@@ -1,4 +1,4 @@
-!
+
 ! Copyright (C) 2005-2015 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
@@ -34,8 +34,15 @@ MODULE exx
   !
   REAL(DP),    ALLOCATABLE :: xkq_collect(:,:)  ! xkq(3,nkqs) the auxiliary k+q set
   REAL(DP),    ALLOCATABLE :: x_occupation(:,:)           
-                                         ! x_occupation(nbnd,nks) the weight of 
+                                         ! x_occupation(nbnd,nkstot) the weight of 
                                          ! auxiliary functions in the density matrix
+
+  INTEGER :: x_nbnd_occ                  ! number of bands of auxiliary functions with
+                                         ! at least some x_occupation > eps_occ
+
+  INTEGER :: ibnd_start = 0              ! starting band index used in bgrp parallelization
+  INTEGER :: ibnd_end = 0                ! ending band index used in bgrp parallelization
+
   COMPLEX(DP), ALLOCATABLE :: exxbuff(:,:,:)
                                          ! temporary buffer for wfc storage
   !
@@ -639,8 +646,7 @@ MODULE exx
     USE klist,                ONLY : ngk, nks, nkstot
     USE symm_base,            ONLY : nsym, s, sr, ftau
     USE mp_pools,             ONLY : npool, nproc_pool, me_pool, inter_pool_comm
-    USE mp_bands,             ONLY : nproc_bgrp, me_bgrp, init_index_over_band,&
-                                     inter_bgrp_comm, ibnd_start, ibnd_end,nbgrp
+    USE mp_bands,             ONLY : me_bgrp, set_bgrp_indices, nbgrp
     USE mp,                   ONLY : mp_sum
     USE funct,                ONLY : get_exx_fraction, start_exx,exx_is_active,&
                                      get_screening_parameter, get_gau_parameter
@@ -697,22 +703,6 @@ MODULE exx
        ALLOCATE(temppsic(nrxxs))
     ENDIF
     !
-    CALL init_index_over_band(inter_bgrp_comm,nbnd)
-    !
-    IF ( gamma_only ) THEN
-        ibnd_buff_start = ibnd_start/2
-        IF(MOD(ibnd_start,2)==0) ibnd_buff_start = ibnd_buff_start -1
-        !
-        ibnd_buff_end = ibnd_end/2
-        IF(MOD(ibnd_end,2)==1) ibnd_buff_end = ibnd_buff_end +1
-    ELSE
-        ibnd_buff_start = ibnd_start
-        ibnd_buff_end   = ibnd_end
-    ENDIF
-    !
-    IF (.NOT. allocated(exxbuff)) &
-        ALLOCATE( exxbuff(nrxxs*npol, ibnd_buff_start:ibnd_buff_end, nkqs))
-    !
     IF (.not.exx_is_active()) THEN 
        !
        erfc_scrlen = get_screening_parameter()
@@ -732,15 +722,37 @@ MODULE exx
 
     IF ( .NOT. gamma_only ) CALL exx_set_symm ( )
 
-    exxbuff=(0.0_DP,0.0_DP)
-    ! set appropriately the x_occupation
+    ! set appropriately the x_occupation and get an upperbound to the number of 
+    ! bands with non zero occupation. used to distribute bands among band groups
+    x_nbnd_occ = 0
     DO ik =1,nkstot
        IF(ABS(wk_collect(ik)) > eps_occ ) THEN
           x_occupation(1:nbnd,ik) = wg_collect (1:nbnd, ik) / wk_collect(ik)
+          do ibnd = max(1,x_nbnd_occ), nbnd
+             if (abs(x_occupation(ibnd,ik)) > eps_occ ) x_nbnd_occ = ibnd
+          end do
        ELSE
           x_occupation(1:nbnd,ik) = 0._dp
        ENDIF
     ENDDO
+
+    CALL set_bgrp_indices(x_nbnd_occ,ibnd_start,ibnd_end)
+
+    IF ( gamma_only ) THEN
+        ibnd_buff_start = ibnd_start/2
+        IF(MOD(ibnd_start,2)==0) ibnd_buff_start = ibnd_buff_start -1
+        !
+        ibnd_buff_end = ibnd_end/2
+        IF(MOD(ibnd_end,2)==1) ibnd_buff_end = ibnd_buff_end +1
+    ELSE
+        ibnd_buff_start = ibnd_start
+        ibnd_buff_end   = ibnd_end
+    ENDIF
+    !
+    IF (.NOT. allocated(exxbuff)) &
+        ALLOCATE( exxbuff(nrxxs*npol, ibnd_buff_start:ibnd_buff_end, nkqs))
+    exxbuff=(0.0_DP,0.0_DP)
+
     !
     !   This is parallelized over pool. Each pool computes only its k-points
     !
@@ -985,7 +997,6 @@ MODULE exx
     USE fft_interfaces,       ONLY : fwfft
     USE control_flags,        ONLY : gamma_only
     USE us_exx,               ONLY : becxx
-    USE mp_bands,             ONLY : ibnd_start, ibnd_end
 
     IMPLICIT NONE
     !
@@ -1132,8 +1143,7 @@ MODULE exx
     USE klist,          ONLY : xk, nks, nkstot
     USE fft_interfaces, ONLY : fwfft, invfft
     USE becmod,         ONLY : bec_type
-    USE mp_bands,       ONLY : ibnd_start, ibnd_end, inter_bgrp_comm, &
-                               intra_bgrp_comm, my_bgrp_id, nbgrp
+    USE mp_bands,       ONLY : inter_bgrp_comm, intra_bgrp_comm, my_bgrp_id, nbgrp
     USE mp,             ONLY : mp_sum, mp_barrier, mp_bcast
     USE uspp,           ONLY : nkb, okvan
     USE paw_variables,  ONLY : okpaw
@@ -1412,8 +1422,7 @@ MODULE exx
     USE klist,          ONLY : xk, nks, nkstot
     USE fft_interfaces, ONLY : fwfft, invfft
     USE becmod,         ONLY : bec_type
-    USE mp_bands,       ONLY : ibnd_start, ibnd_end, inter_bgrp_comm, &
-                               intra_bgrp_comm, my_bgrp_id, nbgrp
+    USE mp_bands,       ONLY : inter_bgrp_comm, intra_bgrp_comm, my_bgrp_id, nbgrp
     USE mp,             ONLY : mp_sum, mp_barrier, mp_bcast
     USE uspp,           ONLY : nkb, okvan
     USE paw_variables,  ONLY : okpaw
@@ -1923,8 +1932,7 @@ MODULE exx
     USE klist,                   ONLY : xk, ngk, nks, nkstot
     USE lsda_mod,                ONLY : lsda, current_spin, isk
     USE mp_pools,                ONLY : inter_pool_comm
-    USE mp_bands,                ONLY : inter_bgrp_comm, intra_bgrp_comm, &
-                                        nbgrp, ibnd_start, ibnd_end
+    USE mp_bands,                ONLY : inter_bgrp_comm, intra_bgrp_comm, nbgrp
     USE mp,                      ONLY : mp_sum
     USE fft_interfaces,          ONLY : fwfft, invfft
     USE gvect,                   ONLY : ecutrho
@@ -2178,8 +2186,7 @@ MODULE exx
     USE klist,                   ONLY : xk, ngk, nks, nkstot
     USE lsda_mod,                ONLY : lsda, current_spin, isk
     USE mp_pools,                ONLY : inter_pool_comm
-    USE mp_bands,                ONLY : inter_bgrp_comm, intra_bgrp_comm, &
-                                        nbgrp, ibnd_start, ibnd_end
+    USE mp_bands,                ONLY : inter_bgrp_comm, intra_bgrp_comm, nbgrp
     USE mp,                      ONLY : mp_sum
     USE fft_interfaces,          ONLY : fwfft, invfft
     USE gvect,                   ONLY : ecutrho
@@ -2511,8 +2518,7 @@ MODULE exx
     USE lsda_mod,             ONLY : lsda, current_spin, isk
     USE gvect,                ONLY : g, nl
     USE mp_pools,             ONLY : npool, inter_pool_comm
-    USE mp_bands,             ONLY : inter_bgrp_comm, intra_bgrp_comm, &
-                                     ibnd_start, ibnd_end
+    USE mp_bands,             ONLY : inter_bgrp_comm, intra_bgrp_comm
     USE mp,                   ONLY : mp_sum 
     USE fft_base,             ONLY : dffts
     USE fft_interfaces,       ONLY : fwfft, invfft

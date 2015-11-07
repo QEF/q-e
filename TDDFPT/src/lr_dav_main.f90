@@ -24,9 +24,9 @@ PROGRAM lr_dav_main
   USE io_files,              ONLY : nd_nmbr
   USE global_version,        ONLY : version_number
   USE ions_base,             ONLY : tau,nat,atm,ityp
-  USE environment,           ONLY: environment_start
-  USE mp_global,             ONLY : nimage, mp_startup, init_index_over_band, inter_bgrp_comm
-
+  USE environment,           ONLY : environment_start
+  USE mp_global,             ONLY : nimage, mp_startup, set_bgrp_indices, &
+                                    ibnd_start, ibnd_end
   USE wvfct,                 ONLY : nbnd
   USE wavefunctions_module,  ONLY : psic
   USE control_flags,         ONLY : tddfpt, do_makov_payne
@@ -78,7 +78,7 @@ PROGRAM lr_dav_main
   !   Read in ground state wavefunctions
   CALL lr_read_wf()
   !
-  CALL init_index_over_band(inter_bgrp_comm,nbnd)
+  CALL set_bgrp_indices(nbnd,ibnd_start,ibnd_end)
 
   !   Set up initial response orbitals
   CALL lr_solve_e()

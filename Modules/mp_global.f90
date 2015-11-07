@@ -21,6 +21,7 @@ MODULE mp_global
   USE mp_images
   USE mp_pools
   USE mp_bands
+  USE mp_bands_TDDFPT
   USE mp_diag
   !
   IMPLICIT NONE 

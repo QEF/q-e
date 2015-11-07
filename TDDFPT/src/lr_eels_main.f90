@@ -29,8 +29,8 @@ PROGRAM lr_eels_main
   USE global_version,        ONLY : version_number
   USE ions_base,             ONLY : tau,nat,atm,ityp
   USE environment,           ONLY : environment_start
-  USE mp_global,             ONLY : nimage, mp_startup, init_index_over_band, &
-                                  & inter_bgrp_comm
+  USE mp_global,             ONLY : nimage, mp_startup, set_bgrp_indices, &
+                                    ibnd_start, ibnd_end
   USE wvfct,                 ONLY : nbnd
   USE wavefunctions_module,  ONLY : psic
   USE control_flags,         ONLY : tddfpt
@@ -127,7 +127,7 @@ PROGRAM lr_eels_main
   !
   ! Band groups parallelization (if activated)
   !
-  CALL init_index_over_band(inter_bgrp_comm, nbnd)
+  CALL set_bgrp_indices(nbnd, ibnd_start, ibnd_end)
   !
   tg_tmp = dffts%have_task_groups
   !

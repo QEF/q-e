@@ -146,8 +146,7 @@ MODULE pw_restart
       USE mp_pools,             ONLY : kunit, nproc_pool, me_pool, root_pool, &
                                        intra_pool_comm, inter_pool_comm
       USE mp_bands,             ONLY : nproc_bgrp, me_bgrp, root_bgrp, &
-                                       intra_bgrp_comm, inter_bgrp_comm, &
-                                       nbgrp, ntask_groups
+                                       intra_bgrp_comm, nbgrp, ntask_groups
       USE mp_diag,              ONLY : nproc_ortho
       USE funct,                ONLY : get_exx_fraction, dft_is_hybrid, &
                                        get_gau_parameter, &
@@ -304,8 +303,7 @@ MODULE pw_restart
       USE mp_pools,             ONLY : kunit, nproc_pool, me_pool, root_pool, &
                                        intra_pool_comm, inter_pool_comm
       USE mp_bands,             ONLY : nproc_bgrp, me_bgrp, root_bgrp, &
-                                       intra_bgrp_comm, inter_bgrp_comm, &
-                                       nbgrp, ntask_groups
+                                       intra_bgrp_comm, nbgrp, ntask_groups
       USE mp_diag,              ONLY : nproc_ortho
       USE funct,                ONLY : get_exx_fraction, dft_is_hybrid, &
                                        get_gau_parameter, &
@@ -2437,7 +2435,7 @@ MODULE pw_restart
       USE mp_pools,             ONLY : kunit, nproc_pool, me_pool, root_pool, &
                                        intra_pool_comm, inter_pool_comm
       USE mp_bands,             ONLY : me_bgrp, nbgrp, root_bgrp, &
-                                       intra_bgrp_comm,  inter_bgrp_comm
+                                       intra_bgrp_comm
       !
       IMPLICIT NONE
       !

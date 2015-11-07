@@ -26,6 +26,59 @@ SUBROUTINE s_psi( lda, n, m, psi, spsi )
   !
   ! ...    spsi  S*psi
   !
+  ! ... bgrp parallelization allowed
+  !
+  USE kinds,            ONLY : DP
+  USE noncollin_module, ONLY : npol
+  USE funct,            ONLY : exx_is_active
+  USE mp_bands,         ONLY : tbgrp, set_bgrp_indices, inter_bgrp_comm
+  USE mp,               ONLY : mp_sum
+  !
+  IMPLICIT NONE
+  !
+  INTEGER, INTENT(IN) :: lda, n, m
+  COMPLEX(DP), INTENT(IN) :: psi(lda*npol,m)
+  COMPLEX(DP), INTENT(OUT)::spsi(lda*npol,m)
+  !
+  INTEGER     :: m_start, m_end
+  !
+  CALL start_clock( 's_psi_bgrp' )
+
+  if (tbgrp .and. .not. exx_is_active() ) then
+      spsi(:,:) = (0.d0,0.d0)
+      call set_bgrp_indices(m,m_start,m_end)
+      if (m_end >= m_start)  & !! at least one band in this band group
+          call s_psi_( lda, n, m_end-m_start+1, psi(1,m_start), spsi(1,m_start) )
+      call mp_sum(spsi,inter_bgrp_comm)
+   else ! no one else to communicate with 
+      call s_psi_( lda, n, m, psi, spsi )
+   end if
+
+  CALL stop_clock( 's_psi_bgrp' )
+  RETURN
+
+END SUBROUTINE s_psi
+!
+!----------------------------------------------------------------------------
+SUBROUTINE s_psi_( lda, n, m, psi, spsi )
+  !----------------------------------------------------------------------------
+  !
+  ! ... This routine applies the S matrix to m wavefunctions psi
+  ! ... and puts the results in spsi.
+  ! ... Requires the products of psi with all beta functions
+  ! ... in array becp(nkb,m) (calculated in h_psi or by calbec)
+  !
+  ! ... input:
+  !
+  ! ...    lda   leading dimension of arrays psi, spsi
+  ! ...    n     true dimension of psi, spsi
+  ! ...    m     number of states psi
+  ! ...    psi
+  !
+  ! ... output:
+  !
+  ! ...    spsi  S*psi
+  !
   USE kinds,      ONLY : DP
   USE becmod,     ONLY : becp
   USE uspp,       ONLY : vkb, nkb, okvan, qq, qq_so, indv_ijkb0
@@ -319,4 +372,4 @@ SUBROUTINE s_psi( lda, n, m, psi, spsi )
 
     END SUBROUTINE s_psi_nc
 
-END SUBROUTINE s_psi
+END SUBROUTINE s_psi_
