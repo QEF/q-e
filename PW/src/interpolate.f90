@@ -127,7 +127,7 @@ subroutine cinterpolate (v, vs, iflag)
   integer :: ig
 
   if (gamma_only) call errore ('cinterpolate','not allowed', 1)
-  call start_clock ('cinterpolate')
+  call start_clock ('interpolate')
   if (iflag <= 0) then
      !
      !    from thick to smooth
@@ -163,6 +163,6 @@ subroutine cinterpolate (v, vs, iflag)
         call zcopy (dfftp%nnr, vs, 1, v, 1)
      endif
   endif
-  call stop_clock ('cinterpolate')
+  call stop_clock ('interpolate')
   return
 end subroutine cinterpolate
