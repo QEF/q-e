@@ -268,9 +268,7 @@ PROGRAM epsilon
   ! ... run the specific pp calculation
   !
   IF (ionode) WRITE(stdout,"(/, 5x, 'Performing ',a,' calculation...')") trim(calculation)
-
-  CALL start_clock( 'calculation' )
-  !
+  CALL start_clock(trim(calculation))
   SELECT CASE ( trim(calculation) )
   !
   CASE ( 'eps' )
@@ -295,21 +293,11 @@ PROGRAM epsilon
       !
   END SELECT
   !
-  CALL stop_clock( 'calculation' )
-
-  !
-  ! few info about timing
-  !
-  CALL stop_clock( 'epsilon' )
-  !
+  CALL stop_clock(trim(calculation))
   IF ( ionode ) WRITE( stdout , "(/)" )
-  !
-  CALL print_clock( 'epsilon' )
-  CALL print_clock( 'calculation' )
+  CALL print_clock( trim(calculation) )
   CALL print_clock( 'dipole_calc' )
-  !
   IF ( ionode ) WRITE( stdout, *  )
-
   !
   CALL environment_end ( 'epsilon' )
   !
