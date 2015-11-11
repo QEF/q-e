@@ -83,7 +83,7 @@ REAL (dp) :: ft1, ft2, ft3
 
 REAL(KIND=DP), PARAMETER :: k_B=8.6173324d-5/13.60658
 LOGICAL :: ld3, verbose, offdiagonal, nodispsym, lforce0,hex, noatsym
-
+  CHARACTER(LEN=256), EXTERNAL :: trimcheck
 
   real(DP), PARAMETER :: sin3 = 0.866025403784438597d0, cos3 = 0.5d0, &
                         msin3 =-0.866025403784438597d0, mcos3 = -0.5d0
@@ -96,12 +96,13 @@ LOGICAL :: ld3, verbose, offdiagonal, nodispsym, lforce0,hex, noatsym
 ! input namelist
 !
 NAMELIST /input/ prefix, de, nrx, nrx1, nrx2, nrx3, ld3, file_force, file_force3, file_out, file_rmsd, verbose, &
-                 offdiagonal, innx, nodispsym, lforce0,hex,noatsym
+                 offdiagonal, innx, nodispsym, lforce0,hex,noatsym, outdir
 
   CALL mp_startup ( )
   CALL environment_start ( code )
 
 prefix=' '
+outdir='./'
 nrx1 = 1
 nrx2 = 1
 nrx2 = 1
@@ -122,6 +123,8 @@ hex=.false.
 CALL input_from_file ( )
 READ(5,input,IOSTAT=ios)
 IF (ios /= 0) CALL errore ('FD_IFC', 'reading input namelist', ABS(ios) )
+outdir=trim(outdir)
+tmp_dir = trimcheck( outdir )
 
 !reading the xml file
 call read_xml_file
