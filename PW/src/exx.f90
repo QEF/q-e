@@ -399,7 +399,7 @@ MODULE exx
                            //" q-points centered on each k-point"
       WRITE( stdout, '(5x,a)' ) '(k+q)-points:'
       do ik = 1, nkqs
-          WRITE( stdout, '(3f12.7,5x,i2,i5)') (xkq_collect (ikq, ik) , ikq = 1, 3) , &
+          WRITE( stdout, '(3f12.7,5x,2i5)') (xkq_collect (ikq, ik) , ikq = 1, 3) , &
                  index_xk(ik), index_sym(ik)
       enddo
     ELSE
