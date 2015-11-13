@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#if !defined(__WIN32)
 #include <sys/resource.h>
 
 void remove_stack_limit_(void) {
@@ -28,3 +29,9 @@ void remove_stack_limit_(void) {
     }
   }
 }
+
+#else
+
+void remove_stack_limit_(void) {;}
+
+#endif
