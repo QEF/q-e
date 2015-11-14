@@ -87,7 +87,7 @@ END SUBROUTINE
 
 SUBROUTINE GRID2D_COORDS( order, rank, nprow, npcol, row, col )
    !
-   !  this subroutine compute the cartesian coordinetes "row" and "col"
+   !  this subroutine computes the cartesian coordinetes "row" and "col"
    !  of the processor whose MPI task id is "rank". 
    !  Note that if the rank is larger that the grid size
    !  all processors whose MPI task id is greather or equal 
@@ -117,14 +117,14 @@ END SUBROUTINE
 
 SUBROUTINE GRID2D_RANK( order, nprow, npcol, row, col, rank )
    !
-   !  this subroutine compute the processor MPI task id "rank" of the processor  
+   !  this subroutine computes the processor MPI task id "rank" of the processor  
    !  whose cartesian coordinate are "row" and "col".
-   !  Note that the subroutine assume cyclic indexing ( row = nprow = 0 )
+   !  Note that the subroutine assumes cyclic indexing ( row = nprow = 0 )
    !
    IMPLICIT NONE
    CHARACTER, INTENT(IN) :: order
    INTEGER, INTENT(OUT) ::  rank         ! process index starting from 0
-   INTEGER, INTENT(IN)  ::  nprow, npcol  ! dimensions of the processor grid
+   INTEGER, INTENT(IN)  ::  nprow, npcol ! dimensions of the processor grid
    INTEGER, INTENT(IN)  ::  row, col
    
    IF( order == 'C' .OR. order == 'c' ) THEN
@@ -152,7 +152,7 @@ END SUBROUTINE
 !   np   = number of processors
 !   me   = index of the calling processor (starting from 0)
 !  
-!   this function return the number of elements of the distributed array
+!   this function returns the number of elements of the distributed array
 !   stored in the local memory of the processor "me" for a cyclic 
 !   data distribution.
 !   Example of the cyclic distribution of a 10 elements array on 4 processors
@@ -180,6 +180,7 @@ END SUBROUTINE
        r = MOD(gdim, np)
 
        IF( me .LT. r ) THEN
+! ...    if my index is less than the reminder I got an extra element
          ldim_cyclic = q+1
        ELSE
          ldim_cyclic = q
@@ -196,7 +197,7 @@ END SUBROUTINE
 !   np   = number of processors
 !   me   = index of the calling processor (starting from 0)
 !  
-!   this function return the number of elements of the distributed array
+!   this function returns the number of elements of the distributed array
 !   stored in the local memory of the processor "me" for a balanced block 
 !   data distribution, with the larger block on the lower index processors.
 !   Example of the block distribution of 10 elements array a on 4 processors
@@ -241,7 +242,7 @@ END SUBROUTINE
 !   np   = number of processors
 !   me   = index of the calling processor (starting from 0)
 !  
-!   this function return the number of elements of the distributed array
+!   this function returns the number of elements of the distributed array
 !   stored in the local memory of the processor "me" for equal block
 !   data distribution, all block have the same size but the last one.
 !   Example of the block distribution of 10 elements array a on 4 processors
@@ -279,7 +280,6 @@ END SUBROUTINE
        END FUNCTION ldim_block_sca
 
 !=----------------------------------------------------------------------------=!
-
 
 
       INTEGER FUNCTION ldim_block_cyclic( N, NB, NPROCS, IPROC )
