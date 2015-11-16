@@ -1,44 +1,47 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2015 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !-----------------------------------------------------------------------
-subroutine cft_wave (evc_g, evc_r, isw)
+SUBROUTINE cft_wave (evc_g, evc_r, isw)
   !-----------------------------------------------------------------------
   !
-  ! Fourier-transformation of a wavefunction
-  ! evc_g(npwx):  the wavefunction in G space
-  ! evc_r(nrxxs): the wavefunction in R space ("smooth" grid)
-  ! isw =+1: input:  evc_g
-  !          output: evc_f = Fourier(evc_g)
-  !          evc_g is transformed according to igk-indexes
-  !          evc_r is set to zero at the beginning
-  ! isw =-1: input:  evc_r
-  !          output: evc_g = evc_g + Fourier-1(evc_r)
-  !          evc_r is transformed according to igkq indexes
+  ! Inverse Fourier (isw=+1) or Fourier (isw=-1) transform of a wavefunction
   !
-
+  ! evc_g(npwx*npol):      wavefunction in G space, ordering: see below
+  ! evc_r(dffts%nnr,npol): wavefunction in R space, ordering: same as
+  !                        real-space points on the "smooth" FFT grid
+  !
+  ! isw =+1  input:  evc_g (ordered as \psi(k+G), using igk indices)
+  !          output: evc_r = Fourier(evc_g), evc_g = unchanged
+  ! isw =-1  input:  evc_r (overwritten on output)
+  !          output: evc_g = evc_g + InvFourier(evc_r)
+  !                  ordered as \psi(k+q+G), using igkq indices
+  !
+  ! Further required variables from modules (unchanged on output):
+  !
   USE kinds, ONLY : DP
   USE wvfct, ONLY : npwx, npw, igk
   USE fft_base,   ONLY: dffts
   USE fft_interfaces, ONLY: fwfft, invfft
   USE gvecs, ONLY : nls
-  use noncollin_module, ONLY : noncolin, npol
-  use qpoint, ONLY : npwq, igkq
-  implicit none
+  USE noncollin_module, ONLY : noncolin, npol
+  USE qpoint, ONLY : npwq, igkq
+  IMPLICIT NONE
 
-  integer :: isw
-  complex(DP) :: evc_g (npwx*npol), evc_r (dffts%nnr,npol)
+  INTEGER, INTENT(IN) :: isw
+  COMPLEX(DP) :: evc_g (npwx*npol), evc_r (dffts%nnr,npol)
+  ! intent depends upon the value of isw
 
-  integer :: ig
+  INTEGER :: ig
 
-  if (isw.eq.1) then
-     evc_r = (0.d0, 0.d0)
-     do ig = 1, npw
+  IF (isw == 1) THEN
+     evc_r = (0.0_dp, 0.0_dp)
+     DO ig = 1, npw
         evc_r (nls (igk (ig) ),1 ) = evc_g (ig)
-     enddo
+     ENDDO
      CALL invfft ('Wave', evc_r(:,1), dffts)
      IF (noncolin) THEN
         DO ig = 1, npw
@@ -46,60 +49,65 @@ subroutine cft_wave (evc_g, evc_r, isw)
         ENDDO
         CALL invfft ('Wave', evc_r(:,2), dffts)
      ENDIF
-  else if(isw.eq.-1) then
+  ELSE IF (isw == -1) then
      CALL fwfft ('Wave', evc_r(:,1), dffts)
-     do ig = 1, npwq
+     DO ig = 1, npwq
         evc_g (ig) = evc_g (ig) + evc_r (nls (igkq (ig) ), 1 )
-     enddo
+     ENDDO
      IF (noncolin) THEN
         CALL fwfft ('Wave', evc_r(:,2), dffts)
         DO ig = 1, npwq
            evc_g (ig+npwx) = evc_g (ig+npwx) + evc_r (nls(igkq(ig)),2)
         ENDDO
      ENDIF
-  else
-     call errore (' cft_wave',' Wrong switch',1)
-  endif
+  ELSE
+     CALL  errore (' cft_wave',' Wrong value for isw',1)
+  ENDIF
 
-  return
-end subroutine cft_wave
+  RETURN
+END SUBROUTINE cft_wave
 !
 !-----------------------------------------------------------------------
-subroutine cft_wave_tg (evc_g, evc_r, isw, v_size, ibnd, nbnd_occ)
+SUBROUTINE cft_wave_tg (evc_g, evc_r, isw, v_size, ibnd, nbnd_occ)
   !-----------------------------------------------------------------------
   !
-  ! Fourier-transformation of a wavefunction using the task group
-  ! features
-  ! evc_g(npwx):  the wavefunction in G space
-  ! evc_r(nrxxs): the wavefunction in R space ("smooth" grid)
-  ! isw =+1: input:  evc_g
-  !          output: evc_f = Fourier(evc_g)
-  !          evc_g is transformed according to igk-indexes
-  !          evc_r is set to zero at the beginning
-  ! isw =-1: input:  evc_r
-  !          output: evc_g = evc_g + Fourier-1(evc_r)
-  !          evc_r is transformed according to igkq indexes
   !
-
+  ! Inverse Fourier (isw=+1) or Fourier (isw=-1) transform of a wavefunction
+  ! using task group parallelization
+  !
+  ! evc_g(npwx*npol,nbnd_occ): wavefunction in G space, ordering: see below
+  ! evc_r(v_size,npol):        wavefunction in R space, ordering: same as
+  !                            real-space points on the "smooth" FFT grid
+  !                            
+  ! isw =+1  input:  evc_g (ordered as \psi(k+G), using igk indices)
+  !          output: evc_r = Fourier(evc_g), evc_g = unchanged
+  ! isw =-1  input:  evc_r (overwritten on output)
+  !          output: evc_g = evc_g + InvFourier(evc_r)
+  !                  ordered as \psi(k+q+G), using igkq indices
+  ! v_size:   dimension of FFT arrays in real space using task groups
+  ! ibnd  :   index of first band in the current task group  
+  ! nbnd_occ: number of occupied states
+  !
+  ! Further required variables from modules (unchanged on output):
+  !
   USE kinds, ONLY : DP
   USE wvfct, ONLY : npwx, npw, igk
   USE fft_base,   ONLY: dffts
   USE fft_interfaces, ONLY: fwfft, invfft
   USE gvecs, ONLY : nls
   USE mp_bands, ONLY : me_bgrp
-  use noncollin_module, ONLY : noncolin, npol
-  use qpoint, ONLY : npwq, igkq
+  USE noncollin_module, ONLY : noncolin, npol
+  USE qpoint, ONLY : npwq, igkq
 
-  implicit none
+  IMPLICIT NONE
 
-  integer, intent(in) :: v_size
-  integer, intent(in) :: isw, ibnd, nbnd_occ
-  complex(DP), intent(inout) :: evc_g(npwx*npol,nbnd_occ), evc_r(v_size,npol)
+  INTEGER, INTENT(in) :: v_size, isw, ibnd, nbnd_occ
+  COMPLEX(DP), INTENT(inout) :: evc_g(npwx*npol,nbnd_occ), evc_r(v_size,npol)
 
-  integer :: ig, ioff, idx
+  INTEGER :: ig, ioff, idx
 
-  if (isw.eq.1) then
-     evc_r = (0.d0, 0.d0)
+  IF (isw == 1) then
+     evc_r = (0.0+dp, 0.0_dp)
      !
      ioff   = 0
      !
@@ -123,7 +131,7 @@ subroutine cft_wave_tg (evc_g, evc_r, isw, v_size, ibnd, nbnd_occ)
      CALL invfft ('Wave', evc_r(:,1), dffts)
      IF (noncolin) CALL invfft ('Wave', evc_r(:,2), dffts)
 
-  else if(isw.eq.-1) then
+  ELSE IF(isw == -1) THEN
 
      CALL fwfft ('Wave', evc_r(:,1), dffts)
      IF (noncolin) CALL fwfft ('Wave', evc_r(:,2), dffts)
@@ -151,9 +159,9 @@ subroutine cft_wave_tg (evc_g, evc_r, isw, v_size, ibnd, nbnd_occ)
         ioff = ioff + dffts%nr3x * dffts%nsw( me_bgrp + 1 )
         !
      ENDDO
-  else
-     call errore (' cft_wave_tg',' Wrong switch',1)
-  endif
+  ELSE
+     CALL  errore (' cft_wave_tg',' Wrong value for isw',1)
+  ENDIF
 
-  return
-end subroutine cft_wave_tg
+  RETURN
+END SUBROUTINE cft_wave_tg
