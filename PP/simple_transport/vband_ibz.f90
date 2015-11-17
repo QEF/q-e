@@ -1,4 +1,4 @@
-      subroutine vband_ibz ( nk1,nk2,nk3, nbnd, nksfit, etk, eqk, bg, vk, dfk )
+      subroutine vband_ibz ( nk1,nk2,nk3, nbnd, nksfit, etk, eqk, at, vk, dfk )
       !
       ! Written by Burak Himmetoglu (burakhmmtgl@gmail.com)
       ! Uses some parts of the PW distribution
@@ -13,7 +13,7 @@
 
       integer, intent(in) :: nk1,nk2,nk3, nbnd, nksfit, eqk(nk1*nk2*nk3)
 
-      double precision, intent(in) :: etk(nbnd,nksfit), bg(3,3)
+      double precision, intent(in) :: etk(nbnd,nksfit), at(3,3)
 
       double precision, intent(out) :: vk(nbnd,nk1*nk2*nk3,3), dfk(nbnd,nk1*nk2*nk3,3)
                                        ! vk is band velocity
@@ -98,7 +98,7 @@
          !
          ! vaux is updated after this call
          !
-         call cryst_to_cart (nktot,vaux,bg,1)
+         call cryst_to_cart (nktot,vaux,at,1)
          !
          do j=1,3
             vk(ibnd,:,j) = vaux(j,:) 

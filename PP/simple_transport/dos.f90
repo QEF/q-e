@@ -149,7 +149,7 @@
       !$ t0 = omp_get_wtime()
       !
       ! Call band velocities and forward derivatives
-      call vband_ibz( nk1fit,nk2fit,nk3fit,nbnd,nksfit,etfit,eqkfit,bg, vk, dfk)
+      call vband_ibz( nk1fit,nk2fit,nk3fit,nbnd,nksfit,etfit,eqkfit,at, vk, dfk)
       !
       !Check number of electrons
       nelec = 0.d0
