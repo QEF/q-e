@@ -24,7 +24,7 @@
       !
       integer :: i,j,iq,ik,imu,itemp,nu,nqtot,nsig,nat,nk1fit,nk2fit,   &
      &           nk3fit, nkfit, nksfit_real, nbnd, nksfit, npk, nsym,   &
-     &           s(3,3,48),ns,nrot,ibnd,ndop
+     &           s(3,3,48),ns,nrot,ibnd,ndop,cbm_i
       ! 
       ! OMP 
       integer :: TID, nthreads
@@ -33,13 +33,14 @@
       !
       double precision :: at(3,3), bg(3,3),vol,T, fd, nelec1,           &
      &                    cbm, vbm, ef_mid, doping(10), nelec,          &
-     &                    Ef_IBZ(10)
+     &                    Ef_IBZ(10), shift
       ! 
       double precision, allocatable :: xkfit(:,:), etfit(:,:), wkfit(:),&
      &                                 wk(:)
       !
       integer, allocatable :: eqkfit(:), sfit(:)
       !
+      logical :: lscissors
       !
       character*20 :: fil_kp, fil_a2F, fil_info
       !
@@ -56,7 +57,7 @@
                                      ! conductivity. From au to (Ohm cm)-1 
 
       namelist /input/ fil_info, fil_a2F, vol, cbm, vbm, T,             &
-     &                 doping, ndop, nthreads
+     &                 doping, ndop, nthreads, lscissors, shift, cbm_i
 
       read(5,input)
 
@@ -115,6 +116,12 @@
       ! 
       ! eqkfit(nk) : maps IBZ to full grid. The full grid is in crystal coords
       ! 
+      ! If lscissors is true, then shift band energies (move conduction bands higher in energy)
+      if (lscissors) then
+        etfit(cbm_i:nbnd,:) = etfit(cbm_i:nbnd,:) + shift/RytoeV
+        cbm = cbm + shift
+      end if
+      !
       ! Determine the number of electrons (neutral, insulating system)
       ef_mid = (cbm + vbm)/2.0/RytoeV ! Fermi level at the middle of the gap
       !

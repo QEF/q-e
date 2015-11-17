@@ -36,13 +36,13 @@
       integer :: i,j,k,nu,ik,ikk,nk1fit,nk2fit,nk3fit,nkfit,            &
      &           nbnd, nksfit, npk, nsym, Nmu, imu,                     &
      &           s(3,3,48),ns,nrot,ibnd,io,phband_i, phband_f,          &
-     &           nphband, n, nn, jbnd, ibnd_ph, ind_k
+     &           nphband, n, nn, jbnd, ibnd_ph, ind_k, cbm_i
       !
       double precision :: wk, at(3,3), bg(3,3), efermi, alat,           &
      &                    T, wo(3), al(3), invtau,aa,cut,deg,           &
-     &                    invT, fd, dfd, fac, vol
+     &                    invT, fd, dfd, fac, vol, shift
       ! 
-      logical :: lsoc
+      logical :: lsoc, lscissors
       !
       double precision, allocatable :: xkfit(:,:),etfit(:,:),wkfit(:),  &
      &                                 dfk(:,:,:),vk(:,:,:)
@@ -69,7 +69,8 @@
                                      ! conductivity. From au to (Ohm cm)-1 
       !
       namelist /input/ fil_info, fil_a2F, T, phband_i, phband_f,cut,    &
-     &                 efermi, invtau, alat, vol, nthreads, lsoc
+     &                 efermi, invtau, alat, vol, nthreads, lsoc,       &
+     &                 cbm_i, shift, lscissors
 
       read(5,input)
 
@@ -141,8 +142,14 @@
          wk = 2.0/nkfit
       end if
       !
+      ! If lscissors is true, then shift band energies (move conduction bands higher in energy)
+      if (lscissors) then
+        etfit(cbm_i:nbnd,:) = etfit(cbm_i:nbnd,:) + shift/RytoeV
+        !cbm = cbm + shift
+      end if
+      !
       ! Call band velocities and forward derivatives
-      call vband_ibz( nk1fit,nk2fit,nk3fit,nphband,nksfit,etfit(phband_i:phband_f,:),eqkfit,at, vk, dfk)
+      call vband_ibz( nk1fit,nk2fit,nk3fit,nphband,nksfit,etfit(phband_i:phband_f,:),eqkfit,bg, vk, dfk)
       !
       ! Include the 2pi/a factor
       vk = vk / tpi * alat
@@ -159,13 +166,13 @@
       !
       !$ t0 = omp_get_wtime()  
       ! Loop over bands and kpoints
+      !$omp parallel default(shared) &
+      !$omp private(ibnd,ibnd_ph,ik,ikk,ind_k,i,j,fd,dfd,fac)
       do ibnd=phband_i,phband_f 
          !
          ibnd_ph = ibnd - phband_i + 1
          ! 
-         !$omp parallel do default(shared) &
-         !$omp private(ik,ikk,ind_k,i,j,fd,dfd,fac) &
-         !$omp reduction(+: I0, I1, I2)
+         !$omp do reduction(+: I0, I1, I2)
          do ik=1,nkeff(ibnd_ph)
             !
             ikk = iflag(ibnd_ph,ik)  ! ikk is in full-grid (just reduced)
@@ -192,9 +199,10 @@
             end do ! i
             !
          end do ! ik
-         !$omp end parallel do
+         !$omp end do
          !
       end do ! ibnd
+      !$omp end parallel
       !
       !Total integration time
       !$ t0 = omp_get_wtime() - t0 
@@ -221,7 +229,7 @@
       open(13,file='Def_1.out',status='unknown')
       write(11,"(10e14.6)") efermi * RytoeV, ((sig(i,j),i=1,3),j=1,3)
       write(12,"(10e14.6)") efermi * RytoeV, ((Se(i,j),i=1,3),j=1,3)
-      write(12,"(2e14.6)") efermi * RytoeV, I0 / RytoeV
+      write(13,"(2e14.6)") efermi * RytoeV, I0 / RytoeV
       close(11)
       close(12)
       close(13) 

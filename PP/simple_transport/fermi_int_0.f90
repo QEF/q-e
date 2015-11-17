@@ -33,14 +33,14 @@
       integer :: i,j,k,nu,ik,ikk,nk1fit,nk2fit,nk3fit,nkfit,            &
      &           nbnd, nksfit, npk, nsym, Nmu, imu,                     &
      &           s(3,3,48),ns,nrot,ibnd,io,phband_i, phband_f,          &
-     &           nphband, n, nn, jbnd, ibnd_ph, ind_k
+     &           nphband, n, nn, jbnd, ibnd_ph, ind_k, cbm_i
       !
       double precision :: wk, at(3,3), bg(3,3), efermi, alat,           &
      &                    T, wo(3), al(3), invtau,aa,cut,deg,           &
      &                    invT, fd, dfd, fac, vol, efmin, efmax,        &
-     &                    inv_I1(3,3)
+     &                    inv_I1(3,3), shift
       ! 
-      logical :: lsoc
+      logical :: lsoc, lscissors
       !
       double precision, allocatable :: xkfit(:,:),etfit(:,:),wkfit(:),  &
      &                                 dfk(:,:,:),vk(:,:,:), En(:)
@@ -68,7 +68,7 @@
                                      ! conductivity. From au to (Ohm cm)-1 
       !
       namelist /input/ fil_info, fil_a2F, T, efmin, efmax, Nmu,         &
-     &                 phband_i, phband_f,                              &
+     &                 phband_i, phband_f, shift, cbm_i, lscissors,     &
      &                 invtau, alat, vol, nthreads, lsoc
 
       read(5,input)
@@ -149,8 +149,14 @@
          wk = 2.0/nkfit
       end if
       !
+      ! If lscissors is true, then shift band energies (move conduction bands higher in energy)
+      if (lscissors) then
+        etfit(cbm_i:nbnd,:) = etfit(cbm_i:nbnd,:) + shift/RytoeV
+        !cbm = cbm + shift
+      end if
+      !
       ! Call band velocities and forward derivatives
-      call vband_ibz( nk1fit,nk2fit,nk3fit,nphband,nksfit,etfit(phband_i:phband_f,:),eqkfit,at, vk, dfk)
+      call vband_ibz( nk1fit,nk2fit,nk3fit,nphband,nksfit,etfit(phband_i:phband_f,:),eqkfit,bg, vk, dfk)
       !
       ! Include the 2pi/a factor
       vk = vk / tpi * alat

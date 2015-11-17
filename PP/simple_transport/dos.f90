@@ -29,7 +29,7 @@
       !
       integer :: i,j,iq,ik,ie,nk1fit,nk2fit,nk3fit,nkfit,               &
      &           nbnd, nksfit, npk, nsym,                               &
-     &           s(3,3,48),ns,nrot,ibnd,io,Nen, ind_k
+     &           s(3,3,48),ns,nrot,ibnd,io,Nen, ind_k, cbm_i
       ! 
       ! OpenMP
       integer :: TID, nthreads
@@ -37,7 +37,7 @@
 
       !
       double precision :: at(3,3), bg(3,3),deg,degauss,wk,T,            &
-     &                    cbm, vbm, ef_mid, doping, nelec,              &
+     &                    cbm, vbm, ef_mid, doping, nelec, shift,       &
      &                    en(1000), de(1000), ne(1000),emin, emax, aa
       ! 
       !
@@ -46,7 +46,7 @@
       !
       integer, allocatable :: eqkfit(:), sfit(:)
       !
-      logical :: lsoc, lfix
+      logical :: lsoc, lfix, lscissors
       !
       character*20 :: fil_kp, fil_a2F, fil_info
       !
@@ -63,7 +63,8 @@
                                      ! conductivity. From au to (Ohm cm)-1 
 
       namelist /input/ fil_info, fil_a2F, Nen, aa, T, degauss,          &
-     &                 cbm, vbm, emin, emax, nthreads, lsoc, lfix
+     &                 cbm, vbm, emin, emax, nthreads, lsoc, lfix,      &
+     &                 cbm_i, lscissors, shift
 
       read(5,input)
 
@@ -138,11 +139,17 @@
          wk = 2.0/nkfit
       end if
       !
+      ! If lscissors is true, then shift band energies (move conduction bands higher in energy)
+      if (lscissors) then
+        etfit(cbm_i:nbnd,:) = etfit(cbm_i:nbnd,:) + shift/RytoeV
+        cbm = cbm + shift
+      end if
+      !
       !Start timing here
       !$ t0 = omp_get_wtime()
       !
       ! Call band velocities and forward derivatives
-      call vband_ibz( nk1fit,nk2fit,nk3fit,nbnd,nksfit,etfit,eqkfit,at, vk, dfk)
+      call vband_ibz( nk1fit,nk2fit,nk3fit,nbnd,nksfit,etfit,eqkfit,bg, vk, dfk)
       !
       !Check number of electrons
       nelec = 0.d0
@@ -188,7 +195,7 @@
       end do ! ie
       !
       ! End timing
-      !$ t0 = omp_get_wtime()
+      !$ t0 = omp_get_wtime() - t0
       !
       open(11,file='dos.out',status='unknown')
       if (t0 >0) then
