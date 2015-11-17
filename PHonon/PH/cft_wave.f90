@@ -107,7 +107,7 @@ SUBROUTINE cft_wave_tg (evc_g, evc_r, isw, v_size, ibnd, nbnd_occ)
   INTEGER :: ig, ioff, idx
 
   IF (isw == 1) then
-     evc_r = (0.0+dp, 0.0_dp)
+     evc_r = (0.0_dp, 0.0_dp)
      !
      ioff   = 0
      !
