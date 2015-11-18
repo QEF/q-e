@@ -168,7 +168,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   USE gvect,                ONLY : gstart
   USE wvfct,                ONLY : g2kin, nbndx, et, nbnd, npwx, npw, &
        current_k, btype
-  USE control_flags,        ONLY : ethr, lscf, max_cg_iter, isolve, istep, &
+  USE control_flags,        ONLY : ethr, lscf, max_cg_iter, isolve, &
                                    gamma_only, use_para_diag
   USE noncollin_module,     ONLY : noncolin, npol
   USE wavefunctions_module, ONLY : evc
@@ -275,7 +275,7 @@ CONTAINS
        !
        CG_loop : DO
           !
-          lrot = ( iter == 1 .AND. istep ==0 .AND. ntry == 0 )
+          lrot = ( iter == 1 .AND. ntry == 0 )
           !
           IF ( .NOT. lrot ) THEN
              !
@@ -412,7 +412,7 @@ CONTAINS
        !
        CG_loop : DO
           !
-          lrot = ( iter == 1 .AND. istep ==0 .AND. ntry == 0 )
+          lrot = ( iter == 1 .AND. ntry == 0 )
           !
           IF ( .NOT. lrot ) THEN
              !
