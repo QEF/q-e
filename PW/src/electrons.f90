@@ -297,7 +297,7 @@ SUBROUTINE electrons_scf ( printout )
                                    rho, rho_core, rhog_core, v, vltot, vrs, &
                                    kedtau, vnew
   USE control_flags,        ONLY : mixing_beta, tr2, ethr, niter, nmix, &
-                                   iprint, istep, conv_elec, &
+                                   iprint, conv_elec, &
                                    restart, io_level, do_makov_payne,  &
                                    gamma_only, iverbosity, textfor,     &
                                    llondon, scf_must_converge, lxdm, ts_vdw
@@ -368,13 +368,6 @@ SUBROUTINE electrons_scf ( printout )
   !
   iter = 0
   dr2  = 0.0_dp
-  !
-  ! ... Convergence threshold for iterative diagonalization
-  ! ... for the first scf iteration of each ionic step (after the first),
-  ! ... the threshold is fixed to a default value of 1.D-6
-  !
-  IF ( istep > 0 ) ethr = 1.D-6
-  !
   IF ( restart ) CALL restart_in_electrons (iter, dr2, ethr, et )
   !
   WRITE( stdout, 9000 ) get_clock( 'PWSCF' )

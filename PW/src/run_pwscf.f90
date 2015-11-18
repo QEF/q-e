@@ -29,7 +29,7 @@ SUBROUTINE run_pwscf ( exit_status )
   USE io_global,        ONLY : stdout, ionode, ionode_id
   USE parameters,       ONLY : ntypx, npk, lmaxx
   USE cell_base,        ONLY : fix_volume, fix_area
-  USE control_flags,    ONLY : conv_elec, gamma_only, lscf, twfcollect
+  USE control_flags,    ONLY : conv_elec, gamma_only, ethr, lscf, twfcollect
   USE control_flags,    ONLY : conv_ions, istep, nstep, restart, lmd, lbfgs
   USE force_mod,        ONLY : lforce, lstres, sigma, force
   USE check_stop,       ONLY : check_stop_init, check_stop_now
@@ -168,6 +168,10 @@ SUBROUTINE run_pwscf ( exit_status )
         CALL hinit1()
         !
      END IF
+     ! ... Reset convergence threshold of iterative diagonalization for
+     ! ... the first scf iteration of each ionic step (after the first)
+     !
+     ethr = 1.0D-6
      !
   END DO main_loop
   !
