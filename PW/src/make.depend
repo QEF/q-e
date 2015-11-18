@@ -719,6 +719,8 @@ h_psi.o : ../../Modules/control_flags.o
 h_psi.o : ../../Modules/fft_base.o
 h_psi.o : ../../Modules/funct.o
 h_psi.o : ../../Modules/kind.o
+h_psi.o : ../../Modules/mp.o
+h_psi.o : ../../Modules/mp_bands.o
 h_psi.o : ../../Modules/noncol.o
 h_psi.o : ../../Modules/recvec.o
 h_psi.o : ../../Modules/uspp.o
@@ -1525,9 +1527,11 @@ s_1psi.o : pwcom.o
 s_1psi.o : realus.o
 s_psi.o : ../../Modules/becmod.o
 s_psi.o : ../../Modules/control_flags.o
+s_psi.o : ../../Modules/funct.o
 s_psi.o : ../../Modules/ions_base.o
 s_psi.o : ../../Modules/kind.o
 s_psi.o : ../../Modules/mp.o
+s_psi.o : ../../Modules/mp_bands.o
 s_psi.o : ../../Modules/noncol.o
 s_psi.o : ../../Modules/uspp.o
 s_psi.o : pwcom.o
