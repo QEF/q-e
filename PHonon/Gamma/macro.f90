@@ -10,8 +10,8 @@
 SUBROUTINE macro
   !----------------------------------------------------------------------
   !
-  USE pwcom
-  USE cgcom
+  USE klist,  ONLY : nks
+  USE cgcom,  ONLY : iubar, dvpsi
   USE io_files,   ONLY : seqopn
   !
   IMPLICIT NONE

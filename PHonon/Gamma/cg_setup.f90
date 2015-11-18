@@ -10,19 +10,25 @@
 SUBROUTINE cg_setup
   !-----------------------------------------------------------------------
   !
-  USE kinds, ONLY: DP
-  USE ions_base, ONLY : nat, ntyp => nsp, ityp, tau, amass
-  USE pwcom
-  USE scf, ONLY : rho, rho_core, v, vltot, vrs, kedtau
-  USE uspp, ONLY: vkb
+  USE kinds,      ONLY: DP
+  USE cell_base,  ONLY: tpiba2, bg
+  USE ions_base,  ONLY: nat, ntyp => nsp, ityp, tau, amass
+  USE scf,        ONLY: rho, rho_core, v, vltot, vrs, kedtau
+  USE uspp,       ONLY: vkb
   USE uspp_param, ONLY: upf
-  USE mp_global,        ONLY : kunit
+  USE mp_global,  ONLY: kunit
   USE wavefunctions_module,  ONLY: evc
-  USE io_files, ONLY: prefix, iunpun, iunres, diropn
+  USE io_files,   ONLY: prefix, iunpun, iunres, diropn
+  USE funct,      ONLY: dft_is_gradient, dmxc
+  USE dfunct,     ONLY: newd
+  USE fft_base,   ONLY: dfftp
+  USE gvect,      ONLY: g, ngm, eigts1, eigts2, eigts3
+  USE gvecs,      ONLY: doublegrid
+  USE klist,      ONLY: xk
+  USE lsda_mod,   ONLY: nspin, current_spin
+  USE vlocal,     ONLY: strf
+  USE wvfct,      ONLY: nbnd, npwx, npw, g2kin, igk, ecutwfc
   USE cgcom
-  USE funct, ONLY : dft_is_gradient, dmxc
-  USE dfunct,          ONLY : newd
-  USE fft_base, ONLY : dfftp
   !
   IMPLICIT NONE
   !

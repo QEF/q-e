@@ -11,12 +11,14 @@ SUBROUTINE cg_setupdgc
   ! Setup all arrays needed in the gradient correction case
   ! This version requires on input allocated array
   !
-  USE kinds, ONLY: DP
-  USE pwcom
-  USE scf, ONLY : rho, rho_core, rhog_core
-  USE cgcom
+  USE kinds, ONLY: dp
+  USE constants, ONLY: e2
+  USE scf,   ONLY: rho, rho_core, rhog_core
   USE funct, ONLY: gcxc, gcx_spin, gcc_spin, dgcxc, dgcxc_spin, dft_is_gradient
   USE fft_base, ONLY: dfftp
+  USE gvect,    ONLY: nl, ngm, g
+  USE lsda_mod, ONLY: nspin
+  USE cgcom
   !
   IMPLICIT NONE
   INTEGER k, is

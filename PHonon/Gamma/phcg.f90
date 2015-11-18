@@ -10,14 +10,16 @@
 PROGRAM phcg
   !-----------------------------------------------------------------------
   !
-  USE pwcom
-  USE cgcom
-  USE ions_base,     ONLY : nat, tau
-  USE io_global,     ONLY : ionode
-  USE io_files,      ONLY : seqopn
-  USE check_stop,    ONLY : check_stop_init
+  USE ions_base,     ONLY: nat, tau
+  USE io_global,     ONLY: ionode
+  USE io_files,      ONLY: seqopn
+  USE check_stop,    ONLY: check_stop_init
   USE mp_global,     ONLY: mp_startup, mp_global_end
   USE environment,   ONLY: environment_start
+  ! The following instruction is just to make it clear that all modules
+  ! from PWscf are needed sooner or later
+  USE pwcom          
+  USE cgcom
 
   IMPLICIT NONE
 

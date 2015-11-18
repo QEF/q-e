@@ -13,13 +13,17 @@ SUBROUTINE dvpsi_e(kpoint,ipol)
   ! Calculates x * psi_k  for each k-points and for the 3 polarizations
   ! Requires on input: vkb, evc, igk
   !
-  USE ions_base, ONLY : ntyp => nsp, nat, ityp
   USE kinds, ONLY: DP
-  USE pwcom
+  USE ions_base, ONLY : ntyp => nsp, nat, ityp
   USE uspp, ONLY: nkb, vkb, dvan
   USE uspp_param, ONLY: nh
   USE wavefunctions_module,  ONLY: evc
-  USE becmod, ONLY: bec_type, becp, calbec, allocate_bec_type, deallocate_bec_type
+  USE becmod, ONLY: bec_type, becp, calbec, allocate_bec_type, &
+      deallocate_bec_type
+  USE cell_base, ONLY : tpiba
+  USE gvect,     ONLY : g
+  USE klist,     ONLY : xk
+  USE wvfct,     ONLY : nbnd, npwx, npw, g2kin, igk, et
   USE cgcom
   !
   IMPLICIT NONE

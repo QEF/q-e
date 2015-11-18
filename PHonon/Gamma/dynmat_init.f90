@@ -13,7 +13,8 @@ SUBROUTINE dynmat_init
   !  Calculate part of the terms appearing in the dynamical matrix
   !
   USE ions_base, ONLY : ntyp => nsp, nat, ityp, zv, tau
-  USE pwcom
+  USE cell_base, ONLY : at, bg, omega, alat
+  USE gvect,     ONLY : ngm, g, gg
   USE cgcom
   IMPLICIT NONE
   real(DP), ALLOCATABLE:: dyn0(:,:),dyn1(:,:), dyncc(:,:)

@@ -10,13 +10,17 @@
 SUBROUTINE solve_e
   !-----------------------------------------------------------------------
   !
-  USE io_global,      ONLY : stdout
-  USE pwcom
-  USE uspp,   ONLY: nkb
+  USE io_global, ONLY : stdout
+  USE io_files,  ONLY : seqopn
+  USE uspp,      ONLY : nkb
+  USE becmod,    ONLY : bec_type, becp, calbec, allocate_bec_type, &
+                        deallocate_bec_type
+  USE cell_base, ONLY : tpiba2
+  USE gvect,     ONLY : g
+  USE klist,     ONLY : xk
+  USE wvfct,     ONLY : nbnd, npwx, npw, g2kin, igk, et
   USE wavefunctions_module,  ONLY: evc
-  USE becmod, ONLY: bec_type, becp, calbec, allocate_bec_type, deallocate_bec_type
   USE cgcom
-  USE io_files,   ONLY : seqopn
   !
   IMPLICIT NONE
   !

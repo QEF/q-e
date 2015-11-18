@@ -9,10 +9,11 @@
 SUBROUTINE writedyn ( )
   !
   USE ions_base, ONLY : nat, tau, ityp, ntyp => nsp, atm, amass
-  USE run_info, ONLY : title
+  USE run_info,  ONLY : title
+  USE cell_base, ONLY : ibrav, celldm
+
   USE constants, ONLY : amu_ry
-  uSE cgcom
-  USE pwcom
+  USE cgcom
   IMPLICIT NONE
   INTEGER :: iudyn, nt, na, nb, i, j
   !

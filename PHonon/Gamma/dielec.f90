@@ -12,12 +12,15 @@ SUBROUTINE dielec(do_zstar)
   !
   !      calculates the dielectric tensor and effective charges
   !
+  USE constants, ONLY : fpi
+  USE cell_base, ONLY : omega
   USE ions_base, ONLY : nat, zv, ityp
-  USE pwcom
+  USE mp_global, ONLY : intra_pool_comm
+  USE mp,        ONLY : mp_sum
+  USE io_files,  ONLY : seqopn
+  USE klist,     ONLY : wk !, nks
+  USE wvfct,     ONLY: nbnd, npwx, npw
   USE cgcom
-  USE mp_global,  ONLY : intra_pool_comm
-  USE mp,         ONLY : mp_sum
-  USE io_files,   ONLY : seqopn
 
   IMPLICIT NONE
   LOGICAL :: do_zstar
