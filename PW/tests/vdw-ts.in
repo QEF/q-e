@@ -10,7 +10,7 @@
  nat=4
  ecutwfc=45.
  ntyp=1
-nspin=2, tot_magnetization=0.0
+ nspin=2, tot_magnetization=0.0
  vdw_corr='TS'
 /
 &electrons
