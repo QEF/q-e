@@ -7,7 +7,7 @@
 !
 !
 !----------------------------------------------------------------------
-subroutine stress ( sigma ) 
+subroutine stress ( sigma )
   !----------------------------------------------------------------------
   !
   USE io_global,     ONLY : stdout
@@ -21,9 +21,9 @@ subroutine stress ( sigma )
   USE ldaU,          ONLY : lda_plus_u, U_projection
   USE lsda_mod,      ONLY : nspin
   USE scf,           ONLY : rho, rho_core, rhog_core
-  USE control_flags, ONLY : iverbosity, gamma_only, llondon, lxdm
+  USE control_flags, ONLY : iverbosity, gamma_only, llondon, lxdm, ts_vdw
   USE noncollin_module, ONLY : noncolin
-  USE funct,         ONLY : dft_is_meta, dft_is_gradient 
+  USE funct,         ONLY : dft_is_meta, dft_is_gradient
   USE symme,         ONLY : symmatrix
   USE bp,            ONLY : lelfield
   USE uspp,          ONLY : okvan
@@ -31,6 +31,7 @@ subroutine stress ( sigma )
   USE xdm_module,    ONLY : stress_xdm
   USE exx,           ONLY : exx_stress
   USE funct,         ONLY : dft_is_hybrid
+  use tsvdw_module,  only : HtsvdW
   !
   IMPLICIT NONE
   !
@@ -39,7 +40,7 @@ subroutine stress ( sigma )
   real(DP) :: sigmakin (3, 3), sigmaloc (3, 3), sigmahar (3, 3), &
        sigmaxc (3, 3), sigmaxcc (3, 3), sigmaewa (3, 3), sigmanlc (3, 3), &
        sigmabare (3, 3), sigmah (3, 3), sigmael( 3, 3), sigmaion(3, 3), &
-       sigmalon ( 3 , 3 ), sigmaxdm(3, 3), sigma_nonloc_dft (3 ,3), sigmaexx(3,3)
+       sigmalon ( 3 , 3 ), sigmaxdm(3, 3), sigma_nonloc_dft (3 ,3), sigmaexx(3,3), sigma_ts(3,3)
   integer :: l, m
   !
   WRITE( stdout, '(//5x,"entering subroutine stress ..."/)')
@@ -75,7 +76,8 @@ subroutine stress ( sigma )
   !  xc contribution: add gradient corrections (non diagonal)
   !
   call stres_gradcorr ( rho%of_r, rho%of_g, rho_core, rhog_core, nspin, &
-                        dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nnr, nl, ngm, g, alat, omega, sigmaxc)
+                        dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nnr, nl, &
+                        ngm, g, alat, omega, sigmaxc)
   !
   ! core correction contribution
   !
@@ -121,14 +123,13 @@ subroutine stress ( sigma )
 !  call stress_bp_efield (sigmael )
 !  call stress_ion_efield (sigmaion )
 
-
-   !
-   !   DFT-non_local contribution
-   !
-   sigma_nonloc_dft (:,:) = 0.d0
- 
-   call stres_nonloc_dft(rho%of_r, rho_core, nspin, sigma_nonloc_dft)
-
+  sigma_ts = 0.0_DP
+  if(ts_vdw) sigma_ts = -2.0_DP*alat*MATMUL( HtsvdW, transpose(at) )/omega
+  !
+  !   DFT-non_local contribution
+  !
+  sigma_nonloc_dft (:,:) = 0.d0
+  call stres_nonloc_dft(rho%of_r, rho_core, nspin, sigma_nonloc_dft)
   !
   ! SUM
   !
@@ -136,7 +137,7 @@ subroutine stress ( sigma )
                sigmaxc(:,:) + sigmaxcc(:,:) + sigmaewa(:,:) + &
                sigmanlc(:,:) + sigmah(:,:) + sigmael(:,:) +  &
                sigmaion(:,:) + sigmalon(:,:) + sigmaxdm(:,:) + &
-               sigma_nonloc_dft(:,:)
+               sigma_nonloc_dft(:,:) + sigma_ts(:,:)
   !
   IF (dft_is_hybrid()) THEN
      sigmaexx = exx_stress()
@@ -167,7 +168,8 @@ subroutine stress ( sigma )
      (sigmah  (l,1)*ry_kbar,sigmah  (l,2)*ry_kbar,sigmah  (l,3)*ry_kbar, l=1,3),&
      (sigmalon(l,1)*ry_kbar,sigmalon(l,2)*ry_kbar,sigmalon(l,3)*ry_kbar, l=1,3), &
      (sigmaxdm(l,1)*ry_kbar,sigmaxdm(l,2)*ry_kbar,sigmaxdm(l,3)*ry_kbar, l=1,3), &
-     (sigma_nonloc_dft(l,1)*ry_kbar,sigma_nonloc_dft(l,2)*ry_kbar,sigma_nonloc_dft(l,3)*ry_kbar, l=1,3)
+     (sigma_nonloc_dft(l,1)*ry_kbar,sigma_nonloc_dft(l,2)*ry_kbar,sigma_nonloc_dft(l,3)*ry_kbar, l=1,3),&
+     (sigma_ts(l,1)*ry_kbar,sigma_ts(l,2)*ry_kbar,sigma_ts(l,3)*ry_kbar, l=1,3)
 
   IF ( dft_is_hybrid() .AND. (iverbosity > 0) ) WRITE( stdout, 9006) &
      (sigmaexx(l,1)*ry_kbar,sigmaexx(l,2)*ry_kbar,sigmaexx(l,3)*ry_kbar, l=1,3)
@@ -196,6 +198,7 @@ subroutine stress ( sigma )
          &   5x,'hubbard stress (kbar)',3f10.2/2(26x,3f10.2/)/ &
          &   5x,'london  stress (kbar)',3f10.2/2(26x,3f10.2/)/ &
          &   5x,'XDM     stress (kbar)',3f10.2/2(26x,3f10.2/)/ &
-         &   5x,'dft-nl  stress (kbar)',3f10.2/2(26x,3f10.2/)/ )
+         &   5x,'dft-nl  stress (kbar)',3f10.2/2(26x,3f10.2/)/ &
+         &   5x,'TS-vdW  stress (kbar)',3f10.2/2(26x,3f10.2/)/ )
 end subroutine stress
 

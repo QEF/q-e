@@ -11,11 +11,12 @@ Fixed in svn version:
      by C. If so, a message is printed instead of weird characters in MD5.
    * PHonon: Gamma-specific code segfaulting with GGA
    * NaN's in stress with nonlocal functionals when the physical dimensions of
-     FFT arrays is larger than the true ones and arrays are paded with zeros
+     FFT arrays is larger than the true ones and arrays are padided with zeros
    * pw.x: "task-group" parallelization wasn't working properly when the number
      of bands was smaller than the number of task groups. Affects v.5.2.1.
    * TDDFPT: lrpa (Random Phase Approximation) keyword was not present in 
      the namelist for turbo_lanczos.x code. 
+   * pw.x: stress with TS-vdw wasn't correct - courtesy of Thomas Markovich
 
 Incompatible changes in svn version:
 
@@ -25,8 +26,8 @@ Incompatible changes in svn version:
    * Old Fermi Surface plotting tools kvecs_FS.f, bands_FS.f90, in PW/tools/,
      replaced by new code PP/src/fermisurface.f90
    * Reshuffling of FFT-related modules: 
-     "gather_*"  and "scatter_*" routines moved from module fft_base to scatter_mod
-
+     "gather_*"  and "scatter_*" routines moved from module fft_base 
+                                                  to module scatter_mod
 
 New in 5.2.1 version:
 

@@ -388,7 +388,7 @@ xc_rVV10.o : io_global.o
 xc_rVV10.o : kernel_table.o
 xc_rVV10.o : kind.o
 xc_rVV10.o : mp.o
-xc_rVV10.o : mp_global.o
+xc_rVV10.o : mp_bands.o
 xc_rVV10.o : recvec.o
 xc_vdW_DF.o : cell_base.o
 xc_vdW_DF.o : constants.o
@@ -399,7 +399,7 @@ xc_vdW_DF.o : io_global.o
 xc_vdW_DF.o : kernel_table.o
 xc_vdW_DF.o : kind.o
 xc_vdW_DF.o : mp.o
-xc_vdW_DF.o : mp_pools.o
+xc_vdW_DF.o : mp_bands.o
 xc_vdW_DF.o : recvec.o
 xml_input.o : ../iotk/src/iotk_module.o
 xml_input.o : input_parameters.o

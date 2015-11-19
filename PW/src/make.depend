@@ -1757,6 +1757,7 @@ stress.o : ../../Modules/kind.o
 stress.o : ../../Modules/mm_dispersion.o
 stress.o : ../../Modules/noncol.o
 stress.o : ../../Modules/recvec.o
+stress.o : ../../Modules/tsvdw.o
 stress.o : ../../Modules/uspp.o
 stress.o : bp_mod.o
 stress.o : exx.o
