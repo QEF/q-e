@@ -297,7 +297,7 @@ SUBROUTINE electrons_scf ( printout )
                                    rho, rho_core, rhog_core, v, vltot, vrs, &
                                    kedtau, vnew
   USE control_flags,        ONLY : mixing_beta, tr2, ethr, niter, nmix, &
-                                   istep, iprint, conv_elec, &
+                                   iprint, conv_elec, &
                                    restart, io_level, do_makov_payne,  &
                                    gamma_only, iverbosity, textfor,     &
                                    llondon, scf_must_converge, lxdm, ts_vdw
@@ -497,7 +497,7 @@ SUBROUTINE electrons_scf ( printout )
               ENDIF
            ENDIF
            !
-           IF ( first .AND. istep == 0 .AND. starting_pot == 'atomic' ) THEN
+           IF ( first .AND. starting_pot == 'atomic' ) THEN
               CALL ns_adj()
               IF (noncolin) THEN
                  rhoin%ns_nc = rho%ns_nc

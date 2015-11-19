@@ -108,5 +108,8 @@ subroutine ns_adj
      CALL write_ns
    endif
 
+   ! reset starting_ns so that this step is not repeated
+   starting_ns == -1.d0
+
    return
 end subroutine ns_adj
