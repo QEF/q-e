@@ -26,7 +26,7 @@ subroutine ns_adj
    real(DP) :: lambda(npol*ldmx) 
    complex(DP) :: vet(npol*ldmx,npol*ldmx), f(npol*ldmx,npol*ldmx), temp
  
-   if (ALL(starting_ns == -1.d0)) return
+   if (ALL(starting_ns == -1.0_dp)) return
    write (stdout,*) "Modify starting ns matrices according to input values "
  
    if (2*Hubbard_lmax+1>ldmx) call errore('ns_adj',' ldmx too small',ldmx) 
@@ -109,7 +109,7 @@ subroutine ns_adj
    endif
 
    ! reset starting_ns so that this step is not repeated
-   starting_ns == -1.d0
+   starting_ns = -1.0_dp
 
    return
 end subroutine ns_adj

@@ -99,7 +99,7 @@ MODULE io_rho_xml
 
     SUBROUTINE read_rho_general( rho, nspin, extension )
       USE paw_variables,    ONLY : okpaw
-      USE ldaU,             ONLY : lda_plus_u
+      USE ldaU,             ONLY : lda_plus_u, starting_ns
       USE noncollin_module, ONLY : noncolin
       USE funct,            ONLY : dft_is_meta
       USE io_files,         ONLY : seqopn
@@ -149,6 +149,9 @@ MODULE io_rho_xml
          else
            CALL mp_sum(rho%ns, intra_image_comm)
          endif
+         ! If projections on Hubbard manifold are read from file, there is no
+         ! need to set starting values: reset them to prevent any problem
+         starting_ns = -1.0_dp
       END IF
       !
       IF ( okpaw ) THEN
