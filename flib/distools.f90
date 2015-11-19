@@ -87,7 +87,7 @@ END SUBROUTINE
 
 SUBROUTINE GRID2D_COORDS( order, rank, nprow, npcol, row, col )
    !
-   !  this subroutine computes the cartesian coordinetes "row" and "col"
+   !  this subroutine computes the cartesian coordinates "row" and "col"
    !  of the processor whose MPI task id is "rank". 
    !  Note that if the rank is larger that the grid size
    !  all processors whose MPI task id is greather or equal 
