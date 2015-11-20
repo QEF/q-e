@@ -135,9 +135,9 @@ CONTAINS
       REAL(DP) :: total_mass, temp_new, temp_av, elapsed_time
       REAL(DP) :: delta(3), ml(3), mlt
       INTEGER  :: na
-      ! istep0 counts MD steps done during this run
-      ! (istep counts instead all MD steps, including those of previous runs)
-      INTEGER, SAVE :: istep0 = 0 
+      ! idone counts MD steps done during this run
+      ! istep counts instead all MD steps, including those of previous runs
+      INTEGER, SAVE :: idone = 0 
 #if defined (__NPT)
       REAL(DP) :: chi, press_new
 #endif
@@ -197,7 +197,7 @@ CONTAINS
          !
       ENDIF
       !
-      IF ( istep0 >= nstep ) THEN
+      IF ( idone >= nstep ) THEN
          !
          conv_ions = .true.
          !
@@ -214,7 +214,7 @@ CONTAINS
       !
       elapsed_time = elapsed_time + dt*2.D0*au_ps
       !
-      istep0= istep0+ 1
+      idone = idone + 1
       istep = istep + 1
       !
       WRITE( UNIT = stdout, &

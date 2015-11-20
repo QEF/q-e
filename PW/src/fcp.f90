@@ -74,9 +74,9 @@ CONTAINS
       !
       REAL(DP) :: ekin, tau
       REAL(DP) :: temp_new, temp_av, elapsed_time, force
-      ! istep0 counts MD steps done during this run
-      ! (istep counts instead all MD steps, including those of previous runs)
-      INTEGER, SAVE :: istep0 = 0 
+      ! idone counts MD steps done during this run
+      ! istep counts instead all MD steps, including those of previous runs
+      INTEGER, SAVE :: idone = 0 
       LOGICAL  :: file_exists
 
       tau = nelec
@@ -113,7 +113,7 @@ CONTAINS
       !
       elapsed_time = elapsed_time + dt*2.D0*au_ps
       !
-      istep0= istep0+ 1
+      idone = idone + 1
       istep = istep + 1
       !
       !
