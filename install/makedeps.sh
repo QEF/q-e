@@ -101,7 +101,7 @@ for dir in $dirs; do
         if test "$DIR" = "FFTXlib"
         then
             sed '/@mpi@/d;/@fft_scalar.*.f90@/d' make.depend > make.depend.tmp
-            sed '/@mkl_dfti/d;/@fftw3.f/d;s/@fftw.c@/fftw.c/;s/@fft_param.f90@/fft_param.f90/' make.depend.tmp > make.depend
+            sed '/@mkl_dfti/d;/@fftw3.f/d;s/@fftw.c@/fftw.c/;s/@fft_param.f90@/fft_param.f90/;s/fft_scalar.*.o/fft_scalar.o/' make.depend.tmp > make.depend
         fi
 
         if test "$DIR" = "Modules"

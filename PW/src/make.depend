@@ -1301,6 +1301,7 @@ punch.o : a2fmod.o
 punch.o : pw_restart.o
 punch.o : pwcom.o
 pw2blip.o : ../../FFTXlib/fft_scalar.DFTI.o
+pw2blip.o : ../../FFTXlib/fft_support.o
 pw2blip.o : ../../Modules/cell_base.o
 pw2blip.o : ../../Modules/constants.o
 pw2blip.o : ../../Modules/control_flags.o
