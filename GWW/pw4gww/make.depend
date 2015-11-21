@@ -114,7 +114,7 @@ fake_conduction.o : ../../PW/src/pwcom.o
 fake_conduction.o : fft_custom.o
 fake_conduction.o : mp_wave_parallel.o
 fft_custom.o : ../../FFTXlib/fft_parallel.o
-fft_custom.o : ../../FFTXlib/fft_scalar.DFTI.o
+fft_custom.o : ../../FFTXlib/fft_scalar.o
 fft_custom.o : ../../FFTXlib/fft_support.o
 fft_custom.o : ../../FFTXlib/fft_types.o
 fft_custom.o : ../../FFTXlib/stick_base.o

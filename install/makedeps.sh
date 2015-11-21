@@ -96,12 +96,12 @@ for dir in $dirs; do
         # handle special cases: hardware-specific monitoring tools
         sed '/@\/cineca\/prod\/hpm\/include\/f_hpm.h@/d;/@ifcore@/d' make.depend > make.depend.tmp
         # handle special cases: modules for C-fortran binding, system utilities
-        sed '/@iso_c_binding@/d;/@f90_unix_env@/d' make.depend.tmp > make.depend
+        sed '/@iso_c_binding@/d;/@f90_unix_env@/d;s/fft_scalar.*.o/fft_scalar.o/' make.depend.tmp > make.depend
 
         if test "$DIR" = "FFTXlib"
         then
             sed '/@mpi@/d;/@fft_scalar.*.f90@/d' make.depend > make.depend.tmp
-            sed '/@mkl_dfti/d;/@fftw3.f/d;s/@fftw.c@/fftw.c/;s/@fft_param.f90@/fft_param.f90/;s/fft_scalar.*.o/fft_scalar.o/' make.depend.tmp > make.depend
+            sed '/@mkl_dfti/d;/@fftw3.f/d;s/@fftw.c@/fftw.c/;s/@fft_param.f90@/fft_param.f90/' make.depend.tmp > make.depend
         fi
 
         if test "$DIR" = "Modules"
