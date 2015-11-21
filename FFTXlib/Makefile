@@ -25,7 +25,8 @@ libqefft.a: 	$(FFTX)
 	$(AR) $(ARFLAGS) $@ $?       
 	$(RANLIB) $@    
 
-fft_scalar.o : fft_scalar.DFTI.f90  fft_scalar.ESSL.f90  fft_scalar.f90  fft_scalar.FFTW3.f90  fft_scalar.FFTW.f90  fft_scalar.SX6.f90
+fft_scalar.o : fft_scalar.f90  fft_scalar.FFTW3.f90  fft_scalar.FFTW.f90  fft_scalar.SX6.f90 fft_scalar.DFTI.f90  fft_scalar.ESSL.f90
+
 
 fft_stick.o : fft_stick.c fftw.c fftw.h konst.h
 
