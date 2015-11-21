@@ -165,36 +165,11 @@
 
           ENDIF
 
-
+#if defined(__MPI)
           CALL MPI_ALLREDUCE(MPI_IN_PLACE, st, SIZE(st), MPI_INTEGER, MPI_SUM, comm, ierr)
           CALL MPI_ALLREDUCE(MPI_IN_PLACE, stw, SIZE(stw), MPI_INTEGER, MPI_SUM, comm, ierr)
           CALL MPI_ALLREDUCE(MPI_IN_PLACE, sts, SIZE(sts), MPI_INTEGER, MPI_SUM, comm, ierr)
-          !CALL reduce_base_integer( SIZE(st), st, comm, -1 )
-          !CALL reduce_base_integer( SIZE(stw), stw, comm, -1 )
-          !CALL reduce_base_integer( SIZE(sts), sts, comm, -1 )
-
-
-!!! TO REMOVE BEFORE COMMIT INTO SVN !!!
-#if defined(__STICKS_DEBUG)
-! Test sticks
-          WRITE( 6,*) 'testtesttesttesttesttesttesttesttesttest'
-          WRITE( 6,*) 'lb = ', lb(1), lb(2)
-          WRITE( 6,*) 'ub = ', ub(1), ub(2)
-          WRITE( 6,*) 'counts    = ', count( st > 0 ), count( stw > 0 ), count( sts > 0 )
-          WRITE( 6,*) 'cut-offs  = ', gcut, gcutw, gcuts
-          WRITE( 6,*) 'b1  = ', b1(1:3)
-          WRITE( 6,*) 'b2  = ', b2(1:3)
-          WRITE( 6,*) 'b3  = ', b3(1:3)
-          DO i = lb(1), ub(1)
-            DO j = lb(2), ub(2)
-              WRITE( 6,'(2I4,3I6)') i,j,st(i,j),stw(i,j),sts(i,j)
-            ENDDO
-          ENDDO
-          WRITE( 6,*) 'testtesttesttesttesttesttesttesttesttest'
-! Test sticks
 #endif
-!!! TO REMOVE BEFORE COMMIT INTO SVN !!!
-
 
         RETURN
       END SUBROUTINE sticks_maps

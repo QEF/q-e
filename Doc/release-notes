@@ -11,7 +11,7 @@ Fixed in svn version:
      by C. If so, a message is printed instead of weird characters in MD5.
    * PHonon: Gamma-specific code segfaulting with GGA
    * NaN's in stress with nonlocal functionals when the physical dimensions of
-     FFT arrays is larger than the true ones and arrays are padided with zeros
+     FFT arrays is larger than the true ones and arrays are padded with zeros
    * pw.x: "task-group" parallelization wasn't working properly when the number
      of bands was smaller than the number of task groups. Affects v.5.2.1.
    * TDDFPT: lrpa (Random Phase Approximation) keyword was not present in 
@@ -28,6 +28,7 @@ Incompatible changes in svn version:
    * Reshuffling of FFT-related modules: 
      "gather_*"  and "scatter_*" routines moved from module fft_base 
                                                   to module scatter_mod
+   * All FFT-related code moved to FFTxlib/
 
 New in 5.2.1 version:
 
