@@ -1,0 +1,1244 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+	 
+    <meta name="description" content="Documentation for FFTXlib">
+	 
+    <meta name="author" content="Chris MacMackin" >
+    <link rel="icon" href="../favicon.png">
+
+    <title>cft_2xy &ndash; FFTXlib</title>
+
+    <link href="../css/bootstrap.min.css" rel="stylesheet">
+    <link href="../css/pygments.css" rel="stylesheet">
+    <link href="../css/font-awesome.min.css" rel="stylesheet">
+    <link href="../css/local.css" rel="stylesheet">
+    
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+    
+    <script src="../js/jquery-2.1.3.min.js"></script>
+    <script src="../js/svg-pan-zoom.min.js"></script>
+
+    
+    <script src="../tipuesearch/tipuesearch_content.js"></script>
+    <link  href="../tipuesearch/tipuesearch.css" rel="stylesheet">
+    <script src="../tipuesearch/tipuesearch_set.js"></script>
+    <script src="../tipuesearch/tipuesearch.js"></script>
+    
+
+  </head>
+
+  <body>
+
+    <!-- Fixed navbar -->
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="../index.html">FFTXlib </a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+				
+                
+            <li><a href="../lists/files.html">Source Files</a></li>
+				
+				
+            <li><a href="../lists/modules.html">Modules</a></li>
+				
+				
+            <li><a href="../lists/procedures.html">Procedures</a></li>
+				
+								
+            <li><a href="../lists/types.html">Derived Types</a></li>
+				
+				
+          </ul>
+        
+        <form action="../search.html" class="navbar-form navbar-right" role="search">
+        <div class="form-group">
+          <input type="text" class="form-control" placeholder="Search" name="q" id="tipue_search_input" autocomplete="off" required>
+        </div>
+<!--
+        <button type="submit" class="btn btn-default">Submit</button>
+-->
+        </form>
+        
+        </div><!--/.nav-collapse -->
+      </div>
+    </nav>
+
+    <div class="container">
+    
+  
+  <div class="row">
+    <h1>cft_2xy
+    <small>Subroutine</small>
+    
+    </h1>
+	 
+<div class="row">
+<div class="col-lg-12">
+<div class="well well-sm">
+  <ul class="list-inline" style="margin-bottom:0px;display:inline">
+     
+     
+     
+     
+    
+    
+    <li><i class="fa fa-code"></i><a href="../src/fft_scalar.FFTW3.f90"> Source File</a></li>
+     
+  </ul>
+  <ol class="breadcrumb in-well text-right">
+  
+     <li><a href='../sourcefile/fft_scalar.fftw3.f90.html'>fft_scalar.FFTW3.f90</a></li>
+  
+     <li><a href='../module/fft_scalar%7E6.html'>fft_scalar</a></li>
+  
+     <li class="active">cft_2xy</li>
+  </ol>
+</div>
+</div>
+</div>
+    
+  </div>
+  
+  <div class="row">
+    <div class="col-lg-3">
+    
+  
+  
+  
+  <div class="panel panel-primary">
+    <div class="panel-heading text-left"><h3 class="panel-title">Variables</h3></div>
+    <div class="list-group">
+      
+      <a class="list-group-item" href="../proc/cft_2xy%7E4.html#variable-i%7E15">i</a>
+      
+      <a class="list-group-item" href="../proc/cft_2xy%7E4.html#variable-k%7E9">k</a>
+      
+      <a class="list-group-item" href="../proc/cft_2xy%7E4.html#variable-j%7E9">j</a>
+      
+      <a class="list-group-item" href="../proc/cft_2xy%7E4.html#variable-err%7E13">err</a>
+      
+      <a class="list-group-item" href="../proc/cft_2xy%7E4.html#variable-idir%7E13">idir</a>
+      
+      <a class="list-group-item" href="../proc/cft_2xy%7E4.html#variable-ip%7E13">ip</a>
+      
+      <a class="list-group-item" href="../proc/cft_2xy%7E4.html#variable-kk%7E4">kk</a>
+      
+      <a class="list-group-item" href="../proc/cft_2xy%7E4.html#variable-void%7E8">void</a>
+      
+      <a class="list-group-item" href="../proc/cft_2xy%7E4.html#variable-tscale%7E13">tscale</a>
+      
+      <a class="list-group-item" href="../proc/cft_2xy%7E4.html#variable-icurrent%7E13">icurrent</a>
+      
+      <a class="list-group-item" href="../proc/cft_2xy%7E4.html#variable-dims%7E9">dims</a>
+      
+      <a class="list-group-item" href="../proc/cft_2xy%7E4.html#variable-dofft%7E4">dofft</a>
+      
+      <a class="list-group-item" href="../proc/cft_2xy%7E4.html#variable-done%7E4">done</a>
+      
+      <a class="list-group-item" href="../proc/cft_2xy%7E4.html#variable-stdout%7E4">stdout</a>
+      
+      <a class="list-group-item" href="../proc/cft_2xy%7E4.html#variable-offset%7E8">offset</a>
+      
+      <a class="list-group-item" href="../proc/cft_2xy%7E4.html#variable-nx_t%7E4">nx_t</a>
+      
+      <a class="list-group-item" href="../proc/cft_2xy%7E4.html#variable-ny_t%7E4">ny_t</a>
+      
+      <a class="list-group-item" href="../proc/cft_2xy%7E4.html#variable-nzl_t%7E4">nzl_t</a>
+      
+      <a class="list-group-item" href="../proc/cft_2xy%7E4.html#variable-ldx_t%7E4">ldx_t</a>
+      
+      <a class="list-group-item" href="../proc/cft_2xy%7E4.html#variable-ldy_t%7E4">ldy_t</a>
+      
+      <a class="list-group-item" href="../proc/cft_2xy%7E4.html#variable-itid%7E4">itid</a>
+      
+      <a class="list-group-item" href="../proc/cft_2xy%7E4.html#variable-mytid%7E4">mytid</a>
+      
+      <a class="list-group-item" href="../proc/cft_2xy%7E4.html#variable-ntids%7E4">ntids</a>
+      
+    </div>
+  </div>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  <div class="panel panel-primary">
+    <div class="panel-heading text-left"><h3 class="panel-title">Subroutines</h3></div>
+    <div class="list-group">
+      
+      <a class="list-group-item" href="../proc/cft_2xy%7E4.html#proc-lookup%7E9">lookup</a>
+      
+      <a class="list-group-item" href="../proc/cft_2xy%7E4.html#proc-init_plan%7E6">init_plan</a>
+      
+    </div>
+  </div>
+  
+  
+  
+  
+  
+  
+  
+  
+  <hr>
+  
+  <div class="panel panel-default">
+    <div class="panel-heading text-left"><h3 class="panel-title">All Procedures</h3></div>
+    <div class="list-group">
+      
+      <a class="list-group-item" href="../proc/allowed.html">allowed</a>
+      
+      <a class="list-group-item" href="../proc/bw_tg_cft3_scatter.html">bw_tg_cft3_scatter</a>
+      
+      <a class="list-group-item" href="../proc/bw_tg_cft3_xy.html">bw_tg_cft3_xy</a>
+      
+      <a class="list-group-item" href="../proc/bw_tg_cft3_z.html">bw_tg_cft3_z</a>
+      
+      <a class="list-group-item" href="../proc/cfft3d.html">cfft3d</a>
+      
+      <a class="list-group-item" href="../proc/cfft3d%7E2.html">cfft3d</a>
+      
+      <a class="list-group-item" href="../proc/cfft3d%7E3.html">cfft3d</a>
+      
+      <a class="list-group-item" href="../proc/cfft3d%7E4.html">cfft3d</a>
+      
+      <a class="list-group-item" href="../proc/cfft3d%7E5.html">cfft3d</a>
+      
+      <a class="list-group-item" href="../proc/cfft3ds.html">cfft3ds</a>
+      
+      <a class="list-group-item" href="../proc/cfft3ds%7E2.html">cfft3ds</a>
+      
+      <a class="list-group-item" href="../proc/cfft3ds%7E3.html">cfft3ds</a>
+      
+      <a class="list-group-item" href="../proc/cfft3ds%7E4.html">cfft3ds</a>
+      
+      <a class="list-group-item" href="../proc/cfft3ds%7E5.html">cfft3ds</a>
+      
+      <a class="list-group-item" href="../proc/cft_1z.html">cft_1z</a>
+      
+      <a class="list-group-item" href="../proc/cft_1z%7E2.html">cft_1z</a>
+      
+      <a class="list-group-item" href="../proc/cft_1z%7E3.html">cft_1z</a>
+      
+      <a class="list-group-item" href="../proc/cft_1z%7E4.html">cft_1z</a>
+      
+      <a class="list-group-item" href="../proc/cft_1z%7E5.html">cft_1z</a>
+      
+      <a class="list-group-item" href="../proc/cft_2xy.html">cft_2xy</a>
+      
+      <a class="list-group-item" href="../proc/cft_2xy%7E2.html">cft_2xy</a>
+      
+      <a class="list-group-item" href="../proc/cft_2xy%7E3.html">cft_2xy</a>
+      
+      <a class="list-group-item" href="../proc/cft_2xy%7E4.html">cft_2xy</a>
+      
+      <a class="list-group-item" href="../proc/cft_2xy%7E5.html">cft_2xy</a>
+      
+      <a class="list-group-item" href="../proc/cft_b.html">cft_b</a>
+      
+      <a class="list-group-item" href="../proc/cft_b_omp.html">cft_b_omp</a>
+      
+      <a class="list-group-item" href="../proc/cft_b_omp_init.html">cft_b_omp_init</a>
+      
+      <a class="list-group-item" href="../proc/cgather_sym.html">cgather_sym</a>
+      
+      <a class="list-group-item" href="../proc/cgather_sym_many.html">cgather_sym_many</a>
+      
+      <a class="list-group-item" href="../proc/cscatter_sym_many.html">cscatter_sym_many</a>
+      
+      <a class="list-group-item" href="../proc/fft_box_allocate.html">fft_box_allocate</a>
+      
+      <a class="list-group-item" href="../proc/fft_box_deallocate.html">fft_box_deallocate</a>
+      
+      <a class="list-group-item" href="../proc/fft_box_set.html">fft_box_set</a>
+      
+      <a class="list-group-item" href="../proc/fft_dlay_allocate.html">fft_dlay_allocate</a>
+      
+      <a class="list-group-item" href="../proc/fft_dlay_deallocate.html">fft_dlay_deallocate</a>
+      
+      <a class="list-group-item" href="../proc/fft_dlay_scalar.html">fft_dlay_scalar</a>
+      
+      <a class="list-group-item" href="../proc/fft_dlay_set.html">fft_dlay_set</a>
+      
+      <a class="list-group-item" href="../proc/fft_scatter.html">fft_scatter</a>
+      
+      <a class="list-group-item" href="../proc/fftx_error__.html">fftx_error__</a>
+      
+      <a class="list-group-item" href="../proc/fw_tg_cft3_scatter.html">fw_tg_cft3_scatter</a>
+      
+      <a class="list-group-item" href="../proc/fw_tg_cft3_xy.html">fw_tg_cft3_xy</a>
+      
+      <a class="list-group-item" href="../proc/fw_tg_cft3_z.html">fw_tg_cft3_z</a>
+      
+      <a class="list-group-item" href="../interface/fwfft.html">fwfft</a>
+      
+      <a class="list-group-item" href="../proc/fwfft_x.html">fwfft_x</a>
+      
+      <a class="list-group-item" href="../proc/gather_complex_grid.html">gather_complex_grid</a>
+      
+      <a class="list-group-item" href="../interface/gather_grid.html">gather_grid</a>
+      
+      <a class="list-group-item" href="../proc/gather_real_grid.html">gather_real_grid</a>
+      
+      <a class="list-group-item" href="../proc/good_fft_dimension.html">good_fft_dimension</a>
+      
+      <a class="list-group-item" href="../proc/good_fft_order.html">good_fft_order</a>
+      
+      <a class="list-group-item" href="../interface/invfft.html">invfft</a>
+      
+      <a class="list-group-item" href="../proc/invfft_b.html">invfft_b</a>
+      
+      <a class="list-group-item" href="../proc/invfft_x.html">invfft_x</a>
+      
+      <a class="list-group-item" href="../proc/pack_group_sticks.html">pack_group_sticks</a>
+      
+      <a class="list-group-item" href="../proc/pstickset.html">pstickset</a>
+      
+      <a class="list-group-item" href="../proc/pstickset_custom.html">pstickset_custom</a>
+      
+      <a class="list-group-item" href="../proc/scatter_complex_grid.html">scatter_complex_grid</a>
+      
+      <a class="list-group-item" href="../interface/scatter_grid.html">scatter_grid</a>
+      
+      <a class="list-group-item" href="../proc/scatter_real_grid.html">scatter_real_grid</a>
+      
+      <a class="list-group-item" href="../proc/sticks_countg.html">sticks_countg</a>
+      
+      <a class="list-group-item" href="../proc/sticks_deallocate.html">sticks_deallocate</a>
+      
+      <a class="list-group-item" href="../proc/sticks_dist.html">sticks_dist</a>
+      
+      <a class="list-group-item" href="../proc/sticks_maps.html">sticks_maps</a>
+      
+      <a class="list-group-item" href="../proc/sticks_maps_scalar.html">sticks_maps_scalar</a>
+      
+      <a class="list-group-item" href="../proc/sticks_ordered_dist.html">sticks_ordered_dist</a>
+      
+      <a class="list-group-item" href="../proc/sticks_pairup.html">sticks_pairup</a>
+      
+      <a class="list-group-item" href="../proc/sticks_sort.html">sticks_sort</a>
+      
+      <a class="list-group-item" href="../proc/task_groups_init.html">task_groups_init</a>
+      
+      <a class="list-group-item" href="../proc/task_groups_init_first.html">task_groups_init_first</a>
+      
+      <a class="list-group-item" href="../proc/tg_cft3s.html">tg_cft3s</a>
+      
+      <a class="list-group-item" href="../proc/tg_cgather.html">tg_cgather</a>
+      
+      <a class="list-group-item" href="../proc/tg_gather.html">tg_gather</a>
+      
+      <a class="list-group-item" href="../proc/unpack_group_sticks.html">unpack_group_sticks</a>
+      
+    </div>
+  </div>
+  
+  
+    </div>
+    
+    <div class="col-lg-9" id='text'>
+    <h2>
+public subroutine cft_2xy(r, nzl, nx, ny, ldx, ldy, isign, pl2ix)
+    
+    
+    
+</h2>
+    
+  
+
+
+
+    <h3>Arguments</h3>
+    
+      
+<table class="table table-striped varlist">
+<thead><tr><th>Type</th>
+<th>Intent</th><th>Optional</th>
+<th>Attributes</th><th></th><th>Name</th><th></th></thead>
+
+
+
+<tbody>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-r%7E4"></span>complex(kind=DP)</td>
+  <td></td>
+  <td></td>
+  
+  <td></td><td>::</td>
+  <td><strong>r</strong>(:)</td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-nzl%7E4"></span>integer,</td>
+  <td>intent(in)</td>
+  <td></td>
+  
+  <td></td><td>::</td>
+  <td><strong>nzl</strong></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-nx%7E10"></span>integer,</td>
+  <td>intent(in)</td>
+  <td></td>
+  
+  <td></td><td>::</td>
+  <td><strong>nx</strong></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-ny%7E10"></span>integer,</td>
+  <td>intent(in)</td>
+  <td></td>
+  
+  <td></td><td>::</td>
+  <td><strong>ny</strong></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-ldx%7E10"></span>integer,</td>
+  <td>intent(in)</td>
+  <td></td>
+  
+  <td></td><td>::</td>
+  <td><strong>ldx</strong></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-ldy%7E10"></span>integer,</td>
+  <td>intent(in)</td>
+  <td></td>
+  
+  <td></td><td>::</td>
+  <td><strong>ldy</strong></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-isign%7E14"></span>integer,</td>
+  <td>intent(in)</td>
+  <td></td>
+  
+  <td></td><td>::</td>
+  <td><strong>isign</strong></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-pl2ix%7E4"></span>integer,</td>
+  <td>intent(in),</td>
+  <td>optional</td>
+  
+  <td></td><td>::</td>
+  <td><strong>pl2ix</strong>(:)</td><td></td>
+  
+</tr>
+
+</tbody>
+</table>
+
+    
+    
+    
+    
+     <h3>Calls</h3>
+     
+                <div class="depgraph"><?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 2.39.20141001.0445 (20141001.0445)
+ -->
+<!-- Title: proc~~cft_2xy~4~~CallsGraph Pages: 1 -->
+<svg id="proccft_2xy4CallsGraph" width="361pt" height="444pt"
+ viewBox="0.00 0.00 361.00 444.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="proc~~cft_2xy~4~~CallsGraph" class="graph" transform="scale(1 1) rotate(0) translate(4 440)">
+<title>proc~~cft_2xy~4~~CallsGraph</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-440 357,-440 357,4 -4,4"/>
+<!-- proc~cft_2xy~4 -->
+<g id="proc~~cft_2xy~4~~CallsGraph_node1" class="node"><title>proc~cft_2xy~4</title>
+<polygon fill="none" stroke="black" points="54,-274 0,-274 0,-250 54,-250 54,-274"/>
+<text text-anchor="middle" x="27" y="-259.6" font-family="Helvetica,sans-Serif" font-size="10.50">cft_2xy</text>
+</g>
+<!-- zdscal -->
+<g id="proc~~cft_2xy~4~~CallsGraph_node2" class="node"><title>zdscal</title>
+<polygon fill="#777777" stroke="#777777" points="164.5,-436 110.5,-436 110.5,-412 164.5,-412 164.5,-436"/>
+<text text-anchor="middle" x="137.5" y="-421.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">zdscal</text>
+</g>
+<!-- proc~cft_2xy~4&#45;&gt;zdscal -->
+<g id="proc~~cft_2xy~4~~CallsGraph_edge10" class="edge"><title>proc~cft_2xy~4&#45;&gt;zdscal</title>
+<path fill="none" stroke="black" d="M29.3568,-274.258C35.0979,-301.031 52.1983,-365.347 90,-403 93.25,-406.237 97.0842,-409.017 101.142,-411.394"/>
+<polygon fill="black" stroke="black" points="99.7365,-414.605 110.243,-415.973 102.883,-408.351 99.7365,-414.605"/>
+</g>
+<!-- dfftw_execute_dft -->
+<g id="proc~~cft_2xy~4~~CallsGraph_node3" class="node"><title>dfftw_execute_dft</title>
+<polygon fill="#777777" stroke="#777777" points="185,-394 90,-394 90,-370 185,-370 185,-394"/>
+<text text-anchor="middle" x="137.5" y="-379.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">dfftw_execute_dft</text>
+</g>
+<!-- proc~cft_2xy~4&#45;&gt;dfftw_execute_dft -->
+<g id="proc~~cft_2xy~4~~CallsGraph_edge11" class="edge"><title>proc~cft_2xy~4&#45;&gt;dfftw_execute_dft</title>
+<path fill="none" stroke="black" d="M31.9675,-274.286C40.8124,-294.786 61.1132,-336.162 90,-361 91.487,-362.279 93.0642,-363.491 94.7055,-364.641"/>
+<polygon fill="black" stroke="black" points="92.9598,-367.675 103.326,-369.864 96.5874,-361.688 92.9598,-367.675"/>
+</g>
+<!-- fftx_error__ -->
+<g id="proc~~cft_2xy~4~~CallsGraph_node4" class="node"><title>fftx_error__</title>
+<polygon fill="#777777" stroke="#777777" points="170.5,-352 104.5,-352 104.5,-328 170.5,-328 170.5,-352"/>
+<text text-anchor="middle" x="137.5" y="-337.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">fftx_error__</text>
+</g>
+<!-- proc~cft_2xy~4&#45;&gt;fftx_error__ -->
+<g id="proc~~cft_2xy~4~~CallsGraph_edge12" class="edge"><title>proc~cft_2xy~4&#45;&gt;fftx_error__</title>
+<path fill="none" stroke="black" d="M40.4228,-274.353C52.7928,-285.421 71.9182,-301.751 90,-314 94.5727,-317.098 99.5482,-320.143 104.501,-322.997"/>
+<polygon fill="black" stroke="black" points="102.86,-326.089 113.299,-327.896 106.265,-319.973 102.86,-326.089"/>
+</g>
+<!-- fw_plan -->
+<g id="proc~~cft_2xy~4~~CallsGraph_node5" class="node"><title>fw_plan</title>
+<polygon fill="#777777" stroke="#777777" points="314,-360 260,-360 260,-336 314,-336 314,-360"/>
+<text text-anchor="middle" x="287" y="-345.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">fw_plan</text>
+</g>
+<!-- proc~cft_2xy~4&#45;&gt;fw_plan -->
+<g id="proc~~cft_2xy~4~~CallsGraph_edge13" class="edge"><title>proc~cft_2xy~4&#45;&gt;fw_plan</title>
+<path fill="none" stroke="black" d="M54.1601,-272.749C65.2235,-277.022 78.1703,-281.889 90,-286 145.303,-305.218 210.204,-325.144 249.96,-337.056"/>
+<polygon fill="black" stroke="black" points="249.164,-340.471 259.747,-339.979 251.167,-333.764 249.164,-340.471"/>
+</g>
+<!-- bw_plan -->
+<g id="proc~~cft_2xy~4~~CallsGraph_node6" class="node"><title>bw_plan</title>
+<polygon fill="#777777" stroke="#777777" points="314,-318 260,-318 260,-294 314,-294 314,-318"/>
+<text text-anchor="middle" x="287" y="-303.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">bw_plan</text>
+</g>
+<!-- proc~cft_2xy~4&#45;&gt;bw_plan -->
+<g id="proc~~cft_2xy~4~~CallsGraph_edge14" class="edge"><title>proc~cft_2xy~4&#45;&gt;bw_plan</title>
+<path fill="none" stroke="black" d="M54.1767,-265.767C85.7028,-270.22 139.214,-278.038 185,-286 206.55,-289.748 230.561,-294.43 249.87,-298.322"/>
+<polygon fill="black" stroke="black" points="249.288,-301.775 259.784,-300.334 250.68,-294.915 249.288,-301.775"/>
+</g>
+<!-- none~lookup~9 -->
+<g id="proc~~cft_2xy~4~~CallsGraph_node7" class="node"><title>none~lookup~9</title>
+<polygon fill="#d9534f" stroke="#d9534f" points="164.5,-192 110.5,-192 110.5,-168 164.5,-168 164.5,-192"/>
+<text text-anchor="middle" x="137.5" y="-177.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">lookup</text>
+</g>
+<!-- proc~cft_2xy~4&#45;&gt;none~lookup~9 -->
+<g id="proc~~cft_2xy~4~~CallsGraph_edge15" class="edge"><title>proc~cft_2xy~4&#45;&gt;none~lookup~9</title>
+<path fill="none" stroke="black" d="M37.1127,-249.918C48.7721,-236.576 69.0391,-215.119 90,-201 93.5335,-198.62 97.3807,-196.403 101.306,-194.37"/>
+<polygon fill="black" stroke="black" points="102.986,-197.446 110.493,-189.971 99.9624,-191.133 102.986,-197.446"/>
+</g>
+<!-- start_clock -->
+<g id="proc~~cft_2xy~4~~CallsGraph_node8" class="node"><title>start_clock</title>
+<polygon fill="#777777" stroke="#777777" points="169,-150 106,-150 106,-126 169,-126 169,-150"/>
+<text text-anchor="middle" x="137.5" y="-135.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">start_clock</text>
+</g>
+<!-- proc~cft_2xy~4&#45;&gt;start_clock -->
+<g id="proc~~cft_2xy~4~~CallsGraph_edge16" class="edge"><title>proc~cft_2xy~4&#45;&gt;start_clock</title>
+<path fill="none" stroke="black" d="M31.5616,-249.89C40.058,-228.8 60.1908,-185.095 90,-159 92.1625,-157.107 94.5228,-155.36 96.9983,-153.751"/>
+<polygon fill="black" stroke="black" points="98.7569,-156.778 105.738,-148.808 95.3105,-150.685 98.7569,-156.778"/>
+</g>
+<!-- none~init_plan~6 -->
+<g id="proc~~cft_2xy~4~~CallsGraph_node9" class="node"><title>none~init_plan~6</title>
+<polygon fill="#d9534f" stroke="#d9534f" points="164.5,-234 110.5,-234 110.5,-210 164.5,-210 164.5,-234"/>
+<text text-anchor="middle" x="137.5" y="-219.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">init_plan</text>
+</g>
+<!-- proc~cft_2xy~4&#45;&gt;none~init_plan~6 -->
+<g id="proc~~cft_2xy~4~~CallsGraph_edge17" class="edge"><title>proc~cft_2xy~4&#45;&gt;none~init_plan~6</title>
+<path fill="none" stroke="black" d="M54.0313,-252.215C68.0779,-247.13 85.4508,-240.841 100.704,-235.32"/>
+<polygon fill="black" stroke="black" points="102.153,-238.518 110.365,-231.823 99.7705,-231.936 102.153,-238.518"/>
+</g>
+<!-- stop_clock -->
+<g id="proc~~cft_2xy~4~~CallsGraph_node10" class="node"><title>stop_clock</title>
+<polygon fill="#777777" stroke="#777777" points="168.5,-108 106.5,-108 106.5,-84 168.5,-84 168.5,-108"/>
+<text text-anchor="middle" x="137.5" y="-93.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">stop_clock</text>
+</g>
+<!-- proc~cft_2xy~4&#45;&gt;stop_clock -->
+<g id="proc~~cft_2xy~4~~CallsGraph_edge18" class="edge"><title>proc~cft_2xy~4&#45;&gt;stop_clock</title>
+<path fill="none" stroke="black" d="M29.1707,-249.81C34.6202,-222.537 51.3083,-155.94 90,-117 92.2164,-114.769 94.7104,-112.757 97.3653,-110.944"/>
+<polygon fill="black" stroke="black" points="99.3402,-113.846 106.25,-105.814 95.8398,-107.784 99.3402,-113.846"/>
+</g>
+<!-- none~init_plan~6&#45;&gt;fw_plan -->
+<g id="proc~~cft_2xy~4~~CallsGraph_edge5" class="edge"><title>none~init_plan~6&#45;&gt;fw_plan</title>
+<path fill="none" stroke="black" d="M146.656,-234.32C166.296,-260.624 211.46,-320.424 221,-327 229.613,-332.937 239.995,-337.264 249.948,-340.39"/>
+<polygon fill="black" stroke="black" points="249.102,-343.788 259.677,-343.13 251,-337.05 249.102,-343.788"/>
+</g>
+<!-- none~init_plan~6&#45;&gt;bw_plan -->
+<g id="proc~~cft_2xy~4~~CallsGraph_edge6" class="edge"><title>none~init_plan~6&#45;&gt;bw_plan</title>
+<path fill="none" stroke="black" d="M163.019,-234.16C170.394,-238.146 178.264,-242.88 185,-248 203.266,-261.885 201.483,-272.938 221,-285 229.822,-290.452 240.191,-294.615 250.064,-297.737"/>
+<polygon fill="black" stroke="black" points="249.116,-301.106 259.695,-300.522 251.061,-294.382 249.116,-301.106"/>
+</g>
+<!-- omp_get_max_threads -->
+<g id="proc~~cft_2xy~4~~CallsGraph_node11" class="node"><title>omp_get_max_threads</title>
+<polygon fill="#777777" stroke="#777777" points="347,-24 227,-24 227,-0 347,-0 347,-24"/>
+<text text-anchor="middle" x="287" y="-9.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">omp_get_max_threads</text>
+</g>
+<!-- none~init_plan~6&#45;&gt;omp_get_max_threads -->
+<g id="proc~~cft_2xy~4~~CallsGraph_edge1" class="edge"><title>none~init_plan~6&#45;&gt;omp_get_max_threads</title>
+<path fill="none" stroke="black" d="M164.561,-215.11C172.159,-211.958 179.766,-207.435 185,-201 233.182,-141.758 169.684,-89.5491 221,-33 221.909,-31.9982 222.866,-31.044 223.864,-30.1349"/>
+<polygon fill="black" stroke="black" points="226.227,-32.7428 232.234,-24.015 222.095,-27.0922 226.227,-32.7428"/>
+</g>
+<!-- dfftw_destroy_plan -->
+<g id="proc~~cft_2xy~4~~CallsGraph_node12" class="node"><title>dfftw_destroy_plan</title>
+<polygon fill="#777777" stroke="#777777" points="337.5,-276 236.5,-276 236.5,-252 337.5,-252 337.5,-276"/>
+<text text-anchor="middle" x="287" y="-261.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">dfftw_destroy_plan</text>
+</g>
+<!-- none~init_plan~6&#45;&gt;dfftw_destroy_plan -->
+<g id="proc~~cft_2xy~4~~CallsGraph_edge2" class="edge"><title>none~init_plan~6&#45;&gt;dfftw_destroy_plan</title>
+<path fill="none" stroke="black" d="M164.573,-229.606C183.937,-235.046 210.626,-242.544 234.144,-249.151"/>
+<polygon fill="black" stroke="black" points="233.425,-252.584 243.999,-251.919 235.318,-245.845 233.425,-252.584"/>
+</g>
+<!-- r -->
+<g id="proc~~cft_2xy~4~~CallsGraph_node13" class="node"><title>r</title>
+<polygon fill="#777777" stroke="#777777" points="314,-234 260,-234 260,-210 314,-210 314,-234"/>
+<text text-anchor="middle" x="287" y="-219.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">r</text>
+</g>
+<!-- none~init_plan~6&#45;&gt;r -->
+<g id="proc~~cft_2xy~4~~CallsGraph_edge3" class="edge"><title>none~init_plan~6&#45;&gt;r</title>
+<path fill="none" stroke="black" d="M164.573,-222C188.418,-222 223.372,-222 249.833,-222"/>
+<polygon fill="black" stroke="black" points="249.876,-225.5 259.876,-222 249.876,-218.5 249.876,-225.5"/>
+</g>
+<!-- dfftw_plan_many_dft -->
+<g id="proc~~cft_2xy~4~~CallsGraph_node14" class="node"><title>dfftw_plan_many_dft</title>
+<polygon fill="#777777" stroke="#777777" points="341.5,-192 232.5,-192 232.5,-168 341.5,-168 341.5,-192"/>
+<text text-anchor="middle" x="287" y="-177.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">dfftw_plan_many_dft</text>
+</g>
+<!-- none~init_plan~6&#45;&gt;dfftw_plan_many_dft -->
+<g id="proc~~cft_2xy~4~~CallsGraph_edge4" class="edge"><title>none~init_plan~6&#45;&gt;dfftw_plan_many_dft</title>
+<path fill="none" stroke="black" d="M164.573,-214.394C183.937,-208.954 210.626,-201.456 234.144,-194.849"/>
+<polygon fill="black" stroke="black" points="235.318,-198.155 243.999,-192.081 233.425,-191.416 235.318,-198.155"/>
+</g>
+<!-- dfftw_cleanup_threads -->
+<g id="proc~~cft_2xy~4~~CallsGraph_node15" class="node"><title>dfftw_cleanup_threads</title>
+<polygon fill="#777777" stroke="#777777" points="346,-150 228,-150 228,-126 346,-126 346,-150"/>
+<text text-anchor="middle" x="287" y="-135.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">dfftw_cleanup_threads</text>
+</g>
+<!-- none~init_plan~6&#45;&gt;dfftw_cleanup_threads -->
+<g id="proc~~cft_2xy~4~~CallsGraph_edge7" class="edge"><title>none~init_plan~6&#45;&gt;dfftw_cleanup_threads</title>
+<path fill="none" stroke="black" d="M164.782,-212.418C171.718,-209.332 178.922,-205.518 185,-201 204.731,-186.333 200.504,-172.578 221,-159 223.573,-157.295 226.294,-155.721 229.107,-154.269"/>
+<polygon fill="black" stroke="black" points="230.709,-157.385 238.337,-150.033 227.789,-151.023 230.709,-157.385"/>
+</g>
+<!-- fftw_init_threads -->
+<g id="proc~~cft_2xy~4~~CallsGraph_node16" class="node"><title>fftw_init_threads</title>
+<polygon fill="#777777" stroke="#777777" points="331.5,-108 242.5,-108 242.5,-84 331.5,-84 331.5,-108"/>
+<text text-anchor="middle" x="287" y="-93.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">fftw_init_threads</text>
+</g>
+<!-- none~init_plan~6&#45;&gt;fftw_init_threads -->
+<g id="proc~~cft_2xy~4~~CallsGraph_edge8" class="edge"><title>none~init_plan~6&#45;&gt;fftw_init_threads</title>
+<path fill="none" stroke="black" d="M164.813,-214.028C172.065,-210.887 179.421,-206.642 185,-201 213.557,-172.116 190.923,-144.297 221,-117 224.595,-113.737 228.698,-110.981 233.059,-108.654"/>
+<polygon fill="black" stroke="black" points="234.64,-111.779 242.292,-104.451 231.741,-105.408 234.64,-111.779"/>
+</g>
+<!-- dfftw_plan_with_nthreads -->
+<g id="proc~~cft_2xy~4~~CallsGraph_node17" class="node"><title>dfftw_plan_with_nthreads</title>
+<polygon fill="#777777" stroke="#777777" points="353,-66 221,-66 221,-42 353,-42 353,-66"/>
+<text text-anchor="middle" x="287" y="-51.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">dfftw_plan_with_nthreads</text>
+</g>
+<!-- none~init_plan~6&#45;&gt;dfftw_plan_with_nthreads -->
+<g id="proc~~cft_2xy~4~~CallsGraph_edge9" class="edge"><title>none~init_plan~6&#45;&gt;dfftw_plan_with_nthreads</title>
+<path fill="none" stroke="black" d="M164.794,-214.681C172.218,-211.532 179.671,-207.12 185,-201 223.246,-157.077 180.435,-116.791 221,-75 222.073,-73.8945 223.204,-72.8471 224.384,-71.8547"/>
+<polygon fill="black" stroke="black" points="226.542,-74.6187 232.802,-66.0712 222.578,-68.8492 226.542,-74.6187"/>
+</g>
+</g>
+</svg>
+</div>
+                <div><a type="button" class="graph-help" data-toggle="modal" href="#graph-help-text">Help</a></div>
+                <div class="modal fade" id="graph-help-text" tabindex="-1" role="dialog">
+                  <div class="modal-dialog modal-lg" role="document">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title" id="-graph-help-label">Graph Key</h4>
+                      </div>
+                      <div class="modal-body">
+                        
+Nodes of different colours represent the following:
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 2.39.20141001.0445 (20141001.0445)
+ -->
+<!-- Title: Graph Key Pages: 1 -->
+<svg width="641pt" height="26pt"
+ viewBox="0.00 0.00 641.00 26.23" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(0.819693 0.819693) rotate(0) translate(4 28)">
+<title>Graph Key</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-28 778,-28 778,4 -4,4"/>
+<!-- Module -->
+<g id="node1" class="node"><title>Module</title>
+<polygon fill="#337ab7" stroke="#337ab7" points="54,-24 0,-24 0,-0 54,-0 54,-24"/>
+<text text-anchor="middle" x="27" y="-9.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Module</text>
+</g>
+<!-- Submodule -->
+<g id="node2" class="node"><title>Submodule</title>
+<polygon fill="#5bc0de" stroke="#5bc0de" points="138,-24 72,-24 72,-0 138,-0 138,-24"/>
+<text text-anchor="middle" x="105" y="-9.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Submodule</text>
+</g>
+<!-- Type -->
+<g id="node3" class="node"><title>Type</title>
+<polygon fill="#5cb85c" stroke="#5cb85c" points="210,-24 156,-24 156,-0 210,-0 210,-24"/>
+<text text-anchor="middle" x="183" y="-9.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Type</text>
+</g>
+<!-- Subroutine -->
+<g id="node4" class="node"><title>Subroutine</title>
+<polygon fill="#d9534f" stroke="#d9534f" points="291.5,-24 228.5,-24 228.5,-0 291.5,-0 291.5,-24"/>
+<text text-anchor="middle" x="260" y="-9.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Subroutine</text>
+</g>
+<!-- Function -->
+<g id="node5" class="node"><title>Function</title>
+<polygon fill="#d94e8f" stroke="#d94e8f" points="364,-24 310,-24 310,-0 364,-0 364,-24"/>
+<text text-anchor="middle" x="337" y="-9.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Function</text>
+</g>
+<!-- Interface -->
+<g id="node6" class="node"><title>Interface</title>
+<polygon fill="#a7506f" stroke="#a7506f" points="436,-24 382,-24 382,-0 436,-0 436,-24"/>
+<text text-anchor="middle" x="409" y="-9.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Interface</text>
+</g>
+<!-- Unknown Procedure Type -->
+<g id="node7" class="node"><title>Unknown Procedure Type</title>
+<polygon fill="#777777" stroke="#777777" points="588,-24 454,-24 454,-0 588,-0 588,-24"/>
+<text text-anchor="middle" x="521" y="-9.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Unknown Procedure Type</text>
+</g>
+<!-- Program -->
+<g id="node8" class="node"><title>Program</title>
+<polygon fill="#f0ad4e" stroke="#f0ad4e" points="660,-24 606,-24 606,-0 660,-0 660,-24"/>
+<text text-anchor="middle" x="633" y="-9.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Program</text>
+</g>
+<!-- This Page&#39;s Entity -->
+<g id="node9" class="node"><title>This Page&#39;s Entity</title>
+<polygon fill="none" stroke="black" points="774,-24 678,-24 678,-0 774,-0 774,-24"/>
+<text text-anchor="middle" x="726" y="-9.6" font-family="Helvetica,sans-Serif" font-size="10.50">This Page&#39;s Entity</text>
+</g>
+</g>
+</svg>
+
+<h5>Module Graph</h5>
+<p>Solid arrows point from a parent (sub)module to the submodule which is
+descended from it. Dashed arrows point from a module being used to the
+module using it.</p>
+<h5>Type Graph</h5>
+<p>Solid arrows point from one derived type to another which extends
+(inherits from) it. Dashed arrows point from a derived type to another
+type containing it as a components, with a label listing the name(s) of
+said component(s).</p>
+<h5>Call Graph</h5>
+<p>Solid arrows point from a procedure to one which it calls. Dashed 
+arrows point from an interface to procedures which implement that interface.
+This could include the module procedures in a generic interface or the
+implementation in a submodule of an interface in a parent module.</p>
+
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+     
+     
+    <br>
+    
+    <section>
+    <h2>Variables</h2>
+    
+<table class="table table-striped varlist">
+<thead><tr><th>Type</th><th>Visibility</th>
+
+<th>Attributes</th><th></th><th>Name</th><th></th><th>Initial</th><th></th></thead>
+
+
+
+<tbody>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-i%7E15"></span>integer,</td>
+  
+  <td>public</td>
+  <td></td><td>::</td>
+  <td><strong>i</strong></td><td></td><td></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-k%7E9"></span>integer,</td>
+  
+  <td>public</td>
+  <td></td><td>::</td>
+  <td><strong>k</strong></td><td></td><td></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-j%7E9"></span>integer,</td>
+  
+  <td>public</td>
+  <td></td><td>::</td>
+  <td><strong>j</strong></td><td></td><td></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-err%7E13"></span>integer,</td>
+  
+  <td>public</td>
+  <td></td><td>::</td>
+  <td><strong>err</strong></td><td></td><td></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-idir%7E13"></span>integer,</td>
+  
+  <td>public</td>
+  <td></td><td>::</td>
+  <td><strong>idir</strong></td><td></td><td></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-ip%7E13"></span>integer,</td>
+  
+  <td>public</td>
+  <td></td><td>::</td>
+  <td><strong>ip</strong></td><td></td><td></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-kk%7E4"></span>integer,</td>
+  
+  <td>public</td>
+  <td></td><td>::</td>
+  <td><strong>kk</strong></td><td></td><td></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-void%7E8"></span>integer,</td>
+  
+  <td>public</td>
+  <td></td><td>::</td>
+  <td><strong>void</strong></td><td></td><td></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-tscale%7E13"></span>real(kind=DP),</td>
+  
+  <td>public</td>
+  <td></td><td>::</td>
+  <td><strong>tscale</strong></td><td></td><td></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-icurrent%7E13"></span>integer,</td>
+  
+  <td>public,</td>
+  <td>SAVE</td><td>::</td>
+  <td><strong>icurrent</strong></td><td> =</td><td>1</td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-dims%7E9"></span>integer,</td>
+  
+  <td>public,</td>
+  <td>SAVE</td><td>::</td>
+  <td><strong>dims</strong>(4,ndims)</td><td> =</td><td>-1</td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-dofft%7E4"></span>logical,</td>
+  
+  <td>public</td>
+  <td></td><td>::</td>
+  <td><strong>dofft</strong>(nfftx)</td><td></td><td></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-done%7E4"></span>logical,</td>
+  
+  <td>public</td>
+  <td></td><td>::</td>
+  <td><strong>done</strong></td><td></td><td></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-stdout%7E4"></span>integer,</td>
+  
+  <td>public,</td>
+  <td>parameter</td><td>::</td>
+  <td><strong>stdout</strong></td><td> =</td><td>6</td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-offset%7E8"></span>integer,</td>
+  
+  <td>public</td>
+  <td></td><td>::</td>
+  <td><strong>offset</strong></td><td></td><td></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-nx_t%7E4"></span>integer,</td>
+  
+  <td>public</td>
+  <td></td><td>::</td>
+  <td><strong>nx_t</strong></td><td></td><td></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-ny_t%7E4"></span>integer,</td>
+  
+  <td>public</td>
+  <td></td><td>::</td>
+  <td><strong>ny_t</strong></td><td></td><td></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-nzl_t%7E4"></span>integer,</td>
+  
+  <td>public</td>
+  <td></td><td>::</td>
+  <td><strong>nzl_t</strong></td><td></td><td></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-ldx_t%7E4"></span>integer,</td>
+  
+  <td>public</td>
+  <td></td><td>::</td>
+  <td><strong>ldx_t</strong></td><td></td><td></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-ldy_t%7E4"></span>integer,</td>
+  
+  <td>public</td>
+  <td></td><td>::</td>
+  <td><strong>ldy_t</strong></td><td></td><td></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-itid%7E4"></span>integer,</td>
+  
+  <td>public</td>
+  <td></td><td>::</td>
+  <td><strong>itid</strong></td><td></td><td></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-mytid%7E4"></span>integer,</td>
+  
+  <td>public</td>
+  <td></td><td>::</td>
+  <td><strong>mytid</strong></td><td></td><td></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-ntids%7E4"></span>integer,</td>
+  
+  <td>public</td>
+  <td></td><td>::</td>
+  <td><strong>ntids</strong></td><td></td><td></td><td></td>
+  
+</tr>
+
+</tbody>
+</table>
+
+    </section>
+    <br>
+    
+    
+    
+    
+    
+
+    
+    
+    
+    
+    
+
+
+    
+    <section>
+    <h2>Subroutines</h2>
+    
+    
+  <div class="panel panel-default">
+  <div class="panel-heading codesum"><span class="anchor" id="proc-lookup%7E9"></span><h3>
+subroutine lookup()
+    
+    
+    
+</h3></div>
+  <div class="panel-body">
+       
+    
+    <h4>Arguments</h4>
+    
+      <em>None</em>
+    
+    
+        
+
+  </div>
+  </div>
+
+    
+    
+  <div class="panel panel-default">
+  <div class="panel-heading codesum"><span class="anchor" id="proc-init_plan%7E6"></span><h3>
+subroutine init_plan()
+    
+    
+    
+</h3></div>
+  <div class="panel-body">
+       
+    
+    <h4>Arguments</h4>
+    
+      <em>None</em>
+    
+    
+        
+
+  </div>
+  </div>
+
+    
+    </section>    
+    
+    
+    
+    
+    </div>
+  </div>
+
+    <hr>
+    <footer>
+        <div class="row">
+        <div class="col-md-6">&copy; 2015 FFTXlib was written by . </div>
+        <div class="col-md-6"><span class="pull-right">Documentation generated by <a href="https://github.com/cmacmackin/ford">FORD</a>.</span></div>
+        </div>
+        <br>
+    </footer>
+    </div> <!-- /container -->
+
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+<!--
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+-->
+    <script src="../js/bootstrap.min.js"></script>
+    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+    <script src="../js/ie10-viewport-bug-workaround.js"></script>
+
+    <!-- MathJax JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        TeX: { extensions: ['AMSmath.js','AMSsymbols.js','noErrors.js','noUndefined.js'], equationNumbers: { autoNumber: 'AMS' } },
+        jax: ['input/TeX','input/MathML','output/HTML-CSS'],
+        extensions: ['tex2jax.js','mml2jax.js','MathMenu.js','MathZoom.js'],
+        'HTML-CSS': { 
+           styles: { '.MathJax_Display, .MathJax .mo, .MathJax .mi, .MathJax .mn': {color: '#000000 ! important'} }
+        }
+      });
+    </script>
+    <script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  </body>
+</html>

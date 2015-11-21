@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+	 
+    <meta name="description" content="Documentation for FFTXlib">
+	 
+    <meta name="author" content="Chris MacMackin" >
+    <link rel="icon" href="../favicon.png">
+
+    <title>invfft_b &ndash; FFTXlib</title>
+
+    <link href="../css/bootstrap.min.css" rel="stylesheet">
+    <link href="../css/pygments.css" rel="stylesheet">
+    <link href="../css/font-awesome.min.css" rel="stylesheet">
+    <link href="../css/local.css" rel="stylesheet">
+    
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+    
+    <script src="../js/jquery-2.1.3.min.js"></script>
+    <script src="../js/svg-pan-zoom.min.js"></script>
+
+    
+    <script src="../tipuesearch/tipuesearch_content.js"></script>
+    <link  href="../tipuesearch/tipuesearch.css" rel="stylesheet">
+    <script src="../tipuesearch/tipuesearch_set.js"></script>
+    <script src="../tipuesearch/tipuesearch.js"></script>
+    
+
+  </head>
+
+  <body>
+
+    <!-- Fixed navbar -->
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="../index.html">FFTXlib </a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+				
+                
+            <li><a href="../lists/files.html">Source Files</a></li>
+				
+				
+            <li><a href="../lists/modules.html">Modules</a></li>
+				
+				
+            <li><a href="../lists/procedures.html">Procedures</a></li>
+				
+								
+            <li><a href="../lists/types.html">Derived Types</a></li>
+				
+				
+          </ul>
+        
+        <form action="../search.html" class="navbar-form navbar-right" role="search">
+        <div class="form-group">
+          <input type="text" class="form-control" placeholder="Search" name="q" id="tipue_search_input" autocomplete="off" required>
+        </div>
+<!--
+        <button type="submit" class="btn btn-default">Submit</button>
+-->
+        </form>
+        
+        </div><!--/.nav-collapse -->
+      </div>
+    </nav>
+
+    <div class="container">
+    
+  
+  <div class="row">
+    <h1>invfft_b
+    <small>Subroutine</small>
+    
+    </h1>
+	 
+<div class="row">
+<div class="col-lg-12">
+<div class="well well-sm">
+  <ul class="list-inline" style="margin-bottom:0px;display:inline">
+     
+     
+     
+     
+    
+    
+    <li><i class="fa fa-code"></i><a href="../src/fft_interfaces.f90"> Source File</a></li>
+     
+  </ul>
+  <ol class="breadcrumb in-well text-right">
+  
+     <li><a href='../sourcefile/fft_interfaces.f90.html'>fft_interfaces.f90</a></li>
+  
+     <li class="active">invfft_b</li>
+  </ol>
+</div>
+</div>
+</div>
+    
+  </div>
+  
+  <div class="row">
+    <div class="col-lg-3">
+    
+  
+  
+  
+  <div class="panel panel-primary">
+    <div class="panel-heading text-left"><h3 class="panel-title">Variables</h3></div>
+    <div class="list-group">
+      
+      <a class="list-group-item" href="../proc/invfft_b.html#variable-dp%7E3">DP</a>
+      
+      <a class="list-group-item" href="../proc/invfft_b.html#variable-imin3%7E2">imin3</a>
+      
+      <a class="list-group-item" href="../proc/invfft_b.html#variable-imax3%7E2">imax3</a>
+      
+      <a class="list-group-item" href="../proc/invfft_b.html#variable-np3%7E2">np3</a>
+      
+    </div>
+  </div>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  <hr>
+  
+  <div class="panel panel-default">
+    <div class="panel-heading text-left"><h3 class="panel-title">All Procedures</h3></div>
+    <div class="list-group">
+      
+      <a class="list-group-item" href="../proc/allowed.html">allowed</a>
+      
+      <a class="list-group-item" href="../proc/bw_tg_cft3_scatter.html">bw_tg_cft3_scatter</a>
+      
+      <a class="list-group-item" href="../proc/bw_tg_cft3_xy.html">bw_tg_cft3_xy</a>
+      
+      <a class="list-group-item" href="../proc/bw_tg_cft3_z.html">bw_tg_cft3_z</a>
+      
+      <a class="list-group-item" href="../proc/cfft3d.html">cfft3d</a>
+      
+      <a class="list-group-item" href="../proc/cfft3d%7E2.html">cfft3d</a>
+      
+      <a class="list-group-item" href="../proc/cfft3d%7E3.html">cfft3d</a>
+      
+      <a class="list-group-item" href="../proc/cfft3d%7E4.html">cfft3d</a>
+      
+      <a class="list-group-item" href="../proc/cfft3d%7E5.html">cfft3d</a>
+      
+      <a class="list-group-item" href="../proc/cfft3ds.html">cfft3ds</a>
+      
+      <a class="list-group-item" href="../proc/cfft3ds%7E2.html">cfft3ds</a>
+      
+      <a class="list-group-item" href="../proc/cfft3ds%7E3.html">cfft3ds</a>
+      
+      <a class="list-group-item" href="../proc/cfft3ds%7E4.html">cfft3ds</a>
+      
+      <a class="list-group-item" href="../proc/cfft3ds%7E5.html">cfft3ds</a>
+      
+      <a class="list-group-item" href="../proc/cft_1z.html">cft_1z</a>
+      
+      <a class="list-group-item" href="../proc/cft_1z%7E2.html">cft_1z</a>
+      
+      <a class="list-group-item" href="../proc/cft_1z%7E3.html">cft_1z</a>
+      
+      <a class="list-group-item" href="../proc/cft_1z%7E4.html">cft_1z</a>
+      
+      <a class="list-group-item" href="../proc/cft_1z%7E5.html">cft_1z</a>
+      
+      <a class="list-group-item" href="../proc/cft_2xy.html">cft_2xy</a>
+      
+      <a class="list-group-item" href="../proc/cft_2xy%7E2.html">cft_2xy</a>
+      
+      <a class="list-group-item" href="../proc/cft_2xy%7E3.html">cft_2xy</a>
+      
+      <a class="list-group-item" href="../proc/cft_2xy%7E4.html">cft_2xy</a>
+      
+      <a class="list-group-item" href="../proc/cft_2xy%7E5.html">cft_2xy</a>
+      
+      <a class="list-group-item" href="../proc/cft_b.html">cft_b</a>
+      
+      <a class="list-group-item" href="../proc/cft_b_omp.html">cft_b_omp</a>
+      
+      <a class="list-group-item" href="../proc/cft_b_omp_init.html">cft_b_omp_init</a>
+      
+      <a class="list-group-item" href="../proc/cgather_sym.html">cgather_sym</a>
+      
+      <a class="list-group-item" href="../proc/cgather_sym_many.html">cgather_sym_many</a>
+      
+      <a class="list-group-item" href="../proc/cscatter_sym_many.html">cscatter_sym_many</a>
+      
+      <a class="list-group-item" href="../proc/fft_box_allocate.html">fft_box_allocate</a>
+      
+      <a class="list-group-item" href="../proc/fft_box_deallocate.html">fft_box_deallocate</a>
+      
+      <a class="list-group-item" href="../proc/fft_box_set.html">fft_box_set</a>
+      
+      <a class="list-group-item" href="../proc/fft_dlay_allocate.html">fft_dlay_allocate</a>
+      
+      <a class="list-group-item" href="../proc/fft_dlay_deallocate.html">fft_dlay_deallocate</a>
+      
+      <a class="list-group-item" href="../proc/fft_dlay_scalar.html">fft_dlay_scalar</a>
+      
+      <a class="list-group-item" href="../proc/fft_dlay_set.html">fft_dlay_set</a>
+      
+      <a class="list-group-item" href="../proc/fft_scatter.html">fft_scatter</a>
+      
+      <a class="list-group-item" href="../proc/fftx_error__.html">fftx_error__</a>
+      
+      <a class="list-group-item" href="../proc/fw_tg_cft3_scatter.html">fw_tg_cft3_scatter</a>
+      
+      <a class="list-group-item" href="../proc/fw_tg_cft3_xy.html">fw_tg_cft3_xy</a>
+      
+      <a class="list-group-item" href="../proc/fw_tg_cft3_z.html">fw_tg_cft3_z</a>
+      
+      <a class="list-group-item" href="../interface/fwfft.html">fwfft</a>
+      
+      <a class="list-group-item" href="../proc/fwfft_x.html">fwfft_x</a>
+      
+      <a class="list-group-item" href="../proc/gather_complex_grid.html">gather_complex_grid</a>
+      
+      <a class="list-group-item" href="../interface/gather_grid.html">gather_grid</a>
+      
+      <a class="list-group-item" href="../proc/gather_real_grid.html">gather_real_grid</a>
+      
+      <a class="list-group-item" href="../proc/good_fft_dimension.html">good_fft_dimension</a>
+      
+      <a class="list-group-item" href="../proc/good_fft_order.html">good_fft_order</a>
+      
+      <a class="list-group-item" href="../interface/invfft.html">invfft</a>
+      
+      <a class="list-group-item" href="../proc/invfft_b.html">invfft_b</a>
+      
+      <a class="list-group-item" href="../proc/invfft_x.html">invfft_x</a>
+      
+      <a class="list-group-item" href="../proc/pack_group_sticks.html">pack_group_sticks</a>
+      
+      <a class="list-group-item" href="../proc/pstickset.html">pstickset</a>
+      
+      <a class="list-group-item" href="../proc/pstickset_custom.html">pstickset_custom</a>
+      
+      <a class="list-group-item" href="../proc/scatter_complex_grid.html">scatter_complex_grid</a>
+      
+      <a class="list-group-item" href="../interface/scatter_grid.html">scatter_grid</a>
+      
+      <a class="list-group-item" href="../proc/scatter_real_grid.html">scatter_real_grid</a>
+      
+      <a class="list-group-item" href="../proc/sticks_countg.html">sticks_countg</a>
+      
+      <a class="list-group-item" href="../proc/sticks_deallocate.html">sticks_deallocate</a>
+      
+      <a class="list-group-item" href="../proc/sticks_dist.html">sticks_dist</a>
+      
+      <a class="list-group-item" href="../proc/sticks_maps.html">sticks_maps</a>
+      
+      <a class="list-group-item" href="../proc/sticks_maps_scalar.html">sticks_maps_scalar</a>
+      
+      <a class="list-group-item" href="../proc/sticks_ordered_dist.html">sticks_ordered_dist</a>
+      
+      <a class="list-group-item" href="../proc/sticks_pairup.html">sticks_pairup</a>
+      
+      <a class="list-group-item" href="../proc/sticks_sort.html">sticks_sort</a>
+      
+      <a class="list-group-item" href="../proc/task_groups_init.html">task_groups_init</a>
+      
+      <a class="list-group-item" href="../proc/task_groups_init_first.html">task_groups_init_first</a>
+      
+      <a class="list-group-item" href="../proc/tg_cft3s.html">tg_cft3s</a>
+      
+      <a class="list-group-item" href="../proc/tg_cgather.html">tg_cgather</a>
+      
+      <a class="list-group-item" href="../proc/tg_gather.html">tg_gather</a>
+      
+      <a class="list-group-item" href="../proc/unpack_group_sticks.html">unpack_group_sticks</a>
+      
+    </div>
+  </div>
+  
+  
+    </div>
+    
+    <div class="col-lg-9" id='text'>
+    <h2>
+subroutine invfft_b(grid_type, f, dfft, ia)
+    
+    
+    
+</h2>
+    
+  
+    <ul class="list-inline">
+      <li><h4>Uses:</h4></li>
+      
+      <li><a href='../module/fft_scalar%7E5.html'>fft_scalar</a></li>
+      
+      <li><a href='../module/fft_smallbox.html'>fft_smallbox</a></li>
+      
+      <li><a href='../module/fft_parallel.html'>fft_parallel</a></li>
+      
+      <li><a href='../module/fft_types.html'>fft_types</a></li>
+      
+    </ul>
+  
+
+
+
+    <h3>Arguments</h3>
+    
+      
+<table class="table table-striped varlist">
+<thead><tr><th>Type</th>
+<th>Intent</th><th>Optional</th>
+<th>Attributes</th><th></th><th>Name</th><th></th></thead>
+
+
+
+<tbody>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-grid_type%7E3"></span>character(len=*),</td>
+  <td>intent(in)</td>
+  <td></td>
+  
+  <td></td><td>::</td>
+  <td><strong>grid_type</strong></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-f%7E3"></span>complex(kind=DP)</td>
+  <td></td>
+  <td></td>
+  
+  <td></td><td>::</td>
+  <td><strong>f</strong>(:)</td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-dfft%7E3"></span>type(<a href='../type/fft_dlay_descriptor.html'>fft_dlay_descriptor</a>),</td>
+  <td>intent(in)</td>
+  <td></td>
+  
+  <td></td><td>::</td>
+  <td><strong>dfft</strong></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-ia"></span>integer,</td>
+  <td>intent(in)</td>
+  <td></td>
+  
+  <td></td><td>::</td>
+  <td><strong>ia</strong></td><td></td>
+  
+</tr>
+
+</tbody>
+</table>
+
+    
+    
+    
+    
+     <h3>Calls</h3>
+     
+                <div class="depgraph"><?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 2.39.20141001.0445 (20141001.0445)
+ -->
+<!-- Title: proc~~invfft_b~~CallsGraph Pages: 1 -->
+<svg id="procinvfft_bCallsGraph" width="451pt" height="750pt"
+ viewBox="0.00 0.00 451.00 749.67" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="proc~~invfft_b~~CallsGraph" class="graph" transform="scale(1 1) rotate(0) translate(4 745.665)">
+<title>proc~~invfft_b~~CallsGraph</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-745.665 447,-745.665 447,4 -4,4"/>
+<!-- proc~invfft_b -->
+<g id="proc~~invfft_b~~CallsGraph_node1" class="node"><title>proc~invfft_b</title>
+<polygon fill="none" stroke="black" points="54,-390.665 0,-390.665 0,-366.665 54,-366.665 54,-390.665"/>
+<text text-anchor="middle" x="27" y="-376.265" font-family="Helvetica,sans-Serif" font-size="10.50">invfft_b</text>
+</g>
+<!-- proc~cfft3d -->
+<g id="proc~~invfft_b~~CallsGraph_node2" class="node"><title>proc~cfft3d</title>
+<g id="a_proc~~invfft_b~~CallsGraph_node2"><a xlink:href="../proc/cfft3d.html" xlink:title="cfft3d">
+<polygon fill="#d9534f" stroke="#d9534f" points="148.5,-573.665 94.5,-573.665 94.5,-549.665 148.5,-549.665 148.5,-573.665"/>
+<text text-anchor="middle" x="121.5" y="-559.265" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">cfft3d</text>
+</a>
+</g>
+</g>
+<!-- proc~invfft_b&#45;&gt;proc~cfft3d -->
+<g id="proc~~invfft_b~~CallsGraph_edge23" class="edge"><title>proc~invfft_b&#45;&gt;proc~cfft3d</title>
+<path fill="none" stroke="black" d="M33.2004,-390.673C48.8809,-421.038 90.2912,-501.229 110.327,-540.029"/>
+<polygon fill="black" stroke="black" points="107.455,-542.095 115.153,-549.374 113.674,-538.883 107.455,-542.095"/>
+</g>
+<!-- fftx_error__ -->
+<g id="proc~~invfft_b~~CallsGraph_node3" class="node"><title>fftx_error__</title>
+<polygon fill="#777777" stroke="#777777" points="423,-451.665 357,-451.665 357,-427.665 423,-427.665 423,-451.665"/>
+<text text-anchor="middle" x="390" y="-437.265" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">fftx_error__</text>
+</g>
+<!-- proc~invfft_b&#45;&gt;fftx_error__ -->
+<g id="proc~~invfft_b~~CallsGraph_edge24" class="edge"><title>proc~invfft_b&#45;&gt;fftx_error__</title>
+<path fill="none" stroke="black" d="M40.9471,-390.786C53.0561,-400.581 71.5069,-413.824 90,-420.665 176.576,-452.692 286.733,-449.532 346.554,-444.52"/>
+<polygon fill="black" stroke="black" points="347.122,-447.983 356.769,-443.604 346.497,-441.011 347.122,-447.983"/>
+</g>
+<!-- proc~cft_b_omp -->
+<g id="proc~~invfft_b~~CallsGraph_node4" class="node"><title>proc~cft_b_omp</title>
+<g id="a_proc~~invfft_b~~CallsGraph_node4"><a xlink:href="../proc/cft_b_omp.html" xlink:title="cft_b_omp">
+<polygon fill="#d9534f" stroke="#d9534f" points="152.5,-411.665 90.5,-411.665 90.5,-387.665 152.5,-387.665 152.5,-411.665"/>
+<text text-anchor="middle" x="121.5" y="-397.265" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">cft_b_omp</text>
+</a>
+</g>
+</g>
+<!-- proc~invfft_b&#45;&gt;proc~cft_b_omp -->
+<g id="proc~~invfft_b~~CallsGraph_edge25" class="edge"><title>proc~invfft_b&#45;&gt;proc~cft_b_omp</title>
+<path fill="none" stroke="black" d="M54.0799,-384.683C62.3223,-386.515 71.5728,-388.57 80.5181,-390.558"/>
+<polygon fill="black" stroke="black" points="79.8969,-394.006 90.4181,-392.758 81.4155,-387.172 79.8969,-394.006"/>
+</g>
+<!-- stop_clock -->
+<g id="proc~~invfft_b~~CallsGraph_node5" class="node"><title>stop_clock</title>
+<polygon fill="#777777" stroke="#777777" points="152.5,-369.665 90.5,-369.665 90.5,-345.665 152.5,-345.665 152.5,-369.665"/>
+<text text-anchor="middle" x="121.5" y="-355.265" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">stop_clock</text>
+</g>
+<!-- proc~invfft_b&#45;&gt;stop_clock -->
+<g id="proc~~invfft_b~~CallsGraph_edge26" class="edge"><title>proc~invfft_b&#45;&gt;stop_clock</title>
+<path fill="none" stroke="black" d="M54.0799,-372.648C62.3223,-370.816 71.5728,-368.76 80.5181,-366.772"/>
+<polygon fill="black" stroke="black" points="81.4155,-370.159 90.4181,-364.572 79.8969,-363.325 81.4155,-370.159"/>
+</g>
+<!-- proc~cft_b -->
+<g id="proc~~invfft_b~~CallsGraph_node6" class="node"><title>proc~cft_b</title>
+<g id="a_proc~~invfft_b~~CallsGraph_node6"><a xlink:href="../proc/cft_b.html" xlink:title="cft_b">
+<polygon fill="#d9534f" stroke="#d9534f" points="148.5,-245.665 94.5,-245.665 94.5,-221.665 148.5,-221.665 148.5,-245.665"/>
+<text text-anchor="middle" x="121.5" y="-231.265" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">cft_b</text>
+</a>
+</g>
+</g>
+<!-- proc~invfft_b&#45;&gt;proc~cft_b -->
+<g id="proc~~invfft_b~~CallsGraph_edge27" class="edge"><title>proc~invfft_b&#45;&gt;proc~cft_b</title>
+<path fill="none" stroke="black" d="M35.057,-366.303C51.2369,-341.476 87.8375,-285.317 107.832,-254.637"/>
+<polygon fill="black" stroke="black" points="110.936,-256.286 113.463,-245.997 105.071,-252.464 110.936,-256.286"/>
+</g>
+<!-- start_clock -->
+<g id="proc~~invfft_b~~CallsGraph_node7" class="node"><title>start_clock</title>
+<polygon fill="#777777" stroke="#777777" points="153,-203.665 90,-203.665 90,-179.665 153,-179.665 153,-203.665"/>
+<text text-anchor="middle" x="121.5" y="-189.265" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">start_clock</text>
+</g>
+<!-- proc~invfft_b&#45;&gt;start_clock -->
+<g id="proc~~invfft_b~~CallsGraph_edge28" class="edge"><title>proc~invfft_b&#45;&gt;start_clock</title>
+<path fill="none" stroke="black" d="M28.9688,-366.559C34.2399,-337.31 51.0066,-261.606 90,-212.665 90.5734,-211.946 91.1783,-211.242 91.8095,-210.555"/>
+<polygon fill="black" stroke="black" points="94.2126,-213.101 99.3452,-203.832 89.5529,-207.877 94.2126,-213.101"/>
+</g>
+<!-- dfticomputeforward -->
+<g id="proc~~invfft_b~~CallsGraph_node8" class="node"><title>dfticomputeforward</title>
+<polygon fill="#777777" stroke="#777777" points="296,-594.665 194,-594.665 194,-570.665 296,-570.665 296,-594.665"/>
+<text text-anchor="middle" x="245" y="-580.265" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">dfticomputeforward</text>
+</g>
+<!-- proc~cfft3d&#45;&gt;dfticomputeforward -->
+<g id="proc~~invfft_b~~CallsGraph_edge6" class="edge"><title>proc~cfft3d&#45;&gt;dfticomputeforward</title>
+<path fill="none" stroke="black" d="M148.603,-566.274C158.92,-568.028 171.146,-570.107 183.366,-572.185"/>
+<polygon fill="black" stroke="black" points="183.142,-575.697 193.588,-573.923 184.316,-568.796 183.142,-575.697"/>
+</g>
+<!-- none~lookup~3 -->
+<g id="proc~~invfft_b~~CallsGraph_node9" class="node"><title>none~lookup~3</title>
+<polygon fill="#d9534f" stroke="#d9534f" points="272,-552.665 218,-552.665 218,-528.665 272,-528.665 272,-552.665"/>
+<text text-anchor="middle" x="245" y="-538.265" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">lookup</text>
+</g>
+<!-- proc~cfft3d&#45;&gt;none~lookup~3 -->
+<g id="proc~~invfft_b~~CallsGraph_edge7" class="edge"><title>proc~cfft3d&#45;&gt;none~lookup~3</title>
+<path fill="none" stroke="black" d="M148.603,-557.057C166.057,-554.089 188.972,-550.192 208.08,-546.943"/>
+<polygon fill="black" stroke="black" points="208.689,-550.39 217.961,-545.263 207.515,-543.489 208.689,-550.39"/>
+</g>
+<!-- dfticomputebackward -->
+<g id="proc~~invfft_b~~CallsGraph_node10" class="node"><title>dfticomputebackward</title>
+<polygon fill="#777777" stroke="#777777" points="301,-510.665 189,-510.665 189,-486.665 301,-486.665 301,-510.665"/>
+<text text-anchor="middle" x="245" y="-496.265" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">dfticomputebackward</text>
+</g>
+<!-- proc~cfft3d&#45;&gt;dfticomputebackward -->
+<g id="proc~~invfft_b~~CallsGraph_edge8" class="edge"><title>proc~cfft3d&#45;&gt;dfticomputebackward</title>
+<path fill="none" stroke="black" d="M138.717,-549.625C152.042,-540.639 171.171,-528.448 189,-519.665 192.566,-517.909 196.317,-516.208 200.119,-514.586"/>
+<polygon fill="black" stroke="black" points="201.655,-517.74 209.597,-510.727 199.016,-511.256 201.655,-517.74"/>
+</g>
+<!-- none~check_dims~2 -->
+<g id="proc~~invfft_b~~CallsGraph_node11" class="node"><title>none~check_dims~2</title>
+<polygon fill="#d9534f" stroke="#d9534f" points="279,-636.665 211,-636.665 211,-612.665 279,-612.665 279,-636.665"/>
+<text text-anchor="middle" x="245" y="-622.265" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">check_dims</text>
+</g>
+<!-- proc~cfft3d&#45;&gt;none~check_dims~2 -->
+<g id="proc~~invfft_b~~CallsGraph_edge9" class="edge"><title>proc~cfft3d&#45;&gt;none~check_dims~2</title>
+<path fill="none" stroke="black" d="M138.717,-573.705C152.042,-582.692 171.171,-594.883 189,-603.665 192.985,-605.628 197.202,-607.522 201.462,-609.314"/>
+<polygon fill="black" stroke="black" points="200.2,-612.579 210.784,-613.063 202.813,-606.084 200.2,-612.579"/>
+</g>
+<!-- none~init_dfti~3 -->
+<g id="proc~~invfft_b~~CallsGraph_node12" class="node"><title>none~init_dfti~3</title>
+<polygon fill="#d9534f" stroke="#d9534f" points="272,-678.665 218,-678.665 218,-654.665 272,-654.665 272,-678.665"/>
+<text text-anchor="middle" x="245" y="-664.265" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">init_dfti</text>
+</g>
+<!-- proc~cfft3d&#45;&gt;none~init_dfti~3 -->
+<g id="proc~~invfft_b~~CallsGraph_edge10" class="edge"><title>proc~cfft3d&#45;&gt;none~init_dfti~3</title>
+<path fill="none" stroke="black" d="M128.422,-573.959C139.182,-592.044 161.565,-625.816 189,-645.665 194.765,-649.836 201.457,-653.279 208.166,-656.085"/>
+<polygon fill="black" stroke="black" points="207.31,-659.502 217.902,-659.75 209.776,-652.951 207.31,-659.502"/>
+</g>
+<!-- proc~cft_b_omp&#45;&gt;fftx_error__ -->
+<g id="proc~~invfft_b~~CallsGraph_edge11" class="edge"><title>proc~cft_b_omp&#45;&gt;fftx_error__</title>
+<path fill="none" stroke="black" d="M152.563,-404.293C200.416,-411.422 292.315,-425.113 346.68,-433.212"/>
+<polygon fill="black" stroke="black" points="346.295,-436.693 356.701,-434.705 347.326,-429.769 346.295,-436.693"/>
+</g>
+<!-- fftw_inplace_drv_1d -->
+<g id="proc~~invfft_b~~CallsGraph_node17" class="node"><title>fftw_inplace_drv_1d</title>
+<polygon fill="#777777" stroke="#777777" points="298,-392.665 192,-392.665 192,-368.665 298,-368.665 298,-392.665"/>
+<text text-anchor="middle" x="245" y="-378.265" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">fftw_inplace_drv_1d</text>
+</g>
+<!-- proc~cft_b_omp&#45;&gt;fftw_inplace_drv_1d -->
+<g id="proc~~invfft_b~~CallsGraph_edge12" class="edge"><title>proc~cft_b_omp&#45;&gt;fftw_inplace_drv_1d</title>
+<path fill="none" stroke="black" d="M152.664,-394.871C161.561,-393.502 171.59,-391.959 181.676,-390.408"/>
+<polygon fill="black" stroke="black" points="182.389,-393.839 191.74,-388.859 181.324,-386.921 182.389,-393.839"/>
+</g>
+<!-- proc~cft_b&#45;&gt;fftx_error__ -->
+<g id="proc~~invfft_b~~CallsGraph_edge15" class="edge"><title>proc~cft_b&#45;&gt;fftx_error__</title>
+<path fill="none" stroke="black" d="M144.472,-221.615C147.739,-219.045 150.748,-216.062 153,-212.665 200.255,-141.398 123.121,-78.1807 189,-23.6654 227.35,8.06941 262.295,7.63513 301,-23.6654 363.262,-74.0162 383.902,-337.524 388.76,-416.971"/>
+<polygon fill="black" stroke="black" points="385.287,-417.532 389.365,-427.31 392.275,-417.122 385.287,-417.532"/>
+</g>
+<!-- proc~cft_b&#45;&gt;fftw_inplace_drv_1d -->
+<g id="proc~~invfft_b~~CallsGraph_edge17" class="edge"><title>proc~cft_b&#45;&gt;fftw_inplace_drv_1d</title>
+<path fill="none" stroke="black" d="M124.853,-245.907C132.275,-270.792 152.396,-327.634 189,-359.665 190.494,-360.973 192.078,-362.203 193.729,-363.358"/>
+<polygon fill="black" stroke="black" points="192.064,-366.44 202.448,-368.542 195.642,-360.423 192.064,-366.44"/>
+</g>
+<!-- bw_planz -->
+<g id="proc~~invfft_b~~CallsGraph_node18" class="node"><title>bw_planz</title>
+<polygon fill="#777777" stroke="#777777" points="273.5,-350.665 216.5,-350.665 216.5,-326.665 273.5,-326.665 273.5,-350.665"/>
+<text text-anchor="middle" x="245" y="-336.265" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">bw_planz</text>
+</g>
+<!-- proc~cft_b&#45;&gt;bw_planz -->
+<g id="proc~~invfft_b~~CallsGraph_edge13" class="edge"><title>proc~cft_b&#45;&gt;bw_planz</title>
+<path fill="none" stroke="black" d="M128.422,-245.959C139.182,-264.044 161.565,-297.816 189,-317.665 194.355,-321.54 200.509,-324.786 206.735,-327.476"/>
+<polygon fill="black" stroke="black" points="205.882,-330.9 216.47,-331.258 208.416,-324.375 205.882,-330.9"/>
+</g>
+<!-- bw_planx -->
+<g id="proc~~invfft_b~~CallsGraph_node19" class="node"><title>bw_planx</title>
+<polygon fill="#777777" stroke="#777777" points="273.5,-308.665 216.5,-308.665 216.5,-284.665 273.5,-284.665 273.5,-308.665"/>
+<text text-anchor="middle" x="245" y="-294.265" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">bw_planx</text>
+</g>
+<!-- proc~cft_b&#45;&gt;bw_planx -->
+<g id="proc~~invfft_b~~CallsGraph_edge14" class="edge"><title>proc~cft_b&#45;&gt;bw_planx</title>
+<path fill="none" stroke="black" d="M138.717,-245.705C152.042,-254.692 171.171,-266.883 189,-275.665 194.685,-278.466 200.842,-281.124 206.923,-283.55"/>
+<polygon fill="black" stroke="black" points="205.747,-286.847 216.338,-287.156 208.251,-280.31 205.747,-286.847"/>
+</g>
+<!-- bw_planxy -->
+<g id="proc~~invfft_b~~CallsGraph_node20" class="node"><title>bw_planxy</title>
+<polygon fill="#777777" stroke="#777777" points="276,-266.665 214,-266.665 214,-242.665 276,-242.665 276,-266.665"/>
+<text text-anchor="middle" x="245" y="-252.265" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">bw_planxy</text>
+</g>
+<!-- proc~cft_b&#45;&gt;bw_planxy -->
+<g id="proc~~invfft_b~~CallsGraph_edge16" class="edge"><title>proc~cft_b&#45;&gt;bw_planxy</title>
+<path fill="none" stroke="black" d="M148.603,-238.274C164.703,-241.012 185.451,-244.54 203.571,-247.621"/>
+<polygon fill="black" stroke="black" points="203.155,-251.1 213.6,-249.326 204.328,-244.199 203.155,-251.1"/>
+</g>
+<!-- destroy_plan_1d -->
+<g id="proc~~invfft_b~~CallsGraph_node21" class="node"><title>destroy_plan_1d</title>
+<polygon fill="#777777" stroke="#777777" points="290,-224.665 200,-224.665 200,-200.665 290,-200.665 290,-224.665"/>
+<text text-anchor="middle" x="245" y="-210.265" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">destroy_plan_1d</text>
+</g>
+<!-- proc~cft_b&#45;&gt;destroy_plan_1d -->
+<g id="proc~~invfft_b~~CallsGraph_edge18" class="edge"><title>proc~cft_b&#45;&gt;destroy_plan_1d</title>
+<path fill="none" stroke="black" d="M148.603,-229.057C160.601,-227.017 175.18,-224.538 189.33,-222.132"/>
+<polygon fill="black" stroke="black" points="190.242,-225.527 199.513,-220.4 189.068,-218.626 190.242,-225.527"/>
+</g>
+<!-- create_plan_1d -->
+<g id="proc~~invfft_b~~CallsGraph_node22" class="node"><title>create_plan_1d</title>
+<polygon fill="#777777" stroke="#777777" points="287.5,-182.665 202.5,-182.665 202.5,-158.665 287.5,-158.665 287.5,-182.665"/>
+<text text-anchor="middle" x="245" y="-168.265" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">create_plan_1d</text>
+</g>
+<!-- proc~cft_b&#45;&gt;create_plan_1d -->
+<g id="proc~~invfft_b~~CallsGraph_edge19" class="edge"><title>proc~cft_b&#45;&gt;create_plan_1d</title>
+<path fill="none" stroke="black" d="M139.932,-221.624C156.39,-210.978 179.342,-196.422 189,-191.665 192.566,-189.909 196.317,-188.208 200.119,-186.586"/>
+<polygon fill="black" stroke="black" points="201.655,-189.74 209.597,-182.727 199.016,-183.256 201.655,-189.74"/>
+</g>
+<!-- bw_plany -->
+<g id="proc~~invfft_b~~CallsGraph_node23" class="node"><title>bw_plany</title>
+<polygon fill="#777777" stroke="#777777" points="273.5,-140.665 216.5,-140.665 216.5,-116.665 273.5,-116.665 273.5,-140.665"/>
+<text text-anchor="middle" x="245" y="-126.265" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">bw_plany</text>
+</g>
+<!-- proc~cft_b&#45;&gt;bw_plany -->
+<g id="proc~~invfft_b~~CallsGraph_edge20" class="edge"><title>proc~cft_b&#45;&gt;bw_plany</title>
+<path fill="none" stroke="black" d="M142.579,-221.609C146.298,-218.946 149.95,-215.933 153,-212.665 175.005,-189.09 164.443,-170.569 189,-149.665 194.259,-145.189 200.566,-141.62 207.021,-138.791"/>
+<polygon fill="black" stroke="black" points="208.402,-142.01 216.479,-135.154 205.889,-135.476 208.402,-142.01"/>
+</g>
+<!-- destroy_plan_2d -->
+<g id="proc~~invfft_b~~CallsGraph_node24" class="node"><title>destroy_plan_2d</title>
+<polygon fill="#777777" stroke="#777777" points="290,-98.6654 200,-98.6654 200,-74.6654 290,-74.6654 290,-98.6654"/>
+<text text-anchor="middle" x="245" y="-84.2654" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">destroy_plan_2d</text>
+</g>
+<!-- proc~cft_b&#45;&gt;destroy_plan_2d -->
+<g id="proc~~invfft_b~~CallsGraph_edge21" class="edge"><title>proc~cft_b&#45;&gt;destroy_plan_2d</title>
+<path fill="none" stroke="black" d="M143.745,-221.569C147.18,-218.976 150.432,-215.997 153,-212.665 183.112,-173.588 154.616,-143.042 189,-107.665 190.063,-106.572 191.188,-105.535 192.365,-104.551"/>
+<polygon fill="black" stroke="black" points="194.491,-107.337 200.771,-98.8042 190.54,-101.559 194.491,-107.337"/>
+</g>
+<!-- create_plan_2d -->
+<g id="proc~~invfft_b~~CallsGraph_node25" class="node"><title>create_plan_2d</title>
+<polygon fill="#777777" stroke="#777777" points="287.5,-56.6654 202.5,-56.6654 202.5,-32.6654 287.5,-32.6654 287.5,-56.6654"/>
+<text text-anchor="middle" x="245" y="-42.2654" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">create_plan_2d</text>
+</g>
+<!-- proc~cft_b&#45;&gt;create_plan_2d -->
+<g id="proc~~invfft_b~~CallsGraph_edge22" class="edge"><title>proc~cft_b&#45;&gt;create_plan_2d</title>
+<path fill="none" stroke="black" d="M144.322,-221.512C147.607,-218.954 150.661,-216.002 153,-212.665 191.615,-157.59 144.34,-115.963 189,-65.6654 190.512,-63.9621 192.177,-62.3965 193.956,-60.9575"/>
+<polygon fill="black" stroke="black" points="195.942,-63.8409 202.378,-55.425 192.098,-57.9905 195.942,-63.8409"/>
+</g>
+<!-- none~check_dims~2&#45;&gt;fftx_error__ -->
+<g id="proc~~invfft_b~~CallsGraph_edge1" class="edge"><title>none~check_dims~2&#45;&gt;fftx_error__</title>
+<path fill="none" stroke="black" d="M279.127,-616.269C286.916,-613.215 294.734,-609.119 301,-603.665 346.176,-564.347 372.518,-496.287 383.669,-461.504"/>
+<polygon fill="black" stroke="black" points="387.045,-462.433 386.646,-451.846 380.355,-460.371 387.045,-462.433"/>
+</g>
+<!-- dfticommitdescriptor -->
+<g id="proc~~invfft_b~~CallsGraph_node13" class="node"><title>dfticommitdescriptor</title>
+<polygon fill="#777777" stroke="#777777" points="443,-699.665 337,-699.665 337,-675.665 443,-675.665 443,-699.665"/>
+<text text-anchor="middle" x="390" y="-685.265" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">dfticommitdescriptor</text>
+</g>
+<!-- none~init_dfti~3&#45;&gt;dfticommitdescriptor -->
+<g id="proc~~invfft_b~~CallsGraph_edge2" class="edge"><title>none~init_dfti~3&#45;&gt;dfticommitdescriptor</title>
+<path fill="none" stroke="black" d="M272.273,-670.615C287.642,-672.841 307.524,-675.721 326.56,-678.478"/>
+<polygon fill="black" stroke="black" points="326.312,-681.978 336.71,-679.948 327.315,-675.05 326.312,-681.978"/>
+</g>
+<!-- dftisetvalue -->
+<g id="proc~~invfft_b~~CallsGraph_node14" class="node"><title>dftisetvalue</title>
+<polygon fill="#777777" stroke="#777777" points="423,-657.665 357,-657.665 357,-633.665 423,-633.665 423,-657.665"/>
+<text text-anchor="middle" x="390" y="-643.265" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">dftisetvalue</text>
+</g>
+<!-- none~init_dfti~3&#45;&gt;dftisetvalue -->
+<g id="proc~~invfft_b~~CallsGraph_edge3" class="edge"><title>none~init_dfti~3&#45;&gt;dftisetvalue</title>
+<path fill="none" stroke="black" d="M272.273,-662.715C293.234,-659.68 322.592,-655.428 346.746,-651.93"/>
+<polygon fill="black" stroke="black" points="347.345,-655.38 356.74,-650.482 346.341,-648.452 347.345,-655.38"/>
+</g>
+<!-- dftifreedescriptor -->
+<g id="proc~~invfft_b~~CallsGraph_node15" class="node"><title>dftifreedescriptor</title>
+<polygon fill="#777777" stroke="#777777" points="435.5,-615.665 344.5,-615.665 344.5,-591.665 435.5,-591.665 435.5,-615.665"/>
+<text text-anchor="middle" x="390" y="-601.265" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">dftifreedescriptor</text>
+</g>
+<!-- none~init_dfti~3&#45;&gt;dftifreedescriptor -->
+<g id="proc~~invfft_b~~CallsGraph_edge4" class="edge"><title>none~init_dfti~3&#45;&gt;dftifreedescriptor</title>
+<path fill="none" stroke="black" d="M272.16,-657.531C281.448,-654.132 291.808,-650.031 301,-645.665 317.732,-637.718 320.342,-632.767 337,-624.665 340.553,-622.937 344.287,-621.237 348.059,-619.599"/>
+<polygon fill="black" stroke="black" points="349.561,-622.765 357.432,-615.672 346.856,-616.308 349.561,-622.765"/>
+</g>
+<!-- dfticreatedescriptor -->
+<g id="proc~~invfft_b~~CallsGraph_node16" class="node"><title>dfticreatedescriptor</title>
+<polygon fill="#777777" stroke="#777777" points="441,-741.665 339,-741.665 339,-717.665 441,-717.665 441,-741.665"/>
+<text text-anchor="middle" x="390" y="-727.265" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">dfticreatedescriptor</text>
+</g>
+<!-- none~init_dfti~3&#45;&gt;dfticreatedescriptor -->
+<g id="proc~~invfft_b~~CallsGraph_edge5" class="edge"><title>none~init_dfti~3&#45;&gt;dfticreatedescriptor</title>
+<path fill="none" stroke="black" d="M270.621,-678.786C288.991,-687.373 314.386,-699.031 337,-708.665 340.944,-710.346 345.07,-712.058 349.205,-713.745"/>
+<polygon fill="black" stroke="black" points="348.2,-717.113 358.784,-717.603 350.816,-710.62 348.2,-717.113"/>
+</g>
+</g>
+</svg>
+</div>
+                <div><a type="button" class="graph-help" data-toggle="modal" href="#graph-help-text">Help</a></div>
+                <div class="modal fade" id="graph-help-text" tabindex="-1" role="dialog">
+                  <div class="modal-dialog modal-lg" role="document">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title" id="-graph-help-label">Graph Key</h4>
+                      </div>
+                      <div class="modal-body">
+                        
+Nodes of different colours represent the following:
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 2.39.20141001.0445 (20141001.0445)
+ -->
+<!-- Title: Graph Key Pages: 1 -->
+<svg width="641pt" height="26pt"
+ viewBox="0.00 0.00 641.00 26.23" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(0.819693 0.819693) rotate(0) translate(4 28)">
+<title>Graph Key</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-28 778,-28 778,4 -4,4"/>
+<!-- Module -->
+<g id="node1" class="node"><title>Module</title>
+<polygon fill="#337ab7" stroke="#337ab7" points="54,-24 0,-24 0,-0 54,-0 54,-24"/>
+<text text-anchor="middle" x="27" y="-9.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Module</text>
+</g>
+<!-- Submodule -->
+<g id="node2" class="node"><title>Submodule</title>
+<polygon fill="#5bc0de" stroke="#5bc0de" points="138,-24 72,-24 72,-0 138,-0 138,-24"/>
+<text text-anchor="middle" x="105" y="-9.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Submodule</text>
+</g>
+<!-- Type -->
+<g id="node3" class="node"><title>Type</title>
+<polygon fill="#5cb85c" stroke="#5cb85c" points="210,-24 156,-24 156,-0 210,-0 210,-24"/>
+<text text-anchor="middle" x="183" y="-9.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Type</text>
+</g>
+<!-- Subroutine -->
+<g id="node4" class="node"><title>Subroutine</title>
+<polygon fill="#d9534f" stroke="#d9534f" points="291.5,-24 228.5,-24 228.5,-0 291.5,-0 291.5,-24"/>
+<text text-anchor="middle" x="260" y="-9.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Subroutine</text>
+</g>
+<!-- Function -->
+<g id="node5" class="node"><title>Function</title>
+<polygon fill="#d94e8f" stroke="#d94e8f" points="364,-24 310,-24 310,-0 364,-0 364,-24"/>
+<text text-anchor="middle" x="337" y="-9.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Function</text>
+</g>
+<!-- Interface -->
+<g id="node6" class="node"><title>Interface</title>
+<polygon fill="#a7506f" stroke="#a7506f" points="436,-24 382,-24 382,-0 436,-0 436,-24"/>
+<text text-anchor="middle" x="409" y="-9.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Interface</text>
+</g>
+<!-- Unknown Procedure Type -->
+<g id="node7" class="node"><title>Unknown Procedure Type</title>
+<polygon fill="#777777" stroke="#777777" points="588,-24 454,-24 454,-0 588,-0 588,-24"/>
+<text text-anchor="middle" x="521" y="-9.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Unknown Procedure Type</text>
+</g>
+<!-- Program -->
+<g id="node8" class="node"><title>Program</title>
+<polygon fill="#f0ad4e" stroke="#f0ad4e" points="660,-24 606,-24 606,-0 660,-0 660,-24"/>
+<text text-anchor="middle" x="633" y="-9.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Program</text>
+</g>
+<!-- This Page&#39;s Entity -->
+<g id="node9" class="node"><title>This Page&#39;s Entity</title>
+<polygon fill="none" stroke="black" points="774,-24 678,-24 678,-0 774,-0 774,-24"/>
+<text text-anchor="middle" x="726" y="-9.6" font-family="Helvetica,sans-Serif" font-size="10.50">This Page&#39;s Entity</text>
+</g>
+</g>
+</svg>
+
+<h5>Module Graph</h5>
+<p>Solid arrows point from a parent (sub)module to the submodule which is
+descended from it. Dashed arrows point from a module being used to the
+module using it.</p>
+<h5>Type Graph</h5>
+<p>Solid arrows point from one derived type to another which extends
+(inherits from) it. Dashed arrows point from a derived type to another
+type containing it as a components, with a label listing the name(s) of
+said component(s).</p>
+<h5>Call Graph</h5>
+<p>Solid arrows point from a procedure to one which it calls. Dashed 
+arrows point from an interface to procedures which implement that interface.
+This could include the module procedures in a generic interface or the
+implementation in a submodule of an interface in a parent module.</p>
+
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+     
+     
+    <br>
+    
+    <section>
+    <h2>Variables</h2>
+    
+<table class="table table-striped varlist">
+<thead><tr><th>Type</th><th>Visibility</th>
+
+<th>Attributes</th><th></th><th>Name</th><th></th><th>Initial</th><th></th></thead>
+
+
+
+<tbody>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-dp%7E3"></span>integer,</td>
+  
+  <td>public,</td>
+  <td>parameter</td><td>::</td>
+  <td><strong>DP</strong></td><td> =</td><td>selected_real_kind(14,200)</td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-imin3%7E2"></span>integer,</td>
+  
+  <td>public</td>
+  <td></td><td>::</td>
+  <td><strong>imin3</strong></td><td></td><td></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-imax3%7E2"></span>integer,</td>
+  
+  <td>public</td>
+  <td></td><td>::</td>
+  <td><strong>imax3</strong></td><td></td><td></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-np3%7E2"></span>integer,</td>
+  
+  <td>public</td>
+  <td></td><td>::</td>
+  <td><strong>np3</strong></td><td></td><td></td><td></td>
+  
+</tr>
+
+</tbody>
+</table>
+
+    </section>
+    <br>
+    
+    
+    
+    
+    
+
+    
+    
+    
+    
+    
+
+
+    
+    
+    
+    
+    </div>
+  </div>
+
+    <hr>
+    <footer>
+        <div class="row">
+        <div class="col-md-6">&copy; 2015 FFTXlib was written by . </div>
+        <div class="col-md-6"><span class="pull-right">Documentation generated by <a href="https://github.com/cmacmackin/ford">FORD</a>.</span></div>
+        </div>
+        <br>
+    </footer>
+    </div> <!-- /container -->
+
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+<!--
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+-->
+    <script src="../js/bootstrap.min.js"></script>
+    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+    <script src="../js/ie10-viewport-bug-workaround.js"></script>
+
+    <!-- MathJax JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        TeX: { extensions: ['AMSmath.js','AMSsymbols.js','noErrors.js','noUndefined.js'], equationNumbers: { autoNumber: 'AMS' } },
+        jax: ['input/TeX','input/MathML','output/HTML-CSS'],
+        extensions: ['tex2jax.js','mml2jax.js','MathMenu.js','MathZoom.js'],
+        'HTML-CSS': { 
+           styles: { '.MathJax_Display, .MathJax .mo, .MathJax .mi, .MathJax .mn': {color: '#000000 ! important'} }
+        }
+      });
+    </script>
+    <script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  </body>
+</html>

@@ -4,12 +4,12 @@ include ../../make.sys
 
 # location of needed modules
 MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules \
-	  $(MOD_FLAG)../src $(MOD_FLAG). 
+	  $(MOD_FLAG)../../FFTXlib $(MOD_FLAG)../src $(MOD_FLAG). 
 
 PWOBJS = ../src/libpw.a
-QEMODS = ../../Modules/libqemod.a
+QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a
 
-TLDEPS= bindir mods libs pw
+TLDEPS= bindir mods libs pw libfft
 
 LIBOBJS        = ../../flib/ptools.a ../../flib/flib.a ../../clib/clib.a ../../iotk/src/libiotk.a
 

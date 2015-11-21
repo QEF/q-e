@@ -4,7 +4,7 @@ include ../../make.sys
 
 # location of needed modules and included files (if any)
 MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules \
-          $(MOD_FLAG)../../PW/src $(MOD_FLAG).
+          $(MOD_FLAG)../../FFTXlib $(MOD_FLAG)../../PW/src $(MOD_FLAG).
 IFLAGS=
 
 XOBJS = \
@@ -40,7 +40,7 @@ GIPAWOBJS=./paw_gipaw.o \
 
 MANIP_XS_OBJ=./gaunt_mod.o 
              
-QEMODS = ../../Modules/libqemod.a
+QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a
 PWOBJS = ../../PW/src/libpw.a 
 
 LIBOBJS = ../../iotk/src/libiotk.a ../../flib/flib.a \

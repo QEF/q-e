@@ -35,7 +35,7 @@
       use gvecw,                only: gkcut, gvecw_init, g2kin_init
       USE smallbox_subs,        ONLY: ggenb
       USE fft_base,             ONLY: dfftp, dffts, dfftb, dfft3d
-      USE fft_scalar,           ONLY: cft_b_omp_init
+      USE fft_smallbox,         ONLY: cft_b_omp_init
       USE stick_set,            ONLY: pstickset
       USE control_flags,        ONLY: gamma_only, smallmem
       USE electrons_module,     ONLY: bmeshset
@@ -138,7 +138,7 @@
 
       CALL pstickset( gamma_only, bg, gcutm, gkcut, gcutms, &
         dfftp, dffts, ngw_ , ngm_ , ngs_ , me_bgrp, root_bgrp, &
-        nproc_bgrp, intra_bgrp_comm, ntask_groups, dfft3d )
+        nproc_bgrp, intra_bgrp_comm, ntask_groups, ionode, stdout, dfft3d )
       !
       !
       ! ... Initialize reciprocal space local and global dimensions
@@ -210,7 +210,7 @@
          !
          CALL ggenb ( ecutrho, iverbosity )
          !
-#if defined __OPENMP && defined __FFTW 
+#if defined __OPENMP
          CALL cft_b_omp_init( dfftb%nr1, dfftb%nr2, dfftb%nr3 )
 #endif
       ELSE IF( okvan .OR. nlcc_any ) THEN

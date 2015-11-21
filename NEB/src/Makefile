@@ -4,6 +4,7 @@ include ../../make.sys
 
 # location of needed modules and included files (if any)
 MODFLAGS= $(MOD_FLAG)../../iotk/src \
+	  $(MOD_FLAG)../../FFTXlib \
 	  $(MOD_FLAG)../../Modules \
 	  $(MOD_FLAG)../../PW/src $(MOD_FLAG).
 IFLAGS=
@@ -39,7 +40,7 @@ path_variables.o \
 set_defaults.o \
 stop_run_path.o 
 
-QEMODS=../../Modules/libqemod.a
+QEMODS=../../Modules/libqemod.a ../../FFTXlib/libqefft.a
 PWOBJS= ../../PW/src/libpw.a
 
 TLDEPS=bindir mods libs liblapack libblas pw

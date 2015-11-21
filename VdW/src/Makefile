@@ -3,7 +3,7 @@
 include ../../make.sys
 
 # location of needed modules
-MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules \
+MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules $(MOD_FLAG)../../FFTXlib \
           $(MOD_FLAG)../../PW/src $(MOD_FLAG)../../PHonon/PH $(MOD_FLAG).
 
 VdWOBJS = \
@@ -26,7 +26,7 @@ vdwcom.o
 PPOBJS = \
 ../../PP/src/openfil_pp.o
 
-QEMODS = ../../Modules/libqemod.a
+QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a
 PWOBJS = ../../PW/src/libpw.a
 PHOBJS = ../../PHonon/PH/libph.a
 

@@ -4,7 +4,7 @@ include ../../make.sys
 
 # location of needed modules and included files (if any)
 MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules \
-          $(MOD_FLAG)../../PW/src $(MOD_FLAG).
+          $(MOD_FLAG)../../FFTXlib $(MOD_FLAG)../../PW/src $(MOD_FLAG).
 IFLAGS=
 
 PPOBJS = \
@@ -52,7 +52,7 @@ wannier_umatrix_subroutines.o \
 wannier_u_matrix.o
 
 PWOBJS = ../../PW/src/libpw.a
-QEOBJS = ../../Modules/libqemod.a
+QEOBJS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a
 
 MODULES = $(PWOBJS) $(QEOBJS)
 

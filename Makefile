@@ -47,35 +47,35 @@ gww:
 # If "|| exit 1" is not present, the error code from make in subdirectories
 # is not returned and make goes on even if compilation has failed
 #
-pw : bindir mods liblapack libblas libs libiotk 
+pw : bindir libfft mods liblapack libblas libs libiotk 
 	if test -d PW ; then \
 	( cd PW ; $(MAKE) TLDEPS= all || exit 1) ; fi
 
-pw-lib : bindir mods liblapack libblas libs libiotk
+pw-lib : bindir libfft mods liblapack libblas libs libiotk
 	if test -d PW ; then \
 	( cd PW ; $(MAKE) TLDEPS= pw-lib || exit 1) ; fi
 
-cp : bindir mods liblapack libblas libs libiotk
+cp : bindir libfft mods liblapack libblas libs libiotk
 	if test -d CPV ; then \
 	( cd CPV ; $(MAKE) TLDEPS= all || exit 1) ; fi
 
-ph : bindir mods libs pw
+ph : bindir libfft mods libs pw
 	( cd install ; $(MAKE) -f plugins_makefile phonon || exit 1 )
 
-neb : bindir mods libs pw
+neb : bindir libfft mods libs pw
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-tddfpt : bindir mods libs pw ph
+tddfpt : bindir libfft mods libs pw ph
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-pp : bindir mods libs pw
+pp : bindir libfft mods libs pw
 	if test -d PP ; then \
 	( cd PP ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
 
-pwcond : bindir mods libs pw pp
+pwcond : bindir libfft mods libs pw pp
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-acfdt : bindir mods libs pw ph
+acfdt : bindir libfft mods libs pw ph
 	if test -d ACFDT ; then \
 	( cd ACFDT ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
 
@@ -86,18 +86,18 @@ gwl : ph
 gipaw : pw
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-ld1 : bindir liblapack libblas mods libs
+ld1 : bindir liblapack libblas libfft mods libs
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-upf : mods libs liblapack libblas
+upf : libfft mods libs liblapack libblas
 	if test -d upftools ; then \
 	( cd upftools ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
 
-pw_export : libiotk bindir mods libs pw
+pw_export : libiotk bindir libfft mods libs pw
 	if test -d PP ; then \
 	( cd PP ; $(MAKE) TLDEPS= pw_export.x || exit 1 ) ; fi
 
-xspectra : bindir mods libs pw
+xspectra : bindir libfft mods libs pw
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
 couple : pw cp
@@ -114,7 +114,9 @@ all   : pwall cp ld1 upf tddfpt gwl xspectra
 # Auxiliary targets used by main targets:
 # compile modules, libraries, directory for binaries, etc
 ###########################################################
-mods : libiotk libelpa
+libfft : touch-dummy
+	( cd FFTXlib ; $(MAKE) TLDEPS= all || exit 1 )
+mods : libiotk libelpa libfft
 	( cd Modules ; $(MAKE) TLDEPS= all || exit 1 )
 libs : mods
 	( cd clib ; $(MAKE) TLDEPS= all || exit 1 )
@@ -219,7 +221,7 @@ install : touch-dummy
 clean : doc_clean
 	touch make.sys 
 	for dir in \
-		CPV Modules PP PW \
+		CPV FFTXlib Modules PP PW \
 		ACFDT COUPLE GWW XSpectra \
 		clib flib pwtools upftools \
 		dev-tools extlibs Environ TDDFPT \

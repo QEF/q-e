@@ -702,7 +702,8 @@
 !uses FFTW machinery
 !does not reorder data but puts appropriate factors
    USE  constants,           ONLY :  pi
-   USE  fft_scalar,          ONLY : cft_1z, good_fft_order
+   USE  fft_scalar,          ONLY : cft_1z
+   USE  fft_support,         ONLY : good_fft_order
 
 
   implicit none

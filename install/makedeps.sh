@@ -11,7 +11,7 @@ TOPDIR=`pwd`
 
 if test $# = 0
 then
-    dirs=" Modules clib PW/src CPV/src flib PW/tools upftools PP/src PWCOND/src\
+    dirs=" FFTXlib Modules clib PW/src CPV/src flib PW/tools upftools PP/src PWCOND/src\
            PHonon/Gamma PHonon/PH PHonon/D3 PHonon/FD atomic/src XSpectra/src \
            ACDFT NEB/src TDDFPT/src GIPAW/src GWW/pw4gww GWW/gww GWW/head" 
           
@@ -46,38 +46,38 @@ for dir in $dirs; do
     # in directory DIR should be listed in DEPENDS
     LEVEL1=..
     LEVEL2=../..
-    DEPENDS="$LEVEL1/include $LEVEL1/iotk/src"
+    DEPENDS="$LEVEL1/include $LEVEL1/iotk/src $LEVEL1/FFTXlib"
     case $DIR in 
         flib | upftools )
-             DEPENDS="$LEVEL1/include $LEVEL1/iotk/src $LEVEL1/Modules" ;;
+             DEPENDS="$LEVEL1/include $LEVEL1/iotk/src $LEVEL1/FFTXlib $LEVEL1/Modules" ;;
 	PP/src  )
-             DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/Modules \
+             DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/FFTXlib $LEVEL2/Modules \
                       $LEVEL2/PW/src" ;;
 	ACFDT ) 
-             DEPENDS="$LEVEL1/include $LEVEL1/iotk/src $LEVEL1/Modules \
+             DEPENDS="$LEVEL1/include $LEVEL1/iotk/src $LEVEL1/FFTXlib $LEVEL1/Modules \
                       $LEVEL1/PW/src $LEVEL1/PHonon/PH" ;;
 	PW/src )
-	     DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/Modules" ;;
+	     DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/FFTXlib $LEVEL2/Modules" ;;
 	PW/tools | PWCOND/src | PHonon/FD )
-	     DEPENDS="$LEVEL2/include $LEVEL2/PW/src $LEVEL2/iotk/src $LEVEL2/Modules" ;;
+	     DEPENDS="$LEVEL2/include $LEVEL2/PW/src $LEVEL2/iotk/src $LEVEL2/FFTXlib $LEVEL2/Modules" ;;
 	CPV/src | atomic/src | GWW/gww )
-             DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/Modules" ;;
+             DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/FFTXlib $LEVEL2/Modules" ;;
 	PHonon/PH | PHonon/Gamma | XSpectra/src  | PWCOND/src | GWW/pw4gww | NEB/src | GIPAW/src )
-             DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/Modules \
+             DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/FFTXlib $LEVEL2/Modules \
                       $LEVEL2/PW/src" ;;
 	PHonon/D3 )
-	     DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/Modules \
+	     DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/FFTXlib $LEVEL2/Modules \
 	              $LEVEL2/PW/src $LEVEL2/PHonon/PH" ;;	
         GWW/pw4gww )
-            DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/Modules \
+            DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/FFTXlib $LEVEL2/Modules \
                        $LEVEL2/PW/src  " ;;
 	GWW/gww )
-            DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/Modules " ;;
+            DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/FFTXlib $LEVEL2/Modules " ;;
         GWW/head )
-             DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/Modules \
+             DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/FFTXlib $LEVEL2/Modules \
                       $LEVEL2/PW/src $LEVEL2/PHonon/PH " ;;
 	TDDFPT/src )
-             DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/Modules \
+             DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/FFTXlib $LEVEL2/Modules \
                       $LEVEL2/PW/src $LEVEL2/PHonon/PH" ;;
     *)
 # if addson needs a make.depend file
@@ -98,16 +98,16 @@ for dir in $dirs; do
         # handle special cases: modules for C-fortran binding, system utilities
         sed '/@iso_c_binding@/d;/@f90_unix_env@/d' make.depend.tmp > make.depend
 
+        if test "$DIR" = "FFTXlib"
+        then
+            sed '/@mpi@/d;/@fft_scalar.*.f90@/d' make.depend > make.depend.tmp
+            sed '/@mkl_dfti/d;/@fftw3.f/d;s/@fftw.c@/fftw.c/;s/@fft_param.f90@/fft_param.f90/' make.depend.tmp > make.depend
+        fi
+
         if test "$DIR" = "Modules"
         then
             sed '/@mpi@/d;/@elpa1@/d' make.depend > make.depend.tmp
             sed '/@mkl_dfti/d;/@fftw3.f/d' make.depend.tmp > make.depend
-        fi
-
-        if test "$DIR" = "clib"
-        then
-            mv make.depend make.depend.tmp
-            sed 's/@fftw.c@/fftw.c/' make.depend.tmp > make.depend
         fi
 
         if test "$DIR" = "PW/src" || test "$DIR" = "TDDFPT/src"

@@ -118,8 +118,9 @@ expansion.o : input_gw.o
 expansion.o : para_gww.o
 expansion.o : self_energy_storage.o
 expansion.o : times_gw.o
+fft_gw.o : ../../FFTXlib/fft_scalar.DFTI.o
+fft_gw.o : ../../FFTXlib/fft_support.o
 fft_gw.o : ../../Modules/constants.o
-fft_gw.o : ../../Modules/fft_scalar.o
 fft_gw.o : ../../Modules/io_files.o
 fft_gw.o : ../../Modules/io_global.o
 fft_gw.o : ../../Modules/kind.o
@@ -270,8 +271,8 @@ self_energy.o : basic_structures.o
 self_energy.o : compact_product.o
 self_energy.o : green_function.o
 self_energy.o : polarization.o
+self_energy_storage.o : ../../FFTXlib/fft_scalar.DFTI.o
 self_energy_storage.o : ../../Modules/constants.o
-self_energy_storage.o : ../../Modules/fft_scalar.o
 self_energy_storage.o : ../../Modules/io_files.o
 self_energy_storage.o : ../../Modules/io_global.o
 self_energy_storage.o : ../../Modules/kind.o

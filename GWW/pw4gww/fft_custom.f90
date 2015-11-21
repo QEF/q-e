@@ -73,7 +73,7 @@ CONTAINS
   !     given as input parameters. Input values are kept otherwise.
   !
   USE io_global,  ONLY : stdout
-  use fft_scalar, only: allowed
+  use fft_support, only: allowed
   USE fft_base,             ONLY : dfftp
   implicit none
 
@@ -176,7 +176,7 @@ CONTAINS
                          inter_pool_comm,root_pool
   USE mp_world,   ONLY : world_comm, nproc
   USE stick_base
-  USE fft_scalar, ONLY : good_fft_dimension
+  USE fft_support, ONLY : good_fft_dimension
   USE fft_types,  ONLY : fft_dlay_allocate, fft_dlay_set, fft_dlay_scalar
   !
   !

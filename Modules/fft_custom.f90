@@ -102,7 +102,7 @@ CONTAINS
     !     given as input parameters. Input values are kept otherwise.
     !
     USE cell_base,   ONLY : at, tpiba2
-    USE fft_scalar,  ONLY : allowed
+    USE fft_support, ONLY : allowed
     
     IMPLICIT NONE
     

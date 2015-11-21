@@ -29,7 +29,7 @@
        ! ... Sets optimal values for dfft%nr[123] and dfft%nr[123]x
        ! ... If fft_fact is present, force nr[123] to be multiple of fft_fac([123])
        !
-       USE fft_scalar, only: good_fft_dimension, good_fft_order
+       USE fft_support, only: good_fft_dimension, good_fft_order
        USE io_global, only: stdout
        !
        IMPLICIT NONE

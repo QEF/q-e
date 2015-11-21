@@ -25,6 +25,7 @@ SUBROUTINE data_structure( gamma_only )
   USE gvecs,      ONLY : gcutms, gvecs_init
   USE stick_set,  ONLY : pstickset
   USE wvfct,      ONLY : ecutwfc
+  USE io_global,  ONLY : stdout, ionode
   !
   IMPLICIT NONE
   LOGICAL, INTENT(in) :: gamma_only
@@ -58,7 +59,7 @@ SUBROUTINE data_structure( gamma_only )
   !
   CALL pstickset( gamma_only, bg, gcutm, gkcut, gcutms, &
                   dfftp, dffts, ngw_ , ngm_ , ngs_ , me_bgrp, &
-                  root_bgrp, nproc_bgrp, intra_bgrp_comm, ntask_groups )
+                  root_bgrp, nproc_bgrp, intra_bgrp_comm, ntask_groups, ionode, stdout )
   !
   !     on output, ngm_ and ngs_ contain the local number of G-vectors
   !     for the two grids. Initialize local and global number of G-vectors

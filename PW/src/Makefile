@@ -3,7 +3,7 @@
 include ../../make.sys
 
 # location of needed modules and included files (if any)
-MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules
+MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules $(MOD_FLAG)../../FFTXlib
 IFLAGS=
 
 PWOBJS = \
@@ -246,7 +246,7 @@ wannier_occ.o \
 wannier_enrg.o \
 wyckoff.o       
 
-QEMODS=../../Modules/libqemod.a
+QEMODS=../../Modules/libqemod.a ../../FFTXlib/libqefft.a
 
 TLDEPS=bindir mods libs liblapack libblas
 

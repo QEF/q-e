@@ -3,7 +3,7 @@
 include ../make.sys
 
 # location of needed modules
-MODFLAGS= $(MOD_FLAG)../iotk/src $(MOD_FLAG)../ELPA/src $(MOD_FLAG).
+MODFLAGS= $(MOD_FLAG)../iotk/src $(MOD_FLAG)../ELPA/src $(MOD_FLAG)../FFTXlib $(MOD_FLAG).
 
 MODULES = \
 atom.o \
@@ -31,10 +31,6 @@ fcp_variables.o \
 fd_gradient.o \
 fft_base.o \
 fft_custom.o \
-fft_interfaces.o \
-fft_parallel.o \
-fft_scalar.o \
-fft_types.o \
 funct.o \
 generate_function.o \
 griddim.o \
@@ -87,12 +83,9 @@ read_xml_fields.o \
 recvec.o \
 recvec_subs.o \
 run_info.o \
-scatter_mod.o \
 space_group.o \
 set_signal.o \
 splinelib.o \
-stick_base.o \
-stick_set.o \
 timestep.o\
 tsvdw.o\
 upf.o \
@@ -114,6 +107,7 @@ wypos.o \
 zdotc_wrapper.o \
 zhpev_drv.o 
 
+TLDEPS=libfft
 
 all : version version.o libqemod.a
 
@@ -133,6 +127,11 @@ version.f90: version
 libqemod.a: 	$(MODULES)
 	$(AR) $(ARFLAGS) $@ $?       
 	$(RANLIB) $@    
+
+tldeps :
+	if test -n "$(TLDEPS)" ; then \
+	( cd ../.. ; $(MAKE) $(TLDEPS) || exit 1 ) ; fi
+
 
 clean :
 	- /bin/rm -f *.o *.a *.d *.i *~ *.F90 *.mod *.L version.f90

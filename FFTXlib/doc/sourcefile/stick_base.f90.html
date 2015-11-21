@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+	 
+    <meta name="description" content="Documentation for FFTXlib">
+	 
+    <meta name="author" content="Chris MacMackin" >
+    <link rel="icon" href="../favicon.png">
+
+    <title>stick_base.f90 &ndash; FFTXlib</title>
+
+    <link href="../css/bootstrap.min.css" rel="stylesheet">
+    <link href="../css/pygments.css" rel="stylesheet">
+    <link href="../css/font-awesome.min.css" rel="stylesheet">
+    <link href="../css/local.css" rel="stylesheet">
+    
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+    
+    <script src="../js/jquery-2.1.3.min.js"></script>
+    <script src="../js/svg-pan-zoom.min.js"></script>
+
+    
+    <script src="../tipuesearch/tipuesearch_content.js"></script>
+    <link  href="../tipuesearch/tipuesearch.css" rel="stylesheet">
+    <script src="../tipuesearch/tipuesearch_set.js"></script>
+    <script src="../tipuesearch/tipuesearch.js"></script>
+    
+
+  </head>
+
+  <body>
+
+    <!-- Fixed navbar -->
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="../index.html">FFTXlib </a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+				
+                
+            <li><a href="../lists/files.html">Source Files</a></li>
+				
+				
+            <li><a href="../lists/modules.html">Modules</a></li>
+				
+				
+            <li><a href="../lists/procedures.html">Procedures</a></li>
+				
+								
+            <li><a href="../lists/types.html">Derived Types</a></li>
+				
+				
+          </ul>
+        
+        <form action="../search.html" class="navbar-form navbar-right" role="search">
+        <div class="form-group">
+          <input type="text" class="form-control" placeholder="Search" name="q" id="tipue_search_input" autocomplete="off" required>
+        </div>
+<!--
+        <button type="submit" class="btn btn-default">Submit</button>
+-->
+        </form>
+        
+        </div><!--/.nav-collapse -->
+      </div>
+    </nav>
+
+    <div class="container">
+    
+  
+  <div class="row">
+    <h1>stick_base.f90
+    <small>Source File</small>
+    
+    </h1>
+	 
+<div class="row">
+<div class="col-lg-12">
+<div class="well well-sm">
+  <ul class="list-inline" style="margin-bottom:0px;display:inline">
+     
+     
+     
+     
+    
+    
+    <li><i class="fa fa-code"></i><a href="../src/stick_base.f90"> Source File</a></li>
+     
+  </ul>
+  <ol class="breadcrumb in-well text-right">
+  
+     <li class="active">stick_base.f90</li>
+  </ol>
+</div>
+</div>
+</div>
+    
+  </div>
+  <div class="row">
+    <div class="col-lg-3">
+    
+  
+  
+  
+  
+  
+  
+  
+  <div class="panel panel-primary">
+    <div class="panel-heading text-left"><h3 class="panel-title">Modules</h3></div>
+    <div class="list-group">
+      
+      <a class="list-group-item" href="../module/stick_base.html">stick_base</a>
+      
+    </div>
+  </div>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  <div class="panel panel-primary">
+    <div class="panel-heading text-left"><h3 class="panel-title">Source Code</h3></div>
+    <div class="list-group">
+      <a class="list-group-item" href="../sourcefile/stick_base.f90.html#src">stick_base.f90</a>
+    </div>
+  </div>
+  
+  <hr>
+  
+  <div class="panel panel-default">
+    <div class="panel-heading text-left"><h3 class="panel-title">All Source Files</h3></div>
+    <div class="list-group">
+      
+      <a class="list-group-item" href="../sourcefile/fft_error.f90.html">fft_error.f90</a>
+      
+      <a class="list-group-item" href="../sourcefile/fft_interfaces.f90.html">fft_interfaces.f90</a>
+      
+      <a class="list-group-item" href="../sourcefile/fft_parallel.f90.html">fft_parallel.f90</a>
+      
+      <a class="list-group-item" href="../sourcefile/fft_param.f90.html">fft_param.f90</a>
+      
+      <a class="list-group-item" href="../sourcefile/fft_scalar.dfti.f90.html">fft_scalar.DFTI.f90</a>
+      
+      <a class="list-group-item" href="../sourcefile/fft_scalar.essl.f90.html">fft_scalar.ESSL.f90</a>
+      
+      <a class="list-group-item" href="../sourcefile/fft_scalar.f90.html">fft_scalar.f90</a>
+      
+      <a class="list-group-item" href="../sourcefile/fft_scalar.fftw.f90.html">fft_scalar.FFTW.f90</a>
+      
+      <a class="list-group-item" href="../sourcefile/fft_scalar.fftw3.f90.html">fft_scalar.FFTW3.f90</a>
+      
+      <a class="list-group-item" href="../sourcefile/fft_scalar.sx6.f90.html">fft_scalar.SX6.f90</a>
+      
+      <a class="list-group-item" href="../sourcefile/fft_smallbox.f90.html">fft_smallbox.f90</a>
+      
+      <a class="list-group-item" href="../sourcefile/fft_support.f90.html">fft_support.f90</a>
+      
+      <a class="list-group-item" href="../sourcefile/fft_types.f90.html">fft_types.f90</a>
+      
+      <a class="list-group-item" href="../sourcefile/scatter_mod.f90.html">scatter_mod.f90</a>
+      
+      <a class="list-group-item" href="../sourcefile/stick_base.f90.html">stick_base.f90</a>
+      
+      <a class="list-group-item" href="../sourcefile/stick_set.f90.html">stick_set.f90</a>
+      
+    </div>
+  </div>
+  
+  
+    </div>
+    <div class="col-lg-9" id='text'>
+    
+    
+    <section>
+    <h2><span class="anchor" id="src"></span>Source Code</h2>
+    <div class="highlight"><pre><span class="c">!</span>
+<span class="c">! Copyright (C) Quantum ESPRESSO group</span>
+<span class="c">!</span>
+<span class="c">! This file is distributed under the terms of the</span>
+<span class="c">! GNU General Public License. See the file `License&#39;</span>
+<span class="c">! in the root directory of the present distribution,</span>
+<span class="c">! or http://www.gnu.org/copyleft/gpl.txt .</span>
+<span class="c">!</span>
+<span class="c">!=----------------------------------------------------------------------=</span>
+   <span class="k">MODULE </span><span class="n">stick_base</span>
+<span class="c">!=----------------------------------------------------------------------=</span>
+
+        <span class="k">IMPLICIT NONE</span>
+<span class="k">        PRIVATE</span>
+<span class="k">        SAVE</span>
+
+<span class="k">        PUBLIC</span> <span class="kd">::</span> <span class="n">sticks_maps</span><span class="p">,</span> <span class="n">sticks_sort</span><span class="p">,</span> <span class="n">sticks_countg</span><span class="p">,</span> <span class="n">sticks_dist</span><span class="p">,</span> <span class="n">sticks_pairup</span>
+        <span class="k">PUBLIC</span> <span class="kd">::</span> <span class="n">sticks_owner</span><span class="p">,</span> <span class="n">sticks_deallocate</span><span class="p">,</span> <span class="n">sticks_maps_scalar</span><span class="p">,</span> <span class="n">sticks_ordered_dist</span>
+
+<span class="c">! ...   sticks_owner :   stick owner, sticks_owner( i, j ) is the index of the processor</span>
+<span class="c">! ...     (starting from 1) owning the stick whose x and y coordinate  are i and j.</span>
+
+        <span class="kt">INTEGER</span><span class="p">,</span> <span class="k">ALLOCATABLE</span><span class="p">,</span> <span class="k">TARGET</span> <span class="kd">::</span> <span class="n">sticks_owner</span><span class="p">(</span> <span class="p">:</span> <span class="p">,</span> <span class="p">:</span> <span class="p">)</span>
+
+        <span class="kt">INTEGER</span><span class="p">,</span> <span class="k">PARAMETER</span> <span class="kd">::</span> <span class="n">DP</span> <span class="o">=</span> <span class="nb">selected_real_kind</span><span class="p">(</span><span class="mi">14</span><span class="p">,</span><span class="mi">200</span><span class="p">)</span>
+
+<span class="c">!=----------------------------------------------------------------------=</span>
+   <span class="k">CONTAINS</span>
+<span class="c">!=----------------------------------------------------------------------=</span>
+
+      <span class="k">SUBROUTINE </span><span class="n">sticks_maps</span><span class="p">(</span> <span class="n">tk</span><span class="p">,</span> <span class="n">ub</span><span class="p">,</span> <span class="n">lb</span><span class="p">,</span> <span class="n">b1</span><span class="p">,</span> <span class="n">b2</span><span class="p">,</span> <span class="n">b3</span><span class="p">,</span> <span class="n">gcut</span><span class="p">,</span> <span class="n">gcutw</span><span class="p">,</span> <span class="n">gcuts</span><span class="p">,</span> <span class="n">st</span><span class="p">,</span> <span class="n">stw</span><span class="p">,</span> <span class="n">sts</span><span class="p">,</span> <span class="n">me</span><span class="p">,</span> <span class="n">nproc</span><span class="p">,</span> <span class="n">comm</span> <span class="p">)</span>
+
+<span class="cp">#if defined(__MPI)</span>
+          <span class="k">INCLUDE</span> <span class="s1">&#39;mpif.h&#39;</span>
+<span class="cp">#endif</span>
+
+          <span class="kt">LOGICAL</span><span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">in</span><span class="p">)</span> <span class="kd">::</span> <span class="n">tk</span>    <span class="c">!  if true use the full space grid</span>
+          <span class="kt">INTEGER</span><span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">in</span><span class="p">)</span> <span class="kd">::</span> <span class="n">ub</span><span class="p">(:)</span> <span class="c">!  upper bounds for i-th grid dimension</span>
+          <span class="kt">INTEGER</span><span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">in</span><span class="p">)</span> <span class="kd">::</span> <span class="n">lb</span><span class="p">(:)</span> <span class="c">!  lower bounds for i-th grid dimension</span>
+          <span class="kt">REAL</span><span class="p">(</span><span class="n">DP</span><span class="p">)</span> <span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">in</span><span class="p">)</span> <span class="kd">::</span> <span class="n">b1</span><span class="p">(:),</span> <span class="n">b2</span><span class="p">(:),</span> <span class="n">b3</span><span class="p">(:)</span> <span class="c">! reciprocal space base vectors</span>
+          <span class="kt">REAL</span><span class="p">(</span><span class="n">DP</span><span class="p">)</span> <span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">in</span><span class="p">)</span> <span class="kd">::</span> <span class="n">gcut</span>   <span class="c">! cut-off for potentials</span>
+          <span class="kt">REAL</span><span class="p">(</span><span class="n">DP</span><span class="p">)</span> <span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">in</span><span class="p">)</span> <span class="kd">::</span> <span class="n">gcutw</span>  <span class="c">! cut-off for plane waves</span>
+          <span class="kt">REAL</span><span class="p">(</span><span class="n">DP</span><span class="p">)</span> <span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">in</span><span class="p">)</span> <span class="kd">::</span> <span class="n">gcuts</span>  <span class="c">! cut-off for smooth mesh</span>
+          <span class="kt">INTEGER</span><span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">out</span><span class="p">)</span> <span class="kd">::</span> <span class="n">st</span><span class="p">(</span> <span class="n">lb</span><span class="p">(</span><span class="mi">1</span><span class="p">):</span> <span class="n">ub</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">lb</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span><span class="n">ub</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="p">)</span> <span class="c">! stick map for potential</span>
+          <span class="kt">INTEGER</span><span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">out</span><span class="p">)</span> <span class="kd">::</span> <span class="n">stw</span><span class="p">(</span><span class="n">lb</span><span class="p">(</span><span class="mi">1</span><span class="p">):</span> <span class="n">ub</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">lb</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span><span class="n">ub</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="p">)</span> <span class="c">! stick map for wave functions</span>
+          <span class="kt">INTEGER</span><span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">out</span><span class="p">)</span> <span class="kd">::</span> <span class="n">sts</span><span class="p">(</span><span class="n">lb</span><span class="p">(</span><span class="mi">1</span><span class="p">):</span> <span class="n">ub</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">lb</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span><span class="n">ub</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="p">)</span> <span class="c">! stick map for smooth mesh</span>
+          <span class="kt">INTEGER</span><span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">in</span><span class="p">)</span> <span class="kd">::</span> <span class="n">me</span> <span class="c">! my proc id (starting from 0)</span>
+          <span class="kt">INTEGER</span><span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">in</span><span class="p">)</span> <span class="kd">::</span> <span class="n">nproc</span> <span class="c">! number of proc in the g-vec group</span>
+          <span class="kt">INTEGER</span><span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">in</span><span class="p">)</span> <span class="kd">::</span> <span class="n">comm</span> <span class="c">! communicator of the g-vec group</span>
+
+          <span class="kt">INTEGER</span> <span class="kd">::</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">kip</span><span class="p">,</span> <span class="n">ierr</span>
+          <span class="kt">REAL</span><span class="p">(</span><span class="n">DP</span><span class="p">)</span> <span class="kd">::</span> <span class="n">gsq</span>
+
+          <span class="n">stw</span>  <span class="o">=</span> <span class="mi">0</span>
+          <span class="n">st</span>   <span class="o">=</span> <span class="mi">0</span>
+          <span class="n">sts</span>  <span class="o">=</span> <span class="mi">0</span>
+
+<span class="c">! ...       Here find the basic maps of sticks st, stw and sts for the potential</span>
+<span class="c">! ...       cut-off gcut, wavefunction cut-off gcutw, and smooth mesh cut-off gcuts</span>
+
+<span class="c">! ...       st(i,j) will contain the number of G vectors of the stick whose</span>
+<span class="c">! ...       indices are (i,j).</span>
+
+<span class="cp">#if defined (__EKO)</span>
+          <span class="k">WRITE</span><span class="p">(</span><span class="o">*</span><span class="p">,</span><span class="o">*</span><span class="p">)</span> <span class="c">! Workaround for EKOPath compiler bug</span>
+<span class="cp">#endif</span>
+          <span class="k">IF</span><span class="p">(</span> <span class="p">.</span><span class="nb">not</span><span class="p">.</span> <span class="n">tk</span> <span class="p">)</span> <span class="k">THEN</span>
+
+<span class="k">            </span><span class="n">kip</span> <span class="o">=</span> <span class="mi">0</span> <span class="o">+</span> <span class="nb">abs</span><span class="p">(</span><span class="n">lb</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="k">IF</span><span class="p">(</span> <span class="nb">mod</span><span class="p">(</span> <span class="n">kip</span><span class="p">,</span> <span class="n">nproc</span> <span class="p">)</span> <span class="o">==</span> <span class="n">me</span> <span class="p">)</span> <span class="k">THEN</span>
+<span class="k">              </span><span class="n">st</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span> <span class="o">=</span> <span class="n">st</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+              <span class="n">stw</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span> <span class="o">=</span> <span class="n">stw</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+              <span class="n">sts</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span> <span class="o">=</span> <span class="n">sts</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="n">ENDIF</span>
+
+            <span class="k">DO </span><span class="n">i</span><span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
+              <span class="k">DO </span><span class="n">j</span><span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
+                <span class="k">DO </span><span class="n">k</span><span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">ub</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+                  <span class="n">kip</span> <span class="o">=</span> <span class="n">k</span> <span class="o">+</span> <span class="nb">abs</span><span class="p">(</span><span class="n">lb</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span> <span class="o">+</span> <span class="mi">1</span>
+                  <span class="k">IF</span><span class="p">(</span> <span class="nb">mod</span><span class="p">(</span> <span class="n">kip</span><span class="p">,</span> <span class="n">nproc</span> <span class="p">)</span> <span class="o">==</span> <span class="n">me</span> <span class="p">)</span> <span class="k">THEN</span>
+<span class="k">                    </span><span class="n">gsq</span><span class="o">=</span>    <span class="p">(</span><span class="nb">dble</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">*</span><span class="n">b1</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">+</span><span class="nb">dble</span><span class="p">(</span><span class="n">j</span><span class="p">)</span><span class="o">*</span><span class="n">b2</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">+</span><span class="nb">dble</span><span class="p">(</span><span class="n">k</span><span class="p">)</span><span class="o">*</span><span class="n">b3</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+                    <span class="n">gsq</span><span class="o">=</span><span class="n">gsq</span><span class="o">+</span><span class="p">(</span><span class="nb">dble</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">*</span><span class="n">b1</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">+</span><span class="nb">dble</span><span class="p">(</span><span class="n">j</span><span class="p">)</span><span class="o">*</span><span class="n">b2</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">+</span><span class="nb">dble</span><span class="p">(</span><span class="n">k</span><span class="p">)</span><span class="o">*</span><span class="n">b3</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+                    <span class="n">gsq</span><span class="o">=</span><span class="n">gsq</span><span class="o">+</span><span class="p">(</span><span class="nb">dble</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">*</span><span class="n">b1</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">+</span><span class="nb">dble</span><span class="p">(</span><span class="n">j</span><span class="p">)</span><span class="o">*</span><span class="n">b2</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">+</span><span class="nb">dble</span><span class="p">(</span><span class="n">k</span><span class="p">)</span><span class="o">*</span><span class="n">b3</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+                    <span class="k">IF</span><span class="p">(</span><span class="n">gsq</span><span class="p">.</span><span class="n">le</span><span class="p">.</span><span class="n">gcut</span> <span class="p">)</span> <span class="k">THEN</span>
+<span class="k">                      </span><span class="n">st</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span> <span class="o">=</span> <span class="n">st</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+                      <span class="k">IF</span><span class="p">(</span><span class="n">gsq</span><span class="p">.</span><span class="n">le</span><span class="p">.</span><span class="n">gcutw</span><span class="p">)</span> <span class="k">THEN</span>
+<span class="k">                        </span><span class="n">stw</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span> <span class="o">=</span> <span class="n">stw</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+                      <span class="n">ENDIF</span>
+                      <span class="k">IF</span><span class="p">(</span><span class="n">gsq</span><span class="p">.</span><span class="n">le</span><span class="p">.</span><span class="n">gcuts</span><span class="p">)</span> <span class="k">THEN</span>
+<span class="k">                        </span><span class="n">sts</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span> <span class="o">=</span> <span class="n">sts</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+                      <span class="n">ENDIF</span>
+                    <span class="n">ENDIF</span>
+                  <span class="n">ENDIF</span>
+                <span class="n">ENDDO</span>
+              <span class="n">ENDDO</span>
+            <span class="n">ENDDO</span>
+
+            <span class="k">DO </span><span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
+              <span class="k">DO </span><span class="n">j</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">ub</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+                <span class="k">DO </span><span class="n">k</span> <span class="o">=</span> <span class="n">lb</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="n">ub</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+                  <span class="n">kip</span> <span class="o">=</span> <span class="n">k</span> <span class="o">+</span> <span class="nb">abs</span><span class="p">(</span><span class="n">lb</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span> <span class="o">+</span> <span class="mi">1</span>
+                  <span class="k">IF</span><span class="p">(</span> <span class="nb">mod</span><span class="p">(</span> <span class="n">kip</span><span class="p">,</span> <span class="n">nproc</span><span class="p">)</span> <span class="o">==</span> <span class="n">me</span> <span class="p">)</span> <span class="k">THEN</span>
+<span class="k">                    </span><span class="n">gsq</span><span class="o">=</span>    <span class="p">(</span><span class="nb">dble</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">*</span><span class="n">b1</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">+</span><span class="nb">dble</span><span class="p">(</span><span class="n">j</span><span class="p">)</span><span class="o">*</span><span class="n">b2</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">+</span><span class="nb">dble</span><span class="p">(</span><span class="n">k</span><span class="p">)</span><span class="o">*</span><span class="n">b3</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+                    <span class="n">gsq</span><span class="o">=</span><span class="n">gsq</span><span class="o">+</span><span class="p">(</span><span class="nb">dble</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">*</span><span class="n">b1</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">+</span><span class="nb">dble</span><span class="p">(</span><span class="n">j</span><span class="p">)</span><span class="o">*</span><span class="n">b2</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">+</span><span class="nb">dble</span><span class="p">(</span><span class="n">k</span><span class="p">)</span><span class="o">*</span><span class="n">b3</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+                    <span class="n">gsq</span><span class="o">=</span><span class="n">gsq</span><span class="o">+</span><span class="p">(</span><span class="nb">dble</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">*</span><span class="n">b1</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">+</span><span class="nb">dble</span><span class="p">(</span><span class="n">j</span><span class="p">)</span><span class="o">*</span><span class="n">b2</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">+</span><span class="nb">dble</span><span class="p">(</span><span class="n">k</span><span class="p">)</span><span class="o">*</span><span class="n">b3</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+                    <span class="k">IF</span><span class="p">(</span><span class="n">gsq</span><span class="p">.</span><span class="n">le</span><span class="p">.</span><span class="n">gcut</span> <span class="p">)</span> <span class="k">THEN</span>
+<span class="k">                      </span><span class="n">st</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span> <span class="o">=</span> <span class="n">st</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+                      <span class="k">IF</span><span class="p">(</span><span class="n">gsq</span><span class="p">.</span><span class="n">le</span><span class="p">.</span><span class="n">gcutw</span><span class="p">)</span> <span class="k">THEN</span>
+<span class="k">                        </span><span class="n">stw</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span> <span class="o">=</span> <span class="n">stw</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+                      <span class="n">ENDIF</span>
+                      <span class="k">IF</span><span class="p">(</span><span class="n">gsq</span><span class="p">.</span><span class="n">le</span><span class="p">.</span><span class="n">gcuts</span><span class="p">)</span> <span class="k">THEN</span>
+<span class="k">                        </span><span class="n">sts</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span> <span class="o">=</span> <span class="n">sts</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+                      <span class="n">ENDIF</span>
+                    <span class="n">ENDIF</span>
+                  <span class="n">ENDIF</span>
+                <span class="n">ENDDO</span>
+              <span class="n">ENDDO</span>
+            <span class="n">ENDDO</span>
+
+            <span class="k">DO </span><span class="n">i</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">ub</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+              <span class="k">DO </span><span class="n">j</span> <span class="o">=</span> <span class="n">lb</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="n">ub</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+                <span class="k">DO </span><span class="n">k</span> <span class="o">=</span> <span class="n">lb</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="n">ub</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+                  <span class="n">kip</span> <span class="o">=</span> <span class="n">k</span> <span class="o">+</span> <span class="nb">abs</span><span class="p">(</span><span class="n">lb</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span> <span class="o">+</span> <span class="mi">1</span>
+                  <span class="k">IF</span><span class="p">(</span> <span class="nb">mod</span><span class="p">(</span> <span class="n">kip</span><span class="p">,</span> <span class="n">nproc</span><span class="p">)</span> <span class="o">==</span> <span class="n">me</span> <span class="p">)</span> <span class="k">THEN</span>
+<span class="k">                    </span><span class="n">gsq</span><span class="o">=</span>    <span class="p">(</span><span class="nb">dble</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">*</span><span class="n">b1</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">+</span><span class="nb">dble</span><span class="p">(</span><span class="n">j</span><span class="p">)</span><span class="o">*</span><span class="n">b2</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">+</span><span class="nb">dble</span><span class="p">(</span><span class="n">k</span><span class="p">)</span><span class="o">*</span><span class="n">b3</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+                    <span class="n">gsq</span><span class="o">=</span><span class="n">gsq</span><span class="o">+</span><span class="p">(</span><span class="nb">dble</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">*</span><span class="n">b1</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">+</span><span class="nb">dble</span><span class="p">(</span><span class="n">j</span><span class="p">)</span><span class="o">*</span><span class="n">b2</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">+</span><span class="nb">dble</span><span class="p">(</span><span class="n">k</span><span class="p">)</span><span class="o">*</span><span class="n">b3</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+                    <span class="n">gsq</span><span class="o">=</span><span class="n">gsq</span><span class="o">+</span><span class="p">(</span><span class="nb">dble</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">*</span><span class="n">b1</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">+</span><span class="nb">dble</span><span class="p">(</span><span class="n">j</span><span class="p">)</span><span class="o">*</span><span class="n">b2</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">+</span><span class="nb">dble</span><span class="p">(</span><span class="n">k</span><span class="p">)</span><span class="o">*</span><span class="n">b3</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+                    <span class="k">IF</span><span class="p">(</span><span class="n">gsq</span><span class="p">.</span><span class="n">le</span><span class="p">.</span><span class="n">gcut</span> <span class="p">)</span> <span class="k">THEN</span>
+<span class="k">                      </span><span class="n">st</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span> <span class="o">=</span> <span class="n">st</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+                      <span class="k">IF</span><span class="p">(</span><span class="n">gsq</span><span class="p">.</span><span class="n">le</span><span class="p">.</span><span class="n">gcutw</span><span class="p">)</span> <span class="k">THEN</span>
+<span class="k">                        </span><span class="n">stw</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span> <span class="o">=</span> <span class="n">stw</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+                      <span class="n">ENDIF</span>
+                      <span class="k">IF</span><span class="p">(</span><span class="n">gsq</span><span class="p">.</span><span class="n">le</span><span class="p">.</span><span class="n">gcuts</span><span class="p">)</span> <span class="k">THEN</span>
+<span class="k">                        </span><span class="n">sts</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span> <span class="o">=</span> <span class="n">sts</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+                      <span class="n">ENDIF</span>
+                    <span class="n">ENDIF</span>
+                  <span class="n">ENDIF</span>
+                <span class="n">ENDDO</span>
+              <span class="n">ENDDO</span>
+            <span class="n">ENDDO</span>
+
+          <span class="k">ELSE</span>
+
+<span class="k">            DO </span><span class="n">i</span><span class="o">=</span> <span class="n">lb</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">ub</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+              <span class="k">DO </span><span class="n">j</span><span class="o">=</span> <span class="n">lb</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="n">ub</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+                <span class="k">DO </span><span class="n">k</span><span class="o">=</span> <span class="n">lb</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="n">ub</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+                  <span class="n">kip</span> <span class="o">=</span> <span class="n">k</span> <span class="o">+</span> <span class="nb">abs</span><span class="p">(</span><span class="n">lb</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span> <span class="o">+</span> <span class="mi">1</span>
+                  <span class="k">IF</span><span class="p">(</span> <span class="nb">mod</span><span class="p">(</span> <span class="n">kip</span><span class="p">,</span> <span class="n">nproc</span> <span class="p">)</span> <span class="o">==</span> <span class="n">me</span> <span class="p">)</span> <span class="k">THEN</span>
+<span class="k">                    </span><span class="n">gsq</span><span class="o">=</span>    <span class="p">(</span><span class="nb">dble</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">*</span><span class="n">b1</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">+</span><span class="nb">dble</span><span class="p">(</span><span class="n">j</span><span class="p">)</span><span class="o">*</span><span class="n">b2</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">+</span><span class="nb">dble</span><span class="p">(</span><span class="n">k</span><span class="p">)</span><span class="o">*</span><span class="n">b3</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+                    <span class="n">gsq</span><span class="o">=</span><span class="n">gsq</span><span class="o">+</span><span class="p">(</span><span class="nb">dble</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">*</span><span class="n">b1</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">+</span><span class="nb">dble</span><span class="p">(</span><span class="n">j</span><span class="p">)</span><span class="o">*</span><span class="n">b2</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">+</span><span class="nb">dble</span><span class="p">(</span><span class="n">k</span><span class="p">)</span><span class="o">*</span><span class="n">b3</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+                    <span class="n">gsq</span><span class="o">=</span><span class="n">gsq</span><span class="o">+</span><span class="p">(</span><span class="nb">dble</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">*</span><span class="n">b1</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">+</span><span class="nb">dble</span><span class="p">(</span><span class="n">j</span><span class="p">)</span><span class="o">*</span><span class="n">b2</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">+</span><span class="nb">dble</span><span class="p">(</span><span class="n">k</span><span class="p">)</span><span class="o">*</span><span class="n">b3</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+                    <span class="k">IF</span><span class="p">(</span><span class="n">gsq</span><span class="p">.</span><span class="n">le</span><span class="p">.</span><span class="n">gcut</span> <span class="p">)</span> <span class="k">THEN</span>
+<span class="k">                      </span><span class="n">st</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span> <span class="o">=</span> <span class="n">st</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+                    <span class="n">ENDIF</span>
+                    <span class="k">IF</span><span class="p">(</span><span class="n">gsq</span><span class="p">.</span><span class="n">le</span><span class="p">.</span><span class="n">gcutw</span><span class="p">)</span> <span class="k">THEN</span>
+<span class="k">                      </span><span class="n">stw</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span> <span class="o">=</span> <span class="n">stw</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+                    <span class="n">ENDIF</span>
+                    <span class="k">IF</span><span class="p">(</span><span class="n">gsq</span><span class="p">.</span><span class="n">le</span><span class="p">.</span><span class="n">gcuts</span><span class="p">)</span> <span class="k">THEN</span>
+<span class="k">                      </span><span class="n">sts</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span> <span class="o">=</span> <span class="n">sts</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+                    <span class="n">ENDIF</span>
+                  <span class="n">ENDIF</span>
+                <span class="n">ENDDO</span>
+              <span class="n">ENDDO</span>
+            <span class="n">ENDDO</span>
+
+          <span class="n">ENDIF</span>
+
+
+          <span class="k">CALL </span><span class="n">MPI_ALLREDUCE</span><span class="p">(</span><span class="n">MPI_IN_PLACE</span><span class="p">,</span> <span class="n">st</span><span class="p">,</span> <span class="n">SIZE</span><span class="p">(</span><span class="n">st</span><span class="p">),</span> <span class="n">MPI_INTEGER</span><span class="p">,</span> <span class="n">MPI_SUM</span><span class="p">,</span> <span class="n">comm</span><span class="p">,</span> <span class="n">ierr</span><span class="p">)</span>
+          <span class="k">CALL </span><span class="n">MPI_ALLREDUCE</span><span class="p">(</span><span class="n">MPI_IN_PLACE</span><span class="p">,</span> <span class="n">stw</span><span class="p">,</span> <span class="n">SIZE</span><span class="p">(</span><span class="n">stw</span><span class="p">),</span> <span class="n">MPI_INTEGER</span><span class="p">,</span> <span class="n">MPI_SUM</span><span class="p">,</span> <span class="n">comm</span><span class="p">,</span> <span class="n">ierr</span><span class="p">)</span>
+          <span class="k">CALL </span><span class="n">MPI_ALLREDUCE</span><span class="p">(</span><span class="n">MPI_IN_PLACE</span><span class="p">,</span> <span class="n">sts</span><span class="p">,</span> <span class="n">SIZE</span><span class="p">(</span><span class="n">sts</span><span class="p">),</span> <span class="n">MPI_INTEGER</span><span class="p">,</span> <span class="n">MPI_SUM</span><span class="p">,</span> <span class="n">comm</span><span class="p">,</span> <span class="n">ierr</span><span class="p">)</span>
+          <span class="c">!CALL reduce_base_integer( SIZE(st), st, comm, -1 )</span>
+          <span class="c">!CALL reduce_base_integer( SIZE(stw), stw, comm, -1 )</span>
+          <span class="c">!CALL reduce_base_integer( SIZE(sts), sts, comm, -1 )</span>
+
+
+<span class="c">!!! TO REMOVE BEFORE COMMIT INTO SVN !!!</span>
+<span class="cp">#if defined(__STICKS_DEBUG)</span>
+<span class="c">! Test sticks</span>
+          <span class="k">WRITE</span><span class="p">(</span> <span class="mi">6</span><span class="p">,</span><span class="o">*</span><span class="p">)</span> <span class="s1">&#39;testtesttesttesttesttesttesttesttesttest&#39;</span>
+          <span class="k">WRITE</span><span class="p">(</span> <span class="mi">6</span><span class="p">,</span><span class="o">*</span><span class="p">)</span> <span class="s1">&#39;lb = &#39;</span><span class="p">,</span> <span class="n">lb</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">lb</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+          <span class="k">WRITE</span><span class="p">(</span> <span class="mi">6</span><span class="p">,</span><span class="o">*</span><span class="p">)</span> <span class="s1">&#39;ub = &#39;</span><span class="p">,</span> <span class="n">ub</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">ub</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+          <span class="k">WRITE</span><span class="p">(</span> <span class="mi">6</span><span class="p">,</span><span class="o">*</span><span class="p">)</span> <span class="s1">&#39;counts    = &#39;</span><span class="p">,</span> <span class="nb">count</span><span class="p">(</span> <span class="n">st</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="p">),</span> <span class="nb">count</span><span class="p">(</span> <span class="n">stw</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="p">),</span> <span class="nb">count</span><span class="p">(</span> <span class="n">sts</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="p">)</span>
+          <span class="k">WRITE</span><span class="p">(</span> <span class="mi">6</span><span class="p">,</span><span class="o">*</span><span class="p">)</span> <span class="s1">&#39;cut-offs  = &#39;</span><span class="p">,</span> <span class="n">gcut</span><span class="p">,</span> <span class="n">gcutw</span><span class="p">,</span> <span class="n">gcuts</span>
+          <span class="k">WRITE</span><span class="p">(</span> <span class="mi">6</span><span class="p">,</span><span class="o">*</span><span class="p">)</span> <span class="s1">&#39;b1  = &#39;</span><span class="p">,</span> <span class="n">b1</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">)</span>
+          <span class="k">WRITE</span><span class="p">(</span> <span class="mi">6</span><span class="p">,</span><span class="o">*</span><span class="p">)</span> <span class="s1">&#39;b2  = &#39;</span><span class="p">,</span> <span class="n">b2</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">)</span>
+          <span class="k">WRITE</span><span class="p">(</span> <span class="mi">6</span><span class="p">,</span><span class="o">*</span><span class="p">)</span> <span class="s1">&#39;b3  = &#39;</span><span class="p">,</span> <span class="n">b3</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">)</span>
+          <span class="k">DO </span><span class="n">i</span> <span class="o">=</span> <span class="n">lb</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">ub</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">DO </span><span class="n">j</span> <span class="o">=</span> <span class="n">lb</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="n">ub</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+              <span class="k">WRITE</span><span class="p">(</span> <span class="mi">6</span><span class="p">,</span><span class="s1">&#39;(2I4,3I6)&#39;</span><span class="p">)</span> <span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span><span class="n">st</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">),</span><span class="n">stw</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">),</span><span class="n">sts</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span>
+            <span class="n">ENDDO</span>
+          <span class="n">ENDDO</span>
+          <span class="k">WRITE</span><span class="p">(</span> <span class="mi">6</span><span class="p">,</span><span class="o">*</span><span class="p">)</span> <span class="s1">&#39;testtesttesttesttesttesttesttesttesttest&#39;</span>
+<span class="c">! Test sticks</span>
+<span class="cp">#endif</span>
+<span class="c">!!! TO REMOVE BEFORE COMMIT INTO SVN !!!</span>
+
+
+        <span class="k">RETURN</span>
+<span class="k">      END SUBROUTINE </span><span class="n">sticks_maps</span>
+
+<span class="c">!=----------------------------------------------------------------------=</span>
+
+  <span class="k">SUBROUTINE </span><span class="n">sticks_maps_scalar</span><span class="p">(</span> <span class="n">lgamma</span><span class="p">,</span> <span class="n">ub</span><span class="p">,</span> <span class="n">lb</span><span class="p">,</span> <span class="n">b1</span><span class="p">,</span> <span class="n">b2</span><span class="p">,</span> <span class="n">b3</span><span class="p">,</span> <span class="n">gcutm</span><span class="p">,</span> <span class="n">gkcut</span><span class="p">,</span> <span class="n">gcutms</span><span class="p">,</span> <span class="n">stw</span><span class="p">,</span> <span class="n">ngm</span><span class="p">,</span> <span class="n">ngms</span> <span class="p">)</span>
+
+    <span class="kt">LOGICAL</span><span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">in</span><span class="p">)</span> <span class="kd">::</span> <span class="n">lgamma</span> <span class="c">!  if true use gamma point simmetry</span>
+    <span class="kt">INTEGER</span><span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">in</span><span class="p">)</span> <span class="kd">::</span> <span class="n">ub</span><span class="p">(:)</span>  <span class="c">!  upper bounds for i-th grid dimension</span>
+    <span class="kt">INTEGER</span><span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">in</span><span class="p">)</span> <span class="kd">::</span> <span class="n">lb</span><span class="p">(:)</span>  <span class="c">!  lower bounds for i-th grid dimension</span>
+    <span class="kt">REAL</span><span class="p">(</span><span class="n">DP</span><span class="p">)</span> <span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">in</span><span class="p">)</span> <span class="kd">::</span> <span class="n">b1</span><span class="p">(:),</span> <span class="n">b2</span><span class="p">(:),</span> <span class="n">b3</span><span class="p">(:)</span> <span class="c">! reciprocal space base vectors</span>
+    <span class="kt">REAL</span><span class="p">(</span><span class="n">DP</span><span class="p">)</span> <span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">in</span><span class="p">)</span> <span class="kd">::</span> <span class="n">gcutm</span>  <span class="c">! cut-off for potentials</span>
+    <span class="kt">REAL</span><span class="p">(</span><span class="n">DP</span><span class="p">)</span> <span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">in</span><span class="p">)</span> <span class="kd">::</span> <span class="n">gkcut</span>  <span class="c">! cut-off for plane waves</span>
+    <span class="kt">REAL</span><span class="p">(</span><span class="n">DP</span><span class="p">)</span> <span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">in</span><span class="p">)</span> <span class="kd">::</span> <span class="n">gcutms</span>  <span class="c">! cut-off for smooth mesh</span>
+    <span class="c">!</span>
+    <span class="kt">INTEGER</span><span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">out</span><span class="p">)</span> <span class="kd">::</span> <span class="n">ngm</span><span class="p">,</span> <span class="n">ngms</span>
+    <span class="c">!</span>
+    <span class="c">!     stick map for wave functions, note that map is taken in YZ plane</span>
+    <span class="c">!</span>
+    <span class="kt">INTEGER</span><span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">out</span><span class="p">)</span> <span class="kd">::</span> <span class="n">stw</span><span class="p">(</span> <span class="n">lb</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="p">:</span> <span class="n">ub</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="n">lb</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="p">:</span> <span class="n">ub</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="p">)</span>
+
+    <span class="kt">INTEGER</span> <span class="kd">::</span> <span class="n">i1</span><span class="p">,</span> <span class="n">i2</span><span class="p">,</span> <span class="n">i3</span><span class="p">,</span> <span class="n">n1</span><span class="p">,</span> <span class="n">n2</span><span class="p">,</span> <span class="n">n3</span>
+    <span class="kt">REAL</span><span class="p">(</span><span class="n">DP</span><span class="p">)</span> <span class="kd">::</span> <span class="nb">amod</span>
+
+<span class="nb">    </span><span class="n">ngm</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">ngms</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">stw</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="n">n1</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span> <span class="nb">abs</span><span class="p">(</span> <span class="n">lb</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="p">),</span> <span class="nb">abs</span><span class="p">(</span> <span class="n">ub</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="p">)</span> <span class="p">)</span>
+    <span class="n">n2</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span> <span class="nb">abs</span><span class="p">(</span> <span class="n">lb</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="p">),</span> <span class="nb">abs</span><span class="p">(</span> <span class="n">ub</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="p">)</span> <span class="p">)</span>
+    <span class="n">n3</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span> <span class="nb">abs</span><span class="p">(</span> <span class="n">lb</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="p">),</span> <span class="nb">abs</span><span class="p">(</span> <span class="n">ub</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="p">)</span> <span class="p">)</span>
+
+    <span class="n">loop1</span><span class="p">:</span> <span class="k">DO </span><span class="n">i1</span> <span class="o">=</span> <span class="o">-</span> <span class="n">n1</span><span class="p">,</span> <span class="n">n1</span>
+       <span class="c">!</span>
+       <span class="c">! Gamma-only: exclude space with x&lt;0</span>
+       <span class="c">!</span>
+       <span class="k">IF</span> <span class="p">(</span><span class="n">lgamma</span> <span class="p">.</span><span class="nb">and</span><span class="p">.</span> <span class="n">i1</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="k">CYCLE </span><span class="n">loop1</span>
+       <span class="c">!</span>
+       <span class="n">loop2</span><span class="p">:</span> <span class="k">DO </span><span class="n">i2</span> <span class="o">=</span> <span class="o">-</span> <span class="n">n2</span><span class="p">,</span> <span class="n">n2</span>
+          <span class="c">!</span>
+          <span class="c">! Gamma-only: exclude plane with x=0, y&lt;0</span>
+          <span class="c">!</span>
+          <span class="k">IF</span><span class="p">(</span><span class="n">lgamma</span> <span class="p">.</span><span class="nb">and</span><span class="p">.</span> <span class="n">i1</span> <span class="o">==</span> <span class="mf">0.</span><span class="nb">and</span><span class="p">.</span> <span class="n">i2</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="k">CYCLE </span><span class="n">loop2</span>
+          <span class="c">!</span>
+          <span class="n">loop3</span><span class="p">:</span> <span class="k">DO </span><span class="n">i3</span> <span class="o">=</span> <span class="o">-</span> <span class="n">n3</span><span class="p">,</span> <span class="n">n3</span>
+             <span class="c">!</span>
+             <span class="c">! Gamma-only: exclude line with x=0, y=0, z&lt;0</span>
+             <span class="c">!</span>
+             <span class="k">IF</span><span class="p">(</span><span class="n">lgamma</span> <span class="p">.</span><span class="nb">and</span><span class="p">.</span> <span class="n">i1</span> <span class="o">==</span> <span class="mi">0</span> <span class="p">.</span><span class="nb">and</span><span class="p">.</span> <span class="n">i2</span> <span class="o">==</span> <span class="mi">0</span> <span class="p">.</span><span class="nb">and</span><span class="p">.</span> <span class="n">i3</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="k">CYCLE </span><span class="n">loop3</span>
+             <span class="c">!</span>
+             <span class="nb">amod</span> <span class="o">=</span> <span class="p">(</span><span class="n">i1</span> <span class="o">*</span> <span class="n">b1</span> <span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">i2</span> <span class="o">*</span> <span class="n">b2</span> <span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">i3</span> <span class="o">*</span> <span class="n">b3</span> <span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="p">)</span> <span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">&amp;</span>
+                    <span class="p">(</span><span class="n">i1</span> <span class="o">*</span> <span class="n">b1</span> <span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="n">i2</span> <span class="o">*</span> <span class="n">b2</span> <span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="n">i3</span> <span class="o">*</span> <span class="n">b3</span> <span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="p">)</span> <span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">&amp;</span>
+                    <span class="p">(</span><span class="n">i1</span> <span class="o">*</span> <span class="n">b1</span> <span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="o">+</span> <span class="n">i2</span> <span class="o">*</span> <span class="n">b2</span> <span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="o">+</span> <span class="n">i3</span> <span class="o">*</span> <span class="n">b3</span> <span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="p">)</span> <span class="o">**</span><span class="mi">2</span>
+             <span class="k">IF</span> <span class="p">(</span><span class="nb">amod</span> <span class="o">&lt;=</span> <span class="n">gcutm</span><span class="p">)</span>  <span class="n">ngm</span>  <span class="o">=</span> <span class="n">ngm</span>  <span class="o">+</span> <span class="mi">1</span>
+             <span class="k">IF</span> <span class="p">(</span><span class="nb">amod</span> <span class="o">&lt;=</span> <span class="n">gcutms</span><span class="p">)</span> <span class="n">ngms</span> <span class="o">=</span> <span class="n">ngms</span> <span class="o">+</span> <span class="mi">1</span>
+             <span class="k">IF</span> <span class="p">(</span><span class="nb">amod</span> <span class="o">&lt;=</span> <span class="n">gkcut</span> <span class="p">)</span> <span class="k">THEN</span>
+<span class="k">                </span><span class="n">stw</span><span class="p">(</span> <span class="n">i2</span><span class="p">,</span> <span class="n">i3</span> <span class="p">)</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="k">IF</span> <span class="p">(</span><span class="n">lgamma</span><span class="p">)</span> <span class="n">stw</span><span class="p">(</span> <span class="o">-</span><span class="n">i2</span><span class="p">,</span> <span class="o">-</span><span class="n">i3</span> <span class="p">)</span> <span class="o">=</span> <span class="mi">1</span>
+             <span class="n">ENDIF</span>
+          <span class="n">ENDDO</span> <span class="n">loop3</span>
+       <span class="n">ENDDO</span> <span class="n">loop2</span>
+    <span class="n">ENDDO</span> <span class="n">loop1</span>
+
+    <span class="k">RETURN</span>
+<span class="k">  END SUBROUTINE </span><span class="n">sticks_maps_scalar</span>
+
+
+<span class="c">!=----------------------------------------------------------------------=</span>
+
+      <span class="k">SUBROUTINE </span><span class="n">sticks_sort</span><span class="p">(</span> <span class="n">ngc</span><span class="p">,</span> <span class="n">ngcw</span><span class="p">,</span> <span class="n">ngcs</span><span class="p">,</span> <span class="n">nct</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">nproc</span> <span class="p">)</span>
+
+<span class="c">! ...     This subroutine sorts the sticks indexes, according to</span>
+<span class="c">! ...     the length and type of the sticks, wave functions sticks</span>
+<span class="c">! ...     first, then smooth mesh sticks, and finally potential</span>
+<span class="c">! ...     sticks</span>
+
+        <span class="c">! lengths of sticks, ngc for potential mesh, ngcw for wave functions mesh</span>
+        <span class="c">! and ngcs for smooth mesh</span>
+
+        <span class="kt">INTEGER</span><span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">in</span><span class="p">)</span> <span class="kd">::</span> <span class="n">ngc</span><span class="p">(:),</span> <span class="n">ngcw</span><span class="p">(:),</span> <span class="n">ngcs</span><span class="p">(:)</span>
+        <span class="kt">INTEGER</span><span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">in</span><span class="p">)</span> <span class="kd">::</span> <span class="n">nproc</span> <span class="c">! number of proc in the g-vec group</span>
+
+        <span class="c">! nct, total number of sticks</span>
+
+        <span class="kt">INTEGER</span><span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">in</span><span class="p">)</span> <span class="kd">::</span> <span class="n">nct</span>
+
+        <span class="c">! index, on output, new sticks indexes</span>
+
+        <span class="kt">INTEGER</span><span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">out</span><span class="p">)</span> <span class="kd">::</span> <span class="n">idx</span><span class="p">(:)</span>
+
+        <span class="kt">INTEGER</span>  <span class="kd">::</span> <span class="n">mc</span><span class="p">,</span> <span class="n">nr3x</span><span class="p">,</span> <span class="n">ic</span>
+        <span class="kt">REAL</span><span class="p">(</span><span class="n">DP</span><span class="p">)</span> <span class="kd">::</span> <span class="n">dn3</span>
+        <span class="kt">REAL</span><span class="p">(</span><span class="n">DP</span><span class="p">),</span> <span class="k">ALLOCATABLE</span> <span class="kd">::</span> <span class="n">aux</span><span class="p">(:)</span>
+
+        <span class="n">nr3x</span> <span class="o">=</span> <span class="nb">maxval</span><span class="p">(</span> <span class="n">ngc</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">nct</span><span class="p">)</span> <span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">dn3</span>  <span class="o">=</span> <span class="kt">REAL</span><span class="p">(</span> <span class="n">nr3x</span> <span class="p">)</span>
+
+        <span class="k">IF</span><span class="p">(</span> <span class="n">nproc</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="p">)</span> <span class="k">THEN</span>
+<span class="k">          ALLOCATE</span><span class="p">(</span> <span class="n">aux</span><span class="p">(</span> <span class="n">nct</span> <span class="p">)</span> <span class="p">)</span>
+          <span class="k">DO </span><span class="n">mc</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">nct</span>
+            <span class="n">aux</span><span class="p">(</span><span class="n">mc</span><span class="p">)</span> <span class="o">=</span> <span class="n">ngcw</span><span class="p">(</span><span class="n">mc</span><span class="p">)</span>
+            <span class="n">aux</span><span class="p">(</span><span class="n">mc</span><span class="p">)</span> <span class="o">=</span> <span class="n">dn3</span> <span class="o">*</span> <span class="n">aux</span><span class="p">(</span><span class="n">mc</span><span class="p">)</span> <span class="o">+</span> <span class="n">ngcs</span><span class="p">(</span><span class="n">mc</span><span class="p">)</span>
+            <span class="n">aux</span><span class="p">(</span><span class="n">mc</span><span class="p">)</span> <span class="o">=</span> <span class="n">dn3</span> <span class="o">*</span> <span class="n">aux</span><span class="p">(</span><span class="n">mc</span><span class="p">)</span> <span class="o">+</span> <span class="n">ngc</span><span class="p">(</span><span class="n">mc</span><span class="p">)</span>
+            <span class="n">aux</span><span class="p">(</span><span class="n">mc</span><span class="p">)</span> <span class="o">=</span> <span class="o">-</span><span class="n">aux</span><span class="p">(</span><span class="n">mc</span><span class="p">)</span>
+            <span class="n">idx</span><span class="p">(</span><span class="n">mc</span><span class="p">)</span> <span class="o">=</span> <span class="mi">0</span> 
+          <span class="n">ENDDO</span>
+          <span class="k">CALL </span><span class="n">hpsort</span><span class="p">(</span> <span class="n">nct</span><span class="p">,</span> <span class="n">aux</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">idx</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+          <span class="k">DEALLOCATE</span><span class="p">(</span> <span class="n">aux</span> <span class="p">)</span>
+        <span class="k">ELSE</span>
+<span class="k">          </span><span class="n">ic</span> <span class="o">=</span> <span class="mi">0</span>
+          <span class="k">DO </span><span class="n">mc</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">nct</span>
+            <span class="k">IF</span><span class="p">(</span> <span class="n">ngcw</span><span class="p">(</span><span class="n">mc</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="p">)</span> <span class="k">THEN</span>
+<span class="k">              </span><span class="n">ic</span> <span class="o">=</span> <span class="n">ic</span> <span class="o">+</span> <span class="mi">1</span>
+              <span class="n">idx</span><span class="p">(</span><span class="n">ic</span><span class="p">)</span> <span class="o">=</span> <span class="n">mc</span>
+            <span class="n">ENDIF</span>
+          <span class="n">ENDDO</span>
+          <span class="k">DO </span><span class="n">mc</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">nct</span>
+            <span class="k">IF</span><span class="p">(</span> <span class="n">ngcs</span><span class="p">(</span><span class="n">mc</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="p">.</span><span class="nb">and</span><span class="p">.</span> <span class="n">ngcw</span><span class="p">(</span><span class="n">mc</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="p">)</span> <span class="k">THEN</span>
+<span class="k">              </span><span class="n">ic</span> <span class="o">=</span> <span class="n">ic</span> <span class="o">+</span> <span class="mi">1</span>
+              <span class="n">idx</span><span class="p">(</span><span class="n">ic</span><span class="p">)</span> <span class="o">=</span> <span class="n">mc</span>
+            <span class="n">ENDIF</span>
+          <span class="n">ENDDO</span>
+          <span class="k">DO </span><span class="n">mc</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">nct</span>
+            <span class="k">IF</span><span class="p">(</span> <span class="n">ngc</span><span class="p">(</span><span class="n">mc</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="p">.</span><span class="nb">and</span><span class="p">.</span> <span class="n">ngcs</span><span class="p">(</span><span class="n">mc</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="p">.</span><span class="nb">and</span><span class="p">.</span> <span class="n">ngcw</span><span class="p">(</span><span class="n">mc</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="p">)</span> <span class="k">THEN</span>
+<span class="k">              </span><span class="n">ic</span> <span class="o">=</span> <span class="n">ic</span> <span class="o">+</span> <span class="mi">1</span>
+              <span class="n">idx</span><span class="p">(</span><span class="n">ic</span><span class="p">)</span> <span class="o">=</span> <span class="n">mc</span>
+            <span class="n">ENDIF</span>
+          <span class="n">ENDDO</span>
+        <span class="n">ENDIF</span>
+
+<span class="c">!!! TO REMOVE BEFORE COMMIT INTO SVN !!!</span>
+<span class="cp">#if defined(__STICKS_DEBUG)</span>
+        <span class="k">WRITE</span><span class="p">(</span> <span class="mi">6</span><span class="p">,</span><span class="o">*</span><span class="p">)</span> <span class="s1">&#39;-----------------&#39;</span>
+        <span class="k">WRITE</span><span class="p">(</span> <span class="mi">6</span><span class="p">,</span><span class="o">*</span><span class="p">)</span> <span class="s1">&#39;STICKS_SORT DEBUG&#39;</span>
+        <span class="k">DO </span><span class="n">mc</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">nct</span>
+          <span class="k">WRITE</span><span class="p">(</span> <span class="mi">6</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s2">&quot;(4I10)&quot;</span> <span class="p">)</span> <span class="n">idx</span><span class="p">(</span><span class="n">mc</span><span class="p">),</span> <span class="n">ngcw</span><span class="p">(</span> <span class="n">idx</span><span class="p">(</span><span class="n">mc</span><span class="p">)</span> <span class="p">),</span> <span class="n">ngcs</span><span class="p">(</span> <span class="n">idx</span><span class="p">(</span><span class="n">mc</span><span class="p">)</span> <span class="p">),</span> <span class="n">ngc</span><span class="p">(</span> <span class="n">idx</span><span class="p">(</span><span class="n">mc</span><span class="p">)</span> <span class="p">)</span>
+        <span class="n">ENDDO</span>
+        <span class="k">WRITE</span><span class="p">(</span> <span class="mi">6</span><span class="p">,</span><span class="o">*</span><span class="p">)</span> <span class="s1">&#39;-----------------&#39;</span>
+<span class="cp">#endif</span>
+<span class="c">!!! TO REMOVE BEFORE COMMIT INTO SVN !!!</span>
+
+        <span class="k">RETURN</span>
+<span class="k">      END SUBROUTINE </span><span class="n">sticks_sort</span>
+
+<span class="c">!=----------------------------------------------------------------------=</span>
+
+    <span class="k">SUBROUTINE </span><span class="n">sticks_countg</span><span class="p">(</span> <span class="n">tk</span><span class="p">,</span> <span class="n">ub</span><span class="p">,</span> <span class="n">lb</span><span class="p">,</span> <span class="n">st</span><span class="p">,</span> <span class="n">stw</span><span class="p">,</span> <span class="n">sts</span><span class="p">,</span> <span class="n">in1</span><span class="p">,</span> <span class="n">in2</span><span class="p">,</span> <span class="n">ngc</span><span class="p">,</span> <span class="n">ngcw</span><span class="p">,</span> <span class="n">ngcs</span> <span class="p">)</span>
+
+      <span class="kt">INTEGER</span><span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">in</span><span class="p">)</span> <span class="kd">::</span> <span class="n">ub</span><span class="p">(:),</span> <span class="n">lb</span><span class="p">(:)</span>
+      <span class="kt">INTEGER</span><span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">in</span><span class="p">)</span> <span class="kd">::</span> <span class="n">st</span><span class="p">(</span> <span class="n">lb</span><span class="p">(</span><span class="mi">1</span><span class="p">):</span> <span class="n">ub</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">lb</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span><span class="n">ub</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="p">)</span> <span class="c">! stick map for potential</span>
+      <span class="kt">INTEGER</span><span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">in</span><span class="p">)</span> <span class="kd">::</span> <span class="n">stw</span><span class="p">(</span><span class="n">lb</span><span class="p">(</span><span class="mi">1</span><span class="p">):</span> <span class="n">ub</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">lb</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span><span class="n">ub</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="p">)</span> <span class="c">! stick map for wave functions</span>
+      <span class="kt">INTEGER</span><span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">in</span><span class="p">)</span> <span class="kd">::</span> <span class="n">sts</span><span class="p">(</span><span class="n">lb</span><span class="p">(</span><span class="mi">1</span><span class="p">):</span> <span class="n">ub</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">lb</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span><span class="n">ub</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="p">)</span> <span class="c">! stick map for smooth mesh</span>
+      <span class="kt">LOGICAL</span><span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">in</span><span class="p">)</span> <span class="kd">::</span> <span class="n">tk</span>
+
+      <span class="kt">INTEGER</span><span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">out</span><span class="p">)</span> <span class="kd">::</span> <span class="n">in1</span><span class="p">(:),</span> <span class="n">in2</span><span class="p">(:)</span>
+      <span class="kt">INTEGER</span><span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">out</span><span class="p">)</span> <span class="kd">::</span> <span class="n">ngc</span><span class="p">(:),</span> <span class="n">ngcw</span><span class="p">(:),</span> <span class="n">ngcs</span><span class="p">(:)</span>
+
+      <span class="kt">INTEGER</span> <span class="kd">::</span> <span class="n">j1</span><span class="p">,</span> <span class="n">j2</span><span class="p">,</span> <span class="n">i1</span><span class="p">,</span> <span class="n">i2</span><span class="p">,</span> <span class="n">nct</span><span class="p">,</span> <span class="n">min_size</span>
+
+<span class="c">!</span>
+<span class="c">! ...     initialize the sticks indexes array ist</span>
+<span class="c">! ...     nct counts columns containing G-vectors for the dense grid</span>
+<span class="c">! ...     ncts counts columns contaning G-vectors for the smooth grid</span>
+<span class="c">!</span>
+      <span class="n">nct</span>   <span class="o">=</span> <span class="mi">0</span>
+
+      <span class="n">ngc</span>   <span class="o">=</span> <span class="mi">0</span>
+      <span class="n">ngcs</span>  <span class="o">=</span> <span class="mi">0</span>
+      <span class="n">ngcw</span>  <span class="o">=</span> <span class="mi">0</span>
+
+      <span class="n">min_size</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span> <span class="n">size</span><span class="p">(</span> <span class="n">in1</span> <span class="p">),</span> <span class="n">size</span><span class="p">(</span> <span class="n">in2</span> <span class="p">),</span> <span class="n">size</span><span class="p">(</span> <span class="n">ngc</span> <span class="p">),</span> <span class="n">size</span><span class="p">(</span> <span class="n">ngcw</span> <span class="p">),</span> <span class="n">size</span><span class="p">(</span> <span class="n">ngcs</span> <span class="p">)</span> <span class="p">)</span>
+
+      <span class="k">DO </span><span class="n">j2</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="p">(</span> <span class="n">ub</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="n">lb</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="p">)</span>
+        <span class="k">DO </span><span class="n">j1</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="p">(</span> <span class="n">ub</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="n">lb</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="p">)</span>
+
+          <span class="n">i1</span> <span class="o">=</span> <span class="n">j1</span>
+          <span class="k">IF</span><span class="p">(</span> <span class="n">i1</span> <span class="o">&gt;</span> <span class="n">ub</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="p">)</span> <span class="n">i1</span> <span class="o">=</span> <span class="n">lb</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span> <span class="n">i1</span> <span class="o">-</span> <span class="n">ub</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+
+          <span class="n">i2</span> <span class="o">=</span> <span class="n">j2</span>
+          <span class="k">IF</span><span class="p">(</span> <span class="n">i2</span> <span class="o">&gt;</span> <span class="n">ub</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="p">)</span> <span class="n">i2</span> <span class="o">=</span> <span class="n">lb</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span> <span class="n">i2</span> <span class="o">-</span> <span class="n">ub</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+
+          <span class="k">IF</span><span class="p">(</span> <span class="n">st</span><span class="p">(</span> <span class="n">i1</span><span class="p">,</span> <span class="n">i2</span> <span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="p">)</span> <span class="k">THEN</span>
+
+            <span class="c">! this sticks contains G-vectors</span>
+
+            <span class="n">nct</span> <span class="o">=</span> <span class="n">nct</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="k">IF</span><span class="p">(</span> <span class="n">nct</span> <span class="o">&gt;</span> <span class="n">min_size</span> <span class="p">)</span> <span class="p">&amp;</span>
+              <span class="k">CALL </span><span class="n">fftx_error__</span><span class="p">(</span><span class="s1">&#39; sticks_countg &#39;</span><span class="p">,</span><span class="s1">&#39; too many sticks &#39;</span><span class="p">,</span> <span class="n">nct</span> <span class="p">)</span>
+
+            <span class="n">in1</span><span class="p">(</span><span class="n">nct</span><span class="p">)</span> <span class="o">=</span> <span class="n">i1</span>
+            <span class="n">in2</span><span class="p">(</span><span class="n">nct</span><span class="p">)</span> <span class="o">=</span> <span class="n">i2</span>
+
+            <span class="n">ngc</span><span class="p">(</span><span class="n">nct</span><span class="p">)</span> <span class="o">=</span> <span class="n">st</span><span class="p">(</span> <span class="n">i1</span> <span class="p">,</span> <span class="n">i2</span><span class="p">)</span>
+            <span class="k">IF</span><span class="p">(</span> <span class="n">stw</span><span class="p">(</span> <span class="n">i1</span><span class="p">,</span> <span class="n">i2</span> <span class="p">)</span> <span class="p">.</span><span class="n">gt</span><span class="p">.</span> <span class="mi">0</span> <span class="p">)</span> <span class="n">ngcw</span><span class="p">(</span><span class="n">nct</span><span class="p">)</span> <span class="o">=</span> <span class="n">stw</span><span class="p">(</span> <span class="n">i1</span> <span class="p">,</span> <span class="n">i2</span><span class="p">)</span>
+            <span class="k">IF</span><span class="p">(</span> <span class="n">sts</span><span class="p">(</span> <span class="n">i1</span><span class="p">,</span> <span class="n">i2</span> <span class="p">)</span> <span class="p">.</span><span class="n">gt</span><span class="p">.</span> <span class="mi">0</span> <span class="p">)</span> <span class="n">ngcs</span><span class="p">(</span><span class="n">nct</span><span class="p">)</span> <span class="o">=</span> <span class="n">sts</span><span class="p">(</span> <span class="n">i1</span> <span class="p">,</span> <span class="n">i2</span><span class="p">)</span>
+
+          <span class="n">ENDIF</span>
+
+          <span class="c">! WRITE(7,fmt=&quot;(5I5)&quot;) i1, i2, nct, ngc(nct), ngcw( nct )</span>
+
+        <span class="n">ENDDO</span>
+      <span class="n">ENDDO</span>
+
+      <span class="k">RETURN</span>
+<span class="k">    END SUBROUTINE </span><span class="n">sticks_countg</span>
+
+<span class="c">!=----------------------------------------------------------------------=</span>
+
+    <span class="k">SUBROUTINE </span><span class="n">sticks_dist</span><span class="p">(</span> <span class="n">tk</span><span class="p">,</span> <span class="n">ub</span><span class="p">,</span> <span class="n">lb</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">in1</span><span class="p">,</span> <span class="n">in2</span><span class="p">,</span> <span class="n">ngc</span><span class="p">,</span> <span class="n">ngcw</span><span class="p">,</span> <span class="n">ngcs</span><span class="p">,</span> <span class="n">nct</span><span class="p">,</span> <span class="p">&amp;</span>
+                            <span class="n">ncp</span><span class="p">,</span> <span class="n">ncpw</span><span class="p">,</span> <span class="n">ncps</span><span class="p">,</span> <span class="n">ngp</span><span class="p">,</span> <span class="n">ngpw</span><span class="p">,</span> <span class="n">ngps</span><span class="p">,</span> <span class="n">stown</span><span class="p">,</span> <span class="n">stownw</span><span class="p">,</span> <span class="n">stowns</span><span class="p">,</span> <span class="n">nproc</span> <span class="p">)</span>
+
+      <span class="kt">LOGICAL</span><span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">in</span><span class="p">)</span> <span class="kd">::</span> <span class="n">tk</span>
+
+      <span class="kt">INTEGER</span><span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">in</span><span class="p">)</span> <span class="kd">::</span> <span class="n">ub</span><span class="p">(:),</span> <span class="n">lb</span><span class="p">(:),</span> <span class="n">idx</span><span class="p">(:)</span>
+      <span class="kt">INTEGER</span><span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">out</span><span class="p">)</span> <span class="kd">::</span> <span class="n">stown</span><span class="p">(</span> <span class="n">lb</span><span class="p">(</span><span class="mi">1</span><span class="p">):</span> <span class="n">ub</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">lb</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span><span class="n">ub</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="p">)</span> <span class="c">! stick map for potential</span>
+      <span class="kt">INTEGER</span><span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">out</span><span class="p">)</span> <span class="kd">::</span> <span class="n">stownw</span><span class="p">(</span><span class="n">lb</span><span class="p">(</span><span class="mi">1</span><span class="p">):</span> <span class="n">ub</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">lb</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span><span class="n">ub</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="p">)</span> <span class="c">! stick map for wave functions</span>
+      <span class="kt">INTEGER</span><span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">out</span><span class="p">)</span> <span class="kd">::</span> <span class="n">stowns</span><span class="p">(</span><span class="n">lb</span><span class="p">(</span><span class="mi">1</span><span class="p">):</span> <span class="n">ub</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">lb</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span><span class="n">ub</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="p">)</span> <span class="c">! stick map for smooth mesh</span>
+
+      <span class="kt">INTEGER</span><span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">in</span><span class="p">)</span> <span class="kd">::</span> <span class="n">in1</span><span class="p">(:),</span> <span class="n">in2</span><span class="p">(:)</span>
+      <span class="kt">INTEGER</span><span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">in</span><span class="p">)</span> <span class="kd">::</span> <span class="n">ngc</span><span class="p">(:),</span> <span class="n">ngcw</span><span class="p">(:),</span> <span class="n">ngcs</span><span class="p">(:)</span>
+      <span class="kt">INTEGER</span><span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">in</span><span class="p">)</span> <span class="kd">::</span> <span class="n">nct</span>
+      <span class="kt">INTEGER</span><span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">out</span><span class="p">)</span> <span class="kd">::</span> <span class="n">ncp</span><span class="p">(:),</span> <span class="n">ncpw</span><span class="p">(:),</span> <span class="n">ncps</span><span class="p">(:)</span>
+      <span class="kt">INTEGER</span><span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">out</span><span class="p">)</span> <span class="kd">::</span> <span class="n">ngp</span><span class="p">(:),</span> <span class="n">ngpw</span><span class="p">(:),</span> <span class="n">ngps</span><span class="p">(:)</span>
+      <span class="kt">INTEGER</span><span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">in</span><span class="p">)</span> <span class="kd">::</span> <span class="n">nproc</span> <span class="c">! number of proc in the g-vec group</span>
+
+      <span class="kt">INTEGER</span> <span class="kd">::</span> <span class="n">mc</span><span class="p">,</span> <span class="n">i1</span><span class="p">,</span> <span class="n">i2</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">jj</span><span class="p">,</span> <span class="n">icnt</span>
+
+      <span class="n">ncp</span>  <span class="o">=</span> <span class="mi">0</span>
+      <span class="n">ncps</span> <span class="o">=</span> <span class="mi">0</span>
+      <span class="n">ncpw</span> <span class="o">=</span> <span class="mi">0</span>
+      <span class="n">ngp</span>  <span class="o">=</span> <span class="mi">0</span>
+      <span class="n">ngps</span> <span class="o">=</span> <span class="mi">0</span>
+      <span class="n">ngpw</span> <span class="o">=</span> <span class="mi">0</span>
+
+      <span class="n">stown</span>  <span class="o">=</span> <span class="mi">0</span>
+      <span class="n">stownw</span> <span class="o">=</span> <span class="mi">0</span>
+      <span class="n">stowns</span> <span class="o">=</span> <span class="mi">0</span>
+
+      <span class="n">icnt</span> <span class="o">=</span> <span class="mi">0</span>
+
+      <span class="k">DO </span><span class="n">mc</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">nct</span>
+
+         <span class="n">i</span> <span class="o">=</span> <span class="n">idx</span><span class="p">(</span> <span class="n">mc</span> <span class="p">)</span>
+         <span class="n">i</span> <span class="o">=</span> <span class="n">idx</span><span class="p">(</span> <span class="n">mc</span> <span class="p">)</span>
+<span class="c">!</span>
+<span class="c">! index contains the desired ordering of sticks (see above)</span>
+<span class="c">!</span>
+         <span class="n">i1</span> <span class="o">=</span> <span class="n">in1</span><span class="p">(</span> <span class="n">i</span> <span class="p">)</span>
+         <span class="n">i2</span> <span class="o">=</span> <span class="n">in2</span><span class="p">(</span> <span class="n">i</span> <span class="p">)</span>
+<span class="c">!</span>
+         <span class="k">IF</span> <span class="p">(</span> <span class="p">(</span> <span class="p">.</span><span class="nb">not</span><span class="p">.</span> <span class="n">tk</span> <span class="p">)</span> <span class="p">.</span><span class="nb">and</span><span class="p">.</span> <span class="p">(</span> <span class="p">(</span><span class="n">i1</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">.</span><span class="nb">or</span><span class="p">.</span> <span class="p">(</span> <span class="p">(</span><span class="n">i1</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">.</span><span class="nb">and</span><span class="p">.</span> <span class="p">(</span><span class="n">i2</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">)</span> <span class="p">)</span> <span class="p">)</span> <span class="k">GOTO </span><span class="mi">30</span>
+<span class="c">!</span>
+         <span class="n">jj</span> <span class="o">=</span> <span class="mi">1</span>
+
+         <span class="k">IF</span> <span class="p">(</span> <span class="n">ngcw</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="p">)</span> <span class="k">THEN</span>
+<span class="c">!</span>
+<span class="c">! this is an active sticks: find which processor has currently</span>
+<span class="c">! the smallest number of plane waves</span>
+<span class="c">!</span>
+            <span class="c">!jj = MOD( icnt, nproc ) + 1</span>
+            <span class="c">!icnt = icnt + 1</span>
+
+            <span class="k">DO </span><span class="n">j</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">nproc</span>
+               <span class="k">IF</span> <span class="p">(</span> <span class="n">ngpw</span><span class="p">(</span><span class="n">j</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">ngpw</span><span class="p">(</span><span class="n">jj</span><span class="p">)</span> <span class="p">)</span> <span class="k">THEN</span>
+<span class="k">                 </span><span class="n">jj</span> <span class="o">=</span> <span class="n">j</span>
+               <span class="n">ELSEIF</span> <span class="p">(</span> <span class="p">(</span> <span class="n">ngpw</span><span class="p">(</span><span class="n">j</span><span class="p">)</span> <span class="o">==</span> <span class="n">ngpw</span><span class="p">(</span><span class="n">jj</span><span class="p">)</span> <span class="p">)</span> <span class="p">.</span><span class="nb">and</span><span class="p">.</span> <span class="p">(</span> <span class="n">ncpw</span><span class="p">(</span><span class="n">j</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">ncpw</span><span class="p">(</span><span class="n">jj</span><span class="p">)</span> <span class="p">)</span> <span class="p">)</span> <span class="k">THEN</span>
+<span class="k">                 </span><span class="n">jj</span> <span class="o">=</span> <span class="n">j</span>
+               <span class="n">ENDIF</span>
+            <span class="n">ENDDO</span>
+
+         <span class="k">ELSE</span>
+<span class="c">!</span>
+<span class="c">! this is an inactive sticks: find which processor has currently</span>
+<span class="c">! the smallest number of G-vectors</span>
+<span class="c">!</span>
+            <span class="k">DO </span><span class="n">j</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">nproc</span>
+               <span class="k">IF</span> <span class="p">(</span> <span class="n">ngp</span><span class="p">(</span><span class="n">j</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">ngp</span><span class="p">(</span><span class="n">jj</span><span class="p">)</span> <span class="p">)</span> <span class="n">jj</span> <span class="o">=</span> <span class="n">j</span>
+            <span class="n">ENDDO</span>
+
+         <span class="n">ENDIF</span>
+<span class="c">!</span>
+         <span class="c">! potential mesh</span>
+
+         <span class="n">ncp</span><span class="p">(</span><span class="n">jj</span><span class="p">)</span> <span class="o">=</span> <span class="n">ncp</span><span class="p">(</span><span class="n">jj</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+         <span class="n">ngp</span><span class="p">(</span><span class="n">jj</span><span class="p">)</span> <span class="o">=</span> <span class="n">ngp</span><span class="p">(</span><span class="n">jj</span><span class="p">)</span> <span class="o">+</span> <span class="n">ngc</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+         <span class="n">stown</span><span class="p">(</span><span class="n">i1</span><span class="p">,</span><span class="n">i2</span><span class="p">)</span> <span class="o">=</span> <span class="n">jj</span>
+
+         <span class="c">! smooth mesh</span>
+
+         <span class="k">IF</span> <span class="p">(</span> <span class="n">ngcs</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="p">)</span> <span class="k">THEN</span>
+<span class="k">            </span><span class="n">ncps</span><span class="p">(</span><span class="n">jj</span><span class="p">)</span> <span class="o">=</span> <span class="n">ncps</span><span class="p">(</span><span class="n">jj</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="n">ngps</span><span class="p">(</span><span class="n">jj</span><span class="p">)</span> <span class="o">=</span> <span class="n">ngps</span><span class="p">(</span><span class="n">jj</span><span class="p">)</span> <span class="o">+</span> <span class="n">ngcs</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="n">stowns</span><span class="p">(</span><span class="n">i1</span><span class="p">,</span><span class="n">i2</span><span class="p">)</span> <span class="o">=</span> <span class="n">jj</span>
+         <span class="n">ENDIF</span>
+
+         <span class="c">! wave functions mesh</span>
+
+         <span class="k">IF</span> <span class="p">(</span> <span class="n">ngcw</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="p">)</span> <span class="k">THEN</span>
+<span class="k">            </span><span class="n">ncpw</span><span class="p">(</span><span class="n">jj</span><span class="p">)</span> <span class="o">=</span> <span class="n">ncpw</span><span class="p">(</span><span class="n">jj</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="n">ngpw</span><span class="p">(</span><span class="n">jj</span><span class="p">)</span> <span class="o">=</span> <span class="n">ngpw</span><span class="p">(</span><span class="n">jj</span><span class="p">)</span> <span class="o">+</span> <span class="n">ngcw</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="n">stownw</span><span class="p">(</span><span class="n">i1</span><span class="p">,</span><span class="n">i2</span><span class="p">)</span> <span class="o">=</span> <span class="n">jj</span>
+         <span class="n">ENDIF</span>
+
+ <span class="mi">30</span>      <span class="k">CONTINUE</span>
+
+<span class="k">      </span><span class="n">ENDDO</span>
+
+      <span class="k">RETURN</span>
+<span class="k">    END SUBROUTINE </span><span class="n">sticks_dist</span>
+
+<span class="c">!=----------------------------------------------------------------------=</span>
+
+    <span class="k">SUBROUTINE </span><span class="n">sticks_pairup</span><span class="p">(</span> <span class="n">tk</span><span class="p">,</span> <span class="n">ub</span><span class="p">,</span> <span class="n">lb</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">in1</span><span class="p">,</span> <span class="n">in2</span><span class="p">,</span> <span class="n">ngc</span><span class="p">,</span> <span class="n">ngcw</span><span class="p">,</span> <span class="n">ngcs</span><span class="p">,</span> <span class="n">nct</span><span class="p">,</span> <span class="p">&amp;</span>
+                             <span class="n">ncp</span><span class="p">,</span> <span class="n">ncpw</span><span class="p">,</span> <span class="n">ncps</span><span class="p">,</span> <span class="n">ngp</span><span class="p">,</span> <span class="n">ngpw</span><span class="p">,</span> <span class="n">ngps</span><span class="p">,</span> <span class="n">stown</span><span class="p">,</span> <span class="n">stownw</span><span class="p">,</span> <span class="n">stowns</span><span class="p">,</span> <span class="n">nproc</span> <span class="p">)</span>
+
+      <span class="kt">LOGICAL</span><span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">in</span><span class="p">)</span> <span class="kd">::</span> <span class="n">tk</span>
+
+      <span class="kt">INTEGER</span><span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">in</span><span class="p">)</span> <span class="kd">::</span> <span class="n">ub</span><span class="p">(:),</span> <span class="n">lb</span><span class="p">(:),</span> <span class="n">idx</span><span class="p">(:)</span>
+      <span class="kt">INTEGER</span><span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">inout</span><span class="p">)</span> <span class="kd">::</span> <span class="n">stown</span><span class="p">(</span> <span class="n">lb</span><span class="p">(</span><span class="mi">1</span><span class="p">):</span> <span class="n">ub</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">lb</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span><span class="n">ub</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="p">)</span> <span class="c">! stick map for potential</span>
+      <span class="kt">INTEGER</span><span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">inout</span><span class="p">)</span> <span class="kd">::</span> <span class="n">stownw</span><span class="p">(</span><span class="n">lb</span><span class="p">(</span><span class="mi">1</span><span class="p">):</span> <span class="n">ub</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">lb</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span><span class="n">ub</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="p">)</span> <span class="c">! stick map for wave functions</span>
+      <span class="kt">INTEGER</span><span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">inout</span><span class="p">)</span> <span class="kd">::</span> <span class="n">stowns</span><span class="p">(</span><span class="n">lb</span><span class="p">(</span><span class="mi">1</span><span class="p">):</span> <span class="n">ub</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">lb</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span><span class="n">ub</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="p">)</span> <span class="c">! stick map for wave functions</span>
+
+      <span class="kt">INTEGER</span><span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">in</span><span class="p">)</span> <span class="kd">::</span> <span class="n">in1</span><span class="p">(:),</span> <span class="n">in2</span><span class="p">(:)</span>
+      <span class="kt">INTEGER</span><span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">in</span><span class="p">)</span> <span class="kd">::</span> <span class="n">ngc</span><span class="p">(:),</span> <span class="n">ngcw</span><span class="p">(:),</span> <span class="n">ngcs</span><span class="p">(:)</span>
+      <span class="kt">INTEGER</span><span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">in</span><span class="p">)</span> <span class="kd">::</span> <span class="n">nct</span>
+      <span class="kt">INTEGER</span><span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">out</span><span class="p">)</span> <span class="kd">::</span> <span class="n">ncp</span><span class="p">(:),</span> <span class="n">ncpw</span><span class="p">(:),</span> <span class="n">ncps</span><span class="p">(:)</span>
+      <span class="kt">INTEGER</span><span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">out</span><span class="p">)</span> <span class="kd">::</span> <span class="n">ngp</span><span class="p">(:),</span> <span class="n">ngpw</span><span class="p">(:),</span> <span class="n">ngps</span><span class="p">(:)</span>
+      <span class="kt">INTEGER</span><span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">in</span><span class="p">)</span> <span class="kd">::</span> <span class="n">nproc</span> <span class="c">! number of proc in the g-vec group</span>
+
+      <span class="kt">INTEGER</span> <span class="kd">::</span> <span class="n">mc</span><span class="p">,</span> <span class="n">i1</span><span class="p">,</span> <span class="n">i2</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">jj</span>
+
+      <span class="k">IF</span> <span class="p">(</span> <span class="p">.</span><span class="nb">not</span><span class="p">.</span> <span class="n">tk</span> <span class="p">)</span> <span class="k">THEN</span>
+
+        <span class="c">!  when gamma symmetry is used only the sticks of half reciprocal space</span>
+        <span class="c">!  are generated, then here we pair-up the sticks with those of the other</span>
+        <span class="c">!  half of the space, using the gamma symmetry relation</span>
+        <span class="c">!  Note that the total numero of stick &quot;nct&quot; is not modified</span>
+
+        <span class="k">DO </span><span class="n">mc</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">nct</span>
+           <span class="n">i</span> <span class="o">=</span> <span class="n">idx</span><span class="p">(</span><span class="n">mc</span><span class="p">)</span>
+           <span class="n">i1</span> <span class="o">=</span> <span class="n">in1</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+           <span class="n">i2</span> <span class="o">=</span> <span class="n">in2</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+           <span class="k">IF</span><span class="p">(</span> <span class="n">i1</span> <span class="o">==</span> <span class="mi">0</span> <span class="p">.</span><span class="nb">and</span><span class="p">.</span> <span class="n">i2</span> <span class="o">==</span> <span class="mi">0</span> <span class="p">)</span> <span class="k">THEN</span>
+<span class="k">             </span><span class="n">jj</span> <span class="o">=</span> <span class="n">stown</span><span class="p">(</span> <span class="n">i1</span><span class="p">,</span> <span class="n">i2</span> <span class="p">)</span>
+             <span class="k">IF</span><span class="p">(</span> <span class="n">jj</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="p">)</span> <span class="n">ngp</span><span class="p">(</span> <span class="n">jj</span> <span class="p">)</span> <span class="o">=</span> <span class="n">ngp</span><span class="p">(</span> <span class="n">jj</span> <span class="p">)</span> <span class="o">+</span> <span class="n">ngc</span><span class="p">(</span> <span class="n">i</span> <span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+             <span class="n">jj</span> <span class="o">=</span> <span class="n">stowns</span><span class="p">(</span> <span class="n">i1</span><span class="p">,</span> <span class="n">i2</span> <span class="p">)</span>
+             <span class="k">IF</span><span class="p">(</span> <span class="n">jj</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="p">)</span> <span class="n">ngps</span><span class="p">(</span> <span class="n">jj</span> <span class="p">)</span> <span class="o">=</span> <span class="n">ngps</span><span class="p">(</span> <span class="n">jj</span> <span class="p">)</span> <span class="o">+</span> <span class="n">ngcs</span><span class="p">(</span> <span class="n">i</span> <span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+             <span class="n">jj</span> <span class="o">=</span> <span class="n">stownw</span><span class="p">(</span> <span class="n">i1</span><span class="p">,</span> <span class="n">i2</span> <span class="p">)</span>
+             <span class="k">IF</span><span class="p">(</span> <span class="n">jj</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="p">)</span> <span class="n">ngpw</span><span class="p">(</span> <span class="n">jj</span> <span class="p">)</span> <span class="o">=</span> <span class="n">ngpw</span><span class="p">(</span> <span class="n">jj</span> <span class="p">)</span> <span class="o">+</span> <span class="n">ngcw</span><span class="p">(</span> <span class="n">i</span> <span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+           <span class="k">ELSE</span>
+<span class="k">             </span><span class="n">jj</span> <span class="o">=</span> <span class="n">stown</span><span class="p">(</span> <span class="n">i1</span><span class="p">,</span> <span class="n">i2</span> <span class="p">)</span>
+             <span class="k">IF</span><span class="p">(</span> <span class="n">jj</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="p">)</span> <span class="k">THEN</span>
+<span class="k">               </span><span class="n">stown</span><span class="p">(</span> <span class="o">-</span><span class="n">i1</span><span class="p">,</span> <span class="o">-</span><span class="n">i2</span> <span class="p">)</span> <span class="o">=</span> <span class="n">jj</span>
+               <span class="n">ncp</span><span class="p">(</span> <span class="n">jj</span> <span class="p">)</span> <span class="o">=</span> <span class="n">ncp</span><span class="p">(</span> <span class="n">jj</span> <span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+               <span class="n">ngp</span><span class="p">(</span> <span class="n">jj</span> <span class="p">)</span> <span class="o">=</span> <span class="n">ngp</span><span class="p">(</span> <span class="n">jj</span> <span class="p">)</span> <span class="o">+</span> <span class="n">ngc</span><span class="p">(</span> <span class="n">i</span> <span class="p">)</span>
+             <span class="n">ENDIF</span>
+             <span class="n">jj</span> <span class="o">=</span> <span class="n">stowns</span><span class="p">(</span> <span class="n">i1</span><span class="p">,</span> <span class="n">i2</span> <span class="p">)</span>
+             <span class="k">IF</span><span class="p">(</span> <span class="n">jj</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="p">)</span> <span class="k">THEN</span>
+<span class="k">               </span><span class="n">stowns</span><span class="p">(</span> <span class="o">-</span><span class="n">i1</span><span class="p">,</span> <span class="o">-</span><span class="n">i2</span> <span class="p">)</span> <span class="o">=</span> <span class="n">jj</span>
+               <span class="n">ncps</span><span class="p">(</span> <span class="n">jj</span> <span class="p">)</span> <span class="o">=</span> <span class="n">ncps</span><span class="p">(</span> <span class="n">jj</span> <span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+               <span class="n">ngps</span><span class="p">(</span> <span class="n">jj</span> <span class="p">)</span> <span class="o">=</span> <span class="n">ngps</span><span class="p">(</span> <span class="n">jj</span> <span class="p">)</span> <span class="o">+</span> <span class="n">ngcs</span><span class="p">(</span> <span class="n">i</span> <span class="p">)</span>
+             <span class="n">ENDIF</span>
+             <span class="n">jj</span> <span class="o">=</span> <span class="n">stownw</span><span class="p">(</span> <span class="n">i1</span><span class="p">,</span> <span class="n">i2</span> <span class="p">)</span>
+             <span class="k">IF</span><span class="p">(</span> <span class="n">jj</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="p">)</span> <span class="k">THEN</span>
+<span class="k">               </span><span class="n">stownw</span><span class="p">(</span> <span class="o">-</span><span class="n">i1</span><span class="p">,</span> <span class="o">-</span><span class="n">i2</span> <span class="p">)</span> <span class="o">=</span> <span class="n">jj</span>
+               <span class="n">ncpw</span><span class="p">(</span> <span class="n">jj</span> <span class="p">)</span> <span class="o">=</span> <span class="n">ncpw</span><span class="p">(</span> <span class="n">jj</span> <span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+               <span class="n">ngpw</span><span class="p">(</span> <span class="n">jj</span> <span class="p">)</span> <span class="o">=</span> <span class="n">ngpw</span><span class="p">(</span> <span class="n">jj</span> <span class="p">)</span> <span class="o">+</span> <span class="n">ngcw</span><span class="p">(</span> <span class="n">i</span> <span class="p">)</span>
+             <span class="n">ENDIF</span>
+           <span class="n">ENDIF</span>
+        <span class="n">ENDDO</span>
+
+      <span class="n">ENDIF</span>
+
+      <span class="k">IF</span><span class="p">(</span> <span class="nb">allocated</span><span class="p">(</span> <span class="n">sticks_owner</span> <span class="p">)</span> <span class="p">)</span> <span class="k">DEALLOCATE</span><span class="p">(</span> <span class="n">sticks_owner</span> <span class="p">)</span>
+      <span class="k">ALLOCATE</span><span class="p">(</span> <span class="n">sticks_owner</span><span class="p">(</span> <span class="n">lb</span><span class="p">(</span><span class="mi">1</span><span class="p">):</span> <span class="n">ub</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">lb</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span><span class="n">ub</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="p">)</span> <span class="p">)</span>
+
+      <span class="n">sticks_owner</span><span class="p">(</span> <span class="p">:,</span> <span class="p">:</span> <span class="p">)</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span> <span class="n">stown</span><span class="p">(</span> <span class="p">:,</span> <span class="p">:)</span> <span class="p">)</span>
+
+      <span class="k">RETURN</span>
+<span class="k">    END SUBROUTINE </span><span class="n">sticks_pairup</span>
+
+<span class="c">!=----------------------------------------------------------------------=</span>
+
+    <span class="k">SUBROUTINE </span><span class="n">sticks_ordered_dist</span><span class="p">(</span> <span class="n">tk</span><span class="p">,</span> <span class="n">ub</span><span class="p">,</span> <span class="n">lb</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">in1</span><span class="p">,</span> <span class="n">in2</span><span class="p">,</span> <span class="n">ngc</span><span class="p">,</span> <span class="n">ngcw</span><span class="p">,</span> <span class="n">ngcs</span><span class="p">,</span> <span class="n">nct</span><span class="p">,</span> <span class="p">&amp;</span>
+                            <span class="n">ncp</span><span class="p">,</span> <span class="n">ncpw</span><span class="p">,</span> <span class="n">ncps</span><span class="p">,</span> <span class="n">ngp</span><span class="p">,</span> <span class="n">ngpw</span><span class="p">,</span> <span class="n">ngps</span><span class="p">,</span> <span class="n">stown</span><span class="p">,</span> <span class="n">stownw</span><span class="p">,</span> <span class="n">stowns</span><span class="p">,</span> <span class="n">nproc</span> <span class="p">)</span>
+<span class="c">!</span>
+<span class="c">! This routine works as sticks_dist only it distributes the sticks according to sticks_owner.</span>
+<span class="c">! This ensures that the gvectors for any &#39;smooth like grid&#39; remain on the same proc as the </span>
+<span class="c">! original grid.</span>
+<span class="c">!</span>
+      <span class="kt">LOGICAL</span><span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">in</span><span class="p">)</span> <span class="kd">::</span> <span class="n">tk</span>
+
+      <span class="kt">INTEGER</span><span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">in</span><span class="p">)</span> <span class="kd">::</span> <span class="n">ub</span><span class="p">(:),</span> <span class="n">lb</span><span class="p">(:),</span> <span class="n">idx</span><span class="p">(:)</span>
+      <span class="kt">INTEGER</span><span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">out</span><span class="p">)</span> <span class="kd">::</span> <span class="n">stown</span><span class="p">(</span> <span class="n">lb</span><span class="p">(</span><span class="mi">1</span><span class="p">):</span> <span class="n">ub</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">lb</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span><span class="n">ub</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="p">)</span> <span class="c">! stick map for potential</span>
+      <span class="kt">INTEGER</span><span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">out</span><span class="p">)</span> <span class="kd">::</span> <span class="n">stownw</span><span class="p">(</span><span class="n">lb</span><span class="p">(</span><span class="mi">1</span><span class="p">):</span> <span class="n">ub</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">lb</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span><span class="n">ub</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="p">)</span> <span class="c">! stick map for wave functions</span>
+      <span class="kt">INTEGER</span><span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">out</span><span class="p">)</span> <span class="kd">::</span> <span class="n">stowns</span><span class="p">(</span><span class="n">lb</span><span class="p">(</span><span class="mi">1</span><span class="p">):</span> <span class="n">ub</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">lb</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span><span class="n">ub</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="p">)</span> <span class="c">! stick map for smooth mesh</span>
+
+      <span class="kt">INTEGER</span><span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">in</span><span class="p">)</span> <span class="kd">::</span> <span class="n">in1</span><span class="p">(:),</span> <span class="n">in2</span><span class="p">(:)</span>
+      <span class="kt">INTEGER</span><span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">in</span><span class="p">)</span> <span class="kd">::</span> <span class="n">ngc</span><span class="p">(:),</span> <span class="n">ngcw</span><span class="p">(:),</span> <span class="n">ngcs</span><span class="p">(:)</span>
+      <span class="kt">INTEGER</span><span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">in</span><span class="p">)</span> <span class="kd">::</span> <span class="n">nct</span>
+      <span class="kt">INTEGER</span><span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">out</span><span class="p">)</span> <span class="kd">::</span> <span class="n">ncp</span><span class="p">(:),</span> <span class="n">ncpw</span><span class="p">(:),</span> <span class="n">ncps</span><span class="p">(:)</span>
+      <span class="kt">INTEGER</span><span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">out</span><span class="p">)</span> <span class="kd">::</span> <span class="n">ngp</span><span class="p">(:),</span> <span class="n">ngpw</span><span class="p">(:),</span> <span class="n">ngps</span><span class="p">(:)</span>
+      <span class="kt">INTEGER</span><span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">in</span><span class="p">)</span> <span class="kd">::</span> <span class="n">nproc</span> <span class="c">! number of proc in the g-vec group</span>
+
+      <span class="kt">INTEGER</span> <span class="kd">::</span> <span class="n">mc</span><span class="p">,</span> <span class="n">i1</span><span class="p">,</span> <span class="n">i2</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">jj</span>
+
+      <span class="n">ncp</span>  <span class="o">=</span> <span class="mi">0</span>
+      <span class="n">ncps</span> <span class="o">=</span> <span class="mi">0</span>
+      <span class="n">ncpw</span> <span class="o">=</span> <span class="mi">0</span>
+      <span class="n">ngp</span>  <span class="o">=</span> <span class="mi">0</span>
+      <span class="n">ngps</span> <span class="o">=</span> <span class="mi">0</span>
+      <span class="n">ngpw</span> <span class="o">=</span> <span class="mi">0</span>
+
+      <span class="n">stown</span>  <span class="o">=</span> <span class="n">sticks_owner</span>
+      <span class="n">stownw</span> <span class="o">=</span> <span class="mi">0</span>
+      <span class="n">stowns</span> <span class="o">=</span> <span class="mi">0</span>
+
+      <span class="k">DO </span><span class="n">mc</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">nct</span>
+
+         <span class="n">i</span> <span class="o">=</span> <span class="n">idx</span><span class="p">(</span> <span class="n">mc</span> <span class="p">)</span>
+<span class="c">!</span>
+<span class="c">! index has no effect in this case</span>
+<span class="c">!</span>
+         <span class="n">i1</span> <span class="o">=</span> <span class="n">in1</span><span class="p">(</span> <span class="n">i</span> <span class="p">)</span>
+         <span class="n">i2</span> <span class="o">=</span> <span class="n">in2</span><span class="p">(</span> <span class="n">i</span> <span class="p">)</span>
+<span class="c">!</span>
+         <span class="k">IF</span> <span class="p">(</span> <span class="p">(</span> <span class="p">.</span><span class="nb">not</span><span class="p">.</span> <span class="n">tk</span> <span class="p">)</span> <span class="p">.</span><span class="nb">and</span><span class="p">.</span> <span class="p">(</span> <span class="p">(</span><span class="n">i1</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">.</span><span class="nb">or</span><span class="p">.</span> <span class="p">(</span> <span class="p">(</span><span class="n">i1</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">.</span><span class="nb">and</span><span class="p">.</span> <span class="p">(</span><span class="n">i2</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">)</span> <span class="p">)</span> <span class="p">)</span> <span class="k">GOTO </span><span class="mi">30</span>
+<span class="c">!</span>
+         <span class="c">! potential mesh set according to sticks_owner</span>
+
+         <span class="n">jj</span> <span class="o">=</span> <span class="n">stown</span><span class="p">(</span><span class="n">i1</span><span class="p">,</span><span class="n">i2</span><span class="p">)</span> 
+         <span class="n">ncp</span><span class="p">(</span><span class="n">jj</span><span class="p">)</span> <span class="o">=</span> <span class="n">ncp</span><span class="p">(</span><span class="n">jj</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+         <span class="n">ngp</span><span class="p">(</span><span class="n">jj</span><span class="p">)</span> <span class="o">=</span> <span class="n">ngp</span><span class="p">(</span><span class="n">jj</span><span class="p">)</span> <span class="o">+</span> <span class="n">ngc</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+
+         <span class="c">! smooth mesh</span>
+
+         <span class="k">IF</span> <span class="p">(</span> <span class="n">ngcs</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="p">)</span> <span class="k">THEN</span>
+<span class="k">            </span><span class="n">ncps</span><span class="p">(</span><span class="n">jj</span><span class="p">)</span> <span class="o">=</span> <span class="n">ncps</span><span class="p">(</span><span class="n">jj</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="n">ngps</span><span class="p">(</span><span class="n">jj</span><span class="p">)</span> <span class="o">=</span> <span class="n">ngps</span><span class="p">(</span><span class="n">jj</span><span class="p">)</span> <span class="o">+</span> <span class="n">ngcs</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="n">stowns</span><span class="p">(</span><span class="n">i1</span><span class="p">,</span><span class="n">i2</span><span class="p">)</span> <span class="o">=</span> <span class="n">jj</span>
+         <span class="n">ENDIF</span>
+
+         <span class="c">! wave functions mesh</span>
+
+         <span class="k">IF</span> <span class="p">(</span> <span class="n">ngcw</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="p">)</span> <span class="k">THEN</span>
+<span class="k">            </span><span class="n">ncpw</span><span class="p">(</span><span class="n">jj</span><span class="p">)</span> <span class="o">=</span> <span class="n">ncpw</span><span class="p">(</span><span class="n">jj</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="n">ngpw</span><span class="p">(</span><span class="n">jj</span><span class="p">)</span> <span class="o">=</span> <span class="n">ngpw</span><span class="p">(</span><span class="n">jj</span><span class="p">)</span> <span class="o">+</span> <span class="n">ngcw</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="n">stownw</span><span class="p">(</span><span class="n">i1</span><span class="p">,</span><span class="n">i2</span><span class="p">)</span> <span class="o">=</span> <span class="n">jj</span>
+         <span class="n">ENDIF</span>
+
+ <span class="mi">30</span>      <span class="k">CONTINUE</span>
+
+<span class="k">      </span><span class="n">ENDDO</span>
+
+      <span class="k">RETURN</span>
+<span class="k">    END SUBROUTINE </span><span class="n">sticks_ordered_dist</span>
+
+<span class="c">!=----------------------------------------------------------------------=</span>
+
+
+
+    <span class="k">SUBROUTINE </span><span class="n">sticks_deallocate</span>
+      <span class="k">IF</span><span class="p">(</span> <span class="nb">allocated</span><span class="p">(</span> <span class="n">sticks_owner</span> <span class="p">)</span> <span class="p">)</span> <span class="k">DEALLOCATE</span><span class="p">(</span> <span class="n">sticks_owner</span> <span class="p">)</span>
+      <span class="k">RETURN</span>
+<span class="k">    END SUBROUTINE </span><span class="n">sticks_deallocate</span>
+
+
+<span class="c">!=----------------------------------------------------------------------=</span>
+   <span class="k">END MODULE </span><span class="n">stick_base</span>
+<span class="c">!=----------------------------------------------------------------------=</span>
+</pre></div>
+
+    </section>
+    </div>
+  </div>
+
+    <hr>
+    <footer>
+        <div class="row">
+        <div class="col-md-6">&copy; 2015 FFTXlib was written by . </div>
+        <div class="col-md-6"><span class="pull-right">Documentation generated by <a href="https://github.com/cmacmackin/ford">FORD</a>.</span></div>
+        </div>
+        <br>
+    </footer>
+    </div> <!-- /container -->
+
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+<!--
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+-->
+    <script src="../js/bootstrap.min.js"></script>
+    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+    <script src="../js/ie10-viewport-bug-workaround.js"></script>
+
+    <!-- MathJax JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        TeX: { extensions: ['AMSmath.js','AMSsymbols.js','noErrors.js','noUndefined.js'], equationNumbers: { autoNumber: 'AMS' } },
+        jax: ['input/TeX','input/MathML','output/HTML-CSS'],
+        extensions: ['tex2jax.js','mml2jax.js','MathMenu.js','MathZoom.js'],
+        'HTML-CSS': { 
+           styles: { '.MathJax_Display, .MathJax .mo, .MathJax .mi, .MathJax .mn': {color: '#000000 ! important'} }
+        }
+      });
+    </script>
+    <script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  </body>
+</html>

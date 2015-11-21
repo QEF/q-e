@@ -7,7 +7,7 @@ MODULE pw2blip
    USE control_flags, ONLY: gamma_only
    USE constants, ONLY: tpi
    USE cell_base, ONLY: at,alat
-   USE fft_scalar, ONLY: allowed, good_fft_dimension
+   USE fft_support, ONLY: allowed, good_fft_dimension
 
    PRIVATE
    PUBLIC pw2blip_init,pw2blip_cleanup,pw2blip_transform,pw2blip_transform2,&

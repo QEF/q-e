@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+	 
+    <meta name="description" content="Documentation for FFTXlib">
+	 
+    <meta name="author" content="Chris MacMackin" >
+    <link rel="icon" href="../favicon.png">
+
+    <title>fft_support.f90 &ndash; FFTXlib</title>
+
+    <link href="../css/bootstrap.min.css" rel="stylesheet">
+    <link href="../css/pygments.css" rel="stylesheet">
+    <link href="../css/font-awesome.min.css" rel="stylesheet">
+    <link href="../css/local.css" rel="stylesheet">
+    
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+    
+    <script src="../js/jquery-2.1.3.min.js"></script>
+    <script src="../js/svg-pan-zoom.min.js"></script>
+
+    
+    <script src="../tipuesearch/tipuesearch_content.js"></script>
+    <link  href="../tipuesearch/tipuesearch.css" rel="stylesheet">
+    <script src="../tipuesearch/tipuesearch_set.js"></script>
+    <script src="../tipuesearch/tipuesearch.js"></script>
+    
+
+  </head>
+
+  <body>
+
+    <!-- Fixed navbar -->
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="../index.html">FFTXlib </a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+				
+                
+            <li><a href="../lists/files.html">Source Files</a></li>
+				
+				
+            <li><a href="../lists/modules.html">Modules</a></li>
+				
+				
+            <li><a href="../lists/procedures.html">Procedures</a></li>
+				
+								
+            <li><a href="../lists/types.html">Derived Types</a></li>
+				
+				
+          </ul>
+        
+        <form action="../search.html" class="navbar-form navbar-right" role="search">
+        <div class="form-group">
+          <input type="text" class="form-control" placeholder="Search" name="q" id="tipue_search_input" autocomplete="off" required>
+        </div>
+<!--
+        <button type="submit" class="btn btn-default">Submit</button>
+-->
+        </form>
+        
+        </div><!--/.nav-collapse -->
+      </div>
+    </nav>
+
+    <div class="container">
+    
+  
+  <div class="row">
+    <h1>fft_support.f90
+    <small>Source File</small>
+    
+    </h1>
+	 
+<div class="row">
+<div class="col-lg-12">
+<div class="well well-sm">
+  <ul class="list-inline" style="margin-bottom:0px;display:inline">
+     
+     
+     
+     
+    
+    
+    <li><i class="fa fa-code"></i><a href="../src/fft_support.f90"> Source File</a></li>
+     
+  </ul>
+  <ol class="breadcrumb in-well text-right">
+  
+     <li class="active">fft_support.f90</li>
+  </ol>
+</div>
+</div>
+</div>
+    
+  </div>
+  <div class="row">
+    <div class="col-lg-3">
+    
+  
+  
+  
+  
+  
+  
+  
+  <div class="panel panel-primary">
+    <div class="panel-heading text-left"><h3 class="panel-title">Modules</h3></div>
+    <div class="list-group">
+      
+      <a class="list-group-item" href="../module/fft_support.html">fft_support</a>
+      
+    </div>
+  </div>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  <div class="panel panel-primary">
+    <div class="panel-heading text-left"><h3 class="panel-title">Source Code</h3></div>
+    <div class="list-group">
+      <a class="list-group-item" href="../sourcefile/fft_support.f90.html#src">fft_support.f90</a>
+    </div>
+  </div>
+  
+  <hr>
+  
+  <div class="panel panel-default">
+    <div class="panel-heading text-left"><h3 class="panel-title">All Source Files</h3></div>
+    <div class="list-group">
+      
+      <a class="list-group-item" href="../sourcefile/fft_error.f90.html">fft_error.f90</a>
+      
+      <a class="list-group-item" href="../sourcefile/fft_interfaces.f90.html">fft_interfaces.f90</a>
+      
+      <a class="list-group-item" href="../sourcefile/fft_parallel.f90.html">fft_parallel.f90</a>
+      
+      <a class="list-group-item" href="../sourcefile/fft_param.f90.html">fft_param.f90</a>
+      
+      <a class="list-group-item" href="../sourcefile/fft_scalar.dfti.f90.html">fft_scalar.DFTI.f90</a>
+      
+      <a class="list-group-item" href="../sourcefile/fft_scalar.essl.f90.html">fft_scalar.ESSL.f90</a>
+      
+      <a class="list-group-item" href="../sourcefile/fft_scalar.f90.html">fft_scalar.f90</a>
+      
+      <a class="list-group-item" href="../sourcefile/fft_scalar.fftw.f90.html">fft_scalar.FFTW.f90</a>
+      
+      <a class="list-group-item" href="../sourcefile/fft_scalar.fftw3.f90.html">fft_scalar.FFTW3.f90</a>
+      
+      <a class="list-group-item" href="../sourcefile/fft_scalar.sx6.f90.html">fft_scalar.SX6.f90</a>
+      
+      <a class="list-group-item" href="../sourcefile/fft_smallbox.f90.html">fft_smallbox.f90</a>
+      
+      <a class="list-group-item" href="../sourcefile/fft_support.f90.html">fft_support.f90</a>
+      
+      <a class="list-group-item" href="../sourcefile/fft_types.f90.html">fft_types.f90</a>
+      
+      <a class="list-group-item" href="../sourcefile/scatter_mod.f90.html">scatter_mod.f90</a>
+      
+      <a class="list-group-item" href="../sourcefile/stick_base.f90.html">stick_base.f90</a>
+      
+      <a class="list-group-item" href="../sourcefile/stick_set.f90.html">stick_set.f90</a>
+      
+    </div>
+  </div>
+  
+  
+    </div>
+    <div class="col-lg-9" id='text'>
+    
+    
+    <section>
+    <h2><span class="anchor" id="src"></span>Source Code</h2>
+    <div class="highlight"><pre><span class="c">!</span>
+<span class="c">! Copyright (C) Quantum ESPRESSO group</span>
+<span class="c">!</span>
+<span class="c">! This file is distributed under the terms of the</span>
+<span class="c">! GNU General Public License. See the file `License&#39;</span>
+<span class="c">! in the root directory of the present distribution,</span>
+<span class="c">! or http://www.gnu.org/copyleft/gpl.txt .</span>
+<span class="c">!</span>
+
+<span class="cp">#include &quot;fft_defs.h&quot;</span>
+
+
+<span class="c">!=----------------------------------------------------------------------=!</span>
+   <span class="k">MODULE </span><span class="n">fft_support</span>
+<span class="c">!=----------------------------------------------------------------------=!</span>
+
+       <span class="k">USE</span><span class="p">,</span> <span class="k">intrinsic</span> <span class="kd">::</span>  <span class="nb">iso_c_binding</span>
+<span class="nb">       </span>
+<span class="nb">       </span><span class="k">IMPLICIT NONE</span>
+<span class="k">       SAVE</span>
+
+<span class="k">       </span><span class="kt">INTEGER</span><span class="p">,</span> <span class="k">PARAMETER</span> <span class="kd">::</span> <span class="n">DP</span> <span class="o">=</span> <span class="nb">selected_real_kind</span><span class="p">(</span><span class="mi">14</span><span class="p">,</span><span class="mi">200</span><span class="p">)</span>
+
+       <span class="k">PRIVATE</span>
+<span class="k">       PUBLIC</span> <span class="kd">::</span> <span class="n">good_fft_dimension</span><span class="p">,</span> <span class="n">allowed</span><span class="p">,</span> <span class="n">good_fft_order</span>
+
+<span class="c">!=----------------------------------------------------------------------=!</span>
+   <span class="k">CONTAINS</span>
+<span class="c">!=----------------------------------------------------------------------=!</span>
+<span class="c">!</span>
+<span class="c">!         FFT support Functions/Subroutines</span>
+<span class="c">!</span>
+<span class="c">!=----------------------------------------------------------------------=!</span>
+<span class="c">!</span>
+<span class="c">!</span>
+<span class="kt">integer </span><span class="k">function </span><span class="n">good_fft_dimension</span> <span class="p">(</span><span class="n">n</span><span class="p">)</span>
+  <span class="c">!</span>
+  <span class="c">! Determines the optimal maximum dimensions of fft arrays</span>
+  <span class="c">! Useful on some machines to avoid memory conflicts</span>
+  <span class="c">!</span>
+  <span class="k">IMPLICIT NONE</span>
+<span class="k">  </span><span class="kt">INTEGER</span> <span class="kd">::</span> <span class="n">n</span><span class="p">,</span> <span class="n">nx</span>
+  <span class="kt">REAL</span><span class="p">(</span><span class="n">DP</span><span class="p">)</span> <span class="kd">::</span> <span class="n">log2n</span>
+  <span class="c">!</span>
+  <span class="c">! this is the default: max dimension = fft dimension</span>
+  <span class="n">nx</span> <span class="o">=</span> <span class="n">n</span>
+  <span class="c">!</span>
+<span class="cp">#if defined(__ESSL) || defined(__LINUX_ESSL)</span>
+  <span class="n">log2n</span> <span class="o">=</span> <span class="nb">LOG</span> <span class="p">(</span> <span class="nb">dble</span> <span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="p">)</span> <span class="o">/</span> <span class="nb">LOG</span> <span class="p">(</span> <span class="mf">2.0_DP</span> <span class="p">)</span>
+  <span class="c">! log2n is the logarithm of n in base 2</span>
+  <span class="k">IF</span> <span class="p">(</span> <span class="nb">ABS</span> <span class="p">(</span><span class="nb">NINT</span><span class="p">(</span><span class="n">log2n</span><span class="p">)</span> <span class="o">-</span> <span class="n">log2n</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1.0</span><span class="n">d</span><span class="o">-</span><span class="mi">8</span> <span class="p">)</span> <span class="n">nx</span> <span class="o">=</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span>
+  <span class="c">! if n is a power of 2 (log2n is integer) increase dimension by 1</span>
+<span class="cp">#elif defined(__SX6)</span>
+  <span class="c">!</span>
+  <span class="k">if</span> <span class="p">(</span><span class="nb">mod</span> <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="o">==</span><span class="mi">0</span><span class="p">)</span> <span class="n">nx</span> <span class="o">=</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span>
+  <span class="c">! for nec vector machines: if n is even increase dimension by 1</span>
+  <span class="c">!</span>
+<span class="cp">#endif</span>
+  <span class="c">!</span>
+  <span class="n">good_fft_dimension</span> <span class="o">=</span> <span class="n">nx</span>
+  <span class="k">return</span>
+<span class="k">end function </span><span class="n">good_fft_dimension</span>
+
+
+<span class="c">!=----------------------------------------------------------------------=!</span>
+
+<span class="k">function </span><span class="n">allowed</span> <span class="p">(</span><span class="n">nr</span><span class="p">)</span>
+
+
+  <span class="c">! find if the fft dimension is a good one</span>
+  <span class="c">! a &quot;bad one&quot; is either not implemented (as on IBM with ESSL)</span>
+  <span class="c">! or implemented but with awful performances (most other cases)</span>
+
+  <span class="k">implicit none</span>
+<span class="k">  </span><span class="kt">integer</span> <span class="kd">::</span> <span class="n">nr</span>
+
+  <span class="kt">logical</span> <span class="kd">::</span> <span class="n">allowed</span>
+  <span class="kt">integer</span> <span class="kd">::</span> <span class="n">pwr</span> <span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+  <span class="kt">integer</span> <span class="kd">::</span> <span class="n">mr</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">fac</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">maxpwr</span>
+  <span class="kt">integer</span> <span class="kd">::</span> <span class="n">factors</span><span class="p">(</span> <span class="mi">5</span> <span class="p">)</span> <span class="o">=</span> <span class="p">(</span><span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">11</span> <span class="o">/</span><span class="p">)</span>
+
+  <span class="c">! find the factors of the fft dimension</span>
+
+  <span class="n">mr</span>  <span class="o">=</span> <span class="n">nr</span>
+  <span class="n">pwr</span> <span class="o">=</span> <span class="mi">0</span>
+  <span class="n">factors_loop</span><span class="p">:</span> <span class="k">do </span><span class="n">i</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">5</span>
+     <span class="n">fac</span> <span class="o">=</span> <span class="n">factors</span> <span class="p">(</span><span class="n">i</span><span class="p">)</span>
+     <span class="n">maxpwr</span> <span class="o">=</span> <span class="nb">NINT</span> <span class="p">(</span> <span class="nb">LOG</span><span class="p">(</span> <span class="nb">DBLE</span> <span class="p">(</span><span class="n">mr</span><span class="p">)</span> <span class="p">)</span> <span class="o">/</span> <span class="nb">LOG</span><span class="p">(</span> <span class="nb">DBLE</span> <span class="p">(</span><span class="n">fac</span><span class="p">)</span> <span class="p">)</span> <span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+     <span class="k">do </span><span class="n">p</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">maxpwr</span>
+        <span class="k">if</span> <span class="p">(</span> <span class="n">mr</span> <span class="o">==</span> <span class="mi">1</span> <span class="p">)</span> <span class="k">EXIT </span><span class="n">factors_loop</span>
+        <span class="k">if</span> <span class="p">(</span> <span class="nb">MOD</span> <span class="p">(</span><span class="n">mr</span><span class="p">,</span> <span class="n">fac</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="p">)</span> <span class="k">then</span>
+<span class="k">           </span><span class="n">mr</span> <span class="o">=</span> <span class="n">mr</span> <span class="o">/</span> <span class="n">fac</span>
+           <span class="n">pwr</span> <span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">=</span> <span class="n">pwr</span> <span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">endif</span>
+     <span class="n">enddo</span>
+  <span class="k">end do </span><span class="n">factors_loop</span>
+
+  <span class="k">IF</span> <span class="p">(</span> <span class="n">nr</span> <span class="o">/=</span> <span class="p">(</span> <span class="n">mr</span> <span class="o">*</span> <span class="mi">2</span><span class="o">**</span><span class="n">pwr</span> <span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">3</span><span class="o">**</span><span class="n">pwr</span> <span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="mi">5</span><span class="o">**</span><span class="n">pwr</span> <span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="o">*</span> <span class="mi">7</span><span class="o">**</span><span class="n">pwr</span> <span class="p">(</span><span class="mi">4</span><span class="p">)</span> <span class="o">*</span> <span class="mi">11</span><span class="o">**</span><span class="n">pwr</span> <span class="p">(</span><span class="mi">5</span><span class="p">)</span> <span class="p">)</span> <span class="p">)</span> <span class="p">&amp;</span>
+     <span class="k">CALL </span><span class="n">fftx_error__</span> <span class="p">(</span><span class="s1">&#39; allowed &#39;</span><span class="p">,</span> <span class="s1">&#39; what ?!? &#39;</span><span class="p">,</span> <span class="mi">1</span> <span class="p">)</span>
+
+  <span class="k">if</span> <span class="p">(</span> <span class="n">mr</span> <span class="o">/=</span> <span class="mi">1</span> <span class="p">)</span> <span class="k">then</span>
+
+     <span class="c">! fft dimension contains factors &gt; 11 : no good in any case</span>
+
+     <span class="n">allowed</span> <span class="o">=</span> <span class="p">.</span><span class="n">false</span><span class="p">.</span>
+
+  <span class="k">else</span>
+
+<span class="cp">#if defined(__ESSL) || defined(__LINUX_ESSL)</span>
+
+     <span class="c">! IBM machines with essl libraries</span>
+
+     <span class="n">allowed</span> <span class="o">=</span>  <span class="p">(</span> <span class="n">pwr</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">1</span> <span class="p">)</span> <span class="p">.</span><span class="nb">and</span><span class="p">.</span> <span class="p">(</span> <span class="n">pwr</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">2</span> <span class="p">)</span> <span class="p">.</span><span class="nb">and</span><span class="p">.</span> <span class="p">(</span> <span class="n">pwr</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">1</span> <span class="p">)</span> <span class="p">.</span><span class="nb">and</span><span class="p">.</span> <span class="p">&amp;</span>
+                <span class="p">(</span> <span class="n">pwr</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">1</span> <span class="p">)</span> <span class="p">.</span><span class="nb">and</span><span class="p">.</span> <span class="p">(</span> <span class="n">pwr</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">1</span> <span class="p">)</span> <span class="p">.</span><span class="nb">and</span><span class="p">.</span> <span class="p">&amp;</span>
+                <span class="p">(</span> <span class="p">(</span> <span class="p">(</span><span class="n">pwr</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="p">)</span> <span class="p">.</span><span class="nb">and</span><span class="p">.</span> <span class="p">(</span> <span class="n">pwr</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="o">+</span> <span class="n">pwr</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span> <span class="o">+</span> <span class="n">pwr</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span> <span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">2</span> <span class="p">)</span> <span class="p">.</span><span class="nb">or</span><span class="p">.</span> <span class="p">&amp;</span>
+                  <span class="p">(</span> <span class="p">(</span><span class="n">pwr</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">/=</span> <span class="mi">0</span> <span class="p">)</span> <span class="p">.</span><span class="nb">and</span><span class="p">.</span> <span class="p">(</span> <span class="n">pwr</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="o">+</span> <span class="n">pwr</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span> <span class="o">+</span> <span class="n">pwr</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span> <span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">1</span> <span class="p">)</span> <span class="p">)</span>
+<span class="cp">#else</span>
+
+     <span class="c">! fftw and all other cases: no factors 7 and 11</span>
+
+     <span class="n">allowed</span> <span class="o">=</span> <span class="p">(</span> <span class="p">(</span> <span class="n">pwr</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="p">)</span> <span class="p">.</span><span class="nb">and</span><span class="p">.</span> <span class="p">(</span> <span class="n">pwr</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="p">)</span> <span class="p">)</span>
+
+<span class="cp">#endif</span>
+
+  <span class="n">endif</span>
+
+  <span class="k">return</span>
+<span class="k">end function </span><span class="n">allowed</span>
+
+<span class="c">!=----------------------------------------------------------------------=!</span>
+
+   <span class="kt">INTEGER </span><span class="k">FUNCTION </span><span class="n">good_fft_order</span><span class="p">(</span> <span class="n">nr</span><span class="p">,</span> <span class="n">np</span> <span class="p">)</span>
+
+<span class="c">!</span>
+<span class="c">!    This function find a &quot;good&quot; fft order value greater or equal to &quot;nr&quot;</span>
+<span class="c">!</span>
+<span class="c">!    nr  (input) tentative order n of a fft</span>
+<span class="c">!</span>
+<span class="c">!    np  (optional input) if present restrict the search of the order</span>
+<span class="c">!        in the ensemble of multiples of np</span>
+<span class="c">!</span>
+<span class="c">!    Output: the same if n is a good number</span>
+<span class="c">!         the closest higher number that is good</span>
+<span class="c">!         an fft order is not good if not implemented (as on IBM with ESSL)</span>
+<span class="c">!         or implemented but with awful performances (most other cases)</span>
+<span class="c">!</span>
+
+     <span class="k">USE </span><span class="n">fft_param</span>
+
+     <span class="k">IMPLICIT NONE</span>
+<span class="k">     </span><span class="kt">INTEGER</span><span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">IN</span><span class="p">)</span> <span class="kd">::</span> <span class="n">nr</span>
+     <span class="kt">INTEGER</span><span class="p">,</span> <span class="k">OPTIONAL</span><span class="p">,</span> <span class="k">INTENT</span><span class="p">(</span><span class="n">IN</span><span class="p">)</span> <span class="kd">::</span> <span class="n">np</span>
+     <span class="kt">INTEGER</span> <span class="kd">::</span> <span class="n">new</span>
+
+     <span class="n">new</span> <span class="o">=</span> <span class="n">nr</span>
+     <span class="k">IF</span><span class="p">(</span> <span class="nb">PRESENT</span><span class="p">(</span> <span class="n">np</span> <span class="p">)</span> <span class="p">)</span> <span class="k">THEN</span>
+<span class="k">       DO WHILE</span><span class="p">(</span> <span class="p">(</span> <span class="p">(</span> <span class="p">.</span><span class="nb">NOT</span><span class="p">.</span> <span class="n">allowed</span><span class="p">(</span> <span class="n">new</span> <span class="p">)</span> <span class="p">)</span> <span class="p">.</span><span class="nb">OR</span><span class="p">.</span> <span class="p">(</span> <span class="nb">MOD</span><span class="p">(</span> <span class="n">new</span><span class="p">,</span> <span class="n">np</span> <span class="p">)</span> <span class="o">/=</span> <span class="mi">0</span> <span class="p">)</span> <span class="p">)</span> <span class="p">.</span><span class="nb">AND</span><span class="p">.</span> <span class="p">(</span> <span class="n">new</span> <span class="o">&lt;=</span> <span class="n">nfftx</span> <span class="p">)</span> <span class="p">)</span>
+         <span class="n">new</span> <span class="o">=</span> <span class="n">new</span> <span class="o">+</span> <span class="mi">1</span>
+       <span class="k">END DO</span>
+<span class="k">     ELSE</span>
+<span class="k">       DO WHILE</span><span class="p">(</span> <span class="p">(</span> <span class="p">.</span><span class="nb">NOT</span><span class="p">.</span> <span class="n">allowed</span><span class="p">(</span> <span class="n">new</span> <span class="p">)</span> <span class="p">)</span> <span class="p">.</span><span class="nb">AND</span><span class="p">.</span> <span class="p">(</span> <span class="n">new</span> <span class="o">&lt;=</span> <span class="n">nfftx</span> <span class="p">)</span> <span class="p">)</span>
+         <span class="n">new</span> <span class="o">=</span> <span class="n">new</span> <span class="o">+</span> <span class="mi">1</span>
+       <span class="k">END DO</span>
+<span class="k">     END IF</span>
+
+<span class="k">     IF</span><span class="p">(</span> <span class="n">new</span> <span class="o">&gt;</span> <span class="n">nfftx</span> <span class="p">)</span> <span class="p">&amp;</span>
+       <span class="k">CALL </span><span class="n">fftx_error__</span><span class="p">(</span> <span class="s1">&#39; good_fft_order &#39;</span><span class="p">,</span> <span class="s1">&#39; fft order too large &#39;</span><span class="p">,</span> <span class="n">new</span> <span class="p">)</span>
+
+     <span class="n">good_fft_order</span> <span class="o">=</span> <span class="n">new</span>
+
+     <span class="k">RETURN</span>
+<span class="k">   END FUNCTION </span><span class="n">good_fft_order</span>
+
+
+<span class="c">!=----------------------------------------------------------------------=!</span>
+   <span class="k">END MODULE </span><span class="n">fft_support</span>
+<span class="c">!=----------------------------------------------------------------------=!</span>
+</pre></div>
+
+    </section>
+    </div>
+  </div>
+
+    <hr>
+    <footer>
+        <div class="row">
+        <div class="col-md-6">&copy; 2015 FFTXlib was written by . </div>
+        <div class="col-md-6"><span class="pull-right">Documentation generated by <a href="https://github.com/cmacmackin/ford">FORD</a>.</span></div>
+        </div>
+        <br>
+    </footer>
+    </div> <!-- /container -->
+
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+<!--
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+-->
+    <script src="../js/bootstrap.min.js"></script>
+    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+    <script src="../js/ie10-viewport-bug-workaround.js"></script>
+
+    <!-- MathJax JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        TeX: { extensions: ['AMSmath.js','AMSsymbols.js','noErrors.js','noUndefined.js'], equationNumbers: { autoNumber: 'AMS' } },
+        jax: ['input/TeX','input/MathML','output/HTML-CSS'],
+        extensions: ['tex2jax.js','mml2jax.js','MathMenu.js','MathZoom.js'],
+        'HTML-CSS': { 
+           styles: { '.MathJax_Display, .MathJax .mo, .MathJax .mi, .MathJax .mn': {color: '#000000 ! important'} }
+        }
+      });
+    </script>
+    <script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  </body>
+</html>

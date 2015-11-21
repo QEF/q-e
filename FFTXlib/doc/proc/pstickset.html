@@ -1,0 +1,1390 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+	 
+    <meta name="description" content="Documentation for FFTXlib">
+	 
+    <meta name="author" content="Chris MacMackin" >
+    <link rel="icon" href="../favicon.png">
+
+    <title>pstickset &ndash; FFTXlib</title>
+
+    <link href="../css/bootstrap.min.css" rel="stylesheet">
+    <link href="../css/pygments.css" rel="stylesheet">
+    <link href="../css/font-awesome.min.css" rel="stylesheet">
+    <link href="../css/local.css" rel="stylesheet">
+    
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+    
+    <script src="../js/jquery-2.1.3.min.js"></script>
+    <script src="../js/svg-pan-zoom.min.js"></script>
+
+    
+    <script src="../tipuesearch/tipuesearch_content.js"></script>
+    <link  href="../tipuesearch/tipuesearch.css" rel="stylesheet">
+    <script src="../tipuesearch/tipuesearch_set.js"></script>
+    <script src="../tipuesearch/tipuesearch.js"></script>
+    
+
+  </head>
+
+  <body>
+
+    <!-- Fixed navbar -->
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="../index.html">FFTXlib </a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+				
+                
+            <li><a href="../lists/files.html">Source Files</a></li>
+				
+				
+            <li><a href="../lists/modules.html">Modules</a></li>
+				
+				
+            <li><a href="../lists/procedures.html">Procedures</a></li>
+				
+								
+            <li><a href="../lists/types.html">Derived Types</a></li>
+				
+				
+          </ul>
+        
+        <form action="../search.html" class="navbar-form navbar-right" role="search">
+        <div class="form-group">
+          <input type="text" class="form-control" placeholder="Search" name="q" id="tipue_search_input" autocomplete="off" required>
+        </div>
+<!--
+        <button type="submit" class="btn btn-default">Submit</button>
+-->
+        </form>
+        
+        </div><!--/.nav-collapse -->
+      </div>
+    </nav>
+
+    <div class="container">
+    
+  
+  <div class="row">
+    <h1>pstickset
+    <small>Subroutine</small>
+    
+    </h1>
+	 
+<div class="row">
+<div class="col-lg-12">
+<div class="well well-sm">
+  <ul class="list-inline" style="margin-bottom:0px;display:inline">
+     
+     
+     
+     
+    
+    
+    <li><i class="fa fa-code"></i><a href="../src/stick_set.f90"> Source File</a></li>
+     
+  </ul>
+  <ol class="breadcrumb in-well text-right">
+  
+     <li><a href='../sourcefile/stick_set.f90.html'>stick_set.f90</a></li>
+  
+     <li><a href='../module/stick_set.html'>stick_set</a></li>
+  
+     <li class="active">pstickset</li>
+  </ol>
+</div>
+</div>
+</div>
+    
+  </div>
+  
+  <div class="row">
+    <div class="col-lg-3">
+    
+  
+  
+  
+  <div class="panel panel-primary">
+    <div class="panel-heading text-left"><h3 class="panel-title">Variables</h3></div>
+    <div class="list-group">
+      
+      <a class="list-group-item" href="../proc/pstickset.html#variable-tk%7E7">tk</a>
+      
+      <a class="list-group-item" href="../proc/pstickset.html#variable-ub%7E9">ub</a>
+      
+      <a class="list-group-item" href="../proc/pstickset.html#variable-lb%7E9">lb</a>
+      
+      <a class="list-group-item" href="../proc/pstickset.html#variable-stw%7E6">stw</a>
+      
+      <a class="list-group-item" href="../proc/pstickset.html#variable-nstpw">nstpw</a>
+      
+      <a class="list-group-item" href="../proc/pstickset.html#variable-sstpw">sstpw</a>
+      
+      <a class="list-group-item" href="../proc/pstickset.html#variable-nstw">nstw</a>
+      
+      <a class="list-group-item" href="../proc/pstickset.html#variable-nstpwx">nstpwx</a>
+      
+      <a class="list-group-item" href="../proc/pstickset.html#variable-st%7E4">st</a>
+      
+      <a class="list-group-item" href="../proc/pstickset.html#variable-nstp">nstp</a>
+      
+      <a class="list-group-item" href="../proc/pstickset.html#variable-sstp">sstp</a>
+      
+      <a class="list-group-item" href="../proc/pstickset.html#variable-nst%7E3">nst</a>
+      
+      <a class="list-group-item" href="../proc/pstickset.html#variable-nstpx">nstpx</a>
+      
+      <a class="list-group-item" href="../proc/pstickset.html#variable-sts%7E3">sts</a>
+      
+      <a class="list-group-item" href="../proc/pstickset.html#variable-nstps">nstps</a>
+      
+      <a class="list-group-item" href="../proc/pstickset.html#variable-sstps">sstps</a>
+      
+      <a class="list-group-item" href="../proc/pstickset.html#variable-nsts">nsts</a>
+      
+      <a class="list-group-item" href="../proc/pstickset.html#variable-ist">ist</a>
+      
+      <a class="list-group-item" href="../proc/pstickset.html#variable-ip%7E23">ip</a>
+      
+      <a class="list-group-item" href="../proc/pstickset.html#variable-ngm_">ngm_</a>
+      
+      <a class="list-group-item" href="../proc/pstickset.html#variable-ngs_">ngs_</a>
+      
+      <a class="list-group-item" href="../proc/pstickset.html#variable-idx%7E6">idx</a>
+      
+    </div>
+  </div>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  <hr>
+  
+  <div class="panel panel-default">
+    <div class="panel-heading text-left"><h3 class="panel-title">All Procedures</h3></div>
+    <div class="list-group">
+      
+      <a class="list-group-item" href="../proc/allowed.html">allowed</a>
+      
+      <a class="list-group-item" href="../proc/bw_tg_cft3_scatter.html">bw_tg_cft3_scatter</a>
+      
+      <a class="list-group-item" href="../proc/bw_tg_cft3_xy.html">bw_tg_cft3_xy</a>
+      
+      <a class="list-group-item" href="../proc/bw_tg_cft3_z.html">bw_tg_cft3_z</a>
+      
+      <a class="list-group-item" href="../proc/cfft3d.html">cfft3d</a>
+      
+      <a class="list-group-item" href="../proc/cfft3d%7E2.html">cfft3d</a>
+      
+      <a class="list-group-item" href="../proc/cfft3d%7E3.html">cfft3d</a>
+      
+      <a class="list-group-item" href="../proc/cfft3d%7E4.html">cfft3d</a>
+      
+      <a class="list-group-item" href="../proc/cfft3d%7E5.html">cfft3d</a>
+      
+      <a class="list-group-item" href="../proc/cfft3ds.html">cfft3ds</a>
+      
+      <a class="list-group-item" href="../proc/cfft3ds%7E2.html">cfft3ds</a>
+      
+      <a class="list-group-item" href="../proc/cfft3ds%7E3.html">cfft3ds</a>
+      
+      <a class="list-group-item" href="../proc/cfft3ds%7E4.html">cfft3ds</a>
+      
+      <a class="list-group-item" href="../proc/cfft3ds%7E5.html">cfft3ds</a>
+      
+      <a class="list-group-item" href="../proc/cft_1z.html">cft_1z</a>
+      
+      <a class="list-group-item" href="../proc/cft_1z%7E2.html">cft_1z</a>
+      
+      <a class="list-group-item" href="../proc/cft_1z%7E3.html">cft_1z</a>
+      
+      <a class="list-group-item" href="../proc/cft_1z%7E4.html">cft_1z</a>
+      
+      <a class="list-group-item" href="../proc/cft_1z%7E5.html">cft_1z</a>
+      
+      <a class="list-group-item" href="../proc/cft_2xy.html">cft_2xy</a>
+      
+      <a class="list-group-item" href="../proc/cft_2xy%7E2.html">cft_2xy</a>
+      
+      <a class="list-group-item" href="../proc/cft_2xy%7E3.html">cft_2xy</a>
+      
+      <a class="list-group-item" href="../proc/cft_2xy%7E4.html">cft_2xy</a>
+      
+      <a class="list-group-item" href="../proc/cft_2xy%7E5.html">cft_2xy</a>
+      
+      <a class="list-group-item" href="../proc/cft_b.html">cft_b</a>
+      
+      <a class="list-group-item" href="../proc/cft_b_omp.html">cft_b_omp</a>
+      
+      <a class="list-group-item" href="../proc/cft_b_omp_init.html">cft_b_omp_init</a>
+      
+      <a class="list-group-item" href="../proc/cgather_sym.html">cgather_sym</a>
+      
+      <a class="list-group-item" href="../proc/cgather_sym_many.html">cgather_sym_many</a>
+      
+      <a class="list-group-item" href="../proc/cscatter_sym_many.html">cscatter_sym_many</a>
+      
+      <a class="list-group-item" href="../proc/fft_box_allocate.html">fft_box_allocate</a>
+      
+      <a class="list-group-item" href="../proc/fft_box_deallocate.html">fft_box_deallocate</a>
+      
+      <a class="list-group-item" href="../proc/fft_box_set.html">fft_box_set</a>
+      
+      <a class="list-group-item" href="../proc/fft_dlay_allocate.html">fft_dlay_allocate</a>
+      
+      <a class="list-group-item" href="../proc/fft_dlay_deallocate.html">fft_dlay_deallocate</a>
+      
+      <a class="list-group-item" href="../proc/fft_dlay_scalar.html">fft_dlay_scalar</a>
+      
+      <a class="list-group-item" href="../proc/fft_dlay_set.html">fft_dlay_set</a>
+      
+      <a class="list-group-item" href="../proc/fft_scatter.html">fft_scatter</a>
+      
+      <a class="list-group-item" href="../proc/fftx_error__.html">fftx_error__</a>
+      
+      <a class="list-group-item" href="../proc/fw_tg_cft3_scatter.html">fw_tg_cft3_scatter</a>
+      
+      <a class="list-group-item" href="../proc/fw_tg_cft3_xy.html">fw_tg_cft3_xy</a>
+      
+      <a class="list-group-item" href="../proc/fw_tg_cft3_z.html">fw_tg_cft3_z</a>
+      
+      <a class="list-group-item" href="../interface/fwfft.html">fwfft</a>
+      
+      <a class="list-group-item" href="../proc/fwfft_x.html">fwfft_x</a>
+      
+      <a class="list-group-item" href="../proc/gather_complex_grid.html">gather_complex_grid</a>
+      
+      <a class="list-group-item" href="../interface/gather_grid.html">gather_grid</a>
+      
+      <a class="list-group-item" href="../proc/gather_real_grid.html">gather_real_grid</a>
+      
+      <a class="list-group-item" href="../proc/good_fft_dimension.html">good_fft_dimension</a>
+      
+      <a class="list-group-item" href="../proc/good_fft_order.html">good_fft_order</a>
+      
+      <a class="list-group-item" href="../interface/invfft.html">invfft</a>
+      
+      <a class="list-group-item" href="../proc/invfft_b.html">invfft_b</a>
+      
+      <a class="list-group-item" href="../proc/invfft_x.html">invfft_x</a>
+      
+      <a class="list-group-item" href="../proc/pack_group_sticks.html">pack_group_sticks</a>
+      
+      <a class="list-group-item" href="../proc/pstickset.html">pstickset</a>
+      
+      <a class="list-group-item" href="../proc/pstickset_custom.html">pstickset_custom</a>
+      
+      <a class="list-group-item" href="../proc/scatter_complex_grid.html">scatter_complex_grid</a>
+      
+      <a class="list-group-item" href="../interface/scatter_grid.html">scatter_grid</a>
+      
+      <a class="list-group-item" href="../proc/scatter_real_grid.html">scatter_real_grid</a>
+      
+      <a class="list-group-item" href="../proc/sticks_countg.html">sticks_countg</a>
+      
+      <a class="list-group-item" href="../proc/sticks_deallocate.html">sticks_deallocate</a>
+      
+      <a class="list-group-item" href="../proc/sticks_dist.html">sticks_dist</a>
+      
+      <a class="list-group-item" href="../proc/sticks_maps.html">sticks_maps</a>
+      
+      <a class="list-group-item" href="../proc/sticks_maps_scalar.html">sticks_maps_scalar</a>
+      
+      <a class="list-group-item" href="../proc/sticks_ordered_dist.html">sticks_ordered_dist</a>
+      
+      <a class="list-group-item" href="../proc/sticks_pairup.html">sticks_pairup</a>
+      
+      <a class="list-group-item" href="../proc/sticks_sort.html">sticks_sort</a>
+      
+      <a class="list-group-item" href="../proc/task_groups_init.html">task_groups_init</a>
+      
+      <a class="list-group-item" href="../proc/task_groups_init_first.html">task_groups_init_first</a>
+      
+      <a class="list-group-item" href="../proc/tg_cft3s.html">tg_cft3s</a>
+      
+      <a class="list-group-item" href="../proc/tg_cgather.html">tg_cgather</a>
+      
+      <a class="list-group-item" href="../proc/tg_gather.html">tg_gather</a>
+      
+      <a class="list-group-item" href="../proc/unpack_group_sticks.html">unpack_group_sticks</a>
+      
+    </div>
+  </div>
+  
+  
+    </div>
+    
+    <div class="col-lg-9" id='text'>
+    <h2>
+public subroutine pstickset(gamma_only, bg, gcut, gkcut, gcuts, dfftp, dffts, ngw, ngm, ngs, mype, root, nproc, comm, nogrp_, ionode, stdout, dfft3d)
+    
+    
+    
+</h2>
+    
+  
+
+
+
+    <h3>Arguments</h3>
+    
+      
+<table class="table table-striped varlist">
+<thead><tr><th>Type</th>
+<th>Intent</th><th>Optional</th>
+<th>Attributes</th><th></th><th>Name</th><th></th></thead>
+
+
+
+<tbody>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-gamma_only"></span>logical,</td>
+  <td>intent(in)</td>
+  <td></td>
+  
+  <td></td><td>::</td>
+  <td><strong>gamma_only</strong></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-bg"></span>real(kind=DP),</td>
+  <td>intent(in)</td>
+  <td></td>
+  
+  <td></td><td>::</td>
+  <td><strong>bg</strong>(3,3)</td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-gcut%7E2"></span>real(kind=DP),</td>
+  <td>intent(in)</td>
+  <td></td>
+  
+  <td></td><td>::</td>
+  <td><strong>gcut</strong></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-gkcut%7E2"></span>real(kind=DP),</td>
+  <td>intent(in)</td>
+  <td></td>
+  
+  <td></td><td>::</td>
+  <td><strong>gkcut</strong></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-gcuts%7E2"></span>real(kind=DP),</td>
+  <td>intent(in)</td>
+  <td></td>
+  
+  <td></td><td>::</td>
+  <td><strong>gcuts</strong></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-dfftp%7E4"></span>type(<a href='../type/fft_dlay_descriptor.html'>fft_dlay_descriptor</a>),</td>
+  <td>intent(inout)</td>
+  <td></td>
+  
+  <td></td><td>::</td>
+  <td><strong>dfftp</strong></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-dffts%7E3"></span>type(<a href='../type/fft_dlay_descriptor.html'>fft_dlay_descriptor</a>),</td>
+  <td>intent(inout)</td>
+  <td></td>
+  
+  <td></td><td>::</td>
+  <td><strong>dffts</strong></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-ngw"></span>integer,</td>
+  <td>intent(out)</td>
+  <td></td>
+  
+  <td></td><td>::</td>
+  <td><strong>ngw</strong></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-ngm%7E2"></span>integer,</td>
+  <td>intent(out)</td>
+  <td></td>
+  
+  <td></td><td>::</td>
+  <td><strong>ngm</strong></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-ngs"></span>integer,</td>
+  <td>intent(out)</td>
+  <td></td>
+  
+  <td></td><td>::</td>
+  <td><strong>ngs</strong></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-mype%7E4"></span>integer,</td>
+  <td>intent(in)</td>
+  <td></td>
+  
+  <td></td><td>::</td>
+  <td><strong>mype</strong></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-root%7E4"></span>integer,</td>
+  <td>intent(in)</td>
+  <td></td>
+  
+  <td></td><td>::</td>
+  <td><strong>root</strong></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-nproc%7E9"></span>integer,</td>
+  <td>intent(in)</td>
+  <td></td>
+  
+  <td></td><td>::</td>
+  <td><strong>nproc</strong></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-comm%7E5"></span>integer,</td>
+  <td>intent(in)</td>
+  <td></td>
+  
+  <td></td><td>::</td>
+  <td><strong>comm</strong></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-nogrp_"></span>integer,</td>
+  <td>intent(in)</td>
+  <td></td>
+  
+  <td></td><td>::</td>
+  <td><strong>nogrp_</strong></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-ionode"></span>logical,</td>
+  <td>intent(in)</td>
+  <td></td>
+  
+  <td></td><td>::</td>
+  <td><strong>ionode</strong></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-stdout%7E6"></span>integer,</td>
+  <td>intent(in)</td>
+  <td></td>
+  
+  <td></td><td>::</td>
+  <td><strong>stdout</strong></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-dfft3d"></span>type(<a href='../type/fft_dlay_descriptor.html'>fft_dlay_descriptor</a>),</td>
+  <td>intent(inout),</td>
+  <td>optional</td>
+  
+  <td></td><td>::</td>
+  <td><strong>dfft3d</strong></td><td></td>
+  
+</tr>
+
+</tbody>
+</table>
+
+    
+    
+    
+    
+     <h3>Calls</h3>
+     
+                <div class="depgraph"><?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 2.39.20141001.0445 (20141001.0445)
+ -->
+<!-- Title: proc~~pstickset~~CallsGraph Pages: 1 -->
+<svg id="procpsticksetCallsGraph" width="476pt" height="427pt"
+ viewBox="0.00 0.00 476.00 426.59" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="proc~~pstickset~~CallsGraph" class="graph" transform="scale(1 1) rotate(0) translate(4 422.587)">
+<title>proc~~pstickset~~CallsGraph</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-422.587 472,-422.587 472,4 -4,4"/>
+<!-- proc~pstickset -->
+<g id="proc~~pstickset~~CallsGraph_node1" class="node"><title>proc~pstickset</title>
+<polygon fill="none" stroke="black" points="54,-234 0,-234 0,-210 54,-210 54,-234"/>
+<text text-anchor="middle" x="27" y="-219.6" font-family="Helvetica,sans-Serif" font-size="10.50">pstickset</text>
+</g>
+<!-- proc~fft_dlay_set -->
+<g id="proc~~pstickset~~CallsGraph_node2" class="node"><title>proc~fft_dlay_set</title>
+<g id="a_proc~~pstickset~~CallsGraph_node2"><a xlink:href="../proc/fft_dlay_set.html" xlink:title="fft_dlay_set">
+<polygon fill="#d9534f" stroke="#d9534f" points="319,-398 253,-398 253,-374 319,-374 319,-398"/>
+<text text-anchor="middle" x="286" y="-383.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">fft_dlay_set</text>
+</a>
+</g>
+</g>
+<!-- proc~pstickset&#45;&gt;proc~fft_dlay_set -->
+<g id="proc~~pstickset~~CallsGraph_edge14" class="edge"><title>proc~pstickset&#45;&gt;proc~fft_dlay_set</title>
+<path fill="none" stroke="black" d="M29.9546,-234.089C36.4588,-258.036 54.3538,-311.557 90,-339 134.314,-373.117 199.69,-382.953 242.557,-385.529"/>
+<polygon fill="black" stroke="black" points="242.517,-389.031 252.677,-386.028 242.862,-382.04 242.517,-389.031"/>
+</g>
+<!-- proc~fft_dlay_scalar -->
+<g id="proc~~pstickset~~CallsGraph_node3" class="node"><title>proc~fft_dlay_scalar</title>
+<g id="a_proc~~pstickset~~CallsGraph_node3"><a xlink:href="../proc/fft_dlay_scalar.html" xlink:title="fft_dlay_scalar">
+<polygon fill="#d9534f" stroke="#d9534f" points="326,-356 246,-356 246,-332 326,-332 326,-356"/>
+<text text-anchor="middle" x="286" y="-341.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">fft_dlay_scalar</text>
+</a>
+</g>
+</g>
+<!-- proc~pstickset&#45;&gt;proc~fft_dlay_scalar -->
+<g id="proc~~pstickset~~CallsGraph_edge15" class="edge"><title>proc~pstickset&#45;&gt;proc~fft_dlay_scalar</title>
+<path fill="none" stroke="black" d="M32.1064,-234.133C40.8897,-253.395 60.777,-290.663 90,-309 133.862,-336.522 193.506,-343.819 235.442,-345.137"/>
+<polygon fill="black" stroke="black" points="235.631,-348.641 245.702,-345.351 235.778,-341.643 235.631,-348.641"/>
+</g>
+<!-- proc~sticks_dist -->
+<g id="proc~~pstickset~~CallsGraph_node4" class="node"><title>proc~sticks_dist</title>
+<g id="a_proc~~pstickset~~CallsGraph_node4"><a xlink:href="../proc/sticks_dist.html" xlink:title="sticks_dist">
+<polygon fill="#d9534f" stroke="#d9534f" points="172.5,-192 111.5,-192 111.5,-168 172.5,-168 172.5,-192"/>
+<text text-anchor="middle" x="142" y="-177.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">sticks_dist</text>
+</a>
+</g>
+</g>
+<!-- proc~pstickset&#45;&gt;proc~sticks_dist -->
+<g id="proc~~pstickset~~CallsGraph_edge16" class="edge"><title>proc~pstickset&#45;&gt;proc~sticks_dist</title>
+<path fill="none" stroke="black" d="M54.2534,-212.047C68.4445,-206.864 86.0717,-200.426 101.796,-194.683"/>
+<polygon fill="black" stroke="black" points="103.101,-197.933 111.293,-191.215 100.699,-191.358 103.101,-197.933"/>
+</g>
+<!-- proc~task_groups_init -->
+<g id="proc~~pstickset~~CallsGraph_node5" class="node"><title>proc~task_groups_init</title>
+<g id="a_proc~~pstickset~~CallsGraph_node5"><a xlink:href="../proc/task_groups_init.html" xlink:title="task_groups_init">
+<polygon fill="#d9534f" stroke="#d9534f" points="186.5,-234 97.5,-234 97.5,-210 186.5,-210 186.5,-234"/>
+<text text-anchor="middle" x="142" y="-219.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">task_groups_init</text>
+</a>
+</g>
+</g>
+<!-- proc~pstickset&#45;&gt;proc~task_groups_init -->
+<g id="proc~~pstickset~~CallsGraph_edge17" class="edge"><title>proc~pstickset&#45;&gt;proc~task_groups_init</title>
+<path fill="none" stroke="black" d="M54.2534,-222C64.2195,-222 75.8803,-222 87.3866,-222"/>
+<polygon fill="black" stroke="black" points="87.412,-225.5 97.412,-222 87.412,-218.5 87.412,-225.5"/>
+</g>
+<!-- proc~fft_dlay_allocate -->
+<g id="proc~~pstickset~~CallsGraph_node6" class="node"><title>proc~fft_dlay_allocate</title>
+<g id="a_proc~~pstickset~~CallsGraph_node6"><a xlink:href="../proc/fft_dlay_allocate.html" xlink:title="fft_dlay_allocate">
+<polygon fill="#d9534f" stroke="#d9534f" points="330,-314 242,-314 242,-290 330,-290 330,-314"/>
+<text text-anchor="middle" x="286" y="-299.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">fft_dlay_allocate</text>
+</a>
+</g>
+</g>
+<!-- proc~pstickset&#45;&gt;proc~fft_dlay_allocate -->
+<g id="proc~~pstickset~~CallsGraph_edge18" class="edge"><title>proc~pstickset&#45;&gt;proc~fft_dlay_allocate</title>
+<path fill="none" stroke="black" d="M34.9236,-234.01C45.5002,-248.902 65.7434,-273.7 90,-285 134.526,-305.742 190.879,-308.545 231.72,-307.018"/>
+<polygon fill="black" stroke="black" points="231.929,-310.512 241.753,-306.544 231.599,-303.52 231.929,-310.512"/>
+</g>
+<!-- proc~sticks_pairup -->
+<g id="proc~~pstickset~~CallsGraph_node7" class="node"><title>proc~sticks_pairup</title>
+<g id="a_proc~~pstickset~~CallsGraph_node7"><a xlink:href="../proc/sticks_pairup.html" xlink:title="sticks_pairup">
+<polygon fill="#d9534f" stroke="#d9534f" points="179,-150 105,-150 105,-126 179,-126 179,-150"/>
+<text text-anchor="middle" x="142" y="-135.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">sticks_pairup</text>
+</a>
+</g>
+</g>
+<!-- proc~pstickset&#45;&gt;proc~sticks_pairup -->
+<g id="proc~~pstickset~~CallsGraph_edge19" class="edge"><title>proc~pstickset&#45;&gt;proc~sticks_pairup</title>
+<path fill="none" stroke="black" d="M36.533,-209.869C47.9696,-195.991 68.3294,-173.341 90,-159 92.3977,-157.413 94.9342,-155.913 97.5456,-154.501"/>
+<polygon fill="black" stroke="black" points="99.1904,-157.592 106.62,-150.039 96.1014,-151.311 99.1904,-157.592"/>
+</g>
+<!-- fftx_error__ -->
+<g id="proc~~pstickset~~CallsGraph_node8" class="node"><title>fftx_error__</title>
+<polygon fill="#777777" stroke="#777777" points="456,-314 390,-314 390,-290 456,-290 456,-314"/>
+<text text-anchor="middle" x="423" y="-299.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">fftx_error__</text>
+</g>
+<!-- proc~pstickset&#45;&gt;fftx_error__ -->
+<g id="proc~~pstickset~~CallsGraph_edge20" class="edge"><title>proc~pstickset&#45;&gt;fftx_error__</title>
+<path fill="none" stroke="black" d="M28.403,-234.347C32.3685,-263.263 46.3698,-335.734 90,-373 138.688,-414.586 166.423,-399.391 230,-407 279.425,-412.916 297.327,-428.959 342,-407 377.386,-389.606 401.679,-348.491 413.883,-323.178"/>
+<polygon fill="black" stroke="black" points="417.094,-324.573 418.101,-314.026 410.737,-321.643 417.094,-324.573"/>
+</g>
+<!-- proc~sticks_sort -->
+<g id="proc~~pstickset~~CallsGraph_node9" class="node"><title>proc~sticks_sort</title>
+<g id="a_proc~~pstickset~~CallsGraph_node9"><a xlink:href="../proc/sticks_sort.html" xlink:title="sticks_sort">
+<polygon fill="#d9534f" stroke="#d9534f" points="173,-108 111,-108 111,-84 173,-84 173,-108"/>
+<text text-anchor="middle" x="142" y="-93.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">sticks_sort</text>
+</a>
+</g>
+</g>
+<!-- proc~pstickset&#45;&gt;proc~sticks_sort -->
+<g id="proc~~pstickset~~CallsGraph_edge21" class="edge"><title>proc~pstickset&#45;&gt;proc~sticks_sort</title>
+<path fill="none" stroke="black" d="M31.28,-209.894C39.4633,-188.368 59.2923,-143.24 90,-117 93.509,-114.002 97.5015,-111.394 101.678,-109.134"/>
+<polygon fill="black" stroke="black" points="103.454,-112.166 111,-104.728 100.463,-105.837 103.454,-112.166"/>
+</g>
+<!-- proc~sticks_countg -->
+<g id="proc~~pstickset~~CallsGraph_node10" class="node"><title>proc~sticks_countg</title>
+<g id="a_proc~~pstickset~~CallsGraph_node10"><a xlink:href="../proc/sticks_countg.html" xlink:title="sticks_countg">
+<polygon fill="#d9534f" stroke="#d9534f" points="180,-276 104,-276 104,-252 180,-252 180,-276"/>
+<text text-anchor="middle" x="142" y="-261.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">sticks_countg</text>
+</a>
+</g>
+</g>
+<!-- proc~pstickset&#45;&gt;proc~sticks_countg -->
+<g id="proc~~pstickset~~CallsGraph_edge22" class="edge"><title>proc~pstickset&#45;&gt;proc~sticks_countg</title>
+<path fill="none" stroke="black" d="M54.2534,-231.953C67.6568,-236.849 84.1254,-242.863 99.1609,-248.354"/>
+<polygon fill="black" stroke="black" points="98.194,-251.727 108.788,-251.87 100.595,-245.152 98.194,-251.727"/>
+</g>
+<!-- proc~sticks_maps -->
+<g id="proc~~pstickset~~CallsGraph_node11" class="node"><title>proc~sticks_maps</title>
+<g id="a_proc~~pstickset~~CallsGraph_node11"><a xlink:href="../proc/sticks_maps.html" xlink:title="sticks_maps">
+<polygon fill="#d9534f" stroke="#d9534f" points="177,-66 107,-66 107,-42 177,-42 177,-66"/>
+<text text-anchor="middle" x="142" y="-51.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">sticks_maps</text>
+</a>
+</g>
+</g>
+<!-- proc~pstickset&#45;&gt;proc~sticks_maps -->
+<g id="proc~~pstickset~~CallsGraph_edge23" class="edge"><title>proc~pstickset&#45;&gt;proc~sticks_maps</title>
+<path fill="none" stroke="black" d="M28.9524,-209.967C34.0278,-182.398 50.1232,-114.045 90,-75 92.4,-72.65 95.0976,-70.552 97.9689,-68.6808"/>
+<polygon fill="black" stroke="black" points="99.9065,-71.6095 106.98,-63.7221 96.5318,-65.4767 99.9065,-71.6095"/>
+</g>
+<!-- proc~sticks_maps_scalar -->
+<g id="proc~~pstickset~~CallsGraph_node12" class="node"><title>proc~sticks_maps_scalar</title>
+<g id="a_proc~~pstickset~~CallsGraph_node12"><a xlink:href="../proc/sticks_maps_scalar.html" xlink:title="sticks_maps_scalar">
+<polygon fill="#d9534f" stroke="#d9534f" points="194,-24 90,-24 90,-0 194,-0 194,-24"/>
+<text text-anchor="middle" x="142" y="-9.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">sticks_maps_scalar</text>
+</a>
+</g>
+</g>
+<!-- proc~pstickset&#45;&gt;proc~sticks_maps_scalar -->
+<g id="proc~~pstickset~~CallsGraph_edge24" class="edge"><title>proc~pstickset&#45;&gt;proc~sticks_maps_scalar</title>
+<path fill="none" stroke="black" d="M27.6518,-209.612C30.0395,-176.545 40.9693,-85.1725 90,-33 91.0418,-31.8914 92.1502,-30.84 93.313,-29.8427"/>
+<polygon fill="black" stroke="black" points="95.4578,-32.614 101.652,-24.0186 91.4496,-26.8751 95.4578,-32.614"/>
+</g>
+<!-- proc~fft_dlay_set&#45;&gt;fftx_error__ -->
+<g id="proc~~pstickset~~CallsGraph_edge1" class="edge"><title>proc~fft_dlay_set&#45;&gt;fftx_error__</title>
+<path fill="none" stroke="black" d="M319.025,-375.507C326.767,-372.536 334.841,-369.004 342,-365 364.245,-352.56 386.923,-334.349 402.604,-320.702"/>
+<polygon fill="black" stroke="black" points="404.963,-323.288 410.127,-314.036 400.321,-318.049 404.963,-323.288"/>
+</g>
+<!-- proc~fft_dlay_scalar&#45;&gt;fftx_error__ -->
+<g id="proc~~pstickset~~CallsGraph_edge2" class="edge"><title>proc~fft_dlay_scalar&#45;&gt;fftx_error__</title>
+<path fill="none" stroke="black" d="M325.259,-331.964C342.312,-326.737 362.341,-320.596 379.814,-315.24"/>
+<polygon fill="black" stroke="black" points="381.229,-318.467 389.764,-312.189 379.177,-311.774 381.229,-318.467"/>
+</g>
+<!-- proc~task_groups_init&#45;&gt;fftx_error__ -->
+<g id="proc~~pstickset~~CallsGraph_edge7" class="edge"><title>proc~task_groups_init&#45;&gt;fftx_error__</title>
+<path fill="none" stroke="black" d="M186.873,-228.371C227.932,-234.913 290.016,-246.61 342,-264 358.917,-269.659 376.957,-277.888 391.708,-285.243"/>
+<polygon fill="black" stroke="black" points="390.382,-288.495 400.882,-289.914 393.558,-282.257 390.382,-288.495"/>
+</g>
+<!-- proc~task_groups_init_first -->
+<g id="proc~~pstickset~~CallsGraph_node13" class="node"><title>proc~task_groups_init_first</title>
+<g id="a_proc~~pstickset~~CallsGraph_node13"><a xlink:href="../proc/task_groups_init_first.html" xlink:title="task_groups_init_first">
+<polygon fill="#d9534f" stroke="#d9534f" points="342,-196 230,-196 230,-172 342,-172 342,-196"/>
+<text text-anchor="middle" x="286" y="-181.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">task_groups_init_first</text>
+</a>
+</g>
+</g>
+<!-- proc~task_groups_init&#45;&gt;proc~task_groups_init_first -->
+<g id="proc~~pstickset~~CallsGraph_edge8" class="edge"><title>proc~task_groups_init&#45;&gt;proc~task_groups_init_first</title>
+<path fill="none" stroke="black" d="M186.773,-210.185C200.592,-206.538 215.98,-202.478 230.434,-198.663"/>
+<polygon fill="black" stroke="black" points="231.485,-202.006 240.261,-196.07 229.699,-195.237 231.485,-202.006"/>
+</g>
+<!-- mpi_allgather -->
+<g id="proc~~pstickset~~CallsGraph_node14" class="node"><title>mpi_allgather</title>
+<polygon fill="#777777" stroke="#777777" points="324,-154 248,-154 248,-130 324,-130 324,-154"/>
+<text text-anchor="middle" x="286" y="-139.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">mpi_allgather</text>
+</g>
+<!-- proc~task_groups_init&#45;&gt;mpi_allgather -->
+<g id="proc~~pstickset~~CallsGraph_edge9" class="edge"><title>proc~task_groups_init&#45;&gt;mpi_allgather</title>
+<path fill="none" stroke="black" d="M177.733,-209.955C183.389,-207.383 189.012,-204.399 194,-201 213.226,-187.9 210.612,-175.858 230,-163 232.726,-161.192 235.629,-159.511 238.624,-157.954"/>
+<polygon fill="black" stroke="black" points="240.236,-161.063 247.801,-153.646 237.261,-154.727 240.236,-161.063"/>
+</g>
+<!-- proc~fft_dlay_allocate&#45;&gt;fftx_error__ -->
+<g id="proc~~pstickset~~CallsGraph_edge10" class="edge"><title>proc~fft_dlay_allocate&#45;&gt;fftx_error__</title>
+<path fill="none" stroke="black" d="M330.102,-302C346.015,-302 363.949,-302 379.785,-302"/>
+<polygon fill="black" stroke="black" points="379.847,-305.5 389.847,-302 379.847,-298.5 379.847,-305.5"/>
+</g>
+<!-- hpsort -->
+<g id="proc~~pstickset~~CallsGraph_node18" class="node"><title>hpsort</title>
+<polygon fill="#777777" stroke="#777777" points="313,-108 259,-108 259,-84 313,-84 313,-108"/>
+<text text-anchor="middle" x="286" y="-93.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">hpsort</text>
+</g>
+<!-- proc~sticks_sort&#45;&gt;hpsort -->
+<g id="proc~~pstickset~~CallsGraph_edge11" class="edge"><title>proc~sticks_sort&#45;&gt;hpsort</title>
+<path fill="none" stroke="black" d="M173.246,-96C195.339,-96 225.066,-96 248.45,-96"/>
+<polygon fill="black" stroke="black" points="248.698,-99.5001 258.698,-96 248.698,-92.5001 248.698,-99.5001"/>
+</g>
+<!-- proc~sticks_countg&#45;&gt;fftx_error__ -->
+<g id="proc~~pstickset~~CallsGraph_edge12" class="edge"><title>proc~sticks_countg&#45;&gt;fftx_error__</title>
+<path fill="none" stroke="black" d="M180.212,-265.33C220.641,-267.183 286.182,-271.462 342,-281 354.418,-283.122 367.718,-286.216 379.876,-289.38"/>
+<polygon fill="black" stroke="black" points="379.212,-292.825 389.777,-292.034 381.025,-286.064 379.212,-292.825"/>
+</g>
+<!-- mpi_allreduce -->
+<g id="proc~~pstickset~~CallsGraph_node19" class="node"><title>mpi_allreduce</title>
+<polygon fill="#777777" stroke="#777777" points="325,-66 247,-66 247,-42 325,-42 325,-66"/>
+<text text-anchor="middle" x="286" y="-51.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">mpi_allreduce</text>
+</g>
+<!-- proc~sticks_maps&#45;&gt;mpi_allreduce -->
+<g id="proc~~pstickset~~CallsGraph_edge13" class="edge"><title>proc~sticks_maps&#45;&gt;mpi_allreduce</title>
+<path fill="none" stroke="black" d="M177.226,-54C195.083,-54 217.064,-54 236.582,-54"/>
+<polygon fill="black" stroke="black" points="236.829,-57.5001 246.829,-54 236.829,-50.5001 236.829,-57.5001"/>
+</g>
+<!-- proc~task_groups_init_first&#45;&gt;fftx_error__ -->
+<g id="proc~~pstickset~~CallsGraph_edge3" class="edge"><title>proc~task_groups_init_first&#45;&gt;fftx_error__</title>
+<path fill="none" stroke="black" d="M317.81,-196.004C326.076,-199.847 334.702,-204.546 342,-210 356.575,-220.892 387.819,-258.282 406.961,-281.91"/>
+<polygon fill="black" stroke="black" points="404.413,-284.326 413.412,-289.918 409.864,-279.935 404.413,-284.326"/>
+</g>
+<!-- mpi_comm_size -->
+<g id="proc~~pstickset~~CallsGraph_node15" class="node"><title>mpi_comm_size</title>
+<polygon fill="#777777" stroke="#777777" points="467,-238 379,-238 379,-214 467,-214 467,-238"/>
+<text text-anchor="middle" x="423" y="-223.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">mpi_comm_size</text>
+</g>
+<!-- proc~task_groups_init_first&#45;&gt;mpi_comm_size -->
+<g id="proc~~pstickset~~CallsGraph_edge4" class="edge"><title>proc~task_groups_init_first&#45;&gt;mpi_comm_size</title>
+<path fill="none" stroke="black" d="M325.259,-196.036C340.45,-200.693 358.003,-206.074 374.006,-210.98"/>
+<polygon fill="black" stroke="black" points="373.149,-214.378 383.736,-213.963 375.201,-207.685 373.149,-214.378"/>
+</g>
+<!-- mpi_comm_split -->
+<g id="proc~~pstickset~~CallsGraph_node16" class="node"><title>mpi_comm_split</title>
+<polygon fill="#777777" stroke="#777777" points="467,-196 379,-196 379,-172 467,-172 467,-196"/>
+<text text-anchor="middle" x="423" y="-181.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">mpi_comm_split</text>
+</g>
+<!-- proc~task_groups_init_first&#45;&gt;mpi_comm_split -->
+<g id="proc~~pstickset~~CallsGraph_edge5" class="edge"><title>proc~task_groups_init_first&#45;&gt;mpi_comm_split</title>
+<path fill="none" stroke="black" d="M342.118,-184C350.935,-184 360.035,-184 368.807,-184"/>
+<polygon fill="black" stroke="black" points="368.917,-187.5 378.917,-184 368.917,-180.5 368.917,-187.5"/>
+</g>
+<!-- mpi_comm_rank -->
+<g id="proc~~pstickset~~CallsGraph_node17" class="node"><title>mpi_comm_rank</title>
+<polygon fill="#777777" stroke="#777777" points="468,-154 378,-154 378,-130 468,-130 468,-154"/>
+<text text-anchor="middle" x="423" y="-139.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">mpi_comm_rank</text>
+</g>
+<!-- proc~task_groups_init_first&#45;&gt;mpi_comm_rank -->
+<g id="proc~~pstickset~~CallsGraph_edge6" class="edge"><title>proc~task_groups_init_first&#45;&gt;mpi_comm_rank</title>
+<path fill="none" stroke="black" d="M325.259,-171.964C340.45,-167.307 358.003,-161.926 374.006,-157.02"/>
+<polygon fill="black" stroke="black" points="375.201,-160.315 383.736,-154.037 373.149,-153.622 375.201,-160.315"/>
+</g>
+</g>
+</svg>
+</div>
+                <div><a type="button" class="graph-help" data-toggle="modal" href="#graph-help-text">Help</a></div>
+                <div class="modal fade" id="graph-help-text" tabindex="-1" role="dialog">
+                  <div class="modal-dialog modal-lg" role="document">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title" id="-graph-help-label">Graph Key</h4>
+                      </div>
+                      <div class="modal-body">
+                        
+Nodes of different colours represent the following:
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 2.39.20141001.0445 (20141001.0445)
+ -->
+<!-- Title: Graph Key Pages: 1 -->
+<svg width="641pt" height="26pt"
+ viewBox="0.00 0.00 641.00 26.23" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(0.819693 0.819693) rotate(0) translate(4 28)">
+<title>Graph Key</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-28 778,-28 778,4 -4,4"/>
+<!-- Module -->
+<g id="node1" class="node"><title>Module</title>
+<polygon fill="#337ab7" stroke="#337ab7" points="54,-24 0,-24 0,-0 54,-0 54,-24"/>
+<text text-anchor="middle" x="27" y="-9.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Module</text>
+</g>
+<!-- Submodule -->
+<g id="node2" class="node"><title>Submodule</title>
+<polygon fill="#5bc0de" stroke="#5bc0de" points="138,-24 72,-24 72,-0 138,-0 138,-24"/>
+<text text-anchor="middle" x="105" y="-9.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Submodule</text>
+</g>
+<!-- Type -->
+<g id="node3" class="node"><title>Type</title>
+<polygon fill="#5cb85c" stroke="#5cb85c" points="210,-24 156,-24 156,-0 210,-0 210,-24"/>
+<text text-anchor="middle" x="183" y="-9.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Type</text>
+</g>
+<!-- Subroutine -->
+<g id="node4" class="node"><title>Subroutine</title>
+<polygon fill="#d9534f" stroke="#d9534f" points="291.5,-24 228.5,-24 228.5,-0 291.5,-0 291.5,-24"/>
+<text text-anchor="middle" x="260" y="-9.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Subroutine</text>
+</g>
+<!-- Function -->
+<g id="node5" class="node"><title>Function</title>
+<polygon fill="#d94e8f" stroke="#d94e8f" points="364,-24 310,-24 310,-0 364,-0 364,-24"/>
+<text text-anchor="middle" x="337" y="-9.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Function</text>
+</g>
+<!-- Interface -->
+<g id="node6" class="node"><title>Interface</title>
+<polygon fill="#a7506f" stroke="#a7506f" points="436,-24 382,-24 382,-0 436,-0 436,-24"/>
+<text text-anchor="middle" x="409" y="-9.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Interface</text>
+</g>
+<!-- Unknown Procedure Type -->
+<g id="node7" class="node"><title>Unknown Procedure Type</title>
+<polygon fill="#777777" stroke="#777777" points="588,-24 454,-24 454,-0 588,-0 588,-24"/>
+<text text-anchor="middle" x="521" y="-9.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Unknown Procedure Type</text>
+</g>
+<!-- Program -->
+<g id="node8" class="node"><title>Program</title>
+<polygon fill="#f0ad4e" stroke="#f0ad4e" points="660,-24 606,-24 606,-0 660,-0 660,-24"/>
+<text text-anchor="middle" x="633" y="-9.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Program</text>
+</g>
+<!-- This Page&#39;s Entity -->
+<g id="node9" class="node"><title>This Page&#39;s Entity</title>
+<polygon fill="none" stroke="black" points="774,-24 678,-24 678,-0 774,-0 774,-24"/>
+<text text-anchor="middle" x="726" y="-9.6" font-family="Helvetica,sans-Serif" font-size="10.50">This Page&#39;s Entity</text>
+</g>
+</g>
+</svg>
+
+<h5>Module Graph</h5>
+<p>Solid arrows point from a parent (sub)module to the submodule which is
+descended from it. Dashed arrows point from a module being used to the
+module using it.</p>
+<h5>Type Graph</h5>
+<p>Solid arrows point from one derived type to another which extends
+(inherits from) it. Dashed arrows point from a derived type to another
+type containing it as a components, with a label listing the name(s) of
+said component(s).</p>
+<h5>Call Graph</h5>
+<p>Solid arrows point from a procedure to one which it calls. Dashed 
+arrows point from an interface to procedures which implement that interface.
+This could include the module procedures in a generic interface or the
+implementation in a submodule of an interface in a parent module.</p>
+
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+     
+     
+    <br>
+    
+    <section>
+    <h2>Variables</h2>
+    
+<table class="table table-striped varlist">
+<thead><tr><th>Type</th><th>Visibility</th>
+
+<th>Attributes</th><th></th><th>Name</th><th></th><th>Initial</th><th></th></thead>
+
+
+
+<tbody>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-tk%7E7"></span>logical,</td>
+  
+  <td>public</td>
+  <td></td><td>::</td>
+  <td><strong>tk</strong></td><td></td><td></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-ub%7E9"></span>integer,</td>
+  
+  <td>public</td>
+  <td></td><td>::</td>
+  <td><strong>ub</strong>(3)</td><td></td><td></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-lb%7E9"></span>integer,</td>
+  
+  <td>public</td>
+  <td></td><td>::</td>
+  <td><strong>lb</strong>(3)</td><td></td><td></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-stw%7E6"></span>integer,</td>
+  
+  <td>public,</td>
+  <td>ALLOCATABLE</td><td>::</td>
+  <td><strong>stw</strong>(:,:)</td><td></td><td></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-nstpw"></span>integer,</td>
+  
+  <td>public,</td>
+  <td>ALLOCATABLE</td><td>::</td>
+  <td><strong>nstpw</strong>(:)</td><td></td><td></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-sstpw"></span>integer,</td>
+  
+  <td>public,</td>
+  <td>ALLOCATABLE</td><td>::</td>
+  <td><strong>sstpw</strong>(:)</td><td></td><td></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-nstw"></span>integer,</td>
+  
+  <td>public</td>
+  <td></td><td>::</td>
+  <td><strong>nstw</strong></td><td></td><td></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-nstpwx"></span>integer,</td>
+  
+  <td>public</td>
+  <td></td><td>::</td>
+  <td><strong>nstpwx</strong></td><td></td><td></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-st%7E4"></span>integer,</td>
+  
+  <td>public,</td>
+  <td>ALLOCATABLE</td><td>::</td>
+  <td><strong>st</strong>(:,:)</td><td></td><td></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-nstp"></span>integer,</td>
+  
+  <td>public,</td>
+  <td>ALLOCATABLE</td><td>::</td>
+  <td><strong>nstp</strong>(:)</td><td></td><td></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-sstp"></span>integer,</td>
+  
+  <td>public,</td>
+  <td>ALLOCATABLE</td><td>::</td>
+  <td><strong>sstp</strong>(:)</td><td></td><td></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-nst%7E3"></span>integer,</td>
+  
+  <td>public</td>
+  <td></td><td>::</td>
+  <td><strong>nst</strong></td><td></td><td></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-nstpx"></span>integer,</td>
+  
+  <td>public</td>
+  <td></td><td>::</td>
+  <td><strong>nstpx</strong></td><td></td><td></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-sts%7E3"></span>integer,</td>
+  
+  <td>public,</td>
+  <td>ALLOCATABLE</td><td>::</td>
+  <td><strong>sts</strong>(:,:)</td><td></td><td></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-nstps"></span>integer,</td>
+  
+  <td>public,</td>
+  <td>ALLOCATABLE</td><td>::</td>
+  <td><strong>nstps</strong>(:)</td><td></td><td></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-sstps"></span>integer,</td>
+  
+  <td>public,</td>
+  <td>ALLOCATABLE</td><td>::</td>
+  <td><strong>sstps</strong>(:)</td><td></td><td></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-nsts"></span>integer,</td>
+  
+  <td>public</td>
+  <td></td><td>::</td>
+  <td><strong>nsts</strong></td><td></td><td></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-ist"></span>integer,</td>
+  
+  <td>public,</td>
+  <td>ALLOCATABLE</td><td>::</td>
+  <td><strong>ist</strong>(:,:)</td><td></td><td></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-ip%7E23"></span>integer,</td>
+  
+  <td>public</td>
+  <td></td><td>::</td>
+  <td><strong>ip</strong></td><td></td><td></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-ngm_"></span>integer,</td>
+  
+  <td>public</td>
+  <td></td><td>::</td>
+  <td><strong>ngm_</strong></td><td></td><td></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-ngs_"></span>integer,</td>
+  
+  <td>public</td>
+  <td></td><td>::</td>
+  <td><strong>ngs_</strong></td><td></td><td></td><td></td>
+  
+</tr>
+
+  
+  
+  
+  
+<tr>
+  
+  <td><span class="anchor" id="variable-idx%7E6"></span>integer,</td>
+  
+  <td>public,</td>
+  <td>ALLOCATABLE</td><td>::</td>
+  <td><strong>idx</strong>(:)</td><td></td><td></td><td></td>
+  
+</tr>
+
+</tbody>
+</table>
+
+    </section>
+    <br>
+    
+    
+    
+    
+    
+
+    
+    
+    
+    
+    
+
+
+    
+    
+    
+    
+    </div>
+  </div>
+
+    <hr>
+    <footer>
+        <div class="row">
+        <div class="col-md-6">&copy; 2015 FFTXlib was written by . </div>
+        <div class="col-md-6"><span class="pull-right">Documentation generated by <a href="https://github.com/cmacmackin/ford">FORD</a>.</span></div>
+        </div>
+        <br>
+    </footer>
+    </div> <!-- /container -->
+
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+<!--
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+-->
+    <script src="../js/bootstrap.min.js"></script>
+    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+    <script src="../js/ie10-viewport-bug-workaround.js"></script>
+
+    <!-- MathJax JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        TeX: { extensions: ['AMSmath.js','AMSsymbols.js','noErrors.js','noUndefined.js'], equationNumbers: { autoNumber: 'AMS' } },
+        jax: ['input/TeX','input/MathML','output/HTML-CSS'],
+        extensions: ['tex2jax.js','mml2jax.js','MathMenu.js','MathZoom.js'],
+        'HTML-CSS': { 
+           styles: { '.MathJax_Display, .MathJax .mo, .MathJax .mi, .MathJax .mn': {color: '#000000 ! important'} }
+        }
+      });
+    </script>
+    <script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  </body>
+</html>

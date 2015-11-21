@@ -26,7 +26,7 @@
 
      SUBROUTINE smallbox_grid_init( dfftp, dfftb )
        !
-       USE fft_scalar, only: good_fft_dimension, good_fft_order
+       USE fft_support, only: good_fft_dimension, good_fft_order
        USE fft_types,  only: fft_dlay_descriptor
        !
        IMPLICIT NONE

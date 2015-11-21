@@ -1,0 +1,23 @@
+fft_interfaces.o : ../FFTXlib/fft_parallel.o
+fft_interfaces.o : ../FFTXlib/fft_scalar.DFTI.o
+fft_interfaces.o : ../FFTXlib/fft_smallbox.o
+fft_interfaces.o : ../FFTXlib/fft_types.o
+fft_parallel.o : ../FFTXlib/fft_scalar.DFTI.o
+fft_parallel.o : ../FFTXlib/fft_types.o
+fft_parallel.o : ../FFTXlib/scatter_mod.o
+scatter_mod.o : ../FFTXlib/fft_types.o
+stick_set.o : ../FFTXlib/fft_types.o
+stick_set.o : ../FFTXlib/stick_base.o
+fft_scalar.DFTI.o : fft_param.f90
+fft_scalar.ESSL.o : fft_param.f90
+fft_scalar.FFTW.o : fft_param.f90
+fft_scalar.FFTW3.o : fft_param.f90
+fft_scalar.SX6.o : fft_param.f90
+fft_scalar.o : ../include/fft_defs.h
+fft_smallbox.o : ../include/fft_defs.h
+fft_stick.o : ../include/c_defs.h
+fft_stick.o : fftw.c
+fft_support.o : ../include/fft_defs.h
+fft_support.o : fft_param.f90
+fftw.o : 
+fftw.o : 

@@ -85,11 +85,11 @@ phq_readin.o : ../../PHonon/PH/save_ph_input.o
 phq_readin.o : ../../PW/src/ldaU.o
 phq_readin.o : ../../PW/src/pwcom.o
 phq_readin.o : ../../PW/src/start_k.o
+solve_head.o : ../../FFTXlib/fft_interfaces.o
 solve_head.o : ../../Modules/becmod.o
 solve_head.o : ../../Modules/check_stop.o
 solve_head.o : ../../Modules/constants.o
 solve_head.o : ../../Modules/fft_base.o
-solve_head.o : ../../Modules/fft_interfaces.o
 solve_head.o : ../../Modules/io_files.o
 solve_head.o : ../../Modules/io_global.o
 solve_head.o : ../../Modules/ions_base.o

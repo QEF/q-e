@@ -3,7 +3,7 @@
 include	../../make.sys
 
 # location of needed modules and included files (if any)
-MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules $(MOD_FLAG).
+MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../FFTXlib $(MOD_FLAG)../../Modules $(MOD_FLAG).
 IFLAGS=
 
 FOBJS = \
@@ -118,21 +118,22 @@ LOBJS = \
 entropy.o 
 
 QEMODS=../../Modules/libqemod.a
+QEFFT=../../FFTXlib/libqefft.a
 
-TLDEPS= bindir mods libs libiotk
+TLDEPS= bindir fftlib mods libs libiotk
 
 LIBOBJS= ../../flib/ptools.a ../../flib/flib.a ../../clib/clib.a ../../iotk/src/libiotk.a
 
 all : tldeps libcp.a manycp.x cp.x cppp.x wfdd.x
 
-manycp.x : manycp.o libcp.a $(QEMODS) $(LIBOBJS)
+manycp.x : manycp.o libcp.a $(QEMODS) $(QEFFT) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o manycp.x manycp.o \
-		libcp.a $(QEMODS) $(LIBOBJS) $(LIBS)
+		libcp.a $(QEMODS) $(QEFFT) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../CPV/src/cp.x . )
 
-cp.x : cprstart.o libcp.a $(QEMODS) $(LIBOBJS)
+cp.x : cprstart.o libcp.a $(QEMODS) $(QEFFT) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o cp.x cprstart.o \
-		libcp.a $(QEMODS) $(LIBOBJS) $(LIBS)
+		libcp.a $(QEMODS) $(QEFFT) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../CPV/src/cp.x . )
 
 libcp.a : $(FOBJS) $(LOBJS) 
@@ -145,12 +146,12 @@ cpver.h :
 	echo "CHARACTER(LEN=70), PARAMETER :: version_date = '"`date`"'" \
 		> cpver.h
 
-cppp.x : fpmdpp.o $(QEMODS) $(LIBOBJS)
-	$(LD) $(LDFLAGS) -o cppp.x fpmdpp.o $(QEMODS) $(LIBOBJS) $(LIBS)
+cppp.x : fpmdpp.o $(QEMODS) $(QEFFT) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o cppp.x fpmdpp.o $(QEMODS) $(QEFFT) $(LIBOBJS) $(LIBS)
 	- (cd ../../bin ; ln -fs ../CPV/src/cppp.x . )
 
 wfdd.x : wfdd.o
-	$(LD) $(LDFLAGS) -o $@ wfdd.o $(QEMODS) $(LIBOBJS) $(LIBS)
+	$(LD) $(LDFLAGS) -o $@ wfdd.o $(QEMODS) $(QEFFT) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../CPV/src/$@ . )
 
 tldeps :
