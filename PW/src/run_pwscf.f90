@@ -30,7 +30,7 @@ SUBROUTINE run_pwscf ( exit_status )
   USE parameters,       ONLY : ntypx, npk, lmaxx
   USE cell_base,        ONLY : fix_volume, fix_area
   USE control_flags,    ONLY : conv_elec, gamma_only, ethr, lscf, twfcollect
-  USE control_flags,    ONLY : conv_ions, istep, nstep, restart, lmd, lbfgs
+  USE control_flags,    ONLY : conv_ions, nstep, restart, lmd, lbfgs
   USE force_mod,        ONLY : lforce, lstres, sigma, force
   USE check_stop,       ONLY : check_stop_init, check_stop_now
   USE mp_images,        ONLY : intra_image_comm
@@ -39,6 +39,7 @@ SUBROUTINE run_pwscf ( exit_status )
   !
   IMPLICIT NONE
   INTEGER, INTENT(OUT) :: exit_status
+  INTEGER :: idone ! number of steps done in this run
   !
   !
   exit_status = 0
@@ -80,7 +81,7 @@ SUBROUTINE run_pwscf ( exit_status )
      RETURN
   ENDIF
   !
-  main_loop: DO
+  main_loop: DO idone = 1, nstep+1
      !
      ! ... electronic self-consistency or band structure calculation
      !
@@ -138,8 +139,7 @@ SUBROUTINE run_pwscf ( exit_status )
         !
         ! ... then we save restart information for the new configuration
         !
-        IF ( istep < nstep .AND. .NOT. conv_ions ) &
-           CALL punch( 'config' )
+        IF ( idone <= nstep .AND. .NOT. conv_ions ) CALL punch( 'config' )
         !
      END IF
      !
