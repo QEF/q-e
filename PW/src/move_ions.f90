@@ -10,10 +10,15 @@ SUBROUTINE move_ions()
   !----------------------------------------------------------------------------
   !
   ! ... This routine moves the ions according to the requested scheme:
-  !
-  ! ... lbfgs               bfgs minimizations
-  ! ... lmd                 molecular dynamics ( verlet of vcsmd )
-  ! ... lmd + lconstrain    constrained molecular dynamics,
+  ! ...    lbfgs               bfgs minimizations
+  ! ...    lmd                 molecular dynamics ( all kinds )
+  ! ...    use_SMC             Smart MonteCarlo
+  ! ... Additional variables affecting the calculation:
+  ! ...    lmovecell           Variable-cell calculation
+  ! ...    calc                Type of MD
+  ! ...    lconstrain          constrained MD
+  ! ...    ldamp               damped MD (projected Verlet)
+  ! ...    llang               Langevin MD 
   !
   ! ... coefficients for potential and wavefunctions extrapolation are
   ! ... also computed here
@@ -159,7 +164,7 @@ SUBROUTINE move_ions()
         !
         CALL bfgs( pos, h, etot, grad, fcell, fixion, tmp_dir, stdout, epse,&
                    epsf, epsp1,  energy_error, gradient_error, cell_error,  &
-                   istep, nstep, step_accepted, conv_ions, lmovecell )
+                   lmovecell, step_accepted, conv_ions, istep )
         !
         ! ... relax for FCP
         !

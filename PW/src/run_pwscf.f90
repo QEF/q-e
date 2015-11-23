@@ -39,7 +39,8 @@ SUBROUTINE run_pwscf ( exit_status )
   !
   IMPLICIT NONE
   INTEGER, INTENT(OUT) :: exit_status
-  INTEGER :: idone ! number of steps done in this run
+  INTEGER :: idone 
+  ! counter of electronic + ionic steps done in this run
   !
   !
   exit_status = 0
