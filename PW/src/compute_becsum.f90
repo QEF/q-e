@@ -26,7 +26,7 @@ SUBROUTINE compute_becsum ( iflag )
   USE noncollin_module,     ONLY : noncolin
   USE wvfct,                ONLY : nbnd, npwx, npw, wg, igk
   USE mp_pools,             ONLY : inter_pool_comm
-  USE mp_bands,             ONLY : intra_bgrp_comm
+  USE mp_bands,             ONLY : intra_bgrp_comm, set_bgrp_indices
   USE mp,                   ONLY : mp_sum, mp_get_comm_null
   USE paw_symmetry,         ONLY : PAW_symmetrize
   USE paw_variables,        ONLY : okpaw
@@ -37,7 +37,8 @@ SUBROUTINE compute_becsum ( iflag )
   !
   INTEGER, INTENT(IN) :: iflag
   !
-  INTEGER :: ik ! counter on k points
+  INTEGER :: ik,& ! counter on k points
+             ibnd_start, ibnd_end, this_bgrp_nbnd ! first, last and number of band in this bgrp
   !
   !
   IF ( .NOT. okvan ) RETURN
@@ -50,6 +51,8 @@ SUBROUTINE compute_becsum ( iflag )
   !
   becsum(:,:,:) = 0.D0
   CALL allocate_bec_type (nkb,nbnd, becp,intra_bgrp_comm)
+  call set_bgrp_indices ( nbnd, ibnd_start, ibnd_end )
+  this_bgrp_nbnd = ibnd_end - ibnd_start + 1
   !
   IF ( nks > 1 ) REWIND( iunigk )
   !
@@ -66,7 +69,7 @@ SUBROUTINE compute_becsum ( iflag )
      !
      ! ... actual calculation is performed inside routine "sum_bec"
      !
-     CALL sum_bec ( ik, current_spin )
+     CALL sum_bec ( ik, current_spin, ibnd_start,ibnd_end,this_bgrp_nbnd  )
      !
   END DO k_loop
   !

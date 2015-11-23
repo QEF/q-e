@@ -29,6 +29,10 @@ Incompatible changes in svn version:
      "gather_*"  and "scatter_*" routines moved from module fft_base 
                                                   to module scatter_mod
    * All FFT-related code moved to FFTxlib/
+   * Linear algebra parallelization made independent of its parent communicator
+     by introducing variable ortho_parent_comm, addressing the whole group.
+     In PW ortho_comm is now a sub-communicator of intra_pool_comm and nolonger
+     of intra_bgrp_comm.
 
 New in 5.2.1 version:
 

@@ -933,7 +933,7 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   ! counters on beta functions, atoms, atom types, spin
   !
   IF (real_space .and. nbgrp > 1 .and. .NOT. exx_is_active()) &
-      call errore ('sum_bec',' band parallelization w/o exx and real_space not fixedi yet' ,1)
+      call errore ('sum_bec',' band parallelization w/o exx and real_space not yet ready' ,1)
 
   IF ( .NOT. real_space ) THEN
      ! calbec computes becp = <vkb_i|psi_j>
@@ -947,7 +947,7 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
 !
 ! I guess the following lines should work also when (real_space .and. nbgrp>1 )
 ! but did not test any calculation with real_space option so I leave the 
-! original version with an error message to promt testing the new one.
+! original version with an error message to prompt testing the new one.
 ! Since bgrp parallelization was already used with exx I assume that case 
 ! has been tested and should be ok. SdG
 !
@@ -1026,7 +1026,7 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
 !$omp end parallel do
                  !
                  ! NB: band parallelizazion has not been performed in this case because 
-                 !     bands were aready distributed across R&G processors.
+                 !     bands were already distributed across R&G processors.
                  !     Contribution to aux_gk is scaled by 1.d0/nbgrp so that the becsum
                  !     summation across bgrps performed outside will gives the right value.
                  !
