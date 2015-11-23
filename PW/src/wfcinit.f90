@@ -29,6 +29,8 @@ SUBROUTINE wfcinit()
   USE wvfct,                ONLY : nbnd, npw, current_k, igk
   USE wannier_new,          ONLY : use_wannier
   USE pw_restart,           ONLY : pw_readfile
+  USE mp_bands,             ONLY : nbgrp, root_bgrp,inter_bgrp_comm
+  USE mp,                   ONLY : mp_bcast
   !
   IMPLICIT NONE
   !
@@ -149,6 +151,10 @@ SUBROUTINE wfcinit()
      ! ... calculate starting wavefunctions
      !
      CALL init_wfc ( ik )
+
+!     ! BGRP:  make sure all bgrp have the same starting wfc
+!     IF ( nbgrp > 1 ) CALL mp_bcast(evc,root_bgrp,inter_bgrp_comm)
+
      !
      ! ... write  starting wavefunctions to file
      !
@@ -182,7 +188,8 @@ SUBROUTINE init_wfc ( ik )
   USE noncollin_module,     ONLY : npol
   USE wavefunctions_module, ONLY : evc
   USE random_numbers,       ONLY : randy
-  USE mp_bands,             ONLY : intra_bgrp_comm
+  USE mp_bands,             ONLY : intra_bgrp_comm, inter_bgrp_comm, my_bgrp_id
+  USE mp,                   ONLY : mp_sum
   USE control_flags,        ONLY : gamma_only
   !
   IMPLICIT NONE
@@ -275,6 +282,11 @@ SUBROUTINE init_wfc ( ik )
      END DO
      !
   END DO
+  
+  ! when band paralleization is active, the first bgrp distributes the wfc to the others
+  ! making sure all bgrp have the same starting wfc
+  if (my_bgrp_id > 0) wfcatom(:,:,:) = (0.d0,0.d0) ; call mp_sum(wfcatom,inter_bgrp_comm)
+
   !
   ! ... Diagonalize the Hamiltonian on the basis of atomic wfcs
   !

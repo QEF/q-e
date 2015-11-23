@@ -37,6 +37,7 @@ MODULE mp_diag
   INTEGER :: ortho_row_comm  = 0  ! communicator for the ortho row group
   INTEGER :: ortho_col_comm  = 0  ! communicator for the ortho col group
   INTEGER :: ortho_comm_id= 0 ! id of the ortho_comm
+  INTEGER :: ortho_parent_comm  = 0  ! parent communicator from which ortho group has been created
   !
 #if defined __SCALAPACK
   INTEGER :: me_blacs   =  0  ! BLACS processor index starting from 0
@@ -181,6 +182,10 @@ CONTAINS
     !  initialize the communicator for the new group by splitting the input communicator
     !
     CALL mp_comm_split ( comm_all, color, key, ortho_comm )
+    !
+    ! and remember where it comes from
+    !
+    ortho_parent_comm = comm_all
     !
     !  Computes coordinates of the processors, in row maior order
     !

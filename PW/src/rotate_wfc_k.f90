@@ -112,11 +112,11 @@ SUBROUTINE protate_wfc_k( npwx, npw, nstart, nbnd, npol, psi, overlap, evc, e )
   ! ... Subroutine with distributed matrices, written by Carlo Cavazzoni
   !
   USE kinds,            ONLY : DP
-  USE mp_bands,         ONLY : intra_bgrp_comm
+  USE mp_bands,         ONLY : intra_bgrp_comm, nbgrp
   USE mp_diag,          ONLY : ortho_comm, np_ortho, me_ortho, ortho_comm_id,&
                                leg_ortho
   USE descriptors,      ONLY : descla_init , la_descriptor
-  USE parallel_toolkit, ONLY : zsqmred, zsqmher, zsqmdst
+  USE parallel_toolkit, ONLY : zsqmher
   USE mp,               ONLY : mp_bcast, mp_root_sum, mp_sum, mp_barrier
   !
   IMPLICIT NONE
@@ -286,11 +286,12 @@ CONTAINS
            CALL ZGEMM( 'C', 'N', nr, nc, kdim, ( 1.D0, 0.D0 ) ,  v(1,ir), kdmx, w(1,ic), kdmx, ( 0.D0, 0.D0 ), work, nx )
 
            ! accumulate result on dm of root proc.
-           CALL mp_root_sum( work, dm, root, intra_bgrp_comm )
+           CALL mp_root_sum( work, dm, root, ortho_comm )
 
         END DO
         !
      END DO
+     if (nbgrp > 1) dm = dm/nbgrp
      !
      CALL zsqmher( nstart, dm, nx, desc )
      !
@@ -331,13 +332,13 @@ CONTAINS
                  !
                  !  this proc sends his block
                  ! 
-                 CALL mp_bcast( vc(:,1:nc), root, intra_bgrp_comm )
+                 CALL mp_bcast( vc(:,1:nc), root, ortho_comm )
                  CALL ZGEMM( 'N', 'N', kdim, nc, nr, ( 1.D0, 0.D0 ),  psi(1,ir), kdmx, vc, nx, beta, aux(1,ic), kdmx )
               ELSE
                  !
                  !  all other procs receive
                  ! 
-                 CALL mp_bcast( vtmp(:,1:nc), root, intra_bgrp_comm )
+                 CALL mp_bcast( vtmp(:,1:nc), root, ortho_comm )
                  CALL ZGEMM( 'N', 'N', kdim, nc, nr, ( 1.D0, 0.D0 ),  psi(1,ir), kdmx, vtmp, nx, beta, aux(1,ic), kdmx )
               END IF
               ! 

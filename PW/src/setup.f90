@@ -628,7 +628,9 @@ END SUBROUTINE setup
 LOGICAL FUNCTION check_para_diag( nbnd )
   !
   USE io_global,        ONLY : stdout, ionode, ionode_id
-  USE mp_diag,          ONLY : np_ortho
+  USE mp_diag,          ONLY : np_ortho, ortho_parent_comm 
+  USE mp_bands,         ONLY : intra_bgrp_comm
+  USE mp_pools,         ONLY : intra_pool_comm
   USE control_flags,    ONLY : gamma_only
 
   IMPLICIT NONE
@@ -654,6 +656,13 @@ LOGICAL FUNCTION check_para_diag( nbnd )
      WRITE( stdout, '(/,5X,"Subspace diagonalization in iterative solution ",&
                      &     "of the eigenvalue problem:")' ) 
      IF ( check_para_diag ) THEN
+        IF (ortho_parent_comm .EQ. intra_pool_comm) THEN
+           WRITE( stdout, '(5X,"one sub-group per k-point group (pool) will be used")' )
+        ELSE IF (ortho_parent_comm .EQ. intra_bgrp_comm) THEN
+           WRITE( stdout, '(5X,"one sub-group per band group will be used")' )
+        ELSE
+           CALL errore( 'setup','Unexpected sub-group communicator ', 1 )
+        END IF
 #if defined(__ELPA)
         WRITE( stdout, '(5X,"ELPA distributed-memory algorithm ", &
               & "(size of sub-group: ", I2, "*", I3, " procs)",/)') &

@@ -130,6 +130,8 @@ atomic_wfc.o : ../../Modules/cell_base.o
 atomic_wfc.o : ../../Modules/constants.o
 atomic_wfc.o : ../../Modules/ions_base.o
 atomic_wfc.o : ../../Modules/kind.o
+atomic_wfc.o : ../../Modules/mp.o
+atomic_wfc.o : ../../Modules/mp_bands.o
 atomic_wfc.o : ../../Modules/noncol.o
 atomic_wfc.o : ../../Modules/recvec.o
 atomic_wfc.o : ../../Modules/uspp.o
@@ -1179,6 +1181,11 @@ paw_symmetry.o : ../../Modules/noncol.o
 paw_symmetry.o : ../../Modules/uspp.o
 paw_symmetry.o : pwcom.o
 paw_symmetry.o : symm_base.o
+pcg.o : ../../Modules/control_flags.o
+pcg.o : ../../Modules/io_global.o
+pcg.o : ../../Modules/kind.o
+pcg.o : ../../Modules/mp.o
+pcg.o : ../../Modules/mp_bands.o
 plugin_clean.o : ../../Modules/plugin_flags.o
 plugin_clock.o : ../../Modules/io_global.o
 plugin_clock.o : ../../Modules/plugin_flags.o
@@ -1623,6 +1630,7 @@ setup.o : ../../Modules/io_files.o
 setup.o : ../../Modules/io_global.o
 setup.o : ../../Modules/ions_base.o
 setup.o : ../../Modules/kind.o
+setup.o : ../../Modules/mp_bands.o
 setup.o : ../../Modules/mp_diag.o
 setup.o : ../../Modules/mp_pools.o
 setup.o : ../../Modules/noncol.o
@@ -2014,6 +2022,7 @@ wfcinit.o : ../../Modules/control_flags.o
 wfcinit.o : ../../Modules/io_files.o
 wfcinit.o : ../../Modules/io_global.o
 wfcinit.o : ../../Modules/kind.o
+wfcinit.o : ../../Modules/mp.o
 wfcinit.o : ../../Modules/mp_bands.o
 wfcinit.o : ../../Modules/noncol.o
 wfcinit.o : ../../Modules/random_numbers.o

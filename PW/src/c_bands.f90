@@ -1,4 +1,4 @@
-
+!
 ! Copyright (C) 2001-2013 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
@@ -179,8 +179,9 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   USE becmod,               ONLY : bec_type, becp, calbec, &
                                    allocate_bec_type, deallocate_bec_type
   USE klist,                ONLY : nks
-  USE mp_bands,             ONLY : nproc_bgrp, intra_bgrp_comm
-  USE mp,                   ONLY : mp_sum
+  USE mp_bands,             ONLY : nproc_bgrp, intra_bgrp_comm, inter_bgrp_comm, &
+                                   set_bgrp_indices, my_bgrp_id, root_bgrp, nbgrp
+  USE mp,                   ONLY : mp_sum, mp_bcast
   !
   IMPLICIT NONE
   !
@@ -194,7 +195,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   ! number of iterations in Davidson
   ! number or repeated call to diagonalization in case of non convergence
   ! number of notconverged elements
-  INTEGER :: ierr, ipw
+  INTEGER :: ierr, ipw, ibnd, ibnd_start, ibnd_end
   !
   LOGICAL :: lrot
   ! .TRUE. if the wfc have already be rotated
@@ -214,7 +215,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   IF ( nbndx > ipw ) &
      CALL errore ( 'diag_bands', 'too many bands, or too few plane waves',1)
   !
-  CALL allocate_bec_type ( nkb, nbnd, becp, intra_bgrp_comm )
+     CALL allocate_bec_type ( nkb, nbnd, becp, intra_bgrp_comm )
   !
   IF ( gamma_only ) THEN
      !
@@ -266,8 +267,7 @@ CONTAINS
        !
        FORALL( ig = 1 : npw )
           !
-          h_diag(ig,1) = 1.D0 + g2kin(ig) + &
-               SQRT( 1.D0 + ( g2kin(ig) - 1.D0 )**2 )
+          h_diag(ig,1) = 1.D0 + g2kin(ig) + SQRT( 1.D0 + ( g2kin(ig) - 1.D0 )**2 )
           !
        END FORALL
        !
@@ -279,8 +279,7 @@ CONTAINS
           !
           IF ( .NOT. lrot ) THEN
              !
-             CALL rotate_wfc ( npwx, npw, nbnd, gstart, nbnd, &
-                               evc, npol, okvan, evc, et(1,ik) )
+             CALL rotate_wfc ( npwx, npw, nbnd, gstart, nbnd, evc, npol, okvan, evc, et(1,ik) )
              !
              avg_iter = avg_iter + 1.D0
              !
@@ -319,6 +318,8 @@ CONTAINS
           !
           IF ( use_para_diag ) then
              !
+!             ! make sure that all processors have the same wfc
+!             IF ( nbgrp > 1 ) CALL mp_bcast(evc,root_bgrp,inter_bgrp_comm)
              CALL pregterg( npw, npwx, nbnd, nbndx, evc, ethr, &
                          okvan, gstart, et(1,ik), btype(1,ik), &
                          notconv, lrot, dav_iter )
@@ -356,7 +357,7 @@ CONTAINS
     !
     ! ... here the local variables
     !
-    INTEGER :: ipol, ierr
+    INTEGER :: ipol
     REAL(dp) :: eps
     !  --- Define a small number ---
     eps=0.000001d0
@@ -403,8 +404,7 @@ CONTAINS
        !
        FORALL( ig = 1 : npwx )
           !
-          h_diag(ig,:) = 1.D0 + g2kin(ig) + &
-             SQRT( 1.D0 + ( g2kin(ig) - 1.D0 )**2 )
+          h_diag(ig,:) = 1.D0 + g2kin(ig) + SQRT( 1.D0 + ( g2kin(ig) - 1.D0 )**2 )
           !
        END FORALL
        !
@@ -416,8 +416,7 @@ CONTAINS
           !
           IF ( .NOT. lrot ) THEN
              !
-             CALL rotate_wfc ( npwx, npw, nbnd, gstart, nbnd, &
-                               evc, npol, okvan, evc, et(1,ik) )
+             CALL rotate_wfc ( npwx, npw, nbnd, gstart, nbnd, evc, npol, okvan, evc, et(1,ik) )
              !
              avg_iter = avg_iter + 1.D0
              !

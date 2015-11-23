@@ -37,7 +37,7 @@ SUBROUTINE sum_band()
   USE spin_orb,             ONLY : lspinorb, domag, fcoef
   USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et, btype
   USE mp_pools,             ONLY : inter_pool_comm
-  USE mp_bands,             ONLY : intra_bgrp_comm
+  USE mp_bands,             ONLY : inter_bgrp_comm, intra_bgrp_comm, set_bgrp_indices, nbgrp
   USE mp,                   ONLY : mp_sum
   USE funct,                ONLY : dft_is_meta
   USE paw_symmetry,         ONLY : PAW_symmetrize
@@ -49,12 +49,12 @@ SUBROUTINE sum_band()
   !
   ! ... local variables
   !
-  INTEGER :: ir, is, ig, ibnd, ik
-    ! counter on 3D r points
-    ! counter on spin polarizations
-    ! counter on g vectors
-    ! counter on bands
-    ! counter on k points
+  INTEGER :: ir,   &! counter on 3D r points
+             is,   &! counter on spin polarizations
+             ig,   &! counter on g vectors
+             ibnd, & ! counter on bands
+             ik,   &! counter on k points
+             ibnd_start, ibnd_end, this_bgrp_nbnd ! first, last and number of band in this bgrp
   REAL (DP), ALLOCATABLE :: kplusg (:)
   !
   !
@@ -103,6 +103,9 @@ SUBROUTINE sum_band()
      ENDIF
   ENDIF
   !
+  call set_bgrp_indices ( nbnd, ibnd_start, ibnd_end )
+  this_bgrp_nbnd = ibnd_end - ibnd_start + 1
+  !
   ! ... Allocate (and later deallocate) arrays needed in specific cases
   !
   IF ( okvan ) CALL allocate_bec_type (nkb,nbnd, becp,intra_bgrp_comm)
@@ -128,6 +131,7 @@ SUBROUTINE sum_band()
      ! rho%bec has to be recollected and symmetrized, becsum must not, otherwise
      ! it will break stress routines.
      CALL mp_sum(rho%bec, inter_pool_comm )
+     call mp_sum(rho%bec, inter_bgrp_comm )
      CALL PAW_symmetrize(rho%bec)
   ENDIF
   !
@@ -150,14 +154,22 @@ SUBROUTINE sum_band()
   !
   CALL addusdens(rho%of_r(:,:)) ! okvan is checked inside the routine
   !
+  IF( okvan )  THEN
+     ! bgrp_parallelization is done here but not in subsequent routines
+     ! (in particular stress routines uses becsum). collect it across bgrp
+     call mp_sum(becsum, inter_bgrp_comm )
+  ENDIF
   IF ( noncolin .AND. .NOT. domag ) rho%of_r(:,2:4)=0.D0
   !
   CALL mp_sum( eband, inter_pool_comm )
+  CALL mp_sum( eband, inter_bgrp_comm )
   !
   ! ... reduce charge density across pools
   !
   CALL mp_sum( rho%of_r, inter_pool_comm )
+  CALL mp_sum( rho%of_r, inter_bgrp_comm )
   if (dft_is_meta() .OR. lxdm) CALL mp_sum( rho%kin_r, inter_pool_comm )
+  if (dft_is_meta() .OR. lxdm) CALL mp_sum( rho%kin_r, inter_bgrp_comm )
   !
   ! ... bring the (unsymmetrized) rho(r) to G-space (use psic as work array)
   !
@@ -244,7 +256,7 @@ SUBROUTINE sum_band()
        IF ( nks > 1 ) REWIND( iunigk )
        !
        use_tg = dffts%have_task_groups 
-       dffts%have_task_groups = ( dffts%have_task_groups ) .AND. ( nbnd >= dffts%nogrp )
+       dffts%have_task_groups = ( dffts%have_task_groups ) .AND. ( this_bgrp_nbnd >= dffts%nogrp )
        !
        incr = 2
        !
@@ -281,7 +293,7 @@ SUBROUTINE sum_band()
           !
           ! ... here we compute the band energy: the sum of the eigenvalues
           !
-          DO ibnd = 1, nbnd
+          DO ibnd = ibnd_start, ibnd_end
              !
              ! ... the sum of eband and demet is the integral for
              ! ... e < ef of e n(e) which reduces for degauss=0 to the sum of
@@ -291,7 +303,7 @@ SUBROUTINE sum_band()
              !
           END DO
           !
-          DO ibnd = 1, nbnd, incr
+          DO ibnd = ibnd_start, ibnd_end, incr
              !
              IF( dffts%have_task_groups ) THEN
                 !
@@ -302,14 +314,14 @@ SUBROUTINE sum_band()
                    !
                    ! ... 2*dffts%nogrp ffts at the same time
                    !
-                   IF( idx + ibnd - 1 < nbnd ) THEN
+                   IF( idx + ibnd - 1 < ibnd_end ) THEN
                       DO j = 1, npw
                          tg_psi(nls (igk(j))+ioff) =       evc(j,idx+ibnd-1) +&
                               (0.0d0,1.d0) * evc(j,idx+ibnd)
                          tg_psi(nlsm(igk(j))+ioff) = CONJG(evc(j,idx+ibnd-1) -&
                               (0.0d0,1.d0) * evc(j,idx+ibnd) )
                       END DO
-                   ELSE IF( idx + ibnd - 1 == nbnd ) THEN
+                   ELSE IF( idx + ibnd - 1 == ibnd_end ) THEN
                       DO j = 1, npw
                          tg_psi(nls (igk(j))+ioff) =        evc(j,idx+ibnd-1)
                          tg_psi(nlsm(igk(j))+ioff) = CONJG( evc(j,idx+ibnd-1) )
@@ -340,10 +352,10 @@ SUBROUTINE sum_band()
                 !
                 idx = 2 * idx - 1
                 !
-                IF( idx + ibnd - 1 < nbnd ) THEN
+                IF( idx + ibnd - 1 < ibnd_end ) THEN
                    w1 = wg( idx + ibnd - 1, ik) / omega
                    w2 = wg( idx + ibnd    , ik) / omega
-                ELSE IF( idx + ibnd - 1 == nbnd ) THEN
+                ELSE IF( idx + ibnd - 1 == ibnd_end ) THEN
                    w1 = wg( idx + ibnd - 1, ik) / omega
                    w2 = w1
                 ELSE
@@ -358,7 +370,7 @@ SUBROUTINE sum_band()
                 !
                 psic(:) = ( 0.D0, 0.D0 )
                 !
-                IF ( ibnd < nbnd ) THEN
+                IF ( ibnd < ibnd_end ) THEN
                    !
                    ! ... two ffts at the same time
                    !
@@ -380,7 +392,7 @@ SUBROUTINE sum_band()
                 !
                 ! ... increment the charge density ...
                 !
-                IF ( ibnd < nbnd ) THEN
+                IF ( ibnd < ibnd_end ) THEN
                    !
                    ! ... two ffts at the same time
                    !
@@ -402,7 +414,7 @@ SUBROUTINE sum_band()
                    !
                    kplusg (1:npw) = (xk(j,ik)+g(j,igk(1:npw))) * tpiba
 
-                   IF ( ibnd < nbnd ) THEN
+                   IF ( ibnd < ibnd_end ) THEN
                       ! ... two ffts at the same time
                       psic(nls(igk(1:npw))) = CMPLX(0d0, kplusg(1:npw),kind=DP) * &
                                             ( evc(1:npw,ibnd) + &
@@ -456,14 +468,13 @@ SUBROUTINE sum_band()
           !
           ! ... If we have a US pseudopotential we compute here the becsum term
           !
-          IF ( okvan ) CALL sum_bec ( ik, current_spin ) 
+          IF ( okvan ) CALL sum_bec ( ik, current_spin, ibnd_start,ibnd_end,this_bgrp_nbnd ) 
           !
        END DO k_loop
        !
        ! ... with distributed <beta|psi>, sum over bands
        !
-       IF( okvan .AND. becp%comm /= mp_get_comm_null() ) &
-            CALL mp_sum( becsum, becp%comm )
+       IF( okvan .AND. becp%comm /= mp_get_comm_null() ) CALL mp_sum( becsum, becp%comm )
        !
        IF( dffts%have_task_groups ) THEN
           DEALLOCATE( tg_psi )
@@ -505,7 +516,7 @@ SUBROUTINE sum_band()
        !
        use_tg = dffts%have_task_groups
        dffts%have_task_groups = ( dffts%have_task_groups ) .AND. &
-              ( nbnd >= dffts%nogrp ) .AND. ( .NOT. (dft_is_meta() .OR. lxdm) )
+              ( this_bgrp_nbnd >= dffts%nogrp ) .AND. ( .NOT. (dft_is_meta() .OR. lxdm) )
        !
        incr = 1
        !
@@ -550,11 +561,11 @@ SUBROUTINE sum_band()
           !
           ! ... here we compute the band energy: the sum of the eigenvalues
           !
-          DO ibnd = 1, nbnd, incr
+          DO ibnd = ibnd_start, ibnd_end, incr
              !
              IF( dffts%have_task_groups ) THEN
                 DO idx = 1, dffts%nogrp
-                   IF( idx + ibnd - 1 <= nbnd ) eband = eband + et( idx + ibnd - 1, ik ) * wg( idx + ibnd - 1, ik )
+                   IF( idx + ibnd - 1 <= ibnd_end ) eband = eband + et( idx + ibnd - 1, ik ) * wg( idx + ibnd - 1, ik )
                 END DO
              ELSE
                 eband = eband + et( ibnd, ik ) * wg( ibnd, ik )
@@ -576,7 +587,7 @@ SUBROUTINE sum_band()
                       !
                       ! ... dffts%nogrp ffts at the same time
                       !
-                      IF( idx + ibnd - 1 <= nbnd ) THEN
+                      IF( idx + ibnd - 1 <= ibnd_end ) THEN
                          DO j = 1, npw
                             tg_psi_nc( nls( igk( j ) ) + ioff, 1 ) = &
                                                        evc( j, idx+ibnd-1 )
@@ -607,7 +618,7 @@ SUBROUTINE sum_band()
                    ! proc 1 has bands ibnd+1
                    ! ....
                    !
-                   IF( idx + ibnd - 1 <= nbnd ) THEN
+                   IF( idx + ibnd - 1 <= ibnd_end ) THEN
                       w1 = wg( idx + ibnd - 1, ik) / omega
                    ELSE
                       w1 = 0.0d0
@@ -668,7 +679,7 @@ SUBROUTINE sum_band()
                       !
                       ! ... dffts%nogrp ffts at the same time
                       !
-                      IF( idx + ibnd - 1 <= nbnd ) THEN
+                      IF( idx + ibnd - 1 <= ibnd_end ) THEN
 !$omp do
                          DO j = 1, npw
                             tg_psi( nls( igk( j ) ) + ioff ) = evc( j, idx+ibnd-1 )
@@ -698,7 +709,7 @@ SUBROUTINE sum_band()
                    ! proc 1 has bands ibnd+1
                    ! ....
                    !
-                   IF( idx + ibnd - 1 <= nbnd ) THEN
+                   IF( idx + ibnd - 1 <= ibnd_end ) THEN
                       w1 = wg( idx + ibnd - 1, ik) / omega
                    ELSE
                       w1 = 0.0d0
@@ -787,7 +798,7 @@ SUBROUTINE sum_band()
           !
           ! ... If we have a US pseudopotential we compute here the becsum term
           !
-          IF ( okvan) CALL sum_bec ( ik, current_spin )
+          IF ( okvan ) CALL sum_bec ( ik, current_spin, ibnd_start,ibnd_end,this_bgrp_nbnd ) 
           !
        END DO k_loop
 
@@ -888,7 +899,7 @@ SUBROUTINE sum_band()
 END SUBROUTINE sum_band
 
 !----------------------------------------------------------------------------
-SUBROUTINE sum_bec ( ik, current_spin )
+SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd ) 
   !----------------------------------------------------------------------------
   !
   ! This routine computes the sum over bands
@@ -906,11 +917,13 @@ SUBROUTINE sum_bec ( ik, current_spin )
   USE wvfct,         ONLY : nbnd, npw, igk, wg
   USE noncollin_module,     ONLY : noncolin, npol
   USE wavefunctions_module, ONLY : evc
-  USE realus, ONLY : real_space, invfft_orbital_gamma, initialisation_level,&
-                     fwfft_orbital_gamma, calbec_rs_gamma, s_psir_gamma
+  USE realus,        ONLY : real_space, invfft_orbital_gamma, initialisation_level,&
+                            fwfft_orbital_gamma, calbec_rs_gamma, s_psir_gamma
+  USE mp_bands,      ONLY : nbgrp
+  USE funct,         ONLY : exx_is_active
   !
   IMPLICIT NONE
-  INTEGER, INTENT(IN) :: ik, current_spin
+  INTEGER, INTENT(IN) :: ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd
   !
   COMPLEX(DP), ALLOCATABLE :: becsum_nc(:,:,:,:)
   COMPLEX(dp), ALLOCATABLE :: auxk1(:,:), auxk2(:,:), aux_nc(:,:)
@@ -919,14 +932,30 @@ SUBROUTINE sum_bec ( ik, current_spin )
   INTEGER :: ikb, jkb, ih, jh, ijh, na, np, is, js
   ! counters on beta functions, atoms, atom types, spin
   !
+  IF (real_space .and. nbgrp > 1 .and. .NOT. exx_is_active()) &
+      call errore ('sum_bec',' band parallelization w/o exx and real_space not fixedi yet' ,1)
+
   IF ( .NOT. real_space ) THEN
      ! calbec computes becp = <vkb_i|psi_j>
      CALL calbec( npw, vkb, evc, becp )
   ELSE
+!!!!!!!!!!!!!!!!!!!!!!! THIS HAS TO BE UNDERSTOOD/TESTED BETTER \\ BEGIN
      do ibnd = 1, nbnd, 2
         call invfft_orbital_gamma(evc,ibnd,nbnd)
         call calbec_rs_gamma(ibnd,nbnd,becp%r)
      enddo
+!
+! I guess the following lines should work also when (real_space .and. nbgrp>1 )
+! but did not test any calculation with real_space option so I leave the 
+! original version with an error message to promt testing the new one.
+! Since bgrp parallelization was already used with exx I assume that case 
+! has been tested and should be ok. SdG
+!
+!     do ibnd = ibnd_start, ibnd_end, 2
+!        call invfft_orbital_gamma(evc,ibnd,this_bgrp_nbnd)
+!        call calbec_rs_gamma(ibnd,this_bgrp_nbnd,becp%r)
+!     enddo
+!!!!!!!!!!!!!!!!!!!!!!! THIS HAS TO BE UNDERSTOOD/TESTED BETTER \\ END
   ENDIF
   !
   CALL start_clock( 'sum_band:becsum' )
@@ -946,8 +975,8 @@ SUBROUTINE sum_bec ( ik, current_spin )
            nbnd_loc = becp%nbnd_loc
            ALLOCATE( auxg( nbnd_loc, nh(np) ) )
         ELSE
-           ALLOCATE( auxk1( nbnd, nh(np)*npol ), &
-                auxk2( nbnd, nh(np)*npol ) )
+           ALLOCATE( auxk1( ibnd_start:ibnd_end, nh(np)*npol ), &
+                     auxk2( ibnd_start:ibnd_end, nh(np)*npol ) )
         END IF
         IF ( noncolin ) THEN
            ALLOCATE ( aux_nc( nh(np)*npol,nh(np)*npol ) ) 
@@ -971,17 +1000,17 @@ SUBROUTINE sum_bec ( ik, current_spin )
                  DO is = 1, npol
                     DO ih = 1, nh(np)
                        ikb = indv_ijkb0(na) + ih
-                       DO ibnd = 1, nbnd
+                       DO ibnd = ibnd_start, ibnd_end
                           auxk1(ibnd,ih+(is-1)*nh(np))= becp%nc(ikb,is,ibnd)
                           auxk2(ibnd,ih+(is-1)*nh(np))= wg(ibnd,ik) * &
-                               becp%nc(ikb,is,ibnd)
+                                                        becp%nc(ikb,is,ibnd)
                        END DO
                     END DO
                  END DO
 !$omp end parallel do
                  !
-                 CALL ZGEMM ( 'C', 'N', npol*nh(np), npol*nh(np), nbnd, &
-                      (1.0_dp,0.0_dp), auxk1, nbnd, auxk2, nbnd, &
+                 CALL ZGEMM ( 'C', 'N', npol*nh(np), npol*nh(np), this_bgrp_nbnd, &
+                      (1.0_dp,0.0_dp), auxk1, this_bgrp_nbnd, auxk2, this_bgrp_nbnd, &
                       (0.0_dp,0.0_dp), aux_nc, npol*nh(np) )
                  !
               ELSE IF ( gamma_only ) THEN
@@ -996,8 +1025,13 @@ SUBROUTINE sum_bec ( ik, current_spin )
                  END DO
 !$omp end parallel do
                  !
+                 ! NB: band parallelizazion has not been performed in this case because 
+                 !     bands were aready distributed across R&G processors.
+                 !     Contribution to aux_gk is scaled by 1.d0/nbgrp so that the becsum
+                 !     summation across bgrps performed outside will gives the right value.
+                 !
                  CALL DGEMM ( 'N', 'N', nh(np), nh(np), nbnd_loc, &
-                      1.0_dp, becp%r(indv_ijkb0(na)+1,1), nkb,    &
+                      1.0_dp/nbgrp, becp%r(indv_ijkb0(na)+1,1), nkb,    &
                       auxg, nbnd_loc, 0.0_dp, aux_gk, nh(np) )
                  !
               ELSE
@@ -1005,7 +1039,7 @@ SUBROUTINE sum_bec ( ik, current_spin )
 !$omp parallel do default(shared), private(ih,ikb,ibnd)
                  DO ih = 1, nh(np)
                     ikb = indv_ijkb0(na) + ih
-                    DO ibnd = 1, nbnd
+                    DO ibnd = ibnd_start, ibnd_end
                        auxk1(ibnd,ih) = becp%k(ikb,ibnd) 
                        auxk2(ibnd,ih) = wg(ibnd,ik)*becp%k(ikb,ibnd)
                     END DO
@@ -1014,8 +1048,8 @@ SUBROUTINE sum_bec ( ik, current_spin )
                  !
                  ! only the real part is computed
                  !
-                 CALL DGEMM ( 'C', 'N', nh(np), nh(np), 2*nbnd, &
-                      1.0_dp, auxk1, 2*nbnd, auxk2, 2*nbnd, &
+                 CALL DGEMM ( 'C', 'N', nh(np), nh(np), 2*this_bgrp_nbnd, &
+                      1.0_dp, auxk1, 2*this_bgrp_nbnd, auxk2, 2*this_bgrp_nbnd, &
                       0.0_dp, aux_gk, nh(np) )
                  !
               END IF

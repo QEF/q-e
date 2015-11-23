@@ -20,12 +20,14 @@ SUBROUTINE atomic_wfc (ik, wfcatom)
   USE basis,      ONLY : natomwfc
   USE gvect,      ONLY : mill, eigts1, eigts2, eigts3, g
   USE klist,      ONLY : xk
-  USE wvfct,      ONLY : npwx, npw, nbnd, igk
+  USE wvfct,      ONLY : npwx, npw, igk
   USE us,         ONLY : tab_at, dq
   USE uspp_param, ONLY : upf
   USE noncollin_module, ONLY : noncolin, npol, angle1, angle2
   USE spin_orb,   ONLY : lspinorb, rot_ylm, fcoef, lmaxx, domag, &
                          starting_spin_angle
+  USE mp_bands,   ONLY : inter_bgrp_comm, set_bgrp_indices
+  USE mp,         ONLY : mp_sum
   !
   implicit none
   !
@@ -38,6 +40,7 @@ SUBROUTINE atomic_wfc (ik, wfcatom)
   complex(DP), allocatable :: sk (:), aux(:)
   complex(DP) :: kphase, lphase
   real(DP) :: arg, px, ux, vx, wx
+  integer :: ig_start, ig_end
 
   call start_clock ('atomic_wfc')
 
@@ -49,8 +52,7 @@ SUBROUTINE atomic_wfc (ik, wfcatom)
   !
   nwfcm = MAXVAL ( upf(1:ntyp)%nwfc )
   !
-  allocate ( ylm (npw,(lmax_wfc+1)**2), chiq(npw,nwfcm,ntyp), &
-             sk(npw), gk(3,npw), qg(npw) )
+  allocate ( ylm (npw,(lmax_wfc+1)**2), chiq(npw,nwfcm,ntyp), sk(npw), gk(3,npw), qg(npw) )
   !
   do ig = 1, npw
      gk (1,ig) = xk(1, ik) + g(1, igk(ig) )
@@ -62,10 +64,13 @@ SUBROUTINE atomic_wfc (ik, wfcatom)
   !  ylm = spherical harmonics
   !
   call ylmr2 ((lmax_wfc+1)**2, npw, gk, qg, ylm)
+
+  ! from now to the end of the routine the ig loops are distributed across bgrp
+  call set_bgrp_indices(npw,ig_start,ig_end)
   !
   ! set now q=|k+G| in atomic units
   !
-  do ig = 1, npw
+  do ig = ig_start, ig_end
      qg(ig) = sqrt(qg(ig))*tpiba
   enddo
   !
@@ -76,7 +81,7 @@ SUBROUTINE atomic_wfc (ik, wfcatom)
   do nt = 1, ntyp
      do nb = 1, upf(nt)%nwfc
         if ( upf(nt)%oc (nb) >= 0.d0) then
-           do ig = 1, npw
+           do ig = ig_start, ig_end
               px = qg (ig) / dq - int (qg (ig) / dq)
               ux = 1.d0 - px
               vx = 2.d0 - px
@@ -106,7 +111,7 @@ SUBROUTINE atomic_wfc (ik, wfcatom)
      !
      !     sk is the structure factor
      !
-     do ig = 1, npw
+     do ig = ig_start, ig_end
         iig = igk (ig)
         sk (ig) = kphase * eigts1 (mill (1,iig), na) * &
                            eigts2 (mill (2,iig), na) * &
@@ -155,6 +160,9 @@ SUBROUTINE atomic_wfc (ik, wfcatom)
 
   deallocate(aux, sk, chiq, ylm)
 
+  ! collect results across bgrp
+  call mp_sum(wfcatom, inter_bgrp_comm)
+
   call stop_clock ('atomic_wfc')
   return
 
@@ -185,7 +193,7 @@ CONTAINS
                   if (abs(rot_ylm(ind,n1)) > 1.d-8) &
                       aux(:)=aux(:)+rot_ylm(ind,n1)*ylm(:,ind1)
                ENDDO
-               DO ig=1,npw
+               do ig = ig_start, ig_end
                   wfcatom (ig,is,n_starting_wfc) = lphase*fact(is)*&
                         sk(ig)*aux(ig)*chiq (ig, nb, nt)
                END DO
@@ -249,14 +257,14 @@ CONTAINS
       n_starting_wfc = n_starting_wfc + 1
       if (n_starting_wfc + 2*l+1 > natomwfc) call errore &
             ('atomic_wfc_nc', 'internal error: too many wfcs', 1)
-      DO ig=1,npw
+      do ig = ig_start, ig_end
          aux(ig) = sk(ig)*ylm(ig,lm)*chiaux(ig)
       END DO
 !
 ! now, rotate wfc as needed
 ! first : rotation with angle alpha around (OX)
 !
-      DO ig=1,npw
+      do ig = ig_start, ig_end
          fup = cos(0.5d0*alpha)*aux(ig)
          fdown = (0.d0,1.d0)*sin(0.5d0*alpha)*aux(ig)
 !
@@ -304,14 +312,14 @@ CONTAINS
       n_starting_wfc = n_starting_wfc + 1
       if (n_starting_wfc + 2*l+1 > natomwfc) call errore &
             ('atomic_wfc_nc', 'internal error: too many wfcs', 1)
-      DO ig=1,npw
+      do ig = ig_start, ig_end
          aux(ig) = sk(ig)*ylm(ig,lm)*chiq(ig,nb,nt)
       END DO
 !
 ! now, rotate wfc as needed
 ! first : rotation with angle alpha around (OX)
 !
-      DO ig=1,npw
+      do ig = ig_start, ig_end
          fup = cos(0.5d0*alpha)*aux(ig)
          fdown = (0.d0,1.d0)*sin(0.5d0*alpha)*aux(ig)
 !
@@ -353,7 +361,7 @@ CONTAINS
       if (n_starting_wfc > natomwfc) call errore &
          ('atomic_wfc___', 'internal error: too many wfcs', 1)
       !
-      DO ig = 1, npw
+      do ig = ig_start, ig_end
          wfcatom (ig, 1, n_starting_wfc) = lphase * &
             sk (ig) * ylm (ig, lm) * chiq (ig, nb, nt)
       ENDDO

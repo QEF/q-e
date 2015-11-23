@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!
 !----------------------------------------------------------------------------
 SUBROUTINE h_1psi( lda, n, psi, hpsi, spsi )
   !----------------------------------------------------------------------------
@@ -14,16 +13,18 @@ SUBROUTINE h_1psi( lda, n, psi, hpsi, spsi )
   ! ... to a vector psi and puts the result in hpsi and spsi
   ! ... Wrapper routine - calls h_psi and s_psi
   !
-  USE kinds, ONLY: DP
-  USE bp,    ONLY: lelfield
-  USE noncollin_module, ONLY: noncolin, npol 
-  USE realus,         ONLY : real_space, invfft_orbital_gamma, fwfft_orbital_gamma, &
-                             calbec_rs_gamma, s_psir_gamma, initialisation_level
-  
+  ! ... No bgrp parallelization here !
+  !
+  USE kinds,  ONLY: DP
+  USE bp,     ONLY: lelfield
+  USE noncollin_module, &
+              ONLY: npol 
+  USE realus, ONLY : real_space, invfft_orbital_gamma, fwfft_orbital_gamma, &
+                     calbec_rs_gamma, s_psir_gamma, initialisation_level
   !
   IMPLICIT NONE
   !
-  INTEGER           :: lda, n
+  INTEGER, INTENT(IN) :: lda, n
   COMPLEX (DP) :: psi(lda*npol,1), hpsi(n), spsi(n,1)
   !
   !
@@ -37,8 +38,8 @@ SUBROUTINE h_1psi( lda, n, psi, hpsi, spsi )
              call s_psir_gamma(1,1)
              call fwfft_orbital_gamma(spsi,1,1)
         else   
-  CALL h_psi( lda, n, 1, psi, hpsi )
-  CALL s_psi( lda, n, 1, psi, spsi )
+  CALL h_psi( lda, n, 1, psi, hpsi ) ! apply H to a single wfc (no bgrp parallelization here)
+  CALL s_psi( lda, n, 1, psi, spsi ) ! apply S to a single wfc (no bgrp parallelization here)
        endif
   !
   CALL stop_clock( 'h_1psi' )

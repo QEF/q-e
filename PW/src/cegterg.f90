@@ -1089,7 +1089,7 @@ CONTAINS
                  vtmp(:,1:notcl) = vl(:,1:notcl)
               END IF
 
-              CALL mp_bcast( vtmp(:,1:notcl), root, intra_bgrp_comm )
+              CALL mp_bcast( vtmp(:,1:notcl), root, ortho_comm )
               ! 
               IF ( uspp ) THEN
                  !
@@ -1158,14 +1158,14 @@ CONTAINS
                  !
                  !  this proc sends his block
                  ! 
-                 CALL mp_bcast( vl(:,1:nc), root, intra_bgrp_comm )
+                 CALL mp_bcast( vl(:,1:nc), root, ortho_comm )
                  CALL ZGEMM( 'N', 'N', kdim, nc, nr, ONE, &
                           psi(1,1,ir), kdmx, vl, nx, beta, evc(1,1,ic), kdmx )
               ELSE
                  !
                  !  all other procs receive
                  ! 
-                 CALL mp_bcast( vtmp(:,1:nc), root, intra_bgrp_comm )
+                 CALL mp_bcast( vtmp(:,1:nc), root, ortho_comm )
                  CALL ZGEMM( 'N', 'N', kdim, nc, nr, ONE, &
                           psi(1,1,ir), kdmx, vtmp, nx, beta, evc(1,1,ic), kdmx )
               END IF
@@ -1216,14 +1216,14 @@ CONTAINS
                  !
                  !  this proc sends his block
                  ! 
-                 CALL mp_bcast( vl(:,1:nc), root, intra_bgrp_comm )
+                 CALL mp_bcast( vl(:,1:nc), root, ortho_comm )
                  CALL ZGEMM( 'N', 'N', kdim, nc, nr, ONE, &
                           spsi(1,1,ir), kdmx, vl, nx, beta, psi(1,1,nvec+ic), kdmx )
               ELSE
                  !
                  !  all other procs receive
                  ! 
-                 CALL mp_bcast( vtmp(:,1:nc), root, intra_bgrp_comm )
+                 CALL mp_bcast( vtmp(:,1:nc), root, ortho_comm )
                  CALL ZGEMM( 'N', 'N', kdim, nc, nr, ONE, &
                           spsi(1,1,ir), kdmx, vtmp, nx, beta, psi(1,1,nvec+ic), kdmx )
               END IF
@@ -1276,14 +1276,14 @@ CONTAINS
                  !
                  !  this proc sends his block
                  ! 
-                 CALL mp_bcast( vl(:,1:nc), root, intra_bgrp_comm )
+                 CALL mp_bcast( vl(:,1:nc), root, ortho_comm )
                  CALL ZGEMM( 'N', 'N', kdim, nc, nr, ONE, &
                           hpsi(1,1,ir), kdmx, vl, nx, beta, psi(1,1,nvec+ic), kdmx )
               ELSE
                  !
                  !  all other procs receive
                  ! 
-                 CALL mp_bcast( vtmp(:,1:nc), root, intra_bgrp_comm )
+                 CALL mp_bcast( vtmp(:,1:nc), root, ortho_comm )
                  CALL ZGEMM( 'N', 'N', kdim, nc, nr, ONE, &
                           hpsi(1,1,ir), kdmx, vtmp, nx, beta, psi(1,1,nvec+ic), kdmx )
               END IF
@@ -1343,11 +1343,12 @@ CONTAINS
 
            ! accumulate result on dm of root proc.
 
-           CALL mp_root_sum( work, dm, root, intra_bgrp_comm )
+           CALL mp_root_sum( work, dm, root, ortho_comm )
 
         END DO
         !
      END DO
+     if (nbgrp > 1) dm = dm/nbgrp
      !
      !  The matrix is hermitianized using upper triangle
      !
@@ -1396,11 +1397,12 @@ CONTAINS
 
               CALL ZGEMM( 'C', 'N', nr, nc, kdim, ONE, v( 1, 1, ir ), &
                           kdmx, w(1,1,ii), kdmx, ZERO, vtmp, nx )
+              if (nbgrp > 1) vtmp = vtmp/nbgrp
               !
               IF(  (desc%active_node > 0) .AND. (ipr-1 == desc%myr) .AND. (ipc-1 == desc%myc) ) THEN
-                 CALL mp_root_sum( vtmp(:,1:nc), dm(:,icc:icc+nc-1), root, intra_bgrp_comm )
+                 CALL mp_root_sum( vtmp(:,1:nc), dm(:,icc:icc+nc-1), root, ortho_comm )
               ELSE
-                 CALL mp_root_sum( vtmp(:,1:nc), dm, root, intra_bgrp_comm )
+                 CALL mp_root_sum( vtmp(:,1:nc), dm, root, ortho_comm )
               END IF
 
            END DO
@@ -1427,7 +1429,7 @@ CONTAINS
            e( i + ic - 1 ) = REAL( hl( i, i ) )
         END DO
      END IF
-     CALL mp_sum( e(1:nbase), intra_bgrp_comm )
+     CALL mp_sum( e(1:nbase), ortho_comm )
      RETURN
   END SUBROUTINE set_e_from_h
   !

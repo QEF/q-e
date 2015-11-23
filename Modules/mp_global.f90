@@ -74,7 +74,12 @@ CONTAINS
     !
     CALL mp_start_pools ( npool_, intra_image_comm )
     CALL mp_start_bands ( nband_, ntg_, intra_pool_comm )
-    CALL mp_start_diag  ( ndiag_, intra_bgrp_comm )
+    !
+    ! linear algebra parallelization. comment/uncomment as desired
+    ! one diag group per pool ( individual k-point level )
+    CALL mp_start_diag  ( ndiag_, intra_pool_comm )
+    ! used to be one diag group per bgrp
+    !CALL mp_start_diag  ( ndiag_, intra_bgrp_comm )
     !
     RETURN
     !

@@ -39,7 +39,11 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
   !
   CALL start_clock( 'h_psi_bgrp' )
 
-  if (tbgrp .and. .not. exx_is_active() ) then
+! if exx_is_active bgrp parallelization is already used in exx routines that are part of Hpsi !
+! if m <= 1 there is nothing to distribute so we can avoid the communication step.
+!           moreover if a band by band diagonalization (such as ParO for instance) is used it may 
+!           be useful/necessary to operate on different vectors independently.
+  if (tbgrp .and. .not. exx_is_active() .and. m > 1) then
       hpsi(:,:) = (0.d0,0.d0)
       call set_bgrp_indices(m,m_start,m_end)
       if (m_end >= m_start)  & !! at least one band in this band group
