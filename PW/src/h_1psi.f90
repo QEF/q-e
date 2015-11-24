@@ -19,8 +19,7 @@ SUBROUTINE h_1psi( lda, n, psi, hpsi, spsi )
   USE bp,     ONLY: lelfield
   USE noncollin_module, &
               ONLY: npol 
-  USE realus, ONLY : real_space, invfft_orbital_gamma, fwfft_orbital_gamma, &
-                     calbec_rs_gamma, s_psir_gamma, initialisation_level
+  USE realus, ONLY : real_space, invfft_orbital_gamma, fwfft_orbital_gamma, s_psir_gamma
   !
   IMPLICIT NONE
   !

@@ -921,7 +921,8 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   USE wavefunctions_module, ONLY : evc
   USE realus,        ONLY : real_space, invfft_orbital_gamma, initialisation_level,&
                             fwfft_orbital_gamma, calbec_rs_gamma, s_psir_gamma
-  USE mp_bands,      ONLY : nbgrp
+  USE mp_bands,      ONLY : nbgrp,inter_bgrp_comm
+  USE mp,            ONLY : mp_sum
   USE funct,         ONLY : exx_is_active
   !
   IMPLICIT NONE
@@ -934,30 +935,15 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   INTEGER :: ikb, jkb, ih, jh, ijh, na, np, is, js
   ! counters on beta functions, atoms, atom types, spin
   !
-  IF (real_space .and. nbgrp > 1 .and. .NOT. exx_is_active()) &
-      call errore ('sum_bec',' band parallelization w/o exx and real_space not yet ready' ,1)
-
   IF ( .NOT. real_space ) THEN
      ! calbec computes becp = <vkb_i|psi_j>
      CALL calbec( npw, vkb, evc, becp )
   ELSE
-!!!!!!!!!!!!!!!!!!!!!!! THIS HAS TO BE UNDERSTOOD/TESTED BETTER \\ BEGIN
-     do ibnd = 1, nbnd, 2
-        call invfft_orbital_gamma(evc,ibnd,nbnd)
-        call calbec_rs_gamma(ibnd,nbnd,becp%r)
+     do ibnd = ibnd_start, ibnd_end, 2
+        call invfft_orbital_gamma(evc,ibnd,ibnd_end) 
+        call calbec_rs_gamma(ibnd,ibnd_end,becp%r)
      enddo
-!
-! I guess the following lines should work also when (real_space .and. nbgrp>1 )
-! but did not test any calculation with real_space option so I leave the 
-! original version with an error message to prompt testing the new one.
-! Since bgrp parallelization was already used with exx I assume that case 
-! has been tested and should be ok. SdG
-!
-!     do ibnd = ibnd_start, ibnd_end, 2
-!        call invfft_orbital_gamma(evc,ibnd,this_bgrp_nbnd)
-!        call calbec_rs_gamma(ibnd,this_bgrp_nbnd,becp%r)
-!     enddo
-!!!!!!!!!!!!!!!!!!!!!!! THIS HAS TO BE UNDERSTOOD/TESTED BETTER \\ END
+     call mp_sum(becp%r,inter_bgrp_comm)
   ENDIF
   !
   CALL start_clock( 'sum_band:becsum' )
