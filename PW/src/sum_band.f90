@@ -908,6 +908,8 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   ! Calls calbec to compute "becp"=<beta_m|psi_i> 
   ! Output is accumulated (unsymmtrized) into "becsum", module "uspp"
   !
+  ! Routine used in sum_band (if okvan) and in compute_becsum, called by hinit1 (if okpaw)
+  !
   USE kinds,         ONLY : DP
   USE becmod,        ONLY : becp, calbec
   USE control_flags, ONLY : gamma_only

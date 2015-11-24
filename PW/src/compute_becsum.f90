@@ -26,7 +26,7 @@ SUBROUTINE compute_becsum ( iflag )
   USE noncollin_module,     ONLY : noncolin
   USE wvfct,                ONLY : nbnd, npwx, npw, wg, igk
   USE mp_pools,             ONLY : inter_pool_comm
-  USE mp_bands,             ONLY : intra_bgrp_comm, set_bgrp_indices
+  USE mp_bands,             ONLY : intra_bgrp_comm, set_bgrp_indices, inter_bgrp_comm 
   USE mp,                   ONLY : mp_sum, mp_get_comm_null
   USE paw_symmetry,         ONLY : PAW_symmetrize
   USE paw_variables,        ONLY : okpaw
@@ -86,6 +86,7 @@ SUBROUTINE compute_becsum ( iflag )
   IF( okpaw )  THEN
      rho%bec(:,:,:) = becsum(:,:,:) ! becsum is filled in sum_band_{k|gamma}
      CALL mp_sum(rho%bec, inter_pool_comm )
+     call mp_sum(rho%bec, inter_bgrp_comm )
      CALL PAW_symmetrize(rho%bec)
   ENDIF
   !
