@@ -30,6 +30,11 @@ MODULE dynamics_module
    IMPLICIT NONE
    !
    SAVE
+   PRIVATE
+   PUBLIC :: verlet, proj_verlet, terminate_verlet, langevin_md, smart_MC, &
+             allocate_dyn_vars, deallocate_dyn_vars
+   PUBLIC :: temperature, refold_pos, vel
+   PUBLIC :: dt, delta_t, nraise, control_temp, thermostat
    !
    REAL(DP) :: &
          dt,          &! time step
@@ -124,7 +129,7 @@ CONTAINS
       USE cell_base,      ONLY : alat, omega
       USE ener,           ONLY : etot
       USE force_mod,      ONLY : force, lstres
-      USE control_flags,  ONLY : istep, nstep, conv_ions, lconstrain, tv0rd
+      USE control_flags,  ONLY : istep, lconstrain, tv0rd
       !
       USE constraints_module, ONLY : nconstr, check_constraint
       USE constraints_module, ONLY : remove_constr_force, remove_constr_vec
@@ -135,9 +140,7 @@ CONTAINS
       REAL(DP) :: total_mass, temp_new, temp_av, elapsed_time
       REAL(DP) :: delta(3), ml(3), mlt
       INTEGER  :: na
-      ! idone counts MD steps done during this run
-      ! istep counts instead all MD steps, including those of previous runs
-      INTEGER, SAVE :: idone = 0 
+      ! istep counts all MD steps, including those of previous runs
 #if defined (__NPT)
       REAL(DP) :: chi, press_new
 #endif
@@ -197,24 +200,10 @@ CONTAINS
          !
       ENDIF
       !
-      IF ( idone >= nstep ) THEN
-         !
-         conv_ions = .true.
-         !
-         WRITE( UNIT = stdout, &
-                FMT = '(/,5X,"The maximum number of steps has been reached.")' )
-         WRITE( UNIT = stdout, &
-                FMT = '(/,5X,"End of molecular dynamics calculation")' )
-         !
-         CALL print_averages()
-         !
-      ENDIF
-      !
       ! ... elapsed_time is in picoseconds
       !
       elapsed_time = elapsed_time + dt*2.D0*au_ps
       !
-      idone = idone + 1
       istep = istep + 1
       !
       WRITE( UNIT = stdout, &
@@ -730,6 +719,24 @@ CONTAINS
       END SUBROUTINE start_therm
       !
    END SUBROUTINE verlet
+   !
+   !------------------------------------------------------------------------
+   SUBROUTINE terminate_verlet
+     !------------------------------------------------------------------------
+     !
+     USE io_global, ONLY : stdout
+     USE control_flags,  ONLY : conv_ions
+     !
+     conv_ions = .true.
+     !
+     WRITE( UNIT = stdout, &
+          FMT = '(/,5X,"The maximum number of steps has been reached.")' )
+     WRITE( UNIT = stdout, &
+          FMT = '(/,5X,"End of molecular dynamics calculation")' )
+     !
+     CALL print_averages()
+     !
+   END SUBROUTINE terminate_verlet
    !
    !------------------------------------------------------------------------
    SUBROUTINE proj_verlet()

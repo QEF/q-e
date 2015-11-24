@@ -82,7 +82,7 @@ SUBROUTINE run_pwscf ( exit_status )
      RETURN
   ENDIF
   !
-  main_loop: DO idone = 1, nstep+1
+  main_loop: DO idone = 1, nstep
      !
      ! ... electronic self-consistency or band structure calculation
      !
@@ -136,7 +136,7 @@ SUBROUTINE run_pwscf ( exit_status )
         !
         ! ... ionic step (for molecular dynamics or optimization)
         !
-        CALL move_ions()
+        CALL move_ions ( idone )
         !
         ! ... then we save restart information for the new configuration
         !

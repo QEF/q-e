@@ -6,10 +6,10 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-SUBROUTINE move_ions()
+SUBROUTINE move_ions ( idone )
   !----------------------------------------------------------------------------
   !
-  ! ... This routine moves the ions according to the requested scheme:
+  ! ... Perform an ionic step, according to the requested scheme:
   ! ...    lbfgs               bfgs minimizations
   ! ...    lmd                 molecular dynamics ( all kinds )
   ! ...    use_SMC             Smart MonteCarlo
@@ -19,9 +19,10 @@ SUBROUTINE move_ions()
   ! ...    lconstrain          constrained MD
   ! ...    ldamp               damped MD (projected Verlet)
   ! ...    llang               Langevin MD 
-  !
-  ! ... coefficients for potential and wavefunctions extrapolation are
-  ! ... also computed here
+  ! ..  "idone" is the counter on ionic moves, "nstep" their total number 
+  ! ... "istep" contains the number of all steps including previous runs
+  ! ... Coefficients for potential and wavefunctions extrapolation are
+  ! ... also computed here, in update_pot
   !
   USE constants,              ONLY : e2, eps6, ry_kbar
   USE io_global,              ONLY : stdout
@@ -49,8 +50,8 @@ SUBROUTINE move_ions()
   USE mp,                     ONLY : mp_bcast
   USE bfgs_module,            ONLY : bfgs, terminate_bfgs
   USE basic_algebra_routines, ONLY : norm
-  USE dynamics_module,        ONLY : verlet, langevin_md, proj_verlet
-  USE dynamics_module,        ONLY : smart_MC
+  USE dynamics_module,        ONLY : verlet, terminate_verlet, proj_verlet
+  USE dynamics_module,        ONLY : smart_MC, langevin_md
   USE fcp                ,    ONLY : fcp_verlet, fcp_line_minimisation
   USE fcp_variables,          ONLY : lfcpopt, lfcpdyn, fcp_mu, &
                                      fcp_relax_crit
@@ -58,6 +59,8 @@ SUBROUTINE move_ions()
   USE dfunct,                 only : newd
   !
   IMPLICIT NONE
+  !
+  INTEGER,  INTENt(IN) :: idone
   !
   LOGICAL, SAVE         :: lcheck_mag = .TRUE., &
                            restart_with_starting_magnetiz = .FALSE., &
@@ -170,7 +173,7 @@ SUBROUTINE move_ions()
         !
         IF ( lfcpopt ) THEN
            CALL fcp_line_minimisation( conv_fcp )
-           IF ( .not. conv_fcp .and. istep < nstep ) THEN
+           IF ( .not. conv_fcp .and. idone < nstep ) THEN
              conv_ions = .FALSE.
            END IF
         END IF
@@ -305,6 +308,7 @@ SUBROUTINE move_ions()
               ! ... dynamics for FCP
               !
               IF ( lfcpdyn ) CALL fcp_verlet()
+              IF ( idone >= nstep) CALL terminate_verlet()
               !
            END IF
            !
