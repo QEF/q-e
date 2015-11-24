@@ -31,8 +31,8 @@ MODULE dynamics_module
    !
    SAVE
    PRIVATE
-   PUBLIC :: verlet, proj_verlet, terminate_verlet, langevin_md, smart_MC, &
-             allocate_dyn_vars, deallocate_dyn_vars
+   PUBLIC :: verlet, proj_verlet, terminate_verlet, terminate_proj_verlet, &
+             langevin_md, smart_MC, allocate_dyn_vars, deallocate_dyn_vars
    PUBLIC :: temperature, refold_pos, vel
    PUBLIC :: dt, delta_t, nraise, control_temp, thermostat
    !
@@ -750,7 +750,7 @@ CONTAINS
       USE ener,          ONLY : etot
       USE force_mod,     ONLY : force
       USE relax,         ONLY : epse, epsf
-      USE control_flags, ONLY : istep, nstep, conv_ions, lconstrain
+      USE control_flags, ONLY : istep, conv_ions, lconstrain
       !
       USE constraints_module, ONLY : remove_constr_force, check_constraint
       !
@@ -792,10 +792,11 @@ CONTAINS
          IF ( refold_pos ) CALL refold_tau()
          !
          tau_old(:,:) = tau(:,:)
-         !
          etotold = etot
-         !
          istep = 0
+         WRITE( UNIT = stdout, &
+                FMT = '(/,5X,"Damped Dynamics Calculation")' )
+         conv_ions = .FALSE.
          !
       ENDIF
       !
@@ -826,14 +827,6 @@ CONTAINS
          !
       ENDIF
       !
-      istep = istep + 1
-      !
-      IF ( istep == 1 ) THEN
-         WRITE( UNIT = stdout, &
-                FMT = '(/,5X,"Damped Dynamics Calculation")' )
-         conv_ions = .FALSE.
-      END IF
-      !
       ! ... check if convergence for structural minimization is achieved
       !
       conv_ions = ( etotold - etot ) < epse
@@ -851,21 +844,11 @@ CONTAINS
          !
          CALL output_tau( .true., .true. )
          !
-      ENDIF
-      !
-      IF ( istep >= nstep ) THEN
-         !
-         conv_ions = .true.
-         !
-         WRITE( UNIT = stdout, &
-                FMT = '(/,5X,"The maximum number of steps has been reached.")' )
-         WRITE( UNIT = stdout, &
-                FMT = '(/,5X,"End of damped dynamics calculation")' )
-         !
-         CALL output_tau( .true., .true. )
+         RETURN
          !
       ENDIF
       !
+      istep = istep + 1
       WRITE( stdout, '(/,5X,"Entering Dynamics:",&
                       & T28,"iteration",T37," = ",I5)' ) istep
       !
@@ -939,6 +922,22 @@ CONTAINS
    END SUBROUTINE proj_verlet
    !
    !------------------------------------------------------------------------
+   SUBROUTINE terminate_proj_verlet
+     !------------------------------------------------------------------------
+     !
+     USE io_global, ONLY : stdout
+     USE control_flags,  ONLY : conv_ions
+     !
+     conv_ions = .true.
+     !
+     WRITE( UNIT = stdout, &
+             FMT = '(/,5X,"The maximum number of steps has been reached.")' )
+     WRITE( UNIT = stdout, &
+             FMT = '(/,5X,"End of molecular dynamics calculation")' )
+     !
+   END SUBROUTINE terminate_proj_verlet
+   !
+   !------------------------------------------------------------------------
    SUBROUTINE langevin_md()
       !------------------------------------------------------------------------
       !
@@ -948,7 +947,7 @@ CONTAINS
       USE cell_base,      ONLY : alat
       USE ener,           ONLY : etot
       USE force_mod,      ONLY : force
-      USE control_flags,  ONLY : istep, nstep, conv_ions, lconstrain
+      USE control_flags,  ONLY : istep, conv_ions, lconstrain
       USE random_numbers, ONLY : gauss_dist
       !
       USE constraints_module, ONLY : nconstr
@@ -993,19 +992,7 @@ CONTAINS
          !
       ENDIF
       !
-      IF ( istep >= nstep ) THEN
-         !
-         conv_ions = .true.
-         !
-         WRITE( UNIT = stdout, &
-                FMT = '(/,5X,"The maximum number of steps has been reached.")' )
-         WRITE( UNIT = stdout, &
-                FMT = '(/,5X,"End of Langevin Dynamics calculation")' )
-         !
-      ENDIF
-      !
       istep = istep + 1
-      !
       WRITE( UNIT = stdout, &
              FMT = '(/,5X,"Entering Dynamics:",T28, &
                     &     "iteration",T37," = ",I5,/)' ) istep

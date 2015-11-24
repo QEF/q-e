@@ -50,7 +50,8 @@ SUBROUTINE move_ions ( idone )
   USE mp,                     ONLY : mp_bcast
   USE bfgs_module,            ONLY : bfgs, terminate_bfgs
   USE basic_algebra_routines, ONLY : norm
-  USE dynamics_module,        ONLY : verlet, terminate_verlet, proj_verlet
+  USE dynamics_module,        ONLY : verlet, terminate_verlet, proj_verlet, &
+                                     terminate_proj_verlet
   USE dynamics_module,        ONLY : smart_MC, langevin_md
   USE fcp                ,    ONLY : fcp_verlet, fcp_line_minimisation
   USE fcp_variables,          ONLY : lfcpopt, lfcpdyn, fcp_mu, &
@@ -60,7 +61,7 @@ SUBROUTINE move_ions ( idone )
   !
   IMPLICIT NONE
   !
-  INTEGER,  INTENt(IN) :: idone
+  INTEGER,  INTENT(IN) :: idone
   !
   LOGICAL, SAVE         :: lcheck_mag = .TRUE., &
                            restart_with_starting_magnetiz = .FALSE., &
@@ -279,7 +280,7 @@ SUBROUTINE move_ions ( idone )
               !
               IF ( lfcpopt ) THEN
                  CALL fcp_line_minimisation( conv_fcp )
-                 IF ( .not. conv_fcp .and. istep < nstep ) THEN
+                 IF ( .not. conv_fcp .and. idone < nstep ) THEN
                    conv_ions = .FALSE.
                  END IF
                  !
@@ -292,6 +293,7 @@ SUBROUTINE move_ions ( idone )
                      SUM( zv(ityp(1:nat)) ) - nelec
                  END IF
               END IF
+              IF ( idone >= nstep ) CALL terminate_proj_verlet () 
               !
            ELSE IF ( llang ) THEN
               !
@@ -300,6 +302,7 @@ SUBROUTINE move_ions ( idone )
               ! ... dynamics for FCP
               !
               IF ( lfcpdyn ) CALL fcp_verlet()
+              IF ( idone >= nstep ) CALL terminate_proj_verlet () 
               !
            ELSE
               !
