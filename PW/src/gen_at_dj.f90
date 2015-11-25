@@ -106,7 +106,7 @@ subroutine gen_at_dj ( kpoint, natw, is_hubbard, hubbard_l, dwfcat )
       end do
       do nb = 1,upf(nt)%nwfc
          l  = upf(nt)%lchi(nb)
-         if ( upf(nt)%oc(nb) >= 0.d0 .and. l == hubbard_l(nt) ) then
+         if ( upf(nt)%oc(nb) > 0.d0 .and. l == hubbard_l(nt) ) then
             pref = (0.d0,1.d0)**l
             do m = 1,2*l+1
                lm = l*l+m

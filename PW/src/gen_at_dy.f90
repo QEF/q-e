@@ -110,7 +110,7 @@ subroutine gen_at_dy ( ik, natw, is_hubbard, hubbard_l, u, dwfcat )
       end do
       do nb = 1,upf(nt)%nwfc
          l  = upf(nt)%lchi(nb)
-         if ( upf(nt)%oc(nb) >= 0.d0 .and. l == hubbard_l(nt) ) then
+         if ( upf(nt)%oc(nb) > 0.d0 .and. l == hubbard_l(nt) ) then
             pref = (0.d0,1.d0)**l
             do m = 1,2*l+1
                lm = l*l+m
