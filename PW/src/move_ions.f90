@@ -12,13 +12,13 @@ SUBROUTINE move_ions ( idone )
   ! ... Perform an ionic step, according to the requested scheme:
   ! ...    lbfgs               bfgs minimizations
   ! ...    lmd                 molecular dynamics ( all kinds )
-  ! ...    use_SMC             Smart MonteCarlo
   ! ... Additional variables affecting the calculation:
   ! ...    lmovecell           Variable-cell calculation
   ! ...    calc                Type of MD
   ! ...    lconstrain          constrained MD
   ! ...    ldamp               damped MD (projected Verlet)
   ! ...    llang               Langevin MD 
+  ! ...    use_SMC             Smart MonteCarlo (with Langevin MD)
   ! ..  "idone" is the counter on ionic moves, "nstep" their total number 
   ! ... "istep" contains the number of all steps including previous runs
   ! ... Coefficients for potential and wavefunctions extrapolation are
@@ -75,8 +75,6 @@ SUBROUTINE move_ions ( idone )
   INTEGER,  ALLOCATABLE :: fixion(:)
   real(dp) :: tr
   LOGICAL               :: conv_fcp
-  !
-  IF (use_SMC) CALL smart_MC()  ! for smart monte carlo method
   !
   ! ... only one node does the calculation in the parallel case
   !
@@ -296,6 +294,10 @@ SUBROUTINE move_ions ( idone )
               IF ( idone >= nstep ) CALL terminate_proj_verlet () 
               !
            ELSE IF ( llang ) THEN
+              !
+              ! ... for smart monte carlo method
+              !
+              IF (use_SMC) CALL smart_MC()
               !
               CALL langevin_md()
               !

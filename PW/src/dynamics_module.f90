@@ -151,7 +151,7 @@ CONTAINS
       !
       ! ... the number of degrees of freedom
       !
-      IF ( ANY( if_pos(:,:) == 0 ) ) THEN
+      IF ( any( if_pos(:,:) == 0 ) ) THEN
          !
          ndof = 3*nat - count( if_pos(:,:) == 0 ) - nconstr
          !
@@ -243,7 +243,7 @@ CONTAINS
          !
       ENDIF
       !
-      IF ( .NOT. ANY( if_pos(:,:) == 0 ) ) THEN
+      IF ( .not. any( if_pos(:,:) == 0 ) ) THEN
          !
          ! ... if no atom has been fixed  we compute the displacement of the
          ! ... center of mass and we subtract it from the displaced positions
@@ -309,11 +309,11 @@ CONTAINS
          ml(:) = ml(:) + vel(:,na) * mass(na)
          ekin  = ekin + 0.5D0 * mass(na) * &
                         ( vel(1,na)**2 + vel(2,na)**2 + vel(3,na)**2 )
-         do i = 1, 3
-             do j = 1, 3
+         DO i = 1, 3
+             DO j = 1, 3
                  kstress(i,j) = kstress(i,j) + mass(na)*vel(i,na)*vel(j,na)
-             enddo
-         enddo
+             ENDDO
+         ENDDO
          !
       ENDDO
       !
@@ -375,7 +375,7 @@ CONTAINS
               ((kstress(1,1)+kstress(2,2)+kstress(3,3))/3.d0*ry_kbar), &
               (kstress(i,1)*ry_kbar,kstress(i,2)*ry_kbar,kstress(i,3)*ry_kbar, i=1,3)
       !
-      IF ( .not.( lconstrain .or. ANY( if_pos(:,:) == 0 ) ) ) THEN
+      IF ( .not.( lconstrain .or. any( if_pos(:,:) == 0 ) ) ) THEN
          !
          ! ... total linear momentum must be zero if all atoms move
          !
@@ -633,7 +633,7 @@ CONTAINS
          ! ... next command prevents different MD runs to start
          ! ... with exactly the same "random" velocities
          !
-         call set_random_seed ( )
+         CALL set_random_seed ( )
          kt = temperature / ry_to_kelvin
          !
          ! ... starting velocities have a Maxwell-Boltzmann distribution
@@ -685,9 +685,9 @@ CONTAINS
             !
             ml(:) = 0.D0
             !
-            IF ( .NOT. ANY( if_pos(:,:) == 0 ) ) THEN
+            IF ( .not. any( if_pos(:,:) == 0 ) ) THEN
                !
-               total_mass = SUM ( mass(1:nat) )
+               total_mass = sum ( mass(1:nat) )
                DO na = 1, nat
                   ml(:) = ml(:) + mass(na)*vel(:,na)
                ENDDO
@@ -796,7 +796,7 @@ CONTAINS
          istep = 0
          WRITE( UNIT = stdout, &
                 FMT = '(/,5X,"Damped Dynamics Calculation")' )
-         conv_ions = .FALSE.
+         conv_ions = .false.
          !
       ENDIF
       !
@@ -870,7 +870,7 @@ CONTAINS
       !
       tau_new(:,:) = tau(:,:) + step(:,:)*min( norm_step, step_max / alat )
       !
-      IF ( .NOT. ANY( if_pos(:,:) == 0 ) ) THEN
+      IF ( .not. any( if_pos(:,:) == 0 ) ) THEN
          !
          ! ... if no atom has been fixed  we compute the displacement of the
          ! ... center of mass and we subtract it from the displaced positions
@@ -1032,7 +1032,7 @@ CONTAINS
       !
       tau_new(:,:) = tau(:,:) + ( dt*force(:,:) + chi(:,:) ) / alat
       !
-      IF ( .NOT. ANY( if_pos(:,:) == 0 ) ) THEN
+      IF ( .not. any( if_pos(:,:) == 0 ) ) THEN
          !
          ! ... here we compute the displacement of the center of mass and we
          ! ... subtract it from the displaced positions
@@ -1477,37 +1477,34 @@ CONTAINS
    !
 
    !-----------------------------------------------------------------------
-   subroutine smart_MC()
+   SUBROUTINE smart_MC()
       !-----------------------------------------------------------------------
       ! Routine to apply smart_MC
       ! Implemented by Xiaochuan Ge, Jul., 2013
       !
       ! At this moment works only with langevin dynamics !!
       ! For the formula see R.J.Rossky, JCP, 69, 4628(1978)
-      
+
      USE ions_base,      ONLY : nat, ityp, tau, if_pos,atm
      USE cell_base,      ONLY : alat
      USE ener,           ONLY : etot
      USE force_mod,      ONLY : force
-     USE control_flags,  ONLY : istep, nstep, conv_ions, lconstrain, llang
+     USE control_flags,  ONLY : istep, nstep, conv_ions, lconstrain
      USE constraints_module, ONLY : remove_constr_force, check_constraint
      USE random_numbers, ONLY : randy
-     use io_files,      only : prefix     
-     use io_global,      only : ionode
+     USE io_files,      ONLY : prefix
+     USE io_global,      ONLY : ionode
      USE constants, ONLY : bohr_radius_angs
 
-     implicit none
-     
-     logical :: accept
+     IMPLICIT NONE
+
+     LOGICAL :: accept
      real(dp) :: kt,sigma2,&
                  T_ij,T_ji,boltzman_ji,& ! boltzman_ji=exp[-(etot_new-etot_old)/kt]
                  temp,p_smc                  ! *_smart means *_old, the quantity of the
                                         ! previous step
-                                    
-     integer :: ia, ip
 
-     if(.not. llang) call errore( ' smart_MC ', "At this moment, smart_MC works&
-      &only with langevin." )
+     INTEGER :: ia, ip
 
       IF ( lconstrain ) THEN
          ! ... we first remove the component of the force along the
@@ -1516,73 +1513,73 @@ CONTAINS
          CALL remove_constr_force( nat, tau, if_pos, ityp, alat, force )
       ENDIF
 
-     if(first_iter) then ! For the first iteration
-       allocate(tau_smart(3,nat))
-       allocate(force_smart(3,nat))
+     IF(first_iter) THEN ! For the first iteration
+       ALLOCATE(tau_smart(3,nat))
+       ALLOCATE(force_smart(3,nat))
        tau_smart=tau
        etot_smart=etot
        force_smart=force
        first_iter=.false.
-       return
-     endif
+       RETURN
+     ENDIF
 
      kt = temperature / ry_to_kelvin
-     sigma2 =  2.D0*dt*kt 
+     sigma2 =  2.D0*dt*kt
 
      T_ij=0.0d0
      T_ji=0.0d0
-     do ia=1,nat
-       do ip = 1, 3
+     DO ia=1,nat
+       DO ip = 1, 3
          T_ij=T_ij+((tau(ip,ia)-tau_smart(ip,ia))*alat-dt*force_smart(ip,ia))**2
          T_ji=T_ji+((tau_smart(ip,ia)-tau(ip,ia))*alat-dt*force(ip,ia))**2
-       enddo
-     enddo
+       ENDDO
+     ENDDO
      T_ij=exp(-T_ij/(2*sigma2))
      T_ji=exp(-T_ji/(2*sigma2))
- 
+
      boltzman_ji=exp(-(etot-etot_smart)/kt)
 
      p_smc=T_ji*boltzman_ji/T_ij
 
-     write(stdout, '(5x,"The old energy is:",3x,F17.8," Ry")') etot_smart
-     write(stdout, '(5x,"The new energy is:",3x,F17.8," Ry")') etot
-     write(stdout, '(5x,"The possibility to accept this step is:",3x,F10.7/)') p_smc
-     write(stdout, '(5x,"Nervously waiting for the fate ..."/)')
-     
+     WRITE(stdout, '(5x,"The old energy is:",3x,F17.8," Ry")') etot_smart
+     WRITE(stdout, '(5x,"The new energy is:",3x,F17.8," Ry")') etot
+     WRITE(stdout, '(5x,"The possibility to accept this step is:",3x,F10.7/)') p_smc
+     WRITE(stdout, '(5x,"Nervously waiting for the fate ..."/)')
+
      ! Decide if accept the new config
      temp = randy()
-     write(stdout, '(5x,"The fate says:",5x,F10.7)') temp
-     if(temp .le. p_smc) then
-       write(stdout, '(5x,"The new config is accepted")')
+     WRITE(stdout, '(5x,"The fate says:",5x,F10.7)') temp
+     IF(temp <= p_smc) THEN
+       WRITE(stdout, '(5x,"The new config is accepted")')
        num_accept=num_accept+1
        tau_smart=tau
        etot_smart=etot
        force_smart=force
-     else
-       write(stdout, '(5x,"The new config is not accepted")')
+     ELSE
+       WRITE(stdout, '(5x,"The new config is not accepted")')
        tau=tau_smart
        etot=etot_smart
        force=force_smart
-     endif
+     ENDIF
 
-     write (stdout, '(5x,"The current acceptance is :",3x,F10.6)') dble(num_accept)/istep
+     WRITE (stdout, '(5x,"The current acceptance is :",3x,F10.6)') dble(num_accept)/istep
 
      ! Print the trajectory
-#ifdef __MPI  
-     if(ionode) then
+#ifdef __MPI
+     IF(ionode) THEN
 #endif
      OPEN(117,file="trajectory-"//trim(prefix)//".xyz",status="unknown",position='APPEND')
-     write(117,'(I5)') nat
-     write(117,'("# Step: ",I5,5x,"Total energy: ",F17.8,5x,"Ry")') istep-1, etot
-     do ia = 1, nat
+     WRITE(117,'(I5)') nat
+     WRITE(117,'("# Step: ",I5,5x,"Total energy: ",F17.8,5x,"Ry")') istep-1, etot
+     DO ia = 1, nat
        WRITE( 117, '(A3,3X,3F14.9)') atm(ityp(ia)),tau(:,ia)*alat*bohr_radius_angs
-     enddo
-     close(117)
-#ifdef __MPI  
-     endif
+     ENDDO
+     CLOSE(117)
+#ifdef __MPI
+     ENDIF
 #endif
 
-     return
-   end subroutine smart_MC
-   
+     RETURN
+   END SUBROUTINE smart_MC
+
 END MODULE dynamics_module

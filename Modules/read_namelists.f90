@@ -457,7 +457,7 @@ MODULE read_namelists_module
        ion_velocities = 'default'
        !
        ! ... ( 'nose' | 'not_controlled' | 'rescaling' | 'berendsen' |
-       !       'andersen' | 'langevin' )
+       !       'andersen' | 'initial' )
        !
        ion_temperature = 'not_controlled'
        !
