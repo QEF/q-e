@@ -31,7 +31,7 @@ MODULE dynamics_module
    !
    SAVE
    PRIVATE
-   PUBLIC :: verlet, proj_verlet, terminate_verlet, terminate_proj_verlet, &
+   PUBLIC :: verlet, proj_verlet, terminate_verlet, &
              langevin_md, smart_MC, allocate_dyn_vars, deallocate_dyn_vars
    PUBLIC :: temperature, refold_pos, vel
    PUBLIC :: dt, delta_t, nraise, control_temp, thermostat
@@ -725,9 +725,6 @@ CONTAINS
      !------------------------------------------------------------------------
      !
      USE io_global, ONLY : stdout
-     USE control_flags,  ONLY : conv_ions
-     !
-     conv_ions = .true.
      !
      WRITE( UNIT = stdout, &
           FMT = '(/,5X,"The maximum number of steps has been reached.")' )
@@ -739,7 +736,7 @@ CONTAINS
    END SUBROUTINE terminate_verlet
    !
    !------------------------------------------------------------------------
-   SUBROUTINE proj_verlet()
+   SUBROUTINE proj_verlet( conv_ions )
       !------------------------------------------------------------------------
       !
       ! ... This routine performs one step of structural relaxation using
@@ -750,11 +747,12 @@ CONTAINS
       USE ener,          ONLY : etot
       USE force_mod,     ONLY : force
       USE relax,         ONLY : epse, epsf
-      USE control_flags, ONLY : istep, conv_ions, lconstrain
+      USE control_flags, ONLY : istep, lconstrain
       !
       USE constraints_module, ONLY : remove_constr_force, check_constraint
       !
       IMPLICIT NONE
+      LOGICAL, INTENT(OUT) :: conv_ions
       !
       REAL(DP), ALLOCATABLE :: step(:,:)
       REAL(DP)              :: norm_step, etotold, delta(3)
@@ -772,6 +770,7 @@ CONTAINS
       tau_new(:,:) = 0.D0
       vel(:,:)     = 0.D0
       acc(:,:)     = 0.D0
+      conv_ions = .FALSE.
       !
       CALL seqopn( 4, 'md', 'FORMATTED', file_exists )
       !
@@ -796,7 +795,6 @@ CONTAINS
          istep = 0
          WRITE( UNIT = stdout, &
                 FMT = '(/,5X,"Damped Dynamics Calculation")' )
-         conv_ions = .false.
          !
       ENDIF
       !
@@ -920,23 +918,6 @@ CONTAINS
       DEALLOCATE( step )
       !
    END SUBROUTINE proj_verlet
-   !
-   !------------------------------------------------------------------------
-   SUBROUTINE terminate_proj_verlet
-     !------------------------------------------------------------------------
-     !
-     USE io_global, ONLY : stdout
-     USE control_flags,  ONLY : conv_ions
-     !
-     conv_ions = .true.
-     !
-     WRITE( UNIT = stdout, &
-             FMT = '(/,5X,"The maximum number of steps has been reached.")' )
-     WRITE( UNIT = stdout, &
-             FMT = '(/,5X,"End of molecular dynamics calculation")' )
-     !
-   END SUBROUTINE terminate_proj_verlet
-   !
    !------------------------------------------------------------------------
    SUBROUTINE langevin_md()
       !------------------------------------------------------------------------
@@ -947,7 +928,7 @@ CONTAINS
       USE cell_base,      ONLY : alat
       USE ener,           ONLY : etot
       USE force_mod,      ONLY : force
-      USE control_flags,  ONLY : istep, conv_ions, lconstrain
+      USE control_flags,  ONLY : istep, lconstrain
       USE random_numbers, ONLY : gauss_dist
       !
       USE constraints_module, ONLY : nconstr
@@ -1489,7 +1470,7 @@ CONTAINS
      USE cell_base,      ONLY : alat
      USE ener,           ONLY : etot
      USE force_mod,      ONLY : force
-     USE control_flags,  ONLY : istep, nstep, conv_ions, lconstrain
+     USE control_flags,  ONLY : istep, nstep, lconstrain
      USE constraints_module, ONLY : remove_constr_force, check_constraint
      USE random_numbers, ONLY : randy
      USE io_files,      ONLY : prefix

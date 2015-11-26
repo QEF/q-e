@@ -50,8 +50,7 @@ SUBROUTINE move_ions ( idone )
   USE mp,                     ONLY : mp_bcast
   USE bfgs_module,            ONLY : bfgs, terminate_bfgs
   USE basic_algebra_routines, ONLY : norm
-  USE dynamics_module,        ONLY : verlet, terminate_verlet, proj_verlet, &
-                                     terminate_proj_verlet
+  USE dynamics_module,        ONLY : verlet, terminate_verlet, proj_verlet
   USE dynamics_module,        ONLY : smart_MC, langevin_md
   USE fcp                ,    ONLY : fcp_verlet, fcp_line_minimisation
   USE fcp_variables,          ONLY : lfcpopt, lfcpdyn, fcp_mu, &
@@ -268,11 +267,11 @@ SUBROUTINE move_ions ( idone )
         !
         IF ( calc == ' ' ) THEN
            !
-           ! ... dynamics algorithms
+           ! ... fixed-cell molecular dynamics algorithms
            !
            IF ( ldamped ) THEN
               !
-              CALL proj_verlet()
+              CALL proj_verlet( conv_ions )
               !
               ! ... relax for FCP
               !
@@ -291,7 +290,12 @@ SUBROUTINE move_ions ( idone )
                      SUM( zv(ityp(1:nat)) ) - nelec
                  END IF
               END IF
-              IF ( idone >= nstep ) CALL terminate_proj_verlet () 
+              IF ( .NOT. conv_ions .AND. idone >= nstep ) THEN
+                 WRITE( UNIT = stdout, FMT =  &
+                     '(/,5X,"The maximum number of steps has been reached.")' )
+                 WRITE( UNIT = stdout, &
+                      FMT = '(/,5X,"End of molecular dynamics calculation")' )
+              END IF
               !
            ELSE IF ( llang ) THEN
               !
@@ -304,7 +308,13 @@ SUBROUTINE move_ions ( idone )
               ! ... dynamics for FCP
               !
               IF ( lfcpdyn ) CALL fcp_verlet()
-              IF ( idone >= nstep ) CALL terminate_proj_verlet () 
+              IF ( idone >= nstep ) THEN
+                 WRITE( UNIT = stdout, FMT =  &
+                     '(/,5X,"The maximum number of steps has been reached.")' )
+                 WRITE( UNIT = stdout, &
+                      FMT = '(/,5X,"End of molecular dynamics calculation")' )
+                 conv_ions = .true.
+              END IF
               !
            ELSE
               !
@@ -313,7 +323,10 @@ SUBROUTINE move_ions ( idone )
               ! ... dynamics for FCP
               !
               IF ( lfcpdyn ) CALL fcp_verlet()
-              IF ( idone >= nstep) CALL terminate_verlet()
+              IF ( idone >= nstep) THEN
+                 CALL terminate_verlet()
+                 conv_ions = .true.
+              END IF
               !
            END IF
            !
@@ -321,7 +334,15 @@ SUBROUTINE move_ions ( idone )
            !
            ! ... variable cell shape md
            !
-           CALL vcsmd()
+           CALL vcsmd( conv_ions )
+           !
+           ! ... after nstep, set conv_ions to T for MD, to F for damped MD
+           !
+           IF ( .NOT.conv_ions .AND. idone >= nstep ) THEN
+              WRITE( UNIT = stdout, FMT = '(/,5X,"Maximum number of ", &
+             &    "iterations reached, stopping")' )
+              conv_ions = ( calc(2:2) == 'd' )
+           END IF
            !
         END IF
         !
