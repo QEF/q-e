@@ -24,6 +24,7 @@ gau-pbe    Si      GAU-PBE functional
 hse-si111  Si      HSE hybrid functional, nq=1
 hse-si222  Si      HSE hybrid functional, nq=2
 hse-si444  Si      HSE hybrid functional, nq=4
+langevin  H_2      Langevin dynamics, Smart Monte Carlo algorithm
 lattice   H_2      all bravais lattices, CELL_PARAMETERS, a b c parameters
                    Gamma and automatic k-points
 lda+U     FeO      LDA+U with standard and user-defined occupancies

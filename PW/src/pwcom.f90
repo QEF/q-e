@@ -284,7 +284,7 @@ MODULE cellmd
   !
   CHARACTER(len=2) :: &
        calc='  '          ! main switch for variable cell shape MD
-                          ! see readin, vcsmd and/or INPUT files
+                          ! see move_ions and vcsmd for allowed values
   !
 END MODULE cellmd
 !

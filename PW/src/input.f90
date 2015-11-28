@@ -417,10 +417,10 @@ SUBROUTINE iosys()
         !
      END SELECT
      !
-     IF ( calc(2:2) /= 'm' .AND. .NOT. lbfgs) &
-        CALL errore( 'iosys', 'calculation='// trim( calculation ) // &
-                   & ': incompatible ion (' // trim( ion_dynamics )// &
-                   & ') and cell dynamics ('// trim(cell_dynamics )// ')', 1 )
+     IF ( lbfgs .AND. TRIM(ion_dynamics) /= 'bfgs' ) &
+        CALL infomsg( 'iosys', 'calculation='// trim( calculation ) // &
+                   & ': ion dynamics ' // trim( ion_dynamics )// &
+                   & " ignored, 'bfgs' assumed" )
      !
   CASE( 'vc-md' )
      !

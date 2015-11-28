@@ -1,0 +1,35 @@
+   &CONTROL
+      calculation = 'md',
+      nstep=10,
+      dt=1
+   /
+   &SYSTEM
+      ibrav=8,
+      celldm(1)=6
+      celldm(2)=1
+      celldm(3)=1.5
+      nat=2
+      ntyp=1,
+      nbnd=20,
+      ecutwfc=25.0,
+      ecutrho=200.0,
+      nosym=.true.
+   /
+   &ELECTRONS
+      electron_maxstep = 50,
+      mixing_mode = 'plain',
+      mixing_beta = 0.3,
+      conv_thr =  1.0d-8,
+   /
+   &IONS
+      ion_dynamics='bfgs',
+      upscale=100,
+      ion_dynamics='langevin'
+      tempw=300.D0
+   /
+ATOMIC_SPECIES
+ H   1.001   H.pbe-rrkjus.UPF
+ATOMIC_POSITIONS (angstrom)
+H        1.500000000   1.500000000   2.898689449    0   0   1
+H        1.500000000   1.500000000   2.101310551    0   0   1
+K_POINTS {gamma}
