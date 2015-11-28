@@ -150,8 +150,7 @@ SUBROUTINE iosys()
                             lkpoint_dir_      => lkpoint_dir, &
                             tqr_              => tqr, &
                             io_level, ethr, lscf, lbfgs, lmd, &
-                            ldamped, lbands, llang, use_SMC,  &
-                            lconstrain, restart, twfcollect, &
+                            lbands, lconstrain, restart, twfcollect, &
                             llondon, do_makov_payne, lxdm, &
                             ts_vdw_           => ts_vdw, &
                             lecrpa_           => lecrpa, &
@@ -337,7 +336,7 @@ SUBROUTINE iosys()
      CASE ( 'damp' )
         !
         lmd     = .true.
-        ldamped = .true.
+        calc    = 'vm'
         !
         ntcheck = nstep + 1
         !
@@ -358,14 +357,18 @@ SUBROUTINE iosys()
      SELECT CASE( trim( ion_dynamics ) )
      CASE( 'verlet' )
         !
-        CONTINUE
+        calc        = 'vd'
         !
-     CASE( 'langevin', 'langevin-smc', 'langevin+smc' )
+     CASE( 'langevin' )
         !
-        llang       = .true.
+        calc        = 'ld'
         temperature = tempw
-        use_SMC     = ( trim( ion_dynamics ) == 'langevin-smc' .OR. & 
-                        trim( ion_dynamics ) == 'langevin+smc' )
+        !
+     CASE( 'langevin-smc', 'langevin+smc' )
+        !
+        calc        = 'ls'
+        temperature = tempw
+        !
         !
      CASE DEFAULT
         !
@@ -380,7 +383,6 @@ SUBROUTINE iosys()
      lmd       = .true.
      lmovecell = .true.
      lforce    = .true.
-     ldamped   = .true.
      !
      epse =  etot_conv_thr
      epsf =  forc_conv_thr
@@ -406,7 +408,6 @@ SUBROUTINE iosys()
         !
         lbfgs = .true.
         lmd   = .false.
-        ldamped = .false.
         !
      CASE DEFAULT
         !
@@ -416,7 +417,7 @@ SUBROUTINE iosys()
         !
      END SELECT
      !
-     IF ( .not. ldamped .and. .not. lbfgs) &
+     IF ( calc(2:2) /= 'm' .AND. .NOT. lbfgs) &
         CALL errore( 'iosys', 'calculation='// trim( calculation ) // &
                    & ': incompatible ion (' // trim( ion_dynamics )// &
                    & ') and cell dynamics ('// trim(cell_dynamics )// ')', 1 )
@@ -446,15 +447,15 @@ SUBROUTINE iosys()
      CASE DEFAULT
         !
         CALL errore( 'iosys', 'calculation=' // trim( calculation ) // &
-                   & ': ion_dynamics=' // trim( ion_dynamics ) // &
+                   & ': cell_dynamics=' // trim( cell_dynamics ) // &
                    & ' not supported', 1 )
         !
      END SELECT
      !
      IF ( trim( ion_dynamics ) /= 'beeman' ) &
-        CALL errore( 'iosys', 'calculation=' // trim( calculation ) // &
+        CALL infomsg( 'iosys', 'calculation=' // trim( calculation ) // &
                    & ': ion_dynamics=' // trim( ion_dynamics ) // &
-                   & ' not supported', 1 )
+                   & " ignored, assuming 'beeman'" )
      !
   CASE DEFAULT
      !

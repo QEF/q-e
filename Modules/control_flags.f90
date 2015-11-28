@@ -169,8 +169,6 @@ MODULE control_flags
     lscf    =.FALSE., &! if .TRUE. the calc. is selfconsistent
     lbfgs   =.FALSE., &! if .TRUE. the calc. is a relaxation based on BFGS
     lmd     =.FALSE., &! if .TRUE. the calc. is a dynamics
-    llang   =.FALSE., &! if .TRUE. the calc. is Langevin dynamics
-    use_SMC =.FALSE., &! if .TRUE. use the Smart Monte Carlo method
     lwf     =.FALSE., &! if .TRUE. the calc. is with wannier functions
     !=================================================================
     !exx_wf related 
@@ -179,7 +177,6 @@ MODULE control_flags
     !=================================================================
     lbands  =.FALSE., &! if .TRUE. the calc. is band structure
     lconstrain=.FALSE.,&! if .TRUE. the calc. is constraint
-    ldamped =.FALSE., &! if .TRUE. the calc. is a damped dynamics
     llondon =.FALSE., & ! if .TRUE. compute Grimme D2 dispersion corrections
     ts_vdw  =.FALSE., & ! as above for Tkatchenko-Scheffler disp.corrections
     lxdm    =.FALSE., & ! if .TRUE. compute XDM dispersion corrections

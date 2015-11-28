@@ -16,9 +16,6 @@ SUBROUTINE move_ions ( idone )
   ! ...    lmovecell           Variable-cell calculation
   ! ...    calc                Type of MD
   ! ...    lconstrain          constrained MD
-  ! ...    ldamp               damped MD (projected Verlet)
-  ! ...    llang               Langevin MD 
-  ! ...    use_SMC             Smart MonteCarlo (with Langevin MD)
   ! ..  "idone" is the counter on ionic moves, "nstep" their total number 
   ! ... "istep" contains the number of all steps including previous runs
   ! ... Coefficients for potential and wavefunctions extrapolation are
@@ -39,9 +36,9 @@ SUBROUTINE move_ions ( idone )
   USE symm_base,              ONLY : checkallsym
   USE ener,                   ONLY : etot, ef
   USE force_mod,              ONLY : force, sigma
-  USE control_flags,          ONLY : istep, nstep, upscale, lbfgs, ldamped, &
-                                     lconstrain, conv_ions, use_SMC, &
-                                     lmd, llang, history, tr2
+  USE control_flags,          ONLY : istep, nstep, upscale, lbfgs, &
+                                     lconstrain, conv_ions, &
+                                     lmd, history, tr2
   USE basis,                  ONLY : starting_wfc
   USE relax,                  ONLY : epse, epsf, epsp, starting_scf_threshold
   USE lsda_mod,               ONLY : lsda, absmag
@@ -265,72 +262,67 @@ SUBROUTINE move_ions ( idone )
      !
      IF ( lmd ) THEN
         !
-        IF ( calc == ' ' ) THEN
+        ! ... fixed-cell molecular dynamics algorithms first:
+        ! ... projected Verlet, Langevin, Verlet
+        !
+        IF ( calc == 'vm' ) THEN
            !
-           ! ... fixed-cell molecular dynamics algorithms
+           CALL proj_verlet( conv_ions )
            !
-           IF ( ldamped ) THEN
+           ! ... relax for FCP
+           !
+           IF ( lfcpopt ) THEN
+              CALL fcp_line_minimisation( conv_fcp )
+              IF ( .not. conv_fcp .and. idone < nstep ) conv_ions = .FALSE.
               !
-              CALL proj_verlet( conv_ions )
+              ! ... FCP output
               !
-              ! ... relax for FCP
-              !
-              IF ( lfcpopt ) THEN
-                 CALL fcp_line_minimisation( conv_fcp )
-                 IF ( .not. conv_fcp .and. idone < nstep ) THEN
-                   conv_ions = .FALSE.
-                 END IF
-                 !
-                 ! ... FCP output
-                 !
-                 IF ( conv_ions ) THEN
-                   WRITE( stdout, '(5X,"FCP : converged ", &
-                    & "( criteria force < ", ES8.1," )")') fcp_relax_crit
-                   WRITE( stdout, '(5X,"FCP : final tot_charge =",F12.6,/)') &
-                     SUM( zv(ityp(1:nat)) ) - nelec
-                 END IF
+              IF ( conv_ions ) THEN
+                 WRITE( stdout, '(5X,"FCP : converged ", &
+                      & "( criteria force < ", ES8.1," )")') fcp_relax_crit
+                 WRITE( stdout, '(5X,"FCP : final tot_charge =",F12.6,/)') &
+                      SUM( zv(ityp(1:nat)) ) - nelec
               END IF
-              IF ( .NOT. conv_ions .AND. idone >= nstep ) THEN
-                 WRITE( UNIT = stdout, FMT =  &
-                     '(/,5X,"The maximum number of steps has been reached.")' )
-                 WRITE( UNIT = stdout, &
-                      FMT = '(/,5X,"End of molecular dynamics calculation")' )
-              END IF
-              !
-           ELSE IF ( llang ) THEN
-              !
-              ! ... for smart monte carlo method
-              !
-              IF (use_SMC) CALL smart_MC()
-              !
-              CALL langevin_md()
-              !
-              ! ... dynamics for FCP
-              !
-              IF ( lfcpdyn ) CALL fcp_verlet()
-              IF ( idone >= nstep ) THEN
-                 WRITE( UNIT = stdout, FMT =  &
-                     '(/,5X,"The maximum number of steps has been reached.")' )
-                 WRITE( UNIT = stdout, &
-                      FMT = '(/,5X,"End of molecular dynamics calculation")' )
-                 conv_ions = .true.
-              END IF
-              !
-           ELSE
-              !
-              CALL verlet()
-              !
-              ! ... dynamics for FCP
-              !
-              IF ( lfcpdyn ) CALL fcp_verlet()
-              IF ( idone >= nstep) THEN
-                 CALL terminate_verlet()
-                 conv_ions = .true.
-              END IF
-              !
+           END IF
+           IF ( .NOT. conv_ions .AND. idone >= nstep ) THEN
+              WRITE( UNIT = stdout, FMT =  &
+                   '(/,5X,"The maximum number of steps has been reached.")' )
+              WRITE( UNIT = stdout, &
+                   FMT = '(/,5X,"End of molecular dynamics calculation")' )
            END IF
            !
-        ELSE IF ( calc /= ' ' ) THEN
+        ELSE IF ( calc(1:1) == 'l' ) THEN
+           !
+           ! ... for smart monte carlo method
+           !
+           IF ( calc(2:2) == 's' ) CALL smart_MC()
+           !
+           CALL langevin_md()
+           !
+           ! ... dynamics for FCP
+           !
+           IF ( lfcpdyn ) CALL fcp_verlet()
+           IF ( idone >= nstep ) THEN
+              WRITE( UNIT = stdout, FMT =  &
+                   '(/,5X,"The maximum number of steps has been reached.")' )
+              WRITE( UNIT = stdout, &
+                   FMT = '(/,5X,"End of molecular dynamics calculation")' )
+              conv_ions = .true.
+           END IF
+           !
+        ELSE IF ( calc == 'vd' ) THEN
+           !
+           CALL verlet()
+           !
+           ! ... dynamics for FCP
+           !
+           IF ( lfcpdyn ) CALL fcp_verlet()
+           IF ( idone >= nstep) THEN
+              CALL terminate_verlet()
+              conv_ions = .true.
+           END IF
+           !
+        ELSE
            !
            ! ... variable cell shape md
            !
