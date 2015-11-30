@@ -13,10 +13,11 @@ SUBROUTINE lr_read_d0psi()
   ! restart the Lanczos recursion.
   !
   ! Modified by Osman Baris Malcioglu (2009)
+  ! Modified by Iurii Timrov (2015)
   !
   USE klist,                ONLY : nks,degauss
   USE io_files,             ONLY : prefix, diropn, tmp_dir, wfc_dir
-  USE lr_variables,         ONLY : d0psi, n_ipol, LR_polarization, lr_verbosity, &
+  USE lr_variables,         ONLY : d0psi, d0psi2, n_ipol, LR_polarization, lr_verbosity, &
                                  & nwordd0psi, iund0psi, eels
   USE wvfct,                ONLY : nbnd, npwx, et
   USE io_global,            ONLY : stdout
@@ -85,6 +86,16 @@ SUBROUTINE lr_read_d0psi()
      CLOSE( UNIT = iund0psi)
      !
   ENDDO
+  !
+  ! EELS: Reading of d0psi2 (n_ipol=1)
+  !
+  IF (eels) THEN
+     !
+     CALL diropn ( iund0psi, 'd0psi2.'//trim(int_to_char(LR_polarization)), nwordd0psi, exst)
+     CALL davcio(d0psi2(1,1,1,1),nwordd0psi,iund0psi,1,-1)
+     CLOSE( UNIT = iund0psi)
+     !
+  ENDIF
   !
   ! End of file i/o
   !

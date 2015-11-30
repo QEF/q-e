@@ -47,7 +47,6 @@ SUBROUTINE lr_calc_dens_eels (drhoscf, dpsi)
   USE mp_global,             ONLY : inter_pool_comm, intra_bgrp_comm
   USE mp_bands,              ONLY : me_bgrp, ntask_groups
   USE mp,                    ONLY : mp_sum
-  USE iso_c_binding,         ONLY : c_int
   !
   IMPLICIT NONE
   !
@@ -66,7 +65,6 @@ SUBROUTINE lr_calc_dens_eels (drhoscf, dpsi)
   ! the change of wavefunctions in real space
   COMPLEX(DP), ALLOCATABLE :: tg_psi(:), tg_dpsi(:), tg_drho(:)
   ! arrays for task groups parallelization
-  INTEGER(kind=c_int) :: kilobytes
   !
   CALL start_clock('lr_calc_dens')
   !
@@ -100,12 +98,6 @@ SUBROUTINE lr_calc_dens_eels (drhoscf, dpsi)
      dbecsum(:,:) = (0.0d0, 0.0d0)
   ENDIF
   !
-  ! Memory usage
-  !
-  !CALL memstat( kilobytes )
-  !IF ( kilobytes > 0 ) WRITE(stdout,'(5X,"lr_calc_dens_eels, & 
-  !      & per-process dynamical memory:",f7.1,"Mb")' ) kilobytes/1000.0
-  !
   ! dpsi contains the   perturbed wavefunctions of this k point
   ! evc  contains the unperturbed wavefunctions of this k point
   !
@@ -125,23 +117,19 @@ SUBROUTINE lr_calc_dens_eels (drhoscf, dpsi)
      CALL gk_sort( xk(1,ikk), ngm, g, ( ecutwfc / tpiba2 ), npw,  igk,  g2kin )
      CALL gk_sort( xk(1,ikq), ngm, g, ( ecutwfc / tpiba2 ), npwq, igkq, g2kin )
      !
-     ! Read the unperturbed wavefuctions evc(k)
+     ! Read the unperturbed wavefuctions evc at k
      !
      IF (lr_periodic) THEN
         evc(:,:) = evc0(:,:,ik)
-       !evq(:,:) = evc0(:,:,ik)
      ELSE
-       IF (nksq.gt.1) THEN
-          CALL davcio (evc, lrwfc, iuwfc, ikk, - 1)
-         !CALL davcio (evq, lrwfc, iuwfc, ikq, - 1)    ! not used
-       ENDIF
+        IF (nksq > 1) CALL davcio (evc, lrwfc, iuwfc, ikk, - 1)
      ENDIF
      !
      DO ibnd = 1, nbnd_occ(ikk), incr
         !
         ! The weight
         !
-        wgt = 2.0d0*wg(ibnd,ikk)/omega
+        wgt = 2.0d0*wk(ikk)/omega
         !
         IF (dffts%have_task_groups) THEN
            !

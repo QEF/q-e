@@ -1181,11 +1181,6 @@ paw_symmetry.o : ../../Modules/noncol.o
 paw_symmetry.o : ../../Modules/uspp.o
 paw_symmetry.o : pwcom.o
 paw_symmetry.o : symm_base.o
-pcg.o : ../../Modules/control_flags.o
-pcg.o : ../../Modules/io_global.o
-pcg.o : ../../Modules/kind.o
-pcg.o : ../../Modules/mp.o
-pcg.o : ../../Modules/mp_bands.o
 plugin_clean.o : ../../Modules/plugin_flags.o
 plugin_clock.o : ../../Modules/io_global.o
 plugin_clock.o : ../../Modules/plugin_flags.o

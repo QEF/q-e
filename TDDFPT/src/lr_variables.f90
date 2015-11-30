@@ -80,6 +80,7 @@ MODULE lr_variables
        sevc1(:,:,:,:),    &    ! S * "    "
        sevc1_new(:,:,:,:),&    ! S * "    "
        d0psi(:,:,:,:),    &    ! for saving the original starting vectors
+       d0psi2(:,:,:,:),   &    ! for saving the original starting vectors (without P^+_c)
        revc0(:,:,:),      &    ! ground state wavefunctions in real space
        tg_revc0(:,:,:)         ! ground state wavefunctions in real space
   REAL(kind=dp), ALLOCATABLE ::    &

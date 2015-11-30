@@ -126,19 +126,15 @@ SUBROUTINE lr_calc_dens_eels_nc (drhoscf, dpsi)
      !
      IF (lr_periodic) THEN
         evc(:,:) = evc0(:,:,ik)
-       !evq(:,:) = evc0(:,:,ik)
      ELSE
-       IF (nksq.gt.1) THEN
-          CALL davcio (evc, lrwfc, iuwfc, ikk, - 1)
-         !call davcio (evq, lrwfc, iuwfc, ikq, - 1)    ! not used
-       ENDIF
+        IF (nksq > 1) CALL davcio (evc, lrwfc, iuwfc, ikk, - 1)
      ENDIF
      !
      DO ibnd = 1, nbnd_occ(ikk), incr
         !
         ! The weight
         !
-        wgt = 2.0d0*wg(ibnd,ikk)/omega
+        wgt = 2.0d0*wk(ikk)/omega
         !
         IF (dffts%have_task_groups) THEN
            !

@@ -19,7 +19,7 @@ FUNCTION lr_dot(x,y)
   !
   USE kinds,                ONLY : dp
   USE io_global,            ONLY : stdout
-  USE klist,                ONLY : nks, xk
+  USE klist,                ONLY : nks, xk, wk
   USE realus,               ONLY : npw_k
   USE lsda_mod,             ONLY : nspin
   USE wvfct,                ONLY : npwx,nbnd,wg,npw,igk,ecutwfc,g2kin
@@ -143,7 +143,7 @@ CONTAINS
     IMPLICIT NONE
     INTEGER :: ios, ikk, ikq
     !
-    !if (nksq.gt.1) rewind (unit = iunigk)
+    !IF (nksq > 1) rewind (unit = iunigk)
     !
     DO ik = 1, nksq
        !
@@ -159,22 +159,19 @@ CONTAINS
        !
        CALL gk_sort( xk(1,ikq), ngm, g, ( ecutwfc / tpiba2 ), npwq, igkq, g2kin)
        !
-!      if (nksq.gt.1) then
+!      IF (nksq > 1) THEN
 !         read (iunigk, err = 100, iostat = ios) npw, igk
 !100      call errore ('lr_dot', 'reading igk', abs (ios) )
-!      endif
-       !
-!      if (nksq.gt.1) then
 !         read (iunigk, err = 200, iostat = ios) npwq, igkq
 !200      call errore ('lr_dot', 'reading igkq', abs (ios) )
-!      endif
+!      ENDIF
        !
        DO ibnd = 1, nbnd_occ(ikk)
           !
           IF (noncolin) THEN
-             lr_dot = lr_dot + wg(ibnd,ikk) * ZDOTC(npwx*npol,x(1,ibnd,ik),1,y(1,ibnd,ik),1)
+             lr_dot = lr_dot + wk(ikk) * ZDOTC(npwx*npol,x(1,ibnd,ik),1,y(1,ibnd,ik),1)
           ELSE
-             lr_dot = lr_dot + wg(ibnd,ikk) * ZDOTC(npwq,x(1,ibnd,ik),1,y(1,ibnd,ik),1)
+             lr_dot = lr_dot + wk(ikk) * ZDOTC(npwq,x(1,ibnd,ik),1,y(1,ibnd,ik),1)
           ENDIF
           !
        ENDDO

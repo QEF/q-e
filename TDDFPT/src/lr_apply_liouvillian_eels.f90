@@ -148,7 +148,7 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, sevc1_new, interaction )
   ! 1) HXC term : P_c (delta V_HXC(q)) psi(k) 
   ! 2) (H - E) * psi(k+q)
   !
-  !if (nksq.gt.1) rewind (unit = iunigk)
+  ! rewind (unit = iunigk)
   ! 
   DO ik = 1, nksq
      !
@@ -172,15 +172,12 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, sevc1_new, interaction )
      !
      CALL init_us_2 (npwq, igkq, xk(1,ikq), vkb)
      !
-!     if (nksq.gt.1) then
+!    IF (nksq > 1) THEN
 !        read (iunigk, err = 100, iostat = ios) npw, igk
 !100     call errore ('lr_apply_liouvillian', 'reading igk', abs (ios) )
-!     endif
-!     !
-!     if (nksq.gt.1) then
 !        read (iunigk, err = 200, iostat = ios) npwq, igkq
 !200     call errore ('lr_apply_liouvillian', 'reading igkq', abs (ios) )
-!     endif
+!    ENDIF
      !
      ! Read unperturbed wavefuctions psi(k) and psi(k+q)
      !
@@ -188,7 +185,7 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, sevc1_new, interaction )
         evc(:,:) = evc0(:,:,ik)
         evq(:,:) = evc0(:,:,ik)
      ELSE
-        IF (nksq.gt.1) THEN
+        IF (nksq > 1) THEN 
            CALL davcio (evc, lrwfc, iuwfc, ikk, - 1)
            CALL davcio (evq, lrwfc, iuwfc, ikq, - 1)
         ENDIF
@@ -272,9 +269,10 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, sevc1_new, interaction )
         !
         IF (okvan) THEN
            !
-           ! Compute the integral of the perturbed potential with the Q function.
+           ! Compute the integral of the HXV response potential with the Q function.
            ! Input : dvrsc = V_HXC(r)
-           ! Output: int3 = \int conjg(V_HXC(r)) * Q_nm(r) dr 
+           ! Output: int3 = \int V_HXC(r) * Q^*_nm(r) dr 
+           ! See Eq.(B22) in Ref. A. Dal Corso, PRB 64, 235118 (2001)
            !
            CALL newdq(dvrsc, 1)
            !

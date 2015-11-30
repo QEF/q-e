@@ -23,6 +23,11 @@ Source: PHYSICAL REVIEW LETTERS   Volume: 96   Issue: 11 Article Number: 113001 
 Electron energy loss and inelastic x-ray scattering cross sections from time-dependent density-functional perturbation theory
 Author(s): I. Timrov, N. Vast, R. Gebauer, and S. Baroni
 Source: PHYSICAL REVIEW B   Volume: 88   Article Number: 064301   Published: AUG 2 2013
+
+turboEELS - A code for the simulation of the electron energy loss and inelastic X-ray scattering spectra using the Liouville-Lanczos approach to time-dependent density-functional perturbation theory
+Author(s): I. Timrov, N. Vast, R. Gebauer, and S. Baroni
+Source: Computer Physics Communications, Volume: 196, Article Number: 460 Published: 4 JUNE 2015
+
 -------------------------------------------------------------------------------
 
 This module uses subroutines from PW and PH along with the general infrasturcture provided by

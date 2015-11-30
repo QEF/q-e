@@ -1,0 +1,13 @@
+&lr_input
+    prefix="Ag",
+    outdir='./out',
+    restart_step = 250,
+    restart = .false.
+/
+&lr_control
+    itermax = 500,
+    q1 = 0.0d0,
+    q2 = 0.0d0,
+    q3 = 0.051045d0,
+    pseudo_hermitian = .true.
+/

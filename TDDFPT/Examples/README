@@ -30,8 +30,8 @@ CH4-DAV-ENVIRON: Example of using Davidson algorithm and the Environ module (imp
 turbo_eels.x :
 
 EELS-Si-NCPP-LDA: Bulk silicon,  Norm-Conserving PP, LDA XC-functional
-EELS-Si-USPP-GGA: Bulk silicon,  Ultrasoft PP,       GGA XC-functional
 EELS-Al-NCPP-LDA: Bulk aluminum, Norm-Conserving PP, LDA XC-functional
+EELS-Ag-USPP-GGA: Bulk silver,   Ultrasoft PP,       GGA XC-functional
 EELS-Bi-NCPP-LDA-withSOC: Bulk bismuth, Norm-Conserving PP, LDA XC-functional, with spin-orbit coupling
 
 

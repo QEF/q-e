@@ -45,7 +45,7 @@ SUBROUTINE one_lanczos_step()
     USE klist,                    ONLY : nks,xk
     USE lr_variables,             ONLY : n_ipol, ltammd, pseudo_hermitian, itermax,  &
                                          evc1, evc1_new, sevc1_new, evc1_old, sevc1, &
-                                         evc0, sevc0, d0psi, eels, test_case_no, lr_verbosity, &
+                                         evc0, sevc0, d0psi, d0psi2, eels, test_case_no, lr_verbosity, &
                                          alpha_store, beta_store, gamma_store, zeta_store,     &
                                          charge_response, size_evc, LR_polarization, LR_iteration
     USE uspp,                     ONLY : vkb, nkb, okvan
@@ -269,10 +269,15 @@ SUBROUTINE one_lanczos_step()
        !
        DO ip = 1, n_ipol
           !
-          ! In the ultrasoft case, the S operator was already
+          ! Optics: In the ultrasoft case, the S operator was already
           ! applied to d0psi, so we have <S*d0psi|evc1>.
           !
-          zeta = lr_dot(d0psi(:,:,:,ip),evc1(:,:,:,1)) 
+          IF (eels) THEN
+             zeta = lr_dot(d0psi2(:,:,:,ip),evc1(:,:,:,1))
+          ELSE
+             zeta = lr_dot(d0psi(:,:,:,ip),evc1(:,:,:,1))
+          ENDIF
+          !
           zeta_store (pol_index,ip,LR_iteration) = zeta
           WRITE(stdout,'(5x,"z1= ",1x,i6,2(1x,e22.15))') ip,real(zeta),aimag(zeta)
           !

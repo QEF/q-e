@@ -46,6 +46,7 @@ lr_calc_dens_eels_nc.o \
 lr_read_wf_eels_periodic.o \
 lr_apply_liouvillian_eels.o \
 lr_addusddens.o \
+lr_addus_dvpsi.o \
 lr_run_nscf.o \
 lr_setup_nscf.o \
 lr_sym_eels.o \

@@ -1,6 +1,6 @@
  Warning: Only a single CPU will be used!
 
-     Program TDDFPT_PP v.5.1.2 (svn rev. 11453) starts on 23Mar2015 at 12:37:49 
+     Program TDDFPT_PP v.5.2.1 (svn rev. 11876) starts on 30Nov2015 at 16:13:34 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -34,10 +34,10 @@
      The exact number of electrons:   8.00
      The violation of the f-sum rule:  11.37 %
  
-     TDDFPT_PP    :     4.77s CPU         4.85s WALL
+     TDDFPT_PP    :     5.09s CPU         5.15s WALL
 
  
-   This run was terminated on:  12:37:54  23Mar2015            
+   This run was terminated on:  16:13:40  30Nov2015            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

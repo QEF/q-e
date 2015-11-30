@@ -116,6 +116,11 @@ SUBROUTINE lr_alloc_init()
   evc1_new(:,:,:,:) = (0.0d0,0.0d0)
   d0psi(:,:,:,:)    = (0.0d0,0.0d0)
   !
+  IF (eels) THEN
+     ALLOCATE(d0psi2(npwx*npol,nbnd,nksq,n_ipol))
+     d0psi2(:,:,:,:) = (0.0d0,0.0d0)
+  ENDIF
+  !
   ! Allocate the R-space unperturbed orbitals
   !
   IF (dffts%have_task_groups) THEN
@@ -164,11 +169,6 @@ SUBROUTINE lr_alloc_init()
            ALLOCATE (int3_nc(nhm,nhm,1,nat,nspin))
            int3_nc = (0.0d0, 0.0d0)
         ENDIF
-        !
-        ALLOCATE (becp1(nksq))
-        DO ik = 1, nksq
-           CALL allocate_bec_type (nkb,nbnd,becp1(ik))
-        ENDDO
         !
      ENDIF
      !

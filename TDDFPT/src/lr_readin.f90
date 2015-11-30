@@ -59,7 +59,7 @@ SUBROUTINE lr_readin
   USE io_rho_xml,          ONLY : write_rho
   USE noncollin_module,    ONLY : noncolin
   USE mp_bands,            ONLY : ntask_groups
-  USE constants,           ONLY : eps8
+  USE constants,           ONLY : eps4
 #ifdef __ENVIRON
   USE environ_base,        ONLY : environ_base_init, ir_end
   USE environ_input,       ONLY : read_environ
@@ -352,8 +352,8 @@ SUBROUTINE lr_readin
            xq(3) = q3
         ENDIF
         !
-        IF ( (q1.le.eps8) .AND. (q2.le.eps8) .AND. (q3.le.eps8) ) &
-           CALL errore( 'lr_readin', 'Vanishing transferred momentum is not supported.', 1 )
+        IF ( (q1.lt.eps4) .AND. (q2.lt.eps4) .AND. (q3.lt.eps4) ) &
+           CALL errore( 'lr_readin', 'The transferred momentum |q| is too small, the limit is not implemented.', 1 )
         !
      ENDIF
      !

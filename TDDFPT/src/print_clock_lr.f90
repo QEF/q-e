@@ -82,6 +82,7 @@ SUBROUTINE print_clock_lr()
     CALL print_clock( 'addusdbec' )
     CALL print_clock( 'addusdbec_nc' )
     CALL print_clock( 'lr_addusddens' )
+    CALL print_clock( 'lr_addus_dvpsi' )
    ENDIF
    !
    IF (real_space_debug>0) THEN

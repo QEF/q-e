@@ -15,7 +15,10 @@ Fixed in svn version:
    * pw.x: "task-group" parallelization wasn't working properly when the number
      of bands was smaller than the number of task groups. Affects v.5.2.1.
    * TDDFPT: lrpa (Random Phase Approximation) keyword was not present in 
-     the namelist for turbo_lanczos.x code. 
+     the namelist for turbo_lanczos.x code. The turboEELS code was not 
+     working correctly with just one k point; for metals there were wrong
+     weights leading to small errors near the Fermi level; the code was not
+     working correctly with ultrasoft PP's. 
    * pw.x: stress with TS-vdw wasn't correct - courtesy of Thomas Markovich
 
 Incompatible changes in svn version:

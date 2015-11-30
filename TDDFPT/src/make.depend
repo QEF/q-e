@@ -10,6 +10,13 @@ bcast_lr_input.o : ../../PW/src/realus.o
 bcast_lr_input.o : lr_charg_resp.o
 bcast_lr_input.o : lr_dav_variables.o
 bcast_lr_input.o : lr_variables.o
+lr_addus_dvpsi.o : ../../Modules/cell_base.o
+lr_addus_dvpsi.o : ../../Modules/ions_base.o
+lr_addus_dvpsi.o : ../../Modules/kind.o
+lr_addus_dvpsi.o : ../../Modules/noncol.o
+lr_addus_dvpsi.o : ../../Modules/paw_variables.o
+lr_addus_dvpsi.o : ../../Modules/uspp.o
+lr_addus_dvpsi.o : ../../PHonon/PH/phcom.o
 lr_addusddens.o : ../../FFTXlib/fft_interfaces.o
 lr_addusddens.o : ../../Modules/fft_base.o
 lr_addusddens.o : ../../Modules/ions_base.o
@@ -257,7 +264,6 @@ lr_dvpsi_e.o : ../../PHonon/PH/phcom.o
 lr_dvpsi_e.o : ../../PW/src/pwcom.o
 lr_dvpsi_e.o : ../../PW/src/realus.o
 lr_dvpsi_e.o : lr_variables.o
-lr_dvpsi_eels.o : ../../Modules/becmod.o
 lr_dvpsi_eels.o : ../../Modules/cell_base.o
 lr_dvpsi_eels.o : ../../Modules/constants.o
 lr_dvpsi_eels.o : ../../Modules/fft_base.o
@@ -307,6 +313,7 @@ lr_exx_kernel.o : ../../PW/src/pwcom.o
 lr_exx_kernel.o : ../../PW/src/realus.o
 lr_exx_kernel.o : ../../PW/src/symm_base.o
 lr_exx_kernel.o : lr_variables.o
+lr_init_nfo.o : ../../Modules/becmod.o
 lr_init_nfo.o : ../../Modules/cell_base.o
 lr_init_nfo.o : ../../Modules/constants.o
 lr_init_nfo.o : ../../Modules/fft_base.o
@@ -319,6 +326,7 @@ lr_init_nfo.o : ../../Modules/mp_global.o
 lr_init_nfo.o : ../../Modules/noncol.o
 lr_init_nfo.o : ../../Modules/recvec.o
 lr_init_nfo.o : ../../Modules/uspp.o
+lr_init_nfo.o : ../../Modules/wavefunctions.o
 lr_init_nfo.o : ../../PHonon/PH/phcom.o
 lr_init_nfo.o : ../../PW/src/pwcom.o
 lr_init_nfo.o : ../../PW/src/realus.o

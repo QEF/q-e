@@ -46,7 +46,11 @@ SUBROUTINE lr_init_nfo()
   USE gvecs,                ONLY : doublegrid
   USE units_ph,             ONLY : iuwfc, lrwfc
   USE fft_base,             ONLY : dfftp 
-  USE uspp,                 ONLY : okvan
+  USE uspp,                 ONLY : vkb, okvan, nkb
+  USE wavefunctions_module, ONLY : evc
+  USE phus,                 ONLY : becp1
+  USE becmod,               ONLY : calbec, allocate_bec_type
+  USE eqv,                  ONLY : evq
   !
   IMPLICIT NONE
   !
@@ -125,47 +129,71 @@ SUBROUTINE lr_init_nfo()
   nwordrestart = 2 * nbnd * npwx * npol * nksq
   nwordwfc     =     nbnd * npwx * npol 
   !
-  ! Open the file to read the wavefunctions at k and k+q 
-  ! after the nscf calculation.
+  ! 3) EELS-specific operations
   !
-  IF (eels .AND. .NOT.lr_periodic) THEN
+  IF (eels) THEN
      !
-     iuwfc = 21
-     lrwfc = 2 * nbnd * npwx * npol
-     IF (restart) wfc_dir = tmp_dir_phq
-     CALL diropn (iuwfc, 'wfc', lrwfc, exst)
-     IF (.NOT.exst) THEN
-        CALL errore ('lr_init_nfo', 'file '//trim(prefix)//'.wfc not found', 1)
+     ! Open the file to read the wavefunctions at k and k+q 
+     ! after the nscf calculation.
+     !
+     IF (.NOT.lr_periodic) THEN
+        !
+        iuwfc = 21
+        lrwfc = 2 * nbnd * npwx * npol
+        IF (restart) wfc_dir = tmp_dir_phq
+        CALL diropn (iuwfc, 'wfc', lrwfc, exst)
+        IF (.NOT.exst) THEN
+           CALL errore ('lr_init_nfo', 'file '//trim(prefix)//'.wfc not found', 1)
+        ENDIF
+        !
+        size_evc = nksq * nbnd * npwx * npol 
+        !
      ENDIF
      !
-     size_evc = nksq * nbnd * npwx * npol 
+     ! If restart=.true. recalculate the small group of q.
      !
-  ENDIF
-  !
-  ! 3) EELS: Calculate phases associated with the q vector
-  !    (needed for Ultrasoft PP's) 
-  !
-  IF (eels .AND. okvan) THEN
+     IF (restart) CALL lr_smallgq (xq)
      !
-     ALLOCATE (eigqts(nat))
+     ! USPP-specific initializations
      !
-     DO na = 1, nat
-        ! 
-        arg = ( xq(1) * tau(1,na) + &
-                xq(2) * tau(2,na) + &
-                xq(3) * tau(3,na) ) * tpi
+     IF (okvan) THEN
         !
-        eigqts(na) = cmplx(cos(arg), -sin(arg) ,kind=DP)
+        ! Calculate phases associated with the q vector
         !
-     ENDDO
-     !
-  ENDIF
-  !
-  ! EELS: If restart=.true. recalculate the small group of q.
-  !
-  IF (eels .AND. restart) THEN
-     !
-     CALL lr_smallgq (xq)
+        ALLOCATE (eigqts(nat))
+        !
+        DO na = 1, nat
+           arg = ( xq(1) * tau(1,na) + &
+                   xq(2) * tau(2,na) + &
+                   xq(3) * tau(3,na) ) * tpi
+           eigqts(na) = cmplx(cos(arg), -sin(arg) ,kind=DP)
+        ENDDO
+        !
+        ! Calculate becp1 = <vkb|evc>
+        !
+        ALLOCATE (becp1(nksq))
+        !
+        DO ik = 1, nksq
+           !
+           CALL allocate_bec_type (nkb,nbnd,becp1(ik))
+           !
+           ikk = ikks(ik)
+           !
+           ! Determination of npw and igk.
+           CALL gk_sort( xk(1,ikk), ngm, g, ( ecutwfc / tpiba2 ), npw,  igk,  g2kin )
+           !
+           ! Read the wavefunction evc
+           CALL davcio (evc, lrwfc, iuwfc, ikk, - 1)
+           !
+           ! Calculate beta-functions vkb at k point
+           CALL init_us_2(npw, igk, xk(1,ikk), vkb)
+           !
+           ! Calculate becp1
+           CALL calbec (npw, vkb, evc, becp1(ik))
+           !
+        ENDDO
+        !
+     ENDIF
      !
   ENDIF
   !

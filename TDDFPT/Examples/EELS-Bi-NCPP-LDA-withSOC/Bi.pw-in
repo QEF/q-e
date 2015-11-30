@@ -18,8 +18,6 @@
     degauss = 0.02,
     lspinorb = .true.
     noncolin = .true.
-    nosym=.false.,
-    noinv=.false.
  /
  &electrons
     diagonalization='david'

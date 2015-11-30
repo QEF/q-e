@@ -26,7 +26,8 @@ SUBROUTINE lr_solve_e
   USE io_files,             ONLY : diropn, tmp_dir, wfc_dir
   USE klist,                ONLY : nks, xk, degauss
   USE lr_variables,         ONLY : nwordd0psi, iund0psi,LR_polarization, test_case_no, &
-                                 & n_ipol, evc0, d0psi, evc1, lr_verbosity, d0psi_rs, eels
+                                   & n_ipol, evc0, d0psi, d0psi2, evc1, lr_verbosity, &
+                                   & d0psi_rs, eels
   USE realus,               ONLY : igk_k,npw_k
   USE lsda_mod,             ONLY : lsda, isk, current_spin
   USE uspp,                 ONLY : vkb
@@ -62,7 +63,7 @@ SUBROUTINE lr_solve_e
      ! EELS
      !
      DO ik = 1, nksq
-        CALL lr_dvpsi_eels(ik, d0psi(:,:,ik,1))
+        CALL lr_dvpsi_eels(ik, d0psi(:,:,ik,1), d0psi2(:,:,ik,1))
      ENDDO
      !
   ELSE
@@ -100,30 +101,6 @@ SUBROUTINE lr_solve_e
   !
   IF (gstart == 2 .and. gamma_only) d0psi(1,:,:,:) = cmplx(dble(d0psi(1,:,:,:)),0.0d0,dp)
   !
-  ! OBM: debug
-  !
-  IF (test_case_no == 2) THEN
-     !
-     PRINT *,"dumping d0psi"
-     OPEN(UNIT=47,FILE="d0psi.dump",STATUS='NEW',ACCESS = 'SEQUENTIAL')
-     WRITE(unit=47,FMT=*) "Kpoint --- band --- plane wave --- value for pol1 --- value for pol2 --- value for pol3"
-     !
-     DO ik=1,nks
-        DO ibnd=1,nbnd
-           DO ip=1, npw
-              WRITE(unit=47,FMT='(I3," ",2(I7," "), 3("(",E14.5," ",E14.5,"i)"))') ik,  &
-              ibnd, ip, d0psi(ip,ibnd,ik,1), d0psi(ip,ibnd,ik,3), d0psi(ip,ibnd,ik,3)
-           ENDDO
-        ENDDO
-     ENDDO
-     !
-     CLOSE(47)
-     PRINT *, "dump complete"
-     !
-  ENDIF
-  !
-  ! OBM: end of debug
-  !
   ! X. Ge: compute d0psi in real-space, will overwrite d0psi calculated before.
   !
   IF (.NOT. eels) THEN
@@ -148,13 +125,19 @@ SUBROUTINE lr_solve_e
      !
   ENDDO
   !
-  ! End of file I/O
+  ! EELS: Writing of d0psi2 to the file.
+  !
+  IF (eels) THEN
+     !
+     CALL diropn ( iund0psi, 'd0psi2.'//trim(int_to_char(LR_polarization)), nwordd0psi, exst)
+     CALL davcio(d0psi2(1,1,1,1),nwordd0psi,iund0psi,1,1)
+     CLOSE( UNIT = iund0psi)
+     !
+  ENDIF
   !
   tmp_dir = tmp_dir_saved
   !
   CALL stop_clock ('lr_solve_e')
-  !
-  !WRITE(stdout,'(5X,"lr_wfcinit_spectrum: finished lr_solve_e")')
   !
   RETURN
   !

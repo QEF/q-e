@@ -21,7 +21,7 @@ PROGRAM lr_eels_main
   USE kinds,                 ONLY : dp
   USE lr_variables,          ONLY : restart, restart_step, itermax, lr_verbosity,  &
                                   & evc1, evc1_old, norm0, n_ipol, &
-                                  & d0psi, LR_iteration, LR_polarization, &
+                                  & d0psi, d0psi2, LR_iteration, LR_polarization, &
                                   & plot_type, nbnd_total, pseudo_hermitian, &
                                   & itermax_int, revc0, lr_io_level, code2, &
                                   & eels, lr_periodic, approximation !eps
@@ -160,8 +160,8 @@ PROGRAM lr_eels_main
         pol_index = LR_polarization
      ENDIF
      !
-     ! Read the starting Lanczos vectors d0psi from the file which
-     ! was written above by lr_solve_e.
+     ! Read the starting Lanczos vectors d0psi (EELS: and d0psi2) from the file,
+     ! which was written above by lr_solve_e.
      !
      CALL lr_read_d0psi()
      !
@@ -194,12 +194,6 @@ PROGRAM lr_eels_main
         IF (.NOT. eels) WRITE(stdout,'(/5x,"Starting Lanczos loop",1x,i8)') LR_polarization
         !
      ENDIF
-     !
-     ! d0psi = S * d0psi 
-     ! This is needed in lr_lanczos for the dot product
-     ! in the calculation of the zeta-coefficients.
-     !
-     IF (okvan) CALL sd0psi() 
      !
      ! Loop on the Lanczos iterations
      ! 
