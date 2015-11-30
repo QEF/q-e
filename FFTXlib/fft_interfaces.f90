@@ -8,7 +8,6 @@
 !
 !=---------------------------------------------------------------------------=!
 MODULE fft_interfaces
-  !=-------------------------------------------------------------------------=!
 
   IMPLICIT NONE
   PRIVATE
@@ -18,11 +17,10 @@ MODULE fft_interfaces
 
   
   INTERFACE invfft
-     !
-     ! invfft is the interface to both the "normal" fft invfft_x,
-     ! and to the "box-grid" version invfft_, used only in CP
-     ! The latter has an additional argument
-     !
+     !! invfft is the interface to both the standard fft **invfft_x**,
+     !! and to the "box-grid" version **invfft_b**, used only in CP 
+     !! (the latter has an additional argument)
+     
      SUBROUTINE invfft_x( grid_type, f, dfft )
        USE fft_types,  ONLY: fft_dlay_descriptor
        IMPLICIT NONE
@@ -54,34 +52,38 @@ MODULE fft_interfaces
      END SUBROUTINE fwfft_x
   END INTERFACE
 
-  !=--------------------------------------------------------------------------=!
 END MODULE fft_interfaces
 !=---------------------------------------------------------------------------=!
 !
-!-----------------------------------------------------------------------
+!=---------------------------------------------------------------------------=!
 SUBROUTINE invfft_x( grid_type, f, dfft )
-  !-----------------------------------------------------------------------
-  ! grid_type = 'Dense'
-  !   inverse fourier transform of potentials and charge density f
-  !   on the dense grid . On output, f is overwritten
-  ! grid_type = 'Smooth'
-  !   inverse fourier transform of  potentials and charge density f
-  !   on the smooth grid . On output, f is overwritten
-  ! grid_type = 'Wave'
-  !   inverse fourier transform of  wave functions f
-  !   on the smooth grid . On output, f is overwritten
-  ! grid_type = 'Custom'
-  !   inverse fourier transform of potentials and charge density f
-  !   on a custom grid. On output, f is overwritten
-  ! grid_type = 'CustomWave'
-  !   inverse fourier transform of  wave functions f
-  !   on a custom grid. On output, f is overwritten
-  !
-  ! dfft = FFT descriptor, IMPORTANT NOTICE: grid is specified only by dfft.
-  ! No check is performed on the correspondence between dfft and grid_type.
-  ! grid_type is now used only to distinguish cases 'Wave' / 'CustomWave' 
-  ! from all other cases
-  !
+  !! Compute G-space to R-space for a specific grid type
+  !! 
+  !! **grid_type = 'Dense'** : 
+  !!   inverse fourier transform of potentials and charge density f
+  !!   on the dense grid . On output, f is overwritten
+  !! 
+  !! **grid_type = 'Smooth'** :
+  !!   inverse fourier transform of  potentials and charge density f
+  !!   on the smooth grid . On output, f is overwritten
+  !! 
+  !! **grid_type = 'Wave'** :
+  !!   inverse fourier transform of  wave functions f
+  !!   on the smooth grid . On output, f is overwritten
+  !! 
+  !! **grid_type = 'Custom'** : 
+  !!   inverse fourier transform of potentials and charge density f
+  !!   on a custom grid. On output, f is overwritten
+  !! 
+  !! **grid_type = 'CustomWave'** :
+  !!   inverse fourier transform of  wave functions f
+  !!   on a custom grid. On output, f is overwritten
+  !! 
+  !! **dfft = FFT descriptor**, IMPORTANT NOTICE: grid is specified only by dfft.
+  !!   No check is performed on the correspondence between dfft and grid_type.
+  !!   grid_type is now used only to distinguish cases 'Wave' / 'CustomWave' 
+  !!   from all other cases
+  
   USE fft_scalar,    ONLY: cfft3d, cfft3ds
   USE fft_smallbox,  ONLY: cft_b, cft_b_omp
   USE fft_parallel,  ONLY: tg_cft3s
@@ -157,31 +159,37 @@ SUBROUTINE invfft_x( grid_type, f, dfft )
   RETURN
 
 END SUBROUTINE invfft_x
-
-!-----------------------------------------------------------------------
+!=---------------------------------------------------------------------------=!
+!
+!=---------------------------------------------------------------------------=!
 SUBROUTINE fwfft_x( grid_type, f, dfft )
-  !-----------------------------------------------------------------------
-  ! grid_type = 'Dense'
-  !   forward fourier transform of potentials and charge density f
-  !   on the dense grid . On output, f is overwritten
-  ! grid_type = 'Smooth'
-  !   forward fourier transform of potentials and charge density f
-  !   on the smooth grid . On output, f is overwritten
-  ! grid_type = 'Wave'
-  !   forward fourier transform of  wave functions f
-  !   on the smooth grid . On output, f is overwritten
-  ! grid_type = 'Custom'
-  !   forward fourier transform of potentials and charge density f
-  !   on a custom grid . On output, f is overwritten
-  ! grid_type = 'CustomWave'
-  !   forward fourier transform of  wave functions
-  !   on a custom grid . On output, f is overwritten
-  !
-  ! dfft = FFT descriptor, IMPORTANT NOTICE: grid is specified only by dfft.
-  ! No check is performed on the correspondence between dfft and grid_type.
-  ! grid_type is now used only to distinguish cases 'Wave' / 'CustomWave' 
-  ! from all other cases
-  ! 
+  !! Compute R-space to G-space for a specific grid type
+  !! 
+  !! **grid_type = 'Dense'**
+  !!   forward fourier transform of potentials and charge density f
+  !!   on the dense grid . On output, f is overwritten
+  !! 
+  !! **grid_type = 'Smooth'**
+  !!   forward fourier transform of potentials and charge density f
+  !!   on the smooth grid . On output, f is overwritten
+  !! 
+  !! **grid_type = 'Wave'**
+  !!   forward fourier transform of  wave functions f
+  !!   on the smooth grid . On output, f is overwritten
+  !! 
+  !! **grid_type = 'Custom'**
+  !!   forward fourier transform of potentials and charge density f
+  !!   on a custom grid . On output, f is overwritten
+  !! 
+  !! **grid_type = 'CustomWave'**
+  !!   forward fourier transform of  wave functions
+  !!   on a custom grid . On output, f is overwritten
+  !! 
+  !! **dfft = FFT descriptor**, IMPORTANT NOTICE: grid is specified only by dfft.
+  !!   No check is performed on the correspondence between dfft and grid_type.
+  !!   grid_type is now used only to distinguish cases 'Wave' / 'CustomWave' 
+  !!   from all other cases
+  
   USE fft_scalar,    ONLY: cfft3d, cfft3ds
   USE fft_parallel,  ONLY: tg_cft3s
   USE fft_types,     ONLY: fft_dlay_descriptor
@@ -254,22 +262,27 @@ SUBROUTINE fwfft_x( grid_type, f, dfft )
   RETURN
   !
 END SUBROUTINE fwfft_x
-!-----------------------------------------------------------------------
+!=---------------------------------------------------------------------------=!
+!
+!=---------------------------------------------------------------------------=!
 SUBROUTINE invfft_b( grid_type, f, dfft, ia )
-  !-----------------------------------------------------------------------
-  !   not-so-parallel 3d fft for box grid, implemented ONLY for sign=1
-  !   G-space to R-space, output = \sum_G f(G)exp(+iG*R)
-  !   The array f (overwritten on output) is NOT distributed:
-  !   a copy is present on each processor.
-  !   The fft along z  is done on the entire grid.
-  !   The fft along xy is done ONLY on planes that have components on the
-  !   dense grid for each processor. Note that the final array will no
-  !   longer be the same on all processors.
-  !   grid_type = 'Box' (only allowed value!)
-  !   dfft = fft descriptor for the box grid
-  !   ia   = index of the atom with a box grid. Used to find the number
-  !          of planes on this processors, contained in dfft%np3(ia)
-  !
+  !! Not-so-parallel 3d fft for box grid, implemented ONLY for sign=1
+  !!
+  !! ComputeG-space to R-space, $$ output = \sum_G f(G)exp(+iG*R) $$
+  !! The array f (overwritten on output) is NOT distributed:
+  !! a copy is present on each processor.
+  !! The fft along z  is done on the entire grid.
+  !! The fft along xy is done ONLY on planes that have components on the
+  !! dense grid for each processor. Note that the final array will no
+  !! longer be the same on all processors.
+  !! 
+  !! **grid_type** = 'Box' (only allowed value!)
+  !! 
+  !! **dfft** = fft descriptor for the box grid
+  !! 
+  !! **ia**   = index of the atom with a box grid. Used to find the number
+  !!         of planes on this processors, contained in dfft%np3(ia)
+  
   USE fft_scalar,    ONLY: cfft3d, cfft3ds
   USE fft_smallbox,  ONLY: cft_b, cft_b_omp
   USE fft_parallel,  ONLY: tg_cft3s
@@ -338,3 +351,4 @@ SUBROUTINE invfft_b( grid_type, f, dfft, ia )
 
   RETURN
 END SUBROUTINE invfft_b
+!=---------------------------------------------------------------------------=!
