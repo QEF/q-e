@@ -110,7 +110,7 @@ SUBROUTINE lr_dvpsi_eels (ik, dvpsi1, dvpsi2)
 !200   call errore ('lr_apply_liouvillian', 'reading igkq', abs (ios) )
 ! ENDIF
   !
-  ! Read the groun-state wavefuctions evc(k) and evq(k+q).
+  ! Read the ground-state wavefuctions evc(k) and evq(k+q).
   ! Note: even in the case when there is only one k point (nksq=1),
   ! the ground-state wavefunctions evc(k) and evq(k+q) are read here
   ! and kept in memory for the rest of the code.

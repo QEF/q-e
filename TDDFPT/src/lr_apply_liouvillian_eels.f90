@@ -269,7 +269,7 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, sevc1_new, interaction )
         !
         IF (okvan) THEN
            !
-           ! Compute the integral of the HXV response potential with the Q function.
+           ! Compute the integral of the HXC response potential with the Q function.
            ! Input : dvrsc = V_HXC(r)
            ! Output: int3 = \int V_HXC(r) * Q^*_nm(r) dr 
            ! See Eq.(B22) in Ref. A. Dal Corso, PRB 64, 235118 (2001)
