@@ -1,20 +1,20 @@
 
-     Program PWSCF v.4.99       starts on  6Jan2012 at 10:24:45 
+     Program PWSCF v.5.2.1 (svn rev. 11881M) starts on  1Dec2015 at 19:19:56 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
          "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
           URL http://www.quantum-espresso.org", 
      in publications or presentations arising from this work. More details at
-     http://www.quantum-espresso.org/quote.php
+     http://www.quantum-espresso.org/quote
 
      Serial version
+     Reading input from /home/giannozz/trunk/espresso/PW/tests/md-pot_extrap2.in
 
      Current dimensions of program PWSCF are:
      Max number of different atomic species (ntypx) = 10
      Max number of k-points (npk) =  40000
      Max angular momentum in pseudopotentials (lmaxx) =  3
-     Reading input from /home/giannozz/trunk/espresso/tests/md-pot_extrap2.in
  
      G-vector sticks info
      --------------------
@@ -35,8 +35,7 @@
      convergence threshold     =      1.0E-08
      mixing beta               =       0.7000
      number of iterations used =            8  plain     mixing
-     Exchange-correlation      =  SLA  PZ   NOGX NOGC ( 1 1 0 0 0)
-     EXX-fraction              =        0.00
+     Exchange-correlation      =  SLA  PZ   NOGX NOGC ( 1  1  0  0 0 0)
      nstep                     =           50
 
 
@@ -83,16 +82,16 @@
      Dense  grid:      869 G-vectors     FFT dimensions: (  15,  15,  15)
 
      Largest allocated arrays     est. size (Mb)     dimensions
-        Kohn-Sham Wavefunctions         0.01 Mb     (    113,    4)
-        NL pseudopotentials             0.01 Mb     (    113,    8)
-        Each V/rho on FFT grid          0.05 Mb     (   3375)
-        Each G-vector array             0.01 Mb     (    869)
-        G-vector shells                 0.00 Mb     (     31)
+        Kohn-Sham Wavefunctions         0.01 Mb     (     113,    4)
+        NL pseudopotentials             0.01 Mb     (     113,    8)
+        Each V/rho on FFT grid          0.05 Mb     (    3375)
+        Each G-vector array             0.01 Mb     (     869)
+        G-vector shells                 0.00 Mb     (      31)
      Largest temporary arrays     est. size (Mb)     dimensions
-        Auxiliary wavefunctions         0.03 Mb     (    113,   16)
-        Each subspace H/S matrix        0.00 Mb     (  16,  16)
-        Each <psi_i|beta_j> matrix      0.00 Mb     (      8,    4)
-        Arrays for rho mixing           0.41 Mb     (   3375,   8)
+        Auxiliary wavefunctions         0.03 Mb     (     113,   16)
+        Each subspace H/S matrix        0.00 Mb     (      16,   16)
+        Each <psi_i|beta_j> matrix      0.00 Mb     (       8,    4)
+        Arrays for rho mixing           0.41 Mb     (    3375,    8)
 
      Initial potential from superposition of free atoms
 
@@ -169,7 +168,7 @@
      Davidson diagonalization with overlap
      ethr =  1.91E-09,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is        0.1 secs
+     total cpu time spent up to now is        0.0 secs
 
      total energy              =     -14.44793732 Ry
      Harris-Foulkes estimate   =     -14.44793736 Ry
@@ -179,7 +178,7 @@
      Davidson diagonalization with overlap
      ethr =  1.69E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        0.1 secs
+     total cpu time spent up to now is        0.0 secs
 
      total energy              =     -14.44793732 Ry
      Harris-Foulkes estimate   =     -14.44793733 Ry
@@ -206,6 +205,8 @@
           k = 0.0000 0.0000 0.0000 (   113 PWs)   bands (ev):
 
     -4.7639   7.1610   7.5134   7.5134
+
+     highest occupied level (ev):     7.5134
 
 !    total energy              =     -14.44793733 Ry
      Harris-Foulkes estimate   =     -14.44793734 Ry
@@ -244,7 +245,7 @@ Si       0.123017881   0.123017881   0.123017881
 
      total cpu time spent up to now is        0.1 secs
 
-     per-process dynamical memory:     1.3 Mb
+     per-process dynamical memory:     1.4 Mb
 
      Self-consistent Calculation
 
@@ -286,6 +287,8 @@ Si       0.123017881   0.123017881   0.123017881
 
     -4.7639   7.1631   7.5123   7.5123
 
+     highest occupied level (ev):     7.5123
+
 !    total energy              =     -14.44796266 Ry
      Harris-Foulkes estimate   =     -14.44796266 Ry
      estimated scf accuracy    <          6.4E-10 Ry
@@ -319,7 +322,7 @@ Si       0.123071192   0.123071192   0.123071192
 
      total cpu time spent up to now is        0.1 secs
 
-     per-process dynamical memory:     1.3 Mb
+     per-process dynamical memory:     1.4 Mb
 
      Self-consistent Calculation
 
@@ -350,6 +353,8 @@ Si       0.123071192   0.123071192   0.123071192
           k = 0.0000 0.0000 0.0000 (   113 PWs)   bands (ev):
 
     -4.7637   7.1694   7.5091   7.5091
+
+     highest occupied level (ev):     7.5091
 
 !    total energy              =     -14.44803679 Ry
      Harris-Foulkes estimate   =     -14.44803679 Ry
@@ -384,7 +389,7 @@ Si       0.123158950   0.123158950   0.123158950
 
      total cpu time spent up to now is        0.1 secs
 
-     per-process dynamical memory:     1.3 Mb
+     per-process dynamical memory:     1.4 Mb
 
      Self-consistent Calculation
 
@@ -398,13 +403,15 @@ Si       0.123158950   0.123158950   0.123158950
      Davidson diagonalization with overlap
      ethr =  4.22E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is        0.2 secs
+     total cpu time spent up to now is        0.1 secs
 
      End of self-consistent calculation
 
           k = 0.0000 0.0000 0.0000 (   113 PWs)   bands (ev):
 
     -4.7635   7.1795   7.5039   7.5039
+
+     highest occupied level (ev):     7.5039
 
 !    total energy              =     -14.44815429 Ry
      Harris-Foulkes estimate   =     -14.44815430 Ry
@@ -439,7 +446,7 @@ Si       0.123279552   0.123279551   0.123279554
 
      total cpu time spent up to now is        0.2 secs
 
-     per-process dynamical memory:     1.3 Mb
+     per-process dynamical memory:     1.4 Mb
 
      Self-consistent Calculation
 
@@ -470,6 +477,8 @@ Si       0.123279552   0.123279551   0.123279554
           k = 0.0000 0.0000 0.0000 (   113 PWs)   bands (ev):
 
     -4.7632   7.1935   7.4967   7.4967
+
+     highest occupied level (ev):     7.4967
 
 !    total energy              =     -14.44830662 Ry
      Harris-Foulkes estimate   =     -14.44830662 Ry
@@ -504,7 +513,7 @@ Si       0.123430794   0.123430792   0.123430797
 
      total cpu time spent up to now is        0.2 secs
 
-     per-process dynamical memory:     1.3 Mb
+     per-process dynamical memory:     1.4 Mb
 
      Self-consistent Calculation
 
@@ -546,6 +555,8 @@ Si       0.123430794   0.123430792   0.123430797
 
     -4.7629   7.2111   7.4877   7.4877
 
+     highest occupied level (ev):     7.4877
+
 !    total energy              =     -14.44848272 Ry
      Harris-Foulkes estimate   =     -14.44848272 Ry
      estimated scf accuracy    <          1.1E-10 Ry
@@ -579,7 +590,7 @@ Si       0.123609921   0.123609918   0.123609925
 
      total cpu time spent up to now is        0.2 secs
 
-     per-process dynamical memory:     1.3 Mb
+     per-process dynamical memory:     1.4 Mb
 
      Self-consistent Calculation
 
@@ -600,6 +611,8 @@ Si       0.123609921   0.123609918   0.123609925
           k = 0.0000 0.0000 0.0000 (   113 PWs)   bands (ev):
 
     -4.7625   7.2320   7.4771   7.4771
+
+     highest occupied level (ev):     7.4771
 
 !    total energy              =     -14.44866990 Ry
      Harris-Foulkes estimate   =     -14.44866991 Ry
@@ -634,7 +647,7 @@ Si       0.123813687   0.123813682   0.123813694
 
      total cpu time spent up to now is        0.3 secs
 
-     per-process dynamical memory:     1.3 Mb
+     per-process dynamical memory:     1.4 Mb
 
      Self-consistent Calculation
 
@@ -676,6 +689,8 @@ Si       0.123813687   0.123813682   0.123813694
 
     -4.7622   7.2558   7.4650   7.4650
 
+     highest occupied level (ev):     7.4650
+
 !    total energy              =     -14.44885478 Ry
      Harris-Foulkes estimate   =     -14.44885478 Ry
      estimated scf accuracy    <          8.7E-11 Ry
@@ -709,7 +724,7 @@ Si       0.124038418   0.124038412   0.124038428
 
      total cpu time spent up to now is        0.3 secs
 
-     per-process dynamical memory:     1.3 Mb
+     per-process dynamical memory:     1.4 Mb
 
      Self-consistent Calculation
 
@@ -740,6 +755,8 @@ Si       0.124038418   0.124038412   0.124038428
           k = 0.0000 0.0000 0.0000 (   113 PWs)   bands (ev):
 
     -4.7618   7.2821   7.4516   7.4516
+
+     highest occupied level (ev):     7.4516
 
 !    total energy              =     -14.44902425 Ry
      Harris-Foulkes estimate   =     -14.44902425 Ry
@@ -774,7 +791,7 @@ Si       0.124280090   0.124280083   0.124280103
 
      total cpu time spent up to now is        0.3 secs
 
-     per-process dynamical memory:     1.3 Mb
+     per-process dynamical memory:     1.4 Mb
 
      Self-consistent Calculation
 
@@ -805,6 +822,8 @@ Si       0.124280090   0.124280083   0.124280103
           k = 0.0000 0.0000 0.0000 (   113 PWs)   bands (ev):
 
     -4.7616   7.3104   7.4373   7.4373
+
+     highest occupied level (ev):     7.4373
 
 !    total energy              =     -14.44916646 Ry
      Harris-Foulkes estimate   =     -14.44916646 Ry
@@ -839,7 +858,7 @@ Si       0.124534401   0.124534394   0.124534417
 
      total cpu time spent up to now is        0.4 secs
 
-     per-process dynamical memory:     1.3 Mb
+     per-process dynamical memory:     1.4 Mb
 
      Self-consistent Calculation
 
@@ -870,6 +889,8 @@ Si       0.124534401   0.124534394   0.124534417
           k = 0.0000 0.0000 0.0000 (   113 PWs)   bands (ev):
 
     -4.7614   7.3402   7.4223   7.4223
+
+     highest occupied level (ev):     7.4223
 
 !    total energy              =     -14.44927160 Ry
      Harris-Foulkes estimate   =     -14.44927160 Ry
@@ -904,7 +925,7 @@ Si       0.124796858   0.124796850   0.124796877
 
      total cpu time spent up to now is        0.4 secs
 
-     per-process dynamical memory:     1.3 Mb
+     per-process dynamical memory:     1.4 Mb
 
      Self-consistent Calculation
 
@@ -925,6 +946,8 @@ Si       0.124796858   0.124796850   0.124796877
           k = 0.0000 0.0000 0.0000 (   113 PWs)   bands (ev):
 
     -4.7613   7.3710   7.4068   7.4068
+
+     highest occupied level (ev):     7.4068
 
 !    total energy              =     -14.44933259 Ry
      Harris-Foulkes estimate   =     -14.44933259 Ry
@@ -959,7 +982,7 @@ Si       0.125062856   0.125062848   0.125062878
 
      total cpu time spent up to now is        0.4 secs
 
-     per-process dynamical memory:     1.3 Mb
+     per-process dynamical memory:     1.4 Mb
 
      Self-consistent Calculation
 
@@ -1001,6 +1024,8 @@ Si       0.125062856   0.125062848   0.125062878
 
     -4.7612   7.3912   7.3912   7.4023
 
+     highest occupied level (ev):     7.4023
+
 !    total energy              =     -14.44934551 Ry
      Harris-Foulkes estimate   =     -14.44934551 Ry
      estimated scf accuracy    <          4.2E-10 Ry
@@ -1032,9 +1057,9 @@ Si       0.125327761   0.125327753   0.125327786
      Writing output data file pwscf.save
      second order charge density extrapolation
 
-     total cpu time spent up to now is        0.5 secs
+     total cpu time spent up to now is        0.4 secs
 
-     per-process dynamical memory:     1.3 Mb
+     per-process dynamical memory:     1.4 Mb
 
      Self-consistent Calculation
 
@@ -1048,7 +1073,7 @@ Si       0.125327761   0.125327753   0.125327786
      Davidson diagonalization with overlap
      ethr =  2.45E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is        0.5 secs
+     total cpu time spent up to now is        0.4 secs
 
      total energy              =     -14.44930981 Ry
      Harris-Foulkes estimate   =     -14.44930982 Ry
@@ -1058,13 +1083,15 @@ Si       0.125327761   0.125327753   0.125327786
      Davidson diagonalization with overlap
      ethr =  1.92E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is        0.5 secs
+     total cpu time spent up to now is        0.4 secs
 
      End of self-consistent calculation
 
           k = 0.0000 0.0000 0.0000 (   113 PWs)   bands (ev):
 
     -4.7613   7.3756   7.3756   7.4335
+
+     highest occupied level (ev):     7.4335
 
 !    total energy              =     -14.44930981 Ry
      Harris-Foulkes estimate   =     -14.44930982 Ry
@@ -1099,7 +1126,7 @@ Si       0.125586993   0.125586985   0.125587020
 
      total cpu time spent up to now is        0.5 secs
 
-     per-process dynamical memory:     1.3 Mb
+     per-process dynamical memory:     1.4 Mb
 
      Self-consistent Calculation
 
@@ -1141,6 +1168,8 @@ Si       0.125586993   0.125586985   0.125587020
 
     -4.7615   7.3604   7.3604   7.4641
 
+     highest occupied level (ev):     7.4641
+
 !    total energy              =     -14.44922831 Ry
      Harris-Foulkes estimate   =     -14.44922831 Ry
      estimated scf accuracy    <          3.9E-10 Ry
@@ -1174,7 +1203,7 @@ Si       0.125836100   0.125836094   0.125836130
 
      total cpu time spent up to now is        0.5 secs
 
-     per-process dynamical memory:     1.3 Mb
+     per-process dynamical memory:     1.4 Mb
 
      Self-consistent Calculation
 
@@ -1205,6 +1234,8 @@ Si       0.125836100   0.125836094   0.125836130
           k = 0.0000 0.0000 0.0000 (   113 PWs)   bands (ev):
 
     -4.7617   7.3458   7.3458   7.4935
+
+     highest occupied level (ev):     7.4935
 
 !    total energy              =     -14.44910688 Ry
      Harris-Foulkes estimate   =     -14.44910689 Ry
@@ -1237,9 +1268,9 @@ Si       0.126070836   0.126070832   0.126070868
      Writing output data file pwscf.save
      second order charge density extrapolation
 
-     total cpu time spent up to now is        0.6 secs
+     total cpu time spent up to now is        0.5 secs
 
-     per-process dynamical memory:     1.3 Mb
+     per-process dynamical memory:     1.4 Mb
 
      Self-consistent Calculation
 
@@ -1253,7 +1284,7 @@ Si       0.126070836   0.126070832   0.126070868
      Davidson diagonalization with overlap
      ethr =  4.47E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is        0.6 secs
+     total cpu time spent up to now is        0.5 secs
 
      total energy              =     -14.44895404 Ry
      Harris-Foulkes estimate   =     -14.44895408 Ry
@@ -1263,7 +1294,7 @@ Si       0.126070836   0.126070832   0.126070868
      Davidson diagonalization with overlap
      ethr =  8.15E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is        0.6 secs
+     total cpu time spent up to now is        0.5 secs
 
      total energy              =     -14.44895405 Ry
      Harris-Foulkes estimate   =     -14.44895407 Ry
@@ -1273,13 +1304,15 @@ Si       0.126070836   0.126070832   0.126070868
      Davidson diagonalization with overlap
      ethr =  6.09E-10,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        0.6 secs
+     total cpu time spent up to now is        0.5 secs
 
      End of self-consistent calculation
 
           k = 0.0000 0.0000 0.0000 (   113 PWs)   bands (ev):
 
     -4.7620   7.3321   7.3321   7.5213
+
+     highest occupied level (ev):     7.5213
 
 !    total energy              =     -14.44895406 Ry
      Harris-Foulkes estimate   =     -14.44895406 Ry
@@ -1314,7 +1347,7 @@ Si       0.126287225   0.126287222   0.126287258
 
      total cpu time spent up to now is        0.6 secs
 
-     per-process dynamical memory:     1.3 Mb
+     per-process dynamical memory:     1.4 Mb
 
      Self-consistent Calculation
 
@@ -1345,6 +1378,8 @@ Si       0.126287225   0.126287222   0.126287258
           k = 0.0000 0.0000 0.0000 (   113 PWs)   bands (ev):
 
     -4.7623   7.3195   7.3195   7.5470
+
+     highest occupied level (ev):     7.5470
 
 !    total energy              =     -14.44878038 Ry
      Harris-Foulkes estimate   =     -14.44878038 Ry
@@ -1379,7 +1414,7 @@ Si       0.126481624   0.126481623   0.126481658
 
      total cpu time spent up to now is        0.6 secs
 
-     per-process dynamical memory:     1.3 Mb
+     per-process dynamical memory:     1.4 Mb
 
      Self-consistent Calculation
 
@@ -1421,6 +1456,8 @@ Si       0.126481624   0.126481623   0.126481658
 
     -4.7626   7.3082   7.3082   7.5700
 
+     highest occupied level (ev):     7.5700
+
 !    total energy              =     -14.44859766 Ry
      Harris-Foulkes estimate   =     -14.44859766 Ry
      estimated scf accuracy    <          5.5E-11 Ry
@@ -1452,9 +1489,9 @@ Si       0.126650778   0.126650778   0.126650812
      Writing output data file pwscf.save
      second order charge density extrapolation
 
-     total cpu time spent up to now is        0.7 secs
+     total cpu time spent up to now is        0.6 secs
 
-     per-process dynamical memory:     1.3 Mb
+     per-process dynamical memory:     1.4 Mb
 
      Self-consistent Calculation
 
@@ -1468,13 +1505,15 @@ Si       0.126650778   0.126650778   0.126650812
      Davidson diagonalization with overlap
      ethr =  2.51E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is        0.7 secs
+     total cpu time spent up to now is        0.6 secs
 
      End of self-consistent calculation
 
           k = 0.0000 0.0000 0.0000 (   113 PWs)   bands (ev):
 
     -4.7630   7.2984   7.2984   7.5901
+
+     highest occupied level (ev):     7.5901
 
 !    total energy              =     -14.44841824 Ry
      Harris-Foulkes estimate   =     -14.44841824 Ry
@@ -1509,7 +1548,7 @@ Si       0.126791869   0.126791871   0.126791903
 
      total cpu time spent up to now is        0.7 secs
 
-     per-process dynamical memory:     1.3 Mb
+     per-process dynamical memory:     1.4 Mb
 
      Self-consistent Calculation
 
@@ -1551,6 +1590,8 @@ Si       0.126791869   0.126791871   0.126791903
 
     -4.7632   7.2902   7.2902   7.6069
 
+     highest occupied level (ev):     7.6069
+
 !    total energy              =     -14.44825409 Ry
      Harris-Foulkes estimate   =     -14.44825409 Ry
      estimated scf accuracy    <          3.5E-10 Ry
@@ -1584,7 +1625,7 @@ Si       0.126902555   0.126902558   0.126902586
 
      total cpu time spent up to now is        0.7 secs
 
-     per-process dynamical memory:     1.3 Mb
+     per-process dynamical memory:     1.4 Mb
 
      Self-consistent Calculation
 
@@ -1615,6 +1656,8 @@ Si       0.126902555   0.126902558   0.126902586
           k = 0.0000 0.0000 0.0000 (   113 PWs)   bands (ev):
 
     -4.7635   7.2838   7.2838   7.6201
+
+     highest occupied level (ev):     7.6201
 
 !    total energy              =     -14.44811613 Ry
      Harris-Foulkes estimate   =     -14.44811613 Ry
@@ -1649,7 +1692,7 @@ Si       0.126981003   0.126981008   0.126981033
 
      total cpu time spent up to now is        0.7 secs
 
-     per-process dynamical memory:     1.3 Mb
+     per-process dynamical memory:     1.4 Mb
 
      Self-consistent Calculation
 
@@ -1663,7 +1706,7 @@ Si       0.126981003   0.126981008   0.126981033
      Davidson diagonalization with overlap
      ethr =  3.57E-10,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is        0.8 secs
+     total cpu time spent up to now is        0.7 secs
 
      total energy              =     -14.44801345 Ry
      Harris-Foulkes estimate   =     -14.44801349 Ry
@@ -1673,7 +1716,7 @@ Si       0.126981003   0.126981008   0.126981033
      Davidson diagonalization with overlap
      ethr =  8.21E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is        0.8 secs
+     total cpu time spent up to now is        0.7 secs
 
      total energy              =     -14.44801346 Ry
      Harris-Foulkes estimate   =     -14.44801349 Ry
@@ -1683,13 +1726,15 @@ Si       0.126981003   0.126981008   0.126981033
      Davidson diagonalization with overlap
      ethr =  8.02E-10,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        0.8 secs
+     total cpu time spent up to now is        0.7 secs
 
      End of self-consistent calculation
 
           k = 0.0000 0.0000 0.0000 (   113 PWs)   bands (ev):
 
     -4.7637   7.2792   7.2792   7.6294
+
+     highest occupied level (ev):     7.6294
 
 !    total energy              =     -14.44801347 Ry
      Harris-Foulkes estimate   =     -14.44801347 Ry
@@ -1724,7 +1769,7 @@ Si       0.127025920   0.127025926   0.127025948
 
      total cpu time spent up to now is        0.8 secs
 
-     per-process dynamical memory:     1.3 Mb
+     per-process dynamical memory:     1.4 Mb
 
      Self-consistent Calculation
 
@@ -1745,6 +1790,8 @@ Si       0.127025920   0.127025926   0.127025948
           k = 0.0000 0.0000 0.0000 (   113 PWs)   bands (ev):
 
     -4.7638   7.2766   7.2766   7.6348
+
+     highest occupied level (ev):     7.6348
 
 !    total energy              =     -14.44795288 Ry
      Harris-Foulkes estimate   =     -14.44795288 Ry
@@ -1779,7 +1826,7 @@ Si       0.127036567   0.127036574   0.127036592
 
      total cpu time spent up to now is        0.8 secs
 
-     per-process dynamical memory:     1.3 Mb
+     per-process dynamical memory:     1.4 Mb
 
      Self-consistent Calculation
 
@@ -1821,6 +1868,8 @@ Si       0.127036567   0.127036574   0.127036592
 
     -4.7638   7.2760   7.2760   7.6360
 
+     highest occupied level (ev):     7.6360
+
 !    total energy              =     -14.44793832 Ry
      Harris-Foulkes estimate   =     -14.44793832 Ry
      estimated scf accuracy    <          4.8E-11 Ry
@@ -1854,7 +1903,7 @@ Si       0.127012767   0.127012775   0.127012788
 
      total cpu time spent up to now is        0.8 secs
 
-     per-process dynamical memory:     1.3 Mb
+     per-process dynamical memory:     1.4 Mb
 
      Self-consistent Calculation
 
@@ -1868,7 +1917,7 @@ Si       0.127012767   0.127012775   0.127012788
      Davidson diagonalization with overlap
      ethr =  3.77E-10,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is        0.9 secs
+     total cpu time spent up to now is        0.8 secs
 
      total energy              =     -14.44797072 Ry
      Harris-Foulkes estimate   =     -14.44797079 Ry
@@ -1878,7 +1927,7 @@ Si       0.127012767   0.127012775   0.127012788
      Davidson diagonalization with overlap
      ethr =  1.35E-09,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is        0.9 secs
+     total cpu time spent up to now is        0.8 secs
 
      total energy              =     -14.44797074 Ry
      Harris-Foulkes estimate   =     -14.44797080 Ry
@@ -1888,13 +1937,15 @@ Si       0.127012767   0.127012775   0.127012788
      Davidson diagonalization with overlap
      ethr =  1.35E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is        0.9 secs
+     total cpu time spent up to now is        0.8 secs
 
      End of self-consistent calculation
 
           k = 0.0000 0.0000 0.0000 (   113 PWs)   bands (ev):
 
     -4.7638   7.2774   7.2774   7.6332
+
+     highest occupied level (ev):     7.6332
 
 !    total energy              =     -14.44797076 Ry
      Harris-Foulkes estimate   =     -14.44797076 Ry
@@ -1929,7 +1980,7 @@ Si       0.126954913   0.126954921   0.126954930
 
      total cpu time spent up to now is        0.9 secs
 
-     per-process dynamical memory:     1.3 Mb
+     per-process dynamical memory:     1.4 Mb
 
      Self-consistent Calculation
 
@@ -1950,6 +2001,8 @@ Si       0.126954913   0.126954921   0.126954930
           k = 0.0000 0.0000 0.0000 (   113 PWs)   bands (ev):
 
     -4.7636   7.2807   7.2807   7.6263
+
+     highest occupied level (ev):     7.6263
 
 !    total energy              =     -14.44804807 Ry
      Harris-Foulkes estimate   =     -14.44804807 Ry
@@ -1984,7 +2037,7 @@ Si       0.126863956   0.126863964   0.126863968
 
      total cpu time spent up to now is        0.9 secs
 
-     per-process dynamical memory:     1.3 Mb
+     per-process dynamical memory:     1.4 Mb
 
      Self-consistent Calculation
 
@@ -2005,6 +2058,8 @@ Si       0.126863956   0.126863964   0.126863968
           k = 0.0000 0.0000 0.0000 (   113 PWs)   bands (ev):
 
     -4.7634   7.2860   7.2860   7.6155
+
+     highest occupied level (ev):     7.6155
 
 !    total energy              =     -14.44816516 Ry
      Harris-Foulkes estimate   =     -14.44816516 Ry
@@ -2039,7 +2094,7 @@ Si       0.126741399   0.126741408   0.126741407
 
      total cpu time spent up to now is        0.9 secs
 
-     per-process dynamical memory:     1.3 Mb
+     per-process dynamical memory:     1.4 Mb
 
      Self-consistent Calculation
 
@@ -2060,6 +2115,8 @@ Si       0.126741399   0.126741408   0.126741407
           k = 0.0000 0.0000 0.0000 (   113 PWs)   bands (ev):
 
     -4.7631   7.2931   7.2931   7.6009
+
+     highest occupied level (ev):     7.6009
 
 !    total energy              =     -14.44831432 Ry
      Harris-Foulkes estimate   =     -14.44831433 Ry
@@ -2092,9 +2149,9 @@ Si       0.126589271   0.126589280   0.126589275
      Writing output data file pwscf.save
      second order charge density extrapolation
 
-     total cpu time spent up to now is        1.0 secs
+     total cpu time spent up to now is        0.9 secs
 
-     per-process dynamical memory:     1.3 Mb
+     per-process dynamical memory:     1.4 Mb
 
      Self-consistent Calculation
 
@@ -2108,7 +2165,7 @@ Si       0.126589271   0.126589280   0.126589275
      Davidson diagonalization with overlap
      ethr =  2.93E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is        1.0 secs
+     total cpu time spent up to now is        0.9 secs
 
      total energy              =     -14.44848567 Ry
      Harris-Foulkes estimate   =     -14.44848569 Ry
@@ -2118,13 +2175,15 @@ Si       0.126589271   0.126589280   0.126589275
      Davidson diagonalization with overlap
      ethr =  3.01E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is        1.0 secs
+     total cpu time spent up to now is        0.9 secs
 
      End of self-consistent calculation
 
           k = 0.0000 0.0000 0.0000 (   113 PWs)   bands (ev):
 
     -4.7628   7.3019   7.3019   7.5828
+
+     highest occupied level (ev):     7.5828
 
 !    total energy              =     -14.44848568 Ry
      Harris-Foulkes estimate   =     -14.44848568 Ry
@@ -2159,7 +2218,7 @@ Si       0.126410102   0.126410111   0.126410101
 
      total cpu time spent up to now is        1.0 secs
 
-     per-process dynamical memory:     1.3 Mb
+     per-process dynamical memory:     1.4 Mb
 
      Self-consistent Calculation
 
@@ -2201,6 +2260,8 @@ Si       0.126410102   0.126410111   0.126410101
 
     -4.7625   7.3124   7.3124   7.5615
 
+     highest occupied level (ev):     7.5615
+
 !    total energy              =     -14.44866782 Ry
      Harris-Foulkes estimate   =     -14.44866782 Ry
      estimated scf accuracy    <          1.2E-09 Ry
@@ -2234,7 +2295,7 @@ Si       0.126206884   0.126206892   0.126206877
 
      total cpu time spent up to now is        1.0 secs
 
-     per-process dynamical memory:     1.3 Mb
+     per-process dynamical memory:     1.4 Mb
 
      Self-consistent Calculation
 
@@ -2265,6 +2326,8 @@ Si       0.126206884   0.126206892   0.126206877
           k = 0.0000 0.0000 0.0000 (   113 PWs)   bands (ev):
 
     -4.7622   7.3242   7.3242   7.5375
+
+     highest occupied level (ev):     7.5375
 
 !    total energy              =     -14.44884853 Ry
      Harris-Foulkes estimate   =     -14.44884853 Ry
@@ -2297,9 +2360,9 @@ Si       0.125983025   0.125983031   0.125983013
      Writing output data file pwscf.save
      second order charge density extrapolation
 
-     total cpu time spent up to now is        1.1 secs
+     total cpu time spent up to now is        1.0 secs
 
-     per-process dynamical memory:     1.3 Mb
+     per-process dynamical memory:     1.4 Mb
 
      Self-consistent Calculation
 
@@ -2313,7 +2376,7 @@ Si       0.125983025   0.125983031   0.125983013
      Davidson diagonalization with overlap
      ethr =  4.18E-10,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is        1.1 secs
+     total cpu time spent up to now is        1.0 secs
 
      total energy              =     -14.44901556 Ry
      Harris-Foulkes estimate   =     -14.44901560 Ry
@@ -2323,7 +2386,7 @@ Si       0.125983025   0.125983031   0.125983013
      Davidson diagonalization with overlap
      ethr =  8.66E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is        1.1 secs
+     total cpu time spent up to now is        1.0 secs
 
      total energy              =     -14.44901558 Ry
      Harris-Foulkes estimate   =     -14.44901560 Ry
@@ -2333,13 +2396,15 @@ Si       0.125983025   0.125983031   0.125983013
      Davidson diagonalization with overlap
      ethr =  7.00E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is        1.1 secs
+     total cpu time spent up to now is        1.0 secs
 
      End of self-consistent calculation
 
           k = 0.0000 0.0000 0.0000 (   113 PWs)   bands (ev):
 
     -4.7618   7.3372   7.3372   7.5109
+
+     highest occupied level (ev):     7.5109
 
 !    total energy              =     -14.44901558 Ry
      Harris-Foulkes estimate   =     -14.44901558 Ry
@@ -2374,7 +2439,7 @@ Si       0.125742302   0.125742307   0.125742286
 
      total cpu time spent up to now is        1.1 secs
 
-     per-process dynamical memory:     1.3 Mb
+     per-process dynamical memory:     1.4 Mb
 
      Self-consistent Calculation
 
@@ -2405,6 +2470,8 @@ Si       0.125742302   0.125742307   0.125742286
           k = 0.0000 0.0000 0.0000 (   113 PWs)   bands (ev):
 
     -4.7616   7.3513   7.3513   7.4825
+
+     highest occupied level (ev):     7.4825
 
 !    total energy              =     -14.44915755 Ry
      Harris-Foulkes estimate   =     -14.44915756 Ry
@@ -2439,7 +2506,7 @@ Si       0.125488803   0.125488808   0.125488784
 
      total cpu time spent up to now is        1.1 secs
 
-     per-process dynamical memory:     1.3 Mb
+     per-process dynamical memory:     1.4 Mb
 
      Self-consistent Calculation
 
@@ -2481,6 +2548,8 @@ Si       0.125488803   0.125488808   0.125488784
 
     -4.7614   7.3661   7.3662   7.4525
 
+     highest occupied level (ev):     7.4525
+
 !    total energy              =     -14.44926458 Ry
      Harris-Foulkes estimate   =     -14.44926459 Ry
      estimated scf accuracy    <          2.0E-09 Ry
@@ -2504,7 +2573,7 @@ Si       0.125226863   0.125226868   0.125226843
 
 
      kinetic energy (Ekin) =     0.00132152 Ry
-     temperature           =   139.10071400 K 
+     temperature           =   139.10071401 K 
      Ekin + Etot (const)   =   -14.44794307 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
@@ -2512,9 +2581,9 @@ Si       0.125226863   0.125226868   0.125226843
      Writing output data file pwscf.save
      second order charge density extrapolation
 
-     total cpu time spent up to now is        1.2 secs
+     total cpu time spent up to now is        1.1 secs
 
-     per-process dynamical memory:     1.3 Mb
+     per-process dynamical memory:     1.4 Mb
 
      Self-consistent Calculation
 
@@ -2528,7 +2597,7 @@ Si       0.125226863   0.125226868   0.125226843
      Davidson diagonalization with overlap
      ethr =  3.94E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is        1.2 secs
+     total cpu time spent up to now is        1.1 secs
 
      total energy              =     -14.44932909 Ry
      Harris-Foulkes estimate   =     -14.44932912 Ry
@@ -2538,7 +2607,7 @@ Si       0.125226863   0.125226868   0.125226843
      Davidson diagonalization with overlap
      ethr =  6.81E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is        1.2 secs
+     total cpu time spent up to now is        1.1 secs
 
      total energy              =     -14.44932910 Ry
      Harris-Foulkes estimate   =     -14.44932911 Ry
@@ -2548,13 +2617,15 @@ Si       0.125226863   0.125226868   0.125226843
      Davidson diagonalization with overlap
      ethr =  2.22E-10,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        1.2 secs
+     total cpu time spent up to now is        1.1 secs
 
      End of self-consistent calculation
 
           k = 0.0000 0.0000 0.0000 (   113 PWs)   bands (ev):
 
     -4.7613   7.3815   7.3815   7.4216
+
+     highest occupied level (ev):     7.4216
 
 !    total energy              =     -14.44932910 Ry
      Harris-Foulkes estimate   =     -14.44932911 Ry
@@ -2589,7 +2660,7 @@ Si       0.124960990   0.124960995   0.124960968
 
      total cpu time spent up to now is        1.2 secs
 
-     per-process dynamical memory:     1.3 Mb
+     per-process dynamical memory:     1.4 Mb
 
      Self-consistent Calculation
 
@@ -2631,6 +2702,8 @@ Si       0.124960990   0.124960995   0.124960968
 
     -4.7612   7.3903   7.3972   7.3972
 
+     highest occupied level (ev):     7.3972
+
 !    total energy              =     -14.44934635 Ry
      Harris-Foulkes estimate   =     -14.44934635 Ry
      estimated scf accuracy    <          7.0E-10 Ry
@@ -2664,7 +2737,7 @@ Si       0.124695794   0.124695800   0.124695772
 
      total cpu time spent up to now is        1.2 secs
 
-     per-process dynamical memory:     1.3 Mb
+     per-process dynamical memory:     1.4 Mb
 
      Self-consistent Calculation
 
@@ -2706,6 +2779,8 @@ Si       0.124695794   0.124695800   0.124695772
 
     -4.7613   7.3591   7.4128   7.4128
 
+     highest occupied level (ev):     7.4128
+
 !    total energy              =     -14.44931479 Ry
      Harris-Foulkes estimate   =     -14.44931479 Ry
      estimated scf accuracy    <          1.3E-10 Ry
@@ -2737,9 +2812,9 @@ Si       0.124435907   0.124435913   0.124435885
      Writing output data file pwscf.save
      second order charge density extrapolation
 
-     total cpu time spent up to now is        1.3 secs
+     total cpu time spent up to now is        1.2 secs
 
-     per-process dynamical memory:     1.3 Mb
+     per-process dynamical memory:     1.4 Mb
 
      Self-consistent Calculation
 
@@ -2753,13 +2828,15 @@ Si       0.124435907   0.124435913   0.124435885
      Davidson diagonalization with overlap
      ethr =  1.32E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is        1.3 secs
+     total cpu time spent up to now is        1.2 secs
 
      End of self-consistent calculation
 
           k = 0.0000 0.0000 0.0000 (   113 PWs)   bands (ev):
 
     -4.7614   7.3286   7.4281   7.4281
+
+     highest occupied level (ev):     7.4281
 
 !    total energy              =     -14.44923627 Ry
      Harris-Foulkes estimate   =     -14.44923627 Ry
@@ -2794,7 +2871,7 @@ Si       0.124185903   0.124185909   0.124185881
 
      total cpu time spent up to now is        1.3 secs
 
-     per-process dynamical memory:     1.3 Mb
+     per-process dynamical memory:     1.4 Mb
 
      Self-consistent Calculation
 
@@ -2836,6 +2913,8 @@ Si       0.124185903   0.124185909   0.124185881
 
     -4.7617   7.2993   7.4429   7.4429
 
+     highest occupied level (ev):     7.4429
+
 !    total energy              =     -14.44911595 Ry
      Harris-Foulkes estimate   =     -14.44911595 Ry
      estimated scf accuracy    <          2.4E-10 Ry
@@ -2869,7 +2948,7 @@ Si       0.123950210   0.123950217   0.123950188
 
      total cpu time spent up to now is        1.3 secs
 
-     per-process dynamical memory:     1.3 Mb
+     per-process dynamical memory:     1.4 Mb
 
      Self-consistent Calculation
 
@@ -2890,6 +2969,8 @@ Si       0.123950210   0.123950217   0.123950188
           k = 0.0000 0.0000 0.0000 (   113 PWs)   bands (ev):
 
     -4.7620   7.2717   7.4569   7.4569
+
+     highest occupied level (ev):     7.4569
 
 !    total energy              =     -14.44896202 Ry
      Harris-Foulkes estimate   =     -14.44896202 Ry
@@ -2922,9 +3003,9 @@ Si       0.123733035   0.123733043   0.123733013
      Writing output data file pwscf.save
      second order charge density extrapolation
 
-     total cpu time spent up to now is        1.4 secs
+     total cpu time spent up to now is        1.3 secs
 
-     per-process dynamical memory:     1.3 Mb
+     per-process dynamical memory:     1.4 Mb
 
      Self-consistent Calculation
 
@@ -2938,7 +3019,7 @@ Si       0.123733035   0.123733043   0.123733013
      Davidson diagonalization with overlap
      ethr =  3.06E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is        1.4 secs
+     total cpu time spent up to now is        1.3 secs
 
      total energy              =     -14.44878515 Ry
      Harris-Foulkes estimate   =     -14.44878517 Ry
@@ -2948,7 +3029,7 @@ Si       0.123733035   0.123733043   0.123733013
      Davidson diagonalization with overlap
      ethr =  4.25E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is        1.4 secs
+     total cpu time spent up to now is        1.3 secs
 
      total energy              =     -14.44878516 Ry
      Harris-Foulkes estimate   =     -14.44878517 Ry
@@ -2958,13 +3039,15 @@ Si       0.123733035   0.123733043   0.123733013
      Davidson diagonalization with overlap
      ethr =  1.54E-10,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        1.4 secs
+     total cpu time spent up to now is        1.3 secs
 
      End of self-consistent calculation
 
           k = 0.0000 0.0000 0.0000 (   113 PWs)   bands (ev):
 
     -4.7623   7.2464   7.4698   7.4698
+
+     highest occupied level (ev):     7.4698
 
 !    total energy              =     -14.44878516 Ry
      Harris-Foulkes estimate   =     -14.44878516 Ry
@@ -2999,7 +3082,7 @@ Si       0.123538277   0.123538285   0.123538256
 
      total cpu time spent up to now is        1.4 secs
 
-     per-process dynamical memory:     1.3 Mb
+     per-process dynamical memory:     1.4 Mb
 
      Self-consistent Calculation
 
@@ -3020,6 +3103,8 @@ Si       0.123538277   0.123538285   0.123538256
           k = 0.0000 0.0000 0.0000 (   113 PWs)   bands (ev):
 
     -4.7627   7.2236   7.4813   7.4813
+
+     highest occupied level (ev):     7.4813
 
 !    total energy              =     -14.44859781 Ry
      Harris-Foulkes estimate   =     -14.44859781 Ry
@@ -3054,7 +3139,7 @@ Si       0.123369453   0.123369461   0.123369433
 
      total cpu time spent up to now is        1.4 secs
 
-     per-process dynamical memory:     1.3 Mb
+     per-process dynamical memory:     1.4 Mb
 
      Self-consistent Calculation
 
@@ -3096,6 +3181,8 @@ Si       0.123369453   0.123369461   0.123369433
 
     -4.7630   7.2040   7.4914   7.4914
 
+     highest occupied level (ev):     7.4914
+
 !    total energy              =     -14.44841329 Ry
      Harris-Foulkes estimate   =     -14.44841329 Ry
      estimated scf accuracy    <          1.8E-10 Ry
@@ -3119,7 +3206,7 @@ Si       0.123229630   0.123229639   0.123229610
 
 
      kinetic energy (Ekin) =     0.00047385 Ry
-     temperature           =    49.87637924 K 
+     temperature           =    49.87637925 K 
      Ekin + Etot (const)   =   -14.44793944 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
@@ -3127,9 +3214,9 @@ Si       0.123229630   0.123229639   0.123229610
      Writing output data file pwscf.save
      second order charge density extrapolation
 
-     total cpu time spent up to now is        1.5 secs
+     total cpu time spent up to now is        1.4 secs
 
-     per-process dynamical memory:     1.3 Mb
+     per-process dynamical memory:     1.4 Mb
 
      Self-consistent Calculation
 
@@ -3143,13 +3230,15 @@ Si       0.123229630   0.123229639   0.123229610
      Davidson diagonalization with overlap
      ethr =  2.05E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is        1.5 secs
+     total cpu time spent up to now is        1.4 secs
 
      End of self-consistent calculation
 
           k = 0.0000 0.0000 0.0000 (   113 PWs)   bands (ev):
 
     -4.7633   7.1877   7.4997   7.4997
+
+     highest occupied level (ev):     7.4997
 
 !    total energy              =     -14.44824484 Ry
      Harris-Foulkes estimate   =     -14.44824485 Ry
@@ -3174,7 +3263,7 @@ Si       0.123121356   0.123121365   0.123121337
 
 
      kinetic energy (Ekin) =     0.00030617 Ry
-     temperature           =    32.22658670 K 
+     temperature           =    32.22658671 K 
      Ekin + Etot (const)   =   -14.44793868 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
@@ -3182,9 +3271,9 @@ Si       0.123121356   0.123121365   0.123121337
      Writing output data file pwscf.save
      second order charge density extrapolation
 
-     total cpu time spent up to now is        1.5 secs
+     total cpu time spent up to now is        1.4 secs
 
-     per-process dynamical memory:     1.3 Mb
+     per-process dynamical memory:     1.4 Mb
 
      Self-consistent Calculation
 
@@ -3198,7 +3287,7 @@ Si       0.123121356   0.123121365   0.123121337
      Davidson diagonalization with overlap
      ethr =  3.51E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is        1.5 secs
+     total cpu time spent up to now is        1.4 secs
 
      total energy              =     -14.44810462 Ry
      Harris-Foulkes estimate   =     -14.44810466 Ry
@@ -3208,7 +3297,7 @@ Si       0.123121356   0.123121365   0.123121337
      Davidson diagonalization with overlap
      ethr =  7.05E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is        1.5 secs
+     total cpu time spent up to now is        1.4 secs
 
      total energy              =     -14.44810464 Ry
      Harris-Foulkes estimate   =     -14.44810465 Ry
@@ -3225,6 +3314,8 @@ Si       0.123121356   0.123121365   0.123121337
           k = 0.0000 0.0000 0.0000 (   113 PWs)   bands (ev):
 
     -4.7636   7.1751   7.5061   7.5061
+
+     highest occupied level (ev):     7.5061
 
 !    total energy              =     -14.44810464 Ry
      Harris-Foulkes estimate   =     -14.44810464 Ry
@@ -3259,7 +3350,7 @@ Si       0.123046614   0.123046623   0.123046597
 
      total cpu time spent up to now is        1.5 secs
 
-     per-process dynamical memory:     1.3 Mb
+     per-process dynamical memory:     1.4 Mb
 
      Self-consistent Calculation
 
@@ -3280,6 +3371,8 @@ Si       0.123046614   0.123046623   0.123046597
           k = 0.0000 0.0000 0.0000 (   113 PWs)   bands (ev):
 
     -4.7638   7.1664   7.5106   7.5106
+
+     highest occupied level (ev):     7.5106
 
 !    total energy              =     -14.44800287 Ry
      Harris-Foulkes estimate   =     -14.44800287 Ry
@@ -3314,7 +3407,7 @@ Si       0.123006777   0.123006786   0.123006761
 
      total cpu time spent up to now is        1.5 secs
 
-     per-process dynamical memory:     1.3 Mb
+     per-process dynamical memory:     1.4 Mb
 
      Self-consistent Calculation
 
@@ -3328,7 +3421,7 @@ Si       0.123006777   0.123006786   0.123006761
      Davidson diagonalization with overlap
      ethr =  1.46E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is        1.6 secs
+     total cpu time spent up to now is        1.5 secs
 
      total energy              =     -14.44794695 Ry
      Harris-Foulkes estimate   =     -14.44794697 Ry
@@ -3338,13 +3431,15 @@ Si       0.123006777   0.123006786   0.123006761
      Davidson diagonalization with overlap
      ethr =  2.44E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is        1.6 secs
+     total cpu time spent up to now is        1.5 secs
 
      End of self-consistent calculation
 
           k = 0.0000 0.0000 0.0000 (   113 PWs)   bands (ev):
 
     -4.7639   7.1618   7.5130   7.5130
+
+     highest occupied level (ev):     7.5130
 
 !    total energy              =     -14.44794696 Ry
      Harris-Foulkes estimate   =     -14.44794696 Ry
@@ -3377,9 +3472,9 @@ Si       0.123002576   0.123002585   0.123002562
      Writing output data file pwscf.save
      second order charge density extrapolation
 
-     total cpu time spent up to now is        1.6 secs
+     total cpu time spent up to now is        1.5 secs
 
-     per-process dynamical memory:     1.3 Mb
+     per-process dynamical memory:     1.4 Mb
 
      Self-consistent Calculation
 
@@ -3393,7 +3488,7 @@ Si       0.123002576   0.123002585   0.123002562
      Davidson diagonalization with overlap
      ethr =  7.54E-11,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is        1.6 secs
+     total cpu time spent up to now is        1.5 secs
 
      total energy              =     -14.44794099 Ry
      Harris-Foulkes estimate   =     -14.44794100 Ry
@@ -3403,7 +3498,7 @@ Si       0.123002576   0.123002585   0.123002562
      Davidson diagonalization with overlap
      ethr =  3.41E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is        1.6 secs
+     total cpu time spent up to now is        1.5 secs
 
      total energy              =     -14.44794099 Ry
      Harris-Foulkes estimate   =     -14.44794100 Ry
@@ -3413,13 +3508,15 @@ Si       0.123002576   0.123002585   0.123002562
      Davidson diagonalization with overlap
      ethr =  2.76E-10,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        1.6 secs
+     total cpu time spent up to now is        1.5 secs
 
      End of self-consistent calculation
 
           k = 0.0000 0.0000 0.0000 (   113 PWs)   bands (ev):
 
     -4.7639   7.1613   7.5132   7.5132
+
+     highest occupied level (ev):     7.5132
 
 !    total energy              =     -14.44794100 Ry
      Harris-Foulkes estimate   =     -14.44794100 Ry
@@ -3454,7 +3551,7 @@ Si       0.123034089   0.123034097   0.123034077
 
      total cpu time spent up to now is        1.6 secs
 
-     per-process dynamical memory:     1.3 Mb
+     per-process dynamical memory:     1.4 Mb
 
      Self-consistent Calculation
 
@@ -3496,6 +3593,8 @@ Si       0.123034089   0.123034097   0.123034077
 
     -4.7638   7.1650   7.5113   7.5113
 
+     highest occupied level (ev):     7.5113
+
 !    total energy              =     -14.44798542 Ry
      Harris-Foulkes estimate   =     -14.44798542 Ry
      estimated scf accuracy    <          8.0E-10 Ry
@@ -3523,44 +3622,6 @@ Si       0.123100734   0.123100742   0.123100724
      Ekin + Etot (const)   =   -14.44793749 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
-     second order charge density extrapolation
-
-     total cpu time spent up to now is        1.6 secs
-
-     per-process dynamical memory:     1.3 Mb
-
-     Self-consistent Calculation
-
-     iteration #  1     ecut=     8.00 Ry     beta=0.70
-     Davidson diagonalization with overlap
-     ethr =  1.00E-06,  avg # of iterations =  1.0
-
-     Threshold (ethr) on eigenvalues was too large:
-     Diagonalizing with lowered threshold
-
-     Davidson diagonalization with overlap
-     ethr =  2.59E-10,  avg # of iterations =  3.0
-
-     total cpu time spent up to now is        1.6 secs
-
-     End of self-consistent calculation
-
-          k = 0.0000 0.0000 0.0000 (   113 PWs)   bands (ev):
-
-    -4.7637   7.1727   7.5074   7.5074
-
-!    total energy              =     -14.44807697 Ry
-     Harris-Foulkes estimate   =     -14.44807697 Ry
-     estimated scf accuracy    <          3.6E-09 Ry
-
-     convergence has been achieved in   1 iterations
-
-     Forces acting on atoms (Ry/au):
-
-     atom    1 type  1   force =    -0.02209269   -0.02209254   -0.02209276
-     atom    2 type  1   force =     0.02209269    0.02209254    0.02209276
-
-     Total force =     0.054116     Total SCF correction =     0.000003
 
      The maximum number of steps has been reached.
 
@@ -3572,61 +3633,48 @@ Si       0.123100734   0.123100742   0.123100724
 
      < D > =       0.00000000 cm^2/s
 
-     Entering Dynamics:    iteration =    51
-                           time      =   0.0493 pico-seconds
-
-
-ATOMIC_POSITIONS (alat)
-Si      -0.123201291  -0.123201298  -0.123201283
-Si       0.123201291   0.123201298   0.123201283
-
-
-     kinetic energy (Ekin) =     0.00013906 Ry
-     temperature           =    14.63730321 K 
-     Ekin + Etot (const)   =   -14.44793791 Ry
-
-     Linear momentum :    0.0000000000    0.0000000000    0.0000000000
-
      Writing output data file pwscf.save
  
      init_run     :      0.02s CPU      0.02s WALL (       1 calls)
-     electrons    :      0.38s CPU      0.41s WALL (      51 calls)
-     update_pot   :      0.19s CPU      0.23s WALL (      50 calls)
-     forces       :      0.02s CPU      0.03s WALL (      51 calls)
+     electrons    :      0.34s CPU      0.40s WALL (      50 calls)
+     update_pot   :      0.10s CPU      0.22s WALL (      49 calls)
+     forces       :      0.07s CPU      0.03s WALL (      50 calls)
 
      Called by init_run:
      wfcinit      :      0.00s CPU      0.00s WALL (       1 calls)
      potinit      :      0.00s CPU      0.00s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :      0.20s CPU      0.22s WALL (     169 calls)
-     sum_band     :      0.07s CPU      0.05s WALL (     169 calls)
-     v_of_rho     :      0.08s CPU      0.08s WALL (     170 calls)
-     mix_rho      :      0.01s CPU      0.01s WALL (     169 calls)
+     c_bands      :      0.16s CPU      0.22s WALL (     167 calls)
+     sum_band     :      0.02s CPU      0.05s WALL (     167 calls)
+     v_of_rho     :      0.07s CPU      0.08s WALL (     168 calls)
+     mix_rho      :      0.02s CPU      0.01s WALL (     167 calls)
 
      Called by c_bands:
-     init_us_2    :      0.00s CPU      0.01s WALL (     339 calls)
-     cegterg      :      0.19s CPU      0.21s WALL (     169 calls)
+     init_us_2    :      0.00s CPU      0.01s WALL (     335 calls)
+     cegterg      :      0.15s CPU      0.21s WALL (     167 calls)
+
+     Called by sum_band:
 
      Called by *egterg:
-     h_psi        :      0.14s CPU      0.14s WALL (     597 calls)
-     g_psi        :      0.00s CPU      0.01s WALL (     427 calls)
-     cdiaghg      :      0.04s CPU      0.03s WALL (     496 calls)
+     h_psi        :      0.10s CPU      0.14s WALL (     591 calls)
+     g_psi        :      0.00s CPU      0.01s WALL (     423 calls)
+     cdiaghg      :      0.02s CPU      0.03s WALL (     492 calls)
 
      Called by h_psi:
-     add_vuspsi   :      0.00s CPU      0.00s WALL (     597 calls)
+     add_vuspsi   :      0.01s CPU      0.01s WALL (     591 calls)
 
      General routines
-     calbec       :      0.01s CPU      0.01s WALL (     648 calls)
-     fft          :      0.06s CPU      0.05s WALL (     881 calls)
-     fftw         :      0.15s CPU      0.13s WALL (    4860 calls)
-     davcio       :      0.00s CPU      0.00s WALL (     119 calls)
+     calbec       :      0.01s CPU      0.01s WALL (     791 calls)
+     fft          :      0.06s CPU      0.05s WALL (     869 calls)
+     fftw         :      0.08s CPU      0.12s WALL (    4806 calls)
+     davcio       :      0.00s CPU      0.00s WALL (      50 calls)
  
  
-     PWSCF        :     1.42s CPU         1.65s WALL
+     PWSCF        :     1.43s CPU         1.60s WALL
 
  
-   This run was terminated on:  10:24:47   6Jan2012            
+   This run was terminated on:  19:19:58   1Dec2015            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
