@@ -37,6 +37,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+/* QE specific */
+
+#define fftw_destroy_plan qe_fftw_destroy_plan
+#define fftw_create_plan qe_fftw_create_plan
+
+/* ----------- */
+
 #ifdef __cplusplus
 extern "C" {
 #endif				/* __cplusplus */
