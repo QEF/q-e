@@ -1,5 +1,5 @@
 
-     Program PWSCF v.5.2.1 (svn rev. 11852M) starts on 19Nov2015 at 17:55: 4 
+     Program PWSCF v.5.2.1 (svn rev. 11881M) starts on  1Dec2015 at 19:15:39 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -278,19 +278,19 @@
 
      Writing output data file pwscf.save
  
-     init_run     :      0.35s CPU      0.35s WALL (       1 calls)
-     electrons    :      0.83s CPU      0.83s WALL (       1 calls)
+     init_run     :      0.34s CPU      0.35s WALL (       1 calls)
+     electrons    :      0.82s CPU      0.83s WALL (       1 calls)
      forces       :      0.02s CPU      0.01s WALL (       1 calls)
      stress       :      0.04s CPU      0.04s WALL (       1 calls)
 
      Called by init_run:
      wfcinit      :      0.02s CPU      0.02s WALL (       1 calls)
-     potinit      :      0.16s CPU      0.16s WALL (       1 calls)
+     potinit      :      0.15s CPU      0.16s WALL (       1 calls)
 
      Called by electrons:
      c_bands      :      0.06s CPU      0.06s WALL (       5 calls)
      sum_band     :      0.02s CPU      0.02s WALL (       5 calls)
-     v_of_rho     :      0.86s CPU      0.86s WALL (       6 calls)
+     v_of_rho     :      0.85s CPU      0.86s WALL (       6 calls)
      mix_rho      :      0.02s CPU      0.02s WALL (       5 calls)
 
      Called by c_bands:
@@ -302,22 +302,22 @@
      Called by *egterg:
      h_psi        :      0.06s CPU      0.06s WALL (      30 calls)
      g_psi        :      0.00s CPU      0.00s WALL (      18 calls)
-     rdiaghg      :      0.02s CPU      0.00s WALL (      28 calls)
+     rdiaghg      :      0.00s CPU      0.01s WALL (      28 calls)
 
      Called by h_psi:
      add_vuspsi   :      0.00s CPU      0.00s WALL (      30 calls)
 
      General routines
      calbec       :      0.00s CPU      0.00s WALL (      40 calls)
-     fft          :      0.01s CPU      0.05s WALL (     135 calls)
+     fft          :      0.04s CPU      0.05s WALL (     135 calls)
      fftw         :      0.06s CPU      0.06s WALL (     308 calls)
      davcio       :      0.00s CPU      0.00s WALL (       2 calls)
  
  
-     PWSCF        :     1.28s CPU         1.30s WALL
+     PWSCF        :     1.27s CPU         1.30s WALL
 
  
-   This run was terminated on:  17:55: 6  19Nov2015            
+   This run was terminated on:  19:15:41   1Dec2015            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
