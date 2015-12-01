@@ -1227,10 +1227,10 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	}
 	
 	var report -type INTEGER {
-	    default { 1 }
+	    default { 100 }
 	    info {
-		It is the number of iterations after which the program
-		write all the atomic magnetic moments.
+		Number of iterations after which the program
+		writes all the atomic magnetic moments.
 	    }
 	}
 	
