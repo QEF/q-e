@@ -1,23 +1,23 @@
 
-     Program PWSCF v.4.99       starts on  6Jan2012 at 11:28:17 
+     Program PWSCF v.5.2.1 (svn rev. 11881M) starts on  2Dec2015 at 10: 8:11 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
          "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
           URL http://www.quantum-espresso.org", 
      in publications or presentations arising from this work. More details at
-     http://www.quantum-espresso.org/quote.php
+     http://www.quantum-espresso.org/quote
 
      Serial version
+     Reading input from /home/giannozz/trunk/espresso/PW/tests/scf.in1
 
      Current dimensions of program PWSCF are:
      Max number of different atomic species (ntypx) = 10
      Max number of k-points (npk) =  40000
      Max angular momentum in pseudopotentials (lmaxx) =  3
-     Reading input from /home/giannozz/trunk/espresso/tests/scf.in1
 
      Atomic positions and unit cell read from directory:
-     /home/giannozz/trunk/espresso/tmp/pwscf.save/
+     /home/giannozz/trunk/espresso/tempdir/pwscf.save/
  
  
      G-vector sticks info
@@ -36,8 +36,7 @@
      number of Kohn-Sham states=            8
      kinetic-energy cutoff     =      12.0000  Ry
      charge density cutoff     =      48.0000  Ry
-     Exchange-correlation      =  SLA  PZ   NOGX NOGC ( 1 1 0 0 0)
-     EXX-fraction              =        0.00
+     Exchange-correlation      =  SLA  PZ   NOGX NOGC ( 1  1  0  0 0 0)
 
      celldm(1)=  10.200000  celldm(2)=   0.000000  celldm(3)=   0.000000
      celldm(4)=   0.000000  celldm(5)=   0.000000  celldm(6)=   0.000000
@@ -67,7 +66,7 @@
 
      24 Sym. Ops. (no inversion) found
           (note: 24 additional sym.ops. were found but ignored
-           their fractional transations are incommensurate with FFT grid)
+           their fractional translations are incommensurate with FFT grid)
 
 
    Cartesian axes
@@ -78,49 +77,45 @@
 
      number of k points=    21
                        cart. coord. in units 2pi/alat
-        k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   2.0000000
-        k(    2) = (   0.2000000   0.0000000   0.0000000), wk =   2.0000000
-        k(    3) = (   0.4000000   0.0000000   0.0000000), wk =   2.0000000
-        k(    4) = (   0.6000000   0.0000000   0.0000000), wk =   2.0000000
-        k(    5) = (   0.8000000   0.0000000   0.0000000), wk =   2.0000000
-        k(    6) = (   1.0000000   0.0000000   0.0000000), wk =   2.0000000
-        k(    7) = (   1.0000000   0.0500000   0.0500000), wk =   2.0000000
-        k(    8) = (   1.0000000   0.1000000   0.1000000), wk =   2.0000000
-        k(    9) = (   1.0000000   0.1500000   0.1500000), wk =   2.0000000
-        k(   10) = (   1.0000000   0.2000000   0.2000000), wk =   2.0000000
-        k(   11) = (   1.0000000   0.2500000   0.2500000), wk =   2.0000000
-        k(   12) = (   0.9000000   0.3000000   0.3000000), wk =   2.0000000
-        k(   13) = (   0.8000000   0.3500000   0.3500000), wk =   2.0000000
-        k(   14) = (   0.7000000   0.4000000   0.4000000), wk =   2.0000000
-        k(   15) = (   0.6000000   0.4500000   0.4500000), wk =   2.0000000
-        k(   16) = (   0.5000000   0.5000000   0.5000000), wk =   2.0000000
-        k(   17) = (   0.4000000   0.4000000   0.4000000), wk =   2.0000000
-        k(   18) = (   0.3000000   0.3000000   0.3000000), wk =   2.0000000
-        k(   19) = (   0.2000000   0.2000000   0.2000000), wk =   2.0000000
-        k(   20) = (   0.1000000   0.1000000   0.1000000), wk =   2.0000000
-        k(   21) = (   0.0000000   0.0000000   0.0000000), wk =   2.0000000
+        k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   0.0952381
+        k(    2) = (   0.2000000   0.0000000   0.0000000), wk =   0.0952381
+        k(    3) = (   0.4000000   0.0000000   0.0000000), wk =   0.0952381
+        k(    4) = (   0.6000000   0.0000000   0.0000000), wk =   0.0952381
+        k(    5) = (   0.8000000   0.0000000   0.0000000), wk =   0.0952381
+        k(    6) = (   1.0000000   0.0000000   0.0000000), wk =   0.0952381
+        k(    7) = (   1.0000000   0.0500000   0.0500000), wk =   0.0952381
+        k(    8) = (   1.0000000   0.1000000   0.1000000), wk =   0.0952381
+        k(    9) = (   1.0000000   0.1500000   0.1500000), wk =   0.0952381
+        k(   10) = (   1.0000000   0.2000000   0.2000000), wk =   0.0952381
+        k(   11) = (   1.0000000   0.2500000   0.2500000), wk =   0.0952381
+        k(   12) = (   0.9000000   0.3000000   0.3000000), wk =   0.0952381
+        k(   13) = (   0.8000000   0.3500000   0.3500000), wk =   0.0952381
+        k(   14) = (   0.7000000   0.4000000   0.4000000), wk =   0.0952381
+        k(   15) = (   0.6000000   0.4500000   0.4500000), wk =   0.0952381
+        k(   16) = (   0.5000000   0.5000000   0.5000000), wk =   0.0952381
+        k(   17) = (   0.4000000   0.4000000   0.4000000), wk =   0.0952381
+        k(   18) = (   0.3000000   0.3000000   0.3000000), wk =   0.0952381
+        k(   19) = (   0.2000000   0.2000000   0.2000000), wk =   0.0952381
+        k(   20) = (   0.1000000   0.1000000   0.1000000), wk =   0.0952381
+        k(   21) = (   0.0000000   0.0000000   0.0000000), wk =   0.0952381
 
      Dense  grid:     1459 G-vectors     FFT dimensions: (  15,  15,  15)
 
      Largest allocated arrays     est. size (Mb)     dimensions
-        Kohn-Sham Wavefunctions         0.02 Mb     (    194,    8)
-        NL pseudopotentials             0.02 Mb     (    194,    8)
-        Each V/rho on FFT grid          0.05 Mb     (   3375)
-        Each G-vector array             0.01 Mb     (   1459)
-        G-vector shells                 0.00 Mb     (     43)
+        Kohn-Sham Wavefunctions         0.02 Mb     (     194,    8)
+        NL pseudopotentials             0.02 Mb     (     194,    8)
+        Each V/rho on FFT grid          0.05 Mb     (    3375)
+        Each G-vector array             0.01 Mb     (    1459)
+        G-vector shells                 0.00 Mb     (      43)
      Largest temporary arrays     est. size (Mb)     dimensions
-        Auxiliary wavefunctions         0.09 Mb     (    194,   32)
-        Each subspace H/S matrix        0.02 Mb     (  32,  32)
-        Each <psi_i|beta_j> matrix      0.00 Mb     (      8,    8)
+        Auxiliary wavefunctions         0.09 Mb     (     194,   32)
+        Each subspace H/S matrix        0.02 Mb     (      32,   32)
+        Each <psi_i|beta_j> matrix      0.00 Mb     (       8,    8)
 
      The potential is recalculated from file :
-     /home/giannozz/trunk/espresso/tmp/pwscf.save/charge-density.dat
+     /home/giannozz/trunk/espresso/tempdir/pwscf.save/charge-density.dat
 
      Starting wfc are    8 randomized atomic wfcs
-
-     total cpu time spent up to now is        0.1 secs
-
-     per-process dynamical memory:     1.5 Mb
 
      Band Structure Calculation
      Davidson diagonalization with overlap
@@ -131,125 +126,128 @@
 
      End of band structure calculation
 
-          k = 0.0000 0.0000 0.0000     band energies (ev):
+          k = 0.0000 0.0000 0.0000 (   169 PWs)   bands (ev):
 
     -5.6687   6.3360   6.3360   6.3360   8.8977   8.8977   8.8977   9.8994
 
-          k = 0.2000 0.0000 0.0000     band energies (ev):
+          k = 0.2000 0.0000 0.0000 (   173 PWs)   bands (ev):
 
     -5.5035   5.4454   5.7234   5.7234   8.5043   9.7229   9.7229  10.6608
 
-          k = 0.4000 0.0000 0.0000     band energies (ev):
+          k = 0.4000 0.0000 0.0000 (   182 PWs)   bands (ev):
 
     -4.9866   3.7828   4.7737   4.7737   7.7521  10.2158  11.2953  11.2953
 
-          k = 0.6000 0.0000 0.0000     band energies (ev):
+          k = 0.6000 0.0000 0.0000 (   186 PWs)   bands (ev):
 
     -4.1136   1.9721   4.0067   4.0067   7.1390   8.7032  13.0662  13.0662
 
-          k = 0.8000 0.0000 0.0000     band energies (ev):
+          k = 0.8000 0.0000 0.0000 (   194 PWs)   bands (ev):
 
     -2.9485   0.1736   3.5278   3.5278   6.8246   7.5723  14.9321  14.9321
 
-          k = 1.0000 0.0000 0.0000     band energies (ev):
+          k = 1.0000 0.0000 0.0000 (   190 PWs)   bands (ev):
 
     -1.4850  -1.4850   3.3662   3.3662   6.9634   6.9634  16.4944  16.4944
 
-          k = 1.0000 0.0500 0.0500     band energies (ev):
+          k = 1.0000 0.0500 0.0500 (   190 PWs)   bands (ev):
 
     -1.4923  -1.4612   3.2169   3.3843   6.9843   7.1849  16.2778  16.3621
 
-          k = 1.0000 0.1000 0.1000     band energies (ev):
+          k = 1.0000 0.1000 0.1000 (   192 PWs)   bands (ev):
 
     -1.5207  -1.3958   2.8622   3.4386   7.0440   7.7574  15.7717  16.0203
 
-          k = 1.0000 0.1500 0.1500     band energies (ev):
+          k = 1.0000 0.1500 0.1500 (   188 PWs)   bands (ev):
 
     -1.5798  -1.2602   2.4549   3.5283   7.1511   8.5465  15.1579  15.5735
 
-          k = 1.0000 0.2000 0.2000     band energies (ev):
+          k = 1.0000 0.2000 0.2000 (   188 PWs)   bands (ev):
 
     -1.6804  -1.1105   2.0973   3.6521   7.2847   9.4656  14.5296  15.0768
 
-          k = 1.0000 0.2500 0.2500     band energies (ev):
+          k = 1.0000 0.2500 0.2500 (   186 PWs)   bands (ev):
 
     -1.8691  -0.8929   1.8512   3.8081   7.4704  10.4622  13.8961  14.4265
 
-          k = 0.9000 0.3000 0.3000     band energies (ev):
+          k = 0.9000 0.3000 0.3000 (   185 PWs)   bands (ev):
 
     -2.2719  -0.5830   1.9303   4.0284   7.7398  11.5404  12.8398  12.9952
 
-          k = 0.8000 0.3500 0.3500     band energies (ev):
+          k = 0.8000 0.3500 0.3500 (   182 PWs)   bands (ev):
 
     -2.6934  -0.5107   2.5730   4.3285   8.1281  11.4263  11.6625  12.8909
 
-          k = 0.7000 0.4000 0.4000     band energies (ev):
+          k = 0.7000 0.4000 0.4000 (   182 PWs)   bands (ev):
 
     -3.0177  -0.6089   3.5481   4.6665   8.5204  10.1860  10.6575  14.0689
 
-          k = 0.6000 0.4500 0.4500     band energies (ev):
+          k = 0.6000 0.4500 0.4500 (   182 PWs)   bands (ev):
 
     -3.2069  -0.7161   4.5528   4.9555   8.3606   9.6341   9.9523  14.1718
 
-          k = 0.5000 0.5000 0.5000     band energies (ev):
+          k = 0.5000 0.5000 0.5000 (   180 PWs)   bands (ev):
 
     -3.2602  -0.7570   5.0794   5.0794   7.9254   9.6978   9.6978  13.8859
 
-          k = 0.4000 0.4000 0.4000     band energies (ev):
+          k = 0.4000 0.4000 0.4000 (   183 PWs)   bands (ev):
 
     -3.7594  -0.0186   5.1539   5.1539   8.0020   9.7831   9.7831  14.0013
 
-          k = 0.3000 0.3000 0.3000     band energies (ev):
+          k = 0.3000 0.3000 0.3000 (   186 PWs)   bands (ev):
 
     -4.5385   1.4884   5.3733   5.3733   8.2161   9.9000   9.9000  13.9086
 
-          k = 0.2000 0.2000 0.2000     band energies (ev):
+          k = 0.2000 0.2000 0.2000 (   178 PWs)   bands (ev):
 
     -5.1604   3.3112   5.7239   5.7239   8.5984   9.7278   9.7278  12.4378
 
-          k = 0.1000 0.1000 0.1000     band energies (ev):
+          k = 0.1000 0.1000 0.1000 (   172 PWs)   bands (ev):
 
     -5.5450   5.1930   6.1230   6.1230   8.9569   9.2022   9.2022  10.7501
 
-          k = 0.0000 0.0000 0.0000     band energies (ev):
+          k = 0.0000 0.0000 0.0000 (   169 PWs)   bands (ev):
 
     -5.6687   6.3360   6.3360   6.3360   8.8977   8.8977   8.8977   9.8994
 
      Writing output data file pwscf.save
  
      init_run     :      0.02s CPU      0.02s WALL (       1 calls)
-     electrons    :      0.24s CPU      0.25s WALL (       1 calls)
+     electrons    :      0.25s CPU      0.25s WALL (       1 calls)
 
      Called by init_run:
      wfcinit      :      0.00s CPU      0.00s WALL (       1 calls)
      potinit      :      0.00s CPU      0.00s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :      0.24s CPU      0.25s WALL (       1 calls)
+     c_bands      :      0.25s CPU      0.25s WALL (       1 calls)
      v_of_rho     :      0.00s CPU      0.00s WALL (       1 calls)
 
      Called by c_bands:
      init_us_2    :      0.00s CPU      0.00s WALL (      21 calls)
-     cegterg      :      0.22s CPU      0.23s WALL (      21 calls)
+     cegterg      :      0.24s CPU      0.23s WALL (      21 calls)
+
+     Called by sum_band:
 
      Called by *egterg:
-     h_psi        :      0.10s CPU      0.12s WALL (     299 calls)
-     g_psi        :      0.01s CPU      0.01s WALL (     257 calls)
+     h_psi        :      0.13s CPU      0.13s WALL (     299 calls)
+     g_psi        :      0.00s CPU      0.01s WALL (     257 calls)
      cdiaghg      :      0.08s CPU      0.07s WALL (     278 calls)
 
      Called by h_psi:
-     add_vuspsi   :      0.00s CPU      0.00s WALL (     299 calls)
+     add_vuspsi   :      0.01s CPU      0.00s WALL (     299 calls)
 
      General routines
-     calbec       :      0.00s CPU      0.00s WALL (     299 calls)
+     calbec       :      0.01s CPU      0.00s WALL (     299 calls)
      fft          :      0.00s CPU      0.00s WALL (       3 calls)
-     fftw         :      0.09s CPU      0.09s WALL (    3250 calls)
+     fftw         :      0.09s CPU      0.10s WALL (    3250 calls)
+     davcio       :      0.00s CPU      0.00s WALL (      21 calls)
  
  
-     PWSCF        :     0.41s CPU         0.43s WALL
+     PWSCF        :     0.45s CPU         0.46s WALL
 
  
-   This run was terminated on:  11:28:18   6Jan2012            
+   This run was terminated on:  10: 8:12   2Dec2015            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

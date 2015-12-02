@@ -1,23 +1,23 @@
 
-     Program PWSCF v.4.99       starts on  6Jan2012 at 11:28:18 
+     Program PWSCF v.5.2.1 (svn rev. 11881M) starts on  2Dec2015 at 10: 8:12 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
          "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
           URL http://www.quantum-espresso.org", 
      in publications or presentations arising from this work. More details at
-     http://www.quantum-espresso.org/quote.php
+     http://www.quantum-espresso.org/quote
 
      Serial version
+     Reading input from /home/giannozz/trunk/espresso/PW/tests/scf.in2
 
      Current dimensions of program PWSCF are:
      Max number of different atomic species (ntypx) = 10
      Max number of k-points (npk) =  40000
      Max angular momentum in pseudopotentials (lmaxx) =  3
-     Reading input from /home/giannozz/trunk/espresso/tests/scf.in2
 
      Atomic positions and unit cell read from directory:
-     /home/giannozz/trunk/espresso/tmp/pwscf.save/
+     /home/giannozz/trunk/espresso/tempdir/pwscf.save/
  
  
      G-vector sticks info
@@ -36,8 +36,7 @@
      number of Kohn-Sham states=            8
      kinetic-energy cutoff     =      12.0000  Ry
      charge density cutoff     =      48.0000  Ry
-     Exchange-correlation      =  SLA  PZ   NOGX NOGC ( 1 1 0 0 0)
-     EXX-fraction              =        0.00
+     Exchange-correlation      =  SLA  PZ   NOGX NOGC ( 1  1  0  0 0 0)
 
      celldm(1)=  10.200000  celldm(2)=   0.000000  celldm(3)=   0.000000
      celldm(4)=   0.000000  celldm(5)=   0.000000  celldm(6)=   0.000000
@@ -67,7 +66,7 @@
 
      24 Sym. Ops. (no inversion) found
           (note: 24 additional sym.ops. were found but ignored
-           their fractional transations are incommensurate with FFT grid)
+           their fractional translations are incommensurate with FFT grid)
 
 
    Cartesian axes
@@ -92,24 +91,20 @@
      Dense  grid:     1459 G-vectors     FFT dimensions: (  15,  15,  15)
 
      Largest allocated arrays     est. size (Mb)     dimensions
-        Kohn-Sham Wavefunctions         0.02 Mb     (    192,    8)
-        NL pseudopotentials             0.02 Mb     (    192,    8)
-        Each V/rho on FFT grid          0.05 Mb     (   3375)
-        Each G-vector array             0.01 Mb     (   1459)
-        G-vector shells                 0.00 Mb     (     43)
+        Kohn-Sham Wavefunctions         0.02 Mb     (     192,    8)
+        NL pseudopotentials             0.02 Mb     (     192,    8)
+        Each V/rho on FFT grid          0.05 Mb     (    3375)
+        Each G-vector array             0.01 Mb     (    1459)
+        G-vector shells                 0.00 Mb     (      43)
      Largest temporary arrays     est. size (Mb)     dimensions
-        Auxiliary wavefunctions         0.09 Mb     (    192,   32)
-        Each subspace H/S matrix        0.02 Mb     (  32,  32)
-        Each <psi_i|beta_j> matrix      0.00 Mb     (      8,    8)
+        Auxiliary wavefunctions         0.09 Mb     (     192,   32)
+        Each subspace H/S matrix        0.02 Mb     (      32,   32)
+        Each <psi_i|beta_j> matrix      0.00 Mb     (       8,    8)
 
      The potential is recalculated from file :
-     /home/giannozz/trunk/espresso/tmp/pwscf.save/charge-density.dat
+     /home/giannozz/trunk/espresso/tempdir/pwscf.save/charge-density.dat
 
      Starting wfc are    8 randomized atomic wfcs
-
-     total cpu time spent up to now is        0.2 secs
-
-     per-process dynamical memory:     1.1 Mb
 
      Band Structure Calculation
      Davidson diagonalization with overlap
@@ -120,43 +115,43 @@
 
      End of band structure calculation
 
-          k = 0.1250 0.1250 0.1250     band energies (ev):
+          k = 0.1250 0.1250 0.1250 (   172 PWs)   bands (ev):
 
     -5.4706   4.7382   6.0279   6.0279   8.8974   9.3395   9.3395  11.1523
 
-          k = 0.1250 0.1250 0.3750     band energies (ev):
+          k = 0.1250 0.1250 0.3750 (   180 PWs)   bands (ev):
 
     -4.9390   3.1208   4.9509   5.0618   8.4665  10.1046  10.8682  11.1190
 
-          k = 0.1250 0.1250 0.6250     band energies (ev):
+          k = 0.1250 0.1250 0.6250 (   186 PWs)   bands (ev):
 
     -3.8735   1.4228   3.5622   4.0290   7.6390   9.1995  12.3955  12.7019
 
-          k = 0.1250 0.1250 0.8750     band energies (ev):
+          k = 0.1250 0.1250 0.8750 (   192 PWs)   bands (ev):
 
     -2.3492  -0.4822   2.7535   3.5416   7.1512   8.2502  14.7060  14.7522
 
-          k = 0.1250 0.3750 0.3750     band energies (ev):
+          k = 0.1250 0.3750 0.3750 (   187 PWs)   bands (ev):
 
     -4.4237   1.6761   3.9439   5.5190   9.0810  10.0402  10.2089  12.6374
 
-          k = 0.1250 0.3750 0.6250     band energies (ev):
+          k = 0.1250 0.3750 0.6250 (   188 PWs)   bands (ev):
 
     -3.4357   0.4677   2.9038   4.3187   9.2003   9.9002  11.3756  12.3445
 
-          k = 0.1250 0.3750 0.8750     band energies (ev):
+          k = 0.1250 0.3750 0.8750 (   189 PWs)   bands (ev):
 
     -2.1560  -0.5888   2.1105   3.2455   8.6854  10.6099  11.6524  13.8332
 
-          k = 0.1250 0.6250 0.6250     band energies (ev):
+          k = 0.1250 0.6250 0.6250 (   184 PWs)   bands (ev):
 
     -2.6862  -0.3462   2.2032   4.3656   8.1405  11.8301  11.8827  13.3481
 
-          k = 0.3750 0.3750 0.3750     band energies (ev):
+          k = 0.3750 0.3750 0.3750 (   183 PWs)   bands (ev):
 
     -3.9543   0.3153   5.1954   5.1954   8.0460   9.8187   9.8187  14.0525
 
-          k = 0.3750 0.3750 0.6250     band energies (ev):
+          k = 0.3750 0.3750 0.6250 (   182 PWs)   bands (ev):
 
     -3.1964  -0.5070   3.9935   4.6986   8.5444   9.8721  10.4853  13.7251
 
@@ -177,7 +172,9 @@
 
      Called by c_bands:
      init_us_2    :      0.00s CPU      0.00s WALL (      10 calls)
-     cegterg      :      0.12s CPU      0.12s WALL (      10 calls)
+     cegterg      :      0.11s CPU      0.12s WALL (      10 calls)
+
+     Called by sum_band:
 
      Called by *egterg:
      h_psi        :      0.06s CPU      0.06s WALL (     150 calls)
@@ -188,15 +185,16 @@
      add_vuspsi   :      0.00s CPU      0.00s WALL (     150 calls)
 
      General routines
-     calbec       :      0.01s CPU      0.00s WALL (     150 calls)
+     calbec       :      0.00s CPU      0.00s WALL (     150 calls)
      fft          :      0.00s CPU      0.00s WALL (       3 calls)
      fftw         :      0.05s CPU      0.05s WALL (    1618 calls)
+     davcio       :      0.00s CPU      0.00s WALL (      10 calls)
  
  
-     PWSCF        :     0.32s CPU         0.33s WALL
+     PWSCF        :     0.34s CPU         0.35s WALL
 
  
-   This run was terminated on:  11:28:18   6Jan2012            
+   This run was terminated on:  10: 8:12   2Dec2015            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

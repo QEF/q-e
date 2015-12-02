@@ -1,23 +1,23 @@
 
-     Program PWSCF v.4.99       starts on  6Jan2012 at 11:44:17 
+     Program PWSCF v.5.2.1 (svn rev. 11881M) starts on  2Dec2015 at 10: 7: 8 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
          "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
           URL http://www.quantum-espresso.org", 
      in publications or presentations arising from this work. More details at
-     http://www.quantum-espresso.org/quote.php
+     http://www.quantum-espresso.org/quote
 
      Serial version
+     Reading input from /home/giannozz/trunk/espresso/PW/tests/spinorbit.in1
 
      Current dimensions of program PWSCF are:
      Max number of different atomic species (ntypx) = 10
      Max number of k-points (npk) =  40000
      Max angular momentum in pseudopotentials (lmaxx) =  3
-     Reading input from /home/giannozz/trunk/espresso/tests/spinorbit.in1
 
      Atomic positions and unit cell read from directory:
-     /home/giannozz/trunk/espresso/tmp/pwscf.save/
+     /home/giannozz/trunk/espresso/tempdir/pwscf.save/
  
  
      G-vector sticks info
@@ -36,8 +36,7 @@
      number of Kohn-Sham states=           16
      kinetic-energy cutoff     =      30.0000  Ry
      charge density cutoff     =     250.0000  Ry
-     Exchange-correlation      =  SLA  PZ   NOGX NOGC ( 1 1 0 0 0)
-     EXX-fraction              =        0.00
+     Exchange-correlation      =  SLA  PZ   NOGX NOGC ( 1  1  0  0 0 0)
      Non magnetic calculation with spin-orbit
 
 
@@ -98,26 +97,22 @@
      Smooth grid:     2229 G-vectors     FFT dimensions: (  20,  20,  20)
 
      Largest allocated arrays     est. size (Mb)     dimensions
-        Kohn-Sham Wavefunctions         0.14 Mb     (    580,   16)
-        NL pseudopotentials             0.12 Mb     (    290,   26)
-        Each V/rho on FFT grid          0.30 Mb     (  19683)
-        Each G-vector array             0.05 Mb     (   6855)
-        G-vector shells                 0.00 Mb     (    119)
+        Kohn-Sham Wavefunctions         0.14 Mb     (     580,   16)
+        NL pseudopotentials             0.12 Mb     (     290,   26)
+        Each V/rho on FFT grid          0.30 Mb     (   19683)
+        Each G-vector array             0.05 Mb     (    6855)
+        G-vector shells                 0.00 Mb     (     119)
      Largest temporary arrays     est. size (Mb)     dimensions
-        Auxiliary wavefunctions         0.57 Mb     (    580,   64)
-        Each subspace H/S matrix        0.06 Mb     (  64,  64)
-        Each <psi_i|beta_j> matrix      0.01 Mb     (     26,   2,   16)
+        Auxiliary wavefunctions         0.57 Mb     (     580,   64)
+        Each subspace H/S matrix        0.06 Mb     (      64,   64)
+        Each <psi_i|beta_j> matrix      0.01 Mb     (      26,   2,   16)
 
      Check: negative/imaginary core charge=   -0.000004    0.000000
 
      The potential is recalculated from file :
-     /home/giannozz/trunk/espresso/tmp/pwscf.save/charge-density.dat
+     /home/giannozz/trunk/espresso/tempdir/pwscf.save/charge-density.dat
 
-     Starting wfc are   12 randomized atomic wfcs
-
-     total cpu time spent up to now is        1.2 secs
-
-     per-process dynamical memory:    17.3 Mb
+     Starting wfc are   12 randomized atomic wfcs +    4 random wfc
 
      Band Structure Calculation
      Davidson diagonalization with overlap
@@ -128,42 +123,42 @@
 
      End of band structure calculation
 
-          k = 0.0000 0.0000 0.0000     band energies (ev):
+          k = 0.0000 0.0000 0.0000 (   283 PWs)   bands (ev):
 
      7.2728   7.2728  13.2972  13.2972  13.2972  13.2972  14.2908  14.2908
     16.1185  16.1185  16.1185  16.1185  34.8404  34.8404  38.3611  38.3611
 
-          k =-0.2500 0.2500-0.2500     band energies (ev):
+          k =-0.2500 0.2500-0.2500 (   289 PWs)   bands (ev):
 
      9.3081   9.3081  13.2365  13.2365  13.4824  13.4824  14.6832  14.6832
     15.9663  15.9663  16.5594  16.5594  31.1289  31.1289  35.9733  35.9733
 
-          k = 0.5000-0.5000 0.5000     band energies (ev):
+          k = 0.5000-0.5000 0.5000 (   272 PWs)   bands (ev):
 
     10.1739  10.1739  13.1418  13.1418  14.1581  14.1581  16.9034  16.9034
     17.2990  17.2990  17.9629  17.9629  23.3574  23.3574  33.8780  33.8780
 
-          k = 0.0000 0.5000 0.0000     band energies (ev):
+          k = 0.0000 0.5000 0.0000 (   290 PWs)   bands (ev):
 
     10.0109  10.0109  12.0836  12.0836  14.0946  14.0946  15.5834  15.5834
     15.6557  15.6557  16.9101  16.9101  33.7855  33.7855  35.8288  35.8288
 
-          k = 0.7500-0.2500 0.7500     band energies (ev):
+          k = 0.7500-0.2500 0.7500 (   283 PWs)   bands (ev):
 
     11.2318  11.2318  12.3531  12.3531  13.8685  13.8685  15.4952  15.4952
     17.7576  17.7576  20.5934  20.5934  24.9747  24.9747  31.5983  31.5983
 
-          k = 0.5000 0.0000 0.5000     band energies (ev):
+          k = 0.5000 0.0000 0.5000 (   283 PWs)   bands (ev):
 
     11.6296  11.6296  12.7413  12.7413  13.2274  13.2274  15.0123  15.0123
     16.0285  16.0285  19.4786  19.4786  28.3128  28.3128  30.4317  30.4317
 
-          k = 0.0000-1.0000 0.0000     band energies (ev):
+          k = 0.0000-1.0000 0.0000 (   286 PWs)   bands (ev):
 
     10.4414  10.4414  10.8730  10.8730  17.3736  17.3736  17.6769  17.6769
     18.6587  18.6587  19.1028  19.1028  26.2686  26.2686  28.7375  28.7375
 
-          k =-0.5000-1.0000 0.0000     band energies (ev):
+          k =-0.5000-1.0000 0.0000 (   280 PWs)   bands (ev):
 
     11.8136  11.8136  12.7585  12.7585  13.0246  13.0246  15.7118  15.7118
     18.0854  18.0854  24.7132  24.7132  25.1084  25.1084  26.4868  26.4868
@@ -172,44 +167,46 @@
 
      Writing output data file pwscf.save
  
-     init_run     :      1.06s CPU      1.06s WALL (       1 calls)
+     init_run     :      0.96s CPU      1.00s WALL (       1 calls)
      electrons    :      0.78s CPU      0.78s WALL (       1 calls)
 
      Called by init_run:
      wfcinit      :      0.00s CPU      0.00s WALL (       1 calls)
-     potinit      :      0.01s CPU      0.01s WALL (       1 calls)
+     potinit      :      0.00s CPU      0.01s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :      0.77s CPU      0.77s WALL (       1 calls)
+     c_bands      :      0.76s CPU      0.77s WALL (       1 calls)
      v_of_rho     :      0.00s CPU      0.00s WALL (       1 calls)
-     newd         :      0.05s CPU      0.05s WALL (       1 calls)
+     newd         :      0.03s CPU      0.06s WALL (       1 calls)
 
      Called by c_bands:
      init_us_2    :      0.00s CPU      0.00s WALL (       8 calls)
-     cegterg      :      0.68s CPU      0.69s WALL (       8 calls)
+     cegterg      :      0.69s CPU      0.70s WALL (       8 calls)
+
+     Called by sum_band:
 
      Called by *egterg:
-     h_psi        :      0.45s CPU      0.44s WALL (     132 calls)
+     h_psi        :      0.36s CPU      0.44s WALL (     132 calls)
      s_psi        :      0.02s CPU      0.02s WALL (     132 calls)
      g_psi        :      0.02s CPU      0.02s WALL (     116 calls)
-     cdiaghg      :      0.10s CPU      0.12s WALL (     124 calls)
+     cdiaghg      :      0.12s CPU      0.12s WALL (     124 calls)
 
      Called by h_psi:
-     add_vuspsi   :      0.02s CPU      0.02s WALL (     132 calls)
+     add_vuspsi   :      0.03s CPU      0.02s WALL (     132 calls)
 
      General routines
-     calbec       :      0.01s CPU      0.02s WALL (     132 calls)
+     calbec       :      0.03s CPU      0.02s WALL (     132 calls)
      fft          :      0.00s CPU      0.00s WALL (      12 calls)
      ffts         :      0.00s CPU      0.00s WALL (       4 calls)
-     fftw         :      0.28s CPU      0.29s WALL (    4556 calls)
+     fftw         :      0.23s CPU      0.30s WALL (    4556 calls)
      interpolate  :      0.00s CPU      0.00s WALL (       4 calls)
      davcio       :      0.00s CPU      0.00s WALL (       8 calls)
  
  
-     PWSCF        :     2.10s CPU         2.14s WALL
+     PWSCF        :     2.00s CPU         2.07s WALL
 
  
-   This run was terminated on:  11:44:19   6Jan2012            
+   This run was terminated on:  10: 7:10   2Dec2015            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
