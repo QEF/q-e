@@ -1,0 +1,31 @@
+#!/bin/bash
+
+export kp=32
+
+cp ../scf/GaAs.$kp.a2Fsave .
+cp ../scf/info-q .
+
+cat > input_0 << EOF
+&input
+  fil_a2F     = 'GaAs.$kp.a2Fsave'
+  fil_info    = 'info-q'
+  T           = 300         ! in K
+  alat        = 10.6867     ! in au
+  vol         = 305.1201    ! in au^3
+  efmin       = 9.0         ! in eV
+  efmax       = 10.0        ! in eV
+  Nmu         = 100         ! sampling of Efs
+  phband_i    = 10          ! initial band index
+  phband_f    = 14          ! final band index
+  invtau      = 0.1         ! in eV
+  lsoc        = .false.     ! Non-collinear?
+  nthreads    = 16          ! number of threads for OpenMP parallelization
+  cbm_i       = 10          ! index of the first conduction band (to be shifted) 
+  shift       = 0.8839      ! in eV 
+  lscissors   = .true.      ! shift conduction bands up to fix band-gap
+&end
+EOF
+
+./fermi_int_0.x < input_0 
+
+

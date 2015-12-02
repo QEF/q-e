@@ -1,0 +1,56 @@
+#!/bin/bash
+
+export kp=32
+export cut=50
+export NAME=GaAs
+
+# Compute the band structure in a large grid
+# It is also possible to use a small enough grid for 
+# scf, and a large grid for nscf. 
+
+cat > GaAs.scf.in << EOF
+&control
+   calculation   = 'scf'
+   restart_mode  = 'from_scratch'
+   prefix        = '$NAME'
+   pseudo_dir    = '.'
+   outdir        = '.'
+   verbosity     = 'high'
+   etot_conv_thr = 1.d-5
+   forc_conv_thr = 1.d-4
+/
+&system
+   ibrav = 2, 
+   celldm(1) = 10.6867, 
+   nat = 2, 
+   ntyp = 2,
+   ecutwfc = $cut,
+   ecutrho = $[12*$cut],
+   nspin = 1
+   nbnd  = 16 
+   la2F  = .true. 
+/
+&electrons
+   mixing_beta      = 0.3 
+   conv_thr         = 1.0d-8
+   electron_maxstep = 200,
+/
+&ions
+/
+&cell
+  press = 0.0
+/
+ATOMIC_SPECIES
+   Ga  69.723    Ga.pbe-dn-kjpaw_psl.0.2.upf 
+   As  74.921595 As.pbe-n-kjpaw_psl.0.2.upf
+ATOMIC_POSITIONS
+ Ga  0.00 0.00 0.00
+ As  0.25 0.25 0.25
+K_POINTS {automatic}
+   $kp $kp $kp 0 0 0
+EOF
+
+./pw.x < GaAs.scf.in > GaAs.scf.out
+
+mv GaAs.a2Fsave GaAs.$kp.a2Fsave
+

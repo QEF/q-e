@@ -1,0 +1,7 @@
+# Files produced
+# report_1  : Report about parallelization, timing and grid reduction
+# Def_1     : Fermi integral I0 = \sum_{n,k} (-df/de_{nk}), related to screening parameter
+# sig_1     : E_F, s11, s12, s13, s21, s22, s23, s31, s32, s33 (Fermi energy in eV and conductivity tensor in (Ohm cm)^{-1} 
+# Se_1      : E_F, Se11, Se12, Se13, Se21, Se22, Se23, Se31, Se32, Se33 ( Fermi energy in eV and Seebeck tensor in V/K)
+
+Notice that the effective grid size increases with increasing Ef. 

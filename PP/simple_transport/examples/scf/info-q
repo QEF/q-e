@@ -1,0 +1,9 @@
+stal axes: (cart. coord. in units of alat)
+ -0.5  0.0  0.5
+  0.0  0.5  0.5
+ -0.5  0.5  0.0
+
+reciprocal axes: (cart. coord. in units 2 pi/alat)
+ -1.0 -1.0  1.0
+  1.0  1.0  1.0
+ -1.0  1.0 -1.0

@@ -1,0 +1,44 @@
+#!/bin/bash
+
+export kp=32
+
+cp ../scf/GaAs.32.a2Fsave .
+cp ../scf/info-q .
+
+
+# Loop over fermi energies
+for ind in 1 2 3 4
+do
+
+dop=`head -$ind dop_vs_ef | tail -1 | awk '{print $1}'`
+ef=`head -$ind dop_vs_ef | tail -1 | awk '{print $2}'`
+
+cat > input << EOF
+&input
+  fil_a2F     = 'GaAs.$kp.a2Fsave'
+  fil_info    = 'info-q'
+  T           = 300         ! in K
+  alat        = 10.6867     ! in au
+  vol         = 305.1201    ! in au^3
+  efermi      = $ef         ! in eV
+  phband_i    = 10          ! initial band index
+  phband_f    = 14          ! final band index
+  lsoc        = .false.     ! Non-collinear?
+  nthreads    = 48          ! number of threads for OpenMP parallelization
+  cut         = 10.0        ! Grid reduction parameter
+  cbm_i       = 10          ! index of the first conduction band (to be shifted) 
+  shift       = 0.8839      ! in eV
+  lscissors   = .true.      ! shift conduction bands up to fix band-gap
+  invtau      = 0.05        ! scattering rate in eV 
+&end
+EOF
+
+./fermi_int_1.x < input 
+
+mv Def_1.out Def.$dop.out
+mv sig_1.out sig.$dop.out
+mv Se_1.out Se.$dop.out
+mv report_1 report.$dop
+
+done
+
