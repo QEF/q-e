@@ -1,23 +1,23 @@
 
-     Program PWSCF v.4.99       starts on  5Jan2012 at 22:44:26 
+     Program PWSCF v.5.2.1 (svn rev. 11881M) starts on  2Dec2015 at 10:42:26 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
          "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
           URL http://www.quantum-espresso.org", 
      in publications or presentations arising from this work. More details at
-     http://www.quantum-espresso.org/quote.php
+     http://www.quantum-espresso.org/quote
 
      Serial version
+     Reading input from /home/giannozz/trunk/espresso/PW/tests/berry.in2
 
      Current dimensions of program PWSCF are:
      Max number of different atomic species (ntypx) = 10
      Max number of k-points (npk) =  40000
      Max angular momentum in pseudopotentials (lmaxx) =  3
-     Reading input from /home/giannozz/trunk/espresso/tests/berry.in2
 
      Atomic positions and unit cell read from directory:
-     /home/giannozz/trunk/espresso/tmp/pwscf.save/
+     /home/giannozz/trunk/espresso/tempdir/pwscf.save/
  
  
      G-vector sticks info
@@ -36,8 +36,7 @@
      number of Kohn-Sham states=           24
      kinetic-energy cutoff     =      25.0000  Ry
      charge density cutoff     =     200.0000  Ry
-     Exchange-correlation      =  SLA  PZ   NOGX NOGC ( 1 1 0 0 0)
-     EXX-fraction              =        0.00
+     Exchange-correlation      =  SLA  PZ   NOGX NOGC ( 1  1  0  0 0 0)
 
      celldm(1)=   7.369900  celldm(2)=   0.000000  celldm(3)=   0.000000
      celldm(4)=   0.000000  celldm(5)=   0.000000  celldm(6)=   0.000000
@@ -143,24 +142,20 @@
      Smooth grid:     6763 G-vectors     FFT dimensions: (  24,  24,  24)
 
      Largest allocated arrays     est. size (Mb)     dimensions
-        Kohn-Sham Wavefunctions         0.31 Mb     (    858,   24)
-        NL pseudopotentials             0.79 Mb     (    858,   60)
-        Each V/rho on FFT grid          0.71 Mb     (  46656)
-        Each G-vector array             0.15 Mb     (  19213)
-        G-vector shells                 0.00 Mb     (    232)
+        Kohn-Sham Wavefunctions         0.31 Mb     (     858,   24)
+        NL pseudopotentials             0.79 Mb     (     858,   60)
+        Each V/rho on FFT grid          0.71 Mb     (   46656)
+        Each G-vector array             0.15 Mb     (   19213)
+        G-vector shells                 0.00 Mb     (     232)
      Largest temporary arrays     est. size (Mb)     dimensions
-        Auxiliary wavefunctions         1.26 Mb     (    858,   96)
-        Each subspace H/S matrix        0.14 Mb     (  96,  96)
-        Each <psi_i|beta_j> matrix      0.02 Mb     (     60,   24)
+        Auxiliary wavefunctions         1.26 Mb     (     858,   96)
+        Each subspace H/S matrix        0.14 Mb     (      96,   96)
+        Each <psi_i|beta_j> matrix      0.02 Mb     (      60,   24)
 
      The potential is recalculated from file :
-     /home/giannozz/trunk/espresso/tmp/pwscf.save/charge-density.dat
+     /home/giannozz/trunk/espresso/tempdir/pwscf.save/charge-density.dat
 
      Starting wfc are   31 randomized atomic wfcs
-
-     total cpu time spent up to now is        1.8 secs
-
-     per-process dynamical memory:    22.5 Mb
 
      Band Structure Calculation
      Davidson diagonalization with overlap
@@ -168,134 +163,134 @@
 
      ethr =  2.27E-09,  avg # of iterations = 29.3
 
-     total cpu time spent up to now is        8.4 secs
+     total cpu time spent up to now is        8.5 secs
 
      End of band structure calculation
 
-          k = 0.1250 0.1250-0.5000     band energies (ev):
+          k = 0.1250 0.1250-0.5000 (   842 PWs)   bands (ev):
 
    -44.7030 -21.3840 -21.3143 -21.3142  -6.0482  -5.3493  -5.3048  -4.5245
     -4.4479  -4.4253  -4.3761  -4.2223   3.4839   6.4509   7.2038   7.8124
-     8.2026   8.4259   9.2312   9.7817   9.9819  10.7887  13.3764  14.6451
+     8.2026   8.4259   9.2312   9.7817   9.9820  10.7887  13.3764  14.6451
 
-          k = 0.1250 0.1250-0.3333     band energies (ev):
+          k = 0.1250 0.1250-0.3333 (   844 PWs)   bands (ev):
 
    -44.7035 -21.3644 -21.3152 -21.3150  -6.1905  -5.4009  -5.3678  -4.5048
     -4.4531  -4.4365  -4.3318  -4.2199   3.6761   6.8998   7.1929   7.6374
      8.3669   8.6540   9.2519   9.7983   9.9394  10.4605  13.4729  14.4721
 
-          k = 0.1250 0.1250-0.1667     band energies (ev):
+          k = 0.1250 0.1250-0.1667 (   837 PWs)   bands (ev):
 
    -44.7041 -21.3247 -21.3169 -21.3165  -6.4698  -5.4917  -5.4817  -4.4631
     -4.4569  -4.4415  -4.2582  -4.2377   4.1639   7.1337   7.1547   7.8934
      8.8542   8.8873   9.6954   9.7689   9.8530   9.9290  13.5291  13.7025
 
-          k = 0.1250 0.1250 0.0000     band energies (ev):
+          k = 0.1250 0.1250 0.0000 (   841 PWs)   bands (ev):
 
    -44.7046 -21.3178 -21.3172 -21.3047  -6.6056  -5.5354  -5.5325  -4.4531
     -4.4413  -4.4402  -4.2554  -4.2273   4.4674   7.1283   7.2347   7.6339
      9.1136   9.3302   9.5923   9.7708  10.0123  10.0578  13.2686  13.3128
 
-          k = 0.1250 0.1250 0.1667     band energies (ev):
+          k = 0.1250 0.1250 0.1667 (   837 PWs)   bands (ev):
 
    -44.7041 -21.3247 -21.3169 -21.3165  -6.4698  -5.4917  -5.4817  -4.4631
     -4.4569  -4.4415  -4.2582  -4.2377   4.1639   7.1337   7.1547   7.8934
      8.8542   8.8873   9.6954   9.7689   9.8530   9.9290  13.5291  13.7025
 
-          k = 0.1250 0.1250 0.3333     band energies (ev):
+          k = 0.1250 0.1250 0.3333 (   844 PWs)   bands (ev):
 
    -44.7035 -21.3644 -21.3152 -21.3150  -6.1905  -5.4009  -5.3678  -4.5048
     -4.4531  -4.4365  -4.3318  -4.2199   3.6761   6.8998   7.1929   7.6374
      8.3669   8.6540   9.2519   9.7983   9.9394  10.4605  13.4729  14.4721
 
-          k = 0.1250 0.1250 0.5000     band energies (ev):
+          k = 0.1250 0.1250 0.5000 (   842 PWs)   bands (ev):
 
    -44.7030 -21.3840 -21.3143 -21.3142  -6.0482  -5.3493  -5.3048  -4.5245
     -4.4479  -4.4253  -4.3761  -4.2223   3.4839   6.4509   7.2038   7.8124
-     8.2026   8.4259   9.2312   9.7817   9.9819  10.7887  13.3764  14.6451
+     8.2026   8.4259   9.2312   9.7817   9.9820  10.7887  13.3764  14.6451
 
-          k = 0.1250 0.3750-0.5000     band energies (ev):
+          k = 0.1250 0.3750-0.5000 (   840 PWs)   bands (ev):
 
    -44.7017 -21.3810 -21.3697 -21.3119  -5.9357  -5.2092  -5.1602  -4.4862
     -4.4269  -4.3671  -4.3011  -4.0855   3.1845   6.4407   6.7600   6.9541
      7.2882   8.5795   9.0929   9.4148   9.4972  10.6953  14.4668  14.7310
 
-          k = 0.1250 0.3750-0.3333     band energies (ev):
+          k = 0.1250 0.3750-0.3333 (   846 PWs)   bands (ev):
 
-   -44.7023 -21.3708 -21.3616 -21.3127  -5.9551  -5.3018  -5.2238  -4.4905
+   -44.7023 -21.3707 -21.3616 -21.3127  -5.9551  -5.3018  -5.2238  -4.4905
     -4.4519  -4.3846  -4.2731  -4.1504   3.3098   6.7090   6.8615   7.0270
      7.5013   8.4782   9.2427   9.4225   9.9187  10.4759  14.2604  14.5296
 
-          k = 0.1250 0.3750-0.1667     band energies (ev):
+          k = 0.1250 0.3750-0.1667 (   846 PWs)   bands (ev):
 
    -44.7032 -21.3727 -21.3223 -21.3144  -6.0878  -5.3810  -5.3277  -4.5084
     -4.4533  -4.4227  -4.3163  -4.2249   3.5461   6.7247   7.0941   7.5669
      8.2099   8.6318   9.0719   9.8771   9.9249  10.5099  13.5668  14.5951
 
-          k = 0.1250 0.3750 0.0000     band energies (ev):
+          k = 0.1250 0.3750 0.0000 (   843 PWs)   bands (ev):
 
    -44.7036 -21.3737 -21.3152 -21.3025  -6.1942  -5.3809  -5.3567  -4.5076
     -4.4747  -4.4380  -4.3885  -4.2156   3.6491   6.7215   7.5633   7.6678
      8.2608   8.5651   9.5673   9.6887   9.9519  10.7306  13.2946  14.5544
 
-          k = 0.1250 0.3750 0.1667     band energies (ev):
+          k = 0.1250 0.3750 0.1667 (   846 PWs)   bands (ev):
 
    -44.7032 -21.3727 -21.3223 -21.3144  -6.0878  -5.3810  -5.3277  -4.5084
     -4.4533  -4.4227  -4.3163  -4.2249   3.5461   6.7247   7.0941   7.5669
      8.2099   8.6318   9.0719   9.8771   9.9249  10.5099  13.5668  14.5951
 
-          k = 0.1250 0.3750 0.3333     band energies (ev):
+          k = 0.1250 0.3750 0.3333 (   846 PWs)   bands (ev):
 
-   -44.7023 -21.3708 -21.3616 -21.3127  -5.9551  -5.3018  -5.2238  -4.4905
+   -44.7023 -21.3707 -21.3616 -21.3127  -5.9551  -5.3018  -5.2238  -4.4905
     -4.4519  -4.3846  -4.2731  -4.1504   3.3098   6.7090   6.8615   7.0270
      7.5013   8.4782   9.2427   9.4225   9.9187  10.4759  14.2604  14.5296
 
-          k = 0.1250 0.3750 0.5000     band energies (ev):
+          k = 0.1250 0.3750 0.5000 (   840 PWs)   bands (ev):
 
    -44.7017 -21.3810 -21.3697 -21.3119  -5.9357  -5.2092  -5.1602  -4.4862
     -4.4269  -4.3671  -4.3011  -4.0855   3.1845   6.4407   6.7600   6.9541
      7.2882   8.5795   9.0929   9.4148   9.4972  10.6953  14.4668  14.7310
 
-          k = 0.3750 0.3750-0.5000     band energies (ev):
+          k = 0.3750 0.3750-0.5000 (   858 PWs)   bands (ev):
 
    -44.7010 -21.3785 -21.3674 -21.3672  -5.5581  -5.4573  -5.3867  -4.4063
-    -4.3881  -3.9987  -3.9888  -3.9453   4.0117   5.6335   5.7716   6.3480
+    -4.3881  -3.9988  -3.9888  -3.9453   4.0117   5.6335   5.7717   6.3480
      6.8313   6.9482   7.1788  10.5511  10.6154  10.6924  14.7790  14.8705
 
-          k = 0.3750 0.3750-0.3333     band energies (ev):
+          k = 0.3750 0.3750-0.3333 (   848 PWs)   bands (ev):
 
-   -44.7011 -21.3683 -21.3680 -21.3591  -5.6142  -5.4180  -5.3964  -4.4182
+   -44.7011 -21.3683 -21.3680 -21.3591  -5.6142  -5.4180  -5.3963  -4.4182
     -4.4115  -4.1181  -4.0375  -4.0199   3.7644   5.8960   5.9504   6.6163
-     6.9610   7.1215   8.0005  10.4394  10.4468  10.5774  14.4353  14.8150
+     6.9610   7.1215   8.0005  10.4393  10.4468  10.5774  14.4353  14.8150
 
-          k = 0.3750 0.3750-0.1667     band energies (ev):
+          k = 0.3750 0.3750-0.1667 (   848 PWs)   bands (ev):
 
    -44.7020 -21.3701 -21.3698 -21.3200  -5.8810  -5.3028  -5.2442  -4.4765
     -4.4328  -4.3223  -4.2400  -4.1108   3.3321   6.6426   6.6543   6.7627
      7.1586   8.2814   9.2510   9.6215   9.7580  10.5659  14.3190  14.5638
 
-          k = 0.3750 0.3750 0.0000     band energies (ev):
+          k = 0.3750 0.3750 0.0000 (   840 PWs)   bands (ev):
 
    -44.7022 -21.3710 -21.3706 -21.3001  -6.0230  -5.2107  -5.1379  -4.4867
     -4.4756  -4.4665  -4.3379  -4.1452   3.1509   6.6820   6.8041   7.9517
      8.0865   8.1061   8.5101   9.2796  10.0820  10.5693  14.5481  14.5908
 
-          k = 0.3750 0.3750 0.1667     band energies (ev):
+          k = 0.3750 0.3750 0.1667 (   848 PWs)   bands (ev):
 
    -44.7020 -21.3701 -21.3698 -21.3200  -5.8810  -5.3028  -5.2442  -4.4765
     -4.4328  -4.3223  -4.2400  -4.1108   3.3321   6.6426   6.6543   6.7627
      7.1586   8.2814   9.2510   9.6215   9.7580  10.5659  14.3190  14.5638
 
-          k = 0.3750 0.3750 0.3333     band energies (ev):
+          k = 0.3750 0.3750 0.3333 (   848 PWs)   bands (ev):
 
-   -44.7011 -21.3683 -21.3680 -21.3591  -5.6142  -5.4180  -5.3964  -4.4182
+   -44.7011 -21.3683 -21.3680 -21.3591  -5.6142  -5.4180  -5.3963  -4.4182
     -4.4115  -4.1181  -4.0375  -4.0199   3.7644   5.8960   5.9504   6.6163
-     6.9610   7.1215   8.0005  10.4394  10.4468  10.5774  14.4353  14.8150
+     6.9610   7.1215   8.0005  10.4393  10.4468  10.5774  14.4353  14.8150
 
-          k = 0.3750 0.3750 0.5000     band energies (ev):
+          k = 0.3750 0.3750 0.5000 (   858 PWs)   bands (ev):
 
    -44.7010 -21.3785 -21.3674 -21.3672  -5.5581  -5.4573  -5.3867  -4.4063
-    -4.3881  -3.9987  -3.9888  -3.9453   4.0117   5.6335   5.7716   6.3480
+    -4.3881  -3.9988  -3.9888  -3.9453   4.0117   5.6335   5.7717   6.3480
      6.8313   6.9482   7.1788  10.5511  10.6154  10.6924  14.7790  14.8705
 
      highest occupied, lowest unoccupied level (ev):    10.7887   13.2686
@@ -377,7 +372,7 @@
         the polarization vector (in different units, and being Omega
         the volume of the unit cell):
 
-           P =   0.2935155  (mod  14.7398000)  (e/Omega).bohr
+           P =   0.2935157  (mod  14.7398000)  (e/Omega).bohr
 
            P =   0.0007332  (mod   0.0368220)  e/bohr^2
 
@@ -392,44 +387,46 @@
 
      Writing output data file pwscf.save
  
-     init_run     :      1.50s CPU      1.50s WALL (       1 calls)
-     electrons    :      7.28s CPU      7.29s WALL (       1 calls)
+     init_run     :      1.36s CPU      1.41s WALL (       1 calls)
+     electrons    :      7.36s CPU      7.42s WALL (       1 calls)
 
      Called by init_run:
      wfcinit      :      0.00s CPU      0.00s WALL (       1 calls)
      potinit      :      0.01s CPU      0.01s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :      6.61s CPU      6.63s WALL (       1 calls)
-     v_of_rho     :      0.01s CPU      0.01s WALL (       1 calls)
-     newd         :      0.13s CPU      0.13s WALL (       1 calls)
+     c_bands      :      6.86s CPU      6.92s WALL (       1 calls)
+     v_of_rho     :      0.00s CPU      0.01s WALL (       1 calls)
+     newd         :      0.10s CPU      0.14s WALL (       1 calls)
 
      Called by c_bands:
      init_us_2    :      0.04s CPU      0.05s WALL (      57 calls)
-     cegterg      :      6.12s CPU      6.13s WALL (      42 calls)
+     cegterg      :      6.38s CPU      6.42s WALL (      42 calls)
+
+     Called by sum_band:
 
      Called by *egterg:
-     h_psi        :      2.71s CPU      2.70s WALL (     679 calls)
-     s_psi        :      0.33s CPU      0.32s WALL (     679 calls)
-     g_psi        :      0.16s CPU      0.17s WALL (     616 calls)
-     cdiaghg      :      1.68s CPU      1.65s WALL (     637 calls)
+     h_psi        :      2.80s CPU      2.89s WALL (     679 calls)
+     s_psi        :      0.32s CPU      0.33s WALL (     679 calls)
+     g_psi        :      0.12s CPU      0.17s WALL (     616 calls)
+     cdiaghg      :      1.69s CPU      1.67s WALL (     637 calls)
 
      Called by h_psi:
-     add_vuspsi   :      0.40s CPU      0.37s WALL (     679 calls)
+     add_vuspsi   :      0.38s CPU      0.40s WALL (     679 calls)
 
      General routines
-     calbec       :      0.43s CPU      0.41s WALL (     715 calls)
-     fft          :      0.01s CPU      0.00s WALL (       5 calls)
+     calbec       :      0.46s CPU      0.43s WALL (     715 calls)
+     fft          :      0.00s CPU      0.00s WALL (       5 calls)
      ffts         :      0.00s CPU      0.00s WALL (       1 calls)
-     fftw         :      1.38s CPU      1.41s WALL (   12824 calls)
+     fftw         :      1.47s CPU      1.51s WALL (   12824 calls)
      interpolate  :      0.00s CPU      0.00s WALL (       1 calls)
-     davcio       :      0.00s CPU      0.01s WALL (      57 calls)
+     davcio       :      0.01s CPU      0.01s WALL (      57 calls)
  
  
-     PWSCF        :     8.96s CPU         9.19s WALL
+     PWSCF        :     8.92s CPU         9.03s WALL
 
  
-   This run was terminated on:  22:44:36   5Jan2012            
+   This run was terminated on:  10:42:35   2Dec2015            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

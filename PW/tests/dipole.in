@@ -8,12 +8,10 @@
     ibrav=0, celldm(1)=4.70366666,
     ecutwfc = 30.0
     occupations='smearing', smearing='m-v', degauss=0.03
-
     edir=3,
     emaxpos=0.55,
     eopreg=0.06,
-    eamp=0,
-	
+    eamp=0
 /
 &electrons
     mixing_beta = 0.3
@@ -25,7 +23,7 @@ C	1.0	C.pz-rrkjus.UPF
 O	1.0	O.pz-rrkjus.UPF
 Ni	1.0	Ni.pz-nd-rrkjus.UPF  
 
-CELL_PARAMETERS
+CELL_PARAMETERS alat
 1.00000000 0.00000000 0.00000000
 0.00000000 1.41421356 0.00000000
 0.00000000 0.00000000 9.10000001

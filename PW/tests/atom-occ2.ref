@@ -1,5 +1,5 @@
 
-     Program PWSCF v.5.1.1 (svn rev. 11283) starts on  2Dec2014 at 12:20:51 
+     Program PWSCF v.5.2.1 (svn rev. 11887M) starts on  2Dec2015 at 11:46:19 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -129,18 +129,15 @@
      negative rho (up, down):  1.002E-08 3.339E-09
      Starting wfc are    6 atomic wfcs
 
-     total cpu time spent up to now is        3.0 secs
+     total cpu time spent up to now is        2.8 secs
 
-     per-process dynamical memory:    98.5 Mb
+     per-process dynamical memory:    97.4 Mb
 
      Self-consistent Calculation
 
      iteration #  1     ecut=    24.00 Ry     beta=0.25
      Davidson diagonalization with overlap
      ethr =  1.00E-02,  avg # of iterations =  1.0
- 
-     Magnetic moment per site:
-     atom:    1    charge:    9.9061    magn:    4.2333    constr:    0.0000
 
      total cpu time spent up to now is        5.1 secs
 
@@ -156,11 +153,8 @@
      ethr =  4.95E-03,  avg # of iterations =  1.5
 
      negative rho (up, down):  1.007E-04 1.158E-05
- 
-     Magnetic moment per site:
-     atom:    1    charge:    9.8697    magn:    3.3248    constr:    0.0000
 
-     total cpu time spent up to now is        7.3 secs
+     total cpu time spent up to now is        7.4 secs
 
      total energy              =     -85.43919414 Ry
      Harris-Foulkes estimate   =     -85.43008060 Ry
@@ -174,11 +168,8 @@
      ethr =  1.18E-03,  avg # of iterations =  2.0
 
      negative rho (up, down):  1.353E-03 3.501E-04
- 
-     Magnetic moment per site:
-     atom:    1    charge:    9.8662    magn:    2.3815    constr:    0.0000
 
-     total cpu time spent up to now is        9.4 secs
+     total cpu time spent up to now is        9.7 secs
 
      total energy              =     -85.47137600 Ry
      Harris-Foulkes estimate   =     -85.45283367 Ry
@@ -192,11 +183,8 @@
      ethr =  2.50E-04,  avg # of iterations =  1.5
 
      negative rho (up, down):  1.786E-03 5.670E-04
- 
-     Magnetic moment per site:
-     atom:    1    charge:    9.8724    magn:    1.9976    constr:    0.0000
 
-     total cpu time spent up to now is       11.5 secs
+     total cpu time spent up to now is       11.9 secs
 
      total energy              =     -85.47337116 Ry
      Harris-Foulkes estimate   =     -85.47195527 Ry
@@ -210,11 +198,8 @@
      ethr =  2.60E-05,  avg # of iterations =  1.5
 
      negative rho (up, down):  8.743E-04 2.815E-04
- 
-     Magnetic moment per site:
-     atom:    1    charge:    9.8756    magn:    2.0029    constr:    0.0000
 
-     total cpu time spent up to now is       13.6 secs
+     total cpu time spent up to now is       14.2 secs
 
      total energy              =     -85.47411887 Ry
      Harris-Foulkes estimate   =     -85.47352975 Ry
@@ -228,11 +213,8 @@
      ethr =  2.91E-07,  avg # of iterations =  3.0
 
      negative rho (up, down):  3.849E-04 1.686E-04
- 
-     Magnetic moment per site:
-     atom:    1    charge:    9.8803    magn:    2.0157    constr:    0.0000
 
-     total cpu time spent up to now is       15.8 secs
+     total cpu time spent up to now is       16.5 secs
 
      total energy              =     -85.47442461 Ry
      Harris-Foulkes estimate   =     -85.47412705 Ry
@@ -246,11 +228,8 @@
      ethr =  1.50E-07,  avg # of iterations =  3.0
 
      negative rho (up, down):  1.621E-04 4.680E-05
- 
-     Magnetic moment per site:
-     atom:    1    charge:    9.8791    magn:    2.0126    constr:    0.0000
 
-     total cpu time spent up to now is       17.9 secs
+     total cpu time spent up to now is       18.8 secs
 
      total energy              =     -85.47459650 Ry
      Harris-Foulkes estimate   =     -85.47442733 Ry
@@ -264,11 +243,8 @@
      ethr =  1.24E-08,  avg # of iterations =  3.0
 
      negative rho (up, down):  6.095E-05 1.383E-05
- 
-     Magnetic moment per site:
-     atom:    1    charge:    9.8796    magn:    2.0133    constr:    0.0000
 
-     total cpu time spent up to now is       20.0 secs
+     total cpu time spent up to now is       21.1 secs
 
      total energy              =     -85.47471154 Ry
      Harris-Foulkes estimate   =     -85.47459758 Ry
@@ -282,11 +258,8 @@
      ethr =  7.36E-09,  avg # of iterations =  2.5
 
      negative rho (up, down):  1.916E-05 3.318E-06
- 
-     Magnetic moment per site:
-     atom:    1    charge:    9.8800    magn:    2.0136    constr:    0.0000
 
-     total cpu time spent up to now is       22.2 secs
+     total cpu time spent up to now is       23.4 secs
 
      total energy              =     -85.47477574 Ry
      Harris-Foulkes estimate   =     -85.47471170 Ry
@@ -302,7 +275,7 @@
      Magnetic moment per site:
      atom:    1    charge:    9.8800    magn:    2.0136    constr:    0.0000
 
-     total cpu time spent up to now is       24.2 secs
+     total cpu time spent up to now is       25.6 secs
 
      End of self-consistent calculation
 
@@ -338,46 +311,50 @@
 
      Writing output data file pwscf.save
  
-     init_run     :      2.92s CPU      2.99s WALL (       1 calls)
-     electrons    :     21.02s CPU     21.25s WALL (       1 calls)
+     init_run     :      2.59s CPU      2.77s WALL (       1 calls)
+     electrons    :     20.86s CPU     22.83s WALL (       1 calls)
 
      Called by init_run:
-     wfcinit      :      0.03s CPU      0.03s WALL (       1 calls)
-     potinit      :      0.98s CPU      1.03s WALL (       1 calls)
+     wfcinit      :      0.02s CPU      0.02s WALL (       1 calls)
+     potinit      :      0.89s CPU      0.94s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :      0.76s CPU      0.75s WALL (      10 calls)
-     sum_band     :      5.80s CPU      5.82s WALL (      10 calls)
-     v_of_rho     :      9.53s CPU      9.69s WALL (      11 calls)
-     newd         :      4.49s CPU      4.58s WALL (      11 calls)
-     mix_rho      :      0.88s CPU      0.88s WALL (      10 calls)
+     c_bands      :      0.56s CPU      0.57s WALL (      10 calls)
+     sum_band     :      8.30s CPU      9.29s WALL (      10 calls)
+     v_of_rho     :      8.79s CPU      8.91s WALL (      11 calls)
+     newd         :      2.84s CPU      3.82s WALL (      11 calls)
+     mix_rho      :      0.71s CPU      0.71s WALL (      10 calls)
 
      Called by c_bands:
-     init_us_2    :      0.05s CPU      0.04s WALL (      44 calls)
-     regterg      :      0.68s CPU      0.68s WALL (      20 calls)
+     init_us_2    :      0.02s CPU      0.04s WALL (      44 calls)
+     regterg      :      0.50s CPU      0.50s WALL (      20 calls)
+
+     Called by sum_band:
+     sum_band:bec :      0.00s CPU      0.00s WALL (      20 calls)
+     addusdens    :      7.14s CPU      8.12s WALL (      10 calls)
 
      Called by *egterg:
-     h_psi        :      0.65s CPU      0.64s WALL (      66 calls)
+     h_psi        :      0.44s CPU      0.45s WALL (      66 calls)
      s_psi        :      0.00s CPU      0.01s WALL (      68 calls)
-     g_psi        :      0.01s CPU      0.01s WALL (      44 calls)
-     rdiaghg      :      0.00s CPU      0.01s WALL (      64 calls)
+     g_psi        :      0.02s CPU      0.01s WALL (      44 calls)
+     rdiaghg      :      0.02s CPU      0.01s WALL (      64 calls)
 
      Called by h_psi:
      add_vuspsi   :      0.00s CPU      0.01s WALL (      66 calls)
 
      General routines
-     calbec       :      0.01s CPU      0.02s WALL (      88 calls)
-     fft          :      5.47s CPU      5.48s WALL (     331 calls)
-     ffts         :      0.09s CPU      0.08s WALL (      42 calls)
-     fftw         :      0.48s CPU      0.48s WALL (     382 calls)
-     interpolate  :      0.95s CPU      0.94s WALL (      42 calls)
+     calbec       :      0.02s CPU      0.02s WALL (      88 calls)
+     fft          :      3.90s CPU      3.91s WALL (     331 calls)
+     ffts         :      0.04s CPU      0.04s WALL (      42 calls)
+     fftw         :      0.27s CPU      0.25s WALL (     382 calls)
+     interpolate  :      0.72s CPU      0.71s WALL (      42 calls)
      davcio       :      0.00s CPU      0.00s WALL (       4 calls)
  
  
-     PWSCF        :    24.05s CPU        24.36s WALL
+     PWSCF        :    23.55s CPU        25.72s WALL
 
  
-   This run was terminated on:  12:21:16   2Dec2014            
+   This run was terminated on:  11:46:44   2Dec2015            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
