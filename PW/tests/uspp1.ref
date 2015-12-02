@@ -1,20 +1,20 @@
 
-     Program PWSCF v.4.99       starts on  6Jan2012 at 11:28:34 
+     Program PWSCF v.5.2.1 (svn rev. 11881M) starts on  2Dec2015 at  9:54:50 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
          "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
           URL http://www.quantum-espresso.org", 
      in publications or presentations arising from this work. More details at
-     http://www.quantum-espresso.org/quote.php
+     http://www.quantum-espresso.org/quote
 
      Serial version
+     Reading input from /home/giannozz/trunk/espresso/PW/tests/uspp1.in
 
      Current dimensions of program PWSCF are:
      Max number of different atomic species (ntypx) = 10
      Max number of k-points (npk) =  40000
      Max angular momentum in pseudopotentials (lmaxx) =  3
-     Reading input from /home/giannozz/trunk/espresso/tests/uspp1.in
 
     ============================================================
     |  pseudopotential report for atomic species:  1           |
@@ -74,8 +74,7 @@
      convergence threshold     =      1.0E-06
      mixing beta               =       0.7000
      number of iterations used =            8  plain     mixing
-     Exchange-correlation      = PBE ( 1 4 3 4 0)
-     EXX-fraction              =        0.00
+     Exchange-correlation      = PBE ( 1  4  3  4 0 0)
 
      celldm(1)=  20.000000  celldm(2)=   0.000000  celldm(3)=   0.000000
      celldm(4)=   0.000000  celldm(5)=   0.000000  celldm(6)=   0.000000
@@ -135,28 +134,28 @@
      Dense  grid:    67522 G-vectors     FFT dimensions: (  64,  64,  64)
 
      Largest allocated arrays     est. size (Mb)     dimensions
-        Kohn-Sham Wavefunctions         0.52 Mb     (   8440,    4)
-        NL pseudopotentials             1.29 Mb     (   8440,   10)
-        Each V/rho on FFT grid          4.00 Mb     ( 262144)
-        Each G-vector array             0.52 Mb     (  67522)
-        G-vector shells                 0.01 Mb     (    847)
+        Kohn-Sham Wavefunctions         0.52 Mb     (    8440,    4)
+        NL pseudopotentials             1.29 Mb     (    8440,   10)
+        Each V/rho on FFT grid          4.00 Mb     (  262144)
+        Each G-vector array             0.52 Mb     (   67522)
+        G-vector shells                 0.01 Mb     (     847)
      Largest temporary arrays     est. size (Mb)     dimensions
-        Auxiliary wavefunctions         1.03 Mb     (   8440,   16)
-        Each subspace H/S matrix        0.00 Mb     (  16,  16)
-        Each <psi_i|beta_j> matrix      0.00 Mb     (     10,    4)
-        Arrays for rho mixing          32.00 Mb     ( 262144,   8)
+        Auxiliary wavefunctions         1.03 Mb     (    8440,   16)
+        Each subspace H/S matrix        0.00 Mb     (      16,   16)
+        Each <psi_i|beta_j> matrix      0.00 Mb     (      10,    4)
+        Arrays for rho mixing          32.00 Mb     (  262144,    8)
 
      Initial potential from superposition of free atoms
      Check: negative starting charge=   -0.058528
 
      starting charge    7.99998, renormalised to    8.00000
 
-     negative rho (up, down):  0.585E-01 0.000E+00
+     negative rho (up, down):  5.853E-02 0.000E+00
      Starting wfc are    6 randomized atomic wfcs
 
      total cpu time spent up to now is        0.9 secs
 
-     per-process dynamical memory:    49.6 Mb
+     per-process dynamical memory:    49.7 Mb
 
      Self-consistent Calculation
 
@@ -164,9 +163,9 @@
      Davidson diagonalization with overlap
      ethr =  1.00E-02,  avg # of iterations =  2.0
 
-     negative rho (up, down):  0.651E-01 0.000E+00
+     negative rho (up, down):  6.505E-02 0.000E+00
 
-     total cpu time spent up to now is        1.5 secs
+     total cpu time spent up to now is        1.4 secs
 
      total energy              =     -34.18235473 Ry
      Harris-Foulkes estimate   =     -34.55121209 Ry
@@ -176,7 +175,7 @@
      Davidson diagonalization with overlap
      ethr =  6.30E-03,  avg # of iterations =  3.0
 
-     negative rho (up, down):  0.586E-01 0.000E+00
+     negative rho (up, down):  5.858E-02 0.000E+00
 
      total cpu time spent up to now is        2.0 secs
 
@@ -188,7 +187,7 @@
      Davidson diagonalization with overlap
      ethr =  6.30E-03,  avg # of iterations =  2.0
 
-     negative rho (up, down):  0.677E-01 0.000E+00
+     negative rho (up, down):  6.772E-02 0.000E+00
 
      total cpu time spent up to now is        2.6 secs
 
@@ -200,9 +199,9 @@
      Davidson diagonalization with overlap
      ethr =  8.33E-05,  avg # of iterations =  2.0
 
-     negative rho (up, down):  0.661E-01 0.000E+00
+     negative rho (up, down):  6.614E-02 0.000E+00
 
-     total cpu time spent up to now is        3.2 secs
+     total cpu time spent up to now is        3.1 secs
 
      total energy              =     -34.39412487 Ry
      Harris-Foulkes estimate   =     -34.39449671 Ry
@@ -212,7 +211,7 @@
      Davidson diagonalization with overlap
      ethr =  1.29E-05,  avg # of iterations =  1.0
 
-     negative rho (up, down):  0.661E-01 0.000E+00
+     negative rho (up, down):  6.606E-02 0.000E+00
 
      total cpu time spent up to now is        3.7 secs
 
@@ -224,9 +223,9 @@
      Davidson diagonalization with overlap
      ethr =  1.71E-06,  avg # of iterations =  2.0
 
-     negative rho (up, down):  0.663E-01 0.000E+00
+     negative rho (up, down):  6.634E-02 0.000E+00
 
-     total cpu time spent up to now is        4.3 secs
+     total cpu time spent up to now is        4.2 secs
 
      total energy              =     -34.39414359 Ry
      Harris-Foulkes estimate   =     -34.39414410 Ry
@@ -236,7 +235,7 @@
      Davidson diagonalization with overlap
      ethr =  4.01E-08,  avg # of iterations =  2.0
 
-     negative rho (up, down):  0.663E-01 0.000E+00
+     negative rho (up, down):  6.629E-02 0.000E+00
 
      total cpu time spent up to now is        4.8 secs
 
@@ -248,7 +247,7 @@
      Davidson diagonalization with overlap
      ethr =  2.23E-08,  avg # of iterations =  1.0
 
-     negative rho (up, down):  0.663E-01 0.000E+00
+     negative rho (up, down):  6.630E-02 0.000E+00
 
      total cpu time spent up to now is        5.3 secs
 
@@ -257,6 +256,8 @@
           k = 0.0000 0.0000 0.0000 (  8440 PWs)   bands (ev):
 
    -25.5020 -13.6158  -8.8896  -7.2055
+
+     highest occupied level (ev):    -7.2055
 
 !    total energy              =     -34.39414368 Ry
      Harris-Foulkes estimate   =     -34.39414367 Ry
@@ -290,29 +291,33 @@
 
      Writing output data file pwscf.save
  
-     init_run     :      0.80s CPU      0.83s WALL (       1 calls)
-     electrons    :      4.34s CPU      4.45s WALL (       1 calls)
-     forces       :      0.20s CPU      0.20s WALL (       1 calls)
-     stress       :      0.73s CPU      0.76s WALL (       1 calls)
+     init_run     :      0.78s CPU      0.82s WALL (       1 calls)
+     electrons    :      4.11s CPU      4.50s WALL (       1 calls)
+     forces       :      0.14s CPU      0.15s WALL (       1 calls)
+     stress       :      0.54s CPU      0.60s WALL (       1 calls)
 
      Called by init_run:
      wfcinit      :      0.04s CPU      0.04s WALL (       1 calls)
-     potinit      :      0.28s CPU      0.30s WALL (       1 calls)
+     potinit      :      0.27s CPU      0.29s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :      0.64s CPU      0.64s WALL (       8 calls)
-     sum_band     :      0.79s CPU      0.80s WALL (       8 calls)
-     v_of_rho     :      2.19s CPU      2.24s WALL (       9 calls)
-     newd         :      0.62s CPU      0.64s WALL (       9 calls)
-     mix_rho      :      0.22s CPU      0.24s WALL (       8 calls)
+     c_bands      :      0.61s CPU      0.62s WALL (       8 calls)
+     sum_band     :      0.90s CPU      1.08s WALL (       8 calls)
+     v_of_rho     :      2.06s CPU      2.09s WALL (       9 calls)
+     newd         :      0.44s CPU      0.61s WALL (       9 calls)
+     mix_rho      :      0.29s CPU      0.30s WALL (       8 calls)
 
      Called by c_bands:
      init_us_2    :      0.06s CPU      0.06s WALL (      17 calls)
-     regterg      :      0.58s CPU      0.59s WALL (       8 calls)
+     regterg      :      0.56s CPU      0.57s WALL (       8 calls)
+
+     Called by sum_band:
+     sum_band:bec :      0.00s CPU      0.00s WALL (       8 calls)
+     addusdens    :      0.62s CPU      0.81s WALL (       8 calls)
 
      Called by *egterg:
-     h_psi        :      0.52s CPU      0.52s WALL (      24 calls)
-     s_psi        :      0.02s CPU      0.01s WALL (      24 calls)
+     h_psi        :      0.52s CPU      0.51s WALL (      24 calls)
+     s_psi        :      0.01s CPU      0.01s WALL (      24 calls)
      g_psi        :      0.02s CPU      0.02s WALL (      15 calls)
      rdiaghg      :      0.00s CPU      0.00s WALL (      23 calls)
 
@@ -321,15 +326,15 @@
 
      General routines
      calbec       :      0.02s CPU      0.03s WALL (      37 calls)
-     fft          :      0.67s CPU      0.70s WALL (     124 calls)
-     fftw         :      0.39s CPU      0.39s WALL (     112 calls)
-     davcio       :      0.00s CPU      0.00s WALL (       8 calls)
+     fft          :      0.62s CPU      0.62s WALL (     124 calls)
+     fftw         :      0.40s CPU      0.39s WALL (     112 calls)
+     davcio       :      0.00s CPU      0.00s WALL (       1 calls)
  
  
-     PWSCF        :     6.15s CPU         6.35s WALL
+     PWSCF        :     5.65s CPU         6.17s WALL
 
  
-   This run was terminated on:  11:28:40   6Jan2012            
+   This run was terminated on:   9:54:56   2Dec2015            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

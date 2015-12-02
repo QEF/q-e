@@ -1,5 +1,5 @@
 
-     Program PWSCF v.5.1.1 (svn rev. 11354) starts on  3Feb2015 at 13:50:58 
+     Program PWSCF v.5.2.1 (svn rev. 11881M) starts on  2Dec2015 at  9:54: 7 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -28,9 +28,7 @@ Warning: card  / ignored
                file O.pbe-rrkjus.UPF: wavefunction(s)  2S renormalized
 
      gamma-point specific algorithms are used
-     EXX: setup a grid of 1 q-points centered on each k-point
-     (k+q)-points:
-   0.0000000   0.0000000   0.0000000      1    1
+EXX: grid of k+q points same as grid of k-points
  
      G-vector sticks info
      --------------------
@@ -49,6 +47,7 @@ Warning: card  / ignored
      number of Kohn-Sham states=            5
      kinetic-energy cutoff     =      25.0000  Ry
      charge density cutoff     =     100.0000  Ry
+     cutoff for Fock operator  =     100.0000  Ry
      convergence threshold     =      1.0E-06
      mixing beta               =       0.7000
      number of iterations used =            8  plain     mixing
@@ -141,7 +140,7 @@ Warning: card  / ignored
 
      total cpu time spent up to now is        0.6 secs
 
-     per-process dynamical memory:    26.2 Mb
+     per-process dynamical memory:    25.9 Mb
 
      Self-consistent Calculation
 
@@ -159,7 +158,7 @@ Warning: card  / ignored
 
      negative rho (up, down):  6.295E-02 0.000E+00
 
-     total cpu time spent up to now is        0.9 secs
+     total cpu time spent up to now is        0.8 secs
 
      iteration #  3     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
@@ -167,7 +166,7 @@ Warning: card  / ignored
 
      negative rho (up, down):  6.192E-02 0.000E+00
 
-     total cpu time spent up to now is        1.0 secs
+     total cpu time spent up to now is        0.9 secs
 
      iteration #  4     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
@@ -175,7 +174,7 @@ Warning: card  / ignored
 
      negative rho (up, down):  6.144E-02 0.000E+00
 
-     total cpu time spent up to now is        1.1 secs
+     total cpu time spent up to now is        0.9 secs
 
      iteration #  5     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
@@ -183,7 +182,7 @@ Warning: card  / ignored
 
      negative rho (up, down):  6.144E-02 0.000E+00
 
-     total cpu time spent up to now is        1.2 secs
+     total cpu time spent up to now is        1.0 secs
 
      iteration #  6     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
@@ -191,7 +190,7 @@ Warning: card  / ignored
 
      negative rho (up, down):  6.142E-02 0.000E+00
 
-     total cpu time spent up to now is        1.3 secs
+     total cpu time spent up to now is        1.1 secs
 
      End of self-consistent calculation
 
@@ -202,16 +201,14 @@ Warning: card  / ignored
      highest occupied level (ev):    -8.3437
 
      convergence has been achieved in   6 iterations
- 
- 
 
      negative rho (up, down):  6.142E-02 0.000E+00
 
      EXX: now go back to refine exchange calculation
 
-     total cpu time spent up to now is        1.5 secs
+     total cpu time spent up to now is        1.4 secs
 
-     per-process dynamical memory:    44.9 Mb
+     per-process dynamical memory:    39.1 Mb
 
      Self-consistent Calculation
 
@@ -221,7 +218,7 @@ Warning: card  / ignored
 
      negative rho (up, down):  7.392E-02 0.000E+00
 
-     total cpu time spent up to now is        2.5 secs
+     total cpu time spent up to now is        2.1 secs
 
      iteration #  2     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
@@ -229,7 +226,7 @@ Warning: card  / ignored
 
      negative rho (up, down):  6.828E-02 0.000E+00
 
-     total cpu time spent up to now is        3.2 secs
+     total cpu time spent up to now is        2.7 secs
 
      iteration #  3     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
@@ -237,7 +234,7 @@ Warning: card  / ignored
 
      negative rho (up, down):  6.672E-02 0.000E+00
 
-     total cpu time spent up to now is        3.9 secs
+     total cpu time spent up to now is        3.2 secs
 
      iteration #  4     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
@@ -245,7 +242,7 @@ Warning: card  / ignored
 
      negative rho (up, down):  6.402E-02 0.000E+00
 
-     total cpu time spent up to now is        4.3 secs
+     total cpu time spent up to now is        3.5 secs
 
      iteration #  5     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
@@ -253,7 +250,7 @@ Warning: card  / ignored
 
      negative rho (up, down):  6.231E-02 0.000E+00
 
-     total cpu time spent up to now is        4.8 secs
+     total cpu time spent up to now is        3.9 secs
 
      iteration #  6     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
@@ -261,7 +258,7 @@ Warning: card  / ignored
 
      negative rho (up, down):  6.229E-02 0.000E+00
 
-     total cpu time spent up to now is        5.4 secs
+     total cpu time spent up to now is        4.4 secs
 
      iteration #  7     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
@@ -269,7 +266,7 @@ Warning: card  / ignored
 
      negative rho (up, down):  6.223E-02 0.000E+00
 
-     total cpu time spent up to now is        5.9 secs
+     total cpu time spent up to now is        4.8 secs
 
      iteration #  8     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
@@ -277,7 +274,7 @@ Warning: card  / ignored
 
      negative rho (up, down):  6.231E-02 0.000E+00
 
-     total cpu time spent up to now is        6.3 secs
+     total cpu time spent up to now is        5.2 secs
 
      End of self-consistent calculation
 
@@ -297,9 +294,9 @@ Warning: card  / ignored
 
      EXX: now go back to refine exchange calculation
 
-     total cpu time spent up to now is        6.5 secs
+     total cpu time spent up to now is        5.3 secs
 
-     per-process dynamical memory:    43.9 Mb
+     per-process dynamical memory:    41.6 Mb
 
      Self-consistent Calculation
 
@@ -309,7 +306,7 @@ Warning: card  / ignored
 
      negative rho (up, down):  6.239E-02 0.000E+00
 
-     total cpu time spent up to now is        7.1 secs
+     total cpu time spent up to now is        5.8 secs
 
      iteration #  2     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
@@ -317,7 +314,7 @@ Warning: card  / ignored
 
      negative rho (up, down):  6.236E-02 0.000E+00
 
-     total cpu time spent up to now is        7.8 secs
+     total cpu time spent up to now is        6.3 secs
 
      iteration #  3     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
@@ -325,7 +322,7 @@ Warning: card  / ignored
 
      negative rho (up, down):  6.241E-02 0.000E+00
 
-     total cpu time spent up to now is        8.3 secs
+     total cpu time spent up to now is        6.7 secs
 
      End of self-consistent calculation
 
@@ -345,9 +342,9 @@ Warning: card  / ignored
 
      EXX: now go back to refine exchange calculation
 
-     total cpu time spent up to now is        8.5 secs
+     total cpu time spent up to now is        6.9 secs
 
-     per-process dynamical memory:    43.9 Mb
+     per-process dynamical memory:    41.6 Mb
 
      Self-consistent Calculation
 
@@ -363,7 +360,7 @@ Warning: card  / ignored
 
      negative rho (up, down):  6.237E-02 0.000E+00
 
-     total cpu time spent up to now is        9.2 secs
+     total cpu time spent up to now is        7.5 secs
 
      End of self-consistent calculation
 
@@ -385,64 +382,71 @@ Warning: card  / ignored
 
      Forces acting on atoms (Ry/au):
 
-     atom    1 type  1   force =     0.15033234    0.15033234    0.15033234
-     atom    2 type  2   force =    -0.15033234   -0.15033234   -0.15033234
+     atom    1 type  1   force =     0.14989468    0.14989468    0.14989468
+     atom    2 type  2   force =    -0.14989468   -0.14989468   -0.14989468
 
-     Total force =     0.368238     Total SCF correction =     0.001246
+     Total force =     0.367165     Total SCF correction =     0.001246
 
      Writing output data file pwscf.save
  
-     init_run     :      0.59s CPU      0.60s WALL (       1 calls)
-     electrons    :      7.92s CPU      8.00s WALL (       4 calls)
-     forces       :      0.05s CPU      0.05s WALL (       1 calls)
+     init_run     :      0.55s CPU      0.56s WALL (       1 calls)
+     electrons    :      6.32s CPU      6.39s WALL (       4 calls)
+     forces       :      0.03s CPU      0.03s WALL (       1 calls)
 
      Called by init_run:
      wfcinit      :      0.01s CPU      0.01s WALL (       1 calls)
-     potinit      :      0.07s CPU      0.08s WALL (       1 calls)
+     potinit      :      0.06s CPU      0.07s WALL (       1 calls)
      realus       :      0.02s CPU      0.02s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :      5.20s CPU      5.26s WALL (      19 calls)
-     sum_band     :      0.19s CPU      0.19s WALL (      19 calls)
-     v_of_rho     :      2.60s CPU      2.61s WALL (      20 calls)
+     c_bands      :      3.80s CPU      3.85s WALL (      19 calls)
+     sum_band     :      0.13s CPU      0.13s WALL (      19 calls)
+     v_of_rho     :      2.45s CPU      2.47s WALL (      20 calls)
      newd         :      0.00s CPU      0.01s WALL (      19 calls)
-     mix_rho      :      0.10s CPU      0.10s WALL (      19 calls)
+     mix_rho      :      0.10s CPU      0.09s WALL (      19 calls)
 
      Called by c_bands:
-     init_us_2    :      0.22s CPU      0.23s WALL (     246 calls)
-     regterg      :      5.16s CPU      5.22s WALL (      19 calls)
+     init_us_2    :      0.27s CPU      0.24s WALL (     246 calls)
+     regterg      :      3.75s CPU      3.81s WALL (      19 calls)
+
+     Called by sum_band:
+     sum_band:bec :      0.00s CPU      0.00s WALL (      19 calls)
+     addusdens    :      0.01s CPU      0.01s WALL (      19 calls)
 
      Called by *egterg:
-     h_psi        :      5.13s CPU      5.14s WALL (      69 calls)
+     h_psi        :      3.68s CPU      3.73s WALL (      69 calls)
      s_psi        :      0.01s CPU      0.01s WALL (      69 calls)
-     g_psi        :      0.00s CPU      0.02s WALL (      49 calls)
+     g_psi        :      0.02s CPU      0.02s WALL (      49 calls)
      rdiaghg      :      0.01s CPU      0.01s WALL (      64 calls)
 
      Called by h_psi:
      add_vuspsi   :      0.01s CPU      0.01s WALL (      69 calls)
 
      General routines
-     calbec       :      0.01s CPU      0.02s WALL (     103 calls)
-     fft          :      0.40s CPU      0.41s WALL (     218 calls)
-     fftw         :      0.49s CPU      0.48s WALL (     417 calls)
+     calbec       :      0.02s CPU      0.02s WALL (     103 calls)
+     fft          :      0.20s CPU      0.22s WALL (     217 calls)
+     fftw         :      0.23s CPU      0.24s WALL (     417 calls)
+     fftc         :      1.36s CPU      1.31s WALL (    1281 calls)
+     fftcw        :      0.14s CPU      0.20s WALL (     346 calls)
      davcio       :      0.00s CPU      0.00s WALL (       1 calls)
  
 
      EXX routines
      exx_grid     :      0.00s CPU      0.00s WALL (       1 calls)
-     exxinit      :      0.08s CPU      0.09s WALL (       4 calls)
-     vexx         :      4.64s CPU      4.66s WALL (      47 calls)
-     exxen2       :      0.51s CPU      0.51s WALL (       7 calls)
+     exxinit      :      0.04s CPU      0.05s WALL (       4 calls)
+     vexx         :      3.42s CPU      3.45s WALL (      47 calls)
+     exxenergy    :      0.40s CPU      0.40s WALL (       7 calls)
 
-     EXX+US routines
-     becxx        :      0.02s CPU      0.03s WALL (       4 calls)
-     addusxx      :      0.31s CPU      0.34s WALL (    1155 calls)
-     nlxx_pot     :      0.20s CPU      0.20s WALL (     196 calls)
+     EXX+US  routines
+     becxx        :      0.02s CPU      0.02s WALL (       4 calls)
+     addusxx      :      0.35s CPU      0.34s WALL (    1155 calls)
+     newdxx       :      0.20s CPU      0.18s WALL (     980 calls)
+     nlxx_pot     :      0.22s CPU      0.20s WALL (     196 calls)
  
-     PWSCF        :     9.40s CPU         9.50s WALL
+     PWSCF        :     7.57s CPU         7.69s WALL
 
  
-   This run was terminated on:  13:51: 7   3Feb2015            
+   This run was terminated on:   9:54:14   2Dec2015            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
