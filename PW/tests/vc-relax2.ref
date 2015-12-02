@@ -1,20 +1,20 @@
 
-     Program PWSCF v.4.99       starts on  6Jan2012 at 11:29:30 
+     Program PWSCF v.5.2.1 (svn rev. 11881M) starts on  1Dec2015 at 19:24:36 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
          "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
           URL http://www.quantum-espresso.org", 
      in publications or presentations arising from this work. More details at
-     http://www.quantum-espresso.org/quote.php
+     http://www.quantum-espresso.org/quote
 
      Serial version
+     Reading input from /home/giannozz/trunk/espresso/PW/tests/vc-relax2.in
 
      Current dimensions of program PWSCF are:
      Max number of different atomic species (ntypx) = 10
      Max number of k-points (npk) =  40000
      Max angular momentum in pseudopotentials (lmaxx) =  3
-     Reading input from /home/giannozz/trunk/espresso/tests/vc-relax2.in
  
      G-vector sticks info
      --------------------
@@ -35,12 +35,11 @@
      convergence threshold     =      1.0E-07
      mixing beta               =       0.7000
      number of iterations used =            8  plain     mixing
-     Exchange-correlation      =  SLA  PZ   NOGX NOGC ( 1 1 0 0 0)
-     EXX-fraction              =        0.00
+     Exchange-correlation      =  SLA  PZ   NOGX NOGC ( 1  1  0  0 0 0)
      nstep                     =           50
 
 
-     celldm(1)=   0.000000  celldm(2)=   0.000000  celldm(3)=   0.000000
+     celldm(1)=   7.010336  celldm(2)=   0.000000  celldm(3)=   0.000000
      celldm(4)=   0.000000  celldm(5)=   0.000000  celldm(6)=   0.000000
 
      crystal axes: (cart. coord. in units of alat)
@@ -94,25 +93,25 @@
      Dense  grid:     4159 G-vectors     FFT dimensions: (  24,  24,  24)
 
      Largest allocated arrays     est. size (Mb)     dimensions
-        Kohn-Sham Wavefunctions         0.07 Mb     (    531,    9)
-        NL pseudopotentials             0.06 Mb     (    531,    8)
-        Each V/rho on FFT grid          0.21 Mb     (  13824)
-        Each G-vector array             0.03 Mb     (   4159)
-        G-vector shells                 0.03 Mb     (   4159)
+        Kohn-Sham Wavefunctions         0.07 Mb     (     531,    9)
+        NL pseudopotentials             0.06 Mb     (     531,    8)
+        Each V/rho on FFT grid          0.21 Mb     (   13824)
+        Each G-vector array             0.03 Mb     (    4159)
+        G-vector shells                 0.03 Mb     (    4159)
      Largest temporary arrays     est. size (Mb)     dimensions
-        Auxiliary wavefunctions         0.29 Mb     (    531,   36)
-        Each subspace H/S matrix        0.02 Mb     (  36,  36)
-        Each <psi_i|beta_j> matrix      0.00 Mb     (      8,    9)
-        Arrays for rho mixing           1.69 Mb     (  13824,   8)
+        Auxiliary wavefunctions         0.29 Mb     (     531,   36)
+        Each subspace H/S matrix        0.02 Mb     (      36,   36)
+        Each <psi_i|beta_j> matrix      0.00 Mb     (       8,    9)
+        Arrays for rho mixing           1.69 Mb     (   13824,    8)
 
      Initial potential from superposition of free atoms
 
      starting charge    9.99960, renormalised to   10.00000
-     Starting wfc are    8 randomized atomic wfcs
+     Starting wfc are    8 randomized atomic wfcs +    1 random wfc
 
      total cpu time spent up to now is        0.2 secs
 
-     per-process dynamical memory:     2.8 Mb
+     per-process dynamical memory:     3.7 Mb
 
      Self-consistent Calculation
 
@@ -244,8 +243,8 @@
    0.00000000   0.00000000   0.00098853          0.00      0.00    145.42
 
 
-     Wentzcovitch Damped Cell-Dynamics Minimization
-     convergence thresholds: EPSE = 0.10E-03  EPSF = 0.10E-02  EPSP = 0.50E+00
+     Wentzcovitch Damped Cell Dynamics Minimization:
+     convergence thresholds EPSE = 1.00E-04  EPSF = 1.00E-03
 
      Entering Dynamics;  it =     1   time =  0.00000 pico-seconds
 
@@ -277,22 +276,11 @@ As      -0.288386168  -0.288386167  -0.288386167
 
      Writing output data file pwscf.save
      NEW-OLD atomic charge density approx. for the potential
-     NEW k-points:
-        k(    1) = (   0.0000000   0.0000000   0.1570920), wk =   0.0625000
-        k(    2) = (  -0.1459894  -0.2528610   0.2618200), wk =   0.1875000
-        k(    3) = (   0.2919788   0.5057221  -0.0523640), wk =   0.1875000
-        k(    4) = (   0.1459894   0.2528610   0.0523640), wk =   0.1875000
-        k(    5) = (  -0.2919788   0.0000000   0.3665479), wk =   0.1875000
-        k(    6) = (   0.1459894   0.7585831   0.0523640), wk =   0.3750000
-        k(    7) = (   0.0000000   0.5057221   0.1570920), wk =   0.3750000
-        k(    8) = (   0.5839576   0.0000000  -0.2618200), wk =   0.1875000
-        k(    9) = (   0.0000000   0.0000000   0.4712759), wk =   0.0625000
-        k(   10) = (   0.4379682   0.7585831   0.1570919), wk =   0.1875000
      extrapolated charge    9.42691, renormalised to   10.00000
 
-     total cpu time spent up to now is        1.1 secs
+     total cpu time spent up to now is        1.0 secs
 
-     per-process dynamical memory:     3.5 Mb
+     per-process dynamical memory:     4.1 Mb
 
      Self-consistent Calculation
 
@@ -330,7 +318,7 @@ As      -0.288386168  -0.288386167  -0.288386167
      Davidson diagonalization with overlap
      ethr =  2.00E-06,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        1.6 secs
+     total cpu time spent up to now is        1.5 secs
 
      total energy              =     -25.42509497 Ry
      Harris-Foulkes estimate   =     -25.42511645 Ry
@@ -468,22 +456,11 @@ As      -0.283819529  -0.283819525  -0.283819525
 
      Writing output data file pwscf.save
      NEW-OLD atomic charge density approx. for the potential
-     NEW k-points:
-        k(    1) = (   0.0000000   0.0000000   0.1663032), wk =   0.0625000
-        k(    2) = (  -0.1510562  -0.2616370   0.2771721), wk =   0.1875000
-        k(    3) = (   0.3021125   0.5232741  -0.0554345), wk =   0.1875000
-        k(    4) = (   0.1510562   0.2616370   0.0554344), wk =   0.1875000
-        k(    5) = (  -0.3021125   0.0000000   0.3880409), wk =   0.1875000
-        k(    6) = (   0.1510562   0.7849111   0.0554344), wk =   0.3750000
-        k(    7) = (   0.0000000   0.5232741   0.1663032), wk =   0.3750000
-        k(    8) = (   0.6042249   0.0000000  -0.2771721), wk =   0.1875000
-        k(    9) = (   0.0000000   0.0000000   0.4989097), wk =   0.0625000
-        k(   10) = (   0.4531687   0.7849111   0.1663032), wk =   0.1875000
      extrapolated charge    8.66610, renormalised to   10.00000
 
      total cpu time spent up to now is        2.1 secs
 
-     per-process dynamical memory:     4.2 Mb
+     per-process dynamical memory:     4.9 Mb
 
      Self-consistent Calculation
 
@@ -491,7 +468,7 @@ As      -0.283819529  -0.283819525  -0.283819525
      Davidson diagonalization with overlap
      ethr =  1.00E-06,  avg # of iterations =  5.3
 
-     total cpu time spent up to now is        2.3 secs
+     total cpu time spent up to now is        2.4 secs
 
      total energy              =     -25.36409080 Ry
      Harris-Foulkes estimate   =     -24.44606117 Ry
@@ -659,22 +636,11 @@ As      -0.275031810  -0.275031803  -0.275031803
 
      Writing output data file pwscf.save
      NEW-OLD atomic charge density approx. for the potential
-     NEW k-points:
-        k(    1) = (   0.0000000   0.0000000   0.1793645), wk =   0.0625000
-        k(    2) = (  -0.1493637  -0.2587056   0.2989409), wk =   0.1875000
-        k(    3) = (   0.2987275   0.5174111  -0.0597882), wk =   0.1875000
-        k(    4) = (   0.1493637   0.2587056   0.0597882), wk =   0.1875000
-        k(    5) = (  -0.2987275   0.0000000   0.4185173), wk =   0.1875000
-        k(    6) = (   0.1493637   0.7761167   0.0597882), wk =   0.3750000
-        k(    7) = (   0.0000000   0.5174111   0.1793645), wk =   0.3750000
-        k(    8) = (   0.5974549   0.0000000  -0.2989410), wk =   0.1875000
-        k(    9) = (   0.0000000   0.0000000   0.5380936), wk =   0.0625000
-        k(   10) = (   0.4480912   0.7761167   0.1793645), wk =   0.1875000
      extrapolated charge    9.45497, renormalised to   10.00000
 
-     total cpu time spent up to now is        3.2 secs
+     total cpu time spent up to now is        3.3 secs
 
-     per-process dynamical memory:     4.2 Mb
+     per-process dynamical memory:     4.9 Mb
 
      Self-consistent Calculation
 
@@ -840,22 +806,11 @@ As      -0.262508269  -0.262508260  -0.262508260
 
      Writing output data file pwscf.save
      NEW-OLD atomic charge density approx. for the potential
-     NEW k-points:
-        k(    1) = (   0.0000000   0.0000000   0.1711993), wk =   0.0625000
-        k(    2) = (  -0.1475060  -0.2554878   0.2853322), wk =   0.1875000
-        k(    3) = (   0.2950119   0.5109756  -0.0570665), wk =   0.1875000
-        k(    4) = (   0.1475060   0.2554878   0.0570664), wk =   0.1875000
-        k(    5) = (  -0.2950119   0.0000000   0.3994651), wk =   0.1875000
-        k(    6) = (   0.1475060   0.7664634   0.0570664), wk =   0.3750000
-        k(    7) = (   0.0000000   0.5109756   0.1711993), wk =   0.3750000
-        k(    8) = (   0.5900238   0.0000000  -0.2853323), wk =   0.1875000
-        k(    9) = (   0.0000000   0.0000000   0.5135980), wk =   0.0625000
-        k(   10) = (   0.4425179   0.7664634   0.1711993), wk =   0.1875000
      extrapolated charge   10.69116, renormalised to   10.00000
 
      total cpu time spent up to now is        4.3 secs
 
-     per-process dynamical memory:     4.2 Mb
+     per-process dynamical memory:     4.9 Mb
 
      Self-consistent Calculation
 
@@ -863,7 +818,7 @@ As      -0.262508269  -0.262508260  -0.262508260
      Davidson diagonalization with overlap
      ethr =  1.00E-06,  avg # of iterations =  8.5
 
-     total cpu time spent up to now is        4.5 secs
+     total cpu time spent up to now is        4.6 secs
 
      total energy              =     -25.43947909 Ry
      Harris-Foulkes estimate   =     -25.95110354 Ry
@@ -873,7 +828,7 @@ As      -0.262508269  -0.262508260  -0.262508260
      Davidson diagonalization with overlap
      ethr =  1.69E-05,  avg # of iterations =  2.9
 
-     total cpu time spent up to now is        4.6 secs
+     total cpu time spent up to now is        4.7 secs
 
      total energy              =     -25.44104340 Ry
      Harris-Foulkes estimate   =     -25.44125354 Ry
@@ -883,7 +838,7 @@ As      -0.262508269  -0.262508260  -0.262508260
      Davidson diagonalization with overlap
      ethr =  5.29E-06,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        4.7 secs
+     total cpu time spent up to now is        4.8 secs
 
      total energy              =     -25.44103738 Ry
      Harris-Foulkes estimate   =     -25.44107117 Ry
@@ -893,7 +848,7 @@ As      -0.262508269  -0.262508260  -0.262508260
      Davidson diagonalization with overlap
      ethr =  7.80E-07,  avg # of iterations =  2.1
 
-     total cpu time spent up to now is        4.8 secs
+     total cpu time spent up to now is        4.9 secs
 
      total energy              =     -25.44104668 Ry
      Harris-Foulkes estimate   =     -25.44104692 Ry
@@ -903,7 +858,7 @@ As      -0.262508269  -0.262508260  -0.262508260
      Davidson diagonalization with overlap
      ethr =  6.51E-09,  avg # of iterations =  2.7
 
-     total cpu time spent up to now is        4.9 secs
+     total cpu time spent up to now is        5.0 secs
 
      total energy              =     -25.44104718 Ry
      Harris-Foulkes estimate   =     -25.44104729 Ry
@@ -913,7 +868,7 @@ As      -0.262508269  -0.262508260  -0.262508260
      Davidson diagonalization with overlap
      ethr =  2.06E-09,  avg # of iterations =  2.1
 
-     total cpu time spent up to now is        5.0 secs
+     total cpu time spent up to now is        5.2 secs
 
      End of self-consistent calculation
 
@@ -1021,22 +976,11 @@ As      -0.249599085  -0.249599092  -0.249599092
 
      Writing output data file pwscf.save
      NEW-OLD atomic charge density approx. for the potential
-     NEW k-points:
-        k(    1) = (   0.0000000   0.0000000   0.1701751), wk =   0.0625000
-        k(    2) = (  -0.1487057  -0.2575659   0.2836252), wk =   0.1875000
-        k(    3) = (   0.2974114   0.5151317  -0.0567251), wk =   0.1875000
-        k(    4) = (   0.1487057   0.2575659   0.0567250), wk =   0.1875000
-        k(    5) = (  -0.2974114   0.0000000   0.3970753), wk =   0.1875000
-        k(    6) = (   0.1487057   0.7726976   0.0567250), wk =   0.3750000
-        k(    7) = (   0.0000000   0.5151317   0.1701751), wk =   0.3750000
-        k(    8) = (   0.5948229   0.0000000  -0.2836253), wk =   0.1875000
-        k(    9) = (   0.0000000   0.0000000   0.5105253), wk =   0.0625000
-        k(   10) = (   0.4461172   0.7726976   0.1701751), wk =   0.1875000
      extrapolated charge    9.89747, renormalised to   10.00000
 
-     total cpu time spent up to now is        5.3 secs
+     total cpu time spent up to now is        5.4 secs
 
-     per-process dynamical memory:     4.2 Mb
+     per-process dynamical memory:     4.9 Mb
 
      Self-consistent Calculation
 
@@ -1044,7 +988,7 @@ As      -0.249599085  -0.249599092  -0.249599092
      Davidson diagonalization with overlap
      ethr =  1.00E-06,  avg # of iterations =  8.0
 
-     total cpu time spent up to now is        5.6 secs
+     total cpu time spent up to now is        5.7 secs
 
      total energy              =     -25.44089309 Ry
      Harris-Foulkes estimate   =     -25.36551760 Ry
@@ -1054,7 +998,7 @@ As      -0.249599085  -0.249599092  -0.249599092
      Davidson diagonalization with overlap
      ethr =  2.14E-05,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        5.6 secs
+     total cpu time spent up to now is        5.8 secs
 
      total energy              =     -25.44092757 Ry
      Harris-Foulkes estimate   =     -25.44095355 Ry
@@ -1064,7 +1008,7 @@ As      -0.249599085  -0.249599092  -0.249599092
      Davidson diagonalization with overlap
      ethr =  1.47E-06,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        5.7 secs
+     total cpu time spent up to now is        5.9 secs
 
      total energy              =     -25.44093218 Ry
      Harris-Foulkes estimate   =     -25.44093244 Ry
@@ -1074,7 +1018,7 @@ As      -0.249599085  -0.249599092  -0.249599092
      Davidson diagonalization with overlap
      ethr =  1.10E-08,  avg # of iterations =  3.1
 
-     total cpu time spent up to now is        5.8 secs
+     total cpu time spent up to now is        6.1 secs
 
      End of self-consistent calculation
 
@@ -1182,22 +1126,11 @@ As      -0.249837169  -0.249837176  -0.249837176
 
      Writing output data file pwscf.save
      NEW-OLD atomic charge density approx. for the potential
-     NEW k-points:
-        k(    1) = (   0.0000000   0.0000000   0.1681025), wk =   0.0625000
-        k(    2) = (  -0.1525967  -0.2643053   0.2801709), wk =   0.1875000
-        k(    3) = (   0.3051934   0.5286105  -0.0560342), wk =   0.1875000
-        k(    4) = (   0.1525967   0.2643053   0.0560342), wk =   0.1875000
-        k(    5) = (  -0.3051934   0.0000000   0.3922393), wk =   0.1875000
-        k(    6) = (   0.1525967   0.7929158   0.0560342), wk =   0.3750000
-        k(    7) = (   0.0000000   0.5286105   0.1681025), wk =   0.3750000
-        k(    8) = (   0.6103869   0.0000000  -0.2801710), wk =   0.1875000
-        k(    9) = (   0.0000000   0.0000000   0.5043076), wk =   0.0625000
-        k(   10) = (   0.4577902   0.7929158   0.1681025), wk =   0.1875000
      extrapolated charge    9.59810, renormalised to   10.00000
 
-     total cpu time spent up to now is        6.1 secs
+     total cpu time spent up to now is        6.4 secs
 
-     per-process dynamical memory:     4.2 Mb
+     per-process dynamical memory:     4.9 Mb
 
      Self-consistent Calculation
 
@@ -1205,7 +1138,7 @@ As      -0.249837169  -0.249837176  -0.249837176
      Davidson diagonalization with overlap
      ethr =  1.00E-06,  avg # of iterations =  4.4
 
-     total cpu time spent up to now is        6.3 secs
+     total cpu time spent up to now is        6.6 secs
 
      total energy              =     -25.42385368 Ry
      Harris-Foulkes estimate   =     -25.12212697 Ry
@@ -1215,7 +1148,7 @@ As      -0.249837169  -0.249837176  -0.249837176
      Davidson diagonalization with overlap
      ethr =  2.40E-06,  avg # of iterations =  3.2
 
-     total cpu time spent up to now is        6.5 secs
+     total cpu time spent up to now is        6.7 secs
 
      total energy              =     -25.42425661 Ry
      Harris-Foulkes estimate   =     -25.42429047 Ry
@@ -1225,7 +1158,7 @@ As      -0.249837169  -0.249837176  -0.249837176
      Davidson diagonalization with overlap
      ethr =  9.65E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        6.5 secs
+     total cpu time spent up to now is        6.8 secs
 
      total energy              =     -25.42424822 Ry
      Harris-Foulkes estimate   =     -25.42425895 Ry
@@ -1235,7 +1168,7 @@ As      -0.249837169  -0.249837176  -0.249837176
      Davidson diagonalization with overlap
      ethr =  2.15E-07,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        6.6 secs
+     total cpu time spent up to now is        6.9 secs
 
      total energy              =     -25.42425076 Ry
      Harris-Foulkes estimate   =     -25.42425082 Ry
@@ -1245,7 +1178,7 @@ As      -0.249837169  -0.249837176  -0.249837176
      Davidson diagonalization with overlap
      ethr =  1.24E-09,  avg # of iterations =  2.7
 
-     total cpu time spent up to now is        6.7 secs
+     total cpu time spent up to now is        7.0 secs
 
      End of self-consistent calculation
 
@@ -1353,22 +1286,11 @@ As      -0.250081295  -0.250081303  -0.250081303
 
      Writing output data file pwscf.save
      NEW-OLD atomic charge density approx. for the potential
-     NEW k-points:
-        k(    1) = (   0.0000000   0.0000000   0.1690457), wk =   0.0625000
-        k(    2) = (  -0.1591053  -0.2755784   0.2817429), wk =   0.1875000
-        k(    3) = (   0.3182106   0.5511568  -0.0563486), wk =   0.1875000
-        k(    4) = (   0.1591053   0.2755784   0.0563486), wk =   0.1875000
-        k(    5) = (  -0.3182105   0.0000000   0.3944401), wk =   0.1875000
-        k(    6) = (   0.1591053   0.8267352   0.0563486), wk =   0.3750000
-        k(    7) = (   0.0000000   0.5511568   0.1690457), wk =   0.3750000
-        k(    8) = (   0.6364211   0.0000000  -0.2817430), wk =   0.1875000
-        k(    9) = (   0.0000000   0.0000000   0.5071372), wk =   0.0625000
-        k(   10) = (   0.4773159   0.8267352   0.1690457), wk =   0.1875000
      extrapolated charge    9.06781, renormalised to   10.00000
 
-     total cpu time spent up to now is        7.0 secs
+     total cpu time spent up to now is        7.3 secs
 
-     per-process dynamical memory:     4.2 Mb
+     per-process dynamical memory:     4.9 Mb
 
      Self-consistent Calculation
 
@@ -1376,7 +1298,7 @@ As      -0.250081295  -0.250081303  -0.250081303
      Davidson diagonalization with overlap
      ethr =  1.00E-06,  avg # of iterations =  5.2
 
-     total cpu time spent up to now is        7.2 secs
+     total cpu time spent up to now is        7.5 secs
 
      total energy              =     -25.36345655 Ry
      Harris-Foulkes estimate   =     -24.63671633 Ry
@@ -1386,7 +1308,7 @@ As      -0.250081295  -0.250081303  -0.250081303
      Davidson diagonalization with overlap
      ethr =  1.50E-05,  avg # of iterations =  3.3
 
-     total cpu time spent up to now is        7.4 secs
+     total cpu time spent up to now is        7.7 secs
 
      total energy              =     -25.36528768 Ry
      Harris-Foulkes estimate   =     -25.36539796 Ry
@@ -1396,7 +1318,7 @@ As      -0.250081295  -0.250081303  -0.250081303
      Davidson diagonalization with overlap
      ethr =  3.04E-06,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        7.4 secs
+     total cpu time spent up to now is        7.7 secs
 
      total energy              =     -25.36527128 Ry
      Harris-Foulkes estimate   =     -25.36529669 Ry
@@ -1406,7 +1328,7 @@ As      -0.250081295  -0.250081303  -0.250081303
      Davidson diagonalization with overlap
      ethr =  5.32E-07,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        7.5 secs
+     total cpu time spent up to now is        7.8 secs
 
      total energy              =     -25.36525930 Ry
      Harris-Foulkes estimate   =     -25.36525961 Ry
@@ -1416,7 +1338,7 @@ As      -0.250081295  -0.250081303  -0.250081303
      Davidson diagonalization with overlap
      ethr =  8.30E-09,  avg # of iterations =  2.4
 
-     total cpu time spent up to now is        7.6 secs
+     total cpu time spent up to now is        8.0 secs
 
      total energy              =     -25.36527753 Ry
      Harris-Foulkes estimate   =     -25.36527765 Ry
@@ -1426,7 +1348,7 @@ As      -0.250081295  -0.250081303  -0.250081303
      Davidson diagonalization with overlap
      ethr =  2.15E-09,  avg # of iterations =  1.9
 
-     total cpu time spent up to now is        7.7 secs
+     total cpu time spent up to now is        8.1 secs
 
      End of self-consistent calculation
 
@@ -1534,22 +1456,11 @@ As      -0.250071440  -0.250071448  -0.250071448
 
      Writing output data file pwscf.save
      NEW-OLD atomic charge density approx. for the potential
-     NEW k-points:
-        k(    1) = (   0.0000000   0.0000000   0.1650648), wk =   0.0625000
-        k(    2) = (  -0.1552871  -0.2689652   0.2751080), wk =   0.1875000
-        k(    3) = (   0.3105743   0.5379304  -0.0550216), wk =   0.1875000
-        k(    4) = (   0.1552871   0.2689652   0.0550216), wk =   0.1875000
-        k(    5) = (  -0.3105742   0.0000000   0.3851513), wk =   0.1875000
-        k(    6) = (   0.1552871   0.8068955   0.0550216), wk =   0.3750000
-        k(    7) = (   0.0000000   0.5379304   0.1650648), wk =   0.3750000
-        k(    8) = (   0.6211485   0.0000000  -0.2751081), wk =   0.1875000
-        k(    9) = (   0.0000000   0.0000000   0.4951944), wk =   0.0625000
-        k(   10) = (   0.4658614   0.8068955   0.1650648), wk =   0.1875000
      extrapolated charge   10.69849, renormalised to   10.00000
 
-     total cpu time spent up to now is        8.0 secs
+     total cpu time spent up to now is        8.4 secs
 
-     per-process dynamical memory:     4.2 Mb
+     per-process dynamical memory:     4.9 Mb
 
      Self-consistent Calculation
 
@@ -1557,7 +1468,7 @@ As      -0.250071440  -0.250071448  -0.250071448
      Davidson diagonalization with overlap
      ethr =  1.00E-06,  avg # of iterations =  4.2
 
-     total cpu time spent up to now is        8.2 secs
+     total cpu time spent up to now is        8.6 secs
 
      total energy              =     -25.41438783 Ry
      Harris-Foulkes estimate   =     -25.95207086 Ry
@@ -1567,7 +1478,7 @@ As      -0.250071440  -0.250071448  -0.250071448
      Davidson diagonalization with overlap
      ethr =  3.42E-06,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is        8.4 secs
+     total cpu time spent up to now is        8.8 secs
 
      total energy              =     -25.41543694 Ry
      Harris-Foulkes estimate   =     -25.41553022 Ry
@@ -1577,7 +1488,7 @@ As      -0.250071440  -0.250071448  -0.250071448
      Davidson diagonalization with overlap
      ethr =  2.94E-06,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        8.4 secs
+     total cpu time spent up to now is        8.8 secs
 
      total energy              =     -25.41539413 Ry
      Harris-Foulkes estimate   =     -25.41544183 Ry
@@ -1587,7 +1498,7 @@ As      -0.250071440  -0.250071448  -0.250071448
      Davidson diagonalization with overlap
      ethr =  9.01E-07,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        8.5 secs
+     total cpu time spent up to now is        9.0 secs
 
      total energy              =     -25.41540458 Ry
      Harris-Foulkes estimate   =     -25.41540779 Ry
@@ -1597,7 +1508,7 @@ As      -0.250071440  -0.250071448  -0.250071448
      Davidson diagonalization with overlap
      ethr =  5.99E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        8.6 secs
+     total cpu time spent up to now is        9.1 secs
 
      total energy              =     -25.41540527 Ry
      Harris-Foulkes estimate   =     -25.41540553 Ry
@@ -1607,7 +1518,7 @@ As      -0.250071440  -0.250071448  -0.250071448
      Davidson diagonalization with overlap
      ethr =  5.28E-09,  avg # of iterations =  1.5
 
-     total cpu time spent up to now is        8.7 secs
+     total cpu time spent up to now is        9.1 secs
 
      End of self-consistent calculation
 
@@ -1715,22 +1626,11 @@ As      -0.250056515  -0.250056523  -0.250056523
 
      Writing output data file pwscf.save
      NEW-OLD atomic charge density approx. for the potential
-     NEW k-points:
-        k(    1) = (   0.0000000   0.0000000   0.1661579), wk =   0.0625000
-        k(    2) = (  -0.1562997  -0.2707191   0.2769299), wk =   0.1875000
-        k(    3) = (   0.3125995   0.5414382  -0.0553860), wk =   0.1875000
-        k(    4) = (   0.1562997   0.2707191   0.0553860), wk =   0.1875000
-        k(    5) = (  -0.3125995   0.0000000   0.3877018), wk =   0.1875000
-        k(    6) = (   0.1562997   0.8121573   0.0553860), wk =   0.3750000
-        k(    7) = (   0.0000000   0.5414382   0.1661579), wk =   0.3750000
-        k(    8) = (   0.6251990   0.0000000  -0.2769299), wk =   0.1875000
-        k(    9) = (   0.0000000   0.0000000   0.4984738), wk =   0.0625000
-        k(   10) = (   0.4688992   0.8121573   0.1661579), wk =   0.1875000
      extrapolated charge    9.80207, renormalised to   10.00000
 
-     total cpu time spent up to now is        9.0 secs
+     total cpu time spent up to now is        9.4 secs
 
-     per-process dynamical memory:     4.2 Mb
+     per-process dynamical memory:     4.9 Mb
 
      Self-consistent Calculation
 
@@ -1738,7 +1638,7 @@ As      -0.250056515  -0.250056523  -0.250056523
      Davidson diagonalization with overlap
      ethr =  1.00E-06,  avg # of iterations =  3.3
 
-     total cpu time spent up to now is        9.2 secs
+     total cpu time spent up to now is        9.6 secs
 
      total energy              =     -25.40343408 Ry
      Harris-Foulkes estimate   =     -25.25152675 Ry
@@ -1748,7 +1648,7 @@ As      -0.250056515  -0.250056523  -0.250056523
      Davidson diagonalization with overlap
      ethr =  4.86E-07,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is        9.3 secs
+     total cpu time spent up to now is        9.7 secs
 
      total energy              =     -25.40352164 Ry
      Harris-Foulkes estimate   =     -25.40352814 Ry
@@ -1758,7 +1658,7 @@ As      -0.250056515  -0.250056523  -0.250056523
      Davidson diagonalization with overlap
      ethr =  1.84E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        9.4 secs
+     total cpu time spent up to now is        9.8 secs
 
      total energy              =     -25.40351992 Ry
      Harris-Foulkes estimate   =     -25.40352206 Ry
@@ -1768,7 +1668,7 @@ As      -0.250056515  -0.250056523  -0.250056523
      Davidson diagonalization with overlap
      ethr =  4.20E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        9.5 secs
+     total cpu time spent up to now is        9.9 secs
 
      End of self-consistent calculation
 
@@ -1876,22 +1776,11 @@ As      -0.250036496  -0.250036504  -0.250036504
 
      Writing output data file pwscf.save
      NEW-OLD atomic charge density approx. for the potential
-     NEW k-points:
-        k(    1) = (   0.0000000   0.0000000   0.1665808), wk =   0.0625000
-        k(    2) = (  -0.1574260  -0.2726698   0.2776347), wk =   0.1875000
-        k(    3) = (   0.3148520   0.5453396  -0.0555270), wk =   0.1875000
-        k(    4) = (   0.1574260   0.2726698   0.0555269), wk =   0.1875000
-        k(    5) = (  -0.3148519   0.0000000   0.3886885), wk =   0.1875000
-        k(    6) = (   0.1574260   0.8180094   0.0555269), wk =   0.3750000
-        k(    7) = (   0.0000000   0.5453396   0.1665808), wk =   0.3750000
-        k(    8) = (   0.6297039   0.0000000  -0.2776347), wk =   0.1875000
-        k(    9) = (   0.0000000   0.0000000   0.4997424), wk =   0.0625000
-        k(   10) = (   0.4722780   0.8180094   0.1665807), wk =   0.1875000
      extrapolated charge    9.82956, renormalised to   10.00000
 
-     total cpu time spent up to now is        9.8 secs
+     total cpu time spent up to now is       10.2 secs
 
-     per-process dynamical memory:     4.2 Mb
+     per-process dynamical memory:     4.9 Mb
 
      Self-consistent Calculation
 
@@ -1899,7 +1788,7 @@ As      -0.250036496  -0.250036504  -0.250036504
      Davidson diagonalization with overlap
      ethr =  1.00E-06,  avg # of iterations =  3.3
 
-     total cpu time spent up to now is        9.9 secs
+     total cpu time spent up to now is       10.3 secs
 
      total energy              =     -25.39214946 Ry
      Harris-Foulkes estimate   =     -25.26013507 Ry
@@ -1909,7 +1798,7 @@ As      -0.250036496  -0.250036504  -0.250036504
      Davidson diagonalization with overlap
      ethr =  3.30E-07,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is       10.0 secs
+     total cpu time spent up to now is       10.5 secs
 
      total energy              =     -25.39221132 Ry
      Harris-Foulkes estimate   =     -25.39221595 Ry
@@ -1919,7 +1808,7 @@ As      -0.250036496  -0.250036504  -0.250036504
      Davidson diagonalization with overlap
      ethr =  1.33E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is       10.1 secs
+     total cpu time spent up to now is       10.6 secs
 
      total energy              =     -25.39221003 Ry
      Harris-Foulkes estimate   =     -25.39221161 Ry
@@ -1929,7 +1818,7 @@ As      -0.250036496  -0.250036504  -0.250036504
      Davidson diagonalization with overlap
      ethr =  3.12E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is       10.2 secs
+     total cpu time spent up to now is       10.7 secs
 
      End of self-consistent calculation
 
@@ -2037,22 +1926,11 @@ As      -0.250012831  -0.250012839  -0.250012839
 
      Writing output data file pwscf.save
      NEW-OLD atomic charge density approx. for the potential
-     NEW k-points:
-        k(    1) = (   0.0000000   0.0000000   0.1663485), wk =   0.0625000
-        k(    2) = (  -0.1564043  -0.2709002   0.2772475), wk =   0.1875000
-        k(    3) = (   0.3128086   0.5418004  -0.0554495), wk =   0.1875000
-        k(    4) = (   0.1564043   0.2709002   0.0554495), wk =   0.1875000
-        k(    5) = (  -0.3128086   0.0000000   0.3881466), wk =   0.1875000
-        k(    6) = (   0.1564043   0.8127006   0.0554495), wk =   0.3750000
-        k(    7) = (   0.0000000   0.5418004   0.1663485), wk =   0.3750000
-        k(    8) = (   0.6256173   0.0000000  -0.2772476), wk =   0.1875000
-        k(    9) = (   0.0000000   0.0000000   0.4990455), wk =   0.0625000
-        k(   10) = (   0.4692130   0.8127006   0.1663485), wk =   0.1875000
      extrapolated charge   10.14313, renormalised to   10.00000
 
-     total cpu time spent up to now is       10.5 secs
+     total cpu time spent up to now is       10.9 secs
 
-     per-process dynamical memory:     4.2 Mb
+     per-process dynamical memory:     4.9 Mb
 
      Self-consistent Calculation
 
@@ -2060,7 +1938,7 @@ As      -0.250012831  -0.250012839  -0.250012839
      Davidson diagonalization with overlap
      ethr =  1.00E-06,  avg # of iterations =  3.2
 
-     total cpu time spent up to now is       10.7 secs
+     total cpu time spent up to now is       11.1 secs
 
      total energy              =     -25.40189088 Ry
      Harris-Foulkes estimate   =     -25.51244206 Ry
@@ -2070,7 +1948,7 @@ As      -0.250012831  -0.250012839  -0.250012839
      Davidson diagonalization with overlap
      ethr =  1.97E-07,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is       10.8 secs
+     total cpu time spent up to now is       11.2 secs
 
      total energy              =     -25.40193480 Ry
      Harris-Foulkes estimate   =     -25.40193827 Ry
@@ -2080,7 +1958,7 @@ As      -0.250012831  -0.250012839  -0.250012839
      Davidson diagonalization with overlap
      ethr =  1.03E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is       10.9 secs
+     total cpu time spent up to now is       11.3 secs
 
      total energy              =     -25.40193362 Ry
      Harris-Foulkes estimate   =     -25.40193499 Ry
@@ -2090,7 +1968,7 @@ As      -0.250012831  -0.250012839  -0.250012839
      Davidson diagonalization with overlap
      ethr =  2.67E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is       11.0 secs
+     total cpu time spent up to now is       11.4 secs
 
      End of self-consistent calculation
 
@@ -2198,22 +2076,11 @@ As      -0.249987977  -0.249987985  -0.249987985
 
      Writing output data file pwscf.save
      NEW-OLD atomic charge density approx. for the potential
-     NEW k-points:
-        k(    1) = (   0.0000000   0.0000000   0.1666255), wk =   0.0625000
-        k(    2) = (  -0.1563615  -0.2708260   0.2777092), wk =   0.1875000
-        k(    3) = (   0.3127230   0.5416521  -0.0555419), wk =   0.1875000
-        k(    4) = (   0.1563615   0.2708260   0.0555418), wk =   0.1875000
-        k(    5) = (  -0.3127230   0.0000000   0.3887930), wk =   0.1875000
-        k(    6) = (   0.1563615   0.8124781   0.0555418), wk =   0.3750000
-        k(    7) = (   0.0000000   0.5416521   0.1666255), wk =   0.3750000
-        k(    8) = (   0.6254460   0.0000000  -0.2777093), wk =   0.1875000
-        k(    9) = (   0.0000000   0.0000000   0.4998766), wk =   0.0625000
-        k(   10) = (   0.4690845   0.8124781   0.1666255), wk =   0.1875000
      extrapolated charge    9.98883, renormalised to   10.00000
 
-     total cpu time spent up to now is       11.3 secs
+     total cpu time spent up to now is       11.7 secs
 
-     per-process dynamical memory:     4.2 Mb
+     per-process dynamical memory:     4.9 Mb
 
      Self-consistent Calculation
 
@@ -2227,7 +2094,7 @@ As      -0.249987977  -0.249987985  -0.249987985
      Davidson diagonalization with overlap
      ethr =  3.21E-09,  avg # of iterations =  2.3
 
-     total cpu time spent up to now is       11.5 secs
+     total cpu time spent up to now is       12.0 secs
 
      total energy              =     -25.40123371 Ry
      Harris-Foulkes estimate   =     -25.39262229 Ry
@@ -2237,7 +2104,7 @@ As      -0.249987977  -0.249987985  -0.249987985
      Davidson diagonalization with overlap
      ethr =  2.75E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is       11.6 secs
+     total cpu time spent up to now is       12.1 secs
 
      End of self-consistent calculation
 
@@ -2345,22 +2212,11 @@ As      -0.249988829  -0.249988837  -0.249988837
 
      Writing output data file pwscf.save
      NEW-OLD atomic charge density approx. for the potential
-     NEW k-points:
-        k(    1) = (   0.0000000   0.0000000   0.1670544), wk =   0.0625000
-        k(    2) = (  -0.1562333  -0.2706041   0.2784240), wk =   0.1875000
-        k(    3) = (   0.3124667   0.5412082  -0.0556848), wk =   0.1875000
-        k(    4) = (   0.1562334   0.2706041   0.0556848), wk =   0.1875000
-        k(    5) = (  -0.3124667   0.0000000   0.3897936), wk =   0.1875000
-        k(    6) = (   0.1562334   0.8118123   0.0556848), wk =   0.3750000
-        k(    7) = (   0.0000000   0.5412082   0.1670544), wk =   0.3750000
-        k(    8) = (   0.6249334   0.0000000  -0.2784240), wk =   0.1875000
-        k(    9) = (   0.0000000   0.0000000   0.5011631), wk =   0.0625000
-        k(   10) = (   0.4687001   0.8118123   0.1670543), wk =   0.1875000
      extrapolated charge    9.99069, renormalised to   10.00000
 
-     total cpu time spent up to now is       11.9 secs
+     total cpu time spent up to now is       12.4 secs
 
-     per-process dynamical memory:     4.2 Mb
+     per-process dynamical memory:     4.9 Mb
 
      Self-consistent Calculation
 
@@ -2374,7 +2230,7 @@ As      -0.249988829  -0.249988837  -0.249988837
      Davidson diagonalization with overlap
      ethr =  3.09E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is       12.1 secs
+     total cpu time spent up to now is       12.6 secs
 
      total energy              =     -25.40065211 Ry
      Harris-Foulkes estimate   =     -25.39346915 Ry
@@ -2384,7 +2240,7 @@ As      -0.249988829  -0.249988837  -0.249988837
      Davidson diagonalization with overlap
      ethr =  3.00E-09,  avg # of iterations =  2.4
 
-     total cpu time spent up to now is       12.2 secs
+     total cpu time spent up to now is       12.8 secs
 
      End of self-consistent calculation
 
@@ -2492,22 +2348,11 @@ As      -0.249990717  -0.249990725  -0.249990725
 
      Writing output data file pwscf.save
      NEW-OLD atomic charge density approx. for the potential
-     NEW k-points:
-        k(    1) = (   0.0000000   0.0000000   0.1670357), wk =   0.0625000
-        k(    2) = (  -0.1560035  -0.2702061   0.2783928), wk =   0.1875000
-        k(    3) = (   0.3120071   0.5404122  -0.0556786), wk =   0.1875000
-        k(    4) = (   0.1560036   0.2702061   0.0556785), wk =   0.1875000
-        k(    5) = (  -0.3120071   0.0000000   0.3897499), wk =   0.1875000
-        k(    6) = (   0.1560036   0.8106183   0.0556785), wk =   0.3750000
-        k(    7) = (   0.0000000   0.5404122   0.1670357), wk =   0.3750000
-        k(    8) = (   0.6240142   0.0000000  -0.2783929), wk =   0.1875000
-        k(    9) = (   0.0000000   0.0000000   0.5011070), wk =   0.0625000
-        k(   10) = (   0.4680107   0.8106183   0.1670356), wk =   0.1875000
      extrapolated charge   10.03051, renormalised to   10.00000
 
-     total cpu time spent up to now is       12.5 secs
+     total cpu time spent up to now is       13.0 secs
 
-     per-process dynamical memory:     4.2 Mb
+     per-process dynamical memory:     4.9 Mb
 
      Self-consistent Calculation
 
@@ -2521,17 +2366,17 @@ As      -0.249990717  -0.249990725  -0.249990725
      Davidson diagonalization with overlap
      ethr =  9.47E-09,  avg # of iterations =  1.8
 
-     total cpu time spent up to now is       12.6 secs
+     total cpu time spent up to now is       13.3 secs
 
      total energy              =     -25.40264245 Ry
-     Harris-Foulkes estimate   =     -25.42615571 Ry
+     Harris-Foulkes estimate   =     -25.42615570 Ry
      estimated scf accuracy    <       0.00000089 Ry
 
      iteration #  2     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  8.90E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is       12.8 secs
+     total cpu time spent up to now is       13.4 secs
 
      total energy              =     -25.40263541 Ry
      Harris-Foulkes estimate   =     -25.40263557 Ry
@@ -2541,7 +2386,7 @@ As      -0.249990717  -0.249990725  -0.249990725
      Davidson diagonalization with overlap
      ethr =  4.78E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is       12.9 secs
+     total cpu time spent up to now is       13.5 secs
 
      total energy              =     -25.40263536 Ry
      Harris-Foulkes estimate   =     -25.40263542 Ry
@@ -2551,7 +2396,7 @@ As      -0.249990717  -0.249990725  -0.249990725
      Davidson diagonalization with overlap
      ethr =  1.25E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is       13.0 secs
+     total cpu time spent up to now is       13.6 secs
 
      End of self-consistent calculation
 
@@ -2659,22 +2504,11 @@ As      -0.249993442  -0.249993450  -0.249993450
 
      Writing output data file pwscf.save
      NEW-OLD atomic charge density approx. for the potential
-     NEW k-points:
-        k(    1) = (   0.0000000   0.0000000   0.1671837), wk =   0.0625000
-        k(    2) = (  -0.1561103  -0.2703911   0.2786395), wk =   0.1875000
-        k(    3) = (   0.3122207   0.5407822  -0.0557279), wk =   0.1875000
-        k(    4) = (   0.1561104   0.2703911   0.0557279), wk =   0.1875000
-        k(    5) = (  -0.3122207   0.0000000   0.3900952), wk =   0.1875000
-        k(    6) = (   0.1561104   0.8111733   0.0557279), wk =   0.3750000
-        k(    7) = (   0.0000000   0.5407822   0.1671837), wk =   0.3750000
-        k(    8) = (   0.6244415   0.0000000  -0.2786395), wk =   0.1875000
-        k(    9) = (   0.0000000   0.0000000   0.5015510), wk =   0.0625000
-        k(   10) = (   0.4683311   0.8111733   0.1671836), wk =   0.1875000
      extrapolated charge    9.97743, renormalised to   10.00000
 
-     total cpu time spent up to now is       13.2 secs
+     total cpu time spent up to now is       13.9 secs
 
-     per-process dynamical memory:     4.2 Mb
+     per-process dynamical memory:     4.9 Mb
 
      Self-consistent Calculation
 
@@ -2688,7 +2522,7 @@ As      -0.249993442  -0.249993450  -0.249993450
      Davidson diagonalization with overlap
      ethr =  7.55E-09,  avg # of iterations =  2.1
 
-     total cpu time spent up to now is       13.4 secs
+     total cpu time spent up to now is       14.1 secs
 
      total energy              =     -25.40117764 Ry
      Harris-Foulkes estimate   =     -25.38377836 Ry
@@ -2698,7 +2532,7 @@ As      -0.249993442  -0.249993450  -0.249993450
      Davidson diagonalization with overlap
      ethr =  6.18E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is       13.5 secs
+     total cpu time spent up to now is       14.2 secs
 
      total energy              =     -25.40118786 Ry
      Harris-Foulkes estimate   =     -25.40118795 Ry
@@ -2708,7 +2542,7 @@ As      -0.249993442  -0.249993450  -0.249993450
      Davidson diagonalization with overlap
      ethr =  2.50E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is       13.6 secs
+     total cpu time spent up to now is       14.3 secs
 
      End of self-consistent calculation
 
@@ -2816,22 +2650,11 @@ As      -0.249996774  -0.249996782  -0.249996782
 
      Writing output data file pwscf.save
      NEW-OLD atomic charge density approx. for the potential
-     NEW k-points:
-        k(    1) = (   0.0000000   0.0000000   0.1673362), wk =   0.0625000
-        k(    2) = (  -0.1560749  -0.2703297   0.2788938), wk =   0.1875000
-        k(    3) = (   0.3121499   0.5406595  -0.0557788), wk =   0.1875000
-        k(    4) = (   0.1560750   0.2703297   0.0557787), wk =   0.1875000
-        k(    5) = (  -0.3121499   0.0000000   0.3904513), wk =   0.1875000
-        k(    6) = (   0.1560750   0.8109892   0.0557787), wk =   0.3750000
-        k(    7) = (   0.0000000   0.5406595   0.1673362), wk =   0.3750000
-        k(    8) = (   0.6242998   0.0000000  -0.2788938), wk =   0.1875000
-        k(    9) = (   0.0000000   0.0000000   0.5020087), wk =   0.0625000
-        k(   10) = (   0.4682249   0.8109892   0.1673362), wk =   0.1875000
      extrapolated charge    9.99541, renormalised to   10.00000
 
-     total cpu time spent up to now is       13.9 secs
+     total cpu time spent up to now is       14.6 secs
 
-     per-process dynamical memory:     4.2 Mb
+     per-process dynamical memory:     4.9 Mb
 
      Self-consistent Calculation
 
@@ -2845,7 +2668,7 @@ As      -0.249996774  -0.249996782  -0.249996782
      Davidson diagonalization with overlap
      ethr =  8.35E-10,  avg # of iterations =  3.4
 
-     total cpu time spent up to now is       14.1 secs
+     total cpu time spent up to now is       14.8 secs
 
      End of self-consistent calculation
 
@@ -2954,22 +2777,11 @@ As      -0.249996875  -0.249996883  -0.249996883
 
      Writing output data file pwscf.save
      NEW-OLD atomic charge density approx. for the potential
-     NEW k-points:
-        k(    1) = (   0.0000000   0.0000000   0.1671924), wk =   0.0625000
-        k(    2) = (  -0.1559759  -0.2701583   0.2786540), wk =   0.1875000
-        k(    3) = (   0.3119519   0.5403166  -0.0557308), wk =   0.1875000
-        k(    4) = (   0.1559760   0.2701583   0.0557308), wk =   0.1875000
-        k(    5) = (  -0.3119519   0.0000000   0.3901156), wk =   0.1875000
-        k(    6) = (   0.1559760   0.8104749   0.0557308), wk =   0.3750000
-        k(    7) = (   0.0000000   0.5403166   0.1671924), wk =   0.3750000
-        k(    8) = (   0.6239038   0.0000000  -0.2786541), wk =   0.1875000
-        k(    9) = (   0.0000000   0.0000000   0.5015772), wk =   0.0625000
-        k(   10) = (   0.4679279   0.8104749   0.1671924), wk =   0.1875000
      extrapolated charge   10.02126, renormalised to   10.00000
 
-     total cpu time spent up to now is       14.4 secs
+     total cpu time spent up to now is       15.1 secs
 
-     per-process dynamical memory:     4.2 Mb
+     per-process dynamical memory:     4.9 Mb
 
      Self-consistent Calculation
 
@@ -2983,7 +2795,7 @@ As      -0.249996875  -0.249996883  -0.249996883
      Davidson diagonalization with overlap
      ethr =  9.70E-09,  avg # of iterations =  2.1
 
-     total cpu time spent up to now is       14.6 secs
+     total cpu time spent up to now is       15.4 secs
 
      total energy              =     -25.40226887 Ry
      Harris-Foulkes estimate   =     -25.41865969 Ry
@@ -2993,7 +2805,7 @@ As      -0.249996875  -0.249996883  -0.249996883
      Davidson diagonalization with overlap
      ethr =  8.06E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is       14.7 secs
+     total cpu time spent up to now is       15.5 secs
 
      total energy              =     -25.40226999 Ry
      Harris-Foulkes estimate   =     -25.40227007 Ry
@@ -3003,7 +2815,7 @@ As      -0.249996875  -0.249996883  -0.249996883
      Davidson diagonalization with overlap
      ethr =  2.03E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is       14.8 secs
+     total cpu time spent up to now is       15.6 secs
 
      End of self-consistent calculation
 
@@ -3111,22 +2923,11 @@ As      -0.249997013  -0.249997021  -0.249997021
 
      Writing output data file pwscf.save
      NEW-OLD atomic charge density approx. for the potential
-     NEW k-points:
-        k(    1) = (   0.0000000   0.0000000   0.1672700), wk =   0.0625000
-        k(    2) = (  -0.1560255  -0.2702441   0.2787833), wk =   0.1875000
-        k(    3) = (   0.3120510   0.5404883  -0.0557567), wk =   0.1875000
-        k(    4) = (   0.1560255   0.2702441   0.0557566), wk =   0.1875000
-        k(    5) = (  -0.3120510   0.0000000   0.3902967), wk =   0.1875000
-        k(    6) = (   0.1560255   0.8107324   0.0557566), wk =   0.3750000
-        k(    7) = (   0.0000000   0.5404883   0.1672700), wk =   0.3750000
-        k(    8) = (   0.6241021   0.0000000  -0.2787834), wk =   0.1875000
-        k(    9) = (   0.0000000   0.0000000   0.5018100), wk =   0.0625000
-        k(   10) = (   0.4680766   0.8107324   0.1672699), wk =   0.1875000
      extrapolated charge    9.98900, renormalised to   10.00000
 
-     total cpu time spent up to now is       15.1 secs
+     total cpu time spent up to now is       15.9 secs
 
-     per-process dynamical memory:     4.2 Mb
+     per-process dynamical memory:     4.9 Mb
 
      Self-consistent Calculation
 
@@ -3140,7 +2941,7 @@ As      -0.249997013  -0.249997021  -0.249997021
      Davidson diagonalization with overlap
      ethr =  2.52E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is       15.3 secs
+     total cpu time spent up to now is       16.2 secs
 
      total energy              =     -25.40155918 Ry
      Harris-Foulkes estimate   =     -25.39308071 Ry
@@ -3150,7 +2951,7 @@ As      -0.249997013  -0.249997021  -0.249997021
      Davidson diagonalization with overlap
      ethr =  1.05E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is       15.4 secs
+     total cpu time spent up to now is       16.3 secs
 
      End of self-consistent calculation
 
@@ -3258,22 +3059,11 @@ As      -0.249997148  -0.249997156  -0.249997156
 
      Writing output data file pwscf.save
      NEW-OLD atomic charge density approx. for the potential
-     NEW k-points:
-        k(    1) = (   0.0000000   0.0000000   0.1673592), wk =   0.0625000
-        k(    2) = (  -0.1560346  -0.2702599   0.2789320), wk =   0.1875000
-        k(    3) = (   0.3120693   0.5405198  -0.0557864), wk =   0.1875000
-        k(    4) = (   0.1560346   0.2702599   0.0557864), wk =   0.1875000
-        k(    5) = (  -0.3120693   0.0000000   0.3905048), wk =   0.1875000
-        k(    6) = (   0.1560346   0.8107798   0.0557864), wk =   0.3750000
-        k(    7) = (   0.0000000   0.5405198   0.1673592), wk =   0.3750000
-        k(    8) = (   0.6241385   0.0000000  -0.2789320), wk =   0.1875000
-        k(    9) = (   0.0000000   0.0000000   0.5020775), wk =   0.0625000
-        k(   10) = (   0.4681039   0.8107798   0.1673591), wk =   0.1875000
      extrapolated charge    9.99350, renormalised to   10.00000
 
-     total cpu time spent up to now is       15.7 secs
+     total cpu time spent up to now is       16.6 secs
 
-     per-process dynamical memory:     4.2 Mb
+     per-process dynamical memory:     4.9 Mb
 
      Self-consistent Calculation
 
@@ -3287,7 +3077,7 @@ As      -0.249997148  -0.249997156  -0.249997156
      Davidson diagonalization with overlap
      ethr =  1.45E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is       15.9 secs
+     total cpu time spent up to now is       16.8 secs
 
      End of self-consistent calculation
 
@@ -3395,22 +3185,11 @@ As      -0.249997277  -0.249997285  -0.249997285
 
      Writing output data file pwscf.save
      NEW-OLD atomic charge density approx. for the potential
-     NEW k-points:
-        k(    1) = (   0.0000000   0.0000000   0.1672841), wk =   0.0625000
-        k(    2) = (  -0.1560272  -0.2702470   0.2788069), wk =   0.1875000
-        k(    3) = (   0.3120544   0.5404940  -0.0557614), wk =   0.1875000
-        k(    4) = (   0.1560272   0.2702470   0.0557614), wk =   0.1875000
-        k(    5) = (  -0.3120543   0.0000000   0.3903296), wk =   0.1875000
-        k(    6) = (   0.1560272   0.8107411   0.0557614), wk =   0.3750000
-        k(    7) = (   0.0000000   0.5404940   0.1672841), wk =   0.3750000
-        k(    8) = (   0.6241087   0.0000000  -0.2788069), wk =   0.1875000
-        k(    9) = (   0.0000000   0.0000000   0.5018523), wk =   0.0625000
-        k(   10) = (   0.4680816   0.8107411   0.1672841), wk =   0.1875000
      extrapolated charge   10.00544, renormalised to   10.00000
 
-     total cpu time spent up to now is       16.2 secs
+     total cpu time spent up to now is       17.1 secs
 
-     per-process dynamical memory:     4.2 Mb
+     per-process dynamical memory:     4.9 Mb
 
      Self-consistent Calculation
 
@@ -3424,7 +3203,7 @@ As      -0.249997277  -0.249997285  -0.249997285
      Davidson diagonalization with overlap
      ethr =  2.25E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is       16.4 secs
+     total cpu time spent up to now is       17.3 secs
 
      total energy              =     -25.40149075 Ry
      Harris-Foulkes estimate   =     -25.40568576 Ry
@@ -3434,7 +3213,7 @@ As      -0.249997277  -0.249997285  -0.249997285
      Davidson diagonalization with overlap
      ethr =  1.85E-09,  avg # of iterations =  2.2
 
-     total cpu time spent up to now is       16.5 secs
+     total cpu time spent up to now is       17.4 secs
 
      End of self-consistent calculation
 
@@ -3542,22 +3321,11 @@ As      -0.249997399  -0.249997407  -0.249997407
 
      Writing output data file pwscf.save
      NEW-OLD atomic charge density approx. for the potential
-     NEW k-points:
-        k(    1) = (   0.0000000   0.0000000   0.1672817), wk =   0.0625000
-        k(    2) = (  -0.1560263  -0.2702456   0.2788029), wk =   0.1875000
-        k(    3) = (   0.3120527   0.5404911  -0.0557606), wk =   0.1875000
-        k(    4) = (   0.1560264   0.2702456   0.0557606), wk =   0.1875000
-        k(    5) = (  -0.3120527   0.0000000   0.3903241), wk =   0.1875000
-        k(    6) = (   0.1560264   0.8107367   0.0557606), wk =   0.3750000
-        k(    7) = (   0.0000000   0.5404911   0.1672817), wk =   0.3750000
-        k(    8) = (   0.6241054   0.0000000  -0.2788029), wk =   0.1875000
-        k(    9) = (   0.0000000   0.0000000   0.5018452), wk =   0.0625000
-        k(   10) = (   0.4680791   0.8107367   0.1672817), wk =   0.1875000
      extrapolated charge   10.00025, renormalised to   10.00000
 
-     total cpu time spent up to now is       16.8 secs
+     total cpu time spent up to now is       17.8 secs
 
-     per-process dynamical memory:     4.2 Mb
+     per-process dynamical memory:     4.9 Mb
 
      Self-consistent Calculation
 
@@ -3571,7 +3339,7 @@ As      -0.249997399  -0.249997407  -0.249997407
      Davidson diagonalization with overlap
      ethr =  8.13E-12,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is       16.9 secs
+     total cpu time spent up to now is       18.1 secs
 
      End of self-consistent calculation
 
@@ -3649,7 +3417,8 @@ As      -0.249997399  -0.249997407  -0.249997407
    0.00000000   0.00000000   0.00339844          0.00      0.00    499.93
 
 
-     Wentzcovitch Damped Dynamics: convergence achieved, Efinal=   -25.40150703
+     Wentzcovitch Damped Cell Dynamics Minimization:
+     convergence achieved, Efinal=   -25.40150703
 
 ------------------------------------------------------------------------
 
@@ -3676,45 +3445,47 @@ End final coordinates
 
      Writing output data file pwscf.save
  
-     init_run     :      0.15s CPU      0.15s WALL (       1 calls)
-     electrons    :     10.57s CPU     10.85s WALL (      22 calls)
-     update_pot   :      2.46s CPU      2.47s WALL (      21 calls)
-     forces       :      1.10s CPU      1.10s WALL (      22 calls)
-     stress       :      1.61s CPU      1.64s WALL (      22 calls)
+     init_run     :      0.14s CPU      0.15s WALL (       1 calls)
+     electrons    :     11.39s CPU     12.00s WALL (      22 calls)
+     update_pot   :      2.36s CPU      2.44s WALL (      21 calls)
+     forces       :      1.07s CPU      1.27s WALL (      22 calls)
+     stress       :      1.59s CPU      1.69s WALL (      22 calls)
 
      Called by init_run:
      wfcinit      :      0.03s CPU      0.03s WALL (       1 calls)
-     potinit      :      0.05s CPU      0.05s WALL (       1 calls)
+     potinit      :      0.04s CPU      0.05s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :      8.80s CPU      9.02s WALL (      96 calls)
-     sum_band     :      1.46s CPU      1.46s WALL (      96 calls)
-     v_of_rho     :      0.25s CPU      0.20s WALL (     107 calls)
-     mix_rho      :      0.03s CPU      0.06s WALL (      96 calls)
+     c_bands      :      9.60s CPU     10.12s WALL (      96 calls)
+     sum_band     :      1.48s CPU      1.52s WALL (      96 calls)
+     v_of_rho     :      0.16s CPU      0.21s WALL (     107 calls)
+     mix_rho      :      0.10s CPU      0.08s WALL (      96 calls)
 
      Called by c_bands:
-     init_us_2    :      0.31s CPU      0.29s WALL (    2370 calls)
-     cegterg      :      8.61s CPU      8.74s WALL (     960 calls)
+     init_us_2    :      0.29s CPU      0.32s WALL (    2370 calls)
+     cegterg      :      9.33s CPU      9.71s WALL (     960 calls)
+
+     Called by sum_band:
 
      Called by *egterg:
-     h_psi        :      6.30s CPU      6.35s WALL (    3286 calls)
-     g_psi        :      0.38s CPU      0.33s WALL (    2316 calls)
-     cdiaghg      :      0.78s CPU      0.72s WALL (    2956 calls)
+     h_psi        :      6.92s CPU      7.19s WALL (    3286 calls)
+     g_psi        :      0.32s CPU      0.33s WALL (    2316 calls)
+     cdiaghg      :      0.78s CPU      0.77s WALL (    2956 calls)
 
      Called by h_psi:
-     add_vuspsi   :      0.10s CPU      0.13s WALL (    3286 calls)
+     add_vuspsi   :      0.15s CPU      0.15s WALL (    3286 calls)
 
      General routines
-     calbec       :      0.18s CPU      0.20s WALL (    3726 calls)
-     fft          :      0.10s CPU      0.11s WALL (     559 calls)
-     fftw         :      5.99s CPU      5.96s WALL (   55992 calls)
-     davcio       :      0.02s CPU      0.10s WALL (    3330 calls)
+     calbec       :      0.32s CPU      0.28s WALL (    4386 calls)
+     fft          :      0.08s CPU      0.11s WALL (     559 calls)
+     fftw         :      6.47s CPU      6.66s WALL (   55992 calls)
+     davcio       :      0.00s CPU      0.00s WALL (      10 calls)
  
  
-     PWSCF        :    16.67s CPU        17.11s WALL
+     PWSCF        :    17.36s CPU        18.43s WALL
 
  
-   This run was terminated on:  11:29:47   6Jan2012            
+   This run was terminated on:  19:24:54   1Dec2015            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
