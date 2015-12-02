@@ -20,6 +20,9 @@
       ! aa         : Parameter determining the k-dependent smearing deg_nk : deg_nk = aa * delta_k * (de_nk/delta_k). 
       !              Larger aa will lead to smoother DOS. Needs to be tested for various grids.
       ! nthreads   : Number of threads for OpenMP parallelization.
+      ! lscissors          : if .true. conduction bands are shifted by a constant energy up
+      ! shift              : value of the shift applied to conduction bands
+      ! cbm_i              : the initial conduction band for which the shift is applied ( all bands with index >= cbm_i are shifted up)
 
 !$    USE omp_lib
       USE smearing_mod
