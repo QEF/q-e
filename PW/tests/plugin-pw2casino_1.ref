@@ -1,5 +1,5 @@
 
-     Program PWSCF v.5.1.1 (svn rev. 11290) starts on 12Dec2014 at 11:59: 1 
+     Program PWSCF v.5.2.1 (svn rev. 11881M) starts on  2Dec2015 at 10:40:21 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -100,7 +100,7 @@
 
      total cpu time spent up to now is        0.0 secs
 
-     per-process dynamical memory:     1.1 Mb
+     per-process dynamical memory:     1.2 Mb
 
      Self-consistent Calculation
 
@@ -194,7 +194,7 @@
  -------------------------------------
  Kinetic energy      3.06673547290565       au  =     6.13347094581130       Ry
  Local energy       -2.56886217107616       au  =    -5.13772434215233       Ry
- Non-Local energy    1.91901990136187       au  =     3.83803980272374       Ry
+ Non-Local energy    1.91901990136186       au  =     3.83803980272373       Ry
  Ewald energy       -8.44987928861168       au  =    -16.8997585772234       Ry
  xc contribution    -2.40640732808204       au  =    -4.81281465616407       Ry
  hartree energy     0.542145449782446       au  =     1.08429089956489       Ry
@@ -216,7 +216,7 @@ Blip grid: 10x10x8
      Writing output data file pwscf.save
  
      init_run     :      0.02s CPU      0.02s WALL (       1 calls)
-     electrons    :      0.03s CPU      0.03s WALL (       1 calls)
+     electrons    :      0.02s CPU      0.03s WALL (       1 calls)
      stress       :      0.00s CPU      0.00s WALL (       1 calls)
 
      Called by init_run:
@@ -225,16 +225,18 @@ Blip grid: 10x10x8
 
      Called by electrons:
      c_bands      :      0.02s CPU      0.02s WALL (       6 calls)
-     sum_band     :      0.01s CPU      0.00s WALL (       6 calls)
+     sum_band     :      0.00s CPU      0.00s WALL (       6 calls)
      v_of_rho     :      0.00s CPU      0.00s WALL (       7 calls)
      mix_rho      :      0.00s CPU      0.00s WALL (       6 calls)
 
      Called by c_bands:
      init_us_2    :      0.00s CPU      0.00s WALL (      30 calls)
-     cegterg      :      0.02s CPU      0.02s WALL (      12 calls)
+     cegterg      :      0.02s CPU      0.01s WALL (      12 calls)
+
+     Called by sum_band:
 
      Called by *egterg:
-     h_psi        :      0.01s CPU      0.01s WALL (      35 calls)
+     h_psi        :      0.02s CPU      0.01s WALL (      35 calls)
      g_psi        :      0.00s CPU      0.00s WALL (      21 calls)
      cdiaghg      :      0.00s CPU      0.00s WALL (      31 calls)
 
@@ -251,7 +253,7 @@ Blip grid: 10x10x8
      PWSCF        :     0.10s CPU         0.11s WALL
 
  
-   This run was terminated on:  11:59: 1  12Dec2014            
+   This run was terminated on:  10:40:21   2Dec2015            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

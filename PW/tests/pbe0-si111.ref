@@ -1,28 +1,39 @@
 
-     Program PWSCF v.5.0.2 (svn rev. 9400) starts on 29Nov2012 at 22:11:12 
+     Program PWSCF v.5.2.1 (svn rev. 11881M) starts on  2Dec2015 at 10:38:17 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
          "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
           URL http://www.quantum-espresso.org", 
      in publications or presentations arising from this work. More details at
-     http://www.quantum-espresso.org/quote.php
+     http://www.quantum-espresso.org/quote
 
      Serial version
+     Reading input from /home/giannozz/trunk/espresso/PW/tests/pbe0-si111.in
 
      Current dimensions of program PWSCF are:
      Max number of different atomic species (ntypx) = 10
      Max number of k-points (npk) =  40000
      Max angular momentum in pseudopotentials (lmaxx) =  3
-     Reading input from /home/giannozz/trunk/espresso/PW/tests/pbe0-si111.in
 
      IMPORTANT: XC functional enforced from input :
-     Exchange-correlation      = PBE0 ( 6 4 8 4 0)
+     Exchange-correlation      = PBE0 ( 6  4  8  4 0 0)
      EXX-fraction              =        0.25
      Any further DFT definition will be discarded
      Please, verify this is what you really want
 
-     EXX: grid of k+q point setup nkqs =         10
+     EXX: setup a grid of 10 q-points centered on each k-point
+     (k+q)-points:
+   0.1250000   0.1250000   0.1250000         1    1
+   0.1250000   0.1250000   0.3750000         2    1
+   0.1250000   0.1250000   0.6250000         3    1
+   0.1250000   0.1250000   0.8750000         4    1
+   0.1250000   0.3750000   0.3750000         5    1
+   0.1250000   0.3750000   0.6250000         6    1
+   0.1250000   0.3750000   0.8750000         7    1
+   0.1250000   0.6250000   0.6250000         8    1
+   0.3750000   0.3750000   0.3750000         9    1
+   0.3750000   0.3750000   0.6250000        10    1
  
      G-vector sticks info
      --------------------
@@ -40,10 +51,11 @@
      number of Kohn-Sham states=            8
      kinetic-energy cutoff     =      12.0000  Ry
      charge density cutoff     =      48.0000  Ry
+     cutoff for Fock operator  =      48.0000  Ry
      convergence threshold     =      1.0E-06
      mixing beta               =       0.7000
      number of iterations used =            8  plain     mixing
-     Exchange-correlation      = PBE0 ( 6 4 8 4 0)
+     Exchange-correlation      = PBE0 ( 6  4  8  4 0 0)
      EXX-fraction              =        0.25
 
      celldm(1)=  10.200000  celldm(2)=   0.000000  celldm(3)=   0.000000
@@ -99,25 +111,25 @@
      Dense  grid:     1459 G-vectors     FFT dimensions: (  15,  15,  15)
 
      Largest allocated arrays     est. size (Mb)     dimensions
-        Kohn-Sham Wavefunctions         0.02 Mb     (    192,    8)
-        NL pseudopotentials             0.02 Mb     (    192,    8)
-        Each V/rho on FFT grid          0.05 Mb     (   3375)
-        Each G-vector array             0.01 Mb     (   1459)
-        G-vector shells                 0.00 Mb     (     43)
+        Kohn-Sham Wavefunctions         0.02 Mb     (     192,    8)
+        NL pseudopotentials             0.02 Mb     (     192,    8)
+        Each V/rho on FFT grid          0.05 Mb     (    3375)
+        Each G-vector array             0.01 Mb     (    1459)
+        G-vector shells                 0.00 Mb     (      43)
      Largest temporary arrays     est. size (Mb)     dimensions
-        Auxiliary wavefunctions         0.09 Mb     (    192,   32)
-        Each subspace H/S matrix        0.02 Mb     (  32,  32)
-        Each <psi_i|beta_j> matrix      0.00 Mb     (      8,    8)
-        Arrays for rho mixing           0.41 Mb     (   3375,   8)
+        Auxiliary wavefunctions         0.09 Mb     (     192,   32)
+        Each subspace H/S matrix        0.02 Mb     (      32,   32)
+        Each <psi_i|beta_j> matrix      0.00 Mb     (       8,    8)
+        Arrays for rho mixing           0.41 Mb     (    3375,    8)
 
      Initial potential from superposition of free atoms
 
      starting charge    7.99901, renormalised to    8.00000
      Starting wfc are    8 randomized atomic wfcs
 
-     total cpu time spent up to now is        0.2 secs
+     total cpu time spent up to now is        0.0 secs
 
-     per-process dynamical memory:     1.2 Mb
+     per-process dynamical memory:     1.5 Mb
 
      Self-consistent Calculation
 
@@ -131,37 +143,25 @@
      Davidson diagonalization with overlap
      ethr =  8.07E-04,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        0.2 secs
-
-     total energy              =     -15.82340308 Ry
-     Harris-Foulkes estimate   =     -15.83974490 Ry
-     estimated scf accuracy    <       0.06415499 Ry
+     total cpu time spent up to now is        0.1 secs
 
      iteration #  2     ecut=    12.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  8.02E-04,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        0.3 secs
-
-     total energy              =     -15.82634536 Ry
-     Harris-Foulkes estimate   =     -15.82635445 Ry
-     estimated scf accuracy    <       0.00228139 Ry
+     total cpu time spent up to now is        0.1 secs
 
      iteration #  3     ecut=    12.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  2.85E-05,  avg # of iterations =  1.9
 
-     total cpu time spent up to now is        0.3 secs
-
-     total energy              =     -15.82644717 Ry
-     Harris-Foulkes estimate   =     -15.82643482 Ry
-     estimated scf accuracy    <       0.00004970 Ry
+     total cpu time spent up to now is        0.2 secs
 
      iteration #  4     ecut=    12.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  6.21E-07,  avg # of iterations =  2.5
 
-     total cpu time spent up to now is        0.4 secs
+     total cpu time spent up to now is        0.2 secs
 
      End of self-consistent calculation
 
@@ -206,8 +206,14 @@
     -3.2022  -0.4691   3.9980   4.6816   8.6289   9.9414  10.5367  13.8202
 
      highest occupied, lowest unoccupied level (ev):     5.9961    7.2968
+
+     convergence has been achieved in   4 iterations
+
      EXX: now go back to refine exchange calculation
-  -2.27181581500083     
+
+     total cpu time spent up to now is        0.2 secs
+
+     per-process dynamical memory:     4.2 Mb
 
      Self-consistent Calculation
 
@@ -215,27 +221,19 @@
      Davidson diagonalization with overlap
      ethr =  6.21E-07,  avg # of iterations =  3.8
 
-     total cpu time spent up to now is        0.9 secs
-
-     total energy              =     -15.90454093 Ry
-     Harris-Foulkes estimate   =     -15.90457569 Ry
-     estimated scf accuracy    <       0.00010599 Ry
+     total cpu time spent up to now is        0.6 secs
 
      iteration #  2     ecut=    12.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  1.32E-06,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        1.2 secs
-
-     total energy              =     -15.90455009 Ry
-     Harris-Foulkes estimate   =     -15.90454921 Ry
-     estimated scf accuracy    <       0.00000237 Ry
+     total cpu time spent up to now is        0.8 secs
 
      iteration #  3     ecut=    12.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  2.96E-08,  avg # of iterations =  1.8
 
-     total cpu time spent up to now is        1.5 secs
+     total cpu time spent up to now is        1.0 secs
 
      End of self-consistent calculation
 
@@ -280,22 +278,20 @@
     -4.8114  -2.0174   2.5050   3.1736   9.8134  11.1224  11.6750  14.9184
 
      highest occupied, lowest unoccupied level (ev):     4.4563    8.3714
-  -2.27181581500083       -2.27112466508722       -2.27065393435706     
-     est. exchange err (dexx)  =       0.00011021 Ry
 
-!    total energy              =     -15.90466057 Ry
+     convergence has been achieved in   3 iterations
+
+     total energy              =     -15.90466057 Ry
      Harris-Foulkes estimate   =     -15.90466051 Ry
-     estimated scf accuracy    <       0.00000012 Ry
-
-     The total energy is the sum of the following terms:
-
-     one-electron contribution =       2.55094837 Ry
-     hartree contribution      =       1.08386099 Ry
-     xc contribution           =      -3.77550906 Ry
-     ewald contribution        =     -16.89975858 Ry
+     est. exchange err (dexx)  =       0.00011021 Ry
      - averaged Fock potential =       2.27112467 Ry
      + Fock energy             =      -1.13532697 Ry
-  NOW GO BACK TO REFINE HYBRID CALCULATION
+
+     EXX: now go back to refine exchange calculation
+
+     total cpu time spent up to now is        1.0 secs
+
+     per-process dynamical memory:     4.5 Mb
 
      Self-consistent Calculation
 
@@ -303,17 +299,13 @@
      Davidson diagonalization with overlap
      ethr =  2.96E-08,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is        1.9 secs
-
-     total energy              =     -15.90467744 Ry
-     Harris-Foulkes estimate   =     -15.90467819 Ry
-     estimated scf accuracy    <       0.00000195 Ry
+     total cpu time spent up to now is        1.3 secs
 
      iteration #  2     ecut=    12.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  2.44E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        2.1 secs
+     total cpu time spent up to now is        1.5 secs
 
      End of self-consistent calculation
 
@@ -358,22 +350,20 @@
     -4.8129  -2.0172   2.5019   3.1649   9.8174  11.1225  11.6734  14.9159
 
      highest occupied, lowest unoccupied level (ev):     4.4366    8.3733
-  -2.27065393435706       -2.27054607327945       -2.27044489047881     
-     est. exchange err (dexx)  =       0.00000334 Ry
 
-!    total energy              =     -15.90468096 Ry
+     convergence has been achieved in   2 iterations
+
+     total energy              =     -15.90468096 Ry
      Harris-Foulkes estimate   =     -15.90468095 Ry
-     estimated scf accuracy    <       0.00000004 Ry
-
-     The total energy is the sum of the following terms:
-
-     one-electron contribution =       2.55296892 Ry
-     hartree contribution      =       1.08151636 Ry
-     xc contribution           =      -3.77473129 Ry
-     ewald contribution        =     -16.89975858 Ry
+     est. exchange err (dexx)  =       0.00000334 Ry
      - averaged Fock potential =       2.27054607 Ry
      + Fock energy             =      -1.13522245 Ry
-  NOW GO BACK TO REFINE HYBRID CALCULATION
+
+     EXX: now go back to refine exchange calculation
+
+     total cpu time spent up to now is        1.5 secs
+
+     per-process dynamical memory:     4.5 Mb
 
      Self-consistent Calculation
 
@@ -387,7 +377,7 @@
      Davidson diagonalization with overlap
      ethr =  5.67E-10,  avg # of iterations =  1.2
 
-     total cpu time spent up to now is        2.7 secs
+     total cpu time spent up to now is        1.9 secs
 
      End of self-consistent calculation
 
@@ -432,23 +422,16 @@
     -4.8132  -2.0169   2.5016   3.1637   9.8177  11.1224  11.6730  14.9155
 
      highest occupied, lowest unoccupied level (ev):     4.4326    8.3733
-  -2.27044489047881       -2.27042135474195       -2.27039827037724     
-     est. exchange err (dexx)  =       0.00000023 Ry
+
+     convergence has been achieved in   1 iterations
 
 !    total energy              =     -15.90468197 Ry
      Harris-Foulkes estimate   =     -15.90468199 Ry
-     estimated scf accuracy    <       0.00000004 Ry
-
-     The total energy is the sum of the following terms:
-
-     one-electron contribution =       2.55336650 Ry
-     hartree contribution      =       1.08107790 Ry
-     xc contribution           =      -3.77459001 Ry
-     ewald contribution        =     -16.89975858 Ry
+     est. exchange err (dexx)  =       0.00000023 Ry
      - averaged Fock potential =       2.27042135 Ry
      + Fock energy             =      -1.13519914 Ry
 
-     convergence has been achieved in   1 iterations
+     EXX self-consistency reached
 
 
      entering subroutine stress ...
@@ -461,49 +444,53 @@
 
      Writing output data file pwscf.save
  
-     init_run     :      0.03s CPU      0.14s WALL (       1 calls)
-     electrons    :      2.47s CPU      2.61s WALL (       1 calls)
-     stress       :      0.08s CPU      0.08s WALL (       1 calls)
+     init_run     :      0.03s CPU      0.03s WALL (       1 calls)
+     electrons    :      1.70s CPU      1.72s WALL (       4 calls)
+     stress       :      0.06s CPU      0.07s WALL (       1 calls)
 
      Called by init_run:
-     wfcinit      :      0.00s CPU      0.11s WALL (       1 calls)
+     wfcinit      :      0.01s CPU      0.01s WALL (       1 calls)
      potinit      :      0.00s CPU      0.00s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :      1.82s CPU      1.92s WALL (      12 calls)
+     c_bands      :      1.62s CPU      1.63s WALL (      12 calls)
      sum_band     :      0.05s CPU      0.05s WALL (      12 calls)
-     v_of_rho     :      0.04s CPU      0.03s WALL (      12 calls)
-     mix_rho      :      0.00s CPU      0.01s WALL (      12 calls)
+     v_of_rho     :      0.03s CPU      0.03s WALL (      12 calls)
+     mix_rho      :      0.00s CPU      0.00s WALL (      12 calls)
 
      Called by c_bands:
-     init_us_2    :      0.02s CPU      0.01s WALL (     260 calls)
-     cegterg      :      1.79s CPU      1.91s WALL (     120 calls)
+     init_us_2    :      0.02s CPU      0.02s WALL (     330 calls)
+     cegterg      :      1.61s CPU      1.62s WALL (     120 calls)
+
+     Called by sum_band:
 
      Called by *egterg:
-     h_psi        :      1.68s CPU      1.81s WALL (     370 calls)
-     g_psi        :      0.02s CPU      0.01s WALL (     240 calls)
-     cdiaghg      :      0.05s CPU      0.14s WALL (     310 calls)
+     h_psi        :      1.50s CPU      1.52s WALL (     370 calls)
+     g_psi        :      0.01s CPU      0.01s WALL (     240 calls)
+     cdiaghg      :      0.04s CPU      0.06s WALL (     310 calls)
 
      Called by h_psi:
-     add_vuspsi   :      0.01s CPU      0.01s WALL (     370 calls)
+     add_vuspsi   :      0.00s CPU      0.01s WALL (     370 calls)
 
      General routines
-     calbec       :      0.00s CPU      0.03s WALL (     380 calls)
-     fft          :      0.01s CPU      0.01s WALL (     135 calls)
-     ffts         :      0.90s CPU      0.95s WALL (   14720 calls)
-     fftw         :      0.28s CPU      0.33s WALL (    9856 calls)
-     davcio       :      0.01s CPU      0.01s WALL (     530 calls)
+     calbec       :      0.00s CPU      0.01s WALL (     450 calls)
+     fft          :      0.00s CPU      0.01s WALL (     135 calls)
+     fftw         :      0.19s CPU      0.18s WALL (    5856 calls)
+     fftc         :      0.73s CPU      0.72s WALL (   12640 calls)
+     fftcw        :      0.08s CPU      0.11s WALL (    3320 calls)
+     davcio       :      0.00s CPU      0.00s WALL (      10 calls)
  
+
      EXX routines
      exx_grid     :      0.00s CPU      0.00s WALL (       1 calls)
-     exxinit      :      0.02s CPU      0.03s WALL (       4 calls)
-     vexx         :      1.48s CPU      1.57s WALL (     208 calls)
-     exxen2       :      0.54s CPU      0.56s WALL (      10 calls)
+     exxinit      :      0.01s CPU      0.01s WALL (       4 calls)
+     vexx         :      1.31s CPU      1.32s WALL (     208 calls)
+     exxenergy    :      0.18s CPU      0.18s WALL (       7 calls)
  
-     PWSCF        :     2.63s CPU         2.91s WALL
+     PWSCF        :     2.04s CPU         2.07s WALL
 
  
-   This run was terminated on:  22:11:15  29Nov2012            
+   This run was terminated on:  10:38:19   2Dec2015            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

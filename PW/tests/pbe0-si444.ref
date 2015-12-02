@@ -1,28 +1,285 @@
 
-     Program PWSCF v.5.0.2 (svn rev. 9400) starts on 29Nov2012 at 22:11:30 
+     Program PWSCF v.5.2.1 (svn rev. 11881M) starts on  2Dec2015 at 10:38:30 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
          "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
           URL http://www.quantum-espresso.org", 
      in publications or presentations arising from this work. More details at
-     http://www.quantum-espresso.org/quote.php
+     http://www.quantum-espresso.org/quote
 
      Serial version
+     Reading input from /home/giannozz/trunk/espresso/PW/tests/pbe0-si444.in
 
      Current dimensions of program PWSCF are:
      Max number of different atomic species (ntypx) = 10
      Max number of k-points (npk) =  40000
      Max angular momentum in pseudopotentials (lmaxx) =  3
-     Reading input from /home/giannozz/trunk/espresso/PW/tests/pbe0-si444.in
 
      IMPORTANT: XC functional enforced from input :
-     Exchange-correlation      = PBE0 ( 6 4 8 4 0)
+     Exchange-correlation      = PBE0 ( 6  4  8  4 0 0)
      EXX-fraction              =        0.25
      Any further DFT definition will be discarded
      Please, verify this is what you really want
 
-     EXX: grid of k+q point setup nkqs =        256
+     EXX: setup a grid of 256 q-points centered on each k-point
+     (k+q)-points:
+   0.1250000   0.1250000   0.1250000         1    1
+  -0.1250000   0.3750000  -0.1250000         2   11
+  -0.3750000   0.6250000  -0.3750000        10   11
+   0.3750000  -0.1250000   0.3750000         5   -7
+   0.3750000   0.3750000   0.3750000         9    1
+   0.1250000   0.6250000   0.1250000         3    9
+  -0.1250000   0.8750000  -0.1250000         4   11
+   0.6250000   0.1250000   0.6250000         8    5
+  -0.3750000  -0.3750000  -0.3750000         9   -1
+  -0.6250000  -0.1250000  -0.6250000         8   -5
+   0.1250000  -0.8750000   0.1250000         4  -11
+  -0.1250000  -0.6250000  -0.1250000         3   -9
+  -0.1250000  -0.1250000  -0.1250000         1   -1
+  -0.3750000   0.1250000  -0.3750000         5    7
+   0.3750000  -0.6250000   0.3750000        10  -11
+   0.1250000  -0.3750000   0.1250000         2  -11
+  -0.1250000  -0.1250000   0.3750000         2    2
+  -0.3750000   0.1250000   0.1250000         2   -8
+  -0.6250000   0.3750000  -0.1250000         6   17
+   0.1250000  -0.3750000   0.6250000         6   -3
+   0.1250000   0.1250000   0.6250000         3    1
+  -0.1250000   0.3750000   0.3750000         5   -4
+  -0.3750000   0.6250000   0.1250000         6  -12
+   0.3750000  -0.1250000   0.8750000         7  -16
+  -0.6250000  -0.6250000  -0.1250000         8   -9
+   0.1250000   0.6250000   0.6250000         8    1
+  -0.1250000   0.8750000   0.3750000         7  -21
+  -0.3750000  -0.8750000   0.1250000         7   10
+  -0.3750000  -0.3750000   0.1250000         5   10
+  -0.6250000  -0.1250000  -0.1250000         3   -5
+  -0.8750000   0.1250000  -0.3750000         7    7
+  -0.1250000  -0.6250000   0.3750000         6   24
+  -0.3750000  -0.3750000   0.6250000        10    2
+  -0.6250000  -0.1250000   0.3750000         6    6
+  -0.8750000   0.1250000   0.1250000         4   -8
+   0.8750000   0.3750000  -0.1250000         7  -20
+  -0.1250000  -0.1250000   0.8750000         4    2
+  -0.3750000   0.1250000   0.6250000         6  -15
+  -0.6250000   0.3750000   0.3750000        10   -8
+   0.1250000  -0.3750000  -0.8750000         7    4
+   0.1250000   0.1250000  -0.8750000         4   -2
+  -0.1250000   0.3750000   0.8750000         7   -4
+   0.6250000  -0.3750000  -0.3750000        10    8
+   0.3750000  -0.1250000  -0.6250000         6   15
+   0.3750000   0.3750000  -0.6250000        10   -2
+  -0.8750000  -0.3750000   0.1250000         7   20
+   0.8750000  -0.1250000  -0.1250000         4    8
+   0.6250000   0.1250000  -0.3750000         6   -6
+   0.3750000   0.3750000  -0.1250000         5  -10
+   0.1250000   0.6250000  -0.3750000         6  -24
+   0.8750000  -0.1250000   0.3750000         7   -7
+   0.6250000   0.1250000   0.1250000         3    5
+   0.6250000   0.6250000   0.1250000         8    9
+   0.3750000   0.8750000  -0.1250000         7  -10
+   0.1250000  -0.8750000  -0.3750000         7   21
+  -0.1250000  -0.6250000  -0.6250000         8   -1
+  -0.1250000  -0.1250000  -0.6250000         3   -1
+  -0.3750000   0.1250000  -0.8750000         7   16
+   0.3750000  -0.6250000  -0.1250000         6   12
+   0.1250000  -0.3750000  -0.3750000         5    4
+   0.1250000   0.1250000  -0.3750000         2   -2
+  -0.1250000   0.3750000  -0.6250000         6    3
+   0.6250000  -0.3750000   0.1250000         6  -17
+   0.3750000  -0.1250000  -0.1250000         2    8
+   0.1250000   0.1250000   0.3750000         2    1
+  -0.1250000   0.3750000   0.1250000         2  -12
+  -0.3750000   0.6250000  -0.1250000         6   11
+   0.3750000  -0.1250000   0.6250000         6  -16
+   0.3750000   0.3750000   0.6250000        10    1
+   0.1250000   0.6250000   0.3750000         6   22
+  -0.1250000   0.8750000   0.1250000         4  -12
+  -0.3750000  -0.8750000  -0.1250000         7   -9
+  -0.3750000  -0.3750000  -0.1250000         5   -9
+  -0.6250000  -0.1250000  -0.3750000         6   -5
+   0.1250000  -0.8750000   0.3750000         7  -23
+  -0.1250000  -0.6250000   0.1250000         3   10
+  -0.1250000  -0.1250000   0.1250000         1    2
+  -0.3750000   0.1250000  -0.1250000         2    7
+  -0.6250000   0.3750000  -0.3750000        10    7
+   0.1250000  -0.3750000   0.3750000         5   -3
+  -0.1250000  -0.1250000   0.6250000         3    2
+  -0.3750000   0.1250000   0.3750000         5   -8
+  -0.6250000   0.3750000   0.1250000         6  -19
+   0.1250000  -0.3750000   0.8750000         7   -3
+   0.1250000   0.1250000   0.8750000         4    1
+  -0.1250000   0.3750000   0.6250000         6   -4
+  -0.3750000   0.6250000   0.3750000        10  -12
+   0.3750000  -0.1250000  -0.8750000         7   15
+  -0.6250000  -0.6250000   0.1250000         8   10
+  -0.8750000  -0.3750000  -0.1250000         7  -18
+   0.8750000  -0.1250000  -0.3750000         7    8
+   0.6250000   0.1250000  -0.6250000         8   -6
+  -0.3750000  -0.3750000   0.3750000         9    2
+  -0.6250000  -0.1250000   0.1250000         3    6
+  -0.8750000   0.1250000  -0.1250000         4    7
+  -0.1250000  -0.6250000   0.6250000         8    2
+   0.6250000   0.6250000  -0.1250000         8  -10
+  -0.6250000  -0.1250000   0.6250000         8    6
+  -0.8750000   0.1250000   0.3750000         7   -8
+   0.8750000   0.3750000   0.1250000         7   18
+  -0.1250000  -0.1250000  -0.8750000         4   -1
+  -0.3750000   0.1250000   0.8750000         7  -15
+   0.3750000  -0.6250000  -0.3750000        10   12
+   0.1250000  -0.3750000  -0.6250000         6    4
+   0.1250000   0.1250000  -0.6250000         3   -2
+  -0.1250000   0.3750000  -0.8750000         7    3
+   0.6250000  -0.3750000  -0.1250000         6   19
+   0.3750000  -0.1250000  -0.3750000         5    8
+   0.3750000   0.3750000  -0.3750000         9   -2
+   0.1250000   0.6250000  -0.6250000         8   -2
+   0.8750000  -0.1250000   0.1250000         4   -7
+   0.6250000   0.1250000  -0.1250000         3   -6
+   0.3750000   0.3750000   0.1250000         5    9
+   0.1250000   0.6250000  -0.1250000         3  -10
+  -0.1250000   0.8750000  -0.3750000         7   23
+   0.6250000   0.1250000   0.3750000         6    5
+  -0.3750000  -0.3750000  -0.6250000        10   -1
+   0.3750000   0.8750000   0.1250000         7    9
+   0.1250000  -0.8750000  -0.1250000         4   12
+  -0.1250000  -0.6250000  -0.3750000         6  -22
+  -0.1250000  -0.1250000  -0.3750000         2   -1
+  -0.3750000   0.1250000  -0.6250000         6   16
+   0.3750000  -0.6250000   0.1250000         6  -11
+   0.1250000  -0.3750000  -0.1250000         2   12
+   0.1250000   0.1250000  -0.1250000         1   -2
+  -0.1250000   0.3750000  -0.3750000         5    3
+   0.6250000  -0.3750000   0.3750000        10   -7
+   0.3750000  -0.1250000   0.1250000         2   -7
+   0.1250000   0.3750000   0.3750000         5    1
+  -0.1250000   0.6250000   0.1250000         3  -12
+  -0.3750000   0.8750000  -0.1250000         7   11
+   0.3750000   0.1250000   0.6250000         6   14
+  -0.6250000  -0.3750000  -0.3750000        10   -5
+   0.1250000   0.8750000   0.3750000         7   22
+  -0.1250000  -0.8750000   0.1250000         4   10
+  -0.3750000  -0.6250000  -0.1250000         6   -9
+  -0.3750000  -0.1250000  -0.1250000         2   -5
+  -0.6250000   0.1250000  -0.3750000         6    7
+   0.1250000  -0.6250000   0.3750000         6  -23
+  -0.1250000  -0.3750000   0.1250000         2   10
+  -0.1250000   0.1250000   0.1250000         1   -4
+  -0.3750000   0.3750000  -0.1250000         5   11
+   0.3750000  -0.3750000   0.6250000        10   -3
+   0.1250000  -0.1250000   0.3750000         2   -3
+  -0.1250000   0.1250000   0.6250000         3   -4
+  -0.3750000   0.3750000   0.3750000         9   -4
+  -0.6250000   0.6250000   0.1250000         8  -12
+   0.1250000  -0.1250000   0.8750000         4   -3
+   0.1250000   0.3750000   0.8750000         7    1
+  -0.1250000   0.6250000   0.6250000         8   -4
+   0.6250000  -0.1250000  -0.6250000         8    8
+   0.3750000   0.1250000  -0.8750000         7  -13
+  -0.6250000  -0.3750000   0.1250000         6   20
+  -0.8750000  -0.1250000  -0.1250000         4   -5
+   0.8750000   0.1250000  -0.3750000         7   -6
+  -0.3750000  -0.6250000   0.3750000        10   10
+  -0.3750000  -0.1250000   0.3750000         5    6
+  -0.6250000   0.1250000   0.1250000         3   -8
+  -0.8750000   0.3750000  -0.1250000         7   17
+  -0.1250000  -0.3750000   0.6250000         6    2
+  -0.3750000  -0.1250000   0.8750000         7   13
+  -0.6250000   0.1250000   0.6250000         8   -8
+   0.1250000  -0.6250000  -0.6250000         8    4
+  -0.1250000  -0.3750000  -0.8750000         7   -1
+  -0.1250000   0.1250000  -0.8750000         4    3
+   0.6250000  -0.6250000  -0.1250000         8   12
+   0.3750000  -0.3750000  -0.3750000         9    4
+   0.1250000  -0.1250000  -0.6250000         3    4
+   0.1250000   0.3750000  -0.6250000         6   -2
+   0.8750000  -0.3750000   0.1250000         7  -17
+   0.6250000  -0.1250000  -0.1250000         3    8
+   0.3750000   0.1250000  -0.3750000         5   -6
+   0.3750000   0.6250000  -0.3750000        10  -10
+  -0.8750000  -0.1250000   0.3750000         7    6
+   0.8750000   0.1250000   0.1250000         4    5
+   0.6250000   0.3750000  -0.1250000         6  -20
+   0.3750000   0.6250000   0.1250000         6    9
+   0.1250000   0.8750000  -0.1250000         4  -10
+  -0.1250000  -0.8750000  -0.3750000         7  -22
+   0.6250000   0.3750000   0.3750000        10    5
+  -0.3750000  -0.1250000  -0.6250000         6  -14
+   0.3750000  -0.8750000   0.1250000         7  -11
+   0.1250000  -0.6250000  -0.1250000         3   12
+  -0.1250000  -0.3750000  -0.3750000         5   -1
+  -0.1250000   0.1250000  -0.3750000         2    3
+  -0.3750000   0.3750000  -0.6250000        10    3
+   0.3750000  -0.3750000   0.1250000         5  -11
+   0.1250000  -0.1250000  -0.1250000         1    4
+   0.1250000   0.3750000  -0.1250000         2  -10
+  -0.1250000   0.6250000  -0.3750000         6   23
+   0.6250000  -0.1250000   0.3750000         6   -7
+   0.3750000   0.1250000   0.1250000         2    5
+   0.1250000   0.3750000   0.6250000         6    1
+  -0.1250000   0.6250000   0.3750000         6  -21
+  -0.3750000   0.8750000   0.1250000         7  -12
+   0.3750000   0.1250000   0.8750000         7   14
+  -0.6250000  -0.3750000  -0.1250000         6  -18
+  -0.8750000  -0.1250000  -0.3750000         7   -5
+  -0.1250000  -0.8750000   0.3750000         7   24
+  -0.3750000  -0.6250000   0.1250000         6   10
+  -0.3750000  -0.1250000   0.1250000         2    6
+  -0.6250000   0.1250000  -0.1250000         3    7
+   0.1250000  -0.6250000   0.6250000         8   -3
+  -0.1250000  -0.3750000   0.3750000         5    2
+  -0.1250000   0.1250000   0.3750000         2   -4
+  -0.3750000   0.3750000   0.1250000         5  -12
+  -0.6250000   0.6250000  -0.1250000         8   11
+   0.1250000  -0.1250000   0.6250000         3   -3
+  -0.1250000   0.1250000   0.8750000         4   -4
+  -0.3750000   0.3750000   0.6250000        10   -4
+   0.3750000  -0.3750000  -0.6250000        10    4
+   0.1250000  -0.1250000  -0.8750000         4    4
+   0.1250000   0.3750000  -0.8750000         7   -2
+   0.8750000  -0.3750000  -0.1250000         7   19
+   0.6250000  -0.1250000  -0.3750000         6    8
+   0.3750000   0.1250000  -0.6250000         6  -13
+  -0.6250000  -0.3750000   0.3750000        10    6
+  -0.8750000  -0.1250000   0.1250000         4    6
+   0.8750000   0.1250000  -0.1250000         4   -6
+   0.6250000   0.3750000  -0.3750000        10   -6
+  -0.3750000  -0.1250000   0.6250000         6   13
+  -0.6250000   0.1250000   0.3750000         6   -8
+  -0.8750000   0.3750000   0.1250000         7  -19
+  -0.1250000  -0.3750000   0.8750000         7    2
+  -0.3750000  -0.1250000  -0.8750000         7  -14
+   0.3750000  -0.8750000  -0.1250000         7   12
+   0.1250000  -0.6250000  -0.3750000         6   21
+  -0.1250000  -0.3750000  -0.6250000         6   -1
+  -0.1250000   0.1250000  -0.6250000         3    3
+   0.6250000  -0.6250000   0.1250000         8  -11
+   0.3750000  -0.3750000  -0.1250000         5   12
+   0.1250000  -0.1250000  -0.3750000         2    4
+   0.1250000   0.3750000  -0.3750000         5   -2
+  -0.1250000   0.6250000  -0.6250000         8    3
+   0.6250000  -0.1250000   0.1250000         3   -7
+   0.3750000   0.1250000  -0.1250000         2   -6
+   0.3750000   0.6250000  -0.1250000         6  -10
+   0.1250000   0.8750000  -0.3750000         7  -24
+   0.8750000   0.1250000   0.3750000         7    5
+   0.6250000   0.3750000   0.1250000         6   18
+   0.3750000   0.6250000   0.3750000        10    9
+   0.1250000   0.8750000   0.1250000         4    9
+  -0.1250000  -0.8750000  -0.1250000         4   -9
+  -0.3750000  -0.6250000  -0.3750000        10   -9
+  -0.3750000  -0.1250000  -0.3750000         5   -5
+  -0.6250000   0.1250000  -0.6250000         8    7
+   0.1250000  -0.6250000   0.1250000         3  -11
+  -0.1250000  -0.3750000  -0.1250000         2   -9
+  -0.1250000   0.1250000  -0.1250000         1    3
+  -0.3750000   0.3750000  -0.3750000         9    3
+   0.3750000  -0.3750000   0.3750000         9   -3
+   0.1250000  -0.1250000   0.1250000         1   -3
+   0.1250000   0.3750000   0.1250000         2    9
+  -0.1250000   0.6250000  -0.1250000         3   11
+   0.6250000  -0.1250000   0.6250000         8   -7
+   0.3750000   0.1250000   0.3750000         5    5
  
      G-vector sticks info
      --------------------
@@ -40,10 +297,11 @@
      number of Kohn-Sham states=            8
      kinetic-energy cutoff     =      12.0000  Ry
      charge density cutoff     =      48.0000  Ry
+     cutoff for Fock operator  =      48.0000  Ry
      convergence threshold     =      1.0E-06
      mixing beta               =       0.7000
      number of iterations used =            8  plain     mixing
-     Exchange-correlation      = PBE0 ( 6 4 8 4 0)
+     Exchange-correlation      = PBE0 ( 6  4  8  4 0 0)
      EXX-fraction              =        0.25
 
      celldm(1)=  10.200000  celldm(2)=   0.000000  celldm(3)=   0.000000
@@ -99,25 +357,25 @@
      Dense  grid:     1459 G-vectors     FFT dimensions: (  15,  15,  15)
 
      Largest allocated arrays     est. size (Mb)     dimensions
-        Kohn-Sham Wavefunctions         0.02 Mb     (    192,    8)
-        NL pseudopotentials             0.02 Mb     (    192,    8)
-        Each V/rho on FFT grid          0.05 Mb     (   3375)
-        Each G-vector array             0.01 Mb     (   1459)
-        G-vector shells                 0.00 Mb     (     43)
+        Kohn-Sham Wavefunctions         0.02 Mb     (     192,    8)
+        NL pseudopotentials             0.02 Mb     (     192,    8)
+        Each V/rho on FFT grid          0.05 Mb     (    3375)
+        Each G-vector array             0.01 Mb     (    1459)
+        G-vector shells                 0.00 Mb     (      43)
      Largest temporary arrays     est. size (Mb)     dimensions
-        Auxiliary wavefunctions         0.09 Mb     (    192,   32)
-        Each subspace H/S matrix        0.02 Mb     (  32,  32)
-        Each <psi_i|beta_j> matrix      0.00 Mb     (      8,    8)
-        Arrays for rho mixing           0.41 Mb     (   3375,   8)
+        Auxiliary wavefunctions         0.09 Mb     (     192,   32)
+        Each subspace H/S matrix        0.02 Mb     (      32,   32)
+        Each <psi_i|beta_j> matrix      0.00 Mb     (       8,    8)
+        Arrays for rho mixing           0.41 Mb     (    3375,    8)
 
      Initial potential from superposition of free atoms
 
      starting charge    7.99901, renormalised to    8.00000
      Starting wfc are    8 randomized atomic wfcs
 
-     total cpu time spent up to now is        0.1 secs
+     total cpu time spent up to now is        0.0 secs
 
-     per-process dynamical memory:     1.2 Mb
+     per-process dynamical memory:     1.5 Mb
 
      Self-consistent Calculation
 
@@ -131,21 +389,13 @@
      Davidson diagonalization with overlap
      ethr =  8.07E-04,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        0.2 secs
-
-     total energy              =     -15.82340308 Ry
-     Harris-Foulkes estimate   =     -15.83974490 Ry
-     estimated scf accuracy    <       0.06415499 Ry
+     total cpu time spent up to now is        0.1 secs
 
      iteration #  2     ecut=    12.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  8.02E-04,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        0.2 secs
-
-     total energy              =     -15.82634536 Ry
-     Harris-Foulkes estimate   =     -15.82635445 Ry
-     estimated scf accuracy    <       0.00228139 Ry
+     total cpu time spent up to now is        0.1 secs
 
      iteration #  3     ecut=    12.00 Ry     beta=0.70
      Davidson diagonalization with overlap
@@ -153,15 +403,11 @@
 
      total cpu time spent up to now is        0.2 secs
 
-     total energy              =     -15.82644717 Ry
-     Harris-Foulkes estimate   =     -15.82643482 Ry
-     estimated scf accuracy    <       0.00004970 Ry
-
      iteration #  4     ecut=    12.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  6.21E-07,  avg # of iterations =  2.5
 
-     total cpu time spent up to now is        0.3 secs
+     total cpu time spent up to now is        0.2 secs
 
      End of self-consistent calculation
 
@@ -206,8 +452,14 @@
     -3.2022  -0.4691   3.9980   4.6816   8.6289   9.9414  10.5367  13.8202
 
      highest occupied, lowest unoccupied level (ev):     5.9961    7.2968
+
+     convergence has been achieved in   4 iterations
+
      EXX: now go back to refine exchange calculation
-  -2.13706186654975     
+
+     total cpu time spent up to now is        1.8 secs
+
+     per-process dynamical memory:    56.2 Mb
 
      Self-consistent Calculation
 
@@ -215,27 +467,19 @@
      Davidson diagonalization with overlap
      ethr =  6.21E-07,  avg # of iterations =  3.9
 
-     total cpu time spent up to now is       30.1 secs
-
-     total energy              =     -15.83783415 Ry
-     Harris-Foulkes estimate   =     -15.83784292 Ry
-     estimated scf accuracy    <       0.00005805 Ry
+     total cpu time spent up to now is       20.1 secs
 
      iteration #  2     ecut=    12.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  7.26E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is       44.7 secs
-
-     total energy              =     -15.83783507 Ry
-     Harris-Foulkes estimate   =     -15.83783520 Ry
-     estimated scf accuracy    <       0.00000399 Ry
+     total cpu time spent up to now is       29.2 secs
 
      iteration #  3     ecut=    12.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  4.99E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is       59.4 secs
+     total cpu time spent up to now is       38.3 secs
 
      End of self-consistent calculation
 
@@ -280,22 +524,20 @@
     -5.0425  -1.9909   3.1274   3.8150   9.3278  10.7054  11.3602  14.8971
 
      highest occupied, lowest unoccupied level (ev):     5.2848    7.8631
-  -2.13706186654975       -2.14016879213658       -2.14369394256821     
-     est. exchange err (dexx)  =       0.00020911 Ry
 
-!    total energy              =     -15.83804432 Ry
+     convergence has been achieved in   3 iterations
+
+     total energy              =     -15.83804432 Ry
      Harris-Foulkes estimate   =     -15.83804431 Ry
-     estimated scf accuracy    <       0.00000001 Ry
-
-     The total energy is the sum of the following terms:
-
-     one-electron contribution =       2.67237324 Ry
-     hartree contribution      =       1.10276674 Ry
-     xc contribution           =      -3.78174753 Ry
-     ewald contribution        =     -16.89975858 Ry
+     est. exchange err (dexx)  =       0.00020911 Ry
      - averaged Fock potential =       2.14016879 Ry
      + Fock energy             =      -1.07184697 Ry
-  NOW GO BACK TO REFINE HYBRID CALCULATION
+
+     EXX: now go back to refine exchange calculation
+
+     total cpu time spent up to now is       41.3 secs
+
+     per-process dynamical memory:    56.4 Mb
 
      Self-consistent Calculation
 
@@ -303,17 +545,13 @@
      Davidson diagonalization with overlap
      ethr =  4.99E-08,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is       82.7 secs
-
-     total energy              =     -15.83807813 Ry
-     Harris-Foulkes estimate   =     -15.83808015 Ry
-     estimated scf accuracy    <       0.00000477 Ry
+     total cpu time spent up to now is       54.4 secs
 
      iteration #  2     ecut=    12.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  5.96E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is       97.4 secs
+     total cpu time spent up to now is       63.5 secs
 
      End of self-consistent calculation
 
@@ -358,22 +596,20 @@
     -5.0377  -1.9859   3.1192   3.8005   9.3441  10.7152  11.3690  14.9012
 
      highest occupied, lowest unoccupied level (ev):     5.2630    7.8804
-  -2.14369394256821       -2.14446575651824       -2.14525049872051     
-     est. exchange err (dexx)  =       0.00000646 Ry
 
-!    total energy              =     -15.83808485 Ry
+     convergence has been achieved in   2 iterations
+
+     total energy              =     -15.83808485 Ry
      Harris-Foulkes estimate   =     -15.83808489 Ry
-     estimated scf accuracy    <       0.00000014 Ry
-
-     The total energy is the sum of the following terms:
-
-     one-electron contribution =       2.66699323 Ry
-     hartree contribution      =       1.10546490 Ry
-     xc contribution           =      -3.78262492 Ry
-     ewald contribution        =     -16.89975858 Ry
+     est. exchange err (dexx)  =       0.00000646 Ry
      - averaged Fock potential =       2.14446576 Ry
      + Fock energy             =      -1.07262525 Ry
-  NOW GO BACK TO REFINE HYBRID CALCULATION
+
+     EXX: now go back to refine exchange calculation
+
+     total cpu time spent up to now is       66.6 secs
+
+     per-process dynamical memory:    56.4 Mb
 
      Self-consistent Calculation
 
@@ -387,7 +623,7 @@
      Davidson diagonalization with overlap
      ethr =  2.91E-09,  avg # of iterations =  1.1
 
-     total cpu time spent up to now is      128.9 secs
+     total cpu time spent up to now is       86.3 secs
 
      End of self-consistent calculation
 
@@ -432,23 +668,16 @@
     -5.0374  -1.9855   3.1168   3.7977   9.3462  10.7168  11.3709  14.9018
 
      highest occupied, lowest unoccupied level (ev):     5.2589    7.8831
-  -2.14525049872051       -2.14543032693703       -2.14561070081517     
-     est. exchange err (dexx)  =       0.00000027 Ry
+
+     convergence has been achieved in   1 iterations
 
 !    total energy              =     -15.83808622 Ry
      Harris-Foulkes estimate   =     -15.83808634 Ry
-     estimated scf accuracy    <       0.00000023 Ry
-
-     The total energy is the sum of the following terms:
-
-     one-electron contribution =       2.66560746 Ry
-     hartree contribution      =       1.10634083 Ry
-     xc contribution           =      -3.78290091 Ry
-     ewald contribution        =     -16.89975858 Ry
+     est. exchange err (dexx)  =       0.00000027 Ry
      - averaged Fock potential =       2.14543033 Ry
      + Fock energy             =      -1.07280535 Ry
 
-     convergence has been achieved in   1 iterations
+     EXX self-consistency reached
 
 
      entering subroutine stress ...
@@ -461,49 +690,53 @@
 
      Writing output data file pwscf.save
  
-     init_run     :      0.04s CPU      0.04s WALL (       1 calls)
-     electrons    :    126.64s CPU    132.47s WALL (       1 calls)
-     stress       :      3.85s CPU      4.01s WALL (       1 calls)
+     init_run     :      0.02s CPU      0.03s WALL (       1 calls)
+     electrons    :     77.87s CPU     78.54s WALL (       4 calls)
+     stress       :      3.48s CPU      3.51s WALL (       1 calls)
 
      Called by init_run:
      wfcinit      :      0.01s CPU      0.01s WALL (       1 calls)
      potinit      :      0.00s CPU      0.00s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :     92.25s CPU     96.45s WALL (      12 calls)
-     sum_band     :      0.04s CPU      0.05s WALL (      12 calls)
-     v_of_rho     :      0.04s CPU      0.03s WALL (      12 calls)
-     mix_rho      :      0.00s CPU      0.00s WALL (      12 calls)
+     c_bands      :     77.78s CPU     78.46s WALL (      12 calls)
+     sum_band     :      0.05s CPU      0.05s WALL (      12 calls)
+     v_of_rho     :      0.03s CPU      0.03s WALL (      12 calls)
+     mix_rho      :      0.01s CPU      0.00s WALL (      12 calls)
 
      Called by c_bands:
-     init_us_2    :      0.02s CPU      0.01s WALL (     260 calls)
-     cegterg      :     92.24s CPU     96.43s WALL (     120 calls)
+     init_us_2    :      0.02s CPU      0.02s WALL (     330 calls)
+     cegterg      :     77.76s CPU     78.45s WALL (     120 calls)
+
+     Called by sum_band:
 
      Called by *egterg:
-     h_psi        :     92.07s CPU     96.30s WALL (     362 calls)
-     g_psi        :      0.01s CPU      0.01s WALL (     232 calls)
-     cdiaghg      :      0.09s CPU      0.07s WALL (     302 calls)
+     h_psi        :     77.66s CPU     78.33s WALL (     362 calls)
+     g_psi        :      0.00s CPU      0.01s WALL (     232 calls)
+     cdiaghg      :      0.07s CPU      0.06s WALL (     302 calls)
 
      Called by h_psi:
      add_vuspsi   :      0.00s CPU      0.01s WALL (     362 calls)
 
      General routines
-     calbec       :      0.00s CPU      0.01s WALL (     372 calls)
-     fft          :      0.02s CPU      0.01s WALL (     135 calls)
-     ffts         :     59.66s CPU     61.83s WALL (  933376 calls)
-     fftw         :      0.21s CPU      0.35s WALL (    9788 calls)
-     davcio       :      0.02s CPU      0.01s WALL (     530 calls)
+     calbec       :      0.00s CPU      0.01s WALL (     442 calls)
+     fft          :      0.01s CPU      0.01s WALL (     135 calls)
+     fftw         :      0.15s CPU      0.17s WALL (    5822 calls)
+     fftc         :     44.84s CPU     45.58s WALL (  800256 calls)
+     fftcw        :      0.12s CPU      0.11s WALL (    3286 calls)
+     davcio       :      0.00s CPU      0.00s WALL (      10 calls)
  
+
      EXX routines
      exx_grid     :      0.00s CPU      0.00s WALL (       1 calls)
-     exxinit      :      0.44s CPU      0.51s WALL (       4 calls)
-     vexx         :     91.95s CPU     96.08s WALL (     200 calls)
-     exxen2       :     33.85s CPU     35.41s WALL (      10 calls)
+     exxinit      :      0.22s CPU      0.25s WALL (       4 calls)
+     vexx         :     77.50s CPU     78.14s WALL (     200 calls)
+     exxenergy    :     10.54s CPU     10.63s WALL (       7 calls)
  
-     PWSCF        :  2m10.61s CPU     2m16.61s WALL
+     PWSCF        :  1m32.22s CPU     1m33.05s WALL
 
  
-   This run was terminated on:  22:13:47  29Nov2012            
+   This run was terminated on:  10:40: 3   2Dec2015            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

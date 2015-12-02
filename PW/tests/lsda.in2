@@ -1,5 +1,6 @@
  &control
     calculation='nscf'
+    verbosity='high'
  /
  &system
     ibrav=2, celldm(1) =6.48, nat=1, ntyp=1,

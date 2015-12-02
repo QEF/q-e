@@ -1,5 +1,5 @@
 
-     Program PWSCF v.5.1.1 (svn rev. 11290) starts on 12Dec2014 at 11:59: 1 
+     Program PWSCF v.5.2.1 (svn rev. 11881M) starts on  2Dec2015 at 10:40:21 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -205,11 +205,11 @@
  Energies determined by pw2casino tool
  -------------------------------------
  Kinetic energy      4.09745477284630       au  =     8.19490954569260       Ry
- Local energy       -2.96838179709193       au  =    -5.93676359418386       Ry
+ Local energy       -2.96838179709194       au  =    -5.93676359418387       Ry
  Non-Local energy    1.76826662205067       au  =     3.53653324410134       Ry
  Ewald energy       -8.44987928861169       au  =    -16.8997585772234       Ry
- xc contribution    -2.52551850766633       au  =    -5.05103701533267       Ry
- hartree energy     0.818678298191433       au  =     1.63735659638287       Ry
+ xc contribution    -2.52551850766633       au  =    -5.05103701533266       Ry
+ hartree energy     0.818678298191435       au  =     1.63735659638287       Ry
  Total energy       -7.25937990028155       au  =    -14.5187598005631       Ry
  
 Writing file pwscf.bwfn.data.b1 for program CASINO.
@@ -232,14 +232,16 @@ Blip grid: 8x8x8
      potinit      :      0.00s CPU      0.00s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :      0.00s CPU      0.01s WALL (       7 calls)
+     c_bands      :      0.01s CPU      0.01s WALL (       7 calls)
      sum_band     :      0.00s CPU      0.00s WALL (       7 calls)
      v_of_rho     :      0.01s CPU      0.00s WALL (       9 calls)
      mix_rho      :      0.00s CPU      0.00s WALL (       7 calls)
 
      Called by c_bands:
      init_us_2    :      0.00s CPU      0.00s WALL (      16 calls)
-     regterg      :      0.00s CPU      0.01s WALL (       7 calls)
+     regterg      :      0.01s CPU      0.00s WALL (       7 calls)
+
+     Called by sum_band:
 
      Called by *egterg:
      h_psi        :      0.00s CPU      0.00s WALL (      22 calls)
@@ -256,10 +258,10 @@ Blip grid: 8x8x8
      davcio       :      0.00s CPU      0.00s WALL (       1 calls)
  
  
-     PWSCF        :     0.07s CPU         0.08s WALL
+     PWSCF        :     0.08s CPU         0.08s WALL
 
  
-   This run was terminated on:  11:59: 1  12Dec2014            
+   This run was terminated on:  10:40:21   2Dec2015            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
