@@ -1,20 +1,20 @@
 
-     Program PWSCF v.4.99       starts on  6Jan2012 at 10:25:34 
+     Program PWSCF v.5.2.1 (svn rev. 11887M) starts on  2Dec2015 at 10:52: 3 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
          "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
           URL http://www.quantum-espresso.org", 
      in publications or presentations arising from this work. More details at
-     http://www.quantum-espresso.org/quote.php
+     http://www.quantum-espresso.org/quote
 
      Serial version
+     Reading input from /home/giannozz/trunk/espresso/PW/tests/noncolin.in
 
      Current dimensions of program PWSCF are:
      Max number of different atomic species (ntypx) = 10
      Max number of k-points (npk) =  40000
      Max angular momentum in pseudopotentials (lmaxx) =  3
-     Reading input from /home/giannozz/trunk/espresso/tests/noncolin.in
                file Fe.pz-nd-rrkjus.UPF: wavefunction(s)  4S renormalized
  
      G-vector sticks info
@@ -38,8 +38,7 @@
      convergence threshold     =      1.0E-08
      mixing beta               =       0.2000
      number of iterations used =            8  plain     mixing
-     Exchange-correlation      =  SLA  PZ   NOGX NOGC ( 1 1 0 0 0)
-     EXX-fraction              =        0.00
+     Exchange-correlation      =  SLA  PZ   NOGX NOGC ( 1  1  0  0 0 0)
      Noncollinear calculation without spin-orbit
 
 
@@ -114,16 +113,16 @@
      Smooth grid:     1205 G-vectors     FFT dimensions: (  15,  15,  15)
 
      Largest allocated arrays     est. size (Mb)     dimensions
-        Kohn-Sham Wavefunctions         0.08 Mb     (    312,   16)
-        NL pseudopotentials             0.04 Mb     (    156,   18)
-        Each V/rho on FFT grid          0.21 Mb     (  13824)
-        Each G-vector array             0.03 Mb     (   3367)
-        G-vector shells                 0.00 Mb     (     64)
+        Kohn-Sham Wavefunctions         0.08 Mb     (     312,   16)
+        NL pseudopotentials             0.04 Mb     (     156,   18)
+        Each V/rho on FFT grid          0.21 Mb     (   13824)
+        Each G-vector array             0.03 Mb     (    3367)
+        G-vector shells                 0.00 Mb     (      64)
      Largest temporary arrays     est. size (Mb)     dimensions
-        Auxiliary wavefunctions         0.30 Mb     (    312,   64)
-        Each subspace H/S matrix        0.06 Mb     (  64,  64)
-        Each <psi_i|beta_j> matrix      0.01 Mb     (     18,   2,   16)
-        Arrays for rho mixing           1.69 Mb     (  13824,   8)
+        Auxiliary wavefunctions         0.30 Mb     (     312,   64)
+        Each subspace H/S matrix        0.06 Mb     (      64,   64)
+        Each <psi_i|beta_j> matrix      0.01 Mb     (      18,   2,   16)
+        Arrays for rho mixing           1.69 Mb     (   13824,    8)
 
      Check: negative/imaginary core charge=   -0.000013    0.000000
 
@@ -139,26 +138,17 @@
      polar coord.: r, theta, phi [deg] :     3.332318   90.000000    0.000000
 
  ==============================================================================
-     Starting wfc are   12 randomized atomic wfcs
+     Starting wfc are   12 randomized atomic wfcs +    4 random wfc
 
      total cpu time spent up to now is        0.6 secs
 
-     per-process dynamical memory:    13.9 Mb
+     per-process dynamical memory:    15.4 Mb
 
      Self-consistent Calculation
 
      iteration #  1     ecut=    25.00 Ry     beta=0.20
      Davidson diagonalization with overlap
      ethr =  1.00E-02,  avg # of iterations =  4.3
-
- ==============================================================================
-     atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     6.573198
-     magnetization :          3.219577    0.000000    0.000000
-     magnetization/charge:    0.489804    0.000000    0.000000
-     polar coord.: r, theta, phi [deg] :     3.219577   90.000000    0.000000
-
- ==============================================================================
 
      total cpu time spent up to now is        1.1 secs
 
@@ -173,15 +163,6 @@
      Davidson diagonalization with overlap
      ethr =  2.53E-03,  avg # of iterations =  1.0
 
- ==============================================================================
-     atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     6.450784
-     magnetization :          3.068257    0.000000    0.000000
-     magnetization/charge:    0.475641    0.000000    0.000000
-     polar coord.: r, theta, phi [deg] :     3.068257   90.000000    0.000000
-
- ==============================================================================
-
      total cpu time spent up to now is        1.4 secs
 
      total energy              =     -55.68005815 Ry
@@ -195,16 +176,7 @@
      Davidson diagonalization with overlap
      ethr =  7.86E-04,  avg # of iterations =  2.0
 
- ==============================================================================
-     atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     6.431606
-     magnetization :          3.032620    0.000000    0.000000
-     magnetization/charge:    0.471518    0.000000    0.000000
-     polar coord.: r, theta, phi [deg] :     3.032620   90.000000    0.000000
-
- ==============================================================================
-
-     total cpu time spent up to now is        1.7 secs
+     total cpu time spent up to now is        1.8 secs
 
      total energy              =     -55.69823091 Ry
      Harris-Foulkes estimate   =     -55.69347498 Ry
@@ -217,16 +189,7 @@
      Davidson diagonalization with overlap
      ethr =  3.55E-05,  avg # of iterations =  3.7
 
- ==============================================================================
-     atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     6.404670
-     magnetization :          2.995707    0.000000    0.000000
-     magnetization/charge:    0.467738    0.000000    0.000000
-     polar coord.: r, theta, phi [deg] :     2.995707   90.000000    0.000000
-
- ==============================================================================
-
-     total cpu time spent up to now is        2.2 secs
+     total cpu time spent up to now is        2.3 secs
 
      total energy              =     -55.69938139 Ry
      Harris-Foulkes estimate   =     -55.69891335 Ry
@@ -239,16 +202,7 @@
      Davidson diagonalization with overlap
      ethr =  8.95E-06,  avg # of iterations =  2.3
 
- ==============================================================================
-     atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     6.413943
-     magnetization :          3.018602    0.000000    0.000000
-     magnetization/charge:    0.470631    0.000000    0.000000
-     polar coord.: r, theta, phi [deg] :     3.018602   90.000000    0.000000
-
- ==============================================================================
-
-     total cpu time spent up to now is        2.5 secs
+     total cpu time spent up to now is        2.7 secs
 
      total energy              =     -55.69965000 Ry
      Harris-Foulkes estimate   =     -55.69965759 Ry
@@ -261,16 +215,7 @@
      Davidson diagonalization with overlap
      ethr =  5.92E-07,  avg # of iterations =  3.1
 
- ==============================================================================
-     atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     6.415233
-     magnetization :          3.027304    0.000000    0.000000
-     magnetization/charge:    0.471893    0.000000    0.000000
-     polar coord.: r, theta, phi [deg] :     3.027304   90.000000    0.000000
-
- ==============================================================================
-
-     total cpu time spent up to now is        2.9 secs
+     total cpu time spent up to now is        3.2 secs
 
      total energy              =     -55.69967480 Ry
      Harris-Foulkes estimate   =     -55.69967447 Ry
@@ -283,16 +228,7 @@
      Davidson diagonalization with overlap
      ethr =  2.47E-07,  avg # of iterations =  1.0
 
- ==============================================================================
-     atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     6.412032
-     magnetization :          3.056082    0.000000    0.000000
-     magnetization/charge:    0.476617    0.000000    0.000000
-     polar coord.: r, theta, phi [deg] :     3.056082   90.000000    0.000000
-
- ==============================================================================
-
-     total cpu time spent up to now is        3.2 secs
+     total cpu time spent up to now is        3.5 secs
 
      total energy              =     -55.69966537 Ry
      Harris-Foulkes estimate   =     -55.69967666 Ry
@@ -305,16 +241,7 @@
      Davidson diagonalization with overlap
      ethr =  1.41E-07,  avg # of iterations =  2.0
 
- ==============================================================================
-     atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     6.412006
-     magnetization :          3.064265    0.000000    0.000000
-     magnetization/charge:    0.477895    0.000000    0.000000
-     polar coord.: r, theta, phi [deg] :     3.064265   90.000000    0.000000
-
- ==============================================================================
-
-     total cpu time spent up to now is        3.6 secs
+     total cpu time spent up to now is        3.9 secs
 
      total energy              =     -55.69968182 Ry
      Harris-Foulkes estimate   =     -55.69968209 Ry
@@ -327,16 +254,7 @@
      Davidson diagonalization with overlap
      ethr =  1.89E-08,  avg # of iterations =  2.5
 
- ==============================================================================
-     atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     6.412400
-     magnetization :          3.062430    0.000000    0.000000
-     magnetization/charge:    0.477579    0.000000    0.000000
-     polar coord.: r, theta, phi [deg] :     3.062430   90.000000    0.000000
-
- ==============================================================================
-
-     total cpu time spent up to now is        3.9 secs
+     total cpu time spent up to now is        4.3 secs
 
      total energy              =     -55.69968321 Ry
      Harris-Foulkes estimate   =     -55.69968286 Ry
@@ -349,16 +267,7 @@
      Davidson diagonalization with overlap
      ethr =  6.77E-09,  avg # of iterations =  2.0
 
- ==============================================================================
-     atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     6.412612
-     magnetization :          3.063216    0.000000    0.000000
-     magnetization/charge:    0.477686    0.000000    0.000000
-     polar coord.: r, theta, phi [deg] :     3.063216   90.000000    0.000000
-
- ==============================================================================
-
-     total cpu time spent up to now is        4.2 secs
+     total cpu time spent up to now is        4.6 secs
 
      total energy              =     -55.69968367 Ry
      Harris-Foulkes estimate   =     -55.69968335 Ry
@@ -380,7 +289,7 @@
 
  ==============================================================================
 
-     total cpu time spent up to now is        4.7 secs
+     total cpu time spent up to now is        5.1 secs
 
      End of self-consistent calculation
 
@@ -524,47 +433,51 @@
 
      Writing output data file pwscf.save
  
-     init_run     :      0.56s CPU      0.56s WALL (       1 calls)
-     electrons    :      3.99s CPU      4.07s WALL (       1 calls)
-     stress       :      0.26s CPU      0.27s WALL (       1 calls)
+     init_run     :      0.53s CPU      0.54s WALL (       1 calls)
+     electrons    :      4.52s CPU      4.57s WALL (       1 calls)
+     stress       :      0.14s CPU      0.14s WALL (       1 calls)
 
      Called by init_run:
      wfcinit      :      0.08s CPU      0.08s WALL (       1 calls)
      potinit      :      0.01s CPU      0.01s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :      2.90s CPU      2.93s WALL (      11 calls)
-     sum_band     :      0.79s CPU      0.80s WALL (      11 calls)
+     c_bands      :      2.98s CPU      3.03s WALL (      11 calls)
+     sum_band     :      1.23s CPU      1.23s WALL (      11 calls)
      v_of_rho     :      0.07s CPU      0.06s WALL (      12 calls)
-     newd         :      0.16s CPU      0.16s WALL (      12 calls)
-     mix_rho      :      0.02s CPU      0.03s WALL (      11 calls)
+     newd         :      0.20s CPU      0.20s WALL (      12 calls)
+     mix_rho      :      0.04s CPU      0.03s WALL (      11 calls)
 
      Called by c_bands:
      init_us_2    :      0.04s CPU      0.04s WALL (     528 calls)
-     cegterg      :      2.75s CPU      2.78s WALL (     242 calls)
+     cegterg      :      2.84s CPU      2.89s WALL (     242 calls)
+
+     Called by sum_band:
+     sum_band:bec :      0.01s CPU      0.01s WALL (     242 calls)
+     addusdens    :      0.59s CPU      0.60s WALL (      11 calls)
 
      Called by *egterg:
-     h_psi        :      1.76s CPU      1.75s WALL (     871 calls)
-     s_psi        :      0.08s CPU      0.07s WALL (     871 calls)
+     h_psi        :      1.76s CPU      1.85s WALL (     871 calls)
+     s_psi        :      0.08s CPU      0.06s WALL (     871 calls)
      g_psi        :      0.05s CPU      0.07s WALL (     607 calls)
-     cdiaghg      :      0.56s CPU      0.57s WALL (     849 calls)
+     cdiaghg      :      0.61s CPU      0.58s WALL (     849 calls)
 
      Called by h_psi:
      add_vuspsi   :      0.10s CPU      0.08s WALL (     871 calls)
 
      General routines
-     calbec       :      0.06s CPU      0.08s WALL (    1135 calls)
-     fft          :      0.06s CPU      0.07s WALL (     381 calls)
-     ffts         :      0.01s CPU      0.01s WALL (      92 calls)
-     fftw         :      1.32s CPU      1.33s WALL (   46604 calls)
-     interpolate  :      0.03s CPU      0.03s WALL (      92 calls)
-     davcio       :      0.00s CPU      0.02s WALL (     770 calls)
+     calbec       :      0.08s CPU      0.08s WALL (    1135 calls)
+     fft          :      0.06s CPU      0.08s WALL (     381 calls)
+     ffts         :      0.00s CPU      0.01s WALL (      92 calls)
+     fftw         :      1.30s CPU      1.41s WALL (   46604 calls)
+     interpolate  :      0.01s CPU      0.03s WALL (      92 calls)
+     davcio       :      0.00s CPU      0.00s WALL (      22 calls)
  
  
-     PWSCF        :     4.93s CPU         5.06s WALL
+     PWSCF        :     5.29s CPU         5.36s WALL
 
  
-   This run was terminated on:  10:25:39   6Jan2012            
+   This run was terminated on:  10:52: 8   2Dec2015            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

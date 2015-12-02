@@ -1,20 +1,20 @@
 
-     Program PWSCF v.4.99       starts on  6Jan2012 at 10:24:53 
+     Program PWSCF v.5.2.1 (svn rev. 11887M) starts on  2Dec2015 at 10:51: 2 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
          "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
           URL http://www.quantum-espresso.org", 
      in publications or presentations arising from this work. More details at
-     http://www.quantum-espresso.org/quote.php
+     http://www.quantum-espresso.org/quote
 
      Serial version
+     Reading input from /home/giannozz/trunk/espresso/PW/tests/noncolin-cg.in
 
      Current dimensions of program PWSCF are:
      Max number of different atomic species (ntypx) = 10
      Max number of k-points (npk) =  40000
      Max angular momentum in pseudopotentials (lmaxx) =  3
-     Reading input from /home/giannozz/trunk/espresso/tests/noncolin-cg.in
                file Fe.pz-nd-rrkjus.UPF: wavefunction(s)  4S renormalized
  
      G-vector sticks info
@@ -38,8 +38,7 @@
      convergence threshold     =      1.0E-06
      mixing beta               =       0.2000
      number of iterations used =            8  plain     mixing
-     Exchange-correlation      =  SLA  PZ   NOGX NOGC ( 1 1 0 0 0)
-     EXX-fraction              =        0.00
+     Exchange-correlation      =  SLA  PZ   NOGX NOGC ( 1  1  0  0 0 0)
      Noncollinear calculation without spin-orbit
 
 
@@ -114,15 +113,15 @@
      Smooth grid:     1205 G-vectors     FFT dimensions: (  15,  15,  15)
 
      Largest allocated arrays     est. size (Mb)     dimensions
-        Kohn-Sham Wavefunctions         0.08 Mb     (    312,   16)
-        NL pseudopotentials             0.04 Mb     (    156,   18)
-        Each V/rho on FFT grid          0.21 Mb     (  13824)
-        Each G-vector array             0.03 Mb     (   3367)
-        G-vector shells                 0.00 Mb     (     64)
+        Kohn-Sham Wavefunctions         0.08 Mb     (     312,   16)
+        NL pseudopotentials             0.04 Mb     (     156,   18)
+        Each V/rho on FFT grid          0.21 Mb     (   13824)
+        Each G-vector array             0.03 Mb     (    3367)
+        G-vector shells                 0.00 Mb     (      64)
      Largest temporary arrays     est. size (Mb)     dimensions
-        Each subspace H/S matrix        0.00 Mb     (  16,  16)
-        Each <psi_i|beta_j> matrix      0.01 Mb     (     18,   2,   16)
-        Arrays for rho mixing           1.69 Mb     (  13824,   8)
+        Each subspace H/S matrix        0.00 Mb     (      16,   16)
+        Each <psi_i|beta_j> matrix      0.01 Mb     (      18,   2,   16)
+        Arrays for rho mixing           1.69 Mb     (   13824,    8)
 
      Check: negative/imaginary core charge=   -0.000013    0.000000
 
@@ -138,11 +137,11 @@
      polar coord.: r, theta, phi [deg] :     3.332318   90.000000    0.000000
 
  ==============================================================================
-     Starting wfc are   12 randomized atomic wfcs
+     Starting wfc are   12 randomized atomic wfcs +    4 random wfc
 
-     total cpu time spent up to now is        0.7 secs
+     total cpu time spent up to now is        0.6 secs
 
-     per-process dynamical memory:    13.9 Mb
+     per-process dynamical memory:    15.4 Mb
 
      Self-consistent Calculation
 
@@ -150,16 +149,7 @@
      CG style diagonalization
      ethr =  1.00E-02,  avg # of iterations =  4.0
 
- ==============================================================================
-     atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     6.571256
-     magnetization :          3.220299    0.000000    0.000000
-     magnetization/charge:    0.490058    0.000000    0.000000
-     polar coord.: r, theta, phi [deg] :     3.220299   90.000000    0.000000
-
- ==============================================================================
-
-     total cpu time spent up to now is        1.2 secs
+     total cpu time spent up to now is        1.1 secs
 
      total energy              =     -55.68101049 Ry
      Harris-Foulkes estimate   =     -55.73563902 Ry
@@ -171,15 +161,6 @@
      iteration #  2     ecut=    25.00 Ry     beta=0.20
      CG style diagonalization
      ethr =  2.82E-03,  avg # of iterations =  3.1
-
- ==============================================================================
-     atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     6.476288
-     magnetization :          3.097420    0.000000    0.000000
-     magnetization/charge:    0.478271    0.000000    0.000000
-     polar coord.: r, theta, phi [deg] :     3.097420   90.000000    0.000000
-
- ==============================================================================
 
      total cpu time spent up to now is        1.6 secs
 
@@ -194,15 +175,6 @@
      CG style diagonalization
      ethr =  6.41E-04,  avg # of iterations =  3.4
 
- ==============================================================================
-     atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     6.398048
-     magnetization :          2.988652    0.000000    0.000000
-     magnetization/charge:    0.467119    0.000000    0.000000
-     polar coord.: r, theta, phi [deg] :     2.988652   90.000000    0.000000
-
- ==============================================================================
-
      total cpu time spent up to now is        2.0 secs
 
      total energy              =     -55.69768615 Ry
@@ -215,15 +187,6 @@
      iteration #  4     ecut=    25.00 Ry     beta=0.20
      CG style diagonalization
      ethr =  5.20E-05,  avg # of iterations =  4.4
-
- ==============================================================================
-     atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     6.415729
-     magnetization :          3.004454    0.000000    0.000000
-     magnetization/charge:    0.468295    0.000000    0.000000
-     polar coord.: r, theta, phi [deg] :     3.004454   90.000000    0.000000
-
- ==============================================================================
 
      total cpu time spent up to now is        2.6 secs
 
@@ -238,16 +201,7 @@
      CG style diagonalization
      ethr =  5.20E-05,  avg # of iterations =  3.6
 
- ==============================================================================
-     atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     6.412843
-     magnetization :          3.003461    0.000000    0.000000
-     magnetization/charge:    0.468351    0.000000    0.000000
-     polar coord.: r, theta, phi [deg] :     3.003461   90.000000    0.000000
-
- ==============================================================================
-
-     total cpu time spent up to now is        3.0 secs
+     total cpu time spent up to now is        3.1 secs
 
      total energy              =     -55.69955475 Ry
      Harris-Foulkes estimate   =     -55.69964716 Ry
@@ -260,16 +214,7 @@
      CG style diagonalization
      ethr =  6.26E-06,  avg # of iterations =  3.9
 
- ==============================================================================
-     atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     6.415999
-     magnetization :          3.015082    0.000000    0.000000
-     magnetization/charge:    0.469932    0.000000    0.000000
-     polar coord.: r, theta, phi [deg] :     3.015082   90.000000    0.000000
-
- ==============================================================================
-
-     total cpu time spent up to now is        3.5 secs
+     total cpu time spent up to now is        3.6 secs
 
      total energy              =     -55.69966549 Ry
      Harris-Foulkes estimate   =     -55.69968499 Ry
@@ -282,16 +227,7 @@
      CG style diagonalization
      ethr =  2.08E-06,  avg # of iterations =  3.8
 
- ==============================================================================
-     atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     6.416732
-     magnetization :          3.027234    0.000000    0.000000
-     magnetization/charge:    0.471772    0.000000    0.000000
-     polar coord.: r, theta, phi [deg] :     3.027234   90.000000    0.000000
-
- ==============================================================================
-
-     total cpu time spent up to now is        3.9 secs
+     total cpu time spent up to now is        4.1 secs
 
      total energy              =     -55.69967276 Ry
      Harris-Foulkes estimate   =     -55.69969592 Ry
@@ -304,16 +240,7 @@
      CG style diagonalization
      ethr =  1.42E-06,  avg # of iterations =  3.1
 
- ==============================================================================
-     atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     6.415509
-     magnetization :          3.028128    0.000000    0.000000
-     magnetization/charge:    0.472001    0.000000    0.000000
-     polar coord.: r, theta, phi [deg] :     3.028128   90.000000    0.000000
-
- ==============================================================================
-
-     total cpu time spent up to now is        4.3 secs
+     total cpu time spent up to now is        4.6 secs
 
      total energy              =     -55.69968029 Ry
      Harris-Foulkes estimate   =     -55.69968319 Ry
@@ -326,16 +253,7 @@
      CG style diagonalization
      ethr =  5.30E-07,  avg # of iterations =  3.0
 
- ==============================================================================
-     atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     6.413849
-     magnetization :          3.054723    0.000000    0.000000
-     magnetization/charge:    0.476270    0.000000    0.000000
-     polar coord.: r, theta, phi [deg] :     3.054723   90.000000    0.000000
-
- ==============================================================================
-
-     total cpu time spent up to now is        4.7 secs
+     total cpu time spent up to now is        5.0 secs
 
      total energy              =     -55.69966422 Ry
      Harris-Foulkes estimate   =     -55.69968217 Ry
@@ -348,16 +266,7 @@
      CG style diagonalization
      ethr =  4.28E-07,  avg # of iterations =  3.1
 
- ==============================================================================
-     atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     6.413427
-     magnetization :          3.052431    0.000000    0.000000
-     magnetization/charge:    0.475944    0.000000    0.000000
-     polar coord.: r, theta, phi [deg] :     3.052431   90.000000    0.000000
-
- ==============================================================================
-
-     total cpu time spent up to now is        5.1 secs
+     total cpu time spent up to now is        5.4 secs
 
      total energy              =     -55.69968199 Ry
      Harris-Foulkes estimate   =     -55.69968103 Ry
@@ -370,16 +279,7 @@
      CG style diagonalization
      ethr =  4.35E-08,  avg # of iterations =  3.9
 
- ==============================================================================
-     atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     6.412600
-     magnetization :          3.063243    0.000000    0.000000
-     magnetization/charge:    0.477691    0.000000    0.000000
-     polar coord.: r, theta, phi [deg] :     3.063243   90.000000    0.000000
-
- ==============================================================================
-
-     total cpu time spent up to now is        5.6 secs
+     total cpu time spent up to now is        5.9 secs
 
      total energy              =     -55.69967936 Ry
      Harris-Foulkes estimate   =     -55.69968447 Ry
@@ -401,7 +301,7 @@
 
  ==============================================================================
 
-     total cpu time spent up to now is        6.0 secs
+     total cpu time spent up to now is        6.4 secs
 
      End of self-consistent calculation
 
@@ -536,46 +436,51 @@
 
      Writing output data file pwscf.save
  
-     init_run     :      0.56s CPU      0.56s WALL (       1 calls)
-     electrons    :      5.13s CPU      5.27s WALL (       1 calls)
+     init_run     :      0.52s CPU      0.54s WALL (       1 calls)
+     electrons    :      5.63s CPU      5.84s WALL (       1 calls)
 
      Called by init_run:
      wfcinit      :      0.08s CPU      0.08s WALL (       1 calls)
      potinit      :      0.01s CPU      0.01s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :      3.94s CPU      4.01s WALL (      12 calls)
-     sum_band     :      0.85s CPU      0.88s WALL (      12 calls)
-     v_of_rho     :      0.06s CPU      0.07s WALL (      13 calls)
-     newd         :      0.17s CPU      0.17s WALL (      13 calls)
-     mix_rho      :      0.04s CPU      0.03s WALL (      12 calls)
+     c_bands      :      3.94s CPU      4.15s WALL (      12 calls)
+     sum_band     :      1.34s CPU      1.35s WALL (      12 calls)
+     v_of_rho     :      0.07s CPU      0.07s WALL (      13 calls)
+     newd         :      0.21s CPU      0.22s WALL (      13 calls)
+     mix_rho      :      0.05s CPU      0.04s WALL (      12 calls)
 
      Called by c_bands:
-     init_us_2    :      0.04s CPU      0.04s WALL (     550 calls)
-     ccgdiagg     :      3.08s CPU      3.14s WALL (     264 calls)
-     wfcrot       :      0.91s CPU      0.91s WALL (     264 calls)
+     init_us_2    :      0.02s CPU      0.04s WALL (     550 calls)
+     ccgdiagg     :      3.17s CPU      3.29s WALL (     264 calls)
+     wfcrot       :      0.83s CPU      0.90s WALL (     264 calls)
+
+     Called by sum_band:
+     sum_band:bec :      0.01s CPU      0.01s WALL (     264 calls)
+     addusdens    :      0.65s CPU      0.65s WALL (      12 calls)
 
      Called by *cgdiagg:
-     h_psi        :      2.98s CPU      3.05s WALL (   11466 calls)
-     s_psi        :      0.38s CPU      0.37s WALL (   22668 calls)
+     h_psi        :      2.88s CPU      3.08s WALL (   11466 calls)
+     s_psi        :      0.36s CPU      0.42s WALL (   22668 calls)
      cdiaghg      :      0.04s CPU      0.03s WALL (     264 calls)
 
      Called by h_psi:
-     add_vuspsi   :      0.23s CPU      0.21s WALL (   11466 calls)
+     add_vuspsi   :      0.24s CPU      0.21s WALL (   11466 calls)
+     h_1psi       :      2.41s CPU      2.56s WALL (   11202 calls)
 
      General routines
-     calbec       :      0.32s CPU      0.37s WALL (   22932 calls)
-     fft          :      0.07s CPU      0.08s WALL (     407 calls)
+     calbec       :      0.42s CPU      0.38s WALL (   22932 calls)
+     fft          :      0.08s CPU      0.08s WALL (     407 calls)
      ffts         :      0.00s CPU      0.01s WALL (     100 calls)
-     fftw         :      2.09s CPU      2.08s WALL (   70152 calls)
-     interpolate  :      0.02s CPU      0.03s WALL (     100 calls)
-     davcio       :      0.00s CPU      0.02s WALL (     814 calls)
+     fftw         :      2.02s CPU      2.07s WALL (   70152 calls)
+     interpolate  :      0.04s CPU      0.03s WALL (     100 calls)
+     davcio       :      0.00s CPU      0.00s WALL (      22 calls)
  
  
-     PWSCF        :     5.90s CPU         6.07s WALL
+     PWSCF        :     6.26s CPU         6.49s WALL
 
  
-   This run was terminated on:  10:24:59   6Jan2012            
+   This run was terminated on:  10:51: 9   2Dec2015            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
