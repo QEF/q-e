@@ -5,7 +5,7 @@ reference=./reference
 . ../../../environment_variables
 BIN_DIR=../../../bin
 
-mkdir $work
+mkdir -p $work
 rm -f $work/*
 
 ld1_command="$PARA_PREFIX $BIN_DIR/ld1.x $PARA_POSTFIX"
@@ -22,3 +22,4 @@ for atom in ar f fe he cu cu1 h pt mg u u1 w ne_oep c_oep ; do
 done
 
 /bin/rm ld1.wfc out_* >& /dev/null
+exit 0
