@@ -2426,7 +2426,7 @@ SUBROUTINE write_plot
             IF (reduce_unk) THEN
                WRITE (iun_plot,'(2ES20.10)') (psic_small(j),j=1,n1by2*n2by2*n3by2)
             ELSE
-               WRITE (iun_plot,*) (psic_all(j),j=1,dffts%nr1*dffts%nr2*dffts%nr3)
+               WRITE (iun_plot,'(2ES20.10)') (psic_all(j),j=1,dffts%nr1*dffts%nr2*dffts%nr3)
             ENDIF
          ELSE
             IF (reduce_unk) THEN
