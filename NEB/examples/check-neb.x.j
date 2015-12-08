@@ -9,7 +9,7 @@ if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 
 ESPRESSO_ROOT=`cd ../.. ; pwd`
 . $ESPRESSO_ROOT/environment_variables
-ESPRESSO_TMPDIR=$ESPRESSO_ROOT/tmp/
+ESPRESSO_TMPDIR=$ESPRESSO_ROOT/tempdir/
 ESPRESSO_PSEUDO=$ESPRESSO_ROOT/pseudo/
 
 # no need to specify outdir and pseudo_dir in all *.in files
