@@ -29,6 +29,7 @@ PROGRAM neb
   USE path_input_parameters_module, ONLY : nstep_path, input_images, &
                                            allocate_path_input_ions, &
                                            deallocate_path_input_ions
+  USE path_io_units_module,  ONLY : iunpath
   !
   IMPLICIT NONE
   !
@@ -51,14 +52,12 @@ PROGRAM neb
   ! ... open input file
   !
   IF ( input_file_ /= ' ') THEN
-     WRITE(0,*) ""
-     WRITE(0,*) "parsing_file_name: ", trim(input_file_)
+     WRITE(iunpath,'(/,5X,"parsing_file_name: ",A)') trim(input_file_)
      CALL path_gen_inputs ( trim(input_file_), engine_prefix, &
                             input_images, root, world_comm )
   ELSE
-     WRITE(0,*) ""
-     WRITE(0,*) "NO input file found, assuming nothing to parse."
-     WRITE(0,*) "Searching argument -input_images or --input_images"
+     WRITE(iunpath,'(/,5X,"No input file found, assuming nothing to parse",/,&
+    &               5X,"Searching argument -input_images or --input_images")')
      IF ( mpime == root )  input_images = input_images_getarg ( )
      CALL mp_bcast(input_images,root, world_comm)
      !

@@ -74,8 +74,8 @@ CONTAINS
          !
       ELSE
          !
-         IF ( meta_ionode ) &
-            WRITE( 0,'(A)') 'Warning: card '//trim(input_line)//' ignored'
+         IF ( meta_ionode ) CALL infomsg ('read_cards_module',&
+            'card '//trim(input_line)//' ignored' )
          !
       ENDIF
       !
