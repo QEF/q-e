@@ -547,7 +547,6 @@ SUBROUTINE ddyn(m,Omat,Umat)
   real(kind=8), INTENT(inout) :: Umat(m,m)
 !
   INTEGER :: i, j, k, l, ig, ierr, ti, tj, tk, inw, ir
-  INTEGER ::  istep
   real(kind=8) :: slope, slope2, t1, t2, t3, mt(nw),t21,temp1,maxdt
   real(kind=8) :: U(m,m), wfc(3, m), Wm(m,m), schd(m,m), f2(3*m-2), gr(nw, 3)
   real(kind=8) :: Uspin2(m,m),temp2,wfdtold,oldt1,t01, d3(m,m), d4(m,m), U1(m,m)

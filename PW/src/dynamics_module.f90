@@ -1067,9 +1067,6 @@ CONTAINS
       !
       tau(:,:) = tau_new(:,:)
       !
-      !!!IF ( nat == 2 ) &
-      !!!  PRINT *, "DISTANCE = ", dnrm2( 3, ( tau(:,1) - tau(:,2) ), 1 ) * ALAT
-      !
 #if ! defined (__REDUCE_OUTPUT)
       !
       CALL output_tau( .false., .false. )
@@ -1470,7 +1467,7 @@ CONTAINS
      USE cell_base,      ONLY : alat
      USE ener,           ONLY : etot
      USE force_mod,      ONLY : force
-     USE control_flags,  ONLY : istep, nstep, lconstrain
+     USE control_flags,  ONLY : istep, lconstrain
      USE constraints_module, ONLY : remove_constr_force, check_constraint
      USE random_numbers, ONLY : randy
      USE io_files,      ONLY : prefix
