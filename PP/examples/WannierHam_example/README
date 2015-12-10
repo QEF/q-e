@@ -88,6 +88,17 @@ NAMELIST: &INPUTPP
                    will be plotted for comparison
    +--------------------------------------------------------------------
 
+   +--------------------------------------------------------------------
+   Variable:       format
+   
+   Type:           CHARACTER
+   Default:        'default'
+   Description:    if set to 'amulet' the code produces two files: 
+                   hamilt.am and system.am. These files could be used as
+                   input for DMFT calculation within AMULET code
+                   (www.amulet-code.org)
+   +--------------------------------------------------------------------
+
 ========================================================================
 CARD: WANNIER_AC
 

@@ -47,9 +47,7 @@ write_proj.o \
 xsf.o \
 xk_et_collect.o \
 write_io_header.o \
-wannier_hamiltonians.o \
-wannier_umatrix_subroutines.o \
-wannier_u_matrix.o
+write_hamiltonians.o 
 
 PWOBJS = ../../PW/src/libpw.a
 QEOBJS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a

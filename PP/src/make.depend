@@ -645,10 +645,6 @@ wannier_ham.o : ../../Modules/wannier_new.o
 wannier_ham.o : ../../PW/src/buffers.o
 wannier_ham.o : ../../PW/src/pwcom.o
 wannier_ham.o : ../../PW/src/symm_base.o
-wannier_hamiltonians.o : ../../Modules/constants.o
-wannier_hamiltonians.o : ../../Modules/io_global.o
-wannier_hamiltonians.o : ../../Modules/kind.o
-wannier_hamiltonians.o : ../../PW/src/pwcom.o
 wannier_plot.o : ../../FFTXlib/fft_interfaces.o
 wannier_plot.o : ../../Modules/cell_base.o
 wannier_plot.o : ../../Modules/constants.o
@@ -667,10 +663,6 @@ wannier_plot.o : ../../PW/src/atomic_wfc_mod.o
 wannier_plot.o : ../../PW/src/buffers.o
 wannier_plot.o : ../../PW/src/pwcom.o
 wannier_plot.o : ../../PW/src/symm_base.o
-wannier_u_matrix.o : ../../Modules/io_files.o
-wannier_u_matrix.o : ../../Modules/io_global.o
-wannier_u_matrix.o : ../../Modules/kind.o
-wannier_u_matrix.o : ../../Modules/wannier_new.o
 wfck2r.o : ../../FFTXlib/fft_interfaces.o
 wfck2r.o : ../../FFTXlib/scatter_mod.o
 wfck2r.o : ../../Modules/cell_base.o
@@ -697,6 +689,14 @@ work_function.o : ../../Modules/mp_world.o
 work_function.o : ../../Modules/recvec.o
 work_function.o : ../../PW/src/pwcom.o
 work_function.o : ../../PW/src/scf_mod.o
+write_hamiltonians.o : ../../Modules/cell_base.o
+write_hamiltonians.o : ../../Modules/constants.o
+write_hamiltonians.o : ../../Modules/input_parameters.o
+write_hamiltonians.o : ../../Modules/io_global.o
+write_hamiltonians.o : ../../Modules/ions_base.o
+write_hamiltonians.o : ../../Modules/kind.o
+write_hamiltonians.o : ../../Modules/wannier_new.o
+write_hamiltonians.o : ../../PW/src/pwcom.o
 write_io_header.o : ../../Modules/ions_base.o
 write_io_header.o : ../../Modules/kind.o
 write_io_header.o : ../../Modules/noncol.o

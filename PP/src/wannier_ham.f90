@@ -27,12 +27,10 @@ PROGRAM wannier_ham
   !
   CHARACTER(LEN=256), EXTERNAL :: trimcheck
   !
-  CHARACTER(len=256) :: outdir
+  CHARACTER(len=256) :: outdir, form
   INTEGER :: ios
-  LOGICAL :: plot_bands, u_matrix
-  real(DP) :: U,J
-  NAMELIST /inputpp/ outdir, prefix, nwan, plot_bands, use_energy_int, u_matrix
-  NAMELIST /Umatrix/ U,J
+  LOGICAL :: plot_bands
+  NAMELIST /inputpp/ outdir, prefix, nwan, plot_bands, use_energy_int, form
 
   ! initialise environment
   !
@@ -52,15 +50,11 @@ PROGRAM wannier_ham
      prefix ='pwscf'
      nwan = 0
      plot_bands = .false.
-     u_matrix=.false.
-     !
-     U=0.d0
-     J=0.d0
+     form = 'default'
      !
      CALL input_from_file ( )
      !
      READ (5, inputpp, iostat=ios )
-     IF(u_matrix) READ (5, Umatrix, iostat=ios )
      !
      tmp_dir = trimcheck (outdir)
 
@@ -75,9 +69,7 @@ PROGRAM wannier_ham
 
   CALL wannier_init(.false.)
 
-  CALL new_hamiltonian(plot_bands)
-
-  IF(u_matrix) CALL wannier_u_matrix(U,J)
+  CALL new_hamiltonian(form, plot_bands)
 
   CALL environment_end ( 'WANNIER_HAM')
 
@@ -87,12 +79,12 @@ PROGRAM wannier_ham
 
 END PROGRAM wannier_ham
 
-SUBROUTINE new_hamiltonian(plot_bands)
+SUBROUTINE new_hamiltonian(form, plot_bands)
 
   USE io_global, ONLY: stdout, ionode, ionode_id
   USE io_files
   USE kinds, ONLY: DP
-  USE wannier_new, ONLY: nwan, pp, wannier_occ, wannier_energy,wan_in
+  USE wannier_new, ONLY: nwan, pp, wannier_occ, wannier_energy, wan_in
   USE klist, ONLY: nks, xk, wk
   USE lsda_mod, ONLY: isk, current_spin, lsda, nspin
   USE wvfct, ONLY: nbnd, npwx, igk, npw, g2kin, et,  ecutwfc
@@ -104,14 +96,14 @@ SUBROUTINE new_hamiltonian(plot_bands)
 
   IMPLICIT NONE
   LOGICAL :: plot_bands
-  INTEGER :: i,j,k,ik, n, ios, i1, i2, outfile, n_from, n_to
+  CHARACTER(len=256), INTENT(IN) :: form
+  INTEGER :: i,j,k,ik, n, ios, i1, i2, n_from, n_to, seconds
   COMPLEX(DP) :: wan_func(npwx,nwan), ham(nwan,nwan,nspin), v(nwan,nwan)
   COMPLEX(DP), ALLOCATABLE :: hamk(:,:,:), hamh(:,:,:)
   real(DP), ALLOCATABLE :: ek(:,:)
-  real(DP) :: e(nwan), x, hoping(3)
-
-  ! HMLT file unit
-  outfile = 114
+  real(DP) :: e(nwan), x, hoping(3), nelec
+  REAL(DP), EXTERNAL :: cclock
+  CHARACTER(20) :: fmt
 
   ALLOCATE(ek(nwan,nks))
   ALLOCATE(hamk(nwan,nwan,nks))
@@ -123,6 +115,7 @@ SUBROUTINE new_hamiltonian(plot_bands)
   hoping(2) = 0.
   hoping(3) = 0.
   ek(:,:) = 0.d0
+  write(fmt,*) nwan
 
   IF (nsym>1) THEN
      WRITE(stdout,'(/5x,a103/)') &
@@ -148,6 +141,7 @@ SUBROUTINE new_hamiltonian(plot_bands)
   ham = ZERO
 
   DO ik = 1, nks
+     write(stdout,*) '       Computing k-point', ik
      CALL gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
      IF (lsda) current_spin  = isk(ik)
      CALL wannier_proj(ik,wan_func)
@@ -173,7 +167,6 @@ SUBROUTINE new_hamiltonian(plot_bands)
               ! Current k-point hamiltonian
               hamk(i,j,ik) = hamk(i,j,ik) + pp(i,n)*conjg(pp(j,n))* &
                              cmplx(et(n,ik),0.d0,kind=DP)
-              !Overlap mtrx in current k-point (for debug purposes)
            ENDDO
         ENDDO
      ENDDO
@@ -205,18 +198,30 @@ SUBROUTINE new_hamiltonian(plot_bands)
      ENDDO
      WRITE(stdout,'(7x,a26/)')'Wannier occupation matrix:'
      DO i=1,nwan
-        WRITE(stdout,'(7x,50f7.3)') (wannier_occ(i,k,j),k=1,nwan)
+        WRITE(stdout,'(7x,'// ADJUSTL(fmt) //'f7.3)') (wannier_occ(i,k,j),k=1,nwan)
      ENDDO
   ENDDO
   !end of output
 
   ! write HMLT file
-  OPEN (outfile, file = 'hamilt', status = 'unknown', form = 'formatted', err = 300, iostat = ios)
-300 CALL errore ('HMLT', 'Opening hamilt', abs (ios) )
+  IF (form == 'amulet') THEN
 
-  CALL wannier_hamiltonian_JK(nwan,hamk,outfile)
+    seconds = cclock()
 
-  CLOSE(outfile)
+    CALL write_hamiltonian_amulet(nwan,hamk,seconds,114)
+
+    nelec = 0.d0
+    DO i=1,nwan
+      nelec = nelec + SUM(wannier_occ(i,i,:))
+    END DO
+
+    CALL write_systemdata_amulet(seconds,nelec,118)
+
+  ELSE
+
+    CALL write_hamiltonian_default(nwan,hamk,114)
+  
+  END IF
 
   IF(nspin==1) THEN
      ham = 5.d-1*ham
@@ -228,14 +233,14 @@ SUBROUTINE new_hamiltonian(plot_bands)
 
      CALL cdiagh(nwan,ham(:,:,i),nwan,e,v)
      WRITE(stdout,'(5x,a39)') 'Projected Hamiltonian eigenvalues (eV):'
-     WRITE(stdout,'(6x,a5,i1,4x,50f9.4)') 'spin', i, (e(j)*rytoev,j=1,nwan)
+     WRITE(stdout,'(6x,a5,i1,4x,'// ADJUSTL(fmt) //'f9.4)') 'spin', i, (e(j)*rytoev,j=1,nwan)
      WRITE(stdout,*) ' '
 
 ! hopings integrals
      IF(any(hoping/=0.d0)) THEN
         WRITE(stdout,'(5x,a44,3f6.2,a5)') 'Hopings from the atom in origin to direction', (hoping(j),j=1,3), 'are:'
         DO j=1,nwan
-           WRITE(stdout,'(5x,20f9.5)') (dreal(hamh(j,n,i))*rytoev, n=1, nwan)
+           WRITE(stdout,'(5x,'// ADJUSTL(fmt) //'f9.5)') (dreal(hamh(j,n,i))*rytoev, n=1, nwan)
         ENDDO
         WRITE(stdout,*) ' '
      ENDIF
@@ -245,7 +250,7 @@ SUBROUTINE new_hamiltonian(plot_bands)
         WRITE(stdout,*) 'ATTENTION! Hamiltonian is NOT hermitian'
         WRITE(stdout,*) 'Imaginary part is:'
         DO j=1,nwan
-           WRITE(stdout,'(20f9.5)') (dimag(hamh(j,n,i))*rytoev, n=1, nwan)
+           WRITE(stdout,'('// ADJUSTL(fmt) //'f9.5)') (dimag(hamh(j,n,i))*rytoev, n=1, nwan)
         ENDDO
         WRITE(stdout,*) '---'
      ENDIF
