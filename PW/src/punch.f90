@@ -41,8 +41,8 @@ SUBROUTINE punch( what )
   iunpun = 4
   !
   CALL pw_writefile( TRIM( what ) )
+  !
 #ifdef __XSD
-!   write(6,*) "pw_write_schema"
   CALL pw_write_schema( TRIM( what ) )
 #endif
   !

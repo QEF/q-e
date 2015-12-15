@@ -31,7 +31,7 @@ MODULE pw_restart
                           qexml_write_bz,qexml_write_para, qexml_write_bands_info, &
                           qexml_write_bands_pw, qexml_write_esm, qexml_wfc_filename, &
                           default_fmt_version => qexml_default_version, &
-                          qexml_save_history, qexml_kpoint_dirname, &
+                          qexml_kpoint_dirname, &
                           qexml_read_header, qexml_read_cell, qexml_read_moving_cell, &
                           qexml_read_planewaves, qexml_read_ions, qexml_read_spin, &
                           qexml_read_magnetization, qexml_read_xc, qexml_read_occ, qexml_read_bz, &
@@ -96,7 +96,7 @@ MODULE pw_restart
     SUBROUTINE pw_write_schema( what )
       !------------------------------------------------------------------------
       !
-      USE control_flags,        ONLY : istep, twfcollect, conv_ions, &
+      USE control_flags,        ONLY : twfcollect, conv_ions, &
                                        lscf, lkpoint_dir, gamma_only, &
                                        tqr, noinv, do_makov_payne, smallmem, &
                                        llondon, lxdm, ts_vdw
@@ -253,7 +253,7 @@ MODULE pw_restart
     SUBROUTINE pw_writefile( what )
       !------------------------------------------------------------------------
       !
-      USE control_flags,        ONLY : istep, twfcollect, conv_ions, &
+      USE control_flags,        ONLY : twfcollect, conv_ions, &
                                        lscf, lkpoint_dir, gamma_only, &
                                        tqr, noinv, do_makov_payne, smallmem, &
                                        llondon, lxdm, ts_vdw
@@ -757,13 +757,6 @@ MODULE pw_restart
       !
       DEALLOCATE( mill_g )
       DEALLOCATE( ngk_g )
-      !
-      IF (ionode) CALL qexml_save_history( dirname, istep, ierr )
-      !
-      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
-      !
-      CALL errore( 'pw_writefile ', &
-                   'cannot save history', ierr )
       !
       RETURN
       !

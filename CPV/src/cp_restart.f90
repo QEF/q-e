@@ -22,7 +22,7 @@ MODULE cp_restart
                           qexml_kpoint_dirname, qexml_read_header, qexml_read_status_cp, &
                           qexml_read_ions, qexml_read_spin, qexml_read_occ, &
                           qexml_read_bands_info, qexml_read_bands_cp, &
-                          fmt_version => qexml_default_version, qexml_save_history,qexml_wfc_filename, qexml_restart_dirname
+                          fmt_version => qexml_default_version, qexml_wfc_filename, qexml_restart_dirname
   USE xml_io_base,     ONLY  : write_wfc, read_wfc, write_rho_xml,read_print_counter, create_directory
   !
   USE kinds,     ONLY : DP
@@ -901,14 +901,6 @@ MODULE cp_restart
       DEALLOCATE( ftmp )
       DEALLOCATE( tau  )
       DEALLOCATE( ityp )
-      !
-      IF (ionode) CALL qexml_save_history( dirname, nfi, ierr )
-      !
-      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
-      !
-      CALL errore( 'cp_writefile', &
-                   'cannot save history', ierr )
-      !
       !
       s1 = cclock() 
       !

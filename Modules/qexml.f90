@@ -80,7 +80,7 @@ MODULE qexml_module
             qexml_read_exx, qexml_read_para, qexml_read_esm
   
   !
-  PUBLIC :: qexml_wfc_filename, qexml_create_directory, qexml_save_history, &
+  PUBLIC :: qexml_wfc_filename, qexml_create_directory, &
             qexml_kpoint_dirname, qexml_restart_dirname
   !
 CONTAINS
@@ -526,52 +526,6 @@ CONTAINS
       RETURN
       !
     END FUNCTION qexml_wfc_filename
-    !
-    !
-    !------------------------------------------------------------------------
-    SUBROUTINE qexml_save_history( dirname, iter, ierr )
-      !------------------------------------------------------------------------
-      !
-      ! ... a copy of the xml descriptor (data-file.xml) is saved in the 
-      ! ... history subdir
-      !
-      USE io_files, ONLY : xmlpun_base
-      !
-      IMPLICIT NONE
-      !
-      CHARACTER(LEN=*), INTENT(IN) :: dirname
-      INTEGER,          INTENT(IN) :: iter
-      INTEGER,          INTENT(OUT) :: ierr
-      !
-      !
-      ierr = 0
-      !
-#if defined (__VERBOSE_SAVE)
-      !
-      CHARACTER(LEN=256) :: filename
-      CHARACTER(LEN=6)   :: hindex
-      !
-      CALL qexml_create_directory( TRIM( dirname ) // '/history', ierr )
-      !
-      IF ( ierr /= 0) RETURN
-      !
-      WRITE( hindex, FMT = '(I6.6)' ) iter
-      !
-      !
-      filename = TRIM( dirname ) // '/history/' // &
-           & TRIM( xmlpun_base ) // hindex // '.xml'
-      !
-      CALL qexml_copy_file( TRIM( dirname ) // "/" // TRIM( xmlpun ), &
-           TRIM( filename ), ierr )
-      !
-      !
-      !
-#endif
-      !
-      RETURN
-      !
-    END SUBROUTINE qexml_save_history
-    !
     !
     !------------------------------------------------------------------------
     SUBROUTINE qexml_copy_file( file_in, file_out, ierr )
