@@ -30,7 +30,7 @@ SUBROUTINE run_pwscf ( exit_status )
   USE parameters,       ONLY : ntypx, npk, lmaxx
   USE cell_base,        ONLY : fix_volume, fix_area
   USE control_flags,    ONLY : conv_elec, gamma_only, ethr, lscf, twfcollect
-  USE control_flags,    ONLY : conv_ions, nstep, restart, lmd, lbfgs
+  USE control_flags,    ONLY : conv_ions, istep, nstep, restart, lmd, lbfgs
   USE force_mod,        ONLY : lforce, lstres, sigma, force
   USE check_stop,       ONLY : check_stop_init, check_stop_now
   USE mp_images,        ONLY : intra_image_comm
@@ -114,7 +114,11 @@ SUBROUTINE run_pwscf ( exit_status )
      !
      ! ... file in CASINO format written here if required
      !
-     IF ( lmd ) CALL pw2casino()
+     IF ( lmd ) THEN
+        CALL pw2casino( istep )
+     ELSE
+        CALL pw2casino( 0 )
+     END IF
      !
      ! ... force calculation
      !
@@ -178,7 +182,6 @@ SUBROUTINE run_pwscf ( exit_status )
   !
   ! ... save final data file
   !
-  IF ( .not. lmd) CALL pw2casino()
   CALL punch('all')
   !
   CALL qmmm_shutdown()

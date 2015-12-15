@@ -9,7 +9,7 @@
 ! Norbert Nemec
 ! (C) 2010 by Norbert Nemec <Norbert@Nemec-online.de> 
 !----------------------------------------------------------------------------
-SUBROUTINE pw2casino()
+SUBROUTINE pw2casino( istep )
   !----------------------------------------------------------------------------
   !
   USE kinds,         ONLY : DP
@@ -18,22 +18,18 @@ SUBROUTINE pw2casino()
   USE mp_bands,      ONLY : nbgrp
   USE mp_pools,      ONLY : npool
   !
-  USE control_flags, ONLY : istep, nstep
-  !
   USE io_files, ONLY : tmp_dir
   !
   USE plugin_flags, ONLY : use_pw2casino
   !
   IMPLICIT NONE
   !
+  INTEGER, INTENT (IN) :: istep
+  !
   CHARACTER(len=4) :: postfix
-  !
   CHARACTER(len=6), EXTERNAL :: int_to_char
-  !
   INTEGER, EXTERNAL :: find_free_unit
-  !
   INTEGER :: tmp_unit
-  !
   INTEGER  :: ios
   LOGICAL  :: casino_gather = .true.
   LOGICAL  :: blip_convert = .true.
@@ -65,8 +61,8 @@ SUBROUTINE pw2casino()
  
    IF ( .not. blip_convert ) blip_binary = .false.
  
-    IF ( nstep == 1 ) THEN
-      write(postfix,*) ''
+    IF ( istep == 0 ) THEN
+      postfix = ' '
       CALL write_casino_wfn( &
                casino_gather, & ! gather
                blip_convert,  & ! blip
@@ -77,9 +73,7 @@ SUBROUTINE pw2casino()
                postfix)   ! postfix
 
     ELSE
-!      write(postfix,'(i4.4)') istep
       postfix=trim(int_to_char(istep))
-      !
       CALL write_casino_wfn( &
                casino_gather, & ! gather
                blip_convert,  & ! blip
