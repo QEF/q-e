@@ -13,10 +13,7 @@
       lambdap, lambda, nlam, vpot, c0, cm, phi, dbec,l_cprestart  )
 
       use kinds, only: dp
-      use control_flags, only: iprint, thdyn, tpre, iverbosity, &
-            tfor, taurdr, tprnfor
-      use control_flags, only: nbeg, nomore, tsde, tortho, tnosee, &
-            tnosep, trane, tranp, tsdp, tcp, tcap, ampre, amprp, tnoseh
+      use control_flags, only: tpre, iverbosity, tfor, tprnfor
 
 !---ensemble-DFT
       use energies, only: eht, epseu, exc, etot, eself, enl, ekin,          &

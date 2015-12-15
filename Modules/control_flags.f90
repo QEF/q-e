@@ -32,19 +32,17 @@ MODULE control_flags
      !
   END TYPE convergence_criteria
   !
-  PUBLIC :: tbeg, nomore, nbeg, isave, iprint, tv0rd, tzeroc, tzerop, &
+  PUBLIC :: tbeg, nomore, nbeg, isave, iprint, tv0rd, tzeroc, tzerop,        &
             tfor, tpre, tzeroe, tsde, tsdp, tsdc, taurdr,                    &
             ndr, ndw, tortho, ortho_eps, ortho_max, tstress, tprnfor,        &
-            timing, memchk, tprnsfac,                                        &
-            trane,dt_old,ampre, tranp, amprp, t_diis, t_diis_simple,         &
-            t_diis_rot, tnosee, tnosep, tnoseh, tcp, tcap, tdamp, tdampions, &
+            timing, memchk, trane, dt_old, ampre, tranp, amprp,              &
+            tnosee, tnosep, tnoseh, tcp, tcap,                               &
             tconvthrs, tolp, convergence_criteria, tionstep, nstepe,         &
-            tsteepdesc, tatomicwfc, tscreen, gamma_only, force_pairing,      &
-            lecrpa, tddfpt, smallmem
+            tscreen, gamma_only, force_pairing, lecrpa, tddfpt,  smallmem
   !
   PUBLIC :: fix_dependencies, check_flags
   PUBLIC :: tksw, trhor, thdyn, trhow
-  PUBLIC :: twfcollect, printwfc
+  PUBLIC :: twfcollect
   PUBLIC :: lkpoint_dir
   PUBLIC :: program_name
   !
@@ -73,14 +71,9 @@ MODULE control_flags
   LOGICAL :: tortho        = .FALSE. ! use iterative orthogonalization
   LOGICAL :: timing        = .FALSE. ! print out timing information
   LOGICAL :: memchk        = .FALSE. ! check for memory leakage
-  LOGICAL :: tprnsfac      = .FALSE. ! print out structure factor
-  LOGICAL :: tdamp         = .FALSE. ! Use damped dynamics for electrons
-  LOGICAL :: tdampions     = .FALSE. ! Use damped dynamics for ions
-  LOGICAL :: tatomicwfc    = .FALSE. ! Use atomic wavefunctions as starting guess for ch. density
   LOGICAL :: tscreen       = .FALSE. ! Use screened coulomb potentials for cluster calculations
   LOGICAL :: twfcollect    = .FALSE. ! Collect wave function in the restart file at the end of run.
   LOGICAL :: lkpoint_dir   = .TRUE.  ! save each k point in a different directory
-  INTEGER :: printwfc      = -1      ! Print wave functions, temporarely used only by ensemble-dft
   LOGICAL :: force_pairing = .FALSE. ! Force pairing
   LOGICAL :: lecrpa        = .FALSE. ! RPA correlation energy request
   LOGICAL :: tddfpt        = .FALSE. ! use tddfpt specific tweaks to ph.x routines
@@ -98,9 +91,6 @@ MODULE control_flags
   INTEGER :: nstepe   = 1
                             !  parameters to control how many electronic steps
                             !  between ions move
-
-  LOGICAL :: tsteepdesc = .FALSE.
-                            !  parameters for electronic steepest desceent
 
   INTEGER :: nbeg   = 0 ! internal code for initialization ( -1, 0, 1, 2, .. )
   INTEGER :: ndw    = 0 !
@@ -130,12 +120,6 @@ MODULE control_flags
   ! ... Read the cell from standard input
   !
   LOGICAL :: tbeg = .FALSE.
-  !
-  ! ... Flags that controls DIIS electronic minimization
-  !
-  LOGICAL :: t_diis        = .FALSE.
-  LOGICAL :: t_diis_simple = .FALSE.
-  LOGICAL :: t_diis_rot    = .FALSE.
   !
   ! ... Flag controlling the Nose thermostat for electrons
   !
@@ -343,12 +327,6 @@ MODULE control_flags
       !------------------------------------------------------------------------
       !
       ! ...  do some checks for consistency
-      !
-      IF ( tnosee .AND. t_diis ) &
-         CALL errore( ' control_flags ', 'DIIS + ELECT. NOSE ? ', 0 )
-      !
-      !IF ( tortho .AND. t_diis ) &
-      !   CALL errore(' control_flags ','DIIS, ORTHO NOT PERMITTED',0)
       !
       IF ( tnosep .AND. tcp ) &
          CALL errore( ' control_flags ', ' TCP AND TNOSEP BOTH TRUE', 0 )

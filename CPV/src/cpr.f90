@@ -18,7 +18,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
                                        ndr, ndw, nomore, tsde, textfor,        &
                                        tortho, tnosee, tnosep, trane, tranp,   &
                                        tsdp, tcp, tcap, ampre, amprp, tnoseh,  &
-                                       tolp, ortho_eps, ortho_max, printwfc
+                                       tolp, ortho_eps, ortho_max
   USE core,                     ONLY : rhoc
   USE uspp_param,               ONLY : nhm, nh, nvb, ish
   USE uspp,                     ONLY : nkb, vkb, becsum, deeq, okvan, nlcc_any
