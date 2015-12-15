@@ -95,7 +95,7 @@ MODULE path_base
       !
       broy_file = TRIM( tmp_dir ) // TRIM( prefix ) // ".broyden"
       !
-      ! ... istep is initialised to zero
+      ! ... istep_path is initialised to zero
       !
       istep_path    = 0
       pending_image = 0
@@ -881,7 +881,7 @@ MODULE path_base
       IMPLICIT NONE
       !
       LOGICAL :: stat
-      REAL(8) :: fcp_err_max = 0.0_DP
+      REAL(DP) :: fcp_err_max = 0.0_DP
       !
       REAL(DP), EXTERNAL :: get_clock
       !

@@ -21,7 +21,7 @@ SUBROUTINE compute_scf( fii, lii, stat  )
   USE basis,            ONLY : starting_wfc, starting_pot
   USE kinds,            ONLY : DP
   USE constants,        ONLY : e2
-  USE control_flags,    ONLY : conv_elec, istep, history, pot_order
+  USE control_flags,    ONLY : conv_elec, history, pot_order
   USE vlocal,           ONLY : strf
   USE cell_base,        ONLY : bg, alat
   USE gvect,            ONLY : ngm, g, eigts1, eigts2, eigts3
@@ -66,7 +66,6 @@ SUBROUTINE compute_scf( fii, lii, stat  )
   fii_ = fii
   lii_ = lii
   !
-  istep = istep_path
   istat = 0
   !
   FLUSH( iunpath )
@@ -303,7 +302,7 @@ SUBROUTINE compute_scf( fii, lii, stat  )
       !
       tau = RESHAPE( pos(:,image), SHAPE( tau ) ) / alat
       !
-      WRITE( stdout, '(/,5X,"coordinates at iteration ",I3,/)' ) istep
+      WRITE( stdout, '(/,5X,"coordinates at iteration ",I3,/)' ) istep_path
       !
       CALL output_tau( .FALSE., .FALSE. )
       !
