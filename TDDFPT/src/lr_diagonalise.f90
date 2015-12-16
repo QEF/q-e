@@ -170,7 +170,7 @@ SUBROUTINE lr_build_matrix_spectrum(coeff_mat,iter)
   IF(.false.) THEN
      DO i=1,2*iter
         DO j=1,2*iter
-           WRITE(stdout,'(f10.5,$)') coeff_mat(i,j)
+           WRITE(stdout,'(f10.5)',ADVANCE='no') coeff_mat(i,j)
         ENDDO
         WRITE(stdout,*)
      ENDDO
