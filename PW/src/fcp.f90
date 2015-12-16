@@ -74,9 +74,7 @@ CONTAINS
       !
       REAL(DP) :: ekin, tau
       REAL(DP) :: temp_new, temp_av, elapsed_time, force
-      ! idone counts MD steps done during this run
-      ! istep counts instead all MD steps, including those of previous runs
-      INTEGER, SAVE :: idone = 0 
+      ! istep counts all MD steps, including those of previous runs
       LOGICAL  :: file_exists
 
       tau = nelec
@@ -112,10 +110,7 @@ CONTAINS
       ! ... elapsed_time is in picoseconds
       !
       elapsed_time = elapsed_time + dt*2.D0*au_ps
-      !
-      idone = idone + 1
       istep = istep + 1
-      !
       !
       IF ( control_temp ) CALL apply_thermostat()
       !
