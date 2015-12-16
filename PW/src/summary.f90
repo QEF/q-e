@@ -492,7 +492,7 @@ SUBROUTINE print_symmetries ( iverbosity, noncolin, domag )
        name_class_so1, elem_name_so
   USE rap_point_group_is, ONLY : nsym_is, sr_is, ftau_is, d_spin_is, &
        gname_is, sname_is, code_group_is
-  USE cell_base,       ONLY : at
+  USE cell_base,       ONLY : at, ibrav
   USE fft_base, ONLY : dfftp
   !
   IMPLICIT NONE
@@ -584,7 +584,15 @@ SUBROUTINE print_symmetries ( iverbosity, noncolin, domag )
            WRITE( stdout, '(17x," (",3f11.7," )"/)') (sr (3, ipol,isym) , ipol = 1, 3)
         END IF
      END DO
+     !
      CALL find_group(nsym,sr,gname,code_group)
+     !
+     ! ... Do not attempt calculation of classes if the lattice is provided
+     ! ... in input as primitive vectors and not computed from parameters:
+     ! ... the resulting vectors may not be accurate enough for the algorithm 
+     !
+     IF ( ibrav == 0 ) RETURN
+     !
      IF (noncolin.AND.domag) THEN
         CALL find_group(nsym_is,sr_is,gname_is,code_group_is)
         CALL set_irr_rap_so(code_group_is,nclass_ref,nrap,char_mat_so, &
@@ -614,6 +622,7 @@ SUBROUTINE print_symmetries ( iverbosity, noncolin, domag )
         ENDIF
      ENDIF
      CALL write_group_info(.true.)
+     !
   END IF
   !
 END SUBROUTINE print_symmetries
