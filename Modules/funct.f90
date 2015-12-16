@@ -108,7 +108,10 @@ module funct
   !              "tb09"  = "sla+pw+tb09+tb09"  = TB09 Meta-GGA
   !              "pbe0"  = "pb0x+pw+pb0x+pbc"  = PBE0
   !              "hse"   = "sla+pw+hse+pbc"    = Heyd-Scuseria-Ernzerhof (HSE 06, see note below)
-  !              "b3lyp" = "b3lp+vwn+b3lp+b3lp"= B3LYP
+  !              "b3lyp" = "b3lp+b3lp+b3lp+b3lp"= B3LYP
+  !              "b3lypv1r"    = "b3lp+b3lpv1r+b3lp+b3lp"= B3LYP-VWN1-RPA
+  !              "x3lyp" = "x3lp+x3lp+x3lp+x3lp"= X3LYP
+  !              "vwn-rpa"     = "sla+vwn-rpa" = VWN LDA using vwn1-rpa parametriz
   !              "gaupbe"= "sla+pw+gaup+pbc"   = Gau-PBE (also "gaup")
   !              "vdw-df"       ="sla+pw+rpb +vdw1"   = vdW-DF1
   !              "vdw-df2"      ="sla+pw+rw86+vdw2"   = vdW-DF2
@@ -134,6 +137,7 @@ module funct
   !              "pb0x"   PBE0 (Slater*0.75+HF*0.25)     iexch=6
   !              "b3lp"   B3LYP(Slater*0.80+HF*0.20)     iexch=7
   !              "kzk"    Finite-size corrections        iexch=8
+  !              "x3lp"   X3LYP(Slater*0.782+HF*0.218)   iexch=9
   !
   ! Correlation: "noc"    none                           icorr=0
   !              "pz"     Perdew-Zunger                  icorr=1 (default)
@@ -146,6 +150,11 @@ module funct
   !              "obw"    Ortiz-Ballone form for PW      icorr=8
   !              "gl"     Gunnarson-Lunqvist             icorr=9
   !              "kzk"    Finite-size corrections        icorr=10
+  !              "vwn-rpa" Vosko-Wilk-Nusair, alt param  icorr=11
+  !              "b3lp"   B3LYP (0.19*vwn+0.81*lyp)      icorr=12
+  !              "b3lpv1r"  B3LYP-VWN-1-RPA 
+  !                         (0.19*vwn_rpa+0.81*lyp)      icorr=13
+  !              "x3lp"   X3LYP (0.129*vwn_rpa+0.871*lyp)icorr=14
   !
   ! Gradient Correction on Exchange:
   !              "nogx"   none                           igcx =0 (default)
@@ -173,6 +182,8 @@ module funct
   !              "evx"    Engel-Vosko exchange           igcx =25
   !              "b86r"   revised Becke (b86b)           igcx =26
   !              "cx13"   consistent exchange            igcx =27
+  !              "x3lp"   X3LYP (Becke88*0.542 +
+  !                              Perdew-Wang91*0.167)    igcx =28
   !
   ! Gradient Correction on Correlation:
   !              "nogc"   none                           igcc =0 (default)
@@ -185,6 +196,7 @@ module funct
   !              "psc"    PBEsol corr                    igcc =8
   !              "pbe"    same as PBX, back-comp.        igcc =9
   !              "q2dc"   Q2D correlation grad corr      igcc =12
+  !              "x3lp"   X3LYP (Lee-Yang-Parr*0.871)    igcc =13
   !
   ! Meta-GGA functionals
   !              "tpss"   TPSS Meta-GGA                  imeta=1
@@ -206,6 +218,7 @@ module funct
   ! References:
   !              pz      J.P.Perdew and A.Zunger, PRB 23, 5048 (1981) 
   !              vwn     S.H.Vosko, L.Wilk, M.Nusair, Can.J.Phys. 58,1200(1980)
+  !              vwn1-rpa S.H.Vosko, L.Wilk, M.Nusair, Can.J.Phys. 58,1200(1980)
   !              wig     E.P.Wigner, Trans. Faraday Soc. 34, 67 (1938) 
   !              hl      L.Hedin and B.I.Lundqvist, J. Phys. C4, 2064 (1971)
   !              gl      O.Gunnarsson and B.I.Lundqvist, PRB 13, 4274 (1976)
@@ -234,6 +247,7 @@ module funct
   !                      Heyd, Scuseria, Ernzerhof, J. Chem. Phys. 124, 219906 (2006).
   !              b3lyp   P.J. Stephens,F.J. Devlin,C.F. Chabalowski,M.J. Frisch
   !                      J.Phys.Chem 98, 11623 (1994)
+  !              x3lyp   X. Xu, W.A Goddard III, PNAS 101, 2673 (2004)
   !              vdW-DF       M. Dion et al., PRL 92, 246401 (2004)
   !                           T. Thonhauser et al., PRL 115, 136402 (2015)
   !              vdW-DF2      Lee et al., Phys. Rev. B 82, 081101 (2010)
@@ -358,6 +372,10 @@ CONTAINS
     ! special cases : PZ  (LDA is equivalent to PZ)
     IF (('PZ' .EQ. TRIM(dftout) ).OR.('LDA' .EQ. TRIM(dftout) )) THEN
        dft_defined = set_dft_values(1,1,0,0,0,0)
+
+    ! special cases : VWN-RPA
+    else IF ('VWN-RPA' .EQ. TRIM(dftout) ) THEN
+       dft_defined = set_dft_values(1,11,0,0,0,0)
 
     ! special cases : OEP no GC part (nor LDA...) and no correlation by default
     else IF ('OEP' .EQ. TRIM(dftout) ) THEN
@@ -507,7 +525,15 @@ CONTAINS
        
     else if ('B3LYP'.EQ. TRIM(dftout) ) then
     ! special case : B3LYP hybrid
-       dft_defined = set_dft_values(7,2,9,7,0,0)
+       dft_defined = set_dft_values(7,12,9,7,0,0)
+     
+    else if ('B3LYP-V1R'.EQ. TRIM(dftout) ) then
+    ! special case : B3LYP-VWN-1-RPA hybrid
+       dft_defined = set_dft_values(7,13,9,7,0,0)
+     
+    else if ('X3LYP'.EQ. TRIM(dftout) ) then
+    ! special case : X3LYP hybrid
+       dft_defined = set_dft_values(9,14,28,13,0,0)
      
     ! special case : TPSS meta-GGA Exc
     else IF ('TPSS'.EQ. TRIM(dftout ) ) THEN
@@ -651,8 +677,10 @@ CONTAINS
     END IF
     ! HF or OEP
     IF ( iexch==4 .or. iexch==5 ) exx_fraction = 1.0_DP
-    !B3LYP
+    ! B3LYP or B3LYP-VWN-1-RPA
     IF ( iexch == 7 ) exx_fraction = 0.2_DP
+    ! X3LYP
+    IF ( iexch == 9 ) exx_fraction = 0.218_DP
     !
     ishybrid = ( exx_fraction /= 0.0_DP )
 
@@ -935,7 +963,8 @@ CONTAINS
   !
   implicit none
   integer iexch_, icorr_, igcx_, igcc_, imeta_, inlc_
-  character (len=6) :: shortname_
+  ! AF: the following variable is actually not used
+  character (len=20):: shortname_
   character (len=25):: longname_
   !
   shortname_ = ' '
@@ -965,8 +994,12 @@ CONTAINS
      shortname_ = 'GAUPBE'
   else if (iexch_==1.and.icorr_==4.and.igcx_==11.and.igcc_==4) then
      shortname_ = 'WC'
-  else if (iexch_==7.and.icorr_==2.and.igcx_==9.and. igcc_==7) then
+  else if (iexch_==7.and.icorr_==12.and.igcx_==9.and. igcc_==7) then
      shortname_ = 'B3LYP'
+  else if (iexch_==7.and.icorr_==13.and.igcx_==9.and. igcc_==7) then
+     shortname_ = 'B3LYP-V1R'
+  else if (iexch_==9.and.icorr_==14.and.igcx_==28.and. igcc_==13) then
+     shortname_ = 'X3LYP'
   else if (iexch_==0.and.icorr_==3.and.igcx_==6.and.igcc_==3) then
      shortname_ = 'OLYP'
   else if (iexch_==1.and.icorr_==4.and.igcx_==17.and.igcc_==4) then
@@ -1017,6 +1050,7 @@ CONTAINS
   return
 end subroutine dft_name
 
+!-----------------------------------------------------------------------
 subroutine write_dft_name
 !-----------------------------------------------------------------------
    WRITE( stdout, '(5X,"Exchange-correlation      = ",A, &
@@ -1057,6 +1091,7 @@ subroutine xc (rho, ex, ec, vx, vc)
   implicit none
 
   real(DP) :: rho, ec, vc, ex, vx
+  real(DP) :: ec__, vc__
   !
   real(DP), parameter :: small = 1.E-10_DP,  third = 1.0_DP / 3.0_DP, &
        pi34 = 0.6203504908994_DP  ! pi34=(3/4pi)^(1/3)
@@ -1092,7 +1127,7 @@ subroutine xc (rho, ex, ec, vx, vc)
         ex = (1.0_DP - exx_fraction) * ex 
         vx = (1.0_DP - exx_fraction) * vx 
      end if
-  ELSEIF (iexch == 7) THEN         !  'b3lyp'
+  ELSEIF (iexch == 7) THEN         !  'B3LYP'
      CALL slater(rs, ex, vx)
      if (exx_started) then
         ex = 0.8_DP * ex 
@@ -1102,6 +1137,13 @@ subroutine xc (rho, ex, ec, vx, vc)
      if (.NOT. finite_size_cell_volume_set) call errore ('XC',&
           'finite size corrected exchange used w/o initialization',1)
      call slaterKZK (rs, ex, vx, finite_size_cell_volume)
+     !
+  ELSEIF (iexch == 9) THEN         !  'X3LYP'
+     CALL slater(rs, ex, vx)
+     if (exx_started) then
+        ex = 0.782_DP * ex 
+        vx = 0.782_DP * vx 
+     end if
   else
      ex = 0.0_DP
      vx = 0.0_DP
@@ -1129,6 +1171,29 @@ subroutine xc (rho, ex, ec, vx, vc)
      if (.NOT. finite_size_cell_volume_set) call errore ('XC',&
           'finite size corrected correlation used w/o initialization',1)
      call pzKZK (rs, ec, vc, finite_size_cell_volume)
+  elseif (icorr ==11) then
+     call vwn1_rpa (rs, ec, vc)
+  elseif (icorr ==12) then  ! 'B3LYP'
+     call vwn (rs, ec, vc)
+     ec = 0.19_DP * ec
+     vc = 0.19_DP * vc
+     call lyp( rs, ec__, vc__ )
+     ec = ec + 0.81_DP * ec__
+     vc = vc + 0.81_DP * vc__
+  elseif (icorr ==13) then  ! 'B3LYP-V1R'
+     call vwn1_rpa (rs, ec, vc)
+     ec = 0.19_DP * ec
+     vc = 0.19_DP * vc
+     call lyp( rs, ec__, vc__ )
+     ec = ec + 0.81_DP * ec__
+     vc = vc + 0.81_DP * vc__
+  elseif (icorr ==14) then  ! 'X3LYP'
+     call vwn1_rpa (rs, ec, vc)
+     ec = 0.129_DP * ec
+     vc = 0.129_DP * vc
+     call lyp( rs, ec__, vc__ )
+     ec = ec + 0.871_DP * ec__
+     vc = vc + 0.871_DP * vc__
   else
      ec = 0.0_DP
      vc = 0.0_DP
@@ -1152,6 +1217,7 @@ subroutine xc_spin (rho, zeta, ex, ec, vxup, vxdw, vcup, vcdw)
   implicit none
 
   real(DP) :: rho, zeta, ex, ec, vxup, vxdw, vcup, vcdw
+  real(DP) :: ec__, vcup__, vcdw__
   !
   real(DP), parameter :: small= 1.E-10_DP, third = 1.0_DP/3.0_DP, &
        pi34= 0.6203504908994_DP ! pi34=(3/4pi)^(1/3)
@@ -1190,7 +1256,7 @@ subroutine xc_spin (rho, zeta, ex, ec, vxup, vxdw, vcup, vcdw)
         vxup = (1.0_DP - exx_fraction) * vxup 
         vxdw = (1.0_DP - exx_fraction) * vxdw 
      end if
-  ELSEIF (iexch == 7) THEN  ! 'b3lyp'
+  ELSEIF (iexch == 7) THEN  ! 'B3LYP'
      call slater_spin (rho, zeta, ex, vxup, vxdw)
      if (exx_started) then
         ex   = 0.8_DP * ex
@@ -1215,6 +1281,24 @@ subroutine xc_spin (rho, zeta, ex, ec, vxup, vxdw, vcup, vcdw)
      call lsd_lyp (rho, zeta, ec, vcup, vcdw) ! from CP/FPMD (more_functionals)
   elseif (icorr == 4) then
      call pw_spin (rs, zeta, ec, vcup, vcdw)
+  elseif (icorr == 12) then ! 'B3LYP'
+     call vwn_spin (rs, zeta, ec, vcup, vcdw)
+     ec = 0.19_DP * ec
+     vcup = 0.19_DP * vcup
+     vcdw = 0.19_DP * vcdw
+     call lsd_lyp (rho, zeta, ec__, vcup__, vcdw__) ! from CP/FPMD (more_functionals)
+     ec = ec + 0.81_DP * ec__
+     vcup = vcup + 0.81_DP * vcup__
+     vcdw = vcdw + 0.81_DP * vcdw__
+  elseif (icorr == 13) then   ! 'B3LYP-V1R'
+     call vwn1_rpa_spin (rs, zeta, ec, vcup, vcdw)
+     ec = 0.19_DP * ec
+     vcup = 0.19_DP * vcup
+     vcdw = 0.19_DP * vcdw
+     call lsd_lyp (rho, zeta, ec__, vcup__, vcdw__) ! from CP/FPMD (more_functionals)
+     ec = ec + 0.81_DP * ec__
+     vcup = vcup + 0.81_DP * vcup__
+     vcdw = vcdw + 0.81_DP * vcdw__
   else
      call errore ('lsda_functional (xc_spin)', 'not implemented', icorr)
   endif
@@ -1270,7 +1354,7 @@ subroutine xc_spin_vec (rho, zeta, length, evx, evc)
      if (exx_started) then
         evx = (1.0_DP - exx_fraction) * evx
      end if
-  case(7)            ! 'b3lyp'
+  case(7)            ! 'B3LYP'
      call slater_spin_vec (rho, zeta, evx, length)
      if (exx_started) then
         evx = 0.8_DP * evx
@@ -1340,6 +1424,7 @@ subroutine gcxc (rho, grho, sx, sc, v1x, v2x, v1c, v2c)
   implicit none
 
   real(DP) :: rho, grho, sx, sc, v1x, v2x, v1c, v2c
+  real(DP) :: sx__,v1x__, v2x__
   real(DP) :: sxsr, v1xsr, v2xsr
   real(DP), parameter:: small = 1.E-10_DP
 
@@ -1362,14 +1447,14 @@ subroutine gcxc (rho, grho, sx, sc, v1x, v2x, v1c, v2c)
      call optx (rho, grho, sx, v1x, v2x)
   ! case igcx == 7 (meta-GGA) must be treated in a separate call to another
   ! routine: needs kinetic energy density in addition to rho and grad rho
-  elseif (igcx == 8) then ! 'pbe0'
+  elseif (igcx == 8) then ! 'PBE0'
      call pbex (rho, grho, 1, sx, v1x, v2x)
      if (exx_started) then
         sx  = (1.0_DP - exx_fraction) * sx
         v1x = (1.0_DP - exx_fraction) * v1x
         v2x = (1.0_DP - exx_fraction) * v2x
      end if
-  elseif (igcx == 9) then ! 'b3lyp'
+  elseif (igcx == 9) then ! 'B3LYP'
      call becke88 (rho, grho, sx, v1x, v2x)
      if (exx_started) then
         sx  = 0.72_DP * sx
@@ -1420,6 +1505,17 @@ subroutine gcxc (rho, grho, sx, sc, v1x, v2x, v1c, v2c)
      call b86b (rho, grho, 3, sx, v1x, v2x)
   elseif (igcx == 27) then ! 'cx13'
      call cx13 (rho, grho, sx, v1x, v2x)
+  elseif (igcx == 28) then ! 'X3LYP'
+     call becke88 (rho, grho, sx, v1x, v2x)
+     call pbex (rho, grho, 1, sx__, v1x__, v2x__)
+     if (exx_started) then
+        sx  = real(0.765*0.709,DP) * sx
+        v1x = real(0.765*0.709,DP) * v1x
+        v2x = real(0.765*0.709,DP) * v2x
+        sx  = sx  + real(0.235*0.709) * sx__
+        v1x = v1x + real(0.235*0.709) * v1x__
+        v2x = v2x + real(0.235*0.709) * v2x__
+     end if
   else
      sx = 0.0_DP
      v1x = 0.0_DP
@@ -1454,6 +1550,13 @@ subroutine gcxc (rho, grho, sx, sc, v1x, v2x, v1c, v2c)
   ! igcc ==11 M06L calculated in another routine
   else if (igcc == 12) then ! 'Q2D'
      call pbec (rho, grho, 3, sc, v1c, v2c)
+  elseif (igcc == 13) then !'X3LYP'
+     call glyp (rho, grho, sc, v1c, v2c)
+     if (exx_started) then
+        sc  = 0.871_DP * sc
+        v1c = 0.871_DP * v1c
+        v2c = 0.871_DP * v2c
+     end if
   else
      sc = 0.0_DP
      v1c = 0.0_DP

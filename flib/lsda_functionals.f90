@@ -187,6 +187,114 @@ SUBROUTINE vwn_spin(rs, zeta, ec, vcup, vcdw)
 
 end subroutine
 
+!---------
+SUBROUTINE vwn1_rpa_spin(rs, zeta, ec, vcup, vcdw)
+
+   USE kinds, ONLY: DP
+   IMPLICIT NONE
+
+   ! parameters:   e_c/para,    e_c/ferro,     alpha_c
+   real(DP), parameter :: &
+      A(3)  = (/  0.0310907_dp, 0.01554535_dp, -0.01688686394039_dp /), &
+      x0(3) = (/ -0.409286_dp, -0.743294_dp,   -0.228344_dp /), &
+      b(3)  = (/ 13.0720_dp,   20.1231_dp,      1.06835_dp  /), &
+      c(3)  = (/ 42.7198_dp,  101.578_dp,      11.4813_dp /),&
+      Q(3)  = (/  0.044899888641577_dp,      1.171685277708971_dp,  6.692072046645942_dp /), &
+      tbQ(3) = (/ 582.273159042780890_dp,   34.348984975465861_dp,  0.319288254087299_dp /), &
+      fx0(3) = (/ 37.537128437796000_dp,    87.173106479036008_dp, 11.289489669936000_dp /), &
+      bx0fx0(3) = (/ -0.142530524167984_dp, -0.171582499414508_dp, -0.021608710360898_dp /)
+   ! N.B.: A is expressed in Hartree
+   ! Q = sqrt(4*c - b^2)
+   ! tbQ = 2*b/Q
+   ! fx0 = X(x_0) = x_0^2 + b*x_0 + c
+   ! bx0fx0 = b*x_0/X(x_0)
+
+   real(DP), intent(in) :: rs, zeta
+   real(DP), intent(out):: ec, vcup, vcdw
+
+   ! local
+   real(DP) :: zeta3, zeta4, trup, trdw, trup13, trdw13, fz, dfz, fzz4 
+   real(DP) :: sqrtrs, ecP, ecF, ac, De, vcP, vcF, dac, dec1, dec2
+   real(DP) :: cfz, cfz1, cfz2, iddfz0
+
+   ! coefficients for f(z), df/dz, ddf/ddz(0)
+   cfz = 2.0_dp**(4.0_dp/3.0_dp) - 2.0_dp
+   cfz1 = 1.0_dp / cfz
+   cfz2 = 4.0_dp/3.0_dp * cfz1
+   iddfz0 = 9.0_dp / 8.0_dp *cfz
+   sqrtrs = sqrt(rs)
+   zeta3 = zeta**3
+   zeta4 = zeta3*zeta
+   trup = 1.0_dp + zeta
+   trdw = 1.0_dp - zeta
+   trup13 = trup**(1.0_dp/3.0_dp)
+   trdw13 = trdw**(1.0_dp/3.0_dp)
+   fz = cfz1 * (trup13*trup + trdw13*trdw - 2.0_dp)         ! f(zeta)
+   dfz = cfz2 * (trup13 - trdw13)     ! d f / d zeta
+
+   call padefit(sqrtrs, 1, ecP, vcP)            ! ecF = e_c Paramagnetic
+   call padefit(sqrtrs, 2, ecF, vcF)            ! ecP = e_c Ferromagnetic
+   call padefit(sqrtrs, 3, ac, dac)             ! ac = "spin stiffness"
+
+   ac = ac * iddfz0
+   dac = dac * iddfz0
+   De = ecF - ecP - ac ! e_c[F] - e_c[P] - alpha_c/(ddf/ddz(z=0))
+   fzz4 = fz * zeta4
+   ec = ecP + ac * fz  + De * fzz4
+
+   dec1 = vcP + dac*fz + (vcF - vcP - dac) * fzz4       ! e_c - (r_s/3)*(de_c/dr_s)
+   dec2 = ac*dfz + De*(4.0_dp*zeta3*fz + zeta4*dfz)       ! de_c/dzeta
+
+   ! v_c[s] = e_c - (r_s/3)*(de_c/dr_s) + [sign(s)-zeta]*(de_c/dzeta)
+   vcup = dec1 + (1.0_dp - zeta)*dec2
+   vcdw = dec1 - (1.0_dp + zeta)*dec2
+
+
+   contains
+   !---
+   subroutine padefit(x, i, fit, dfit)
+      !----
+      ! implements formula [4.4] in:
+      ! S.H. Vosko, L. Wilk, and M. Nusair, Can. J. Phys. 58, 1200 (1980)
+
+      USE kinds, ONLY: DP
+      implicit none
+
+      ! input
+      real(DP) :: x     ! x is sqrt(r_s) 
+      integer :: i      ! i is the index of the fit
+
+      ! output
+      real(DP) :: fit, dfit
+      ! Pade fit calculated in x and its derivative w.r.t. rho
+      ! rs = inv((rho*)^(1/3)) = x^2
+      ! fit  [eq. 4.4]
+      ! dfit/drho = fit - (rs/3)*dfit/drs = ec - (x/6)*dfit/dx
+
+      ! local
+      real(DP) :: sqx, xx0, Qtxb, atg, fx
+      real(DP) :: txb, txbfx, itxbQ
+
+      sqx = x * x                          ! x^2 = r_s
+      xx0 = x - x0(i)                      ! x - x_0
+      Qtxb = Q(i) / (2.0_dp*x + b(i))      ! Q / (2x+b)
+      atg = atan(Qtxb)                     ! tan^-1(Q/(2x+b))
+      fx = sqx + b(i)*x + c(i)             ! X(x) = x^2 + b*x + c
+
+      fit = A(i) * (  log(sqx/fx) + tbQ(i)*atg - &
+            bx0fx0(i) * ( log(xx0*xx0/fx) + (tbQ(i) + 4.0_dp*x0(i)/Q(i)) * atg )  )
+
+      txb = 2.0_dp*x + b(i)
+      txbfx = txb / fx
+      itxbQ = 1.0_dp / (txb*txb + Q(i)*Q(i))
+
+      dfit = fit - A(i) / 3.0_dp + A(i)*x/6.0_dp * (  txbfx + 4.0_dp*b(i)*itxbQ + &
+              bx0fx0(i) * ( 2.0_dp/xx0 - txbfx - 4.0_dp*(b(i)+2.0_dp*x0(i))*itxbQ )  )
+
+   end subroutine
+
+end subroutine
+
 !-----------------------------------------------------------------------
 subroutine pw_spin (rs, zeta, ec, vcup, vcdw)
   !-----------------------------------------------------------------------

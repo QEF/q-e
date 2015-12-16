@@ -320,6 +320,37 @@ subroutine vwn (rs, ec, vc)
   !
   return
 end subroutine vwn
+
+!-----------------------------------------------------------------------
+subroutine vwn1_rpa (rs, ec, vc)
+  !-----------------------------------------------------------------------
+  !     S.H. Vosko, L. Wilk, and M. Nusair, Can. J. Phys. 58, 1200 (1980)
+  !
+  USE kinds, ONLY : DP
+  implicit none
+  real(DP) :: rs, ec, vc
+  real(DP) :: a, b, c, x0
+  parameter (a = 0.0310907_dp, b = 13.0720_dp, c = 42.7198_dp, x0 = -0.409286_dp)
+  real(DP) :: q, f1, f2, f3, rs12, fx, qx, tx, tt
+  !
+  q = sqrt (4.d0 * c - b * b)
+  f1 = 2.d0 * b / q
+  f2 = b * x0 / (x0 * x0 + b * x0 + c)
+  f3 = 2.d0 * (2.d0 * x0 + b) / q
+  rs12 = sqrt (rs)
+  fx = rs + b * rs12 + c
+  qx = atan (q / (2.d0 * rs12 + b) )
+  ec = a * (log (rs / fx) + f1 * qx - f2 * (log ( (rs12 - x0) **2 / &
+       fx) + f3 * qx) )
+  tx = 2.d0 * rs12 + b
+  tt = tx * tx + q * q
+  vc = ec - rs12 * a / 6.d0 * (2.d0 / rs12 - tx / fx - 4.d0 * b / &
+       tt - f2 * (2.d0 / (rs12 - x0) - tx / fx - 4.d0 * (2.d0 * x0 + b) &
+       / tt) )
+  !
+  return
+end subroutine vwn1_rpa
+
 !-----------------------------------------------------------------------
 subroutine lyp (rs, ec, vc)
   !-----------------------------------------------------------------------

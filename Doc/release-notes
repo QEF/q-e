@@ -1,6 +1,8 @@
 New in svn version:
 
    * projwfc.x: PDOS with PAW projectors and all-electron basis functions
+   * X3LYP hybrid functional (using VWN_1_RPA)
+   * B3LYP hybrid functional (using VWN) and B3LYP-V1R (using VWN_1_RPA)
 
 Fixed in svn version:
 
@@ -20,6 +22,11 @@ Fixed in svn version:
      weights leading to small errors near the Fermi level; the code was not
      working correctly with ultrasoft PP's. 
    * pw.x: stress with TS-vdw wasn't correct - courtesy of Thomas Markovich
+   * The local correlation energy of B3LYP hybrid functional wasn't the "true" 
+     one for B3LYP. This caused discrepancies up to of a few tenths of eV 
+     in Kohn-Sham energies with respect to the "true" B3LYP. VWN is used
+     to define the LDA correlation. B3LYP-V1R (B3LYP using VWN_1_RPA instead) 
+     has also been added.
 
 Incompatible changes in svn version:
 
