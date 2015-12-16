@@ -193,7 +193,6 @@ ptoolkit.o : kind.o
 ptoolkit.o : parallel_include.o
 ptoolkit.o : zhpev_drv.o
 qexml.o : ../iotk/src/iotk_module.o
-qexml.o : io_files.o
 qexml.o : kind.o
 qexml.o : wrappers.o
 qexml_xsd.o : ../iotk/src/iotk_module.o

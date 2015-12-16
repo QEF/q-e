@@ -68,6 +68,7 @@ neb.o : ../../Modules/read_input.o
 neb.o : path_base.o
 neb.o : path_input_parameters_module.o
 neb.o : path_io_routines.o
+neb.o : path_io_units_module.o
 neb.o : path_read_cards_module.o
 neb.o : path_read_namelists_module.o
 neb.o : path_variables.o
