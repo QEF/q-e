@@ -785,7 +785,7 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
               WRITE(stdout, 2000,advance='no') na, totcharge(1), l_label(l), charges(na,l,1)
               IF (l /= 0) THEN
                  DO m = 1, 2*l+1
-                    WRITE( stdout,'(A1,A,''='',F8.4,'', '')',advance='no') &
+                    WRITE( stdout,'(A1,A,"=",F8.4,", ")',advance='no') &
                        l_label(l), trim(lm_label(m,l)), charges_lm(na,l,m,1)
                  ENDDO
               ENDIF
@@ -798,7 +798,7 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
               WRITE(stdout,2001,advance='no') totcharge(1), l_label(l), charges(na,l,1)
               IF (l /= 0) THEN
                  DO m = 1, 2*l+1
-                    WRITE( stdout,'(A1,A,''='',F8.4,'', '')',advance='no') &
+                    WRITE( stdout,'(A1,A,"=",F8.4,", ")',advance='no') &
                        l_label(l), trim(lm_label(m,l)), charges_lm(na,l,m,1)
                  ENDDO
               ENDIF
@@ -808,7 +808,7 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
               WRITE(stdout,2002,advance='no') totcharge(2), l_label(l), charges(na,l,2)
               IF (l /= 0) THEN
                  DO m = 1, 2*l+1
-                    WRITE( stdout,'(A1,A,''='',F8.4,'', '')',advance='no') &
+                    WRITE( stdout,'(A1,A,"=",F8.4,", ")',advance='no') &
                        l_label(l), trim(lm_label(m,l)), charges_lm(na,l,m,2)
                  ENDDO
               ENDIF
