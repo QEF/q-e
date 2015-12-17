@@ -6,11 +6,11 @@ URL=http://files.qe-forge.org/index.php?file=
 WANT=want-2.5.1
 WANT_URL=http://qe-forge.org/gf/download/frsrelease/153/618/$(WANT)-base.tar.gz
 #
-YAMBO_DEVEL=yambo-4.0.1-rev.89
-YAMBO_DEVEL_URL=http://qe-forge.org/gf/download/frsrelease/194/796/$(YAMBO_DEVEL).zip
+YAMBO_DEVEL=yambo-devel
+YAMBO_DEVEL_URL=http://www.yambo-code.org/files/yambo-devel-latest.tar.gz
 #
-YAMBO=yambo-3.4.1-rev61
-YAMBO_URL=http://qe-forge.org/gf/download/frsrelease/184/723/$(YAMBO).tgz
+YAMBO=yambo-stable
+YAMBO_URL=http://www.yambo-code.org/files/yambo-stable-latest.tar.gz
 #
 W90=wannier90-2.0.1
 W90_URL=http://www.wannier.org/code/wannier90-2.0.1.tar.gz

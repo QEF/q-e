@@ -268,17 +268,17 @@ yambo: extlibs uncompress-yambo configure-yambo
 	cd ../YAMBO; $(MAKE) yambo interfaces ypp || exit 1; fi
 	touch ./make-yambo
 uncompress-yambo: touch-dummy
-	@(if test ! -s ../archive/$(YAMBO).tgz && test ! -d ../YAMBO ; then \
-	wget -O ../archive/$(YAMBO).tgz $(YAMBO_URL) > /dev/null 2>&1; \
+	@(if test ! -s ../archive/$(YAMBO).tar.gz && test ! -d ../YAMBO ; then \
+	wget -O ../archive/$(YAMBO).tar.gz $(YAMBO_URL) > /dev/null 2>&1; \
 	if test "`echo $$?`" -ne "0" ; then \
-	curl -o ../archive/$(YAMBO).tgz $(YAMBO_URL) > /dev/null 2>&1; \
+	curl -o ../archive/$(YAMBO).tar.gz $(YAMBO_URL) > /dev/null 2>&1; \
 	if test "`echo $$?`" -ne "0" ; then \
 	echo "*** Unable to download yambo. Test whether curl or wget is installed and working," ; \
 	echo "*** if you have direct access to internet. If not, copy into archive/ the file" ; \
-	echo "*** $(YAMBO).tgz from $(YAMBO_URL)." ; \
+	echo "*** $(YAMBO).tar.gz from $(YAMBO_URL)." ; \
 	exit 1 ; fi ; fi ; fi) 
 	if test ! -d ../YAMBO; then \
-	(gzip -dc ../archive/$(YAMBO).tgz | (cd ../ ; tar -xvf -)) ; \
+	(gzip -dc ../archive/$(YAMBO).tar.gz | (cd ../ ; tar -xvf -)) ; \
 	(cd ../ ; ln -s $(YAMBO) YAMBO) ; fi 
 	touch uncompress-yambo
 
@@ -302,23 +302,19 @@ yambo-devel: extlibs uncompress-yambo-devel configure-yambo-devel
 	if test -d ../YAMBO_DEVEL; then \
 	cd ../YAMBO_DEVEL; $(MAKE) yambo interfaces ypp || exit 1; fi
 	touch ./make-yambo-devel
-	@echo 
-	@echo "*** YAMBO-DEVEL has been built serially for safety reasons ***"
-	@echo "*** enter the YAMBO-DEVEL folder and reconfigure for a parallel build ***"
-	@echo 
 
 uncompress-yambo-devel: touch-dummy
-	@(if test ! -s ../archive/$(YAMBO_DEVEL).zip && test ! -d ../YAMBO_DEVEL ; then \
-	wget -O ../archive/$(YAMBO_DEVEL).zip $(YAMBO_DEVEL_URL) > /dev/null 2>&1; \
+	@(if test ! -s ../archive/$(YAMBO_DEVEL).tar.gz && test ! -d ../YAMBO_DEVEL ; then \
+	wget -O ../archive/$(YAMBO_DEVEL).tar.gz $(YAMBO_DEVEL_URL) > /dev/null 2>&1; \
 	if test "`echo $$?`" -ne "0" ; then \
-	curl -o ../archive/$(YAMBO_DEVEL).zip $(YAMBO_DEVEL_URL) > /dev/null 2>&1; \
+	curl -o ../archive/$(YAMBO_DEVEL).tar.gz $(YAMBO_DEVEL_URL) > /dev/null 2>&1; \
 	if test "`echo $$?`" -ne "0" ; then \
 	echo "*** Unable to download yambo-devel. Test whether curl or wget is installed and working," ; \
 	echo "*** if you have direct access to internet. If not, copy into archive/ the file" ; \
-	echo "*** $(YAMBO_DEVEL).zip from $(YAMBO_DEVEL_URL)." ; \
+	echo "*** $(YAMBO_DEVEL).tar.gz from $(YAMBO_DEVEL_URL)." ; \
 	exit 1 ; fi ; fi ; fi) 
 	if test ! -d ../YAMBO_DEVEL; then \
-	unzip ../archive/$(YAMBO_DEVEL).zip ; mv $(YAMBO_DEVEL) ../ ; \
+	(gzip -dc ../archive/$(YAMBO_DEVEL).tar.gz | (cd ../ ; tar -xvf -)) ; \
 	(cd ../ ; ln -s $(YAMBO_DEVEL) YAMBO_DEVEL) ; fi 
 	touch uncompress-yambo-devel
 
@@ -327,7 +323,6 @@ configure-yambo-devel: touch-dummy
 	echo "*** F90 is not defined; please define F90 or edit make.sys" ; exit 1 ; fi)
 	cd ../YAMBO_DEVEL ; \
 	./configure \
-	 --without-mpi-libs \
 	 --with-blas-libs="$(BLAS_LIBS)" \
 	 --with-lapack-libs="$(LAPACK_LIBS) $(BLAS_LIBS)" \
 	 --with-iotk-path="$(TOPDIR)/iotk" \
