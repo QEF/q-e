@@ -1,5 +1,5 @@
 
-     Program PWSCF v.5.2.1 (svn rev. 11887M) starts on  2Dec2015 at 11:46:46 
+     Program PWSCF v.5.2.1 (svn rev. 11915) starts on 19Dec2015 at  9:44:46 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -86,10 +86,9 @@
      site n.     atom                  positions (alat units)
          1           O   tau(   1) = (   0.0000000   0.0000000   0.0000000  )
 
-     number of k points=     2
+     number of k points=     1
                        cart. coord. in units 2pi/alat
         k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   1.0000000
-        k(    2) = (   0.0000000   0.0000000   0.0000000), wk =   1.0000000
 
      Dense  grid:    23917 G-vectors     FFT dimensions: (  45,  45,  45)
 
@@ -136,7 +135,7 @@
 
      negative rho (up, down):  3.603E-06 2.558E-06
 
-     total cpu time spent up to now is        1.1 secs
+     total cpu time spent up to now is        1.0 secs
 
      total energy              =     -31.42250911 Ry
      Harris-Foulkes estimate   =     -31.37473853 Ry
@@ -337,8 +336,8 @@
      Writing output data file pwscf.save
  
      init_run     :      0.68s CPU      0.70s WALL (       1 calls)
-     electrons    :      3.15s CPU      3.18s WALL (       1 calls)
-     stress       :      0.23s CPU      0.23s WALL (       1 calls)
+     electrons    :      3.15s CPU      3.17s WALL (       1 calls)
+     stress       :      0.22s CPU      0.22s WALL (       1 calls)
 
      Called by init_run:
      wfcinit      :      0.00s CPU      0.01s WALL (       1 calls)
@@ -346,41 +345,41 @@
 
      Called by electrons:
      c_bands      :      0.24s CPU      0.25s WALL (      11 calls)
-     sum_band     :      0.71s CPU      0.73s WALL (      11 calls)
-     v_of_rho     :      1.78s CPU      1.79s WALL (      12 calls)
-     newd         :      0.29s CPU      0.29s WALL (      12 calls)
+     sum_band     :      0.71s CPU      0.72s WALL (      11 calls)
+     v_of_rho     :      1.78s CPU      1.80s WALL (      12 calls)
+     newd         :      0.28s CPU      0.28s WALL (      12 calls)
      mix_rho      :      0.17s CPU      0.17s WALL (      11 calls)
 
      Called by c_bands:
      init_us_2    :      0.01s CPU      0.02s WALL (      48 calls)
-     regterg      :      0.24s CPU      0.23s WALL (      22 calls)
+     regterg      :      0.23s CPU      0.23s WALL (      22 calls)
 
      Called by sum_band:
      sum_band:bec :      0.00s CPU      0.00s WALL (      22 calls)
-     addusdens    :      0.52s CPU      0.53s WALL (      11 calls)
+     addusdens    :      0.51s CPU      0.53s WALL (      11 calls)
 
      Called by *egterg:
-     h_psi        :      0.20s CPU      0.18s WALL (      89 calls)
-     s_psi        :      0.00s CPU      0.00s WALL (      89 calls)
-     g_psi        :      0.00s CPU      0.01s WALL (      65 calls)
-     rdiaghg      :      0.00s CPU      0.01s WALL (      87 calls)
+     h_psi        :      0.17s CPU      0.18s WALL (      89 calls)
+     s_psi        :      0.01s CPU      0.00s WALL (      89 calls)
+     g_psi        :      0.01s CPU      0.01s WALL (      65 calls)
+     rdiaghg      :      0.03s CPU      0.01s WALL (      87 calls)
 
      Called by h_psi:
      add_vuspsi   :      0.00s CPU      0.00s WALL (      89 calls)
 
      General routines
-     calbec       :      0.01s CPU      0.01s WALL (     113 calls)
-     fft          :      0.52s CPU      0.57s WALL (     371 calls)
+     calbec       :      0.00s CPU      0.01s WALL (     113 calls)
+     fft          :      0.56s CPU      0.57s WALL (     371 calls)
      ffts         :      0.01s CPU      0.02s WALL (      46 calls)
-     fftw         :      0.14s CPU      0.14s WALL (     474 calls)
+     fftw         :      0.13s CPU      0.14s WALL (     474 calls)
      interpolate  :      0.13s CPU      0.12s WALL (      46 calls)
      davcio       :      0.00s CPU      0.00s WALL (       2 calls)
  
  
-     PWSCF        :     4.14s CPU         4.19s WALL
+     PWSCF        :     4.13s CPU         4.18s WALL
 
  
-   This run was terminated on:  11:46:50   2Dec2015            
+   This run was terminated on:   9:44:50  19Dec2015            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

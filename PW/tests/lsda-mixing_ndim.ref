@@ -1,5 +1,5 @@
 
-     Program PWSCF v.5.2.1 (svn rev. 11887M) starts on  2Dec2015 at 11: 2: 4 
+     Program PWSCF v.5.2.1 (svn rev. 11915) starts on 19Dec2015 at  9:53:56 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -85,7 +85,7 @@
      site n.     atom                  positions (alat units)
          1           Ni  tau(   1) = (   0.0000000   0.0000000   0.0000000  )
 
-     number of k points=    20  Marzari-Vanderbilt smearing, width (Ry)=  0.0200
+     number of k points=    10  Marzari-Vanderbilt smearing, width (Ry)=  0.0200
                        cart. coord. in units 2pi/alat
         k(    1) = (  -0.1250000   0.1250000   0.1250000), wk =   0.0312500
         k(    2) = (  -0.3750000   0.3750000  -0.1250000), wk =   0.0937500
@@ -97,16 +97,6 @@
         k(    8) = (  -0.1250000  -0.8750000   0.1250000), wk =   0.0937500
         k(    9) = (  -0.3750000   0.3750000   0.3750000), wk =   0.0312500
         k(   10) = (   0.3750000  -0.3750000   1.1250000), wk =   0.0937500
-        k(   11) = (  -0.1250000   0.1250000   0.1250000), wk =   0.0312500
-        k(   12) = (  -0.3750000   0.3750000  -0.1250000), wk =   0.0937500
-        k(   13) = (   0.3750000  -0.3750000   0.6250000), wk =   0.0937500
-        k(   14) = (   0.1250000  -0.1250000   0.3750000), wk =   0.0937500
-        k(   15) = (  -0.1250000   0.6250000   0.1250000), wk =   0.0937500
-        k(   16) = (   0.6250000  -0.1250000   0.8750000), wk =   0.1875000
-        k(   17) = (   0.3750000   0.1250000   0.6250000), wk =   0.1875000
-        k(   18) = (  -0.1250000  -0.8750000   0.1250000), wk =   0.0937500
-        k(   19) = (  -0.3750000   0.3750000   0.3750000), wk =   0.0312500
-        k(   20) = (   0.3750000  -0.3750000   1.1250000), wk =   0.0937500
 
      Dense  grid:     5601 G-vectors     FFT dimensions: (  25,  25,  25)
 
@@ -154,7 +144,7 @@
      Davidson diagonalization with overlap
      ethr =  9.20E-03,  avg # of iterations =  1.9
 
-     total cpu time spent up to now is        1.2 secs
+     total cpu time spent up to now is        1.1 secs
 
      total energy              =     -85.52433182 Ry
      Harris-Foulkes estimate   =     -85.85735982 Ry
@@ -206,7 +196,7 @@
      Davidson diagonalization with overlap
      ethr =  8.05E-07,  avg # of iterations =  1.5
 
-     total cpu time spent up to now is        1.8 secs
+     total cpu time spent up to now is        1.7 secs
 
      total energy              =     -85.72339524 Ry
      Harris-Foulkes estimate   =     -85.72337220 Ry
@@ -235,7 +225,7 @@
      Magnetic moment per site:
      atom:    1    charge:    8.6871    magn:    0.7534    constr:    0.0000
 
-     total cpu time spent up to now is        2.1 secs
+     total cpu time spent up to now is        2.0 secs
 
      End of self-consistent calculation
 
@@ -366,50 +356,50 @@
 
      Writing output data file pwscf.save
  
-     init_run     :      0.73s CPU      0.76s WALL (       1 calls)
-     electrons    :      1.25s CPU      1.27s WALL (       1 calls)
+     init_run     :      0.74s CPU      0.75s WALL (       1 calls)
+     electrons    :      1.22s CPU      1.22s WALL (       1 calls)
 
      Called by init_run:
      wfcinit      :      0.02s CPU      0.02s WALL (       1 calls)
      potinit      :      0.01s CPU      0.01s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :      0.51s CPU      0.51s WALL (       8 calls)
-     sum_band     :      0.50s CPU      0.52s WALL (       8 calls)
+     c_bands      :      0.50s CPU      0.50s WALL (       8 calls)
+     sum_band     :      0.50s CPU      0.49s WALL (       8 calls)
      v_of_rho     :      0.06s CPU      0.05s WALL (       9 calls)
-     newd         :      0.18s CPU      0.19s WALL (       9 calls)
-     mix_rho      :      0.02s CPU      0.01s WALL (       8 calls)
+     newd         :      0.18s CPU      0.18s WALL (       9 calls)
+     mix_rho      :      0.00s CPU      0.01s WALL (       8 calls)
 
      Called by c_bands:
-     init_us_2    :      0.03s CPU      0.02s WALL (     340 calls)
-     cegterg      :      0.46s CPU      0.46s WALL (     160 calls)
+     init_us_2    :      0.02s CPU      0.02s WALL (     340 calls)
+     cegterg      :      0.47s CPU      0.45s WALL (     160 calls)
 
      Called by sum_band:
      sum_band:bec :      0.00s CPU      0.00s WALL (     160 calls)
-     addusdens    :      0.40s CPU      0.40s WALL (       8 calls)
+     addusdens    :      0.37s CPU      0.38s WALL (       8 calls)
 
      Called by *egterg:
      h_psi        :      0.32s CPU      0.31s WALL (     481 calls)
-     s_psi        :      0.01s CPU      0.01s WALL (     481 calls)
-     g_psi        :      0.00s CPU      0.01s WALL (     301 calls)
-     cdiaghg      :      0.09s CPU      0.09s WALL (     461 calls)
+     s_psi        :      0.00s CPU      0.01s WALL (     481 calls)
+     g_psi        :      0.01s CPU      0.01s WALL (     301 calls)
+     cdiaghg      :      0.11s CPU      0.09s WALL (     461 calls)
 
      Called by h_psi:
-     add_vuspsi   :      0.03s CPU      0.01s WALL (     481 calls)
+     add_vuspsi   :      0.01s CPU      0.01s WALL (     481 calls)
 
      General routines
-     calbec       :      0.03s CPU      0.02s WALL (     641 calls)
+     calbec       :      0.01s CPU      0.02s WALL (     641 calls)
      fft          :      0.04s CPU      0.04s WALL (     143 calls)
      ffts         :      0.00s CPU      0.00s WALL (      34 calls)
-     fftw         :      0.17s CPU      0.25s WALL (    8370 calls)
-     interpolate  :      0.01s CPU      0.01s WALL (      34 calls)
+     fftw         :      0.22s CPU      0.25s WALL (    8370 calls)
+     interpolate  :      0.02s CPU      0.01s WALL (      34 calls)
      davcio       :      0.00s CPU      0.00s WALL (      20 calls)
  
  
-     PWSCF        :     2.09s CPU         2.15s WALL
+     PWSCF        :     2.06s CPU         2.09s WALL
 
  
-   This run was terminated on:  11: 2: 6   2Dec2015            
+   This run was terminated on:   9:53:58  19Dec2015            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

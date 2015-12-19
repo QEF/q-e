@@ -333,7 +333,11 @@ an unusable state.
 \subsection{Electronic structure calculations}
 \paragraph{Single-point (fixed-ion) SCF calculation} 
 Set \texttt{calculation='scf'} (this is actually the default).
-Namelists \&IONS and \&CELL will be ignored. See Example 01.
+Namelists \&IONS and \&CELL will be ignored. For LSDA spin-polarized 
+calculations (that is: with a fixed quantization axis for magnetization),
+set \texttt{nspin=2}. Note that the number of k-points will be internally
+doubled (one set of k-points for spin-up, one set for spin-down).
+See Example 01.
 
 \paragraph{Band structure calculation}
 First perform a SCF calculation as above;
@@ -729,7 +733,7 @@ The effectiveness of parallelization is ultimately judged by the
 \begin{itemize}
 \item the size and type of the system under study;
 \item the judicious choice of the various levels of parallelization 
-(detailed in Sec.\ref{SubSec:para});
+(detailed in Sec.\ref{SubSec:badpara});
 \item the availability of fast interprocess communications (or lack of it).
 \end{itemize}
 Ideally one would like to have linear scaling, i.e. $T \sim T_0/N_p$ for 
@@ -743,8 +747,9 @@ Parallelization on k-points:
 \item guarantees (almost) linear scaling if the number of k-points
 is a multiple of the number of pools;
 \item requires little communications (suitable for ethernet communications);
-\item does not reduce the required memory per processor (unsuitable for 
-large-memory jobs).
+\item reduces the required memory per processor by distributing wavefunctions
+(but not other quantities like the charge density), unless you set 
+\texttt{disk\_io='high'}.
 \end{itemize}
 Parallelization on PWs:
 \begin{itemize}
@@ -1025,7 +1030,8 @@ you may have forgotten to properly define PARA\_PREFIX and PARA\_POSTFIX.
   (parallel execution)} 
 If the code looks like it is not reading from input, maybe
 it isn't: the MPI libraries need to be properly configured to accept input
-redirection. Use \texttt{pw.x -i} and the input file name (see Sec.\ref{SubSec:para}), or inquire with
+redirection. Use \texttt{pw.x -i} and the input file name (see
+Sec.\ref{SubSec:badpara}), or inquire with
 your local computer wizard (if any). Since v.4.2, this is for sure the
 reason if the code stops at {\em Waiting for input...}.
 
