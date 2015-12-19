@@ -25,7 +25,7 @@ SUBROUTINE summary()
   USE cellmd,          ONLY : calc, cmass
   USE ions_base,       ONLY : amass
   USE gvect,           ONLY : ecutrho, ngm, ngm_g, gcutm
-  USE gvecs,           ONLY : doublegrid, ngms, gcutms
+  USE gvecs,           ONLY : doublegrid, ngms, ngms_g, gcutms
   USE fft_base,        ONLY : dfftp
   USE fft_base,        ONLY : dffts
   USE lsda_mod,        ONLY : lsda, starting_magnetization
@@ -45,7 +45,6 @@ SUBROUTINE summary()
   USE fixed_occ,       ONLY : f_inp, tfixed_occ
   USE uspp_param,      ONLY : upf
   USE wvfct,           ONLY : nbnd, ecutwfc, qcutz, ecfixed, q2sigma
-  USE lsda_mod,        ONLY : nspin
   USE mp_bands,        ONLY : intra_bgrp_comm
   USE mp,              ONLY : mp_sum
   USE esm,             ONLY : do_comp_esm, esm_summary
@@ -59,7 +58,7 @@ SUBROUTINE summary()
   !
   ! ... declaration of the local variables
   !
-  INTEGER :: i, ipol, apol, na, ik, nt, ibnd, ngmtot
+  INTEGER :: i, ipol, apol, na, ik, nt, ibnd, nk_
     ! counter on the celldm elements
     ! counter on polarizations
     ! counter on direct or reciprocal lattice vect
@@ -69,7 +68,7 @@ SUBROUTINE summary()
     ! counter on beta functions
     ! counter on types
     ! counter on bands
-    ! total number of G-vectors (parallel execution)
+    ! actual number of k-points
     !
   REAL(DP), ALLOCATABLE :: xau(:,:)
     ! atomic coordinate referred to the crystal axes
@@ -321,20 +320,29 @@ SUBROUTINE summary()
      DEALLOCATE(xau)
   ENDIF
 
+  IF ( lsda ) THEN
+     !
+     ! ... LSDA case: do not print replicated k-points
+     !
+     nk_ = nkstot/2
+  ELSE
+     nk_ = nkstot
+  END IF
+
   IF (lgauss) THEN
      WRITE( stdout, '(/5x,"number of k points=", i6, 2x, &
           &             a," smearing, width (Ry)=",f8.4)') &
-          &             nkstot, TRIM(smearing), degauss
+          &             nk_, TRIM(smearing), degauss
   ELSE IF (ltetra) THEN
      WRITE( stdout,'(/5x,"number of k points=",i6, &
-          &        " (tetrahedron method)")') nkstot
+          &        " (tetrahedron method)")') nk_
   ELSE
-     WRITE( stdout, '(/5x,"number of k points=",i6)') nkstot
+     WRITE( stdout, '(/5x,"number of k points=",i6)') nk_
 
   ENDIF
-  IF ( iverbosity > 0 .OR. nkstot < 100 ) THEN
+  IF ( iverbosity > 0 .OR. nk_ < 100 ) THEN
      WRITE( stdout, '(23x,"cart. coord. in units 2pi/alat")')
-     DO ik = 1, nkstot
+     DO ik = 1, nk_
         WRITE( stdout, '(8x,"k(",i5,") = (",3f12.7,"), wk =",f12.7)') ik, &
              (xk (ipol, ik) , ipol = 1, 3) , wk (ik)
      ENDDO
@@ -344,7 +352,7 @@ SUBROUTINE summary()
   ENDIF
   IF ( iverbosity > 0 ) THEN
      WRITE( stdout, '(/23x,"cryst. coord.")')
-     DO ik = 1, nkstot
+     DO ik = 1, nk_
         DO ipol = 1, 3
            xkg(ipol) = at(1,ipol)*xk(1,ik) + at(2,ipol)*xk(2,ik) + &
                        at(3,ipol)*xk(3,ik)
@@ -358,13 +366,9 @@ SUBROUTINE summary()
        &               "FFT dimensions: (",i4,",",i4,",",i4,")")') &
        &         ngm_g, dfftp%nr1, dfftp%nr2, dfftp%nr3
   IF (doublegrid) THEN
-     !
-     ngmtot = ngms
-     CALL mp_sum (ngmtot, intra_bgrp_comm)
-     !
      WRITE( stdout, '(/5x,"Smooth grid: ",i8," G-vectors", 5x, &
        &               "FFT dimensions: (",i4,",",i4,",",i4,")")') &
-       &         ngmtot, dffts%nr1, dffts%nr2, dffts%nr3
+       &         ngms_g, dffts%nr1, dffts%nr2, dffts%nr3
   ENDIF
 
   IF ( real_space ) WRITE( stdout, &
@@ -374,7 +378,7 @@ SUBROUTINE summary()
 
   IF (tfixed_occ) THEN
      WRITE( stdout, '(/,5X,"Occupations read from input ")' ) 
-     IF (nspin==2) THEN
+     IF ( lsda ) THEN
         WRITE(stdout, '(/,5X," Spin-up")' ) 
         WRITE(stdout, '(/,(5X,8f9.4))') (f_inp(ibnd,1),ibnd=1,nbnd)
         WRITE(stdout, '(/,5X," Spin-down")' ) 
