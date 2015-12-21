@@ -17,12 +17,12 @@ extern "C" {
 
 /* interface to pw.x */
 /* launch a pw.x-like calculation */
-void c2libpwscf(int lib_comm, int nimage, int npot, int npool, int ntaskgroup,
+void c2libpwscf(int lib_comm, int nimage, int npool, int ntaskgroup,
                 int nband, int ndiag, int *exit_status, char *input_file);
 
 /* interface to cp.x */
 /* launch a cp.x-like calculation */
-void c2libcpv(int lib_comm, int nimage, int npot, int npool, int ntaskgroup,
+void c2libcpv(int lib_comm, int nimage, int npool, int ntaskgroup,
               int nband, int ndiag, int *exit_status, char *input_file);
 
 /* accessing the qmmm.f90 module */
