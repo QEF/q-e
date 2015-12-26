@@ -1,0 +1,21 @@
+&CONTROL
+  calculation   = 'scf'
+  tstress=.true.
+  tprnfor=.true.
+/
+&SYSTEM
+  ibrav     = 1,
+  celldm(1) = 20.0,
+  nat       = 3,
+  ntyp      = 2,
+  ecutwfc   = 25.D0
+/
+&ELECTRONS
+/
+ATOMIC_SPECIES
+O  16.D0  O_US.van
+H   2.D0  H.coulomb-ae.UPF
+ATOMIC_POSITIONS (bohr)
+O     10.0000    10.0000    10.000
+H     11.7325     9.6757    10.000
+H      9.6757    11.7325    10.000

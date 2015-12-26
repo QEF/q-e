@@ -1,0 +1,25 @@
+&CONTROL
+  calculation  = "relax"
+/
+&SYSTEM
+  ibrav     = 1,
+  celldm(1) =12.0,
+  nat       = 2,
+  ntyp      = 2,
+  ecutwfc   = 24.D0,
+  ecutrho   = 144.D0,
+/
+&ELECTRONS
+/
+&IONS
+/
+ATOMIC_SPECIES
+O  1.00  O.pz-rrkjus.UPF
+C  1.00  C.pz-rrkjus.UPF
+ATOMIC_POSITIONS {bohr}
+C  2.140  0.0  0.0
+O  0.000  0.0  0.0
+ATOMIC_FORCES
+C   0.21576369  0.0  0.0
+O  -0.21576369  0.0  0.0
+K_POINTS {Gamma}

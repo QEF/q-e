@@ -1,0 +1,23 @@
+ &control
+    calculation = 'scf'
+    tstress=.true.
+ /
+ &system
+    ibrav=2, celldm(1) =10.20, 
+    nat=2, ntyp=1,
+    ecutwfc=12.0
+    nbnd=8, occupations='from_input'
+ /
+ &electrons
+ /
+ATOMIC_SPECIES
+ Si  28.086  Si.pz-vbc.UPF
+ATOMIC_POSITIONS (alat)
+ Si 0.00 0.00 0.00
+ Si 0.25 0.25 0.25
+K_POINTS
+  2 
+   0.250000  0.250000  0.250000   1.00
+   0.250000  0.250000  0.750000   3.00
+OCCUPATIONS
+ 2. 2. 2. 2. 0. 0. 0. 0.

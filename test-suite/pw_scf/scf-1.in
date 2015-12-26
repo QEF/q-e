@@ -1,0 +1,23 @@
+ &control
+    calculation = 'bands'
+ /
+ &system
+    ibrav=2, celldm(1) =10.20, 
+    nat=2, ntyp=1,
+    ecutwfc=12.0
+    nbnd=8
+ /
+ &electrons
+ /
+ATOMIC_SPECIES
+ Si  28.086  Si.pz-vbc.UPF
+ATOMIC_POSITIONS alat
+ Si 0.00 0.00 0.00
+ Si 0.25 0.25 0.25
+K_POINTS tpiba_b
+  5
+  0.00  0.00  0.00 5 
+  1.00  0.00  0.00 5
+  1.00  0.25  0.25 5
+  0.50  0.50  0.50 5
+  0.00  0.00  0.00 1

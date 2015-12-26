@@ -1,0 +1,21 @@
+ &control
+    calculation = 'scf'
+ /
+ &system
+    ibrav=  2, celldm(1) =25.0,
+    nat=  1, ntyp= 1, 
+    ecutwfc=30
+    occupations = 'from_input'
+    nbnd = 6
+ /
+ &electrons
+    conv_thr =  1.0d-6
+ /
+ATOMIC_SPECIES
+ O   1.000  O.pz-kjpaw.UPF 
+ATOMIC_POSITIONS {alat}
+O   0.0   0.0   0.0
+K_POINTS {gamma}
+OCCUPATIONS
+2. 1.333333333333 1.333333333333 1.333333333333   0. 0.
+  

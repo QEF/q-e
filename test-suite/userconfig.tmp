@@ -1,0 +1,34 @@
+[PW]
+exe = XXXXXX/test-suite/run-pw.sh
+extract_program = XXXXXX/test-suite/extract-pw.x
+inputs_args = ('*.in', '')
+run_cmd_template = tc.program -input tc.input tc.args > tc.output 2> tc.error
+tolerance = ( (1.0e-6, None, 'e1'),
+              (1.5, None, 'n1'),
+              (1.0e-3, None, 'f1'),
+              (1.0e-1, None, 'p1'),
+              (1.0e-2, None, 'ef1'),
+              (1.0e-2, None, 'eh1'),
+              (1.0e-2, None, 'el1'),
+              (1.0e-2, None, 'tf1') )
+skip_program = grep
+skip_args = 'not present in this version'
+
+[CP]
+exe = XXXXXX/test-suite/run-cp.sh
+extract_program = XXXXXX/test-suite/extract-cp.x
+inputs_args = ('*.in', '')
+run_cmd_template = tc.program -input tc.input tc.args > tc.output 2> tc.error
+tolerance = ( (1.0e-5, None, 'e1'),
+              (1.0e-5, None, 's1'),
+              (1.0e-2, None, 'v1u'),
+              (1.0e-2, None, 'v1d'),
+              (1.0e-5, None, 't1') )
+skip_program = grep
+skip_args = 'not present in this version'
+
+[user]
+benchmark = r11920
+date_fmt = %d%m%y
+diff = vimdiff
+

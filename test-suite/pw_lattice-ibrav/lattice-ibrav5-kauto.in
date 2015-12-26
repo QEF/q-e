@@ -1,0 +1,19 @@
+ &control
+    calculation='scf',
+ /
+ &system    
+    ibrav = 5, 
+    celldm(1) =10.0, 
+    celldm(4) = 0.5,
+    nat=2, ntyp=1,
+    ecutwfc = 25.0
+ /
+ &electrons
+ /
+ATOMIC_SPECIES
+ H 1.0008   H.pz-vbc.UPF
+ATOMIC_POSITIONS {angstrom}
+ H  0.00 0.00 -0.35 
+ H  0.00 0.00  0.35
+K_POINTS {automatic}
+ 2 2 2 1 1 1

@@ -1,0 +1,27 @@
+&CONTROL
+  calculation  = 'relax'
+/
+&SYSTEM
+  ibrav     = 1,
+  celldm(1) = 12.0
+  nat       = 3,
+  ntyp      = 2,
+  ecutwfc   = 30.D0,
+  ecutrho   = 120.D0,
+  nbnd      = 8
+  assume_isolated='martyna-tuckerman'
+/
+&ELECTRONS
+  conv_thr    = 1.D-7,
+  mixing_beta = 0.7D0,
+/
+&IONS
+/
+ATOMIC_SPECIES
+O  1.00  O.pbe-kjpaw.UPF
+H  1.00  H.pbe-kjpaw.UPF
+ATOMIC_POSITIONS {bohr}
+O  0.0  0.0  0.0  0 0 0
+H  1.0  1.0  1.0
+H -1.0 -1.0  1.0
+K_POINTS Gamma

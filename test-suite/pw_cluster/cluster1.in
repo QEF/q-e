@@ -1,0 +1,21 @@
+&CONTROL
+/
+&SYSTEM
+  ibrav     = 1,
+  celldm(1) = 12.0
+  nat       = 1,
+  ntyp      = 1,
+  ecutwfc   = 30.D0,
+  ecutrho   = 120.D0,
+  nspin = 2, tot_magnetization = 3.0,
+  assume_isolated = 'martyna-tuckerman'
+/
+&ELECTRONS
+  conv_thr    = 1.D-7,
+  mixing_beta = 0.7D0,
+/
+ATOMIC_SPECIES
+N  1.00  N.pbe-kjpaw.UPF
+ATOMIC_POSITIONS {bohr}
+N  0.000  0.0  0.0  0 0 0
+K_POINTS Gamma

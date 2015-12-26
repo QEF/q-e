@@ -1,0 +1,20 @@
+# Copyright (C) 2001-2016 Quantum ESPRESSO group
+# 
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License. See the file `License' in the root directory
+# of the present distribution.
+
+# Edit this line 
+#export ESPRESSO_ROOT=/home/fspiga/my_q-e
+
+# Edit this line every time a new reference is created
+export REFERENCE_VERSION=r11920
+
+####################################################################################
+
+export ESPRESSO_PSEUDO=${ESPRESSO_ROOT}/pseudo
+export ESPRESSO_TMPDIR=/tmp/save
+export NETWORK_PSEUDO=http://www.quantum-espresso.org/wp-content/uploads/upf_files/
+export TESTCODE_DIR=${ESPRESSO_ROOT}/test-suite/testcode

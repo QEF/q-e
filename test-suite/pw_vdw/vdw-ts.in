@@ -1,0 +1,28 @@
+&control
+ calculation='scf'
+ tprnfor=.true.
+ tstress=.true.
+/
+&system
+ ibrav=4
+ celldm(1)=4.66
+ celldm(3)=2.60
+ nat=4
+ ecutwfc=45.
+ ntyp=1
+ nspin=2, tot_magnetization=0.0
+ vdw_corr='TS'
+/
+&electrons
+ conv_thr=1.0e-8
+ mixing_beta=0.5
+ mixing_ndim=20
+/
+ATOMIC_SPECIES
+ C   12.   C.pbe-mt_gipaw.UPF   1
+K_POINTS {gamma}
+ATOMIC_POSITIONS {crystal}
+ C      0.00000    1.00000    0.75000 
+ C      0.66667    0.33333    0.75000 
+ C      0.00000    1.00000    0.25000
+ C      0.33333    0.66667    0.25000

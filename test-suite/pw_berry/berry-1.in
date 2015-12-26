@@ -1,0 +1,29 @@
+ &control
+    calculation   = 'nscf'
+    lberry        = .true.
+    gdir          = 3
+    nppstr        = 7
+ /
+ &system
+    ibrav         = 1
+    celldm(1)     = 7.3699
+    nat           = 5
+    ntyp          = 3
+    nbnd          = 22
+    ecutwfc       = 25.0
+    ecutrho       =200.0
+ /
+ &electrons
+ /
+ATOMIC_SPECIES
+  Pb   207.2      Pb.pz-d-van.UPF
+  Ti    47.867    Ti.pz-sp-van_ak.UPF
+  O     15.9994   O.pz-van_ak.UPF
+ATOMIC_POSITIONS {alat}
+  Pb    0.000    0.000    0.010
+  Ti    0.500    0.500    0.500
+  O     0.000    0.500    0.500
+  O     0.500    0.500    0.000
+  O     0.500    0.000    0.500
+K_POINTS {automatic}
+  4 4 7  1 1 1

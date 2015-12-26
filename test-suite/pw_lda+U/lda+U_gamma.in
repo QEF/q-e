@@ -1,0 +1,37 @@
+ &control
+    calculation = 'scf'
+    tstress=.true.
+    tprnfor=.true.
+ /
+ &system
+    ibrav=  0, celldm(1)=8.19, nat=  4, ntyp= 3,
+    ecutwfc = 30.0, ecutrho = 240.0, nbnd=20,
+    starting_magnetization(1)= 0.0,
+    starting_magnetization(2)= 0.5,
+    starting_magnetization(3)=-0.5,
+    occupations='smearing', smearing='gauss', degauss=0.02,
+    nspin=2,
+    lda_plus_u=.true.  Hubbard_U(2)=4.3, Hubbard_U(3)=4.3,
+    starting_ns_eigenvalue(3,2,2) = 1.d0
+    starting_ns_eigenvalue(3,1,3) = 1.d0
+ /
+ &electrons
+    mixing_mode = 'plain'
+    mixing_beta = 0.2
+    conv_thr =  1.0d-8
+    mixing_fixed_ns = 0
+ /
+CELL_PARAMETERS alat
+0.50 0.50 1.00
+0.50 1.00 0.50
+1.00 0.50 0.50
+ATOMIC_SPECIES
+ O1   1.  O.pz-rrkjus.UPF
+ Fe1  1.  Fe.pz-nd-rrkjus.UPF
+ Fe2  1.  Fe.pz-nd-rrkjus.UPF
+ATOMIC_POSITIONS {crystal}
+ O1  0.25 0.25 0.25
+ O1  0.75 0.75 0.75
+ Fe1 0.025  0.025  0.025
+ Fe2 0.475  0.475  0.475
+K_POINTS {gamma}

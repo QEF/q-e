@@ -1,0 +1,28 @@
+ &control
+    calculation = 'relax'
+ /
+ &system
+    ibrav=  2, celldm(1) =25.0,
+    nat=  3, ntyp= 2,
+    ecutwfc=25
+    occupations = 'smearing'
+    smearing='gauss'
+       degauss = 0.005
+    starting_magnetization(1) = +0.1
+    starting_magnetization(2) = -0.1
+    nspin = 2
+ /
+ &electrons
+    conv_thr =  1.0d-6
+ /
+ &ions
+    ion_dynamics = 'bfgs'
+ /
+ATOMIC_SPECIES
+ O   16.00  O.pbe-kjpaw.UPF
+ H    1.00  H.pbe-kjpaw.UPF
+ATOMIC_POSITIONS {bohr}
+H        1.116339788  -1.457719099   0.000000000
+H        1.116339788   1.457719099   0.000000000
+O       -0.012679577   0.000000000   0.000000000
+K_POINTS {gamma}

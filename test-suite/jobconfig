@@ -1,0 +1,42 @@
+[pw_b3lyp/]
+program = PW
+inputs_args = ('b3lyp-O.in', ''), ('b3lyp-h2o.in','')
+
+[pw_berry/]
+program = PW
+inputs_args = ('berry.in', ''), ('berry-1.in', ''), ('berry-2.in','')
+
+[pw_noncolin/]
+program = PW
+inputs_args = ('noncolin.in' ,''), ('noncolin-1.in' ,''), ('noncolin-2.in' ,''), ('noncolin-cg.in' ,''), ('noncolin-constrain_angle.in' ,''), ('noncolin-constrain_atomic.in' ,''), ('noncolin-constrain_total.in' ,''), ('noncolin-hyb.in' ,'')
+
+[pw_metal/]
+program = PW
+inputs_args = ('metal.in' ,''), ('metal-2.in' ,''), ('metal-fermi_dirac.in' ,''), ('metal-gaussian.in' ,''), ('metal-tetrahedra-2.in' ,''), ('metal-tetrahedra.in' ,'')
+
+[pw_scf/]
+program = PW
+inputs_args = ('scf.in' ,''), ('scf-1.in' ,''), ('scf-2.in' ,''), ('scf-allfrac.in' ,''), ('scf-cg.in' ,''), ('scf-disk_io.in' ,''), ('scf-disk_io-1.in' ,''), ('scf-disk_io-2.in' ,''), ('scf-gamma.in' ,''), ('scf-k0.in' ,''), ('scf-kauto.in' ,''), ('scf-kcrys.in' ,''), ('scf-mixing_TF.in' ,''), ('scf-mixing_beta.in' ,''), ('scf-mixing_localTF.in' ,''), ('scf-mixing_ndim.in' ,''), ('scf-ncpp.in' ,''), ('scf-nofrac.in' ,''), ('scf-occ.in' ,''), ('scf-wf_collect.in' ,'')
+
+[pw_spinorbit/]
+program = PW
+inputs_args = ('spinorbit.in' ,''), ('spinorbit-1.in' ,''), ('spinorbit-3.in' ,'')
+
+[pw_uspp/]
+program = PW
+inputs_args = ('uspp.in' ,''), ('uspp-2.in' ,''), ('uspp-cg.in' ,''), ('uspp-hyb-g.in' ,''), ('uspp-hyb-k.in' ,''), ('uspp-mixing_TF.in' ,''), ('uspp-mixing_localTF.in' ,''), ('uspp-mixing_ndim.in' ,''), ('uspp-singlegrid.in' ,''), ('uspp1-coulomb.in' ,''), ('uspp1.in' ,''), ('uspp2.in' ,'')
+
+[pw_lsda/]
+program = PW
+inputs_args = ('lsda.in', ''), ('lsda-2.in', ''), ('lsda-cg.in', ''), ('lsda-mixing_localTF.in', ''), ('lsda-mixing_ndim.in', ''), ('lsda-mixing_TF.in', ''), ('lsda-nelup+neldw.in', ''), ('lsda-tot_magnetization.in', '')
+
+[pw_*/]
+program = PW
+
+[cp_*/]
+program = CP
+
+[categories]
+pw_all = pw_*?? 
+cp_all = cp_*??
+_default_ = pw_*?? cp_*?? 

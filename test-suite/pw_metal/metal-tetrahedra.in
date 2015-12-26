@@ -1,0 +1,17 @@
+ &control
+    calculation='scf'
+ /
+ &system
+    ibrav=2, celldm(1) =7.50, 
+    nat=1, ntyp=1, 
+    ecutwfc =15.0,
+    occupations='smearing', smearing='gaussian', degauss=0.02
+ /
+ &electrons
+ /
+ATOMIC_SPECIES
+ Al  26.98 Al.pz-vbc.UPF
+ATOMIC_POSITIONS (alat)
+ Al 0.00 0.00 0.00
+K_POINTS {automatic}
+ 4 4 4 1 1 1

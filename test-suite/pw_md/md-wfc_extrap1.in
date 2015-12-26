@@ -1,0 +1,23 @@
+ &control
+    calculation='md'
+    dt=20,
+    nstep=50
+ /
+ &system
+    ibrav= 2, celldm(1)=10.18, nat=  2, ntyp= 1,
+    ecutwfc = 8.0, nosym=.true.
+ /
+ &electrons
+    conv_thr =  1.0e-8
+    mixing_beta = 0.7
+ /
+ &ions
+    wfc_extrapolation='first_order'
+ /
+ATOMIC_SPECIES
+ Si  28.086  Si.pz-vbc.UPF
+ATOMIC_POSITIONS {alat}
+ Si -0.123 -0.123 -0.123
+ Si  0.123  0.123  0.123
+K_POINTS {automatic}
+ 1 1 1 0 0 0

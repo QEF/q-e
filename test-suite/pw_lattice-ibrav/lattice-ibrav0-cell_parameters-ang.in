@@ -1,0 +1,20 @@
+ &control
+    calculation='scf',
+ /
+ &system    
+    ibrav = 0
+    nat=2, ntyp=1,
+    ecutwfc = 25.0
+ /
+ &electrons
+ /
+ATOMIC_SPECIES
+ H 1.0008   H.pz-vbc.UPF
+ATOMIC_POSITIONS {angstrom}
+ H  0.00 0.00 -0.35 
+ H  0.00 0.00  0.35
+CELL_PARAMETERS angstrom
+   5.291772  0.00000   0.00000 
+   2.381297  7.572044  0.00000  
+   2.116709  0.443784 10.360210
+K_POINTS {gamma}

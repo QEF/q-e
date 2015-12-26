@@ -1,0 +1,30 @@
+ &control
+    calculation='scf',
+ /
+ &system
+   ibrav=1,
+   celldm(1)=12.0,
+   nat=1,
+   ntyp=1,
+   nbnd=6,
+   nosym=.true.,
+   ecutwfc=24.0,
+   ecutrho=288.0,
+   occupations='from_input',
+   nspin=2,
+   starting_magnetization(1)=0.5d0,
+   one_atom_occupations=.true.,
+ /
+ &electrons
+   mixing_beta=0.25,
+   conv_thr=1.0E-8,
+   startingwfc='atomic'
+ /
+ATOMIC_SPECIES
+Ni     0.0   Ni.pbe-nd-rrkjus.UPF
+ATOMIC_POSITIONS alat
+Ni   0.000000000   0.000000000   0.000000000
+K_POINTS (gamma)
+OCCUPATIONS
+1.0 1.0 1.0 1.0 1.0 1.0
+0.0 0.8 0.8 0.8 0.8 0.8

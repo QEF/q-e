@@ -1,0 +1,28 @@
+&CONTROL
+                 calculation = 'scf' ,
+                     tprnfor = .true.
+                     tstress = .false.
+ /
+ &SYSTEM
+                       ibrav = 1,
+                   celldm(1) = 12.0,
+                         nat = 1,
+                        ntyp = 1,
+                     ecutwfc = 80,
+                     ecutfock=160,
+                   input_dft = 'B3LYP'
+                       nspin = 2
+   starting_magnetization(1) = 0.2,
+                        nbnd = 4
+           tot_magnetization = 2.0
+            exxdiv_treatment = 'gygi-baldereschi'
+       x_gamma_extrapolation = .TRUE.
+ /
+ &ELECTRONS
+                    conv_thr = 0.5d-3
+ /
+ATOMIC_SPECIES
+  O 16.0  O.blyp-mt.UPF
+ATOMIC_POSITIONS angstrom 
+  O  0.1 0.2 0.3 
+K_POINTS gamma

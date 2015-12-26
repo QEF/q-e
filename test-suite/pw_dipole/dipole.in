@@ -1,0 +1,41 @@
+ &control
+    calculation='scf',
+    tefield=.true.,
+    dipfield=.true.,
+ /
+&system
+    nat=5, ntyp=3,
+    ibrav=0, celldm(1)=4.70366666,
+    ecutwfc = 30.0
+    occupations='smearing', smearing='m-v', degauss=0.03
+
+    edir=3,
+    emaxpos=0.55,
+    eopreg=0.06,
+    eamp=0,
+	
+/
+&electrons
+    mixing_beta = 0.3
+    conv_thr =  1.0d-6
+/
+
+ATOMIC_SPECIES
+C	1.0	C.pz-rrkjus.UPF
+O	1.0	O.pz-rrkjus.UPF
+Ni	1.0	Ni.pz-nd-rrkjus.UPF  
+
+CELL_PARAMETERS
+1.00000000 0.00000000 0.00000000
+0.00000000 1.41421356 0.00000000
+0.00000000 0.00000000 9.10000001
+
+ATOMIC_POSITIONS (alat)
+
+C       -0.00364039     0.02119538      1.54673745
+O       -0.00634860     0.04192428      2.02021975
+Ni      0.48527378      0.00197332      0.97713547
+Ni      -0.00049546     0.70236680      0.45417840
+Ni      0.50000000      0.00000000      0.00000000
+
+K_POINTS {gamma}

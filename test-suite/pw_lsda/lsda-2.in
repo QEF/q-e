@@ -1,0 +1,18 @@
+ &control
+    calculation='nscf'
+ /
+ &system
+    ibrav=2, celldm(1) =6.48, nat=1, ntyp=1,
+    nspin=2,  starting_magnetization(1)=0.7,
+    ecutwfc = 24.0, ecutrho = 288.0,
+    occupations='smearing', smearing='marzari-vanderbilt', degauss=0.02
+    nbnd=8
+ /
+ &electrons
+ /
+ATOMIC_SPECIES
+ Ni 58.69 Ni.pz-nd-rrkjus.UPF
+ATOMIC_POSITIONS {alat}
+ Ni 0.0 0.0 0.0
+K_POINTS {automatic}
+ 8 8 8 1 1 1

@@ -1,0 +1,35 @@
+&CONTROL
+  calculation = "relax",
+/
+&SYSTEM
+  ibrav       = 6,
+  celldm(1)   = 5.3033D0,
+  celldm(3)   = 8.D0,
+  nat         = 7,
+  ntyp        = 1,
+  ecutwfc     = 12.D0,
+  occupations = "smearing",
+  smearing    = "methfessel-paxton",
+  degauss     = 0.05D0,
+/
+&ELECTRONS
+  conv_thr=1.0e-8
+  mixing_beta = 0.3D0
+/
+&IONS
+/
+ATOMIC_SPECIES 
+Al  1.0  Al.pz-vbc.UPF
+ATOMIC_POSITIONS (alat)
+Al   0.5000000      0.5000000     -2.121320
+Al   0.0000000      0.0000000     -1.414213
+Al   0.5000000      0.5000000     -0.707107
+Al   0.0000000      0.0000000      0.000000
+Al   0.5000000      0.5000000      0.707107
+Al   0.0000000      0.0000000      1.414213
+Al   0.5000000      0.5000000      2.121320
+K_POINTS
+ 3
+ 0.125  0.125  0.0  1.0
+ 0.125  0.375  0.0  2.0
+ 0.375  0.375  0.0  1.0

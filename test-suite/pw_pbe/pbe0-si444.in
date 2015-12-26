@@ -1,0 +1,30 @@
+ &control
+    calculation = 'scf'
+    tstress=.true.
+ /
+ &system    
+    ibrav=  2, celldm(1) =10.20, nat=  2, ntyp= 1,
+    ecutwfc =12.0,  nbnd = 8,
+    input_dft='pbe0', nqx1=4, nqx2=4, nqx3=4, 
+    exxdiv_treatment='gygi-baldereschi'
+    x_gamma_extrapolation = .true.
+ /
+ &electrons
+ /
+ATOMIC_SPECIES
+ Si  28.086  Si.pz-vbc.UPF
+ATOMIC_POSITIONS (alat)
+ Si 0.00 0.00 0.00 
+ Si 0.25 0.25 0.25 
+K_POINTS
+  10
+   0.1250000  0.1250000  0.1250000   1.00
+   0.1250000  0.1250000  0.3750000   3.00
+   0.1250000  0.1250000  0.6250000   3.00
+   0.1250000  0.1250000  0.8750000   3.00
+   0.1250000  0.3750000  0.3750000   3.00
+   0.1250000  0.3750000  0.6250000   6.00
+   0.1250000  0.3750000  0.8750000   6.00
+   0.1250000  0.6250000  0.6250000   3.00
+   0.3750000  0.3750000  0.3750000   1.00
+   0.3750000  0.3750000  0.6250000   3.00

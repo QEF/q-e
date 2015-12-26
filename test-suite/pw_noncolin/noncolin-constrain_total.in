@@ -1,0 +1,27 @@
+ &control
+    calculation='scf'
+ /
+ &system
+    ibrav = 3, celldm(1) =5.217, nat= 1, ntyp= 1,
+    ecutwfc = 25.0,ecutrho = 200.0,
+    occupations='smearing', smearing='marzari-vanderbilt', degauss=0.05
+    noncolin = .true.
+    starting_magnetization(1) = 0.5
+    angle1(1) = 45.0
+    angle2(1) = 53.0
+    constrained_magnetization='total'
+    fixed_magnetization(1)=0.3,
+    fixed_magnetization(2)=0.4,
+    fixed_magnetization(3)=0.5,
+    lambda = 0.5
+ /
+ &electrons
+    conv_thr = 1.0e-9
+    mixing_beta = 0.3
+ /
+ATOMIC_SPECIES
+ Fe 55.847 Fe.pz-nd-rrkjus.UPF
+ATOMIC_POSITIONS (alat)
+ Fe 0.0 0.0 0.0
+K_POINTS AUTOMATIC
+4 4 4 1 1 1

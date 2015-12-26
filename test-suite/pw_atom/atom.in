@@ -1,0 +1,23 @@
+ &control
+    calculation='scf',
+ /
+ &system
+   ibrav=1,
+   celldm(1)=10.0,
+   nat=1,
+   ntyp=1,
+   nbnd=6,
+   ecutwfc=25.0,
+   ecutrho=200.0,
+   occupations='from_input',
+ /
+ &electrons
+   mixing_beta=0.25,
+ /
+ATOMIC_SPECIES
+O     15.99994   O.pz-rrkjus.UPF
+ATOMIC_POSITIONS alat
+O   0.000000000   0.000000000   0.000000000
+K_POINTS {gamma}
+OCCUPATIONS
+2.0 1.3333333333 1.3333333333 1.3333333333 0.0 0.0
