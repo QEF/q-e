@@ -1,8 +1,18 @@
+# Copyright (C) 2001-2016 Quantum ESPRESSO group
+# 
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License. See the file `License' in the root directory
+# of the present distribution.
+
 ########################################
 # definition of plugins version and URL
 ########################################
+#
 URL=http://files.qe-forge.org/index.php?file=
-
+#
+#
 WANT=want-2.5.1
 WANT_URL=http://qe-forge.org/gf/download/frsrelease/153/618/$(WANT)-base.tar.gz
 #
@@ -41,6 +51,9 @@ PHONON_URL=$(URL)$(PHONON).tar.gz
 #
 TDDFPT=tddfpt-5.2.1
 TDDFPT_URL=$(URL)$(TDDFPT).tar.gz
+#
+TESTSUITE=test-suite-5.3.0
+TESTSUITE_URL=$(URL)$(TESTSUITE).tar.gz
 #
 GUI=PWgui-5.2.1
 GUI_URL=$(URL)$(GUI).tar.gz

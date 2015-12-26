@@ -1,26 +1,29 @@
-
-#===============================
-# espresso
-#===============================
+# Copyright (C) 2001-2016 Quantum ESPRESSO group
+# 
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License. See the file `License' in the root directory
+# of the present distribution.
 #
 # Makefile for plugins
-#
 
 include ../make.sys
 include plugins_list
-#
-# MAIN target
-#
 
+# MAIN target
 EXTLIBS=liblapack libblas libiotk
 
-##########################################################
+
+###########################################################
 # LD1
 ###########################################################
+
 ld1:  uncompress-ld1
 	if test -d ../atomic; then \
 	cd ../atomic; $(MAKE) all || exit 1; cd ../bin; ln -fs ../atomic/src/ld1.x . ; fi
 	touch make-ld1
+
 uncompress-ld1: touch-dummy
 	@(if test ! -s ../archive/$(LD1).tar.gz && test ! -d ../atomic ; then \
 	wget -O ../archive/$(LD1).tar.gz $(LD1_URL) > /dev/null 2>&1; \
@@ -34,13 +37,16 @@ uncompress-ld1: touch-dummy
 	if test ! -d ../atomic; then \
 	(gzip -dc ../archive/$(LD1).tar.gz | (cd ../ ; tar -xvf -)) ; fi
 	touch uncompress-ld1
-##########################################################
+
+###########################################################
 # XSpectra
 ###########################################################
+
 xspectra:  uncompress-xspectra
 	if test -d ../XSpectra; then \
 	cd ../XSpectra; $(MAKE) all || exit 1; cd ../bin; ln -fs ../XSpectra/src/xspectra.x . ; fi
 	touch make-xspectra
+
 uncompress-xspectra: touch-dummy
 	@(if test ! -s ../archive/$(XSPECTRA).tar.gz && test ! -d ../XSpectra ; then \
 	wget -O ../archive/$(XSPECTRA).tar.gz $(XSPECTRA_URL) > /dev/null 2>&1; \
@@ -54,13 +60,16 @@ uncompress-xspectra: touch-dummy
 	if test ! -d ../XSpectra; then \
 	(gzip -dc ../archive/$(XSPECTRA).tar.gz | (cd ../ ; tar -xvf -)) ; fi
 	touch uncompress-xspectra
-##########################################################
+
+###########################################################
 # PWCOND
 ###########################################################
+
 pwcond:  uncompress-pwcond
 	if test -d ../PWCOND; then \
 	cd ../PWCOND; $(MAKE) all || exit 1; cd ../bin; ln -fs ../PWCOND/src/pwcond.x . ; fi
 	touch make-pwcond
+
 uncompress-pwcond: touch-dummy
 	@(if test ! -s ../archive/$(PWCOND).tar.gz && test ! -d ../PWCOND ; then \
 	wget -O ../archive/$(PWCOND).tar.gz $(PWCOND_URL) > /dev/null 2>&1; \
@@ -75,13 +84,16 @@ uncompress-pwcond: touch-dummy
 	(gzip -dc ../archive/$(PWCOND).tar.gz | (cd ../ ; tar -xvf -)) ; \
 	(cd ../ ; ln -s $(PWCOND) PWCOND) ; fi 
 	touch uncompress-pwcond
-##########################################################
+
+###########################################################
 # NEB
 ###########################################################
+
 neb:  uncompress-neb
 	if test -d ../NEB; then \
 	cd ../NEB; $(MAKE) all || exit 1; cd ../bin; ln -fs ../NEB/src/neb.x . ; fi
 	touch make-neb
+
 uncompress-neb: touch-dummy
 	@(if test ! -s ../archive/$(NEB).tar.gz && test ! -d ../NEB ; then \
 	wget -O ../archive/$(NEB).tar.gz $(NEB_URL) > /dev/null 2>&1; \
@@ -95,14 +107,17 @@ uncompress-neb: touch-dummy
 	if test ! -d ../NEB; then \
 	(gzip -dc ../archive/$(NEB).tar.gz | (cd ../ ; tar -xvf -)) ; fi
 	touch uncompress-neb
-##########################################################
+
+###########################################################
 # TDDFPT
 ###########################################################
+
 tddfpt:  uncompress-tddfpt
 	if test -d ../TDDFPT; then \
 	cd ../TDDFPT; $(MAKE) all || exit 1; cd ../bin; ln -fs ../TDDFPT/src/turbo_lanczos.x . ; \
 	ln -fs ../TDDFPT/tools/turbo_spectrum.x . ; fi
 	touch make-tddfpt
+
 uncompress-tddfpt: touch-dummy
 	@(if test ! -s ../archive/$(TDDFPT).tar.gz && test ! -d ../TDDFPT ; then \
 	wget -O ../archive/$(TDDFPT).tar.gz $(TDDFPT_URL) > /dev/null 2>&1; \
@@ -116,9 +131,11 @@ uncompress-tddfpt: touch-dummy
 	if test ! -d ../TDDFPT; then \
 	(gzip -dc ../archive/$(TDDFPT).tar.gz | (cd ../ ; tar -xvf -)) ; fi
 	touch uncompress-tddfpt
-##########################################################
+
+###########################################################
 # PHonon
 ###########################################################
+
 phonon:  uncompress-phonon
 	if test -d ../PHonon; then \
 	cd ../PHonon; $(MAKE) all || exit 1; cd ../bin; \
@@ -133,6 +150,7 @@ phonon:  uncompress-phonon
 	ln -fs ../PHonon/D3/d3.x . ; \
 	fi
 	touch make-phonon
+
 uncompress-phonon: touch-dummy
 	@(if test ! -s ../archive/$(PHONON).tar.gz && test ! -d ../PHonon ; then \
 	wget -O ../archive/$(PHONON).tar.gz $(PHONON_URL) > /dev/null 2>&1; \
@@ -146,13 +164,38 @@ uncompress-phonon: touch-dummy
 	if test ! -d ../PHonon; then \
 	(gzip -dc ../archive/$(PHONON).tar.gz | (cd ../ ; tar -xvf -)) ; fi
 	touch uncompress-phonon
+
+###########################################################
+# test-suite
+###########################################################
+
+test-suite: uncompress-test-suite
+	if test -d ../test-suite ; then \
+	( cd ../test-suite ; $(MAKE) TLDEPS= run-tests || exit 1) ; fi
+
+uncompress-test-suite: touch-dummy
+	@(if test ! -s ../archive/$(TESTSUITE).tar.gz && test ! -d ../test-suite ; then \
+  wget -O ../archive/$(TESTSUITE).tar.gz $(TESTSUITE_URL) > /dev/null 2>&1; \
+  if test "`echo $$?`" -ne "0" ; then \
+  curl -o ../archive/$(TESTSUITE).tar.gz $(TESTSUITE_URL) > /dev/null 2>&1; \
+  if test "`echo $$?`" -ne "0" ; then \
+  echo "*** Unable to download test-suite. Test whether curl or wget is installed and working," ; \
+  echo "*** if you have direct access to internet. If not, copy into archive/ the file" ; \
+  echo "*** $(TESTSUITE).tar.gz from $(TESTSUITE_URL)." ; \
+  exit 1 ; fi ; fi ; fi)
+	if test ! -d ../test-suite; then \
+  (gzip -dc ../archive/$(TESTSUITE).tar.gz | (cd ../ ; tar -xvf -)) ; fi
+	touch uncompress-test-suite
+
 ##########################################################
 # GIPAW
 ###########################################################
+
 gipaw:  uncompress-gipaw configure-gipaw
 	if test -d ../GIPAW; then \
 	cd ../GIPAW; $(MAKE) all || exit 1; cd ../bin; ln -fs ../GIPAW/src/gipaw.x . ; fi
 	touch make-gipaw
+
 uncompress-gipaw: touch-dummy
 	@(if test ! -s ../archive/$(GIPAW).tar.gz && test ! -d ../GIPAW ; then \
 	wget -O ../archive/$(GIPAW).tar.gz $(GIPAW_URL) > /dev/null 2>&1; \
@@ -167,14 +210,16 @@ uncompress-gipaw: touch-dummy
 	(gzip -dc ../archive/$(GIPAW).tar.gz | (cd ../ ; tar -xvf -)) ; \
 	(cd ../ ; ln -s $(GIPAW) GIPAW) ; fi 
 	touch uncompress-gipaw
+
 configure-gipaw: touch-dummy
 	cd ../GIPAW ; \
 	./configure --with-qe-source=${TOPDIR}
 	touch ./configure-gipaw
 
-##########################################################
+###########################################################
 # EPW
 ###########################################################
+
 epw: 
 	if test -d ../EPW; then \
 	cd ../EPW ; $(MAKE) all || exit 1; cd ../bin; ln -fs ../EPW/bin/epw.x . ; fi
@@ -210,6 +255,7 @@ configure-w90: touch-dummy
 	if (test -e ../install/make_wannier90.sys) || (test -d ../W90); then \
 	(cp ../install/make_wannier90.sys ../W90/make.sys); fi 
 	touch ./configure-w90
+
 ###########################################################
 # WANT
 ###########################################################
@@ -259,9 +305,9 @@ configure-want: touch-dummy
 	FFT_LIBS="$(FFT_LIBS)" 
 	touch ./configure-want
 
-###################################################
+###########################################################
 # YAMBO
-###################################################
+###########################################################
 
 yambo: extlibs uncompress-yambo configure-yambo
 	if test -d ../YAMBO; then \
@@ -371,9 +417,9 @@ patch-plumed: touch-dummy
 	cd ../ ; ./plumedpatch_qespresso_5.2.sh -patch) ; fi	
 	touch ./patch-plumed
 
-##################################
+###########################################################
 # SaX
-##################################
+###########################################################
 
 sax: extlibs uncompress-sax configure-sax
 	if test -d ../SaX; then \
@@ -420,10 +466,9 @@ configure-sax: touch-dummy
 	FFT_LIBS="$(FFT_LIBS)" 
 	touch ./configure-sax
 
-
-###################################
+###########################################################
 # WEST
-###################################
+###########################################################
 
 west: extlibs uncompress-west 
 	if test -d ../West; then \
@@ -443,17 +488,20 @@ uncompress-west: touch-dummy
 	(gzip -dc ../archive/$(WEST).tar.gz | (cd ../ ; tar -xvf -)) ; fi
 	touch uncompress-west
 
-##################################
+###########################################################
 # extlibs
-###################################
+###########################################################
+
 extlibs:
 	test -n "$(EXTLIBS)" && ( cd .. ; $(MAKE) $(EXTLIBS) || exit 1) || :
 
-##########################################################
+###########################################################
 # GUI
 ###########################################################
+
 gui:  uncompress-gui
 	touch make-gui
+
 uncompress-gui: touch-dummy
 	@(if test ! -s ../archive/$(GUI).tar.gz && test ! -d ../GUI && test ! -d ../$(GUI); then \
 	wget -O ../archive/$(GUI).tar.gz $(GUI_URL) > /dev/null 2>&1; \
@@ -468,11 +516,13 @@ uncompress-gui: touch-dummy
 	(gzip -dc ../archive/$(GUI).tar.gz | (cd ../ ; tar -xvf -)) ; fi
 	touch uncompress-gui
 
-##########################################################
+###########################################################
 # GPU
 ###########################################################
+
 gpu:  uncompress-gpu
 	touch make-gpu
+
 uncompress-gpu: touch-dummy
 	@(if test ! -s ../archive/$(GPU).tar.gz && test ! -d ../GPU && test ! -d ../$(GPU); then \
 	wget -O ../archive/$(GPU).tar.gz $(GPU_URL) > /dev/null 2>&1; \
@@ -491,9 +541,10 @@ uncompress-gpu: touch-dummy
 	@ echo ""
 	touch uncompress-gpu
 
-###################################
+###########################################################
 # cleaning
-###################################
+###########################################################
+
 # each lib independently
 ld1_clean:
 	if test -d ../atomic; then (cd ../atomic; \
@@ -650,6 +701,10 @@ gui_clean:
 gui_veryclean: gui_clean
 # dir is not deleted for compatibility with the repository
 
+test-suite_clean:
+	if test -d ../test-suite; then (cd ../test-suite; \
+	$(MAKE) clean); fi
+
 gpu_clean:
 	rm -f ./make-gpu 
 
@@ -659,9 +714,10 @@ gpu_veryclean: gpu_clean
 ##########################################################
 # general cleaning
 ##########################################################
+
 clean: w90_clean want_clean yambo_clean yambo-devel_clean plumed_clean epw_clean \
 	gui_clean phonon_clean tddfpt_clean xspectra_clean neb_clean pwcond_clean \
-	ld1_clean gipaw_clean gpu_clean west_clean
+	ld1_clean gipaw_clean gpu_clean west_clean test-suite_clean
 veryclean: w90_veryclean want_veryclean yambo_veryclean yambo-devel_veryclean plumed_veryclean epw_veryclean \
 	gui_veryclean phonon_veryclean tddfpt_veryclean xspectra_veryclean neb_veryclean \
 	pwcond_veryclean ld1_veryclean gipaw_veryclean gpu_veryclean west_veryclean

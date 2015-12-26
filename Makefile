@@ -1,4 +1,12 @@
-sinclude make.sys
+# Copyright (C) 2001-2016 Quantum ESPRESSO group
+# 
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License. See the file `License' in the root directory
+# of the present distribution.
+
+include make.sys
 
 default :
 	@echo 'to install, type at the shell prompt:'
@@ -29,6 +37,7 @@ default :
 	@echo '  epw          Electron-Phonon Coupling with wannier functions'
 	@echo '  gpu          Download the latest QE-GPU package'
 	@echo '  couple       Library interface for coupling to external codes'
+	@echo '  test-suite   Run semi-automated test-suite for regression testing'
 	@echo '  clean        remove executables and objects'
 	@echo '  veryclean    revert distribution to the original status'
 	@echo '  tar          create a tarball of the source tree'
@@ -36,17 +45,16 @@ default :
 	 echo '  tar-gui      create a standalone PWgui tarball from the GUI sources'; fi
 	@echo '  doc          build documentation'
 	@echo '  links        create links to all executables in bin/'
-gww:
-	@echo '"make gww" is obsolete, use "make gwl" instead '
 
 ###########################################################
 # Main targets
 ###########################################################
+
 # The syntax "( cd PW ; $(MAKE) TLDEPS= all || exit 1)" below
 # guarantees that error code 1 is returned in case of error and make stops
 # If "|| exit 1" is not present, the error code from make in subdirectories
 # is not returned and make goes on even if compilation has failed
-#
+
 pw : bindir libfft mods liblapack libblas libs libiotk 
 	if test -d PW ; then \
 	( cd PW ; $(MAKE) TLDEPS= all || exit 1) ; fi
@@ -79,6 +87,10 @@ acfdt : bindir libfft mods libs pw ph
 	if test -d ACFDT ; then \
 	( cd ACFDT ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
 
+# target still present for backward compatibility
+gww:
+	@echo '"make gww" is obsolete, use "make gwl" instead '
+
 gwl : ph
 	if test -d GWW ; then \
 	( cd GWW ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
@@ -108,16 +120,20 @@ gui : touch-dummy
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
 pwall : pw neb ph pp pwcond acfdt
+
 all   : pwall cp ld1 upf tddfpt gwl xspectra
 
 ###########################################################
 # Auxiliary targets used by main targets:
 # compile modules, libraries, directory for binaries, etc
 ###########################################################
+
 libfft : touch-dummy
 	( cd FFTXlib ; $(MAKE) TLDEPS= all || exit 1 )
+
 mods : libiotk libelpa libfft
 	( cd Modules ; $(MAKE) TLDEPS= all || exit 1 )
+
 libs : mods
 	( cd clib ; $(MAKE) TLDEPS= all || exit 1 )
 	( cd flib ; $(MAKE) TLDEPS= $(FLIB_TARGETS) || exit 1 )
@@ -128,6 +144,7 @@ bindir :
 #############################################################
 # Targets for external libraries
 ############################################################
+
 libblas : touch-dummy
 	cd install ; $(MAKE) -f extlibs_makefile $@
 
@@ -142,6 +159,7 @@ libiotk: touch-dummy
 
 # In case of trouble with iotk and compilers, add
 # FFLAGS="$(FFLAGS_NOOPT)" after $(MFLAGS)
+
 
 #########################################################
 # plugins
@@ -181,6 +199,7 @@ touch-dummy :
 # /some/place/qe_pw.x). This allows installation of QE
 # into system directories with no danger of name conflicts
 #########################################################
+
 inst : 
 	( for exe in */*/*.x */bin/* ; do \
 	   file=`basename $$exe`; if test "$(INSTALLDIR)" != ""; then \
@@ -212,6 +231,14 @@ install : touch-dummy
 	mkdir -p $(PREFIX) ; for x in `find . -name *.x -type f` ; do cp $$x $(PREFIX)/ ; done ; \
 	fi
 
+#########################################################
+# Run test-suite for numerical regression testing
+# NB: assumtion is that reference outputs have been 
+#     already computed once (usualy during release)
+#########################################################
+
+test-suite: pw cp touch-dummy
+	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
 #########################################################
 # Other targets: clean up
