@@ -16,6 +16,31 @@ EXTLIBS=liblapack libblas libiotk
 
 
 ###########################################################
+# Template function
+# $(1) = package name
+# $(2) = package URL
+# $(3) = directory name
+# $(4) = plugin/code name
+###########################################################
+
+define download_and_unpack
+	@(if test ! -s ../archive/$(1).tar.gz && test ! -d ../$(3) ; then \
+	wget -O ../archive/$(1).tar.gz $(2) > /dev/null 2>&1; \
+	if test "`echo $$?`" -ne "0" ; then \
+	curl -o ../archive/$(1).tar.gz $(2) > /dev/null 2>&1; \
+	if test "`echo $$?`" -ne "0" ; then \
+	echo "*** Unable to download $(4). Test whether curl or wget is installed and working," ; \
+	echo "*** if you have direct access to internet. If not, copy into archive/ the file" ; \
+	      echo "*** $(1).tar.gz from $(2)." ; \
+	exit 1 ; fi ; fi ; fi)
+	if test ! -d ../$(3); then \
+	(gzip -dc ../archive/$(1).tar.gz | (cd ../ ; tar -xvf -)) ; fi
+	if test ! -d ../$(3); then \
+	(cd ../ ; ln -s $(1) $(3)) ; fi
+endef
+
+
+###########################################################
 # LD1
 ###########################################################
 
@@ -25,17 +50,7 @@ ld1:  uncompress-ld1
 	touch make-ld1
 
 uncompress-ld1: touch-dummy
-	@(if test ! -s ../archive/$(LD1).tar.gz && test ! -d ../atomic ; then \
-	wget -O ../archive/$(LD1).tar.gz $(LD1_URL) > /dev/null 2>&1; \
-	if test "`echo $$?`" -ne "0" ; then \
-	curl -o ../archive/$(LD1).tar.gz $(LD1_URL) > /dev/null 2>&1; \
-	if test "`echo $$?`" -ne "0" ; then \
-	echo "*** Unable to download ld1. Test whether curl or wget is installed and working," ; \
-	echo "*** if you have direct access to internet. If not, copy into archive/ the file" ; \
-        echo "*** $(LD1).tar.gz from $(LD1_URL)." ; \
-	exit 1 ; fi ; fi ; fi) 
-	if test ! -d ../atomic; then \
-	(gzip -dc ../archive/$(LD1).tar.gz | (cd ../ ; tar -xvf -)) ; fi
+	$(call download_and_unpack,$(LD1),$(LD1_URL),atomic,ld1)
 	touch uncompress-ld1
 
 ###########################################################
@@ -48,17 +63,7 @@ xspectra:  uncompress-xspectra
 	touch make-xspectra
 
 uncompress-xspectra: touch-dummy
-	@(if test ! -s ../archive/$(XSPECTRA).tar.gz && test ! -d ../XSpectra ; then \
-	wget -O ../archive/$(XSPECTRA).tar.gz $(XSPECTRA_URL) > /dev/null 2>&1; \
-	if test "`echo $$?`" -ne "0" ; then \
-	curl -o ../archive/$(XSPECTRA).tar.gz $(XSPECTRA_URL) > /dev/null 2>&1; \
-	if test "`echo $$?`" -ne "0" ; then \
-	echo "*** Unable to download xspectra. Test whether curl or wget is installed and working," ; \
-	echo "*** if you have direct access to internet. If not, copy into archive/ the file" ; \
-	echo "*** $(XSPECTRA).tar.gz from $(XSPECTRA_URL)." ; \
-	exit 1 ; fi ; fi ; fi) 
-	if test ! -d ../XSpectra; then \
-	(gzip -dc ../archive/$(XSPECTRA).tar.gz | (cd ../ ; tar -xvf -)) ; fi
+	$(call download_and_unpack,$(XSPECTRA),$(XSPECTRA_URL),XSpectra,xspectra)
 	touch uncompress-xspectra
 
 ###########################################################
@@ -71,18 +76,7 @@ pwcond:  uncompress-pwcond
 	touch make-pwcond
 
 uncompress-pwcond: touch-dummy
-	@(if test ! -s ../archive/$(PWCOND).tar.gz && test ! -d ../PWCOND ; then \
-	wget -O ../archive/$(PWCOND).tar.gz $(PWCOND_URL) > /dev/null 2>&1; \
-	if test "`echo $$?`" -ne "0" ; then \
-	curl -o ../archive/$(PWCOND).tar.gz $(PWCOND_URL) > /dev/null 2>&1; \
-	if test "`echo $$?`" -ne "0" ; then \
-	echo "*** Unable to download pwcond. Test whether curl or wget is installed and working," ; \
-	echo "*** if you have direct access to internet. If not, copy into archive/ the file" ; \
-	echo "*** $(PWCOND).tar.gz from $(PWCOND_URL)." ; \
-	exit 1 ; fi ; fi ; fi) 
-	if test ! -d ../PWCOND; then \
-	(gzip -dc ../archive/$(PWCOND).tar.gz | (cd ../ ; tar -xvf -)) ; \
-	(cd ../ ; ln -s $(PWCOND) PWCOND) ; fi 
+	$(call download_and_unpack,$(PWCOND),$(PWCOND_URL),PWCOND,pwcond)
 	touch uncompress-pwcond
 
 ###########################################################
@@ -95,17 +89,7 @@ neb:  uncompress-neb
 	touch make-neb
 
 uncompress-neb: touch-dummy
-	@(if test ! -s ../archive/$(NEB).tar.gz && test ! -d ../NEB ; then \
-	wget -O ../archive/$(NEB).tar.gz $(NEB_URL) > /dev/null 2>&1; \
-	if test "`echo $$?`" -ne "0" ; then \
-	curl -o ../archive/$(NEB).tar.gz $(NEB_URL) > /dev/null 2>&1; \
-	if test "`echo $$?`" -ne "0" ; then \
-	echo "*** Unable to download neb. Test whether curl or wget is installed and working," ; \
-	echo "*** if you have direct access to internet. If not, copy into archive/ the file" ; \
-	echo "*** $(NEB).tar.gz from $(NEB_URL)." ; \
-	exit 1 ; fi ; fi ; fi) 
-	if test ! -d ../NEB; then \
-	(gzip -dc ../archive/$(NEB).tar.gz | (cd ../ ; tar -xvf -)) ; fi
+	$(call download_and_unpack,$(NEB),$(NEB_URL),NEB,neb)
 	touch uncompress-neb
 
 ###########################################################
@@ -119,17 +103,7 @@ tddfpt:  uncompress-tddfpt
 	touch make-tddfpt
 
 uncompress-tddfpt: touch-dummy
-	@(if test ! -s ../archive/$(TDDFPT).tar.gz && test ! -d ../TDDFPT ; then \
-	wget -O ../archive/$(TDDFPT).tar.gz $(TDDFPT_URL) > /dev/null 2>&1; \
-	if test "`echo $$?`" -ne "0" ; then \
-	curl -o ../archive/$(TDDFPT).tar.gz $(TDDFPT_URL) > /dev/null 2>&1; \
-	if test "`echo $$?`" -ne "0" ; then \
-	echo "*** Unable to download tddfpt. Test whether curl or wget is installed and working," ; \
-	echo "*** if you have direct access to internet. If not, copy into archive/ the file" ; \
-	echo "*** $(TDDFPT).tar.gz from $(TDDFPT_URL)." ; \
-	exit 1 ; fi ; fi ; fi) 
-	if test ! -d ../TDDFPT; then \
-	(gzip -dc ../archive/$(TDDFPT).tar.gz | (cd ../ ; tar -xvf -)) ; fi
+	$(call download_and_unpack,$(TDDFPT),$(TDDFPT_URL),TDDFPT,tddfpt)
 	touch uncompress-tddfpt
 
 ###########################################################
@@ -152,17 +126,7 @@ phonon:  uncompress-phonon
 	touch make-phonon
 
 uncompress-phonon: touch-dummy
-	@(if test ! -s ../archive/$(PHONON).tar.gz && test ! -d ../PHonon ; then \
-	wget -O ../archive/$(PHONON).tar.gz $(PHONON_URL) > /dev/null 2>&1; \
-	if test "`echo $$?`" -ne "0" ; then \
-	curl -o ../archive/$(PHONON).tar.gz $(PHONON_URL) > /dev/null 2>&1; \
-	if test "`echo $$?`" -ne "0" ; then \
-	echo "*** Unable to download phonon. Test whether curl or wget is installed and working," ; \
-	echo "*** if you have direct access to internet. If not, copy into archive/ the file" ; \
-	echo "*** $(PHONON).tar.gz from $(PHONON_URL)." ; \
-	exit 1 ; fi ; fi ; fi) 
-	if test ! -d ../PHonon; then \
-	(gzip -dc ../archive/$(PHONON).tar.gz | (cd ../ ; tar -xvf -)) ; fi
+	$(call download_and_unpack,$(PHONON),$(PHONON_URL),PHonon,phonon)
 	touch uncompress-phonon
 
 ###########################################################
@@ -174,17 +138,7 @@ test-suite: uncompress-test-suite
 	( cd ../test-suite ; $(MAKE) TLDEPS= run-tests || exit 1) ; fi
 
 uncompress-test-suite: touch-dummy
-	@(if test ! -s ../archive/$(TESTSUITE).tar.gz && test ! -d ../test-suite ; then \
-  wget -O ../archive/$(TESTSUITE).tar.gz $(TESTSUITE_URL) > /dev/null 2>&1; \
-  if test "`echo $$?`" -ne "0" ; then \
-  curl -o ../archive/$(TESTSUITE).tar.gz $(TESTSUITE_URL) > /dev/null 2>&1; \
-  if test "`echo $$?`" -ne "0" ; then \
-  echo "*** Unable to download test-suite. Test whether curl or wget is installed and working," ; \
-  echo "*** if you have direct access to internet. If not, copy into archive/ the file" ; \
-  echo "*** $(TESTSUITE).tar.gz from $(TESTSUITE_URL)." ; \
-  exit 1 ; fi ; fi ; fi)
-	if test ! -d ../test-suite; then \
-  (gzip -dc ../archive/$(TESTSUITE).tar.gz | (cd ../ ; tar -xvf -)) ; fi
+	$(call download_and_unpack,$(TESTSUITE),$(TESTSUITE_URL),test-suite,test-suite)
 	touch uncompress-test-suite
 
 ##########################################################
@@ -197,18 +151,7 @@ gipaw:  uncompress-gipaw configure-gipaw
 	touch make-gipaw
 
 uncompress-gipaw: touch-dummy
-	@(if test ! -s ../archive/$(GIPAW).tar.gz && test ! -d ../GIPAW ; then \
-	wget -O ../archive/$(GIPAW).tar.gz $(GIPAW_URL) > /dev/null 2>&1; \
-	if test "`echo $$?`" -ne "0" ; then \
-	curl -o ../archive/$(GIPAW).tar.gz $(GIPAW_URL) > /dev/null 2>&1; \
-	if test "`echo $$?`" -ne "0" ; then \
-	echo "*** Unable to download qe-gipaw. Test whether curl or wget is installed and working," ; \
-	echo "*** if you have direct access to internet. If not, copy into archive/ the file" ; \
-	echo "*** $(GIPAW).tar.gz from $(GIPAW_URL)." ; \
-	exit 1 ; fi ; fi ; fi )
-	if test ! -d ../GIPAW; then \
-	(gzip -dc ../archive/$(GIPAW).tar.gz | (cd ../ ; tar -xvf -)) ; \
-	(cd ../ ; ln -s $(GIPAW) GIPAW) ; fi 
+	$(call download_and_unpack,$(GIPAW),$(GIPAW_URL),GIPAW,qe-gipaw)	
 	touch uncompress-gipaw
 
 configure-gipaw: touch-dummy
@@ -235,19 +178,9 @@ w90: uncompress-w90 configure-w90
 	cd ../W90; $(MAKE) all || exit 1; cd ../bin; ln -fs ../W90/wannier90.x . ; fi
 	-(cd ../bin; ln -fs ../W90/wannier90.x .)
 	touch make-w90
+
 uncompress-w90: touch-dummy
-	@(if test ! -s ../archive/$(W90).tar.gz && test ! -d ../W90 ; then \
-	wget -O ../archive/$(W90).tar.gz $(W90_URL) > /dev/null 2>&1; \
-	if test "`echo $$?`" -ne "0" ; then \
-	curl -o ../archive/$(W90).tar.gz $(W90_URL) > /dev/null 2>&1; \
-	if test "`echo $$?`" -ne "0" ; then \
-	echo "*** Unable to download wannier90. Test whether curl or wget is installed and working," ; \
-	echo "*** if you have direct access to internet. If not, copy into archive/ the file" ; \
-	echo "*** $(W90).tar.gz from $(W90_URL)." ; \
-	exit 1 ; fi ; fi ; fi) 
-	if test ! -d ../W90; then \
-	(gzip -dc ../archive/$(W90).tar.gz | (cd ../ ; tar -xvf -)) ; \
-	(cd ../ ; ln -s $(W90) W90) ; fi 
+	$(call download_and_unpack,$(W90),$(W90_URL),W90,wannier90)
 	touch uncompress-w90
 
 configure-w90: touch-dummy
@@ -265,19 +198,9 @@ want: extlibs uncompress-want configure-want
 	cd ../WANT; $(MAKE) all || exit 1; fi
 #	- ( cd ../bin ; ln -sf ../WANT/bin/* . ) 
 	touch ./make-want
+
 uncompress-want: touch-dummy
-	@(if test ! -s ../archive/$(WANT)-base.tar.gz && test ! -d ../WANT ; then \
-	wget -O ../archive/$(WANT)-base.tar.gz $(WANT_URL) > /dev/null 2>&1; \
-	if test "`echo $$?`" -ne "0" ; then \
-	curl -o ../archive/$(WANT)-base.tar.gz $(WANT_URL) > /dev/null 2>&1; \
-	if test "`echo $$?`" -ne "0" ; then \
-	echo "*** Unable to download want. Test whether curl or wget is installed and working," ; \
-	echo "*** if you have direct access to internet. If not, copy into archive/ the file" ; \
-	echo "*** $(WANT)-base.tar.gz from $(WANT_URL)." ; \
-	exit 1 ; fi ; fi ; fi) 
-	if test ! -d ../WANT; then \
-	(gzip -dc ../archive/$(WANT)-base.tar.gz | (cd ../ ; tar -xvf -)) ; \
-	(cd ../ ; ln -sf $(WANT) WANT) ; fi 
+	$(call download_and_unpack,$(WANT),$(WANT_URL),WANT,want)
 	touch uncompress-want
 
 configure-want: touch-dummy
@@ -313,19 +236,9 @@ yambo: extlibs uncompress-yambo configure-yambo
 	if test -d ../YAMBO; then \
 	cd ../YAMBO; $(MAKE) yambo interfaces ypp || exit 1; fi
 	touch ./make-yambo
+
 uncompress-yambo: touch-dummy
-	@(if test ! -s ../archive/$(YAMBO).tar.gz && test ! -d ../YAMBO ; then \
-	wget -O ../archive/$(YAMBO).tar.gz $(YAMBO_URL) > /dev/null 2>&1; \
-	if test "`echo $$?`" -ne "0" ; then \
-	curl -o ../archive/$(YAMBO).tar.gz $(YAMBO_URL) > /dev/null 2>&1; \
-	if test "`echo $$?`" -ne "0" ; then \
-	echo "*** Unable to download yambo. Test whether curl or wget is installed and working," ; \
-	echo "*** if you have direct access to internet. If not, copy into archive/ the file" ; \
-	echo "*** $(YAMBO).tar.gz from $(YAMBO_URL)." ; \
-	exit 1 ; fi ; fi ; fi) 
-	if test ! -d ../YAMBO; then \
-	(gzip -dc ../archive/$(YAMBO).tar.gz | (cd ../ ; tar -xvf -)) ; \
-	(cd ../ ; ln -s $(YAMBO) YAMBO) ; fi 
+	$(call download_and_unpack,$(YAMBO),$(YAMBO_URL),YAMBO,yambo)
 	touch uncompress-yambo
 
 configure-yambo: touch-dummy
@@ -350,18 +263,7 @@ yambo-devel: extlibs uncompress-yambo-devel configure-yambo-devel
 	touch ./make-yambo-devel
 
 uncompress-yambo-devel: touch-dummy
-	@(if test ! -s ../archive/$(YAMBO_DEVEL).tar.gz && test ! -d ../YAMBO_DEVEL ; then \
-	wget -O ../archive/$(YAMBO_DEVEL).tar.gz $(YAMBO_DEVEL_URL) > /dev/null 2>&1; \
-	if test "`echo $$?`" -ne "0" ; then \
-	curl -o ../archive/$(YAMBO_DEVEL).tar.gz $(YAMBO_DEVEL_URL) > /dev/null 2>&1; \
-	if test "`echo $$?`" -ne "0" ; then \
-	echo "*** Unable to download yambo-devel. Test whether curl or wget is installed and working," ; \
-	echo "*** if you have direct access to internet. If not, copy into archive/ the file" ; \
-	echo "*** $(YAMBO_DEVEL).tar.gz from $(YAMBO_DEVEL_URL)." ; \
-	exit 1 ; fi ; fi ; fi) 
-	if test ! -d ../YAMBO_DEVEL; then \
-	(gzip -dc ../archive/$(YAMBO_DEVEL).tar.gz | (cd ../ ; tar -xvf -)) ; \
-	(cd ../ ; ln -s $(YAMBO_DEVEL) YAMBO_DEVEL) ; fi 
+	$(call download_and_unpack,$(YAMBO_DEVEL),$(YAMBO_DEVEL_URL),YAMBO_DEVEL,yambo-devel)
 	touch uncompress-yambo-devel
 
 configure-yambo-devel: touch-dummy
@@ -391,23 +293,14 @@ plumed: test-plumed uncompress-plumed patch-plumed
 	if test -d ../PLUMED; then \
 	cd ../; $(MAKE) pw; $(MAKE) cp; fi
 	touch make-plumed
+
 test-plumed: touch-dummy
 	@(if test ! -s ../archive/$(PLUMED).tar.gz && test ! -d ../PLUMED; then \
 	echo "The release contains no PLUMED package. Trying to download it from qe-forge."; fi) 
 	touch ./test-plumed
+
 uncompress-plumed: touch-dummy
-	@(if test ! -s ../archive/$(PLUMED).tar.gz && test ! -d ../PLUMED ; then \
-	wget -O ../archive/$(PLUMED).tar.gz $(PLUMED_URL) > /dev/null 2>&1; \
-	if test "`echo $$?`" -ne "0" ; then \
-	curl -o ../archive/$(PLUMED).tar.gz $(PLUMED_URL) > /dev/null 2>&1; \
-	if test "`echo $$?`" -ne "0" ; then \
-	echo "*** Unable to download plumed. Test whether curl or wget is installed and working," ; \
-	echo "*** if you have direct access to internet. If not, copy into archive/ the file" ; \
-	echo "*** $(PLUMED).tar.gz from $(PLUMED_URL)." ; \
-	exit 1 ; fi ; fi ; fi) 
-	if test ! -d ../PLUMED; then \
-	(gzip -dc ../archive/$(PLUMED).tar.gz | (cd ../ ; tar -xvf -)) ; \
-	(cd ../ ; ln -s $(PLUMED) PLUMED) ; fi 
+	$(call download_and_unpack,$(PLUMED),$(PLUMED_URL),PLUMED,plumed)
 	touch uncompress-plumed
 
 patch-plumed: touch-dummy
@@ -426,19 +319,9 @@ sax: extlibs uncompress-sax configure-sax
 	cd ../SaX; $(MAKE) sax_all; fi
 #	- ( cd ../bin ; ln -sf ../SaX/sax/bin/* . ) 
 	touch ./make-sax
+
 uncompress-sax: touch-dummy
-	@(if test ! -s ../archive/$(SAX).tar.gz && test ! -d ../SaX ; then \
-	wget -O ../archive/$(SAX).tar.gz $(SAX_URL) > /dev/null 2>&1; \
-	if test "`echo $$?`" -ne "0" ; then \
-	curl -o ../archive/$(SAX).tar.gz $(SAX_URL) > /dev/null 2>&1; \
-	if test "`echo $$?`" -ne "0" ; then \
-	echo "*** Unable to download SaX. Test whether curl or wget is installed and working." ; \
-	echo "*** if you have direct access to internet. If not, copy into archive/ the file" ; \
-	echo "*** $(SAX).tar.gz from $(SAX_URL)." ; \
-	exit 1 ; fi ; fi ; fi) 
-	if test ! -d ../SaX; then \
-	(gzip -dc ../archive/$(SAX).tar.gz | (cd ../ ; tar -xvf -)) ; \
-	(cd ../ ; ln -s $(SAX) SaX) ; fi 
+	$(call download_and_unpack,$(SAX),$(SAX_URL),SaX,SaX)
 	touch uncompress-sax
 
 configure-sax: touch-dummy
@@ -474,18 +357,9 @@ west: extlibs uncompress-west
 	if test -d ../West; then \
 	cd ../West; $(MAKE) -j1 all || exit 1; fi
 	touch ./make-west
+
 uncompress-west: touch-dummy
-	@(if test ! -s ../archive/$(WEST).tgz && test ! -d ../West ; then \
-	wget -O ../archive/$(WEST).tar.gz $(WEST_URL) > /dev/null 2>&1; \
-	if test "`echo $$?`" -ne "0" ; then \
-	curl -o ../archive/$(WEST).tar.gz $(WEST_URL) > /dev/null 2>&1; \
-	if test "`echo $$?`" -ne "0" ; then \
-	echo "*** Unable to download WEST. Test whether curl or wget is installed and working," ; \
-	echo "*** if you have direct access to internet. If not, copy into archive/ the file" ; \
-	echo "*** $(WEST).tar.gz from http://www.west-code.org ." ; \
-	exit 1 ; fi ; fi ; fi)
-	if test ! -d ../West; then \
-	(gzip -dc ../archive/$(WEST).tar.gz | (cd ../ ; tar -xvf -)) ; fi
+	$(call download_and_unpack,$(WEST),$(WEST_URL),West,WEST)
 	touch uncompress-west
 
 ###########################################################
@@ -503,17 +377,7 @@ gui:  uncompress-gui
 	touch make-gui
 
 uncompress-gui: touch-dummy
-	@(if test ! -s ../archive/$(GUI).tar.gz && test ! -d ../GUI && test ! -d ../$(GUI); then \
-	wget -O ../archive/$(GUI).tar.gz $(GUI_URL) > /dev/null 2>&1; \
-	if test "`echo $$?`" -ne "0" ; then \
-	curl -o ../archive/$(GUI).tar.gz $(GUI_URL) > /dev/null 2>&1; \
-	if test "`echo $$?`" -ne "0" ; then \
-	echo "*** Unable to download pwGUI. Test whether curl or wget is installed and working," ; \
-	echo "*** if you have direct access to internet. If not, copy into archive/ the file" ; \
-	echo "*** $(GUI).tar.gz from $(GUI_URL)." ; \
-	exit 1 ; fi ; fi ; fi) 
-	if test ! -d ../GUI && test ! -d ../$(GUI); then \
-	(gzip -dc ../archive/$(GUI).tar.gz | (cd ../ ; tar -xvf -)) ; fi
+	$(call download_and_unpack,$(GUI),$(GUI_URL),GUI,pwGUI)
 	touch uncompress-gui
 
 ###########################################################
@@ -625,6 +489,7 @@ epw_clean:
 	$(MAKE) clean); fi
 	rm -f ../bin/epw.x
 	rm -rf ./make-epw 
+
 epw_veryclean: epw_clean
 
 w90_clean:
@@ -632,6 +497,7 @@ w90_clean:
 	$(MAKE) veryclean); fi
 	rm -f ../bin/wannier90.x
 	rm -rf ./make-w90 ./configure-w90
+
 w90_veryclean: w90_clean
 	if test -d ../W90; then (rm -R -f ../W90); fi
 	if test -d ../$(W90); then (rm -R -f ../$(W90)); fi
@@ -642,6 +508,7 @@ want_clean:
 	if test -d ../WANT; then (cd ../WANT; \
 	$(MAKE) clean); fi
 	- rm -rf ./make-want ./configure-want
+
 want_veryclean: want_clean
 	if test -d ../WANT; then (rm -R -f ../WANT); fi
 	if test -d ../$(WANT); then (rm -R -f ../$(WANT)); fi
@@ -651,6 +518,7 @@ yambo_clean:
 	if test -d ../YAMBO; then (cd ../YAMBO; \
 	$(MAKE) clean); fi
 	- rm -rf ./make-yambo ./configure-yambo
+
 yambo_veryclean: yambo_clean
 	if test -d ../YAMBO; then (rm -R -f ../YAMBO); fi
 	if test -d ../$(YAMBO); then (rm -R -f ../$(YAMBO)); fi
@@ -718,6 +586,7 @@ gpu_veryclean: gpu_clean
 clean: w90_clean want_clean yambo_clean yambo-devel_clean plumed_clean epw_clean \
 	gui_clean phonon_clean tddfpt_clean xspectra_clean neb_clean pwcond_clean \
 	ld1_clean gipaw_clean gpu_clean west_clean test-suite_clean
+
 veryclean: w90_veryclean want_veryclean yambo_veryclean yambo-devel_veryclean plumed_veryclean epw_veryclean \
 	gui_veryclean phonon_veryclean tddfpt_veryclean xspectra_veryclean neb_veryclean \
 	pwcond_veryclean ld1_veryclean gipaw_veryclean gpu_veryclean west_veryclean
