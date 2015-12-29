@@ -1,7 +1,8 @@
 #!/bin/sh -x
 
-tempdir=$HOME/Downloads
-version=5.2.1
+#tempdir=$HOME/Downloads
+tempdir=/tmp
+version=5.3.0
 
 # make sure there is no locale setting creating unneeded differences.
 LC_ALL=C
@@ -11,7 +12,7 @@ mkdir $tempdir
 cd $tempdir
 /bin/rm -rf espresso/ espresso-$version
 # get the svn copy
-svn checkout http://qeforge.qe-forge.org/svn/q-e/tags/QE-5-2-1/espresso
+svn checkout http://qeforge.qe-forge.org/svn/q-e/tags/QE-5.3.0/espresso
 mv espresso/ espresso-$version/
 
 cd espresso-$version
@@ -84,4 +85,4 @@ tar -czvf ../GWW-$version.tar.gz      GWW
 #tar -czvf ../GIPAW-$version.tar.gz    GIPAW
 tar -czvf ../tddfpt-$version.tar.gz   TDDFPT
 tar -czvf ../atomic-$version.tar.gz   atomic
-
+tar -czvf ../test-suite-$version.tar.gz test-suite
