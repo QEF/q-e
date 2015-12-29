@@ -388,15 +388,7 @@ gpu:  uncompress-gpu
 	touch make-gpu
 
 uncompress-gpu: touch-dummy
-	@(if test ! -s ../archive/$(GPU).tar.gz && test ! -d ../GPU && test ! -d ../$(GPU); then \
-	wget -O ../archive/$(GPU).tar.gz $(GPU_URL) > /dev/null 2>&1; \
-	if test "`echo $$?`" -ne "0" ; then \
-	curl -o ../archive/$(GPU).tar.gz $(GPU_URL) > /dev/null 2>&1; \
-	if test "`echo $$?`" -ne "0" ; then \
-	echo "*** Unable to download QE-GPU. Test whether curl or wget is installed and working," ; \
-	echo "*** if you have direct access to internet. If not, copy into archive/ the file" ; \
-	echo "*** $(GPU).tar.gz from $(GPU_URL)." ; \
-	exit 1 ; fi ; fi ; fi) 
+	$(call download_and_unpack,$(GPU),$(GPU_URL),GPU,QE-GPU)
 	@ echo ""
 	@ echo " *****************************************************************************"
 	@ echo " * QE-GPU has been downloaded under ./archive Please follow the instructions *"
