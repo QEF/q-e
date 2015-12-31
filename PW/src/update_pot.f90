@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2007 Quantum ESPRESSO group
+! Copyright (C) 2001-2015 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -8,6 +8,67 @@
 !
 #define ONE  (1.D0,0.D0)
 #define ZERO (0.D0,0.D0)
+!
+!----------------------------------------------------------------------------
+SUBROUTINE update_file ( )
+  !----------------------------------------------------------------------------
+  !
+  ! ... Reads, updates and rewrites the file containing atomic positions at
+  ! ... two previous steps, used by potential and wavefunction extrapolation
+  ! ... Requires: number of atoms nat, current atomic positions tau
+  ! ... Produces: length of history and tau at current and two previous steps
+  ! ...           written to file $prefix.update
+  !
+  USE kinds,     ONLY : DP
+  USE io_global, ONLY : ionode
+  USE io_files,  ONLY : iunupdate, seqopn
+  USE ions_base, ONLY : nat, tau
+  !
+  IMPLICIT NONE
+  !
+  REAL(DP), ALLOCATABLE :: tauold(:,:,:)
+  INTEGER :: history
+  LOGICAL :: exst
+  !
+  IF ( ionode ) THEN
+     !
+     ALLOCATE( tauold( 3, nat, 3 ) )
+     CALL seqopn( iunupdate, 'update', 'FORMATTED', exst ) 
+     IF ( exst ) THEN
+        READ( UNIT = iunupdate, FMT = * ) history
+        READ( UNIT = iunupdate, FMT = * ) tauold
+     ELSE
+        history = 0
+        tauold  = 0.D0
+        WRITE( UNIT = iunupdate, FMT = * ) history
+        WRITE( UNIT = iunupdate, FMT = * ) tauold
+     END IF
+     CLOSE( UNIT = iunupdate, STATUS = 'KEEP' )
+     !
+     ! ... save the previous two steps ( a total of three steps is saved )
+     !
+     tauold(:,:,3) = tauold(:,:,2)
+     tauold(:,:,2) = tauold(:,:,1)
+     tauold(:,:,1) = tau(:,:)
+     !
+     ! ... history is updated (a new ionic step has been done)
+     !
+     history = MIN( 3, ( history + 1 ) )
+     !
+     ! ... old positions are written on file
+     !
+     CALL seqopn( iunupdate, 'update', 'FORMATTED', exst ) 
+     !
+     WRITE( UNIT = iunupdate, FMT = * ) history
+     WRITE( UNIT = iunupdate, FMT = * ) tauold
+     !
+     CLOSE( UNIT = iunupdate, STATUS = 'KEEP' )
+     !  
+     DEALLOCATE( tauold )
+     !
+  END IF
+  !
+END SUBROUTINE update_file
 !
 !----------------------------------------------------------------------------
 SUBROUTINE update_pot()
@@ -116,6 +177,7 @@ SUBROUTINE update_pot()
   !
   CALL mp_bcast( alpha0, ionode_id, intra_image_comm )
   CALL mp_bcast( beta0,  ionode_id, intra_image_comm )
+  CALL mp_bcast( history,ionode_id, intra_image_comm )
   CALL mp_bcast( tauold, ionode_id, intra_image_comm )
   !
   IF ( wfc_order > 0 ) THEN
@@ -626,8 +688,8 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
         CALL ZGEMM( 'N', 'C', npw, nbnd, nbnd, ONE, &
                     evcold, npwx, sp_m, nbnd, ZERO, aux, npwx )
         !
-        ! ... alpha0 and beta0 are calculated in "move_ions"
-        ! ... for first-order interpolation, alpha=1, beta0=0
+        ! ... alpha0 and beta0 are calculated in "update_pot"
+        ! ... for first-order interpolation, alpha0=1, beta0=0
         !
         IF ( wfc_extr == 3 ) THEN
            evc = ( 1.0_dp + alpha0 ) * evc + ( beta0 - alpha0 ) * aux

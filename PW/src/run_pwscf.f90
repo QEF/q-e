@@ -135,8 +135,11 @@ SUBROUTINE run_pwscf ( exit_status )
      IF ( lmd .OR. lbfgs ) THEN
         !
         if (fix_volume) CALL impose_deviatoric_stress(sigma)
-        !
         if (fix_area)  CALL  impose_deviatoric_stress_2d(sigma)
+        !
+        ! ... save data needed for potential and wavefunction extrapolation
+        !
+        CALL update_file ( )
         !
         ! ... ionic step (for molecular dynamics or optimization)
         !

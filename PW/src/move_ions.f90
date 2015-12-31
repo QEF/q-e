@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2011 Quantum ESPRESSO group
+! Copyright (C) 2002-2015 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -19,11 +19,11 @@ SUBROUTINE move_ions ( idone )
   ! ..  "idone" is the counter on ionic moves, "nstep" their total number 
   ! ... "istep" contains the number of all steps including previous runs
   ! ... Coefficients for potential and wavefunctions extrapolation are
-  ! ... also computed here, in update_pot
+  ! ... no longer computed here but in update_pot
   !
   USE constants,              ONLY : e2, eps6, ry_kbar
   USE io_global,              ONLY : stdout
-  USE io_files,               ONLY : tmp_dir, iunupdate, seqopn
+  USE io_files,               ONLY : tmp_dir
   USE kinds,                  ONLY : DP
   USE cell_base,              ONLY : alat, at, bg, omega, cell_force, fix_volume, fix_area
   USE cellmd,                 ONLY : omega_old, at_old, press, lmovecell, calc
@@ -37,8 +37,7 @@ SUBROUTINE move_ions ( idone )
   USE ener,                   ONLY : etot, ef
   USE force_mod,              ONLY : force, sigma
   USE control_flags,          ONLY : istep, nstep, upscale, lbfgs, &
-                                     lconstrain, conv_ions, &
-                                     lmd, history, tr2
+                                     lconstrain, conv_ions, lmd, tr2
   USE basis,                  ONLY : starting_wfc
   USE relax,                  ONLY : epse, epsf, epsp, starting_scf_threshold
   USE lsda_mod,               ONLY : lsda, absmag
@@ -63,7 +62,6 @@ SUBROUTINE move_ions ( idone )
                            restart_with_starting_magnetiz = .FALSE., &
                            lcheck_cell= .TRUE., &
                            final_cell_calculation=.FALSE.
-  REAL(DP), ALLOCATABLE :: tauold(:,:,:)
   REAL(DP)              :: energy_error, gradient_error, cell_error
   LOGICAL               :: step_accepted, exst
   REAL(DP), ALLOCATABLE :: pos(:), grad(:)
@@ -77,51 +75,6 @@ SUBROUTINE move_ions ( idone )
   IF ( ionode ) THEN
      !
      conv_ions = .FALSE.
-     !
-     ALLOCATE( tauold( 3, nat, 3 ) )
-     !
-     ! ... the file containing old positions is opened 
-     ! ... ( needed for extrapolation )
-     !
-     CALL seqopn( iunupdate, 'update', 'FORMATTED', exst ) 
-     !
-     IF ( exst ) THEN
-        !
-        READ( UNIT = iunupdate, FMT = * ) history
-        READ( UNIT = iunupdate, FMT = * ) tauold
-        !
-     ELSE
-        !
-        history = 0
-        tauold  = 0.D0
-        !
-        WRITE( UNIT = iunupdate, FMT = * ) history
-        WRITE( UNIT = iunupdate, FMT = * ) tauold
-        !
-     END IF
-     !
-     CLOSE( UNIT = iunupdate, STATUS = 'KEEP' )
-     !
-     ! ... save the previous two steps ( a total of three steps is saved )
-     !
-     tauold(:,:,3) = tauold(:,:,2)
-     tauold(:,:,2) = tauold(:,:,1)
-     tauold(:,:,1) = tau(:,:)
-     !
-     ! ... history is updated (a new ionic step has been done)
-     !
-     history = MIN( 3, ( history + 1 ) )
-     !
-     ! ... old positions are written on file
-     !
-     CALL seqopn( iunupdate, 'update', 'FORMATTED', exst ) 
-     !
-     WRITE( UNIT = iunupdate, FMT = * ) history
-     WRITE( UNIT = iunupdate, FMT = * ) tauold
-     !
-     CLOSE( UNIT = iunupdate, STATUS = 'KEEP' )
-     !  
-     DEALLOCATE( tauold )
      !
      ! ... do the minimization / dynamics step
      !
@@ -420,7 +373,6 @@ SUBROUTINE move_ions ( idone )
   CALL mp_bcast( force,     ionode_id, intra_image_comm )
   CALL mp_bcast( tr2,       ionode_id, intra_image_comm )
   CALL mp_bcast( conv_ions, ionode_id, intra_image_comm )
-  CALL mp_bcast( history,   ionode_id, intra_image_comm )
   !
   IF ( lmovecell ) THEN
      !

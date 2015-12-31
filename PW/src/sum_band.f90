@@ -906,7 +906,7 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   !     \sum_i <\psi_i|\beta_l>w_i<\beta_m|\psi_i>
   ! for point "ik" and, for LSDA, spin "current_spin" 
   ! Calls calbec to compute "becp"=<beta_m|psi_i> 
-  ! Output is accumulated (unsymmtrized) into "becsum", module "uspp"
+  ! Output is accumulated (unsymmetrized) into "becsum", module "uspp"
   !
   ! Routine used in sum_band (if okvan) and in compute_becsum, called by hinit1 (if okpaw)
   !

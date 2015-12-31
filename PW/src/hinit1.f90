@@ -28,7 +28,6 @@ SUBROUTINE hinit1()
   USE scf,           ONLY : rho
   USE paw_variables, ONLY : okpaw, ddd_paw
   USE paw_onecenter, ONLY : paw_potential
-  USE paw_init,      ONLY : paw_atomic_becsum
   USE paw_symmetry,  ONLY : paw_symmetrize_ddd
   USE dfunct,        ONLY : newd
   !
