@@ -34,36 +34,34 @@ SUBROUTINE update_file ( )
      !
      ALLOCATE( tauold( 3, nat, 3 ) )
      CALL seqopn( iunupdate, 'update', 'FORMATTED', exst ) 
-     IF ( exst ) THEN
-        READ( UNIT = iunupdate, FMT = * ) history
-        READ( UNIT = iunupdate, FMT = * ) tauold
-     ELSE
+     IF ( .NOT. exst ) THEN
+        !
+        ! ... file not present, start the procedure
+        !
         history = 0
         tauold  = 0.D0
-        WRITE( UNIT = iunupdate, FMT = * ) history
-        WRITE( UNIT = iunupdate, FMT = * ) tauold
+     ELSE
+        READ( UNIT = iunupdate, FMT = * ) history
+        READ( UNIT = iunupdate, FMT = * ) tauold
+        REWIND( UNIT = iunupdate ) 
+        !
+        ! ... read and save the previous two steps ( three steps are saved )
+        !
+        tauold(:,:,3) = tauold(:,:,2)
+        tauold(:,:,2) = tauold(:,:,1)
+        tauold(:,:,1) = tau(:,:)
+        !
+        ! ... history is updated (a new ionic step has been done)
+        !
+        history = MIN( 3, ( history + 1 ) )
+        !
      END IF
-     CLOSE( UNIT = iunupdate, STATUS = 'KEEP' )
      !
-     ! ... save the previous two steps ( a total of three steps is saved )
-     !
-     tauold(:,:,3) = tauold(:,:,2)
-     tauold(:,:,2) = tauold(:,:,1)
-     tauold(:,:,1) = tau(:,:)
-     !
-     ! ... history is updated (a new ionic step has been done)
-     !
-     history = MIN( 3, ( history + 1 ) )
-     !
-     ! ... old positions are written on file
-     !
-     CALL seqopn( iunupdate, 'update', 'FORMATTED', exst ) 
+     ! ... history and positions are written on file, file is closed
      !
      WRITE( UNIT = iunupdate, FMT = * ) history
      WRITE( UNIT = iunupdate, FMT = * ) tauold
-     !
      CLOSE( UNIT = iunupdate, STATUS = 'KEEP' )
-     !  
      DEALLOCATE( tauold )
      !
   END IF
