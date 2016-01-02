@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2013 Quantum ESPRESSO group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -16,8 +16,7 @@ SUBROUTINE openfil()
   USE kinds,            ONLY : DP
   USE buffers,          ONLY : open_buffer
   USE control_flags,    ONLY : io_level
-  USE io_global,        ONLY : stdout
-  USE basis,            ONLY : natomwfc, starting_wfc
+  USE basis,            ONLY : natomwfc
   USE wvfct,            ONLY : nbnd, npwx
   USE fixed_occ,        ONLY : one_atom_occupations
   USE ldaU,             ONLY : lda_plus_U, U_projection, nwfcU
@@ -38,7 +37,7 @@ SUBROUTINE openfil()
   !
   ! ... nwordwfc is the record length (IN COMPLEX WORDS)
   ! ... for the direct-access file containing wavefunctions
-  ! ... nwordatwfc as above (IN REAL WORDS) for atomic wavefunctions
+  ! ... nwordatwfc/nwordwfcU as above for atomic/U-manifold wavefunctions
   !
   nwordwfc  = nbnd*npwx*npol
   nwordatwfc= npwx*natomwfc*npol
