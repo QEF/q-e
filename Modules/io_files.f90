@@ -178,9 +178,12 @@ CONTAINS
 subroutine diropn (unit, extension, recl, exst, tmp_dir_)
   !-----------------------------------------------------------------------
   !
-  !     this routine opens a file named "prefix"."extension" in tmp_dir 
-  !     for direct I/O access
-  !     If appropriate, the node number is added to the file name
+  !     Opens a direct-access file named "prefix"."extension" in directory
+  !     "tmp_dir_" if specified, in "tmp_dir" otherwise. 
+  !     In parallel execution, the node number is added to the file name.
+  !     The record length is "recl" double-precision numbers.
+  !     On output, "exst" is .T. if opened file already exists
+  !     If recl=-1, the file existence is checked, nothing else is done
   !
 #if defined(__SX6)
 #  define DIRECT_IO_FACTOR 1
@@ -240,6 +243,7 @@ subroutine diropn (unit, extension, recl, exst, tmp_dir_)
   endif
 
   inquire (file = tempfile, exist = exst)
+  if (recl == -1) RETURN
   !
   !      the unit for record length is unfortunately machine-dependent
   !
