@@ -21,12 +21,9 @@ SUBROUTINE compute_scf( fii, lii, stat  )
   USE basis,            ONLY : starting_wfc, starting_pot
   USE kinds,            ONLY : DP
   USE constants,        ONLY : e2
-  USE control_flags,    ONLY : conv_elec, history, pot_order
-  USE vlocal,           ONLY : strf
-  USE cell_base,        ONLY : bg, alat
-  USE gvect,            ONLY : ngm, g, eigts1, eigts2, eigts3
-  USE fft_base,         ONLY : dfftp
-  USE ions_base,        ONLY : tau, nat, nsp, ityp, zv
+  USE control_flags,    ONLY : conv_elec
+  USE cell_base,        ONLY : alat
+  USE ions_base,        ONLY : tau, nat, ityp, zv
   USE ener,             ONLY : etot, ef
   USE force_mod,        ONLY : force
   USE io_files,         ONLY : prefix, tmp_dir, wfc_dir,  iunupdate, seqopn, &
@@ -57,8 +54,6 @@ SUBROUTINE compute_scf( fii, lii, stat  )
   REAL(DP)              :: tcpu
   CHARACTER (LEN=256)   :: tmp_dir_saved
   LOGICAL               :: file_exists, opnd
-  REAL(DP), ALLOCATABLE :: tauold(:,:,:)
-   ! previous positions of atoms (needed by extrapolation)
   !
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
   !
@@ -69,8 +64,6 @@ SUBROUTINE compute_scf( fii, lii, stat  )
   istat = 0
   !
   FLUSH( iunpath )
-  !
-  ALLOCATE( tauold( 3, nat, 3 ) )
   !
   tmp_dir_saved = tmp_dir
   !
@@ -189,8 +182,6 @@ SUBROUTINE compute_scf( fii, lii, stat  )
   ! ... condition)
   !
 1 CALL mp_barrier( world_comm )
-  !
-  DEALLOCATE( tauold )
   !
   IF ( nimage > 1 ) THEN
      !
@@ -318,54 +309,9 @@ SUBROUTINE compute_scf( fii, lii, stat  )
       !
       CALL init_run()
       !
-      IF ( ionode ) THEN
-         !
-         ! ... the file containing old positions is opened
-         ! ... ( needed for extrapolation )
-         !
-         CALL seqopn( iunupdate, 'update', 'FORMATTED', file_exists )
-         !
-         IF ( file_exists ) THEN
-            !
-            READ( UNIT = iunupdate, FMT = * ) history
-            READ( UNIT = iunupdate, FMT = * ) tauold
-            !
-         ELSE
-            !
-            history = 0
-            tauold  = 0.D0
-            !
-            WRITE( UNIT = iunupdate, FMT = * ) history
-            WRITE( UNIT = iunupdate, FMT = * ) tauold
-            !
-         END IF
-         !
-         CLOSE( UNIT = iunupdate, STATUS = 'KEEP' )
-         !
-      END IF
+      ! ... charge density and wavefunction extrapolation
       !
-      CALL mp_bcast( history, ionode_id, intra_image_comm )
-      CALL mp_bcast( tauold,  ionode_id, intra_image_comm )
-      !
-      IF ( history > 0 ) THEN
-         !
-         ! ... potential and wavefunctions are extrapolated only if
-         ! ... we are starting a new self-consistency ( scf on the
-         ! ... previous image was achieved )
-         !
-         IF ( pot_order > 0 ) THEN
-            !
-            ! ... structure factors of the old positions are computed
-            ! ... (needed for the old atomic charge)
-            !
-            CALL struc_fact( nat, tauold(:,:,1), nsp, ityp, ngm, g, bg, &
-                             dfftp%nr1, dfftp%nr2, dfftp%nr3, strf, eigts1, eigts2, eigts3 )
-            !
-         END IF
-         !
-         CALL update_pot()
-         !
-      END IF
+      CALL update_neb ()
       !
       ! ... self-consistency loop
       !
@@ -403,26 +349,6 @@ SUBROUTINE compute_scf( fii, lii, stat  )
       ! ... gradients are converted from rydberg/bohr to hartree/bohr
       !
       grad_pes(:,image) = - RESHAPE( force, (/ dim1 /) ) / e2
-      !
-      IF ( ionode ) THEN
-         !
-         ! ... save the previous two steps
-         ! ... ( a total of three ionic steps is saved )
-         !
-         tauold(:,:,3) = tauold(:,:,2)
-         tauold(:,:,2) = tauold(:,:,1)
-         tauold(:,:,1) = tau(:,:)
-         !
-         history = MIN( 3, ( history + 1 ) )
-         !
-         CALL seqopn( iunupdate, 'update', 'FORMATTED', file_exists )
-         !
-         WRITE( UNIT = iunupdate, FMT = * ) history
-         WRITE( UNIT = iunupdate, FMT = * ) tauold
-         !
-         CLOSE( UNIT = iunupdate, STATUS = 'KEEP' )
-         !
-      END IF
       !
       ethr = diago_thr_init
       !

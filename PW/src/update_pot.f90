@@ -69,6 +69,108 @@ SUBROUTINE update_file ( )
 END SUBROUTINE update_file
 !
 !----------------------------------------------------------------------------
+SUBROUTINE update_neb ( )
+  !----------------------------------------------------------------------------
+  !
+  ! ... Potential and wavefunction extrapolation for NEB
+  ! ... Prepares file with previous steps for usage by update_pot
+  ! ... Must be merged soon with update_file for MD in PWscf
+  !
+  USE kinds,     ONLY : DP
+  USE control_flags, ONLY : pot_order, history
+  USE io_global, ONLY : ionode, ionode_id
+  USE io_files,  ONLY : iunupdate, seqopn
+  USE mp,        ONLY : mp_bcast
+  USE mp_images, ONLY : intra_image_comm
+  USE ions_base, ONLY : nat, tau, nsp, ityp
+  USE gvect,     ONLY : ngm, g, eigts1, eigts2, eigts3
+  USE vlocal,    ONLY : strf
+  USE cell_base, ONLY : bg
+  USE fft_base,  ONLY : dfftp
+  !
+  IMPLICIT NONE
+  !
+  REAL(DP), ALLOCATABLE :: tauold(:,:,:)
+  LOGICAL :: exst
+  !
+  ALLOCATE( tauold( 3, nat, 3 ) )
+  !
+  IF ( ionode ) THEN
+     !
+     CALL seqopn( iunupdate, 'update', 'FORMATTED', exst )
+     IF ( exst ) THEN
+        !
+        READ( UNIT = iunupdate, FMT = * ) history
+        READ( UNIT = iunupdate, FMT = * ) tauold
+        !
+     ELSE
+        !
+        ! ... file not present: create one (update_pot needs it)
+        !
+        history = 0
+        tauold  = 0.D0
+        WRITE( UNIT = iunupdate, FMT = * ) history
+        WRITE( UNIT = iunupdate, FMT = * ) tauold
+        !
+     END IF
+     !
+     CLOSE( UNIT = iunupdate, STATUS = 'KEEP' )
+     !
+   END IF
+   !
+   CALL mp_bcast( history, ionode_id, intra_image_comm )
+   CALL mp_bcast( tauold,  ionode_id, intra_image_comm )
+   !
+   IF ( history > 0 ) THEN
+      !
+      ! ... potential and wavefunctions are extrapolated only if
+      ! ... we are starting a new self-consistency ( scf on the
+      ! ... previous image was achieved )
+      !
+      IF ( pot_order > 0 ) THEN
+         !
+         ! ... structure factors of the old positions are computed
+         ! ... (needed for the old atomic charge; update_pot will then
+         ! ...  overwrite them with structure factors at curret positions)
+         !
+         CALL struc_fact( nat, tauold(:,:,1), nsp, ityp, ngm, g, bg, &
+                          dfftp%nr1, dfftp%nr2, dfftp%nr3, strf,     &
+                          eigts1, eigts2, eigts3 )
+         !
+      END IF
+      !
+      CALL update_pot()
+      !
+   END IF
+   !
+   IF ( ionode ) THEN
+      !
+      ! ... save the previous two steps, for usage in next scf
+      ! ... ( a total of three ionic steps is saved )
+      !
+      tauold(:,:,3) = tauold(:,:,2)
+      tauold(:,:,2) = tauold(:,:,1)
+      tauold(:,:,1) = tau(:,:)
+      !
+      ! ... update history count (will be used at next step)
+      !
+      history = MIN( 3, ( history + 1 ) )
+      !
+      ! ... update history file (must be deleted if scf conv. not reached)
+      !
+      CALL seqopn( iunupdate, 'update', 'FORMATTED', exst )
+      !
+      WRITE( UNIT = iunupdate, FMT = * ) history
+      WRITE( UNIT = iunupdate, FMT = * ) tauold
+      !
+      CLOSE( UNIT = iunupdate, STATUS = 'KEEP' )
+      !
+   END IF
+   !
+   DEALLOCATE ( tauold )
+   !
+ END SUBROUTINE update_neb
+!----------------------------------------------------------------------------
 SUBROUTINE update_pot()
   !----------------------------------------------------------------------------
   !
