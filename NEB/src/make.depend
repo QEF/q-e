@@ -2,7 +2,6 @@ compute_scf.o : ../../Modules/cell_base.o
 compute_scf.o : ../../Modules/constants.o
 compute_scf.o : ../../Modules/control_flags.o
 compute_scf.o : ../../Modules/fcp_variables.o
-compute_scf.o : ../../Modules/fft_base.o
 compute_scf.o : ../../Modules/input_parameters.o
 compute_scf.o : ../../Modules/io_files.o
 compute_scf.o : ../../Modules/io_global.o
@@ -11,9 +10,9 @@ compute_scf.o : ../../Modules/kind.o
 compute_scf.o : ../../Modules/mp.o
 compute_scf.o : ../../Modules/mp_global.o
 compute_scf.o : ../../Modules/mp_world.o
-compute_scf.o : ../../Modules/recvec.o
 compute_scf.o : ../../PW/src/atomic_wfc_mod.o
 compute_scf.o : ../../PW/src/pwcom.o
+compute_scf.o : ../../PW/src/update_pot.o
 compute_scf.o : fcp_opt_routines.o
 compute_scf.o : path_formats.o
 compute_scf.o : path_io_routines.o

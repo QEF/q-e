@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2011 Quantum ESPRESSO group
+! Copyright (C) 2002-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -200,16 +200,6 @@ MODULE control_flags
   LOGICAL, PUBLIC :: &
     diago_full_acc = .FALSE. ! if true,  empty eigenvalues have the same
                              ! accuracy of the occupied ones
-  !
-  ! ... wfc and rho extrapolation
-  !
-  REAL(DP), PUBLIC :: &
-    alpha0,           &! the mixing parameters for the extrapolation
-    beta0              ! of the starting potential
-  INTEGER, PUBLIC :: &
-    history,          &! number of old steps available for potential updating
-    pot_order = 0,    &! type of potential updating ( see update_pot )
-    wfc_order = 0      ! type of wavefunctions updating ( see update_pot )
   !
   ! ... ionic dynamics
   !

@@ -763,7 +763,6 @@ hinit1.o : ../../Modules/wannier_new.o
 hinit1.o : ldaU.o
 hinit1.o : martyna_tuckerman.o
 hinit1.o : newd.o
-hinit1.o : paw_init.o
 hinit1.o : paw_onecenter.o
 hinit1.o : paw_symmetry.o
 hinit1.o : pwcom.o
@@ -880,6 +879,7 @@ input.o : pwcom.o
 input.o : realus.o
 input.o : start_k.o
 input.o : symm_base.o
+input.o : update_pot.o
 input.o : wyckoff.o
 input.o : xdm_dispersion.o
 interpolate.o : ../../FFTXlib/fft_interfaces.o
@@ -1074,7 +1074,6 @@ offset_atom_wfc.o : ../../Modules/uspp.o
 offset_atom_wfc.o : ldaU.o
 openfil.o : ../../Modules/control_flags.o
 openfil.o : ../../Modules/io_files.o
-openfil.o : ../../Modules/io_global.o
 openfil.o : ../../Modules/kind.o
 openfil.o : ../../Modules/noncol.o
 openfil.o : ../../Modules/wannier_new.o
@@ -1520,6 +1519,7 @@ run_pwscf.o : ../../Modules/mp_images.o
 run_pwscf.o : ../../Modules/parameters.o
 run_pwscf.o : ../../Modules/qmmm.o
 run_pwscf.o : pwcom.o
+run_pwscf.o : update_pot.o
 ruotaijk.o : ../../Modules/kind.o
 s_1psi.o : ../../Modules/becmod.o
 s_1psi.o : ../../Modules/control_flags.o

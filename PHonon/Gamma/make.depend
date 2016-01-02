@@ -155,6 +155,7 @@ phcg.o : ../../PW/src/ldaU.o
 phcg.o : ../../PW/src/pwcom.o
 phcg.o : ../../PW/src/scf_mod.o
 phcg.o : ../../PW/src/symm_base.o
+phcg.o : ../../PW/src/update_pot.o
 phcg.o : cgcom.o
 pw_dot.o : ../../Modules/kind.o
 pw_dot.o : ../../Modules/mp.o

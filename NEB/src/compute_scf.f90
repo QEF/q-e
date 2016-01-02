@@ -43,6 +43,7 @@ SUBROUTINE compute_scf( fii, lii, stat  )
   USE fcp_opt_routines, ONLY : fcp_neb_nelec, fcp_neb_ef
   USE fcp_variables,    ONLY : lfcpopt
   USE klist,            ONLY : nelec, tot_charge
+  USE extrapolation,    ONLY : update_neb
   !
   IMPLICIT NONE
   !

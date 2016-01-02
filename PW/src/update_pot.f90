@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2015 Quantum ESPRESSO group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -8,6 +8,26 @@
 !
 #define ONE  (1.D0,0.D0)
 #define ZERO (0.D0,0.D0)
+!
+MODULE extrapolation
+  !
+  ! ... wfc and rho extrapolation
+  !
+  USE kinds, ONLY: dp
+  !
+  REAL(dp) :: &
+    alpha0,           &! the mixing parameters for the extrapolation
+    beta0              ! of the starting potential
+  INTEGER :: &
+    history,          &! number of old steps available for potential updating
+    pot_order = 0,    &! type of potential updating ( see update_pot )
+    wfc_order = 0      ! type of wavefunctions updating ( see update_pot )
+  !
+  PRIVATE
+  PUBLIC :: pot_order, wfc_order
+  PUBLIC :: update_file, update_neb, update_pot, extrapolate_charge
+  !
+  CONTAINS
 !
 !----------------------------------------------------------------------------
 SUBROUTINE update_file ( )
@@ -19,7 +39,6 @@ SUBROUTINE update_file ( )
   ! ... Produces: length of history and tau at current and two previous steps
   ! ...           written to file $prefix.update
   !
-  USE kinds,     ONLY : DP
   USE io_global, ONLY : ionode
   USE io_files,  ONLY : iunupdate, seqopn
   USE ions_base, ONLY : nat, tau
@@ -27,7 +46,6 @@ SUBROUTINE update_file ( )
   IMPLICIT NONE
   !
   REAL(DP), ALLOCATABLE :: tauold(:,:,:)
-  INTEGER :: history
   LOGICAL :: exst
   !
   IF ( ionode ) THEN
@@ -76,8 +94,6 @@ SUBROUTINE update_neb ( )
   ! ... Prepares file with previous steps for usage by update_pot
   ! ... Must be merged soon with update_file for MD in PWscf
   !
-  USE kinds,     ONLY : DP
-  USE control_flags, ONLY : pot_order, history
   USE io_global, ONLY : ionode, ionode_id
   USE io_files,  ONLY : iunupdate, seqopn
   USE mp,        ONLY : mp_bcast
@@ -221,8 +237,6 @@ SUBROUTINE update_pot()
   ! ...                     + beta0*( tau(t-dt) -tau(t-2*dt) )
   !
   !
-  USE kinds,         ONLY : DP
-  USE control_flags, ONLY : pot_order, wfc_order, history, alpha0, beta0
   USE io_files,      ONLY : prefix, iunupdate, tmp_dir, wfc_dir, nd_nmbr, seqopn
   USE io_global,     ONLY : ionode, ionode_id
   USE cell_base,     ONLY : bg
@@ -374,7 +388,6 @@ SUBROUTINE extrapolate_charge( rho_extr )
   !
   USE constants,            ONLY : eps32
   USE io_global,            ONLY : stdout
-  USE kinds,                ONLY : DP
   USE cell_base,            ONLY : omega, bg
   USE ions_base,            ONLY : nat, tau, nsp, ityp
   USE fft_base,             ONLY : dfftp, dffts
@@ -384,7 +397,6 @@ SUBROUTINE extrapolate_charge( rho_extr )
   USE scf,                  ONLY : rho, rho_core, rhog_core, v
   USE ldaU,                 ONLY : eth
   USE wavefunctions_module, ONLY : psic
-  USE control_flags,        ONLY : alpha0, beta0
   USE ener,                 ONLY : ehart, etxc, vtxc, epaw
   USE extfield,             ONLY : etotefield
   USE cellmd,               ONLY : lmovecell, omega_old
@@ -615,10 +627,8 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
   ! ... by Mead, Rev. Mod. Phys., vol 64, pag. 51 (1992), eqs. 3.20-3.29
   !
   USE io_global,            ONLY : stdout
-  USE kinds,                ONLY : DP
   USE klist,                ONLY : nks, ngk, xk
   USE lsda_mod,             ONLY : lsda, current_spin, isk
-  USE control_flags,        ONLY : alpha0, beta0, wfc_order
   USE wvfct,                ONLY : nbnd, npw, npwx, igk, current_k
   USE ions_base,            ONLY : nat, tau
   USE io_files,             ONLY : nwordwfc, iunigk, iunwfc, iunoldwfc, &
@@ -861,9 +871,7 @@ SUBROUTINE find_alpha_and_beta( nat, tau, tauold, alpha0, beta0 )
   ! ...                  + beta0 * ( tau(t-dt) -tau(t-2*dt) )
   !
   USE constants,     ONLY : eps16
-  USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
-  USE control_flags, ONLY : history
   !
   IMPLICIT NONE
   !
@@ -944,3 +952,5 @@ SUBROUTINE find_alpha_and_beta( nat, tau, tauold, alpha0, beta0 )
   RETURN
   !
 END SUBROUTINE find_alpha_and_beta
+  !
+END MODULE extrapolation

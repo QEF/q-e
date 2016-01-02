@@ -34,6 +34,7 @@ SUBROUTINE run_pwscf ( exit_status )
   USE force_mod,        ONLY : lforce, lstres, sigma, force
   USE check_stop,       ONLY : check_stop_init, check_stop_now
   USE mp_images,        ONLY : intra_image_comm
+  USE extrapolation,    ONLY : update_file, update_pot
   USE qmmm,             ONLY : qmmm_initialization, qmmm_shutdown, &
                                qmmm_update_positions, qmmm_update_forces
   !
