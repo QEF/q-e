@@ -10,7 +10,7 @@
 #
 # Maintainer: Filippo Spiga (filippo.spiga@quantum-espresso.org)
 
-source ${ESPRESSO_ROOT}/test-suite/ENVIRONMENT
+include ${ESPRESSO_ROOT}/test-suite/ENVIRONMENT
 
 # -- Uncomment to run in parallel
 #export PARA_PREFIX="mpirun -np 4"

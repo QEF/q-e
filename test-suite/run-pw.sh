@@ -10,7 +10,7 @@
 #
 # Maintainer: Filippo Spiga (filippo.spiga@quantum-espresso.org)
 
-source ${ESPRESSO_ROOT}/test-suite/ENVIRONMENT
+include ${ESPRESSO_ROOT}/test-suite/ENVIRONMENT
 
 
 # Additional stuff before run special test-cases

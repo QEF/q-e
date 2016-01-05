@@ -1,15 +1,10 @@
 # Copyright (C) 2001-2020 Quantum ESPRESSO Foundation
 # Maintainer: Filippo Spiga (filippo.spiga@quantum-espresso.org)
 
-TEST-SUITE  v0.9.5
+TEST-SUITE  v0.9.6
 ------------------
 
-First you need to define ESPRESSO_ROOT
-
-$ export ESPRESSO_ROOT=${PWD}/../
-
-
-Then you can run make with several options:
+You can run make with several options:
 
 A) Run all PW and CP tests and show a final report
 

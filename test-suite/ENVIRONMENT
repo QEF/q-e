@@ -14,6 +14,9 @@ export REFERENCE_VERSION=r11920
 
 ####################################################################################
 
+# Edit this line _ONLY_ iff you run test-code outside the QE main directory 
+export ESPRESSO_ROOT=${PWD}/../
+
 export ESPRESSO_PSEUDO=${ESPRESSO_ROOT}/pseudo
 export ESPRESSO_TMPDIR=/tmp/save
 export NETWORK_PSEUDO=http://www.quantum-espresso.org/wp-content/uploads/upf_files/
