@@ -40,6 +40,8 @@ compare :
 clean: prolog
 	@for x in `find pw_* -name "test*"`; do rm -rf $$x; done
 	@for x in `find cp_* -name "test*"`; do rm -rf $$x; done
+# Special case for 'pw_vc-relax' test-case
+	@rm -f rm pw_vc-relax/e pw_vc-relax/tv pw_vc-relax/p pw_vc-relax/eal pw_vc-relax/avec
 	@rm userconfig
 
 purge: clean
