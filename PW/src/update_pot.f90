@@ -56,7 +56,7 @@ SUBROUTINE update_file ( )
         !
         ! ... file not present, start the procedure
         !
-        history = 0
+        history = 1
         tauold  = 0.D0
      ELSE
         READ( UNIT = iunupdate, FMT = * ) history
