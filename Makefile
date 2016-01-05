@@ -9,24 +9,30 @@
 include make.sys
 
 default :
-	@echo 'to install, type at the shell prompt:'
-	@echo '  ./configure'
-	@echo '  make target'
-	@echo 'where target is one of the following:'
+	@echo 'to install Quantum ESPRESSO, type at the shell prompt:'
+	@echo '  ./configure [--prefix=]'
+	@echo '  make [-j] target'
+	@echo ' '
+	@echo 'where target identifies one or multiple CORE PACKAGES:'
 	@echo '  pw           basic code for scf, structure optimization, MD'
 	@echo '  ph           phonon code, Gamma-only version and third-order derivatives'
 	@echo '  pwcond       ballistic conductance'
 	@echo '  neb          code for Nudged Elastic Band method'
 	@echo '  pp           postprocessing programs'
+	@echo '  pwall        same as "make pw ph pp pwcond neb"'
 	@echo '  cp           CP code: CP MD with ultrasoft pseudopotentials'
+	@echo '  tddfpt       time dependent dft code'
+	@echo '  gwl          GW with Lanczos chains'
 	@echo '  ld1          utilities for pseudopotential generation'
 	@echo '  upf          utilities for pseudopotential conversion'
-	@echo '  tddfpt       time dependent dft code'
-	@echo '  gui          Graphical User Interface '
-	@echo '  gwl          GW with Lanczos chains '
-	@echo '  xspectra     X-ray core-hole spectroscopy calculations '
-	@echo '  pwall        same as "make pw ph pp pwcond neb"'
-	@echo '  all          same as "make pwall cp ld1 upf tddfpt gwl"'
+	@echo '  xspectra     X-ray core-hole spectroscopy calculations'
+	@echo '  couple       Library interface for coupling to external codes'
+	@if test -d GUI/; then \
+		echo '  gui          Graphical User Interface'; fi
+	@echo '  test-suite   Run semi-automated test-suite for regression testing'
+	@echo '  all          same as "make pwall cp ld1 upf tddfpt"'
+	@echo ' '
+	@echo 'where target identifies one or multiple THIRD-PARTIES PACKAGES:'
 	@echo '  gipaw        NMR and EPR spectra'
 	@echo '  w90          Maximally localised Wannier Functions'
 	@echo '  want         Quantum Transport with Wannier functions'
@@ -36,15 +42,15 @@ default :
 	@echo '  plumed       Metadynamics plugin for pw or cp'
 	@echo '  epw          Electron-Phonon Coupling with wannier functions'
 	@echo '  gpu          Download the latest QE-GPU package'
-	@echo '  couple       Library interface for coupling to external codes'
-	@echo '  test-suite   Run semi-automated test-suite for regression testing'
-	@echo '  clean        remove executables and objects'
-	@echo '  veryclean    revert distribution to the original status'
-	@echo '  tar          create a tarball of the source tree'
-	@if test -d GUI/; then \
-	 echo '  tar-gui      create a standalone PWgui tarball from the GUI sources'; fi
+	@echo ' '
+	@echo 'where target is one of the following suite operation:'
 	@echo '  doc          build documentation'
 	@echo '  links        create links to all executables in bin/'
+	@echo '  tar          create a tarball of the source tree'
+	@echo '  tar-gui      create a standalone PWgui tarball from the GUI sources'
+	@echo '  clean        remove executables and objects'
+	@echo '  veryclean    revert distribution to the original status'
+
 
 ###########################################################
 # Main targets
