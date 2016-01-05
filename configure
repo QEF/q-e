@@ -14,6 +14,7 @@
 # Dependencies may be also directly generated
 # 
 # Courtesy of A. Ferretti and G. Bussi
+# Modified by F. Spiga
 #
 #================================================================
 #
@@ -35,11 +36,9 @@ MANUAL=" Usage
 #================================================================
 #
 
-
 # run from directory where this script is
 auxdir=`echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
 if [ "$auxdir" != "configure" ] ; then cd $auxdir ; fi
-
 
 #
 # detect the simplest cases 
@@ -48,18 +47,22 @@ case $1 in
   ("-h" | "--help" )      echo "$MANUAL"     ; ./install/configure --help ; exit 0 ;;
 esac
 
-#
+
 # run the autoconf configure with the
 # given cong_flags 
 #
-
 test -e ./install/make.sys       && rm ./install/make.sys
 test -e ./install/configure.msg  && rm ./install/configure.msg
+#test -e ./install/Makefile  && rm ./install/Makefile
+
+# SAFEGUARD: if you run configure without clean everything first there 
+#            are chances that something goes wrong. Forcing distclean then.
+if [ -e make.sys -a -e Makefile ] ; then
+  make -f Makefile distclean
+fi
 
 ./install/configure "$@"
-#./install/configure-new "$@"
 
-#
 # copy make.sys in the home dir
 # and final clean up
 #
@@ -67,8 +70,5 @@ test -e ./install/make.sys && mv ./install/make.sys .
 test -e config.log        && mv config.log    ./install/
 test -e config.status     && mv config.status ./install/
 test -e configure.msg     && mv configure.msg ./install/
-#
 
 exit 0
-
-
