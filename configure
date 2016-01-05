@@ -57,7 +57,7 @@ test -e ./install/configure.msg  && rm ./install/configure.msg
 
 # SAFEGUARD: if you run configure without clean everything first there 
 #            are chances that something goes wrong. Forcing distclean then.
-if [ -e make.sys -a -e Makefile ] ; then
+if [[ (-e make.sys) && (-e Makefile) && !($@ =~ "--help") ]] ; then
   make -f Makefile distclean
 fi
 
