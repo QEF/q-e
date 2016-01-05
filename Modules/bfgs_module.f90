@@ -44,7 +44,7 @@ MODULE bfgs_module
    !
    USE kinds,     ONLY : DP
    USE io_files,  ONLY : iunbfgs, prefix
-   USE constants, ONLY : eps16
+   USE constants, ONLY : eps8, eps16
    USE cell_base, ONLY : iforceh
    !
    USE basic_algebra_routines
@@ -799,7 +799,7 @@ CONTAINS
    !
    !------------------------------------------------------------------------
    SUBROUTINE compute_trust_radius( lwolfe, energy, grad, n, stdout )
-      !------------------------------------------------------------------------
+      !-----------------------------------------------------------------------
       !
       IMPLICIT NONE
       !
@@ -813,7 +813,14 @@ CONTAINS
       LOGICAL  :: ltest
       !
       ltest = ( energy - energy_p ) < w_1 * ( grad_p .dot. step_old ) * trust_radius_old
-      ltest = ltest .AND. ( nr_step_length_old > trust_radius_old )
+      !
+      ! The instruction below replaces the original instruction:
+      !    ltest = ltest .AND. ( nr_step_length_old > trust_radius_old )
+      ! which gives a random result if trust_radius was set equal to 
+      ! nr_step_length at previous step. I am not sure what the best 
+      ! action should be in that case, though (PG)
+      !
+      ltest = ltest .AND. ( nr_step_length_old > trust_radius_old + eps8 )
       !
       IF ( ltest ) THEN
          a = 1.5_DP
