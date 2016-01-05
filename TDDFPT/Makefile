@@ -1,5 +1,5 @@
 # Makefile for TDDFPT
-sinclude ../make.sys
+include ../make.sys
 
 default: all
 
@@ -27,6 +27,5 @@ doc_clean:
         (cd Doc ; $(MAKE) clean ) ; fi
 
 distclean: clean
-
-
+	if [ -d bin ] ; then rm -rf bin; fi;
 
