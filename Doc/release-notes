@@ -1,454 +1,477 @@
-New in svn version:
+New in 5.3.0 version:
 
-   * projwfc.x: PDOS with PAW projectors and all-electron basis functions
-   * X3LYP hybrid functional (using VWN_1_RPA)
-   * B3LYP hybrid functional (using VWN) and B3LYP-V1R (using VWN_1_RPA)
+  * projwfc.x: PDOS with PAW projectors and all-electron basis functions
+  * X3LYP hybrid functional (using VWN_1_RPA)
+  * B3LYP hybrid functional (using VWN) and B3LYP-V1R (using VWN_1_RPA)
 
-Fixed in svn version:
+Fixed in 5.3.0 version:
 
-   * projwfc.x: When pw.x was run on a different number of processors and
-     twfcollect was not true, projwfc.x was silently giving wrong results.
-     Thanks to Hande Toffoli for reporting.
-   * Usage of "~" in pseudo_dir is sometimes acceptable by fortran but not 
-     by C. If so, a message is printed instead of weird characters in MD5.
-   * PHonon: Gamma-specific code segfaulting with GGA
-   * NaN's in stress with nonlocal functionals when the physical dimensions of
-     FFT arrays is larger than the true ones and arrays are padded with zeros
-   * pw.x: "task-group" parallelization wasn't working properly when the number
-     of bands was smaller than the number of task groups. Affects v.5.2.1.
-   * TDDFPT: lrpa (Random Phase Approximation) keyword was not present in 
-     the namelist for turbo_lanczos.x code. The turboEELS code was not 
-     working correctly with just one k point; for metals there were wrong
-     weights leading to small errors near the Fermi level; the code was not
-     working correctly with ultrasoft PP's. 
-   * pw.x: stress with TS-vdw wasn't correct - courtesy of Thomas Markovich
-   * The local correlation energy of B3LYP hybrid functional wasn't the "true" 
-     one for B3LYP. This caused discrepancies up to of a few tenths of eV 
-     in Kohn-Sham energies with respect to the "true" B3LYP. VWN is used
-     to define the LDA correlation. B3LYP-V1R (B3LYP using VWN_1_RPA instead) 
-     has also been added.
+  * projwfc.x: When pw.x was run on a different number of processors and
+    twfcollect was not true, projwfc.x was silently giving wrong results.
+    Thanks to Hande Toffoli for reporting.
+  * Usage of "~" in pseudo_dir is sometimes acceptable by fortran but not 
+    by C. If so, a message is printed instead of weird characters in MD5.
+  * PHonon: Gamma-specific code segfaulting with GGA
+  * NaN's in stress with nonlocal functionals when the physical dimensions of
+    FFT arrays is larger than the true ones and arrays are padded with zeros
+  * pw.x: "task-group" parallelization wasn't working properly when the number
+    of bands was smaller than the number of task groups. Affects v.5.2.1.
+  * TDDFPT: lrpa (Random Phase Approximation) keyword was not present in 
+    the namelist for turbo_lanczos.x code. The turboEELS code was not 
+    working correctly with just one k point; for metals there were wrong
+    weights leading to small errors near the Fermi level; the code was not
+    working correctly with ultrasoft PP's. 
+  * pw.x: stress with TS-vdw wasn't correct - courtesy of Thomas Markovich
+  * The local correlation energy of B3LYP hybrid functional wasn't the "true" 
+    one for B3LYP. This caused discrepancies up to of a few tenths of eV 
+    in Kohn-Sham energies with respect to the "true" B3LYP. VWN is used
+    to define the LDA correlation. B3LYP-V1R (B3LYP using VWN_1_RPA instead) 
+    has also been added.
 
-Incompatible changes in svn version:
+Incompatible changes in 5.3.0 version:
 
-   * Standard F2003 calls to: get_environment_variable, get_command_argument, 
-     command_argument_count, flush, are used everywhere instead of wrappers.
-     Some old compilers may no longer work and must be considered unsupported.
-   * Old Fermi Surface plotting tools kvecs_FS.f, bands_FS.f90, in PW/tools/,
-     replaced by new code PP/src/fermisurface.f90
-   * Reshuffling of FFT-related modules: 
-     "gather_*"  and "scatter_*" routines moved from module fft_base 
-                                                  to module scatter_mod
-   * All FFT-related code moved to FFTxlib/
-   * Linear algebra parallelization made independent of its parent communicator
-     by introducing variable ortho_parent_comm, addressing the whole group.
-     In PW ortho_comm is now a sub-communicator of intra_pool_comm and nolonger
-     of intra_bgrp_comm.
+  * Standard F2003 calls to: get_environment_variable, get_command_argument, 
+    command_argument_count, flush, are used everywhere instead of wrappers.
+    Some old compilers may no longer work and must be considered unsupported.
+  * Old Fermi Surface plotting tools kvecs_FS.f, bands_FS.f90, in PW/tools/,
+    replaced by new code PP/src/fermisurface.f90
+  * Reshuffling of FFT-related modules: 
+    "gather_*"  and "scatter_*" routines moved from module fft_base 
+                                                 to module scatter_mod
+  * All FFT-related code moved to FFTxlib/
+  * Linear algebra parallelization made independent of its parent communicator
+    by introducing variable ortho_parent_comm, addressing the whole group.
+    In PW ortho_comm is now a sub-communicator of intra_pool_comm and nolonger
+    of intra_bgrp_comm.
+
+                               * * * * *
 
 New in 5.2.1 version:
 
-   * svdW-DF, a proper spin version of vdW-DF (PRL 115, 136402 (2015);
-     courtesy of Timo Thonhauser)
-   * XSpectra: various improvements, extension to L_23 edges
-   * ESM: various improvements, constant-bias (PRL 109, 266101 (2012))
-     calculations for both pw.x and neb.x (courtesy of Minoru Otani)
+  * svdW-DF, a proper spin version of vdW-DF (PRL 115, 136402 (2015);
+    courtesy of Timo Thonhauser)
+  * XSpectra: various improvements, extension to L_23 edges
+  * ESM: various improvements, constant-bias (PRL 109, 266101 (2012))
+    calculations for both pw.x and neb.x (courtesy of Minoru Otani)
 
 Incompatible changes in 5.2.1 version:
 
-   * "pot" parallelization level, no longer used, removed   
-   * Obsolete calls to SCSL and SUNPERF library FFTs removed
+  * "pot" parallelization level, no longer used, removed   
+  * Obsolete calls to SCSL and SUNPERF library FFTs removed
 
 Fixed in 5.2.1 version:
 
-   * PW: incorrect calculation of maximum number of plane waves could lead 
-     to error exit with hybrid functionals and ultrasoft pseudopotentials
-   * PW: cell_dofree = '2Dshape' wasn't working as expected
-   * PW: a few do loops included more FFT planes than physical ones in real
-     space, leading to inaccuracies in real-space augmentation charge and xdm,
-     only if the number of processors nproc_bgrp was not a divisor of nr3
-   * XSpectra: v.5.1.2 and 5.2.0 contained a bug in parallelization that could
-     lead to incorrect results     
-   * TDDFPT: mismatch between actual and expected format of save file
-   * Various fixes for compilation on NAG compiler
+  * PW: incorrect calculation of maximum number of plane waves could lead 
+    to error exit with hybrid functionals and ultrasoft pseudopotentials
+  * PW: cell_dofree = '2Dshape' wasn't working as expected
+  * PW: a few do loops included more FFT planes than physical ones in real
+    space, leading to inaccuracies in real-space augmentation charge and xdm,
+    only if the number of processors nproc_bgrp was not a divisor of nr3
+  * XSpectra: v.5.1.2 and 5.2.0 contained a bug in parallelization that could
+    lead to incorrect results     
+  * TDDFPT: mismatch between actual and expected format of save file
+  * Various fixes for compilation on NAG compiler
+
+                               * * * * *
 
 Incompatible changes in 5.2.0 version:
 
-   * various "gather" and "scatter" routines removes and replaced by two
-     interface routines gather_grid, scatter_grid, valid for all FFT grids
-     and for both real and complex arrays; realspace_grid_init_custom and
-     realspace_grids_init merged into realspace_grid_init, for each grid
-   * __STD_F95 preprocessing option removed: all compilers that do not allow
-     allocatable arrays in derived types are no longer supported
+  * various "gather" and "scatter" routines removes and replaced by two
+    interface routines gather_grid, scatter_grid, valid for all FFT grids
+    and for both real and complex arrays; realspace_grid_init_custom and
+    realspace_grids_init merged into realspace_grid_init, for each grid
+  * __STD_F95 preprocessing option removed: all compilers that do not allow
+    allocatable arrays in derived types are no longer supported
 
 New in 5.2.0 version:
 
-   * Goedecker-Hutter-Teter pseudopotentials directy supported in analytical
-     form (courtesy of Sebastiano Caravati)
-   * PW: Hybrid functionals with reduced cutoff for Vx\psi should now work
-         also with k-points and for stress calculation
-   * PW: real-space treatment of augmentation charges in USPP and PAW can 
-         be used in (fixed-cell) structural relaxation as well
-   * PW: speedup of USPP with full G-space treatment of augmentation charges
-   * PW: Hybrid functionals for USPP now working
-   * PW: Improved ESM, works also for NEB and with postprocessing codes;
-     constant-bias potential (constant-mu) calculations (PRL109, 266101, 2012)
-     implemented (courtesy of Minoru Otani)
-   * TDDFPT contains now the turboEELS code for the calculation of the
-     Electron Energy Loss and Inelastic X-ray Scattering Spectra
+  * Goedecker-Hutter-Teter pseudopotentials directy supported in analytical
+    form (courtesy of Sebastiano Caravati)
+  * PW: Hybrid functionals with reduced cutoff for Vx\psi should now work
+        also with k-points and for stress calculation
+  * PW: real-space treatment of augmentation charges in USPP and PAW can 
+        be used in (fixed-cell) structural relaxation as well
+  * PW: speedup of USPP with full G-space treatment of augmentation charges
+  * PW: Hybrid functionals for USPP now working
+  * PW: Improved ESM, works also for NEB and with postprocessing codes;
+    constant-bias potential (constant-mu) calculations (PRL109, 266101, 2012)
+    implemented (courtesy of Minoru Otani)
+  * TDDFPT contains now the turboEELS code for the calculation of the
+    Electron Energy Loss and Inelastic X-ray Scattering Spectra
 
 Fixed in 5.2.0 version:
 
-   * PP: projwfc.x wasn't working any longer for noncolinear case without
-     spin-orbit in 5.1.x versions
-   * PW: ordering of beta functions incorrect in USPP + hybrid functionals.
-   * PW: floating-point error could occur in rVV10 functional
+  * PP: projwfc.x wasn't working any longer for noncolinear case without
+    spin-orbit in 5.1.x versions
+  * PW: ordering of beta functions incorrect in USPP + hybrid functionals.
+  * PW: floating-point error could occur in rVV10 functional
 
+                               * * * * *
 
 New in 5.1.2 version:
 
-   * PW: Hybrid functionals for USPP and PAW still have problems, disabled
-   * code "molecularpdos.x" computing PDOS on selected molecular orbitals
-     separately computed (courtesy of Guido Fratesi)
-   * TDDFPT: a few more options, improved documentation, compatibility
-     with "Environ" plugin
-   * Added spin-polarized b86r exchange (courtesy of Ikutaro Hamada)
+  * PW: Hybrid functionals for USPP and PAW still have problems, disabled
+  * code "molecularpdos.x" computing PDOS on selected molecular orbitals
+    separately computed (courtesy of Guido Fratesi)
+  * TDDFPT: a few more options, improved documentation, compatibility
+    with "Environ" plugin
+  * Added spin-polarized b86r exchange (courtesy of Ikutaro Hamada)
 
 Incompatible changes in 5.1.2 version:
 
-   * XSpectra: variable ef_r, used to eliminate the occupied states
-               from the spectrum, replaced by new variable xe0  
-   * PHonon: input variable iverbosity => verbosity
-   * The (undocumented) *.evp file of CP uses a slightly different format
-     (equally undocumented) since v.5.1.1. In order to use original format,
-     compile with __OLD_FORMAT preprocessing variable on.
+  * XSpectra: variable ef_r, used to eliminate the occupied states
+              from the spectrum, replaced by new variable xe0  
+  * PHonon: input variable iverbosity => verbosity
+  * The (undocumented) *.evp file of CP uses a slightly different format
+    (equally undocumented) since v.5.1.1. In order to use original format,
+    compile with __OLD_FORMAT preprocessing variable on.
 
 Fixed in 5.1.2 version:
 
-   * Option wf_collect wasn't working with LSDA and one k-point per pool
-   * Restarting from interrupted calculations could be spoiled by options
-     "startingwfc" and "startingpot": warning added
-   * Bug in space-group generator in the monoclinic case.
-   * atomic: a small bug was preventing the generation of non-PAW 
-     pseudopotentials with GIPAW reconstruction data
-   * Changes made in rev.10251 had broken pw.x -pw2casino when just
-     one k-point per processor was present. Also: pp converter from upf 
-     to casino produced invalid pp for Z>=10 due to insufficient format
-   * Symmetry printout could lead to error exit in same cases
-   * Restarting from incomplete calculation could lead in some cases
-     to mysterious crashes due to usage of unitialized communicator
-   * PH: option only_init + US or PAW was not working.
-   * Minor printout bug: the printed number of symmetries with fractional
-     translations was sometimes incorrect in the noncollinear magnetic case.
- 
+  * Option wf_collect wasn't working with LSDA and one k-point per pool
+  * Restarting from interrupted calculations could be spoiled by options
+    "startingwfc" and "startingpot": warning added
+  * Bug in space-group generator in the monoclinic case.
+  * atomic: a small bug was preventing the generation of non-PAW 
+    pseudopotentials with GIPAW reconstruction data
+  * Changes made in rev.10251 had broken pw.x -pw2casino when just
+    one k-point per processor was present. Also: pp converter from upf 
+    to casino produced invalid pp for Z>=10 due to insufficient format
+  * Symmetry printout could lead to error exit in same cases
+  * Restarting from incomplete calculation could lead in some cases
+    to mysterious crashes due to usage of unitialized communicator
+  * PH: option only_init + US or PAW was not working.
+  * Minor printout bug: the printed number of symmetries with fractional
+    translations was sometimes incorrect in the noncollinear magnetic case.
+
+                               * * * * * 
 
 Incompatible changes in 5.1.1 version:
 
-   * Regularization of DFT names for nonlocal functionals:
-       "vdw-df3"                   replaced by "vdw-df-obk8"
-       "vdw-df4" and "optb86b-vdw" replaced by "vdw-df-ob86"
-       "rev-vdw-df2"               replaced by "vdw-df2-b86r"
-     Explanation: We have tried to unify the naming convention of the vdW-DF 
-     family of functionals built on "Dion et al., PRL 92, 246401 (2004)." 
-     Within this family, numbering should be used for different non-local
-     pieces of the functionals, such as vdW-DF2. If functionals only change the
-     (semi)local contribution, the choice of (semi)local functional should be 
-     attached at the end of the name, such as vdW-DF-C09 or vdW-DF-cx.
+  * Regularization of DFT names for nonlocal functionals:
+      "vdw-df3"                   replaced by "vdw-df-obk8"
+      "vdw-df4" and "optb86b-vdw" replaced by "vdw-df-ob86"
+      "rev-vdw-df2"               replaced by "vdw-df2-b86r"
+    Explanation: We have tried to unify the naming convention of the vdW-DF 
+    family of functionals built on "Dion et al., PRL 92, 246401 (2004)." 
+    Within this family, numbering should be used for different non-local
+    pieces of the functionals, such as vdW-DF2. If functionals only change the
+    (semi)local contribution, the choice of (semi)local functional should be 
+    attached at the end of the name, such as vdW-DF-C09 or vdW-DF-cx.
 
 New in 5.1.1 version:
 
-   * CP: Hybrid functionals with Wannier functions
-   * Added possibility to provide structure via space-group number and
-     Wyckoff positions (experimental)
-   * Added vdW-DF-cx, Berland and Hyldgaard, PRB 89, 035412 (2014)
-     (courtesy of Timo Thonhauser)
-   * PW: TB09 meta-GGA functional (requires libxc)
-   * PW: the code can capture "signals". typically sent by batch queues
-     when allowed time is close to expire, and terminate gracefully.
-     Experimental, to be enabled at compile time (see the user guide)
-   * TDDFPT: Implemented a restart option in turbo_Davidson
+  * CP: Hybrid functionals with Wannier functions
+  * Added possibility to provide structure via space-group number and
+    Wyckoff positions (experimental)
+  * Added vdW-DF-cx, Berland and Hyldgaard, PRB 89, 035412 (2014)
+    (courtesy of Timo Thonhauser)
+  * PW: TB09 meta-GGA functional (requires libxc)
+  * PW: the code can capture "signals". typically sent by batch queues
+    when allowed time is close to expire, and terminate gracefully.
+    Experimental, to be enabled at compile time (see the user guide)
+  * TDDFPT: Implemented a restart option in turbo_Davidson
 
 Fixed in 5.1.1 version:
 
-   * PWscf: variable-cell glitches at last scf step 
-   * PWscf & PHonon: added several checks for unimplemented features
-   * PWscf: energy related to external forces wasn't correct
-   * CP: Wannier functions dynamics with nspin=2 wasn't working
-   * PWscf: restart in variable-cell case wasn't working in v.5.1
-   * pot_extrapolation='none' was crashing with a bogus error message
-   * PHonon: the recently introduced fix to the G=0 component of the 
-     deformation potential at q=0 was not working properly
-   * Kernel table for rVV10 nonlocal functional was not written to file,
-     breaking restart and postprocessing (no problem for scf)
-   * Strange compilation bug on some IBM machines
-   * Minor bug plus OpenMP bug in ESM implementation
-   * Small bug leading to crashes when restarting some type of constrained
-     magnetization calculations (courtesy of Florian Thoele, ETHZ)
+  * PWscf: variable-cell glitches at last scf step 
+  * PWscf & PHonon: added several checks for unimplemented features
+  * PWscf: energy related to external forces wasn't correct
+  * CP: Wannier functions dynamics with nspin=2 wasn't working
+  * PWscf: restart in variable-cell case wasn't working in v.5.1
+  * pot_extrapolation='none' was crashing with a bogus error message
+  * PHonon: the recently introduced fix to the G=0 component of the 
+    deformation potential at q=0 was not working properly
+  * Kernel table for rVV10 nonlocal functional was not written to file,
+    breaking restart and postprocessing (no problem for scf)
+  * Strange compilation bug on some IBM machines
+  * Minor bug plus OpenMP bug in ESM implementation
+  * Small bug leading to crashes when restarting some type of constrained
+    magnetization calculations (courtesy of Florian Thoele, ETHZ)
+
+                               * * * * *
 
 New in 5.1 version:
 
-   * "Cold restart" for Car-Parrinello dynamics
-   * Calling QE from external codes made easier: see new subdirectory COUPLE
-   * PW: Hybrid functionals for USPP and PAW (experimental)
-   * PW: partial support to the use of k-point labels in the Brillouin zone
-   * PW: Langevin dynamics with Smart Monte Carlo
-   * CP and PW: Tkatchenko-Scheffler vdW correction (experimental)
-   * GWW replaced by GWL (using Lanczos chains)
-   * turboTDDFT: pseudo_Hermitian Lanczos algorithm and 
-     Davidson-like diagonalization added
-   * PWCOND with DFT+U
-   * New functionals: gau-pbe, PW86 (unrevised), B86B, XDM (exchange-hole 
-     dipole moment) model of dispersions, vdW-DF-obk8, vdW-DF-ob86 (Klimes
-     et al), rVV10, vdW-DF2-b86r
-   * PHonon: Calculation of phonon dispersions using the finite displacements 
-     supercell approach. See subdirectory FD/ in PHonon.
-   * dynmat.x can calculate phonon contribution to dielectric tensor
-   * turboTDDFT now supports hybrid functionals (only with norm-conserving
-     pseudopotentials)
-   * "image" parallelization re-introduced in pw.x: see code "manypw.x"
+  * "Cold restart" for Car-Parrinello dynamics
+  * Calling QE from external codes made easier: see new subdirectory COUPLE
+  * PW: Hybrid functionals for USPP and PAW (experimental)
+  * PW: partial support to the use of k-point labels in the Brillouin zone
+  * PW: Langevin dynamics with Smart Monte Carlo
+  * CP and PW: Tkatchenko-Scheffler vdW correction (experimental)
+  * GWW replaced by GWL (using Lanczos chains)
+  * turboTDDFT: pseudo_Hermitian Lanczos algorithm and 
+    Davidson-like diagonalization added
+  * PWCOND with DFT+U
+  * New functionals: gau-pbe, PW86 (unrevised), B86B, XDM (exchange-hole 
+    dipole moment) model of dispersions, vdW-DF-obk8, vdW-DF-ob86 (Klimes
+    et al), rVV10, vdW-DF2-b86r
+  * PHonon: Calculation of phonon dispersions using the finite displacements 
+    supercell approach. See subdirectory FD/ in PHonon.
+  * dynmat.x can calculate phonon contribution to dielectric tensor
+  * turboTDDFT now supports hybrid functionals (only with norm-conserving
+    pseudopotentials)
+  * "image" parallelization re-introduced in pw.x: see code "manypw.x"
 
 Incompatible changes in 5.1 version:
 
-   * Initialization of MPI modified in order to simplify usage of QE routines
-     from external codes. It is now possible to run an instance of QE into a
-     mpi communicator passed by the external routine. Changes affect a few MPI
-     initialization routines (e.g. mp_start) and some MPI related modules;
-     the communicator must be explicitly specified when calling mp_* interfaces
-     to low-level MPI libraries.
-   * Input variable "london" should be replaced by " vdw_corr='Grimme-D2' "
-   * Routine "electrons" doesn't deal any longer with non-scf cases;
-     use routine "non_scf" instead. For hybrid functionals, the loops over
-     the charge density and over the exchange potential have been separated.
-   * Restart mechanism of pw.x changed a lot. It works ONLY if you stop
-     the code cleanly with the prefix.EXIT file, or by setting "max_seconds";
-     disk_io='high' no longer needed (use it ONLY if tight with memory)
-     Restarting from hard crashes is no longer supported.
-   * Major restructuring of DFT+U and related modules in PW: related variables
-     moved to module ldaU, "swfcatom" moved to module "basis"
-   * Definition of "nwordwfc" in PP/ follows the same logic as in PW/
-   * Calls to "find_equiv_sites" and "writemodes" changed (fixed dimension
-     "nax" removed)
-   * Call to "open_buffer" changed: unit must be a valid fortran unit > 0;
-     max number of records is no longer specified; a new flag explicitly
-     specifies if writing to RAM buffer is required. Functionalities of 
-     Modules/buffers.f90 have been considerably modified and extended.
+  * Initialization of MPI modified in order to simplify usage of QE routines
+    from external codes. It is now possible to run an instance of QE into a
+    mpi communicator passed by the external routine. Changes affect a few MPI
+    initialization routines (e.g. mp_start) and some MPI related modules;
+    the communicator must be explicitly specified when calling mp_* interfaces
+    to low-level MPI libraries.
+  * Input variable "london" should be replaced by " vdw_corr='Grimme-D2' "
+  * Routine "electrons" doesn't deal any longer with non-scf cases;
+    use routine "non_scf" instead. For hybrid functionals, the loops over
+    the charge density and over the exchange potential have been separated.
+  * Restart mechanism of pw.x changed a lot. It works ONLY if you stop
+    the code cleanly with the prefix.EXIT file, or by setting "max_seconds";
+    disk_io='high' no longer needed (use it ONLY if tight with memory)
+    Restarting from hard crashes is no longer supported.
+  * Major restructuring of DFT+U and related modules in PW: related variables
+    moved to module ldaU, "swfcatom" moved to module "basis"
+  * Definition of "nwordwfc" in PP/ follows the same logic as in PW/
+  * Calls to "find_equiv_sites" and "writemodes" changed (fixed dimension
+    "nax" removed)
+  * Call to "open_buffer" changed: unit must be a valid fortran unit > 0;
+    max number of records is no longer specified; a new flag explicitly
+    specifies if writing to RAM buffer is required. Functionalities of 
+    Modules/buffers.f90 have been considerably modified and extended.
 
 Fixed in 5.1 version:
 
-   * PWscf: bug in finite electric field in noncolinear case
-   * PHonon: G=0 component of the deformation potential at q=0 was incorrect
-     (the contribution from the average coulomb potential, i.e. the integral 
-      of the Coulomb contribution on the unit cell, was missing). For more 
-     details, see M. Calandra et al. Phys. Rev. B 82 165111 , section III B.
-   * PWscf: spin-polarized HSE for PAW was incorrectly implemented
-   * PHonon: Gamma-specific code wasn't properly restarting in parallel
-   * PHonon: epsil + paw was not working with k-point parallelization.
-   * PHonon: problem with the symmetry analysis in D_6h. The problem appeared
-     in special cases after the symmetry reshuffling made by the phonon code.
-   * PWscf: starting with uniform charge worked only for non-spin-polarized
-     calculations. Not a big deal unless one used HGH or other pseudopotentials
-     without atomic charge information
-   * PWscf: Forces with finite electric field (lelfield=.true.) and US PP
-     were incorrect in parallel execution
-   * D3: bug when the crystal has symmetry but the small group of the 
-     q-point has no symmetry.
-   * Bogus "file not found" error in pp.x when extracting quantities not
-     requiring wave functions if these were "collected" - v.5.0.2 only
-   * Some quantities calculated in real space (including the charge itself
-     when tqr=.true.) were not always accurately computed in parallel
-     execution if the number of planes wasn't the same for all processors
-   * Bogus symmetry error in NEB due to missing re-initialization
-     of fractional translations
+  * PWscf: bug in finite electric field in noncolinear case
+  * PHonon: G=0 component of the deformation potential at q=0 was incorrect
+    (the contribution from the average coulomb potential, i.e. the integral 
+    of the Coulomb contribution on the unit cell, was missing). For more 
+    details, see M. Calandra et al. Phys. Rev. B 82 165111 , section III B.
+  * PWscf: spin-polarized HSE for PAW was incorrectly implemented
+  * PHonon: Gamma-specific code wasn't properly restarting in parallel
+  * PHonon: epsil + paw was not working with k-point parallelization.
+  * PHonon: problem with the symmetry analysis in D_6h. The problem appeared
+    in special cases after the symmetry reshuffling made by the phonon code.
+  * PWscf: starting with uniform charge worked only for non-spin-polarized
+    calculations. Not a big deal unless one used HGH or other pseudopotentials
+    without atomic charge information
+  * PWscf: Forces with finite electric field (lelfield=.true.) and US PP
+    were incorrect in parallel execution
+  * D3: bug when the crystal has symmetry but the small group of the 
+    q-point has no symmetry.
+  * Bogus "file not found" error in pp.x when extracting quantities not
+    requiring wave functions if these were "collected" - v.5.0.2 only
+  * Some quantities calculated in real space (including the charge itself
+    when tqr=.true.) were not always accurately computed in parallel
+    execution if the number of planes wasn't the same for all processors
+  * Bogus symmetry error in NEB due to missing re-initialization
+    of fractional translations
+
+                               * * * * *
 
 Fixed in 5.0.3 version:
 
-   * PW, PP, PHonon: files for DFT+U produced by previous versions
-     could no longer be read
-   * PHonon: restart with convt=.true. was not working with PAW
-   * PHonon: in matdyn.x, displacement patterns were no longer correct
-     if eigenvectors of the dynamical matrix were also written to file
-   * PHonon: compatibility with files produced by previous releases
-     was broken if pools were used
-   * VERY NASTY PHonon bug: symmetry Sq=-q+G introduced in v.5.0.2
-     could lead to bad phonons in some cases and has been disabled 
-   * PHonon: effective charges eu + PAW were not accurate with pools;
-     effective charges eu + US PP + spin-orbit nonmagnetic were not
-     working in parallel.
-   * Bug fix for NC pseudos with GIPAW info, for upf version 2 only:
-     Pseudo local potential was incorrectly written and read. 
-   * divide_class: wrong check for T_h
-   * PP: incorrect check yielding bogus error in bands.f90 (v.5.0.2 only)
-   * CP wasn't working properly with USPP having distinct Q functions 
-     for each value of l, due to the never ending l/l+1 problem
+  * PW, PP, PHonon: files for DFT+U produced by previous versions
+    could no longer be read
+  * PHonon: restart with convt=.true. was not working with PAW
+  * PHonon: in matdyn.x, displacement patterns were no longer correct
+    if eigenvectors of the dynamical matrix were also written to file
+  * PHonon: compatibility with files produced by previous releases
+    was broken if pools were used
+  * VERY NASTY PHonon bug: symmetry Sq=-q+G introduced in v.5.0.2
+    could lead to bad phonons in some cases and has been disabled 
+  * PHonon: effective charges eu + PAW were not accurate with pools;
+    effective charges eu + US PP + spin-orbit nonmagnetic were not
+    working in parallel.
+  * Bug fix for NC pseudos with GIPAW info, for upf version 2 only:
+    Pseudo local potential was incorrectly written and read. 
+  * divide_class: wrong check for T_h
+  * PP: incorrect check yielding bogus error in bands.f90 (v.5.0.2 only)
+  * CP wasn't working properly with USPP having distinct Q functions 
+    for each value of l, due to the never ending l/l+1 problem
+
+                               * * * * *
 
 New in 5.0.2 version:
 
-   * DFT+U with on-site occupations from pseudopotential projectors;
-     DFT+U+J (both experimental)
-   * Calculation of orbital magnetization (experimental)
+  * DFT+U with on-site occupations from pseudopotential projectors;
+    DFT+U+J (both experimental)
+  * Calculation of orbital magnetization (experimental)
 
 Fixed in 5.0.2 version:
 
-   * the random-number generator wasn't checking for incorrect seeding;
-     under some unlikely circumstances this might lead to strange errors
-   * k-point parallelization in v.5.0 and 5.0.1 was affected by a subtle 
-     problem: the distribution of plane waves was not always the same on 
-     all pools of processors. While results were still correct, strange
-     problems (e.g. lockups) could result. Also: there are more and more
-     machines that are not able to produce the same results starting from
-     the same data on different processors. Charge-density mixing is now
-     performed on one pool, broadcast to all others, to prevent trouble.
-   * upftools: fhi2upf converter of v.5 introduced a small error in some cases
-   * Small error in the calculation of rPW86 functional, due to a mismatch
-     between its previous definition (Slater exchange contained in GGA) and
-     the check on the rho=>0, grad rho=>0 limits. Note that a similar problem
-     might also affect hcth, olyp, m06l functionals. 
-     The new PBEQ2D functional (introduced in 5.0.1) was also not correct.
-   * NEB calculation can get stuck if the code tries to read &ions namelist
-     in the PWscf-related input section
-   * NEB: spurious blank character appearing in lines longer than 80 characters
-     with Intel compiler (same problem that was previously fixed in PWscf)
-   * PH: bug in symmetrization in some special cases (supercells of graphene)
-   * PH: bug in restart when the code stops during self consistency
-   * PH: ph.x with images wasn't working any longer 
-   * PH: electron_phonon='simple' wasn't working together with ldisp=.true.
-   * PH: images with a single q point were not collecting properly the files.
-   * PH: grid splitting of irrep + single q point + wf_collect=.true. 
-     was not working
+  * the random-number generator wasn't checking for incorrect seeding;
+    under some unlikely circumstances this might lead to strange errors
+  * k-point parallelization in v.5.0 and 5.0.1 was affected by a subtle 
+    problem: the distribution of plane waves was not always the same on 
+    all pools of processors. While results were still correct, strange
+    problems (e.g. lockups) could result. Also: there are more and more
+    machines that are not able to produce the same results starting from
+    the same data on different processors. Charge-density mixing is now
+    performed on one pool, broadcast to all others, to prevent trouble.
+  * upftools: fhi2upf converter of v.5 introduced a small error in some cases
+  * Small error in the calculation of rPW86 functional, due to a mismatch
+    between its previous definition (Slater exchange contained in GGA) and
+    the check on the rho=>0, grad rho=>0 limits. Note that a similar problem
+    might also affect hcth, olyp, m06l functionals. 
+    The new PBEQ2D functional (introduced in 5.0.1) was also not correct.
+  * NEB calculation can get stuck if the code tries to read &ions namelist
+    in the PWscf-related input section
+  * NEB: spurious blank character appearing in lines longer than 80 characters
+    with Intel compiler (same problem that was previously fixed in PWscf)
+  * PH: bug in symmetrization in some special cases (supercells of graphene)
+  * PH: bug in restart when the code stops during self consistency
+  * PH: ph.x with images wasn't working any longer 
+  * PH: electron_phonon='simple' wasn't working together with ldisp=.true.
+  * PH: images with a single q point were not collecting properly the files.
+  * PH: grid splitting of irrep + single q point + wf_collect=.true. 
+    was not working
 
-New in 5.0.1 version
+                               * * * * *
 
-   * vdW-DF functional and DFT-D extended to CP (experimental)
-   * PWscf: Noncollinear/spin-orbit Berry Phases (experimental)
-   * New functionals: SOGGA, M06L (courtesy of Yves Ferro), 
+New in 5.0.1 version:
+
+  * vdW-DF functional and DFT-D extended to CP (experimental)
+  * PWscf: Noncollinear/spin-orbit Berry Phases (experimental)
+  * New functionals: SOGGA, M06L (courtesy of Yves Ferro), 
                       PBEQ2D (courtesy of Letizia Chiodo)
 
 Incompatible changes in 5.0.1 version:
-   * Variable "amconv" removed from constants.f90, use "amu_ry" instead
-   * ld1.x no longer generates pseudopotentials into UPF v.1
 
-Fixed in 5.0.1 version
+  * Variable "amconv" removed from constants.f90, use "amu_ry" instead
+  * ld1.x no longer generates pseudopotentials into UPF v.1
 
-   * Funny frequencies from matdyn.x if masses were read from file
-   * Stress calculation in parallel execution was wrong in the
-     Gamma-only case when ScaLAPACK was present (v.5.0 only) 
-   * Misc compilation problems with old compilers 
+Fixed in 5.0.1 version:
 
-New in 5.0 version
+  * Funny frequencies from matdyn.x if masses were read from file
+  * Stress calculation in parallel execution was wrong in the
+    Gamma-only case when ScaLAPACK was present (v.5.0 only) 
+  * Misc compilation problems with old compilers 
 
-   * More ways of calculating electron-phonon coefficients.
-   * Full DFT+U scheme (with J and additional parameters) implemented.
-     Should work also for fully-relativistic calculations.
-   * band parallelization for Green function sum in EXX (memory replication).
+                               * * * * *
+
+New in 5.0 version:
+
+  * More ways of calculating electron-phonon coefficients.
+  * Full DFT+U scheme (with J and additional parameters) implemented.
+    Should work also for fully-relativistic calculations.
+  * band parallelization for Green function sum in EXX (memory replication).
 
 Incompatible changes in 5.0 version:
 
-   * Postprocessing codes dos.x, bands.x, projwfc.x, now use
-     namelist &dos, &bands, &projwfc respectively, instead of &inputpp
-   * Directory reorganization: whole packages into subdirectories,
-     almost nothing is in the same directory where it used to be. 
-   * atomic masses in the code are in amu unless otherwise stated
-   * Options 'cubic'/'hexagonal' to CELL_PARAMETERS removed: it is no 
-     longer useful, the code will anyway find the correct sym.ops.
-   * Options 'bohr'/'angstrom'/'alat' to CELL_PARAMETERS implemented
-   * -DEXX no longer required for exact exchange or hybrid functionals
-   * PHonon: input variable 'elph' replaced by 'electron_phonon'
+  * Postprocessing codes dos.x, bands.x, projwfc.x, now use
+    namelist &dos, &bands, &projwfc respectively, instead of &inputpp
+  * Directory reorganization: whole packages into subdirectories,
+    almost nothing is in the same directory where it used to be. 
+  * atomic masses in the code are in amu unless otherwise stated
+  * Options 'cubic'/'hexagonal' to CELL_PARAMETERS removed: it is no 
+    longer useful, the code will anyway find the correct sym.ops.
+  * Options 'bohr'/'angstrom'/'alat' to CELL_PARAMETERS implemented
+  * -DEXX no longer required for exact exchange or hybrid functionals
+  * PHonon: input variable 'elph' replaced by 'electron_phonon'
 
-Fixed in 5.0 version
+Fixed in 5.0 version:
 
-   * Missing checks for unimplemented cases with electric fields
-   * CP with electric fields wasn't working any longer in parallel
-     due to an unallocated variable
-   * VERY NASTY bug: exchange-correlation keyword 'PW91' was incorrectly 
-     interpreted (PZ LDA instead of PW) in all 4.3.x versions
-   * A few glitches when the standard input is copied to file
-   * PW: LDA+U crash in the final step of a vc-relax run, due to a
-     premature deallocation of a variable
-   * PW: constraint 'atomic direction' on noncolinear magnetization
-     wasn't working properly
-   * PW: tetrahedra were not working with magnetic symmetries, 
-     and not yet working in the noncolinear case as well.
-   * Velocity rescaling in variable-cell MD wasn't really working
-   * Workaround for frequent crashes in PAW with vc-relax
-   * In some cases spin-polarized HSE was yielding NaN's
-   * Two instances of an array not always allocated passed as variable to
-     routine (init_start_k and dynmatrix.f90) - harmless but not nice
-   * disk_io='low' or 'none' wasn't working if a wavefunction file from a
-     previous run was found
-   * CP + OpenMP without MPI wasn't working with ultrasoft pseudopotentials
-   * Bug in CASINO to UPF converter
-   * Bug in k-point generation in the noncollinear case
-   * ESM with spin polarization fixed
-   * Weird problem with irreps in PHonon
-   * Bug in turbo_lanczos.x . Restarts of polarizations other than ipol=1 
-     or ipol=4 were not working properly due to buggy test_restart routine.
+  * Missing checks for unimplemented cases with electric fields
+  * CP with electric fields wasn't working any longer in parallel
+    due to an unallocated variable
+  * VERY NASTY bug: exchange-correlation keyword 'PW91' was incorrectly 
+    interpreted (PZ LDA instead of PW) in all 4.3.x versions
+  * A few glitches when the standard input is copied to file
+  * PW: LDA+U crash in the final step of a vc-relax run, due to a
+    premature deallocation of a variable
+  * PW: constraint 'atomic direction' on noncolinear magnetization
+    wasn't working properly
+  * PW: tetrahedra were not working with magnetic symmetries, 
+    and not yet working in the noncolinear case as well.
+  * Velocity rescaling in variable-cell MD wasn't really working
+  * Workaround for frequent crashes in PAW with vc-relax
+  * In some cases spin-polarized HSE was yielding NaN's
+  * Two instances of an array not always allocated passed as variable to
+    routine (init_start_k and dynmatrix.f90) - harmless but not nice
+  * disk_io='low' or 'none' wasn't working if a wavefunction file from a
+    previous run was found
+  * CP + OpenMP without MPI wasn't working with ultrasoft pseudopotentials
+  * Bug in CASINO to UPF converter
+  * Bug in k-point generation in the noncollinear case
+  * ESM with spin polarization fixed
+  * Weird problem with irreps in PHonon
+  * Bug in turbo_lanczos.x . Restarts of polarizations other than ipol=1 
+    or ipol=4 were not working properly due to buggy test_restart routine.
 
-New in 4.3.2 version
+                               * * * * *
 
-   * A few crystal lattices can be specified using the traditional
-     crystallography parameter (labelled with negative ibrav values)
-   * A few extensions to PP format converters, conversion to UPF v.2
-   * C09 GGA Exchange functional, courtesy of Ikutaro Hamada
+New in 4.3.2 version:
 
-Fixed in 4.3.2 version
+  * A few crystal lattices can be specified using the traditional
+    crystallography parameter (labelled with negative ibrav values)
+  * A few extensions to PP format converters, conversion to UPF v.2
+  * C09 GGA Exchange functional, courtesy of Ikutaro Hamada
 
-   * Bugfix for pw2casino: total energies should now agree with pwscf total
-     energies for any number of nodes/k-points, also for hybrid functionals. 
-     Note: bwfn files produced before and after this patch will differ!
-   * Funny results in the last step of variable-cell optimization,
-     due to bad symmetrization in presence of fractional translations
-   * OpenMP crash with PAW
-   * Removed lines in iotk that confused some preprocessors
-   * More glitches with new xc functionals, compatibility with 
-     previous cases: HF, OEP, PZ
-   * Variable-cell optimization at fixed volume broke hexagonal symmetry
-   * NEB: possible problem in parallel execution (if command-line arguments
-     are not available to all processors) avoided by broadcasting arguments
-   * PWGui documentation updated to reflect cvs to svn switch
-   * Some formats increased to fit printout of large cells
-   * PW: the cell volume omega must be positive definite even when the 
-     lattice vectors form a left-handed set
-   * PW: a bad initialization (of becsum) in the paw spin/orbit case 
-     made the convergence more difficult
-   * PW: couldn't read any longer data files written by previous versions
-   * PHonon: problem with the D_4h group when the matrices of the group 
-     are not in the same order as in the routine cubicsym
-   * Yet another LDA+CPU+U fix: forces were wrong in spin-polarized case 
-   * PW was not stopping anymore when two inconsistent dft were given
-   * atomic: default for non-local correlation is set to "   " AND upf%dft 
-     is trimmed before being written by write_upf_v2.f90. Therefore older 
-     versions of pw will still work if no vdW is present
-   * inlc label for vdw-df is set as VDW1, consistently with the comment and 
-     needed to avoid matching conflict with VDW2
+Fixed in 4.3.2 version:
+
+  * Bugfix for pw2casino: total energies should now agree with pwscf total
+    energies for any number of nodes/k-points, also for hybrid functionals. 
+    Note: bwfn files produced before and after this patch will differ!
+  * Funny results in the last step of variable-cell optimization,
+    due to bad symmetrization in presence of fractional translations
+  * OpenMP crash with PAW
+  * Removed lines in iotk that confused some preprocessors
+  * More glitches with new xc functionals, compatibility with 
+    previous cases: HF, OEP, PZ
+  * Variable-cell optimization at fixed volume broke hexagonal symmetry
+  * NEB: possible problem in parallel execution (if command-line arguments
+    are not available to all processors) avoided by broadcasting arguments
+  * PWGui documentation updated to reflect cvs to svn switch
+  * Some formats increased to fit printout of large cells
+  * PW: the cell volume omega must be positive definite even when the 
+    lattice vectors form a left-handed set
+  * PW: a bad initialization (of becsum) in the paw spin/orbit case 
+    made the convergence more difficult
+  * PW: couldn't read any longer data files written by previous versions
+  * PHonon: problem with the D_4h group when the matrices of the group 
+    are not in the same order as in the routine cubicsym
+  * Yet another LDA+CPU+U fix: forces were wrong in spin-polarized case 
+  * PW was not stopping anymore when two inconsistent dft were given
+  * atomic: default for non-local correlation is set to "   " AND upf%dft 
+    is trimmed before being written by write_upf_v2.f90. Therefore older 
+    versions of pw will still work if no vdW is present
+  * inlc label for vdw-df is set as VDW1, consistently with the comment and 
+    needed to avoid matching conflict with VDW2
+
+                               * * * * *
 
 New in 4.3.1 version:
 
-   * New, improved version of GIPAW (available as a separate package)
-   * Effective Screening Medium (Otani and Sugino PRB 73 115407 (2006).
-   * CP: faster implementation of LDA+U
+  * New, improved version of GIPAW (available as a separate package)
+  * Effective Screening Medium (Otani and Sugino PRB 73 115407 (2006).
+  * CP: faster implementation of LDA+U
 
 Fixed in 4.3.1 version:
 
-   * atomic: behavior of which_augfun='PSQ' made consistent with documentation
-   * CP: LDA+U buggy; PLUMED wasn't working
-   * Misc compilation and configure problems: line exceeding 132 characters, 
-     syntax not accepted by some compilers, pathscale+mpif90 not recognized, 
-     etc.
-   * PW: nasty out-of-bound bug leading to mysterious crashes or 
-     incorrect results in some variable-cell calculations. Also in
-     variable-cell: last scf step could crash due to insufficient
-     FFT grid if the final cell was larger than the initial one
-   * PW: minor bug in damped dynamics (hessian matrix incorrectly reset)
-   * PW: bug in LDA+U forces for the Gamma-only case
-   * Electron-Phonon code wasn't working any longer in serial execution
-   * PH with input variable "fildrho" and D3 were not working due to 
-     inconsistencies in the calls to io_pattern
-   * PWCOND: fixed bug when the write/read option is used for the case 
-     of different leads. 
-   * NEB + nonlocal exchange (DF-vdW) or hybrid functionals wasn't working
-   * NEB: incorrect parsing of intermediate images fixed
-   * HSE numerical problems in function expint
-   * XSPECTRA wasn't working any longer due to missing updates to
-     read_file_xspectra.f90
-   * epsilon.f90: the term 1 must be added to diagonal components only! 
+  * atomic: behavior of which_augfun='PSQ' made consistent with documentation
+  * CP: LDA+U buggy; PLUMED wasn't working
+  * Misc compilation and configure problems: line exceeding 132 characters, 
+    syntax not accepted by some compilers, pathscale+mpif90 not recognized, 
+    etc.
+  * PW: nasty out-of-bound bug leading to mysterious crashes or 
+    incorrect results in some variable-cell calculations. Also in
+    variable-cell: last scf step could crash due to insufficient
+    FFT grid if the final cell was larger than the initial one
+  * PW: minor bug in damped dynamics (hessian matrix incorrectly reset)
+  * PW: bug in LDA+U forces for the Gamma-only case
+  * Electron-Phonon code wasn't working any longer in serial execution
+  * PH with input variable "fildrho" and D3 were not working due to 
+    inconsistencies in the calls to io_pattern
+  * PWCOND: fixed bug when the write/read option is used for the case 
+    of different leads. 
+  * NEB + nonlocal exchange (DF-vdW) or hybrid functionals wasn't working
+  * NEB: incorrect parsing of intermediate images fixed
+  * HSE numerical problems in function expint
+  * XSPECTRA wasn't working any longer due to missing updates to
+    read_file_xspectra.f90
+  * epsilon.f90: the term 1 must be added to diagonal components only! 
+
+                               * * * * *
 
 New in 4.3 version:
 
@@ -509,6 +532,8 @@ Fixed in 4.3 version:
         for formats in lambda.f90 was not accepted by gfortran
   * D3: k-point parallelization fixed again
 
+                               * * * * *
+
 Fixed in version 4.2.1:
 
   * CP: problem in electronic forces with OpenMP parallelization
@@ -532,6 +557,8 @@ Fixed in version 4.2.1:
   * A problem in projwfc in the spin-orbit case introduced in version 4.1.3.
     Courtesy of R. Mazzarello.  
 
+                               * * * * *
+
 New in version 4.2:
 
   * Removal of duplicated and unused routines
@@ -550,12 +577,9 @@ New in version 4.2:
 Fixed in version 4.2:
 
   * A few occurrences of uninitialized variables and of incorrect INTENT
-
   * The value of DFT set in input (instead of DFT read from PP files) was
     ignored by all codes using the data file (phonon, postprocessing, etc)
-
   * PW: glitches in restart (now it works also with exact exchange)
-
   * D3: real-space contribution to the Ewald term was incorrect, since the
     initial release. Since such term is usually very small, the error was 
     also very small. Also: preconditioning was not properly implemented,
@@ -563,109 +587,90 @@ Fixed in version 4.2:
 
 Incompatible changes in version 4.2:
 
-* changed defaults:
-  startingwfc='atomic+random' in pw.x (instead of 'atomic')
-* calculations 'fpmd', 'fpmd-neb' removed from CP: use 'cp' or 'neb'
-  instead
-* calculation 'metadyn' and related variables removed from PW and CP:
-  use the "plumed" plugin for QE to perform metadynamics calculations
-* nelec, nelup, neldw, multiplicity variables removed from input:
-  use tot_charge and tot_magnetization instead
-* calculation of empty Kohn-Sham states, and related variables, removed
-  from cp.x: use option disk_io='high' in cp.x to save the charge density,
-  read the charge density so produced with pw.x, specifying option
-  "calculation='nscf'" or "calculation='bands'"
-* "xc_type" input variable in cp.x replaced by "input_dft" (as in pw.x)
-* ortho_para variable removed from input (CP); diagonalization='cg-serial',
-  'david-serial', 'david-para', 'david-distpara', removed as well
-  Use command-line option "-ndiag N" or "-northo N" to select how
-  many processors to use for linar-algebra (orthonormalization or
-  subspace diagonalization) parallelization. Note that the default value
-  for ndiag/northo has changed as well: 1 if ScaLAPACK is not compiled,
-  Nproc/2 if Scalapack is compiled
-* "stm_wfc_matching" removed from pp.x
+  * changed defaults:
+    startingwfc='atomic+random' in pw.x (instead of 'atomic')
+  * calculations 'fpmd', 'fpmd-neb' removed from CP: use 'cp' or 'neb'
+    instead
+  * calculation 'metadyn' and related variables removed from PW and CP:
+    use the "plumed" plugin for QE to perform metadynamics calculations
+  * nelec, nelup, neldw, multiplicity variables removed from input:
+    use tot_charge and tot_magnetization instead
+  * calculation of empty Kohn-Sham states, and related variables, removed
+    from cp.x: use option disk_io='high' in cp.x to save the charge density,
+    read the charge density so produced with pw.x, specifying option
+    "calculation='nscf'" or "calculation='bands'"
+  * "xc_type" input variable in cp.x replaced by "input_dft" (as in pw.x)
+  * ortho_para variable removed from input (CP); diagonalization='cg-serial',
+    'david-serial', 'david-para', 'david-distpara', removed as well
+    Use command-line option "-ndiag N" or "-northo N" to select how
+    many processors to use for linar-algebra (orthonormalization or
+    subspace diagonalization) parallelization. Note that the default value
+    for ndiag/northo has changed as well: 1 if ScaLAPACK is not compiled,
+    Nproc/2 if Scalapack is compiled
+  * "stm_wfc_matching" removed from pp.x
+
+                               * * * * *
 
 Fixed in version 4.1.3:
 
   * CP: electric enthalpy wasn't working properly with spin polarization
-
   * PWCOND: Bug fix in automatic generation of 2D k-points
-
   * bug in PAW negatively affected convergence (but not the results) 
-
   * possible out-of-bound errors in divide_class and divide_class_so
-
   * non initialized variables in PAW charge density plotting
+
+                                * * * * *
 
 Fixed in version 4.1.2:
 
   * fixed nonstandard C construct in memstat.c that picky compilers didn't like
-
   * PBEsol keyword wasn't properly recognized
-
   * call to invsym with overlapping input and output matrix could 
     result in bogus error message
-
   * cp.x: update of dt with autopilot wasn't working
-
   * for some magnetic point groups, having rotation+time reversal
     symmetries, the k-point reduction was not correctly done
-
   * wavefunctions for extrapolation written to wfcdir and not to outdir
-
   * Some constraints were not working in solids, due to an incorrect
     estimate of the maximum possible distance between two atoms
-
   * Parallel execution of D3 wasn't working in at least some cases
     (e.g. with k-point parallelization) since a long time
-
   * restart of phonon code with PAW wasn't working
+
+                                * * * * *
 
 Fixed in version 4.1.1:
 
   * newly added DFT-D wasn't working properly with k-point parallelization
-
   * Gamma-only phonon code wasn't working any longer if pseudopotentials
     with nonlinear core correction were used
-
   * Check of lspinorb flag consistency between left/right lead and
     scattering region in pwcond.x was not working properly; wrong
     print-out of E-Ef when Nchannels=0 also fixed.
-
   * Check on convergence of variable-cell damped dynamics was not
     working as expected in the presence of constraints
-
   * Velocity rescaling in CP was not working, and it was performed
     also if not required when ion velocities were set to 'random'
-
   * ESPRESSO_TMPDIR is caught by gipaw.x as well
- 
   * Phonon calculation could not be performed with only local PPs
-
   * Small error in the definition of the saw-tooth potential for slab
     calculations with E-field: the "physical" dimensions of the R-space
     grid are nr1,nr2,nr3 NOT nrx1,nrx2,nrx3
-
   * Misc compilation problem for: gfortran v.4.1 (casino2upf),
     pathscale 3.2 (mp_base),  xlf 12.1 (buggy compilation of iotk)
-
   * Possible memory leak in PW/update_pot.f90
-
   * Spin-polarized calculations in CP had a bug since v.4.1  when using
     parallel distributed diagonalization ("ortho" group)
-
   * FFT glitches: Nec SX routines were not properly called,
     OpenMP was not compatible with all FFTs
-
   * augmentation charges in real space (tqr=.true.) and k-point
     parallelization (pools) was not working due to bogus check
-
   * fhi2upf.x : fixed segmentation fault in some cases with ifort
-
   * OLYP XC functional was incorrectly flagged as Meta-GGA 
     (courtesy of Latevi Max Lawson Daku)
-
   * Minor corrections and extensions to the documentation
+
+                                * * * * *
 
 New in version 4.1:
 
@@ -673,9 +678,7 @@ New in version 4.1:
     PBEsol and WC (courtesy of Willam Parker, Ohio State U.)
     LDA with finite-size corrections (Kwee, Zhang, Krakauer,
     courtesy of Ester Sola and Dario Alfe)
-
   * Dispersion calculation with DFT-D (Grimme)
-
   * mixed openMP-MPI parallelization (very experimental)
  
 Fixed in version 4.1:
@@ -684,52 +687,42 @@ Fixed in version 4.1:
     Car-Parrinello dynamics. Forcing them to zero was not completely
     correct -- only the sum of nuclear plus "electronic" forces should 
     be exactly zero -- and was causing loss of ergodicity in some cases. 
-
   * symmetry analysis for spin-orbit case: a few signs in the character 
     tables of C_3 and S_6 have been changed so that they agree with the
     Koster-Dimmock-Wheeler-Statz tables.
-
   * a problem in the plotting routine plotband.f90 could yield wrong
     band plots even when the symmetry classification was correct.  
-
   * serious bug in plotting code pp.x: all plots requiring Fourier space
     interpolation, i.e.: 1d, 2d, user-supplied 3d grid, spherical average,
     were yielding incorrect results if performed on data produced by pw.x
     (and cp.x) using Gamma-only option. Workaround introduced, but it works
     (around) only if the desired data is first saved to file, then plotted.
-
   * stop_run was not properly deleting files in the case of path calculations 
-
   * Coulomb pseudopotentials in UPF v.2 format were not working 
     (courtesy of Andrea Ferretti)
-
   * electron-phonon calculation on a uniform grid of q-points + 
     Delta Vscf and dynamical matrices read from file should be fine now:
     the Delta Vscf saved to file are no longer overwritten at each q-point.
     Also: the xml file written by pw.x is no longer overwritten by ph.x.
-
   * nasty problem with C routines receiving fortran strings as arguments.
     The way it was done may lead to stack corruption and all kinds of
     unexpected and mysterious problems under some circumstances.
     Now fortran strings are converted to integer arrays, that can be
     safely passed to C, and converted back in Modules/wrappers.f90
-
   * USPP generated with ld1.x may have been incorrectly written to
     UPF format v.2 in all 4.0.x versions . The error may have been
     small enough to go unnoticed but may be not negligible. All USPP
     in UPF format tagged as version 2.0.0 should be regenerated.
 
+                                * * * * *
+
 Fixed in version 4.0.5:
 
   * option calwf=1 (CP with Wannier functions) was not working
-
   * more problems in symmetry analysis in special cases for C_4h and
     D_2h symmetry
-
   * various small memory leaks or double allocations in special cases
-
   * problem with effective charges d Force / d E in the noncollinear+NLCC case
-
   * calculation of ionic dipole, used for calculations with sawtooth 
     potential, used wrong reference point assuming the field parallel
     to z axis (while it can be parallel to any reciprocal basis vector). 
@@ -737,592 +730,467 @@ Fixed in version 4.0.5:
     with option tefield and edir/=3, were completely wrong. Non-relax 
     calculation in the same cathegory were correct, apart from a constant, 
     but system-dependent, addictive factor in total energy.
-
   * generation of supercells in matdyn was not working (since a long time)
-
   * PWCOND: two more small bug fixed (in CVS since june)
+
+                                * * * * *
 
 Fixed in version 4.0.4:
 
   * Structural optimization with external sawtooth potential was not
     working correctly (electric field disappeared after first run).
     All versions after october 2005 affected.
-
   *  problem in FFTW v.3 driver in parallel execution (Davide)
-
   *  option maxirr disabled
-
   *  memory leak in pw_readfile in parallel
-
   *  the phonon code was not working when wf_collect=.true. and
      either ldisp=.true. or lnscf=.true. 
-
   *  incorrect make.sys produced by configure on some IBM machines
-
   *  rigid.f90: the fix introduced in v. 4.0.1 to improve convergence
      wasn't really correct 
+
+                                * * * * *
 
 Fixed in version 4.0.3:
 
   * CP: array qv allocated in newd wasn't deallocated in all cases,
     leading to either a crash or a memory leak (Ralph)
-
   * Task groups bug fix: array tg_rho was not cleared at every k point cycle. 
     This was causing problems with some combinations of "-npool" and "-ntg".
-
   * PWCOND: a bug with some array bounds fixed (A. Smogunov) 
-
   * Problem with the generation of the atomic wavefunctions in the
     projwfc code when a scalar relativistic PP is used with lspinorb=.true.
-
   * Bug fix in symmetry analysis for the case S_6 (reported by Marino 
     Vetuschi Zuccolini) and also in: S_4, T_h, C_3h, C_4h, C_6h. 
+
+                                * * * * *
 
 Fixed in version 4.0.2:
 
   * Nuclear masses not correctly displayed for variable-cell calculations
-
   * Probably all results for EFG (electric field gradients) were wrong,
     due to an incorrect multiplication of "r" with "alat" inside a loop
     (should have been outside: routine PW/ewald_dipole.f90)
-
   * Calculation with fixed magnetization and nspin=2 (using 2 fermi
     levels) was not working in v. 4.0.1
-
   * non linear core correction was not detected in FPMD run
-
   * effective charges + US PP + spin-orbit not correct in noncubic cases.
-
   * symm_type was not properly set by pw_restart (used in various 
     post-processing including phonons) when using free lattice 
     (ibrav=0) and symm_type=hexagonal.
+  * CP: conjugate gradient had a bug in some cases of parallel 
+    execution. Also: default max number of iterations was not
+    what was promised in the documentation (100)
+  * phonon: alpha_pv depended on the number of  unoccupied bands
+    in insulators (harmless).
+  * fpmd was using wrong forces propagate cell variables in
+    variable-cell calculations. Also: interpolation tables
+    were a little bit too small for variable cell simulation
+    (not really a bug but it could be annoying)
+  * Minor glitch in configure for pathscale compiler. Note that 
+    in the machine that has been tested, compilation of iotk 
+    fails for mysterious reasons if CPP = pathcc -E, while it
+    works with CPP = /lib/cpp -P --traditional
 
-  *  CP: conjugate gradient had a bug in some cases of parallel 
-     execution. Also: default max number of iterations was not
-     what was promised in the documentation (100)
-
-  *  phonon: alpha_pv depended on the number of  unoccupied bands
-     in insulators (harmless).
-
-  *  fpmd was using wrong forces propagate cell variables in
-     variable-cell calculations. Also: interpolation tables
-     were a little bit too small for variable cell simulation
-     (not really a bug but it could be annoying)
-
-  *  Minor glitch in configure for pathscale compiler. Note that 
-     in the machine that has been tested, compilation of iotk 
-     fails for mysterious reasons if CPP = pathcc -E, while it
-     works with CPP = /lib/cpp -P --traditional
+                                * * * * *
 
 Fixed in version 4.0.1:
 
-  *  Some scripts used in tests/ and in examples were not
-     posix-compliant and could fail in some cases
+  * Some scripts used in tests/ and in examples were not
+    posix-compliant and could fail in some cases
+  * In cg calculations with cp, the case of no spin multiplicity
+    (i.e. nspin=1) with odd number of bands was yielding an error
+    "c second dimension too small"
+  * rigid.f90: sum over G-space in long-range term, used in q2r.x 
+    and matdyn.x, wasn't really converged for sufficiently large cells
+  * too many automatic arrays in "set_asr" called in matdyn.f90,
+    causing a mysterious crash for systems larger than a few atoms
+  * incorrect call to "sgama" in matdyn.f90 could lead to failures
+    with strange messages when calculating phonon DOS
+  * c_mkdir is explicitly defined as integer*4 in order to prevent
+    problems in 64-bit machines with default 64-bit integers
+  * PP/chdens.f90: incorrect orthogonality test for axis
+  * GIPAW: 10^3 factor missing in conversion
+  * GIPAW: paw_recon[]%paw_betar[] was not initialised and caused NaN's
+    with IBM compilers. Courtesy of Christos Gougoussis (IMPMC, Paris).
+  * Minor glitches in PWgui
+  * cppp.x was not working in v.4.0
+  * Workaround for bluegene weirdness extended to complex hamiltonians
+  * PP/projwfc.f90: Problems with file names in systems > 1000 atoms
+  * Workaround for ATLAS bug causing random crashes
+  * Minor bug in helpdoc: adding syntaxFlush to linecard
+  * Incorrect dimensions in PW/local.f90 (courtesy of Zhiping)
 
-  *  In cg calculations with cp, the case of no spin multiplicity
-     (i.e. nspin=1) with odd number of bands was yielding an error
-      "c second dimension too small"
-
-  *  rigid.f90: sum over G-space in long-range term, used in q2r.x 
-     and matdyn.x, wasn't really converged for sufficiently large cells
-
-  *  too many automatic arrays in "set_asr" called in matdyn.f90,
-     causing a mysterious crash for systems larger than a few atoms
-
-  *  incorrect call to "sgama" in matdyn.f90 could lead to failures
-     with strange messages when calculating phonon DOS
-
-  *  c_mkdir is explicitly defined as integer*4 in order to prevent
-     problems in 64-bit machines with default 64-bit integers
-
-  *  PP/chdens.f90: incorrect orthogonality test for axis
-
-  *  GIPAW: 10^3 factor missing in conversion
-
-  *  GIPAW: paw_recon[]%paw_betar[] was not initialised and caused NaN's
-     with IBM compilers. Courtesy of Christos Gougoussis (IMPMC, Paris).
-
-  *  Minor glitches in PWgui
-
-  *  cppp.x was not working in v.4.0
-  
-  *  Workaround for bluegene weirdness extended to complex hamiltonians
-
-  *  PP/projwfc.f90: Problems with file names in systems > 1000 atoms
-
-  *  Workaround for ATLAS bug causing random crashes
-
-  *  Minor bug in helpdoc: adding syntaxFlush to linecard
-
-  *  Incorrect dimensions in PW/local.f90 (courtesy of Zhiping)
+                                * * * * *
 
 Fixed in version 4.0:
 
-  *  Unpredictable results when the output from a spin-polarized CP
-     calculation was used for post-processing. This was due to an
-     incorrect treatment of the case where the number of up and down
-     states are not the same. There was also an inconsistency in the 
-     treatment of the number of up and down electrons, that can be in
-     principle real, unlike the number of states that is integer
+  * Unpredictable results when the output from a spin-polarized CP
+    calculation was used for post-processing. This was due to an
+    incorrect treatment of the case where the number of up and down
+    states are not the same. There was also an inconsistency in the 
+    treatment of the number of up and down electrons, that can be in
+    principle real, unlike the number of states that is integer
+  * In MD calculations with PWscf, there was the possibility of an
+    out-of-bound error, with unpredictable consequences, including 
+    in at least one case hanging of parallel jobs
+  * Due to a bad dimensioning of variable hubbard_l, DFT+U results could 
+    be wrong if atomic type N with U term has N > L=maximum hubbard L
+  * a few symmetries were confusing the symmetry finder
+  * serious bugs in Berry's phase calculation. It affected only the US 
+    case and only some terms, so the error was small but not negligible. 
+    There were three different bugs, one introduced when the spherical
+    harmonics were modified in the rest of the code, two that I think
+    have been there from the beginning.
+  * various glitches with wf_collect option in the noncollinear case
+  * mix_rho was not working properly for lsda with data saved to file
+    and double grid
 
-  *  In MD calculations with PWscf, there was the possibility of an
-     out-of-bound error, with unpredictable consequences, including 
-     in at least one case hanging of parallel jobs
-
-  *  Due to a bad dimensioning of variable hubbard_l, DFT+U results could 
-     be wrong if atomic type N with U term has N > L=maximum hubbard L
-
-  *  a few symmetries were confusing the symmetry finder
-
-  *  serious bugs in Berry's phase calculation. It affected only the US 
-     case and only some terms, so the error was small but not negligible. 
-     There were three different bugs, one introduced when the spherical
-     harmonics were modified in the rest of the code, two that I think
-     have been there from the beginning.
-
-  *  various glitches with wf_collect option in the noncollinear case
-
-  *  mix_rho was not working properly for lsda with data saved to file
-     and double grid
+                                 * * * * *
 
 Fixed in version 3.2.1-3.2.3:
 
-  *  CP in parallel execution had a serious bug if the third dimension
-     of FFT arrays (nr3x/nr3sx) was not the same as FFT order (nr3/nr3s)
+  * CP in parallel execution had a serious bug if the third dimension
+    of FFT arrays (nr3x/nr3sx) was not the same as FFT order (nr3/nr3s)
+  * restart of pw.x in parallel could go bananas under some not-so-unusual
+    circumstances, due to bad setting of a variable
+  * various phonon glitches: pools and lsda, pools and dispersions,
+    option lnscf, were not working
+  * incorrect exchange-correlation contribution to the electro-optical 
+    coefficient
+  * check for stop condition was unsafe with pools and could hang pw.x
+  * fixed occupations in parallel: array not allocated on all processors
+  * Yet another problem of poor accuracy of routines calculating spherical 
+    bessel functions - harmless except in some cases of pseudopotential 
+    generation 
+  * DOS EOF characters present in some files could cause trouble
+    during installation
+  * restart in phonon calculations was not always properly working
+  * possible divide-by-zero error in dV_xc/dz (spin polarized case)
+  * gamma_gamma symmetry was not working for open-shell molecules
+  * T_h group not correctly identified in postprocessing
+  * missing initialization of rho could lead to serious trouble
+    if the physical and true dimensions of FFT grid did not coincide
+  * Ewald real-space term could have been incorrectly calculated 
+    if an atom was far away from the unit cell
+  * Some variables were used before they were initialized - this could
+    lead to crashes or unpredictable behaviour on some machines
+  * lattice parameters a,b,c,cosab,cosac,cosbc were not properly 
+    copied to the celldm in the case of triclinic lattice
 
-  *  restart of pw.x in parallel could go bananas under some not-so-unusual
-     circumstances, due to bad setting of a variable
-
-  *  various phonon glitches: pools and lsda, pools and dispersions,
-     option lnscf, were not working
-
-  *  incorrect exchange-correlation contribution to the electro-optical 
-     coefficient
-
-  *  check for stop condition was unsafe with pools and could hang pw.x
-
-  *  fixed occupations in parallel: array not allocated on all processors
-
-  *  Yet another problem of poor accuracy of routines calculating spherical 
-     bessel functions - harmless except in some cases of pseudopotential 
-     generation 
-
-  *  DOS EOF characters present in some files could cause trouble
-     during installation
-
-  *  restart in phonon calculations was not always properly working
-
-  *  possible divide-by-zero error in dV_xc/dz (spin polarized case)
-
-  *  gamma_gamma symmetry was not working for open-shell molecules
-
-  *  T_h group not correctly identified in postprocessing
-
-  *  missing initialization of rho could lead to serious trouble
-     if the physical and true dimensions of FFT grid did not coincide
-
-  *  Ewald real-space term could have been incorrectly calculated 
-     if an atom was far away from the unit cell
-
-  *  Some variables were used before they were initialized - this could
-     lead to crashes or unpredictable behaviour on some machines
-
-  *  lattice parameters a,b,c,cosab,cosac,cosbc were not properly 
-     copied to the celldm in the case of triclinic lattice
+                                 * * * * *
 
 Fixed in version 3.2:
 
-  *  In same cases the energy under an external sawtooth potential
-     simulating an electric field was not correct
+  * In same cases the energy under an external sawtooth potential
+    simulating an electric field was not correct
+  * Case ibrav=13 fixed for good this time!!!
+  * Bug in PH/clinear.f90 for cells having nr1 /= nr2 may have
+    affected new electron-phonon algorithm
+  * Poor accuracy of routines calculating spherical bessel functions
+    for high l and small q - harmless except in very special cases
+  * LDA+U with variable-cell dynamics/relaxation was wrong due to
+    missing rescaling of the integrals of atomic wavefunctions.
+    This bug has been present since at least 3.0 
+  * Parallel subspace diagonalization could occasionally fail;
+    replaced by a new algorithm that is much more stable 
+  * Restart problems in parallel run for two cases:
+    1) with pools, 2) with local filesystems
 
-  *  Case ibrav=13 fixed for good this time!!!
-
-  *  Bug in PH/clinear.f90 for cells having nr1 /= nr2 may have
-     affected new electron-phonon algorithm
-  
-  *  Poor accuracy of routines calculating spherical bessel functions
-     for high l and small q - harmless except in very special cases
-  
-  *  LDA+U with variable-cell dynamics/relaxation was wrong due to
-     missing rescaling of the integrals of atomic wavefunctions.
-     This bug has been present since at least 3.0 
-
-  *  Parallel subspace diagonalization could occasionally fail;
-     replaced by a new algorithm that is much more stable 
-
-  *  Restart problems in parallel run for two cases:
-     1) with pools, 2) with local filesystems
+                                 * * * * *
 
 Fixed in version 3.1.1:
 
-  *  Methfessel-Paxton broadening was hardcoded in the calculation of
-     the electron-phonon coefficients (ngauss1=1 in PH/elphon.f90).
-     There is no good reason to use this instead of simple gaussian
-     (ngauss1=0), which, moreover, guarantees positive definite results.
+  * Methfessel-Paxton broadening was hardcoded in the calculation of
+    the electron-phonon coefficients (ngauss1=1 in PH/elphon.f90).
+    There is no good reason to use this instead of simple gaussian
+    (ngauss1=0), which, moreover, guarantees positive definite results.
+
+                                 * * * * *
 
 Fixed in version 3.1:
 
-  *  various problems in stress calculation, both in PW and in CP
+  * various problems in stress calculation, both in PW and in CP
+  * in phonon dispersion calculation, the threshold for diagonalization
+    was not always what was expected to be. Minor numerical differences 
+    could result.
+  * the new algorithm for electron-phonon calculation removes a serious
+    bug in the old algorithm, present in v.2.1 to 3 included: when 
+    electron-phonon coefficients were calculated together with the 
+    dynamical matrix, the symmetrization of coeffcients was incorrect.
+    Results from separate calculations were correct.
 
-  *  in phonon dispersion calculation, the threshold for diagonalization
-     was not always what was expected to be. Minor numerical differences 
-     could result.
-
-  *  the new algorithm for electron-phonon calculation removes a serious
-     bug in the old algorithm, present in v.2.1 to 3 included: when 
-     electron-phonon coefficients were calculated together with the 
-     dynamical matrix, the symmetrization of coeffcients was incorrect.
-     Results from separate calculations were correct.
+                                 * * * * *
 
 Fixed in version 3.0:
 
-  *  latgen.f90 : case ibrav=13 bad
+  * latgen.f90 : case ibrav=13 bad
+  * kpoints.f : case ibrav=5 bad
 
-  *  kpoints.f : case ibrav=5 bad
+                                 * * * * *
 
 Fixed in version 2.1.5:
 
-  *   bad forces and stresses with LDA+U in spin-unpolarised case
+  * bad forces and stresses with LDA+U in spin-unpolarised case
+  * bad printout of Lowdin charges in projwfc
+  * FPMD had a problem with some types of UPF PPs
 
-  *   bad printout of Lowdin charges in projwfc
-
-  *   FPMD had a problem with some types of UPF PPs
+                                 * * * * *
  
 Fixed in version 2.1.4:
 
-  *   Incorrect initial guess for occupancies in LDA+U (init_ns)
+  * Incorrect initial guess for occupancies in LDA+U (init_ns)
+  * bogus error in postprocessing with local pseudopotentials only
+  * several errors in third-order energy derivatives (D3/)
+  * checks on several unimplemented cases were missing
 
-  *   bogus error in postprocessing with local pseudopotentials only
-
-  *   several errors in third-order energy derivatives (D3/)
-
-  *   checks on several unimplemented cases were missing
+                                 * * * * *
 
 Fixed in version 2.1.3:
  
-  *  case ibrav=0 in CP was not properly working
+  * case ibrav=0 in CP was not properly working
+  * forces in CP with core corrections were wrong
+    (reported by Giacomo Saielli)
+  * damped variable-cell dynamics in PWscf was not working properly
+  * lambda.x could yield NaN's on negative frequencies
+  * option "write_save" was not working in parallel
+  * diagonalization of (0,0) matrix in init_paw_1
+  * out-of-bound error in readnewvan.f90 fixed
+  * FPMD: bug with UPF PP when betas are not ordered as l=0,1,2,...
+  * Possible out-of-bound error with US PP in some cases
+  * Martins-Troullier norm-conserving PP generation had a small
+    error when rcloc > rcut(l)
+  * the default for relativistic vs nonrelativistic calculation
+    in the atomic code was the opposite of what was intended
+  * electron-phonon calculation was not working properly if called
+    after a restart
+  * Parallel execution on local filesystems (i.e. not visible to all
+    processors) could hang due to a bad check in charge extrapolation
+  * When imposing hermiticity in matdyn.x and dynmat.x codes in pwtools
+    routine dyndiag was actually computing the complex conjugate of
+    the dynamical matrix. Eigenvectors were therefore wrong, while
+    eigenvalues were fine. (thanks to Nicolas Mounet)
 
-  *  forces in CP with core corrections were wrong
-     (reported by Giacomo Saielli)
-
-  *  damped variable-cell dynamics in PWscf was not working properly
-
-  *  lambda.x could yield NaN's on negative frequencies
-
-  *  option "write_save" was not working in parallel
-
-  *  diagonalization of (0,0) matrix in init_paw_1
-
-  *  out-of-bound error in readnewvan.f90 fixed
-
-  *  FPMD: bug with UPF PP when betas are not ordered as l=0,1,2,...
-
-  *  Possible out-of-bound error with US PP in some cases
-
-  *  Martins-Troullier norm-conserving PP generation had a small
-     error when rcloc > rcut(l)
-
-  *  the default for relativistic vs nonrelativistic calculation
-     in the atomic code was the opposite of what was intended
-
-  *  electron-phonon calculation was not working properly if called
-     after a restart
-
-  *  Parallel execution on local filesystems (i.e. not visible to all
-     processors) could hang due to a bad check in charge extrapolation
-
-  *  When imposing hermiticity in matdyn.x and dynmat.x codes in pwtools
-     routine dyndiag was actually computing the complex conjugate of
-     the dynamical matrix. Eigenvectors were therefore wrong, while
-     eigenvalues were fine. (thanks to Nicolas Mounet)
+                                 * * * * *
 
 Fixed in version 2.1.2:
 
-  *  The phonon code was yielding incorrect results when 4-dimensional 
-     irreps were present (i.e. A point in graphite) and ultrasoft PP used
-      (reported by Nicolas Mounet)
+  * The phonon code was yielding incorrect results when 4-dimensional 
+    irreps were present (i.e. A point in graphite) and ultrasoft PP used
+    (reported by Nicolas Mounet)
+  * in some cases ld1 was writing a bad UPF file
+  * in some cases the charge density was not conserved during
+    the charge mixing
+  * various problems with potential extrapolation in neb and smd
+  * variable-cell dynamics and optimization was not working in parallel
+  * Berry phase calculation in parallel should have been disabled
+  * bug in readfile_config when restarting without a "*.save" file
+  * crash in pw2casino due to bad call to v_of_rho
 
-  *  in some cases ld1 was writing a bad UPF file
-
-  *  in some cases the charge density was not conserved during
-     the charge mixing
-
-  *  various problems with potential extrapolation in neb and smd
-
-  *  variable-cell dynamics and optimization was not working in parallel
-
-  *  Berry phase calculation in parallel should have been disabled
-
-  *  bug in readfile_config when restarting without a "*.save" file
-
-  *  crash in pw2casino due to bad call to v_of_rho
+                                 * * * * *
 
 Fixed in version 2.1.1:
 
-  *  memory leak in Raman code
+  * memory leak in Raman code
+  * disproportionate memory requirement in phonon code with USPP
+  * dangerous calls to read_restart_tetra and write_restart_tetra
+    when restarting with no allocated tetrahedra
+  * vc-relax was not working
+  * projwfc failed with lda+U 
+  * incorrect automatic generation of k-points in the non colinear case:
+    inversion symmetry is not always present because of the presence of  
+    a magnetic field in the Hamiltonian
+  * electron-phonon calculation was not working if called directly
+    after a phonon calculation
+  * PWCOND + FFTW + parallel execution = not good
+  * cell minimization with steepest descent was not working (CP/FPMD)
+  * various Alpha, IBM, SGI, SUN, PGI compilation problems
 
-  *  disproportionate memory requirement in phonon code with USPP
-
-  *  dangerous calls to read_restart_tetra and write_restart_tetra
-     when restarting with no allocated tetrahedra
- 
-  *  vc-relax was not working
-
-  *  projwfc failed with lda+U 
-
-  *  incorrect automatic generation of k-points in the non colinear case:
-     inversion symmetry is not always present because of the presence of  
-     a magnetic field in the Hamiltonian
-
-  *  electron-phonon calculation was not working if called directly
-     after a phonon calculation
-
-  *  PWCOND + FFTW + parallel execution = not good
-
-  *  cell minimization with steepest descent was not working (CP/FPMD)
-
-  *  various Alpha, IBM, SGI, SUN, PGI compilation problems
+                                 * * * * *
 
 Fixed in version 2.1:
 
-  *  various T3E compilation problems
+  * various T3E compilation problems
+  * cpmd2upf was yielding incorrect DFT if converting BLYP PPs
+  * some variables not properly written and read in restart file
+  * The value of gamma_only was not correctly set when restarting or
+    reading from file with option __NEW_PUNCH enabled
+  * Incorrect calculation of eloc in pw2casino
+  * Two serious bugs in the local-TF screening :
+    possible occurrence of division by zero (present since v1.2),
+    wrong mixing of spin polarized systems
+  * cpmd2upf failed with some files due to bad check
+  * Intel compiler v.8: wavefunction files four times bigger than needed
+  * compilation problems on some version of SGI compiler
+  * non-collinear code was not working with insulators and nbnd > nelec/2
+  * multiple writes to file in parallel execution when calculating
+    electron-phonon coefficients
+  * various bugs in LBFGS
+  * NEB + LDA+U = crash
+  * compilation problems with __NEW_PUNCH
+  * planar average crashed if used with a cubic system
+  * Gamma-only phonon code not working for Raman calculations
+    in some cases
+  * yet another bug in phonon and k-point parallelization when
+    reading namelist (phq_readin)
+  * options startingwfc and startingpot were ignored if restarting
+    from a previous calculation
+  * pw2casino interface didn't work properly in spin-polarized case
+    and didn't use variable "outdir"
+  * minor bug in pwtools/pwo2xsf.sh 
+  * serious bug in the path interpolator
+  * phonon, post_processing, various other auxiliary codes were
+    not working with k-point parallelization (pools) due to 
+    double call to init_pool
 
-  *  cpmd2upf was yielding incorrect DFT if converting BLYP PPs
+                                 * * * * *
 
-  *  some variables not properly written and read in restart file
-
-  *  The value of gamma_only was not correctly set when restarting or
-     reading from file with option __NEW_PUNCH enabled
-
-  *  Incorrect calculation of eloc in pw2casino
-
-  *  Two serious bugs in the local-TF screening :
-     possible occurrence of division by zero (present since v1.2),
-     wrong mixing of spin polarized systems
-
-  *  cpmd2upf failed with some files due to bad check
-
-  *  Intel compiler v.8: wavefunction files four times bigger than needed
-
-  *  compilation problems on some version of SGI compiler
-
-  *  non-collinear code was not working with insulators and nbnd > nelec/2
-
-  *  multiple writes to file in parallel execution when calculating
-     electron-phonon coefficients
-
-  *  various bugs in LBFGS
-
-  *  NEB + LDA+U = crash
-
-  *  compilation problems with __NEW_PUNCH
-
-  *  planar average crashed if used with a cubic system
-
-  *  Gamma-only phonon code not working for Raman calculations
-     in some cases
-
-  *  yet another bug in phonon and k-point parallelization when
-     reading namelist (phq_readin)
-
-  *  options startingwfc and startingpot were ignored if restarting
-     from a previous calculation
-
-  *  pw2casino interface didn't work properly in spin-polarized case
-     and didn't use variable "outdir"
-
-  *  minor bug in pwtools/pwo2xsf.sh 
-
-  *  serious bug in the path interpolator
-
-  *  phonon, post_processing, various other auxiliary codes were
-     not working with k-point parallelization (pools) due to 
-     double call to init_pool
-
-Fixed in version 2.0 :
+Fixed in version 2.0:
   
-  *  wrong results when running Berry-phase calculation in parallel execution:
-     it was not implemented but no warning was issued
+  * wrong results when running Berry-phase calculation in parallel execution:
+    it was not implemented but no warning was issued
+  * variable-cell code was subject to overflow and floating-point errors
+  * phonon + nosym=.true. was not properly done
+  * out-of-bound error in Berry Phase calculation
+  * out-of-bound errors in phonon if 4-dimensional irreps were present
+    (also d3.x was not working properly in this case)
+  * Berry-phase calculation had problems in low-symmetry cases
+  * phonon with k-point parallelization (pools) was yielding wrong
+    results in some cases (since v. 1.2 included)
+  * upftools/cpmd2upf.f90: wrong conversion due to Rydberg-Hartree mess
+  * PW/input.f90: lattice parameter a converted to wrong units if input
+    is given as a,b,c,cos(ab),cos(ac),cos(bc) instead of celldm(:)
+  * Wrong coordinates written if atomic_positions='crystal'
+    (thanks to Francois Willaime)
 
-  *  variable-cell code was subject to overflow and floating-point errors
+                                 * * * * *
 
-  *  phonon + nosym=.true. was not properly done
+Fixed in version 1.3.0:
 
-  *  out-of-bound error in Berry Phase calculation
-
-  *  out-of-bound errors in phonon if 4-dimensional irreps were present
-     (also d3.x was not working properly in this case)
-
-  *  Berry-phase calculation had problems in low-symmetry cases
-
-  *  phonon with k-point parallelization (pools) was yielding wrong
-     results in some cases (since v. 1.2 included)
-
-  *  upftools/cpmd2upf.f90: wrong conversion due to Rydberg-Hartree mess
-
-  *  PW/input.f90: lattice parameter a converted to wrong units if input
-     is given as a,b,c,cos(ab),cos(ac),cos(bc) instead of celldm(:)
-
-  *  Wrong coordinates written if atomic_positions='crystal'
-     (thanks to Francois Willaime)
-
-Fixed in version 1.3.0 :
-
-  *  PH/elphon.f90 : el-ph calculation in the US case was not correctly
-     working in v.1.2.0 (it was not implemented in previous versions).
-     An US term in the calculation of deltaV * psi_v was missing.
-     Fixed by M. Wierzbowska and SdG
-
-  *  various problems caused by too short file names fixed:
-     file and directory names up to 80 characters are allowed
-     (thanks to Serguei Patchkovskii and others) 
-
-  *  LAPACK routines DSYTRF and DYSTRI require some character arguments
-     (like 'U', 'L'). While most LAPACK implementations accept both
-     lowercase and uppercase arguments, the standard is uppercase only.
-     Various anomalies in self-consistency were caused by lowercase
-     arguments.
-
-  *  Incorrect Make.pc_abs fixed
-
-  *  PGI compiler v.3.3-2 on Linux: PP/chdens.x coredump fixed
- 
-  *  various T3E glitches in v.1.2.0 fixed
-
-  *  PP/work_functions.f90 : STM maps did not work in version 1.2.0
-     (undefined variable lscf was used, call to sum_band no longer needed)
-
-  *  PP/projwave.f90: symmetrization of projected dos was incorrectly 
-     performed using d1,d2,or d3 instead of their transponse.
-     (affects all previous versions)
-
-  *  PW/new_ns.f90: symmetrization of occupation matrix ns needed for LDA+U
-     calculations used incorrectly d2 matrices instead of their transponse. 
-     Thanks to Lixin He for finding out the problem and the solution.
-     (affects all previous versions)
+  * PH/elphon.f90 : el-ph calculation in the US case was not correctly
+    working in v.1.2.0 (it was not implemented in previous versions).
+    An US term in the calculation of deltaV * psi_v was missing.
+    Fixed by M. Wierzbowska and SdG
+  * various problems caused by too short file names fixed:
+    file and directory names up to 80 characters are allowed
+    (thanks to Serguei Patchkovskii and others) 
+  * LAPACK routines DSYTRF and DYSTRI require some character arguments
+    (like 'U', 'L'). While most LAPACK implementations accept both
+    lowercase and uppercase arguments, the standard is uppercase only.
+    Various anomalies in self-consistency were caused by lowercase
+    arguments.
+  * Incorrect Make.pc_abs fixed
+  * PGI compiler v.3.3-2 on Linux: PP/chdens.x coredump fixed
+  * various T3E glitches in v.1.2.0 fixed
+  * PP/work_functions.f90 : STM maps did not work in version 1.2.0
+    (undefined variable lscf was used, call to sum_band no longer needed)
+  * PP/projwave.f90: symmetrization of projected dos was incorrectly 
+    performed using d1,d2,or d3 instead of their transponse.
+    (affects all previous versions)
+  * PW/new_ns.f90: symmetrization of occupation matrix ns needed for LDA+U
+    calculations used incorrectly d2 matrices instead of their transponse. 
+    Thanks to Lixin He for finding out the problem and the solution.
+    (affects all previous versions)
   
-Fixed in version 1.2.0 (f90) :
+                                 * * * * *
 
-  *  dynmat.f90: out-of-bound error fixed
+Fixed in version 1.2.0 (f90):
+  
+  * dynmat.f90: out-of-bound error fixed
+  * pplib/chdens.F90, pplib/projwave.F90 : compilation problems
+    for alpha (found by Giovanni Cantele)
+  * postprocessing routines: problems with unallocate pointers
+    passed to subroutine plot_io fixed (found by various people)
+  * postprocessing with ibrav=0 was not working properly
+  * rather serious bug in cinitcgg (used by conjugate-gradient
+    diagonalization) could produce mysterious crashes. The bug 
+    appeared in version 1.1.1.
+  * pplib/dos.f90 was not plotting the expected energy window
+  * pplib/chdens.F90, pplib/average.F90 : wrong call to setv
+    could cause an out-of-bound error
 
-  *  pplib/chdens.F90, pplib/projwave.F90 : compilation problems
-     for alpha (found by Giovanni Cantele)
+                                 * * * * *
 
-  *  postprocessing routines: problems with unallocate pointers
-     passed to subroutine plot_io fixed (found by various people)
+Fixed in version 1.1.2 (f90):
 
-  *  postprocessing with ibrav=0 was not working properly
+  * a check on the number of arguments to command line in parallel
+    execution was added - Intel compiler crashes if attempting to
+    read a nonexistent argument
+  * tmp_dir was incorrectly truncated to 35 characters in
+    parallel execution
+  * variable "kfac" was not deallocated in stres_knl. A crash in 
+    variable-cell MD could result.
+  * an inconsistent check between the calling program (gen_us_dj)
+    and the routine calculating j_l(r) (sph_bes) could result in 
+    error stop when calculating stress or dielectric properties
+  * errors at file close in pw.x and phonon.x in some cases
+  * tetrahedra work for parallel execution 
+    (ltetra is now distributed in bcast_input)
+  * fixed some problems in automatic dependencies (Giovanni Cantele)
 
-  *  rather serious bug in cinitcgg (used by conjugate-gradient
-     diagonalization) could produce mysterious crashes. The bug 
-     appeared in version 1.1.1.
+                                 * * * * *
 
-  *  pplib/dos.f90 was not plotting the expected energy window
+Fixed in version 1.1.1 (f90) and 1.0.3 (f77):
 
-  *  pplib/chdens.F90, pplib/average.F90 : wrong call to setv
-     could cause an out-of-bound error
+  * LSDA calculations need either gaussian broadening or tetrahedra
+    but no input check was performed 
+  * restarting from a run interrupted at the end of self-consistency
+    yielded wrong forces
+  * projwave.F (projection over atomic functions) was not working
+    with atoms having semicore states (found by Seungwu Han)
+  * stm.F : option stm_wfc_matching was not working properly 
+    if symmetry was present (no symmetrization was performed)
+  * dynmat.x : displacement patterns in "molden" format were
+    incorrectly divided by the square root of atomic masses
+  * d3: misc. problems in parallel execution fixed
 
-Fixed in version 1.1.2 (f90) :
+                                 * * * * *
 
-  *  a check on the number of arguments to command line in parallel
-     execution was added - Intel compiler crashes if attempting to
-     read a nonexistent argument
+Fixed in version 1.1.0 (f90) and 1.0.2 (f77): 
 
-  *  tmp_dir was incorrectly truncated to 35 characters in
-     parallel execution
+  * an inconsistency in the indexing of pseudopotential arrays could
+    yield bad dielectric tensors and effective charges if atoms where
+    not listed as first all atoms of type 1, then all atoms of type 2,
+    and so on (found by Nathalie Vast)
+  * phonon with ibrav=0 was not working (info on symm_type was lost:
+    found by Michele Lazzeri)
+  * the generation of the two random matrices needed in the calculation
+    of third order derivatives was incorrect because the random seed
+    was not reset. This produced crazy results for q<>0 calculations.
+  * the check on existence of tmp_dir did not work properly on 
+    Compaq (formerly Dec) alphas (thanks to Guido Roma and Alberto
+    Debernardi).
+  * a system containing local pseudopotentials only (i.e. H)
+    produced a segmentation fault error
+  * getenv was incorrectly called on PC's using Absoft compiler:
+    the default pseudopotential directory was incorrect
+  * out-of-bound bug in pplib/dosg.f fixed. It could have caused
+    mysterious crashes or weird results in DOS calculations using
+    gaussian broadening.  Thanks to Gun-Do Lee for fixing the bug.
+  * a missing initialization to zero in gen_us_dy.F could have
+    yielded a wrong stress in some cases
+  * phonons in an insulator did not work if more bands (nbnd) 
+    were specified than filled valence band only
+  * electron-phonon calculation was incorrect if nonlocal PPs
+    were used (that is, almost always)
+  * Real space term in third order derivative of ewald energy
+    was missing (not exactly a bug, but introduced a small error
+    that could be not negligible in some cases)
+  * bad call in dynmat.f corrected 
+  * compilation problems for PC clusters fixed (thanks to Nicola Marzari)
 
-  *  variable "kfac" was not deallocated in stres_knl. A crash in 
-     variable-cell MD could result.
-
-  *  an inconsistent check between the calling program (gen_us_dj)
-     and the routine calculating j_l(r) (sph_bes) could result in 
-     error stop when calculating stress or dielectric properties
-
-  *  errors at file close in pw.x and phonon.x in some cases
-
-  *  tetrahedra work for parallel execution 
-     (ltetra is now distributed in bcast_input)
-
-  *  fixed some problems in automatic dependencies (Giovanni Cantele)
-
-Fixed in version 1.1.1 (f90) and 1.0.3 (f77) :
-
-  *  LSDA calculations need either gaussian broadening or tetrahedra
-     but no input check was performed 
-
-  *  restarting from a run interrupted at the end of self-consistency
-     yielded wrong forces
-
-  *  projwave.F (projection over atomic functions) was not working
-     with atoms having semicore states (found by Seungwu Han)
-
-  *  stm.F : option stm_wfc_matching was not working properly 
-     if symmetry was present (no symmetrization was performed)
-
-  *  dynmat.x : displacement patterns in "molden" format were
-     incorrectly divided by the square root of atomic masses
-
-  *  d3: misc. problems in parallel execution fixed
-
-Fixed in version 1.1.0 (f90) and 1.0.2 (f77) : 
-
-  *  an inconsistency in the indexing of pseudopotential arrays could
-     yield bad dielectric tensors and effective charges if atoms where
-     not listed as first all atoms of type 1, then all atoms of type 2,
-     and so on (found by Nathalie Vast)
-
-  *  phonon with ibrav=0 was not working (info on symm_type was lost:
-     found by Michele Lazzeri)
-
-  *  the generation of the two random matrices needed in the calculation
-     of third order derivatives was incorrect because the random seed
-     was not reset. This produced crazy results for q<>0 calculations.
-
-  *  the check on existence of tmp_dir did not work properly on 
-     Compaq (formerly Dec) alphas (thanks to Guido Roma and Alberto
-     Debernardi).
-
-  *  a system containing local pseudopotentials only (i.e. H)
-     produced a segmentation fault error
-
-  *  getenv was incorrectly called on PC's using Absoft compiler:
-     the default pseudopotential directory was incorrect
-
-  *  out-of-bound bug in pplib/dosg.f fixed. It could have caused
-     mysterious crashes or weird results in DOS calculations using
-     gaussian broadening.  Thanks to Gun-Do Lee for fixing the bug.
-
-  *  a missing initialization to zero in gen_us_dy.F could have
-     yielded a wrong stress in some cases
-
-  *  phonons in an insulator did not work if more bands (nbnd) 
-     were specified than filled valence band only
-
-  *  electron-phonon calculation was incorrect if nonlocal PPs
-     were used (that is, almost always)
-
-  *  Real space term in third order derivative of ewald energy
-     was missing (not exactly a bug, but introduced a small error
-     that could be not negligible in some cases)
-
-  *  bad call in dynmat.f corrected 
-
-  *  compilation problems for PC clusters fixed (thanks to Nicola Marzari)
+                                 * * * * *
 
 Fixed in version 1.0.1:
 
-  *  recovering from a previous run in pw.x did not work on PC's
-
-  *  recovering from a previous run in pw.x did not work for stress
-     calculation
-
-  *  poolrecover did not compile on some machines (thanks to Eric Wu)
- 
-  *  PC with absoft compiler (and maybe other cases as well):
-     bad type conversions for REAL and CMPLX resulted in poor
-     convergence in some test cases. DCMPLX, DREAL used instead.
-
-  *  Asymptotic high- and low-density formulae used in PW91 and PBE
-     unpolarized functionals gave a small but not negligible error,
-     leading to bad convergence of structural optimization
+  * recovering from a previous run in pw.x did not work on PC's
+  * recovering from a previous run in pw.x did not work for stress
+    calculation
+  * poolrecover did not compile on some machines (thanks to Eric Wu)
+  * PC with absoft compiler (and maybe other cases as well):
+    bad type conversions for REAL and CMPLX resulted in poor
+    convergence in some test cases. DCMPLX, DREAL used instead.
+  * Asymptotic high- and low-density formulae used in PW91 and PBE
+    unpolarized functionals gave a small but not negligible error,
+    leading to bad convergence of structural optimization
 
