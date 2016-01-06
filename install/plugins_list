@@ -13,15 +13,15 @@
 URL=http://files.qe-forge.org/index.php?file=
 #
 #
-# Package maintainer: 
+# Package maintainer: Andrea Ferretti
 WANT=want-2.5.1
 WANT_URL=http://qe-forge.org/gf/download/frsrelease/153/618/$(WANT)-base.tar.gz
 #
-# Package maintainer:
+# Package maintainer: Andrea Ferretti
 YAMBO_DEVEL=yambo-devel
 YAMBO_DEVEL_URL=http://www.yambo-code.org/files/yambo-devel-latest.tar.gz
 #
-# Package maintainer:
+# Package maintainer: Andrea Ferretti
 YAMBO=yambo-stable
 YAMBO_URL=http://www.yambo-code.org/files/yambo-stable-latest.tar.gz
 #
