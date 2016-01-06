@@ -295,6 +295,10 @@ CONTAINS
     USE io_global, ONLY: ionode, ionode_id
     USE mp,        ONLY : mp_bcast, mp_barrier
     USE mp_world,  ONLY : world_comm
+#if defined (__NAG)
+    USE f90_unix_proc
+#endif
+
     IMPLICIT NONE
     INTEGER :: nfi
     LOGICAL :: file_p
