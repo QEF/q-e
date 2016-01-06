@@ -246,15 +246,15 @@ configure-yambo: touch-dummy
 	echo "*** F90 is not defined; please define F90 or edit make.sys" ; exit 1 ; fi)
 	cd ../YAMBO ; \
 	./configure \
-	--with-blas="$(BLAS_LIBS)" \
-	--with-lapack="$(LAPACK_LIBS) $(BLAS_LIBS)" \
-	--with-iotk="$(TOPDIR)/iotk" \
-	PFC="$(MPIF90)" \
-	FC="$(MPIF90)" \
-	F90="$(MPIF90)" \
-	F77="$(F77)" \
-	CC="$(CC)" \
-	LDFLAGS="$(FFLAGS_NOMAIN)"
+	 --with-blas-libs="$(BLAS_LIBS)" \
+	 --with-lapack-libs="$(LAPACK_LIBS) $(BLAS_LIBS)" \
+	 --with-iotk-path="$(TOPDIR)/iotk" \
+	 --with-fft-libs="$(FFT_LIBS)" \
+	 --with-scalapack-libs="$(SCALAPACK_LIBS)" \
+	 --with-blacs-libs="$(SCALAPACK_LIBS)" \
+	 PFC="$(MPIF90)" \
+	 FC="$(F90)" \
+	 F77="$(F77)"
 	touch ./configure-yambo
 
 yambo-devel: extlibs uncompress-yambo-devel configure-yambo-devel
@@ -504,6 +504,7 @@ want_clean:
 want_veryclean: want_clean
 	if test -d ../WANT; then (rm -R -f ../WANT); fi
 	if test -d ../$(WANT); then (rm -R -f ../$(WANT)); fi
+	if test -e ../archive/$(WANT).tar.gz ; then (rm -f ../archive/$(WANT).tar.gz); fi
 	- rm -rf ./uncompress-want
 
 yambo_clean:
@@ -514,15 +515,18 @@ yambo_clean:
 yambo_veryclean: yambo_clean
 	if test -d ../YAMBO; then (rm -R -f ../YAMBO); fi
 	if test -d ../$(YAMBO); then (rm -R -f ../$(YAMBO)); fi
+	if test -e ../archive/$(YAMBO).tar.gz ; then (rm -f ../archive/$(YAMBO).tar.gz); fi
 	- rm -rf ./uncompress-yambo
 
 yambo-devel_clean:
 	if test -d ../YAMBO_DEVEL; then (cd ../YAMBO_DEVEL; \
 	$(MAKE) clean); fi
 	- rm -rf ./make-yambo-devel ./configure-yambo-devel
+
 yambo-devel_veryclean: yambo-devel_clean
 	if test -d ../YAMBO_DEVEL; then (rm -R -f ../YAMBO_DEVEL); fi
 	if test -d ../$(YAMBO_DEVEL); then (rm -R -f ../$(YAMBO_DEVEL)); fi
+	if test -e ../archive/$(YAMBO_DEVEL).tar.gz ; then (rm -f ../archive/$(YAMBO_DEVEL).tar.gz); fi
 	- rm -rf ./uncompress-yambo-devel
 
 plumed_clean:
