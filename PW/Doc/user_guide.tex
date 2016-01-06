@@ -1,5 +1,5 @@
 \documentclass[12pt,a4paper]{article}
-\def\version{5.2.1}
+\def\version{5.3}
 \def\PWscf{\texttt{PWscf}}
 \def\qe{{\sc Quantum ESPRESSO}}
 
@@ -699,6 +699,12 @@ $$T_{scf} = d_2 N_{r1} N_{r2} N_{r3} + d_3 N_{r1} N_{r2} N_{r3}
             log(N_{r1} N_{r2} N_{r3} )$$
 where $d_1, d_2$ are prefactors.
 
+For hybrid DFTs, the dominant term is by far the calculation of the 
+nonlocal $(V_x\psi)$ product, taking as much as
+$$T_{exx} = e N_k N_q M^2 N_1 N_2N_3 log(N_1 N_2 N_3)$$
+where $N_q$ is the number of points in the $k+q$ grid, determined by
+options \texttt{nqx1,nqx2,nqx3}, $e$ is a prefactor.
+
 The above estimates are for serial execution. In parallel execution,
 each contribution may scale in a different manner with the number of processors (see below).
 
@@ -710,6 +716,11 @@ $$ O = m M N + P N + p N_1 N_2 N_3 + q N_{r1} N_{r2} N_{r3}$$
 with $m, p, q$ = small factors; all other variables have the same meaning as
 above. Note that if the $\Gamma-$point only ($k=0$) is used to sample the 
 Brillouin Zone, the value of N will be cut into half.
+
+For hybrid DFTs, additional storage of $O_x$ double precision complex 
+numbers is needed (for Fourier-transformed Kohn-Sham states), with
+$O_x = x N_q M N_1N_2N_3$ and $x=0.5$ for $\Gamma-$only 
+calculations, $x=1$ otherwise.
 
 The memory required by the phonon code follows the same patterns, with
 somewhat larger factors $m, p, q$.
