@@ -34,7 +34,7 @@ SAX=sax-2.0.3
 SAX_URL=$(URL)$(SAX).tar.gz
 #
 # Package maintainer:
-GIPAW=qe-gipaw-5.1
+GIPAW=qe-gipaw-5.3
 GIPAW_URL=$(URL)$(GIPAW).tar.gz
 #
 # Package maintainer:
