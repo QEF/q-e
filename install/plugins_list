@@ -33,7 +33,7 @@ W90_URL=http://www.wannier.org/code/wannier90-2.0.1.tar.gz
 SAX=sax-2.0.3
 SAX_URL=$(URL)$(SAX).tar.gz
 #
-# Package maintainer:
+# Package maintainer: Davide Ceresoli
 GIPAW=qe-gipaw-5.3
 GIPAW_URL=$(URL)$(GIPAW).tar.gz
 #
