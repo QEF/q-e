@@ -908,7 +908,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	    default { read from pseudopotential files } 
 	    info {
                    Exchange-correlation functional: eg 'PBE', 'BLYP' etc
-                   See Modules/functionals.f90 for allowed values. 
+                   See Modules/funct.f90 for allowed values. 
                    Overrides the value read from pseudopotential files.
                    Use with care and if you know what you are doing!
 	    }
