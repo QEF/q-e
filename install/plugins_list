@@ -27,9 +27,9 @@ YAMBO_URL=http://www.yambo-code.org/files/yambo-stable-latest.tar.gz
 #
 # Package maintainer:
 W90=wannier90-2.0.1
-W90_URL=http://www.wannier.org/code/wannier90-2.0.1.tar.gz
+W90_URL=http://www.wannier.org/code/$(W90).tar.gz
 #
-# Package maintainer:
+# Package maintainer: Layla Martin-Samos
 SAX=sax-2.0.3
 SAX_URL=$(URL)$(SAX).tar.gz
 #
@@ -77,6 +77,6 @@ GUI_URL=$(URL)$(GUI).tar.gz
 GPU=QE-GPU-5.3.0
 GPU_URL=$(URL)$(GPU).tar.gz
 #
-# Package maintainer:
-WEST=West-1.0.2
+# Package maintainer: Marco Govoni
+WEST=West-1.0.3
 WEST_URL=http://www.west-code.org/downloads/$(WEST).tar.gz
