@@ -1,7 +1,7 @@
 # Copyright (C) 2001-2020 Quantum ESPRESSO Foundation
 # Maintainer: Filippo Spiga (filippo.spiga@quantum-espresso.org)
 
-TEST-SUITE  v0.9.6
+TEST-SUITE  v1.0.0
 ------------------
 
 You can run make with several options:
@@ -36,3 +36,13 @@ $ make create_reference
 F) Clean all test files create so far and leave only benchmark reference
 
 $ make clean
+
+
+
+REFERENCE OUTPUTS
+-----------------
+
+All reference outputs for PWscf and CP v5.3.0 are computed using GCC 4.9.2. The
+following configure options have been used:
+./configure --disable-openmp --disable-parallel \
+    --with-internal-blas --with-internal-lapack
