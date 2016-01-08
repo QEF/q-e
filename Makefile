@@ -15,7 +15,7 @@ default :
 	@echo ' '
 	@echo 'where target identifies one or multiple CORE PACKAGES:'
 	@echo '  pw           basic code for scf, structure optimization, MD'
-	@echo '  ph           phonon code, Gamma-only version and third-order derivatives'
+	@echo '  ph           phonon code, Gamma-only and third-order derivatives'
 	@echo '  pwcond       ballistic conductance'
 	@echo '  neb          code for Nudged Elastic Band method'
 	@echo '  pp           postprocessing programs'
@@ -49,8 +49,8 @@ default :
 	@echo '  tar          create a tarball of the source tree'
 	@echo '  tar-gui      create a standalone PWgui tarball from the GUI sources'
 	@echo '  clean        remove executables and objects'
-	@echo '  veryclean    revert distribution to the original status'
-
+	@echo '  veryclean    remove files produced by "configure" as well'
+	@echo '  distclean    revert distribution to the original status'
 
 ###########################################################
 # Main targets
@@ -209,7 +209,8 @@ touch-dummy :
 inst : 
 	( for exe in */*/*.x */bin/* ; do \
 	   file=`basename $$exe`; if test "$(INSTALLDIR)" != ""; then \
-		if test ! -L $(PWD)/$$exe; then ln -fs $(PWD)/$$exe $(INSTALLDIR)/qe_$$file ; fi ; \
+		if test ! -L $(PWD)/$$exe; then \
+			ln -fs $(PWD)/$$exe $(INSTALLDIR)/qe_$$file ; fi ; \
 		fi ; \
 	done )
 
@@ -220,11 +221,14 @@ links : bindir
 	for exe in ../*/*/*.x ../*/bin/* ; do \
 	    if test ! -L $$exe ; then ln -fs $$exe . ; fi \
 	done ; \
-	[ -f ../WANT/wannier/dos.x ] &&  ln -fs ../WANT/wannier/dos.x ../bin/dos_want.x ; \
-	[ -f ../PP/src/dos.x ] &&  ln -fs ../PP/src/dos.x ../bin/dos.x ; \
-	[ -f ../WANT/wannier/bands.x ] &&  ln -fs ../WANT/wannier/bands.x ../bin/bands_want.x ; \
+	[ -f ../WANT/wannier/dos.x ] && \
+		ln -fs ../WANT/wannier/dos.x ../bin/dos_want.x ; \
+	[ -f ../PP/src/dos.x ] &&  \
+		ln -fs ../PP/src/dos.x ../bin/dos.x ; \
+	[ -f ../WANT/wannier/bands.x ] && \
+		ln -fs ../WANT/wannier/bands.x ../bin/bands_want.x ; \
 	[ -f ../PP/src/dos.x ] &&  ln -fs ../PP/src/bands.x ../bin/bands.x ; \
-	[ -f ../W90/wannier90.x ] &&  ln -fs ../W90/wannier90.x ../bin/wannier90.x ; \
+	[ -f ../W90/wannier90.x ] &&  ln -fs ../W90/wannier90.x ../bin/wannier90.x ;\
 	)
 
 #########################################################
@@ -234,7 +238,8 @@ links : bindir
 
 install : touch-dummy
 	if test -d bin ; then \
-	mkdir -p $(PREFIX) ; for x in `find . -name *.x -type f` ; do cp $$x $(PREFIX)/ ; done ; \
+	mkdir -p $(PREFIX) ; for x in `find . -name *.x -type f` ; do \
+		cp $$x $(PREFIX)/ ; done ; \
 	fi
 
 #########################################################
@@ -270,8 +275,8 @@ clean : doc_clean
 	- cd PW/tests; /bin/rm -rf CRASH *.out *.out? ; cd -
 	- cd CPV/tests; /bin/rm -rf CRASH *.out *.out? 
 
-# remove configuration files too
-distclean veryclean : clean
+# remove files produced by "configure" as well
+veryclean : clean
 	- @(cd install ; $(MAKE) -f plugins_makefile veryclean)
 	- @(cd install ; $(MAKE) -f extlibs_makefile veryclean)
 	- rm -rf install/patch-plumed
@@ -283,6 +288,10 @@ distclean veryclean : clean
 	- cd include; ./clean.sh ; cd -
 	- rm -f espresso.tar.gz
 	- rm -rf make.sys
+
+# remove everything not in the original distribution 
+distclean : veryclean
+	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
 tar :
 	@if test -f espresso.tar.gz ; then /bin/rm espresso.tar.gz ; fi
