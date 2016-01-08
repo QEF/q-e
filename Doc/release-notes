@@ -27,6 +27,7 @@ Fixed in 5.3.0 version:
     in Kohn-Sham energies with respect to the "true" B3LYP. VWN is used
     to define the LDA correlation. B3LYP-V1R (B3LYP using VWN_1_RPA instead) 
     has also been added.
+  * Constrained dynamics in pw.x wasn't completely correct
 
 Incompatible changes in 5.3.0 version:
 

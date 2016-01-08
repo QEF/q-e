@@ -249,7 +249,7 @@ install : touch-dummy
 
 #########################################################
 # Run test-suite for numerical regression testing
-# NB: assumtion is that reference outputs have been 
+# NB: it is assumed that reference outputs have been 
 #     already computed once (usualy during release)
 #########################################################
 
