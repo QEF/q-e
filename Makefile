@@ -37,6 +37,7 @@ default :
 	@echo '  w90          Maximally localised Wannier Functions'
 	@echo '  want         Quantum Transport with Wannier functions'
 	@echo '  west         Many-body perturbation corrections Without Empty STates'
+	@echo '  SaX          Standard GW-BSE with plane waves'
 	@echo '  yambo        electronic excitations with plane waves'
 	@echo '  yambo-devel  yambo devel version'
 	@echo '  plumed       Metadynamics plugin for pw or cp'
@@ -177,8 +178,12 @@ w90: bindir libblas liblapack
 want : touch-dummy
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
+SaX : touch-dummy
+	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
+
 yambo: touch-dummy
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
+
 yambo-devel: touch-dummy
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
