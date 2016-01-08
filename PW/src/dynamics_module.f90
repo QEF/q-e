@@ -271,7 +271,7 @@ CONTAINS
          ! ... check if the new positions satisfy the constrain equation
          !
          CALL check_constraint( nat, tau_new, tau, &
-                                force, if_pos, ityp, alat, dt**2, amu_ry )
+                                force, if_pos, ityp, alat, dt, amu_ry )
          !
 #if ! defined (__REDUCE_OUTPUT)
          !
@@ -291,7 +291,7 @@ CONTAINS
 
          IF (vel_defined) THEN
             CALL check_constraint( nat, tau_old, tau, &
-                                   force, if_pos, ityp, alat, dt**2, amu_ry )
+                                   force, if_pos, ityp, alat, dt, amu_ry )
          ENDIF
          !
       ENDIF
@@ -892,7 +892,7 @@ CONTAINS
          ! ... check if the new positions satisfy the constrain equation
          !
          CALL check_constraint( nat, tau_new, tau, &
-                                force, if_pos, ityp, alat, dt**2, amu_ry )
+                                force, if_pos, ityp, alat, dt, amu_ry )
          !
       ENDIF
       !
@@ -1035,7 +1035,7 @@ CONTAINS
          ! ... check if the new positions satisfy the constrain equation
          !
          CALL check_constraint( nat, tau_new, tau, &
-                                force, if_pos, ityp, alat, dt**2, amu_ry )
+                                force, if_pos, ityp, alat, dt, amu_ry )
          !
 #if ! defined (__REDUCE_OUTPUT)
          !
