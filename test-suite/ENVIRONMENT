@@ -10,7 +10,7 @@
 #export ESPRESSO_ROOT=/home/fspiga/my_q-e
 
 # Edit this line every time a new reference is created
-export REFERENCE_VERSION=r11920
+export REFERENCE_VERSION=v5.3.0
 
 ####################################################################################
 

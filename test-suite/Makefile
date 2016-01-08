@@ -31,8 +31,8 @@ run-tests-pw : prolog pseudo
 	${TESTCODE_DIR}/bin/testcode.py --processors=0 --category=pw_all
 
 # --test-id={v<release-version>, r<revision-number>}
-create-reference : pseudo
-	${TESTCODE_DIR}/bin/testcode.py --processors=0 --category=_default_  --test-id=$(REFERENCE_VERSION) make-benchmarks
+create-reference : pseudo prolog
+	${TESTCODE_DIR}/bin/testcode.py --processors=0 --category=_default_ make-benchmarks
 
 compare :
 	${TESTCODE_DIR}/bin/testcode.py --processors=0 --category=_default_  --verbose compare 2>&1 | tee out.`date +%Y%m%d_%H%M%S`
