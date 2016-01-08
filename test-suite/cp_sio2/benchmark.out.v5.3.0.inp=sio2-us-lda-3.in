@@ -1,0 +1,1211 @@
+
+     Program CP v.5.3.0 (svn rev. 11957) starts on  8Jan2016 at 11:56:52 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Serial version
+
+   Dumping input parameters
+
+     Reading input from sio2-us-lda-3.in
+     Message from routine read_cards :
+     DEPRECATED: no units specified in ATOMIC_POSITIONS card
+     Message from routine read_cards :
+     ATOMIC_POSITIONS: units set to bohr
+
+   Job Title: MD Simulation
+
+
+   Atomic Pseudopotentials Parameters
+   ----------------------------------
+
+   Reading pseudopotential for specie #  1 from file :
+   /home/fs395/scratch/QE/espresso/test-suite/..//pseudo/O.pz-rrkjus.UPF
+   file type is UPF v.1
+               file O.pz-rrkjus.UPF: wavefunction(s)  2S renormalized
+
+   Reading pseudopotential for specie #  2 from file :
+   /home/fs395/scratch/QE/espresso/test-suite/..//pseudo/Si.pz-vbc.UPF
+   file type is UPF v.1
+
+
+   Main Simulation Parameters (from input)
+   ---------------------------------------
+   Restart Mode       =       0   reset_counters 
+   Number of MD Steps =     100
+   Print out every           10 MD Steps
+   Reads from unit    =      92
+   Writes to unit     =      93
+   MD Simulation time step            =      12.00
+   Electronic fictitious mass (emass) =     700.00
+   emass cut-off                      =       3.00
+
+   Simulation Cell Parameters (from input)
+   external pressure       =            1.00 [KBar]
+   wmass (calculated)      =        49868.25 [AU]
+   ibrav =    8
+   alat  =     9.28990000
+   a1    =     9.28990000    0.00000000    0.00000000
+   a2    =     0.00000000   16.09066419    0.00000000
+   a3    =     0.00000000    0.00000000   10.21470954
+
+   b1    =     0.10764379    0.00000000    0.00000000
+   b2    =     0.00000000    0.06214784    0.00000000
+   b3    =     0.00000000    0.00000000    0.09789804
+   omega =    1526.90153773
+
+   Energy Cut-offs
+   ---------------
+   Ecutwfc =   20.0 Ry,      Ecutrho =  150.0 Ry,      Ecuts =   80.0 Ry
+   Gcutwfc =    6.6     ,    Gcutrho =   18.1          Gcuts =   13.2
+   modified kinetic energy functional, with parameters:
+   ecutz = 150.0000  ecsig =  2.0000  ecfix =  16.00
+   NOTA BENE: refg, mmx =   0.050000  6000
+   Eigenvalues calculated without the kinetic term contribution
+   Orthog. with lagrange multipliers : eps =   0.10E-08,  max =  30
+   Electron dynamics with newton equations
+   Electron dynamics : the temperature is not controlled
+
+   Electronic states
+   -----------------
+   Number of Electron =    96, of States =    48
+   Occupation numbers :
+   2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00
+   2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00
+   2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00
+   2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00
+   2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00
+
+
+   Exchange and correlations functionals
+   -------------------------------------
+     Exchange-correlation      =  SLA  PZ   NOGX NOGC ( 1  1  0  0 0 0)
+
+
+   Ions Simulation Parameters
+   --------------------------
+   Ions are allowed to move
+   Ions dynamics with newton equations
+   the temperature is computed for    54 degrees of freedom
+   ion dynamics with fricp =  0.0000 and greasp =  1.0000
+   Ionic position (from input)
+   sorted by specie, and converted to real a.u. coordinates
+   Species   1 atoms =   12 mass =     29166.22 (a.u.),        16.00 (amu) rcmax =   1.00 (a.u.)
+        3.188294    14.832370     1.228830
+        7.832315     6.787040     1.228830
+        2.074435     5.995380     4.737583
+        6.720314    14.042319     4.737583
+        3.963071    11.269898     7.878606
+        8.608021     3.222959     7.878606
+        3.963071     4.819153     9.146251
+        8.608021    12.864483     9.146251
+        3.187365     1.256681     5.580296
+        7.833244     9.302011     5.580296
+        2.075364    10.092062     2.073586
+        6.719385     2.046732     2.073586
+   Species   2 atoms =    6 mass =     51040.88 (a.u.),        28.00 (amu) rcmax =   1.00 (a.u.)
+        0.288916     8.045330     3.404563
+        4.933866     0.000000     3.404563
+        2.133890    12.277174    -0.041880
+        6.778840     4.231844    -0.041880
+        2.133890     3.813486     6.852027
+        6.778840    11.858816     6.852027
+   Ionic position will be re-read from restart file
+
+   All atoms are allowed to move
+   Ionic temperature control via nose thermostat
+
+
+   ion dynamics with nose` temperature control:
+   temperature required      =  300.00000 (kelvin) 
+   NH chain length           =   1
+   active degrees of freedom =     54
+   time steps per nose osc.  =    516
+
+
+   nose` frequency(es)       =       6.667
+
+
+   the requested type of NH chains is     0
+   total number of thermostats used     1 0 0
+   ionic degrees of freedom for each chain   54
+
+
+   nose` mass(es) for chain    1 =   99946.828
+
+
+   atom i (in sorted order) is assigned to this thermostat :
+   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1
+
+
+   Cell Dynamics Parameters (from STDIN)
+   -------------------------------------
+   internal stress tensor calculated
+   Starting cell generated from CELLDM
+   Cell parameters will be re-read from restart file
+   Volume dynamics with newton equations
+   cell parameters dynamics with nose` temp. control
+   Constant PRESSURE Molecular dynamics:
+   External pressure (GPa) =        0.10
+   Volume mass             =    49868.25
+
+
+   cell dynamics with nose` temperature control:
+   Kinetic energy required   =  300.00000 (Kelvin) 
+   time steps per nose osc.  =   400
+   nose` frequency           =      8.607 (THz) 
+   nose` mass(es)            =    9993.391
+
+   Verbosity: iverbosity =  1
+
+
+
+   Simulation dimensions initialization
+   ------------------------------------
+
+   unit vectors of full simulation cell
+   in real space:                         in reciprocal space (units 2pi/alat):
+   1     9.2899    0.0000    0.0000              1.0000    0.0000    0.0000
+   2     0.0000   16.0907    0.0000              0.0000    0.5773    0.0000
+   3     0.0000    0.0000   10.2147              0.0000    0.0000    0.9095
+
+     G-vector sticks info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Sum        1783     951    239                47285    18431    2305
+     Tot         892     476    120
+
+
+   Real Mesh
+   ---------
+   Global Dimensions   Local  Dimensions   Processor Grid
+   .X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.
+    40    64    40      40    64    40       1     1     1
+   Array leading dimensions ( nr1x, nr2x, nr3x )   =     40    64    40
+   Local number of cell to store the grid ( nrxx ) =     102400
+   Number of x-y planes for each processors: 
+   nr3l =    40
+
+   Smooth Real Mesh
+   ----------------
+   Global Dimensions   Local  Dimensions   Processor Grid
+   .X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.
+    27    45    30      27    45    30       1     1     1
+   Array leading dimensions ( nr1x, nr2x, nr3x )   =     27    45    30
+   Local number of cell to store the grid ( nrxx ) =      36450
+   Number of x-y planes for each processors: 
+   nr3sl =    30
+
+   Small Box Real Mesh
+   -------------------
+   Global Dimensions   Local  Dimensions   Processor Grid
+   .X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.
+    24    24    24      24    24    24       1     1     1
+   Array leading dimensions ( nr1x, nr2x, nr3x )   =     24    24    24
+   Local number of cell to store the grid ( nrxx ) =      13824
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.5739    0.0000    0.0000              1.0000    0.0000    0.0000
+       0.0000    6.0340    0.0000              0.0000    0.9238    0.0000
+       0.0000    0.0000    6.1288              0.0000    0.0000    0.9095
+
+   Reciprocal Space Mesh
+   ---------------------
+   Large Mesh
+     Global(ngm_g)    MinLocal       MaxLocal      Average
+          23643          23643          23643       23643.00
+   Smooth Mesh
+     Global(ngms_g)   MinLocal       MaxLocal      Average
+           9216           9216           9216        9216.00
+   Wave function Mesh
+     Global(ngw_g)    MinLocal       MaxLocal      Average
+           1153           1153           1153        1153.00
+
+   Small box Mesh
+   ngb =         3183 not distributed to processors
+
+
+   System geometry initialization
+   ------------------------------
+   cell parameters read from restart file
+   ibrav =    8       cell parameters 
+
+
+   cell at current step : h(t)
+       9.28990       0.00000       0.00000
+       0.00000      16.09066       0.00000
+       0.00000       0.00000      10.21471
+
+   cell at previous step : h(t-dt)
+       9.28990       0.00000       0.00000
+       0.00000      16.09066       0.00000
+       0.00000       0.00000      10.21471
+
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.5739    0.0000    0.0000              1.0000    0.0000    0.0000
+       0.0000    6.0340    0.0000              0.0000    0.9238    0.0000
+       0.0000    0.0000    6.1288              0.0000    0.0000    0.9095
+
+
+   Pseudopotentials initialization
+   -------------------------------
+  nlinit  nh(is), ngb, is, kkbeta, lmaxq =            8        3183           1         865           3
+
+                        qqq 
+  -0.0987   0.4865   0.0000   0.0000
+   0.4865  -2.1787   0.0000   0.0000
+   0.0000   0.0000   0.2330   0.2950
+   0.0000   0.0000   0.2950   0.3737
+
+
+
+   Common initialization
+
+   Specie:     1
+   1  indv=  1   ang. mom=  0
+   2  indv=  2   ang. mom=  0
+   3  indv=  3   ang. mom=  1
+   4  indv=  3   ang. mom=  1
+   5  indv=  3   ang. mom=  1
+   6  indv=  4   ang. mom=  1
+   7  indv=  4   ang. mom=  1
+   8  indv=  4   ang. mom=  1
+
+                        dion 
+   0.4817  -1.2813   0.0000   0.0000
+  -1.2813   2.3075   0.0000   0.0000
+   0.0000   0.0000   0.6338   0.8752
+   0.0000   0.0000   0.8752   1.2039
+
+   Specie:     2
+   1  indv=  1   ang. mom=  0
+   2  indv=  2   ang. mom=  1
+   3  indv=  2   ang. mom=  1
+   4  indv=  2   ang. mom=  1
+
+                        dion 
+   0.7619   0.0000
+   0.0000   1.8417
+
+   Cell parameters from input file are used in electron mass preconditioning
+   init_tpiba2=    0.45744371
+
+   Short Legend and Physical Units in the Output
+   ---------------------------------------------
+   NFI    [int]          - step index
+   EKINC  [HARTREE A.U.] - kinetic energy of the fictitious electronic dynamics
+   TEMPH  [K]            - Temperature of the fictitious cell dynamics
+   TEMP   [K]            - Ionic temperature
+   ETOT   [HARTREE A.U.] - Scf total energy (Kohn-Sham hamiltonian)
+   ENTHAL [HARTREE A.U.] - Enthalpy ( ETOT + P * V )
+   ECONS  [HARTREE A.U.] - Enthalpy + kinetic energy of ions and cell
+   ECONT  [HARTREE A.U.] - Constant of motion for the CP lagrangian
+
+
+   reading restart file: /tmp/save/sio2_92.save
+   restart file read in    0.024 sec.
+
+
+   formf: eself=   210.64152
+   formf:     vps(g=0)=  -0.0099256     rhops(g=0)=  -0.0039295
+   formf: sum_g vps(g)=  -2.2959144 sum_g rhops(g)=  -0.5407261
+   formf:     vps(g=0)=  -0.0098400     rhops(g=0)=  -0.0026197
+   formf: sum_g vps(g)=  -2.3753533 sum_g rhops(g)=  -0.3604841
+   Delta V(G=0):   0.197519Ry,    5.374775eV
+
+   formf: eself=   210.64152
+   formf:     vps(g=0)=  -0.0099256     rhops(g=0)=  -0.0039295
+   formf: sum_g vps(g)=  -2.2959144 sum_g rhops(g)=  -0.5407261
+   formf:     vps(g=0)=  -0.0098400     rhops(g=0)=  -0.0026197
+   formf: sum_g vps(g)=  -2.3753533 sum_g rhops(g)=  -0.3604841
+   Delta V(G=0):   0.197519Ry,    5.374775eV
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.5740    0.0000   -0.0000              1.0000   -0.0000    0.0000
+       0.0000    6.0340   -0.0000             -0.0000    0.9238    0.0000
+      -0.0000   -0.0000    6.1287              0.0000    0.0000    0.9095
+
+  nfi     ekinc              temph  tempp     etot                 enthal               econs                econt              vnhh    xnhh0   vnhp    xnhp0
+      1    0.000000845842439    0.1    0.01    -211.981897129819    -211.976707296105    -211.976705413218    -211.976704078774  -0.0000   0.0000  -0.0000   0.0000
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.5741    0.0000   -0.0000              1.0000   -0.0000    0.0000
+       0.0000    6.0340   -0.0000             -0.0000    0.9238    0.0000
+      -0.0000   -0.0000    6.1285              0.0000    0.0000    0.9095
+      2    0.000001032836596    0.8    0.06    -211.981912069229    -211.976722278198    -211.976705667442    -211.976704146841  -0.0000  -0.0000  -0.0000  -0.0001
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.5742    0.0000   -0.0000              1.0000   -0.0000    0.0000
+       0.0000    6.0340   -0.0000             -0.0000    0.9238    0.0000
+      -0.0000   -0.0001    6.1283              0.0000    0.0000    0.9096
+      3    0.000001681628764    2.2    0.16    -211.981940561502    -211.976750855363    -211.976706086867    -211.976703921796  -0.0000  -0.0000  -0.0000  -0.0002
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.5743    0.0000   -0.0000              1.0000   -0.0000    0.0000
+       0.0000    6.0340   -0.0000             -0.0000    0.9238    0.0000
+      -0.0000   -0.0001    6.1279              0.0000    0.0000    0.9097
+      4    0.000004030766092    4.3    0.28    -211.981983016548    -211.976793437018    -211.976708248148    -211.976703746536  -0.0000  -0.0001  -0.0000  -0.0004
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.5746    0.0000   -0.0000              1.0000   -0.0000    0.0000
+       0.0000    6.0340   -0.0001             -0.0000    0.9239    0.0000
+      -0.0000   -0.0001    6.1274              0.0000    0.0000    0.9098
+      5    0.000008610837489    7.0    0.44    -211.982040367069    -211.976850955701    -211.976712997353    -211.976703943181  -0.0000  -0.0001  -0.0000  -0.0007
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.5748    0.0000   -0.0000              1.0000   -0.0000    0.0000
+       0.0000    6.0340   -0.0001             -0.0000    0.9239    0.0000
+      -0.0000   -0.0002    6.1269              0.0000    0.0000    0.9099
+      6    0.000013913389024   10.5    0.65    -211.982112369319    -211.976923168104    -211.976718602815    -211.976704297429  -0.0000  -0.0002  -0.0000  -0.0011
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.5751    0.0000   -0.0000              1.0000   -0.0000    0.0000
+       0.0000    6.0339   -0.0001             -0.0000    0.9240    0.0000
+      -0.0000   -0.0003    6.1262              0.0000    0.0000    0.9100
+      7    0.000017785572440   14.6    0.91    -211.982198124288    -211.977009176181    -211.976722334243    -211.976704243746  -0.0000  -0.0003  -0.0000  -0.0016
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.5754    0.0000   -0.0000              1.0000   -0.0000    0.0000
+       0.0000    6.0339   -0.0001             -0.0000    0.9240    0.0000
+      -0.0000   -0.0003    6.1255              0.0000    0.0000    0.9102
+      8    0.000019842416229   19.6    1.24    -211.982298485738    -211.977109834829    -211.976724348582    -211.976704339024  -0.0000  -0.0004  -0.0000  -0.0021
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.5758    0.0000   -0.0000              1.0000   -0.0000    0.0000
+       0.0000    6.0339   -0.0002             -0.0000    0.9241    0.0001
+      -0.0000   -0.0004    6.1247              0.0000    0.0000    0.9104
+      9    0.000021728029871   25.3    1.63    -211.982414073628    -211.977225764915    -211.976726504055    -211.976704814160  -0.0000  -0.0004  -0.0001  -0.0027
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.5762    0.0000   -0.0000              1.0000   -0.0000    0.0000
+       0.0000    6.0339   -0.0002             -0.0000    0.9241    0.0001
+      -0.0000   -0.0005    6.1237              0.0000    0.0000    0.9106
+     10    0.000025683250421   31.7    2.04    -211.982502318402    -211.977314397377    -211.976688687162    -211.976663331327  -0.0000  -0.0005  -0.0001  -0.0033
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.5766    0.0000   -0.0000              1.0000   -0.0000    0.0000
+       0.0000    6.0339   -0.0002             -0.0000    0.9242    0.0001
+      -0.0000   -0.0006    6.1227              0.0000    0.0000    0.9108
+     11    0.000033271538403   38.8    2.46    -211.982646778495    -211.977459290875    -211.976696200452    -211.976663644549  -0.0000  -0.0006  -0.0001  -0.0041
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.5771    0.0000   -0.0000              1.0000   -0.0000    0.0000
+       0.0000    6.0338   -0.0003             -0.0000    0.9243    0.0001
+      -0.0000   -0.0007    6.1216              0.0000    0.0000    0.9111
+     12    0.000044266727627   46.5    2.91    -211.982806301901    -211.977619293772    -211.976707334909    -211.976664285167  -0.0000  -0.0007  -0.0001  -0.0049
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.5776    0.0000   -0.0000              1.0000   -0.0000    0.0000
+       0.0000    6.0338   -0.0003             -0.0000    0.9244    0.0001
+      -0.0000   -0.0008    6.1204              0.0000    0.0000    0.9113
+     13    0.000056109574398   55.0    3.41    -211.982981182063    -211.977794700354    -211.976719656749    -211.976665394476  -0.0000  -0.0008  -0.0001  -0.0058
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.5781    0.0000   -0.0000              1.0000   -0.0000    0.0000
+       0.0000    6.0338   -0.0004             -0.0000    0.9245    0.0001
+      -0.0000   -0.0010    6.1190              0.0000    0.0001    0.9116
+     14    0.000065458975091   64.3    3.97    -211.983171091956    -211.977985184991    -211.976729713350    -211.976666880107  -0.0000  -0.0009  -0.0001  -0.0067
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.5787    0.0000   -0.0000              1.0000   -0.0000    0.0000
+       0.0000    6.0338   -0.0004             -0.0000    0.9246    0.0002
+      -0.0000   -0.0011    6.1176              0.0000    0.0001    0.9119
+     15    0.000071037465344   74.4    4.62    -211.983376152944    -211.978190870752    -211.976736294517    -211.976668830604  -0.0000  -0.0010  -0.0001  -0.0077
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.5793    0.0000   -0.0000              1.0000   -0.0000    0.0000
+       0.0000    6.0337   -0.0005             -0.0000    0.9247    0.0002
+      -0.0000   -0.0012    6.1161              0.0000    0.0001    0.9122
+     16    0.000074823067122   85.4    5.31    -211.983596441723    -211.978411835962    -211.976741016425    -211.976670903235  -0.0000  -0.0011  -0.0001  -0.0088
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.5800    0.0000   -0.0000              1.0000   -0.0000    0.0000
+       0.0000    6.0337   -0.0006             -0.0000    0.9248    0.0002
+      -0.0000   -0.0014    6.1145              0.0000    0.0001    0.9126
+     17    0.000080558466580   97.2    6.03    -211.983831880524    -211.978648004110    -211.976747266174    -211.976672754315  -0.0000  -0.0011  -0.0001  -0.0100
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.5807    0.0000   -0.0000              1.0000   -0.0000    0.0000
+       0.0000    6.0337   -0.0006             -0.0000    0.9249    0.0002
+      -0.0000   -0.0016    6.1128              0.0000    0.0001    0.9130
+     18    0.000091204862627  109.7    6.76    -211.984083464667    -211.978900371427    -211.976758954440    -211.976675335732  -0.0000  -0.0012  -0.0001  -0.0113
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.5814    0.0001   -0.0000              1.0000   -0.0000    0.0000
+       0.0000    6.0336   -0.0007             -0.0000    0.9251    0.0003
+      -0.0000   -0.0017    6.1110              0.0000    0.0001    0.9133
+     19    0.000107024572896  123.0    7.49    -211.984349752661    -211.979167497272    -211.976774764237    -211.976677063385   0.0000  -0.0012  -0.0001  -0.0126
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.5822    0.0001   -0.0000              1.0000   -0.0000    0.0000
+       0.0000    6.0336   -0.0008             -0.0000    0.9252    0.0003
+      -0.0000   -0.0019    6.1091              0.0000    0.0001    0.9137
+     20    0.000125219616808  137.0    8.26    -211.984631827532    -211.979450465853    -211.976792803724    -211.976678836378   0.0000  -0.0011  -0.0001  -0.0140
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.5830    0.0001   -0.0000              1.0000   -0.0000    0.0000
+       0.0000    6.0335   -0.0008             -0.0000    0.9253    0.0003
+      -0.0000   -0.0021    6.1071              0.0000    0.0001    0.9142
+     21    0.000141611841275  151.8    9.10    -211.984929653984    -211.979749243592    -211.976808843310    -211.976680597057   0.0000  -0.0011  -0.0001  -0.0154
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.5838    0.0001   -0.0000              1.0000   -0.0000    0.0000
+       0.0000    6.0335   -0.0009             -0.0000    0.9255    0.0003
+      -0.0000   -0.0023    6.1050              0.0000    0.0001    0.9146
+     22    0.000153537191314  167.5   10.02    -211.985242384783    -211.980062985395    -211.976819376946    -211.976681495548   0.0000  -0.0010  -0.0001  -0.0170
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.5846    0.0001   -0.0000              1.0000   -0.0000    0.0000
+       0.0000    6.0335   -0.0010             -0.0000    0.9256    0.0004
+      -0.0000   -0.0025    6.1027              0.0000    0.0002    0.9151
+     23    0.000161805165112  184.3   11.00    -211.985572436696    -211.980394110227    -211.976827446097    -211.976683746466   0.0000  -0.0009  -0.0001  -0.0186
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.5855    0.0001   -0.0000              1.0000   -0.0000    0.0000
+       0.0000    6.0334   -0.0011             -0.0000    0.9258    0.0004
+      -0.0000   -0.0027    6.1004              0.0000    0.0002    0.9156
+     24    0.000170176418723  202.1   12.01    -211.985920040808    -211.980742851058    -211.976836711080    -211.976687213922   0.0000  -0.0007  -0.0001  -0.0203
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.5864    0.0001   -0.0000              1.0000   -0.0000    0.0000
+       0.0000    6.0334   -0.0012             -0.0000    0.9259    0.0004
+      -0.0000   -0.0030    6.0980              0.0000    0.0002    0.9161
+     25    0.000182750081739  220.7   13.02    -211.986284635577    -211.981108647783    -211.976850405788    -211.976690974849   0.0000  -0.0004  -0.0001  -0.0220
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.5874    0.0001   -0.0000              1.0000   -0.0000    0.0000
+       0.0000    6.0333   -0.0013             -0.0000    0.9261    0.0005
+      -0.0000   -0.0032    6.0954              0.0000    0.0002    0.9166
+     26    0.000201121489294  240.2   14.02    -211.986666481025    -211.981491761628    -211.976870233886    -211.976695060463   0.0000  -0.0001  -0.0002  -0.0238
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.5883    0.0001   -0.0000              1.0000   -0.0000    0.0000
+       0.0000    6.0332   -0.0014             -0.0000    0.9263    0.0005
+      -0.0000   -0.0034    6.0928              0.0000    0.0002    0.9172
+     27    0.000223304001913  260.4   15.05    -211.987065300638    -211.981891917454    -211.976893930932    -211.976699103534   0.0000   0.0003  -0.0002  -0.0257
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.5893    0.0001   -0.0000              1.0000   -0.0000    0.0000
+       0.0000    6.0332   -0.0015             -0.0000    0.9264    0.0006
+      -0.0000   -0.0037    6.0900              0.0000    0.0002    0.9178
+     28    0.000245147208403  281.5   16.15    -211.987480671767    -211.982308694501    -211.976916943154    -211.976702603193   0.0000   0.0007  -0.0002  -0.0277
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.5903    0.0001   -0.0000              1.0000   -0.0000    0.0000
+       0.0000    6.0331   -0.0016             -0.0000    0.9266    0.0006
+      -0.0000   -0.0040    6.0872              0.0000    0.0002    0.9184
+     29    0.000263157369874  303.5   17.32    -211.987915321731    -211.982744822489    -211.976938444078    -211.976708117475   0.0001   0.0013  -0.0002  -0.0297
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.5913    0.0001   -0.0000              1.0000   -0.0000    0.0000
+       0.0000    6.0331   -0.0017             -0.0000    0.9268    0.0006
+      -0.0000   -0.0042    6.0842              0.0000    0.0003    0.9190
+     30    0.000276774728045  326.7   18.56    -211.988366468330    -211.983197521809    -211.976954967381    -211.976712607956   0.0001   0.0019  -0.0002  -0.0318
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.5924    0.0001   -0.0000              1.0000   -0.0000    0.0000
+       0.0000    6.0330   -0.0018             -0.0000    0.9270    0.0007
+      -0.0000   -0.0045    6.0811              0.0000    0.0003    0.9196
+     31    0.000288702409389  351.0   19.83    -211.988837402675    -211.983670085870    -211.976972327382    -211.976719019403   0.0001   0.0027  -0.0002  -0.0340
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.5935    0.0001   -0.0000              1.0000   -0.0000    0.0000
+       0.0000    6.0329   -0.0019             -0.0000    0.9272    0.0007
+      -0.0000   -0.0048    6.0779              0.0000    0.0003    0.9203
+     32    0.000303074576659  376.3   21.11    -211.989327246884    -211.984161638516    -211.976993568727    -211.976726055580   0.0001   0.0036  -0.0002  -0.0362
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.5946    0.0001   -0.0000              1.0000   -0.0000    0.0000
+       0.0000    6.0329   -0.0020             -0.0000    0.9273    0.0008
+      -0.0000   -0.0051    6.0746              0.0000    0.0003    0.9210
+     33    0.000322622744361  402.6   22.39    -211.989835500354    -211.984671680396    -211.977020838044    -211.976732887772   0.0001   0.0046  -0.0002  -0.0385
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.5957    0.0001   -0.0000              1.0000   -0.0000    0.0000
+       0.0001    6.0328   -0.0022             -0.0000    0.9275    0.0008
+      -0.0000   -0.0054    6.0712              0.0000    0.0003    0.9217
+     34    0.000346850420778  429.6   23.68    -211.990363092038    -211.985201141692    -211.977054741015    -211.976740344914   0.0001   0.0057  -0.0002  -0.0409
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.5968    0.0001   -0.0000              1.0000   -0.0000    0.0000
+       0.0001    6.0327   -0.0023             -0.0000    0.9277    0.0009
+      -0.0000   -0.0057    6.0676              0.0000    0.0003    0.9224
+     35    0.000372550732114  457.4   25.02    -211.990909964348    -211.985749966502    -211.977092336107    -211.976748393565   0.0001   0.0069  -0.0002  -0.0433
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.5979    0.0002   -0.0000              1.0000   -0.0000    0.0000
+       0.0001    6.0326   -0.0024             -0.0000    0.9279    0.0009
+      -0.0000   -0.0061    6.0640              0.0000    0.0004    0.9231
+     36    0.000396210887426  486.2   26.42    -211.991518842368    -211.986360882203    -211.977173056445    -211.976799649580   0.0001   0.0084  -0.0002  -0.0459
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.5991    0.0002   -0.0000              1.0000   -0.0000    0.0000
+       0.0001    6.0325   -0.0025             -0.0000    0.9281    0.0010
+      -0.0000   -0.0064    6.0602              0.0000    0.0004    0.9239
+     37    0.000416290311145  516.1   27.88    -211.992118230663    -211.986962395937    -211.977224013540    -211.976822390635   0.0001   0.0100  -0.0002  -0.0484
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6003    0.0002   -0.0000              1.0000   -0.0000    0.0000
+       0.0001    6.0325   -0.0027             -0.0000    0.9284    0.0010
+      -0.0000   -0.0067    6.0563              0.0000    0.0004    0.9247
+     38    0.000434053216679  547.0   29.38    -211.992719304620    -211.987565685406    -211.977257880014    -211.976827594363   0.0002   0.0117  -0.0002  -0.0511
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6014    0.0002   -0.0000              1.0000   -0.0000    0.0000
+       0.0001    6.0324   -0.0028             -0.0000    0.9286    0.0011
+      -0.0000   -0.0071    6.0523              0.0000    0.0004    0.9255
+     39    0.000452597690132  579.0   30.89    -211.993336453890    -211.988185141841    -211.977292416003    -211.976829432054   0.0002   0.0137  -0.0002  -0.0538
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6026    0.0002   -0.0000              1.0000   -0.0000    0.0000
+       0.0001    6.0323   -0.0030             -0.0000    0.9288    0.0011
+      -0.0000   -0.0075    6.0482              0.0000    0.0005    0.9263
+     40    0.000474575524175  611.9   32.41    -211.993969359681    -211.988820447283    -211.977330274897    -211.976827360348   0.0002   0.0158  -0.0002  -0.0566
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6038    0.0002   -0.0000              1.0000   -0.0000    0.0000
+       0.0001    6.0322   -0.0031             -0.0000    0.9290    0.0012
+      -0.0000   -0.0078    6.0439              0.0000    0.0005    0.9272
+     41    0.000500325919810  645.4   33.94    -211.994622832642    -211.989476412977    -211.977377100695    -211.976826093371   0.0002   0.0182  -0.0002  -0.0594
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6050    0.0002   -0.0000              1.0000   -0.0000    0.0000
+       0.0001    6.0321   -0.0033             -0.0000    0.9292    0.0013
+      -0.0000   -0.0082    6.0396              0.0000    0.0005    0.9281
+     42    0.000527740324492  679.6   35.52    -211.995293912967    -211.990150080114    -211.977428591643    -211.976822803200   0.0002   0.0208  -0.0002  -0.0623
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6062    0.0002   -0.0000              1.0000   -0.0000    0.0000
+       0.0001    6.0320   -0.0034             -0.0000    0.9294    0.0013
+      -0.0000   -0.0086    6.0351              0.0000    0.0005    0.9289
+     43    0.000553994233739  714.5   37.15    -211.995986659084    -211.990845508825    -211.977486946892    -211.976821825946   0.0002   0.0237  -0.0003  -0.0653
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6075    0.0002   -0.0000              1.0000   -0.0000    0.0000
+       0.0001    6.0319   -0.0036             -0.0000    0.9296    0.0014
+      -0.0000   -0.0090    6.0305              0.0000    0.0006    0.9298
+     44    0.000577824091602  750.2   38.83    -211.996699979790    -211.991561610042    -211.977550737500    -211.976822242518   0.0003   0.0268  -0.0003  -0.0683
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6087    0.0002   -0.0000              1.0000   -0.0000    0.0000
+       0.0001    6.0318   -0.0037             -0.0000    0.9299    0.0015
+      -0.0000   -0.0094    6.0258              0.0000    0.0006    0.9308
+     45    0.000600359630330  786.7   40.54    -211.997432598259    -211.992297108802    -211.977620687150    -211.976822820027   0.0003   0.0301  -0.0003  -0.0715
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6099    0.0002   -0.0000              1.0000   -0.0000    0.0000
+       0.0001    6.0317   -0.0039             -0.0000    0.9301    0.0015
+      -0.0000   -0.0098    6.0210              0.0000    0.0006    0.9317
+     46    0.000623843159499  823.7   42.26    -211.998186065277    -211.993053556851    -211.977701647072    -211.976825273151   0.0003   0.0338  -0.0003  -0.0746
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6111    0.0002   -0.0000              1.0000   -0.0000    0.0000
+       0.0001    6.0316   -0.0041             -0.0000    0.9303    0.0016
+      -0.0000   -0.0103    6.0161              0.0000    0.0006    0.9327
+     47    0.000649585488821  861.2   44.00    -211.998962476624    -211.993833049934    -211.977798304002    -211.976832030393   0.0003   0.0377  -0.0003  -0.0779
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6123    0.0002   -0.0000              1.0000   -0.0000    0.0000
+       0.0001    6.0314   -0.0042             -0.0000    0.9305    0.0017
+      -0.0000   -0.0107    6.0110              0.0000    0.0007    0.9337
+     48    0.000676853481629  899.0   45.76    -211.999759442356    -211.994633197587    -211.977908914241    -211.976841091725   0.0004   0.0420  -0.0003  -0.0811
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6135    0.0002   -0.0000              1.0000   -0.0000    0.0000
+       0.0001    6.0313   -0.0044             -0.0000    0.9307    0.0017
+      -0.0000   -0.0111    6.0059              0.0000    0.0007    0.9347
+     49    0.000703471130089  937.0   47.58    -212.000571536705    -211.995448573765    -211.978027438852    -211.976847562467   0.0004   0.0466  -0.0003  -0.0845
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6148    0.0002   -0.0000              1.0000   -0.0000    0.0000
+       0.0001    6.0312   -0.0046             -0.0000    0.9310    0.0018
+      -0.0000   -0.0116    6.0006              0.0000    0.0007    0.9357
+     50    0.000727851483603  975.1   49.46    -212.001401947641    -211.996282366779    -211.978157269501    -211.976855338603   0.0004   0.0516  -0.0003  -0.0879
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6160    0.0002   -0.0000              1.0000   -0.0000    0.0000
+       0.0001    6.0311   -0.0048             -0.0000    0.9312    0.0019
+      -0.0000   -0.0121    5.9952              0.0000    0.0007    0.9367
+     51    0.000750798416056 1013.4   51.37    -212.002248528827    -211.997132431006    -211.978298921359    -211.976862992682   0.0005   0.0569  -0.0003  -0.0914
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6172    0.0002   -0.0000              1.0000   -0.0000    0.0000
+       0.0001    6.0310   -0.0050             -0.0000    0.9314    0.0019
+      -0.0000   -0.0125    5.9898              0.0000    0.0008    0.9378
+     52    0.000775097871941 1051.5   53.30    -212.003093962815    -211.997981449397    -211.978439608500    -211.976853765679   0.0005   0.0626  -0.0003  -0.0949
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6183    0.0002   -0.0000              1.0000   -0.0000    0.0000
+       0.0001    6.0308   -0.0052             -0.0000    0.9316    0.0020
+      -0.0000   -0.0130    5.9842              0.0000    0.0008    0.9389
+     53    0.000803151344895 1089.3   55.23    -212.003974294522    -211.998865466387    -211.978619822259    -211.976864530454   0.0005   0.0686  -0.0003  -0.0986
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6195    0.0002   -0.0000              1.0000   -0.0000    0.0000
+       0.0001    6.0307   -0.0054             -0.0000    0.9318    0.0021
+      -0.0000   -0.0135    5.9785              0.0000    0.0008    0.9400
+     54    0.000834655378377 1126.6   57.16    -212.004869151377    -211.999764107981    -211.978821267201    -211.976876067360   0.0006   0.0751  -0.0003  -0.1022
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6207    0.0002   -0.0000              1.0000   -0.0000    0.0000
+       0.0001    6.0306   -0.0056             -0.0000    0.9320    0.0022
+      -0.0000   -0.0140    5.9728              0.0000    0.0009    0.9411
+     55    0.000866451543356 1163.4   59.12    -212.005773018393    -212.000671857282    -211.979037733593    -211.976884099438   0.0006   0.0821  -0.0003  -0.1059
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6218    0.0002   -0.0000              1.0000   -0.0000    0.0000
+       0.0001    6.0304   -0.0058             -0.0000    0.9322    0.0023
+      -0.0000   -0.0145    5.9669              0.0000    0.0009    0.9422
+     56    0.000895075496478 1199.5   61.13    -212.006691574818    -212.001594391662    -211.979274038504    -211.976895693209   0.0006   0.0894  -0.0003  -0.1097
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6230    0.0002   -0.0000              1.0000   -0.0000    0.0000
+       0.0001    6.0303   -0.0060             -0.0000    0.9325    0.0024
+      -0.0000   -0.0150    5.9610              0.0000    0.0009    0.9433
+     57    0.000919630116192 1234.7   63.21    -212.007691177438    -212.002598066249    -211.979598088507    -211.976978460709   0.0007   0.0972  -0.0003  -0.1136
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6241    0.0002   -0.0000              1.0000   -0.0000    0.0000
+       0.0001    6.0301   -0.0062             -0.0000    0.9327    0.0024
+      -0.0000   -0.0156    5.9549              0.0000    0.0010    0.9444
+     58    0.000942370849066 1268.9   65.34    -212.008835026053    -212.003746079171    -211.980077531273    -211.977196643519   0.0007   0.1055  -0.0003  -0.1175
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6252    0.0002   -0.0000              1.0000   -0.0000    0.0000
+       0.0001    6.0300   -0.0064             -0.0000    0.9329    0.0025
+      -0.0000   -0.0161    5.9488              0.0000    0.0010    0.9456
+     59    0.000966858190129 1301.6   67.49    -212.009751950819    -212.004667258474    -211.980347602011    -211.977180824911   0.0008   0.1143  -0.0003  -0.1214
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6263    0.0002   -0.0000              1.0000   -0.0000    0.0000
+       0.0001    6.0299   -0.0066             -0.0000    0.9331    0.0026
+      -0.0000   -0.0166    5.9426              0.0000    0.0010    0.9468
+     60    0.000995068458696 1332.8   69.65    -212.010664741974    -212.005584391790    -211.980636206678    -211.977155914584   0.0008   0.1235  -0.0003  -0.1254
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6274    0.0002   -0.0000              1.0000   -0.0000    0.0000
+       0.0001    6.0297   -0.0068             -0.0000    0.9333    0.0027
+      -0.0000   -0.0172    5.9364              0.0000    0.0011    0.9480
+     61    0.001025911549796 1362.3   71.80    -212.011586499367    -212.006510575896    -211.980958016364    -211.977136733793   0.0008   0.1333  -0.0003  -0.1295
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6284    0.0002   -0.0000              1.0000   -0.0000    0.0000
+       0.0001    6.0296   -0.0071             -0.0000    0.9335    0.0028
+      -0.0000   -0.0178    5.9300              0.0000    0.0011    0.9491
+     62    0.001056461387373 1390.0   73.97    -212.012514399905    -212.007442984303    -211.981309973549    -211.977122311929   0.0009   0.1436  -0.0003  -0.1336
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6294    0.0002   -0.0000              1.0000   -0.0000    0.0000
+       0.0001    6.0294   -0.0073             -0.0000    0.9337    0.0029
+      -0.0000   -0.0183    5.9237              0.0000    0.0011    0.9503
+     63    0.001084114866440 1415.7   76.18    -212.013440100035    -212.008373269838    -211.981683912135    -211.977106384061   0.0009   0.1544  -0.0004  -0.1378
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6304    0.0002   -0.0000              1.0000   -0.0000    0.0000
+       0.0001    6.0292   -0.0075             -0.0000    0.9339    0.0030
+      -0.0000   -0.0189    5.9172              0.0000    0.0012    0.9515
+     64    0.001108085992304 1439.3   78.46    -212.014369681429    -212.009307510356    -211.982087862562    -211.977097233519   0.0010   0.1658  -0.0004  -0.1421
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6314    0.0002   -0.0000              1.0000   -0.0000    0.0000
+       0.0001    6.0291   -0.0077             -0.0000    0.9340    0.0031
+      -0.0000   -0.0195    5.9107              0.0000    0.0012    0.9527
+     65    0.001129739720636 1460.5   80.79    -212.015297351157    -212.010239908979    -211.982519865120    -211.977091182056   0.0010   0.1777  -0.0004  -0.1464
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6324    0.0002   -0.0000              1.0000   -0.0000    0.0000
+       0.0001    6.0289   -0.0080             -0.0000    0.9342    0.0032
+      -0.0000   -0.0201    5.9042              0.0000    0.0013    0.9540
+     66    0.001151789819164 1479.0   83.13    -212.016217875070    -212.011165227437    -211.982979735073    -211.977085156826   0.0011   0.1902  -0.0004  -0.1507
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6333    0.0002   -0.0000              1.0000   -0.0000    0.0000
+       0.0001    6.0288   -0.0082             -0.0000    0.9344    0.0033
+      -0.0000   -0.0207    5.8977              0.0000    0.0013    0.9552
+     67    0.001177023145373 1494.9   85.47    -212.017128756236    -212.012080964393    -211.983469828931    -211.977078744060   0.0011   0.2033  -0.0004  -0.1551
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6342    0.0002   -0.0000              1.0000   -0.0000    0.0000
+       0.0001    6.0286   -0.0085             -0.0000    0.9346    0.0034
+      -0.0000   -0.0213    5.8911              0.0000    0.0013    0.9564
+     68    0.001206231710483 1507.8   87.80    -212.018031104899    -212.012988225286    -211.983993789767    -211.977075026265   0.0012   0.2169  -0.0004  -0.1596
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6351    0.0002   -0.0000              1.0000   -0.0000    0.0000
+       0.0001    6.0284   -0.0087             -0.0000    0.9348    0.0035
+      -0.0000   -0.0219    5.8845              0.0000    0.0014    0.9576
+     69    0.001236587644108 1517.8   90.13    -212.018916660941    -212.013878744911    -211.984542177257    -211.977067846658   0.0012   0.2312  -0.0004  -0.1641
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6359    0.0002   -0.0000              1.0000   -0.0000    0.0000
+       0.0001    6.0283   -0.0090             -0.0000    0.9349    0.0036
+      -0.0000   -0.0226    5.8778              0.0000    0.0014    0.9589
+     70    0.001263258664693 1524.9   92.50    -212.019798789860    -212.014765883675    -211.985125062072    -211.977072777275   0.0013   0.2460  -0.0004  -0.1686
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6368    0.0002   -0.0000              1.0000   -0.0000    0.0000
+       0.0001    6.0281   -0.0092             -0.0000    0.9351    0.0037
+      -0.0000   -0.0232    5.8712              0.0000    0.0015    0.9601
+     71    0.001283635074419 1529.2   94.93    -212.020661447464    -212.015633592303    -211.985725103676    -211.977075973335   0.0013   0.2614  -0.0004  -0.1732
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6376    0.0002   -0.0000              1.0000   -0.0000    0.0000
+       0.0001    6.0279   -0.0095             -0.0000    0.9352    0.0038
+      -0.0000   -0.0239    5.8646              0.0000    0.0015    0.9613
+     72    0.001300065777427 1530.3   97.41    -212.021498132990    -212.016475364691    -211.986339018138    -211.977072940375   0.0014   0.2774  -0.0004  -0.1779
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6383    0.0002   -0.0000              1.0000   -0.0000    0.0000
+       0.0001    6.0278   -0.0098             -0.0000    0.9354    0.0039
+      -0.0000   -0.0245    5.8579              0.0000    0.0016    0.9625
+     73    0.001317503086172 1528.1   99.90    -212.022310281347    -212.017292629924    -211.986973687809    -211.977067023321   0.0014   0.2940  -0.0004  -0.1826
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6390    0.0002   -0.0000              1.0000   -0.0000    0.0000
+       0.0001    6.0276   -0.0100             -0.0000    0.9355    0.0040
+      -0.0000   -0.0252    5.8513              0.0000    0.0016    0.9637
+     74    0.001338844025528 1522.7  102.38    -212.023086853719    -212.018074343176    -211.987621076481    -211.977048939838   0.0015   0.3112  -0.0004  -0.1874
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6397    0.0002   -0.0000              1.0000   -0.0000    0.0000
+       0.0001    6.0274   -0.0103             -0.0000    0.9357    0.0041
+      -0.0000   -0.0259    5.8447              0.0000    0.0016    0.9649
+     75    0.001363341648600 1514.2  104.82    -212.023848524121    -212.018841172753    -211.988300821044    -211.977040887402   0.0015   0.3290  -0.0004  -0.1922
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6404    0.0002   -0.0000              1.0000   -0.0000    0.0000
+       0.0001    6.0272   -0.0106             -0.0000    0.9358    0.0043
+      -0.0000   -0.0266    5.8381              0.0000    0.0017    0.9661
+     76    0.001388758818030 1502.6  107.24    -212.024581668506    -212.019579489219    -211.988996551799    -211.977030697603   0.0016   0.3474  -0.0004  -0.1970
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6410    0.0002   -0.0000              1.0000   -0.0000    0.0000
+       0.0001    6.0271   -0.0108             -0.0000    0.9360    0.0044
+      -0.0000   -0.0273    5.8316              0.0000    0.0017    0.9673
+     77    0.001413074339749 1488.1  109.67    -212.025286131154    -212.020289131317    -211.989705481151    -211.977019773425   0.0016   0.3664  -0.0004  -0.2019
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6416    0.0002   -0.0000              1.0000   -0.0000    0.0000
+       0.0001    6.0269   -0.0111             -0.0000    0.9361    0.0045
+      -0.0000   -0.0280    5.8251              0.0000    0.0018    0.9685
+     78    0.001433998069026 1470.6  112.15    -212.025965203664    -212.020973384771    -211.990427740569    -211.977012922269   0.0017   0.3860  -0.0004  -0.2069
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6422    0.0002   -0.0000              1.0000   -0.0000    0.0000
+       0.0001    6.0267   -0.0114             -0.0000    0.9362    0.0046
+      -0.0000   -0.0287    5.8187              0.0000    0.0018    0.9697
+     79    0.001449691273745 1450.3  114.66    -212.026617298054    -212.021630655768    -211.991158585198    -211.977009757534   0.0017   0.4061  -0.0004  -0.2119
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6427    0.0002   -0.0000              1.0000   -0.0000    0.0000
+       0.0001    6.0265   -0.0117             -0.0000    0.9363    0.0047
+      -0.0000   -0.0294    5.8123              0.0000    0.0019    0.9708
+     80    0.001461560570304 1427.5  117.19    -212.027240777063    -212.022259301521    -211.991896152770    -211.977009589735   0.0017   0.4268  -0.0004  -0.2169
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6432    0.0002   -0.0000              1.0000   -0.0000    0.0000
+       0.0001    6.0264   -0.0120             -0.0000    0.9364    0.0049
+      -0.0000   -0.0301    5.8060              0.0000    0.0019    0.9720
+     81    0.001474459980077 1402.1  119.70    -212.027831133699    -212.022854809531    -211.992638860602    -211.977008635512   0.0018   0.4481  -0.0004  -0.2220
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6437    0.0001   -0.0001              1.0000   -0.0000    0.0000
+       0.0001    6.0262   -0.0123             -0.0000    0.9365    0.0050
+      -0.0000   -0.0309    5.7997              0.0000    0.0020    0.9731
+     82    0.001491925469704 1374.2  122.16    -212.028391609877    -212.023420416022    -211.993391202609    -211.977010595536   0.0018   0.4699  -0.0004  -0.2271
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6441    0.0001   -0.0001              1.0000   -0.0000    0.0000
+       0.0000    6.0260   -0.0126             -0.0000    0.9366    0.0051
+      -0.0000   -0.0316    5.7935              0.0000    0.0020    0.9742
+     83    0.001512480040828 1344.2  124.57    -212.028923386999    -212.023957296950    -211.994150435439    -211.977016965578   0.0019   0.4922  -0.0004  -0.2323
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6445    0.0001   -0.0001              1.0000   -0.0000    0.0000
+       0.0000    6.0258   -0.0129             -0.0000    0.9367    0.0052
+      -0.0000   -0.0324    5.7874              0.0000    0.0021    0.9753
+     84    0.001532103770185 1312.2  126.96    -212.029422824224    -212.024461806647    -211.994906540758    -211.977024453692   0.0019   0.5151  -0.0004  -0.2375
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6448    0.0001   -0.0001              1.0000   -0.0000    0.0000
+       0.0000    6.0257   -0.0132             -0.0000    0.9368    0.0054
+      -0.0000   -0.0332    5.7814              0.0000    0.0021    0.9764
+     85    0.001548337609431 1278.5  129.35    -212.029881523644    -212.024925542711    -211.995646317432    -211.977024976408   0.0020   0.5385  -0.0004  -0.2428
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6452    0.0001   -0.0001              1.0000   -0.0000    0.0000
+       0.0000    6.0255   -0.0135             -0.0000    0.9369    0.0055
+      -0.0000   -0.0340    5.7754              0.0000    0.0022    0.9775
+     86    0.001560808585767 1243.2  131.75    -212.030310075754    -212.025359091076    -211.996377435154    -211.977029206702   0.0020   0.5623  -0.0004  -0.2481
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6454    0.0001   -0.0001              1.0000   -0.0000    0.0000
+       0.0000    6.0253   -0.0138             -0.0000    0.9370    0.0056
+      -0.0000   -0.0348    5.7696              0.0000    0.0022    0.9785
+     87    0.001570500290755 1206.6  134.14    -212.030703157428    -212.025757124054    -211.997092853096    -211.977031680967   0.0020   0.5867  -0.0004  -0.2534
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6457    0.0001   -0.0001              1.0000   -0.0000    0.0000
+       0.0000    6.0252   -0.0142             -0.0000    0.9370    0.0058
+      -0.0000   -0.0356    5.7638              0.0000    0.0023    0.9795
+     88    0.001579916564327 1168.8  136.50    -212.031056701186    -212.026115569712    -211.997788309231    -211.977028081007   0.0021   0.6115  -0.0005  -0.2588
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6459    0.0001   -0.0001              1.0000   -0.0000    0.0000
+       0.0000    6.0250   -0.0145             -0.0000    0.9371    0.0059
+      -0.0000   -0.0364    5.7582              0.0000    0.0024    0.9805
+     89    0.001591519631919 1130.0  138.80    -212.031377880646    -212.026441597313    -211.998470612366    -211.977025073944   0.0021   0.6368  -0.0005  -0.2643
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6461    0.0001   -0.0001              1.0000   -0.0000    0.0000
+       0.0000    6.0248   -0.0148             -0.0000    0.9372    0.0061
+      -0.0000   -0.0372    5.7527              0.0000    0.0024    0.9815
+     90    0.001604960401354 1090.4  141.05    -212.031655375378    -212.026723882445    -211.999125169634    -211.977010575567   0.0022   0.6625  -0.0005  -0.2697
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6462    0.0001   -0.0001              1.0000   -0.0000    0.0000
+       0.0000    6.0246   -0.0151             -0.0000    0.9372    0.0062
+      -0.0000   -0.0380    5.7472              0.0000    0.0025    0.9824
+     91    0.001617964207921 1050.3  143.24    -212.031907753018    -212.026980989394    -211.999765590739    -211.977002436088   0.0022   0.6886  -0.0005  -0.2752
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6463    0.0001   -0.0001              1.0000   -0.0000    0.0000
+       0.0000    6.0245   -0.0155             -0.0000    0.9372    0.0063
+      -0.0000   -0.0389    5.7419              0.0000    0.0025    0.9834
+     92    0.001629059196144 1009.9  145.40    -212.032132623347    -212.027210524961    -212.000385620851    -211.976997663652   0.0022   0.7151  -0.0005  -0.2808
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6464    0.0000   -0.0001              1.0000   -0.0000    0.0000
+       0.0000    6.0243   -0.0158             -0.0000    0.9373    0.0065
+      -0.0000   -0.0397    5.7367              0.0000    0.0026    0.9843
+     93    0.001637891188684  969.4  147.54    -212.032333257397    -212.027415757273    -212.000985854494    -211.976998834273   0.0023   0.7421  -0.0005  -0.2863
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6464    0.0000   -0.0001              1.0000   -0.0000    0.0000
+       0.0000    6.0242   -0.0162             -0.0000    0.9373    0.0066
+      -0.0000   -0.0406    5.7316              0.0000    0.0026    0.9852
+     94    0.001644668933101  929.0  149.63    -212.032498140488    -212.027585168963    -212.001552615881    -211.976993485714   0.0023   0.7693  -0.0005  -0.2920
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6465    0.0000   -0.0001              1.0000   -0.0000    0.0000
+       0.0000    6.0240   -0.0165             -0.0000    0.9373    0.0068
+      -0.0000   -0.0415    5.7267              0.0000    0.0027    0.9860
+     95    0.001650619706657  888.8  151.67    -212.032640690609    -212.027732175596    -212.002098384605    -211.976994066206   0.0023   0.7970  -0.0005  -0.2976
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6464    0.0000   -0.0001              1.0000   -0.0000    0.0000
+       0.0000    6.0238   -0.0169             -0.0000    0.9374    0.0069
+      -0.0001   -0.0423    5.7218              0.0000    0.0028    0.9868
+     96    0.001657458432577  848.9  153.63    -212.032760258364    -212.027856125430    -212.002622210916    -211.976998911648   0.0023   0.8250  -0.0005  -0.3033
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6464    0.0000   -0.0001              1.0000   -0.0000    0.0000
+       0.0000    6.0237   -0.0172             -0.0000    0.9374    0.0071
+      -0.0001   -0.0432    5.7171              0.0000    0.0028    0.9876
+     97    0.001665674240438  809.6  155.52    -212.032857827577    -212.027958000027    -212.003123598848    -211.977007872069   0.0024   0.8533  -0.0005  -0.3090
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6463   -0.0000   -0.0001              1.0000    0.0000    0.0000
+      -0.0000    6.0235   -0.0176              0.0000    0.9374    0.0072
+      -0.0001   -0.0442    5.7125              0.0000    0.0029    0.9884
+     98    0.001673897041932  770.9  157.34    -212.032932395584    -212.028036794765    -212.003598530852    -211.977018959706   0.0024   0.8819  -0.0005  -0.3148
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6461   -0.0000   -0.0001              1.0000    0.0000    0.0000
+      -0.0000    6.0234   -0.0179              0.0000    0.9374    0.0074
+      -0.0001   -0.0451    5.7081              0.0000    0.0029    0.9892
+     99    0.001680114684644  733.0  159.10    -212.032976123314    -212.028084669183    -212.004035726528    -211.977023360563   0.0024   0.9107  -0.0005  -0.3206
+
+ * Physical Quantities at step:   100
+
+   from rhoofr: total integrated electronic density
+   in g-space =     96.000000   in r-space =    96.000000
+     Total Electronic Pressure (GPa)      -20.85933    100
+     Pressure of Nuclei (GPa)             0.18756    100
+     Pressure Total (GPa)            -0.99039    100
+
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.6460   -0.0000   -0.0001              1.0000    0.0000    0.0000
+      -0.0000    6.0232   -0.0183              0.0000    0.9374    0.0076
+      -0.0001   -0.0460    5.7037              0.0000    0.0030    0.9899
+
+
+                total energy =     -212.03299623106 Hartree a.u.
+              kinetic energy =       94.67490 Hartree a.u.
+        electrostatic energy =     -198.34783 Hartree a.u.
+                         esr =        0.42809 Hartree a.u.
+                       eself =      210.64152 Hartree a.u.
+      pseudopotential energy =      -96.42249 Hartree a.u.
+  n-l pseudopotential energy =       36.64063 Hartree a.u.
+ exchange-correlation energy =      -48.57821 Hartree a.u.
+           average potential =        0.00000 Hartree a.u.
+
+
+
+   Eigenvalues (eV), kp =   1 , spin =  1
+
+  -23.45  -22.85  -22.63  -22.06  -21.98  -21.76  -21.59  -21.53  -21.49  -21.44
+  -21.33  -21.26  -11.19  -11.09  -10.82  -10.37   -8.73   -8.59   -8.36   -8.19
+   -8.11   -8.03   -7.99   -7.18   -6.05   -6.02   -6.01   -5.87   -5.74   -5.38
+   -5.29   -5.05   -4.93   -4.58   -4.51   -4.15   -4.09   -3.97   -3.92   -3.81
+   -3.77   -3.73   -3.67   -3.23   -2.98   -2.87   -2.80   -2.63
+
+   Allocated memory (kb) =     88780
+
+   CELL_PARAMETERS
+    9.41021020   -0.00001546   -0.00008973
+   -0.00001871   16.06226951   -0.07511827
+   -0.00010165   -0.04784527    9.51345838
+
+   System Density [g/cm^3] :              2.8055793303
+
+
+   System Volume [A.U.^3] :           1437.9190623607
+
+
+   Center of mass square displacement (a.u.):   0.106915
+
+   Total stress (GPa)
+       -3.57424119         0.00847113        -0.01158972
+        0.00847113         0.68715865        -1.13903687
+       -0.01158972        -1.13903687        -0.08407722
+   ATOMIC_POSITIONS
+   O       0.31670646630540E+01     0.14905327429288E+02     0.10048646708844E+01
+   O       0.78716388467549E+01     0.68742085527543E+01     0.10285088348561E+01
+   O       0.22156085205729E+01     0.59915426352148E+01     0.43404661700947E+01
+   O       0.69212451378871E+01     0.14023702616860E+02     0.43167759599702E+01
+   O       0.39733632924819E+01     0.11039821190685E+02     0.71461867926985E+01
+   O       0.86785498990205E+01     0.30080368826468E+01     0.71709683140746E+01
+   O       0.39717681203925E+01     0.48961538253110E+01     0.86621843531856E+01
+   O       0.86769930665445E+01     0.12927084087339E+02     0.86389394633864E+01
+   O       0.31669890993641E+01     0.11052545390717E+01     0.52914154907543E+01
+   O       0.78725597422725E+01     0.91370315969906E+01     0.52674862744743E+01
+   O       0.22160875341935E+01     0.10018034332197E+02     0.19518110508534E+01
+   O       0.69209378243006E+01     0.19871792392381E+01     0.19761740491969E+01
+   Si      0.31834452581269E+00     0.80063022286371E+01     0.31470711170288E+01
+   Si      0.50237346038810E+01    -0.25127371722662E-01     0.31712247782447E+01
+   Si      0.21428646636011E+01     0.12262615487294E+02    -0.90103479305872E-01
+   Si      0.68478575638222E+01     0.42318166436113E+01    -0.66268059123545E-01
+   Si      0.21421385150800E+01     0.37480627272193E+01     0.63842652326308E+01
+   Si      0.68477522465022E+01     0.11779716403612E+02     0.63603667350644E+01
+
+   ATOMIC_VELOCITIES
+   O      -0.11754250250274E-03     0.16194295863844E-03    -0.21019752556473E-03
+   O      -0.11776841124275E-03     0.16117245494860E-03    -0.21150674112944E-03
+   O       0.18346064093162E-03     0.26764622550140E-04    -0.57002724148816E-04
+   O       0.18254099438696E-03     0.28551221824274E-04    -0.58580510166007E-04
+   O      -0.70349995304358E-04    -0.19437108893107E-03    -0.23442498638602E-03
+   O      -0.69928757759493E-04    -0.19365843939720E-03    -0.23385713168365E-03
+   O      -0.71637428344082E-04     0.19432382857682E-03     0.23086400250631E-03
+   O      -0.71881151191660E-04     0.19441735431220E-03     0.23199212038326E-03
+   O      -0.11389748563669E-03    -0.16495117938658E-03     0.21158105650542E-03
+   O      -0.11331375154940E-03    -0.16521840308877E-03     0.21016680648422E-03
+   O       0.17977145799411E-03    -0.35154947563107E-04     0.59468751368557E-04
+   O       0.18009549545428E-03    -0.35644637260948E-04     0.61008992049480E-04
+   Si      0.91763530469396E-04     0.25382924972138E-05     0.26280069210867E-06
+   Si      0.93055200662234E-04     0.16593046625144E-05    -0.50733243692237E-06
+   Si     -0.43228679896416E-04     0.22196242737593E-04    -0.55362578731182E-04
+   Si     -0.44086655275149E-04     0.23598875851100E-04    -0.54591565049310E-04
+   Si     -0.42969371913784E-04    -0.18491494359943E-04     0.54455996131958E-04
+   Si     -0.42847798466148E-04    -0.19029075801957E-04     0.56021473554664E-04
+
+
+
+   Partial temperatures (for each ionic specie) 
+   Species  Temp (K)   Mean Square Displacement (a.u.)
+        1   2.24E+02     6.1375E-02
+        2   3.45E+01     3.9142E-02
+
+  nfi     ekinc              temph  tempp     etot                 enthal               econs                econt              vnhh    xnhh0   vnhp    xnhp0
+    100    0.001684117864743  696.0  160.81    -212.032996231057    -212.028108842680    -212.004440855466    -211.977027209603   0.0024   0.9399  -0.0005  -0.3264
+
+   writing restart file: /tmp/save/sio2_93.save
+   restart file written in    0.041 sec.
+
+
+
+   Averaged Physical Quantities
+                      accumulated      this run
+   ekinc         :        0.00079       0.00079 (AU)
+   ekin          :       94.62836      94.62836 (AU)
+   epot          :     -343.16335    -343.16335 (AU)
+   total energy  :     -212.00502    -212.00502 (AU)
+   temperature   :       61.81360      61.81360 (K )
+   enthalpy      :     -211.99993    -211.99993 (AU)
+   econs         :     -211.98343    -211.98343 (AU)
+   pressure      :       -3.82298      -3.82298 (Gpa)
+   volume        :     1496.34601    1496.34601 (AU)
+
+
+
+     Called by MAIN_LOOP:
+     initialize   :      6.52s CPU      6.55s WALL (       1 calls)
+     main_loop    :     59.90s CPU     60.35s WALL (     100 calls)
+     cpr_total    :     59.98s CPU     60.87s WALL (       1 calls)
+
+     Called by INIT_RUN:
+     init_readfil :      0.16s CPU      0.16s WALL (       1 calls)
+
+     Called by CPR:
+     cpr_md       :     59.98s CPU     60.87s WALL (     100 calls)
+     move_electro :     40.16s CPU     40.25s WALL (     100 calls)
+
+     Called by CELL_DYNAMICS:
+     formf        :      0.25s CPU      0.25s WALL (     101 calls)
+
+     Called by move_electrons:
+     rhoofr       :     14.26s CPU     14.32s WALL (     100 calls)
+     vofrho       :      2.91s CPU      2.92s WALL (     100 calls)
+     dforce       :      4.05s CPU      4.07s WALL (    2400 calls)
+     calphi       :      0.78s CPU      0.78s WALL (     100 calls)
+     newd         :     13.95s CPU     13.98s WALL (     100 calls)
+     nlfl         :      0.09s CPU      0.09s WALL (     100 calls)
+
+     Called by ortho:
+     ortho_iter   :      0.64s CPU      0.64s WALL (     100 calls)
+     rsg          :      0.05s CPU      0.06s WALL (     100 calls)
+     rhoset       :      0.53s CPU      0.54s WALL (     100 calls)
+     sigset       :      0.53s CPU      0.53s WALL (     100 calls)
+     tauset       :      0.53s CPU      0.54s WALL (     100 calls)
+     ortho        :      4.42s CPU      4.42s WALL (     100 calls)
+     updatc       :      0.40s CPU      0.40s WALL (     100 calls)
+
+     Small boxes:
+     rhov         :      1.06s CPU      1.06s WALL (     100 calls)
+     fftb         :      9.01s CPU      9.04s WALL (   29400 calls)
+
+     Low-level routines:
+     prefor       :      0.16s CPU      0.14s WALL (     401 calls)
+     nlfq         :      4.00s CPU      3.99s WALL (     100 calls)
+     nlsm1        :      2.39s CPU      2.39s WALL (     301 calls)
+     nlsm2        :      3.96s CPU      3.96s WALL (     100 calls)
+     fft          :      4.54s CPU      4.54s WALL (    1300 calls)
+     ffts         :      0.20s CPU      0.20s WALL (     200 calls)
+     fftw         :      3.93s CPU      3.95s WALL (    7200 calls)
+     betagx       :      4.03s CPU      4.03s WALL (       1 calls)
+     qradx        :      1.76s CPU      1.76s WALL (       1 calls)
+     nlinit       :      6.35s CPU      6.38s WALL (       1 calls)
+     init_dim     :      0.01s CPU      0.01s WALL (       1 calls)
+     newnlinit    :      2.03s CPU      2.08s WALL (     101 calls)
+     from_restart :      0.14s CPU      0.14s WALL (       1 calls)
+     strucf       :      0.05s CPU      0.07s WALL (     101 calls)
+     calbec       :      0.27s CPU      0.28s WALL (     101 calls)
+
+
+
+     CP           :  1m 6.55s CPU     1m 7.50s WALL
+
+
+   This run was terminated on:  11:58: 0   8Jan2016            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=
