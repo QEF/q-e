@@ -229,6 +229,9 @@ bug is filed.
 
 \subsection{Contributing new developments}
 
+{\em Important notice: starting with release 5.3, there will be important 
+changes in the development model of \qe. Stay tuned.}
+
 Various procedures can be followed to contribute new developments.
 It is possible to contribute:
 \begin{itemize}
@@ -2030,9 +2033,9 @@ read\_namelists.f90 )
 \section{Using SVN}
 \label{Sec:SVN}
 \qe is maintained in a Subversion (SVN) repository. Developers can have 
-read-write access when needed. Note that the latest (development) version
-may not work properly, and sometimes not even compile properly. 
-Use at your own risk. 
+read-write access when needed, read-only otherwise. Note that the latest 
+(development) version may occasionally not work properly: carefully
+verify the results before using it in production work.
 
 Subversion, also known as SVN, is a software that allows many
 developers to work and maintain a single copy of a software in a
@@ -2046,10 +2049,10 @@ More information on SVN can be found here:
 
 Current organization:
 \begin{itemize}
-\item {\em trunk}: development goes on here -- open read-only to everybody
+\item {\em trunk}: development goes on here
 \item {\em branches}: major new developments, disruptive changes, very
 experimental features, things that have a long time before being released
-(if ever) ... -- branches may or may not be public
+(if ever) ... 
 \item {\em external}: packages that are be developed in a separate SVN trunk
 can be downloaded into the main QE trunk -- access may be restricted to
 specific (usually expert) developers.
@@ -2058,10 +2061,12 @@ specific (usually expert) developers.
 Follow the instructions in
 \texttt{http://qe-forge.org/gf/project/q-e/scmsvn},
 under `Access Info'',
-to check out (i.e.  download) the SVN repository in either 
-read-write or anonymous mode.
+to check out (i.e.  download) the SVN repository.
 The distribution will appear in directory \texttt{trunk/espresso/}.
 Branches (i.e. sub-versions) will appear as separate directories.
+
+{\em Important notice: since v.5.3 the SVN repository is no longer accessible
+read-only to everybody.}
 
 \subsection{SVN operations}
 
