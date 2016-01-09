@@ -32,6 +32,8 @@ rm archive/plumed-1.3-qe.tar.gz archive/PLUMED-latest.tar.gz
 
 # restore version.f90 
 mv version.f90 Modules/
+cp Modules/version.f90 Modules/version.f90.in
+chmod -x install/update_version
 
 # generate documentation - NOTA BENE:
 # in order to build the .html and .txt documentation in Doc, 
@@ -44,7 +46,6 @@ touch make.sys
 make doc
 
 # generate PWGUI
-
 make tar-gui PWGUI_VERSION=$version 
 tar -xzvf PWgui-$version.tgz
 /bin/rm PWgui-$version.tgz
@@ -62,6 +63,7 @@ tar -czvf espresso-$version.tar.gz espresso-$version/archive \
                                    espresso-$version/Doc \
                                    espresso-$version/environment_variables \
                                    espresso-$version/flib \
+                                   espresso-$version/FFTXlib \
                                    espresso-$version/Makefile \
                                    espresso-$version/include \
                                    espresso-$version/install \
