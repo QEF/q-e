@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2010 Quantum ESPRESSO group
+! Copyright (C) 2010-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -15,7 +15,7 @@
 
      PRIVATE
      PUBLIC :: ngw, ngw_g, ngwx, ecutwfc, gcutw, ekcut, gkcut
-     PUBLIC :: ggp, ecfixed, qcutz, q2sigma
+     PUBLIC :: g2kin, ecfixed, qcutz, q2sigma
      PUBLIC :: gvecw_init, g2kin_init, deallocate_gvecw
 
      ! ...   G vectors less than the wave function cut-off ( ecutwfc )
@@ -39,9 +39,9 @@
     
      ! array of G vectors module plus penalty function for constant cut-off 
      ! simulation.
-     ! ggp = g + ( agg / tpiba**2 ) * ( 1 + erf( ( tpiba2 * g - e0gg ) / sgg ) )
+     ! g2kin = g + ( agg / tpiba**2 ) * ( 1 + erf( ( tpiba2*g - e0gg ) / sgg ) )
 
-     REAL(DP), ALLOCATABLE, TARGET :: ggp(:)
+     REAL(DP), ALLOCATABLE :: g2kin(:)
 
    CONTAINS
 
@@ -66,7 +66,7 @@
        !
        !  allocate kinetic energy
        !
-       ALLOCATE( ggp(ngw) )
+       ALLOCATE( g2kin(ngw) )
        !
        RETURN 
 
@@ -85,11 +85,11 @@
        gcutz  = qcutz / tpiba2
        IF( gcutz > 0.0d0 ) THEN
           DO ig=1,ngw
-             ggp(ig) = gg(ig) + gcutz * &
+             g2kin(ig) = gg(ig) + gcutz * &
                      ( 1.0d0 + qe_erf( ( tpiba2 *gg(ig) - ecfixed )/q2sigma ) )
           ENDDO
        ELSE
-          ggp( 1 : ngw ) = gg( 1 : ngw )
+          g2kin( 1 : ngw ) = gg( 1 : ngw )
        END IF
 
        RETURN 
@@ -97,7 +97,7 @@
      END SUBROUTINE g2kin_init
 
      SUBROUTINE deallocate_gvecw
-       IF( ALLOCATED( ggp ) ) DEALLOCATE( ggp )
+       IF( ALLOCATED( g2kin ) ) DEALLOCATE( g2kin )
      END SUBROUTINE deallocate_gvecw
 
 !=----------------------------------------------------------------------------=!

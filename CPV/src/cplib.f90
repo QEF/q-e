@@ -1617,7 +1617,7 @@ END SUBROUTINE print_lambda_x
       USE constants,          ONLY: pi, fpi
       USE gvecw,              ONLY: ngw
       USE gvect,              ONLY: gstart
-      USE gvecw,              ONLY: ggp
+      USE gvecw,              ONLY: g2kin
       USE mp,                 ONLY: mp_sum
       USE mp_global,          ONLY: intra_bgrp_comm
       USE cell_base,          ONLY: tpiba2
@@ -1640,7 +1640,7 @@ END SUBROUTINE print_lambda_x
       DO i=1,n
          sk(i)=0.0d0
          DO ig=gstart,ngw
-            sk(i)=sk(i)+DBLE(CONJG(c(ig,i))*c(ig,i))*ggp(ig)
+            sk(i)=sk(i)+DBLE(CONJG(c(ig,i))*c(ig,i))*g2kin(ig)
          END DO
       END DO
 

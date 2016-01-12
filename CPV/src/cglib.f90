@@ -586,7 +586,7 @@ subroutine pc2(a,beca,b,becb)
 
       SUBROUTINE emass_precond_tpa( ema0bg, tpiba2, emaec )
        use kinds, ONLY : dp
-       use gvecw, ONLY : ggp,ngw
+       use gvecw, ONLY : g2kin,ngw
        IMPLICIT NONE
        REAL(DP), INTENT(OUT) :: ema0bg(ngw)
        REAL(DP), INTENT(IN) ::  tpiba2, emaec
@@ -597,7 +597,7 @@ subroutine pc2(a,beca,b,becb)
        call start_clock('emass_p_tpa')
        do i = 1, ngw
 
-          x=0.5d0*tpiba2*ggp(i)/emaec
+          x=0.5d0*tpiba2*g2kin(i)/emaec
           ema0bg(i) = 1.d0/(1.d0+(16.d0*x**4)/(27.d0+18.d0*x+12.d0*x**2+8.d0*x**3))
        end do
        call stop_clock('emass_p_tpa')
@@ -613,7 +613,7 @@ subroutine pc2(a,beca,b,becb)
       USE constants,          ONLY: pi, fpi
       USE gvecw,              ONLY: ngw
       USE gvect, ONLY: gstart
-      USE gvecw,              ONLY: ggp
+      USE gvecw,              ONLY: g2kin
       USE mp,                 ONLY: mp_sum
       USE mp_global,          ONLY: intra_bgrp_comm
       USE cell_base,          ONLY: tpiba2
@@ -635,7 +635,7 @@ subroutine pc2(a,beca,b,becb)
       DO i=1,n
          ene_ave(i)=0.d0
          DO ig=gstart,ngw
-            ene_ave(i)=ene_ave(i)+DBLE(CONJG(c(ig,i))*c(ig,i))*ggp(ig)
+            ene_ave(i)=ene_ave(i)+DBLE(CONJG(c(ig,i))*c(ig,i))*g2kin(ig)
          END DO
       END DO
 
@@ -672,7 +672,7 @@ subroutine pc2(a,beca,b,becb)
       use constants, only: pi, fpi
       use mp, only: mp_sum
       use gvect, only: gstart
-      USE gvecw,              ONLY: ggp
+      USE gvecw,              ONLY: g2kin
       USE cell_base,          ONLY: tpiba2
 
 
@@ -733,7 +733,7 @@ subroutine pc2(a,beca,b,becb)
       if (do_k) then
          do j=1,n
             do ig=1,ngw
-               x=tpiba2*ggp(i)/ave_kin(j)
+               x=tpiba2*g2kin(i)/ave_kin(j)
                prec_fact = 1.d0/(1.d0+(16.d0*x**4)/(27.d0+18.d0*x+12.d0*x**2+8.d0*x**3))
                 c0(ig,j)=c0(ig,j)*prec_fact
                !c0(ig,j)=(phi(ig,j)+c0(ig,j))*ema0bg(ig)
@@ -752,7 +752,7 @@ subroutine pc2(a,beca,b,becb)
       if (do_k) then
          do j=1,n
             do ig=1,ngw
-               x=tpiba2*ggp(ig)/ave_kin(j)
+               x=tpiba2*g2kin(ig)/ave_kin(j)
                prec_fact = 1.d0/(1.d0+(16.d0*x**4)/(27.d0+18.d0*x+12.d0*x**2+8.d0*x**3))
                c0(ig,j)=c0(ig,j)*prec_fact
             end do

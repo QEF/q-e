@@ -56,8 +56,6 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE local_pseudo,             ONLY : allocate_local_pseudo
   USE io_global,                ONLY : stdout, ionode, ionode_id
   USE dener,                    ONLY : detot
-  !USE cdvan,                    ONLY : drhovan
-  USE gvecw,                    ONLY : ggp
   USE constants,                ONLY : pi, k_boltzmann_au, au_ps
   USE io_files,                 ONLY : psfile, pseudo_dir
   USE wave_base,                ONLY : wave_steepest, wave_verlet
@@ -773,8 +771,6 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         END IF
         !
      END IF
-     !
-     !IF ( thdyn .AND. tfirst ) CALL emass_precond( ema0bg, ggp, ngw, tpiba2, emass_cutoff ) ! BS: Possibly not needed
      !
      ekincm = ekinc0
      !  

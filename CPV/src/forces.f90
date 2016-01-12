@@ -28,7 +28,7 @@
       USE uspp_param,             ONLY: nhm, nh, ish
       USE constants,              ONLY: pi, fpi
       USE ions_base,              ONLY: nsp, na, nat
-      USE gvecw,                  ONLY: ngw, ggp
+      USE gvecw,                  ONLY: ngw, g2kin
       USE cell_base,              ONLY: tpiba2
       USE ensemble_dft,           ONLY: tens
       USE funct,                  ONLY: dft_is_meta, dft_is_hybrid, exx_is_active
@@ -272,7 +272,7 @@
 !$omp parallel default(none) &
 !$omp          private( eig_offset, igno, fi, fip, idx, fp, fm, ig ) &
 !$omp          shared( nogrp_ , f, ngw, aux, df, da, c, tpiba2, tens, dffts, me_bgrp, &
-!$omp                  i, n, ggp, nls, nlsm )
+!$omp                  i, n, g2kin, nls, nlsm )
 
       eig_offset = 0
       igno = 1
@@ -292,9 +292,9 @@
                DO ig=1,ngw
                   fp= aux(nls(ig)+eig_offset) +  aux(nlsm(ig)+eig_offset)
                   fm= aux(nls(ig)+eig_offset) -  aux(nlsm(ig)+eig_offset)
-                  df(ig+igno-1)= fi *(tpiba2 * ggp(ig) * c(ig,idx+i-1) + &
+                  df(ig+igno-1)= fi *(tpiba2 * g2kin(ig) * c(ig,idx+i-1) + &
                                  CMPLX(real (fp), aimag(fm), kind=dp ))
-                  da(ig+igno-1)= fip*(tpiba2 * ggp(ig) * c(ig,idx+i  ) + &
+                  da(ig+igno-1)= fip*(tpiba2 * g2kin(ig) * c(ig,idx+i  ) + &
                                  CMPLX(aimag(fp),-real (fm), kind=dp ))
                END DO
 !$omp end do
@@ -304,8 +304,8 @@
                DO ig=1,ngw
                   fp= aux(nls(ig)) + aux(nlsm(ig))
                   fm= aux(nls(ig)) - aux(nlsm(ig))
-                  df(ig)= fi*(tpiba2*ggp(ig)* c(ig,idx+i-1)+CMPLX(DBLE(fp), AIMAG(fm),kind=DP))
-                  da(ig)=fip*(tpiba2*ggp(ig)* c(ig,idx+i  )+CMPLX(AIMAG(fp),-DBLE(fm),kind=DP))
+                  df(ig)= fi*(tpiba2*g2kin(ig)* c(ig,idx+i-1)+CMPLX(DBLE(fp), AIMAG(fm),kind=DP))
+                  da(ig)=fip*(tpiba2*g2kin(ig)* c(ig,idx+i  )+CMPLX(AIMAG(fp),-DBLE(fm),kind=DP))
                END DO
 !$omp end do
             END IF
