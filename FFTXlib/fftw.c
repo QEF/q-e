@@ -345,8 +345,6 @@ config_twiddle fftwi_config_twiddle[] =
 #include <stdio.h>
 #include <stdlib.h>
 
-char *fftw_version = "FFTW V1.1 ($Id: fftw.c,v 1.3 2010-01-26 14:06:59 giannozz Exp $)";
-
 /*
  * This function is called in other files, so we cannot declare
  * it as static. 

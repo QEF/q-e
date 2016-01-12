@@ -133,7 +133,6 @@ extern config_twiddle fftwi_config_twiddle[];
 
 extern generic_codelet fftw_twiddle_generic;
 extern generic_codelet fftwi_twiddle_generic;
-extern char *fftw_version;
 
 /*****************************
  *        Plans

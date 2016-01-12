@@ -1,3 +1,12 @@
+Fixed in svn version:
+
+  * New configure wasn't working properly for some Macintosh due to a
+    missing line (commit 11976)
+  * Possible conflict between FFTW in MKL and in Modules/fftw.c solved 
+    (commit 11980)
+
+                               * * * * *
+
 New in 5.3.0 version:
 
   * projwfc.x: PDOS with PAW projectors and all-electron basis functions
