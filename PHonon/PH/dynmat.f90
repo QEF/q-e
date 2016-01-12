@@ -226,6 +226,9 @@ end Module dynamical
             IF (lperm .OR. lplasma) THEN
                 CALL polar_mode_permittivity(nat,eps0,z,zstar,w2,omega, &
                                              lplasma)
+                IF ( ABS( q(1)**2+q(2)**2+q(3)**2 ) > 1.0d-8 ) &
+                   WRITE(6,'(5x,a)') 'BEWARE: phonon contribution to &
+                   & permittivity computed with TO-LO splitting'
             ENDIF
          ENDIF
       ENDIF
@@ -1065,7 +1068,7 @@ subroutine polar_mode_permittivity( nat, eps0, z, zstar, w2, omega, lplasma)
   !----------------------------------------------------------------------
 
   !
-  ! Algorithm from Fennie and Rabe, Phys. Rev. B 68, 18411 (2003)
+  ! Algorithm from Fennie and Rabe, Phys. Rev. B 68, 184111 (2003)
   !
   USE kinds, ONLY: DP
   USE constants, ONLY : pi, tpi, fpi, eps4, eps8, eps12, &
