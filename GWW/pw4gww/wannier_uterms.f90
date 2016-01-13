@@ -22,7 +22,7 @@
   USE basis
   USE klist
   USE constants, ONLY : e2, pi, tpi, fpi
-  USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, nbndx, ecutwfc
+  USE wvfct,    ONLY : igk, npwx, npw, nbnd, nbndx, ecutwfc
    USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2
   USE wannier_gw
   USE mp, ONLY : mp_sum

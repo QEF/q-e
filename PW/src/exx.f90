@@ -1138,7 +1138,7 @@ MODULE exx
     USE constants,      ONLY : fpi, e2, pi
     USE cell_base,      ONLY : omega
     USE gvect,          ONLY : ngm, g
-    USE wvfct,          ONLY : npwx, npw, igk, current_k, ecutwfc
+    USE wvfct,          ONLY : npwx, npw, igk, current_k
     USE control_flags,  ONLY : gamma_only
     USE klist,          ONLY : xk, nks, nkstot
     USE fft_interfaces, ONLY : fwfft, invfft
@@ -1417,7 +1417,7 @@ MODULE exx
     USE constants,      ONLY : fpi, e2, pi
     USE cell_base,      ONLY : omega
     USE gvect,          ONLY : ngm, g
-    USE wvfct,          ONLY : npwx, npw, igk, current_k, ecutwfc
+    USE wvfct,          ONLY : npwx, npw, igk, current_k
     USE control_flags,  ONLY : gamma_only
     USE klist,          ONLY : xk, nks, nkstot
     USE fft_interfaces, ONLY : fwfft, invfft
@@ -1926,7 +1926,7 @@ MODULE exx
     USE cell_base,               ONLY : alat, omega, bg, at, tpiba
     USE symm_base,               ONLY : nsym, s
     USE gvect,                   ONLY : ngm, gstart, g, nl
-    USE wvfct,                   ONLY : nbnd, npwx, npw, igk, wg, ecutwfc
+    USE wvfct,                   ONLY : nbnd, npwx, npw, igk, wg
     USE control_flags,           ONLY : gamma_only
     USE wavefunctions_module,    ONLY : evc
     USE klist,                   ONLY : xk, ngk, nks, nkstot
@@ -2180,7 +2180,7 @@ MODULE exx
     USE cell_base,               ONLY : alat, omega, bg, at, tpiba
     USE symm_base,               ONLY : nsym, s
     USE gvect,                   ONLY : ngm, gstart, g, nl
-    USE wvfct,                   ONLY : nbnd, npwx, npw, igk, wg, ecutwfc
+    USE wvfct,                   ONLY : nbnd, npwx, npw, igk, wg
     USE control_flags,           ONLY : gamma_only
     USE wavefunctions_module,    ONLY : evc
     USE klist,                   ONLY : xk, ngk, nks, nkstot

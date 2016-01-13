@@ -25,7 +25,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
   !       e_h
   USE kinds,    ONLY : DP
   USE uspp,     ONLY : vkb, nkb
-  USE wvfct,    ONLY : igk, g2kin, ecutwfc
+  USE wvfct,    ONLY : igk
   USE gvecs,  ONLY : nls, doublegrid
   USE gvect,                ONLY : ngm, gstart, nl, nlm, g, gg, gcutm
   USE cell_base,            ONLY :  alat, omega

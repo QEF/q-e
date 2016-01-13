@@ -433,7 +433,7 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
   USE start_k, ONLY : nk1, nk2, nk3, k1, k2, k3
   USE symm_base, ONLY : s, ftau, nsym
   USE wavefunctions_module, ONLY : evc
-  USE wvfct, ONLY : npwx, nbnd, npw, et, wg, g2kin, ecutwfc, igk
+  USE wvfct, ONLY : npwx, nbnd, npw, et, wg, ecutwfc, igk
 #ifdef __MPI
   USE parallel_include, ONLY : MPI_DOUBLE_COMPLEX
 #endif
@@ -1444,7 +1444,7 @@ SUBROUTINE calc_rhog (rhog_nvmin, rhog_nvmax)
   USE scf, ONLY : rho
   USE symme, ONLY : sym_rho, sym_rho_init
   USE wavefunctions_module, ONLY : evc, psic
-  USE wvfct, ONLY : npw, igk, wg, g2kin, ecutwfc
+  USE wvfct, ONLY : npw, igk, wg
 
   IMPLICIT NONE
 
@@ -1826,7 +1826,7 @@ SUBROUTINE write_vxc_r (output_file_name, diag_nmin, diag_nmax, &
     inter_pool_comm, npool
   USE scf, ONLY : rho, rho_core, rhog_core
   USE wavefunctions_module, ONLY : evc, psic
-  USE wvfct, ONLY : npw, nbnd, igk, g2kin, ecutwfc
+  USE wvfct, ONLY : npw, nbnd, igk
 
   IMPLICIT NONE
 
@@ -2019,7 +2019,7 @@ SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
     inter_pool_comm, npool
   USE scf, ONLY : rho, rho_core, rhog_core
   USE wavefunctions_module, ONLY : evc, psic
-  USE wvfct, ONLY : npwx, npw, nbnd, igk, g2kin, ecutwfc
+  USE wvfct, ONLY : npwx, npw, nbnd, igk
 
   IMPLICIT NONE
 
@@ -2446,7 +2446,7 @@ SUBROUTINE write_vkbg (output_file_name, symm_type, wfng_kgrid, &
   USE symm_base, ONLY : s, ftau, nsym
   USE uspp, ONLY : nkb, vkb, deeq
   USE uspp_param, ONLY : nhm, nh
-  USE wvfct, ONLY : npwx, npw, g2kin, ecutwfc, igk
+  USE wvfct, ONLY : npwx, npw, ecutwfc, igk
 
   IMPLICIT NONE
 

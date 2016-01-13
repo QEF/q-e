@@ -17,7 +17,7 @@
     USE io_files,             ONLY : prefix, tmp_dir, nwordwfc,iunwfc
     USE kinds,    ONLY : DP
     USE wannier_gw, ONLY : num_nbnds,num_nbndv,s_first_state,s_last_state, l_verbose
-    USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, nbndx, ecutwfc
+    USE wvfct,    ONLY : igk, npwx, npw, nbnd, nbndx
     USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
     USE mp_world, ONLY : mpime,nproc,world_comm
     USE wavefunctions_module, ONLY : evc

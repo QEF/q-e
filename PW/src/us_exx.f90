@@ -455,7 +455,7 @@ MODULE us_exx
     USE uspp,                ONLY : nkb, okvan,indv_ijkb0
     USE uspp_param,          ONLY : upf, nh
     USE gvecs,               ONLY : nls
-    USE wvfct,               ONLY : nbnd, npwx !, ecutwfc
+    USE wvfct,               ONLY : nbnd, npwx
     USE control_flags,       ONLY : gamma_only
     IMPLICIT NONE
     !

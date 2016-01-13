@@ -97,7 +97,7 @@ subroutine matrix_wannier_gamma_big( matsincos, ispin, n_set, itask )
   USE mp,                   ONLY : mp_bcast,mp_barrier,mp_sum
   USE mp_world,             ONLY : world_comm
   USE fft_base,             ONLY : dffts,dfftp
-  USE wvfct,    ONLY : nbnd, ecutwfc
+  USE wvfct,    ONLY : nbnd
 
  implicit none
 

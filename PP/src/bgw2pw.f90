@@ -205,7 +205,7 @@ SUBROUTINE write_evc ( input_file_name, real_or_complex, &
 #ifdef __MPI
   USE parallel_include, ONLY : MPI_INTEGER, MPI_DOUBLE_COMPLEX
 #endif
-  USE wvfct, ONLY : npwx, g2kin, ecutwfc, igk
+  USE wvfct, ONLY : npwx, igk
 
   IMPLICIT NONE
 
