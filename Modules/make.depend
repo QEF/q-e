@@ -114,6 +114,8 @@ gth.o : funct.o
 gth.o : kind.o
 gth.o : parameters.o
 gth.o : pseudo_types.o
+gvecw.o : kind.o
+gvecw.o : mp.o
 input_parameters.o : kind.o
 input_parameters.o : parameters.o
 input_parameters.o : wannier_new.o

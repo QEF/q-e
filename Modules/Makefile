@@ -35,6 +35,7 @@ funct.o \
 generate_function.o \
 griddim.o \
 gth.o \
+gvecw.o \
 input_parameters.o \
 io_files.o \
 io_global.o  \

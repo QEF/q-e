@@ -158,8 +158,8 @@ SUBROUTINE iosys()
                             smallmem
   USE control_flags, ONLY: scf_must_converge_ => scf_must_converge
   !
-  USE wvfct,         ONLY : nbnd_ => nbnd, &
-                            ecfixed_ => ecfixed, &
+  USE wvfct,         ONLY : nbnd_ => nbnd
+  USE gvecw,         ONLY : ecfixed_ => ecfixed, &
                             qcutz_   => qcutz, &
                             q2sigma_ => q2sigma
   !

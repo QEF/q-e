@@ -14,11 +14,12 @@ subroutine stres_knl (sigmanlc, sigmakin)
   USE constants,            ONLY: pi, e2
   USE cell_base,            ONLY: omega, alat, at, bg, tpiba
   USE gvect,                ONLY: g
+  USE gvecw,                ONLY: qcutz, ecfixed, q2sigma
   USE klist,                ONLY: nks, xk, ngk
   USE io_files,             ONLY: iunwfc, nwordwfc, iunigk
   USE buffers,              ONLY: get_buffer
   USE symme,                ONLY: symmatrix
-  USE wvfct,                ONLY: npw, npwx, nbnd, igk, wg, qcutz, ecfixed, q2sigma
+  USE wvfct,                ONLY: npw, npwx, nbnd, igk, wg
   USE control_flags,        ONLY: gamma_only
   USE noncollin_module,     ONLY: noncolin, npol
   USE wavefunctions_module, ONLY: evc

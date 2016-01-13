@@ -604,6 +604,7 @@ forces_bp_efield.o : bp_mod.o
 forces_bp_efield.o : buffers.o
 forces_bp_efield.o : pwcom.o
 g2_kin.o : ../../Modules/cell_base.o
+g2_kin.o : ../../Modules/gvecw.o
 g2_kin.o : ../../Modules/kind.o
 g2_kin.o : ../../Modules/recvec.o
 g2_kin.o : pwcom.o
@@ -848,6 +849,7 @@ input.o : ../../Modules/control_flags.o
 input.o : ../../Modules/fcp_variables.o
 input.o : ../../Modules/fft_base.o
 input.o : ../../Modules/funct.o
+input.o : ../../Modules/gvecw.o
 input.o : ../../Modules/input_parameters.o
 input.o : ../../Modules/io_files.o
 input.o : ../../Modules/io_global.o
@@ -1705,6 +1707,7 @@ stres_hub.o : symme.o
 stres_knl.o : ../../Modules/cell_base.o
 stres_knl.o : ../../Modules/constants.o
 stres_knl.o : ../../Modules/control_flags.o
+stres_knl.o : ../../Modules/gvecw.o
 stres_knl.o : ../../Modules/io_files.o
 stres_knl.o : ../../Modules/kind.o
 stres_knl.o : ../../Modules/mp.o
@@ -1807,6 +1810,7 @@ summary.o : ../../Modules/control_flags.o
 summary.o : ../../Modules/fcp_variables.o
 summary.o : ../../Modules/fft_base.o
 summary.o : ../../Modules/funct.o
+summary.o : ../../Modules/gvecw.o
 summary.o : ../../Modules/io_files.o
 summary.o : ../../Modules/io_global.o
 summary.o : ../../Modules/ions_base.o

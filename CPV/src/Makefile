@@ -44,7 +44,6 @@ fromscra.o \
 gradrho.o \
 gram.o \
 gtable.o \
-gvecw.o\
 init.o \
 init_run.o \
 inner_loop_cold.o \

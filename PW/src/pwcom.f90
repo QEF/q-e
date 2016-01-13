@@ -185,10 +185,7 @@ MODULE wvfct
   INTEGER, ALLOCATABLE, TARGET :: &
        igk(:)             ! index of G corresponding to a given index of k+G
   REAL(DP) :: &
-       ecutwfc,       &! energy cut-off
-       ecfixed,       &!
-       qcutz = 0.0_DP,&! For the modified Ekin functional
-       q2sigma         !
+       ecutwfc            ! energy cut-off
   REAL(DP), ALLOCATABLE :: &
        et(:,:),          &! eigenvalues of the hamiltonian
        wg(:,:),          &! the weight of each k point and band

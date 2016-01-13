@@ -488,7 +488,7 @@ SUBROUTINE newscf
   USE gvecs, ONLY: doublegrid
   USE wvfct, ONLY: btype
   USE klist, ONLY: nkstot
-  USE wvfct, ONLY: nbnd, nbndx, qcutz
+  USE wvfct, ONLY: nbnd, nbndx
   USE noncollin_module, ONLY: report
   USE symm_base,     ONLY : nsym
   USE io_files,      ONLY : iunigk, iunwfc, input_drho, output_drho
@@ -512,7 +512,6 @@ SUBROUTINE newscf
   lda_plus_u=.false.
   doublegrid=.false.
   lmovecell=.false.
-  qcutz=0.0d0
   iprint=10000
   input_drho=' '
   output_drho=' '
