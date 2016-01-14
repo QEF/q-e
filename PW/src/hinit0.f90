@@ -21,7 +21,8 @@ SUBROUTINE hinit0()
   USE fft_base,     ONLY : dfftp
   USE gvect,        ONLY : ngm, ig_l2g, g, eigts1, eigts2, eigts3
   USE vlocal,       ONLY : strf
-  USE wvfct,        ONLY : npw, g2kin, igk, ecutwfc
+  USE wvfct,        ONLY : npw, g2kin, igk
+  USE gvecw,        ONLY : gcutw
   USE io_files,     ONLY : iunigk
   USE realus,       ONLY : generate_qpointlist,betapointlist,init_realspace_vars,real_space
   use ldaU,         ONLY : lda_plus_U, U_projection
@@ -52,7 +53,7 @@ SUBROUTINE hinit0()
      !
      ! ... g2kin is used here as work space
      !
-     CALL gk_sort( xk(1,ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin )
+     CALL gk_sort( xk(1,ik), ngm, g, gcutw, npw, igk, g2kin )
      !
      ! ... if there is only one k-point npw and igk stay in memory
      !

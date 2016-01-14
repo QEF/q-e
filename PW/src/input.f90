@@ -1548,7 +1548,7 @@ SUBROUTINE set_cutoff ( ecutwfc_in, ecutrho_in, ecutwfc_pp, ecutrho_pp )
   USE kinds, ONLY : dp
   USE gvecs, ONLY : dual
   USE gvect, ONLY : ecutrho
-  USE wvfct, ONLY : ecutwfc
+  USE gvecw, ONLY : ecutwfc
   !
   IMPLICIT NONE
   REAL(dp), INTENT(INOUT) :: ecutwfc_in, ecutrho_in

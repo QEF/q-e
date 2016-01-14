@@ -121,7 +121,8 @@ MODULE exx
   !
   !------------------------------------------------------------------------
   SUBROUTINE exx_fft_create ()
-    USE wvfct,        ONLY : ecutwfc, npw
+    USE gvecw,        ONLY : ecutwfc
+    USE wvfct,        ONLY : npw
     USE gvect,        ONLY : ecutrho, ig_l2g
     USE uspp,         ONLY : okvan
     USE paw_variables,ONLY : okpaw
@@ -987,10 +988,10 @@ MODULE exx
     ! (i.e. at the end of exxinit)
     !
     USE kinds,                ONLY : DP
-    USE wvfct,                ONLY : g2kin, npwx, ecutwfc, nbnd
+    USE wvfct,                ONLY : g2kin, npwx, nbnd
     USE gvect,                ONLY : g, ngm
     USE gvecs,                ONLY : nls, nlsm
-    USE cell_base,            ONLY : tpiba2
+    USE gvecw,                ONLY : gcutw
     USE uspp,                 ONLY : nkb, okvan
     USE becmod,               ONLY : calbec
     USE fft_base,             ONLY : dffts
@@ -1001,7 +1002,6 @@ MODULE exx
     IMPLICIT NONE
     !
     INTEGER  :: npwq, ibnd, i, ikq, j, h_ibnd, ibnd_loop_start
-    REAL(DP) :: gcutwfc
     INTEGER,ALLOCATABLE     :: igkq(:)   ! order of wavefunctions at k+q[+G]
     COMPLEX(DP),ALLOCATABLE :: vkbq(:,:) ! |beta_I> 
     COMPLEX(DP),ALLOCATABLE :: evcq(:,:) ! |psi_j,k> in g-space
@@ -1016,7 +1016,6 @@ MODULE exx
     !
     CALL start_clock('becxx')
     !
-    gcutwfc = ecutwfc / tpiba2
     ALLOCATE(igkq(npwx))
     ALLOCATE(vkbq(npwx,nkb))
     ALLOCATE(phi(dffts%nnr))
@@ -1027,7 +1026,7 @@ MODULE exx
       ! bands count is reset at each k-point
       !
       ! prepare the g-vectors mapping
-      CALL gk_sort(xkq_collect(:, ikq), ngm, g, gcutwfc, npwq, igkq, g2kin )
+      CALL gk_sort(xkq_collect(:, ikq), ngm, g, gcutw, npwq, igkq, g2kin )
       ! prepare the |beta> function at k+q
       CALL init_us_2(npwq, igkq, xkq_collect(:, ikq), vkbq)
       !
@@ -2384,7 +2383,7 @@ MODULE exx
      USE constants,      ONLY : fpi, e2, pi
      USE cell_base,      ONLY : bg, at, alat, omega
      USE gvect,          ONLY : ngm, g
-     USE wvfct,          ONLY : ecutwfc
+     USE gvecw,          ONLY : gcutw
      USE io_global,      ONLY : stdout
      USE control_flags,  ONLY : gamma_only
      USE mp_bands,       ONLY : intra_bgrp_comm
@@ -2404,7 +2403,7 @@ MODULE exx
 
      tpiba2 = (fpi / 2.d0 / alat) **2
 
-     alpha  = 10._dp * tpiba2 / ecutwfc
+     alpha  = 10._dp / gcutw
 
      IF ( .NOT. use_regularization ) THEN
         exx_divergence = 0._dp

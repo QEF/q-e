@@ -22,7 +22,8 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
    USE scf, ONLY: rho, rho_core, rhog_core, v
    USE ldaU, ONLY : eth
    USE vlocal, ONLY: vloc, strf
-   USE wvfct, ONLY: npw, npwx, nbnd, igk, g2kin, wg, et, ecutwfc
+   USE wvfct, ONLY: npw, npwx, nbnd, igk, g2kin, wg, et
+   USE gvecw, ONLY: gcutw, ecutwfc
    USE control_flags, ONLY : gamma_only
    USE uspp, ONLY: nkb, vkb, dvan
    USE uspp_param, ONLY: nh
@@ -104,8 +105,8 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
    DO ispin = 1, nspin
       DO ik = 1, nk
          ikk = ik + nk*(ispin-1)
-         CALL gk_sort (xk (1:3, ikk), ngm, g(1:3,1:ngm), ecutwfc / tpiba2, & ! input
-                      &npw, igk, g2kin)                                      ! output
+         CALL gk_sort (xk (1:3, ikk), ngm, g(1:3,1:ngm), gcutw, & ! input
+                      &npw, igk, g2kin)                           ! output
          idx( igk(1:npw) ) = 1
       ENDDO
    ENDDO
@@ -214,8 +215,8 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
       DO ispin = 1, nspin
          ikk = ik + nk*(ispin-1)
          IF( nks > 1 )THEN
-            CALL gk_sort (xk (1:3, ikk), ngm, g(1:3,1:ngm), ecutwfc / tpiba2, & ! input
-                         &npw, igk, g2kin)                                      ! output
+            CALL gk_sort (xk (1:3, ikk), ngm, g(1:3,1:ngm), gcutw, & ! input
+                         &npw, igk, g2kin)                           ! output
             CALL get_buffer(evc,nwordwfc,iunwfc,ikk)
          ENDIF
          DO ibnd = 1, nbnd
@@ -363,7 +364,7 @@ CONTAINS
 
          DO ik = 1, nk
             ikk = ik + nk*(ispin-1)
-            CALL gk_sort (xk (1, ikk), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
+            CALL gk_sort (xk (1, ikk), ngm, g, gcutw, npw, igk, g2kin)
             IF( nks > 1 ) CALL get_buffer (evc, nwordwfc, iunwfc, ikk )
             CALL init_us_2 (npw, igk, xk (1, ikk), vkb)
             CALL calbec ( npw, vkb, evc, becp )

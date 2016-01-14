@@ -157,7 +157,7 @@ SUBROUTINE c_phase
    USE io_files,             ONLY : iunwfc, nwordwfc
    USE buffers,              ONLY : get_buffer
    USE ions_base,            ONLY : nat, ntyp => nsp, ityp, tau, zv, atm
-   USE cell_base,            ONLY : at, alat, tpiba, omega, tpiba2
+   USE cell_base,            ONLY : at, alat, tpiba, omega
    USE constants,            ONLY : pi, tpi
    USE gvect,                ONLY : ngm, g, gcutm, ngm_g, ig_l2g
    USE fft_base,             ONLY : dfftp
@@ -165,7 +165,8 @@ SUBROUTINE c_phase
    USE uspp_param,           ONLY : upf, lmaxq, nbetam, nh, nhm
    USE lsda_mod,             ONLY : nspin
    USE klist,                ONLY : nelec, degauss, nks, xk, wk
-   USE wvfct,                ONLY : npwx, npw, nbnd, ecutwfc, wg
+   USE wvfct,                ONLY : npwx, npw, nbnd, wg
+   USE gvecw,                ONLY : gcutw
    USE wavefunctions_module, ONLY : evc
    USE bp,                   ONLY : gdir, nppstr, mapgm_global, pdl_tot
    USE becmod,               ONLY : calbec, bec_type, allocate_bec_type, &
@@ -474,7 +475,7 @@ SUBROUTINE c_phase
             IF (kpar /= 1) THEN
 
 !              --- Dot wavefunctions and betas for PREVIOUS k-point ---
-               CALL gk_sort(xk(1,kpoint-1),ngm,g,ecutwfc/tpiba2, &
+               CALL gk_sort(xk(1,kpoint-1),ngm,g,gcutw, &
                             npw0,igk0,g2kin_bp) 
                CALL get_buffer (psi,nwordwfc,iunwfc,kpoint-1)
                if (okvan) then
@@ -483,7 +484,7 @@ SUBROUTINE c_phase
                endif
 !              --- Dot wavefunctions and betas for CURRENT k-point ---
                IF (kpar /= nppstr) THEN
-                  CALL gk_sort(xk(1,kpoint),ngm,g,ecutwfc/tpiba2, &
+                  CALL gk_sort(xk(1,kpoint),ngm,g,gcutw, &
                                npw1,igk1,g2kin_bp)        
                   CALL get_buffer(evc,nwordwfc,iunwfc,kpoint)
                   if (okvan) then
@@ -492,7 +493,7 @@ SUBROUTINE c_phase
                   endif
                ELSE
                   kstart = kpoint-nppstr+1
-                  CALL gk_sort(xk(1,kstart),ngm,g,ecutwfc/tpiba2, &
+                  CALL gk_sort(xk(1,kstart),ngm,g,gcutw, &
                                npw1,igk1,g2kin_bp)  
                   CALL get_buffer(evc,nwordwfc,iunwfc,kstart)
                   if (okvan) then

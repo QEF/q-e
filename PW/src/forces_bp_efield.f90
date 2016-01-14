@@ -56,17 +56,17 @@ SUBROUTINE forces_us_efield(forces_bp, pdir, e_field)
    USE ions_base,            ONLY : nat, ntyp => nsp, ityp, tau, zv, atm
    USE cell_base,            ONLY : at, alat, tpiba, omega, tpiba2
    USE constants,            ONLY : pi, tpi
-   USE gvect,                ONLY : ngm,  g, gcutm, ngm_g,ngmx
+   USE gvect,                ONLY : ngm,  g, gcutm, ngm_g, ngmx, ig_l2g
    USE fft_base,             ONLY : dfftp
    USE uspp,                 ONLY : nkb, vkb, okvan
    USE uspp_param,           ONLY : upf, lmaxq, nbetam, nh, nhm
    USE lsda_mod,             ONLY : nspin
    USE klist,                ONLY : nelec, degauss, nks, xk, wk
-   USE wvfct,                ONLY : npwx, npw, nbnd, ecutwfc
+   USE wvfct,                ONLY : npwx, npw, nbnd
+   USE gvecw,                ONLY : gcutw
    USE wavefunctions_module, ONLY : evc
    USE bp,                   ONLY : nppstr_3d, mapgm_global, nx_el,mapg_owner
    USE fixed_occ
-   USE gvect,   ONLY : ig_l2g
    USE mp,                   ONLY : mp_sum,mp_barrier
    USE mp_world,             ONLY : world_comm,mpime,nproc
    USE mp_bands,             ONLY : intra_bgrp_comm
@@ -415,7 +415,7 @@ SUBROUTINE forces_us_efield(forces_bp, pdir, e_field)
             IF (kpar /= 1 ) THEN
 
 !              --- Dot wavefunctions and betas for PREVIOUS k-point ---
-               CALL gk_sort(xk(1,nx_el(kpoint-1,pdir)),ngm,g,ecutwfc/tpiba2, &
+               CALL gk_sort(xk(1,nx_el(kpoint-1,pdir)),ngm,g,gcutw, &
                             npw0,igk0,g2kin_bp) 
                CALL get_buffer (psi,nwordwfc,iunwfc,nx_el(kpoint-1,pdir))
                if (okvan) then
@@ -439,7 +439,7 @@ SUBROUTINE forces_us_efield(forces_bp, pdir, e_field)
 !              --- Dot wavefunctions and betas for CURRENT k-point ---
                IF (kpar /= (nppstr_3d(pdir)+1)) THEN
 
-                  CALL gk_sort(xk(1,nx_el(kpoint,pdir)),ngm,g,ecutwfc/tpiba2, &
+                  CALL gk_sort(xk(1,nx_el(kpoint,pdir)),ngm,g,gcutw, &
                                npw1,igk1,g2kin_bp)        
                   CALL get_buffer (psi1,nwordwfc,iunwfc,nx_el(kpoint,pdir))
                   if(okvan) then
@@ -462,7 +462,7 @@ SUBROUTINE forces_us_efield(forces_bp, pdir, e_field)
                ELSE
 
                   kstart = kpoint-(nppstr_3d(pdir)+1)+1
-                  CALL gk_sort(xk(1,nx_el(kstart,pdir)),ngm,g,ecutwfc/tpiba2, &
+                  CALL gk_sort(xk(1,nx_el(kstart,pdir)),ngm,g,gcutw, &
                                npw1,igk1,g2kin_bp)  
                   CALL get_buffer (psi1,nwordwfc,iunwfc,nx_el(kstart,pdir))
                   if(okvan) then

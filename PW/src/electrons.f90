@@ -287,7 +287,8 @@ SUBROUTINE electrons_scf ( printout )
                                    two_fermi_energies, tot_charge
   USE lsda_mod,             ONLY : lsda, nspin, magtot, absmag, isk
   USE vlocal,               ONLY : strf
-  USE wvfct,                ONLY : nbnd, et, npwx, ecutwfc
+  USE wvfct,                ONLY : nbnd, et, npwx
+  USE gvecw,                ONLY : ecutwfc
   USE ener,                 ONLY : etot, hwf_energy, eband, deband, ehart, &
                                    vtxc, etxc, etxcc, ewld, demet, epaw, &
                                    elondon, ef_up, ef_dw, exdm, ef

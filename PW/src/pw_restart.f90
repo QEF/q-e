@@ -122,7 +122,7 @@ MODULE pw_restart
       USE gvecs,                ONLY : ngms_g, dual
       USE fft_base,             ONLY : dffts
       USE wvfct,                ONLY : npw, npwx, g2kin, et, wg, &
-                                       igk, nbnd, ecutwfc
+                                       igk, nbnd
       USE ener,                 ONLY : ef, ef_up, ef_dw
       USE fixed_occ,            ONLY : tfixed_occ, f_inp
       USE ldaU,                 ONLY : lda_plus_u, lda_plus_u_kind, U_projection, &
@@ -279,7 +279,8 @@ MODULE pw_restart
       USE gvecs,                ONLY : ngms_g, dual
       USE fft_base,             ONLY : dffts
       USE wvfct,                ONLY : npw, npwx, g2kin, et, wg, &
-                                       igk, nbnd, ecutwfc
+                                       igk, nbnd
+      USE gvecw,                ONLY : ecutwfc
       USE ener,                 ONLY : ef, ef_up, ef_dw
       USE fixed_occ,            ONLY : tfixed_occ, f_inp
       USE ldaU,                 ONLY : lda_plus_u, lda_plus_u_kind, U_projection, &
@@ -1395,7 +1396,8 @@ MODULE pw_restart
       USE noncollin_module, ONLY : noncolin
       USE ktetra,           ONLY : ntetra
       USE klist,            ONLY : nkstot, nelec
-      USE wvfct,            ONLY : nbnd, npwx, ecutwfc
+      USE wvfct,            ONLY : nbnd, npwx
+      USE gvecw,            ONLY : ecutwfc
       USE control_flags,    ONLY : gamma_only
       USE mp_pools,         ONLY : kunit
       USE mp_global,        ONLY : nproc_file, nproc_pool_file, &
@@ -1871,9 +1873,10 @@ MODULE pw_restart
       !
       USE gvect,           ONLY : ngm_g, ecutrho
       USE gvecs,           ONLY : ngms_g, dual
+      USE gvecw,           ONLY : ecutwfc
       USE fft_base,        ONLY : dfftp
       USE fft_base,        ONLY : dffts
-      USE wvfct,           ONLY : npwx, g2kin, ecutwfc
+      USE wvfct,           ONLY : npwx, g2kin
       USE control_flags,   ONLY : gamma_only
       !
       IMPLICIT NONE
@@ -2418,7 +2421,8 @@ MODULE pw_restart
       USE cell_base,            ONLY : tpiba2
       USE lsda_mod,             ONLY : nspin, isk
       USE klist,                ONLY : nkstot, wk, nks, xk, ngk
-      USE wvfct,                ONLY : npw, npwx, g2kin, et, wg, nbnd, ecutwfc
+      USE wvfct,                ONLY : npw, npwx, g2kin, et, wg, nbnd
+      USE gvecw,                ONLY : ecutwfc
       USE wavefunctions_module, ONLY : evc
       USE io_files,             ONLY : nwordwfc, iunwfc
       USE buffers,              ONLY : save_buffer

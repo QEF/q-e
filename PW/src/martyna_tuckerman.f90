@@ -257,8 +257,8 @@ CONTAINS
 !----------------------------------------------------------------------------
   USE fft_base,        ONLY : dfftp
   USE gvect,           ONLY : gcutm
-  USE wvfct,           ONLY : ecutwfc
-  USE gvecs,         ONLY : dual
+  USE gvecw,           ONLY : ecutwfc
+  USE gvecs,           ONLY : dual
   USE cell_base,       ONLY : at, alat, tpiba2, omega, ibrav, celldm
   USE ions_base,       ONLY : zv, ntyp => nsp, nat, ityp, atm, tau
   CHARACTER (LEN=25), INTENT(IN) :: filplot
@@ -266,9 +266,9 @@ CONTAINS
   CHARACTER (LEN=25) :: title
   INTEGER :: plot_num=0, iflag=+1
 
-  CALL plot_io (filplot, title, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, dfftp%nr1, dfftp%nr2, &
-     dfftp%nr3, nat, ntyp, ibrav, celldm, at, gcutm, dual, ecutwfc, plot_num, atm, &
-     ityp, zv, tau, plot, iflag)
+  CALL plot_io (filplot, title, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, &
+     dfftp%nr1, dfftp%nr2, dfftp%nr3, nat, ntyp, ibrav, celldm, at, &
+     gcutm, dual, ecutwfc, plot_num, atm, ityp, zv, tau, plot, iflag)
   RETURN
   END SUBROUTINE write_wg_on_file
 !----------------------------------------------------------------------------

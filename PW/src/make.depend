@@ -95,6 +95,7 @@ allocate_locpot.o : ../../Modules/recvec.o
 allocate_locpot.o : pwcom.o
 allocate_nlpot.o : ../../Modules/cell_base.o
 allocate_nlpot.o : ../../Modules/control_flags.o
+allocate_nlpot.o : ../../Modules/gvecw.o
 allocate_nlpot.o : ../../Modules/io_global.o
 allocate_nlpot.o : ../../Modules/ions_base.o
 allocate_nlpot.o : ../../Modules/noncol.o
@@ -145,6 +146,7 @@ bp_c_phase.o : ../../Modules/becmod.o
 bp_c_phase.o : ../../Modules/cell_base.o
 bp_c_phase.o : ../../Modules/constants.o
 bp_c_phase.o : ../../Modules/fft_base.o
+bp_c_phase.o : ../../Modules/gvecw.o
 bp_c_phase.o : ../../Modules/io_files.o
 bp_c_phase.o : ../../Modules/io_global.o
 bp_c_phase.o : ../../Modules/ions_base.o
@@ -202,6 +204,7 @@ c_phase_field.o : ../../Modules/becmod.o
 c_phase_field.o : ../../Modules/cell_base.o
 c_phase_field.o : ../../Modules/constants.o
 c_phase_field.o : ../../Modules/fft_base.o
+c_phase_field.o : ../../Modules/gvecw.o
 c_phase_field.o : ../../Modules/io_files.o
 c_phase_field.o : ../../Modules/io_global.o
 c_phase_field.o : ../../Modules/ions_base.o
@@ -324,6 +327,7 @@ d_matrix.o : symm_base.o
 data_structure.o : ../../FFTXlib/stick_set.o
 data_structure.o : ../../Modules/cell_base.o
 data_structure.o : ../../Modules/fft_base.o
+data_structure.o : ../../Modules/gvecw.o
 data_structure.o : ../../Modules/io_global.o
 data_structure.o : ../../Modules/kind.o
 data_structure.o : ../../Modules/mp.o
@@ -388,6 +392,7 @@ electrons.o : ../../Modules/control_flags.o
 electrons.o : ../../Modules/fcp_variables.o
 electrons.o : ../../Modules/fft_base.o
 electrons.o : ../../Modules/funct.o
+electrons.o : ../../Modules/gvecw.o
 electrons.o : ../../Modules/io_files.o
 electrons.o : ../../Modules/io_global.o
 electrons.o : ../../Modules/ions_base.o
@@ -457,6 +462,7 @@ exx.o : ../../Modules/fft_base.o
 exx.o : ../../Modules/fft_custom.o
 exx.o : ../../Modules/funct.o
 exx.o : ../../Modules/griddim.o
+exx.o : ../../Modules/gvecw.o
 exx.o : ../../Modules/io_files.o
 exx.o : ../../Modules/io_global.o
 exx.o : ../../Modules/kind.o
@@ -588,6 +594,7 @@ forces_bp_efield.o : ../../Modules/cell_base.o
 forces_bp_efield.o : ../../Modules/clocks.o
 forces_bp_efield.o : ../../Modules/constants.o
 forces_bp_efield.o : ../../Modules/fft_base.o
+forces_bp_efield.o : ../../Modules/gvecw.o
 forces_bp_efield.o : ../../Modules/io_files.o
 forces_bp_efield.o : ../../Modules/io_global.o
 forces_bp_efield.o : ../../Modules/ions_base.o
@@ -705,6 +712,7 @@ h_epsi_her_set.o : ../../Modules/becmod.o
 h_epsi_her_set.o : ../../Modules/cell_base.o
 h_epsi_her_set.o : ../../Modules/constants.o
 h_epsi_her_set.o : ../../Modules/fft_base.o
+h_epsi_her_set.o : ../../Modules/gvecw.o
 h_epsi_her_set.o : ../../Modules/io_files.o
 h_epsi_her_set.o : ../../Modules/ions_base.o
 h_epsi_her_set.o : ../../Modules/kind.o
@@ -746,6 +754,7 @@ h_psi_meta.o : scf_mod.o
 hinit0.o : ../../Modules/cell_base.o
 hinit0.o : ../../Modules/control_flags.o
 hinit0.o : ../../Modules/fft_base.o
+hinit0.o : ../../Modules/gvecw.o
 hinit0.o : ../../Modules/io_files.o
 hinit0.o : ../../Modules/io_global.o
 hinit0.o : ../../Modules/ions_base.o
@@ -951,13 +960,13 @@ martyna_tuckerman.o : ../../Modules/cell_base.o
 martyna_tuckerman.o : ../../Modules/constants.o
 martyna_tuckerman.o : ../../Modules/control_flags.o
 martyna_tuckerman.o : ../../Modules/fft_base.o
+martyna_tuckerman.o : ../../Modules/gvecw.o
 martyna_tuckerman.o : ../../Modules/ions_base.o
 martyna_tuckerman.o : ../../Modules/kind.o
 martyna_tuckerman.o : ../../Modules/mp.o
 martyna_tuckerman.o : ../../Modules/mp_bands.o
 martyna_tuckerman.o : ../../Modules/recvec.o
 martyna_tuckerman.o : ../../Modules/ws_base.o
-martyna_tuckerman.o : pwcom.o
 memory_report.o : ../../Modules/control_flags.o
 memory_report.o : ../../Modules/fft_base.o
 memory_report.o : ../../Modules/io_global.o
@@ -1088,6 +1097,7 @@ orbm_kubo.o : ../../Modules/becmod.o
 orbm_kubo.o : ../../Modules/cell_base.o
 orbm_kubo.o : ../../Modules/constants.o
 orbm_kubo.o : ../../Modules/fft_base.o
+orbm_kubo.o : ../../Modules/gvecw.o
 orbm_kubo.o : ../../Modules/io_files.o
 orbm_kubo.o : ../../Modules/io_global.o
 orbm_kubo.o : ../../Modules/kind.o
@@ -1325,6 +1335,7 @@ pw2casino_write.o : ../../Modules/constants.o
 pw2casino_write.o : ../../Modules/control_flags.o
 pw2casino_write.o : ../../Modules/fft_base.o
 pw2casino_write.o : ../../Modules/funct.o
+pw2casino_write.o : ../../Modules/gvecw.o
 pw2casino_write.o : ../../Modules/io_files.o
 pw2casino_write.o : ../../Modules/io_global.o
 pw2casino_write.o : ../../Modules/ions_base.o
@@ -1348,6 +1359,7 @@ pw_restart.o : ../../Modules/control_flags.o
 pw_restart.o : ../../Modules/electrons_base.o
 pw_restart.o : ../../Modules/fft_base.o
 pw_restart.o : ../../Modules/funct.o
+pw_restart.o : ../../Modules/gvecw.o
 pw_restart.o : ../../Modules/io_files.o
 pw_restart.o : ../../Modules/io_global.o
 pw_restart.o : ../../Modules/ions_base.o
@@ -1423,6 +1435,7 @@ read_file.o : ../../Modules/control_flags.o
 read_file.o : ../../Modules/fft_base.o
 read_file.o : ../../Modules/funct.o
 read_file.o : ../../Modules/griddim.o
+read_file.o : ../../Modules/gvecw.o
 read_file.o : ../../Modules/io_files.o
 read_file.o : ../../Modules/io_global.o
 read_file.o : ../../Modules/ions_base.o
@@ -1457,6 +1470,7 @@ realus.o : ../../Modules/constants.o
 realus.o : ../../Modules/control_flags.o
 realus.o : ../../Modules/fft_base.o
 realus.o : ../../Modules/funct.o
+realus.o : ../../Modules/gvecw.o
 realus.o : ../../Modules/io_global.o
 realus.o : ../../Modules/ions_base.o
 realus.o : ../../Modules/kind.o
@@ -1622,6 +1636,7 @@ setup.o : ../../Modules/fcp_variables.o
 setup.o : ../../Modules/fft_base.o
 setup.o : ../../Modules/funct.o
 setup.o : ../../Modules/griddim.o
+setup.o : ../../Modules/gvecw.o
 setup.o : ../../Modules/io_files.o
 setup.o : ../../Modules/io_global.o
 setup.o : ../../Modules/ions_base.o

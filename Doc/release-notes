@@ -5,6 +5,14 @@ Fixed in svn version:
   * Possible conflict between FFTW in MKL and in Modules/fftw.c solved 
     (commit 11980)
 
+Incompatible changes in 5.3.0 version:
+
+  * Module "gvecw", in Modules/gvecw.f90, includes previous CP module "gvecw"
+    and several PW variables taken out from module "wvfct":
+    qcutz, ecfixed, q2sigm, ecutwfc
+    New variable gcutw=ecutwfc/tpiba2 used also in PW every time "gk_sort"
+    is called - gcutw is initialized at startup or when data files are read
+
                                * * * * *
 
 New in 5.3.0 version:

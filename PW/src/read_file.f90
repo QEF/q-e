@@ -100,7 +100,7 @@ SUBROUTINE read_xml_file_internal(withbs)
   USE force_mod,            ONLY : force
   USE klist,                ONLY : nkstot, nks, xk, wk
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
-  USE wvfct,                ONLY : nbnd, nbndx, et, wg, ecutwfc
+  USE wvfct,                ONLY : nbnd, nbndx, et, wg
   USE symm_base,            ONLY : irt, d1, d2, d3, checkallsym
   USE ktetra,               ONLY : tetra, ntetra 
   USE extfield,             ONLY : forcefield, tefield
@@ -343,8 +343,8 @@ SUBROUTINE read_xml_file_internal(withbs)
       USE constants, ONLY : pi
       USE cell_base, ONLY : alat, tpiba, tpiba2
       USE gvect,     ONLY : ecutrho, gcutm
-      USE wvfct,     ONLY : ecutwfc
       USE gvecs,     ONLY : gcutms, dual, doublegrid
+      USE gvecw,     ONLY : gcutw, ecutwfc
       !
       !
       ! ... Set the units in real and reciprocal space
@@ -354,6 +354,7 @@ SUBROUTINE read_xml_file_internal(withbs)
       !
       ! ... Compute the cut-off of the G vectors
       !
+      gcutw =        ecutwfc / tpiba2
       gcutm = dual * ecutwfc / tpiba2
       ecutrho=dual * ecutwfc
       !

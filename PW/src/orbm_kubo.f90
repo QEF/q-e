@@ -35,7 +35,8 @@ SUBROUTINE orbm_kubo()
   USE io_files,             ONLY : iunwfc, nwordwfc
   USE buffers,              ONLY : get_buffer
   USE noncollin_module,     ONLY : noncolin, npol
-  USE wvfct,                ONLY : npwx, nbnd,ecutwfc, g2kin,npw_k=>npw,igk_k=>igk,et
+  USE wvfct,                ONLY : npwx, nbnd, g2kin,npw_k=>npw,igk_k=>igk,et
+  USE gvecw,                ONLy : gcutw
   USE lsda_mod,             ONLY : nspin
   USE fft_base,             ONLY : dfftp
   USE gvect,                ONLY : ngm,ngm_g,g,gcutm,ig_l2g
@@ -170,7 +171,7 @@ SUBROUTINE orbm_kubo()
         ! Read wavefunction at k
         CALL get_buffer ( evc_k, nwordwfc, iunwfc, n )
 
-        CALL gk_sort(xk(1,n),ngm,g,ecutwfc/tpiba2, &
+        CALL gk_sort(xk(1,n),ngm,g,gcutw, &
               npw_k,igk_k,g2kin)
         CALL init_us_2(npw_k,igk_k,xk(1,n),vkb)
 
@@ -248,7 +249,7 @@ SUBROUTINE orbm_kubo()
           signum=-signum
 
           CALL get_buffer ( evc_kp, nwordwfc, iunwfc, nbr(np) )
-          CALL gk_sort(xk(1,nbr(np)),ngm,g,ecutwfc/tpiba2,npw_kp,igk_kp,g2kin)
+          CALL gk_sort(xk(1,nbr(np)),ngm,g,gcutw,npw_kp,igk_kp,g2kin)
 
           ! Calculate S-1(k,k-dx)
 
@@ -446,15 +447,14 @@ SUBROUTINE orbm_kubo()
         !====================================================!
         !=== Compute orbital magnetization ==================!
         !====================================================!
-        CALL gk_sort(xk(1,nbr(1)),ngm,g,ecutwfc/tpiba2, &
-             npw_kp,igk_kp,g2kin)
+        CALL gk_sort(xk(1,nbr(1)),ngm,g,gcutw, npw_kp,igk_kp,g2kin)
 
         ! gk_sort overwrites the kinetic energy - recalculate at ik
         g2kin(1:npw_k)=( ( xk(1,n) + g(1,igk_k(1:npw_k)) )**2 + &
                          ( xk(2,n) + g(2,igk_k(1:npw_k)) )**2 + &
                          ( xk(3,n) + g(3,igk_k(1:npw_k)) )**2 ) * tpiba2
         !  these 2 lines are equivalent to the kinetic energy calculation above
-        !  CALL gk_sort(xk(1,n), ngm, g, ecutwfc/tpiba2, npw_k, igk_k, g2kin)
+        !  CALL gk_sort(xk(1,n), ngm, g, gcutw, npw_k, igk_k, g2kin)
         !  g2kin(1:npw) = g2kin(1:npw) * tpiba2
 
         ! LC TERM

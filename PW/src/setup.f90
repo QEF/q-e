@@ -42,6 +42,7 @@ SUBROUTINE setup()
   USE ions_base,          ONLY : nat, tau, ntyp => nsp, ityp, zv
   USE basis,              ONLY : starting_pot, natomwfc
   USE gvect,              ONLY : gcutm, ecutrho
+  USE gvecw,              ONLY : gcutw, ecutwfc
   USE fft_base,           ONLY : dfftp
   USE fft_base,           ONLY : dffts
   USE grid_subroutines,   ONLY : realspace_grid_init
@@ -60,7 +61,7 @@ SUBROUTINE setup()
   USE symm_base,          ONLY : s, t_rev, irt, nrot, nsym, invsym, nosym, &
                                  d1,d2,d3, time_reversal, sname, set_sym_bl, &
                                  find_sym, inverse_s, no_t_rev
-  USE wvfct,              ONLY : nbnd, nbndx, ecutwfc
+  USE wvfct,              ONLY : nbnd, nbndx
   USE control_flags,      ONLY : tr2, ethr, lscf, lmd, david, lecrpa,  &
                                  isolve, niter, noinv, ts_vdw, &
                                  lbands, use_para_diag, gamma_only
@@ -386,6 +387,7 @@ SUBROUTINE setup()
   IF ( doublegrid .AND. (.NOT.okvan .AND. .not.okpaw) ) &
      CALL infomsg ( 'setup', 'no reason to have ecutrho>4*ecutwfc' )
   gcutm = dual * ecutwfc / tpiba2
+  gcutw = ecutwfc / tpiba2
   !
   IF ( doublegrid ) THEN
      !

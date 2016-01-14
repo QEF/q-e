@@ -112,10 +112,10 @@ MODULE realus
     !---------------------------------------------------------------------------
     !This subroutine should be called to allocate/reset real space related variables.
     !---------------------------------------------------------------------------
-     USE wvfct,                ONLY : npwx,npw, igk, g2kin, ecutwfc
+     USE wvfct,                ONLY : npwx,npw, igk, g2kin
      USE klist,                ONLY : nks, xk
      USE gvect,                ONLY : ngm, g
-     USE cell_base,            ONLY : tpiba2
+     USE gvecw,                ONLY : gcutw
      USE control_flags,        ONLY : tqr
      USE fft_base,             ONLY : dffts
      USE io_global,            ONLY : stdout
@@ -144,7 +144,7 @@ MODULE realus
      !
      DO ik=1,nks
       !
-      CALL gk_sort( xk(1,ik), ngm, g, ( ecutwfc / tpiba2 ), npw, igk, g2kin )
+      CALL gk_sort( xk(1,ik), ngm, g, gcutw, npw, igk, g2kin )
       npw_k(ik) = npw
       igk_k(:,ik) = igk(:)
       !
