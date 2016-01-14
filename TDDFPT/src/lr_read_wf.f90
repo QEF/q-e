@@ -26,7 +26,7 @@ SUBROUTINE lr_read_wf()
                                  & becp1_c_virt, no_hxc, becp_1, becp1_c, &
                                  & test_case_no, size_evc, project,       &
                                  & lr_verbosity, lr_exx, davidson, eels
-  USE wvfct,                ONLY : npw, igk, nbnd, g2kin, npwx
+  USE wvfct,                ONLY : npw, igk, nbnd, npwx
   USE control_flags,        ONLY : gamma_only,io_level
   USE gvecs,                ONLY : nls, nlsm
   USE fft_base,             ONLY : dffts

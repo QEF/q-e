@@ -2198,7 +2198,7 @@ SUBROUTINE generate_guiding_functions(ik)
    !
    USE io_global,  ONLY : stdout
    USE constants, ONLY : pi, tpi, fpi, eps8
-   USE wvfct, ONLY : npw, g2kin, igk
+   USE wvfct, ONLY : npw, igk
    USE control_flags, ONLY : gamma_only
    USE gvect, ONLY : g, gstart
    USE cell_base,  ONLY : tpiba

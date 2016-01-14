@@ -19,7 +19,7 @@ SUBROUTINE rhod2vkb(dyn0)
   USE lsda_mod,  ONLY : current_spin
   USE gvect,  ONLY : ngm, g, igtongl, nl
   USE gvecw,  ONLY: gcutw
-  USE wvfct,  ONLY: nbnd, npwx, npw, g2kin, igk
+  USE wvfct,  ONLY: nbnd, npwx, npw, igk
   USE klist,  ONLY : xk, nks, wk
   USE scf,    ONLY : rho
   USE vlocal, ONLY: vloc

@@ -19,7 +19,7 @@ subroutine wannier_bse(ispin,w_wfcs,o_mat)
    USE wannier_gw, ONLY : num_nbndv,dual_bse,s_bse,l_truncated_coulomb,truncation_radius,vg_q,&
                           max_ngm,numw_prod
    USE fft_custom_gwl
-   USE wvfct,    ONLY : igk, npwx, npw, nbnd, nbndx
+   USE wvfct,    ONLY : igk, npwx, npw, nbnd
    USE gvecw,    ONLY : ecutwfc
    USE mp_pools, ONLY : intra_pool_comm
    USE mp_world, ONLY : mpime, nproc, world_comm

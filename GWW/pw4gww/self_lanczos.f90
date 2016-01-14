@@ -22,7 +22,7 @@ subroutine self_basis_lanczos(n_set,nstates,numpw, nsteps,ispin,lfull,nfull)
    USE gvect
    USE constants, ONLY : e2, pi, tpi, fpi
    USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2
-   USE wvfct,     ONLY : igk, npwx, npw, nbnd, nbndx
+   USE wvfct,     ONLY : igk, npwx, npw, nbnd
    USE gvecw,     ONLY : ecutwfc
    USE wavefunctions_module, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
@@ -563,7 +563,7 @@ subroutine global_self_lanczos(nstates,nstates_eff,threshold,nglobal,nsteps,nump
                                &num_nbndv,l_pmatrix,vg_q,s_first_state,s_last_state, l_verbose,&
                                &l_contour,l_big_system,l_list,n_list,i_list,optimal_options
   USE gvect
-  USE wvfct,    ONLY : igk, npwx, npw, nbnd, nbndx
+  USE wvfct,    ONLY : igk, npwx, npw, nbnd
   USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
   USE mp_world, ONLY : world_comm, mpime,nproc
   USE wavefunctions_module, ONLY : evc, psic
@@ -1171,7 +1171,7 @@ subroutine self_basis_lanczos_real(n_set,nstates,numpw, nsteps,ispin)
    USE gvect
    USE constants, ONLY : e2, pi, tpi, fpi
    USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2
-   USE wvfct,     ONLY : igk, npwx, npw, nbnd, nbndx
+   USE wvfct,     ONLY : igk, npwx, npw, nbnd
    USE gvecw,     ONLY : ecutwfc
    USE wavefunctions_module, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast

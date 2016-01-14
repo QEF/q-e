@@ -18,7 +18,7 @@ SUBROUTINE o_bands(numv, v_states,numpw,o_basis,ethr,cutoff,ptype)
   USE cell_base,            ONLY : tpiba2
   USE klist,                ONLY : nkstot, nks, wk, xk, nelec
   USE gvect,                ONLY : g, gstart
-  USE wvfct,                ONLY : g2kin, wg, nbndx, et, nbnd, npwx, igk, &
+  USE wvfct,                ONLY : g2kin, wg, et, nbnd, npwx, igk, &
                                    npw, current_k
   USE control_flags,        ONLY : max_cg_iter, david
   USE g_psi_mod,            ONLY : h_diag
@@ -371,7 +371,7 @@ subroutine o_extra_pw( p_basis, numwp, numwp_max,cutoff)
   USE cell_base,            ONLY : tpiba2
   USE klist,                ONLY : nkstot, nks, wk, xk, nelec
   USE gvect,                ONLY : g, gstart
-  USE wvfct,                ONLY : g2kin, wg, nbndx, et, nbnd, npwx, igk, &
+  USE wvfct,                ONLY : g2kin, wg, et, nbnd, npwx, igk, &
                                    npw, current_k
   USE control_flags,        ONLY : max_cg_iter, david
   USE g_psi_mod,            ONLY : h_diag
@@ -456,7 +456,7 @@ subroutine  update_numwp(numwp, cutoff)
   USE cell_base,            ONLY : tpiba2
   USE klist,                ONLY : nkstot, nks, wk, xk, nelec
   USE gvect,                ONLY : g, gstart
-  USE wvfct,                ONLY : g2kin, wg, nbndx, et, nbnd, npwx, igk, &
+  USE wvfct,                ONLY : g2kin, wg, et, nbnd, npwx, igk, &
                                    npw, current_k
   USE control_flags,        ONLY : max_cg_iter, david
   USE g_psi_mod,            ONLY : h_diag

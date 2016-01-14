@@ -19,8 +19,7 @@ SUBROUTINE v_basis(numpw,o_basis,cutoff)
   USE cell_base,            ONLY : tpiba2,tpiba
   USE klist,                ONLY : nkstot, nks, wk, xk, nelec
   USE gvect,                ONLY : g, gstart
-  USE wvfct,                ONLY : g2kin, wg, nbndx, et, nbnd, npwx, igk, &
-                                   npw, current_k
+  USE wvfct,                ONLY : npw
   USE mp,                   ONLY : mp_sum,mp_bcast
   USE mp_world,             ONLY : world_comm
   USE klist,                ONLY : xk

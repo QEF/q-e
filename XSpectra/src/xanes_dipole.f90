@@ -12,8 +12,7 @@ SUBROUTINE xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,&
   USE parameters,      ONLY : ntypx
   USE radial_grids,    ONLY : ndmx
   USE ions_base,       ONLY : nat, ntyp => nsp, ityp
-  USE wvfct,           ONLY : npwx, nbndx, nbnd, npw, igk, g2kin, et,&
-                              current_k
+  USE wvfct,           ONLY : npwx, nbnd, npw, igk, g2kin, et, current_k
   USE gvecw,           ONLY : gcutw
   USE symm_base,       ONLY : d1,d2,d3
   USE noncollin_module,ONLY : noncolin

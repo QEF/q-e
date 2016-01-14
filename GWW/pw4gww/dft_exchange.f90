@@ -20,7 +20,7 @@ subroutine dft_exchange(nbnd_v,nbnd_s,n_set, e_x,ks_wfcs)
   USE basis
   USE klist
   USE constants, ONLY : e2, pi, tpi, fpi, RYTOEV
-  USE wvfct,     ONLY : igk, npwx, npw, nbnd, nbndx, wg
+  USE wvfct,     ONLY : igk, npwx, npw, nbnd, wg
   USE gvecw,     ONLY : gcutw
   USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2,bg
   USE wannier_gw

@@ -23,7 +23,7 @@ SUBROUTINE dvpsi_kb(kpoint,nu)
   USE fft_interfaces, ONLY : invfft
   USE gvect,      ONLY : gstart, nl, nlm, ngl, ngm, g, gg, gl, igtongl
   USE vlocal,     ONLY: vloc
-  USE wvfct,      ONLY: nbnd, npwx, npw, g2kin, igk
+  USE wvfct,      ONLY: nbnd, npwx, npw, igk
   USE wavefunctions_module,  ONLY: evc, psic
   USE cgcom
   !

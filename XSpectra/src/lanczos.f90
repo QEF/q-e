@@ -6,7 +6,7 @@ SUBROUTINE lanczos (a,b,psi,ncalcv,terminator)
   ! subroutine written by CG
   USE kinds,     ONLY: DP
   USE constants, ONLY: rytoev
-  USE wvfct,     ONLY: npwx,nbndx, nbnd,npw,igk,g2kin
+  USE wvfct,     ONLY: npwx, nbnd,npw
   USE becmod,    ONLY: becp
   USE uspp,      ONLY: vkb, nkb
   !USE cell_base, ONLY: omega
@@ -204,7 +204,7 @@ SUBROUTINE lanczos_uspp (a,b,psi,ncalcv,terminator)
   !----------------------------------------------------------------------------
   ! subroutine written by CG
   USE kinds,     ONLY: DP
-  USE wvfct,     ONLY: npwx,nbndx, nbnd,npw,igk,g2kin
+  USE wvfct,     ONLY: npwx, nbnd,npw
   USE becmod,    ONLY: becp, calbec
   USE constants, ONLY: rytoev
   USE uspp,      ONLY: vkb, nkb

@@ -20,7 +20,7 @@ contains
     !  as the initial vectors of lr davidson algorithm
 
     use kinds,         only : dp
-    use wvfct,         only : nbnd, nbndx, et
+    use wvfct,         only : nbnd, et
     use lr_dav_variables, only : vc_couple,num_init,single_pole,energy_dif,&
                                 & energy_dif_order, p_nbnd_occ, p_nbnd_virt,&
                                 & if_dft_spectrum, reference
@@ -183,7 +183,7 @@ contains
     use lr_variables,         only : evc0, sevc0 ,revc0, evc0_virt,&
                                    & sevc0_virt, nbnd_total, davidson, restart
     use io_global,    only : stdout
-    use wvfct,       only : g2kin,npwx,nbnd,et,npw
+    use wvfct,       only : npwx,nbnd,et,npw
     use gvect,                only : gstart
     use uspp,           only : okvan
     use lr_us
@@ -1786,7 +1786,7 @@ contains
     ! energy*|R_ij|^2
 
     use kinds,         only : dp
-    use wvfct,         only : nbnd, nbndx, et
+    use wvfct,         only : nbnd, et
     use lr_dav_variables, only : vc_couple,num_init,single_pole,energy_dif,&
                                 & energy_dif_order, p_nbnd_occ, p_nbnd_virt,PI
     use lr_variables, only : nbnd_total,R

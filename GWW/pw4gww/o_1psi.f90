@@ -435,7 +435,7 @@ SUBROUTINE o_1psi_gamma( numv, v_states, psi, opsi,l_freq,hdiag, ptype,fcw_numbe
    USE gvect
    USE constants, ONLY : e2, pi, tpi, fpi
    USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2
-   USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, nbndx, et
+   USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, et
    USE wavefunctions_module, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
    USE mp_world, ONLY : world_comm, mpime, nproc
@@ -821,7 +821,7 @@ SUBROUTINE evc_to_real(numv, v_states)
 
    USE io_global,            ONLY : stdout, ionode, ionode_id
    USE kinds,    ONLY : DP
-   USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, nbndx
+   USE wvfct,    ONLY : igk, npwx, npw, nbnd
    USE wavefunctions_module, ONLY : evc, psic
    USE gvecs,              ONLY : nls, nlsm, doublegrid
    USE fft_base,             ONLY : dfftp, dffts
@@ -865,7 +865,7 @@ SUBROUTINE o_basis_init(numpw,o_basis,numv,v_states,cutoff, ptype,fcw_number,fcw
   USE gvect, ONLY : g
   USE io_global,            ONLY : stdout, ionode, ionode_id
   USE kinds,    ONLY : DP
-  USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, nbndx
+  USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd
   USE wavefunctions_module, ONLY : evc, psic
   USE gvecs,              ONLY : nls, nlsm, doublegrid
   USE constants, ONLY : tpi
@@ -954,7 +954,7 @@ SUBROUTINE o_basis_init(numpw,o_basis,numv,v_states,cutoff, ptype,fcw_number,fcw
 !this subroutines writes the basis of the polarization on file
    USE io_global,            ONLY : stdout, ionode, ionode_id
    USE kinds,    ONLY : DP
-   USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, nbndx
+   USE wvfct,    ONLY : igk, npwx, npw, nbnd
    USE wavefunctions_module, ONLY : evc, psic
    USE gvecs,              ONLY : nls, nlsm, doublegrid
    USE wavefunctions_module, ONLY : psic
@@ -1040,7 +1040,7 @@ SUBROUTINE o_1psi_gamma_real( numv, v_states, psi, opsi)
    USE gvect
    USE constants, ONLY : e2, pi, tpi, fpi
    USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2
-   USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, nbndx
+   USE wvfct,    ONLY : igk, npwx, npw, nbnd
    USE wavefunctions_module, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
    USE mp_world, ONLY : mpime, world_comm
@@ -1121,7 +1121,7 @@ END SUBROUTINE o_1psi_gamma_real
 !this subroutines writes the basis of the polarization on file      
    USE io_global,            ONLY : stdout, ionode, ionode_id
    USE kinds,    ONLY : DP
-   USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, nbndx
+   USE wvfct,    ONLY : igk, npwx, npw, nbnd
    USE wavefunctions_module, ONLY : evc, psic
    USE gvecs,              ONLY : nls, nlsm, doublegrid
    USE wavefunctions_module, ONLY : psic

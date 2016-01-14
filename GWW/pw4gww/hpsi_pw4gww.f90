@@ -13,7 +13,7 @@
   subroutine hpsi_pw4gww( ndim,psi,ppsi,et,ik,numv)   
 ! ch_psi_all (n, h, ah, e, ik, m)    
     USE kinds,    ONLY : DP
-    USE wvfct,    ONLY : igk, npwx, npw, nbnd, nbndx
+    USE wvfct,    ONLY : igk, npwx, npw, nbnd
     USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
     USE mp_world, ONLY : mpime, nproc
    

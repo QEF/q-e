@@ -20,7 +20,7 @@ subroutine go_wannier( iun_wannier, tresh, maxiter,nbndv, itask, ispin)
 
   USE kinds,    ONLY : DP
   USE us
-  USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbndx,nbnd
+  USE wvfct,    ONLY : nbnd
   USE wavefunctions_module, ONLY : evc
   USE gvect
   USE basis

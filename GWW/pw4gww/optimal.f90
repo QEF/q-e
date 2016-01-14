@@ -22,7 +22,7 @@ SUBROUTINE optimal_driver(num_in,wfcs,lda,options,num_out, info)
 
   INTEGER, INTENT(in) :: num_in!number of initial vectors
   COMPLEX(kind=DP), INTENT(inout) :: wfcs(lda,num_in)!in input non-orthonormal in output optimal basis
-  INTEGER, INTENT(in) :: lda!leading dimension of wfcs, essetally npw or npwx
+  INTEGER, INTENT(in) :: lda!leading dimension of wfcs, essentially npw or npwx
   TYPE(optimal_options), INTENT(in) :: options!options to be used
   INTEGER, INTENT(out) :: num_out!final number of orthonormal basis functions
   INTEGER, INTENT(out) :: info!final outcome status 0== OK
@@ -64,8 +64,7 @@ SUBROUTINE optimal_gram_schmidt(num_in,wfcs,lda,ithres,thres,num_out)
   USE mp_world, ONLY : world_comm, mpime, nproc
   USE mp,                   ONLY : mp_sum,mp_bcast
   USE io_global,            ONLY : stdout, ionode,ionode_id
-  USE wvfct,                ONLY : g2kin, wg, nbndx, et, nbnd, npwx, igk, &
-                                   npw, current_k
+  USE wvfct,                ONLY : npwx, npw
   USE gvect,                ONLY : gstart
  
  implicit none

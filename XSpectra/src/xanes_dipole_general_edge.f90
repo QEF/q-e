@@ -12,8 +12,7 @@ SUBROUTINE xanes_dipole_general_edge(a,b,ncalcv,nl_init, xnorm,core_wfn,paw_ilto
   USE parameters,      ONLY : ntypx
   USE radial_grids,    ONLY : ndmx
   USE ions_base,       ONLY : nat, ntyp => nsp, ityp
-  USE wvfct,           ONLY : npwx, nbndx, nbnd, npw, igk, g2kin, et,&
-                              current_k
+  USE wvfct,           ONLY : npwx, nbnd, npw, igk, g2kin, et, current_k
   USE gvecw,           ONLY : gcutw
   USE lsda_mod,        ONLY : nspin,lsda,isk,current_spin
   USE cell_base,       ONLY: tpiba2, bg

@@ -1128,7 +1128,7 @@ MODULE exchange_custom
 
 
       USE io_global,  ONLY : stdout, ionode, ionode_id
-      USE wvfct,    ONLY : igk, npwx, npw, nbnd, nbndx
+      USE wvfct,    ONLY : igk, npwx, npw, nbnd
       USE gvecw, ONLY : ecutwfc
       USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2,bg
       USE constants, ONLY : e2, pi, tpi, fpi, RYTOEV
@@ -1465,7 +1465,7 @@ MODULE exchange_custom
 !apply Fock operator to a wavefunction
 
       USE io_global, ONLY : stdout, ionode, ionode_id
-      USE wvfct,     ONLY : igk, npwx, npw, nbnd, nbndx
+      USE wvfct,     ONLY : igk, npwx, npw, nbnd
       USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2,bg
       USE constants, ONLY : e2, pi, tpi, fpi, RYTOEV
       USE wavefunctions_module, ONLY : psic
@@ -1657,7 +1657,7 @@ MODULE exchange_custom
 
     FUNCTION exchange_energy_fast(exx_cus,exxalpha)
 
-      USE wvfct,    ONLY : igk, npwx, npw, nbnd, nbndx
+      USE wvfct,    ONLY : igk, npwx, npw, nbnd
       USE wavefunctions_module, ONLY : evc
       USE mp, ONLY : mp_sum
       USE mp_world, ONLY : world_comm
@@ -1707,7 +1707,7 @@ MODULE exchange_custom
 
     subroutine dft_exchange_fast(ispin,nbnd_s,psi,exx_cus)
       USE io_global,            ONLY : stdout, ionode, ionode_id
-      USE wvfct,    ONLY : igk, npwx, npw, nbnd, nbndx, wg
+      USE wvfct,    ONLY : igk, npwx, npw, nbnd, wg
       USE gvect
       USE mp, ONLY : mp_sum
       USE mp_world, ONLY : world_comm

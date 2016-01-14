@@ -20,7 +20,7 @@ subroutine rotate_wannier( rot_u,ispin, iun_wannier)
 
   USE kinds,    ONLY : DP
   USE us
-  USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, nbndx
+  USE wvfct,    ONLY : npwx, npw, nbnd
   USE gvecw,    ONLY : gcutw
   USE gvect
   USE basis
@@ -110,7 +110,7 @@ subroutine rotate_wannier_gamma( rot_u,ispin, itrasp)
 
   USE kinds,    ONLY : DP
   USE us
-  USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbndx,nbnd
+  USE wvfct,    ONLY : npwx, npw,nbnd
   USE gvect
   USE basis
   USE klist
