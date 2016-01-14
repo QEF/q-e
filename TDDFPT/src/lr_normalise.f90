@@ -169,8 +169,8 @@ CONTAINS
     use lr_variables,        only : lr_periodic
     use qpoint,              only : npwq, igkq, ikks, ikqs
     use gvect,               only : ngm, g
-    use wvfct,               only : g2kin, ecutwfc
-    use cell_base,           only : tpiba2
+    use wvfct,               only : g2kin
+    use gvecw,               only : gcutw
     use control_ph,          only : nbnd_occ
     !
     IMPLICIT NONE
@@ -193,7 +193,7 @@ CONTAINS
        !
        ! Determination of npwq, igkq; g2kin is used here as a workspace.
        !
-       CALL gk_sort( xk(1,ikq), ngm, g, ( ecutwfc / tpiba2 ), npwq, igkq, g2kin)
+       CALL gk_sort( xk(1,ikq), ngm, g, gcutw, npwq, igkq, g2kin)
        !
        IF ( okvan .and. nkb > 0 ) THEN
           !

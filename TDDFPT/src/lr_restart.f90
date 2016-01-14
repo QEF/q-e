@@ -334,8 +334,8 @@ SUBROUTINE lr_recalc_sevc1_new_eels()
     use lr_variables,        only : lr_periodic
     use qpoint,              only : nksq, npwq, igkq, ikks, ikqs
     use gvect,               only : ngm, g
-    use wvfct,               only : g2kin, ecutwfc
-    use cell_base,           only : tpiba2
+    use wvfct,               only : g2kin
+    use gvecw,               only : gcutw
     use control_ph,          only : nbnd_occ
 
     implicit none
@@ -353,7 +353,7 @@ SUBROUTINE lr_recalc_sevc1_new_eels()
        !
        ! Determination of npwq, igkq; g2kin is used here as a workspace.
        !
-       CALL gk_sort( xk(1,ikq), ngm, g, ( ecutwfc / tpiba2 ), npwq, igkq, g2kin)
+       CALL gk_sort( xk(1,ikq), ngm, g, gcutw, npwq, igkq, g2kin)
        !
        if ( okvan .and. nkb > 0 ) then
           !

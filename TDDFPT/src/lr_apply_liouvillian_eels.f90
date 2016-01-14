@@ -28,7 +28,8 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, sevc1_new, interaction )
   USE klist,                ONLY : nks, xk
   USE lr_variables,         ONLY : evc0, no_hxc, lr_periodic
   USE lsda_mod,             ONLY : nspin, current_spin
-  USE wvfct,                ONLY : nbnd, npwx, g2kin, et, npw, igk, ecutwfc
+  USE wvfct,                ONLY : nbnd, npwx, g2kin, et, npw, igk
+  USE gvecw,                ONLY : gcutw
   USE io_global,            ONLY : stdout
   USE uspp,                 ONLY : vkb
   USE qpoint,               ONLY : npwq, igkq, ikks, ikqs, nksq
@@ -163,8 +164,8 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, sevc1_new, interaction )
      ! Determination of npw, igk, and npwq, igkq;
      ! g2kin is used here as a workspace.
      !
-     CALL gk_sort( xk(1,ikk), ngm, g, ( ecutwfc / tpiba2 ), npw,  igk,  g2kin )
-     CALL gk_sort( xk(1,ikq), ngm, g, ( ecutwfc / tpiba2 ), npwq, igkq, g2kin ) 
+     CALL gk_sort( xk(1,ikk), ngm, g, gcutw, npw,  igk,  g2kin )
+     CALL gk_sort( xk(1,ikq), ngm, g, gcutw, npwq, igkq, g2kin ) 
      !
      ! Calculate beta-functions vkb at k+q (Kleinman-Bylander projectors)
      ! The vks's are needed for the non-local potential in h_psiq,

@@ -34,12 +34,13 @@ SUBROUTINE lr_init_nfo()
   USE mp,                   ONLY : mp_max, mp_min
   USE mp_global,            ONLY : inter_pool_comm
   USE gvect,                ONLY : ngm, g
-  USE cell_base,            ONLY : at, bg, tpiba, tpiba2, omega
+  USE cell_base,            ONLY : at, bg, omega
   USE ener,                 ONLY : ef, ef_up, ef_dw
   USE ktetra,               ONLY : ltetra
   USE lsda_mod,             ONLY : lsda, current_spin, nspin, isk
   USE control_ph,           ONLY : alpha_pv, nbnd_occ, tmp_dir_phq
-  USE wvfct,                ONLY : npwx, ecutwfc, wg
+  USE wvfct,                ONLY : npwx, wg
+  USE gvecw,                ONLY : gcutw
   USE io_files,             ONLY : iunigk, seqopn, tmp_dir, prefix, &
                                  & diropn, nwordwfc, wfc_dir
   USE qpoint,               ONLY : xq, npwq, igkq, ikks, ikqs, nksq, eigqts
@@ -75,7 +76,7 @@ SUBROUTINE lr_init_nfo()
         !
         DO ik = 1, nks
            !
-           CALL gk_sort( xk(1,ik), ngm, g, ( ecutwfc / tpiba2 ), npw, igk, g2kin )
+           CALL gk_sort( xk(1,ik), ngm, g, gcutw, npw, igk, g2kin )
            !
            npw_k(ik) = npw
            igk_k(:,ik) = igk(:)
@@ -180,7 +181,7 @@ SUBROUTINE lr_init_nfo()
            ikk = ikks(ik)
            !
            ! Determination of npw and igk.
-           CALL gk_sort( xk(1,ikk), ngm, g, ( ecutwfc / tpiba2 ), npw,  igk,  g2kin )
+           CALL gk_sort( xk(1,ikk), ngm, g, gcutw, npw,  igk,  g2kin )
            !
            ! Read the wavefunction evc
            CALL davcio (evc, lrwfc, iuwfc, ikk, - 1)
@@ -332,13 +333,13 @@ SUBROUTINE lr_init_nfo()
      !
      ! ... g2kin is used here as work space
      !
-  !   CALL gk_sort( xk(1,ikk), ngm, g, ( ecutwfc / tpiba2 ), npw, igk, g2kin )
+  !   CALL gk_sort( xk(1,ikk), ngm, g, gcutw, npw, igk, g2kin )
      !
      ! ... if there is only one k-point evc, evq, npw, igk stay in memory
      !
   !   IF ( nksq > 1 ) WRITE( iunigk ) npw, igk
      !
-  !   CALL gk_sort( xk(1,ikq), ngm, g, ( ecutwfc / tpiba2 ), npwq, igkq, g2kin )
+  !   CALL gk_sort( xk(1,ikq), ngm, g, gcutw, npwq, igkq, g2kin )
      !
   !   IF ( nksq > 1 ) WRITE( iunigk ) npwq, igkq
      !

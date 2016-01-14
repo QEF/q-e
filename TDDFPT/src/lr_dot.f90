@@ -22,10 +22,10 @@ FUNCTION lr_dot(x,y)
   USE klist,                ONLY : nks, xk, wk
   USE realus,               ONLY : npw_k
   USE lsda_mod,             ONLY : nspin
-  USE wvfct,                ONLY : npwx,nbnd,wg,npw,igk,ecutwfc,g2kin
+  USE wvfct,                ONLY : npwx,nbnd,wg,npw,igk,g2kin
+  USE gvecw,                ONLY : gcutw
   USE control_flags,        ONLY : gamma_only
   USE gvect,                ONLY : gstart, ngm, g
-  USE cell_base,            ONLY : tpiba2
   USE mp,                   ONLY : mp_sum
   USE mp_global,            ONLY : inter_pool_comm, intra_bgrp_comm
   USE lr_variables,         ONLY : lr_verbosity, lr_periodic, eels
@@ -157,7 +157,7 @@ CONTAINS
        !
        ! Determination of the number of plane waves npwq at point k+q (ikq).
        !
-       CALL gk_sort( xk(1,ikq), ngm, g, ( ecutwfc / tpiba2 ), npwq, igkq, g2kin)
+       CALL gk_sort( xk(1,ikq), ngm, g, gcutw, npwq, igkq, g2kin)
        !
 !      IF (nksq > 1) THEN
 !         read (iunigk, err = 100, iostat = ios) npw, igk

@@ -70,6 +70,7 @@ lr_apply_liouvillian_eels.o : ../../Modules/constants.o
 lr_apply_liouvillian_eels.o : ../../Modules/control_flags.o
 lr_apply_liouvillian_eels.o : ../../Modules/fft_base.o
 lr_apply_liouvillian_eels.o : ../../Modules/funct.o
+lr_apply_liouvillian_eels.o : ../../Modules/gvecw.o
 lr_apply_liouvillian_eels.o : ../../Modules/io_files.o
 lr_apply_liouvillian_eels.o : ../../Modules/io_global.o
 lr_apply_liouvillian_eels.o : ../../Modules/ions_base.o
@@ -108,6 +109,7 @@ lr_calc_dens.o : lr_variables.o
 lr_calc_dens_eels.o : ../../FFTXlib/fft_interfaces.o
 lr_calc_dens_eels.o : ../../Modules/cell_base.o
 lr_calc_dens_eels.o : ../../Modules/fft_base.o
+lr_calc_dens_eels.o : ../../Modules/gvecw.o
 lr_calc_dens_eels.o : ../../Modules/io_global.o
 lr_calc_dens_eels.o : ../../Modules/ions_base.o
 lr_calc_dens_eels.o : ../../Modules/kind.o
@@ -123,6 +125,7 @@ lr_calc_dens_eels.o : lr_variables.o
 lr_calc_dens_eels_nc.o : ../../FFTXlib/fft_interfaces.o
 lr_calc_dens_eels_nc.o : ../../Modules/cell_base.o
 lr_calc_dens_eels_nc.o : ../../Modules/fft_base.o
+lr_calc_dens_eels_nc.o : ../../Modules/gvecw.o
 lr_calc_dens_eels_nc.o : ../../Modules/io_global.o
 lr_calc_dens_eels_nc.o : ../../Modules/ions_base.o
 lr_calc_dens_eels_nc.o : ../../Modules/kind.o
@@ -192,6 +195,7 @@ lr_dav_routines.o : ../../FFTXlib/scatter_mod.o
 lr_dav_routines.o : ../../Modules/cell_base.o
 lr_dav_routines.o : ../../Modules/control_flags.o
 lr_dav_routines.o : ../../Modules/fft_base.o
+lr_dav_routines.o : ../../Modules/gvecw.o
 lr_dav_routines.o : ../../Modules/io_files.o
 lr_dav_routines.o : ../../Modules/io_global.o
 lr_dav_routines.o : ../../Modules/ions_base.o
@@ -223,8 +227,8 @@ lr_dealloc.o : lr_variables.o
 lr_diagonalise.o : ../../Modules/io_global.o
 lr_diagonalise.o : ../../Modules/kind.o
 lr_diagonalise.o : lr_variables.o
-lr_dot.o : ../../Modules/cell_base.o
 lr_dot.o : ../../Modules/control_flags.o
+lr_dot.o : ../../Modules/gvecw.o
 lr_dot.o : ../../Modules/io_global.o
 lr_dot.o : ../../Modules/kind.o
 lr_dot.o : ../../Modules/mp.o
@@ -267,6 +271,7 @@ lr_dvpsi_e.o : lr_variables.o
 lr_dvpsi_eels.o : ../../Modules/cell_base.o
 lr_dvpsi_eels.o : ../../Modules/constants.o
 lr_dvpsi_eels.o : ../../Modules/fft_base.o
+lr_dvpsi_eels.o : ../../Modules/gvecw.o
 lr_dvpsi_eels.o : ../../Modules/io_files.o
 lr_dvpsi_eels.o : ../../Modules/io_global.o
 lr_dvpsi_eels.o : ../../Modules/kind.o
@@ -317,6 +322,7 @@ lr_init_nfo.o : ../../Modules/becmod.o
 lr_init_nfo.o : ../../Modules/cell_base.o
 lr_init_nfo.o : ../../Modules/constants.o
 lr_init_nfo.o : ../../Modules/fft_base.o
+lr_init_nfo.o : ../../Modules/gvecw.o
 lr_init_nfo.o : ../../Modules/io_files.o
 lr_init_nfo.o : ../../Modules/io_global.o
 lr_init_nfo.o : ../../Modules/ions_base.o
@@ -366,6 +372,7 @@ lr_main.o : lr_variables.o
 lr_normalise.o : ../../Modules/becmod.o
 lr_normalise.o : ../../Modules/cell_base.o
 lr_normalise.o : ../../Modules/control_flags.o
+lr_normalise.o : ../../Modules/gvecw.o
 lr_normalise.o : ../../Modules/io_global.o
 lr_normalise.o : ../../Modules/kind.o
 lr_normalise.o : ../../Modules/noncol.o
@@ -399,7 +406,6 @@ lr_read_d0psi.o : ../../PW/src/pwcom.o
 lr_read_d0psi.o : lr_variables.o
 lr_read_wf.o : ../../FFTXlib/fft_interfaces.o
 lr_read_wf.o : ../../Modules/becmod.o
-lr_read_wf.o : ../../Modules/cell_base.o
 lr_read_wf.o : ../../Modules/control_flags.o
 lr_read_wf.o : ../../Modules/fft_base.o
 lr_read_wf.o : ../../Modules/funct.o
@@ -468,6 +474,7 @@ lr_restart.o : ../../Modules/becmod.o
 lr_restart.o : ../../Modules/cell_base.o
 lr_restart.o : ../../Modules/control_flags.o
 lr_restart.o : ../../Modules/fft_base.o
+lr_restart.o : ../../Modules/gvecw.o
 lr_restart.o : ../../Modules/io_files.o
 lr_restart.o : ../../Modules/io_global.o
 lr_restart.o : ../../Modules/kind.o
@@ -511,8 +518,8 @@ lr_setup_nscf.o : ../../PW/src/pwcom.o
 lr_setup_nscf.o : ../../PW/src/start_k.o
 lr_setup_nscf.o : ../../PW/src/symm_base.o
 lr_sm1_psi.o : ../../Modules/becmod.o
-lr_sm1_psi.o : ../../Modules/cell_base.o
 lr_sm1_psi.o : ../../Modules/control_flags.o
+lr_sm1_psi.o : ../../Modules/gvecw.o
 lr_sm1_psi.o : ../../Modules/io_global.o
 lr_sm1_psi.o : ../../Modules/ions_base.o
 lr_sm1_psi.o : ../../Modules/kind.o
@@ -553,6 +560,7 @@ lr_solve_e.o : lr_variables.o
 lr_summary.o : ../../Modules/cell_base.o
 lr_summary.o : ../../Modules/fft_base.o
 lr_summary.o : ../../Modules/funct.o
+lr_summary.o : ../../Modules/gvecw.o
 lr_summary.o : ../../Modules/io_global.o
 lr_summary.o : ../../Modules/ions_base.o
 lr_summary.o : ../../Modules/kind.o
@@ -576,8 +584,8 @@ lr_test_restart.o : ../../Modules/mp.o
 lr_test_restart.o : ../../Modules/mp_world.o
 lr_test_restart.o : lr_variables.o
 lr_us.o : ../../Modules/becmod.o
-lr_us.o : ../../Modules/cell_base.o
 lr_us.o : ../../Modules/control_flags.o
+lr_us.o : ../../Modules/gvecw.o
 lr_us.o : ../../Modules/io_global.o
 lr_us.o : ../../Modules/kind.o
 lr_us.o : ../../Modules/noncol.o
@@ -614,8 +622,8 @@ print_clock_lr.o : ../../Modules/plugin_flags.o
 print_clock_lr.o : ../../PW/src/realus.o
 print_clock_lr.o : lr_variables.o
 sd0psi.o : ../../Modules/becmod.o
-sd0psi.o : ../../Modules/cell_base.o
 sd0psi.o : ../../Modules/control_flags.o
+sd0psi.o : ../../Modules/gvecw.o
 sd0psi.o : ../../Modules/io_global.o
 sd0psi.o : ../../Modules/recvec.o
 sd0psi.o : ../../Modules/uspp.o

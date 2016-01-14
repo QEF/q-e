@@ -31,12 +31,12 @@ SUBROUTINE lr_calc_dens_eels (drhoscf, dpsi)
   USE ions_base,             ONLY : nat
   USE gvecs,                 ONLY : nls
   USE gvect,                 ONLY : ngm, g
-  USE cell_base,             ONLY : tpiba2
   USE fft_base,              ONLY : dfftp, dffts
   USE fft_interfaces,        ONLY : invfft
   USE klist,                 ONLY : xk, wk
   USE lr_variables,          ONLY : evc0, lr_periodic
-  USE wvfct,                 ONLY : nbnd,wg,npwx,npw,igk,ecutwfc,g2kin
+  USE wvfct,                 ONLY : nbnd,wg,npwx,npw,igk,g2kin
+  USE gvecw,                 ONLY : gcutw
   USE qpoint,                ONLY : npwq, igkq, nksq, ikks, ikqs
   USE control_ph,            ONLY : nbnd_occ
   USE units_ph,              ONLY : lrwfc, iuwfc 
@@ -114,8 +114,8 @@ SUBROUTINE lr_calc_dens_eels (drhoscf, dpsi)
      ! Determination of npw, igk, and npwq, igkq;
      ! g2kin is used here as work space.
      !
-     CALL gk_sort( xk(1,ikk), ngm, g, ( ecutwfc / tpiba2 ), npw,  igk,  g2kin )
-     CALL gk_sort( xk(1,ikq), ngm, g, ( ecutwfc / tpiba2 ), npwq, igkq, g2kin )
+     CALL gk_sort( xk(1,ikk), ngm, g, gcutw, npw,  igk,  g2kin )
+     CALL gk_sort( xk(1,ikq), ngm, g, gcutw, npwq, igkq, g2kin )
      !
      ! Read the unperturbed wavefuctions evc at k
      !

@@ -1871,7 +1871,7 @@ contains
     use mp_world,             only : world_comm
     USE cell_base,  ONLY : bg, ibrav, celldm
     USE gvect,      ONLY : gcutm, ngm, nl, nlm
-    USE wvfct,      ONLY : ecutwfc
+    USE gvecw,      ONLY : ecutwfc
     USE ions_base,  ONLY : nat, ityp, ntyp => nsp, atm, zv, tau
     USE io_global,  ONLY : stdout, ionode,ionode_id
     USE io_files,   ONLY : tmp_dir

@@ -445,8 +445,8 @@ SUBROUTINE sm1_psi_eels_k()
     USE qpoint,            ONLY : npwq, igkq, ikks, ikqs, nksq
     use lr_variables,      only : lr_periodic
     use gvect,             only : ngm, g
-    use wvfct,             only : g2kin, ecutwfc
-    use cell_base,         only : tpiba2
+    use wvfct,             only : g2kin
+    use gvecw,             only : gcutw
     !
     IMPLICIT NONE
     !
@@ -496,7 +496,7 @@ SUBROUTINE sm1_psi_eels_k()
           !
           ! Determination of npwq, igkq; g2kin is used here as a workspace.
           !
-          CALL gk_sort( xk(1,ikq), ngm, g, ( ecutwfc / tpiba2 ), npwq, igkq, g2kin )
+          CALL gk_sort( xk(1,ikq), ngm, g, gcutw, npwq, igkq, g2kin )
           !
           ! Calculate beta-functions vkb for a given k+q point.
           !
@@ -608,7 +608,7 @@ SUBROUTINE sm1_psi_eels_k()
     !
     ! Determination of npwq, igkq; g2kin is used here as a workspace.
     !
-    CALL gk_sort( xk(1,ikq), ngm, g, ( ecutwfc / tpiba2 ), npwq, igkq, g2kin )
+    CALL gk_sort( xk(1,ikq), ngm, g, gcutw, npwq, igkq, g2kin )
     !
     ! Calculate beta-functions vkb for a given k+q point.
     !
@@ -662,8 +662,8 @@ SUBROUTINE sm1_psi_eels_nc()
     USE qpoint,            ONLY : npwq, igkq, ikks, ikqs, nksq
     USE lr_variables,      ONLY : lr_periodic
     USE gvect,             ONLY : ngm, g
-    USE wvfct,             ONLY : g2kin, ecutwfc
-    USE cell_base,         ONLY : tpiba2
+    USE wvfct,             ONLY : g2kin
+    USE gvecw,             ONLY : gcutw
     USE uspp,              ONLY : qq_so
     USE spin_orb,          ONLY : lspinorb
     !
@@ -724,7 +724,7 @@ SUBROUTINE sm1_psi_eels_nc()
           !
           ! Determination of npwq, igkq; g2kin is used here as a workspace.
           !
-          CALL gk_sort( xk(1,ikq), ngm, g, ( ecutwfc / tpiba2 ), npwq, igkq, g2kin )
+          CALL gk_sort( xk(1,ikq), ngm, g, gcutw, npwq, igkq, g2kin )
           !
           ! Calculate beta-functions vkb for a given k+q point.
           !
@@ -869,7 +869,7 @@ SUBROUTINE sm1_psi_eels_nc()
     !
     ! Determination of npwq, igkq; g2kin is used here as a workspace.
     !
-    CALL gk_sort( xk(1,ikq), ngm, g, ( ecutwfc / tpiba2 ), npwq, igkq, g2kin )
+    CALL gk_sort( xk(1,ikq), ngm, g, gcutw, npwq, igkq, g2kin )
     !
     ! Calculate beta-functions vkb for a given k+q point.
     !

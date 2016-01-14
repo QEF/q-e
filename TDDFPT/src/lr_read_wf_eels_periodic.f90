@@ -20,8 +20,7 @@ SUBROUTINE lr_read_wf_eels_periodic()
   USE io_files,             ONLY : nwordwfc, iunwfc, prefix, &
                                  & diropn, tmp_dir, wfc_dir 
   USE lr_variables,         ONLY : evc0, size_evc
-  USE wvfct,                ONLY : npw, igk, nbnd, g2kin, &
-                                 & npwx, ecutwfc
+  USE wvfct,                ONLY : npw, igk, nbnd, g2kin, npwx
   USE fft_base,             ONLY : dffts
   USE kinds,                ONLY : dp
   USE save_ph,              ONLY : tmp_dir_save

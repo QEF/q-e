@@ -32,7 +32,7 @@ SUBROUTINE lr_summary
   USE run_info,               ONLY : title
   USE modes,                  ONLY : irotmq, irgq, minus_q, nsymq
   USE qpoint,                 ONLY : xq
-  USE wvfct,                  ONLY : ecutwfc
+  USE gvecw,                  ONLY : ecutwfc
   USE lr_variables,           ONLY : lr_verbosity
   !
   IMPLICIT NONE
