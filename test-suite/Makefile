@@ -30,6 +30,9 @@ run-tests-cp : prolog pseudo
 run-tests-pw : prolog pseudo
 	${TESTCODE_DIR}/bin/testcode.py --processors=0 --category=pw_all
 
+run-custom-test : prolog pseudo
+	${TESTCODE_DIR}/bin/testcode.py --processors=0 --category=$(testdir)
+
 # --test-id={v<release-version>, r<revision-number>}
 create-reference : pseudo prolog
 	${TESTCODE_DIR}/bin/testcode.py --processors=0 --category=_default_ make-benchmarks

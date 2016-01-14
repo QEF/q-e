@@ -20,20 +20,26 @@ C) Run only CP tests and show a final report
 
 $ make run_tests_cp
 
+D) Run the test that is in a single directory and show a final report
 
-D) After computing all tests, it also run a comparison-only steps and redirect
+$ make run-custom-test testdir=name_of_directory
+
+For example, the following runs only the tests in the pw_spinorbit directory
+$ make run-custom-test testdir=pw_spinorbit
+
+E) After computing all tests, it also run a comparison-only steps and redirect
    the output to a file called "out.`date +%Y%m%d_%H%M%S`" (python buffers both
    stdout and stderr)
 
 $ make compare
 
 
-E) Regenerate all benchmark reference files
+F) Regenerate all benchmark reference files
 
 $ make create_reference
 
 
-F) Clean all test files create so far and leave only benchmark reference
+G) Clean all test files create so far and leave only benchmark reference
 
 $ make clean
 
