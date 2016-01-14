@@ -33,6 +33,7 @@ dft_exchange.o : ../../Modules/cell_base.o
 dft_exchange.o : ../../Modules/constants.o
 dft_exchange.o : ../../Modules/control_flags.o
 dft_exchange.o : ../../Modules/fft_base.o
+dft_exchange.o : ../../Modules/gvecw.o
 dft_exchange.o : ../../Modules/io_files.o
 dft_exchange.o : ../../Modules/io_global.o
 dft_exchange.o : ../../Modules/ions_base.o
@@ -81,6 +82,7 @@ energies_xc.o : ../../PW/src/pwcom.o
 energies_xc.o : ../../PW/src/scf_mod.o
 exchange_custom.o : ../../Modules/cell_base.o
 exchange_custom.o : ../../Modules/constants.o
+exchange_custom.o : ../../Modules/gvecw.o
 exchange_custom.o : ../../Modules/io_files.o
 exchange_custom.o : ../../Modules/io_global.o
 exchange_custom.o : ../../Modules/kind.o
@@ -97,6 +99,7 @@ fake_conduction.o : ../../Modules/becmod.o
 fake_conduction.o : ../../Modules/cell_base.o
 fake_conduction.o : ../../Modules/constants.o
 fake_conduction.o : ../../Modules/fft_base.o
+fake_conduction.o : ../../Modules/gvecw.o
 fake_conduction.o : ../../Modules/io_files.o
 fake_conduction.o : ../../Modules/io_global.o
 fake_conduction.o : ../../Modules/kind.o
@@ -226,6 +229,7 @@ pola_lanczos.o : ../../Modules/becmod.o
 pola_lanczos.o : ../../Modules/cell_base.o
 pola_lanczos.o : ../../Modules/constants.o
 pola_lanczos.o : ../../Modules/fft_base.o
+pola_lanczos.o : ../../Modules/gvecw.o
 pola_lanczos.o : ../../Modules/io_files.o
 pola_lanczos.o : ../../Modules/io_global.o
 pola_lanczos.o : ../../Modules/kind.o
@@ -245,6 +249,7 @@ pola_partial.o : ../../FFTXlib/fft_interfaces.o
 pola_partial.o : ../../Modules/cell_base.o
 pola_partial.o : ../../Modules/constants.o
 pola_partial.o : ../../Modules/fft_base.o
+pola_partial.o : ../../Modules/gvecw.o
 pola_partial.o : ../../Modules/io_files.o
 pola_partial.o : ../../Modules/io_global.o
 pola_partial.o : ../../Modules/kind.o
@@ -260,6 +265,7 @@ pola_partial.o : fft_custom.o
 produce_wannier_gamma.o : ../../Modules/constants.o
 produce_wannier_gamma.o : ../../Modules/fft_base.o
 produce_wannier_gamma.o : ../../Modules/funct.o
+produce_wannier_gamma.o : ../../Modules/gvecw.o
 produce_wannier_gamma.o : ../../Modules/io_files.o
 produce_wannier_gamma.o : ../../Modules/io_global.o
 produce_wannier_gamma.o : ../../Modules/mp.o
@@ -278,6 +284,7 @@ pw4gww.o : ../../Modules/becmod.o
 pw4gww.o : ../../Modules/constants.o
 pw4gww.o : ../../Modules/control_flags.o
 pw4gww.o : ../../Modules/fft_base.o
+pw4gww.o : ../../Modules/gvecw.o
 pw4gww.o : ../../Modules/io_files.o
 pw4gww.o : ../../Modules/io_global.o
 pw4gww.o : ../../Modules/ions_base.o
@@ -310,6 +317,7 @@ realus.o : ../../PW/src/pwcom.o
 realus.o : ../../PW/src/realus.o
 rotate_wannier.o : ../../Modules/cell_base.o
 rotate_wannier.o : ../../Modules/constants.o
+rotate_wannier.o : ../../Modules/gvecw.o
 rotate_wannier.o : ../../Modules/io_files.o
 rotate_wannier.o : ../../Modules/kind.o
 rotate_wannier.o : ../../Modules/recvec.o
@@ -320,6 +328,7 @@ self_lanczos.o : ../../FFTXlib/fft_interfaces.o
 self_lanczos.o : ../../Modules/cell_base.o
 self_lanczos.o : ../../Modules/constants.o
 self_lanczos.o : ../../Modules/fft_base.o
+self_lanczos.o : ../../Modules/gvecw.o
 self_lanczos.o : ../../Modules/io_files.o
 self_lanczos.o : ../../Modules/io_global.o
 self_lanczos.o : ../../Modules/kind.o
@@ -391,6 +400,7 @@ wannier.o : ../../PW/src/atomic_wfc_mod.o
 wannier.o : ../../PW/src/pwcom.o
 wannier_bse.o : ../../Modules/cell_base.o
 wannier_bse.o : ../../Modules/constants.o
+wannier_bse.o : ../../Modules/gvecw.o
 wannier_bse.o : ../../Modules/io_files.o
 wannier_bse.o : ../../Modules/io_global.o
 wannier_bse.o : ../../Modules/kind.o
@@ -406,6 +416,7 @@ wannier_bse.o : fft_custom.o
 wannier_uterms.o : ../../Modules/cell_base.o
 wannier_uterms.o : ../../Modules/constants.o
 wannier_uterms.o : ../../Modules/control_flags.o
+wannier_uterms.o : ../../Modules/gvecw.o
 wannier_uterms.o : ../../Modules/io_files.o
 wannier_uterms.o : ../../Modules/io_global.o
 wannier_uterms.o : ../../Modules/kind.o

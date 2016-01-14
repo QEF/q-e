@@ -1128,7 +1128,8 @@ MODULE exchange_custom
 
 
       USE io_global,  ONLY : stdout, ionode, ionode_id
-      USE wvfct,    ONLY : igk, npwx, npw, nbnd, nbndx, ecutwfc
+      USE wvfct,    ONLY : igk, npwx, npw, nbnd, nbndx
+      USE gvecw, ONLY : ecutwfc
       USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2,bg
       USE constants, ONLY : e2, pi, tpi, fpi, RYTOEV
       USE wavefunctions_module, ONLY : psic

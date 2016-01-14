@@ -34,7 +34,8 @@ CONTAINS
    USE gvect
    USE constants, ONLY : e2, pi, tpi, fpi
    USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2
-   USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, nbndx, et, ecutwfc, wg
+   USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, nbndx, et, wg
+   USE gvecw,    ONLY : ecutwfc
    USE wavefunctions_module, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
    USE mp_pools, ONLY : intra_pool_comm
@@ -1416,7 +1417,8 @@ subroutine fake_conduction_wannier_real( cutoff, s_cutoff )
    USE gvect
    USE constants, ONLY : e2, pi, tpi, fpi
    USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2
-   USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, nbndx, et, ecutwfc
+   USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, nbndx, et
+   USE gvecw,    ONLY : ecutwfc
    USE wavefunctions_module, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
    USE mp_world, ONLY : world_comm, mpime, nproc
@@ -2163,7 +2165,8 @@ end subroutine fake_conduction_wannier_real
    USE gvect
    USE constants, ONLY : e2, pi, tpi, fpi
    USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2
-   USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, nbndx, et, ecutwfc, wg
+   USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, nbndx, et, wg
+   USE gvecw,    ONLY : ecutwfc
    USE wavefunctions_module, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
    USE mp_world, ONLY : world_comm, mpime, nproc

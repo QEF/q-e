@@ -516,6 +516,7 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
 
   use kinds,          ONLY : DP 
   use pwcom  
+  use gvecw,          ONLY : gcutw
   use control_flags,  ONLY : gamma_only  
   use becmod,         ONLY : bec_type, becp, calbec, &
                              allocate_bec_type, deallocate_bec_type
@@ -638,7 +639,7 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   do ik = 1, nks
      kisort = 0
      npw = npwx
-     call gk_sort (xk (1, ik+iks-1), ngm, g, ecutwfc / tpiba2, npw, kisort(1), g2kin)
+     call gk_sort (xk (1, ik+iks-1), ngm, g, gcutw, npw, kisort(1), g2kin)
      !
      ! mapping between local and global G vector index, for this kpoint
      !
@@ -769,7 +770,7 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
            local_pw = 0
            IF( (ik >= iks) .AND. (ik <= ike) ) THEN
                
-               CALL gk_sort (xk (1, ik+iks-1), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
+               CALL gk_sort (xk (1, ik+iks-1), ngm, g, gcutw, npw, igk, g2kin)
                CALL davcio (evc, 2*nwordwfc, iunwfc, (ik-iks+1), - 1)
 
                CALL init_us_2(npw, igk, xk(1, ik), vkb)

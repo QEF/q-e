@@ -22,7 +22,8 @@
   USE basis
   USE klist
   USE constants, ONLY : e2, pi, tpi, fpi
-  USE wvfct,    ONLY : igk, npwx, npw, nbnd, nbndx, ecutwfc
+  USE wvfct,     ONLY : igk, npwx, npw, nbnd, nbndx
+  USE gvecw,     ONLY : gcutw
    USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2
   USE wannier_gw
   USE mp, ONLY : mp_sum
@@ -80,8 +81,7 @@
   
 ! reads wfcs from iunwfc
 
-   CALL gk_sort(xk(1,1),ngm,g,ecutwfc/tpiba2, &
-              &    npw0,igk0,g2kin_bp)
+   CALL gk_sort(xk(1,1),ngm,g,gcutw,npw0,igk0,g2kin_bp)
    allocate(uterms(numw_prod,numw_prod))
    allocate(tmpspacei(max_ngm,n_set),tmpspacej(max_ngm,n_set),fac(max_ngm))
    allocate(umat_tmp(n_set,n_set))

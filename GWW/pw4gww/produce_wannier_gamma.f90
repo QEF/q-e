@@ -22,7 +22,8 @@
        USE wavefunctions_module, ONLY : evc
        USE exx,      ONLY : ecutfock,vexx,exx_div_check,exx_grid_init,exx_grid_check,exxinit,x_occupation
        USE funct,    ONLY : exx_is_active, dft_is_hybrid,start_exx,stop_exx
-       USE wvfct,     ONLY  : current_k, ecutwfc,et
+       USE wvfct,    ONLY : current_k, et
+       USE gvecw,    ONLY : ecutwfc
        USE scf,                  ONLY : scf_type, scf_type_COPY, &
                                    create_scf_type, destroy_scf_type, &
                                    rho, rho_core, rhog_core, &

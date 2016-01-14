@@ -20,7 +20,8 @@ subroutine rotate_wannier( rot_u,ispin, iun_wannier)
 
   USE kinds,    ONLY : DP
   USE us
-  USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, nbndx, ecutwfc
+  USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, nbndx
+  USE gvecw,    ONLY : gcutw
   USE gvect
   USE basis
   USE klist
@@ -52,8 +53,7 @@ subroutine rotate_wannier( rot_u,ispin, iun_wannier)
   
  !reads wfcs from iun_wannier
 
-  CALL gk_sort(xk(1,1),ngm,g,ecutwfc/tpiba2, &
-              &    npw0,igk0,g2kin_bp) 
+  CALL gk_sort(xk(1,1),ngm,g,gcutw,npw0,igk0,g2kin_bp) 
   CALL davcio(evc0,2*nwordwfc,iun_wannier,1,-1)
 
   evc1=(0.d0,0.d0)

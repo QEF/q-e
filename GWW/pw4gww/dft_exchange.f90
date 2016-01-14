@@ -20,8 +20,8 @@ subroutine dft_exchange(nbnd_v,nbnd_s,n_set, e_x,ks_wfcs)
   USE basis
   USE klist
   USE constants, ONLY : e2, pi, tpi, fpi, RYTOEV
-  USE wvfct,    ONLY : igk, npwx, npw, nbnd, nbndx, ecutwfc,wg
-  USE io_files, ONLY:
+  USE wvfct,     ONLY : igk, npwx, npw, nbnd, nbndx, wg
+  USE gvecw,     ONLY : gcutw
   USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2,bg
   USE wannier_gw
   USE gvect
@@ -101,8 +101,7 @@ subroutine dft_exchange(nbnd_v,nbnd_s,n_set, e_x,ks_wfcs)
    endif
 
    e_x(:,:)=0.d0
-   CALL gk_sort(xk(1,1),ngm,g,ecutwfc/tpiba2, &
-              &    npw0,igk0,g2kin_bp)
+   CALL gk_sort(xk(1,1),ngm,g,gcutw,npw0,igk0,g2kin_bp)
 
  
    if(okvan) allocate(becpr(nkb,nbnd_s))

@@ -22,7 +22,8 @@ subroutine pola_basis_lanczos(n_set,nstates,numpw, nsteps,ispin)
    USE gvect
    USE constants, ONLY : e2, pi, tpi, fpi
    USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2
-   USE wvfct,    ONLY : igk, npwx, npw, nbnd, nbndx, ecutwfc
+   USE wvfct,     ONLY : igk, npwx, npw, nbnd, nbndx
+   USE gvecw,     ONLY : ecutwfc
    USE wavefunctions_module, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
    USE mp_world, ONLY : world_comm, mpime, nproc
@@ -2191,7 +2192,8 @@ subroutine pola_basis_lanczos_real(n_set,nstates,numpw, nsteps,ispin)
    USE gvect
    USE constants, ONLY : e2, pi, tpi, fpi
    USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2
-   USE wvfct,    ONLY : igk, npwx, npw, nbnd, nbndx, ecutwfc
+   USE wvfct,    ONLY : igk, npwx, npw, nbnd, nbndx
+   USE gvecw,     ONLY : ecutwfc
    USE wavefunctions_module, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
    USE mp_pools, ONLY : intra_pool_comm
