@@ -10,9 +10,9 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   !-----------------------------------------------------------------------
   !
   !    This subroutine computes the electronic term
-  !    <psi|dv - e ds|dpsi> of the dynamical matrix.
+  !    2 <dpsi|dv - e ds|psi> of the dynamical matrix.
   !    Eq. B35 of PRB 64, 235118 (2001). The contribution of
-  !    the nonlocal potential is calculated in rhodvnl, the
+  !    the nonlocal potential is calculated in drhodvnl, the
   !    contribution of the local potential in drhodvloc.
   !    Note that drhoscf contain only the smooth part of the
   !    induced charge density, calculated in solve linter.
