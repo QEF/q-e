@@ -121,8 +121,7 @@ MODULE pw_restart
       USE basis,                ONLY : natomwfc
       USE gvecs,                ONLY : ngms_g, dual
       USE fft_base,             ONLY : dffts
-      USE wvfct,                ONLY : npw, npwx, g2kin, et, wg, &
-                                       igk, nbnd
+      USE wvfct,                ONLY : npw, npwx, et, wg, igk, nbnd
       USE ener,                 ONLY : ef, ef_up, ef_dw
       USE fixed_occ,            ONLY : tfixed_occ, f_inp
       USE ldaU,                 ONLY : lda_plus_u, lda_plus_u_kind, U_projection, &
@@ -278,8 +277,7 @@ MODULE pw_restart
       USE basis,                ONLY : natomwfc
       USE gvecs,                ONLY : ngms_g, dual
       USE fft_base,             ONLY : dffts
-      USE wvfct,                ONLY : npw, npwx, g2kin, et, wg, &
-                                       igk, nbnd
+      USE wvfct,                ONLY : npw, npwx, et, wg, igk, nbnd
       USE gvecw,                ONLY : ecutwfc
       USE ener,                 ONLY : ef, ef_up, ef_dw
       USE fixed_occ,            ONLY : tfixed_occ, f_inp
@@ -1876,7 +1874,7 @@ MODULE pw_restart
       USE gvecw,           ONLY : ecutwfc
       USE fft_base,        ONLY : dfftp
       USE fft_base,        ONLY : dffts
-      USE wvfct,           ONLY : npwx, g2kin
+      USE wvfct,           ONLY : npwx
       USE control_flags,   ONLY : gamma_only
       !
       IMPLICIT NONE

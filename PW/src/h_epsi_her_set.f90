@@ -20,7 +20,7 @@ subroutine h_epsi_her_set(pdir, e_field)
   USE spin_orb, ONLY: lspinorb
   USE kinds,    ONLY : DP
   USE us
-  USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd
+  USE wvfct,    ONLY : igk, npwx, npw, nbnd
   USE gvecw,    ONLY : gcutw
   USE ldaU,     ONLY : lda_plus_u
   USE lsda_mod, ONLY : current_spin, nspin
