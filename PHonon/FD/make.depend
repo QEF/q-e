@@ -2,6 +2,7 @@ fd.o : ../../Modules/cell_base.o
 fd.o : ../../Modules/constants.o
 fd.o : ../../Modules/environment.o
 fd.o : ../../Modules/fft_base.o
+fd.o : ../../Modules/gvecw.o
 fd.o : ../../Modules/io_files.o
 fd.o : ../../Modules/io_global.o
 fd.o : ../../Modules/ions_base.o
@@ -18,6 +19,7 @@ fd_ef.o : ../../Modules/cell_base.o
 fd_ef.o : ../../Modules/constants.o
 fd_ef.o : ../../Modules/environment.o
 fd_ef.o : ../../Modules/fft_base.o
+fd_ef.o : ../../Modules/gvecw.o
 fd_ef.o : ../../Modules/io_files.o
 fd_ef.o : ../../Modules/io_global.o
 fd_ef.o : ../../Modules/ions_base.o
@@ -32,6 +34,7 @@ fd_ifc.o : ../../Modules/cell_base.o
 fd_ifc.o : ../../Modules/constants.o
 fd_ifc.o : ../../Modules/environment.o
 fd_ifc.o : ../../Modules/fft_base.o
+fd_ifc.o : ../../Modules/gvecw.o
 fd_ifc.o : ../../Modules/io_files.o
 fd_ifc.o : ../../Modules/io_global.o
 fd_ifc.o : ../../Modules/ions_base.o

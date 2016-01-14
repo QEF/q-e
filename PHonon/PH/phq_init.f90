@@ -45,7 +45,8 @@ SUBROUTINE phq_init()
   USE atom,                 ONLY : msh, rgrid
   USE vlocal,               ONLY : strf
   USE spin_orb,             ONLY : lspinorb
-  USE wvfct,                ONLY : igk, g2kin, npwx, npw, nbnd, ecutwfc
+  USE wvfct,                ONLY : igk, g2kin, npwx, npw, nbnd
+  USE gvecw,                ONLY : gcutw
   USE wavefunctions_module, ONLY : evc
   USE noncollin_module,     ONLY : noncolin, npol
   USE uspp,                 ONLY : okvan, vkb
@@ -154,7 +155,7 @@ SUBROUTINE phq_init()
      !
      ! ... g2kin is used here as work space
      !
-     CALL gk_sort( xk(1,ikk), ngm, g, ( ecutwfc / tpiba2 ), npw, igk, g2kin )
+     CALL gk_sort( xk(1,ikk), ngm, g, gcutw, npw, igk, g2kin )
      !
      ! ... if there is only one k-point evc, evq, npw, igk stay in memory
      !
@@ -166,8 +167,7 @@ SUBROUTINE phq_init()
         !
      ELSE
         !
-        CALL gk_sort( xk(1,ikq), ngm, g, ( ecutwfc / tpiba2 ), &
-                      npwq, igkq, g2kin )
+        CALL gk_sort( xk(1,ikq), ngm, g, gcutw, npwq, igkq, g2kin )
         !
         IF ( nksq > 1 ) WRITE( iunigk ) npwq, igkq
         !

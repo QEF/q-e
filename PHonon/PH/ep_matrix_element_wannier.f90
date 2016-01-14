@@ -628,10 +628,11 @@ subroutine calculate_and_apply_phase(ik, ikqg, igqg, npwq_refolded, g_kpq, xk_ga
   USE kinds, ONLY : DP
   USE fft_base, ONLY : dffts
   USE fft_interfaces,        ONLY : fwfft, invfft
-  USE wvfct, ONLY: nbnd, npw, npwx,  g2kin, ecutwfc, nbnd
+  USE wvfct, ONLY: nbnd, npw, npwx,  g2kin, nbnd
   USE gvect, ONLY : ngm, g
   USE gvecs, ONLY : nls
-  USE cell_base, ONLY : bg, tpiba2
+  USE gvecw, ONLY : gcutw
+  USE cell_base, ONLY : bg
   USE qpoint, ONLY : nksq, npwq
    USE wavefunctions_module, ONLY : evc
 !  USE eqv,      ONLY : evq
@@ -670,13 +671,13 @@ subroutine calculate_and_apply_phase(ik, ikqg, igqg, npwq_refolded, g_kpq, xk_ga
   igkq_=0
 
 
-  call gk_sort (xk_gamma(1,ikqg), ngm, g_scra, ecutwfc / tpiba2, npw_, igk_, g2kin)
+  call gk_sort (xk_gamma(1,ikqg), ngm, g_scra, gcutw, npw_, igk_, g2kin)
 
   if(lread) then
      call read_wfc_rspace_and_fwfft( evq , ikqg , lrwfcr , iunwfcwann , npw_ , igk_ )
   endif
 
-  call gk_sort (xkqg, ngm, g_scra, ecutwfc / tpiba2, npwq_refolded, igkq_, g2kin)
+  call gk_sort (xkqg, ngm, g_scra, gcutw, npwq_refolded, igkq_, g2kin)
 
   phase(:) = CMPLX(0.d0,0.d0)
 

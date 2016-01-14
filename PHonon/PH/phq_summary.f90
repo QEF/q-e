@@ -42,7 +42,7 @@ subroutine phq_summary
   USE qpoint,        ONLY : xq
   USE ramanm,        ONLY : lraman, elop
   USE control_flags, ONLY : iverbosity
-  USE wvfct,         ONLY : ecutwfc
+  USE gvecw,         ONLY : ecutwfc
 
   implicit none
 

@@ -22,7 +22,7 @@ program fd_ifc
   USE cell_base,  ONLY : tpiba2, alat,omega, at, bg, ibrav, celldm
   USE ions_base,  ONLY : amass, nat, nat, atm, zv, tau, ntyp => nsp, ityp
   USE kinds,      ONLY : dp
-  USE wvfct,      ONLY : ecutwfc
+  USE gvecw,      ONLY : ecutwfc
 
   USE symm_base
   USE symme

@@ -11,7 +11,7 @@ SUBROUTINE cg_setup
   !-----------------------------------------------------------------------
   !
   USE kinds,      ONLY: DP
-  USE cell_base,  ONLY: tpiba2, bg
+  USE cell_base,  ONLY: bg
   USE ions_base,  ONLY: nat, ntyp => nsp, ityp, tau, amass
   USE scf,        ONLY: rho, rho_core, v, vltot, vrs, kedtau
   USE uspp,       ONLY: vkb
@@ -27,7 +27,8 @@ SUBROUTINE cg_setup
   USE klist,      ONLY: xk
   USE lsda_mod,   ONLY: nspin, current_spin
   USE vlocal,     ONLY: strf
-  USE wvfct,      ONLY: nbnd, npwx, npw, g2kin, igk, ecutwfc
+  USE wvfct,      ONLY: nbnd, npwx, npw, g2kin, igk
+  USE gvecw,      ONLY: gcutw
   USE cgcom
   !
   IMPLICIT NONE
@@ -114,7 +115,7 @@ SUBROUTINE cg_setup
   ELSE
      CLOSE(unit=iunpun,status='delete')
   ENDIF
-  CALL gk_sort (xk(1,kpoint),ngm,g,ecutwfc/tpiba2,npw,igk,g2kin)
+  CALL gk_sort (xk(1,kpoint),ngm,g,gcutw,npw,igk,g2kin)
   !
   !  Kleinman-Bylander PPs
   !

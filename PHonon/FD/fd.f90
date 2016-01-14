@@ -21,7 +21,7 @@ program fd
   USE cell_base,  ONLY : tpiba2, alat,omega, at, bg, ibrav, celldm
   USE ions_base,  ONLY : amass, nat, atm, zv, tau, ntyp => nsp, ityp
   USE kinds,      ONLY : dp 
-  USE wvfct,      ONLY : ecutwfc
+  USE gvecw,      ONLY : ecutwfc
   USE gvect,     ONLY : ecutrho
   USE wrappers,  ONLY : f_mkdir_safe
 

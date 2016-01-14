@@ -18,7 +18,8 @@ SUBROUTINE rhod2vkb(dyn0)
   USE cell_base, ONLY : tpiba2, tpiba, omega
   USE lsda_mod,  ONLY : current_spin
   USE gvect,  ONLY : ngm, g, igtongl, nl
-  USE wvfct,  ONLY: ecutwfc, nbnd, npwx, npw, g2kin, igk
+  USE gvecw,  ONLY: gcutw
+  USE wvfct,  ONLY: nbnd, npwx, npw, g2kin, igk
   USE klist,  ONLY : xk, nks, wk
   USE scf,    ONLY : rho
   USE vlocal, ONLY: vloc
@@ -108,7 +109,7 @@ SUBROUTINE rhod2vkb(dyn0)
      ! sum_G sum_G' sum_j sum_l [ psi_j*(G) V_na,l(G)  V^*_na,l(G') ( iG'u_ipol)( iG'u_jpol) psi_j(G')
      !
      weight = 2.0d0*wk(kpoint)
-     CALL gk_sort(xk(1,kpoint),ngm,g,ecutwfc/tpiba2,npw,igk,psic)
+     CALL gk_sort(xk(1,kpoint),ngm,g,gcutw,npw,igk,psic)
      IF (nks>1) CALL davcio(evc,lrwfc,iuwfc,kpoint,-1)
      !
      CALL calbec ( npw, vkb, evc, becp )

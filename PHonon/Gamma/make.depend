@@ -29,6 +29,7 @@ cg_readin.o : cgcom.o
 cg_setup.o : ../../Modules/cell_base.o
 cg_setup.o : ../../Modules/fft_base.o
 cg_setup.o : ../../Modules/funct.o
+cg_setup.o : ../../Modules/gvecw.o
 cg_setup.o : ../../Modules/io_files.o
 cg_setup.o : ../../Modules/ions_base.o
 cg_setup.o : ../../Modules/kind.o
@@ -166,6 +167,7 @@ rhod2vkb.o : ../../Modules/becmod.o
 rhod2vkb.o : ../../Modules/cell_base.o
 rhod2vkb.o : ../../Modules/constants.o
 rhod2vkb.o : ../../Modules/fft_base.o
+rhod2vkb.o : ../../Modules/gvecw.o
 rhod2vkb.o : ../../Modules/ions_base.o
 rhod2vkb.o : ../../Modules/kind.o
 rhod2vkb.o : ../../Modules/mp.o

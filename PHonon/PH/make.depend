@@ -705,6 +705,7 @@ ep_matrix_element_wannier.o : ../../FFTXlib/fft_interfaces.o
 ep_matrix_element_wannier.o : ../../Modules/cell_base.o
 ep_matrix_element_wannier.o : ../../Modules/constants.o
 ep_matrix_element_wannier.o : ../../Modules/fft_base.o
+ep_matrix_element_wannier.o : ../../Modules/gvecw.o
 ep_matrix_element_wannier.o : ../../Modules/io_files.o
 ep_matrix_element_wannier.o : ../../Modules/io_global.o
 ep_matrix_element_wannier.o : ../../Modules/ions_base.o
@@ -997,6 +998,7 @@ phq_init.o : ../../Modules/atom.o
 phq_init.o : ../../Modules/becmod.o
 phq_init.o : ../../Modules/cell_base.o
 phq_init.o : ../../Modules/constants.o
+phq_init.o : ../../Modules/gvecw.o
 phq_init.o : ../../Modules/io_files.o
 phq_init.o : ../../Modules/io_global.o
 phq_init.o : ../../Modules/ions_base.o
@@ -1076,6 +1078,7 @@ phq_summary.o : ../../Modules/cell_base.o
 phq_summary.o : ../../Modules/control_flags.o
 phq_summary.o : ../../Modules/fft_base.o
 phq_summary.o : ../../Modules/funct.o
+phq_summary.o : ../../Modules/gvecw.o
 phq_summary.o : ../../Modules/io_global.o
 phq_summary.o : ../../Modules/ions_base.o
 phq_summary.o : ../../Modules/kind.o
@@ -1165,6 +1168,7 @@ psyme2.o : ../../Modules/mp_bands.o
 punch_plot_e.o : ../../FFTXlib/scatter_mod.o
 punch_plot_e.o : ../../Modules/cell_base.o
 punch_plot_e.o : ../../Modules/fft_base.o
+punch_plot_e.o : ../../Modules/gvecw.o
 punch_plot_e.o : ../../Modules/io_global.o
 punch_plot_e.o : ../../Modules/ions_base.o
 punch_plot_e.o : ../../Modules/kind.o

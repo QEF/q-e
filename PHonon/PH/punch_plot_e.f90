@@ -31,7 +31,7 @@ SUBROUTINE punch_plot_e()
   USE noncollin_module, ONLY : nspin_mag
   USE output,     ONLY : fildrho
   USE units_ph,   ONLY : iudrho, lrdrho
-  USE wvfct,      ONLY : ecutwfc
+  USE gvecw,      ONLY : ecutwfc
   IMPLICIT NONE
 
   INTEGER :: plot_num, iunplot, ios, ipol, jpol, na, ir, nt
