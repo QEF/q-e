@@ -22,7 +22,7 @@ SUBROUTINE do_cond(done)
   USE spin_orb,   ONLY : lspinorb, domag
   USE uspp,       ONLY : okvan
   USE gvect,      ONLY : ecutrho
-  USE wvfct,      ONLY : ecutwfc
+  USE gvecw,      ONLY : ecutwfc
   USE symm_base,  ONLY: nsym, s, t_rev, time_reversal
   USE cond
   USE io_files,   ONLY: outdir, tmp_dir, prefix

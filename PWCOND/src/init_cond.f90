@@ -22,7 +22,7 @@ subroutine init_cond (nregion, flag)
   USE ions_base,  ONLY : atm, nat, ityp, ntyp => nsp, tau
   USE cell_base,  ONLY : at, bg, omega, alat
   USE ener,       ONLY : ef
-  USE wvfct,      ONLY : ecutwfc
+  USE gvecw,      ONLY : ecutwfc
   USE fft_base,   ONLY : dfftp, dffts
   USE noncollin_module,       ONLY : noncolin, npol
   USE cond

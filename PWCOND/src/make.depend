@@ -34,6 +34,7 @@ do_cond.o : ../../Modules/cell_base.o
 do_cond.o : ../../Modules/check_stop.o
 do_cond.o : ../../Modules/constants.o
 do_cond.o : ../../Modules/environment.o
+do_cond.o : ../../Modules/gvecw.o
 do_cond.o : ../../Modules/input_parameters.o
 do_cond.o : ../../Modules/io_files.o
 do_cond.o : ../../Modules/io_global.o
@@ -66,6 +67,7 @@ hev_ab.o : ../../Modules/kind.o
 init_cond.o : ../../Modules/atom.o
 init_cond.o : ../../Modules/cell_base.o
 init_cond.o : ../../Modules/fft_base.o
+init_cond.o : ../../Modules/gvecw.o
 init_cond.o : ../../Modules/io_global.o
 init_cond.o : ../../Modules/ions_base.o
 init_cond.o : ../../Modules/kind.o
