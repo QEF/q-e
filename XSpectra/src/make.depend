@@ -162,6 +162,7 @@ xanes_dipole.o : ../../Modules/becmod.o
 xanes_dipole.o : ../../Modules/cell_base.o
 xanes_dipole.o : ../../Modules/constants.o
 xanes_dipole.o : ../../Modules/fft_base.o
+xanes_dipole.o : ../../Modules/gvecw.o
 xanes_dipole.o : ../../Modules/io_global.o
 xanes_dipole.o : ../../Modules/ions_base.o
 xanes_dipole.o : ../../Modules/kind.o
@@ -187,6 +188,7 @@ xanes_dipole_general_edge.o : ../../Modules/becmod.o
 xanes_dipole_general_edge.o : ../../Modules/cell_base.o
 xanes_dipole_general_edge.o : ../../Modules/constants.o
 xanes_dipole_general_edge.o : ../../Modules/fft_base.o
+xanes_dipole_general_edge.o : ../../Modules/gvecw.o
 xanes_dipole_general_edge.o : ../../Modules/io_global.o
 xanes_dipole_general_edge.o : ../../Modules/ions_base.o
 xanes_dipole_general_edge.o : ../../Modules/kind.o
@@ -210,6 +212,7 @@ xanes_quadrupole.o : ../../Modules/becmod.o
 xanes_quadrupole.o : ../../Modules/cell_base.o
 xanes_quadrupole.o : ../../Modules/constants.o
 xanes_quadrupole.o : ../../Modules/fft_base.o
+xanes_quadrupole.o : ../../Modules/gvecw.o
 xanes_quadrupole.o : ../../Modules/io_global.o
 xanes_quadrupole.o : ../../Modules/ions_base.o
 xanes_quadrupole.o : ../../Modules/kind.o

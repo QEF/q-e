@@ -13,7 +13,8 @@ SUBROUTINE xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,&
   USE radial_grids,    ONLY : ndmx
   USE ions_base,       ONLY : nat, ntyp => nsp, ityp
   USE wvfct,           ONLY : npwx, nbndx, nbnd, npw, igk, g2kin, et,&
-                              current_k, ecutwfc
+                              current_k
+  USE gvecw,           ONLY : gcutw
   USE symm_base,       ONLY : d1,d2,d3
   USE noncollin_module,ONLY : noncolin
   USE lsda_mod,        ONLY : nspin,lsda,isk,current_spin
@@ -214,8 +215,8 @@ SUBROUTINE xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,&
 
      !... gk_sort: sort k-points and exit kinetic energies 
      !
-     CALL gk_sort(xk (1,ik),ngm,g,ecutwfc/tpiba2,npw,igk,g2kin)  !CHECK
-     g2kin=g2kin*tpiba2                                          !CHECK
+     CALL gk_sort(xk (1,ik),ngm,g,gcutw,npw,igk,g2kin)  !CHECK
+     g2kin=g2kin*tpiba2                                 !CHECK
      
      npw_partial = npw
      CALL mp_sum( npw_partial, intra_pool_comm )
