@@ -144,13 +144,14 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, no_overlap)
   !
   USE kinds,                ONLY : dp
   USE ions_base,            ONLY : nat, ityp, ntyp => nsp
-  USE cell_base,            ONLY : at, tpiba2
+  USE cell_base,            ONLY : at
   USE constants,            ONLY : rytoev
   USE gvect,                ONLY : g, ngm
   USE lsda_mod,             ONLY : nspin
   USE klist,                ONLY : xk, nks, nkstot
   USE io_files,             ONLY : iunpun, nwordwfc, iunwfc
-  USE wvfct,                ONLY : nbnd, et, ecutwfc, igk, npw, npwx, g2kin
+  USE wvfct,                ONLY : nbnd, et, igk, npw, npwx, g2kin
+  USE gvecw,                ONLY : gcutw
   USE uspp,                 ONLY : nkb, vkb, qq
   USE uspp_param,           ONLY : upf, nh, nhm
   USE noncollin_module,     ONLY : noncolin, npol
@@ -275,8 +276,7 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, no_overlap)
      !    prepare the indices of this k point
      !
      IF (.not.no_overlap.or.lsigma(1).or.lsigma(2).or.lsigma(3).or.lsigma(4)) THEN
-        CALL gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, &
-             igk, g2kin)
+        CALL gk_sort (xk (1, ik), ngm, g, gcutw, npw, igk, g2kin)
         !
         !   read eigenfunctions
         !

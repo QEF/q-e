@@ -14,9 +14,10 @@ SUBROUTINE add_shift_us( shift_nl )
   ! ... wrapper
   !
   USE kinds,                ONLY : DP
-  USE wvfct,                ONLY : g2kin, ecutwfc
+  USE wvfct,                ONLY : g2kin
+  USE gvecw,                ONLY : gcutw
   USE control_flags,        ONLY : gamma_only
-  USE cell_base,            ONLY : at, bg, tpiba, tpiba2
+  USE cell_base,            ONLY : at, bg
   USE ions_base,            ONLY : nat, ntyp => nsp , ityp
   USE klist,                ONLY : nks, xk
   USE gvect,                ONLY : g, ngm
@@ -79,7 +80,7 @@ SUBROUTINE add_shift_us( shift_nl )
        DO ik = 1, nks
           IF ( lsda ) current_spin = isk(ik)
           !
-          CALL gk_sort (xk(1,ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
+          CALL gk_sort (xk(1,ik), ngm, g, gcutw, npw, igk, g2kin)
           IF ( nks > 1 ) THEN
              CALL davcio( evc, 2*nwordwfc, iunwfc, ik, -1 )
              IF ( nkb > 0 ) CALL init_us_2( npw, igk, xk(1,ik), vkb )
@@ -169,7 +170,7 @@ SUBROUTINE add_shift_us( shift_nl )
        DO ik = 1, nks
           IF ( lsda ) current_spin = isk(ik)
           !
-          CALL gk_sort (xk(1,ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
+          CALL gk_sort (xk(1,ik), ngm, g, gcutw, npw, igk, g2kin)
           IF ( nks > 1 ) THEN
              CALL davcio( evc, 2*nwordwfc, iunwfc, ik, -1 )
              IF ( nkb > 0 ) CALL init_us_2( npw, igk, xk(1,ik), vkb )

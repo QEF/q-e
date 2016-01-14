@@ -26,9 +26,10 @@ SUBROUTINE projwave_boxes( filpdos, filproj, n_proj_boxes, irmin, irmax, plotbox
   USE constants, ONLY: rytoev
   USE gvect
   USE gvecs,     ONLY: dual
+  USE gvecw,     ONLY: gcutw, ecutwfc
   USE klist,     ONLY: xk, nks, nkstot
   USE lsda_mod,  ONLY: nspin, isk, current_spin, lsda
-  USE wvfct
+  USE wvfct, ONLY: npw, npwx, nbnd, g2kin, igk, et, wg
   USE control_flags, ONLY: gamma_only
   USE uspp,      ONLY: okvan
   USE noncollin_module, ONLY: noncolin, npol
@@ -224,7 +225,7 @@ SUBROUTINE projwave_boxes( filpdos, filproj, n_proj_boxes, irmin, irmax, plotbox
   k_loop: DO ik = 1, nks
      !
      IF ( lsda ) current_spin = isk(ik)
-     CALL gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
+     CALL gk_sort (xk (1, ik), ngm, g, gcutw, npw, igk, g2kin)
      CALL davcio (evc, 2*nwordwfc, iunwfc, ik, - 1)
      !
      bnd_loop: DO ibnd = 1, nbnd

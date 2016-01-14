@@ -20,7 +20,8 @@ PROGRAM wfck2r
   USE kinds, ONLY : DP
   USE io_files,  ONLY : prefix, tmp_dir, diropn
   USE mp_global, ONLY : npool, mp_startup,  intra_image_comm
-  USE wvfct,     ONLY : nbnd, npwx, igk, npw , g2kin, ecutwfc
+  USE wvfct,     ONLY : nbnd, npwx, igk, npw , g2kin
+  USE gvecw,     ONLY : gcutw
   USE klist,     ONLY : xk     , nks
   USE io_global, ONLY : ionode, ionode_id, stdout
   USE mp,        ONLY : mp_bcast, mp_barrier
@@ -30,7 +31,6 @@ PROGRAM wfck2r
   USE gvect, ONLY : ngm, g 
   USE gvecs, ONLY : nls
   USE noncollin_module, ONLY : npol, nspin_mag, noncolin
-  USE cell_base, ONLY : tpiba2
   USE environment,ONLY : environment_start, environment_end
   USE fft_base,  only : dffts
   USE scatter_mod,  only : gather_grid
@@ -114,8 +114,7 @@ PROGRAM wfck2r
      !
      !    prepare the indices of this k point
      !
-     CALL gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, &
-          igk, g2kin)
+     CALL gk_sort (xk (1, ik), ngm, g, gcutw, npw, igk, g2kin)
      
      CALL davcio (evc, 2*nwordwfc, iunwfc, ik, - 1)
 

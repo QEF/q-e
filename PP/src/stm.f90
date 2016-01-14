@@ -21,7 +21,7 @@ SUBROUTINE stm (sample_bias, stmdos, istates)
   USE kinds, ONLY: DP
   USE constants, ONLY: tpi, rytoev
   USE io_global, ONLY : stdout
-  USE cell_base, ONLY: tpiba2, tpiba, omega, at
+  USE cell_base, ONLY: omega, at
   USE fft_base,  ONLY: dfftp
   USE scatter_mod,  ONLY: gather_grid
   USE fft_interfaces, ONLY : fwfft, invfft
@@ -30,7 +30,8 @@ SUBROUTINE stm (sample_bias, stmdos, istates)
   USE ener, ONLY: ef
   USE symme, ONLY : sym_rho, sym_rho_init
   USE scf, ONLY: rho
-  USE wvfct, ONLY: npwx, npw, nbnd, wg, et, g2kin, igk, ecutwfc
+  USE wvfct, ONLY: npwx, npw, nbnd, wg, et, g2kin, igk
+  USE gvecw, ONLY: gcutw
   USE control_flags, ONLY : gamma_only
   USE wavefunctions_module,  ONLY : evc, psic
   USE io_files, ONLY: iunwfc, nwordwfc
@@ -148,7 +149,7 @@ SUBROUTINE stm (sample_bias, stmdos, istates)
      ENDDO
      istates = istates +  (last_band - first_band + 1)
 
-     CALL gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
+     CALL gk_sort (xk (1, ik), ngm, g, gcutw, npw, igk, g2kin)
      CALL davcio (evc, 2*nwordwfc, iunwfc, ik, - 1)
      !
      IF (gamma_only) THEN

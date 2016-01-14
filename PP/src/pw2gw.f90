@@ -108,7 +108,8 @@ SUBROUTINE compute_gw( use_gmaps )
   USE constants, ONLY : eps8, pi, AUTOEV, rytoev
   USE cell_base, ONLY : alat, tpiba2, at, bg, omega
   USE symm_base, ONLY : s, nsym
-  USE wvfct,     ONLY : npw, npwx, nbnd, igk, g2kin, wg, et, ecutwfc
+  USE wvfct,     ONLY : npw, npwx, nbnd, igk, g2kin, wg, et
+  USE gvecw,     ONLY : gcutw
   USE control_flags, ONLY : gamma_only
   USE gvect,         ONLY : ngm, g, gg, ig_l2g, nl
   USE fft_base,  ONLY: dfftp
@@ -299,11 +300,11 @@ SUBROUTINE compute_gw( use_gmaps )
   !DEBUG
   igwx  = 0  !  maximum G vector index
   DO ik = 1, nks
-     CALL gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
+     CALL gk_sort (xk (1, ik), ngm, g, gcutw, npw, igk, g2kin)
      g2max = max ( g2max, maxval (g2kin(1:npw)) )
      ! WRITE( 6, * ) 'DEBUG g2max ', g2max
      ! g2max, g2kin = RAGGIO DELLA SFERA |G+k|<cut, non MASSIMO |G| nella sfera
-     ! g2max <= ecutwfc / tpiba2   PER COSTRUZIONE
+     ! g2max <= gcutw   PER COSTRUZIONE
      igwx = max( igwx, maxval( igk(1:npw) ) )
   ENDDO
   !IF (ionode) write(*,*) "igwx = ", igwx
@@ -630,7 +631,7 @@ SUBROUTINE compute_gw( use_gmaps )
 
   DO ik = 1, nkpt
     !
-    CALL gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
+    CALL gk_sort (xk (1, ik), ngm, g, gcutw, npw, igk, g2kin)
     !
     ALLOCATE( igk_l2g( npw ) )
     !
@@ -741,7 +742,7 @@ SUBROUTINE compute_gw( use_gmaps )
    ALLOCATE ( vxc(dfftp%nnr,nspin) )
    CALL v_xc (rho, rho_core, rhog_core, etxc, vtxc, vxc)
    DO ik=1,nkpt
-      CALL gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
+      CALL gk_sort (xk (1, ik), ngm, g, gcutw, npw, igk, g2kin)
       CALL davcio( evc, 2*nwordwfc, iunwfc, ik, -1 )
       DO iband1 = 1, nbnd
          psic(:) = (0.d0, 0.d0)
@@ -841,12 +842,13 @@ SUBROUTINE write_gmaps ( kunit)
   !-----------------------------------------------------------------------
   !
   USE io_global, ONLY : stdout
-  USE cell_base, ONLY : at, bg, tpiba2, alat
+  USE cell_base, ONLY : at, bg, alat
   USE ions_base, ONLY : atm, nat
   USE gvect,     ONLY : ngm, ngm_g, ig_l2g, g
   USE lsda_mod,  ONLY : nspin, isk
   USE ions_base, ONLY : ntyp => nsp, tau, ityp
-  USE wvfct,     ONLY : nbnd, npw, npwx, et, g2kin, ecutwfc
+  USE wvfct,     ONLY : nbnd, npw, npwx, et, g2kin
+  USE gvecw,     ONLY : gcutw
   USE klist,     ONLY : nkstot, ngk, nks, xk
   USE wavefunctions_module,  ONLY : evc
   USE io_files,  ONLY : nd_nmbr, tmp_dir, prefix, iunwfc, nwordwfc
@@ -919,7 +921,7 @@ SUBROUTINE write_gmaps ( kunit)
   ALLOCATE ( igk_l2g( npwx, ik ) )
   DO ik = 1, nks
      kisort = 0
-     CALL gk_sort (xk (1, ik+iks-1), ngm, g, ecutwfc / tpiba2, npw, kisort(1), g2kin)
+     CALL gk_sort (xk (1, ik+iks-1), ngm, g, gcutw, npw, kisort(1), g2kin)
      DO ig = 1, npw
         igk_l2g(ig,ik) = ig_l2g(kisort(ig))
      ENDDO

@@ -34,7 +34,8 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   USE ener,             ONLY : ehart
   USE io_global,        ONLY : stdout, ionode
   USE scf,              ONLY : rho, vltot, v
-  USE wvfct,            ONLY : npw, nbnd, wg, igk, ecutwfc
+  USE wvfct,            ONLY : npw, nbnd, wg, igk
+  USE gvecw,            ONLY : ecutwfc
   USE noncollin_module, ONLY : noncolin
   USE paw_postproc,     ONLY : PAW_make_ae_charge
 

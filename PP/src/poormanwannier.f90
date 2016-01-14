@@ -133,7 +133,8 @@ SUBROUTINE projection (first_band, last_band, min_energy, max_energy, sigma, iop
   USE constants,  ONLY: rytoev
   USE gvect
   USE klist
-  USE wvfct
+  USE gvecw,      ONLY : gcutw
+  USE wvfct,      ONLY : nbnd, npw, npwx, g2kin, igk, et
   USE ldaU,       ONLY : is_Hubbard, Hubbard_lmax, Hubbard_l, &
                          oatwfc, offsetU, nwfcU, wfcU, copy_U_wfc
   USE lsda_mod
@@ -262,7 +263,7 @@ SUBROUTINE projection (first_band, last_band, min_energy, max_energy, sigma, iop
      !
      !!DEBUG
      !WRITE (*,*) "KPOINT =", ik
-     CALL gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
+     CALL gk_sort (xk (1, ik), ngm, g, gcutw, npw, igk, g2kin)
 
      CALL davcio (evc, 2*nwordwfc, iunwfc, ik, - 1)
 

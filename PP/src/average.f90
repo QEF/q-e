@@ -47,7 +47,7 @@ PROGRAM average
                                    tpiba2, at, bg
   USE gvect,                ONLY : gcutm
   USE gvecs,                ONLY : doublegrid, gcutms, dual
-  USE wvfct,                ONLY : ecutwfc
+  USE gvecw,                ONLY : ecutwfc
   USE fft_base,             ONLY : dfftp
   USE grid_subroutines,     ONLY : realspace_grid_init
   USE fft_base,             ONLY : dffts

@@ -12,12 +12,13 @@ SUBROUTINE write_p_avg(filp, spin_component, firstk, lastk)
   !
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ityp, ntyp => nsp
-  USE cell_base,            ONLY : tpiba2, at, bg, ibrav
+  USE cell_base,            ONLY : at, bg, ibrav
   USE constants,            ONLY : rytoev
   USE gvect,                ONLY : ngm, nl, g
   USE lsda_mod,             ONLY : nspin
   USE ener,                 ONLY : ef
-  USE wvfct,                ONLY : et, nbnd, npwx, npw, igk, g2kin, ecutwfc
+  USE wvfct,                ONLY : et, nbnd, npwx, npw, igk, g2kin
+  USE gvecw,                ONLY : gcutw
   USE klist,                ONLY : xk, nks, nkstot
   USE io_files,             ONLY : nwordwfc, iunwfc
   USE uspp,                 ONLY : nkb, vkb, okvan
@@ -89,8 +90,7 @@ SUBROUTINE write_p_avg(filp, spin_component, firstk, lastk)
      !
      !    prepare the indices of this k point
      !
-     CALL gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, &
-          igk, g2kin)
+     CALL gk_sort (xk (1, ik), ngm, g, gcutw, npw, igk, g2kin)
      !
      CALL init_us_2 (npw, igk, xk (1, ik), vkb)
      !

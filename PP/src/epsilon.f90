@@ -1316,10 +1316,10 @@ END SUBROUTINE offdiag_calc
 SUBROUTINE dipole_calc( ik, dipole_aux, metalcalc, nbndmin, nbndmax )
   !------------------------------------------------------------------
   USE kinds,                ONLY : DP
-  USE wvfct,                ONLY : npw, nbnd, igk, g2kin, ecutwfc
+  USE wvfct,                ONLY : npw, nbnd, igk, g2kin
+  USE gvecw,                ONLY : gcutw
   USE wavefunctions_module, ONLY : evc
   USE klist,                ONLY : xk
-  USE cell_base,            ONLY : tpiba2
   USE gvect,                ONLY : ngm, g
   USE io_files,             ONLY : nwordwfc, iunwfc
   USE grid_module,          ONLY : focc
@@ -1345,7 +1345,7 @@ IMPLICIT NONE
   !
   ! setup k+G grids for each kpt
   !
-  CALL gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
+  CALL gk_sort (xk (1, ik), ngm, g, gcutw, npw, igk, g2kin)
   !
   ! read wfc for the given kpt
   !

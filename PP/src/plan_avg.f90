@@ -13,16 +13,17 @@ PROGRAM plan_avg
   ! calculate planar averages of each wavefunction
   !
   USE kinds,     ONLY : DP
-  USE run_info, ONLY: title
+  USE run_info,  ONLY: title
   USE cell_base, ONLY : ibrav, celldm, at
   USE fft_base,  ONLY : dfftp
   USE gvect,     ONLY : gcutm
-  USE gvecs,   ONLY : dual
+  USE gvecs,     ONLY : dual
   USE klist,     ONLY : nkstot, xk
   USE ions_base, ONLY : nat, ntyp=>nsp, ityp, tau, atm, zv
   USE io_files,  ONLY : tmp_dir, prefix
   USE io_global, ONLY : ionode, ionode_id
-  USE wvfct,     ONLY : nbnd, ecutwfc
+  USE wvfct,     ONLY : nbnd
+  USE gvecw,     ONLY : gcutw, ecutwfc
   USE mp,        ONLY : mp_bcast
   USE mp_world,  ONLY : world_comm
   USE mp_global, ONLY : mp_startup
@@ -153,7 +154,7 @@ SUBROUTINE do_plan_avg (averag, plan, ninter)
   !    evaluated and given as output. The number of planes is
   !    computed starting from the atomic positions
   !
-  USE cell_base, ONLY: celldm, omega, alat, tpiba2
+  USE cell_base, ONLY: celldm, omega, alat
   USE ions_base, ONLY: nat, ntyp=>nsp, ityp, tau
   USE gvect
   USE klist, ONLY: nks, nkstot, xk
@@ -255,7 +256,7 @@ SUBROUTINE do_plan_avg (averag, plan, ninter)
 !  CALL init_us_1 ( )
   DO ik = 1, nks
      IF (lsda) current_spin = isk (ik)
-     CALL gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
+     CALL gk_sort (xk (1, ik), ngm, g, gcutw, npw, igk, g2kin)
      CALL davcio (evc, 2*nwordwfc, iunwfc, ik, - 1)
      CALL init_us_2 (npw, igk, xk (1, ik), vkb)
 

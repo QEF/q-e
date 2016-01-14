@@ -22,6 +22,7 @@ add_shift_lc.o : ../../Modules/mp_global.o
 add_shift_us.o : ../../Modules/becmod.o
 add_shift_us.o : ../../Modules/cell_base.o
 add_shift_us.o : ../../Modules/control_flags.o
+add_shift_us.o : ../../Modules/gvecw.o
 add_shift_us.o : ../../Modules/io_files.o
 add_shift_us.o : ../../Modules/ions_base.o
 add_shift_us.o : ../../Modules/kind.o
@@ -55,6 +56,7 @@ average.o : ../../Modules/constants.o
 average.o : ../../Modules/environment.o
 average.o : ../../Modules/fft_base.o
 average.o : ../../Modules/griddim.o
+average.o : ../../Modules/gvecw.o
 average.o : ../../Modules/io_files.o
 average.o : ../../Modules/io_global.o
 average.o : ../../Modules/ions_base.o
@@ -71,6 +73,7 @@ bands.o : ../../Modules/cell_base.o
 bands.o : ../../Modules/constants.o
 bands.o : ../../Modules/control_flags.o
 bands.o : ../../Modules/environment.o
+bands.o : ../../Modules/gvecw.o
 bands.o : ../../Modules/io_files.o
 bands.o : ../../Modules/io_global.o
 bands.o : ../../Modules/ions_base.o
@@ -120,6 +123,7 @@ chdens.o : ../../Modules/constants.o
 chdens.o : ../../Modules/control_flags.o
 chdens.o : ../../Modules/fft_base.o
 chdens.o : ../../Modules/griddim.o
+chdens.o : ../../Modules/gvecw.o
 chdens.o : ../../Modules/io_files.o
 chdens.o : ../../Modules/io_global.o
 chdens.o : ../../Modules/ions_base.o
@@ -207,6 +211,7 @@ elf.o : ../../Modules/cell_base.o
 elf.o : ../../Modules/constants.o
 elf.o : ../../Modules/control_flags.o
 elf.o : ../../Modules/fft_base.o
+elf.o : ../../Modules/gvecw.o
 elf.o : ../../Modules/io_files.o
 elf.o : ../../Modules/kind.o
 elf.o : ../../Modules/mp.o
@@ -219,6 +224,7 @@ elf.o : ../../PW/src/symme.o
 epsilon.o : ../../Modules/cell_base.o
 epsilon.o : ../../Modules/constants.o
 epsilon.o : ../../Modules/environment.o
+epsilon.o : ../../Modules/gvecw.o
 epsilon.o : ../../Modules/io_files.o
 epsilon.o : ../../Modules/io_global.o
 epsilon.o : ../../Modules/kind.o
@@ -278,6 +284,7 @@ local_dos.o : ../../Modules/becmod.o
 local_dos.o : ../../Modules/cell_base.o
 local_dos.o : ../../Modules/control_flags.o
 local_dos.o : ../../Modules/fft_base.o
+local_dos.o : ../../Modules/gvecw.o
 local_dos.o : ../../Modules/io_files.o
 local_dos.o : ../../Modules/ions_base.o
 local_dos.o : ../../Modules/kind.o
@@ -306,6 +313,7 @@ local_dos_mag.o : ../../FFTXlib/fft_interfaces.o
 local_dos_mag.o : ../../Modules/becmod.o
 local_dos_mag.o : ../../Modules/cell_base.o
 local_dos_mag.o : ../../Modules/fft_base.o
+local_dos_mag.o : ../../Modules/gvecw.o
 local_dos_mag.o : ../../Modules/io_files.o
 local_dos_mag.o : ../../Modules/ions_base.o
 local_dos_mag.o : ../../Modules/kind.o
@@ -369,11 +377,13 @@ pawplot.o : ../../Modules/uspp.o
 pawplot.o : ../../PW/src/paw_onecenter.o
 pawplot.o : ../../PW/src/pwcom.o
 pawplot.o : ../../PW/src/scf_mod.o
+pdos+tetra.o : ../../Modules/kind.o
 plan_avg.o : ../../Modules/becmod.o
 plan_avg.o : ../../Modules/cell_base.o
 plan_avg.o : ../../Modules/control_flags.o
 plan_avg.o : ../../Modules/environment.o
 plan_avg.o : ../../Modules/fft_base.o
+plan_avg.o : ../../Modules/gvecw.o
 plan_avg.o : ../../Modules/io_files.o
 plan_avg.o : ../../Modules/io_global.o
 plan_avg.o : ../../Modules/ions_base.o
@@ -395,6 +405,7 @@ poormanwannier.o : ../../Modules/cell_base.o
 poormanwannier.o : ../../Modules/constants.o
 poormanwannier.o : ../../Modules/control_flags.o
 poormanwannier.o : ../../Modules/environment.o
+poormanwannier.o : ../../Modules/gvecw.o
 poormanwannier.o : ../../Modules/io_files.o
 poormanwannier.o : ../../Modules/io_global.o
 poormanwannier.o : ../../Modules/ions_base.o
@@ -435,6 +446,7 @@ projwfc.o : ../../Modules/control_flags.o
 projwfc.o : ../../Modules/descriptors.o
 projwfc.o : ../../Modules/environment.o
 projwfc.o : ../../Modules/fft_base.o
+projwfc.o : ../../Modules/gvecw.o
 projwfc.o : ../../Modules/io_files.o
 projwfc.o : ../../Modules/io_global.o
 projwfc.o : ../../Modules/ions_base.o
@@ -461,6 +473,7 @@ projwfc_box.o : ../../Modules/cell_base.o
 projwfc_box.o : ../../Modules/constants.o
 projwfc_box.o : ../../Modules/control_flags.o
 projwfc_box.o : ../../Modules/fft_base.o
+projwfc_box.o : ../../Modules/gvecw.o
 projwfc_box.o : ../../Modules/io_files.o
 projwfc_box.o : ../../Modules/io_global.o
 projwfc_box.o : ../../Modules/ions_base.o
@@ -481,6 +494,7 @@ punch_plot.o : ../../Modules/cell_base.o
 punch_plot.o : ../../Modules/constants.o
 punch_plot.o : ../../Modules/control_flags.o
 punch_plot.o : ../../Modules/fft_base.o
+punch_plot.o : ../../Modules/gvecw.o
 punch_plot.o : ../../Modules/io_global.o
 punch_plot.o : ../../Modules/ions_base.o
 punch_plot.o : ../../Modules/kind.o
@@ -498,6 +512,7 @@ pw2bgw.o : ../../Modules/control_flags.o
 pw2bgw.o : ../../Modules/environment.o
 pw2bgw.o : ../../Modules/fft_base.o
 pw2bgw.o : ../../Modules/funct.o
+pw2bgw.o : ../../Modules/gvecw.o
 pw2bgw.o : ../../Modules/io_files.o
 pw2bgw.o : ../../Modules/io_global.o
 pw2bgw.o : ../../Modules/ions_base.o
@@ -525,6 +540,7 @@ pw2gw.o : ../../Modules/constants.o
 pw2gw.o : ../../Modules/control_flags.o
 pw2gw.o : ../../Modules/environment.o
 pw2gw.o : ../../Modules/fft_base.o
+pw2gw.o : ../../Modules/gvecw.o
 pw2gw.o : ../../Modules/io_files.o
 pw2gw.o : ../../Modules/io_global.o
 pw2gw.o : ../../Modules/ions_base.o
@@ -551,6 +567,7 @@ pw2wannier90.o : ../../Modules/constants.o
 pw2wannier90.o : ../../Modules/control_flags.o
 pw2wannier90.o : ../../Modules/environment.o
 pw2wannier90.o : ../../Modules/fft_base.o
+pw2wannier90.o : ../../Modules/gvecw.o
 pw2wannier90.o : ../../Modules/io_files.o
 pw2wannier90.o : ../../Modules/io_global.o
 pw2wannier90.o : ../../Modules/ions_base.o
@@ -569,6 +586,7 @@ pw_export.o : ../../Modules/becmod.o
 pw_export.o : ../../Modules/control_flags.o
 pw_export.o : ../../Modules/environment.o
 pw_export.o : ../../Modules/fft_base.o
+pw_export.o : ../../Modules/gvecw.o
 pw_export.o : ../../Modules/io_files.o
 pw_export.o : ../../Modules/io_global.o
 pw_export.o : ../../Modules/ions_base.o
@@ -596,6 +614,7 @@ stm.o : ../../Modules/cell_base.o
 stm.o : ../../Modules/constants.o
 stm.o : ../../Modules/control_flags.o
 stm.o : ../../Modules/fft_base.o
+stm.o : ../../Modules/gvecw.o
 stm.o : ../../Modules/io_files.o
 stm.o : ../../Modules/io_global.o
 stm.o : ../../Modules/kind.o
@@ -616,6 +635,7 @@ sym_band.o : ../../Modules/becmod.o
 sym_band.o : ../../Modules/cell_base.o
 sym_band.o : ../../Modules/constants.o
 sym_band.o : ../../Modules/fft_base.o
+sym_band.o : ../../Modules/gvecw.o
 sym_band.o : ../../Modules/io_files.o
 sym_band.o : ../../Modules/io_global.o
 sym_band.o : ../../Modules/ions_base.o
@@ -630,9 +650,9 @@ sym_band.o : ../../Modules/uspp.o
 sym_band.o : ../../Modules/wavefunctions.o
 sym_band.o : ../../PW/src/pwcom.o
 sym_band.o : ../../PW/src/symm_base.o
-wannier_ham.o : ../../Modules/cell_base.o
 wannier_ham.o : ../../Modules/constants.o
 wannier_ham.o : ../../Modules/environment.o
+wannier_ham.o : ../../Modules/gvecw.o
 wannier_ham.o : ../../Modules/io_files.o
 wannier_ham.o : ../../Modules/io_global.o
 wannier_ham.o : ../../Modules/kind.o
@@ -650,6 +670,7 @@ wannier_plot.o : ../../Modules/cell_base.o
 wannier_plot.o : ../../Modules/constants.o
 wannier_plot.o : ../../Modules/environment.o
 wannier_plot.o : ../../Modules/fft_base.o
+wannier_plot.o : ../../Modules/gvecw.o
 wannier_plot.o : ../../Modules/io_files.o
 wannier_plot.o : ../../Modules/io_global.o
 wannier_plot.o : ../../Modules/ions_base.o
@@ -665,9 +686,9 @@ wannier_plot.o : ../../PW/src/pwcom.o
 wannier_plot.o : ../../PW/src/symm_base.o
 wfck2r.o : ../../FFTXlib/fft_interfaces.o
 wfck2r.o : ../../FFTXlib/scatter_mod.o
-wfck2r.o : ../../Modules/cell_base.o
 wfck2r.o : ../../Modules/environment.o
 wfck2r.o : ../../Modules/fft_base.o
+wfck2r.o : ../../Modules/gvecw.o
 wfck2r.o : ../../Modules/io_files.o
 wfck2r.o : ../../Modules/io_global.o
 wfck2r.o : ../../Modules/kind.o
@@ -704,6 +725,7 @@ write_io_header.o : ../../PW/src/pwcom.o
 write_p_avg.o : ../../Modules/becmod.o
 write_p_avg.o : ../../Modules/cell_base.o
 write_p_avg.o : ../../Modules/constants.o
+write_p_avg.o : ../../Modules/gvecw.o
 write_p_avg.o : ../../Modules/io_files.o
 write_p_avg.o : ../../Modules/io_global.o
 write_p_avg.o : ../../Modules/ions_base.o

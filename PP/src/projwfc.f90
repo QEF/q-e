@@ -360,11 +360,12 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
   USE constants, ONLY: rytoev, eps4
   USE gvect
   USE gvecs,   ONLY: dual
+  USE gvecw,   ONLY: gcutw, ecutwfc
   USE fft_base, ONLY : dfftp
   USE klist, ONLY: xk, nks, nkstot, nelec
   USE lsda_mod, ONLY: nspin, isk, current_spin
   USE symm_base, ONLY: nsym, irt, d1, d2, d3
-  USE wvfct
+  USE wvfct, ONLY: npw, npwx, nbnd, g2kin, igk, et, wg
   USE control_flags, ONLY: gamma_only
   USE uspp, ONLY: nkb, vkb
   USE becmod,   ONLY: bec_type, becp, calbec, allocate_bec_type, deallocate_bec_type
@@ -449,7 +450,7 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
   CALL init_at_1
   !
   DO ik = 1, nks
-     CALL gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
+     CALL gk_sort (xk (1, ik), ngm, g, gcutw, npw, igk, g2kin)
      CALL davcio (evc, 2*nwordwfc, iunwfc, ik, - 1)
 
      CALL atomic_wfc (ik, wfcatom)
@@ -852,12 +853,13 @@ SUBROUTINE projwave_nc(filproj, lsym, lwrite_ovp, lbinary )
   USE constants, ONLY: rytoev, eps4
   USE gvect
   USE gvecs,   ONLY: dual
+  USE gvecw,   ONLY: gcutw, ecutwfc
   USE fft_base, ONLY : dfftp
   USE klist, ONLY: xk, nks, nkstot, nelec
   USE lsda_mod, ONLY: nspin
   USE noncollin_module, ONLY: noncolin, npol, angle1, angle2
   USE symm_base, ONLY: nsym, irt, t_rev
-  USE wvfct
+  USE wvfct, ONLY: npw, npwx, nbnd, g2kin, igk, et, wg
   USE control_flags, ONLY: gamma_only
   USE uspp, ONLY: nkb, vkb
   USE uspp_param, ONLY: upf
@@ -954,7 +956,7 @@ SUBROUTINE projwave_nc(filproj, lsym, lwrite_ovp, lbinary )
   DO ik = 1, nks
      wfcatom = (0.d0,0.d0)
      swfcatom= (0.d0,0.d0)
-     CALL gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
+     CALL gk_sort (xk (1, ik), ngm, g, gcutw, npw, igk, g2kin)
      CALL davcio (evc, 2*nwordwfc, iunwfc, ik, - 1)
      !
      CALL atomic_wfc_nc_proj (ik, wfcatom)
@@ -1375,11 +1377,12 @@ SUBROUTINE projwave_paw( filproj)
   USE constants, ONLY: rytoev, eps4
   USE gvect
   USE gvecs,   ONLY: dual
+  USE gvecw,   ONLY: gcutw, ecutwfc
   USE fft_base, ONLY : dfftp
   USE klist, ONLY: xk, nks, nkstot, nelec
   USE lsda_mod, ONLY: nspin, isk, current_spin
   USE symm_base, ONLY: nsym, irt, d1, d2, d3
-  USE wvfct
+  USE wvfct, ONLY: npw, npwx, nbnd, g2kin, igk, et, wg
   USE control_flags, ONLY: gamma_only
   USE uspp, ONLY: nkb, vkb
   USE uspp_param, ONLY : upf
@@ -1484,7 +1487,7 @@ SUBROUTINE projwave_paw( filproj)
   CALL init_at_1
   !
   DO ik = 1, nks
-     CALL gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
+     CALL gk_sort (xk (1, ik), ngm, g, gcutw, npw, igk, g2kin)
      CALL davcio (evc, 2*nwordwfc, iunwfc, ik, - 1)
 
 
@@ -1736,11 +1739,12 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
   USE constants, ONLY: rytoev, eps4
   USE gvect
   USE gvecs,   ONLY: dual
+  USE gvecw,   ONLY: gcutw, ecutwfc
   USE fft_base, ONLY : dfftp
   USE klist, ONLY: xk, nks, nkstot, nelec
   USE lsda_mod, ONLY: nspin, isk, current_spin
   USE symm_base, ONLY: nsym, irt, d1, d2, d3
-  USE wvfct
+  USE wvfct, ONLY: npw, npwx, nbnd, g2kin, igk, et, wg
   USE control_flags, ONLY: gamma_only
   USE uspp, ONLY: nkb, vkb
   USE uspp_param, ONLY: upf
@@ -1871,7 +1875,7 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
   !
   DO ik = 1, nks
      !
-     CALL gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
+     CALL gk_sort (xk (1, ik), ngm, g, gcutw, npw, igk, g2kin)
      CALL davcio (evc, 2*nwordwfc, iunwfc, ik, - 1)
 
      CALL atomic_wfc (ik, wfcatom)

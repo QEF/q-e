@@ -24,13 +24,13 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
   !                     0 for up+down dos,  1 for up dos, 2 for down dos
   !
   USE kinds,                ONLY : DP
-  USE cell_base,            ONLY : omega, tpiba2
+  USE cell_base,            ONLY : omega
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE ener,                 ONLY : ef
   USE fft_base,             ONLY : dffts, dfftp
   USE fft_interfaces,       ONLY : fwfft, invfft
   USE gvect,                ONLY : nl, ngm, g
-  USE gvecs,              ONLY : nls, nlsm, doublegrid
+  USE gvecs,                ONLY : nls, nlsm, doublegrid
   USE klist,                ONLY : lgauss, degauss, ngauss, nks, wk, xk, nkstot
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE scf,                  ONLY : rho
@@ -38,7 +38,8 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
   USE uspp,                 ONLY : nkb, vkb, becsum, nhtol, nhtoj, indv
   USE uspp_param,           ONLY : upf, nh, nhm
   USE wavefunctions_module, ONLY : evc, psic, psic_nc
-  USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et, g2kin, ecutwfc
+  USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et, g2kin
+  USE gvecw,                ONLY : gcutw
   USE control_flags,        ONLY : gamma_only
   USE noncollin_module,     ONLY : noncolin, npol
   USE spin_orb,             ONLY : lspinorb, fcoef
@@ -154,7 +155,7 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
   DO ik = 1, nks
      IF (ik == kpoint_pool .and.i_am_the_pool.or. iflag /= 0) THEN
         IF (lsda) current_spin = isk (ik)
-        CALL gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
+        CALL gk_sort (xk (1, ik), ngm, g, gcutw, npw, igk, g2kin)
         CALL davcio (evc, 2*nwordwfc, iunwfc, ik, - 1)
         CALL init_us_2 (npw, igk, xk (1, ik), vkb)
 

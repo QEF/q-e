@@ -433,7 +433,8 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
   USE start_k, ONLY : nk1, nk2, nk3, k1, k2, k3
   USE symm_base, ONLY : s, ftau, nsym
   USE wavefunctions_module, ONLY : evc
-  USE wvfct, ONLY : npwx, nbnd, npw, et, wg, ecutwfc, igk
+  USE wvfct, ONLY : npwx, nbnd, npw, et, wg, igk
+  USE gvecw, ONLY : ecutwfc
 #ifdef __MPI
   USE parallel_include, ONLY : MPI_DOUBLE_COMPLEX
 #endif
@@ -2446,7 +2447,8 @@ SUBROUTINE write_vkbg (output_file_name, symm_type, wfng_kgrid, &
   USE symm_base, ONLY : s, ftau, nsym
   USE uspp, ONLY : nkb, vkb, deeq
   USE uspp_param, ONLY : nhm, nh
-  USE wvfct, ONLY : npwx, npw, ecutwfc, igk
+  USE wvfct, ONLY : npwx, npw, igk
+  USE gvecw, ONLY : ecutwfc
 
   IMPLICIT NONE
 

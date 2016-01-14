@@ -25,7 +25,7 @@ SUBROUTINE do_elf (elf)
   !
   USE kinds, ONLY: DP
   USE constants, ONLY: pi
-  USE cell_base, ONLY: omega, tpiba, tpiba2
+  USE cell_base, ONLY: omega, tpiba
   USE fft_base,  ONLY: dffts, dfftp
   USE fft_interfaces, ONLY : fwfft, invfft
   USE gvect, ONLY: gcutm, g, ngm, nl, nlm
@@ -35,7 +35,8 @@ SUBROUTINE do_elf (elf)
   USE lsda_mod, ONLY: nspin
   USE scf, ONLY: rho
   USE symme, ONLY: sym_rho, sym_rho_init
-  USE wvfct, ONLY: npw, igk, g2kin, nbnd, wg, ecutwfc
+  USE wvfct, ONLY: npw, igk, g2kin, nbnd, wg
+  USE gvecw, ONLY: gcutw
   USE control_flags, ONLY: gamma_only
   USE wavefunctions_module,  ONLY: evc
   USE mp_global,            ONLY: inter_pool_comm, intra_pool_comm
@@ -66,7 +67,7 @@ SUBROUTINE do_elf (elf)
      !
      !    prepare the indices of this k point
      !
-     CALL gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
+     CALL gk_sort (xk (1, ik), ngm, g, gcutw, npw, igk, g2kin)
      !
      !   reads the eigenfunctions
      !
@@ -192,7 +193,6 @@ SUBROUTINE do_rdg (rdg)
   !
   USE kinds,                ONLY: DP
   USE constants,            ONLY: pi
-  USE cell_base,            ONLY: omega, tpiba, tpiba2
   USE fft_base,             ONLY: dfftp
   USE scf,                  ONLY: rho
   USE gvect,                ONLY: g, ngm, nl
@@ -243,7 +243,6 @@ SUBROUTINE do_sl2rho (sl2rho)
   !
   USE kinds,                ONLY: DP
   USE constants,            ONLY: pi
-  USE cell_base,            ONLY: omega, tpiba, tpiba2
   USE fft_base,             ONLY: dfftp
   USE scf,                  ONLY: rho
   USE gvect,                ONLY: g, ngm, nl

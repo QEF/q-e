@@ -92,7 +92,6 @@ PROGRAM pw2wannier90
   USE noncollin_module, ONLY : noncolin
   USE control_flags,    ONLY : gamma_only, twfcollect
   USE environment,ONLY : environment_start, environment_end
-  USE wvfct,      ONLY : ecutwfc
   USE wannier
   !
   IMPLICIT NONE
@@ -1048,7 +1047,7 @@ SUBROUTINE compute_mmn
    USE klist,           ONLY : nkstot, xk
    USE io_files,        ONLY : nwordwfc, iunwfc
    USE gvect,           ONLY : g, ngm, gstart
-   USE cell_base,       ONLY : tpiba2, omega, alat, tpiba, at, bg
+   USE cell_base,       ONLY : omega, alat, tpiba, at, bg
    USE ions_base,       ONLY : nat, ntyp => nsp, ityp, tau
    USE constants,       ONLY : tpi
    USE uspp,            ONLY : nkb, vkb
@@ -1058,7 +1057,7 @@ SUBROUTINE compute_mmn
    USE mp_global,       ONLY : intra_pool_comm
    USE mp,              ONLY : mp_sum
    USE noncollin_module,ONLY : noncolin, npol
-   USE wvfct,           ONLY : ecutwfc
+   USE gvecw,           ONLY : gcutw
    USE wannier
 
    IMPLICIT NONE
@@ -1189,7 +1188,7 @@ SUBROUTINE compute_mmn
       FLUSH(stdout)
       ikevc = ik + ikstart - 1
          CALL davcio (evc, 2*nwordwfc, iunwfc, ikevc, -1 )
-      CALL gk_sort (xk(1,ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
+      CALL gk_sort (xk(1,ik), ngm, g, gcutw, npw, igk, g2kin)
       !
       !  USPP
       !
@@ -1211,7 +1210,7 @@ SUBROUTINE compute_mmn
 !         else
             CALL davcio (evcq, 2*nwordwfc, iunwfc, ikpevcq, -1 )
 !         end if
-         CALL gk_sort (xk(1,ikp), ngm, g, ecutwfc / tpiba2, npwq, igkq, g2kin)
+         CALL gk_sort (xk(1,ikp), ngm, g, gcutw, npwq, igkq, g2kin)
 ! compute the phase
          phase(:) = (0.d0,0.d0)
          IF ( ig_(ik,ib)>0) phase( nls(ig_(ik,ib)) ) = (1.d0,0.d0)
@@ -1414,7 +1413,7 @@ SUBROUTINE compute_spin
    USE klist,           ONLY : nkstot, xk
    USE io_files,        ONLY : nwordwfc, iunwfc
    USE gvect,           ONLY : g, ngm, gstart
-   USE cell_base,       ONLY : tpiba2, omega, alat, tpiba, at, bg
+   USE cell_base,       ONLY : alat, at, bg
    USE ions_base,       ONLY : nat, ntyp => nsp, ityp, tau
    USE constants,       ONLY : tpi
    USE uspp,            ONLY : nkb, vkb
@@ -1424,7 +1423,7 @@ SUBROUTINE compute_spin
    USE mp_global,       ONLY : intra_pool_comm
    USE mp,              ONLY : mp_sum
    USE noncollin_module,ONLY : noncolin, npol
-   USE wvfct,           ONLY : ecutwfc
+   USE gvecw,           ONLY : gcutw
    USE wannier
    ! begin change Lopez, Thonhauser, Souza
    USE mp,              ONLY : mp_barrier
@@ -1491,7 +1490,7 @@ SUBROUTINE compute_spin
       WRITE (stdout,'(i8)') ik
       ikevc = ik + ikstart - 1
       CALL davcio (evc, 2*nwordwfc, iunwfc, ikevc, -1 )
-      CALL gk_sort (xk(1,ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
+      CALL gk_sort (xk(1,ik), ngm, g, gcutw, npw, igk, g2kin)
       IF(write_spn.and.noncolin) THEN
          counter=0
          DO m=1,nbnd
@@ -1559,7 +1558,7 @@ SUBROUTINE compute_orb
    USE klist,           ONLY : nkstot, xk
    USE io_files,        ONLY : nwordwfc, iunwfc
    USE gvect,           ONLY : g, ngm, gstart
-   USE cell_base,       ONLY : tpiba2, omega, alat, tpiba, at, bg
+   USE cell_base,       ONLY : tpiba2, alat, at, bg
    USE ions_base,       ONLY : nat, ntyp => nsp, ityp, tau
    USE constants,       ONLY : tpi
    USE uspp,            ONLY : nkb, vkb
@@ -1569,7 +1568,7 @@ SUBROUTINE compute_orb
    USE mp_global,       ONLY : intra_pool_comm
    USE mp,              ONLY : mp_sum
    USE noncollin_module,ONLY : noncolin, npol
-   USE wvfct,           ONLY : ecutwfc
+   USE gvecw,           ONLY : gcutw
    USE wannier
    ! begin change Lopez, Thonhauser, Souza
    USE mp,              ONLY : mp_barrier
@@ -1719,7 +1718,7 @@ SUBROUTINE compute_orb
         write (stdout,'(i8)') ik
         !
         ! sort the wfc at k and set up stuff for h_psi
-        CALL gk_sort(xk(1,ik), ngm, g, ecutwfc/tpiba2, npw, igk, g2kin)
+        CALL gk_sort(xk(1,ik), ngm, g, gcutw, npw, igk, g2kin)
         CALL init_us_2(npw,igk,xk(1,ik),vkb)
         !
         ! compute  " H | u_n,k+b2 > "
@@ -1731,8 +1730,8 @@ SUBROUTINE compute_orb
            !
 !           call davcio  (evc_b2, 2*nwordwfc, iunwfc, ikp_b2, -1 ) !ivo
            call davcio  (evc_b2, 2*nwordwfc, iunwfc, ikp_b2+ikstart-1, -1 ) !ivo
-!           call gk_sort (xk(1,ikp_b2), ngm, g, ecutwfc/tpiba2, npw_b1, igk_b1, g2kin) !ivo
-           call gk_sort (xk(1,ikp_b2), ngm, g, ecutwfc/tpiba2, npw_b2, igk_b2, g2kin) !ivo
+!           call gk_sort (xk(1,ikp_b2), ngm, g, gcutw, npw_b1, igk_b1, g2kin) !ivo
+           call gk_sort (xk(1,ikp_b2), ngm, g, gcutw, npw_b2, igk_b2, g2kin) !ivo
            !
            ! compute the phase
            phase(:) = ( 0.0D0, 0.0D0 )
@@ -1788,8 +1787,8 @@ SUBROUTINE compute_orb
 !              call davcio  (evc_b1, 2*nwordwfc, iunwfc, ikp_b1, -1 ) !ivo
               call davcio  (evc_b1, 2*nwordwfc, iunwfc, ikp_b1+ikstart-1, -1 ) !ivo
 
-!              call gk_sort (xk(1,ikp_b1), ngm, g, ecutwfc/tpiba2, npw_b2, igk_b2, g2kin) !ivo
-              call gk_sort (xk(1,ikp_b1), ngm, g, ecutwfc/tpiba2, npw_b1, igk_b1, g2kin) !ivo
+!              call gk_sort (xk(1,ikp_b1), ngm, g, gcutw, npw_b2, igk_b2, g2kin) !ivo
+              call gk_sort (xk(1,ikp_b1), ngm, g, gcutw, npw_b1, igk_b1, g2kin) !ivo
               !
               ! compute the phase
               phase(:) = ( 0.0D0, 0.0D0 )
@@ -1971,7 +1970,6 @@ SUBROUTINE compute_amn
    USE wavefunctions_module, ONLY : evc
    USE io_files,        ONLY : nwordwfc, iunwfc
    USE gvect,           ONLY : g, ngm, gstart
-   USE cell_base,       ONLY : tpiba2
    USE uspp,            ONLY : nkb, vkb
    USE becmod,          ONLY : bec_type, becp, calbec, &
                                allocate_bec_type, deallocate_bec_type
@@ -1981,7 +1979,7 @@ SUBROUTINE compute_amn
    USE mp_global,       ONLY : intra_pool_comm
    USE mp,              ONLY : mp_sum
    USE noncollin_module,ONLY : noncolin, npol
-   USE wvfct,           ONLY : ecutwfc
+   USE gvecw,           ONLY : gcutw
    USE constants,       ONLY : eps6
 
    IMPLICIT NONE
@@ -2047,7 +2045,7 @@ SUBROUTINE compute_amn
 !      else
          CALL davcio (evc, 2*nwordwfc, iunwfc, ikevc, -1 )
 !      end if
-      CALL gk_sort (xk(1,ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
+      CALL gk_sort (xk(1,ik), ngm, g, gcutw, npw, igk, g2kin)
       CALL generate_guiding_functions(ik)   ! they are called gf(npw,n_proj)
       !
       !  USPP
@@ -2203,7 +2201,7 @@ SUBROUTINE generate_guiding_functions(ik)
    USE wvfct, ONLY : npw, g2kin, igk
    USE control_flags, ONLY : gamma_only
    USE gvect, ONLY : g, gstart
-   USE cell_base,  ONLY : tpiba2, omega, tpiba
+   USE cell_base,  ONLY : tpiba
    USE wannier
    USE klist,      ONLY : xk
    USE cell_base, ONLY : bg
@@ -2314,7 +2312,8 @@ END SUBROUTINE write_band
 
 SUBROUTINE write_plot
    USE io_global,  ONLY : stdout, ionode
-   USE wvfct, ONLY : nbnd, npw, igk, g2kin, ecutwfc
+   USE wvfct, ONLY : nbnd, npw, igk, g2kin
+   USE gvecw, ONLY : gcutw
    USE control_flags, ONLY : gamma_only
    USE wavefunctions_module, ONLY : evc, psic
    USE io_files, ONLY : nwordwfc, iunwfc
@@ -2322,7 +2321,6 @@ SUBROUTINE write_plot
    USE gvecs,         ONLY : nls, nlsm
    USE klist,           ONLY : nkstot, xk
    USE gvect,           ONLY : g, ngm
-   USE cell_base,       ONLY : tpiba2
    USE fft_base,        ONLY : dffts
    USE scatter_mod,     ONLY : gather_grid
    USE fft_interfaces,  ONLY : invfft
@@ -2397,7 +2395,7 @@ SUBROUTINE write_plot
    ENDIF
 
       CALL davcio (evc, 2*nwordwfc, iunwfc, ik, -1 )
-      CALL gk_sort (xk(1,ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
+      CALL gk_sort (xk(1,ik), ngm, g, gcutw, npw, igk, g2kin)
 
       ibnd1 = 0
       DO ibnd=1,nbnd
@@ -2488,14 +2486,15 @@ SUBROUTINE write_parity
    USE mp_world,             ONLY : mpime, nproc
    USE mp,                   ONLY : mp_sum
    USE io_global,            ONLY : stdout, ionode
-   USE wvfct,                ONLY : nbnd, npw, igk, g2kin, ecutwfc
+   USE wvfct,                ONLY : nbnd, npw, igk, g2kin
+   USE gvecw,                ONLY : gcutw
    USE control_flags,        ONLY : gamma_only
    USE wavefunctions_module, ONLY : evc
    USE io_files,             ONLY : nwordwfc, iunwfc
    USE wannier
    USE klist,                ONLY : nkstot, xk
    USE gvect,                ONLY : g, ngm
-   USE cell_base,            ONLY : tpiba2, at
+   USE cell_base,            ONLY : at
    USE constants,            ONLY : eps6
 
    IMPLICIT NONE
@@ -2544,7 +2543,7 @@ SUBROUTINE write_parity
    ! building the evc array corresponding to the Gamma point
    !
    CALL davcio (evc, 2*nwordwfc, iunwfc, kgamma, -1 )
-   CALL gk_sort (xk(1,kgamma), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
+   CALL gk_sort (xk(1,kgamma), ngm, g, gcutw, npw, igk, g2kin)
    !
    ! opening the <seedname>.unkg file
    !
@@ -2895,11 +2894,11 @@ SUBROUTINE wan2sic
   USE io_global,  ONLY : stdout
   USE kinds, ONLY : DP
   USE io_files, ONLY : iunwfc, nwordwfc, nwordwann
-  USE cell_base, ONLY : omega, tpiba2
   USE gvect, ONLY : g, ngm
   USE gvecs, ONLY: nls
   USE wavefunctions_module, ONLY : evc, psic
-  USE wvfct, ONLY : nbnd, npwx, npw, igk, g2kin, ecutwfc
+  USE wvfct, ONLY : nbnd, npwx, npw, igk, g2kin
+  USE gvecw, ONLY : gcutw
   USE klist, ONLY : nkstot, xk, wk
   USE wannier
 
@@ -2929,7 +2928,7 @@ SUBROUTINE wan2sic
   DO ik=1,iknum
      ikevc = ik + ikstart - 1
      CALL davcio (evc, 2*nwordwfc, iunwfc, ikevc, -1)
-     CALL gk_sort (xk(1,ik), ngm, g, ecutwfc/tpiba2, npw, igk, g2kin)
+     CALL gk_sort (xk(1,ik), ngm, g, gcutw, npw, igk, g2kin)
      WRITE(stdout,*) 'npw ',npw
      DO iw=1,n_wannier
         DO j=1,npw

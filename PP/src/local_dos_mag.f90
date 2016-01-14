@@ -16,7 +16,7 @@ SUBROUTINE local_dos_mag(spin_component, kpoint, kband, raux)
   !
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
-  USE cell_base,            ONLY : omega,tpiba2
+  USE cell_base,            ONLY : omega
   USE fft_base,             ONLY : dffts
   USE fft_interfaces,       ONLY : invfft
   USE gvect,                ONLY : ngm, g
@@ -30,7 +30,8 @@ SUBROUTINE local_dos_mag(spin_component, kpoint, kband, raux)
   USE wavefunctions_module, ONLY : evc, psic_nc
   USE noncollin_module,     ONLY : noncolin, npol
   USE spin_orb,             ONLY : lspinorb, fcoef
-  USE wvfct,                ONLY : nbnd, npwx, npw, igk, g2kin, ecutwfc
+  USE wvfct,                ONLY : nbnd, npwx, npw, igk, g2kin
+  USE gvecw,                ONLY : gcutw
   USE becmod,               ONLY : calbec
   !
   IMPLICIT NONE
@@ -70,7 +71,7 @@ SUBROUTINE local_dos_mag(spin_component, kpoint, kband, raux)
   !
   DO ik = 1, nks
      IF (ik == kpoint) THEN
-        CALL gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
+        CALL gk_sort (xk (1, ik), ngm, g, gcutw, npw, igk, g2kin)
         CALL davcio (evc, 2*nwordwfc, iunwfc, ik, - 1)
         IF (nkb > 0) CALL init_us_2 (npw, igk, xk (1, ik), vkb)
         CALL calbec ( npw, vkb, evc, becp_nc)

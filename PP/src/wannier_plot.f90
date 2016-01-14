@@ -97,7 +97,8 @@ SUBROUTINE plot_wannier(nc,n0)
   USE wannier_new,   ONLY : nwan,plot_wan_num,plot_wan_spin
   USE klist,         ONLY : nks, xk, wk
   USE lsda_mod,      ONLY : isk, current_spin, lsda, nspin
-  USE wvfct,         ONLY : nbnd, npwx, igk, npw, g2kin, ecutwfc
+  USE wvfct,         ONLY : nbnd, npwx, igk, npw, g2kin
+  USE gvecw,         ONLY : gcutw
   USE constants,     ONLY : rytoev , tpi
   USE buffers
   USE symm_base,     ONLY : nsym
@@ -143,7 +144,7 @@ SUBROUTINE plot_wannier(nc,n0)
   psic_sum = ZERO
 
   DO ik = 1, nks
-     CALL gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
+     CALL gk_sort (xk (1, ik), ngm, g, gcutw, npw, igk, g2kin)
      IF (lsda) current_spin  = isk(ik)
 
      wan_func = ZERO

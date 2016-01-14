@@ -33,7 +33,7 @@ SUBROUTINE chdens (filplot,plot_num)
   USE gvect,      ONLY : ngm, nl, g, gcutm
   USE gvecs,      ONLY : gcutms, doublegrid, dual, ecuts 
   USE recvec_subs,ONLY: ggen 
-  USE wvfct,      ONLY: ecutwfc
+  USE gvecw,      ONLY: ecutwfc
   USE run_info,   ONLY: title
   USE control_flags, ONLY: gamma_only
   USE wavefunctions_module,  ONLY: psic
