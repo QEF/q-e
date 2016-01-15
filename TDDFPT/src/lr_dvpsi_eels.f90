@@ -31,7 +31,6 @@ SUBROUTINE lr_dvpsi_eels (ik, dvpsi1, dvpsi2)
   USE fft_base,              ONLY : dffts, dfftp
   USE wvfct,                 ONLY : npw, igk, g2kin
   USE gvecw,                 ONLY : gcutw
-  USE realus,                ONLY : npw_k, igk_k   
   USE qpoint,                ONLY : npwq, igkq, ikks, ikqs, nksq, xq 
   USE lr_variables,          ONLY : evc0, lr_periodic, q1, q2, q3
   USE eqv,                   ONLY : evq, dpsi 

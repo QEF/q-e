@@ -28,7 +28,6 @@ USE uspp,        ONLY : vkb, okvan
 USE mp_bands,    ONLY : intra_bgrp_comm
 USE mp,          ONLY : mp_sum
 USE control_flags, ONLY : gamma_only
-USE realus,      ONLY : npw_k
 USE gvect,       ONLY : gstart
 !
 IMPLICIT NONE
