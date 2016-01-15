@@ -316,11 +316,12 @@ SUBROUTINE kpoint_grid_efield (at, bg, npk, &
                          k1,k2,k3, nk1,nk2,nk3, nks, xk, wk, nspin)
 !-----------------------------------------------------------------------
 !
-!  Automatic generation of a uniform grid of k-points, for Berry's phase electric field
+!  Automatic generation of a uniform grid of k-points
+! for Berry's phase electric field
 !
   USE kinds, ONLY : DP
   USE bp,    ONLY : nppstr_3d, nx_el, l3dstring, efield_cart, efield_cry,&
-                      transform_el
+                    transform_el
   USE io_global,  ONLY : stdout
   USE noncollin_module,   ONLY : noncolin
 
@@ -339,7 +340,6 @@ SUBROUTINE kpoint_grid_efield (at, bg, npk, &
   real(DP) :: cry_to_cart(3,3)
   real(DP) :: bg_n(3,3)
   !
-
   !
   DO i=1,nk1
      DO j=1,nk2
@@ -398,14 +398,6 @@ SUBROUTINE kpoint_grid_efield (at, bg, npk, &
      ENDDO
   ENDIF
   l3dstring=.true.
-!setup transfromation matrix
-!  do i=1,3
-!     cry_to_cart(:,i)=bg(:,i)
-!     sca=sqrt(cry_to_cart(1,i)**2.d0+cry_to_cart(2,i)**2.d0+cry_to_cart(3,i)**2.d0)
-!     cry_to_cart(:,i)=cry_to_cart(:,i)/sca
-! enddo
-! call  invmat (3, cry_to_cart, transform_el, sca)
-
 
   DO i=1,3
      sca=at(1,i)**2.d0+at(2,i)**2.d0+at(3,i)**2.d0
@@ -413,41 +405,24 @@ SUBROUTINE kpoint_grid_efield (at, bg, npk, &
      bg_n(1:3,i)=(1.d0/sca)*at(1:3,i)
   ENDDO
 
-
   DO i=1,3
      DO j=1,3
-        cry_to_cart(j,i)=bg_n(1,j)*bg_n(1,i)+bg_n(2,j)*bg_n(2,i)+bg_n(3,j)*bg_n(3,i)
+        cry_to_cart(j,i) = bg_n(1,j)*bg_n(1,i) + &
+                           bg_n(2,j)*bg_n(2,i) + &
+                           bg_n(3,j)*bg_n(3,i)
      ENDDO
  ENDDO
  CALL  invmat (3, cry_to_cart, transform_el, sca)
 
-!set up electric field
+! calculate EFFECTIVE electric field on crystal axis
 
-!calculate EFFECTIVE electric field on crystal axis
   efield_cry(:)=0.d0
-
-!  do i=1,3
-!     do j=1,3
-!        efield_cry(i)=efield_cry(i)+transform_el(i,j)*efield_cart(j)
-!     enddo
-!  enddo
-
   DO i=1,3
-    ! do j=1,3
-        !efield_cry(i)=efield_cry(i)+transform_el(i,j)*(efield_cart(1)*bg_n(1,j)+efield_cart(2)*bg_n(2,j)+efield_cart(3)*bg_n(3,j))
-        efield_cry(i)=efield_cry(i)+efield_cart(1)*bg_n(1,i)+efield_cart(2)*bg_n(2,i)+efield_cart(3)*bg_n(3,i)
-  !enddo
+        efield_cry(i) = efield_cry(i) + efield_cart(1)*bg_n(1,i) + &
+                                        efield_cart(2)*bg_n(2,i) + &
+                                        efield_cart(3)*bg_n(3,i)
   ENDDO
-  !efield_cry(:)=0.001d0
-  !efield_cry(3)=0.001d0
-  WRITE(*,*) 'EFIELD CART', efield_cart(1),efield_cart(2), efield_cart(3)
-  WRITE(*,*) 'EFIELD CRY', efield_cry(1),efield_cry(2), efield_cry(3)
 
-  WRITE(*,*) 'BG1', bg(1,1),bg(2,1),bg(3,1)
-  WRITE(*,*) 'BG1', at(1,1),at(2,1),at(3,1)
-!
-  WRITE(*,*) 'nx_el1', nx_el(1:nks,1)
-!  write(*,*) 'nx_el2', nx_el(1:nks,2)
-!  write(*,*) 'nx_el3', nx_el(1:nks,3)
-   RETURN
+  RETURN
+
  END SUBROUTINE kpoint_grid_efield
