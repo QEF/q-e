@@ -31,9 +31,9 @@ run-tests-pw : prolog pseudo
 	${TESTCODE_DIR}/bin/testcode.py --processors=0 --category=pw_all
 
 run-custom-test : prolog pseudo
-	${TESTCODE_DIR}/bin/testcode.py --processors=0 --category=$(testdir)
+	if test -d $(testdir); then \
+	${TESTCODE_DIR}/bin/testcode.py --processors=0 --category=$(testdir) ; fi
 
-# --test-id={v<release-version>, r<revision-number>}
 create-reference : pseudo prolog
 	${TESTCODE_DIR}/bin/testcode.py --processors=0 --category=_default_ make-benchmarks
 
@@ -47,6 +47,7 @@ clean: prolog
 	@rm -f rm pw_vc-relax/e pw_vc-relax/tv pw_vc-relax/p pw_vc-relax/eal pw_vc-relax/avec
 	@rm userconfig
 
+# Calling 'purge' means remove all reference outputs... be careful!
 purge: clean
 	@for x in `find pw_* -name "benchmark*"`; do rm -rf $$x; done
 	@for x in `find cp_* -name "benchmark*"`; do rm -rf $$x; done
