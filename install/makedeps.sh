@@ -11,7 +11,8 @@ TOPDIR=`pwd`
 
 if test $# = 0
 then
-    dirs=" FFTXlib Modules clib PW/src CPV/src flib PW/tools upftools PP/src PWCOND/src\
+    dirs=" FFTXlib Modules clib PW/src CPV/src flib PW/tools upftools PP/src \
+           PWCOND/src LR_Modules/ \
            PHonon/Gamma PHonon/PH PHonon/D3 PHonon/FD atomic/src XSpectra/src \
            ACDFT NEB/src TDDFPT/src GIPAW/src GWW/pw4gww GWW/gww GWW/head" 
           
@@ -46,39 +47,26 @@ for dir in $dirs; do
     # in directory DIR should be listed in DEPENDS
     LEVEL1=..
     LEVEL2=../..
-    DEPENDS="$LEVEL1/include $LEVEL1/iotk/src $LEVEL1/FFTXlib"
+    # default
+    DEPENDS="$LEVEL1/include" 
+    # for convenience, used later
+    DEPEND1="$LEVEL1/include $LEVEL1/iotk/src $LEVEL1/FFTXlib"
+    DEPEND2="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/FFTXlib $LEVEL2/Modules"
     case $DIR in 
+        Modules )
+             DEPENDS="$DEPEND1" ;;
         flib | upftools )
-             DEPENDS="$LEVEL1/include $LEVEL1/iotk/src $LEVEL1/FFTXlib $LEVEL1/Modules" ;;
-	PP/src  )
-             DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/FFTXlib $LEVEL2/Modules \
-                      $LEVEL2/PW/src" ;;
+             DEPENDS="$DEPEND1 $LEVEL1/Modules" ;;
+        LR_Modules )
+             DEPENDS="$DEPEND1 $LEVEL1/Modules $LEVEL1/PW/src" ;;
 	ACFDT ) 
-             DEPENDS="$LEVEL1/include $LEVEL1/iotk/src $LEVEL1/FFTXlib $LEVEL1/Modules \
-                      $LEVEL1/PW/src $LEVEL1/PHonon/PH" ;;
-	PW/src )
-	     DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/FFTXlib $LEVEL2/Modules" ;;
-	PW/tools | PWCOND/src | PHonon/FD )
-	     DEPENDS="$LEVEL2/include $LEVEL2/PW/src $LEVEL2/iotk/src $LEVEL2/FFTXlib $LEVEL2/Modules" ;;
-	CPV/src | atomic/src | GWW/gww )
-             DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/FFTXlib $LEVEL2/Modules" ;;
-	PHonon/PH | PHonon/Gamma | XSpectra/src  | PWCOND/src | GWW/pw4gww | NEB/src | GIPAW/src )
-             DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/FFTXlib $LEVEL2/Modules \
-                      $LEVEL2/PW/src" ;;
-	PHonon/D3 )
-	     DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/FFTXlib $LEVEL2/Modules \
-	              $LEVEL2/PW/src $LEVEL2/PHonon/PH" ;;	
-        GWW/pw4gww )
-            DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/FFTXlib $LEVEL2/Modules \
-                       $LEVEL2/PW/src  " ;;
-	GWW/gww )
-            DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/FFTXlib $LEVEL2/Modules " ;;
-        GWW/head )
-             DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/FFTXlib $LEVEL2/Modules \
-                      $LEVEL2/PW/src $LEVEL2/PHonon/PH " ;;
-	TDDFPT/src )
-             DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/FFTXlib $LEVEL2/Modules \
-                      $LEVEL2/PW/src $LEVEL2/PHonon/PH" ;;
+             DEPENDS="$DEPEND1 $LEVEL1/PW/src $LEVEL1/PHonon/PH" ;;
+	PW/src | CPV/src | atomic/src | GWW/gww )
+	     DEPENDS="$DEPEND2" ;;
+	PW/tools | PP/src | PWCOND/src | PHonon/FD | PHonon/PH | PHonon/Gamma | XSpectra/src  | PWCOND/src | GWW/pw4gww | NEB/src | GIPAW/src )
+	     DEPENDS="$DEPEND2 $LEVEL2/PW/src" ;;
+	PHonon/D3 | GWW/head | TDDFPT/src )
+	     DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/PHonon/PH" ;;	
     *)
 # if addson needs a make.depend file
 	DEPENDS="$DEPENDS $add_deps"
