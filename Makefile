@@ -74,7 +74,7 @@ cp : bindir libfft mods liblapack libblas libs libiotk
 	if test -d CPV ; then \
 	( cd CPV ; $(MAKE) TLDEPS= all || exit 1) ; fi
 
-ph : bindir libfft mods libs pw
+ph : bindir libfft mods libs pw 
 	( cd install ; $(MAKE) -f plugins_makefile phonon || exit 1 )
 
 neb : bindir libfft mods libs pw
@@ -144,6 +144,9 @@ mods : libiotk libelpa libfft
 libs : mods
 	( cd clib ; $(MAKE) TLDEPS= all || exit 1 )
 	( cd flib ; $(MAKE) TLDEPS= $(FLIB_TARGETS) || exit 1 )
+
+lrmods :
+	( cd LR_Modules ; $(MAKE) TLDEPS=pw || exit 1 )
 
 bindir :
 	test -d bin || mkdir bin
