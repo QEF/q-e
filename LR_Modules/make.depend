@@ -1,0 +1,10 @@
+cft_wave.o : ../FFTXlib/fft_interfaces.o
+cft_wave.o : ../Modules/fft_base.o
+cft_wave.o : ../Modules/kind.o
+cft_wave.o : ../Modules/mp_bands.o
+cft_wave.o : ../Modules/noncol.o
+cft_wave.o : ../Modules/recvec.o
+cft_wave.o : ../PW/src/pwcom.o
+cft_wave.o : lrcom.o
+lrcom.o : ../Modules/kind.o
+lrcom.o : ../Modules/parameters.o
