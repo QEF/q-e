@@ -43,6 +43,7 @@ lanczos_k.o : ../../Modules/wavefunctions.o
 lanczos_k.o : ../../PHonon/PH/phcom.o
 lanczos_k.o : ../../PW/src/g_psi_mod.o
 lanczos_k.o : ../../PW/src/pwcom.o
+openfilq.o : ../../LR_Modules/lrcom.o
 openfilq.o : ../../Modules/control_flags.o
 openfilq.o : ../../Modules/fft_base.o
 openfilq.o : ../../Modules/io_files.o
@@ -57,6 +58,7 @@ openfilq.o : ../../PHonon/PH/ramanm.o
 openfilq.o : ../../PHonon/PH/save_ph_input.o
 openfilq.o : ../../PW/src/buffers.o
 openfilq.o : ../../PW/src/pwcom.o
+phq_readin.o : ../../LR_Modules/lrcom.o
 phq_readin.o : ../../Modules/control_flags.o
 phq_readin.o : ../../Modules/input_parameters.o
 phq_readin.o : ../../Modules/io_files.o
@@ -86,6 +88,7 @@ phq_readin.o : ../../PW/src/ldaU.o
 phq_readin.o : ../../PW/src/pwcom.o
 phq_readin.o : ../../PW/src/start_k.o
 solve_head.o : ../../FFTXlib/fft_interfaces.o
+solve_head.o : ../../LR_Modules/lrcom.o
 solve_head.o : ../../Modules/becmod.o
 solve_head.o : ../../Modules/check_stop.o
 solve_head.o : ../../Modules/constants.o

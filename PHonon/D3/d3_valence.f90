@@ -13,6 +13,7 @@ subroutine d3_valence
   USE ions_base,  ONLY : nat
   USE kinds, only : DP
   use pwcom
+  use qpoint, ONLY: nksq
   use phcom
   use d3com
   USE mp_global,  ONLY : inter_pool_comm, intra_pool_comm

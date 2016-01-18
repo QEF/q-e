@@ -64,9 +64,9 @@ for dir in $dirs; do
 	PW/src | CPV/src | atomic/src | GWW/gww )
 	     DEPENDS="$DEPEND2" ;;
 	PW/tools | PP/src | PWCOND/src | PHonon/FD | PHonon/PH | PHonon/Gamma | XSpectra/src  | PWCOND/src | GWW/pw4gww | NEB/src | GIPAW/src )
-	     DEPENDS="$DEPEND2 $LEVEL2/PW/src" ;;
+	     DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/LR_Modules" ;;
 	PHonon/D3 | GWW/head | TDDFPT/src )
-	     DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/PHonon/PH" ;;	
+	     DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/PHonon/PH $LEVEL2/LR_Modules" ;;	
     *)
 # if addson needs a make.depend file
 	DEPENDS="$DEPENDS $add_deps"

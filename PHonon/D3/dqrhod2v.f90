@@ -22,6 +22,7 @@ SUBROUTINE dqrhod2v (ipert, drhoscf)
   USE uspp_param,           ONLY : nh
   USE wavefunctions_module, ONLY : evc
   USE io_files,             ONLY : iunigk
+  use qpoint,               ONLY : xq, npwq, nksq, igkq
   USE phcom
   USE d3com
   USE mp_global,            ONLY : my_pool_id

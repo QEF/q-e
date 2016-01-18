@@ -15,6 +15,7 @@ subroutine bcast_d3_input
   !
 #ifdef __MPI
   use pwcom
+  use qpoint, ONLY: xq
   use phcom
   use d3com
   use mp, only: mp_bcast

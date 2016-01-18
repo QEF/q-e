@@ -23,6 +23,7 @@ subroutine d3dyn_cc
   USE fft_interfaces,        ONLY : fwfft
   use pwcom
   use scf, only : rho, rho_core
+  use qpoint, ONLY : xq
   use phcom
   use d3com
   USE mp_global,  ONLY : inter_pool_comm, intra_pool_comm

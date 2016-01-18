@@ -20,6 +20,7 @@ subroutine d3matrix
   use pwcom
   USE symm_base, ONLY : s, irt, invs
   USE control_flags, ONLY : modenum
+  USE qpoint, ONLY : xq
   use phcom
   use d3com
   implicit none

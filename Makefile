@@ -70,6 +70,10 @@ pw-lib : bindir libfft mods liblapack libblas libs libiotk
 	if test -d PW ; then \
 	( cd PW ; $(MAKE) TLDEPS= pw-lib || exit 1) ; fi
 
+lr-lib : bindir libfft mods liblapack libblas libs libiotk
+	if test -d LR_Modules ; then \
+	( cd LR_Modules ; $(MAKE) TLDEPS= all || exit 1) ; fi
+
 cp : bindir libfft mods liblapack libblas libs libiotk
 	if test -d CPV ; then \
 	( cd CPV ; $(MAKE) TLDEPS= all || exit 1) ; fi
@@ -146,7 +150,7 @@ libs : mods
 	( cd flib ; $(MAKE) TLDEPS= $(FLIB_TARGETS) || exit 1 )
 
 lrmods :
-	( cd LR_Modules ; $(MAKE) TLDEPS=pw || exit 1 )
+	( cd LR_Modules ; $(MAKE) TLDEPS=lr-lib || exit 1 )
 
 bindir :
 	test -d bin || mkdir bin
@@ -342,7 +346,7 @@ doc_clean :
 	( if test -f $$dir/Makefile ; then \
 	( cd $$dir; $(MAKE) TLDEPS= clean ) ; fi ) ;  done
 
-depend:
+depend: libiotk mods
 	@echo 'Checking dependencies...'
 	- ( if test -x install/makedeps.sh ; then install/makedeps.sh ; fi)
 

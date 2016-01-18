@@ -7,6 +7,7 @@ allocate_pert_d3.o : ../../Modules/ions_base.o
 allocate_pert_d3.o : ../../Modules/kind.o
 allocate_pert_d3.o : ../../PHonon/PH/phcom.o
 allocate_pert_d3.o : d3com.o
+bcast_d3_input.o : ../../LR_Modules/lrcom.o
 bcast_d3_input.o : ../../Modules/control_flags.o
 bcast_d3_input.o : ../../Modules/io_files.o
 bcast_d3_input.o : ../../Modules/ions_base.o
@@ -29,6 +30,7 @@ close_open.o : ../../PHonon/PH/phcom.o
 close_open.o : ../../PW/src/pwcom.o
 close_open.o : d3com.o
 d0rhod2v.o : ../../FFTXlib/fft_interfaces.o
+d0rhod2v.o : ../../LR_Modules/lrcom.o
 d0rhod2v.o : ../../Modules/fft_base.o
 d0rhod2v.o : ../../Modules/io_files.o
 d0rhod2v.o : ../../Modules/io_global.o
@@ -63,6 +65,7 @@ d3_init.o : ../../PHonon/PH/phcom.o
 d3_init.o : ../../PW/src/pwcom.o
 d3_init.o : ../../PW/src/symm_base.o
 d3_init.o : d3com.o
+d3_readin.o : ../../LR_Modules/lrcom.o
 d3_readin.o : ../../Modules/control_flags.o
 d3_readin.o : ../../Modules/fft_base.o
 d3_readin.o : ../../Modules/io_files.o
@@ -84,6 +87,7 @@ d3_recover.o : ../../Modules/mp_world.o
 d3_recover.o : ../../PHonon/PH/phcom.o
 d3_recover.o : ../../PW/src/pwcom.o
 d3_recover.o : d3com.o
+d3_setup.o : ../../LR_Modules/lrcom.o
 d3_setup.o : ../../Modules/constants.o
 d3_setup.o : ../../Modules/control_flags.o
 d3_setup.o : ../../Modules/fft_base.o
@@ -100,6 +104,7 @@ d3_setup.o : ../../PW/src/pwcom.o
 d3_setup.o : ../../PW/src/scf_mod.o
 d3_setup.o : ../../PW/src/symm_base.o
 d3_setup.o : d3com.o
+d3_summary.o : ../../LR_Modules/lrcom.o
 d3_summary.o : ../../Modules/constants.o
 d3_summary.o : ../../Modules/control_flags.o
 d3_summary.o : ../../Modules/fft_base.o
@@ -117,6 +122,7 @@ d3_symdyn.o : ../../Modules/mp.o
 d3_symdyn.o : ../../Modules/mp_global.o
 d3_symdynph.o : ../../Modules/constants.o
 d3_symdynph.o : ../../Modules/kind.o
+d3_valence.o : ../../LR_Modules/lrcom.o
 d3_valence.o : ../../Modules/ions_base.o
 d3_valence.o : ../../Modules/kind.o
 d3_valence.o : ../../Modules/mp.o
@@ -126,6 +132,7 @@ d3_valence.o : ../../PW/src/pwcom.o
 d3_valence.o : d3com.o
 d3com.o : ../../Modules/kind.o
 d3dyn_cc.o : ../../FFTXlib/fft_interfaces.o
+d3dyn_cc.o : ../../LR_Modules/lrcom.o
 d3dyn_cc.o : ../../Modules/fft_base.o
 d3dyn_cc.o : ../../Modules/funct.o
 d3dyn_cc.o : ../../Modules/ions_base.o
@@ -141,6 +148,7 @@ d3ionq.o : ../../Modules/io_global.o
 d3ionq.o : ../../Modules/kind.o
 d3ionq.o : ../../Modules/mp.o
 d3ionq.o : ../../Modules/mp_global.o
+d3matrix.o : ../../LR_Modules/lrcom.o
 d3matrix.o : ../../Modules/control_flags.o
 d3matrix.o : ../../Modules/ions_base.o
 d3matrix.o : ../../Modules/kind.o
@@ -149,6 +157,7 @@ d3matrix.o : ../../PHonon/PH/phcom.o
 d3matrix.o : ../../PW/src/pwcom.o
 d3matrix.o : ../../PW/src/symm_base.o
 d3matrix.o : d3com.o
+d3toten.o : ../../LR_Modules/lrcom.o
 d3toten.o : ../../Modules/control_flags.o
 d3toten.o : ../../Modules/environment.o
 d3toten.o : ../../Modules/io_files.o
@@ -159,6 +168,7 @@ d3toten.o : ../../PHonon/PH/phcom.o
 d3toten.o : ../../PW/src/pwcom.o
 d3toten.o : d3com.o
 d3vrho.o : ../../FFTXlib/fft_interfaces.o
+d3vrho.o : ../../LR_Modules/lrcom.o
 d3vrho.o : ../../Modules/cell_base.o
 d3vrho.o : ../../Modules/constants.o
 d3vrho.o : ../../Modules/fft_base.o
@@ -183,10 +193,12 @@ davcio_drho2.o : ../../Modules/mp_global.o
 davcio_drho2.o : ../../Modules/mp_world.o
 davcio_drho2.o : ../../PHonon/PH/phcom.o
 davcio_drho2.o : ../../PW/src/pwcom.o
+dpsi_corr.o : ../../LR_Modules/lrcom.o
 dpsi_corr.o : ../../Modules/kind.o
 dpsi_corr.o : ../../PHonon/PH/phcom.o
 dpsi_corr.o : ../../PW/src/pwcom.o
 dpsi_corr.o : d3com.o
+dpsidpsidv.o : ../../LR_Modules/lrcom.o
 dpsidpsidv.o : ../../Modules/ions_base.o
 dpsidpsidv.o : ../../Modules/kind.o
 dpsidpsidv.o : ../../Modules/mp.o
@@ -194,6 +206,7 @@ dpsidpsidv.o : ../../Modules/mp_global.o
 dpsidpsidv.o : ../../PHonon/PH/phcom.o
 dpsidpsidv.o : ../../PW/src/pwcom.o
 dpsidpsidv.o : d3com.o
+dpsidvdpsi.o : ../../LR_Modules/lrcom.o
 dpsidvdpsi.o : ../../Modules/fft_base.o
 dpsidvdpsi.o : ../../Modules/io_files.o
 dpsidvdpsi.o : ../../Modules/ions_base.o
@@ -205,6 +218,7 @@ dpsidvdpsi.o : ../../PHonon/PH/phcom.o
 dpsidvdpsi.o : ../../PW/src/pwcom.o
 dpsidvdpsi.o : d3com.o
 dqrhod2v.o : ../../FFTXlib/fft_interfaces.o
+dqrhod2v.o : ../../LR_Modules/lrcom.o
 dqrhod2v.o : ../../Modules/fft_base.o
 dqrhod2v.o : ../../Modules/io_files.o
 dqrhod2v.o : ../../Modules/ions_base.o
@@ -216,6 +230,7 @@ dqrhod2v.o : ../../Modules/wavefunctions.o
 dqrhod2v.o : ../../PHonon/PH/phcom.o
 dqrhod2v.o : ../../PW/src/pwcom.o
 dqrhod2v.o : d3com.o
+drho_cc.o : ../../LR_Modules/lrcom.o
 drho_cc.o : ../../Modules/kind.o
 drho_cc.o : ../../PHonon/PH/phcom.o
 drho_cc.o : ../../PW/src/pwcom.o
@@ -237,6 +252,7 @@ drhod2v.o : ../../PHonon/PH/phcom.o
 drhod2v.o : ../../PW/src/pwcom.o
 drhod2v.o : d3com.o
 dvdpsi.o : ../../FFTXlib/fft_interfaces.o
+dvdpsi.o : ../../LR_Modules/lrcom.o
 dvdpsi.o : ../../Modules/cell_base.o
 dvdpsi.o : ../../Modules/fft_base.o
 dvdpsi.o : ../../Modules/ions_base.o
@@ -255,6 +271,7 @@ dvscf.o : ../../Modules/uspp.o
 dvscf.o : ../../PHonon/PH/phcom.o
 dvscf.o : ../../PW/src/pwcom.o
 dvscf.o : d3com.o
+gen_dpdvp.o : ../../LR_Modules/lrcom.o
 gen_dpdvp.o : ../../Modules/fft_base.o
 gen_dpdvp.o : ../../Modules/io_files.o
 gen_dpdvp.o : ../../Modules/ions_base.o
@@ -271,6 +288,7 @@ gen_dwfc.o : ../../PHonon/PH/phcom.o
 gen_dwfc.o : ../../PW/src/pwcom.o
 gen_dwfc.o : d3com.o
 incdrhoscf2.o : ../../FFTXlib/fft_interfaces.o
+incdrhoscf2.o : ../../LR_Modules/lrcom.o
 incdrhoscf2.o : ../../Modules/fft_base.o
 incdrhoscf2.o : ../../Modules/ions_base.o
 incdrhoscf2.o : ../../Modules/kind.o
@@ -314,6 +332,7 @@ set_d3irr.o : ../../PW/src/pwcom.o
 set_d3irr.o : ../../PW/src/symm_base.o
 set_d3irr.o : d3com.o
 set_efsh.o : ../../FFTXlib/fft_interfaces.o
+set_efsh.o : ../../LR_Modules/lrcom.o
 set_efsh.o : ../../Modules/fft_base.o
 set_efsh.o : ../../Modules/io_global.o
 set_efsh.o : ../../Modules/kind.o
@@ -326,6 +345,7 @@ set_sym_irr.o : ../../Modules/constants.o
 set_sym_irr.o : ../../Modules/kind.o
 set_sym_irr.o : ../../Modules/mp.o
 set_sym_irr.o : ../../Modules/mp_world.o
+solve_linter_d3.o : ../../LR_Modules/lrcom.o
 solve_linter_d3.o : ../../Modules/cell_base.o
 solve_linter_d3.o : ../../Modules/fft_base.o
 solve_linter_d3.o : ../../Modules/io_files.o
@@ -359,6 +379,7 @@ write_aux.o : ../../PHonon/PH/phcom.o
 write_aux.o : ../../PW/src/pwcom.o
 write_aux.o : d3com.o
 write_d3dyn.o : ../../Modules/kind.o
+write_igk.o : ../../LR_Modules/lrcom.o
 write_igk.o : ../../Modules/io_files.o
 write_igk.o : ../../PHonon/PH/phcom.o
 write_igk.o : ../../PW/src/pwcom.o

@@ -54,6 +54,7 @@ SUBROUTINE d3_setup()
   USE uspp_param,    ONLY : upf
   USE control_flags, ONLY : iverbosity, modenum
   USE constants,     ONLY : degspin
+  USE qpoint,        ONLY : xq, ikks, ikqs, nksq
   USE phcom
   USE d3com,         ONLY : q0mode, wrmode, nsymg0, npertg0, nirrg0, &
                             npert_i, npert_f, q0mode_todo, allmodes, ug0, &

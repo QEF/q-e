@@ -19,4 +19,5 @@ fft_stick.o : ../include/c_defs.h
 fft_stick.o : fftw.c
 fft_support.o : ../include/fft_defs.h
 fft_support.o : fft_param.f90
-fft_param.f90 : fftw.o 
+fftw.o : 
+fftw.o : 

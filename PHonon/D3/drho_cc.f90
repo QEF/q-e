@@ -23,6 +23,7 @@ subroutine drho_cc (iflag)
   !
   USE kinds, only : DP
   use pwcom
+  use qpoint, ONLY : xq
   use phcom
   use d3com
 

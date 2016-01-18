@@ -1,3 +1,4 @@
+bcast_lr_input.o : ../../LR_Modules/lrcom.o
 bcast_lr_input.o : ../../Modules/control_flags.o
 bcast_lr_input.o : ../../Modules/io_files.o
 bcast_lr_input.o : ../../Modules/io_global.o
@@ -10,6 +11,7 @@ bcast_lr_input.o : ../../PW/src/realus.o
 bcast_lr_input.o : lr_charg_resp.o
 bcast_lr_input.o : lr_dav_variables.o
 bcast_lr_input.o : lr_variables.o
+lr_addus_dvpsi.o : ../../LR_Modules/lrcom.o
 lr_addus_dvpsi.o : ../../Modules/cell_base.o
 lr_addus_dvpsi.o : ../../Modules/ions_base.o
 lr_addus_dvpsi.o : ../../Modules/kind.o
@@ -18,6 +20,7 @@ lr_addus_dvpsi.o : ../../Modules/paw_variables.o
 lr_addus_dvpsi.o : ../../Modules/uspp.o
 lr_addus_dvpsi.o : ../../PHonon/PH/phcom.o
 lr_addusddens.o : ../../FFTXlib/fft_interfaces.o
+lr_addusddens.o : ../../LR_Modules/lrcom.o
 lr_addusddens.o : ../../Modules/fft_base.o
 lr_addusddens.o : ../../Modules/ions_base.o
 lr_addusddens.o : ../../Modules/kind.o
@@ -26,7 +29,7 @@ lr_addusddens.o : ../../Modules/paw_variables.o
 lr_addusddens.o : ../../Modules/recvec.o
 lr_addusddens.o : ../../Modules/uspp.o
 lr_addusddens.o : ../../Modules/wavefunctions.o
-lr_addusddens.o : ../../PHonon/PH/phcom.o
+lr_alloc_init.o : ../../LR_Modules/lrcom.o
 lr_alloc_init.o : ../../Modules/becmod.o
 lr_alloc_init.o : ../../Modules/control_flags.o
 lr_alloc_init.o : ../../Modules/fft_base.o
@@ -65,6 +68,7 @@ lr_apply_liouvillian.o : lr_exx_kernel.o
 lr_apply_liouvillian.o : lr_variables.o
 lr_apply_liouvillian_eels.o : ../../FFTXlib/fft_interfaces.o
 lr_apply_liouvillian_eels.o : ../../FFTXlib/fft_parallel.o
+lr_apply_liouvillian_eels.o : ../../LR_Modules/lrcom.o
 lr_apply_liouvillian_eels.o : ../../Modules/cell_base.o
 lr_apply_liouvillian_eels.o : ../../Modules/constants.o
 lr_apply_liouvillian_eels.o : ../../Modules/control_flags.o
@@ -107,6 +111,7 @@ lr_calc_dens.o : lr_charg_resp.o
 lr_calc_dens.o : lr_exx_kernel.o
 lr_calc_dens.o : lr_variables.o
 lr_calc_dens_eels.o : ../../FFTXlib/fft_interfaces.o
+lr_calc_dens_eels.o : ../../LR_Modules/lrcom.o
 lr_calc_dens_eels.o : ../../Modules/cell_base.o
 lr_calc_dens_eels.o : ../../Modules/fft_base.o
 lr_calc_dens_eels.o : ../../Modules/gvecw.o
@@ -123,6 +128,7 @@ lr_calc_dens_eels.o : ../../PHonon/PH/phcom.o
 lr_calc_dens_eels.o : ../../PW/src/pwcom.o
 lr_calc_dens_eels.o : lr_variables.o
 lr_calc_dens_eels_nc.o : ../../FFTXlib/fft_interfaces.o
+lr_calc_dens_eels_nc.o : ../../LR_Modules/lrcom.o
 lr_calc_dens_eels_nc.o : ../../Modules/cell_base.o
 lr_calc_dens_eels_nc.o : ../../Modules/fft_base.o
 lr_calc_dens_eels_nc.o : ../../Modules/gvecw.o
@@ -215,6 +221,7 @@ lr_dav_routines.o : lr_dav_variables.o
 lr_dav_routines.o : lr_us.o
 lr_dav_routines.o : lr_variables.o
 lr_dav_variables.o : ../../Modules/kind.o
+lr_dealloc.o : ../../LR_Modules/lrcom.o
 lr_dealloc.o : ../../Modules/becmod.o
 lr_dealloc.o : ../../Modules/control_flags.o
 lr_dealloc.o : ../../Modules/io_global.o
@@ -227,6 +234,7 @@ lr_dealloc.o : lr_variables.o
 lr_diagonalise.o : ../../Modules/io_global.o
 lr_diagonalise.o : ../../Modules/kind.o
 lr_diagonalise.o : lr_variables.o
+lr_dot.o : ../../LR_Modules/lrcom.o
 lr_dot.o : ../../Modules/control_flags.o
 lr_dot.o : ../../Modules/gvecw.o
 lr_dot.o : ../../Modules/io_global.o
@@ -252,6 +260,7 @@ lr_dv_setup.o : ../../PHonon/PH/phcom.o
 lr_dv_setup.o : ../../PW/src/pwcom.o
 lr_dv_setup.o : ../../PW/src/scf_mod.o
 lr_dv_setup.o : lr_variables.o
+lr_dvpsi_e.o : ../../LR_Modules/lrcom.o
 lr_dvpsi_e.o : ../../Modules/becmod.o
 lr_dvpsi_e.o : ../../Modules/cell_base.o
 lr_dvpsi_e.o : ../../Modules/control_flags.o
@@ -268,6 +277,7 @@ lr_dvpsi_e.o : ../../PHonon/PH/phcom.o
 lr_dvpsi_e.o : ../../PW/src/pwcom.o
 lr_dvpsi_e.o : ../../PW/src/realus.o
 lr_dvpsi_e.o : lr_variables.o
+lr_dvpsi_eels.o : ../../LR_Modules/lrcom.o
 lr_dvpsi_eels.o : ../../Modules/cell_base.o
 lr_dvpsi_eels.o : ../../Modules/constants.o
 lr_dvpsi_eels.o : ../../Modules/fft_base.o
@@ -283,7 +293,6 @@ lr_dvpsi_eels.o : ../../Modules/uspp.o
 lr_dvpsi_eels.o : ../../Modules/wavefunctions.o
 lr_dvpsi_eels.o : ../../PHonon/PH/phcom.o
 lr_dvpsi_eels.o : ../../PW/src/pwcom.o
-lr_dvpsi_eels.o : ../../PW/src/realus.o
 lr_dvpsi_eels.o : lr_variables.o
 lr_eels_main.o : ../../Modules/check_stop.o
 lr_eels_main.o : ../../Modules/control_flags.o
@@ -318,6 +327,7 @@ lr_exx_kernel.o : ../../PW/src/pwcom.o
 lr_exx_kernel.o : ../../PW/src/realus.o
 lr_exx_kernel.o : ../../PW/src/symm_base.o
 lr_exx_kernel.o : lr_variables.o
+lr_init_nfo.o : ../../LR_Modules/lrcom.o
 lr_init_nfo.o : ../../Modules/becmod.o
 lr_init_nfo.o : ../../Modules/cell_base.o
 lr_init_nfo.o : ../../Modules/constants.o
@@ -337,13 +347,13 @@ lr_init_nfo.o : ../../PHonon/PH/phcom.o
 lr_init_nfo.o : ../../PW/src/pwcom.o
 lr_init_nfo.o : ../../PW/src/realus.o
 lr_init_nfo.o : lr_variables.o
+lr_lanczos.o : ../../LR_Modules/lrcom.o
 lr_lanczos.o : ../../Modules/becmod.o
 lr_lanczos.o : ../../Modules/control_flags.o
 lr_lanczos.o : ../../Modules/io_global.o
 lr_lanczos.o : ../../Modules/kind.o
 lr_lanczos.o : ../../Modules/noncol.o
 lr_lanczos.o : ../../Modules/uspp.o
-lr_lanczos.o : ../../PHonon/PH/phcom.o
 lr_lanczos.o : ../../PW/src/pwcom.o
 lr_lanczos.o : ../../PW/src/realus.o
 lr_lanczos.o : lr_charg_resp.o
@@ -369,6 +379,7 @@ lr_main.o : ../../PW/src/pwcom.o
 lr_main.o : lr_charg_resp.o
 lr_main.o : lr_lanczos.o
 lr_main.o : lr_variables.o
+lr_normalise.o : ../../LR_Modules/lrcom.o
 lr_normalise.o : ../../Modules/becmod.o
 lr_normalise.o : ../../Modules/cell_base.o
 lr_normalise.o : ../../Modules/control_flags.o
@@ -405,6 +416,7 @@ lr_read_d0psi.o : ../../Modules/io_global.o
 lr_read_d0psi.o : ../../PW/src/pwcom.o
 lr_read_d0psi.o : lr_variables.o
 lr_read_wf.o : ../../FFTXlib/fft_interfaces.o
+lr_read_wf.o : ../../LR_Modules/lrcom.o
 lr_read_wf.o : ../../Modules/becmod.o
 lr_read_wf.o : ../../Modules/control_flags.o
 lr_read_wf.o : ../../Modules/fft_base.o
@@ -424,6 +436,7 @@ lr_read_wf.o : ../../PW/src/pwcom.o
 lr_read_wf.o : ../../PW/src/realus.o
 lr_read_wf.o : lr_exx_kernel.o
 lr_read_wf.o : lr_variables.o
+lr_read_wf_eels_periodic.o : ../../LR_Modules/lrcom.o
 lr_read_wf_eels_periodic.o : ../../Modules/cell_base.o
 lr_read_wf_eels_periodic.o : ../../Modules/fft_base.o
 lr_read_wf_eels_periodic.o : ../../Modules/io_files.o
@@ -435,6 +448,7 @@ lr_read_wf_eels_periodic.o : ../../PHonon/PH/phcom.o
 lr_read_wf_eels_periodic.o : ../../PHonon/PH/save_ph_input.o
 lr_read_wf_eels_periodic.o : ../../PW/src/pwcom.o
 lr_read_wf_eels_periodic.o : lr_variables.o
+lr_readin.o : ../../LR_Modules/lrcom.o
 lr_readin.o : ../../Modules/cell_base.o
 lr_readin.o : ../../Modules/constants.o
 lr_readin.o : ../../Modules/control_flags.o
@@ -470,6 +484,7 @@ lr_readin.o : ../../iotk/src/iotk_module.o
 lr_readin.o : lr_charg_resp.o
 lr_readin.o : lr_dav_variables.o
 lr_readin.o : lr_variables.o
+lr_restart.o : ../../LR_Modules/lrcom.o
 lr_restart.o : ../../Modules/becmod.o
 lr_restart.o : ../../Modules/cell_base.o
 lr_restart.o : ../../Modules/control_flags.o
@@ -502,6 +517,7 @@ lr_set_boxes_density.o : ../../Modules/io_global.o
 lr_set_boxes_density.o : ../../Modules/kind.o
 lr_set_boxes_density.o : ../../Modules/mp_global.o
 lr_set_boxes_density.o : lr_variables.o
+lr_setup_nscf.o : ../../LR_Modules/lrcom.o
 lr_setup_nscf.o : ../../Modules/cell_base.o
 lr_setup_nscf.o : ../../Modules/constants.o
 lr_setup_nscf.o : ../../Modules/control_flags.o
@@ -517,6 +533,7 @@ lr_setup_nscf.o : ../../PW/src/atomic_wfc_mod.o
 lr_setup_nscf.o : ../../PW/src/pwcom.o
 lr_setup_nscf.o : ../../PW/src/start_k.o
 lr_setup_nscf.o : ../../PW/src/symm_base.o
+lr_sm1_psi.o : ../../LR_Modules/lrcom.o
 lr_sm1_psi.o : ../../Modules/becmod.o
 lr_sm1_psi.o : ../../Modules/control_flags.o
 lr_sm1_psi.o : ../../Modules/gvecw.o
@@ -528,7 +545,6 @@ lr_sm1_psi.o : ../../Modules/mp_global.o
 lr_sm1_psi.o : ../../Modules/noncol.o
 lr_sm1_psi.o : ../../Modules/recvec.o
 lr_sm1_psi.o : ../../Modules/uspp.o
-lr_sm1_psi.o : ../../PHonon/PH/phcom.o
 lr_sm1_psi.o : ../../PW/src/pwcom.o
 lr_sm1_psi.o : ../../PW/src/realus.o
 lr_sm1_psi.o : lr_variables.o
@@ -541,6 +557,7 @@ lr_smallgq.o : ../../Modules/mp_global.o
 lr_smallgq.o : ../../Modules/noncol.o
 lr_smallgq.o : ../../PHonon/PH/phcom.o
 lr_smallgq.o : ../../PW/src/symm_base.o
+lr_solve_e.o : ../../LR_Modules/lrcom.o
 lr_solve_e.o : ../../Modules/cell_base.o
 lr_solve_e.o : ../../Modules/control_flags.o
 lr_solve_e.o : ../../Modules/fft_base.o
@@ -557,6 +574,7 @@ lr_solve_e.o : ../../PHonon/PH/phcom.o
 lr_solve_e.o : ../../PW/src/pwcom.o
 lr_solve_e.o : ../../PW/src/realus.o
 lr_solve_e.o : lr_variables.o
+lr_summary.o : ../../LR_Modules/lrcom.o
 lr_summary.o : ../../Modules/cell_base.o
 lr_summary.o : ../../Modules/fft_base.o
 lr_summary.o : ../../Modules/funct.o
@@ -583,6 +601,7 @@ lr_test_restart.o : ../../Modules/io_global.o
 lr_test_restart.o : ../../Modules/mp.o
 lr_test_restart.o : ../../Modules/mp_world.o
 lr_test_restart.o : lr_variables.o
+lr_us.o : ../../LR_Modules/lrcom.o
 lr_us.o : ../../Modules/becmod.o
 lr_us.o : ../../Modules/control_flags.o
 lr_us.o : ../../Modules/gvecw.o
@@ -621,6 +640,7 @@ print_clock_lr.o : ../../Modules/mp_world.o
 print_clock_lr.o : ../../Modules/plugin_flags.o
 print_clock_lr.o : ../../PW/src/realus.o
 print_clock_lr.o : lr_variables.o
+sd0psi.o : ../../LR_Modules/lrcom.o
 sd0psi.o : ../../Modules/becmod.o
 sd0psi.o : ../../Modules/control_flags.o
 sd0psi.o : ../../Modules/gvecw.o

@@ -11,6 +11,7 @@ program d3toten
   !-----------------------------------------------------------------------
   !
   use pwcom
+  use qpoint,        ONLY : xq
   use phcom
   use d3com
   USE ions_base,     ONLY : nat, ityp, ntyp => nsp, zv, tau

@@ -30,6 +30,7 @@ subroutine d3vrho()
   USE mp,                   ONLY : mp_sum
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft
+  USE qpoint,               ONLY : nksq, npwq, igkq
   USE phcom
   USE d3com
   !

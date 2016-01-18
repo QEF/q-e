@@ -20,6 +20,7 @@ subroutine dvdpsi (nu_i, xq_, dvloc, vkb_, vkbq_, psi_, dvpsi_)
   USE gvect,      ONLY : g
   USE gvecs,    ONLY : nls
   USE wvfct,      ONLY : nbnd, npwx, npw, igk
+  use qpoint,     ONLY : npwq, igkq
   use phcom
   use d3com
   USE uspp,       ONLY : nkb, dvan

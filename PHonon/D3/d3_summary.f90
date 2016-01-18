@@ -26,6 +26,7 @@ subroutine d3_summary
   USE fft_base, ONLY : dffts, dfftp
   USE gvecw, ONLY : ecutwfc
   use pwcom
+  use qpoint, ONLY: xq
   use phcom
   use d3com
 !

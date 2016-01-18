@@ -2,16 +2,20 @@
 
 include ../make.sys
 
-# location of needed modules
+# location of needed modules and included files (if any)
 MODFLAGS=$(MOD_FLAG)../FFTXlib $(MOD_FLAG)../Modules $(MOD_FLAG)../PW/src $(MOD_FLAG).
 
-LRMODULES = cft_wave.o
+IFLAGS=
+
+LR_MODULES = \
+cft_wave.o \
+lrcom.o
 
 TLDEPS=libfft mods
 
 all : liblrmod.a
 
-liblrmod.a: $(LRMODULES)
+liblrmod.a: $(LR_MODULES)
 	$(AR) $(ARFLAGS) $@ $?       
 	$(RANLIB) $@    
 

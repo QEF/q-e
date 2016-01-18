@@ -22,6 +22,7 @@ subroutine solve_head
   USE kinds,                 ONLY : DP
   USE becmod,                ONLY : becp,calbec
   USE uspp_param,            ONLY : nhm
+  use qpoint,                ONLY : npwq, nksq
   use phcom
   USE wannier_gw,           ONLY : n_gauss, omega_gauss, grid_type,&
                                    nsteps_lanczos,second_grid_n,second_grid_i,&

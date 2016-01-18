@@ -23,6 +23,7 @@ SUBROUTINE d0rhod2v (ipert, drhoscf)
   USE fft_interfaces,        ONLY : fwfft
   USE pwcom
   USE wavefunctions_module,  ONLY : evc
+  USE qpoint,                ONLY : igkq, nksq, npwq
   USE phcom
   USE d3com
   USE mp_global,             ONLY : my_pool_id, inter_pool_comm, intra_pool_comm

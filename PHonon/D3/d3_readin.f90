@@ -17,9 +17,10 @@ SUBROUTINE d3_readin()
   USE pwcom
   USE run_info, ONLY : title
   USE control_flags, ONLY : iverbosity
+  USE qpoint,        ONLY : xq, nksq
   USE phcom
   USE d3com
-  USE fft_base,        ONLY : dffts
+  USE fft_base,      ONLY : dffts
   USE noncollin_module, ONLY : noncolin
   USE io_files,      ONLY : tmp_dir, prefix
   USE io_global,     ONLY : ionode, ionode_id

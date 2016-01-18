@@ -9,6 +9,7 @@
 subroutine write_igk
   !
   use pwcom
+  use qpoint,   ONLY : npwq, nksq, igkq
   use phcom
   USE io_files, ONLY : iunigk
   implicit none

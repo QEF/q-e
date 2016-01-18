@@ -1,4 +1,5 @@
 acfdtest.o : ../../Modules/kind.o
+add_dkmds.o : ../../LR_Modules/lrcom.o
 add_dkmds.o : ../../Modules/becmod.o
 add_dkmds.o : ../../Modules/cell_base.o
 add_dkmds.o : ../../Modules/ions_base.o
@@ -9,6 +10,7 @@ add_dkmds.o : ../../Modules/uspp.o
 add_dkmds.o : ../../Modules/wavefunctions.o
 add_dkmds.o : ../../PW/src/pwcom.o
 add_dkmds.o : phcom.o
+add_for_charges.o : ../../LR_Modules/lrcom.o
 add_for_charges.o : ../../Modules/becmod.o
 add_for_charges.o : ../../Modules/cell_base.o
 add_for_charges.o : ../../Modules/ions_base.o
@@ -18,6 +20,7 @@ add_for_charges.o : ../../Modules/recvec.o
 add_for_charges.o : ../../Modules/uspp.o
 add_for_charges.o : ../../PW/src/pwcom.o
 add_for_charges.o : phcom.o
+add_zstar_ue.o : ../../LR_Modules/lrcom.o
 add_zstar_ue.o : ../../Modules/io_files.o
 add_zstar_ue.o : ../../Modules/kind.o
 add_zstar_ue.o : ../../Modules/noncol.o
@@ -26,6 +29,7 @@ add_zstar_ue.o : ../../Modules/wavefunctions.o
 add_zstar_ue.o : ../../PW/src/buffers.o
 add_zstar_ue.o : ../../PW/src/pwcom.o
 add_zstar_ue.o : phcom.o
+add_zstar_ue_us.o : ../../LR_Modules/lrcom.o
 add_zstar_ue_us.o : ../../Modules/io_files.o
 add_zstar_ue_us.o : ../../Modules/kind.o
 add_zstar_ue_us.o : ../../Modules/mp.o
@@ -37,6 +41,7 @@ add_zstar_ue_us.o : ../../PW/src/buffers.o
 add_zstar_ue_us.o : ../../PW/src/pwcom.o
 add_zstar_ue_us.o : phcom.o
 addcore.o : ../../FFTXlib/fft_interfaces.o
+addcore.o : ../../LR_Modules/lrcom.o
 addcore.o : ../../Modules/cell_base.o
 addcore.o : ../../Modules/fft_base.o
 addcore.o : ../../Modules/ions_base.o
@@ -52,12 +57,14 @@ adddvepsi_us.o : ../../Modules/noncol.o
 adddvepsi_us.o : ../../Modules/uspp.o
 adddvepsi_us.o : ../../PW/src/pwcom.o
 adddvepsi_us.o : phcom.o
+adddvscf.o : ../../LR_Modules/lrcom.o
 adddvscf.o : ../../Modules/ions_base.o
 adddvscf.o : ../../Modules/kind.o
 adddvscf.o : ../../Modules/noncol.o
 adddvscf.o : ../../Modules/uspp.o
 adddvscf.o : ../../PW/src/pwcom.o
 adddvscf.o : phcom.o
+addnlcc.o : ../../LR_Modules/lrcom.o
 addnlcc.o : ../../Modules/cell_base.o
 addnlcc.o : ../../Modules/fft_base.o
 addnlcc.o : ../../Modules/funct.o
@@ -69,6 +76,7 @@ addnlcc.o : ../../Modules/noncol.o
 addnlcc.o : ../../Modules/recvec.o
 addnlcc.o : ../../PW/src/scf_mod.o
 addnlcc.o : phcom.o
+addnlcc_zstar_eu_us.o : ../../LR_Modules/lrcom.o
 addnlcc_zstar_eu_us.o : ../../Modules/cell_base.o
 addnlcc_zstar_eu_us.o : ../../Modules/fft_base.o
 addnlcc_zstar_eu_us.o : ../../Modules/funct.o
@@ -78,6 +86,7 @@ addnlcc_zstar_eu_us.o : ../../Modules/noncol.o
 addnlcc_zstar_eu_us.o : ../../Modules/recvec.o
 addnlcc_zstar_eu_us.o : ../../PW/src/scf_mod.o
 addnlcc_zstar_eu_us.o : phcom.o
+addusdbec.o : ../../LR_Modules/lrcom.o
 addusdbec.o : ../../Modules/becmod.o
 addusdbec.o : ../../Modules/ions_base.o
 addusdbec.o : ../../Modules/kind.o
@@ -85,6 +94,7 @@ addusdbec.o : ../../Modules/mp_bands.o
 addusdbec.o : ../../Modules/uspp.o
 addusdbec.o : ../../PW/src/pwcom.o
 addusdbec.o : phcom.o
+addusdbec_nc.o : ../../LR_Modules/lrcom.o
 addusdbec_nc.o : ../../Modules/becmod.o
 addusdbec_nc.o : ../../Modules/ions_base.o
 addusdbec_nc.o : ../../Modules/kind.o
@@ -94,6 +104,7 @@ addusdbec_nc.o : ../../Modules/uspp.o
 addusdbec_nc.o : ../../PW/src/pwcom.o
 addusdbec_nc.o : phcom.o
 addusddens.o : ../../FFTXlib/fft_interfaces.o
+addusddens.o : ../../LR_Modules/lrcom.o
 addusddens.o : ../../Modules/cell_base.o
 addusddens.o : ../../Modules/fft_base.o
 addusddens.o : ../../Modules/ions_base.o
@@ -106,13 +117,13 @@ addusddens.o : ../../Modules/wavefunctions.o
 addusddens.o : ../../PW/src/buffers.o
 addusddens.o : phcom.o
 addusddense.o : ../../FFTXlib/fft_interfaces.o
+addusddense.o : ../../LR_Modules/lrcom.o
 addusddense.o : ../../Modules/fft_base.o
 addusddense.o : ../../Modules/ions_base.o
 addusddense.o : ../../Modules/kind.o
 addusddense.o : ../../Modules/noncol.o
 addusddense.o : ../../Modules/recvec.o
 addusddense.o : ../../Modules/uspp.o
-addusddense.o : phcom.o
 addusdynmat.o : ../../Modules/ions_base.o
 addusdynmat.o : ../../Modules/kind.o
 addusdynmat.o : ../../Modules/noncol.o
@@ -131,6 +142,7 @@ allocate_part.o : elph.o
 allocate_part.o : phcom.o
 allocate_pert.o : ../../Modules/ions_base.o
 allocate_pert.o : phcom.o
+allocate_phq.o : ../../LR_Modules/lrcom.o
 allocate_phq.o : ../../Modules/becmod.o
 allocate_phq.o : ../../Modules/fft_base.o
 allocate_phq.o : ../../Modules/ions_base.o
@@ -164,6 +176,7 @@ bcast_ph_input.o : ramanm.o
 bcast_ph_input.o : yambo.o
 ccg_psi.o : ../../Modules/kind.o
 ccg_psi.o : ../../Modules/noncol.o
+cch_psi_all.o : ../../LR_Modules/lrcom.o
 cch_psi_all.o : ../../Modules/becmod.o
 cch_psi_all.o : ../../Modules/kind.o
 cch_psi_all.o : ../../Modules/mp.o
@@ -173,13 +186,13 @@ cch_psi_all.o : ../../Modules/uspp.o
 cch_psi_all.o : ../../PW/src/pwcom.o
 cch_psi_all.o : phcom.o
 cft_wave.o : ../../FFTXlib/fft_interfaces.o
+cft_wave.o : ../../LR_Modules/lrcom.o
 cft_wave.o : ../../Modules/fft_base.o
 cft_wave.o : ../../Modules/kind.o
 cft_wave.o : ../../Modules/mp_bands.o
 cft_wave.o : ../../Modules/noncol.o
 cft_wave.o : ../../Modules/recvec.o
 cft_wave.o : ../../PW/src/pwcom.o
-cft_wave.o : phcom.o
 cg_psi.o : ../../Modules/kind.o
 cg_psi.o : ../../Modules/noncol.o
 cgsolve_all.o : ../../Modules/control_flags.o
@@ -190,6 +203,7 @@ cgsolve_all.o : ../../Modules/recvec.o
 cgsolve_all_imfreq.o : ../../Modules/kind.o
 cgsolve_all_imfreq.o : ../../Modules/mp.o
 cgsolve_all_imfreq.o : ../../Modules/mp_world.o
+ch_psi_all.o : ../../LR_Modules/lrcom.o
 ch_psi_all.o : ../../Modules/becmod.o
 ch_psi_all.o : ../../Modules/control_flags.o
 ch_psi_all.o : ../../Modules/fft_base.o
@@ -208,6 +222,7 @@ check_if_partial_dyn.o : ../../Modules/ions_base.o
 check_if_partial_dyn.o : ../../Modules/kind.o
 check_if_partial_dyn.o : ../../PW/src/symm_base.o
 check_if_partial_dyn.o : phcom.o
+check_initial_status.o : ../../LR_Modules/lrcom.o
 check_initial_status.o : ../../Modules/control_flags.o
 check_initial_status.o : ../../Modules/io_files.o
 check_initial_status.o : ../../Modules/io_global.o
@@ -229,6 +244,7 @@ check_initial_status.o : save_ph_input.o
 check_initial_status.o : yambo.o
 check_q_points_sym.o : ../../Modules/kind.o
 check_restart_recover.o : ../../Modules/io_files.o
+chi_test.o : ../../LR_Modules/lrcom.o
 chi_test.o : ../../Modules/fft_base.o
 chi_test.o : ../../Modules/kind.o
 chi_test.o : ../../Modules/wavefunctions.o
@@ -261,6 +277,7 @@ commutator_Hx_psi.o : ../../Modules/recvec.o
 commutator_Hx_psi.o : ../../Modules/uspp.o
 commutator_Hx_psi.o : ../../Modules/wavefunctions.o
 commutator_Hx_psi.o : ../../PW/src/pwcom.o
+compute_alphasum.o : ../../LR_Modules/lrcom.o
 compute_alphasum.o : ../../Modules/ions_base.o
 compute_alphasum.o : ../../Modules/kind.o
 compute_alphasum.o : ../../Modules/noncol.o
@@ -268,6 +285,7 @@ compute_alphasum.o : ../../Modules/paw_variables.o
 compute_alphasum.o : ../../Modules/uspp.o
 compute_alphasum.o : ../../PW/src/pwcom.o
 compute_alphasum.o : phcom.o
+compute_becalp.o : ../../LR_Modules/lrcom.o
 compute_becalp.o : ../../Modules/becmod.o
 compute_becalp.o : ../../Modules/cell_base.o
 compute_becalp.o : ../../Modules/io_files.o
@@ -279,6 +297,7 @@ compute_becalp.o : ../../Modules/uspp.o
 compute_becalp.o : ../../PW/src/buffers.o
 compute_becalp.o : ../../PW/src/pwcom.o
 compute_becalp.o : phcom.o
+compute_becsum_ph.o : ../../LR_Modules/lrcom.o
 compute_becsum_ph.o : ../../Modules/ions_base.o
 compute_becsum_ph.o : ../../Modules/kind.o
 compute_becsum_ph.o : ../../Modules/noncol.o
@@ -287,6 +306,7 @@ compute_becsum_ph.o : ../../Modules/uspp.o
 compute_becsum_ph.o : ../../PW/src/pwcom.o
 compute_becsum_ph.o : phcom.o
 compute_drhous.o : ../../FFTXlib/fft_interfaces.o
+compute_drhous.o : ../../LR_Modules/lrcom.o
 compute_drhous.o : ../../Modules/becmod.o
 compute_drhous.o : ../../Modules/fft_base.o
 compute_drhous.o : ../../Modules/io_files.o
@@ -299,6 +319,7 @@ compute_drhous.o : ../../PW/src/buffers.o
 compute_drhous.o : ../../PW/src/pwcom.o
 compute_drhous.o : phcom.o
 compute_drhous_nc.o : ../../FFTXlib/fft_interfaces.o
+compute_drhous_nc.o : ../../LR_Modules/lrcom.o
 compute_drhous_nc.o : ../../Modules/becmod.o
 compute_drhous_nc.o : ../../Modules/fft_base.o
 compute_drhous_nc.o : ../../Modules/io_files.o
@@ -312,12 +333,14 @@ compute_drhous_nc.o : ../../PW/src/buffers.o
 compute_drhous_nc.o : ../../PW/src/pwcom.o
 compute_drhous_nc.o : phcom.o
 compute_dvloc.o : ../../FFTXlib/fft_interfaces.o
+compute_dvloc.o : ../../LR_Modules/lrcom.o
 compute_dvloc.o : ../../Modules/cell_base.o
 compute_dvloc.o : ../../Modules/fft_base.o
 compute_dvloc.o : ../../Modules/ions_base.o
 compute_dvloc.o : ../../Modules/kind.o
 compute_dvloc.o : ../../Modules/recvec.o
 compute_dvloc.o : phcom.o
+compute_nldyn.o : ../../LR_Modules/lrcom.o
 compute_nldyn.o : ../../Modules/becmod.o
 compute_nldyn.o : ../../Modules/ions_base.o
 compute_nldyn.o : ../../Modules/kind.o
@@ -335,6 +358,7 @@ compute_vsgga.o : ../../Modules/kind.o
 compute_vsgga.o : ../../Modules/noncol.o
 compute_vsgga.o : ../../Modules/recvec.o
 compute_vsgga.o : ../../PW/src/pwcom.o
+compute_weight.o : ../../LR_Modules/lrcom.o
 compute_weight.o : ../../Modules/kind.o
 compute_weight.o : ../../Modules/paw_variables.o
 compute_weight.o : ../../PW/src/pwcom.o
@@ -355,6 +379,7 @@ davcio_drho.o : ../../Modules/mp_pools.o
 davcio_drho.o : ../../Modules/noncol.o
 deallocate_part.o : elph.o
 deallocate_part.o : phcom.o
+deallocate_phq.o : ../../LR_Modules/lrcom.o
 deallocate_phq.o : ../../Modules/becmod.o
 deallocate_phq.o : ../../Modules/noncol.o
 deallocate_phq.o : ../../Modules/wavefunctions.o
@@ -387,6 +412,7 @@ dgradcorr.o : ../../Modules/noncol.o
 dgradcorr.o : ../../Modules/recvec.o
 dgradcorr.o : ../../PW/src/pwcom.o
 dgradcorr.o : phcom.o
+dhdrhopsi.o : ../../LR_Modules/lrcom.o
 dhdrhopsi.o : ../../Modules/becmod.o
 dhdrhopsi.o : ../../Modules/cell_base.o
 dhdrhopsi.o : ../../Modules/fft_base.o
@@ -401,6 +427,7 @@ dhdrhopsi.o : ../../PW/src/buffers.o
 dhdrhopsi.o : ../../PW/src/pwcom.o
 dhdrhopsi.o : phcom.o
 dhdrhopsi.o : ramanm.o
+dielec.o : ../../LR_Modules/lrcom.o
 dielec.o : ../../Modules/cell_base.o
 dielec.o : ../../Modules/constants.o
 dielec.o : ../../Modules/io_global.o
@@ -414,6 +441,7 @@ dielec.o : ../../PW/src/pwcom.o
 dielec.o : ../../PW/src/symme.o
 dielec.o : ph_restart.o
 dielec.o : phcom.o
+dielec_test.o : ../../LR_Modules/lrcom.o
 dielec_test.o : ../../Modules/cell_base.o
 dielec_test.o : ../../Modules/constants.o
 dielec_test.o : ../../Modules/io_files.o
@@ -430,6 +458,7 @@ dielec_test.o : ramanm.o
 do_phonon.o : elph.o
 do_phonon.o : phcom.o
 do_phonon.o : yambo.o
+drho.o : ../../LR_Modules/lrcom.o
 drho.o : ../../Modules/becmod.o
 drho.o : ../../Modules/cell_base.o
 drho.o : ../../Modules/fft_base.o
@@ -445,6 +474,7 @@ drho.o : ../../Modules/uspp.o
 drho.o : ../../PW/src/buffers.o
 drho.o : ../../PW/src/pwcom.o
 drho.o : phcom.o
+drhodv.o : ../../LR_Modules/lrcom.o
 drhodv.o : ../../Modules/becmod.o
 drhodv.o : ../../Modules/cell_base.o
 drhodv.o : ../../Modules/fft_base.o
@@ -491,6 +521,7 @@ drhodvus.o : ../../Modules/uspp.o
 drhodvus.o : ../../PW/src/buffers.o
 drhodvus.o : phcom.o
 dv_of_drho.o : ../../FFTXlib/fft_interfaces.o
+dv_of_drho.o : ../../LR_Modules/lrcom.o
 dv_of_drho.o : ../../Modules/cell_base.o
 dv_of_drho.o : ../../Modules/constants.o
 dv_of_drho.o : ../../Modules/control_flags.o
@@ -503,6 +534,7 @@ dv_of_drho.o : ../../PW/src/martyna_tuckerman.o
 dv_of_drho.o : ../../PW/src/scf_mod.o
 dv_of_drho.o : phcom.o
 dvanqq.o : ../../FFTXlib/fft_interfaces.o
+dvanqq.o : ../../LR_Modules/lrcom.o
 dvanqq.o : ../../Modules/cell_base.o
 dvanqq.o : ../../Modules/fft_base.o
 dvanqq.o : ../../Modules/ions_base.o
@@ -523,6 +555,7 @@ dvkb3.o : ../../Modules/uspp.o
 dvkb3.o : ../../Modules/wavefunctions.o
 dvkb3.o : ../../PW/src/pwcom.o
 dvkb3.o : phcom.o
+dvpsi_e.o : ../../LR_Modules/lrcom.o
 dvpsi_e.o : ../../Modules/becmod.o
 dvpsi_e.o : ../../Modules/cell_base.o
 dvpsi_e.o : ../../Modules/io_global.o
@@ -535,6 +568,7 @@ dvpsi_e.o : ../../PW/src/buffers.o
 dvpsi_e.o : ../../PW/src/pwcom.o
 dvpsi_e.o : phcom.o
 dvpsi_e.o : ramanm.o
+dvpsi_e2.o : ../../LR_Modules/lrcom.o
 dvpsi_e2.o : ../../Modules/cell_base.o
 dvpsi_e2.o : ../../Modules/fft_base.o
 dvpsi_e2.o : ../../Modules/io_files.o
@@ -550,6 +584,7 @@ dvpsi_e2.o : ../../PW/src/scf_mod.o
 dvpsi_e2.o : phcom.o
 dvpsi_e2.o : ramanm.o
 dvqpsi_us.o : ../../FFTXlib/fft_interfaces.o
+dvqpsi_us.o : ../../LR_Modules/lrcom.o
 dvqpsi_us.o : ../../Modules/cell_base.o
 dvqpsi_us.o : ../../Modules/fft_base.o
 dvqpsi_us.o : ../../Modules/ions_base.o
@@ -560,6 +595,7 @@ dvqpsi_us.o : ../../Modules/uspp.o
 dvqpsi_us.o : ../../Modules/wavefunctions.o
 dvqpsi_us.o : ../../PW/src/pwcom.o
 dvqpsi_us.o : phcom.o
+dvqpsi_us_only.o : ../../LR_Modules/lrcom.o
 dvqpsi_us_only.o : ../../Modules/cell_base.o
 dvqpsi_us_only.o : ../../Modules/ions_base.o
 dvqpsi_us_only.o : ../../Modules/kind.o
@@ -581,6 +617,7 @@ dynmat.o : ../../Modules/mp.o
 dynmat.o : ../../Modules/mp_global.o
 dynmat.o : ../../Modules/mp_world.o
 dynmat.o : io_dyn_mat.o
+dynmat0.o : ../../LR_Modules/lrcom.o
 dynmat0.o : ../../Modules/cell_base.o
 dynmat0.o : ../../Modules/control_flags.o
 dynmat0.o : ../../Modules/ions_base.o
@@ -590,6 +627,7 @@ dynmat0.o : ../../PW/src/symm_base.o
 dynmat0.o : ph_restart.o
 dynmat0.o : phcom.o
 dynmat_us.o : ../../FFTXlib/fft_interfaces.o
+dynmat_us.o : ../../LR_Modules/lrcom.o
 dynmat_us.o : ../../Modules/becmod.o
 dynmat_us.o : ../../Modules/cell_base.o
 dynmat_us.o : ../../Modules/constants.o
@@ -610,6 +648,7 @@ dynmat_us.o : ../../PW/src/pwcom.o
 dynmat_us.o : ../../PW/src/scf_mod.o
 dynmat_us.o : phcom.o
 dynmatcc.o : ../../FFTXlib/fft_interfaces.o
+dynmatcc.o : ../../LR_Modules/lrcom.o
 dynmatcc.o : ../../Modules/cell_base.o
 dynmatcc.o : ../../Modules/constants.o
 dynmatcc.o : ../../Modules/fft_base.o
@@ -621,6 +660,7 @@ dynmatcc.o : ../../Modules/recvec.o
 dynmatcc.o : ../../PW/src/pwcom.o
 dynmatcc.o : ../../PW/src/scf_mod.o
 dynmatcc.o : phcom.o
+dynmatrix.o : ../../LR_Modules/lrcom.o
 dynmatrix.o : ../../Modules/cell_base.o
 dynmatrix.o : ../../Modules/constants.o
 dynmatrix.o : ../../Modules/control_flags.o
@@ -634,6 +674,7 @@ dynmatrix.o : ph_restart.o
 dynmatrix.o : phcom.o
 dynmatrix.o : ramanm.o
 ef_shift.o : ../../FFTXlib/fft_interfaces.o
+ef_shift.o : ../../LR_Modules/lrcom.o
 ef_shift.o : ../../Modules/cell_base.o
 ef_shift.o : ../../Modules/fft_base.o
 ef_shift.o : ../../Modules/io_global.o
@@ -648,6 +689,7 @@ ef_shift.o : ../../Modules/wavefunctions.o
 ef_shift.o : ../../PW/src/buffers.o
 ef_shift.o : ../../PW/src/pwcom.o
 ef_shift.o : phcom.o
+el_opt.o : ../../LR_Modules/lrcom.o
 el_opt.o : ../../Modules/cell_base.o
 el_opt.o : ../../Modules/constants.o
 el_opt.o : ../../Modules/fft_base.o
@@ -673,6 +715,7 @@ el_ph_collect.o : ../../Modules/mp_pools.o
 el_ph_collect.o : ../../PW/src/pwcom.o
 elph.o : ../../Modules/kind.o
 elphon.o : ../../FFTXlib/fft_parallel.o
+elphon.o : ../../LR_Modules/lrcom.o
 elphon.o : ../../Modules/cell_base.o
 elphon.o : ../../Modules/constants.o
 elphon.o : ../../Modules/fft_base.o
@@ -702,6 +745,7 @@ elphon.o : ph_restart.o
 elphon.o : phcom.o
 elphon.o : save_ph_input.o
 ep_matrix_element_wannier.o : ../../FFTXlib/fft_interfaces.o
+ep_matrix_element_wannier.o : ../../LR_Modules/lrcom.o
 ep_matrix_element_wannier.o : ../../Modules/cell_base.o
 ep_matrix_element_wannier.o : ../../Modules/constants.o
 ep_matrix_element_wannier.o : ../../Modules/fft_base.o
@@ -723,6 +767,7 @@ ep_matrix_element_wannier.o : ../../PW/src/pwcom.o
 ep_matrix_element_wannier.o : ../../PW/src/symm_base.o
 ep_matrix_element_wannier.o : elph.o
 ep_matrix_element_wannier.o : phcom.o
+find_irrep.o : ../../LR_Modules/lrcom.o
 find_irrep.o : ../../Modules/control_flags.o
 find_irrep.o : ../../Modules/ions_base.o
 find_irrep.o : ../../Modules/kind.o
@@ -742,6 +787,7 @@ gmressolve_all.o : ../../Modules/kind.o
 gmressolve_all.o : ../../Modules/mp.o
 gmressolve_all.o : ../../Modules/mp_bands.o
 h_psiq.o : ../../FFTXlib/fft_interfaces.o
+h_psiq.o : ../../LR_Modules/lrcom.o
 h_psiq.o : ../../Modules/becmod.o
 h_psiq.o : ../../Modules/control_flags.o
 h_psiq.o : ../../Modules/fft_base.o
@@ -753,7 +799,6 @@ h_psiq.o : ../../Modules/wavefunctions.o
 h_psiq.o : ../../PW/src/pwcom.o
 h_psiq.o : ../../PW/src/realus.o
 h_psiq.o : ../../PW/src/scf_mod.o
-h_psiq.o : phcom.o
 hdiag.o : ../../Modules/cell_base.o
 hdiag.o : ../../Modules/kind.o
 hdiag.o : ../../Modules/noncol.o
@@ -763,6 +808,7 @@ hdiag.o : ../../Modules/wavefunctions.o
 hdiag.o : ../../PW/src/pwcom.o
 hdiag.o : ramanm.o
 incdrhoscf.o : ../../FFTXlib/fft_interfaces.o
+incdrhoscf.o : ../../LR_Modules/lrcom.o
 incdrhoscf.o : ../../Modules/cell_base.o
 incdrhoscf.o : ../../Modules/fft_base.o
 incdrhoscf.o : ../../Modules/ions_base.o
@@ -775,6 +821,7 @@ incdrhoscf.o : ../../Modules/wavefunctions.o
 incdrhoscf.o : ../../PW/src/pwcom.o
 incdrhoscf.o : phcom.o
 incdrhoscf_nc.o : ../../FFTXlib/fft_interfaces.o
+incdrhoscf_nc.o : ../../LR_Modules/lrcom.o
 incdrhoscf_nc.o : ../../Modules/cell_base.o
 incdrhoscf_nc.o : ../../Modules/fft_base.o
 incdrhoscf_nc.o : ../../Modules/ions_base.o
@@ -788,6 +835,7 @@ incdrhoscf_nc.o : ../../Modules/wavefunctions.o
 incdrhoscf_nc.o : ../../PW/src/pwcom.o
 incdrhoscf_nc.o : phcom.o
 incdrhous.o : ../../FFTXlib/fft_interfaces.o
+incdrhous.o : ../../LR_Modules/lrcom.o
 incdrhous.o : ../../Modules/becmod.o
 incdrhous.o : ../../Modules/cell_base.o
 incdrhous.o : ../../Modules/fft_base.o
@@ -801,6 +849,7 @@ incdrhous.o : ../../Modules/uspp.o
 incdrhous.o : ../../PW/src/pwcom.o
 incdrhous.o : phcom.o
 incdrhous_nc.o : ../../FFTXlib/fft_interfaces.o
+incdrhous_nc.o : ../../LR_Modules/lrcom.o
 incdrhous_nc.o : ../../Modules/becmod.o
 incdrhous_nc.o : ../../Modules/cell_base.o
 incdrhous_nc.o : ../../Modules/fft_base.o
@@ -813,6 +862,7 @@ incdrhous_nc.o : ../../Modules/recvec.o
 incdrhous_nc.o : ../../Modules/uspp.o
 incdrhous_nc.o : ../../PW/src/pwcom.o
 incdrhous_nc.o : phcom.o
+init_representations.o : ../../LR_Modules/lrcom.o
 init_representations.o : ../../Modules/cell_base.o
 init_representations.o : ../../Modules/control_flags.o
 init_representations.o : ../../Modules/environment.o
@@ -826,6 +876,7 @@ init_representations.o : ../../PW/src/symm_base.o
 init_representations.o : elph.o
 init_representations.o : ph_restart.o
 init_representations.o : phcom.o
+initialize_ph.o : ../../LR_Modules/lrcom.o
 initialize_ph.o : ../../PW/src/pwcom.o
 initialize_ph.o : phcom.o
 io_dyn_mat.o : ../../Modules/constants.o
@@ -848,6 +899,7 @@ io_pattern.o : ../../Modules/io_global.o
 io_pattern.o : ../../Modules/kind.o
 io_pattern.o : dfile_autoname.o
 localdos.o : ../../FFTXlib/fft_interfaces.o
+localdos.o : ../../LR_Modules/lrcom.o
 localdos.o : ../../Modules/becmod.o
 localdos.o : ../../Modules/cell_base.o
 localdos.o : ../../Modules/fft_base.o
@@ -885,6 +937,7 @@ mix_pot.o : ../../Modules/mp_bands.o
 mode_group.o : ../../Modules/constants.o
 mode_group.o : ../../Modules/kind.o
 newdq.o : ../../FFTXlib/fft_interfaces.o
+newdq.o : ../../LR_Modules/lrcom.o
 newdq.o : ../../Modules/cell_base.o
 newdq.o : ../../Modules/fft_base.o
 newdq.o : ../../Modules/ions_base.o
@@ -897,6 +950,7 @@ newdq.o : ../../Modules/recvec.o
 newdq.o : ../../Modules/uspp.o
 newdq.o : phcom.o
 obsolete.o : ../../FFTXlib/fft_interfaces.o
+obsolete.o : ../../LR_Modules/lrcom.o
 obsolete.o : ../../Modules/becmod.o
 obsolete.o : ../../Modules/cell_base.o
 obsolete.o : ../../Modules/constants.o
@@ -922,6 +976,7 @@ obsolete.o : io_dyn_mat.o
 obsolete.o : ph_restart.o
 obsolete.o : phcom.o
 obsolete.o : ramanm.o
+openfilq.o : ../../LR_Modules/lrcom.o
 openfilq.o : ../../Modules/cell_base.o
 openfilq.o : ../../Modules/control_flags.o
 openfilq.o : ../../Modules/fft_base.o
@@ -952,7 +1007,6 @@ orthogonalize.o : ../../Modules/noncol.o
 orthogonalize.o : ../../Modules/recvec.o
 orthogonalize.o : ../../Modules/uspp.o
 orthogonalize.o : ../../PW/src/pwcom.o
-orthogonalize.o : ../../PW/src/realus.o
 orthogonalize.o : phcom.o
 pcgreen.o : ../../Modules/kind.o
 pcgreen.o : ../../Modules/mp.o
@@ -960,6 +1014,7 @@ pcgreen.o : ../../Modules/mp_bands.o
 pcgreen.o : ../../Modules/wavefunctions.o
 pcgreen.o : ../../PW/src/pwcom.o
 pcgreen.o : phcom.o
+ph_restart.o : ../../LR_Modules/lrcom.o
 ph_restart.o : ../../Modules/io_files.o
 ph_restart.o : ../../Modules/io_global.o
 ph_restart.o : ../../Modules/ions_base.o
@@ -994,6 +1049,7 @@ phonon.o : ../../Modules/mp_global.o
 phonon.o : ph_restart.o
 phonon.o : phcom.o
 phonon.o : yambo.o
+phq_init.o : ../../LR_Modules/lrcom.o
 phq_init.o : ../../Modules/atom.o
 phq_init.o : ../../Modules/becmod.o
 phq_init.o : ../../Modules/cell_base.o
@@ -1015,6 +1071,7 @@ phq_init.o : ../../PW/src/pwcom.o
 phq_init.o : acfdtest.o
 phq_init.o : elph.o
 phq_init.o : phcom.o
+phq_readin.o : ../../LR_Modules/lrcom.o
 phq_readin.o : ../../Modules/control_flags.o
 phq_readin.o : ../../Modules/fft_base.o
 phq_readin.o : ../../Modules/funct.o
@@ -1045,6 +1102,7 @@ phq_readin.o : phcom.o
 phq_readin.o : ramanm.o
 phq_readin.o : save_ph_input.o
 phq_readin.o : yambo.o
+phq_recover.o : ../../LR_Modules/lrcom.o
 phq_recover.o : ../../Modules/io_global.o
 phq_recover.o : ../../Modules/kind.o
 phq_recover.o : ../../PW/src/pwcom.o
@@ -1052,6 +1110,7 @@ phq_recover.o : elph.o
 phq_recover.o : ph_restart.o
 phq_recover.o : phcom.o
 phq_recover.o : ramanm.o
+phq_setup.o : ../../LR_Modules/lrcom.o
 phq_setup.o : ../../Modules/cell_base.o
 phq_setup.o : ../../Modules/constants.o
 phq_setup.o : ../../Modules/control_flags.o
@@ -1074,6 +1133,7 @@ phq_setup.o : elph.o
 phq_setup.o : ph_restart.o
 phq_setup.o : phcom.o
 phq_setup.o : ramanm.o
+phq_summary.o : ../../LR_Modules/lrcom.o
 phq_summary.o : ../../Modules/cell_base.o
 phq_summary.o : ../../Modules/control_flags.o
 phq_summary.o : ../../Modules/fft_base.o
@@ -1102,6 +1162,7 @@ phqscf.o : ../../Modules/uspp.o
 phqscf.o : ../../PW/src/pwcom.o
 phqscf.o : phcom.o
 phqscf.o : write_rec.o
+polariz.o : ../../LR_Modules/lrcom.o
 polariz.o : ../../Modules/cell_base.o
 polariz.o : ../../Modules/constants.o
 polariz.o : ../../Modules/io_files.o
@@ -1115,6 +1176,7 @@ polariz.o : ../../PW/src/pwcom.o
 polariz.o : ../../PW/src/symme.o
 polariz.o : ph_restart.o
 polariz.o : phcom.o
+prepare_q.o : ../../LR_Modules/lrcom.o
 prepare_q.o : ../../Modules/control_flags.o
 prepare_q.o : ../../Modules/io_files.o
 prepare_q.o : ../../Modules/io_global.o
@@ -1257,6 +1319,7 @@ raman.o : ../../PW/src/pwcom.o
 raman.o : ph_restart.o
 raman.o : phcom.o
 raman.o : ramanm.o
+raman_mat.o : ../../LR_Modules/lrcom.o
 raman_mat.o : ../../Modules/becmod.o
 raman_mat.o : ../../Modules/cell_base.o
 raman_mat.o : ../../Modules/constants.o
@@ -1291,6 +1354,7 @@ rigid.o : ../../Modules/constants.o
 rigid.o : ../../Modules/kind.o
 rotate_and_add_dyn.o : ../../Modules/constants.o
 rotate_and_add_dyn.o : ../../Modules/kind.o
+rotate_dvscf_star.o : ../../LR_Modules/lrcom.o
 rotate_dvscf_star.o : ../../Modules/cell_base.o
 rotate_dvscf_star.o : ../../Modules/ions_base.o
 rotate_dvscf_star.o : ../../Modules/kind.o
@@ -1298,6 +1362,7 @@ rotate_dvscf_star.o : ../../PW/src/symm_base.o
 rotate_dvscf_star.o : dfile_star.o
 rotate_dvscf_star.o : phcom.o
 rotate_pattern_add.o : ../../Modules/kind.o
+run_nscf.o : ../../LR_Modules/lrcom.o
 run_nscf.o : ../../Modules/check_stop.o
 run_nscf.o : ../../Modules/control_flags.o
 run_nscf.o : ../../Modules/fft_base.o
@@ -1367,6 +1432,7 @@ set_irr.o : phcom.o
 set_irr_nosym.o : ../../Modules/ions_base.o
 set_irr_nosym.o : ../../Modules/kind.o
 set_irr_nosym.o : phcom.o
+set_irr_sym.o : ../../LR_Modules/lrcom.o
 set_irr_sym.o : ../../Modules/cell_base.o
 set_irr_sym.o : ../../Modules/constants.o
 set_irr_sym.o : ../../Modules/control_flags.o
@@ -1377,13 +1443,13 @@ set_irr_sym.o : ../../Modules/mp.o
 set_irr_sym.o : ../../Modules/mp_images.o
 set_irr_sym.o : ../../PW/src/symm_base.o
 set_irr_sym.o : phcom.o
+set_small_group_of_q.o : ../../LR_Modules/lrcom.o
 set_small_group_of_q.o : ../../Modules/cell_base.o
 set_small_group_of_q.o : ../../Modules/control_flags.o
 set_small_group_of_q.o : ../../Modules/ions_base.o
 set_small_group_of_q.o : ../../Modules/kind.o
 set_small_group_of_q.o : ../../Modules/paw_variables.o
 set_small_group_of_q.o : ../../PW/src/symm_base.o
-set_small_group_of_q.o : phcom.o
 setlocq.o : ../../Modules/constants.o
 setlocq.o : ../../Modules/kind.o
 setqmod.o : ../../Modules/kind.o
@@ -1403,6 +1469,7 @@ smallgq.o : ../../Modules/cell_base.o
 smallgq.o : ../../Modules/kind.o
 smallgq.o : phcom.o
 solve_e.o : ../../FFTXlib/fft_parallel.o
+solve_e.o : ../../LR_Modules/lrcom.o
 solve_e.o : ../../Modules/cell_base.o
 solve_e.o : ../../Modules/check_stop.o
 solve_e.o : ../../Modules/fft_base.o
@@ -1425,6 +1492,7 @@ solve_e.o : ../../PW/src/pwcom.o
 solve_e.o : ../../PW/src/scf_mod.o
 solve_e.o : phcom.o
 solve_e.o : write_rec.o
+solve_e2.o : ../../LR_Modules/lrcom.o
 solve_e2.o : ../../Modules/cell_base.o
 solve_e2.o : ../../Modules/check_stop.o
 solve_e2.o : ../../Modules/fft_base.o
@@ -1444,6 +1512,7 @@ solve_e2.o : phcom.o
 solve_e2.o : ramanm.o
 solve_e2.o : write_rec.o
 solve_e_fpol.o : ../../FFTXlib/fft_interfaces.o
+solve_e_fpol.o : ../../LR_Modules/lrcom.o
 solve_e_fpol.o : ../../Modules/becmod.o
 solve_e_fpol.o : ../../Modules/cell_base.o
 solve_e_fpol.o : ../../Modules/check_stop.o
@@ -1462,6 +1531,7 @@ solve_e_fpol.o : ../../PW/src/buffers.o
 solve_e_fpol.o : ../../PW/src/pwcom.o
 solve_e_fpol.o : phcom.o
 solve_e_nscf.o : ../../FFTXlib/fft_interfaces.o
+solve_e_nscf.o : ../../LR_Modules/lrcom.o
 solve_e_nscf.o : ../../Modules/cell_base.o
 solve_e_nscf.o : ../../Modules/fft_base.o
 solve_e_nscf.o : ../../Modules/kind.o
@@ -1471,6 +1541,7 @@ solve_e_nscf.o : ../../PW/src/buffers.o
 solve_e_nscf.o : ../../PW/src/pwcom.o
 solve_e_nscf.o : phcom.o
 solve_linter.o : ../../FFTXlib/fft_parallel.o
+solve_linter.o : ../../LR_Modules/lrcom.o
 solve_linter.o : ../../Modules/cell_base.o
 solve_linter.o : ../../Modules/check_stop.o
 solve_linter.o : ../../Modules/constants.o
@@ -1558,6 +1629,7 @@ symm.o : ../../Modules/constants.o
 symm.o : ../../Modules/kind.o
 symmorphic_or_nzb.o : ../../PW/src/symm_base.o
 symmorphic_or_nzb.o : phcom.o
+tra_write_matrix.o : ../../LR_Modules/lrcom.o
 tra_write_matrix.o : ../../Modules/cell_base.o
 tra_write_matrix.o : ../../Modules/io_global.o
 tra_write_matrix.o : ../../Modules/kind.o
@@ -1621,6 +1693,7 @@ write_ramtns.o : ../../Modules/constants.o
 write_ramtns.o : ../../Modules/ions_base.o
 write_ramtns.o : ../../Modules/kind.o
 write_ramtns.o : phcom.o
+write_rec.o : ../../LR_Modules/lrcom.o
 write_rec.o : ../../Modules/fft_base.o
 write_rec.o : ../../Modules/io_files.o
 write_rec.o : ../../Modules/ions_base.o
@@ -1631,6 +1704,7 @@ write_rec.o : ../../Modules/uspp.o
 write_rec.o : ../../PW/src/pwcom.o
 write_rec.o : ph_restart.o
 write_rec.o : phcom.o
+yambo.o : ../../LR_Modules/lrcom.o
 yambo.o : ../../Modules/cell_base.o
 yambo.o : ../../Modules/io_global.o
 yambo.o : ../../Modules/ions_base.o
@@ -1641,6 +1715,7 @@ yambo.o : ../../Modules/xml_io_base.o
 yambo.o : ../../PW/src/pwcom.o
 yambo.o : elph.o
 yambo.o : phcom.o
+zstar_eu.o : ../../LR_Modules/lrcom.o
 zstar_eu.o : ../../Modules/cell_base.o
 zstar_eu.o : ../../Modules/io_files.o
 zstar_eu.o : ../../Modules/ions_base.o
@@ -1656,6 +1731,7 @@ zstar_eu.o : ../../PW/src/pwcom.o
 zstar_eu.o : ../../PW/src/symme.o
 zstar_eu.o : ph_restart.o
 zstar_eu.o : phcom.o
+zstar_eu_us.o : ../../LR_Modules/lrcom.o
 zstar_eu_us.o : ../../Modules/cell_base.o
 zstar_eu_us.o : ../../Modules/fft_base.o
 zstar_eu_us.o : ../../Modules/io_files.o
