@@ -10,6 +10,11 @@
    file is specified via the -i option; from "input_file"_N
    if command-line options -i "input_file" is specified
 
+ * You can change the number of the first index with the
+   environment variable FIRST_IMAGE_INDEX, i.e. if you set
+   export FIRST_IMAGE_INDEX=N_first
+   then images will go from N_first N_first+Ni-1
+
  * saves temporary and final data to "outdir"_N/ directory
    (or to tmp_N/ if outdir='./')
 
