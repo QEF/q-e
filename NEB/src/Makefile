@@ -54,7 +54,7 @@ neb.x : $(NEBOBJS) libneb.a $(LIBOBJS) $(PWOBJS) $(QEMODS)
 
 path_interpolation.x : path_interpolation.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-	path_interpolation.o $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
+	path_interpolation.o libneb.a $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../NEB/src/$@ . )
 
 libneb.a : $(NEBLIBS)
