@@ -8,7 +8,9 @@ MODFLAGS=$(MOD_FLAG)../FFTXlib $(MOD_FLAG)../Modules $(MOD_FLAG)../PW/src $(MOD_
 IFLAGS=
 
 LR_MODULES = \
+apply_dpot.o \
 cft_wave.o \
+h_psiq.o \
 lrcom.o
 
 TLDEPS=libfft mods

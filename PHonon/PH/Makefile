@@ -27,7 +27,6 @@ addusldos.o \
 allocate_part.o \
 allocate_pert.o \
 allocate_phq.o \
-apply_dpot.o \
 yambo.o \
 bcast_ph_input.o \
 cch_psi_all.o \
@@ -89,7 +88,6 @@ find_irrep.o \
 generate_dynamical_matrix_c.o \
 generate_effective_charges_c.o \
 gmressolve_all.o \
-h_psiq.o \
 incdrhoscf.o \
 incdrhoscf_nc.o \
 incdrhous.o \

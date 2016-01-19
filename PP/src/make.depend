@@ -377,7 +377,6 @@ pawplot.o : ../../Modules/uspp.o
 pawplot.o : ../../PW/src/paw_onecenter.o
 pawplot.o : ../../PW/src/pwcom.o
 pawplot.o : ../../PW/src/scf_mod.o
-pdos+tetra.o : ../../Modules/kind.o
 plan_avg.o : ../../Modules/becmod.o
 plan_avg.o : ../../Modules/cell_base.o
 plan_avg.o : ../../Modules/control_flags.o

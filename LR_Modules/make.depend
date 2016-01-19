@@ -1,3 +1,8 @@
+apply_dpot.o : ../Modules/fft_base.o
+apply_dpot.o : ../Modules/kind.o
+apply_dpot.o : ../Modules/mp_bands.o
+apply_dpot.o : ../Modules/noncol.o
+apply_dpot.o : ../PW/src/pwcom.o
 cft_wave.o : ../FFTXlib/fft_interfaces.o
 cft_wave.o : ../Modules/fft_base.o
 cft_wave.o : ../Modules/kind.o
@@ -6,5 +11,18 @@ cft_wave.o : ../Modules/noncol.o
 cft_wave.o : ../Modules/recvec.o
 cft_wave.o : ../PW/src/pwcom.o
 cft_wave.o : lrcom.o
+h_psiq.o : ../FFTXlib/fft_interfaces.o
+h_psiq.o : ../Modules/becmod.o
+h_psiq.o : ../Modules/control_flags.o
+h_psiq.o : ../Modules/fft_base.o
+h_psiq.o : ../Modules/kind.o
+h_psiq.o : ../Modules/noncol.o
+h_psiq.o : ../Modules/recvec.o
+h_psiq.o : ../Modules/uspp.o
+h_psiq.o : ../Modules/wavefunctions.o
+h_psiq.o : ../PW/src/pwcom.o
+h_psiq.o : ../PW/src/realus.o
+h_psiq.o : ../PW/src/scf_mod.o
+h_psiq.o : lrcom.o
 lrcom.o : ../Modules/kind.o
 lrcom.o : ../Modules/parameters.o
