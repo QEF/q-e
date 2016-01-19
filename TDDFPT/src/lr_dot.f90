@@ -30,7 +30,7 @@ FUNCTION lr_dot(x,y)
   USE mp_global,            ONLY : inter_pool_comm, intra_bgrp_comm
   USE lr_variables,         ONLY : lr_verbosity, lr_periodic, eels
   USE noncollin_module,     ONLY : noncolin, npol
-  USE control_ph,           ONLY : nbnd_occ
+  USE control_lr,           ONLY : nbnd_occ
   USE qpoint,               ONLY : npwq, igkq, ikks, ikqs, nksq
   !
   IMPLICIT NONE

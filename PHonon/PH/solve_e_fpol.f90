@@ -38,8 +38,9 @@ subroutine solve_e_fpol ( iw )
   USE uspp,                  ONLY : okvan, vkb
   USE uspp_param,            ONLY : nhm
   USE eqv,                   ONLY : dpsi, dvpsi, eprec
+  USE control_lr,            ONLY : nbnd_occ
   USE control_ph,            ONLY : nmix_ph, tr2_ph, alpha_mix, convt, &
-                                    nbnd_occ, lgamma, niter_ph, &
+                                    lgamma, niter_ph, &
                                     rec_code, flmixdpot
   USE output,                ONLY : fildrho
   USE qpoint,                ONLY : nksq, npwq, igkq

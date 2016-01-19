@@ -40,6 +40,7 @@ subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
   USE uspp, ONLY : vkb
   USE wavefunctions_module,  ONLY : evc
   use qpoint,     ONLY : xq, igkq, npwq, nksq
+  use control_lr, ONLY : nbnd_occ
   use phcom
   use d3com
   USE mp_global,  ONLY : inter_pool_comm, intra_pool_comm

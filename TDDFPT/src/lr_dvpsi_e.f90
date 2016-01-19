@@ -32,7 +32,7 @@ SUBROUTINE lr_dvpsi_e(ik,ipol,dvpsi)
   USE uspp_param,           ONLY : nh, nhm
   USE phus,                 ONLY : dpqq 
   USE control_flags,        ONLY : gamma_only
-  USE control_ph,           ONLY : nbnd_occ
+  USE control_lr,           ONLY : nbnd_occ
   USE realus,               ONLY : npw_k
   USE lr_variables,         ONLY : lr_verbosity
   USE io_global,            ONLY : stdout

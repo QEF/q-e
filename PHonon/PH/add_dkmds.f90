@@ -29,8 +29,9 @@ subroutine add_dkmds(kpoint, uact, jpol, dvkb)
   USE becmod, ONLY: calbec
   USE qpoint, ONLY : igkq, npwq
   USE phus,   ONLY : becp1, alphap, dpqq, dpqq_so
-  USE control_ph, ONLY : nbnd_occ
   USE eqv,    ONLY : dvpsi
+
+  USE control_lr, ONLY : nbnd_occ
 
   implicit none
 

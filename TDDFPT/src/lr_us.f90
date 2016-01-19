@@ -127,7 +127,7 @@ SUBROUTINE lr_apply_s_eels()
    USE gvect,           ONLY : ngm, g
    USE wvfct,           ONLY : g2kin
    USE gvecw,           ONLY : gcutw
-   USE control_ph,      ONLY : nbnd_occ
+   USE control_lr,      ONLY : nbnd_occ
 
    IMPLICIT NONE
    !

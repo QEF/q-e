@@ -49,6 +49,7 @@ addcore.o : ../../Modules/kind.o
 addcore.o : ../../Modules/recvec.o
 addcore.o : ../../Modules/uspp.o
 addcore.o : phcom.o
+adddvepsi_us.o : ../../LR_Modules/lrcom.o
 adddvepsi_us.o : ../../Modules/becmod.o
 adddvepsi_us.o : ../../Modules/control_flags.o
 adddvepsi_us.o : ../../Modules/ions_base.o
@@ -793,7 +794,6 @@ incdrhoscf.o : ../../Modules/recvec.o
 incdrhoscf.o : ../../Modules/uspp.o
 incdrhoscf.o : ../../Modules/wavefunctions.o
 incdrhoscf.o : ../../PW/src/pwcom.o
-incdrhoscf.o : phcom.o
 incdrhoscf_nc.o : ../../FFTXlib/fft_interfaces.o
 incdrhoscf_nc.o : ../../LR_Modules/lrcom.o
 incdrhoscf_nc.o : ../../Modules/cell_base.o
@@ -807,7 +807,6 @@ incdrhoscf_nc.o : ../../Modules/recvec.o
 incdrhoscf_nc.o : ../../Modules/uspp.o
 incdrhoscf_nc.o : ../../Modules/wavefunctions.o
 incdrhoscf_nc.o : ../../PW/src/pwcom.o
-incdrhoscf_nc.o : phcom.o
 incdrhous.o : ../../FFTXlib/fft_interfaces.o
 incdrhous.o : ../../LR_Modules/lrcom.o
 incdrhous.o : ../../Modules/becmod.o
@@ -972,16 +971,7 @@ openfilq.o : elph.o
 openfilq.o : phcom.o
 openfilq.o : ramanm.o
 openfilq.o : save_ph_input.o
-orthogonalize.o : ../../Modules/becmod.o
-orthogonalize.o : ../../Modules/control_flags.o
-orthogonalize.o : ../../Modules/kind.o
-orthogonalize.o : ../../Modules/mp.o
-orthogonalize.o : ../../Modules/mp_bands.o
-orthogonalize.o : ../../Modules/noncol.o
-orthogonalize.o : ../../Modules/recvec.o
-orthogonalize.o : ../../Modules/uspp.o
-orthogonalize.o : ../../PW/src/pwcom.o
-orthogonalize.o : phcom.o
+pcgreen.o : ../../LR_Modules/lrcom.o
 pcgreen.o : ../../Modules/kind.o
 pcgreen.o : ../../Modules/mp.o
 pcgreen.o : ../../Modules/mp_bands.o

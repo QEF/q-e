@@ -103,7 +103,6 @@ mode_group.o \
 newdq.o \
 obsolete.o \
 openfilq.o \
-orthogonalize.o \
 phcom.o \
 ph_restart.o \
 phescf.o \

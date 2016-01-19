@@ -35,7 +35,7 @@ subroutine dvpsi_e (ik, ipol)
   USE qpoint,          ONLY : nksq, npwq
   USE units_ph,        ONLY : this_pcxpsi_is_on_file, lrcom, iucom, &
                               lrebar, iuebar
-  USE control_ph,      ONLY : nbnd_occ
+  USE control_lr,      ONLY : nbnd_occ
 
   implicit none
   !

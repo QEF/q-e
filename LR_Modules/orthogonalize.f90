@@ -17,18 +17,18 @@ SUBROUTINE orthogonalize(dvpsi, evq, ikk, ikq, dpsi, npwq)
   !
   ! NB: IN/OUT is dvpsi ; dpsi is used as work_space
   !
-USE kinds, ONLY : DP
-USE klist, ONLY : lgauss, degauss, ngauss
+USE kinds,       ONLY : DP
+USE klist,       ONLY : lgauss, degauss, ngauss
 USE noncollin_module, ONLY : noncolin, npol
-USE wvfct, ONLY : npwx, nbnd, et
-USE ener, ONLY : ef
-USE control_ph,  ONLY : alpha_pv, nbnd_occ
+USE wvfct,       ONLY : npwx, nbnd, et
+USE ener,        ONLY : ef
 USE becmod,      ONLY : bec_type, becp, calbec
 USE uspp,        ONLY : vkb, okvan
 USE mp_bands,    ONLY : intra_bgrp_comm
 USE mp,          ONLY : mp_sum
 USE control_flags, ONLY : gamma_only
 USE gvect,       ONLY : gstart
+USE control_lr,  ONLY : alpha_pv, nbnd_occ
 !
 IMPLICIT NONE
 INTEGER, INTENT(IN) :: ikk, ikq   ! the index of the k and k+q points

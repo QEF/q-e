@@ -37,7 +37,7 @@ SUBROUTINE lr_calc_dens_eels_nc (drhoscf, dpsi)
   USE wvfct,                 ONLY : nbnd,wg,npwx,npw,igk,g2kin
   USE gvecw,                 ONLY : gcutw
   USE qpoint,                ONLY : npwq, igkq, nksq, ikks, ikqs
-  USE control_ph,            ONLY : nbnd_occ
+  USE control_lr,            ONLY : nbnd_occ
   USE units_ph,              ONLY : lrwfc, iuwfc
   USE wavefunctions_module,  ONLY : evc
   USE eqv,                   ONLY : evq

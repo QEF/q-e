@@ -20,12 +20,13 @@ subroutine cch_psi_all (n, h, ah, e, ik, m)
   USE wvfct, ONLY : npwx, nbnd
   USE noncollin_module, ONLY : noncolin, npol
 
-  USE control_ph, ONLY : alpha_pv, nbnd_occ
   USE eqv,  ONLY : evq
   USE qpoint, ONLY : ikqs
 
   USE mp_bands,  ONLY: intra_bgrp_comm
   USE mp,        ONLY: mp_sum
+
+  USE control_lr, ONLY : alpha_pv, nbnd_occ
 
   implicit none
 

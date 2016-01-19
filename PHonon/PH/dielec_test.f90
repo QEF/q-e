@@ -25,7 +25,7 @@ subroutine dielec_test
   USE efield_mod, ONLY : epsilon
   USE qpoint, ONLY : nksq
   USE eqv, ONLY : dpsi
-  USE control_ph, ONLY : nbnd_occ
+  USE control_lr, ONLY : nbnd_occ
   USE units_ph, ONLY : lrwfc, iuwfc
 
   USE ramanm, ONLY : a1j, a2j, lrd2w, iud2w

@@ -38,7 +38,7 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, sevc1_new, interaction )
   USE wavefunctions_module, ONLY : evc, psic, psic_nc
   USE units_ph,             ONLY : lrwfc, iuwfc
   USE noncollin_module,     ONLY : noncolin, npol, nspin_mag
-  USE control_ph,           ONLY : nbnd_occ
+  USE control_lr,           ONLY : nbnd_occ
   USE uspp,                 ONLY : okvan
   USE nlcc_ph,              ONLY : nlcc_any
   USE iso_c_binding,        ONLY : c_int

@@ -30,7 +30,8 @@ subroutine zstar_eu
   USE eqv,       ONLY : dvpsi, dpsi
   USE efield_mod,   ONLY : zstareu0, zstareu
   USE units_ph,  ONLY : iudwf, lrdwf, iuwfc, lrwfc
-  USE control_ph,ONLY : nbnd_occ, done_zeu
+  USE control_lr,ONLY : nbnd_occ
+  USE control_ph,ONLY : done_zeu
   USE ph_restart, ONLY : ph_writefile
 
   USE mp_pools,              ONLY : inter_pool_comm

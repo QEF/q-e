@@ -34,7 +34,7 @@ SUBROUTINE lr_ortho(dvpsi, evq, ikk, ikq, sevc, inverse)
   USE noncollin_module,  ONLY : noncolin, npol
   USE wvfct,             ONLY : npwx, nbnd, et
   USE ener,              ONLY : ef
-  USE control_ph,        ONLY : alpha_pv, nbnd_occ
+  USE control_lr,        ONLY : alpha_pv, nbnd_occ
   USE uspp,              ONLY : vkb, okvan
   USE mp_global,         ONLY : intra_bgrp_comm
   USE mp,                ONLY : mp_sum

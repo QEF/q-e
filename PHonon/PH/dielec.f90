@@ -26,7 +26,8 @@ subroutine dielec()
   USE eqv, ONLY : dpsi, dvpsi
   USE qpoint, ONLY : nksq
   USE ph_restart, ONLY : ph_writefile
-  USE control_ph, ONLY : nbnd_occ, done_epsil, epsil
+  USE control_lr, ONLY : nbnd_occ
+  USE control_ph, ONLY : done_epsil, epsil
   USE mp_pools,   ONLY : inter_pool_comm
   USE mp_bands,   ONLY : intra_bgrp_comm
   USE mp,               ONLY : mp_sum

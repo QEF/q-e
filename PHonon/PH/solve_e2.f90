@@ -30,7 +30,8 @@ subroutine solve_e2
   USE wavefunctions_module,  ONLY: evc
   USE eqv,       ONLY : dpsi, dvpsi
   USE qpoint,    ONLY : npwq, igkq, nksq
-  USE control_ph, ONLY : convt, nmix_ph, alpha_mix, nbnd_occ, tr2_ph, &
+  USE control_lr, ONLY : nbnd_occ
+  USE control_ph, ONLY : convt, nmix_ph, alpha_mix, tr2_ph, &
                          niter_ph, lgamma, rec_code, flmixdpot, rec_code_read
   USE units_ph,   ONLY : lrwfc, iuwfc
   USE ramanm,     ONLY : lrba2, iuba2, lrd2w, iud2w

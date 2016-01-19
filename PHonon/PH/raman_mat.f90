@@ -28,7 +28,7 @@ subroutine raman_mat
   USE wavefunctions_module,  ONLY: evc
   USE eqv,      ONLY : dvpsi
   USE phus,     ONLY : becp1, alphap
-  USE control_ph, ONLY : nbnd_occ
+  USE control_lr, ONLY : nbnd_occ
   USE units_ph, ONLY : lrdwf, iudwf, lrwfc, iuwfc
   USE qpoint,   ONLY : npwq, nksq
   USE ramanm,   ONLY : ramtns, jab, a1j, a2j, lrd2w, iud2w

@@ -38,7 +38,8 @@ SUBROUTINE lr_init_nfo()
   USE ener,                 ONLY : ef, ef_up, ef_dw
   USE ktetra,               ONLY : ltetra
   USE lsda_mod,             ONLY : lsda, current_spin, nspin, isk
-  USE control_ph,           ONLY : alpha_pv, nbnd_occ, tmp_dir_phq
+  USE control_lr,           ONLY : alpha_pv, nbnd_occ
+  USE control_ph,           ONLY : tmp_dir_phq
   USE wvfct,                ONLY : npwx, wg
   USE gvecw,                ONLY : gcutw
   USE io_files,             ONLY : iunigk, seqopn, tmp_dir, prefix, &

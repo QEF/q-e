@@ -11,6 +11,7 @@ LR_MODULES = \
 apply_dpot.o \
 cft_wave.o \
 h_psiq.o \
+orthogonalize.o \
 lrcom.o
 
 TLDEPS=libfft mods

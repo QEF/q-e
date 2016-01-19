@@ -39,7 +39,8 @@ SUBROUTINE dynmat_us()
   USE modes,                ONLY : u
   USE dynmat,               ONLY : dyn
   USE phus,                 ONLY : becp1, alphap
-  USE control_ph,           ONLY : nbnd_occ, lgamma
+  USE control_lr,           ONLY : nbnd_occ
+  USE control_ph,           ONLY : lgamma
   USE units_ph,             ONLY : iuwfc, lrwfc
   USE io_global,            ONLY : stdout
   USE mp_pools,             ONLY : my_pool_id, inter_pool_comm

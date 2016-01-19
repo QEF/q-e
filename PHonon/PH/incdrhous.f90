@@ -26,7 +26,7 @@ subroutine incdrhous (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
   USE wvfct,     ONLY : nbnd, npwx
   USE qpoint,    ONLY : nksq, igkq, npwq, ikks
   USE phus,      ONLY : becp1, alphap
-  USE control_ph, ONLY: nbnd_occ
+  USE control_lr, ONLY: nbnd_occ
   USE eqv,       ONLY : evq, dpsi
   USE modes,     ONLY : u
   USE mp_bands,  ONLY : intra_bgrp_comm

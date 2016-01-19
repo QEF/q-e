@@ -24,7 +24,7 @@ subroutine incdrhoscf (drhoscf, weight, ik, dbecsum, dpsi)
   USE uspp_param,ONLY: nhm
   USE wavefunctions_module,  ONLY: evc
   USE qpoint,    ONLY : npwq, igkq, ikks
-  USE control_ph, ONLY : nbnd_occ
+  USE control_lr, ONLY : nbnd_occ
   USE mp_bands,   ONLY : me_bgrp, inter_bgrp_comm, ntask_groups
   USE mp, ONLY : mp_sum
 

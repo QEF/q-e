@@ -26,3 +26,13 @@ h_psiq.o : ../PW/src/scf_mod.o
 h_psiq.o : lrcom.o
 lrcom.o : ../Modules/kind.o
 lrcom.o : ../Modules/parameters.o
+orthogonalize.o : ../Modules/becmod.o
+orthogonalize.o : ../Modules/control_flags.o
+orthogonalize.o : ../Modules/kind.o
+orthogonalize.o : ../Modules/mp.o
+orthogonalize.o : ../Modules/mp_bands.o
+orthogonalize.o : ../Modules/noncol.o
+orthogonalize.o : ../Modules/recvec.o
+orthogonalize.o : ../Modules/uspp.o
+orthogonalize.o : ../PW/src/pwcom.o
+orthogonalize.o : lrcom.o

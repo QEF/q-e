@@ -21,7 +21,7 @@ subroutine addusdbec (ik, wgt, psi, dbecsum)
   USE uspp_param, only: upf, nh, nhm
   USE phus,   ONLY : becp1
   USE qpoint, ONLY : npwq, ikks
-  USE control_ph, ONLY : nbnd_occ
+  USE control_lr, ONLY : nbnd_occ
   !
   USE mp_bands, ONLY : intra_bgrp_comm
   !

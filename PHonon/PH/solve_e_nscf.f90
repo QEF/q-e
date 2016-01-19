@@ -28,7 +28,7 @@ subroutine solve_e_nscf( avg_iter, thresh, ik, ipol, dvscfs, auxr )
   USE eqv,                   ONLY : dpsi, dvpsi
   USE units_ph,              ONLY : this_pcxpsi_is_on_file, lrdwf, iudwf
   USE qpoint,                ONLY : nksq, npwq, igkq
-  USE control_ph,            ONLY : nbnd_occ
+  USE control_lr,            ONLY : nbnd_occ
   implicit none
 
   !

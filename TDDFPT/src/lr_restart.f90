@@ -336,7 +336,7 @@ SUBROUTINE lr_recalc_sevc1_new_eels()
     use gvect,               only : ngm, g
     use wvfct,               only : g2kin
     use gvecw,               only : gcutw
-    use control_ph,          only : nbnd_occ
+    use control_lr,          only : nbnd_occ
 
     implicit none
     integer :: ikk, ikq

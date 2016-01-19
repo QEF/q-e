@@ -31,7 +31,8 @@ subroutine compute_alphasum
 
   USE phus,       ONLY : alphasum, alphasum_nc, becp1, alphap
   USE qpoint,     ONLY : nksq, ikks, ikqs
-  USE control_ph, ONLY : nbnd_occ, rec_code_read
+  USE control_ph, ONLY : rec_code_read
+  USE control_lr, ONLY : nbnd_occ
 
   implicit none
 

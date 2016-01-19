@@ -1937,7 +1937,7 @@ subroutine localdos (ldos, ldoss, dos_ef)
   USE uspp_param, ONLY: upf, nh, nhm
   USE io_files, ONLY: iunigk
   USE qpoint,   ONLY : nksq
-  USE control_ph, ONLY : nbnd_occ
+  USE control_lr, ONLY : nbnd_occ
   USE units_ph,   ONLY : iuwfc, lrwfc
 
   USE mp_global,        ONLY : inter_pool_comm

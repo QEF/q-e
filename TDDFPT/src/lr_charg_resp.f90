@@ -133,7 +133,7 @@ CONTAINS
     USE kinds,         ONLY : DP
     USE lr_variables,  ONLY : R, nbnd_total, n_ipol, project
     USE wvfct,         ONLY : nbnd
-    USE control_ph,    ONLY : nbnd_occ
+    USE control_lr,    ONLY : nbnd_occ
 
     IMPLICIT NONE
 

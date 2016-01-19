@@ -292,7 +292,7 @@ SUBROUTINE virt_read()
   !
   ! The modifications to read also the virtual orbitals.
   !
-  USE control_ph,            ONLY : nbnd_occ
+  USE control_lr,            ONLY : nbnd_occ
   USE becmod,                ONLY : allocate_bec_type, deallocate_bec_type
   !
   IMPLICIT NONE

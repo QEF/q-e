@@ -22,8 +22,8 @@ SUBROUTINE adddvepsi_us(becp1,becp2,ipol,kpoint,dvpsi)
   USE uspp_param, only: nh
   USE phus,     ONLY : dpqq, dpqq_so
   USE becmod,   ONLY : bec_type
-  USE control_ph, ONLY: nbnd_occ
   USE control_flags, ONLY : gamma_only
+  USE control_lr, ONLY: nbnd_occ
 
   implicit none
 

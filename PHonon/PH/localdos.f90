@@ -34,7 +34,7 @@ subroutine localdos_paw (ldos, ldoss, becsum1, dos_ef)
   USE uspp, ONLY: okvan, nkb, vkb
   USE uspp_param, ONLY: upf, nh, nhm
   USE qpoint,   ONLY : nksq
-  USE control_ph, ONLY : nbnd_occ
+  USE control_lr, ONLY : nbnd_occ
   USE units_ph,   ONLY : iuwfc, lrwfc
 
   USE io_files, ONLY: iunigk

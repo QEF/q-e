@@ -54,7 +54,8 @@ SUBROUTINE phq_init()
   USE eqv,                  ONLY : vlocq, evq, eprec
   USE phus,                 ONLY : becp1, alphap, dpqq, dpqq_so
   USE nlcc_ph,              ONLY : nlcc_any, drc
-  USE control_ph,           ONLY : trans, zue, epsil, lgamma, all_done, nbnd_occ
+  USE control_lr,           ONLY : nbnd_occ
+  USE control_ph,           ONLY : trans, zue, epsil, lgamma, all_done
   USE units_ph,             ONLY : lrwfc, iuwfc
   USE qpoint,               ONLY : xq, igkq, npwq, nksq, eigqts, ikks, ikqs
 

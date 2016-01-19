@@ -21,7 +21,7 @@ subroutine pcgreen (avg_iter, thresh, ik, et_ )
   USE mp_bands,  ONLY: intra_bgrp_comm
   USE mp,        ONLY: mp_sum
   USE eqv,       ONLY: dpsi, dvpsi, eprec
-  USE control_ph, ONLY : nbnd_occ
+  USE control_lr, ONLY : nbnd_occ
   implicit none
 
   !

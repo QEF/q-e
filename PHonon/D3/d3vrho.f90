@@ -31,6 +31,7 @@ subroutine d3vrho()
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft
   USE qpoint,               ONLY : nksq, npwq, igkq
+  USE control_lr,           ONLY : nbnd_occ
   USE phcom
   USE d3com
   !

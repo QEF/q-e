@@ -279,15 +279,13 @@ MODULE control_ph
   INTEGER, PARAMETER :: maxter = 100 ! maximum number of iterations
   INTEGER :: niter_ph,      & ! maximum number of iterations (read from input)
              nmix_ph,       & ! mixing type
-             nbnd_occ(npk), & ! occupated bands in metals
              start_irr,     & ! initial representation
              last_irr,      & ! last representation of this run
              current_iq,    & ! current q point
              start_q, last_q  ! initial q in the list, last_q in the list
   REAL(DP) :: tr2_ph  ! threshold for phonon calculation
   REAL(DP) :: alpha_mix(maxter), & ! the mixing parameter
-              time_now,          & ! CPU time up to now
-              alpha_pv             ! the alpha value for shifting the bands
+              time_now             ! CPU time up to now
   CHARACTER(LEN=10)  :: where_rec='no_recover'! where the ph run recovered
   CHARACTER(LEN=12) :: electron_phonon
   CHARACTER(LEN=256) :: flmixdpot, tmp_dir_ph, tmp_dir_phq

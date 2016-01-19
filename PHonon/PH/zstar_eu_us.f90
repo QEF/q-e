@@ -32,7 +32,7 @@ subroutine zstar_eu_us
   USE uspp_param,       ONLY : upf, nhm, nh
   USE noncollin_module, ONLY : noncolin, npol, nspin_mag
   USE qpoint,    ONLY : nksq, npwq
-  USE control_ph, ONLY : nbnd_occ
+  USE control_lr, ONLY : nbnd_occ
   USE efield_mod, ONLY : zstareu0
   USE eqv,        ONLY : dvpsi, dpsi
   USE phus,       ONLY : becsumort, int3, int3_paw

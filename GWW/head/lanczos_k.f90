@@ -323,7 +323,7 @@ subroutine  h_psi_scissor( ik,lda, n, m, psi, hpsi )
   USE wannier_gw, ONLY : scissor
   USE mp, ONLY : mp_sum
   USE mp_world, ONLY : world_comm
-  USE control_ph,           ONLY : nbnd_occ
+  USE control_lr,           ONLY : nbnd_occ
   USE constants, ONLY : rytoev
 
   implicit none

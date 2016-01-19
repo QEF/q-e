@@ -28,7 +28,8 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
   USE modes,     ONLY : u
   USE phus,      ONLY : becp1, alphap, int1, int2, &
                         int2_so, int1_nc
-  USE control_ph, ONLY : nbnd_occ, rec_code_read
+  USE control_lr, ONLY : nbnd_occ
+  USE control_ph, ONLY : rec_code_read
 
   USE mp_bands,  ONLY: intra_bgrp_comm
   USE mp,        ONLY: mp_sum

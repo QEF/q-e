@@ -35,7 +35,8 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag)
   USE noncollin_module,     ONLY : noncolin, npol, nspin_mag, nspin_lsda
 ! modules from phcom
   USE qpoint,               ONLY : nksq
-  USE control_ph,           ONLY : nbnd_occ, lgamma_gamma
+  USE control_lr,           ONLY : nbnd_occ
+  USE control_ph,           ONLY : lgamma_gamma
   USE units_ph,             ONLY : lrwfc, iuwfc, lrdwf, iudwf
   USE eqv,                  ONLY : dpsi
   USE modes,                ONLY : npert
@@ -177,7 +178,8 @@ subroutine ef_shift_paw (drhoscf, dbecsum, ldos, ldoss, becsum1, &
   USE ener,                 ONLY : ef
 ! modules from phcom
   USE qpoint,               ONLY : nksq
-  USE control_ph,           ONLY : nbnd_occ, lgamma_gamma
+  USE control_lr,           ONLY : nbnd_occ
+  USE control_ph,           ONLY : lgamma_gamma
   USE noncollin_module,     ONLY : noncolin, npol, nspin_lsda, nspin_mag
   USE units_ph,             ONLY : lrwfc, iuwfc, lrdwf, iudwf
   USE eqv,                  ONLY : dpsi

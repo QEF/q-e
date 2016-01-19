@@ -47,8 +47,9 @@ subroutine solve_e
   USE units_ph,              ONLY : lrdwf, iudwf, lrwfc, iuwfc, lrdrho, &
                                     iudrho
   USE output,                ONLY : fildrho
+  USE control_lr,            ONLY : nbnd_occ
   USE control_ph,            ONLY : ext_recover, rec_code, &
-                                    lnoloc, nbnd_occ, convt, tr2_ph, nmix_ph, &
+                                    lnoloc, convt, tr2_ph, nmix_ph, &
                                     alpha_mix, lgamma_gamma, niter_ph, &
                                     lgamma, flmixdpot, rec_code_read
   USE phus,                  ONLY : int3_paw

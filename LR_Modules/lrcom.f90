@@ -35,3 +35,16 @@ MODULE qpoint
   !
 END MODULE qpoint
 !
+MODULE control_lr
+  USE kinds, ONLY :  DP
+  USE parameters, ONLY: npk
+  !
+  ! ... the variable controlling the phonon run
+  !
+  SAVE
+  !
+  INTEGER :: nbnd_occ(npk)   ! occupated bands in metals
+
+  REAL(DP) :: alpha_pv       ! the alpha value for shifting the bands
+  !
+END MODULE control_lr

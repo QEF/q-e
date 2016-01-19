@@ -17,6 +17,7 @@ subroutine ch_psi_all2 (n, h, ah, e, ik, m)
   USE uspp,      ONLY: vkb
   use becmod
   use phcom
+  use control_lr, ONLY : alpha_pv
   USE mp_global, ONLY: intra_pool_comm
   USE mp,        ONLY: mp_sum
 

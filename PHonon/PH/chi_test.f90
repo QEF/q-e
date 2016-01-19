@@ -22,7 +22,7 @@ subroutine chi_test (dvscfs, chif, ik, depsi, auxr, auxg)
   USE buffers, ONLY : get_buffer
   USE qpoint, ONLY : npwq, nksq
   USE eqv, ONLY : dpsi, dvpsi
-  USE control_ph, ONLY : nbnd_occ
+  USE control_lr, ONLY : nbnd_occ
   USE wavefunctions_module,  ONLY: evc
   implicit none
 
