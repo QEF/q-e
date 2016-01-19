@@ -988,7 +988,7 @@ MODULE exx
     ! (i.e. at the end of exxinit)
     !
     USE kinds,                ONLY : DP
-    USE wvfct,                ONLY : g2kin, npwx, nbnd
+    USE wvfct,                ONLY : npwx, nbnd
     USE gvect,                ONLY : g, ngm
     USE gvecs,                ONLY : nls, nlsm
     USE gvecw,                ONLY : gcutw
@@ -1002,15 +1002,17 @@ MODULE exx
     IMPLICIT NONE
     !
     INTEGER  :: npwq, ibnd, i, ikq, j, h_ibnd, ibnd_loop_start
-    INTEGER,ALLOCATABLE     :: igkq(:)   ! order of wavefunctions at k+q[+G]
+    INTEGER,ALLOCATABLE     :: igkq(:)   !  order of wavefunctions at k+q[+G]
     COMPLEX(DP),ALLOCATABLE :: vkbq(:,:) ! |beta_I> 
     COMPLEX(DP),ALLOCATABLE :: evcq(:,:) ! |psi_j,k> in g-space
     COMPLEX(DP),ALLOCATABLE :: phi(:)    ! aux space for fwfft
     COMPLEX(DP) :: fp, fm
+    REAL(dp) :: gk(npwx)  ! work space (automatic array)
     !
-    ! NOTE: I do not want to use vkb from uspp, as you never know if it is going to be used again or not,
-    !       this way we are wasting some memory, but the fault is with uspp that should not use global
-    !       variables for temporary data (lp-2012-10-03)
+    ! NOTE: I do not want to use vkb from uspp, as you never know if it is 
+    ! going to be used again or not, this way we are wasting some memory,
+    ! but the fault is with uspp that should not use global variables
+    ! for temporary data (lp-2012-10-03)
     !
     IF(.not. okvan) RETURN
     !
@@ -1026,7 +1028,7 @@ MODULE exx
       ! bands count is reset at each k-point
       !
       ! prepare the g-vectors mapping
-      CALL gk_sort(xkq_collect(:, ikq), ngm, g, gcutw, npwq, igkq, g2kin )
+      CALL gk_sort(xkq_collect(:, ikq), ngm, g, gcutw, npwq, igkq, gk )
       ! prepare the |beta> function at k+q
       CALL init_us_2(npwq, igkq, xkq_collect(:, ikq), vkbq)
       !
