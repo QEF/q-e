@@ -822,7 +822,7 @@ MODULE path_io_routines
        !
        IF ( lfcpopt ) THEN
           WRITE(iunpath,'(/,5X,"image",2X,"Fermi energy (eV)",11X, &
-                        "error (V)",4X,"tot_charge",/)')
+                        & "error (V)",4X,"tot_charge",/)')
           DO image = 1, num_of_images
           !
              WRITE(iunpath,'(5X,I5,9X,F10.6,10X,F10.6,4X,F10.6)') &
