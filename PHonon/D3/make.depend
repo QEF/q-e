@@ -313,6 +313,7 @@ openfild3.o : d3com.o
 print_clock_d3.o : ../../Modules/io_global.o
 print_clock_d3.o : d3com.o
 psymd0rho.o : ../../FFTXlib/scatter_mod.o
+psymd0rho.o : ../../LR_Modules/lrcom.o
 psymd0rho.o : ../../Modules/fft_base.o
 psymd0rho.o : ../../Modules/ions_base.o
 psymd0rho.o : ../../Modules/kind.o
@@ -329,6 +330,7 @@ read_ef.o : ../../PW/src/pwcom.o
 read_ef.o : d3com.o
 rotate_and_add_d3.o : ../../Modules/constants.o
 rotate_and_add_d3.o : ../../Modules/kind.o
+set_d3irr.o : ../../LR_Modules/lrcom.o
 set_d3irr.o : ../../Modules/control_flags.o
 set_d3irr.o : ../../Modules/io_files.o
 set_d3irr.o : ../../Modules/ions_base.o
@@ -373,6 +375,7 @@ stop_d3.o : ../../Modules/mp_global.o
 stop_d3.o : ../../PHonon/PH/phcom.o
 stop_d3.o : ../../PW/src/pwcom.o
 stop_d3.o : d3com.o
+sym_def1.o : ../../LR_Modules/lrcom.o
 sym_def1.o : ../../Modules/kind.o
 sym_def1.o : ../../PHonon/PH/phcom.o
 sym_def1.o : ../../PW/src/pwcom.o
