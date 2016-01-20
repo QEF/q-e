@@ -339,6 +339,7 @@ upf_to_internal.o : funct.o
 upf_to_internal.o : pseudo_types.o
 upf_to_internal.o : radial_grids.o
 uspp.o : constants.o
+uspp.o : invmat.o
 uspp.o : kind.o
 uspp.o : parameters.o
 uspp.o : pseudo_types.o

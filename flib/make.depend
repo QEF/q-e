@@ -13,8 +13,6 @@ functionals.o : ../Modules/constants.o
 functionals.o : ../Modules/kind.o
 functionals.o : ../Modules/libxc.o
 generate_k_along_lines.o : ../Modules/kind.o
-invmat.o : ../Modules/kind.o
-invmat_complex.o : ../Modules/kind.o
 latgen.o : ../Modules/kind.o
 linpack.o : ../Modules/kind.o
 lsda_functionals.o : ../Modules/constants.o
