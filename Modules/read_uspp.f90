@@ -17,6 +17,7 @@ MODULE read_uspp_module
   USE io_global, ONLY: stdout
   USE funct, ONLY: set_dft_from_name, dft_is_hybrid, dft_is_meta, &
        set_dft_from_indices
+  USE matrix_inversion
   !
   ! Variables above are not modified, variables below are
   !
@@ -485,7 +486,6 @@ CONTAINS
     implicit none
     !
     real (kind=DP), allocatable :: qrl(:,:), a(:,:), ainv(:,:), b(:), x(:)
-    real (kind=DP) :: deta
     integer :: iv, jv, ijv, lmin, lmax, l, ir, irinner, i,j
     !
     !
@@ -541,7 +541,7 @@ CONTAINS
                 end do
              end do
              !
-             call invmat (upf%nqf, a, ainv, deta)
+             call invmat (upf%nqf, a, ainv)
              !
              do i = 1, upf%nqf
                 upf%qfcoef(i,l,iv,jv) = dot_product(ainv(i,:),b(:))

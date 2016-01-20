@@ -321,6 +321,7 @@ compute_ux.o : ../../Modules/io_global.o
 compute_ux.o : ../../Modules/kind.o
 compute_ux.o : ../../Modules/noncol.o
 coset.o : ../../Modules/kind.o
+d_matrix.o : ../../Modules/invmat.o
 d_matrix.o : ../../Modules/kind.o
 d_matrix.o : ../../Modules/random_numbers.o
 d_matrix.o : symm_base.o
@@ -917,6 +918,7 @@ iweights.o : ../../Modules/kind.o
 iweights.o : ../../Modules/mp.o
 iweights.o : ../../Modules/mp_pools.o
 iweights.o : ../../Modules/noncol.o
+kpoint_grid.o : ../../Modules/invmat.o
 kpoint_grid.o : ../../Modules/io_global.o
 kpoint_grid.o : ../../Modules/kind.o
 kpoint_grid.o : ../../Modules/noncol.o
@@ -1257,6 +1259,7 @@ plugin_scf_potential.o : scf_mod.o
 plugin_summary.o : ../../Modules/plugin_flags.o
 plus_u_full.o : ../../Modules/cell_base.o
 plus_u_full.o : ../../Modules/constants.o
+plus_u_full.o : ../../Modules/invmat.o
 plus_u_full.o : ../../Modules/ions_base.o
 plus_u_full.o : ../../Modules/kind.o
 plus_u_full.o : ../../Modules/noncol.o
@@ -1849,6 +1852,7 @@ summary.o : pwcom.o
 summary.o : realus.o
 summary.o : symm_base.o
 symm_base.o : ../../Modules/cell_base.o
+symm_base.o : ../../Modules/invmat.o
 symm_base.o : ../../Modules/io_global.o
 symm_base.o : ../../Modules/kind.o
 symme.o : ../../Modules/cell_base.o

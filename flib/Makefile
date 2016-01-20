@@ -23,8 +23,6 @@ has_xml.o \
 iglocal.o \
 inpfile.o \
 int_to_char.o \
-invmat.o \
-invmat_complex.o \
 latgen.o \
 linpack.o \
 metagga.o \

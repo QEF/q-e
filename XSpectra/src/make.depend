@@ -37,6 +37,7 @@ gipaw_module.o : paw_gipaw.o
 init_gipaw_1.o : ../../Modules/atom.o
 init_gipaw_1.o : ../../Modules/cell_base.o
 init_gipaw_1.o : ../../Modules/constants.o
+init_gipaw_1.o : ../../Modules/invmat.o
 init_gipaw_1.o : ../../Modules/io_global.o
 init_gipaw_1.o : ../../Modules/ions_base.o
 init_gipaw_1.o : ../../Modules/kind.o

@@ -12,6 +12,7 @@ subroutine d_matrix (dy1, dy2, dy3)
   USE kinds, only: DP
   USE symm_base, ONLY:  nsym, sr
   USE random_numbers, ONLY : randy
+  USE matrix_inversion
   implicit none
   real(DP) :: dy1 (3, 3, 48), dy2 (5, 5, 48), dy3 (7, 7, 48)
   !
@@ -46,7 +47,7 @@ subroutine d_matrix (dy1, dy2, dy3)
         yl1 (m, n) = ylm (n, 1+m)
      end do
   end do
-  call invmat (3, yl1, yl1_inv, capel)
+  call invmat (3, yl1, yl1_inv)
   !
   !  l = 2 block
   !
@@ -55,7 +56,7 @@ subroutine d_matrix (dy1, dy2, dy3)
         yl2 (m, n) = ylm (n, 4+m)
      end do
   end do
-  call invmat (5, yl2, yl2_inv, capel)
+  call invmat (5, yl2, yl2_inv)
   !
   !  l = 3 block
   !
@@ -64,7 +65,7 @@ subroutine d_matrix (dy1, dy2, dy3)
         yl3 (m, n) = ylm (n, 9+m)
      end do
   end do
-  call invmat (7, yl3, yl3_inv, capel)
+  call invmat (7, yl3, yl3_inv)
   !
   ! now for each symmetry operation of the point-group ...
   !

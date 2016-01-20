@@ -27,7 +27,7 @@ subroutine init_gipaw_1
   USE io_global,   ONLY : stdout
   USE mp_global,   ONLY : intra_pool_comm
   USE mp,          ONLY : mp_sum
-
+  USE matrix_inversion
   !
   implicit none
   !
@@ -221,7 +221,7 @@ subroutine init_gipaw_1
            !</apsi>
 #endif
 
-           call invmat ( paw_recon(nt)%paw_nl(l), s, sinv, norm)
+           call invmat ( paw_recon(nt)%paw_nl(l), s, sinv)
 
            do ih = 1, paw_recon(nt)%paw_nl(l)
               n1 = paw_recon(nt)%paw_iltonh(l,ih)

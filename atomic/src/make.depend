@@ -153,6 +153,7 @@ export_upf.o : ../../Modules/write_upf_v2.o
 export_upf.o : ld1inc.o
 find_qi.o : ../../Modules/kind.o
 find_qi.o : ld1inc.o
+gener_pseudo.o : ../../Modules/invmat.o
 gener_pseudo.o : ../../Modules/io_global.o
 gener_pseudo.o : ../../Modules/kind.o
 gener_pseudo.o : ../../Modules/mp.o

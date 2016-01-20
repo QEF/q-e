@@ -48,6 +48,7 @@ MODULE bfgs_module
    USE cell_base, ONLY : iforceh
    !
    USE basic_algebra_routines
+   USE matrix_inversion
    !
    IMPLICIT NONE
    !
@@ -164,7 +165,7 @@ CONTAINS
       LOGICAL  :: lwolfe
       REAL(DP) :: dE0s, den
       ! ... for scaled coordinates
-      REAL(DP) :: hinv(3,3),g(3,3),ginv(3,3),garbage, omega
+      REAL(DP) :: hinv(3,3),g(3,3),ginv(3,3), omega
       !
       !
       lwolfe=.false.
@@ -195,7 +196,7 @@ CONTAINS
       ! ... the BFGS file read (pos & grad) in scaled coordinates
       !
       call invmat(3, h, hinv, omega)
-      ! volume is defined to be positve even for left-handed vector triplet
+      ! volume is defined to be positive even for left-handed vector triplet
       omega = abs(omega) 
       !
       hinv_block = 0.d0
@@ -203,7 +204,7 @@ CONTAINS
       !
       ! ... generate metric to work with scaled ionic coordinates
       g = MATMUL(TRANSPOSE(h),h)
-      call invmat(3,g,ginv,garbage)
+      call invmat(3,g,ginv)
       metric = 0.d0
       FORALL ( k=0:nat-1,   i=1:3, j=1:3 ) metric(i+3*k,j+3*k) = g(i,j)
       FORALL ( k=nat:nat+2, i=1:3, j=1:3 ) metric(i+3*k,j+3*k) = 0.04 * omega * ginv(i,j)
@@ -554,9 +555,7 @@ CONTAINS
       !
       INTEGER, INTENT(IN) :: n
       !
-      REAL(DP) :: garbage
-      !
-      call invmat(n, metric, inv_hess, garbage)
+      call invmat(n, metric, inv_hess)
       !
       gdiis_iter = 0
       !
@@ -578,7 +577,6 @@ CONTAINS
       !
       CHARACTER(LEN=256) :: bfgs_file
       LOGICAL            :: file_exists
-      REAL(DP) :: garbage
       !
       !
       bfgs_file = TRIM( scratch ) // TRIM( prefix ) // '.bfgs'
@@ -617,7 +615,7 @@ CONTAINS
          WRITE( UNIT = stdout, FMT = '(/,5X,"BFGS Geometry Optimization")' )
          !
          ! initialize the inv_hess to the inverse of the metric
-         call invmat(n, metric, inv_hess, garbage)
+         call invmat(n, metric, inv_hess)
          !
          pos_p      = 0.0_DP
          grad_p     = 0.0_DP

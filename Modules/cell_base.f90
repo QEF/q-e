@@ -497,6 +497,7 @@
 !
 
       SUBROUTINE gethinv(box)
+        USE matrix_inversion
         IMPLICIT NONE
         TYPE (boxdimensions), INTENT (INOUT) :: box
         !

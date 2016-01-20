@@ -78,14 +78,13 @@ MODULE ws_base
 !---------------------------------------------------------------
     SUBROUTINE ws_init(a,ws)
 !---------------------------------------------------------------
+      USE matrix_inversion
       REAL(DP), INTENT(IN) :: a(3,3)
       TYPE(ws_type), INTENT(OUT) :: ws
-
-      REAL(DP) :: garbage
       INTEGER :: i
       !
       ws%a = a
-      CALL invmat( 3, ws%a, ws%b, garbage ) ! invmat is defined in flib
+      CALL invmat( 3, ws%a, ws%b )
       ws%aa = MATMUL(TRANSPOSE(a),a)
       do i=1,3
          ws%norm_b(i) =  DSQRT(SUM(ws%b(i,:)*ws%b(i,:)))

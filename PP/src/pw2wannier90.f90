@@ -2953,13 +2953,13 @@ END SUBROUTINE wan2sic
 SUBROUTINE ylm_expansion
    USE io_global,  ONLY : stdout
    USE kinds, ONLY :  DP
-   USE random_numbers,       ONLY : randy
+   USE random_numbers,  ONLY : randy
+   USE matrix_inversion
    USE wannier
    IMPLICIT NONE
    ! local variables
    INTEGER, PARAMETER :: lmax2=16
    INTEGER ::  lm, i, ir, iw, m
-   real(DP) :: capel
    real(DP), ALLOCATABLE :: r(:,:), rr(:), rp(:,:), ylm_w(:), ylm(:,:), mly(:,:)
    real(DP) :: u(3,3)
 
@@ -2976,7 +2976,7 @@ SUBROUTINE ylm_expansion
    !- compute ylm(ir,lm)
    CALL ylmr2(lmax2, lmax2, r, rr, ylm)
    !- store the inverse of ylm(ir,lm) in mly(lm,ir)
-   CALL invmat(lmax2, ylm, mly, capel)
+   CALL invmat(lmax2, ylm, mly)
    !- check that r points are independent
    CALL check_inverse(lmax2, ylm, mly)
 

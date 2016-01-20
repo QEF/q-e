@@ -37,6 +37,7 @@ griddim.o \
 gth.o \
 gvecw.o \
 input_parameters.o \
+invmat.o \
 io_files.o \
 io_global.o  \
 ions_base.o \

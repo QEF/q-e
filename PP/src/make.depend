@@ -169,9 +169,11 @@ compute_sigma_avg.o : ../../PW/src/scf_mod.o
 cube.o : ../../Modules/cell_base.o
 cube.o : ../../Modules/io_global.o
 cube.o : ../../Modules/kind.o
+d_matrix_nc.o : ../../Modules/invmat.o
 d_matrix_nc.o : ../../Modules/kind.o
 d_matrix_nc.o : ../../Modules/random_numbers.o
 d_matrix_nc.o : ../../PW/src/symm_base.o
+d_matrix_so.o : ../../Modules/invmat.o
 d_matrix_so.o : ../../Modules/kind.o
 d_matrix_so.o : ../../Modules/random_numbers.o
 d_matrix_so.o : ../../PW/src/pwcom.o
@@ -512,6 +514,7 @@ pw2bgw.o : ../../Modules/environment.o
 pw2bgw.o : ../../Modules/fft_base.o
 pw2bgw.o : ../../Modules/funct.o
 pw2bgw.o : ../../Modules/gvecw.o
+pw2bgw.o : ../../Modules/invmat.o
 pw2bgw.o : ../../Modules/io_files.o
 pw2bgw.o : ../../Modules/io_global.o
 pw2bgw.o : ../../Modules/ions_base.o
@@ -567,6 +570,7 @@ pw2wannier90.o : ../../Modules/control_flags.o
 pw2wannier90.o : ../../Modules/environment.o
 pw2wannier90.o : ../../Modules/fft_base.o
 pw2wannier90.o : ../../Modules/gvecw.o
+pw2wannier90.o : ../../Modules/invmat.o
 pw2wannier90.o : ../../Modules/io_files.o
 pw2wannier90.o : ../../Modules/io_global.o
 pw2wannier90.o : ../../Modules/ions_base.o

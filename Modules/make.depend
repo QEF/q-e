@@ -15,6 +15,7 @@ becmod.o : recvec.o
 bfgs_module.o : basic_algebra_routines.o
 bfgs_module.o : cell_base.o
 bfgs_module.o : constants.o
+bfgs_module.o : invmat.o
 bfgs_module.o : io_files.o
 bfgs_module.o : kind.o
 bspline.o : kind.o
@@ -23,6 +24,7 @@ bz_form.o : io_global.o
 bz_form.o : kind.o
 cell_base.o : constants.o
 cell_base.o : control_flags.o
+cell_base.o : invmat.o
 cell_base.o : io_global.o
 cell_base.o : kind.o
 check_stop.o : input_parameters.o
@@ -119,6 +121,7 @@ gvecw.o : mp.o
 input_parameters.o : kind.o
 input_parameters.o : parameters.o
 input_parameters.o : wannier_new.o
+invmat.o : kind.o
 io_files.o : io_global.o
 io_files.o : kind.o
 io_files.o : parameters.o
@@ -272,6 +275,7 @@ read_upf_v2.o : pseudo_types.o
 read_upf_v2.o : radial_grids.o
 read_uspp.o : constants.o
 read_uspp.o : funct.o
+read_uspp.o : invmat.o
 read_uspp.o : io_global.o
 read_uspp.o : kind.o
 read_uspp.o : parameters.o
@@ -354,6 +358,7 @@ write_upf_v2.o : ../iotk/src/iotk_module.o
 write_upf_v2.o : kind.o
 write_upf_v2.o : pseudo_types.o
 write_upf_v2.o : radial_grids.o
+ws_base.o : invmat.o
 ws_base.o : kind.o
 wypos.o : kind.o
 xc_rVV10.o : ../FFTXlib/fft_interfaces.o

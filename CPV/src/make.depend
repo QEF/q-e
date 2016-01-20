@@ -115,6 +115,7 @@ cp_restart.o : ../../Modules/electrons_base.o
 cp_restart.o : ../../Modules/fft_base.o
 cp_restart.o : ../../Modules/funct.o
 cp_restart.o : ../../Modules/gvecw.o
+cp_restart.o : ../../Modules/invmat.o
 cp_restart.o : ../../Modules/io_files.o
 cp_restart.o : ../../Modules/io_global.o
 cp_restart.o : ../../Modules/ions_base.o
@@ -443,6 +444,7 @@ fromscra.o : ../../Modules/control_flags.o
 fromscra.o : ../../Modules/electrons_base.o
 fromscra.o : ../../Modules/fft_base.o
 fromscra.o : ../../Modules/gvecw.o
+fromscra.o : ../../Modules/invmat.o
 fromscra.o : ../../Modules/io_global.o
 fromscra.o : ../../Modules/ions_base.o
 fromscra.o : ../../Modules/kind.o
@@ -499,6 +501,7 @@ init.o : ../../Modules/fft_base.o
 init.o : ../../Modules/griddim.o
 init.o : ../../Modules/gvecw.o
 init.o : ../../Modules/input_parameters.o
+init.o : ../../Modules/invmat.o
 init.o : ../../Modules/io_files.o
 init.o : ../../Modules/io_global.o
 init.o : ../../Modules/ions_base.o
@@ -994,6 +997,7 @@ restart_sub.o : ../../Modules/control_flags.o
 restart_sub.o : ../../Modules/electrons_base.o
 restart_sub.o : ../../Modules/fft_base.o
 restart_sub.o : ../../Modules/gvecw.o
+restart_sub.o : ../../Modules/invmat.o
 restart_sub.o : ../../Modules/io_global.o
 restart_sub.o : ../../Modules/ions_base.o
 restart_sub.o : ../../Modules/kind.o

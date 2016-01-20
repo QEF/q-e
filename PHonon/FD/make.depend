@@ -35,6 +35,7 @@ fd_ifc.o : ../../Modules/constants.o
 fd_ifc.o : ../../Modules/environment.o
 fd_ifc.o : ../../Modules/fft_base.o
 fd_ifc.o : ../../Modules/gvecw.o
+fd_ifc.o : ../../Modules/invmat.o
 fd_ifc.o : ../../Modules/io_files.o
 fd_ifc.o : ../../Modules/io_global.o
 fd_ifc.o : ../../Modules/ions_base.o

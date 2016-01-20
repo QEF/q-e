@@ -179,6 +179,7 @@ CONTAINS
     ! The indices limi,ljmj and LM assume the order for real spherical
     ! harmonics given in routine ylmr2
     !
+    USE matrix_inversion
     implicit none
     !
     ! input: the maximum li considered
@@ -193,7 +194,6 @@ CONTAINS
     ! the norm of r: rr(llx)
     ! the real spherical harmonics for array r: ylm(llx,llx)
     ! the inverse of ylm considered as a matrix: mly(llx,llx)
-    real(DP) :: dum
     !
     if (lli < 0) call errore('aainit','lli not allowed',lli)
 
@@ -223,7 +223,7 @@ CONTAINS
 
     !-  store the inverse of ylm(ir,lm) in mly(lm,ir)
 
-    call invmat(llx, ylm, mly, dum)
+    call invmat(llx, ylm, mly)
 
     !-  for each li,lj compute ap(l,li,lj) and the indices, lpx and lpl
     do li = 1, lli*lli

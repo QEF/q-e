@@ -30,6 +30,7 @@ MODULE cp_restart
   USE io_files,  ONLY : prefix, iunpun, xmlpun, qexml_version, qexml_version_init
   USE mp,        ONLY : mp_bcast
   USE parser,    ONLY : version_compare
+  USE matrix_inversion
   !
   IMPLICIT NONE
   !
@@ -243,10 +244,11 @@ MODULE cp_restart
       nk3 = 0
       !
       ! ... Compute Cell related variables
-      !
+      ! ... Dirty trick to avoid bogus complaints because ht in intent(in)
+      h = ht
+      CALL invmat( 3, h, htm1, omega )
       h = TRANSPOSE( ht )
       !
-      CALL invmat( 3, ht, htm1, omega )
       !
       a1 = ht(1,:)
       a2 = ht(2,:)

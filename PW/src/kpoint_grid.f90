@@ -324,6 +324,7 @@ SUBROUTINE kpoint_grid_efield (at, bg, npk, &
                     transform_el
   USE io_global,  ONLY : stdout
   USE noncollin_module,   ONLY : noncolin
+  USE matrix_inversion
 
   IMPLICIT NONE
   !
@@ -412,7 +413,7 @@ SUBROUTINE kpoint_grid_efield (at, bg, npk, &
                            bg_n(3,j)*bg_n(3,i)
      ENDDO
  ENDDO
- CALL  invmat (3, cry_to_cart, transform_el, sca)
+ CALL  invmat (3, cry_to_cart, transform_el)
 
 ! calculate EFFECTIVE electric field on crystal axis
 

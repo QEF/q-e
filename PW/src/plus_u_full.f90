@@ -139,6 +139,7 @@ subroutine aainit_1(n2l, nl, ap)
     ! The routine is similar to aainit in Modules/uspp.f90 
     !
     USE kinds,     ONLY : DP
+    USE matrix_inversion
 
     implicit none
     !
@@ -151,7 +152,7 @@ subroutine aainit_1(n2l, nl, ap)
     !
     integer :: li, lj, l, ir
     real(DP) , allocatable :: r(:,:), rr(:), ylm(:,:), mly(:,:)
-    real(DP) :: ap(n2l, nl, nl), compute_ap_1, dum
+    real(DP) :: ap(n2l, nl, nl), compute_ap_1
 
     allocate (r( 3, n2l ))    
     allocate (rr( n2l ))    
@@ -173,7 +174,7 @@ subroutine aainit_1(n2l, nl, ap)
 
     !-  store the inverse of ylm(ir,lm) in mly(lm,ir)
 
-    call invmat(n2l, ylm, mly, dum)
+    call invmat(n2l, ylm, mly)
 
     !-  for each l,li,lj compute ap(l,li,lj) 
     do li = 1, nl

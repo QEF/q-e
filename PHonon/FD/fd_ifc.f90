@@ -23,6 +23,7 @@ program fd_ifc
   USE ions_base,  ONLY : amass, nat, nat, atm, zv, tau, ntyp => nsp, ityp
   USE kinds,      ONLY : dp
   USE gvecw,      ONLY : ecutwfc
+  USE matrix_inversion
 
   USE symm_base
   USE symme
@@ -73,7 +74,7 @@ INTEGER :: isym
 INTEGER, ALLOCATABLE  ::  sxy(:), sxz(:), syz(:)
 REAL (dp) :: ft1, ft2, ft3
 
-  REAL (dp) :: d(3,3),rd(3,3),dhex(3,3), dcub(3,3), dhexm1(3,3), da, tmp(3)
+  REAL (dp) :: d(3,3),rd(3,3),dhex(3,3), dcub(3,3), dhexm1(3,3), tmp(3)
   REAL (dp) :: accep=1.0d-5
   LOGICAL, ALLOCATABLE :: move_sl(:,:)
   LOGICAL, EXTERNAL :: eqdisp
@@ -346,7 +347,7 @@ end if
 
 if (hex) then
    d=dhex
-   call invmat (3, dhex, dhexm1, da)
+   call invmat (3, dhex, dhexm1)
 else
    d=dcub
 end if

@@ -44,6 +44,7 @@ subroutine gener_pseudo
                     lnc2paw, rhos, which_augfun, psipaw_rel, &
                     cau_fact, ik, ikus
   use atomic_paw, only : us2paw, paw2us
+  use matrix_inversion
   implicit none
 
   integer ::   &
@@ -60,7 +61,7 @@ subroutine gener_pseudo
        gi(ndmx),      &  ! auxiliary to compute the integrals
        occ, norm1, norm2, &  !
        speed,        & ! an estimate of electron speed at rcutus
-       db, work(nwfsx)   ! work space
+       work(nwfsx)   ! work space
 
   real(DP), allocatable :: &
        b(:,:), binv(:,:) ! the B matrix and its inverse
@@ -342,7 +343,7 @@ subroutine gener_pseudo
   do ns1=1,nbeta
      write(stdout,'(6f12.5)') (bmat(ns1,ns),ns=1,nbeta)
   enddo
-  if (nbeta > 0) call invmat(nbeta, b, binv, db)
+  if (nbeta > 0) call invmat(nbeta, b, binv)
   !
   !   compute the beta functions
   !

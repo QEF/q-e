@@ -37,6 +37,7 @@ SUBROUTINE from_restart( )
                                      sfac, taub, irb, eigrb, edft, bec_bgrp, dbec, descla
    USE time_step,             ONLY : delt
    USE fft_base,              ONLY : dfftp
+   USE matrix_inversion
    !
    IMPLICIT NONE
 

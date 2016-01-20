@@ -109,6 +109,7 @@ SUBROUTINE set_sym_bl ( )
   ! then the 8 rotations specific for the hexagonal axis (special axis c);
   ! then inversion is added
   !
+  USE matrix_inversion
   IMPLICIT NONE
   !
   ! sin3 = sin(pi/3), cos3 = cos(pi/3), msin3 = -sin(pi/3), mcos3 = -cos(pi/3)
@@ -237,7 +238,7 @@ SUBROUTINE set_sym_bl ( )
   !
   !    then its inverse (rot is used as work space)
   !
-  CALL invmat (3, rot, overlap, value)
+  CALL invmat (3, rot, overlap)
 
   nrot = 1
   DO irot = 1,32

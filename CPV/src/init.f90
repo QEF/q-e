@@ -260,6 +260,7 @@
       USE cp_main_variables,ONLY: ht0, htm, taub
       USE cp_interfaces,    ONLY: newinit
       USE constants,        ONLY: amu_au
+      USE matrix_inversion
 
       implicit none
       !
