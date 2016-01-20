@@ -129,7 +129,7 @@ SUBROUTINE esm_cft_1z_init(nsl, nz, ldz)
   !   initialize a new one
 
   nth = 1
-#ifdef _OPENMP
+#ifdef __OPENMP
   nth = OMP_GET_MAX_THREADS()
 #endif
 
