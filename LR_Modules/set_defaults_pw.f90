@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-SUBROUTINE setup_nscf ( newgrid, xq )
+SUBROUTINE setup_nscf ( newgrid, xq, elph_mat )
   !----------------------------------------------------------------------------
   !
   ! ... This routine initializes variables for the non-scf calculations at k
@@ -38,7 +38,7 @@ SUBROUTINE setup_nscf ( newgrid, xq )
   USE wvfct,              ONLY : nbnd, nbndx
   USE control_flags,      ONLY : ethr, isolve, david, max_cg_iter, &
                                  noinv, use_para_diag
-  USE el_phon,            ONLY : elph_mat
+!!!!!!!!!  USE el_phon,            ONLY : elph_mat
   USE mp_pools,           ONLY : kunit
   USE spin_orb,           ONLY : domag
   USE noncollin_module,   ONLY : noncolin
@@ -54,6 +54,7 @@ SUBROUTINE setup_nscf ( newgrid, xq )
   !
   REAL (DP), INTENT(IN) :: xq(3)
   LOGICAL, INTENT (IN) :: newgrid
+  LOGICAL, INTENT (IN) :: elph_mat  ! used to be passed through a module. 
   !
   REAL (DP), ALLOCATABLE :: rtau (:,:,:)
   LOGICAL  :: magnetic_sym, sym(48)
@@ -105,8 +106,8 @@ SUBROUTINE setup_nscf ( newgrid, xq )
      !
      ! In this case I generate a new set of k-points
      !
-     ! In the case of electron-phonon matrix element with
-     ! wannier functions the k-points should not be reduced
+     ! In the case of electron-phonon matrix element with wannier functions 
+     ! (and possibly in other cases as well) the k-points should not be reduced
      !
      skip_equivalence = elph_mat
      CALL kpoint_grid ( nrot, time_reversal, skip_equivalence, s, t_rev, &

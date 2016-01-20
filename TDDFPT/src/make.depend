@@ -405,11 +405,11 @@ lr_ortho.o : ../../PW/src/pwcom.o
 lr_ortho.o : ../../PW/src/realus.o
 lr_ortho.o : lr_variables.o
 lr_psym_eels.o : ../../FFTXlib/scatter_mod.o
+lr_psym_eels.o : ../../LR_Modules/lrcom.o
 lr_psym_eels.o : ../../Modules/fft_base.o
 lr_psym_eels.o : ../../Modules/kind.o
 lr_psym_eels.o : ../../Modules/mp_global.o
 lr_psym_eels.o : ../../Modules/noncol.o
-lr_psym_eels.o : ../../PHonon/PH/phcom.o
 lr_read_d0psi.o : ../../Modules/io_files.o
 lr_read_d0psi.o : ../../Modules/io_global.o
 lr_read_d0psi.o : ../../PW/src/pwcom.o
@@ -525,7 +525,6 @@ lr_setup_nscf.o : ../../Modules/mp_pools.o
 lr_setup_nscf.o : ../../Modules/noncol.o
 lr_setup_nscf.o : ../../Modules/parameters.o
 lr_setup_nscf.o : ../../Modules/uspp.o
-lr_setup_nscf.o : ../../PHonon/PH/phcom.o
 lr_setup_nscf.o : ../../PW/src/atomic_wfc_mod.o
 lr_setup_nscf.o : ../../PW/src/pwcom.o
 lr_setup_nscf.o : ../../PW/src/start_k.o
@@ -546,6 +545,7 @@ lr_sm1_psi.o : ../../Modules/uspp.o
 lr_sm1_psi.o : ../../PW/src/pwcom.o
 lr_sm1_psi.o : ../../PW/src/realus.o
 lr_sm1_psi.o : lr_variables.o
+lr_smallgq.o : ../../LR_Modules/lrcom.o
 lr_smallgq.o : ../../Modules/cell_base.o
 lr_smallgq.o : ../../Modules/control_flags.o
 lr_smallgq.o : ../../Modules/io_global.o
@@ -553,7 +553,6 @@ lr_smallgq.o : ../../Modules/kind.o
 lr_smallgq.o : ../../Modules/mp.o
 lr_smallgq.o : ../../Modules/mp_global.o
 lr_smallgq.o : ../../Modules/noncol.o
-lr_smallgq.o : ../../PHonon/PH/phcom.o
 lr_smallgq.o : ../../PW/src/symm_base.o
 lr_solve_e.o : ../../LR_Modules/lrcom.o
 lr_solve_e.o : ../../Modules/cell_base.o
@@ -582,16 +581,15 @@ lr_summary.o : ../../Modules/kind.o
 lr_summary.o : ../../Modules/noncol.o
 lr_summary.o : ../../Modules/recvec.o
 lr_summary.o : ../../Modules/run_info.o
-lr_summary.o : ../../PHonon/PH/phcom.o
 lr_summary.o : ../../PW/src/pwcom.o
 lr_summary.o : ../../PW/src/symm_base.o
 lr_summary.o : lr_variables.o
+lr_sym_eels.o : ../../LR_Modules/lrcom.o
 lr_sym_eels.o : ../../Modules/cell_base.o
 lr_sym_eels.o : ../../Modules/constants.o
 lr_sym_eels.o : ../../Modules/fft_base.o
 lr_sym_eels.o : ../../Modules/kind.o
 lr_sym_eels.o : ../../Modules/noncol.o
-lr_sym_eels.o : ../../PHonon/PH/phcom.o
 lr_sym_eels.o : ../../PW/src/symm_base.o
 lr_test_restart.o : ../../Modules/io_files.o
 lr_test_restart.o : ../../Modules/io_global.o

@@ -130,7 +130,6 @@ rotate_pattern_add.o \
 run_nscf.o \
 save_ph_input.o \
 set_asr_c.o \
-set_defaults_pw.o \
 set_drhoc.o \
 set_int12_nc.o \
 set_irr.o \
@@ -141,7 +140,6 @@ setlocq.o \
 setqmod.o \
 setup_dgc.o \
 sgam_ph.o \
-smallgq.o \
 solve_e.o \
 solve_e_fpol.o \
 solve_linter.o \
@@ -211,7 +209,7 @@ libs-ph : libph.a libphaux.a
 
 ph.x : phonon.o libph.a $(PWOBJS) $(LRMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ phonon.o libph.a \
-		 $(PWOBJS) $(LRMODS) $(QEMODS) $(LIBOBJS) $(LIBS)
+		 $(LRMODS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../PHonon/PH/ph.x . )
 
 dynmat.x : dynmat.o libphaux.a  libph.a $(PWOBJS)  $(MODULES) $(LIBOBJS)

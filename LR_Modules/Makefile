@@ -16,6 +16,8 @@ ch_psi_all.o \
 commutator_Hx_psi.o \
 h_psiq.o \
 orthogonalize.o \
+set_defaults_pw.o \
+smallgq.o \
 lrcom.o
 
 TLDEPS=libfft mods
