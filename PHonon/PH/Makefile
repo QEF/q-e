@@ -39,7 +39,6 @@ check_restart_recover.o \
 clean_pw_ph.o \
 clinear.o \
 close_phq.o \
-commutator_Hx_psi.o \
 compute_alphasum.o \
 compute_becalp.o \
 compute_becsum_ph.o \

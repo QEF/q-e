@@ -25,9 +25,11 @@ subroutine adddvscf (ipert, ik)
   USE wvfct,      ONLY : nbnd, npwx
   USE noncollin_module, ONLY : noncolin, npol
 ! modules from phcom
-  USE qpoint,     ONLY : npwq, ikks
   USE phus,       ONLY : int3, int3_nc, becp1
+
+  USE qpoint,     ONLY : npwq, ikks
   USE eqv,        ONLY : dvpsi
+
   implicit none
   !
   !   The dummy variables

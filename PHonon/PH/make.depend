@@ -232,17 +232,6 @@ close_phq.o : elph.o
 close_phq.o : phcom.o
 close_phq.o : ramanm.o
 close_phq.o : write_rec.o
-commutator_Hx_psi.o : ../../Modules/becmod.o
-commutator_Hx_psi.o : ../../Modules/cell_base.o
-commutator_Hx_psi.o : ../../Modules/control_flags.o
-commutator_Hx_psi.o : ../../Modules/io_global.o
-commutator_Hx_psi.o : ../../Modules/ions_base.o
-commutator_Hx_psi.o : ../../Modules/kind.o
-commutator_Hx_psi.o : ../../Modules/noncol.o
-commutator_Hx_psi.o : ../../Modules/recvec.o
-commutator_Hx_psi.o : ../../Modules/uspp.o
-commutator_Hx_psi.o : ../../Modules/wavefunctions.o
-commutator_Hx_psi.o : ../../PW/src/pwcom.o
 compute_alphasum.o : ../../LR_Modules/lrcom.o
 compute_alphasum.o : ../../Modules/ions_base.o
 compute_alphasum.o : ../../Modules/kind.o

@@ -31,6 +31,17 @@ ch_psi_all.o : ../Modules/wavefunctions.o
 ch_psi_all.o : ../PW/src/pwcom.o
 ch_psi_all.o : ../PW/src/realus.o
 ch_psi_all.o : lrcom.o
+commutator_Hx_psi.o : ../Modules/becmod.o
+commutator_Hx_psi.o : ../Modules/cell_base.o
+commutator_Hx_psi.o : ../Modules/control_flags.o
+commutator_Hx_psi.o : ../Modules/io_global.o
+commutator_Hx_psi.o : ../Modules/ions_base.o
+commutator_Hx_psi.o : ../Modules/kind.o
+commutator_Hx_psi.o : ../Modules/noncol.o
+commutator_Hx_psi.o : ../Modules/recvec.o
+commutator_Hx_psi.o : ../Modules/uspp.o
+commutator_Hx_psi.o : ../Modules/wavefunctions.o
+commutator_Hx_psi.o : ../PW/src/pwcom.o
 h_psiq.o : ../FFTXlib/fft_interfaces.o
 h_psiq.o : ../Modules/becmod.o
 h_psiq.o : ../Modules/control_flags.o

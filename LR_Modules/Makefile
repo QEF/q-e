@@ -13,6 +13,7 @@ cft_wave.o \
 cgsolve_all.o \
 cg_psi.o \
 ch_psi_all.o \
+commutator_Hx_psi.o \
 h_psiq.o \
 orthogonalize.o \
 lrcom.o
