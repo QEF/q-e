@@ -583,7 +583,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
            endif
            call davcio_drho ( dvscfin(1,1,ipert),  lrdrho, iudvscf, &
                          imode0 + ipert, +1 )
-           IF (okpaw.AND.me_bgrp==0) CALL davcio( int3_paw(:,:,ipert,:,:), lint3paw, &
+           IF (okpaw.AND.me_bgrp==0) CALL davcio( int3_paw(:,:,:,:,ipert), lint3paw, &
                                                   iuint3paw, imode0+ipert, + 1 )
         end do
         if (elph) call elphel (irr, npe, imode0, dvscfins)

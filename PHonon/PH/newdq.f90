@@ -118,7 +118,7 @@ subroutine newdq (dvscf, npe)
                                                eigqts(na)
                        enddo
                        do is = 1, nspin_mag
-                          int3(ih,jh,ipert,na,is) = omega * &
+                          int3(ih,jh,na,is,ipert) = omega * &
                                              zdotc(ngm,aux1,1,aux2(1,is),1)
                        enddo
                     endif
@@ -133,7 +133,7 @@ subroutine newdq (dvscf, npe)
                  do ih = 1, nh (nt)
                     do jh = ih, nh (nt)
                        do is = 1, nspin_mag
-                          int3(jh,ih,ipert,na,is) = int3(ih,jh,ipert,na,is)
+                          int3(jh,ih,na,is,ipert) = int3(ih,jh,na,is,ipert)
                        enddo
                     enddo
                  enddo

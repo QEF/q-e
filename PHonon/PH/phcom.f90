@@ -130,13 +130,13 @@ MODULE phus
   COMPLEX (DP), ALLOCATABLE :: &
        int1(:,:,:,:,:),     &! nhm, nhm, 3, nat, nspin),&
        int2(:,:,:,:,:),     &! nhm, nhm, 3,nat, nat),&
-       int3(:,:,:,:,:),     &! nhm, nhm, npert, nat, nspin),&
-       int3_paw(:,:,:,:,:), &! nhm, nhm, npert, nat, nspin),&
+       int3(:,:,:,:,:),     &! nhm, nhm, nat, nspin, npert),&
+       int3_paw(:,:,:,:,:), &! nhm, nhm, nat, nspin, npert),&
        int4(:,:,:,:,:),     &! nhm*(nhm+1)/2, 3, 3, nat, nspin),&
        int5(:,:,:,:,:),     &! nhm*(nhm+1)/2, 3, 3, nat, nat),&
        int1_nc(:,:,:,:,:),     &! nhm, nhm, 3, nat, nspin),&
        int2_so(:,:,:,:,:,:),   &! nhm, nhm, 3, nat,nat,nspin),&
-       int3_nc(:,:,:,:,:),     &! nhm, nhm, npert, nat, nspin),&
+       int3_nc(:,:,:,:,:),     &! nhm, nhm, nat, nspin, npert),&
        int4_nc(:,:,:,:,:,:),   &! nhm, nhm, 3, 3, nat, nspin),&
        int5_so(:,:,:,:,:,:,:), &! nhm*(nhm+1)/2, 3, 3, nat, nat, nspin),&
 !

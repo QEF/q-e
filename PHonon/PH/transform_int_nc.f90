@@ -126,7 +126,7 @@ USE phus,                 ONLY : int3_nc
 IMPLICIT NONE
 
 INTEGER :: na, npert
-COMPLEX(DP) :: int3(nhm,nhm,npert,nat,nspin_mag)
+COMPLEX(DP) :: int3(nhm,nhm,nat,nspin_mag,npert)
 !
 ! ... local variables
 !
@@ -137,16 +137,16 @@ DO ih = 1, nh(np)
    DO jh = 1, nh(np)
       DO ipol=1,npert
          IF (domag) THEN
-            int3_nc(ih,jh,ipol,na,1)=int3(ih,jh,ipol,na,1)+int3(ih,jh,ipol,na,4)
-            int3_nc(ih,jh,ipol,na,2)=                                       &
-               int3(ih,jh,ipol,na,2) - (0.d0, 1.d0) * int3(ih,jh,ipol,na,3)
-            int3_nc(ih,jh,ipol,na,3)=                                       &
-               int3(ih,jh,ipol,na,2) + (0.d0, 1.d0) * int3(ih,jh,ipol,na,3)
-            int3_nc(ih,jh,ipol,na,4)=                                       &
-               int3(ih,jh,ipol,na,1) - int3(ih,jh,ipol,na,4)
+            int3_nc(ih,jh,na,1,ipol)=int3(ih,jh,na,1,ipol)+int3(ih,jh,na,4,ipol)
+            int3_nc(ih,jh,na,2,ipol)=                                       &
+               int3(ih,jh,na,2,ipol) - (0.d0, 1.d0) * int3(ih,jh,na,3,ipol)
+            int3_nc(ih,jh,na,3,ipol)=                                       &
+               int3(ih,jh,na,2,ipol) + (0.d0, 1.d0) * int3(ih,jh,na,3,ipol)
+            int3_nc(ih,jh,na,4,ipol)=                                       &
+               int3(ih,jh,na,1,ipol) - int3(ih,jh,na,4,ipol)
          ELSE
-            int3_nc(ih,jh,ipol,na,1)=int3(ih,jh,ipol,na,1)
-            int3_nc(ih,jh,ipol,na,4)=int3(ih,jh,ipol,na,1)
+            int3_nc(ih,jh,na,1,ipol)=int3(ih,jh,na,1,ipol)
+            int3_nc(ih,jh,na,4,ipol)=int3(ih,jh,na,1,ipol)
          END IF
       END DO
    END DO

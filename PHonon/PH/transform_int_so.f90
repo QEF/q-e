@@ -168,7 +168,7 @@ USE phus,                 ONLY : int3_nc
 IMPLICIT NONE
 
 INTEGER :: na, npert
-COMPLEX(DP) :: int3(nhm,nhm,npert,nat,nspin_mag)
+COMPLEX(DP) :: int3(nhm,nhm,nat,nspin_mag,npert)
 !
 ! ... local variables
 !
@@ -187,21 +187,21 @@ DO ih = 1, nh(np)
                      DO is1=1,npol
                         DO is2=1,npol
                            ijs=ijs+1
-                           int3_nc(ih,jh,ipol,na,ijs)=                       &
-                               int3_nc(ih,jh,ipol,na,ijs) +                  &
-                               int3 (kh,lh,ipol,na,1)*                       &
+                           int3_nc(ih,jh,na,ijs,ipol)=                       &
+                               int3_nc(ih,jh,na,ijs,ipol) +                  &
+                               int3 (kh,lh,na,1,ipol)*                       &
                              (fcoef(ih,kh,is1,1,np)*fcoef(lh,jh,1,is2,np)  + &
                              fcoef(ih,kh,is1,2,np)*fcoef(lh,jh,2,is2,np)   )
                            IF (domag) THEN
-                              int3_nc(ih,jh,ipol,na,ijs)=                     &
-                                 int3_nc(ih,jh,ipol,na,ijs) +                 &
-                                 int3(kh,lh,ipol,na,2)*                       &
+                              int3_nc(ih,jh,na,ijs,ipol)=                     &
+                                 int3_nc(ih,jh,na,ijs,ipol) +                 &
+                                 int3(kh,lh,na,2,ipol)*                       &
                                 (fcoef(ih,kh,is1,1,np)*fcoef(lh,jh,2,is2,np)+ &
                                  fcoef(ih,kh,is1,2,np)*fcoef(lh,jh,1,is2,np))+&
-                                 (0.D0,-1.D0) * int3(kh,lh,ipol,na,3)*        &
+                                 (0.D0,-1.D0) * int3(kh,lh,na,3,ipol)*        &
                                 (fcoef(ih,kh,is1,1,np)*fcoef(lh,jh,2,is2,np)- &
                                  fcoef(ih,kh,is1,2,np)*fcoef(lh,jh,1,is2,np))+&
-                                 int3 (kh,lh,ipol,na,4)*                      &
+                                 int3 (kh,lh,na,4,ipol)*                      &
                                 (fcoef(ih,kh,is1,1,np)*fcoef(lh,jh,1,is2,np)- &
                                  fcoef(ih,kh,is1,2,np)*fcoef(lh,jh,2,is2,np))
                            END IF

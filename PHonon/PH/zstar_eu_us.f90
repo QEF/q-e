@@ -279,7 +279,7 @@ subroutine zstar_eu_us
                              do jpol = 1, 3
                                 do is=1,nspin_mag
                                  zstareu0(jpol,mode)=zstareu0(jpol,mode)  &
-                                    -fact*int3_paw(ih,jh,jpol,na,is)* &
+                                    -fact*int3_paw(ih,jh,na,is,jpol)* &
                                             becsumort(ijh,na,is,mode)
                                 enddo
                              enddo

@@ -68,15 +68,15 @@ SUBROUTINE elphon()
      npe=npert(irr)
      ALLOCATE (dvscfin (dfftp%nnr, nspin_mag , npe) )
      IF (okvan) THEN
-        ALLOCATE (int3 ( nhm, nhm, npe, nat, nspin_mag))
-        IF (okpaw) ALLOCATE (int3_paw (nhm, nhm, npe, nat, nspin_mag))
-        IF (noncolin) ALLOCATE(int3_nc( nhm, nhm, npe, nat, nspin))
+        ALLOCATE (int3 ( nhm, nhm, nat, nspin_mag, npe))
+        IF (okpaw) ALLOCATE (int3_paw (nhm, nhm, nat, nspin_mag, npe))
+        IF (noncolin) ALLOCATE(int3_nc( nhm, nhm, nat, nspin, npe))
      ENDIF
      DO ipert = 1, npe
         CALL davcio_drho ( dvscfin(1,1,ipert),  lrdrho, iudvscf, &
                            imode0 + ipert,  -1 )
         IF (okpaw .AND. me_bgrp==0) &
-             CALL davcio( int3_paw(:,:,ipert,:,:), lint3paw, &
+             CALL davcio( int3_paw(:,:,:,:,ipert), lint3paw, &
                                           iuint3paw, imode0 + ipert, - 1 )
      END DO
      IF (okpaw) CALL mp_bcast(int3_paw, root_bgrp, intra_bgrp_comm)

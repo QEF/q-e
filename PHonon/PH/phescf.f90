@@ -41,9 +41,9 @@ SUBROUTINE phescf()
   ENDIF
   !
   IF (okvan) THEN
-     ALLOCATE (int3 ( nhm, nhm, 3, nat, nspin_mag))
-     IF (okpaw) ALLOCATE (int3_paw ( nhm, nhm, 3, nat, nspin_mag))
-     IF (noncolin) ALLOCATE(int3_nc( nhm, nhm, 3, nat, nspin))
+     ALLOCATE (int3 ( nhm, nhm, nat, nspin_mag, 3))
+     IF (okpaw) ALLOCATE (int3_paw ( nhm, nhm, nat, nspin_mag, 3))
+     IF (noncolin) ALLOCATE(int3_nc( nhm, nhm, nat, nspin, 3))
   ENDIF
   !
   IF (fpol) THEN    ! calculate freq. dependent polarizability

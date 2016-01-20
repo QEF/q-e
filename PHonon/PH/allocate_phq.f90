@@ -30,7 +30,7 @@ subroutine allocate_phq
   USE uspp_param, ONLY: nhm
   USE ramanm, ONLY: ramtns, lraman
 
-  USE phus, ONLY : int1, int1_nc, int2, int2_so, int3, int3_nc, int3_paw, &
+  USE phus, ONLY : int1, int1_nc, int2, int2_so, &
                    int4, int4_nc, int5, int5_so, becsumort, dpqq, &
                    dpqq_so, alphasum, alphasum_nc, becsum_nc, &
                    becp1, alphap

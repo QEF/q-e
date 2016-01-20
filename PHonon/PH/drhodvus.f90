@@ -110,7 +110,7 @@ subroutine drhodvus (irr, imode0, dvscfin, npe)
                              if (ityp(na)==nt) then
                                 do is = 1, nspin_mag
                                    dyn1(nu_i,nu_j)=dyn1(nu_i,nu_j)+ &
-                                       CONJG(int3_paw(ih,jh,mu,na,is))* &
+                                       CONJG(int3_paw(ih,jh,na,is,mu))* &
                                        becsumort(ijh,na,is,nu_j)
                                 enddo
                              endif

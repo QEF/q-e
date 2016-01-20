@@ -38,11 +38,12 @@ subroutine addusddens (drhoscf, dbecsum, mode0, npe, iflag)
   USE uspp_param, ONLY: upf, lmaxq, nh, nhm
   USE paw_variables, ONLY : okpaw
   USE modes,     ONLY : u
-  USE qpoint,    ONLY : xq, eigqts
   USE phus,    ONLY : becsumort, alphasum
   USE units_ph,  ONLY : iudrhous, lrdrhous
-  USE control_lr, ONLY : lgamma
   USE noncollin_module, ONLY : nspin_mag
+
+  USE qpoint,     ONLY : xq, eigqts
+  USE control_lr, ONLY : lgamma
 
   implicit none
   !

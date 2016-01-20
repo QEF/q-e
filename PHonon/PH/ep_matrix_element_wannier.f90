@@ -93,9 +93,9 @@ SUBROUTINE ep_matrix_element_wannier()
   DO irr = 1, nirr
      ALLOCATE (dvscfin (dfftp%nnr, nspin_mag , npert(irr)) )
      IF (okvan) THEN
-        ALLOCATE (int3 ( nhm, nhm, npert(irr), nat, nspin_mag))
-        IF (okpaw) ALLOCATE (int3_paw (nhm, nhm, npert(irr), nat, nspin_mag))
-        IF (noncolin) ALLOCATE(int3_nc( nhm, nhm, npert(irr), nat, nspin))
+        ALLOCATE (int3 ( nhm, nhm, nat, nspin_mag, npert(irr)))
+        IF (okpaw) ALLOCATE (int3_paw (nhm, nhm, nat, nspin_mag, npert(irr)))
+        IF (noncolin) ALLOCATE(int3_nc( nhm, nhm, nat, nspin, npert(irr)))
      ENDIF
 
 !     if(ascii_dvscf) then
