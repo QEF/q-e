@@ -63,7 +63,8 @@ SUBROUTINE d3_setup()
   USE mp,            ONLY : mp_max, mp_min, mp_bcast
   USE funct,         ONLY : dmxc, dmxc_spin
 
-  USE control_lr,    ONLY : alpha_pv, nbnd_occ, lgamma
+  USE lr_symm_base, ONLY : nsymq, irotmq, irgq, gi, gimq, minus_q, rtau
+  USE control_lr,   ONLY : alpha_pv, nbnd_occ, lgamma
   !
   IMPLICIT NONE
   !

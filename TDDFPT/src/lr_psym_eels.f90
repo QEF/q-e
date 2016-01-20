@@ -18,10 +18,11 @@ SUBROUTINE lr_psym_eels (dvtosym)
   !
   USE kinds,            ONLY : DP
   USE noncollin_module, ONLY : nspin_mag
-  USE modes,            ONLY : nsymq, minus_q
   USE mp_global,        ONLY : me_bgrp
   USE fft_base,         ONLY : dfftp
   USE scatter_mod,      ONLY : cgather_sym
+
+  USE lr_symm_base, ONLY : nsymq, minus_q
   !
   IMPLICIT NONE
   !

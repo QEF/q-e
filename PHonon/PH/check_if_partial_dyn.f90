@@ -22,7 +22,9 @@ USE symm_base, ONLY : irt
 USE partial, ONLY : nat_todo, atomo
 USE control_ph, ONLY : start_irr, last_irr, ldiag
 USE control_flags, ONLY : modenum
-USE modes, ONLY : nsymq
+
+USE lr_symm_base, ONLY : nsymq
+
 IMPLICIT NONE
 
 COMPLEX(DP), INTENT(IN) :: u( 3*nat, 3*nat )

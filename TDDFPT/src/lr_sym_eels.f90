@@ -22,7 +22,8 @@ SUBROUTINE lr_sym_eels (dvtosym)
   USE cell_base,        ONLY : at
   USE symm_base,        ONLY : s, ftau
   USE noncollin_module, ONLY : nspin_lsda, nspin_mag
-  USE modes,            ONLY : minus_q, nsymq, irotmq, gi, gimq
+
+  USE lr_symm_base, ONLY : minus_q, nsymq, irotmq, gi, gimq
   !  
   IMPLICIT NONE
   !

@@ -23,6 +23,8 @@ subroutine psymd0rho (nper, irr, dvtosym)
   USE fft_base,  ONLY : dfftp
   USE scatter_mod,  ONLY : cgather_sym
 
+  USE lr_symm_base, ONLY : irgq
+
   IMPLICIT NONE
 
   integer :: nper, irr

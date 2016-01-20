@@ -98,7 +98,7 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, &
   USE ions_base,        ONLY : nat, tau, amass
   USE symm_base,        ONLY : ftau, t_rev
   USE lsda_mod,         ONLY : nspin
-  USE modes,            ONLY : nirr, npert, npertx, rtau
+  USE modes,            ONLY : nirr, npert, npertx
   USE units_ph,         ONLY : lrdrho
   USE io_global,        ONLY : stdout , ionode, ionode_id
   use io_files,         ONLY : diropn, prefix
@@ -109,6 +109,8 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, &
   USE mp_images,        ONLY : intra_image_comm
   USE mp,               ONLY : mp_bcast
   USE wrappers,         ONLY : f_mkdir_safe
+
+  USE lr_symm_base, ONLY : rtau
   !
   IMPLICIT NONE
   ! input variables:

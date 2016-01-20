@@ -18,7 +18,11 @@ subroutine sym_def1 (def, irr)
   use pwcom
   use phcom
   use d3com
+
+  USE lr_symm_base, ONLY : nsymq, irgq
+
   implicit none
+
   integer :: irr
   ! input: the representation under consideration
 

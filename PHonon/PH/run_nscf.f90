@@ -20,9 +20,7 @@ SUBROUTINE run_nscf(do_band, iq)
   USE control_flags,   ONLY : restart
   USE check_stop,      ONLY : check_stop_now
   USE fft_base,        ONLY : dffts
-  USE modes,           ONLY : minus_q, nsymq, invsymq
   USE disp,            ONLY : lgamma_iq
-  USE qpoint,          ONLY : xq
   USE control_ph,      ONLY : reduce_io, recover, tmp_dir_phq, &
                               ext_restart, bands_computed, newgrid, qplot, &
                               only_wfc
@@ -33,6 +31,9 @@ SUBROUTINE run_nscf(do_band, iq)
   USE acfdtest,        ONLY : acfdt_is_active, acfdt_num_der, ir_point, delta_vrs
   USE scf,             ONLY : vrs
   USE mp_bands,        ONLY : ntask_groups
+
+  USE lr_symm_base, ONLY : minus_q, nsymq, invsymq
+  USE qpoint,       ONLY : xq
 
  !
   IMPLICIT NONE

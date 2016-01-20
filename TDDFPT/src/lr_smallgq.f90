@@ -25,7 +25,8 @@ SUBROUTINE lr_smallgq (xq)
   USE noncollin_module,   ONLY : noncolin
   USE symm_base,          ONLY : s, nrot, nsym, sname, copy_sym, s_axis_to_cart
   USE control_flags,      ONLY : noinv
-  USE modes,              ONLY : nsymq, invsymq, gi, minus_q
+
+  USE lr_symm_base, ONLY : nsymq, invsymq, gi, minus_q
   !
 #ifdef __MPI
   USE mp,                 ONLY : mp_bcast

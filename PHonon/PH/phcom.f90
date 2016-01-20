@@ -16,22 +16,13 @@ MODULE modes
   !
   SAVE
   !
-  INTEGER :: irgq(48), nsymq=0, irotmq, nirr, nmodes
-  ! selects the operations of the small group
-  ! the number of symmetry of the small group
-  ! selects the symmetry sending q <-> -q+G
+ INTEGER :: nirr, nmodes
   ! number of irreducible representations contained in the dynamical matrix
   ! number of modes
-  ! number of crystal sym.ops. for q=0
   INTEGER, ALLOCATABLE, TARGET :: npert(:) !3 * nat )
   ! the number of perturbations per IR
   INTEGER :: npertx
   ! max number of perturbations per IR
-  REAL (DP), ALLOCATABLE :: rtau(:,:,:) !3, 48, nat)
-  ! coordinates of direct translations
-  REAL (DP) :: gi(3,48), gimq(3)
-  ! the possible G associated to each symmetry
-  ! the G associated to the symmetry q<->-q+G
   COMPLEX (DP), POINTER :: &
        u(:,:),                     &!  3 * nat, 3 * nat),
        t(:,:,:,:),                 &! npertx, npertx, 48,3 * nat),
@@ -40,9 +31,6 @@ MODULE modes
   ! the mode for deltarho
   ! the symmetry in the base of the pattern
   ! the symmetry q<->-q in the base of the pa
-  LOGICAL :: &
-       minus_q,  &    !  if .TRUE. there is the symmetry sending q<->-q
-       invsymq        !  if .TRUE. the small group of q has inversion
 
   CHARACTER(15), ALLOCATABLE :: name_rap_mode(:) ! symmetry type of each mode
   INTEGER, ALLOCATABLE :: num_rap_mode(:)  ! number of the representation for

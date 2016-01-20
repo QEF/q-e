@@ -11,8 +11,9 @@ LOGICAL FUNCTION symmorphic_or_nzb()
 ! or if the q point is not at zone border. Presently the routine that
 ! finds the mode symmetry works only when this function is .true..
 !
-  USE symm_base, ONLY : ftau
-  USE modes,    ONLY : gi, nsymq
+  USE symm_base,    ONLY : ftau
+  USE lr_symm_base, ONLY : gi, nsymq
+
   IMPLICIT NONE
   LOGICAL :: is_symmorphic, result_sym
   INTEGER :: isym

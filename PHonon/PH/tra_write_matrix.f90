@@ -7,12 +7,14 @@
 !-----------------------------------------------------------------------
 subroutine tra_write_matrix (alpha, adyn, u, nat)
   !-----------------------------------------------------------------------
-  USE io_global,  ONLY : stdout
-  USE kinds, only : DP
-  USE cell_base, only : at, bg
-  USE symm_base, only : s, irt, invs
-  USE modes, only : rtau, nsymq, irotmq, minus_q
-  USE qpoint, only : xq
+  USE io_global,    ONLY : stdout
+  USE kinds,        ONLY : DP
+  USE cell_base,    ONLY : at, bg
+  USE symm_base,    ONLY : s, irt, invs
+
+  USE lr_symm_base, ONLY : rtau, nsymq, irotmq, minus_q
+  USE qpoint,       ONLY : xq
+
   implicit none
   !
   !    This routine writes on output the symmetrized dynamical matrix in

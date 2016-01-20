@@ -22,8 +22,7 @@ subroutine init_representations()
   USE symm_base,     ONLY : nsym, sr, ftau, irt, time_reversal, t_rev, s
   USE control_ph,    ONLY : search_sym, current_iq, u_from_file, &
                             search_sym_save
-  USE modes,         ONLY : u, npert, gi, gimq, nirr, irotmq, minus_q, &
-                            invsymq, nsymq, nmodes, rtau, name_rap_mode, &
+  USE modes,         ONLY : u, npert, nirr, nmodes, name_rap_mode, &
                             num_rap_mode
   USE disp,          ONLY : x_q, nqs, lgamma_iq
   USE cryst_ph,      ONLY : magnetic_sym
@@ -32,6 +31,7 @@ subroutine init_representations()
   USE mp,            ONLY : mp_bcast
   USE mp_world,      ONLY : root, world_comm
 
+  USE lr_symm_base,  ONLY : gi, gimq, irotmq, minus_q, nsymq, invsymq, rtau
   USE qpoint,        ONLY : xq
   USE control_lr,    ONLY : lgamma
 
@@ -120,7 +120,7 @@ subroutine initialize_grid_variables()
   !
   USE kinds,         ONLY : DP
   USE ions_base,     ONLY : nat
-  USE modes,         ONLY : u, npert, nirr, nsymq, name_rap_mode, num_rap_mode
+  USE modes,         ONLY : u, npert, nirr, name_rap_mode, num_rap_mode
   USE disp,          ONLY : nqs, comp_iq
   USE partial,       ONLY : comp_irr
   USE grid_irr_iq,   ONLY : nsymq_iq, irr_iq, npert_irr_iq, comp_irr_iq
@@ -130,6 +130,8 @@ subroutine initialize_grid_variables()
   USE io_global,     ONLY : stdout
   USE mp_global,     ONLY : mp_global_end
   USE environment,   ONLY : environment_end
+
+  USE lr_symm_base, ONLY : nsymq
 
   implicit none
 

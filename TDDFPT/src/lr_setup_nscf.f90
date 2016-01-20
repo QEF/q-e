@@ -39,9 +39,10 @@ SUBROUTINE lr_setup_nscf ()
   USE noncollin_module,   ONLY : noncolin
   USE start_k,            ONLY : nks_start, xk_start, wk_start, &
                                  nk1, nk2, nk3, k1, k2, k3
-  USE modes,              ONLY : nsymq, minus_q
   USE uspp_param,         ONLY : n_atom_wfc
-  USE qpoint,             ONLY : xq
+
+  USE lr_symm_base, ONLY : nsymq, minus_q
+  USE qpoint,       ONLY : xq
   ! 
   IMPLICIT NONE
   !

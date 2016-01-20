@@ -32,7 +32,10 @@ subroutine set_d3irr
   use d3com
   use io_files, only: tmp_dir
 
+  use lr_symm_base, ONLY :  rtau, irgq
+
   implicit none
+
   integer :: w_nsymq, w_irotmq
   ! work array
   ! work array

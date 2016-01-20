@@ -30,10 +30,11 @@ SUBROUTINE lr_summary
   USE spin_orb,               ONLY : lspinorb, domag
   USE funct,                  ONLY : write_dft_name
   USE run_info,               ONLY : title
-  USE modes,                  ONLY : irotmq, irgq, minus_q, nsymq
   USE qpoint,                 ONLY : xq
   USE gvecw,                  ONLY : ecutwfc
   USE lr_variables,           ONLY : lr_verbosity
+
+  USE lr_symm_base,           ONLY : irotmq, irgq, minus_q, nsymq
   !
   IMPLICIT NONE
   !

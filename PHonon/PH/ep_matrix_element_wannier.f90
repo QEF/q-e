@@ -19,12 +19,11 @@ SUBROUTINE ep_matrix_element_wannier()
   USE fft_base, ONLY : dfftp, dffts
   USE noncollin_module, ONLY : nspin_mag, noncolin
   USE dynmat, ONLY : dyn, w2
-  USE modes,  ONLY : npert, nirr
+  USE modes,  ONLY : npert, nirr, u
   USE control_ph, ONLY : trans
   USE units_ph, ONLY : iudyn, lrdrho, iudvscf
   USE io_global, ONLY : stdout
   USE mp_pools,  ONLY : me_pool, root_pool
-  USE modes, ONLY : u
   USE klist, ONLY : xk
   USE wvfct, ONLY : npwx
   USE el_phon, ONLY: elph_mat, kpq, g_kpq, igqg, xk_gamma
@@ -173,10 +172,11 @@ SUBROUTINE elphsum_wannier(q_index)
   USE io_global, ONLY : stdout,ionode
   USE io_files,  ONLY : prefix
   USE dynmat, ONLY : dyn, w2
-  USE modes, ONLY : u, gi, gimq, irgq, irotmq
+  USE modes, ONLY : u
   USE lsda_mod, only : isk,nspin, current_spin,lsda
   USE mp,        ONLY: mp_sum
 
+  USE lr_symm_base, ONLY : irotmq, irgq, gimq, gi
   USE qpoint,     ONLY : xq, nksq, ikks, ikqs
   USE control_lr, ONLY : lgamma
   !

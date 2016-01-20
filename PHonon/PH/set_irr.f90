@@ -26,8 +26,7 @@ subroutine set_irr_new (xq, u, npert, nirr, eigen)
   USE ions_base, ONLY : nat, tau, ntyp => nsp, ityp, amass
   USE cell_base, ONLY : at, bg
   USE symm_base, ONLY : s, sr, ftau, invs, nsym, irt, t_rev
-  USE modes,     ONLY : nsymq, minus_q, irotmq, gi, gimq, num_rap_mode, &
-                        name_rap_mode, rtau
+  USE modes,     ONLY : num_rap_mode, name_rap_mode
   USE noncollin_module, ONLY : noncolin, nspin_mag
   USE spin_orb,  ONLY : domag
   USE constants, ONLY: tpi
@@ -40,7 +39,8 @@ subroutine set_irr_new (xq, u, npert, nirr, eigen)
   use io_global, only : ionode_id
   use mp_images, only : intra_image_comm
 
-  USE control_lr, ONLY : lgamma
+  USE lr_symm_base, ONLY : nsymq, minus_q, irotmq, gi, gimq, rtau
+  USE control_lr,   ONLY : lgamma
 
   implicit none
 !

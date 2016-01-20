@@ -223,8 +223,9 @@ MODULE ph_restart
          END SUBROUTINE write_tensors
 
          SUBROUTINE write_modes(iq)
-            USE modes, ONLY : nirr, npert, u, nsymq, minus_q, &
-                                           name_rap_mode, num_rap_mode
+            USE modes, ONLY : nirr, npert, u, name_rap_mode, num_rap_mode
+
+            USE lr_symm_base, ONLY : nsymq, minus_q
 
             IMPLICIT NONE
             INTEGER :: imode0, imode, irr, ipert, iq
@@ -831,10 +832,11 @@ MODULE ph_restart
 !
 !   This routine reads the displacement patterns.
 !
-    USE modes, ONLY : nirr, npert, nsymq, u, minus_q, name_rap_mode, &
-                      num_rap_mode
+    USE modes, ONLY : nirr, npert, u, name_rap_mode, num_rap_mode
     USE el_phon, ONLY : elph 
     USE control_ph, ONLY : trans, zeu
+
+    USE lr_symm_base, ONLY : nsymq, minus_q
 
     IMPLICIT NONE
 

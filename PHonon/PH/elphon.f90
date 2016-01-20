@@ -469,7 +469,7 @@ SUBROUTINE elphsum ( )
   USE parameters,  ONLY : npk
   USE el_phon,     ONLY : el_ph_mat, done_elph, el_ph_nsigma, el_ph_ngauss, &
                           el_ph_sigma
-  USE modes,       ONLY : u, minus_q, nsymq, rtau, nirr
+  USE modes,       ONLY : u, nirr
   USE dynmat,      ONLY : dyn, w2
   USE io_global,   ONLY : stdout, ionode, ionode_id
   USE xml_io_base, ONLY : create_directory
@@ -480,8 +480,9 @@ SUBROUTINE elphsum ( )
   USE save_ph,     ONLY : tmp_dir_save
   USE io_files,    ONLY : prefix, tmp_dir, seqopn
   
-  USE qpoint,      ONLY : xq, nksq
-  USE control_lr,  ONLY : lgamma
+  USE lr_symm_base, ONLY : minus_q, nsymq, rtau
+  USE qpoint,       ONLY : xq, nksq
+  USE control_lr,   ONLY : lgamma
   !
   IMPLICIT NONE
   ! epsw = 20 cm^-1, in Ry
@@ -934,15 +935,17 @@ SUBROUTINE elphsum_simple
   USE el_phon, ONLY : el_ph_mat, el_ph_nsigma, el_ph_ngauss, el_ph_sigma
   USE mp_pools,  ONLY : inter_pool_comm, npool
   USE mp_images, ONLY : intra_image_comm
-  USE qpoint, ONLY : xq, nksq, ikks, ikqs
   USE output, ONLY : fildyn
   USE dynmat, ONLY : dyn, w2
-  USE modes, ONLY : u, rtau, nsymq, irotmq, minus_q, nirr
+  USE modes, ONLY : u, nirr
   USE control_ph, only : current_iq, qplot
   USE lsda_mod, only : isk
   USE el_phon,   ONLY : done_elph, gamma_disp
   USE io_global, ONLY : stdout, ionode, ionode_id
   USE mp,        ONLY: mp_sum, mp_bcast
+
+  USE lr_symm_base, ONLY : rtau, nsymq, irotmq, minus_q
+  USE qpoint, ONLY : xq, nksq, ikks, ikqs
   !
   IMPLICIT NONE
   REAL(DP), PARAMETER :: eps = 20_dp/ry_to_cmm1 ! eps = 20 cm^-1, in Ry

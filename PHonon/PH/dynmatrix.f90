@@ -24,8 +24,7 @@ subroutine dynmatrix_new(iq_)
   USE symm_base,     ONLY : s, sr, irt, nsym, invs
   USE dynmat,        ONLY : dyn, w2
   USE noncollin_module, ONLY : nspin_mag
-  USE modes,         ONLY : u, nmodes, minus_q, irotmq, nsymq, &
-                            rtau, npert, nirr, num_rap_mode
+  USE modes,         ONLY : u, nmodes, npert, nirr, num_rap_mode
   USE gamma_gamma,   ONLY : nasr, asr, equiv_atoms, has_equivalent, &
                             n_diff_sites
   USE efield_mod,    ONLY : epsilon, zstareu, zstarue0, zstarue
@@ -43,6 +42,7 @@ subroutine dynmatrix_new(iq_)
   USE io_dyn_mat,    ONLY : write_dyn_mat_header
   USE ramanm,        ONLY : lraman, ramtns
 
+  USE lr_symm_base,  ONLY : minus_q, irotmq, nsymq, rtau
   USE qpoint,        ONLY : xq
   USE control_lr,    ONLY : lgamma
 

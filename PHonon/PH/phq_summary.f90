@@ -36,13 +36,14 @@ subroutine phq_summary
                             nmix_ph, alpha_mix, tr2_ph, zeu, search_sym
   USE freq_ph,       ONLY : fpol, nfs, fiu
   USE partial,       ONLY : atomo, nat_todo, all_comp, done_irr, comp_irr
-  USE modes,         ONLY : u, npert, irotmq, minus_q, nsymq, nirr, &
-                            name_rap_mode
+  USE modes,         ONLY : u, npert, nirr, name_rap_mode
   USE rap_point_group, ONLY : gname
-  USE qpoint,        ONLY : xq
   USE ramanm,        ONLY : lraman, elop
   USE control_flags, ONLY : iverbosity
   USE gvecw,         ONLY : ecutwfc
+
+  USE qpoint,       ONLY : xq
+  USE lr_symm_base, ONLY : irotmq, minus_q, nsymq
 
   implicit none
 

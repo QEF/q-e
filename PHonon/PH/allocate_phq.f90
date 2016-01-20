@@ -30,19 +30,21 @@ subroutine allocate_phq
   USE uspp_param, ONLY: nhm
   USE ramanm, ONLY: ramtns, lraman
 
-  USE qpoint, ONLY : nksq, eigqts, igkq, xk_col
   USE phus, ONLY : int1, int1_nc, int2, int2_so, int3, int3_nc, int3_paw, &
                    int4, int4_nc, int5, int5_so, becsumort, dpqq, &
                    dpqq_so, alphasum, alphasum_nc, becsum_nc, &
                    becp1, alphap
   USE efield_mod, ONLY : zstareu, zstareu0, zstarue0, zstarue0_rec, zstarue
-  USE eqv, ONLY : dpsi, evq, vlocq, dmuxc, dvpsi, eprec
   USE units_ph, ONLY : this_pcxpsi_is_on_file, this_dvkb3_is_on_file
   USE dynmat, ONLY : dyn00, dyn, dyn_rec, w2
-  USE modes, ONLY : u, rtau, npert, name_rap_mode, num_rap_mode
-  USE control_lr, ONLY :  lgamma
+  USE modes, ONLY : u, npert, name_rap_mode, num_rap_mode
   USE el_phon, ONLY : el_ph_mat, elph
   USE freq_ph, ONLY : polar, nfs
+
+  USE qpoint,       ONLY : nksq, eigqts, igkq, xk_col
+  USE eqv,          ONLY : dpsi, evq, vlocq, dmuxc, dvpsi, eprec
+  USE lr_symm_base, ONLY : rtau
+  USE control_lr,   ONLY : lgamma
 
   implicit none
   INTEGER :: ik, ipol

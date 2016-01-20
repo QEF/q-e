@@ -27,9 +27,12 @@ subroutine dynmat0_new
   USE ph_restart,    ONLY : ph_writefile
   USE control_ph,    ONLY : rec_code_read, current_iq
   USE qpoint,        ONLY : xq
-  USE modes,         ONLY : u, minus_q, irotmq, rtau, nsymq, nmodes
+  USE modes,         ONLY : u, nmodes
   USE partial,       ONLY : done_irr, comp_irr
   USE dynmat,        ONLY : dyn, dyn00, dyn_rec
+
+  USE lr_symm_base,  ONLY : minus_q, irotmq, nsymq, rtau
+
   implicit none
 
   integer :: nu_i, nu_j, na_icart, nb_jcart, ierr

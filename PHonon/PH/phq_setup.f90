@@ -78,9 +78,7 @@ subroutine phq_setup
                             done_epsil, zeu, done_zeu, current_iq, u_from_file
   USE el_phon,       ONLY : elph, comp_elph, done_elph
   USE output,        ONLY : fildrho
-  USE modes,         ONLY : u, npertx, npert, gi, gimq, nirr, &
-                            t, tmq, irotmq, minus_q, invsymq, &
-                            nsymq, nmodes, rtau, num_rap_mode
+  USE modes,         ONLY : u, npertx, npert, nirr, t, tmq, nmodes, num_rap_mode
   USE dynmat,        ONLY : dyn, dyn_rec, dyn00
   USE efield_mod,    ONLY : epsilon, zstareu
   USE partial,       ONLY : comp_irr, atomo, nat_todo, all_comp, &
@@ -99,9 +97,10 @@ subroutine phq_setup
   !
   USE acfdtest,      ONLY : acfdt_is_active, acfdt_num_der
 
-  USE qpoint,        ONLY : xq, xk_col
-  USE eqv,           ONLY : dmuxc
-  USE control_lr,    ONLY : alpha_pv, nbnd_occ, lgamma
+  USE lr_symm_base, ONLY : gi, gimq, irotmq, minus_q, invsymq, nsymq, rtau
+  USE qpoint,       ONLY : xq, xk_col
+  USE eqv,          ONLY : dmuxc
+  USE control_lr,   ONLY : alpha_pv, nbnd_occ, lgamma
 
   implicit none
 

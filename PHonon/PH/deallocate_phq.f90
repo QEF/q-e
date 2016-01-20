@@ -16,7 +16,7 @@ subroutine deallocate_phq
   USE wavefunctions_module,  ONLY: evc
 
   USE ramanm, ONLY: ramtns
-  USE modes, ONLY : tmq, t, npert, u, rtau, name_rap_mode, num_rap_mode
+  USE modes, ONLY : tmq, t, npert, u, name_rap_mode, num_rap_mode
   USE efield_mod, ONLY : zstareu, zstarue, zstarue0, zstareu0, &
                          zstarue0_rec
   USE phus, ONLY : int1, int1_nc, int2, int2_so, int3, int3_nc, int3_paw, &
@@ -31,11 +31,12 @@ subroutine deallocate_phq
   USE el_phon, ONLY : el_ph_mat
   USE freq_ph, ONLY : polar
 
-  USE gc_lr,      ONLY : grho, gmag, dvxc_rr,  dvxc_sr,  dvxc_ss, dvxc_s, &
-                         vsgga, segni
-  USE qpoint,     ONLY : eigqts, igkq, ikks, ikqs, nksq, xk_col
-  USE eqv,        ONLY : dmuxc, vlocq, dpsi, dvpsi, evq, eprec
-  USE control_lr, ONLY : lgamma
+  USE lr_symm_base, ONLY : rtau
+  USE gc_lr,        ONLY : grho, gmag, dvxc_rr,  dvxc_sr,  dvxc_ss, dvxc_s, &
+                           vsgga, segni
+  USE qpoint,       ONLY : eigqts, igkq, ikks, ikqs, nksq, xk_col
+  USE eqv,          ONLY : dmuxc, vlocq, dpsi, dvpsi, evq, eprec
+  USE control_lr,   ONLY : lgamma
 
 
   IMPLICIT NONE

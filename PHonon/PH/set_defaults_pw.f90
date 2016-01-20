@@ -45,10 +45,10 @@ SUBROUTINE setup_nscf ( newgrid, xq )
   USE start_k,            ONLY : nks_start, xk_start, wk_start, &
                                  nk1, nk2, nk3, k1, k2, k3
   USE paw_variables,      ONLY : okpaw
-  USE modes,              ONLY : nsymq, invsymq, minus_q
   USE uspp_param,         ONLY : n_atom_wfc
  
-  USE control_lr,         ONLY : lgamma
+  USE lr_symm_base, ONLY : nsymq, invsymq, minus_q
+  USE control_lr,   ONLY : lgamma
   !
   IMPLICIT NONE
   !

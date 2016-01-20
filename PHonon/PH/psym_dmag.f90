@@ -14,10 +14,11 @@ SUBROUTINE psym_dmag (nper, irr, dvtosym)
   !
   USE kinds,      ONLY : DP
   USE noncollin_module, ONLY : nspin_mag
-  USE modes,     ONLY : minus_q, nsymq
   USE mp_bands,  ONLY : me_bgrp
   USE fft_base,  ONLY : dfftp
   USE scatter_mod,  ONLY : cgather_sym
+
+  USE lr_symm_base, ONLY : minus_q, nsymq
   !
   IMPLICIT NONE
   !

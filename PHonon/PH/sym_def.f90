@@ -14,8 +14,10 @@ subroutine sym_def (def, irr)
   !
   ! Used in the q=0 metallic case only.
   !
-    USE kinds, only : DP
-  USE modes,   ONLY : npert, minus_q, nsymq, t, tmq, npertx
+  USE kinds, only : DP
+  USE modes,   ONLY : npert, t, tmq, npertx
+
+  USE lr_symm_base, ONLY : minus_q, nsymq
 
   implicit none
 

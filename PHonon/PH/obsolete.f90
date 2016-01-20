@@ -950,10 +950,13 @@ subroutine dynmat0
   USE kinds,         ONLY : DP
   USE ph_restart,    ONLY : ph_writefile
   USE control_ph,    ONLY : rec_code_read, current_iq
-  USE qpoint,        ONLY : xq
-  USE modes,         ONLY : u, minus_q, irotmq, irgq, rtau, nsymq, nmodes
+  USE modes,         ONLY : u, nmodes
   USE partial,       ONLY : done_irr, comp_irr
   USE dynmat,        ONLY : dyn, dyn00, dyn_rec
+
+  USE lr_symm_base, ONLY : minus_q, irotmq, irgq, rtau, nsymq
+  USE qpoint,       ONLY : xq
+
   implicit none
 
   integer :: nu_i, nu_j, na_icart, nb_jcart, ierr
@@ -1315,8 +1318,7 @@ subroutine dynmatrix(iq_)
   USE run_info, ONLY : title
   USE dynmat,        ONLY : dyn, w2
   USE noncollin_module, ONLY : nspin_mag
-  USE modes,         ONLY : u, nmodes, minus_q, irotmq, nsymq, irgq, &
-                            rtau, npert, nirr, name_rap_mode, num_rap_mode
+  USE modes,         ONLY : u, nmodes, npert, nirr, name_rap_mode, num_rap_mode
   USE gamma_gamma,   ONLY : nasr, asr, equiv_atoms, has_equivalent, &
                             n_diff_sites
   USE efield_mod,    ONLY : epsilon, zstareu, zstarue0, zstarue
@@ -1334,8 +1336,9 @@ subroutine dynmatrix(iq_)
   USE dfile_star,    ONLY : write_dfile_star, drho_star, dvscf_star !write_dfile_mq
   USE units_ph,      ONLY : iudrho, iudvscf
 
-  USE qpoint,        ONLY : xq
-  USE control_lr,    ONLY : lgamma
+  USE lr_symm_base, ONLY : minus_q, irotmq, nsymq, irgq, rtau
+  USE qpoint,       ONLY : xq
+  USE control_lr,   ONLY : lgamma
 
   implicit none
   INTEGER, INTENT(IN) :: iq_

@@ -18,8 +18,9 @@ subroutine sym_dmag (nper, irr, dmagtosym)
   USE cell_base, ONLY : at, bg
   USE symm_base, ONLY : s, ftau, t_rev, sname, invs
   USE noncollin_module, ONLY: nspin_mag
+  USE modes,   ONLY : t, tmq
 
-  USE modes,   ONLY : minus_q, irotmq, nsymq, gi, t, tmq, gimq
+  USE lr_symm_base, ONLY : minus_q, irotmq, nsymq, gi, gimq
 
   implicit none
 

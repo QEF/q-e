@@ -19,12 +19,15 @@ subroutine set_irr_sym_new ( t, tmq, npertx )
   USE ions_base, ONLY : nat
   USE cell_base, ONLY : at, bg
   USE symm_base, ONLY : s, irt
-  USE qpoint,    ONLY : xq
-  USE modes,     ONLY : nsymq, u, irotmq, nirr, npert, rtau, minus_q
+  USE modes,     ONLY : u, nirr, npert
   USE control_flags, ONLY : modenum
   USE mp,        ONLY : mp_bcast
   USE mp_images, ONLY : intra_image_comm
   USE io_global, ONLY : ionode_id
+
+  USE qpoint,       ONLY : xq
+  USE lr_symm_base, ONLY : nsymq, irotmq, rtau, minus_q
+
   implicit none
 !
 !   first the dummy variables
