@@ -11,6 +11,8 @@ cft_wave.o : ../Modules/noncol.o
 cft_wave.o : ../Modules/recvec.o
 cft_wave.o : ../PW/src/pwcom.o
 cft_wave.o : lrcom.o
+cg_psi.o : ../Modules/kind.o
+cg_psi.o : ../Modules/noncol.o
 ch_psi_all.o : ../Modules/becmod.o
 ch_psi_all.o : ../Modules/control_flags.o
 ch_psi_all.o : ../Modules/fft_base.o

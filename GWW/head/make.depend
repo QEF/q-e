@@ -1,3 +1,4 @@
+bcast_ph_input.o : ../../LR_Modules/lrcom.o
 bcast_ph_input.o : ../../Modules/control_flags.o
 bcast_ph_input.o : ../../Modules/input_parameters.o
 bcast_ph_input.o : ../../Modules/io_files.o

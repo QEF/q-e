@@ -1,8 +1,10 @@
+allocate_d3.o : ../../LR_Modules/lrcom.o
 allocate_d3.o : ../../Modules/ions_base.o
 allocate_d3.o : ../../Modules/uspp.o
 allocate_d3.o : ../../PHonon/PH/phcom.o
 allocate_d3.o : ../../PW/src/pwcom.o
 allocate_d3.o : d3com.o
+allocate_pert_d3.o : ../../LR_Modules/lrcom.o
 allocate_pert_d3.o : ../../Modules/ions_base.o
 allocate_pert_d3.o : ../../Modules/kind.o
 allocate_pert_d3.o : ../../PHonon/PH/phcom.o
@@ -25,6 +27,7 @@ ch_psi_all2.o : ../../Modules/mp_global.o
 ch_psi_all2.o : ../../Modules/uspp.o
 ch_psi_all2.o : ../../PHonon/PH/phcom.o
 ch_psi_all2.o : ../../PW/src/pwcom.o
+close_open.o : ../../LR_Modules/lrcom.o
 close_open.o : ../../Modules/io_files.o
 close_open.o : ../../Modules/io_global.o
 close_open.o : ../../PHonon/PH/phcom.o
@@ -56,6 +59,7 @@ d3_exc.o : ../../PHonon/PH/phcom.o
 d3_exc.o : ../../PW/src/pwcom.o
 d3_exc.o : ../../PW/src/scf_mod.o
 d3_exc.o : d3com.o
+d3_init.o : ../../LR_Modules/lrcom.o
 d3_init.o : ../../Modules/atom.o
 d3_init.o : ../../Modules/fft_base.o
 d3_init.o : ../../Modules/ions_base.o
@@ -297,6 +301,7 @@ incdrhoscf2.o : ../../Modules/uspp.o
 incdrhoscf2.o : ../../Modules/wavefunctions.o
 incdrhoscf2.o : ../../PHonon/PH/phcom.o
 incdrhoscf2.o : ../../PW/src/pwcom.o
+openfild3.o : ../../LR_Modules/lrcom.o
 openfild3.o : ../../Modules/control_flags.o
 openfild3.o : ../../Modules/fft_base.o
 openfild3.o : ../../Modules/io_files.o
@@ -361,6 +366,7 @@ solve_linter_d3.o : ../../Modules/wavefunctions.o
 solve_linter_d3.o : ../../PHonon/PH/phcom.o
 solve_linter_d3.o : ../../PW/src/pwcom.o
 solve_linter_d3.o : d3com.o
+stop_d3.o : ../../LR_Modules/lrcom.o
 stop_d3.o : ../../Modules/control_flags.o
 stop_d3.o : ../../Modules/io_files.o
 stop_d3.o : ../../Modules/mp_global.o

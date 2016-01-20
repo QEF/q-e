@@ -19,7 +19,6 @@ add_for_charges.o : ../../Modules/noncol.o
 add_for_charges.o : ../../Modules/recvec.o
 add_for_charges.o : ../../Modules/uspp.o
 add_for_charges.o : ../../PW/src/pwcom.o
-add_for_charges.o : phcom.o
 add_zstar_ue.o : ../../LR_Modules/lrcom.o
 add_zstar_ue.o : ../../Modules/io_files.o
 add_zstar_ue.o : ../../Modules/kind.o
@@ -157,6 +156,7 @@ allocate_phq.o : ../../PW/src/pwcom.o
 allocate_phq.o : elph.o
 allocate_phq.o : phcom.o
 allocate_phq.o : ramanm.o
+bcast_ph_input.o : ../../LR_Modules/lrcom.o
 bcast_ph_input.o : ../../Modules/control_flags.o
 bcast_ph_input.o : ../../Modules/input_parameters.o
 bcast_ph_input.o : ../../Modules/io_files.o
@@ -180,8 +180,6 @@ cch_psi_all.o : ../../Modules/mp_bands.o
 cch_psi_all.o : ../../Modules/noncol.o
 cch_psi_all.o : ../../Modules/uspp.o
 cch_psi_all.o : ../../PW/src/pwcom.o
-cg_psi.o : ../../Modules/kind.o
-cg_psi.o : ../../Modules/noncol.o
 cgsolve_all.o : ../../Modules/control_flags.o
 cgsolve_all.o : ../../Modules/kind.o
 cgsolve_all.o : ../../Modules/mp.o
@@ -836,7 +834,6 @@ init_representations.o : ph_restart.o
 init_representations.o : phcom.o
 initialize_ph.o : ../../LR_Modules/lrcom.o
 initialize_ph.o : ../../PW/src/pwcom.o
-initialize_ph.o : phcom.o
 io_dyn_mat.o : ../../Modules/constants.o
 io_dyn_mat.o : ../../Modules/io_global.o
 io_dyn_mat.o : ../../Modules/kind.o
@@ -1142,6 +1139,7 @@ print_clock_ph.o : ../../Modules/io_global.o
 print_clock_ph.o : ../../Modules/uspp.o
 print_clock_ph.o : phcom.o
 print_clock_ph.o : ramanm.o
+psidspsi.o : ../../LR_Modules/lrcom.o
 psidspsi.o : ../../Modules/cell_base.o
 psidspsi.o : ../../Modules/ions_base.o
 psidspsi.o : ../../Modules/kind.o
@@ -1262,6 +1260,7 @@ qdipol_cryst.o : ../../Modules/kind.o
 qdipol_cryst.o : ../../Modules/uspp.o
 qdipol_cryst.o : ../../PW/src/pwcom.o
 qdipol_cryst.o : phcom.o
+raman.o : ../../LR_Modules/lrcom.o
 raman.o : ../../Modules/control_flags.o
 raman.o : ../../Modules/kind.o
 raman.o : ../../Modules/uspp.o
@@ -1330,6 +1329,7 @@ save_ph_input.o : ../../Modules/ions_base.o
 save_ph_input.o : ../../Modules/kind.o
 save_ph_input.o : phcom.o
 set_asr_c.o : ../../Modules/kind.o
+set_defaults_pw.o : ../../LR_Modules/lrcom.o
 set_defaults_pw.o : ../../Modules/cell_base.o
 set_defaults_pw.o : ../../Modules/constants.o
 set_defaults_pw.o : ../../Modules/control_flags.o
@@ -1366,6 +1366,7 @@ set_int12_nc.o : ../../Modules/noncol.o
 set_int12_nc.o : ../../Modules/uspp.o
 set_int12_nc.o : ../../PW/src/pwcom.o
 set_int12_nc.o : phcom.o
+set_irr.o : ../../LR_Modules/lrcom.o
 set_irr.o : ../../Modules/cell_base.o
 set_irr.o : ../../Modules/constants.o
 set_irr.o : ../../Modules/control_flags.o
@@ -1415,9 +1416,9 @@ setup_dgc.o : ../../PW/src/pwcom.o
 setup_dgc.o : ../../PW/src/scf_mod.o
 setup_dgc.o : phcom.o
 sgam_ph.o : ../../Modules/kind.o
+smallgq.o : ../../LR_Modules/lrcom.o
 smallgq.o : ../../Modules/cell_base.o
 smallgq.o : ../../Modules/kind.o
-smallgq.o : phcom.o
 solve_e.o : ../../FFTXlib/fft_parallel.o
 solve_e.o : ../../LR_Modules/lrcom.o
 solve_e.o : ../../Modules/cell_base.o
