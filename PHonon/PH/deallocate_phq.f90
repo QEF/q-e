@@ -23,8 +23,6 @@ subroutine deallocate_phq
                    int4, int4_nc, int5, int5_so, becsum_nc, &
                    becsumort, alphasum, alphasum_nc, dpqq, dpqq_so, &
                    becp1, alphap
-  USE gc_ph,   ONLY: grho, gmag, dvxc_rr,  dvxc_sr,  dvxc_ss, dvxc_s, &
-                    vsgga, segni
   USE gamma_gamma, ONLY : with_symmetry, has_equivalent, equiv_atoms, &
                    n_equiv_atoms
   USE nlcc_ph, ONLY : drc
@@ -33,6 +31,8 @@ subroutine deallocate_phq
   USE el_phon, ONLY : el_ph_mat
   USE freq_ph, ONLY : polar
 
+  USE gc_lr,      ONLY : grho, gmag, dvxc_rr,  dvxc_sr,  dvxc_ss, dvxc_s, &
+                         vsgga, segni
   USE qpoint,     ONLY : eigqts, igkq, ikks, ikqs, nksq, xk_col
   USE eqv,        ONLY : dmuxc, vlocq, dpsi, dvpsi, evq, eprec
   USE control_lr, ONLY : lgamma

@@ -21,13 +21,14 @@ subroutine addnlcc (imode0, drhoscf, npe)
   USE noncollin_module, ONLY : nspin_lsda, nspin_gga, nspin_mag
   USE dynmat, ONLY : dyn, dyn_rec
   USE modes,  ONLY : nirr, npert
-  USE gc_ph,   ONLY: grho,  dvxc_rr,  dvxc_sr,  dvxc_ss, dvxc_s
-  USE eqv,    ONLY : dmuxc
   USE nlcc_ph, ONLY : nlcc_any
-  USE qpoint, ONLY : xq
 
   USE mp_bands,  ONLY: intra_bgrp_comm
   USE mp,        ONLY: mp_sum
+
+  USE qpoint,  ONLY : xq
+  USE eqv,     ONLY : dmuxc
+  USE gc_lr,   ONLY: grho,  dvxc_rr,  dvxc_sr,  dvxc_ss, dvxc_s
 
   implicit none
 

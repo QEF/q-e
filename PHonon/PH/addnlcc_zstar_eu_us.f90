@@ -18,14 +18,14 @@ SUBROUTINE addnlcc_zstar_eu_us( drhoscf )
   USE fft_base, ONLY : dfftp
   USE noncollin_module, ONLY : nspin_lsda, nspin_gga, nspin_mag
   USE efield_mod, ONLY : zstareu0
-  USE qpoint, ONLY : xq
   USE nlcc_ph, ONLY : nlcc_any
   USE modes,  ONLY : npert, nirr
-  USE eqv,    ONLY : dmuxc
-  USE gc_ph,   ONLY: grho, dvxc_rr,  dvxc_sr,  dvxc_ss, dvxc_s
 
   USE mp_pools, ONLY : my_pool_id
 
+  USE qpoint, ONLY : xq
+  USE eqv,     ONLY : dmuxc
+  USE gc_lr,   ONLY: grho, dvxc_rr,  dvxc_sr,  dvxc_ss, dvxc_s
 
   IMPLICIT NONE
 

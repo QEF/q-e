@@ -26,10 +26,10 @@ subroutine setup_dgc
   USE kinds, only : DP
   use funct, only : dft_is_gradient, gcxc, gcx_spin, gcc_spin, dgcxc, &
                     dgcxc_spin
-  USE gc_ph,   ONLY: grho, gmag, dvxc_rr,  dvxc_sr,  dvxc_ss, dvxc_s, &
-                    vsgga, segni
   USE nlcc_ph, ONLY : nlcc_any
 
+  USE gc_lr,   ONLY : grho, gmag, dvxc_rr,  dvxc_sr,  dvxc_ss, dvxc_s, &
+                      vsgga, segni
 
   implicit none
   integer :: k, is, ipol, jpol, ir

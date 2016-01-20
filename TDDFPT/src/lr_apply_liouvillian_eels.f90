@@ -32,18 +32,19 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, sevc1_new, interaction )
   USE gvecw,                ONLY : gcutw
   USE io_global,            ONLY : stdout
   USE uspp,                 ONLY : vkb
-  USE qpoint,               ONLY : npwq, igkq, ikks, ikqs, nksq
-  USE eqv,                  ONLY : evq, dpsi, dvpsi
   USE io_files,             ONLY : iunigk
   USE wavefunctions_module, ONLY : evc, psic, psic_nc
   USE units_ph,             ONLY : lrwfc, iuwfc
   USE noncollin_module,     ONLY : noncolin, npol, nspin_mag
-  USE control_lr,           ONLY : nbnd_occ
   USE uspp,                 ONLY : okvan
   USE nlcc_ph,              ONLY : nlcc_any
   USE iso_c_binding,        ONLY : c_int
   USE mp_bands,             ONLY : ntask_groups, me_bgrp
   USE spin_orb,             ONLY : domag
+
+  USE qpoint,               ONLY : npwq, igkq, ikks, ikqs, nksq
+  USE eqv,                  ONLY : evq, dpsi, dvpsi
+  USE control_lr,           ONLY : nbnd_occ
  
   IMPLICIT NONE
   !
@@ -430,13 +431,14 @@ SUBROUTINE lr_dv_of_drho_eels (dvscf)
   USE noncollin_module,  ONLY : nspin_lsda, nspin_mag, nspin_gga
   USE funct,             ONLY : dft_is_gradient
   USE scf,               ONLY : rho, rho_core
-  USE eqv,               ONLY : dmuxc
   USE nlcc_ph,           ONLY : nlcc_any
-  USE qpoint,            ONLY : xq
-  USE gc_ph,             ONLY : grho, dvxc_rr,  dvxc_sr,  dvxc_ss, dvxc_s
   USE control_ph,        ONLY : lrpa
   USE control_flags,     ONLY : gamma_only
   USE lr_variables,      ONLY : clfe  !eps
+
+  USE gc_lr,             ONLY : grho, dvxc_rr,  dvxc_sr,  dvxc_ss, dvxc_s
+  USE eqv,               ONLY : dmuxc
+  USE qpoint,            ONLY : xq
 
   IMPLICIT NONE
 

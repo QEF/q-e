@@ -15,9 +15,11 @@ subroutine dgradcorr (rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, &
   !  noncollinear is allowed. ADC (June 2007)
   !
   USE kinds, ONLY : DP
-  USE gc_ph, ONLY : gmag, vsgga, segni
   USE noncollin_module, ONLY : noncolin
   USE spin_orb, ONLY : domag
+
+  USE gc_lr, ONLY : gmag, vsgga, segni
+
   implicit none
   !
   integer :: nrxx, ngm, nl (ngm), &

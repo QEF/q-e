@@ -359,6 +359,7 @@ dfile_star.o : ../../PW/src/symm_base.o
 dfile_star.o : dfile_autoname.o
 dfile_star.o : phcom.o
 dgradcorr.o : ../../FFTXlib/fft_interfaces.o
+dgradcorr.o : ../../LR_Modules/lrcom.o
 dgradcorr.o : ../../Modules/constants.o
 dgradcorr.o : ../../Modules/control_flags.o
 dgradcorr.o : ../../Modules/fft_base.o
@@ -366,7 +367,6 @@ dgradcorr.o : ../../Modules/kind.o
 dgradcorr.o : ../../Modules/noncol.o
 dgradcorr.o : ../../Modules/recvec.o
 dgradcorr.o : ../../PW/src/pwcom.o
-dgradcorr.o : phcom.o
 dhdrhopsi.o : ../../LR_Modules/lrcom.o
 dhdrhopsi.o : ../../Modules/becmod.o
 dhdrhopsi.o : ../../Modules/cell_base.o
@@ -1389,6 +1389,7 @@ setlocq.o : ../../Modules/constants.o
 setlocq.o : ../../Modules/kind.o
 setqmod.o : ../../Modules/kind.o
 setup_dgc.o : ../../FFTXlib/fft_interfaces.o
+setup_dgc.o : ../../LR_Modules/lrcom.o
 setup_dgc.o : ../../Modules/constants.o
 setup_dgc.o : ../../Modules/fft_base.o
 setup_dgc.o : ../../Modules/funct.o

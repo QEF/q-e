@@ -22,14 +22,15 @@ subroutine dv_of_drho (mode, dvscf, add_nlcc)
   USE noncollin_module, ONLY : nspin_lsda, nspin_mag, nspin_gga
   USE funct,     ONLY : dft_is_gradient
   USE scf,       ONLY : rho, rho_core
-  USE eqv,       ONLY : dmuxc
   USE nlcc_ph,   ONLY : nlcc_any
-  USE qpoint,    ONLY : xq
-  USE gc_ph,     ONLY : grho, dvxc_rr,  dvxc_sr,  dvxc_ss, dvxc_s
   USE control_ph, ONLY : lrpa
   USE control_flags, only : gamma_only, tddfpt
   USE martyna_tuckerman, ONLY : wg_corr_h, do_comp_mt
   !OBM: gamma_only is disregarded for phonon calculations, TDDFPT purposes only
+
+  USE qpoint,    ONLY : xq
+  USE gc_lr,     ONLY : grho, dvxc_rr,  dvxc_sr,  dvxc_ss, dvxc_s
+  USE eqv,       ONLY : dmuxc
 
   implicit none
 
