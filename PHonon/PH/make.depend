@@ -180,11 +180,6 @@ cch_psi_all.o : ../../Modules/mp_bands.o
 cch_psi_all.o : ../../Modules/noncol.o
 cch_psi_all.o : ../../Modules/uspp.o
 cch_psi_all.o : ../../PW/src/pwcom.o
-cgsolve_all.o : ../../Modules/control_flags.o
-cgsolve_all.o : ../../Modules/kind.o
-cgsolve_all.o : ../../Modules/mp.o
-cgsolve_all.o : ../../Modules/mp_bands.o
-cgsolve_all.o : ../../Modules/recvec.o
 cgsolve_all_imfreq.o : ../../Modules/kind.o
 cgsolve_all_imfreq.o : ../../Modules/mp.o
 cgsolve_all_imfreq.o : ../../Modules/mp_world.o
