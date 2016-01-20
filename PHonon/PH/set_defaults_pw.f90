@@ -41,7 +41,6 @@ SUBROUTINE setup_nscf ( newgrid, xq )
   USE el_phon,            ONLY : elph_mat
   USE mp_pools,           ONLY : kunit
   USE spin_orb,           ONLY : domag
-  USE control_ph,         ONLY : lgamma
   USE noncollin_module,   ONLY : noncolin
   USE start_k,            ONLY : nks_start, xk_start, wk_start, &
                                  nk1, nk2, nk3, k1, k2, k3
@@ -49,6 +48,7 @@ SUBROUTINE setup_nscf ( newgrid, xq )
   USE modes,              ONLY : nsymq, invsymq, minus_q
   USE uspp_param,         ONLY : n_atom_wfc
  
+  USE control_lr,         ONLY : lgamma
   !
   IMPLICIT NONE
   !

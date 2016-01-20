@@ -35,18 +35,17 @@ SUBROUTINE dynmat_us()
   USE spin_orb,             ONLY : lspinorb
   USE becmod,               ONLY : calbec, bec_type, allocate_bec_type, &
                                    deallocate_bec_type, beccopy
-  USE qpoint,               ONLY : npwq, nksq, igkq, ikks
   USE modes,                ONLY : u
   USE dynmat,               ONLY : dyn
   USE phus,                 ONLY : becp1, alphap
-  USE control_lr,           ONLY : nbnd_occ
-  USE control_ph,           ONLY : lgamma
   USE units_ph,             ONLY : iuwfc, lrwfc
   USE io_global,            ONLY : stdout
   USE mp_pools,             ONLY : my_pool_id, inter_pool_comm
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
 
+  USE qpoint,               ONLY : npwq, nksq, igkq, ikks
+  USE control_lr,           ONLY : nbnd_occ, lgamma
 
   IMPLICIT NONE
   INTEGER :: icart, jcart, na_icart, na_jcart, na, ng, nt, ik, &

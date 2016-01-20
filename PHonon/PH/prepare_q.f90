@@ -25,10 +25,9 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
   USE control_flags,   ONLY : modenum
   USE io_global,       ONLY : stdout, ionode
   USE klist,           ONLY : lgauss
-  USE qpoint,          ONLY : xq
   USE disp,            ONLY : x_q, done_iq, comp_iq, lgamma_iq
   USE grid_irr_iq,     ONLY : irr_iq, done_irr_iq, done_bands
-  USE control_ph,      ONLY : ldisp, lgamma, epsil, trans, zue, zeu, &
+  USE control_ph,      ONLY : ldisp, epsil, trans, zue, zeu, &
                               start_irr, last_irr, current_iq, newgrid, &
                               tmp_dir_ph, tmp_dir_phq, lqdir, qplot, &
                               always_run, where_rec, rec_code
@@ -38,6 +37,10 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
   USE freq_ph,         ONLY : fpol
   USE output,          ONLY : fildyn, fildvscf
   USE el_phon,         ONLY : elph_mat, wan_index_dyn, auxdvscf
+
+  USE qpoint,          ONLY : xq
+  USE control_lr,      ONLY : lgamma
+
   ! YAMBO >
   USE YAMBO,           ONLY : elph_yambo,yambo_elph_file_name,dvscf_yambo
   ! YAMBO <

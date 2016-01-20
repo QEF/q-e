@@ -36,10 +36,11 @@ subroutine drhodv (nu_i0, nper, drhoscf)
 
   USE dynmat,   ONLY : dyn, dyn_rec
   USE modes,    ONLY : u
-  USE qpoint,   ONLY : nksq, npwq, igkq, ikks, ikqs
-  USE eqv,      ONLY : dpsi
   USE units_ph, ONLY : lrdwf, iudwf
-  USE control_ph, ONLY : lgamma
+
+  USE eqv,      ONLY : dpsi
+  USE qpoint,   ONLY : nksq, npwq, igkq, ikks, ikqs
+  USE control_lr, ONLY : lgamma
 
   USE mp_pools,         ONLY : inter_pool_comm
   USE mp,               ONLY : mp_sum

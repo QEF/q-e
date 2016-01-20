@@ -28,6 +28,7 @@ head.o : ../../PHonon/PH/elph.o
 head.o : ../../PHonon/PH/ph_restart.o
 head.o : ../../PHonon/PH/phcom.o
 head.o : ../../PHonon/PH/save_ph_input.o
+lanczos_k.o : ../../LR_Modules/lrcom.o
 lanczos_k.o : ../../Modules/cell_base.o
 lanczos_k.o : ../../Modules/constants.o
 lanczos_k.o : ../../Modules/io_files.o
@@ -40,7 +41,6 @@ lanczos_k.o : ../../Modules/recvec.o
 lanczos_k.o : ../../Modules/uspp.o
 lanczos_k.o : ../../Modules/wannier_gw.o
 lanczos_k.o : ../../Modules/wavefunctions.o
-lanczos_k.o : ../../PHonon/PH/phcom.o
 lanczos_k.o : ../../PW/src/g_psi_mod.o
 lanczos_k.o : ../../PW/src/pwcom.o
 openfilq.o : ../../LR_Modules/lrcom.o

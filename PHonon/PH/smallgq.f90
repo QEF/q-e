@@ -17,7 +17,7 @@ subroutine set_giq (xq,s,nsymq,nsym,irotmq,minus_q,gi,gimq)
   !
   USE kinds, ONLY : DP
   USE cell_base, ONLY : bg, at
-  USE control_ph, ONLY : lgamma
+  USE control_lr, ONLY : lgamma
   implicit none
 
   REAL(DP), PARAMETER :: accep=1.e-5_dp

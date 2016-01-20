@@ -11,7 +11,6 @@ program d3toten
   !-----------------------------------------------------------------------
   !
   use pwcom
-  use qpoint,        ONLY : xq
   use phcom
   use d3com
   USE ions_base,     ONLY : nat, ityp, ntyp => nsp, zv, tau
@@ -20,6 +19,9 @@ program d3toten
   use control_flags, ONLY : gamma_only
   USE mp_global,     ONLY : mp_startup
   USE environment,   ONLY : environment_start
+
+  use qpoint,     ONLY : xq
+  use control_lr, ONLY : lgamma
 
   implicit none
   character(len=9) :: cdate, ctime, code = 'D3TOTEN'

@@ -17,7 +17,6 @@ SUBROUTINE d3_readin()
   USE pwcom
   USE run_info, ONLY : title
   USE control_flags, ONLY : iverbosity
-  USE qpoint,        ONLY : xq, nksq
   USE phcom
   USE d3com
   USE fft_base,      ONLY : dffts
@@ -27,6 +26,9 @@ SUBROUTINE d3_readin()
   USE mp_bands,      ONLY : nbgrp, ntask_groups
   USE mp,            ONLY : mp_bcast
   USE mp_world,      ONLY : world_comm
+
+  USE qpoint,     ONLY : xq, nksq
+  USE control_lr, ONLY : lgamma
   !
   IMPLICIT NONE
   !

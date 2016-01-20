@@ -19,7 +19,6 @@ SUBROUTINE ep_matrix_element_wannier()
   USE fft_base, ONLY : dfftp, dffts
   USE noncollin_module, ONLY : nspin_mag, noncolin
   USE dynmat, ONLY : dyn, w2
-  USE qpoint, ONLY : xq, nksq, ikks
   USE modes,  ONLY : npert, nirr
   USE control_ph, ONLY : trans
   USE units_ph, ONLY : iudyn, lrdrho, iudvscf
@@ -35,6 +34,7 @@ SUBROUTINE ep_matrix_element_wannier()
   USE uspp_param, ONLY : nhm
   USE lsda_mod, ONLY : nspin
 
+  USE qpoint, ONLY : xq, nksq, ikks
   !
   IMPLICIT NONE
   !
@@ -172,12 +172,13 @@ SUBROUTINE elphsum_wannier(q_index)
   USE mp_bands,  ONLY : intra_bgrp_comm
   USE io_global, ONLY : stdout,ionode
   USE io_files,  ONLY : prefix
-  USE qpoint, ONLY : xq, nksq, ikks, ikqs
   USE dynmat, ONLY : dyn, w2
   USE modes, ONLY : u, gi, gimq, irgq, irotmq
-  USE control_ph, only : lgamma
   USE lsda_mod, only : isk,nspin, current_spin,lsda
   USE mp,        ONLY: mp_sum
+
+  USE qpoint,     ONLY : xq, nksq, ikks, ikqs
+  USE control_lr, ONLY : lgamma
   !
   IMPLICIT NONE
   !
@@ -337,9 +338,7 @@ SUBROUTINE elphel_refolded (npe, imode0, dvscfins)
            xk_gamma, npwq_refolded, lrwfcr
   USE modes, ONLY : u
   USE units_ph, ONLY : iubar, lrbar
-  USE eqv,      ONLY : dvpsi!, evq
-  USE qpoint,   ONLY : igkq, npwq, nksq, ikks, ikqs
-  USE control_ph, ONLY : trans, lgamma
+  USE control_ph, ONLY : trans
   USE mp_bands,  ONLY: intra_bgrp_comm
   USE mp_pools,  ONLY: me_pool, root_pool
   USE mp,        ONLY: mp_sum
@@ -347,6 +346,9 @@ SUBROUTINE elphel_refolded (npe, imode0, dvscfins)
   USE io_global, ONLY : stdout
   USE gvecs, ONLY : nls
 
+  USE eqv,        ONLY : dvpsi!, evq
+  USE qpoint,     ONLY : igkq, npwq, nksq, ikks, ikqs
+  USE control_lr, ONLY : lgamma
 
   IMPLICIT NONE
   !

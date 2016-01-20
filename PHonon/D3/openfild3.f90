@@ -21,6 +21,8 @@ SUBROUTINE openfild3
   USE io_files,        ONLY : iunigk, prefix, tmp_dir, diropn, seqopn
   USE io_global,       ONLY : ionode
   USE mp_global,       ONLY : kunit, me_pool, root_pool
+
+  USE control_lr, ONLY : lgamma
   !
   IMPLICIT NONE
   !

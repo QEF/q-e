@@ -18,7 +18,8 @@ subroutine allocate_pert_d3()
 
   USE modes, ONLY : npertx, t, tmq
   USE modesg0, ONLY : tg0
-  USE control_ph, ONLY : lgamma
+
+  USE control_lr, ONLY : lgamma
 
   implicit none
   !

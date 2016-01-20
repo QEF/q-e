@@ -75,10 +75,10 @@ SUBROUTINE check_initial_status(auxdyn)
   USE disp,            ONLY : nqs, x_q, comp_iq, nq1, nq2, nq3, &
                               done_iq, lgamma_iq
   USE qpoint,          ONLY : xq
+  USE control_lr,      ONLY : lgamma
   USE output,          ONLY : fildyn
   USE control_ph,      ONLY : ldisp, recover, where_rec, rec_code, &
-                              start_q, last_q, current_iq, &
-                              tmp_dir_ph, lgamma, &
+                              start_q, last_q, current_iq, tmp_dir_ph, &
                               ext_recover, ext_restart, tmp_dir_phq, lqdir, &
                               start_irr, last_irr, newgrid, qplot, &
                               done_zeu, done_start_zstar, done_epsil, &

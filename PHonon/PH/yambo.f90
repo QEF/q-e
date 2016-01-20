@@ -28,7 +28,7 @@ SUBROUTINE debye_waller(y_grad_at_gamma,y_pol_vec,ibnd,jbnd,ik,mu)
   USE kinds,      ONLY:DP
   USE wvfct,      ONLY:nbnd
   USE ions_base,  ONLY:nat
-  USE control_ph, ONLY:lgamma
+  USE control_lr, ONLY:lgamma
   USE el_phon,    ONLY:el_ph_mat
   USE phcom,      ONLY:u,dyn
   !
@@ -83,7 +83,8 @@ SUBROUTINE elph_yambo_eval_and_IO( )
   USE xml_io_base, ONLY : create_directory
   USE mp_images,   ONLY : intra_image_comm
   USE mp,          ONLY : mp_bcast
-  USE control_ph,  ONLY : lgamma, current_iq
+  USE control_lr,  ONLY : lgamma
+  USE control_ph,  ONLY : current_iq
   USE cell_base,   ONLY : alat
   USE YAMBO,       ONLY : yambo_elph_file_name
   !

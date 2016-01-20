@@ -55,7 +55,6 @@ SUBROUTINE d3_setup()
   USE control_flags, ONLY : iverbosity, modenum
   USE constants,     ONLY : degspin
   USE qpoint,        ONLY : xq, ikks, ikqs, nksq
-  USE control_lr,    ONLY : alpha_pv, nbnd_occ
   USE phcom
   USE d3com,         ONLY : q0mode, wrmode, nsymg0, npertg0, nirrg0, &
                             npert_i, npert_f, q0mode_todo, allmodes, ug0, &
@@ -63,6 +62,8 @@ SUBROUTINE d3_setup()
   USE mp_global,     ONLY : npool, my_pool_id, inter_pool_comm, intra_image_comm
   USE mp,            ONLY : mp_max, mp_min, mp_bcast
   USE funct,         ONLY : dmxc, dmxc_spin
+
+  USE control_lr,    ONLY : alpha_pv, nbnd_occ, lgamma
   !
   IMPLICIT NONE
   !

@@ -26,9 +26,11 @@ subroutine d3_summary
   USE fft_base, ONLY : dffts, dfftp
   USE gvecw, ONLY : ecutwfc
   use pwcom
-  use qpoint, ONLY: xq
   use phcom
   use d3com
+
+  use qpoint,     ONLY : xq
+  use control_lr, ONLY : lgamma
 !
   implicit none
   integer :: i, l, nt, mu, nu, ipol, apol, na, isymq, isym, nsymtot, &

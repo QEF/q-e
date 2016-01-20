@@ -9,10 +9,14 @@
 subroutine write_igk
   !
   use pwcom
-  use qpoint,   ONLY : npwq, nksq, igkq
   use phcom
   USE io_files, ONLY : iunigk
+
+  use qpoint,     ONLY : npwq, nksq, igkq
+  use control_lr, ONLY : lgamma
+
   implicit none
+
   if (nksq.ne.1) return
   rewind (unit = iunigk)
   write (iunigk) npw, igk

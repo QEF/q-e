@@ -18,6 +18,9 @@ subroutine allocate_d3
   use pwcom
   use phcom
   use d3com
+
+  use control_lr, ONLY : lgamma
+
   implicit none
 
   call allocate_phq

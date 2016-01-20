@@ -27,11 +27,11 @@ subroutine newdq (dvscf, npe)
   USE paw_variables,        ONLY : okpaw
 
   USE phus,                 ONLY : int3, int3_paw
-  USE qpoint,               ONLY : xq, eigqts
-  USE control_ph,           ONLY : lgamma
-
   USE mp_bands,  ONLY: intra_bgrp_comm
   USE mp,        ONLY: mp_sum
+
+  USE qpoint,               ONLY : xq, eigqts
+  USE control_lr,           ONLY : lgamma
 
   implicit none
   !

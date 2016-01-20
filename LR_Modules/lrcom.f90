@@ -44,7 +44,33 @@ MODULE control_lr
   SAVE
   !
   INTEGER :: nbnd_occ(npk)   ! occupated bands in metals
-
+  !
+  LOGICAL :: lgamma          ! if .TRUE. this is a q=0 computation
+  !
   REAL(DP) :: alpha_pv       ! the alpha value for shifting the bands
   !
 END MODULE control_lr
+!
+MODULE eqv
+  USE kinds, ONLY :  DP
+  !
+  ! ... The wavefunctions at point k+q
+  !
+  SAVE
+  !
+  COMPLEX (DP), POINTER :: evq(:,:)
+  !
+  ! ... The variable describing the linear response problem
+  !
+  COMPLEX (DP), ALLOCATABLE :: dvpsi(:,:), dpsi(:,:), drhoscfs (:,:,:)
+  ! the product of dV psi
+  ! the change of the wavefunctions
+  REAL (DP), ALLOCATABLE :: dmuxc(:,:,:)        ! nrxx, nspin, nspin),
+  REAL (DP), ALLOCATABLE, TARGET :: vlocq(:,:)  ! ngm, ntyp)
+  ! the derivative of the xc potential
+  ! the local potential at q+G
+  REAL (DP), ALLOCATABLE :: eprec(:,:) ! needed for preconditioning
+  !
+END MODULE eqv
+!
+

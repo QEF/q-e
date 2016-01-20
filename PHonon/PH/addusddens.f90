@@ -41,7 +41,7 @@ subroutine addusddens (drhoscf, dbecsum, mode0, npe, iflag)
   USE qpoint,    ONLY : xq, eigqts
   USE phus,    ONLY : becsumort, alphasum
   USE units_ph,  ONLY : iudrhous, lrdrhous
-  USE control_ph, ONLY : lgamma
+  USE control_lr, ONLY : lgamma
   USE noncollin_module, ONLY : nspin_mag
 
   implicit none

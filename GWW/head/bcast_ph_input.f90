@@ -23,8 +23,7 @@ subroutine bcast_ph_input ( )
   USE mp_global, only : intra_image_comm
   USE control_ph, ONLY : start_irr, last_irr, start_q, last_q, nmix_ph, &
                          niter_ph, lnoloc, alpha_mix, tr2_ph, lrpa, recover, &
-                         ldisp,  reduce_io, zue, zeu, epsil, trans, &
-                         lgamma
+                         ldisp,  reduce_io, zue, zeu, epsil, trans
   USE gamma_gamma, ONLY : asr
   USE disp, ONLY : nq1, nq2, nq3
   USE partial, ONLY : nat_todo
@@ -39,6 +38,8 @@ subroutine bcast_ph_input ( )
   USE run_info, ONLY : title
   USE wannier_gw,    ONLY : l_head, omega_gauss, n_gauss, grid_type, nsteps_lanczos,&
                              &second_grid_n,second_grid_i,l_scissor,scissor,len_head_block_freq,len_head_block_wfc
+
+  USE control_lr, ONLY : lgamma
 
   implicit none
   !

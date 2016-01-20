@@ -23,9 +23,11 @@ subroutine drho_cc (iflag)
   !
   USE kinds, only : DP
   use pwcom
-  use qpoint, ONLY : xq
   use phcom
   use d3com
+
+  use qpoint,     ONLY : xq
+  use control_lr, ONLY : lgamma
 
   implicit none
   integer :: iflag

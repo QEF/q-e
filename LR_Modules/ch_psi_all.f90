@@ -32,8 +32,7 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   USE mp_bands,             ONLY : intra_bgrp_comm, ntask_groups
   USE mp,                   ONLY : mp_sum
 
-  USE control_ph,           ONLY : lgamma
-  USE control_lr,           ONLY : alpha_pv, nbnd_occ
+  USE control_lr,           ONLY : alpha_pv, nbnd_occ, lgamma
 
   !Needed only for TDDFPT
   USE control_flags,        ONLY : gamma_only, tddfpt

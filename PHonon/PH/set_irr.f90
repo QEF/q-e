@@ -31,7 +31,7 @@ subroutine set_irr_new (xq, u, npert, nirr, eigen)
   USE noncollin_module, ONLY : noncolin, nspin_mag
   USE spin_orb,  ONLY : domag
   USE constants, ONLY: tpi
-  USE control_ph, ONLY : lgamma, search_sym
+  USE control_ph, ONLY : search_sym
   USE control_flags, ONLY : iverbosity
   USE random_numbers, ONLY : randy
   USE rap_point_group, ONLY : name_rap
@@ -39,6 +39,8 @@ subroutine set_irr_new (xq, u, npert, nirr, eigen)
   use mp, only: mp_bcast
   use io_global, only : ionode_id
   use mp_images, only : intra_image_comm
+
+  USE control_lr, ONLY : lgamma
 
   implicit none
 !

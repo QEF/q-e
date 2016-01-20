@@ -34,13 +34,15 @@ subroutine dvanqq
   USE uspp, ONLY: okvan, ijtoh
   USE uspp_param, ONLY: upf, lmaxq, nh
 
-  USE phus, ONLY : int1, int2, int4, int4_nc, int5, int5_so
-  USE eqv, ONLY : vlocq
-  USE qpoint, ONLY : eigqts, xq
-  USE control_ph, ONLY : rec_code_read, lgamma
-
   USE mp_bands, ONLY: intra_bgrp_comm
   USE mp,        ONLY: mp_sum
+
+  USE phus, ONLY : int1, int2, int4, int4_nc, int5, int5_so
+  USE control_ph, ONLY : rec_code_read
+
+  USE eqv,        ONLY : vlocq
+  USE qpoint,     ONLY : eigqts, xq
+  USE control_lr, ONLY : lgamma
 
   implicit none
   !

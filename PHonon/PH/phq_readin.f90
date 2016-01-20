@@ -37,7 +37,7 @@ SUBROUTINE phq_readin()
   USE spin_orb,      ONLY : domag
   USE cellmd,        ONLY : lmovecell
   USE run_info, ONLY : title
-  USE control_ph,    ONLY : maxter, alpha_mix, lgamma, lgamma_gamma, epsil, &
+  USE control_ph,    ONLY : maxter, alpha_mix, lgamma_gamma, epsil, &
                             zue, zeu, xmldyn, newgrid,                      &
                             trans, reduce_io, tr2_ph, niter_ph,       &
                             nmix_ph, ldisp, recover, lrpa, lnoloc, start_irr, &
@@ -49,7 +49,6 @@ SUBROUTINE phq_readin()
 
   USE save_ph,       ONLY : tmp_dir_save, save_ph_input_variables
   USE gamma_gamma,   ONLY : asr
-  USE qpoint,        ONLY : nksq, xq
   USE partial,       ONLY : atomo, nat_todo, nat_todo_input
   USE output,        ONLY : fildyn, fildvscf, fildrho
   USE disp,          ONLY : nq1, nq2, nq3, x_q, wq, nqs, lgamma_iq
@@ -73,6 +72,10 @@ SUBROUTINE phq_readin()
   USE el_phon,       ONLY : elph,elph_mat,elph_simple,elph_nbnd_min, elph_nbnd_max, &
                             el_ph_sigma, el_ph_nsigma, el_ph_ngauss,auxdvscf
   USE dfile_star,    ONLY : drho_star, dvscf_star
+
+  USE qpoint,        ONLY : nksq, xq
+  USE control_lr,    ONLY : lgamma
+
   ! YAMBO >
   USE YAMBO,         ONLY : elph_yambo,dvscf_yambo
   ! YAMBO <

@@ -86,29 +86,6 @@ MODULE dynmat
 END MODULE dynmat
 !
 !
-MODULE eqv
-  USE kinds, ONLY :  DP
-  !
-  ! ... The wavefunctions at point k+q
-  !
-  SAVE
-  !
-  COMPLEX (DP), POINTER :: evq(:,:)
-  !
-  ! ... The variable describing the linear response problem
-  !
-  COMPLEX (DP), ALLOCATABLE :: dvpsi(:,:), dpsi(:,:), drhoscfs (:,:,:)
-  ! the product of dV psi
-  ! the change of the wavefunctions
-  REAL (DP), ALLOCATABLE :: dmuxc(:,:,:)        ! nrxx, nspin, nspin),
-  REAL (DP), ALLOCATABLE, TARGET :: vlocq(:,:)  ! ngm, ntyp)
-  ! the derivative of the xc potential
-  ! the local potential at q+G
-  REAL (DP), ALLOCATABLE :: eprec(:,:) ! needed for preconditioning
-  !
-END MODULE eqv
-!
-!
 MODULE efield_mod
   USE kinds, ONLY :  DP
   !
@@ -291,8 +268,7 @@ MODULE control_ph
   CHARACTER(LEN=256) :: flmixdpot, tmp_dir_ph, tmp_dir_phq
   INTEGER :: rec_code=-1000,    &! code for recover
              rec_code_read=-1000 ! code for recover. Not changed during the run
-  LOGICAL :: lgamma,      &! if .TRUE. this is a q=0 computation
-             lgamma_gamma,&! if .TRUE. this is a q=0 computation with k=0 only
+  LOGICAL :: lgamma_gamma,&! if .TRUE. this is a q=0 computation with k=0 only
              convt,       &! if .TRUE. the phonon has converged
              epsil,       &! if .TRUE. computes dielec. const and eff. charges
              done_epsil=.FALSE.,  &! .TRUE. when diel. constant is available

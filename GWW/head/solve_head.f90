@@ -22,8 +22,6 @@ subroutine solve_head
   USE kinds,                 ONLY : DP
   USE becmod,                ONLY : becp,calbec
   USE uspp_param,            ONLY : nhm
-  use qpoint,                ONLY : npwq, nksq
-  use control_lr,            ONLY : nbnd_occ
   use phcom
   USE wannier_gw,           ONLY : n_gauss, omega_gauss, grid_type,&
                                    nsteps_lanczos,second_grid_n,second_grid_i,&
@@ -42,6 +40,9 @@ subroutine solve_head
   USE fft_interfaces,       ONLY : fwfft, invfft
   USE buffers,              ONLY : get_buffer
   USE constants,            ONLY : rytoev
+
+  use qpoint,                ONLY : npwq, nksq
+  use control_lr,            ONLY : nbnd_occ, lgamma
 
   implicit none
 

@@ -15,9 +15,11 @@ subroutine dpsidpsidv
   USE mp_global,  ONLY : inter_pool_comm, intra_pool_comm
   USE mp,         ONLY : mp_sum
   use pwcom
-  use qpoint,     ONLY : nksq, npwq
   use phcom
   use d3com
+
+  use qpoint,     ONLY : nksq, npwq
+  use control_lr, ONLY : lgamma
 
   implicit none
   integer :: ik, ikk, ikq, ibnd, jbnd, nu_i, nu_j, nu_z, nrec

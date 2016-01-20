@@ -273,14 +273,16 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
                       comp_elph, done_elph
   USE modes, ONLY : u
   USE units_ph, ONLY : iubar, lrbar, lrwfc, iuwfc
-  USE eqv,      ONLY : dvpsi, evq
-  USE qpoint,   ONLY : igkq, npwq, nksq, ikks, ikqs, nksqtot
-  USE control_ph, ONLY : trans, lgamma, current_iq
+  USE control_ph, ONLY : trans, current_iq
   USE ph_restart, ONLY : ph_writefile
   USE spin_orb,   ONLY : domag
   USE mp_bands,   ONLY: intra_bgrp_comm, ntask_groups
   USE mp_pools,   ONLY: npool
   USE mp,        ONLY: mp_sum
+
+  USE eqv,        ONLY : dvpsi, evq
+  USE qpoint,     ONLY : igkq, npwq, nksq, ikks, ikqs, nksqtot
+  USE control_lr, ONLY : lgamma
 
   IMPLICIT NONE
   !
@@ -467,7 +469,6 @@ SUBROUTINE elphsum ( )
   USE parameters,  ONLY : npk
   USE el_phon,     ONLY : el_ph_mat, done_elph, el_ph_nsigma, el_ph_ngauss, &
                           el_ph_sigma
-  USE qpoint,      ONLY : xq, nksq
   USE modes,       ONLY : u, minus_q, nsymq, rtau, nirr
   USE dynmat,      ONLY : dyn, w2
   USE io_global,   ONLY : stdout, ionode, ionode_id
@@ -475,9 +476,12 @@ SUBROUTINE elphsum ( )
   USE mp_pools,    ONLY : my_pool_id, npool, kunit
   USE mp_images,   ONLY : intra_image_comm
   USE mp,          ONLY : mp_bcast
-  USE control_ph,  ONLY : lgamma, tmp_dir_phq, xmldyn, current_iq
+  USE control_ph,  ONLY : tmp_dir_phq, xmldyn, current_iq
   USE save_ph,     ONLY : tmp_dir_save
   USE io_files,    ONLY : prefix, tmp_dir, seqopn
+  
+  USE qpoint,      ONLY : xq, nksq
+  USE control_lr,  ONLY : lgamma
   !
   IMPLICIT NONE
   ! epsw = 20 cm^-1, in Ry

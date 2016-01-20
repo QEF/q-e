@@ -1314,14 +1314,13 @@ subroutine dynmatrix(iq_)
   USE symm_base,     ONLY : s, sr, irt, nsym, time_reversal, invs
   USE run_info, ONLY : title
   USE dynmat,        ONLY : dyn, w2
-  USE qpoint,        ONLY : xq
   USE noncollin_module, ONLY : nspin_mag
   USE modes,         ONLY : u, nmodes, minus_q, irotmq, nsymq, irgq, &
                             rtau, npert, nirr, name_rap_mode, num_rap_mode
   USE gamma_gamma,   ONLY : nasr, asr, equiv_atoms, has_equivalent, &
                             n_diff_sites
   USE efield_mod,    ONLY : epsilon, zstareu, zstarue0, zstarue
-  USE control_ph,    ONLY : epsil, zue, lgamma, lgamma_gamma, search_sym, ldisp, &
+  USE control_ph,    ONLY : epsil, zue, lgamma_gamma, search_sym, ldisp, &
                             start_irr, last_irr, done_zue, where_rec, &
                             rec_code, ldiag, done_epsil, done_zeu, xmldyn, &
                             current_iq
@@ -1334,6 +1333,9 @@ subroutine dynmatrix(iq_)
   USE ramanm,        ONLY : lraman, ramtns
   USE dfile_star,    ONLY : write_dfile_star, drho_star, dvscf_star !write_dfile_mq
   USE units_ph,      ONLY : iudrho, iudvscf
+
+  USE qpoint,        ONLY : xq
+  USE control_lr,    ONLY : lgamma
 
   implicit none
   INTEGER, INTENT(IN) :: iq_

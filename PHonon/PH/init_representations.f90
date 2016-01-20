@@ -20,18 +20,20 @@ subroutine init_representations()
   USE cell_base,     ONLY : at, bg
   USE io_global,     ONLY : stdout
   USE symm_base,     ONLY : nsym, sr, ftau, irt, time_reversal, t_rev, s
-  USE control_ph,    ONLY : search_sym, lgamma, current_iq, u_from_file, &
+  USE control_ph,    ONLY : search_sym, current_iq, u_from_file, &
                             search_sym_save
   USE modes,         ONLY : u, npert, gi, gimq, nirr, irotmq, minus_q, &
                             invsymq, nsymq, nmodes, rtau, name_rap_mode, &
                             num_rap_mode
-  USE qpoint,        ONLY : xq
   USE disp,          ONLY : x_q, nqs, lgamma_iq
   USE cryst_ph,      ONLY : magnetic_sym
   USE ph_restart,    ONLY : ph_writefile
   USE control_flags, ONLY : modenum, noinv
   USE mp,            ONLY : mp_bcast
   USE mp_world,      ONLY : root, world_comm
+
+  USE qpoint,        ONLY : xq
+  USE control_lr,    ONLY : lgamma
 
   implicit none
 

@@ -26,7 +26,7 @@ subroutine add_for_charges (ik, uact)
   USE uspp_param, only: nh
   USE eqv, ONLY : dvpsi, dpsi
   USE qpoint, ONLY : igkq
-  USE control_ph, ONLY : lgamma
+  USE control_lr, ONLY : lgamma
   implicit none
   !
   !   The dummy variables

@@ -145,6 +145,7 @@ lr_calc_dens_eels_nc.o : ../../Modules/wavefunctions.o
 lr_calc_dens_eels_nc.o : ../../PHonon/PH/phcom.o
 lr_calc_dens_eels_nc.o : ../../PW/src/pwcom.o
 lr_calc_dens_eels_nc.o : lr_variables.o
+lr_charg_resp.o : ../../LR_Modules/lrcom.o
 lr_charg_resp.o : ../../Modules/becmod.o
 lr_charg_resp.o : ../../Modules/cell_base.o
 lr_charg_resp.o : ../../Modules/constants.o
@@ -159,7 +160,6 @@ lr_charg_resp.o : ../../Modules/mp_world.o
 lr_charg_resp.o : ../../Modules/noncol.o
 lr_charg_resp.o : ../../Modules/recvec.o
 lr_charg_resp.o : ../../Modules/uspp.o
-lr_charg_resp.o : ../../PHonon/PH/phcom.o
 lr_charg_resp.o : ../../PW/src/pwcom.o
 lr_charg_resp.o : ../../PW/src/realus.o
 lr_charg_resp.o : lr_variables.o
@@ -243,10 +243,10 @@ lr_dot.o : ../../Modules/mp.o
 lr_dot.o : ../../Modules/mp_global.o
 lr_dot.o : ../../Modules/noncol.o
 lr_dot.o : ../../Modules/recvec.o
-lr_dot.o : ../../PHonon/PH/phcom.o
 lr_dot.o : ../../PW/src/pwcom.o
 lr_dot.o : ../../PW/src/realus.o
 lr_dot.o : lr_variables.o
+lr_dv_setup.o : ../../LR_Modules/lrcom.o
 lr_dv_setup.o : ../../Modules/fft_base.o
 lr_dv_setup.o : ../../Modules/funct.o
 lr_dv_setup.o : ../../Modules/io_global.o
@@ -389,10 +389,10 @@ lr_normalise.o : ../../Modules/kind.o
 lr_normalise.o : ../../Modules/noncol.o
 lr_normalise.o : ../../Modules/recvec.o
 lr_normalise.o : ../../Modules/uspp.o
-lr_normalise.o : ../../PHonon/PH/phcom.o
 lr_normalise.o : ../../PW/src/pwcom.o
 lr_normalise.o : ../../PW/src/realus.o
 lr_normalise.o : lr_variables.o
+lr_ortho.o : ../../LR_Modules/lrcom.o
 lr_ortho.o : ../../Modules/control_flags.o
 lr_ortho.o : ../../Modules/io_global.o
 lr_ortho.o : ../../Modules/kind.o
@@ -401,7 +401,6 @@ lr_ortho.o : ../../Modules/mp_global.o
 lr_ortho.o : ../../Modules/noncol.o
 lr_ortho.o : ../../Modules/recvec.o
 lr_ortho.o : ../../Modules/uspp.o
-lr_ortho.o : ../../PHonon/PH/phcom.o
 lr_ortho.o : ../../PW/src/pwcom.o
 lr_ortho.o : ../../PW/src/realus.o
 lr_ortho.o : lr_variables.o
@@ -429,7 +428,6 @@ lr_read_wf.o : ../../Modules/noncol.o
 lr_read_wf.o : ../../Modules/recvec.o
 lr_read_wf.o : ../../Modules/uspp.o
 lr_read_wf.o : ../../Modules/wavefunctions.o
-lr_read_wf.o : ../../PHonon/PH/phcom.o
 lr_read_wf.o : ../../PW/src/buffers.o
 lr_read_wf.o : ../../PW/src/exx.o
 lr_read_wf.o : ../../PW/src/pwcom.o
@@ -498,7 +496,6 @@ lr_restart.o : ../../Modules/mp_world.o
 lr_restart.o : ../../Modules/noncol.o
 lr_restart.o : ../../Modules/recvec.o
 lr_restart.o : ../../Modules/uspp.o
-lr_restart.o : ../../PHonon/PH/phcom.o
 lr_restart.o : ../../PW/src/pwcom.o
 lr_restart.o : ../../PW/src/realus.o
 lr_restart.o : lr_charg_resp.o
@@ -570,7 +567,6 @@ lr_solve_e.o : ../../Modules/mp_global.o
 lr_solve_e.o : ../../Modules/recvec.o
 lr_solve_e.o : ../../Modules/uspp.o
 lr_solve_e.o : ../../Modules/wavefunctions.o
-lr_solve_e.o : ../../PHonon/PH/phcom.o
 lr_solve_e.o : ../../PW/src/pwcom.o
 lr_solve_e.o : ../../PW/src/realus.o
 lr_solve_e.o : lr_variables.o
@@ -610,7 +606,6 @@ lr_us.o : ../../Modules/kind.o
 lr_us.o : ../../Modules/noncol.o
 lr_us.o : ../../Modules/recvec.o
 lr_us.o : ../../Modules/uspp.o
-lr_us.o : ../../PHonon/PH/phcom.o
 lr_us.o : ../../PW/src/pwcom.o
 lr_us.o : ../../PW/src/realus.o
 lr_us.o : lr_variables.o
@@ -647,7 +642,6 @@ sd0psi.o : ../../Modules/gvecw.o
 sd0psi.o : ../../Modules/io_global.o
 sd0psi.o : ../../Modules/recvec.o
 sd0psi.o : ../../Modules/uspp.o
-sd0psi.o : ../../PHonon/PH/phcom.o
 sd0psi.o : ../../PW/src/pwcom.o
 sd0psi.o : ../../PW/src/realus.o
 sd0psi.o : lr_variables.o

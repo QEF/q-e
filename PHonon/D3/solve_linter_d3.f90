@@ -39,12 +39,13 @@ subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
   USE kinds, only : DP
   USE uspp, ONLY : vkb
   USE wavefunctions_module,  ONLY : evc
-  use qpoint,     ONLY : xq, igkq, npwq, nksq
-  use control_lr, ONLY : nbnd_occ
   use phcom
   use d3com
   USE mp_global,  ONLY : inter_pool_comm, intra_pool_comm
   USE mp,         ONLY : mp_sum
+
+  use qpoint,     ONLY : xq, igkq, npwq, nksq
+  use control_lr, ONLY : nbnd_occ, lgamma
 
   implicit none
   integer :: irr, npe, imode0, isw_sl

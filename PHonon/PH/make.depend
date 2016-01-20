@@ -180,7 +180,6 @@ cch_psi_all.o : ../../Modules/mp_bands.o
 cch_psi_all.o : ../../Modules/noncol.o
 cch_psi_all.o : ../../Modules/uspp.o
 cch_psi_all.o : ../../PW/src/pwcom.o
-cch_psi_all.o : phcom.o
 cg_psi.o : ../../Modules/kind.o
 cg_psi.o : ../../Modules/noncol.o
 cgsolve_all.o : ../../Modules/control_flags.o
@@ -191,20 +190,6 @@ cgsolve_all.o : ../../Modules/recvec.o
 cgsolve_all_imfreq.o : ../../Modules/kind.o
 cgsolve_all_imfreq.o : ../../Modules/mp.o
 cgsolve_all_imfreq.o : ../../Modules/mp_world.o
-ch_psi_all.o : ../../LR_Modules/lrcom.o
-ch_psi_all.o : ../../Modules/becmod.o
-ch_psi_all.o : ../../Modules/control_flags.o
-ch_psi_all.o : ../../Modules/fft_base.o
-ch_psi_all.o : ../../Modules/kind.o
-ch_psi_all.o : ../../Modules/mp.o
-ch_psi_all.o : ../../Modules/mp_bands.o
-ch_psi_all.o : ../../Modules/noncol.o
-ch_psi_all.o : ../../Modules/recvec.o
-ch_psi_all.o : ../../Modules/uspp.o
-ch_psi_all.o : ../../Modules/wavefunctions.o
-ch_psi_all.o : ../../PW/src/pwcom.o
-ch_psi_all.o : ../../PW/src/realus.o
-ch_psi_all.o : phcom.o
 check_if_partial_dyn.o : ../../Modules/control_flags.o
 check_if_partial_dyn.o : ../../Modules/ions_base.o
 check_if_partial_dyn.o : ../../Modules/kind.o
@@ -977,7 +962,6 @@ pcgreen.o : ../../Modules/mp.o
 pcgreen.o : ../../Modules/mp_bands.o
 pcgreen.o : ../../Modules/wavefunctions.o
 pcgreen.o : ../../PW/src/pwcom.o
-pcgreen.o : phcom.o
 ph_restart.o : ../../LR_Modules/lrcom.o
 ph_restart.o : ../../Modules/io_files.o
 ph_restart.o : ../../Modules/io_global.o
@@ -995,6 +979,7 @@ ph_restart.o : ../../iotk/src/iotk_module.o
 ph_restart.o : elph.o
 ph_restart.o : phcom.o
 ph_restart.o : ramanm.o
+phcom.o : ../../LR_Modules/lrcom.o
 phcom.o : ../../Modules/becmod.o
 phcom.o : ../../Modules/kind.o
 phcom.o : ../../Modules/parameters.o
@@ -1113,6 +1098,7 @@ phq_summary.o : ../../PW/src/pwcom.o
 phq_summary.o : ../../PW/src/symm_base.o
 phq_summary.o : phcom.o
 phq_summary.o : ramanm.o
+phqscf.o : ../../LR_Modules/lrcom.o
 phqscf.o : ../../Modules/fft_base.o
 phqscf.o : ../../Modules/io_global.o
 phqscf.o : ../../Modules/ions_base.o

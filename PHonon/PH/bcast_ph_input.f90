@@ -17,10 +17,11 @@ subroutine bcast_ph_input ( )
 
   use mp, only: mp_bcast
   use mp_world, only: world_comm
+  USE control_lr, ONLY : lgamma
   USE control_ph, ONLY : start_irr, last_irr, start_q, last_q, nmix_ph, &
                          niter_ph, lnoloc, alpha_mix, tr2_ph, lrpa, recover, &
                          ldisp, reduce_io, zue, zeu, epsil, trans, &
-                         lgamma, ldiag, lqdir, search_sym,  electron_phonon, &
+                         ldiag, lqdir, search_sym,  electron_phonon, &
                          qplot, only_init, only_wfc, low_directory_check
   USE gamma_gamma, ONLY : asr
   USE disp, ONLY : nq1, nq2, nq3

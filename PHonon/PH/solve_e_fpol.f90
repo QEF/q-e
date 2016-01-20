@@ -37,10 +37,8 @@ subroutine solve_e_fpol ( iw )
   USE wvfct,                 ONLY : npw, npwx, nbnd, igk, g2kin, et
   USE uspp,                  ONLY : okvan, vkb
   USE uspp_param,            ONLY : nhm
-  USE eqv,                   ONLY : dpsi, dvpsi, eprec
-  USE control_lr,            ONLY : nbnd_occ
   USE control_ph,            ONLY : nmix_ph, tr2_ph, alpha_mix, convt, &
-                                    lgamma, niter_ph, &
+                                    niter_ph, &
                                     rec_code, flmixdpot
   USE output,                ONLY : fildrho
   USE qpoint,                ONLY : nksq, npwq, igkq
@@ -49,6 +47,9 @@ subroutine solve_e_fpol ( iw )
   USE mp_pools,              ONLY : inter_pool_comm
   USE mp_bands,              ONLY : intra_bgrp_comm
   USE mp,                    ONLY : mp_sum
+
+  USE eqv,                   ONLY : dpsi, dvpsi, eprec
+  USE control_lr,            ONLY : nbnd_occ, lgamma
 
   implicit none
 

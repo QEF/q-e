@@ -17,6 +17,7 @@ bcast_d3_input.o : ../../Modules/run_info.o
 bcast_d3_input.o : ../../PHonon/PH/phcom.o
 bcast_d3_input.o : ../../PW/src/pwcom.o
 bcast_d3_input.o : d3com.o
+ch_psi_all2.o : ../../LR_Modules/lrcom.o
 ch_psi_all2.o : ../../Modules/becmod.o
 ch_psi_all2.o : ../../Modules/kind.o
 ch_psi_all2.o : ../../Modules/mp.o

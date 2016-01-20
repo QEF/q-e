@@ -29,7 +29,9 @@ subroutine psidspsi (ik, uact, pdsp)
   USE uspp,      ONLY: nkb, vkb, qq, qq_so
   USE uspp_param,ONLY : nh
   USE phus,      ONLY : becp1, alphap
-  USE control_ph, ONLY : lgamma
+
+  USE control_lr, ONLY : lgamma
+
   implicit none
   !
   !   The dummy variables

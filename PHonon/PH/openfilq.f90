@@ -19,13 +19,12 @@ SUBROUTINE openfilq()
                               lrwfc, lrdwf, lrbar, lrcom, lrdvkb3, &
                               lrdrhous, lrebar, lrdrho, lint3paw, iuint3paw
   USE io_files,        ONLY : tmp_dir, diropn, seqopn
-  USE control_ph,      ONLY : epsil, zue, ext_recover, trans, lgamma, &
+  USE control_ph,      ONLY : epsil, zue, ext_recover, trans, &
                               tmp_dir_phq, start_irr, last_irr, xmldyn, &
                               all_done
   USE save_ph,         ONLY : tmp_dir_save
   USE ions_base,       ONLY : nat
   USE cell_base,       ONLY : at
-  USE qpoint,          ONLY : xq, nksq
   USE output,          ONLY : fildyn, fildvscf
   USE wvfct,           ONLY : nbnd, npwx
   USE fft_base,        ONLY : dfftp, dffts
@@ -45,6 +44,9 @@ SUBROUTINE openfilq()
   USE el_phon,         ONLY : elph, elph_mat, iunwfcwann, lrwfcr
   USE dfile_star,      ONLY : dvscf_star
   USE dfile_autoname,  ONLY : dfile_name
+
+  USE qpoint,          ONLY : xq, nksq
+  USE control_lr,      ONLY : lgamma
   !
   IMPLICIT NONE
   !

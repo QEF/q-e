@@ -23,7 +23,6 @@ subroutine dynmatrix_new(iq_)
   USE cell_base,     ONLY : at, bg, celldm, ibrav, omega
   USE symm_base,     ONLY : s, sr, irt, nsym, invs
   USE dynmat,        ONLY : dyn, w2
-  USE qpoint,        ONLY : xq
   USE noncollin_module, ONLY : nspin_mag
   USE modes,         ONLY : u, nmodes, minus_q, irotmq, nsymq, &
                             rtau, npert, nirr, num_rap_mode
@@ -31,18 +30,21 @@ subroutine dynmatrix_new(iq_)
                             n_diff_sites
   USE efield_mod,    ONLY : epsilon, zstareu, zstarue0, zstarue
   USE disp,          ONLY : omega_disp
-  USE control_ph,    ONLY : epsil, zue, lgamma, lgamma_gamma, search_sym, ldisp, &
+  USE control_ph,    ONLY : always_run
+  USE control_ph,    ONLY : epsil, zue, lgamma_gamma, search_sym, ldisp, &
                             done_zue, where_rec, &
                             rec_code, ldiag, done_epsil, done_zeu, xmldyn, &
                             current_iq, qplot
   USE ph_restart,    ONLY : ph_writefile
   USE partial,       ONLY : all_comp, comp_irr, done_irr, nat_todo_input
   USE units_ph,      ONLY : iudyn
-  USE control_ph,    ONLY : always_run
   USE noncollin_module, ONLY : m_loc, nspin_mag
   USE output,        ONLY : fildyn
   USE io_dyn_mat,    ONLY : write_dyn_mat_header
   USE ramanm,        ONLY : lraman, ramtns
+
+  USE qpoint,        ONLY : xq
+  USE control_lr,    ONLY : lgamma
 
   implicit none
   INTEGER, INTENT(IN) :: iq_

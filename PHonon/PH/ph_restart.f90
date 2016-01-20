@@ -299,7 +299,7 @@ MODULE ph_restart
            USE klist, ONLY : nks
            USE wvfct, ONLY: nbnd
            USE qpoint, ONLY : nksqtot, xk_col
-           USE control_ph, ONLY : lgamma
+           USE control_lr, ONLY : lgamma
            IMPLICIT NONE
            INTEGER, INTENT(IN) :: irr
            INTEGER :: ik, ikk

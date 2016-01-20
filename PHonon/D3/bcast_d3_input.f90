@@ -15,7 +15,6 @@ subroutine bcast_d3_input
   !
 #ifdef __MPI
   use pwcom
-  use qpoint, ONLY: xq
   use phcom
   use d3com
   use mp, only: mp_bcast
@@ -24,6 +23,9 @@ subroutine bcast_d3_input
   use ions_base, only: amass
   use control_flags, only: iverbosity
   use run_info, only: title
+
+  use qpoint, ONLY: xq
+  use control_lr, ONLY : lgamma
 
   implicit none
   integer :: root = 0

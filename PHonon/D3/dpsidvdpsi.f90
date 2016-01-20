@@ -17,10 +17,12 @@ subroutine dpsidvdpsi (nu_q0)
   use pwcom
   USE fft_base,   ONLY : dfftp
   USE uspp,       ONLY : nkb, vkb
-  use qpoint,     ONLY : igkq, npwq, nksq, xq
   use phcom
   use d3com
   USE io_files,      ONLY : iunigk
+
+  use qpoint,     ONLY : igkq, npwq, nksq, xq
+  use control_lr, ONLY : lgamma
 
   implicit none
   integer :: nu_q0

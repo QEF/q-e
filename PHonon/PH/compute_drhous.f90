@@ -30,8 +30,9 @@ subroutine compute_drhous (drhous, dbecsum, wgg, becq, alpq)
 
   USE qpoint,     ONLY : nksq, igkq, npwq, ikks, ikqs
   USE eqv,        ONLY : evq
+  USE control_lr, ONLY : lgamma
+
   USE units_ph,   ONLY : iuwfc, lrwfc
-  USE control_ph, ONLY : lgamma
   USE becmod,     ONLY : bec_type
 
   implicit none

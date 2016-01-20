@@ -23,8 +23,10 @@ subroutine incdrhoscf2 (drhoscf, weight, ik, dbecsum, mode, flag)
   USE wavefunctions_module,  ONLY: evc
   USE uspp, ONLY: okvan
   USE uspp_param, ONLY: nhm
-  USE qpoint,     ONLY: npwq, igkq
   use phcom
+
+  USE qpoint,     ONLY : npwq, igkq
+  USE control_lr, ONLY : lgamma
 
   implicit none
   integer :: ik

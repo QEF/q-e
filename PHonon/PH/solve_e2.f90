@@ -28,11 +28,8 @@ subroutine solve_e2
   USE uspp,      ONLY: okvan, nkb, vkb
   USE uspp_param,ONLY : nhm
   USE wavefunctions_module,  ONLY: evc
-  USE eqv,       ONLY : dpsi, dvpsi
-  USE qpoint,    ONLY : npwq, igkq, nksq
-  USE control_lr, ONLY : nbnd_occ
   USE control_ph, ONLY : convt, nmix_ph, alpha_mix, tr2_ph, &
-                         niter_ph, lgamma, rec_code, flmixdpot, rec_code_read
+                         niter_ph, rec_code, flmixdpot, rec_code_read
   USE units_ph,   ONLY : lrwfc, iuwfc
   USE ramanm,     ONLY : lrba2, iuba2, lrd2w, iud2w
   USE recover_mod, ONLY : read_rec, write_rec
@@ -41,6 +38,11 @@ subroutine solve_e2
   USE mp_pools,   ONLY : inter_pool_comm
   USE mp_bands,   ONLY : intra_bgrp_comm
   USE mp,         ONLY : mp_sum
+
+  USE eqv,       ONLY : dpsi, dvpsi
+  USE qpoint,    ONLY : npwq, igkq, nksq
+  USE control_lr, ONLY : nbnd_occ, lgamma
+
   implicit none
 
   real(DP) ::  thresh, weight, avg_iter, dr2

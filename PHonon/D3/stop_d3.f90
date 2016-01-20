@@ -20,6 +20,8 @@ SUBROUTINE stop_d3 (flag)
   USE io_files,      ONLY : iunigk
   USE mp_global,     ONLY : me_pool, root_pool, mp_global_end
 
+  use control_lr, ONLY : lgamma
+
   IMPLICIT NONE
 
   LOGICAL :: flag

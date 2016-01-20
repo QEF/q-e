@@ -34,7 +34,6 @@ cg_psi.o \
 ccg_psi.o \
 cgsolve_all.o \
 cgsolve_all_imfreq.o \
-ch_psi_all.o \
 check_if_partial_dyn.o \
 check_initial_status.o \
 check_q_points_sym.o \

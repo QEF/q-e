@@ -22,7 +22,7 @@ SUBROUTINE openfilq()
                              lrwfc, lrdwf, lrbar, lrcom, lrdvkb3, &
                              lrdrhous, lrebar, lrdrho
   ! USE io_files,       ONLY : tmp_dir
-  USE control_ph,     ONLY : epsil, zue, ext_recover, trans,  lgamma, &
+  USE control_ph,     ONLY : epsil, zue, ext_recover, trans,  &
                              tmp_dir_ph, start_irr, last_irr
   USE save_ph,        ONLY : tmp_dir_save
   USE qpoint,         ONLY : nksq
@@ -39,6 +39,8 @@ SUBROUTINE openfilq()
   USE wannier_gw,     ONLY : l_head
   USE fft_base,             ONLY : dfftp, dffts
   USE buffers,         ONLY : open_buffer
+
+  USE control_lr,     ONLY : lgamma
  !
   IMPLICIT NONE
   !

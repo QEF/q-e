@@ -952,8 +952,10 @@ manypw.o : ../../Modules/command_line_options.o
 manypw.o : ../../Modules/environment.o
 manypw.o : ../../Modules/input_parameters.o
 manypw.o : ../../Modules/io_global.o
+manypw.o : ../../Modules/mp.o
 manypw.o : ../../Modules/mp_global.o
 manypw.o : ../../Modules/mp_images.o
+manypw.o : ../../Modules/mp_world.o
 manypw.o : ../../Modules/read_input.o
 martyna_tuckerman.o : ../../FFTXlib/fft_interfaces.o
 martyna_tuckerman.o : ../../Modules/cell_base.o

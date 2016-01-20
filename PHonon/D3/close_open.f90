@@ -13,10 +13,12 @@ SUBROUTINE close_open (isw)
   !
   !
   USE pwcom,     ONLY : degauss
-  USE phcom,     ONLY : iudwf, lrdwf, lgamma
+  USE phcom,     ONLY : iudwf, lrdwf
   USE io_files,  ONLY : prefix, diropn, seqopn
   USE d3com
   USE io_global, ONLY : ionode
+
+  use control_lr, ONLY : lgamma
   !
   IMPLICIT NONE
   !

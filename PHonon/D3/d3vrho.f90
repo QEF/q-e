@@ -30,10 +30,11 @@ subroutine d3vrho()
   USE mp,                   ONLY : mp_sum
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft
-  USE qpoint,               ONLY : nksq, npwq, igkq
-  USE control_lr,           ONLY : nbnd_occ
   USE phcom
   USE d3com
+
+  USE qpoint,               ONLY : nksq, npwq, igkq
+  USE control_lr,           ONLY : nbnd_occ, lgamma
   !
   implicit none
   integer :: icart, jcart, kcart, na_i, na_j, na_k, na, ng, ir, nt, &

@@ -88,9 +88,8 @@ subroutine phq_recover
   USE ph_restart,    ONLY : ph_readfile
   USE control_ph,    ONLY : epsil, rec_code_read, all_done, where_rec,&
                             zeu, done_epsil, done_zeu, ext_recover, recover, &
-                            lgamma, zue, trans, current_iq, low_directory_check
+                            zue, trans, current_iq, low_directory_check
   USE wvfct,         ONLY : nbnd
-  USE qpoint,        ONLY : nksq
   USE el_phon,       ONLY : el_ph_mat, el_ph_mat_rec, done_elph, elph
   USE efield_mod,    ONLY : zstarue0, zstarue0_rec
   USE partial,       ONLY : comp_irr, done_irr
@@ -99,6 +98,9 @@ subroutine phq_recover
   USE freq_ph,       ONLY : fpol, done_fpol, done_iu, nfs
   USE grid_irr_iq,   ONLY : comp_irr_iq
   USE dynmat,        ONLY : dyn, dyn_rec
+
+  USE qpoint,        ONLY : nksq
+  USE control_lr,    ONLY : lgamma
   !
   implicit none
   !

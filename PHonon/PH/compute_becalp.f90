@@ -27,9 +27,10 @@ subroutine compute_becalp (becq, alpq)
   USE wvfct,    ONLY : nbnd, npw, npwx, igk
   USE paw_variables, ONLY : okpaw
 
-  USE control_ph, ONLY : lgamma, rec_code_read
-  USE eqv, ONLY : evq
   USE units_ph, ONLY : lrwfc, iuwfc
+  USE control_ph, ONLY : rec_code_read
+  USE control_lr, ONLY : lgamma
+  USE eqv, ONLY : evq
   USE qpoint, ONLY : nksq, npwq, igkq, ikqs
 
   implicit none
