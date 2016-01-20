@@ -52,7 +52,7 @@ PROGRAM manypw
   !
   ! ... Image-specific input files
   !
-  image_label = '_' // int_to_char(my_image_id)
+  image_label = '_' // int_to_char(my_image_id+first_image)
   IF ( TRIM (input_file_) == ' ') THEN
      filin = 'pw' // TRIM(image_label)  // '.in'
   ELSE
