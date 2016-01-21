@@ -130,25 +130,19 @@ MODULE phus
   COMPLEX (DP), ALLOCATABLE :: &
        int1(:,:,:,:,:),     &! nhm, nhm, 3, nat, nspin),&
        int2(:,:,:,:,:),     &! nhm, nhm, 3,nat, nat),&
-       int3(:,:,:,:,:),     &! nhm, nhm, nat, nspin, npert),&
-       int3_paw(:,:,:,:,:), &! nhm, nhm, nat, nspin, npert),&
        int4(:,:,:,:,:),     &! nhm*(nhm+1)/2, 3, 3, nat, nspin),&
        int5(:,:,:,:,:),     &! nhm*(nhm+1)/2, 3, 3, nat, nat),&
        int1_nc(:,:,:,:,:),     &! nhm, nhm, 3, nat, nspin),&
        int2_so(:,:,:,:,:,:),   &! nhm, nhm, 3, nat,nat,nspin),&
-       int3_nc(:,:,:,:,:),     &! nhm, nhm, nat, nspin, npert),&
        int4_nc(:,:,:,:,:,:),   &! nhm, nhm, 3, 3, nat, nspin),&
        int5_so(:,:,:,:,:,:,:), &! nhm*(nhm+1)/2, 3, 3, nat, nat, nspin),&
 !
 !  These variables contains the five integrals defined in PRB 64, 35118 (2001)
 !  int1 -> \int V_eff d/du (Q) d^3r
 !  int2 -> \int d/du (V_loc) Q d^3r
-!  int3 -> \int d\du (V_Hxc) Q d^3r
+!  int3 -> \int d\du (V_Hxc) Q d^3r .... generalized to Delta V_Hxc and move to lr_us in LR_Modules
 !  int4 -> \int V_eff d^2/dudu (Q) d^3r
 !  int5 -> \int d/du (V_loc) d/du (Q) d^3r
-!
-!  int3_paw contains d/du (D^1-\tilde D^1)
-!
 !
        becsum_nc(:,:,:,:),     &! nhm*(nhm+1)/2,nat,npol,npol)
        becsumort(:,:,:,:),     &! nhm*(nhm+1)/2,nat,nspin,3*nat)

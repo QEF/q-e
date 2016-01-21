@@ -125,3 +125,24 @@ MODULE lr_symm_base
 
 END MODULE lr_symm_base
 
+
+MODULE lrus
+  USE kinds,  ONLY : DP
+  USE becmod, ONLY : bec_type
+  !
+  ! ... These are additional variables needed for the linear response
+  ! ... with US pseudopotentials and a generic perturbation Delta Vscf
+  !
+  SAVE
+  !
+  COMPLEX (DP), ALLOCATABLE :: &
+       int3(:,:,:,:,:),     &! nhm, nhm, nat, nspin, npert),&
+       int3_paw(:,:,:,:,:), &! nhm, nhm, nat, nspin, npert),&
+       int3_nc(:,:,:,:,:)    ! nhm, nhm, nat, nspin, npert),&
+!
+! where
+!  int3 -> \int (Delta V_Hxc) Q d^3r
+!  similarly for int_nc while
+!  int3_paw contains Delta (D^1-\tilde D^1)
+
+END MODULE lrus

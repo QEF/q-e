@@ -23,9 +23,10 @@ SUBROUTINE phescf()
                               lrpa, where_rec, done_epsil, done_zeu, epsil
   USE output,          ONLY : fildrho
   USE ph_restart,      ONLY : ph_writefile
-  USE phus,            ONLY : int3, int3_nc, int3_paw
   USE freq_ph
   USE ramanm,          ONLY : ramtns, lraman, elop, done_lraman, done_elop
+
+  USE lrus,   ONLY : int3, int3_nc, int3_paw
   !
   IMPLICIT NONE
   !

@@ -96,7 +96,6 @@ io_pattern.o \
 localdos.o \
 mix_pot.o \
 mode_group.o \
-newdq.o \
 obsolete.o \
 openfilq.o \
 phcom.o \

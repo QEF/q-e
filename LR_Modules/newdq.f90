@@ -22,27 +22,26 @@ subroutine newdq (dvscf, npe)
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft
   USE gvect,                ONLY : g, gg, ngm, mill, eigts1, eigts2, eigts3, nl
-  USE uspp,                 ONLY: okvan
+  USE uspp,                 ONLY : okvan
   USE uspp_param,           ONLY : upf, lmaxq, nh, nhm
   USE paw_variables,        ONLY : okpaw
 
-  USE phus,                 ONLY : int3, int3_paw
   USE mp_bands,  ONLY: intra_bgrp_comm
   USE mp,        ONLY: mp_sum
 
-  USE qpoint,               ONLY : xq, eigqts
-  USE control_lr,           ONLY : lgamma
+  USE lrus,       ONLY : int3, int3_paw
+  USE qpoint,     ONLY : xq, eigqts
+  USE control_lr, ONLY : lgamma
 
   implicit none
   !
   !   The dummy variables
   !
-  integer :: npe
+  integer, intent(in) :: npe
   ! input: the number of perturbations
 
-  complex(DP) :: dvscf (dfftp%nnr, nspin_mag, npe)
-  ! input: the change of the self
-  ! consistent pot.
+  complex(DP), intent(in) :: dvscf (dfftp%nnr, nspin_mag, npe)
+  ! input: the change of the selfconsistent pot.
   !
   !   And the local variables
   !

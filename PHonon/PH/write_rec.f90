@@ -33,15 +33,17 @@ CONTAINS
     USE units_ph, ONLY : this_pcxpsi_is_on_file
     USE noncollin_module, ONLY : nspin_mag
     USE nlcc_ph, ONLY : nlcc_any
-    USE qpoint, ONLY : nksq
     USE fft_base, ONLY : dfftp
     USE uspp, ONLY : okvan
-    USE phus, ONLY : int1, int2, int3
-    USE eqv,  ONLY : drhoscfs
+    USE phus, ONLY : int1, int2
     USE control_ph, ONLY : where_rec, rec_code, reduce_io, current_iq
     USE ph_restart, ONLY : ph_writefile
     USE efield_mod, ONLY : zstareu0, zstarue0
     USE io_files, ONLY : seqopn
+
+    USE lrus,   ONLY : int3
+    USE eqv,    ONLY : drhoscfs
+    USE qpoint, ONLY : nksq
 
     IMPLICIT NONE
     CHARACTER(LEN=10), INTENT(IN) :: where
@@ -98,10 +100,12 @@ CONTAINS
     USE units_ph, ONLY : this_pcxpsi_is_on_file
     USE control_ph, ONLY : ext_recover, convt
     USE nlcc_ph, ONLY : nlcc_any
-    USE eqv,   ONLY : drhoscfs
     USE efield_mod, ONLY : zstareu0, zstarue0
-    USE phus, ONLY : int1, int2, int3
+    USE phus, ONLY : int1, int2
     USE io_files, ONLY : seqopn
+
+    USE lrus, ONLY : int3
+    USE eqv,  ONLY : drhoscfs
 
     IMPLICIT NONE
     INTEGER, INTENT(OUT) :: iter0

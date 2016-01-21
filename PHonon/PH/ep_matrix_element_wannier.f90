@@ -27,12 +27,12 @@ SUBROUTINE ep_matrix_element_wannier()
   USE klist, ONLY : xk
   USE wvfct, ONLY : npwx
   USE el_phon, ONLY: elph_mat, kpq, g_kpq, igqg, xk_gamma
-  USE phus,       ONLY : int3, int3_nc, int3_paw
   USE uspp,                 ONLY: okvan
   USE paw_variables, ONLY : okpaw
   USE uspp_param, ONLY : nhm
   USE lsda_mod, ONLY : nspin
 
+  USE lrus,   ONLY : int3, int3_nc, int3_paw
   USE qpoint, ONLY : xq, nksq, ikks
   !
   IMPLICIT NONE

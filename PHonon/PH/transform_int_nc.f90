@@ -121,7 +121,7 @@ USE ions_base,            ONLY : nat, ityp
 USE uspp_param,           ONLY : nh, nhm
 USE noncollin_module,     ONLY : nspin_mag
 USE spin_orb,             ONLY : domag
-USE phus,                 ONLY : int3_nc
+USE lrus,                 ONLY : int3_nc
 !
 IMPLICIT NONE
 

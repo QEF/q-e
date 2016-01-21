@@ -33,12 +33,14 @@ subroutine drhodvus (irr, imode0, dvscfin, npe)
 
   USE modes,     ONLY : npert, nirr, u
   USE dynmat,    ONLY : dyn, dyn_rec
-  USE phus,      ONLY : becsumort, int3_paw
+  USE phus,      ONLY : becsumort
   USE units_ph,  ONLY : iudrhous, lrdrhous
 
   USE mp_pools,  ONLY : inter_pool_comm
   USE mp_bands,  ONLY : intra_bgrp_comm
   USE mp,        ONLY : mp_sum
+
+  USE lrus,      ONLY : int3_paw
   implicit none
 
   integer :: irr, imode0, npe

@@ -20,12 +20,10 @@ SUBROUTINE elphon()
   USE fft_base, ONLY : dfftp, dffts
   USE noncollin_module, ONLY : nspin_mag, noncolin, m_loc
   USE lsda_mod, ONLY : nspin
-  USE phus,       ONLY : int3, int3_nc, int3_paw
   USE uspp,  ONLY: okvan
   USE paw_variables, ONLY : okpaw
   USE el_phon,  ONLY : done_elph
   USE dynmat, ONLY : dyn, w2
-  USE qpoint, ONLY : xq
   USE modes,  ONLY : npert, nirr, u
   USE uspp_param, ONLY : nhm
   USE control_ph, ONLY : trans, xmldyn
@@ -37,6 +35,9 @@ SUBROUTINE elphon()
   USE mp_bands,  ONLY : intra_bgrp_comm, me_bgrp, root_bgrp
   USE mp,        ONLY : mp_bcast
   USE io_global, ONLY: stdout
+
+  USE lrus,   ONLY : int3, int3_nc, int3_paw
+  USE qpoint, ONLY : xq
   !
   IMPLICIT NONE
   !

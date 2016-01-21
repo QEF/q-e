@@ -57,11 +57,12 @@ SUBROUTINE one_lanczos_step()
                                          v_loc_psir, s_psir_gamma, igk_k, npw_k, real_space_debug
     USE charg_resp,               ONLY : w_T_beta_store, w_T, lr_calc_F
     USE lr_us,                    ONLY : lr_apply_s
-    USE qpoint,                   ONLY : nksq
     USE noncollin_module,         ONLY : npol
     ! Debugging
     USE lr_variables,             ONLY : check_all_bands_gamma, check_density_gamma, check_vector_gamma
     USE iso_c_binding,            ONLY : c_int
+
+    USE qpoint,                   ONLY : nksq
     !
     IMPLICIT NONE
     !

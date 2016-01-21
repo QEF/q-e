@@ -44,7 +44,7 @@ SUBROUTINE set_int3_nc(npe)
 !----------------------------------------------------------------------------
 USE ions_base, ONLY : nat, ntyp => nsp, ityp
 USE uspp_param, only: upf
-USE phus, ONLY : int3, int3_nc
+USE lrus, ONLY : int3, int3_nc
 IMPLICIT NONE
 INTEGER :: npe
 INTEGER :: np, na

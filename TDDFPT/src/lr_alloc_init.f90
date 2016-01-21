@@ -25,13 +25,16 @@ SUBROUTINE lr_alloc_init()
   USE charg_resp,           ONLY : w_T, w_T_beta_store, w_T_gamma_store, &
                                  & w_T_zeta_store, w_T_npol,chi
   USE realus,               ONLY : igk_k, npw_k, tg_psic
-  USE control_lr,           ONLY : nbnd_occ
   USE noncollin_module,     ONLY : nspin_mag, npol, noncolin
-  USE eqv,                  ONLY : dmuxc, evq, dpsi, dvpsi
   USE wavefunctions_module, ONLY : evc
-  USE qpoint,               ONLY : igkq, nksq, eigqts
   USE becmod,               ONLY : allocate_bec_type, bec_type, becp
-  USE phus,                 ONLY : int3, int3_nc, becp1
+  USE phus,                 ONLY : becp1
+
+  USE lrus,       ONLY : int3, int3_nc
+  USE eqv,        ONLY : dmuxc, evq, dpsi, dvpsi
+  USE qpoint,     ONLY : igkq, nksq, eigqts
+  USE control_lr, ONLY : nbnd_occ
+
   !
   IMPLICIT NONE
   !

@@ -21,8 +21,8 @@ subroutine zstar_eu_us
   USE ions_base, ONLY : nat, ntyp => nsp, ityp
   USE buffers,   ONLY : get_buffer
   USE klist,     ONLY : xk, wk
-  USE gvecs,   ONLY : doublegrid
-  USE fft_base, ONLY : dfftp, dffts
+  USE gvecs,     ONLY : doublegrid
+  USE fft_base,  ONLY : dfftp, dffts
   USE lsda_mod,  ONLY : nspin, current_spin, isk, lsda
   USE io_files,  ONLY : iunigk
   USE uspp,      ONLY : okvan, nkb, vkb
@@ -31,17 +31,18 @@ subroutine zstar_eu_us
   USE wavefunctions_module,    ONLY : evc
   USE uspp_param,       ONLY : upf, nhm, nh
   USE noncollin_module, ONLY : noncolin, npol, nspin_mag
-  USE qpoint,    ONLY : nksq, npwq
-  USE control_lr, ONLY : nbnd_occ
   USE efield_mod, ONLY : zstareu0
-  USE eqv,        ONLY : dvpsi, dpsi
-  USE phus,       ONLY : becsumort, int3, int3_paw
+  USE phus,       ONLY : becsumort
   USE modes,      ONLY : u, npert, nirr
   USE nlcc_ph,    ONLY : nlcc_any
   USE units_ph,   ONLY : lrdwf, iucom, lrcom, lrebar, iuebar, lrdrhous, &
                          iudrhous, iudwf, lrwfc, iuwfc
   USE mp_pools, ONLY : nproc_pool, npool
 
+  USE control_lr, ONLY : nbnd_occ
+  USE lrus,       ONLY : int3, int3_paw
+  USE eqv,        ONLY : dvpsi, dpsi
+  USE qpoint,     ONLY : nksq, npwq
   !
   implicit none
   integer :: ibnd, jbnd, ipol, jpol, imode0, irr, imode, nrec, mode

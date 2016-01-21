@@ -50,13 +50,13 @@ subroutine solve_e
                                     lnoloc, convt, tr2_ph, nmix_ph, &
                                     alpha_mix, lgamma_gamma, niter_ph, &
                                     flmixdpot, rec_code_read
-  USE phus,                  ONLY : int3_paw
   USE recover_mod,           ONLY : read_rec, write_rec
 
   USE mp_pools,              ONLY : inter_pool_comm
   USE mp_bands,              ONLY : intra_bgrp_comm, ntask_groups
   USE mp,                    ONLY : mp_sum
 
+  USE lrus,                  ONLY : int3_paw
   USE qpoint,                ONLY : npwq, nksq
   USE eqv,                   ONLY : dpsi, dvpsi, eprec
   USE control_lr,            ONLY : nbnd_occ, lgamma

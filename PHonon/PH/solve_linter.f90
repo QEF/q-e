@@ -54,7 +54,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   USE units_ph,             ONLY : iudrho, lrdrho, iudwf, lrdwf, iubar, lrbar, &
                                    iuwfc, lrwfc, iudvscf, iuint3paw, lint3paw
   USE output,               ONLY : fildrho, fildvscf
-  USE phus,                 ONLY : int3_paw, becsumort
+  USE phus,                 ONLY : becsumort
   USE modes,                ONLY : npertx, npert, u, t, tmq
 
   USE recover_mod,          ONLY : read_rec, write_rec
@@ -67,6 +67,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   USE mp,                   ONLY : mp_sum
   USE efermi_shift,         ONLY : ef_shift, ef_shift_paw,  def
 
+  USE lrus,         ONLY : int3_paw
   USE lr_symm_base, ONLY : irotmq, minus_q, nsymq, rtau
   USE eqv,          ONLY : dvpsi, dpsi, evq, eprec
   USE qpoint,       ONLY : xq, npwq, igkq, nksq, ikks, ikqs
