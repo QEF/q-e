@@ -27,7 +27,9 @@ subroutine drhodvnl (ik, ikk, nper, nu_i0, wdyn, dbecq, dalpq)
   USE klist,     ONLY : wk
   USE lsda_mod,  ONLY : current_spin, nspin
   USE spin_orb,  ONLY : lspinorb
-  USE phus,      ONLY : int1, int1_nc, int2, int2_so, becp1, alphap
+  USE phus,      ONLY : int1, int1_nc, int2, int2_so, alphap
+
+  USE lrus,      ONLY : becp1
 
   USE mp_bands, ONLY: intra_bgrp_comm
   USE mp,        ONLY: mp_sum

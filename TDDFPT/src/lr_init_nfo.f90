@@ -38,20 +38,21 @@ SUBROUTINE lr_init_nfo()
   USE ener,                 ONLY : ef, ef_up, ef_dw
   USE ktetra,               ONLY : ltetra
   USE lsda_mod,             ONLY : lsda, current_spin, nspin, isk
-  USE control_lr,           ONLY : alpha_pv, nbnd_occ
   USE control_ph,           ONLY : tmp_dir_phq
   USE wvfct,                ONLY : npwx, wg
   USE gvecw,                ONLY : gcutw
   USE io_files,             ONLY : iunigk, seqopn, tmp_dir, prefix, &
                                  & diropn, nwordwfc, wfc_dir
-  USE qpoint,               ONLY : xq, npwq, igkq, ikks, ikqs, nksq, eigqts
   USE gvecs,                ONLY : doublegrid
   USE units_ph,             ONLY : iuwfc, lrwfc
   USE fft_base,             ONLY : dfftp 
   USE uspp,                 ONLY : vkb, okvan, nkb
   USE wavefunctions_module, ONLY : evc
-  USE phus,                 ONLY : becp1
   USE becmod,               ONLY : calbec, allocate_bec_type
+
+  USE lrus,                 ONLY : becp1
+  USE control_lr,           ONLY : alpha_pv, nbnd_occ
+  USE qpoint,               ONLY : xq, npwq, igkq, ikks, ikqs, nksq, eigqts
   USE eqv,                  ONLY : evq
   !
   IMPLICIT NONE

@@ -37,13 +37,14 @@ SUBROUTINE dynmat_us()
                                    deallocate_bec_type, beccopy
   USE modes,                ONLY : u
   USE dynmat,               ONLY : dyn
-  USE phus,                 ONLY : becp1, alphap
+  USE phus,                 ONLY : alphap
   USE units_ph,             ONLY : iuwfc, lrwfc
   USE io_global,            ONLY : stdout
   USE mp_pools,             ONLY : my_pool_id, inter_pool_comm
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
 
+  USE lrus,                 ONLY : becp1
   USE qpoint,               ONLY : npwq, nksq, igkq, ikks
   USE control_lr,           ONLY : nbnd_occ, lgamma
 

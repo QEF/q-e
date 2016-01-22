@@ -15,7 +15,6 @@ add_zstar_ue.o \
 add_zstar_ue_us.o \
 addcore.o \
 adddvepsi_us.o \
-adddvscf.o \
 addnlcc.o \
 addnlcc_zstar_eu_us.o \
 addusdbec.o \

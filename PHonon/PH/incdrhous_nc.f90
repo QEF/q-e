@@ -28,13 +28,15 @@ subroutine incdrhous_nc (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
   USE uspp_param,ONLY : nhm, nh
   USE wvfct,     ONLY : nbnd, npwx
   USE modes,     ONLY : u
-  USE qpoint,    ONLY : npwq, nksq, igkq, ikks
-  USE eqv,       ONLY : dpsi, evq
-  USE control_lr, ONLY : nbnd_occ
-  USE phus,      ONLY  : becp1, alphap
+  USE phus,      ONLY  : alphap
   USE mp_bands,  ONLY : intra_bgrp_comm
   USE mp,        ONLY : mp_sum
   USE becmod,    ONLY : bec_type
+
+  USE qpoint,     ONLY : npwq, nksq, igkq, ikks
+  USE eqv,        ONLY : dpsi, evq
+  USE control_lr, ONLY : nbnd_occ
+  USE lrus,       ONLY  : becp1
 
   implicit none
 

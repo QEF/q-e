@@ -26,12 +26,15 @@ subroutine raman_mat
   USE uspp,     ONLY : nkb, vkb
   USE wvfct,    ONLY : npw, npwx, nbnd, igk
   USE wavefunctions_module,  ONLY: evc
-  USE eqv,      ONLY : dvpsi
-  USE phus,     ONLY : becp1, alphap
-  USE control_lr, ONLY : nbnd_occ
+  USE phus,     ONLY : alphap
   USE units_ph, ONLY : lrdwf, iudwf, lrwfc, iuwfc
-  USE qpoint,   ONLY : npwq, nksq
   USE ramanm,   ONLY : ramtns, jab, a1j, a2j, lrd2w, iud2w
+
+  USE lrus,     ONLY : becp1
+  USE control_lr, ONLY : nbnd_occ
+  USE qpoint,   ONLY : npwq, nksq
+  USE eqv,      ONLY : dvpsi
+
   USE mp_pools, ONLY : inter_pool_comm
   USE mp_bands, ONLY : intra_bgrp_comm
   USE mp,       ONLY : mp_sum

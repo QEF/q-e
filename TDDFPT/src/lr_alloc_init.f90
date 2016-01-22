@@ -28,9 +28,8 @@ SUBROUTINE lr_alloc_init()
   USE noncollin_module,     ONLY : nspin_mag, npol, noncolin
   USE wavefunctions_module, ONLY : evc
   USE becmod,               ONLY : allocate_bec_type, bec_type, becp
-  USE phus,                 ONLY : becp1
 
-  USE lrus,       ONLY : int3, int3_nc
+  USE lrus,       ONLY : int3, int3_nc, becp1
   USE eqv,        ONLY : dmuxc, evq, dpsi, dvpsi
   USE qpoint,     ONLY : igkq, nksq, eigqts
   USE control_lr, ONLY : nbnd_occ

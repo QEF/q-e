@@ -154,11 +154,6 @@ MODULE phus
 !  dpqq_so dipole moment of each Q multiplied by the fcoef factors
 !
   type (bec_type),  ALLOCATABLE, TARGET :: &
-       becp1(:)              ! (nksq); (nkbtot, nbnd)
-  !
-  ! becp1 contains < beta_n | \psi_i >
-  !
-  type (bec_type),  ALLOCATABLE, TARGET :: &
        alphap(:,:)           ! nkbtot, nbnd, 3, nksq)
   !
   ! alphap contains < d\du (\beta_n) | psi_i>

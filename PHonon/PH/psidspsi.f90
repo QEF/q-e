@@ -28,8 +28,9 @@ subroutine psidspsi (ik, uact, pdsp)
   USE wvfct,     ONLY : nbnd, npw, npwx, igk
   USE uspp,      ONLY: nkb, vkb, qq, qq_so
   USE uspp_param,ONLY : nh
-  USE phus,      ONLY : becp1, alphap
+  USE phus,      ONLY : alphap
 
+  USE lrus,       ONLY : becp1
   USE control_lr, ONLY : lgamma
 
   implicit none

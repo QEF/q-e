@@ -1,3 +1,9 @@
+adddvscf.o : ../Modules/ions_base.o
+adddvscf.o : ../Modules/kind.o
+adddvscf.o : ../Modules/noncol.o
+adddvscf.o : ../Modules/uspp.o
+adddvscf.o : ../PW/src/pwcom.o
+adddvscf.o : lrcom.o
 apply_dpot.o : ../Modules/fft_base.o
 apply_dpot.o : ../Modules/kind.o
 apply_dpot.o : ../Modules/mp_bands.o

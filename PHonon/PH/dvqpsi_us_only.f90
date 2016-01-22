@@ -29,8 +29,9 @@ subroutine dvqpsi_us_only (ik, uact)
   USE noncollin_module, ONLY : noncolin, npol
   USE uspp, ONLY: okvan, nkb, vkb
   USE uspp_param, ONLY: nh, nhm
-  USE phus,      ONLY : int1, int1_nc, int2, int2_so, alphap, becp1
+  USE phus,      ONLY : int1, int1_nc, int2, int2_so, alphap
 
+  USE lrus,       ONLY : becp1
   USE qpoint,     ONLY : igkq, npwq, ikks, ikqs
   USE eqv,        ONLY : dvpsi
   USE control_lr, ONLY : lgamma

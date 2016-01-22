@@ -32,8 +32,8 @@ subroutine dvpsi_e (ik, ipol)
   USE ramanm,          ONLY : eth_rps
   USE units_ph,        ONLY : this_pcxpsi_is_on_file, lrcom, iucom, &
                               lrebar, iuebar
-  USE phus,            ONLY : becp1
 
+  USE lrus,            ONLY : becp1
   USE qpoint,          ONLY : nksq, npwq
   USE eqv,             ONLY : dpsi, dvpsi, eprec
   USE control_lr,      ONLY : nbnd_occ

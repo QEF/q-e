@@ -144,5 +144,12 @@ MODULE lrus
 !  int3 -> \int (Delta V_Hxc) Q d^3r
 !  similarly for int_nc while
 !  int3_paw contains Delta (D^1-\tilde D^1)
+!
+  type (bec_type),  ALLOCATABLE, TARGET :: &
+       becp1(:)              ! (nksq); (nkbtot, nbnd)
+  !
+  ! becp1 contains < beta_n | \psi_i >
+  !
+
 
 END MODULE lrus

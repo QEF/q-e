@@ -8,6 +8,7 @@ MODFLAGS=$(MOD_FLAG)../FFTXlib $(MOD_FLAG)../Modules $(MOD_FLAG)../PW/src $(MOD_
 IFLAGS=
 
 LR_MODULES = \
+adddvscf.o \
 apply_dpot.o \
 cft_wave.o \
 cgsolve_all.o \

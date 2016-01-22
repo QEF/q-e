@@ -31,12 +31,13 @@ subroutine drho
   USE paw_variables,    ONLY : okpaw
   USE control_ph, ONLY : ldisp, all_done, rec_code_read
 
+  USE lrus,       ONLY : becp1
   USE qpoint,     ONLY : nksq
   USE control_lr, ONLY : lgamma
 
   USE dynmat,     ONLY : dyn00
   USE modes,      ONLY : npertx, npert, nirr
-  USE phus,       ONLY : becsumort, alphap, becp1
+  USE phus,       ONLY : becsumort, alphap
   USE units_ph,   ONLY : lrdrhous, iudrhous
 
   USE mp_pools,   ONLY : inter_pool_comm

@@ -26,11 +26,12 @@ SUBROUTINE lr_addus_dvpsi ( ik, lda, n, m, psi, dpsi )
   USE uspp,                 ONLY : okvan
   USE uspp_param,           ONLY : upf, lmaxq, nh
   USE paw_variables,        ONLY : okpaw
-  USE qpoint,               ONLY : xq, eigqts
   USE noncollin_module,     ONLY : npol, noncolin
   USE uspp,                 ONLY : vkb, nkb, indv_ijkb0
-  USE phus,                 ONLY : becp1
   USE cell_base,            ONLY : omega
+
+  USE lrus,                 ONLY : becp1
+  USE qpoint,               ONLY : xq, eigqts
   !
   IMPLICIT NONE
   !

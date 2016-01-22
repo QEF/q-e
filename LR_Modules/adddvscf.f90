@@ -25,9 +25,8 @@ subroutine adddvscf (ipert, ik)
   USE wvfct,      ONLY : nbnd, npwx
   USE noncollin_module, ONLY : noncolin, npol
 ! modules from phcom
-  USE phus,       ONLY : becp1
 
-  USE lrus,       ONLY : int3, int3_nc
+  USE lrus,       ONLY : int3, int3_nc, becp1
   USE qpoint,     ONLY : npwq, ikks
   USE eqv,        ONLY : dvpsi
 

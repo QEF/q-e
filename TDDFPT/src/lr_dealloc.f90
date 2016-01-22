@@ -22,10 +22,9 @@ SUBROUTINE lr_dealloc()
   USE charg_resp,     ONLY : w_T_beta_store, w_T_gamma_store, w_T,&
                            & w_T_zeta_store, chi, rho_1_tot, rho_1_tot_im
   USE lr_exx_kernel,  ONLY : lr_exx_dealloc
-  USE phus,           ONLY : becp1
   use becmod,         only : bec_type, becp, deallocate_bec_type
 
-  USE lrus,    ONLY : int3, int3_nc
+  USE lrus,    ONLY : int3, int3_nc, becp1
   USE qpoint,  ONLY : ikks, ikqs, igkq, eigqts
   USE eqv,     ONLY : dmuxc, evq, dpsi, dvpsi
   !
