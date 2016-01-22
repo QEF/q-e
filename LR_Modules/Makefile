@@ -9,6 +9,8 @@ IFLAGS=
 
 LR_MODULES = \
 adddvscf.o \
+addusdbec.o \
+addusdbec_nc.o \
 apply_dpot.o \
 cft_wave.o \
 cgsolve_all.o \
