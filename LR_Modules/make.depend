@@ -86,6 +86,17 @@ orthogonalize.o : ../Modules/recvec.o
 orthogonalize.o : ../Modules/uspp.o
 orthogonalize.o : ../PW/src/pwcom.o
 orthogonalize.o : lrcom.o
+set_dbecsum_nc.o : ../Modules/ions_base.o
+set_dbecsum_nc.o : ../Modules/kind.o
+set_dbecsum_nc.o : ../Modules/noncol.o
+set_dbecsum_nc.o : ../Modules/uspp.o
+set_dbecsum_nc.o : ../PW/src/pwcom.o
+set_int3_nc.o : ../Modules/ions_base.o
+set_int3_nc.o : ../Modules/kind.o
+set_int3_nc.o : ../Modules/noncol.o
+set_int3_nc.o : ../Modules/uspp.o
+set_int3_nc.o : ../PW/src/pwcom.o
+set_int3_nc.o : lrcom.o
 setup_nscf.o : ../Modules/cell_base.o
 setup_nscf.o : ../Modules/constants.o
 setup_nscf.o : ../Modules/control_flags.o

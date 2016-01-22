@@ -19,6 +19,8 @@ h_psiq.o \
 newdq.o \
 orthogonalize.o \
 setup_nscf.o \
+set_dbecsum_nc.o \
+set_int3_nc.o \
 smallgq.o \
 lrcom.o
 

@@ -18,7 +18,6 @@ lr_addus_dvpsi.o : ../../Modules/kind.o
 lr_addus_dvpsi.o : ../../Modules/noncol.o
 lr_addus_dvpsi.o : ../../Modules/paw_variables.o
 lr_addus_dvpsi.o : ../../Modules/uspp.o
-lr_addus_dvpsi.o : ../../PHonon/PH/phcom.o
 lr_addusddens.o : ../../FFTXlib/fft_interfaces.o
 lr_addusddens.o : ../../LR_Modules/lrcom.o
 lr_addusddens.o : ../../Modules/fft_base.o
@@ -39,7 +38,6 @@ lr_alloc_init.o : ../../Modules/kind.o
 lr_alloc_init.o : ../../Modules/noncol.o
 lr_alloc_init.o : ../../Modules/uspp.o
 lr_alloc_init.o : ../../Modules/wavefunctions.o
-lr_alloc_init.o : ../../PHonon/PH/phcom.o
 lr_alloc_init.o : ../../PW/src/pwcom.o
 lr_alloc_init.o : ../../PW/src/realus.o
 lr_alloc_init.o : lr_charg_resp.o
@@ -226,7 +224,6 @@ lr_dealloc.o : ../../Modules/becmod.o
 lr_dealloc.o : ../../Modules/control_flags.o
 lr_dealloc.o : ../../Modules/io_global.o
 lr_dealloc.o : ../../Modules/uspp.o
-lr_dealloc.o : ../../PHonon/PH/phcom.o
 lr_dealloc.o : ../../PW/src/realus.o
 lr_dealloc.o : lr_charg_resp.o
 lr_dealloc.o : lr_exx_kernel.o

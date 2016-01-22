@@ -158,8 +158,6 @@ transform_int_so.o \
 transform_int_nc.o \
 transform_alphasum_nc.o \
 transform_alphasum_so.o \
-transform_dbecsum_so.o \
-transform_dbecsum_nc.o \
 tra_write_matrix.o \
 trntnsc.o \
 write_epsilon_and_zeu.o \
