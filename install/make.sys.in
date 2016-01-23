@@ -147,7 +147,7 @@ RANLIB         = @ranlib@
 
 FLIB_TARGETS   = all
 
-LIBOBJS        = ../flib/ptools.a ../flib/flib.a ../clib/clib.a ../iotk/src/libiotk.a 
+LIBOBJS        = ../flib/flib.a ../clib/clib.a ../iotk/src/libiotk.a 
 LIBS           = $(SCALAPACK_LIBS) $(LAPACK_LIBS) $(FFT_LIBS) $(BLAS_LIBS) $(MPI_LIBS) $(MASS_LIBS) $(LD_LIBS)
 
 # wget or curl - useful to download from network

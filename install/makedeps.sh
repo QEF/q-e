@@ -11,7 +11,7 @@ TOPDIR=`pwd`
 
 if test $# = 0
 then
-    dirs=" FFTXlib Modules clib PW/src CPV/src flib PW/tools upftools PP/src \
+    dirs=" LAXlib FFTXlib Modules clib PW/src CPV/src flib PW/tools upftools PP/src \
            PWCOND/src LR_Modules/ \
            PHonon/Gamma PHonon/PH PHonon/D3 PHonon/FD atomic/src XSpectra/src \
            ACDFT NEB/src TDDFPT/src GIPAW/src GWW/pw4gww GWW/gww GWW/head" 
@@ -50,8 +50,8 @@ for dir in $dirs; do
     # default
     DEPENDS="$LEVEL1/include" 
     # for convenience, used later
-    DEPEND1="$LEVEL1/include $LEVEL1/iotk/src $LEVEL1/FFTXlib"
-    DEPEND2="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/FFTXlib $LEVEL2/Modules"
+    DEPEND1="$LEVEL1/include $LEVEL1/iotk/src $LEVEL1/FFTXlib $LEVEL1/LAXlib"
+    DEPEND2="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/FFTXlib $LEVEL2/LAXlib $LEVEL2/Modules"
     case $DIR in 
         Modules )
              DEPENDS="$DEPEND1" ;;
@@ -90,6 +90,12 @@ for dir in $dirs; do
         then
             sed '/@mpi@/d;/@fft_scalar.*.f90@/d' make.depend > make.depend.tmp
             sed '/@mkl_dfti/d;/@fftw3.f/d;s/@fftw.c@/fftw.c/;s/@fft_param.f90@/fft_param.f90/' make.depend.tmp > make.depend
+        fi
+
+        if test "$DIR" = "LAXlib"
+        then
+            sed '/@mpi@/d;/@elpa1@/d' make.depend > make.depend.tmp
+            sed 's/@la_param.f90@/la_param.f90/' make.depend.tmp > make.depend
         fi
 
         if test "$DIR" = "Modules"
