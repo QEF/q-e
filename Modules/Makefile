@@ -3,7 +3,7 @@
 include ../make.sys
 
 # location of needed modules
-MODFLAGS= $(MOD_FLAG)../iotk/src $(MOD_FLAG)../ELPA/src $(MOD_FLAG)../FFTXlib $(MOD_FLAG).
+MODFLAGS= $(MOD_FLAG)../iotk/src $(MOD_FLAG)../ELPA/src $(MOD_FLAG)../FFTXlib $(MOD_FLAG)../LAXlib $(MOD_FLAG).
 
 MODULES = \
 atom.o \
@@ -22,8 +22,6 @@ constants.o \
 constraints_module.o \
 control_flags.o \
 coulomb_vcut.o \
-descriptors.o \
-dspev_drv.o \
 electrons_base.o \
 environment.o \
 error_handler.o \
@@ -65,7 +63,6 @@ plugin_flags.o \
 plugin_arguments.o \
 plugin_variables.o \
 pseudo_types.o \
-ptoolkit.o \
 qexml.o \
 qexml_xsd.o \
 qmmm.o \
@@ -106,8 +103,7 @@ xc_rVV10.o \
 xml_input.o \
 xml_io_base.o \
 wypos.o \
-zdotc_wrapper.o \
-zhpev_drv.o 
+zdotc_wrapper.o 
 
 TLDEPS=libfft
 

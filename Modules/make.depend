@@ -55,10 +55,6 @@ constraints_module.o : ions_base.o
 constraints_module.o : kind.o
 control_flags.o : kind.o
 control_flags.o : parameters.o
-dspev_drv.o : kind.o
-dspev_drv.o : mp.o
-dspev_drv.o : mp_bands.o
-dspev_drv.o : mp_diag.o
 electrons_base.o : constants.o
 electrons_base.o : io_global.o
 electrons_base.o : kind.o
@@ -192,11 +188,6 @@ plugin_variables.o : kind.o
 plugin_variables.o : parameters.o
 pseudo_types.o : kind.o
 pseudo_types.o : radial_grids.o
-ptoolkit.o : descriptors.o
-ptoolkit.o : dspev_drv.o
-ptoolkit.o : kind.o
-ptoolkit.o : parallel_include.o
-ptoolkit.o : zhpev_drv.o
 qexml.o : ../iotk/src/iotk_module.o
 qexml.o : kind.o
 qexml.o : wrappers.o
@@ -405,7 +396,3 @@ xml_io_base.o : mp_wave.o
 xml_io_base.o : parser.o
 xml_io_base.o : wrappers.o
 zdotc_wrapper.o : kind.o
-zhpev_drv.o : io_global.o
-zhpev_drv.o : kind.o
-zhpev_drv.o : mp.o
-zhpev_drv.o : mp_diag.o
