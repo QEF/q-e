@@ -90,10 +90,12 @@
       !
 #ifdef __MPI
 
-      aux( : ) = (0.d0, 0.d0)
+      !aux( : ) = (0.d0, 0.d0)
+      !igoff = 0
 
-      igoff = 0
-
+!$omp parallel do default(none) &
+!$omp          private( idx, igoff, ig ) &
+!$omp          shared( i, n, c, dffts, aux, ngw, ci, nogrp_, nlsm, nls )
       DO idx = 1, 2*nogrp_ , 2
          !
          !  This loop is executed only ONCE when NOGRP=1.
@@ -108,6 +110,10 @@
          ! 
          IF ( ( idx + i - 1 ) == n ) c( : , idx + i ) = 0.0d0
 
+         igoff = ( idx - 1 )/2 * dffts%tg_nnr
+
+         aux( igoff + 1 : igoff + dffts%tg_nnr ) = (0.d0, 0.d0)
+
          IF( idx + i - 1 <= n ) THEN
             DO ig=1,ngw
                aux(nlsm(ig)+igoff) = conjg( c(ig,idx+i-1) - ci * c(ig,idx+i) )
@@ -115,7 +121,7 @@
             END DO
          END IF
 
-         igoff = igoff + dffts%tg_nnr
+         !igoff = igoff + dffts%tg_nnr
 
       END DO
 

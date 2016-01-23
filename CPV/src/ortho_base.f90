@@ -93,7 +93,7 @@ SUBROUTINE diagonalize_parallel( n, rhos, rhod, s, desc )
 
       USE descriptors
 #ifdef __SCALAPACK
-      USE mp_global,    ONLY: ortho_cntx
+      USE mp_global,    ONLY: ortho_cntx, ortho_comm
       USE dspev_module, ONLY: pdsyevd_drv
 #endif
 
@@ -122,7 +122,7 @@ SUBROUTINE diagonalize_parallel( n, rhos, rhod, s, desc )
          s = rhos
          !
 #ifdef __SCALAPACK
-         CALL pdsyevd_drv( .true. , n, desc%nrcx, s, SIZE(s,1), rhod, ortho_cntx )
+         CALL pdsyevd_drv( .true. , n, desc%nrcx, s, SIZE(s,1), rhod, ortho_cntx, ortho_comm )
 #else
          CALL qe_pdsyevd( .true., n, desc, s, SIZE(s,1), rhod )
 #endif
