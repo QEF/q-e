@@ -37,7 +37,6 @@ simpsn.o \
 sort.o \
 sph_bes.o \
 sph_dbes.o \
-transto.o \
 trimcheck.o \
 test_input_file.o \
 date_and_tim.o \
@@ -49,12 +48,10 @@ w0gauss.o \
 w1gauss.o \
 deviatoric.o
 
-POBJS = \
-distools.o 
 
-all: flib.a ptools.a 
+all: flib.a
 
-flib_only: flib.a ptools.a
+flib_only: flib.a
 
 flib.a : $(OBJS)
 	$(AR) $(ARFLAGS) $@ $?
@@ -62,10 +59,6 @@ flib.a : $(OBJS)
 
 dlamch.o : dlamch.f
 	$(F77) $(FFLAGS_NOOPT) -c $<
-
-ptools.a : $(POBJS)
-	$(AR) $(ARFLAGS) $@ $?
-	$(RANLIB) $@
 
 clean :
 	- /bin/rm -f *.a *.o *.mod *.i *.F90 core* *.L

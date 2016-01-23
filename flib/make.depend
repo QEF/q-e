@@ -44,4 +44,3 @@ wgauss.o : ../Modules/constants.o
 wgauss.o : ../Modules/kind.o
 ylmr2.o : ../Modules/constants.o
 ylmr2.o : ../Modules/kind.o
-transto.o : ../include/opt_param.h
