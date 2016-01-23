@@ -444,8 +444,8 @@ Common files and directories in the \texttt{espresso/} directory are:
    pseudo/                  README
    Doc/                     environment_variables
    clib/                    flib/
-   Modules/                 upftools/
-   COUPLE/
+   Modules/                 LR_Modules/
+   COUPLE/                  upftools/
 \end{verbatim}
 Apart from  \texttt{License} and \texttt{README} whose meaning is 
 obvious, the other files and directories are related to
@@ -457,10 +457,12 @@ obvious, the other files and directories are related to
 \texttt{pseudo/}, \texttt{environment\_variables}
 \item  {\em General documentation} (not package-specific):
 \texttt{Doc/}
-\item {\em  C and Fortran Libraries, modules} (F95):
+\item {\em  C and Fortran Libraries, modules}:
 \texttt{clib/}, \texttt{flib/}, \texttt{Modules/}, \texttt{COUPLE/} 
-(the latter contains code and documentation useful to call \qe\ programs
- from external codes).
+(the latter contains code and documentation useful to call \qe\ programs 
+ from external codes)
+\item {\em  Linear-response specific modules}:
+\texttt{LR\_Modules/}.
 \end{itemize}
 
 The core distribution also  contains the three package-specific directories
@@ -1956,8 +1958,8 @@ pointers may hinder optimization. Allocatable arrays should be used instead.
 status.
 \item Beware fancy constructs like structures: they look great on paper, 
 but they also have the potential to make a code unreadable, or inefficient,
-or simply unusable because some compiler gets confused. Avoid nested
-structures unless you have a valid reason to use them.
+or unusable with some compilers. Avoid nested structures unless you have a
+valid reason to use them.
 \item Be careful with F90 array syntax and in particular with
 array sections. Passing an array section to a routine may look elegant
 but it may turn out to be inefficient: a copy will be silently done
@@ -2102,6 +2104,11 @@ directory using command
 \begin{verbatim}
   svn mv
 \end{verbatim}
+or, if you prefer to make a copy of the file, retaining the history:
+\begin{verbatim}
+svn cp svn+ssh://myusername@qeforge.qe-forge.org/svnroot/q-e/trunk/espresso/DIR1/file.1 svn+ssh://myusername@qeforge.qe-forge.org/svnroot/q-e/trunk/espresso/DIR2/file2
+\end{verbatim}
+then run \texttt{svn update} to have it applied locally.
 
 \subsection{Removing conflicts}
 \label{SubSec:Conflicts}
