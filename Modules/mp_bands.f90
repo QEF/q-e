@@ -25,7 +25,10 @@ MODULE mp_bands
   INTEGER :: my_bgrp_id  = 0  ! index of my band group
   INTEGER :: inter_bgrp_comm  = 0  ! inter band group communicator
   INTEGER :: intra_bgrp_comm  = 0  ! intra band group communicator  
-  LOGICAL :: tbgrp       = .FALSE. ! logical flag. .TRUE. when nbgrp > 1
+  ! Next variable is .T. if band parallelization is performed inside H\psi 
+  ! and S\psi, .F. otherwise (band parallelization can be performed outside
+  ! H\psi and S\psi, though)  
+  LOGICAL :: use_bgrp_in_hpsi = .FALSE.
   !
   ! ... "task" groups (for band parallelization of FFT)
   !
@@ -64,9 +67,10 @@ CONTAINS
     IF ( MOD( parent_nproc, nbgrp ) /= 0 ) CALL errore( 'mp_start_bands', &
         'n. of band groups  must be divisor of parent_nproc', 1 )
     !
-    ! set the logical flag tbgrp 
+    ! set logical flag so that band parallelization in H\psi is allowed
+    ! (can be disabled before calling H\psi if not desired)
     !
-    tbgrp = ( nbgrp > 1 )
+    use_bgrp_in_hpsi = ( nbgrp > 1 )
     ! 
     ! ... Set number of processors per band group
     !

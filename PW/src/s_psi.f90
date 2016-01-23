@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2015 Quantum ESPRESSO group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -26,12 +26,14 @@ SUBROUTINE s_psi( lda, n, m, psi, spsi )
   !
   ! ...    spsi  S*psi
   !
-  ! ... bgrp parallelization allowed
+  ! --- Wrapper routine: performs bgrp parallelization on non-distributed bands
+  ! --- if suitable and required, calls old S\psi routine s_psi_
+  ! --- See comments in h_psi.f90 about band parallelization
   !
   USE kinds,            ONLY : DP
   USE noncollin_module, ONLY : npol
   USE funct,            ONLY : exx_is_active
-  USE mp_bands,         ONLY : tbgrp, set_bgrp_indices, inter_bgrp_comm
+  USE mp_bands,         ONLY : use_bgrp_in_hpsi, set_bgrp_indices, inter_bgrp_comm
   USE mp,               ONLY : mp_sum
   !
   IMPLICIT NONE
@@ -44,19 +46,18 @@ SUBROUTINE s_psi( lda, n, m, psi, spsi )
   !
   CALL start_clock( 's_psi_bgrp' )
 
-! if exx_is_active bgrp parallelization is already used in exx routines that are part of Hpsi !
-! if m <= 1 there is nothing to distribute so we can avoid the communication step.
-!           moreover if a band by band diagonalization (such as ParO for instance) is used it may 
-!           be useful/necessary to operate on different vectors independently.
-  if (tbgrp .and. .not. exx_is_active() .and. m > 1) then
-      spsi(:,:) = (0.d0,0.d0)
-      call set_bgrp_indices(m,m_start,m_end)
-      if (m_end >= m_start)  & !! at least one band in this band group
-          call s_psi_( lda, n, m_end-m_start+1, psi(1,m_start), spsi(1,m_start) )
-      call mp_sum(spsi,inter_bgrp_comm)
-   else ! no one else to communicate with 
-      call s_psi_( lda, n, m, psi, spsi )
-   end if
+  IF (use_bgrp_in_hpsi .AND. .NOT. exx_is_active() .AND. m > 1) THEN
+     ! use band parallelization here
+     spsi(:,:) = (0.d0,0.d0)
+     CALL set_bgrp_indices(m,m_start,m_end)
+     ! Check if there at least one band in this band group
+     IF (m_end >= m_start) &
+        CALL s_psi_( lda, n, m_end-m_start+1, psi(1,m_start), spsi(1,m_start) )
+     CALL mp_sum(spsi,inter_bgrp_comm)
+  ELSE
+     ! don't use band parallelization here
+     CALL s_psi_( lda, n, m, psi, spsi )
+  END IF
 
   CALL stop_clock( 's_psi_bgrp' )
   RETURN
