@@ -233,7 +233,7 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
   USE descriptors,      ONLY : la_descriptor
   USE parallel_toolkit, ONLY : zsqmdst, zsqmcll
 #if defined __SCALAPACK
-  USE mp_diag,          ONLY : ortho_cntx, me_blacs, np_ortho, me_ortho
+  USE mp_diag,          ONLY : ortho_cntx, me_blacs, np_ortho, me_ortho, ortho_comm
   USE zhpev_module,     ONLY : pzheevd_drv
 #endif
 
@@ -362,7 +362,7 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
 
 #ifdef __SCALAPACK
      !
-     CALL pzheevd_drv( .true., n, desc%nrcx, hh, e, ortho_cntx )
+     CALL pzheevd_drv( .true., n, desc%nrcx, hh, e, ortho_cntx, ortho_comm )
      !
 #else
      !

@@ -213,7 +213,7 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
   USE mp_bands,         ONLY : root_bgrp, intra_bgrp_comm
   USE descriptors,      ONLY : la_descriptor
 #if defined __SCALAPACK
-  USE mp_diag,          ONLY : ortho_cntx, me_blacs, np_ortho, me_ortho
+  USE mp_diag,          ONLY : ortho_cntx, me_blacs, np_ortho, me_ortho, ortho_comm
   USE dspev_module,     ONLY : pdsyevd_drv
 #endif
   !
@@ -329,7 +329,7 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
      !  Compute local dimension of the cyclically distributed matrix
      !
 #ifdef __SCALAPACK
-     CALL pdsyevd_drv( .true., n, desc%nrcx, hh, SIZE(hh,1), e, ortho_cntx )
+     CALL pdsyevd_drv( .true., n, desc%nrcx, hh, SIZE(hh,1), e, ortho_cntx, ortho_comm )
 #else
      CALL qe_pdsyevd( .true., n, desc, hh, SIZE(hh,1), e )
 #endif
