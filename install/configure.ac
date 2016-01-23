@@ -86,6 +86,9 @@ X_AC_QE_SCALAPACK()
 # Setting ELPA...
 X_AC_QE_ELPA()
 
+# Setting HDF5...
+X_AC_QE_HDF5()
+
 # Checking SIGNAL...
 X_AC_QE_SIGNAL()
 
@@ -95,7 +98,7 @@ X_AC_QE_AIX_DFLAGS()
 # Checking for ranlib...
 X_AC_QE_RANLIB()
 
-# check if wget or curl work  
+# Check if wget or curl work  
 X_AC_QE_WGET()
 
 if test "$dflags" = "" ; then dflags="$try_dflags" ; fi
