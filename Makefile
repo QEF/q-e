@@ -62,39 +62,39 @@ default :
 # If "|| exit 1" is not present, the error code from make in subdirectories
 # is not returned and make goes on even if compilation has failed
 
-pw : bindir libfft mods liblapack libblas libs libiotk 
+pw : bindir libfft libla mods liblapack libblas libs libiotk 
 	if test -d PW ; then \
 	( cd PW ; $(MAKE) TLDEPS= all || exit 1) ; fi
 
-pw-lib : bindir libfft mods liblapack libblas libs libiotk
+pw-lib : bindir libfft libla mods liblapack libblas libs libiotk
 	if test -d PW ; then \
 	( cd PW ; $(MAKE) TLDEPS= pw-lib || exit 1) ; fi
 
-lr-lib : bindir libfft mods liblapack libblas libs libiotk
+lr-lib : bindir libfft libla mods liblapack libblas libs libiotk
 	if test -d LR_Modules ; then \
 	( cd LR_Modules ; $(MAKE) TLDEPS= all || exit 1) ; fi
 
-cp : bindir libfft mods liblapack libblas libs libiotk
+cp : bindir libfft libla mods liblapack libblas libs libiotk
 	if test -d CPV ; then \
 	( cd CPV ; $(MAKE) TLDEPS= all || exit 1) ; fi
 
-ph : bindir libfft mods libs pw 
+ph : bindir libfft libla mods libs pw 
 	( cd install ; $(MAKE) -f plugins_makefile phonon || exit 1 )
 
-neb : bindir libfft mods libs pw
+neb : bindir libfft libla mods libs pw
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-tddfpt : bindir libfft mods libs pw ph
+tddfpt : bindir libfft libla mods libs pw ph
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-pp : bindir libfft mods libs pw
+pp : bindir libfft libla mods libs pw
 	if test -d PP ; then \
 	( cd PP ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
 
-pwcond : bindir libfft mods libs pw pp
+pwcond : bindir libfft libla mods libs pw pp
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-acfdt : bindir libfft mods libs pw ph
+acfdt : bindir libfft libla mods libs pw ph
 	if test -d ACFDT ; then \
 	( cd ACFDT ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
 
@@ -109,10 +109,10 @@ gwl : ph
 gipaw : pw
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-ld1 : bindir liblapack libblas libfft mods libs
+ld1 : bindir liblapack libblas libfft libla mods libs
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-upf : libfft mods libs liblapack libblas
+upf : libfft libla mods libs liblapack libblas
 	if test -d upftools ; then \
 	( cd upftools ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
 
@@ -139,10 +139,13 @@ all   : pwall cp ld1 upf tddfpt gwl xspectra
 # compile modules, libraries, directory for binaries, etc
 ###########################################################
 
+libla : touch-dummy libelpa
+	( cd LAXlib ; $(MAKE) TLDEPS= all || exit 1 )
+
 libfft : touch-dummy
 	( cd FFTXlib ; $(MAKE) TLDEPS= all || exit 1 )
 
-mods : libiotk libelpa libfft
+mods : libiotk libla libfft
 	( cd Modules ; $(MAKE) TLDEPS= all || exit 1 )
 
 libs : mods
@@ -271,7 +274,7 @@ test-suite: pw cp touch-dummy
 clean : doc_clean
 	touch make.sys 
 	for dir in \
-		CPV FFTXlib Modules PP PW \
+		CPV LAXlib FFTXlib Modules PP PW \
 		ACFDT COUPLE GWW XSpectra \
 		clib flib pwtools upftools \
 		dev-tools extlibs Environ TDDFPT \
