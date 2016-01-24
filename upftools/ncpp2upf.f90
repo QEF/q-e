@@ -19,7 +19,8 @@ PROGRAM ncpp2upf
   !
   CALL get_file ( filein )
   OPEN(unit=1,file=filein,status='old',form='formatted')
-  CALL read_ncpp(1)
+  ! underscore added to prevent conflict with read_ncpp in Modules/
+  CALL read_ncpp_(1)
   CLOSE (unit=1)
 
   ! convert variables read from NCPP format into those needed
@@ -64,7 +65,7 @@ MODULE ncpp
 END MODULE ncpp
 !
 !     ----------------------------------------------------------
-SUBROUTINE read_ncpp(iunps)
+SUBROUTINE read_ncpp_(iunps)
   !     ----------------------------------------------------------
   !
   USE ncpp
@@ -245,7 +246,7 @@ SUBROUTINE read_ncpp(iunps)
 
 300 CALL errore('read_ncpp','pseudo file is empty or wrong',1)
 
-END SUBROUTINE read_ncpp
+END SUBROUTINE read_ncpp_
 
 !     ----------------------------------------------------------
 SUBROUTINE convert_ncpp

@@ -1,7 +1,5 @@
 atomic_number.o : ../Modules/kind.o
 avrec.o : ../Modules/kind.o
-bachel.o : ../Modules/constants.o
-bachel.o : ../Modules/kind.o
 cryst_to_car.o : ../Modules/kind.o
 deviatoric.o : ../Modules/io_global.o
 deviatoric.o : ../Modules/kind.o
