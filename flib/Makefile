@@ -6,7 +6,6 @@ include ../make.sys
 MODFLAGS= $(MOD_FLAG)../iotk/src $(MOD_FLAG)../Modules $(MOD_FLAG).
 
 OBJS = \
-avrec.o \
 atomic_number.o \
 capital.o \
 cryst_to_car.o \
