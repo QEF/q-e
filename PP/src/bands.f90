@@ -671,7 +671,7 @@ SUBROUTINE punch_plottable_bands ( filband, nks1tot, nks2tot, nkstot, nbnd, &
         !
         !   save the typical length of dk
         !
-        IF (n==2) dxmod_save = sqrt( k1(1)**2 + k1(2)**2 + k1(3)**2)
+        IF (n==nks1tot+1) dxmod_save = sqrt( k1(1)**2 + k1(2)**2 + k1(3)**2)
      ENDIF
   ENDDO
 
