@@ -275,8 +275,8 @@ clean : doc_clean
 	touch make.sys 
 	for dir in \
 		CPV LAXlib FFTXlib Modules PP PW \
-		ACFDT COUPLE GWW XSpectra \
-		clib flib pwtools upftools \
+		NEB ACFDT COUPLE GWW XSpectra \
+		atomic clib flib pwtools upftools \
 		dev-tools extlibs Environ TDDFPT \
 	; do \
 	    if test -d $$dir ; then \
