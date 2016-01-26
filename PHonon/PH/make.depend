@@ -1298,6 +1298,7 @@ run_nscf.o : ../../PW/src/atomic_wfc_mod.o
 run_nscf.o : ../../PW/src/pwcom.o
 run_nscf.o : ../../PW/src/scf_mod.o
 run_nscf.o : acfdtest.o
+run_nscf.o : elph.o
 run_nscf.o : phcom.o
 run_nscf.o : save_ph_input.o
 save_ph_input.o : ../../Modules/io_files.o

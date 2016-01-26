@@ -11,7 +11,7 @@ TOPDIR=`pwd`
 
 if test $# = 0
 then
-    dirs=" LAXlib FFTXlib Modules clib PW/src CPV/src flib PW/tools upftools PP/src \
+    dirs=" LAXlib FFTXlib Modules clib PW/src CPV/src PW/tools upftools PP/src \
            PWCOND/src LR_Modules/ \
            PHonon/Gamma PHonon/PH PHonon/D3 PHonon/FD atomic/src XSpectra/src \
            ACDFT NEB/src TDDFPT/src GIPAW/src GWW/pw4gww GWW/gww GWW/head" 
@@ -55,7 +55,7 @@ for dir in $dirs; do
     case $DIR in 
         Modules )
              DEPENDS="$DEPEND1" ;;
-        flib | upftools )
+        upftools )
              DEPENDS="$DEPEND1 $LEVEL1/Modules" ;;
         LR_Modules )
              DEPENDS="$DEPEND1 $LEVEL1/Modules $LEVEL1/PW/src" ;;
