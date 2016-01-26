@@ -15,6 +15,7 @@ Incompatible changes in 5.3.0 version:
     is called - gcutw is initialized at startup or when data files are read
   * Common modules for linear-response codes moved to new directory LR_Modules/
   * Routines for subspace diagonalization moved to LAXlib/
+  * Routines in flib/ are now in Modules/
 
                                * * * * *
 
