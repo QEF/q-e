@@ -43,8 +43,7 @@ MANIP_XS_OBJ=./gaunt_mod.o
 QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a
 PWOBJS = ../../PW/src/libpw.a 
 
-LIBOBJS = ../../iotk/src/libiotk.a ../../flib/flib.a \
-         ../../clib/clib.a 
+LIBOBJS = ../../iotk/src/libiotk.a ../../clib/clib.a 
 
 TLDEPS = bindir libs pw
 

@@ -122,7 +122,7 @@ QELA=../../LAXlib/libqela.a
 
 TLDEPS= bindir fftlib mods libs libiotk
 
-LIBOBJS= ../../flib/flib.a ../../clib/clib.a ../../iotk/src/libiotk.a
+LIBOBJS= ../../clib/clib.a ../../iotk/src/libiotk.a
 
 all : tldeps libcp.a manycp.x cp.x cppp.x wfdd.x
 

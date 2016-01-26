@@ -11,8 +11,7 @@ MODFLAGS= $(MOD_FLAG)../../iotk/src \
 IFLAGS=
 
 #location of needed libraries
-LIBOBJS= ../../iotk/src/libiotk.a ../../flib/flib.a \
-         ../../clib/clib.a
+LIBOBJS= ../../iotk/src/libiotk.a ../../clib/clib.a
 
 NEBOBJS = \
 neb.o \

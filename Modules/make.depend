@@ -1,4 +1,5 @@
 atom.o : radial_grids.o
+atomic_number.o : kind.o
 autopilot.o : input_parameters.o
 autopilot.o : io_global.o
 autopilot.o : kind.o
@@ -55,6 +56,11 @@ constraints_module.o : ions_base.o
 constraints_module.o : kind.o
 control_flags.o : kind.o
 control_flags.o : parameters.o
+cryst_to_car.o : kind.o
+deviatoric.o : io_global.o
+deviatoric.o : kind.o
+dost.o : kind.o
+dylmr2.o : kind.o
 electrons_base.o : constants.o
 electrons_base.o : io_global.o
 electrons_base.o : kind.o
@@ -66,10 +72,12 @@ environment.o : mp_images.o
 environment.o : mp_pools.o
 environment.o : mp_world.o
 environment.o : version.o
+erf.o : kind.o
 error_handler.o : io_files.o
 error_handler.o : io_global.o
 error_handler.o : mp.o
 error_handler.o : mp_world.o
+expint.o : kind.o
 fcp_variables.o : kind.o
 fd_gradient.o : ../FFTXlib/scatter_mod.o
 fd_gradient.o : cell_base.o
@@ -93,6 +101,9 @@ funct.o : io_global.o
 funct.o : kind.o
 funct.o : xc_rVV10.o
 funct.o : xc_vdW_DF.o
+functionals.o : constants.o
+functionals.o : kind.o
+functionals.o : libxc.o
 generate_function.o : cell_base.o
 generate_function.o : constants.o
 generate_function.o : fft_base.o
@@ -100,6 +111,7 @@ generate_function.o : io_global.o
 generate_function.o : kind.o
 generate_function.o : mp.o
 generate_function.o : mp_bands.o
+generate_k_along_lines.o : kind.o
 griddim.o : ../FFTXlib/fft_support.o
 griddim.o : ../FFTXlib/fft_types.o
 griddim.o : io_global.o
@@ -131,7 +143,14 @@ kernel_table.o : constants.o
 kernel_table.o : io_files.o
 kernel_table.o : kind.o
 kernel_table.o : wrappers.o
+latgen.o : kind.o
 libxc.o : libxc_funcs.o
+linpack.o : kind.o
+lsda_functionals.o : constants.o
+lsda_functionals.o : kind.o
+metagga.o : constants.o
+metagga.o : kind.o
+metagga.o : libxc.o
 mm_dispersion.o : cell_base.o
 mm_dispersion.o : io_global.o
 mm_dispersion.o : ions_base.o
@@ -139,6 +158,8 @@ mm_dispersion.o : kind.o
 mm_dispersion.o : mp.o
 mm_dispersion.o : mp_images.o
 mm_dispersion.o : parameters.o
+more_functionals.o : constants.o
+more_functionals.o : kind.o
 mp.o : io_global.o
 mp.o : kind.o
 mp.o : parallel_include.o
@@ -178,6 +199,8 @@ parser.o : kind.o
 parser.o : mp.o
 parser.o : mp_images.o
 paw_variables.o : kind.o
+plot_io.o : io_global.o
+plot_io.o : kind.o
 plugin_arguments.o : io_global.o
 plugin_arguments.o : kind.o
 plugin_arguments.o : mp.o
@@ -205,6 +228,7 @@ qmmm.o : kind.o
 qmmm.o : mp.o
 qmmm.o : mp_world.o
 qmmm.o : parallel_include.o
+radial_gradients.o : kind.o
 radial_grids.o : constants.o
 radial_grids.o : kind.o
 random_numbers.o : kind.o
@@ -235,6 +259,7 @@ read_namelists.o : io_global.o
 read_namelists.o : kind.o
 read_namelists.o : mp.o
 read_namelists.o : mp_images.o
+read_ncpp.o : constants.o
 read_ncpp.o : funct.o
 read_ncpp.o : kind.o
 read_ncpp.o : parameters.o
@@ -295,6 +320,7 @@ read_xml_fields.o : ../iotk/src/iotk_unit_interf.o
 read_xml_fields.o : input_parameters.o
 read_xml_fields.o : io_global.o
 read_xml_fields.o : kind.o
+recips.o : kind.o
 recvec.o : kind.o
 recvec.o : mp.o
 recvec_subs.o : constants.o
@@ -302,10 +328,19 @@ recvec_subs.o : fft_base.o
 recvec_subs.o : kind.o
 recvec_subs.o : mp.o
 recvec_subs.o : recvec.o
+remove_tot_torque.o : kind.o
+rgen.o : kind.o
+set_hubbard_l.o : io_global.o
 set_signal.o : io_global.o
 set_signal.o : mp.o
 set_signal.o : mp_world.o
+simpsn.o : kind.o
+sort.o : kind.o
 space_group.o : kind.o
+sph_bes.o : constants.o
+sph_bes.o : kind.o
+sph_dbes.o : constants.o
+sph_dbes.o : kind.o
 splinelib.o : kind.o
 timestep.o : kind.o
 tsvdw.o : cell_base.o
@@ -335,6 +370,11 @@ uspp.o : kind.o
 uspp.o : parameters.o
 uspp.o : pseudo_types.o
 uspp.o : random_numbers.o
+volume.o : kind.o
+w0gauss.o : constants.o
+w0gauss.o : kind.o
+w1gauss.o : constants.o
+w1gauss.o : kind.o
 wannier_gw.o : cell_base.o
 wannier_gw.o : io_global.o
 wannier_gw.o : kind.o
@@ -344,6 +384,8 @@ wave_base.o : kind.o
 wave_base.o : mp.o
 wave_base.o : random_numbers.o
 wavefunctions.o : kind.o
+wgauss.o : constants.o
+wgauss.o : kind.o
 wrappers.o : io_global.o
 wrappers.o : kind.o
 write_upf_v2.o : ../iotk/src/iotk_module.o
@@ -395,4 +437,6 @@ xml_io_base.o : mp_images.o
 xml_io_base.o : mp_wave.o
 xml_io_base.o : parser.o
 xml_io_base.o : wrappers.o
+ylmr2.o : constants.o
+ylmr2.o : kind.o
 zdotc_wrapper.o : kind.o

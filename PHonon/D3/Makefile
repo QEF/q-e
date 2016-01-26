@@ -7,7 +7,7 @@ MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules $(MOD_FLAG)../../FF
           $(MOD_FLAG)../../LAXlib $(MOD_FLAG)../../PW/src $(MOD_FLAG)../../LR_Modules $(MOD_FLAG)../../PHonon/PH $(MOD_FLAG).
 IFLAGS=
 
-LIBOBJS        = ../../flib/flib.a ../../clib/clib.a ../../iotk/src/libiotk.a
+LIBOBJS        = ../../clib/clib.a ../../iotk/src/libiotk.a
 
 D3OBJS = \
 allocate_d3.o \

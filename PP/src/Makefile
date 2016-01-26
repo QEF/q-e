@@ -56,7 +56,7 @@ MODULES = $(PWOBJS) $(QEOBJS)
 
 TLDEPS= bindir mods libs pw
 
-LIBOBJS = ../../flib/flib.a ../../clib/clib.a ../../iotk/src/libiotk.a
+LIBOBJS = ../../clib/clib.a ../../iotk/src/libiotk.a
 
 all : tldeps average.x bands.x dos.x epsilon.x initial_state.x fs.x \
       plan_avg.x plotband.x plotproj.x plotrho.x pmw.x pp.x projwfc.x \

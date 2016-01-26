@@ -193,7 +193,7 @@ LRMODS = ../../LR_Modules/liblrmod.a
 PWOBJS = ../../PW/src/libpw.a
 QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a
 
-LIBOBJS	= ../../flib/flib.a ../../clib/clib.a ../../iotk/src/libiotk.a
+LIBOBJS	= ../../clib/clib.a ../../iotk/src/libiotk.a
 
 TLDEPS= bindir mods libs pw-lib lr-lib
 

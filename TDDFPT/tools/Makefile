@@ -2,7 +2,7 @@
 
 include ../../make.sys
 IFLAGS         = -I../../include
-LIBOBJS        = ../../flib/flib.a ../../clib/clib.a ../../iotk/src/libiotk.a 
+LIBOBJS        = ../../clib/clib.a ../../iotk/src/libiotk.a 
 
 
 # location of needed modules

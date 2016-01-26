@@ -150,7 +150,6 @@ mods : libiotk libla libfft
 
 libs : mods
 	( cd clib ; $(MAKE) TLDEPS= all || exit 1 )
-	( cd flib ; $(MAKE) TLDEPS= $(FLIB_TARGETS) || exit 1 )
 
 lrmods :
 	( cd LR_Modules ; $(MAKE) TLDEPS=lr-lib || exit 1 )

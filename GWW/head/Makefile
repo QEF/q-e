@@ -13,8 +13,7 @@ MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules \
 	  $(MOD_FLAG)../../LAXlib $(MOD_FLAG)../../FFTXlib $(MOD_FLAG).
 
 #location of needed libraries
-LIBOBJS= ../../iotk/src/libiotk.a ../../flib/flib.a \
-         ../../clib/clib.a
+LIBOBJS= ../../iotk/src/libiotk.a ../../clib/clib.a
 
 HEADOBJS = \
 bcast_ph_input.o \

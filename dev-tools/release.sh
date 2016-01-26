@@ -62,7 +62,7 @@ tar -czvf espresso-$version.tar.gz espresso-$version/archive \
                                    espresso-$version/dev-tools \
                                    espresso-$version/Doc \
                                    espresso-$version/environment_variables \
-                                   espresso-$version/flib \
+                                   espresso-$version/LAXlib \
                                    espresso-$version/FFTXlib \
                                    espresso-$version/Makefile \
                                    espresso-$version/include \

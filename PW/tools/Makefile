@@ -11,7 +11,7 @@ QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a ../../LAXlib/libqela.
 
 TLDEPS= bindir mods libs pw libfft libla
 
-LIBOBJS        = ../../flib/flib.a ../../clib/clib.a ../../iotk/src/libiotk.a
+LIBOBJS        = ../../clib/clib.a ../../iotk/src/libiotk.a
 
 all : tldeps dist.x ev.x kpoints.x pwi2xsf.x
 

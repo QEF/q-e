@@ -250,7 +250,7 @@ QEMODS=../../Modules/libqemod.a ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a
 
 TLDEPS=bindir mods libs liblapack libblas
 
-LIBOBJS	= ../../flib/flib.a ../../clib/clib.a ../../iotk/src/libiotk.a
+LIBOBJS	= ../../clib/clib.a ../../iotk/src/libiotk.a
 
 all : tldeps pw.x manypw.x generate_vdW_kernel_table.x generate_rVV10_kernel_table.x
 
