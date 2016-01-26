@@ -81,12 +81,12 @@
                     gsq=    (dble(i)*b1(1)+dble(j)*b2(1)+dble(k)*b3(1) )**2
                     gsq=gsq+(dble(i)*b1(2)+dble(j)*b2(2)+dble(k)*b3(2) )**2
                     gsq=gsq+(dble(i)*b1(3)+dble(j)*b2(3)+dble(k)*b3(3) )**2
-                    IF(gsq.le.gcut ) THEN
+                    IF(gsq<=gcut ) THEN
                       st(i,j) = st(i,j) + 1
-                      IF(gsq.le.gcutw) THEN
+                      IF(gsq<=gcutw) THEN
                         stw(i,j) = stw(i,j) + 1
                       ENDIF
-                      IF(gsq.le.gcuts) THEN
+                      IF(gsq<=gcuts) THEN
                         sts(i,j) = sts(i,j) + 1
                       ENDIF
                     ENDIF
@@ -103,12 +103,12 @@
                     gsq=    (dble(i)*b1(1)+dble(j)*b2(1)+dble(k)*b3(1) )**2
                     gsq=gsq+(dble(i)*b1(2)+dble(j)*b2(2)+dble(k)*b3(2) )**2
                     gsq=gsq+(dble(i)*b1(3)+dble(j)*b2(3)+dble(k)*b3(3) )**2
-                    IF(gsq.le.gcut ) THEN
+                    IF(gsq<=gcut ) THEN
                       st(i,j) = st(i,j) + 1
-                      IF(gsq.le.gcutw) THEN
+                      IF(gsq<=gcutw) THEN
                         stw(i,j) = stw(i,j) + 1
                       ENDIF
-                      IF(gsq.le.gcuts) THEN
+                      IF(gsq<=gcuts) THEN
                         sts(i,j) = sts(i,j) + 1
                       ENDIF
                     ENDIF
@@ -125,12 +125,12 @@
                     gsq=    (dble(i)*b1(1)+dble(j)*b2(1)+dble(k)*b3(1) )**2
                     gsq=gsq+(dble(i)*b1(2)+dble(j)*b2(2)+dble(k)*b3(2) )**2
                     gsq=gsq+(dble(i)*b1(3)+dble(j)*b2(3)+dble(k)*b3(3) )**2
-                    IF(gsq.le.gcut ) THEN
+                    IF(gsq<=gcut ) THEN
                       st(i,j) = st(i,j) + 1
-                      IF(gsq.le.gcutw) THEN
+                      IF(gsq<=gcutw) THEN
                         stw(i,j) = stw(i,j) + 1
                       ENDIF
-                      IF(gsq.le.gcuts) THEN
+                      IF(gsq<=gcuts) THEN
                         sts(i,j) = sts(i,j) + 1
                       ENDIF
                     ENDIF
@@ -149,13 +149,13 @@
                     gsq=    (dble(i)*b1(1)+dble(j)*b2(1)+dble(k)*b3(1) )**2
                     gsq=gsq+(dble(i)*b1(2)+dble(j)*b2(2)+dble(k)*b3(2) )**2
                     gsq=gsq+(dble(i)*b1(3)+dble(j)*b2(3)+dble(k)*b3(3) )**2
-                    IF(gsq.le.gcut ) THEN
+                    IF(gsq<=gcut ) THEN
                       st(i,j) = st(i,j) + 1
                     ENDIF
-                    IF(gsq.le.gcutw) THEN
+                    IF(gsq<=gcutw) THEN
                       stw(i,j) = stw(i,j) + 1
                     ENDIF
-                    IF(gsq.le.gcuts) THEN
+                    IF(gsq<=gcuts) THEN
                       sts(i,j) = sts(i,j) + 1
                     ENDIF
                   ENDIF
@@ -166,9 +166,9 @@
           ENDIF
 
 #if defined(__MPI)
-          CALL MPI_ALLREDUCE(MPI_IN_PLACE, st, SIZE(st), MPI_INTEGER, MPI_SUM, comm, ierr)
-          CALL MPI_ALLREDUCE(MPI_IN_PLACE, stw, SIZE(stw), MPI_INTEGER, MPI_SUM, comm, ierr)
-          CALL MPI_ALLREDUCE(MPI_IN_PLACE, sts, SIZE(sts), MPI_INTEGER, MPI_SUM, comm, ierr)
+          CALL MPI_ALLREDUCE(MPI_IN_PLACE, st, size(st), MPI_INTEGER, MPI_SUM, comm, ierr)
+          CALL MPI_ALLREDUCE(MPI_IN_PLACE, stw, size(stw), MPI_INTEGER, MPI_SUM, comm, ierr)
+          CALL MPI_ALLREDUCE(MPI_IN_PLACE, sts, size(sts), MPI_INTEGER, MPI_SUM, comm, ierr)
 #endif
 
         RETURN
@@ -275,9 +275,9 @@
             aux(mc) = dn3 * aux(mc) + ngcs(mc)
             aux(mc) = dn3 * aux(mc) + ngc(mc)
             aux(mc) = -aux(mc)
-            idx(mc) = 0 
+            idx(mc) = 0
           ENDDO
-          CALL hpsort( nct, aux(1), idx(1))
+          CALL hpsort( nct, aux, idx)
           DEALLOCATE( aux )
         ELSE
           ic = 0
@@ -364,8 +364,8 @@
             in2(nct) = i2
 
             ngc(nct) = st( i1 , i2)
-            IF( stw( i1, i2 ) .gt. 0 ) ngcw(nct) = stw( i1 , i2)
-            IF( sts( i1, i2 ) .gt. 0 ) ngcs(nct) = sts( i1 , i2)
+            IF( stw( i1, i2 ) > 0 ) ngcw(nct) = stw( i1 , i2)
+            IF( sts( i1, i2 ) > 0 ) ngcs(nct) = sts( i1 , i2)
 
           ENDIF
 
@@ -558,7 +558,7 @@
                             ncp, ncpw, ncps, ngp, ngpw, ngps, stown, stownw, stowns, nproc )
 !
 ! This routine works as sticks_dist only it distributes the sticks according to sticks_owner.
-! This ensures that the gvectors for any 'smooth like grid' remain on the same proc as the 
+! This ensures that the gvectors for any 'smooth like grid' remain on the same proc as the
 ! original grid.
 !
       LOGICAL, INTENT(in) :: tk
@@ -601,7 +601,7 @@
 !
          ! potential mesh set according to sticks_owner
 
-         jj = stown(i1,i2) 
+         jj = stown(i1,i2)
          ncp(jj) = ncp(jj) + 1
          ngp(jj) = ngp(jj) + ngc(i)
 
@@ -629,8 +629,114 @@
     END SUBROUTINE sticks_ordered_dist
 
 !=----------------------------------------------------------------------=
-
-
+    
+!---------------------------------------------------------------------
+    SUBROUTINE hpsort (n, ra, ind)
+      !---------------------------------------------------------------------
+      ! sort an array ra(1:n) into ascending order using heapsort algorithm.
+      ! n is input, ra is replaced on output by its sorted rearrangement.
+      ! create an index table (ind) by making an exchange in the index array
+      ! whenever an exchange is made on the sorted data array (ra).
+      ! in case of equal values in the data array (ra) the values in the
+      ! index array (ind) are used to order the entries.
+      ! if on input ind(1)  = 0 then indices are initialized in the routine,
+      ! if on input ind(1) != 0 then indices are assumed to have been
+      !                initialized before entering the routine and these
+      !                indices are carried around during the sorting process
+      !
+      ! no work space needed !
+      ! free us from machine-dependent sorting-routines !
+      !
+      ! adapted from Numerical Recipes pg. 329 (new edition)
+      !
+      IMPLICIT NONE
+      !-input/output variables
+      INTEGER :: n
+      INTEGER :: ind (n)
+      REAL(DP) :: ra (n)
+      !-local variables
+      INTEGER :: i, ir, j, l, iind
+      REAL(DP) :: rra
+      ! initialize index array
+      IF (ind (1) ==0) THEN
+         DO i = 1, n
+            ind (i) = i
+         ENDDO
+      ENDIF
+      ! nothing to order
+      IF (n<2) RETURN
+      ! initialize indices for hiring and retirement-promotion phase
+      l = n / 2 + 1
+      ir = n
+10    CONTINUE
+      ! still in hiring phase
+      IF (l>1) THEN
+         l = l - 1
+         rra = ra (l)
+         iind = ind (l)
+         ! in retirement-promotion phase.
+      ELSE
+         ! clear a space at the end of the array
+         rra = ra (ir)
+         !
+         iind = ind (ir)
+         ! retire the top of the heap into it
+         ra (ir) = ra (1)
+         !
+         ind (ir) = ind (1)
+         ! decrease the size of the corporation
+         ir = ir - 1
+         ! done with the last promotion
+         IF (ir==1) THEN
+            ! the least competent worker at all !
+            ra (1) = rra
+            !
+            ind (1) = iind
+            RETURN
+         ENDIF
+      ENDIF
+      ! wheter in hiring or promotion phase, we
+      i = l
+      ! set up to place rra in its proper level
+      j = l + l
+      !
+      DO WHILE (j<=ir)
+         IF (j<ir) THEN
+            ! compare to better underling
+            IF (ra (j) <ra (j + 1) ) THEN
+               j = j + 1
+            ELSEIF (ra (j) ==ra (j + 1) ) THEN
+               IF (ind (j) <ind (j + 1) ) j = j + 1
+            ENDIF
+         ENDIF
+         ! demote rra
+         IF (rra<ra (j) ) THEN
+            ra (i) = ra (j)
+            ind (i) = ind (j)
+            i = j
+            j = j + j
+         ELSEIF (rra==ra (j) ) THEN
+            ! demote rra
+            IF (iind<ind (j) ) THEN
+               ra (i) = ra (j)
+               ind (i) = ind (j)
+               i = j
+               j = j + j
+            ELSE
+               ! set j to terminate do-while loop
+               j = ir + 1
+            ENDIF
+            ! this is the right place for rra
+         ELSE
+            ! set j to terminate do-while loop
+            j = ir + 1
+         ENDIF
+      ENDDO
+      ra (i) = rra
+      ind (i) = iind
+      GOTO 10
+      !
+    END SUBROUTINE hpsort
 
     SUBROUTINE sticks_deallocate
       IF( allocated( sticks_owner ) ) DEALLOCATE( sticks_owner )
