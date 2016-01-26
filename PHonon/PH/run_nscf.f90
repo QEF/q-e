@@ -32,9 +32,9 @@ SUBROUTINE run_nscf(do_band, iq)
   USE scf,             ONLY : vrs
   USE mp_bands,        ONLY : ntask_groups
 
-  USE lr_symm_base, ONLY : minus_q, nsymq, invsymq
-  USE qpoint,       ONLY : xq
-
+  USE lr_symm_base,    ONLY : minus_q, nsymq, invsymq
+  USE qpoint,          ONLY : xq
+  USE el_phon,         ONLY : elph_mat
  !
   IMPLICIT NONE
   !
@@ -73,7 +73,7 @@ SUBROUTINE run_nscf(do_band, iq)
   restart = ext_restart
   conv_ions=.true.
   !
-  CALL setup_nscf ( newgrid, xq )
+  CALL setup_nscf ( newgrid, xq, elph_mat )
   CALL init_run()
 !!!!!!!!!!!!!!!!!!!!!!!! ACFDT TEST !!!!!!!!!!!!!!!!
   IF (acfdt_is_active) THEN
