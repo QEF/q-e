@@ -3,6 +3,7 @@
 AC_DEFUN([X_AC_QE_FFT], [
 
 have_fft=0
+have_fft_include=0
 
   AC_MSG_CHECKING([FFT])
  
@@ -119,36 +120,113 @@ then
 
 fi
 
-if test "$have_fft" -eq 0 && test "$use_openmp" -eq 0
+# Check for fftw v3, both native and MKL interfaces
+if test "$have_fft" -eq 0 
 then
 
-        # check for fftw v.3 (in several directories)
         try_libdirs="/usr/local/lib"
-        try_libdirs="$libdirs $try_libdirs $ld_library_path"
+        try_libdirs="$libdirs $try_libdirs $ld_library_path "
 
-        for dir in none $try_libdirs
-        do
-                unset ac_cv_search_dfftw_execute_dft # clear cached value
-                if test "$dir" = "none"
-                then
+        AC_LANG_POP(Fortran 77)
+        AC_LANG_PUSH(C)
+        #for dir in none $try_libdirs
+        #do
+        unset ac_cv_lib_mkl_intel_lp64_DftiComputeForward
+        if test "$dir" = "none"
+        then
+                try_loption=
+        else
+                echo $ECHO_N "in $dir: " $ECHO_C
+                try_loption="-L$dir"
+        fi
+
+        CFLAGS="$test_cflags"
+        CPPFLAGS="$test_cppflags"
+        LDFLAGS=" $test_ldflags $try_loption"
+        LIBS="$fft_libs"
+
+         #here we check if dfti explicit calls work
+         #it should work with blas flags
+        AC_CHECK_LIB([mkl_intel_lp64],DftiComputeForward,have_fft=1,
+        ,$blas_libs -lm)
+
+
+        if test "$have_fft" == "1"
+        then
+              try_dflags="$try_dflags -D__DFTI"
+              try_incdir="$MKL_INCLUDE $MKLROOT/include $CPATH $FPATH"
+              for inc in $try_incdir
+              do
+                 #we need to add the fft include path to IFLAGS
+                 AC_CHECK_HEADERS([$inc/mkl_dfti.f90],have_fft_include=1,)
+                 if test "$have_fft_include=1"
+                 then
+                   try_iflags="$try_iflags -I$inc"
+                   break
+                 fi
+              done
+              break
+        fi
+
+        #done
+        AC_LANG_POP(C)
+        AC_LANG_PUSH(Fortran 77)
+
+        if test "$have_fft" -eq 0
+        then
+          for dir in none $try_libdirs
+          do
+                  unset ac_cv_search_dfftw_execute_dft # clear cached value
+                  if test "$dir" = "none"
+                  then
                         try_loption=
-                else
+                  else
                         echo $ECHO_N "in $dir: " $ECHO_C
                         try_loption="-L$dir"
-                fi
-                CFLAGS="$test_cflags"
-                CPPFLAGS="$test_cppflags"
-                LDFLAGS="$c_ldflags $try_loption"
-                LIBS="$fft_libs"
-                AC_SEARCH_LIBS(dfftw_execute_dft, fftw3, have_fft=1
-                               fft_libs="$try_loption $LIBS", , -lm)
-                if test "$ac_cv_search_dfftw_execute_dft" != "no"
-                then
-                        try_dflags="$try_dflags -D__FFTW3"
-                        break
-                fi
-        done
+                  fi
 
+                  CFLAGS="$test_cflags"
+                  CPPFLAGS="$test_cppflags"
+                  LDFLAGS=" $test_ldflags $try_loption"
+                  LIBS="$fft_libs"
+
+                  if test "$use_openmp" -eq 1
+                  then
+                    AC_SEARCH_LIBS(dfftw_execute_dft, fftw3_omp, have_fft=1
+                               fft_libs="$try_loption $LIBS -lfftw3", , -lfftw3 -lm)
+                  else
+                    AC_SEARCH_LIBS(dfftw_execute_dft, fftw3, have_fft=1
+                               fft_libs="$try_loption $LIBS", , -lm)
+                  fi
+
+                  if test "$have_fft" == "1"
+                  then
+                        try_dflags="$try_dflags -D__FFTW3"
+                        try_incdir="$FFTW_INCLUDE $FFTW_INC $INCLUDE_PATH $CPATH $FPATH"
+                        for inc in $try_incdir
+                        do
+                           #AC_LANG_POP([Fortran 77])
+                           #AC_LANG_PUSH([C])
+                           #AC_CHECK_HEADERS([$inc/fftw3.f03],have_fft_include=1,)
+                           AC_MSG_CHECKING([for fftw3.f03])
+                           AC_COMPILE_IFELSE(
+                           [include "fftw3.f03"],
+                           [AC_MSG_RESULT([yes])],
+                           [AC_MSG_RESULT([no])]
+                           )
+                           #AC_LANG_POP([C])
+                           #AC_LANG_PUSH([Fortran 77])
+                           if test "$have_fft_include=1"
+                           then
+                             try_iflags="$try_iflags -I$inc"
+                             break
+                           fi
+                        done
+                        break
+                  fi
+
+          done
+        fi
 fi
 
   AC_MSG_RESULT(${fft_libs})
