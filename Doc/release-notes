@@ -5,6 +5,8 @@ Fixed in svn version:
   * Possible conflict between FFTW in MKL and in Modules/fftw.c solved 
     (commit 11980)
   * Incorrect printout from bands.x for nspin=2 (commit 12064)
+  * generate_vdW_kernel was crashing in parallel on more than 210 processors
+    (210 = default number of different q_i and q_j pairs) (commit 12077)
 
 Incompatible changes in 5.3.0 version:
 

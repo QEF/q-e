@@ -393,7 +393,11 @@ do proc_i = 1, nproc
    end_q = start_q + (Nper - 1)
 
    if (proc_i <= Nextra) end_q = end_q + 1
-
+     ! PG: this is to prevent trouble if number of processors exceeds Ntotal
+     IF ( proc_i > Ntotal ) THEN
+        start_q = Ntotal
+        end_q   = Ntotal
+     ENDIF
    if (proc_i == (mpime+1)) then
 
       my_start_q = start_q
@@ -873,7 +877,8 @@ CONTAINS
   ! phi array. Then write the data.
 
   do proc_i = 1, nproc-1
-
+     ! PG: next line for the case of more processors than q points
+     IF ( proc_i >= Ntotal ) exit
      call mp_get(phi, phi, mpime, 0, proc_i, 0, my_comm)
 
      if (ionode) then
@@ -900,7 +905,9 @@ CONTAINS
 
 
   do proc_i = 1, nproc-1
-
+     ! PG: next line for the case of more processors than q points
+     IF ( proc_i >= Ntotal ) exit
+     
      call mp_get(d2phi_dk2, d2phi_dk2, mpime, 0, proc_i, 0, my_comm)
 
      if (mpime == 0) then
