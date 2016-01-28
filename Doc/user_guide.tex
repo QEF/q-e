@@ -356,12 +356,12 @@ please follow the instructions given at \texttt{gww.qe-forge.org}.
 %developers' site \texttt{qe-forge.org}: follow the link ''Quantum ESPRESSO'', 
 %then ''SCM''.
 
-The bravest may access the development version via anonymous access to the
-Subversion (SVN) repository: \texttt{qe-forge.org/gf/project/q-e/scmsvn}, 
-link ''Access Info'' on the left. See also the Developer Manual
-(\texttt{Doc/developer\_man.pdf}), section ''Using SVN''.
-Beware: the development version 
-is, well, under development: use at your own risk! 
+%The bravest may access the development version via anonymous access to the
+%Subversion (SVN) repository: \texttt{qe-forge.org/gf/project/q-e/scmsvn}, 
+%link ''Access Info'' on the left. See also the Developer Manual
+%(\texttt{Doc/developer\_man.pdf}), section ''Using SVN''.
+%Beware: the development version 
+%is, well, under development: use at your own risk! 
 
 The \qe\ distribution contains several directories. Some of them are
 common to all packages:
@@ -453,8 +453,10 @@ Instructions for the impatient:
     ./configure
      make all
 \end{verbatim}
-Symlinks to executable programs will be placed in the
-\texttt{bin/}
+This will (try to) produce parallel (MPI) executable if a proper parallel 
+environment is detected, serial executables otherwise. For OpenMP version,
+specify \texttt{./configure --enable-openmp}. Symlinks to executable programs 
+will be placed in the \texttt{bin/}
 subdirectory. Note that both C and Fortran compilers must be in your execution
 path, as specified in the PATH environment variable.
 Additional instructions for special machines:
