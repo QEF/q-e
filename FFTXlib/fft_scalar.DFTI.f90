@@ -140,7 +140,7 @@
      END SUBROUTINE check_dims
 
      SUBROUTINE lookup()
-     IF( dfti_first .EQ. .TRUE. ) THEN
+     IF( dfti_first ) THEN
         DO ip = 1, ndims
            hand(ip)%desc => NULL()
         END DO
@@ -321,7 +321,7 @@
      END SUBROUTINE check_dims
 
      SUBROUTINE lookup()
-     IF( dfti_first .EQ. .TRUE. ) THEN
+     IF( dfti_first ) THEN
         DO ip = 1, ndims
            hand(ip)%desc => NULL()
         END DO
@@ -486,7 +486,7 @@
      END SUBROUTINE check_dims
 
      SUBROUTINE lookup()
-     IF( dfti_first .EQ. .TRUE. ) THEN
+     IF( dfti_first ) THEN
         DO ip = 1, ndims
            hand(ip)%desc => NULL()
         END DO
