@@ -8,6 +8,9 @@ Fixed in svn version:
   * parallel make broken by missing dependency (commit 12076)
   * generate_vdW_kernel was crashing in parallel on more than 210 processors
     (210 = default number of different q_i and q_j pairs) (commit 12077)
+  * Incorrect normalization in epsilon.f90 for nspin=2, some inaccuracy
+    for 'mv' and 'mp' smearing (courtesy of Tae Yun Kim and Cheol-Hwan Park,
+    Seoul National University) (commit 12082)
 
 Incompatible changes in 5.3.0 version:
 

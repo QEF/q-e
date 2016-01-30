@@ -25,7 +25,10 @@
 
 @SET_MAKE@
 
-# topdir for linking espresso libs with plugins
+# Top QE directory, not used in QE but useful for linking QE libs with plugins
+# The following syntax should always point to TOPDIR:
+#   $(dir $(abspath $(filter %make.sys,$(MAKEFILE_LIST))))
+
 TOPDIR = @topdir@
 
 # DFLAGS  = precompilation options (possible arguments to -D and -U)
@@ -42,8 +45,9 @@ MANUAL_DFLAGS  =
 DFLAGS         = @dflags@ $(MANUAL_DFLAGS)
 FDFLAGS        = @fdflags@ $(MANUAL_DFLAGS)
 
-# IFLAGS = how to locate directories where files to be included are
-# In most cases, IFLAGS = -I../include
+# IFLAGS = how to locate directories with *.h or *.f90 file to be included 
+#          typically -I../include -I/some/other/directory/
+#          the latter contains .e.g. files needed by FFT libraries
 
 IFLAGS         = @iflags@
 
@@ -86,7 +90,7 @@ FFLAGS         = @fflags@
 
 FFLAGS_NOOPT   = @fflags_noopt@
 
-# compiler flag needed by some compilers when the main is not fortran
+# compiler flag needed by some compilers when the main program is not fortran
 # Currently used for Yambo
 
 FFLAGS_NOMAIN   = @fflags_nomain@
@@ -153,5 +157,5 @@ LIBS           = $(SCALAPACK_LIBS) $(LAPACK_LIBS) $(FFT_LIBS) $(BLAS_LIBS) $(MPI
 # wget or curl - useful to download from network
 WGET = @wget@
 
-# Install directory 
+# Install directory - not currently used
 PREFIX = @prefix@
