@@ -13,7 +13,7 @@ SUBROUTINE punch( what )
   ! ... the information needed for further processing (phonon etc.)
   !
   USE io_global,            ONLY : stdout
-  USE io_files,             ONLY : prefix, iunpun, iunwfc, nwordwfc
+  USE io_files,             ONLY : prefix, iunpun, iunwfc, nwordwfc, diropn
   USE control_flags,        ONLY : io_level, twfcollect
   USE klist,                ONLY : nks
   USE pw_restart,           ONLY : pw_writefile
@@ -26,6 +26,7 @@ SUBROUTINE punch( what )
   IMPLICIT NONE
   !
   CHARACTER(LEN=*) :: what
+  LOGICAL :: exst
   !
   !
   IF (io_level < 0 ) RETURN
@@ -36,8 +37,11 @@ SUBROUTINE punch( what )
   ! ... if wavefunctions are stored in "distributed" format,
   ! ... save here wavefunctions to file if never saved before
   !
-  IF ( .NOT. twfcollect .AND. nks == 1 ) &
-              CALL davcio ( evc, 2*nwordwfc, iunwfc, nks, 1 )
+  IF ( .NOT. twfcollect .AND. nks == 1 ) THEN
+     CALL diropn( iunwfc, 'wfc', 2*nwordwfc, exst )
+     CALL davcio ( evc, 2*nwordwfc, iunwfc, nks, 1 )
+     CLOSE ( UNIT=iunwfc, STATUS='keep' )
+  END IF
   iunpun = 4
   !
   CALL pw_writefile( TRIM( what ) )

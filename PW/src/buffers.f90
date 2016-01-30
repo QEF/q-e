@@ -5,6 +5,7 @@
 ! Contains a few changes by PG wrt the original implementation:
 ! - data is complex, not real
 ! - most routines are functions that return error status instead of stopping
+! - added possibility to store file name info in the linked list
 !
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
@@ -18,9 +19,11 @@ MODULE buiol
   PUBLIC :: init_buiol          ! init the linked chain of i/o units
   PUBLIC :: stop_buiol          ! destroy the linked chain, dealloc everything
   PUBLIC :: report_buiol        ! report on total number of units and memory usage
-  PUBLIC :: buiol_open_unit     ! (unit, recl) open a new unit
+  PUBLIC :: buiol_open_unit     ! (unit, recl, ext, dir) open a new unit
   PUBLIC :: buiol_close_unit    ! (unit) close the unit, dealloc the space
   PUBLIC :: buiol_check_unit    ! (unit) returns recl, if opened, -1 if closed
+  PUBLIC :: buiol_get_ext       ! (unit) returns file extension
+  PUBLIC :: buiol_get_dir       ! (unit) returns dir where file is opened
   PUBLIC :: buiol_report_unit   ! (unit, mem?) report about unit status (on stdout)
   PUBLIC :: buiol_write_record  ! (unit, recl, nrec, DATA) write DATA(recl) in record nrec of unit
   PUBLIC :: buiol_read_record   ! (unit, recl, nrec, DATA) read DATA(recl) from record nrec of unit
@@ -41,6 +44,7 @@ MODULE buiol
   TYPE index_of_list
     TYPE(data_in_the_list),POINTER :: index(:)
     INTEGER :: nrec, unit, recl
+    CHARACTER(LEN=256) :: extension, save_dir
     TYPE(index_of_list),POINTER :: next => null()
   END TYPE
   !
@@ -73,6 +77,8 @@ MODULE buiol
     ENTRY%nrec =  0
     ENTRY%unit = -1
     ENTRY%recl = -1
+    ENTRY%extension= ' '
+    ENTRY%save_dir = ' '
     NULLIFY(ENTRY%next)
     is_init_buiol = .true.
     !
@@ -122,9 +128,10 @@ MODULE buiol
     RETURN
   END SUBROUTINE report_buiol
   ! \/o\________\\\_________________________________________/^>
-  FUNCTION buiol_open_unit(unit, recl) RESULT (ierr)
+  FUNCTION buiol_open_unit(unit, recl, extension, save_dir) RESULT (ierr)
     IMPLICIT NONE
     INTEGER,INTENT(in) :: unit, recl
+    CHARACTER(LEN=*), INTENT(in) :: extension, save_dir
     INTEGER :: ierr
     TYPE(index_of_list),POINTER :: CURSOR
     !
@@ -148,7 +155,7 @@ MODULE buiol
     END IF
     !
     ! all is fine, allocate a new unit with standard size
-    CURSOR => alloc_buffer(unit, recl, nrec0)
+    CURSOR => alloc_buffer(unit, recl, nrec0, extension, save_dir)
     !
     ! place it at the beginning of the chain
     CURSOR%next => ENTRY%next
@@ -209,6 +216,42 @@ MODULE buiol
     RETURN
     !
   END FUNCTION buiol_check_unit
+  ! \/o\________\\\_________________________________________/^>
+  FUNCTION buiol_get_ext(unit) RESULT(extension)
+    IMPLICIT NONE
+    INTEGER,INTENT(in) :: unit
+    CHARACTER(LEN=256) :: extension
+    TYPE(index_of_list),POINTER :: CURSOR
+    !
+    ! find the unit
+    CURSOR => find_unit(unit)
+    IF(.not.associated(CURSOR)) THEN
+      extension = ' '
+    ELSE
+      extension = CURSOR%extension
+    ENDIF
+    !
+    RETURN
+    !
+  END FUNCTION buiol_get_ext
+  ! \/o\________\\\_________________________________________/^>
+  FUNCTION buiol_get_dir(unit) RESULT(save_dir)
+    IMPLICIT NONE
+    INTEGER,INTENT(in) :: unit
+    CHARACTER(LEN=256) :: save_dir
+    TYPE(index_of_list),POINTER :: CURSOR
+    !
+    ! find the unit
+    CURSOR => find_unit(unit)
+    IF(.not.associated(CURSOR)) THEN
+      save_dir = ' '
+    ELSE
+      save_dir = CURSOR%save_dir
+    ENDIF
+    !
+    RETURN
+    !
+  END FUNCTION buiol_get_dir
   ! \/o\______\\_______________________________________/^>
   SUBROUTINE increase_nrec(nrec_new, CURSOR)
     IMPLICIT NONE
@@ -395,9 +438,10 @@ MODULE buiol
     RETURN
   END FUNCTION find_prev_unit
   ! \/o\________\\\_________________________________________/^>
-  FUNCTION alloc_buffer(unit, recl, nrec)
+  FUNCTION alloc_buffer(unit, recl, nrec, extension, save_dir)
     IMPLICIT NONE
     INTEGER,INTENT(in) :: unit, recl, nrec
+    CHARACTER(LEN=*), INTENT(in) :: extension, save_dir
     TYPE(index_of_list),POINTER :: alloc_buffer
     TYPE(index_of_list),POINTER :: CURSOR
     !
@@ -405,6 +449,8 @@ MODULE buiol
     CURSOR%unit = unit
     CURSOR%recl = recl
     CURSOR%nrec = nrec0
+    CURSOR%extension = extension
+    CURSOR%save_dir  = save_dir
     NULLIFY(CURSOR%next)
     ALLOCATE(CURSOR%index(CURSOR%nrec))
     !
@@ -439,7 +485,8 @@ Module buffers
 
   use kinds, only: dp
   use buiol, only: init_buiol, buiol_open_unit, buiol_close_unit, &
-                   buiol_check_unit, buiol_read_record, buiol_write_record
+                   buiol_check_unit, buiol_get_ext, buiol_get_dir, &
+                   buiol_read_record, buiol_write_record
   implicit none
   !
   ! QE interfaces to BUIOL module
@@ -460,8 +507,8 @@ contains
     !   for direct I/O access, with record length = nword complex numbers;
     !   on output, exst=T(F) if the file (does not) exists
     !
-    !   io_level=0: in addition to opening unit "unit" as above, open a
-    !   buffer for storing records of length nword complex numbers;
+    !   io_level=0: open a buffer for storing records of length nword complex
+    !   numbers; store in memory file-related variables for later usage.
     !   on output, exst=T(F) if the buffer is already allocated
     !
     !   on output, optional variable exst_file=T(F) if file is present (absent)
@@ -491,19 +538,22 @@ contains
     ELSE
        save_dir=TRIM(wfc_dir)
     ENDIF
-    CALL diropn ( unit, extension, 2*nword, exst, save_dir )      
-    IF (present(exst_file)) exst_file=exst
-    nunits = nunits + 1
     !
     IF ( io_level <= 0 ) THEN
-       ierr = buiol_open_unit ( unit, nword )
+       CALL diropn ( unit, extension, -1, exst, save_dir )      
+       IF (present(exst_file)) exst_file=exst
+       ierr = buiol_open_unit ( unit, nword, extension, save_dir )
        IF ( ierr > 0 ) CALL errore ('open_buffer', ' cannot open unit', 2)
        exst = ( ierr == -1 )
        IF (exst) THEN
           CALL infomsg ('open_buffer', 'unit already opened')
           nunits = nunits - 1
        END IF
+    ELSE
+       CALL diropn ( unit, extension, 2*nword, exst, save_dir )      
+       IF (present(exst_file)) exst_file=exst
     ENDIF
+    nunits = nunits + 1
     !
     RETURN
     !
@@ -542,13 +592,18 @@ contains
     !
     ! ... copy vect(1:nword) from the "nrec"-th record of a previously
     ! ... allocated buffer / opened direct-access file, depending upon
-    ! ... how "open_buffer" was called
+    ! ... how "open_buffer" was called. If buffer access was chosen 
+    ! ... but buffer is not allocated, open the file, read from file
+    !
+    USE io_files, ONLY : diropn
     !
     IMPLICIT NONE
     !
     INTEGER, INTENT(IN) :: nword, unit, nrec
     COMPLEX(DP), INTENT(OUT) :: vect(nword)
+    CHARACTER(LEN=256) :: extension, save_dir
     INTEGER :: ierr
+    LOGICAL :: opnd
     !
     ierr = buiol_check_unit (unit)
     IF( ierr > 0 ) THEN
@@ -557,7 +612,13 @@ contains
        print *, 'get_buffer: record', nrec, ' read from unit', unit
 #endif
        if ( ierr < 0 ) then
-          ! record not found: read from file ....
+          ! record not found: open file if not opened, read from it...
+          INQUIRE( UNIT = unit, OPENED = opnd )
+          IF ( .NOT. opnd ) THEN
+             extension = buiol_get_ext (unit)
+             save_dir  = buiol_get_dir (unit)
+             CALL diropn ( unit, extension, 2*nword, opnd, save_dir )      
+          END IF
           CALL davcio ( vect, 2*nword, unit, nrec, -1 )
           ! ... and save to memory
           ierr =  buiol_write_record ( unit, nword, nrec, vect )
@@ -580,8 +641,8 @@ contains
     !
     !     close unit with status "status" ('keep' or 'delete')
     !     deallocate related buffer if any; if "status='keep'"
-    !     save it to file (using saved value of extension)
-    !     doesn't complain if closing an already closed unit
+    !     save it to file (opening it if not already opened).
+    !     Does not complain if closing an already closed unit
     !
     USE io_files, ONLY : diropn
     !
@@ -591,14 +652,22 @@ contains
     CHARACTER(LEN=*), INTENT(IN) :: status
     !
     COMPLEX(dp), ALLOCATABLE :: vect(:)
+    CHARACTER(LEN=256) :: extension, save_dir
     INTEGER :: n, ierr, nrec, nword
     LOGICAL :: opnd
     !
-    ierr = buiol_check_unit (unit)
-    IF( ierr > 0 ) THEN
-       if ( status == 'keep' .or. status == 'KEEP' ) then
-          !
-          nword = buiol_check_unit ( unit )
+    nword = buiol_check_unit (unit)
+    !
+    IF( nword > 0 ) THEN
+       ! data is in memory buffer
+       IF ( status == 'keep' .or. status == 'KEEP' ) then
+          ! open file if not previously opened
+          INQUIRE( UNIT = unit, OPENED = opnd )
+          IF ( .NOT. opnd ) THEN
+             extension = buiol_get_ext (unit)
+             save_dir  = buiol_get_dir (unit)
+             CALL diropn ( unit, extension, 2*nword, opnd, save_dir )      
+          END IF
           allocate (vect(nword))
           n = 1
   10      continue

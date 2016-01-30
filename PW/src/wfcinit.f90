@@ -22,7 +22,8 @@ SUBROUTINE wfcinit()
   USE fixed_occ,            ONLY : one_atom_occupations
   USE ldaU,                 ONLY : lda_plus_u, U_projection, wfcU
   USE lsda_mod,             ONLY : lsda, current_spin, isk
-  USE io_files,             ONLY : nwordwfc, nwordwfcU, iunhub, iunwfc, iunigk
+  USE io_files,             ONLY : nwordwfc, nwordwfcU, iunhub, iunwfc,iunigk,&
+                                   diropn
   USE buffers,              ONLY : open_buffer, get_buffer, save_buffer
   USE uspp,                 ONLY : nkb, vkb
   USE wavefunctions_module, ONLY : evc
@@ -35,7 +36,7 @@ SUBROUTINE wfcinit()
   IMPLICIT NONE
   !
   INTEGER :: ik, ierr
-  LOGICAL :: exst_mem, exst_file
+  LOGICAL :: exst, exst_mem, exst_file
   !
   !
   CALL start_clock( 'wfcinit' )
@@ -78,7 +79,11 @@ SUBROUTINE wfcinit()
      ! ... a case, we read wavefunctions (directly from file in 
      ! ... order to avoid a useless buffer allocation) here
      !
-     IF ( nks == 1 ) CALL davcio ( evc, 2*nwordwfc, iunwfc, nks, -1 )
+     IF ( nks == 1 ) THEN
+         CALL diropn( iunwfc, 'wfc', 2*nwordwfc, exst )
+         CALL davcio ( evc, 2*nwordwfc, iunwfc, nks, -1 )
+         CLOSE ( UNIT=iunwfc, STATUS='keep' )
+     END IF
      !
   END IF
   !
