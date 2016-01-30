@@ -316,7 +316,7 @@ SUBROUTINE eps_calc ( intersmear,intrasmear, nw, wmax, wmin, nbndmin, nbndmax, s
   USE cell_base,            ONLY : tpiba2, omega
   USE wvfct,                ONLY : nbnd, et
   USE ener,                 ONLY : efermi => ef
-  USE klist,                ONLY : nks, nkstot, degauss
+  USE klist,                ONLY : nks, nkstot, degauss, ngauss
   USE io_global,            ONLY : ionode, stdout
   !
   USE grid_module,          ONLY : alpha, focc, wgrid, grid_build, grid_destroy
@@ -342,6 +342,8 @@ SUBROUTINE eps_calc ( intersmear,intrasmear, nw, wmax, wmin, nbndmin, nbndmax, s
   REAL(DP), ALLOCATABLE    :: ieps(:,:), eels(:,:), iepsc(:,:,:), eelsc(:,:,:)
   REAL(DP), ALLOCATABLE    :: dipole(:,:,:)
   COMPLEX(DP),ALLOCATABLE  :: dipole_aux(:,:,:)
+  !
+  real(DP) , external :: w0gauss
 !
 !--------------------------
 ! main routine body
@@ -436,30 +438,21 @@ IF (nspin == 1) THEN
      !
      IF (metalcalc) THEN
      DO iband1 = nbndmin,nbndmax
-         !
-         IF ( focc(iband1,ik) < 2.0d0) THEN
-         IF ( focc(iband1,ik) >= 1e-4 ) THEN
-               !
-               ! loop over frequencies
-               !
-               DO iw = 1, nw
-                   !
-                   w = wgrid(iw)
-                   !
-                  epsi(:,iw) = epsi(:,iw) +  dipole(:,iband1,iband1) * intrasmear * w* &
-                                RYTOEV**2 * (exp((et(iband1,ik)-efermi)/degauss ))/  &
-                    (( w**4 + intrasmear**2 * w**2 )*(1+exp((et(iband1,ik)-efermi)/ &
-                    degauss))**2*degauss )
-
-                  epsr(:,iw) = epsr(:,iw) - dipole(:,iband1,iband1) * RYTOEV**2 * &
-                                            (exp((et(iband1,ik)-efermi)/degauss )) * w**2 / &
-                    (( w**4 + intrasmear**2 * w**2 )*(1+exp((et(iband1,ik)-efermi)/ &
-                    degauss))**2*degauss )
-               ENDDO
-
-         ENDIF
-         ENDIF
-
+        !
+        ! loop over frequencies
+        !
+        DO iw = 1, nw
+          !
+          w = wgrid(iw)
+          !
+          epsi(:,iw) = epsi(:,iw) +  dipole(:,iband1,iband1) * intrasmear * w * &
+                       RYTOEV**2 * w0gauss((et(iband1,ik)-efermi)/degauss, ngauss) / &
+                       (( w**4 + intrasmear**2 * w**2 )*degauss )
+          epsr(:,iw) = epsr(:,iw) - dipole(:,iband1,iband1) * RYTOEV**2 * &
+                       w0gauss((et(iband1,ik)-efermi)/degauss, ngauss) * w**2 / &
+                       (( w**4 + intrasmear**2 * w**2 )*degauss )
+        ENDDO
+        !
      ENDDO
      ENDIF
   ENDDO kpt_loop
@@ -593,8 +586,8 @@ DO is=0,1
      DO iband1 = nbndmin,nbndmax
          !
          IF (iband1==iband2) CYCLE
-         IF ( focc(iband1,ik) >= 1e-4 ) THEN
-         IF (abs(focc(iband2,ik)-focc(iband1,ik))< 1e-3) CYCLE
+         IF ( focc(iband1,ik) >= 0.5e-4 ) THEN
+         IF (abs(focc(iband2,ik)-focc(iband1,ik))< 0.5e-3) CYCLE
                !
                ! transition energy
                !
@@ -625,30 +618,21 @@ DO is=0,1
      !
      IF (metalcalc) THEN
      DO iband1 = nbndmin,nbndmax
-         !
-         IF ( focc(iband1,ik) < 1.0d0) THEN
-         IF ( focc(iband1,ik) >= 1e-4 ) THEN
-               !
-               ! loop over frequencies
-               !
-               DO iw = 1, nw
-                   !
-                   w = wgrid(iw)
-                   !
-                  epsic(is,:,iw) = epsic(is,:,iw) +  dipole(:,iband1,iband1) * intrasmear * w* &
-                                RYTOEV**2 * (exp((et(iband1,ik)-efermi)/degauss ))/  &
-                    (( w**4 + intrasmear**2 * w**2 )*(1+exp((et(iband1,ik)-efermi)/ &
-                    degauss))**2*degauss )
-
-                  epsrc(is,:,iw) = epsrc(is,:,iw) - dipole(:,iband1,iband1) * RYTOEV**2 * &
-                                            (exp((et(iband1,ik)-efermi)/degauss )) * w**2 / &
-                    (( w**4 + intrasmear**2 * w**2 )*(1+exp((et(iband1,ik)-efermi)/ &
-                    degauss))**2*degauss )
-               ENDDO
-
-         ENDIF
-         ENDIF
-
+        !
+        ! loop over frequencies
+        !
+        DO iw = 1, nw
+            !
+            w = wgrid(iw)
+            !
+            epsic(is,:,iw) = epsic(is,:,iw) +  dipole(:,iband1,iband1) * intrasmear * w* &
+                            RYTOEV**2 * w0gauss((et(iband1,ik)-efermi)/degauss, ngauss)/  &
+                            (( w**4 + intrasmear**2 * w**2 )*degauss)*0.5
+            epsrc(is,:,iw) = epsrc(is,:,iw) - dipole(:,iband1,iband1) * RYTOEV**2 * &
+                            w0gauss((et(iband1,ik)-efermi)/degauss, ngauss) * w**2 / &
+                            (( w**4 + intrasmear**2 * w**2 )*degauss)*0.5
+        ENDDO
+        !
      ENDDO
      ENDIF
   ENDDO kpt_loopspin
@@ -731,7 +715,7 @@ ENDDO spin_loop
           WRITE(44,"(4f15.6)") wgrid(iw), epsic(1,1:3, iw)
           WRITE(45,"(4f15.6)") wgrid(iw), eelsc(1,1:3, iw)
           WRITE(46,"(4f15.6)") wgrid(iw), iepsc(1,1:3, iw)
-          WRITE(47,"(4f15.6)") wgrid(iw), epsrc(1,1:3, iw)+epsrc(0,1:3, iw)
+          WRITE(47,"(4f15.6)") wgrid(iw), epsrc(1,1:3, iw)+epsrc(0,1:3, iw)-1.0_DP
           WRITE(48,"(4f15.6)") wgrid(iw), epsic(1,1:3, iw)+epsic(0,1:3, iw)
           WRITE(49,"(4f15.6)") wgrid(iw), eelsc(1,1:3, iw)+eelsc(0,1:3, iw)
           WRITE(50,"(4f15.6)") wgrid(iw), iepsc(1,1:3, iw)+iepsc(0,1:3, iw)
