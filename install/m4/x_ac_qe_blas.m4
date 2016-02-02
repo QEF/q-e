@@ -89,7 +89,7 @@ then
                         # Check first MKL...
                         FFLAGS="$test_fflags"
                         LDFLAGS="$MKL_FLAGS $test_ldflags $try_loption"
-                        LIBS="$MKL_LIBS"
+                        LIBS=""
 
                         if test "$use_openmp" -eq 0; then
                               AC_SEARCH_LIBS(dgemm, mkl_intel_lp64,
@@ -160,7 +160,7 @@ then
                         fi
                         FFLAGS="$test_fflags"
                         LDFLAGS="$MKL_FLAGS $test_ldflags $try_loption"
-                        LIBS="$MKL_LIBS"
+                        LIBS=""
                         #
                         # should work for recent MKL versions only
                         #
@@ -252,7 +252,7 @@ then
                         fi
                         FFLAGS="$test_fflags"
                         LDFLAGS="$MKL_FLAGS $test_ldflags $try_loption"
-                        LIBS="$MKL_LIBS"
+                        LIBS=""
                         #
                         # should work for recent MKL versions only
                         #
@@ -315,7 +315,7 @@ then
                         fi
                         FFLAGS="$test_fflags"
                         LDFLAGS="$MKL_FLAGS $test_ldflags $try_loption"
-                        LIBS="$MKL_LIBS"
+                        LIBS=""
                         #
                         # should work for recent MKL versions only
                         #
@@ -488,7 +488,7 @@ then
 			fi
 			FFLAGS="$test_fflags"
 			LDFLAGS="$MKL_FLAGS $test_ldflags $try_loption"
-			LIBS="$MKL_LIBS"
+			LIBS=""
                         # First, a by-the-apple-book search of MKL... >10.2 requires multiple libraries
                         # 64 bit is buggy as of 11.1.088
                         if test "$use_openmp" -eq 0; then

@@ -149,18 +149,8 @@ case "$arch" in
                 ifort_version=`echo $version | sed 's/\..*//'`
                 echo "${ECHO_T}ifort $version"
                 f90_in_mpif90="ifort"
-                if test "$ifort_version" -gt 8; then
-                # flags for MKL - ifort 9 and later
-                   MKL_LIBS=""
-                   if test "$ifort_version" -gt 9; then
-                        MKL_FLAGS="-static-intel"
-                   else
-                        MKL_FLAGS="-i-static"
-                   fi
-                else
-                # flags for MKL - ifort 8 and earlier, obsolescent
-                   MKL_LIBS="-lguide -lpthread"
-                   MKL_FLAGS=""
+                if test "$ifort_version" -gt 9; then
+                   MKL_FLAGS="-static-intel"
                 fi
         elif test "$sunf95_version" != ""
         then
