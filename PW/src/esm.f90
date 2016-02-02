@@ -1850,9 +1850,7 @@ SUBROUTINE esm_ewaldg_bc1 ( alpha_g, ewg )
 !$omp end do
 !$omp atomic
   ewg=ewg+ew
-#ifdef __OPENMP
 !$omp end parallel
-#endif
 
   return
 END SUBROUTINE esm_ewaldg_bc1
@@ -1944,9 +1942,7 @@ SUBROUTINE esm_ewaldg_bc2 ( alpha_g, ewg )
 !$omp end do
 !$omp atomic
   ewg=ewg+ew
-#ifdef __OPENMP
 !$omp end parallel
-#endif
 
   return
 END SUBROUTINE esm_ewaldg_bc2
@@ -2030,9 +2026,7 @@ SUBROUTINE esm_ewaldg_bc3 ( alpha_g, ewg )
 !$omp end do
 !$omp atomic
   ewg=ewg+ew
-#ifdef __OPENMP
 !$omp end parallel
-#endif
 
   return
 END SUBROUTINE esm_ewaldg_bc3
@@ -2169,9 +2163,7 @@ SUBROUTINE esm_ewaldg_bc4 ( alpha_g, ewg )
 !$omp end do
 !$omp atomic
   ewg=ewg+ew
-#ifdef __OPENMP
 !$omp end parallel
-#endif
 
   return
 END SUBROUTINE esm_ewaldg_bc4

@@ -227,8 +227,7 @@ SUBROUTINE esm_cft_1z(c, nsl, nz, ldz, isign, cout)
   INTEGER    :: i, idir, ith
 
 #if defined __OPENMP
-  INTEGER    :: OMP_GET_THREAD_NUM
-  EXTERNAL   :: OMP_GET_THREAD_NUM
+  INTEGER, EXTERNAL :: OMP_GET_THREAD_NUM
 #endif
 
   IF( nsl < 0 ) THEN
