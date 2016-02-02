@@ -2232,7 +2232,7 @@ CONTAINS
       CHARACTER(len=256) :: time_units_, title_, energy_units_
       !
       CALL iotk_scan_begin( iunit, "STATUS", ATTR=attr, FOUND = found )
-      IF ( (ierr /= 0).OR.(.NOT.found) ) RETURN
+      IF ( .NOT.found ) RETURN
       !
       CALL iotk_scan_empty( iunit, "STEP", ATTR = attr, IERR = ierr )
       IF (ierr/=0) RETURN
