@@ -289,6 +289,8 @@
             !
             ! Wannier function, charge density from state iwf
             !
+            ALLOCATE( psis( dffts%nnr ) ) 
+            !
             i = iwf
             !
             psis = 0.D0
@@ -304,6 +306,8 @@
             DO ir=1,dffts%nnr
                rhos(ir,iss1)=rhos(ir,iss1) + sa1*( DBLE(psis(ir)))**2
             END DO
+            !
+            DEALLOCATE( psis )
             !
          ELSE 
             !
