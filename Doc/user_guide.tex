@@ -454,7 +454,7 @@ Instructions for the impatient:
      make all
 \end{verbatim}
 This will (try to) produce parallel (MPI) executable if a proper parallel 
-environment is detected, serial executables otherwise. For OpenMP version,
+environment is detected, serial executables otherwise. For OpenMP executables,
 specify \texttt{./configure --enable-openmp}. Symlinks to executable programs 
 will be placed in the \texttt{bin/}
 subdirectory. Note that both C and Fortran compilers must be in your execution
@@ -519,7 +519,7 @@ Note that the value of \texttt{FFLAGS} must be quoted, because it contains
 spaces. NOTA BENE: do not pass compiler names with the leading path
 included. \texttt{F90=f90xyz} is ok, \texttt{F90=/path/to/f90xyz} is not. 
 Do not use
-environmental variables with \configure\ unless they are needed! try
+environment variables with \configure\ unless they are needed! try
 \configure\ with no options as a first step.
 
 If your machine type is unknown to \configure, you may use the 
@@ -649,12 +649,14 @@ the newer FFTW3 library and the following vendor-specific FFT libraries:
 \configure\ will first search for vendor-specific FFT libraries;
 if none is found, it will search for an external FFTW v.3 library;
 if none is found, it will fall back to the internal  copy of FFTW.
+\configure\ will add the appropriate preprocessing options:
+for DFTI, \texttt{-D\_\_DFTI}; for ESSL, \texttt{-D\_\_ESSL} or
+\texttt{-D\_\_LINUX\_ESSL}; for FFTW3, \texttt{-D\_\_FFTW3}; for
+FFTW \texttt{-D\_\_FFTW}), to \texttt{DFLAGS} in the \texttt{make.sys} 
+file.
 
-If you have MKL libraries, you may use the provided FFTW3 interface 
+If you have MKL libraries, you may also use the provided FFTW3 interface 
 (v.10 and later), or directly link FFTW3 from MKL (v.12 and later).
-
-In order to use Intel DFTI from MKL, you need to add \texttt{-D\_\_DFTI}
-to \texttt{DFLAGS} in the \texttt{make.sys} file.
 
 \paragraph{MPI libraries} 
 MPI libraries are usually needed for parallel execution 
@@ -1139,7 +1141,7 @@ refer to the following web page to find the correct way to link MKL:\\
 \texttt{http://software.intel.com/en-us/articles/intel-mkl-link-line-advisor/}.
 
 For parallel (MPI) execution on multiprocessor (SMP) machines, set the
-environmental variable OMP\_NUM\_THREADS to 1 unless you know what you 
+environment variable OMP\_NUM\_THREADS to 1 unless you know what you 
 are doing. See Sec.\ref{Sec:para} for more info on this
 and on the difference between MPI and OpenMP parallelization. 
 
@@ -1637,7 +1639,7 @@ to provide an input file.
 If you notice very bad parallel performances with MPI and MKL libraries, 
 it is very likely that the OpenMP parallelization performed by the latter 
 is colliding with MPI. Recent versions of MKL enable autoparallelization
-by default on multicore machines.  You must set the environmental variable
+by default on multicore machines.  You must set the environment variable
 OMP\_NUM\_THREADS to 1 to disable it. 
 Note that if for some reason the correct setting  of variable
 OMP\_NUM\_THREADS  
