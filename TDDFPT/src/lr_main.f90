@@ -236,7 +236,7 @@ PROGRAM lr_main
         !
         LR_iteration = iteration
         !
-        WRITE(stdout,'(/5x,"Lanczos iteration:",1x,i6,3x"Pol:",i1,i8)') LR_iteration, ip
+        WRITE(stdout,'(/5x,"Lanczos iteration:",1x,i6,3x,"Pol:",i1,i8)') LR_iteration, ip
         !
         CALL one_lanczos_step()
         !
