@@ -1443,6 +1443,8 @@ MODULE exx
     ! local variables
     COMPLEX(DP),ALLOCATABLE :: temppsic(:), result(:)
     COMPLEX(DP),ALLOCATABLE :: temppsic_nc(:,:),result_nc(:,:)
+    COMPLEX(DP),ALLOCATABLE :: result_g(:)
+    COMPLEX(DP),ALLOCATABLE :: result_nc_g(:,:)
     !
     COMPLEX(DP),ALLOCATABLE :: rhoc(:), vc(:), deexx(:)
     REAL(DP),   ALLOCATABLE :: fac(:)
@@ -1461,8 +1463,10 @@ MODULE exx
     !
     IF (noncolin) THEN
        ALLOCATE( temppsic_nc(nrxxs,npol), result_nc(nrxxs,npol) )
+       ALLOCATE( result_nc_g(n,2) )
     ELSE
        ALLOCATE( temppsic(nrxxs), result(nrxxs) )
+       ALLOCATE( result_g(n) )
     ENDIF
     !
     ALLOCATE(rhoc(nrxxs), vc(nrxxs))
@@ -1632,12 +1636,6 @@ MODULE exx
          CALL mp_sum(deexx,inter_bgrp_comm)
        ENDIF
        !
-       IF (noncolin) THEN
-          CALL mp_sum( result_nc(1:nrxxs,1:npol), inter_bgrp_comm)
-       ELSE
-          CALL mp_sum( result(1:nrxxs), inter_bgrp_comm)
-       ENDIF
-       !
        !brings back result in G-space
        !
        IF (noncolin) THEN
@@ -1645,15 +1643,24 @@ MODULE exx
           CALL fwfft ('CustomWave', result_nc(:,1), exx_fft%dfftt)
           CALL fwfft ('CustomWave', result_nc(:,2), exx_fft%dfftt)
           !
+          !communicate result
+          DO ig = 1, n
+             result_nc_g(ig,1) = result_nc(exx_fft%nlt(igk(ig)),1)
+          ENDDO
+          DO ig = 1, n
+             result_nc_g(ig,2) = result_nc(exx_fft%nlt(igk(ig)),2)
+          ENDDO
+          CALL mp_sum( result_nc_g(1:n,1:2), inter_bgrp_comm)
+          !
           !adds it to hpsi
 !$omp parallel do default(shared), private(ig)
           DO ig = 1, n
-             hpsi(ig,im)    = hpsi(ig,im)     - exxalfa*result_nc(exx_fft%nlt(igk(ig)),1)
+             hpsi(ig,im)    = hpsi(ig,im)     - exxalfa*result_nc_g(ig,1)
           ENDDO
 !$omp end parallel do
 !$omp parallel do default(shared), private(ig)
           DO ig = 1, n
-             hpsi(lda+ig,im)= hpsi(lda+ig,im) - exxalfa*result_nc(exx_fft%nlt(igk(ig)),2)
+             hpsi(lda+ig,im)= hpsi(lda+ig,im) - exxalfa*result_nc_g(ig,2)
           ENDDO
 !$omp end parallel do
           !
@@ -1661,10 +1668,16 @@ MODULE exx
           !
           CALL fwfft ('CustomWave', result, exx_fft%dfftt)
           !
+          !communicate result
+          DO ig = 1, n
+             result_g(ig) = result(exx_fft%nlt(igk(ig)))
+          ENDDO
+          CALL mp_sum( result_g(1:n), inter_bgrp_comm)
+          !
           !adds it to hpsi
 !$omp parallel do default(shared), private(ig)
           DO ig = 1, n
-             hpsi(ig,im)=hpsi(ig,im) - exxalfa*result(exx_fft%nlt(igk(ig)))
+             hpsi(ig,im)=hpsi(ig,im) - exxalfa*result_g(ig)
           ENDDO
 !$omp end parallel do
        ENDIF
