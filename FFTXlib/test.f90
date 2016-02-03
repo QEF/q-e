@@ -1,9 +1,11 @@
 program test
   USE fft_types, ONLY: fft_dlay_descriptor, fft_dlay_deallocate
   USE stick_set, ONLY: pstickset
+  USE fft_parallel
   IMPLICIT NONE
 #ifdef __MPI
   include 'mpif.h'
+  include 'fft_param.f90'
 #endif
   TYPE(fft_dlay_descriptor) :: dfftp, dffts, dfft3d 
   INTEGER, PARAMETER :: nx = 128
@@ -19,6 +21,9 @@ program test
   REAL*8  :: gcutm, gkcut, gcutms
   LOGICAL :: gamma_only
   !
+  COMPLEX(DP), ALLOCATABLE :: psis(:)
+  COMPLEX(DP), ALLOCATABLE :: aux(:)
+  !
 #if defined(__OPENMP)
   INTEGER :: PROVIDED
 #endif
@@ -26,10 +31,12 @@ program test
   !   ........
   !
 #ifdef __MPI
+
 #if defined(__OPENMP)
   CALL MPI_Init_thread(MPI_THREAD_FUNNELED, PROVIDED, ierr)
 #else
   CALL MPI_Init(ierr)
+#endif
   CALL mpi_comm_rank(MPI_COMM_WORLD,mype,ierr)
   CALL mpi_comm_size(MPI_COMM_WORLD,npes,ierr)
   comm = MPI_COMM_WORLD
@@ -40,15 +47,19 @@ program test
   ELSE
      iope = .false.
   ENDIF
-#endif
+
 #else
+
   mype = 0
   npes = 1
   comm = 0
   ntgs = 1
   root = 0
   iope = .true.
+
 #endif
+  !
+  write(*,*) 'mype = ', mype, ' npes = ', npes
   !
   dffts%nr1 = nx 
   dffts%nr2 = ny
@@ -86,11 +97,32 @@ program test
   gcutms = 53.1
   gkcut  = 26.5
 
+
   CALL pstickset( gamma_only, bg, gcutm, gkcut, gcutms, &
         dfftp, dffts, ngw_ , ngm_ , ngs_ , mype, root, &
         npes, comm, ntgs, iope, stdout, dfft3d )
 
+  ALLOCATE( psis( dffts%tg_nnr * dffts%nogrp ) )
+  ALLOCATE( aux( dffts%tg_nnr * dffts%nogrp ) )
   !
+  ! Test FFT for wave functions
+
+  aux = 0.0d0
+  aux(1) = 1.0d0
+
+  CALL pack_group_sticks( aux, psis, dffts )
+  CALL fw_tg_cft3_z( psis, dffts, aux )
+  CALL fw_tg_cft3_scatter( psis, dffts, aux )
+  CALL fw_tg_cft3_xy( psis, dffts )
+
+  CALL bw_tg_cft3_xy( psis, dffts )
+  CALL bw_tg_cft3_scatter( psis, dffts, aux )
+  CALL bw_tg_cft3_z( psis, dffts, aux )
+  CALL unpack_group_sticks( psis, aux, dffts )
+
+  write(*,*) 'mype = ', mype, ' aux(1) = ', aux(1)
+
+  DEALLOCATE( psis, aux )
 
   CALL fft_dlay_deallocate( dffts )
   CALL fft_dlay_deallocate( dfftp )
@@ -101,3 +133,14 @@ program test
   CALL mpi_finalize(ierr)
 #endif
 end program test
+
+
+subroutine start_clock( label )
+implicit none
+character(len=*) :: label
+end subroutine
+
+subroutine stop_clock( label )
+implicit none
+character(len=*) :: label
+end subroutine
