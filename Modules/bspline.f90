@@ -2078,10 +2078,10 @@ CONTAINS
 
   subroutine huntn(xx,n,kord,x,jlo)
     implicit none
-    integer, intent(in)                      :: n, kord
+    integer, intent(in)                :: n, kord
     real(dp), intent(in)               :: x
     real(dp), dimension(n), intent(in) :: xx
-    integer, intent(out)                     :: jlo
+    integer, intent(inout)             :: jlo
     integer :: max, null, jhi, jm, inc
 
     max  = n - kord
