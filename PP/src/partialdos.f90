@@ -152,17 +152,21 @@ SUBROUTINE  partialdos (Emin, Emax, DeltaE, kresolveddos, filpdos)
         WRITE (filextension(c_tab:c_tab+4),'(a1,a)') &
              '(',trim(atm(ityp(nlmchi(nwfc)%na)))
         c_tab = c_tab + len_trim(atm(ityp(nlmchi(nwfc)%na))) + 1
-        IF (nlmchi(nwfc)%n >= 10) &
-             CALL errore('partialdos',&
-             'file extension not supporting so many atomic wfc', nwfc)
         IF (nlmchi(nwfc)%l > 3) &
              CALL errore('partialdos',&
              'file extension not supporting so many l', nwfc)
-        WRITE (filextension(c_tab:),'(")_wfc#",i1,"(",a1,")")')  &
-             nlmchi(nwfc)%n, l_label(nlmchi(nwfc)%l)
+        IF (nlmchi(nwfc)%n < 10) THEN
+           WRITE (filextension(c_tab:),'(")_wfc#",i1,"(",a1,")")')  &
+                nlmchi(nwfc)%n, l_label(nlmchi(nwfc)%l)
+        ELSE IF (nlmchi(nwfc)%n < 100) THEN
+           WRITE (filextension(c_tab:),'(")_wfc#",i2,"(",a1,")")')  &
+                nlmchi(nwfc)%n, l_label(nlmchi(nwfc)%l)
+        ELSE
+           CALL errore('partialdos',&
+             'file extension not supporting so many atomic wfc', nwfc)
+        END IF
         fileout = trim(filpdos)//trim(filextension)
-        OPEN (4,file=fileout,form='formatted', &
-             status='unknown')
+        OPEN (4,file=fileout,form='formatted', status='unknown')
 
         IF (kresolveddos) THEN
            WRITE (4,'("# ik   ")', advance="NO")
@@ -398,22 +402,31 @@ SUBROUTINE  partialdos_nc (Emin, Emax, DeltaE, kresolveddos, filpdos)
         WRITE (filextension(c_tab:c_tab+4),'(a1,a)') &
              '(',trim(atm(ityp(nlmchi(nwfc)%na)))
         c_tab = c_tab + len_trim(atm(ityp(nlmchi(nwfc)%na))) + 1
-        IF (nlmchi(nwfc)%n >= 10) &
-             CALL errore('partialdos_nc',&
-             'file extension not supporting so many atomic wfc', nwfc)
         IF (nlmchi(nwfc)%l > 3) &
              CALL errore('partialdos_nc',&
              'file extension not supporting so many l', nwfc)
-        IF (lspinorb) THEN
-           WRITE (filextension(c_tab:),'(")_wfc#",i1,"(",a1,"_j",f3.1,")")') &
+        IF (nlmchi(nwfc)%n < 10) THEN
+           IF (lspinorb) THEN
+             WRITE (filextension(c_tab:),'(")_wfc#",i1,"(",a1,"_j",f3.1,")")') &
              nlmchi(nwfc)%n, l_label(nlmchi(nwfc)%l),nlmchi(nwfc)%jj
-        ELSE
-           WRITE (filextension(c_tab:),'(")_wfc#",i1,"(",a1,")")')  &
+           ELSE
+             WRITE (filextension(c_tab:),'(")_wfc#",i1,"(",a1,")")')  &
              nlmchi(nwfc)%n, l_label(nlmchi(nwfc)%l)
+           ENDIF
+        ELSE IF (nlmchi(nwfc)%n < 100) THEN
+           IF (lspinorb) THEN
+             WRITE (filextension(c_tab:),'(")_wfc#",i2,"(",a1,"_j",f3.1,")")') &
+             nlmchi(nwfc)%n, l_label(nlmchi(nwfc)%l),nlmchi(nwfc)%jj
+           ELSE
+             WRITE (filextension(c_tab:),'(")_wfc#",i2,"(",a1,")")')  &
+             nlmchi(nwfc)%n, l_label(nlmchi(nwfc)%l)
+           ENDIF
+        ELSE
+           CALL errore('partialdos_nc',&
+             'file extension not supporting so many atomic wfc', nwfc)
         ENDIF
         fileout = trim(filpdos)//trim(filextension)
-        OPEN (4,file=fileout,form='formatted', &
-             status='unknown')
+        OPEN (4,file=fileout,form='formatted', status='unknown')
 
         IF (kresolveddos) THEN
            WRITE (4,'("# ik   ")', advance="NO")
