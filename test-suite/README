@@ -13,12 +13,12 @@ $ make
 
 B) Run only PW tests and show a final report
 
-$ make run_tests_pw 
+$ make run-tests-pw 
 
 
 C) Run only CP tests and show a final report
 
-$ make run_tests_cp
+$ make run-tests-cp
 
 D) Run the test that is in a single directory and show a final report
 
