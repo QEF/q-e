@@ -54,7 +54,7 @@ SUBROUTINE one_lanczos_step()
     USE becmod,                   ONLY : bec_type, becp, calbec
     USE realus,                   ONLY : real_space, invfft_orbital_gamma, initialisation_level,    &
                                          fwfft_orbital_gamma, calbec_rs_gamma, add_vuspsir_gamma, &
-                                         v_loc_psir, s_psir_gamma, igk_k, npw_k, real_space_debug
+                                         v_loc_psir, s_psir_gamma, real_space_debug
     USE charg_resp,               ONLY : w_T_beta_store, w_T, lr_calc_F
     USE lr_us,                    ONLY : lr_apply_s
     USE noncollin_module,         ONLY : npol

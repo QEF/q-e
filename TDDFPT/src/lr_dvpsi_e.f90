@@ -22,7 +22,7 @@ SUBROUTINE lr_dvpsi_e(ik,ipol,dvpsi)
   USE cell_base,            ONLY : tpiba, at
   USE ions_base,            ONLY : ntyp => nsp
   USE io_global,            ONLY : stdout
-  USE klist,                ONLY : xk
+  USE klist,                ONLY : xk, npw_k => ngk
   USE wvfct,                ONLY : npw, npwx, nbnd, igk, g2kin, et
   USE wavefunctions_module, ONLY : evc
   USE noncollin_module,     ONLY : noncolin, npol
@@ -33,7 +33,6 @@ SUBROUTINE lr_dvpsi_e(ik,ipol,dvpsi)
   USE phus,                 ONLY : dpqq 
   USE control_flags,        ONLY : gamma_only
   USE control_lr,           ONLY : nbnd_occ
-  USE realus,               ONLY : npw_k
   USE lr_variables,         ONLY : lr_verbosity
   USE io_global,            ONLY : stdout
   USE qpoint,               ONLY : igkq
@@ -205,7 +204,7 @@ CONTAINS
     USE gvect,                ONLY : gstart
     USE wvfct,                ONLY : npw, npwx, nbnd, g2kin
     USE wavefunctions_module, ONLY : evc
-    USE realus,               ONLY : npw_k
+    USE klist,                ONLY : npw_k => ngk
     USE mp,                   ONLY : mp_sum
     USE mp_global,            ONLY : intra_bgrp_comm
 

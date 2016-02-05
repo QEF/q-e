@@ -23,7 +23,7 @@ SUBROUTINE lr_apply_s(vect, svect)
     USE io_global,          ONLY : stdout
     USE uspp,               ONLY : okvan, vkb, nkb
     USE wvfct,              ONLY : npwx, npw, nbnd
-    USE klist,              ONLY : nks,xk
+    USE klist,              ONLY : nks, xk, npw_k=>ngk, igk_k
     USE becmod,             ONLY : becp, calbec
     USE noncollin_module,   ONLY : npol
     USE lr_variables,       ONLY : eels, lr_verbosity
@@ -70,10 +70,9 @@ SUBROUTINE lr_apply_s_optical()
     ! Optical case
     !
     USE control_flags,    ONLY : gamma_only
-    USE realus,           ONLY : real_space, invfft_orbital_gamma,             &
+    USE realus,           ONLY : real_space, invfft_orbital_gamma,           &
                                & fwfft_orbital_gamma, calbec_rs_gamma,       &
-                               & v_loc_psir, igk_k,npw_k, real_space_debug, &
-                               & s_psir_gamma
+                               & v_loc_psir, real_space_debug, s_psir_gamma
     !
     IMPLICIT NONE   
     !

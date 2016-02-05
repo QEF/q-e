@@ -17,7 +17,8 @@ SUBROUTINE lr_dealloc()
   USE lr_variables
   USE uspp,           ONLY : nkb
   USE control_flags,  ONLY : gamma_only
-  USE realus,         ONLY : igk_k, npw_k, tg_psic
+  USE realus,         ONLY : tg_psic
+  USE klist,          ONLY : npw_k => ngk, igk_k
   USE io_global,      ONLY : stdout
   USE charg_resp,     ONLY : w_T_beta_store, w_T_gamma_store, w_T,&
                            & w_T_zeta_store, chi, rho_1_tot, rho_1_tot_im

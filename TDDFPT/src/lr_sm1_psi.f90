@@ -265,8 +265,7 @@ CONTAINS
     ! Optical case : k-points version
     !
     USE becmod,        ONLY : bec_type,becp,calbec
-    USE realus,        ONLY : igk_k,npw_k
-    USE klist,         ONLY : nks, xk
+    USE klist,         ONLY : nks, xk, npw_k=>ngk, igk_k
     !
     IMPLICIT NONE
     !

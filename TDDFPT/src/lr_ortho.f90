@@ -30,7 +30,7 @@ SUBROUTINE lr_ortho(dvpsi, evq, ikk, ikq, sevc, inverse)
   !
   USE kinds,             ONLY : DP
   use gvect,             only : gstart
-  USE klist,             ONLY : lgauss, degauss, ngauss
+  USE klist,             ONLY : npw_k=>ngk, lgauss, degauss, ngauss
   USE noncollin_module,  ONLY : noncolin, npol
   USE wvfct,             ONLY : npwx, nbnd, et
   USE ener,              ONLY : ef
@@ -39,7 +39,6 @@ SUBROUTINE lr_ortho(dvpsi, evq, ikk, ikq, sevc, inverse)
   USE mp_global,         ONLY : intra_bgrp_comm
   USE mp,                ONLY : mp_sum
   use lr_variables,      ONLY : lr_verbosity
-  use realus,            ONLY : npw_k
   use control_flags,     only : gamma_only
   USE io_global,         ONLY : stdout
   !

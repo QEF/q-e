@@ -25,7 +25,7 @@ subroutine allocate_nlpot
   USE cell_base,        ONLY : tpiba2
   USE cellmd,           ONLY : cell_factor
   USE gvect,            ONLY : ngm, gcutm, g
-  USE klist,            ONLY : xk, wk, ngk, nks, qnorm
+  USE klist,            ONLY : xk, wk, ngk, nks, qnorm, igk_k
   USE lsda_mod,         ONLY : nspin
   USE ldaU,             ONLY : Hubbard_lmax
   USE scf,              ONLY : rho
@@ -45,11 +45,7 @@ subroutine allocate_nlpot
   !
   implicit none
   !
-  !    a few local variables
-  !
   integer :: nwfcm
-  integer,allocatable :: ngkq(:)
-  ! counters on atom type, atoms, beta functions
   !
   !   calculate number of PWs for all kpoints
   !
@@ -62,6 +58,7 @@ subroutine allocate_nlpot
   !
   !   igk relates the index of PW k+G to index in the list of G vector
   !
+  allocate ( igk_k( npwx,nks ) )
   allocate (igk( npwx ), g2kin ( npwx ) )    
   !
   ! Note: computation of the number of beta functions for

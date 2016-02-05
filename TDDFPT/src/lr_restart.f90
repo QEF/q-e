@@ -17,7 +17,7 @@ SUBROUTINE lr_restart(iter_restart,rflag)
   USE kinds,                ONLY : DP 
   USE io_global,            ONLY : stdout, ionode_id
   USE control_flags,        ONLY : gamma_only
-  USE klist,                ONLY : nks, xk
+  USE klist,                ONLY : nks, xk, npw_k=>ngk, igk_k
   USE cell_base,            ONLY : tpiba2
   USE gvect,                ONLY : g
   USE io_files,             ONLY : tmp_dir, prefix, diropn, wfc_dir
@@ -34,8 +34,7 @@ SUBROUTINE lr_restart(iter_restart,rflag)
   USE mp_world,             ONLY : world_comm
   USE realus,               ONLY : real_space, invfft_orbital_gamma, initialisation_level, &
                                    fwfft_orbital_gamma, calbec_rs_gamma, add_vuspsir_gamma, &
-                                   v_loc_psir, s_psir_gamma,igk_k,npw_k, &
-                                   real_space_debug
+                                   v_loc_psir, s_psir_gamma, real_space_debug
   USE fft_base,             ONLY : dfftp
   USE noncollin_module,     ONLY : nspin_mag
 

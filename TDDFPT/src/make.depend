@@ -224,6 +224,7 @@ lr_dealloc.o : ../../Modules/becmod.o
 lr_dealloc.o : ../../Modules/control_flags.o
 lr_dealloc.o : ../../Modules/io_global.o
 lr_dealloc.o : ../../Modules/uspp.o
+lr_dealloc.o : ../../PW/src/pwcom.o
 lr_dealloc.o : ../../PW/src/realus.o
 lr_dealloc.o : lr_charg_resp.o
 lr_dealloc.o : lr_exx_kernel.o
@@ -241,7 +242,6 @@ lr_dot.o : ../../Modules/mp_global.o
 lr_dot.o : ../../Modules/noncol.o
 lr_dot.o : ../../Modules/recvec.o
 lr_dot.o : ../../PW/src/pwcom.o
-lr_dot.o : ../../PW/src/realus.o
 lr_dot.o : lr_variables.o
 lr_dv_setup.o : ../../LR_Modules/lrcom.o
 lr_dv_setup.o : ../../Modules/fft_base.o
@@ -272,7 +272,6 @@ lr_dvpsi_e.o : ../../Modules/uspp.o
 lr_dvpsi_e.o : ../../Modules/wavefunctions.o
 lr_dvpsi_e.o : ../../PHonon/PH/phcom.o
 lr_dvpsi_e.o : ../../PW/src/pwcom.o
-lr_dvpsi_e.o : ../../PW/src/realus.o
 lr_dvpsi_e.o : lr_variables.o
 lr_dvpsi_eels.o : ../../LR_Modules/lrcom.o
 lr_dvpsi_eels.o : ../../Modules/cell_base.o
@@ -399,7 +398,6 @@ lr_ortho.o : ../../Modules/noncol.o
 lr_ortho.o : ../../Modules/recvec.o
 lr_ortho.o : ../../Modules/uspp.o
 lr_ortho.o : ../../PW/src/pwcom.o
-lr_ortho.o : ../../PW/src/realus.o
 lr_ortho.o : lr_variables.o
 lr_psym_eels.o : ../../FFTXlib/scatter_mod.o
 lr_psym_eels.o : ../../LR_Modules/lrcom.o
@@ -614,7 +612,6 @@ lr_variables.o : ../../Modules/mp.o
 lr_variables.o : ../../Modules/mp_global.o
 lr_variables.o : ../../Modules/recvec.o
 lr_variables.o : ../../PW/src/pwcom.o
-lr_variables.o : ../../PW/src/realus.o
 lr_write_restart.o : ../../Modules/cell_base.o
 lr_write_restart.o : ../../Modules/fft_base.o
 lr_write_restart.o : ../../Modules/io_files.o

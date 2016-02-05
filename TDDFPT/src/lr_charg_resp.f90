@@ -639,9 +639,9 @@ CONTAINS
     USE uspp_param,               ONLY : upf, nh
     USE becmod,                   ONLY : becp,calbec
     USE ions_base,                ONLY : ityp,nat,ntyp=>nsp
-    USE realus,                   ONLY : npw_k,real_space_debug,invfft_orbital_gamma,calbec_rs_gamma
+    USE realus,                   ONLY : real_space_debug,invfft_orbital_gamma,calbec_rs_gamma
     USE gvect,                    ONLY : gstart
-    USE klist,                    ONLY : nks
+    USE klist,                    ONLY : nks, npw_k => ngk
     USE lr_variables,             ONLY : lr_verbosity, itermax, LR_iteration, LR_polarization, &
          project,evc0_virt,F,nbnd_total,n_ipol, becp1_virt
 
@@ -785,9 +785,9 @@ CONTAINS
     USE uspp_param,               ONLY : upf, nh
     USE becmod,                   ONLY : becp,calbec
     USE ions_base,                ONLY : ityp,nat,ntyp=>nsp
-    USE realus,                   ONLY : npw_k,real_space_debug,invfft_orbital_gamma,calbec_rs_gamma
+    USE realus,                   ONLY : real_space_debug,invfft_orbital_gamma,calbec_rs_gamma
     USE gvect,                    ONLY : gstart
-    USE klist,                    ONLY : nks
+    USE klist,                    ONLY : nks, npw_k => ngk
     USE lr_variables,             ONLY : lr_verbosity, itermax, LR_iteration, LR_polarization, &
          project,evc0_virt,R,nbnd_total,n_ipol, becp1_virt,d0psi
 

@@ -24,7 +24,7 @@ SUBROUTINE lr_alloc_init()
   USE io_global,            ONLY : stdout
   USE charg_resp,           ONLY : w_T, w_T_beta_store, w_T_gamma_store, &
                                  & w_T_zeta_store, w_T_npol,chi
-  USE realus,               ONLY : igk_k, npw_k, tg_psic
+  USE realus,               ONLY : tg_psic
   USE noncollin_module,     ONLY : nspin_mag, npol, noncolin
   USE wavefunctions_module, ONLY : evc
   USE becmod,               ONLY : allocate_bec_type, bec_type, becp

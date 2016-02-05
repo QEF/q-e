@@ -16,7 +16,7 @@ SUBROUTINE sd0psi()
     ! Modified by Osman Baris Malcioglu (2009)
     ! Modified by Iurii Timrov (EELS extension) (2013)
     !
-    USE klist,                ONLY : nks, xk
+    USE klist,                ONLY : nks, xk, npw_k=>ngk, igk_k
     USE lr_variables,         ONLY : n_ipol, d0psi, lr_verbosity, eels
     USE uspp,                 ONLY : vkb, nkb, okvan
     USE wvfct,                ONLY : nbnd, npwx
@@ -55,7 +55,7 @@ SUBROUTINE lr_sd0psi_optical()
     USE control_flags,  ONLY : gamma_only
     USE realus,         ONLY : real_space, invfft_orbital_gamma, fwfft_orbital_gamma, &
                              & calbec_rs_gamma, v_loc_psir, s_psir_gamma, &
-                             & igk_k, npw_k, real_space_debug
+                             & real_space_debug
  
     IMPLICIT NONE
     !

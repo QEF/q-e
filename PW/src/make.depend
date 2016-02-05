@@ -759,6 +759,7 @@ hinit0.o : ../../Modules/gvecw.o
 hinit0.o : ../../Modules/io_files.o
 hinit0.o : ../../Modules/io_global.o
 hinit0.o : ../../Modules/ions_base.o
+hinit0.o : ../../Modules/kind.o
 hinit0.o : ../../Modules/recvec.o
 hinit0.o : atomic_wfc_mod.o
 hinit0.o : ldaU.o
@@ -1475,7 +1476,6 @@ realus.o : ../../Modules/constants.o
 realus.o : ../../Modules/control_flags.o
 realus.o : ../../Modules/fft_base.o
 realus.o : ../../Modules/funct.o
-realus.o : ../../Modules/gvecw.o
 realus.o : ../../Modules/io_global.o
 realus.o : ../../Modules/ions_base.o
 realus.o : ../../Modules/kind.o

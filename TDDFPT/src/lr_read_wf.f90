@@ -17,7 +17,7 @@ SUBROUTINE lr_read_wf()
   !
   USE kinds,                ONLY : dp
   USE io_global,            ONLY : stdout
-  USE klist,                ONLY : nks, xk
+  USE klist,                ONLY : nks, xk, npw_k=>ngk, igk_k
   USE gvect,                ONLY : ngm, g
   USE io_files,             ONLY : nwordwfc, iunwfc, prefix, diropn,&
                                  & tmp_dir, wfc_dir 
@@ -37,8 +37,7 @@ SUBROUTINE lr_read_wf()
                                  & initialisation_level,&
                                  & fwfft_orbital_gamma, calbec_rs_gamma,&
                                  & add_vuspsir_gamma, v_loc_psir,&
-                                 & s_psir_gamma, real_space_debug, &
-                                 & igk_k,npw_k  
+                                 & s_psir_gamma, real_space_debug
   USE buffers,              ONLY : get_buffer
   USE exx,                  ONLY : exx_grid_init, exx_div_check, exx_restart
   USE funct,                ONLY : dft_is_hybrid

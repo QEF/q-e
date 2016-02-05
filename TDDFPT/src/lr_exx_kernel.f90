@@ -36,7 +36,7 @@ MODULE lr_exx_kernel
   USE klist,                  ONLY : xk, wk, nks
   USE lr_variables,           ONLY : gamma_only, lr_verbosity
   USE realus,                 ONLY : invfft_orbital_gamma, fwfft_orbital_gamma,&
-                                   & invfft_orbital_k, fwfft_orbital_k, igk_k, npw_k 
+                                   & invfft_orbital_k, fwfft_orbital_k
   USE wavefunctions_module,   ONLY : psic
   USE cell_base,              ONLY : omega
   USE exx,                    ONLY : exxalfa, g2_convolution, exx_fft

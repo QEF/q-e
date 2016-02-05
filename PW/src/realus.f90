@@ -35,12 +35,6 @@ MODULE realus
   ! init_realspace_vars sets this to 3; qpointlist adds 5; betapointlist adds 7
   ! so the value should be 15 if the real space routine is initialised properly
 
-  INTEGER, ALLOCATABLE :: &
-       igk_k(:,:),&       ! The g<->k correspondance for each k point
-       npw_k(:)           ! number of plane waves at each k point
-  ! They are (used many times, it is much better to hold them in memory
-  ! FIXME: npw_k is redundant. it is already there
-  !
   COMPLEX(DP), ALLOCATABLE :: tg_psic(:)
   COMPLEX(DP), ALLOCATABLE :: psic_temp(:),tg_psic_temp(:) !Copies of psic and tg_psic
   COMPLEX(DP), ALLOCATABLE :: tg_vrs(:) !task groups linear V memory
@@ -71,7 +65,7 @@ MODULE realus
        addusforce_r, real_space_dq, deallocate_realsp
   ! variables for real-space beta, followed by routines
   PUBLIC :: real_space, initialisation_level, real_space_debug, &
-       npw_k, igk_k, tg_psic, betasave, maxbox_beta, box_beta
+       tg_psic, betasave, maxbox_beta, box_beta
   PUBLIC :: betapointlist, init_realspace_vars, v_loc_psir
   PUBLIC :: invfft_orbital_gamma, fwfft_orbital_gamma, s_psir_gamma, &
             calbec_rs_gamma, add_vuspsir_gamma, invfft_orbital_k,    &
@@ -112,10 +106,6 @@ MODULE realus
     !---------------------------------------------------------------------------
     !This subroutine should be called to allocate/reset real space related variables.
     !---------------------------------------------------------------------------
-     USE wvfct,                ONLY : npwx,npw, igk, g2kin
-     USE klist,                ONLY : nks, xk
-     USE gvect,                ONLY : ngm, g
-     USE gvecw,                ONLY : gcutw
      USE control_flags,        ONLY : tqr
      USE fft_base,             ONLY : dffts
      USE io_global,            ONLY : stdout
@@ -127,12 +117,8 @@ MODULE realus
 
      !print *, "<<<<<init_realspace_vars>>>>>>>"
 
-     IF ( allocated( igk_k ) )     DEALLOCATE( igk_k )
-     IF ( allocated( npw_k ) )     DEALLOCATE( npw_k )
-
-     ALLOCATE(igk_k(npwx,nks))
-     ALLOCATE(npw_k(nks))
      !real space, allocation for task group fft work arrays
+
      IF( dffts%have_task_groups ) THEN
         !
         IF (allocated( tg_psic ) ) DEALLOCATE( tg_psic )
@@ -142,14 +128,6 @@ MODULE realus
         !
      ENDIF
      !
-     DO ik=1,nks
-      !
-      CALL gk_sort( xk(1,ik), ngm, g, gcutw, npw, igk, g2kin )
-      npw_k(ik) = npw
-      igk_k(:,ik) = igk(:)
-      !
-     ENDDO
-
      initialisation_level = initialisation_level + 7
      IF (real_space_debug > 20 .and. real_space_debug < 30) THEN
        real_space=.false.
@@ -1916,6 +1894,7 @@ MODULE realus
     USE wavefunctions_module, &
                        ONLY : psic
     USE gvecs,         ONLY : nls,nlsm,doublegrid
+    USE klist,         ONLY : ngk, igk_k
     USE kinds,         ONLY : DP
     USE fft_base,      ONLY : dffts
     USE fft_parallel,  ONLY : tg_gather
@@ -1956,14 +1935,14 @@ MODULE realus
         DO idx = 1, 2*dffts%nogrp, 2
 
            IF( idx + ibnd - 1 < last ) THEN
-              DO j = 1, npw_k(1)
+              DO j = 1, ngk(1)
                  tg_psic(nls (igk_k(j,1))+ioff) =      orbital(j,idx+ibnd-1) +&
                       (0.0d0,1.d0) * orbital(j,idx+ibnd)
                  tg_psic(nlsm(igk_k(j,1))+ioff) =conjg(orbital(j,idx+ibnd-1) -&
                       (0.0d0,1.d0) * orbital(j,idx+ibnd) )
               ENDDO
            ELSEIF( idx + ibnd - 1 == last ) THEN
-              DO j = 1, npw_k(1)
+              DO j = 1, ngk(1)
                  tg_psic(nls (igk_k(j,1))+ioff) =        orbital(j,idx+ibnd-1)
                  tg_psic(nlsm(igk_k(j,1))+ioff) = conjg( orbital(j,idx+ibnd-1))
               ENDDO
@@ -1990,12 +1969,12 @@ MODULE realus
 
         IF (ibnd < last) THEN
            ! two ffts at the same time
-           DO j = 1, npw_k(1)
+           DO j = 1, ngk(1)
               psic (nls (igk_k(j,1))) =       orbital(j, ibnd) + (0.0d0,1.d0)*orbital(j, ibnd+1)
               psic (nlsm(igk_k(j,1))) = conjg(orbital(j, ibnd) - (0.0d0,1.d0)*orbital(j, ibnd+1))
            ENDDO
         ELSE
-           DO j = 1, npw_k(1)
+           DO j = 1, ngk(1)
               psic (nls (igk_k(j,1))) =       orbital(j, ibnd)
               psic (nlsm(igk_k(j,1))) = conjg(orbital(j, ibnd))
            ENDDO
@@ -2037,6 +2016,7 @@ MODULE realus
   !
     USE wavefunctions_module, &
                        ONLY : psic
+    USE klist,         ONLY : ngk, igk_k
     USE gvecs,         ONLY : nls,nlsm,doublegrid
     USE kinds,         ONLY : DP
     USE fft_base,      ONLY : dffts
@@ -2075,7 +2055,7 @@ MODULE realus
         DO idx = 1, 2*dffts%nogrp, 2
            !
            IF( idx + ibnd - 1 < last ) THEN
-              DO j = 1, npw_k(1)
+              DO j = 1, ngk(1)
                  fp= ( tg_psic( nls(igk_k(j,1)) + ioff ) +  &
                       tg_psic( nlsm(igk_k(j,1)) + ioff ) ) * 0.5d0
                  fm= ( tg_psic( nls(igk_k(j,1)) + ioff ) -  &
@@ -2084,7 +2064,7 @@ MODULE realus
                  orbital (j, ibnd+idx  ) =  cmplx(aimag(fp),- dble(fm),kind=DP)
               ENDDO
            ELSEIF( idx + ibnd - 1 == last ) THEN
-              DO j = 1, npw_k(1)
+              DO j = 1, ngk(1)
                  orbital (j, ibnd+idx-1) =  tg_psic( nls(igk_k(j,1)) + ioff )
               ENDDO
            ENDIF
@@ -2107,14 +2087,14 @@ MODULE realus
         IF (ibnd < last) THEN
 
            ! two ffts at the same time
-           DO j = 1, npw_k(1)
+           DO j = 1, ngk(1)
               fp = (psic (nls(igk_k(j,1))) + psic (nlsm(igk_k(j,1))))*0.5d0
               fm = (psic (nls(igk_k(j,1))) - psic (nlsm(igk_k(j,1))))*0.5d0
               orbital( j, ibnd)   = cmplx( dble(fp), aimag(fm),kind=DP)
               orbital( j, ibnd+1) = cmplx(aimag(fp),- dble(fm),kind=DP)
            ENDDO
         ELSE
-           DO j = 1, npw_k(1)
+           DO j = 1, ngk(1)
               orbital(j, ibnd)   =  psic (nls(igk_k(j,1)))
            ENDDO
         ENDIF
@@ -2147,6 +2127,7 @@ MODULE realus
   !
     USE kinds,                    ONLY : DP
     USE wavefunctions_module,     ONLY : psic
+    USE klist,                    ONLY : ngk, igk_k
     USE gvecs,                    ONLY : nls, nlsm, doublegrid
     USE fft_base,                 ONLY : dffts
     USE fft_interfaces,           ONLY : invfft
@@ -2199,7 +2180,7 @@ MODULE realus
        !
        psic(1:dffts%nnr) = ( 0.D0, 0.D0 )
        !
-       psic(nls(igk_k(1:npw_k(ik), ik))) = orbital(1:npw_k(ik),ibnd)
+       psic(nls(igk_k(1:ngk(ik), ik))) = orbital(1:ngk(ik),ibnd)
        !
        CALL invfft ('Wave', psic, dffts)
        IF (present(conserved)) THEN
@@ -2229,6 +2210,7 @@ MODULE realus
     ! ik:   kpoint index of the bands
     !
     USE wavefunctions_module,     ONLY : psic
+    USE klist,                    ONLY : ngk, igk_k
     USE gvecs,                    ONLY : nls, nlsm, doublegrid
     USE kinds,                    ONLY : DP
     USE fft_base,                 ONLY : dffts
@@ -2277,7 +2259,7 @@ MODULE realus
        !
        CALL fwfft ('Wave', psic, dffts)
        !
-       orbital(1:npw_k(ik),ibnd) = psic(nls(igk_k(1:npw_k(ik),ik)))
+       orbital(1:ngk(ik),ibnd) = psic(nls(igk_k(1:ngk(ik),ik)))
        !
        IF (present(conserved)) THEN
           IF (conserved .eqv. .true.) THEN

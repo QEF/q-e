@@ -31,7 +31,9 @@ MODULE klist
   REAL(DP) :: &
        qnorm= 0.0_dp      ! |q|, used in phonon+US calculations only
   INTEGER, ALLOCATABLE :: &
-       ngk(:)              ! number of plane waves for each k point
+       igk_k(:,:),&       ! The g<->k correspondance for each k point
+       ngk(:)             ! number of plane waves for each k point
+  !
   INTEGER :: &
        nks,               &! number of k points in this pool
        nkstot,            &! total number of k points

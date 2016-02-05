@@ -33,7 +33,7 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
   USE gvect,                ONLY : nl, ngm, gstart, g, gg
   USE io_global,            ONLY : stdout
   USE kinds,                ONLY : dp
-  USE klist,                ONLY : nks, xk
+  USE klist,                ONLY : nks, xk, npw_k => ngk, igk_k
   USE lr_variables,         ONLY : evc0, revc0, rho_1, rho_1c, &
                                  & ltammd, size_evc, no_hxc, lr_exx, &
                                  & scissor, davidson, lr_verbosity
@@ -49,8 +49,7 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
                                    & calbec_rs_gamma, newq_r, &
                                    & add_vuspsir_gamma, v_loc_psir,   &
                                    & s_psir_gamma, real_space_debug,  &
-                                   & betasave, box_beta, maxbox_beta, &
-                                   & igk_k,npw_k
+                                   & betasave, box_beta, maxbox_beta
   USE dfunct,               ONLY : newq
   USE control_flags,        ONLY : tqr
   USE mp,                   ONLY : mp_sum, mp_barrier
@@ -538,7 +537,7 @@ CONTAINS
     ! Kinetic energy
     ! It has been already computed in commutator_Hx_psi.
     !
-    !do ig = 1,npw_k(1)
+    !do ig = 1,ngk(1)
     !   !
     !   g2kin(ig) = ((xk(1,1) + g(1,igk_k(ig,1)))**2 &
     !               +(xk(2,1) + g(2,igk_k(ig,1)))**2 &

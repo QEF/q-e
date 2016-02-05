@@ -30,7 +30,7 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
   USE fft_interfaces,         ONLY : invfft
   USE io_global,              ONLY : stdout
   USE kinds,                  ONLY : dp
-  USE klist,                  ONLY : nks,xk,wk
+  USE klist,                  ONLY : nks, xk, wk, npw_k => ngk, igk_k
   USE lr_variables,           ONLY : evc0,revc0,rho_1,lr_verbosity,&
                                      & charge_response, itermax,&
                                      & cube_save, LR_iteration,&
@@ -49,7 +49,7 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
   USE mp,                     ONLY : mp_sum
   USE mp_global,              ONLY : inter_pool_comm, intra_bgrp_comm,&
                                      inter_bgrp_comm 
-  USE realus,                 ONLY : igk_k,npw_k, addusdens_r
+  USE realus,                 ONLY : addusdens_r
   USE charg_resp,             ONLY : w_T, lr_dump_rho_tot_cube,&
                                      & lr_dump_rho_tot_xyzd, &
                                      & lr_dump_rho_tot_xcrys,&

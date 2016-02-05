@@ -22,10 +22,10 @@ SUBROUTINE lr_init_nfo()
   !
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, tau
-  USE klist,                ONLY : nks,degauss,lgauss,ngauss,xk,wk,nelec, &
-                                  & two_fermi_energies, nelup, neldw
+  USE klist,                ONLY : nks,degauss,lgauss,ngauss,xk,wk, npw_k=>ngk,&
+                                   igk_k,nelec, two_fermi_energies, nelup, neldw
   USE wvfct,                ONLY : nbnd, et, igk, npw, g2kin
-  USE realus,               ONLY : npw_k, igk_k, real_space
+  USE realus,               ONLY : real_space
   USE lr_variables,         ONLY : lr_verbosity, eels, lr_periodic, nwordd0psi, &
                                   & nwordrestart, restart, size_evc
   USE io_global,            ONLY : stdout
@@ -69,8 +69,8 @@ SUBROUTINE lr_init_nfo()
   !
   IF (.NOT.eels) THEN
      !
-     IF ( .not. allocated( igk_k ) )    ALLOCATE(igk_k(npwx,nks))
-     IF ( .not. allocated( npw_k ) )    ALLOCATE(npw_k(nks))
+     IF ( .not. allocated( igk_k ) )  ALLOCATE(igk_k(npwx,nks))
+     IF ( .not. allocated( npw_k ) )  ALLOCATE(npw_k(nks))
      !
      CALL seqopn( iunigk, 'igk', 'UNFORMATTED', exst )
      !

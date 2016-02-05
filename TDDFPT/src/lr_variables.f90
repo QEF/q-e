@@ -181,7 +181,7 @@ SUBROUTINE check_vector_gamma (x)
    !
    USE mp_global,            ONLY : inter_pool_comm, intra_bgrp_comm
    USE mp,                   ONLY : mp_sum
-   USE realus,               ONLY : npw_k
+   USE klist ,               ONLY : npw_k=>ngk
    USE gvect,                ONLY : gstart
    USE io_global,            ONLY : stdout
    !
@@ -217,7 +217,7 @@ SUBROUTINE check_vector_f (x)
    ! 
    USE mp_global,            ONLY : inter_pool_comm, intra_bgrp_comm
    USE mp,                   ONLY : mp_sum
-   USE realus,               ONLY : npw_k
+   USE klist ,               ONLY : npw_k=>ngk
    USE gvect,                ONLY : gstart
    USE io_global,            ONLY : stdout
    !
@@ -251,7 +251,7 @@ SUBROUTINE check_all_bands_gamma (x,sx,nbnd1,nbnd2)
   ! 
   USE mp_global,            ONLY : inter_pool_comm, intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
-  USE realus,               ONLY : npw_k
+  USE klist ,               ONLY : npw_k=>ngk
   USE io_global,            ONLY : stdout
   USE gvect,                ONLY : gstart
   !
@@ -294,7 +294,6 @@ SUBROUTINE check_density_gamma (rx,nbnd)
   !
   USE mp_global,            ONLY : inter_pool_comm, intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
-  USE realus,               ONLY : npw_k
   USE wvfct,                ONLY : wg
   USE fft_base,             ONLY : dfftp
   USE io_global,            ONLY : stdout

@@ -13,15 +13,16 @@ SUBROUTINE hinit0()
   ! ... atomic position independent initialization for nonlocal PP,
   ! ... structure factors, local potential, core charge
   !
+  USE kinds,        ONLY : dp
   USE ions_base,    ONLY : nat, nsp, ityp, tau
   USE basis,        ONLY : startingconfig
   USE cell_base,    ONLY : at, bg, omega, tpiba2
   USE cellmd,       ONLY : omega_old, at_old, lmovecell
-  USE klist,        ONLY : nks, xk
+  USE klist,        ONLY : nks, xk, ngk, igk_k
+  USE wvfct,        ONLY : npw, npwx, igk
   USE fft_base,     ONLY : dfftp
   USE gvect,        ONLY : ngm, ig_l2g, g, eigts1, eigts2, eigts3
   USE vlocal,       ONLY : strf
-  USE wvfct,        ONLY : npw, g2kin, igk
   USE gvecw,        ONLY : gcutw
   USE io_files,     ONLY : iunigk
   USE realus,       ONLY : generate_qpointlist,betapointlist,init_realspace_vars,real_space
@@ -31,8 +32,8 @@ SUBROUTINE hinit0()
   !
   IMPLICIT NONE
   !
-  INTEGER :: ik
-  ! counter on k points
+  INTEGER :: ik                 ! counter on k points
+  REAL(dp), ALLOCATABLE :: gk(:) ! work space
   !
   ! ... calculate the Fourier coefficients of the local part of the PP
   !
@@ -49,17 +50,22 @@ SUBROUTINE hinit0()
   ! ... The following loop must NOT be called more than once in a run
   ! ... or else there will be problems with variable-cell calculations
   !
+  ALLOCATE ( gk(npwx) )
+  igk_k(:,:) = 0
   DO ik = 1, nks
      !
      ! ... g2kin is used here as work space
      !
-     CALL gk_sort( xk(1,ik), ngm, g, gcutw, npw, igk, g2kin )
+     CALL gk_sort( xk(1,ik), ngm, g, gcutw, ngk(ik), igk_k(1,ik), gk )
      !
      ! ... if there is only one k-point npw and igk stay in memory
      !
+     npw = ngk(ik)
+     igk(:) = igk_k(:,ik)
      IF ( nks > 1 ) WRITE( iunigk ) igk
      !
   END DO
+  DEALLOCATE ( gk )
   !
   IF ( lmovecell .AND. startingconfig == 'file' ) THEN
      !

@@ -19,8 +19,7 @@ FUNCTION lr_dot(x,y)
   !
   USE kinds,                ONLY : dp
   USE io_global,            ONLY : stdout
-  USE klist,                ONLY : nks, xk, wk
-  USE realus,               ONLY : npw_k
+  USE klist,                ONLY : nks, xk, wk, npw_k => ngk
   USE lsda_mod,             ONLY : nspin
   USE wvfct,                ONLY : npwx,nbnd,wg,npw,igk,g2kin
   USE gvecw,                ONLY : gcutw
@@ -158,13 +157,6 @@ CONTAINS
        ! Determination of the number of plane waves npwq at point k+q (ikq).
        !
        CALL gk_sort( xk(1,ikq), ngm, g, gcutw, npwq, igkq, g2kin)
-       !
-!      IF (nksq > 1) THEN
-!         read (iunigk, err = 100, iostat = ios) npw, igk
-!100      call errore ('lr_dot', 'reading igk', abs (ios) )
-!         read (iunigk, err = 200, iostat = ios) npwq, igkq
-!200      call errore ('lr_dot', 'reading igkq', abs (ios) )
-!      ENDIF
        !
        DO ibnd = 1, nbnd_occ(ikk)
           !

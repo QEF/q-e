@@ -19,9 +19,8 @@ SUBROUTINE lr_normalise (evc1, norm)
   USE gvect,                ONLY : gstart
   USE cell_base,            ONLY : omega
   USE io_global,            ONLY : stdout
-  USE klist,                ONLY : nks,xk
+  USE klist,                ONLY : nks, xk, npw_k=>ngk, igk_k
   USE lsda_mod,             ONLY : nspin
-  USE realus,               ONLY : igk_k, npw_k
   USE uspp,                 ONLY : vkb, nkb, okvan
   USE wvfct,                ONLY : nbnd, npwx, npw, wg
   USE control_flags,        ONLY : gamma_only

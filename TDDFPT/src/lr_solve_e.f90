@@ -24,11 +24,10 @@ SUBROUTINE lr_solve_e
   USE gvect,                ONLY : gstart
   USE io_global,            ONLY : stdout
   USE io_files,             ONLY : diropn, tmp_dir, wfc_dir
-  USE klist,                ONLY : nks, xk, degauss
+  USE klist,                ONLY : nks, xk, npw_k=>ngk, igk_k, degauss
   USE lr_variables,         ONLY : nwordd0psi, iund0psi,LR_polarization, test_case_no, &
                                    & n_ipol, evc0, d0psi, d0psi2, evc1, lr_verbosity, &
                                    & d0psi_rs, eels
-  USE realus,               ONLY : igk_k,npw_k
   USE lsda_mod,             ONLY : lsda, isk, current_spin
   USE uspp,                 ONLY : vkb
   USE wvfct,                ONLY : igk, nbnd, npwx, npw, et, current_k
