@@ -36,8 +36,8 @@ SUBROUTINE force_hub(forceh)
    USE uspp,                 ONLY : nkb, vkb, indv_ijkb0
    USE uspp_param,           ONLY : nh
    USE wavefunctions_module, ONLY : evc
-   USE klist,                ONLY : nks, xk, ngk
-   USE io_files,             ONLY : iunigk, nwordwfc, iunwfc
+   USE klist,                ONLY : nks, xk, ngk, igk_k
+   USE io_files,             ONLY : nwordwfc, iunwfc
    USE buffers,              ONLY : get_buffer
 
    IMPLICIT NONE
@@ -75,15 +75,15 @@ SUBROUTINE force_hub(forceh)
    !
    !    we start a loop on k points
    !
-   IF (nks > 1) REWIND (iunigk)
    DO ik = 1, nks
       !
       IF (lsda) current_spin = isk(ik)
       npw = ngk (ik)
-      IF (nks > 1) THEN
-         READ (iunigk) igk
+      igk(1:npw) = igk_k(1:npw,ik)
+
+      IF (nks > 1) &
          CALL get_buffer (evc, nwordwfc, iunwfc, ik)
-      END IF
+
       CALL init_us_2 (npw,igk,xk(1,ik),vkb)
       CALL calbec( npw, vkb, evc, becp )
       CALL s_psi  (npwx, npw, nbnd, evc, spsi )

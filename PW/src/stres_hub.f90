@@ -124,7 +124,7 @@ SUBROUTINE dndepsilon ( ipol,jpol,ldim,dns )
    USE wavefunctions_module, ONLY : evc
    USE ions_base,            ONLY : nat, ityp
    USE control_flags,        ONLY : gamma_only   
-   USE klist,                ONLY : nks, xk, ngk
+   USE klist,                ONLY : nks, xk, ngk, igk_k
    USE ldaU,                 ONLY : wfcU, nwfcU, offsetU, Hubbard_l, &
                                     is_hubbard, copy_U_wfc
    USE basis,                ONLY : natomwfc
@@ -133,7 +133,7 @@ SUBROUTINE dndepsilon ( ipol,jpol,ldim,dns )
    USE uspp,                 ONLY : nkb, vkb
    USE becmod,               ONLY : bec_type, becp, calbec, &
                                     allocate_bec_type, deallocate_bec_type
-   USE io_files,             ONLY : iunigk, nwordwfc, iunwfc, &
+   USE io_files,             ONLY : nwordwfc, iunwfc, &
                                     iunhub, nwordwfcU, nwordatwfc
    USE buffers,              ONLY : get_buffer
    USE mp_pools,             ONLY : inter_pool_comm, intra_pool_comm, &
@@ -180,16 +180,14 @@ SUBROUTINE dndepsilon ( ipol,jpol,ldim,dns )
    !
    !    we start a loop on k points
    !
-   IF (nks > 1) REWIND (iunigk)
-
    DO ik = 1, nks
       IF (lsda) current_spin = isk(ik)
       npw = ngk(ik)
+      igk(1:npw) = igk_k(1:npw,ik)
       !
-      IF (nks > 1) THEN
-         READ (iunigk) igk
+      IF (nks > 1) &
          CALL get_buffer (evc, nwordwfc, iunwfc, ik)
-      END IF
+      !
       CALL init_us_2 (npw,igk,xk(1,ik),vkb)
       CALL calbec( npw, vkb, evc, becp )
       CALL s_psi  (npwx, npw, nbnd, evc, spsi )

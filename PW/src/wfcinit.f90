@@ -17,12 +17,12 @@ SUBROUTINE wfcinit()
   USE io_global,            ONLY : stdout
   USE basis,                ONLY : natomwfc, starting_wfc
   USE bp,                   ONLY : lelfield
-  USE klist,                ONLY : xk, nks, ngk
+  USE klist,                ONLY : xk, nks, ngk, igk_k
   USE control_flags,        ONLY : io_level, lscf
   USE fixed_occ,            ONLY : one_atom_occupations
   USE ldaU,                 ONLY : lda_plus_u, U_projection, wfcU
   USE lsda_mod,             ONLY : lsda, current_spin, isk
-  USE io_files,             ONLY : nwordwfc, nwordwfcU, iunhub, iunwfc,iunigk,&
+  USE io_files,             ONLY : nwordwfc, nwordwfcU, iunhub, iunwfc,&
                                    diropn
   USE buffers,              ONLY : open_buffer, get_buffer, save_buffer
   USE uspp,                 ONLY : nkb, vkb
@@ -129,8 +129,6 @@ SUBROUTINE wfcinit()
      !
   END IF
   !
-  IF ( nks > 1 ) REWIND( iunigk )
-  !
   ! ... calculate and write all starting wavefunctions to file
   !
   DO ik = 1, nks
@@ -140,7 +138,7 @@ SUBROUTINE wfcinit()
      current_k = ik
      IF ( lsda ) current_spin = isk(ik)
      npw = ngk (ik)
-     IF ( nks > 1 ) READ( iunigk ) igk
+     igk(1:npw) = igk_k(1:npw,ik)
      !
      call g2_kin (ik)
      !

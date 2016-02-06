@@ -15,8 +15,8 @@ subroutine stres_knl (sigmanlc, sigmakin)
   USE cell_base,            ONLY: omega, alat, at, bg, tpiba
   USE gvect,                ONLY: g
   USE gvecw,                ONLY: qcutz, ecfixed, q2sigma
-  USE klist,                ONLY: nks, xk, ngk
-  USE io_files,             ONLY: iunwfc, nwordwfc, iunigk
+  USE klist,                ONLY: nks, xk, ngk, igk_k
+  USE io_files,             ONLY: iunwfc, nwordwfc
   USE buffers,              ONLY: get_buffer
   USE symme,                ONLY: symmatrix
   USE wvfct,                ONLY: npw, npwx, nbnd, igk, wg
@@ -41,13 +41,11 @@ subroutine stres_knl (sigmanlc, sigmakin)
 
   kfac(:) = 1.d0
 
-  if (nks.gt.1) rewind (iunigk)
   do ik = 1, nks
      npw = ngk(ik)
-     if (nks > 1) then
-        read (iunigk) igk
+     igk(1:npw) = igk_k(1:npw,ik)
+     if (nks > 1) &
         call get_buffer (evc, nwordwfc, iunwfc, ik)
-     endif
      do i = 1, npw
         gk (1, i) = (xk (1, ik) + g (1, igk (i) ) ) * tpiba
         gk (2, i) = (xk (2, ik) + g (2, igk (i) ) ) * tpiba

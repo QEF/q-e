@@ -16,7 +16,7 @@ SUBROUTINE force_us( forcenl )
   USE control_flags,        ONLY : gamma_only
   USE cell_base,            ONLY : at, bg, tpiba
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
-  USE klist,                ONLY : nks, xk, ngk
+  USE klist,                ONLY : nks, xk, ngk, igk_k
   USE gvect,                ONLY : g
   USE uspp,                 ONLY : nkb, vkb, qq, deeq, qq_so, deeq_nc, indv_ijkb0
   USE uspp_param,           ONLY : upf, nh, newpseudo, nhm
@@ -26,7 +26,7 @@ SUBROUTINE force_us( forcenl )
   USE wavefunctions_module, ONLY : evc
   USE noncollin_module,     ONLY : npol, noncolin
   USE spin_orb,             ONLY : lspinorb
-  USE io_files,             ONLY : iunwfc, nwordwfc, iunigk
+  USE io_files,             ONLY : iunwfc, nwordwfc
   USE buffers,              ONLY : get_buffer
   USE becmod,               ONLY : calbec, becp, bec_type, allocate_bec_type, &
                                    deallocate_bec_type
@@ -57,13 +57,13 @@ SUBROUTINE force_us( forcenl )
   !
   ! ... the forces are a sum over the K points and over the bands
   !   
-  IF ( nks > 1 ) REWIND iunigk
   DO ik = 1, nks
      !
      IF ( lsda ) current_spin = isk(ik)
      npw = ngk (ik)
+     igk(1:npw) = igk_k(1:npw,ik)
+
      IF ( nks > 1 ) THEN
-        READ( iunigk ) igk
         CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
         IF ( nkb > 0 ) &
              CALL init_us_2( npw, igk, xk(1,ik), vkb )

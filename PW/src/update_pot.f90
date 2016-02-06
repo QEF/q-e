@@ -627,11 +627,11 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
   ! ... by Mead, Rev. Mod. Phys., vol 64, pag. 51 (1992), eqs. 3.20-3.29
   !
   USE io_global,            ONLY : stdout
-  USE klist,                ONLY : nks, ngk, xk
+  USE klist,                ONLY : nks, ngk, xk, igk_k
   USE lsda_mod,             ONLY : lsda, current_spin, isk
   USE wvfct,                ONLY : nbnd, npw, npwx, igk, current_k
   USE ions_base,            ONLY : nat, tau
-  USE io_files,             ONLY : nwordwfc, iunigk, iunwfc, iunoldwfc, &
+  USE io_files,             ONLY : nwordwfc, iunwfc, iunoldwfc, &
                                    iunoldwfc2, diropn
   USE buffers,              ONLY : get_buffer, save_buffer
   USE uspp,                 ONLY : nkb, vkb, okvan
@@ -723,8 +723,6 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
         ALLOCATE( work( lwork ) )
      END IF
      !
-     IF ( nks > 1 ) REWIND( iunigk )
-     !
      zero_ew = 0
      !
      DO ik = 1, nks
@@ -743,7 +741,7 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
            current_k = ik
            IF ( lsda ) current_spin = isk(ik)
            npw = ngk (ik)
-           IF ( nks > 1 ) READ( iunigk ) igk
+           igk(1:npw) = igk_k(1:npw,ik)
            !
            call g2_kin (ik)
            !

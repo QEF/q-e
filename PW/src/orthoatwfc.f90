@@ -18,10 +18,10 @@ SUBROUTINE orthoUwfc
   USE kinds,      ONLY : DP
   USE buffers,    ONLY : get_buffer, save_buffer
   USE io_global,  ONLY : stdout
-  USE io_files,   ONLY : iunhub, nwordwfcU, iunigk
+  USE io_files,   ONLY : iunhub, nwordwfcU
   USE ions_base,  ONLY : nat
   USE basis,      ONLY : natomwfc, swfcatom
-  USE klist,      ONLY : nks, xk, ngk
+  USE klist,      ONLY : nks, xk, ngk, igk_k
   USE ldaU,       ONLY : U_projection, wfcU, nwfcU, copy_U_wfc
   USE wvfct,      ONLY : npwx, npw, igk
   USE uspp,       ONLY : nkb, vkb
@@ -79,12 +79,10 @@ SUBROUTINE orthoUwfc
   ! Allocate the array becp = <beta|wfcatom>
   CALL allocate_bec_type (nkb,natomwfc, becp) 
   
-  IF (nks > 1) REWIND (iunigk)
-  
   DO ik = 1, nks
      
      npw = ngk (ik)
-     IF (nks > 1) READ (iunigk) igk
+     igk(1:npw) = igk_k(1:npw,ik)
      
      IF (noncolin) THEN
        CALL atomic_wfc_nc_updown (ik, wfcatom)
@@ -125,10 +123,10 @@ SUBROUTINE orthoatwfc (orthogonalize_wfc)
   USE kinds,      ONLY : DP
   USE buffers,    ONLY : save_buffer
   USE io_global,  ONLY : stdout
-  USE io_files,   ONLY : iunsat, nwordatwfc, iunigk
+  USE io_files,   ONLY : iunsat, nwordatwfc
   USE ions_base,  ONLY : nat
   USE basis,      ONLY : natomwfc, swfcatom
-  USE klist,      ONLY : nks, xk, ngk
+  USE klist,      ONLY : nks, xk, ngk, igk_k
   USE wvfct,      ONLY : npwx, npw, igk
   USE uspp,       ONLY : nkb, vkb
   USE becmod,     ONLY : allocate_bec_type, deallocate_bec_type, &
@@ -153,12 +151,10 @@ SUBROUTINE orthoatwfc (orthogonalize_wfc)
   ! Allocate the array becp = <beta|wfcatom>
   CALL allocate_bec_type (nkb,natomwfc, becp) 
   
-  IF (nks > 1) REWIND (iunigk)
-  
   DO ik = 1, nks
      
      npw = ngk (ik)
-     IF (nks > 1) READ (iunigk) igk
+     igk(1:npw) = igk_k(1:npw,ik)
      
      IF (noncolin) THEN
        CALL atomic_wfc_nc_updown (ik, wfcatom)

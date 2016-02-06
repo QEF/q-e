@@ -107,7 +107,7 @@ MODULE pw_restart
       USE gvect,                ONLY : ig_l2g
       USE ions_base,            ONLY : nsp, ityp, atm, nat, tau, if_pos
       USE noncollin_module,     ONLY : noncolin, npol
-      USE io_files,             ONLY : nwordwfc, iunwfc, iunigk, psfile
+      USE io_files,             ONLY : nwordwfc, iunwfc, psfile
       USE buffers,              ONLY : get_buffer
       USE wavefunctions_module, ONLY : evc
       USE klist,                ONLY : nks, nkstot, xk, ngk, wk, qnorm, &
@@ -263,10 +263,10 @@ MODULE pw_restart
       USE gvect,                ONLY : ig_l2g
       USE ions_base,            ONLY : nsp, ityp, atm, nat, tau, if_pos
       USE noncollin_module,     ONLY : noncolin, npol
-      USE io_files,             ONLY : nwordwfc, iunwfc, iunigk, psfile
+      USE io_files,             ONLY : nwordwfc, iunwfc, psfile
       USE buffers,              ONLY : get_buffer
       USE wavefunctions_module, ONLY : evc
-      USE klist,                ONLY : nks, nkstot, xk, ngk, wk, qnorm, &
+      USE klist,                ONLY : nks, nkstot, xk, ngk, igk_k, wk, qnorm,&
                                        lgauss, ngauss, degauss, nelec, &
                                        two_fermi_energies, nelup, neldw
       USE start_k,              ONLY : nk1, nk2, nk3, k1, k2, k3, &
@@ -277,7 +277,7 @@ MODULE pw_restart
       USE basis,                ONLY : natomwfc
       USE gvecs,                ONLY : ngms_g, dual
       USE fft_base,             ONLY : dffts
-      USE wvfct,                ONLY : npw, npwx, et, wg, igk, nbnd
+      USE wvfct,                ONLY : npw, npwx, et, wg, nbnd
       USE gvecw,                ONLY : ecutwfc
       USE ener,                 ONLY : ef, ef_up, ef_dw
       USE fixed_occ,            ONLY : tfixed_occ, f_inp
@@ -453,18 +453,11 @@ MODULE pw_restart
       ! ... k+G vectors
       !
       ALLOCATE ( igk_l2g( npwx, nks ) )
-      !
       igk_l2g = 0
       !
-      IF ( nks > 1 ) REWIND( iunigk )
-      !
       DO ik = 1, nks
-         !
          npw = ngk (ik)
-         IF ( nks > 1 ) READ( iunigk ) igk
-         !
-         CALL gk_l2gmap( ngm, ig_l2g(1), npw, igk(1), igk_l2g(1,ik) )
-         !
+         CALL gk_l2gmap( ngm, ig_l2g(1), npw, igk_k(1,ik), igk_l2g(1,ik) )
       END DO
       !
       ! ... compute the global number of G+k vectors for each k point

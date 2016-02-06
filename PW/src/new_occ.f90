@@ -21,14 +21,14 @@ SUBROUTINE new_evc()
   USE kinds,                ONLY : DP
   USE constants,            ONLY : rytoev
   USE basis,                ONLY : natomwfc, swfcatom
-  USE klist,                ONLY : nks, ngk
+  USE klist,                ONLY : nks, ngk, igk_k
   USE lsda_mod,             ONLY : lsda, current_spin, nspin, isk
   USE wvfct,                ONLY : nbnd, npw, npwx, igk, wg, et
   USE control_flags,        ONLY : gamma_only, iverbosity
   USE wavefunctions_module, ONLY : evc
   USE noncollin_module,     ONLY : noncolin, npol
   USE gvect,                ONLY : gstart
-  USE io_files,             ONLY : iunigk, nwordwfc, iunwfc, nwordatwfc, iunsat
+  USE io_files,             ONLY : nwordwfc, iunwfc, nwordatwfc, iunsat
   USE buffers,              ONLY : get_buffer, save_buffer
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
@@ -66,14 +66,14 @@ SUBROUTINE new_evc()
   !
   !  we start a loop over k points
   !
-  IF (nks > 1) REWIND (iunigk)
   DO ik = 1, nks
      IF (lsda) current_spin = isk(ik)
      npw = ngk (ik)
-     IF (nks > 1) THEN
-        READ (iunigk) igk
+     igk(1:npw) = igk_k(1:npw,ik)
+
+     IF (nks > 1) &
         CALL get_buffer  (evc, nwordwfc, iunwfc, ik)
-     END IF
+
      CALL get_buffer (swfcatom, nwordatwfc, iunsat, ik)
      !
      ! make the projection on the atomic wavefunctions,

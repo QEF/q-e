@@ -17,9 +17,9 @@ SUBROUTINE c_bands( iter )
   !
   USE kinds,                ONLY : DP
   USE io_global,            ONLY : stdout
-  USE io_files,             ONLY : iunigk, iunhub, iunwfc, nwordwfc, nwordwfcU
+  USE io_files,             ONLY : iunhub, iunwfc, nwordwfc, nwordwfcU
   USE buffers,              ONLY : get_buffer, save_buffer, close_buffer
-  USE klist,                ONLY : nkstot, nks, xk, ngk
+  USE klist,                ONLY : nkstot, nks, xk, ngk, igk_k
   USE uspp,                 ONLY : vkb, nkb
   USE gvect,                ONLY : g
   USE wvfct,                ONLY : et, nbnd, npwx, igk, npw, current_k
@@ -51,6 +51,15 @@ SUBROUTINE c_bands( iter )
   avg_iter = 0.D0
   IF ( restart ) CALL restart_in_cbands(ik_, ethr, avg_iter, et )
   !
+  ! ... If restarting, calculated wavefunctions have to be read from file
+  ! ... (not needed for a single k-point: this is done in wfcinit, 
+  ! ...  directly from file, in order to avoid wasting memory)
+  !
+  DO ik = 1, ik_
+     IF ( nks > 1 .OR. lelfield ) &
+        CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
+  END DO
+  !
   IF ( isolve == 0 ) THEN
      WRITE( stdout, '(5X,"Davidson diagonalization with overlap")' )
   ELSE IF ( isolve == 1 ) THEN
@@ -59,33 +68,18 @@ SUBROUTINE c_bands( iter )
      CALL errore ( 'c_bands', 'invalid type of diagonalization', isolve)
   END IF
   !
-  if ( nks > 1 ) REWIND( iunigk )
-  !
   ! ... For each k point diagonalizes the hamiltonian
   !
-  k_loop: DO ik = 1, nks
+  k_loop: DO ik = ik_+1, nks
+     !
+     ! ... Set k-point, spin, number of plane waves, k+G indices
      !
      current_k = ik
      IF ( lsda ) current_spin = isk(ik)
      npw = ngk(ik)
+     igk(1:npw) = igk_k(1:npw,ik)
      !
-     ! ... Reads the list of indices k+G <-> G of this k point
-     !
-     IF ( nks > 1 ) READ( iunigk ) igk
-     !
-     ! ... Dirty restart trick: iunigk is sequential so it has to be read
-     ! ... for all k-points, or else the wrong igk would be read.
-     ! ... Calculated wavefunctions have to be read from buffer.
-     ! ... (not for a single k-point: this is done in wfcinit, 
-     ! ...  directly from file, in order to avoid wasting memory)
-     !
-     IF ( ik < ik_+1 ) THEN
-        IF ( nks > 1 .OR. lelfield ) &
-           CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
-        CYCLE k_loop
-     END IF
-     !
-     ! ... various initializations
+     ! ... More stuff needed by the hamiltonian: nonlocal projectors
      !
      IF ( nkb > 0 ) CALL init_us_2( npw, igk, xk(1,ik), vkb )
      !
@@ -582,10 +576,10 @@ SUBROUTINE c_bands_nscf( )
   !
   USE kinds,                ONLY : DP
   USE io_global,            ONLY : stdout
-  USE io_files,             ONLY : iunigk, iunhub, iunwfc, nwordwfc, nwordwfcU
+  USE io_files,             ONLY : iunhub, iunwfc, nwordwfc, nwordwfcU
   USE buffers,              ONLY : get_buffer, save_buffer, close_buffer
   USE basis,                ONLY : starting_wfc
-  USE klist,                ONLY : nkstot, nks, xk, ngk
+  USE klist,                ONLY : nkstot, nks, xk, ngk, igk_k
   USE uspp,                 ONLY : vkb, nkb
   USE gvect,                ONLY : g
   USE wvfct,                ONLY : et, nbnd, npwx, igk, npw, current_k
@@ -614,6 +608,12 @@ SUBROUTINE c_bands_nscf( )
   avg_iter = 0.D0
   IF ( restart ) CALL restart_in_cbands(ik_, ethr, avg_iter, et )
   !
+  ! ... If restarting, calculated wavefunctions have to be read from file
+  !
+  DO ik = 1, ik_
+     CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
+  END DO
+  !
   IF ( isolve == 0 ) THEN
      WRITE( stdout, '(5X,"Davidson diagonalization with overlap")' )
   ELSE IF ( isolve == 1 ) THEN
@@ -622,33 +622,19 @@ SUBROUTINE c_bands_nscf( )
      CALL errore ( 'c_bands', 'invalid type of diagonalization', isolve)
   END IF
   !
-  if ( nks > 1 ) REWIND( iunigk )
-  !
   ! ... For each k point (except those already calculated if restarting)
   ! ... diagonalizes the hamiltonian
   !
-  k_loop: DO ik = 1, nks
+  k_loop: DO ik = ik_+1, nks
+     !
+     ! ... Set k-point, spin, number of plane waves, k+G indices
      !
      current_k = ik
      IF ( lsda ) current_spin = isk(ik)
      npw = ngk(ik)
+     igk(1:npw) = igk_k(1:npw,ik)
      !
-     ! ... Reads the list of indices k+G <-> G of this k point
-     !
-     IF ( nks > 1 ) READ( iunigk ) igk
-     !
-     ! ... Dirty restart trick: iunigk is sequential so it has to be read
-     ! ... for all k-points, or else the wrong igk would be read.
-     ! ... Calculated wavefunctions have to be read from buffer.
-     !
-     IF ( ik < ik_+1 ) THEN
-        CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
-        CYCLE k_loop
-     END IF
-     !
-     IF ( iverbosity > 0 ) WRITE( stdout, 9001 ) ik
-     !
-     ! ... various initializations
+     ! ... More stuff needed by the hamiltonian: nonlocal projectors
      !
      IF ( nkb > 0 ) CALL init_us_2( npw, igk, xk(1,ik), vkb )
      !
@@ -662,6 +648,8 @@ SUBROUTINE c_bands_nscf( )
           CALL get_buffer ( wfcU, nwordwfcU, iunhub, ik )
      !
      ! ... calculate starting  wavefunctions
+     !
+     IF ( iverbosity > 0 ) WRITE( stdout, 9001 ) ik
      !
      IF ( TRIM(starting_wfc) == 'file' ) THEN
         !

@@ -640,11 +640,11 @@ MODULE exx
     ! It saves the wavefunctions for the right density matrix, in real space
     !
     USE wavefunctions_module, ONLY : evc, psic
-    USE io_files,             ONLY : nwordwfc, iunwfc, iunigk
+    USE io_files,             ONLY : nwordwfc, iunwfc
     USE buffers,              ONLY : get_buffer
     USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg
     USE control_flags,        ONLY : gamma_only
-    USE klist,                ONLY : ngk, nks, nkstot
+    USE klist,                ONLY : ngk, nks, nkstot, igk_k
     USE symm_base,            ONLY : nsym, s, sr, ftau
     USE mp_pools,             ONLY : npool, nproc_pool, me_pool, inter_pool_comm
     USE mp_bands,             ONLY : me_bgrp, set_bgrp_indices, nbgrp
@@ -757,14 +757,13 @@ MODULE exx
     !
     !   This is parallelized over pool. Each pool computes only its k-points
     !
-    IF ( nks > 1 ) REWIND( iunigk )
     KPOINTS_LOOP : &
     DO ik = 1, nks
        npw = ngk (ik)
-       IF ( nks > 1 ) THEN
-          READ( iunigk ) igk
+       igk(1:npw) = igk_k(1:npw,ik)
+
+       IF ( nks > 1 ) &
           CALL get_buffer(evc, nwordwfc, iunwfc, ik)
-       ENDIF
        !
        ! only useful for npool>1, but always work
        current_ik=find_current_k(ik, nkstot, nks)
@@ -1823,14 +1822,14 @@ MODULE exx
     !     good, from time to time, to replace exxenergy2 with it to check that 
     !     everything is ok and energy and potential are consistent as they should.
     !
-    USE io_files,               ONLY : iunigk,iunwfc, nwordwfc
+    USE io_files,               ONLY : iunwfc, nwordwfc
     USE buffers,                ONLY : get_buffer
     USE wvfct,                  ONLY : nbnd, npwx, npw, igk, wg, current_k
     USE control_flags,          ONLY : gamma_only
     USE gvect,                  ONLY : gstart
     USE wavefunctions_module,   ONLY : evc
     USE lsda_mod,               ONLY : lsda, current_spin, isk
-    USE klist,                  ONLY : ngk, nks, xk
+    USE klist,                  ONLY : ngk, nks, xk, igk_k
     USE mp_pools,               ONLY : inter_pool_comm
     USE mp_bands,               ONLY : intra_bgrp_comm, intra_bgrp_comm, nbgrp
     USE mp,                     ONLY : mp_sum
@@ -1852,13 +1851,13 @@ MODULE exx
     IF(okvan) CALL allocate_bec_type( nkb, nbnd, becpsi)
     energy = 0._dp
     
-    IF ( nks > 1 ) REWIND( iunigk )
     DO ik=1,nks
        current_k = ik
        IF ( lsda ) current_spin = isk(ik)
        npw = ngk (ik)
+       igk(1:npw) = igk_k(1:npw,ik)
+
        IF ( nks > 1 ) THEN
-          READ( iunigk ) igk
           CALL get_buffer(psi, nwordwfc, iunwfc, ik)
        ELSE
           psi(1:npwx*npol,1:nbnd) = evc(1:npwx*npol,1:nbnd)
@@ -1931,7 +1930,7 @@ MODULE exx
     !-----------------------------------------------------------------------
     !
     USE constants,               ONLY : fpi, e2, pi
-    USE io_files,                ONLY : iunigk,iunwfc, nwordwfc
+    USE io_files,                ONLY : iunwfc, nwordwfc
     USE buffers,                 ONLY : get_buffer
     USE cell_base,               ONLY : alat, omega, bg, at, tpiba
     USE symm_base,               ONLY : nsym, s
@@ -1939,7 +1938,7 @@ MODULE exx
     USE wvfct,                   ONLY : nbnd, npwx, npw, igk, wg
     USE control_flags,           ONLY : gamma_only
     USE wavefunctions_module,    ONLY : evc
-    USE klist,                   ONLY : xk, ngk, nks, nkstot
+    USE klist,                   ONLY : xk, ngk, nks, nkstot, igk_k
     USE lsda_mod,                ONLY : lsda, current_spin, isk
     USE mp_pools,                ONLY : inter_pool_comm
     USE mp_bands,                ONLY : inter_bgrp_comm, intra_bgrp_comm, nbgrp
@@ -1972,7 +1971,6 @@ MODULE exx
     !
     TYPE(bec_type) :: becpsi
     COMPLEX(DP), ALLOCATABLE :: psi_t(:), prod_tot(:)
-    INTEGER,     ALLOCATABLE :: igkt(:)
     REAL(DP),ALLOCATABLE :: temppsic_dble (:)
     REAL(DP),ALLOCATABLE :: temppsic_aimag(:)
     LOGICAL :: l_fft_doubleband
@@ -1989,8 +1987,6 @@ MODULE exx
     !
     CALL allocate_bec_type( nkb, nbnd, becpsi)
     !
-    IF ( nks > 1 ) REWIND( iunigk )
-    !
     IKK_LOOP : &
     DO ikk=1,nks
        current_ik=find_current_k(ikk,nkstot,nks)
@@ -1998,10 +1994,10 @@ MODULE exx
        !
        IF ( lsda ) current_spin = isk(ikk)
        npw = ngk (ikk)
-       IF ( nks > 1 ) THEN
-          READ( iunigk ) igk
+       igk(1:npw) = igk_k(1:npw,ikk)
+
+       IF ( nks > 1 ) &
           CALL get_buffer (evc, nwordwfc, iunwfc, ikk)
-       END IF
        !
        ! prepare the |beta> function at k+q
        CALL init_us_2(npw, igk, xk(:,ikk), vkb)
@@ -2185,7 +2181,7 @@ MODULE exx
     !-----------------------------------------------------------------------
     !
     USE constants,               ONLY : fpi, e2, pi
-    USE io_files,                ONLY : iunigk,iunwfc, nwordwfc
+    USE io_files,                ONLY : iunwfc, nwordwfc
     USE buffers,                 ONLY : get_buffer
     USE cell_base,               ONLY : alat, omega, bg, at, tpiba
     USE symm_base,               ONLY : nsym, s
@@ -2193,7 +2189,7 @@ MODULE exx
     USE wvfct,                   ONLY : nbnd, npwx, npw, igk, wg
     USE control_flags,           ONLY : gamma_only
     USE wavefunctions_module,    ONLY : evc
-    USE klist,                   ONLY : xk, ngk, nks, nkstot
+    USE klist,                   ONLY : xk, ngk, nks, nkstot, igk_k
     USE lsda_mod,                ONLY : lsda, current_spin, isk
     USE mp_pools,                ONLY : inter_pool_comm
     USE mp_bands,                ONLY : inter_bgrp_comm, intra_bgrp_comm, nbgrp
@@ -2227,7 +2223,6 @@ MODULE exx
     !
     TYPE(bec_type) :: becpsi
     COMPLEX(DP), ALLOCATABLE :: psi_t(:), prod_tot(:)
-    INTEGER,     ALLOCATABLE :: igkt(:)
     !
     nrxxs = exx_fft%dfftt%nnr
     ALLOCATE( fac(exx_fft%ngmt) )
@@ -2243,8 +2238,6 @@ MODULE exx
     !
     CALL allocate_bec_type( nkb, nbnd, becpsi)
     !
-    IF ( nks > 1 ) REWIND( iunigk )
-    !
     IKK_LOOP : &
     DO ikk=1,nks
        current_ik=find_current_k(ikk,nkstot,nks)
@@ -2252,10 +2245,10 @@ MODULE exx
        !
        IF ( lsda ) current_spin = isk(ikk)
        npw = ngk (ikk)
-       IF ( nks > 1 ) THEN
-          READ( iunigk ) igk
+       igk(1:npw) = igk_k(1:npw,ikk)
+
+       IF ( nks > 1 ) &
           CALL get_buffer (evc, nwordwfc, iunwfc, ikk)
-       END IF
        !
        ! prepare the |beta> function at k+q
        CALL init_us_2(npw, igk, xk(:,ikk), vkb)
@@ -2517,14 +2510,14 @@ MODULE exx
     ! This is Eq.(10) of PRB 73, 125120 (2006).
     !
     USE constants,            ONLY : fpi, e2, pi, tpi
-    USE io_files,             ONLY : iunigk,iunwfc, nwordwfc
+    USE io_files,             ONLY : iunwfc, nwordwfc
     USE buffers,              ONLY : get_buffer
     USE cell_base,            ONLY : alat, omega, bg, at, tpiba
     USE symm_base,            ONLY : nsym, s
     USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, current_k
     USE control_flags,        ONLY : gamma_only
     USE wavefunctions_module, ONLY : evc
-    USE klist,                ONLY : xk, ngk, nks
+    USE klist,                ONLY : xk, ngk, nks, igk_k
     USE lsda_mod,             ONLY : lsda, current_spin, isk
     USE gvect,                ONLY : g, nl
     USE mp_pools,             ONLY : npool, inter_pool_comm
@@ -2566,8 +2559,6 @@ MODULE exx
     exx_stress_ = 0._dp
     allocate( tempphic(nrxxs), temppsic(nrxxs), rhoc(nrxxs), fac(ngm) )
     allocate( fac_tens(3,3,ngm), fac_stress(ngm) )
-
-    IF ( nks > 1 ) rewind( iunigk )
     !
     nqi=nqs
     !
@@ -2576,11 +2567,10 @@ MODULE exx
         current_k = ikk
         IF (lsda) current_spin = isk(ikk)
         npw = ngk(ikk)
+        igk(1:npw) = igk_k(1:npw,ikk)
 
-        IF (nks > 1) THEN
-            read(iunigk) igk
+        IF (nks > 1) &
             CALL get_buffer(evc, nwordwfc, iunwfc, ikk)
-        ENDIF
 
         ! loop over bands
         DO jbnd = 1, nbnd

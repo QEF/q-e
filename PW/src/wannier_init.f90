@@ -66,8 +66,6 @@ SUBROUTINE wannier_init(hwwa)
   CALL open_buffer( iunwf, 'wwf', nwordwf, io_level, exst )
 
   ! For atomic wavefunctions
-  INQUIRE( UNIT = iunigk, OPENED = opnd )
-  IF(.NOT. opnd) CALL seqopn( iunigk, 'igk', 'UNFORMATTED', exst )
 
   IF(.NOT. ALLOCATED(swfcatom)) ALLOCATE( swfcatom( npwx, natomwfc))
   

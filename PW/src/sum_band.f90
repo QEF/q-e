@@ -22,13 +22,13 @@ SUBROUTINE sum_band()
   USE fft_interfaces,       ONLY : fwfft, invfft
   USE gvect,                ONLY : ngm, g, nl, nlm
   USE gvecs,                ONLY : nls, nlsm, doublegrid
-  USE klist,                ONLY : nks, nkstot, wk, xk, ngk
+  USE klist,                ONLY : nks, nkstot, wk, xk, ngk, igk_k
   USE fixed_occ,            ONLY : one_atom_occupations
   USE ldaU,                 ONLY : lda_plus_U
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE scf,                  ONLY : rho
   USE symme,                ONLY : sym_rho
-  USE io_files,             ONLY : iunwfc, nwordwfc, iunigk
+  USE io_files,             ONLY : iunwfc, nwordwfc
   USE buffers,              ONLY : get_buffer
   USE uspp,                 ONLY : nkb, vkb, becsum, nhtol, nhtoj, indv, okvan
   USE uspp_param,           ONLY : upf, nh, nhm
@@ -253,10 +253,9 @@ SUBROUTINE sum_band()
        ! ... here we sum for each k point the contribution
        ! ... of the wavefunctions to the charge
        !
-       IF ( nks > 1 ) REWIND( iunigk )
-       !
        use_tg = dffts%have_task_groups 
-       dffts%have_task_groups = ( dffts%have_task_groups ) .AND. ( this_bgrp_nbnd >= dffts%nogrp )
+       dffts%have_task_groups = ( dffts%have_task_groups ) .AND. &
+                                ( this_bgrp_nbnd >= dffts%nogrp )
        !
        incr = 2
        !
@@ -280,13 +279,10 @@ SUBROUTINE sum_band()
           IF ( lsda ) current_spin = isk(ik)
           !
           npw = ngk(ik)
+          igk(1:npw) = igk_k(1:npw,ik)
           !
-          IF ( nks > 1 ) THEN
-             !
-             READ( iunigk ) igk
+          IF ( nks > 1 ) &
              CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
-             !
-          END IF
           !
           IF ( nkb > 0 ) &
              CALL init_us_2( npw, igk, xk(1,ik), vkb )
@@ -512,11 +508,10 @@ SUBROUTINE sum_band()
        ! ... here we sum for each k point the contribution
        ! ... of the wavefunctions to the charge
        !
-       IF ( nks > 1 ) REWIND( iunigk )
-       !
        use_tg = dffts%have_task_groups
-       dffts%have_task_groups = ( dffts%have_task_groups ) .AND. &
-              ( this_bgrp_nbnd >= dffts%nogrp ) .AND. ( .NOT. (dft_is_meta() .OR. lxdm) )
+       dffts%have_task_groups = ( dffts%have_task_groups )        .AND. &
+                                ( this_bgrp_nbnd >= dffts%nogrp ) .AND. &
+                                ( .NOT. (dft_is_meta() .OR. lxdm) )
        !
        incr = 1
        !
@@ -548,13 +543,10 @@ SUBROUTINE sum_band()
 
           IF ( lsda ) current_spin = isk(ik)
           npw = ngk (ik)
+          igk(1:npw) = igk_k(1:npw,ik)
           !
-          IF ( nks > 1 ) THEN
-             !
-             READ( iunigk ) igk
+          IF ( nks > 1 ) &
              CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
-             !
-          END IF
           !
           IF ( nkb > 0 ) &
              CALL init_us_2( npw, igk, xk(1,ik), vkb )
@@ -916,7 +908,7 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   USE ions_base,     ONLY : nat, ntyp => nsp, ityp
   USE uspp,          ONLY : nkb, vkb, becsum, indv_ijkb0
   USE uspp_param,    ONLY : upf, nh, nhm
-  USE wvfct,         ONLY : nbnd, npw, igk, wg
+  USE wvfct,         ONLY : nbnd, npw, wg
   USE noncollin_module,     ONLY : noncolin, npol
   USE wavefunctions_module, ONLY : evc
   USE realus,        ONLY : real_space, invfft_orbital_gamma, initialisation_level,&

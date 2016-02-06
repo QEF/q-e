@@ -25,7 +25,7 @@ SUBROUTINE new_ns(ns)
   USE io_global,            ONLY : stdout
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ityp
-  USE klist,                ONLY : nks, ngk
+  USE klist,                ONLY : nks, ngk, igk_k
   USE ldaU,                 ONLY : Hubbard_lmax, Hubbard_l, q_ae, wfcU, &
                                    U_projection, is_hubbard, nwfcU, offsetU
   USE symm_base,            ONLY : d1, d2, d3
@@ -34,7 +34,7 @@ SUBROUTINE new_ns(ns)
   USE wvfct,                ONLY : nbnd, npw, npwx, igk, wg
   USE control_flags,        ONLY : gamma_only
   USE wavefunctions_module, ONLY : evc
-  USE io_files,             ONLY : iunigk, nwordwfc, iunwfc, nwordwfcU, iunhub
+  USE io_files,             ONLY : nwordwfc, iunwfc, nwordwfcU, iunhub
   USE buffers,              ONLY : get_buffer
   USE mp_pools,             ONLY : inter_pool_comm
   USE mp,                   ONLY : mp_sum
@@ -67,14 +67,13 @@ SUBROUTINE new_ns(ns)
   !
   !    we start a loop on k points
   !
-  IF (nks > 1) REWIND (iunigk)
   DO ik = 1, nks
      IF (lsda) current_spin = isk(ik)
      npw = ngk (ik)
-     IF (nks > 1) THEN
-        READ (iunigk) igk
+     igk(1:npw) = igk_k(1:npw,ik)
+
+     IF (nks > 1) &
         CALL get_buffer  (evc, nwordwfc, iunwfc, ik)
-     END IF
      !
      ! make the projection
      !
@@ -288,7 +287,7 @@ SUBROUTINE new_ns_nc(ns)
   USE io_global,            ONLY : stdout
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ityp
-  USE klist,                ONLY : nks, ngk
+  USE klist,                ONLY : nks, ngk, igk_k
   USE ldaU,                 ONLY : Hubbard_lmax, Hubbard_l, wfcU, &
                                    d_spin_ldau, is_hubbard, nwfcU, offsetU
   USE symm_base,            ONLY : d1, d2, d3
@@ -299,7 +298,7 @@ SUBROUTINE new_ns_nc(ns)
   USE control_flags,        ONLY : gamma_only
   USE wavefunctions_module, ONLY : evc
   USE gvect,                ONLY : gstart
-  USE io_files,             ONLY : iunigk, nwordwfc, iunwfc, nwordwfcU, iunhub
+  USE io_files,             ONLY : nwordwfc, iunwfc, nwordwfcU, iunhub
   USE buffers,              ONLY : get_buffer
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp_pools,             ONLY : inter_pool_comm
@@ -333,14 +332,14 @@ SUBROUTINE new_ns_nc(ns)
 !--
 !    loop on k points
 !
-  IF (nks > 1) REWIND (iunigk)
   DO ik = 1, nks
 
      npw = ngk (ik)
-     IF (nks > 1) THEN
-        READ (iunigk) igk
+     igk(1:npw) = igk_k(1:npw,ik)
+
+     IF (nks > 1) &
         CALL get_buffer  (evc, nwordwfc, iunwfc, ik)
-     END IF
+ 
      CALL get_buffer (wfcU, nwordwfcU, iunhub, ik)
      !
      ! make the projection - FIXME: use ZGEMM or calbec instead
