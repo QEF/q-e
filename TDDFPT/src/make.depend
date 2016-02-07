@@ -233,7 +233,9 @@ lr_diagonalise.o : ../../Modules/io_global.o
 lr_diagonalise.o : ../../Modules/kind.o
 lr_diagonalise.o : lr_variables.o
 lr_dot.o : ../../LR_Modules/lrcom.o
+lr_dot.o : ../../Modules/cell_base.o
 lr_dot.o : ../../Modules/control_flags.o
+lr_dot.o : ../../Modules/fft_base.o
 lr_dot.o : ../../Modules/gvecw.o
 lr_dot.o : ../../Modules/io_global.o
 lr_dot.o : ../../Modules/kind.o
@@ -603,15 +605,8 @@ lr_us.o : ../../Modules/uspp.o
 lr_us.o : ../../PW/src/pwcom.o
 lr_us.o : ../../PW/src/realus.o
 lr_us.o : lr_variables.o
-lr_variables.o : ../../Modules/cell_base.o
 lr_variables.o : ../../Modules/control_flags.o
-lr_variables.o : ../../Modules/fft_base.o
-lr_variables.o : ../../Modules/io_global.o
 lr_variables.o : ../../Modules/kind.o
-lr_variables.o : ../../Modules/mp.o
-lr_variables.o : ../../Modules/mp_global.o
-lr_variables.o : ../../Modules/recvec.o
-lr_variables.o : ../../PW/src/pwcom.o
 lr_write_restart.o : ../../Modules/cell_base.o
 lr_write_restart.o : ../../Modules/fft_base.o
 lr_write_restart.o : ../../Modules/io_files.o
