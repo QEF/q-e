@@ -59,7 +59,6 @@ SUBROUTINE one_lanczos_step()
     USE lr_us,                    ONLY : lr_apply_s
     USE noncollin_module,         ONLY : npol
     ! Debugging
-    USE lr_variables,             ONLY : check_all_bands_gamma, check_density_gamma, check_vector_gamma
     USE iso_c_binding,            ONLY : c_int
 
     USE qpoint,                   ONLY : nksq

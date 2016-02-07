@@ -104,9 +104,7 @@ SUBROUTINE normal_read()
   !
   ! The usual way of reading wavefunctions
   !
-  USE lr_variables,             ONLY : check_all_bands_gamma, &
-                                     & check_density_gamma,   &
-                                     & check_vector_gamma, tg_revc0
+  USE lr_variables,             ONLY : tg_revc0
   USE wavefunctions_module,     ONLY : psic
   USE realus,                   ONLY : tg_psic
   USE mp_global,                ONLY : me_bgrp

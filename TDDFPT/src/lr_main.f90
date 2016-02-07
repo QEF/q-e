@@ -52,10 +52,6 @@ PROGRAM lr_main
   USE plugin_flags,          ONLY : use_environ
   USE environ_info,          ONLY : environ_summary
 #endif
-
-  !Debugging
-  USE lr_variables,          ONLY : check_all_bands_gamma, check_density_gamma, &
-                                  & check_vector_gamma
   !
   IMPLICIT NONE
   !
