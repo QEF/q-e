@@ -20,7 +20,7 @@ SUBROUTINE openfil()
   USE wvfct,            ONLY : nbnd, npwx
   USE fixed_occ,        ONLY : one_atom_occupations
   USE ldaU,             ONLY : lda_plus_U, U_projection, nwfcU
-  USE io_files,         ONLY : prefix, iunpun, iunsat, iunigk,  &
+  USE io_files,         ONLY : prefix, iunpun, iunsat, &
                                iunhub, nwordwfcU, nwordwfc, nwordatwfc,&
                                iunefield, iunefieldm, iunefieldp, seqopn
   USE noncollin_module, ONLY : npol
@@ -47,10 +47,6 @@ SUBROUTINE openfil()
      CALL open_buffer ( iunhub, 'hub',    nwordwfcU, io_level, exst )
   IF ( use_wannier .OR. one_atom_occupations ) &
      CALL open_buffer ( iunsat, 'satwfc', nwordatwfc, io_level, exst )
-  !
-  ! ... iunigk contains the number of PW and the indices igk
-  !
-  CALL seqopn( iunigk, 'igk', 'UNFORMATTED', exst )
   !
   ! ... open units for electric field calculations
   !

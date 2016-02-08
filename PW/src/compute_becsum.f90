@@ -16,9 +16,9 @@ SUBROUTINE compute_becsum ( iflag )
   !
   USE kinds,                ONLY : DP
   USE control_flags,        ONLY : gamma_only
-  USE klist,                ONLY : nks, xk, ngk
+  USE klist,                ONLY : nks, xk, ngk, igk_k
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
-  USE io_files,             ONLY : iunwfc, nwordwfc, iunigk
+  USE io_files,             ONLY : iunwfc, nwordwfc
   USE buffers,              ONLY : get_buffer
   USE scf,                  ONLY : rho
   USE uspp,                 ONLY : nkb, vkb, becsum, okvan
@@ -54,16 +54,13 @@ SUBROUTINE compute_becsum ( iflag )
   call set_bgrp_indices ( nbnd, ibnd_start, ibnd_end )
   this_bgrp_nbnd = ibnd_end - ibnd_start + 1
   !
-  IF ( nks > 1 ) REWIND( iunigk )
-  !
   k_loop: DO ik = 1, nks
      !
      IF ( lsda ) current_spin = isk(ik)
      npw = ngk(ik)
-     IF ( nks > 1 ) THEN
-        READ( iunigk ) igk
+     igk(1:npw) = igk_k(1:npw,ik)
+     IF ( nks > 1 ) &
         CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
-     END IF
      IF ( nkb > 0 ) &
           CALL init_us_2( npw, igk, xk(1,ik), vkb )
      !
