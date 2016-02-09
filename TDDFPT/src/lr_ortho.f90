@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2015 Quantum ESPRESSO group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -30,7 +30,7 @@ SUBROUTINE lr_ortho(dvpsi, evq, ikk, ikq, sevc, inverse)
   !
   USE kinds,             ONLY : DP
   use gvect,             only : gstart
-  USE klist,             ONLY : npw_k=>ngk, lgauss, degauss, ngauss
+  USE klist,             ONLY : ngk, lgauss, degauss, ngauss
   USE noncollin_module,  ONLY : noncolin, npol
   USE wvfct,             ONLY : npwx, nbnd, et
   USE ener,              ONLY : ef
@@ -102,10 +102,10 @@ SUBROUTINE lr_ortho_k()
        !
        ps = (0.d0, 0.d0)
        IF (inverse_mode) THEN
-          CALL ZGEMM( 'C', 'N', nbnd, nbnd_occ(ikk), npw_k(ikk), (1.d0,0.d0), &
+          CALL ZGEMM( 'C', 'N', nbnd, nbnd_occ(ikk), ngk(ikk), (1.d0,0.d0), &
                       sevc, npwx, dvpsi, npwx, (0.d0,0.d0), ps, nbnd )
        ELSE
-          CALL ZGEMM( 'C', 'N', nbnd, nbnd_occ(ikk), npw_k(ikk), (1.d0,0.d0), &
+          CALL ZGEMM( 'C', 'N', nbnd, nbnd_occ(ikk), ngk(ikk), (1.d0,0.d0), &
                       evq, npwx, dvpsi, npwx, (0.d0,0.d0), ps, nbnd )
        ENDIF
        !
@@ -132,7 +132,7 @@ SUBROUTINE lr_ortho_k()
              ps(jbnd,ibnd) = wwg * ps(jbnd,ibnd)
              !
           ENDDO
-          CALL DSCAL (2*npw_k(ikk), wg1, dvpsi(1,ibnd), 1)
+          CALL DSCAL (2*ngk(ikk), wg1, dvpsi(1,ibnd), 1)
        ENDDO
        !
        nbnd_eff = nbnd
@@ -147,7 +147,7 @@ SUBROUTINE lr_ortho_k()
          !
          ! ps = <sevc|dvpsi>
          !
-         CALL ZGEMM( 'C', 'N', nbnd_occ(ikq), nbnd_occ (ikk), npw_k(ikk), &
+         CALL ZGEMM( 'C', 'N', nbnd_occ(ikq), nbnd_occ (ikk), ngk(ikk), &
                    (1.d0,0.d0), sevc, npwx, dvpsi, npwx, &
                    (0.d0,0.d0), ps, nbnd )
          !
@@ -155,7 +155,7 @@ SUBROUTINE lr_ortho_k()
          !
          ! ps = <evq|dvpsi>
          !
-         CALL ZGEMM( 'C', 'N', nbnd_occ(ikq), nbnd_occ (ikk), npw_k(ikk), &
+         CALL ZGEMM( 'C', 'N', nbnd_occ(ikq), nbnd_occ (ikk), ngk(ikk), &
                    (1.d0,0.d0), evq, npwx, dvpsi, npwx, &
                    (0.d0,0.d0), ps, nbnd )
       ENDIF
@@ -173,11 +173,11 @@ SUBROUTINE lr_ortho_k()
       !  Metallic case
       !
       if (inverse_mode) then
-         CALL ZGEMM( 'N', 'N', npw_k(ikk), nbnd_occ(ikk), nbnd, &
+         CALL ZGEMM( 'N', 'N', ngk(ikk), nbnd_occ(ikk), nbnd, &
                    (-1.d0,0.d0), evq, npwx, ps, nbnd, (1.0d0,0.d0), &
                    dvpsi, npwx )
       else
-         CALL ZGEMM( 'N', 'N', npw_k(ikk), nbnd_occ(ikk), nbnd, &
+         CALL ZGEMM( 'N', 'N', ngk(ikk), nbnd_occ(ikk), nbnd, &
                    (-1.d0,0.d0), sevc, npwx, ps, nbnd, (1.0d0,0.d0), &
                    dvpsi, npwx )
       endif
@@ -190,7 +190,7 @@ SUBROUTINE lr_ortho_k()
          !
          ! |dvspi> =  |dvpsi> - |evq><sevc|dvpsi>
          !
-         CALL ZGEMM( 'N', 'N', npw_k(ikk), nbnd_occ(ikk), nbnd_occ(ikk), &
+         CALL ZGEMM( 'N', 'N', ngk(ikk), nbnd_occ(ikk), nbnd_occ(ikk), &
                    (-1.d0,0.d0), evq, npwx, ps, nbnd, (1.0d0,0.d0), &
                    dvpsi, npwx )
          !
@@ -198,7 +198,7 @@ SUBROUTINE lr_ortho_k()
          !
          ! |dvspi> =  |dvpsi> - |sevc><evq|dvpsi>
          !
-         CALL ZGEMM( 'N', 'N', npw_k(ikk), nbnd_occ(ikk), nbnd_occ(ikk), &
+         CALL ZGEMM( 'N', 'N', ngk(ikk), nbnd_occ(ikk), nbnd_occ(ikk), &
                    (-1.d0,0.d0), sevc, npwx, ps, nbnd, (1.0d0,0.d0), &
                    dvpsi, npwx )
          !
@@ -241,14 +241,14 @@ SUBROUTINE lr_ortho_gamma()
          ! 
          ! ps = 2 * <sevc|dvpsi>
          !
-         CALL DGEMM( 'C', 'N', nbnd, nbnd ,2*npw_k(1), &
+         CALL DGEMM( 'C', 'N', nbnd, nbnd ,2*ngk(1), &
                2.d0, sevc, 2*npwx, dvpsi, 2*npwx, 0.d0, ps, nbnd )
          !
       ELSE
          !
          ! ps = 2 * <evq|dvpsi>
          !
-         CALL DGEMM( 'C', 'N', nbnd, nbnd ,2*npw_k(1), &
+         CALL DGEMM( 'C', 'N', nbnd, nbnd ,2*ngk(1), &
                2.d0, evq, 2*npwx, dvpsi, 2*npwx, 0.d0, ps, nbnd )
          !
       ENDIF
@@ -300,14 +300,14 @@ SUBROUTINE lr_ortho_gamma()
         !
         ! |dvpsi> = |dvpsi> - |evq><sevc|dvpsi>
         !
-        CALL ZGEMM( 'N', 'N', npw_k(1), nbnd, nbnd, &
+        CALL ZGEMM( 'N', 'N', ngk(1), nbnd, nbnd, &
                   (-1.d0,0.d0), evq, npwx, ps_c, nbnd, (1.0d0,0.d0), dvpsi, npwx)
         !
      ELSE
         !
         ! |dvpsi> = |dvpsi> - |sevc><evq|dvpsi>
         !
-        CALL ZGEMM( 'N', 'N', npw_k(1), nbnd, nbnd, &
+        CALL ZGEMM( 'N', 'N', ngk(1), nbnd, nbnd, &
                   (-1.d0,0.d0), sevc, npwx, ps_c, nbnd, (1.0d0,0.d0), dvpsi, npwx )
         !
      ENDIF

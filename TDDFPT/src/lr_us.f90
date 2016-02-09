@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2015 Quantum ESPRESSO group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -23,7 +23,7 @@ SUBROUTINE lr_apply_s(vect, svect)
     USE io_global,          ONLY : stdout
     USE uspp,               ONLY : okvan, vkb, nkb
     USE wvfct,              ONLY : npwx, npw, nbnd
-    USE klist,              ONLY : nks, xk, npw_k=>ngk, igk_k
+    USE klist,              ONLY : nks, xk, ngk, igk_k
     USE becmod,             ONLY : becp, calbec
     USE noncollin_module,   ONLY : npol
     USE lr_variables,       ONLY : eels, lr_verbosity
@@ -104,9 +104,9 @@ SUBROUTINE lr_apply_s_optical()
        !
        DO ik = 1, nksq
           !
-          CALL init_us_2(npw_k(ik),igk_k(1,ik),xk(1,ik),vkb)
-          CALL calbec(npw_k(ik),vkb,vect(:,:,ik),becp)
-          CALL s_psi(npwx,npw_k(ik),nbnd,vect(1,1,ik),svect(1,1,ik))
+          CALL init_us_2(ngk(ik),igk_k(1,ik),xk(1,ik),vkb)
+          CALL calbec(ngk(ik),vkb,vect(:,:,ik),becp)
+          CALL s_psi(npwx,ngk(ik),nbnd,vect(1,1,ik),svect(1,1,ik))
           !
        ENDDO
        !

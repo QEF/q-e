@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2015 Quantum ESPRESSO group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -18,7 +18,7 @@ SUBROUTINE lr_dealloc()
   USE uspp,           ONLY : nkb
   USE control_flags,  ONLY : gamma_only
   USE realus,         ONLY : tg_psic
-  USE klist,          ONLY : npw_k => ngk, igk_k
+  USE klist,          ONLY : ngk, igk_k
   USE io_global,      ONLY : stdout
   USE charg_resp,     ONLY : w_T_beta_store, w_T_gamma_store, w_T,&
                            & w_T_zeta_store, chi, rho_1_tot, rho_1_tot_im
@@ -59,7 +59,7 @@ SUBROUTINE lr_dealloc()
   IF (allocated(rho_1c)) DEALLOCATE(rho_1c)
   IF (allocated(dmuxc))  DEALLOCATE(dmuxc)
   IF (allocated(igk_k))  DEALLOCATE(igk_k)
-  IF (allocated(npw_k))  DEALLOCATE(npw_k)
+  IF (allocated(ngk))    DEALLOCATE(ngk)
   !
   ! EELS-related variables
   !

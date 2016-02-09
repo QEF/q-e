@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2015 Quantum ESPRESSO group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -22,7 +22,7 @@ SUBROUTINE lr_dvpsi_e(ik,ipol,dvpsi)
   USE cell_base,            ONLY : tpiba, at
   USE ions_base,            ONLY : ntyp => nsp
   USE io_global,            ONLY : stdout
-  USE klist,                ONLY : xk, npw_k => ngk
+  USE klist,                ONLY : xk, ngk
   USE wvfct,                ONLY : npw, npwx, nbnd, igk, g2kin, et
   USE wavefunctions_module, ONLY : evc
   USE noncollin_module,     ONLY : noncolin, npol
@@ -78,7 +78,7 @@ SUBROUTINE lr_dvpsi_e(ik,ipol,dvpsi)
   !
   CALL allocate_bec_type ( nkb, nbnd, becp1 )
   !
-  CALL calbec ( npw_k(ik), vkb, evc, becp1 )
+  CALL calbec ( ngk(ik), vkb, evc, becp1 )
   !
   CALL allocate_bec_type ( nkb, nbnd, becp2 )
   !
@@ -88,9 +88,9 @@ SUBROUTINE lr_dvpsi_e(ik,ipol,dvpsi)
   !    Apply -P^+_c
   !    NB it uses dvpsi as workspace
   !
-  IF (okvan) CALL calbec ( npw_k(ik), vkb, evc, becp, nbnd)
+  IF (okvan) CALL calbec ( ngk(ik), vkb, evc, becp, nbnd)
   !
-  CALL orthogonalize(d0psi, evc, ik, ik, dvpsi,npw_k(ik))
+  CALL orthogonalize(d0psi, evc, ik, ik, dvpsi, ngk(ik))
   d0psi = -d0psi
   !
   !   d0psi contains P^+_c [H-eS,x] psi_v for the polarization direction ipol
@@ -102,11 +102,11 @@ SUBROUTINE lr_dvpsi_e(ik,ipol,dvpsi)
   CALL lr_calc_eprec(eprec)
   !
   DO ibnd = 1, nbnd_occ (ik)
-     DO ig = 1, npw_k(ik)
+     DO ig = 1, ngk(ik)
         h_diag (ig, ibnd) = 1.d0 / max (1.0d0, g2kin (ig) / eprec (ibnd) )
      ENDDO
      IF (noncolin) THEN
-        DO ig = 1, npw_k(ik)
+        DO ig = 1, ngk(ik)
            h_diag (ig+npwx, ibnd) = 1.d0/max(1.0d0,g2kin(ig)/eprec(ibnd))
         ENDDO
      ENDIF
@@ -119,7 +119,7 @@ SUBROUTINE lr_dvpsi_e(ik,ipol,dvpsi)
   igkq => igk ! PG: needed by h_psiq, called by ch_psi_all
   !
   CALL cgsolve_all (ch_psi_all, cg_psi, et (1, ik), d0psi, dvpsi, &
-       h_diag, npwx, npw_k(ik), thresh, ik, lter, conv_root, anorm, &
+       h_diag, npwx, ngk(ik), thresh, ik, lter, conv_root, anorm, &
        nbnd_occ(ik), 1)
   !
   IF (.not.conv_root) WRITE( stdout, '(5x,"ik",i4," ibnd",i4, &
@@ -141,8 +141,8 @@ SUBROUTINE lr_dvpsi_e(ik,ipol,dvpsi)
      ! for effective charges
      !
      ALLOCATE (spsi ( npwx*npol, nbnd))
-     CALL calbec (npw_k(ik), vkb, dvpsi, becp )
-     CALL s_psi(npwx,npw_k(ik),nbnd,dvpsi,spsi)
+     CALL calbec (ngk(ik), vkb, dvpsi, becp )
+     CALL s_psi(npwx,ngk(ik),nbnd,dvpsi,spsi)
      CALL DCOPY(2*npwx*npol*nbnd,spsi,1,dvpsi,1)
      DEALLOCATE (spsi)
      ALLOCATE (dpqq( nhm, nhm, 3, ntyp))
@@ -155,12 +155,12 @@ SUBROUTINE lr_dvpsi_e(ik,ipol,dvpsi)
   !
   ! orthogonalize dvpsi to the valence subspace
   !
-  IF (okvan) CALL calbec ( npw_k(ik), vkb, evc, becp, nbnd)
+  IF (okvan) CALL calbec ( ngk(ik), vkb, evc, becp, nbnd)
   !
   ALLOCATE (work ( npwx, nbnd ) )
   work = evc ! work will be corrupted on exit from orthogonalize
   !
-  CALL orthogonalize(dvpsi, evc, ik, ik, work,npw_k(ik))
+  CALL orthogonalize(dvpsi, evc, ik, ik, work, ngk(ik))
   dvpsi = -dvpsi
   !
   DEALLOCATE(work)
@@ -172,7 +172,7 @@ SUBROUTINE lr_dvpsi_e(ik,ipol,dvpsi)
   !
   IF (okvan) THEN
      ALLOCATE (spsi ( npwx*npol, nbnd))
-     CALL sm1_psi(.TRUE.,ik,npwx,npw_k(ik),nbnd,dvpsi,spsi)
+     CALL sm1_psi(.TRUE.,ik,npwx,ngk(ik),nbnd,dvpsi,spsi)
      dvpsi(:,:) = spsi(:,:)
      DEALLOCATE(spsi)
   ENDIF
@@ -204,7 +204,7 @@ CONTAINS
     USE gvect,                ONLY : gstart
     USE wvfct,                ONLY : npw, npwx, nbnd, g2kin
     USE wavefunctions_module, ONLY : evc
-    USE klist,                ONLY : npw_k => ngk
+    USE klist,                ONLY : ngk
     USE mp,                   ONLY : mp_sum
     USE mp_global,            ONLY : intra_bgrp_comm
 
@@ -222,7 +222,7 @@ CONTAINS
        !
        work = 0.d0
        !
-       DO ig = 1,npw_k(ik)
+       DO ig = 1, ngk(ik)
           work(ig,1) = g2kin(ig)*evc(ig,ibnd)
        ENDDO
        !
@@ -237,7 +237,7 @@ CONTAINS
           eprec(ibnd) = 1.35d0*eprec(ibnd)
           !
        ELSE
-          eprec(ibnd) = 1.35d0*ZDOTC(npw_k(ik),evc(1,ibnd),1,work,1)
+          eprec(ibnd) = 1.35d0*ZDOTC(ngk(ik),evc(1,ibnd),1,work,1)
        ENDIF
        !
     ENDDO

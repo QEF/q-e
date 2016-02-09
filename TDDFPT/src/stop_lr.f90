@@ -174,8 +174,6 @@ SUBROUTINE stop_lr( full_run  )
      CLOSE( UNIT = iuwfc, STATUS = 'KEEP' )
   ENDIF
   !
-  !CLOSE( UNIT = iunigk, STATUS = 'KEEP' )
-  !
   STOP
   !
 END SUBROUTINE stop_lr

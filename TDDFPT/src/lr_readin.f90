@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2015 Quantum ESPRESSO group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -144,7 +144,6 @@ SUBROUTINE lr_readin
      plot_type = 1
      project = .FALSE.
      max_seconds = 1.0E+7_DP
-     eig_dir='./'
      scissor = 0.d0
      ecutfock = -1d0
      !

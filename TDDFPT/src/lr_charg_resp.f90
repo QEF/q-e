@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2015 Quantum ESPRESSO group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -641,9 +641,9 @@ CONTAINS
     USE ions_base,                ONLY : ityp,nat,ntyp=>nsp
     USE realus,                   ONLY : real_space_debug,invfft_orbital_gamma,calbec_rs_gamma
     USE gvect,                    ONLY : gstart
-    USE klist,                    ONLY : nks, npw_k => ngk
+    USE klist,                    ONLY : nks, ngk
     USE lr_variables,             ONLY : lr_verbosity, itermax, LR_iteration, LR_polarization, &
-         project,evc0_virt,F,nbnd_total,n_ipol, becp1_virt
+                                         project,evc0_virt,F,nbnd_total,n_ipol, becp1_virt
 
     IMPLICIT NONE
     !
@@ -679,7 +679,7 @@ CONTAINS
              CALL calbec_rs_gamma(ibnd,nbnd,becp%r)
           ENDDO
        ELSE
-          CALL calbec(npw_k(1), vkb, evc1(:,:,1), becp)
+          CALL calbec(ngk(1), vkb, evc1(:,:,1), becp)
        ENDIF
     ENDIF
     !
@@ -756,7 +756,7 @@ CONTAINS
           ! US part finished
           !first part
           ! the dot  product <evc1|evc0> taken from lr_dot
-          SSUM=(2.D0*wg(ibnd_occ,1)*DDOT(2*npw_k(1),evc0_virt(:,ibnd_virt,1),1,evc1(:,ibnd_occ,1),1))
+          SSUM=(2.D0*wg(ibnd_occ,1)*DDOT(2*ngk(1),evc0_virt(:,ibnd_virt,1),1,evc1(:,ibnd_occ,1),1))
           IF (gstart==2) SSUM = SSUM - (wg(ibnd_occ,1)*dble(evc1(1,ibnd_occ,1))*dble(evc0_virt(1,ibnd_virt,1)))
           !US contribution
           SSUM=SSUM+scal
@@ -787,7 +787,7 @@ CONTAINS
     USE ions_base,                ONLY : ityp,nat,ntyp=>nsp
     USE realus,                   ONLY : real_space_debug,invfft_orbital_gamma,calbec_rs_gamma
     USE gvect,                    ONLY : gstart
-    USE klist,                    ONLY : nks, npw_k => ngk
+    USE klist,                    ONLY : nks, ngk
     USE lr_variables,             ONLY : lr_verbosity, itermax, LR_iteration, LR_polarization, &
          project,evc0_virt,R,nbnd_total,n_ipol, becp1_virt,d0psi
 
@@ -805,7 +805,7 @@ CONTAINS
        DO ibnd_occ=1,nbnd
           DO ibnd_virt=1,(nbnd_total-nbnd)
              ! the dot  product <evc0|sd0psi> taken from lr_dot
-             SSUM=(2.D0*wg(ibnd_occ,1)*DDOT(2*npw_k(1),evc0_virt(:,ibnd_virt,1),1,d0psi(:,ibnd_occ,1,ipol),1))
+             SSUM=(2.D0*wg(ibnd_occ,1)*DDOT(2*ngk(1),evc0_virt(:,ibnd_virt,1),1,d0psi(:,ibnd_occ,1,ipol),1))
              IF (gstart==2) SSUM = SSUM - (wg(ibnd_occ,1)*dble(d0psi(1,ibnd_occ,1,ipol))*dble(evc0_virt(1,ibnd_virt,1)))
 #ifdef __MPI
              CALL mp_sum(SSUM, intra_bgrp_comm)

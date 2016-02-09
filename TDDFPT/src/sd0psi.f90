@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2015 Quantum ESPRESSO group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -16,7 +16,7 @@ SUBROUTINE sd0psi()
     ! Modified by Osman Baris Malcioglu (2009)
     ! Modified by Iurii Timrov (EELS extension) (2013)
     !
-    USE klist,                ONLY : nks, xk, npw_k=>ngk, igk_k
+    USE klist,                ONLY : nks, xk, ngk, igk_k
     USE lr_variables,         ONLY : n_ipol, d0psi, lr_verbosity, eels
     USE uspp,                 ONLY : vkb, nkb, okvan
     USE wvfct,                ONLY : nbnd, npwx
@@ -76,8 +76,8 @@ SUBROUTINE lr_sd0psi_optical()
              !
           ELSE
              !
-             CALL calbec(npw_k(1),vkb,d0psi(:,:,1,ip),becp)
-             CALL s_psi(npwx,npw_k(1),nbnd,d0psi(:,:,1,ip),d0psi(:,:,1,ip))
+             CALL calbec(ngk(1),vkb,d0psi(:,:,1,ip),becp)
+             CALL s_psi(npwx,ngk(1),nbnd,d0psi(:,:,1,ip),d0psi(:,:,1,ip))
              !
           ENDIF
           !
@@ -85,9 +85,9 @@ SUBROUTINE lr_sd0psi_optical()
          !
          DO ik = 1, nksq
             !
-            CALL init_us_2(npw_k(ik),igk_k(1,ik),xk(1,ik),vkb)
-            CALL calbec(npw_k(ik),vkb,d0psi(:,:,ik,ip),becp)
-            CALL s_psi(npwx,npw_k(ik),nbnd,d0psi(:,:,ik,ip),d0psi(:,:,ik,ip))
+            CALL init_us_2(ngk(ik),igk_k(1,ik),xk(1,ik),vkb)
+            CALL calbec(ngk(ik),vkb,d0psi(:,:,ik,ip),becp)
+            CALL s_psi(npwx,ngk(ik),nbnd,d0psi(:,:,ik,ip),d0psi(:,:,ik,ip))
             !
          ENDDO
          !

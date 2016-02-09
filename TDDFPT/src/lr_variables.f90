@@ -27,26 +27,8 @@ MODULE lr_variables
   INTEGER :: size_evc
   CHARACTER (len=24) :: bgz_suffix
   !
-  !------------------------------------------------------------------------!
-  ! Variables for TD-HF using Dario Rocca's BSE routines.
-  !------------------------------------------------------------------------!
-  !
   LOGICAL :: lr_exx
-  REAL(kind=dp), ALLOCATABLE :: xkk_m(:,:), xkk_p(:,:), weight_kk(:)
-  REAL(kind=dp) :: exxdiv
-  REAL(kind=dp) :: ecutfock_
-  !  REAL(kind=dp), ALLOCATABLE :: revc_int(:,:)
-  !  COMPLEX(kind=dp), ALLOCATABLE :: revc_int_c(:,:,:)
-  !
-  INTEGER, ALLOCATABLE :: &
-           igkk_kk_m(:,:),&
-           npw_kk_m(:),   &
-           ind_kk_m(:,:), &
-           igkk_kk_p(:,:),&
-           npw_kk_p(:),   &
-           ind_kk_p(:,:)
   REAL(kind=dp) :: scissor
-  CHARACTER(len=200) :: eig_dir
   !
   !------------------------------------------------------------------------!
   ! Variables for EELS

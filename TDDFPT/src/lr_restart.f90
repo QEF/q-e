@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2015 Quantum ESPRESSO group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -17,7 +17,7 @@ SUBROUTINE lr_restart(iter_restart,rflag)
   USE kinds,                ONLY : DP 
   USE io_global,            ONLY : stdout, ionode_id
   USE control_flags,        ONLY : gamma_only
-  USE klist,                ONLY : nks, xk, npw_k=>ngk, igk_k
+  USE klist,                ONLY : nks, xk, ngk, igk_k
   USE cell_base,            ONLY : tpiba2
   USE gvect,                ONLY : g
   USE io_files,             ONLY : tmp_dir, prefix, diropn, wfc_dir
@@ -257,15 +257,15 @@ SUBROUTINE lr_recalc_sevc1_new_optical()
            enddo
            !
         else
-           call calbec(npw_k(1),vkb,evc1_new(:,:,1,1),becp)
-           call s_psi(npwx,npw_k(1),nbnd,evc1_new(:,:,1,1),sevc1_new(:,:,1,1))
+           call calbec(ngk(1),vkb,evc1_new(:,:,1,1),becp)
+           call s_psi(npwx,ngk(1),nbnd,evc1_new(:,:,1,1),sevc1_new(:,:,1,1))
         endif
         !
      else
         !
         ! nkb = 0, not real space
         !
-        call s_psi(npwx,npw_k(1),nbnd,evc1_new(:,:,1,1),sevc1_new(:,:,1,1))
+        call s_psi(npwx,ngk(1),nbnd,evc1_new(:,:,1,1),sevc1_new(:,:,1,1))
         !
      endif
      !
@@ -285,15 +285,15 @@ SUBROUTINE lr_recalc_sevc1_new_optical()
            enddo
            !
         else
-           call calbec(npw_k(1),vkb,evc1_new(:,:,1,2),becp%r)
-           call s_psi(npwx,npw_k(1),nbnd,evc1_new(:,:,1,2),sevc1_new(:,:,1,2))
+           call calbec(ngk(1),vkb,evc1_new(:,:,1,2),becp%r)
+           call s_psi(npwx,ngk(1),nbnd,evc1_new(:,:,1,2),sevc1_new(:,:,1,2))
         endif
         !
      else
         !
         ! nkb = 0, not real space
         !
-        call s_psi(npwx,npw_k(1),nbnd,evc1_new(:,:,1,2),sevc1_new(:,:,1,2))
+        call s_psi(npwx,ngk(1),nbnd,evc1_new(:,:,1,2),sevc1_new(:,:,1,2))
         !
      endif
      !
@@ -305,16 +305,16 @@ SUBROUTINE lr_recalc_sevc1_new_optical()
         !
         if ( nkb > 0 .and. okvan ) then
            !
-           call init_us_2(npw_k(ik),igk_k(1,ik),xk(1,ik),vkb)
-           call calbec(npw_k(ik), vkb, evc1_new(:,:,ik,1), becp)
+           call init_us_2(ngk(ik),igk_k(1,ik),xk(1,ik),vkb)
+           call calbec(ngk(ik), vkb, evc1_new(:,:,ik,1), becp)
            !
         endif
         !
-        call s_psi(npwx,npw_k(ik),nbnd,evc1_new(:,:,ik,1),sevc1_new(:,:,ik,1))
+        call s_psi(npwx,ngk(ik),nbnd,evc1_new(:,:,ik,1),sevc1_new(:,:,ik,1))
         !
-        if (nkb > 0 .and. okvan) call calbec(npw_k(ik), vkb, evc1_new(:,:,ik,2),becp)
+        if (nkb > 0 .and. okvan) call calbec(ngk(ik), vkb, evc1_new(:,:,ik,2),becp)
         !
-        call s_psi(npwx,npw_k(ik),nbnd,evc1_new(:,:,ik,2),sevc1_new(:,:,ik,2))
+        call s_psi(npwx,ngk(ik),nbnd,evc1_new(:,:,ik,2),sevc1_new(:,:,ik,2))
         !
      enddo
      !

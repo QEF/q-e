@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2015 Quantum ESPRESSO group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -11,7 +11,7 @@ SUBROUTINE lr_init_nfo()
   !
   !  This subroutine prepares several variables which are needed in the
   !  TDDFPT program:
-  !  1) Optical case: initialization of igk_k and npw_k. 
+  !  1) Optical case: initialization of igk_k and ngk. 
   !  2) Initialization of ikks, ikqs, and nksq.
   !  3) EELS: Calculate phases associated with a q vector.
   !  4) Compute the number of occupied bands for each k point.
@@ -22,7 +22,7 @@ SUBROUTINE lr_init_nfo()
   !
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, tau
-  USE klist,                ONLY : nks,degauss,lgauss,ngauss,xk,wk, npw_k=>ngk,&
+  USE klist,                ONLY : nks,degauss,lgauss,ngauss,xk,wk,ngk,&
                                    igk_k,nelec, two_fermi_energies, nelup, neldw
   USE wvfct,                ONLY : nbnd, et, igk, npw, g2kin
   USE realus,               ONLY : real_space
@@ -64,15 +64,13 @@ SUBROUTINE lr_init_nfo()
   REAL(DP), ALLOCATABLE :: wg_up(:,:), wg_dw(:,:)
   LOGICAL       :: exst ! logical variable to check file existence
   !
-  ! 1) Optical case: initialize igk_k and npw_k
+  ! 1) Optical case: initialize igk_k and ngk
   !    Open shell related
   !
   IF (.NOT.eels) THEN
      !
      IF ( .not. allocated( igk_k ) )  ALLOCATE(igk_k(npwx,nks))
-     IF ( .not. allocated( npw_k ) )  ALLOCATE(npw_k(nks))
-     !
-     CALL seqopn( iunigk, 'igk', 'UNFORMATTED', exst )
+     IF ( .not. allocated( ngk ) )    ALLOCATE(ngk(nks))
      !
      IF (.not. real_space) THEN
         !
@@ -80,13 +78,8 @@ SUBROUTINE lr_init_nfo()
            !
            CALL gk_sort( xk(1,ik), ngm, g, gcutw, npw, igk, g2kin )
            !
-           npw_k(ik) = npw
+           ngk(ik) = npw
            igk_k(:,ik) = igk(:)
-           !
-           ! S. Binnie: For systems with more than one kpoint, we also write 
-           ! igk to iunigk. This is required by exx_init().
-           !
-           IF ( nks > 1 ) WRITE( iunigk ) igk
            !
         ENDDO
         !

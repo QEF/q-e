@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2015 Quantum ESPRESSO group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -24,7 +24,7 @@ SUBROUTINE lr_solve_e
   USE gvect,                ONLY : gstart
   USE io_global,            ONLY : stdout
   USE io_files,             ONLY : diropn, tmp_dir, wfc_dir
-  USE klist,                ONLY : nks, xk, npw_k=>ngk, igk_k, degauss
+  USE klist,                ONLY : nks, xk, ngk, igk_k, degauss
   USE lr_variables,         ONLY : nwordd0psi, iund0psi,LR_polarization, test_case_no, &
                                    & n_ipol, evc0, d0psi, d0psi2, evc1, lr_verbosity, &
                                    & d0psi_rs, eels
@@ -79,7 +79,7 @@ SUBROUTINE lr_solve_e
         !
         ! Ultrasoft case: calculate beta-functions vkb.
         !
-        npw = npw_k(ik)
+        npw = ngk(ik)
         igk(:) = igk_k(:,ik)
         !
         CALL init_us_2(npw,igk,xk(1,ik),vkb)

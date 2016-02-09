@@ -19,7 +19,7 @@ FUNCTION lr_dot(x,y)
   !
   USE kinds,                ONLY : dp
   USE io_global,            ONLY : stdout
-  USE klist,                ONLY : nks, xk, wk, npw_k => ngk
+  USE klist,                ONLY : nks, xk, wk, ngk
   USE lsda_mod,             ONLY : nspin
   USE wvfct,                ONLY : npwx,nbnd,wg,npw,igk,g2kin
   USE gvecw,                ONLY : gcutw
@@ -96,7 +96,7 @@ CONTAINS
     !
     DO ibnd=1,nbnd
        !
-       temp_gamma = temp_gamma + 2.D0*wg(ibnd,1)*DDOT(2*npw_k(1),x(:,ibnd,1),1,y(:,ibnd,1),1)
+       temp_gamma = temp_gamma + 2.D0*wg(ibnd,1)*DDOT(2*ngk(1),x(:,ibnd,1),1,y(:,ibnd,1),1)
        !
        ! G=0 has been accounted twice, so we subtract one contribution.
        !
@@ -120,7 +120,7 @@ CONTAINS
     DO ik=1,nks   
        DO ibnd=1,nbnd
           !
-          temp_k = temp_k + wg(ibnd,ik) * ZDOTC(npw_k(ik),x(1,ibnd,ik),1,y(1,ibnd,ik),1)
+          temp_k = temp_k + wg(ibnd,ik) * ZDOTC(ngk(ik),x(1,ibnd,ik),1,y(1,ibnd,ik),1)
           !
        ENDDO
     ENDDO
@@ -195,7 +195,7 @@ SUBROUTINE check_vector_gamma (x)
    USE kinds,                ONLY : dp
    USE mp_global,            ONLY : inter_pool_comm, intra_bgrp_comm
    USE mp,                   ONLY : mp_sum
-   USE klist ,               ONLY : npw_k=>ngk
+   USE klist ,               ONLY : ngk
    USE gvect,                ONLY : gstart
    USE io_global,            ONLY : stdout
    !
@@ -208,7 +208,7 @@ SUBROUTINE check_vector_gamma (x)
    REAL(kind=dp) :: temp_gamma
    REAL(kind=dp), EXTERNAL :: DDOT
    !
-   temp_gamma = 2.D0*DDOT(2*npw_k(1),x(:),1,x(:),1)
+   temp_gamma = 2.D0*DDOT(2*ngk(1),x(:),1,x(:),1)
    !    
    IF (gstart==2) temp_gamma = temp_gamma - dble(x(1))*dble(x(1))
    ! 
@@ -232,7 +232,7 @@ SUBROUTINE check_vector_f (x)
    USE kinds,                ONLY : dp
    USE mp_global,            ONLY : inter_pool_comm, intra_bgrp_comm
    USE mp,                   ONLY : mp_sum
-   USE klist ,               ONLY : npw_k=>ngk
+   USE klist ,               ONLY : ngk
    USE gvect,                ONLY : gstart
    USE io_global,            ONLY : stdout
    !
@@ -245,7 +245,7 @@ SUBROUTINE check_vector_f (x)
    COMPLEX(kind=dp) :: temp_f
    COMPLEX(kind=dp), EXTERNAL :: ZDOTC
    !
-   temp_f = ZDOTC(npw_k(1),x(:),1,x(:),1)
+   temp_f = ZDOTC(ngk(1),x(:),1,x(:),1)
    !
 #ifdef __MPI
    CALL mp_sum(temp_f, intra_bgrp_comm)
@@ -267,7 +267,7 @@ SUBROUTINE check_all_bands_gamma (x,sx,nbnd1,nbnd2)
   USE kinds,                ONLY : dp 
   USE mp_global,            ONLY : inter_pool_comm, intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
-  USE klist ,               ONLY : npw_k=>ngk
+  USE klist ,               ONLY : ngk
   USE io_global,            ONLY : stdout
   USE gvect,                ONLY : gstart
   !
@@ -285,7 +285,7 @@ SUBROUTINE check_all_bands_gamma (x,sx,nbnd1,nbnd2)
   DO ibnd=1,nbnd1
      DO jbnd=ibnd,nbnd2
         !
-        temp_gamma = 2.D0*DDOT(2*npw_k(1),x(:,ibnd),1,sx(:,jbnd),1)
+        temp_gamma = 2.D0*DDOT(2*ngk(1),x(:,ibnd),1,sx(:,jbnd),1)
         !
         IF (gstart==2) temp_gamma = temp_gamma - dble(x(1,ibnd))*dble(sx(1,jbnd))
         !

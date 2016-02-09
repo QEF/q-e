@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2015 Quantum ESPRESSO group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -19,7 +19,7 @@ SUBROUTINE lr_normalise (evc1, norm)
   USE gvect,                ONLY : gstart
   USE cell_base,            ONLY : omega
   USE io_global,            ONLY : stdout
-  USE klist,                ONLY : nks, xk, npw_k=>ngk, igk_k
+  USE klist,                ONLY : nks, xk, ngk, igk_k
   USE lsda_mod,             ONLY : nspin
   USE uspp,                 ONLY : vkb, nkb, okvan
   USE wvfct,                ONLY : nbnd, npwx, npw, wg
@@ -98,8 +98,8 @@ CONTAINS
           !
           ! Non real_space & nkb > 0 case
           !
-          CALL calbec(npw_k(1),vkb,evc1(:,:,1),becp)
-          CALL s_psi(npwx,npw_k(1),nbnd,evc1(1,1,1),spsi)
+          CALL calbec(ngk(1),vkb,evc1(:,:,1),becp)
+          CALL s_psi(npwx,ngk(1),nbnd,evc1(1,1,1),spsi)
           !
        ENDIF
        !
@@ -107,7 +107,7 @@ CONTAINS
        !
        ! nkb = 0 (just array copying)
        !
-       CALL s_psi(npwx,npw_k(1),nbnd,evc1(1,1,1),spsi)
+       CALL s_psi(npwx,ngk(1),nbnd,evc1(1,1,1),spsi)
        !
     ENDIF
     !
@@ -138,12 +138,12 @@ CONTAINS
        !
        IF ( nkb > 0 .and. okvan) THEN
           !
-          CALL init_us_2(npw_k(ik),igk_k(1,ik),xk(1,ik),vkb)
-          CALL calbec(npw_k(ik),vkb,evc1(:,:,ik),becp)
+          CALL init_us_2(ngk(ik),igk_k(1,ik),xk(1,ik),vkb)
+          CALL calbec(ngk(ik),vkb,evc1(:,:,ik),becp)
           !
        ENDIF
        !
-       CALL s_psi(npwx,npw_k(ik),nbnd,evc1(:,:,ik),spsi(:,:,ik))
+       CALL s_psi(npwx,ngk(ik),nbnd,evc1(:,:,ik),spsi(:,:,ik))
        !
     ENDDO
     !

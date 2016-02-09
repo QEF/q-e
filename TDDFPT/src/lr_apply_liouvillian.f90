@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2015 Quantum ESPRESSO group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -33,7 +33,7 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
   USE gvect,                ONLY : nl, ngm, gstart, g, gg
   USE io_global,            ONLY : stdout
   USE kinds,                ONLY : dp
-  USE klist,                ONLY : nks, xk, npw_k => ngk, igk_k
+  USE klist,                ONLY : nks, xk, ngk, igk_k
   USE lr_variables,         ONLY : evc0, revc0, rho_1, rho_1c, &
                                  & ltammd, size_evc, no_hxc, lr_exx, &
                                  & scissor, davidson, lr_verbosity
@@ -301,7 +301,7 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
   !
   DO ik = 1, nks
      !
-     CALL sm1_psi(.FALSE., ik, npwx, npw_k(ik), nbnd, &
+     CALL sm1_psi(.FALSE., ik, npwx, ngk(ik), nbnd, &
                   & sevc1_new(1,1,ik), evc1_new(1,1,ik))
      ! 
   ENDDO
@@ -523,7 +523,7 @@ CONTAINS
        !
        IF( nkb > 0 .and. okvan .and. real_space_debug <= 7) THEN
           !The non real_space part
-          CALL dgemm( 'N', 'N', 2*npw_k(1), nbnd, nkb, 1.d0, vkb, &
+          CALL dgemm( 'N', 'N', 2*ngk(1), nbnd, nkb, 1.d0, vkb, &
                2*npwx, becp2, nkb, 1.d0, evc1_new, 2*npwx )
           !
        ENDIF
@@ -547,7 +547,7 @@ CONTAINS
     !
     !  Call h_psi on evc1 such that h.evc1 = sevc1_new
     !
-    CALL h_psi(npwx,npw_k(1),nbnd,evc1(1,1,1),sevc1_new(1,1,1)) ! g2kin is needed here
+    CALL h_psi(npwx,ngk(1),nbnd,evc1(1,1,1),sevc1_new(1,1,1)) ! g2kin is needed here
     !
     ! spsi1 = s*evc1
     !
@@ -558,14 +558,14 @@ CONTAINS
            CALL fwfft_orbital_gamma(spsi1,ibnd,nbnd)
         ENDDO
     ELSE
-       CALL s_psi(npwx,npw_k(1),nbnd,evc1(1,1,1),spsi1)
+       CALL s_psi(npwx,ngk(1),nbnd,evc1(1,1,1),spsi1)
     ENDIF
     !
     !   Subtract the eigenvalues
     !
     DO ibnd = 1,nbnd
        !
-       CALL zaxpy(npw_k(1), CMPLX(-(et(ibnd,1)-scissor),0.0d0,dp), &
+       CALL zaxpy(ngk(1), CMPLX(-(et(ibnd,1)-scissor),0.0d0,dp), &
                       & spsi1(:,ibnd), 1, sevc1_new(:,ibnd,1), 1)
        !
     ENDDO
@@ -627,7 +627,7 @@ SUBROUTINE lr_apply_liouvillian_k()
              !
              CALL fwfft ('Wave', psic, dffts)
              !
-             DO ig = 1,npw_k(ik)
+             DO ig = 1,ngk(ik)
                 !
                 evc1_new(ig,ibnd,ik) = psic(nls(igk_k(ig,ik)))
                 !
@@ -643,7 +643,7 @@ SUBROUTINE lr_apply_liouvillian_k()
           !
           DO ik = 1,nks
              !
-             CALL init_us_2(npw_k(ik),igk_k(1,ik),xk(1,ik),vkb)
+             CALL init_us_2(ngk(ik),igk_k(1,ik),xk(1,ik),vkb)
              !
              becp2(:,:) = 0.0d0
              !
@@ -682,7 +682,7 @@ SUBROUTINE lr_apply_liouvillian_k()
              ENDDO
              !
              !evc1_new(ik) = evc1_new(ik) + vkb*becp2(ik)
-             CALL zgemm( 'N', 'N', npw_k(ik), nbnd, nkb, (1.d0,0.d0), vkb, &
+             CALL zgemm( 'N', 'N', ngk(ik), nbnd, nkb, (1.d0,0.d0), vkb, &
                   npwx, becp2, nkb, (1.d0,0.d0), evc1_new(:,:,ik), npwx )
              !
           ENDDO
@@ -698,9 +698,9 @@ SUBROUTINE lr_apply_liouvillian_k()
     !
     DO ik=1,nks
        !
-       CALL init_us_2(npw_k(ik),igk_k(1,ik),xk(1,ik),vkb)
+       CALL init_us_2(ngk(ik),igk_k(1,ik),xk(1,ik),vkb)
        !
-       DO ig = 1,npw_k(ik)
+       DO ig = 1, ngk(ik)
           !
           g2kin(ig)=((xk(1,ik)+g(1,igk_k(ig,ik)))**2 &
                     +(xk(2,ik)+g(2,igk_k(ig,ik)))**2 &
@@ -710,18 +710,18 @@ SUBROUTINE lr_apply_liouvillian_k()
        !
        igk(:) = igk_k(:,ik)
        current_k = ik
-       npw = npw_k(ik)
+       npw = ngk(ik)
        !
-       CALL h_psi(npwx,npw_k(ik),nbnd,evc1(1,1,ik),sevc1_new(1,1,ik))
+       CALL h_psi(npwx,ngk(ik),nbnd,evc1(1,1,ik),sevc1_new(1,1,ik))
        !
-       CALL s_psi(npwx,npw_k(ik),nbnd,evc1(1,1,ik),spsi1)
+       CALL s_psi(npwx,ngk(ik),nbnd,evc1(1,1,ik),spsi1)
        !
        ! Subtract the eigenvalues
        ! IT: One may want to add scissor 
        !
        DO ibnd=1,nbnd
           !
-          DO ig=1,npw_k(ik)
+          DO ig=1,ngk(ik)
              !
              sevc1_new(ig,ibnd,ik)=sevc1_new(ig,ibnd,ik) &
                   -cmplx(et(ibnd,ik),0.0d0,dp)*spsi1(ig,ibnd)

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2015 Quantum ESPRESSO group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -30,7 +30,7 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
   USE fft_interfaces,         ONLY : invfft
   USE io_global,              ONLY : stdout
   USE kinds,                  ONLY : dp
-  USE klist,                  ONLY : nks, xk, wk, npw_k => ngk, igk_k
+  USE klist,                  ONLY : nks, xk, wk, ngk, igk_k
   USE lr_variables,           ONLY : evc0,revc0,rho_1,lr_verbosity,&
                                      & charge_response, itermax,&
                                      & cube_save, LR_iteration,&
@@ -487,7 +487,7 @@ CONTAINS
        !
        IF ( real_space_debug <= 6) THEN 
           ! In real space, the value is calculated above
-          CALL calbec(npw_k(1), vkb, evc1(:,:,1), becp)
+          CALL calbec(ngk(1), vkb, evc1(:,:,1), becp)
           !
        ENDIF
        !
@@ -594,7 +594,7 @@ CONTAINS
           !
           psic(:) = (0.0d0,0.0d0)
           !
-          DO ig=1,npw_k(ik)
+          DO ig = 1, ngk(ik)
              psic(nls(igk_k(ig,ik)))=evc1(ig,ibnd,ik)
           ENDDO
           !
@@ -625,7 +625,7 @@ CONTAINS
           !
           ! Calculate the beta-functions vkb
           !
-          CALL init_us_2(npw_k(ik),igk_k(1,ik),xk(1,ik),vkb)
+          CALL init_us_2(ngk(ik),igk_k(1,ik),xk(1,ik),vkb)
           !
           scal = 0.0d0
           becsum(:,:,:) = 0.0d0
@@ -633,7 +633,7 @@ CONTAINS
           ! Calculate the product of beta-functions vkb with the 
           ! wavefunctions evc1 : becp%k = <vkb|evc1>
           !
-          CALL calbec(npw_k(ik),vkb,evc1(:,:,ik),becp)
+          CALL calbec(ngk(ik),vkb,evc1(:,:,ik),becp)
           !
           CALL start_clock( 'becsum' )
           !

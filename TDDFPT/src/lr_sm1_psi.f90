@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2015 Quantum ESPRESSO group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -265,7 +265,7 @@ CONTAINS
     ! Optical case : k-points version
     !
     USE becmod,        ONLY : bec_type,becp,calbec
-    USE klist,         ONLY : nks, xk, npw_k=>ngk, igk_k
+    USE klist,         ONLY : nks, xk, ngk, igk_k
     !
     IMPLICIT NONE
     !
@@ -306,12 +306,12 @@ CONTAINS
           !
           ! Calculate beta-functions vkb for a given k point.
           !
-          CALL init_us_2(npw_k(ik1),igk_k(:,ik1),xk(1,ik1),vkb)
+          CALL init_us_2(ngk(ik1),igk_k(:,ik1),xk(1,ik1),vkb)
           !
           ! Calculate the coefficients B_ij defined by Eq.(15).
           ! B_ij = <beta(i)|beta(j)>, where beta(i) = vkb(i).
           !
-          CALL zgemm('C','N',nkb,nkb,npw_k(ik1),(1.d0,0.d0),vkb,lda,vkb,lda,(0.d0,0.d0),BB_(1,1,ik1),nkb)
+          CALL zgemm('C','N',nkb,nkb,ngk(ik1),(1.d0,0.d0),vkb,lda,vkb,lda,(0.d0,0.d0),BB_(1,1,ik1),nkb)
           !
 #ifdef __MPI
           CALL mp_sum(BB_(:,:,ik1), intra_bgrp_comm)
@@ -393,7 +393,7 @@ CONTAINS
     !
     ! Calculate beta-functions vkb for a given k point 'ik'.
     !
-    CALL init_us_2(npw_k(ik),igk_k(:,ik),xk(1,ik),vkb)
+    CALL init_us_2(ngk(ik),igk_k(:,ik),xk(1,ik),vkb)
     !
     ! Compute the product of the beta-functions vkb with the functions psi
     ! at point k, and put the result in becp%k.
