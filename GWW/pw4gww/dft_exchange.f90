@@ -14,7 +14,7 @@ subroutine dft_exchange(nbnd_v,nbnd_s,n_set, e_x,ks_wfcs)
 
   
   USE io_global,            ONLY : stdout, ionode, ionode_id
-  USE io_files,             ONLY : prefix, tmp_dir, iunwfc, nwordwfc, iunigk
+  USE io_files,             ONLY : prefix, tmp_dir, iunwfc, nwordwfc
   USE mp_global,            ONLY : nproc_pool, me_pool
   USE kinds,    ONLY : DP
   USE basis

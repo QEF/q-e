@@ -491,7 +491,7 @@ SUBROUTINE newscf
   USE wvfct, ONLY: nbnd, nbndx
   USE noncollin_module, ONLY: report
   USE symm_base,     ONLY : nsym
-  USE io_files,      ONLY : iunigk, iunwfc, input_drho, output_drho
+  USE io_files,      ONLY : iunwfc, input_drho, output_drho
   USE ldaU,          ONLY : lda_plus_u
   USE control_flags, ONLY : restart, io_level, lscf, iprint, &
                             david, max_cg_iter, &
@@ -545,7 +545,6 @@ SUBROUTINE newscf
   CALL electrons ( )
   !
   CLOSE(unit=iunwfc, status='keep')
-  CLOSE(unit=iunigk, status='delete')
   !
   CALL stop_clock('PWSCF')
   !

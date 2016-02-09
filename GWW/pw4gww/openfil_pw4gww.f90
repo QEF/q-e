@@ -46,15 +46,6 @@ SUBROUTINE openfil_pw4gww()
      call errore ('openfil_pw4gww','file '//TRIM( prefix )//'.wfc'//' not found',1)     
   END IF
   !
-  !!!! ... iunigk contains the number of PW and the indices igk
-  !!!! ... Note that unit 15 is reserved for error messages 
-  !
-  !!!! CALL seqopn( iunigk, 'igk', 'UNFORMATTED', exst )
-  !!!!
-  !!!! IF ( .NOT. exst ) THEN
-  !!!!   call errore ('openfil_pp','file '//TRIM( prefix )//'.igk'//' not found',1)
-  !!!! END IF
-  !
   ! ... Needed for LDA+U
   !
   ! ... iunat  contains the (orthogonalized) atomic wfcs 

@@ -19,7 +19,7 @@ SUBROUTINE wfc_gamma_real(itask,ispin)
   USE kinds,                ONLY : DP
   USE gvect,                ONLY : gstart
   USE gvecs,              ONLY : nls, nlsm, doublegrid
-   USE io_files,             ONLY : iunwfc, nwordwfc, iunigk, diropn
+   USE io_files,             ONLY : iunwfc, nwordwfc, diropn
   USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et
   USE mp,                   ONLY : mp_bcast
   USE io_global,            ONLY : stdout

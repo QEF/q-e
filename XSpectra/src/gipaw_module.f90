@@ -234,7 +234,7 @@ CONTAINS
     USE io_global,        ONLY : stdout
     USE wvfct,            ONLY : nbnd, npwx
     USE ldaU,             ONLY : lda_plus_U, nwfcU
-    USE io_files,         ONLY : prefix, iunhub, iunwfc, iunigk, &
+    USE io_files,         ONLY : prefix, iunhub, iunwfc, &
                                  nwordwfcU, nwordwfc, seqopn
     USE noncollin_module, ONLY : npol
     USE buffers,          ONLY : open_buffer
@@ -255,10 +255,6 @@ CONTAINS
     nwordwfcU = npwx*nwfcU*npol
     IF ( lda_plus_u ) &
        CALL open_buffer( iunhub, 'hub', nwordwfcU, io_level, exst )
-    !
-    ! ... iunigk contains the number of PW and the indices igk
-    ! ... 
-    CALL seqopn( iunigk, 'igk', 'UNFORMATTED', exst )
     !
     RETURN
   END SUBROUTINE gipaw_openfil

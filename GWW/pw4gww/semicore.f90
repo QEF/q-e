@@ -13,7 +13,7 @@
   subroutine semicore(n_semicore, num_nbnds,ispin)
 !NOT_TO_BE_INCLUDED_START
      USE io_global,             ONLY : stdout, ionode,ionode_id
-     USE io_files,              ONLY : diropn,prefix,tmp_dir, iunigk
+     USE io_files,              ONLY : diropn,prefix,tmp_dir
      use pwcom
      USE wavefunctions_module,  ONLY : evc
      USE kinds,                 ONLY : DP
