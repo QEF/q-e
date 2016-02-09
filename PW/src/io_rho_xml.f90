@@ -282,7 +282,9 @@ MODULE io_rho_xml
       !
       USE io_files,  ONLY : tmp_dir, prefix
       USE fft_base,  ONLY : dfftp
-      USE spin_orb,  ONLY : domag
+      USE spin_orb,  ONLY : domag, lforcet 
+      USE noncollin_module,   ONLY : angle1, angle2
+      USE constants, ONLY : PI
       USE io_global, ONLY : ionode
       !
       IMPLICIT NONE
@@ -321,6 +323,30 @@ MODULE io_rho_xml
       ELSE IF ( nspin == 4 ) THEN
          !
          IF ( domag ) THEN
+
+!---  
+!  To set up noncollinear m_x,y,z from collinear m_z (AlexS) 
+!
+if(lforcet) then
+            rho(:,2:4) = 0.D0
+            write(6,*)
+            write(6,*) '-----------'
+            write(6,'(''Spin angles Theta, Phi (degree) = '',2f8.4)') &
+                                 angle1(1)/PI*180.d0, angle2(1)/PI*180.d0 
+            write(6,*) '-----------'
+            file_base = TRIM( dirname ) // '/spin-polarization' // TRIM( ext )
+            CALL read_rho_xml ( file_base, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
+                        dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, rho(:,3) )
+
+            rho(:,4) = rho(:,3)*cos(angle1(1))
+            rho(:,2) = rho(:,3)*sin(angle1(1))
+
+            rho(:,3) = rho(:,2)*sin(angle2(1))
+            rho(:,2) = rho(:,2)*cos(angle2(1))
+
+!-------------
+
+else
             !
             file_base = TRIM( dirname ) // '/magnetization.x' // TRIM( ext )
             CALL read_rho_xml ( file_base, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
@@ -333,6 +359,7 @@ MODULE io_rho_xml
             file_base = TRIM( dirname ) // '/magnetization.z' // TRIM( ext )
             CALL read_rho_xml ( file_base, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
                  dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, rho(:,4) ) 
+endif
             !
          ELSE
             !

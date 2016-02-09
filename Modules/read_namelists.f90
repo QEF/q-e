@@ -225,6 +225,7 @@ MODULE read_namelists_module
        ! ... non collinear program variables
        !
        lspinorb = .FALSE.
+       lforcet = .FALSE.
        starting_spin_angle=.FALSE.
        noncolin = .FALSE.
        lambda = 1.0_DP
@@ -817,6 +818,7 @@ MODULE read_namelists_module
        ! ... non collinear broadcast
        !
        CALL mp_bcast( lspinorb,                  ionode_id, intra_image_comm )
+       CALL mp_bcast( lforcet,                   ionode_id, intra_image_comm )
        CALL mp_bcast( starting_spin_angle,       ionode_id, intra_image_comm )
        CALL mp_bcast( noncolin,                  ionode_id, intra_image_comm )
        CALL mp_bcast( angle1,                    ionode_id, intra_image_comm )

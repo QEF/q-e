@@ -174,6 +174,7 @@ SUBROUTINE iosys()
                                report_    => report
   !
   USE spin_orb, ONLY : lspinorb_ => lspinorb,  &
+                       lforcet_ => lforcet,    &
                        starting_spin_angle_ => starting_spin_angle
 
   !
@@ -235,7 +236,7 @@ SUBROUTINE iosys()
                                starting_spin_angle, assume_isolated,spline_ps,&
                                vdw_corr, london, london_s6, london_rcut, london_c6, &
                                ts_vdw, ts_vdw_isolated, ts_vdw_econv_thr,     &
-                               xdm, xdm_a1, xdm_a2,                           &
+                               xdm, xdm_a1, xdm_a2, lforcet,                  &
                                one_atom_occupations,                          &
                                esm_bc, esm_efield, esm_w, esm_nfit, esm_a,    &
                                lfcpopt, lfcpdyn, fcp_mu, fcp_mass, fcp_tempw, & 
@@ -753,6 +754,7 @@ SUBROUTINE iosys()
      !
   ENDIF
   !
+
   SELECT CASE( trim( restart_mode ) )
   CASE( 'from_scratch' )
      !
@@ -1105,6 +1107,7 @@ SUBROUTINE iosys()
   tot_magnetization_ = tot_magnetization
   !
   lspinorb_ = lspinorb
+  lforcet_ = lforcet
   starting_spin_angle_ = starting_spin_angle
   noncolin_ = noncolin
   angle1_   = angle1

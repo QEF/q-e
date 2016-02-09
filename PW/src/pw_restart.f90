@@ -971,6 +971,8 @@ MODULE pw_restart
       USE scf,           ONLY : rho
       USE lsda_mod,      ONLY : nspin
       USE mp_bands,      ONLY : intra_bgrp_comm
+      USE spin_orb,      ONLY : lforcet 
+      USE input_parameters, ONLY : calculation
       USE mp,            ONLY : mp_sum
       !
       IMPLICIT NONE
@@ -1003,6 +1005,8 @@ MODULE pw_restart
       !
       lheader = .NOT. qexml_version_init
       IF (lheader) need_qexml = .TRUE.
+
+
       !
       ldim    = .FALSE.
       lcell   = .FALSE.
@@ -1022,6 +1026,8 @@ MODULE pw_restart
       lexx    = .FALSE.
       lesm    = .FALSE.
       !
+
+
       SELECT CASE( what )
       CASE( 'header' )
          !
@@ -1133,6 +1139,21 @@ MODULE pw_restart
          !
       END SELECT
       !
+
+
+!-- To do Force Theorem calculation (AlexS)
+!
+      IF ( lforcet.and.calculation.eq.'nscf' ) THEN
+        IF ( what.eq.'config' ) THEN
+           ierr = 1
+        ELSE 
+          IF (lrho) CALL read_rho( rho, nspin )
+        ENDIF
+        RETURN
+      ENDIF
+!--
+
+
       IF ( .NOT. lheader .AND. .NOT. qexml_version_init) &
          CALL errore( 'pw_readfile', 'qexml version not set', 71 )
       !
@@ -1278,6 +1299,7 @@ MODULE pw_restart
          END IF
          !
       END IF
+
       IF ( lrho ) THEN
          !
          ! ... to read the charge-density we use the routine from io_rho_xml 
@@ -1286,6 +1308,7 @@ MODULE pw_restart
          CALL read_rho( rho, nspin )
          !
       END IF
+
       IF ( lef ) THEN
          !
          CALL read_ef( ierr )
@@ -1326,6 +1349,7 @@ MODULE pw_restart
          GOTO 100
       END IF
       !
+
       RETURN
       !
       ! uncomment to continue execution after an error occurs
@@ -1334,7 +1358,11 @@ MODULE pw_restart
       !     ENDIF
       !     RETURN
       ! comment to continue execution after an error occurs
+
+
 100   CALL errore('pw_readfile',TRIM(errmsg),ierr)
+
+
       !
     END SUBROUTINE pw_readfile
     !

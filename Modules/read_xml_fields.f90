@@ -470,6 +470,9 @@ CONTAINS
     CASE ( 'lspinorb' ) 
        CALL iotk_scan_dat_inside( xmlinputunit, lspinorb, ierr = ierr )
        !
+    CASE ( 'lforcet' )
+       CALL iotk_scan_dat_inside( xmlinputunit, lforcet, ierr = ierr )
+       !
     CASE ( 'max_seconds' )
        CALL iotk_scan_dat_inside( xmlinputunit, max_seconds, ierr = ierr )
        !
