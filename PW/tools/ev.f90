@@ -84,7 +84,7 @@ PROGRAM ev
                     au_unit=='ang'
       IF (in_angstrom) WRITE(*,'(5x,"Assuming Angstrom")')
       WRITE(*,'(5x,"Enter type of bravais lattice (fcc, bcc, sc, noncubic) > ")', advance="NO")
-      READ(6,'(a)') bravais
+      READ(5,'(a)') bravais
 !
       IF(trim(bravais)=='fcc'.or.trim(bravais)=='FCC') THEN
          fac = 0.25d0
