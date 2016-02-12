@@ -972,7 +972,7 @@ MODULE pw_restart
       USE lsda_mod,      ONLY : nspin
       USE mp_bands,      ONLY : intra_bgrp_comm
       USE spin_orb,      ONLY : lforcet 
-      USE input_parameters, ONLY : calculation
+      USE control_flags, ONLY : lscf, lbands
       USE mp,            ONLY : mp_sum
       !
       IMPLICIT NONE
@@ -1143,7 +1143,7 @@ MODULE pw_restart
 
 !-- To do Force Theorem calculation (AlexS)
 !
-      IF ( lforcet.and.calculation.eq.'nscf' ) THEN
+      IF ( lforcet.and. .NOT.lscf .AND. .NOT.lbands ) THEN
         IF ( what.eq.'config' ) THEN
            ierr = 1
         ELSE 

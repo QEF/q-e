@@ -523,7 +523,6 @@ CONTAINS
    !
    SUBROUTINE fcp_summary ()
       !
-      USE input_parameters, ONLY : calculation
       USE io_global,        ONLY : stdout, ionode
       USE constants,        ONLY : rytoev, BOHR_RADIUS_ANGS
       USE klist,            ONLY : tot_charge

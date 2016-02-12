@@ -485,7 +485,6 @@ fcp.o : ../../Modules/cell_base.o
 fcp.o : ../../Modules/constants.o
 fcp.o : ../../Modules/control_flags.o
 fcp.o : ../../Modules/fcp_variables.o
-fcp.o : ../../Modules/input_parameters.o
 fcp.o : ../../Modules/io_files.o
 fcp.o : ../../Modules/io_global.o
 fcp.o : ../../Modules/ions_base.o
@@ -756,7 +755,6 @@ hinit0.o : ../../Modules/cell_base.o
 hinit0.o : ../../Modules/control_flags.o
 hinit0.o : ../../Modules/fft_base.o
 hinit0.o : ../../Modules/gvecw.o
-hinit0.o : ../../Modules/io_files.o
 hinit0.o : ../../Modules/io_global.o
 hinit0.o : ../../Modules/ions_base.o
 hinit0.o : ../../Modules/kind.o
@@ -900,6 +898,7 @@ interpolate.o : ../../Modules/control_flags.o
 interpolate.o : ../../Modules/fft_base.o
 interpolate.o : ../../Modules/kind.o
 interpolate.o : ../../Modules/recvec.o
+io_rho_xml.o : ../../Modules/constants.o
 io_rho_xml.o : ../../Modules/fft_base.o
 io_rho_xml.o : ../../Modules/funct.o
 io_rho_xml.o : ../../Modules/io_files.o
@@ -1311,6 +1310,7 @@ print_ks_energies.o : ../../Modules/io_global.o
 print_ks_energies.o : ../../Modules/kind.o
 print_ks_energies.o : ../../Modules/mp.o
 print_ks_energies.o : ../../Modules/mp_bands.o
+print_ks_energies.o : ../../Modules/mp_pools.o
 print_ks_energies.o : pwcom.o
 punch.o : ../../Modules/control_flags.o
 punch.o : ../../Modules/io_files.o
@@ -1569,6 +1569,7 @@ save_in_electrons.o : ../../Modules/io_global.o
 save_in_electrons.o : ../../Modules/kind.o
 save_in_electrons.o : pwcom.o
 scale_h.o : ../../Modules/cell_base.o
+scale_h.o : ../../Modules/constants.o
 scale_h.o : ../../Modules/control_flags.o
 scale_h.o : ../../Modules/funct.o
 scale_h.o : ../../Modules/input_parameters.o

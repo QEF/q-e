@@ -17,11 +17,12 @@ subroutine scale_h
   USE io_global,  ONLY : stdout
   USE cell_base,  ONLY : bg, omega
   USE cellmd,     ONLY : at_old, omega_old
+  USE constants,  ONLY : eps8
   USE gvect,      ONLY : g, gg, ngm
   USE klist,      ONLY : xk, wk, nkstot
   USE us,         ONLY : nqxq, qrad, tab, tab_at, dq
   USE control_flags, ONLY : iverbosity
-  USE start_k,          ONLY : nks_start, xk_start
+  USE start_k,          ONLY : nks_start, xk_start, nk1,nk2,nk3
   USE input_parameters, ONLY : k_points
   USE exx,        ONLY : exx_grid_reinit
   USE funct,      ONLY : dft_is_hybrid
@@ -44,15 +45,19 @@ subroutine scale_h
     call cryst_to_cart (nks_start, xk_start, at_old, - 1)
     call cryst_to_cart (nks_start, xk_start, bg, + 1)
   ENDIF
-  IF(k_points/='automatic' .and. k_points/='gamma')THEN
-  IF ( iverbosity > 0 .OR. nkstot < 100 ) THEN
-     WRITE( stdout, '(5x,a)' ) 'NEW k-points:'
-     do ik = 1, nkstot
-        WRITE( stdout, '(3f12.7,f12.7)') (xk (ipol, ik) , ipol = 1, 3) , wk (ik)
-     enddo
-  ELSE
-     WRITE( stdout, '(5x,a)' ) "NEW k-points: (use verbosity='high' to print them)"
-  ENDIF
+  !
+  ! Print new k-points only if given in input and if not Gamma
+  !
+  IF ( nk1/=0 .AND. nk2/=0 .AND. nk3 /= 0 .AND. &
+       ( nkstot > 1 .OR. ABS(xk(1,1)**2+xk(2,1)**2+xk(3,1)**2) > eps8 ) ) THEN
+     IF ( iverbosity > 0 .OR. nkstot < 100 ) THEN
+        WRITE( stdout, '(5x,a)' ) 'NEW k-points:'
+        DO ik = 1, nkstot
+           WRITE( stdout, '(3f12.7,f12.7)') (xk (ipol, ik) , ipol=1,3), wk (ik)
+        ENDDO
+     ELSE
+        WRITE( stdout, '(5x,a)' ) "NEW k-points: use verbosity='high' to print them"
+     ENDIF
   ENDIF
   !
   ! scale the g vectors (as well as gg and gl arrays)
