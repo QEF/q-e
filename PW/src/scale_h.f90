@@ -48,7 +48,7 @@ subroutine scale_h
   !
   ! Print new k-points only if given in input and if not Gamma
   !
-  IF ( nk1/=0 .AND. nk2/=0 .AND. nk3 /= 0 .AND. &
+  IF ( nk1==0 .AND. nk2==0 .AND. nk3 == 0 .AND. &
        ( nkstot > 1 .OR. ABS(xk(1,1)**2+xk(2,1)**2+xk(3,1)**2) > eps8 ) ) THEN
      IF ( iverbosity > 0 .OR. nkstot < 100 ) THEN
         WRITE( stdout, '(5x,a)' ) 'NEW k-points:'
