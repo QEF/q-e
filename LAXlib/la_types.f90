@@ -34,6 +34,7 @@
          INTEGER :: myr      = 0 !  processor row index
          INTEGER :: myc      = 0 !  processor column index
          INTEGER :: comm     = 0 !  communicator
+         INTEGER :: cntx     =-1 !  scalapack context
          INTEGER :: mype     = 0 !  processor index ( from 0 to desc( la_npr_ ) * desc( la_npc_ ) - 1 )
          INTEGER :: nrl      = 0 !  number of local rows, when the matrix rows are cyclically distributed across proc
          INTEGER :: nrlx     = 0 !  leading dimension, when the matrix is distributed by row
@@ -76,14 +77,14 @@
    END SUBROUTINE descla_local_dims
    !
    !
-   SUBROUTINE descla_init( descla, n, nx, np, me, comm, includeme )
+   SUBROUTINE descla_init( descla, n, nx, np, me, comm, cntx, includeme )
       !
       IMPLICIT NONE  
       TYPE(la_descriptor), INTENT(OUT) :: descla
       INTEGER, INTENT(IN)  :: n   !  the size of this matrix
       INTEGER, INTENT(IN)  :: nx  !  the max among different matrixes sharing 
                                   !  this descriptor or the same data distribution
-      INTEGER, INTENT(IN)  :: np(2), me(2), comm
+      INTEGER, INTENT(IN)  :: np(2), me(2), comm, cntx
       INTEGER, INTENT(IN)  :: includeme
       INTEGER  :: ir, nr, ic, nc, lnode, nrcx, nrl, nrlx
       INTEGER  :: ip, npp
@@ -101,11 +102,13 @@
 
 #if __SCALAPACK
       nrcx = ldim_block_sca( nx, np(1), 0 )
+      descla%cntx = cntx
 #else
       nrcx = ldim_block( nx, np(1), 0 )
       DO ip = 1, np(1) - 1
          nrcx = MAX( nrcx, ldim_block( nx, np(1), ip ) )
       END DO
+      descla%cntx = -1
 #endif
       !
       ! find local dimensions, if appropriate

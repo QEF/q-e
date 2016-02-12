@@ -115,7 +115,7 @@ MODULE cp_main_variables
       !------------------------------------------------------------------------
       !
       USE mp_global,   ONLY: np_ortho, me_ortho, intra_bgrp_comm, ortho_comm, &
-                             me_bgrp, ortho_comm_id
+                             me_bgrp, ortho_comm_id, ortho_cntx
       USE mp,          ONLY: mp_max, mp_min
       USE descriptors, ONLY: la_descriptor, descla_init
       !
@@ -199,7 +199,7 @@ MODULE cp_main_variables
       ALLOCATE( descla( nspin ) )
       !
       DO iss = 1, nspin
-         CALL descla_init( descla( iss ), nupdwn( iss ), nudx, np_ortho, me_ortho, ortho_comm, ortho_comm_id )
+         CALL descla_init( descla( iss ), nupdwn( iss ), nudx, np_ortho, me_ortho, ortho_comm, ortho_cntx, ortho_comm_id )
       END DO
       !
       nrcx = MAXVAL( descla( : )%nrcx )

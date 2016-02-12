@@ -1875,7 +1875,7 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
   USE mp_global,        ONLY : npool, me_pool, root_pool, &
                                intra_pool_comm, me_image, &
                                ortho_comm, np_ortho, me_ortho, ortho_comm_id, &
-                               leg_ortho
+                               leg_ortho, ortho_cntx
   USE wavefunctions_module, ONLY: evc
   USE parallel_toolkit, ONLY : zsqmred, zsqmher, zsqmdst, zsqmcll, dsqmsym
   USE zhpev_module,     ONLY : pzhpev_drv, zhpev_drv
@@ -2426,7 +2426,7 @@ CONTAINS
      INTEGER :: i, j, rank
      INTEGER :: coor_ip( 2 )
      !
-     CALL descla_init( desc, nsiz, nsiz, np_ortho, me_ortho, ortho_comm, ortho_comm_id )
+     CALL descla_init( desc, nsiz, nsiz, np_ortho, me_ortho, ortho_comm, ortho_cntx, ortho_comm_id )
      !
      nx = desc%nrcx
      !
@@ -2434,7 +2434,7 @@ CONTAINS
         DO i = 0, desc%npr - 1
            coor_ip( 1 ) = i
            coor_ip( 2 ) = j
-           CALL descla_init( desc_ip(i+1,j+1), desc%n, desc%nx, np_ortho, coor_ip, ortho_comm, 1 )
+           CALL descla_init( desc_ip(i+1,j+1), desc%n, desc%nx, np_ortho, coor_ip, ortho_comm, ortho_cntx, 1 )
            CALL GRID2D_RANK( 'R', desc%npr, desc%npc, i, j, rank )
            rank_ip( i+1, j+1 ) = rank * leg_ortho
         ENDDO

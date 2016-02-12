@@ -19,6 +19,7 @@ MODULE dspev_module
     PRIVATE
 
     PUBLIC :: pdspev_drv, dspev_drv
+    PUBLIC :: diagonalize_parallel, diagonalize_serial
 
 #if defined __SCALAPACK
     PUBLIC :: pdsyevd_drv
@@ -757,6 +758,90 @@ CONTAINS
   END SUBROUTINE pdsyevd_drv
 
 #endif
+
+
+!   ----------------------------------------------
+!   Simplified driver 
+
+SUBROUTINE diagonalize_parallel( n, rhos, rhod, s, desc )
+
+      USE descriptors
+
+      IMPLICIT NONE
+      REAL(DP), INTENT(IN)  :: rhos(:,:) !  input symmetric matrix
+      REAL(DP)              :: rhod(:)   !  output eigenvalues
+      REAL(DP)              :: s(:,:)    !  output eigenvectors
+      INTEGER,   INTENT(IN) :: n         !  size of the global matrix
+      TYPE(la_descriptor), INTENT(IN) :: desc
+
+      IF( n < 1 ) RETURN
+
+      !  Matrix is distributed on the same processors group
+      !  used for parallel matrix multiplication
+      !
+      IF( SIZE(s,1) /= SIZE(rhos,1) .OR. SIZE(s,2) /= SIZE(rhos,2) ) &
+         CALL lax_error__( " diagonalize_parallel ", " inconsistent dimension for s and rhos ", 1 )
+
+      IF ( desc%active_node > 0 ) THEN
+         !
+         IF( SIZE(s,1) /= desc%nrcx ) &
+            CALL lax_error__( " diagonalize_parallel ", " inconsistent dimension ", 1)
+         !
+         !  Compute local dimension of the cyclically distributed matrix
+         !
+         s = rhos
+         !
+#ifdef __SCALAPACK
+         CALL pdsyevd_drv( .true. , n, desc%nrcx, s, SIZE(s,1), rhod, desc%cntx, desc%comm )
+#else
+         CALL qe_pdsyevd( .true., n, desc, s, SIZE(s,1), rhod )
+#endif
+         !
+      END IF
+
+      RETURN
+
+END SUBROUTINE diagonalize_parallel
+
+
+SUBROUTINE diagonalize_serial( n, rhos, rhod )
+      IMPLICIT NONE
+      INTEGER,  INTENT(IN)  :: n
+      REAL(DP)              :: rhos(:,:)
+      REAL(DP)              :: rhod(:)
+      !
+      ! inputs:
+      ! n     size of the eigenproblem
+      ! rhos  the symmetric matrix
+      ! outputs:
+      ! rhos  eigenvectors
+      ! rhod  eigenvalues
+      !
+      REAL(DP), ALLOCATABLE :: aux(:)
+      INTEGER :: i, j, k
+
+      IF( n < 1 ) RETURN
+
+      ALLOCATE( aux( n * ( n + 1 ) / 2 ) )
+
+      !  pack lower triangle of rho into aux
+      !
+      k = 0
+      DO j = 1, n
+         DO i = j, n
+            k = k + 1
+            aux( k ) = rhos( i, j )
+         END DO
+      END DO
+
+      CALL dspev_drv( 'V', 'L', n, aux, rhod, rhos, SIZE(rhos,1) )
+
+      DEALLOCATE( aux )
+
+      RETURN
+
+END SUBROUTINE diagonalize_serial
+
 
 
 END MODULE dspev_module

@@ -14,8 +14,8 @@
       !
       USE kinds,              ONLY: DP
       USE orthogonalize_base, ONLY: rhoset, sigset, tauset, ortho_iterate,   &
-                                    ortho_alt_iterate, diagonalize_serial,   &
-                                    use_parallel_diag, diagonalize_parallel
+                                    ortho_alt_iterate, use_parallel_diag
+      USE dspev_module,       ONLY: diagonalize_serial, diagonalize_parallel
       USE descriptors,        ONLY: la_descriptor
       USE mp_global,          ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm, my_bgrp_id, inter_bgrp_comm, nbgrp
       USE mp,                 ONLY: mp_sum, mp_bcast

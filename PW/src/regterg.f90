@@ -480,7 +480,7 @@ SUBROUTINE pregterg( npw, npwx, nvec, nvecx, evc, ethr, &
   USE io_global, ONLY : stdout
   USE mp_bands,  ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp, nbgrp
   USE mp_diag,   ONLY : ortho_comm, np_ortho, me_ortho, ortho_comm_id, leg_ortho, &
-                        ortho_parent_comm
+                        ortho_parent_comm, ortho_cntx
   USE descriptors,      ONLY : la_descriptor, descla_init, descla_local_dims
   USE parallel_toolkit, ONLY : dsqmdst, dsqmcll, dsqmred, dsqmsym
   USE mp,               ONLY : mp_bcast, mp_root_sum, mp_sum
@@ -933,7 +933,7 @@ CONTAINS
 
      INTEGER :: i, j, rank
      !
-     CALL descla_init( desc, nsiz, nsiz, np_ortho, me_ortho, ortho_comm, ortho_comm_id )
+     CALL descla_init( desc, nsiz, nsiz, np_ortho, me_ortho, ortho_comm, ortho_cntx, ortho_comm_id )
      !
      nx = desc%nrcx
      !

@@ -42,9 +42,10 @@ MODULE mp_diag
 #if defined __SCALAPACK
   INTEGER :: me_blacs   =  0  ! BLACS processor index starting from 0
   INTEGER :: np_blacs   =  1  ! BLACS number of processor
+#endif
+  !
   INTEGER :: world_cntx = -1  ! BLACS context of all processor 
   INTEGER :: ortho_cntx = -1  ! BLACS context for ortho_comm
-#endif
   !
 CONTAINS
   !

@@ -2653,7 +2653,7 @@ SUBROUTINE cyc2blk_redist( n, a, lda, nca, b, ldb, ncb, desc )
       !
       ! initialize other processor descriptor
       !
-      CALL descla_init( ip_desc, desc%n, desc%nx, np_ortho, me_ortho, desc%comm, 1 )
+      CALL descla_init( ip_desc, desc%n, desc%nx, np_ortho, me_ortho, desc%comm, desc%cntx, 1 )
 
       IF( ip_desc%nrcx /= nb ) &
          CALL lax_error__( ' cyc2blk_redist ', ' inconsistent block dim nb ', 1 )
@@ -2817,7 +2817,7 @@ SUBROUTINE cyc2blk_zredist( n, a, lda, nca, b, ldb, ncb, desc )
       !
       ! initialize other processor descriptor
       !
-      CALL descla_init( ip_desc, desc%n, desc%nx, np_ortho, me_ortho, desc%comm, 1 )
+      CALL descla_init( ip_desc, desc%n, desc%nx, np_ortho, me_ortho, desc%comm, desc%cntx, 1 )
 
       ip_nr = ip_desc%nr
       ip_nc = ip_desc%nc
@@ -3001,7 +3001,7 @@ SUBROUTINE blk2cyc_redist( n, a, lda, nca, b, ldb, ncb, desc )
       !
       ! initialize other processor descriptor
       !
-      CALL descla_init( ip_desc, desc%n, desc%nx, np_ortho, me_ortho, desc%comm, 1 )
+      CALL descla_init( ip_desc, desc%n, desc%nx, np_ortho, me_ortho, desc%comm, desc%cntx, 1 )
       !
       ip_nr = ip_desc%nr
       ip_nc = ip_desc%nc
@@ -3132,7 +3132,7 @@ SUBROUTINE blk2cyc_zredist( n, a, lda, nca, b, ldb, ncb, desc )
       !
       ! initialize other processor descriptor
       !
-      CALL descla_init( ip_desc, desc%n, desc%nx, np_ortho, me_ortho, desc%comm, 1 )
+      CALL descla_init( ip_desc, desc%n, desc%nx, np_ortho, me_ortho, desc%comm, desc%cntx, 1 )
       !
       ip_nr = ip_desc%nr
       ip_nc = ip_desc%nc
