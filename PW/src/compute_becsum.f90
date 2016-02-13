@@ -24,7 +24,7 @@ SUBROUTINE compute_becsum ( iflag )
   USE uspp,                 ONLY : nkb, vkb, becsum, okvan
   USE wavefunctions_module, ONLY : evc
   USE noncollin_module,     ONLY : noncolin
-  USE wvfct,                ONLY : nbnd, npwx, npw, wg, igk
+  USE wvfct,                ONLY : nbnd, npwx, wg
   USE mp_pools,             ONLY : inter_pool_comm
   USE mp_bands,             ONLY : intra_bgrp_comm, set_bgrp_indices, inter_bgrp_comm 
   USE mp,                   ONLY : mp_sum, mp_get_comm_null
@@ -57,12 +57,10 @@ SUBROUTINE compute_becsum ( iflag )
   k_loop: DO ik = 1, nks
      !
      IF ( lsda ) current_spin = isk(ik)
-     npw = ngk(ik)
-     igk(1:npw) = igk_k(1:npw,ik)
      IF ( nks > 1 ) &
         CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
      IF ( nkb > 0 ) &
-          CALL init_us_2( npw, igk, xk(1,ik), vkb )
+          CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb )
      !
      ! ... actual calculation is performed inside routine "sum_bec"
      !

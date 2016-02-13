@@ -46,17 +46,15 @@ SUBROUTINE hinit0()
   !
   ! ... The following loop must NOT be called more than once in a run
   ! ... or else there will be problems with variable-cell calculations
+  ! ... Note that with just one k-point all one needs are npw and igk
   !
   ALLOCATE ( gk(npwx) )
   igk_k(:,:) = 0
   DO ik = 1, nks
      !
-     CALL gk_sort( xk(1,ik), ngm, g, gcutw, ngk(ik), igk_k(1,ik), gk )
-     !
-     ! ... if there is only one k-point npw and igk stay in memory
-     !
-     npw = ngk(ik)
-     igk(:) = igk_k(:,ik)
+     CALL gk_sort( xk(1,ik), ngm, g, gcutw, npw, igk, gk )
+     ngk(ik) = npw
+     igk_k(1:npw,ik)= igk(1:npw)
      !
   END DO
   DEALLOCATE ( gk )

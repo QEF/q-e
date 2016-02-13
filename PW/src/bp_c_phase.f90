@@ -164,9 +164,8 @@ SUBROUTINE c_phase
    USE uspp,                 ONLY : nkb, vkb, okvan
    USE uspp_param,           ONLY : upf, lmaxq, nbetam, nh, nhm
    USE lsda_mod,             ONLY : nspin
-   USE klist,                ONLY : nelec, degauss, nks, xk, wk
-   USE wvfct,                ONLY : npwx, npw, nbnd, wg
-   USE gvecw,                ONLY : gcutw
+   USE klist,                ONLY : nelec, degauss, nks, xk, wk, igk_k, ngk
+   USE wvfct,                ONLY : npwx, nbnd, wg
    USE wavefunctions_module, ONLY : evc
    USE bp,                   ONLY : gdir, nppstr, mapgm_global, pdl_tot
    USE becmod,               ONLY : calbec, bec_type, allocate_bec_type, &
@@ -239,7 +238,6 @@ SUBROUTINE c_phase
    REAL(DP) :: el_loc
    REAL(DP) :: eps
    REAL(DP) :: fac
-   REAL(DP) :: g2kin_bp(npwx)
    REAL(DP) :: gpar(3)
    REAL(DP) :: gtr(3)
    REAL(DP) :: gvec
@@ -475,8 +473,8 @@ SUBROUTINE c_phase
             IF (kpar /= 1) THEN
 
 !              --- Dot wavefunctions and betas for PREVIOUS k-point ---
-               CALL gk_sort(xk(1,kpoint-1),ngm,g,gcutw, &
-                            npw0,igk0,g2kin_bp) 
+               npw0 = ngk(kpoint-1)
+               igk0(:) = igk_k(:,kpoint-1)
                CALL get_buffer (psi,nwordwfc,iunwfc,kpoint-1)
                if (okvan) then
                   CALL init_us_2 (npw0,igk0,xk(1,kpoint-1),vkb)
@@ -484,8 +482,8 @@ SUBROUTINE c_phase
                endif
 !              --- Dot wavefunctions and betas for CURRENT k-point ---
                IF (kpar /= nppstr) THEN
-                  CALL gk_sort(xk(1,kpoint),ngm,g,gcutw, &
-                               npw1,igk1,g2kin_bp)        
+                  npw1 = ngk(kpoint)
+                  igk1(:) = igk_k(:,kpoint)
                   CALL get_buffer(evc,nwordwfc,iunwfc,kpoint)
                   if (okvan) then
                      CALL init_us_2 (npw1,igk1,xk(1,kpoint),vkb)
@@ -493,8 +491,8 @@ SUBROUTINE c_phase
                   endif
                ELSE
                   kstart = kpoint-nppstr+1
-                  CALL gk_sort(xk(1,kstart),ngm,g,gcutw, &
-                               npw1,igk1,g2kin_bp)  
+                  npw1 = ngk(kstart)
+                  igk1(:) = igk_k(:,kstart)
                   CALL get_buffer(evc,nwordwfc,iunwfc,kstart)
                   if (okvan) then
                      CALL init_us_2 (npw1,igk1,xk(1,kstart),vkb)
