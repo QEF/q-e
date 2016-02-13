@@ -35,8 +35,18 @@ program lax_test
   REAL(DP), ALLOCATABLE :: d(:)
   !
   REAL(DP) :: time1, time2 
+  REAL*8  :: tempo(100)
+  REAL*8  :: tempo_mio(100)
+  REAL*8  :: tempo_min(100)
+  REAL*8  :: tempo_max(100)
+  REAL*8  :: tempo_avg(100)
+
   TYPE(la_descriptor) :: desc
   INTEGER :: i, ir, ic, nx, n, nr, nc  ! size of the matrix
+  INTEGER :: n_in
+  !
+  integer :: nargs
+  CHARACTER(LEN=80) :: arg
   !
 #if defined(__OPENMP)
   INTEGER :: PROVIDED
@@ -44,6 +54,19 @@ program lax_test
   !
   !   ........
   !
+  !   default parameter 
+  !
+  n_in = 1024
+  !
+  nargs = command_argument_count()
+  do i = 1, nargs - 1
+     CALL get_command_argument(i, arg)
+     IF( TRIM( arg ) == '-n' ) THEN
+        CALL get_command_argument(i+1, arg)
+        READ( arg, * ) n_in
+     END IF
+  end do
+
 #ifdef __MPI
 
 #if defined(__OPENMP)
@@ -75,8 +98,27 @@ program lax_test
   !
   !write(*,*) 'mype = ', mype, ' npes = ', npes
   !
-  n = 1024
- 
+  !
+  !  Broadcast input parameter first
+  !
+  CALL MPI_BCAST(n_in, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, ierr )
+
+  n = n_in
+
+  if( mype == 0 ) then
+
+    write(*,*) '+-----------------------------------+'
+    write(*,*) '|         QE Linear Algebra         |'
+    write(*,*) '|          testing & timing         |'
+    write(*,*) '|         by Carlo Cavazzoni        |'
+    write(*,*) '+-----------------------------------+'
+    write(*,*)
+    write(*,*) 'matrix size = ', n, ' x ', n
+    write(*,*) 'num. procs  = ', npes
+    write(*,*)
+
+  endif
+
   call mp_start_diag()
   !
   CALL descla_init( desc, n, n, np_ortho, me_ortho, ortho_comm, ortho_cntx, ortho_comm_id )
@@ -100,18 +142,41 @@ program lax_test
   !
   CALL diagonalize_parallel( n, a, d, s, desc )
   !
+  tempo = 0.0d0
+  tempo_mio = 0.0d0
+  tempo_min = 0.0d0
+  tempo_max = 0.0d0
+  tempo_avg = 0.0d0
+
   CALL set_a()
   !
   CALL MPI_BARRIER( MPI_COMM_WORLD, ierr)
-  time1 = MPI_WTIME()
+  tempo(1) = MPI_WTIME()
   !
   CALL diagonalize_parallel( n, a, d, s, desc )
   !
   CALL MPI_BARRIER( MPI_COMM_WORLD, ierr)
-  time2 = MPI_WTIME()
+  tempo(2) = MPI_WTIME()
+  !
+  do i = 2, 10
+     tempo_mio(i) = tempo(i)-tempo(i-1)
+  end do
+  !
+#ifdef __MPI
+  CALL MPI_ALLREDUCE( tempo_mio, tempo_min, 100, MPI_DOUBLE_PRECISION, MPI_MIN, MPI_COMM_WORLD, ierr )
+  CALL MPI_ALLREDUCE( tempo_mio, tempo_max, 100, MPI_DOUBLE_PRECISION, MPI_MAX, MPI_COMM_WORLD, ierr )
+  CALL MPI_ALLREDUCE( tempo_mio, tempo_avg, 100, MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, ierr )
+#else
+  tempo_min = tempo
+  tempo_max = tempo
+#endif
+
+  tempo_avg = tempo_avg / npes
   !
   IF( mype == 0 ) THEN
+     write(*,*) 
      write(*,*) ' Matrix eigenvalues '
+     write(*,*) 
      IF ( n <= 16 ) THEN
        DO i = 1, n
          write(*,*) ' D(',i,')=',d(i)
@@ -125,8 +190,28 @@ program lax_test
          write(*,*) ' D(',i,')=',d(i)
        END DO
      END IF
-     write(*,*) ' Matrix size = ', n, ' Diagonalization wall time = ', time2-time1
+     write(*,*) 
   ENDIF
+
+  if( mype == 0 ) then
+
+    write(*,*) '**** LA Timing ****'
+    write(*,*) 
+
+    write(*,100)
+    write(*,1)
+    write(*,100)
+    write(*,2) tempo_min(2), tempo_max(2), tempo_avg(2)
+    write(*,100)
+
+100 FORMAT(' +--------------------+----------------+-----------------+----------------+' )
+1   FORMAT(' |LAX subroutine      |  sec. min      | sec. max        | sec.  avg      |' )
+2   FORMAT(' |diagonalize_parallel| ',    D14.3, ' | ',   D14.3,  '  | ', D14.3,    ' |' )
+
+
+  end if
+
+
 
 #ifdef __MPI
   CALL mpi_finalize(ierr)

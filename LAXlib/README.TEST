@@ -1,0 +1,18 @@
+This library provides a Testing and Timing code
+to asses the performance of Linear Algebra subroutines, 
+estimate the scalability and the size of your simulation.
+
+To compile the test program, once you have properly
+configure QE, go inside the directory LAXlib and
+type:
+	make TEST
+
+Then you can run your LA tests using command like:
+
+	mpirun -np 4 ./la_test.x -n 1024
+
+or, in case of serial build
+
+	./la_test.x -n 1024
+
+where 1024 is the size of the matrix to be processed.
