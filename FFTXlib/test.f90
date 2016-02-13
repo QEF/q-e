@@ -20,7 +20,9 @@ program test
   INTEGER :: ngw_ , ngm_ , ngs_
   REAL*8  :: gcutm, gkcut, gcutms
   REAL*8  :: ecutm, ecutw, ecutms
-  REAL*8  :: tpiba, alat
+  REAL*8  :: ecutrho
+  REAL*8  :: ecutwfc
+  REAL*8  :: tpiba, alat, alat_in
   REAL*8  :: tempo(100)
   REAL*8  :: tempo_mio(100)
   REAL*8  :: tempo_min(100)
@@ -33,18 +35,38 @@ program test
   COMPLEX(DP), ALLOCATABLE :: psis(:)
   COMPLEX(DP), ALLOCATABLE :: aux(:)
   !
+  integer :: nargs
+  CHARACTER(LEN=80) :: arg
+  !
 #if defined(__OPENMP)
   INTEGER :: PROVIDED
 #endif
   !
   !   ........
   !
-  tempo = 0.0d0
-  tempo_mio = 0.0d0
-  tempo_min = 0.0d0
-  tempo_max = 0.0d0
-  tempo_avg = 0.0d0
-
+  !   default parameter (32 water molecules)
+  !
+  ecutwfc = 80.0d0
+  ecutrho = 4.0d0 * ecutwfc
+  alat_in = 18.65
+  !
+  nargs = command_argument_count()
+  do i = 1, nargs - 1
+     CALL get_command_argument(i, arg)
+     IF( TRIM( arg ) == '-ecutrho' ) THEN
+        CALL get_command_argument(i+1, arg)
+        READ( arg, * ) ecutrho
+     END IF 
+     IF( TRIM( arg ) == '-ecutwfc' ) THEN
+        CALL get_command_argument(i+1, arg)
+        READ( arg, * ) ecutwfc
+     END IF 
+     IF( TRIM( arg ) == '-alat' ) THEN
+        CALL get_command_argument(i+1, arg)
+        READ( arg, * ) alat_in
+     END IF 
+  end do
+  
 #ifdef __MPI
 
 #if defined(__OPENMP)
@@ -74,14 +96,22 @@ program test
 
 #endif
   !
-  ecutw  = 80
-  ! dual
-  ecutm  = ecutw*4
-  ecutms = ecutw*4
+  !  Broadcast input parameter first
   !
-  at(1,:) = (/ 18.65d0 , 0.0d0, 0.0d0 /)
-  at(2,:) = (/ 0.0d0 , 18.65d0, 0.0d0 /)
-  at(3,:) = (/ 0.0d0 , 0.0d0, 18.65d0 /)
+  CALL MPI_BCAST(ecutrho, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, ierr )
+  CALL MPI_BCAST(ecutwfc, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, ierr )
+  CALL MPI_BCAST(alat_in, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, ierr )
+  !
+  ecutw  = ecutwfc
+  ! dual
+  ecutm  = ecutrho
+  ecutms = ecutrho
+  !
+  at(1,:) = (/ 1.d0 , 0.0d0, 0.0d0 /)
+  at(2,:) = (/ 0.0d0 , 1.d0, 0.0d0 /)
+  at(3,:) = (/ 0.0d0 , 0.0d0, 1.d0 /)
+  !
+  at = at * alat_in
   !
   alat = SQRT ( at(1,1)**2+at(2,1)**2+at(3,1)**2 )
   !
@@ -92,6 +122,13 @@ program test
   gkcut = ecutw    / tpiba**2  ! wave function cut-off
   !
   if( mype == 0 ) then
+
+    write(*,*) '+-----------------------------------+'
+    write(*,*) '|               QE FFT              |'
+    write(*,*) '|          testing & timing         |'
+    write(*,*) '|         by Carlo Cavazzoni        |'
+    write(*,*) '+-----------------------------------+'
+    write(*,*) 
     write(*,*) 'alat    = ', alat
     write(*,*) 'Ecutwfc = ', ecutw
     write(*,*) 'Ecutrho = ', ecutm
@@ -172,6 +209,13 @@ program test
 
   ALLOCATE( psis( dffts%tg_nnr * dffts%nogrp ) )
   ALLOCATE( aux( dffts%tg_nnr * dffts%nogrp ) )
+
+  tempo = 0.0d0
+  tempo_mio = 0.0d0
+  tempo_min = 0.0d0
+  tempo_max = 0.0d0
+  tempo_avg = 0.0d0
+
   !
   ! Test FFT for wave functions - First calls may be biased by MPI and FFT initialization
   !
