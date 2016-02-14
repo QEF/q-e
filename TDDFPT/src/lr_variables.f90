@@ -37,7 +37,6 @@ MODULE lr_variables
   LOGICAL :: eels=.false.      ! If .true. then EELS calculation is activated
   REAL(kind=dp) :: q1,q2,q3    ! Components of the q-vector in units of 2*pi/a
                                ! in Cartesian coordinates
-  LOGICAL :: lr_periodic       ! If .true. the perturbation is periodic (q=G)
   CHARACTER(len=30) :: approximation ! Level of approximation in TDDFPT  
   LOGICAL :: clfe              ! Crystal Local Field Effects (CLFE) are used 
                                ! if clfe=.true.

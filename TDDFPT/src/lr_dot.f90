@@ -27,7 +27,7 @@ FUNCTION lr_dot(x,y)
   USE gvect,                ONLY : gstart, ngm, g
   USE mp,                   ONLY : mp_sum
   USE mp_global,            ONLY : inter_pool_comm, intra_bgrp_comm
-  USE lr_variables,         ONLY : lr_verbosity, lr_periodic, eels
+  USE lr_variables,         ONLY : lr_verbosity, eels
   USE noncollin_module,     ONLY : noncolin, npol
   USE control_lr,           ONLY : nbnd_occ
   USE qpoint,               ONLY : npwq, igkq, ikks, ikqs, nksq
@@ -146,13 +146,8 @@ CONTAINS
     !
     DO ik = 1, nksq
        !
-       IF (lr_periodic) THEN
-          ikk = ik
-          ikq = ik
-       ELSE
-          ikk = ikks(ik)
-          ikq = ikqs(ik)
-       ENDIF
+       ikk = ikks(ik)
+       ikq = ikqs(ik)
        !
        ! Determination of the number of plane waves npwq at point k+q (ikq).
        !

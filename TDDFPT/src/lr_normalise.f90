@@ -165,7 +165,6 @@ CONTAINS
     ! EELS: generalized k-point case
     !
     use becmod,              only : becp, calbec
-    use lr_variables,        only : lr_periodic
     use qpoint,              only : npwq, igkq, ikks, ikqs
     use gvect,               only : ngm, g
     use wvfct,               only : g2kin
@@ -182,13 +181,8 @@ CONTAINS
     !
     DO ik = 1, nksq
        !
-       IF (lr_periodic) THEN
-          ikk = ik
-          ikq = ik
-       ELSE
-          ikk = ikks(ik)
-          ikq = ikqs(ik)
-       ENDIF
+       ikk = ikks(ik)
+       ikq = ikqs(ik)
        !
        ! Determination of npwq, igkq; g2kin is used here as a workspace.
        !

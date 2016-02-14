@@ -121,7 +121,6 @@ SUBROUTINE lr_apply_s_eels()
    ! EELS
    ! Written by I. Timrov (2013)
    !
-   USE lr_variables,    ONLY : lr_periodic
    USE qpoint,          ONLY : nksq, npwq, igkq, ikks, ikqs
    USE gvect,           ONLY : ngm, g
    USE wvfct,           ONLY : g2kin
@@ -134,13 +133,8 @@ SUBROUTINE lr_apply_s_eels()
    !
    DO ik = 1, nksq
       !
-      IF (lr_periodic) THEN
-          ikk = ik
-          ikq = ik
-      ELSE
-          ikk = ikks(ik)
-          ikq = ikqs(ik)
-      ENDIF
+      ikk = ikks(ik)
+      ikq = ikqs(ik)
       !
       ! Determination of npwq, igkq; g2kin is used here as a workspace.
       !

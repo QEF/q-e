@@ -26,7 +26,7 @@ SUBROUTINE lr_init_nfo()
                                    igk_k,nelec, two_fermi_energies, nelup, neldw
   USE wvfct,                ONLY : nbnd, et, igk, npw, g2kin
   USE realus,               ONLY : real_space
-  USE lr_variables,         ONLY : lr_verbosity, eels, lr_periodic, nwordd0psi, &
+  USE lr_variables,         ONLY : lr_verbosity, eels, nwordd0psi, &
                                   & nwordrestart, restart, size_evc
   USE io_global,            ONLY : stdout
   USE constants,            ONLY : pi, tpi, degspin, eps8
@@ -93,23 +93,17 @@ SUBROUTINE lr_init_nfo()
      !
      ! EELS
      !
-     IF (lr_periodic) THEN
-        nksq = nks
-     ELSE
-        !
-        ! nksq is the number of k-points, NOT including k+q points
-        ! The following block was copied from PH/initialize_ph.f90.
-        !
-        nksq = nks / 2
-        !
-        ALLOCATE(ikks(nksq), ikqs(nksq))
-        !
-        DO ik=1,nksq
-           ikks(ik) = 2 * ik - 1
-           ikqs(ik) = 2 * ik
-        ENDDO
-        !
-     ENDIF
+     ! nksq is the number of k-points, NOT including k+q points
+     ! The following block was copied from PH/initialize_ph.f90.
+     !
+     nksq = nks / 2
+     !
+     ALLOCATE(ikks(nksq), ikqs(nksq))
+     !
+     DO ik = 1, nksq
+        ikks(ik) = 2 * ik - 1
+        ikqs(ik) = 2 * ik
+     ENDDO
      !
   ELSE
      !
@@ -132,19 +126,15 @@ SUBROUTINE lr_init_nfo()
      ! Open the file to read the wavefunctions at k and k+q 
      ! after the nscf calculation.
      !
-     IF (.NOT.lr_periodic) THEN
-        !
-        iuwfc = 21
-        lrwfc = 2 * nbnd * npwx * npol
-        IF (restart) wfc_dir = tmp_dir_phq
-        CALL diropn (iuwfc, 'wfc', lrwfc, exst)
-        IF (.NOT.exst) THEN
-           CALL errore ('lr_init_nfo', 'file '//trim(prefix)//'.wfc not found', 1)
-        ENDIF
-        !
-        size_evc = nksq * nbnd * npwx * npol 
-        !
+     iuwfc = 21
+     lrwfc = 2 * nbnd * npwx * npol
+     IF (restart) wfc_dir = tmp_dir_phq
+     CALL diropn (iuwfc, 'wfc', lrwfc, exst)
+     IF (.NOT.exst) THEN
+        CALL errore ('lr_init_nfo', 'file '//trim(prefix)//'.wfc not found', 1)
      ENDIF
+     !
+     size_evc = nksq * nbnd * npwx * npol 
      !
      ! If restart=.true. recalculate the small group of q.
      !

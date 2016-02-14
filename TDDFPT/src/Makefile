@@ -44,7 +44,6 @@ lr_init_nfo.o \
 lr_exx_kernel.o \
 lr_calc_dens_eels.o \
 lr_calc_dens_eels_nc.o \
-lr_read_wf_eels_periodic.o \
 lr_apply_liouvillian_eels.o \
 lr_addusddens.o \
 lr_addus_dvpsi.o \

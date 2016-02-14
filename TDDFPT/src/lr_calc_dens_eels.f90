@@ -26,7 +26,6 @@ SUBROUTINE lr_calc_dens_eels (drhoscf, dpsi)
   USE gvect,                 ONLY : ngm, g
   USE fft_base,              ONLY : dfftp, dffts
   USE klist,                 ONLY : xk, wk
-  USE lr_variables,          ONLY : evc0, lr_periodic
   USE wvfct,                 ONLY : nbnd, npwx, npw, igk, g2kin
   USE gvecw,                 ONLY : gcutw
   USE qpoint,                ONLY : npwq, igkq, nksq, ikks, ikqs
@@ -63,13 +62,8 @@ SUBROUTINE lr_calc_dens_eels (drhoscf, dpsi)
   !
   DO ik = 1, nksq
      !
-     IF (lr_periodic) THEN
-        ikk = ik
-        ikq = ik
-     ELSE
-        ikk = ikks(ik)
-        ikq = ikqs(ik)
-     ENDIF
+     ikk = ikks(ik)
+     ikq = ikqs(ik)
      !
      ! Determination of npw, igk, and npwq, igkq;
      ! g2kin is used here as work space.
@@ -79,11 +73,7 @@ SUBROUTINE lr_calc_dens_eels (drhoscf, dpsi)
      !
      ! Read the unperturbed wavefuctions evc at k
      !
-     IF (lr_periodic) THEN
-        evc(:,:) = evc0(:,:,ik)
-     ELSE
-        IF (nksq > 1) CALL davcio (evc, lrwfc, iuwfc, ikk, - 1)
-     ENDIF
+     IF (nksq > 1) CALL davcio (evc, lrwfc, iuwfc, ikk, - 1)
      !
      ! The weight of the k point
      !

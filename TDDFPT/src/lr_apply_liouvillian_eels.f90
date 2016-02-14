@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2015 Quantum ESPRESSO group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -26,7 +26,7 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, sevc1_new, interaction )
   USE io_global,            ONLY : stdout
   USE kinds,                ONLY : dp
   USE klist,                ONLY : nks, xk
-  USE lr_variables,         ONLY : evc0, no_hxc, lr_periodic
+  USE lr_variables,         ONLY : evc0, no_hxc
   USE lsda_mod,             ONLY : nspin, current_spin
   USE wvfct,                ONLY : nbnd, npwx, g2kin, et, npw, igk
   USE gvecw,                ONLY : gcutw
@@ -154,13 +154,8 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, sevc1_new, interaction )
   ! 
   DO ik = 1, nksq
      !
-     IF (lr_periodic) THEN
-        ikk = ik
-        ikq = ik
-     ELSE
-        ikk = ikks(ik)
-        ikq = ikqs(ik)
-     ENDIF
+     ikk = ikks(ik)
+     ikq = ikqs(ik)
      !
      ! Determination of npw, igk, and npwq, igkq;
      ! g2kin is used here as a workspace.
@@ -183,14 +178,9 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, sevc1_new, interaction )
      !
      ! Read unperturbed wavefuctions psi(k) and psi(k+q)
      !
-     IF (lr_periodic) THEN
-        evc(:,:) = evc0(:,:,ik)
-        evq(:,:) = evc0(:,:,ik)
-     ELSE
-        IF (nksq > 1) THEN 
-           CALL davcio (evc, lrwfc, iuwfc, ikk, - 1)
-           CALL davcio (evq, lrwfc, iuwfc, ikq, - 1)
-        ENDIF
+     IF (nksq > 1) THEN 
+        CALL davcio (evc, lrwfc, iuwfc, ikk, - 1)
+        CALL davcio (evq, lrwfc, iuwfc, ikq, - 1)
      ENDIF
      !
      dpsi(:,:)  = (0.d0,0.d0)

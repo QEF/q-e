@@ -93,7 +93,7 @@ SUBROUTINE lr_readin
   NAMELIST / lr_control / itermax, ipol, ltammd, real_space, real_space_debug, lrpa,   &
                         & charge_response, tqr, auto_rs, no_hxc, n_ipol, project,      &
                         & scissor, ecutfock, pseudo_hermitian, d0psi_rs, lshift_d0psi, &
-                        & q1, q2, q3, lr_periodic, approximation !eps  
+                        & q1, q2, q3, approximation !eps  
   NAMELIST / lr_post /    omeg, beta_gamma_z_prefix, w_T_npol, plot_type, epsil, itermax_int,sum_rule
   namelist / lr_dav /     num_eign, num_init, num_basis_max, residue_conv_thr, precondition,         &
                         & dav_debug, reference,single_pole, sort_contr, diag_of_h, close_pre,        &
@@ -129,7 +129,6 @@ SUBROUTINE lr_readin
      n_ipol = 1
      no_hxc = .FALSE.      
      lrpa = .false.         
-     lr_periodic = .false.  
      real_space = .FALSE.
      real_space_debug = 0
      charge_response = 0
@@ -341,15 +340,9 @@ SUBROUTINE lr_readin
         ! We do this trick because xq is used in PH/dv_of_drho.f90
         ! in the Hartree term ~1/|xq+k|^2
         !
-        IF (lr_periodic) THEN
-           xq(1) = 0.0d0
-           xq(2) = 0.0d0
-           xq(3) = 0.0d0
-        ELSE
-           xq(1) = q1
-           xq(2) = q2
-           xq(3) = q3
-        ENDIF
+        xq(1) = q1
+        xq(2) = q2
+        xq(3) = q3
         !
         IF ( (q1.lt.eps4) .AND. (q2.lt.eps4) .AND. (q3.lt.eps4) ) &
            CALL errore( 'lr_readin', 'The transferred momentum |q| is too small, the limit is not implemented.', 1 )
@@ -395,7 +388,7 @@ SUBROUTINE lr_readin
   ! where the turboEELS code saved its own data (including the data about
   ! the nscf calculation)
   !
-  IF (eels .AND. restart .AND. .NOT.lr_periodic) tmp_dir = tmp_dir_phq
+  IF (eels .AND. restart) tmp_dir = tmp_dir_phq
   !
   ! Now PWSCF XML file will be read, and various initialisations will be done.
   ! I. Timrov: Allocate space for PW scf variables (EELS: for PW nscf files,
@@ -418,7 +411,7 @@ SUBROUTINE lr_readin
      ! Copy the scf-charge-density to the tmp_dir (PH/check_initial_status.f90).
      ! Needed for the nscf calculation.
      !
-     IF (.NOT.restart .AND. .NOT.lr_periodic) CALL write_rho( rho, nspin )
+     IF (.NOT.restart) CALL write_rho( rho, nspin )
      !
      ! If a band structure calculation needs to be done, do not open a file
      ! for k point (PH/phq_readin.f90)
@@ -661,22 +654,11 @@ CONTAINS
     !
     IF (lsda) CALL errore( 'lr_readin', 'LSDA is not implemented', 1 )
     !
-    ! lr_periodic was created for EELS only.
-    !
-    IF (lr_periodic)   CALL errore( 'lr_readin', 'lr_periodic=.true. is not supported.', 1 )
-    !
     ! EELS-related restrictions
     !
     IF (eels) THEN
        !
        IF (okvan .AND. noncolin) CALL errore( 'lr_readin', 'Ultrasoft PP + noncolin is not fully implemented', 1 )
-       !
-       ! EELS + gamma_only is allowed only for periodic perturbations q=G (lr_periodic=.true.). 
-       ! The Lanczos recursion has to be done twice: for cos(qr) and sin(qr) [see lr_dvpsi_eels.f90]
-       ! and then the two spectra must be summed up. lr_periodic=.true. was
-       ! implemeted only for testing purposes.
-       !
-       IF (lr_periodic)   CALL errore( 'lr_readin', 'lr_periodic=.true. is disabled.', 1 ) 
        IF (gamma_only)  CALL errore( 'lr_readin', 'gamma_only is not supported', 1 )
        !
        ! Tamm-Dancoff approximation is not recommended to be used with EELS, and

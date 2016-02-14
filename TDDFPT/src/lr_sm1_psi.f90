@@ -442,7 +442,6 @@ SUBROUTINE sm1_psi_eels_k()
     USE becmod,            ONLY : bec_type, becp, calbec
     USE klist,             only : xk
     USE qpoint,            ONLY : npwq, igkq, ikks, ikqs, nksq
-    use lr_variables,      only : lr_periodic
     use gvect,             only : ngm, g
     use wvfct,             only : g2kin
     use gvecw,             only : gcutw
@@ -485,13 +484,8 @@ SUBROUTINE sm1_psi_eels_k()
        !
        DO ik1 = 1, nksq
           !
-          IF (lr_periodic) THEN
-             ikk = ik1
-             ikq = ik1
-          ELSE
-             ikk = ikks(ik1)
-             ikq = ikqs(ik1)
-          ENDIF
+          ikk = ikks(ik1)
+          ikq = ikqs(ik1)
           !
           ! Determination of npwq, igkq; g2kin is used here as a workspace.
           !
@@ -597,13 +591,8 @@ SUBROUTINE sm1_psi_eels_k()
        !
     ENDIF
     !
-    IF (lr_periodic) THEN
-        ikk = ik
-        ikq = ik
-    ELSE
-        ikk = ikks(ik)
-        ikq = ikqs(ik)
-    ENDIF
+    ikk = ikks(ik)
+    ikq = ikqs(ik)
     !
     ! Determination of npwq, igkq; g2kin is used here as a workspace.
     !
@@ -659,7 +648,6 @@ SUBROUTINE sm1_psi_eels_nc()
     USE becmod,            ONLY : bec_type, becp, calbec
     USE klist,             ONLY : xk
     USE qpoint,            ONLY : npwq, igkq, ikks, ikqs, nksq
-    USE lr_variables,      ONLY : lr_periodic
     USE gvect,             ONLY : ngm, g
     USE wvfct,             ONLY : g2kin
     USE gvecw,             ONLY : gcutw
@@ -713,13 +701,8 @@ SUBROUTINE sm1_psi_eels_nc()
        !
        DO ik1 = 1, nksq
           !
-          IF (lr_periodic) THEN
-             ikk = ik1
-             ikq = ik1
-          ELSE
-             ikk = ikks(ik1)
-             ikq = ikqs(ik1)
-          ENDIF
+          ikk = ikks(ik1)
+          ikq = ikqs(ik1)
           !
           ! Determination of npwq, igkq; g2kin is used here as a workspace.
           !
@@ -858,13 +841,8 @@ SUBROUTINE sm1_psi_eels_nc()
        !
     endif
     !
-    IF (lr_periodic) THEN
-        ikk = ik
-        ikq = ik
-    ELSE
-        ikk = ikks(ik)
-        ikq = ikqs(ik)
-    ENDIF
+    ikk = ikks(ik)
+    ikq = ikqs(ik)
     !
     ! Determination of npwq, igkq; g2kin is used here as a workspace.
     !

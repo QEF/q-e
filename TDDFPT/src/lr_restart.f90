@@ -330,7 +330,6 @@ SUBROUTINE lr_recalc_sevc1_new_eels()
     ! sevc1_new(:,:,ik,2)
     !
     use becmod,              only : becp, calbec
-    use lr_variables,        only : lr_periodic
     use qpoint,              only : nksq, npwq, igkq, ikks, ikqs
     use gvect,               only : ngm, g
     use wvfct,               only : g2kin
@@ -342,13 +341,8 @@ SUBROUTINE lr_recalc_sevc1_new_eels()
     !
     do ik = 1, nksq
        !
-       if (lr_periodic) then
-          ikk = ik
-          ikq = ik
-       else
-          ikk = ikks(ik)
-          ikq = ikqs(ik)
-       endif
+       ikk = ikks(ik)
+       ikq = ikqs(ik)
        !
        ! Determination of npwq, igkq; g2kin is used here as a workspace.
        !

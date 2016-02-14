@@ -24,7 +24,7 @@ PROGRAM lr_eels_main
                                   & d0psi, d0psi2, LR_iteration, LR_polarization, &
                                   & plot_type, nbnd_total, pseudo_hermitian, &
                                   & itermax_int, revc0, lr_io_level, code2, &
-                                  & eels, lr_periodic, approximation !eps
+                                  & eels, approximation !eps
   USE io_files,              ONLY : nd_nmbr
   USE global_version,        ONLY : version_number
   USE ions_base,             ONLY : tau,nat,atm,ityp
@@ -84,15 +84,9 @@ PROGRAM lr_eels_main
   !
   CALL lr_print_preamble_eels()
   !
-  ! Memory usage
-  !
-  !CALL memstat( kilobytes )
-  !IF ( kilobytes > 0 ) WRITE(stdout,'(5X,"lr_eels_main, & 
-  !    & per-process dynamical memory:",f7.1,"Mb")' ) kilobytes/1000.0
-  !
   ! Non-scf calculation at k and k+q
   !
-  IF (.NOT.restart .AND. .NOT.lr_periodic) THEN
+  IF (.NOT.restart) THEN
      !
      WRITE( stdout, '(/,5X,"------------ Nscf calculation ---------------")')
      !
@@ -101,7 +95,6 @@ PROGRAM lr_eels_main
   ENDIF
   !
   ! Initialisation, and read the wfct's at k and k+q
-  ! (lr_periodic=.false.).
   !
   CALL lr_init_nfo()
   !
@@ -120,10 +113,6 @@ PROGRAM lr_eels_main
       & per-process dynamical memory:",f7.1,"Mb")' ) kilobytes/1000.0
   !
   IF ( ntask_groups > 1 ) WRITE(stdout,'(5X,"Task groups is activated...")' )
-  !
-  ! If q=G then read the unperturbed wfct's from PWscf
-  !
-  IF (lr_periodic) CALL lr_read_wf_eels_periodic()
   !
   ! Band groups parallelization (if activated)
   !
