@@ -93,7 +93,7 @@ SUBROUTINE lr_readin
   NAMELIST / lr_control / itermax, ipol, ltammd, real_space, real_space_debug, lrpa,   &
                         & charge_response, tqr, auto_rs, no_hxc, n_ipol, project,      &
                         & scissor, ecutfock, pseudo_hermitian, d0psi_rs, lshift_d0psi, &
-                        & q1, q2, q3, approximation !eps  
+                        & q1, q2, q3, approximation 
   NAMELIST / lr_post /    omeg, beta_gamma_z_prefix, w_T_npol, plot_type, epsil, itermax_int,sum_rule
   namelist / lr_dav /     num_eign, num_init, num_basis_max, residue_conv_thr, precondition,         &
                         & dav_debug, reference,single_pole, sort_contr, diag_of_h, close_pre,        &
@@ -152,8 +152,6 @@ SUBROUTINE lr_readin
      q2 = 1.0d0         
      q3 = 1.0d0
      approximation = 'TDDFT'
-     clfe = .TRUE. 
-     !eps  = .FALSE.         
      !
      ! For lr_dav (Davidson program)
      !
@@ -306,25 +304,21 @@ SUBROUTINE lr_readin
            !
            no_hxc = .FALSE.
            lrpa   = .FALSE.
-           clfe   = .TRUE.
            !
          CASE ( 'IPA' )
            !
            no_hxc = .TRUE.
            lrpa   = .TRUE.
-           clfe   = .FALSE.
            !
          CASE ( 'RPA_with_CLFE' )
            !
            no_hxc = .FALSE.
            lrpa   = .TRUE.
-           clfe   = .TRUE.
            !
          !CASE ( 'RPA_without_CLFE' )
            !
            !no_hxc = .FALSE.
            !lrpa   = .TRUE.
-           !clfe   = .FALSE.
            !
          CASE DEFAULT
            !
@@ -332,10 +326,6 @@ SUBROUTINE lr_readin
                 & trim( approximation ) // ' not implemented', 1 )
            !
         END SELECT
-        !
-        !IF (eps .AND. trim(approximation)=='RPA_without_CLFE') &
-        !    & CALL errore( 'lr_readin', 'Approximation ' // &
-        !        & trim( approximation ) // ' is not allowed when eps=.true. Try "IPA".', 1 ) 
         !
         ! We do this trick because xq is used in PH/dv_of_drho.f90
         ! in the Hartree term ~1/|xq+k|^2

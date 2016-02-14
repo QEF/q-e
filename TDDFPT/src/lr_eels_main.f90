@@ -24,7 +24,7 @@ PROGRAM lr_eels_main
                                   & d0psi, d0psi2, LR_iteration, LR_polarization, &
                                   & plot_type, nbnd_total, pseudo_hermitian, &
                                   & itermax_int, revc0, lr_io_level, code2, &
-                                  & eels, approximation !eps
+                                  & eels, approximation 
   USE io_files,              ONLY : nd_nmbr
   USE global_version,        ONLY : version_number
   USE ions_base,             ONLY : tau,nat,atm,ityp
@@ -258,8 +258,6 @@ SUBROUTINE lr_print_preamble_eels()
                    & /5x,"to time-dependent density-functional perturbation theory", &
                    & /5x,"Comp. Phys. Commun. 196, 460 (2015). ")' )
     WRITE( stdout, '(/5x,"----------------------------------------")' )
-    !
-    !IF (eps) WRITE( stdout, '(/5x,"Calculation of the dielectric function (not the inverse), because eps=.true.")' )
     !
     WRITE( stdout, '(/5x,"Using the ' // trim(approximation) // ' approximation.")' )
     !

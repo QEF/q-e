@@ -38,10 +38,6 @@ MODULE lr_variables
   REAL(kind=dp) :: q1,q2,q3    ! Components of the q-vector in units of 2*pi/a
                                ! in Cartesian coordinates
   CHARACTER(len=30) :: approximation ! Level of approximation in TDDFPT  
-  LOGICAL :: clfe              ! Crystal Local Field Effects (CLFE) are used 
-                               ! if clfe=.true.
-  !LOGICAL :: eps               ! If eps=.true. one computes the dielectric
-  !                             ! function (not the inverse) for a fixed q
   !
   !------------------------------------------------------------------------!
   !

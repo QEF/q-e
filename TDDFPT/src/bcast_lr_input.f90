@@ -72,8 +72,6 @@ SUBROUTINE bcast_lr_input
   call mp_bcast (xq, ionode_id, world_comm )
   call mp_bcast (approximation, ionode_id, world_comm ) 
   call mp_bcast (lrpa, ionode_id, world_comm ) 
-  call mp_bcast (clfe, ionode_id, world_comm ) 
-  !call mp_bcast (eps, ionode_id, world_comm ) 
 
   ! for lr_dav
   CALL mp_bcast (davidson, ionode_id, world_comm )

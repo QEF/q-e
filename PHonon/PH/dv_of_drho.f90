@@ -1,58 +1,53 @@
 !
-! Copyright (C) 2001-2008 Quantum ESPRESSO group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!
 !-----------------------------------------------------------------------
 subroutine dv_of_drho (mode, dvscf, add_nlcc)
   !-----------------------------------------------------------------------
   !
-  !     This routine computes the change of the self consistent potential
-  !     due to the perturbation.
+  !  This routine computes the change of the self consistent potential
+  !  (Hartree and XC) due to the perturbation.
+  !  Note: gamma_only is disregarded for PHonon calculations, 
+  !  TDDFPT purposes only.
   !
-  USE kinds,     ONLY : DP
-  USE constants, ONLY : e2, fpi
-  USE fft_base,  ONLY: dfftp
-  USE fft_interfaces, ONLY: fwfft, invfft
-  USE gvect,     ONLY : nl, ngm, g,nlm, gstart
-  USE cell_base, ONLY : alat, tpiba2, omega
-  USE noncollin_module, ONLY : nspin_lsda, nspin_mag, nspin_gga
-  USE funct,     ONLY : dft_is_gradient
-  USE scf,       ONLY : rho, rho_core
-  USE nlcc_ph,   ONLY : nlcc_any
-  USE control_ph, ONLY : lrpa
-  USE control_flags, only : gamma_only, tddfpt
+  USE kinds,             ONLY : DP
+  USE constants,         ONLY : e2, fpi
+  USE fft_base,          ONLY : dfftp
+  USE fft_interfaces,    ONLY : fwfft, invfft
+  USE gvect,             ONLY : nl, ngm, g,nlm, gstart
+  USE cell_base,         ONLY : alat, tpiba2, omega
+  USE noncollin_module,  ONLY : nspin_lsda, nspin_mag, nspin_gga
+  USE funct,             ONLY : dft_is_gradient
+  USE scf,               ONLY : rho, rho_core
+  USE nlcc_ph,           ONLY : nlcc_any
+  USE control_ph,        ONLY : lrpa
+  USE control_flags,     ONLY : gamma_only
   USE martyna_tuckerman, ONLY : wg_corr_h, do_comp_mt
-  !OBM: gamma_only is disregarded for phonon calculations, TDDFPT purposes only
+  USE qpoint,            ONLY : xq
+  USE gc_lr,             ONLY : grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s
+  USE eqv,               ONLY : dmuxc
 
-  USE qpoint,    ONLY : xq
-  USE gc_lr,     ONLY : grho, dvxc_rr,  dvxc_sr,  dvxc_ss, dvxc_s
-  USE eqv,       ONLY : dmuxc
-
-  implicit none
-
+  IMPLICIT NONE
+  
   integer :: mode
   ! input: the mode to do
-
   complex(DP), intent(inout):: dvscf (dfftp%nnr, nspin_mag)
-  ! input: the change of the charge,
-  ! output: change of the potential
-
+  ! input:  response charge density
+  ! output: response Hartree-and-XC potential
   logical :: add_nlcc
   ! input: if true add core charge
-
+  
   integer :: ir, is, is1, ig
   ! counter on r vectors
   ! counter on spin polarizations
   ! counter on g vectors
-
   real(DP) :: qg2, fac
   ! the modulus of (q+G)^2
   ! the structure factor
-
   complex(DP), allocatable :: dvaux (:,:), drhoc (:)
   !  the change of the core charge
   complex(DP), allocatable :: dvhart (:,:) 
@@ -60,18 +55,21 @@ subroutine dv_of_drho (mode, dvscf, add_nlcc)
   ! auxiliary array for Martyna-Tuckerman correction in TDDFPT
   ! total response density  
   real(DP) :: eh_corr
-  ! Correction to response Hartree energy due to Martyna-Tuckerman correction 
-  ! (only TDDFT). Not used.
+  ! Correction to response Hartree energy due to Martyna-Tuckerman 
+  ! correction (only TDDFT). Calculated, but not used.
 
-  call start_clock ('dv_of_drho')
+  CALL start_clock ('dv_of_drho')
+  !
   allocate (dvaux( dfftp%nnr,  nspin_mag))
   dvaux (:,:) = (0.d0, 0.d0)
   if (add_nlcc) allocate (drhoc( dfftp%nnr))
   !
-  ! the exchange-correlation contribution is computed in real space
+  ! 1) The exchange-correlation contribution is computed in real space
   !
   if (lrpa) goto 111
+  !
   fac = 1.d0 / DBLE (nspin_lsda)
+  !
   if (nlcc_any.and.add_nlcc) then
      if (mode > 0) call addcore (mode, drhoc)
      do is = 1, nspin_lsda
@@ -79,6 +77,7 @@ subroutine dv_of_drho (mode, dvscf, add_nlcc)
         dvscf(:, is) = dvscf(:, is) + fac * drhoc (:)
      enddo
   endif
+  !
   do is = 1, nspin_mag
      do is1 = 1, nspin_mag
         do ir = 1, dfftp%nnr
@@ -86,26 +85,25 @@ subroutine dv_of_drho (mode, dvscf, add_nlcc)
         enddo
      enddo
   enddo
-
-
   !
-  ! add gradient correction to xc, NB: if nlcc is true we need to add here
-  ! its contribution. grho contains already the core charge
+  ! Add gradient correction to XC.
+  ! NB: If nlcc=.true. we need to add here its contribution. 
+  ! grho contains already the core charge
   !
   if ( dft_is_gradient() ) call dgradcorr &
        (rho%of_r, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, xq, &
        dvscf, dfftp%nnr, nspin_mag, nspin_gga, nl, ngm, g, alat, dvaux)
+  !
   if (nlcc_any.and.add_nlcc) then
      do is = 1, nspin_lsda
         rho%of_r(:, is) = rho%of_r(:, is) - fac * rho_core (:)
         dvscf(:, is) = dvscf(:, is) - fac * drhoc (:)
      enddo
   endif
-
-
+  !
 111 continue
   !
-  ! copy the total (up+down) delta rho in dvscf(*,1) and go to G-space
+  ! Copy the total (up+down) delta rho in dvscf(*,1) and go to G-space
   !
   if (nspin_mag == 2) then
      dvscf(:,1) = dvscf(:,1) + dvscf(:,2)
@@ -113,12 +111,11 @@ subroutine dv_of_drho (mode, dvscf, add_nlcc)
   !
   CALL fwfft ('Dense', dvscf(:,1), dfftp)
   !
-  ! Hartree contribution is computed in reciprocal space
+  ! 2) Hartree contribution is computed in reciprocal space
   !
-  IF (tddfpt .and. do_comp_mt) THEN
+  IF (do_comp_mt) THEN
       !
-      ! TDDFPT plus Martyna-Tuckerman correction
-      ! (gamma_only and general k-points are supported)
+      ! Response Hartree potential with the Martyna-Tuckerman correction
       !
       allocate(dvhart(dfftp%nnr,nspin_mag))
       dvhart(:,:) = (0.d0,0.d0)
@@ -168,55 +165,69 @@ subroutine dv_of_drho (mode, dvscf, add_nlcc)
       !
   ELSE
    !
-   ! PHonon, and TDDFPT (without Martyna-Tuckerman correction)
+   ! Response Hartree potential (without Martyna-Tuckerman correction)
    !
-   if (gamma_only) then
+   If (gamma_only) then
+      !
+      ! Gamma_only case
+      !
       allocate(dvhart(dfftp%nnr,nspin_mag))
       dvhart(:,:) = (0.d0,0.d0)
       !
       do is = 1, nspin_lsda
-       do ig = 1, ngm
-         qg2 = (g(1,ig)+xq(1))**2 + (g(2,ig)+xq(2))**2 + (g(3,ig)+xq(3))**2
-         if (qg2 > 1.d-8) then
-            dvhart(nl(ig),is) = e2 * fpi * dvscf(nl(ig),1) / (tpiba2 * qg2)
-            dvhart(nlm(ig),is)=conjg(dvhart(nl(ig),is))
-         endif
-       enddo
-       !
-       !  and transformed back to real space
-       !
-       CALL invfft ('Dense', dvhart (:, is), dfftp)
+        do ig = 1, ngm
+           qg2 = (g(1,ig)+xq(1))**2 + (g(2,ig)+xq(2))**2 + (g(3,ig)+xq(3))**2
+           if (qg2 > 1.d-8) then
+              dvhart(nl(ig),is) = e2 * fpi * dvscf(nl(ig),1) / (tpiba2 * qg2)
+              dvhart(nlm(ig),is)=conjg(dvhart(nl(ig),is))
+           endif
+        enddo
+        !
+        ! Transformed back to real space
+        !
+        CALL invfft ('Dense', dvhart (:, is), dfftp)
+        !
       enddo
       !
-      ! at the end the two contributes are added
-      dvscf  = dvaux  + dvhart
-      !OBM : Again not totally convinced about this trimming.
-      !dvscf (:,:) = cmplx(DBLE(dvscf(:,:)),0.0d0,dp)
+      ! At the end the two contributes are added
+      !
+      dvscf = dvaux + dvhart
+      !
       deallocate(dvhart)
+      !
    else
-    do is = 1, nspin_lsda
-       CALL fwfft ('Dense', dvaux (:, is), dfftp)
-       do ig = 1, ngm
-          qg2 = (g(1,ig)+xq(1))**2 + (g(2,ig)+xq(2))**2 + (g(3,ig)+xq(3))**2
-          if (qg2 > 1.d-8) then
-             dvaux(nl(ig),is) = dvaux(nl(ig),is) + &
-                                e2 * fpi * dvscf(nl(ig),1) / (tpiba2 * qg2)
-          endif
-       enddo
-       !
-       !  and transformed back to real space
-       !
-       CALL invfft ('Dense', dvaux (:, is), dfftp)
-    enddo
-    !
-    ! at the end the two contributes are added
-    dvscf (:,:) = dvaux (:,:)
+      !
+      ! General k points implementation
+      !
+      do is = 1, nspin_lsda
+         CALL fwfft ('Dense', dvaux (:, is), dfftp)
+         do ig = 1, ngm
+            qg2 = (g(1,ig)+xq(1))**2 + (g(2,ig)+xq(2))**2 + (g(3,ig)+xq(3))**2
+            if (qg2 > 1.d-8) then
+               dvaux(nl(ig),is) = dvaux(nl(ig),is) + &
+                              & e2 * fpi * dvscf(nl(ig),1) / (tpiba2 * qg2)
+            endif
+         enddo
+         !
+         ! Transformed back to real space
+         !
+         CALL invfft ('Dense', dvaux (:, is), dfftp)
+         !
+      enddo
+      !
+      ! At the end the two contributes are added
+      !
+      dvscf (:,:) = dvaux (:,:)
+      !
    endif
    !
   ENDIF
   !
   if (add_nlcc) deallocate (drhoc)
   deallocate (dvaux)
-  call stop_clock ('dv_of_drho')
-  return
+  !
+  CALL stop_clock ('dv_of_drho')
+  !
+  RETURN
+  !
 end subroutine dv_of_drho
