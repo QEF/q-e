@@ -9,4 +9,4 @@ all : check_results
 check_results: $(NAME).pw-out $(NAME).tddfpt-out $(NAME).tddfpt_pp-out
 
 clean :
-	- /bin/rm -rf $(NAME).pw-out $(NAME).tddfpt-out $(NAME).tddfpt_pp-out $(NAME).tddfpt-st-out *.plot_chi.dat out/*
+	- /bin/rm -rf $(NAME).pw-out $(NAME).tddfpt-out $(NAME).tddfpt_pp-out *.plot_chi.dat out/*

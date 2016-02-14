@@ -1,12 +1,12 @@
 &lr_input
-  prefix='sih4',
+  prefix='SiH4',
   outdir='./out',
-  itermax=10000
-  itermax0=450
+  itermax0 = 500
+  itermax  = 10000
   extrapolation="osc"
   epsil=0.01
-  end=3.50d0
   increment=0.001d0
   start=0.0d0
+  end=3.50d0
   ipol=4
 /

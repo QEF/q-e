@@ -4,7 +4,7 @@
     restart_mode='from_scratch',
     pseudo_dir = '../pseudo',
     outdir='./out',
-    prefix='benzene'
+    prefix='Benzene'
  /
  &system
     ibrav = 6,
@@ -15,14 +15,16 @@
     ecutwfc = 25,
     ecutrho = 250,
  /  
-
  &electrons
-   tqr=.true.
+    diagonalization='david'
+    mixing_mode = 'plain'
+    mixing_beta = 0.7
+    conv_thr =  1.0d-10
+    !tqr=.true.
  /
-
 ATOMIC_SPECIES
-C 12.01 C.pz-rrkjus.UPF
-H 1.0 H.pz-rrkjus.UPF
+C 12.01  C.pz-rrkjus.UPF
+H 1.0    H.pz-rrkjus.UPF
 ATOMIC_POSITIONS {Angstrom}
 C        5.633200899   6.320861303   5.
 C        6.847051545   8.422621957   5.
@@ -37,4 +39,3 @@ H        6.846845929   4.530522778   5.
 H        4.689556006   5.776237709   5.
 H        4.689791688   8.267023318   5.
 K_POINTS {gamma}
-

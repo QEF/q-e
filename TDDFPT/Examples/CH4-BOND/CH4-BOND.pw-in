@@ -4,8 +4,7 @@
     restart_mode='from_scratch',
     pseudo_dir = '../pseudo',
     outdir='./out',
-    prefix='ch4-bond'
-    etot_conv_thr=1d-6
+    prefix='CH4-bond'
     wf_collect=.true.
     disk_io='low'
  /
@@ -16,13 +15,13 @@
     ntyp = 2,
     ecutwfc = 35,
     nbnd = 8,   
-/
- &electrons
-
  /
-&ions
-/
-
+ &electrons
+    diagonalization='david'
+    mixing_mode = 'plain'
+    mixing_beta = 0.7
+    conv_thr =  1.0d-10
+ /
 ATOMIC_SPECIES
 C 1.0 C.pz-vbc.UPF
 H 1.0 H.pz-vbc.UPF
@@ -33,4 +32,3 @@ H      4.35718591      4.35718591      5.64281409
 H      5.64281409      4.35718591      4.35718591
 H      4.35718591      5.64281409      4.35718591
 K_POINTS {gamma}
-
