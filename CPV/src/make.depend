@@ -769,6 +769,7 @@ nlcc.o : pseudopot.o
 nlcc.o : smallbox.o
 nlcc.o : smallbox_gvec.o
 nlcc.o : spline.o
+ortho.o : ../../LAXlib/dspev_drv.o
 ortho.o : ../../LAXlib/la_types.o
 ortho.o : ../../Modules/control_flags.o
 ortho.o : ../../Modules/electrons_base.o

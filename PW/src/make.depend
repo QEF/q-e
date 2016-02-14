@@ -146,7 +146,6 @@ bp_c_phase.o : ../../Modules/becmod.o
 bp_c_phase.o : ../../Modules/cell_base.o
 bp_c_phase.o : ../../Modules/constants.o
 bp_c_phase.o : ../../Modules/fft_base.o
-bp_c_phase.o : ../../Modules/gvecw.o
 bp_c_phase.o : ../../Modules/io_files.o
 bp_c_phase.o : ../../Modules/io_global.o
 bp_c_phase.o : ../../Modules/ions_base.o
@@ -204,7 +203,6 @@ c_phase_field.o : ../../Modules/becmod.o
 c_phase_field.o : ../../Modules/cell_base.o
 c_phase_field.o : ../../Modules/constants.o
 c_phase_field.o : ../../Modules/fft_base.o
-c_phase_field.o : ../../Modules/gvecw.o
 c_phase_field.o : ../../Modules/io_files.o
 c_phase_field.o : ../../Modules/io_global.o
 c_phase_field.o : ../../Modules/ions_base.o
@@ -594,7 +592,6 @@ forces_bp_efield.o : ../../Modules/cell_base.o
 forces_bp_efield.o : ../../Modules/clocks.o
 forces_bp_efield.o : ../../Modules/constants.o
 forces_bp_efield.o : ../../Modules/fft_base.o
-forces_bp_efield.o : ../../Modules/gvecw.o
 forces_bp_efield.o : ../../Modules/io_files.o
 forces_bp_efield.o : ../../Modules/io_global.o
 forces_bp_efield.o : ../../Modules/ions_base.o
@@ -712,7 +709,6 @@ h_epsi_her_set.o : ../../Modules/becmod.o
 h_epsi_her_set.o : ../../Modules/cell_base.o
 h_epsi_her_set.o : ../../Modules/constants.o
 h_epsi_her_set.o : ../../Modules/fft_base.o
-h_epsi_her_set.o : ../../Modules/gvecw.o
 h_epsi_her_set.o : ../../Modules/io_files.o
 h_epsi_her_set.o : ../../Modules/ions_base.o
 h_epsi_her_set.o : ../../Modules/kind.o
@@ -1101,7 +1097,6 @@ orbm_kubo.o : ../../Modules/becmod.o
 orbm_kubo.o : ../../Modules/cell_base.o
 orbm_kubo.o : ../../Modules/constants.o
 orbm_kubo.o : ../../Modules/fft_base.o
-orbm_kubo.o : ../../Modules/gvecw.o
 orbm_kubo.o : ../../Modules/io_files.o
 orbm_kubo.o : ../../Modules/io_global.o
 orbm_kubo.o : ../../Modules/kind.o

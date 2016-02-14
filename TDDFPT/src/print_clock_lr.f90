@@ -60,6 +60,7 @@ SUBROUTINE print_clock_lr()
    !
    CALL print_clock( 'h_psi' )
    CALL print_clock( 'lr_calc_dens' )
+   IF (eels) CALL print_clock( 'incdrhoscf' )
    CALL print_clock( 'lr_dvpsi_e' )
    CALL print_clock( 'lr_dv_setup' )
    CALL print_clock( 'lr_ortho' )

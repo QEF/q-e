@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2009 Quantum ESPRESSO group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -13,26 +13,25 @@ subroutine incdrhoscf_nc (drhoscf, weight, ik, dbecsum, dpsi)
   !     perturbation. It is called at the end of the computation of the
   !     change of the wavefunction for a given k point.
   !
+  USE kinds,                ONLY : DP
+  USE ions_base,            ONLY : nat
+  USE cell_base,            ONLY : omega
+  USE fft_base,             ONLY : dffts, dfftp
+  USE fft_interfaces,       ONLY : invfft
+  USE gvecs,                ONLY : nls
+  USE lsda_mod,             ONLY : nspin
+  USE spin_orb,             ONLY : domag
+  USE noncollin_module,     ONLY : npol, nspin_mag
+  USE uspp_param,           ONLY : nhm
+  USE wvfct,                ONLY : npw, npwx, igk, nbnd
+  USE wavefunctions_module, ONLY : evc
+  USE qpoint,               ONLY : npwq, igkq, ikks
+  USE control_lr,           ONLY : nbnd_occ
+  USE mp_bands,             ONLY : me_bgrp, inter_bgrp_comm, ntask_groups
+  USE mp,                   ONLY : mp_sum
+
+  IMPLICIT NONE
   !
-  USE kinds, only : DP
-  USE ions_base, ONLY : nat
-  USE cell_base, ONLY : omega
-  USE fft_base,  ONLY : dffts, dfftp
-  USE fft_interfaces, ONLY: invfft
-  USE gvecs,   ONLY : nls
-  USE lsda_mod,  ONLY : nspin
-  USE spin_orb,  ONLY : domag
-  USE noncollin_module, ONLY : npol, nspin_mag
-  USE uspp_param,ONLY : nhm
-  USE wvfct,     ONLY : npw, npwx, igk, nbnd
-  USE wavefunctions_module,  ONLY: evc
-  USE qpoint,    ONLY : npwq, igkq, ikks
-  USE control_lr, ONLY : nbnd_occ
-  USE mp_bands,   ONLY : me_bgrp, inter_bgrp_comm, ntask_groups
-  USE mp,         ONLY : mp_sum
-
-  implicit none
-
   ! I/O variables
   INTEGER, INTENT(IN) :: ik
   ! input: the k point
@@ -43,26 +42,27 @@ subroutine incdrhoscf_nc (drhoscf, weight, ik, dbecsum, dpsi)
   COMPLEX(DP), INTENT(INOUT) :: drhoscf (dfftp%nnr,nspin_mag), dbecsum (nhm,nhm,nat,nspin)
   ! input/output: the accumulated change of the charge density and dbecsum
   !
-  !
   !   here the local variable
   !
-
-  real(DP) :: wgt
+  REAL(DP) :: wgt
   ! the effective weight of the k point
-
-  complex(DP), allocatable  :: psi (:,:), dpsic (:,:)
+  !
+  COMPLEX(DP), ALLOCATABLE :: psi (:,:), dpsic (:,:)
   ! the wavefunctions in real space
   ! the change of wavefunctions in real space
-
-  complex(DP), allocatable  :: tg_psi (:,:), tg_dpsi (:,:), tg_drho(:,:)
-
-  integer :: ibnd, jbnd, ikk, ir, ig, incr, v_siz, idx, ioff, ipol
+  !
+  COMPLEX(DP), ALLOCATABLE :: tg_psi (:,:), tg_dpsi (:,:), tg_drho(:,:)
+  !
+  INTEGER :: ibnd, jbnd, ikk, ir, ig, incr, v_siz, idx, ioff, ipol
   ! counters
-
-  call start_clock ('incdrhoscf')
+  !
+  CALL start_clock ('incdrhoscf')
+  !
   IF (ntask_groups > 1 ) dffts%have_task_groups=.TRUE.
-  allocate (dpsic(dffts%nnr, npol))
-  allocate (psi  (dffts%nnr, npol))
+  !
+  ALLOCATE (dpsic(dffts%nnr, npol))
+  ALLOCATE (psi  (dffts%nnr, npol))
+  !
   wgt = 2.d0 * weight / omega
   ikk = ikks(ik)
   incr = 1
@@ -154,7 +154,13 @@ subroutine incdrhoscf_nc (drhoscf, weight, ik, dbecsum, dpsi)
               drhoscf(ir,ipol) = drhoscf(ir,ipol) + tg_drho(ir+ioff,ipol)
            END DO
         END DO
+        !
      ELSE
+        !
+        ! Normal case: no task groups
+        !
+        ! FFT to R-space of the unperturbed wfct's evc
+        !
         psi = (0.d0, 0.d0)
         do ig = 1, npw
            psi (nls (igk (ig) ), 1) = evc (ig, ibnd)
@@ -162,15 +168,19 @@ subroutine incdrhoscf_nc (drhoscf, weight, ik, dbecsum, dpsi)
         enddo
         CALL invfft ('Wave', psi(:,1), dffts)
         CALL invfft ('Wave', psi(:,2), dffts)
-
+        !
+        ! FFT to R-space of the perturbed wfct's dpsi
+        !
         dpsic = (0.d0, 0.d0)
         do ig = 1, npwq
            dpsic (nls (igkq (ig)), 1 ) = dpsi (ig, ibnd)
            dpsic (nls (igkq (ig)), 2 ) = dpsi (ig+npwx, ibnd)
         enddo
-
         CALL invfft ('Wave', dpsic(:,1), dffts)
         CALL invfft ('Wave', dpsic(:,2), dffts)
+        !
+        ! Calculation of the response charge density
+        !
         do ir = 1, dffts%nnr
            drhoscf(ir,1)=drhoscf(ir,1)+wgt*(CONJG(psi(ir,1))*dpsic(ir,1)  +  &
                                             CONJG(psi(ir,2))*dpsic(ir,2) )
@@ -186,20 +196,28 @@ subroutine incdrhoscf_nc (drhoscf, weight, ik, dbecsum, dpsi)
                                             CONJG(psi(ir,2))*dpsic(ir,2) )
            enddo
         END IF
+        !
      END IF
+     !
   enddo
-
-  call addusdbec_nc (ik, weight, dpsi, dbecsum)
-  deallocate (psi)
-  deallocate (dpsic)
-
+  !
+  ! Ultrasoft contribution
+  ! Calculate dbecsum_nc = <evc|vkb><vkb|dpsi>
+  !
+  CALL addusdbec_nc (ik, weight, dpsi, dbecsum)
+  !
+  DEALLOCATE(psi)
+  DEALLOCATE(dpsic)
+  !
   IF (dffts%have_task_groups) THEN
-     DEALLOCATE( tg_psi )
-     DEALLOCATE( tg_dpsi )
-     DEALLOCATE( tg_drho )
+     DEALLOCATE(tg_psi)
+     DEALLOCATE(tg_dpsi)
+     DEALLOCATE(tg_drho)
   END IF
   dffts%have_task_groups=.FALSE.
-
-  call stop_clock ('incdrhoscf')
-  return
+  !
+  CALL stop_clock ('incdrhoscf')
+  !
+  RETURN
+  !
 end subroutine incdrhoscf_nc

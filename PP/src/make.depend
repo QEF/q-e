@@ -456,6 +456,7 @@ projwfc.o : ../../Modules/ions_base.o
 projwfc.o : ../../Modules/kind.o
 projwfc.o : ../../Modules/mp.o
 projwfc.o : ../../Modules/mp_global.o
+projwfc.o : ../../Modules/mp_pools.o
 projwfc.o : ../../Modules/mp_world.o
 projwfc.o : ../../Modules/noncol.o
 projwfc.o : ../../Modules/paw_variables.o

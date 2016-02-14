@@ -8,6 +8,10 @@ fft_parallel.o : scatter_mod.o
 scatter_mod.o : fft_types.o
 stick_set.o : fft_types.o
 stick_set.o : stick_base.o
+test.o : fft_parallel.o
+test.o : fft_support.o
+test.o : fft_types.o
+test.o : stick_set.o
 fft_scalar.o : fft_param.f90
 fft_scalar.o : fft_param.f90
 fft_scalar.o : fft_param.f90

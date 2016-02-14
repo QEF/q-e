@@ -1,46 +1,44 @@
 !
-! Copyright (C) 2001-2008 Quantum ESPRESSO group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!
 !----------------------------------------------------------------------
-subroutine addusdbec (ik, wgt, psi, dbecsum)
+subroutine addusdbec (ik, wgt, dpsi, dbecsum)
   !----------------------------------------------------------------------
   !
   !  This routine adds to dbecsum the contribution of this
   !  k point. It implements Eq. B15 of PRB 64, 235118 (2001).
   !
-  USE kinds, only : DP
-  USE ions_base, ONLY : nat, ityp, ntyp => nsp
-  USE becmod, ONLY : calbec
-  USE wvfct, only: npw, npwx, nbnd
-  USE uspp, only: nkb, vkb, okvan, ijtoh
-  USE uspp_param, only: upf, nh, nhm
+  USE kinds,      ONLY : DP
+  USE ions_base,  ONLY : nat, ityp, ntyp => nsp
+  USE becmod,     ONLY : calbec
+  USE wvfct,      ONLY : npw, npwx, nbnd
+  USE uspp,       ONLY : nkb, vkb, okvan, ijtoh
+  USE uspp_param, ONLY : upf, nh, nhm
+  USE mp_bands,   ONLY : intra_bgrp_comm
 
-  USE lrus,   ONLY : becp1
-  USE qpoint, ONLY : npwq, ikks
+  USE lrus,       ONLY : becp1
+  USE qpoint,     ONLY : npwq, ikks
   USE control_lr, ONLY : nbnd_occ
   !
-  USE mp_bands, ONLY : intra_bgrp_comm
-  !
-  implicit none
+  IMPLICIT NONE
   !
   !   the dummy variables
   !
-  complex(DP) :: dbecsum (nhm*(nhm+1)/2, nat), psi(npwx,nbnd)
+  COMPLEX(DP) :: dbecsum (nhm*(nhm+1)/2, nat), dpsi(npwx,nbnd)
   ! inp/out: the sum kv of bec *
   ! input  : contains delta psi
-  integer :: ik
+  INTEGER :: ik
   ! input: the k point
-  real(DP) :: wgt
+  REAL(DP) :: wgt
   ! input: the weight of this k point
   !
   !     here the local variables
   !
-  integer :: na, nt, ih, jh, ibnd, ikk, ikb, jkb, ijh, startb, &
+  INTEGER :: na, nt, ih, jh, ibnd, ikk, ikb, jkb, ijh, startb, &
        lastb, ijkb0
   ! counter on atoms
   ! counter on atomic type
@@ -54,25 +52,25 @@ subroutine addusdbec (ik, wgt, psi, dbecsum)
   ! divide among processors the sum
   ! auxiliary variable for counting
 
-  complex(DP), allocatable :: dbecq (:,:)
+  COMPLEX(DP), ALLOCATABLE :: dbecq (:,:)
   ! the change of becq
 
-  if (.not.okvan) return
-
-  call start_clock ('addusdbec')
-
-  allocate (dbecq( nkb, nbnd))
+  IF (.NOT.okvan) RETURN
+  !
+  CALL start_clock ('addusdbec')
+  !
+  ALLOCATE (dbecq( nkb, nbnd))
   ikk = ikks(ik)
   !
-  !     First compute the product of psi and vkb
+  ! First compute the product of dpsi and vkb
   !
-  call calbec (npwq, vkb, psi, dbecq)
+  CALL calbec (npwq, vkb, dpsi, dbecq)
   !
   !  And then we add the product to becsum
   !
   !  Band parallelization: each processor takes care of its slice of bands
   !
-  call divide (intra_bgrp_comm, nbnd_occ (ikk), startb, lastb)
+  CALL divide (intra_bgrp_comm, nbnd_occ (ikk), startb, lastb)
   !
   ijkb0 = 0
   do nt = 1, ntyp
@@ -110,8 +108,10 @@ subroutine addusdbec (ik, wgt, psi, dbecsum)
      endif
   enddo
   !
-  deallocate (dbecq)
-
-  call stop_clock ('addusdbec')
-  return
+  DEALLOCATE (dbecq)
+  !
+  CALL stop_clock ('addusdbec')
+  !
+  RETURN
+  !
 end subroutine addusdbec
