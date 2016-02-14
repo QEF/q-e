@@ -32,6 +32,7 @@ program lax_test
   !
   REAL(DP), ALLOCATABLE :: a(:,:)
   REAL(DP), ALLOCATABLE :: s(:,:)
+  REAL(DP), ALLOCATABLE :: c(:,:)
   REAL(DP), ALLOCATABLE :: d(:)
   !
   REAL(DP) :: time1, time2 
@@ -129,6 +130,7 @@ program lax_test
   ALLOCATE( d( n ) )
   ALLOCATE( s( nx, nx ) )
   ALLOCATE( a( nx, nx ) )
+  ALLOCATE( c( nx, nx ) )
 
   nr = desc%nr
   nc = desc%nc
@@ -157,6 +159,11 @@ program lax_test
   !
   CALL MPI_BARRIER( MPI_COMM_WORLD, ierr)
   tempo(2) = MPI_WTIME()
+  !
+  CALL sqr_mm_cannon( 'N', 'N', n, 1.0d0, a, nx, s, nx, 0.0d0, c, nr, desc)
+  !
+  CALL MPI_BARRIER( MPI_COMM_WORLD, ierr)
+  tempo(3) = MPI_WTIME()
   !
   do i = 2, 10
      tempo_mio(i) = tempo(i)-tempo(i-1)
@@ -197,16 +204,22 @@ program lax_test
 
     write(*,*) '**** LA Timing ****'
     write(*,*) 
+    write(*,200) 2.0d0*n*n*n / 1.D9 / tempo_avg(3)
+    write(*,*) 
 
     write(*,100)
     write(*,1)
     write(*,100)
     write(*,2) tempo_min(2), tempo_max(2), tempo_avg(2)
     write(*,100)
+    write(*,3) tempo_min(3), tempo_max(3), tempo_avg(3)
+    write(*,100)
 
+200 FORMAT(' GFlops = ', F14.2 )
 100 FORMAT(' +--------------------+----------------+-----------------+----------------+' )
 1   FORMAT(' |LAX subroutine      |  sec. min      | sec. max        | sec.  avg      |' )
 2   FORMAT(' |diagonalize_parallel| ',    D14.3, ' | ',   D14.3,  '  | ', D14.3,    ' |' )
+3   FORMAT(' |sqr_mm_cannon       | ',    D14.3, ' | ',   D14.3,  '  | ', D14.3,    ' |' )
 
 
   end if
