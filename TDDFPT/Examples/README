@@ -1,12 +1,8 @@
 Time Dependent Density Functional Perturbation Theory (TDDFPT)
 
-To run all examples do "make normal_test" 
+Each example can be run separately by running "make" in its designated directory.
 
-"make clean" resets the tests 
-
-"make small_test" runs a short test, useful for checking compilation
-
-each example can be run separately by running "make" in its designated directory
+"make clean" resets the tests.
 
 make.sys can be edited for parallel executions of tests by editing "RUNNER" variable (i.e. RUNNER=mpirun -np 4)
 

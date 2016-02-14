@@ -1,28 +1,17 @@
 # Makefile for TDDFPT Examples
 #Modified for v4.0 by obm
 
-default: small_test
+default: normal_test
 
 
 normal_test:	
 	for dir in \
-		CH4 SiH4 CH4-PR Benzene CH4-BOND\
+		CH4 CH4-TDHF CH4-DAV EELS-Si-NCPP-LDA \
 	; do \
 	    if test -d $$dir ; then \
 		( cd $$dir ; \
 		if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
 		else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) \
-	    fi \
-	done
-
-small_test:
-	@for dir in \
-		CH4 SiH4 Benzene\
-	; do \
-	    if test -d $$dir ; then \
-		( cd $$dir ; \
-		if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= small_test ; \
-		else $(MAKE) $(MFLAGS) TLDEPS= small_test ; fi ) \
 	    fi \
 	done
 
