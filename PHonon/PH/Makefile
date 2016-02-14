@@ -81,8 +81,6 @@ find_irrep.o \
 generate_dynamical_matrix_c.o \
 generate_effective_charges_c.o \
 gmressolve_all.o \
-incdrhoscf.o \
-incdrhoscf_nc.o \
 incdrhous.o \
 incdrhous_nc.o \
 initialize_ph.o \
