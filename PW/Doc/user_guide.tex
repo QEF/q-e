@@ -17,7 +17,6 @@
 \def\pwx{\texttt{pw.x}}
 \def\cpx{\texttt{cp.x}}
 \def\phx{\texttt{ph.x}}
-\def\nebx{\texttt{neb.x}}
 \def\configure{\texttt{configure}}
 
 \def\PHonon{\texttt{PHonon}}
@@ -203,13 +202,14 @@ calculates distances and angles between atoms in a cell,
 taking into account periodicity 
 \item  \texttt{PW/tools/ev.x} fits energy-vs-volume data to an equation of state
 \item  \texttt{PW/tools/kpoints.x} produces lists of k-points
-\item  \texttt{PW/tools/pwi2xsf.sh},  \texttt{pwo2xsf.sh} process respectively input and output
-  files (not data files!) for \pwx and produce an XSF-formatted file
+\item  \texttt{PW/tools/pwi2xsf.sh},  \texttt{pwo2xsf.sh} process respectively 
+  input and output files (not data files!) for \pwx\ and \texttt{neb.x} 
+  (the latter, courtesy of Pietro Bonf\`a) and produce an XSF-formatted file
   suitable for plotting with XCrySDen:
-  \texttt{http://www.xcrysden.org/},  powerful crystalline and
+  \texttt{http://www.xcrysden.org/}, a powerful crystalline and
   molecular structure visualization program.
-  BEWARE: the  \texttt{pwi2xsf.sh} shell script
-  requires the  \texttt{pwi2xsf.x} executables to be located somewhere in your PATH. 
+  BEWARE: the  \texttt{pwi2xsf.sh} shell script requires the
+  \texttt{pwi2xsf.x} executables to be located somewhere in your PATH. 
 \item  \texttt{PW/tools/bs.awk},  \texttt{PW/tools/mv.awk} are scripts that process the output of \pwx\ (not
 data files!). Usage: 
 \begin{verbatim}

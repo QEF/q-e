@@ -83,7 +83,7 @@
      &     new_total_dist, new_dist ! new(=output) inter-image distances
 !
       logical                                                           &
-     &     ltaucry, matches, last_image
+     &     ltaucry, matches, last_image, first_image
 !
       namelist/system/                                                  &
      &     ibrav, nat, celldm, a, b, c, cosab, cosac, cosbc,            &
@@ -174,11 +174,57 @@
 !     
             iim = 0
             last_image = .false.
+            first_image = .true.
             do while(.not.last_image)               
                iim = iim + 1
-               read (5,'(a120)') line ! line: first_image
-               if ( matches('LAST_IMAGE',line) ) last_image = .true.
-               call read_atoms(nat,atm(1,iim),tau(1,1,iim))
+               if ( first_image ) then
+!              the last line contained the ATOMIC_POSITIONS tag.
+!              the next line will have positions
+                  call read_atoms(nat,atm(1,iim),tau(1,1,iim))
+                  first_image = .false.
+                  continue
+               else
+                  do 
+                     read (5,'(a120)') line ! line: first_image
+!                    if empty line read again
+                     len = string_length(line)
+                     if (len.gt.0) then
+                        exit
+                     endif                     
+                  enddo
+!                  
+                  if ( matches('LAST_IMAGE',line) ) last_image = .true.               
+!               
+!                 find out (again) the length-unit
+                  do 
+                     read (5,'(a120)') line 
+!                    if empty line read again
+                     len = string_length(line)
+                     if (len.gt.0) then
+                        exit
+                     endif                     
+                  enddo
+!
+                  if ( line(1:16) .eq. 'ATOMIC_POSITIONS' ) then
+!                    find out the length-unit
+                     line = line(17:len)
+                     len  = string_length(line)
+!                    default is leave unchanged
+                     if (len.gt.0 ) then
+                        if ( matches('ALAT',line) ) then
+                            atomic_posunit = ALAT_UNIT
+                        elseif ( matches('BOHR',line) ) then
+                            atomic_posunit = BOHR_UNIT
+                        elseif ( matches('CRYSTAL',line) ) then
+                            atomic_posunit = CRYSTAL_UNIT
+                        elseif ( matches('ANGSTROM',line) ) then
+                            atomic_posunit = ANGSTROM_UNIT
+                        endif
+                     endif
+                  endif
+!
+                  call read_atoms(nat,atm(1,iim),tau(1,1,iim))
+               endif
             enddo
          endif
       endif

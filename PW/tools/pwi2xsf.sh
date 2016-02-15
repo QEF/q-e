@@ -67,11 +67,13 @@ toupper($0) ~ /&SYSTEM/          { print; }
   if ( toupper($1) ~ /^IBRAV($|=)|^CELLDM\([1-6]\)($|=)|^NAT($|=)|^A($|=)|^B($|=)|^C($|=)|^COSAB($|=)|^COSAC($|=)|^COSBC($|=)/ ) { print; } 
   
   if ( toupper($1) ~ /^CALCULATION($|=)/ ) { calculation=toupper($0); }
+  
+  if ( toupper($1) ~ /^STRING_METHOD($|=)/ ) { calculation="calculation=" toupper($3); }
 
   if ( toupper($1) ~ /^NUM_OF_IMAGES($|=)/ ) { num_of_images=toupper($0); }
 }
 
-/ATOMIC_POSITIONS|CELL_PARAMETERS/ {
+/ATOMIC_POSITIONS|CELL_PARAMETERS|FIRST_IMAGE/ {
   if ( !nml_end) {
      # first finish the namelist
      nml_end=1;
