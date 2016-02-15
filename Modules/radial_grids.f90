@@ -437,7 +437,7 @@ end subroutine series
 !
 !----------------------------------------------------------------------
 subroutine write_grid_on_file(iunit,grid)
-!  use radial_grids, only: radial_grid_type
+
   implicit none
   type(radial_grid_type), intent(in) :: grid
   integer, intent(in) :: iunit
@@ -455,9 +455,9 @@ subroutine write_grid_on_file(iunit,grid)
 end subroutine write_grid_on_file
 
 subroutine read_grid_from_file(iunit,grid)
-!  use radial_grids, only: radial_grid_type
+
   implicit none
-  type(radial_grid_type), intent(out) :: grid
+  type(radial_grid_type), intent(inout) :: grid
   integer, intent(in) :: iunit
   integer :: n
 !
