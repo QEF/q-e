@@ -212,10 +212,8 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
    DO ik = 1, nk
       DO ispin = 1, nspin
          ikk = ik + nk*(ispin-1)
-         IF( nks > 1 )THEN
-            npw = ngk(ikk)
-            CALL get_buffer(evc,nwordwfc,iunwfc,ikk)
-         ENDIF
+         npw = ngk(ikk)
+         IF( nks > 1 ) CALL get_buffer(evc,nwordwfc,iunwfc,ikk)
          DO ibnd = 1, nbnd
             evc_l(:) = (0.d0, 0d0)
             evc_l(gtoig(igk_k(1:npw,ikk))) = evc(1:npw,ibnd)
@@ -442,8 +440,6 @@ CONTAINS
       CALL mp_sum( demet, inter_pool_comm )
 #endif
       eloc = eloc * omega
-      ek = ek * tpiba2
-
       !
       ! compute ewald contribution
       !
