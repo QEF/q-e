@@ -17,9 +17,9 @@ subroutine gen_us_dj (ik, dvkb)
   USE constants,  ONLY : tpi
   USE ions_base,  ONLY : nat, ntyp => nsp, ityp, tau
   USE cell_base,  ONLY : tpiba
-  USE klist,      ONLY : xk
+  USE klist,      ONLY : xk, ngk, igk_k
   USE gvect,      ONLY : mill, eigts1, eigts2, eigts3, g
-  USE wvfct,      ONLY : npw, npwx, igk
+  USE wvfct,      ONLY : npwx
   USE uspp,       ONLY : nkb, indv, nhtol, nhtolm
   USE us,         ONLY : nqx, tab, tab_d2y, dq, spline_ps
   USE m_gth,      ONLY : mk_dffnl_gth
@@ -28,12 +28,12 @@ subroutine gen_us_dj (ik, dvkb)
   !
   implicit none
   !
-  integer :: ik
-  complex(DP) :: dvkb (npwx, nkb)
+  integer, intent(in) :: ik
+  complex(DP), intent(out) :: dvkb (npwx, nkb)
   !
   ! local variables
   !
-  integer :: ikb, nb, ih, ig, i0, i1, i2, i3 , nt
+  integer :: npw, ikb, nb, ih, ig, i0, i1, i2, i3 , nt
   ! counter on beta functions
   ! counter on beta functions
   ! counter on beta functions
@@ -48,28 +48,26 @@ subroutine gen_us_dj (ik, dvkb)
   ! atomic phase factor
   ! prefactor
 
-  integer :: na, l, iig, lm
+  integer :: na, l, iig, lm, iq
   real(DP), allocatable :: djl (:,:,:), ylm (:,:), q (:), gk (:,:)
-  real(DP) ::  qt, eps
-  parameter (eps = 1.0d-8)
-
+  real(DP) ::  qt
   complex(DP), allocatable :: sk (:)
-
-  integer :: iq
   real(DP), allocatable :: xdata(:)
 
   if (nkb.eq.0) return
 
   call start_clock('stres_us31')
 
+  npw = ngk(ik)
   allocate (djl( npw , nbetam , ntyp))    
   allocate (ylm( npw ,(lmaxkb + 1) **2))    
   allocate (gk( 3, npw))    
   allocate (q( npw))    
   do ig = 1, npw
-     gk (1,ig) = xk (1, ik) + g(1, igk(ig) )
-     gk (2,ig) = xk (2, ik) + g(2, igk(ig) )
-     gk (3,ig) = xk (3, ik) + g(3, igk(ig) )
+     iig = igk_k(ig,ik)
+     gk (1,ig) = xk (1, ik) + g(1, iig)
+     gk (2,ig) = xk (2, ik) + g(2, iig)
+     gk (3,ig) = xk (3, ik) + g(3, iig)
      q (ig) = gk(1, ig)**2 +  gk(2, ig)**2 + gk(3, ig)**2
   enddo
 
@@ -78,7 +76,6 @@ subroutine gen_us_dj (ik, dvkb)
   call ylmr2 ((lmaxkb+1)**2, npw, gk, q, ylm)
   call stop_clock('stres_us32')
   call start_clock('stres_us33')
-
 
   if (spline_ps) then
     allocate(xdata(nqx))
@@ -131,7 +128,7 @@ subroutine gen_us_dj (ik, dvkb)
                   xk (3, ik) * tau(3,na) ) * tpi
            phase = CMPLX(cos (arg), - sin (arg) ,kind=DP)
            do ig = 1, npw
-              iig = igk (ig)
+              iig = igk_k (ig,ik)
               sk (ig) = eigts1 (mill (1,iig), na) * &
                         eigts2 (mill (2,iig), na) * &
                         eigts3 (mill (3,iig), na) * phase

@@ -642,7 +642,7 @@ MODULE exx
     USE wavefunctions_module, ONLY : evc, psic
     USE io_files,             ONLY : nwordwfc, iunwfc
     USE buffers,              ONLY : get_buffer
-    USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg
+    USE wvfct,                ONLY : nbnd, npwx, wg
     USE control_flags,        ONLY : gamma_only
     USE klist,                ONLY : ngk, nks, nkstot, igk_k
     USE symm_base,            ONLY : nsym, s, sr, ftau
@@ -672,8 +672,8 @@ MODULE exx
     COMPLEX(DP), ALLOCATABLE :: temppsic_all_nc(:,:), psic_all_nc(:,:)
 #endif
     COMPLEX(DP) :: d_spin(2,2,48)
-    INTEGER :: current_ik
-    integer       :: find_current_k
+    INTEGER :: npw, current_ik
+    integer :: find_current_k
 
     CALL start_clock ('exxinit')
     !
@@ -759,8 +759,6 @@ MODULE exx
     !
     KPOINTS_LOOP : &
     DO ik = 1, nks
-       npw = ngk (ik)
-       igk(1:npw) = igk_k(1:npw,ik)
 
        IF ( nks > 1 ) &
           CALL get_buffer(evc, nwordwfc, iunwfc, ik)
@@ -807,18 +805,19 @@ MODULE exx
           !
        ELSE IF_GAMMA_ONLY 
           !
+          npw = ngk (ik)
           IBND_LOOP_K : &
           DO ibnd = ibnd_start, ibnd_end
              !
              IF (noncolin) THEN
                 temppsic_nc(:,:) = ( 0._dp, 0._dp )
-                temppsic_nc(exx_fft%nlt(igk(1:npw)),1) = evc(1:npw,ibnd)
+                temppsic_nc(exx_fft%nlt(igk_k(1:npw,ik)),1) = evc(1:npw,ibnd)
                 CALL invfft ('CustomWave', temppsic_nc(:,1), exx_fft%dfftt)
-                temppsic_nc(exx_fft%nlt(igk(1:npw)),2) = evc(npwx+1:npwx+npw,ibnd)
+                temppsic_nc(exx_fft%nlt(igk_k(1:npw,ik)),2) = evc(npwx+1:npwx+npw,ibnd)
                 CALL invfft ('CustomWave', temppsic_nc(:,2), exx_fft%dfftt)
              ELSE
                 temppsic(:) = ( 0._dp, 0._dp )
-                temppsic(exx_fft%nlt(igk(1:npw))) = evc(1:npw,ibnd)
+                temppsic(exx_fft%nlt(igk_k(1:npw,ik))) = evc(1:npw,ibnd)
                 CALL invfft ('CustomWave', temppsic, exx_fft%dfftt)
              ENDIF
              !
@@ -1935,7 +1934,7 @@ MODULE exx
     USE cell_base,               ONLY : alat, omega, bg, at, tpiba
     USE symm_base,               ONLY : nsym, s
     USE gvect,                   ONLY : ngm, gstart, g, nl
-    USE wvfct,                   ONLY : nbnd, npwx, npw, igk, wg
+    USE wvfct,                   ONLY : nbnd, npwx, wg
     USE control_flags,           ONLY : gamma_only
     USE wavefunctions_module,    ONLY : evc
     USE klist,                   ONLY : xk, ngk, nks, nkstot, igk_k
@@ -1975,7 +1974,7 @@ MODULE exx
     REAL(DP),ALLOCATABLE :: temppsic_aimag(:)
     LOGICAL :: l_fft_doubleband
     LOGICAL :: l_fft_singleband
-    INTEGER :: jmax
+    INTEGER :: jmax, npw
     !
     nrxxs= exx_fft%dfftt%nnr
     ALLOCATE( fac(exx_fft%ngmt) )
@@ -1994,13 +1993,12 @@ MODULE exx
        !
        IF ( lsda ) current_spin = isk(ikk)
        npw = ngk (ikk)
-       igk(1:npw) = igk_k(1:npw,ikk)
 
        IF ( nks > 1 ) &
           CALL get_buffer (evc, nwordwfc, iunwfc, ikk)
        !
        ! prepare the |beta> function at k+q
-       CALL init_us_2(npw, igk, xk(:,ikk), vkb)
+       CALL init_us_2(npw, igk_k(:,ikk), xk(:,ikk), vkb)
        ! compute <beta_I|psi_j> at this k+q point, for all band and all projectors
        CALL calbec(npw, vkb, evc, becpsi, nbnd)
        !
@@ -2186,7 +2184,7 @@ MODULE exx
     USE cell_base,               ONLY : alat, omega, bg, at, tpiba
     USE symm_base,               ONLY : nsym, s
     USE gvect,                   ONLY : ngm, gstart, g, nl
-    USE wvfct,                   ONLY : nbnd, npwx, npw, igk, wg
+    USE wvfct,                   ONLY : nbnd, npwx, wg
     USE control_flags,           ONLY : gamma_only
     USE wavefunctions_module,    ONLY : evc
     USE klist,                   ONLY : xk, ngk, nks, nkstot, igk_k
@@ -2214,7 +2212,7 @@ MODULE exx
     COMPLEX(DP), ALLOCATABLE :: temppsic_nc(:,:)
     COMPLEX(DP), ALLOCATABLE :: rhoc(:)
     REAL(DP),    ALLOCATABLE :: fac(:)
-    INTEGER  :: jbnd, ibnd, ik, ikk, ig, ikq, iq, ir
+    INTEGER  :: npw, jbnd, ibnd, ik, ikk, ig, ikq, iq, ir
     INTEGER  :: h_ibnd, nrxxs, current_ik, ibnd_loop_start
     REAL(DP) :: x1, x2
     REAL(DP) :: xkq(3), xkp(3), vc
@@ -2245,13 +2243,12 @@ MODULE exx
        !
        IF ( lsda ) current_spin = isk(ikk)
        npw = ngk (ikk)
-       igk(1:npw) = igk_k(1:npw,ikk)
 
        IF ( nks > 1 ) &
           CALL get_buffer (evc, nwordwfc, iunwfc, ikk)
        !
        ! prepare the |beta> function at k+q
-       CALL init_us_2(npw, igk, xk(:,ikk), vkb)
+       CALL init_us_2(npw, igk_k(:,ikk), xk(:,ikk), vkb)
        ! compute <beta_I|psi_j> at this k+q point, for all band and all projectors
        CALL calbec(npw, vkb, evc, becpsi, nbnd)
        !
@@ -2270,12 +2267,12 @@ MODULE exx
              !
 !$omp parallel do default(shared), private(ig)
              DO ig = 1, npw
-                temppsic_nc(exx_fft%nlt(igk(ig)),1) = evc(ig,jbnd)
+                temppsic_nc(exx_fft%nlt(igk_k(ig,ikk)),1) = evc(ig,jbnd)
              ENDDO
 !$omp end parallel do
 !$omp parallel do default(shared), private(ig)
              DO ig = 1, npw
-                temppsic_nc(exx_fft%nlt(igk(ig)),2) = evc(npwx+ig,jbnd)
+                temppsic_nc(exx_fft%nlt(igk_k(ig,ikk)),2) = evc(npwx+ig,jbnd)
              ENDDO
 !$omp end parallel do
              !
@@ -2285,7 +2282,7 @@ MODULE exx
           ELSE
 !$omp parallel do default(shared), private(ig)
              DO ig = 1, npw
-                temppsic(exx_fft%nlt(igk(ig))) = evc(ig,jbnd)
+                temppsic(exx_fft%nlt(igk_k(ig,ikk))) = evc(ig,jbnd)
              ENDDO
 !$omp end parallel do
              !
@@ -2514,7 +2511,7 @@ MODULE exx
     USE buffers,              ONLY : get_buffer
     USE cell_base,            ONLY : alat, omega, bg, at, tpiba
     USE symm_base,            ONLY : nsym, s
-    USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, current_k
+    USE wvfct,                ONLY : nbnd, npwx, wg, current_k
     USE control_flags,        ONLY : gamma_only
     USE wavefunctions_module, ONLY : evc
     USE klist,                ONLY : xk, ngk, nks, igk_k
@@ -2539,7 +2536,7 @@ MODULE exx
                                result_nc(:,:)
     COMPLEX(DP),ALLOCATABLE :: rhoc(:)
     REAL(DP),    allocatable :: fac(:), fac_tens(:,:,:), fac_stress(:)
-    INTEGER  :: jbnd, ibnd, ik, ikk, ig, ir, ikq, iq, isym
+    INTEGER  :: npw, jbnd, ibnd, ik, ikk, ig, ir, ikq, iq, isym
     INTEGER  :: h_ibnd, nqi, iqi, beta, nrxxs, ngm
     INTEGER  :: ibnd_loop_start
     REAL(DP) :: x1, x2
@@ -2567,7 +2564,6 @@ MODULE exx
         current_k = ikk
         IF (lsda) current_spin = isk(ikk)
         npw = ngk(ikk)
-        igk(1:npw) = igk_k(1:npw,ikk)
 
         IF (nks > 1) &
             CALL get_buffer(evc, nwordwfc, iunwfc, ikk)
@@ -2578,14 +2574,14 @@ MODULE exx
             temppsic(:) = ( 0._dp, 0._dp )
 !$omp parallel do default(shared), private(ig)
             DO ig = 1, npw
-                temppsic(exx_fft%nlt(igk(ig))) = evc(ig,jbnd)
+                temppsic(exx_fft%nlt(igk_k(ig,ikk))) = evc(ig,jbnd)
             ENDDO
 !$omp end parallel do
             !
             IF(gamma_only) THEN
 !$omp parallel do default(shared), private(ig)
                 DO ig = 1, npw
-                    temppsic(exx_fft%nltm(igk(ig))) = conjg(evc(ig,jbnd))
+                    temppsic(exx_fft%nltm(igk_k(ig,ikk))) = conjg(evc(ig,jbnd))
                 ENDDO
 !$omp end parallel do
             ENDIF

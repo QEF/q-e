@@ -27,7 +27,7 @@ SUBROUTINE wfcinit()
   USE buffers,              ONLY : open_buffer, get_buffer, save_buffer
   USE uspp,                 ONLY : nkb, vkb
   USE wavefunctions_module, ONLY : evc
-  USE wvfct,                ONLY : nbnd, npw, current_k, igk
+  USE wvfct,                ONLY : nbnd, npwx, npw, current_k, igk
   USE wannier_new,          ONLY : use_wannier
   USE pw_restart,           ONLY : pw_readfile
   USE mp_bands,             ONLY : nbgrp, root_bgrp,inter_bgrp_comm
@@ -133,31 +133,26 @@ SUBROUTINE wfcinit()
   !
   DO ik = 1, nks
      !
-     ! ... various initializations: k, spin, number of PW, indices
+     ! ... Hpsi initializations: PWs, k, spin, k+G indices, kinetic energy
      !
+     npw = ngk(ik)
      current_k = ik
      IF ( lsda ) current_spin = isk(ik)
-     npw = ngk (ik)
      igk(1:npw) = igk_k(1:npw,ik)
-     !
      call g2_kin (ik)
      !
-     ! ... Calculate nonlocal pseudopotential projectors |beta>
+     ! ... More Hpsi initialization: nonlocal pseudopotential projectors |beta>
      !
-     IF ( nkb > 0 ) CALL init_us_2( npw, igk, xk(1,ik), vkb )
+     IF ( nkb > 0 ) CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb )
      !
      ! ... Needed for LDA+U
      !
      IF ( nks > 1 .AND. lda_plus_u .AND. (U_projection .NE. 'pseudo') ) &
         CALL get_buffer( wfcU, nwordwfcU, iunhub, ik )
      !
-     ! ... calculate starting wavefunctions
+     ! ... calculate starting wavefunctions (calls Hpsi)
      !
      CALL init_wfc ( ik )
-
-!     ! BGRP:  make sure all bgrp have the same starting wfc
-!     IF ( nbgrp > 1 ) CALL mp_bcast(evc,root_bgrp,inter_bgrp_comm)
-
      !
      ! ... write  starting wavefunctions to file
      !
@@ -185,8 +180,8 @@ SUBROUTINE init_wfc ( ik )
   USE cell_base,            ONLY : tpiba2
   USE basis,                ONLY : natomwfc, starting_wfc
   USE gvect,                ONLY : g, gstart
-  USE klist,                ONLY : xk
-  USE wvfct,                ONLY : nbnd, npw, npwx, igk, et
+  USE klist,                ONLY : xk, ngk, igk_k
+  USE wvfct,                ONLY : nbnd, npwx, et
   USE uspp,                 ONLY : nkb, okvan
   USE noncollin_module,     ONLY : npol
   USE wavefunctions_module, ONLY : evc
@@ -197,7 +192,7 @@ SUBROUTINE init_wfc ( ik )
   !
   IMPLICIT NONE
   !
-  INTEGER :: ik
+  INTEGER, INTENT(in) :: ik
   !
   INTEGER :: ibnd, ig, ipol, n_starting_wfc, n_starting_atomic_wfc
   LOGICAL :: lelfield_save
@@ -243,7 +238,7 @@ SUBROUTINE init_wfc ( ik )
             !
             DO ipol = 1, npol
                !
-               DO ig = 1, npw
+               DO ig = 1, ngk(ik)
                   !
                   rr  = randy()
                   arg = tpi * randy()
@@ -270,26 +265,27 @@ SUBROUTINE init_wfc ( ik )
         ! 
         wfcatom(:,ipol,ibnd) = (0.0_dp, 0.0_dp)
         !
-        DO ig = 1, npw
+        DO ig = 1, ngk(ik)
            !
            rr  = randy()
            arg = tpi * randy()
            !
            wfcatom(ig,ipol,ibnd) = &
                 CMPLX( rr*COS( arg ), rr*SIN( arg ) ,kind=DP) / &
-                       ( ( xk(1,ik) + g(1,igk(ig)) )**2 + &
-                         ( xk(2,ik) + g(2,igk(ig)) )**2 + &
-                         ( xk(3,ik) + g(3,igk(ig)) )**2 + 1.0_DP )
+                       ( ( xk(1,ik) + g(1,igk_k(ig,ik)) )**2 + &
+                         ( xk(2,ik) + g(2,igk_k(ig,ik)) )**2 + &
+                         ( xk(3,ik) + g(3,igk_k(ig,ik)) )**2 + 1.0_DP )
         END DO
         !
      END DO
      !
   END DO
   
-  ! when band paralleization is active, the first bgrp distributes the wfc to the others
-  ! making sure all bgrp have the same starting wfc
-  if (my_bgrp_id > 0) wfcatom(:,:,:) = (0.d0,0.d0) ; call mp_sum(wfcatom,inter_bgrp_comm)
+  ! when band parallelization is active, the first band group distributes
+  ! the wfcs to the others making sure all bgrp have the same starting wfc
 
+  if (my_bgrp_id > 0) wfcatom(:,:,:) = (0.d0,0.d0)
+  call mp_sum(wfcatom,inter_bgrp_comm)
   !
   ! ... Diagonalize the Hamiltonian on the basis of atomic wfcs
   !
@@ -307,7 +303,9 @@ SUBROUTINE init_wfc ( ik )
   lelfield_save = lelfield
   lelfield = .FALSE.
   !
-  CALL rotate_wfc ( npwx, npw, n_starting_wfc, gstart, &
+  ! ... subspace diagonalization (calls Hpsi)
+  !
+  CALL rotate_wfc ( npwx, ngk(ik), n_starting_wfc, gstart, &
                     nbnd, wfcatom, npol, okvan, evc, etatom )
   !
   lelfield = lelfield_save

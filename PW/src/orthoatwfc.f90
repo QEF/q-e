@@ -23,7 +23,7 @@ SUBROUTINE orthoUwfc
   USE basis,      ONLY : natomwfc, swfcatom
   USE klist,      ONLY : nks, xk, ngk, igk_k
   USE ldaU,       ONLY : U_projection, wfcU, nwfcU, copy_U_wfc
-  USE wvfct,      ONLY : npwx, npw, igk
+  USE wvfct,      ONLY : npwx
   USE uspp,       ONLY : nkb, vkb
   USE becmod,     ONLY : allocate_bec_type, deallocate_bec_type, &
                          bec_type, becp, calbec
@@ -34,7 +34,7 @@ SUBROUTINE orthoUwfc
   !
   !
   INTEGER :: ik, ibnd, info, i, j, k, na, nb, nt, isym, n, ntemp, m, &
-       l, lm, ltot, ntot, ipol
+       l, lm, ltot, ntot, ipol, npw
   ! ik: the k point under consideration
   ! ibnd: counter on bands
   LOGICAL :: orthogonalize_wfc, normalize_only
@@ -81,15 +81,13 @@ SUBROUTINE orthoUwfc
   
   DO ik = 1, nks
      
-     npw = ngk (ik)
-     igk(1:npw) = igk_k(1:npw,ik)
-     
      IF (noncolin) THEN
        CALL atomic_wfc_nc_updown (ik, wfcatom)
      ELSE
        CALL atomic_wfc (ik, wfcatom)
      ENDIF
-     CALL init_us_2 (npw, igk, xk (1, ik), vkb)
+     npw = ngk (ik)
+     CALL init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb)
      CALL calbec (npw, vkb, wfcatom, becp) 
      CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)
 
