@@ -64,6 +64,7 @@ module funct
   PUBLIC  :: xc, xc_spin, gcxc, gcx_spin, gcc_spin, gcc_spin_more
   PUBLIC  :: tau_xc , tau_xc_spin, dmxc, dmxc_spin, dmxc_nc
   PUBLIC  :: dgcxc, dgcxc_spin
+  PUBLIC  :: d3gcxc       
   PUBLIC  :: nlc
   ! vector XC driver
   PUBLIC  :: evxc_t_vec, gcx_spin_vec
@@ -2917,6 +2918,67 @@ end subroutine tau_xc_spin
         return
       end subroutine dgcxc_spin
 
+    !-----------------------------------------------------------------------
+    subroutine d3gcxc (r, s2, vrrrx, vsrrx, vssrx, vsssx, &
+         vrrrc, vsrrc, vssrc, vsssc )
+    !-----------------------------------------------------------------------
+    !
+    !    wat20101006: Calculates all derviatives of the exchange (x) and 
+    !                 correlation (c) potential in third order.  
+    !                 of the Exc.
+    !
+    !    input:       r = rho, s2=|\nabla rho|^2
+    !    definition:  E_xc = \int ( f_x(r,s2) + f_c(r,s2) ) dr
+    !    output:      vrrrx = d^3(f_x)/d(r)^3
+    !                 vsrrx = d^3(f_x)/d(|\nabla r|)d(r)^2 / |\nabla r|
+    !                 vssrx = d/d(|\nabla r|) [ &
+    !                           d^2(f_x)/d(|\nabla r|)d(r) / |\nabla r| ] &
+    !                                                           / |\nabla r|
+    !                 vsssx = d/d(|\nabla r|) [ &
+    !                           d/d(|\nabla r|) [ & 
+    !                           d(f_x)/d(|\nabla r|) / |\nabla r| ] &
+    !                                                   / |\nabla r| ] &
+    !                                                   / |\nabla r|
+    !                 same for (c)
+    !
+    USE kinds, ONLY : DP
+    IMPLICIT NONE
+    REAL(DP) :: r, s2, vrrrx, vsrrx, vssrx, vsssx, &
+                vrrrc, vsrrc, vssrc, vsssc
+    REAL(DP) :: dr, s, ds
+    !
+    REAL(DP) :: vrrx_rp, vsrx_rp, vssx_rp, vrrc_rp, vsrc_rp, vssc_rp, &
+                vrrx_rm, vsrx_rm, vssx_rm, vrrc_rm, vsrc_rm, vssc_rm, &
+                vrrx_sp, vsrx_sp, vssx_sp, vrrc_sp, vsrc_sp, vssc_sp, &
+                vrrx_sm, vsrx_sm, vssx_sm, vrrc_sm, vsrc_sm, vssc_sm
+    !
+    s = sqrt (s2)
+    dr = min (1.d-4, 1.d-2 * r)
+    ds = min (1.d-4, 1.d-2 * s)
+    !  
+    call dgcxc (r+dr, s2, vrrx_rp, vsrx_rp, vssx_rp, vrrc_rp, vsrc_rp, vssc_rp)
+    call dgcxc (r-dr, s2, vrrx_rm, vsrx_rm, vssx_rm, vrrc_rm, vsrc_rm, vssc_rm)
+    !  
+    call dgcxc (r, (s+ds)**2, vrrx_sp, vsrx_sp, vssx_sp, vrrc_sp, vsrc_sp, vssc_sp)
+    call dgcxc (r, (s-ds)**2, vrrx_sm, vsrx_sm, vssx_sm, vrrc_sm, vsrc_sm, vssc_sm)
+    !  
+    vrrrx = 0.5d0 * (vrrx_rp - vrrx_rm) / dr
+    vsrrx = 0.25d0 * (vsrx_rp - vsrx_rm) / dr &
+                  + 0.25d0 * (vrrx_sp - vrrx_sm) / ds / s
+    vssrx = 0.25d0 * (vssx_rp - vssx_rm) / dr &
+                  + 0.25d0 * (vsrx_sp - vsrx_sm) / ds / s
+    vsssx = 0.5d0 * (vssx_sp - vssx_sm) / ds / s
+    !
+    vrrrc = 0.5d0 * (vrrc_rp - vrrc_rm) / dr
+    vsrrc = 0.25d0 * (vsrc_rp - vsrc_rm) / dr &
+                  + 0.25d0 * (vrrc_sp - vrrc_sm) / ds / s
+    vssrc = 0.25d0 * (vssc_rp - vssc_rm) / dr &
+                  + 0.25d0 * (vsrc_sp - vsrc_sm) / ds / s
+    vsssc = 0.5d0 * (vssc_sp - vssc_sm) / ds / s
+    !
+    return
+    !
+  end subroutine d3gcxc
 !
 !-----------------------------------------------------------------------
 !------- VECTOR AND GENERAL XC DRIVERS -------------------------------
