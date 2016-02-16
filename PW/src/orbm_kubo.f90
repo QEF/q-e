@@ -172,7 +172,7 @@ SUBROUTINE orbm_kubo()
         ! for the current k-point (n)
         npw_k = ngk(n)
         igk(:)= igk_k(:,n)
-        CALL init_us_2(npw_k,igk,xk(1,n),vkb)
+        CALL init_us_2(npw_k,igk_k(1,n),xk(1,n),vkb)
         CALL g2_kin( n )
 
         evcpm=(0.0d0,0.0d0)
@@ -268,7 +268,7 @@ SUBROUTINE orbm_kubo()
 
                   istart = (ipol-1)*npwx+1
                   iend = istart+npw_k-1
-                  aux_k(igk(1:npw_k)+ngm*(ipol-1))=evc_k(istart:iend,nb)
+                  aux_k(igk_k(1:npw_k,n)+ngm*(ipol-1))=evc_k(istart:iend,nb)
 
                   iend = istart+npw_kp-1
                   aux_kp(igk_kp(1:npw_kp)+ngm*(ipol-1))=evc_kp(istart:iend,mb)
@@ -338,7 +338,7 @@ SUBROUTINE orbm_kubo()
 
                     istart = (ipol-1)*npwx+1
                     iend = istart+npw_k-1
-                    aux_k(igk(1:npw_k)+ngm*(ipol-1))=evc_k(istart:iend,nb)
+                    aux_k(igk_k(1:npw_k,n)+ngm*(ipol-1))=evc_k(istart:iend,nb)
 
                     iend = istart+npw_kp-1
                     aux_kp(map_g(1:npw_kp)+ngm*(ipol-1))=evc_kp(istart:iend,mb)
@@ -379,7 +379,7 @@ SUBROUTINE orbm_kubo()
                   DO ipol=1,npol
                     DO ig=1,npw_k
                       sca=sca+CONJG(evc_k(ig+npwx*(ipol-1),nb))*&
-                              aux_kp_g(ig_l2g(igk(ig))+ngm_g*(ipol-1))
+                              aux_kp_g(ig_l2g(igk_k(ig,n))+ngm_g*(ipol-1))
                     END DO
                   END DO
                   mat(nb,mb)=sca
@@ -433,10 +433,10 @@ SUBROUTINE orbm_kubo()
               DO mb=1,nbnd
                 IF(inbz(np).OR.(np>4).OR.(ngm==ngm_g)) THEN
                   evcpm(istart:iend,mb,np)=evcpm(istart:iend,mb,np)+&
-                      mat(nb,mb)*temp(igk(1:npw_k))
+                      mat(nb,mb)*temp(igk_k(1:npw_k,n))
                 ELSE ! special parallel case
                   evcpm(istart:iend,mb,np)=evcpm(istart:iend,mb,np)+&
-                      mat(nb,mb)*temp2(ig_l2g(igk(1:npw_k)))
+                      mat(nb,mb)*temp2(ig_l2g(igk_k(1:npw_k,n)))
                 END IF
               END DO
               IF(ALLOCATED(temp2)) DEALLOCATE(temp2)

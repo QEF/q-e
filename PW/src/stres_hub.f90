@@ -339,7 +339,6 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
    DO i=1,3
       xyz(i,i) = 1.d0
    END DO
-
    dproj(:,:) = (0.d0,0.d0)
    !
    ! At first the derivatives of the atomic wfcs: we compute the term
@@ -450,7 +449,6 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
       END DO
       DEALLOCATE (dbeta, dbetapsi, betapsi, wfatbeta, wfatdbeta )
    END DO
-
 
    DEALLOCATE ( aux0, aux1 )
    DEALLOCATE ( qm1, gk )

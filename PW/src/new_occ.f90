@@ -21,9 +21,9 @@ SUBROUTINE new_evc()
   USE kinds,                ONLY : DP
   USE constants,            ONLY : rytoev
   USE basis,                ONLY : natomwfc, swfcatom
-  USE klist,                ONLY : nks, ngk, igk_k
+  USE klist,                ONLY : nks, ngk
   USE lsda_mod,             ONLY : lsda, current_spin, nspin, isk
-  USE wvfct,                ONLY : nbnd, npw, npwx, igk, wg, et
+  USE wvfct,                ONLY : nbnd, npwx, wg, et
   USE control_flags,        ONLY : gamma_only, iverbosity
   USE wavefunctions_module, ONLY : evc
   USE noncollin_module,     ONLY : noncolin, npol
@@ -37,7 +37,7 @@ SUBROUTINE new_evc()
   !
   ! I/O variables
   !
-  INTEGER :: ik, ibnd, jbnd, igroup
+  INTEGER :: ik, ibnd, jbnd, igroup, npw
   ! counter on k points
   !    "    "  bands
   !    "    "  groups of bands
@@ -69,8 +69,6 @@ SUBROUTINE new_evc()
   DO ik = 1, nks
      IF (lsda) current_spin = isk(ik)
      npw = ngk (ik)
-     igk(1:npw) = igk_k(1:npw,ik)
-
      IF (nks > 1) &
         CALL get_buffer  (evc, nwordwfc, iunwfc, ik)
 

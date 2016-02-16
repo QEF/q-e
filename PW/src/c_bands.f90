@@ -81,7 +81,7 @@ SUBROUTINE c_bands( iter )
      !
      ! ... More stuff needed by the hamiltonian: nonlocal projectors
      !
-     IF ( nkb > 0 ) CALL init_us_2( npw, igk, xk(1,ik), vkb )
+     IF ( nkb > 0 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
      !
      ! ... kinetic energy
      !
@@ -636,7 +636,7 @@ SUBROUTINE c_bands_nscf( )
      !
      ! ... More stuff needed by the hamiltonian: nonlocal projectors
      !
-     IF ( nkb > 0 ) CALL init_us_2( npw, igk, xk(1,ik), vkb )
+     IF ( nkb > 0 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
      !
      ! ... kinetic energy
      !

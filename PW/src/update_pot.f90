@@ -629,7 +629,7 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
   USE io_global,            ONLY : stdout
   USE klist,                ONLY : nks, ngk, xk, igk_k
   USE lsda_mod,             ONLY : lsda, current_spin, isk
-  USE wvfct,                ONLY : nbnd, npw, npwx, igk, current_k
+  USE wvfct,                ONLY : nbnd, npwx, current_k
   USE ions_base,            ONLY : nat, tau
   USE io_files,             ONLY : nwordwfc, iunwfc, iunoldwfc, &
                                    iunoldwfc2, diropn
@@ -647,7 +647,7 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
   !
   INTEGER, INTENT(IN) :: wfc_extr
   !
-  INTEGER :: ik, zero_ew, lwork, info
+  INTEGER :: npw, ik, zero_ew, lwork, info
     ! do-loop variables
     ! counter on k-points
     ! number of zero 'eigenvalues' of the s_m matrix
@@ -736,22 +736,15 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
         IF ( okvan ) THEN
            !
            ! ... Ultrasoft PP: calculate overlap matrix
-           ! ... various initializations: k, spin, number of PW, indices
+           ! ... Required by s_psi:
+           ! ... nonlocal pseudopotential projectors |beta>, <psi|beta>
            !
-           current_k = ik
-           IF ( lsda ) current_spin = isk(ik)
            npw = ngk (ik)
-           igk(1:npw) = igk_k(1:npw,ik)
-           !
-           call g2_kin (ik)
-           !
-           ! ... Calculate nonlocal pseudopotential projectors |beta>
-           !
-           IF ( nkb > 0 ) CALL init_us_2( npw, igk, xk(1,ik), vkb )
-           !
+           IF ( nkb > 0 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
            CALL calbec( npw, vkb, evc, becp )
            !
            CALL s_psi ( npwx, npw, nbnd, evc, aux )
+           !
         ELSE
            !
            ! ... Norm-Conserving  PP: no overlap matrix

@@ -18,9 +18,9 @@ subroutine gen_us_dy (ik, u, dvkb)
   USE constants,  ONLY : tpi
   USE ions_base,  ONLY : nat, ntyp => nsp, ityp, tau
   USE cell_base,  ONLY : tpiba
-  USE klist,      ONLY : xk
+  USE klist,      ONLY : xk, ngk, igk_k
   USE gvect,      ONLY : mill, eigts1, eigts2, eigts3, g
-  USE wvfct,      ONLY : npw, npwx, igk
+  USE wvfct,      ONLY : npwx
   USE uspp,       ONLY : nkb, indv, nhtol, nhtolm
   USE us,         ONLY : nqx, tab, tab_d2y, dq, spline_ps
   USE splinelib
@@ -33,7 +33,7 @@ subroutine gen_us_dy (ik, u, dvkb)
 
   complex(DP) :: dvkb (npwx, nkb)
   integer :: na, nt, nb, ih, l, lm, ikb, iig, ipol, i0, i1, i2, &
-       i3, ig
+       i3, ig, npw
   real(DP), allocatable :: gk(:,:), q (:)
   real(DP) :: px, ux, vx, wx, arg
 
@@ -50,13 +50,15 @@ subroutine gen_us_dy (ik, u, dvkb)
   dvkb(:,:) = (0.d0, 0.d0)
   if (lmaxkb.le.0) return
 
+  npw = ngk(ik)
   allocate ( vkb0(npw,nbetam,ntyp), dylm_u(npw,(lmaxkb+1)**2), gk(3,npw) )
   allocate ( q(npw) )
 
   do ig = 1, npw
-     gk (1, ig) = xk (1, ik) + g (1, igk (ig) )
-     gk (2, ig) = xk (2, ik) + g (2, igk (ig) )
-     gk (3, ig) = xk (3, ik) + g (3, igk (ig) )
+     iig = igk_k(ig,ik)
+     gk (1, ig) = xk (1, ik) + g (1,iig)
+     gk (2, ig) = xk (2, ik) + g (2,iig)
+     gk (3, ig) = xk (3, ik) + g (3,iig)
      q (ig) = gk(1, ig)**2 +  gk(2, ig)**2 + gk(3, ig)**2
   enddo
 
@@ -115,7 +117,7 @@ subroutine gen_us_dy (ik, u, dvkb)
                 + xk (3, ik) * tau (3, na) ) * tpi
            phase = CMPLX(cos (arg), - sin (arg) ,kind=DP)
            do ig = 1, npw
-              iig = igk (ig)
+              iig = igk_k(ig,ik)
               sk (ig) = eigts1 (mill (1,iig), na) * &
                         eigts2 (mill (2,iig), na) * &
                         eigts3 (mill (3,iig), na) * phase
