@@ -379,10 +379,10 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
   USE gvecs,   ONLY: dual
   USE gvecw,   ONLY: gcutw, ecutwfc
   USE fft_base, ONLY : dfftp
-  USE klist, ONLY: xk, nks, nkstot, nelec
+  USE klist, ONLY: xk, nks, nkstot, nelec, ngk, igk_k
   USE lsda_mod, ONLY: nspin, isk, current_spin
   USE symm_base, ONLY: nsym, irt, d1, d2, d3
-  USE wvfct, ONLY: npw, npwx, nbnd, g2kin, igk, et, wg
+  USE wvfct, ONLY: npwx, nbnd, et, wg
   USE control_flags, ONLY: gamma_only
   USE uspp, ONLY: nkb, vkb
   USE becmod,   ONLY: bec_type, becp, calbec, allocate_bec_type, deallocate_bec_type
@@ -396,9 +396,9 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
   CHARACTER (len=*) :: filproj
   LOGICAL           :: lwrite_ovp, lbinary
   !
-  INTEGER :: ik, ibnd, i, j, k, na, nb, nt, isym, n,  m, m1, l, nwfc,&
+  INTEGER :: npw, ik, ibnd, i, j, k, na, nb, nt, isym, n,  m, m1, l, nwfc,&
        nwfc1, lmax_wfc, is, iunproj
-  REAL(DP), ALLOCATABLE :: e (:)
+  REAL(DP), ALLOCATABLE :: e (:), gk(:)
   COMPLEX(DP), ALLOCATABLE :: wfcatom (:,:)
   COMPLEX(DP), ALLOCATABLE :: overlap(:,:), work(:,:),work1(:), proj0(:,:)
   ! Some workspace for k-point calculation ...
@@ -460,6 +460,7 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
   ENDIF
   CALL allocate_bec_type (nkb, natomwfc, becp )
   ALLOCATE(e (natomwfc) )
+  ALLOCATE(gk(npwx))
   !
   !    loop on k points
   !
@@ -467,15 +468,15 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
   CALL init_at_1
   !
   DO ik = 1, nks
-     CALL gk_sort (xk (1, ik), ngm, g, gcutw, npw, igk, g2kin)
+
+     CALL gk_sort (xk(1,ik), ngm, g, gcutw, ngk(ik), igk_k(1,ik), gk)
+     npw = ngk(ik)
      CALL davcio (evc, 2*nwordwfc, iunwfc, ik, - 1)
 
      CALL atomic_wfc (ik, wfcatom)
 
-     CALL init_us_2 (npw, igk, xk (1, ik), vkb)
-
+     CALL init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb)
      CALL calbec ( npw, vkb, wfcatom, becp)
-
      CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)
      !
      ! wfcatom = |phi_i> , swfcatom = \hat S |phi_i>
@@ -647,6 +648,7 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
      ! on k-points
   ENDDO
   !
+  DEALLOCATE (gk)
   DEALLOCATE (e)
   IF ( gamma_only ) THEN
      DEALLOCATE (roverlap)
@@ -872,11 +874,11 @@ SUBROUTINE projwave_nc(filproj, lsym, lwrite_ovp, lbinary, ef_0 )
   USE gvecs,   ONLY: dual
   USE gvecw,   ONLY: gcutw, ecutwfc
   USE fft_base, ONLY : dfftp
-  USE klist, ONLY: xk, nks, nkstot, nelec
+  USE klist, ONLY: xk, nks, nkstot, nelec, ngk, igk_k
   USE lsda_mod, ONLY: nspin
   USE noncollin_module, ONLY: noncolin, npol, angle1, angle2
   USE symm_base, ONLY: nsym, irt, t_rev
-  USE wvfct, ONLY: npw, npwx, nbnd, g2kin, igk, et, wg
+  USE wvfct, ONLY: npwx, nbnd, et, wg
   USE control_flags, ONLY: gamma_only
   USE uspp, ONLY: nkb, vkb
   USE uspp_param, ONLY: upf
@@ -899,10 +901,10 @@ SUBROUTINE projwave_nc(filproj, lsym, lwrite_ovp, lbinary, ef_0 )
   LOGICAL :: freeswfcatom
   !
   INTEGER :: ik, ibnd, i, j, k, na, nb, nt, isym, ind, n, m, m1, n1, &
-             n2, l, nwfc, nwfc1, lmax_wfc, is, nspin0, iunproj,    &
+             n2, l, nwfc, nwfc1, lmax_wfc, is, nspin0, iunproj, npw, &
              ind0
   REAL(DP) :: jj, ef_0, eband_proj_tot, eband_tot
-  REAL(DP), ALLOCATABLE :: e (:)
+  REAL(DP), ALLOCATABLE :: e (:), gk(:)
   COMPLEX(DP), ALLOCATABLE :: wfcatom (:,:)
   COMPLEX(DP), ALLOCATABLE :: overlap(:,:), work(:,:), work1(:), proj0(:,:)
   ! Some workspace for k-point calculation ...
@@ -933,6 +935,7 @@ SUBROUTINE projwave_nc(filproj, lsym, lwrite_ovp, lbinary, ef_0 )
      freeswfcatom = .false.
   ENDIF
   CALL allocate_bec_type (nkb, natomwfc, becp )
+  ALLOCATE(gk(npwx) )
   ALLOCATE(e (natomwfc) )
   ALLOCATE(work (natomwfc, natomwfc) )
   !
@@ -990,9 +993,10 @@ SUBROUTINE projwave_nc(filproj, lsym, lwrite_ovp, lbinary, ef_0 )
   DO ik = 1, nks
      wfcatom = (0.d0,0.d0)
      swfcatom= (0.d0,0.d0)
-     CALL gk_sort (xk (1, ik), ngm, g, gcutw, npw, igk, g2kin)
-     CALL davcio (evc, 2*nwordwfc, iunwfc, ik, - 1)
+     CALL gk_sort (xk (1, ik), ngm, g, gcutw, ngk(ik), igk_k(1,ik), gk)
+     npw = ngk(ik)
 
+     CALL davcio (evc, 2*nwordwfc, iunwfc, ik, - 1)
 
 !---- AlexS
 !    To project on real harmonics, not on spinors.  
@@ -1002,9 +1006,8 @@ SUBROUTINE projwave_nc(filproj, lsym, lwrite_ovp, lbinary, ef_0 )
        CALL atomic_wfc_nc_proj (ik, wfcatom)
      endif
 !----
-
      !
-     CALL init_us_2 (npw, igk, xk (1, ik), vkb)
+     CALL init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb)
 
      CALL calbec ( npw, vkb, wfcatom, becp )
 
@@ -1280,6 +1283,7 @@ ENDIF
   DEALLOCATE (work1)
   DEALLOCATE (proj0)
   DEALLOCATE (e)
+  DEALLOCATE (gk)
   CALL deallocate_bec_type (becp)
   DEALLOCATE (overlap)
   DEALLOCATE (wfcatom)
@@ -1499,10 +1503,10 @@ SUBROUTINE projwave_paw( filproj)
   USE gvecs,   ONLY: dual
   USE gvecw,   ONLY: gcutw, ecutwfc
   USE fft_base, ONLY : dfftp
-  USE klist, ONLY: xk, nks, nkstot, nelec
+  USE klist, ONLY: xk, nks, nkstot, nelec, igk_k, ngk
   USE lsda_mod, ONLY: nspin, isk, current_spin
   USE symm_base, ONLY: nsym, irt, d1, d2, d3
-  USE wvfct, ONLY: npw, npwx, nbnd, g2kin, igk, et, wg
+  USE wvfct, ONLY: npwx, nbnd, et, wg
   USE control_flags, ONLY: gamma_only
   USE uspp, ONLY: nkb, vkb
   USE uspp_param, ONLY : upf
@@ -1517,9 +1521,9 @@ SUBROUTINE projwave_paw( filproj)
   CHARACTER (len=*) :: filproj
   LOGICAL           :: lwrite_ovp, lbinary
   !
-  INTEGER :: ik, ibnd, i, j, k, na, nb, nt, isym, n,  m, m1, l, nwfc,&
+  INTEGER :: npw, ik, ibnd, i, j, k, na, nb, nt, isym, n,  m, m1, l, nwfc,&
        nwfc1, lmax_wfc, is, iunproj, ndm, mr,nbp
-  REAL(DP), ALLOCATABLE :: e (:), aux(:), pcharge(:,:,:)
+  REAL(DP), ALLOCATABLE :: e (:), gk(:), aux(:), pcharge(:,:,:)
   COMPLEX(DP), ALLOCATABLE :: wfcatom (:,:)
   COMPLEX(DP), ALLOCATABLE :: overlap(:,:), work(:,:),work1(:), proj0(:,:)
   ! Some workspace for k-point calculation ...
@@ -1591,15 +1595,13 @@ SUBROUTINE projwave_paw( filproj)
   enddo
  enddo
 
-
   ALLOCATE( proj (nkb, nbnd, nkstot),proj0(nkb,nbnd) )
   ALLOCATE( proj_aux (nkb, nbnd, nkstot) )
   proj      = 0.d0
   proj_aux  = (0.d0, 0.d0)
   !
-
-  !
   CALL allocate_bec_type (nkb, nbnd, becp )
+  ALLOCATE(gk(npwx))
   !
   !    loop on k points
   !
@@ -1607,19 +1609,15 @@ SUBROUTINE projwave_paw( filproj)
   CALL init_at_1
   !
   DO ik = 1, nks
-     CALL gk_sort (xk (1, ik), ngm, g, gcutw, npw, igk, g2kin)
+     CALL gk_sort (xk (1, ik), ngm, g, gcutw, npw, igk_k(1,ik), gk)
      CALL davcio (evc, 2*nwordwfc, iunwfc, ik, - 1)
 
+     CALL init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb)
 
-     CALL init_us_2 (npw, igk, xk (1, ik), vkb)
+     proj0=0; 
+     CALL calbec ( npw, vkb, evc, proj0)
 
-    proj0=0; 
-
-    CALL calbec ( npw, vkb, evc, proj0)
-
-
-      proj_aux(:,:,ik)=proj0(:,:)
-
+     proj_aux(:,:,ik)=proj0(:,:)
 
      do nwfc=1,nkb
         na=nlmchi(nwfc)%na
@@ -1638,6 +1636,7 @@ SUBROUTINE projwave_paw( filproj)
     enddo    
      
  ENDDO
+ DEALLOCATE (gk)
  DEALLOCATE(proj0,pcharge)
 
   CALL deallocate_bec_type (becp)
@@ -1861,10 +1860,10 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
   USE gvecs,   ONLY: dual
   USE gvecw,   ONLY: gcutw, ecutwfc
   USE fft_base, ONLY : dfftp
-  USE klist, ONLY: xk, nks, nkstot, nelec
+  USE klist, ONLY: xk, nks, nkstot, nelec, ngk, igk_k
   USE lsda_mod, ONLY: nspin, isk, current_spin
   USE symm_base, ONLY: nsym, irt, d1, d2, d3
-  USE wvfct, ONLY: npw, npwx, nbnd, g2kin, igk, et, wg
+  USE wvfct, ONLY: npwx, nbnd, et, wg
   USE control_flags, ONLY: gamma_only
   USE uspp, ONLY: nkb, vkb
   USE uspp_param, ONLY: upf
@@ -1892,9 +1891,9 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
   CHARACTER (len=*) :: filproj
   LOGICAL :: lwrite_ovp, lbinary
   !
-  INTEGER :: ik, ibnd, i, j, na, nb, nt, isym, n,  m, m1, l, nwfc,&
+  INTEGER :: npw, ik, ibnd, i, j, na, nb, nt, isym, n,  m, m1, l, nwfc,&
        nwfc1, lmax_wfc, is, iunproj, iunaux
-  REAL(DP),    ALLOCATABLE :: e (:)
+  REAL(DP),    ALLOCATABLE :: e (:), gk(:)
   COMPLEX(DP), ALLOCATABLE :: wfcatom (:,:)
   COMPLEX(DP), ALLOCATABLE :: work1(:), proj0(:,:)
   COMPLEX(DP), ALLOCATABLE :: overlap_d(:,:), work_d(:,:), diag(:,:), vv(:,:)
@@ -1987,6 +1986,7 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
   ALLOCATE(wfcatom (npwx, natomwfc) )
   !
   ALLOCATE(e (natomwfc) )
+  ALLOCATE(gk(npwx) )
   !
   !    loop on k points
   !
@@ -1995,12 +1995,13 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
   !
   DO ik = 1, nks
      !
-     CALL gk_sort (xk (1, ik), ngm, g, gcutw, npw, igk, g2kin)
+     CALL gk_sort (xk (1, ik), ngm, g, gcutw, ngk(ik), igk_k(1,ik), gk)
+     npw = ngk(ik)
      CALL davcio (evc, 2*nwordwfc, iunwfc, ik, - 1)
 
      CALL atomic_wfc (ik, wfcatom)
 
-     CALL init_us_2 (npw, igk, xk (1, ik), vkb)
+     CALL init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb)
 
      CALL allocate_bec_type ( nkb, natomwfc, becp )
      CALL calbec ( npw, vkb, wfcatom, becp)
@@ -2216,7 +2217,7 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
      !
   ENDDO
   !
-  !
+  DEALLOCATE (gk)
   DEALLOCATE (e)
   !
   DEALLOCATE (wfcatom)

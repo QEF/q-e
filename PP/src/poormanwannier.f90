@@ -134,7 +134,7 @@ SUBROUTINE projection (first_band, last_band, min_energy, max_energy, sigma, iop
   USE gvect
   USE klist
   USE gvecw,      ONLY : gcutw
-  USE wvfct,      ONLY : nbnd, npw, npwx, g2kin, igk, et
+  USE wvfct,      ONLY : nbnd, npwx, et
   USE ldaU,       ONLY : is_Hubbard, Hubbard_lmax, Hubbard_l, &
                          oatwfc, offsetU, nwfcU, wfcU, copy_U_wfc
   USE lsda_mod
@@ -160,7 +160,7 @@ SUBROUTINE projection (first_band, last_band, min_energy, max_energy, sigma, iop
   !
   ! local variables
   !
-  INTEGER :: ibnd, ik, na, nt, n, m, l, nwfc, lmax_wfc, &
+  INTEGER :: npw, ibnd, ik, na, nt, n, m, l, nwfc, lmax_wfc, &
              ldim1, ldim2, lwork, i, j, info, counter, counter_ldau
   LOGICAL :: exst
   COMPLEX(DP), ALLOCATABLE :: wfcatom (:,:)
@@ -174,7 +174,7 @@ SUBROUTINE projection (first_band, last_band, min_energy, max_energy, sigma, iop
   ! left unitary matrix in the SVD of sp_m
   ! right unitary matrix in the SVD of sp_m
   ! workspace for ZGESVD
-  REAL(DP), ALLOCATABLE :: ew(:), rwork(:)
+  REAL(DP), ALLOCATABLE :: ew(:), rwork(:), gk(:)
   ! the eigenvalues of pp
   ! workspace for ZGESVD
   REAL (DP) :: capel
@@ -255,15 +255,14 @@ SUBROUTINE projection (first_band, last_band, min_energy, max_energy, sigma, iop
   ALLOCATE(swfcatom (npwx , ldim1 ) )
   ! Allocate the array containing <beta|wfcatom>
   CALL allocate_bec_type ( nkb, ldim1, becp)
-
   !
   ! Main loop (on k-points)
   !
+  ALLOCATE (gk(npwx))
   DO ik = 1, nks
      !
-     !!DEBUG
-     !WRITE (*,*) "KPOINT =", ik
-     CALL gk_sort (xk (1, ik), ngm, g, gcutw, npw, igk, g2kin)
+     CALL gk_sort (xk (1, ik), ngm, g, gcutw, ngk(ik), igk_k(1,ik), gk)
+     npw = ngk(ik)
 
      CALL davcio (evc, 2*nwordwfc, iunwfc, ik, - 1)
 
@@ -274,7 +273,7 @@ SUBROUTINE projection (first_band, last_band, min_energy, max_energy, sigma, iop
      CALL copy_U_wfc (wfcatom)
      !CALL copy_U_wfc (swfcatom, noncolin) ! not yet implemented/tested
 
-     CALL init_us_2 (npw, igk, xk (1, ik), vkb)
+     CALL init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb)
 
      CALL calbec ( npw, vkb, wfcU, becp )
 
@@ -381,6 +380,7 @@ SUBROUTINE projection (first_band, last_band, min_energy, max_energy, sigma, iop
      !
      ! on k-points
   ENDDO
+  DEALLOCATE (gk)
   !
   ! Check if everything went OK (on all k-points)
   !
