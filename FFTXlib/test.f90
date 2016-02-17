@@ -13,9 +13,9 @@ program test
   INTEGER :: ny = 128
   INTEGER :: nz = 256
   !
-  INTEGER :: mype, npes, comm, ntgs, root
+  INTEGER :: mype, npes, comm, ntgs, root, nbnd
   LOGICAL :: iope
-  INTEGER :: ierr, i
+  INTEGER :: ierr, i, ncount, ib
   INTEGER :: stdout
   INTEGER :: ngw_ , ngm_ , ngs_
   REAL*8  :: gcutm, gkcut, gcutms
@@ -49,6 +49,8 @@ program test
   ecutwfc = 80.0d0
   ecutrho = 4.0d0 * ecutwfc
   alat_in = 18.65
+  ntgs    = 1
+  nbnd    = 1
   !
   nargs = command_argument_count()
   do i = 1, nargs - 1
@@ -65,6 +67,14 @@ program test
         CALL get_command_argument(i+1, arg)
         READ( arg, * ) alat_in
      END IF 
+     IF( TRIM( arg ) == '-ntg' ) THEN
+        CALL get_command_argument(i+1, arg)
+        READ( arg, * ) ntgs
+     END IF 
+     IF( TRIM( arg ) == '-nbnd' ) THEN
+        CALL get_command_argument(i+1, arg)
+        READ( arg, * ) nbnd
+     END IF 
   end do
   
 #ifdef __MPI
@@ -77,7 +87,6 @@ program test
   CALL mpi_comm_rank(MPI_COMM_WORLD,mype,ierr)
   CALL mpi_comm_size(MPI_COMM_WORLD,npes,ierr)
   comm = MPI_COMM_WORLD
-  ntgs = 1
   root = 0
   IF(mype==root) THEN
      iope = .true.
@@ -101,6 +110,8 @@ program test
   CALL MPI_BCAST(ecutrho, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, ierr )
   CALL MPI_BCAST(ecutwfc, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, ierr )
   CALL MPI_BCAST(alat_in, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, ierr )
+  CALL MPI_BCAST(ntgs,    1, MPI_INTEGER, 0, MPI_COMM_WORLD, ierr )
+  CALL MPI_BCAST(nbnd,    1, MPI_INTEGER, 0, MPI_COMM_WORLD, ierr )
   !
   ecutw  = ecutwfc
   ! dual
@@ -136,6 +147,9 @@ program test
     write(*,*) 'Gcutrho = ', SQRT(gcutm)
     write(*,*) 'Gcuts   = ', SQRT(gcutms)
     write(*,*) 'Gcutwfc = ', SQRT(gkcut)
+    write(*,*) 'Num bands      = ', nbnd
+    write(*,*) 'Num procs      = ', npes
+    write(*,*) 'Num Task Group = ', ntgs
   end if
   !
   at = at / alat
@@ -260,44 +274,56 @@ program test
   !
   ! Execute FFT calls once more and Take time
   !
-  aux = 0.0d0
-  aux(1) = 1.0d0
+  ncount = 0
 
-  CALL MPI_BARRIER( MPI_COMM_WORLD, ierr)
+  DO ib = 1, nbnd, 2*dffts%nogrp
 
-  tempo(1) = MPI_WTIME()
+     aux = 0.0d0
+     aux(1) = 1.0d0
 
-  CALL pack_group_sticks( aux, psis, dffts )
+     CALL MPI_BARRIER( MPI_COMM_WORLD, ierr)
 
-  tempo(2) = MPI_WTIME()
+     tempo(1) = MPI_WTIME()
 
-  CALL fw_tg_cft3_z( psis, dffts, aux )
+     CALL pack_group_sticks( aux, psis, dffts )
 
-  tempo(3) = MPI_WTIME()
+     tempo(2) = MPI_WTIME()
 
-  CALL fw_tg_cft3_scatter( psis, dffts, aux )
+     CALL fw_tg_cft3_z( psis, dffts, aux )
 
-  tempo(4) = MPI_WTIME()
+     tempo(3) = MPI_WTIME()
 
-  CALL fw_tg_cft3_xy( psis, dffts )
+     CALL fw_tg_cft3_scatter( psis, dffts, aux )
 
-  tempo(5) = MPI_WTIME()
+     tempo(4) = MPI_WTIME()
 
-  CALL bw_tg_cft3_xy( psis, dffts )
+     CALL fw_tg_cft3_xy( psis, dffts )
 
-  tempo(6) = MPI_WTIME()
+     tempo(5) = MPI_WTIME()
 
-  CALL bw_tg_cft3_scatter( psis, dffts, aux )
+     CALL bw_tg_cft3_xy( psis, dffts )
 
-  tempo(7) = MPI_WTIME()
+     tempo(6) = MPI_WTIME()
 
-  CALL bw_tg_cft3_z( psis, dffts, aux )
+     CALL bw_tg_cft3_scatter( psis, dffts, aux )
 
-  tempo(8) = MPI_WTIME()
+     tempo(7) = MPI_WTIME()
 
-  CALL unpack_group_sticks( psis, aux, dffts )
+     CALL bw_tg_cft3_z( psis, dffts, aux )
 
-  tempo(9) = MPI_WTIME()
+     tempo(8) = MPI_WTIME()
+
+     CALL unpack_group_sticks( psis, aux, dffts )
+
+     tempo(9) = MPI_WTIME()
+
+     do i = 2, 10
+        tempo_mio(i) = tempo_mio(i) + (tempo(i) - tempo(i-1))
+     end do
+
+     ncount = ncount + 1
+
+  enddo
 
   DEALLOCATE( psis, aux )
 
@@ -305,9 +331,9 @@ program test
   CALL fft_dlay_deallocate( dfftp )
   CALL fft_dlay_deallocate( dfft3d )
 
-  do i = 2, 10
-     tempo_mio(i) = tempo(i)-tempo(i-1)
-  end do
+  if( ncount > 0 ) then
+     tempo_mio = tempo_mio / DBLE(ncount)
+  endif
 
 #ifdef __MPI
   CALL MPI_ALLREDUCE( tempo_mio, tempo_min, 100, MPI_DOUBLE_PRECISION, MPI_MIN, MPI_COMM_WORLD, ierr )
@@ -326,6 +352,9 @@ program test
     write(*,*) '**** QE 3DFFT Timing ****'
     write(*,*) 'grid size = ', dffts%nr1, dffts%nr2, dffts%nr3
     write(*,*) 'num proc  = ', npes
+    write(*,*) 'num band  = ', nbnd
+    write(*,*) 'num task group  = ', ntgs
+    write(*,*) 'num fft cycles  = ', ncount
 
     write(*,100) 
     write(*,1) 

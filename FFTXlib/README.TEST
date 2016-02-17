@@ -9,8 +9,15 @@ type:
 
 Then you can run your FFT tests using command like:
 
-	mpirun -np 4 ./fft_test.x -ecutwfc 80 -alat 20 
+	mpirun -np 4 ./fft_test.x -ecutwfc 80 -alat 20  -nbnd 128 -ntg 4
 
 or, in case of serial build
 
-	./fft_test.x -ecutwfc 80 -alat 20
+	./fft_test.x -ecutwfc 80 -alat 20  -nbnd 128 -ntg 4
+
+
+Command line arguments:
+-ecutwfc  Plane wave energy cut off
+-alat     Lattice parameter
+-nbnd     Number of bands (fft cycles)
+-ntg      Number of task groups
