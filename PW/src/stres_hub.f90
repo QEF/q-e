@@ -114,7 +114,7 @@ SUBROUTINE stres_hub ( sigmah )
 END  SUBROUTINE stres_hub
 !
 !-----------------------------------------------------------------------
-SUBROUTINE dndepsilon ( ipol,jpol,ldim,dns )
+SUBROUTINE dndepsilon ( ipol, jpol, ldim, dns )
    !-----------------------------------------------------------------------
    ! This routine computes the derivative of the ns atomic occupations with
    ! respect to the strain epsilon(ipol,jpol) used to obtain the hubbard
@@ -129,7 +129,7 @@ SUBROUTINE dndepsilon ( ipol,jpol,ldim,dns )
                                     is_hubbard, copy_U_wfc
    USE basis,                ONLY : natomwfc
    USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
-   USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg
+   USE wvfct,                ONLY : nbnd, npwx, wg
    USE uspp,                 ONLY : nkb, vkb
    USE becmod,               ONLY : bec_type, becp, calbec, &
                                     allocate_bec_type, deallocate_bec_type
@@ -152,7 +152,7 @@ SUBROUTINE dndepsilon ( ipol,jpol,ldim,dns )
    INTEGER :: ik,    & ! counter on k points
               ibnd,  & !    "    "  bands
               is,    & !    "    "  spins
-              na, nt, m1, m2, nb_s, nb_e, mykey
+              npw, na, nt, m1, m2, nb_s, nb_e, mykey
    REAL(DP), ALLOCATABLE :: dns_(:,:,:,:) ! partial contribution 
    COMPLEX (DP), ALLOCATABLE :: spsi(:,:), wfcatom(:,:)
    type (bec_type) :: proj, dproj
@@ -183,12 +183,11 @@ SUBROUTINE dndepsilon ( ipol,jpol,ldim,dns )
    DO ik = 1, nks
       IF (lsda) current_spin = isk(ik)
       npw = ngk(ik)
-      igk(1:npw) = igk_k(1:npw,ik)
       !
       IF (nks > 1) &
          CALL get_buffer (evc, nwordwfc, iunwfc, ik)
       !
-      CALL init_us_2 (npw,igk,xk(1,ik),vkb)
+      CALL init_us_2 (npw,igk_k(1,ik),xk(1,ik),vkb)
       CALL calbec( npw, vkb, evc, becp )
       CALL s_psi  (npwx, npw, nbnd, evc, spsi )
       
@@ -206,7 +205,7 @@ SUBROUTINE dndepsilon ( ipol,jpol,ldim,dns )
       ! epsilon(ipol,jpol)
       !
       IF ( gamma_only ) THEN
-         CALL dprojdepsilon_gamma (spsi, ipol, jpol, nb_s, nb_e, mykey, dproj%r)
+         CALL dprojdepsilon_gamma (spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj%r)
       ELSE
          CALL dprojdepsilon_k (spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj%k)
       END IF
@@ -293,10 +292,10 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
    USE cell_base,            ONLY : tpiba
    USE ions_base,            ONLY : nat, ntyp => nsp, ityp
    USE gvect,                ONLY : g
-   USE klist,                ONLY : nks, xk
+   USE klist,                ONLY : nks, xk, ngk, igk_k
    USE ldaU,                 ONLY : hubbard_l, is_hubbard, nwfcU, wfcU
    USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
-   USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg
+   USE wvfct,                ONLY : nbnd, npwx, wg
    USE uspp,                 ONLY : nkb, vkb, qq, indv_ijkb0
    USE uspp_param,           ONLY : upf, nhm, nh
    USE wavefunctions_module, ONLY : evc
@@ -314,7 +313,7 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
    COMPLEX (DP), INTENT(OUT) :: &
            dproj(nwfcU,nbnd)     ! the derivative of the projection
    !
-   INTEGER :: i, ig, ijkb0, na, ibnd, iwf, nt, ih,jh
+   INTEGER :: npw, i, ig, ijkb0, na, ibnd, iwf, nt, ih,jh
    REAL (DP) :: xyz(3,3), q, a1, a2
    REAL (DP), PARAMETER :: eps=1.0d-8
    COMPLEX (DP), ALLOCATABLE :: &
@@ -352,10 +351,11 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
    ! and here the derivative of the spherical harmonic
    CALL gen_at_dy (ik,nwfcU,is_hubbard,hubbard_l,xyz(1,ipol),aux)
 
+   npw = ngk(ik)
    DO ig = 1,npw
-      gk(1,ig) = (xk(1,ik)+g(1,igk(ig)))*tpiba
-      gk(2,ig) = (xk(2,ik)+g(2,igk(ig)))*tpiba
-      gk(3,ig) = (xk(3,ik)+g(3,igk(ig)))*tpiba
+      gk(1,ig) = (xk(1,ik)+g(1,igk_k(ig,ik)))*tpiba
+      gk(2,ig) = (xk(2,ik)+g(2,igk_k(ig,ik)))*tpiba
+      gk(3,ig) = (xk(3,ik)+g(3,igk_k(ig,ik)))*tpiba
       q = SQRT(gk(1,ig)**2+gk(2,ig)**2+gk(3,ig)**2)
       IF (q.GT.eps) THEN
          qm1(ig)=1.d0/q
@@ -457,7 +457,7 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
 END SUBROUTINE dprojdepsilon_k
 !
 !-----------------------------------------------------------------------
-SUBROUTINE dprojdepsilon_gamma ( spsi, ipol, jpol, nb_s, nb_e, mykey, dproj )
+SUBROUTINE dprojdepsilon_gamma ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
    !-----------------------------------------------------------------------
    !
    ! This routine computes the first derivative of the projection
@@ -469,10 +469,10 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ipol, jpol, nb_s, nb_e, mykey, dproj )
    USE cell_base,            ONLY : tpiba
    USE ions_base,            ONLY : nat, ntyp => nsp, ityp
    USE gvect,                ONLY : g, gstart
-   USE klist,                ONLY : nks, xk
+   USE klist,                ONLY : nks, xk, ngk, igk_k
    USE ldaU,                 ONLY : is_hubbard, hubbard_l, nwfcU, wfcU
    USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
-   USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg
+   USE wvfct,                ONLY : nbnd, npwx, wg
    USE uspp,                 ONLY : nkb, vkb, qq, indv_ijkb0
    USE uspp_param,           ONLY : upf, nhm, nh
    USE wavefunctions_module, ONLY : evc
@@ -484,13 +484,13 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ipol, jpol, nb_s, nb_e, mykey, dproj )
    !
    ! I/O variables first
    !
-   INTEGER, INTENT(IN) :: ipol, jpol, nb_s, nb_e, mykey
+   INTEGER, INTENT(IN) :: ik, ipol, jpol, nb_s, nb_e, mykey
    COMPLEX (DP), INTENT(IN)  :: &
            spsi(npwx,nbnd)          ! S|evc>
    REAL (DP), INTENT(OUT) :: &
            dproj(nwfcU,nbnd)     ! the derivative of the projection
    !
-   INTEGER :: ik=1, i, ig, ijkb0, na, ibnd, iwf, nt, ih,jh
+   INTEGER :: npw, i, ig, ijkb0, na, ibnd, iwf, nt, ih,jh
    REAL (DP) :: xyz(3,3), q, a1, a2
    REAL (DP), PARAMETER :: eps=1.0d-8
    COMPLEX (DP), ALLOCATABLE :: &
@@ -529,10 +529,11 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ipol, jpol, nb_s, nb_e, mykey, dproj )
    ! and here the derivative of the spherical harmonic
    CALL gen_at_dy (ik,nwfcU,is_hubbard,hubbard_l,xyz(1,ipol),aux)
 
+   npw = ngk(ik)
    DO ig = 1,npw
-      gk(1,ig) = (xk(1,ik)+g(1,igk(ig)))*tpiba
-      gk(2,ig) = (xk(2,ik)+g(2,igk(ig)))*tpiba
-      gk(3,ig) = (xk(3,ik)+g(3,igk(ig)))*tpiba
+      gk(1,ig) = (xk(1,ik)+g(1,igk_k(ig,ik)))*tpiba
+      gk(2,ig) = (xk(2,ik)+g(2,igk_k(ig,ik)))*tpiba
+      gk(3,ig) = (xk(3,ik)+g(3,igk_k(ig,ik)))*tpiba
       q = SQRT(gk(1,ig)**2+gk(2,ig)**2+gk(3,ig)**2)
       IF (q.GT.eps) THEN
          qm1(ig)=1.d0/q

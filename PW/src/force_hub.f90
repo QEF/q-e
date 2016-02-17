@@ -84,7 +84,7 @@ SUBROUTINE force_hub(forceh)
       IF (nks > 1) &
          CALL get_buffer (evc, nwordwfc, iunwfc, ik)
 
-      CALL init_us_2 (npw,igk,xk(1,ik),vkb)
+      CALL init_us_2 (npw,igk_k(1,ik),xk(1,ik),vkb)
       CALL calbec( npw, vkb, evc, becp )
       CALL s_psi  (npwx, npw, nbnd, evc, spsi )
 
@@ -186,7 +186,7 @@ SUBROUTINE dndtau_k &
    CALL start_clock('dndtau')
    !
    ALLOCATE ( dproj(nwfcU,nb_s:nb_e) )
-   CALL dprojdtau_k ( spsi, alpha, jkb0, ipol, nb_s, nb_e, mykey, dproj )
+   CALL dprojdtau_k ( spsi, alpha, jkb0, ipol, ik, nb_s, nb_e, mykey, dproj )
    !
    ! compute the derivative of occupation numbers (the quantities dn(m1,m2))
    ! of the atomic orbitals. They are real quantities as well as n(m1,m2)
@@ -273,7 +273,7 @@ SUBROUTINE dndtau_gamma &
    CALL start_clock('dndtau')
    !
    ALLOCATE ( dproj(nwfcU,nb_s:nb_e) )
-   CALL dprojdtau_gamma ( spsi, alpha, jkb0, ipol, nb_s, nb_e, mykey, dproj )
+   CALL dprojdtau_gamma ( spsi, alpha, jkb0, ipol, ik, nb_s, nb_e, mykey, dproj )
    !
    ! compute the derivative of occupation numbers (the quantities dn(m1,m2))
    ! of the atomic orbitals. They are real quantities as well as n(m1,m2)
@@ -329,7 +329,7 @@ SUBROUTINE dndtau_gamma &
 END SUBROUTINE dndtau_gamma
 !
 !-----------------------------------------------------------------------
-SUBROUTINE dprojdtau_k (spsi, alpha, ijkb0, ipol, nb_s, nb_e, mykey, dproj)
+SUBROUTINE dprojdtau_k (spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, mykey, dproj)
    !-----------------------------------------------------------------------
    !
    ! This routine computes the first derivative of the projection
@@ -341,9 +341,9 @@ SUBROUTINE dprojdtau_k (spsi, alpha, ijkb0, ipol, nb_s, nb_e, mykey, dproj)
    USE ions_base,            ONLY : nat, ntyp => nsp, ityp
    USE cell_base,            ONLY : tpiba
    USE gvect,                ONLY : g
-   USE klist,                ONLY : nks, xk
+   USE klist,                ONLY : nks, xk, ngk, igk_k
    USE ldaU,                 ONLY : is_hubbard, Hubbard_l, nwfcU, wfcU, offsetU
-   USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg
+   USE wvfct,                ONLY : nbnd, npwx, wg
    USE uspp,                 ONLY : nkb, vkb, qq
    USE uspp_param,           ONLY : nh
    USE wavefunctions_module, ONLY : evc
@@ -352,14 +352,15 @@ SUBROUTINE dprojdtau_k (spsi, alpha, ijkb0, ipol, nb_s, nb_e, mykey, dproj)
    USE mp,                   ONLY : mp_sum
    
    IMPLICIT NONE
-   INTEGER, INTENT (IN) :: alpha,   &! the displaced atom
+   INTEGER, INTENT (IN) :: ik,      &! k-point index
+                           alpha,   &! the displaced atom
                            ipol,    &! the component of displacement
                            ijkb0     ! position of beta functions for atom alpha
    INTEGER, INTENT (IN) :: nb_s, nb_e, mykey       ! band parallelization
    COMPLEX (DP), INTENT (IN) :: spsi(npwx,nbnd)    ! S|evc>
    COMPLEX (DP), INTENT (OUT) :: dproj(nwfcU,nb_s:nb_e) ! derivative of projection
    !
-   INTEGER :: nt, ig, na_, m1, ibnd, iwf, nt_, ih, jh, ldim
+   INTEGER :: npw, nt, ig, na_, m1, ibnd, iwf, nt_, ih, jh, ldim
    REAL (DP) :: gvec
    COMPLEX (DP), ALLOCATABLE :: dproj0(:,:), dwfc(:,:), dbeta(:,:), &
                                 betapsi(:,:), dbetapsi(:,:), &
@@ -373,7 +374,7 @@ SUBROUTINE dprojdtau_k (spsi, alpha, ijkb0, ipol, nb_s, nb_e, mykey, dproj)
 
    call start_clock('dprojdtau')
    nt = ityp(alpha)
-
+   npw= ngk(ik)
    ldim = 2 * Hubbard_l(nt) + 1
 
    dproj(:,:) = (0.d0, 0.d0)
@@ -386,7 +387,7 @@ SUBROUTINE dprojdtau_k (spsi, alpha, ijkb0, ipol, nb_s, nb_e, mykey, dproj)
       ALLOCATE ( dwfc(npwx,ldim) )
 !!omp parallel do default(shared) private(ig,gvec,m1)
       DO ig = 1,npw
-         gvec = g(ipol,igk(ig)) * tpiba
+         gvec = g(ipol,igk_k(ig,ik)) * tpiba
 
          ! in the expression of dwfc we don't need (k+G) but just G; k always
          ! multiplies the underived quantity and gives an opposite contribution
@@ -425,7 +426,7 @@ SUBROUTINE dprojdtau_k (spsi, alpha, ijkb0, ipol, nb_s, nb_e, mykey, dproj)
 !!omp parallel do default(shared) private(ig,ih)
    DO ih=1,nh(nt)
       DO ig = 1, npw
-         gvec = g(ipol,igk(ig)) * tpiba
+         gvec = g(ipol,igk_k(ig,ik)) * tpiba
          dbeta(ig,ih) = (0.d0,-1.d0) * dbeta(ig,ih) * gvec
       END DO
    END DO
@@ -485,7 +486,7 @@ SUBROUTINE dprojdtau_k (spsi, alpha, ijkb0, ipol, nb_s, nb_e, mykey, dproj)
 END SUBROUTINE dprojdtau_k
 !
 !-----------------------------------------------------------------------
-SUBROUTINE dprojdtau_gamma (spsi, alpha, ijkb0, ipol, nb_s, nb_e, mykey, dproj)
+SUBROUTINE dprojdtau_gamma (spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, mykey, dproj)
    !-----------------------------------------------------------------------
    !
    ! This routine computes the first derivative of the projection
@@ -497,9 +498,9 @@ SUBROUTINE dprojdtau_gamma (spsi, alpha, ijkb0, ipol, nb_s, nb_e, mykey, dproj)
    USE ions_base,            ONLY : nat, ntyp => nsp, ityp
    USE cell_base,            ONLY : tpiba
    USE gvect,                ONLY : g
-   USE klist,                ONLY : nks, xk
+   USE klist,                ONLY : nks, xk, ngk, igk_k
    USE ldaU,                 ONLY : is_hubbard, Hubbard_l, nwfcU, wfcU, offsetU
-   USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg
+   USE wvfct,                ONLY : nbnd, npwx,  wg
    USE uspp,                 ONLY : nkb, vkb, qq
    USE uspp_param,           ONLY : nh
    USE wavefunctions_module, ONLY : evc
@@ -510,14 +511,15 @@ SUBROUTINE dprojdtau_gamma (spsi, alpha, ijkb0, ipol, nb_s, nb_e, mykey, dproj)
    
    IMPLICIT NONE
 
-   INTEGER, INTENT (IN) :: alpha,   &! the displaced atom
+   INTEGER, INTENT (IN) :: ik,      &! k-point index
+                           alpha,   &! the displaced atom
                            ipol,    &! the component of displacement
                            ijkb0     ! position of beta functions for atom alpha
    INTEGER, INTENT (IN) :: nb_s, nb_e, mykey       ! band parallelization
    COMPLEX (DP), INTENT (IN) :: spsi(npwx,nbnd)   ! S|evc>
    REAL (DP), INTENT (OUT) ::  dproj(nwfcU,nb_s:nb_e) ! derivative of projection
    !
-   INTEGER :: nt, ig, na_, m1, ibnd, iwf, nt_, ih, jh, ldim
+   INTEGER :: npw, nt, ig, na_, m1, ibnd, iwf, nt_, ih, jh, ldim
    REAL (DP) :: gvec
    COMPLEX (DP), ALLOCATABLE :: dwfc(:,:), dbeta(:,:)
    REAL (DP), ALLOCATABLE ::    dproj0(:,:), betapsi(:,:), dbetapsi(:,:), &
@@ -531,6 +533,7 @@ SUBROUTINE dprojdtau_gamma (spsi, alpha, ijkb0, ipol, nb_s, nb_e, mykey, dproj)
 
    call start_clock('dprojdtau')
    nt = ityp(alpha)
+   npw=ngk(ik)
    ldim = 2 * Hubbard_l(nt) + 1
    !
    ! At first the derivatives of the atomic wfc and the beta are computed
@@ -542,7 +545,7 @@ SUBROUTINE dprojdtau_gamma (spsi, alpha, ijkb0, ipol, nb_s, nb_e, mykey, dproj)
       ALLOCATE ( dwfc(npwx,ldim) )
 !!omp parallel do default(shared) private(ig,m1,gvec)
       DO ig = 1,npw
-         gvec = g(ipol,igk(ig)) * tpiba
+         gvec = g(ipol,igk_k(ig,ik)) * tpiba
          ! in the expression of dwfc we don't need (k+G) but just G; k always
          ! multiplies the underived quantity and gives an opposite contribution
          ! in c.c. term because the sign of the imaginary unit.
@@ -578,7 +581,7 @@ SUBROUTINE dprojdtau_gamma (spsi, alpha, ijkb0, ipol, nb_s, nb_e, mykey, dproj)
 !!omp parallel do default(shared) private(ih,ig,gvec)
    DO ih=1,nh(nt)
       DO ig = 1, npw
-         gvec = g(ipol,igk(ig)) * tpiba
+         gvec = g(ipol,igk_k(ig,ik)) * tpiba
          dbeta(ig,ih) = (0.d0,-1.d0) * dbeta(ig,ih) * gvec
       END DO
    END DO
