@@ -19,7 +19,7 @@ subroutine stres_knl (sigmanlc, sigmakin)
   USE io_files,             ONLY: iunwfc, nwordwfc
   USE buffers,              ONLY: get_buffer
   USE symme,                ONLY: symmatrix
-  USE wvfct,                ONLY: npw, npwx, nbnd, igk, wg
+  USE wvfct,                ONLY: npwx, nbnd, wg
   USE control_flags,        ONLY: gamma_only
   USE noncollin_module,     ONLY: noncolin, npol
   USE wavefunctions_module, ONLY: evc
@@ -30,7 +30,7 @@ subroutine stres_knl (sigmanlc, sigmakin)
   real(DP) :: sigmanlc (3, 3), sigmakin (3, 3)
   real(DP), allocatable :: gk (:,:), kfac (:)
   real(DP) :: twobysqrtpi, gk2, arg
-  integer :: ik, l, m, i, ibnd, is
+  integer :: npw, ik, l, m, i, ibnd, is
 
   allocate (gk(  3, npwx))    
   allocate (kfac(   npwx))    
@@ -42,14 +42,13 @@ subroutine stres_knl (sigmanlc, sigmakin)
   kfac(:) = 1.d0
 
   do ik = 1, nks
-     npw = ngk(ik)
-     igk(1:npw) = igk_k(1:npw,ik)
      if (nks > 1) &
         call get_buffer (evc, nwordwfc, iunwfc, ik)
+     npw = ngk(ik)
      do i = 1, npw
-        gk (1, i) = (xk (1, ik) + g (1, igk (i) ) ) * tpiba
-        gk (2, i) = (xk (2, ik) + g (2, igk (i) ) ) * tpiba
-        gk (3, i) = (xk (3, ik) + g (3, igk (i) ) ) * tpiba
+        gk (1, i) = (xk (1, ik) + g (1, igk_k(i,ik) ) ) * tpiba
+        gk (2, i) = (xk (2, ik) + g (2, igk_k(i,ik) ) ) * tpiba
+        gk (3, i) = (xk (3, ik) + g (3, igk_k(i,ik) ) ) * tpiba
         if (qcutz.gt.0.d0) then
            gk2 = gk (1, i) **2 + gk (2, i) **2 + gk (3, i) **2
            arg = ( (gk2 - ecfixed) / q2sigma) **2

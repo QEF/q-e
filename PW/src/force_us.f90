@@ -20,7 +20,7 @@ SUBROUTINE force_us( forcenl )
   USE gvect,                ONLY : g
   USE uspp,                 ONLY : nkb, vkb, qq, deeq, qq_so, deeq_nc, indv_ijkb0
   USE uspp_param,           ONLY : upf, nh, newpseudo, nhm
-  USE wvfct,                ONLY : nbnd, npw, npwx, igk, wg, et
+  USE wvfct,                ONLY : nbnd, npwx, wg, et
   USE lsda_mod,             ONLY : lsda, current_spin, isk, nspin
   USE symme,                ONLY : symvector
   USE wavefunctions_module, ONLY : evc
@@ -42,7 +42,7 @@ SUBROUTINE force_us( forcenl )
   COMPLEX(DP), ALLOCATABLE :: deff_nc(:,:,:,:)
   REAL(DP), ALLOCATABLE :: deff(:,:,:)
   TYPE(bec_type) :: dbecp                 ! contains <dbeta|psi>
-  INTEGER    :: ik, ipol, ig, jkb
+  INTEGER    :: npw, ik, ipol, ig, jkb
   !
   forcenl(:,:) = 0.D0
   !
@@ -61,12 +61,11 @@ SUBROUTINE force_us( forcenl )
      !
      IF ( lsda ) current_spin = isk(ik)
      npw = ngk (ik)
-     igk(1:npw) = igk_k(1:npw,ik)
 
      IF ( nks > 1 ) THEN
         CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
         IF ( nkb > 0 ) &
-             CALL init_us_2( npw, igk, xk(1,ik), vkb )
+             CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
      END IF
      !
      CALL calbec ( npw, vkb, evc, becp )
@@ -75,7 +74,7 @@ SUBROUTINE force_us( forcenl )
         DO jkb = 1, nkb
 !$omp parallel do default(shared) private(ig)
            do ig = 1, npw
-              vkb1(ig,jkb) = vkb(ig,jkb) * (0.D0,-1.D0) * g(ipol,igk(ig))
+              vkb1(ig,jkb) = vkb(ig,jkb) * (0.D0,-1.D0) * g(ipol,igk_k(ig,ik))
            END DO
 !$omp end parallel do
         END DO

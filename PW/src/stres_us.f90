@@ -16,9 +16,9 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE constants,            ONLY : eps8
-  USE klist,                ONLY : nks, xk
+  USE klist,                ONLY : nks, xk, ngk, igk_k
   USE lsda_mod,             ONLY : current_spin, lsda, isk
-  USE wvfct,                ONLY : npw, npwx, nbnd, igk, wg, et
+  USE wvfct,                ONLY : npwx, nbnd, wg, et
   USE control_flags,        ONLY : gamma_only
   USE uspp_param,           ONLY : upf, lmaxkb, nh, newpseudo, nhm
   USE uspp,                 ONLY : nkb, vkb, qq, deeq, deeq_nc, qq_so
@@ -35,18 +35,19 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN)    :: ik
-  REAL(DP), INTENT(IN)   :: gk(3,npw)
+  REAL(DP), INTENT(IN)   :: gk(3,npwx)
   REAL(DP), INTENT(INOUT):: sigmanlc(3,3)
   !
   REAL(DP), ALLOCATABLE  :: qm1(:)
   REAL(DP)               :: q
-  INTEGER                :: i
+  INTEGER                :: npw, i
   !
   !
   IF ( nkb == 0 ) RETURN
   !
   IF ( lsda ) current_spin = isk(ik)
-  IF ( nks > 1 ) CALL init_us_2( npw, igk, xk(1,ik), vkb )
+  npw = ngk(ik)
+  IF ( nks > 1 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
   !
   CALL allocate_bec_type ( nkb, nbnd, becp, intra_bgrp_comm ) 
   CALL calbec( npw, vkb, evc, becp )

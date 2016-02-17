@@ -1851,11 +1851,12 @@ MODULE exx
     energy = 0._dp
     
     DO ik=1,nks
+       npw = ngk (ik)
+       ! setup variables for usage by vexx (same logic as for H_psi)
        current_k = ik
        IF ( lsda ) current_spin = isk(ik)
-       npw = ngk (ik)
        igk(1:npw) = igk_k(1:npw,ik)
-
+       ! end setup
        IF ( nks > 1 ) THEN
           CALL get_buffer(psi, nwordwfc, iunwfc, ik)
        ELSE
@@ -1864,7 +1865,7 @@ MODULE exx
        !
        IF(okvan)THEN
           ! prepare the |beta> function at k+q
-          CALL init_us_2(npw, igk, xk(:,ik), vkb)
+          CALL init_us_2(npw, igk_k(1,ik), xk(:,ik), vkb)
           ! compute <beta_I|psi_j> at this k+q point, for all band and all projectors
           CALL calbec(npw, vkb, psi, becpsi, nbnd)
        ENDIF
