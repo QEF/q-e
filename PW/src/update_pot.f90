@@ -733,13 +733,13 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
         IF ( nks > 1 ) CALL get_buffer( evc, nwordwfc, iunwfc, ik )
         CALL davcio(    evc, 2*nwordwfc, iunoldwfc, ik, +1 )
         !
+        npw = ngk (ik)
         IF ( okvan ) THEN
            !
            ! ... Ultrasoft PP: calculate overlap matrix
            ! ... Required by s_psi:
            ! ... nonlocal pseudopotential projectors |beta>, <psi|beta>
            !
-           npw = ngk (ik)
            IF ( nkb > 0 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
            CALL calbec( npw, vkb, evc, becp )
            !
