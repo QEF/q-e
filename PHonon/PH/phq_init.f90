@@ -37,7 +37,7 @@ SUBROUTINE phq_init()
   USE becmod,               ONLY : calbec
   USE constants,            ONLY : eps8, tpi
   USE gvect,                ONLY : g, ngm
-  USE klist,                ONLY : xk
+  USE klist,                ONLY : xk, ngk, igk_k
   USE lsda_mod,             ONLY : lsda, current_spin, isk
   USE buffers,              ONLY : get_buffer
   USE io_global,            ONLY : stdout
@@ -163,6 +163,10 @@ SUBROUTINE phq_init()
      ! ... if there is only one k-point evc, evq, npw, igk stay in memory
      !
      IF ( nksq > 1 ) WRITE( iunigk ) npw, igk
+     ! TEMP: used in gen_us_dj, to be removed
+     ngk(ik) = npw
+     igk_k(1:npw,ik) = igk(1:npw)
+     ! TEMP: end
      !
      IF ( lgamma ) THEN
         !

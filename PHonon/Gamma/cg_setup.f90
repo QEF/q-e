@@ -24,7 +24,7 @@ SUBROUTINE cg_setup
   USE fft_base,   ONLY: dfftp
   USE gvect,      ONLY: g, ngm, eigts1, eigts2, eigts3
   USE gvecs,      ONLY: doublegrid
-  USE klist,      ONLY: xk
+  USE klist,      ONLY: xk, ngk, igk_k
   USE lsda_mod,   ONLY: nspin, current_spin
   USE vlocal,     ONLY: strf
   USE wvfct,      ONLY: nbnd, npwx, npw, g2kin, igk
@@ -116,6 +116,10 @@ SUBROUTINE cg_setup
      CLOSE(unit=iunpun,status='delete')
   ENDIF
   CALL gk_sort (xk(1,kpoint),ngm,g,gcutw,npw,igk,g2kin)
+  ! TEMP: used in gen_us_dj, to be removed
+  ngk(kpoint)=npw
+  igk_k(:,kpoint)=igk(:)
+  ! TEMP: end
   !
   !  Kleinman-Bylander PPs
   !
