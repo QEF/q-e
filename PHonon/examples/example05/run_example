@@ -138,7 +138,6 @@ phonons of AlAs at Gamma
   elop=.true.,
   zeu=.true.,
   zue=.true.,
-  max_seconds=3.2
   amass(1)=26.98,
   amass(2)=74.92,
   outdir='$TMP_DIR/',
