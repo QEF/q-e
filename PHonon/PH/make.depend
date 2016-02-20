@@ -478,7 +478,6 @@ dv_of_drho.o : ../../Modules/recvec.o
 dv_of_drho.o : ../../Modules/uspp.o
 dv_of_drho.o : ../../PW/src/martyna_tuckerman.o
 dv_of_drho.o : ../../PW/src/scf_mod.o
-dv_of_drho.o : phcom.o
 dvanqq.o : ../../FFTXlib/fft_interfaces.o
 dvanqq.o : ../../LR_Modules/lrcom.o
 dvanqq.o : ../../Modules/cell_base.o
@@ -1447,6 +1446,7 @@ stop_ph.o : ../../Modules/mp_global.o
 stop_ph.o : ../../Modules/mp_images.o
 stop_ph.o : ph_restart.o
 stop_ph.o : save_ph_input.o
+summarize.o : ../../LR_Modules/lrcom.o
 summarize.o : ../../Modules/cell_base.o
 summarize.o : ../../Modules/constants.o
 summarize.o : ../../Modules/io_global.o

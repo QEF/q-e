@@ -1,6 +1,5 @@
 !
-
-! Copyright (C) 2001-2013 Quantum ESPRESSO group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -40,7 +39,7 @@ SUBROUTINE phq_readin()
   USE control_ph,    ONLY : maxter, alpha_mix, lgamma_gamma, epsil, &
                             zue, zeu, xmldyn, newgrid,                      &
                             trans, reduce_io, tr2_ph, niter_ph,       &
-                            nmix_ph, ldisp, recover, lrpa, lnoloc, start_irr, &
+                            nmix_ph, ldisp, recover, lnoloc, start_irr, &
                             last_irr, start_q, last_q, current_iq, tmp_dir_ph, &
                             ext_recover, ext_restart, u_from_file, ldiag, &
                             search_sym, lqdir, electron_phonon, tmp_dir_phq, &
@@ -74,7 +73,7 @@ SUBROUTINE phq_readin()
   USE dfile_star,    ONLY : drho_star, dvscf_star
 
   USE qpoint,        ONLY : nksq, xq
-  USE control_lr,    ONLY : lgamma
+  USE control_lr,    ONLY : lgamma, lrpa
 
   ! YAMBO >
   USE YAMBO,         ONLY : elph_yambo,dvscf_yambo

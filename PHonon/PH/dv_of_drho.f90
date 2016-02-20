@@ -24,11 +24,11 @@ subroutine dv_of_drho (mode, dvscf, add_nlcc)
   USE funct,             ONLY : dft_is_gradient
   USE scf,               ONLY : rho, rho_core
   USE uspp,              ONLY : nlcc_any
-  USE control_ph,        ONLY : lrpa
   USE control_flags,     ONLY : gamma_only
   USE martyna_tuckerman, ONLY : wg_corr_h, do_comp_mt
   USE qpoint,            ONLY : xq
   USE gc_lr,             ONLY : grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s
+  USE control_lr,        ONLY : lrpa
   USE eqv,               ONLY : dmuxc
 
   IMPLICIT NONE

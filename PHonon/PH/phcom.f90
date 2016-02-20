@@ -236,7 +236,6 @@ MODULE control_ph
                            ! in input.
              ext_restart, &! if .TRUE. there is a restart file
              ext_recover, &! if .TRUE. there is a recover file
-             lrpa,        &! if .TRUE. calculates the RPA dielectric constant
              lnoloc,      &! if .TRUE. calculates the dielectric constant
                            ! neglecting local field effects
              search_sym=.TRUE.,  &! if .TRUE. search the mode symmetry

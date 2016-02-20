@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2008 Quantum ESPRESSO group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -17,9 +17,9 @@ subroutine bcast_ph_input ( )
 
   use mp, only: mp_bcast
   use mp_world, only: world_comm
-  USE control_lr, ONLY : lgamma
+  USE control_lr, ONLY : lgamma, lrpa
   USE control_ph, ONLY : start_irr, last_irr, start_q, last_q, nmix_ph, &
-                         niter_ph, lnoloc, alpha_mix, tr2_ph, lrpa, recover, &
+                         niter_ph, lnoloc, alpha_mix, tr2_ph, recover, &
                          ldisp, reduce_io, zue, zeu, epsil, trans, &
                          ldiag, lqdir, search_sym,  electron_phonon, &
                          qplot, only_init, only_wfc, low_directory_check

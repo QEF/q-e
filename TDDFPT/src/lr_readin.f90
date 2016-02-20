@@ -54,12 +54,13 @@ SUBROUTINE lr_readin
   USE esm,                 ONLY : do_comp_esm
   USE qpoint,              ONLY : xq
   USE save_ph,             ONLY : tmp_dir_save
-  USE control_ph,          ONLY : tmp_dir_phq, lrpa
+  USE control_ph,          ONLY : tmp_dir_phq
   USE xml_io_base,         ONLY : create_directory
   USE io_rho_xml,          ONLY : write_rho
   USE noncollin_module,    ONLY : noncolin
   USE mp_bands,            ONLY : ntask_groups
   USE constants,           ONLY : eps4
+  USE control_lr,          ONLY : lrpa
 #ifdef __ENVIRON
   USE environ_base,        ONLY : environ_base_init, ir_end
   USE environ_input,       ONLY : read_environ
@@ -314,11 +315,6 @@ SUBROUTINE lr_readin
            !
            no_hxc = .FALSE.
            lrpa   = .TRUE.
-           !
-         !CASE ( 'RPA_without_CLFE' )
-           !
-           !no_hxc = .FALSE.
-           !lrpa   = .TRUE.
            !
          CASE DEFAULT
            !

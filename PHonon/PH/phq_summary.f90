@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2010 Quantum ESPRESSO group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -32,7 +32,7 @@ subroutine phq_summary
   USE funct,         ONLY : write_dft_name
   USE run_info, ONLY : title
   USE gamma_gamma,   ONLY : with_symmetry, nasr
-  USE control_ph,    ONLY : lgamma_gamma, lnoloc, lrpa, zue, epsil, ldisp, &
+  USE control_ph,    ONLY : lgamma_gamma, lnoloc, zue, epsil, ldisp, &
                             nmix_ph, alpha_mix, tr2_ph, zeu, search_sym
   USE freq_ph,       ONLY : fpol, nfs, fiu
   USE partial,       ONLY : atomo, nat_todo, all_comp, done_irr, comp_irr

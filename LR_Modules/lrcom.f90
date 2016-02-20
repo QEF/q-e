@@ -49,6 +49,8 @@ MODULE control_lr
   !
   REAL(DP) :: alpha_pv       ! the alpha value for shifting the bands
   !
+  LOGICAL :: lrpa            ! if .TRUE. uses the Random Phace Approximation
+  !
 END MODULE control_lr
 !
 MODULE eqv

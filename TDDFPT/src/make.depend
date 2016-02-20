@@ -5,7 +5,6 @@ bcast_lr_input.o : ../../Modules/io_global.o
 bcast_lr_input.o : ../../Modules/mp.o
 bcast_lr_input.o : ../../Modules/mp_global.o
 bcast_lr_input.o : ../../Modules/mp_world.o
-bcast_lr_input.o : ../../PHonon/PH/phcom.o
 bcast_lr_input.o : ../../PW/src/exx.o
 bcast_lr_input.o : ../../PW/src/realus.o
 bcast_lr_input.o : lr_charg_resp.o

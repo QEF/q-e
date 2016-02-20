@@ -25,7 +25,7 @@ SUBROUTINE bcast_lr_input
   USE mp_world,            ONLY: world_comm
   USE exx,                 ONLY: ecutfock
   USE qpoint,              ONLY: xq
-  USE control_ph,          ONLY: lrpa
+  USE control_lr,          ONLY: lrpa
 
   IMPLICIT NONE
   !

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2009 Quantum ESPRESSO group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -20,13 +20,14 @@ SUBROUTINE phescf()
   USE noncollin_module,ONLY : noncolin, nspin_mag
   USE lsda_mod,        ONLY : nspin
   USE control_ph,      ONLY : convt, zeu, rec_code, rec_code_read, lnoloc, &
-                              lrpa, where_rec, done_epsil, done_zeu, epsil
+                              where_rec, done_epsil, done_zeu, epsil
   USE output,          ONLY : fildrho
   USE ph_restart,      ONLY : ph_writefile
   USE freq_ph
   USE ramanm,          ONLY : ramtns, lraman, elop, done_lraman, done_elop
 
-  USE lrus,   ONLY : int3, int3_nc, int3_paw
+  USE lrus,            ONLY : int3, int3_nc, int3_paw
+  USE control_lr,      ONLY : lrpa
   !
   IMPLICIT NONE
   !

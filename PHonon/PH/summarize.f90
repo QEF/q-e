@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2009 Quantum ESPRESSO group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -18,7 +18,8 @@ SUBROUTINE summarize_epsilon()
   USE cell_base, ONLY: omega
   USE noncollin_module, ONLY : npol
   USE efield_mod, ONLY : epsilon
-  USE control_ph, ONLY : lgamma_gamma, lrpa, lnoloc, done_epsil
+  USE control_ph, ONLY : lgamma_gamma, lnoloc, done_epsil
+  USE control_lr, ONLY : lrpa
 
   IMPLICIT NONE
 
