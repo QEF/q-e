@@ -51,7 +51,6 @@ d2ionq.o \
 davcio_drho.o \
 dfile_autoname.o \
 dfile_star.o \
-dgradcorr.o \
 dielec.o \
 do_phonon.o \
 drho.o \
@@ -59,7 +58,6 @@ drhodv.o \
 drhodvloc.o \
 drhodvnl.o \
 drhodvus.o \
-dv_of_drho.o \
 dvanqq.o \
 dvkb3.o \
 dvpsi_e.o \

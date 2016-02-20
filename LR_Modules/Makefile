@@ -20,6 +20,8 @@ commutator_Hx_psi.o \
 h_psiq.o \
 incdrhoscf.o \
 incdrhoscf_nc.o \
+dv_of_drho.o \
+dgradcorr.o \
 newdq.o \
 orthogonalize.o \
 setup_nscf.o \
