@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -8,20 +8,19 @@
 !--------------------------------------------------------------------
 subroutine dgradcorr (rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, &
      dvxc_s, xq, drho, nrxx, nspin, nspin0, nl, ngm, g, alat, dvxc)
-  !     ===================
   !--------------------------------------------------------------------
-  !  Add Gradient Correction contribution to dvxc
-  !  LSDA is allowed. ADC (September 1999)
-  !  noncollinear is allowed. ADC (June 2007)
   !
-  USE kinds, ONLY : DP
+  !  Add gradient correction contribution to 
+  !  the responce exchange-correlation potential dvxc.
+  !  LSDA is allowed.         ADC (September 1999)
+  !  Noncollinear is allowed. ADC (June 2007)
+  !
+  USE kinds,            ONLY : DP
   USE noncollin_module, ONLY : noncolin
-  USE spin_orb, ONLY : domag
-
-  USE gc_lr, ONLY : gmag, vsgga, segni
+  USE spin_orb,         ONLY : domag
+  USE gc_lr,            ONLY : gmag, vsgga, segni
 
   implicit none
-  !
   integer :: nrxx, ngm, nl (ngm), &
        nspin, nspin0
   real(DP) :: rho (nrxx, nspin), grho (3, nrxx, nspin0), &
@@ -40,11 +39,6 @@ subroutine dgradcorr (rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, &
   complex(DP), allocatable  :: drhoout(:,:)
   real(DP), allocatable :: rhoout(:,:)
   integer :: k, ipol, jpol, is, js, ks, ls
-
-!  write(6,*) 'enter dgradcor'
-!  do k=2,2
-!     write(6,'(3f20.5)') rho(k,1), drho(k,1), dvxc(k,1)
-!  enddo
 
   if (noncolin.and.domag) then
      allocate (gdmag(3, nrxx, nspin))
@@ -105,12 +99,6 @@ subroutine dgradcorr (rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, &
         drhoout(:,is)=drho(:,is)
      ENDDO
   ENDIF
-!  write(6,*) 'rhoout,gdrho'
-!  do k=2,2
-!     write(6,'(3f20.5)') rhoout(k,1), drhoout(k,1), grho(3,k,1), gdrho(3,k,1)
-!     write(6,'(3f20.5)') rhoout(k,2), drhoout(k,2), grho(3,k,2), gdrho(3,k,2)
-!  enddo
-!  write(6,*) 'done rhoout,gdrho'
 
   do k = 1, nrxx
      grho2 = grho(1, k, 1)**2 + grho(2, k, 1)**2 + grho(3, k, 1)**2
@@ -234,12 +222,6 @@ subroutine dgradcorr (rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, &
      ENDDO
   ENDIF
 
-
-!  do k=2,2
-!     write(6,'(3f20.5)') rho(k,1), drho(k,1), dvxc(k,1)
-!  enddo
-!  write(6,*) 'exit dgradcor'
-
   deallocate (dh)
   deallocate (h)
   deallocate (gdrho)
@@ -250,20 +232,25 @@ subroutine dgradcorr (rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, &
      deallocate (dvxcsave)
      deallocate (vgg)
   endif
+
   return
+
 end subroutine dgradcorr
 !
 !--------------------------------------------------------------------
 subroutine qgradient (xq, nrxx, a, ngm, g, nl, alat, ga)
   !--------------------------------------------------------------------
+  !
   ! Calculates ga = \grad a in R-space (a is also in R-space)
-  use control_flags,  ONLY : gamma_only
-  USE fft_base,       ONLY: dfftp
-  USE fft_interfaces, ONLY: fwfft, invfft
-  USE gvect,     ONLY : nlm
-  !gamma_only is disregarded for phonon calculations
-  USE kinds, only : DP
-  USE constants, ONLY: tpi
+  ! Note: gamma_only is disregarded for phonon calculations
+  !
+  USE kinds,          ONLY : DP
+  USE constants,      ONLY : tpi
+  USE control_flags,  ONLY : gamma_only
+  USE fft_base,       ONLY : dfftp
+  USE fft_interfaces, ONLY : fwfft, invfft
+  USE gvect,          ONLY : nlm
+  
   implicit none
   integer :: nrxx, ngm, nl (ngm)
   complex(DP) :: a (nrxx), ga (3, nrxx)
@@ -297,20 +284,24 @@ subroutine qgradient (xq, nrxx, a, ngm, g, nl, alat, ga)
   enddo
   deallocate (aux)
   deallocate (gaux)
+  
   return
 
 end subroutine qgradient
 !--------------------------------------------------------------------
 subroutine qgrad_dot (xq, nrxx, a, ngm, g, nl, alat, da)
   !--------------------------------------------------------------------
+  !
   ! Calculates da = \sum_i \grad_i a_i in R-space
-  use control_flags,     only : gamma_only
-  USE fft_base,   ONLY: dfftp
+  ! Note: gamma_only is disregarded for phonon calculations
+  !
+  USE kinds,          ONLY : DP
+  USE constants,      ONLY : tpi
+  USE control_flags,  ONLY : gamma_only
+  USE fft_base,       ONLY : dfftp
   USE fft_interfaces, ONLY: fwfft, invfft
-  USE gvect,     ONLY : nlm
-  !gamma_only is disregarded for phonon calculations
-  USE kinds, only : DP
-  USE constants, ONLY: tpi
+  USE gvect,          ONLY : nlm
+  
   implicit none
   integer ::  nrxx, ngm, nl (ngm)
   complex(DP) :: a (3, nrxx), da (nrxx)
@@ -353,4 +344,5 @@ subroutine qgrad_dot (xq, nrxx, a, ngm, g, nl, alat, da)
   deallocate (aux)
 
   return
+ 
 end subroutine qgrad_dot
