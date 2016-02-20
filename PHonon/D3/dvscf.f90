@@ -74,7 +74,11 @@ subroutine dvscf (nu_i, dvloc, xq_x)
 
   call davcio_drho (aux2, lrdrho, iudrho_x, nu_i, - 1)
 
-!  call dv_of_drho (nu_i, aux2(1), .true.)
+! IT: Warning, if you uncomment the following line,
+! you have to precompute the response core charge density
+! and pass it as the input to dv_of_drho.
+! 
+!  call dv_of_drho (nu_i, aux2(1), .true., ???)
 
 !  dvloc = aux2(:)
 

@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine dv_of_drho (mode, dvscf, add_nlcc)
+subroutine dv_of_drho (mode, dvscf, add_nlcc, drhoc)
   !-----------------------------------------------------------------------
   !
   !  This routine computes the change of the self consistent potential
@@ -33,13 +33,17 @@ subroutine dv_of_drho (mode, dvscf, add_nlcc)
 
   IMPLICIT NONE
   
-  integer :: mode
-  ! input: the mode to do
-  complex(DP), intent(inout):: dvscf (dfftp%nnr, nspin_mag)
+  integer, intent(in) :: mode
+  ! input: the mode to do for PHonon 
+  ! (otherwise mode=0 on the input)
+  complex(DP), intent(inout) :: dvscf(dfftp%nnr, nspin_mag)
   ! input:  response charge density
   ! output: response Hartree-and-XC potential
-  logical :: add_nlcc
-  ! input: if true add core charge
+  logical, intent(in) :: add_nlcc
+  ! input: if true add core charge density
+  complex(DP), intent(in), optional :: drhoc(dfftp%nnr)
+  ! input: response core charge density 
+  ! (needed only for PHonon when add_nlcc=.true.)
   
   integer :: ir, is, is1, ig
   ! counter on r vectors
@@ -48,7 +52,7 @@ subroutine dv_of_drho (mode, dvscf, add_nlcc)
   real(DP) :: qg2, fac
   ! the modulus of (q+G)^2
   ! the structure factor
-  complex(DP), allocatable :: dvaux (:,:), drhoc (:)
+  complex(DP), allocatable :: dvaux (:,:)
   !  the change of the core charge
   complex(DP), allocatable :: dvhart (:,:) 
   complex(DP), allocatable :: dvaux_mt(:), rgtot(:)
@@ -62,7 +66,9 @@ subroutine dv_of_drho (mode, dvscf, add_nlcc)
   !
   allocate (dvaux( dfftp%nnr,  nspin_mag))
   dvaux (:,:) = (0.d0, 0.d0)
-  if (add_nlcc) allocate (drhoc( dfftp%nnr))
+  !
+  if (add_nlcc .and. .not.present(drhoc)) &
+     & CALL errore( 'dv_of_drho', 'drhoc is not present in the input of the routine', 1 )   
   !
   ! 1) The exchange-correlation contribution is computed in real space
   !
@@ -71,7 +77,6 @@ subroutine dv_of_drho (mode, dvscf, add_nlcc)
   fac = 1.d0 / DBLE (nspin_lsda)
   !
   if (nlcc_any.and.add_nlcc) then
-     if (mode > 0) call addcore (mode, drhoc)
      do is = 1, nspin_lsda
         rho%of_r(:, is) = rho%of_r(:, is) + fac * rho_core (:)
         dvscf(:, is) = dvscf(:, is) + fac * drhoc (:)
@@ -86,7 +91,7 @@ subroutine dv_of_drho (mode, dvscf, add_nlcc)
      enddo
   enddo
   !
-  ! Add gradient correction to XC.
+  ! Add gradient correction to the response XC potential.
   ! NB: If nlcc=.true. we need to add here its contribution. 
   ! grho contains already the core charge
   !
@@ -223,7 +228,6 @@ subroutine dv_of_drho (mode, dvscf, add_nlcc)
    !
   ENDIF
   !
-  if (add_nlcc) deallocate (drhoc)
   deallocate (dvaux)
   !
   CALL stop_clock ('dv_of_drho')
