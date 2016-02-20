@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2008 Quantum ESPRESSO group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -23,7 +23,8 @@ subroutine dynmatcc
   use scf,       ONLY : rho, rho_core, rhog_core
   USE modes,     ONLY : u
   USE qpoint,    ONLY : xq
-  USE nlcc_ph,   ONLY : nlcc_any, drc
+  USE nlcc_ph,   ONLY : drc
+  USE uspp,      ONLY : nlcc_any
   USE dynmat,    ONLY : dyn
   USE mp_bands,  ONLY: intra_bgrp_comm
   USE mp,        ONLY: mp_sum

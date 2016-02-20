@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2011 PWSCF group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -106,8 +106,6 @@ MODULE nlcc_ph
   !
   COMPLEX (DP), ALLOCATABLE, TARGET :: drc(:,:) ! ngm, ntyp)
   ! contain the rhoc (without structure fac) for all atomic types
-  LOGICAL :: nlcc_any
-  ! .T. if any atom-type has nlcc
   !
 END MODULE nlcc_ph
 !

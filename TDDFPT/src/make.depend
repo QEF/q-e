@@ -68,10 +68,7 @@ lr_apply_liouvillian_eels.o : ../../FFTXlib/fft_interfaces.o
 lr_apply_liouvillian_eels.o : ../../FFTXlib/fft_parallel.o
 lr_apply_liouvillian_eels.o : ../../LR_Modules/lrcom.o
 lr_apply_liouvillian_eels.o : ../../Modules/cell_base.o
-lr_apply_liouvillian_eels.o : ../../Modules/constants.o
-lr_apply_liouvillian_eels.o : ../../Modules/control_flags.o
 lr_apply_liouvillian_eels.o : ../../Modules/fft_base.o
-lr_apply_liouvillian_eels.o : ../../Modules/funct.o
 lr_apply_liouvillian_eels.o : ../../Modules/gvecw.o
 lr_apply_liouvillian_eels.o : ../../Modules/io_files.o
 lr_apply_liouvillian_eels.o : ../../Modules/io_global.o
@@ -84,7 +81,6 @@ lr_apply_liouvillian_eels.o : ../../Modules/uspp.o
 lr_apply_liouvillian_eels.o : ../../Modules/wavefunctions.o
 lr_apply_liouvillian_eels.o : ../../PHonon/PH/phcom.o
 lr_apply_liouvillian_eels.o : ../../PW/src/pwcom.o
-lr_apply_liouvillian_eels.o : ../../PW/src/scf_mod.o
 lr_apply_liouvillian_eels.o : lr_variables.o
 lr_calc_dens.o : ../../FFTXlib/fft_interfaces.o
 lr_calc_dens.o : ../../FFTXlib/fft_parallel.o

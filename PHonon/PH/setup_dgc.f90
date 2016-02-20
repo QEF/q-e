@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2008 Quantum ESPRESSO group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -26,7 +26,7 @@ subroutine setup_dgc
   USE kinds, only : DP
   use funct, only : dft_is_gradient, gcxc, gcx_spin, gcc_spin, dgcxc, &
                     dgcxc_spin
-  USE nlcc_ph, ONLY : nlcc_any
+  USE uspp,  ONLY : nlcc_any
 
   USE gc_lr,   ONLY : grho, gmag, dvxc_rr,  dvxc_sr,  dvxc_ss, dvxc_s, &
                       vsgga, segni

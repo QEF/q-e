@@ -144,6 +144,7 @@ d3dyn_cc.o : ../../Modules/ions_base.o
 d3dyn_cc.o : ../../Modules/kind.o
 d3dyn_cc.o : ../../Modules/mp.o
 d3dyn_cc.o : ../../Modules/mp_global.o
+d3dyn_cc.o : ../../Modules/uspp.o
 d3dyn_cc.o : ../../PHonon/PH/phcom.o
 d3dyn_cc.o : ../../PW/src/pwcom.o
 d3dyn_cc.o : ../../PW/src/scf_mod.o
@@ -237,6 +238,7 @@ dqrhod2v.o : ../../PW/src/pwcom.o
 dqrhod2v.o : d3com.o
 drho_cc.o : ../../LR_Modules/lrcom.o
 drho_cc.o : ../../Modules/kind.o
+drho_cc.o : ../../Modules/uspp.o
 drho_cc.o : ../../PHonon/PH/phcom.o
 drho_cc.o : ../../PW/src/pwcom.o
 drho_cc.o : d3com.o
@@ -307,6 +309,7 @@ openfild3.o : ../../Modules/fft_base.o
 openfild3.o : ../../Modules/io_files.o
 openfild3.o : ../../Modules/io_global.o
 openfild3.o : ../../Modules/mp_global.o
+openfild3.o : ../../Modules/uspp.o
 openfild3.o : ../../PHonon/PH/phcom.o
 openfild3.o : ../../PW/src/pwcom.o
 openfild3.o : d3com.o
@@ -372,6 +375,7 @@ stop_d3.o : ../../LR_Modules/lrcom.o
 stop_d3.o : ../../Modules/control_flags.o
 stop_d3.o : ../../Modules/io_files.o
 stop_d3.o : ../../Modules/mp_global.o
+stop_d3.o : ../../Modules/uspp.o
 stop_d3.o : ../../PHonon/PH/phcom.o
 stop_d3.o : ../../PW/src/pwcom.o
 stop_d3.o : d3com.o

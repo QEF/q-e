@@ -19,6 +19,7 @@ SUBROUTINE stop_d3 (flag)
   USE control_flags, ONLY : twfcollect
   USE io_files,      ONLY : iunigk
   USE mp_global,     ONLY : me_pool, root_pool, mp_global_end
+  USE uspp,          ONLY : nlcc_any
 
   use control_lr, ONLY : lgamma
 

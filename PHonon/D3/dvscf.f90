@@ -20,6 +20,7 @@ subroutine dvscf (nu_i, dvloc, xq_x)
   USE fft_interfaces, ONLY : fwfft, invfft
   use pwcom
   USE uspp_param, ONLY: upf
+  USE uspp,       ONLY: nlcc_any
   use phcom
   use d3com
   !

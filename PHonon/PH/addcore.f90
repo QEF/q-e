@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2007 Quantum ESPRESSO group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -35,7 +35,7 @@ subroutine addcore_ofq (xq, mode, u, drc, drhoc, csign)
   use fft_interfaces, only: invfft
   use gvect, only: ngm, nl, mill, eigts1, eigts2, eigts3, g
   use qpoint, only: eigqts
-  use nlcc_ph, only: nlcc_any
+  use uspp,   only: nlcc_any
   implicit none
 
   !

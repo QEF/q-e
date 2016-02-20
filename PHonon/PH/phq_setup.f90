@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2008 Quantum ESPRESSO group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -66,11 +66,12 @@ subroutine phq_setup
   USE symm_base,     ONLY : nrot, nsym, s, ftau, irt, t_rev, time_reversal, &
                             sr, invs, inverse_s
   USE uspp_param,    ONLY : upf
+  USE uspp,          ONLY : nlcc_any
   USE spin_orb,      ONLY : domag
   USE constants,     ONLY : degspin, pi
   USE noncollin_module, ONLY : noncolin, m_loc, angle1, angle2, ux, nspin_mag
   USE wvfct,         ONLY : nbnd, et
-  USE nlcc_ph,       ONLY : drc, nlcc_any
+  USE nlcc_ph,       ONLY : drc
   USE control_ph,    ONLY : rec_code, lgamma_gamma, search_sym, start_irr, &
                             last_irr, niter_ph, alpha_mix, all_done,  &
                             trans, epsil, recover, where_rec, &

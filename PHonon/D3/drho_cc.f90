@@ -28,6 +28,7 @@ subroutine drho_cc (iflag)
 
   use qpoint,     ONLY : xq
   use control_lr, ONLY : lgamma
+  use uspp,       ONLY : nlcc_any
 
   implicit none
   integer :: iflag

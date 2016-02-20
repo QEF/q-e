@@ -21,6 +21,7 @@ SUBROUTINE dv_of_drho_vdw (mode, dvscf, flag)
   USE kinds, ONLY : DP
   USE phcom
   USE eff_v,  ONLY : rho_veff
+  USE uspp,   ONLY : nlcc_any
   IMPLICIT NONE
 
   INTEGER :: mode

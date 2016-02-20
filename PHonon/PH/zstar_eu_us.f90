@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2008 Quantum ESPRESSO group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -25,7 +25,7 @@ subroutine zstar_eu_us
   USE fft_base,  ONLY : dfftp, dffts
   USE lsda_mod,  ONLY : nspin, current_spin, isk, lsda
   USE io_files,  ONLY : iunigk
-  USE uspp,      ONLY : okvan, nkb, vkb
+  USE uspp,      ONLY : okvan, nkb, vkb, nlcc_any
   USE wvfct,     ONLY : nbnd, npw, npwx, igk
   USE paw_variables, ONLY : okpaw
   USE wavefunctions_module,    ONLY : evc
@@ -34,7 +34,6 @@ subroutine zstar_eu_us
   USE efield_mod, ONLY : zstareu0
   USE phus,       ONLY : becsumort
   USE modes,      ONLY : u, npert, nirr
-  USE nlcc_ph,    ONLY : nlcc_any
   USE units_ph,   ONLY : lrdwf, iucom, lrcom, lrebar, iuebar, lrdrhous, &
                          iudrhous, iudwf, lrwfc, iuwfc
   USE mp_pools, ONLY : nproc_pool, npool

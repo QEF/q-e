@@ -23,7 +23,7 @@ subroutine dv_of_drho (mode, dvscf, add_nlcc)
   USE noncollin_module,  ONLY : nspin_lsda, nspin_mag, nspin_gga
   USE funct,             ONLY : dft_is_gradient
   USE scf,               ONLY : rho, rho_core
-  USE nlcc_ph,           ONLY : nlcc_any
+  USE uspp,              ONLY : nlcc_any
   USE control_ph,        ONLY : lrpa
   USE control_flags,     ONLY : gamma_only
   USE martyna_tuckerman, ONLY : wg_corr_h, do_comp_mt

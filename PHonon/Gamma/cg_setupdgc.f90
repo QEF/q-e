@@ -18,6 +18,7 @@ SUBROUTINE cg_setupdgc
   USE fft_base, ONLY: dfftp
   USE gvect,    ONLY: nl, ngm, g
   USE lsda_mod, ONLY: nspin
+  USE uspp,     ONLY: nlcc_any
   USE cgcom
   !
   IMPLICIT NONE

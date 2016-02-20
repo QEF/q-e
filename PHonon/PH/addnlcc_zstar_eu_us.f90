@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2004 PWSCF group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -18,7 +18,7 @@ SUBROUTINE addnlcc_zstar_eu_us( drhoscf )
   USE fft_base, ONLY : dfftp
   USE noncollin_module, ONLY : nspin_lsda, nspin_gga, nspin_mag
   USE efield_mod, ONLY : zstareu0
-  USE nlcc_ph, ONLY : nlcc_any
+  USE uspp,   ONLY : nlcc_any
   USE modes,  ONLY : npert, nirr
 
   USE mp_pools, ONLY : my_pool_id

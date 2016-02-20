@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -10,10 +10,9 @@ subroutine print_clock_ph
   !-----------------------------------------------------------------------
 
   USE io_global,  ONLY : stdout
-  USE uspp, only: okvan
+  USE uspp,       ONLY : okvan, nlcc_any
   USE control_ph, ONLY : trans, zue, epsil
-  USE ramanm, ONLY: lraman, elop
-  USE nlcc_ph, ONLY: nlcc_any
+  USE ramanm,     ONLY : lraman, elop
   implicit none
   !
   WRITE( stdout, * )

@@ -10,9 +10,8 @@ SUBROUTINE print_clock_vdw
   !-----------------------------------------------------------------------
 
   USE io_global,  ONLY : stdout
-  USE uspp, ONLY: okvan
-  USE ramanm, ONLY: lraman, elop
-  USE nlcc_ph, ONLY: nlcc_any
+  USE uspp,       ONLY: okvan
+  USE ramanm,     ONLY: lraman, elop
   IMPLICIT NONE
   !
   WRITE( stdout, * )

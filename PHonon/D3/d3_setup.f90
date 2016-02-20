@@ -52,6 +52,7 @@ SUBROUTINE d3_setup()
   USE symm_base,     ONLY : nrot, nsym, s, ftau, irt, invs, inverse_s, &
                             s_axis_to_cart, find_sym, copy_sym, s_axis_to_cart
   USE uspp_param,    ONLY : upf
+  USE uspp,          ONLY : nlcc_any
   USE control_flags, ONLY : iverbosity, modenum
   USE constants,     ONLY : degspin
   USE qpoint,        ONLY : xq, ikks, ikqs, nksq

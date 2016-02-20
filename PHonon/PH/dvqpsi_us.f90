@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2007 Quantum ESPRESSO group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -32,7 +32,8 @@ subroutine dvqpsi_us (ik, uact, addnlcc)
   use uspp_param,ONLY : upf
   USE wvfct,     ONLY : nbnd, npw, npwx, igk
   USE wavefunctions_module,  ONLY: evc
-  USE nlcc_ph,    ONLY : nlcc_any, drc
+  USE nlcc_ph,    ONLY : drc
+  USE uspp,       ONLY : nlcc_any
   USE eqv,        ONLY : dvpsi, dmuxc, vlocq
   USE qpoint,     ONLY : npwq, igkq, xq, eigqts, ikks
 

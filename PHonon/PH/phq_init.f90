@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2008 Quantum ESPRESSO group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -49,10 +49,10 @@ SUBROUTINE phq_init()
   USE gvecw,                ONLY : gcutw
   USE wavefunctions_module, ONLY : evc
   USE noncollin_module,     ONLY : noncolin, npol
-  USE uspp,                 ONLY : okvan, vkb
+  USE uspp,                 ONLY : okvan, vkb, nlcc_any
   USE uspp_param,           ONLY : upf
   USE phus,                 ONLY : alphap, dpqq, dpqq_so
-  USE nlcc_ph,              ONLY : nlcc_any, drc
+  USE nlcc_ph,              ONLY : drc
   USE control_ph,           ONLY : trans, zue, epsil, all_done
   USE units_ph,             ONLY : lrwfc, iuwfc
 

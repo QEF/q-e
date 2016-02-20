@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2014 Quantum ESPRESSO group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -50,7 +50,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
                                    alpha_mix, rec_code_read, &
                                    where_rec, flmixdpot, ext_recover
   USE el_phon,              ONLY : elph
-  USE nlcc_ph,              ONLY : nlcc_any
+  USE uspp,                 ONLY : nlcc_any
   USE units_ph,             ONLY : iudrho, lrdrho, iudwf, lrdwf, iubar, lrbar, &
                                    iuwfc, lrwfc, iudvscf, iuint3paw, lint3paw
   USE output,               ONLY : fildrho, fildvscf

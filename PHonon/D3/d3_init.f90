@@ -19,7 +19,8 @@ SUBROUTINE d3_init
   USE mp,         ONLY : mp_barrier
   USE mp_world,   ONLY : world_comm
   USE symm_base,  ONLY : s, ftau
-  USE nlcc_ph,    ONLY : nlcc_any, drc
+  USE nlcc_ph,    ONLY : drc
+  USE uspp,       ONLY : nlcc_any
 
   USE control_lr, ONLY : lgamma
   USE lr_symm_base, ONLY : irgq

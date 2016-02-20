@@ -40,7 +40,6 @@ MODULE flags
       epsil,     &!
       raman,     &!
       equil,     &!
-      nlcc_any,  &!
       asr,       &!
       recover
   !

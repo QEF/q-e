@@ -46,6 +46,7 @@ cg_setupdgc.o : ../../Modules/fft_base.o
 cg_setupdgc.o : ../../Modules/funct.o
 cg_setupdgc.o : ../../Modules/kind.o
 cg_setupdgc.o : ../../Modules/recvec.o
+cg_setupdgc.o : ../../Modules/uspp.o
 cg_setupdgc.o : ../../PW/src/pwcom.o
 cg_setupdgc.o : ../../PW/src/scf_mod.o
 cg_setupdgc.o : cgcom.o

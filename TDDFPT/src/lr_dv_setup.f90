@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2015 Quantum ESPRESSO group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -24,7 +24,8 @@ SUBROUTINE lr_dv_setup
   USE gvect,                 ONLY : ngm
   USE uspp_param,            ONLY : upf
   USE spin_orb,              ONLY : domag
-  USE nlcc_ph,               ONLY : drc,nlcc_any
+  USE nlcc_ph,               ONLY : drc
+  USE uspp,                  ONLY : nlcc_any
   USE noncollin_module,      ONLY : noncolin, nspin_mag
   USE eqv,                   ONLY : dmuxc
   USE funct,                 ONLY : dmxc, dmxc_spin, dmxc_nc

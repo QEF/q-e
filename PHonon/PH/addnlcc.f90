@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -21,7 +21,7 @@ subroutine addnlcc (imode0, drhoscf, npe)
   USE noncollin_module, ONLY : nspin_lsda, nspin_gga, nspin_mag
   USE dynmat, ONLY : dyn, dyn_rec
   USE modes,  ONLY : nirr, npert
-  USE nlcc_ph, ONLY : nlcc_any
+  USE uspp,   ONLY : nlcc_any
 
   USE mp_bands,  ONLY: intra_bgrp_comm
   USE mp,        ONLY: mp_sum

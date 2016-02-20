@@ -14,7 +14,7 @@ SUBROUTINE cg_setup
   USE cell_base,  ONLY: bg
   USE ions_base,  ONLY: nat, ntyp => nsp, ityp, tau, amass
   USE scf,        ONLY: rho, rho_core, v, vltot, vrs, kedtau
-  USE uspp,       ONLY: vkb
+  USE uspp,       ONLY: vkb, nlcc_any
   USE uspp_param, ONLY: upf
   USE mp_global,  ONLY: kunit
   USE wavefunctions_module,  ONLY: evc

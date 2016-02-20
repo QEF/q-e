@@ -74,6 +74,7 @@ addnlcc.o : ../../Modules/mp.o
 addnlcc.o : ../../Modules/mp_bands.o
 addnlcc.o : ../../Modules/noncol.o
 addnlcc.o : ../../Modules/recvec.o
+addnlcc.o : ../../Modules/uspp.o
 addnlcc.o : ../../PW/src/scf_mod.o
 addnlcc.o : phcom.o
 addnlcc_zstar_eu_us.o : ../../LR_Modules/lrcom.o
@@ -84,6 +85,7 @@ addnlcc_zstar_eu_us.o : ../../Modules/kind.o
 addnlcc_zstar_eu_us.o : ../../Modules/mp_pools.o
 addnlcc_zstar_eu_us.o : ../../Modules/noncol.o
 addnlcc_zstar_eu_us.o : ../../Modules/recvec.o
+addnlcc_zstar_eu_us.o : ../../Modules/uspp.o
 addnlcc_zstar_eu_us.o : ../../PW/src/scf_mod.o
 addnlcc_zstar_eu_us.o : phcom.o
 addusddens.o : ../../FFTXlib/fft_interfaces.o
@@ -473,6 +475,7 @@ dv_of_drho.o : ../../Modules/funct.o
 dv_of_drho.o : ../../Modules/kind.o
 dv_of_drho.o : ../../Modules/noncol.o
 dv_of_drho.o : ../../Modules/recvec.o
+dv_of_drho.o : ../../Modules/uspp.o
 dv_of_drho.o : ../../PW/src/martyna_tuckerman.o
 dv_of_drho.o : ../../PW/src/scf_mod.o
 dv_of_drho.o : phcom.o
@@ -600,6 +603,7 @@ dynmatcc.o : ../../Modules/kind.o
 dynmatcc.o : ../../Modules/mp.o
 dynmatcc.o : ../../Modules/mp_bands.o
 dynmatcc.o : ../../Modules/recvec.o
+dynmatcc.o : ../../Modules/uspp.o
 dynmatcc.o : ../../PW/src/pwcom.o
 dynmatcc.o : ../../PW/src/scf_mod.o
 dynmatcc.o : phcom.o
@@ -1273,7 +1277,6 @@ set_drhoc.o : ../../Modules/ions_base.o
 set_drhoc.o : ../../Modules/kind.o
 set_drhoc.o : ../../Modules/recvec.o
 set_drhoc.o : ../../Modules/uspp.o
-set_drhoc.o : phcom.o
 set_dvscf.o : ../../Modules/fft_base.o
 set_dvscf.o : ../../Modules/kind.o
 set_dvscf.o : ../../Modules/recvec.o
@@ -1329,10 +1332,10 @@ setup_dgc.o : ../../Modules/funct.o
 setup_dgc.o : ../../Modules/kind.o
 setup_dgc.o : ../../Modules/noncol.o
 setup_dgc.o : ../../Modules/recvec.o
+setup_dgc.o : ../../Modules/uspp.o
 setup_dgc.o : ../../Modules/wavefunctions.o
 setup_dgc.o : ../../PW/src/pwcom.o
 setup_dgc.o : ../../PW/src/scf_mod.o
-setup_dgc.o : phcom.o
 sgam_ph.o : ../../Modules/kind.o
 solve_e.o : ../../FFTXlib/fft_parallel.o
 solve_e.o : ../../LR_Modules/lrcom.o

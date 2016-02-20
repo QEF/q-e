@@ -28,6 +28,7 @@ subroutine d3dyn_cc
   use d3com
   USE mp_global,  ONLY : inter_pool_comm, intra_pool_comm
   USE mp,         ONLY : mp_sum
+  USE uspp,       ONLY : nlcc_any
 
   implicit none
   integer :: na, nta, ig, ir, i_cart, j_cart, k_cart, na_i, na_j, &
