@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine dv_of_drho (mode, dvscf, add_nlcc, drhoc)
+subroutine dv_of_drho (dvscf, add_nlcc, drhoc)
   !-----------------------------------------------------------------------
   !
   !  This routine computes the change of the self consistent potential
@@ -32,39 +32,34 @@ subroutine dv_of_drho (mode, dvscf, add_nlcc, drhoc)
   USE eqv,               ONLY : dmuxc
 
   IMPLICIT NONE
-  
-  integer, intent(in) :: mode
-  ! input: the mode to do for PHonon 
-  ! (otherwise mode=0 on the input)
-  complex(DP), intent(inout) :: dvscf(dfftp%nnr, nspin_mag)
+  COMPLEX(DP), INTENT(INOUT) :: dvscf(dfftp%nnr, nspin_mag)
   ! input:  response charge density
   ! output: response Hartree-and-XC potential
-  logical, intent(in) :: add_nlcc
+  LOGICAL, INTENT(IN) :: add_nlcc
   ! input: if true add core charge density
-  complex(DP), intent(in), optional :: drhoc(dfftp%nnr)
+  COMPLEX(DP), INTENT(IN), OPTIONAL :: drhoc(dfftp%nnr)
   ! input: response core charge density 
   ! (needed only for PHonon when add_nlcc=.true.)
   
-  integer :: ir, is, is1, ig
+  INTEGER :: ir, is, is1, ig
   ! counter on r vectors
   ! counter on spin polarizations
   ! counter on g vectors
-  real(DP) :: qg2, fac
-  ! the modulus of (q+G)^2
-  ! the structure factor
-  complex(DP), allocatable :: dvaux (:,:)
-  !  the change of the core charge
-  complex(DP), allocatable :: dvhart (:,:) 
-  complex(DP), allocatable :: dvaux_mt(:), rgtot(:)
-  ! auxiliary array for Martyna-Tuckerman correction in TDDFPT
-  ! total response density  
-  real(DP) :: eh_corr
-  ! Correction to response Hartree energy due to Martyna-Tuckerman 
-  ! correction (only TDDFT). Calculated, but not used.
+  REAL(DP) :: qg2, fac, eh_corr
+  ! qg2: the modulus of (q+G)^2
+  ! fac: the structure factor
+  ! eh_corr: the correction to response Hartree energy due 
+  ! to Martyna-Tuckerman correction (calculated, but not used).
+  COMPLEX(DP), ALLOCATABLE :: dvaux(:,:), dvhart(:,:), & 
+                              dvaux_mt(:), rgtot(:)
+  ! dvaux: response XC potential 
+  ! dvhart: response Hartree potential
+  ! dvaux_mt: auxiliary array for Martyna-Tuckerman correction
+  ! rgtot: total response density  
 
   CALL start_clock ('dv_of_drho')
   !
-  allocate (dvaux( dfftp%nnr,  nspin_mag))
+  allocate (dvaux( dfftp%nnr, nspin_mag))
   dvaux (:,:) = (0.d0, 0.d0)
   !
   if (add_nlcc .and. .not.present(drhoc)) &
@@ -161,7 +156,7 @@ subroutine dv_of_drho (mode, dvscf, add_nlcc, drhoc)
         !
       enddo
       !
-      ! At the end the two contributions (Hartree+XC) are added
+      ! At the end the two contributions (XC+Hartree) are added
       ! 
       dvscf = dvaux + dvhart
       !

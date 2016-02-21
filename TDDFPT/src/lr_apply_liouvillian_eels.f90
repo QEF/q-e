@@ -107,7 +107,8 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, sevc1_new, interaction )
   !
   IF ( interaction1 ) THEN
      ! 
-     ! Calculation of the charge density response, and symmetrization of it.
+     ! Calculation of the response charge density response 
+     ! and its symmetrization.
      !
      !if (.not. allocated(psic)) allocate(psic(dfftp%nnr))   
      !
@@ -119,12 +120,10 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, sevc1_new, interaction )
      !
      !if (allocated(psic)) deallocate(psic) 
      !
-     ! Calculation of the HXC potential
-     ! input:  the change of the charge density (dvrsc)
-     ! output: the change of the HXC potential  (dvrsc)
-     ! Note: check the implementation of the non-linear core correction.
+     ! Calculation of the response HXC potential
+     ! from the response charge density.
      !
-     CALL dv_of_drho(0, dvrsc, .false.)
+     CALL dv_of_drho (dvrsc, .false.)
      !
      ! Interpolation of the HXC potential from the thick mesh 
      ! to a smoother mesh (if doublegrid=.true.)

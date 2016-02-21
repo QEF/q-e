@@ -323,7 +323,7 @@ SUBROUTINE lr_readin
            !
         END SELECT
         !
-        ! We do this trick because xq is used in PH/dv_of_drho.f90
+        ! We do this trick because xq is used in LR_Modules/dv_of_drho.f90
         ! in the Hartree term ~1/|xq+k|^2
         !
         xq(1) = q1

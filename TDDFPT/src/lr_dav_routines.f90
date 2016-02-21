@@ -1397,7 +1397,7 @@ contains
       dvrss(ir) = w1 * dvrss(ir) * psic(ir)         ! drho = 2*v1*c1 -> dvrss
     enddo
 
-    call dv_of_drho(0,dvrss,.false.)       ! calc the potential change 
+    call dv_of_drho(dvrss,.false.)       ! calc the potential change 
 
     wfck(:,1) = evc0(:,v2,1)
     call invfft_orbital_gamma(wfck(:,:),1,1)  ! FFT: v2 -> psic

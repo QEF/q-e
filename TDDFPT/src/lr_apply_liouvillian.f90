@@ -158,7 +158,7 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
            !
            DEALLOCATE ( dvrs )  ! to save memory
            !
-           CALL dv_of_drho(0,dvrs_temp,.FALSE.)
+           CALL dv_of_drho(dvrs_temp,.FALSE.)
            !
            ALLOCATE ( dvrs(dfftp%nnr, nspin) )
            ! 
@@ -198,7 +198,7 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
            !
            dvrsc(:,1) = rho_1c(:,1)
            !
-           CALL dv_of_drho(0,dvrsc,.FALSE.)
+           CALL dv_of_drho(dvrsc,.FALSE.)
            !
         ENDIF
         !

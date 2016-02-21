@@ -146,7 +146,7 @@ subroutine zstar_eu_us
      !
      ! call davcio_drho(dvscf(1,1,ipol),lrdrho,iudrho,ipol,-1)
      !
-     call dv_of_drho (0, dvscf (1, 1, ipol), .false.)
+     call dv_of_drho (dvscf (1, 1, ipol), .false.)
   enddo
   call psyme (dvscf)
 

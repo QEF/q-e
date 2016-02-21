@@ -167,6 +167,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   allocate (aux1 ( dffts%nnr, npol))
   allocate (h_diag ( npwx*npol, nbnd))
   allocate (aux2(npwx*npol, nbnd))
+  allocate (drhoc(dfftp%nnr))
   incr=1
   IF ( dffts%have_task_groups ) THEN
      !
@@ -494,16 +495,13 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
         ! IT: Should the condition "imode0+ipert > 0" be removed?
         !
         if (imode0+ipert > 0) then
-           allocate(drhoc(dfftp%nnr))
            call addcore (imode0+ipert, drhoc)
+        else
+           drhoc(:) = (0.0_DP,0.0_DP) 
         endif
         !
         ! Compute the response HXC potential
-        call dv_of_drho (imode0+ipert, dvscfout(1,1,ipert), .true., drhoc)
-        !
-        if (imode0+ipert > 0) then
-           deallocate(drhoc)
-        endif
+        call dv_of_drho (dvscfout(1,1,ipert), .true., drhoc)
         !
      enddo
      !
@@ -623,6 +621,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   if (doublegrid) deallocate (dvscfins)
   deallocate (dvscfin)
   deallocate(aux2)
+  deallocate(drhoc)
   IF ( ntask_groups > 1) dffts%have_task_groups=.TRUE.
   IF ( dffts%have_task_groups ) THEN
      DEALLOCATE( tg_dv )

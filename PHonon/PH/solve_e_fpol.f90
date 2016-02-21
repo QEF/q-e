@@ -321,7 +321,7 @@ subroutine solve_e_fpol ( iw )
      do ipol=1,3
         if (fildrho.ne.' ') call davcio_drho(dvscfout(1,1,ipol),lrdrho, &
              iudrho,ipol,+1)
-        call dv_of_drho (0, dvscfout (1, 1, ipol), .false.)
+        call dv_of_drho (dvscfout (1, 1, ipol), .false.)
      enddo
      !
      !   mix the new potential with the old

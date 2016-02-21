@@ -193,7 +193,7 @@ subroutine solve_e2
      !
      call mp_sum ( dvscfout, inter_pool_comm )
      do ipol = 1, 6
-        call dv_of_drho (0, dvscfout (1, 1, ipol), .false.)
+        call dv_of_drho (dvscfout (1, 1, ipol), .false.)
      enddo
 
      call psyme2(dvscfout)
