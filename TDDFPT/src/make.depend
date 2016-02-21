@@ -496,7 +496,6 @@ lr_sm1_psi.o : ../../Modules/becmod.o
 lr_sm1_psi.o : ../../Modules/control_flags.o
 lr_sm1_psi.o : ../../Modules/gvecw.o
 lr_sm1_psi.o : ../../Modules/invmat.o
-lr_sm1_psi.o : ../../Modules/io_global.o
 lr_sm1_psi.o : ../../Modules/ions_base.o
 lr_sm1_psi.o : ../../Modules/kind.o
 lr_sm1_psi.o : ../../Modules/mp.o
@@ -506,7 +505,6 @@ lr_sm1_psi.o : ../../Modules/recvec.o
 lr_sm1_psi.o : ../../Modules/uspp.o
 lr_sm1_psi.o : ../../PW/src/pwcom.o
 lr_sm1_psi.o : ../../PW/src/realus.o
-lr_sm1_psi.o : lr_variables.o
 lr_smallgq.o : ../../LR_Modules/lrcom.o
 lr_smallgq.o : ../../Modules/cell_base.o
 lr_smallgq.o : ../../Modules/control_flags.o

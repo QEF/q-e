@@ -23,11 +23,11 @@ SUBROUTINE lr_dealloc()
   USE charg_resp,     ONLY : w_T_beta_store, w_T_gamma_store, w_T,&
                            & w_T_zeta_store, chi, rho_1_tot, rho_1_tot_im
   USE lr_exx_kernel,  ONLY : lr_exx_dealloc
-  use becmod,         only : bec_type, becp, deallocate_bec_type
-
-  USE lrus,    ONLY : int3, int3_nc, becp1
-  USE qpoint,  ONLY : ikks, ikqs, igkq, eigqts
-  USE eqv,     ONLY : dmuxc, evq, dpsi, dvpsi
+  USE becmod,         ONLY : bec_type, becp, deallocate_bec_type
+  USE lrus,           ONLY : int3, int3_nc, becp1, &
+                           & bbg, bbk, bbnc
+  USE qpoint,         ONLY : ikks, ikqs, igkq, eigqts
+  USE eqv,            ONLY : dmuxc, evq, dpsi, dvpsi
   !
   IMPLICIT NONE
   !
@@ -46,9 +46,12 @@ SUBROUTINE lr_dealloc()
   IF (allocated(sevc1))     DEALLOCATE(sevc1)
   IF (allocated(d0psi))     DEALLOCATE(d0psi)
   IF (allocated(d0psi2))    DEALLOCATE(d0psi2)
-  if (allocated(tg_revc0))  DEALLOCATE(tg_revc0)
-  if (allocated(tg_psic))   DEALLOCATE(tg_psic)
-  if (allocated(revc0))     DEALLOCATE(revc0)
+  IF (allocated(tg_revc0))  DEALLOCATE(tg_revc0)
+  IF (allocated(tg_psic))   DEALLOCATE(tg_psic)
+  IF (allocated(revc0))     DEALLOCATE(revc0)
+  IF (allocated(bbg))       DEALLOCATE(bbg)
+  IF (allocated(bbk))       DEALLOCATE(bbk)
+  IF (allocated(bbnc))      DEALLOCATE(bbnc)
   !
   IF (project) THEN
      DEALLOCATE(F)

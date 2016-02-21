@@ -6,24 +6,26 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-SUBROUTINE sm1_psi(recalculate, ik, lda, n, m, psi, spsi)
+SUBROUTINE lr_sm1_psi (recalculate, ik, lda, n, m, psi, spsi)
   !----------------------------------------------------------------------------
   !
   ! This subroutine applies the S^{-1} matrix to m wavefunctions psi
   ! and puts the results in spsi.
-  ! See Eq.(13) in B. Walker and R. Gebauer, J. Chem. Phys. 127, 164106 (2007).
+  ! See Eq.(13) in B. Walker and R. Gebauer, JCP 127, 164106 (2007).
   ! Requires the products of psi with all beta functions
-  ! in array becp(nkb,m) (calculated in h_psi or by ccalbec)
-  ! input:
-  !     recalculate decides if the overlap of beta functions is recalculated or not.
-  !            this is needed e.g. if ions are moved and the overlap changes accordingly.
-  !     ik    k point under consideration
-  !     lda   leading dimension of arrays psi, spsi
-  !     n     true dimension of psi, spsi
-  !     m     number of states psi
-  !     psi
-  ! output:
-  !     spsi = S^{-1}*psi
+  ! in array becp(nkb,m) (calculated in h_psi or by ccalbec).
+  !
+  ! INPUT: recalculate   Decides if the overlap of beta 
+  !                      functions is recalculated or not.
+  !                      This is needed e.g. if ions are moved 
+  !                      and the overlap changes accordingly.
+  !        ik            k point under consideration
+  !        lda           leading dimension of arrays psi, spsi
+  !        n             true dimension of psi, spsi
+  !        m             number of states psi
+  !        psi           the wavefunction to which the S^{-1} 
+  !                      matrix is applied
+  ! OUTPUT: spsi = S^{-1}*psi
   !
   ! Original routine written by R. Gebauer
   ! Modified by Osman Baris Malcioglu (2009)
@@ -35,67 +37,50 @@ SUBROUTINE sm1_psi(recalculate, ik, lda, n, m, psi, spsi)
   USE uspp_param,       ONLY : nh, upf
   USE ions_base,        ONLY : ityp,nat,ntyp=>nsp
   USE mp,               ONLY : mp_sum
-  USE mp_global,        ONLY : inter_pool_comm, intra_bgrp_comm
-  USE lr_variables,     ONLY : lr_verbosity, eels, LR_iteration,itermax
-  USE io_global,        ONLY : stdout
+  USE mp_global,        ONLY : intra_bgrp_comm
   USE noncollin_module, ONLY : noncolin, npol
   USE matrix_inversion
   !
   IMPLICIT NONE
+  LOGICAL, INTENT(in)      :: recalculate
+  INTEGER, INTENT(in)      :: lda, n, m, ik
+  COMPLEX(DP), INTENT(in)  :: psi(lda*npol,m)
+  COMPLEX(DP), INTENT(out) :: spsi(lda*npol,m)
   !
-  ! ... First the dummy variables
-  !
-  LOGICAL, INTENT(in)           :: recalculate
-  INTEGER, INTENT(in)           :: lda, n, m, ik
-  COMPLEX(kind=DP), INTENT(in)  :: psi(lda*npol,m)
-  COMPLEX(kind=DP), INTENT(out) :: spsi(lda*npol,m)
-  !
-  LOGICAL ::recalc
-  !
-  IF (lr_verbosity > 5) THEN
-     WRITE(stdout,'("<lr_sm1_psi>")')
-  ENDIF
+  LOGICAL :: recalc
   !
   CALL start_clock( 'lr_sm1_psi' )
   !
   recalc = recalculate
   !
-  IF (eels) THEN
-     !
-     IF ( gamma_only ) THEN
-        CALL errore( 'sm1_psi', 'EELS + gamma_only is not supported', 1 )
-     ELSEIF (noncolin) THEN
-        CALL sm1_psi_eels_nc()
-     ELSE
-        CALL sm1_psi_eels_k()
-     ENDIF
-     !
+  IF ( gamma_only ) THEN
+     CALL sm1_psi_gamma()
+  ELSEIF (noncolin) THEN
+     CALL errore( 'lr_sm1_psi', 'Noncollinear case is not implemented', 1 )
   ELSE
-     !
-     IF ( gamma_only ) THEN
-        CALL sm1_psi_gamma()
-     ELSE
-        CALL sm1_psi_k()
-     ENDIF
-     !
-  ENDIF 
+     CALL sm1_psi_k()
+  ENDIF
   !
   CALL stop_clock( 'lr_sm1_psi' )
   !
   RETURN
   !
 CONTAINS
-  
+  ! 
   SUBROUTINE sm1_psi_gamma()
     !-----------------------------------------------------------------------
     !
-    ! Optical case : gamma_only
+    ! gamma_only version
     !
-    USE becmod,              ONLY : bec_type,becp,calbec
-    USE realus,              ONLY : real_space, invfft_orbital_gamma, initialisation_level, &
-                                    fwfft_orbital_gamma, calbec_rs_gamma, add_vuspsir_gamma, &
-                                    v_loc_psir, s_psir_gamma, real_space_debug
-
+    ! Note: 1) vkb must be computed before calling this routine
+    !       2) the array bbg must be deallocated somewhere
+    !          outside of this routine.
+    !
+    USE becmod,   ONLY : bec_type,becp,calbec
+    USE realus,   ONLY : real_space, invfft_orbital_gamma, initialisation_level, &
+                         fwfft_orbital_gamma, calbec_rs_gamma, add_vuspsir_gamma, &
+                         v_loc_psir, s_psir_gamma, real_space_debug
+    USE lrus,     ONLY : bbg
     !
     IMPLICIT NONE
     !
@@ -103,8 +88,7 @@ CONTAINS
     !
     INTEGER :: ikb, jkb, ih, jh, na, nt, ijkb0, ibnd, ii
     ! counters
-    REAL(kind=DP), ALLOCATABLE :: ps(:,:)
-    REAL(kind=dp), ALLOCATABLE, SAVE :: BB_(:,:)
+    REAL(DP), ALLOCATABLE :: ps(:,:)
     LOGICAL, SAVE :: first_entry = .true.
     !
     ! Initialize spsi : spsi = psi
@@ -120,36 +104,29 @@ CONTAINS
     !
     IF (first_entry) THEN
        !
-       IF (allocated(BB_)) DEALLOCATE(BB_)
+       IF (allocated(bbg)) DEALLOCATE(bbg)
        first_entry = .false.
        recalc = .true.
        !
     ENDIF
     !
-    IF (.not.allocated(BB_)) recalc = .true.
-    IF (recalc .and. allocated(BB_)) DEALLOCATE(BB_)
+    IF (.not.allocated(bbg)) recalc = .true.
+    IF (recalc .and. allocated(bbg)) DEALLOCATE(bbg)
     !
     IF (recalc) THEN
        !
-       ALLOCATE(BB_(nkb,nkb))
-       BB_=0.d0
+       ALLOCATE(bbg(nkb,nkb))
+       bbg = 0.d0
        !
-       CALL errore('sm1_psi','recalculating BB_ matrix',-1)  ! it does nothing
-       !
-       IF (lr_verbosity > 1) THEN
-          WRITE(stdout,'(5X,"Calculating S^-1")')
-       ENDIF
-       !
-       ! The beta-functions vkb were already calculated elsewhere 
-       ! (in the routine lr_solve_e). So there is no need to call 
-       ! the routine init_us_2.
+       ! The beta-functions vkb must have beed calculated elsewhere. 
+       ! So there is no need to call the routine init_us_2.
        !
        ! Calculate the coefficients B_ij defined by Eq.(15).
        ! B_ij = <beta(i)|beta(j)>, where beta(i) = vkb(i).
        !
-       CALL calbec (n,vkb,vkb,BB_,nkb)
+       CALL calbec (n, vkb, vkb, bbg(:,:), nkb)
        !
-       ALLOCATE( ps( nkb, nkb ) )
+       ALLOCATE(ps(nkb,nkb))
        !
        ps(:,:) = 0.d0
        !
@@ -165,7 +142,8 @@ CONTAINS
                          jkb=ijkb0 + jh
                          DO ih=1,nh(nt)
                             ikb = ijkb0 + ih
-                            ps(ikb,ii) = ps(ikb,ii) + qq(ih,jh,nt)*BB_(jkb,ii)
+                            ps(ikb,ii) = ps(ikb,ii) + &
+                               & qq(ih,jh,nt) * bbg(jkb,ii)
                          ENDDO
                       ENDDO
                    ENDDO
@@ -190,7 +168,9 @@ CONTAINS
        !
        CALL invmat( nkb, ps )
        !
-       BB_(:,:) = 0.d0
+       ! Use the array bbg as a workspace in order to save memory
+       !
+       bbg(:,:) = 0.d0
        !
        ! Finally, let us calculate lambda_nm = -(1+q*B)^{-1} * q
        !
@@ -204,7 +184,8 @@ CONTAINS
                          jkb=ijkb0 + jh
                          DO ih=1,nh(nt)
                             ikb = ijkb0 + ih
-                            BB_(ii,jkb) = BB_(ii,jkb) - ps(ii,ikb)*qq(ih,jh,nt)
+                            bbg(ii,jkb) = bbg(ii,jkb) &
+                                    & - ps(ii,ikb) * qq(ih,jh,nt)
                          ENDDO
                       ENDDO
                    ENDDO
@@ -235,25 +216,23 @@ CONTAINS
        CALL calbec(n,vkb,psi,becp,m)
     ENDIF
     !
-    ALLOCATE( ps( nkb, m ) )
-    !
+    ! Use the array ps as a workspace
+    ALLOCATE(ps(nkb,m))
     ps(:,:) = 0.D0
     !
     ! Now let us apply the operator S^{-1}, given by Eq.(13), to the functions psi.
     ! Let's do this in 2 steps.
     !
     ! Step 1 : ps = lambda * <beta|psi>
-    ! Here, lambda = BB_, and <beta|psi> = becp%r
+    ! Here, lambda = bbg, and <beta|psi> = becp%r
     !
-    call DGEMM( 'N','N',nkb,m,nkb,1.d0,BB_,nkb,becp%r,nkb,0.d0,ps,nkb)
+    call DGEMM( 'N','N',nkb,m,nkb,1.d0,bbg(:,:),nkb,becp%r,nkb,0.d0,ps,nkb)
     !
     ! Step 2 : |spsi> = S^{-1} * |psi> = |psi> + ps * |beta>
     !
     call DGEMM('N','N',2*n,m,nkb,1.d0,vkb,2*lda,ps,nkb,1.d0,spsi,2*lda)
     !
-    DEALLOCATE( ps )
-    !
-    IF (LR_iteration==itermax) DEALLOCATE(BB_)
+    DEALLOCATE(ps)
     !
     RETURN
     !
@@ -262,10 +241,13 @@ CONTAINS
   SUBROUTINE sm1_psi_k()
     !-----------------------------------------------------------------------
     !
-    ! Optical case : k-points version
+    ! k-points version
+    ! Note: the array bbk must be deallocated somewhere
+    ! outside of this routine.
     !
-    USE becmod,        ONLY : bec_type,becp,calbec
-    USE klist,         ONLY : nks, xk, ngk, igk_k
+    USE becmod,   ONLY : bec_type,becp,calbec
+    USE klist,    ONLY : nks, xk, ngk, igk_k
+    USE lrus,     ONLY : bbk
     !
     IMPLICIT NONE
     !
@@ -273,12 +255,11 @@ CONTAINS
     !
     INTEGER :: ikb, jkb, ih, jh, na, nt, ijkb0, ibnd, ii, ik1
     ! counters
-    COMPLEX(kind=DP), ALLOCATABLE :: ps(:,:)
-    COMPLEX(kind=dp), ALLOCATABLE, SAVE :: BB_(:,:,:)
+    COMPLEX(DP), ALLOCATABLE :: ps(:,:)
     !
     ! Initialize spsi : spsi = psi
     !
-    CALL ZCOPY( lda * npol * m, psi, 1, spsi, 1 )
+    CALL ZCOPY( lda*npol*m, psi, 1, spsi, 1 )
     !
     IF ( nkb == 0 .OR. .NOT. okvan ) RETURN
     !
@@ -288,19 +269,17 @@ CONTAINS
     ! (they are already allocated) but use the ones which were already calculated 
     ! and saved (if recalc=.false.).
     !
-    IF (.NOT.ALLOCATED(BB_)) recalc = .true.
-    IF (recalc .AND. ALLOCATED(BB_)) DEALLOCATE(BB_)
+    IF (.NOT.ALLOCATED(bbk)) recalc = .true.
+    IF (recalc .AND. ALLOCATED(bbk)) DEALLOCATE(bbk)
     !
     ! If recalc=.true. we (re)calculate the coefficients lambda_nm defined by Eq.(16).
     !
     IF (recalc) THEN
        !
-       ALLOCATE(BB_(nkb,nkb,nks))
-       BB_ = (0.d0,0.d0)
+       ALLOCATE(bbk(nkb,nkb,nks))
+       bbk = (0.d0,0.d0)
        !
-       CALL errore('sm1_psi','recalculating BB_ matrix',-1)  ! it does nothing
-       !
-       ALLOCATE( ps( nkb, nkb ) )
+       ALLOCATE(ps(nkb,nkb))
        !
        DO ik1 = 1, nks
           !
@@ -311,10 +290,11 @@ CONTAINS
           ! Calculate the coefficients B_ij defined by Eq.(15).
           ! B_ij = <beta(i)|beta(j)>, where beta(i) = vkb(i).
           !
-          CALL zgemm('C','N',nkb,nkb,ngk(ik1),(1.d0,0.d0),vkb,lda,vkb,lda,(0.d0,0.d0),BB_(1,1,ik1),nkb)
+          CALL zgemm('C','N',nkb,nkb,ngk(ik1),(1.d0,0.d0),vkb, &
+                 & lda,vkb,lda,(0.d0,0.d0),bbk(1,1,ik1),nkb)
           !
 #ifdef __MPI
-          CALL mp_sum(BB_(:,:,ik1), intra_bgrp_comm)
+          CALL mp_sum(bbk(:,:,ik1), intra_bgrp_comm)
 #endif
           !
           ps(:,:) = (0.d0,0.d0)
@@ -331,7 +311,8 @@ CONTAINS
                             jkb=ijkb0 + jh
                             DO ih=1,nh(nt)
                                ikb = ijkb0 + ih
-                               ps(ikb,ii) = ps(ikb,ii) + BB_(jkb,ii, ik1)*qq(ih,jh,nt)
+                               ps(ikb,ii) = ps(ikb,ii) + &
+                                & bbk(jkb,ii, ik1) * qq(ih,jh,nt)
                             ENDDO
                          ENDDO
                       ENDDO
@@ -356,9 +337,9 @@ CONTAINS
           !
           CALL invmat( nkb, ps )
           ! 
-          ! Now let's use BB_ as a work space (in order to save the memory).
+          ! Use the array bbk as a work space in order to save memory.
           !
-          BB_(:,:,ik1) = (0.d0,0.d0)
+          bbk(:,:,ik1) = (0.d0,0.d0)
           !
           ! Finally, let us calculate lambda_nm = -(1+q*B)^{-1} * q
           !
@@ -372,7 +353,8 @@ CONTAINS
                             jkb=ijkb0 + jh
                             DO ih=1,nh(nt)
                                ikb = ijkb0 + ih
-                               BB_(ii,jkb,ik1) = BB_(ii,jkb,ik1) - ps(ii,ikb)*qq(ih,jh,nt)
+                               bbk(ii,jkb,ik1) = bbk(ii,jkb,ik1) &
+                                           & - ps(ii,ikb) * qq(ih,jh,nt)
                             ENDDO
                          ENDDO
                       ENDDO
@@ -401,13 +383,12 @@ CONTAINS
     !
     CALL calbec(n,vkb,psi,becp,m)
     !
-    ! Let's use ps as a work space.
+    ! Use ps as a work space.
     !
-    ALLOCATE( ps( nkb, m ) )
+    ALLOCATE(ps(nkb,m))
     ps(:,:) = (0.d0,0.d0)
     !
-    ! Now let us apply the operator S^{-1}, given by Eq.(13), to the functions
-    ! psi.
+    ! Apply the operator S^{-1}, given by Eq.(13), to the functions psi.
     ! Let's do this in 2 steps.
     !
     ! Step 1 : calculate the product 
@@ -416,7 +397,7 @@ CONTAINS
     DO ibnd=1,m
        DO jkb=1,nkb
           DO ii=1,nkb
-             ps(jkb,ibnd) = ps(jkb,ibnd) + BB_(jkb,ii,ik) * becp%k(ii,ibnd)
+             ps(jkb,ibnd) = ps(jkb,ibnd) + bbk(jkb,ii,ik) * becp%k(ii,ibnd)
           ENDDO
        ENDDO
     ENDDO
@@ -426,41 +407,110 @@ CONTAINS
     CALL ZGEMM( 'N', 'N', n, m, nkb, (1.D0, 0.D0), vkb, &
                & lda, ps, nkb, (1.D0, 0.D0), spsi, lda )
     !
-    DEALLOCATE( ps )
-    !
-    IF (LR_iteration==itermax .AND. ik==nks) DEALLOCATE(BB_)
+    DEALLOCATE(ps)
     !
     RETURN
     !
   END SUBROUTINE sm1_psi_k
 
-SUBROUTINE sm1_psi_eels_k()
+END SUBROUTINE lr_sm1_psi
+
+
+!----------------------------------------------------------------------------
+SUBROUTINE lr_sm1_psiq (recalculate, ik, lda, n, ig, m, psi, spsi)
+  !----------------------------------------------------------------------------
+  !
+  ! This subroutine applies the S^{-1} matrix to m wavefunctions psi
+  ! and puts the results in spsi.
+  ! See Eq.(13) in B. Walker and R. Gebauer, JCP 127, 164106 (2007).
+  ! Requires the products of psi with all beta functions
+  ! in array becp(nkb,m) (calculated in h_psi or by ccalbec)
+  !
+  ! INPUT: recalculate   Decides if the overlap of beta 
+  !                      functions is recalculated or not.
+  !                      This is needed e.g. if ions are moved 
+  !                      and the overlap changes accordingly.
+  !        ik            k point under consideration
+  !        lda           leading dimension of arrays psi, spsi
+  !        n             true dimension of psi, spsi
+  !        ig            index igkq
+  !        m             number of states psi
+  !        psi           the wavefunction to which the S^{-1} 
+  !                      matrix is applied
+  ! OUTPUT: spsi = S^{-1}*psi  
+  !
+  ! Written by Iurii Timrov (2016) on the basis of lr_sm1_psi.
+  ! Note: The difference of this routine from lr_sm1_psi is that 
+  ! it can be used when there is a perturbation with the finite
+  ! (transferred) momentum q (e.g. by PHonon and turboEELS codes). 
+  !
+  USE kinds,            ONLY : DP
+  USE control_flags,    ONLY : gamma_only
+  USE uspp,             ONLY : okvan, vkb, nkb, qq
+  USE uspp_param,       ONLY : nh, upf
+  USE ions_base,        ONLY : ityp,nat,ntyp=>nsp
+  USE mp,               ONLY : mp_sum
+  USE mp_global,        ONLY : intra_bgrp_comm
+  USE noncollin_module, ONLY : noncolin, npol, nspin_mag
+  USE matrix_inversion
+  !
+  IMPLICIT NONE
+  LOGICAL, INTENT(in)      :: recalculate
+  INTEGER, INTENT(in)      :: lda, n, m, ik, ig(lda)
+  COMPLEX(DP), INTENT(in)  :: psi(lda*npol,m)
+  COMPLEX(DP), INTENT(out) :: spsi(lda*npol,m)
+  !
+  LOGICAL :: recalc
+  !
+  CALL start_clock( 'lr_sm1_psiq' )
+  !
+  recalc = recalculate
+  !
+  IF ( gamma_only ) THEN
+     CALL errore( 'lr_sm1_psiq', 'gamma_only is not supported', 1 )
+  ELSEIF (noncolin) THEN
+     CALL sm1_psiq_nc()
+  ELSE
+     CALL sm1_psiq_k()
+  ENDIF
+  !
+  CALL stop_clock( 'lr_sm1_psiq' )
+  !
+  RETURN
+  !
+CONTAINS
+  !
+  SUBROUTINE sm1_psiq_k()
     !-----------------------------------------------------------------------
     !
-    ! EELS : k-points version
+    ! k-points version
+    ! Note: the array bbk must be deallocated somewhere
+    ! outside of this routine.
     !
-    USE becmod,            ONLY : bec_type, becp, calbec
-    USE klist,             only : xk
-    USE qpoint,            ONLY : npwq, igkq, ikks, ikqs, nksq
-    use gvect,             only : ngm, g
-    use wvfct,             only : g2kin
-    use gvecw,             only : gcutw
+    USE becmod,    ONLY : bec_type, becp, calbec
+    USE klist,     ONLY : xk
+    USE qpoint,    ONLY : igkq, ikks, ikqs, nksq
+    USE gvect,     ONLY : ngm, g
+    USE wvfct,     ONLY : g2kin
+    USE gvecw,     ONLY : gcutw
+    USE lrus,      ONLY : bbk
     !
     IMPLICIT NONE
     !
     ! ... local variables
     !
-    INTEGER :: ikb, jkb, ih, jh, na, nt, ijkb0, ibnd, ii, ik1,&
-               ikk, ikq, nbnd_eff
-    ! counters
-    complex(KIND=DP), ALLOCATABLE :: ps(:,:)
-    complex(kind=dp), allocatable, save :: BB_(:,:,:)
+    INTEGER :: ikb, jkb, ih, jh, na, nt, ijkb0, &
+             & ibnd, ii, ik1, ikk, ikq, npwq_
+    INTEGER, ALLOCATABLE :: igkq_(:)
+    COMPLEX(DP), ALLOCATABLE :: ps(:,:)
     !
     ! Initialize spsi : spsi = psi
     !
-    CALL ZCOPY( lda * m, psi, 1, spsi, 1 )
+    CALL ZCOPY( lda*m, psi, 1, spsi, 1 )
     !
     IF ( nkb == 0 .OR. .NOT. okvan ) RETURN
+    !
+    ALLOCATE(igkq_(lda))
     !
     ! If this is the first entry, we calculate and save the coefficients B from Eq.(15)
     ! B. Walker and R. Gebauer, J. Chem. Phys. 127, 164106 (2007).
@@ -468,40 +518,39 @@ SUBROUTINE sm1_psi_eels_k()
     ! (they are already allocated) but use the ones which were already
     ! calculated and saved (if recalc=.false.).
     !
-    IF (.NOT.ALLOCATED(BB_)) recalc = .true.
-    IF (recalc .AND. ALLOCATED(BB_)) DEALLOCATE(BB_)
+    IF (.NOT.ALLOCATED(bbk)) recalc = .true.
+    IF (recalc .AND. ALLOCATED(bbk)) DEALLOCATE(bbk)
     !
     ! If recalc=.true. we (re)calculate the coefficients lambda_nm defined by Eq.(16).
     !
     IF ( recalc ) THEN
        !
-       ALLOCATE(BB_(nkb,nkb,nksq))
-       BB_ = (0.0d0,0.0d0)
+       ALLOCATE(bbk(nkb,nkb,nksq))
+       bbk = (0.0d0,0.0d0)
        ! 
-       CALL errore('sm1_psi','recalculating BB_ matrix',-1)  ! it does nothing
-       !
-       ALLOCATE( ps(nkb,nkb) )
+       ALLOCATE(ps(nkb,nkb))
        !
        DO ik1 = 1, nksq
           !
           ikk = ikks(ik1)
           ikq = ikqs(ik1)
           !
-          ! Determination of npwq, igkq; g2kin is used here as a workspace.
+          ! Determination of npwq_, igkq_; g2kin is used here as a workspace.
           !
-          CALL gk_sort( xk(1,ikq), ngm, g, gcutw, npwq, igkq, g2kin )
+          CALL gk_sort( xk(1,ikq), ngm, g, gcutw, npwq_, igkq_, g2kin )
           !
           ! Calculate beta-functions vkb for a given k+q point.
           !
-          CALL init_us_2 (npwq, igkq, xk(1,ikq), vkb)
+          CALL init_us_2 (npwq_, igkq_, xk(1,ikq), vkb)
           !
           ! Calculate the coefficients B_ij defined by Eq.(15).
           ! B_ij = <beta(i)|beta(j)>, where beta(i) = vkb(i).
           !
-          CALL zgemm('C','N',nkb,nkb,npwq,(1.d0,0.d0),vkb,lda,vkb,lda,(0.d0,0.d0),BB_(1,1,ik1),nkb)
+          CALL zgemm('C','N',nkb,nkb,npwq_,(1.d0,0.d0),vkb, &
+                & lda,vkb,lda,(0.d0,0.d0),bbk(1,1,ik1),nkb)
           !
 #ifdef __MPI
-          CALL mp_sum(BB_(:,:,ik1), intra_bgrp_comm)
+          CALL mp_sum(bbk(:,:,ik1), intra_bgrp_comm)
 #endif
           ! 
           ps(:,:) = (0.d0,0.d0)
@@ -522,7 +571,7 @@ SUBROUTINE sm1_psi_eels_k()
                                !
                                ikb = ijkb0 + ih
                                !
-                               ps(ikb,ii) = ps(ikb,ii) + BB_(jkb,ii,ik1)*qq(ih,jh,nt)
+                               ps(ikb,ii) = ps(ikb,ii) + bbk(jkb,ii,ik1)*qq(ih,jh,nt)
                                !
                             enddo
                          enddo
@@ -548,12 +597,12 @@ SUBROUTINE sm1_psi_eels_k()
           ! 
           CALL invmat( nkb, ps )
           !
-          ! Now let's use BB_ as a work space (in order to save the memory).
+          ! Use the array bbk as a work space in order to save the memory.
           !
-          BB_(:,:,ik1) = (0.d0,0.d0)
+          bbk(:,:,ik1) = (0.d0,0.d0)
           !
           ! Finally, let us calculate lambda_nm = -(1+q*B)^{-1} * q
-          ! Let us use the array BB_ and put there the values of the lambda
+          ! Let us use the array bbk and put there the values of the lambda
           ! coefficients.
           !
           ijkb0 = 0
@@ -570,7 +619,7 @@ SUBROUTINE sm1_psi_eels_k()
                                !
                                ikb = ijkb0 + ih
                                !
-                               BB_(ii,jkb,ik1) = BB_(ii,jkb,ik1) - ps(ii,ikb)*qq(ih,jh,nt)
+                               bbk(ii,jkb,ik1) = bbk(ii,jkb,ik1) - ps(ii,ikb) * qq(ih,jh,nt)
                                !
                             enddo
                          enddo
@@ -585,7 +634,7 @@ SUBROUTINE sm1_psi_eels_k()
              endif
           enddo
           !
-       enddo ! loop on k points
+       ENDDO ! loop on k points
        !
        DEALLOCATE(ps)
        !
@@ -594,13 +643,9 @@ SUBROUTINE sm1_psi_eels_k()
     ikk = ikks(ik)
     ikq = ikqs(ik)
     !
-    ! Determination of npwq, igkq; g2kin is used here as a workspace.
-    !
-    CALL gk_sort( xk(1,ikq), ngm, g, gcutw, npwq, igkq, g2kin )
-    !
     ! Calculate beta-functions vkb for a given k+q point.
     !
-    CALL init_us_2 (npwq, igkq, xk(1,ikq), vkb)
+    CALL init_us_2 (n, ig, xk(1,ikq), vkb)
     !
     ! Compute the product of the beta-functions vkb with the functions psi
     ! at point k+q, and put the result in becp%k.
@@ -608,13 +653,12 @@ SUBROUTINE sm1_psi_eels_k()
     !
     CALL calbec(n, vkb, psi, becp, m)
     !
-    ! Let's use ps as a work space.
+    ! Use ps as a work space.
     !
     ALLOCATE(ps(nkb,m))
-    !    
     ps(:,:) = (0.d0,0.d0)
     !
-    ! Now let us apply the operator S^{-1}, given by Eq.(13), to the functions psi.
+    ! Apply the operator S^{-1}, given by Eq.(13), to the functions psi.
     ! Let's do this in 2 steps.
     !
     ! Step 1 : calculate the product 
@@ -623,53 +667,59 @@ SUBROUTINE sm1_psi_eels_k()
     DO ibnd=1,m
        DO jkb=1,nkb
           DO ii=1,nkb
-             ps(jkb,ibnd) = ps(jkb,ibnd) + BB_(jkb,ii,ik) * becp%k(ii,ibnd)
+             ps(jkb,ibnd) = ps(jkb,ibnd) + bbk(jkb,ii,ik) * becp%k(ii,ibnd)
           ENDDO
        ENDDO
     ENDDO
     !
     ! Step 2 : |spsi> = S^{-1} * |psi> = |psi> + ps * |beta> 
     !
-    CALL zgemm( 'N', 'N', n, m, nkb, (1.D0, 0.D0), vkb, lda, ps, nkb, (1.D0, 0.D0), spsi, lda )
+    CALL zgemm( 'N', 'N', n, m, nkb, (1.D0, 0.D0), vkb, &
+                & lda, ps, nkb, (1.D0, 0.D0), spsi, lda )
     !
     DEALLOCATE(ps)
-    !
-    IF (LR_iteration==itermax .AND. ik==nksq) DEALLOCATE(BB_)
+    DEALLOCATE(igkq_)
     !
     RETURN
     !
-END SUBROUTINE sm1_psi_eels_k
+END SUBROUTINE sm1_psiq_k
 
-SUBROUTINE sm1_psi_eels_nc()
+SUBROUTINE sm1_psiq_nc()
     !-----------------------------------------------------------------------
     !
-    ! EELS : noncollinear case
+    ! Noncollinear case
+    ! Note: 1) the implementation of this routine is not finished...
+    !       2) the array bbk must be deallocated somewhere
+    !          outside of this routine.
     !
-    USE becmod,            ONLY : bec_type, becp, calbec
-    USE klist,             ONLY : xk
-    USE qpoint,            ONLY : npwq, igkq, ikks, ikqs, nksq
-    USE gvect,             ONLY : ngm, g
-    USE wvfct,             ONLY : g2kin
-    USE gvecw,             ONLY : gcutw
-    USE uspp,              ONLY : qq_so
-    USE spin_orb,          ONLY : lspinorb
+    USE becmod,     ONLY : bec_type, becp, calbec
+    USE klist,      ONLY : xk
+    USE qpoint,     ONLY : ikks, ikqs, nksq
+    USE gvect,      ONLY : ngm, g
+    USE wvfct,      ONLY : g2kin
+    USE gvecw,      ONLY : gcutw
+    USE uspp,       ONLY : qq_so
+    USE spin_orb,   ONLY : lspinorb
+    USE lrus,       ONLY : bbnc
     !
     IMPLICIT NONE
     !
     ! ... local variables
     !
-    INTEGER :: ikb, jkb, ih, jh, na, nt, ijkb0, ibnd, ii, ik1, ikk, ikq, ipol
-    ! counters
-    complex(KIND=DP), ALLOCATABLE :: ps(:,:,:)
-    complex(kind=dp), allocatable, save :: BB_(:,:,:,:)
+    INTEGER :: ikb, jkb, ih, jh, na, nt, ijkb0, &
+             & ibnd, ii, ik1, ikk, ikq, ipol, npwq_
+    INTEGER, ALLOCATABLE :: igkq_(:)
+    COMPLEX(DP), ALLOCATABLE :: ps(:,:,:)
+    !
+    CALL errore( 'sm1_psiq_nc', 'USPP + noncolin is not implemented', 1 )
     !
     ! Initialize spsi : spsi = psi
     !
-    CALL ZCOPY( lda * npol * m, psi, 1, spsi, 1 )
+    CALL ZCOPY( lda*npol*m, psi, 1, spsi, 1 )
     !
     IF ( nkb == 0 .OR. .NOT. okvan ) RETURN
     !
-    CALL errore( 'sm1_psi_eels_nc', 'US pseudopotentials + Spin-orbit not tested', 1 )
+    ALLOCATE(igkq_(lda))
     !
     ! If this is the first entry, we calculate and save the coefficients B from Eq.(15)
     ! B. Walker and R. Gebauer, J. Chem. Phys. 127, 164106 (2007).
@@ -677,54 +727,45 @@ SUBROUTINE sm1_psi_eels_nc()
     ! (they are already allocated) but use the ones which were already calculated 
     ! and saved (if recalc=.false.).
     !
-    IF (.NOT.ALLOCATED(BB_)) recalc = .true.
-    IF (recalc .AND. ALLOCATED(BB_)) DEALLOCATE(BB_)
+    IF (.NOT.ALLOCATED(bbnc)) recalc = .true.
+    IF (recalc .AND. ALLOCATED(bbnc)) DEALLOCATE(bbnc)
     !
     ! If recalc=.true. we (re)calculate the coefficients lambda_nm defined by Eq.(16).
     !
     IF ( recalc ) THEN
        !
-       IF (lspinorb) THEN
-          ALLOCATE(BB_(nkb,nkb,4,nksq))
-       ELSE
-          ALLOCATE(BB_(nkb,nkb,1,nksq))
-       ENDIF
-       BB_ = (0.0d0,0.0d0)
+       ALLOCATE(bbnc(nkb,nkb,nspin_mag,nksq))
+       bbnc = (0.0d0,0.0d0)
        ! 
-       CALL errore('sm1_psi','recalculating BB_ matrix',-1)  ! it does nothing
-       !
-       IF (lspinorb) THEN
-          ALLOCATE(ps(nkb,nkb,4))
-       ELSE
-          ALLOCATE(ps(nkb,nkb,1))
-       ENDIF
+       ALLOCATE(ps(nkb,nkb,nspin_mag))
        !
        DO ik1 = 1, nksq
           !
           ikk = ikks(ik1)
           ikq = ikqs(ik1)
           !
-          ! Determination of npwq, igkq; g2kin is used here as a workspace.
+          ! Determination of npwq_, igkq_; g2kin is used here as a workspace.
           !
-          CALL gk_sort( xk(1,ikq), ngm, g, gcutw, npwq, igkq, g2kin )
+          CALL gk_sort( xk(1,ikq), ngm, g, gcutw, npwq_, igkq_, g2kin )
           !
           ! Calculate beta-functions vkb for a given k+q point.
           !
-          CALL init_us_2 (npwq, igkq, xk(1,ikq), vkb)
+          CALL init_us_2 (npwq_, igkq_, xk(1,ikq), vkb)
           !
           ! Calculate the coefficients B_ij defined by Eq.(15).
           ! B_ij = <beta(i)|beta(j)>, where beta(i) = vkb(i).
           !
-          CALL ZGEMM('C','N',nkb,nkb,npwq,(1.d0,0.d0),vkb,lda,vkb,lda,(0.d0,0.d0),BB_(1,1,1,ik1),nkb)
+          CALL ZGEMM('C','N',nkb,nkb,npwq_,(1.d0,0.d0),vkb, &
+               & lda,vkb,lda,(0.d0,0.d0),bbnc(1,1,1,ik1),nkb)
           !
           IF (lspinorb) THEN
-             BB_(:,:,2,ik1) = BB_(:,:,1,ik1)
-             BB_(:,:,3,ik1) = BB_(:,:,1,ik1)
-             BB_(:,:,4,ik1) = BB_(:,:,1,ik1)
+             bbnc(:,:,2,ik1) = bbnc(:,:,1,ik1)
+             bbnc(:,:,3,ik1) = bbnc(:,:,1,ik1)
+             bbnc(:,:,4,ik1) = bbnc(:,:,1,ik1)
           ENDIF
           !
 #ifdef __MPI
-          CALL mp_sum(BB_(:,:,:,ik1), intra_bgrp_comm)
+          CALL mp_sum(bbnc(:,:,:,ik1), intra_bgrp_comm)
 #endif
           !
           ps(:,:,:) = (0.d0,0.d0)
@@ -747,10 +788,12 @@ SUBROUTINE sm1_psi_eels_nc()
                                !
                                if (lspinorb) then
                                   do ipol=1,4
-                                     ps(ikb,ii,ipol) = ps(ikb,ii,ipol) + BB_(jkb,ii,ipol,ik1)*qq_so(ih,jh,ipol,nt)
+                                     ps(ikb,ii,ipol) = ps(ikb,ii,ipol) + &
+                                        & bbnc(jkb,ii,ipol,ik1) * qq_so(ih,jh,ipol,nt)
                                   enddo
                                else
-                                  ps(ikb,ii,1) = ps(ikb,ii,1) + BB_(jkb,ii,1,ik1)*qq(ih,jh,nt) 
+                                  ps(ikb,ii,1) = ps(ikb,ii,1) + &
+                                        & bbnc(jkb,ii,1,ik1) * qq(ih,jh,nt) 
                                endif
                                !
                             enddo
@@ -766,7 +809,7 @@ SUBROUTINE sm1_psi_eels_nc()
              endif
           enddo
           !
-          ! Add identity to q_nm * B_ij [see Eq.(16)].
+          ! Add an identity to q_nm * B_ij [see Eq.(16)].
           ! ps = (1 + q*B)
           ! 
           DO ii=1,nkb
@@ -792,9 +835,11 @@ SUBROUTINE sm1_psi_eels_nc()
           ENDIF
           !
           ! Finally, let us calculate lambda_nm = -(1+q*B)^{-1} * q
-          ! Let us use the array BB_ and put there the values of the lambda coefficients.
           !
-          BB_(:,:,:,ik1) = (0.d0,0.d0)
+          ! Use the array bbnc as a workspace and put there 
+          ! the values of the lambda coefficients.
+          !
+          bbnc(:,:,:,ik1) = (0.d0,0.d0)
           !
           ijkb0 = 0
           do nt=1,ntyp
@@ -807,19 +852,24 @@ SUBROUTINE sm1_psi_eels_nc()
                             do ih=1,nh(nt)
                                ikb = ijkb0 + ih
                                if (lspinorb) then
-                                  BB_(ii,jkb,1,ik1) = BB_(ii,jkb,1,ik1) - ps(ii,ikb,1) * qq_so(ih,jh,1,nt) &
-                                                                        - ps(ii,ikb,2) * qq_so(ih,jh,3,nt)
+                                  bbnc(ii,jkb,1,ik1) = bbnc(ii,jkb,1,ik1) &
+                                     & - ps(ii,ikb,1) * qq_so(ih,jh,1,nt) &
+                                     & - ps(ii,ikb,2) * qq_so(ih,jh,3,nt)
                                   !
-                                  BB_(ii,jkb,2,ik1) = BB_(ii,jkb,2,ik1) - ps(ii,ikb,1) * qq_so(ih,jh,2,nt) &
-                                                                        - ps(ii,ikb,2) * qq_so(ih,jh,4,nt)
+                                  bbnc(ii,jkb,2,ik1) = bbnc(ii,jkb,2,ik1) &
+                                     & - ps(ii,ikb,1) * qq_so(ih,jh,2,nt) &
+                                     & - ps(ii,ikb,2) * qq_so(ih,jh,4,nt)
                                   !
-                                  BB_(ii,jkb,3,ik1) = BB_(ii,jkb,3,ik1) - ps(ii,ikb,3) * qq_so(ih,jh,1,nt) &
-                                                                        - ps(ii,ikb,4) * qq_so(ih,jh,3,nt)
+                                  bbnc(ii,jkb,3,ik1) = bbnc(ii,jkb,3,ik1) &
+                                     & - ps(ii,ikb,3) * qq_so(ih,jh,1,nt) &
+                                     & - ps(ii,ikb,4) * qq_so(ih,jh,3,nt)
                                   !
-                                  BB_(ii,jkb,4,ik1) = BB_(ii,jkb,4,ik1) - ps(ii,ikb,3) * qq_so(ih,jh,2,nt) &
-                                                                        - ps(ii,ikb,4) * qq_so(ih,jh,4,nt)
+                                  bbnc(ii,jkb,4,ik1) = bbnc(ii,jkb,4,ik1) &
+                                     & - ps(ii,ikb,3) * qq_so(ih,jh,2,nt) &
+                                     & - ps(ii,ikb,4) * qq_so(ih,jh,4,nt)
                                 else
-                                  BB_(ii,jkb,1,ik1) = BB_(ii,jkb,1,ik1) - ps(ii,ikb,1)*qq(ih,jh,nt)
+                                  bbnc(ii,jkb,1,ik1) = bbnc(ii,jkb,1,ik1) &
+                                            & - ps(ii,ikb,1)*qq(ih,jh,nt)
                                 endif
                                 !
                             enddo
@@ -844,13 +894,9 @@ SUBROUTINE sm1_psi_eels_nc()
     ikk = ikks(ik)
     ikq = ikqs(ik)
     !
-    ! Determination of npwq, igkq; g2kin is used here as a workspace.
-    !
-    CALL gk_sort( xk(1,ikq), ngm, g, gcutw, npwq, igkq, g2kin )
-    !
     ! Calculate beta-functions vkb for a given k+q point.
     !
-    CALL init_us_2 (npwq, igkq, xk(1,ikq), vkb)
+    CALL init_us_2 (n, ig, xk(1,ikq), vkb)
     !
     ! Compute the product of the beta-functions vkb with the functions psi
     ! at point k+q, and put the result in becp%k.
@@ -858,12 +904,12 @@ SUBROUTINE sm1_psi_eels_nc()
     !
     CALL calbec(n, vkb, psi, becp, m)
     !
-    ! Let's use ps as a work space.
+    ! Use ps as a work space.
     !
     ALLOCATE(ps(nkb,npol,m))
     ps(:,:,:) = (0.d0,0.d0)
     !    
-    ! Now let us apply the operator S^{-1}, given by Eq.(13), to the functions psi.
+    ! Apply the operator S^{-1}, given by Eq.(13), to the functions psi.
     ! Let's do this in 2 steps.
     !
     ! Step 1 : calculate the product 
@@ -874,15 +920,18 @@ SUBROUTINE sm1_psi_eels_nc()
           DO ii=1,nkb
              IF (lspinorb) THEN
                 !
-                ps(jkb,1,ibnd) = ps(jkb,1,ibnd) + BB_(jkb,ii,1,ik) * becp%nc(ii,1,ibnd) &
-                                                + BB_(jkb,ii,2,ik) * becp%nc(ii,2,ibnd)
+                ps(jkb,1,ibnd) = ps(jkb,1,ibnd) &
+                    & + bbnc(jkb,ii,1,ik) * becp%nc(ii,1,ibnd) &
+                    & + bbnc(jkb,ii,2,ik) * becp%nc(ii,2,ibnd)
                 !
-                ps(jkb,2,ibnd) = ps(jkb,2,ibnd) + BB_(jkb,ii,3,ik) * becp%nc(ii,1,ibnd) &
-                                                + BB_(jkb,ii,4,ik) * becp%nc(ii,2,ibnd)
+                ps(jkb,2,ibnd) = ps(jkb,2,ibnd) &
+                    & + bbnc(jkb,ii,3,ik) * becp%nc(ii,1,ibnd) &
+                    & + bbnc(jkb,ii,4,ik) * becp%nc(ii,2,ibnd)
                 !
              ELSE
                 DO ipol=1,npol
-                   ps(jkb,ipol,ibnd) = ps(jkb,ipol,ibnd) + BB_(jkb,ii,1,ik) * becp%nc(ii,ipol,ibnd) 
+                   ps(jkb,ipol,ibnd) = ps(jkb,ipol,ibnd) &
+                   & + bbnc(jkb,ii,1,ik) * becp%nc(ii,ipol,ibnd) 
                 ENDDO
              ENDIF
            ENDDO
@@ -891,14 +940,14 @@ SUBROUTINE sm1_psi_eels_nc()
     !
     ! Step 2 : |spsi> = S^{-1} * |psi> = |psi> + ps * |beta> 
     !
-    CALL ZGEMM( 'N', 'N', n, m*npol, nkb, (1.D0, 0.D0), vkb, lda, ps, nkb, (1.D0, 0.D0), spsi, lda )
+    CALL ZGEMM( 'N', 'N', n, m*npol, nkb, (1.D0, 0.D0), vkb, &
+                     & lda, ps, nkb, (1.D0, 0.D0), spsi, lda )
     !
     DEALLOCATE(ps)
-    !
-    IF (LR_iteration==itermax .AND. ik==nksq) DEALLOCATE(BB_)
+    DEALLOCATE(igkq_)
     !
     RETURN
     !
-END SUBROUTINE sm1_psi_eels_nc
+END SUBROUTINE sm1_psiq_nc
 
-END SUBROUTINE sm1_psi
+END SUBROUTINE lr_sm1_psiq

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2011 PWSCF group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -9,12 +9,13 @@
 !
 ! ... Common variables for LR_Modules routines
 !
-!
 MODULE qpoint
-  USE kinds, ONLY :  DP
+  !
+  USE kinds,      ONLY : DP
   USE parameters, ONLY : npk
   !
-  ! ... The q point
+  ! ... The variables needed to specify various indices,
+  ! ... number of plane waves and k points and their coordiantes.
   !
   SAVE
   !
@@ -36,38 +37,35 @@ MODULE qpoint
 END MODULE qpoint
 !
 MODULE control_lr
-  USE kinds, ONLY :  DP
-  USE parameters, ONLY: npk
   !
-  ! ... the variable controlling the phonon run
+  USE kinds,      ONLY : DP
+  USE parameters, ONLY : npk
+  !
+  ! ... The variables controlling the run of linear response codes
   !
   SAVE
   !
-  INTEGER :: nbnd_occ(npk)   ! occupated bands in metals
-  !
-  LOGICAL :: lgamma          ! if .TRUE. this is a q=0 computation
-  !
+  INTEGER  :: nbnd_occ(npk)  ! occupated bands in metals
   REAL(DP) :: alpha_pv       ! the alpha value for shifting the bands
-  !
-  LOGICAL :: lrpa            ! if .TRUE. uses the Random Phace Approximation
+  LOGICAL  :: lgamma         ! if .TRUE. this is a q=0 computation
+  LOGICAL  :: lrpa           ! if .TRUE. uses the Random Phace Approximation
   !
 END MODULE control_lr
 !
 MODULE eqv
-  USE kinds, ONLY :  DP
   !
-  ! ... The wavefunctions at point k+q
+  USE kinds,  ONLY : DP
+  !
+  ! ... The variables describing the linear response problem
   !
   SAVE
   !
   COMPLEX (DP), POINTER :: evq(:,:)
-  !
-  ! ... The variable describing the linear response problem
-  !
+  ! the wavefunctions at point k+q
   COMPLEX (DP), ALLOCATABLE :: dvpsi(:,:), dpsi(:,:), drhoscfs (:,:,:)
   ! the product of dV psi
   ! the change of the wavefunctions
-  REAL (DP), ALLOCATABLE :: dmuxc(:,:,:)        ! nrxx, nspin, nspin),
+  REAL (DP), ALLOCATABLE :: dmuxc(:,:,:)        ! nrxx, nspin, nspin)
   REAL (DP), ALLOCATABLE, TARGET :: vlocq(:,:)  ! ngm, ntyp)
   ! the derivative of the xc potential
   ! the local potential at q+G
@@ -75,22 +73,22 @@ MODULE eqv
   !
 END MODULE eqv
 !
-!
 MODULE gc_lr
-  USE kinds, ONLY :  DP
+  !
+  USE kinds, ONLY : DP
   !
   ! ... The variables needed for gradient corrected calculations
   !
   SAVE
   !
   REAL (DP), ALLOCATABLE :: &
-       grho(:,:,:),              &! 3, nrxx, nspin),
-       gmag(:,:,:),              &! 3, nrxx, nspin),
-       vsgga(:),                 &! nrxx
-       segni(:),                 &! nrxx
-       dvxc_rr(:,:,:),           &! nrxx, nspin, nspin), &
-       dvxc_sr(:,:,:),           &! nrxx, nspin, nspin),
-       dvxc_ss(:,:,:),           &! nrxx, nspin, nspin), &
+       grho(:,:,:),              &! 3, nrxx, nspin)
+       gmag(:,:,:),              &! 3, nrxx, nspin)
+       vsgga(:),                 &! nrxx)
+       segni(:),                 &! nrxx)
+       dvxc_rr(:,:,:),           &! nrxx, nspin, nspin)
+       dvxc_sr(:,:,:),           &! nrxx, nspin, nspin)
+       dvxc_ss(:,:,:),           &! nrxx, nspin, nspin)
        dvxc_s(:,:,:)              ! nrxx, nspin, nspin)
   !
   ! in the noncollinear case gmag contains the gradient of the magnetization
@@ -105,6 +103,7 @@ MODULE gc_lr
 END MODULE gc_lr
 !
 MODULE lr_symm_base
+  !
   USE kinds,  ONLY : DP
   !
   ! ... The variables needed to describe the modes and the small group of q
@@ -120,15 +119,13 @@ MODULE lr_symm_base
   REAL (DP) :: gi(3,48), gimq(3)
   ! the possible G associated to each symmetry
   ! the G associated to the symmetry q<->-q+G
-  LOGICAL :: &
-       minus_q,  &    !  if .TRUE. there is the symmetry sending q<->-q
-       invsymq        !  if .TRUE. the small group of q has inversion
+  LOGICAL :: minus_q, & ! if .TRUE. there is the symmetry sending q<->-q
+             invsymq    ! if .TRUE. the small group of q has inversion
   !
-
 END MODULE lr_symm_base
-
-
+!
 MODULE lrus
+  !
   USE kinds,  ONLY : DP
   USE becmod, ONLY : bec_type
   !
@@ -138,20 +135,26 @@ MODULE lrus
   SAVE
   !
   COMPLEX (DP), ALLOCATABLE :: &
-       int3(:,:,:,:,:),     &! nhm, nhm, nat, nspin, npert),&
-       int3_paw(:,:,:,:,:), &! nhm, nhm, nat, nspin, npert),&
-       int3_nc(:,:,:,:,:)    ! nhm, nhm, nat, nspin, npert),&
-!
-! where
-!  int3 -> \int (Delta V_Hxc) Q d^3r
-!  similarly for int_nc while
-!  int3_paw contains Delta (D^1-\tilde D^1)
-!
-  type (bec_type),  ALLOCATABLE, TARGET :: &
-       becp1(:)              ! (nksq); (nkbtot, nbnd)
+       int3(:,:,:,:,:),     &! nhm, nhm, nat, nspin, npert)
+       int3_paw(:,:,:,:,:), &! nhm, nhm, nat, nspin, npert)
+       int3_nc(:,:,:,:,:)    ! nhm, nhm, nat, nspin, npert)
   !
-  ! becp1 contains < beta_n | \psi_i >
+  ! where
+  ! int3 -> \int (Delta V_Hxc) Q d^3r
+  ! similarly for int_nc while
+  ! int3_paw contains Delta (D^1-\tilde D^1)
   !
-
-
+  type (bec_type), ALLOCATABLE, TARGET :: becp1(:) ! nksq)
+  ! becp1 contains < beta_n | psi_i >
+  !
+  REAL (DP),    ALLOCATABLE :: bbg(:,:)      ! nkb, nkb)
+  ! for gamma_only     
+  COMPLEX (DP), ALLOCATABLE :: bbk(:,:,:)    ! nkb, nkb, nks)
+  ! for k points
+  COMPLEX (DP), ALLOCATABLE :: bbnc(:,:,:,:) ! nkb, nkb, nspin_mag, nks)
+  ! for the noncollinear case
+  ! bbg = < beta^N_i | beta^P_j > 
+  ! bbg/bbk/bbnc are the scalar products of beta functions 
+  ! localized on atoms N and P.
+  !
 END MODULE lrus

@@ -172,7 +172,7 @@ SUBROUTINE lr_dvpsi_e(ik,ipol,dvpsi)
   !
   IF (okvan) THEN
      ALLOCATE (spsi ( npwx*npol, nbnd))
-     CALL sm1_psi(.TRUE.,ik,npwx,ngk(ik),nbnd,dvpsi,spsi)
+     CALL lr_sm1_psi (.TRUE.,ik,npwx,ngk(ik),nbnd,dvpsi,spsi)
      dvpsi(:,:) = spsi(:,:)
      DEALLOCATE(spsi)
   ENDIF

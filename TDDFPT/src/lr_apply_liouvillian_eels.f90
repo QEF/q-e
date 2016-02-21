@@ -107,7 +107,7 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, sevc1_new, interaction )
   !
   IF ( interaction1 ) THEN
      ! 
-     ! Calculation of the response charge density response 
+     ! Calculation of the response charge density 
      ! and its symmetrization.
      !
      !if (.not. allocated(psic)) allocate(psic(dfftp%nnr))   
@@ -352,7 +352,8 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, sevc1_new, interaction )
         IF (noncolin) THEN
            DO ibnd = 1, nbnd_occ(ikk)
               DO ig = 1, npwq
-                 sevc1_new(ig+npwx,ibnd,ik) = sevc1_new(ig+npwx,ibnd,ik) + dvpsi(ig+npwx,ibnd)
+                 sevc1_new(ig+npwx,ibnd,ik) = sevc1_new(ig+npwx,ibnd,ik) &
+                                                   & + dvpsi(ig+npwx,ibnd)
               ENDDO
            ENDDO
         ENDIF
@@ -363,7 +364,8 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, sevc1_new, interaction )
      !    evc1_new = S^{-1} * sevc1_new
      !    If not ultrasoft: evc1_new = sevc1_new
      !
-     CALL sm1_psi(.FALSE.,ik, npwx, npwq, nbnd_occ(ikk), sevc1_new(1,1,ik), evc1_new(1,1,ik))
+     CALL lr_sm1_psiq (.FALSE., ik, npwx, npwq, igkq, nbnd_occ(ikk), &
+                         & sevc1_new(1,1,ik), evc1_new(1,1,ik))
      !
   ENDDO ! loop on ik
   !
