@@ -32,7 +32,6 @@ lr_apply_liouvillian.o \
 lr_dv_setup.o \
 lr_solve_e.o \
 lr_dvpsi_e.o \
-lr_sm1_psi.o \
 stop_lr.o \
 lr_read_d0psi.o \
 lr_restart.o \

@@ -28,6 +28,7 @@ setup_nscf.o \
 set_dbecsum_nc.o \
 set_int3_nc.o \
 smallgq.o \
+lr_sm1_psi.o \
 lrcom.o
 
 TLDEPS=libfft mods
