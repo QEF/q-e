@@ -33,6 +33,10 @@
 
 #include "fft_scalar.SX6.f90"
 
+#elif defined(__ARM_LIB)
+
+#include "fft_scalar.ARM_LIB.f90"
+
 #else
 
 #include "fft_scalar.FFTW.f90"
