@@ -2,6 +2,7 @@ New in 5.3.1 version:
 
   * Calculation of the Magnetic anisotropy energy is implemented (in the limit 
     of small spin-orbit coupling) using the Force theorem (A. Smogunov)
+  * Support for FFT with ARM Performance Library (-D__ARM_LIB) added (F. Spiga)
 
 Fixed in 5.3.1 version:
 
@@ -28,7 +29,7 @@ Incompatible changes in 5.3.1 version:
     is called - gcutw is initialized at startup or when data files are read
   * Common modules for linear-response codes moved to new directory LR_Modules/
   * Routines for subspace diagonalization moved to LAXlib/
-  * Routines in flib/ are now in Modules/
+  * flib/ directory deleted, routines in flib/ moved to Modules/
 
                                * * * * *
 
