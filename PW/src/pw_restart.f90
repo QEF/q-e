@@ -284,7 +284,7 @@ MODULE pw_restart
       USE ldaU,                 ONLY : lda_plus_u, lda_plus_u_kind, U_projection, &
                                        Hubbard_lmax, Hubbard_l, Hubbard_U, Hubbard_J, &
                                        Hubbard_alpha, Hubbard_J0, Hubbard_beta
-      USE spin_orb,             ONLY : lspinorb, domag
+      USE spin_orb,             ONLY : lspinorb, domag, lforcet
       USE symm_base,            ONLY : nrot, nsym, invsym, s, ft, irt, &
                                        t_rev, sname, time_reversal, no_t_rev
       USE lsda_mod,             ONLY : nspin, isk, lsda, starting_magnetization
@@ -336,8 +336,10 @@ MODULE pw_restart
       CASE( "all" )
          !
          ! ... do not overwrite the scf charge density with a non-scf one
+         ! ... (except in the 'force theorem' calculation of MAE where the
+         ! ...  charge density differs from the one read from disk)
          !
-         lrho  = lscf
+         lrho  = lscf .OR. lforcet
          lwfc  = twfcollect
          !
       CASE( "config" )
@@ -739,10 +741,9 @@ MODULE pw_restart
 ! ... CHARGE-DENSITY FILES
 !-------------------------------------------------------------------------------
       !
-      ! ... do not overwrite the scf charge density with a non-scf one
       ! ... also writes rho%ns if lda+U and rho%bec if PAW
       !
-      IF ( lscf ) CALL write_rho( rho, nspin )
+      IF ( lrho ) CALL write_rho( rho, nspin )
 !-------------------------------------------------------------------------------
 ! ... END RESTART SECTIONS
 !-------------------------------------------------------------------------------
@@ -1003,8 +1004,6 @@ MODULE pw_restart
       !
       lheader = .NOT. qexml_version_init
       IF (lheader) need_qexml = .TRUE.
-
-
       !
       ldim    = .FALSE.
       lcell   = .FALSE.
@@ -1024,8 +1023,6 @@ MODULE pw_restart
       lexx    = .FALSE.
       lesm    = .FALSE.
       !
-
-
       SELECT CASE( what )
       CASE( 'header' )
          !
@@ -1048,10 +1045,6 @@ MODULE pw_restart
          lcell = .TRUE.
          lions = .TRUE.
          need_qexml = .TRUE.
-         !
-      CASE( 'rho' )
-         !
-         lrho  = .TRUE.
          !
       CASE( 'wave' )
          !
@@ -1134,6 +1127,10 @@ MODULE pw_restart
          !
          lesm       = .TRUE.
          need_qexml = .TRUE.
+         !
+      CASE DEFAULT
+         !
+         CALL errore( 'pw_readfile', 'unknown case '//TRIM(what), 1 )
          !
       END SELECT
       !

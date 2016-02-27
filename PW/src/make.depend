@@ -894,7 +894,6 @@ interpolate.o : ../../Modules/control_flags.o
 interpolate.o : ../../Modules/fft_base.o
 interpolate.o : ../../Modules/kind.o
 interpolate.o : ../../Modules/recvec.o
-io_rho_xml.o : ../../Modules/constants.o
 io_rho_xml.o : ../../Modules/fft_base.o
 io_rho_xml.o : ../../Modules/funct.o
 io_rho_xml.o : ../../Modules/io_files.o
@@ -1288,7 +1287,6 @@ potinit.o : io_rho_xml.o
 potinit.o : ldaU.o
 potinit.o : paw_init.o
 potinit.o : paw_onecenter.o
-potinit.o : pw_restart.o
 potinit.o : pwcom.o
 potinit.o : scf_mod.o
 print_clock_pw.o : ../../Modules/control_flags.o
@@ -1452,6 +1450,7 @@ read_file.o : ../../Modules/wavefunctions.o
 read_file.o : ../../Modules/xml_io_base.o
 read_file.o : buffers.o
 read_file.o : esm.o
+read_file.o : io_rho_xml.o
 read_file.o : ldaU.o
 read_file.o : newd.o
 read_file.o : paw_init.o

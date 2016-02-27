@@ -120,6 +120,7 @@ SUBROUTINE read_xml_file_internal(withbs)
   USE io_files,             ONLY : tmp_dir, prefix, iunpun, nwordwfc, iunwfc
   USE noncollin_module,     ONLY : noncolin, npol, nspin_lsda, nspin_mag, nspin_gga
   USE pw_restart,           ONLY : pw_readfile
+  USE io_rho_xml,           ONLY : read_rho
   USE read_pseudo_mod,      ONLY : readpp
   USE xml_io_base,          ONLY : pp_check_file
   USE uspp,                 ONLY : becsum
@@ -301,7 +302,7 @@ SUBROUTINE read_xml_file_internal(withbs)
   !
   ! ... read the charge density
   !
-  CALL pw_readfile( 'rho', ierr )
+  CALL read_rho( rho, nspin )
   !
   ! ... re-calculate the local part of the pseudopotential vltot
   ! ... and the core correction charge (if any) - This is done here
