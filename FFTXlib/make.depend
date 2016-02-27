@@ -17,6 +17,7 @@ fft_scalar.o : fft_param.f90
 fft_scalar.o : fft_param.f90
 fft_scalar.o : fft_param.f90
 fft_scalar.o : fft_param.f90
+fft_scalar.o : fft_param.f90
 fft_scalar.o : ../include/fft_defs.h
 fft_smallbox.o : ../include/fft_defs.h
 fft_stick.o : ../include/c_defs.h

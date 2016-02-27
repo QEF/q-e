@@ -43,7 +43,6 @@ compute_drhous.o \
 compute_drhous_nc.o \
 compute_dvloc.o \
 compute_nldyn.o \
-compute_vsgga.o \
 compute_weight.o \
 deallocate_part.o \
 deallocate_phq.o \
@@ -130,7 +129,6 @@ set_irr_sym.o \
 set_small_group_of_q.o \
 setlocq.o \
 setqmod.o \
-setup_dgc.o \
 sgam_ph.o \
 solve_e.o \
 solve_e_fpol.o \
