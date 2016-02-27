@@ -66,10 +66,11 @@ MODULE eqv
   ! the product of dV psi
   ! the change of the wavefunctions
   REAL (DP), ALLOCATABLE :: dmuxc(:,:,:)        ! nrxx, nspin, nspin)
-  REAL (DP), ALLOCATABLE, TARGET :: vlocq(:,:)  ! ngm, ntyp)
   ! the derivative of the xc potential
+  REAL (DP), ALLOCATABLE, TARGET :: vlocq(:,:)  ! ngm, ntyp)
   ! the local potential at q+G
-  REAL (DP), ALLOCATABLE :: eprec(:,:) ! needed for preconditioning
+  REAL (DP), ALLOCATABLE :: eprec(:,:) 
+  ! needed for preconditioning
   !
 END MODULE eqv
 !
