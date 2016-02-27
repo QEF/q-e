@@ -61,7 +61,7 @@ SUBROUTINE potinit()
   REAL(DP)              :: charge           ! the starting charge
   REAL(DP)              :: etotefield       !
   REAL(DP)              :: fact
-  INTEGER               :: is, ios
+  INTEGER               :: is
   LOGICAL               :: exst 
   CHARACTER(LEN=256)    :: filename
   !
@@ -89,21 +89,14 @@ SUBROUTINE potinit()
         CALL read_rho ( rho, nspin )
      ELSE
         !
-        ! ... force theorem: read rho only from lsda calculation,
-        ! ... set noncolinear magnetization from angles
+        ! ... 'force theorem' calculation of MAE: read rho only from previous
+        ! ... lsda calculation, set noncolinear magnetization from angles
         !
         CALL read_rho ( rho%of_r, 2 )
         CALL nc_magnetization_from_lsda ( dfftp%nnr, nspin, rho%of_r )
      END IF
      !
-     IF ( ios /= 0 ) THEN
-        !
-        WRITE( stdout, '(/5X,"Error reading from file :"/5X,A,/)' ) &
-            TRIM( filename )
-        !
-        CALL errore ( 'potinit' , 'reading starting density', ios)
-        !
-     ELSE IF ( lscf ) THEN
+     IF ( lscf ) THEN
         !
         WRITE( stdout, '(/5X, &
              & "The initial density is read from file :"/5X,A,/)' ) &
@@ -288,7 +281,7 @@ SUBROUTINE nc_magnetization_from_lsda ( nnr, nspin, rho )
   ! On input, rho(1)=rho_up, rho(2)=rho_down
   ! Set rho(1)=rho_tot, rho(3)=rho_up-rho_down=magnetization
   ! 
-  rho(:,3) = rho(:,2)-rho(:,1)
+  rho(:,3) = rho(:,1)-rho(:,2)
   rho(:,1) = rho(:,1)+rho(:,2)
   !
   ! now set rho(2)=magn*sin(theta)*cos(phi)   x
