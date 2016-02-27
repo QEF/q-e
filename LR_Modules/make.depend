@@ -193,6 +193,13 @@ setup_dgc.o : ../Modules/wavefunctions.o
 setup_dgc.o : ../PW/src/pwcom.o
 setup_dgc.o : ../PW/src/scf_mod.o
 setup_dgc.o : lrcom.o
+setup_dmuxc.o : ../Modules/fft_base.o
+setup_dmuxc.o : ../Modules/funct.o
+setup_dmuxc.o : ../Modules/kind.o
+setup_dmuxc.o : ../Modules/noncol.o
+setup_dmuxc.o : ../PW/src/pwcom.o
+setup_dmuxc.o : ../PW/src/scf_mod.o
+setup_dmuxc.o : lrcom.o
 setup_nscf.o : ../Modules/cell_base.o
 setup_nscf.o : ../Modules/constants.o
 setup_nscf.o : ../Modules/control_flags.o

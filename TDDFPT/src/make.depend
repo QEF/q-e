@@ -230,16 +230,12 @@ lr_dot.o : lr_variables.o
 lr_dv_setup.o : ../../LR_Modules/lrcom.o
 lr_dv_setup.o : ../../Modules/fft_base.o
 lr_dv_setup.o : ../../Modules/funct.o
-lr_dv_setup.o : ../../Modules/io_global.o
 lr_dv_setup.o : ../../Modules/ions_base.o
 lr_dv_setup.o : ../../Modules/kind.o
 lr_dv_setup.o : ../../Modules/noncol.o
-lr_dv_setup.o : ../../Modules/recvec.o
 lr_dv_setup.o : ../../Modules/uspp.o
 lr_dv_setup.o : ../../Modules/wavefunctions.o
-lr_dv_setup.o : ../../PHonon/PH/phcom.o
 lr_dv_setup.o : ../../PW/src/pwcom.o
-lr_dv_setup.o : ../../PW/src/scf_mod.o
 lr_dv_setup.o : lr_variables.o
 lr_dvpsi_e.o : ../../LR_Modules/lrcom.o
 lr_dvpsi_e.o : ../../Modules/becmod.o
