@@ -53,9 +53,7 @@ SUBROUTINE lr_dv_setup
   ! 1) Set the nonlinear core correction stuff
   !
   nlcc_any = ANY ( upf(1:ntyp)%nlcc )
-  !do nt = 1, ntyp
-  !   nlcc_any = nlcc_any.or.nlcc (nt)
-  !enddo
+  !
   IF (nlcc_any) ALLOCATE(drc( ngm, ntyp))
   !
   ! 2) Computes the derivative of the XC potential
@@ -114,7 +112,7 @@ SUBROUTINE lr_dv_setup
         psic(:) = (0.0_dp, 0.0_dp)
      ENDIF
      !
-     CALL setup_dgc
+     CALL setup_dgc()
      !
      IF (ALLOCATED(psic)) DEALLOCATE(psic)
      !

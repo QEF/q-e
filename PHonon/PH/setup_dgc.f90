@@ -8,28 +8,27 @@
 !-----------------------------------------------------------------------
 subroutine setup_dgc
   !-----------------------------------------------------------------------
+  !
   ! Allocate and setup all variable needed in the gradient correction case
   !
-  !  GGA+LSDA is allowed. ADC (September 1999).
-  !  GGA+LSDA+NLCC is allowed. ADC (November 1999).
-  !  GGA+noncollinear+NLCC is allowed. ADC (June 2007).
+  ! GGA+LSDA is allowed. ADC (September 1999).
+  ! GGA+LSDA+NLCC is allowed. ADC (November 1999).
+  ! GGA+noncollinear+NLCC is allowed. ADC (June 2007).
   !
-
-  USE constants,ONLY : e2
-  USE fft_base, ONLY : dfftp
-  USE fft_interfaces, ONLY: fwfft
-  USE gvect,    ONLY : ngm, g, nl
-  USE spin_orb, ONLY : domag
-  USE scf,      ONLY : rho, rho_core, rhog_core
-  USE noncollin_module, ONLY : noncolin, ux, nspin_gga, nspin_mag
+  USE constants,            ONLY : e2
+  USE fft_base,             ONLY : dfftp
+  USE fft_interfaces,       ONLY : fwfft
+  USE gvect,                ONLY : ngm, g, nl
+  USE spin_orb,             ONLY : domag
+  USE scf,                  ONLY : rho, rho_core, rhog_core
+  USE noncollin_module,     ONLY : noncolin, ux, nspin_gga, nspin_mag
   USE wavefunctions_module, ONLY : psic
-  USE kinds, only : DP
-  use funct, only : dft_is_gradient, gcxc, gcx_spin, gcc_spin, dgcxc, &
-                    dgcxc_spin
-  USE uspp,  ONLY : nlcc_any
-
-  USE gc_lr,   ONLY : grho, gmag, dvxc_rr,  dvxc_sr,  dvxc_ss, dvxc_s, &
-                      vsgga, segni
+  USE kinds,                ONLY : DP
+  USE funct,                ONLY : dft_is_gradient, gcxc, gcx_spin, &
+                                   gcc_spin, dgcxc, dgcxc_spin
+  USE uspp,                 ONLY : nlcc_any
+  USE gc_lr,                ONLY : grho, gmag, dvxc_rr, dvxc_sr, &
+                                   dvxc_ss, dvxc_s, vsgga, segni
 
   implicit none
   integer :: k, is, ipol, jpol, ir
@@ -42,7 +41,8 @@ subroutine setup_dgc
   real(DP), allocatable :: rhoout(:,:)
   real (DP), parameter :: epsr = 1.0d-6, epsg = 1.0d-10
 
-  if ( .not. dft_is_gradient() ) return
+  IF ( .NOT. dft_is_gradient() ) RETURN
+  
   IF (noncolin.AND.domag) THEN
      allocate (segni (dfftp%nnr))
      allocate (vsgga (dfftp%nnr))
@@ -170,5 +170,6 @@ subroutine setup_dgc
 
   DEALLOCATE(rhoout)
 
-  return
+  RETURN
+
 end subroutine setup_dgc

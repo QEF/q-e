@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2007 Quantum ESPRESSO group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -44,6 +44,7 @@ SUBROUTINE compute_vsgga( rhoout, grho, vsgga )
   !
   !
   IF ( .NOT. dft_is_gradient() ) RETURN
+  
   IF ( .NOT. (noncolin.and.domag) ) &
      call errore('compute_vsgga','routine called in the wrong case',1)
 
