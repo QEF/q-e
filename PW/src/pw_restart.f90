@@ -971,8 +971,6 @@ MODULE pw_restart
       USE scf,           ONLY : rho
       USE lsda_mod,      ONLY : nspin
       USE mp_bands,      ONLY : intra_bgrp_comm
-      USE spin_orb,      ONLY : lforcet 
-      USE control_flags, ONLY : lscf, lbands
       USE mp,            ONLY : mp_sum
       !
       IMPLICIT NONE
@@ -1139,21 +1137,6 @@ MODULE pw_restart
          !
       END SELECT
       !
-
-
-!-- To do Force Theorem calculation (AlexS)
-!
-      IF ( lforcet.and. .NOT.lscf .AND. .NOT.lbands ) THEN
-        IF ( what.eq.'config' ) THEN
-           ierr = 1
-        ELSE 
-          IF (lrho) CALL read_rho( rho, nspin )
-        ENDIF
-        RETURN
-      ENDIF
-!--
-
-
       IF ( .NOT. lheader .AND. .NOT. qexml_version_init) &
          CALL errore( 'pw_readfile', 'qexml version not set', 71 )
       !

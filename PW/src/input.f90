@@ -1373,16 +1373,16 @@ SUBROUTINE iosys()
      wfc_dir = tmp_dir
   ENDIF
   !
-!   IF ( lmovecell ) THEN
   at_old    = at
   omega_old = omega
-!   ENDIF
   !
   ! ... Read atomic positions and unit cell from data file, if needed,
   ! ... overwriting what has just been read before from input
   !
   ierr = 1
-  IF ( startingconfig == 'file' )   ierr = read_config_from_file(nat, at_old,omega_old, lmovecell, at, bg, omega, tau)
+  IF ( startingconfig == 'file' .AND. .NOT. lforcet ) &
+     ierr = read_config_from_file(nat, at_old, omega_old, lmovecell, &
+                                       at, bg, omega, tau)
   !
   ! ... read_config_from_file returns 0 if structure successfully read
   ! ... Atomic positions (tau) must be converted to internal units
