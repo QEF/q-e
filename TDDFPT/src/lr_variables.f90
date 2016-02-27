@@ -38,6 +38,7 @@ MODULE lr_variables
   REAL(kind=dp) :: q1,q2,q3    ! Components of the q-vector in units of 2*pi/a
                                ! in Cartesian coordinates
   CHARACTER(len=30) :: approximation ! Level of approximation in TDDFPT  
+  CHARACTER(LEN=256) :: tmp_dir_lr   ! Name of a temporary directory 
   !
   !------------------------------------------------------------------------!
   !

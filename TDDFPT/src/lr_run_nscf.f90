@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2015 Quantum ESPRESSO group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -19,11 +19,12 @@ SUBROUTINE lr_run_nscf( )
   USE io_files,        ONLY : prefix, tmp_dir, wfc_dir, seqopn
   USE lsda_mod,        ONLY : nspin
   USE control_flags,   ONLY : restart
-  USE control_ph,      ONLY : reduce_io, tmp_dir_phq, ext_restart
+  USE control_ph,      ONLY : reduce_io, ext_restart
   USE save_ph,         ONLY : tmp_dir_save
   USE io_global,       ONLY : stdout
   USE fft_base,        ONLY : dffts
   USE mp_bands,        ONLY : ntask_groups
+  USE lr_variables,    ONLY : tmp_dir_lr
   !
   IMPLICIT NONE
   !
@@ -37,8 +38,8 @@ SUBROUTINE lr_run_nscf( )
   !
   ! From now on, work only on the _ph directory
   !
-  wfc_dir = tmp_dir_phq
-  tmp_dir = tmp_dir_phq
+  wfc_dir = tmp_dir_lr
+  tmp_dir = tmp_dir_lr
   !
   ! Setting the values for the nscf run
   !

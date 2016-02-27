@@ -48,7 +48,7 @@ PROGRAM lr_calculate_spectrum
   REAL(kind=dp) :: omegmax,delta_omeg
   CHARACTER(len=60) :: extrapolation, td
   CHARACTER(len=256) :: outdir, filename, filename1, &
-                      & eign_file, tmp_dir_phq
+                      & eign_file, tmp_dir_lr
   INTEGER :: units
   LOGICAL :: eels
   !
@@ -171,12 +171,12 @@ PROGRAM lr_calculate_spectrum
      outdir = trimcheck(outdir)
      tmp_dir = outdir
      !
-     ! EELS: Read data from the directory _ph
+     ! EELS: Read data from the directory tmp_dir_lr
      !
      IF (eels) THEN
         !
-        tmp_dir_phq = TRIM (tmp_dir) // '_ph' // TRIM(int_to_char(my_image_id)) //'/'
-        tmp_dir = tmp_dir_phq
+        tmp_dir_lr = TRIM (tmp_dir) // 'tmp_eels/'
+        tmp_dir = tmp_dir_lr
         !
      ENDIF   
      !

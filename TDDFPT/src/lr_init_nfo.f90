@@ -27,7 +27,7 @@ SUBROUTINE lr_init_nfo()
   USE wvfct,                ONLY : nbnd, et, igk, npw, g2kin
   USE realus,               ONLY : real_space
   USE lr_variables,         ONLY : lr_verbosity, eels, nwordd0psi, &
-                                  & nwordrestart, restart, size_evc
+                                   nwordrestart, restart, size_evc, tmp_dir_lr
   USE io_global,            ONLY : stdout
   USE constants,            ONLY : pi, tpi, degspin, eps8
   USE noncollin_module,     ONLY : noncolin, npol
@@ -38,7 +38,6 @@ SUBROUTINE lr_init_nfo()
   USE ener,                 ONLY : ef, ef_up, ef_dw
   USE ktetra,               ONLY : ltetra
   USE lsda_mod,             ONLY : lsda, current_spin, nspin, isk
-  USE control_ph,           ONLY : tmp_dir_phq
   USE wvfct,                ONLY : npwx, wg
   USE gvecw,                ONLY : gcutw
   USE io_files,             ONLY : iunigk, seqopn, tmp_dir, prefix, &
@@ -128,7 +127,7 @@ SUBROUTINE lr_init_nfo()
      !
      iuwfc = 21
      lrwfc = 2 * nbnd * npwx * npol
-     IF (restart) wfc_dir = tmp_dir_phq
+     IF (restart) wfc_dir = tmp_dir_lr
      CALL diropn (iuwfc, 'wfc', lrwfc, exst)
      IF (.NOT.exst) THEN
         CALL errore ('lr_init_nfo', 'file '//trim(prefix)//'.wfc not found', 1)

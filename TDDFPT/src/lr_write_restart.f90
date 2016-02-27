@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2015 Quantum ESPRESSO group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -21,14 +21,13 @@ SUBROUTINE lr_write_restart()
                                    LR_polarization, LR_iteration, n_ipol,F,project,&
                                    evc1,evc1_new,evc1_old,iunrestart, nwordrestart, &
                                    nbnd_total, charge_response,lr_verbosity,&
-                                   bgz_suffix, eels, q1, q2, q3, sum_rule
+                                   bgz_suffix, eels, q1, q2, q3, sum_rule, tmp_dir_lr
   USE charg_resp,           ONLY : resonance_condition, rho_1_tot, rho_1_tot_im
   USE wvfct,                ONLY : nbnd, npwx, npw
   USE fft_base,             ONLY : dfftp
   USE io_global,            ONLY : ionode, stdout
   USE klist,                ONLY : nks, nelec
   USE noncollin_module,     ONLY : nspin_mag, noncolin
-  USE control_ph,           ONLY : tmp_dir_phq
   use lsda_mod,             only : nspin
   USE cell_base,            ONLY : alat, omega
   !
@@ -54,7 +53,7 @@ SUBROUTINE lr_write_restart()
   ! 
   IF ( n_ipol /= 1 ) pol_index = LR_polarization
   !
-  IF (eels) tmp_dir = tmp_dir_phq
+  IF (eels) tmp_dir = tmp_dir_lr
   !
 #ifdef __MPI
   IF (ionode) THEN

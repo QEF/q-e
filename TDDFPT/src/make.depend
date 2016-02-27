@@ -426,7 +426,6 @@ lr_readin.o : ../../Modules/plugin_flags.o
 lr_readin.o : ../../Modules/recvec.o
 lr_readin.o : ../../Modules/uspp.o
 lr_readin.o : ../../Modules/xml_io_base.o
-lr_readin.o : ../../PHonon/PH/phcom.o
 lr_readin.o : ../../PHonon/PH/save_ph_input.o
 lr_readin.o : ../../PW/src/esm.o
 lr_readin.o : ../../PW/src/exx.o
@@ -467,6 +466,7 @@ lr_run_nscf.o : ../../PHonon/PH/phcom.o
 lr_run_nscf.o : ../../PHonon/PH/save_ph_input.o
 lr_run_nscf.o : ../../PW/src/atomic_wfc_mod.o
 lr_run_nscf.o : ../../PW/src/pwcom.o
+lr_run_nscf.o : lr_variables.o
 lr_set_boxes_density.o : ../../Modules/fft_base.o
 lr_set_boxes_density.o : ../../Modules/io_global.o
 lr_set_boxes_density.o : ../../Modules/kind.o
@@ -558,7 +558,6 @@ lr_write_restart.o : ../../Modules/io_files.o
 lr_write_restart.o : ../../Modules/io_global.o
 lr_write_restart.o : ../../Modules/kind.o
 lr_write_restart.o : ../../Modules/noncol.o
-lr_write_restart.o : ../../PHonon/PH/phcom.o
 lr_write_restart.o : ../../PW/src/pwcom.o
 lr_write_restart.o : lr_charg_resp.o
 lr_write_restart.o : lr_variables.o

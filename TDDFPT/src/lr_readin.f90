@@ -54,7 +54,6 @@ SUBROUTINE lr_readin
   USE esm,                 ONLY : do_comp_esm
   USE qpoint,              ONLY : xq
   USE save_ph,             ONLY : tmp_dir_save
-  USE control_ph,          ONLY : tmp_dir_phq
   USE xml_io_base,         ONLY : create_directory
   USE io_rho_xml,          ONLY : write_rho
   USE noncollin_module,    ONLY : noncolin
@@ -362,19 +361,18 @@ SUBROUTINE lr_readin
   !
   ! EELS: Create a temporary directory for nscf files, and for
   ! writing of the turboEELS restart files.
-  ! TODO: Try to change the name "_ph" to something like "_eels".
   !
   IF (eels) THEN
      tmp_dir_save = tmp_dir
-     tmp_dir_phq = TRIM (tmp_dir) // '_ph' // TRIM(int_to_char(my_image_id)) //'/'
-     CALL create_directory(tmp_dir_phq)
+     tmp_dir_lr = TRIM (tmp_dir) // 'tmp_eels/'
+     CALL create_directory(tmp_dir_lr)
   ENDIF
   !
   ! EELS: If restart=.true. read the initial information from the file
   ! where the turboEELS code saved its own data (including the data about
   ! the nscf calculation)
   !
-  IF (eels .AND. restart) tmp_dir = tmp_dir_phq
+  IF (eels .AND. restart) tmp_dir = tmp_dir_lr
   !
   ! Now PWSCF XML file will be read, and various initialisations will be done.
   ! I. Timrov: Allocate space for PW scf variables (EELS: for PW nscf files,
@@ -392,7 +390,7 @@ SUBROUTINE lr_readin
      !
      ! Specify the temporary derictory.
      !
-     tmp_dir = tmp_dir_phq
+     tmp_dir = tmp_dir_lr
      !
      ! Copy the scf-charge-density to the tmp_dir (PH/check_initial_status.f90).
      ! Needed for the nscf calculation.
