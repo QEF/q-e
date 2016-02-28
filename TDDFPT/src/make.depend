@@ -78,7 +78,7 @@ lr_apply_liouvillian_eels.o : ../../Modules/noncol.o
 lr_apply_liouvillian_eels.o : ../../Modules/recvec.o
 lr_apply_liouvillian_eels.o : ../../Modules/uspp.o
 lr_apply_liouvillian_eels.o : ../../Modules/wavefunctions.o
-lr_apply_liouvillian_eels.o : ../../PHonon/PH/phcom.o
+lr_apply_liouvillian_eels.o : ../../PW/src/buffers.o
 lr_apply_liouvillian_eels.o : ../../PW/src/pwcom.o
 lr_apply_liouvillian_eels.o : lr_variables.o
 lr_calc_dens.o : ../../FFTXlib/fft_interfaces.o
@@ -106,6 +106,7 @@ lr_calc_dens.o : lr_variables.o
 lr_calc_dens_eels.o : ../../LR_Modules/lrcom.o
 lr_calc_dens_eels.o : ../../Modules/fft_base.o
 lr_calc_dens_eels.o : ../../Modules/gvecw.o
+lr_calc_dens_eels.o : ../../Modules/io_files.o
 lr_calc_dens_eels.o : ../../Modules/ions_base.o
 lr_calc_dens_eels.o : ../../Modules/kind.o
 lr_calc_dens_eels.o : ../../Modules/mp.o
@@ -113,11 +114,12 @@ lr_calc_dens_eels.o : ../../Modules/mp_global.o
 lr_calc_dens_eels.o : ../../Modules/recvec.o
 lr_calc_dens_eels.o : ../../Modules/uspp.o
 lr_calc_dens_eels.o : ../../Modules/wavefunctions.o
-lr_calc_dens_eels.o : ../../PHonon/PH/phcom.o
+lr_calc_dens_eels.o : ../../PW/src/buffers.o
 lr_calc_dens_eels.o : ../../PW/src/pwcom.o
 lr_calc_dens_eels_nc.o : ../../LR_Modules/lrcom.o
 lr_calc_dens_eels_nc.o : ../../Modules/fft_base.o
 lr_calc_dens_eels_nc.o : ../../Modules/gvecw.o
+lr_calc_dens_eels_nc.o : ../../Modules/io_files.o
 lr_calc_dens_eels_nc.o : ../../Modules/ions_base.o
 lr_calc_dens_eels_nc.o : ../../Modules/kind.o
 lr_calc_dens_eels_nc.o : ../../Modules/mp.o
@@ -126,7 +128,7 @@ lr_calc_dens_eels_nc.o : ../../Modules/noncol.o
 lr_calc_dens_eels_nc.o : ../../Modules/recvec.o
 lr_calc_dens_eels_nc.o : ../../Modules/uspp.o
 lr_calc_dens_eels_nc.o : ../../Modules/wavefunctions.o
-lr_calc_dens_eels_nc.o : ../../PHonon/PH/phcom.o
+lr_calc_dens_eels_nc.o : ../../PW/src/buffers.o
 lr_calc_dens_eels_nc.o : ../../PW/src/pwcom.o
 lr_charg_resp.o : ../../LR_Modules/lrcom.o
 lr_charg_resp.o : ../../Modules/becmod.o
@@ -263,7 +265,7 @@ lr_dvpsi_eels.o : ../../Modules/noncol.o
 lr_dvpsi_eels.o : ../../Modules/recvec.o
 lr_dvpsi_eels.o : ../../Modules/uspp.o
 lr_dvpsi_eels.o : ../../Modules/wavefunctions.o
-lr_dvpsi_eels.o : ../../PHonon/PH/phcom.o
+lr_dvpsi_eels.o : ../../PW/src/buffers.o
 lr_dvpsi_eels.o : ../../PW/src/pwcom.o
 lr_eels_main.o : ../../Modules/check_stop.o
 lr_eels_main.o : ../../Modules/control_flags.o
@@ -302,6 +304,7 @@ lr_init_nfo.o : ../../LR_Modules/lrcom.o
 lr_init_nfo.o : ../../Modules/becmod.o
 lr_init_nfo.o : ../../Modules/cell_base.o
 lr_init_nfo.o : ../../Modules/constants.o
+lr_init_nfo.o : ../../Modules/control_flags.o
 lr_init_nfo.o : ../../Modules/fft_base.o
 lr_init_nfo.o : ../../Modules/gvecw.o
 lr_init_nfo.o : ../../Modules/io_files.o
@@ -312,7 +315,7 @@ lr_init_nfo.o : ../../Modules/noncol.o
 lr_init_nfo.o : ../../Modules/recvec.o
 lr_init_nfo.o : ../../Modules/uspp.o
 lr_init_nfo.o : ../../Modules/wavefunctions.o
-lr_init_nfo.o : ../../PHonon/PH/phcom.o
+lr_init_nfo.o : ../../PW/src/buffers.o
 lr_init_nfo.o : ../../PW/src/pwcom.o
 lr_init_nfo.o : ../../PW/src/realus.o
 lr_init_nfo.o : lr_variables.o
@@ -580,5 +583,6 @@ stop_lr.o : ../../Modules/noncol.o
 stop_lr.o : ../../Modules/parallel_include.o
 stop_lr.o : ../../Modules/plugin_flags.o
 stop_lr.o : ../../PHonon/PH/phcom.o
+stop_lr.o : ../../PW/src/buffers.o
 stop_lr.o : ../../PW/src/pwcom.o
 stop_lr.o : lr_variables.o
