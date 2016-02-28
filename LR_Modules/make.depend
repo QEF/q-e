@@ -195,6 +195,7 @@ set_int3_nc.o : ../Modules/noncol.o
 set_int3_nc.o : ../Modules/uspp.o
 set_int3_nc.o : ../PW/src/pwcom.o
 set_int3_nc.o : lrcom.o
+setqmod.o : ../Modules/kind.o
 setup_alpha_pv.o : ../Modules/kind.o
 setup_alpha_pv.o : ../Modules/mp.o
 setup_alpha_pv.o : ../Modules/mp_pools.o

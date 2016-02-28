@@ -581,7 +581,6 @@ stop_lr.o : ../../Modules/mp_global.o
 stop_lr.o : ../../Modules/noncol.o
 stop_lr.o : ../../Modules/parallel_include.o
 stop_lr.o : ../../Modules/plugin_flags.o
-stop_lr.o : ../../PHonon/PH/phcom.o
 stop_lr.o : ../../PW/src/buffers.o
 stop_lr.o : ../../PW/src/pwcom.o
 stop_lr.o : lr_variables.o

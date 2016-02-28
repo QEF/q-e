@@ -126,7 +126,6 @@ set_irr_nosym.o \
 set_irr_sym.o \
 set_small_group_of_q.o \
 setlocq.o \
-setqmod.o \
 sgam_ph.o \
 solve_e.o \
 solve_e_fpol.o \

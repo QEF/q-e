@@ -1275,7 +1275,6 @@ set_small_group_of_q.o : ../../Modules/paw_variables.o
 set_small_group_of_q.o : ../../PW/src/symm_base.o
 setlocq.o : ../../Modules/constants.o
 setlocq.o : ../../Modules/kind.o
-setqmod.o : ../../Modules/kind.o
 sgam_ph.o : ../../Modules/kind.o
 solve_e.o : ../../FFTXlib/fft_parallel.o
 solve_e.o : ../../LR_Modules/lrcom.o
