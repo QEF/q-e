@@ -308,8 +308,6 @@ lr_init_nfo.o : ../../Modules/io_files.o
 lr_init_nfo.o : ../../Modules/io_global.o
 lr_init_nfo.o : ../../Modules/ions_base.o
 lr_init_nfo.o : ../../Modules/kind.o
-lr_init_nfo.o : ../../Modules/mp.o
-lr_init_nfo.o : ../../Modules/mp_global.o
 lr_init_nfo.o : ../../Modules/noncol.o
 lr_init_nfo.o : ../../Modules/recvec.o
 lr_init_nfo.o : ../../Modules/uspp.o
@@ -426,7 +424,6 @@ lr_readin.o : ../../Modules/plugin_flags.o
 lr_readin.o : ../../Modules/recvec.o
 lr_readin.o : ../../Modules/uspp.o
 lr_readin.o : ../../Modules/xml_io_base.o
-lr_readin.o : ../../PHonon/PH/save_ph_input.o
 lr_readin.o : ../../PW/src/esm.o
 lr_readin.o : ../../PW/src/exx.o
 lr_readin.o : ../../PW/src/io_rho_xml.o
@@ -460,12 +457,8 @@ lr_restart.o : lr_variables.o
 lr_run_nscf.o : ../../Modules/control_flags.o
 lr_run_nscf.o : ../../Modules/fft_base.o
 lr_run_nscf.o : ../../Modules/io_files.o
-lr_run_nscf.o : ../../Modules/io_global.o
 lr_run_nscf.o : ../../Modules/mp_bands.o
-lr_run_nscf.o : ../../PHonon/PH/phcom.o
-lr_run_nscf.o : ../../PHonon/PH/save_ph_input.o
 lr_run_nscf.o : ../../PW/src/atomic_wfc_mod.o
-lr_run_nscf.o : ../../PW/src/pwcom.o
 lr_run_nscf.o : lr_variables.o
 lr_set_boxes_density.o : ../../Modules/fft_base.o
 lr_set_boxes_density.o : ../../Modules/io_global.o
@@ -476,7 +469,6 @@ lr_setup_nscf.o : ../../LR_Modules/lrcom.o
 lr_setup_nscf.o : ../../Modules/cell_base.o
 lr_setup_nscf.o : ../../Modules/constants.o
 lr_setup_nscf.o : ../../Modules/control_flags.o
-lr_setup_nscf.o : ../../Modules/io_global.o
 lr_setup_nscf.o : ../../Modules/ions_base.o
 lr_setup_nscf.o : ../../Modules/kind.o
 lr_setup_nscf.o : ../../Modules/mp_pools.o

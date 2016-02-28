@@ -15,29 +15,21 @@ SUBROUTINE lr_init_nfo()
   !  2) Initialization of ikks, ikqs, and nksq.
   !  3) EELS: Calculate phases associated with a q vector.
   !  4) Compute the number of occupied bands for each k point.
-  !  5) Computes alpha_pv (needed in PH/orthogonalize.f90 when lgauss=.true.)
-  !
-  ! Created by Osman Baris Malcioglu (2009)
-  ! Modified by Iurii Timrov (2013)
+  !  5) Computes alpha_pv (needed by orthogonalize.f90 when lgauss=.true.)
   !
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, tau
-  USE klist,                ONLY : nks,degauss,lgauss,ngauss,xk,wk,ngk,&
-                                   igk_k,nelec, two_fermi_energies, nelup, neldw
-  USE wvfct,                ONLY : nbnd, et, igk, npw, g2kin
+  USE klist,                ONLY : nks,xk,ngk,igk_k
+  USE wvfct,                ONLY : nbnd, igk, npw, g2kin
   USE realus,               ONLY : real_space
   USE lr_variables,         ONLY : lr_verbosity, eels, nwordd0psi, &
                                    nwordrestart, restart, size_evc, tmp_dir_lr
   USE io_global,            ONLY : stdout
-  USE constants,            ONLY : pi, tpi, degspin, eps8
-  USE noncollin_module,     ONLY : noncolin, npol
-  USE mp,                   ONLY : mp_max, mp_min
-  USE mp_global,            ONLY : inter_pool_comm
+  USE constants,            ONLY : tpi, eps8
+  USE noncollin_module,     ONLY : npol
   USE gvect,                ONLY : ngm, g
   USE cell_base,            ONLY : at, bg, omega
-  USE ener,                 ONLY : ef, ef_up, ef_dw
-  USE ktetra,               ONLY : ltetra
-  USE lsda_mod,             ONLY : lsda, current_spin, nspin, isk
+  USE lsda_mod,             ONLY : current_spin, nspin
   USE wvfct,                ONLY : npwx, wg
   USE gvecw,                ONLY : gcutw
   USE io_files,             ONLY : iunigk, seqopn, tmp_dir, prefix, &
@@ -48,9 +40,8 @@ SUBROUTINE lr_init_nfo()
   USE uspp,                 ONLY : vkb, okvan, nkb
   USE wavefunctions_module, ONLY : evc
   USE becmod,               ONLY : calbec, allocate_bec_type
-
   USE lrus,                 ONLY : becp1
-  USE control_lr,           ONLY : alpha_pv, nbnd_occ
+  USE control_lr,           ONLY : alpha_pv
   USE qpoint,               ONLY : xq, npwq, igkq, ikks, ikqs, nksq, eigqts
   USE eqv,                  ONLY : evq
   !
@@ -58,9 +49,8 @@ SUBROUTINE lr_init_nfo()
   !
   ! local variables
   !
-  REAL(kind=DP) :: small, emin, emax, xmax, fac, targ, arg
+  REAL(kind=DP) :: arg
   INTEGER       :: i, ik, ibnd, ipol, ikk, ikq, ios, isym, na
-  REAL(DP), ALLOCATABLE :: wg_up(:,:), wg_dw(:,:)
   LOGICAL       :: exst ! logical variable to check file existence
   !
   ! 1) Optical case: initialize igk_k and ngk
@@ -182,79 +172,11 @@ SUBROUTINE lr_init_nfo()
      !
   ENDIF
   !
-  ! 4) Compute the number of occupied bands for each k point (PH/phq_setup.f90)
+  ! 4) Compute the number of occupied bands for each k point
   !
-  !if (.not. allocated (nbnd_occ) allocate( nbnd_occ (nks) )
+  CALL setup_nbnd_occ()
   !
-  IF (lgauss) THEN
-     !
-     ! discard conduction bands such that w0gauss(x,n) < small
-     !
-     ! hint
-     !   small = 1.0333492677046d-2  ! corresponds to 2 gaussian sigma
-     !   small = 6.9626525973374d-5  ! corresponds to 3 gaussian sigma
-     !   small = 6.3491173359333d-8  ! corresponds to 4 gaussian sigma
-     !
-     small = 6.9626525973374d-5
-     !
-     ! - appropriate limit for gaussian broadening (used for all ngauss)
-     !
-     xmax = sqrt ( - log (sqrt (pi) * small) )
-     !
-     ! - appropriate limit for Fermi-Dirac
-     !
-     IF (ngauss== - 99) THEN
-        fac = 1.d0 / sqrt (small)
-        xmax = 2.d0 * log (0.5d0 * (fac + sqrt (fac * fac - 4.d0) ) )
-     ENDIF
-     targ = ef + xmax * degauss
-     DO ik = 1, nks
-        DO ibnd = 1, nbnd
-           IF (et (ibnd, ik) <targ) nbnd_occ (ik) = ibnd
-        ENDDO
-        IF (nbnd_occ (ik) ==nbnd) WRITE( stdout, '(5x,/,&
-             &"Possibly too few bands at point ", i4,3f10.5)') &
-             ik,  (xk (ipol, ik) , ipol = 1, 3)
-     ENDDO
-  ELSEIF (ltetra) THEN
-     CALL errore('lr_init_nfo','tddfpt + tetrahedra not implemented', 1)
-  ELSE
-     IF (noncolin) THEN
-        nbnd_occ = nint (nelec)
-     ELSE
-        IF ( two_fermi_energies ) THEN
-           !
-           ALLOCATE(wg_up(nbnd,nks))
-           ALLOCATE(wg_dw(nbnd,nks))
-           CALL iweights( nks, wk, nbnd, nelup, et, ef_up, wg_up, 1, isk )
-           CALL iweights( nks, wk, nbnd, neldw, et, ef_dw, wg_dw, 2, isk )
-           DO ik = 1, nks
-              DO ibnd=1,nbnd
-                 IF (isk(ik)==1) THEN
-                    IF (wg_up(ibnd,ik) > 0.0_DP) nbnd_occ (ik) = nbnd_occ(ik)+1
-                 ELSE
-                    IF (wg_dw(ibnd,ik) > 0.0_DP) nbnd_occ (ik) = nbnd_occ(ik)+1
-                 ENDIF
-              ENDDO
-           ENDDO
-           !
-           ! the following line to prevent NaN in Ef
-           !
-           ef = ( ef_up + ef_dw ) / 2.0_dp
-           !
-           DEALLOCATE(wg_up)
-           DEALLOCATE(wg_dw)
-        ELSE
-           IF (lsda) call infomsg('lr_init_nfo', &
-                                 'occupation numbers probably wrong')
-           DO ik = 1, nks
-              nbnd_occ (ik) = nint (nelec) / degspin
-           ENDDO
-        ENDIF
-     ENDIF
-  ENDIF
-  !
-  ! 5) Computes alpha_pv
+  ! 5) Compute alpha_pv
   !
   IF (eels) THEN
      !
@@ -262,38 +184,7 @@ SUBROUTINE lr_init_nfo()
      !
   ELSE
      !
-     emin = et (1, 1)
-     DO ik = 1, nks
-        DO ibnd = 1, nbnd
-           emin = min (emin, et (ibnd, ik) )
-        ENDDO
-     ENDDO
-     !
-#ifdef __MPI
-  ! find the minimum across pools
-  CALL mp_min( emin, inter_pool_comm )
-#endif
-     !
-     IF (lgauss) THEN
-        emax = targ
-        alpha_pv = emax - emin
-     ELSE
-        emax = et (1, 1)
-        DO ik = 1, nks
-           DO ibnd = 1, nbnd_occ(ik)
-              emax = max (emax, et (ibnd, ik) )
-           ENDDO
-        ENDDO
-        !
-#ifdef __MPI
-     ! find the maximum across pools
-     CALL mp_max( emax, inter_pool_comm )
-#endif
-        !
-        alpha_pv = 2.d0 * (emax - emin)
-     ENDIF
-     ! avoid zero value for alpha_pv
-     alpha_pv = max (alpha_pv, 1.0d-2)
+     CALL setup_alpha_pv()
      !
   ENDIF
   !

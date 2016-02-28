@@ -53,7 +53,6 @@ SUBROUTINE lr_readin
   USE martyna_tuckerman,   ONLY : do_comp_mt
   USE esm,                 ONLY : do_comp_esm
   USE qpoint,              ONLY : xq
-  USE save_ph,             ONLY : tmp_dir_save
   USE xml_io_base,         ONLY : create_directory
   USE io_rho_xml,          ONLY : write_rho
   USE noncollin_module,    ONLY : noncolin
@@ -363,7 +362,6 @@ SUBROUTINE lr_readin
   ! writing of the turboEELS restart files.
   !
   IF (eels) THEN
-     tmp_dir_save = tmp_dir
      tmp_dir_lr = TRIM (tmp_dir) // 'tmp_eels/'
      CALL create_directory(tmp_dir_lr)
   ENDIF

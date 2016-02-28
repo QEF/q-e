@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2015 Quantum ESPRESSO group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -21,7 +21,6 @@ SUBROUTINE lr_setup_nscf ()
   USE kinds,              ONLY : DP
   USE constants,          ONLY : eps8
   USE parameters,         ONLY : npk
-  USE io_global,          ONLY : stdout
   USE constants,          ONLY : pi, degspin
   USE cell_base,          ONLY : at, bg, alat, tpiba, tpiba2, ibrav, omega
   USE ions_base,          ONLY : nat, tau, ityp, zv
@@ -40,9 +39,8 @@ SUBROUTINE lr_setup_nscf ()
   USE start_k,            ONLY : nks_start, xk_start, wk_start, &
                                  nk1, nk2, nk3, k1, k2, k3
   USE uspp_param,         ONLY : n_atom_wfc
-
-  USE lr_symm_base, ONLY : nsymq, minus_q
-  USE qpoint,       ONLY : xq
+  USE lr_symm_base,       ONLY : nsymq, minus_q
+  USE qpoint,             ONLY : xq
   ! 
   IMPLICIT NONE
   !

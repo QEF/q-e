@@ -966,7 +966,6 @@ phq_recover.o : phcom.o
 phq_recover.o : ramanm.o
 phq_setup.o : ../../LR_Modules/lrcom.o
 phq_setup.o : ../../Modules/cell_base.o
-phq_setup.o : ../../Modules/constants.o
 phq_setup.o : ../../Modules/control_flags.o
 phq_setup.o : ../../Modules/fft_base.o
 phq_setup.o : ../../Modules/funct.o
@@ -974,7 +973,6 @@ phq_setup.o : ../../Modules/io_files.o
 phq_setup.o : ../../Modules/io_global.o
 phq_setup.o : ../../Modules/ions_base.o
 phq_setup.o : ../../Modules/kind.o
-phq_setup.o : ../../Modules/mp.o
 phq_setup.o : ../../Modules/mp_pools.o
 phq_setup.o : ../../Modules/noncol.o
 phq_setup.o : ../../Modules/recvec.o

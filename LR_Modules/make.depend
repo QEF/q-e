@@ -181,6 +181,11 @@ set_int3_nc.o : ../Modules/noncol.o
 set_int3_nc.o : ../Modules/uspp.o
 set_int3_nc.o : ../PW/src/pwcom.o
 set_int3_nc.o : lrcom.o
+setup_alpha_pv.o : ../Modules/kind.o
+setup_alpha_pv.o : ../Modules/mp.o
+setup_alpha_pv.o : ../Modules/mp_pools.o
+setup_alpha_pv.o : ../PW/src/pwcom.o
+setup_alpha_pv.o : lrcom.o
 setup_dgc.o : ../FFTXlib/fft_interfaces.o
 setup_dgc.o : ../Modules/constants.o
 setup_dgc.o : ../Modules/fft_base.o
@@ -200,6 +205,12 @@ setup_dmuxc.o : ../Modules/noncol.o
 setup_dmuxc.o : ../PW/src/pwcom.o
 setup_dmuxc.o : ../PW/src/scf_mod.o
 setup_dmuxc.o : lrcom.o
+setup_nbnd_occ.o : ../Modules/constants.o
+setup_nbnd_occ.o : ../Modules/io_global.o
+setup_nbnd_occ.o : ../Modules/kind.o
+setup_nbnd_occ.o : ../Modules/noncol.o
+setup_nbnd_occ.o : ../PW/src/pwcom.o
+setup_nbnd_occ.o : lrcom.o
 setup_nscf.o : ../Modules/cell_base.o
 setup_nscf.o : ../Modules/constants.o
 setup_nscf.o : ../Modules/control_flags.o

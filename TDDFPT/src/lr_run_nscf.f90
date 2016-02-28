@@ -14,14 +14,9 @@ SUBROUTINE lr_run_nscf( )
   !
   ! Created by Iurii Timrov (2013)
   !
-  USE control_flags,   ONLY : conv_ions, twfcollect
+  USE control_flags,   ONLY : conv_ions, twfcollect, restart
   USE basis,           ONLY : starting_wfc, starting_pot, startingconfig
   USE io_files,        ONLY : prefix, tmp_dir, wfc_dir, seqopn
-  USE lsda_mod,        ONLY : nspin
-  USE control_flags,   ONLY : restart
-  USE control_ph,      ONLY : reduce_io, ext_restart
-  USE save_ph,         ONLY : tmp_dir_save
-  USE io_global,       ONLY : stdout
   USE fft_base,        ONLY : dffts
   USE mp_bands,        ONLY : ntask_groups
   USE lr_variables,    ONLY : tmp_dir_lr
@@ -64,19 +59,17 @@ SUBROUTINE lr_run_nscf( )
   !
   CALL non_scf()
   !
-  IF (.not.reduce_io) THEN
-     !
-     twfcollect = .FALSE.
-     CALL punch( 'all' ) 
-     !
-  ENDIF
+  ! Save information for further processing
+  !
+  twfcollect = .FALSE.
+  CALL punch( 'all' ) 
   !
   CALL seqopn( 4, 'restart', 'UNFORMATTED', exst )
   CLOSE( UNIT = 4, STATUS = 'DELETE' )
   !
   CALL close_files(.TRUE.)
   !   
-  !  PWscf has run with task groups if available, but in the TDDFPT (phonon) 
+  !  PWscf has run with task groups if available, but in the TDDFPT 
   !  they are used only in some places. In that case it is activated.
   !
   IF (ntask_groups > 1) dffts%have_task_groups = .FALSE.
