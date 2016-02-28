@@ -986,7 +986,6 @@ MODULE pw_restart
                             lsymm, lrho, lefield, ldim, &
                             lef, lexx, lesm
       !
-      LOGICAL            :: need_qexml
       INTEGER            :: tmp
       !
       ierr = 0
@@ -1000,10 +999,7 @@ MODULE pw_restart
       CALL errore( 'pw_readfile', &
                    'no free units to read wavefunctions', ierr )
       !
-      need_qexml = .FALSE.
-      !
       lheader = .NOT. qexml_version_init
-      IF (lheader) need_qexml = .TRUE.
       !
       ldim    = .FALSE.
       lcell   = .FALSE.
@@ -1027,30 +1023,25 @@ MODULE pw_restart
       CASE( 'header' )
          !
          lheader = .TRUE.
-         need_qexml = .TRUE.
          !
       CASE( 'dim' )
          !
          ldim = .TRUE.
          lbz  = .TRUE.
-         need_qexml = .TRUE.
          !
       CASE( 'pseudo' )
          !
          lions = .TRUE.
-         need_qexml = .TRUE.
          !
       CASE( 'config' )
          !
          lcell = .TRUE.
          lions = .TRUE.
-         need_qexml = .TRUE.
          !
       CASE( 'wave' )
          !
          lpw   = .TRUE.
          lwfc  = .TRUE.
-         need_qexml = .TRUE.
          !
       CASE( 'nowavenobs' )
          !
@@ -1064,8 +1055,7 @@ MODULE pw_restart
          lbz     = .TRUE.
          lsymm   = .TRUE.
          lefield = .TRUE.
-         need_qexml = .TRUE.
-
+         !
       CASE( 'nowave' )
          !
          lcell   = .TRUE.
@@ -1079,7 +1069,6 @@ MODULE pw_restart
          lbs     = .TRUE.
          lsymm   = .TRUE.
          lefield = .TRUE.
-         need_qexml = .TRUE.
          !
       CASE( 'all' )
          !
@@ -1096,7 +1085,6 @@ MODULE pw_restart
          lsymm   = .TRUE.
          lefield = .TRUE.
          lrho    = .TRUE.
-         need_qexml = .TRUE.
          !
       CASE( 'reset' )
          !
@@ -1116,17 +1104,14 @@ MODULE pw_restart
       CASE( 'ef' )
          !
          lef        = .TRUE.
-         need_qexml = .TRUE.
          !
       CASE( 'exx' )
          !
          lexx       = .TRUE.
-         need_qexml = .TRUE.
          !
       CASE( 'esm' )
          !
          lesm       = .TRUE.
-         need_qexml = .TRUE.
          !
       CASE DEFAULT
          !
@@ -1137,7 +1122,7 @@ MODULE pw_restart
       IF ( .NOT. lheader .AND. .NOT. qexml_version_init) &
          CALL errore( 'pw_readfile', 'qexml version not set', 71 )
       !
-      IF (  ionode .AND. need_qexml ) THEN
+      IF (  ionode ) THEN
          !
          CALL qexml_init( iunpun )
          CALL qexml_openfile( TRIM( dirname ) // '/' // TRIM( xmlpun ), &
@@ -1317,7 +1302,7 @@ MODULE pw_restart
          !
       END IF
       !
-      IF (ionode .AND. need_qexml) THEN
+      IF (ionode) THEN
          !
          CALL qexml_closefile( 'read', IERR=ierr)
          !
@@ -1333,7 +1318,7 @@ MODULE pw_restart
       RETURN
       !
       ! uncomment to continue execution after an error occurs
-      ! 100 IF (ionode .AND. need_qexml) THEN
+      ! 100 IF (ionode) THEN
       !        CALL qexml_closefile( 'read', IERR=tmp)
       !     ENDIF
       !     RETURN

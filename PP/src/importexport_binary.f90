@@ -77,7 +77,6 @@ SUBROUTINE impexp ()
   USE io_global, ONLY : ionode, ionode_id
   USE mp,        ONLY : mp_bcast
   USE mp_world,  ONLY : world_comm
-  USE pw_restart,    ONLY : pw_readfile
   USE io_rho_xml,    ONLY : read_rho, write_rho
   USE scf,           ONLY : rho
   USE lsda_mod,      ONLY : nspin
