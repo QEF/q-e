@@ -15,6 +15,9 @@ SUBROUTINE lr_dvpsi_e(ik,ipol,dvpsi)
   ! dvpsi is COMPUTED and WRITTEN on file (vkb,evc,igk must be set) 
   ! OBM:                  ^ This is now handled elesewhere
   !
+  ! See J. Tobik and A. Dal Corso, JCP 120, 9934 (2004)
+  ! for the details of the theory implemented in this routine.
+  !
   ! Modified by Osman Baris Malcioglu (2009)
   ! Rebased wrt PHONON routines. S J Binnie (2011)
   !

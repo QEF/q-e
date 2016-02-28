@@ -711,13 +711,13 @@ SUBROUTINE sm1_psiq_nc()
     INTEGER, ALLOCATABLE :: igkq_(:)
     COMPLEX(DP), ALLOCATABLE :: ps(:,:,:)
     !
-    CALL errore( 'sm1_psiq_nc', 'USPP + noncolin is not implemented', 1 )
-    !
     ! Initialize spsi : spsi = psi
     !
     CALL ZCOPY( lda*npol*m, psi, 1, spsi, 1 )
     !
     IF ( nkb == 0 .OR. .NOT. okvan ) RETURN
+    !
+    CALL errore( 'sm1_psiq_nc', 'USPP + noncolin is not implemented', 1 )
     !
     ALLOCATE(igkq_(lda))
     !

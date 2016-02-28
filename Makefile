@@ -84,7 +84,7 @@ ph : bindir libfft libla mods libs pw
 neb : bindir libfft libla mods libs pw
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-tddfpt : bindir libfft libla mods libs pw ph
+tddfpt : bindir libfft libla mods libs pw
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
 pp : bindir libfft libla mods libs pw

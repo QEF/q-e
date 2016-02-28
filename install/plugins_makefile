@@ -451,6 +451,8 @@ tddfpt_clean:
 	if test -d ../TDDFPT; then (cd ../TDDFPT; \
 	$(MAKE) clean); fi
 	rm -f ../bin/turbo_lanczos.x
+	rm -f ../bin/turbo_davidson.x
+	rm -f ../bin/turbo_eels.x
 	rm -f ../bin/turbo_spectrum.x
 	rm -rf ./make-tddfpt
 
