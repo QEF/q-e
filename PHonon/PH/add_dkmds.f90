@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2007 Quantum ESPRESSO group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -27,12 +27,11 @@ subroutine add_dkmds(kpoint, uact, jpol, dvkb)
   USE wavefunctions_module,    ONLY : evc
   USE uspp_param, only: nh
   USE becmod, ONLY: calbec
-  USE phus,   ONLY : alphap, dpqq, dpqq_so
+  USE phus,   ONLY : alphap
 
-  USE qpoint, ONLY : igkq, npwq
-  USE lrus,   ONLY : becp1
-  USE eqv,    ONLY : dvpsi
-
+  USE qpoint,     ONLY : igkq, npwq
+  USE lrus,       ONLY : becp1, dpqq, dpqq_so
+  USE eqv,        ONLY : dvpsi
   USE control_lr, ONLY : nbnd_occ
 
   implicit none

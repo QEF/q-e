@@ -51,7 +51,7 @@ SUBROUTINE phq_init()
   USE noncollin_module,     ONLY : noncolin, npol
   USE uspp,                 ONLY : okvan, vkb, nlcc_any
   USE uspp_param,           ONLY : upf
-  USE phus,                 ONLY : alphap, dpqq, dpqq_so
+  USE phus,                 ONLY : alphap
   USE nlcc_ph,              ONLY : drc
   USE control_ph,           ONLY : trans, zue, epsil, all_done
   USE units_ph,             ONLY : lrwfc, iuwfc
@@ -63,7 +63,7 @@ SUBROUTINE phq_init()
                                   kpq,g_kpq,igqg,xk_gamma, lrwfcr
   USE wannier_gw,           ONLY : l_head
 
-  USE lrus,                 ONLY : becp1
+  USE lrus,                 ONLY : becp1, dpqq, dpqq_so
   USE qpoint,               ONLY : xq, igkq, npwq, nksq, eigqts, ikks, ikqs
   USE eqv,                  ONLY : vlocq, evq, eprec
   USE control_lr,           ONLY : nbnd_occ, lgamma

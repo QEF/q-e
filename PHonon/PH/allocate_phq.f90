@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2003 PWSCF group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -31,8 +31,8 @@ subroutine allocate_phq
   USE ramanm, ONLY: ramtns, lraman
 
   USE phus, ONLY : int1, int1_nc, int2, int2_so, &
-                   int4, int4_nc, int5, int5_so, becsumort, dpqq, &
-                   dpqq_so, alphasum, alphasum_nc, becsum_nc, &
+                   int4, int4_nc, int5, int5_so, becsumort, &
+                   alphasum, alphasum_nc, becsum_nc, &
                    alphap
   USE efield_mod, ONLY : zstareu, zstareu0, zstarue0, zstarue0_rec, zstarue
   USE units_ph, ONLY : this_pcxpsi_is_on_file, this_dvkb3_is_on_file
@@ -41,7 +41,7 @@ subroutine allocate_phq
   USE el_phon, ONLY : el_ph_mat, elph
   USE freq_ph, ONLY : polar, nfs
 
-  USE lrus,         ONLY : becp1
+  USE lrus,         ONLY : becp1, dpqq, dpqq_so
   USE qpoint,       ONLY : nksq, eigqts, igkq, xk_col
   USE eqv,          ONLY : dpsi, evq, vlocq, dmuxc, dvpsi, eprec
   USE lr_symm_base, ONLY : rtau

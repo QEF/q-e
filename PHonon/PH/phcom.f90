@@ -120,9 +120,8 @@ MODULE phus
   SAVE
   !
   REAL (DP), ALLOCATABLE :: &
-       alphasum(:,:,:,:),   &! nhm*(nhm+1)/2,3,nat,nspin)
+       alphasum(:,:,:,:)     ! nhm*(nhm+1)/2,3,nat,nspin)
                              ! used to compute modes
-       dpqq(:,:,:,:)         ! (nhm, nhm, 3, ntyp)
   ! alphasum contains \sum_i <psi_i| d/du (|\beta_n><beta_m|) | psi_i> + (m-n)
   ! dipole moment of each Q
   COMPLEX (DP), ALLOCATABLE :: &
@@ -144,12 +143,10 @@ MODULE phus
 !
        becsum_nc(:,:,:,:),     &! nhm*(nhm+1)/2,nat,npol,npol)
        becsumort(:,:,:,:),     &! nhm*(nhm+1)/2,nat,nspin,3*nat)
-       alphasum_nc(:,:,:,:,:), &! nhm*(nhm+1)/2,3,nat,npol,npol)
-       dpqq_so(:,:,:,:,:)       ! nhm, nhm, nspin, 3, ntyp
+       alphasum_nc(:,:,:,:,:)   ! nhm*(nhm+1)/2,3,nat,npol,npol)
 !
 !  becsum contains \sum_i <\psi_i | \beta_n><\beta_m| \psi_i > + (m-n)
 !  besumort contains alphasum+\sum_i <\psi_i | \beta_n><\beta_m| \delta \psi_i >
-!  dpqq_so dipole moment of each Q multiplied by the fcoef factors
 !
   type (bec_type),  ALLOCATABLE, TARGET :: &
        alphap(:,:)           ! nkbtot, nbnd, 3, nksq)

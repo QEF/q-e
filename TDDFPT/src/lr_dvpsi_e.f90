@@ -30,12 +30,12 @@ SUBROUTINE lr_dvpsi_e(ik,ipol,dvpsi)
                                    & deallocate_bec_type,  bec_type
   USE uspp,                 ONLY : okvan, nkb, vkb
   USE uspp_param,           ONLY : nh, nhm
-  USE phus,                 ONLY : dpqq 
   USE control_flags,        ONLY : gamma_only
   USE control_lr,           ONLY : nbnd_occ
   USE lr_variables,         ONLY : lr_verbosity
   USE io_global,            ONLY : stdout
   USE qpoint,               ONLY : igkq
+  USE lrus,                 ONLY : dpqq
   !
   IMPLICIT NONE
   !

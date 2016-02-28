@@ -139,11 +139,13 @@ MODULE lrus
        int3(:,:,:,:,:),     &! nhm, nhm, nat, nspin, npert)
        int3_paw(:,:,:,:,:), &! nhm, nhm, nat, nspin, npert)
        int3_nc(:,:,:,:,:)    ! nhm, nhm, nat, nspin, npert)
-  !
-  ! where
   ! int3 -> \int (Delta V_Hxc) Q d^3r
   ! similarly for int_nc while
   ! int3_paw contains Delta (D^1-\tilde D^1)
+  !
+  REAL (DP), ALLOCATABLE ::    dpqq(:,:,:,:)       ! nhm, nhm, 3, ntyp)
+  COMPLEX (DP), ALLOCATABLE :: dpqq_so(:,:,:,:,:)  ! nhm, nhm, nspin, 3, ntyp)
+  ! dpqq and dpqq_so: dipole moment of each Q multiplied by the fcoef factors 
   !
   type (bec_type), ALLOCATABLE, TARGET :: becp1(:) ! nksq)
   ! becp1 contains < beta_n | psi_i >

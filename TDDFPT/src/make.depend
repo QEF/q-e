@@ -252,7 +252,6 @@ lr_dvpsi_e.o : ../../Modules/noncol.o
 lr_dvpsi_e.o : ../../Modules/recvec.o
 lr_dvpsi_e.o : ../../Modules/uspp.o
 lr_dvpsi_e.o : ../../Modules/wavefunctions.o
-lr_dvpsi_e.o : ../../PHonon/PH/phcom.o
 lr_dvpsi_e.o : ../../PW/src/pwcom.o
 lr_dvpsi_e.o : lr_variables.o
 lr_dvpsi_eels.o : ../../LR_Modules/lrcom.o

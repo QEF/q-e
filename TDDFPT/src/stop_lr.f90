@@ -170,7 +170,6 @@ SUBROUTINE stop_lr( full_run  )
   !
   ! EELS: Close the file where it read the wavefunctions at k and k+q.
   !
-  !IF (eels) CLOSE( UNIT = iuwfc, STATUS = 'KEEP' )
   IF (eels) CALL close_buffer(iunwfc, 'keep')
   !
   STOP

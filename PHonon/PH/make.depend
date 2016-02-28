@@ -56,7 +56,6 @@ adddvepsi_us.o : ../../Modules/kind.o
 adddvepsi_us.o : ../../Modules/noncol.o
 adddvepsi_us.o : ../../Modules/uspp.o
 adddvepsi_us.o : ../../PW/src/pwcom.o
-adddvepsi_us.o : phcom.o
 adddvscf.o : ../../LR_Modules/lrcom.o
 adddvscf.o : ../../Modules/ions_base.o
 adddvscf.o : ../../Modules/kind.o
@@ -1161,12 +1160,12 @@ q_points_wannier.o : dfile_autoname.o
 q_points_wannier.o : dfile_star.o
 q_points_wannier.o : elph.o
 q_points_wannier.o : phcom.o
+qdipol_cryst.o : ../../LR_Modules/lrcom.o
 qdipol_cryst.o : ../../Modules/cell_base.o
 qdipol_cryst.o : ../../Modules/ions_base.o
 qdipol_cryst.o : ../../Modules/kind.o
 qdipol_cryst.o : ../../Modules/uspp.o
 qdipol_cryst.o : ../../PW/src/pwcom.o
-qdipol_cryst.o : phcom.o
 raman.o : ../../LR_Modules/lrcom.o
 raman.o : ../../Modules/control_flags.o
 raman.o : ../../Modules/kind.o

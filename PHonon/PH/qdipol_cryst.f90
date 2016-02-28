@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2009 Quantum ESPRESSO group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -16,7 +16,7 @@ USE uspp_param, ONLY : nh
 USE spin_orb,  ONLY : lspinorb
 USE cell_base, ONLY : at
 USE ions_base, ONLY : nat, ityp, ntyp => nsp
-USE phus,      ONLY : dpqq, dpqq_so
+USE lrus,      ONLY : dpqq, dpqq_so
 
 IMPLICIT NONE
 
