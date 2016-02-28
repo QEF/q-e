@@ -25,7 +25,6 @@ SUBROUTINE stop_lr( full_run  )
   USE noncollin_module,     ONLY : noncolin
   USE ions_base,            ONLY : nat, ityp, atm, ntyp => nsp, tau
   USE cell_base,            ONLY : celldm, at, bg, alat, omega
-  USE units_ph,             ONLY : iuwfc
   USE klist,                ONLY : nelec
   USE buffers,              ONLY : close_buffer
 #ifdef __ENVIRON
