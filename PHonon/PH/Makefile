@@ -14,7 +14,6 @@ add_for_charges.o \
 add_zstar_ue.o \
 add_zstar_ue_us.o \
 addcore.o \
-adddvepsi_us.o \
 addnlcc.o \
 addnlcc_zstar_eu_us.o \
 addusddens.o \
@@ -112,7 +111,6 @@ punch_plot_e.o \
 q_points.o \
 q_points_wannier.o \
 q2qstar_ph.o \
-qdipol_cryst.o \
 random_matrix.o \
 read_wfc_rspace_and_fwfft.o \
 rotate_dvscf_star.o \

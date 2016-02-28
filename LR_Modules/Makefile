@@ -34,6 +34,8 @@ compute_vsgga.o \
 setup_dmuxc.o \
 setup_nbnd_occ.o \
 setup_alpha_pv.o \
+qdipol_cryst.o \
+adddvepsi_us.o \
 lrcom.o
 
 TLDEPS=libfft mods

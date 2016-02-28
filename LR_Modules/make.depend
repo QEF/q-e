@@ -1,3 +1,11 @@
+adddvepsi_us.o : ../Modules/becmod.o
+adddvepsi_us.o : ../Modules/control_flags.o
+adddvepsi_us.o : ../Modules/ions_base.o
+adddvepsi_us.o : ../Modules/kind.o
+adddvepsi_us.o : ../Modules/noncol.o
+adddvepsi_us.o : ../Modules/uspp.o
+adddvepsi_us.o : ../PW/src/pwcom.o
+adddvepsi_us.o : lrcom.o
 adddvscf.o : ../Modules/ions_base.o
 adddvscf.o : ../Modules/kind.o
 adddvscf.o : ../Modules/noncol.o
@@ -170,6 +178,12 @@ orthogonalize.o : ../Modules/recvec.o
 orthogonalize.o : ../Modules/uspp.o
 orthogonalize.o : ../PW/src/pwcom.o
 orthogonalize.o : lrcom.o
+qdipol_cryst.o : ../Modules/cell_base.o
+qdipol_cryst.o : ../Modules/ions_base.o
+qdipol_cryst.o : ../Modules/kind.o
+qdipol_cryst.o : ../Modules/uspp.o
+qdipol_cryst.o : ../PW/src/pwcom.o
+qdipol_cryst.o : lrcom.o
 set_dbecsum_nc.o : ../Modules/ions_base.o
 set_dbecsum_nc.o : ../Modules/kind.o
 set_dbecsum_nc.o : ../Modules/noncol.o
