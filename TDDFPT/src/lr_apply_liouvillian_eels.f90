@@ -32,14 +32,13 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, sevc1_new, interaction )
   USE gvecw,                ONLY : gcutw
   USE io_global,            ONLY : stdout
   USE uspp,                 ONLY : vkb
-  USE io_files,             ONLY : iunigk
+  USE io_files,             ONLY : iunigk, iunwfc, nwordwfc
   USE wavefunctions_module, ONLY : evc, psic, psic_nc
-  USE units_ph,             ONLY : lrwfc, iuwfc
   USE noncollin_module,     ONLY : noncolin, npol, nspin_mag
   USE uspp,                 ONLY : okvan
   USE mp_bands,             ONLY : ntask_groups, me_bgrp
   USE spin_orb,             ONLY : domag
-
+  USE buffers,              ONLY : get_buffer
   USE qpoint,               ONLY : npwq, igkq, ikks, ikqs, nksq
   USE eqv,                  ONLY : evq, dpsi, dvpsi
   USE control_lr,           ONLY : nbnd_occ
@@ -168,8 +167,8 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, sevc1_new, interaction )
      ! Read unperturbed wavefuctions psi(k) and psi(k+q)
      !
      IF (nksq > 1) THEN 
-        CALL davcio (evc, lrwfc, iuwfc, ikk, - 1)
-        CALL davcio (evq, lrwfc, iuwfc, ikq, - 1)
+        CALL get_buffer (evc, nwordwfc, iunwfc, ikk)
+        CALL get_buffer (evq, nwordwfc, iunwfc, ikq)
      ENDIF
      !
      dpsi(:,:)  = (0.d0,0.d0)

@@ -29,7 +29,6 @@ SUBROUTINE lr_calc_dens_eels_nc (drhoscf, dpsi)
   USE wvfct,                 ONLY : nbnd, npwx, npw, igk, g2kin
   USE gvecw,                 ONLY : gcutw
   USE qpoint,                ONLY : npwq, igkq, nksq, ikks, ikqs
-  USE units_ph,              ONLY : lrwfc, iuwfc
   USE wavefunctions_module,  ONLY : evc
   USE noncollin_module,      ONLY : npol, nspin_mag
   USE uspp_param,            ONLY : nhm
@@ -37,6 +36,8 @@ SUBROUTINE lr_calc_dens_eels_nc (drhoscf, dpsi)
   USE lsda_mod,              ONLY : nspin
   USE mp_global,             ONLY : inter_pool_comm, intra_bgrp_comm
   USE mp,                    ONLY : mp_sum
+  USE io_files,              ONLY : iunwfc, nwordwfc
+  USE buffers,               ONLY : get_buffer
   !
   IMPLICIT NONE
   !
@@ -77,7 +78,7 @@ SUBROUTINE lr_calc_dens_eels_nc (drhoscf, dpsi)
      !
      ! Read the unperturbed wavefuctions evc(k)
      !
-     IF (nksq > 1) CALL davcio (evc, lrwfc, iuwfc, ikk, - 1)
+     IF (nksq > 1) CALL get_buffer (evc, nwordwfc, iunwfc, ikk)
      !
      ! The weight of the k point
      !

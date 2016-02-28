@@ -18,9 +18,8 @@ SUBROUTINE stop_lr( full_run  )
                                  & gamma_store, zeta_store, norm0, code1,code2,  &
                                  & lr_verbosity, itermax, bgz_suffix,            &
                                    eels, q1, q2, q3              
-  USE io_global,            ONLY : ionode
-  USE io_files,             ONLY : tmp_dir, prefix
-  USE io_global,            ONLY : stdout
+  USE io_global,            ONLY : ionode, stdout
+  USE io_files,             ONLY : tmp_dir, prefix, iunwfc
   USE environment,          ONLY : environment_end
   USE lsda_mod,             ONLY : nspin
   USE noncollin_module,     ONLY : noncolin
@@ -28,6 +27,7 @@ SUBROUTINE stop_lr( full_run  )
   USE cell_base,            ONLY : celldm, at, bg, alat, omega
   USE units_ph,             ONLY : iuwfc
   USE klist,                ONLY : nelec
+  USE buffers,              ONLY : close_buffer
 #ifdef __ENVIRON
   USE plugin_flags,         ONLY : use_environ
   USE solvent_tddfpt,       ONLY : solvent_clean_tddfpt
@@ -170,7 +170,8 @@ SUBROUTINE stop_lr( full_run  )
   !
   ! EELS: Close the file where it read the wavefunctions at k and k+q.
   !
-  IF (eels) CLOSE( UNIT = iuwfc, STATUS = 'KEEP' )
+  !IF (eels) CLOSE( UNIT = iuwfc, STATUS = 'KEEP' )
+  IF (eels) CALL close_buffer(iunwfc, 'keep')
   !
   STOP
   !

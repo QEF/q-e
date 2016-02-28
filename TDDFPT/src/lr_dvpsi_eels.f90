@@ -34,13 +34,13 @@ SUBROUTINE lr_dvpsi_eels (ik, dvpsi1, dvpsi2)
   USE eqv,                   ONLY : evq, dpsi 
   USE wavefunctions_module,  ONLY : evc
   USE noncollin_module,      ONLY : noncolin, npol, nspin_mag
-  USE units_ph,              ONLY : lrwfc, iuwfc
   use klist,                 only : xk
   use gvect,                 only : ngm, g
   USE control_lr,            ONLY : nbnd_occ
-  USE io_files,              ONLY : iunigk, iunwfc, prefix, diropn
+  USE io_files,              ONLY : iunigk, iunwfc, nwordwfc
   use uspp,                  only : vkb, okvan
   USE mp_bands,              ONLY : ntask_groups
+  USE buffers,               ONLY : get_buffer
  
   IMPLICIT NONE
   !
@@ -97,8 +97,8 @@ SUBROUTINE lr_dvpsi_eels (ik, dvpsi1, dvpsi2)
   ! the ground-state wavefunctions evc(k) and evq(k+q) are read here
   ! and kept in memory for the rest of the code.
   !
-  CALL davcio (evc, lrwfc, iuwfc, ikk, - 1)
-  CALL davcio (evq, lrwfc, iuwfc, ikq, - 1)
+  CALL get_buffer (evc, nwordwfc, iunwfc, ikk)
+  CALL get_buffer (evq, nwordwfc, iunwfc, ikq)
   !
   ! Re-ordering of the G vectors.
   !

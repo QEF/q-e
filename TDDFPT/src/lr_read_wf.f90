@@ -38,7 +38,6 @@ SUBROUTINE lr_read_wf()
                                  & fwfft_orbital_gamma, calbec_rs_gamma,&
                                  & add_vuspsir_gamma, v_loc_psir,&
                                  & s_psir_gamma, real_space_debug
-  USE buffers,              ONLY : get_buffer
   USE exx,                  ONLY : exx_grid_init, exx_div_check, exx_restart
   USE funct,                ONLY : dft_is_hybrid
   USE lr_exx_kernel,        ONLY : lr_exx_revc0_init, lr_exx_alloc

@@ -33,9 +33,8 @@ SUBROUTINE lr_init_nfo()
   USE wvfct,                ONLY : npwx, wg
   USE gvecw,                ONLY : gcutw
   USE io_files,             ONLY : iunigk, seqopn, tmp_dir, prefix, &
-                                 & diropn, nwordwfc, wfc_dir
+                                 & diropn, iunwfc, nwordwfc, wfc_dir
   USE gvecs,                ONLY : doublegrid
-  USE units_ph,             ONLY : iuwfc, lrwfc
   USE fft_base,             ONLY : dfftp 
   USE uspp,                 ONLY : vkb, okvan, nkb
   USE wavefunctions_module, ONLY : evc
@@ -44,6 +43,8 @@ SUBROUTINE lr_init_nfo()
   USE control_lr,           ONLY : alpha_pv
   USE qpoint,               ONLY : xq, npwq, igkq, ikks, ikqs, nksq, eigqts
   USE eqv,                  ONLY : evq
+  USE buffers,              ONLY : open_buffer, get_buffer
+  USE control_flags,        ONLY : io_level
   !
   IMPLICIT NONE
   !
@@ -51,7 +52,9 @@ SUBROUTINE lr_init_nfo()
   !
   REAL(kind=DP) :: arg
   INTEGER       :: i, ik, ibnd, ipol, ikk, ikq, ios, isym, na
-  LOGICAL       :: exst ! logical variable to check file existence
+  LOGICAL       :: exst, exst_mem 
+  ! logical variable to check file exists
+  ! logical variable to check file exists in memory
   !
   ! 1) Optical case: initialize igk_k and ngk
   !    Open shell related
@@ -115,11 +118,11 @@ SUBROUTINE lr_init_nfo()
      ! Open the file to read the wavefunctions at k and k+q 
      ! after the nscf calculation.
      !
-     iuwfc = 21
-     lrwfc = 2 * nbnd * npwx * npol
      IF (restart) wfc_dir = tmp_dir_lr
-     CALL diropn (iuwfc, 'wfc', lrwfc, exst)
-     IF (.NOT.exst) THEN
+     !
+     CALL open_buffer (iunwfc, 'wfc', nwordwfc, io_level, exst_mem, exst)
+     ! 
+     IF (.NOT.exst .AND. .NOT.exst_mem) THEN
         CALL errore ('lr_init_nfo', 'file '//trim(prefix)//'.wfc not found', 1)
      ENDIF
      !
@@ -158,7 +161,7 @@ SUBROUTINE lr_init_nfo()
            CALL gk_sort( xk(1,ikk), ngm, g, gcutw, npw,  igk,  g2kin )
            !
            ! Read the wavefunction evc
-           CALL davcio (evc, lrwfc, iuwfc, ikk, - 1)
+           CALL get_buffer (evc, nwordwfc, iunwfc, ikk)
            !
            ! Calculate beta-functions vkb at k point
            CALL init_us_2(npw, igk, xk(1,ikk), vkb)
