@@ -275,7 +275,7 @@ clean : doc_clean
 	for dir in \
 		CPV LAXlib FFTXlib Modules PP PW \
 		NEB ACFDT COUPLE GWW XSpectra \
-		atomic clib flib pwtools upftools \
+		atomic clib LR_Modules pwtools upftools \
 		dev-tools extlibs Environ TDDFPT \
 	; do \
 	    if test -d $$dir ; then \
