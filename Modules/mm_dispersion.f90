@@ -36,11 +36,12 @@ MODULE london_module
   ! r     ( 3 , mxr )     : ordered distance vectors
   ! dist2 ( mxr )         : ordered distances
   !
-  REAL ( DP ) , PUBLIC :: scal6=0._dp , lon_rcut=0._dp , in_C6 ( nsx )
+  REAL ( DP ) , PUBLIC :: scal6=0._dp , lon_rcut=0._dp , in_C6 ( nsx ), in_rvdw( nsx )
   !
   ! scal6    : global scaling factor
   ! lon_rcut : public cut-off radius
   ! in_C6 ( ntyp ) : input (user) specified atomic C6 coefficients
+  ! in_rvdw ( ntyp ) : input (user) specified atomic vdw radii
   !
   INTEGER , PRIVATE :: mxr
   !
@@ -211,7 +212,11 @@ MODULE london_module
               ELSE
                  C6_i  ( ilab )  = vdw_coeffs(1,i)
               END IF
-              R_vdw ( ilab )  = vdw_coeffs(2,i)
+              IF ( in_rvdw (ilab) > 0.0_DP ) THEN
+                R_vdw ( ilab )  = in_rvdw (ilab)
+              ELSE
+                R_vdw ( ilab )  = vdw_coeffs(2,i)
+              END IF
            ELSE
              CALL errore ( ' init_london ' ,&
                            'atom ' // atom_label(ilab) //' not found ' , ilab )

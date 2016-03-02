@@ -253,6 +253,7 @@ MODULE read_namelists_module
        london_s6   = 0.75_DP
        london_rcut = 200.00_DP
        london_c6   = -1.0_DP
+       london_rvdw = -1.0_DP
        ts_vdw          = .FALSE.
        ts_vdw_isolated = .FALSE.
        ts_vdw_econv_thr = 1.E-6_DP
@@ -841,6 +842,7 @@ MODULE read_namelists_module
        CALL mp_bcast( london_s6,                 ionode_id, intra_image_comm )
        CALL mp_bcast( london_rcut,               ionode_id, intra_image_comm )
        CALL mp_bcast( london_c6,                 ionode_id, intra_image_comm )
+       CALL mp_bcast( london_rvdw,               ionode_id, intra_image_comm )
        CALL mp_bcast( xdm,                       ionode_id, intra_image_comm )
        CALL mp_bcast( xdm_a1,                    ionode_id, intra_image_comm )
        CALL mp_bcast( xdm_a2,                    ionode_id, intra_image_comm )
