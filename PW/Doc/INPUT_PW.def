@@ -1359,7 +1359,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 Type of Van der Waals correction. Allowed values:
 
                    'grimme-d2', 'Grimme-D2', 'DFT-D', 'dft-d': semiempirical Grimme's DFT-D2.
-                    Optional variables: "london_s6", "london_rcut", "london_c6"
+                    Optional variables: "london_s6", "london_rcut", "london_c6", "london_rvdw",
                     S. Grimme, J. Comp. Chem. 27, 1787 (2006),
                     V. Barone et al., J. Comp. Chem. 30, 934 (2009). 
 
@@ -1393,6 +1393,15 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
            default { standard Grimme-D2 values }
            info {
 	       atomic C6 coefficient of each atom type
+
+	       ( if not specified default values from S. Grimme, J. Comp. Chem. 27, 1787 (2006) are used;
+		 see file Modules/mm_dispersion.f90 )
+           }
+         }
+         dimension london_rvdw -type REAL -start 1 -end ntyp {
+           default { standard Grimme-D2 values }
+           info {
+	       atomic vdw radii of each atom type
 
 	       ( if not specified default values from S. Grimme, J. Comp. Chem. 27, 1787 (2006) are used;
 		 see file Modules/mm_dispersion.f90 )
