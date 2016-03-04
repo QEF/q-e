@@ -940,7 +940,7 @@ CONTAINS
     CASE ( 2 ) 
        ! two-dimensional erfc, volume is exactly the one of the 
        ! box, does not depend on spread 
-       erfcvolume = width * omega / at(axis,axis) / alat
+       erfcvolume = 2.D0 * width * omega / at(axis,axis) / alat
     END SELECT
     
 !----------------------------------------------------------------------
