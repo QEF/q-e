@@ -59,10 +59,8 @@ MODULE exx
   INTEGER, ALLOCATABLE :: rir(:,:)       ! rotations to take k to q
 !
 !  Used for k points pool parallelization. All pools need these quantities.
-!  They are allocated only IF needed.
 !
   REAL(DP),    ALLOCATABLE :: xk_collect(:,:)
-  REAL(DP),    ALLOCATABLE :: wk_collect(:)
   !
   ! Internal:
   LOGICAL :: exx_grid_initialized = .false.
@@ -191,7 +189,6 @@ MODULE exx
     !  Pool variables deallocation
     !
     IF ( allocated (xk_collect) )  DEALLOCATE( xk_collect )
-    IF ( allocated (wk_collect) )  DEALLOCATE( wk_collect )
     !
     !
     !------------------------------------------------------------------------
@@ -224,7 +221,7 @@ MODULE exx
     INTEGER       :: iq1, iq2, iq3, isym, ik, ikq, iq, max_nk, temp_nkqs
     INTEGER, allocatable :: temp_index_xk(:), temp_index_sym(:)
     INTEGER, allocatable :: temp_index_ikq(:), new_ikq(:)
-    REAL(DP),allocatable :: temp_xkq(:,:)
+    REAL(DP),allocatable :: temp_xkq(:,:), wk_collect(:)
     LOGICAL      :: xk_not_found
     REAL(DP)     :: sxk(3), dxk(3), xk_cryst(3)
     REAL(DP)     :: dq1, dq2, dq3
@@ -255,14 +252,14 @@ MODULE exx
     ! all processors need to have access to all k+q points
     !
     IF ( .NOT.allocated (xk_collect) )  ALLOCATE(xk_collect(3,nkstot))
-    IF ( .NOT.allocated (wk_collect) )  ALLOCATE(wk_collect(nkstot))
     ! the next if/then if probably not necessary, as xk_wk collect can
     ! deal with npool==1, leaving it for clarity.
     IF ( npool > 1 ) THEN
+      ALLOCATE(wk_collect(nkstot))
       CALL xk_wk_collect(xk_collect, wk_collect, xk, wk, nkstot, nks)
+      DEALLOCATE(wk_collect)
     ELSE
       xk_collect(:,1:nks) = xk(:,1:nks)
-      wk_collect(1:nks) = wk(1:nks)
     ENDIF
     !
     ! set a safe limit as the maximum number of auxiliary points we may need
@@ -640,7 +637,7 @@ MODULE exx
     USE buffers,              ONLY : get_buffer
     USE wvfct,                ONLY : nbnd, npwx, wg
     USE control_flags,        ONLY : gamma_only
-    USE klist,                ONLY : ngk, nks, nkstot, igk_k
+    USE klist,                ONLY : ngk, nks, nkstot, wk, igk_k
     USE symm_base,            ONLY : nsym, s, sr, ftau
     USE mp_pools,             ONLY : npool, nproc_pool, me_pool, inter_pool_comm
     USE mp_bands,             ONLY : me_bgrp, set_bgrp_indices, nbgrp
@@ -716,24 +713,26 @@ MODULE exx
     ! set appropriately the x_occupation and get an upperbound to the number of 
     ! bands with non zero occupation. used to distribute bands among band groups
 
-    ALLOCATE(wg_collect(nbnd,nkstot))
-    IF (npool>1) THEN
-      CALL wg_all(wg_collect, wg, nkstot, nks)
-    ELSE
-      wg_collect = wg
-    ENDIF
-    x_nbnd_occ = 0
-    DO ik =1,nkstot
-       IF(ABS(wk_collect(ik)) > eps_occ ) THEN
-          x_occupation(1:nbnd,ik) = wg_collect (1:nbnd, ik) / wk_collect(ik)
-          do ibnd = max(1,x_nbnd_occ), nbnd
-             if (abs(x_occupation(ibnd,ik)) > eps_occ ) x_nbnd_occ = ibnd
-          end do
+    ALLOCATE(wg_collect(nbnd,nks))
+    DO ik =1,nks
+       IF(ABS(wk(ik)) > eps_occ ) THEN
+          wg_collect(1:nbnd,ik) = wg (1:nbnd, ik) / wk(ik)
        ELSE
-          x_occupation(1:nbnd,ik) = 0._dp
+          wg_collect(1:nbnd,ik) = 0._dp
        ENDIF
     ENDDO
+    IF (npool>1) THEN
+      CALL wg_all(x_occupation, wg_collect, nkstot, nks)
+    ELSE
+      x_occupation(:,1:nks) = wg_collect(:,1:nks)
+    ENDIF
     DEALLOCATE (wg_collect)
+    x_nbnd_occ = 0
+    DO ik =1,nkstot
+       DO ibnd = max(1,x_nbnd_occ), nbnd
+          IF (abs(x_occupation(ibnd,ik)) > eps_occ ) x_nbnd_occ = ibnd
+       END DO
+    ENDDO
 
     CALL set_bgrp_indices(x_nbnd_occ,ibnd_start,ibnd_end)
 
