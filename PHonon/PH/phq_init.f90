@@ -127,8 +127,6 @@ SUBROUTINE phq_init()
   !
   IF ( nksq > 1 ) REWIND( iunigk )
   !
- 
-  !
   ! only for electron-phonon coupling with wannier functions
   ! 
   if(elph_mat) then
@@ -231,7 +229,6 @@ SUBROUTINE phq_init()
         CALL calbec (npw, vkb, aux1, alphap(ipol,ik) )
      END DO
      !
-     !
 !!!!!!!!!!!!!!!!!!!!!!!! ACFDT TEST !!!!!!!!!!!!!!!!
   IF (acfdt_is_active) THEN
      ! ACFDT -test always read calculated wcf from non_scf calculation
@@ -284,7 +281,6 @@ SUBROUTINE phq_init()
   CALL mp_sum ( eprec, intra_bgrp_comm )
   !
   DEALLOCATE( aux1 )
-     
   !
   CALL dvanqq()
   CALL drho()

@@ -530,7 +530,7 @@ SUBROUTINE elphsum ( )
   COMPLEX(DP) :: el_ph_sum (3*nat,3*nat)
 
   COMPLEX(DP), POINTER :: el_ph_mat_collect(:,:,:,:)
-  REAL(DP), ALLOCATABLE :: xk_collect(:,:), wk_collect(:)
+  REAL(DP), ALLOCATABLE :: xk_collect(:,:)
   REAL(DP), POINTER :: wkfit_dist(:), etfit_dist(:,:)
   INTEGER :: nksfit_dist, rest, kunit_save
   INTEGER :: nks_real, ispin, nksqtot, irr
@@ -554,7 +554,6 @@ SUBROUTINE elphsum ( )
   nsig =el_ph_nsigma
 
   ALLOCATE(xk_collect(3,nkstot))
-  ALLOCATE(wk_collect(nkstot))
 
   ALLOCATE(deg(nsig))
   ALLOCATE(effit(nsig))
@@ -566,7 +565,6 @@ SUBROUTINE elphsum ( )
 !
      nksqtot=nksq
      xk_collect(:,1:nks) = xk(:,1:nks)
-     wk_collect(1:nks) = wk(1:nks)
      el_ph_mat_collect => el_ph_mat
   ELSE  
 !
@@ -579,7 +577,7 @@ SUBROUTINE elphsum ( )
         nksqtot=nkstot/2
      ENDIF
      ALLOCATE(el_ph_mat_collect(nbnd,nbnd,nksqtot,3*nat))
-     CALL xk_wk_collect(xk_collect,wk_collect,xk,wk,nkstot,nks)
+     CALL xk_wk_collect(xk_collect,xk,nkstot,nks)
      CALL el_ph_collect(3*nat,el_ph_mat,el_ph_mat_collect,nksqtot,nksq)
   ENDIF
   !
@@ -905,7 +903,6 @@ SUBROUTINE elphsum ( )
   DEALLOCATE( effit )
   DEALLOCATE( dosfit )
   DEALLOCATE(xk_collect)
-  DEALLOCATE(wk_collect)
   IF (npool /= 1) DEALLOCATE(el_ph_mat_collect)
 
   !

@@ -221,7 +221,7 @@ MODULE exx
     INTEGER       :: iq1, iq2, iq3, isym, ik, ikq, iq, max_nk, temp_nkqs
     INTEGER, allocatable :: temp_index_xk(:), temp_index_sym(:)
     INTEGER, allocatable :: temp_index_ikq(:), new_ikq(:)
-    REAL(DP),allocatable :: temp_xkq(:,:), wk_collect(:)
+    REAL(DP),allocatable :: temp_xkq(:,:)
     LOGICAL      :: xk_not_found
     REAL(DP)     :: sxk(3), dxk(3), xk_cryst(3)
     REAL(DP)     :: dq1, dq2, dq3
@@ -255,9 +255,7 @@ MODULE exx
     ! the next if/then if probably not necessary, as xk_wk collect can
     ! deal with npool==1, leaving it for clarity.
     IF ( npool > 1 ) THEN
-      ALLOCATE(wk_collect(nkstot))
-      CALL xk_wk_collect(xk_collect, wk_collect, xk, wk, nkstot, nks)
-      DEALLOCATE(wk_collect)
+      CALL xk_wk_collect(xk_collect, xk, nkstot, nks)
     ELSE
       xk_collect(:,1:nks) = xk(:,1:nks)
     ENDIF

@@ -7,12 +7,11 @@
 !
 !
 !----------------------------------------------------------------------------
-SUBROUTINE xk_wk_collect( xk_collect, wk_collect, xk, wk, nkstot, nks )
+SUBROUTINE xk_wk_collect( xk_collect, xk, nkstot, nks )
   !----------------------------------------------------------------------------
   !
-  ! ... This routine collects the k points (with granularity kunit) among 
-  ! ... nodes and sets the variable xk_collect and wk_collect with the total 
-  ! ... number of k-points
+  ! ... This routine collects the k points (with granularity kunit) among nodes
+  ! ... and sets the variable xk_collect with the total number of k-points
   !
   USE io_global, only : stdout
   USE kinds,     ONLY : DP
@@ -25,8 +24,8 @@ SUBROUTINE xk_wk_collect( xk_collect, wk_collect, xk, wk, nkstot, nks )
   INTEGER :: nkstot, nks
     ! total number of k-points
     ! number of k-points per pool
-  REAL (DP) :: xk(3,nks), wk(nks)
-  REAL (DP) :: xk_collect(3,nkstot), wk_collect(nkstot)
+  REAL (DP) :: xk(3,nks)
+  REAL (DP) :: xk_collect(3,nkstot)
     ! k-points
     ! k-point weights
   !
@@ -36,8 +35,6 @@ SUBROUTINE xk_wk_collect( xk_collect, wk_collect, xk, wk, nkstot, nks )
   !
   xk_collect=0.d0
   !
-  wk_collect=0.d0
-  !
   nks1    = kunit * ( nkstot / kunit / npool )
   !
   rest = ( nkstot - nks1 * npool ) / kunit
@@ -45,7 +42,7 @@ SUBROUTINE xk_wk_collect( xk_collect, wk_collect, xk, wk, nkstot, nks )
   IF ( ( my_pool_id + 1 ) <= rest ) nks1 = nks1 + kunit
   !
   IF (nks1.ne.nks) &
-     call errore('xk_wk_collect','problems with nks1',1)
+     call errore('xk_collect','problems with nks1',1)
   !
   ! ... calculates nbase = the position in the list of the first point that
   ! ...                    belong to this npool - 1
@@ -58,11 +55,7 @@ SUBROUTINE xk_wk_collect( xk_collect, wk_collect, xk, wk, nkstot, nks )
   !
   xk_collect(:,nbase+1:nbase+nks) = xk(:,1:nks)
   !
-  wk_collect(nbase+1:nbase+nks)=wk(1:nks)
-  !
   CALL mp_sum( xk_collect, inter_pool_comm )
-  !
-  CALL mp_sum( wk_collect, inter_pool_comm )
   !
 #endif
   !
