@@ -63,7 +63,6 @@ MODULE exx
 !
   REAL(DP),    ALLOCATABLE :: xk_collect(:,:)
   REAL(DP),    ALLOCATABLE :: wk_collect(:)
-  REAL(DP),    ALLOCATABLE :: wg_collect(:,:)
   !
   ! Internal:
   LOGICAL :: exx_grid_initialized = .false.
@@ -193,7 +192,6 @@ MODULE exx
     !
     IF ( allocated (xk_collect) )  DEALLOCATE( xk_collect )
     IF ( allocated (wk_collect) )  DEALLOCATE( wk_collect )
-    IF ( allocated (wg_collect) )  DEALLOCATE( wg_collect )
     !
     !
     !------------------------------------------------------------------------
@@ -670,6 +668,7 @@ MODULE exx
     COMPLEX(DP), ALLOCATABLE :: temppsic_all_nc(:,:), psic_all_nc(:,:)
 #endif
     COMPLEX(DP) :: d_spin(2,2,48)
+    REAL(DP), ALLOCATABLE :: wg_collect (:,:)
     INTEGER :: npw, current_ik
     integer :: find_current_k
 
@@ -712,17 +711,17 @@ MODULE exx
        CALL start_exx()
     ENDIF
 
-    IF (.NOT.allocated (wg_collect)) ALLOCATE(wg_collect(nbnd,nkstot))
+    IF ( .NOT. gamma_only ) CALL exx_set_symm ( )
+
+    ! set appropriately the x_occupation and get an upperbound to the number of 
+    ! bands with non zero occupation. used to distribute bands among band groups
+
+    ALLOCATE(wg_collect(nbnd,nkstot))
     IF (npool>1) THEN
       CALL wg_all(wg_collect, wg, nkstot, nks)
     ELSE
       wg_collect = wg
     ENDIF
-
-    IF ( .NOT. gamma_only ) CALL exx_set_symm ( )
-
-    ! set appropriately the x_occupation and get an upperbound to the number of 
-    ! bands with non zero occupation. used to distribute bands among band groups
     x_nbnd_occ = 0
     DO ik =1,nkstot
        IF(ABS(wk_collect(ik)) > eps_occ ) THEN
@@ -734,6 +733,7 @@ MODULE exx
           x_occupation(1:nbnd,ik) = 0._dp
        ENDIF
     ENDDO
+    DEALLOCATE (wg_collect)
 
     CALL set_bgrp_indices(x_nbnd_occ,ibnd_start,ibnd_end)
 
