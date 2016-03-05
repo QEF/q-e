@@ -72,7 +72,7 @@ SUBROUTINE setup()
   USE bp,                 ONLY : gdir, lberry, nppstr, lelfield, lorbm, nx_el, nppstr_3d,l3dstring, efield, lcalc_z2
   USE fixed_occ,          ONLY : f_inp, tfixed_occ, one_atom_occupations
   USE funct,              ONLY : set_dft_from_name
-  USE mp_pools,           ONLY : kunit
+  USE mp_pools,           ONLY : kunit, npool
   USE spin_orb,           ONLY : lspinorb, domag
   USE noncollin_module,   ONLY : noncolin, npol, m_loc, i_cons, &
                                  angle1, angle2, bfield, ux, nspin_lsda, &
@@ -119,6 +119,8 @@ SUBROUTINE setup()
      IF (okvan) THEN
         IF (ecutfock /= 4*ecutwfc) CALL infomsg &
            ('setup','Warning: US/PAW use ecutfock=4*ecutwfc, ecutfock ignored')
+        IF (npool > 1) CALL errore &
+           ('setup','hybrid functionals + US/PAW + pools = not working',1)
         IF ( noncolin ) CALL errore &
            ('setup','Noncolinear hybrid XC for USPP not implemented',1)
      END IF

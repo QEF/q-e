@@ -124,8 +124,6 @@ MODULE exx
     USE gvecw,        ONLY : ecutwfc
     USE wvfct,        ONLY : npw
     USE gvect,        ONLY : ecutrho, ig_l2g
-    USE uspp,         ONLY : okvan
-    USE paw_variables,ONLY : okpaw
     USE control_flags,ONLY : gamma_only
     USE klist,        ONLY : qnorm
     USE cell_base,    ONLY : at, bg, tpiba2
