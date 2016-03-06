@@ -236,7 +236,7 @@ SUBROUTINE poolcollect( vec, length, nkstot, nks )
   ! ... of all pools - Quick-and-dirty implementation
   !
   USE kinds,     ONLY : DP
-  USE mp_pools,  ONLY : root_pool, inter_pool_comm
+  USE mp_pools,  ONLY : root_pool, inter_pool_comm, intra_pool_comm
   USE mp,        ONLY : mp_bcast
   !
   IMPLICIT NONE

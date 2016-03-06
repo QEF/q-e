@@ -658,7 +658,6 @@ MODULE exx
     COMPLEX(DP), ALLOCATABLE :: temppsic_all_nc(:,:), psic_all_nc(:,:)
 #endif
     COMPLEX(DP) :: d_spin(2,2,48)
-    REAL(DP), ALLOCATABLE :: wg_collect (:,:)
     INTEGER :: npw, current_ik
     integer :: find_current_k
 
@@ -703,23 +702,20 @@ MODULE exx
 
     IF ( .NOT. gamma_only ) CALL exx_set_symm ( )
 
-    ! set appropriately the x_occupation and get an upperbound to the number of 
-    ! bands with non zero occupation. used to distribute bands among band groups
+    ! set occupations of wavefunctions used in the calculation of exchange term
 
-    ALLOCATE(wg_collect(nbnd,nks))
     DO ik =1,nks
        IF(ABS(wk(ik)) > eps_occ ) THEN
-          wg_collect(1:nbnd,ik) = wg (1:nbnd, ik) / wk(ik)
+          x_occupation(1:nbnd,ik) = wg (1:nbnd, ik) / wk(ik)
        ELSE
-          wg_collect(1:nbnd,ik) = 0._dp
+          x_occupation(1:nbnd,ik) = 0._dp
        ENDIF
     ENDDO
-    IF (npool>1) THEN
-      CALL wg_all(x_occupation, wg_collect, nkstot, nks)
-    ELSE
-      x_occupation(:,1:nks) = wg_collect(:,1:nks)
-    ENDIF
-    DEALLOCATE (wg_collect)
+    CALL poolcollect(x_occupation, nbnd, nkstot, nks)
+
+    ! find an upper bound to the number of bands with non zero occupation.
+    ! Useful to distribute bands among band groups
+
     x_nbnd_occ = 0
     DO ik =1,nkstot
        DO ibnd = max(1,x_nbnd_occ), nbnd
