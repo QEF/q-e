@@ -1988,7 +1988,7 @@ MODULE exx
           !
           xkq = xkq_collect(:,ikq)
           !
-          CALL g2_convolution(exx_fft%ngmt, exx_fft%gt, xk(:,current_ik), xkq, fac) 
+          CALL g2_convolution(exx_fft%ngmt, exx_fft%gt, xk(:,ikk), xkq, fac) 
           fac(exx_fft%gstart_t:) = 2 * fac(exx_fft%gstart_t:)
           IF ( okvan .AND..NOT.tqr ) CALL qvan_init (xkq, xkp)
           !
@@ -2276,7 +2276,7 @@ MODULE exx
              !
              xkq = xkq_collect(:,ikq)
              !
-             CALL g2_convolution(exx_fft%ngmt, exx_fft%gt, xk(:,current_ik), xkq, fac)
+             CALL g2_convolution(exx_fft%ngmt, exx_fft%gt, xk(:,ikk), xkq, fac)
              IF ( okvan .AND..NOT.tqr ) CALL qvan_init (xkq, xkp)
              !
              IBND_LOOP_K : &
