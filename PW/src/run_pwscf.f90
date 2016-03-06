@@ -35,6 +35,9 @@ SUBROUTINE run_pwscf ( exit_status )
   USE check_stop,       ONLY : check_stop_init, check_stop_now
   USE mp_images,        ONLY : intra_image_comm
   USE extrapolation,    ONLY : update_file, update_pot
+  USE scf,              ONLY : rho
+  USE lsda_mod,         ONLY : nspin
+  USE fft_base,         ONLY : dfftp
   USE qmmm,             ONLY : qmmm_initialization, qmmm_shutdown, &
                                qmmm_update_positions, qmmm_update_forces
   !
@@ -131,7 +134,7 @@ SUBROUTINE run_pwscf ( exit_status )
      !
      ! ... send out forces to MM code in QM/MM run
      !
-     CALL qmmm_update_forces(force)
+     CALL qmmm_update_forces( force, rho%of_r, nspin, dfftp)
      !
      IF ( lmd .OR. lbfgs ) THEN
         !
