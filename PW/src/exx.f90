@@ -57,10 +57,6 @@ MODULE exx
   INTEGER, ALLOCATABLE :: index_xk(:)    ! index_xk(nkqs)  
   INTEGER, ALLOCATABLE :: index_sym(:)   ! index_sym(nkqs)
   INTEGER, ALLOCATABLE :: rir(:,:)       ! rotations to take k to q
-!
-!  Used for k points pool parallelization. All pools need these quantities.
-!
-  REAL(DP),    ALLOCATABLE :: xk_collect(:,:)
   !
   ! Internal:
   LOGICAL :: exx_grid_initialized = .false.
@@ -186,11 +182,6 @@ MODULE exx
     !
     CALL deallocate_fft_custom(exx_fft)
     !
-    !  Pool variables deallocation
-    !
-    IF ( allocated (xk_collect) )  DEALLOCATE( xk_collect )
-    !
-    !
     !------------------------------------------------------------------------
   END SUBROUTINE deallocate_exx
   !------------------------------------------------------------------------
@@ -221,7 +212,7 @@ MODULE exx
     INTEGER       :: iq1, iq2, iq3, isym, ik, ikq, iq, max_nk, temp_nkqs
     INTEGER, allocatable :: temp_index_xk(:), temp_index_sym(:)
     INTEGER, allocatable :: temp_index_ikq(:), new_ikq(:)
-    REAL(DP),allocatable :: temp_xkq(:,:)
+    REAL(DP),allocatable :: temp_xkq(:,:), xk_collect(:,:)
     LOGICAL      :: xk_not_found
     REAL(DP)     :: sxk(3), dxk(3), xk_cryst(3)
     REAL(DP)     :: dq1, dq2, dq3
@@ -251,7 +242,7 @@ MODULE exx
     !
     ! all processors on all pools need to have access to all k+q points
     !
-    IF ( .NOT.allocated (xk_collect) )  ALLOCATE(xk_collect(3,nkstot))
+    ALLOCATE(xk_collect(3,nkstot))
     xk_collect(:,1:nks) = xk(:,1:nks)
     CALL poolcollect(xk_collect, 3, nkstot, nks)
     !
@@ -412,7 +403,8 @@ MODULE exx
     DEALLOCATE(temp_index_xk, temp_index_sym, temp_index_ikq, new_ikq, temp_xkq)
     !
     ! check that everything is what it should be
-    CALL exx_grid_check () 
+    CALL exx_grid_check ( xk_collect(:,:) ) 
+    DEALLOCATE( xk_collect )
     !
     ! qnorm = max |k+q|, useful for reduced-cutoff calculations with k-points 
     !
@@ -531,13 +523,15 @@ MODULE exx
 
 
   !------------------------------------------------------------------------
-  SUBROUTINE exx_grid_check ( )
+  SUBROUTINE exx_grid_check ( xk_collect )
     !------------------------------------------------------------------------
     USE symm_base,  ONLY : s
     USE cell_base,  ONLY : at
     USE klist,      ONLY : nkstot, xk
     USE mp_pools,   ONLY : npool
     IMPLICIT NONE
+    REAL(dp), INTENT(IN) :: xk_collect(:,:) 
+    !
     REAL(DP) :: sxk(3), dxk(3), xk_cryst(3), xkk_cryst(3)
     INTEGER :: iq1, iq2, iq3, isym, ik, ikk, ikq, iq
     REAL(DP) :: dq1, dq2, dq3
@@ -562,12 +556,9 @@ MODULE exx
               ikk  = index_xk(ikq)
               isym = index_sym(ikq)
 
-              IF (npool>1) THEN
-                xkk_cryst(:) = at(1,:)*xk_collect(1,ikk)+at(2,:)*xk_collect(2,ikk)+at(3,:)*xk_collect(3,ikk)
-              ELSE
-                xkk_cryst(:) = at(1,:)*xk(1,ikk)+at(2,:)*xk(2,ikk)+at(3,:)*xk(3,ikk)
-              ENDIF
-
+              xkk_cryst(:) = at(1,:)*xk_collect(1,ikk) + &
+                             at(2,:)*xk_collect(2,ikk) + &
+                             at(3,:)*xk_collect(3,ikk)
               IF (isym < 0 ) xkk_cryst(:) = - xkk_cryst(:)
               isym = abs (isym)
               dxk(:) = s(:,1,isym)*xkk_cryst(1) + &
@@ -1173,7 +1164,7 @@ MODULE exx
     IF(okvan) ALLOCATE(deexx(nkb))
     !
     current_ik=find_current_k(current_k,nkstot,nks)
-    xkp = xk_collect(:,current_ik)
+    xkp = xk(:,current_k)
     !
     ! This is to stop numerical inconsistencies creeping in through the band parallelization.
     !
@@ -1456,7 +1447,7 @@ MODULE exx
     IF(okvan) ALLOCATE(deexx(nkb))
     !
     current_ik=find_current_k(current_k,nkstot,nks)
-    xkp = xk_collect(:,current_ik)
+    xkp = xk(:,current_k)
     !
     ! This is to stop numerical inconsistencies creeping in through the band parallelization.
     !
@@ -1976,7 +1967,7 @@ MODULE exx
     IKK_LOOP : &
     DO ikk=1,nks
        current_ik=find_current_k(ikk,nkstot,nks)
-       xkp = xk_collect(:,current_ik)
+       xkp = xk(:,ikk)
        !
        IF ( lsda ) current_spin = isk(ikk)
        npw = ngk (ikk)
@@ -2226,7 +2217,7 @@ MODULE exx
     IKK_LOOP : &
     DO ikk=1,nks
        current_ik=find_current_k(ikk,nkstot,nks)
-       xkp = xk_collect(:,current_ik)
+       xkp = xk(:,ikk)
        !
        IF ( lsda ) current_spin = isk(ikk)
        npw = ngk (ikk)
