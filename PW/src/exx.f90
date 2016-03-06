@@ -249,16 +249,11 @@ MODULE exx
     !
     nqs = nq1 * nq2 * nq3
     !
-    ! all processors need to have access to all k+q points
+    ! all processors on all pools need to have access to all k+q points
     !
     IF ( .NOT.allocated (xk_collect) )  ALLOCATE(xk_collect(3,nkstot))
-    ! the next if/then if probably not necessary, as xk_wk collect can
-    ! deal with npool==1, leaving it for clarity.
-    IF ( npool > 1 ) THEN
-      CALL xk_wk_collect(xk_collect, xk, nkstot, nks)
-    ELSE
-      xk_collect(:,1:nks) = xk(:,1:nks)
-    ENDIF
+    xk_collect(:,1:nks) = xk(:,1:nks)
+    CALL poolcollect(xk_collect, 3, nkstot, nks)
     !
     ! set a safe limit as the maximum number of auxiliary points we may need
     ! and allocate auxiliary arrays
