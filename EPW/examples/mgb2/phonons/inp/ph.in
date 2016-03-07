@@ -1,0 +1,11 @@
+--
+&inputph
+  tr2_ph   =  1.0d-14
+  prefix   = 'mgb2'
+  amass(1) = 24.305
+  amass(2) = 10.811
+  outdir   = './'
+  fildyn   = 'mgb2.dyn'
+  fildvscf = 'dvscf'
+ /
+XQ1 XQ2 XQ3

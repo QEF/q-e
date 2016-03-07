@@ -1,0 +1,82 @@
+--
+&inputepw
+  prefix      = 'diam'
+  amass(1)    = 12.01078
+  outdir      = './'
+
+  iverbosity  = 0
+
+  elph        = .true.
+  epbwrite    = .false. !.true.
+  epbread     = .true. ! .false.
+
+  epwwrite    =  .false. ! .true.
+  epwread     =  .true. ! .false.
+
+  efermi_read = .true. 
+  fermi_energy = 13.209862
+
+  nbndsub     =  4
+  nbndskip    =  0
+
+  wannierize  = .false. ! .true.
+  num_iter    = 300
+  iprint      = 2
+  dis_win_max = 12
+  dis_froz_max= 7
+  proj(1)     = 'f=0,0,0:l=-3'   
+
+  elinterp    = .true.
+  phinterp    = .true.
+
+  tshuffle2   = .true.
+  tphases     = .false.
+
+  elecselfen  = .true. 
+  phonselfen  = .fasle. 
+  a2f         = .false.
+
+  specfun      = .true. 
+  wmin_specfun = -4
+  wmax_specfun = 1
+  nw_specfun   = 500
+
+  parallel_k  = .true.
+  parallel_q  = .false.
+
+  fsthick     = 1.36056981 ! eV 
+  eptemp      = 0.01 ! K (same as PRB 76, 165108)
+  degaussw    = 0.1 ! eV
+
+  dvscf_dir   = '../phonons/save'
+  filukk      = './diam.ukk'
+  filkf       = 'meshes/path2.dat'
+  nqf1        = 50
+  nqf2        = 50
+  nqf3        = 50
+  
+  nk1         = 6
+  nk2         = 6
+  nk3         = 6
+
+  nq1         = 6
+  nq2         = 6
+  nq3         = 6
+ /
+      16 cartesian
+   0.0000000   0.0000000   0.0000000  0.0092593
+  -0.1666667   0.1666667  -0.1666667  0.0740741
+  -0.3333333   0.3333333  -0.3333333  0.0740741
+   0.5000000  -0.5000000   0.5000000  0.0370370
+   0.0000000   0.3333333   0.0000000  0.0555556
+  -0.1666667   0.5000000  -0.1666667  0.2222222
+   0.6666667  -0.3333333   0.6666667  0.2222222
+   0.5000000  -0.1666667   0.5000000  0.2222222
+   0.3333333   0.0000000   0.3333333  0.1111111
+   0.0000000   0.6666667   0.0000000  0.0555556
+   0.8333333  -0.1666667   0.8333333  0.2222222
+   0.6666667   0.0000000   0.6666667  0.1111111
+   0.0000000  -1.0000000   0.0000000  0.0277778
+   0.6666667  -0.3333333   1.0000000  0.2222222
+   0.5000000  -0.1666667   0.8333333  0.2222222
+  -0.3333333  -1.0000000   0.0000000  0.1111111

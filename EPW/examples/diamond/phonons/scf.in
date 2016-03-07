@@ -1,0 +1,34 @@
+ &control
+    calculation     = 'scf'
+    prefix          = 'diam'
+    restart_mode    = 'from_scratch'
+    wf_collect      = .false.
+    pseudo_dir      = '../pp'
+    outdir          = './'
+    tprnfor         = .true.
+    tstress         = .true.
+ /
+ &system
+    ibrav           = 2
+    celldm(1)       = 6.64245
+    nat             = 2
+    ntyp            = 1
+    ecutwfc         = 60
+    occupations     = 'smearing'
+    smearing        = 'mp'
+    degauss         = 0.02
+    nbnd            = 4
+ /
+ &electrons
+    diagonalization = 'david'
+    mixing_beta     = 0.7
+    conv_thr        = 1.0d-10
+ /
+ATOMIC_SPECIES
+  C  12.01078  C_3.98148.UPF
+ATOMIC_POSITIONS alat
+  C   0.00  0.00  0.00
+  C   0.25  0.25  0.25
+K_POINTS automatic
+8 8 8 1 1 1
+

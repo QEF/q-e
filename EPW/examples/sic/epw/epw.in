@@ -1,0 +1,82 @@
+--
+&inputepw
+  prefix      = 'sic'
+  amass(1)    = 28.0855
+  amass(2)    = 12.0107
+  outdir      = './'
+
+  elph        = .true.
+  kmaps       = .false.
+  epbwrite    = .true.
+  epbread     = .false.
+
+  epwwrite    = .true.
+  epwread     = .false.
+
+  nbndsub     =  4
+  nbndskip    =  0
+
+  wannierize  = .true.
+  num_iter    = 300
+  iprint      = 2
+  dis_win_max = 12
+  dis_froz_max= 7
+  proj(1)     = 'Si:sp3'   
+
+  iverbosity  = 0
+
+  elinterp    = .true.
+  phinterp    = .true.
+
+  tshuffle2   = .true.
+  tphases     = .false.
+
+  elecselfen  = .false.
+  phonselfen  = .true.
+  a2f         = .true.
+
+  parallel_k  = .true.
+  parallel_q  = .false.
+
+  fsthick     = 2.80284905 ! eV
+  eptemp      = 200 ! K
+  degaussw    = 0.1 ! eV
+
+  dvscf_dir   = '../phonons/save'
+  filukk      = './SiC.ukk'
+  
+  nk1         = 6
+  nk2         = 6
+  nk3         = 6
+
+  nq1         = 6
+  nq2         = 6
+  nq3         = 6
+
+  nqf1         = 20
+  nqf2         = 20
+  nqf3         = 20
+  nkf1         = 10
+  nkf2         = 10
+  nkf3         = 10
+
+! The list of qpoints below must be identical
+! to ../phonons/qlist.dat
+ /
+  16 cartesian
+  0.0000000   0.0000000   0.0000000    0.0092593
+ -0.1666667   0.1666667  -0.1666667    0.0740741
+ -0.3333333   0.3333333  -0.3333333    0.0740741
+  0.5000000  -0.5000000   0.5000000    0.0370370
+  0.0000000   0.3333333   0.0000000    0.0555556
+ -0.1666667   0.5000000  -0.1666667    0.2222222
+  0.6666667  -0.3333333   0.6666667    0.2222222
+  0.5000000  -0.1666667   0.5000000    0.2222222
+  0.3333333   0.0000000   0.3333333    0.1111111
+  0.0000000   0.6666667   0.0000000    0.0555556
+  0.8333333  -0.1666667   0.8333333    0.2222222
+  0.6666667   0.0000000   0.6666667    0.1111111
+  0.0000000  -1.0000000   0.0000000    0.0277778
+  0.6666667  -0.3333333   1.0000000    0.2222222
+  0.5000000  -0.1666667   0.8333333    0.2222222
+ -0.3333333  -1.0000000   0.0000000    0.1111111

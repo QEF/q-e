@@ -1,0 +1,43 @@
+#!/bin/tcsh
+#$ -S /bin/tcsh
+#$ -l qname=parallel.q
+#$ -l h_rt=4:00:00
+#$ -o jobtest.out 
+#$ -e jobtest.err
+#$ -pe orte 16
+#$ -cwd 
+#$ -j y
+#$ -R y
+module load intel/ict/3.2
+module load ofed/openmpi/intel/1.2.8
+set NPROC   = 16
+set NPOOL   = 16
+set ESPDIR  = /home/giustino/code/espresso-4.0.3
+set MPIRUN  = "mpirun -np $NSLOTS"
+
+######################################################################
+#### everything above is machine dependent and should be modified ####
+#### according to the requirements of your cluster                ####
+#### do not edit below this line                                  ####
+######################################################################
+
+set PREFIX  = mgb2
+set PW      = "$MPIRUN $ESPDIR/bin/pw.x -npool $NPOOL"
+set PH      = "$MPIRUN $ESPDIR/bin/ph.x -npool $NPOOL"
+set EPWDIR  = $ESPDIR/EPW
+set EPW     = "$MPIRUN $EPWDIR/bin/epw.x -npool $NPOOL"
+set PDIR    = $ESPDIR/EPW/examples/mgb2/pp
+set JDIR    = $ESPDIR/EPW/examples/mgb2/epw
+set TDIR    = $JDIR/tmp
+
+mkdir $TDIR
+cd $TDIR
+cp $PDIR/* ./
+
+$PW  < $JDIR/inp/scf.in  > $JDIR/out/scf.out
+$PW  < $JDIR/inp/nscf.in > $JDIR/out/nscf.out
+
+cat $JDIR/inp/epw.in > $JDIR/out/epw.out
+$EPW < $JDIR/inp/epw.in  >> $JDIR/out/epw.out
+
+exit

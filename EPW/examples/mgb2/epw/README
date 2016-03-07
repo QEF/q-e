@@ -1,0 +1,30 @@
+
+The grid of k-points in the nscf calculation immediately preceeding
+the epw.x run must be uniform, centered at Gamma, and all the points
+must belong to the interval [0,1) in reciprocal space (this is a 
+requirement of the wannier90 program).
+
+The generation of this mesh can be done using any method. For instance
+we can use bin/kpoints.x with a cubic lattice (ibrav = 1), unshifted grid 
+[nshift = (/0,0,0/)] and no symmetry reduction (Print all points = y).
+Or we can use the following simple tcsh script:
+
+> more kgen.tcsh
+cat > script.m << EOF
+nk1 = 6;
+nk2 = 6;
+nk3 = 6;
+fid = fopen('klist.dat','w');
+for i1=0:nk1-1;
+ for i2=0:nk2-1;
+  for i3=0:nk3-1;
+    kvec = [i1/nk1 i2/nk2 i3/nk3 1/(nk1*nk2*nk3)];
+    fprintf(fid,'%12.6f %12.6f %12.6f %12.6f\n',kvec');
+  end;
+ end;
+end;
+fclose(fid);
+EOF
+octave < script.m 
+rm script.m
+

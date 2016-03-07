@@ -1,0 +1,182 @@
+Example
+
+Running EPW to calculate anisotropic superconducting gap on hexagonal MgB2
+
+The MgB2 example is located inside the EPW/examples/ directory. Within this directory is a shell script (run_example) and three directories. pp/ contains the MgB2 pseudopotential, phonon/ contains the input files to calculate the phonons for MgB2; epw/ contains the inputs to run epw.x on MgB2.
+
+Once epw.x has been compiled, we are ready to run the example.
+
+The first step is to calculate the phonons in the irreducible wedge. For this example, we use a 6x6x6 coarse phonon grid. This grid requires 28 phonons, which are listed in phonon/qlist.dat.
+
+From within EPW/examples/mgb2/ epw.x can be run to completion by executing: 
+
+./run_example
+
+and choosing "3" to first run the phonons, then execute EPW.
+
+Calculating the phonons
+
+./run_example
+
+Choose option "1".
+
+The example script first calculates the phonon dvscf and dyn files for each of the 28 wavevectors. This is done by first doing a self-consistent pw.x run, followed by a non-selfconsistent calculation with the 'phonon' specifier. Finally, ph.x is executed at the given wavevector. These data are saved in the mgb2/phonons/save/ directory for use in EPW. The resulting files, mgb2.dyn_q?? and mgb2.dvscf_q?? are labeled from 01 to 28 for each of the wavevectors.
+
+Once this calculation is completed we are ready to proceed with the execution of epw.x.  
+
+Running EPW
+
+./run_example
+
+Choose option "2".
+
+In order to execute, EPW needs the Kohn-Sham eigenfunctions on a uniform grid. Here we use a 24x24x24 coarse grid. A self-consistent calculation is first run, and then a non-selfconsistent calculation generates the eigenfunctions and eigenvalues on the coarse grid. The script will now execute epw.x as in
+
+epw.x < epw.in > epw.out
+
+The epw.out file is saved to the mgb2/epw/out/ directory. The rest of the output files are written to the mgb2/epw/inp/ directory.
+The format of the output files is described below (XX represents the temperature for which the anisotropic Eliashberg equations are solved). 
+Full description of these files can be found in the EPW souce code (eliashberg_aniso_iaxis.f90 and eliashberg_setup.f90 files).
+
+mgb2.imag_aniso_XX contains 5 columns: frequency on the imaginary-axis w (eV), eigenvalue E_nk with respect to the Fermi level (eV), Z_nk (eV), Delta_nk (eV), Z_nk in the normal state (eV). 
+(see Fig. 6a in Phys. Rev. B 87, 024505 (2013) as a reference).
+
+mgb2.imag_aniso_gap0_XX contains the distribution of the anisotropic superconducting gap (in eV) on the Fermi surface for the imaginary-axis calculation
+(see Fig. 7a in Phys. Rev. B 87, 024505 (2013) as a reference).
+
+mgb2.pade_aniso_gap0_XX same as mgb2.imag_aniso_gap0_XX only for the real-axis calculation using Pade approximants
+
+mgb2.pade_aniso_XX same as mgb2.imag_aniso_XX only for the real-axis calculation using Pade approximants (this file is written if iverbosity=2 in the input file).
+
+mgb2.qdos_XX contains the quasiparticle density of states N_S(w)/N_F as a function of frequency w (eV).
+
+mgb2.lambda_aniso contains 4 columns: eigenvalue E_nk with respect to the Fermi level (eV), lambda_nk, k (k-point index), n (band index)
+
+mgb2.lambda_k_pairs contains the normalized (column 2) and unnormalized (column 3) distribution of the electron-phonon coupling strength lambda_nk on the Fermi surface.  
+
+mgb2.lambda_pairs contains contains the normalized (column 2) and unnormalized (column 3) distribution of the electron-phonon coupling strength lambda_nk,n'k' on the Fermi surface. Column 4 is the total isotropic electron-phonon coupling strength lambda.
+ 
+
+The included epw.in input file is as follows: 
+
+--
+&inputepw
+  prefix      = 'mgb2',
+  amass(1)    = 24.305,
+  amass(2)    = 10.811
+  outdir      = './'
+
+  ep_coupling = .true.
+  elph        = .true.
+  kmaps       = .false.
+  epbwrite    = .true.
+  epbread     = .false.
+
+  epwwrite = .true.
+  epwread  = .false.
+
+  etf_mem     = .true.
+
+  nbndsub     =  5
+  nbndskip    =  0
+
+  wannierize  = .true.
+  num_iter    = 500
+  dis_froz_max= 8.8
+  proj(1)     = 'B:pz'
+  proj(2)     = 'f=0.5,1.0,0.5:s'
+  proj(3)     = 'f=0.0,0.5,0.5:s'
+  proj(4)     = 'f=0.5,0.5,0.5:s'
+
+  iverbosity  = 0
+
+  elinterp    = .true.
+  phinterp    = .true.
+
+  tshuffle2   = .true.
+  tphases     = .false.
+
+  parallel_k  = .true.
+  parallel_q  = .false.
+
+  eps_acustic = 2.0
+  ephwrite    = .true.
+  fly         = .true.
+
+  fsthick     = 0.4  ! eV
+  eptemp      = 300  ! K
+  degaussw    = 0.10 ! eV
+  nsmear      = 1
+  delta_smear = 0.04 ! eV
+
+  degaussq     = 0.5 ! meV
+  nqstep       = 500
+
+  eliashberg  = .true.
+
+  laniso = .true.
+  limag = .true.
+  lpade = .true.
+
+  conv_thr_iaxis = 1.0d-4
+
+  wscut = 0.525 ! eV
+  wccut = 0.525 ! eV
+
+  nstemp   = 2
+  tempsmin = 15.00
+  tempsmax = 20.00
+
+  nsiter   = 500
+
+  nuc     = 0.16
+
+  dvscf_dir   = '../../phonons/save'
+  
+  nk1         = 6
+  nk2         = 6
+  nk3         = 6
+
+  nq1         = 6
+  nq2         = 6
+  nq3         = 6
+
+  mp_mesh_k = .true.
+  nkf1 = 20
+  nkf2 = 20
+  nkf3 = 20
+
+  nqf1 = 20
+  nqf2 = 20
+  nqf3 = 20
+ /
+      28 cartesian
+0.000000000   0.000000000   0.000000000   0.004629630
+0.000000000   0.000000000   0.145933920   0.009259259
+0.000000000   0.000000000   0.291867841   0.009259259
+0.000000000   0.000000000   0.437801761   0.004629630
+0.000000000   0.192450090   0.000000000   0.027777778
+0.000000000   0.192450090   0.145933920   0.055555556
+0.000000000   0.192450090   0.291867841   0.055555556
+0.000000000   0.192450090   0.437801761   0.027777778
+0.000000000   0.384900179   0.000000000   0.027777778
+0.000000000   0.384900179   0.145933920   0.055555556
+0.000000000   0.384900179   0.291867841   0.055555556
+0.000000000   0.384900179   0.437801761   0.027777778
+0.000000000   0.577350269   0.000000000   0.013888889
+0.000000000   0.577350269   0.145933920   0.027777778
+0.000000000   0.577350269   0.291867841   0.027777778
+0.000000000   0.577350269   0.437801761   0.013888889
+0.166666667   0.288675135   0.000000000   0.027777778
+0.166666667   0.288675135   0.145933920   0.055555556
+0.166666667   0.288675135   0.291867841   0.055555556
+0.166666667   0.288675135   0.437801761   0.027777778
+0.166666667   0.481125224   0.000000000   0.055555556
+0.166666667   0.481125224   0.145933920   0.111111111
+0.166666667   0.481125224   0.291867841   0.111111111
+0.166666667   0.481125224   0.437801761   0.055555556
+0.333333333   0.577350269   0.000000000   0.009259259
+0.333333333   0.577350269   0.145933920   0.018518519
+0.333333333   0.577350269   0.291867841   0.018518519
+0.333333333   0.577350269   0.437801761   0.009259259
+

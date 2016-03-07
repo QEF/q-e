@@ -1,0 +1,67 @@
+                                       ``:oss/                                        
+                           `.+s+.     .+ys--yh+     `./ss+.                           
+                          -sh//yy+`   +yy   +yy    -+h+-oyy                           
+                          -yh- .oyy/.-sh.   .syo-.:sy-  /yh                           
+                 `.-.`    `yh+   -oyyyo.     `/syys:    oys      `.`                  
+               `/+ssys+-` `sh+      `                   oys`   .:osyo`                
+               -yh- ./syyooyo`                          .sys+/oyo--yh/                
+               `yy+    .-:-.                             `-/+/:`  -sh-                
+                /yh.                                              oys                 
+          ``..---hho---------`   .---------..`      `.-----.`    -hd+---.             
+       `./osmNMMMMMMMMMMMMMMMs. +NNMMMMMMMMNNmh+.   yNMMMMMNm-  oNMMMMMNmo++:`        
+       +sy--/sdMMMhyyyyyyyNMMh- .oyNMMmyyyyyhNMMm+` -yMMMdyyo:` .oyyNMMNhs+syy`       
+       -yy/   /MMM+.`-+/``mMMy-   `mMMh:`````.dMMN:` `MMMy-`-dhhy```mMMy:``+hs        
+        -yy+` /MMMo:-mMM+`-oo/.    mMMh:     `dMMN/`  dMMm:`dMMMMy..MMMo-.+yo`        
+         .sys`/MMMMNNMMMs-         mMMmyooooymMMNo:   oMMM/sMMMMMM++MMN//oh:          
+          `sh+/MMMhyyMMMs- `-`     mMMMMMMMMMNmy+-`   -MMMhMMMsmMMmdMMd/yy+           
+    `-/+++oyy-/MMM+.`/hh/.`mNm:`   mMMd+/////:-.`      NMMMMMd/:NMMMMMy:/yyo/:.`      
+   +os+//:-..-oMMMo:--:::-/MMMo. .-mMMd+---`           hMMMMN+. oMMMMMo. `-+osyso:`   
+   syo     `mNMMMMMNNNNNNNNMMMo.oNNMMMMMNNNN:`         +MMMMs:`  dMMMN/`     ``:syo   
+   /yh`     :syyyyyyyyyyyyyyyy+.`+syyyyyyyyo:`         .oyys:`   .oyys:`        +yh   
+   -yh-        ````````````````    `````````              ``        ``          oys   
+   -+h/------------------------::::::::://////++++++++++++++++++++++///////::::/yd:   
+   shdddddddddddddddddddddddddddddhhhhhhhhyyyyyssssssssssssssssyyyyyyyhhhhhhhddddh`   
+                                                                                    
+ EPW v4 is part of the open-source Quantum ESPRESSO suite
+ for quantum simulation of materials; please cite
+     "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+      URL http://www.quantum-espresso.org",
+ in publications or presentations arising from this work. More details at
+ http://www.quantum-espresso.org/quote
+
+ Please also consider citing the EPW papers:
+ 1) F. Giustino, M. L. Cohen, and S. G. Louie, Phys. Rev. B 76, 165108 (2007)
+ 2) S. Ponc\'e, E. R. Margine, C. Verdi, and F. Giustino, Comput. Phys. Comm. (2016) [to be submitted]
+
+ The software tree of EPW v4 is composed of
+ /bin ==> Contains the epw.x soft link to the EPW executable.
+ /examples  ==> Contains a lists of examples that are connected to the tutorials. The 
+          tutorials can be found at http://epw.org.uk/Documentation/Tutorial
+ /src ==> Contains all the EPW source files.
+ /tests ==> Small tests useful for debugging and checking if the code works. Those tests are used
+          by the test farm. Do not expect physically relevant results out of it. 
+
+ Installation
+ ------------
+ To compile the code you first need to issue ./configure in /espresso. 
+ Indeed EPW rely on the make.sys file created by QE. 
+ Then you can run ./make inside espresso/EPW.
+
+ EPW dedicated website and forum
+ -------------------------------
+ EPW has a dedicated website that you can access at http://epw.org.uk/
+ 
+ If you have any questions, please use the forum at http://epw.freefo.org/index.php
+
+ Initial release inside Quantum ESPRESSO
+ ---------------------------------------
+ SP, ERM, CV, FG, 1 March 2016 
+
+
+
+
+
+
+
+
+
