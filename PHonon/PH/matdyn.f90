@@ -109,6 +109,7 @@ PROGRAM matdyn
   !     na_ifc     (logical) add non analitic contributions to the interatomic force 
   !                constants if finite displacement method is used (as in Wang et al.
   !                Phys. Rev. B 85, 224303 (2012)) [to be used in conjunction with fd.x]
+  !     nosym      if .true., no symmetry and no time reversal are imposed
   !
   !  if (readtau) atom types and positions in the supercell follow:
   !     (tau(i,na),i=1,3), ityp(na)
@@ -179,7 +180,7 @@ PROGRAM matdyn
 
   INTEGER :: nspin_mag, nqs, ios
   !
-  LOGICAL :: readtau, la2F, xmlifc, lo_to_split, na_ifc, fd
+  LOGICAL :: readtau, la2F, xmlifc, lo_to_split, na_ifc, fd, nosym
   !
   REAL(DP) :: qhat(3), qh, DeltaE, Emin=0._dp, Emax, E, DOSofE(1), qq
   REAL(DP) :: delta, pathL
@@ -209,7 +210,7 @@ PROGRAM matdyn
   NAMELIST /input/ flfrc, amass, asr, flfrq, flvec, fleig, at, dos,  &
        &           fldos, nk1, nk2, nk3, l1, l2, l3, ntyp, readtau, fltau, &
        &           la2F, ndos, DeltaE, q_in_band_form, q_in_cryst_coord, &
-       &           eigen_similarity, fldyn, na_ifc, fd, point_label_type
+       &           eigen_similarity, fldyn, na_ifc, fd, point_label_type, nosym
   !
   CALL mp_startup()
   CALL environment_start('MATDYN')
@@ -249,6 +250,7 @@ PROGRAM matdyn
      na_ifc=.FALSE.
      fd=.FALSE.
      point_label_type='SC'
+     nosym = .false.
      !
      !
      IF (ionode) READ (5,input,IOSTAT=ios)
@@ -394,7 +396,7 @@ PROGRAM matdyn
         nqx = nk1*nk2*nk3
         ALLOCATE ( tetra(4,ntetra), q(3,nqx) )
         CALL gen_qpoints (ibrav, at, bg, nat, tau, ityp, nk1, nk2, nk3, &
-             ntetra, nqx, nq, q, tetra)
+             ntetra, nqx, nq, q, tetra, nosym)
      ELSE
         !
         ! read q-point list
@@ -1982,7 +1984,7 @@ END SUBROUTINE write_tau
 !
 !-----------------------------------------------------------------------
 SUBROUTINE gen_qpoints (ibrav, at_, bg_, nat, tau, ityp, nk1, nk2, nk3, &
-     ntetra, nqx, nq, q, tetra)
+     ntetra, nqx, nq, q, tetra, nosym)
   !-----------------------------------------------------------------------
   !
   USE kinds,      ONLY : DP
@@ -1994,6 +1996,7 @@ SUBROUTINE gen_qpoints (ibrav, at_, bg_, nat, tau, ityp, nk1, nk2, nk3, &
   ! input
   INTEGER :: ibrav, nat, nk1, nk2, nk3, ntetra, ityp(*)
   REAL(DP) :: at_(3,3), bg_(3,3), tau(3,nat)
+  LOGICAL :: nosym
   ! output
   INTEGER :: nqx, nq, tetra(4,ntetra)
   REAL(DP) :: q(3,nqx)
@@ -2002,12 +2005,17 @@ SUBROUTINE gen_qpoints (ibrav, at_, bg_, nat, tau, ityp, nk1, nk2, nk3, &
   LOGICAL :: magnetic_sym=.FALSE., skip_equivalence=.FALSE.
   !
   time_reversal = .true.
+  if (nosym) time_reversal = .false.
   t_rev(:) = 0
   xqq (:) =0.d0
   at = at_
   bg = bg_
   CALL set_sym_bl ( )
   !
+  if (nosym) then
+     nrot = 1
+     nsym = 1
+  endif
   CALL kpoint_grid ( nrot, time_reversal, skip_equivalence, s, t_rev, bg, nqx, &
                            0,0,0, nk1,nk2,nk3, nq, q, wk)
   !
