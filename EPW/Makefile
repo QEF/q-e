@@ -4,7 +4,7 @@ default: epw
 all: epw
 
 epw: 
-	(cd src ; make )
+	(cd src ; make all )
 	(cd bin ; ln -fs ../src/epw.x . )
 
 clean:

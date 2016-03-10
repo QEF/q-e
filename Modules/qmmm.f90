@@ -341,7 +341,7 @@ END SUBROUTINE qmmm_minimum_image
        END DO
        WRITE(stdout,*)
        DO i = 1, nat_all
-          WRITE(stdout,'(5X,A,3F10.6,2X,A,F10.6,2X,A,F10.6,A,I)') &
+          WRITE(stdout,'(5X,A,3F10.6,2X,A,F10.6,2X,A,F10.6,A,I1)') &
              'QMMM: tau_mm ', tau_mm(:,i), ' charge_mm ', charge_mm(i), ' aradii ', aradii(i), ' QA ', tau_mask(i)
        END DO
     END IF

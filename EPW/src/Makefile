@@ -114,11 +114,6 @@ write_ephmat.o
 #default : epw
 
 
-#epw :   pw ph wannier epw.o libepw.a $(EPWOBJS) $(LIBOBJS)
-#	$(LD) $(LDFLAGS) -o epw.x libepw.a $(QEMODS) $(PWOBJS) $(PHOBJS) \
-#	$(EPWOBJS) $(W90LIB) $(LIBOBJS) $(IBS)
-#	- ( cd ../bin ; ln -fs ../src/epw.x . )
-
 PHOBJS = ../../PHonon/PH/libph.a
 PWOBJS = ../../PW/src/libpw.a
 W90LIB = ../../wannier90-2.0.1/libwannier.a
@@ -129,28 +124,21 @@ LIBOBJS = ../../clib/clib.a ../../iotk/src/libiotk.a
 
 TLDEPS= bindir mods libs pw-lib pw ph
 
-
-all :  libepw.a epw.x
+all :   pw ph wannier wcorr pp atom upf libepw.a epw.x 
 
 libepw.a : $(EPWOBJS)
 	$(AR) $(ARFLAGS) $@ $?
 	$(RANLIB) $@
 
-###### epw.x : ph pw wannier wcorr pp atom upf epw.o  libepw.a 
-##	$(PHOBJS) $(LRMODS) $(PWOBJS) $(W90LIB) $(QEMODS) $(LIBOBJS) $(LD) $(LDFLAGS) epw.o  libepw.a 
-##	$(PHOBJS) $(LRMODS) $(PWOBJS) $(W90LIB) $(QEMODS) $(LIBOBJS) $(LIBS) -o epw.x
-##	- ( cd ../bin ; ln -fs ../src/epw.x . )
-
-epw.x : ph pw wannier wcorr pp atom upf epw.o libepw.a $(PHOBJS) $(LRMODS) $(PWOBJS) $(W90LIB) $(QEMODS) $(LIBOBJS)
+epw.x : epw.o libepw.a $(PHOBJS) $(LRMODS) $(PWOBJS) $(W90LIB) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
 	epw.o  libepw.a	$(PHOBJS) $(LRMODS) $(W90LIB) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS) 
 	- ( cd ../bin ; ln -fs ../src/epw.x . )
 
-
 # SP: Here to correct bugs in wannier 2.0.1
 
 wcorr : 
-	sed -i "s/allocate(fermi_energy_list(nfermi),stat=ierr)/if (.not. allocated(fermi_energy_list) ) allocate(fermi_energy_list(nfermi))/g" ../../wannier90-2.0.1/src/parameters.F90 ; sed -i "s/allocate(kubo_freq_list(kubo_nfreq),stat=ierr)/if (.not. allocated(kubo_freq_list) ) allocate(kubo_freq_list(kubo_nfreq)) /g" ../../wannier90-2.0.1/src/parameters.F90 ; cp wannier_lib.F90 ../../wannier90-2.0.1/src/
+	sed -i "s/allocate(fermi_energy_list(nfermi),stat=ierr)/if (.not. allocated(fermi_energy_list) ) allocate(fermi_energy_list(nfermi))/g" ../../wannier90-2.0.1/src/parameters.F90 ; sed -i "s/allocate(kubo_freq_list(kubo_nfreq),stat=ierr)/if (.not. allocated(kubo_freq_list) ) allocate(kubo_freq_list(kubo_nfreq)) /g" ../../wannier90-2.0.1/src/parameters.F90 ; cp wannier_lib.F90 ../../wannier90-2.0.1/src/ 
 
 pw : 
 	cd ../../ ; make pw
