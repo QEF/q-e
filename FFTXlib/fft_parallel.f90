@@ -15,7 +15,7 @@
 !     Written and maintained by Carlo Cavazzoni
 !     Last update Apr. 2009
 !
-!=---------------------------------------------------------------------==!
+!!=---------------------------------------------------------------------==!
 !
 MODULE fft_parallel
 !
@@ -34,14 +34,14 @@ CONTAINS
 SUBROUTINE tg_cft3s( f, dfft, isgn, use_task_groups )
   !----------------------------------------------------------------------------
   !
-  ! ... isgn = +-1 : parallel 3d fft for rho and for the potential
+  !! ... isgn = +-1 : parallel 3d fft for rho and for the potential
   !                  NOT IMPLEMENTED WITH TASK GROUPS
-  ! ... isgn = +-2 : parallel 3d fft for wavefunctions
+  !! ... isgn = +-2 : parallel 3d fft for wavefunctions
   !
-  ! ... isgn = +   : G-space to R-space, output = \sum_G f(G)exp(+iG*R)
-  ! ...              fft along z using pencils        (cft_1z)
-  ! ...              transpose across nodes           (fft_scatter)
-  ! ...                 and reorder
+  !! ... isgn = +   : G-space to R-space, output = \sum_G f(G)exp(+iG*R)
+  !! ...              fft along z using pencils        (cft_1z)
+  !! ...              transpose across nodes           (fft_scatter)
+  !! ...                 and reorder
   ! ...              fft along y (using planes) and x (cft_2xy)
   ! ... isgn = -   : R-space to G-space, output = \int_R f(R)exp(-iG*R)/Omega
   ! ...              fft along x and y(using planes)  (cft_2xy)
@@ -73,7 +73,7 @@ SUBROUTINE tg_cft3s( f, dfft, isgn, use_task_groups )
 #endif
   !
   COMPLEX(DP), INTENT(inout)    :: f( : )  ! array containing data to be transformed
-  TYPE (fft_dlay_descriptor), INTENT(in) :: dfft
+  TYPE (fft_dlay_descriptor), INTENT(inout) :: dfft
                                            ! descriptor of fft data layout
   INTEGER, INTENT(in)           :: isgn    ! fft direction
   LOGICAL, OPTIONAL, INTENT(in) :: use_task_groups
@@ -288,7 +288,7 @@ SUBROUTINE fw_tg_cft3_z( f_in, dfft, f_out )
   !
   COMPLEX(DP), INTENT(inout)    :: f_in( : )  ! INPUT array containing data to be transformed
   COMPLEX(DP), INTENT(inout)   :: f_out (:)  ! OUTPUT
-  TYPE (fft_dlay_descriptor), INTENT(in) :: dfft ! descriptor of fft data layout
+  TYPE (fft_dlay_descriptor), INTENT(inout) :: dfft ! descriptor of fft data layout
   !
   CALL cft_1z( f_in, dfft%tg_nsw( dfft%mype + 1 ), dfft%nr3, dfft%nr3x, 2, f_out )
   !
@@ -308,7 +308,7 @@ SUBROUTINE bw_tg_cft3_z( f_out, dfft, f_in )
   !
   COMPLEX(DP), INTENT(inout)    :: f_out( : ) ! OUTPUT
   COMPLEX(DP), INTENT(inout)   :: f_in (:) ! INPUT array containing data to be transformed
-  TYPE (fft_dlay_descriptor), INTENT(in) :: dfft ! descriptor of fft data layout
+  TYPE (fft_dlay_descriptor), INTENT(inout) :: dfft ! descriptor of fft data layout
   !
   CALL cft_1z( f_in, dfft%tg_nsw( dfft%mype + 1 ), dfft%nr3, dfft%nr3x, -2, f_out )
   !
@@ -324,7 +324,7 @@ SUBROUTINE fw_tg_cft3_scatter( f, dfft, aux )
   IMPLICIT NONE
   !
   COMPLEX(DP), INTENT(inout)    :: f( : ), aux( : )  ! array containing data to be transformed
-  TYPE (fft_dlay_descriptor), INTENT(in) :: dfft     ! descriptor of fft data layout
+  TYPE (fft_dlay_descriptor), INTENT(inout) :: dfft     ! descriptor of fft data layout
   !
   CALL fft_scatter( dfft, aux, dfft%nr3x, dfft%nogrp*dfft%tg_nnr, f, dfft%tg_nsw, dfft%tg_npp, 2, .true. )
   !
@@ -340,7 +340,7 @@ SUBROUTINE bw_tg_cft3_scatter( f, dfft, aux )
   IMPLICIT NONE
   !
   COMPLEX(DP), INTENT(inout)    :: f( : ), aux( : )  ! array containing data to be transformed
-  TYPE (fft_dlay_descriptor), INTENT(in) :: dfft     ! descriptor of fft data layout
+  TYPE (fft_dlay_descriptor), INTENT(inout) :: dfft     ! descriptor of fft data layout
   !
   CALL fft_scatter( dfft, aux, dfft%nr3x, dfft%nogrp*dfft%tg_nnr, f, dfft%tg_nsw, dfft%tg_npp, -2, .true. )
   !
@@ -356,7 +356,7 @@ SUBROUTINE fw_tg_cft3_xy( f, dfft )
   IMPLICIT NONE
   !
   COMPLEX(DP), INTENT(inout)    :: f( : ) ! INPUT/OUTPUT array containing data to be transformed
-  TYPE (fft_dlay_descriptor), INTENT(in) :: dfft ! descriptor of fft data layout
+  TYPE (fft_dlay_descriptor), INTENT(inout) :: dfft ! descriptor of fft data layout
   INTEGER                    :: planes( dfft%nr1x )
   !
   planes = dfft%iplw
@@ -374,7 +374,7 @@ SUBROUTINE bw_tg_cft3_xy( f, dfft )
   IMPLICIT NONE
   !
   COMPLEX(DP), INTENT(inout)    :: f( : ) ! INPUT/OUTPUT  array containing data to be transformed
-  TYPE (fft_dlay_descriptor), INTENT(in) :: dfft ! descriptor of fft data layout
+  TYPE (fft_dlay_descriptor), INTENT(inout) :: dfft ! descriptor of fft data layout
   INTEGER                    :: planes( dfft%nr1x )
   !
   planes = dfft%iplw
@@ -395,7 +395,7 @@ END SUBROUTINE bw_tg_cft3_xy
 
      COMPLEX(DP), INTENT(in)    :: f( : )  ! array containing all bands, and gvecs distributed across processors
      COMPLEX(DP), INTENT(out)    :: yf( : )  ! array containing bands collected into task groups
-     TYPE (fft_dlay_descriptor), INTENT(in) :: dfft
+     TYPE (fft_dlay_descriptor), INTENT(inout) :: dfft
      INTEGER                     :: ierr
      !
      IF( dfft%tg_rdsp(dfft%nogrp) + dfft%tg_rcv(dfft%nogrp) > size( yf ) ) THEN
@@ -435,8 +435,59 @@ END SUBROUTINE bw_tg_cft3_xy
      RETURN
   END SUBROUTINE pack_group_sticks
 
-  !
+  SUBROUTINE pack_group_sticks_i( f, yf, dfft, req )
 
+     USE fft_types,  ONLY : fft_dlay_descriptor
+
+     IMPLICIT NONE
+#if defined(__MPI)
+  INCLUDE 'mpif.h'
+#endif
+
+     COMPLEX(DP), INTENT(in)    :: f( : )  ! array containing all bands, and gvecs distributed across processors
+     COMPLEX(DP), INTENT(out)    :: yf( : )  ! array containing bands collected into task groups
+     TYPE (fft_dlay_descriptor), INTENT(inout) :: dfft
+     INTEGER, INTENT(OUT) :: req
+     INTEGER :: ierr
+     !
+     IF( dfft%tg_rdsp(dfft%nogrp) + dfft%tg_rcv(dfft%nogrp) > size( yf ) ) THEN
+        CALL fftx_error__( 'pack_group_sticks' , ' inconsistent size ', 1 )
+     ENDIF
+     IF( dfft%tg_psdsp(dfft%nogrp) + dfft%tg_snd(dfft%nogrp) > size( f ) ) THEN
+        CALL fftx_error__( 'pack_group_sticks', ' inconsistent size ', 2 )
+     ENDIF
+
+     CALL start_clock( 'ALLTOALL' )
+     !
+     !  Collect all the sticks of the different states,
+     !  in "yf" processors will have all the sticks of the OGRP
+
+#if defined(__MPI)
+
+     CALL MPI_IALLTOALLV( f(1), dfft%tg_snd, dfft%tg_psdsp, MPI_DOUBLE_COMPLEX, yf(1), dfft%tg_rcv, &
+      &                     dfft%tg_rdsp, MPI_DOUBLE_COMPLEX, dfft%ogrp_comm, req, IERR)
+     IF( ierr /= 0 ) THEN
+        CALL fftx_error__( 'pack_group_sticks', ' alltoall error 1 ', abs(ierr) )
+     ENDIF
+
+#else
+
+     IF( dfft%tg_rcv(dfft%nogrp) /= dfft%tg_snd(dfft%nogrp) ) THEN
+        CALL fftx_error__( 'pack_group_sticks', ' inconsistent size ', 3 )
+     ENDIF
+
+     yf( 1 : dfft%tg_rcv(dfft%nogrp) ) =  f( 1 : dfft%tg_snd(dfft%nogrp) )
+
+#endif
+
+     CALL stop_clock( 'ALLTOALL' )
+     !
+     !YF Contains all ( ~ NOGRP*dfft%nsw(me) ) Z-sticks
+     !
+     RETURN
+  END SUBROUTINE pack_group_sticks_i
+
+  !
   SUBROUTINE unpack_group_sticks( yf, f, dfft )
 
      USE fft_types,  ONLY : fft_dlay_descriptor
@@ -448,7 +499,7 @@ END SUBROUTINE bw_tg_cft3_xy
 
      COMPLEX(DP), INTENT(out)    :: f( : )  ! array containing all bands, and gvecs distributed across processors
      COMPLEX(DP), INTENT(in)    :: yf( : )  ! array containing bands collected into task groups
-     TYPE (fft_dlay_descriptor), INTENT(in) :: dfft
+     TYPE (fft_dlay_descriptor), INTENT(inout) :: dfft
      !
      !  Bring pencils back to their original distribution
      !
@@ -477,6 +528,47 @@ END SUBROUTINE bw_tg_cft3_xy
      RETURN
   END SUBROUTINE unpack_group_sticks
 
+  SUBROUTINE unpack_group_sticks_i( yf, f, dfft, req )
+
+     USE fft_types,  ONLY : fft_dlay_descriptor
+
+     IMPLICIT NONE
+#if defined(__MPI)
+  INCLUDE 'mpif.h'
+     INTEGER :: req
+#endif
+
+     COMPLEX(DP), INTENT(out)    :: f( : )  ! array containing all bands, and gvecs distributed across processors
+     COMPLEX(DP), INTENT(in)    :: yf( : )  ! array containing bands collected into task groups
+     TYPE (fft_dlay_descriptor), INTENT(inout) :: dfft
+     !
+     !  Bring pencils back to their original distribution
+     !
+     INTEGER                     :: ierr
+     !
+     IF( dfft%tg_usdsp(dfft%nogrp) + dfft%tg_snd(dfft%nogrp) > size( f ) ) THEN
+        CALL fftx_error__( 'unpack_group_sticks', ' inconsistent size ', 3 )
+     ENDIF
+     IF( dfft%tg_rdsp(dfft%nogrp) + dfft%tg_rcv(dfft%nogrp) > size( yf ) ) THEN
+        CALL fftx_error__( 'unpack_group_sticks', ' inconsistent size ', 4 )
+     ENDIF
+
+     CALL start_clock( 'ALLTOALL' )
+
+#if defined(__MPI)
+     CALL MPI_IAlltoallv( yf(1), &
+          dfft%tg_rcv, dfft%tg_rdsp, MPI_DOUBLE_COMPLEX, f(1), &
+          dfft%tg_snd, dfft%tg_usdsp, MPI_DOUBLE_COMPLEX, dfft%ogrp_comm, req, IERR)
+     IF( ierr /= 0 ) THEN
+        CALL fftx_error__( 'unpack_group_sticks', ' alltoall error 2 ', abs(ierr) )
+     ENDIF
+#endif
+
+     CALL stop_clock( 'ALLTOALL' )
+
+     RETURN
+  END SUBROUTINE unpack_group_sticks_i
+
 SUBROUTINE tg_gather( dffts, v, tg_v )
    !
    USE fft_types,      ONLY : fft_dlay_descriptor
@@ -489,7 +581,7 @@ SUBROUTINE tg_gather( dffts, v, tg_v )
   INCLUDE 'mpif.h'
 #endif
 
-   TYPE(fft_dlay_descriptor), INTENT(in) :: dffts
+   TYPE(fft_dlay_descriptor), INTENT(inout) :: dffts
 
    REAL(DP) :: v(:)
    REAL(DP) :: tg_v(:)
@@ -551,7 +643,7 @@ SUBROUTINE tg_cgather( dffts, v, tg_v )
    INCLUDE 'mpif.h'
 #endif
 
-   TYPE(fft_dlay_descriptor), INTENT(in) :: dffts
+   TYPE(fft_dlay_descriptor), INTENT(inout) :: dffts
 
    COMPLEX(DP) :: v(:)
    COMPLEX(DP) :: tg_v(:)

@@ -26,7 +26,7 @@ MODULE fft_interfaces
        IMPLICIT NONE
        INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
        CHARACTER(LEN=*),  INTENT(IN) :: grid_type
-       TYPE(fft_dlay_descriptor), INTENT(IN) :: dfft
+       TYPE(fft_dlay_descriptor), INTENT(INOUT) :: dfft
        COMPLEX(DP) :: f(:)
      END SUBROUTINE invfft_x
      !
@@ -36,7 +36,7 @@ MODULE fft_interfaces
        INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
        INTEGER, INTENT(IN) :: ia
        CHARACTER(LEN=*),  INTENT(IN) :: grid_type
-       TYPE(fft_dlay_descriptor), INTENT(IN) :: dfft
+       TYPE(fft_dlay_descriptor), INTENT(INOUT) :: dfft
        COMPLEX(DP) :: f(:)
      END SUBROUTINE invfft_b
   END INTERFACE
@@ -47,7 +47,7 @@ MODULE fft_interfaces
        IMPLICIT NONE
        INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
        CHARACTER(LEN=*), INTENT(IN) :: grid_type
-       TYPE(fft_dlay_descriptor), INTENT(IN) :: dfft
+       TYPE(fft_dlay_descriptor), INTENT(INOUT) :: dfft
        COMPLEX(DP) :: f(:)
      END SUBROUTINE fwfft_x
   END INTERFACE
@@ -93,7 +93,7 @@ SUBROUTINE invfft_x( grid_type, f, dfft )
 
   INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
 
-  TYPE(fft_dlay_descriptor), INTENT(IN) :: dfft
+  TYPE(fft_dlay_descriptor), INTENT(INOUT) :: dfft
   CHARACTER(LEN=*), INTENT(IN) :: grid_type
   COMPLEX(DP) :: f(:)
   !
@@ -198,7 +198,7 @@ SUBROUTINE fwfft_x( grid_type, f, dfft )
 
   INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
 
-  TYPE(fft_dlay_descriptor), INTENT(IN) :: dfft
+  TYPE(fft_dlay_descriptor), INTENT(INOUT) :: dfft
   CHARACTER(LEN=*), INTENT(IN) :: grid_type
   COMPLEX(DP) :: f(:)
 
@@ -292,7 +292,7 @@ SUBROUTINE invfft_b( grid_type, f, dfft, ia )
 
   INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
   
-  TYPE(fft_dlay_descriptor), INTENT(IN) :: dfft
+  TYPE(fft_dlay_descriptor), INTENT(INOUT) :: dfft
 ! Removed the 'OPTIONAL' attribute. When present, the specific interfaces
 ! 'invfft_x' and 'invfft_b' cannot be disambiguated when the generic interface
 ! call is made. This is a violation the Fortran standard. The Cray compiler

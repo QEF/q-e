@@ -420,7 +420,7 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
   INCLUDE 'mpif.h'
 #endif
 
-  TYPE (fft_dlay_descriptor), INTENT(in) :: dfft
+  TYPE (fft_dlay_descriptor), INTENT(inout) :: dfft
   INTEGER, INTENT(in)           :: nr3x, nxx_, isgn, ncp_ (:), npp_ (:)
   COMPLEX (DP), INTENT(inout)   :: f_in (nxx_), f_aux (nxx_)
   LOGICAL, OPTIONAL, INTENT(in) :: use_tg
@@ -428,7 +428,7 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
 #if defined(__MPI)
 
   INTEGER :: dest, from, k, offset, proc, ierr, me, nprocp, gproc, gcomm, i, kdest, kfrom
-  INTEGER :: me_p, nppx, mc, j, npp, nnp, ii, it, ip, ioff, sendsiz, ncpx, ipp, nblk, nsiz
+  INTEGER :: me_p, nppx, mc, j, npp, nnp, ii, it, ip, ioff, sendsiz, ncpx, ipp, nblk, nsiz, ijp
   INTEGER :: sh(dfft%nproc), rh(dfft%nproc)
   INTEGER :: istat( MPI_STATUS_SIZE )
   LOGICAL :: lrcv, lsnd, tsts(dfft%nproc), tstr(dfft%nproc)
@@ -437,6 +437,8 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
 
   !
   !  Task Groups
+  !
+  CALL start_clock ('fft_scatter')
 
   use_tg_ = .false.
 
@@ -451,8 +453,6 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
      nprocp = dfft%nproc
   ENDIF
   !
-  CALL start_clock ('fft_scatter')
-  !
   ncpx = 0
   nppx = 0
   IF( use_tg_ ) THEN
@@ -461,6 +461,7 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
         ncpx = max( ncpx, ncp_ ( gproc ) )
         nppx = max( nppx, npp_ ( gproc ) )
      ENDDO
+     gcomm = dfft%pgrp_comm
   ELSE
      DO proc = 1, nprocp
         ncpx = max( ncpx, ncp_ ( proc ) )
@@ -469,18 +470,12 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
      IF ( dfft%nproc == 1 ) THEN
         nppx = dfft%nr3x
      END IF
-  ENDIF
-  sendsiz = ncpx * nppx
-  !
-  IF( use_tg_ ) THEN
-     gcomm = dfft%pgrp_comm
-  ELSE
      gcomm = dfft%comm
   ENDIF
-
-
-  ierr = 0
-  IF (isgn.gt.0) THEN
+  ! 
+  sendsiz = ncpx * nppx
+  !
+  IF ( isgn .gt. 0 ) THEN
      !
      ! "forward" scatter from columns to planes
      !
@@ -489,6 +484,7 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
      offset = 1
 
      DO proc = 1, nprocp
+
         IF( use_tg_ ) THEN
            gproc = dfft%nplist(proc)+1
         ELSE
@@ -509,23 +505,15 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
            kfrom = kfrom + nr3x
         ENDDO
         !
-        ! post the non-blocking send, f_aux can't be overwritten until operation
-        ! has completed
+        ! post the non-blocking send, f_aux can't be overwritten until operation has completed
         !
         CALL mpi_isend( f_aux( (proc-1)*sendsiz + 1 ), sendsiz, MPI_DOUBLE_COMPLEX, proc-1, me, gcomm, sh( proc ), ierr )
         !
         IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', ' forward send info<>0', abs(ierr) )
 
         offset = offset + npp_ ( gproc )
+        !
      ENDDO
-
-     !
-     ! maybe useless; ensures that no garbage is present in the output
-     !
-     !! f_in = 0.0_DP
-     !
-     ! step two: communication
-     !
      !
      ! step two: receive
      !
@@ -537,22 +525,17 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
         !
         IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', ' forward receive info<>0', abs(ierr) )
         !
-        tstr( proc )  = .false.
-        tsts( proc )  = .false.
-        !
      ENDDO
      !
      ! maybe useless; ensures that no garbage is present in the output
      !
      f_in( nprocp*sendsiz + 1 : size( f_in )  ) = 0.0_DP
      !
-     lrcv = .false.
-     lsnd = .false.
-     !
      call mpi_waitall( nprocp, sh, MPI_STATUSES_IGNORE, ierr )
-     call mpi_waitall( nprocp, rh, MPI_STATUSES_IGNORE, ierr )
      !
      f_aux = (0.d0, 0.d0)
+     !
+     call mpi_waitall( nprocp, rh, MPI_STATUSES_IGNORE, ierr )
      !
      IF( isgn == 1 ) THEN
 
@@ -573,60 +556,70 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
         IF( use_tg_ ) THEN
            npp  = dfft%tg_npp( me )
            nnp  = dfft%nr1x * dfft%nr2x
-        ELSE
-           npp  = dfft%npp( me )
-           nnp  = dfft%nnp
-        ENDIF
-
-        IF( use_tg_ ) THEN
            nblk = dfft%nproc / dfft%nogrp
            nsiz = dfft%nogrp
         ELSE
+           npp  = dfft%npp( me )
+           nnp  = dfft%nnp
            nblk = dfft%nproc 
            nsiz = 1
-        END IF
+        ENDIF
         !
-        ip = 1
-        !
-        DO gproc = 1, nblk
+        IF( ( dfft%dimref(1) .ne. npp ) .or. ( dfft%dimref(2) .ne. nnp ) .or. &
+            ( dfft%dimref(3) .ne. nblk ) .or. ( dfft%dimref(4) .ne. nsiz ) ) THEN
            !
-           ii = 0
+           IF( ALLOCATED( dfft%indmap ) )  &
+              DEALLOCATE( dfft%indmap )
+           ALLOCATE( dfft%indmap(2,SIZE(f_aux)) )
            !
-           DO ipp = 1, nsiz
+           ijp = 0
+           !
+           DO gproc = 1, nblk
               !
-              ioff = dfft%iss( ip )
+              ii = 0
               !
-              DO i = 1, dfft%nsw( ip )
+              DO ipp = 1, nsiz
                  !
-                 mc = dfft%ismap( i + ioff )
+                 ioff = dfft%iss( (gproc-1)*nsiz + ipp )
                  !
-                 it = ii * nppx + ( gproc - 1 ) * sendsiz
-                 !
-                 DO j = 1, npp
-                    f_aux( mc + ( j - 1 ) * nnp ) = f_in( j + it )
+                 DO i = 1, dfft%nsw( (gproc-1)*nsiz + ipp )
+                    !
+                    mc = dfft%ismap( i + ioff )
+                    !
+                    it = ii * nppx + (gproc-1) * sendsiz
+                    !
+                    DO j = 1, npp
+                       ijp = ijp + 1
+                       dfft%indmap(1,ijp) = mc + ( j - 1 ) * nnp
+                       dfft%indmap(2,ijp) = j + it 
+                    ENDDO
+                    !
+                    ii = ii + 1
+                    !
                  ENDDO
-                 !
-                 ii = ii + 1
                  !
               ENDDO
               !
-              ip = ip + 1
-              !
            ENDDO
            !
-        ENDDO
-
+           dfft%nijp = ijp
+           CALL fftsort( dfft%nijp, dfft%indmap )
+           dfft%dimref(1) = npp
+           dfft%dimref(2) = nnp
+           dfft%dimref(3) = nblk
+           dfft%dimref(4) = nsiz
+           !
+        END IF
+        !
+        DO ijp = 1, dfft%nijp
+           f_aux( dfft%indmap(1,ijp) ) = f_in( dfft%indmap(2,ijp) )
+        END DO
+        !
      END IF
 
   ELSE
      !
      !  "backward" scatter from planes to columns
-     !
-     IF( use_tg_ ) THEN
-        gcomm = dfft%pgrp_comm
-     ELSE
-        gcomm = dfft%comm
-     ENDIF
      !
      IF( isgn == -1 ) THEN
 
@@ -653,68 +646,81 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
            IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', ' backward receive info<>0', abs(ierr) )
         ENDDO
 
-
      ELSE
 
         IF( use_tg_ ) THEN
            npp  = dfft%tg_npp( me )
            nnp  = dfft%nr1x * dfft%nr2x
-        ELSE
-           npp  = dfft%npp( me )
-           nnp  = dfft%nnp
-        ENDIF
-
-        IF( use_tg_ ) THEN
            nblk = dfft%nproc / dfft%nogrp
            nsiz = dfft%nogrp
         ELSE
+           npp  = dfft%npp( me )
+           nnp  = dfft%nnp
            nblk = dfft%nproc 
            nsiz = 1
-        END IF
+        ENDIF
         !
-        ip = 1
-        !
-        DO gproc = 1, nblk
+        IF( ( dfft%dimref_bw(1) .ne. npp ) .or. ( dfft%dimref_bw(2) .ne. nnp ) .or. &
+            ( dfft%dimref_bw(3) .ne. nblk ) .or. ( dfft%dimref_bw(4) .ne. nsiz ) ) THEN
            !
-           ii = 0
+           IF( ALLOCATED( dfft%indmap_bw ) )  &
+              DEALLOCATE( dfft%indmap_bw )
+           ALLOCATE( dfft%indmap_bw(2,SIZE(f_aux)) )
            !
-           DO ipp = 1, nsiz
+           ijp = 0
+           !
+           DO gproc = 1, nblk
               !
-              ioff = dfft%iss( ip )
+              ii = 0
               !
-              DO i = 1, dfft%nsw( ip )
+              DO ipp = 1, nsiz
                  !
-                 mc = dfft%ismap( i + ioff )
+                 ioff = dfft%iss(  (gproc-1)*nsiz + ipp  )
                  !
-                 it = ii * nppx + ( gproc - 1 ) * sendsiz
-                 !
-                 DO j = 1, npp
-                    f_in( j + it ) = f_aux( mc + ( j - 1 ) * nnp )
+                 DO i = 1, dfft%nsw(  (gproc-1)*nsiz + ipp  )
+                    !
+                    mc = dfft%ismap( i + ioff )
+                    !
+                    it = ii * nppx + ( gproc - 1 ) * sendsiz
+                    !
+                    DO j = 1, npp
+                       ijp = ijp + 1
+                       dfft%indmap_bw(1,ijp) = j + it 
+                       dfft%indmap_bw(2,ijp) = mc + ( j - 1 ) * nnp
+                    ENDDO
+                    !
+                    ii = ii + 1
+                    !
                  ENDDO
-                 !
-                 ii = ii + 1
                  !
               ENDDO
               !
-              ip = ip + 1
-              !
            ENDDO
-           !
-           CALL mpi_isend( f_in( (gproc-1)*sendsiz + 1 ), sendsiz, MPI_DOUBLE_COMPLEX, gproc-1, me, gcomm, sh( gproc ), ierr )
-           IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', ' backward send info<>0', abs(ierr) )
 
-        ENDDO
+           dfft%nijp_bw = ijp
+           CALL fftsort( dfft%nijp_bw, dfft%indmap_bw )
+
+           dfft%dimref_bw(1) = npp
+           dfft%dimref_bw(2) = nnp
+           dfft%dimref_bw(3) = nblk
+           dfft%dimref_bw(4) = nsiz
+
+        END IF
+
+        DO ijp = 1, dfft%nijp_bw
+           f_in( dfft%indmap_bw(1,ijp) ) = f_aux( dfft%indmap_bw(2,ijp) )
+        END DO
 
         DO gproc = 1, nblk
            CALL mpi_irecv( f_aux( (gproc-1)*sendsiz + 1 ), sendsiz, MPI_DOUBLE_COMPLEX, gproc-1, MPI_ANY_TAG, gcomm, rh(gproc), ierr )
            IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', ' backward receive info<>0', abs(ierr) )
         ENDDO
+        DO gproc = 1, nblk
+           CALL mpi_isend( f_in( (gproc-1)*sendsiz + 1 ), sendsiz, MPI_DOUBLE_COMPLEX, gproc-1, me, gcomm, sh( gproc ), ierr )
+           IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', ' backward send info<>0', abs(ierr) )
+        END DO
 
      END IF
-     !
-     !
-     lrcv = .false.
-     lsnd = .false.
      !
      call mpi_waitall( nblk, sh, MPI_STATUSES_IGNORE, ierr )
      call mpi_waitall( nblk, rh, MPI_STATUSES_IGNORE, ierr )
@@ -1241,3 +1247,87 @@ END SUBROUTINE cscatter_sym_many
 !=----------------------------------------------------------------------=!
    END MODULE scatter_mod
 !=----------------------------------------------------------------------=!
+!
+#if defined __NON_BLOCKING_SCATTER
+!
+!---------------------------------------------------------------------
+subroutine fftsort (n, ia)  
+  !---------------------------------------------------------------------
+  ! sort an integer array ia(1:n) into ascending order using heapsort algorithm.
+  ! n is input, ia is replaced on output by its sorted rearrangement.
+  ! create an index table (ind) by making an exchange in the index array
+  ! whenever an exchange is made on the sorted data array (ia).
+  ! in case of equal values in the data array (ia) the values in the
+  ! index array (ind) are used to order the entries.
+  ! if on input ind(1)  = 0 then indices are initialized in the routine,
+  ! if on input ind(1) != 0 then indices are assumed to have been
+  !                initialized before entering the routine and these
+  !                indices are carried around during the sorting process
+  !
+  ! no work space needed !
+  ! free us from machine-dependent sorting-routines !
+  !
+  ! adapted from Numerical Recipes pg. 329 (new edition)
+  !
+  implicit none  
+  !-input/output variables
+  integer :: n  
+  integer :: ia (2,*)  
+  !-local variables
+  integer :: i, ir, j, l
+  integer :: iia(2)  
+  ! nothing to order
+  if (n.lt.2) return  
+  ! initialize indices for hiring and retirement-promotion phase
+  l = n / 2 + 1  
+  ir = n  
+10 continue  
+  ! still in hiring phase
+  if (l.gt.1) then  
+     l = l - 1  
+     iia(:) = ia (:,l)  
+     ! in retirement-promotion phase.
+  else  
+     ! clear a space at the end of the array
+     iia(:) = ia (:,ir)  
+     !
+     ! retire the top of the heap into it
+     ia (:,ir) = ia (:,1)  
+     !
+     ! decrease the size of the corporation
+     ir = ir - 1  
+     ! done with the last promotion
+     if (ir.eq.1) then  
+        ! the least competent worker at all !
+        ia (:,1) = iia(:)  
+        !
+        return  
+     endif
+  endif
+  ! wheter in hiring or promotion phase, we
+  i = l  
+  ! set up to place iia in its proper level
+  j = l + l  
+  !
+  do while (j.le.ir)  
+     if (j.lt.ir) then  
+        if (ia (1,j) .lt. ia (1,j + 1) ) then  
+           j = j + 1  
+        endif
+     endif
+     ! demote iia
+     if (iia(1).lt.ia (1,j) ) then  
+        ia (:,i) = ia (:,j)  
+        i = j  
+        j = j + j  
+     else  
+        ! set j to terminate do-while loop
+        j = ir + 1  
+     endif
+  enddo
+  ia (:,i) = iia(:)  
+  goto 10  
+  !
+end subroutine fftsort
+
+#endif
