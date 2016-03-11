@@ -51,9 +51,9 @@ SUBROUTINE run_dist ( )
   !
   IMPLICIT NONE
   !
-  integer, parameter:: ounit=4, ndistx=1000, nn=4
+  integer, parameter:: ounit=4, ndistx=9999, nn=4
   real(dp), parameter:: dmin=0.01_dp, dmax=3.0_dp
-  integer :: nsp1, nsp2, na, nb, n, nd, nn1, nn2, nn3, i
+  integer :: nsp1, nsp2, na, nb, n, nd, nn1, nn2, nn3, i, nbad
   integer :: atom1(ndistx), atom2(ndistx), idx(ndistx), ndist
   character(len=3 ) :: atm1, atm2
   character(len=80) :: filename, line
@@ -62,11 +62,13 @@ SUBROUTINE run_dist ( )
   real(dp) :: dr(3), dd, dn1, dn2, dn3, scalef, arg
   real(dp) :: angolo(nn*(nn-1)/2), drv(3), drn(3,nn), temp, rtemp(3)
   !
+  open(unit=ounit,file='dist.out',status='unknown',form='formatted')
   write(stdout,'(/,5x,"Output written to file dist.out")')
   !
   scalef=bohr_radius_angs*alat
   !
   ndist=0
+  nbad =0
   do na=1,nat
      do nb=na+1,nat
         dr(:) = (tau(1,na)-tau(1,nb))*bg(1,:) + &
@@ -83,12 +85,12 @@ SUBROUTINE run_dist ( )
                          ( dn1*at(2,1)+dn2*at(2,2)+dn3*at(2,3) )**2 + &
                          ( dn1*at(3,1)+dn2*at(3,2)+dn3*at(3,3) )**2 )
                  if (dd < dmin) then
+                    nbad=nbad+1
                     if (nn1==0 .and. nn2==0 .and. nn3==0) then
-                       write(stdout,60) na,nb
+                       write(ounit,60) na,nb
                     else
-                       write(stdout,61) na,nb
+                       write(ounit,61) na,nb
                     end if
-                    return
                  else if (dd < dmax) then
                     ndist=ndist+1
                     if (ndist > ndistx) then
@@ -111,10 +113,15 @@ SUBROUTINE run_dist ( )
   end do
 20 continue
   !
+  if (nbad > 0) then
+     write(stdout,59) nbad
+     close(unit=ounit,status='keep')
+     return
+  end if
+  !
   idx(1)=0.0
   if (ndist.gt.0) call hpsort(ndist,d,idx)
   !
-  open(unit=ounit,file='dist.out',status='unknown',form='formatted')
   write(ounit,50) dmax
   !
   do nd=1,ndist
@@ -203,12 +210,14 @@ SUBROUTINE run_dist ( )
       write(ounit,300) dd, (angolo(nn1),nn1=1,nn*(nn-1)/2)
    end do
    !
+   close(unit=ounit,status='keep')
    return
    !
   50  format('Distances between atoms, up to dmax=',f6.2,' A   (* = with lattice translation)',/,'  #1  #2   bond       d')
-  60  format(/,80('*'),/,' Fatal error: atom',i4,' and',i4,' overlap',/,80('*'))
-  61  format(/,80('*'),/,' Fatal error: atom',i4,' and',i4,' overlap (with lattice translation)',/,80('*'))
-  62  format(/,80('*'),/,' Serious warning: more than',i4,' distances smaller than',f6.2,' A found',/,80('*'))
+  59  format(/,80('*'),/,' Fatal error: ',i3,' overlapping atoms (see file dist.out)',/,80('*'))
+  60  format(' Atom',i4,' and',i4,' overlap')
+  61  format(' Atom',i4,' and',i4,' overlap (with lattice translation)')
+  62  format(/,80('*'),/,' Serious warning: more than ',i4,' distances smaller than',f6.2,' A found',/,80('*'))
   70  format(/,'Nearest neighbors for each atom (up to ',i1,')',/)
  200  format(2i4,a4,'-',a3,f10.5,' A ',a1)
  250  format(' atom ',i3,' species ',a3,': neighbors at ',4f8.3,' A')
