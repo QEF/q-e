@@ -577,12 +577,13 @@ SUBROUTINE elphsum ( )
         nksqtot=nkstot/2
      ENDIF
      ALLOCATE(el_ph_mat_collect(nbnd,nbnd,nksqtot,3*nat))
+  ! FIXME: these two routines should be replaced by a generic routine
      CALL xk_wk_collect(xk_collect,xk,nkstot,nks)
      CALL el_ph_collect(3*nat,el_ph_mat,el_ph_mat_collect,nksqtot,nksq)
   ENDIF
   !
   ! read eigenvalues for the dense grid
-  ! FIXME: this might be done from the xml file, not from a specialized file
+  ! FIXME: this should be done from the xml file, not from a specialized file
   ! parallel case: only first node reads
   !
   IF ( ionode ) THEN

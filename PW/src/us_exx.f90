@@ -478,8 +478,11 @@ MODULE us_exx
     !
     IF(.not.okvan) RETURN
     !
-    ALLOCATE(vkbp(npwx,nkb))
+    ! These are beta functions for k-point "xkp" with indices "igkp"
+    ! Possibly already available in the calling routines vexx, since
+    ! xkp and igkp are the "current" k-point and indices in hpsi
     !
+    ALLOCATE(vkbp(npwx,nkb))
     CALL init_us_2(npwp, igkp, xkp, vkbp)
     !
     DO np = 1, ntyp
