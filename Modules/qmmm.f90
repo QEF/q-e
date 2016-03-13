@@ -240,9 +240,9 @@ END SUBROUTINE qmmm_minimum_image
     IMPLICIT NONE
     INTEGER :: ierr,i
 
+    IF (qmmm_mode < 0) RETURN
 #if defined(__MPI)
    
-    IF (qmmm_mode < 0) RETURN
     IF (ionode .and. (qmmm_verb > 0)) &
          WRITE(stdout,'(/,5X,A)') 'QMMM: update positions'
 
