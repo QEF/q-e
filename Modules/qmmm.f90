@@ -368,10 +368,10 @@ END SUBROUTINE qmmm_minimum_image
     REAL(DP) :: rho(:,:)
     INTEGER  :: nspin
     TYPE(fft_dlay_descriptor) :: dfftp
-
-#if defined(__MPI)
     INTEGER :: ierr
     IF (qmmm_mode < 0) RETURN
+
+#if defined(__MPI)
     IF (ionode .and. (qmmm_verb > 0)) &
         WRITE(stdout,'(/,5X,A)') 'QMMM: update forces'
 
