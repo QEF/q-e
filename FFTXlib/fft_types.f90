@@ -83,13 +83,6 @@ MODULE fft_types
     INTEGER, POINTER :: tg_usdsp(:)! send displacement for all to all (unpack)
     INTEGER, POINTER :: tg_rdsp(:)! receive displacement for all to all
     !
-#if defined __NON_BLOCKING_SCATTER
-    INTEGER, ALLOCATABLE :: indmap(:,:)
-    INTEGER, ALLOCATABLE :: indmap_bw(:,:)
-    INTEGER  :: nijp, nijp_bw
-    INTEGER  :: dimref(4) 
-    INTEGER  :: dimref_bw(4) 
-#endif
   END TYPE
 
 
@@ -187,10 +180,6 @@ CONTAINS
        IF ( associated( desc%tg_rdsp ) )   DEALLOCATE( desc%tg_rdsp )
     ENDIF
     desc%have_task_groups = .false.
-#if defined __NON_BLOCKING_SCATTER
-    IF( ALLOCATED( desc%indmap    ) ) DEALLOCATE( desc%indmap )
-    IF( ALLOCATED( desc%indmap_bw ) ) DEALLOCATE( desc%indmap_bw )
-#endif
   END SUBROUTINE fft_dlay_deallocate
 
 !=----------------------------------------------------------------------------=!
@@ -483,11 +472,6 @@ CONTAINS
     !  Initialize the pointer to the fft tables
 
     desc%tptr = icount
-
-#if defined __NON_BLOCKING_SCATTER
-    desc%dimref = 0
-    desc%dimref_bw = 0
-#endif
 
     RETURN
   END SUBROUTINE fft_dlay_set

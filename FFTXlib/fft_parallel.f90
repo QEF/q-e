@@ -73,7 +73,7 @@ SUBROUTINE tg_cft3s( f, dfft, isgn, use_task_groups )
 #endif
   !
   COMPLEX(DP), INTENT(inout)    :: f( : )  ! array containing data to be transformed
-  TYPE (fft_dlay_descriptor), INTENT(inout) :: dfft
+  TYPE (fft_dlay_descriptor), INTENT(in) :: dfft
                                            ! descriptor of fft data layout
   INTEGER, INTENT(in)           :: isgn    ! fft direction
   LOGICAL, OPTIONAL, INTENT(in) :: use_task_groups
@@ -288,7 +288,7 @@ SUBROUTINE fw_tg_cft3_z( f_in, dfft, f_out )
   !
   COMPLEX(DP), INTENT(inout)    :: f_in( : )  ! INPUT array containing data to be transformed
   COMPLEX(DP), INTENT(inout)   :: f_out (:)  ! OUTPUT
-  TYPE (fft_dlay_descriptor), INTENT(inout) :: dfft ! descriptor of fft data layout
+  TYPE (fft_dlay_descriptor), INTENT(in) :: dfft ! descriptor of fft data layout
   !
   CALL cft_1z( f_in, dfft%tg_nsw( dfft%mype + 1 ), dfft%nr3, dfft%nr3x, 2, f_out )
   !
@@ -308,7 +308,7 @@ SUBROUTINE bw_tg_cft3_z( f_out, dfft, f_in )
   !
   COMPLEX(DP), INTENT(inout)    :: f_out( : ) ! OUTPUT
   COMPLEX(DP), INTENT(inout)   :: f_in (:) ! INPUT array containing data to be transformed
-  TYPE (fft_dlay_descriptor), INTENT(inout) :: dfft ! descriptor of fft data layout
+  TYPE (fft_dlay_descriptor), INTENT(in) :: dfft ! descriptor of fft data layout
   !
   CALL cft_1z( f_in, dfft%tg_nsw( dfft%mype + 1 ), dfft%nr3, dfft%nr3x, -2, f_out )
   !
@@ -324,7 +324,7 @@ SUBROUTINE fw_tg_cft3_scatter( f, dfft, aux )
   IMPLICIT NONE
   !
   COMPLEX(DP), INTENT(inout)    :: f( : ), aux( : )  ! array containing data to be transformed
-  TYPE (fft_dlay_descriptor), INTENT(inout) :: dfft     ! descriptor of fft data layout
+  TYPE (fft_dlay_descriptor), INTENT(in) :: dfft     ! descriptor of fft data layout
   !
   CALL fft_scatter( dfft, aux, dfft%nr3x, dfft%nogrp*dfft%tg_nnr, f, dfft%tg_nsw, dfft%tg_npp, 2, .true. )
   !
@@ -340,7 +340,7 @@ SUBROUTINE bw_tg_cft3_scatter( f, dfft, aux )
   IMPLICIT NONE
   !
   COMPLEX(DP), INTENT(inout)    :: f( : ), aux( : )  ! array containing data to be transformed
-  TYPE (fft_dlay_descriptor), INTENT(inout) :: dfft     ! descriptor of fft data layout
+  TYPE (fft_dlay_descriptor), INTENT(in) :: dfft     ! descriptor of fft data layout
   !
   CALL fft_scatter( dfft, aux, dfft%nr3x, dfft%nogrp*dfft%tg_nnr, f, dfft%tg_nsw, dfft%tg_npp, -2, .true. )
   !
@@ -356,7 +356,7 @@ SUBROUTINE fw_tg_cft3_xy( f, dfft )
   IMPLICIT NONE
   !
   COMPLEX(DP), INTENT(inout)    :: f( : ) ! INPUT/OUTPUT array containing data to be transformed
-  TYPE (fft_dlay_descriptor), INTENT(inout) :: dfft ! descriptor of fft data layout
+  TYPE (fft_dlay_descriptor), INTENT(in) :: dfft ! descriptor of fft data layout
   INTEGER                    :: planes( dfft%nr1x )
   !
   planes = dfft%iplw
@@ -374,7 +374,7 @@ SUBROUTINE bw_tg_cft3_xy( f, dfft )
   IMPLICIT NONE
   !
   COMPLEX(DP), INTENT(inout)    :: f( : ) ! INPUT/OUTPUT  array containing data to be transformed
-  TYPE (fft_dlay_descriptor), INTENT(inout) :: dfft ! descriptor of fft data layout
+  TYPE (fft_dlay_descriptor), INTENT(in) :: dfft ! descriptor of fft data layout
   INTEGER                    :: planes( dfft%nr1x )
   !
   planes = dfft%iplw
@@ -395,7 +395,7 @@ END SUBROUTINE bw_tg_cft3_xy
 
      COMPLEX(DP), INTENT(in)    :: f( : )  ! array containing all bands, and gvecs distributed across processors
      COMPLEX(DP), INTENT(out)    :: yf( : )  ! array containing bands collected into task groups
-     TYPE (fft_dlay_descriptor), INTENT(inout) :: dfft
+     TYPE (fft_dlay_descriptor), INTENT(in) :: dfft
      INTEGER                     :: ierr
      !
      IF( dfft%tg_rdsp(dfft%nogrp) + dfft%tg_rcv(dfft%nogrp) > size( yf ) ) THEN
@@ -447,7 +447,7 @@ END SUBROUTINE bw_tg_cft3_xy
 
      COMPLEX(DP), INTENT(out)    :: f( : )  ! array containing all bands, and gvecs distributed across processors
      COMPLEX(DP), INTENT(in)    :: yf( : )  ! array containing bands collected into task groups
-     TYPE (fft_dlay_descriptor), INTENT(inout) :: dfft
+     TYPE (fft_dlay_descriptor), INTENT(in) :: dfft
      !
      !  Bring pencils back to their original distribution
      !
@@ -489,7 +489,7 @@ SUBROUTINE tg_gather( dffts, v, tg_v )
   INCLUDE 'mpif.h'
 #endif
 
-   TYPE(fft_dlay_descriptor), INTENT(inout) :: dffts
+   TYPE(fft_dlay_descriptor), INTENT(in) :: dffts
 
    REAL(DP) :: v(:)
    REAL(DP) :: tg_v(:)
@@ -551,7 +551,7 @@ SUBROUTINE tg_cgather( dffts, v, tg_v )
    INCLUDE 'mpif.h'
 #endif
 
-   TYPE(fft_dlay_descriptor), INTENT(inout) :: dffts
+   TYPE(fft_dlay_descriptor), INTENT(in) :: dffts
 
    COMPLEX(DP) :: v(:)
    COMPLEX(DP) :: tg_v(:)

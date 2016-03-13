@@ -420,7 +420,7 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
   INCLUDE 'mpif.h'
 #endif
 
-  TYPE (fft_dlay_descriptor), INTENT(inout) :: dfft
+  TYPE (fft_dlay_descriptor), INTENT(in) :: dfft
   INTEGER, INTENT(in)           :: nr3x, nxx_, isgn, ncp_ (:), npp_ (:)
   COMPLEX (DP), INTENT(inout)   :: f_in (nxx_), f_aux (nxx_)
   LOGICAL, OPTIONAL, INTENT(in) :: use_tg
@@ -432,6 +432,13 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
   INTEGER :: sh(dfft%nproc), rh(dfft%nproc)
   INTEGER :: istat( MPI_STATUS_SIZE )
   LOGICAL :: lrcv, lsnd, tsts(dfft%nproc), tstr(dfft%nproc)
+  !
+  INTEGER, SAVE, ALLOCATABLE :: indmap(:,:)
+  INTEGER, SAVE, ALLOCATABLE :: indmap_bw(:,:)
+  INTEGER, SAVE  :: nijp, nijp_bw
+  INTEGER, SAVE  :: dimref(4) = 0
+  INTEGER, SAVE  :: dimref_bw(4) = 0
+
   !
   LOGICAL :: use_tg_
 
@@ -565,12 +572,12 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
            nsiz = 1
         ENDIF
         !
-        IF( ( dfft%dimref(1) .ne. npp ) .or. ( dfft%dimref(2) .ne. nnp ) .or. &
-            ( dfft%dimref(3) .ne. nblk ) .or. ( dfft%dimref(4) .ne. nsiz ) ) THEN
+        IF( ( dimref(1) .ne. npp ) .or. ( dimref(2) .ne. nnp ) .or. &
+            ( dimref(3) .ne. nblk ) .or. ( dimref(4) .ne. nsiz ) ) THEN
            !
-           IF( ALLOCATED( dfft%indmap ) )  &
-              DEALLOCATE( dfft%indmap )
-           ALLOCATE( dfft%indmap(2,SIZE(f_aux)) )
+           IF( ALLOCATED( indmap ) )  &
+              DEALLOCATE( indmap )
+           ALLOCATE( indmap(2,SIZE(f_aux)) )
            !
            ijp = 0
            !
@@ -590,8 +597,8 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
                     !
                     DO j = 1, npp
                        ijp = ijp + 1
-                       dfft%indmap(1,ijp) = mc + ( j - 1 ) * nnp
-                       dfft%indmap(2,ijp) = j + it 
+                       indmap(1,ijp) = mc + ( j - 1 ) * nnp
+                       indmap(2,ijp) = j + it 
                     ENDDO
                     !
                     ii = ii + 1
@@ -602,17 +609,17 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
               !
            ENDDO
            !
-           dfft%nijp = ijp
-           CALL fftsort( dfft%nijp, dfft%indmap )
-           dfft%dimref(1) = npp
-           dfft%dimref(2) = nnp
-           dfft%dimref(3) = nblk
-           dfft%dimref(4) = nsiz
+           nijp = ijp
+           CALL fftsort( nijp, indmap )
+           dimref(1) = npp
+           dimref(2) = nnp
+           dimref(3) = nblk
+           dimref(4) = nsiz
            !
         END IF
         !
-        DO ijp = 1, dfft%nijp
-           f_aux( dfft%indmap(1,ijp) ) = f_in( dfft%indmap(2,ijp) )
+        DO ijp = 1, nijp
+           f_aux( indmap(1,ijp) ) = f_in( indmap(2,ijp) )
         END DO
         !
      END IF
@@ -660,12 +667,12 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
            nsiz = 1
         ENDIF
         !
-        IF( ( dfft%dimref_bw(1) .ne. npp ) .or. ( dfft%dimref_bw(2) .ne. nnp ) .or. &
-            ( dfft%dimref_bw(3) .ne. nblk ) .or. ( dfft%dimref_bw(4) .ne. nsiz ) ) THEN
+        IF( ( dimref_bw(1) .ne. npp ) .or. ( dimref_bw(2) .ne. nnp ) .or. &
+            ( dimref_bw(3) .ne. nblk ) .or. ( dimref_bw(4) .ne. nsiz ) ) THEN
            !
-           IF( ALLOCATED( dfft%indmap_bw ) )  &
-              DEALLOCATE( dfft%indmap_bw )
-           ALLOCATE( dfft%indmap_bw(2,SIZE(f_aux)) )
+           IF( ALLOCATED( indmap_bw ) )  &
+              DEALLOCATE( indmap_bw )
+           ALLOCATE( indmap_bw(2,SIZE(f_aux)) )
            !
            ijp = 0
            !
@@ -685,8 +692,8 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
                     !
                     DO j = 1, npp
                        ijp = ijp + 1
-                       dfft%indmap_bw(1,ijp) = j + it 
-                       dfft%indmap_bw(2,ijp) = mc + ( j - 1 ) * nnp
+                       indmap_bw(1,ijp) = j + it 
+                       indmap_bw(2,ijp) = mc + ( j - 1 ) * nnp
                     ENDDO
                     !
                     ii = ii + 1
@@ -697,18 +704,18 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
               !
            ENDDO
 
-           dfft%nijp_bw = ijp
-           CALL fftsort( dfft%nijp_bw, dfft%indmap_bw )
+           nijp_bw = ijp
+           CALL fftsort( nijp_bw, indmap_bw )
 
-           dfft%dimref_bw(1) = npp
-           dfft%dimref_bw(2) = nnp
-           dfft%dimref_bw(3) = nblk
-           dfft%dimref_bw(4) = nsiz
+           dimref_bw(1) = npp
+           dimref_bw(2) = nnp
+           dimref_bw(3) = nblk
+           dimref_bw(4) = nsiz
 
         END IF
 
-        DO ijp = 1, dfft%nijp_bw
-           f_in( dfft%indmap_bw(1,ijp) ) = f_aux( dfft%indmap_bw(2,ijp) )
+        DO ijp = 1, nijp_bw
+           f_in( indmap_bw(1,ijp) ) = f_aux( indmap_bw(2,ijp) )
         END DO
 
         DO gproc = 1, nblk
