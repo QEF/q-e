@@ -1087,7 +1087,7 @@ SUBROUTINE fwfft_orbital_custom_gamma(orbital, ibnd, nbnd, g2r)
 
   COMPLEX(DP), INTENT(INOUT)    :: orbital(:,:)
   INTEGER, INTENT(IN)        :: ibnd, nbnd
-  TYPE(fft_cus), INTENT(INOUT)  :: g2r
+  TYPE(fft_cus), INTENT(IN)  :: g2r
 
   ! Workspaces
   COMPLEX(DP) :: fp, fm
