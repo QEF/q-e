@@ -640,8 +640,8 @@ ENDDO spin_loop
   !
   ! recover over kpt parallelization (inter_pool)
   !
-  CALL mp_sum( epsr, inter_pool_comm )
-  CALL mp_sum( epsi, inter_pool_comm )
+  CALL mp_sum( epsrc, inter_pool_comm )
+  CALL mp_sum( epsic, inter_pool_comm )
 
   !
   ! impose the correct normalization
