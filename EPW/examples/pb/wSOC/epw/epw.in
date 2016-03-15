@@ -6,16 +6,16 @@
 
   elph        = .true.
   kmaps       = .false.
-  epbwrite    = .false.
-  epbread     = .true.
+  epbwrite    = .true.
+  epbread     = .false.
 
-  epwwrite    = .false.
-  epwread     = .true.
+  epwwrite    = .true.
+  epwread     = .false.
 
   nbndsub     =  8
   nbndskip    =  10
 
-  wannierize  = .false.
+  wannierize  = .true.
   num_iter    = 300
   dis_win_max = 21
   dis_win_min = -3
