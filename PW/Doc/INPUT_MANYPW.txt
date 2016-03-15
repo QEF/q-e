@@ -1,5 +1,5 @@
  Poor-man pw.x parallel launcher. Usage (for mpirun):
-    mpirun -np Np many.x -ni Ni [other options]
+    mpirun -np Np manypw.x -ni Ni [other options]
  or whatever is appropriate for your parallel environment
 
  Starts Ni pw.x instances each running on Np/Ni processors
