@@ -86,7 +86,7 @@
           !
           ! SP : Only print the Free energy if the user want it
           !
-          IF ( iverbosity .eq. 0 ) THEN
+          IF ( iverbosity .eq. 2 ) THEN
 #ifdef __PARA 
             IF (mpime .eq. ionode_id) THEN
 #endif 

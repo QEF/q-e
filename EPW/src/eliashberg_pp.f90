@@ -116,7 +116,7 @@
   IF ( temp .lt. 10.d0 ) THEN
      WRITE(filfe,'(a,a5,f4.2)') TRIM(prefix),'.fe_0', temp
   ELSEIF ( temp .ge. 10.d0 ) THEN
-     WRITE(filfe,'(a,a4,f4.2)') TRIM(prefix),'.fe_', temp
+     WRITE(filfe,'(a,a4,f5.2)') TRIM(prefix),'.fe_', temp
   ENDIF
   OPEN(iufe, file=filfe, form='formatted')
   !
