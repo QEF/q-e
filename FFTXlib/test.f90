@@ -29,6 +29,9 @@ program test
   REAL*8  :: tempo_min(100)
   REAL*8  :: tempo_max(100)
   REAL*8  :: tempo_avg(100)
+  !
+  REAL*8  :: tmp1(10000),tmp2(10000)
+  !
   LOGICAL :: gamma_only
   REAL*8  :: at(3,3), bg(3,3)
   REAL(DP), PARAMETER :: pi     = 3.14159265358979323846_DP
@@ -319,6 +322,11 @@ program test
      tempo(4) = MPI_WTIME()
      CALL fw_tg_cft3_xy( psis( :, ipsi ), dffts )
      tempo(5) = MPI_WTIME()
+     !
+     tmp1=1.d0
+     tmp2=0.d0
+     CALL DAXPY(10000, pi, tmp1, 1, tmp2, 1)
+     !
      CALL bw_tg_cft3_xy( psis( :, ipsi ), dffts )
      tempo(6) = MPI_WTIME()
      CALL bw_tg_cft3_scatter( psis( :, ipsi ), dffts, aux )
