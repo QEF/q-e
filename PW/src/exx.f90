@@ -1281,7 +1281,7 @@ MODULE exx
              !
              CALL fwfft ('Custom', rhoc, exx_fft%dfftt)
              !   >>>> add augmentation in G SPACE here
-             IF(okvan .AND. .NOT. TQR) THEN
+             IF(okvan .AND. .NOT. tqr) THEN
                 ! contribution from one band added to real (in real space) part of rhoc
                 IF(ibnd>=ibnd_start) &
                    CALL addusxx_g(rhoc, xkq,  xkp, 'r', &
@@ -1305,7 +1305,7 @@ MODULE exx
 !$omp end parallel do
              !
              !   >>>>  compute <psi|H_fock G SPACE here
-             IF(okvan .and. .not. TQR) THEN
+             IF(okvan .and. .not. tqr) THEN
                 IF(ibnd>=ibnd_start) &
                 CALL newdxx_g(vc, xkq, xkp, 'r', deexx, becphi_r=x1*becxx(ikq)%r(:,ibnd))
                 IF(ibnd<ibnd_end) &
@@ -1565,7 +1565,7 @@ MODULE exx
              CALL invfft ('Custom', vc, exx_fft%dfftt)
              !
              ! Add ultrasoft contribution (REAL SPACE)
-             IF(okvan .AND. TQR) CALL newdxx_r(vc, becxx(ikq)%k(:,ibnd),deexx)
+             IF(okvan .AND. tqr) CALL newdxx_r(vc, becxx(ikq)%k(:,ibnd),deexx)
              !
              ! Add PAW one-center contribution
              IF(okpaw) THEN
@@ -1971,7 +1971,7 @@ MODULE exx
           CALL get_buffer (evc, nwordwfc, iunwfc, ikk)
        !
        ! prepare the |beta> function at k+q
-       CALL init_us_2(npw, igk_k(:,ikk), xk(:,ikk), vkb)
+       CALL init_us_2(npw, igk_k(:,ikk), xkp, vkb)
        ! compute <beta_I|psi_j> at this k+q point, for all band and all projectors
        CALL calbec(npw, vkb, evc, becpsi, nbnd)
        !
@@ -1983,7 +1983,7 @@ MODULE exx
           !
           xkq = xkq_collect(:,ikq)
           !
-          CALL g2_convolution(exx_fft%ngmt, exx_fft%gt, xk(:,ikk), xkq, fac) 
+          CALL g2_convolution(exx_fft%ngmt, exx_fft%gt, xkp, xkq, fac) 
           fac(exx_fft%gstart_t:) = 2 * fac(exx_fft%gstart_t:)
           IF ( okvan .AND..NOT.tqr ) CALL qvan_init (xkq, xkp)
           !
@@ -2221,7 +2221,7 @@ MODULE exx
           CALL get_buffer (evc, nwordwfc, iunwfc, ikk)
        !
        ! prepare the |beta> function at k+q
-       CALL init_us_2(npw, igk_k(:,ikk), xk(:,ikk), vkb)
+       CALL init_us_2(npw, igk_k(:,ikk), xkp, vkb)
        ! compute <beta_I|psi_j> at this k+q point, for all band and all projectors
        CALL calbec(npw, vkb, evc, becpsi, nbnd)
        !
@@ -2271,7 +2271,7 @@ MODULE exx
              !
              xkq = xkq_collect(:,ikq)
              !
-             CALL g2_convolution(exx_fft%ngmt, exx_fft%gt, xk(:,ikk), xkq, fac)
+             CALL g2_convolution(exx_fft%ngmt, exx_fft%gt, xkp, xkq, fac)
              IF ( okvan .AND..NOT.tqr ) CALL qvan_init (xkq, xkp)
              !
              IBND_LOOP_K : &

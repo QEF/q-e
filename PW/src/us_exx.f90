@@ -591,7 +591,6 @@ MODULE us_exx
     USE ions_base,        ONLY : nat, ityp
     USE uspp_param,       ONLY : upf, nh, nhm
     USE uspp,             ONLY : nkb, ijtoh, indv_ijkb0
-    USE control_flags,    ONLY : tqr
     USE noncollin_module, ONLY : nspin_mag
     USE mp,               ONLY : mp_sum
 
