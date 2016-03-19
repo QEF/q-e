@@ -38,7 +38,7 @@ MODULE mytime
   !
   SAVE
   !
-  INTEGER,  PARAMETER :: maxclock = 100
+  INTEGER,  PARAMETER :: maxclock = 101
   REAL(DP), PARAMETER :: notrunning = - 1.0_DP
   !
   REAL(DP)          :: cputime(maxclock), t0cpu(maxclock)
@@ -142,7 +142,7 @@ SUBROUTINE start_clock( label )
   !
   IF ( nclock == maxclock ) THEN
      !
-     WRITE( stdout, '("start_clock: Too many clocks! call ignored")' )
+     WRITE( stdout, '("start_clock(",A,"): Too many clocks! call ignored")' ) label
      !
   ELSE
      !
