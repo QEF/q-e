@@ -35,7 +35,7 @@ SUBROUTINE lr_dvpsi_e(ik,ipol,dvpsi)
   USE uspp_param,           ONLY : nh, nhm
   USE control_flags,        ONLY : gamma_only
   USE control_lr,           ONLY : nbnd_occ
-  USE lr_variables,         ONLY : lr_verbosity
+  USE lr_variables,         ONLY : lr_verbosity, sevc0
   USE io_global,            ONLY : stdout
   USE qpoint,               ONLY : igkq
   USE lrus,                 ONLY : dpqq
@@ -59,7 +59,7 @@ SUBROUTINE lr_dvpsi_e(ik,ipol,dvpsi)
   ! the desired convergence of linter
   LOGICAL :: conv_root
   ! true if convergence has been achieved
-  COMPLEX(DP), ALLOCATABLE :: work (:,:), spsi(:,:)
+  COMPLEX(DP), ALLOCATABLE :: spsi(:,:)
   !
   TYPE(bec_type) :: becp1 
   TYPE(bec_type) :: becp2 
@@ -87,13 +87,11 @@ SUBROUTINE lr_dvpsi_e(ik,ipol,dvpsi)
   !
   CALL commutator_Hx_psi (ik, nbnd_occ(ik), becp1, becp2, ipol, d0psi )
   !
-  !    orthogonalize d0psi to the valence subspace: ps = <evc|d0psi>
-  !    Apply -P^+_c
-  !    NB it uses dvpsi as workspace
-  !
   IF (okvan) CALL calbec ( ngk(ik), vkb, evc, becp, nbnd)
   !
-  CALL orthogonalize(d0psi, evc, ik, ik, dvpsi, ngk(ik))
+  ! Orthogonalize d0psi to the valence subspace. Apply P_c^+
+  !
+  CALL orthogonalize(d0psi, evc, ik, ik, sevc0(:,:,ik), ngk(ik), .true.)
   d0psi = -d0psi
   !
   !   d0psi contains P^+_c [H-eS,x] psi_v for the polarization direction ipol
@@ -114,10 +112,6 @@ SUBROUTINE lr_dvpsi_e(ik,ipol,dvpsi)
         ENDDO
      ENDIF
   ENDDO
-  !
-  ! OBM: upto here, the dvpsi was used as a scratch
-  !
-  dvpsi(:,:) = (0.d0, 0.d0)
   !
   igkq => igk ! PG: needed by h_psiq, called by ch_psi_all
   !
@@ -156,17 +150,13 @@ SUBROUTINE lr_dvpsi_e(ik,ipol,dvpsi)
      !
   ENDIF
   !
-  ! orthogonalize dvpsi to the valence subspace
-  !
   IF (okvan) CALL calbec ( ngk(ik), vkb, evc, becp, nbnd)
   !
-  ALLOCATE (work ( npwx, nbnd ) )
-  work = evc ! work will be corrupted on exit from orthogonalize
+  ! Orthogonalize dvpsi to the valence subspace. Apply P_c^+
   !
-  CALL orthogonalize(dvpsi, evc, ik, ik, work, ngk(ik))
+  CALL orthogonalize(dvpsi, evc, ik, ik, sevc0(:,:,ik), ngk(ik), .true.)
   dvpsi = -dvpsi
   !
-  DEALLOCATE(work)
   DEALLOCATE (h_diag)
   DEALLOCATE (eprec)
   DEALLOCATE (d0psi)

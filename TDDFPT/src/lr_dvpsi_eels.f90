@@ -143,9 +143,9 @@ SUBROUTINE lr_dvpsi_eels (ik, dvpsi1, dvpsi2)
   dvpsi2 = dvpsi1
   !
   ! Ortogonalize dvpsi1 to valence states.
-  ! Apply - P^+_c, and then change the sign, because we need + P^+_c.
+  ! Apply -P_c^+, and then change the sign, because we need P_c^+.
   !
-  CALL orthogonalize(dvpsi1, evq, ikk, ikq, dpsi, npwq) 
+  CALL orthogonalize(dvpsi1, evq, ikk, ikq, dpsi, npwq, .false.) 
   dvpsi1 = -dvpsi1
   !
   ! In the ultrasoft case apply the S^{-1} operator.

@@ -172,6 +172,7 @@ SUBROUTINE compute_d0psi_rs( n_ipol )
   REAL(DP) :: inv_nr1, inv_nr2, inv_nr3
   !
   IF (.not. ALLOCATED(psic)) ALLOCATE(psic(dfftp%nnr))
+  !
   ALLOCATE(psic_temp(dfftp%nnr))
   ALLOCATE(r(dfftp%nnr,n_ipol))
   !
@@ -187,6 +188,8 @@ SUBROUTINE compute_d0psi_rs( n_ipol )
 #endif
       stop
   endif
+  !
+  IF (nks > 1) CALL errore( 'compute_d0psi_rs', 'nks>1 is not supported', 1 )
   !
   ! Calculate r
   !
@@ -251,7 +254,7 @@ SUBROUTINE compute_d0psi_rs( n_ipol )
   ! Orthogonalized batch orbitals to occupied minifold
   ! 
   DO ip = 1, n_ipol
-     CALL lr_ortho(d0psi(:,:,:,ip), evc0(:,:,1), 1, 1, sevc0(:,:,1),.true.)
+     CALL orthogonalize(d0psi(:,:,1,ip), evc0(:,:,1), 1, 1, sevc0(:,:,1), npw, .true.)
   ENDDO
   !
   DEALLOCATE(r)

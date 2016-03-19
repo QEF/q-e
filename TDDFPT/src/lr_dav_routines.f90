@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2015 Quantum ESPRESSO group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -458,7 +458,6 @@ contains
       if(.not.ltammd) then
         ! Calculate new D*vec_b
         call lr_apply_liouvillian(vec_b(:,:,:,ibr),vecwork(:,:,:),svecwork(:,:,:),.false.)
-        call lr_ortho(vecwork(:,:,:), evc0(:,:,1), 1, 1,sevc0(:,:,1),.true.) ! Project to virtual space
         if(.not. poor_of_ram2) D_vec_b(:,:,:,ibr)=vecwork(:,:,:)
 
         ! Add new M_D
@@ -474,7 +473,6 @@ contains
 
         ! Calculate new C*vec_b
         call lr_apply_liouvillian(vec_b(:,:,:,ibr),vecwork(:,:,:),svecwork(:,:,:),.true.)
-        call lr_ortho(vecwork(:,:,:), evc0(:,:,1), 1, 1,sevc0(:,:,1),.true.) ! Project to virtual space
         if(.not. poor_of_ram2) C_vec_b(:,:,:,ibr)=vecwork(:,:,:)
 
         ! Add new M_C
@@ -489,7 +487,6 @@ contains
 
       else ! ltammd
         call lr_apply_liouvillian(vec_b(:,:,:,ibr),vecwork(:,:,:),svecwork(:,:,:),.true.)
-        call lr_ortho(vecwork(:,:,:), evc0(:,:,1), 1, 1,sevc0(:,:,1),.true.)
         if(.not. poor_of_ram2) then
           D_vec_b(:,:,:,ibr)=vecwork(:,:,:)
           C_vec_b(:,:,:,ibr)=vecwork(:,:,:)
@@ -680,8 +677,6 @@ contains
       if(poor_of_ram2) then ! If D_ C_ basis are not stored, we have to apply liouvillian again
         call lr_apply_liouvillian(right_full(:,:,:,ieign),right_res(:,:,:,ieign),svecwork(:,:,:),.true.) ! Apply lanczos
         call lr_apply_liouvillian(left_full(:,:,:,ieign),left_res(:,:,:,ieign),svecwork(:,:,:),.false.)
-        call lr_ortho(right_res(:,:,:,ieign), evc0(:,:,1), 1,1,sevc0(:,:,1),.true.) ! Project to virtual space
-        call lr_ortho(left_res(:,:,:,ieign), evc0(:,:,1), 1,1,sevc0(:,:,1),.true.)
       else ! Otherwise they are be recovered directly by the combination of C_ and D_ basis
         left_res(:,:,:,ieign)=0.0d0
         right_res(:,:,:,ieign)=0.0d0

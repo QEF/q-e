@@ -14,6 +14,9 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, sevc1_new, interaction )
   !
   ! Inspired by PH/solve_linter.f90
   !
+  ! TODO: sevc1_new is never used on the output from this routine,
+  ! hence it should be removed from the output.
+  !
   ! Written by Iurii Timrov (2013)
   !
   USE ions_base,            ONLY : ityp, nat, ntyp=>nsp
@@ -263,7 +266,7 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, sevc1_new, interaction )
         ! Ortogonalize dvpsi to valence states.
         ! Apply -P_c, and then change the sign, because we need +P_c.
         !
-        CALL orthogonalize(dvpsi, evq, ikk, ikq, dpsi, npwq)
+        CALL orthogonalize(dvpsi, evq, ikk, ikq, dpsi, npwq, .false.)
         dvpsi = -dvpsi
         !
      ENDIF

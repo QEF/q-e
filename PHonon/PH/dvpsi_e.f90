@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2009 Quantum ESPRESSO group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -80,7 +80,7 @@ subroutine dvpsi_e (ik, ipol)
   !    Apply -P^+_c
   !    NB it uses dvpsi as workspace
   !
-  CALL orthogonalize(dpsi, evc, ik, ik, dvpsi, npwq)
+  CALL orthogonalize(dpsi, evc, ik, ik, dvpsi, npwq, .false.)
   dpsi=-dpsi
   !
   !   dpsi contains P^+_c [H-eS,x] psi_v for the three crystal polarizations

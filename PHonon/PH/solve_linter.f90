@@ -356,7 +356,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
            ! Ortogonalize dvpsi to valence states: ps = <evq|dvpsi>
            ! Apply -P_c^+.
            !
-           CALL orthogonalize(dvpsi, evq, ikk, ikq, dpsi, npwq)
+           CALL orthogonalize(dvpsi, evq, ikk, ikq, dpsi, npwq, .false.)
            !
            if (where_rec=='solve_lint'.or.iter > 1) then
               !

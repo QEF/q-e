@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2015 Quantum ESPRESSO group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -64,9 +64,10 @@ SUBROUTINE print_clock_lr()
    CALL print_clock( 'lr_dvpsi_e' )
    CALL print_clock( 'lr_dv_setup' )
    CALL print_clock( 'dv_of_drho' )
-   CALL print_clock( 'lr_ortho' )
    CALL print_clock( 'interaction' )
    CALL print_clock( 'lr_dot' )
+   CALL print_clock( 'ortho' )
+   IF (davidson) CALL print_clock( 'lr_ortho' )
    !
    WRITE( stdout, * ) 
    CALL print_clock( 'lr_exx_int')

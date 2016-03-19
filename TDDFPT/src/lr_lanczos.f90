@@ -45,7 +45,7 @@ SUBROUTINE one_lanczos_step()
     USE klist,                    ONLY : nks,xk
     USE lr_variables,             ONLY : n_ipol, ltammd, pseudo_hermitian, itermax,  &
                                          evc1, evc1_new, sevc1_new, evc1_old, sevc1, &
-                                         evc0, sevc0, d0psi, d0psi2, eels, test_case_no, lr_verbosity, &
+                                         d0psi, d0psi2, eels, test_case_no, lr_verbosity, &
                                          alpha_store, beta_store, gamma_store, zeta_store,     &
                                          charge_response, size_evc, LR_polarization, LR_iteration
     USE uspp,                     ONLY : vkb, nkb, okvan
@@ -156,17 +156,6 @@ SUBROUTINE one_lanczos_step()
        ENDIF
        !
     ENDIF 
-    !
-    ! I. Timrov: In the case of EELS, the orthogonalization is applied for HXC in the
-    ! routine lr_apply_liouvillian_eels.
-    !
-    IF (.not.eels) THEN
-       DO ik=1, nks
-          CALL lr_ortho(evc1_new(:,:,ik,1), evc0(:,:,ik), ik, ik, sevc0(:,:,ik),.true.)
-          IF (.not. pseudo_hermitian) &
-          CALL lr_ortho(evc1_new(:,:,ik,2), evc0(:,:,ik), ik, ik, sevc0(:,:,ik),.true.)
-       ENDDO
-    ENDIF
     !
     ! By construction <p|Lq>=0 should be 0, forcing this both conserves 
     ! resources and increases stability.
@@ -311,18 +300,6 @@ SUBROUTINE one_lanczos_step()
     IF (.not. pseudo_hermitian) &
      CALL zaxpy(size_evc,-cmplx(beta,0.0d0,kind=dp),evc1_old(1,1,1,2),1,evc1_new(1,1,1,2),1)
     !
-    ! X. Ge: To increase the stability, apply lr_ortho once more.
-    !
-    IF (.not.eels) THEN
-       !
-       DO ik=1, nks
-          CALL lr_ortho(evc1_new(:,:,ik,1), evc0(:,:,ik), ik, ik, sevc0(:,:,ik),.true.)
-          IF (.not. pseudo_hermitian) &
-          CALL lr_ortho(evc1_new(:,:,ik,2), evc0(:,:,ik), ik, ik, sevc0(:,:,ik),.true.)
-       ENDDO
-       !
-    ENDIF
-    ! 
     ! X. Ge: Throw away q(i-1), and make q(i+1) to be the current vector,
     ! be ready for the next iteration. evc1_new will be free again after this step
     !
