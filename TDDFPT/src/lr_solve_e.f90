@@ -177,7 +177,7 @@ SUBROUTINE compute_d0psi_rs( n_ipol )
   ALLOCATE(r(dfftp%nnr,n_ipol))
   !
   ! ... Initialization
-  WRITE(stdout,'(5x,"Calculating d0psi in the real space."//)')
+  WRITE(stdout,'(/,5x,"Calculating d0psi in the real space.")')
   !
   IF (okvan) THEN
      !
@@ -255,6 +255,7 @@ SUBROUTINE compute_d0psi_rs( n_ipol )
   ! 
   DO ip = 1, n_ipol
      CALL orthogonalize(d0psi(:,:,1,ip), evc0(:,:,1), 1, 1, sevc0(:,:,1), npw, .true.)
+     d0psi(:,:,1,ip) = -d0psi(:,:,1,ip)
   ENDDO
   !
   DEALLOCATE(r)
