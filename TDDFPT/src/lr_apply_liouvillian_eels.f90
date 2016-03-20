@@ -6,16 +6,13 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !--------------------------------------------------------------------------------
-SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, sevc1_new, interaction )
+SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
   !------------------------------------------------------------------------------
   !
   ! This subroutine applies the linear response operator to response wavefunctions.
   ! (H - E)*psi(k+q) + P_c V_HXC(q)*psi0(k)
   !
   ! Inspired by PH/solve_linter.f90
-  !
-  ! TODO: sevc1_new is never used on the output from this routine,
-  ! hence it should be removed from the output.
   !
   ! Written by Iurii Timrov (2013)
   !
@@ -49,15 +46,17 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, sevc1_new, interaction )
   IMPLICIT NONE
   !
   COMPLEX(kind=dp),INTENT(in)  :: evc1(npwx*npol,nbnd,nksq)
-  COMPLEX(kind=dp),INTENT(out) :: evc1_new(npwx*npol,nbnd,nksq), &
-                                  sevc1_new(npwx*npol,nbnd,nksq) 
-  ! output : sevc1_new = S * evc1_new
+  COMPLEX(kind=dp),INTENT(out) :: evc1_new(npwx*npol,nbnd,nksq)
+  !
+  ! Local variables
+  !
   LOGICAL, INTENT(in) :: interaction
   LOGICAL :: interaction1
   INTEGER :: i,j,ir, ibnd, ik, ig, ia, ios, ikk, ikq, is, &
              incr, v_siz, ipol
   COMPLEX(DP), ALLOCATABLE :: hpsi(:,:), spsi(:,:), revc(:,:), &
                             & dvrsc(:,:), dvrssc(:,:), &
+                            & sevc1_new(:,:,:), &
   ! Change of the Hartree and exchange-correlation (HXC) potential
                             & tg_psic(:,:), tg_dvrssc(:,:)
   ! Task groups: wfct in R-space
@@ -70,6 +69,7 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, sevc1_new, interaction )
   !
   ALLOCATE (hpsi(npwx*npol,nbnd))
   ALLOCATE (spsi(npwx*npol,nbnd))
+  ALLOCATE (sevc1_new(npwx*npol,nbnd,nksq))
   ALLOCATE (revc(dffts%nnr,npol))
   ALLOCATE (dvrsc(dfftp%nnr,nspin_mag))
   ALLOCATE (dvrssc(dffts%nnr,nspin_mag))
@@ -79,6 +79,7 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, sevc1_new, interaction )
   revc(:,:)   = (0.d0,0.d0)
   dvrsc(:,:)  = (0.0d0,0.0d0)
   dvrssc(:,:) = (0.0d0,0.0d0)
+  sevc1_new(:,:,:) = (0.0d0,0.0d0)
   !
   incr = 1
   !
@@ -376,6 +377,7 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, sevc1_new, interaction )
   DEALLOCATE (hpsi)
   DEALLOCATE (spsi)
   DEALLOCATE (revc)
+  DEALLOCATE (sevc1_new)
   IF (ALLOCATED(psic)) DEALLOCATE(psic)
   !
   IF ( ntask_groups > 1) dffts%have_task_groups = .TRUE.

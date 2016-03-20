@@ -34,7 +34,8 @@ FUNCTION lr_dot(x,y)
   !
   IMPLICIT NONE
   !
-  COMPLEX(kind=dp) :: x(npwx*npol,nbnd,nksq), y(npwx*npol,nbnd,nksq)
+  COMPLEX(kind=dp) :: x(npwx*npol,nbnd,nksq), &
+                      y(npwx*npol,nbnd,nksq)
   COMPLEX(kind=dp) :: lr_dot
   COMPLEX(kind=dp) :: temp_k
   REAL(kind=dp) :: temp_gamma, degspin

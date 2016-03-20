@@ -97,7 +97,6 @@ contains
     !IF (ierr /= 0) call errore('lr_dav_alloc_init',"no enough memory",ierr) 
     !allocate(C_vec_b(npwx,nbnd,nks,num_basis_max),stat=ierr) 
     !IF (ierr /= 0) call errore('lr_dav_alloc_init',"no enough memory",ierr) 
-    allocate(svecwork(npwx,nbnd,nks))
     allocate(vecwork(npwx,nbnd,nks))
     allocate(M(num_basis_max,num_basis_max))
     allocate(M_shadow_avatar(num_basis_max,num_basis_max))
@@ -457,7 +456,7 @@ contains
     do ibr = num_basis_old+1, num_basis
       if(.not.ltammd) then
         ! Calculate new D*vec_b
-        call lr_apply_liouvillian(vec_b(:,:,:,ibr),vecwork(:,:,:),svecwork(:,:,:),.false.)
+        call lr_apply_liouvillian(vec_b(:,:,:,ibr),vecwork(:,:,:),.false.)
         if(.not. poor_of_ram2) D_vec_b(:,:,:,ibr)=vecwork(:,:,:)
 
         ! Add new M_D
@@ -472,7 +471,7 @@ contains
         enddo
 
         ! Calculate new C*vec_b
-        call lr_apply_liouvillian(vec_b(:,:,:,ibr),vecwork(:,:,:),svecwork(:,:,:),.true.)
+        call lr_apply_liouvillian(vec_b(:,:,:,ibr),vecwork(:,:,:),.true.)
         if(.not. poor_of_ram2) C_vec_b(:,:,:,ibr)=vecwork(:,:,:)
 
         ! Add new M_C
@@ -486,7 +485,7 @@ contains
         enddo
 
       else ! ltammd
-        call lr_apply_liouvillian(vec_b(:,:,:,ibr),vecwork(:,:,:),svecwork(:,:,:),.true.)
+        call lr_apply_liouvillian(vec_b(:,:,:,ibr),vecwork(:,:,:),.true.)
         if(.not. poor_of_ram2) then
           D_vec_b(:,:,:,ibr)=vecwork(:,:,:)
           C_vec_b(:,:,:,ibr)=vecwork(:,:,:)
@@ -646,7 +645,7 @@ contains
     ! Created by X.Ge in Jan. 2013
     !-------------------------------------------------------------------------------
     ! Calculate the residue of appro. eigen vector
-    use lr_dav_variables, only : right_res,left_res,svecwork,C_vec_b,D_vec_b,&
+    use lr_dav_variables, only : right_res,left_res,C_vec_b,D_vec_b,&
                                  kill_left,kill_right,poor_of_ram2,right2,left2,&
                                  right_full,left_full,eign_value_order,residue_conv_thr,&
                                  toadd,left_M,right_M,num_eign,dav_conv,num_basis,zero,max_res,&
@@ -675,8 +674,8 @@ contains
 
     do ieign = 1, num_eign
       if(poor_of_ram2) then ! If D_ C_ basis are not stored, we have to apply liouvillian again
-        call lr_apply_liouvillian(right_full(:,:,:,ieign),right_res(:,:,:,ieign),svecwork(:,:,:),.true.) ! Apply lanczos
-        call lr_apply_liouvillian(left_full(:,:,:,ieign),left_res(:,:,:,ieign),svecwork(:,:,:),.false.)
+        call lr_apply_liouvillian(right_full(:,:,:,ieign),right_res(:,:,:,ieign),.true.) ! Apply lanczos
+        call lr_apply_liouvillian(left_full(:,:,:,ieign),left_res(:,:,:,ieign),.false.)
       else ! Otherwise they are be recovered directly by the combination of C_ and D_ basis
         left_res(:,:,:,ieign)=0.0d0
         right_res(:,:,:,ieign)=0.0d0

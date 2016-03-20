@@ -56,7 +56,7 @@ MODULE lr_dav_variables
         right_full(:,:,:,:),&  ! left and right appro. eigen vector of D*C in full space
         left_res(:,:,:,:), &  
         right_res(:,:,:,:), &  ! left and right residual of the appr. eigen-v
-        vecwork(:,:,:), svecwork(:,:,:), & ! Working space for supervectors
+        vecwork(:,:,:), & ! Working space for supervectors
         left2(:),right2(:), & ! square of the module of left_res and right_res
         M_C(:,:),M_D(:,:),M(:,:),& ! Matrix represented in the sub space
         ground_state(:,:,:),&

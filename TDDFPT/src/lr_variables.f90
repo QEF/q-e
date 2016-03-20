@@ -55,8 +55,8 @@ MODULE lr_variables
                                ! index 1: q' using rotated SBR 2: p')
        evc1(:,:,:,:),     &    !  "    "
        evc1_new(:,:,:,:), &    !  "    "
-       sevc1(:,:,:,:),    &    ! S * "    "
-       sevc1_new(:,:,:,:),&    ! S * "    "
+       sevc1(:,:,:),      &    ! S * "    "
+       sevc1_new(:,:,:),  &    ! S * "    "
        d0psi(:,:,:,:),    &    ! for saving the original starting vectors
        d0psi2(:,:,:,:),   &    ! for saving the original starting vectors (without P^+_c)
        revc0(:,:,:),      &    ! ground state wavefunctions in real space

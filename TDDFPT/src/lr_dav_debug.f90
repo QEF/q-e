@@ -245,7 +245,7 @@ contains
     real(dp) :: diff,diffmax
 
     do ibr = 1, num_basis
-      call lr_apply_liouvillian(vec_b(:,:,:,ibr),vecwork(:,:,:),svecwork(:,:,:),.true.)
+      call lr_apply_liouvillian(vec_b(:,:,:,ibr),vecwork(:,:,:),.true.)
       do ibl = 1, num_basis
         M_C(ibl,ibr)=lr_dot_us(vec_b(1,1,1,ibl),vecwork(1,1,1))
       enddo

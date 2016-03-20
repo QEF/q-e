@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
+SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
   !---------------------------------------------------------------------
   !
   ! Applies the linear response operator to response wavefunctions
@@ -22,9 +22,6 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
   ! interaction=.true. corresponds to eq.(32)
   ! interaction=.false. corresponds to eq.(33)
   ! in Ralph Gebauer, Brent Walker  J. Chem. Phys., 127, 164106 (2007)
-  !
-  ! TODO: sevc1_new is never used on the output from this routine,
-  ! hence it should be removed from the output. 
   !
   ! Modified by Osman Baris Malcioglu in 2009
   ! Modified by Simone Binnie in 2012 (EXX)
@@ -72,21 +69,18 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
   IMPLICIT NONE
   !
   COMPLEX(kind=dp),INTENT(in)  :: evc1(npwx*npol,nbnd,nks)
-  COMPLEX(kind=dp),INTENT(out) :: evc1_new(npwx*npol,nbnd,nks),&
-                                & sevc1_new(npwx*npol,nbnd,nks)
-  ! output : sevc1_new = S * evc1_new
+  COMPLEX(kind=dp),INTENT(out) :: evc1_new(npwx*npol,nbnd,nks)
   LOGICAL, INTENT(in) :: interaction
   !
-  !   Local variables
+  ! Local variables
   !
   INTEGER :: ir, ibnd, ik, ig, ia, mbia
   INTEGER :: ijkb0, na, nt, ih, jh, ikb, jkb, iqs,jqs
-  REAL(kind=dp), ALLOCATABLE :: dvrs(:,:), dvrss(:)
-  REAL(kind=dp), ALLOCATABLE :: d_deeq(:,:,:,:)
-  COMPLEX(kind=dp), ALLOCATABLE :: dvrs_temp(:,:)   
-  COMPLEX(kind=dp), ALLOCATABLE :: spsi1(:,:)
-  COMPLEX(kind=dp), ALLOCATABLE :: dvrsc(:,:), dvrssc(:)
-  REAL(kind=dp), ALLOCATABLE, DIMENSION(:) :: w1, w2
+  REAL(kind=dp), ALLOCATABLE :: dvrs(:,:), dvrss(:),           &
+                                & d_deeq(:,:,:,:), w1(:), w2(:)
+  COMPLEX(kind=dp), ALLOCATABLE :: dvrs_temp(:,:), spsi1(:,:), &
+                                   & dvrsc(:,:), dvrssc(:),    &
+                                   & sevc1_new(:,:,:)
   !
   ! Environ related arrays
   !
@@ -109,8 +103,10 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
   ALLOCATE( spsi1(npwx, nbnd) )
   spsi1(:,:)=(0.0d0,0.0d0)
   !
-  evc1_new(:,:,:) = (0.0d0,0.0d0)
+  ALLOCATE(sevc1_new(npwx*npol,nbnd,nks))
   sevc1_new(:,:,:) = (0.0d0,0.0d0)
+  !
+  evc1_new(:,:,:) = (0.0d0,0.0d0)
   !
   IF ( interaction ) THEN 
      !
@@ -336,6 +332,7 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
   IF (allocated(dvrss)) DEALLOCATE(dvrss)
   DEALLOCATE(d_deeq)
   DEALLOCATE(spsi1)
+  DEALLOCATE(sevc1_new)
   !
   IF (interaction)      CALL stop_clock('lr_apply_int')
   IF (.not.interaction) CALL stop_clock('lr_apply_no')

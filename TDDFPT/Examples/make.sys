@@ -7,7 +7,7 @@
 #RUNNER = openmpi-1.4.3/bin/mpirun -np 8 
 #PWSCF = "../../../bin/pw.x" -ndiag 4
 
-RUNNER =
+RUNNER = 
 PWSCF = "../../../bin/pw.x" 
 TDDFPT_LANCZOS = "../../../bin/turbo_lanczos.x"
 TDDFPT_DAVIDSON = "../../../bin/turbo_davidson.x"

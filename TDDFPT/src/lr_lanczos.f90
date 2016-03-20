@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2015 Quantum ESPRESSO group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -44,7 +44,7 @@ SUBROUTINE one_lanczos_step()
     USE kinds,                    ONLY : dp
     USE klist,                    ONLY : nks,xk
     USE lr_variables,             ONLY : n_ipol, ltammd, pseudo_hermitian, itermax,  &
-                                         evc1, evc1_new, sevc1_new, evc1_old, sevc1, &
+                                         evc1, evc1_new, evc1_old, sevc1_new, sevc1, &
                                          d0psi, d0psi2, eels, test_case_no, lr_verbosity, &
                                          alpha_store, beta_store, gamma_store, zeta_store,     &
                                          charge_response, size_evc, LR_polarization, LR_iteration
@@ -107,15 +107,15 @@ SUBROUTINE one_lanczos_step()
        !
        IF (mod(LR_iteration,2)==0) THEN
           !
-          CALL lr_apply_liouvillian_eels(evc1(1,1,1,1),evc1_new(1,1,1,1),sevc1_new(1,1,1,1),.true.)
+          CALL lr_apply_liouvillian_eels(evc1(1,1,1,1),evc1_new(1,1,1,1),.true.)
           IF (.NOT.pseudo_hermitian) &
-          CALL lr_apply_liouvillian_eels(evc1(1,1,1,2),evc1_new(1,1,1,2),sevc1_new(1,1,1,2),.false.)
+          CALL lr_apply_liouvillian_eels(evc1(1,1,1,2),evc1_new(1,1,1,2),.false.)
           !
        ELSE
           !
-          CALL lr_apply_liouvillian_eels(evc1(1,1,1,1),evc1_new(1,1,1,1),sevc1_new(1,1,1,1),.false.)
+          CALL lr_apply_liouvillian_eels(evc1(1,1,1,1),evc1_new(1,1,1,1),.false.)
           IF (.not. pseudo_hermitian) &
-          CALL lr_apply_liouvillian_eels(evc1(1,1,1,2),evc1_new(1,1,1,2),sevc1_new(1,1,1,2),.true.)
+          CALL lr_apply_liouvillian_eels(evc1(1,1,1,2),evc1_new(1,1,1,2),.true.)
           !
        ENDIF
        !
@@ -129,15 +129,15 @@ SUBROUTINE one_lanczos_step()
           !
           IF (mod(LR_iteration,2)==0) THEN
              !
-             CALL lr_apply_liouvillian(evc1(1,1,1,1),evc1_new(1,1,1,1),sevc1_new(1,1,1,1),.true.)
+             CALL lr_apply_liouvillian(evc1(1,1,1,1),evc1_new(1,1,1,1),.true.)
              IF (.NOT.pseudo_hermitian) &
-             CALL lr_apply_liouvillian(evc1(1,1,1,2),evc1_new(1,1,1,2),sevc1_new(1,1,1,2),.false.)
+             CALL lr_apply_liouvillian(evc1(1,1,1,2),evc1_new(1,1,1,2),.false.)
              !
           ELSE
              !
-             CALL lr_apply_liouvillian(evc1(1,1,1,1),evc1_new(1,1,1,1),sevc1_new(1,1,1,1),.false.)
+             CALL lr_apply_liouvillian(evc1(1,1,1,1),evc1_new(1,1,1,1),.false.)
              IF (.not. pseudo_hermitian) &
-             CALL lr_apply_liouvillian(evc1(1,1,1,2),evc1_new(1,1,1,2),sevc1_new(1,1,1,2),.true.)
+             CALL lr_apply_liouvillian(evc1(1,1,1,2),evc1_new(1,1,1,2),.true.)
              !
           ENDIF
           !
@@ -145,12 +145,11 @@ SUBROUTINE one_lanczos_step()
           !
           ! Tamm-Dancoff approximation
           !
-          CALL lr_apply_liouvillian(evc1(1,1,1,1),evc1_new(1,1,1,1),sevc1_new(1,1,1,1),.true.)
+          CALL lr_apply_liouvillian(evc1(1,1,1,1),evc1_new(1,1,1,1),.true.)
           !
           IF (.not. pseudo_hermitian) THEN
              CALL zcopy(size_evc,evc1(1,1,1,1),1,evc1(1,1,1,2),1) 
              CALL zcopy(size_evc,evc1_new(1,1,1,1),1,evc1_new(1,1,1,2),1) 
-             CALL zcopy(size_evc,sevc1_new(1,1,1,1),1,sevc1_new(1,1,1,2),1)
           ENDIF
           !
        ENDIF
@@ -168,27 +167,17 @@ SUBROUTINE one_lanczos_step()
     ! one array into another.
     !
     IF (pseudo_hermitian) THEN
-       CALL lr_apply_s(evc1_new(:,:,1,1),sevc1_new(:,:,1,1))
+       CALL lr_apply_s(evc1_new(:,:,:,1), sevc1_new(:,:,:))
     ELSE
-       CALL lr_apply_s(evc1(:,:,1,2),sevc1(:,:,1,2))
+       CALL lr_apply_s(evc1(:,:,:,2), sevc1(:,:,:))
     ENDIF
     !
     ! Orthogonality requirement: <v|\bar{L}|v> = 1
     !
     IF (pseudo_hermitian) THEN
-       !
-       beta = dble(lr_dot(evc1(1,1,1,1),sevc1_new(1,1,1,1)))
-       !
+       beta = dble(lr_dot(evc1(:,:,:,1), sevc1_new(:,:,:)))
     ELSE
-       !
-       beta = dble(lr_dot(evc1(1,1,1,1),sevc1(1,1,1,2)))
-       !
-       !call lr_apply_s(evc1(:,:,1,1),sevc1(:,:,1,1))
-       !angle=dble(lr_dot(evc1(1,1,1,1),sevc1(1,1,1,1)))*dble(lr_dot(evc1(1,1,1,2),sevc1(1,1,1,2)))
-       !angle=beta/sqrt(angle)
-       !angle = acos(angle)
-       !print *, "Pol: ", LR_polarization, "Iteration: ",LR_iteration, "Angle:", angle
-       !
+       beta = dble(lr_dot(evc1(:,:,:,1), sevc1(:,:,:)))
     ENDIF
     !
     ! beta<0 is a serious error for the pseudo-Hermitian algorithm
@@ -340,7 +329,8 @@ CONTAINS
     INTEGER :: ibnd, ig
     !
     WRITE(stdout,'(5x,"Error: Beta is negative:",5x,e22.15)') beta
-    !  
+    !
+    OPEN(301, file="evc1_1.dat")  
     DO ibnd = 1, nbnd
        DO ig = 1, npwx
           WRITE(301,*) ibnd, ig, dble(evc1(ig,ibnd,1,1)), aimag(evc1(ig,ibnd,1,1))
@@ -348,19 +338,13 @@ CONTAINS
     ENDDO
     CLOSE(301)
     !
+    OPEN(302, file="evc1_2.dat")
     DO ibnd = 1, nbnd
        DO ig = 1, npwx
           WRITE(302,*) ibnd, ig, dble(evc1(ig,ibnd,1,2)), aimag(evc1(ig,ibnd,1,2))
        ENDDO
     ENDDO
     CLOSE(302)
-    !
-    DO ibnd = 1, nbnd
-       DO ig = 1, npwx
-          WRITE(303,*) ibnd, ig, dble(sevc1_new(ig,ibnd,1,2)), aimag(evc1(ig,ibnd,1,2))
-       ENDDO
-    ENDDO
-    CLOSE(303)
     !
     WRITE (stdout,'(/5x,"!!!WARNING!!! The pseudo-Hermitian Lanczos algorithm is stopping...")') 
     WRITE (stdout,'(/5x,"Try to use the non-Hermitian Lanczos algorithm.")') 
