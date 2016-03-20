@@ -45,7 +45,7 @@ SUBROUTINE one_lanczos_step()
     USE klist,                    ONLY : nks,xk
     USE lr_variables,             ONLY : n_ipol, ltammd, pseudo_hermitian, itermax,  &
                                          evc1, evc1_new, evc1_old, sevc1_new, sevc1, &
-                                         d0psi, d0psi2, eels, test_case_no, lr_verbosity, &
+                                         evc0, sevc0, d0psi, d0psi2, eels, test_case_no, lr_verbosity, &
                                          alpha_store, beta_store, gamma_store, zeta_store,     &
                                          charge_response, size_evc, LR_polarization, LR_iteration
     USE uspp,                     ONLY : vkb, nkb, okvan
@@ -288,6 +288,23 @@ SUBROUTINE one_lanczos_step()
     CALL zaxpy(size_evc,-cmplx(gamma,0.0d0,kind=dp),evc1_old(1,1,1,1),1,evc1_new(1,1,1,1),1)
     IF (.not. pseudo_hermitian) &
      CALL zaxpy(size_evc,-cmplx(beta,0.0d0,kind=dp),evc1_old(1,1,1,2),1,evc1_new(1,1,1,2),1)
+    !
+    ! X. Ge: To increase the stability, apply lr_ortho.
+    ! I.Timrov: Actually, without this trick, it turns out that 
+    ! the Lanczos chain is not stable when pseudo_hermitian=.false., 
+    ! because there is a warning from lr_calc_dens that the integral of 
+    ! the response charge density does not some to zero, i.e. the non-zero 
+    ! value of the integral increases during the Lanczos chain.
+    !
+    IF (.not.eels) THEN
+       !
+       DO ik=1, nks
+          CALL lr_ortho(evc1_new(:,:,ik,1), evc0(:,:,ik), ik, ik, sevc0(:,:,ik),.true.)
+          IF (.not. pseudo_hermitian) &
+          CALL lr_ortho(evc1_new(:,:,ik,2), evc0(:,:,ik), ik, ik, sevc0(:,:,ik),.true.)
+       ENDDO
+       !
+    ENDIF
     !
     ! X. Ge: Throw away q(i-1), and make q(i+1) to be the current vector,
     ! be ready for the next iteration. evc1_new will be free again after this step
