@@ -14,7 +14,7 @@ then
     dirs=" LAXlib FFTXlib Modules clib PW/src CPV/src PW/tools upftools PP/src \
            PWCOND/src LR_Modules/ \
            PHonon/Gamma PHonon/PH PHonon/D3 PHonon/FD atomic/src XSpectra/src \
-           ACDFT NEB/src TDDFPT/src GIPAW/src GWW/pw4gww GWW/gww GWW/head" 
+           ACDFT NEB/src TDDFPT/src GIPAW/src GWW/pw4gww GWW/gww GWW/head GWW/bse" 
           
 elif
     test $1 = "-addson" 
@@ -67,6 +67,8 @@ for dir in $dirs; do
 	     DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/LR_Modules" ;;
 	PHonon/D3 | GWW/head | TDDFPT/src )
 	     DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/PHonon/PH $LEVEL2/LR_Modules" ;;	
+	GWW/bse )
+	 DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/PHonon/PH $LEVEL2/LR_Modulesi $LEVEL2/GWW/pw4gww $LEVEL2/GWW/gww" ;;	
     *)
 # if addson needs a make.depend file
 	DEPENDS="$DEPENDS $add_deps"
