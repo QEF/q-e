@@ -9,7 +9,7 @@ program test
   include 'fft_param.f90'
   INTEGER, ALLOCATABLE :: req_p(:),req_u(:)
 #endif
-  TYPE(fft_dlay_descriptor) :: dfftp, dffts, dfft3d,dfftsnow,dfftsnext
+  TYPE(fft_dlay_descriptor) :: dfftp, dffts, dfft3d
   INTEGER :: nx = 128
   INTEGER :: ny = 128
   INTEGER :: nz = 256
@@ -219,9 +219,6 @@ program test
   gamma_only = .true.
   stdout     = 6
   
-  dfftsnow=dffts
-  dfftsnext=dffts
-
 
   CALL pstickset( gamma_only, bg, gcutm, gkcut, gcutms, &
         dfftp, dffts, ngw_ , ngm_ , ngs_ , mype, root, &
@@ -282,21 +279,21 @@ program test
   ! Execute FFT calls once more and Take time
   !
   ncount = 0
-
-  ! Copie provvisorie: CHECK
   ! 
   tempo(10) = MPI_WTIME()
-
+  !
+#ifdef __DOUBLE_BUFFER
   ireq = 1
   ipsi = MOD( ireq + 1, 2 ) + 1 
+  !
   CALL pack_group_sticks_i( aux, psis(:, ipsi ), dffts, req_p( ireq ) )
   !
   nreq = 0
-  DO ib = 1, nbnd, 2*dffts%nogrp ! <- originale. non funziona
+  DO ib = 1, nbnd, 2*dffts%nogrp 
     nreq = nreq + 1
   END DO
   ! 
-  DO ib = 1, nbnd, 2*dffts%nogrp ! <- originale. non funziona
+  DO ib = 1, nbnd, 2*dffts%nogrp 
  
      ireq = ireq + 1
 
@@ -333,6 +330,48 @@ program test
      tempo(7) = MPI_WTIME()
      CALL bw_tg_cft3_z( psis( :, ipsi ), dffts, aux )
      tempo(8) = MPI_WTIME()
+     !
+     CALL unpack_group_sticks( psis( :, ipsi ), aux, dffts )
+     !
+     tempo(9) = MPI_WTIME()
+     !
+     do i = 2, 10
+        tempo_mio(i) = tempo_mio(i) + (tempo(i) - tempo(i-1))
+     end do
+     !
+     ncount = ncount + 1
+     !
+  enddo
+#else
+  ipsi = 1 
+  ! 
+  DO ib = 1, nbnd, 2*dffts%nogrp 
+ 
+     aux = 0.0d0
+     aux(1) = 1.0d0
+
+     tempo(1) = MPI_WTIME()
+     CALL pack_group_sticks( aux, psis(:,ipsi), dffts )
+
+     tempo(2) = MPI_WTIME()
+
+     CALL fw_tg_cft3_z( psis( :, ipsi ), dffts, aux )
+     tempo(3) = MPI_WTIME()
+     CALL fw_tg_cft3_scatter( psis( :, ipsi ), dffts, aux )
+     tempo(4) = MPI_WTIME()
+     CALL fw_tg_cft3_xy( psis( :, ipsi ), dffts )
+     tempo(5) = MPI_WTIME()
+     !
+     tmp1=1.d0
+     tmp2=0.d0
+     CALL DAXPY(10000, pi, tmp1, 1, tmp2, 1)
+     !
+     CALL bw_tg_cft3_xy( psis( :, ipsi ), dffts )
+     tempo(6) = MPI_WTIME()
+     CALL bw_tg_cft3_scatter( psis( :, ipsi ), dffts, aux )
+     tempo(7) = MPI_WTIME()
+     CALL bw_tg_cft3_z( psis( :, ipsi ), dffts, aux )
+     tempo(8) = MPI_WTIME()
 
      CALL unpack_group_sticks( psis( :, ipsi ), aux, dffts )
 
@@ -345,6 +384,7 @@ program test
      ncount = ncount + 1
 
   enddo
+#endif
 
   tempo(11) = MPI_WTIME()
 
