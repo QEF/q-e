@@ -1,0 +1,86 @@
+# Makefile for BSE
+#
+ include ../../make.sys
+
+# location of include files
+IFLAGS=-I../../include
+
+# location of needed modules
+MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules \
+          $(MOD_FLAG)../../PHonon/Gamma/ $(MOD_FLAG)../../PHonon/PH/ \
+          $(MOD_FLAG)../../EE $(MOD_FLAG)../../PW/src $(MOD_FLAG)../../FFTXlib $(MOD_FLAG)../../LAXlib $(MOD_FLAG)../pw4gww $(MOD_FLAG)../gww $(MOD_FLAG).
+
+#location of needed libraries
+LIBOBJS= ../../iotk/src/libiotk.a  \
+         ../../clib/clib.a ../../flib/flib.a ../../flib/ptools.a 
+
+BSEOBJS = \
+openfil_bse.o \
+start_bse.o \
+bse_wannier.o\
+transitions.o\
+read_export.o\
+bse_basic_structure.o\
+exciton.o\
+diago_exc.o\
+exchange_exc.o\
+rotate_wannier.o\
+write_wannier_matrix.o\
+direct_v_exc.o\
+direct_w_exc.o\
+exc_h_a.o\
+sdescent.o\
+check_basis.o\
+conjgrad.o\
+conj_grad_stuff.o\
+find_eig.o\
+plot_excwfn.o\
+tspace.o\
+absorption.o\
+spectrum.o\
+absorption.o\
+cgsolve.o\
+h_h.o\
+dvpsi_bse.o\
+lanczos.o\
+print_spectrum.o\
+print_bse.o\
+contract_w_exc.o\
+qpe_exc.o\
+qpcorrections.o
+#zvscal_test.o\
+
+
+QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a
+PWOBJS = ../../PW/src/libpw.a
+PW4GWWOBJ = ../pw4gww/fft_custom.o
+PW4GWWOBJ2 = ../pw4gww/stop_pp.o
+PW4GWWOBJ3 = ../pw4gww/mp_wave_parallel.o
+GWWOBJ = ../gww/libgww.a
+LIBMIN= ../minpack/minpacklib.a
+LIBPWPH =  ../../PHonon/Gamma/libcg.a
+PPOBJ= ../../PP/src/libpp.a
+
+TLDEPS= bindir libs pw ph mods 
+
+all : tldeps bse_main.x
+
+bse_main.x : bse_main.o libbse.a  $(BSEOBJS) $(PWOBJS) $(QEMODS) $(LIBPWPH) $(LIBMIN) $(GWWOBJ) $(PPOBJ)
+	$(LD) $(LDFLAGS) -o $@ \
+		bse_main.o libbse.a $(PWOBJS) $(EEOBJS) $(LIBPWPH) $(QEMODS) $(LIBOBJS) $(LIBS) $(LIBMIN) $(PW4GWWOBJ) $(PW4GWWOBJ2) $(PW4GWWOBJ3) $(GWWOBJ) $(PPOBJ)
+	- ( cd ../../bin ; ln -fs ../GWW/bse/$@ . )
+ 
+tldeps:
+	test -n "$(TLDEPS)" && ( cd ../.. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :
+
+libbse.a : $(BSEOBJS)
+	$(AR) $(ARFLAGS) $@ $?
+	$(RANLIB) $@
+
+clean :
+	- /bin/rm -f *.x *.o *~ *.F90 *.d *.mod *.i *.L libbse.a
+
+include make.depend
+
+
+
