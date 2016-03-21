@@ -14,7 +14,7 @@ SUBROUTINE punch( what )
   !
   USE io_global,            ONLY : stdout
   USE io_files,             ONLY : prefix, iunpun, iunwfc, nwordwfc, diropn
-  USE control_flags,        ONLY : io_level, twfcollect
+  USE control_flags,        ONLY : io_level, twfcollect, io_level
   USE klist,                ONLY : nks
   USE pw_restart,           ONLY : pw_writefile
 #ifdef __XSD
@@ -38,7 +38,7 @@ SUBROUTINE punch( what )
   ! ... save here wavefunctions to file if never saved before
   !
   IF ( .NOT. twfcollect .AND. nks == 1 ) THEN
-     CALL diropn( iunwfc, 'wfc', 2*nwordwfc, exst )
+     if(io_level < 1)  CALL diropn( iunwfc, 'wfc', 2*nwordwfc, exst )
      CALL davcio ( evc, 2*nwordwfc, iunwfc, nks, 1 )
      CLOSE ( UNIT=iunwfc, STATUS='keep' )
   END IF
