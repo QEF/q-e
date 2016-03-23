@@ -185,7 +185,8 @@ CONTAINS
    SUBROUTINE mesure_mmul_perf( n )
       !
       USE mp_bands,    ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm, &
-                             root_bgrp
+                             root_bgrp, my_bgrp_id, nbgrp
+      USE mp_images,   ONLY: nimage, my_image_id
       USE mp_diag,     ONLY: ortho_comm, nproc_ortho, np_ortho, &
                              me_ortho, init_ortho_group, ortho_comm_id, ortho_cntx
       USE io_global,   ONLY: ionode, stdout
@@ -213,7 +214,7 @@ CONTAINS
       !
       !  Now re-define the ortho group and test the performance
       !
-      CALL init_ortho_group( np * np, intra_bgrp_comm )
+      CALL init_ortho_group( np * np, intra_bgrp_comm, nimage*nbgrp, my_bgrp_id + nbgrp * my_image_id )
 
       CALL descla_init( desc, n, n, np_ortho, me_ortho, ortho_comm, ortho_cntx, ortho_comm_id )
 

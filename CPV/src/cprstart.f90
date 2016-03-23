@@ -33,7 +33,7 @@ PROGRAM main
   !
   ! ... initialize MPI (parallel processing handling)
   !
-  CALL mp_startup ( )
+  CALL mp_startup ( diag_in_band_group = .true. )
   !
   ! ... start the environment
   !
