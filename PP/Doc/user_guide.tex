@@ -174,13 +174,14 @@ and in \texttt{examples/dipole\_example/}.
 for PAW calculations.
 
 \paragraph{About Bader's analysis}
-In \texttt{http://theory.cm.utexas.edu/bader/} one can find a software 
-that performs
-Bader's analysis starting from charge on a regular grid. The required 
-"cube" format can be produced by \qe\ using  \texttt{pp.x} (info by G. Lapenna
-who has successfully used this technique, but adds: ``Problems occur with polar 
-X-H bonds or in all cases where the zero-flux of density comes too close to 
-atoms described with pseudo-potentials"). This code should perform 
+In \texttt{http://theory.cm.utexas.edu/henkelman/code/bader/} 
+one can find a software that performs Bader's analysis starting 
+from charge on a regular grid. One should use PAW to compute the
+charge density. The required "cube" format can be produced using 
+\texttt{pp.x} (info by G. Lapenna who has successfully used this 
+technique, but adds: ``Problems occur with polar X-H bonds or in
+all cases where the zero-flux of density comes too close to atoms 
+described with pseudo-potentials"). This code should perform 
 decomposition into Voronoi polyhedra as well, in place of obsolete
 code  \texttt{voronoy.x} (removed from distribution since v.4.2).
 

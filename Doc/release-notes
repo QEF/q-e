@@ -3,6 +3,7 @@ New in 5.3.1 version:
   * Calculation of the Magnetic anisotropy energy is implemented (in the limit 
     of small spin-orbit coupling) using the Force theorem (A. Smogunov)
   * Support for FFT with ARM Performance Library (-D__ARM_LIB) added (F. Spiga)
+  * Non-blocking FFT communications (-D__NON_BLOCKING_SCATTER) (C. Cavazzoni)
 
 Fixed in 5.3.1 version:
 
@@ -17,6 +18,8 @@ Fixed in 5.3.1 version:
   * Incorrect normalization in epsilon.f90 for nspin=2, some inaccuracy
     for 'mv' and 'mp' smearing (courtesy of Tae Yun Kim and Cheol-Hwan Park,
     Seoul National University) (commit 12082)
+  * Incorrect sum over pools in epsilon.f90 for nspin=2 (courtesy of Mariella
+    Ippolito, CINECA) (commit 12218)
 
 Incompatible changes in 5.3.1 version:
 
