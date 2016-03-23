@@ -168,8 +168,6 @@ mp_bands.o : parallel_include.o
 mp_base.o : kind.o
 mp_base.o : parallel_include.o
 mp_diag.o : mp.o
-mp_diag.o : mp_bands.o
-mp_diag.o : mp_pools.o
 mp_diag.o : mp_world.o
 mp_diag.o : parallel_include.o
 mp_global.o : command_line_options.o
@@ -219,13 +217,16 @@ qexml_xsd.o : input_parameters.o
 qexml_xsd.o : io_files.o
 qexml_xsd.o : kind.o
 qexml_xsd.o : wrappers.o
+qmmm.o : ../FFTXlib/fft_types.o
 qmmm.o : cell_base.o
 qmmm.o : constants.o
+qmmm.o : constraints_module.o
 qmmm.o : input_parameters.o
 qmmm.o : io_global.o
 qmmm.o : ions_base.o
 qmmm.o : kind.o
 qmmm.o : mp.o
+qmmm.o : mp_global.o
 qmmm.o : mp_world.o
 qmmm.o : parallel_include.o
 radial_gradients.o : kind.o

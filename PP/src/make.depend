@@ -266,7 +266,6 @@ importexport_binary.o : ../../Modules/mp_world.o
 importexport_binary.o : ../../Modules/wrappers.o
 importexport_binary.o : ../../Modules/xml_io_base.o
 importexport_binary.o : ../../PW/src/io_rho_xml.o
-importexport_binary.o : ../../PW/src/pw_restart.o
 importexport_binary.o : ../../PW/src/pwcom.o
 importexport_binary.o : ../../PW/src/scf_mod.o
 initial_state.o : ../../Modules/environment.o

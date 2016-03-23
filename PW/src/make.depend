@@ -1529,11 +1529,13 @@ rotate_wfc_k.o : ../../Modules/mp_diag.o
 run_pwscf.o : ../../Modules/cell_base.o
 run_pwscf.o : ../../Modules/check_stop.o
 run_pwscf.o : ../../Modules/control_flags.o
+run_pwscf.o : ../../Modules/fft_base.o
 run_pwscf.o : ../../Modules/io_global.o
 run_pwscf.o : ../../Modules/mp_images.o
 run_pwscf.o : ../../Modules/parameters.o
 run_pwscf.o : ../../Modules/qmmm.o
 run_pwscf.o : pwcom.o
+run_pwscf.o : scf_mod.o
 run_pwscf.o : update_pot.o
 ruotaijk.o : ../../Modules/kind.o
 s_1psi.o : ../../Modules/becmod.o
@@ -1617,6 +1619,7 @@ setlocal.o : ../../Modules/cell_base.o
 setlocal.o : ../../Modules/constants.o
 setlocal.o : ../../Modules/control_flags.o
 setlocal.o : ../../Modules/fft_base.o
+setlocal.o : ../../Modules/io_global.o
 setlocal.o : ../../Modules/ions_base.o
 setlocal.o : ../../Modules/kind.o
 setlocal.o : ../../Modules/mp.o
@@ -2082,4 +2085,3 @@ xk_wk_collect.o : ../../Modules/io_global.o
 xk_wk_collect.o : ../../Modules/kind.o
 xk_wk_collect.o : ../../Modules/mp.o
 xk_wk_collect.o : ../../Modules/mp_pools.o
-xk_wk_collect.o : pwcom.o

@@ -796,6 +796,7 @@ ortho_base.o : ../../Modules/mp.o
 ortho_base.o : ../../Modules/mp_bands.o
 ortho_base.o : ../../Modules/mp_diag.o
 ortho_base.o : ../../Modules/mp_global.o
+ortho_base.o : ../../Modules/mp_images.o
 ortho_base.o : ../../Modules/recvec.o
 ortho_base.o : ../../Modules/uspp.o
 phasefactor.o : ../../Modules/cell_base.o
