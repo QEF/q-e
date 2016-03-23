@@ -1908,6 +1908,7 @@ us_exx.o : ../../Modules/cell_base.o
 us_exx.o : ../../Modules/constants.o
 us_exx.o : ../../Modules/control_flags.o
 us_exx.o : ../../Modules/fft_base.o
+us_exx.o : ../../Modules/fft_custom.o
 us_exx.o : ../../Modules/ions_base.o
 us_exx.o : ../../Modules/kind.o
 us_exx.o : ../../Modules/mp.o

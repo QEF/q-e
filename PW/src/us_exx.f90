@@ -18,6 +18,11 @@ MODULE us_exx
   !   * compute_becxx is still in exx.f90 as it uses plenty of global variables from there
   !   * some tests and loops are done directly in exx.f90        
   !   * PAW specific parts are in paw_exx.f90
+  !   * USPP terms in G-space are now computed on the "custom" grid (cutoff
+  !     ecutfock), the same used in exx.f90, instead of the "smooth" grid
+  !     (cutoff 4*ecutwfc). Not sure what happens when the two do not coincide,
+  !     but I expect things to work. Previously the "smooth" grid was used,
+  !     but this lead to erratic problems with non-coincident shell ordering
   !
   USE kinds,   ONLY : DP
   USE becmod,  ONLY : bec_type, calbec, ALLOCATE_bec_type, DEALLOCATE_bec_type
@@ -60,17 +65,17 @@ MODULE us_exx
   END FUNCTION bexg_merge
 
   !-----------------------------------------------------------------------
-  SUBROUTINE qvan_init ( xkq, xk )
+  SUBROUTINE qvan_init ( ngms, xkq, xk )
   !-----------------------------------------------------------------------
     ! allocate and store augmentation charges in G space Q(G) for USPP
     !
     USE ions_base,           ONLY : ntyp => nsp
     USE uspp_param,          ONLY : upf, nh, lmaxq
     USE gvect,               ONLY : g
-    USE gvecs,               ONLY : ngms
     IMPLICIT NONE
     !
     REAL(dp),   INTENT(in)    :: xkq(3), xk(3)
+    INTEGER, INTENT(IN)  :: ngms
     !
     REAL(dp), ALLOCATABLE :: ylmk0(:,:), qmod(:), q(:,:), qq(:)
     INTEGER  :: nij, ijh, ig, nt, ih, jh
@@ -122,7 +127,7 @@ MODULE us_exx
   END SUBROUTINE qvan_clean
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE addusxx_g(rhoc, xkq, xk, flag, becphi_c, becpsi_c, becphi_r, becpsi_r )
+  SUBROUTINE addusxx_g(exx_fft, rhoc, xkq, xk, flag, becphi_c, becpsi_c, becphi_r, becpsi_r )
     !-----------------------------------------------------------------------
     ! 
     ! Add US contribution to rhoc for hybrid functionals
@@ -137,14 +142,15 @@ MODULE us_exx
     USE uspp,                ONLY : nkb, vkb,  okvan, indv_ijkb0, ijtoh
     USE uspp_param,          ONLY : upf, nh, nhm, lmaxq
     USE fft_base,            ONLY : dffts
-    USE gvect,               ONLY : ngm, nl, nlm, g, &
-                                    eigts1, eigts2, eigts3, mill, gstart
-    USE gvecs,               ONLY : ngms, nls, nlsm
+    USE gvect,               ONLY : g, eigts1, eigts2, eigts3, mill, gstart
     USE cell_base,           ONLY : tpiba
     USE control_flags,       ONLY : gamma_only
+    USE fft_custom,          ONLY : fft_cus
     IMPLICIT NONE
     !
-    ! In input I get a slice of <beta|left> and <beta|right> only for this kpoint and this band
+    TYPE(fft_cus), INTENT(inout):: exx_fft
+    ! In input I get a slice of <beta|left> and <beta|right>
+    ! only for this kpoint and this band
     COMPLEX(DP),INTENT(inout) :: rhoc(dffts%nnr)
     COMPLEX(DP),INTENT(in), OPTIONAL  :: becphi_c(nkb), becpsi_c(nkb)
     REAL(DP),   INTENT(in), OPTIONAL  :: becphi_r(nkb), becpsi_r(nkb)
@@ -154,7 +160,7 @@ MODULE us_exx
     ! ... local variables
     !
     COMPLEX(DP),ALLOCATABLE :: aux1(:), aux2(:), eigqts(:)
-    INTEGER :: ikb, jkb, ijkb0, ih, jh, na, nt, ig, nij, ijh
+    INTEGER :: ngms, ikb, jkb, ijkb0, ih, jh, na, nt, ig, nij, ijh
     COMPLEX(DP) :: becfac_c
     REAL(DP) :: arg, becfac_r
     LOGICAL :: add_complex, add_real, add_imaginary
@@ -176,6 +182,7 @@ MODULE us_exx
          ( add_imaginary.AND.(.NOT. PRESENT(becphi_r) .OR. .NOT. PRESENT(becpsi_r) ) ) )    &
        CALL errore('addusxx_g', 'called with incorrect arguments', 2 )
     !
+    ngms = exx_fft%ngmt
     ALLOCATE( aux1(ngms), aux2(ngms) )
     ALLOCATE(eigqts(nat))
     !
@@ -243,22 +250,24 @@ MODULE us_exx
 !$omp end parallel do
                 IF ( add_complex ) THEN
                    DO ig = 1, ngms
-                      rhoc(nls(ig)) = rhoc(nls(ig)) + aux2(ig)
+                      rhoc(exx_fft%nlt(ig)) = rhoc(exx_fft%nlt(ig)) + aux2(ig)
                    END DO
                 ELSE IF ( add_real ) THEN
-                   DO ig = 1,ngms
-                      rhoc(nls(ig)) = rhoc(nls(ig)) + aux2(ig)
+                   DO ig = 1, ngms
+                      rhoc(exx_fft%nlt(ig)) = rhoc(exx_fft%nlt(ig)) + aux2(ig)
                    ENDDO
-                   DO ig = gstart,ngms
-                      rhoc(nlsm(ig)) = rhoc(nlsm(ig)) + CONJG(aux2(ig))
+                   DO ig = gstart, ngms
+                      rhoc(exx_fft%nltm(ig)) = rhoc(exx_fft%nltm(ig)) &
+                                               + CONJG(aux2(ig))
                    ENDDO
                 ELSE IF ( add_imaginary ) THEN
-                   DO ig = 1,ngms
-                      rhoc(nls(ig)) = rhoc(nls(ig)) + (0.0_dp,1.0_dp) * aux2(ig)
+                   DO ig = 1, ngms
+                      rhoc(exx_fft%nlt(ig)) = rhoc(exx_fft%nlt(ig)) &
+                                              + (0.0_dp,1.0_dp) * aux2(ig)
                    ENDDO
-                   DO ig = gstart,ngms
-                      rhoc(nlsm(ig)) = rhoc(nlsm(ig)) + (0.0_dp,1.0_dp)* &
-                           CONJG( aux2(ig) )
+                   DO ig = gstart, ngms
+                      rhoc(exx_fft%nltm(ig)) = rhoc(exx_fft%nltm(ig)) &
+                                             + (0.0_dp,1.0_dp)* CONJG(aux2(ig))
                    ENDDO
                 ENDIF
              ENDIF
@@ -281,7 +290,7 @@ MODULE us_exx
   !-----------------------------------------------------------------------
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE newdxx_g(vc, xkq, xk, flag, deexx, becphi_r, becphi_c)
+  SUBROUTINE newdxx_g(exx_fft, vc, xkq, xk, flag, deexx, becphi_r, becphi_c)
     !-----------------------------------------------------------------------
     !
     ! This subroutine computes some sort of EXX contribution to the non-local 
@@ -299,26 +308,28 @@ MODULE us_exx
     USE uspp,           ONLY : nkb, vkb,  okvan, indv_ijkb0, ijtoh
     USE uspp_param,     ONLY : upf, nh, nhm, lmaxq
     USE fft_base,       ONLY : dffts
-    USE gvect,          ONLY : ngm, nl, nlm, gg, g, gstart, &
-                               eigts1, eigts2, eigts3, mill
-    USE gvecs,          ONLY : ngms, nls, nlsm
+    USE gvect,          ONLY : gg, g, gstart, eigts1, eigts2, eigts3, mill
     USE cell_base,      ONLY : tpiba, omega
     USE control_flags,  ONLY : gamma_only
+    USE fft_custom,          ONLY : fft_cus
     !
     IMPLICIT NONE
     !
+    TYPE(fft_cus), INTENT(inout):: exx_fft
     COMPLEX(DP),INTENT(in)    :: vc(dffts%nnr)
-    ! In input I get a slice of <beta|left> and <beta|right> only for this kpoint and this band
+    ! In input I get a slice of <beta|left> and <beta|right> 
+    ! only for this kpoint and this band
     COMPLEX(DP),INTENT(in), OPTIONAL :: becphi_c(nkb)
     REAL(DP),   INTENT(in), OPTIONAL :: becphi_r(nkb)
     COMPLEX(DP),INTENT(inout) :: deexx(nkb)
     REAL(DP),INTENT(in)       :: xk(3), xkq(3)
     CHARACTER(LEN=1), INTENT(IN) :: flag
+    INTEGER:: ngms
     !
     ! ... local variables
     INTEGER :: ig, ikb, jkb, ijkb0, ih, jh, na, nt, nij
     REAL(DP) :: fact
-    COMPLEX(DP), EXTERNAL :: ZDOTC
+    COMPLEX(DP), EXTERNAL :: zdotc
     !
     COMPLEX(DP),ALLOCATABLE :: auxvc(:), &  ! vc in order of |g|
                                eigqts(:), aux1(:), aux2(:)
@@ -344,6 +355,7 @@ MODULE us_exx
     !
     CALL start_clock( 'newdxx' )
     !
+    ngms = exx_fft%ngmt
     ALLOCATE(aux1(ngms), aux2(ngms), auxvc( ngms))
     ALLOCATE(eigqts(nat))
     !
@@ -358,19 +370,19 @@ MODULE us_exx
     !
     auxvc = (0._dp, 0._dp)
     IF ( add_complex ) THEN
-       auxvc(1:ngms) = vc(nls(1:ngms) )
+       auxvc(1:ngms) = vc(exx_fft%nlt(1:ngms) )
        fact=omega
     ELSE IF ( add_real ) THEN
        DO ig = 1, ngms
-          fp = (vc(nls(ig)) + vc(nlsm(ig)))/2.0_dp
-          fm = (vc(nls(ig)) - vc(nlsm(ig)))/2.0_dp
+          fp = (vc(exx_fft%nlt(ig)) + vc(exx_fft%nltm(ig)))/2.0_dp
+          fm = (vc(exx_fft%nlt(ig)) - vc(exx_fft%nltm(ig)))/2.0_dp
           auxvc(ig) = CMPLX( DBLE(fp), AIMAG(fm), KIND=dp)
        END DO
        fact=2.0_dp*omega
     ELSE IF ( add_imaginary ) THEN
        DO ig = 1, ngms
-          fp = (vc(nls(ig)) + vc(nlsm(ig)))/2.0_dp
-          fm = (vc(nls(ig)) - vc(nlsm(ig)))/2.0_dp
+          fp = (vc(exx_fft%nlt(ig)) + vc(exx_fft%nltm(ig)))/2.0_dp
+          fm = (vc(exx_fft%nlt(ig)) - vc(exx_fft%nltm(ig)))/2.0_dp
           auxvc(ig) = CMPLX( AIMAG(fp), -DBLE(fm), KIND=dp)
        END DO
        fact=2.0_dp*omega
@@ -419,7 +431,7 @@ MODULE us_exx
                       END IF
                    END DO
                    !
-                   deexx(ikb) = deexx(ikb) + fact*ZDOTC(ngms, aux2, 1, aux1, 1)
+                   deexx(ikb) = deexx(ikb) + fact*zdotc(ngms, aux2, 1, aux1, 1)
                    IF( gamma_only .AND. gstart == 2 ) &
                         deexx(ikb) =  deexx(ikb) - fact*CONJG (aux2(1))*aux1(1)
                 ENDDO
@@ -454,7 +466,6 @@ MODULE us_exx
     USE ions_base,           ONLY : nat, ntyp => nsp, ityp
     USE uspp,                ONLY : nkb, okvan,indv_ijkb0
     USE uspp_param,          ONLY : upf, nh
-    USE gvecs,               ONLY : nls
     USE wvfct,               ONLY : nbnd, npwx
     USE control_flags,       ONLY : gamma_only
     IMPLICIT NONE
