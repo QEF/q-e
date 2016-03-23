@@ -8,11 +8,12 @@ IFLAGS=-I../../include
 # location of needed modules
 MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules \
           $(MOD_FLAG)../../PHonon/Gamma/ $(MOD_FLAG)../../PHonon/PH/ \
-          $(MOD_FLAG)../../EE $(MOD_FLAG)../../PW/src $(MOD_FLAG)../../FFTXlib $(MOD_FLAG)../../LAXlib $(MOD_FLAG)../pw4gww $(MOD_FLAG)../gww $(MOD_FLAG).
+          $(MOD_FLAG)../../PW/src $(MOD_FLAG)../../FFTXlib \
+          $(MOD_FLAG)../../LAXlib $(MOD_FLAG)../pw4gww $(MOD_FLAG)../gww \
+          $(MOD_FLAG).
 
 #location of needed libraries
-LIBOBJS= ../../iotk/src/libiotk.a  \
-         ../../clib/clib.a ../../flib/flib.a ../../flib/ptools.a 
+LIBOBJS= ../../iotk/src/libiotk.a  ../../clib/clib.a 
 
 BSEOBJS = \
 openfil_bse.o \
@@ -67,7 +68,7 @@ all : tldeps bse_main.x
 
 bse_main.x : bse_main.o libbse.a  $(BSEOBJS) $(PWOBJS) $(QEMODS) $(LIBPWPH) $(LIBMIN) $(GWWOBJ) $(PPOBJ)
 	$(LD) $(LDFLAGS) -o $@ \
-		bse_main.o libbse.a $(PWOBJS) $(EEOBJS) $(LIBPWPH) $(QEMODS) $(LIBOBJS) $(LIBS) $(LIBMIN) $(PW4GWWOBJ) $(PW4GWWOBJ2) $(PW4GWWOBJ3) $(GWWOBJ) $(PPOBJ)
+		bse_main.o libbse.a $(PWOBJS) $(LIBPWPH) $(QEMODS) $(LIBOBJS) $(LIBS) $(LIBMIN) $(PW4GWWOBJ) $(PW4GWWOBJ2) $(PW4GWWOBJ3) $(GWWOBJ) $(PPOBJ)
 	- ( cd ../../bin ; ln -fs ../GWW/bse/$@ . )
  
 tldeps:
