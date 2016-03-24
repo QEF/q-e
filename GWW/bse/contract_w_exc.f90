@@ -699,7 +699,7 @@ call free_memory_exc_a_r(a_in_rt)
 
 call fftback_a_exc(a_tmp_rt,fc,a_out)
 
-! free memory                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+! free memory
 call free_memory_exc_a_r(a_tmp_rt)
 
 
