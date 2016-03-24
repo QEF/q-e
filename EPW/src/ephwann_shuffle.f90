@@ -43,7 +43,7 @@
   USE constants_epw, ONLY : ryd2ev, ryd2mev, one, two
   USE control_flags, ONLY : iverbosity
   USE io_files,      ONLY : prefix, diropn
-  USE io_global,     ONLY : stdout
+  USE io_global,     ONLY : stdout, ionode
   USE io_epw,        ONLY : lambda_phself,linewidth_phself,linewidth_elself, iunepmatf, &
                             iuetf, iunepmatwe, iunepmatwp
   USE elph2,         ONLY : nrr_k, nrr_q, cu, cuq, lwin, lwinq, irvec, ndegen_k, ndegen_q, &
@@ -76,6 +76,7 @@
   !
   complex(kind=DP), ALLOCATABLE :: &
     epmatwe  (:,:,:,:,:),       &! e-p matrix  in wannier basis - electrons
+    epmatwe_mem  (:,:,:,:),     &! e-p matrix  in wannier basis - electrons (written on disk)
     epmatwef (:,:,:,:)           ! e-p matrix  in el wannier - fine Bloch phonon grid
   complex(kind=DP), ALLOCATABLE :: &
     epmatf( :, :, :),           &! e-p matrix  in smooth Bloch basis, fine mesh
@@ -120,7 +121,17 @@
   CALL wigner_seitz2 &
        ( nk1, nk2, nk3, nq1, nq2, nq3, nrr_k, nrr_q, irvec, wslen, ndegen_k, ndegen_q )
   !
-  ! at this point, we will interpolate the Wannier rep to the Bloch rep 
+  IF ((.NOT. etf_mem) .AND. (ionode)) THEN
+    ! open the .epmatwe file with the proper record length
+    lrepmatw   = 2 * nbndsub * nbndsub * nrr_k * nmodes
+    filint    = trim(prefix)//'.epmatwe'
+    CALL diropn (iunepmatwe, 'epmatwe', lrepmatw, exst)  
+    filint    = trim(prefix)//'.epmatwp'
+    CALL diropn (iunepmatwp, 'epmatwp', lrepmatw, exst)
+    !CALL seqopn (iunepmatwp, 'epmatwp', lrepmatw, exst)
+  ENDIF
+  ! 
+  ! At this point, we will interpolate the Wannier rep to the Bloch rep 
   !
   IF ( epwread ) THEN
      !
@@ -143,9 +154,17 @@
           chw_ks  ( nbndsub, nbndsub, nrr_k ),        &
           cdmew   ( 3, nbndsub, nbndsub, nrr_k ),     &
           rdw     ( nmodes,  nmodes,  nrr_q ) )
-     ALLOCATE(epmatwe ( nbndsub, nbndsub, nrr_k, nmodes, nqc))
-     ALLOCATE (epmatwp ( nbndsub, nbndsub, nrr_k, nmodes, nrr_q))
      IF (vme) ALLOCATE(cvmew   ( 3, nbndsub, nbndsub, nrr_k ) )
+     ! 
+     ! SP : Let the user chose. If false use files on disk
+     !print*,'nrr_k',nrr_k
+     !print*,'nrr_q',nrr_q
+     IF (etf_mem) THEN
+       ALLOCATE(epmatwe ( nbndsub, nbndsub, nrr_k, nmodes, nqc))
+       ALLOCATE (epmatwp ( nbndsub, nbndsub, nrr_k, nmodes, nrr_q))
+     ELSE
+       ALLOCATE(epmatwe_mem ( nbndsub, nbndsub, nrr_k, nmodes))
+     ENDIF
      !
      ! Hamiltonian
      !
@@ -155,9 +174,9 @@
      ! Kohn-Sham eigenvalues
      !
      IF (eig_read) THEN
-        WRITE (6,'(5x,a)') "Interpolating MB and KS eigenvalues"
-        CALL hambloch2wan &
-             ( nbnd, nbndsub, nks, nkstot, lgamma, et_ks, xk, cu, lwin, nrr_k, irvec, wslen, chw_ks )
+       WRITE (6,'(5x,a)') "Interpolating MB and KS eigenvalues"
+       CALL hambloch2wan &
+            ( nbnd, nbndsub, nks, nkstot, lgamma, et_ks, xk, cu, lwin, nrr_k, irvec, wslen, chw_ks )
      ENDIF
      !
      ! Dipole
@@ -180,27 +199,52 @@
      ! Electron-Phonon vertex (Bloch el and Bloch ph -> Wannier el and Bloch ph)
      !
      DO iq = 1, nqc
-        !
-        xxq = xqc (:, iq)
-        !
-        ! we need the cu again for the k+q points, we generate the map here
-        !
-        CALL loadumat ( nbnd, nbndsub, nks, nkstot, xxq, cu, cuq, lwin, lwinq )
-        !
-        DO imode = 1, nmodes
-           !
+       !
+       xxq = xqc (:, iq)
+       !
+       ! we need the cu again for the k+q points, we generate the map here
+       !
+       CALL loadumat ( nbnd, nbndsub, nks, nkstot, xxq, cu, cuq, lwin, lwinq )
+       !
+       DO imode = 1, nmodes
+         !
+         IF (etf_mem) THEN 
            CALL ephbloch2wane &
-                ( nbnd, nbndsub, nks, nkstot, lgamma, xk, cu, cuq, lwin, lwinq, &
-                epmatq (:,:,:,imode,iq), nrr_k, irvec, wslen, epmatwe(:,:,:,imode,iq) )
+             ( nbnd, nbndsub, nks, nkstot, lgamma, xk, cu, cuq, lwin, lwinq, &
+             epmatq (:,:,:,imode,iq), nrr_k, irvec, wslen, epmatwe(:,:,:,imode,iq) )
+         ELSE
+           CALL ephbloch2wane &
+             ( nbnd, nbndsub, nks, nkstot, lgamma, xk, cu, cuq, lwin, lwinq, &
+             epmatq (:,:,:,imode,iq), nrr_k, irvec, wslen, epmatwe_mem(:,:,:,imode) )
            !
-        ENDDO
-        !
+         ENDIF
+         !
+       ENDDO
+       ! Only the master node writes 
+       IF ((.NOT. etf_mem) .AND. (ionode)) THEN
+         ! direct write of epmatwe for this iq 
+         CALL rwepmatw ( epmatwe_mem, nbndsub, nrr_k, nmodes, iq, iunepmatwe, +1)       
+         !   
+       ENDIF   
+       !
      ENDDO
      !
      ! Electron-Phonon vertex (Wannier el and Bloch ph -> Wannier el and Wannier ph)
      !
-     CALL ephbloch2wanp &
-        ( nbndsub, nmodes, xqc, nqc, irvec, wslen, nrr_k, nrr_q, epmatwe )
+     ! Only master perform this task. Need to be parallelize in the future (SP)
+     IF (ionode) THEN
+       IF (etf_mem) THEN
+         CALL ephbloch2wanp &
+           ( nbndsub, nmodes, xqc, nqc, irvec, wslen, nrr_k, nrr_q, epmatwe )
+       ELSE
+          CALL ephbloch2wanp_mem &
+           ( nbndsub, nmodes, xqc, nqc, irvec, wslen, nrr_k, nrr_q, epmatwe_mem )
+       ENDIF
+     ENDIF
+     !
+#ifdef __PARA
+     CALL mp_barrier(inter_pool_comm)
+#endif
      !
      IF ( epwwrite ) THEN
         CALL epw_write 
@@ -211,6 +255,7 @@
   !
   !
   IF ( ALLOCATED (epmatwe) ) DEALLOCATE (epmatwe)
+  IF ( ALLOCATED (epmatwe_mem) ) DEALLOCATE (epmatwe_mem)
   IF ( ALLOCATED (epmatq) )  DEALLOCATE (epmatq)
   IF ( ALLOCATED (cu) )      DEALLOCATE (cu)
   IF ( ALLOCATED (cuq) )     DEALLOCATE (cuq)
@@ -863,7 +908,7 @@ SUBROUTINE epw_write
 !-------------------------------------------
   !
   USE kinds,     ONLY : DP
-  USE epwcom,    ONLY : nbndsub, vme, eig_read
+  USE epwcom,    ONLY : nbndsub, vme, eig_read, etf_mem
   USE pwcom,     ONLY : ef
   USE elph2,     ONLY : nrr_k, nrr_q, chw, rdw, cdmew, cvmew, chw_ks, &
                         zstar, epsi, epmatwp
@@ -918,25 +963,27 @@ SUBROUTINE epw_write
           ENDDO
        ENDDO
        !
-       lrepmatw   = 2 * nbndsub * nbndsub * nrr_k * nmodes * nrr_q
-       i = 0
-       DO irq = 1, nrr_q
-         DO imode = 1, nmodes
-           DO irk = 1, nrr_k
-             DO jbnd = 1, nbndsub
-               DO ibnd = 1, nbndsub
-                 i = i + 1
-                 aux (i) = epmatwp(ibnd,jbnd,irk,imode,irq)
+       IF (etf_mem) THEN
+         lrepmatw   = 2 * nbndsub * nbndsub * nrr_k * nmodes * nrr_q
+         i = 0
+         DO irq = 1, nrr_q
+           DO imode = 1, nmodes
+             DO irk = 1, nrr_k
+               DO jbnd = 1, nbndsub
+                 DO ibnd = 1, nbndsub
+                   i = i + 1
+                   aux (i) = epmatwp(ibnd,jbnd,irk,imode,irq)
+                 ENDDO
                ENDDO
              ENDDO
            ENDDO
          ENDDO
-       ENDDO
-       filint    = trim(prefix)//'.epmatwp'
-       CALL diropn (iunepmatwp, 'epmatwp', lrepmatw, exst)
-       CALL davcio ( aux, lrepmatw, iunepmatwp, 1, +1 )
-       CLOSE(iunepmatwp)
-       IF (ALLOCATED(epmatwp)) DEALLOCATE ( epmatwp )
+         filint    = trim(prefix)//'.epmatwp'
+         CALL diropn (iunepmatwp, 'epmatwp', lrepmatw, exst)
+         CALL davcio ( aux, lrepmatw, iunepmatwp, 1, +1 )
+         CLOSE(iunepmatwp)
+         IF (ALLOCATED(epmatwp)) DEALLOCATE ( epmatwp )
+       ENDIF 
        !
        CLOSE(epwdata)
        CLOSE(iundmedata)
@@ -955,7 +1002,7 @@ END SUBROUTINE epw_write
 SUBROUTINE epw_read()
 !---------------------------------
   USE kinds,     ONLY : DP
-  USE epwcom,    ONLY : nbndsub, vme, eig_read, wepexst
+  USE epwcom,    ONLY : nbndsub, vme, eig_read, wepexst, etf_mem
   USE pwcom,     ONLY : ef
   USE elph2,     ONLY : nrr_k, nrr_q, chw, rdw, epmatwp, &
                         cdmew, cvmew, chw_ks, zstar, epsi
@@ -1076,35 +1123,38 @@ SUBROUTINE epw_read()
 #endif
   !
   !
-  epmatwp = czero
+  IF (etf_mem) then
+    epmatwp = czero
 #ifdef __PARA
-  IF (mpime.eq.ionode_id) THEN
+    IF (mpime.eq.ionode_id) THEN
 #endif
-    !
-    lrepmatw   = 2 * nbndsub * nbndsub * nrr_k * nmodes * nrr_q
-    filint    = trim(prefix)//'.epmatwp'
-    CALL diropn (iunepmatwp, 'epmatwp', lrepmatw, exst)
-    CALL davcio ( aux, lrepmatw, iunepmatwp, 1, -1 )
-    i = 0
-    DO irq = 1, nrr_q
-      DO imode = 1, nmodes
-        DO irk = 1, nrr_k
-          DO jbnd = 1, nbndsub
-            DO ibnd = 1, nbndsub
-              i = i + 1
-              epmatwp(ibnd,jbnd,irk,imode,irq) = aux(i)
+      !
+      lrepmatw   = 2 * nbndsub * nbndsub * nrr_k * nmodes * nrr_q
+      filint    = trim(prefix)//'.epmatwp'
+      CALL diropn (iunepmatwp, 'epmatwp', lrepmatw, exst)
+      CALL davcio ( aux, lrepmatw, iunepmatwp, 1, -1 )
+      i = 0
+      DO irq = 1, nrr_q
+        DO imode = 1, nmodes
+          DO irk = 1, nrr_k
+            DO jbnd = 1, nbndsub
+              DO ibnd = 1, nbndsub
+                i = i + 1
+                epmatwp(ibnd,jbnd,irk,imode,irq) = aux(i)
+              ENDDO
             ENDDO
           ENDDO
         ENDDO
       ENDDO
-    ENDDO
 #ifdef __PARA
-  ENDIF
-  !
-  CALL mp_bcast (epmatwp, ionode_id, inter_pool_comm)
-  CALL mp_bcast (epmatwp, root_pool, intra_pool_comm)
-  !
+    ENDIF
+    !
+    CALL mp_bcast (epmatwp, ionode_id, inter_pool_comm)
+    CALL mp_bcast (epmatwp, root_pool, intra_pool_comm)
+    !
 #endif
+    !
+  ENDIF
   !
 #ifdef __PARA
   CALL mp_barrier(inter_pool_comm)
@@ -1267,6 +1317,73 @@ function sumkg_seq (et, nbnd, nks, wk, degauss, ngauss, e, is, isk)
   enddo
   return
 end function sumkg_seq
+!
+  !-----------------------------------------------------------------
+  subroutine rwepmatw ( epmatw, nbnd, np, nmodes, nrec, iun, iop)
+  !-----------------------------------------------------------------
+  !
+  ! A simple wrapper to the davcio routine to read/write arrays
+  ! instead of vectors 
+  !-----------------------------------------------------------------
+  USE kinds, only : DP
+#ifdef __PARA
+  use mp, only : mp_barrier
+  use mp_global, only : my_pool_id
+#endif
+  implicit none
+  integer :: lrec, iun, nrec, iop, i, nbnd, np, nmodes, ibnd, jbnd, imode, ip
+  !
+  ! np is either nrr_k or nq (epmatwe and epmatwp have the same structure)
+  !
+  complex(kind=DP):: epmatw(nbnd,nbnd,np,nmodes), &
+     aux ( nbnd*nbnd*np*nmodes )
+  !
+  lrec = 2 * nbnd * nbnd * np * nmodes
+  !
+  IF ( iop .eq. -1 ) then
+    !
+    !  read matrix
+    !
+    CALL davcio ( aux, lrec, iun, nrec, -1 )
+    !
+    i = 0
+    DO imode = 1, nmodes
+     DO ip = 1, np
+      DO jbnd = 1, nbnd
+       DO ibnd = 1, nbnd
+         i = i + 1
+         epmatw ( ibnd, jbnd, ip, imode ) = aux (i)
+         ! 
+       ENDDO
+      ENDDO
+     ENDDO
+    ENDDO
+    !
+  ELSEif ( iop .eq. 1 ) then 
+    !
+    !  write matrix
+    !
+    i = 0
+    DO imode = 1, nmodes
+     DO ip = 1, np
+      DO jbnd = 1, nbnd
+       DO ibnd = 1, nbnd
+         i = i + 1
+         aux (i) = epmatw ( ibnd, jbnd, ip, imode )
+       ENDDO
+      ENDDO
+     ENDDO
+    ENDDO
+    !
+    CALL davcio ( aux, lrec, iun, nrec, +1 )
+    !
+  ELSE
+    !
+    CALL errore ('rwepmatw','iop not permitted',1)
+    !
+  ENDIF
+  !
+  end subroutine rwepmatw
 
 
 

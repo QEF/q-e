@@ -17,12 +17,16 @@
   !
 #include "f_defs.h"
   USE kinds,         only : DP
-  USE epwcom,        only : parallel_k, parallel_q
+  USE epwcom,        only : parallel_k, parallel_q, etf_mem
   USE io_epw,        only : iunepmatwp
-  use elph2,         only : epmatwp
+  USE elph2,         only : epmatwp
   USE constants_epw, ONLY : twopi, ci, czero
+  USE io_global,     ONLY : ionode
+  USE io_files,      ONLY : prefix, diropn
 #ifdef __PARA 
   USE mp_global,     ONLY : inter_pool_comm, intra_pool_comm, mp_sum
+  USE mp_world,      ONLY : world_comm
+  USE parallel_include
 #endif
   implicit none
   !
@@ -48,10 +52,16 @@
   !
   ! work variables 
   !
-  integer :: ibnd, jbnd, ir, ire, ir_start, ir_stop, imode
+  character (len=256) :: filint
+  character (len=256) :: string 
+  logical :: exst
+  integer :: ibnd, jbnd, ir, ire, ir_start, ir_stop, imode,iunepmatwp2,ierr, i
+  integer ::  ip , test
+  integer(kind=8) ::  lrepmatw,  lrepmatw2
   real(kind=DP) :: rdotk
   complex(kind=DP) :: eptmp( nbnd, nbnd, nrr_k, nmodes)
   complex(kind=DP) :: cfac(nrr_q)
+  complex(kind=DP):: aux( nbnd*nbnd*nrr_k*nmodes )
   !
   CALL start_clock('ephW2Bp')
   !----------------------------------------------------------
@@ -72,6 +82,17 @@
      CALL errore ('ephwan2blochp', 'Problem with parallel_k/q scheme', nrr_q)
   ENDIF
   !
+#ifdef __PARA
+  IF (.NOT. etf_mem) then
+    filint = trim(prefix)//'.epmatwp1'
+    CALL MPI_FILE_OPEN(intra_pool_comm,filint,MPI_MODE_RDONLY,MPI_INFO_NULL,iunepmatwp2,ierr)
+    IF( ierr /= 0 ) CALL errore( 'ephwan2blochp', 'error in MPI_FILE_OPEN',1 )
+  ENDIF
+#endif
+  ! CALL MPI_ERROR_STRING(ierr, string , i, ierr)
+  ! inquire(FILE=filint,EXIST=exst)
+  ! CALL MPI_FILE_GET_SIZE(iunepmatwp2,test,  ierr)
+  !
   eptmp = czero
   cfac(:) = czero
   !
@@ -83,10 +104,45 @@
      cfac(ir) = exp( ci*rdotk ) / dble( ndegen(ir) )
   ENDDO
   ! 
-  DO ir = ir_start, ir_stop
-    eptmp(:,:,:,:) = eptmp(:,:,:,:) +&
-      cfac(ir)*epmatwp( :, :, :, :, ir)
-  ENDDO
+  IF (etf_mem) then
+    DO ir = ir_start, ir_stop
+      eptmp(:,:,:,:) = eptmp(:,:,:,:) +&
+        cfac(ir)*epmatwp( :, :, :, :, ir)
+    ENDDO
+  ELSE
+    lrepmatw2   = 2 * nbnd * nbnd * nrr_k * nmodes
+   ! IF( ierr /= 0 ) CALL errore( 'ephwan2blochp', 'error in mpi_set_view',ierr )
+    DO ir = ir_start, ir_stop
+#ifdef __PARA
+      !  Direct read of epmatwp for this ir
+      lrepmatw   = 2 * nbnd * nbnd * nrr_k * nmodes * 8 * (ir-1)
+      ! SP: mpi view is used to set the position at which we should start
+      ! reading the file. It is given in bits. 
+      CALL MPI_FILE_SET_VIEW(iunepmatwp2,lrepmatw,MPI_DOUBLE_PRECISION,MPI_DOUBLE_PRECISION,'native',MPI_INFO_NULL,ierr)
+      IF( ierr /= 0 ) CALL errore( 'ephwan2blochp', 'error in MPI_FILE_SET_VIEW',1 )
+      CALL MPI_FILE_READ_ALL(iunepmatwp2, aux, lrepmatw2, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE,ierr)
+      IF( ierr /= 0 ) CALL errore( 'ephwan2blochp', 'error in MPI_FILE_READ_ALL',1 )
+      ! 
+      i = 0
+      DO imode = 1, nmodes
+       DO ip = 1, nrr_k
+        DO jbnd = 1, nbnd
+         DO ibnd = 1, nbnd
+           i = i + 1
+           epmatw ( ibnd, jbnd, ip, imode ) = aux (i)
+           ! 
+         ENDDO
+        ENDDO
+       ENDDO
+      ENDDO
+#else      
+      call rwepmatw ( epmatw, nbnd, nrr_k, nmodes, ir, iunepmatwp, -1)
+#endif
+      !
+      !call rwepmatw ( epmatw, nbnd, nrr_k, nmodes, ir, iunepmatwp, -1)
+      eptmp = eptmp + cfac(ir)*epmatw
+    ENDDO
+  ENDIF
   !
 #ifdef __PARA
   IF (parallel_k) CALL mp_sum(eptmp, inter_pool_comm)
