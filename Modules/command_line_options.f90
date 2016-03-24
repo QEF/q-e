@@ -90,7 +90,7 @@ CONTAINS
            ENDIF
               IF ( TRIM (input_file_) == ' ' ) GO TO 15
               narg = narg + 1
-           CASE ( '-ni', '-nimage', '-nimages' ) 
+           CASE ( '-ni', '-nimage', '-nimages', '-npot' ) 
               IF (read_string) THEN
                  CALL my_getarg ( input_command_line, narg, arg )
               ELSE

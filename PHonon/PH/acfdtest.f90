@@ -14,6 +14,7 @@ MODULE acfdtest
  USE kinds
  SAVE
  LOGICAL :: acfdt_is_active=.FALSE.
+ LOGICAL :: off_vrs_setup  =.FALSE.
  LOGICAL :: acfdt_num_der=.FALSE.
  LOGICAL :: acfdt_term1 = .FALSE.
  LOGICAL :: acfdt_term2 = .FALSE.
@@ -29,5 +30,6 @@ MODULE acfdtest
  REAL(DP):: sum_der_etot=1.0_DP
  REAL(DP), ALLOCATABLE :: vrs_save(:)
  REAL(DP), ALLOCATABLE :: den_xc(:)
+ LOGICAL :: skip_ph = .FALSE. 
 END MODULE acfdtest
 
