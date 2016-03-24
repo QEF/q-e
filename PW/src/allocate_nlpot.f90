@@ -22,7 +22,6 @@ subroutine allocate_nlpot
   !
   !
   USE ions_base,        ONLY : nat, nsp, ityp
-  USE cell_base,        ONLY : tpiba2
   USE cellmd,           ONLY : cell_factor
   USE gvect,            ONLY : ngm, gcutm, g
   USE klist,            ONLY : xk, wk, ngk, nks, qnorm, igk_k
@@ -31,7 +30,7 @@ subroutine allocate_nlpot
   USE scf,              ONLY : rho
   USE noncollin_module, ONLY : noncolin
   USE wvfct,            ONLY : npwx, npw, igk, g2kin
-  USE gvecw,            ONLY : ecutwfc
+  USE gvecw,            ONLY : gcutw, ecutwfc
   USE us,               ONLY : qrad, tab, tab_d2y, tab_at, dq, nqx, &
                                nqxq, spline_ps
   USE uspp,             ONLY : indv, nhtol, nhtolm, ijtoh, qq, dvan, deeq, &
@@ -41,7 +40,6 @@ subroutine allocate_nlpot
   USE spin_orb,         ONLY : lspinorb, fcoef
   USE control_flags,    ONLY : program_name
   USE io_global,        ONLY : stdout
-  USE exx,              ONLY : exx_n_plane_waves
   !
   implicit none
   !
@@ -51,10 +49,7 @@ subroutine allocate_nlpot
   !
   allocate (ngk( nks ))
   !
-  call n_plane_waves (ecutwfc, tpiba2, nks, xk, g, ngm, npwx, ngk)
-  !
-  ! more plane waves are required in the exx case (only with ultrasoft)
-  call exx_n_plane_waves (ecutwfc, tpiba2, g, ngm, npwx)
+  call n_plane_waves (gcutw, nks, xk, g, ngm, npwx, ngk)
   !
   !   igk relates the index of PW k+G to index in the list of G vector
   !

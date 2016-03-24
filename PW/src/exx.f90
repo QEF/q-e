@@ -422,40 +422,6 @@ MODULE exx
   END SUBROUTINE exx_grid_init
   !------------------------------------------------------------------------
   !
-  !-----------------------------------------------------------------------
-  SUBROUTINE exx_n_plane_waves(ecutwfc, tpiba2, g, ngm, npwx)
-    !-----------------------------------------------------------------------
-    !
-    ! Find maximum number of plane waves npwx among the entire grid of k and
-    ! of k+q points - should be called after a previous call to n_plane_waves 
-    ! (for k-points only), providing in input the value of npwx found by
-    ! n_plane_waves, to ensure that the final npwx is the largest of the two
-    !
-    USE kinds, ONLY : DP
-    USE funct, ONLY : dft_is_hybrid
-    USE uspp,  ONLY : okvan
-    IMPLICIT NONE
-    !
-    INTEGER, INTENT(in)  :: ngm
-    REAL(DP),INTENT(in)  :: ecutwfc, tpiba2, g (3, ngm)
-    INTEGER, INTENT(inout) :: npwx
-    INTEGER, ALLOCATABLE :: ngkq(:)
-    INTEGER :: npwx_
-    !
-    IF( .NOT. okvan .OR. .NOT.dft_is_hybrid() ) RETURN
-    IF( .NOT.exx_grid_initialized) &
-        CALL errore("exx_n_plane_waves","you must initialize the grid first",1)
-    ALLOCATE(ngkq(nkqs))
-    CALL n_plane_waves (ecutwfc, tpiba2, nkqs, xkq_collect, g, ngm, npwx_, ngkq)
-    DEALLOCATE(ngkq)
-    npwx = MAX (npwx, npwx_)
-    !
-    RETURN
-    !------------------------------------------------------------------------
-  END SUBROUTINE exx_n_plane_waves
-  !------------------------------------------------------------------------
-  !
-  !
   !------------------------------------------------------------------------
   SUBROUTINE exx_div_check()
     !------------------------------------------------------------------------
@@ -977,29 +943,46 @@ MODULE exx
 
     IMPLICIT NONE
     !
-    INTEGER  :: npwq, ibnd, i, ikq, j, h_ibnd, ibnd_loop_start
+    INTEGER  :: npwq, npwx_, ibnd, ikq, j, h_ibnd, ibnd_loop_start
     INTEGER,ALLOCATABLE     :: igkq(:)   !  order of wavefunctions at k+q[+G]
+    INTEGER,ALLOCATABLE     :: ngkq(:)   !  number of plane waves at k+q[+G]
     COMPLEX(DP),ALLOCATABLE :: vkbq(:,:) ! |beta_I> 
     COMPLEX(DP),ALLOCATABLE :: evcq(:,:) ! |psi_j,k> in g-space
     COMPLEX(DP),ALLOCATABLE :: phi(:)    ! aux space for fwfft
+    REAL(dp), ALLOCATABLE   :: gk(:)     ! work space 
     COMPLEX(DP) :: fp, fm
-    REAL(dp) :: gk(npwx)  ! work space (automatic array)
     !
     IF(.not. okvan) RETURN
     !
     CALL start_clock('becxx')
     !
-    ALLOCATE(igkq(npwx))
-    ALLOCATE(vkbq(npwx,nkb))
+    ! Find maximum number of plane waves npwq among the entire grid of k and
+    ! of k+q points - needed if plane waves are distributed (if not, the number
+    ! of plane waves for each k+q point is the same as for the k-point that is
+    ! equivalent by symmetry)
+    !
+    ALLOCATE(ngkq(nkqs))
+    CALL n_plane_waves (gcutw, nkqs, xkq_collect, g, ngm, npwq, ngkq)
+    npwq = MAX (npwx, npwq)
+    !
+    ! Dirty trick to prevent gk_sort from stopping with an error message:
+    ! set npwx to max value now, reset it to original value later
+    ! (better solution: gk_sort should check actual array dimension, not npwx)
+    !
+    npwx_= npwx
+    npwx = npwq
+    !
+    ALLOCATE(gk(npwq), igkq(npwq))
+    ALLOCATE(vkbq(npwq,nkb))
+    ALLOCATE(evcq(npwq,nbnd))
     ALLOCATE(phi(dffts%nnr))
-    ALLOCATE(evcq(npwx,nbnd))
     !
     DO ikq = 1,nkqs
       !
       ! prepare the g-vectors mapping
-      CALL gk_sort(xkq_collect(:, ikq), ngm, g, gcutw, npwq, igkq, gk )
+      CALL gk_sort(xkq_collect(:, ikq), ngm, g, gcutw, ngkq(ikq), igkq, gk )
       ! prepare the |beta> function at k+q
-      CALL init_us_2(npwq, igkq, xkq_collect(:, ikq), vkbq)
+      CALL init_us_2(ngkq(ikq), igkq, xkq_collect(:, ikq), vkbq)
       !
       ! take rotated phi to G space
       IF (gamma_only) THEN
@@ -1019,14 +1002,14 @@ MODULE exx
             CALL fwfft ('Wave', phi, dffts)
             IF (ibnd < ibnd_end) THEN
                ! two ffts at the same time
-               DO j = 1, npwq
+               DO j = 1, ngkq(ikq)
                   fp = (phi (nls(igkq(j))) + phi (nlsm(igkq(j))))*0.5d0
                   fm = (phi (nls(igkq(j))) - phi (nlsm(igkq(j))))*0.5d0
                   evcq( j, ibnd)   = CMPLX( DBLE(fp), AIMAG(fm),kind=DP)
                   evcq( j, ibnd+1) = CMPLX(AIMAG(fp),- DBLE(fm),kind=DP)
                ENDDO
             ELSE
-               DO j = 1, npwq
+               DO j = 1, ngkq(ikq)
                   evcq(j, ibnd)   =  phi(nls(igkq(j)))
                ENDDO
             ENDIF
@@ -1035,18 +1018,22 @@ MODULE exx
          DO ibnd = ibnd_start,ibnd_end
             phi(:) = exxbuff(:,ibnd,ikq)
             CALL fwfft ('Wave', phi, dffts)
-            FORALL(i=1:npwq) evcq(i,ibnd) = phi(nls(igkq(i)))
+            DO j = 1, ngkq(ikq)
+               evcq(j, ibnd)   =  phi(nls(igkq(j)))
+            ENDDO
          ENDDO
       ENDIF
       !
       ! compute <beta_I|psi_j> at this k+q point, for all bands 
       ! and all projectors
       !
-      CALL calbec(npwq, vkbq, evcq, becxx(ikq), nbnd)
+      CALL calbec(ngkq(ikq), vkbq, evcq, becxx(ikq), nbnd)
       !
     ENDDO
     !
-    DEALLOCATE(igkq, vkbq, phi, evcq)
+    DEALLOCATE(phi, evcq, vkbq, igkq, gk, ngkq)
+    ! suite of the dirty trick: reset npwx to its original value
+    npwx = npwx_
     !
     CALL stop_clock('becxx')
     !-----------------------------------------------------------------------

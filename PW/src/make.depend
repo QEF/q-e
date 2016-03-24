@@ -93,7 +93,6 @@ allocate_locpot.o : ../../Modules/fft_base.o
 allocate_locpot.o : ../../Modules/ions_base.o
 allocate_locpot.o : ../../Modules/recvec.o
 allocate_locpot.o : pwcom.o
-allocate_nlpot.o : ../../Modules/cell_base.o
 allocate_nlpot.o : ../../Modules/control_flags.o
 allocate_nlpot.o : ../../Modules/gvecw.o
 allocate_nlpot.o : ../../Modules/io_global.o
@@ -101,7 +100,6 @@ allocate_nlpot.o : ../../Modules/ions_base.o
 allocate_nlpot.o : ../../Modules/noncol.o
 allocate_nlpot.o : ../../Modules/recvec.o
 allocate_nlpot.o : ../../Modules/uspp.o
-allocate_nlpot.o : exx.o
 allocate_nlpot.o : ldaU.o
 allocate_nlpot.o : pwcom.o
 allocate_nlpot.o : scf_mod.o

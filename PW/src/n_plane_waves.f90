@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine n_plane_waves (ecutwfc, tpiba2, nks, xk, g, ngm, npwx, ngk)
+subroutine n_plane_waves (gcutw, nks, xk, g, ngm, npwx, ngk)
   !-----------------------------------------------------------------------
   !
   ! Find number of plane waves for each k-point
@@ -18,7 +18,7 @@ subroutine n_plane_waves (ecutwfc, tpiba2, nks, xk, g, ngm, npwx, ngk)
   implicit none
   !
   integer, intent(in) :: nks, ngm
-  real(DP),intent(in) :: ecutwfc, tpiba2, xk (3, nks), g (3, ngm)
+  real(DP),intent(in) :: gcutw, xk (3, nks), g (3, ngm)
   !
   integer, intent(out) :: npwx, ngk (nks)
   !
@@ -31,7 +31,7 @@ subroutine n_plane_waves (ecutwfc, tpiba2, nks, xk, g, ngm, npwx, ngk)
      do ng = 1, ngm
         q2 = (xk (1, nk) + g (1, ng) ) **2 + (xk (2, nk) + g (2, ng) ) ** &
              2 + (xk (3, nk) + g (3, ng) ) **2
-        if (q2 <= ecutwfc / tpiba2) then
+        if (q2 <= gcutw) then
            !
            ! here if |k+G|^2 <= Ecut increase the number of G inside the sphere
            !
@@ -39,7 +39,7 @@ subroutine n_plane_waves (ecutwfc, tpiba2, nks, xk, g, ngm, npwx, ngk)
         else
            if (sqrt (g (1, ng) **2 + g (2, ng) **2 + g (3, ng) **2) &
                 .gt.sqrt (xk (1, nk) **2 + xk (2, nk) **2 + xk (3, nk) **2) &
-                + sqrt (ecutwfc / tpiba2) ) goto 100
+                + sqrt (gcutw) ) goto 100
            !
            ! if |G| > |k| + sqrt(Ecut)  stop search
            !
