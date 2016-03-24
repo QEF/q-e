@@ -79,7 +79,8 @@ tar -czvf espresso-$version.tar.gz espresso-$version/archive \
 
 cd espresso-$version
 tar -cvzf ../PWgui-$version.tar.gz    PWgui-$version
-tar -czvf ../PHonon-$version.tar.gz   PHonon PlotPhon QHA
+tar -czvf ../PHonon-$version.tar.gz   PHonon # PlotPhon QHA
+tar -czvf ../EPW-$version.tar.gz      EPW
 tar -czvf ../neb-$version.tar.gz      NEB
 tar -czvf ../pwcond-$version.tar.gz   PWCOND
 tar -czvf ../xspectra-$version.tar.gz XSpectra
