@@ -1,10 +1,12 @@
  &control
-    calculation='phonon',
-    prefix='mgb2',
-    pseudo_dir = '../../pp/',
+    calculation='scf',
+    prefix='MgB2',
+    pseudo_dir = '../pp/',
     outdir='./',
     tprnfor = .true.,
     tstress = .true.,   
+    etot_conv_thr = 1.0d-5
+    forc_conv_thr = 1.0d-4
  /
  &system    
     ibrav = 4,
@@ -12,7 +14,7 @@
     celldm(3) = 1.1420694129095,
     nat=  3,
     ntyp = 2,
-    ecutwfc = 60.0
+    ecutwfc = 40
     smearing = 'mp'
     occupations = 'smearing'
     degauss = 0.02
@@ -23,11 +25,6 @@
     mixing_beta = 0.7
     conv_thr =  1.0d-9
  /
- &phonon
-  xqq(1) = XQ1
-  xqq(2) = XQ2
-  xqq(3) = XQ3
- /
 ATOMIC_SPECIES
  Mg  24.305  Mg.pz-n-vbc.UPF
  B   10.811  B.pz-vbc.UPF
@@ -36,5 +33,4 @@ Mg       0.000000000   0.000000000   0.000000000
 B        0.333333333   0.666666667   0.500000000
 B        0.666666667   0.333333333   0.500000000
 K_POINTS AUTOMATIC
-24 24 24 0 0 0
-
+12 12 12 0 0 0

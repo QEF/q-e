@@ -1,0 +1,15 @@
+--
+&inputph
+  prefix   = 'MgB2',
+  fildyn   = 'MgB2.dyn',
+  amass(1) = 24.305,
+  amass(2) = 10.811,
+  outdir   = './'
+  ldisp    = .true.,
+  trans    = .true.,
+  fildvscf = 'dvscf',
+  nq1=6,
+  nq2=6,
+  nq3=6,
+  tr2_ph   =  1.0d-14
+ /
