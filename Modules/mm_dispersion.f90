@@ -385,7 +385,9 @@ MODULE london_module
           !
           CALL rgen ( dtau, r_cut, mxr, at, bg, r, dist2, nrm )
           !
+#if defined(__INTEL_COMPILER) && (__INTEL_COMPILER < 1600)
 !$omp parallel do private(nr,dist,dist6,f_damp) default(shared), reduction(-:energy_london)
+#endif
           DO nr = 1 , nrm
             !
             dist  = alat * sqrt ( dist2 ( nr ) )
@@ -406,7 +408,9 @@ MODULE london_module
                   f_damp
             !
           END DO
+#if defined(__INTEL_COMPILER) && (__INTEL_COMPILER < 1600)
 !$omp end parallel do
+#endif
           !
         END DO
         !
@@ -520,7 +524,9 @@ MODULE london_module
            par = beta / ( R_sum ( ityp ( atb ) , ityp ( ata ) ) )
            !
            aux(:) = 0.d0
+#if defined(__INTEL_COMPILER) && (__INTEL_COMPILER < 1600)
 !$omp parallel do private(nr,dist,dist6,dist7,exparg,expval,fac,add,ipol) default(shared), reduction(+:aux)
+#endif
            DO nr = 1 , nrm
             !
             dist  = alat * sqrt ( dist2 ( nr ) )
@@ -543,7 +549,9 @@ MODULE london_module
             END DO
             !
            END DO
+#if defined(__INTEL_COMPILER) && (__INTEL_COMPILER < 1600)
 !$omp end parallel do 
+#endif
            DO ipol = 1 , 3
               force_london ( ipol , ata ) = force_london ( ipol , ata ) + aux(ipol)
            ENDDO
