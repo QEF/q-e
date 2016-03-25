@@ -12,7 +12,7 @@ MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules \
 
 #location of needed libraries
 LIBOBJS= ../../iotk/src/libiotk.a  \
-         ../../clib/clib.a ../../flib/flib.a ../../flib/ptools.a 
+         ../../clib/clib.a 
 
 BSEOBJS = \
 openfil_bse.o \
@@ -53,10 +53,8 @@ qpcorrections.o
 
 QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a
 PWOBJS = ../../PW/src/libpw.a
-PW4GWWOBJ = ../pw4gww/fft_custom.o
-PW4GWWOBJ2 = ../pw4gww/stop_pp.o
-PW4GWWOBJ3 = ../pw4gww/mp_wave_parallel.o
-GWWOBJ = ../gww/libgww.a
+PW4GWWOBJ = ../pw4gww/fft_custom.o ../pw4gww/stop_pp.o ../pw4gww/mp_wave_parallel.o
+GWWOBJ = ../gww/libgww.a ../minpack/minpacklib.a
 #LIBPWPH =  ../../PHonon/Gamma/libcg.a
 LIBPWPH =
 #PPOBJ= ../../PP/src/libpp.a
@@ -68,7 +66,7 @@ all : tldeps bse_main.x
 
 bse_main.x : bse_main.o libbse.a  $(BSEOBJS) $(PWOBJS) $(QEMODS) $(LIBPWPH)  $(GWWOBJ) $(PPOBJ)
 	$(LD) $(LDFLAGS) -o $@ \
-		bse_main.o libbse.a $(PWOBJS) $(EEOBJS) $(LIBPWPH) $(QEMODS) $(LIBOBJS) $(LIBS)  $(PW4GWWOBJ) $(PW4GWWOBJ2) $(PW4GWWOBJ3) $(GWWOBJ) $(PPOBJ)
+		bse_main.o libbse.a $(PWOBJS) $(EEOBJS) $(LIBPWPH) $(QEMODS) $(LIBOBJS) $(LIBS)  $(PW4GWWOBJ) $(GWWOBJ) $(PPOBJ)
 	- ( cd ../../bin ; ln -fs ../GWW/bse/$@ . )
  
 tldeps:
