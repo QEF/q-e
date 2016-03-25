@@ -44,13 +44,12 @@ sym_band.o \
 work_function.o \
 write_p_avg.o \
 write_proj.o \
-xsf.o \
 xk_et_collect.o \
 write_io_header.o \
 write_hamiltonians.o 
 
 PWOBJS = ../../PW/src/libpw.a
-QEOBJS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a
+QEOBJS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../flib/flib.a
 
 MODULES = $(PWOBJS) $(QEOBJS)
 
