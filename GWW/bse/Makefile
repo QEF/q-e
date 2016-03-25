@@ -8,12 +8,11 @@ IFLAGS=-I../../include
 # location of needed modules
 MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules \
           $(MOD_FLAG)../../PHonon/Gamma/ $(MOD_FLAG)../../PHonon/PH/ \
-          $(MOD_FLAG)../../PW/src $(MOD_FLAG)../../FFTXlib \
-          $(MOD_FLAG)../../LAXlib $(MOD_FLAG)../pw4gww $(MOD_FLAG)../gww \
-          $(MOD_FLAG).
+          $(MOD_FLAG)../../EE $(MOD_FLAG)../../PW/src $(MOD_FLAG)../../FFTXlib $(MOD_FLAG)../../LAXlib $(MOD_FLAG)../pw4gww $(MOD_FLAG)../gww $(MOD_FLAG).
 
 #location of needed libraries
-LIBOBJS= ../../iotk/src/libiotk.a  ../../clib/clib.a 
+LIBOBJS= ../../iotk/src/libiotk.a  \
+         ../../clib/clib.a ../../flib/flib.a ../../flib/ptools.a 
 
 BSEOBJS = \
 openfil_bse.o \
@@ -58,17 +57,18 @@ PW4GWWOBJ = ../pw4gww/fft_custom.o
 PW4GWWOBJ2 = ../pw4gww/stop_pp.o
 PW4GWWOBJ3 = ../pw4gww/mp_wave_parallel.o
 GWWOBJ = ../gww/libgww.a
-LIBMIN= ../minpack/minpacklib.a
-LIBPWPH =  ../../PHonon/Gamma/libcg.a
-PPOBJ= ../../PP/src/libpp.a
+#LIBPWPH =  ../../PHonon/Gamma/libcg.a
+LIBPWPH =
+#PPOBJ= ../../PP/src/libpp.a
+PPOBJ=
 
 TLDEPS= bindir libs pw ph mods 
 
 all : tldeps bse_main.x
 
-bse_main.x : bse_main.o libbse.a  $(BSEOBJS) $(PWOBJS) $(QEMODS) $(LIBPWPH) $(LIBMIN) $(GWWOBJ) $(PPOBJ)
+bse_main.x : bse_main.o libbse.a  $(BSEOBJS) $(PWOBJS) $(QEMODS) $(LIBPWPH)  $(GWWOBJ) $(PPOBJ)
 	$(LD) $(LDFLAGS) -o $@ \
-		bse_main.o libbse.a $(PWOBJS) $(LIBPWPH) $(QEMODS) $(LIBOBJS) $(LIBS) $(LIBMIN) $(PW4GWWOBJ) $(PW4GWWOBJ2) $(PW4GWWOBJ3) $(GWWOBJ) $(PPOBJ)
+		bse_main.o libbse.a $(PWOBJS) $(EEOBJS) $(LIBPWPH) $(QEMODS) $(LIBOBJS) $(LIBS)  $(PW4GWWOBJ) $(PW4GWWOBJ2) $(PW4GWWOBJ3) $(GWWOBJ) $(PPOBJ)
 	- ( cd ../../bin ; ln -fs ../GWW/bse/$@ . )
  
 tldeps:
