@@ -105,6 +105,7 @@ xc_vdW_DF.o \
 xc_rVV10.o \
 xml_input.o \
 xml_io_base.o \
+xsf.o \
 wypos.o \
 zdotc_wrapper.o  \
 zvscal.o 
