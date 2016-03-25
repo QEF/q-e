@@ -67,7 +67,7 @@ v_rh(:)=0.d0
 !get the valence wavefunctions at the nxh,nyh,nzh (only one processor has it!) 
 #ifndef __PARA
 nh=(nzh-1)*fc%nrx1t*fc%nrx2t+(nyh-1)*fc%nrx1t+nxh
-v_rh(:)=v_rt%wfnrt(nh,:,1)
+v_rh(:)=vstate_r%wfnrt(nh,:,1)
 #else
 nr3s_start=0
 nr3s_end =0
