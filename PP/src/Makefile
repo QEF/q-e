@@ -49,7 +49,7 @@ write_io_header.o \
 write_hamiltonians.o 
 
 PWOBJS = ../../PW/src/libpw.a
-QEOBJS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../flib/flib.a
+QEOBJS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a
 
 MODULES = $(PWOBJS) $(QEOBJS)
 
