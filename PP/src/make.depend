@@ -756,5 +756,3 @@ xctest.o : ../../Modules/mp_global.o
 xk_et_collect.o : ../../Modules/kind.o
 xk_et_collect.o : ../../Modules/mp.o
 xk_et_collect.o : ../../Modules/mp_pools.o
-xsf.o : ../../Modules/constants.o
-xsf.o : ../../Modules/kind.o

@@ -159,10 +159,6 @@ phcg.o : ../../PW/src/scf_mod.o
 phcg.o : ../../PW/src/symm_base.o
 phcg.o : ../../PW/src/update_pot.o
 phcg.o : cgcom.o
-pw_dot.o : ../../Modules/kind.o
-pw_dot.o : ../../Modules/mp.o
-pw_dot.o : ../../Modules/mp_global.o
-pw_dot.o : ../../Modules/recvec.o
 rhod2vkb.o : ../../FFTXlib/fft_interfaces.o
 rhod2vkb.o : ../../Modules/becmod.o
 rhod2vkb.o : ../../Modules/cell_base.o

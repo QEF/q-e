@@ -442,8 +442,8 @@ xml_io_base.o : mp_images.o
 xml_io_base.o : mp_wave.o
 xml_io_base.o : parser.o
 xml_io_base.o : wrappers.o
-xsf.o : kind.o
 xsf.o : constants.o
+xsf.o : kind.o
 ylmr2.o : constants.o
 ylmr2.o : kind.o
 zdotc_wrapper.o : kind.o
