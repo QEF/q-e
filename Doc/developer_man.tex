@@ -2102,13 +2102,17 @@ To remove a file/directory (if empty):
 You can move a file (a directory, a group of files, ...) into a different
 directory using command
 \begin{verbatim}
-  svn mv
+  svn mv dir1/file1 [dir1/file2 ...] dir2/
 \end{verbatim}
 or, if you prefer to make a copy of the file, retaining the history:
 \begin{verbatim}
 svn cp svn+ssh://myusername@qeforge.qe-forge.org/svnroot/q-e/trunk/espresso/DIR1/file.1 svn+ssh://myusername@qeforge.qe-forge.org/svnroot/q-e/trunk/espresso/DIR2/file2
 \end{verbatim}
 then run \texttt{svn update} to have it applied locally.
+After such operations are done, run the \texttt{install/makedeps.sh} script
+or type \texttt{make depend} to update files \texttt{make.depend} in the 
+various subdirectories. It is preferrable to commit the moved files/modified 
+directories and the affected Makefiles/make.depend in a single command.
 
 \subsection{Removing conflicts}
 \label{SubSec:Conflicts}

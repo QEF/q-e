@@ -1,11 +1,12 @@
-New in 5.3.1 version:
+New in 5.4 version:
 
   * Calculation of the Magnetic anisotropy energy is implemented (in the limit 
     of small spin-orbit coupling) using the Force theorem (A. Smogunov)
   * Support for FFT with ARM Performance Library (-D__ARM_LIB) added (F. Spiga)
   * Non-blocking FFT communications (-D__NON_BLOCKING_SCATTER) (C. Cavazzoni)
+  * Bethe-Salpeter equation added to GWL (P. Umari)
 
-Fixed in 5.3.1 version:
+Fixed in 5.4 version:
 
   * New configure wasn't working properly for some Macintosh due to a
     missing line (commit 11976)
@@ -20,8 +21,10 @@ Fixed in 5.3.1 version:
     Seoul National University) (commit 12082)
   * Incorrect sum over pools in epsilon.f90 for nspin=2 (courtesy of Mariella
     Ippolito, CINECA) (commit 12218)
+  * Hybrid functionals with USPP and k-p[oint parallelization now work 
+    (commit 12242)
 
-Incompatible changes in 5.3.1 version:
+Incompatible changes in 5.4 version:
 
   * k+G indices "igk" no longer written to and read from file (PW only, 
     will be extended to all codes)
