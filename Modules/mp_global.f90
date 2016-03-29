@@ -58,7 +58,7 @@ CONTAINS
     LOGICAL, INTENT(IN), OPTIONAL :: diag_in_band_group
     LOGICAL :: do_images
     LOGICAL :: do_diag_in_band
-    INTEGER :: my_comm
+    INTEGER :: my_comm, num_groups, group_id
     !
     my_comm = MPI_COMM_WORLD
     IF ( PRESENT(my_world_comm) ) my_comm = my_world_comm
@@ -79,14 +79,21 @@ CONTAINS
     !
     do_diag_in_band = .FALSE.
     IF ( PRESENT(diag_in_band_group) ) do_diag_in_band = diag_in_band_group
+    !
     IF( do_diag_in_band ) THEN
        ! used to be one diag group per bgrp
-       CALL mp_start_diag  ( ndiag_, intra_bgrp_comm, npool_* nimage_ * nband_ , &
-                          my_bgrp_id + (my_pool_id + my_image_id * npool_ ) * nband_ )
+       ! with strict hierarchy: POOL > BAND > DIAG
+       num_groups = npool_* nimage_ * nband_
+       group_id   = my_bgrp_id + (my_pool_id + my_image_id * npool_ ) * nband_
+       my_comm    = intra_bgrp_comm
     ELSE
        ! one diag group per pool ( individual k-point level )
-       CALL mp_start_diag  ( ndiag_, intra_pool_comm, npool_ * nimage_ , my_pool_id + my_image_id * npool_ )
+       ! with band group and diag group both being children of POOL comm
+       num_groups = npool_* nimage_ 
+       group_id   = my_pool_id + my_image_id * npool_ 
+       my_comm    = intra_pool_comm
     END IF
+    CALL mp_start_diag  ( ndiag_, my_comm, num_groups , group_id )
     !
     RETURN
     !
