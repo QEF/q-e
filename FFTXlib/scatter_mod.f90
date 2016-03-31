@@ -431,19 +431,14 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
   INTEGER :: me_p, nppx, mc, j, npp, nnp, ii, it, ip, ioff, sendsiz, ncpx, ipp, nblk, nsiz, ijp
   INTEGER :: sh(dfft%nproc), rh(dfft%nproc)
   INTEGER :: istat( MPI_STATUS_SIZE )
-  LOGICAL :: lrcv, lsnd, tsts(dfft%nproc), tstr(dfft%nproc)
   !
   INTEGER, SAVE, ALLOCATABLE :: indmap(:,:)
-  INTEGER, SAVE, ALLOCATABLE :: indmap_bw(:,:)
-  INTEGER, SAVE  :: nijp, nijp_bw
+  INTEGER, SAVE, ALLOCATABLE :: indmap_bw(:)
+  INTEGER, SAVE  :: nijp
   INTEGER, SAVE  :: dimref(4) = 0
   INTEGER, SAVE  :: dimref_bw(4) = 0
-
   !
   LOGICAL :: use_tg_
-
-  !
-  !  Task Groups
   !
   CALL start_clock ('fft_scatter')
 
@@ -453,16 +448,11 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
 
   me     = dfft%mype + 1
   !
-  IF( use_tg_ ) THEN
-    !  This is the number of procs. in the plane-wave group
-     nprocp = dfft%npgrp
-  ELSE
-     nprocp = dfft%nproc
-  ENDIF
-  !
   ncpx = 0
   nppx = 0
   IF( use_tg_ ) THEN
+     !  This is the number of procs. in the plane-wave group
+     nprocp = dfft%npgrp
      DO proc = 1, nprocp
         gproc = dfft%nplist( proc ) + 1
         ncpx = max( ncpx, ncp_ ( gproc ) )
@@ -470,6 +460,7 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
      ENDDO
      gcomm = dfft%pgrp_comm
   ELSE
+     nprocp = dfft%nproc
      DO proc = 1, nprocp
         ncpx = max( ncpx, ncp_ ( proc ) )
         nppx = max( nppx, npp_ ( proc ) )
@@ -490,37 +481,40 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
      !
      offset = 1
 
-     DO proc = 1, nprocp
-
-        IF( use_tg_ ) THEN
+     IF( use_tg_ ) THEN
+        DO proc = 1, nprocp
            gproc = dfft%nplist(proc)+1
-        ELSE
-           gproc = proc
-        ENDIF
-        !
-        from = offset
-        dest = 1 + ( proc - 1 ) * sendsiz
-        !
-        kdest = dest - 1
-        kfrom = from - 1
-        !
-        DO k = 1, ncp_ (me)
-           DO i = 1, npp_ ( gproc )
-              f_aux ( kdest + i ) =  f_in ( kfrom + i )
+           kdest = ( proc - 1 ) * sendsiz
+           kfrom = offset - 1
+           DO k = 1, ncp_ (me)
+              DO i = 1, npp_ ( gproc )
+                 f_aux ( kdest + i ) =  f_in ( kfrom + i )
+              ENDDO
+              kdest = kdest + nppx
+              kfrom = kfrom + nr3x
            ENDDO
-           kdest = kdest + nppx
-           kfrom = kfrom + nr3x
+           offset = offset + npp_ ( gproc )
+           ! post the non-blocking send, f_aux can't be overwritten until operation has completed
+           CALL mpi_isend( f_aux( (proc-1)*sendsiz + 1 ), sendsiz, MPI_DOUBLE_COMPLEX, proc-1, me, gcomm, sh( proc ), ierr )
+           ! IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', ' forward send info<>0', abs(ierr) )
         ENDDO
-        !
-        ! post the non-blocking send, f_aux can't be overwritten until operation has completed
-        !
-        CALL mpi_isend( f_aux( (proc-1)*sendsiz + 1 ), sendsiz, MPI_DOUBLE_COMPLEX, proc-1, me, gcomm, sh( proc ), ierr )
-        !
-        IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', ' forward send info<>0', abs(ierr) )
-
-        offset = offset + npp_ ( gproc )
-        !
-     ENDDO
+     ELSE
+        DO proc = 1, nprocp
+           kdest = ( proc - 1 ) * sendsiz
+           kfrom = offset - 1
+           DO k = 1, ncp_ (me)
+              DO i = 1, npp_ ( proc )
+                 f_aux ( kdest + i ) =  f_in ( kfrom + i )
+              ENDDO
+              kdest = kdest + nppx
+              kfrom = kfrom + nr3x
+           ENDDO
+           offset = offset + npp_ ( proc )
+           ! post the non-blocking send, f_aux can't be overwritten until operation has completed
+           CALL mpi_isend( f_aux( (proc-1)*sendsiz + 1 ), sendsiz, MPI_DOUBLE_COMPLEX, proc-1, me, gcomm, sh( proc ), ierr )
+           ! IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', ' forward send info<>0', abs(ierr) )
+        ENDDO
+     ENDIF
      !
      ! step two: receive
      !
@@ -529,14 +523,14 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
         ! now post the receive
         !
         CALL mpi_irecv( f_in( (proc-1)*sendsiz + 1 ), sendsiz, MPI_DOUBLE_COMPLEX, proc-1, MPI_ANY_TAG, gcomm, rh( proc ), ierr )
+        !IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', ' forward receive info<>0', abs(ierr) )
         !
-        IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', ' forward receive info<>0', abs(ierr) )
         !
      ENDDO
      !
      ! maybe useless; ensures that no garbage is present in the output
      !
-     f_in( nprocp*sendsiz + 1 : size( f_in )  ) = 0.0_DP
+     !f_in( nprocp*sendsiz + 1 : size( f_in )  ) = 0.0_DP
      !
      call mpi_waitall( nprocp, sh, MPI_STATUSES_IGNORE, ierr )
      !
@@ -582,31 +576,20 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
            ijp = 0
            !
            DO gproc = 1, nblk
-              !
               ii = 0
-              !
               DO ipp = 1, nsiz
-                 !
                  ioff = dfft%iss( (gproc-1)*nsiz + ipp )
-                 !
                  DO i = 1, dfft%nsw( (gproc-1)*nsiz + ipp )
-                    !
                     mc = dfft%ismap( i + ioff )
-                    !
                     it = ii * nppx + (gproc-1) * sendsiz
-                    !
                     DO j = 1, npp
                        ijp = ijp + 1
                        indmap(1,ijp) = mc + ( j - 1 ) * nnp
                        indmap(2,ijp) = j + it 
                     ENDDO
-                    !
                     ii = ii + 1
-                    !
                  ENDDO
-                 !
               ENDDO
-              !
            ENDDO
            !
            nijp = ijp
@@ -644,13 +627,13 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
            ENDDO
 
            CALL mpi_isend( f_in( (ip-1)*sendsiz + 1 ), sendsiz, MPI_DOUBLE_COMPLEX, ip-1, me, gcomm, sh( ip ), ierr )
-           IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', ' backward send info<>0', abs(ierr) )
+           ! IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', ' backward send info<>0', abs(ierr) )
 
         ENDDO
 
         DO ip = 1, dfft%nproc
            CALL mpi_irecv( f_aux( (ip-1)*sendsiz + 1 ), sendsiz, MPI_DOUBLE_COMPLEX, ip-1, MPI_ANY_TAG, gcomm, rh(ip), ierr )
-           IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', ' backward receive info<>0', abs(ierr) )
+           ! IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', ' backward receive info<>0', abs(ierr) )
         ENDDO
 
      ELSE
@@ -672,40 +655,25 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
            !
            IF( ALLOCATED( indmap_bw ) )  &
               DEALLOCATE( indmap_bw )
-           ALLOCATE( indmap_bw(2,SIZE(f_aux)) )
+           !
+           ALLOCATE( indmap_bw(SIZE(f_aux)) )
            !
            ijp = 0
-           !
            DO gproc = 1, nblk
-              !
               ii = 0
-              !
               DO ipp = 1, nsiz
-                 !
                  ioff = dfft%iss(  (gproc-1)*nsiz + ipp  )
-                 !
                  DO i = 1, dfft%nsw(  (gproc-1)*nsiz + ipp  )
-                    !
                     mc = dfft%ismap( i + ioff )
-                    !
                     it = ii * nppx + ( gproc - 1 ) * sendsiz
-                    !
                     DO j = 1, npp
-                       ijp = ijp + 1
-                       indmap_bw(1,ijp) = j + it 
-                       indmap_bw(2,ijp) = mc + ( j - 1 ) * nnp
+                       indmap_bw( j + ijp ) = mc + ( j - 1 ) * nnp
                     ENDDO
-                    !
+                    ijp = ijp + npp 
                     ii = ii + 1
-                    !
                  ENDDO
-                 !
               ENDDO
-              !
            ENDDO
-
-           nijp_bw = ijp
-           CALL fftsort( nijp_bw, indmap_bw )
 
            dimref_bw(1) = npp
            dimref_bw(2) = nnp
@@ -714,47 +682,63 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
 
         END IF
 
-        DO ijp = 1, nijp_bw
-           f_in( indmap_bw(1,ijp) ) = f_aux( indmap_bw(2,ijp) )
-        END DO
+
+        ijp = 0
+        DO gproc = 0, nblk-1
+           ii = gproc * sendsiz
+           DO ipp = gproc*nsiz+1, gproc*nsiz+nsiz
+              DO i = 1, dfft%nsw(  ipp  )
+                 DO j = 1, npp
+                    f_in( j + ii ) = f_aux( indmap_bw( j + ijp ) )
+                 ENDDO
+                 ijp = ijp + npp
+                 ii = ii + nppx 
+              ENDDO
+           ENDDO
+           CALL mpi_isend( f_in( gproc*sendsiz + 1 ), sendsiz, MPI_DOUBLE_COMPLEX, gproc, me, gcomm, sh( gproc+1 ), ierr )
+           ! IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', ' backward send info<>0', abs(ierr) )
+        ENDDO
 
         DO gproc = 1, nblk
            CALL mpi_irecv( f_aux( (gproc-1)*sendsiz + 1 ), sendsiz, MPI_DOUBLE_COMPLEX, gproc-1, MPI_ANY_TAG, gcomm, rh(gproc), ierr )
-           IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', ' backward receive info<>0', abs(ierr) )
+           ! IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', ' backward receive info<>0', abs(ierr) )
         ENDDO
-        DO gproc = 1, nblk
-           CALL mpi_isend( f_in( (gproc-1)*sendsiz + 1 ), sendsiz, MPI_DOUBLE_COMPLEX, gproc-1, me, gcomm, sh( gproc ), ierr )
-           IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', ' backward send info<>0', abs(ierr) )
-        END DO
 
      END IF
      !
-     call mpi_waitall( nblk, sh, MPI_STATUSES_IGNORE, ierr )
      call mpi_waitall( nblk, rh, MPI_STATUSES_IGNORE, ierr )
+     call mpi_waitall( nblk, sh, MPI_STATUSES_IGNORE, ierr )
      !
      offset = 1
 
-     DO proc = 1, nprocp
-        from = offset
-        IF( use_tg_ ) THEN
-           gproc = dfft%nplist(proc)+1
-        ELSE
-           gproc = proc
-        ENDIF
-        dest = 1 + ( proc - 1 ) * sendsiz
-        !
-        kdest = dest - 1
-        kfrom = from - 1
-        !
-        DO k = 1, ncp_ (me)
-           DO i = 1, npp_ ( gproc )  
-              f_in ( kfrom + i ) = f_aux ( kdest + i )
+     IF( use_tg_ ) THEN
+        DO proc = 1, nprocp
+           gproc = dfft%nplist(proc) + 1
+           kdest = ( proc - 1 ) * sendsiz
+           kfrom = offset - 1
+           DO k = 1, ncp_ (me)
+              DO i = 1, npp_ ( gproc )  
+                 f_in ( kfrom + i ) = f_aux ( kdest + i )
+              ENDDO
+              kdest = kdest + nppx
+              kfrom = kfrom + nr3x
            ENDDO
-           kdest = kdest + nppx
-           kfrom = kfrom + nr3x
+           offset = offset + npp_ ( gproc )
         ENDDO
-        offset = offset + npp_ ( gproc )
-     ENDDO
+     ELSE
+        DO proc = 1, nprocp
+           kdest = ( proc - 1 ) * sendsiz 
+           kfrom = offset - 1
+           DO k = 1, ncp_ (me)
+              DO i = 1, npp_ ( proc )  
+                 f_in ( kfrom + i ) = f_aux ( kdest + i )
+              ENDDO
+              kdest = kdest + nppx
+              kfrom = kfrom + nr3x
+           ENDDO
+           offset = offset + npp_ ( proc )
+        ENDDO
+     ENDIF
 
   ENDIF
 

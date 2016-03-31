@@ -117,8 +117,8 @@
 
 
         INTEGER, ALLOCATABLE :: ist(:,:)    ! sticks indices ordered
-          INTEGER :: ip, ngm_ , ngs_
-          INTEGER, ALLOCATABLE :: idx(:)
+        INTEGER :: ip, ngm_ , ngs_, ipg
+        INTEGER, ALLOCATABLE :: idx(:)
 
           tk    = .not. gamma_only
           ub(1) = ( dfftp%nr1 - 1 ) / 2
@@ -180,7 +180,7 @@
           !  idx( iss ) = itmp
 
           CALL sticks_dist( tk, ub, lb, idx, ist(:,1), ist(:,2), ist(:,4), ist(:,3), ist(:,5), &
-             nst, nstp, nstpw, nstps, sstp, sstpw, sstps, st, stw, sts, nproc )
+             nst, nstp, nstpw, nstps, sstp, sstpw, sstps, st, stw, sts, mype, nproc )
 
           ngw = sstpw( mype + 1 )
           ngm = sstp( mype + 1 )
@@ -232,14 +232,12 @@
           nstpx  = maxval( nstp )
 ! ...     Maximum number of sticks (wave func.)
           nstpwx = maxval( nstpw  )
-
           !
           !  Initialize task groups.
           !  Note that this call modify dffts adding task group data.
           !
           CALL task_groups_init( dffts )
           !
-
           IF (ionode) THEN
              WRITE( stdout,*)
              IF ( nproc > 1 ) THEN

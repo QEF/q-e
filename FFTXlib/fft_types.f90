@@ -57,24 +57,24 @@ MODULE fft_types
     !
     !  fft parallelization
     !
-    INTEGER :: mype               ! my processor id (starting from 0) in the fft group
-    INTEGER :: comm               ! communicator of the fft gruop 
-    INTEGER :: nproc              ! number of processor in the fft group
-    INTEGER :: root               ! root processor
+    INTEGER :: mype     = 0          ! my processor id (starting from 0) in the fft group
+    INTEGER :: comm     = 0          ! communicator of the fft gruop 
+    INTEGER :: nproc    = 1          ! number of processor in the fft group
+    INTEGER :: root     = 0          ! root processor
     !
     !  task groups
     !
     LOGICAL :: have_task_groups
     !
-    INTEGER :: me_pgrp            ! task id for plane wave task group
-    INTEGER :: nogrp              ! number of proc. in an orbital "task group"
-    INTEGER :: npgrp              ! number of proc. in a plane-wave "task group"
-    INTEGER :: ogrp_comm          ! orbital group communicator
-    INTEGER :: pgrp_comm          ! plane-wave group communicator
+    INTEGER :: me_pgrp   = 0          ! task id for plane wave task group
+    INTEGER :: nogrp     = 1          ! number of proc. in an orbital "task group"
+    INTEGER :: npgrp     = 1          ! number of proc. in a plane-wave "task group"
+    INTEGER :: ogrp_comm = 0          ! orbital group communicator
+    INTEGER :: pgrp_comm = 0          ! plane-wave group communicator
     INTEGER, POINTER :: nolist(:) ! list of pes in orbital group
     INTEGER, POINTER :: nplist(:) ! list of pes in pw group
     !
-    INTEGER :: tg_nnr             ! maximum among nnr
+    INTEGER :: tg_nnr = 0            ! maximum among nnr
     INTEGER, POINTER :: tg_nsw(:) ! number of sticks per task group ( wave func )
     INTEGER, POINTER :: tg_npp(:) ! number of "Z" planes per task group
     INTEGER, POINTER :: tg_snd(:) ! number of element to be sent in group redist
@@ -594,7 +594,5 @@ CONTAINS
 
     RETURN
   END SUBROUTINE fft_dlay_scalar
-
-
 
 END MODULE fft_types
