@@ -1,3 +1,13 @@
+!
+! Copyright (C) Quantum ESPRESSO group
+!
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
+! by F. Affinito and C. Cavazzoni, Cineca
+
 program test
   USE fft_types, ONLY: fft_dlay_descriptor, fft_dlay_deallocate
   USE stick_set, ONLY: pstickset
@@ -16,7 +26,7 @@ program test
   !
   INTEGER :: mype, npes, comm, ntgs, root, nbnd
   LOGICAL :: iope
-  INTEGER :: ierr, i, ncount, ib, ireq, nreq, ipsi
+  INTEGER :: ierr, i, ncount, ib, ireq, nreq, ipsi, iloop
   INTEGER :: stdout
   INTEGER :: ngw_ , ngm_ , ngs_
   REAL*8  :: gcutm, gkcut, gcutms
@@ -300,7 +310,10 @@ program test
      !
      tmp1=1.d0
      tmp2=0.d0
-     CALL DAXPY(10000, pi, tmp1, 1, tmp2, 1)
+     !
+     do iloop = 1,10 
+       CALL DAXPY(10000, pi*iloop, tmp1, 1, tmp2, 1)
+     end do 
      !
      tempo(6) = MPI_WTIME()
      CALL bw_tg_cft3_xy( psis( :, ipsi ), dffts )
@@ -344,7 +357,9 @@ program test
      !
      tmp1=1.d0
      tmp2=0.d0
-     CALL DAXPY(10000, pi, tmp1, 1, tmp2, 1)
+     do iloop = 1,10 
+       CALL DAXPY(10000, pi*iloop, tmp1, 1, tmp2, 1)
+     end do 
      !
      tempo(6) = MPI_WTIME()
      CALL bw_tg_cft3_xy( psis( :, ipsi ), dffts )
@@ -379,15 +394,19 @@ program test
      tempo_mio = tempo_mio / DBLE(ncount)
   endif
 
+!write(*,*)tempo_mio(2), tempo_mio(3), tempo_mio(4)
+
 #ifdef __MPI
-  CALL MPI_ALLREDUCE( tempo_mio, tempo_min, 100, MPI_DOUBLE_PRECISION, MPI_MIN, MPI_COMM_WORLD, ierr )
-  CALL MPI_ALLREDUCE( tempo_mio, tempo_max, 100, MPI_DOUBLE_PRECISION, MPI_MAX, MPI_COMM_WORLD, ierr )
-  CALL MPI_ALLREDUCE( tempo_mio, tempo_avg, 100, MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, ierr )
-  CALL MPI_ALLREDUCE( wall, wall_avg, 100, MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, ierr )
+  CALL MPI_ALLREDUCE( tempo_mio, tempo_min, 10, MPI_DOUBLE_PRECISION, MPI_MIN, MPI_COMM_WORLD, ierr )
+  CALL MPI_ALLREDUCE( tempo_mio, tempo_max, 10, MPI_DOUBLE_PRECISION, MPI_MAX, MPI_COMM_WORLD, ierr )
+  CALL MPI_ALLREDUCE( tempo_mio, tempo_avg, 10, MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, ierr )
+  CALL MPI_ALLREDUCE( wall, wall_avg, 10, MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, ierr )
 #else
   tempo_min = tempo
   tempo_max = tempo
 #endif
+
+!write(*,*)tempo_min(2), tempo_min(3), tempo_min(4)
 
   tempo_avg = tempo_avg / npes
   wall_avg = wall_avg / npes
@@ -418,16 +437,16 @@ program test
 
 100 FORMAT(' +--------------------+----------------+-----------------+----------------+' )
 1   FORMAT(' |FFT subroutine      |  sec. min      | sec. max        | sec.  avg      |' )
-2   FORMAT(' |pack_group_sticks/w | ',    D14.3, ' | ',   D14.3,  '  | ', D14.3,   ' |' )
-3   FORMAT(' |fw_tg_cft3_z        | ',    D14.3, ' | ',   D14.3,  '  | ', D14.3,   ' |' )
-4   FORMAT(' |fw_tg_cft3_scatter  | ',    D14.3, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
-5   FORMAT(' |fw_tg_cft3_xy       | ',    D14.3, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
-6   FORMAT(' |workload            | ',    D14.3, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
-7   FORMAT(' |bw_tg_cft3_xy       | ',    D14.3, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
-8   FORMAT(' |bw_tg_cft3_scatter  | ',    D14.3, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
-9   FORMAT(' |bw_tg_cft3_z        | ',    D14.3, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
-10  FORMAT(' |unpack_group_sticks | ',    D14.3, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
-11  FORMAT(' |wall time           | ',    D14.3, ' |')
+2   FORMAT(' |pack_group_sticks/w | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3,   ' |' )
+3   FORMAT(' |fw_tg_cft3_z        | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3,   ' |' )
+4   FORMAT(' |fw_tg_cft3_scatter  | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
+5   FORMAT(' |fw_tg_cft3_xy       | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
+6   FORMAT(' |workload            | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
+7   FORMAT(' |bw_tg_cft3_xy       | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
+8   FORMAT(' |bw_tg_cft3_scatter  | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
+9   FORMAT(' |bw_tg_cft3_z        | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
+10  FORMAT(' |unpack_group_sticks | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
+11  FORMAT(' |wall time           | ',    D14.5, ' |')
 
 
   end if
