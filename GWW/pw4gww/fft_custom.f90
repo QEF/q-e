@@ -332,7 +332,7 @@ CONTAINS
   CALL sticks_sort( ngc, ngkc, ngcs, nct, idx ,nproc_pool)
 
   CALL sticks_dist( tk, ub, lb, idx, in1, in2, ngc, ngkc, ngcs, nct, &
-          ncp, nkcp, ncps, ngp, ngkp, ngps, st, stw, sts ,nproc_pool)
+          ncp, nkcp, ncps, ngp, ngkp, ngps, st, stw, sts , me_pool, nproc_pool)
 
   CALL sticks_pairup( tk, ub, lb, idx, in1, in2, ngc, ngkc, ngcs, nct, &
           ncp, nkcp, ncps, ngp, ngkp, ngps, st, stw, sts ,nproc_pool)
