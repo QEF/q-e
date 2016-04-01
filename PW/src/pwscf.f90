@@ -20,7 +20,7 @@ PROGRAM pwscf
   INTEGER :: exit_status
   !
   !
-  CALL mp_startup ( )
+  CALL mp_startup ( diag_in_band_group = .true. )
   CALL environment_start ( 'PWSCF' )
   !
   CALL read_input_file ('PW', input_file_ )
