@@ -5,6 +5,7 @@ New in 5.4 version:
   * Support for FFT with ARM Performance Library (-D__ARM_LIB) added (F. Spiga)
   * Non-blocking FFT communications (-D__NON_BLOCKING_SCATTER) (C. Cavazzoni)
   * Bethe-Salpeter equation added to GWL (P. Umari)
+  * Support for QM-MM using MPI (C. Cavazzoni and M. Ippolito)
 
 Fixed in 5.4 version:
 
@@ -21,7 +22,7 @@ Fixed in 5.4 version:
     Seoul National University) (commit 12082)
   * Incorrect sum over pools in epsilon.f90 for nspin=2 (courtesy of Mariella
     Ippolito, CINECA) (commit 12218)
-  * Hybrid functionals with USPP and k-p[oint parallelization now work 
+  * Hybrid functionals with USPP and k-point parallelization now work 
     (commit 12242)
 
 Incompatible changes in 5.4 version:
