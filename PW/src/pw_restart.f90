@@ -2069,6 +2069,9 @@ MODULE pw_restart
       CALL mp_bcast( dft_name,   ionode_id, intra_image_comm )
       CALL mp_bcast( lda_plus_u, ionode_id, intra_image_comm )
       CALL mp_bcast( inlc, ionode_id, intra_image_comm )
+      CALL mp_bcast( llondon,    ionode_id, intra_image_comm )
+      CALL mp_bcast( lxdm,       ionode_id, intra_image_comm )
+      CALL mp_bcast( ts_vdw,     ionode_id, intra_image_comm )
       !
       IF ( lda_plus_u ) THEN
          !
@@ -2087,7 +2090,16 @@ MODULE pw_restart
       IF ( inlc == 1 .OR. inlc == 2 ) THEN
          CALL mp_bcast( vdw_table_name,  ionode_id, intra_image_comm )
       END IF
-
+      !
+      IF ( llondon ) THEN
+         CALL mp_bcast( scal6, ionode_id, intra_image_comm )
+         CALL mp_bcast( lon_rcut, ionode_id, intra_image_comm )
+      END IF
+      !
+      IF ( ts_vdw ) THEN
+         CALL mp_bcast( vdw_isolated, ionode_id, intra_image_comm )
+      END IF
+ 
       ! discard any further attempt to set a different dft
       CALL enforce_input_dft( dft_name, nomsg )
       !

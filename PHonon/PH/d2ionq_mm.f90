@@ -109,7 +109,7 @@ SUBROUTINE d2ionq_mm ( alat , nat , ityp , at , bg , tau, q, deriv2_london )
         par2 = par**2
         !
 #if defined(__INTEL_COMPILER) && (__INTEL_COMPILER < 1600)
-!$omp parallel do private(nr,dist,exparg,expval,fac,add,eiqr,facF,addF,auxr,ipol,jpol) default(shared), reduction(+:aux,+:aux2)
+!$omp parallel do private(nr,dist,exparg,expval,fac,add,eiqr,facF,addF,auxr,ipol,jpol) default(shared), reduction(+:aux), reduction(+:aux2)
 #endif
         DO nr = 1 , nrm
            !
