@@ -46,6 +46,7 @@ compute_weight.o \
 deallocate_part.o \
 deallocate_phq.o \
 d2ionq.o \
+d2ionq_mm.o \
 davcio_drho.o \
 dfile_autoname.o \
 dfile_star.o \

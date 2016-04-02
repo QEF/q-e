@@ -293,6 +293,10 @@ d2ionq.o : ../../Modules/io_global.o
 d2ionq.o : ../../Modules/kind.o
 d2ionq.o : ../../Modules/mp.o
 d2ionq.o : ../../Modules/mp_bands.o
+d2ionq_mm.o : ../../Modules/constants.o
+d2ionq_mm.o : ../../Modules/mm_dispersion.o
+d2ionq_mm.o : ../../Modules/mp.o
+d2ionq_mm.o : ../../Modules/mp_images.o
 d2mxc.o : ../../Modules/kind.o
 davcio_drho.o : ../../FFTXlib/scatter_mod.o
 davcio_drho.o : ../../Modules/fft_base.o
@@ -528,6 +532,7 @@ dynmat0.o : ../../Modules/cell_base.o
 dynmat0.o : ../../Modules/control_flags.o
 dynmat0.o : ../../Modules/ions_base.o
 dynmat0.o : ../../Modules/kind.o
+dynmat0.o : ../../Modules/mm_dispersion.o
 dynmat0.o : ../../Modules/recvec.o
 dynmat0.o : ../../PW/src/symm_base.o
 dynmat0.o : ph_restart.o

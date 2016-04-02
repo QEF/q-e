@@ -22,12 +22,12 @@ MODULE london_module
   SAVE
   !
   !
-  REAL ( DP ) , ALLOCATABLE , PRIVATE :: C6_i  ( : ) ,     &
-                                         R_vdw ( : ) ,     &
-                                         C6_ij ( : , : ) , &
-                                         R_sum ( : , : ) , &
-                                         r     ( : , : ) , &
-                                         dist2 ( : )
+  REAL ( DP ) , ALLOCATABLE :: C6_i  ( : ) ,     &
+                               R_vdw ( : ) ,     &
+                               C6_ij ( : , : ) , &
+                               R_sum ( : , : ) , &
+                               r     ( : , : ) , &
+                               dist2 ( : )
   !
   ! C6_i  ( ntyp )        : atomic C6 coefficient of each atom type
   ! R_vdw ( ntyp )        : Van der Waals Radii of each atom type
@@ -43,11 +43,11 @@ MODULE london_module
   ! in_C6 ( ntyp ) : input (user) specified atomic C6 coefficients
   ! in_rvdw ( ntyp ) : input (user) specified atomic vdw radii
   !
-  INTEGER , PRIVATE :: mxr
+  INTEGER :: mxr
   !
   ! max number of r ( see rgen)
   !
-  REAL ( DP ) , PRIVATE :: r_cut , beta = 20.0_DP
+  REAL ( DP ) :: r_cut , beta = 20.0_DP
   !
   ! beta  : damping function parameter 
   ! r_cut : cut-off radius in alat units
