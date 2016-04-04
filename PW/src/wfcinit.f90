@@ -36,7 +36,7 @@ SUBROUTINE wfcinit()
   IMPLICIT NONE
   !
   INTEGER :: ik, ierr
-  LOGICAL :: exst, exst_mem, exst_file
+  LOGICAL :: exst, exst_mem, exst_file, opnd_file
   !
   !
   CALL start_clock( 'wfcinit' )
@@ -80,9 +80,10 @@ SUBROUTINE wfcinit()
      ! ... order to avoid a useless buffer allocation) here
      !
      IF ( nks == 1 ) THEN
-         CALL diropn( iunwfc, 'wfc', 2*nwordwfc, exst )
+         inquire (unit = iunwfc, opened = opnd_file)
+         if (.not.opnd_file) CALL diropn( iunwfc, 'wfc', 2*nwordwfc, exst )
          CALL davcio ( evc, 2*nwordwfc, iunwfc, nks, -1 )
-         CLOSE ( UNIT=iunwfc, STATUS='keep' )
+         if(.not.opnd_file) CLOSE ( UNIT=iunwfc, STATUS='keep' )
      END IF
      !
   END IF

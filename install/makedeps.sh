@@ -14,7 +14,7 @@ then
     dirs=" LAXlib FFTXlib Modules clib PW/src CPV/src PW/tools upftools PP/src \
            PWCOND/src LR_Modules/ \
            PHonon/Gamma PHonon/PH PHonon/D3 PHonon/FD atomic/src XSpectra/src \
-           ACFDT NEB/src TDDFPT/src GIPAW/src GWW/pw4gww GWW/gww GWW/head GWW/bse" 
+           ACFDT/src NEB/src TDDFPT/src GIPAW/src GWW/pw4gww GWW/gww GWW/head GWW/bse" 
           
 elif
     test $1 = "-addson" 
@@ -59,8 +59,8 @@ for dir in $dirs; do
              DEPENDS="$DEPEND1 $LEVEL1/Modules" ;;
         LR_Modules )
              DEPENDS="$DEPEND1 $LEVEL1/Modules $LEVEL1/PW/src" ;;
-	ACFDT ) 
-             DEPENDS="$DEPEND1 $LEVEL1/PW/src $LEVEL1/PHonon/PH" ;;
+	ACFDT/src ) 
+             DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/PHonon/PH $LEVEL2/LR_Modules" ;;
 	PW/src | CPV/src | atomic/src | GWW/gww )
 	     DEPENDS="$DEPEND2" ;;
 	PW/tools | PP/src | PWCOND/src | GWW/pw4gww | NEB/src )

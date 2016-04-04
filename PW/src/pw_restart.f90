@@ -45,10 +45,10 @@ MODULE pw_restart
   USE constants, ONLY : e2, PI
 
 #ifdef __XSD
-  USE io_files,  ONLY : tmp_dir, prefix, iunpun, iunpun_xsd, xmlpun, xmlpun_schema, & 
+  USE io_files,  ONLY : tmp_dir, prefix, iunpun, iunpun_xsd, xmlpun, xmlpun_schema, &
                         delete_if_present, qexml_version, qexml_version_init, pseudo_dir
 #else
-  USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, delete_if_present, &                        
+  USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, delete_if_present, &
                         qexml_version, qexml_version_init, pseudo_dir
 #endif
 
@@ -266,7 +266,7 @@ MODULE pw_restart
       USE io_files,             ONLY : nwordwfc, iunwfc, psfile
       USE buffers,              ONLY : get_buffer
       USE wavefunctions_module, ONLY : evc
-      USE klist,                ONLY : nks, nkstot, xk, ngk, igk_k, wk, qnorm,&
+      USE klist,                ONLY : nks, nkstot, xk, ngk, igk_k, wk, qnorm, &
                                        lgauss, ngauss, degauss, nelec, &
                                        two_fermi_energies, nelup, neldw
       USE start_k,              ONLY : nk1, nk2, nk3, k1, k2, k3, &
@@ -313,9 +313,10 @@ MODULE pw_restart
       USE martyna_tuckerman,    ONLY : do_comp_mt
       USE esm,                  ONLY : do_comp_esm, esm_nfit, esm_efield, esm_w, &
                                        esm_a, esm_bc
+      USE acfdt_ener,           ONLY : acfdt_in_pw 
       USE london_module,        ONLY : scal6, lon_rcut
       USE tsvdw_module,         ONLY : vdw_isolated
-      
+
       !
       IMPLICIT NONE
       !
@@ -601,7 +602,8 @@ MODULE pw_restart
                         HUBBARD_J0 = Hubbard_J0, HUBBARD_BETA = Hubbard_beta, &
                         HUBBARD_ALPHA = Hubbard_alpha, &
                         INLC = inlc, VDW_TABLE_NAME = vdw_table_name, &
-                        PSEUDO_DIR = pseudo_dir, DIRNAME = dirname,   &
+                        PSEUDO_DIR = pseudo_dir, DIRNAME = dirname, &
+                        ACFDT_IN_PW = acfdt_in_pw, &
                         LLONDON = llondon, LONDON_S6 = scal6,         &
                         LONDON_RCUT = lon_rcut, LXDM = lxdm,          &
                         TS_VDW = ts_vdw, VDW_ISOLATED = vdw_isolated )
@@ -750,6 +752,10 @@ MODULE pw_restart
       !
       DEALLOCATE( mill_g )
       DEALLOCATE( ngk_g )
+      !
+      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
+      !
+      CALL errore( 'pw_writefile ', 'cannot save history', ierr )
       !
       RETURN
       !
@@ -2038,6 +2044,7 @@ MODULE pw_restart
                             Hubbard_l, Hubbard_U, Hubbard_J, Hubbard_alpha, &
                             Hubbard_J0, Hubbard_beta, U_projection
       USE kernel_table, ONLY : vdw_table_name
+      USE acfdt_ener,   ONLY : acfdt_in_pw
       USE control_flags,ONLY : llondon, lxdm, ts_vdw
       USE london_module,ONLY : scal6, lon_rcut
       USE tsvdw_module, ONLY : vdw_isolated
@@ -2061,7 +2068,7 @@ MODULE pw_restart
          CALL qexml_read_xc( dft_name, lda_plus_u, lda_plus_u_kind, U_projection,&
                              Hubbard_lmax, Hubbard_l, nsp_, Hubbard_U, Hubbard_J, &
                              Hubbard_J0, Hubbard_alpha, Hubbard_beta, &
-                             inlc, vdw_table_name, llondon, scal6, &
+                             inlc, vdw_table_name,  acfdt_in_pw, llondon, scal6, &
                              lon_rcut, lxdm, ts_vdw, vdw_isolated, ierr )
          !
       END IF
@@ -2099,7 +2106,13 @@ MODULE pw_restart
       IF ( ts_vdw ) THEN
          CALL mp_bcast( vdw_isolated, ionode_id, intra_image_comm )
       END IF
- 
+      !
+      ! SCF EXX/RPA
+      !
+      CALL mp_bcast( acfdt_in_pw, ionode_id, intra_image_comm )
+      !
+      IF (acfdt_in_pw) dft_name = 'NOX-NOC'
+
       ! discard any further attempt to set a different dft
       CALL enforce_input_dft( dft_name, nomsg )
       !
@@ -2694,6 +2707,10 @@ MODULE pw_restart
                   !
                END IF
                !
+               ! workaround for pot parallelization ( Viet Nguyen / SdG )
+               ! -pot parallelization uses mp_image communicators
+               ! note that ionode must be also reset in the similar way 
+               ! to image parallelization
                CALL read_wfc( iunout, ik, nkstot, kunit, ispin, nspin,         &
                               evc, npw_g, nbnd, igk_l2g_kdip(:,ik-iks+1),      &
                               ngk(ik-iks+1), filename, scalef, &
