@@ -128,6 +128,13 @@ example14:
     on an arbitrary set of q points. The points can be generated automatically
     along paths or on a bi-dimensional plane.
 
+example15:
+    This example shows how to create Infrared and Raman spectra using pw.x, 
+    ph.x and dynmat.x
+
+example16:
+    Graphite with DFT-D2 (experimental!)
+
 Additional feature-specific examples:
 
 Partial_example
