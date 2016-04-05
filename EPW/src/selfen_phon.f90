@@ -638,7 +638,9 @@ END SUBROUTINE selfen_phon_q
 #else
     !
     xqf_all = xqf
-    wqf_all = wqf
+    DO iq = 1, nqtotf
+      wqf_all(1,iq) = wqf(iq)
+    ENDDO
     !
 #endif
     !
