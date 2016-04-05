@@ -35,7 +35,7 @@
   USE io_files,      ONLY : prefix, tmp_dir
   USE wavefunctions_module, ONLY: evc
   USE ions_base,     ONLY : nat, nsp, tau, ityp
-  USE control_flags, ONLY : iverbosity, modenum
+  USE control_flags, ONLY : iverbosity
   USE io_global,     ONLY : stdout, ionode
   USE io_epw,        ONLY : iuepb 
   USE kinds,         ONLY : DP
