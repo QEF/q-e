@@ -1256,7 +1256,7 @@ CONTAINS
                                         Hubbard_J0(:), Hubbard_beta(:)
       INTEGER,  OPTIONAL, INTENT(IN) :: inlc
       CHARACTER(LEN=*), OPTIONAL,   INTENT(IN) :: vdw_table_name, pseudo_dir, dirname
-      LOGICAL,            INTENT(IN) :: acfdt_in_pw
+      LOGICAL, OPTIONAL,  INTENT(IN) :: acfdt_in_pw
       !
       LOGICAL,  OPTIONAL, INTENT(IN) :: llondon, lxdm, ts_vdw, vdw_isolated
       REAL(DP), OPTIONAL, INTENT(IN) :: london_s6, london_rcut
