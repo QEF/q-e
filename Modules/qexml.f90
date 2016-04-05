@@ -1356,7 +1356,9 @@ CONTAINS
          END IF
       END IF
       !
-      CALL iotk_write_dat( ounit, "ACFDT_IN_PW", acfdt_in_pw )
+      IF ( PRESENT (acfdt_in_pw) ) THEN
+         CALL iotk_write_dat( ounit, "ACFDT_IN_PW", acfdt_in_pw )
+      ENDIF
       !
       CALL iotk_write_end( ounit, "EXCHANGE_CORRELATION" )
       !
