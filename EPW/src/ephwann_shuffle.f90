@@ -442,6 +442,15 @@
        !   
        CALL start_clock ( 'ep-interp' )
        !
+       ! In case of big calculation, show progression of iq (especially usefull when
+       ! elecselfen = true as nothing happen during the calculation otherwise. 
+       !
+       IF ((.not. etf_mem) .AND. (.not. phonselfen) ) THEN 
+         IF (MOD(iq,100) == 0) THEN
+           WRITE(stdout, '(a,i10,a,i10)' ) '     Progression iq (fine) = ',iq,'/',nqf
+         ENDIF
+       ENDIF
+       !
        xxq = xqf (:, iq)
        !
        ! ------------------------------------------------------

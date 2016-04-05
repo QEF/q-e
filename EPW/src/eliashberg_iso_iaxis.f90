@@ -279,9 +279,9 @@
   IF ( errdelta .lt. conv_thr_iaxis .OR. iter .eq. nsiter ) THEN
      temp = estemp(itemp) / kelvin2eV 
      IF ( temp .lt. 10.d0 ) THEN
-        WRITE(name1,'(a,a11,f10.5)') TRIM(prefix),'.imag_iso_0', temp
+        WRITE(name1,'(a,a11,f4.2)') TRIM(prefix),'.imag_iso_0', temp
      ELSEIF ( temp .ge. 10.d0 ) THEN
-        WRITE(name1,'(a,a10,f10.5)') TRIM(prefix),'.imag_iso_', temp
+        WRITE(name1,'(a,a10,f5.2)') TRIM(prefix),'.imag_iso_', temp
      ENDIF
      OPEN(iufilgap, file=name1, form='formatted')
      WRITE(iufilgap,'(4a24)') 'w', 'Znorm(w)', 'Delta(w)', 'NZnorm(w)'
@@ -615,9 +615,9 @@
   !
   temp = estemp(itemp) / kelvin2eV
   IF ( temp .lt. 10.d0 ) THEN
-     WRITE(name1,'(a,a11,f10.5)') TRIM(prefix),'.imag_iso_0', temp
+     WRITE(name1,'(a,a11,f4.2)') TRIM(prefix),'.imag_iso_0', temp
   ELSEIF ( temp .ge. 10.d0 ) THEN
-     WRITE(name1,'(a,a10,f10.5)') TRIM(prefix),'.imag_iso_', temp
+     WRITE(name1,'(a,a10,f5.2)') TRIM(prefix),'.imag_iso_', temp
   ENDIF
   OPEN(iufilgap, file=name1, form='formatted', err=100, iostat=ios)
 100 CALL errore('read_eliashberg_iso_iaxis','opening file '//name1,abs(ios))

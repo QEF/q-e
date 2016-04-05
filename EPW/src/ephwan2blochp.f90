@@ -56,7 +56,7 @@
   character (len=256) :: string 
   logical :: exst
   integer :: ibnd, jbnd, ir, ire, ir_start, ir_stop, imode,iunepmatwp2,ierr, i
-  integer ::  ip , test
+  integer ::  ip , test !, my_id
   integer(kind=8) ::  lrepmatw,  lrepmatw2
   real(kind=DP) :: rdotk
   complex(kind=DP) :: eptmp( nbnd, nbnd, nrr_k, nmodes)
@@ -85,13 +85,12 @@
 #ifdef __PARA
   IF (.NOT. etf_mem) then
     filint = trim(prefix)//'.epmatwp1'
-    CALL MPI_FILE_OPEN(intra_pool_comm,filint,MPI_MODE_RDONLY,MPI_INFO_NULL,iunepmatwp2,ierr)
+    CALL MPI_FILE_OPEN(world_comm,filint,MPI_MODE_RDONLY,MPI_INFO_NULL,iunepmatwp2,ierr)
     IF( ierr /= 0 ) CALL errore( 'ephwan2blochp', 'error in MPI_FILE_OPEN',1 )
+    IF( parallel_q ) CALL errore( 'ephwan2blochp', 'q-parallel+etf_mem=.false. is not supported',1 ) 
+    !CALL MPI_COMM_RANK(world_comm,my_id,ierr)
   ENDIF
 #endif
-  ! CALL MPI_ERROR_STRING(ierr, string , i, ierr)
-  ! inquire(FILE=filint,EXIST=exst)
-  ! CALL MPI_FILE_GET_SIZE(iunepmatwp2,test,  ierr)
   !
   eptmp = czero
   cfac(:) = czero
@@ -110,17 +109,24 @@
         cfac(ir)*epmatwp( :, :, :, :, ir)
     ENDDO
   ELSE
+    !
     lrepmatw2   = 2 * nbnd * nbnd * nrr_k * nmodes
-   ! IF( ierr /= 0 ) CALL errore( 'ephwan2blochp', 'error in mpi_set_view',ierr )
+    ! 
     DO ir = ir_start, ir_stop
 #ifdef __PARA
+      ! DEBUG: print*,'Process ',my_id,' do ',ir,'/ ',ir_stop
+      !
       !  Direct read of epmatwp for this ir
       lrepmatw   = 2 * nbnd * nbnd * nrr_k * nmodes * 8 * (ir-1)
-      ! SP: mpi view is used to set the position at which we should start
+      ! SP: mpi seek is used to set the position at which we should start
       ! reading the file. It is given in bits. 
-      CALL MPI_FILE_SET_VIEW(iunepmatwp2,lrepmatw,MPI_DOUBLE_PRECISION,MPI_DOUBLE_PRECISION,'native',MPI_INFO_NULL,ierr)
+      ! Note : The process can be collective (=blocking) if using MPI_FILE_SET_VIEW & MPI_FILE_READ_ALL
+      !        or noncollective (=non blocking) if using MPI_FILE_SEEK & MPI_FILE_READ. 
+      !        Here we want non blocking because not all the process have the same nb of ir. 
+      !
+      CALL MPI_FILE_SEEK(iunepmatwp2,lrepmatw,MPI_SEEK_SET,ierr)
       IF( ierr /= 0 ) CALL errore( 'ephwan2blochp', 'error in MPI_FILE_SET_VIEW',1 )
-      CALL MPI_FILE_READ_ALL(iunepmatwp2, aux, lrepmatw2, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE,ierr)
+      CALL MPI_FILE_READ(iunepmatwp2, aux, lrepmatw2, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE,ierr)
       IF( ierr /= 0 ) CALL errore( 'ephwan2blochp', 'error in MPI_FILE_READ_ALL',1 )
       ! 
       i = 0
@@ -139,13 +145,13 @@
       call rwepmatw ( epmatw, nbnd, nrr_k, nmodes, ir, iunepmatwp, -1)
 #endif
       !
-      !call rwepmatw ( epmatw, nbnd, nrr_k, nmodes, ir, iunepmatwp, -1)
       eptmp = eptmp + cfac(ir)*epmatw
+      ! 
     ENDDO
   ENDIF
   !
 #ifdef __PARA
-  IF (parallel_k) CALL mp_sum(eptmp, inter_pool_comm)
+  IF (parallel_k) CALL mp_sum(eptmp, world_comm)
 #endif
   !
   !----------------------------------------------------------

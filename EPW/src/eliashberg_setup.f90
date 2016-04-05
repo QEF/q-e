@@ -16,6 +16,7 @@
 #include "f_defs.h"
   !
   USE kinds,         ONLY : DP
+  USE io_global,     ONLY : stdout
   USE epwcom,        ONLY : eliashberg, nkf1, nkf2, nkf3, nsiter, nqstep, &
                             nqf1, nqf2, nqf3, ntempxx, nswi, nswfc, nswc, &
                             nstemp, muc, lreal, lpade, liso, limag, laniso, &
@@ -61,14 +62,12 @@
        'wsfc should be .lt. wscut',1)
   IF ( eliashberg .AND. lreal .AND. wsfc .lt. 0.d0 ) CALL errore('eliashberg_init', &
        'wsfc should be .gt. 0.d0',1)
-  IF ( eliashberg .AND. nswi .gt. 0 .AND. ( wscut .gt. 0.d0 ) ) &
-       CALL errore('eliashberg_init', 'define either nswi or wscut',1)
+  IF ( eliashberg .AND. nswi .gt. 0 .AND. .not.limag ) &
+       CALL errore('eliashberg_init', 'nswi requires limag true',1)
   IF ( eliashberg .AND. nswi .lt. 0 ) CALL errore('eliashberg_init', &
        'nswi should be .gt. 0',1)
-  IF ( eliashberg .AND. wscut .lt. 0.d0 ) CALL errore('eliashberg_init', &
-       'wscut should be .gt. 0.d0',1)
-  IF ( eliashberg .AND. wscut .lt. 0.d0 ) CALL errore('eliashberg_init', &
-       'wscut should be .gt. 0.d0',1)
+  IF ( eliashberg .AND. wscut .lt. 0.d0 ) &
+       CALL errore('eliashberg_init', 'wscut should be .gt. 0.d0',1)
   IF ( eliashberg .AND. nstemp .lt. 1 ) CALL errore('eliashberg_init', &
        'wrong number of nstemp',1)
   IF ( eliashberg .AND. maxval(temps(:)) .gt. 0.d0 .AND. & 
@@ -130,6 +129,9 @@
         nswc  = 2 * nqstep
      ENDIF
      nsw = nswfc + nswc  
+     WRITE(stdout,'(5x,a7,f12.6,a11,f12.6)') 'wsfc = ', wsfc, '   wscut = ', wscut
+     WRITE(stdout,'(5x,a8,i8,a10,i8,a90,i8)') 'nswfc = ', nswfc, '   nswc = ', nswc, & 
+                                              '   nsw = ', nsw 
      IF ( nsw .eq. 0 ) CALL errore('eliashberg_setup','wrong number of nsw',1)
      !
   ELSEIF ( limag ) THEN
@@ -143,6 +145,9 @@
         DO itemp = 1, nstemp
            nsiw(itemp) = int(0.5d0 * ( wscut / pi / estemp(itemp) - 1.d0 )) + 1
         ENDDO
+     ELSEIF ( nswi .gt. 0 .AND. wscut .gt. 0.d0 ) THEN
+        nsiw(:) = nswi
+        WRITE(stdout,'(5x,a)') 'when nswi .gt. 0, wscut is not used for limag=.true.'
      ENDIF
      !
      IF ( ABS(wscut) < eps ) THEN 
@@ -506,8 +511,8 @@
            IF ( ixkff(ik) .gt. 0 ) THEN
               DO ibnd = 1, nbndfs
                  ! SP: Here take a 0.2 eV interval around the FS.
-                 !IF ( abs( ekfs(ibnd,ixkff(ik)) - ef0 ) .lt. fsthick ) THEN
-                 IF ( abs( ekfs(ibnd,ixkff(ik)) - ef0 ) .lt. 0.2 ) THEN
+                 IF ( abs( ekfs(ibnd,ixkff(ik)) - ef0 ) .lt. fsthick ) THEN
+                 !IF ( abs( ekfs(ibnd,ixkff(ik)) - ef0 ) .lt. 0.2 ) THEN
                     x1 = bg(1,1)*(i-1)/nkf1+bg(1,2)*(j-1)/nkf2+bg(1,3)*(k-1)/nkf3
                     x2 = bg(2,1)*(i-1)/nkf1+bg(2,2)*(j-1)/nkf2+bg(2,3)*(k-1)/nkf3
                     x3 = bg(3,1)*(i-1)/nkf1+bg(3,2)*(j-1)/nkf2+bg(3,3)*(k-1)/nkf3
