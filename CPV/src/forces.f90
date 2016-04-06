@@ -90,13 +90,16 @@
       !
 #ifdef __MPI
 
-      !aux( : ) = (0.d0, 0.d0)
-      !igoff = 0
 
-!$omp parallel do default(none) &
-!$omp          private( idx, igoff, ig ) &
-!$omp          shared( i, n, c, dffts, aux, ngw, ci, nogrp_, nlsm, nls )
+!$omp  parallel
+!$omp  single
+
       DO idx = 1, 2*nogrp_ , 2
+
+!$omp task default(none) &
+!$omp          firstprivate( idx ) &
+!$omp          private( igoff, ig ) &
+!$omp          shared( i, n, c, dffts, aux, ngw, ci, nogrp_, nlsm, nls )
          !
          !  This loop is executed only ONCE when NOGRP=1.
          !  Equivalent to the case with no task-groups
@@ -121,9 +124,13 @@
             END DO
          END IF
 
-         !igoff = igoff + dffts%tg_nnr
+!$omp end task
+
 
       END DO
+
+!$omp  end single
+!$omp  end parallel
 
       CALL pack_group_sticks( aux, psi, dffts )
 
@@ -275,15 +282,18 @@
       !   Each processor will treat its own part of the eigenstate
       !   assigned to its ORBITAL group
       !
-!$omp parallel default(none) &
-!$omp          private( eig_offset, igno, fi, fip, idx, fp, fm, ig ) &
-!$omp          shared( nogrp_ , f, ngw, aux, df, da, c, tpiba2, tens, dffts, me_bgrp, &
-!$omp                  i, n, g2kin, nls, nlsm )
+!$omp  parallel
+!$omp  single
 
       eig_offset = 0
       igno = 1
 
       DO idx = 1, 2*nogrp_ , 2
+
+!$omp task default(none)  &
+!$omp          private( fi, fip, fp, fm, ig ) &
+!$omp          firstprivate( eig_offset, igno, idx ) &
+!$omp          shared( nogrp_ , f, ngw, aux, df, da, c, tpiba2, tens, dffts, me_bgrp, i, n, g2kin, nls, nlsm )
 
          IF( idx + i - 1 <= n ) THEN
             if (tens) then
@@ -294,7 +304,6 @@
                fip = -0.5d0*f(i+idx)
             endif
             IF( dffts%have_task_groups ) THEN
-!$omp do 
                DO ig=1,ngw
                   fp= aux(nls(ig)+eig_offset) +  aux(nlsm(ig)+eig_offset)
                   fm= aux(nls(ig)+eig_offset) -  aux(nlsm(ig)+eig_offset)
@@ -303,26 +312,25 @@
                   da(ig+igno-1)= fip*(tpiba2 * g2kin(ig) * c(ig,idx+i  ) + &
                                  CMPLX(aimag(fp),-real (fm), kind=dp ))
                END DO
-!$omp end do
-               igno = igno + ngw
             ELSE
-!$omp do 
                DO ig=1,ngw
                   fp= aux(nls(ig)) + aux(nlsm(ig))
                   fm= aux(nls(ig)) - aux(nlsm(ig))
                   df(ig)= fi*(tpiba2*g2kin(ig)* c(ig,idx+i-1)+CMPLX(DBLE(fp), AIMAG(fm),kind=DP))
                   da(ig)=fip*(tpiba2*g2kin(ig)* c(ig,idx+i  )+CMPLX(AIMAG(fp),-DBLE(fm),kind=DP))
                END DO
-!$omp end do
             END IF
          END IF
+!$omp end task
 
+         igno = igno + ngw
          eig_offset = eig_offset + dffts%nr3x * dffts%nsw(me_bgrp+1)
 
          ! We take into account the number of elements received from other members of the orbital group
 
       ENDDO
 
+!$omp end single
 !$omp end parallel 
       !
       IF(dft_is_meta()) THEN
@@ -339,13 +347,17 @@
          af = 0.0d0
          aa = 0.0d0
          !
-!$omp parallel default(none) &
-!$omp          private(iv,jv,ivoff,jvoff,dd,dv,inl,jnl,is,isa,ism,igrp,idx,fi,fip) &
-!$omp          shared( nogrp_ , f, ngw, deeq, bec, af, aa, i, n, nsp, na, nh, dvan, tens, ish, iss1, iss2 )
+!$omp parallel
+!$omp single
          !
          igrp = 1
 
          DO idx = 1, 2*nogrp_ , 2
+
+!$omp task default(none) &
+!$omp          firstprivate(igrp,idx) &
+!$omp          private(iv,jv,ivoff,jvoff,dd,dv,inl,jnl,is,isa,ism,fi,fip) &
+!$omp          shared( nogrp_ , f, ngw, deeq, bec, af, aa, i, n, nsp, na, nh, dvan, tens, ish, iss1, iss2 )
 
             IF( idx + i - 1 <= n ) THEN
 
@@ -368,7 +380,6 @@
                            ivoff = ish(is)+(iv-1)*na(is)
                            jvoff = ish(is)+(jv-1)*na(is)
                            IF( i + idx - 1 /= n ) THEN
-!$omp do
                               DO ia=1,na(is)
                                  inl = ivoff + ia
                                  jnl = jvoff + ia
@@ -378,7 +389,6 @@
                                  aa(inl,igrp) = aa(inl,igrp) - fip * dd * bec(jnl,i+idx)
                               END DO
                            ELSE
-!$omp do
                               DO ia=1,na(is)
                                  inl = ivoff + ia
                                  jnl = jvoff + ia
@@ -392,12 +402,15 @@
 
             END IF
 
+!$omp end task
+
             igrp = igrp + 1
 
          END DO
 
+!$omp end single
 !$omp end parallel
-!
+
          CALL dgemm ( 'N', 'N', 2*ngw, nogrp_ , nhsa, 1.0d0, vkb, 2*ngw, af, nhsa, 1.0d0, df, 2*ngw)
 
          CALL dgemm ( 'N', 'N', 2*ngw, nogrp_ , nhsa, 1.0d0, vkb, 2*ngw, aa, nhsa, 1.0d0, da, 2*ngw)
