@@ -10,7 +10,7 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
   !------------------------------------------------------------------------------
   !
   ! This subroutine applies the linear response operator to response wavefunctions.
-  ! (H - E)*psi(k+q) + P_c V_HXC(q)*psi0(k)
+  ! S^{-1} { (H - E)*psi(k+q) + P_c^+(k+q) V_HXC(q)*psi0(k) }
   !
   ! Inspired by PH/solve_linter.f90
   !
@@ -139,8 +139,8 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
   ENDIF
   !
   ! Now we will calculate two terms:
-  ! 1) HXC term : P_c (delta V_HXC(q)) psi(k) 
-  ! 2) (H - E) * psi(k+q)
+  ! 1) HXC term : P_c^+(k+q) V_HXC(q)*psi0(k) 
+  ! 2) (H - E)*psi(k+q)
   !
   ! rewind (unit = iunigk)
   ! 
@@ -168,7 +168,8 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
 !200     call errore ('lr_apply_liouvillian', 'reading igkq', abs (ios) )
 !    ENDIF
      !
-     ! Read unperturbed wavefuctions psi(k) and psi(k+q)
+     ! Read unperturbed wavefuctions evc (wfct at k) 
+     ! and evq (wfct at k+q)
      !
      IF (nksq > 1) THEN 
         CALL get_buffer (evc, nwordwfc, iunwfc, ikk)
@@ -249,13 +250,13 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
         dffts%have_task_groups = .FALSE.
         !
         ! In the case of US pseudopotentials there is an additional term.
-        ! See second part of Eq.(39) in J. Chem. Phys. 127, 164106 (2007)
+        ! See second term in Eq.(11) in J. Chem. Phys. 127, 164106 (2007)
         !
         IF (okvan) THEN
            !
            ! Compute the integral of the HXC response potential with the Q function.
            ! Input : dvrsc = V_HXC(r)
-           ! Output: int3 = \int V_HXC(r) * Q^*_nm(r) dr 
+           ! Output: int3 = \int V_HXC(r) * Q_nm(r) dr 
            ! See Eq.(B22) in Ref. A. Dal Corso, PRB 64, 235118 (2001)
            !
            CALL newdq(dvrsc, 1)
@@ -265,7 +266,7 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
         ENDIF
         !
         ! Ortogonalize dvpsi to valence states.
-        ! Apply -P_c, and then change the sign, because we need +P_c.
+        ! Apply -P_c^+, and then change the sign, because we need P_c^+.
         !
         CALL orthogonalize(dvpsi, evq, ikk, ikq, dpsi, npwq, .false.)
         dvpsi = -dvpsi
@@ -342,7 +343,7 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
         ENDDO
      ENDIF
      !
-     ! 3) Sum up the two terms : (H - E)*psi(k+q) + HXC
+     ! 3) Sum up the two terms : (H - E)*psi(k+q) + P_c^+(k+q) V_HXC(q)*psi0(k)
      !
      IF (interaction1) THEN
         !
