@@ -834,7 +834,7 @@ MODULE input
      endif
      !
      IF ( ref_cell ) THEN
-       CALL ref_cell_base_init( ref_cell, ref_alat, rd_ref_ht, ref_cell_units )
+       CALL ref_cell_base_init( ref_alat, rd_ref_ht, ref_cell_units )
        CALL gcutoffs_setup( ref_alat , tk_inp, nkstot, xk )
      ELSE
        CALL gcutoffs_setup( alat_ , tk_inp, nkstot, xk )

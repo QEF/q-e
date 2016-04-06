@@ -1,6 +1,5 @@
 atom.o : radial_grids.o
 atomic_number.o : kind.o
-autopilot.o : input_parameters.o
 autopilot.o : io_global.o
 autopilot.o : kind.o
 autopilot.o : mp.o
@@ -86,7 +85,6 @@ fd_gradient.o : kind.o
 fd_gradient.o : mp.o
 fd_gradient.o : mp_bands.o
 fft_base.o : ../FFTXlib/fft_types.o
-fft_base.o : kind.o
 fft_base.o : parallel_include.o
 fft_custom.o : ../FFTXlib/fft_support.o
 fft_custom.o : ../FFTXlib/fft_types.o

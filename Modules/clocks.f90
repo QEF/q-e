@@ -228,7 +228,6 @@ END SUBROUTINE stop_clock
 SUBROUTINE print_clock( label )
   !----------------------------------------------------------------------------
   !
-  USE kinds,     ONLY : DP
   USE io_global, ONLY : stdout
   USE mytime,    ONLY : nclock, clock_label
   !
@@ -279,7 +278,7 @@ SUBROUTINE print_this_clock( n )
   !
   USE kinds,     ONLY : DP
   USE io_global, ONLY : stdout
-  USE mytime,    ONLY : no, nclock, clock_label, cputime, walltime, &
+  USE mytime,    ONLY : nclock, clock_label, cputime, walltime, &
                         notrunning, called, t0cpu, t0wall
 !
 ! ... See comments below about parallel case
@@ -422,9 +421,8 @@ FUNCTION get_clock( label )
   !----------------------------------------------------------------------------
   !
   USE kinds,     ONLY : DP
-  USE io_global, ONLY : stdout
   USE mytime,    ONLY : no, nclock, clock_label, walltime, &
-                        notrunning, called, t0wall, t0cpu
+                        notrunning, t0wall, t0cpu
 !
 ! ... See comments in subroutine print_this_clock about parallel case
 !

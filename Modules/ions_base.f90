@@ -151,7 +151,7 @@
                                rcmax_ , extfor_ )
       !-------------------------------------------------------------------------
       !
-      USE constants, ONLY: amu_au, bohr_radius_angs
+      USE constants, ONLY: bohr_radius_angs
       USE io_global, ONLY: stdout
       !
       IMPLICIT NONE
@@ -603,8 +603,7 @@
 !------------------------------------------------------------------------------!
 
   subroutine ions_thermal_stress( stress, nstress, pmass, omega, h, vels, nsp, na )
-    USE constants, ONLY : eps8, au_gpa
-    USE io_global, ONLY : stdout
+    USE constants, ONLY : eps8
     REAL(DP), intent(inout) :: stress(3,3),nstress(3,3)
     REAL(DP), intent(in)  :: pmass(:), omega, h(3,3), vels(:,:)
     integer, intent(in) :: nsp, na(:)

@@ -1381,6 +1381,7 @@ pw_restart.o : ../../Modules/version.o
 pw_restart.o : ../../Modules/wavefunctions.o
 pw_restart.o : ../../Modules/xml_io_base.o
 pw_restart.o : ../../iotk/src/iotk_module.o
+pw_restart.o : acfdt_in_pw.o
 pw_restart.o : atomic_wfc_mod.o
 pw_restart.o : buffers.o
 pw_restart.o : esm.o

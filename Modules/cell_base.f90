@@ -262,13 +262,12 @@
   !
   END SUBROUTINE cell_base_init
   !
-  SUBROUTINE ref_cell_base_init( ref_cell, ref_alat, rd_ref_ht, ref_cell_units )
+  SUBROUTINE ref_cell_base_init( ref_alat, rd_ref_ht, ref_cell_units )
       !
       ! ... initialize cell_base module variables, set up crystal lattice
       !
 
       IMPLICIT NONE
-      LOGICAL, INTENT(IN) :: ref_cell
       REAL(DP), INTENT(IN) :: rd_ref_ht (3,3)
       REAL(DP), INTENT(INOUT) :: ref_alat
       CHARACTER(LEN=*), INTENT(IN) :: ref_cell_units
@@ -667,7 +666,7 @@
     REAL(DP),  INTENT(IN) :: wc_ , frich_ , greash_ , total_ions_mass
     REAL(DP),  INTENT(IN) :: press_ ! external pressure from input 
                                     ! ( in KBar = 0.1 GPa )
-    INTEGER   :: i,j
+    INTEGER   :: j
     !
     press  = press_ / 10.0_DP ! convert press in KBar to GPa
     press  = press  / au_gpa  ! convert to AU

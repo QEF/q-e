@@ -155,7 +155,6 @@ d3ionq.o : ../../Modules/kind.o
 d3ionq.o : ../../Modules/mp.o
 d3ionq.o : ../../Modules/mp_global.o
 d3matrix.o : ../../LR_Modules/lrcom.o
-d3matrix.o : ../../Modules/control_flags.o
 d3matrix.o : ../../Modules/ions_base.o
 d3matrix.o : ../../Modules/kind.o
 d3matrix.o : ../../Modules/run_info.o

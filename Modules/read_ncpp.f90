@@ -20,7 +20,7 @@ subroutine read_ncpp (iunps, np, upf)
   TYPE (pseudo_upf) :: upf
   integer :: iunps, np
   !
-  real(DP) :: cc(2), alpc(2), aps(6,0:3), alps(3,0:3), &
+  real(DP) :: cc(2), alpc(2), aps(6,0:3), alps(3,0:3), ll(1), &
        a_nlcc, b_nlcc, alpha_nlcc
   real(DP) :: x, vll
   real(DP), allocatable:: vnl(:,:)
@@ -167,8 +167,10 @@ subroutine read_ncpp (iunps, np, upf)
      !
      ! bring analytic potentials into numerical form
      !
-     IF ( nlc == 2 .AND. nnl == 3 .AND. bhstype ) &
-          CALL bachel( alps(1,0), aps(1,0), 1, lmax )
+     IF ( nlc == 2 .AND. nnl == 3 .AND. bhstype ) THEN
+          ll(1) = lmax ! workaround for NAG compiler
+          CALL bachel( alps(1,0), aps(1,0), 1, ll )
+     END IF
      !
      do i = 1, nlc 
         do ir = 1, upf%kkbeta

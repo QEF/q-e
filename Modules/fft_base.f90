@@ -14,7 +14,6 @@
    MODULE fft_base
 !=----------------------------------------------------------------------=!
 
-        USE kinds, ONLY: DP
         USE parallel_include
 
         USE fft_types, ONLY: fft_dlay_descriptor

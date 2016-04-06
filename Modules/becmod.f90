@@ -36,12 +36,6 @@ MODULE becmod
   TYPE (bec_type) :: becp  ! <beta|psi>
 
   PRIVATE
-
-  REAL(DP), ALLOCATABLE :: &
-       becp_r(:,:)       !   <beta|psi> for real (at Gamma) wavefunctions
-  COMPLEX(DP), ALLOCATABLE ::  &
-       becp_k (:,:), &    !  as above for complex wavefunctions
-       becp_nc(:,:,:)   !  as above for spinors
   !
   INTERFACE calbec
      !
@@ -74,9 +68,8 @@ CONTAINS
     INTEGER, OPTIONAL :: nbnd
     !
     INTEGER :: local_nbnd
-    INTEGER, EXTERNAL :: ldim_block, lind_block, gind_block
-    INTEGER :: nproc, mype, m_loc, m_begin, m_max, ip
-    INTEGER :: ibnd, ibnd_loc
+    INTEGER, EXTERNAL :: ldim_block, gind_block
+    INTEGER :: m_loc, m_begin, m_max, ip
     REAL(DP), ALLOCATABLE :: dtmp(:,:)
     !
     IF ( present (nbnd) ) THEN
@@ -335,7 +328,7 @@ CONTAINS
     INTEGER, INTENT (in) :: nkb, nbnd
     INTEGER, INTENT (in), OPTIONAL :: comm
     INTEGER :: ierr, nbnd_siz
-    INTEGER, EXTERNAL :: ldim_block, lind_block, gind_block
+    INTEGER, EXTERNAL :: ldim_block, gind_block
     !
     nbnd_siz = nbnd
     bec%comm = mp_get_comm_null()

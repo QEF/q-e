@@ -415,7 +415,7 @@ CONTAINS
   SUBROUTINE add_rule( input_line )
     USE io_global, ONLY: ionode, ionode_id
     IMPLICIT NONE
-    integer :: i, j, linelen
+    integer :: i, linelen
     integer :: eq1_pos, eq2_pos, plus_pos, colon_pos
     CHARACTER(LEN=256) :: input_line
     CHARACTER(LEN=32)  :: var_label
@@ -433,7 +433,6 @@ CONTAINS
 
     ! important for parsing
     i=0
-    j=0
     eq1_pos   = 0
     eq2_pos   = 0
     plus_pos  = 0
@@ -657,7 +656,6 @@ CONTAINS
   ! ASSIGN_RULE
   !-----------------------------------------------------------------------
   SUBROUTINE assign_rule(event, var, value)
-    USE input_parameters, ONLY : isave, iprint, dt, tempw
     USE io_global, ONLY: ionode, ionode_id
     IMPLICIT NONE
     INTEGER :: i, event, varlen

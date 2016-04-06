@@ -2093,7 +2093,7 @@ IMPLICIT NONE
 INTEGER, INTENT(IN) :: idir
 INTEGER, INTENT(INOUT) :: n1(6), n2(6)
 TYPE(bz), INTENT(INOUT) :: bz_struc
-INTEGER :: in1, in2, ind(6), inaux(6), nfound, ivect, isub, i
+INTEGER :: in1, in2, ind(6), inaux(6), nfound, ivect, isub
 REAL(DP) :: min_mod, max_mod, modul, vect(3), save_mod(6), save_angle(6), angle
 INTEGER :: npx_
 LOGICAL :: done
