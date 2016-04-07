@@ -9,7 +9,11 @@ MODULE paw_postproc
 
     CONTAINS
 
-SUBROUTINE PAW_make_ae_charge(rho)
+! Reconstruct the valence (withcore=.false.) or all-electron
+! (withcore=.true.) density using the PAW transformation and the
+! information in the UPF file.
+SUBROUTINE PAW_make_ae_charge(rho,withcore)
+   USE constants,         ONLY : sqrtpi
    USE paw_onecenter,     ONLY : paw_rho_lm
    USE atom,              ONLY : g => rgrid
    USE ions_base,         ONLY : nat, ityp, tau
@@ -22,6 +26,7 @@ SUBROUTINE PAW_make_ae_charge(rho)
    USE cell_base,         ONLY : at, bg, alat
 
    TYPE(scf_type), INTENT(inout) :: rho
+   LOGICAL, INTENT(IN) :: withcore
    TYPE(paw_info)          :: i                     ! minimal info on atoms
    INTEGER                 :: ipol                  ! counter on x,y,z
    INTEGER                 :: ir                    ! counter on grid point
@@ -76,10 +81,12 @@ SUBROUTINE PAW_make_ae_charge(rho)
             !
             ! add core charge
             !
-            !DO ir = 1, i%m
-            !   rho_lm(ir,1,is) = rho_lm(ir,1,is) + &
-            !        upf(i%t)%paw%ae_rho_atc(ir) / nspin
-            !ENDDO
+            IF (withcore) THEN
+               DO ir = 1, i%m
+                  rho_lm(ir,1,is) = rho_lm(ir,1,is) + &
+                     upf(i%t)%paw%ae_rho_atc(ir) / nspin * (2._DP * sqrtpi)
+               ENDDO
+            ENDIF
          ENDDO
 
          ! deallocate asap

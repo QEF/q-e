@@ -117,6 +117,11 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pp.x 
                    20 = Product of the electron density (charge) and the second 
                         eigenvalue of the electron-density Hessian matrix;
                         used to colorize the RDG plot (plot_num = 19)
+
+		   21 = all-electron charge density (valence+core).
+                        For PAW calculations only; requires a very dense 
+                        real-space grid. 
+
 	    }
 	}
 

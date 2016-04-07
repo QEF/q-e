@@ -149,7 +149,7 @@ SUBROUTINE extract (filplot,plot_num)
   !
   IF (plot_num == -1) RETURN
   !
-  IF (plot_num < 0 .or. plot_num > 20) CALL errore ('postproc', &
+  IF (plot_num < 0 .or. plot_num > 21) CALL errore ('postproc', &
           'Wrong plot_num', abs (plot_num) )
 
   IF (plot_num == 7 .or. plot_num == 13 .or. plot_num==18) THEN

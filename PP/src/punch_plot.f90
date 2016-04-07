@@ -237,11 +237,11 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
      ipol = plot_num - 13
      CALL polarization ( spin_component, ipol, epsilon, raux )
 
-  ELSEIF (plot_num == 17) THEN
+  ELSEIF (plot_num == 17 .or. plot_num == 21) THEN
      WRITE(stdout, '(7x,a)') "Reconstructing all-electron valence charge."
      ! code partially duplicate from plot_num=0, should be unified
      CALL init_us_1()
-     CALL PAW_make_ae_charge(rho)
+     CALL PAW_make_ae_charge(rho,(plot_num==21))
      !
      IF (spin_component == 0) THEN
          CALL dcopy (dfftp%nnr, rho%of_r (1, 1), 1, raux, 1)
