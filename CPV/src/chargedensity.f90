@@ -492,6 +492,7 @@
          USE parallel_include
          USE fft_parallel,           ONLY: pack_group_sticks, fw_tg_cft3_z, fw_tg_cft3_scatter, fw_tg_cft3_xy
          USE fft_scalar, ONLY: cfft3ds
+         USE scatter_mod, ONLY: maps_sticks_to_3d
          !
          !        MAIN LOOP OVER THE EIGENSTATES
          !           - This loop is also parallelized within the task-groups framework
@@ -499,7 +500,7 @@
          !
          IMPLICIT NONE
          !
-         INTEGER :: from, ii, eig_index, eig_offset
+         INTEGER :: from, i, eig_index, eig_offset, ii
          !
 #if defined(__INTEL_COMPILER)
 #if __INTEL_COMPILER  >= 1300
@@ -566,18 +567,20 @@
             !  now redistribute data
             !
             !
-            !IF( dffts%nogrp == dffts%nproc ) THEN
-            !   CALL pack_group_sticks( aux, psis, dffts, dfft3d )
-            !   CALL cfft3ds( psis, dfft3d%nr1, dfft3d%nr2, dfft3d%nr3, &
-            !                 dfft3d%nr1x,dfft3d%nr2x,dfft3d%nr3x, 1, dfft3d%isind, dfft3d%iplw )
-            !ELSE
+            IF( dffts%nogrp == dffts%nproc ) THEN
+               CALL pack_group_sticks( aux, psis, dffts )
+               CALL maps_sticks_to_3d( dffts, psis, SIZE(psis), aux, 2 )
+               CALL cfft3ds( aux, dfft3d%nr1, dfft3d%nr2, dfft3d%nr3, &
+                             dfft3d%nr1x,dfft3d%nr2x,dfft3d%nr3x, 1, dfft3d%isind, dfft3d%iplw )
+               psis = aux
+            ELSE
                !
                CALL pack_group_sticks( aux, psis, dffts )
                CALL fw_tg_cft3_z( psis, dffts, aux )
                CALL fw_tg_cft3_scatter( psis, dffts, aux )
                CALL fw_tg_cft3_xy( psis, dffts )
 
-            !END IF
+            END IF
 #else
 
             psis = (0.d0, 0.d0)
