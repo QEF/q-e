@@ -36,6 +36,7 @@
         PUBLIC :: fft_dlay_descriptor
         PUBLIC :: fft_scatter, gather_grid, scatter_grid
         PUBLIC :: cgather_sym, cgather_sym_many, cscatter_sym_many
+        PUBLIC :: maps_sticks_to_3d
 
 !=----------------------------------------------------------------------=!
       CONTAINS
@@ -751,6 +752,60 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
 END SUBROUTINE fft_scatter
 !
 #endif
+!
+!
+SUBROUTINE maps_sticks_to_3d( dffts, f_in, nxx_, f_aux, isgn )
+  !
+  ! this subroutine copy sticks stored in 1D array into the 3D array
+  ! to be used with 3D FFT. 
+  ! This is meant for the use of 3D scalar FFT in parallel build 
+  ! once the data have been "rotated" to have a single band in a single task 
+  !
+  IMPLICIT NONE
+#if defined(__MPI)
+  INCLUDE 'mpif.h'
+#endif
+
+  TYPE (fft_dlay_descriptor), INTENT(in) :: dffts
+  INTEGER, INTENT(in)           :: nxx_, isgn
+  COMPLEX (DP), INTENT(inout)   :: f_in (nxx_), f_aux (nxx_)
+
+  INTEGER :: ii, j, it, ioff, ipp, mc, nppx, jj, ncpx, ip, gproc, nblk, sendsiz, nsiz
+
+  nblk = dffts%nproc / dffts%nogrp
+  nsiz = dffts%nogrp
+  ncpx = 0
+  nppx = 0
+  DO ip = 1, dffts%npgrp
+     gproc = dffts%nplist( ip ) + 1
+     ncpx = max( ncpx, dffts%tg_nsw ( gproc ) )
+     nppx = max( nppx, dffts%tg_npp ( gproc ) )
+  END DO
+  sendsiz = ncpx * nppx
+  IF( isgn == 2 ) THEN
+     ip = 1
+     f_aux = 0.0d0
+     DO gproc = 1, nblk
+        ii = 0
+        DO ipp = 1, nsiz
+           ioff = dffts%iss( ip )
+           DO jj = 1, dffts%nsw( ip )
+              mc = dffts%ismap( jj + ioff )
+              it = ii * nppx + ( gproc - 1 ) * sendsiz
+              DO j = 1, dffts%tg_npp( dffts%mype + 1 )
+                 f_aux( mc + ( j - 1 ) * dffts%nr1x * dffts%nr2x ) = f_in( j + it)
+              ENDDO
+              ii = ii + 1
+           ENDDO
+           ip = ip + 1
+        ENDDO
+     ENDDO
+  ELSE
+     CALL fftx_error__ (' maps_sticks_to_3d ', ' isgn .ne. 2  not implemented ', 999 )
+  END IF
+  RETURN
+END SUBROUTINE maps_sticks_to_3d
+!
 !
 !----------------------------------------------------------------------------
 SUBROUTINE gather_real_grid ( dfft, f_in, f_out )
