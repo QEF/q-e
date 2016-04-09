@@ -120,11 +120,9 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
   ncpx = 0
   nppx = 0
   IF( use_tg_ ) THEN
-     DO proc = 1, nprocp
-        gproc = dfft%nplist( proc ) + 1
-        ncpx = max( ncpx, ncp_ ( gproc ) )
-        nppx = max( nppx, npp_ ( gproc ) )
-     ENDDO
+     ncpx   = dfft%tg_ncpx
+     nppx   = dfft%tg_nppx
+     gcomm  = dfft%pgrp_comm
   ELSE
      DO proc = 1, nprocp
         ncpx = max( ncpx, ncp_ ( proc ) )
@@ -454,12 +452,9 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
   IF( use_tg_ ) THEN
      !  This is the number of procs. in the plane-wave group
      nprocp = dfft%npgrp
-     DO proc = 1, nprocp
-        gproc = dfft%nplist( proc ) + 1
-        ncpx = max( ncpx, ncp_ ( gproc ) )
-        nppx = max( nppx, npp_ ( gproc ) )
-     ENDDO
-     gcomm = dfft%pgrp_comm
+     ncpx   = dfft%tg_ncpx
+     nppx   = dfft%tg_nppx
+     gcomm  = dfft%pgrp_comm
   ELSE
      nprocp = dfft%nproc
      DO proc = 1, nprocp
@@ -768,32 +763,25 @@ SUBROUTINE maps_sticks_to_3d( dffts, f_in, nxx_, f_aux, isgn )
 
   TYPE (fft_dlay_descriptor), INTENT(in) :: dffts
   INTEGER, INTENT(in)           :: nxx_, isgn
-  COMPLEX (DP), INTENT(inout)   :: f_in (nxx_), f_aux (nxx_)
+  COMPLEX (DP), INTENT(in)      :: f_in (nxx_)
+  COMPLEX (DP), INTENT(out)     :: f_aux (nxx_)
 
-  INTEGER :: ii, j, it, ioff, ipp, mc, nppx, jj, ncpx, ip, gproc, nblk, sendsiz, nsiz
-
-  nblk = dffts%nproc / dffts%nogrp
-  nsiz = dffts%nogrp
-  ncpx = 0
-  nppx = 0
-  DO ip = 1, dffts%npgrp
-     gproc = dffts%nplist( ip ) + 1
-     ncpx = max( ncpx, dffts%tg_nsw ( gproc ) )
-     nppx = max( nppx, dffts%tg_npp ( gproc ) )
-  END DO
-  sendsiz = ncpx * nppx
+  INTEGER :: ijp, ii, i, j, it, ioff, ipp, mc, jj, ip, gproc, nr12x
+  !
+  f_aux = 0.0d0
+  !
   IF( isgn == 2 ) THEN
      ip = 1
-     f_aux = 0.0d0
-     DO gproc = 1, nblk
+     nr12x = dffts%nr1x * dffts%nr2x
+     DO gproc = 1, dffts%nproc / dffts%nogrp
         ii = 0
-        DO ipp = 1, nsiz
+        DO ipp = 1, dffts%nogrp
            ioff = dffts%iss( ip )
-           DO jj = 1, dffts%nsw( ip )
-              mc = dffts%ismap( jj + ioff )
-              it = ii * nppx + ( gproc - 1 ) * sendsiz
+           DO i = 1, dffts%nsw( ip )
+              mc = dffts%ismap( i + ioff )
+              it = ( ii + ( gproc - 1 ) * dffts%tg_ncpx ) * dffts%tg_nppx
               DO j = 1, dffts%tg_npp( dffts%mype + 1 )
-                 f_aux( mc + ( j - 1 ) * dffts%nr1x * dffts%nr2x ) = f_in( j + it)
+                 f_aux( mc + ( j - 1 ) * nr12x ) = f_in( j + it )
               ENDDO
               ii = ii + 1
            ENDDO
@@ -1294,7 +1282,6 @@ END SUBROUTINE cscatter_sym_many
    END MODULE scatter_mod
 !=----------------------------------------------------------------------=!
 !
-#if defined __NON_BLOCKING_SCATTER
 !
 !---------------------------------------------------------------------
 subroutine fftsort (n, ia)  
@@ -1318,7 +1305,7 @@ subroutine fftsort (n, ia)
   implicit none  
   !-input/output variables
   integer :: n  
-  integer :: ia (2,*)  
+  integer :: ia (2,n)  
   !-local variables
   integer :: i, ir, j, l
   integer :: iia(2)  
@@ -1376,4 +1363,3 @@ subroutine fftsort (n, ia)
   !
 end subroutine fftsort
 
-#endif

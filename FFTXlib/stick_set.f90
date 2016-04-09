@@ -579,6 +579,14 @@ SUBROUTINE task_groups_init( dffts )
       dffts%tg_rdsp(i) = dffts%tg_rdsp(i-1) + dffts%tg_rcv(i-1)
    ENDDO
 
+   dffts%tg_ncpx = 0
+   dffts%tg_nppx = 0
+   DO i = 1, dffts%npgrp
+      dffts%tg_ncpx = max( dffts%tg_ncpx, dffts%tg_nsw ( dffts%nplist(i) + 1 ) )
+      dffts%tg_nppx = max( dffts%tg_nppx, dffts%tg_npp ( dffts%nplist(i) + 1 ) )
+   ENDDO
+
+
    RETURN
 
 END SUBROUTINE task_groups_init

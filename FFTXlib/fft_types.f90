@@ -82,6 +82,8 @@ MODULE fft_types
     INTEGER, POINTER :: tg_psdsp(:)! send displacement for all to all (pack)
     INTEGER, POINTER :: tg_usdsp(:)! send displacement for all to all (unpack)
     INTEGER, POINTER :: tg_rdsp(:)! receive displacement for all to all
+    INTEGER :: tg_nppx = 0  ! max of tg_npp
+    INTEGER :: tg_ncpx = 0  ! max of tg_ncpx
     !
   END TYPE
 
