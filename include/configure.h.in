@@ -1,0 +1,47 @@
+!
+! Copyright (C) 2006 WanT Group
+!
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
+
+!
+! contains configure infos
+!
+
+#define  __HAVE_CONFIG_INFO
+
+#define   __CONF_HOST           "@host@"
+#define   __CONF_ARCH           "@arch@"
+
+#define   __CONF_CC             "@cc@"
+#define   __CONF_CFLAGS         "@cflags@"
+#define   __CONF_DFLAGS         "@dflags@"
+#define   __CONF_CPP            "@cpp@"
+#define   __CONF_CPPFLAGS       "@cppflags@"
+
+#define   __CONF_F90            "@f90@"
+#define   __CONF_MPIF90         "@mpif90@"
+#define   __CONF_F90FLAGS       "@f90flags@"
+#define   __CONF_F77            "@f77@"
+#define   __CONF_FFLAGS         "@fflags@"
+#define   __CONF_FFLAGS_NOOPT   "@fflags_noopt@"
+#define   __CONF_PRE_FDFLAGS    "@pre_fdflags@"
+#define   __CONF_FDFLAGS        "@fdflags@"
+
+#define   __CONF_LD             "@ld@"
+#define   __CONF_LDFLAGS        "@ldflags@"
+#define   __CONF_IMOD           "@imod@"
+
+#define   __CONF_BLAS_LIBS      "@blas_libs@"
+#define   __CONF_LAPACK_LIBS    "@lapack_libs@"
+#define   __CONF_FFT_LIBS       "@fft_libs@"
+#define   __CONF_MASS_LIBS      "@mass_libs@"
+
+#define   __CONF_AR             "@ar@"
+#define   __CONF_ARFLAGS        "@arflags@"
+#define   __CONF_RANLIB         "@ranlib@"
+
+

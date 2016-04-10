@@ -87,7 +87,7 @@ X_AC_QE_SCALAPACK()
 X_AC_QE_ELPA()
 
 # Setting HDF5...
-X_AC_QE_HDF5()
+#X_AC_QE_HDF5()
 
 # Checking SIGNAL...
 X_AC_QE_SIGNAL()
@@ -107,7 +107,7 @@ echo setting DFLAGS... $dflags
 if test "$iflags" = "" ; then iflags="$try_iflags" ; fi
 echo setting IFLAGS... $iflags
 
-# export sdditional ettings to generated files
+# export additional settings to generated files
 AC_SUBST(dflags)
 AC_SUBST(fdflags)
 AC_SUBST(iflags)
@@ -117,6 +117,7 @@ AC_SUBST(extlib_flags)
 
 AC_CONFIG_HEADERS([include/c_defs.h:include/c_defs.h.in])
 AC_CONFIG_FILES([include/fft_defs.h:include/fft_defs.h.in])
+AC_CONFIG_FILES([include/configure.h:include/configure.h.in])
 
 #AC_CONFIG_FILES(Makefile.cpu)
 AC_CONFIG_FILES(make.sys)

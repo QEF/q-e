@@ -46,5 +46,6 @@ then
 fi
 
   AC_MSG_RESULT(${arch})
+  AC_SUBST(arch)
 
 ])
