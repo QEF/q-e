@@ -62,6 +62,7 @@ cglib.o : mainvar.o
 chargedensity.o : ../../FFTXlib/fft_interfaces.o
 chargedensity.o : ../../FFTXlib/fft_parallel.o
 chargedensity.o : ../../FFTXlib/fft_scalar.o
+chargedensity.o : ../../FFTXlib/scatter_mod.o
 chargedensity.o : ../../Modules/cell_base.o
 chargedensity.o : ../../Modules/constants.o
 chargedensity.o : ../../Modules/control_flags.o

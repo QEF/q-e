@@ -16,18 +16,18 @@ SUBROUTINE setup_alpha_pv
   ! This coefficient is also used in orthogonalize.f90 when lgauss=.true.
   !
   USE kinds,      ONLY : DP
+  USE constants,  ONLY : pi
   USE wvfct,      ONLY : nbnd, et
-  USE klist,      ONLY : nks
+  USE klist,      ONLY : nks, lgauss, ngauss, degauss
+  USE ener,       ONLY : ef
   USE mp,         ONLY : mp_max, mp_min
   USE mp_pools,   ONLY : inter_pool_comm
-  USE klist,      ONLY : lgauss
   USE control_lr, ONLY : alpha_pv, nbnd_occ
   !
   IMPLICIT NONE
   !
-  REAL(DP) :: target, emin, emax
-  ! auxiliary variable used
-  ! to set nbnd_occ in the metallic case
+  REAL(DP) :: small, fac, xmax, emin, emax
+  ! auxiliary variable used in the metallic case
   ! minimum band energy
   ! maximum band energy
   INTEGER :: ik, ibnd
@@ -48,20 +48,48 @@ SUBROUTINE setup_alpha_pv
 #endif
   !
   IF (lgauss) THEN
-     emax = target
+     !
+     ! Discard conduction bands such that w0gauss(x,n) < small
+     !
+     ! hint:
+     !   small = 1.0333492677046d-2  ! corresponds to 2 gaussian sigma
+     !   small = 6.9626525973374d-5  ! corresponds to 3 gaussian sigma
+     !   small = 6.3491173359333d-8  ! corresponds to 4 gaussian sigma
+     !
+     small = 6.9626525973374d-5
+     !
+     ! - appropriate limit for gaussian broadening (used for all ngauss)
+     !
+     xmax = sqrt ( - log (sqrt (pi) * small) )
+     !
+     ! - appropriate limit for Fermi-Dirac
+     !
+     IF (ngauss.eq. - 99) THEN
+        fac = 1.d0 / sqrt (small)
+        xmax = 2.d0 * log (0.5d0 * (fac + sqrt (fac * fac - 4.d0) ) )
+     ENDIF
+     !
+     emax = ef + xmax * degauss
+     !
      alpha_pv = emax - emin
+     !
   ELSE
+     !
      emax = et (1, 1)
+     !
      DO ik = 1, nks
         DO ibnd = 1, nbnd_occ(ik)
            emax = max (emax, et (ibnd, ik) )
         ENDDO
      ENDDO
+     !
 #ifdef __MPI
      ! Find the maximum across pools
      CALL mp_max( emax, inter_pool_comm )
 #endif
+     !
      alpha_pv = 2.d0 * (emax - emin)
+     !
   ENDIF
   !
   ! Avoid zero value for alpha_pv
