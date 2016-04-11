@@ -639,8 +639,8 @@ SUBROUTINE phq_readin()
   IF (ts_vdw) CALL errore('phq_readin',&
      'The phonon code with TS-VdW is not yet available',1)
 
-  IF ( dft_is_nonlocc() ) CALL errore('phq_readin',&
-     'The phonon code with non-local vdW functionals is not yet available',1)
+!  IF ( dft_is_nonlocc() ) CALL errore('phq_readin',&
+!     'The phonon code with non-local vdW functionals is not yet available',1)
 
   IF ( dft_is_hybrid() ) CALL errore('phq_readin',&
      'The phonon code with hybrid functionals is not yet available',1)

@@ -22,6 +22,9 @@ incdrhoscf.o \
 incdrhoscf_nc.o \
 dv_of_drho.o \
 dgradcorr.o \
+dnonloccorr.o \
+dv_vdW_DF.o \
+dv_rVV10.o \
 newdq.o \
 orthogonalize.o \
 setup_nscf.o \

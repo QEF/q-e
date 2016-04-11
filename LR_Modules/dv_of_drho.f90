@@ -21,7 +21,7 @@ subroutine dv_of_drho (dvscf, add_nlcc, drhoc)
   USE gvect,             ONLY : nl, ngm, g,nlm, gstart
   USE cell_base,         ONLY : alat, tpiba2, omega
   USE noncollin_module,  ONLY : nspin_lsda, nspin_mag, nspin_gga
-  USE funct,             ONLY : dft_is_gradient
+  USE funct,             ONLY : dft_is_gradient, dft_is_nonlocc
   USE scf,               ONLY : rho, rho_core
   USE uspp,              ONLY : nlcc_any
   USE control_flags,     ONLY : gamma_only
@@ -94,6 +94,16 @@ subroutine dv_of_drho (dvscf, add_nlcc, drhoc)
        (rho%of_r, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, xq, &
        dvscf, dfftp%nnr, nspin_mag, nspin_gga, nl, ngm, g, alat, dvaux)
   !
+  if (dft_is_nonlocc()) then
+     !allocate(dvnonloc(dfftp%nnr,nspin_mag))
+     !dvnonloc(:,:)=CMPLX(0.d0,0.d0)
+     !CALL dv_drho_vdw(rho%of_r, dvscf, nspin_mag, dvnonloc)
+     !if (get_inlc()==3) CALL dv_drho_rvv10(rho%of_r, dvscf, nspin_mag, xq, dvnonloc)
+     !dvaux = dvaux + dvnonloc
+     !deallocate(dvnonloc)
+     call dnonloccorr(rho%of_r, dvscf, xq, dvaux)
+  endif
+
   if (nlcc_any.and.add_nlcc) then
      do is = 1, nspin_lsda
         rho%of_r(:, is) = rho%of_r(:, is) - fac * rho_core (:)

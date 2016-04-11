@@ -13,7 +13,7 @@ subroutine addnlcc (imode0, drhoscf, npe)
 
   USE kinds, only : DP
   USE ions_base, ONLY : nat
-  use funct, only : dft_is_gradient
+  use funct, only : dft_is_gradient, dft_is_nonlocc
   USE cell_base, ONLY : omega, alat
   use scf, only : rho, rho_core
   USE gvect, ONLY : g, ngm, nl
@@ -102,6 +102,9 @@ subroutine addnlcc (imode0, drhoscf, npe)
        call dgradcorr (rho%of_r, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, xq, &
           drhoscf (1, 1, ipert), dfftp%nnr, nspin_mag, nspin_gga, nl, ngm, g, alat,&
           dvaux)
+     if (dft_is_nonlocc()) &
+       call dnonloccorr(rho%of_r, drhoscf (1, 1, ipert), xq, dvaux)
+
      do is = 1, nspin_lsda
         call daxpy (2 * dfftp%nnr, - fac, drhoc, 1, drhoscf (1, is, ipert), 1)
      enddo
