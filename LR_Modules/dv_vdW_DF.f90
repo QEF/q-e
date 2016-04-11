@@ -133,7 +133,7 @@ subroutine get_delta_v(rho, drho, nspin, q_point, delta_v)
     !! -------------------------------------------------------------------------        
 
     complex(dp), allocatable :: u(:,:), delta_u(:,:)
-    complex(dp), allocatable :: delta_h(:), delta_h1(:), delta_h2(:) , delta_h_aux(:), delta_h1_aux(:), delta_h2_aux(:)
+    complex(dp), allocatable :: delta_h(:), delta_h_aux(:)
 
     !! -------------------------------------------------------------------------
     !! Delta u and delta_h
@@ -264,8 +264,6 @@ subroutine get_delta_v(rho, drho, nspin, q_point, delta_v)
     !!---------------------------------------------------------------------------------------------    	
 
     delta_h(:) = 0.0_DP
-    delta_h1(:) = 0.0_DP                                                                                     
-    delta_h2(:) = 0.0_DP 
 
     h1t(:) = CMPLX(0.0D0, 0.0D0)
     h2t(:) = CMPLX(0.0D0, 0.0D0)
