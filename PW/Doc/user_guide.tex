@@ -321,8 +321,18 @@ to all file names, whose default value is: \texttt{prefix='pwscf'}). \texttt{out
 as well in environment variable ESPRESSO\_TMPDIR. The \texttt{iotk}
 toolkit is used to write the file in a XML format, whose definition can
 be found in the Developer Manual. In order to use the data directory
-on a different machine, you need to convert the binary files to formatted
-and back, using the \texttt{bin/iotk} script.
+on a different machine, you should convert the binary files to formatted,
+transfer them, convert them back to unformatted as in the following 
+example:
+\begin{verbatim}
+  $bindir/iotk convert -t outdir/prefix.save/charge-density.dat myfile.txt
+  [ transfer file to the other machine ]
+  $bindir/iotk convert -b myfile.txt outdir/prefix.save/charge-density.dat
+\end{verbatim}
+If you need wavefunctions as well, you must to set the \pwx\ option 
+\texttt{wf\_collect} to \texttt{.true.}. In such case, wavefunction files 
+are found in directories \texttt{outdir/prefix.save/K*}, one per k-point.
+You should do the conversion for all of them.
 
 The execution stops if you create a file \texttt{prefix.EXIT} either
 in the working directory (i.e. where the program is executed), or in

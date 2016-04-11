@@ -6,6 +6,8 @@ New in 5.4 version:
   * Non-blocking FFT communications (-D__NON_BLOCKING_SCATTER) (C. Cavazzoni)
   * Bethe-Salpeter equation added to GWL (P. Umari)
   * Support for QM-MM using MPI (C. Cavazzoni and M. Ippolito)
+  * Phonons with vdw-DF (S. de Gironcoli and R. Sabatini) and with DFT-D2
+    (P. Giannozzi and F. Masullo) 
 
 Fixed in 5.4 version:
 

@@ -89,6 +89,7 @@ cat > graphite.scf.in << EOF
    calculation = 'scf'
    restart_mode='from_scratch',
    prefix='graphite'
+   outdir='$TMP_DIR'
 /
 
 &system
@@ -126,10 +127,11 @@ $ECHO " done"
 cat > graphite.phG.in << EOF
 phonons of graphite
  &inputph
-  tr2_ph=1.0d-18,
-  prefix='graphite'
-  amass(1)=12.0107,
-  fildyn='graphiteG.dyn',
+   tr2_ph=1.0d-18,
+   prefix='graphite'
+   outdir='$TMP_DIR'
+   amass(1)=12.0107,
+   fildyn='graphiteG.dyn',
  /
 0.0 0.0 0.0
 EOF
@@ -141,10 +143,11 @@ $ECHO " done"
 cat > graphite.phK.in << EOF
 phonons of graphite
  &inputph
-  tr2_ph=1.0d-18,
-  prefix='graphite'
-  amass(1)=12.0107,
-  fildyn='graphiteK.dyn',
+   tr2_ph=1.0d-18,
+   prefix='graphite'
+   outdir='$TMP_DIR'
+   amass(1)=12.0107,
+   fildyn='graphiteK.dyn',
  /
 0.33333333 0.57735027 0.0 
 EOF
