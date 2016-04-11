@@ -41,16 +41,14 @@
                             nkf2, nkf3, nqf1, nqf2, nqf3, rand_nk, indabs, &
                             nest_fn, eps_acustic, nw, wmax, wmin, filelph, &
                             mp_mesh_q, filqf, filkf, delta_qsmear, degaussq, &
-                            band_plot, ephwrite, mp_mesh_k, &
-                            nstemp, broyden_beta, &
+                            band_plot, ephwrite, mp_mesh_k, nstemp, broyden_beta, &
                             conv_thr_raxis, tempsmax, tempsmin, temps, broyden_ndim, &
                             wscut, wsfc, nqstep, limag, lreal, muc, gap_edge, &
-                            conv_thr_iaxis, nqsmear, iprint, wepexst, &
-                            epwread, pade_read, eliashberg, acon_read, &
-                            imag_read, kerread, kerwrite, lunif, specfun, &
+                            conv_thr_iaxis, nqsmear, iprint, wepexst, epwread, & 
+                            eliashberg, imag_read, kerread, kerwrite, lunif, specfun, &
                             fermi_energy, efermi_read, max_memlt, fila2f, &
                             ep_coupling, nw_specfun, wmax_specfun, &
-                            wmin_specfun, laniso, lpolar, tphases, elinterp, &
+                            wmin_specfun, laniso, lpolar, epstrict, tphases, elinterp, &
                             proj, write_wfn, phinterp, iswitch, neptemp, &
                             ntempxx, liso, lacon, lpade, etf_mem, epbwrite, &
                             tshuffle2, tshuffle, nsiter, conv_thr_racon, &
@@ -91,7 +89,7 @@
   character(len=256) :: outdir
   namelist / inputepw / &
        amass, outdir, prefix, iverbosity, time_max, fildvscf,                  &
-       tshuffle, tshuffle2, phinterp, elinterp,                                &
+       tshuffle, tshuffle2, phinterp, elinterp, epstrict,                      &
        elph, nq1, nq2, nq3, nk1, nk2, nk3, nbndskip,  nbndsub,                 &
        tphases, fildvscf0, filukk, filukq,                                     &
        epbread, epbwrite, epwread, epwwrite, etf_mem, kmaps,                   &
@@ -110,7 +108,7 @@
        broyden_beta, broyden_ndim, nstemp, tempsmin, tempsmax, temps,          &
        conv_thr_raxis, conv_thr_iaxis, conv_thr_racon,                         &
        gap_edge, nsiter, muc, lreal, limag, lpade, lacon, liso, laniso, lpolar,& 
-       lunif, kerwrite, kerread, imag_read, acon_read, pade_read, eliashberg,  & 
+       lunif, kerwrite, kerread, imag_read, eliashberg,                        & 
        ep_coupling, fila2f, max_memlt, efermi_read, fermi_energy,              &
        specfun, wmin_specfun, wmax_specfun, nw_specfun, system_2d, delta_approx
   !
@@ -137,13 +135,14 @@
   ! filukk   : file with rotation matrix U(k) for interpolation
   ! filukq   : file with rotation matrix U(k+q) for interpolation
   ! tphases  : if true set absolute unitary gauge for eigenvectors
+  ! epstrict : if true use strict selection rule for phonon linewidht calculation
   ! fsthick  : the thickness of the Fermi shell for averaging the e-ph matrix elements (units of eV)
   ! eptemp   : temperature for the electronic Fermi occupations in the e-p calculation (units of Kelvin)
   ! fildvscf0: file containing deltavscf to be used as fake perturbation to set phases
   ! nw       : nr. of bins for frequency scan in \delta( e_k - e_k+q - w ) (units of eV)
   ! wmin     : min frequency for frequency scan in \delta( e_k - e_k+q - w ) (units of eV)
   ! wmax     : max    "  "  "                                    (units of eV)                   
-  ! selfen_type : choice of real/imag part of phonon selfenergy calcuation.
+  ! selfen_type : choice of real/imag part of phonon selfenergy calcuation when epstrict = .true.
   ! nbndsub  : number of bands in the optimal subspace (when disentanglement is used)
   ! tshuffle2: shuffle mode for electrons + load all phonons at once
   ! elecselfen: if .TRUE. calculate imaginary part of electron selfenergy due to e-p interaction
@@ -216,8 +215,6 @@
   ! kerwrite: if .true. write Kp and Km to files .ker for real-axis calculations
   ! kerread : if .true. read Kp and Km from files .ker for real-axis calculations
   ! imag_read : if .true. read from files Delta and Znorm on the imaginary-axis
-  ! acon_read : if .true. read from file Delta and Znorm on the real-axis from analytic continuation
-  ! pade_read : if .true. read from file Delta and Znorm on the real-axis from Pade approximants
   ! eliashberg : if .true. solve the Eliashberg equations
   ! ep_coupling : if .true. run e-p coupling calculation
   ! fila2f  : input file with eliashberg spectral function 
@@ -311,6 +308,7 @@
   eptemp(:)    = 0.000d0
   eptemp(1)    = 300.0d0
   degaussw     = 0.025d0 ! eV
+  epstrict     = .false.
   selfen_type  = 2
   elinterp     = .true.
   tphases      = .false.
@@ -378,8 +376,6 @@
   kerwrite= .false.
   kerread = .false.
   imag_read = .false.
-  acon_read = .false.
-  pade_read = .false.
   eliashberg = .false.
   ep_coupling = .true.
   nswfc    = 0
@@ -394,10 +390,10 @@
   conv_thr_iaxis = 1.d-05
   conv_thr_racon = 5.d-04
   gap_edge = 0.d0
-  nstemp   = 2
-  tempsmin = -10.d0
-  tempsmax = -10.d0
-  temps(:) = -10.d0
+  nstemp   = 1
+  tempsmin = 0.d0
+  tempsmax = 0.d0
+  temps(:) = 0.d0
   nsiter   = 40
   muc     = 0.d0
   fila2f  = ' '

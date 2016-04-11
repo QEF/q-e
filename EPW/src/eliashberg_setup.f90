@@ -21,8 +21,7 @@
                             nqf1, nqf2, nqf3, ntempxx, nswi, nswfc, nswc, &
                             nstemp, muc, lreal, lpade, liso, limag, laniso, &
                             lacon, kerwrite, kerread, imag_read, fila2f, temps, &
-                            wsfc, wscut, tempsmin, tempsmax, rand_q, rand_k, &
-                            pade_read
+                            wsfc, wscut, tempsmin, tempsmax, rand_q, rand_k
   USE constants_epw, ONLY : pi, kelvin2eV
   USE eliashbergcom, ONLY : estemp, nsw, nsiw, dwsph, wsphmax, wsph
   !
@@ -48,12 +47,10 @@
        CALL errore('eliashberg_init', 'lreal or lacon needs to be true',1)
   IF ( eliashberg .AND. lreal .AND.  lpade ) &
        CALL errore('eliashberg_init', 'lreal or lpade needs to be true',1)
-  IF ( eliashberg .AND. imag_read .AND. .not.limag ) &
-       CALL errore('eliashberg_init', 'imag_read requires limag true',1)
+  IF ( eliashberg .AND. imag_read .AND. .not.limag .AND. .not.laniso ) &
+       CALL errore('eliashberg_init', 'imag_read requires limag true and laniso true',1)
   IF ( eliashberg .AND. lpade .AND. .not.limag ) &                
        CALL errore('eliashberg_init', 'lpade requires limag true',1)
-  IF ( eliashberg .AND. pade_read .AND. .not.lpade ) &
-       CALL errore('eliashberg_init', 'pade_read requires lpade true',1)
   IF ( eliashberg .AND. lacon .AND. (.not.limag .OR. .not.lpade ) ) & 
        CALL errore('eliashberg_init', 'lacon requires both limag and lpade true',1)
   IF ( eliashberg .AND. lreal .AND. (kerread .OR. kerwrite) ) & 
@@ -74,18 +71,9 @@
        tempsmin .gt. 0.d0 .AND. tempsmax .gt. 0.d0 ) &
        CALL errore('eliashberg_init', & 
        'define either (tempsmin and tempsmax) or temp(:)',1)
-  IF ( eliashberg .AND. tempsmin .ge. 0.d0 .AND. & 
-       ( tempsmax .lt. 0.d0 .OR. tempsmax .lt. tempsmin ) ) &
+  IF ( eliashberg .AND. tempsmax .lt. tempsmin ) &
        CALL errore('eliashberg_init', & 
        'tempsmax should be greater than tempsmin',1)
-  IF ( eliashberg .AND. lreal .AND. maxval(temps(:)) .lt. 0.d0 .AND. & 
-       tempsmin .lt. 0.d0 .AND. tempsmax .lt. 0.d0  ) & 
-       CALL errore('eliashberg_init', "to solve Eliashberg equations on real axis &
-       &define either (tempsmin and tempsmax) or temps(:)",1)
-  IF ( eliashberg .AND. limag .AND. maxval(temps(:)) .lt. 0.d0 .AND. & 
-       tempsmin .lt. 0.d0 .AND. tempsmax .lt. 0.d0  )  &
-       CALL errore('eliashberg_init', 'to solve Eliashberg equations on imaginary axis &
-       &define either (tempsmin and tempsmax) or temp(:)',1)
   IF ( eliashberg .AND. nsiter .lt. 1 ) CALL errore('eliashberg_init', &
        'wrong number of nsiter',1)
   IF ( eliashberg .AND. muc .lt. 0.d0 ) CALL errore('eliashberg_init', &
@@ -98,7 +86,7 @@
        'eliashberg requires nkf1,nkf2,nkf3 to be multiple of nqf1,nqf2,nqf3 when fila2f is not used',1)
   !
   DO itemp = 1, ntempxx
-     IF (temps(itemp) .ge. 0.d0) THEN
+     IF (temps(itemp) .gt. 0.d0) THEN
         nstemp = itemp
      ENDIF
   ENDDO

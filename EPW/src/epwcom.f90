@@ -27,7 +27,7 @@
        nw_specfun
   ! ngaussw: smearing type for Fermi surface average in e-ph coupling after wann. interp.
   ! nw: nr. of bins for frequency scan in \delta( e_k - e_k+q - w ) when strict sel. rule is applied
-  ! selfen_type: choice of real/imag part of phonon self-energy.
+  ! selfen_type: choice of real/imag part of phonon self-energy when epstrict = .true.
   ! nbndsub: nr. of bands in the optimal subspace (when disentanglement is used)
   ! nbndskip:  nr. of bands to be skipped when we use only a subspace (this is nfirstwin-1 in Marzari's notation)
   ! @JN
@@ -87,16 +87,17 @@
   ! wmin_specfun : min frequency in electron spectral function due to e-p interaction 
   ! wmax_specfun : max frequency in electron spectral function due to e-p `interaction
   !
-  logical :: phinterp , elinterp, tphases, tshuffle2, elecselfen, phonselfen, &
+  logical :: phinterp , elinterp, tphases, epstrict, tshuffle2, elecselfen, phonselfen, &
        epbread, epbwrite, epwread, epwwrite, specfun, wannierize, spinors, parallel_k,      &
        parallel_q, a2f, etf_mem, write_wfn, kmaps, nest_fn, rand_q, rand_k, &
        mp_mesh_q, mp_mesh_k, indabs, eig_read, wepexst, epexst, vme, twophoton, & 
        ephwrite, band_plot, lreal, limag, lpade, lacon, liso, laniso, lpolar, lunif, & 
-       kerwrite, kerread, imag_read, acon_read, pade_read, eliashberg, ep_coupling, & 
+       kerwrite, kerread, imag_read, eliashberg, ep_coupling, & 
        efermi_read, system_2d, delta_approx
   ! phinterp: if .TRUE. perform phonon interpolation of e-p matrix
   ! elinterp: if .TRUE. perform electron interpolation of e-p matrix
   ! tphases:  if .TRUE. set absolute reference for unitary gauge of the eigenvectors
+  ! epstrict: if .TRUE. use strict selection rule in phonon linewidth calculation
   ! tshuffle2: shuffle mode for electrons + load all phonons at once
   ! elecselfen: if .TRUE. calculate electron selfenergy due to e-p interaction
   ! phonselfen: if .TRUE. calculate phonon selfenergy due to e-p interaction
@@ -140,8 +141,6 @@
   ! kerwrite : if .true. write Kp and Km to files .ker for real-axis calculations
   ! kerread  : if .true. read Kp and Km from files .ker for real-axis calculations
   ! imag_read : if .true. read from file Delta and Znorm on the imaginary-axis
-  ! acon_read : if .true. read from file Delta and Znorm on the real-axis from analytic continuation
-  ! pade_real : if .true. read from file Delta and Znorm on the real-axis from Pade approximants
   ! eliashberg : if .true. solve the Eliashberg equations 
   ! ep_coupling : if .true. run e-p coupling calculation
   ! efermi_read : if .true. fermi energy is read from the input file
@@ -151,7 +150,7 @@
   CHARACTER(len=80) :: filelph, fileig ! output file for the electron-phonon coefficients
   character(len=256), dimension(200) :: proj, wdata ! projections and any extra info for W90 
   REAL (kind=DP), dimension(25) :: eptemp 
-  REAL (kind=DP), dimension(25) :: temps ! temperature entering in the Eliashberg equtions (units of Kelvin)
+  REAL (kind=DP), dimension(50) :: temps ! temperature entering in the Eliashberg equtions (units of Kelvin)
   integer :: iswitch
 
 END MODULE control_epw

@@ -152,6 +152,10 @@
   !
 #ifdef __PARA
   IF (parallel_k) CALL mp_sum(eptmp, world_comm)
+  IF (.NOT. etf_mem) then
+    CALL MPI_FILE_CLOSE(iunepmatwp2,ierr)
+    IF( ierr /= 0 ) CALL errore( 'ephwan2blochp', 'error in MPI_FILE_CLOSE',1 )
+  ENDIF  
 #endif
   !
   !----------------------------------------------------------

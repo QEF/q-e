@@ -28,11 +28,11 @@
                             efermi_read, dvscf_dir, deltaeabs, delta_smear, &
                             delta_qsmear, degaussw, degaussq, conv_thr_raxis, &
                             conv_thr_racon, conv_thr_iaxis, broyden_ndim, &
-                            broyden_beta, band_plot, acon_read, a2f, lacon, &
+                            broyden_beta, band_plot, a2f, lacon, &
                             kmaps, kerwrite, kerread, indabs, imag_read, &
                             gap_edge, fsthick, filukq, filukk, filqf, filkf, &
                             filelph, fileig, fildvscf0, fila2f, fermi_energy, &
-                            etf_mem, epwwrite, epwread, eptemp, &
+                            etf_mem, epwwrite, epwread, eptemp, epstrict, &
                             eps_acustic, ephwrite, epbread, nsiter, nqstep, &
                             nqsmear, nqf3, nqf2, nqf1, nkf3, nkf2, nkf1, &
                             ngaussw, nest_fn, neptemp, nbndsub, nbndskip, &
@@ -40,7 +40,7 @@
                             lreal, lpolar, lpade, liso, limag, laniso, &
                             specfun, selfen_type, &
                             rand_q, rand_nq, rand_nk, rand_k, pwc, phonselfen, &
-                            phinterp, parallel_q, parallel_k, pade_read, &
+                            phinterp, parallel_q, parallel_k, &
                             nw_specfun, nw, nswi, nswfc, nswc, nstemp, nsmear, &
                             wsfc, wscut, write_wfn, wmin_specfun, wmin, &
                             wmax_specfun, wmax, wepexst, wannierize, &
@@ -82,6 +82,7 @@
   CALL mp_bcast (phinterp, ionode_id, world_comm)  !
   CALL mp_bcast (elinterp, ionode_id, world_comm)  !
   CALL mp_bcast (tphases, ionode_id, world_comm)   !
+  CALL mp_bcast (epstrict, ionode_id, world_comm)  !
   CALL mp_bcast (fsthick, ionode_id, world_comm)   !
   CALL mp_bcast (eptemp, ionode_id, world_comm)    !
   CALL mp_bcast (wmin, ionode_id, world_comm)      !
@@ -117,8 +118,6 @@
   CALL mp_bcast (kerwrite, ionode_id, world_comm)     !
   CALL mp_bcast (kerread, ionode_id, world_comm)     !
   CALL mp_bcast (imag_read, ionode_id, world_comm ) !
-  CALL mp_bcast (acon_read, ionode_id, world_comm ) !
-  CALL mp_bcast (pade_read, ionode_id, world_comm ) !
   CALL mp_bcast (eliashberg, ionode_id, world_comm ) !
   CALL mp_bcast (ep_coupling, ionode_id, world_comm ) !
   CALL mp_bcast (efermi_read, ionode_id, world_comm)

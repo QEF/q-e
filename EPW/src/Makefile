@@ -41,7 +41,9 @@ dynbloch2wan.o \
 dynwan2bloch.o \
 eliashberg.o \
 eliashbergcom.o \
+eliashberg_aniso_cont_raxis.o \
 eliashberg_aniso_iaxis.o \
+eliashberg_iso_cont_raxis.o \
 eliashberg_iso_iaxis.o \
 eliashberg_iso_raxis.o \
 eliashberg_pp.o \
