@@ -1,6 +1,5 @@
 !
-! Copyright (C) 2001-2009 Quantum ESPRESSO group
-! Copyright (C) 2009 Brian Kolb, Timo Thonhauser - Wake Forest University
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -20,7 +19,8 @@ MODULE ph_rVV10
   USE fft_interfaces,    ONLY : fwfft, invfft 
   USE control_flags,     ONLY : iverbosity, gamma_only
   USE io_global,         ONLY : stdout
-  USE rVV10 
+  USE rVV10,             ONLY : b_value, initialize_spline_interpolation, &
+                                numerical_gradient, interpolate_kernel
   USE gc_lr,             ONLY : grho
   
 
@@ -73,36 +73,12 @@ subroutine dv_drho_rvv10(rho, drho, nspin, q_point, dv_drho)
     !!
     allocate(delta_v(dfftp%nnr))
 
-    !! -------------------------------------------------------------------------
-    !! Writers
-    !! -------------------------------------------------------------------------
-
-
-
     CALL get_delta_v(rho, drho, nspin, q_point, delta_v) 
     
-    !! -------------------------------------------------------------------------
-    !! Writers
-    !! -------------------------------------------------------------------------
-
-    !if (ionode) then
-    !
-    !    write(*,'(A)') "Writing delta_v..."
-    !    open (unit = 80, file = "delta_v")
-    !    write(80, '(A)') "#rho delta_v"
-    !    do i_grid = 1, dfftp%nnr
-    !        write(80, '(3F19.8)') rho(i_grid,1), REAL(delta_v(i_grid)), AIMAG(delta_v(i_grid))
-    !    enddo
-    !    close(80)
-    !
-    !endif
-
     dv_drho(:,1) = delta_v(:)
 
     deallocate(delta_v)
 
-    !call errore('dv_drho_vdw_test','Developement break',1) 
-    
 end subroutine dv_drho_rvv10
 
 !! ###############################################################################################################
@@ -209,65 +185,9 @@ subroutine get_delta_v(rho, drho, nspin, q_point, delta_v)
     total_rho(:) = rho(:,1)
     call numerical_gradient(total_rho,gradient_rho)
 
-!     CALL fwfft ('Dense', drho(:,1), dfftp)
-!     do icar=1,3
-!       ! compute gradient in G space
-!       gradient_drho(:,icar) =CMPLX(0.0_DP,0.0_DP)
-!       gradient_drho(nl(:), icar) = CMPLX (0.0_DP,1.0_DP) * tpiba * (g(icar,:) + q_point(icar)) * drho(nl(:),1)
-!       ! back in real space for the icar component
-!       CALL invfft ('Dense', gradient_drho(:,icar), dfftp)
-!     end do
-!     ! back in real space
-!     CALL invfft ('Dense', drho(:,1), dfftp)
-    
     CALL qgradient (q_point, dfftp%nnr, drho(:,1), ngm, g, nl, alat, gradient_drho)
 
-    !! -------------------------------------------------------------------------
-    !! q and derivatives [REMOVE q0 AND q BEFORE FINAL VERSION]
-    !! ------------------------------------------------------------------------- 
-
-!     if (ionode .and. my_development.eq.3) then
-        
-!         write(*,'(A, 3F13.8)') "q: ", q_point(:)
- 
-!         write(*,'(A, I)') "Writing gradient_drho with lines: ", dfftp%nnr
-!         open (unit = 80, file = "gradient_drho.dat")
-!         write(80, '(A)') "#x.real x.imm y.real y.imm z.real z.imm"
-!         do i_grid = 1, dfftp%nnr
-!             write(80, '(6F19.8)') REAL(gradient_drho(i_grid,1)), AIMAG(gradient_drho(i_grid,1)), &
-!                                   REAL(gradient_drho(i_grid,2)), AIMAG(gradient_drho(i_grid,2)), &
-!                                   REAL(gradient_drho(i_grid,3)), AIMAG(gradient_drho(i_grid,3))
-!         enddo
-!         close(80)
-    
-!     endif
-
-    !call mp_barrier(intra_pool_comm)     
-    !if (iverbosity.eq.1) call errore('get_delta_v','Developement break test',1)
- 
-    !! -------------------------------------------------------------------------
-    !! q and derivatives [REMOVE q0 AND q BEFORE FINAL VERSION]
-    !! -------------------------------------------------------------------------
-    
     call fill_q0_extended_on_grid ()
-
-    !! -------------------------------------------------------------------------
-    !! Writers
-    !! -------------------------------------------------------------------------
-
-!     if (ionode.and.my_development.eq.3) then
-    
-!         write(*,'(A)') "Writing ders..."
-!         open (unit = 80, file = "q0qders.dat")
-!         write(80, '(A)') "#rho gradrho q0 dq0_dq d2q0_dq2 dq_dn_n dn_dq_dn_n_n dq_dgradn_n_gmod"
-!         do i_grid = 1, dfftp%nnr
-!             temp = sqrt((gradient_rho(i_grid,1)**2+gradient_rho(i_grid,2)**2+gradient_rho(i_grid,3)**2))
-!             write(80, '(5F24.17, 3F40.17)') total_rho(i_grid), temp, q0(i_grid), dq0_dq(i_grid), d2q0_dq2(i_grid), &
-!                                             dq_dn_n(i_grid), dn_dq_dn_n_n(i_grid), dq_dgradn_n_gmod(i_grid)
-!         enddo
-!         close(80)
-    
-!     endif
 
     call mp_barrier(intra_pool_comm)
     
@@ -279,10 +199,6 @@ subroutine get_delta_v(rho, drho, nspin, q_point, delta_v)
         allocate( d2y_dx2(Nqs, Nqs) )
         call initialize_spline_interpolation(q_mesh, d2y_dx2(:,:))
     end if
-
-    !! --------------------------------------------------------------------------------------------- 
-    !! Open one file for each alpha
-    !!---------------------------------------------------------------------------------------------
 
     !! --------------------------------------------------------------------------------------------- 
     !! Begin integral for the delta_b part
@@ -313,25 +229,10 @@ subroutine get_delta_v(rho, drho, nspin, q_point, delta_v)
           !! Here gradn_graddeltan IS complex, the cast is automatic
           delta_u(i_grid, P_i) =  dtheta_dn*drho(i_grid,1) +  dtheta_dgradn*gradn_graddeltan
 
-          !! Write in the correct file for the P_i
-!           if (ionode.and.my_development.ge.5) then
-!             temp_unit = 90+P_i
-!             write(temp_unit, '(I4,8F40.17)') P_i, total_rho(i_grid), gmod, &
-!                                              theta, dtheta_dn, dtheta_dgradn, d2theta_dn2, dn_dtheta_dgradn, dgradn_dtheta_dgradn
-!           endif
-
         end do
         
     end do
   
-!     !! Closing files
-!     if (ionode.and.my_development.ge.5) then
-!         do P_i = 1, Nqs
-!             temp_unit = 90+P_i
-!             close(temp_unit)       
-!         enddo
-!     endif
-
     !! -------------------------------------------------------------------------
     !! Delta u part
     !! -------------------------------------------------------------------------
@@ -393,10 +294,6 @@ subroutine get_delta_v(rho, drho, nspin, q_point, delta_v)
         
         end do
 
-      !else
-      !    h1t(i_grid) = CMPLX(0.0D0, 0.0D0) 
-      !    h2t(i_grid) = CMPLX(0.0D0, 0.0D0)
-      !endif        
     end do
 
     allocate (delta_h_aux(dfftp%nnr))
@@ -404,49 +301,18 @@ subroutine get_delta_v(rho, drho, nspin, q_point, delta_v)
     allocate (delta_h2_aux(dfftp%nnr))
 
     do icar = 1,3
-       !delta_h(:) = (h1t(:) * grho(icar, :, 1)+ h2t(:) * gradient_drho(:,icar))
        delta_h(:) = (h1t(:) * gradient_rho(:,icar)+ h2t(:) * gradient_drho(:,icar))
-       !delta_h1(:) = h1t(:) * gradient_rho(:,icar)
-       !delta_h1(:) = h1t(:) * grho(icar, :, 1)
-       !delta_h2(:) = h2t(:) * gradient_drho(:,icar)
-       !delta_h(:) = delta_h1(:) + delta_h2(:)
 
        CALL fwfft ('Dense', delta_h, dfftp) 
-!        CALL fwfft ('Dense', delta_h1, dfftp) 
-!        CALL fwfft ('Dense', delta_h2, dfftp) 
 
        delta_h_aux(:) = CMPLX(0.0_DP, 0.0_DP)
        delta_h_aux(nl(:)) = CMPLX(0.0_DP,(g(icar,:)+q_point(icar)),kind=DP ) * delta_h(nl(:))
        
        if (gamma_only) delta_h_aux(nlm(:)) = CONJG(delta_h_aux(nl(:)))
 
-!        delta_h1_aux(:) = CMPLX(0.0_DP, 0.0_DP)
-!        delta_h2_aux(:) = CMPLX(0.0_DP, 0.0_DP)
-
-!        delta_h1_aux(nl(:)) = CMPLX(0.0_DP,(g(icar,:)+q_point(icar)),kind=DP ) * delta_h1(nl(:))
-!        delta_h2_aux(nl(:)) = CMPLX(0.0_DP,(g(icar,:)+q_point(icar)),kind=DP ) * delta_h2(nl(:))
-
-!        if (gamma_only) then
-!         delta_h1_aux(nlm(:)) = CONJG(delta_h1_aux(nl(:)))
-!         delta_h2_aux(nlm(:)) = CONJG(delta_h2_aux(nl(:)))
-!        endif
-
        CALL invfft ('Dense', delta_h_aux, dfftp) 
 
-!        CALL invfft ('Dense', delta_h1_aux, dfftp) 
-!        CALL invfft ('Dense', delta_h2_aux, dfftp) 
-
        delta_h_aux(:) = delta_h_aux(:)*tpiba
-       !delta_h_aux(:) = delta_h1_aux(:)*tpiba + delta_h2_aux(:)*tpiba
-
-!        if (ionode .and. my_development.ge.4) then
-!          write(fn,fmt='(i0,a)') icar, '_delta_h_aux.dat'
-!          open (unit=78, file=fn)
-!            do i_grid = 1,dfftp%nnr
-!              write(78, '(2F15.8)') REAL(delta_h_aux(i_grid)),AIMAG(delta_h_aux(i_grid))
-!            enddo
-!          close(78)
-!        endif
 
        delta_v(:) = delta_v(:) - delta_h_aux(:)
 
@@ -458,20 +324,6 @@ subroutine get_delta_v(rho, drho, nspin, q_point, delta_v)
     !! -------------------------------------------------------------------------
 
     call mp_barrier(intra_pool_comm)
-
-!     if (ionode.and.my_development.ge.5) then
-!        open (unit=78, file="delta_v2.dat")
-!        open (unit=79, file="h1t.dat")
-!        open (unit=80, file="h2t.dat")
-!          do i_grid = 1,dfftp%nnr
-!            write(78, '(2F35.8)') REAL(delta_v(i_grid)),AIMAG(delta_v(i_grid))
-!            write(79, '(2F35.8)') REAL(h1t(i_grid)),AIMAG(h1t(i_grid))
-!            write(80, '(2F35.8)') REAL(h2t(i_grid)),AIMAG(h2t(i_grid))
-!          enddo
-!        close(78)
-!        close(79)
-!        close(80)
-!     endif
 
     call mp_barrier(intra_pool_comm)
 
@@ -595,11 +447,6 @@ end subroutine get_delta_v
     gradn_graddeltan = gradient_rho(i_grid,1)*gradient_drho(i_grid,1) + &
                        gradient_rho(i_grid,2)*gradient_drho(i_grid,2) + &
                        gradient_rho(i_grid,3)*gradient_drho(i_grid,3)
-
-!     gmod = sqrt(grho(1,i_grid,1)**2+grho(2,i_grid,1)**2+grho(3,i_grid,1)**2)
-!     gradn_graddeltan = grho(1,i_grid,1)*gradient_drho(i_grid,1) + &
-!                        grho(2,i_grid,1)*gradient_drho(i_grid,2) + &
-!                        grho(3,i_grid,1)*gradient_drho(i_grid,3)
 
   END SUBROUTINE get_thetas_exentended
 
@@ -795,7 +642,6 @@ subroutine get_u_delta_u(u, delta_u, q_point)
      CALL fwfft ('Dense', delta_u(:,q1_i), dfftp)
   end do
   call stop_clock( 'vdW_ffts')
-  
   
   !!
   !! Integrate in reciprocal space

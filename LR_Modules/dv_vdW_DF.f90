@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2009 Quantum ESPRESSO group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -19,9 +19,8 @@ MODULE ph_vdW_DF
   USE fft_interfaces,    ONLY : fwfft, invfft 
   USE control_flags,     ONLY : iverbosity, gamma_only
   USE io_global,         ONLY : stdout
-  USE vdW_DF 
-!  USE control_ph,        ONLY : my_development
-!  USE my_devmod,         ONLY : dry_run, t_irr, t_ipert, t_Nqs
+  USE vdW_DF,            ONLY : vdw_type, initialize_spline_interpolation, &
+                                numerical_gradient, interpolate_kernel
   USE gc_lr,             ONLY : grho
   
 
@@ -74,41 +73,9 @@ subroutine dv_drho_vdwdf(rho, drho, nspin, q_point, dv_drho)
     !!
     allocate(delta_v(dfftp%nnr))
 
-
-!    if (ionode .and. my_development.ge.6) then
-    
-!        write(*,'(A)') "Writing drho..."
-!        if (dry_run) then
-!          open (unit = 80, file = "drho_in.dat.dry")
-!        else
-!          open (unit = 80, file = "drho_in.dat")
-!        endif
-!        write(80, '(A)') "#rhor rhoc"
-!        do i_grid = 1, dfftp%nnr
-!            write(80, '(2F22.15)') REAL(drho(i_grid,1)), AIMAG(drho(i_grid,1))
-!        enddo
-!        close(80)
-    
-!    endif
-
     CALL get_delta_v(rho, drho, nspin, q_point, delta_v) 
     
     dv_drho(:,1) = e2*delta_v(:)
-
-!    if (ionode.and.my_development.ge.2) then
-!        write(*,'(A,i0,A,i0,A,i0)') "[",me_pool,"] writing dv_vdw | irr ",t_irr," npe ",t_ipert
-!        if (dry_run) then
-!          write(fn,fmt='(a,i0,a,i0,a,i0,a)') 'dv_vdw_irr-',t_irr,'_npe_',t_ipert,'_mepool-',me_pool,'.dat.dry'
-!        else
-!          write(fn,fmt='(a,i0,a,i0,a,i0,a)') 'dv_vdw_irr-',t_irr,'_npe_',t_ipert,'_mepool-',me_pool,'.dat'
-!        endif
-
-!        open (unit=78, file=TRIM(fn))
-!         do i_grid = 1,dfftp%nnr
-!           write(78, '(2F22.15)') REAL(dv_drho(i_grid,1)),AIMAG(dv_drho(i_grid,1))
-!         enddo
-!       close(78)
-!    endif
 
     deallocate(delta_v)
 
@@ -235,20 +202,6 @@ subroutine get_delta_v(rho, drho, nspin, q_point, delta_v)
         call initialize_spline_interpolation(q_mesh, d2y_dx2(:,:))
     end if
 
-!    if (ionode.and.my_development.ge.6) then
-!    P_i = t_Nqs
-!    !do P_i = 1, Nqs
-!      if (dry_run) then
-!        write(fn,fmt='(a,i0,a,i0,a,i0,a,i0,a)') 'dv_vdw_misc_',P_i,'-',t_irr,'_npe_',t_ipert,'_mepool-',me_pool,'.dat.dry'
-!      else
-!        write(fn,fmt='(a,i0,a,i0,a,i0,a,i0,a)') 'dv_vdw_misc_',P_i,'-',t_irr,'_npe_',t_ipert,'_mepool-',me_pool,'.dat'
-!      endif
-!      open (unit=78, file=fn)
-!      write(78, '(A)') "#"
-!      close(78)
-!    !enddo
-!    endif
-
     !! --------------------------------------------------------------------------------------------- 
     !! Begin integral for the delta_b part
     !!---------------------------------------------------------------------------------------------    	
@@ -281,43 +234,6 @@ subroutine get_delta_v(rho, drho, nspin, q_point, delta_v)
         
     end do
   
-!    if (ionode.and.my_development.ge.6) then
-
-!      do P_i = 1, Nqs
-        
-!        if (dry_run) then
-!          write(fn,fmt='(a,i0,a,i0,a,i0,a,i0,a)') 'dv_vdw_dtheta_',P_i,'_irr-',t_irr,'_npe_',t_ipert,'_mepool-',me_pool,'.dat.dry'
-!        else
-!          write(fn,fmt='(a,i0,a,i0,a,i0,a,i0,a)') 'dv_vdw_dtheta_',P_i,'_irr-',t_irr,'_npe_',t_ipert,'_mepool-',me_pool,'.dat'
-!        endif
-
-!        open (unit=78, file=fn)
-!        do i_grid = 1,dfftp%nnr
-!          write(78, '(2F22.15)') REAL(delta_u(i_grid, P_i)), AIMAG(delta_u(i_grid, P_i))
-!        enddo
-!        close (78)
-!      enddo
-
-!    endif
-    
-!    if (ionode.and.my_development.ge.6) then
-
-!      P_i = t_Nqs
-!      !do P_i = 1, Nqs
-!        if (dry_run) then
-!          write(fn,fmt='(a,i0,a,i0,a,i0,a,i0,a)') 'dv_vdw_dtheta_dn_',P_i,'_irr-',t_irr,'_npe_',t_ipert,'_mepool-',me_pool,'.dat.dry'
-!        else
-!          write(fn,fmt='(a,i0,a,i0,a,i0,a,i0,a)') 'dv_vdw_dtheta_dn_',P_i,'_irr-',t_irr,'_npe_',t_ipert,'_mepool-',me_pool,'.dat'
-!        endif
-!        open (unit=78, file=fn)
-!        do i_grid = 1,dfftp%nnr
-!          write(78, '(2F22.15)') REAL(b2(i_grid, P_i)), AIMAG(b2(i_grid, P_i))
-!        enddo
-!        close (78)
-!      !enddo
-
-!    endif
-
     !! -------------------------------------------------------------------------
     !! Delta u part
     !! -------------------------------------------------------------------------
@@ -333,41 +249,6 @@ subroutine get_delta_v(rho, drho, nspin, q_point, delta_v)
     enddo
 
     call mp_barrier(intra_pool_comm)
-
-!    if (ionode.and.my_development.ge.2) then
-
-!       if (dry_run) then
-!        write(fn,fmt='(a,i0,a,i0,a,i0,a)') 'dv_vdw_v1_irr-',t_irr,'_npe_',t_ipert,'_mepool-',me_pool,'.dat.dry'
-!       else
-!        write(fn,fmt='(a,i0,a,i0,a,i0,a)') 'dv_vdw_v1_irr-',t_irr,'_npe_',t_ipert,'_mepool-',me_pool,'.dat'
-!       endif
-
-!       open (unit=78, file=fn)
-!         do i_grid = 1,dfftp%nnr
-!           write(78, '(2F22.15)') REAL(e2*delta_v(i_grid)),AIMAG(e2*delta_v(i_grid))
-!         enddo
-!       close(78)
-!    endif
-
-!    if (ionode.and.my_development.ge.6) then
-      
-!      P_i = t_Nqs
-!      !do P_i = 1, Nqs
-
-!        if (dry_run) then
-!          write(fn,fmt='(a,i0,a,i0,a,i0,a,i0,a)') 'dv_vdw_u_',P_i,'_irr-',t_irr,'_npe_',t_ipert,'_mepool-',me_pool,'.dat.dry'
-!        else
-!          write(fn,fmt='(a,i0,a,i0,a,i0,a,i0,a)') 'dv_vdw_u_',P_i,'_irr-',t_irr,'_npe_',t_ipert,'_mepool-',me_pool,'.dat'
-!        endif
-
-!        open (unit=78, file=fn)
-!        do i_grid = 1,dfftp%nnr
-!          write(78, '(2F22.15)') REAL(delta_u(i_grid, P_i)), AIMAG(delta_u(i_grid, P_i))
-!        enddo
-!        close (78)
-!      !enddo
-
-!    endif
 
     !! -------------------------------------------------------------------------
     !! Deallocate something
@@ -389,26 +270,8 @@ subroutine get_delta_v(rho, drho, nspin, q_point, delta_v)
     h1t(:) = CMPLX(0.0D0, 0.0D0)
     h2t(:) = CMPLX(0.0D0, 0.0D0)
 
-!    if (ionode.and.my_development.ge.6) then
-      
-!      P_i = t_Nqs
-!      !do P_i = 1, Nqs
-!        if (dry_run) then
-!          write(fn,fmt='(a,i0,a,i0,a,i0,a,i0,a)') 'dv_vdw_dtheta_dgradn_',P_i,'_irr-',t_irr,'_npe_',t_ipert,'_mepool-',me_pool,'.dat.dry'
-!        else
-!          write(fn,fmt='(a,i0,a,i0,a,i0,a,i0,a)') 'dv_vdw_dtheta_dgradn_',P_i,'_irr-',t_irr,'_npe_',t_ipert,'_mepool-',me_pool,'.dat'
-!        endif
-
-!        temp = 90+P_i
-!        open (unit=temp, file=fn)
-!      !enddo
-!    endif
- 
     do i_grid = 1,dfftp%nnr
 
-      !gmod2 = gradient_rho(i_grid,1)**2+gradient_rho(i_grid,2)**2+gradient_rho(i_grid,3)**2 
-      !if (abs (total_rho(i_grid) ) > epsr .and. gmod2 > epsg) then
-    
         CALL get_abcdef (q0, i_grid, q_hi, q_low, dq, a,b,c,d,e,f )
  
         do P_i = 1, Nqs
@@ -424,149 +287,34 @@ subroutine get_delta_v(rho, drho, nspin, q_point, delta_v)
           !!
           h1part2 = dn_dtheta_dgradn*(drho(i_grid,1)/total_rho(i_grid)) + dgradn_dtheta_dgradn*(gradn_graddeltan/total_rho(i_grid))
           
-!          if (ionode.and.my_development.ge.6.and.P_i.eq.t_Nqs) write(90+P_i, '(2F22.15)') REAL(h1part2), AIMAG(h1part2)
-
           h1t(i_grid) = h1t(i_grid) + delta_u(i_grid,P_i)*dtheta_dgradn + u(i_grid,P_i)*h1part2
           h2t(i_grid) = h2t(i_grid) + u(i_grid,P_i)*dtheta_dgradn
         
         end do
 
-      !else
-      !    h1t(i_grid) = CMPLX(0.0D0, 0.0D0) 
-      !    h2t(i_grid) = CMPLX(0.0D0, 0.0D0)
-      !endif        
     end do
-
-!    if (ionode.and.my_development.ge.6) then
-!      P_i = t_Nqs
-!      !do P_i = 1, Nqs
-!        temp = 90+P_i
-!        close(temp)
-!      !enddo
-!    endif
 
     !! --------------------------------------------------------------------------------------------- 
     !! Derivative
     !!---------------------------------------------------------------------------------------------     
 
-!     do icar = 1,3
-!        delta_h(:) = (h1t(:) * gradient_rho(:,icar)+ h2t(:) * gradient_drho(:,icar))
-!        CALL fwfft ('Dense', delta_h, dfftp) 
-
-!        delta_h_aux(:) = CMPLX(0.0_DP, 0.0_DP)
-!        delta_h_aux(nl(:)) = CMPLX(0.0_DP,(g(icar,:)+q_point(icar)),kind=DP ) * delta_h(nl(:))
-       
-!        if (gamma_only) delta_h_aux(nlm(:)) = CONJG(delta_h_aux(nl(:)))
-
-!        CALL invfft ('Dense', delta_h_aux, dfftp) 
-
-!        delta_h_aux(:) = delta_h_aux(:)*tpiba
-!        delta_v(:) = delta_v(:) - delta_h_aux(:)
-
-
-!     end do
-
     allocate(delta_h_aux(dfftp%nnr))
-    !allocate(delta_h1_aux(dfftp%nnr))
-    !allocate(delta_h2_aux(dfftp%nnr))
 
     do icar = 1,3
-       !delta_h(:) = (h1t(:) * grho(icar, :, 1)+ h2t(:) * gradient_drho(:,icar))
        delta_h(:) = (h1t(:) * gradient_rho(:,icar)+ h2t(:) * gradient_drho(:,icar))
-       !delta_h1(:) = h1t(:) * gradient_rho(:,icar)
-       !delta_h1(:) = h1t(:) * grho(icar, :, 1)
-       !delta_h2(:) = h2t(:) * gradient_drho(:,icar)
-       !delta_h(:) = delta_h1(:) + delta_h2(:)
 
-!       if (ionode.and.my_development.ge.6) then
-
-!         if (dry_run) then
-!          write(fn,fmt='(a,i0,a,i0,a,i0,a,i0,a)') 'dv_vdw_h_',icar,'_irr-',t_irr,'_npe_',t_ipert,'_mepool-',me_pool,'.dat.dry'
-!         else
-!          write(fn,fmt='(a,i0,a,i0,a,i0,a,i0,a)') 'dv_vdw_h_',icar,'_irr-',t_irr,'_npe_',t_ipert,'_mepool-',me_pool,'.dat'
-!         endif
-
-!         open (unit=78, file=fn)
-!         do i_grid = 1,dfftp%nnr
-!           write(78, '(2F22.15)') REAL(delta_h(i_grid)), AIMAG(delta_h(i_grid))
-!         enddo
-!         close (78)
-
-!       endif
- 
        CALL fwfft ('Dense', delta_h, dfftp) 
-!        CALL fwfft ('Dense', delta_h1, dfftp) 
-!        CALL fwfft ('Dense', delta_h2, dfftp) 
-
-!       if (ionode.and.my_development.ge.6) then
-
-!         if (dry_run) then
-!          write(fn,fmt='(a,i0,a,i0,a,i0,a,i0,a)') 'dv_vdw_hfft_',icar,'_irr-',t_irr,'_npe_',t_ipert,'_mepool-',me_pool,'.dat.dry'
-!         else
-!          write(fn,fmt='(a,i0,a,i0,a,i0,a,i0,a)') 'dv_vdw_hfft_',icar,'_irr-',t_irr,'_npe_',t_ipert,'_mepool-',me_pool,'.dat'
-!         endif
-
-!         open (unit=78, file=fn)
-!         do i_grid = 1,dfftp%nnr
-!           write(78, '(2F22.15)') REAL(delta_h(i_grid)), AIMAG(delta_h(i_grid))
-!         enddo
-!         close (78)
-
-!       endif
-
-!       write(*, '(A, I, A, F13.8)') "Q_point(", icar, ") = ", q_point(icar)
 
        delta_h_aux(:) = CMPLX(0.0_DP, 0.0_DP)
        delta_h_aux(nl(:)) = CMPLX(0.0_DP,(g(icar,:)+q_point(icar)),kind=DP ) * delta_h(nl(:))
        
        if (gamma_only) delta_h_aux(nlm(:)) = CONJG(delta_h_aux(nl(:)))
 
-!        delta_h1_aux(:) = CMPLX(0.0_DP, 0.0_DP)
-!        delta_h2_aux(:) = CMPLX(0.0_DP, 0.0_DP)
-
-!        delta_h1_aux(nl(:)) = CMPLX(0.0_DP,(g(icar,:)+q_point(icar)),kind=DP ) * delta_h1(nl(:))
-!        delta_h2_aux(nl(:)) = CMPLX(0.0_DP,(g(icar,:)+q_point(icar)),kind=DP ) * delta_h2(nl(:))
-
-!        if (gamma_only) then
-!         delta_h1_aux(nlm(:)) = CONJG(delta_h1_aux(nl(:)))
-!         delta_h2_aux(nlm(:)) = CONJG(delta_h2_aux(nl(:)))
-!        endif
-
        CALL invfft ('Dense', delta_h_aux, dfftp) 
 
-!        CALL invfft ('Dense', delta_h1_aux, dfftp) 
-!        CALL invfft ('Dense', delta_h2_aux, dfftp) 
-
        delta_h_aux(:) = delta_h_aux(:)*tpiba
-       !delta_h_aux(:) = delta_h1_aux(:)*tpiba + delta_h2_aux(:)*tpiba
-
-!        if (ionode .and. my_development.ge.4) then
-!          write(fn,fmt='(i0,a)') icar, '_delta_h_aux.dat'
-!          open (unit=78, file=fn)
-!            do i_grid = 1,dfftp%nnr
-!              write(78, '(2F15.8)') REAL(delta_h_aux(i_grid)),AIMAG(delta_h_aux(i_grid))
-!            enddo
-!          close(78)
-!        endif
-
-!       if (ionode.and.my_development.ge.6) then
-
-!         if (dry_run) then
-!          write(fn,fmt='(a,i0,a,i0,a,i0,a,i0,a)') 'dv_vdw_hh_',icar,'_irr-',t_irr,'_npe_',t_ipert,'_mepool-',me_pool,'.dat.dry'
-!         else
-!          write(fn,fmt='(a,i0,a,i0,a,i0,a,i0,a)') 'dv_vdw_hh_',icar,'_irr-',t_irr,'_npe_',t_ipert,'_mepool-',me_pool,'.dat'
-!         endif
-
-!         open (unit=78, file=fn)
-!         do i_grid = 1,dfftp%nnr
-!           write(78, '(2F22.15)') REAL(delta_h_aux(i_grid)), AIMAG(delta_h_aux(i_grid))
-!         enddo
-!         close (78)
-
-!       endif
 
        delta_v(:) = delta_v(:) - delta_h_aux(:)
-
 
     end do
     !! -------------------------------------------------------------------------
@@ -581,8 +329,6 @@ subroutine get_delta_v(rho, drho, nspin, q_point, delta_v)
     deallocate(dq_dn_n, dn_dq_dn_n_n, dq_dgradn_n_gmod)
     deallocate(h1t, h2t)
     deallocate(delta_h_aux, delta_h)
-    !deallocate(delta_h1_aux, delta_h1)
-    !deallocate(delta_h2_aux, delta_h2)
     deallocate(u, delta_u)
  
 end subroutine get_delta_v
@@ -685,24 +431,6 @@ end subroutine get_delta_v
                        gradient_rho(i_grid,2)*gradient_drho(i_grid,2) + &
                        gradient_rho(i_grid,3)*gradient_drho(i_grid,3)
 
-!     gmod = sqrt(grho(1,i_grid,1)**2+grho(2,i_grid,1)**2+grho(3,i_grid,1)**2)
-!     gradn_graddeltan = grho(1,i_grid,1)*gradient_drho(i_grid,1) + &
-!                        grho(2,i_grid,1)*gradient_drho(i_grid,2) + &
-!                        grho(3,i_grid,1)*gradient_drho(i_grid,3)
-
-!    if (ionode.and.do_write.and.my_development.ge.6.and.P_i.eq.t_Nqs) then
-       
-!       if (dry_run) then
-!        write(fn,fmt='(a,i0,a,i0,a,i0,a,i0,a)') 'dv_vdw_misc_',P_i,'-',t_irr,'_npe_',t_ipert,'_mepool-',me_pool,'.dat.dry'
-!       else
-!        write(fn,fmt='(a,i0,a,i0,a,i0,a,i0,a)') 'dv_vdw_misc_',P_i,'-',t_irr,'_npe_',t_ipert,'_mepool-',me_pool,'.dat'
-!       endif
-!
-!       open (unit=78, file=fn, ACCESS = 'APPEND')
-!       write(78, '(11F22.15)') q0(i_grid), dP_dq0, d2P_dq02, q(i_grid), dq0_dq(i_grid), d2q0_dq2(i_grid), total_rho(i_grid), dq_dn_n(i_grid), dn_dq_dn_n_n(i_grid), dtheta_dn, d2theta_dn2
-!       close(78)
-!    endif
-
   END SUBROUTINE get_thetas_exentended
 
 
@@ -782,11 +510,6 @@ end subroutine get_delta_v
      
      gmod = sqrt(gradient_rho(i_grid,1)**2+gradient_rho(i_grid,2)**2+gradient_rho(i_grid,3)**2) 
      
-!      gc = -Z_ab/(36.0D0*kF*total_rho(i_grid)**2) &
-!           * (grho(1,i_grid,1)**2+grho(2,i_grid,1)**2+grho(3,i_grid,1)**2)
-     
-!      gmod = sqrt(grho(1,i_grid,1)**2+grho(2,i_grid,1)**2+grho(3,i_grid,1)**2)
-
      LDA_1 =  8.0D0*pi/3.0D0*(LDA_A*(1.0D0+LDA_a1*r_s))
      LDA_2 =  2.0D0*LDA_A * (LDA_b1*sqrt_r_s + LDA_b2*r_s + LDA_b3*r_s*sqrt_r_s + LDA_b4*r_s*r_s)
      

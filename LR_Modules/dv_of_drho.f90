@@ -95,12 +95,6 @@ subroutine dv_of_drho (dvscf, add_nlcc, drhoc)
        dvscf, dfftp%nnr, nspin_mag, nspin_gga, nl, ngm, g, alat, dvaux)
   !
   if (dft_is_nonlocc()) then
-     !allocate(dvnonloc(dfftp%nnr,nspin_mag))
-     !dvnonloc(:,:)=CMPLX(0.d0,0.d0)
-     !CALL dv_drho_vdw(rho%of_r, dvscf, nspin_mag, dvnonloc)
-     !if (get_inlc()==3) CALL dv_drho_rvv10(rho%of_r, dvscf, nspin_mag, xq, dvnonloc)
-     !dvaux = dvaux + dvnonloc
-     !deallocate(dvnonloc)
      call dnonloccorr(rho%of_r, dvscf, xq, dvaux)
   endif
 
