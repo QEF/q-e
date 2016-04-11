@@ -387,7 +387,8 @@ end subroutine get_delta_v
 
   SUBROUTINE get_thetas_exentended (q_hi, q_low, dq, a,b,c,d,e,f, P_i, i_grid, &
                                     gmod, gradn_graddeltan, &
-                                    theta, dtheta_dn, dtheta_dgradn, d2theta_dn2, dn_dtheta_dgradn, dgradn_dtheta_dgradn, do_write, total_rho)
+                                    theta, dtheta_dn, dtheta_dgradn, d2theta_dn2, &
+                                    dn_dtheta_dgradn, dgradn_dtheta_dgradn, do_write, total_rho)
   
     integer,  intent(IN)  :: q_low, q_hi, P_i, i_grid
     real(dp),  intent(IN) :: dq, a, b, c, d, e, f

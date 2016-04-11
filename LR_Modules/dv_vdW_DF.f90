@@ -380,7 +380,8 @@ end subroutine get_delta_v
 
   SUBROUTINE get_thetas_exentended (q_hi, q_low, dq, a,b,c,d,e,f, P_i, i_grid, &
                                     gmod, gradn_graddeltan, &
-                                    theta, dtheta_dn, dtheta_dgradn, d2theta_dn2, dn_dtheta_dgradn, dgradn_dtheta_dgradn, do_write, total_rho)
+                                    theta, dtheta_dn, dtheta_dgradn, d2theta_dn2, &
+                                    dn_dtheta_dgradn, dgradn_dtheta_dgradn, do_write, total_rho)
   
     integer,  intent(IN)  :: q_low, q_hi, P_i, i_grid
     real(dp),  intent(IN) :: dq, a, b, c, d, e, f
@@ -546,7 +547,8 @@ end subroutine get_delta_v
      d2LDA_1_dn2_n2 =  32.0D0*pi/27.0D0 * LDA_A*LDA_a1*r_s
 
      dLDA_2_dn_n  = -2.0D0*LDA_A*(LDA_b1/6.0D0*sqrt_r_s + LDA_b2/3.0D0*r_s + LDA_b3/2.0D0*r_s*sqrt_r_s + 2.0D0*LDA_b4/3.0D0*r_s**2)
-     d2LDA_2_dn2_n2 = 2.0D0*LDA_A*(7.0D0*LDA_b1/36.0D0*sqrt_r_s + 4.0D0*LDA_b2/9.0D0*r_s + 3.0D0*LDA_b3/4.0D0*r_s*sqrt_r_s + 10.0D0*LDA_b4/9.0D0*r_s**2)
+     d2LDA_2_dn2_n2 = 2.0D0*LDA_A*(7.0D0*LDA_b1/36.0D0*sqrt_r_s + 4.0D0*LDA_b2/9.0D0*r_s + &
+                      3.0D0*LDA_b3/4.0D0*r_s*sqrt_r_s + 10.0D0*LDA_b4/9.0D0*r_s**2)
 
      !! ---------------------------------------------------------------------------------------
      
@@ -567,7 +569,8 @@ end subroutine get_delta_v
                               LDA_1*(-1.0D0/(LDA_2*(1.0D0 + LDA_2)))*dLDA_2_dn_n
      
      dn_dq_dn_n_n(i_grid)   = 1.0D0/9.0D0*kF + (49.0D0/9.0D0)*gc + dLDA_1_dn_n*log(1.0D0 + 1.0D0/LDA_2) + &
-                              d2LDA_1_dn2_n2*log(1.0D0 + 1.0D0/LDA_2) + 2.0D0*dLDA_1_dn_n*(-1.0D0/(LDA_2*(1.0D0 + LDA_2)))*dLDA_2_dn_n + &
+                              d2LDA_1_dn2_n2*log(1.0D0 + 1.0D0/LDA_2) + &
+                              2.0D0*dLDA_1_dn_n*(-1.0D0/(LDA_2*(1.0D0 + LDA_2)))*dLDA_2_dn_n + &
                               LDA_1*((1+2.0D0*LDA_2)/((LDA_2*(1.0D0 + LDA_2))**2))*(dLDA_2_dn_n**2) + &
                               LDA_1*(-1.0D0/(LDA_2*(1.0D0 + LDA_2)))*dLDA_2_dn_n + &
                               LDA_1*(-1.0D0/(LDA_2*(1.0D0 + LDA_2)))*d2LDA_2_dn2_n2
