@@ -190,8 +190,6 @@
   !
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
-  USE io_files,      ONLY : prefix
-  USE io_epw,        ONLY : iufilgap
   USE epwcom,        ONLY : nsiter, nstemp, muc, conv_thr_iaxis
   USE eliashbergcom, ONLY : nsiw, estemp, gap0, gap, wsi, NZnormi, Znormi, Deltai, Deltaip, Keri
   USE constants_epw, ONLY : pi, kelvin2eV
@@ -199,11 +197,10 @@
   IMPLICIT NONE
   !
   INTEGER :: iw, iwp, itemp, iter
-  REAL(DP) :: esqrt, kernelp, kernelm, lambdap, lambdam, absdelta, reldelta, errdelta, temp
+  REAL(DP) :: esqrt, kernelp, kernelm, lambdap, lambdam, absdelta, reldelta, errdelta
   REAL(DP), ALLOCATABLE :: wesqrt(:), desqrt(:)
   REAL(DP), ALLOCATABLE, SAVE :: Deltaold(:)
   LOGICAL :: conv
-  CHARACTER(len=256) :: name1
   !
   IF ( .not. ALLOCATED(wesqrt) ) ALLOCATE( wesqrt(nsiw(itemp)) )
   IF ( .not. ALLOCATED(desqrt) ) ALLOCATE( desqrt(nsiw(itemp)) )
@@ -216,12 +213,8 @@
      IF ( .not. ALLOCATED(NZnormi) )  ALLOCATE( NZnormi(nsiw(itemp)) )
      gap(itemp) = 0.d0
      Deltaip(:) = 0.d0
-     IF ( itemp .eq. 1 ) THEN 
-        Deltaip(:) = gap0
-     ELSE
-        Deltaip(:) = gap(itemp-1)
-        !Deltaip(:) = 2.d0*gap(1)*sqrt(1.d0 - 3.52d0*estemp(itemp)/2.d0/gap(1) )
-     ENDIF
+     Deltaip(:) = gap0
+     !
      CALL kernel_iso_iaxis( itemp )
   ENDIF
   Znormi(:) = 0.d0
@@ -264,19 +257,9 @@
   !
   IF ( errdelta .lt. conv_thr_iaxis ) conv = .true.
   IF ( errdelta .lt. conv_thr_iaxis .OR. iter .eq. nsiter ) THEN
-     temp = estemp(itemp) / kelvin2eV 
-     IF ( temp .lt. 10.d0 ) THEN
-        WRITE(name1,'(a,a11,f4.2)') TRIM(prefix),'.imag_iso_0', temp
-     ELSEIF ( temp .ge. 10.d0 ) THEN
-        WRITE(name1,'(a,a10,f5.2)') TRIM(prefix),'.imag_iso_', temp
-     ENDIF
-     OPEN(iufilgap, file=name1, form='formatted')
-     WRITE(iufilgap,'(4a24)') 'w', 'Znorm(w)', 'Delta(w)', 'NZnorm(w)'
-     DO iw = 1, nsiw(itemp) ! loop over omega
-        WRITE(iufilgap,'(4ES20.10)') wsi(iw), Znormi(iw), Deltai(iw), NZnormi(iw)
-     ENDDO
      gap(itemp) = Deltai(1)
-     CLOSE(iufilgap)
+     gap0 = gap(itemp)
+     CALL eliashberg_write_iaxis( itemp )
   ENDIF
   !
   IF( ALLOCATED(wesqrt) ) DEALLOCATE(wesqrt)

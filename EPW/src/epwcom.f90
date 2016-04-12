@@ -146,9 +146,9 @@
   ! efermi_read : if .true. fermi energy is read from the input file
   ! system_2d : if .true. the system is 2 dimensional (vaccum is in z-direction)
   ! delta_approx : if .true. the double delta approximation is used for the phonon self energy
-  CHARACTER(len=80) :: dvscf_dir ='./' ! directory for .dvscf and .dyn files (wannier interpolation)
+  CHARACTER(len=100) :: dvscf_dir ='./' ! directory for .dvscf and .dyn files (wannier interpolation)
   CHARACTER(len=80) :: filelph, fileig ! output file for the electron-phonon coefficients
-  character(len=256), dimension(200) :: proj, wdata ! projections and any extra info for W90 
+  CHARACTER(len=256), dimension(200) :: proj, wdata ! projections and any extra info for W90 
   REAL (kind=DP), dimension(25) :: eptemp 
   REAL (kind=DP), dimension(50) :: temps ! temperature entering in the Eliashberg equtions (units of Kelvin)
   integer :: iswitch

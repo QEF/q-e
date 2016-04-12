@@ -49,6 +49,7 @@ eliashberg_iso_raxis.o \
 eliashberg_pp.o \
 eliashberg_readfiles.o \
 eliashberg_setup.o \
+eliashberg_write.o \
 elphel2_shuffle.o \
 elphon_shuffle.o \
 elphon_shuffle_wrap.o \

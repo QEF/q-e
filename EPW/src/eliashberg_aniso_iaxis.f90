@@ -110,7 +110,7 @@
           RETURN
         ENDIF
       ELSEIF ( limag .AND. imag_read .AND. itemp .eq. 1 ) THEN
-        CALL read_eliashberg_aniso_iaxis( itemp )
+        CALL eliashberg_read_aniso_iaxis( itemp )
       ENDIF
       !
       If ( lpade ) THEN 
@@ -222,10 +222,6 @@
       ! remove memory allocated for ws, Delta, Znorm, ADelta, ADeltap, AZnorm, AZnormp
       imelt = nsw + 2 * ( 2 + 4 * nbndfs * nkfs ) * nsw
       CALL mem_size_eliashberg( -imelt )
-    ELSE
-      ! remove memory allocated for ws
-      imelt = nsw 
-      CALL mem_size_eliashberg( -imelt )
     ENDIF
     ! 
     tcpu = get_clock('aniso_iaxis')
@@ -259,18 +255,15 @@
   !
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
-  USE io_epw,        ONLY : iufilgap, iufilgapFS
   USE io_files,      ONLY : prefix
   USE elph2,         ONLY : wqf
-  USE cell_base,     ONLY : bg
-  USE control_flags, ONLY : iverbosity
   USE epwcom,        ONLY : nsiter, nstemp, muc, conv_thr_iaxis, fsthick, nkf1, &
                             nkf2, nkf3
   USE eliashbergcom, ONLY : nsiw, estemp, gap0, gap, Agap, wsi, AKeri, limag_fly, & 
                             NAZnormi, AZnormi, ADeltai, ADeltaip, NZnormi, Znormi, & 
                             Deltai, wsphmax, nkfs, nbndfs, dosef, ef0, ixkqf, ixqfs, & 
-                            nqfs, wkfs, w0g, ekfs, ixkff
-  USE constants_epw, ONLY : pi, kelvin2eV 
+                            nqfs, wkfs, w0g, ekfs
+  USE constants_epw, ONLY : pi  
 #ifdef __PARA
   USE io_global,     ONLY : ionode_id
   USE mp_global,     ONLY : inter_pool_comm, my_pool_id, npool
@@ -280,15 +273,13 @@
   ! 
   IMPLICIT NONE
   !
-  INTEGER  :: i, j, k, iw, iwp, itemp, iter, ik, iq, iq0, ibnd, jbnd, & 
-             lower_bnd, upper_bnd, ibin, nbin, imelt
-  REAL(DP) :: esqrt, absdelta, reldelta, errdelta, weight, temp, delta_max, dbin, sigma
-  REAL(DP) :: kernelp, kernelm, lambdap, lambdam, x1, x2, x3
-  REAL(DP), ALLOCATABLE :: wesqrt(:,:,:), desqrt(:,:,:), delta_k_bin(:), Agap_tmp(:,:)
+  INTEGER  :: iw, iwp, itemp, iter, ik, iq, iq0, ibnd, jbnd, & 
+             lower_bnd, upper_bnd, imelt
+  REAL(DP) :: esqrt, absdelta, reldelta, errdelta, weight
+  REAL(DP) :: kernelp, kernelm, lambdap, lambdam
+  REAL(DP), ALLOCATABLE :: wesqrt(:,:,:), desqrt(:,:,:)
   REAL(DP), ALLOCATABLE, SAVE :: Deltaold(:)
-  REAL(DP), EXTERNAL :: w0gauss
   LOGICAL  :: conv
-  CHARACTER (len=256) :: name1, name2
   !
   IF ( .not. ALLOCATED(wesqrt) ) ALLOCATE( wesqrt(nbndfs,nkfs,nsiw(itemp)) )
   IF ( .not. ALLOCATED(desqrt) ) ALLOCATE( desqrt(nbndfs,nkfs,nsiw(itemp)) )
@@ -320,26 +311,17 @@
      gap(itemp) = 0.d0
      Agap(:,:,itemp) = 0.d0
      ADeltaip(:,:,:) = 0.d0
+     !
      DO ik = 1, nkfs
         DO ibnd = 1, nbndfs
            IF ( abs( ekfs(ibnd,ik) - ef0 ) .lt. fsthick ) THEN
-              IF ( itemp .eq. 1 ) THEN
-                 DO iw = 1, nsiw(itemp)
-                    IF ( wsi(iw) .lt. 2.d0*wsphmax ) THEN 
-                       ADeltaip(ibnd,ik,iw) = gap0 
-                    ELSE
-                       ADeltaip(ibnd,ik,iw) = 0.d0
-                    ENDIF
-                 ENDDO
-              ELSEIF ( itemp .ne. 1 ) THEN
-                 DO iw = 1, nsiw(itemp)
-                    IF ( wsi(iw) .lt. 2.d0*wsphmax ) THEN
-                       ADeltaip(ibnd,ik,iw) = gap(itemp-1)
-                    ELSE
-                       ADeltaip(ibnd,ik,iw) = 0.d0
-                    ENDIF
-                 ENDDO
-              ENDIF
+              DO iw = 1, nsiw(itemp)
+                 IF ( wsi(iw) .lt. 2.d0*wsphmax ) THEN
+                    ADeltaip(ibnd,ik,iw) = gap0
+                 ELSE
+                    ADeltaip(ibnd,ik,iw) = 0.d0
+                 ENDIF
+              ENDDO
            ENDIF
         ENDDO ! ibnd
      ENDDO ! ik
@@ -446,138 +428,11 @@
   !
   IF ( errdelta .lt. conv_thr_iaxis) conv = .true.
   IF ( errdelta .lt. conv_thr_iaxis .OR. iter .eq. nsiter ) THEN
-     temp = estemp(itemp) / kelvin2eV
-     IF ( temp .lt. 10.d0 ) THEN
-        WRITE(name1,'(a,a13,f4.2)') TRIM(prefix),'.imag_aniso_0', temp
-     ELSEIF ( temp .ge. 10.d0 ) THEN
-        WRITE(name1,'(a,a12,f5.2)') TRIM(prefix),'.imag_aniso_', temp
-     ENDIF
-     OPEN(iufilgap, file=name1, form='formatted')
-     WRITE(iufilgap,'(5a20)') '#        w [eV]', 'Enk-Ef [eV]', 'Znorm(w) [eV]', 'Delta(w) [eV]', 'NZnorm(w) [eV]'
-     DO iw = 1, nsiw(itemp) ! loop over omega
-        DO ik = 1, nkfs
-           DO ibnd = 1, nbndfs
-              IF ( abs( ekfs(ibnd,ik) - ef0 ) .lt. fsthick ) THEN
-                 WRITE(iufilgap,'(5ES20.10)') wsi(iw), ekfs(ibnd,ik)-ef0,&
-                       AZnormi(ibnd,ik,iw), ADeltai(ibnd,ik,iw), NAZnormi(ibnd,ik,iw)
-                 IF ( iw .eq. 1 ) Agap(ibnd,ik,itemp) = ADeltai(ibnd,ik,iw)
-              ENDIF
-           ENDDO ! ibnd                   
-        ENDDO ! ik
-     ENDDO ! iw
-     CLOSE(iufilgap)
      gap(itemp) = Deltai(1)
+     gap0 = gap(itemp)
      !
-     delta_max = 1.25d0 * maxval(Agap(:,:,itemp)) 
-     nbin = int(delta_max/(0.005d0/1000.d0))
-     dbin = delta_max / dble(nbin)
-     IF ( .not. ALLOCATED(delta_k_bin) ) ALLOCATE( delta_k_bin(nbin) )
-     delta_k_bin(:) = 0.d0
+     CALL eliashberg_write_iaxis( itemp )
      !
-     DO ik = 1, nkfs
-        DO ibnd = 1, nbndfs
-           IF ( abs( ekfs(ibnd,ik) - ef0 ) .lt. fsthick ) THEN
-              DO ibin = 1, nbin
-                 sigma = 1.d0 * dbin
-                 weight = w0gauss( ( Agap(ibnd,ik,itemp) - dble(ibin) * dbin) / sigma, 0 ) / sigma
-                 delta_k_bin(ibin) = delta_k_bin(ibin) + weight
-              ENDDO
-           ENDIF
-        ENDDO
-     ENDDO
-     !
-     IF ( temp .lt. 10.d0 ) THEN
-        WRITE(name1,'(a,a18,f4.2)') TRIM(prefix),'.imag_aniso_gap0_0', temp
-     ELSEIF ( temp .ge. 10.d0 ) THEN
-        WRITE(name1,'(a,a17,f5.2)') TRIM(prefix),'.imag_aniso_gap0_', temp
-     ENDIF
-     OPEN(iufilgap, file=name1, form='formatted')
-     DO ibin = 1, nbin
-        WRITE(iufilgap,'(2ES20.10)') temp + delta_k_bin(ibin)/maxval(delta_k_bin(:)), dbin*dble(ibin)
-     ENDDO
-     CLOSE(iufilgap)
-     !
-     IF ( ALLOCATED(delta_k_bin) ) DEALLOCATE(delta_k_bin) 
-     !
-     ! RM - If the k-point is outside the Fermi shell, 
-     ! ixkff(ik)=0 and Agap_tmp(:,0) = 0.0
-     !
-     IF ( .not. ALLOCATED(Agap_tmp) ) ALLOCATE(Agap_tmp(nbndfs,0:nkfs))
-     Agap_tmp(:,1:nkfs) = Agap(:,1:nkfs,itemp)
-     Agap_tmp(:,0) = 0.0d0
-     !
-     ! SP & RM: .cube file for VESTA plotting (only if iverbosity = 2)
-     !
-     IF ( iverbosity .eq. 2 ) THEN
-       ! 
-       DO ibnd = 1, nbndfs
-          IF ( temp .lt. 10.d0 ) THEN
-             WRITE(name1,'(a,a18,f4.2,a1,i1,a5)')TRIM(prefix),'_imag_aniso_gap0_0', temp, '_', ibnd, '.cube'
-          ELSEIF ( temp .ge. 10.d0 ) THEN
-             WRITE(name1,'(a,a17,f5.2,a1,i1,a5)')TRIM(prefix),'.imag_aniso_gap0_', temp, '_', ibnd, '.cube'
-          ENDIF
-          OPEN(iufilgap, file=name1, form='formatted')
-          WRITE(iufilgap,*) 'Cubfile created from EPW calculation'
-          WRITE(iufilgap,*) 'gap'
-          WRITE(iufilgap,'(i5,3f12.6)') 1, 0.0d0, 0.0d0, 0.0d0
-          WRITE(iufilgap,'(i5,3f12.6)') nkf1, (bg(i,1)/dble(nkf1),i=1,3)
-          WRITE(iufilgap,'(i5,3f12.6)') nkf2, (bg(i,2)/dble(nkf2),i=1,3)
-          WRITE(iufilgap,'(i5,3f12.6)') nkf3, (bg(i,3)/dble(nkf3),i=1,3)
-          WRITE(iufilgap,'(i5,4f12.6)') 1, 1.0d0, 0.0d0, 0.0d0, 0.0d0
-          WRITE(iufilgap,'(6f12.6)') ( Agap_tmp(ibnd,ixkff(ik)),ik=1,nkf1*nkf2*nkf3 )
-          CLOSE(iufilgap)
-       ENDDO
-       ! 
-     ENDIF
-     ! 
-     ! SP & RM : Write on file the superconducting gap close to the Fermi surface along with 
-     !     Cartesian coordinate, band index, energy distance from Fermi level and gap value.
-     ! 
-     IF ( temp .lt. 10.d0 ) THEN
-        WRITE(name2,'(a,a20,f4.2)') TRIM(prefix),'.imag_aniso_gap_FS_0', temp
-     ELSEIF ( temp .ge. 10.d0 ) THEN
-        WRITE(name2,'(a,a19,f5.2)') TRIM(prefix),'.imag_aniso_gap_FS_', temp
-     ENDIF
-     OPEN(iufilgapFS, file=name2, form='formatted')
-     WRITE(iufilgapFS,'(a78)') '#               k-point                  Band Enk-Ef [eV]        Delta(0) [eV]'
-     DO i = 1, nkf1
-       DO j = 1, nkf2
-         DO k = 1, nkf3
-           ik = k + (j-1)*nkf3 + (i-1)*nkf2*nkf3
-           IF ( ixkff(ik) .gt. 0 ) THEN
-             DO ibnd = 1, nbndfs
-               ! RM: Everything is in eV here. 
-               ! SP: Here take a 0.2 eV interval around the FS. 
-               IF ( abs( ekfs(ibnd,ixkff(ik)) - ef0 ) .lt. fsthick ) THEN
-               !IF ( abs( ekfs(ibnd,ixkff(ik)) - ef0 ) .lt. 0.2 ) THEN
-                 x1 = bg(1,1)*(i-1)/nkf1+bg(1,2)*(j-1)/nkf2+bg(1,3)*(k-1)/nkf3
-                 x2 = bg(2,1)*(i-1)/nkf1+bg(2,2)*(j-1)/nkf2+bg(2,3)*(k-1)/nkf3
-                 x3 = bg(3,1)*(i-1)/nkf1+bg(3,2)*(j-1)/nkf2+bg(3,3)*(k-1)/nkf3
-                 WRITE(iufilgapFS,'(3f12.6,i8,f12.6,f24.15)') x1, x2, x3, ibnd, & 
-                                  ekfs(ibnd,ixkff(ik))-ef0, Agap_tmp(ibnd,ixkff(ik))
-               ENDIF
-             ENDDO ! ibnd    
-           ENDIF  
-         ENDDO  ! k           
-       ENDDO ! j
-     ENDDO ! i
-     CLOSE(iufilgapFS)
-     !
-     ! isotropic case
-     ! SP: Only write isotropic if user really want that
-     IF ( iverbosity .eq. 2 ) THEN
-       IF ( temp .lt. 10.d0 ) THEN
-          WRITE(name1,'(a,a11,f4.2)') TRIM(prefix),'.imag_iso_0', temp
-       ELSEIF ( temp .ge. 10.d0 ) THEN
-          WRITE(name1,'(a,a10,f5.2)') TRIM(prefix),'.imag_iso_', temp
-       ENDIF
-       OPEN(iufilgap, file=name1, form='formatted')
-       WRITE(iufilgap,'(4a24)') 'w', 'Znorm(w)', 'Delta(w)', 'NZnorm(w)'
-       DO iw = 1, nsiw(itemp) ! loop over omega
-          WRITE(iufilgap,'(4ES20.10)') wsi(iw), Znormi(iw), Deltai(iw), NZnormi(iw)
-       ENDDO
-       CLOSE(iufilgap)
-     ENDIF 
   ENDIF
   !
   IF ( conv .OR. iter .eq. nsiter ) THEN
@@ -596,6 +451,7 @@
   CALL mp_bcast( NZnormi, ionode_id, inter_pool_comm )
   CALL mp_bcast( AZnormi, ionode_id, inter_pool_comm )
   CALL mp_bcast( NAZnormi, ionode_id, inter_pool_comm )
+  CALL mp_bcast( gap0, ionode_id, inter_pool_comm )
   CALL mp_bcast( gap, ionode_id, inter_pool_comm )
   CALL mp_bcast( Agap, ionode_id, inter_pool_comm )
   CALL mp_bcast( conv, ionode_id, inter_pool_comm )
@@ -625,7 +481,7 @@
   END SUBROUTINE sum_eliashberg_aniso_iaxis
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE read_eliashberg_aniso_iaxis( itemp )
+  SUBROUTINE eliashberg_read_aniso_iaxis( itemp )
   !-----------------------------------------------------------------------
   !  
   ! This routine reads from file the anisotropic Delta and Znorm on the imaginary-axis
@@ -639,12 +495,11 @@
   USE kinds,         ONLY : DP
   USE io_epw,        ONLY : iufilgap
   USE io_files,      ONLY : prefix
-  USE cell_base,     ONLY : bg
   USE control_flags, ONLY : iverbosity
-  USE epwcom,        ONLY : nstemp, fsthick, nkf1, nkf2, nkf3
-  USE eliashbergcom, ONLY : nsiw, estemp, gap, Agap, wsi, Znormi, Deltai, & 
+  USE epwcom,        ONLY : nstemp, fsthick
+  USE eliashbergcom, ONLY : nsiw, estemp, gap0, gap, Agap, wsi, NZnormi, Znormi, Deltai, & 
                             AZnormi, NAZnormi, ADeltai, nkfs, nbndfs, ef0, ekfs, &
-                            dosef, wkfs, w0g, ixkff
+                            dosef, wkfs, w0g
   USE constants_epw, ONLY : kelvin2eV
 #ifdef __PARA
   USE io_global, ONLY : ionode_id
@@ -658,17 +513,17 @@
   INTEGER :: i, iw, itemp, ik, ibnd, imelt, ios
   REAL(DP) :: temp, eband, omega, weight
   REAL(DP) :: eps=1.0d-6
-  REAL(DP), ALLOCATABLE :: Agap_tmp(:,:)
   CHARACTER (len=256) :: name1, word
   !
   ! get the size of required allocated memory 
-  imelt = ( 1 + nbndfs * nkfs ) * nstemp + ( 2 + 3 * nbndfs * nkfs ) * nsiw(itemp)
+  imelt = ( 1 + nbndfs * nkfs ) * nstemp + ( 3 + 3 * nbndfs * nkfs ) * nsiw(itemp)
   CALL mem_size_eliashberg( imelt )
   !
   IF ( .not. ALLOCATED(gap) )      ALLOCATE( gap(nstemp) )
   IF ( .not. ALLOCATED(Agap) )     ALLOCATE( Agap(nbndfs,nkfs,nstemp) )
   IF ( .not. ALLOCATED(Deltai) )   ALLOCATE( Deltai(nsiw(itemp)) )
   IF ( .not. ALLOCATED(Znormi) )   ALLOCATE( Znormi(nsiw(itemp)) )
+  IF ( .not. ALLOCATED(NZnormi) )  ALLOCATE( NZnormi(nsiw(itemp)) )
   IF ( .not. ALLOCATED(ADeltai) )  ALLOCATE( ADeltai(nbndfs,nkfs,nsiw(itemp)) )
   IF ( .not. ALLOCATED(AZnormi) )  ALLOCATE( AZnormi(nbndfs,nkfs,nsiw(itemp)) )
   IF ( .not. ALLOCATED(NAZnormi) ) ALLOCATE( NAZnormi(nbndfs,nkfs,nsiw(itemp)) )
@@ -676,6 +531,7 @@
   Agap(:,:,:) = 0.d0
   Deltai(:) = 0.d0
   Znormi(:) = 0.d0
+  NZnormi(:) = 0.d0
   ADeltai(:,:,:) = 0.d0
   AZnormi(:,:,:) = 0.d0
   NAZnormi(:,:,:) = 0.d0
@@ -692,7 +548,7 @@
      WRITE(name1,'(a,a12,f5.2)') TRIM(prefix),'.imag_aniso_', temp
   ENDIF 
   OPEN(iufilgap, file=name1, form='formatted', err=100, iostat=ios)
-100 CALL errore('read_eliashberg_aniso_iaxis','opening file '//name1,abs(ios))
+100 CALL errore('eliashberg_read_aniso_iaxis','opening file '//name1,abs(ios))
   READ(iufilgap,'(a)') word
   DO iw = 1, nsiw(itemp) ! loop over omega
      DO ik = 1, nkfs
@@ -705,7 +561,7 @@
         ENDDO ! ibnd
      ENDDO ! ik             
      IF ( abs(wsi(iw)-omega) .gt. eps ) &
-        CALL errore('read_eliashberg_aniso_iaxis','temperature not the same with the input',1)
+        CALL errore('eliashberg_read_aniso_iaxis','temperature not the same with the input',1)
   ENDDO ! iw
   CLOSE(iufilgap)
   !
@@ -716,50 +572,25 @@
               weight = 0.5d0 * wkfs(ik) * w0g(ibnd,ik) / dosef
               Znormi(iw) = Znormi(iw) + weight * AZnormi(ibnd,ik,iw)
               Deltai(iw) = Deltai(iw) + weight * ADeltai(ibnd,ik,iw)
+              NZnormi(iw) = NZnormi(iw) + weight * NAZnormi(ibnd,ik,iw)
            ENDIF
         ENDDO ! ibnd
      ENDDO ! ik
   ENDDO ! iw
   gap(itemp) = Deltai(1)
+  gap0 = gap(itemp)
   !
-  ! RM - If the k-point is outside the Fermi shell,
-  ! ixkff(ik)=0 and Agap_tmp(:,0) = 0.0
-  !
-  IF ( .not. ALLOCATED(Agap_tmp) ) ALLOCATE(Agap_tmp(nbndfs,0:nkfs))
-  Agap_tmp(:,1:nkfs) = Agap(:,1:nkfs,itemp)
-  Agap_tmp(:,0) = 0.0d0
-  !
-  ! SP & RM: .cube file for VESTA plotting (only if iverbosity = 2)
-  !
-  IF ( iverbosity .eq. 2 ) THEN
-     !
-     DO ibnd = 1, nbndfs
-        IF ( temp .lt. 10.d0 ) THEN
-           WRITE(name1,'(a,a18,f4.2,a1,i1,a5)')TRIM(prefix),'_imag_aniso_gap0_0', temp, '_', ibnd, '.cube'
-        ELSEIF ( temp .ge. 10.d0 ) THEN
-           WRITE(name1,'(a,a17,f5.2,a1,i1,a5)')TRIM(prefix),'.imag_aniso_gap0_', temp, '_', ibnd, '.cube'
-        ENDIF
-        OPEN(iufilgap, file=name1, form='formatted')
-        WRITE(iufilgap,*) 'Cubfile created from EPW calculation'
-        WRITE(iufilgap,*) 'gap'
-        WRITE(iufilgap,'(i5,3f12.6)') 1, 0.0d0, 0.0d0, 0.0d0
-        WRITE(iufilgap,'(i5,3f12.6)') nkf1, (bg(i,1)/dble(nkf1),i=1,3)
-        WRITE(iufilgap,'(i5,3f12.6)') nkf2, (bg(i,2)/dble(nkf2),i=1,3)
-        WRITE(iufilgap,'(i5,3f12.6)') nkf3, (bg(i,3)/dble(nkf3),i=1,3)
-        WRITE(iufilgap,'(i5,4f12.6)') 1, 1.0d0, 0.0d0, 0.0d0, 0.0d0
-        WRITE(iufilgap,'(6f12.6)') ( Agap_tmp(ibnd,ixkff(ik)),ik=1,nkf1*nkf2*nkf3 )
-        CLOSE(iufilgap)
-     ENDDO
-     !
-  ENDIF
+  CALL gap_FS( itemp )
   !
 #ifdef __PARA
   ENDIF
   CALL mp_bcast( Deltai, ionode_id, inter_pool_comm )
   CALL mp_bcast( Znormi, ionode_id, inter_pool_comm )
+  CALL mp_bcast( NZnormi, ionode_id, inter_pool_comm )
   CALL mp_bcast( ADeltai, ionode_id, inter_pool_comm )
   CALL mp_bcast( AZnormi, ionode_id, inter_pool_comm )
   CALL mp_bcast( NAZnormi, ionode_id, inter_pool_comm )
+  CALL mp_bcast( gap0, ionode_id, inter_pool_comm )
   CALL mp_bcast( gap, ionode_id, inter_pool_comm )
   CALL mp_bcast( Agap, ionode_id, inter_pool_comm )
   CALL mp_barrier(inter_pool_comm)
@@ -767,6 +598,6 @@
   !
   RETURN
   !
-  END SUBROUTINE read_eliashberg_aniso_iaxis
+  END SUBROUTINE eliashberg_read_aniso_iaxis
   !
   !-----------------------------------------------------------------------

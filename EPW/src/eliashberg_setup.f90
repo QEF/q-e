@@ -363,7 +363,7 @@
   !
   IF ( ALLOCATED(phdos) )          DEALLOCATE( phdos )
   IF ( ALLOCATED(phdos_modeproj) ) DEALLOCATE( phdos_modeproj )
-  IF ( ALLOCATED(l_a2f) )          DEALLOCATE(l_a2f)
+  IF ( ALLOCATED(l_a2f) )          DEALLOCATE( l_a2f )
   !
 #ifdef __PARA
   ENDIF
@@ -433,7 +433,7 @@
   IF ( mpime .eq. ionode_id ) THEN
 #endif
   !
-  ! SP: Produced if user really want it 
+  ! SP: Produced if user really wants it 
   IF ( iverbosity .eq. 2 ) THEN
     OPEN(unit = iufillambda, file = TRIM(prefix)//".lambda_aniso", form = 'formatted')
     WRITE(iufillambda,'(2a12,2a7)') '# enk-e0[eV]','  lambda_nk','# kpt','# band'
@@ -454,7 +454,7 @@
   ENDDO
   CLOSE(iufillambda)
   !
-  ! SP: Produced if user really want it 
+  ! SP: Produced if user really wants it 
   IF ( iverbosity .eq. 2 ) THEN  
     OPEN( unit = iufillambda, file = TRIM(prefix)//".lambda_pairs", form = 'formatted')
     DO ibin = 1, nbin
@@ -471,17 +471,17 @@
   IF ( iverbosity .eq. 2 ) THEN
      !
      DO ibnd = 1, nbndfs
-        WRITE(name1,'(a,a8,i1,a5)') TRIM(prefix),'_lambda_', ibnd, '.cube'
-        OPEN(iufillambda, file=name1, form='formatted')
-        WRITE(iufillambda,*) 'Cubfile created from EPW calculation'
-        WRITE(iufillambda,*) 'lambda'
-        WRITE(iufillambda,'(i5,3f12.6)') 1, 0.0d0, 0.0d0, 0.0d0
-        WRITE(iufillambda,'(i5,3f12.6)') nkf1, (bg(i,1)/DBLE(nkf1),i=1,3)
-        WRITE(iufillambda,'(i5,3f12.6)') nkf2, (bg(i,2)/DBLE(nkf2),i=1,3)
-        WRITE(iufillambda,'(i5,3f12.6)') nkf3, (bg(i,3)/DBLE(nkf3),i=1,3)
-        WRITE(iufillambda,'(i5,4f12.6)') 1, 1.0d0, 0.0d0, 0.0d0, 0.0d0
-        WRITE(iufillambda,'(6f12.6)') ( lambda_k(ixkff(ik),ibnd), ik=1,nkf1*nkf2*nkf3 )
-        CLOSE(iufillambda)
+        WRITE(name1,'(a,a8,i1,a5)') TRIM(prefix),'.lambda_', ibnd, '.cube'
+        OPEN(iufillambdaFS, file=name1, form='formatted')
+        WRITE(iufillambdaFS,*) 'Cubfile created from EPW calculation'
+        WRITE(iufillambdaFS,*) 'lambda'
+        WRITE(iufillambdaFS,'(i5,3f12.6)') 1, 0.0d0, 0.0d0, 0.0d0
+        WRITE(iufillambdaFS,'(i5,3f12.6)') nkf1, (bg(i,1)/DBLE(nkf1),i=1,3)
+        WRITE(iufillambdaFS,'(i5,3f12.6)') nkf2, (bg(i,2)/DBLE(nkf2),i=1,3)
+        WRITE(iufillambdaFS,'(i5,3f12.6)') nkf3, (bg(i,3)/DBLE(nkf3),i=1,3)
+        WRITE(iufillambdaFS,'(i5,4f12.6)') 1, 1.0d0, 0.0d0, 0.0d0, 0.0d0
+        WRITE(iufillambdaFS,'(6f12.6)') ( lambda_k(ixkff(ik),ibnd), ik=1,nkf1*nkf2*nkf3 )
+        CLOSE(iufillambdaFS)
      ENDDO
      !
   ENDIF

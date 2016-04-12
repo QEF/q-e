@@ -102,7 +102,6 @@
   !
   ! frequency-grid for real-axis ( Pade approximants and analytic continuation)
   !
-!  IF ( itemp .eq. 1 .AND. ( lpade .OR. lacon ) ) THEN 
   IF ( lpade .OR. lacon ) THEN
      IF ( .not. ALLOCATED(ws) )  ALLOCATE( ws(nsw) )
      ws(:) = 0.d0
@@ -112,7 +111,7 @@
         ELSE
            ws(iw) = wsphmax + dble(iw-nqstep)*dwsph
         ENDIF
-        !WRITE(*,*) iw, w(iw), wsph(iw)
+        !WRITE(*,*) iw, ws(iw), wsph(iw)
      ENDDO
   ENDIF
   !

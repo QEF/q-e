@@ -29,21 +29,18 @@
   !
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
-  USE io_files,      ONLY : prefix
-  USE io_epw,        ONLY : iufilgap
   USE epwcom,        ONLY : nqstep, nsiter, conv_thr_racon, lpade
   USE eliashbergcom, ONLY : nsw, estemp, dwsph, ws, gap, a2f_iso, Dsumi, Zsumi, & 
                             Delta, Deltap, Znorm, Znormp, Gp, Gm
-  USE constants_epw, ONLY : pi, kelvin2eV, ci
+  USE constants_epw, ONLY : pi, ci
   ! 
   IMPLICIT NONE
   !
   INTEGER :: i, iw, iwp, itemp, iter 
-  REAL(DP) :: rgammap, rgammam, absdelta, reldelta, errdelta, temp
+  REAL(DP) :: rgammap, rgammam, absdelta, reldelta, errdelta
   COMPLEX(DP) :: esqrt, root
   COMPLEX(DP), ALLOCATABLE, SAVE :: Deltaold(:)
-  LOGICAL :: conv, lgap
-  CHARACTER(len=256) :: name1
+  LOGICAL :: conv
   !
   IF ( iter .eq. 1 ) THEN
      IF ( .not. ALLOCATED(Delta) )    ALLOCATE( Delta(nsw) )
@@ -121,35 +118,7 @@
   !
   IF ( errdelta .lt. conv_thr_racon ) conv = .true.
   IF ( errdelta .lt. conv_thr_racon .OR. iter .eq. nsiter ) THEN
-     temp = estemp(itemp) / kelvin2eV
-     IF ( temp .lt. 10.d0 ) THEN
-        WRITE(name1,'(a,a11,f10.5)') TRIM(prefix),'.acon_iso_0', temp
-     ELSEIF ( temp .ge. 10.d0 ) THEN
-        WRITE(name1,'(a,a10,f10.5)') TRIM(prefix),'.acon_iso_', temp
-     ENDIF
-     OPEN(iufilgap, file=name1, form='formatted')
-     WRITE(iufilgap,'(5a18)') 'w', 'Re[Znorm(w)]', 'Im[Znorm(w)]', 'Re[Delta(w)]', 'Im[Delta(w)]'
-     lgap = .true.
-     DO iw = 1, nsw
-        IF ( lgap .AND. iw .lt. nqstep .AND. real(Delta(iw)) .gt. 0.d0 .AND. real(Delta(iw+1)) .gt. 0.d0 .AND. & 
-             ( ws(iw) - real(Delta(iw)) )*( ws(iw+1) - real(Delta(iw+1)) ) .lt. 0.d0 ) THEN 
-           gap(itemp) = ( ( real(Delta(iw)) - ws(iw) ) * ws(iw+1) - ( real(Delta(iw+1)) - ws(iw+1) ) * ws(iw) ) &
-                      / ( ( real(Delta(iw)) - ws(iw) ) - ( real(Delta(iw+1)) - ws(iw+1) ) )  
-           !WRITE(stdout,'(a)') '   '
-           !WRITE(stdout,'(5x,a)') 'gap_edge'
-           !WRITE(stdout,'(5x,a,i6,4d18.9)') 'iw = ', iw, ws(iw), real(Delta(iw)), aimag(Delta(iw)), & 
-           !                                 gap(itemp)
-           !WRITE(stdout,'(5x,a,i6,4d18.9)') 'iw = ', iw+1, ws(iw+1), real(Delta(iw+1)), aimag(Delta(iw+1)), &
-           !                                 gap(itemp)
-           !WRITE(stdout,'(a)') '   '
-           !
-           lgap = .false. 
-           !
-        ENDIF
-        WRITE(iufilgap,'(5ES20.10)') ws(iw), real(Znorm(iw)), aimag(Znorm(iw)), &
-                                   real(Delta(iw)), aimag(Delta(iw))
-     ENDDO
-     CLOSE(iufilgap)
+     CALL eliashberg_write_cont_raxis
   ENDIF
   !
   IF ( conv .OR. iter .eq. nsiter ) THEN
@@ -186,20 +155,17 @@
   !
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
-  USE io_files,      ONLY : prefix
-  USE io_epw,        ONLY : iufilgap
   USE epwcom,        ONLY : nqstep
   USE eliashbergcom, ONLY : nsw, ws, wsi, gap, Delta, Znorm, Deltai, Znormi, estemp
-  USE constants_epw, ONLY : kelvin2eV, cone, ci
+  USE constants_epw, ONLY : cone, ci
   ! 
   IMPLICIT NONE
   !
   INTEGER :: iw, itemp, N
-  REAL(DP) :: absdelta, reldelta, errdelta, temp
+  REAL(DP) :: absdelta, reldelta, errdelta
   COMPLEX(DP) :: a(N), b(N), z(N), u(N), v(N)
   COMPLEX(DP) :: omega, padapp, Deltaold(nsw)
   LOGICAL :: lgap, conv
-  CHARACTER(len=256) :: name1
   !
   Deltaold(:) = gap(itemp)
   absdelta = 0.d0
@@ -238,35 +204,7 @@
      conv = .true.
      WRITE(stdout,'(5x,a,i6,a,d18.9,a,d18.9,a,d18.9)') 'pade = ', N, '   error = ', errdelta, &
                   '   Re[Znorm(1)] = ', real(Znorm(1)), '   Re[Delta(1)] = ', real(Delta(1))
-     temp = estemp(itemp) / kelvin2eV
-     IF ( temp .lt. 10.d0 ) THEN
-        WRITE(name1,'(a,a11,f10.5)') TRIM(prefix),'.pade_iso_0', temp
-     ELSEIF ( temp .ge. 10.d0 ) THEN
-        WRITE(name1,'(a,a10,f10.5)') TRIM(prefix),'.pade_iso_', temp
-     ENDIF
-     OPEN(iufilgap, file=name1, form='formatted')
-     WRITE(iufilgap,'(5a18)') 'w', 'Re[Znorm(w)]', 'Im[Znorm(w)]', 'Re[Delta(w)]', 'Im[Delta(w)]'
-     lgap = .true.
-     DO iw = 1, nsw
-        WRITE(iufilgap,'(5ES20.10)') ws(iw), real(Znorm(iw)), aimag(Znorm(iw)), &
-                                  real(Delta(iw)), aimag(Delta(iw))
-        IF ( lgap .AND. iw .lt. nqstep .AND. real(Delta(iw)) .gt. 0.d0 .AND. real(Delta(iw+1)) .gt. 0.d0 .AND. &
-             ( ws(iw) - real(Delta(iw)) )*( ws(iw+1) - real(Delta(iw+1)) ) .lt. 0.d0 ) THEN 
-           gap(itemp) = ( ( real(Delta(iw)) - ws(iw) ) * ws(iw+1) - ( real(Delta(iw+1)) - ws(iw+1) ) * ws(iw) ) &
-                   / ( ( real(Delta(iw)) - ws(iw) ) - ( real(Delta(iw+1)) - ws(iw+1) ) )  
-           !WRITE(stdout,'(a)') '   '
-           !WRITE(stdout,'(5x,a)') 'gap_edge'
-           !WRITE(stdout,'(5x,a,i6,4d18.9)') 'iw = ', iw, ws(iw), real(Delta(iw)), aimag(Delta(iw)), &
-           !                                 gap(itemp)
-           !WRITE(stdout,'(5x,a,i6,4d18.9)') 'iw = ', iw+1, ws(iw+1), real(Delta(iw+1)), aimag(Delta(iw+1)), &
-           !                                 gap(itemp)
-           !WRITE(stdout,'(a)') '   '        
-           !
-           lgap = .false. 
-           ! 
-        ENDIF
-     ENDDO
-     CLOSE(iufilgap)
+     CALL eliashberg_write_cont_raxis
   ENDIF
   !
 !  IF ( .not. conv ) THEN
