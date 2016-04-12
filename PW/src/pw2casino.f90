@@ -18,6 +18,8 @@ SUBROUTINE pw2casino( istep )
   USE mp_bands,      ONLY : nbgrp
   USE mp_pools,      ONLY : npool
   !
+  USE noncollin_module, ONLY : noncolin
+  USE spin_orb,         ONLY : lspinorb
   USE io_files, ONLY : tmp_dir
   !
   USE plugin_flags, ONLY : use_pw2casino
@@ -48,9 +50,10 @@ SUBROUTINE pw2casino( istep )
   !
   IF ( use_pw2casino ) THEN
     !
-    IF ( npool > 1 .or. nimage > 1 .or. nbgrp > 1 ) THEN
+    IF ( npool > 1 .or. nimage > 1 .or. nbgrp > 1 ) &
       CALL errore('pw2casino', 'pool/band/image parallelization not (yet) implemented',1)
-    ENDIF
+    IF ( noncolin .OR. lspinorb ) &
+      CALL errore('pw2casino', 'noncollinear/spinorbit magnetism not (yet) implemented',2)
     !
     tmp_unit = find_free_unit()
     OPEN(unit=tmp_unit,file = trim(tmp_dir)//'/'//'pw2casino.dat',status='old',err=20)

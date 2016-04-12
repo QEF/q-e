@@ -1324,7 +1324,9 @@ pw2casino.o : ../../Modules/kind.o
 pw2casino.o : ../../Modules/mp_bands.o
 pw2casino.o : ../../Modules/mp_images.o
 pw2casino.o : ../../Modules/mp_pools.o
+pw2casino.o : ../../Modules/noncol.o
 pw2casino.o : ../../Modules/plugin_flags.o
+pw2casino.o : pwcom.o
 pw2casino_write.o : ../../FFTXlib/fft_interfaces.o
 pw2casino_write.o : ../../Modules/becmod.o
 pw2casino_write.o : ../../Modules/cell_base.o
