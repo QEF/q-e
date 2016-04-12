@@ -169,6 +169,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pwcon
 	var bdl  -type REAL {
 	    info {
 		right boundary of the left lead (left one is supposed to be at 0) 
+                (in units of lattice parameter "alat" defined in the scf run)
 	    }
 	}
 
@@ -176,6 +177,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pwcon
 	    info {
 		right boundary of the scatt. reg. (left one is at 0 if prefixs
                 is used and = bdl if prefixt is used) 
+                (in units of lattice parameter "alat" defined in the scf run)
 	    }
 	}
 
@@ -183,6 +185,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pwcon
 	    info {
 		right boundary of the right lead (left one is at 0 if prefixr
 		is used and = bds if prefixt is used) 
+                (in units of lattice parameter "alat" defined in the scf run)
 	    }
 	}
 
