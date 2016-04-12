@@ -1,3 +1,17 @@
 
-This example illustrates how to use pw.x and ph.x to calculate phonon
-frequencies at Gamma and X for graphite using DFT+D (Grimme)
+These examples illustrate how to use pw.x and ph.x to calculate 
+phonon frequencies at Gamma and K for graphite using 
+ DFT+D2 (Grimme), vdW-DF, vdW-DF2 and rVV10
+
+The number of k points and cutoff are set to very small
+values in order to have a fast testing case to compare with.
+Much denser k-point grids and higher cutoff values are needed 
+in order to obtain converged results.
+
+As for the xc functional that should be used in combination with 
+vdW xc functionals (set to pbe in the example in order not to 
+upload too many pseudopotentials) it actually is as follows:
+rw86 for rVV10, rw86 for vdw-df2, revpbe for vdw-df
+
+
+

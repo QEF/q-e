@@ -12,6 +12,7 @@ $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
 $ECHO "This example shows how to use pw.x and ph.x to calculate phonon"
 $ECHO "frequencies for Graphite using DFT-D2 (Grimme)"
+$ECHO "as well as with vdW-DF, vdW-DF2 and rVV10"
 
 # set the needed environment variables
 . ../../../environment_variables
@@ -69,13 +70,40 @@ for FILE in $PSEUDO_LIST ; do
 done
 $ECHO " done"
 
+# check for vdw kernel table
+$ECHO " "
+$ECHO "  checking that needed vdW kernel tables exist...\c"
+for VDW_TABLE in vdW_kernel_table rVV10_kernel_table ; do
+GEN_COMMAND="$PARA_PREFIX $BIN_DIR/generate_${VDW_TABLE}.x $PARA_POSTFIX"
+if test ! -r $PSEUDO_DIR/$VDW_TABLE ; then
+        $ECHO " "
+        $ECHO "  WARNING: $PSEUDO_DIR/$VDW_TABLE not existent or not readable"
+        $ECHO "  WARNING: a new table will be generated, this process may take up to 20 mins"
+        $ECHO "  WARNING: (depending on your cpu power and configuration)."
+        $ECHO
+        $ECHO "  Generating $VDW_TABLE...\c"
+        if $GEN_COMMAND ; then
+                if test ! -r $VDW_TABLE ; then
+                        $ECHO "  ERROR: cannot generate VDW_TABLE !!"
+                        exit 1
+                fi
+                $ECHO "done ! Table moved to $PSEUDO_DIR"
+                mv $VDW_TABLE $PSEUDO_DIR
+        fi
+fi
+done
+$ECHO " done"
+
 # how to run executables
 PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
 PH_COMMAND="$PARA_PREFIX $BIN_DIR/ph.x $PARA_POSTFIX"
+
 $ECHO
 $ECHO "  running pw.x as: $PW_COMMAND"
 $ECHO "  running ph.x as: $PH_COMMAND"
 $ECHO
+
+############# Grimme part ###################################################
 
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
@@ -89,13 +117,14 @@ cat > graphite.scf.in << EOF
    calculation = 'scf'
    restart_mode='from_scratch',
    prefix='graphite'
+   pseudo_dir ='$PSEUDO_DIR'
    outdir='$TMP_DIR'
 /
 
 &system
     ibrav           = 4 
     celldm(1)       = 4.64630333
-    celldm(3)       =  2.58254285
+    celldm(3)       = 2.58254285
     nat             = 4 
     ntyp            = 1
     ecutwfc         = 30.0
@@ -118,7 +147,7 @@ C        0.666666667   0.333333333   0.500000000
 K_POINTS automatic
 4 4 2 1 1 1
 EOF
-$ECHO "  running the scf calculation for Graphite...\c"
+$ECHO "  running the Grimme D2 scf calculation for Graphite...\c"
 $PW_COMMAND < graphite.scf.in > graphite.scf.out
 check_failure $?
 $ECHO " done"
@@ -135,7 +164,7 @@ phonons of graphite
  /
 0.0 0.0 0.0
 EOF
-$ECHO "  running the phonon calculation at Gamma for Graphite...\c"
+$ECHO "  running the Grimme D2 phonon calculation at Gamma for Graphite...\c"
 $PH_COMMAND < graphite.phG.in > graphite.phG.out
 $ECHO " done"
 
@@ -151,9 +180,95 @@ phonons of graphite
  /
 0.33333333 0.57735027 0.0 
 EOF
-$ECHO "  running the phonon calculation at K for Graphite...\c"
+$ECHO "  running the Grimme D2 phonon calculation at K for Graphite...\c"
 $PH_COMMAND < graphite.phK.in > graphite.phK.out
 $ECHO " done"
+
+################################################################
+
+
+for VDWDF in "vdw-df" "vdw-df2" "rvv10" ; do
+
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/graphite*
+rm -rf $TMP_DIR/_ph0/graphite*
+$ECHO " done"
+
+# self-consistent calculation
+cat > graphite.scf.in << EOF
+&control
+   calculation = 'scf'
+   restart_mode='from_scratch',
+   prefix='graphite'
+   pseudo_dir ='$PSEUDO_DIR'
+   outdir='$TMP_DIR'
+/
+
+&system
+    ibrav           = 4 
+    celldm(1)       = 4.64630333
+    celldm(3)       = 2.58254285
+    nat             = 4 
+    ntyp            = 1
+    ecutwfc         = 30.0
+    ecutrho         = 180.0
+    input_dft       = '$VDWDF'
+/
+
+&electrons
+    conv_thr        = 1.0d-12
+/
+ATOMIC_SPECIES
+C   12.00   C.pbe-rrkjus.UPF
+
+ATOMIC_POSITIONS (CRYSTAL)
+C        0.000000000   0.000000000   0.000000000
+C        0.333333333   0.666666667   0.000000000
+C        0.000000000   0.000000000   0.500000000
+C        0.666666667   0.333333333   0.500000000
+
+K_POINTS automatic
+4 4 2 1 1 1
+EOF
+$ECHO "  running the $VDWDF scf calculation for Graphite...\c"
+$PW_COMMAND < graphite.scf.in > graphite.$VDWDF.scf.out
+check_failure $?
+$ECHO " done"
+
+# phonon calculation at Gamma
+cat > graphite.phG.in << EOF
+phonons of graphite
+ &inputph
+   tr2_ph=1.0d-18,
+   prefix='graphite'
+   outdir='$TMP_DIR'
+   amass(1)=12.0107,
+   fildyn='graphiteG.dyn',
+ /
+0.0 0.0 0.0
+EOF
+$ECHO "  running the $VDWDF phonon calculation at Gamma for Graphite...\c"
+$PH_COMMAND < graphite.phG.in > graphite.$VDWDF.phG.out
+$ECHO " done"
+
+# phonon calculation at K
+cat > graphite.phK.in << EOF
+phonons of graphite
+ &inputph
+   tr2_ph=1.0d-18,
+   prefix='graphite'
+   outdir='$TMP_DIR'
+   amass(1)=12.0107,
+   fildyn='graphiteK.dyn',
+ /
+0.33333333 0.57735027 0.0 
+EOF
+$ECHO "  running the $VDWDF phonon calculation at K for Graphite...\c"
+$PH_COMMAND < graphite.phK.in > graphite.$VDWDF.phK.out
+$ECHO " done"
+
+done
 
 $ECHO
 $ECHO "$EXAMPLE_DIR: done"
