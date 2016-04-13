@@ -172,7 +172,7 @@
         IF ( lpade ) THEN
            WRITE(name1,'(a,a10,f5.2)') TRIM(prefix),'.pade_iso_', temp
         ELSEIF ( lacon ) THEN
-           WRITE(name1,'(a,a10,f4.2)') TRIM(prefix),'.acon_iso_', temp
+           WRITE(name1,'(a,a10,f5.2)') TRIM(prefix),'.acon_iso_', temp
         ENDIF
      ENDIF
      OPEN(iufilgap, file=name1, form='formatted')
