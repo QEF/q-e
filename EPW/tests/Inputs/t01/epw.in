@@ -10,6 +10,8 @@
   epbwrite    = .true.
   epbread     = .false.
 
+  etf_mem     = .false.
+
   epwwrite    = .true.
   epwread     = .false.
 
@@ -31,8 +33,8 @@
   tphases     = .false.
 
   elecselfen  = .true.
-  phonselfen  = .true.
-  a2f         = .true.
+  phonselfen  = .false.
+  a2f         = .false.
 
   parallel_k  = .true.
   parallel_q  = .false.
