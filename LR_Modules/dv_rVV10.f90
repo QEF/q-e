@@ -92,10 +92,9 @@ subroutine get_delta_v(rho, drho, nspin, q_point, delta_v)
     USE cell_base,           ONLY : alat, tpiba, omega
     USE fft_scalar,          ONLY : cfft3d
 
-    !integer, intent(IN) :: nspin
+    integer, intent(IN) :: nspin
     real(dp),    intent(IN) :: rho(:,:), q_point(3)       !
     complex(DP), intent(IN) :: drho (dfftp%nnr, nspin)
-    integer,     intent(IN) :: nspin
 
     complex(DP), intent(OUT) :: delta_v(dfftp%nnr)
 

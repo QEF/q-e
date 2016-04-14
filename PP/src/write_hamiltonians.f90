@@ -206,7 +206,7 @@ SUBROUTINE write_systemdata_amulet(hash,nelec,iunsystem)
   WRITE(iunsystem,'(a6)') '&atoms'
   WRITE(iunsystem,'(i5)') nat
   DO i=1, nat
-    WRITE(iunsystem,'(a4,x,3f9.5)') atm(ityp(i)), tau(:,i)
+    WRITE(iunsystem,'(a4,1x,3f9.5)') atm(ityp(i)), tau(:,i)
   END DO
   WRITE(iunsystem,*)
 
