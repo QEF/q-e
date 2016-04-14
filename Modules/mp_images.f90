@@ -40,11 +40,10 @@ CONTAINS
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: nimage_, parent_comm
     !
+#if defined (__MPI)
     INTEGER :: parent_nproc, parent_mype
     !
     ! ... nothing needed to be done in serial calculation
-    !
-#if defined (__MPI)
     !
     parent_nproc = mp_size( parent_comm )
     parent_mype  = mp_rank( parent_comm )

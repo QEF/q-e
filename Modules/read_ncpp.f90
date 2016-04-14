@@ -20,13 +20,13 @@ subroutine read_ncpp (iunps, np, upf)
   TYPE (pseudo_upf) :: upf
   integer :: iunps, np
   !
-  real(DP) :: cc(2), alpc(2), aps(6,0:3), alps(3,0:3), ll(1), &
+  real(DP) :: cc(2), alpc(2), aps(6,0:3), alps(3,0:3), &
        a_nlcc, b_nlcc, alpha_nlcc
   real(DP) :: x, vll
   real(DP), allocatable:: vnl(:,:)
   real(DP), parameter :: rcut = 10.d0, e2 = 2.d0
   real(DP), external :: qe_erf
-  integer :: nlc, nnl, lmax, lloc
+  integer :: nlc, nnl, lmax, lloc, ll(1) 
   integer :: nb, i, l, ir, ios=0
   logical :: bhstype,  numeric
   !

@@ -29,7 +29,9 @@ MODULE mp_world
   ! ... if true, MPI_Init()     is not called when starting MPI,
   ! ...          MPI_Finalize() is not called when stopping MPI
   !
+#if defined(__MPI)
   LOGICAL :: library_mode = .FALSE.
+#endif
   !
   PRIVATE
   PUBLIC ::nproc, mpime, root, world_comm, mp_world_start, mp_world_end
@@ -42,7 +44,9 @@ CONTAINS
     !
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: my_world_comm
+#if defined(__MPI)
     INTEGER :: ierr
+#endif
 #if defined(__OPENMP) 	 
     INTEGER :: PROVIDED
 #endif
@@ -80,7 +84,9 @@ CONTAINS
   !-----------------------------------------------------------------------
   SUBROUTINE mp_world_end ( )
     !-----------------------------------------------------------------------
+#if defined(__MPI)
     INTEGER :: ierr
+#endif
     !
     CALL mp_barrier( world_comm )
     CALL mp_end ( world_comm )

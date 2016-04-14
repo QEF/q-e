@@ -29,7 +29,7 @@ MODULE constraints_module
    ! ...    Clarendon Press - Oxford (1986)
    !
    USE kinds,     ONLY : DP
-   USE constants, ONLY : eps8, eps16, eps32, tpi, fpi
+   USE constants, ONLY : eps32, tpi, fpi
    USE io_global, ONLY : stdout
    !
    USE basic_algebra_routines
@@ -552,9 +552,6 @@ CONTAINS
       REAL(DP)    :: dtau(3), norm_dtau, norm_dtau_sq, expo
       REAL(DP)    :: r0(3), r1(3), r2(3), ri(3), k(3), phase, ksin(3), norm_k, sinxx
       COMPLEX(DP) :: struc_fac
-      !
-      REAL(DP), EXTERNAL :: ddot
-      !
       !
       dg(:,:) = 0.0_DP
       !
@@ -1178,7 +1175,7 @@ CONTAINS
       REAL(DP), ALLOCATABLE :: dg(:,:,:), dg_matrix(:,:), lambda(:)
       INTEGER,  ALLOCATABLE :: iwork(:)
       !
-      REAL(DP), EXTERNAL :: ddot, dnrm2
+      REAL(DP), EXTERNAL :: ddot
       !
       !
       dim = 3*nat

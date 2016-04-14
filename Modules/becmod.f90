@@ -58,7 +58,7 @@ CONTAINS
     !-----------------------------------------------------------------------
     !_
     USE mp_bands, ONLY: intra_bgrp_comm
-    USE mp,       ONLY: mp_size, mp_rank, mp_get_comm_null
+    USE mp,       ONLY: mp_get_comm_null
     !
     IMPLICIT NONE
     COMPLEX (DP), INTENT (in) :: beta(:,:), psi(:,:)
@@ -69,7 +69,7 @@ CONTAINS
     !
     INTEGER :: local_nbnd
     INTEGER, EXTERNAL :: ldim_block, gind_block
-    INTEGER :: m_loc, m_begin, m_max, ip
+    INTEGER :: m_loc, m_begin, ip
     REAL(DP), ALLOCATABLE :: dtmp(:,:)
     !
     IF ( present (nbnd) ) THEN

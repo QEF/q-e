@@ -48,7 +48,9 @@ MODULE mytime
   !
   INTEGER :: nclock = 0
   LOGICAL :: no
+#if defined (__TRACE)
   INTEGER :: trace_depth = 0
+#endif
   !
 END MODULE mytime
 !
@@ -94,9 +96,10 @@ SUBROUTINE start_clock( label )
   USE io_global, ONLY : stdout
 #if defined (__TRACE)
   USE mp_world,  ONLY : mpime
+  USE mytime,    ONLY : trace_depth
 #endif
   USE mytime,    ONLY : nclock, clock_label, notrunning, no, maxclock, &
-                        t0cpu, t0wall, trace_depth
+                        t0cpu, t0wall
   !
   IMPLICIT NONE
   !
@@ -165,9 +168,10 @@ SUBROUTINE stop_clock( label )
   USE io_global, ONLY : stdout
 #if defined (__TRACE)
   USE mp_world,  ONLY : mpime
+  USE mytime,    ONLY : trace_depth
 #endif
   USE mytime,    ONLY : no, nclock, clock_label, cputime, walltime, &
-                        notrunning, called, t0cpu, t0wall, trace_depth
+                        notrunning, called, t0cpu, t0wall
   !
   IMPLICIT NONE
   !
@@ -278,7 +282,7 @@ SUBROUTINE print_this_clock( n )
   !
   USE kinds,     ONLY : DP
   USE io_global, ONLY : stdout
-  USE mytime,    ONLY : nclock, clock_label, cputime, walltime, &
+  USE mytime,    ONLY : clock_label, cputime, walltime, &
                         notrunning, called, t0cpu, t0wall
 !
 ! ... See comments below about parallel case
