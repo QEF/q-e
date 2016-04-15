@@ -75,8 +75,6 @@ PROGRAM do_bands
   !
   !
   CALL mp_bcast( ios, ionode_id, world_comm )
-  IF (ios /= 0) WRITE (stdout, &
-    '("*** namelist &inputpp no longer valid: please use &bands instead")')
   IF (ios /= 0) CALL errore ('bands', 'reading bands namelist', abs(ios) )
   !
   ! ... Broadcast variables

@@ -76,8 +76,6 @@ PROGRAM do_dos
   ENDIF
   !
   CALL mp_bcast( ios, ionode_id, world_comm )
-  IF (ios /= 0) WRITE (stdout, &
-    '("*** namelist &inputpp no longer valid: please use &dos instead")')
   IF ( ios /= 0 ) CALL errore('dos','reading dos namelist',abs(ios))
   !
   ! ... Broadcast variables

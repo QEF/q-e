@@ -102,9 +102,6 @@ PROGRAM do_projwfc
   ENDIF
   !
   CALL mp_bcast (ios, ionode_id, world_comm )
-  !
-  IF (ios /= 0) WRITE (stdout, &
-    '("*** namelist &inputpp no longer valid: please use &projwfc instead")')
   IF (ios /= 0) CALL errore ('do_projwfc', 'reading projwfc namelist', abs (ios) )
   !
   ! ... Broadcast variables
