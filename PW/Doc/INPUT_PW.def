@@ -561,7 +561,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	var nat -type INTEGER {
 	    status { REQUIRED }
 	    info {
-		number of atoms in the unit cell
+		number of atoms in the unit cell (ALL atoms, except if 
+                space_group is set, in which case, INEQUIVALENT atoms)
 	    }
 	}
 	

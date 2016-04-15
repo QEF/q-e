@@ -1,0 +1,23 @@
+ &control
+    calculation='scf',
+ /
+ &system
+    space_group=154,
+    celldm(1)=9.284,
+    celldm(3)=1.100,
+    nat = 2,
+    ntyp= 2,
+    ecutwfc = 30.0, ecutrho = 150.0
+ /
+ &electrons
+    diagonalization='david',
+    conv_thr = 1.d-8
+ /
+ATOMIC_SPECIES
+Si   28.086   Si.pbe-rrkj.UPF
+ O   15.9994   O.pbe-rrkjus.UPF
+ATOMIC_POSITIONS crystal_sg
+Si 3a 0.4697
+ O    0.4125   0.2662    0.7855
+K_POINTS automatic
+2 2 2 0 0 0
