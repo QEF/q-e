@@ -274,28 +274,28 @@ SUBROUTINE loadkmesh_serial
      OPEN ( unit = iunkf, file = filkf, status = 'old', form = 'formatted', err=100, iostat=ios)
 100  CALL errore('loadkmesh_serial','opening file '//filkf,abs(ios))
      READ(iunkf, *) nkqtotf
-     ALLOCATE (xkf(3, nkqtotf), wkf(nkqtotf))
+     ALLOCATE (xkf(3, 2*nkqtotf), wkf(2*nkqtotf))
      !DO ik = 1, nkqtotf
      !   READ (iunkf, *) xkf (:, ik), wkf(ik)
      !ENDDO
      DO ik = 1, nkqtotf
-        !
-        ikk = 2 * ik - 1
-        ikq = ikk + 1
-        !
-        READ (iunkf, *) xkf(:, ikk ), wkf(ikk)
-        !
-        ! SP: This is so we can input a weight of 1 to random file 
-        !     This way you can feed the same file for the k and q grid  
-        wkf(ikk) = wkf(ikk)*2.d0
-        !
-        !  bring the k point to crystal coordinates
-        ! CALL cryst_to_cart ( 1, xkf_ (:,ikk), at, -1)
-        !
-        xkf(:, ikq) = xkf(:, ikk)
-        wkf( ikq ) = 0.d0
-        !
-     ENDDO     
+       !
+       ikk = 2 * ik - 1
+       ikq = ikk + 1
+       !
+       READ (iunkf, *) xkf (:, ikk ), wkf (ikk)
+       !
+       ! SP: This is so we can input a weight of 1 to random file 
+       !     This way you can feed the same file for the k and q grid  
+       wkf (ikk) = wkf (ikk)*2.d0
+       !
+       !  bring the k point to crystal coordinates
+       ! CALL cryst_to_cart ( 1, xkf_ (:,ikk), at, -1)
+       !
+       xkf (:, ikq) = xkf (:, ikk)
+       wkf ( ikq ) = 0.d0
+       !
+     ENDDO
      CLOSE(iunkf)
      !
      ! redefine nkqtotf to include the k+q points
@@ -405,7 +405,7 @@ SUBROUTINE loadkmesh_serial
   ! Serial
   nkf = nkqtotf/2
   nkqf = nkqtotf
-  ! 
+  !
 #ifdef __PARA
  ENDIF
  !

@@ -41,7 +41,8 @@
   USE pwcom,         ONLY : ef !, nelec, isk
   USE elph2,         ONLY : etf, ibndmin, ibndmax, nkqf, &
                             epf17, wkf, nkf, nqtotf, wf, wqf, xkf, nkqtotf, &
-                            sigmar_all, sigmai_all, zi_all, efnew, nqf
+                            sigmar_all, sigmai_all, sigmai_mode, zi_all, efnew, nqf
+  USE control_flags, ONLY : iverbosity
   USE constants_epw, ONLY : ryd2mev, one, ryd2ev, two, zero, pi, ci
 #ifdef __PARA
   USE mp,            ONLY : mp_barrier, mp_sum
@@ -121,6 +122,10 @@
      IF ( .not. ALLOCATED (sigmar_all) ) ALLOCATE( sigmar_all(ibndmax-ibndmin+1, nksqtotf) )
      IF ( .not. ALLOCATED (sigmai_all) ) ALLOCATE( sigmai_all(ibndmax-ibndmin+1, nksqtotf) )
      IF ( .not. ALLOCATED (zi_all) )     ALLOCATE( zi_all(ibndmax-ibndmin+1, nksqtotf) )
+     IF ( iverbosity == 3 ) THEN
+       IF ( .not. ALLOCATED (sigmai_mode) ) ALLOCATE( sigmai_mode(ibndmax-ibndmin+1, nmodes, nksqtotf) )
+       sigmai_mode(:,:,:) = zero
+     ENDIF
      sigmar_all(:,:) = zero
      sigmai_all(:,:) = zero
      zi_all(:,:) = zero
@@ -215,12 +220,18 @@
 !                         ( (       wgkq + wgq ) / ( ekk - ( ekq - wq ) - ci * degaussw )  +  &
 !                           ( one - wgkq + wgq ) / ( ekk - ( ekq + wq ) - ci * degaussw ) ) ) 
 !@                 if ( abs(ekq-ekk) .gt. ecutse ) weight = 0.d0
+                 !
                  ! Delta implementation 
                  w0g1=w0gauss( (ekk-ekq+wq)/degaussw, 0) /degaussw
                  w0g2=w0gauss( (ekk-ekq-wq)/degaussw, 0) /degaussw
                  weight = pi * wqf(iq) * ( (wgkq+wgq)*w0g1 + (one-wgkq+wgq)*w0g2 )
                  !
                  sigmai_all(ibnd,ik+lower_bnd-1) = sigmai_all(ibnd,ik+lower_bnd-1) + g2 * weight
+                 !
+                 ! Mode-resolved
+                 IF (iverbosity == 3) THEN
+                   sigmai_mode(ibnd,imode,ik+lower_bnd-1) = sigmai_mode(ibnd,imode,ik+lower_bnd-1) + g2 * weight
+                 ENDIF
                  !
                  ! Z FACTOR: -\frac{\partial\Re\Sigma}{\partial\omega}
                  !
@@ -260,6 +271,7 @@
      CALL poolgather2 ( nbndsub, nkqtotf, nkqf, etf,    etf_all  )
      CALL mp_sum( sigmar_all, inter_pool_comm )
      CALL mp_sum( sigmai_all, inter_pool_comm )
+     IF (iverbosity == 3) CALL mp_sum( sigmai_mode, inter_pool_comm )
      CALL mp_sum( zi_all, inter_pool_comm )
      CALL mp_sum(fermicount, inter_pool_comm)
      CALL mp_barrier(inter_pool_comm)
@@ -279,7 +291,11 @@
      ! Write to file
      OPEN(unit=linewidth_elself,file='linewidth.elself')
      WRITE(linewidth_elself, '(a)') '# Electron lifetime (meV)'
-     WRITE(linewidth_elself, '(a)') '#    ik     E(ibnd)    Im(Sgima)(meV)'
+     IF ( iverbosity == 3 ) THEN
+       WRITE(linewidth_elself, '(a)') '#      ik       ibnd                 E(ibnd)      imode          Im(Sgima)(meV)'
+     ELSE
+       WRITE(linewidth_elself, '(a)') '#      ik       ibnd                 E(ibnd)      Im(Sgima)(meV)'
+     ENDIF
      ! 
      DO ik = 1, nksqtotf
         !
@@ -306,11 +322,20 @@
                              ryd2mev * sigmai_all (ibnd,ik), zi_all (ibnd,ik), one/zi_all(ibnd,ik)-one
 !          WRITE(stdout, 103) ik, ryd2ev * ekk, ryd2mev * sigmar_all (ibnd,ik), &
 !                             ryd2mev * sigmai_all (ibnd,ik), zi_all (ibnd,ik)
-
-          WRITE(linewidth_elself,'(i9,2x)',advance='no') ik
-          WRITE(linewidth_elself,'(i9,2x)',advance='no') ibndmin-1+ibnd
-          WRITE(linewidth_elself,'(E22.14,2x)',advance='no') ryd2ev * ekk
-          WRITE(linewidth_elself,'(E22.14,2x)') ryd2mev*sigmai_all(ibnd,ik)
+          IF ( iverbosity == 3 ) THEN
+            DO imode=1, nmodes
+              WRITE(linewidth_elself,'(i9,2x)',advance='no') ik
+              WRITE(linewidth_elself,'(i9,2x)',advance='no') ibndmin-1+ibnd
+              WRITE(linewidth_elself,'(E22.14,2x)',advance='no') ryd2ev * ekk
+              WRITE(linewidth_elself,'(i9,2x)',advance='no') imode
+              WRITE(linewidth_elself,'(E22.14,2x)') ryd2mev*sigmai_mode(ibnd,imode,ik)
+            ENDDO
+          ELSE
+            WRITE(linewidth_elself,'(i9,2x)',advance='no') ik
+            WRITE(linewidth_elself,'(i9,2x)',advance='no') ibndmin-1+ibnd
+            WRITE(linewidth_elself,'(E22.14,2x)',advance='no') ryd2ev * ekk
+            WRITE(linewidth_elself,'(E22.14,2x)') ryd2mev*sigmai_all(ibnd,ik)
+          ENDIF
           !
         ENDDO
         WRITE(stdout,'(5x,a/)') repeat('-',67)
@@ -351,6 +376,7 @@
      IF ( ALLOCATED(sigmar_all) )   DEALLOCATE( sigmar_all )
      IF ( ALLOCATED(sigmai_all) )   DEALLOCATE( sigmai_all )
      IF ( ALLOCATED(zi_all) )       DEALLOCATE( zi_all )
+     IF ( ALLOCATED(sigmai_mode) )   DEALLOCATE( sigmai_mode )
      !
   ENDIF 
   !
@@ -389,8 +415,9 @@
   USE pwcom,         ONLY : ef !, nelec, isk
   USE elph2,         ONLY : etf, ibndmin, ibndmax, nkqf, etf_k, &
                             epf17, wkf, nkf, nqtotf, wf, wqf, xkf, nkqtotf, &
-                            sigmar_all, sigmai_all, zi_all, efnew, nqf
+                            sigmar_all, sigmai_all, sigmai_mode, zi_all, efnew, nqf
   USE constants_epw, ONLY : ryd2mev, one, ryd2ev, two, zero, pi, ci
+  USE control_flags, ONLY : iverbosity
 #ifdef __PARA
   USE mp,            ONLY : mp_barrier, mp_sum, mp_bcast
   USE mp_global,     ONLY : me_pool, inter_pool_comm, my_pool_id
@@ -434,7 +461,12 @@
      WRITE(stdout,'(5x,"WARNING: only the eigenstates within the Fermi window are meaningful")')
      OPEN(unit=linewidth_elself,file='linewidth.elself')
      WRITE(linewidth_elself, '(a)') '# Electron lifetime (meV)'
-     WRITE(linewidth_elself, '(a)') '#    ik     E(ibnd)    Im(Sgima)(meV)'
+     IF ( iverbosity == 3 ) THEN
+       WRITE(linewidth_elself, '(a)') '#      ik       ibnd                 E(ibnd)      imode          Im(Sgima)(meV)'
+     ELSE
+       WRITE(linewidth_elself, '(a)') '#      ik       ibnd                 E(ibnd)      Im(Sgima)(meV)'
+     ENDIF
+     !
   ENDIF
   !
   ! Fermi level and corresponding DOS
@@ -483,6 +515,10 @@
      IF ( .not. ALLOCATED (sigmar_all) ) ALLOCATE( sigmar_all(ibndmax-ibndmin+1, nksqtotf) )
      IF ( .not. ALLOCATED (sigmai_all) ) ALLOCATE( sigmai_all(ibndmax-ibndmin+1, nksqtotf) )
      IF ( .not. ALLOCATED (zi_all) )     ALLOCATE( zi_all(ibndmax-ibndmin+1, nksqtotf) )
+     IF ( iverbosity == 3 ) THEN
+       IF ( .not. ALLOCATED (sigmai_mode) ) ALLOCATE(sigmai_mode(ibndmax-ibndmin+1, nmodes, nksqtotf) )
+       sigmai_mode(:,:,:) = zero
+     ENDIF
      sigmar_all(:,:) = zero
      sigmai_all(:,:) = zero
      zi_all(:,:) = zero
@@ -584,6 +620,11 @@
                  !
                  sigmai_all(ibnd,ik) = sigmai_all(ibnd,ik) + g2 * weight
                  !
+                 ! Mode-resolved
+                 IF (iverbosity == 3) THEN
+                   sigmai_mode(ibnd,imode,ik) = sigmai_mode(ibnd,imode,ik) + g2 * weight
+                 ENDIF
+                 !
                  ! Z FACTOR: -\frac{\partial\Re\Sigma}{\partial\omega}
                  !
                  weight = wqf(iq) * &
@@ -612,6 +653,7 @@
   !
   CALL mp_sum(sigmar_all,inter_pool_comm)
   CALL mp_sum(sigmai_all,inter_pool_comm)
+  CALL mp_sum(sigmai_mode,inter_pool_comm)
   CALL mp_sum(zi_all,inter_pool_comm)
   CALL mp_sum(fermicount, inter_pool_comm)
   CALL mp_barrier(inter_pool_comm)
@@ -642,10 +684,20 @@
 !    WRITE(stdout, 103) ik, ryd2ev * ekk, ryd2mev * sigmar_all (ibnd,ik), &
 !                       ryd2mev * sigmai_all (ibnd,ik), zi_all (ibnd,ik)
 
-    WRITE(linewidth_elself,'(i9,2x)',advance='no') ik
-    WRITE(linewidth_elself,'(i9,2x)',advance='no') ibndmin-1+ibnd
-    WRITE(linewidth_elself,'(E22.14,2x)',advance='no') ryd2ev * ekk
-    WRITE(linewidth_elself,'(E22.14,2x)') ryd2mev*sigmai_all(ibnd,ik)
+    IF ( iverbosity == 3 ) THEN
+      DO imode=1, nmodes
+        WRITE(linewidth_elself,'(i9,2x)',advance='no') ik
+        WRITE(linewidth_elself,'(i9,2x)',advance='no') ibndmin-1+ibnd
+        WRITE(linewidth_elself,'(E22.14,2x)',advance='no') ryd2ev * ekk
+        WRITE(linewidth_elself,'(i9,2x)',advance='no') imode
+        WRITE(linewidth_elself,'(E22.14,2x)') ryd2mev*sigmai_mode(ibnd,imode,ik)
+      ENDDO
+    ELSE
+      WRITE(linewidth_elself,'(i9,2x)',advance='no') ik
+      WRITE(linewidth_elself,'(i9,2x)',advance='no') ibndmin-1+ibnd
+      WRITE(linewidth_elself,'(E22.14,2x)',advance='no') ryd2ev * ekk
+      WRITE(linewidth_elself,'(E22.14,2x)') ryd2mev*sigmai_all(ibnd,ik)
+    ENDIF
     !
   ENDDO
   WRITE(stdout,'(5x,a/)') repeat('-',67)
@@ -655,6 +707,7 @@
     IF ( ALLOCATED(sigmar_all) )   DEALLOCATE( sigmar_all )
     IF ( ALLOCATED(sigmai_all) )   DEALLOCATE( sigmai_all )
     IF ( ALLOCATED(zi_all) )       DEALLOCATE( zi_all )
+    IF ( ALLOCATED(sigmai_mode) )   DEALLOCATE( sigmai_mode )
   ENDIF
   !
   !
@@ -665,10 +718,4 @@
   !
   RETURN
   !
-  END SUBROUTINE selfen_elec_k
-
-
-
-
-
-
+END SUBROUTINE selfen_elec_k

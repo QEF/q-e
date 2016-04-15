@@ -57,7 +57,8 @@
        lambda_all(:,:,:),      &!
        lambda_v_all(:,:,:),    &!
        sigmar_all(:,:),        &!  To store sigmar, sigmai and zi globally
-       sigmai_all(:,:),        &! 
+       sigmai_all(:,:),        &!
+       sigmai_mode(:,:,:),     &! 
        zi_all(:,:),            &!
        esigmar_all(:,:,:),     &!
        esigmai_all(:,:,:),     &!   

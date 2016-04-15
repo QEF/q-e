@@ -51,7 +51,7 @@
                             wf, etf, etf_k, etf_ks, xqf, xkf, wkf, wqf, &
                             dynq, nqtotf, nkqf, epf17, nkf, nqf, et_ks, &
                             ibndmin, ibndmax, lambda_all, dmec, dmef, vmef, &
-                            gamma_all, sigmai_all, nkqtotf, epsi, zstar, efnew
+                            sigmai_all, sigmai_mode, gamma_all, nkqtotf, epsi, zstar, efnew
 #ifdef __NAG
   USE f90_unix_io,   ONLY : flush
   USE,INTRINSIC :: f90_unix_file, ONLY:fstat, stat_t
@@ -906,6 +906,7 @@
   IF ( ALLOCATED(lambda_all) )   DEALLOCATE( lambda_all )
   IF ( ALLOCATED(gamma_all) )   DEALLOCATE( gamma_all )
   IF ( ALLOCATED(sigmai_all) )   DEALLOCATE( sigmai_all )
+  IF ( ALLOCATED(sigmai_mode) )   DEALLOCATE( sigmai_mode )
   !
   !
   CALL stop_clock ( 'ephwann' )

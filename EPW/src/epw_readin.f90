@@ -426,7 +426,7 @@
   IF (filukk.eq.' ') filukk=trim(prefix)//'.ukk'
   IF (nsmear .lt. 1) CALL errore ('epw_readin', &
        & 'Wrong number of nsmears',1)
-  IF (iverbosity.ne.0.and.iverbosity.ne.1.and.iverbosity.ne.2) CALL errore ('epw_readin', &
+  IF (iverbosity.ne.0.and.iverbosity.ne.1.and.iverbosity.ne.2.and.iverbosity.ne.3) CALL errore ('epw_readin', &
        &' Wrong  iverbosity ', 1)
   IF (time_max.lt.1.d0) CALL errore ('epw_readin', ' Wrong time_max', 1)
   IF (tphases.and.fildvscf0.eq.' ') CALL errore ('epw_readin', &
