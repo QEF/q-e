@@ -58,10 +58,8 @@ CONTAINS
      END DO
 
      call ccord(outco,sym_n,not_eq,ibrav,unique)
-     do i=1,not_eq
-       call zerone(outco,sym_n,not_eq,i)
-     end do
-     call esclusion(outco,sym_n,msym_n,not_eq)
+     CALL zerone(sym_n,not_eq, outco)
+     CALL esclusion(sym_n,not_eq,outco,msym_n)
 
      nattot=SUM(msym_n)
      
@@ -254,74 +252,40 @@ END SUBROUTINE clean_spacegroup
    END SUBROUTINE ccord
 
 !Translation in order to have 0<=x,y,z<=1
-   SUBROUTINE zerone(outco,sym_n, not_eq,k)
+   SUBROUTINE zerone(sym_n,not_eq, outco)
    IMPLICIT NONE
-      REAL(DP), DIMENSION(:,:,:), INTENT(INOUT) :: outco
-      INTEGER, INTENT(in) :: sym_n,not_eq, k
-      INTEGER :: i
-         DO i=1, sym_n
-            DO
-            IF (outco(1,i,k)>=1.0_DP) THEN
-               outco(1,i,k)=outco(1,i,k)-1.0_DP
-            else
-               EXIT
-            END IF
-            END DO
-
-            DO
-            IF (outco(2,i,k)>=1.0_DP) THEN
-               outco(2,i,k)=outco(2,i,k)-1.0_DP
-            else
-               EXIT
-            END IF
-            END DO
-
-            DO
-            IF (outco(3,i,k)>=1.0_DP) THEN
-               outco(3,i,k)=outco(3,i,k)-1.0_DP
-            else
-               EXIT
-            END IF
-            END DO
-
-            DO
-            IF (outco(1,i,k)<0.0_DP) THEN
-               outco(1,i,k)=outco(1,i,k)+1.0_DP
-            else
-               EXIT
-            END IF
-            END DO
-
-            DO
-            IF (outco(2,i,k)<0.0_DP) THEN
-               outco(2,i,k)=outco(2,i,k)+1.0_DP
-            else
-               EXIT
-            END IF
-            END DO
-
-            DO
-            IF (outco(3,i,k)<0.0_DP) THEN
-               outco(3,i,k)=outco(3,i,k)+1.0_DP
-            else
-               EXIT
-            END IF
-            END DO
+   INTEGER, INTENT(in) :: sym_n,not_eq
+   REAL(DP), DIMENSION(:,:,:), INTENT(INOUT) :: outco
+   INTEGER :: i,j, k
+ 
+   DO k=1,not_eq
+      DO i=1, sym_n
+         DO j=1,3
+            !
+            ! bring everything to the -0.5:+0.5 interval 
+            !
+            outco(j,i,k)=outco(j,i,k)-NINT(outco(j,i,k))
+            !
+            ! bring everything to positive values
+            !
+            IF ( outco(j,i,k) < 0.0_dp ) &
+               outco(j,i,k)=outco(j,i,k) + 1.0_dp
          END DO
-         RETURN
+      END DO
+   END DO
+   
    END SUBROUTINE zerone
 
-   SUBROUTINE esclusion(outco,sym_n,msym_n,not_eq)
+   SUBROUTINE esclusion(sym_n,not_eq,outco,msym_n)
       IMPLICIT NONE
       REAL(DP), DIMENSION(:,:,:), INTENT(INOUT) :: outco
       INTEGER, DIMENSION (:), INTENT(INOUT) :: msym_n
       INTEGER, INTENT(in) :: not_eq, sym_n
       INTEGER :: i,l,k,j
       REAL(DP), DIMENSION(:,:,:),allocatable :: temp
+      REAL(DP):: diff(3)
+      REAL(dp), PARAMETER :: eps6=1.0D-6
       LOGICAL :: bol
-      REAL :: eps
-
-      eps=1.D-6
 
       ALLOCATE(temp(3,sym_n,not_eq))
 
@@ -329,21 +293,19 @@ END SUBROUTINE clean_spacegroup
          l=0
          DO j=1,sym_n
             bol=.false.
-            i=j+1
-            DO while (i<=sym_n)
-               IF ((abs(outco(1,j,k)-outco(1,i,k))<eps).and.&
-                   (abs(outco(2,j,k)-outco(2,i,k))<eps).and.&
-                   (abs(outco(3,j,k)-outco(3,i,k))<eps)) THEN
-                  bol=.true.
-               END IF
-            i=i+1
+            DO i=j+1,sym_n
+               diff(:) = outco(:,j,k)-outco(:,i,k)
+               diff(:) = diff(:) - NINT (diff(:))
+               IF ( ( ABS(diff(1)) < eps6 ) .AND. &
+                    ( ABS(diff(2)) < eps6 ) .AND. &
+                    ( ABS(diff(3)) < eps6 ) ) THEN
+                  bol = .true.
+               ENDIF
             END DO
          
             IF (.not.bol) THEN
                l=l+1
-               temp(1,l,k)=outco(1,j,k)
-               temp(2,l,k)=outco(2,j,k)
-               temp(3,l,k)=outco(3,j,k)
+               temp(:,l,k)=outco(:,j,k)
             END IF
          END DO
          msym_n(k)=l
