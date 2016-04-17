@@ -1241,7 +1241,6 @@ SUBROUTINE iosys()
      IF (space_group==0) &
         CALL errore('input','The option crystal_sg requires the space group &
                                                    &number',1 )
-        
      CALL sup_spacegroup(rd_pos,sp_pos,rd_for,rd_if_pos,space_group,nat,&
               uniqueb,rhombohedral,origin_choice,ibrav_sg)
      IF (ibrav==-1) THEN

@@ -2228,20 +2228,21 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                                         Please note that this feature is NOT supported by XCrysDen (which will
                                         display a wrong structure, or nothing at all).	       
                                         When atomic positions are of type crystal_sg coordinates can be given 
-                                        in the following three forms (Wyckoff positions):
+                                        in the following four forms (Wyckoff positions):
                                         C  1a 
                                         C  8g   x 
                                         C  24m  x y 
+                                        C  48n  x y z
                                         The first form must be used when the Wyckoff letter determines uniquely 
-                                        all three coordinates, the second form when the Wyckoff letter 
-                                        and one coordinate are needed, the third form when one letter and two 
-                                        coordinates are needed.
+                                        all three coordinates, forms 2,3,4 when the Wyckoff letter 
+                                        and 1,2,3 coordinates respectively are needed
                                         The forms:
                                         C 8g  x  x  x
                                         C 24m x  x  y 
                                         are not allowed, but
                                         C x x x
                                         C x x y
+                                        C x y z
                                         are correct.
 				}
 				col x

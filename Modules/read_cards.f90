@@ -353,7 +353,7 @@ CONTAINS
       INTEGER            :: ia, k, is, nfield, idx, rep_i
       LOGICAL, EXTERNAL  :: matches
       LOGICAL            :: tend
-      REAL(DP)           :: inp1, inp2
+      REAL(DP)           :: inp(3)
       INTEGER            :: fieldused
       !
       INTEGER            :: ifield, ierr
@@ -417,84 +417,79 @@ CONTAINS
          !
          CALL field_count( nfield, input_line )
          !
-         ! read atom symbol (column 1) and coordinate
+         ! read atom symbol (column 1)
+         !
          CALL get_field(1, lb_pos, input_line)
          lb_pos = trim(lb_pos)
          !
          error_msg = 'Error while parsing atomic position card.'
-         ! read field 2 (atom X coordinate)
+         !
+         ! read field 2 (atom X coordinate or Wyckoff position symbol)
+         !
          CALL get_field(2, field_str, input_line)
          !     
-         !If the ia position is expressed in wyckoff position.
-         IF (lsg.AND.LEN_TRIM(field_str)<4.AND.&
-              ((IACHAR(field_str(LEN_TRIM(field_str):LEN_TRIM(field_str)))>64.AND.&
-               IACHAR(field_str(LEN_TRIM(field_str):LEN_TRIM(field_str)))<123))) THEN
-            !wyckoff position case
+         ! Check if position ia is expressed in wyckoff positions
+         !
+         idx = LEN_TRIM(field_str)
+         IF ( lsg .AND. (idx < 4) .AND. &
+              ( IACHAR(field_str(idx:idx)) > 64 .AND. &
+                IACHAR(field_str(idx:idx)) < 123 ) ) THEN
             !
+            ! wyckoff positions
+            !
+            IF ( nfield < 3 .and. nfield > 8 ) &
+            CALL errore( 'read_cards', 'wrong number of columns ' // &
+                           & 'in ATOMIC_POSITIONS', ia )
             wp=field_str
-            inp1=1.d5
-            inp2=1.d5
+            inp(:)=1.d5
             !
-            IF (nfield>2) THEN
-               ! read field 2 (1st coordinate)
-               CALL get_field(3, field_str, input_line)
-               inp1 = feval_infix(ierr, field_str )
+            DO k = 3,MIN(nfield,5)
+               ! read k-th field (coordinate k-2)
+               CALL get_field(k, field_str, input_line)
+               inp(k-2) = feval_infix(ierr, field_str )
                CALL errore('card_atomic_positions', error_msg, ierr)
-               !
-               IF (nfield>3) THEN
-                  ! read field 3 (2nd coordinate)
-                  CALL get_field(4, field_str, input_line)
-                  inp2 = feval_infix(ierr, field_str )
-                  CALL errore('card_atomic_positions', error_msg, ierr)
-               ENDIF
-            ENDIF
+            ENDDO
             !
-            CALL wypos(rd_pos(1,ia),wp,inp1,inp2,space_group, &
+            CALL wypos(rd_pos(1,ia),wp,inp,space_group, &
                  uniqueb,rhombohedral,origin_choice)
             !
-            fieldused=3
-            IF ((rd_pos(1,ia)==inp1).OR.(rd_pos(2,ia)==inp1).OR.(rd_pos(3,ia)==inp1))&
-               fieldused=fieldused+1
-            IF ((rd_pos(2,ia)==inp2).OR.(rd_pos(3,ia)==inp2)) fieldused=fieldused+1
+            ! count how many fields were used to find wyckoff positions
             !
-            !         
-            !
-            IF ( nfield >= 5 ) THEN
-               ! read constrains (fields 3-5, if present)
-               CALL get_field(fieldused, field_str, input_line)
-               READ(field_str, *) if_pos(1,ia)
-               CALL get_field(fieldused+1, field_str, input_line)
-               READ(field_str, *) if_pos(2,ia)
-               CALL get_field(fieldused+2, field_str, input_line)
-               READ(field_str, *) if_pos(3,ia)
-            ENDIF
+            fieldused=2
+            IF ( ANY (rd_pos(1:3,ia)==inp(1)) ) fieldused=fieldused+1
+            IF ( ANY (rd_pos(2:3,ia)==inp(2)) ) fieldused=fieldused+1
+            IF (      rd_pos(  3,ia)==inp(3)  ) fieldused=fieldused+1
             !
          ELSE
+            !
+            ! no wyckoff positions 
+            !
             IF ( nfield /= 4 .and. nfield /= 7 ) &
             CALL errore( 'read_cards', 'wrong number of columns ' // &
                            & 'in ATOMIC_POSITIONS', ia )
-
+            !
+            ! field just read is coordinate X
+            !
             rd_pos(1,ia) = feval_infix(ierr, field_str )
             CALL errore('card_atomic_positions', error_msg, ierr)
-            ! read field 2 (atom Y coordinate)
-            CALL get_field(3, field_str, input_line)
-            rd_pos(2,ia) = feval_infix(ierr, field_str )
-            CALL errore('card_atomic_positions', error_msg, ierr)
-            ! read field 2 (atom Z coordinate)
-            CALL get_field(4, field_str, input_line)
-            rd_pos(3,ia) = feval_infix(ierr, field_str )
-            CALL errore('card_atomic_positions', error_msg, ierr)
-            IF ( nfield >= 7 ) THEN
-               ! read constrains (fields 5-7, if present)
-               CALL get_field(5, field_str, input_line)
-               READ(field_str, *) if_pos(1,ia)
-               CALL get_field(6, field_str, input_line)
-               READ(field_str, *) if_pos(2,ia)
-               CALL get_field(7, field_str, input_line)
-               READ(field_str, *) if_pos(3,ia)
-            ENDIF
+            DO k = 3,4
+               ! read fields 3 and 4 (atom Y and Z coordinate)
+               CALL get_field(k, field_str, input_line)
+               rd_pos(k-1,ia) = feval_infix(ierr, field_str )
+               CALL errore('card_atomic_positions', error_msg, ierr)
+            END DO
+            !
+            fieldused=4
             !
          ENDIF
+         ! read constraints if present (last 3 fields)
+         IF ( nfield-fieldused > 0 .AND. nfield-fieldused /= 3 ) &
+            CALL errore( 'read_cards', 'unexpected number of columns ' // &
+                           & 'in ATOMIC_POSITIONS', ia )
+         DO k = fieldused+1, nfield
+            CALL get_field(k, field_str, input_line)
+            READ(field_str, *) if_pos(k-fieldused,ia)
+         ENDDO
          !
          match_label: DO is = 1, ntyp
             !
