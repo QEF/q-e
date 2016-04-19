@@ -27,15 +27,17 @@ subroutine addcore_ofq (xq, mode, u, drc, drhoc, csign)
   !    when the atoms moves along the given mode
   !
   !
-  USE kinds, only : DP
-  use uspp_param, only: upf
-  use ions_base, only: nat, ityp, ntyp => nsp
-  use cell_base, only: tpiba
-  use fft_base,  only: dfftp
-  use fft_interfaces, only: invfft
-  use gvect, only: ngm, nl, mill, eigts1, eigts2, eigts3, g
-  use qpoint, only: eigqts
-  use uspp,   only: nlcc_any
+  USE kinds,          only : DP
+  use uspp_param,     only : upf
+  use ions_base,      only : nat, ityp
+  use cell_base,      only : tpiba
+  use fft_base,       only : dfftp
+  use fft_interfaces, only : invfft
+  use gvect,          only : ngm, nl, mill, eigts1, eigts2, eigts3, g
+  use modes,          only : u
+  use qpoint,         only : eigqts, xq
+  use uspp,           only : nlcc_any 
+  use nlcc_ph,        only : drc
   implicit none
 
   !
