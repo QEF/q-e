@@ -16,8 +16,11 @@ PROGRAM molecularpdos
   ! Then the eigenvectors of the full system are projected onto the ones of the
   ! part.
   !
-  ! Example of application: decompose the PDOS of an adsorbed molecule
-  ! into its molecular orbital, as determined by a gas-phase calculation.
+  ! An explanation of the keywords and the implementation is provided in
+  ! Scientific Reports | 6:24603 | DOI: 10.1038/srep24603 (2016) (Supp. Info)
+  !
+  ! Typical application: decompose the PDOS of an adsorbed molecule into
+  ! its molecular orbital, as determined by a gas-phase calculation.
   !
   ! The user has to specify which atomic functions (range beg:end) to use in
   ! both the full system and the part (the same atomic set should be used).
@@ -39,6 +42,9 @@ PROGRAM molecularpdos
   !      = \sum_iatmwfc CONJG(projs_part(iatmwfc,ibnd_part,k))
   !                         * projs_full(iatmwfc,ibnd_full,k)
   !
+  ! If kresolveddos=.true. from input, the summation over k is not performed
+  ! and individual k-resolved contributions are given in output.
+  !
   USE kinds,       ONLY : DP
   USE constants,   ONLY : PI, RYTOEV, eps4
   USE io_global,   ONLY : stdout, ionode, ionode_id
@@ -55,11 +61,12 @@ PROGRAM molecularpdos
   INTEGER  :: i_atmwfc_beg_part, i_atmwfc_end_part, i_bnd_beg_part, i_bnd_end_part 
   REAL(DP) :: degauss, Emax, Emin, DeltaE
   INTEGER  :: ngauss
+  LOGICAL  :: kresolveddos
   !
   NAMELIST / inputmopdos / &
        xmlfile_full, i_atmwfc_beg_full, i_atmwfc_end_full, i_bnd_beg_full, i_bnd_end_full, &
        xmlfile_part, i_atmwfc_beg_part, i_atmwfc_end_part, i_bnd_beg_part, i_bnd_end_part, &
-       fileout, Emin, Emax, DeltaE, ngauss, degauss
+       fileout, Emin, Emax, DeltaE, ngauss, degauss, kresolveddos
   !
   INTEGER  :: nbnd_full, nkstot_full, num_k_points_full, nspin_full, natomwfc_full
   INTEGER  :: nbnd_part, nkstot_part, num_k_points_part, nspin_part, natomwfc_part
@@ -68,7 +75,7 @@ PROGRAM molecularpdos
   !
   ! The read-from-file and the computed projections
   COMPLEX(DP), ALLOCATABLE :: projs_full(:,:,:), projs_part(:,:,:), projs_mo(:,:,:)  
-  REAL(DP), ALLOCATABLE :: projs_mo_sq(:,:,:), mopdos(:,:,:), mopdostot(:,:)
+  REAL(DP), ALLOCATABLE :: projs_mo_sq(:,:,:), mopdos(:,:,:,:), mopdostot(:,:,:)
   !
   ! For sorting projections
   INTEGER,  ALLOCATABLE :: idx(:)
@@ -76,6 +83,8 @@ PROGRAM molecularpdos
   !
   INTEGER  :: nkstot, natmwfc,num_k_points, nspin, ns, nwfc
   INTEGER  :: ibnd_full, ibnd_part, iatmwfc, ik, ik_eff, ik0, j, is, i, ios
+  INTEGER  :: nksum, iksum
+  REAL(DP) :: wksum
   !
   REAL(DP) :: Elw, Eup, delta, etev, psum
   INTEGER  :: ne, ie_delta, ie_mid, ie
@@ -105,6 +114,7 @@ PROGRAM molecularpdos
   DeltaE = 0.01d0
   ngauss = 0
   degauss= 0.d0
+  kresolveddos = .false.
   !
   ios = 0
   !
@@ -251,11 +261,29 @@ PROGRAM molecularpdos
      ne = nint ( (Emax - Emin) / DeltaE+0.500001d0)
      ie_delta = 5 * degauss / DeltaE + 1
      !
-     ALLOCATE (mopdos(i_bnd_beg_part:i_bnd_end_part, 0:ne,nspin))
-     mopdos(:,:,:)=0d0
+     IF (kresolveddos) THEN
+        nksum=num_k_points
+     ELSE
+        nksum=1
+     ENDIF
+     !
+     ALLOCATE (mopdos(i_bnd_beg_part:i_bnd_end_part, 0:ne,nspin,nksum))
+     mopdos(:,:,:,:)=0d0
      !
      ! Compute mopdos(E)
-     DO ik=1,num_k_points  
+     DO ik=1,num_k_points
+        IF (kresolveddos) THEN
+           ! set equal weight to all k-points
+           wksum=1.D0
+           ! do not sum over k-points
+           iksum=ik
+        ELSE
+           ! use true weights
+           wksum=wk_full(ik)
+           ! contributions from all k-points are summed in mopdos(:,:,:,iksum)
+           iksum=1
+        ENDIF
+        !
         DO ibnd_full=i_bnd_beg_full,i_bnd_end_full
            !
            etev = et_full(ibnd_full,ik)
@@ -265,8 +293,8 @@ PROGRAM molecularpdos
               delta=w0gauss((Emin+DeltaE*ie-etev)/degauss,ngauss) &
                    / degauss / rytoev
               DO ibnd_part=i_bnd_beg_part,i_bnd_end_part
-                 mopdos(ibnd_part,ie,1) = mopdos(ibnd_part,ie,1)  &
-                      +  wk_full(ik) * delta * projs_mo_sq(ibnd_part,ibnd_full,ik)
+                 mopdos(ibnd_part,ie,1,iksum) = mopdos(ibnd_part,ie,1,iksum)  &
+                      +  wksum * delta * projs_mo_sq(ibnd_part,ibnd_full,ik)
               END DO
            END DO
            !
@@ -280,8 +308,8 @@ PROGRAM molecularpdos
                  delta=w0gauss((Emin+DeltaE*ie-etev)/degauss,ngauss) &
                       / degauss / rytoev
                  DO ibnd_part=i_bnd_beg_part,i_bnd_end_part
-                    mopdos(ibnd_part,ie,2) = mopdos(ibnd_part,ie,2)  &
-                         +  wk_full(ik) * delta * projs_mo_sq(ibnd_part,ibnd_full,ik_eff)
+                    mopdos(ibnd_part,ie,2,iksum) = mopdos(ibnd_part,ie,2,iksum)  &
+                         +  wksum * delta * projs_mo_sq(ibnd_part,ibnd_full,ik_eff)
                  END DO
               END DO
               !
@@ -292,54 +320,77 @@ PROGRAM molecularpdos
      !
      ! Ouput mopdos(E)
      OPEN(UNIT=12, FILE=TRIM(fileout)//".mopdos", ACTION="write", STATUS="replace")
-     DO ibnd_part=i_bnd_beg_part,i_bnd_end_part
+     !
+     IF (kresolveddos) THEN
+        WRITE (12,'("# ik   ")', advance="NO")
+     ENDIF
+     !
+     IF ( nspin == 2 ) THEN
+        WRITE (12,'("# ibnd_part  E (eV)  tot_up(E)  tot_dw(E)")')
+     ELSE
+        WRITE (12,'("# ibnd_part  E (eV)  tot(E)")')
+     END IF
+     !
+     DO iksum=1, nksum
         !
-        IF ( nspin == 2 ) THEN
-           WRITE (12,'("# ibnd_part  E (eV)  tot_up(E)  tot_dw(E)")')
-        ELSE
-           WRITE (12,'("# ibnd_part  E (eV)  tot(E)")')
-        END IF
-        !
-        DO ie=0,ne
-           etev = Emin + ie * DeltaE
-           WRITE(12,'(i11," ")', advance="NO") ibnd_part
-           WRITE(12,'(f7.3)', advance="NO") etev*rytoev
-           DO is=1,nspin
-              WRITE(12,'(e11.3)', advance="NO") mopdos(ibnd_part,ie,is)
+        DO ibnd_part=i_bnd_beg_part,i_bnd_end_part
+           !
+           DO ie=0,ne
+              etev = Emin + ie * DeltaE
+              IF (kresolveddos) THEN
+                 WRITE (12,'(i5," ")', advance="NO") iksum
+              ENDIF
+              WRITE(12,'(i11," ")', advance="NO") ibnd_part
+              WRITE(12,'(f7.3)', advance="NO") etev*rytoev
+              DO is=1,nspin
+                 WRITE(12,'(e11.3)', advance="NO") mopdos(ibnd_part,ie,is,iksum)
+              END DO
+              WRITE(12,'()')
            END DO
-           WRITE(12,'()')
+           WRITE (12,'()')
         END DO
-        !
-        WRITE (12,*)
-        !
+        IF (kresolveddos) WRITE (12,'()')
      END DO
      CLOSE(12)
      !
      ! Compute the total mopdos(E)
-     ALLOCATE (mopdostot(0:ne,nspin))
-     mopdostot(:,:)=0d0
-     DO ns=1, nspin
-        DO ie=0,ne
-           DO ibnd_part=i_bnd_beg_part,i_bnd_end_part
-              mopdostot(ie,ns)=mopdostot(ie,ns) + mopdos(ibnd_part,ie,ns)         
+     ALLOCATE (mopdostot(0:ne,nspin,nksum))
+     mopdostot(:,:,:)=0d0
+     DO iksum=1, nksum
+        DO ns=1, nspin
+           DO ie=0,ne
+              DO ibnd_part=i_bnd_beg_part,i_bnd_end_part
+                 mopdostot(ie,ns,iksum)=mopdostot(ie,ns,iksum) + mopdos(ibnd_part,ie,ns,iksum)
+              END DO
            END DO
         END DO
      END DO
      !
      ! Ouput the total mopdos(E)
      OPEN(UNIT=13, FILE=TRIM(fileout)//".mopdos_tot", ACTION="write", STATUS="replace")
+     !
+     IF (kresolveddos) THEN
+        WRITE (13,'("# ik   ")', advance="NO")
+     ENDIF
+     !
      IF ( nspin == 2 ) THEN
         WRITE (13,'("# E (eV)  tot_up(E)  tot_dw(E) ")')
      ELSE
         WRITE (13,'("# E (eV)  tot(E) ")')
      END IF
-     DO ie=0,ne
-        etev = Emin + ie * DeltaE
-        WRITE(13,'(f7.3)', advance="NO") etev*rytoev
-        DO is=1,nspin
-           WRITE(13,'(e11.3)', advance="NO") mopdostot(ie,is)
+     DO iksum=1, nksum
+        DO ie=0,ne
+           etev = Emin + ie * DeltaE
+           IF (kresolveddos) THEN
+              WRITE (13,'(i5," ")', advance="NO") iksum
+           ENDIF
+           WRITE(13,'(f7.3)', advance="NO") etev*rytoev
+           DO is=1,nspin
+              WRITE(13,'(e11.3)', advance="NO") mopdostot(ie,is,iksum)
+           END DO
+           WRITE(13,'()')
         END DO
-        WRITE(13,'()')
+        IF (kresolveddos) WRITE(13,'()')
      END DO
      CLOSE(13)
      !

@@ -17,7 +17,7 @@ $ECHO "This example shows how to use PostProc codes to project the DOS on molecu
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x projwfc.x molecularpdos.x"
-PSEUDO_LIST="H.pbe-rrkjus.UPF"
+PSEUDO_LIST="H_US.van"
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"
@@ -77,7 +77,6 @@ $ECHO " done"
 
 # how to run executables
 PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
-DOS_COMMAND="$PARA_PREFIX $BIN_DIR/dos.x $PARA_POSTFIX"
 PROJWFC_COMMAND="$PARA_PREFIX $BIN_DIR/projwfc.x $PARA_POSTFIX"
 MOLECULARPDOS_COMMAND="$PARA_PREFIX $BIN_DIR/molecularpdos.x $PARA_POSTFIX"
 $ECHO
@@ -87,36 +86,18 @@ $ECHO "  running molecularpdos.x as: $MOLECULARPDOS_COMMAND"
 $ECHO "  running gnuplot as:         $GP_COMMAND"
 $ECHO
 
-# semi-distance between H atoms in the H2 molecules considered
-# (here they are stretched to artificially lower the antibonding orbitals)
-d0=1.1
-d1=1.0
-
-# z coordinates of the H2 molecules considered
-z0=0.0
-z1=15.0
-
-# labels for the two H2 molecules
-l0="A"
-l1="B"
-# label for the total system
-ll=${l0}${l1}
-
-# which kpoints to test?
-kpline0="Gamma"
-kpline1=""
-#kpline0="automatic"
-#kpline1="2 2 2 0 0 0"
-
 # to spin or not to spin?
 nspin=1
 #nspin="2, tot_magnetization=0"
 
-# self-consistent calculation for two H2 molecules together
-cat <<EOF > H2$ll.scf.in
+# how many kpoints to test k-resolved DOS?
+nk=20
+
+# self-consistent calculation for H chain and H2 molecule
+cat <<EOF > chainH2.scf.in
 &CONTROL
   calculation  = "scf",
-  prefix       = "H2$ll",
+  prefix       = "chainH2",
   tstress      = .false.,
   tprnfor      = .false.,
   pseudo_dir = '$PSEUDO_DIR/',
@@ -124,36 +105,51 @@ cat <<EOF > H2$ll.scf.in
 /
 &SYSTEM
   ibrav     = 6, 
-  celldm(1) = 15.d0
-  celldm(3) = 2.d0
-  nat       = 4,
+  celldm(1) = 7.d0
+  celldm(3) = 2.0d0
+  nat       = 12,
   ntyp      = 1,
-  ecutwfc   = 24.0,
-  nbnd      = 8
+  ecutwfc   = 20.0,
+  nbnd      = 20
   nspin     = $nspin
+  occupations = 'smearing'
+  smearing = 'mp'
+  degauss = 0.01d0
 /
 &ELECTRONS
 /
 ATOMIC_SPECIES
 H  1.00  H_US.van
-ATOMIC_POSITIONS {bohr}
-H   0.0  -${d0}  ${z0}
-H   0.0   ${d0}  ${z0}
-H   0.0  -${d1}  ${z1}
-H   0.0   ${d1}  ${z1}
-K_POINTS ${kpline0}
-${kpline1}
+ATOMIC_POSITIONS crystal
+H   0.0  0.0  0.0
+H   0.0  0.0  0.1
+H   0.0  0.0  0.2
+H   0.0  0.0  0.3
+H   0.0  0.0  0.4
+H   0.0  0.0  0.5
+H   0.0  0.0  0.6
+H   0.0  0.0  0.7
+H   0.0  0.0  0.8
+H   0.0  0.0  0.9
+H   0.35 0.35 0.445
+H   0.35 0.35 0.555
+K_POINTS
+4
+  0.0000000   0.0000000   0.0312500   0.2500000
+  0.0000000   0.0000000   0.0937500   0.2500000
+  0.0000000   0.0000000   0.1562500   0.2500000
+  0.0000000   0.0000000   0.2187500   0.2500000
 EOF
-$ECHO "  running the scf calculation for two H2 molecules...\c"
-$PW_COMMAND < H2$ll.scf.in > H2$ll.scf.out
+$ECHO "  running the scf calculation for H-chain with H2-molecule...\c"
+$PW_COMMAND < chainH2.scf.in > chainH2.scf.out
 check_failure $?
 $ECHO " done"
 
-# self-consistent calculation for two H2 molecules separately
-cat <<EOF > H2$l0.scf.in
+# self-consistent calculation for the H2 molecule
+cat <<EOF > H2.scf.in
 &CONTROL
   calculation  = "scf",
-  prefix       = "H2$l0",
+  prefix       = "H2",
   tstress      = .false.,
   tprnfor      = .false.,
   pseudo_dir = '$PSEUDO_DIR/',
@@ -161,72 +157,44 @@ cat <<EOF > H2$l0.scf.in
 /
 &SYSTEM
   ibrav     = 6, 
-  celldm(1) = 15.d0
-  celldm(3) = 2.d0
+  celldm(1) = 7.d0
+  celldm(3) = 2.0d0
   nat       = 2,
   ntyp      = 1,
-  ecutwfc   = 24.0,
-  nbnd      = 8
+  ecutwfc   = 20.0,
   nspin     = $nspin
+  occupations = 'smearing'
+  smearing = 'mp'
+  degauss = 0.01d0
 /
 &ELECTRONS
 /
 ATOMIC_SPECIES
 H  1.00  H_US.van
-ATOMIC_POSITIONS {bohr}
-H   0.0  -${d0}  ${z0}
-H   0.0   ${d0}  ${z0}
-K_POINTS ${kpline0}
-${kpline1}
+ATOMIC_POSITIONS crystal
+H   0.35 0.35 0.445
+H   0.35 0.35 0.555
+K_POINTS
+4
+  0.0000000   0.0000000   0.0312500   0.2500000
+  0.0000000   0.0000000   0.0937500   0.2500000
+  0.0000000   0.0000000   0.1562500   0.2500000
+  0.0000000   0.0000000   0.2187500   0.2500000
 EOF
 $ECHO "  running the scf calculation for the H2 molecule ${l0}...\c"
-$PW_COMMAND < H2$l0.scf.in > H2$l0.scf.out
+$PW_COMMAND < H2.scf.in > H2.scf.out
 check_failure $?
 $ECHO " done"
 
-cat <<EOF > H2$l1.scf.in
-&CONTROL
-  calculation  = "scf",
-  prefix       = "H2$l1",
-  tstress      = .false.,
-  tprnfor      = .false.,
-  pseudo_dir = '$PSEUDO_DIR/',
-  outdir='$TMP_DIR/'
-/
-&SYSTEM
-  ibrav     = 6, 
-  celldm(1) = 15.d0
-  celldm(3) = 2.d0
-  nat       = 2,
-  ntyp      = 1,
-  ecutwfc   = 24.0,
-  nbnd      = 8
-  nspin     = $nspin
-/
-&ELECTRONS
-/
-ATOMIC_SPECIES
-H  1.00  H_US.van
-ATOMIC_POSITIONS {bohr}
-H   0.0  -${d1}  ${z1}
-H   0.0   ${d1}  ${z1}
-K_POINTS ${kpline0}
-${kpline1}
-EOF
-$ECHO "  running the scf calculation for the H2 molecule ${l1}...\c"
-$PW_COMMAND < H2$l1.scf.in > H2$l1.scf.out
-check_failure $?
-$ECHO " done"
-
-# projwfc calculation for the two H2 molecules together and separately
-for prefix in H2$ll H2${l0} H2${l1}; do
+# projwfc calculation for the H2 molecule with H-chain and alone
+for prefix in chainH2 H2; do
 cat <<EOF > $prefix.projwfc.in
 &PROJWFC
   outdir='$TMP_DIR/'
   prefix       = '$prefix'
   ngauss       = 0
-  degauss      = 0.00743
-  deltae       = 0.02
+  degauss      = 0.01470
+  deltae       = 0.05
 /
 EOF
 $ECHO "  running the projwfc calculation for $prefix...\c"
@@ -237,59 +205,167 @@ $ECHO " copying atomic_proj.xml file to $prefix.atomic_proj.xml"
 cp -p $TMP_DIR/$prefix.save/atomic_proj.xml $prefix.atomic_proj.xml
 done
 
-# First/last atomic wavefunctions to consider
-# when projecting on the first H2 molecule
-atmwfc_b0=1
-atmwfc_e0=2
-# when projecting on the second H2 molecule
-atmwfc_b1=3
-atmwfc_e1=4
-
-# project the DOS on the molecular orbitals of the first H2 molecule
-cat <<EOF > project_${ll}_onto_${l0}.in
+# project the DOS on the molecular orbitals of the H2 molecule
+cat <<EOF > chainH2_onto_H2.in
 &INPUTMOPDOS
-xmlfile_full='H2$ll.atomic_proj.xml'
-i_atmwfc_beg_full=${atmwfc_b0},
-i_atmwfc_end_full=${atmwfc_e0},
+xmlfile_full='chainH2.atomic_proj.xml'
+i_atmwfc_beg_full=11,
+i_atmwfc_end_full=12,
 i_bnd_beg_full=1,
-i_bnd_end_full=8,
-xmlfile_part='H2${l0}.atomic_proj.xml'
+i_bnd_end_full=20,
+xmlfile_part='H2.atomic_proj.xml'
 i_atmwfc_beg_part=1,
 i_atmwfc_end_part=2,
 i_bnd_beg_part=1,
 i_bnd_end_part=2,
-fileout ='project_${ll}_onto_${l0}'
+fileout ='chainH2_onto_H2'
 ngauss=0,
-degauss=0.00743,
-DeltaE=0.02,
+degauss=0.01470,
+DeltaE=0.05,
+kresolveddos=.false.
 /
 EOF
-$ECHO "  running the molecular orbital projection of the DOS for the molecule $l0...\c"
-$MOLECULARPDOS_COMMAND < project_${ll}_onto_${l0}.in > project_${ll}_onto_${l0}.out
+$ECHO "  running the molecular orbital projection of the DOS...\c"
+$MOLECULARPDOS_COMMAND < chainH2_onto_H2.in > chainH2_onto_H2.out
 check_failure $?
 $ECHO " done"
 
-# project the DOS on the molecular orbitals of the second H2 molecule
-cat <<EOF > project_${ll}_onto_${l1}.in
+# now with DOS k-resolved with nk+1 k-points
+
+# bands calculation for H chain and H2 molecule
+cat <<EOF > chainH2.bands.in
+&CONTROL
+  calculation  = "bands",
+  prefix       = "chainH2",
+  tstress      = .false.,
+  tprnfor      = .false.,
+  pseudo_dir = '$PSEUDO_DIR/',
+  outdir='$TMP_DIR/'
+/
+&SYSTEM
+  ibrav     = 6, 
+  celldm(1) = 7.d0
+  celldm(3) = 2.0d0
+  nat       = 12,
+  ntyp      = 1,
+  ecutwfc   = 20.0,
+  nbnd      = 20
+  nspin     = $nspin
+  occupations = 'smearing'
+  smearing = 'mp'
+  degauss = 0.01d0
+/
+&ELECTRONS
+  conv_thr_init = 1.d-6
+/
+ATOMIC_SPECIES
+H  1.00  H_US.van
+ATOMIC_POSITIONS crystal
+H   0.0  0.0  0.0
+H   0.0  0.0  0.1
+H   0.0  0.0  0.2
+H   0.0  0.0  0.3
+H   0.0  0.0  0.4
+H   0.0  0.0  0.5
+H   0.0  0.0  0.6
+H   0.0  0.0  0.7
+H   0.0  0.0  0.8
+H   0.0  0.0  0.9
+H   0.35 0.35 0.445
+H   0.35 0.35 0.555
+K_POINTS crystal_b
+2
+0.0 0.0 0.0 $nk
+0.0 0.0 0.5 0
+EOF
+$ECHO "  running the bands calculation for H-chain with H2-molecule...\c"
+$PW_COMMAND < chainH2.bands.in > chainH2.bands.out
+check_failure $?
+$ECHO " done"
+
+# bands calculation for the H2 molecule
+cat <<EOF > H2.bands.in
+&CONTROL
+  calculation  = "bands",
+  prefix       = "H2",
+  tstress      = .false.,
+  tprnfor      = .false.,
+  pseudo_dir = '$PSEUDO_DIR/',
+  outdir='$TMP_DIR/'
+/
+&SYSTEM
+  ibrav     = 6, 
+  celldm(1) = 7.d0
+  celldm(3) = 2.0d0
+  nat       = 2,
+  ntyp      = 1,
+  ecutwfc   = 20.0,
+  nspin     = $nspin
+  occupations = 'smearing'
+  smearing = 'mp'
+  degauss = 0.01d0
+/
+&ELECTRONS
+  conv_thr_init = 1.d-6
+/
+ATOMIC_SPECIES
+H  1.00  H_US.van
+ATOMIC_POSITIONS crystal
+H   0.35 0.35 0.445
+H   0.35 0.35 0.555
+K_POINTS crystal_b
+2
+0.0 0.0 0.0 $nk
+0.0 0.0 0.5 0
+EOF
+$ECHO "  running the bands calculation for the H2 molecule ${l0}...\c"
+$PW_COMMAND < H2.bands.in > H2.bands.out
+check_failure $?
+$ECHO " done"
+
+# projwfc calculation for the H2 molecule with H-chain and alone
+for prefix in chainH2 H2; do
+cat <<EOF > $prefix.k.projwfc.in
+&PROJWFC
+  outdir='$TMP_DIR/'
+  prefix       = '$prefix'
+  ngauss       = 0
+  degauss      = 0.01470
+  deltae       = 0.05
+  kresolveddos = .true.
+  filpdos      = '$prefix.k'
+/
+EOF
+$ECHO "  running the k-resolved projwfc calculation for $prefix...\c"
+$PROJWFC_COMMAND < $prefix.k.projwfc.in > $prefix.k.projwfc.out
+check_failure $?
+$ECHO " done"
+$ECHO " copying atomic_proj.xml file to $prefix.k.atomic_proj.xml"
+cp -p $TMP_DIR/$prefix.save/atomic_proj.xml $prefix.k.atomic_proj.xml
+done
+
+# project the DOS on the molecular orbitals of the H2 molecule
+cat <<EOF > chainH2_onto_H2.k.in
 &INPUTMOPDOS
-xmlfile_full='H2$ll.atomic_proj.xml'
-i_atmwfc_beg_full=${atmwfc_b1},
-i_atmwfc_end_full=${atmwfc_e1},
+xmlfile_full='chainH2.k.atomic_proj.xml'
+i_atmwfc_beg_full=11,
+i_atmwfc_end_full=12,
 i_bnd_beg_full=1,
-i_bnd_end_full=8,
-xmlfile_part='H2${l1}.atomic_proj.xml'
+i_bnd_end_full=20,
+xmlfile_part='H2.k.atomic_proj.xml'
 i_atmwfc_beg_part=1,
 i_atmwfc_end_part=2,
 i_bnd_beg_part=1,
 i_bnd_end_part=2,
-fileout ='project_${ll}_onto_${l1}'
+fileout ='chainH2_onto_H2.k'
 ngauss=0,
-degauss=0.00743,
-DeltaE=0.02,
+degauss=0.01470,
+DeltaE=0.05,
+kresolveddos=.true.
 /
 EOF
-$ECHO "  running the molecular orbital projection of the DOS for the molecule $l1...\c"
-$MOLECULARPDOS_COMMAND < project_${ll}_onto_${l1}.in > project_${ll}_onto_${l1}.out
+$ECHO "  running the molecular orbital projection of the DOS...\c"
+$MOLECULARPDOS_COMMAND < chainH2_onto_H2.k.in > chainH2_onto_H2.k.out
 check_failure $?
 $ECHO " done"
 
@@ -303,27 +379,45 @@ cat > gnuplot.tmp <<EOF
 #!$GP_COMMAND
 #
 set term post color solid enh
-set out 'project_${ll}_onto_${l0}_${l1}.ps'
+set out 'project_chainH2_onto_H2.ps'
 set xlabel "Energy (eV)"
 set ylabel "DOS (states/eV)"
-shift=10.0
-set rmargin 20
-set key top left
-set label 1 "bonding H2 orbital" at graph 1.01, first shift
-set label 2 "antibonding H2 orbital" at graph 1.01, first 2*shift
-plot 'H2$ll.pdos_tot' t "total DOS for two molecules ($ll)", \
-'project_${ll}_onto_${l0}.mopdos' u 2:(\$3+\$1*shift) t "projection on H2-${l0}", \
-'project_${ll}_onto_${l1}.mopdos' u 2:(\$3+\$1*shift) t "projection on H2-${l1}"
+ef=`awk '/Fermi/{printf $(NF-1)}' chainH2.scf.out`
+set xra [-15:5]
+set yzeroaxis
+set style data lines
+set origin 0,0
+set size 1,1
+set multiplot
+
+set origin 0,1./2
+set size 0.5,1./2
+plot 'chainH2_onto_H2.mopdos_tot' u (\$1-ef):2 lc 3 t "total H_2-projected DOS"
+
+set origin 0,0./2
+set size 0.5,1./2
+plot "<awk '(\$1==1)' chainH2_onto_H2.mopdos" u (\$2-ef):3 t "bonding H_2 orbital",  "<awk '(\$1==2)' chainH2_onto_H2.mopdos" u (\$2-ef):3 t "anti-bonding H_2 orbital"
+
+set origin 0.5,0
+set size 0.5,1
+#set ytics 0.5
+set ylabel "k_z (crystal)"
+scaledos=20
+set key title "K-resolved"
+plot "<awk '(\$2==1)' chainH2_onto_H2.k.mopdos" u (\$3-ef):((\$1-1)/$nk*0.5+\$4/scaledos) t "bonding H_2 orbital", "<awk '(\$2==2)' chainH2_onto_H2.k.mopdos" u (\$3-ef):((\$1-1)/$nk*0.5+\$4/scaledos) t "anti-bonding H_2 orbital"
+
+unset multiplot
 EOF
+
 $ECHO
 $ECHO "  plotting molecular orbital projected DOS ...\c"
 $GP_COMMAND < gnuplot.tmp
 $ECHO " done"
-rm gnuplot.tmp
+#rm gnuplot.tmp
 fi
 
 $ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/ni.*
+rm -rf $TMP_DIR/*H2.*
 
 $ECHO
 $ECHO "$EXAMPLE_DIR: done"

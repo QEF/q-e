@@ -12,6 +12,12 @@ input_description -distribution {Quantum Espresso} -package PWscf -program molec
 	    of the part. For example, to decompose the PDOS of an adsorbed molecule
 	    into its molecular orbital, as determined by a gas-phase calculation.
 
+	Reference:
+	    An explanation of the keywords and the implementation
+	    is provided in Scientific Reports | 6:24603 (2016)
+	    DOI: 10.1038/srep24603 (Supp. Info).
+
+
 	Structure of the input data:
 	============================
 
@@ -124,6 +130,15 @@ input_description -distribution {Quantum Espresso} -package PWscf -program molec
 	var DeltaE -type REAL {
 	    default { 0.01 } 
 	    info { energy grid step (eV) }
+	}
+
+	var kresolveddos -type LOGICAL {
+	    default { .false. }
+            info {
+		if .true. the k-resolved DOS is computed: not summed over
+                all k-points but written as a function of the k-point index.
+                In this case all k-point weights are set to unity
+	    }
 	}
     }
 
