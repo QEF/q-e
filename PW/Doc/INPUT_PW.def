@@ -705,12 +705,15 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	var nosym -type LOGICAL { 
 	    default { .FALSE. }
 	    info {
-		if (.TRUE.) symmetry is not used. Note that
-		- if the k-point grid is provided in input, it is used "as is"
-		  and symmetry-inequivalent k-points are not generated;
-		- if the k-point grid is automatically generated, it will
-		  contain only points in the irreducible BZ for the bravais
-		  lattice, irrespective of the actual crystal symmetry.
+		if (.TRUE.) symmetry is not used, which means that:
+		- if a list of k points is provided in input, it is used
+                  "as is": symmetry-inequivalent k-points are not generated,
+                  and the charge density is not symmetrized;
+		- if a uniform (Monkhorst-Pack) k-point grid is provided in 
+                  input, it is expanded to cover the entire Brillouin Zone,
+                  irrespective of the crystal symmetry. 
+                  Time reversal symmetry is assumed so k and -k are considered
+                  as equivalent unless noinv=.true. is specified.
 		A careful usage of this option can be advantageous 
 		- in low-symmetry large cells, if you cannot afford a k-point
 		  grid with the correct symmetry
@@ -722,15 +725,18 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	var nosym_evc -type LOGICAL { 
 	    default { .FALSE. }
 	    info {
-		if(.TRUE.) symmetry is not used but the k-points are 
+		if(.TRUE.) symmetry is not used, and k points are 
                 forced to have the symmetry of the Bravais lattice; 
-                an automatically generated k-point grid will contain
-                all the k-points of the grid and the points rotated by
-                the symmetries of the Bravais lattice which are not in the 
-                original grid. If available, time reversal is
-                used to reduce the k-points (and the q => -q symmetry
-                is used in the phonon code). To disable also this symmetry set
-                noinv=.TRUE..
+                an automatically generated Monkhorst-Pack grid will contain
+                all points of the grid over the entire Brillouin Zone,
+                plus the points rotated by the symmetries of the Bravais 
+                lattice which were not in the original grid. The same 
+                applies if a k-point list is provided in input instead
+                of a Monkhorst-Pack grid. Time reversal symmetry is assumed
+                so k and -k are equivalent unless noinv=.true. is specified.
+                This option differs from "nosym" because it forces k-points
+                in all cases to have the full symmetry of the Bravais lattice
+                (not all uniform grids have such property!)
 	    }
 	}
 
@@ -765,8 +771,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                associated fractionary translation that does not send the
                real-space FFT grid into itself. These operations are 
                incompatible with real-space symmetrization but not with the
-               new G-space symmetrization. BEWARE: do not use for phonons!
-               The phonon code still uses real-space symmetrization.
+               new G-space symmetrization. BEWARE: do not use for phonons
+               and for hybrid functionals! Both still use symmetrization
+               in real space.
           }
       }
 
