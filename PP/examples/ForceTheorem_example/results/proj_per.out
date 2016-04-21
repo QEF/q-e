@@ -1,0 +1,49 @@
+
+     Program PROJWFC v.5.3.0 (svn rev. 12320M) starts on 21Apr2016 at 20:21: 2 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     1 processors
+
+     Reading data from directory:
+     /home/giannozz/trunk/espresso/tempdir/per.save
+
+   Info: using nr1, nr2, nr3 values from input
+
+   Info: using nr1, nr2, nr3 values from input
+
+     IMPORTANT: XC functional enforced from input :
+     Exchange-correlation      =  SLA  PW   PBX  PBC ( 1  4  3  4 0 0)
+     Any further DFT definition will be discarded
+     Please, verify this is what you really want
+
+               file CorelUSPBE.RRKJ3.UPF: wavefunction(s)  4P 4P 3D renormalized
+ 
+     G-vector sticks info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Sum         313     151     55                43773    15409    3373
+ 
+
+     Check: negative/imaginary core charge=   -0.000023    0.000000
+
+     negative rho (up, down):  1.071E-02 4.332E-01
+
+     Gaussian broadening (read from input): ngauss,degauss=  -1    0.005000
+
+
+     Calling projwave_nc .... 
+ 
+     PROJWFC      :     3.54s CPU         3.89s WALL
+
+ 
+   This run was terminated on:  20:21: 6  21Apr2016            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=

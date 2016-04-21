@@ -1,0 +1,278 @@
+#!/bin/sh
+
+# run from directory where this script is
+cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+EXAMPLE_DIR=`pwd`
+
+# check whether echo has the -e option
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : starting"
+$ECHO
+$ECHO "This example shows how to use pw.x and projwfc.x to calculate"
+$ECHO "the Magnetic Anisotropy Energy n Co using the Force Theorem"
+
+# set the needed environment variables
+. ../../../environment_variables
+# required executables and pseudopotentials
+BIN_LIST="pw.x projwfc.x"
+PSEUDO_LIST="Co.pbe-nd-rrkjus.UPF  CorelUSPBE.RRKJ3.UPF"
+
+$ECHO
+$ECHO "  executables directory: $BIN_DIR"
+$ECHO "  pseudo directory:      $PSEUDO_DIR"
+$ECHO "  temporary directory:   $TMP_DIR"
+$ECHO "  checking that needed directories and files exist...\c"
+
+# check for directories
+for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
+    if test ! -d $DIR ; then
+        $ECHO
+        $ECHO "ERROR: $DIR not existent or not a directory"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results" ; do
+    if test ! -d $DIR ; then
+        mkdir $DIR
+    fi
+done
+cd $EXAMPLE_DIR/results
+
+# check for executables
+for FILE in $BIN_LIST ; do
+    if test ! -x $BIN_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $BIN_DIR/$FILE not existent or not executable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+
+# check for pseudopotentials
+for FILE in $PSEUDO_LIST ; do
+    if test ! -r $PSEUDO_DIR/$FILE ; then
+       $ECHO
+       $ECHO "Downloading $FILE to $PSEUDO_DIR...\c"
+            $WGET $PSEUDO_DIR/$FILE $NETWORK_PSEUDO/$FILE 2> /dev/null
+    fi
+    if test $? != 0; then
+        $ECHO
+        $ECHO "ERROR: $PSEUDO_DIR/$FILE not existent or not readable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+# how to run executables
+PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
+PROJ_COMMAND="$PARA_PREFIX $BIN_DIR/projwfc.x $PARA_POSTFIX"
+$ECHO
+$ECHO "  running pw.x as: $PW_COMMAND"
+$ECHO
+
+# self-consistent calculation for 3-layer Co slab, no SOC
+cat > sr.in << EOF
+ &control
+    calculation = 'scf',
+    restart_mode = 'from_scratch',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir = '$TMP_DIR/',
+    prefix = 'sr'
+ /
+ &system
+    ibrav = 4,
+    celldm(1) = 4.723553684826,
+    celldm(3) = 10.0,
+    nat= 3,
+    ntyp= 1,
+    nspin = 2,
+    ecutwfc = 25.0,
+    ecutrho = 200.0,
+    occupations='smearing',
+    smearing='mv',
+    degauss=0.005
+    starting_magnetization(1)=1.0,
+ /
+ &electrons
+    conv_thr = 1.0e-10
+    mixing_mode = 'local-TF'
+    mixing_beta = 0.7
+ /
+ &ions
+ /
+ATOMIC_SPECIES
+Co 58.933  Co.pbe-nd-rrkjus.UPF
+ATOMIC_POSITIONS {angstrom}
+Co       1.249798200   0.721571500   0.000000000
+Co       0.000000000   0.000000000   2.019286000
+Co       1.249798200   0.721571500   4.038572000
+K_POINTS (automatic)
+12 12 1 1 1 0
+EOF
+
+$ECHO "  running SR calculation ...\c"
+$PW_COMMAND < sr.in > sr.out
+check_failure $?
+$ECHO " done"
+
+$ECHO "  create SOC folders and copy there SR density and spin moment...\c"
+mkdir $TMP_DIR/par.save
+mkdir $TMP_DIR/per.save
+cp $TMP_DIR/sr.save/data-file.xml $TMP_DIR/par.save/
+cp $TMP_DIR/sr.save/charge-density.dat $TMP_DIR/par.save/
+cp $TMP_DIR/sr.save/spin-polarization.dat $TMP_DIR/par.save/
+cp $TMP_DIR/sr.save/data-file.xml $TMP_DIR/per.save/
+cp $TMP_DIR/sr.save/charge-density.dat $TMP_DIR/per.save/
+cp $TMP_DIR/sr.save/spin-polarization.dat $TMP_DIR/per.save/
+
+
+# NSCF run with SOC for parallel configuration 
+cat > par.in << EOF
+ &control
+    calculation='nscf'
+    restart_mode='from_scratch',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir = '$TMP_DIR/',
+    prefix='par'
+    verbosity = 'high'
+    wf_collect = .true.
+ /
+ &system
+    ibrav = 4,
+    celldm(1) = 4.723553684826,
+    celldm(3) = 10.0,
+    nat= 3,
+    ntyp= 1,
+    ecutwfc = 25.0,
+    ecutrho = 200.0,
+    occupations='smearing',
+    smearing='mv',
+    degauss=0.005
+    starting_magnetization(1)=1.0,
+    noncolin = .true.
+    lspinorb = .true.
+    angle1(1) = 90, 
+    angle2(1) = 0,
+    lforcet = .true.
+    nosym = .true.
+ /
+ &electrons
+    startingpot = 'file'
+    diago_thr_init = 1.d-14
+    mixing_mode = 'local-TF'
+    mixing_beta = 0.7
+ /
+ &ions
+ /
+ATOMIC_SPECIES
+Co 58.933  CorelUSPBE.RRKJ3.UPF
+ATOMIC_POSITIONS {angstrom}
+Co       1.249798200   0.721571500   0.000000000
+Co       0.000000000   0.000000000   2.019286000
+Co       1.249798200   0.721571500   4.038572000
+K_POINTS (automatic)
+4 4 1 1 1 0
+EOF
+$ECHO "  NSCF run with SOC for parallel configuration ...\c"
+$PW_COMMAND < par.in > par.out
+check_failure $?
+$ECHO " done"
+
+# NSCF run with SOC for perpendicular configuration 
+cat > per.in << EOF
+ &control
+    calculation='nscf'
+    restart_mode='from_scratch',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir = '$TMP_DIR/',
+    prefix='per'
+    verbosity = 'high'
+    wf_collect = .true.
+ /
+ &system
+    ibrav = 4,
+    celldm(1) = 4.723553684826,
+    celldm(3) = 10.0,
+    nat= 3,
+    ntyp= 1,
+    ecutwfc = 25.0,
+    ecutrho = 200.0,
+    occupations='smearing',
+    smearing='mv',
+    degauss=0.005
+    starting_magnetization(1)=1.0,
+    noncolin = .true.
+    lspinorb = .true.
+    angle1(1) = 0, 
+    angle2(1) = 0,
+    lforcet = .true.
+    nosym = .true.
+ /
+ &electrons
+    startingpot = 'file'
+    diago_thr_init = 1.d-14
+    mixing_mode = 'local-TF'
+    mixing_beta = 0.7
+ /
+ &ions
+ /
+ATOMIC_SPECIES
+Co 58.933  CorelUSPBE.RRKJ3.UPF
+ATOMIC_POSITIONS {angstrom}
+Co       1.249798200   0.721571500   0.000000000
+Co       0.000000000   0.000000000   2.019286000
+Co       1.249798200   0.721571500   4.038572000
+K_POINTS (automatic)
+4 4 1 1 1 0
+EOF
+$ECHO "  NSCF run with SOC for perpendicular configuration ...\c"
+$PW_COMMAND < per.in > per.out
+check_failure $?
+$ECHO " done"
+
+# projection for parallel configuration 
+cat > proj_par.in << EOF
+ &projwfc
+    outdir = '$TMP_DIR/',
+    prefix='par'
+    Emin = -25.0
+    Emax=25.0
+    DeltaE=0.01
+    degauss = 0.005
+    ngauss = -1
+    lsym = .false.
+    filproj = 'eband_par.dat'
+    ef_0 = -0.481064464641450  
+    lforcet = .true.
+ /
+EOF
+$ECHO "  running projection for parallel configuration ...\c"
+$PROJ_COMMAND < proj_par.in > proj_par.out
+check_failure $?
+$ECHO " done"
+
+# projection for perpendicular configuration 
+cat > proj_per.in << EOF
+ &projwfc
+    outdir = '$TMP_DIR/',
+    prefix='per'
+    Emin = -25.0
+    Emax=25.0
+    DeltaE=0.01
+    degauss = 0.005
+    ngauss = -1
+    lsym = .false.
+    filproj = 'eband_per.dat'
+    ef_0 = -0.481064464641450
+    lforcet = .true.
+ /
+EOF
+$ECHO "  running projection for perpendicular configuration ...\c"
+$PROJ_COMMAND < proj_per.in > proj_per.out
+check_failure $?
+$ECHO " done"
+

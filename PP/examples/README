@@ -127,3 +127,8 @@ MolDos_example:
     a system, containing a molecule, on the molecular orbitals of the
     molecule (separately computed).
 
+ForceTheorem_example:
+
+    This example shows how to compute the magnetic anisotropy energy (MAE) 
+    with the "Force Theorem" method (Phys. Rev. B 90, 205409 (2014), and to
+    get its local decomposition over atomic orbitals using projwfc.x.

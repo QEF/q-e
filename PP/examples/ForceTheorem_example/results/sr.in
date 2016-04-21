@@ -1,0 +1,36 @@
+ &control
+    calculation = 'scf',
+    restart_mode = 'from_scratch',
+    pseudo_dir = '/home/giannozz/trunk/espresso/pseudo/',
+    outdir = '/home/giannozz/trunk/espresso/tempdir/',
+    prefix = 'sr'
+ /
+ &system
+    ibrav = 4,
+    celldm(1) = 4.723553684826,
+    celldm(3) = 10.0,
+    nat= 3,
+    ntyp= 1,
+    nspin = 2,
+    ecutwfc = 25.0,
+    ecutrho = 200.0,
+    occupations='smearing',
+    smearing='mv',
+    degauss=0.005
+    starting_magnetization(1)=1.0,
+ /
+ &electrons
+    conv_thr = 1.0e-10
+    mixing_mode = 'local-TF'
+    mixing_beta = 0.7
+ /
+ &ions
+ /
+ATOMIC_SPECIES
+Co 58.933  Co.pbe-nd-rrkjus.UPF
+ATOMIC_POSITIONS {angstrom}
+Co       1.249798200   0.721571500   0.000000000
+Co       0.000000000   0.000000000   2.019286000
+Co       1.249798200   0.721571500   4.038572000
+K_POINTS (automatic)
+12 12 1 1 1 0

@@ -1,0 +1,32 @@
+This example shows how to compute the magnetic anisotropy energy (MAE) with the
+"Force Theorem" method (Phys. Rev. B 90, 205409 (2014). The system is a 3-layer
+Co slab and two magnetic configurations, parallel and perpendicular to the slab
+surface, are considered. 
+
+The procedure is as follows:
+1) run SCF calculation without SOC to get charge and spin moment
+densities.
+2) Copy them to two folders to be used for two SOC calculations
+for different magnetic moment orientations - parallel and perpendicular
+to the slab surface.
+3) for each orientation run NSCF calculation with SOC, in the input
+file one should specify in this case lforcet = .true. standing for the option
+"Force Theorem".
+
+In each case one will have already in output file the total band energy.
+Their difference, eband_par - eband_perp will give the total Magnetic
+anisotropy energy, MAE, in the Force theorem approximation.
+
+To get its local decomposition over different atomic orbitals we should run
+4) projwfc.x calculation for each orientation which will decompose
+each band energy over atomic orbitals using PDOS. One will get two files,
+eband_par.dat and eband_per.dat, containing this decomposition
+for each magnetic orientation.
+
+Taking the above difference orbital by orbital we obtain
+orbital-resolved MAE.
+
+There are two new parameters to specify: lforcet and ef_0 (in projwfc.x run).
+The last one should be the Fermi energy of one of NSCF calculations with SOC
+and will be substracted from all the eigenvalues to produce correct
+local decomposition of MAE.
