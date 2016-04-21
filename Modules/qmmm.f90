@@ -66,7 +66,7 @@ MODULE qmmm
   INTEGER  :: nat_all
 !!!!!!!!!!!!!!!   
 
-  PUBLIC :: qmmm_config, qmmm_initialization, qmmm_shutdown
+  PUBLIC :: qmmm_config, qmmm_initialization, qmmm_shutdown, qmmm_mode
   PUBLIC :: qmmm_update_positions, qmmm_update_forces, qmmm_add_esf, qmmm_force_esf
 
 CONTAINS
