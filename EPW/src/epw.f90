@@ -58,11 +58,11 @@
 #ifdef __PARA
   IF (mpime.eq.ionode_id) then
 #endif
-write(stdout,'(a)') "                                                                  \      /  |         "
-write(stdout,'(a)') "                                       ``:oss/                     \    /   |         "
-write(stdout,'(a)') "                           `.+s+.     .+ys--yh+     `./ss+.         \  /    |   |     "
-write(stdout,'(a)') "                          -sh//yy+`   +yy   +yy    -+h+-oyy          \/     |----     "
-write(stdout,'(a)') "                          -yh- .oyy/.-sh.   .syo-.:sy-  /yh                     |     "
+write(stdout,'(a)') "                                                                                      "
+write(stdout,'(a)') "                                       ``:oss/                                        "
+write(stdout,'(a)') "                           `.+s+.     .+ys--yh+     `./ss+.                           "
+write(stdout,'(a)') "                          -sh//yy+`   +yy   +yy    -+h+-oyy                           "
+write(stdout,'(a)') "                          -yh- .oyy/.-sh.   .syo-.:sy-  /yh                           "
 write(stdout,'(a)') "                 `.-.`    `yh+   -oyyyo.     `/syys:    oys      `.`                  "
 write(stdout,'(a)') "               `/+ssys+-` `sh+      `                   oys`   .:osyo`                "
 write(stdout,'(a)') "               -yh- ./syyooyo`                          .sys+/oyo--yh/                "
@@ -82,6 +82,8 @@ write(stdout,'(a)') "   /yh`     :syyyyyyyyyyyyyyyy+.`+syyyyyyyyo:`         .oyy
 write(stdout,'(a)') "   -yh-        ````````````````    `````````              ``        ``          oys   "
 write(stdout,'(a)') "   -+h/------------------------::::::::://////++++++++++++++++++++++///////::::/yd:   "
 write(stdout,'(a)') "   shdddddddddddddddddddddddddddddhhhhhhhhyyyyyssssssssssssssssyyyyyyyhhhhhhhddddh`   "
+write(stdout,'(a)') "                                                                                      "
+write(stdout,'(a)') "  S. Ponce, E. R. Margine, C. Verdi, and F. Giustino, http://arxiv.org/abs/1604.03525 "
 write(stdout,'(a)') "                                                                                      "
 #ifdef __PARA
   ENDIF

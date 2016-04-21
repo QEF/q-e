@@ -339,25 +339,25 @@
   OPEN(iufilgapFS, file=name1, form='formatted')
   WRITE(iufilgapFS,'(a78)') '#               k-point                  Band Enk-Ef [eV]        Delta(0) [eV]'
   DO i = 1, nkf1
-     DO j = 1, nkf2
-        DO k = 1, nkf3
-           ik = k + (j-1)*nkf3 + (i-1)*nkf2*nkf3
-           IF ( ixkff(ik) .gt. 0 ) THEN
-              DO ibnd = 1, nbndfs
-                 ! RM: Everything is in eV here.
-                 ! SP: Here take a 0.2 eV interval around the FS.
-                 IF ( abs( ekfs(ibnd,ixkff(ik)) - ef0 ) .lt. fsthick ) THEN
-                 !IF ( abs( ekfs(ibnd,ixkff(ik)) - ef0 ) .lt. 0.2 ) THEN
-                     x1 = bg(1,1)*(i-1)/nkf1+bg(1,2)*(j-1)/nkf2+bg(1,3)*(k-1)/nkf3
-                     x2 = bg(2,1)*(i-1)/nkf1+bg(2,2)*(j-1)/nkf2+bg(2,3)*(k-1)/nkf3
-                     x3 = bg(3,1)*(i-1)/nkf1+bg(3,2)*(j-1)/nkf2+bg(3,3)*(k-1)/nkf3
-                     WRITE(iufilgapFS,'(3f12.6,i8,f12.6,f24.15)') x1, x2, x3, ibnd, &
-                           ekfs(ibnd,ixkff(ik))-ef0, Agap_tmp(ibnd,ixkff(ik))
-                 ENDIF
-              ENDDO ! ibnd
-           ENDIF
-        ENDDO  ! k
-     ENDDO ! j
+    DO j = 1, nkf2
+      DO k = 1, nkf3
+        ik = k + (j-1)*nkf3 + (i-1)*nkf2*nkf3
+        !IF ( ixkff(ik) .gt. 0 ) THEN
+          DO ibnd = 1, nbndfs
+            ! RM: Everything is in eV here.
+            ! SP: Here take a 0.2 eV interval around the FS.
+            IF ( abs( ekfs(ibnd,ixkff(ik)) - ef0 ) .lt. fsthick ) THEN
+            !IF ( abs( ekfs(ibnd,ixkff(ik)) - ef0 ) .lt. 0.2 ) THEN
+               x1 = bg(1,1)*(i-1)/nkf1+bg(1,2)*(j-1)/nkf2+bg(1,3)*(k-1)/nkf3
+               x2 = bg(2,1)*(i-1)/nkf1+bg(2,2)*(j-1)/nkf2+bg(2,3)*(k-1)/nkf3
+               x3 = bg(3,1)*(i-1)/nkf1+bg(3,2)*(j-1)/nkf2+bg(3,3)*(k-1)/nkf3
+               WRITE(iufilgapFS,'(3f12.6,i8,f12.6,f24.15)') x1, x2, x3, ibnd, &
+                     ekfs(ibnd,ixkff(ik))-ef0, Agap_tmp(ibnd,ixkff(ik))
+            ENDIF
+          ENDDO ! ibnd
+        !ENDIF
+      ENDDO  ! k
+    ENDDO ! j
   ENDDO ! i
   CLOSE(iufilgapFS)
   !
