@@ -201,9 +201,7 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   
   write(stdout,*)"after wfc waves"
 
-#ifdef __PARA
   call poolrecover (et, nbnd, nkstot, nks)
-#endif
  
   wfc_scal = 1.0d0
   twf0 = .true.

@@ -217,7 +217,7 @@ ENDIF
   call read_file 
 ! after read_file everything is known
 
-#if defined __PARA
+#if defined __MPI
   kunittmp = kunit
 #else
   kunittmp = 1
