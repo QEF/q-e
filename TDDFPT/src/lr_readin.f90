@@ -543,6 +543,7 @@ CONTAINS
     USE paw_variables,    ONLY : okpaw
     USE uspp,             ONLY : okvan
     USE funct,            ONLY : dft_is_hybrid
+    USE ldaU,             ONLY : lda_plus_u
 
     IMPLICIT NONE
     !
@@ -562,8 +563,11 @@ CONTAINS
     !
     !  Meta-DFT currently not supported by TDDFPT
     !
-    IF (dft_is_meta()) &
-         & CALL errore( ' iosys ', ' Meta DFT ' // 'is not implemented yet', 1 )
+    IF (dft_is_meta()) CALL errore( 'lr_readin', 'Meta DFT is not implemented yet', 1 )
+    !
+    ! Hubbard U is not supported
+    !
+    IF (lda_plus_u) CALL errore('lr_readin', 'TDDFPT with Hubbard U is not implemented',1)
     !
     !  Tetrahedron method and fixed occupations are not implemented.
     !
