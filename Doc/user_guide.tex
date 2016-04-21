@@ -1,5 +1,5 @@
 \documentclass[12pt,a4paper]{article}
-\def\version{5.3}
+\def\version{5.4}
 \def\qe{{\sc Quantum ESPRESSO}}
 
 \usepackage{html}
@@ -641,24 +641,28 @@ open-source license: see the GotoBLAS2 page at \\
 \texttt{http://www.tacc.utexas.edu/tacc-software/gotoblas2/}.
 
 \paragraph{FFT}
-\qe\ has an internal copy of an old FFTW version. It also supports
-the newer FFTW3 library and the following vendor-specific FFT libraries:
-\begin{quote}
-      Intel DFTI from MKL\\
-      IBM ESSL\\
-      NEC ASL
-\end{quote}
+\qe\ has an internal copy of an old FFTW library. It also supports
+the newer FFTW3 library and some vendor-specific FFT libraries.
 \configure\ will first search for vendor-specific FFT libraries;
 if none is found, it will search for an external FFTW v.3 library;
 if none is found, it will fall back to the internal  copy of FFTW.
 \configure\ will add the appropriate preprocessing options:
-for DFTI, \texttt{-D\_\_DFTI}; for ESSL, \texttt{-D\_\_ESSL} or
-\texttt{-D\_\_LINUX\_ESSL}; for FFTW3, \texttt{-D\_\_FFTW3}; for
-FFTW \texttt{-D\_\_FFTW}), to \texttt{DFLAGS} in the \texttt{make.sys} 
-file.
+\begin{itemize}
+\item \texttt{-D\_\_ESSL} for ESSL on IBM AIX machines,
+\item \texttt{-D\_\_LINUX\_ESSL} for ESSL on IBM Linux machines,
+\item \texttt{-DASL} for NEC ASL library on NEC machines,
+\item \texttt{-D\_\_ARM\_LIB} for ARM library,
+\item \texttt{-D\_\_DFTI}  for DFTI (Intel MKL library),
+\item \texttt{-D\_\_FFTW3} for FFTW3 (external),
+\item \texttt{-D\_\_FFTW}) for FFTW (internal library),
+\end{itemize}
+to \texttt{DFLAGS} in the \texttt{make.sys} file. 
+If you edit \texttt{make.sys} manually, please note that one and
+only one among the mentioned preprocessing option must be set.
 
-If you have MKL libraries, you may also use the provided FFTW3 interface 
-(v.10 and later), or directly link FFTW3 from MKL (v.12 and later).
+If you have MKL libraries, you may either use the provided FFTW3 
+interface (v.10 and later), or directly link FFTW3 from MKL (v.12 
+and later) or use DFTI (recent versions).
 
 \paragraph{MPI libraries} 
 MPI libraries are usually needed for parallel execution 
