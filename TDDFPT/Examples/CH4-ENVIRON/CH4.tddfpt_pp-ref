@@ -1,6 +1,6 @@
  Warning: Only a single CPU will be used!
 
-     Program TDDFPT_PP v.5.3.0 (svn rev. 12334M) starts on 22Apr2016 at 19: 7: 9 
+     Program TDDFPT_PP v.5.3.0 (svn rev. 12334M) starts on 22Apr2016 at 19:14:56 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -26,18 +26,18 @@
 
      Polarization direction:1
      Lanczos coefficients:
-     Average =    13.02540170
-     Average oscillation amplitude =     0.35591637
+     Average =    13.02093283
+     Average oscillation amplitude =     0.35164944
 
      Polarization direction:2
      Lanczos coefficients:
-     Average =    13.02538666
-     Average oscillation amplitude =     0.35591636
+     Average =    13.02097048
+     Average oscillation amplitude =     0.35164724
 
      Polarization direction:3
      Lanczos coefficients:
-     Average =    13.02551123
-     Average oscillation amplitude =     0.35591424
+     Average =    13.02108724
+     Average oscillation amplitude =     0.35164063
 
      Data ready, starting to calculate observables...
 
@@ -55,10 +55,10 @@
 
      Functions are reported in \hbar.\omega  Energy unit is (Ry)
  
-     TDDFPT_PP    :    11.25s CPU        11.37s WALL
+     TDDFPT_PP    :    10.50s CPU        10.56s WALL
 
  
-   This run was terminated on:  19: 7:21  22Apr2016            
+   This run was terminated on:  19:15: 6  22Apr2016            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
