@@ -29,8 +29,11 @@ Fixed in 5.4 version:
 
 Incompatible changes in 5.4 version:
 
+  * Directories PW/tests/ and CPV/tests/ deleted, superseded by "testcode"
+    tests in test-suite/
   * k+G indices "igk" no longer written to and read from file (PW only, 
     will be extended to all codes)
+  * Matrix inversion routines merged into "invmat" in module matrix_inversion
   * Module "gvecw", in Modules/gvecw.f90, includes previous CP module "gvecw"
     and several PW variables taken out from module "wvfct":
     qcutz, ecfixed, q2sigm, ecutwfc
