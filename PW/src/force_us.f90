@@ -167,7 +167,7 @@ SUBROUTINE force_us( forcenl )
                 CALL DGEMM ('N','N', nh(nt), becp%nbnd_loc, nh(nt), &
                      1.0_dp, deeq(1,1,na,current_spin), nhm, &
                      becp%r(ijkb0+1,1), nkb, 1.0_dp, aux, nh(nt) )
-!$omp parallel do default(shared) private(ibnd_loc,ibnd,ih) reduction(+:forcenl)
+!$omp parallel do default(shared) private(ibnd_loc,ibnd,ih) reduction(-:forcenl)
                 DO ih = 1, nh(nt)
                    DO ibnd_loc = 1, becp%nbnd_loc
                       ibnd = ibnd_loc + becp%ibnd_begin - 1
