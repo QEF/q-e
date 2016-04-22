@@ -5,11 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-
-#if defined __HPM
-#  include "/cineca/prod/hpm/include/f_hpm.h"
-#endif
-!
 ! This module contains interfaces to most low-level MPI operations:
 ! initialization and stopping, broadcast, parallel sum, etc.
 !
@@ -155,10 +150,6 @@
         IF (ierr/=0) CALL mp_stop( 8004 )
         CALL mpi_comm_rank(group,taskid,ierr)
         IF (ierr/=0) CALL mp_stop( 8005 )
-#if defined __HPM
-        !   initialize the IBM Hardware performance monitor
-        CALL f_hpminit( taskid, 'profiling' )
-#endif
         CALL mpi_comm_size(group,numtask,ierr)
         IF (ierr/=0) CALL mp_stop( 8006 )
 #  endif
@@ -198,10 +189,6 @@
 
 #if defined(__MPI)
         CALL mpi_comm_rank( groupid, taskid, ierr)
-#if defined __HPM
-        !   terminate the IBM Hardware performance monitor
-        CALL f_hpmterminate( taskid )
-#endif
 #endif
         RETURN
       END SUBROUTINE mp_end

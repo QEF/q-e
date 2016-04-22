@@ -81,6 +81,7 @@ Libraries:
       __FFTW      FFT routines from internal FFTW library
       __FFTW3     FFT routines from external FFTW v.3 library
       __DFTI      FFT routines from Intel MKL library
+      __ARM_LIB   FFT routines from ARM Performance library
       __ESSL      use blas/lapack/fft routines from IBM ESSL library
       __LINUX_ESSL  use blas/lapack/fft routines from IBM ESSL library
                    (linux version)
@@ -88,8 +89,6 @@ Libraries:
                   for parallel subspace diagonalization
       __MASS      use mathematical routines from IBM MASS library
       ASL, MICRO  SX-6 specific libraries
-Timing:
-      __HPM        Hardware Performance Monitor (IBM SP)
 Signals:
       __PTRACE        Enable traceback
       __TRAP_SIGUSR1  Enable signal trapping (experimental): code will stop

@@ -71,9 +71,6 @@
      INTEGER, SAVE :: icurrent = 1
      LOGICAL :: found
 
-#if defined __HPM
-     INTEGER :: OMP_GET_THREAD_NUM
-#endif
      INTEGER :: tid
 
 #if defined(__OPENMP)
@@ -229,9 +226,6 @@
      LOGICAL :: dofft( nfftx ), found
      INTEGER, PARAMETER  :: stdout = 6
 
-#if defined __HPM
-     INTEGER :: OMP_GET_THREAD_NUM
-#endif
 #if defined(__OPENMP)
      INTEGER :: offset
      INTEGER :: nx_t, ny_t, nzl_t, ldx_t, ldy_t
