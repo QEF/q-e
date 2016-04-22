@@ -68,12 +68,12 @@ if(l_contraction) then
       call read_iimat(iimat_contract,ispin)
    enddo
    write(stdout,*) 'CALL contract_v_build'
-   call FLUSH(stdout)
+   FLUSH(stdout)
    call contract_v_build(fc)
 endif
 
 write(stdout,*) 'FIND_EIG 1'
-call FLUSH(stdout)
+FLUSH(stdout)
 
 do i=1,n_eig
    call initialize_exc(bse_spectrum(i))
@@ -85,7 +85,7 @@ enddo
 
 
 write(stdout,*) 'FIND_EIG 2'
-call FLUSH(stdout)
+FLUSH(stdout)
 
 if(l_restart==1)then
    nstart=n_eig_start
@@ -98,7 +98,7 @@ else
 endif
 
 write(stdout,*) 'FIND_EIG 3'
-call FLUSH(stdout)
+FLUSH(stdout)
 
 !compute the eigenfunction and eigenvalues
 if(l_restart<2) then

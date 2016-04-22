@@ -98,7 +98,7 @@ if (debug) then
   prod=prod*RYTOEV
   if(ionode) write(stdout,*) 'exc_diago, prod (eV)=',prod
   if(ionode) write(stdout,*) 'prod should be greater than LUMO level'
-  CALL flush_unit( stdout )
+  FLUSH ( stdout )
 end if
 
 if(.not.l_scissor) then

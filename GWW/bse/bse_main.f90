@@ -367,7 +367,7 @@ ENDIF
   call print_clock('build_exch')
   call print_clock('read_wannier_matrix')
 
-  CALL FLUSH( stdout )
+  FLUSH( stdout )
 
   call stop_pp
 
