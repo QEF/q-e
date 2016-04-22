@@ -275,9 +275,6 @@ esac
 if test "$use_shared" -eq 0 ; then
   try_ldflags="$try_ldflags $try_ldflags_static" ; fi
 
-# Checking OpenMP...
-X_AC_QE_OPENMP()
-
 if test "$use_openmp" -eq 1 ; then
   try_f90flags="$try_f90flags $try_fflags_openmp"
   try_fflags="$try_fflags $try_fflags_openmp"

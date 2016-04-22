@@ -8,7 +8,7 @@
 # most fortran compilers can directly preprocess c-like directives: use
 # 	$(MPIF90) $(F90FLAGS) -c $<
 # if explicit preprocessing by the C preprocessor is needed, use:
-# 	$(CPP) $(CPPFLAGS) $< -o $*.F90 
+# 	$(CPP) $(CPPFLAGS) $< -o $*.F90
 #	$(MPIF90) $(F90FLAGS) -c $*.F90 -o $*.o
 # remember the tabulator in the first column !!!
 
@@ -36,16 +36,15 @@ TOPDIR = @topdir@
 # FDFLAGS = as DFLAGS, for the f90 compiler
 # See include/defs.h.README for a list of options and their meaning
 # With the exception of IBM xlf, FDFLAGS = $(DFLAGS)
-# For IBM xlf, FDFLAGS is the same as DFLAGS with separating commas 
+# For IBM xlf, FDFLAGS is the same as DFLAGS with separating commas
 
 # MANUAL_DFLAGS  = additional precompilation option(s), if desired
-#                  You may use this instead of tweaking DFLAGS and FDFLAGS
-#                  BEWARE: will not work for IBM xlf! Manually edit FDFLAGS
+#                  BEWARE: it does not work for IBM xlf! Manually edit FDFLAGS
 MANUAL_DFLAGS  =
-DFLAGS         = @dflags@ $(MANUAL_DFLAGS)
-FDFLAGS        = @fdflags@ $(MANUAL_DFLAGS)
+DFLAGS         = @dflags@
+FDFLAGS        = @fdflags@
 
-# IFLAGS = how to locate directories with *.h or *.f90 file to be included 
+# IFLAGS = how to locate directories with *.h or *.f90 file to be included
 #          typically -I../include -I/some/other/directory/
 #          the latter contains .e.g. files needed by FFT libraries
 
@@ -57,7 +56,7 @@ IFLAGS         = @iflags@
 MOD_FLAG      = @imod@
 
 # Compilers: fortran-90, fortran-77, C
-# If a parallel compilation is desired, MPIF90 should be a fortran-90 
+# If a parallel compilation is desired, MPIF90 should be a fortran-90
 # compiler that produces executables for parallel execution using MPI
 # (such as for instance mpif90, mpf90, mpxlf90,...);
 # otherwise, an ordinary fortran-90 compiler (f90, g95, xlf90, ifort,...)
@@ -70,7 +69,7 @@ MPIF90         = @mpif90@
 CC             = @cc@
 F77            = @f77@
 
-# C preprocessor and preprocessing flags - for explicit preprocessing, 
+# C preprocessor and preprocessing flags - for explicit preprocessing,
 # if needed (see the compilation rules above)
 # preprocessing flags must include DFLAGS and IFLAGS
 
@@ -151,7 +150,7 @@ RANLIB         = @ranlib@
 
 FLIB_TARGETS   = all
 
-LIBOBJS        = ../clib/clib.a ../iotk/src/libiotk.a 
+LIBOBJS        = ../clib/clib.a ../iotk/src/libiotk.a
 LIBS           = $(SCALAPACK_LIBS) $(LAPACK_LIBS) $(FFT_LIBS) $(BLAS_LIBS) $(MPI_LIBS) $(MASS_LIBS) $(LD_LIBS)
 
 # wget or curl - useful to download from network
