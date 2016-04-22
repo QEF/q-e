@@ -10,9 +10,10 @@ if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
-$ECHO "This example shows how to use pw.x to compute the IR and Raman espectra "
-$ECHO "of a CO2 molecule."
-$ECHO "After the calculation, it pops up a gnuplot window with both espectra."
+$ECHO "This example shows how to use pw.x and ph.x to compute IR and Raman spectra"
+$ECHO "for a CO2 molecule and for ZnO in the Wurtzite structure."
+$ECHO "After the calculation, a gnuplot window posp up with both spectra."
+$ECHO "NOTE: Raman calculation currently disabled (not implemented for GGA)."
 $ECHO " "
 
 # set the needed environment variables
@@ -151,6 +152,7 @@ Normal modes for CO2
   epsil=.true.,
   trans=.true.,
   asr=.true.
+  ! lraman=.true.
   fildyn='dmat.co2'
  /
  0.0 0.0 0.0
@@ -269,6 +271,7 @@ Normal modes for Wurtzite
   amass(2)=15.999,
   outdir='$TMP_DIR'
   epsil=.false.,
+  ! lraman=.true.
   trans=.true.,
   asr=.true.
   fildyn='dmat.zno'

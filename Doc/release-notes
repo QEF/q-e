@@ -12,7 +12,7 @@ New in 5.4 version:
 Fixed in 5.4 version:
 
   * New configure wasn't working properly for some Macintosh due to a
-    missing line (commit 11976)
+    missing line (commit 11976) and on BG (commit 12333)
   * Possible conflict between FFTW in MKL and in Modules/fftw.c solved 
     (commit 11980)
   * Incorrect printout from bands.x for nspin=2 (commit 12064)
@@ -26,6 +26,9 @@ Fixed in 5.4 version:
     Ippolito, CINECA) (commit 12218)
   * Hybrid functionals with USPP and k-point parallelization now work 
     (commit 12242)
+  * Raman with no symmetry wasn't working properly due to bad logic of
+    routines symmatrix3 and symtensor3 (courtesy of Marc Blanchard and
+    Michele Lazzeri, IMPMC) (commit 12334)
 
 Incompatible changes in 5.4 version:
 
@@ -50,6 +53,7 @@ New in 5.3.0 version:
   * projwfc.x: PDOS with PAW projectors and all-electron basis functions
   * X3LYP hybrid functional (using VWN_1_RPA)
   * B3LYP hybrid functional (using VWN) and B3LYP-V1R (using VWN_1_RPA)
+  * New modular configure
 
 Fixed in 5.3.0 version:
 

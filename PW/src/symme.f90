@@ -268,27 +268,29 @@ CONTAINS
      INTEGER :: isym, i,j,k,l,m,n
      REAL(DP) :: work (3,3,3)
      !
-     IF (nsym == 1) RETURN
-     !
-     work (:,:,:) = 0.0_dp
-     DO isym = 1, nsym
-        DO i = 1, 3
-           DO j = 1, 3
-              DO k = 1, 3
-                 DO l = 1, 3
-                    DO m = 1, 3
-                       DO n = 1, 3
-                          work (i, j, k) = work (i, j, k) + &
-                               s (i, l, isym) * s (j, m, isym) * &
-                               s (k, n, isym) * mat3 (l, m, n)
+     IF (nsym > 1) THEN
+        !
+        work (:,:,:) = 0.0_dp
+        DO isym = 1, nsym
+           DO i = 1, 3
+              DO j = 1, 3
+                 DO k = 1, 3
+                    DO l = 1, 3
+                       DO m = 1, 3
+                          DO n = 1, 3
+                             work (i, j, k) = work (i, j, k) + &
+                                s (i, l, isym) * s (j, m, isym) * &
+                                s (k, n, isym) * mat3 (l, m, n)
+                          END DO
                        END DO
                     END DO
                  END DO
               END DO
            END DO
         END DO
-     END DO
-     mat3 = work/ DBLE(nsym)
+        mat3 = work/ DBLE(nsym)
+        !
+     END IF
      !
      ! Bring to cartesian axis
      !
@@ -311,24 +313,25 @@ CONTAINS
      INTEGER :: na, isym, nar, i,j,k,l,n,m
      REAL(DP), ALLOCATABLE :: work (:,:,:,:)
      !
-     IF (nsym == 1) RETURN
-     !
-     ! symmetrize in crystal axis
-     !
-     ALLOCATE (work(3,3,3,nat))
-     work (:,:,:,:) = 0.0_dp
-     DO na = 1, nat
-        DO isym = 1, nsym
-           nar = irt (isym, na)
-           DO i = 1, 3
-              DO j = 1, 3
-                 DO k = 1, 3
-                    DO l = 1, 3
-                       DO m =1, 3
-                          DO n =1, 3
-                             work (i, j, k, na) = work (i, j, k, na) + &
+     IF (nsym > 1) THEN
+        !
+        ! symmetrize in crystal axis
+        !
+        ALLOCATE (work(3,3,3,nat))
+        work (:,:,:,:) = 0.0_dp
+        DO na = 1, nat
+           DO isym = 1, nsym
+              nar = irt (isym, na)
+              DO i = 1, 3
+                 DO j = 1, 3
+                    DO k = 1, 3
+                       DO l = 1, 3
+                          DO m =1, 3
+                             DO n =1, 3
+                                work (i, j, k, na) = work (i, j, k, na) + &
                                   s (i, l, isym) * s (j, m, isym) *    &
                                   s (k, n, isym) * tens3 (l, m, n, nar)
+                             END DO
                           END DO
                        END DO
                     END DO
@@ -336,9 +339,10 @@ CONTAINS
               END DO
            END DO
         END DO
-     END DO
-     tens3 (:,:,:,:) =   work(:,:,:,:) / DBLE (nsym)
-     DEALLOCATE (work)
+        tens3 (:,:,:,:) =   work(:,:,:,:) / DBLE (nsym)
+        DEALLOCATE (work)
+        !
+     END IF
      !
      ! Bring to cartesian axis
      !
