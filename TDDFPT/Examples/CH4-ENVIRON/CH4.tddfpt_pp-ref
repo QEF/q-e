@@ -1,6 +1,6 @@
- Warning: Only a single cpu will be used!
+ Warning: Only a single CPU will be used!
 
-     Program TDDFPT_PP v.5.0.2 (svn rev. 10732M) starts on  8Feb2014 at 18:42:48 
+     Program TDDFPT_PP v.5.3.0 (svn rev. 12334M) starts on 22Apr2016 at 19: 7: 9 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -9,55 +9,57 @@
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
-     Parallel version (MPI), running on     4 processors
-     R & G space division:  proc/nbgrp/npool/nimage =       4
- Calculation is finished.
- Calculation is finished.
- Calculation is finished.
+     Parallel version (MPI), running on     8 processors
+     R & G space division:  proc/nbgrp/npool/nimage =       8
 
      Reading    500 Lanczos steps for direction 1
         500 steps will be considered
 
+
      Reading    500 Lanczos steps for direction 2
         500 steps will be considered
+
 
      Reading    500 Lanczos steps for direction 3
         500 steps will be considered
 
+
      Polarization direction:1
-     Average =    13.02094308
-     Average oscillation amplitude =     0.35164911
+     Lanczos coefficients:
+     Average =    13.02540170
+     Average oscillation amplitude =     0.35591637
 
      Polarization direction:2
-     Average =    13.02091602
-     Average oscillation amplitude =     0.35165046
+     Lanczos coefficients:
+     Average =    13.02538666
+     Average oscillation amplitude =     0.35591636
 
      Polarization direction:3
-     Average =    13.02094712
-     Average oscillation amplitude =     0.35164847
+     Lanczos coefficients:
+     Average =    13.02551123
+     Average oscillation amplitude =     0.35591424
 
-     Data ready, starting to calculate observables
+     Data ready, starting to calculate observables...
 
      Broadening =      0.01000000 Ry
 
-     Output file name: ch4.plot            
+     Output file name: ch4.plot_chi.dat    
 
-     chi_i_j: dipole polarizability tensor in units of e^2*a_0^2/energy
+     chi_i_j: dipole polarizability tensor  in units of e^2*a_0^2/energy
 
      S: oscillator strength in units of 1/energy
 
-     S(\hbar \omega) = 2m/( 3 \pi e^2 \hbar) \omega sum_j chi_j_j
+     S(\hbar \omega) = 2m/( 3 \pi e^2 \hbar)  \omega sum_j chi_j_j
 
-     S(\hbar \omega) satisfies the f-sum rule: \int_0^\infty dE S(E) = N_el 
+     S(\hbar \omega) satisfies the f-sum rule:  \int_0^\infty dE S(E) = N_el 
 
-     Functions are reported in \hbar.\omega Energy unit is (Ry)
+     Functions are reported in \hbar.\omega  Energy unit is (Ry)
  
-     TDDFPT_PP    :    26.32s CPU        26.60s WALL
+     TDDFPT_PP    :    11.25s CPU        11.37s WALL
 
  
-   This run was terminated on:  18:43:14   8Feb2014            
+   This run was terminated on:  19: 7:21  22Apr2016            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
 =------------------------------------------------------------------------------=
- Calculation is finished.
