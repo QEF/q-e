@@ -38,7 +38,7 @@ oldcp2upf.x : oldcp2upf.o $(OBJS) $(QEMODS) $(LIBOBJS)
 read_upf.x : read_upf.o
 	$(LD) $(LDFLAGS) -o $@ read_upf.o $(LIBS)
 
-read_upf_tofile.x : read_upf_tofile.o $(QEMODS) 
+read_upf_tofile.x : read_upf_tofile.o $(OBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ read_upf_tofile.o $(OBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 
 rrkj2upf.x : rrkj2upf.o $(OBJS) $(QEMODS) $(LIBOBJS)
