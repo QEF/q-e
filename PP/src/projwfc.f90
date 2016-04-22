@@ -972,20 +972,17 @@ SUBROUTINE projwave_nc(filproj, lsym, lwrite_ovp, lbinary, ef_0 )
      !
   ENDIF
   !
-
-
-!---- Force Theorem -- (AlexS)
+  !---- Force Theorem -- (AlexS)
   IF ( lforcet ) THEN
-   IF ( lsym ) call errore('projwave_nc','Force Theorem   &
-                   implemented only with lsym=.false.',1) 
-   CALL weights()
+     IF ( lsym ) call errore('projwave_nc','Force Theorem   &
+                     & implemented only with lsym=.false.',1) 
+      CALL weights()
 !   write(6,*) 'ef_0 = ', ef_0
 !   write(6,*) wg
-   eband_tot = 0.d0
-   ALLOCATE (eband_proj(natomwfc))
-   eband_proj = 0.d0
+      eband_tot = 0.d0
+      ALLOCATE (eband_proj(natomwfc))
+      eband_proj = 0.d0
   ENDIF
-
 
   DO ik = 1, nks
      wfcatom = (0.d0,0.d0)
@@ -997,11 +994,11 @@ SUBROUTINE projwave_nc(filproj, lsym, lwrite_ovp, lbinary, ef_0 )
 
 !---- AlexS
 !    To project on real harmonics, not on spinors.  
-     if(lforcet) then
-       CALL atomic_wfc_nc_updown(ik, wfcatom)
-     else
-       CALL atomic_wfc_nc_proj (ik, wfcatom)
-     endif
+     IF (lforcet) THEN
+        CALL atomic_wfc_nc_updown(ik, wfcatom)
+     ELSE
+        CALL atomic_wfc_nc_proj (ik, wfcatom)
+     ENDIF
 !----
      !
      CALL init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb)
@@ -1259,7 +1256,7 @@ IF ( ionode ) THEN
            ENDIF
         ENDDO
         eband_proj_tot = eband_proj_tot + psum
-        WRITE(4,'(''eband_atom (eV) = '',i5,e30.10)') na, psum*rytoev
+        WRITE(4,'("eband_atom (eV) = ",i5,e30.10)') na, psum*rytoev
 
         WRITE(4,*)
 
