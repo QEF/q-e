@@ -118,14 +118,15 @@ installed from the core distribution using \texttt{make}:
 \item \texttt{XSPECTRA}: calculation of X-Ray spectra
 \item \texttt{TDDFPT}: Time-dependent DFPT
 \item \texttt{EPW}: electron-phonon
-\item \texttt{GIPAW}: calculation of NMR coefficients and chemical shifts,
-\item \texttt{GWL}: GW calculations using Lanczos chains.
+\item \texttt{GIPAW}: NMR coefficients and chemical shifts
+\item \texttt{GWL}: GW and BSE using Lanczos chains
+\item \texttt{West}: Many-body perturbation corrections to DFT.
 \end{itemize}
 All these packages use routines from the core distribution. Note that
 \begin{itemize}
 \item \texttt{EPW} and \texttt{GWL} require \texttt{PHonon};
-\item \texttt{GWL} must be separately downloaded;
-\item \texttt{GIPAW} is stored in a separate SVN repository.
+\item \texttt{GWL} is not automatically downloaded in the released version;
+\item \texttt{GIPAW} and \texttt{West} are stored in separate SVN repositories.
 \end{itemize}
 
 There is then a shell of {\em external} packages, which typically
@@ -479,7 +480,7 @@ Common files and directories in the \texttt{espresso/} directory are:
    dev-tools/               License
    pseudo/                  README
    Doc/                     environment_variables
-   clib/                    flib/
+   clib/                    bin/
    Modules/                 LR_Modules/
    COUPLE/                  upftools/
 \end{verbatim}
@@ -494,7 +495,7 @@ obvious, the other files and directories are related to
 \item  {\em General documentation} (not package-specific):
 \texttt{Doc/}
 \item {\em  C and Fortran Libraries, modules}:
-\texttt{clib/}, \texttt{flib/}, \texttt{Modules/}, \texttt{COUPLE/} 
+\texttt{clib/}, \texttt{Modules/}, \texttt{COUPLE/} 
 (the latter contains code and documentation useful to call \qe\ programs 
  from external codes)
 \item {\em  Linear-response specific modules}:
@@ -538,11 +539,10 @@ command \texttt{make}.
 \item[--] \texttt{include/}: files to be included into sources, to be 
 pre-processed.
 \end{itemize}
-\texttt{./configure} {\em options} runs \texttt{install/configure},
-produces file \make.sys. Its behavior can be changed by
-modifying file \texttt{install/configure.ac} (see Sec.\ref{SubSec:conf}
-for more details) and running (in \texttt{install/}) command \autoconf. 
-This produces a new version of \texttt{install/configure}. 
+\texttt{./configure} {\em options} cleans executbales,
+runs \texttt{install/configure}, produces file \make.sys. 
+See Sec.\ref{SubSec:conf} for some details on how to change the
+behavior of \configure. 
 
 \texttt{make} {\em target} checks for dependencies, recursively goes 
 into subdirectories executing \texttt{make} again. The behavior of 
@@ -649,8 +649,8 @@ include ../../make.sys
 \end{verbatim}
 {\em Contains machine- and \qe-specific definitions}
 \begin{verbatim}
-MODFLAGS= $(MOD_FLAG)../../iotk/src
-          $(MOD_FLAG)../../Modules $(MOD_FLAG).
+MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules $(MOD_FLAG).\
+          $(MOD_FLAG)../../FFTXlib $(MOD_FLAG)../../LAXlib
 \end{verbatim}
 {\em Location of needed modules; {\rm \texttt{MOD\_FLAG}} is defined in
 \texttt{make.sys}}
@@ -668,7 +668,7 @@ wannier_enrg.o
 {\em List of objects - add here new objects, or delete from this list. Do not
 forget the backslash! It ensure continuation of the line}
 \begin{verbatim}
-QEMODS=../../Modules/libqemod.a
+QEMODS=../../Modules/libqemod.a ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a
 \end{verbatim}
 {\em Objects from {\rm\texttt{Modules/}} are available from the above archive.
 The directory where F95 modules are must also be specified to the compiler!}
@@ -679,8 +679,7 @@ TLDEPS=bindir mods libs liblapack libblas libenviron
 compilation with correct dependencies also if compiling from inside
 a package directory and not from top level}
 \begin{verbatim}
-LIBOBJS = ../../flib/ptools.a ../../flib/flib.a
-          ../../clib/clib.a   ../../iotk/src/libiotk.a
+LIBOBJS = ../../clib/clib.a   ../../iotk/src/libiotk.a
 \end{verbatim}
 {\em All needed QE-specific libraries}
 \begin{verbatim}
@@ -805,10 +804,9 @@ The \configure\ script is generated from its source file
 \configurac\ by the GNU \autoconf\ utility
 (\texttt{http://www.gnu.org/software/autoconf/}).  Don't edit \configure\
 directly: whenever it gets regenerated, your changes will be lost.
-Instead, go to the \texttt{install/} directory, edit \configurac, 
-then run \autoconf\ to regenerate \configure. If you want 
-to keep the old \configure, make a copy
-first.
+Instead, go to the \texttt{install/} directory, edit \configurac\ and/or
+files \texttt{install/mt/*.m4}, then run \autoconf\ to regenerate \configure. 
+If you want to keep the old \configure, make a copy first.
 
 GNU \autoconf\ is installed by default on most Unix/Linux systems.  If
 you don't have it on your system, you'll have to install it. You will
@@ -1084,26 +1082,19 @@ Some vendor replacements for BLAS that are supported by \qe\ are:
 \begin{quote}
     MKL on Linux, 32- and 64-bit Intel CPUs\\
     ACML on Linux, 64-bit AMD CPUs\\
-    essl on AIX\\
+    ESSL on AIX\\
     SCSL on sgi altix\\
     SUNperf on sparc
 \end{quote}
 Moreover, ATLAS is used over BLAS if available.
 
-- LAPACK or equivalent. Some vendor replacements for LAPACK that are supported by \qe\ are:
-\begin{quote}
-    mkl on linux
-    SUNperf on sparc
-\end{quote}
+- LAPACK or equivalent. Some vendor replacements for LAPACK are supported 
+  by \qe, e.g.: Intel MKL, IBM ESSL
 
-- FFTW (version 3) or another supported FFT library. The latter include:
-\begin{quote}
-    essl on aix
-    ACML on Linux, 64-bit AMD CPUs
-    SUNperf on sparc
-\end{quote}
+- FFTW (version 3) or another supported FFT library (e.g Intel DFTI, 
+  IBM ESSL)
 
-- the MASS vector math library on aix
+- the IBM MASS vector math library 
 
 - an MPI library. This is often automatically linked by the compiler
 
@@ -1122,11 +1113,6 @@ prerequisites (for example, Lapack requires BLAS).
 \end{enumerate}
 
 \subsection{Libraries}
-
-Subdirectory \texttt{flib/} contains libraries written in fortran77 
-(\texttt{*.f}) and in fortran-90 (\texttt{*.f90}).
-The latter should not depend on any module, except for modules
-\texttt{kinds} and \texttt{constants}.
 
 Subdirectory \texttt{clib/} contains libraries written in C 
 (\texttt{*.c}). There are currently two different ways to 
@@ -2233,13 +2219,14 @@ The following web page may be useful:
 \subsection{Including a repository into the trunk}
 \label{SubSec:propedit}
 It is possible to download other repositories into the main \qe\ repository. 
-Currently, this possibility works only for GIPAW; you need to be authorized
-to access the GIPAW svn, though. From the trunk/ subdirectory
-(the one containing espresso/), type ``svn propedit svn:externals espresso''.
+Currently, this possibility works for GIPAW and West (for authorized users).
+From the trunk/ subdirectory (the one containing espresso/), type 
+``svn propedit svn:externals espresso''.
 An editor will open. Type the name of the subdirectory of ``espresso/''
 where you want the repository to be downloaded, followed by the address of
-the repository, exit (not quit!) the editor. Example:
+the repository, exit (not quit!) the editor. Currently:
 \begin{verbatim}
+West  http://qeforge.qe-forge.org/svn/west/trunk
 GIPAW http://qeforge.qe-forge.org/svn/qe-gipaw/trunk
 \end{verbatim}
 
