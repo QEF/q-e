@@ -31,7 +31,7 @@ run-tests-pw : prolog pseudo
 	${TESTCODE_DIR}/bin/testcode.py --processors=0 --category=pw_all
 
 run-custom-test : prolog pseudo
-	if test -d $(testdir); then \
+	@if test -d $(testdir); then \
 	${TESTCODE_DIR}/bin/testcode.py --processors=0 --category=$(testdir) ; fi
 
 create-reference : pseudo prolog
@@ -44,7 +44,11 @@ clean: prolog
 	@for x in `find pw_* -name "test*"`; do rm -rf $$x; done
 	@for x in `find cp_* -name "test*"`; do rm -rf $$x; done
 # Special case for 'pw_vc-relax' test-case
-	@rm -f rm pw_vc-relax/e pw_vc-relax/tv pw_vc-relax/p pw_vc-relax/eal pw_vc-relax/avec
+	@rm -f pw_vc-relax/ave pw_vc-relax/e pw_vc-relax/tv pw_vc-relax/p pw_vc-relax/eal pw_vc-relax/avec
+# Special case for 'pw_langevin' test-case
+	@rm -f pw_langevin/trajectory-pwscf.xyz
+# Soecial cases for CP	
+	@rm -f cp_si/qe_input.xml cp_sio2/qe_input.xml cp_o2/qe_input.xml cp_h2o/qe_input.xml
 	@rm userconfig
 
 # Calling 'purge' means remove all reference outputs... be careful!
