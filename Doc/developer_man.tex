@@ -273,44 +273,46 @@ committed: the repository should always be at or close to production
 status. SVN branches are discouraged: experience shows that too many
 branches are never merged.
 
-Due to various \qeforge\ limitations, anonymous SVN access is also disabled.
-People who need to access a development version may use the link to the
-"Daily Snapshot" on the www.quantum-espresso.org web site.
+Due to various \qeforge limitations and a change in access policy, 
+anonymous SVN access is also disabled. People who need to regularly access 
+to a development version may use the link to the "Daily Snapshot" 
+on the www.quantum-espresso.org web site.
 
-People who need to stay aligned to the development of \qe may use the official
-\texttt{git} mirror, available on \qeforge\ under the project ``qe-private''.
-Please apply for an account on QE-FORGE if you haven't one
-(see Sect.\ref{SubSec:qeforge} for details), contact support[.at.]qe-forge.org 
-and explain what you need and why. To check out the repository:
+People who need to stay aligned to the development of \qe but they do not 
+contribute directly into the code can use a mirrored version of the repository 
+done using \texttt{git}, available on \qeforge. Please apply for an account on 
+the portal if you haven't one (see Sect.\ref{SubSec:qeforge} for details) then 
+contact support[.at.]qe-forge.org for authorization (remember to explain  what 
+you need and why). Once the access is set, tadd a public SSH key on QE-FORGE and 
+then check out the repository using this command:
 \begin{verbatim}
    git clone ssh://username@qeforge.qe-forge.org/gitroot/q-e-private
 \end{verbatim}
-This repository is only for pull operation and it is one way repository,
-meaning it is automatically aligned by a script with the SVN repository.
-Committing into this repository does not produce a commit in the SVN.
-So never commit ;-). See Sect.\ref{Sec:git}, ``Using git'', for more
-instructions on how to use \texttt{git}. You should also
-register to the q-e-commit@qe-forge.org mailing list in order to better
-follow what is going on in the main repository.
 
-If your project involves a major new addition (e.g. a new package),
-consider registering it as a new \qeforge\ project, with a separate
-SVN or (better) \texttt{git} repository. It is possible to keep the
-project private, or to restrict access to selected \qe\ developers.
+This repository is only for pull operation and it is "one-way" repository,
+meaning it is kept automatically aligned by a script with the SVN repository.
+Committing into this GIT mirror does not produce a commit in the SVN. See 
+Sect.\ref{Sec:git}, ``Using git'', for more instructions on how to 
+use \texttt{git}.\\
+
+If your project involves a major new addition (e.g. a new package), 
+consider registering it as a new \qeforge project, with a separate 
+SVN or (better) \texttt{git} repository. It is possible to keep the 
+project private, or to restrict access to selected \qe developers.\\
 
 % or to have two repositories, one public and one private.
 % It is also possible to have the public repository automatically
 % downloaded into the SVN copy of \qe\ (see Sect.\ref{SubSec:propedit}).
 
-{\em Important:} keep your copy of the distribution aligned to the SVN.
-Don't work for years, or even for months, without keeping an eye to
-what is going on in the SVN. This is especially true for projects that
-are ``tightly bound'' to \qe, that is, use \qe\ code and routines.
-Frequently update your copy (using command \texttt{svn update} or
-\texttt{git pull}), verify if changes made meanwhile by other developers
-conflict with your changes. Conflicts are in most cases easy to solve:
-see Sect. \ref{SubSec:Conflicts} for hints on how to remove conflicts
-and on how to figure out what went wrong.
+{\em Important:} if you closely develop to \qe then keep your copy of the 
+distribution aligned to the SVN. Don't work for years, or even for months, 
+without keeping an eye to what is going on in the SVN or in the mirrored GIT 
+repository. This is especially true for projects that are ``tightly bound'' 
+to \qe, that is, use \qe\ code and routines. Frequently update your copy 
+(using command \texttt{svn update} or \texttt{git pull}), verify if changes 
+made meanwhile by other developers conflict with your changes.
+Conflicts are in most cases easy to solve: see Sect. \ref{SubSec:Conflicts} 
+for hints on how to remove conflicts and on how to figure out what went wrong.
 
 If instead your project is ``loosely coupled'', that is, it just uses the
 \qe\ installation procedure and/or data files, it is less likely to run
@@ -2233,7 +2235,10 @@ GIPAW http://qeforge.qe-forge.org/svn/qe-gipaw/trunk
 \section{Using git}
 \label{Sec:git}
 
-The following links contain an introduction to \texttt{git}:\\
+Git is a very populare versioning control system for collaborative development 
+nowadays. The web is full of tutorials and guide about how to use it, covering 
+simple novice concepts to master the most sophisticated functionalities. The 
+following links contain an introduction to \texttt{git}:\\
 https://git-scm.com/book/en/v2/Getting-Started-Git-Basics\\
 https://git-scm.com/course/svn.html
 
