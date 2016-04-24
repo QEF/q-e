@@ -1,5 +1,5 @@
 
-     Program PWSCF v.5.3.0 (svn rev. 11957) starts on  8Jan2016 at 12: 1:55 
+     Program PWSCF v.5.4.0 (svn rev. 12348) starts on 24Apr2016 at 21:19:56 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -202,7 +202,7 @@
         Total length         40.2352 bohr
 
 
-     total cpu time spent up to now is        3.1 secs
+     total cpu time spent up to now is        3.2 secs
 
      total energy              =    -295.45492746 Ry
      Harris-Foulkes estimate   =    -305.85915720 Ry
@@ -224,7 +224,7 @@
         Total length         40.2352 bohr
 
 
-     total cpu time spent up to now is        3.6 secs
+     total cpu time spent up to now is        3.7 secs
 
      total energy              =    -300.45852393 Ry
      Harris-Foulkes estimate   =    -300.89952102 Ry
@@ -246,7 +246,7 @@
         Total length         40.2352 bohr
 
 
-     total cpu time spent up to now is        4.0 secs
+     total cpu time spent up to now is        4.1 secs
 
      total energy              =    -300.51620028 Ry
      Harris-Foulkes estimate   =    -300.81079446 Ry
@@ -268,7 +268,7 @@
         Total length         40.2352 bohr
 
 
-     total cpu time spent up to now is        4.3 secs
+     total cpu time spent up to now is        4.5 secs
 
      total energy              =    -300.62307027 Ry
      Harris-Foulkes estimate   =    -300.76129296 Ry
@@ -290,7 +290,7 @@
         Total length         40.2352 bohr
 
 
-     total cpu time spent up to now is        4.7 secs
+     total cpu time spent up to now is        4.9 secs
 
      total energy              =    -300.63775469 Ry
      Harris-Foulkes estimate   =    -300.68855274 Ry
@@ -312,7 +312,7 @@
         Total length         40.2352 bohr
 
 
-     total cpu time spent up to now is        5.0 secs
+     total cpu time spent up to now is        5.3 secs
 
      total energy              =    -300.64363737 Ry
      Harris-Foulkes estimate   =    -300.65986195 Ry
@@ -334,7 +334,7 @@
         Total length         40.2352 bohr
 
 
-     total cpu time spent up to now is        5.4 secs
+     total cpu time spent up to now is        5.7 secs
 
      total energy              =    -300.64465410 Ry
      Harris-Foulkes estimate   =    -300.65366739 Ry
@@ -356,7 +356,7 @@
         Total length         40.2352 bohr
 
 
-     total cpu time spent up to now is        5.7 secs
+     total cpu time spent up to now is        6.1 secs
 
      total energy              =    -300.64329560 Ry
      Harris-Foulkes estimate   =    -300.64795254 Ry
@@ -378,7 +378,7 @@
         Total length         40.2352 bohr
 
 
-     total cpu time spent up to now is        6.1 secs
+     total cpu time spent up to now is        6.5 secs
 
      total energy              =    -300.64320186 Ry
      Harris-Foulkes estimate   =    -300.64486838 Ry
@@ -400,7 +400,7 @@
         Total length         40.2352 bohr
 
 
-     total cpu time spent up to now is        6.4 secs
+     total cpu time spent up to now is        6.9 secs
 
      total energy              =    -300.64135735 Ry
      Harris-Foulkes estimate   =    -300.64426724 Ry
@@ -422,7 +422,7 @@
         Total length         40.2352 bohr
 
 
-     total cpu time spent up to now is        6.8 secs
+     total cpu time spent up to now is        7.3 secs
 
      total energy              =    -300.64229058 Ry
      Harris-Foulkes estimate   =    -300.64243049 Ry
@@ -444,7 +444,7 @@
         Total length         40.2352 bohr
 
 
-     total cpu time spent up to now is        7.1 secs
+     total cpu time spent up to now is        7.7 secs
 
      total energy              =    -300.64212292 Ry
      Harris-Foulkes estimate   =    -300.64234801 Ry
@@ -466,7 +466,7 @@
         Total length         40.2352 bohr
 
 
-     total cpu time spent up to now is        7.5 secs
+     total cpu time spent up to now is        8.1 secs
 
      total energy              =    -300.64220198 Ry
      Harris-Foulkes estimate   =    -300.64221326 Ry
@@ -488,7 +488,7 @@
         Total length         40.2352 bohr
 
 
-     total cpu time spent up to now is        7.8 secs
+     total cpu time spent up to now is        8.5 secs
 
      total energy              =    -300.64220766 Ry
      Harris-Foulkes estimate   =    -300.64221222 Ry
@@ -510,7 +510,7 @@
         Total length         40.2352 bohr
 
 
-     total cpu time spent up to now is        8.2 secs
+     total cpu time spent up to now is        8.9 secs
 
      total energy              =    -300.64220887 Ry
      Harris-Foulkes estimate   =    -300.64220858 Ry
@@ -532,7 +532,7 @@
         Total length         40.2352 bohr
 
 
-     total cpu time spent up to now is        8.5 secs
+     total cpu time spent up to now is        9.3 secs
 
      End of self-consistent calculation
 
@@ -561,48 +561,48 @@
 
      Writing output data file pwscf.save
 
-     init_run     :      2.06s CPU      2.07s WALL (       1 calls)
-     electrons    :      5.97s CPU      6.24s WALL (       1 calls)
+     init_run     :      2.02s CPU      2.10s WALL (       1 calls)
+     electrons    :      5.89s CPU      7.05s WALL (       1 calls)
 
      Called by init_run:
      wfcinit      :      0.06s CPU      0.06s WALL (       1 calls)
-     potinit      :      0.40s CPU      0.40s WALL (       1 calls)
+     potinit      :      0.39s CPU      0.39s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :      2.51s CPU      2.51s WALL (      17 calls)
-     sum_band     :      1.81s CPU      1.93s WALL (      17 calls)
-     v_of_rho     :      0.25s CPU      0.26s WALL (      18 calls)
-     newd         :      1.27s CPU      1.42s WALL (      18 calls)
+     c_bands      :      2.46s CPU      2.49s WALL (      17 calls)
+     sum_band     :      1.77s CPU      2.35s WALL (      17 calls)
+     v_of_rho     :      0.25s CPU      0.25s WALL (      18 calls)
+     newd         :      1.27s CPU      1.86s WALL (      18 calls)
      mix_rho      :      0.19s CPU      0.19s WALL (      17 calls)
 
      Called by c_bands:
      init_us_2    :      0.06s CPU      0.06s WALL (      35 calls)
-     regterg      :      2.39s CPU      2.39s WALL (      17 calls)
+     regterg      :      2.35s CPU      2.35s WALL (      17 calls)
 
      Called by sum_band:
      sum_band:bec :      0.00s CPU      0.00s WALL (      17 calls)
-     addusdens    :      1.34s CPU      1.47s WALL (      17 calls)
+     addusdens    :      1.32s CPU      1.89s WALL (      17 calls)
 
      Called by *egterg:
-     h_psi        :      1.71s CPU      1.71s WALL (      71 calls)
+     h_psi        :      1.68s CPU      1.69s WALL (      71 calls)
      s_psi        :      0.18s CPU      0.18s WALL (      71 calls)
      g_psi        :      0.01s CPU      0.01s WALL (      53 calls)
-     rdiaghg      :      0.07s CPU      0.07s WALL (      70 calls)
+     rdiaghg      :      0.06s CPU      0.07s WALL (      70 calls)
 
      Called by h_psi:
      add_vuspsi   :      0.18s CPU      0.18s WALL (      71 calls)
 
      General routines
-     calbec       :      0.35s CPU      0.35s WALL (      88 calls)
-     fft          :      0.20s CPU      0.20s WALL (     107 calls)
-     fftw         :      1.41s CPU      1.42s WALL (    1210 calls)
+     calbec       :      0.33s CPU      0.34s WALL (      88 calls)
+     fft          :      0.19s CPU      0.19s WALL (     107 calls)
+     fftw         :      1.41s CPU      1.40s WALL (    1210 calls)
      davcio       :      0.00s CPU      0.00s WALL (       1 calls)
 
 
-     PWSCF        :     8.19s CPU         8.57s WALL
+     PWSCF        :     8.08s CPU         9.38s WALL
 
 
-   This run was terminated on:  12: 2: 4   8Jan2016            
+   This run was terminated on:  21:20: 6  24Apr2016            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

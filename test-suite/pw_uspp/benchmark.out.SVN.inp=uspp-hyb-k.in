@@ -1,5 +1,5 @@
 
-     Program PWSCF v.5.3.0 (svn rev. 11957) starts on  8Jan2016 at 12:15:57 
+     Program PWSCF v.5.4.0 (svn rev. 12348) starts on 24Apr2016 at 21:33: 6 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -204,7 +204,7 @@
      starting charge    7.99989, renormalised to    8.00000
      Starting wfc are    8 randomized atomic wfcs
 
-     total cpu time spent up to now is        0.2 secs
+     total cpu time spent up to now is        0.1 secs
 
      per-process dynamical memory:     1.4 Mb
 
@@ -232,7 +232,7 @@
      Davidson diagonalization with overlap
      ethr =  5.28E-07,  avg # of iterations =  1.6
 
-     total cpu time spent up to now is        0.3 secs
+     total cpu time spent up to now is        0.2 secs
 
      End of self-consistent calculation
 
@@ -284,7 +284,7 @@
 
      total cpu time spent up to now is        0.8 secs
 
-     per-process dynamical memory:    19.3 Mb
+     per-process dynamical memory:    19.4 Mb
 
      Self-consistent Calculation
 
@@ -292,31 +292,31 @@
      Davidson diagonalization with overlap
      ethr =  5.28E-07,  avg # of iterations =  3.6
 
-     total cpu time spent up to now is        7.8 secs
+     total cpu time spent up to now is        7.6 secs
 
      iteration #  2     ecut=    18.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  7.28E-07,  avg # of iterations =  3.5
 
-     total cpu time spent up to now is       15.0 secs
+     total cpu time spent up to now is       14.5 secs
 
      iteration #  3     ecut=    18.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  7.28E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is       18.5 secs
+     total cpu time spent up to now is       17.9 secs
 
      iteration #  4     ecut=    18.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  7.28E-07,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is       22.9 secs
+     total cpu time spent up to now is       22.2 secs
 
      iteration #  5     ecut=    18.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  6.35E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is       26.4 secs
+     total cpu time spent up to now is       25.6 secs
 
      End of self-consistent calculation
 
@@ -372,7 +372,7 @@
 
      EXX: now go back to refine exchange calculation
 
-     total cpu time spent up to now is       27.5 secs
+     total cpu time spent up to now is       26.7 secs
 
      per-process dynamical memory:    19.8 Mb
 
@@ -382,7 +382,7 @@
      Davidson diagonalization with overlap
      ethr =  6.35E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is       32.1 secs
+     total cpu time spent up to now is       30.9 secs
 
      End of self-consistent calculation
 
@@ -441,43 +441,43 @@
      Writing output data file pwscf.save
 
      init_run     :      0.11s CPU      0.11s WALL (       1 calls)
-     electrons    :     30.01s CPU     30.31s WALL (       3 calls)
+     electrons    :     29.04s CPU     29.14s WALL (       3 calls)
 
      Called by init_run:
      wfcinit      :      0.01s CPU      0.01s WALL (       1 calls)
      potinit      :      0.00s CPU      0.00s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :     29.93s CPU     30.23s WALL (      10 calls)
+     c_bands      :     28.97s CPU     29.06s WALL (      10 calls)
      sum_band     :      0.04s CPU      0.04s WALL (      10 calls)
      v_of_rho     :      0.03s CPU      0.03s WALL (      12 calls)
      newd         :      0.01s CPU      0.01s WALL (      11 calls)
      mix_rho      :      0.00s CPU      0.00s WALL (      10 calls)
 
      Called by c_bands:
-     init_us_2    :      0.07s CPU      0.05s WALL (    1866 calls)
-     cegterg      :     29.93s CPU     30.21s WALL (     100 calls)
+     init_us_2    :      0.05s CPU      0.05s WALL (    1866 calls)
+     cegterg      :     28.96s CPU     29.03s WALL (     100 calls)
 
      Called by sum_band:
      sum_band:bec :      0.00s CPU      0.00s WALL (     100 calls)
      addusdens    :      0.01s CPU      0.01s WALL (      10 calls)
 
      Called by *egterg:
-     h_psi        :     29.87s CPU     30.15s WALL (     318 calls)
-     s_psi        :      0.00s CPU      0.01s WALL (     318 calls)
+     h_psi        :     28.90s CPU     28.97s WALL (     318 calls)
+     s_psi        :      0.01s CPU      0.01s WALL (     318 calls)
      g_psi        :      0.00s CPU      0.00s WALL (     208 calls)
      cdiaghg      :      0.04s CPU      0.04s WALL (     288 calls)
 
      Called by h_psi:
-     add_vuspsi   :      0.00s CPU      0.01s WALL (     318 calls)
+     add_vuspsi   :      0.01s CPU      0.01s WALL (     318 calls)
 
      General routines
      calbec       :      0.01s CPU      0.01s WALL (     708 calls)
      fft          :      0.01s CPU      0.01s WALL (     176 calls)
      ffts         :      0.00s CPU      0.00s WALL (      22 calls)
-     fftw         :      0.16s CPU      0.14s WALL (    6190 calls)
-     fftc         :      3.66s CPU      3.86s WALL (   93824 calls)
-     fftcw        :      0.07s CPU      0.07s WALL (    3052 calls)
+     fftw         :      0.12s CPU      0.14s WALL (    6190 calls)
+     fftc         :      3.74s CPU      3.68s WALL (   93824 calls)
+     fftcw        :      0.08s CPU      0.07s WALL (    3052 calls)
      interpolate  :      0.00s CPU      0.00s WALL (      22 calls)
      davcio       :      0.00s CPU      0.00s WALL (      10 calls)
 
@@ -485,20 +485,20 @@
      EXX routines
      exx_grid     :      0.00s CPU      0.00s WALL (       1 calls)
      exxinit      :      0.07s CPU      0.08s WALL (       3 calls)
-     vexx         :     29.73s CPU     30.01s WALL (     191 calls)
-     exxenergy    :      2.65s CPU      2.69s WALL (       5 calls)
+     vexx         :     28.78s CPU     28.84s WALL (     191 calls)
+     exxenergy    :      2.60s CPU      2.61s WALL (       5 calls)
 
      EXX+US  routines
      becxx        :      0.04s CPU      0.04s WALL (       3 calls)
-     addusxx      :     10.64s CPU     10.64s WALL (   50112 calls)
-     newdxx       :      9.15s CPU      9.21s WALL (   43712 calls)
-     qvan_init    :      6.53s CPU      6.57s WALL (   12528 calls)
-     nlxx_pot     :      0.06s CPU      0.04s WALL (    1366 calls)
+     addusxx      :     10.34s CPU     10.39s WALL (   50112 calls)
+     newdxx       :      8.76s CPU      8.79s WALL (   43712 calls)
+     qvan_init    :      6.26s CPU      6.28s WALL (   12528 calls)
+     nlxx_pot     :      0.04s CPU      0.04s WALL (    1366 calls)
 
-     PWSCF        :    32.92s CPU        33.29s WALL
+     PWSCF        :    31.89s CPU        32.07s WALL
 
 
-   This run was terminated on:  12:16:30   8Jan2016            
+   This run was terminated on:  21:33:38  24Apr2016            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

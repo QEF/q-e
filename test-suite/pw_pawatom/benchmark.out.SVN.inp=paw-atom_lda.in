@@ -1,5 +1,5 @@
 
-     Program PWSCF v.5.3.0 (svn rev. 11957) starts on  8Jan2016 at 12:12: 6 
+     Program PWSCF v.5.4.0 (svn rev. 12348) starts on 24Apr2016 at 21:29:22 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -112,7 +112,7 @@
 
      total cpu time spent up to now is        1.0 secs
 
-     per-process dynamical memory:    34.3 Mb
+     per-process dynamical memory:    34.4 Mb
 
      Self-consistent Calculation
 
@@ -128,7 +128,7 @@
 
      negative rho (up, down):  1.562E-02 0.000E+00
 
-     total cpu time spent up to now is        1.8 secs
+     total cpu time spent up to now is        1.7 secs
 
      total energy              =     -40.13459252 Ry
      Harris-Foulkes estimate   =     -40.13458585 Ry
@@ -152,7 +152,7 @@
 
      negative rho (up, down):  1.566E-02 0.000E+00
 
-     total cpu time spent up to now is        2.3 secs
+     total cpu time spent up to now is        2.2 secs
 
      End of self-consistent calculation
 
@@ -180,49 +180,49 @@
 
      Writing output data file pwscf.save
 
-     init_run     :      0.83s CPU      0.85s WALL (       1 calls)
-     electrons    :      1.31s CPU      1.32s WALL (       1 calls)
+     init_run     :      0.78s CPU      0.82s WALL (       1 calls)
+     electrons    :      1.23s CPU      1.25s WALL (       1 calls)
 
      Called by init_run:
      wfcinit      :      0.04s CPU      0.04s WALL (       1 calls)
-     potinit      :      0.08s CPU      0.09s WALL (       1 calls)
+     potinit      :      0.08s CPU      0.08s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :      0.71s CPU      0.71s WALL (       4 calls)
-     sum_band     :      0.31s CPU      0.32s WALL (       4 calls)
-     v_of_rho     :      0.16s CPU      0.16s WALL (       4 calls)
-     newd         :      0.14s CPU      0.14s WALL (       4 calls)
-     PAW_pot      :      0.04s CPU      0.04s WALL (       4 calls)
-     mix_rho      :      0.03s CPU      0.03s WALL (       4 calls)
+     c_bands      :      0.65s CPU      0.65s WALL (       4 calls)
+     sum_band     :      0.30s CPU      0.32s WALL (       4 calls)
+     v_of_rho     :      0.15s CPU      0.15s WALL (       4 calls)
+     newd         :      0.12s CPU      0.15s WALL (       4 calls)
+     PAW_pot      :      0.04s CPU      0.03s WALL (       4 calls)
+     mix_rho      :      0.03s CPU      0.02s WALL (       4 calls)
 
      Called by c_bands:
-     init_us_2    :      0.02s CPU      0.01s WALL (       9 calls)
-     regterg      :      0.69s CPU      0.70s WALL (       4 calls)
+     init_us_2    :      0.01s CPU      0.01s WALL (       9 calls)
+     regterg      :      0.64s CPU      0.64s WALL (       4 calls)
 
      Called by sum_band:
      sum_band:bec :      0.00s CPU      0.00s WALL (       4 calls)
-     addusdens    :      0.16s CPU      0.16s WALL (       4 calls)
+     addusdens    :      0.15s CPU      0.17s WALL (       4 calls)
 
      Called by *egterg:
-     h_psi        :      0.67s CPU      0.67s WALL (      33 calls)
+     h_psi        :      0.62s CPU      0.62s WALL (      33 calls)
      s_psi        :      0.01s CPU      0.01s WALL (      33 calls)
      g_psi        :      0.00s CPU      0.00s WALL (      28 calls)
      rdiaghg      :      0.00s CPU      0.00s WALL (      31 calls)
 
      Called by h_psi:
-     add_vuspsi   :      0.01s CPU      0.01s WALL (      33 calls)
+     add_vuspsi   :      0.00s CPU      0.01s WALL (      33 calls)
 
      General routines
      calbec       :      0.01s CPU      0.01s WALL (      37 calls)
-     fft          :      0.19s CPU      0.19s WALL (      26 calls)
-     fftw         :      0.67s CPU      0.67s WALL (     118 calls)
+     fft          :      0.17s CPU      0.16s WALL (      26 calls)
+     fftw         :      0.61s CPU      0.60s WALL (     118 calls)
      davcio       :      0.00s CPU      0.00s WALL (       1 calls)
 
 
-     PWSCF        :     2.35s CPU         2.40s WALL
+     PWSCF        :     2.21s CPU         2.33s WALL
 
 
-   This run was terminated on:  12:12: 8   8Jan2016            
+   This run was terminated on:  21:29:24  24Apr2016            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

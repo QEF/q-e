@@ -1,5 +1,5 @@
 
-     Program CP v.5.3.0 (svn rev. 11957) starts on  8Jan2016 at 11:48:23 
+     Program CP v.5.4.0 (svn rev. 12348) starts on 24Apr2016 at 21: 6: 5 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -208,7 +208,7 @@
 
 
    reading restart file: /tmp/save/h2o_51.save
-   restart file read in    0.019 sec.
+   restart file read in    0.017 sec.
 
 
    formf: eself=    18.94976
@@ -291,7 +291,7 @@
     400    0.000133940652467    0.0   76.23     -17.178296108115     -17.178296108115     -17.177525896509     -17.177391955857   0.0000   0.0000   0.0000   0.0000
 
    writing restart file: /tmp/save/h2o_51.save
-   restart file written in    0.046 sec.
+   restart file written in    0.127 sec.
 
     401    0.000131599759763    0.0   74.61     -17.178276716558     -17.178276716558     -17.177523869576     -17.177392269817   0.0000   0.0000   0.0000   0.0000
     402    0.000128884860651    0.0   72.12     -17.178248353715     -17.178248353715     -17.177521434861     -17.177392550001   0.0000   0.0000   0.0000   0.0000
@@ -395,7 +395,7 @@
     500    0.000014566846553    0.0    6.43     -17.177469259211     -17.177469259211     -17.177408110186     -17.177393543339   0.0000   0.0000   0.0000   0.0000
 
    writing restart file: /tmp/save/h2o_51.save
-   restart file written in    0.044 sec.
+   restart file written in    0.039 sec.
 
     501    0.000012075050172    0.0    3.95     -17.177443219192     -17.177443219192     -17.177405652303     -17.177393577253   0.0000   0.0000   0.0000   0.0000
     502    0.000010506708327    0.0    2.26     -17.177425787261     -17.177425787261     -17.177404092113     -17.177393585405   0.0000   0.0000   0.0000   0.0000
@@ -491,7 +491,7 @@
     530    0.000129916206743    0.0   68.54     -17.178186756402     -17.178186756402     -17.177521008421     -17.177391092214   0.0000   0.0000   0.0000   0.0000
 
    writing restart file: /tmp/save/h2o_51.save
-   restart file written in    0.048 sec.
+   restart file written in    0.038 sec.
 
 
 
@@ -510,58 +510,58 @@
 
 
      Called by MAIN_LOOP:
-     initialize   :      0.45s CPU      0.48s WALL (       1 calls)
-     main_loop    :     75.38s CPU     76.11s WALL (     200 calls)
-     cpr_total    :     75.60s CPU     76.83s WALL (       1 calls)
+     initialize   :      0.44s CPU      0.46s WALL (       1 calls)
+     main_loop    :     74.47s CPU     74.98s WALL (     200 calls)
+     cpr_total    :     74.66s CPU     75.49s WALL (       1 calls)
 
      Called by INIT_RUN:
      init_readfil :      0.04s CPU      0.05s WALL (       1 calls)
 
      Called by CPR:
-     cpr_md       :     75.60s CPU     76.83s WALL (     200 calls)
-     move_electro :     74.36s CPU     74.49s WALL (     200 calls)
+     cpr_md       :     74.66s CPU     75.49s WALL (     200 calls)
+     move_electro :     73.49s CPU     73.86s WALL (     200 calls)
 
      Called by move_electrons:
-     rhoofr       :     10.24s CPU     10.33s WALL (     200 calls)
-     vofrho       :     57.47s CPU     57.51s WALL (     200 calls)
-     dforce       :      6.40s CPU      6.40s WALL (     400 calls)
+     rhoofr       :     10.32s CPU     10.63s WALL (     200 calls)
+     vofrho       :     56.59s CPU     56.65s WALL (     200 calls)
+     dforce       :      6.32s CPU      6.32s WALL (     400 calls)
      calphi       :      0.03s CPU      0.03s WALL (     200 calls)
      nlfl         :      0.00s CPU      0.00s WALL (     200 calls)
 
      Called by ortho:
      ortho_iter   :      0.00s CPU      0.00s WALL (     200 calls)
      rsg          :      0.00s CPU      0.00s WALL (     200 calls)
-     rhoset       :      0.07s CPU      0.07s WALL (     200 calls)
-     sigset       :      0.07s CPU      0.07s WALL (     200 calls)
-     tauset       :      0.06s CPU      0.07s WALL (     200 calls)
+     rhoset       :      0.09s CPU      0.06s WALL (     200 calls)
+     sigset       :      0.06s CPU      0.06s WALL (     200 calls)
+     tauset       :      0.05s CPU      0.06s WALL (     200 calls)
      ortho        :      0.20s CPU      0.20s WALL (     200 calls)
-     updatc       :      0.06s CPU      0.06s WALL (     200 calls)
+     updatc       :      0.07s CPU      0.05s WALL (     200 calls)
 
      Small boxes:
 
      Low-level routines:
      prefor       :      0.01s CPU      0.01s WALL (     401 calls)
-     nlfq         :      0.08s CPU      0.08s WALL (     200 calls)
+     nlfq         :      0.07s CPU      0.08s WALL (     200 calls)
      nlsm1        :      0.02s CPU      0.02s WALL (     201 calls)
-     nlsm2        :      0.08s CPU      0.08s WALL (     200 calls)
-     fft          :     17.48s CPU     17.49s WALL (    1600 calls)
-     ffts         :      4.41s CPU      4.40s WALL (     400 calls)
-     fftw         :      8.12s CPU      8.12s WALL (    1200 calls)
+     nlsm2        :      0.07s CPU      0.08s WALL (     200 calls)
+     fft          :     16.84s CPU     16.81s WALL (    1600 calls)
+     ffts         :      4.23s CPU      4.23s WALL (     400 calls)
+     fftw         :      7.92s CPU      7.88s WALL (    1200 calls)
      betagx       :      0.16s CPU      0.16s WALL (       1 calls)
      qradx        :      0.00s CPU      0.00s WALL (       1 calls)
-     nlinit       :      0.37s CPU      0.39s WALL (       1 calls)
+     nlinit       :      0.37s CPU      0.37s WALL (       1 calls)
      init_dim     :      0.03s CPU      0.03s WALL (       1 calls)
      newnlinit    :      0.00s CPU      0.00s WALL (       1 calls)
      from_restart :      0.02s CPU      0.03s WALL (       1 calls)
-     strucf       :      0.31s CPU      0.39s WALL (     201 calls)
+     strucf       :      0.31s CPU      0.38s WALL (     201 calls)
      calbec       :      0.02s CPU      0.02s WALL (     201 calls)
 
 
 
-     CP           :  1m16.06s CPU     1m17.36s WALL
+     CP           :  1m15.12s CPU     1m16.03s WALL
 
 
-   This run was terminated on:  11:49:40   8Jan2016            
+   This run was terminated on:  21: 7:21  24Apr2016            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

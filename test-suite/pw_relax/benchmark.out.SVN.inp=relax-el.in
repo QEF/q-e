@@ -1,5 +1,5 @@
 
-     Program PWSCF v.5.3.0 (svn rev. 11957) starts on  8Jan2016 at 12:14:37 
+     Program PWSCF v.5.4.0 (svn rev. 12348) starts on 24Apr2016 at 21:31:41 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -128,7 +128,7 @@
      starting charge    9.99996, renormalised to   10.00000
      Starting wfc are    8 randomized atomic wfcs
 
-     total cpu time spent up to now is        1.4 secs
+     total cpu time spent up to now is        1.7 secs
 
      per-process dynamical memory:    34.8 Mb
 
@@ -138,7 +138,7 @@
      Davidson diagonalization with overlap
      ethr =  1.00E-02,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is        1.7 secs
+     total cpu time spent up to now is        2.3 secs
 
      total energy              =     -43.05880401 Ry
      Harris-Foulkes estimate   =     -43.17209775 Ry
@@ -150,7 +150,7 @@
 
      negative rho (up, down):  2.589E-04 0.000E+00
 
-     total cpu time spent up to now is        2.0 secs
+     total cpu time spent up to now is        4.7 secs
 
      total energy              =     -43.08760496 Ry
      Harris-Foulkes estimate   =     -43.16506846 Ry
@@ -162,7 +162,7 @@
 
      negative rho (up, down):  1.063E-05 0.000E+00
 
-     total cpu time spent up to now is        2.4 secs
+     total cpu time spent up to now is        5.1 secs
 
      total energy              =     -43.11976114 Ry
      Harris-Foulkes estimate   =     -43.12236322 Ry
@@ -174,7 +174,7 @@
 
      negative rho (up, down):  4.558E-06 0.000E+00
 
-     total cpu time spent up to now is        2.7 secs
+     total cpu time spent up to now is        6.2 secs
 
      total energy              =     -43.12352614 Ry
      Harris-Foulkes estimate   =     -43.12406769 Ry
@@ -184,7 +184,7 @@
      Davidson diagonalization with overlap
      ethr =  3.09E-05,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        3.1 secs
+     total cpu time spent up to now is        7.7 secs
 
      total energy              =     -43.12242224 Ry
      Harris-Foulkes estimate   =     -43.12359281 Ry
@@ -194,7 +194,7 @@
      Davidson diagonalization with overlap
      ethr =  2.09E-05,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        3.5 secs
+     total cpu time spent up to now is        8.0 secs
 
      total energy              =     -43.12296464 Ry
      Harris-Foulkes estimate   =     -43.12317487 Ry
@@ -206,7 +206,7 @@
 
      negative rho (up, down):  1.085E-08 0.000E+00
 
-     total cpu time spent up to now is        3.8 secs
+     total cpu time spent up to now is        8.3 secs
 
      total energy              =     -43.12297547 Ry
      Harris-Foulkes estimate   =     -43.12302115 Ry
@@ -216,7 +216,7 @@
      Davidson diagonalization with overlap
      ethr =  1.65E-06,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is        4.2 secs
+     total cpu time spent up to now is        8.6 secs
 
      total energy              =     -43.12301712 Ry
      Harris-Foulkes estimate   =     -43.12301807 Ry
@@ -226,7 +226,7 @@
      Davidson diagonalization with overlap
      ethr =  3.00E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        4.5 secs
+     total cpu time spent up to now is        8.9 secs
 
      total energy              =     -43.12301761 Ry
      Harris-Foulkes estimate   =     -43.12301786 Ry
@@ -236,7 +236,7 @@
      Davidson diagonalization with overlap
      ethr =  9.15E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is        4.8 secs
+     total cpu time spent up to now is        9.2 secs
 
      total energy              =     -43.12301773 Ry
      Harris-Foulkes estimate   =     -43.12301775 Ry
@@ -246,7 +246,7 @@
      Davidson diagonalization with overlap
      ethr =  1.08E-09,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is        5.2 secs
+     total cpu time spent up to now is        9.5 secs
 
      total energy              =     -43.12301774 Ry
      Harris-Foulkes estimate   =     -43.12301780 Ry
@@ -256,7 +256,7 @@
      Davidson diagonalization with overlap
      ethr =  1.08E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        5.5 secs
+     total cpu time spent up to now is        9.8 secs
 
      total energy              =     -43.12301773 Ry
      Harris-Foulkes estimate   =     -43.12301775 Ry
@@ -266,7 +266,7 @@
      Davidson diagonalization with overlap
      ethr =  1.08E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        5.9 secs
+     total cpu time spent up to now is       10.1 secs
 
      total energy              =     -43.12301771 Ry
      Harris-Foulkes estimate   =     -43.12301773 Ry
@@ -276,7 +276,7 @@
      Davidson diagonalization with overlap
      ethr =  1.08E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        6.2 secs
+     total cpu time spent up to now is       10.4 secs
 
      total energy              =     -43.12301768 Ry
      Harris-Foulkes estimate   =     -43.12301772 Ry
@@ -286,7 +286,7 @@
      Davidson diagonalization with overlap
      ethr =  1.07E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is        6.5 secs
+     total cpu time spent up to now is       10.7 secs
 
      End of self-consistent calculation
 
@@ -343,9 +343,9 @@ C       -0.000000063   0.000000070   0.982461558
         Total length          9.0000 bohr
 
 
-     total cpu time spent up to now is        7.1 secs
+     total cpu time spent up to now is       11.2 secs
 
-     per-process dynamical memory:    52.4 Mb
+     per-process dynamical memory:    50.6 Mb
 
      Self-consistent Calculation
 
@@ -353,7 +353,7 @@ C       -0.000000063   0.000000070   0.982461558
      Davidson diagonalization with overlap
      ethr =  1.00E-06,  avg # of iterations =  7.0
 
-     total cpu time spent up to now is        7.5 secs
+     total cpu time spent up to now is       11.5 secs
 
      total energy              =     -43.07677514 Ry
      Harris-Foulkes estimate   =     -43.09327416 Ry
@@ -363,7 +363,7 @@ C       -0.000000063   0.000000070   0.982461558
      Davidson diagonalization with overlap
      ethr =  2.93E-04,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        7.8 secs
+     total cpu time spent up to now is       11.8 secs
 
      total energy              =     -43.08043707 Ry
      Harris-Foulkes estimate   =     -43.08087293 Ry
@@ -373,7 +373,7 @@ C       -0.000000063   0.000000070   0.982461558
      Davidson diagonalization with overlap
      ethr =  1.17E-05,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is        8.2 secs
+     total cpu time spent up to now is       12.1 secs
 
      total energy              =     -43.08060035 Ry
      Harris-Foulkes estimate   =     -43.08081405 Ry
@@ -383,7 +383,7 @@ C       -0.000000063   0.000000070   0.982461558
      Davidson diagonalization with overlap
      ethr =  6.01E-06,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        8.5 secs
+     total cpu time spent up to now is       12.4 secs
 
      total energy              =     -43.08066536 Ry
      Harris-Foulkes estimate   =     -43.08067685 Ry
@@ -393,7 +393,7 @@ C       -0.000000063   0.000000070   0.982461558
      Davidson diagonalization with overlap
      ethr =  5.98E-07,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is        8.8 secs
+     total cpu time spent up to now is       12.7 secs
 
      total energy              =     -43.08065886 Ry
      Harris-Foulkes estimate   =     -43.08069780 Ry
@@ -403,7 +403,7 @@ C       -0.000000063   0.000000070   0.982461558
      Davidson diagonalization with overlap
      ethr =  5.98E-07,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is        9.2 secs
+     total cpu time spent up to now is       13.0 secs
 
      total energy              =     -43.08067565 Ry
      Harris-Foulkes estimate   =     -43.08067568 Ry
@@ -413,7 +413,7 @@ C       -0.000000063   0.000000070   0.982461558
      Davidson diagonalization with overlap
      ethr =  5.04E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        9.5 secs
+     total cpu time spent up to now is       13.3 secs
 
      total energy              =     -43.08067584 Ry
      Harris-Foulkes estimate   =     -43.08067585 Ry
@@ -423,7 +423,7 @@ C       -0.000000063   0.000000070   0.982461558
      Davidson diagonalization with overlap
      ethr =  9.78E-10,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        9.8 secs
+     total cpu time spent up to now is       13.6 secs
 
      total energy              =     -43.08067584 Ry
      Harris-Foulkes estimate   =     -43.08067584 Ry
@@ -433,7 +433,7 @@ C       -0.000000063   0.000000070   0.982461558
      Davidson diagonalization with overlap
      ethr =  2.72E-10,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is       10.2 secs
+     total cpu time spent up to now is       13.9 secs
 
      End of self-consistent calculation
 
@@ -491,9 +491,9 @@ C       -0.000000012   0.000000014   1.076793333
         Total length          9.0000 bohr
 
 
-     total cpu time spent up to now is       10.7 secs
+     total cpu time spent up to now is       14.3 secs
 
-     per-process dynamical memory:    56.3 Mb
+     per-process dynamical memory:    50.6 Mb
 
      Self-consistent Calculation
 
@@ -501,7 +501,7 @@ C       -0.000000012   0.000000014   1.076793333
      Davidson diagonalization with overlap
      ethr =  1.00E-06,  avg # of iterations =  8.0
 
-     total cpu time spent up to now is       11.1 secs
+     total cpu time spent up to now is       14.7 secs
 
      total energy              =     -43.12350353 Ry
      Harris-Foulkes estimate   =     -43.13471658 Ry
@@ -511,7 +511,7 @@ C       -0.000000012   0.000000014   1.076793333
      Davidson diagonalization with overlap
      ethr =  2.00E-04,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is       11.5 secs
+     total cpu time spent up to now is       15.0 secs
 
      total energy              =     -43.12620086 Ry
      Harris-Foulkes estimate   =     -43.12646599 Ry
@@ -521,7 +521,7 @@ C       -0.000000012   0.000000014   1.076793333
      Davidson diagonalization with overlap
      ethr =  8.30E-06,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is       11.9 secs
+     total cpu time spent up to now is       15.3 secs
 
      total energy              =     -43.12627892 Ry
      Harris-Foulkes estimate   =     -43.12648916 Ry
@@ -531,7 +531,7 @@ C       -0.000000012   0.000000014   1.076793333
      Davidson diagonalization with overlap
      ethr =  6.92E-06,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is       12.2 secs
+     total cpu time spent up to now is       15.6 secs
 
      total energy              =     -43.12631976 Ry
      Harris-Foulkes estimate   =     -43.12634949 Ry
@@ -541,7 +541,7 @@ C       -0.000000012   0.000000014   1.076793333
      Davidson diagonalization with overlap
      ethr =  7.92E-07,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is       12.6 secs
+     total cpu time spent up to now is       15.9 secs
 
      total energy              =     -43.12634298 Ry
      Harris-Foulkes estimate   =     -43.12639473 Ry
@@ -551,7 +551,7 @@ C       -0.000000012   0.000000014   1.076793333
      Davidson diagonalization with overlap
      ethr =  7.92E-07,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is       12.9 secs
+     total cpu time spent up to now is       16.2 secs
 
      total energy              =     -43.12634159 Ry
      Harris-Foulkes estimate   =     -43.12635549 Ry
@@ -561,7 +561,7 @@ C       -0.000000012   0.000000014   1.076793333
      Davidson diagonalization with overlap
      ethr =  3.31E-07,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is       13.3 secs
+     total cpu time spent up to now is       16.5 secs
 
      total energy              =     -43.12635022 Ry
      Harris-Foulkes estimate   =     -43.12635064 Ry
@@ -571,7 +571,7 @@ C       -0.000000012   0.000000014   1.076793333
      Davidson diagonalization with overlap
      ethr =  1.80E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is       13.6 secs
+     total cpu time spent up to now is       16.8 secs
 
      total energy              =     -43.12635015 Ry
      Harris-Foulkes estimate   =     -43.12635032 Ry
@@ -581,7 +581,7 @@ C       -0.000000012   0.000000014   1.076793333
      Davidson diagonalization with overlap
      ethr =  6.22E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is       14.0 secs
+     total cpu time spent up to now is       17.1 secs
 
      total energy              =     -43.12635025 Ry
      Harris-Foulkes estimate   =     -43.12635026 Ry
@@ -591,7 +591,7 @@ C       -0.000000012   0.000000014   1.076793333
      Davidson diagonalization with overlap
      ethr =  1.87E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is       14.3 secs
+     total cpu time spent up to now is       17.3 secs
 
      End of self-consistent calculation
 
@@ -649,9 +649,9 @@ C        0.000000001  -0.000000001   1.071010373
         Total length          9.0000 bohr
 
 
-     total cpu time spent up to now is       14.9 secs
+     total cpu time spent up to now is       17.8 secs
 
-     per-process dynamical memory:    57.1 Mb
+     per-process dynamical memory:    50.6 Mb
 
      Self-consistent Calculation
 
@@ -659,7 +659,7 @@ C        0.000000001  -0.000000001   1.071010373
      Davidson diagonalization with overlap
      ethr =  1.00E-06,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is       15.2 secs
+     total cpu time spent up to now is       18.1 secs
 
      total energy              =     -43.12646412 Ry
      Harris-Foulkes estimate   =     -43.12649566 Ry
@@ -669,7 +669,7 @@ C        0.000000001  -0.000000001   1.071010373
      Davidson diagonalization with overlap
      ethr =  5.71E-07,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is       15.5 secs
+     total cpu time spent up to now is       18.4 secs
 
      total energy              =     -43.12647078 Ry
      Harris-Foulkes estimate   =     -43.12647336 Ry
@@ -679,7 +679,7 @@ C        0.000000001  -0.000000001   1.071010373
      Davidson diagonalization with overlap
      ethr =  4.23E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is       15.8 secs
+     total cpu time spent up to now is       18.7 secs
 
      total energy              =     -43.12647134 Ry
      Harris-Foulkes estimate   =     -43.12647163 Ry
@@ -689,7 +689,7 @@ C        0.000000001  -0.000000001   1.071010373
      Davidson diagonalization with overlap
      ethr =  8.12E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is       16.1 secs
+     total cpu time spent up to now is       19.0 secs
 
      total energy              =     -43.12647144 Ry
      Harris-Foulkes estimate   =     -43.12647147 Ry
@@ -699,7 +699,7 @@ C        0.000000001  -0.000000001   1.071010373
      Davidson diagonalization with overlap
      ethr =  1.03E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is       16.4 secs
+     total cpu time spent up to now is       19.3 secs
 
      total energy              =     -43.12647144 Ry
      Harris-Foulkes estimate   =     -43.12647149 Ry
@@ -709,7 +709,7 @@ C        0.000000001  -0.000000001   1.071010373
      Davidson diagonalization with overlap
      ethr =  1.03E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is       16.7 secs
+     total cpu time spent up to now is       19.6 secs
 
      End of self-consistent calculation
 
@@ -767,9 +767,9 @@ C       -0.000000001   0.000000001   1.071599420
         Total length          9.0000 bohr
 
 
-     total cpu time spent up to now is       17.3 secs
+     total cpu time spent up to now is       20.1 secs
 
-     per-process dynamical memory:    57.1 Mb
+     per-process dynamical memory:    54.5 Mb
 
      Self-consistent Calculation
 
@@ -783,7 +783,7 @@ C       -0.000000001   0.000000001   1.071599420
      Davidson diagonalization with overlap
      ethr =  6.09E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is       17.8 secs
+     total cpu time spent up to now is       20.5 secs
 
      total energy              =     -43.12647347 Ry
      Harris-Foulkes estimate   =     -43.12647383 Ry
@@ -793,7 +793,7 @@ C       -0.000000001   0.000000001   1.071599420
      Davidson diagonalization with overlap
      ethr =  6.49E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is       18.1 secs
+     total cpu time spent up to now is       20.8 secs
 
      total energy              =     -43.12647355 Ry
      Harris-Foulkes estimate   =     -43.12647356 Ry
@@ -803,7 +803,7 @@ C       -0.000000001   0.000000001   1.071599420
      Davidson diagonalization with overlap
      ethr =  3.30E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is       18.4 secs
+     total cpu time spent up to now is       21.1 secs
 
      total energy              =     -43.12647355 Ry
      Harris-Foulkes estimate   =     -43.12647356 Ry
@@ -813,7 +813,7 @@ C       -0.000000001   0.000000001   1.071599420
      Davidson diagonalization with overlap
      ethr =  1.69E-10,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is       18.7 secs
+     total cpu time spent up to now is       21.4 secs
 
      total energy              =     -43.12647356 Ry
      Harris-Foulkes estimate   =     -43.12647356 Ry
@@ -823,7 +823,7 @@ C       -0.000000001   0.000000001   1.071599420
      Davidson diagonalization with overlap
      ethr =  1.45E-11,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is       19.0 secs
+     total cpu time spent up to now is       21.7 secs
 
      total energy              =     -43.12647356 Ry
      Harris-Foulkes estimate   =     -43.12647356 Ry
@@ -833,7 +833,7 @@ C       -0.000000001   0.000000001   1.071599420
      Davidson diagonalization with overlap
      ethr =  1.23E-11,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is       19.3 secs
+     total cpu time spent up to now is       22.0 secs
 
      total energy              =     -43.12647356 Ry
      Harris-Foulkes estimate   =     -43.12647356 Ry
@@ -843,7 +843,7 @@ C       -0.000000001   0.000000001   1.071599420
      Davidson diagonalization with overlap
      ethr =  3.44E-12,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is       19.7 secs
+     total cpu time spent up to now is       22.3 secs
 
      total energy              =     -43.12647356 Ry
      Harris-Foulkes estimate   =     -43.12647356 Ry
@@ -853,7 +853,7 @@ C       -0.000000001   0.000000001   1.071599420
      Davidson diagonalization with overlap
      ethr =  1.96E-12,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is       19.9 secs
+     total cpu time spent up to now is       22.5 secs
 
      End of self-consistent calculation
 
@@ -902,52 +902,52 @@ End final coordinates
 
      Writing output data file pwscf.save
 
-     init_run     :      1.25s CPU      1.28s WALL (       1 calls)
-     electrons    :     14.15s CPU     16.37s WALL (       5 calls)
-     update_pot   :      0.64s CPU      0.68s WALL (       4 calls)
-     forces       :      1.01s CPU      1.11s WALL (       5 calls)
+     init_run     :      1.16s CPU      1.63s WALL (       1 calls)
+     electrons    :     12.71s CPU     18.89s WALL (       5 calls)
+     update_pot   :      0.59s CPU      0.60s WALL (       4 calls)
+     forces       :      0.88s CPU      0.98s WALL (       5 calls)
 
      Called by init_run:
      wfcinit      :      0.02s CPU      0.02s WALL (       1 calls)
-     potinit      :      0.10s CPU      0.10s WALL (       1 calls)
+     potinit      :      0.09s CPU      0.10s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :      1.39s CPU      1.42s WALL (      49 calls)
-     sum_band     :      6.11s CPU      7.17s WALL (      49 calls)
-     v_of_rho     :      1.84s CPU      1.87s WALL (      53 calls)
-     newd         :      3.96s CPU      5.13s WALL (      53 calls)
-     mix_rho      :      0.83s CPU      0.86s WALL (      49 calls)
+     c_bands      :      1.35s CPU      1.38s WALL (      49 calls)
+     sum_band     :      5.45s CPU      7.39s WALL (      49 calls)
+     v_of_rho     :      1.68s CPU      1.67s WALL (      53 calls)
+     newd         :      3.49s CPU      8.17s WALL (      53 calls)
+     mix_rho      :      0.75s CPU      0.76s WALL (      49 calls)
 
      Called by c_bands:
-     init_us_2    :      0.09s CPU      0.09s WALL (      99 calls)
-     cegterg      :      1.31s CPU      1.34s WALL (      49 calls)
+     init_us_2    :      0.09s CPU      0.08s WALL (      99 calls)
+     cegterg      :      1.28s CPU      1.28s WALL (      49 calls)
 
      Called by sum_band:
      sum_band:bec :      0.00s CPU      0.00s WALL (      49 calls)
-     addusdens    :      4.67s CPU      5.72s WALL (      49 calls)
+     addusdens    :      4.15s CPU      6.08s WALL (      49 calls)
 
      Called by *egterg:
-     h_psi        :      1.13s CPU      1.14s WALL (     173 calls)
-     s_psi        :      0.05s CPU      0.05s WALL (     173 calls)
-     g_psi        :      0.02s CPU      0.01s WALL (     123 calls)
+     h_psi        :      1.11s CPU      1.11s WALL (     173 calls)
+     s_psi        :      0.04s CPU      0.04s WALL (     173 calls)
+     g_psi        :      0.01s CPU      0.01s WALL (     123 calls)
      cdiaghg      :      0.01s CPU      0.01s WALL (     167 calls)
 
      Called by h_psi:
-     add_vuspsi   :      0.05s CPU      0.05s WALL (     173 calls)
+     add_vuspsi   :      0.03s CPU      0.04s WALL (     173 calls)
 
      General routines
-     calbec       :      0.07s CPU      0.08s WALL (     242 calls)
-     fft          :      3.02s CPU      3.05s WALL (     475 calls)
-     ffts         :      0.06s CPU      0.06s WALL (     102 calls)
-     fftw         :      0.67s CPU      0.68s WALL (    1693 calls)
-     interpolate  :      0.79s CPU      0.81s WALL (     102 calls)
+     calbec       :      0.07s CPU      0.07s WALL (     242 calls)
+     fft          :      2.60s CPU      2.61s WALL (     475 calls)
+     ffts         :      0.05s CPU      0.05s WALL (     102 calls)
+     fftw         :      0.55s CPU      0.57s WALL (    1693 calls)
+     interpolate  :      0.67s CPU      0.68s WALL (     102 calls)
      davcio       :      0.00s CPU      0.00s WALL (       5 calls)
 
 
-     PWSCF        :    17.63s CPU        20.21s WALL
+     PWSCF        :    15.86s CPU        22.79s WALL
 
 
-   This run was terminated on:  12:14:57   8Jan2016            
+   This run was terminated on:  21:32: 4  24Apr2016            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

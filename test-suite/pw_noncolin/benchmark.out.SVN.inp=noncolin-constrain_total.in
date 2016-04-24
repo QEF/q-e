@@ -1,5 +1,5 @@
 
-     Program PWSCF v.5.3.0 (svn rev. 11957) starts on  8Jan2016 at 12:11:17 
+     Program PWSCF v.5.4.0 (svn rev. 12348) starts on 24Apr2016 at 21:28:33 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -162,7 +162,7 @@
      ethr =  1.00E-02,  avg # of iterations = 13.8
       External magnetic field:       0.13056      0.17370      0.21696
 
-     total cpu time spent up to now is        2.2 secs
+     total cpu time spent up to now is        2.7 secs
 
      total energy              =     -49.81719842 Ry
      Harris-Foulkes estimate   =     -91.11127859 Ry
@@ -178,7 +178,7 @@
      ethr =  1.00E-02,  avg # of iterations =  6.4
       External magnetic field:      -0.20589     -0.27371     -0.34184
 
-     total cpu time spent up to now is        3.2 secs
+     total cpu time spent up to now is        3.7 secs
 
      total energy              =     -54.06914925 Ry
      Harris-Foulkes estimate   =     -56.28645457 Ry
@@ -194,7 +194,7 @@
      ethr =  2.49E-03,  avg # of iterations =  4.6
       External magnetic field:       0.07343      0.09771      0.12206
 
-     total cpu time spent up to now is        3.8 secs
+     total cpu time spent up to now is        4.2 secs
 
      total energy              =     -53.83961407 Ry
      Harris-Foulkes estimate   =     -57.46785425 Ry
@@ -210,7 +210,7 @@
      ethr =  2.49E-03,  avg # of iterations =  1.1
       External magnetic field:      -0.00170     -0.00227     -0.00286
 
-     total cpu time spent up to now is        4.2 secs
+     total cpu time spent up to now is        4.6 secs
 
      total energy              =     -55.41631842 Ry
      Harris-Foulkes estimate   =     -55.87270614 Ry
@@ -226,7 +226,7 @@
      ethr =  1.78E-03,  avg # of iterations =  1.0
       External magnetic field:       0.00018      0.00025      0.00030
 
-     total cpu time spent up to now is        4.5 secs
+     total cpu time spent up to now is        5.0 secs
 
      total energy              =     -55.54600526 Ry
      Harris-Foulkes estimate   =     -55.54495957 Ry
@@ -242,7 +242,7 @@
      ethr =  3.37E-05,  avg # of iterations =  4.4
       External magnetic field:      -0.03679     -0.04793     -0.05955
 
-     total cpu time spent up to now is        5.1 secs
+     total cpu time spent up to now is        5.6 secs
 
      total energy              =     -55.52131512 Ry
      Harris-Foulkes estimate   =     -55.54670384 Ry
@@ -258,7 +258,7 @@
      ethr =  3.37E-05,  avg # of iterations =  1.6
       External magnetic field:      -0.03764     -0.04948     -0.06163
 
-     total cpu time spent up to now is        5.6 secs
+     total cpu time spent up to now is        6.0 secs
 
      total energy              =     -55.65322494 Ry
      Harris-Foulkes estimate   =     -55.64638115 Ry
@@ -274,7 +274,7 @@
      ethr =  3.37E-05,  avg # of iterations =  1.5
       External magnetic field:      -0.03952     -0.04999     -0.06161
 
-     total cpu time spent up to now is        6.0 secs
+     total cpu time spent up to now is        6.4 secs
 
      total energy              =     -55.65613461 Ry
      Harris-Foulkes estimate   =     -55.65329192 Ry
@@ -290,7 +290,7 @@
      ethr =  3.37E-05,  avg # of iterations =  2.0
       External magnetic field:      -0.07154     -0.09400     -0.11704
 
-     total cpu time spent up to now is        6.4 secs
+     total cpu time spent up to now is        6.8 secs
 
      total energy              =     -55.86918236 Ry
      Harris-Foulkes estimate   =     -55.65618287 Ry
@@ -306,7 +306,7 @@
      ethr =  3.37E-05,  avg # of iterations =  1.7
       External magnetic field:      -0.00267     -0.00356     -0.00447
 
-     total cpu time spent up to now is        6.9 secs
+     total cpu time spent up to now is        7.2 secs
 
      total energy              =     -55.27821075 Ry
      Harris-Foulkes estimate   =     -55.92610571 Ry
@@ -322,7 +322,7 @@
      ethr =  3.37E-05,  avg # of iterations =  1.2
       External magnetic field:       0.02313      0.03101      0.03870
 
-     total cpu time spent up to now is        7.3 secs
+     total cpu time spent up to now is        7.6 secs
 
      total energy              =     -55.55076135 Ry
      Harris-Foulkes estimate   =     -55.54455977 Ry
@@ -338,7 +338,7 @@
      ethr =  2.98E-05,  avg # of iterations =  1.4
       External magnetic field:       0.02685      0.03558      0.04472
 
-     total cpu time spent up to now is        7.7 secs
+     total cpu time spent up to now is        8.0 secs
 
      total energy              =     -55.59907055 Ry
      Harris-Foulkes estimate   =     -55.58730257 Ry
@@ -354,7 +354,7 @@
      ethr =  2.98E-05,  avg # of iterations =  1.0
       External magnetic field:      -0.00483     -0.01315     -0.00769
 
-     total cpu time spent up to now is        8.1 secs
+     total cpu time spent up to now is        8.4 secs
 
      total energy              =     -55.50151491 Ry
      Harris-Foulkes estimate   =     -55.59960381 Ry
@@ -370,7 +370,7 @@
      ethr =  2.98E-05,  avg # of iterations =  4.5
       External magnetic field:      -0.01355     -0.00193     -0.02473
 
-     total cpu time spent up to now is        8.7 secs
+     total cpu time spent up to now is        9.0 secs
 
      total energy              =     -55.54402048 Ry
      Harris-Foulkes estimate   =     -55.54629562 Ry
@@ -386,7 +386,7 @@
      ethr =  2.98E-05,  avg # of iterations =  3.5
       External magnetic field:      -0.00845     -0.01089     -0.01381
 
-     total cpu time spent up to now is        9.2 secs
+     total cpu time spent up to now is        9.5 secs
 
      total energy              =     -55.54203365 Ry
      Harris-Foulkes estimate   =     -55.55253386 Ry
@@ -402,7 +402,7 @@
      ethr =  2.98E-05,  avg # of iterations =  3.9
       External magnetic field:       0.00089      0.00115      0.00147
 
-     total cpu time spent up to now is        9.7 secs
+     total cpu time spent up to now is       10.0 secs
 
      total energy              =     -55.53935307 Ry
      Harris-Foulkes estimate   =     -55.54667214 Ry
@@ -418,7 +418,7 @@
      ethr =  2.98E-05,  avg # of iterations =  1.0
       External magnetic field:       0.00110     -0.00206     -0.00389
 
-     total cpu time spent up to now is       10.1 secs
+     total cpu time spent up to now is       10.4 secs
 
      total energy              =     -55.54493679 Ry
      Harris-Foulkes estimate   =     -55.54664921 Ry
@@ -434,7 +434,7 @@
      ethr =  2.98E-05,  avg # of iterations =  1.0
       External magnetic field:       0.00570      0.00759      0.00958
 
-     total cpu time spent up to now is       10.5 secs
+     total cpu time spent up to now is       10.8 secs
 
      total energy              =     -55.54826910 Ry
      Harris-Foulkes estimate   =     -55.54547863 Ry
@@ -450,7 +450,7 @@
      ethr =  2.58E-05,  avg # of iterations =  1.0
       External magnetic field:       0.00585      0.00740      0.00993
 
-     total cpu time spent up to now is       10.9 secs
+     total cpu time spent up to now is       11.2 secs
 
      total energy              =     -55.55235428 Ry
      Harris-Foulkes estimate   =     -55.55228992 Ry
@@ -466,7 +466,7 @@
      ethr =  2.58E-05,  avg # of iterations =  1.0
       External magnetic field:      -0.00401     -0.00518     -0.00648
 
-     total cpu time spent up to now is       11.3 secs
+     total cpu time spent up to now is       11.5 secs
 
      total energy              =     -55.53887111 Ry
      Harris-Foulkes estimate   =     -55.55236229 Ry
@@ -482,7 +482,7 @@
      ethr =  2.58E-05,  avg # of iterations =  1.0
       External magnetic field:      -0.00296     -0.00379     -0.00471
 
-     total cpu time spent up to now is       11.7 secs
+     total cpu time spent up to now is       11.9 secs
 
      total energy              =     -55.54492290 Ry
      Harris-Foulkes estimate   =     -55.54483057 Ry
@@ -498,7 +498,7 @@
      ethr =  2.45E-06,  avg # of iterations =  1.0
       External magnetic field:      -0.00294     -0.00372     -0.00471
 
-     total cpu time spent up to now is       12.1 secs
+     total cpu time spent up to now is       12.3 secs
 
      total energy              =     -55.54500292 Ry
      Harris-Foulkes estimate   =     -55.54500747 Ry
@@ -514,7 +514,7 @@
      ethr =  2.45E-06,  avg # of iterations =  1.0
       External magnetic field:      -0.00563     -0.00754     -0.00921
 
-     total cpu time spent up to now is       12.5 secs
+     total cpu time spent up to now is       12.7 secs
 
      total energy              =     -55.54429558 Ry
      Harris-Foulkes estimate   =     -55.54500511 Ry
@@ -530,7 +530,7 @@
      ethr =  2.45E-06,  avg # of iterations =  1.0
       External magnetic field:      -0.00647     -0.00849     -0.01070
 
-     total cpu time spent up to now is       12.9 secs
+     total cpu time spent up to now is       13.1 secs
 
      total energy              =     -55.54506273 Ry
      Harris-Foulkes estimate   =     -55.54489747 Ry
@@ -546,7 +546,7 @@
      ethr =  2.45E-06,  avg # of iterations =  1.0
       External magnetic field:      -0.00476     -0.00673     -0.00779
 
-     total cpu time spent up to now is       13.3 secs
+     total cpu time spent up to now is       13.5 secs
 
      total energy              =     -55.54459033 Ry
      Harris-Foulkes estimate   =     -55.54511792 Ry
@@ -562,7 +562,7 @@
      ethr =  2.45E-06,  avg # of iterations =  1.0
       External magnetic field:      -0.00430     -0.00596     -0.00749
 
-     total cpu time spent up to now is       13.7 secs
+     total cpu time spent up to now is       13.8 secs
 
      total energy              =     -55.54476896 Ry
      Harris-Foulkes estimate   =     -55.54479890 Ry
@@ -578,7 +578,7 @@
      ethr =  2.40E-07,  avg # of iterations =  1.0
       External magnetic field:      -0.00456     -0.00603     -0.00747
 
-     total cpu time spent up to now is       14.1 secs
+     total cpu time spent up to now is       14.2 secs
 
      total energy              =     -55.54478197 Ry
      Harris-Foulkes estimate   =     -55.54478305 Ry
@@ -594,7 +594,7 @@
      ethr =  4.26E-08,  avg # of iterations =  1.0
       External magnetic field:      -0.00503     -0.00673     -0.00840
 
-     total cpu time spent up to now is       14.5 secs
+     total cpu time spent up to now is       14.6 secs
 
      total energy              =     -55.54479378 Ry
      Harris-Foulkes estimate   =     -55.54478327 Ry
@@ -610,7 +610,7 @@
      ethr =  1.20E-08,  avg # of iterations =  1.1
       External magnetic field:      -0.00449     -0.00600     -0.00749
 
-     total cpu time spent up to now is       14.9 secs
+     total cpu time spent up to now is       15.0 secs
 
      total energy              =     -55.54475932 Ry
      Harris-Foulkes estimate   =     -55.54481694 Ry
@@ -626,7 +626,7 @@
      ethr =  1.20E-08,  avg # of iterations =  1.4
       External magnetic field:      -0.00454     -0.00606     -0.00757
 
-     total cpu time spent up to now is       15.3 secs
+     total cpu time spent up to now is       15.4 secs
 
      total energy              =     -55.54478369 Ry
      Harris-Foulkes estimate   =     -55.54478294 Ry
@@ -642,7 +642,7 @@
      ethr =  6.18E-09,  avg # of iterations =  1.0
       External magnetic field:      -0.00455     -0.00607     -0.00758
 
-     total cpu time spent up to now is       15.7 secs
+     total cpu time spent up to now is       15.8 secs
 
      total energy              =     -55.54478404 Ry
      Harris-Foulkes estimate   =     -55.54478385 Ry
@@ -667,7 +667,7 @@
 
  ==============================================================================
 
-     total cpu time spent up to now is       16.3 secs
+     total cpu time spent up to now is       16.4 secs
 
      End of self-consistent calculation
 
@@ -854,50 +854,50 @@
 
      Writing output data file pwscf.save
 
-     init_run     :      0.54s CPU      0.55s WALL (       1 calls)
-     electrons    :     15.46s CPU     15.64s WALL (       1 calls)
+     init_run     :      0.51s CPU      0.53s WALL (       1 calls)
+     electrons    :     14.77s CPU     15.82s WALL (       1 calls)
 
      Called by init_run:
-     wfcinit      :      0.12s CPU      0.12s WALL (       1 calls)
+     wfcinit      :      0.11s CPU      0.12s WALL (       1 calls)
      potinit      :      0.01s CPU      0.02s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :     11.66s CPU     11.79s WALL (      32 calls)
-     sum_band     :      2.90s CPU      2.95s WALL (      32 calls)
-     v_of_rho     :      0.30s CPU      0.30s WALL (      33 calls)
-     newd         :      0.43s CPU      0.44s WALL (      33 calls)
-     mix_rho      :      0.12s CPU      0.12s WALL (      32 calls)
+     c_bands      :     11.18s CPU     11.52s WALL (      32 calls)
+     sum_band     :      2.74s CPU      3.44s WALL (      32 calls)
+     v_of_rho     :      0.29s CPU      0.28s WALL (      33 calls)
+     newd         :      0.41s CPU      0.42s WALL (      33 calls)
+     mix_rho      :      0.11s CPU      0.11s WALL (      32 calls)
 
      Called by c_bands:
-     init_us_2    :      0.18s CPU      0.19s WALL (    2080 calls)
-     cegterg      :     11.27s CPU     11.32s WALL (    1024 calls)
+     init_us_2    :      0.17s CPU      0.18s WALL (    2080 calls)
+     cegterg      :     10.81s CPU     10.87s WALL (    1024 calls)
 
      Called by sum_band:
-     sum_band:bec :      0.06s CPU      0.05s WALL (    1024 calls)
-     addusdens    :      0.88s CPU      0.91s WALL (      32 calls)
+     sum_band:bec :      0.05s CPU      0.05s WALL (    1024 calls)
+     addusdens    :      0.82s CPU      1.50s WALL (      32 calls)
 
      Called by *egterg:
-     h_psi        :      6.67s CPU      6.70s WALL (    3385 calls)
-     s_psi        :      0.43s CPU      0.43s WALL (    3385 calls)
-     g_psi        :      0.07s CPU      0.08s WALL (    2329 calls)
-     cdiaghg      :      1.86s CPU      1.86s WALL (    3353 calls)
+     h_psi        :      6.36s CPU      6.44s WALL (    3385 calls)
+     s_psi        :      0.40s CPU      0.42s WALL (    3385 calls)
+     g_psi        :      0.08s CPU      0.08s WALL (    2329 calls)
+     cdiaghg      :      1.80s CPU      1.78s WALL (    3353 calls)
 
      Called by h_psi:
-     add_vuspsi   :      0.45s CPU      0.46s WALL (    3385 calls)
+     add_vuspsi   :      0.46s CPU      0.44s WALL (    3385 calls)
 
      General routines
-     calbec       :      0.61s CPU      0.60s WALL (    4409 calls)
-     fft          :      0.32s CPU      0.34s WALL (    1067 calls)
+     calbec       :      0.54s CPU      0.57s WALL (    4409 calls)
+     fft          :      0.33s CPU      0.32s WALL (    1067 calls)
      ffts         :      0.01s CPU      0.01s WALL (     260 calls)
-     fftw         :      4.88s CPU      4.91s WALL (  186912 calls)
+     fftw         :      4.66s CPU      4.71s WALL (  186912 calls)
      interpolate  :      0.10s CPU      0.10s WALL (     260 calls)
      davcio       :      0.00s CPU      0.00s WALL (      32 calls)
 
 
-     PWSCF        :    16.14s CPU        16.35s WALL
+     PWSCF        :    15.40s CPU        16.50s WALL
 
 
-   This run was terminated on:  12:11:34   8Jan2016            
+   This run was terminated on:  21:28:50  24Apr2016            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

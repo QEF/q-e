@@ -1,6 +1,5 @@
-Generating kernel table - May take several minutes...kernel table generated in /home/fs395/scratch/QE/espresso/test-suite/..//pseudo/vdW_kernel_table
 
-     Program PWSCF v.5.3.0 (svn rev. 11957) starts on  8Jan2016 at 12:27:28 
+     Program PWSCF v.5.4.0 (svn rev. 12348) starts on 24Apr2016 at 21:37:23 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -138,7 +137,7 @@ Generating kernel table - May take several minutes...kernel table generated in /
 
      Starting wfc are   16 randomized atomic wfcs
 
-     total cpu time spent up to now is        1.1 secs
+     total cpu time spent up to now is        0.6 secs
 
      per-process dynamical memory:    14.5 Mb
 
@@ -148,7 +147,7 @@ Generating kernel table - May take several minutes...kernel table generated in /
      Davidson diagonalization with overlap
      ethr =  1.00E-02,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is        1.3 secs
+     total cpu time spent up to now is        0.7 secs
 
      total energy              =     -44.45696836 Ry
      Harris-Foulkes estimate   =     -44.69576598 Ry
@@ -158,7 +157,7 @@ Generating kernel table - May take several minutes...kernel table generated in /
      Davidson diagonalization with overlap
      ethr =  4.45E-03,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        1.5 secs
+     total cpu time spent up to now is        0.9 secs
 
      total energy              =     -44.46599905 Ry
      Harris-Foulkes estimate   =     -44.49235110 Ry
@@ -168,7 +167,7 @@ Generating kernel table - May take several minutes...kernel table generated in /
      Davidson diagonalization with overlap
      ethr =  6.44E-04,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        1.7 secs
+     total cpu time spent up to now is        1.1 secs
 
      total energy              =     -44.47719952 Ry
      Harris-Foulkes estimate   =     -44.47620508 Ry
@@ -178,7 +177,7 @@ Generating kernel table - May take several minutes...kernel table generated in /
      Davidson diagonalization with overlap
      ethr =  2.39E-05,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        1.9 secs
+     total cpu time spent up to now is        1.2 secs
 
      total energy              =     -44.47742475 Ry
      Harris-Foulkes estimate   =     -44.47739012 Ry
@@ -188,7 +187,7 @@ Generating kernel table - May take several minutes...kernel table generated in /
      Davidson diagonalization with overlap
      ethr =  2.64E-07,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        2.0 secs
+     total cpu time spent up to now is        1.4 secs
 
      total energy              =     -44.47744802 Ry
      Harris-Foulkes estimate   =     -44.47743322 Ry
@@ -198,7 +197,7 @@ Generating kernel table - May take several minutes...kernel table generated in /
      Davidson diagonalization with overlap
      ethr =  8.63E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is        2.2 secs
+     total cpu time spent up to now is        1.5 secs
 
      End of self-consistent calculation
 
@@ -244,20 +243,20 @@ Generating kernel table - May take several minutes...kernel table generated in /
 
      Writing output data file pwscf.save
 
-     init_run     :      0.31s CPU      0.77s WALL (       1 calls)
-     electrons    :      0.98s CPU      1.09s WALL (       1 calls)
-     forces       :      0.02s CPU      0.03s WALL (       1 calls)
-     stress       :      0.28s CPU      0.29s WALL (       1 calls)
+     init_run     :      0.28s CPU      0.30s WALL (       1 calls)
+     electrons    :      0.90s CPU      1.00s WALL (       1 calls)
+     forces       :      0.02s CPU      0.02s WALL (       1 calls)
+     stress       :      0.25s CPU      0.26s WALL (       1 calls)
 
      Called by init_run:
      wfcinit      :      0.00s CPU      0.00s WALL (       1 calls)
-     potinit      :      0.15s CPU      0.62s WALL (       1 calls)
+     potinit      :      0.14s CPU      0.16s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :      0.03s CPU      0.06s WALL (       6 calls)
-     sum_band     :      0.06s CPU      0.06s WALL (       6 calls)
-     v_of_rho     :      0.98s CPU      1.49s WALL (       7 calls)
-     newd         :      0.04s CPU      0.05s WALL (       7 calls)
+     c_bands      :      0.03s CPU      0.03s WALL (       6 calls)
+     sum_band     :      0.05s CPU      0.05s WALL (       6 calls)
+     v_of_rho     :      0.89s CPU      0.99s WALL (       7 calls)
+     newd         :      0.03s CPU      0.04s WALL (       7 calls)
      mix_rho      :      0.01s CPU      0.01s WALL (       6 calls)
 
      Called by c_bands:
@@ -269,7 +268,7 @@ Generating kernel table - May take several minutes...kernel table generated in /
      addusdens    :      0.03s CPU      0.03s WALL (       6 calls)
 
      Called by *egterg:
-     h_psi        :      0.03s CPU      0.03s WALL (      21 calls)
+     h_psi        :      0.02s CPU      0.02s WALL (      21 calls)
      s_psi        :      0.00s CPU      0.00s WALL (      21 calls)
      g_psi        :      0.00s CPU      0.00s WALL (      14 calls)
      rdiaghg      :      0.00s CPU      0.00s WALL (      20 calls)
@@ -279,17 +278,17 @@ Generating kernel table - May take several minutes...kernel table generated in /
 
      General routines
      calbec       :      0.00s CPU      0.00s WALL (      32 calls)
-     fft          :      0.47s CPU      0.47s WALL (     510 calls)
+     fft          :      0.44s CPU      0.44s WALL (     510 calls)
      ffts         :      0.00s CPU      0.00s WALL (      13 calls)
      fftw         :      0.02s CPU      0.02s WALL (     230 calls)
-     interpolate  :      0.02s CPU      0.02s WALL (      13 calls)
+     interpolate  :      0.01s CPU      0.01s WALL (      13 calls)
      davcio       :      0.00s CPU      0.00s WALL (       1 calls)
 
 
-     PWSCF        :     1.96s CPU         2.69s WALL
+     PWSCF        :     1.79s CPU         1.95s WALL
 
 
-   This run was terminated on:  12:27:31   8Jan2016            
+   This run was terminated on:  21:37:25  24Apr2016            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

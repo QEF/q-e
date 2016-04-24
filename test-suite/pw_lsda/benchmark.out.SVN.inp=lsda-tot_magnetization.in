@@ -1,5 +1,5 @@
 
-     Program PWSCF v.5.3.0 (svn rev. 11957) starts on  8Jan2016 at 12:10:31 
+     Program PWSCF v.5.4.0 (svn rev. 12348) starts on 24Apr2016 at 21:27:48 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -121,9 +121,9 @@
      starting charge    9.99966, renormalised to   10.00000
      Starting wfc are    6 randomized atomic wfcs +    4 random wfc
 
-     total cpu time spent up to now is        0.8 secs
+     total cpu time spent up to now is        0.7 secs
 
-     per-process dynamical memory:     5.7 Mb
+     per-process dynamical memory:     5.8 Mb
 
      Self-consistent Calculation
 
@@ -131,7 +131,7 @@
      Davidson diagonalization with overlap
      ethr =  1.00E-02,  avg # of iterations =  4.4
 
-     total cpu time spent up to now is        1.0 secs
+     total cpu time spent up to now is        0.9 secs
 
      total energy              =     -85.36100764 Ry
      Harris-Foulkes estimate   =     -85.65775224 Ry
@@ -144,7 +144,7 @@
      Davidson diagonalization with overlap
      ethr =  5.62E-03,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        1.1 secs
+     total cpu time spent up to now is        1.0 secs
 
      total energy              =     -85.50364204 Ry
      Harris-Foulkes estimate   =     -85.68883154 Ry
@@ -170,7 +170,7 @@
      Davidson diagonalization with overlap
      ethr =  4.35E-05,  avg # of iterations =  1.9
 
-     total cpu time spent up to now is        1.4 secs
+     total cpu time spent up to now is        1.3 secs
 
      total energy              =     -85.57808381 Ry
      Harris-Foulkes estimate   =     -85.57822591 Ry
@@ -183,7 +183,7 @@
      Davidson diagonalization with overlap
      ethr =  3.16E-06,  avg # of iterations =  1.5
 
-     total cpu time spent up to now is        1.5 secs
+     total cpu time spent up to now is        1.4 secs
 
      total energy              =     -85.57814925 Ry
      Harris-Foulkes estimate   =     -85.57814691 Ry
@@ -330,50 +330,50 @@
 
      Writing output data file pwscf.save
 
-     init_run     :      0.69s CPU      0.69s WALL (       1 calls)
-     electrons    :      0.81s CPU      0.85s WALL (       1 calls)
+     init_run     :      0.66s CPU      0.68s WALL (       1 calls)
+     electrons    :      0.76s CPU      0.81s WALL (       1 calls)
 
      Called by init_run:
      wfcinit      :      0.02s CPU      0.02s WALL (       1 calls)
      potinit      :      0.01s CPU      0.01s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :      0.40s CPU      0.42s WALL (       6 calls)
-     sum_band     :      0.24s CPU      0.25s WALL (       6 calls)
-     v_of_rho     :      0.06s CPU      0.07s WALL (       7 calls)
-     newd         :      0.12s CPU      0.12s WALL (       7 calls)
+     c_bands      :      0.37s CPU      0.40s WALL (       6 calls)
+     sum_band     :      0.22s CPU      0.23s WALL (       6 calls)
+     v_of_rho     :      0.06s CPU      0.06s WALL (       7 calls)
+     newd         :      0.10s CPU      0.12s WALL (       7 calls)
      mix_rho      :      0.01s CPU      0.01s WALL (       6 calls)
 
      Called by c_bands:
-     init_us_2    :      0.02s CPU      0.02s WALL (     260 calls)
-     cegterg      :      0.37s CPU      0.39s WALL (     120 calls)
+     init_us_2    :      0.01s CPU      0.02s WALL (     260 calls)
+     cegterg      :      0.36s CPU      0.36s WALL (     120 calls)
 
      Called by sum_band:
      sum_band:bec :      0.00s CPU      0.00s WALL (     120 calls)
-     addusdens    :      0.16s CPU      0.17s WALL (       6 calls)
+     addusdens    :      0.15s CPU      0.16s WALL (       6 calls)
 
      Called by *egterg:
-     h_psi        :      0.25s CPU      0.26s WALL (     409 calls)
+     h_psi        :      0.22s CPU      0.24s WALL (     409 calls)
      s_psi        :      0.02s CPU      0.02s WALL (     409 calls)
-     g_psi        :      0.00s CPU      0.00s WALL (     269 calls)
-     cdiaghg      :      0.07s CPU      0.08s WALL (     389 calls)
+     g_psi        :      0.01s CPU      0.00s WALL (     269 calls)
+     cdiaghg      :      0.07s CPU      0.07s WALL (     389 calls)
 
      Called by h_psi:
      add_vuspsi   :      0.02s CPU      0.02s WALL (     409 calls)
 
      General routines
-     calbec       :      0.02s CPU      0.02s WALL (     529 calls)
-     fft          :      0.03s CPU      0.03s WALL (     109 calls)
-     ffts         :      0.00s CPU      0.00s WALL (      26 calls)
-     fftw         :      0.18s CPU      0.20s WALL (    7440 calls)
+     calbec       :      0.03s CPU      0.02s WALL (     529 calls)
+     fft          :      0.02s CPU      0.03s WALL (     109 calls)
+     ffts         :      0.01s CPU      0.00s WALL (      26 calls)
+     fftw         :      0.17s CPU      0.18s WALL (    7440 calls)
      interpolate  :      0.01s CPU      0.01s WALL (      26 calls)
      davcio       :      0.00s CPU      0.00s WALL (      20 calls)
 
 
-     PWSCF        :     1.63s CPU         1.71s WALL
+     PWSCF        :     1.54s CPU         1.65s WALL
 
 
-   This run was terminated on:  12:10:32   8Jan2016            
+   This run was terminated on:  21:27:50  24Apr2016            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

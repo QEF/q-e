@@ -1,5 +1,5 @@
 
-     Program PWSCF v.5.3.0 (svn rev. 11957) starts on  8Jan2016 at 12:20:26 
+     Program PWSCF v.5.4.0 (svn rev. 12348) starts on 24Apr2016 at 21:37:19 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -116,7 +116,7 @@
      starting charge   15.99984, renormalised to   16.00000
      Starting wfc are   16 randomized atomic wfcs
 
-     total cpu time spent up to now is        0.3 secs
+     total cpu time spent up to now is        0.2 secs
 
      per-process dynamical memory:     8.9 Mb
 
@@ -136,7 +136,7 @@
      Davidson diagonalization with overlap
      ethr =  4.22E-03,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        0.6 secs
+     total cpu time spent up to now is        0.5 secs
 
      total energy              =     -44.18909044 Ry
      Harris-Foulkes estimate   =     -44.22325934 Ry
@@ -156,7 +156,7 @@
      Davidson diagonalization with overlap
      ethr =  1.84E-05,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        0.7 secs
+     total cpu time spent up to now is        0.6 secs
 
      total energy              =     -44.19780375 Ry
      Harris-Foulkes estimate   =     -44.19778832 Ry
@@ -166,7 +166,7 @@
      Davidson diagonalization with overlap
      ethr =  9.77E-08,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is        0.7 secs
+     total cpu time spent up to now is        0.6 secs
 
      End of self-consistent calculation
 
@@ -213,29 +213,29 @@
 
      Writing output data file pwscf.save
 
-     init_run     :      0.20s CPU      0.20s WALL (       1 calls)
-     electrons    :      0.46s CPU      0.47s WALL (       1 calls)
-     forces       :      0.22s CPU      0.22s WALL (       1 calls)
-     stress       :      0.37s CPU      0.37s WALL (       1 calls)
+     init_run     :      0.19s CPU      0.19s WALL (       1 calls)
+     electrons    :      0.42s CPU      0.43s WALL (       1 calls)
+     forces       :      0.20s CPU      0.20s WALL (       1 calls)
+     stress       :      0.34s CPU      0.34s WALL (       1 calls)
 
      Called by init_run:
      wfcinit      :      0.00s CPU      0.00s WALL (       1 calls)
-     potinit      :      0.04s CPU      0.05s WALL (       1 calls)
+     potinit      :      0.04s CPU      0.04s WALL (       1 calls)
 
      Called by electrons:
      c_bands      :      0.03s CPU      0.03s WALL (       5 calls)
      sum_band     :      0.04s CPU      0.05s WALL (       5 calls)
-     v_of_rho     :      0.18s CPU      0.18s WALL (       6 calls)
+     v_of_rho     :      0.17s CPU      0.17s WALL (       6 calls)
      newd         :      0.03s CPU      0.03s WALL (       6 calls)
      mix_rho      :      0.01s CPU      0.01s WALL (       5 calls)
 
      Called by c_bands:
      init_us_2    :      0.00s CPU      0.00s WALL (      11 calls)
-     regterg      :      0.03s CPU      0.03s WALL (       5 calls)
+     regterg      :      0.02s CPU      0.02s WALL (       5 calls)
 
      Called by sum_band:
      sum_band:bec :      0.00s CPU      0.00s WALL (       5 calls)
-     addusdens    :      0.03s CPU      0.03s WALL (       5 calls)
+     addusdens    :      0.02s CPU      0.03s WALL (       5 calls)
 
      Called by *egterg:
      h_psi        :      0.02s CPU      0.02s WALL (      17 calls)
@@ -248,17 +248,17 @@
 
      General routines
      calbec       :      0.00s CPU      0.00s WALL (      27 calls)
-     fft          :      0.09s CPU      0.09s WALL (     100 calls)
+     fft          :      0.08s CPU      0.09s WALL (     100 calls)
      ffts         :      0.00s CPU      0.00s WALL (      11 calls)
      fftw         :      0.01s CPU      0.02s WALL (     196 calls)
      interpolate  :      0.01s CPU      0.01s WALL (      11 calls)
      davcio       :      0.00s CPU      0.00s WALL (       1 calls)
 
 
-     PWSCF        :     1.31s CPU         1.35s WALL
+     PWSCF        :     1.21s CPU         1.23s WALL
 
 
-   This run was terminated on:  12:20:28   8Jan2016            
+   This run was terminated on:  21:37:21  24Apr2016            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

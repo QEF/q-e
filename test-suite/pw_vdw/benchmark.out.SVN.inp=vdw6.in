@@ -1,5 +1,5 @@
 
-     Program PWSCF v.5.3.0 (svn rev. 11957) starts on  8Jan2016 at 12:28:49 
+     Program PWSCF v.5.4.0 (svn rev. 12348) starts on 24Apr2016 at 21:38:40 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -74,7 +74,7 @@
 
 
      vdW kernel table read from file rVV10_kernel_table
-     MD5 check sum: 58b35d571421623f372a2c3819b1c2f9
+     MD5 check sum: b40d87f4363f44cbecbc2ba61283f335
 
      atomic species   valence    mass     pseudopotential
         C              4.00    12.00000     C ( 1.00)
@@ -118,30 +118,13 @@
 
 ---------------------------------------------------------------------------------
 Carrying out rVV10 run using the following parameters:
-
 Nqs =      20    Nr_points =    1024   r_max =   100.000
-b_value =  6.30000
-beta =  0.00901
-q_mesh =       0.00010000
-     0.00030000
-     0.00058939
-     0.00100810
-     0.00161396
-     0.00249058
-     0.00375900
-     0.00559430
-     0.00824984
-     0.01209221
-     0.01765183
-     0.02569619
-     0.03733578
-     0.05417739
-     0.07854596
-     0.11380545
-     0.16482331
-     0.23864234
-     0.34545298
-     0.50000000
+b_value =  6.30000    beta =  0.00901
+     q_mesh =  0.00010000  0.00030000  0.00058939  0.00100810
+               0.00161396  0.00249058  0.00375900  0.00559430
+               0.00824984  0.01209221  0.01765183  0.02569619
+               0.03733578  0.05417739  0.07854596  0.11380545
+               0.16482331  0.23864234  0.34545298  0.50000000
 
 Gradients computed in Reciprocal space
 
@@ -150,7 +133,7 @@ Gradients computed in Reciprocal space
 
      Starting wfc are   16 randomized atomic wfcs
 
-     total cpu time spent up to now is        0.8 secs
+     total cpu time spent up to now is        0.7 secs
 
      per-process dynamical memory:    14.5 Mb
 
@@ -160,7 +143,7 @@ Gradients computed in Reciprocal space
      Davidson diagonalization with overlap
      ethr =  1.00E-02,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is        1.1 secs
+     total cpu time spent up to now is        1.0 secs
 
      total energy              =     -44.23249950 Ry
      Harris-Foulkes estimate   =     -44.49859546 Ry
@@ -180,7 +163,7 @@ Gradients computed in Reciprocal space
      Davidson diagonalization with overlap
      ethr =  6.17E-04,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        1.6 secs
+     total cpu time spent up to now is        1.5 secs
 
      total energy              =     -44.24234068 Ry
      Harris-Foulkes estimate   =     -44.24208610 Ry
@@ -190,7 +173,7 @@ Gradients computed in Reciprocal space
      Davidson diagonalization with overlap
      ethr =  2.18E-05,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        1.9 secs
+     total cpu time spent up to now is        1.8 secs
 
      total energy              =     -44.24253031 Ry
      Harris-Foulkes estimate   =     -44.24254584 Ry
@@ -200,7 +183,7 @@ Gradients computed in Reciprocal space
      Davidson diagonalization with overlap
      ethr =  3.87E-07,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is        2.2 secs
+     total cpu time spent up to now is        2.1 secs
 
      total energy              =     -44.24255266 Ry
      Harris-Foulkes estimate   =     -44.24254809 Ry
@@ -210,7 +193,7 @@ Gradients computed in Reciprocal space
      Davidson diagonalization with overlap
      ethr =  3.98E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        2.5 secs
+     total cpu time spent up to now is        2.4 secs
 
      End of self-consistent calculation
 
@@ -256,20 +239,20 @@ Gradients computed in Reciprocal space
 
      Writing output data file pwscf.save
 
-     init_run     :      0.42s CPU      0.44s WALL (       1 calls)
-     electrons    :      1.64s CPU      1.69s WALL (       1 calls)
-     forces       :      0.02s CPU      0.03s WALL (       1 calls)
+     init_run     :      0.40s CPU      0.42s WALL (       1 calls)
+     electrons    :      1.58s CPU      1.72s WALL (       1 calls)
+     forces       :      0.02s CPU      0.02s WALL (       1 calls)
      stress       :      0.32s CPU      0.33s WALL (       1 calls)
 
      Called by init_run:
      wfcinit      :      0.00s CPU      0.00s WALL (       1 calls)
-     potinit      :      0.27s CPU      0.29s WALL (       1 calls)
+     potinit      :      0.26s CPU      0.27s WALL (       1 calls)
 
      Called by electrons:
      c_bands      :      0.03s CPU      0.03s WALL (       6 calls)
      sum_band     :      0.05s CPU      0.05s WALL (       6 calls)
-     v_of_rho     :      1.76s CPU      1.81s WALL (       7 calls)
-     newd         :      0.03s CPU      0.04s WALL (       7 calls)
+     v_of_rho     :      1.69s CPU      1.82s WALL (       7 calls)
+     newd         :      0.04s CPU      0.04s WALL (       7 calls)
      mix_rho      :      0.01s CPU      0.01s WALL (       6 calls)
 
      Called by c_bands:
@@ -284,24 +267,24 @@ Gradients computed in Reciprocal space
      h_psi        :      0.02s CPU      0.02s WALL (      21 calls)
      s_psi        :      0.00s CPU      0.00s WALL (      21 calls)
      g_psi        :      0.00s CPU      0.00s WALL (      14 calls)
-     rdiaghg      :      0.01s CPU      0.00s WALL (      20 calls)
+     rdiaghg      :      0.00s CPU      0.00s WALL (      20 calls)
 
      Called by h_psi:
      add_vuspsi   :      0.00s CPU      0.00s WALL (      21 calls)
 
      General routines
      calbec       :      0.00s CPU      0.00s WALL (      32 calls)
-     fft          :      0.45s CPU      0.46s WALL (     510 calls)
+     fft          :      0.44s CPU      0.44s WALL (     510 calls)
      ffts         :      0.00s CPU      0.00s WALL (      13 calls)
      fftw         :      0.02s CPU      0.02s WALL (     228 calls)
-     interpolate  :      0.01s CPU      0.02s WALL (      13 calls)
+     interpolate  :      0.01s CPU      0.01s WALL (      13 calls)
      davcio       :      0.00s CPU      0.00s WALL (       1 calls)
 
 
-     PWSCF        :     2.77s CPU         2.95s WALL
+     PWSCF        :     2.67s CPU         2.90s WALL
 
 
-   This run was terminated on:  12:28:52   8Jan2016            
+   This run was terminated on:  21:38:43  24Apr2016            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

@@ -1,5 +1,5 @@
 
-     Program PWSCF v.5.3.0 (svn rev. 11957) starts on  8Jan2016 at 12: 0:27 
+     Program PWSCF v.5.4.0 (svn rev. 12348) starts on 24Apr2016 at 21:18:29 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -122,7 +122,7 @@ EXX: grid of k+q points same as grid of k-points
      negative rho (up, down):  4.488E-03 0.000E+00
      Starting wfc are    6 randomized atomic wfcs
 
-     total cpu time spent up to now is        0.7 secs
+     total cpu time spent up to now is        0.6 secs
 
      per-process dynamical memory:    45.5 Mb
 
@@ -134,7 +134,7 @@ EXX: grid of k+q points same as grid of k-points
 
      negative rho (up, down):  1.186E-03 0.000E+00
 
-     total cpu time spent up to now is        1.2 secs
+     total cpu time spent up to now is        1.1 secs
 
      iteration #  2     ecut=    80.00 Ry     beta=0.70
      Davidson diagonalization with overlap
@@ -142,7 +142,7 @@ EXX: grid of k+q points same as grid of k-points
 
      negative rho (up, down):  5.391E-04 0.000E+00
 
-     total cpu time spent up to now is        1.8 secs
+     total cpu time spent up to now is        1.7 secs
 
      iteration #  3     ecut=    80.00 Ry     beta=0.70
      Davidson diagonalization with overlap
@@ -150,7 +150,7 @@ EXX: grid of k+q points same as grid of k-points
 
      negative rho (up, down):  6.818E-05 0.000E+00
 
-     total cpu time spent up to now is        2.3 secs
+     total cpu time spent up to now is        2.2 secs
 
      iteration #  4     ecut=    80.00 Ry     beta=0.70
      Davidson diagonalization with overlap
@@ -158,7 +158,7 @@ EXX: grid of k+q points same as grid of k-points
 
      negative rho (up, down):  1.310E-08 0.000E+00
 
-     total cpu time spent up to now is        2.8 secs
+     total cpu time spent up to now is        2.6 secs
 
      iteration #  5     ecut=    80.00 Ry     beta=0.70
      Davidson diagonalization with overlap
@@ -166,13 +166,13 @@ EXX: grid of k+q points same as grid of k-points
 
      negative rho (up, down):  1.383E-07 0.000E+00
 
-     total cpu time spent up to now is        3.3 secs
+     total cpu time spent up to now is        3.1 secs
 
      iteration #  6     ecut=    80.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  6.39E-07,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        3.7 secs
+     total cpu time spent up to now is        3.6 secs
 
      End of self-consistent calculation
 
@@ -186,9 +186,9 @@ EXX: grid of k+q points same as grid of k-points
 
      EXX: now go back to refine exchange calculation
 
-     total cpu time spent up to now is        4.2 secs
+     total cpu time spent up to now is        4.0 secs
 
-     per-process dynamical memory:    54.1 Mb
+     per-process dynamical memory:    54.2 Mb
 
      Self-consistent Calculation
 
@@ -196,25 +196,25 @@ EXX: grid of k+q points same as grid of k-points
      Davidson diagonalization with overlap
      ethr =  6.39E-07,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is        5.1 secs
+     total cpu time spent up to now is        5.0 secs
 
      iteration #  2     ecut=    80.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  2.55E-06,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        5.9 secs
+     total cpu time spent up to now is        5.7 secs
 
      iteration #  3     ecut=    80.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  4.75E-07,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        6.6 secs
+     total cpu time spent up to now is        6.4 secs
 
      iteration #  4     ecut=    80.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  1.65E-07,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        7.3 secs
+     total cpu time spent up to now is        7.1 secs
 
      End of self-consistent calculation
 
@@ -234,7 +234,7 @@ EXX: grid of k+q points same as grid of k-points
 
      EXX: now go back to refine exchange calculation
 
-     total cpu time spent up to now is        7.4 secs
+     total cpu time spent up to now is        7.3 secs
 
      per-process dynamical memory:    52.9 Mb
 
@@ -244,13 +244,13 @@ EXX: grid of k+q points same as grid of k-points
      Davidson diagonalization with overlap
      ethr =  1.65E-07,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        8.2 secs
+     total cpu time spent up to now is        8.0 secs
 
      iteration #  2     ecut=    80.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  1.99E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        9.0 secs
+     total cpu time spent up to now is        8.7 secs
 
      End of self-consistent calculation
 
@@ -303,9 +303,9 @@ H       -0.221322385   1.811230348   0.000198242
 
      negative rho (up, down):  1.876E-03 0.000E+00
 
-     total cpu time spent up to now is        9.7 secs
+     total cpu time spent up to now is        9.5 secs
 
-     per-process dynamical memory:    54.1 Mb
+     per-process dynamical memory:    54.2 Mb
 
      Self-consistent Calculation
 
@@ -315,7 +315,7 @@ H       -0.221322385   1.811230348   0.000198242
 
      negative rho (up, down):  2.780E-04 0.000E+00
 
-     total cpu time spent up to now is       10.7 secs
+     total cpu time spent up to now is       10.5 secs
 
      iteration #  2     ecut=    80.00 Ry     beta=0.70
      Davidson diagonalization with overlap
@@ -323,7 +323,7 @@ H       -0.221322385   1.811230348   0.000198242
 
      negative rho (up, down):  1.277E-04 0.000E+00
 
-     total cpu time spent up to now is       11.5 secs
+     total cpu time spent up to now is       11.3 secs
 
      iteration #  3     ecut=    80.00 Ry     beta=0.70
      Davidson diagonalization with overlap
@@ -331,13 +331,13 @@ H       -0.221322385   1.811230348   0.000198242
 
      negative rho (up, down):  3.561E-06 0.000E+00
 
-     total cpu time spent up to now is       12.3 secs
+     total cpu time spent up to now is       12.1 secs
 
      iteration #  4     ecut=    80.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  2.01E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is       13.0 secs
+     total cpu time spent up to now is       12.8 secs
 
      End of self-consistent calculation
 
@@ -357,7 +357,7 @@ H       -0.221322385   1.811230348   0.000198242
 
      EXX: now go back to refine exchange calculation
 
-     total cpu time spent up to now is       13.2 secs
+     total cpu time spent up to now is       12.9 secs
 
      per-process dynamical memory:    52.9 Mb
 
@@ -367,25 +367,25 @@ H       -0.221322385   1.811230348   0.000198242
      Davidson diagonalization with overlap
      ethr =  2.01E-08,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is       14.1 secs
+     total cpu time spent up to now is       13.9 secs
 
      iteration #  2     ecut=    80.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  7.08E-07,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is       14.9 secs
+     total cpu time spent up to now is       14.6 secs
 
      iteration #  3     ecut=    80.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  5.81E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is       15.6 secs
+     total cpu time spent up to now is       15.4 secs
 
      iteration #  4     ecut=    80.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  1.70E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is       16.3 secs
+     total cpu time spent up to now is       16.1 secs
 
      End of self-consistent calculation
 
@@ -405,7 +405,7 @@ H       -0.221322385   1.811230348   0.000198242
 
      EXX: now go back to refine exchange calculation
 
-     total cpu time spent up to now is       16.5 secs
+     total cpu time spent up to now is       16.2 secs
 
      per-process dynamical memory:    52.9 Mb
 
@@ -415,7 +415,7 @@ H       -0.221322385   1.811230348   0.000198242
      Davidson diagonalization with overlap
      ethr =  1.70E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is       17.2 secs
+     total cpu time spent up to now is       17.0 secs
 
      End of self-consistent calculation
 
@@ -469,9 +469,9 @@ H       -0.221480490   1.819915756   0.000198613
 
      negative rho (up, down):  4.995E-04 0.000E+00
 
-     total cpu time spent up to now is       18.0 secs
+     total cpu time spent up to now is       17.7 secs
 
-     per-process dynamical memory:    54.1 Mb
+     per-process dynamical memory:    54.2 Mb
 
      Self-consistent Calculation
 
@@ -481,7 +481,7 @@ H       -0.221480490   1.819915756   0.000198613
 
      negative rho (up, down):  6.902E-05 0.000E+00
 
-     total cpu time spent up to now is       18.9 secs
+     total cpu time spent up to now is       18.7 secs
 
      iteration #  2     ecut=    80.00 Ry     beta=0.70
      Davidson diagonalization with overlap
@@ -489,7 +489,7 @@ H       -0.221480490   1.819915756   0.000198613
 
      negative rho (up, down):  3.101E-05 0.000E+00
 
-     total cpu time spent up to now is       19.7 secs
+     total cpu time spent up to now is       19.5 secs
 
      iteration #  3     ecut=    80.00 Ry     beta=0.70
      Davidson diagonalization with overlap
@@ -497,13 +497,13 @@ H       -0.221480490   1.819915756   0.000198613
 
      negative rho (up, down):  1.027E-06 0.000E+00
 
-     total cpu time spent up to now is       20.5 secs
+     total cpu time spent up to now is       20.2 secs
 
      iteration #  4     ecut=    80.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  7.56E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is       21.2 secs
+     total cpu time spent up to now is       20.9 secs
 
      End of self-consistent calculation
 
@@ -523,7 +523,7 @@ H       -0.221480490   1.819915756   0.000198613
 
      EXX: now go back to refine exchange calculation
 
-     total cpu time spent up to now is       21.3 secs
+     total cpu time spent up to now is       21.1 secs
 
      per-process dynamical memory:    52.9 Mb
 
@@ -533,25 +533,25 @@ H       -0.221480490   1.819915756   0.000198613
      Davidson diagonalization with overlap
      ethr =  7.56E-09,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is       22.3 secs
+     total cpu time spent up to now is       22.0 secs
 
      iteration #  2     ecut=    80.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  1.41E-07,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is       23.0 secs
+     total cpu time spent up to now is       22.8 secs
 
      iteration #  3     ecut=    80.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  4.96E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is       23.8 secs
+     total cpu time spent up to now is       23.5 secs
 
      iteration #  4     ecut=    80.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  2.11E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is       24.5 secs
+     total cpu time spent up to now is       24.2 secs
 
      End of self-consistent calculation
 
@@ -571,7 +571,7 @@ H       -0.221480490   1.819915756   0.000198613
 
      EXX: now go back to refine exchange calculation
 
-     total cpu time spent up to now is       24.7 secs
+     total cpu time spent up to now is       24.4 secs
 
      per-process dynamical memory:    52.9 Mb
 
@@ -581,13 +581,13 @@ H       -0.221480490   1.819915756   0.000198613
      Davidson diagonalization with overlap
      ethr =  2.11E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is       25.4 secs
+     total cpu time spent up to now is       25.1 secs
 
      iteration #  2     ecut=    80.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  5.76E-10,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is       26.2 secs
+     total cpu time spent up to now is       25.8 secs
 
      End of self-consistent calculation
 
@@ -641,9 +641,9 @@ H       -0.220664363   1.819214452   0.000198359
 
      negative rho (up, down):  3.286E-06 0.000E+00
 
-     total cpu time spent up to now is       26.8 secs
+     total cpu time spent up to now is       26.5 secs
 
-     per-process dynamical memory:    54.1 Mb
+     per-process dynamical memory:    54.2 Mb
 
      Self-consistent Calculation
 
@@ -659,7 +659,7 @@ H       -0.220664363   1.819214452   0.000198359
 
      negative rho (up, down):  2.777E-07 0.000E+00
 
-     total cpu time spent up to now is       28.0 secs
+     total cpu time spent up to now is       27.6 secs
 
      iteration #  2     ecut=    80.00 Ry     beta=0.70
      Davidson diagonalization with overlap
@@ -667,13 +667,13 @@ H       -0.220664363   1.819214452   0.000198359
 
      negative rho (up, down):  8.069E-08 0.000E+00
 
-     total cpu time spent up to now is       28.8 secs
+     total cpu time spent up to now is       28.4 secs
 
      iteration #  3     ecut=    80.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  8.24E-10,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is       29.5 secs
+     total cpu time spent up to now is       29.1 secs
 
      End of self-consistent calculation
 
@@ -693,7 +693,7 @@ H       -0.220664363   1.819214452   0.000198359
 
      EXX: now go back to refine exchange calculation
 
-     total cpu time spent up to now is       29.6 secs
+     total cpu time spent up to now is       29.3 secs
 
      per-process dynamical memory:    52.9 Mb
 
@@ -709,7 +709,7 @@ H       -0.220664363   1.819214452   0.000198359
      Davidson diagonalization with overlap
      ethr =  2.49E-11,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is       30.7 secs
+     total cpu time spent up to now is       30.4 secs
 
      End of self-consistent calculation
 
@@ -755,29 +755,29 @@ End final coordinates
 
      Writing output data file pwscf.save
 
-     init_run     :      0.58s CPU      0.65s WALL (       1 calls)
-     electrons    :     26.62s CPU     26.82s WALL (      11 calls)
-     update_pot   :      1.27s CPU      1.30s WALL (       3 calls)
-     forces       :      0.33s CPU      0.33s WALL (       4 calls)
+     init_run     :      0.55s CPU      0.59s WALL (       1 calls)
+     electrons    :     26.21s CPU     26.47s WALL (      11 calls)
+     update_pot   :      1.26s CPU      1.32s WALL (       3 calls)
+     forces       :      0.32s CPU      0.32s WALL (       4 calls)
 
      Called by init_run:
      wfcinit      :      0.06s CPU      0.06s WALL (       1 calls)
-     potinit      :      0.43s CPU      0.47s WALL (       1 calls)
+     potinit      :      0.40s CPU      0.42s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :     13.35s CPU     13.40s WALL (      37 calls)
-     sum_band     :      1.71s CPU      1.71s WALL (      37 calls)
-     v_of_rho     :     12.32s CPU     12.44s WALL (      40 calls)
-     mix_rho      :      0.61s CPU      0.66s WALL (      37 calls)
+     c_bands      :     13.14s CPU     13.21s WALL (      37 calls)
+     sum_band     :      1.64s CPU      1.65s WALL (      37 calls)
+     v_of_rho     :     12.17s CPU     12.36s WALL (      40 calls)
+     mix_rho      :      0.60s CPU      0.65s WALL (      37 calls)
 
      Called by c_bands:
-     init_us_2    :      0.06s CPU      0.06s WALL (      96 calls)
-     regterg      :     13.32s CPU     13.37s WALL (      37 calls)
+     init_us_2    :      0.04s CPU      0.06s WALL (      96 calls)
+     regterg      :     13.12s CPU     13.18s WALL (      37 calls)
 
      Called by sum_band:
 
      Called by *egterg:
-     h_psi        :     13.01s CPU     13.03s WALL (     127 calls)
+     h_psi        :     12.80s CPU     12.83s WALL (     127 calls)
      g_psi        :      0.04s CPU      0.04s WALL (      89 calls)
      rdiaghg      :      0.01s CPU      0.01s WALL (     114 calls)
 
@@ -785,24 +785,24 @@ End final coordinates
      add_vuspsi   :      0.01s CPU      0.01s WALL (     127 calls)
 
      General routines
-     calbec       :      0.01s CPU      0.02s WALL (     164 calls)
-     fft          :      4.82s CPU      4.83s WALL (     441 calls)
-     fftw         :      3.86s CPU      3.86s WALL (     560 calls)
-     fftc         :      5.99s CPU      6.00s WALL (    1760 calls)
-     fftcw        :      1.62s CPU      1.64s WALL (     665 calls)
+     calbec       :      0.02s CPU      0.01s WALL (     164 calls)
+     fft          :      4.75s CPU      4.76s WALL (     441 calls)
+     fftw         :      3.78s CPU      3.79s WALL (     560 calls)
+     fftc         :      5.96s CPU      5.95s WALL (    1760 calls)
+     fftcw        :      1.66s CPU      1.64s WALL (     665 calls)
      davcio       :      0.00s CPU      0.00s WALL (       4 calls)
 
 
      EXX routines
      exx_grid     :      0.00s CPU      0.00s WALL (       1 calls)
-     exxinit      :      0.13s CPU      0.13s WALL (      11 calls)
-     vexx         :      8.99s CPU      9.02s WALL (     107 calls)
-     exxenergy    :      1.15s CPU      1.15s WALL (      21 calls)
+     exxinit      :      0.12s CPU      0.13s WALL (      11 calls)
+     vexx         :      8.91s CPU      8.94s WALL (     107 calls)
+     exxenergy    :      1.16s CPU      1.17s WALL (      21 calls)
 
-     PWSCF        :    30.62s CPU        31.01s WALL
+     PWSCF        :    30.13s CPU        30.67s WALL
 
 
-   This run was terminated on:  12: 0:58   8Jan2016            
+   This run was terminated on:  21:18:59  24Apr2016            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

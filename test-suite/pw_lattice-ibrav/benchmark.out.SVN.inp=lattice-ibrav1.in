@@ -1,5 +1,5 @@
 
-     Program PWSCF v.5.3.0 (svn rev. 11957) starts on  8Jan2016 at 12: 7:12 
+     Program PWSCF v.5.4.0 (svn rev. 12348) starts on 24Apr2016 at 21:25: 8 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -113,7 +113,7 @@
 
      negative rho (up, down):  5.785E-05 0.000E+00
 
-     total cpu time spent up to now is        0.1 secs
+     total cpu time spent up to now is        0.0 secs
 
      total energy              =      -2.22236352 Ry
      Harris-Foulkes estimate   =      -2.29105276 Ry
@@ -125,7 +125,7 @@
 
      negative rho (up, down):  4.428E-06 0.000E+00
 
-     total cpu time spent up to now is        0.1 secs
+     total cpu time spent up to now is        0.0 secs
 
      total energy              =      -2.23377840 Ry
      Harris-Foulkes estimate   =      -2.23412533 Ry
@@ -172,18 +172,18 @@
 
      Writing output data file pwscf.save
 
-     init_run     :      0.02s CPU      0.02s WALL (       1 calls)
-     electrons    :      0.04s CPU      0.05s WALL (       1 calls)
+     init_run     :      0.01s CPU      0.02s WALL (       1 calls)
+     electrons    :      0.04s CPU      0.04s WALL (       1 calls)
 
      Called by init_run:
      wfcinit      :      0.00s CPU      0.00s WALL (       1 calls)
-     potinit      :      0.01s CPU      0.01s WALL (       1 calls)
+     potinit      :      0.00s CPU      0.01s WALL (       1 calls)
 
      Called by electrons:
      c_bands      :      0.01s CPU      0.01s WALL (       4 calls)
      sum_band     :      0.01s CPU      0.01s WALL (       4 calls)
      v_of_rho     :      0.02s CPU      0.02s WALL (       5 calls)
-     mix_rho      :      0.00s CPU      0.01s WALL (       4 calls)
+     mix_rho      :      0.00s CPU      0.00s WALL (       4 calls)
 
      Called by c_bands:
      regterg      :      0.01s CPU      0.01s WALL (       4 calls)
@@ -203,10 +203,10 @@
      davcio       :      0.00s CPU      0.00s WALL (       1 calls)
 
 
-     PWSCF        :     0.10s CPU         0.13s WALL
+     PWSCF        :     0.09s CPU         0.11s WALL
 
 
-   This run was terminated on:  12: 7:12   8Jan2016            
+   This run was terminated on:  21:25: 8  24Apr2016            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

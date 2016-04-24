@@ -1,5 +1,5 @@
 
-     Program PWSCF v.5.3.0 (svn rev. 11957) starts on  8Jan2016 at 12:12:30 
+     Program PWSCF v.5.4.0 (svn rev. 12348) starts on 24Apr2016 at 21:29:46 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -132,9 +132,9 @@
      negative rho (up, down):  7.358E-03 6.806E-03
      Starting wfc are    6 randomized atomic wfcs +    2 random wfc
 
-     total cpu time spent up to now is        2.1 secs
+     total cpu time spent up to now is        2.0 secs
 
-     per-process dynamical memory:    46.2 Mb
+     per-process dynamical memory:    46.3 Mb
 
      Self-consistent Calculation
 
@@ -144,7 +144,7 @@
 
      negative rho (up, down):  1.201E-02 1.163E-02
 
-     total cpu time spent up to now is        3.3 secs
+     total cpu time spent up to now is        3.2 secs
 
      total energy              =     -43.79412762 Ry
      Harris-Foulkes estimate   =     -44.11329505 Ry
@@ -159,7 +159,7 @@
 
      negative rho (up, down):  1.148E-02 1.124E-02
 
-     total cpu time spent up to now is        4.3 secs
+     total cpu time spent up to now is        4.2 secs
 
      total energy              =     -43.87237975 Ry
      Harris-Foulkes estimate   =     -44.10508875 Ry
@@ -174,7 +174,7 @@
 
      negative rho (up, down):  1.344E-02 1.334E-02
 
-     total cpu time spent up to now is        5.3 secs
+     total cpu time spent up to now is        5.2 secs
 
      total energy              =     -43.97647249 Ry
      Harris-Foulkes estimate   =     -43.97930853 Ry
@@ -189,7 +189,7 @@
 
      negative rho (up, down):  1.313E-02 1.306E-02
 
-     total cpu time spent up to now is        6.5 secs
+     total cpu time spent up to now is        6.3 secs
 
      total energy              =     -43.97826561 Ry
      Harris-Foulkes estimate   =     -43.97848834 Ry
@@ -208,7 +208,7 @@
 
      negative rho (up, down):  1.300E-02 1.298E-02
 
-     total cpu time spent up to now is        7.8 secs
+     total cpu time spent up to now is        7.7 secs
 
      total energy              =     -43.97828131 Ry
      Harris-Foulkes estimate   =     -43.97829820 Ry
@@ -223,7 +223,7 @@
 
      negative rho (up, down):  1.302E-02 1.303E-02
 
-     total cpu time spent up to now is        9.1 secs
+     total cpu time spent up to now is        8.9 secs
 
      total energy              =     -43.97829570 Ry
      Harris-Foulkes estimate   =     -43.97829380 Ry
@@ -243,7 +243,7 @@
      atom:    2    charge:    0.4018    magn:   -0.0000    constr:    0.0000
      atom:    3    charge:    1.9320    magn:    0.0001    constr:    0.0000
 
-     total cpu time spent up to now is       10.1 secs
+     total cpu time spent up to now is        9.8 secs
 
      End of self-consistent calculation
 
@@ -314,25 +314,25 @@ End final coordinates
 
      Writing output data file pwscf.save
 
-     init_run     :      1.82s CPU      1.85s WALL (       1 calls)
-     electrons    :      7.99s CPU      8.01s WALL (       1 calls)
-     forces       :      0.57s CPU      0.58s WALL (       1 calls)
+     init_run     :      1.74s CPU      1.81s WALL (       1 calls)
+     electrons    :      7.80s CPU      7.83s WALL (       1 calls)
+     forces       :      0.55s CPU      0.55s WALL (       1 calls)
 
      Called by init_run:
-     wfcinit      :      0.07s CPU      0.08s WALL (       1 calls)
-     potinit      :      0.74s CPU      0.75s WALL (       1 calls)
+     wfcinit      :      0.08s CPU      0.08s WALL (       1 calls)
+     potinit      :      0.70s CPU      0.73s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :      2.18s CPU      2.18s WALL (       7 calls)
+     c_bands      :      2.16s CPU      2.16s WALL (       7 calls)
      sum_band     :      0.81s CPU      0.82s WALL (       7 calls)
-     v_of_rho     :      3.68s CPU      3.69s WALL (       8 calls)
-     newd         :      0.29s CPU      0.31s WALL (       8 calls)
-     PAW_pot      :      1.55s CPU      1.55s WALL (       8 calls)
+     v_of_rho     :      3.55s CPU      3.58s WALL (       8 calls)
+     newd         :      0.29s CPU      0.32s WALL (       8 calls)
+     PAW_pot      :      1.49s CPU      1.48s WALL (       8 calls)
      mix_rho      :      0.14s CPU      0.14s WALL (       7 calls)
 
      Called by c_bands:
      init_us_2    :      0.04s CPU      0.05s WALL (      32 calls)
-     regterg      :      2.15s CPU      2.15s WALL (      14 calls)
+     regterg      :      2.13s CPU      2.13s WALL (      14 calls)
 
      Called by sum_band:
      sum_band:bec :      0.00s CPU      0.00s WALL (      14 calls)
@@ -340,24 +340,24 @@ End final coordinates
 
      Called by *egterg:
      h_psi        :      1.94s CPU      1.94s WALL (     122 calls)
-     s_psi        :      0.02s CPU      0.03s WALL (     122 calls)
+     s_psi        :      0.03s CPU      0.03s WALL (     122 calls)
      g_psi        :      0.01s CPU      0.01s WALL (     106 calls)
      rdiaghg      :      0.02s CPU      0.02s WALL (     120 calls)
 
      Called by h_psi:
-     add_vuspsi   :      0.04s CPU      0.03s WALL (     122 calls)
+     add_vuspsi   :      0.02s CPU      0.03s WALL (     122 calls)
 
      General routines
-     calbec       :      0.05s CPU      0.06s WALL (     144 calls)
-     fft          :      1.26s CPU      1.25s WALL (     215 calls)
-     fftw         :      1.85s CPU      1.85s WALL (     542 calls)
+     calbec       :      0.06s CPU      0.05s WALL (     144 calls)
+     fft          :      1.20s CPU      1.19s WALL (     215 calls)
+     fftw         :      1.78s CPU      1.78s WALL (     542 calls)
      davcio       :      0.00s CPU      0.00s WALL (       2 calls)
 
 
-     PWSCF        :    10.64s CPU        10.73s WALL
+     PWSCF        :    10.34s CPU        10.53s WALL
 
 
-   This run was terminated on:  12:12:41   8Jan2016            
+   This run was terminated on:  21:29:56  24Apr2016            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
