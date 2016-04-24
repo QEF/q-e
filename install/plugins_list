@@ -42,41 +42,41 @@ PLUMED=plumed-1.3-qe
 PLUMED_URL=$(URL)$(PLUMED).tar.gz
 #
 # Package maintainer: Andrea Dal Corso
-LD1=atomic-5.3.0
+LD1=atomic-5.4.0
 LD1_URL=$(URL)$(LD1).tar.gz
 #
 # Package maintainer: Matteo Calandra
-XSPECTRA=xspectra-5.3.0
+XSPECTRA=xspectra-5.4.0
 XSPECTRA_URL=$(URL)$(XSPECTRA).tar.gz
 #
 # Package maintainer: Alexander Smogunov
-PWCOND=pwcond-5.3.0
+PWCOND=pwcond-5.4.0
 PWCOND_URL=$(URL)$(PWCOND).tar.gz
 #
 # Package maintainer: Paolo Giannozzi
-NEB=neb-5.3.0
+NEB=neb-5.4.0
 NEB_URL=$(URL)$(NEB).tar.gz
 #
 # Package maintainer: Marco Buongiorno Nardelli (FD)
-PHONON=PHonon-5.3.0
+PHONON=PHonon-5.4.0
 PHONON_URL=$(URL)$(PHONON).tar.gz
 #
 # Package maintainer: Iurii Timrov
-TDDFPT=tddfpt-5.3.0
+TDDFPT=tddfpt-5.4.0
 TDDFPT_URL=$(URL)$(TDDFPT).tar.gz
 #
 # Package maintainer: Filippo Spiga
-TESTSUITE=test-suite-5.3.0
+TESTSUITE=test-suite-5.4.0
 TESTSUITE_URL=$(URL)$(TESTSUITE).tar.gz
 #
 # Package maintainer: Anton Kokalj
-GUI=PWgui-5.3.0
+GUI=PWgui-5.4.0
 GUI_URL=$(URL)$(GUI).tar.gz
 #
 # Package maintainer: Filippo Spiga
-GPU=QE-GPU-5.3.0
+GPU=QE-GPU-5.4.0
 GPU_URL=$(URL)$(GPU).tar.gz
 #
 # Package maintainer: Marco Govoni
-WEST=West-1.0.3
+WEST=West-1.1.0
 WEST_URL=http://www.west-code.org/downloads/$(WEST).tar.gz

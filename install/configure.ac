@@ -6,7 +6,7 @@
 # of the License. See the file `License' in the root directory
 # of the present distribution.
 
-AC_INIT(ESPRESSO, 5.3.0, , espresso)
+AC_INIT(ESPRESSO, 5.4.0, , espresso)
 
 AC_PREREQ(2.60)
 AC_CONFIG_MACRO_DIR([m4/])
