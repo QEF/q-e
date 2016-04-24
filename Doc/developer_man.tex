@@ -21,13 +21,13 @@
 
 \def\qeImage{quantum_espresso.pdf}
 
-\begin{document} 
+\begin{document}
 \author{}
 \date{}
 \title{
   \includegraphics[width=5cm]{\qeImage} \\
   % title
-  \Huge Developer's Manual for \\ \qe\ (v.\version) 
+  \Huge Developer's Manual for \\ \qe\ (v.\version)
 }
 \maketitle
 
@@ -56,7 +56,7 @@ to the general User Guide, there are also package-specific
 guides.
 
 People who want to know about the methods or the physics
-behind \qe\ should read first the relevant  
+behind \qe\ should read first the relevant
 literature (some pointers in the User Guide).
 
 \subsection{How to contribute to \qe\ as a user}
@@ -64,24 +64,24 @@ literature (some pointers in the User Guide).
 You can contribute to a better \qe, even as an ordinary user, by:
 \begin{itemize}
 \item Answering other people's questions on the mailing list (correct
-  answers are strongly preferred to wrong ones). 
+  answers are strongly preferred to wrong ones).
 \item Porting to new/unsupported architectures or configurations: see
   Sect. \ref{SubSec:Inst}, "Installation mechanism". You should
-  not need to add new preprocessing flags, but if you do, 
+  not need to add new preprocessing flags, but if you do,
   see Sect. \ref{SubSec:CPP}, "Preprocessing".
 \item Pointing out bugs in the software and in the documentation
   (reports of real bugs are strongly preferred to reports of
-  nonexistent bugs). See Sect. \ref{SubSec:Bugs}, "Guidelines 
+  nonexistent bugs). See Sect. \ref{SubSec:Bugs}, "Guidelines
   for reporting bugs".
 \item Improving the documentation (generic complaints or suggestions
-  that "there should be this and that" do not qualify as improvements). 
+  that "there should be this and that" do not qualify as improvements).
 \item Suggesting changes: contact developers at
-  \texttt{q-e-developers[.at.]qe-forge[.dot.]org} mailing list, 
-  Unless there are technical reasons not to follow your suggestion, 
-  we will try to make you happy. Note however that suggestions requiring 
+  \texttt{q-e-developers[.at.]qe-forge[.dot.]org} mailing list,
+  Unless there are technical reasons not to follow your suggestion,
+  we will try to make you happy. Note however that suggestions requiring
   a significant amount of work are welcome only if accompanied by
   implementation or by a promise of future implementation (fulfilled
-  promises are strongly preferred to forgotten ones). 
+  promises are strongly preferred to forgotten ones).
 \item Adding new features to the code: see Sect.\ref{SubSec:BeDev},
   "How to become a developer", in particular Sect.\ref{SubSec:Contrib},
   "Contributing new developments".
@@ -92,12 +92,12 @@ You can contribute to a better \qe, even as an ordinary user, by:
 \section{\qe\ as a distribution}
 
 \qe\ is not organized as a monolithic code, but rather as a
-{\em distribution} (integrated suite) of ``packages'', with 
+{\em distribution} (integrated suite) of ``packages'', with
 varying degrees of integration, that can be installed on demand,
 or sometimes independently. There is a ``shell'' structure,
 with at the center the {\em core} distribution, including
 \begin{itemize}
-\item scripts, installation tools, libraries, common source files; 
+\item scripts, installation tools, libraries, common source files;
 \item basic packages
 \begin{itemize}
 \item \texttt{PWscf}: self-consistent calculations, structural optimization,
@@ -108,12 +108,12 @@ molecular dynamics on the ground state;
 \end{itemize}
 Note that some libraries are downloaded on demand from the web
 during the installation of the core distribution. Then comes a
-shell of {\em additional} packages, that can be downloaded and 
+shell of {\em additional} packages, that can be downloaded and
 installed from the core distribution using \texttt{make}:
 \begin{itemize}
 \item \texttt{atomic}: pseudopotential generation
 \item \texttt{PHonon}: Density-Functional Perturbation Theory
-\item \texttt{NEB}: reaction pathways and energy barriers 
+\item \texttt{NEB}: reaction pathways and energy barriers
 \item \texttt{PWCOND}: ballistic conductance
 \item \texttt{XSPECTRA}: calculation of X-Ray spectra
 \item \texttt{TDDFPT}: Time-dependent DFPT
@@ -158,30 +158,30 @@ information may become obsolete.}
 \qeforge\ is the portal for \qe\ developers, contributors,
 and for anybody else wanting to develop a project in the
 field of atomistic simulations. \qeforge\ provides for
-each project a repository, mailing lists, a wiki, upload 
-space, a bug tracking facility, various other tools that 
+each project a repository, mailing lists, a wiki, upload
+space, a bug tracking facility, various other tools that
 are useful for developers.
 
-Once you have obtained an account ({\em please} follow the 
-instructions and introduce yourself when you register: the 
+Once you have obtained an account ({\em please} follow the
+instructions and introduce yourself when you register: the
 site administrator has to be sure that you are a real person!)
-you may open your own project, retaining all rights on it 
+you may open your own project, retaining all rights on it
 (including the right not to release anything): at the end of
-the "projects" page, click on the link "add new project", fill 
+the "projects" page, click on the link "add new project", fill
 the form (note that the Unix name given to the project cannot
-be modified). You have the choice between a repository using 
-CVS, SVN, \texttt{git}, others. Please don't even think using CVS 
-(obsolete), prefer \texttt{git} (it is easier to move the 
+be modified). You have the choice between a repository using
+CVS, SVN, \texttt{git}, others. Please don't even think using CVS
+(obsolete), prefer \texttt{git} (it is easier to move the
 repository).
 
-You may as well register as a developer 
+You may as well register as a developer
 in an existing project: go to the project page, click on
 button ''Request to become a developer'' under the ''Activity''
-graph on the top of the column at the right, to obtain the permission 
+graph on the top of the column at the right, to obtain the permission
 from the administrator of the project (please contact the
 project administratior by mail!).
 
-You need to register your SSH keys in order to have read-write 
+You need to register your SSH keys in order to have read-write
 access the repository (if you have such permissions). Generate
 keys on your work machine if you haven't already, using command
 \texttt{ssh-keygen -t rsa}. The keys are typically found
@@ -203,28 +203,28 @@ Currently \qe\ uses the following development tools:
 \item Upload space (with download counter)
 \item Mailing lists, currently
 \begin{itemize}
-\item \texttt{pw\_forum} (high traffic): for ordinary users, 
+\item \texttt{pw\_forum} (high traffic): for ordinary users,
 requests for help, problems, discussions, etc.. Only
 registered users can post.
 \item \texttt{q-e-developers} (low traffic):
 for communications among developers and people interested
 in the development of \qe. Only registered users can post
-but messages from unregistered users are monitored and 
+but messages from unregistered users are monitored and
 approved if relevant.
 \item \texttt{q-e-commits} (medium traffic): for automatic
 commit messages. Note that replies to commit messages go
-to the mailing list: in case of doubts or questions or 
+to the mailing list: in case of doubts or questions or
 remarks over a specific commit, feel free to reply.
 \end{itemize}
 \end{itemize}
 Everybody is encouraged to explore other capabilities of \qeforge.
 
-All \qe\ developer are {\em strongly} invited to subscribe to the 
+All \qe\ developer are {\em strongly} invited to subscribe to the
 two mailing lists \texttt{q-e-developers} and \texttt{q-e-commits}.
 Those who don't, lose i) the opportunity to follow what is going on,
-ii) the right to complain if something has gone into a direction 
-they don't like. Note that subscription to mailing lists is not 
-automatic when you register: you should subscribe using the links 
+ii) the right to complain if something has gone into a direction
+they don't like. Note that subscription to mailing lists is not
+automatic when you register: you should subscribe using the links
 in \texttt{http://www.qe-forge.org/gf/project/q-e/mailman/}.
 Please also consider subscribing to the bug tracker: select the
 "Tracker" item on the left, then select "Bugs", then click on
@@ -266,7 +266,7 @@ modified routine(s) to an expert developer who will review it and
 take the appropriate steps.
 
 {\em Notice:} the development model of \qe\ has undergone
-significant changes between releases 5.3 and 5.4. Since v.5.4, only 
+significant changes between releases 5.3 and 5.4. Since v.5.4, only
 package maintainers and a few expert developers are allowed to commit
 into the main ("trunk") SVN repository. Only ``safe'' changes can be
 committed: the repository should always be at or close to production
@@ -279,18 +279,18 @@ People who need to access a development version may use the link to the
 
 People who need to stay aligned to the development of \qe may use the official
 \texttt{git} mirror, available on \qeforge\ under the project ``qe-private''.
-Please apply for an account on qe-forge if you haven't one
+Please apply for an account on QE-FORGE if you haven't one
 (see Sect.\ref{SubSec:qeforge} for details), contact support[.at.]qe-forge.org 
 and explain what you need and why. To check out the repository:
 \begin{verbatim}
    git clone ssh://username@qeforge.qe-forge.org/gitroot/q-e-private
 \end{verbatim}
-This repository is only for pull operation and it is one way repository, 
+This repository is only for pull operation and it is one way repository,
 meaning it is automatically aligned by a script with the SVN repository.
-Committing into this repository does not produce a commit in the SVN. 
+Committing into this repository does not produce a commit in the SVN.
 So never commit ;-). See Sect.\ref{Sec:git}, ``Using git'', for more
 instructions on how to use \texttt{git}. You should also
-register to the q-e-commit@qe-forge.org mailing list in order to better 
+register to the q-e-commit@qe-forge.org mailing list in order to better
 follow what is going on in the main repository.
 
 If your project involves a major new addition (e.g. a new package),
@@ -326,21 +326,21 @@ or under development. In particular, check (and update) the "Road Map"
 page \texttt{www.quantum-espresso.org/road-map}, send a message to
 \texttt{q-e-developers}.
 \item Before starting writing code, inquire whether you can reuse
-code that is already available in the distribution. Avoid redundancy: 
+code that is already available in the distribution. Avoid redundancy:
 {\em the only bug-free software line is the one that doesn't exist}
 (citation adapted from Henry Ford).
 \item When you make some changes:
 \begin{itemize}
-\item Check that are not spoiling other people's work. In particular, 
-search the distribution for codes using the routine or module you are 
+\item Check that are not spoiling other people's work. In particular,
+search the distribution for codes using the routine or module you are
 modifying and change its usage or its calling arguments everywhere.
-Use the commit message to notify all developers if you introduce any 
-``dangerous'' change (i.e. susceptible to break some features or 
+Use the commit message to notify all developers if you introduce any
+``dangerous'' change (i.e. susceptible to break some features or
 packages, including external packages using \qe).
-\item Do not forget that your changes must work on many different 
+\item Do not forget that your changes must work on many different
 combinations of hardware and software, in both serial and parallel execution.
 \item Do not forget that your changes must work for a wide variety of
-different case: if you implement something that works only in some 
+different case: if you implement something that works only in some
 selected cases, that's ok, as long as the code stops (or at least,
 issues a warning) in all other cases. There is something worse than
 no results: wrong results.
@@ -352,7 +352,7 @@ memory in a 1000-atom cell.
 \item Document your contributions:
 \begin{itemize}
 \item If you modify what a code can do, or introduce
-incompatibilities with previous versions (e.g. old data file 
+incompatibilities with previous versions (e.g. old data file
 no longer readable, old input no longer valid), {\em please}
 report it in file \texttt{Doc/release-notes}.
 \item If you add/modify/remove input variables, document
@@ -360,16 +360,16 @@ it in the appropriate
 \texttt{INPUT\_*.def} file; if
 you remove an input variable, update tests and examples
 accordingly.
-\item All newly introduced features or variables must be 
-accompanied by an example or a test or both (either a 
+\item All newly introduced features or variables must be
+accompanied by an example or a test or both (either a
 new one or a modified existing test or example).
 \end{itemize}
 \item Please do not include files (any kind, including
-pseudopotential files) with DOS \^{}M characters or 
-tabulators \^{}I. 
+pseudopotential files) with DOS \^{}M characters or
+tabulators \^{}I.
 \item When you modify the program sources, run the
-\texttt{install/makedeps.sh}  script  or type \texttt{make depend} 
-to update files \texttt{make.depend} in the various 
+\texttt{install/makedeps.sh}  script  or type \texttt{make depend}
+to update files \texttt{make.depend} in the various
 subdirectories. These files are under SVN as well;
 if modified they should be committed.
 \end{itemize}
@@ -378,21 +378,21 @@ if modified they should be committed.
 
 \label{SubSec:Bugs}
 \begin{itemize}
-\item Before deciding that a problem is due to a bug in the codes, 
+\item Before deciding that a problem is due to a bug in the codes,
 verify if it is reproducible on different machines/architectures/phases
 of the moon: erratic or irreproducible problems, especially in parallel
 execution, are often an indication of buggy compilers or libraries
-\item Bug reports should preferably be filed using the bug tracking 
+\item Bug reports should preferably be filed using the bug tracking
 facility at \qeforge:\\
 \texttt{http://qe-forge.org/gf/project/q-e/tracker}
-\item Bug reports should include enough information to be reproduced: 
-the error message alone is seldom a sufficient piece of information. 
+\item Bug reports should include enough information to be reproduced:
+the error message alone is seldom a sufficient piece of information.
 Typically, one should report
 \begin{itemize}
-\item version number, hardware/software combination(s) for which 
+\item version number, hardware/software combination(s) for which
      the problem arises
-\item whether it happens in serial or parallel execution or both 
-(if in parallel only, how executed), 
+\item whether it happens in serial or parallel execution or both
+(if in parallel only, how executed),
 \item an output for a test case showing the presumed bug
 \item all the needed info and data to re-run the test case showing
 the bug
@@ -415,14 +415,14 @@ $M$=minor, $p$=bugfix. The logic goes more or less as follows:
 \item[v.4] New XML-based data file format
 \item[v.5] Major package and directory reorganization
 \end{enumerate}
-(the above numbers are a slightly idealized versions of how things have 
+(the above numbers are a slightly idealized versions of how things have
 gone until now)
 \item {\em Minor}: when some important new functionality is being added
 \item {\em Bugfix}: only bug fixes; occasionally, minor new functionalities
 that don't break any existing ones are allowed to sneak into a bugfix release.
 \end{itemize}
-It may be convenient to make a SVN branch at release $N.M.0$: this allows 
-to go on with the development while keeping track of bug fixes. 
+It may be convenient to make a SVN branch at release $N.M.0$: this allows
+to go on with the development while keeping track of bug fixes.
 
 Since release 5.2 (June 20, 2015), stable release are packaged at
 fixed dates. The initial schedule is a release every three to four months.
@@ -430,7 +430,7 @@ Since v.5.4 bugfix releases are no longer packaged.
 
 Releases are stored to \qeforge. Given the size of the complete distribution,
 the release is split into a ``core'' distribution and ``add-ons'',
-additional packages, that can be downloaded and installed on demand 
+additional packages, that can be downloaded and installed on demand
 from the core distribution. ``External'' packages can be independently
 released, as long as there is no compatibility problem.
 
@@ -438,9 +438,9 @@ The automatic downloading of packages is implemented in file
 \texttt{install/plugins\_makefile} and configured in file
 \texttt{install/plugins\_list}. For independently released packages,
 it is sufficient to update links. For add-ons packages, not contained
-in the core distribution, there is however a catch-22: 
+in the core distribution, there is however a catch-22:
 the core distribution must know the link to all packages it downloads,
-but these are known only {\em after} such packages are uploaded to 
+but these are known only {\em after} such packages are uploaded to
 \qeforge\ (and the only way to discover the exact link is to go over
 the released package with the mouse).
 The workaround is that the core distribution looks for generic names,
@@ -450,9 +450,9 @@ file \texttt{/var/lib/gforge/archives/index.php}, residing on \qeforge,
 must be edited and links updated. This requires system privileges on
 the machine hosting \qeforge.
 
-\paragraph{Preparing a release} 
+\paragraph{Preparing a release}
 When the release date approaches, development of new stuff is temporarily
-stopped: nothing new or potentially ''dangerous'' is added, and all 
+stopped: nothing new or potentially ''dangerous'' is added, and all
 attention is dedicated to fix bugs and to stabilize the distribution.
 This manual and the user manual have to be updated.
 
@@ -467,9 +467,9 @@ the web server).
 \section{Structure of the distribution}
 
 Since v.5, the directory structure of \qe\ reflects its organization
-into packages. Each package is stored into a specific subdirectory. 
-In addition, there is a set of directories, common to all packages, 
-containing common code, 
+into packages. Each package is stored into a specific subdirectory.
+In addition, there is a set of directories, common to all packages,
+containing common code,
 libraries, installation utilities, general documentation.
 
 Common files and directories in the \texttt{espresso/} directory are:
@@ -484,7 +484,7 @@ Common files and directories in the \texttt{espresso/} directory are:
    Modules/                 LR_Modules/
    COUPLE/                  upftools/
 \end{verbatim}
-Apart from  \texttt{License} and \texttt{README} whose meaning is 
+Apart from  \texttt{License} and \texttt{README} whose meaning is
 obvious, the other files and directories are related to
 \begin{itemize}
 \item {\em Installation} (i.e. compilation and linking):\\
@@ -495,8 +495,8 @@ obvious, the other files and directories are related to
 \item  {\em General documentation} (not package-specific):
 \texttt{Doc/}
 \item {\em  C and Fortran Libraries, modules}:
-\texttt{clib/}, \texttt{Modules/}, \texttt{COUPLE/} 
-(the latter contains code and documentation useful to call \qe\ programs 
+\texttt{clib/}, \texttt{Modules/}, \texttt{COUPLE/}
+(the latter contains code and documentation useful to call \qe\ programs
  from external codes)
 \item {\em  Linear-response specific modules}:
 \texttt{LR\_Modules/}.
@@ -505,7 +505,7 @@ obvious, the other files and directories are related to
 The core distribution also  contains the three package-specific directories
 \texttt{PW/}, \texttt{PP/}, \texttt{CPV/}, for
  \texttt{PWscf}, \texttt{PostProc}, \texttt{CP}, respectively.
-Typical subdirectory structure of a directory containing a package 
+Typical subdirectory structure of a directory containing a package
 (e.g. \texttt{PW/}):
 \begin{verbatim}
    Makefile
@@ -529,23 +529,23 @@ and none is called \texttt{src/} ).
 \label{SubSec:Inst}
 Let us review the files related to compilation and linking:
 \begin{itemize}
-\item[--] \texttt{install/}: documentation and utilities for compilation 
-and linking 
+\item[--] \texttt{install/}: documentation and utilities for compilation
+and linking
 \item[--] \configure: wrapper for \texttt{install/configure} script
-\item[--] \make.sys: produced by \texttt{configure}, contains 
+\item[--] \make.sys: produced by \texttt{configure}, contains
 machine-specific compilation and linking options
-\item[--] \Makefile: contains dependencies and targets used by 
-command \texttt{make}. 
-\item[--] \texttt{include/}: files to be included into sources, to be 
+\item[--] \Makefile: contains dependencies and targets used by
+command \texttt{make}.
+\item[--] \texttt{include/}: files to be included into sources, to be
 pre-processed.
 \end{itemize}
 \texttt{./configure} {\em options} cleans executbales,
-runs \texttt{install/configure}, produces file \make.sys. 
+runs \texttt{install/configure}, produces file \make.sys.
 See Sec.\ref{SubSec:conf} for some details on how to change the
-behavior of \configure. 
+behavior of \configure.
 
-\texttt{make} {\em target} checks for dependencies, recursively goes 
-into subdirectories executing \texttt{make} again. The behavior of 
+\texttt{make} {\em target} checks for dependencies, recursively goes
+into subdirectories executing \texttt{make} again. The behavior of
 \texttt{make} is thus
 determined by many \Makefile's in the various directories. The
 most important files are \Makefile's in the directories containing
@@ -557,8 +557,8 @@ the sources, running script \texttt{install/makedeps.sh} or using command
 \texttt{make depend}.
 
 \paragraph{make.sys}
-This file is produced by \configure\ using the template in 
-\texttt{install/make.sys.in} and contains all system-specific 
+This file is produced by \configure\ using the template in
+\texttt{install/make.sys.in} and contains all system-specific
 information on
 \begin{itemize}
 \item C and Fortran compilers name, pre-processing and compilation options
@@ -567,11 +567,11 @@ information on
 \item available optimized mathematical libraries, libraries to be downloaded
 \item Miscellanous stuff
 \end{itemize}
-The \make.sys\ file is included into all \Makefile's, 
-using the corresponding syntax. The best documentation for the 
+The \make.sys\ file is included into all \Makefile's,
+using the corresponding syntax. The best documentation for the
 \make.sys\ file is the file itself. Note that if you want to
 change something or to add more documentation into this file,
-you may need to modify the template file \texttt{install/make.sys.in}. 
+you may need to modify the template file \texttt{install/make.sys.in}.
 
 \paragraph{Makefile}
 The top-level \Makefile\ contains the instructions to download,
@@ -625,7 +625,7 @@ subdirectory or package. Sample contents:
 sinclude ../make.sys
 default : all
 all: pw pwtools
-pw:     
+pw:
     ( cd src ; $(MAKE) all || exit 1 )
 
 pwtools: pw
@@ -633,7 +633,7 @@ pwtools: pw
 
 ...
 \end{verbatim}
-{\em Target {\tt pw}: go into {\tt src/} if it exists, and (apart 
+{\em Target {\tt pw}: go into {\tt src/} if it exists, and (apart
 from \texttt{make} wizardry) give command {\tt make pw}. It is important
 to note that {\tt pwtools} has to depend on {\tt pw} or else this
 makefile will break when calling parallel make using {\tt make -j\# }
@@ -642,7 +642,7 @@ Other targets are quite similar: go into a subdirectory, e.g.
 
 \paragraph{PW/src/Makefile}
 The most important and most complex Makefile is the one in the
-source directory. It is also the one you need to modify if you 
+source directory. It is also the one you need to modify if you
 add something.
 \begin{verbatim}
 include ../../make.sys
@@ -739,12 +739,12 @@ Handle with care: what works for you may break other cases.
 \subsubsection{Preprocessing}
 
 \label{SubSec:CPP}
-Fortran-95 source code contains preprocessing option with 
+Fortran-95 source code contains preprocessing option with
 the same syntax used by the C preprocessor \texttt{cpp}.
 Most F95 compilers understand preprocessing options \texttt{-D ...}
 or some similar form. Some compilers however do not support
 or do not implement properly preprocessing. In this case the
-preprocessing is done using \texttt{cpp}. 
+preprocessing is done using \texttt{cpp}.
 Normally, \configure\ takes care of this, by selecting the
 appropriate rule \texttt{@f90rule@} below, in this section
 of file \texttt{make.sys.in}:
@@ -762,8 +762,8 @@ follow different paths (i.e. there is a substantial difference between
 serial execution and parallel execution on a single processor)
 \item  introduce experimental or special-purpose stuff
 \end{itemize}
-Use with care and {\em only when needed}. See file 
-\texttt{include/defs.README} for a list of preprocessing 
+Use with care and {\em only when needed}. See file
+\texttt{include/defs.README} for a list of preprocessing
 options. Please {\em keep that list updated}.
 
 {\em Note:} \texttt{include/f\_defs.h} is obsolete and
@@ -774,7 +774,7 @@ The following capabilities of the C preprocessor are used:
 \item assign a value to a given expression. For instance, command
   \texttt{\#define THIS that}, or the option in the command line:
   \texttt{-DTHIS=that}, will replace all occurrences of \texttt{THIS}
-  with \texttt{that}. 
+  with \texttt{that}.
 \item include file (command \texttt{\#include})
 \item expand macros (command \texttt{\#define})
 \item execute conditional expressions such as
@@ -786,16 +786,16 @@ The following capabilities of the C preprocessor are used:
   #endif
 \end{verbatim}
 If \texttt{\_\_expression} is defined (with a \texttt{\#define} command
-or from the command line with option \texttt{-D\_\_expression}), 
-then  \texttt{...code A...} is sent to output; otherwise 
+or from the command line with option \texttt{-D\_\_expression}),
+then  \texttt{...code A...} is sent to output; otherwise
 \texttt{...code B...} is sent to output.
 
 \end{itemize}
 In order to make  preprocessing options
-easy to see, preprocessing variables should start with  
+easy to see, preprocessing variables should start with
 two underscores, as \texttt{\_\_expression} in the above
 example. Traditionally ''preprocessed'' variables are also written in
-uppercase. 
+uppercase.
 
 \subsubsection{How to edit the \configure\ script}
 
@@ -805,29 +805,29 @@ The \configure\ script is generated from its source file
 (\texttt{http://www.gnu.org/software/autoconf/}).  Don't edit \configure\
 directly: whenever it gets regenerated, your changes will be lost.
 Instead, go to the \texttt{install/} directory, edit \configurac\ and/or
-files \texttt{install/mt/*.m4}, then run \autoconf\ to regenerate \configure. 
+files \texttt{install/mt/*.m4}, then run \autoconf\ to regenerate \configure.
 If you want to keep the old \configure, make a copy first.
 
 GNU \autoconf\ is installed by default on most Unix/Linux systems.  If
 you don't have it on your system, you'll have to install it. You will
-need a recent version (e.g. v.2.65) of \autoconf, because our 
+need a recent version (e.g. v.2.65) of \autoconf, because our
 \configurac\
 file uses recent syntax.
 
-\configurac\ is a regular Bourne shell script (i.e., "sh" -- not csh!), 
+\configurac\ is a regular Bourne shell script (i.e., "sh" -- not csh!),
 except that:
 \begin{itemize}
 \item[--] capitalized names starting with "AC\_" are \autoconf\
-  macros.  Normally you shouldn't have to touch them. 
+  macros.  Normally you shouldn't have to touch them.
 \item[--] square brackets are normally removed by the macro processor.
   If you need a square bracket (that should be very rare), you'll have
-  to write two. 
+  to write two.
 \end{itemize}
 
 You may refer to the GNU \autoconf\ Manual for more info.
 
 \texttt{make.sys.in} is the source file for \make.sys, that
-\configure\ generates: you might want to edit that file as well. 
+\configure\ generates: you might want to edit that file as well.
 The generation procedure is as follows: if \configurac\ contains the macro
 "AC\_SUBST(name)", then every occurrence of "@name@" in the source
 file will be substituted with the value of the shell variable "name"
@@ -849,7 +849,7 @@ In order to support a previously unsupported architecture, first you
 have to figure out which compilers, compilation flags, libraries
 etc. should be used on that architecture.
 In other words, you have to write a \make.sys\ that works: you may use
-the manual configuration procedure for that (see the 
+the manual configuration procedure for that (see the
 User Guide).  Then, you have to modify \configure\ so that it can
 generate that \make.sys\ automatically.
 
@@ -904,12 +904,12 @@ them in "try\_mpif90".
 
 - "try\_ar", "try\_arflags": for these, the values "ar" and "ruv" should
 be always fine, unless some special flag is required (e.g., -X64
-With sp4).  
+With sp4).
 
 - you should define "try\_dflags" if there is
 any
 "\#ifdef" specific to your machine: for instance, on IBM machines,
-"try\_dflags=-D\_\_AIX" . A list of such flags can be found in file 
+"try\_dflags=-D\_\_AIX" . A list of such flags can be found in file
 \texttt{include/defs.h.README}.
 
 You shouldn't need to define the following:
@@ -946,10 +946,10 @@ Intel Fortran compiler was selected, you need to know which version
 because different versions need different flags.
 
 At the end of the test,
- 
+
 - \$mpif90 is the parallel compiler, if any; if no parallel compiler
   is found or if \texttt{--disable-parallel} was specified, \$mpif90
-  is the serial compiler 
+  is the serial compiler
 
 - \$f90 is the serial compiler
 
@@ -965,11 +965,11 @@ Look for these lines:
         ....
   etc.
 \end{verbatim}
-Here you have to add an entry for your architecture, and since the 
-correct choice of C and f77 compilers may depend on the fortran-90 
+Here you have to add an entry for your architecture, and since the
+correct choice of C and f77 compilers may depend on the fortran-90
 compiler, you may need to specify the f90 compiler as well.
-Again, specify the compilers in try\_cc and try\_f77 in order of 
-decreasing preference.  At the end of the test, 
+Again, specify the compilers in try\_cc and try\_f77 in order of
+decreasing preference.  At the end of the test,
 
 - \$cc is the C compiler
 
@@ -1003,7 +1003,7 @@ These flags must be used for compiling flib/dlamch.f (part of our
 version of Lapack): it won't work properly with optimization.
 
 - "try\_ldflags": flags for the linking phase (not including the list
-of libraries: this is decided later). 
+of libraries: this is decided later).
 
 - "try\_ldflags\_static": additional flags to select static compilation
 (i.e., don't use shared libraries).
@@ -1015,9 +1015,9 @@ flags, if any, are preserved.
 
 - if the Fortran 90 compiler is not able to invoke the C preprocessor
 automatically before compiling, set "have\_cpp=0" (the opposite case
-is the default). The appropriate compilation rules will be generated 
+is the default). The appropriate compilation rules will be generated
 accordingly. If the compiler requires that any flags be specified in
-order to invoke the preprocessor (for example, "-fpp " -- note the 
+order to invoke the preprocessor (for example, "-fpp " -- note the
 space), specify them in "pre\_fdflags".
 
 For example, here's the entry for ifort on Linux PC:
@@ -1077,7 +1077,7 @@ should search.
 
 The following libraries are searched for:
 
-- BLAS or equivalent. 
+- BLAS or equivalent.
 Some vendor replacements for BLAS that are supported by \qe\ are:
 \begin{quote}
     MKL on Linux, 32- and 64-bit Intel CPUs\\
@@ -1088,13 +1088,13 @@ Some vendor replacements for BLAS that are supported by \qe\ are:
 \end{quote}
 Moreover, ATLAS is used over BLAS if available.
 
-- LAPACK or equivalent. Some vendor replacements for LAPACK are supported 
+- LAPACK or equivalent. Some vendor replacements for LAPACK are supported
   by \qe, e.g.: Intel MKL, IBM ESSL
 
-- FFTW (version 3) or another supported FFT library (e.g Intel DFTI, 
+- FFTW (version 3) or another supported FFT library (e.g Intel DFTI,
   IBM ESSL)
 
-- the IBM MASS vector math library 
+- the IBM MASS vector math library
 
 - an MPI library. This is often automatically linked by the compiler
 
@@ -1114,27 +1114,27 @@ prerequisites (for example, Lapack requires BLAS).
 
 \subsection{Libraries}
 
-Subdirectory \texttt{clib/} contains libraries written in C 
-(\texttt{*.c}). There are currently two different ways to 
-ensure that fortran can call C routines. The new and recommanded 
+Subdirectory \texttt{clib/} contains libraries written in C
+(\texttt{*.c}). There are currently two different ways to
+ensure that fortran can call C routines. The new and recommanded
 way uses the fortran-95 intrinsic \texttt{iso\_c\_binding} module.
 See \texttt{Modules/wrappers.f90} for inspiration and examples.
 Reference documentation can be found for instance here:\\
-{\tt 
+{\tt
 https://gcc.gnu.org/onlinedocs/gfortran/Interoperable-Subroutines-and-Functions.html}
 
 The old way uses macros in C routines:
 \begin{enumerate}
 \item \texttt{F77\_FUNC (func,FUNC)} for function \texttt{func}, not
-  containing underscore(s) in name  
+  containing underscore(s) in name
 \item \texttt{F77\_FUNC\_(f\_nc,F\_NC)} for function \texttt{f\_nc},
-  containing underscore(s) in name 
+  containing underscore(s) in name
 \end{enumerate}
 These macros are defined in file \texttt{include/c\_defs.h},
-included by all \texttt{*.c} files, and are automagically 
+included by all \texttt{*.c} files, and are automagically
 generated by \configure. The goal of these macros is to
 choose the correct case (lowercase or uppercase, the latter
-probably obsolete) and the correct number of underscores. 
+probably obsolete) and the correct number of underscores.
 See file \texttt{include/defs.h.README} for more info.
 
 % \subsection{Adding new directories or routines}
@@ -1147,8 +1147,8 @@ See file \texttt{include/defs.h.README} for more info.
 \subsection{Gamma tricks}
 
 In calculations using only the $\Gamma$ point (k=0),
-the Kohn-Sham orbitals can be chosen to be real functions in 
-real space, so that 
+the Kohn-Sham orbitals can be chosen to be real functions in
+real space, so that
 $
   \psi(G) = \psi^*(-G).
 $
@@ -1175,24 +1175,24 @@ must be assigned to the same processor.
 
 The two main packages, \texttt{PWscf} and \texttt{CP}, support
 restarting from interrupted calculations, Restarting is trivial
-in \texttt{CP}: it is sufficient to save from time to time a 
-restart file containing wavefunctions, orthogonality matrix, 
+in \texttt{CP}: it is sufficient to save from time to time a
+restart file containing wavefunctions, orthogonality matrix,
 forces, atomic positions, at the current and previous time step.
 
 Restarting is much more complicated in  \texttt{PWscf}. Since v.5.1.
 restarting from interrupted calculations is possible ONLY if the code
 has been explicitly stopped by user. It is not practical to try to
-restart from any possible case, such as e.g. crashes. This would 
+restart from any possible case, such as e.g. crashes. This would
 imply saving lots of data all the time. With modern machines, this is
 not a good idea. Restart in  \texttt{PWscf} currently works as follows:
 \begin{itemize}
-\item Each loop calls \texttt{check\_stop\_now} just before the end. 
+\item Each loop calls \texttt{check\_stop\_now} just before the end.
   If a user request to stop is found, create a small file
-  \texttt{restart\_*}, containing only loop-specific local variables; 
+  \texttt{restart\_*}, containing only loop-specific local variables;
   close and save files used by the loop if any; set variable
   \texttt{conv\_elec} to false; return
 \item After each routine containing a loop has been called, check if the code
-  was either stopped there or no convergence was achieved; if so, save 
+  was either stopped there or no convergence was achieved; if so, save
   data (if needed) for the current loop as well, return.
 \item Return after return, exit all loops and go to main program, which must save
   needed global variables to file. The only difference with normal exit is that
@@ -1200,7 +1200,7 @@ not a good idea. Restart in  \texttt{PWscf} currently works as follows:
 \item if variable \texttt{restart} is set in input:
   \begin{itemize}
   \item starting potential and wavefunctions are read from file
-  \item each routine containing a loop checks for the existence of a 
+  \item each routine containing a loop checks for the existence of a
     \texttt{restart\_*} file before starting its loop
   \end{itemize}
 \end{itemize}
@@ -1210,7 +1210,7 @@ re-organization is completed. To be done:
 \begin{itemize}
 \item wg and et should be read from data file
 \item rho(+paw/U/metagga info) should be written to and read from
-  unformatted data file similar to the file used in \texttt{mix\_rho}; 
+  unformatted data file similar to the file used in \texttt{mix\_rho};
   portable format should be written only at convergence.
 \end{itemize}
 
@@ -1275,12 +1275,12 @@ to reduce memory conflicts.
 
 In MPI parallelization, a number of independent processes are started
 on as many processors, communicating via calls to MPI libraries
-(the code will work even with more than one process per processor, 
-but this is not a smart thing to do). Each process has its own 
-set of variables and knows nothing about other processes' variables. 
-Variables that take little memory are replicated on all processors, 
-those that take a lot of memory (wavefunctions, G-vectors, R-space grid) 
-are distributed. 
+(the code will work even with more than one process per processor,
+but this is not a smart thing to do). Each process has its own
+set of variables and knows nothing about other processes' variables.
+Variables that take little memory are replicated on all processors,
+those that take a lot of memory (wavefunctions, G-vectors, R-space grid)
+are distributed.
 
 \subsection{General rules}
 
@@ -1289,13 +1289,13 @@ not scattered everywhere into the source code. The vast majority
 of parallel operations consist either in broadcasts from one processor
 to all others, or in global operations: parallel sums and transpose.
 All you need is the MPI communicator (plus the ID of the root processor
-for broadcasts), and the appropriate call to wrapper routines, contained 
-in {\tt espresso/Modules/mp.f90} and {\tt espresso/Modules/mp\_base.f90}. 
+for broadcasts), and the appropriate call to wrapper routines, contained
+in {\tt espresso/Modules/mp.f90} and {\tt espresso/Modules/mp\_base.f90}.
 For instance: {\tt mp\_sum} is a wrapper to {\tt mpi\_reduce},
 {\tt mp\_bcast} to {\tt mpi\_bcast}.
 
 For efficiency reasons (latency is very significant), performing many
-parallel operations on a small amount of data each must be avoided. 
+parallel operations on a small amount of data each must be avoided.
 If you can, store a sizable amount of data and transmit it in a single
 MPI call. An example of REALLY BAD code:
 \begin{verbatim}
@@ -1319,15 +1319,15 @@ MUCH better code, both for serial and parallel speed:
 
 \subsubsection{Usage of \#ifdef \_\_MPI}
 
-Calls to MPI libraries require variables contained into a 
+Calls to MPI libraries require variables contained into a
 \texttt{mpif.h} file that is usually absent on serial machines.
 In order to prevent compilation problems on serial machines,
 the following rules {\em must} be followed:
 \begin{itemize}
 \item Direct calls to MPI library routines must be replaced by
-calls to wrapper routines like those in module \texttt{mp.f90}. 
+calls to wrapper routines like those in module \texttt{mp.f90}.
 If this is not possible or not convenient, use \#ifdef \_\_MPI
-to prevent compilation and usage in the serial case. Note that 
+to prevent compilation and usage in the serial case. Note that
 some compilers do not like empty files or modules containing nothing!
 \item Wrapper routines do not need to be conditionally called:
 there are \#ifdef's inside them. Keep the difference between serial
@@ -1339,57 +1339,57 @@ only when the flux of parallel and serial execution differ.
 
 \subsection{Parallelization levels and communicators}
 
-\texttt{mp\_world.f90} is the module containing all processors 
-on which QE is running. \texttt{world\_comm} 
+\texttt{mp\_world.f90} is the module containing all processors
+on which QE is running. \texttt{world\_comm}
 is the communicator between all such processors. In QE, its usage
 should be confined to parallel environment initialization. It
 should not be used in source code, unless this is used only by
-stand-alone executables that perform simple auxiliary tasks 
+stand-alone executables that perform simple auxiliary tasks
 and do not allow for  multiple parallelization levels.
 Unless QE is started from an external code, \texttt{world\_comm}
 will in practice coincides with MPI\_WORLD\_COMM.
 
-\texttt{mp\_image.f90} is the module containing information about 
+\texttt{mp\_image.f90} is the module containing information about
 ``image" parallelization, i.e. division into quasi-independent similar
 calculations, each taking care of a different set of atomic
 positions (NEB, PWscf) or of different irreps/phonon wavevectors
-(PHonon). \texttt{intra\_image\_comm} is the communicator between 
-processors of the same image (most of the action will happen here); 
-\texttt{inter\_image\_comm} is the communicator between processors 
-belonging to different images (should be used only when communication 
-between images is necessary). 
-{\tt intra\_image\_comm} and {\tt world\_comm} coincide if there 
+(PHonon). \texttt{intra\_image\_comm} is the communicator between
+processors of the same image (most of the action will happen here);
+\texttt{inter\_image\_comm} is the communicator between processors
+belonging to different images (should be used only when communication
+between images is necessary).
+{\tt intra\_image\_comm} and {\tt world\_comm} coincide if there
 is just one image running.
 
-\texttt{mp\_pools.f90} is the module containing information about k-point 
-(``pool") parallelization. \texttt{intra\_pool\_comm} is the communicator 
+\texttt{mp\_pools.f90} is the module containing information about k-point
+(``pool") parallelization. \texttt{intra\_pool\_comm} is the communicator
 between processors working on the same group (``pool") of k-points;
-\texttt{inter\_pool\_comm} is the communicator between different 
+\texttt{inter\_pool\_comm} is the communicator between different
 k-point pools. Note that:
 \begin{quote}
-\framebox{$\sum_{\bf k}\equiv$ sum over local {\bf k}-points + 
+\framebox{$\sum_{\bf k}\equiv$ sum over local {\bf k}-points +
 {\tt mp\_sum} on {\tt inter \_pool\_comm}}
 \end{quote}
-{\tt intra\_pool\_comm} and {\tt intra\_image\_comm} coincide if there 
+{\tt intra\_pool\_comm} and {\tt intra\_image\_comm} coincide if there
 is just one k-point pool.
 
 \texttt{mp\_bands.f90} is the module containing information about band
 parallelization. \texttt{intra\_bgrp\_comm} is the communicator between
-processors of the same group of bands; \texttt{inter\_band\_comm} is the 
+processors of the same group of bands; \texttt{inter\_band\_comm} is the
 communicator between processors belonging to different groups of bands.
 Note that band parallelization is currently implemented only in CP and
 for hybrid functionals in PW. When a sum over all bands is needed:
 \begin{quote}
-\framebox{$\sum_i\equiv$ sum over local bands + {\tt mp\_sum} on 
+\framebox{$\sum_i\equiv$ sum over local bands + {\tt mp\_sum} on
 {\tt inter\_bgrp\_comm}}
 \end{quote}
 {\tt intra\_bgrp\_comm} and {\tt intra\_pool\_comm} coincide
 if there is just one band group.
 
-Plane waves (${\bf k}+{\bf G}$ or ${\bf G}$ vectors up to the specified 
+Plane waves (${\bf k}+{\bf G}$ or ${\bf G}$ vectors up to the specified
 kinetic energy cutoff) are distributed across processors of the
 {\tt intra\_bgrp\_comm} communicators. Sums over all plane waves
-or {\bf G}-vectors (as e.g. in scalar products $\langle\phi_i|\phi_j\rangle$) 
+or {\bf G}-vectors (as e.g. in scalar products $\langle\phi_i|\phi_j\rangle$)
 should be performed as follows:
 \begin{quote}
 \framebox{$\sum_{\bf G} \equiv$ {\tt mp\_sum} on {\tt intra\_bgrp\_comm}}
@@ -1400,25 +1400,25 @@ The same holds for real-space FFT's grid.
 
 \begin{itemize}
 \item
-Replicated calculations may either be performed independently on 
+Replicated calculations may either be performed independently on
 each processor, or performed on one processor and broadcast to all
 others. The first approach requires less programming, but it is unsafe:
-in principle all processors should yield exactly the same results, if 
+in principle all processors should yield exactly the same results, if
 they work on the same data, but sometimes they don't (depending on the
-machine, compiler, and libraries). Even a tiny difference in the last 
+machine, compiler, and libraries). Even a tiny difference in the last
 significant digit can eventually cause serious trouble if allowed to
  build up, especially when a replicated check is performed (in which
-case the code may ''hang'' if the check yields different results on 
-different processors). Never assume that the value of a variable produced 
-by replicated calculations is exactly the same on all processors: when in 
-doubt, broadcast the value calculated on a specific processor (the ''root'' 
+case the code may ''hang'' if the check yields different results on
+different processors). Never assume that the value of a variable produced
+by replicated calculations is exactly the same on all processors: when in
+doubt, broadcast the value calculated on a specific processor (the ''root''
 processor) to all others.
 \item
 Routine \texttt{errore} should be called in parallel by all processors,
 or else it will hang
 \item
-I/O operations: file opening, closing, and so on, are as a rule performed 
-only on processor \texttt{ionode}. The correct way to check for errors is 
+I/O operations: file opening, closing, and so on, are as a rule performed
+only on processor \texttt{ionode}. The correct way to check for errors is
 the following:
 \begin{verbatim}
 IF ( ionode ) THEN
@@ -1435,27 +1435,27 @@ the check.
 
 \subsection{Data distribution}
 
-Quantum ESPRESSO employ arrays whose memory requirements fall 
+Quantum ESPRESSO employ arrays whose memory requirements fall
 into three categories.
 \begin{itemize}
-\item {\em Fully Scalable}: 
+\item {\em Fully Scalable}:
 Arrays that are distributed across processors of a pool.
-Fully scalable arrays are typically large to very large and contain one 
+Fully scalable arrays are typically large to very large and contain one
 of the following dimensions:
 \begin{itemize}
 \item number of plane waves, npw (or max number, npwx)
 \item number of Gvectors, ngm
 \item number of grid points in the R space, dfft\%nnr
 \end{itemize}
-Their size decreases linearly with the number of processors in a pool. 
+Their size decreases linearly with the number of processors in a pool.
 
-\item {\em Partially Scalable}: 
+\item {\em Partially Scalable}:
 Arrays that are distributed across processors of the
 ortho or diag group. Typically they are much smaller than fully scalable
 array, and small in absolute terms for moderate-size system. Their size
 however increases quadratically with the number of atoms in the system,
 so they have to be distributed for large systems (hundreds to thousands
-atoms). Partially scalable arrays contain none of the dimensions listed 
+atoms). Partially scalable arrays contain none of the dimensions listed
 above, two of the following dimensions:
 \begin{itemize}
 \item number of states, nbnd
@@ -1463,7 +1463,7 @@ above, two of the following dimensions:
 \item number of projectors, nkb
 \end{itemize}
 Their size decreases linearly with the number of processors in a ortho
-or diag group. 
+or diag group.
 
 \item
 {\em Nonscalable}: All the remaining arrays, that are not distributed across
@@ -1494,14 +1494,14 @@ Requirements: the data file should be
 \item easy to read, parse and write without special libraries
 \item easy to understand (self-documented)
 \item portable across different software packages
-\item portable across different computer architectures 
+\item portable across different computer architectures
 \end{itemize}
 Solutions:
 \begin{itemize}
 \item use binary I/O for large records
 \item exploit the file system for organizing data
 \item use XML
-\item use a small specialized library (iotk) to read, parse, write 
+\item use a small specialized library (iotk) to read, parse, write
 \item ensure the possibility to convert to a portable formatted file
 \end{itemize}
 Integration with other packages:
@@ -1517,7 +1517,7 @@ Format version: 1.4.0 \\
 
 The "restart file" is actually a "restart directory", containing
 several files and sub-directories. For CP/FPMD, the restart directory
-is created as "\$prefix\_\$ndw/", where \$prefix is the value of the  
+is created as "\$prefix\_\$ndw/", where \$prefix is the value of the
 variable "prefix". \$ndw the value of variable ndw, both read in
 input; it is read from "\$prefix\_\$ndr/", where \$ndr the value of
 variable ndr, read from input. For PWscf, both input and output
@@ -1526,29 +1526,29 @@ directories are called "\$prefix.save/".
 The content of the restart directory is as follows:
 \begin{verbatim}
 data-file.xml          which contains:
-                       - general information that doesn't require large data set: 
+                       - general information that doesn't require large data set:
                          atomic structure, lattice, k-points, symmetries,
                          parameters of the run, ...
                        - pointers to other files or directories containing bulkier
                          data: grids, wavefunctions, charge density, potentials, ...
-  
+
 charge_density.dat     contains the charge density
 spin_polarization.dat  contains the spin polarization (rhoup-rhodw) (LSDA case)
-magnetization.x.dat    
-magnetization.y.dat    contain the spin polarization along x,y,z 
+magnetization.x.dat
+magnetization.y.dat    contain the spin polarization along x,y,z
 magnetization.z.dat    (noncollinear calculations)
 lambda.dat             contains occupations (Car-Parrinello dynamics only)
 mat_z.1                contains occupations (ensemble-dynamics only)
 
 <pseudopotentials>     A copy of all pseudopotential files given in input
-    
+
 <k-point dirs>         Subdirectories K00001/, K00002/, etc, one per k-point.
 \end{verbatim}
 Each k-point directory contains:
 \begin{verbatim}
     evc.dat                wavefunctions for spin-unpolarized calculations, OR
     evc1.dat
-    evc2.dat               spin-up and spin-down wavefunctions, respectively, 
+    evc2.dat               spin-up and spin-down wavefunctions, respectively,
                            for spin polarized (LSDA) calculations;
     gkvectors.dat          the details of specific k+G grid;
     eigenval.xml           eigenvalues for the corresponding k-point
@@ -1567,7 +1567,7 @@ in a molecular dynamics run, also wavefunctions at the preceding time step:
 \item All files "*.xml" are XML-compliant, formatted file;
 \item Files "mat\_z.1", "lambda.dat" are unformatted files, containing a single record;
 \item All other files "*.dat", are XML-compliant files, but they
-  contain an unformatted record. 
+  contain an unformatted record.
 \end{itemize}
 
 \subsubsection{Structure of file "data-file.xml"}
@@ -1598,7 +1598,7 @@ Acceptable values for "units" depend on the specific tag.
 
 Short syntax, used only in a few cases:
 \begin{verbatim}
-      <TAG attribute="something"/> . 
+      <TAG attribute="something"/> .
 \end{verbatim}
 For instance:
 \begin{verbatim}
@@ -1613,7 +1613,7 @@ Header:
  <?xml version="1.0"?>
  <?iotk version="1.0.0test"?>
  <?iotk file_version="1.0"?>
- <?iotk binary="F"?> 
+ <?iotk binary="F"?>
 \end{verbatim}
 These are meant to be used only by iotk (actually they aren't)
 
@@ -1639,10 +1639,10 @@ First-level tags:
   - <EIGENVALUES>    (eigenvalues and related data)
   - <EIGENVECTORS>   (eigenvectors and related data)
 
-  
+
 * Tag description
 
-  <HEADER> 
+  <HEADER>
      <FORMAT>    (name and version of the format)
      <CREATOR>   (name and version of the code generating the file)
   </HEADER>
@@ -1729,13 +1729,13 @@ First-level tags:
   </SYMMETRIES>
 
   <ELECTRIC_FIELD>  (optional, sawtooth field in PW only))
-     <HAS_ELECTRIC_FIELD> 
+     <HAS_ELECTRIC_FIELD>
      <HAS_DIPOLE_CORRECTION>
      <FIELD_DIRECTION>
      <MAXIMUM_POSITION>
      <INVERSE_REGION>
      <FIELD_AMPLITUDE>
-  </ELECTRIC_FIELD>  
+  </ELECTRIC_FIELD>
 
   <PLANE_WAVES>
      <UNITS_FOR_CUTOFF>
@@ -1818,7 +1818,7 @@ First-level tags:
         <exx_fraction>
         <screening_parameter>
       </EXACT_EXCHANGE>
-  endif 
+  endif
 
   <OCCUPATIONS>
      <SMEARING_METHOD>
@@ -1943,42 +1943,42 @@ First-level tags:
 There are currently no strict guidelines for developers. You
 should however follow at least the following loose ones:
 \begin{itemize}
-\item Preprocessing options should be capitalized and start with 
+\item Preprocessing options should be capitalized and start with
 two underscores. Examples: \_\_AIX, \_\_LINUX, ...
-\item Fortran commands should be capitalized: 
+\item Fortran commands should be capitalized:
 CALL something( )
 \item Variable names should be lowercase: \texttt{foo = bar/2}
 \item Indent DO's and IF's with three white spaces (editors like emacs will do this automatically for you)
 \item Do not write crammed code: leave spaces, insert empty separation lines
-\item Use comments (introduced by a !) to explain what is not obvious from 
-the code. Remember that what is obvious to you may not be obvious to other 
+\item Use comments (introduced by a !) to explain what is not obvious from
+the code. Remember that what is obvious to you may not be obvious to other
 people. It is especially important to document what a routine does, what
 it needs on input, what it produces on output. A few words of comment
 may save hours of searching into the code for a piece of missing information.
 \item do not use machine-dependent extensions or sloppy syntax. An example:
-Standard f90 
-requires that a \& is needed both at end of line AND at the beginning of 
+Standard f90
+requires that a \& is needed both at end of line AND at the beginning of
 continuation line if there is a character variable (inside ' ' or " ")
-spanning two lines. Some compilers do not complain if the latter \& is 
+spanning two lines. Some compilers do not complain if the latter \& is
 missing, others do.
 \item use "dp" (defined in module ''kinds'') to define the type of real and complex variables
 \item all constants should be defined to be of kind "dp".  Preferred syntax: 0.0\_dp.
 \item use "generic" intrinsic functions: SIN, COS, etc.
-\item conversions should be explicitely indicated. For conversions to real, 
-use DBLE, or else REAL(...,KIND=dp). For conversions to complex, use 
-CMPLX(...,...,KIND=dp). For complex conjugate, use CONJG.  For imaginary part, 
-use AIMAG.  IMPORTANT: Do not use REAL or CMPLX without KIND=dp, or else you 
-will lose precision (except when you take the real part of a 
+\item conversions should be explicitely indicated. For conversions to real,
+use DBLE, or else REAL(...,KIND=dp). For conversions to complex, use
+CMPLX(...,...,KIND=dp). For complex conjugate, use CONJG.  For imaginary part,
+use AIMAG.  IMPORTANT: Do not use REAL or CMPLX without KIND=dp, or else you
+will lose precision (except when you take the real part of a
 double precision complex number).
 \item Do not use automatic arrays (e.g. \texttt{REAL(dp) :: A(N)} with
-\texttt{N} defined at run time) unless you are sure that the array is 
+\texttt{N} defined at run time) unless you are sure that the array is
 small in all cases: large arrays may easily exceed the stack size,
 or the memory size,
-\item Do not use pointers unless you have a good reason to: 
+\item Do not use pointers unless you have a good reason to:
 pointers may hinder optimization. Allocatable arrays should be used instead.
 \item If you use pointers, nullify them before performing tests on their
 status.
-\item Beware fancy constructs like structures: they look great on paper, 
+\item Beware fancy constructs like structures: they look great on paper,
 but they also have the potential to make a code unreadable, or inefficient,
 or unusable with some compilers. Avoid nested structures unless you have a
 valid reason to use them.
@@ -1990,25 +1990,25 @@ decides it is the right thing to do), increasing the memory footprint.
 \item Do not pass unallocated arrays as arguments, even in those cases where
 they are not actually used inside the subroutine: some compilers don't
 like it.
-\item Do not use any construct that is susceptible to be flagged as 
+\item Do not use any construct that is susceptible to be flagged as
 out-of-bounds error, even if no actual out-of-bound error takes place.
 \item Always use IMPLICIT NONE and declare all local variables.
-All variables passed as arguments to a routine should be declared as 
+All variables passed as arguments to a routine should be declared as
 INTENT (IN), (OUT), or (INOUT). All variables from modules should be
 explicitly specified via USE module, ONLY : variable. Variables used
 in an array declaration must be declared first, as in the following
 example:
 \begin{verbatim}
-    INTEGER, INTENT(IN)   :: N 
-    REAL(dp), INTENT(OUT) :: A(N) 
+    INTEGER, INTENT(IN)   :: N
+    REAL(dp), INTENT(OUT) :: A(N)
 \end{verbatim}
-in this order (some compilers complain if you put the second line 
+in this order (some compilers complain if you put the second line
 before the first).
 \end{itemize}
 
 \subsection{Adding or modifying input variables}
 
-New input variables should be added to 
+New input variables should be added to
 ''Modules/input\_parameters.f90'',
 then copied to the code internal variables in the ''input.f90''
 subroutine. The namelists and cards parsers are in
@@ -2024,7 +2024,7 @@ to the namelist control, then:
 
 \begin{enumerate}
 \item add pippo to the input\_parameters.f90 file containing the
-namelist control 
+namelist control
 \begin{verbatim}
               INTEGER :: pippo = 0
               NAMELIST / control / ....., pippo
@@ -2032,7 +2032,7 @@ namelist control
 Remember: always set an initial value!
 
 \item add pippo to the control\_default subroutine (contained in
-module read\_namelists.f90 ) 
+module read\_namelists.f90 )
 \begin{verbatim}
                subroutine control_default( prog )
               ...
@@ -2041,10 +2041,10 @@ module read\_namelists.f90 )
               end subroutine
 \end{verbatim}
 This routine sets the default value for pippo (can be different in
-different codes) 
+different codes)
 
 \item add pippo to the control\_bcast subroutine (contained in module
-read\_namelists.f90 ) 
+read\_namelists.f90 )
  \begin{verbatim}
                 subroutine control_bcast( )
                 ...
@@ -2053,22 +2053,22 @@ read\_namelists.f90 )
                 end subroutine
 \end{verbatim}
 \end{enumerate}
- 
+
 \section{Using SVN}
 \label{Sec:SVN}
-\qe is maintained in a Subversion (SVN) repository. Developers can have 
-read-write access when needed, read-only otherwise. Note that the latest 
+\qe is maintained in a Subversion (SVN) repository. Developers can have
+read-write access when needed, read-only otherwise. Note that the latest
 (development) version may occasionally not work properly: carefully
 verify the results before using it in production work.
 
 Subversion, also known as SVN, is a software that allows many
 developers to work and maintain a single copy of a software in a
 central location (repository).
-It is installed by default on many Unix machines, or otherwise 
+It is installed by default on many Unix machines, or otherwise
 it can be very easily installed.
 For the end user, SVN is rather similar to CVS:
 if no advanced features are used, the basic commands are the same.
-More information on SVN can be found here: 
+More information on SVN can be found here:
 \texttt{http://subversion.apache.org/}.
 
 Current organization:
@@ -2076,7 +2076,7 @@ Current organization:
 \item {\em trunk}: development goes on here
 \item {\em branches}: major new developments, disruptive changes, very
 experimental features, things that have a long time before being released
-(if ever) ... 
+(if ever) ...
 \item {\em external}: packages that are be developed in a separate SVN trunk
 can be downloaded into the main QE trunk -- access may be restricted to
 specific (usually expert) developers.
@@ -2094,12 +2094,12 @@ read-only to everybody.}
 
 \subsection{SVN operations}
 
-To update the code to the current version: 
+To update the code to the current version:
 \begin{verbatim}
   svn update
 \end{verbatim}
 in the directory containing the distribution.
-To see the difference between the current version and your modified 
+To see the difference between the current version and your modified
 copy:
 \begin{verbatim}
   svn diff
@@ -2112,7 +2112,7 @@ To save your modified version into the repository:
 Please explain in a few words what your commit is about! Use option
 \texttt{-m"comment"} or the editor of your choice (set it using the
 \texttt{SVN\_EDITOR} environment variable).
-If you want to add a new file, or a new directory, before commiting 
+If you want to add a new file, or a new directory, before commiting
 give command
 \begin{verbatim}
   svn add
@@ -2132,17 +2132,17 @@ svn cp svn+ssh://myusername@qeforge.qe-forge.org/svnroot/q-e/trunk/espresso/DIR1
 \end{verbatim}
 then run \texttt{svn update} to have it applied locally.
 After such operations are done, run the \texttt{install/makedeps.sh} script
-or type \texttt{make depend} to update files \texttt{make.depend} in the 
-various subdirectories. It is preferrable to commit the moved files/modified 
+or type \texttt{make depend} to update files \texttt{make.depend} in the
+various subdirectories. It is preferrable to commit the moved files/modified
 directories and the affected Makefiles/make.depend in a single command.
 
 \subsection{Removing conflicts}
 \label{SubSec:Conflicts}
-When you update your working copy of the repository, 
+When you update your working copy of the repository,
 you may encounter two types of conflicts:
 \begin{enumerate}
 \item Somebody else has changed the same lines that you have
-      modified. 
+      modified.
 \item Somebody else has changed something that has broken one
       or more functionalities of your modified version.
 \end{enumerate}
@@ -2158,14 +2158,14 @@ indicated by
      (your version)
    =======
      (SVN version)
-   >>>>>>> 
+   >>>>>>>
 \end{verbatim}
 \item \texttt{conflicting-file.mine} containing your version
 \item two \texttt{conflicting-file.rXXXXX} containing the two most
 recent versions (\texttt{XXXXX} is the revision number) in SVN.
 \end{itemize}
-Look into the conflicting section(s): in most cases, conflicts are trivial 
-(format changes, white spaces) or easily solved (the part of the code you 
+Look into the conflicting section(s): in most cases, conflicts are trivial
+(format changes, white spaces) or easily solved (the part of the code you
 were modifying has been moved to another place, or a variable has meanwhilke
 changed name, for instance). Edit \texttt{conflicting-file}, remove all other
 copies of \texttt{conflicting-file.*}, commit.
@@ -2193,20 +2193,20 @@ to figure out why.
 \subsection{Merging branch and trunk}
 \label{SubSec:Merge}
 Let us assume that you have created a branch and that you are working
-in the directory of your branch. The simplest way to keep it aligned 
+in the directory of your branch. The simplest way to keep it aligned
 with the trunk is the following command:
 \begin{verbatim}
   svn merge ^/trunk/espresso
 \end{verbatim}
 The caret (\texttt{\^}) syntax is a shorthand for the entire URL of the trunk.
-Then you have to remove conflicts that can arise from incompatible changes 
+Then you have to remove conflicts that can arise from incompatible changes
 made in the trunk. Then you can commit your "aligned" branch (beware:
 the commit message is very large in size if you haven't merged recently;
 if so, it may never reach the \texttt{q-e-commits} mailing list).
 
 In order to merge a branch back into the trunk, the simplest procedure is
 to align first the branch with the trunk and commit it, as above; then,
-in a clean, not locally modified, trunk: 
+in a clean, not locally modified, trunk:
 \begin{verbatim}
   svn merge --reintegrate ^/branches/my-espresso-branch
 \end{verbatim}
@@ -2218,9 +2218,9 @@ The following web page may be useful:
 
 \subsection{Including a repository into the trunk}
 \label{SubSec:propedit}
-It is possible to download other repositories into the main \qe\ repository. 
+It is possible to download other repositories into the main \qe\ repository.
 Currently, this possibility works for GIPAW and West (for authorized users).
-From the trunk/ subdirectory (the one containing espresso/), type 
+From the trunk/ subdirectory (the one containing espresso/), type
 ``svn propedit svn:externals espresso''.
 An editor will open. Type the name of the subdirectory of ``espresso/''
 where you want the repository to be downloaded, followed by the address of
@@ -2241,13 +2241,13 @@ https://git-scm.com/course/svn.html
 
 Fortran books:
 \begin{itemize}
-\item 
-M. Metcalf, J. Reid, Fortran 95/2003 Explained, Oxford University Press (2004) 
 \item
-S. J. Chapman, Fortran 95/2003 for Scientists and Engineers, McGraw Hill (2007) 
+M. Metcalf, J. Reid, Fortran 95/2003 Explained, Oxford University Press (2004)
+\item
+S. J. Chapman, Fortran 95/2003 for Scientists and Engineers, McGraw Hill (2007)
 \item
 J. C. Adams, W. S. Brainerd, R. A. Hendrickson, R. E. Maine, J. T. Martin,
-B. T. Smith, The Fortran 2003 Handbook, Springer (2009) 
+B. T. Smith, The Fortran 2003 Handbook, Springer (2009)
 \item
 W. S. Brainerd, Guide to Fortran 2003 Programming, Springer (2009)
 \end{itemize}
@@ -2255,7 +2255,7 @@ On-line tutorials:
 \begin{itemize}
 \item Fortran:
 http://www.cs.mtu.edu/\~{}shene/COURSES/cs201/NOTES/fortran.html
-\item Make:  
+\item Make:
 http://en.wikipedia.org/wiki/Make\_(software)
 \item Configure script:
 http://en.wikipedia.org/wiki/Configure\_script
