@@ -80,3 +80,7 @@ GPU_URL=$(URL)$(GPU).tar.gz
 # Package maintainer: Marco Govoni
 WEST=West-1.1.0
 WEST_URL=http://www.west-code.org/downloads/$(WEST).tar.gz
+#
+# Package maintainer: Samuel Poncé <samuel.pon@gmail.com>
+EPW=EPW-5.4.0
+EPW_URL=$(URL)$(EPW).tar.gz

@@ -163,11 +163,15 @@ configure-gipaw: touch-dummy
 # EPW
 ###########################################################
 
-epw: 
+epw: extlibs uncompress-epw
 	if test -d ../EPW; then \
-	cd ../EPW ; $(MAKE) all ; $(MAKE) all || exit 1; cd ../bin; ln -fs ../EPW/bin/epw.x . ; fi
+	cd ../EPW ; $(MAKE) all ; exit 1; cd ../bin; ln -fs ../EPW/bin/epw.x . ; fi
 	-(cd ../bin; ln -fs ../EPW/src/epw.x .)
-	touch make-epw
+	touch ./make-epw
+
+uncompress-epw: touch-dummy
+	$(call download_and_unpack,$(EPW),$(EPW_URL),EPW,EPW)
+	touch uncompress-epw
 
 ###########################################################
 # wannier90
@@ -498,16 +502,18 @@ gipaw_distclean:
 	if test -d ../$(GIPAW); then (rm -R -f ../$(GIPAW) ); fi
 	rm -f ../archive/$(GIPAW).tar.gz
 
-epw_clean:
+epw:
 	if test -d ../EPW; then (cd ../EPW; \
 	$(MAKE) clean); fi
-	rm -f ../bin/epw.x
-	rm -rf ./make-epw 
+	- rm -rf ./make-west ./configure-epw
 
 epw_veryclean: epw_clean
+# dir is not deleted for compatibility with the repository
 
-epw_distclean: epw_clean
+epw_distclean:
+	rm -f ../archive/$(EPW).tar.gz
 
+pw_distclean: epw_clean
 w90_clean:
 	if test -d ../W90; then (cd ../W90; \
 	$(MAKE) veryclean); fi
