@@ -8,7 +8,10 @@ epw:
 	(cd bin ; ln -fs ../src/epw.x . )
 
 clean:
-	cd src ; rm -f *.o *.mod  *~ 
+	cd src ; rm -f *.o *.mod  *~ *.F90
+
+distclean : clean
+	rm src/epw.x bin/epw.x
 
 release:
 	cd ../ ; cp -r EPW EPW-release; cd EPW-release ; \
