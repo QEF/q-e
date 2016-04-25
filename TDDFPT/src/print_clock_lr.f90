@@ -24,9 +24,6 @@ SUBROUTINE print_clock_lr()
    !
    IMPLICIT NONE
    !
-   IF ( mpime /= root ) &
-      OPEN( UNIT = stdout, FILE = '/dev/null', STATUS = 'UNKNOWN' )
-   !
    WRITE( stdout, * )
    !
    IF (eels) THEN

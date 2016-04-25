@@ -81,8 +81,6 @@
       write(name_proc,'(5i1)') &
            & (mpime+1)/10000,mod(mpime+1,10000)/1000,mod(mpime+1,1000)/100,mod(mpime+1,100)/10,mod(mpime+1,10)
       OPEN( UNIT = stdout, FILE = trim(tmp_dir)//trim(prefix)//'-out_'//name_proc, STATUS = 'UNKNOWN' )
-   else
-      if(.not.ionode) OPEN ( unit = stdout, file='/dev/null', status='unknown' )
    endif
 #endif
 

@@ -19,9 +19,6 @@ SUBROUTINE print_clock_pwcond()
    IMPLICIT NONE
    !
    !
-   IF ( mpime /= root ) &
-      OPEN( UNIT = stdout, FILE = '/dev/null', STATUS = 'UNKNOWN' )
-   !
    WRITE( stdout, * )
    !
    CALL print_clock( 'PWCOND' )
