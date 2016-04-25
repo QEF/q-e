@@ -127,7 +127,7 @@ LIBOBJS = ../../clib/clib.a ../../iotk/src/libiotk.a
 
 TLDEPS= bindir mods libs pw-lib pw ph
 
-all :   pw ph wannier wcorr pp atom upf libepw.a epw.x 
+all :   pw ph wannier wcorr pp ld1 upf libepw.a epw.x 
 
 libepw.a : $(EPWOBJS)
 	$(AR) $(ARFLAGS) $@ $?
@@ -155,8 +155,8 @@ wannier :
 pp : 
 	cd ../../ ; make pp
 
-atom :
-	cd ../../atomic ; make
+ld1 :
+	cd ../../ ; make ld1
 
 upf :
 	cd ../../ ; make upf
