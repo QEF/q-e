@@ -15,7 +15,7 @@
 ! Nicolas Lacorne, Filippo Spiga, Nicola Varini - Last update Jul 2015     !
 !--------------------------------------------------------------------------!
 
-#if defined(__ESSL) || defined (__LINUX_ESSL)
+#if defined(__LINUX_ESSL)
 
 !=----------------------------------------------------------------------=!
    MODULE fft_scalar

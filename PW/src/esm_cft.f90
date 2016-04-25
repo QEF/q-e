@@ -41,7 +41,7 @@ MODULE esm_cft
   C_POINTER :: fw_planz = 0
   C_POINTER :: bw_planz = 0
 
-#elif defined __ESSL || defined __LINUX_ESSL
+#elif defined __LINUX_ESSL
 
   !   ESSL IBM library: see the ESSL manual for DCFT
 
@@ -105,7 +105,7 @@ SUBROUTINE esm_cft_1z_init(nsl, nz, ldz)
   INTEGER, INTENT(IN) :: nsl, nz, ldz
   REAL (DP)  :: tscale
   INTEGER    :: idir, nth
-#if defined __FFTW3 || defined __ESSL || defined __LINUX_ESSL
+#if defined __FFTW3 || defined __LINUX_ESSL
   COMPLEX(DP), ALLOCATABLE :: c(:), cout(:)
 #endif
 #if defined __OPENMP
@@ -133,7 +133,7 @@ SUBROUTINE esm_cft_1z_init(nsl, nz, ldz)
   nth = OMP_GET_MAX_THREADS()
 #endif
 
-#if defined __FFTW3 || defined __ESSL || defined __LINUX_ESSL
+#if defined __FFTW3 || defined __LINUX_ESSL
   ALLOCATE ( c( ldz*nsl ) )
   ALLOCATE ( cout( ldz*nsl ) )
 #endif
@@ -158,7 +158,7 @@ SUBROUTINE esm_cft_1z_init(nsl, nz, ldz)
   DEALLOCATE ( c )
   DEALLOCATE ( cout )
 
-#elif defined __ESSL || defined __LINUX_ESSL
+#elif defined __LINUX_ESSL
 
   IF( ALLOCATED( work ) ) DEALLOCATE( work )
   ALLOCATE( work( lwork, 0:nth-1 ) )
@@ -189,7 +189,7 @@ SUBROUTINE esm_cft_1z_init(nsl, nz, ldz)
   
 #else
 
-#if defined __FFTW3 || defined __ESSL || defined __LINUX_ESSL
+#if defined __FFTW3 || defined __LINUX_ESSL
   IF( ALLOCATED( c ) ) DEALLOCATE( c )
   IF( ALLOCATED( cout ) ) DEALLOCATE( cout )
 #endif
@@ -295,7 +295,7 @@ SUBROUTINE esm_cft_1z(c, nsl, nz, ldz, isign, cout)
   IF (isign /= 0) CALL ZZFFTM (idir, nz, nsl, tscale, c(1), ldz, &
     cout(1), ldz, tablez, work(1,ith), isys)
   
-#elif defined __ESSL || defined __LINUX_ESSL
+#elif defined __LINUX_ESSL
   
   ! essl uses a different convention for forward/backward transforms
   ! wrt most other implementations: notice the sign of "idir"

@@ -1428,21 +1428,13 @@ CONTAINS
         REAL(DP), ALLOCATABLE :: RWORK(:)
         COMPLEX(DP), ALLOCATABLE :: ZWORK(:)
 
-#if defined __ESSL
-        IOPT = 0
-        IF((JOBZ .EQ. 'V') .OR. (JOBZ .EQ. 'v') ) iopt = iopt + 1
-        IF((UPLO .EQ. 'U') .OR. (UPLO .EQ. 'u') ) iopt = iopt + 20
-        ALLOCATE( rwork( 4*n ) )
-        CALL ZHPEV(IOPT, ap, w, z, ldz, n, rwork, 4*n)
-        DEALLOCATE( rwork )
-#else
         ALLOCATE( rwork( MAX(1, 3*n-2) ), zwork( MAX(1, 2*n-1)) )
         CALL ZHPEV(jobz, uplo, n, ap, w, z, ldz, zwork, rwork, INFO)
         DEALLOCATE( rwork, zwork )
         IF( INFO .NE. 0 ) THEN
           CALL lax_error__( ' dspev_drv ', ' diagonalization failed ',INFO )
         END IF
-#endif
+
         RETURN
    END SUBROUTINE zhpev_drv
 

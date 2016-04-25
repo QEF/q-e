@@ -130,12 +130,6 @@
               enddo
             END IF
 
-#if defined __ESSL
-          case (3)
-
-            CALL DGETMO (x, ldx, n, m, y, ldy)
-#endif
-
           case default
 
             write(6,fmt='("trasponi: undefined method")')
@@ -264,12 +258,6 @@
                 enddo
               enddo
             END IF
-
-#if defined __ESSL
-          case (3)
-
-            CALL ZGETMO (x, ldx, n, m, y, ldy)
-#endif
 
           case default
 

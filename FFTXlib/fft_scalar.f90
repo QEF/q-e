@@ -25,7 +25,7 @@
 
 #include "fft_scalar.DFTI.f90"
 
-#elif defined(__ESSL) || defined(__LINUX_ESSL)
+#elif defined(__LINUX_ESSL)
 
 #include "fft_scalar.ESSL.f90"
 

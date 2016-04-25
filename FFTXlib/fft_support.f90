@@ -45,7 +45,7 @@ integer function good_fft_dimension (n)
   ! this is the default: max dimension = fft dimension
   nx = n
   !
-#if defined(__ESSL) || defined(__LINUX_ESSL)
+#if defined(__LINUX_ESSL)
   log2n = LOG ( dble (n) ) / LOG ( 2.0_DP )
   ! log2n is the logarithm of n in base 2
   IF ( ABS (NINT(log2n) - log2n) < 1.0d-8 ) nx = n + 1
@@ -106,7 +106,7 @@ function allowed (nr)
 
   else
 
-#if defined(__ESSL) || defined(__LINUX_ESSL)
+#if defined(__LINUX_ESSL)
 
      ! IBM machines with essl libraries
 

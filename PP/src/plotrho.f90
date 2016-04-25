@@ -70,16 +70,9 @@ PROGRAM plotrho
   READ (5, '(a)') fileout
 
   WRITE( stdout, '("Read ",i3," *",i3,"  grid")') nxi+1, nyi+1
-#ifdef __ESSL
-  !
-  ! interpolation implemented only for ESSL routines ...
-  !
-  WRITE( stdout, '("nx, ny (output) > ")', advance="NO")
-  READ (5, * ) nx, ny
-#else
+  ! interpolation no longer implemented
   nx = nxi
   ny = nyi
-#endif
   ALLOCATE ( x(0:nx), y(0:ny), rhoo(0:nx,0:ny) )
   xmin = xi (0)
   xmax = xi (nxi)
@@ -92,12 +85,8 @@ PROGRAM plotrho
   DO i = 0, ny
      y (i) = (yi (nyi) - yi (0) ) * dble (i) / dble (ny)
   ENDDO
-#ifdef __ESSL
-  CALL dcsin2 (xi, yi, rhoi, nxi + 1, nyi + 1, nxi + 1, x, y, &
-               nx + 1, ny + 1, rhoo, nx + 1, wrk, nwrk)
-#else
+  ! interpolation no longer implemented
   rhoo (0:nx, 0:ny) = rhoi (0:nx, 0:ny)
-#endif
   rhomin = minval (rhoo(0:nx, 0:ny))
   rhomax = maxval (rhoo(0:nx, 0:ny))
 

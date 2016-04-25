@@ -650,17 +650,10 @@ CONTAINS
 
         ALLOCATE( work( 3*n ) )
 
-#if defined __ESSL
-          IOPT = 0
-          IF((JOBZ .EQ. 'V') .OR. (JOBZ .EQ. 'v') ) iopt = iopt + 1
-          IF((UPLO .EQ. 'U') .OR. (UPLO .EQ. 'u') ) iopt = iopt + 20
-          CALL DSPEV(IOPT, ap, w, z, ldz, n, work, 3*n)
-#else 
-          CALL DSPEV(jobz, uplo, n, ap(1), w(1), z(1,1), ldz, work, INFO)
-          IF( info .NE. 0 ) THEN
-            CALL lax_error__( ' dspev_drv ', ' diagonalization failed ',info )
-          END IF
-#endif
+        CALL DSPEV(jobz, uplo, n, ap(1), w(1), z(1,1), ldz, work, INFO)
+        IF( info .NE. 0 ) THEN
+           CALL lax_error__( ' dspev_drv ', ' diagonalization failed ',info )
+        END IF
 
         DEALLOCATE( work )
  

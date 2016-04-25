@@ -86,9 +86,8 @@ Libraries:
       __FFTW3       FFT routines from external FFTW v.3 library
       __DFTI        FFT routines from Intel MKL library
       __ARM_LIB     EFT routines from ARM Performance library
-      __ESSL        Use blas/lapack/fft routines from IBM ESSL library
       __LINUX_ESSL  Use blas/lapack/fft routines from IBM ESSL library
-                    (linux version)
+                   (linux version; aix version no longer supported)
       __SCALAPACK   Use Scalapack routines instead of internal ones
                     for parallel subspace diagonalization
       __ELPA        Use ELPA library, it replaces some Scalapack calls
