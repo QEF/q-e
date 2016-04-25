@@ -202,7 +202,7 @@ plumed: touch-dummy
 west: pw touch-dummy
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-epw: touch-dummy
+epw: pw ph ld1 touch-dummy
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
 gpu: touch-dummy
