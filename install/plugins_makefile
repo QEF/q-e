@@ -502,10 +502,10 @@ gipaw_distclean:
 	if test -d ../$(GIPAW); then (rm -R -f ../$(GIPAW) ); fi
 	rm -f ../archive/$(GIPAW).tar.gz
 
-epw:
+epw_clean:
 	if test -d ../EPW; then (cd ../EPW; \
 	$(MAKE) clean); fi
-	- rm -rf ./make-west ./configure-epw
+	- rm -rf ./make-epw ./configure-epw
 
 epw_veryclean: epw_clean
 # dir is not deleted for compatibility with the repository
@@ -513,7 +513,6 @@ epw_veryclean: epw_clean
 epw_distclean:
 	rm -f ../archive/$(EPW).tar.gz
 
-pw_distclean: epw_clean
 w90_clean:
 	if test -d ../W90; then (cd ../W90; \
 	$(MAKE) veryclean); fi
