@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2004-2014 Quantum ESPRESSO group
+! Copyright (C) 2004-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -19,7 +19,7 @@ module funct
 !                      start_exx
 !                      stop_exx
 !                      set_finite_size_volume
-!  retrieve functions: get_dft_name
+!  retrieve functions: get_dft_name, get_dft_short, get_dft_long
 !                      get_iexch
 !                      get_icorr
 !                      get_igcx
@@ -44,8 +44,8 @@ module funct
   SAVE
   ! subroutines/functions managing dft name and indices
   PUBLIC  :: set_dft_from_indices, set_dft_from_name
-  PUBLIC  :: enforce_input_dft, write_dft_name, dft_name
-  PUBLIC  :: get_dft_name
+  PUBLIC  :: enforce_input_dft, write_dft_name
+  PUBLIC  :: get_dft_name, get_dft_short, get_dft_long
   PUBLIC  :: get_iexch, get_icorr, get_igcx, get_igcc, get_meta, get_inlc
   PUBLIC  :: dft_is_gradient, dft_is_meta, dft_is_hybrid, dft_is_nonlocc, igcc_is_lyp
 
@@ -71,7 +71,7 @@ module funct
   !
   ! PRIVATE variables defining the DFT functional
   !
-  PRIVATE :: dft, dft_shortname, iexch, icorr, igcx, igcc, imeta, inlc
+  PRIVATE :: dft, iexch, icorr, igcx, igcc, imeta, inlc
   PRIVATE :: discard_input_dft
   PRIVATE :: isgradient, ismeta, ishybrid
   PRIVATE :: exx_fraction, exx_started
@@ -79,12 +79,11 @@ module funct
              finite_size_cell_volume,  finite_size_cell_volume_set 
   !
   character (len=25) :: dft = 'not set'
-  character (len=6)  :: dft_shortname = ' '
   !
-  ! "dft" is the exchange-correlation functional label, described either 
-  ! by short names listed below, or by a series of keywords (everything
-  ! is case-insensitive). "dft_shortname" contains one of the short names
-  ! listed below (deduced from from "dft" as read from input or PP files)
+  ! "dft" is the exchange-correlation functional label, as set by the user,
+  ! using either set_dft_from_name or set_dft_from_indices. It can contain
+  ! either the short names or a series of the keywords listed below.
+  ! All operations on names are case-insensitive. 
   !
   !           short name       complete name       Short description
   !              "pz"    = "sla+pz"            = Perdew-Zunger LDA
@@ -594,8 +593,8 @@ CONTAINS
     !
     dft = dftout
 
-    dftout = exc (iexch) //'-'//corr (icorr) //'-'//gradx (igcx) //'-' &
-         &//gradc (igcc) //'-'// nonlocc(inlc)
+    !dft_longname = exc (iexch) //'-'//corr (icorr) //'-'//gradx (igcx) //'-' &
+    !     &//gradc (igcc) //'-'// nonlocc(inlc)
 
     call set_auxiliary_flags
     !
@@ -954,102 +953,106 @@ CONTAINS
      call set_auxiliary_flags
      return
   end subroutine set_dft_from_indices
-
   !---------------------------------------------------------------------
-  subroutine dft_name(iexch_, icorr_, igcx_, igcc_, inlc_, imeta_,  &
-       longname_, shortname_)
+  function get_dft_short ( )
   !---------------------------------------------------------------------
-  ! convert the four indices iexch, icorr, igcx, igcc
-  ! into user-readable strings
   !
-  implicit none
-  integer iexch_, icorr_, igcx_, igcc_, imeta_, inlc_
-  ! AF: the following variable is actually not used
-  character (len=20):: shortname_
-  character (len=25):: longname_
+  character (len=12) :: get_dft_short
+  character (len=12) :: shortname
   !
-  shortname_ = ' '
-  if (iexch_==1.and.igcx_==0.and.igcc_==0) then
-     shortname_ = corr(icorr_)
-  else if (iexch_==1.and.icorr_==3.and.igcx_==1.and.igcc_==3) then
-     shortname_ = 'BLYP'
-  else if (iexch_==1.and.icorr_==1.and.igcx_==1.and.igcc_==0) then
-     shortname_ = 'B88'
-  else if (iexch_==1.and.icorr_==1.and.igcx_==1.and.igcc_==1) then
-     shortname_ = 'BP'
-  else if (iexch_==1.and.icorr_==4.and.igcx_==2.and.igcc_==2) then
-     shortname_ = 'PW91'
-  else if (iexch_==1.and.icorr_==4.and.igcx_==3.and.igcc_==4) then
-     shortname_ = 'PBE'
-  else if (iexch_==6.and.icorr_==4.and.igcx_==8.and.igcc_==4) then
-     shortname_ = 'PBE0'
-  else if (iexch_==1.and.icorr_==4.and.igcx_==4.and.igcc_==4) then
-     shortname_ = 'revPBE'
-  else if (iexch_==1.and.icorr_==4.and.igcx_==10.and.igcc_==8) then
-     shortname_ = 'PBESOL'
-  else if (iexch_==1.and.icorr_==4.and.igcx_==19.and.igcc_==12) then
-     shortname_ = 'Q2D'
-  else if (iexch_==1.and.icorr_==4.and.igcx_==12.and.igcc_==4) then
-     shortname_ = 'HSE'
-  else if (iexch_==1.and.icorr_==4.and.igcx_==20.and.igcc_==4) then
-     shortname_ = 'GAUPBE'
-  else if (iexch_==1.and.icorr_==4.and.igcx_==11.and.igcc_==4) then
-     shortname_ = 'WC'
-  else if (iexch_==7.and.icorr_==12.and.igcx_==9.and. igcc_==7) then
-     shortname_ = 'B3LYP'
-  else if (iexch_==7.and.icorr_==13.and.igcx_==9.and. igcc_==7) then
-     shortname_ = 'B3LYP-V1R'
-  else if (iexch_==9.and.icorr_==14.and.igcx_==28.and. igcc_==13) then
-     shortname_ = 'X3LYP'
-  else if (iexch_==0.and.icorr_==3.and.igcx_==6.and.igcc_==3) then
-     shortname_ = 'OLYP'
-  else if (iexch_==1.and.icorr_==4.and.igcx_==17.and.igcc_==4) then
-     shortname_ = 'SOGGA'
-  else if (iexch_==1.and.icorr_==4.and.igcx_==25.and.igcc_==0) then
-     shortname_ = 'EV93'
+  shortname = 'no shortname'
+  if (iexch==1.and.igcx==0.and.igcc==0) then
+     shortname = corr(icorr)
+  else if (iexch==1.and.icorr==3.and.igcx==1.and.igcc==3) then
+     shortname = 'BLYP'
+  else if (iexch==1.and.icorr==1.and.igcx==1.and.igcc==0) then
+     shortname = 'B88'
+  else if (iexch==1.and.icorr==1.and.igcx==1.and.igcc==1) then
+     shortname = 'BP'
+  else if (iexch==1.and.icorr==4.and.igcx==2.and.igcc==2) then
+     shortname = 'PW91'
+  else if (iexch==1.and.icorr==4.and.igcx==3.and.igcc==4) then
+     shortname = 'PBE'
+  else if (iexch==6.and.icorr==4.and.igcx==8.and.igcc==4) then
+     shortname = 'PBE0'
+  else if (iexch==1.and.icorr==4.and.igcx==4.and.igcc==4) then
+     shortname = 'revPBE'
+  else if (iexch==1.and.icorr==4.and.igcx==10.and.igcc==8) then
+     shortname = 'PBESOL'
+  else if (iexch==1.and.icorr==4.and.igcx==19.and.igcc==12) then
+     shortname = 'Q2D'
+  else if (iexch==1.and.icorr==4.and.igcx==12.and.igcc==4) then
+     shortname = 'HSE'
+  else if (iexch==1.and.icorr==4.and.igcx==20.and.igcc==4) then
+     shortname = 'GAUPBE'
+  else if (iexch==1.and.icorr==4.and.igcx==11.and.igcc==4) then
+     shortname = 'WC'
+  else if (iexch==7.and.icorr==12.and.igcx==9.and. igcc==7) then
+     shortname = 'B3LYP'
+  else if (iexch==7.and.icorr==13.and.igcx==9.and. igcc==7) then
+     shortname = 'B3LYP-V1R'
+  else if (iexch==9.and.icorr==14.and.igcx==28.and. igcc==13) then
+     shortname = 'X3LYP'
+  else if (iexch==0.and.icorr==3.and.igcx==6.and.igcc==3) then
+     shortname = 'OLYP'
+  else if (iexch==1.and.icorr==4.and.igcx==17.and.igcc==4) then
+     shortname = 'SOGGA'
+  else if (iexch==1.and.icorr==4.and.igcx==25.and.igcc==0) then
+     shortname = 'EV93'
   end if
 
-  if (imeta_ == 1 ) then
-     shortname_ = 'TPSS'
-  else if (imeta_ == 2) then
-     shortname_ = 'M06L'
-  else if (imeta_ == 3) then
-     shortname_ = 'TB09'
+  if (imeta == 1 ) then
+     shortname = 'TPSS'
+  else if (imeta == 2) then
+     shortname = 'M06L'
+  else if (imeta == 3) then
+     shortname = 'TB09'
   end if
 
-  if ( inlc_==1 ) then
-     if (iexch_==1.and.icorr_==4.and.igcx_==4.and.igcc_==0) then
-        shortname_ = 'VDW-DF'
-     else if (iexch_==1.and.icorr_==4.and.igcx_==27.and.igcc_==0) then
-        shortname_ = 'VDW-DF-CX'
-     else if (iexch_==1.and.icorr_==4.and.igcx_==16.and.igcc_==0) then
-        shortname_ = 'VDW-DF-C09'
-     else if (iexch_==1.and.icorr_==4.and.igcx_==24.and.igcc_==0) then
-        shortname_ = 'VDW-DF-OB86'
-     else if (iexch_==1.and.icorr_==4.and.igcx_==23.and.igcc_==0) then
-        shortname_ = 'VDW-DF-OBK8'
+  if ( inlc==1 ) then
+     if (iexch==1.and.icorr==4.and.igcx==4.and.igcc==0) then
+        shortname = 'VDW-DF'
+     else if (iexch==1.and.icorr==4.and.igcx==27.and.igcc==0) then
+        shortname = 'VDW-DF-CX'
+     else if (iexch==1.and.icorr==4.and.igcx==16.and.igcc==0) then
+        shortname = 'VDW-DF-C09'
+     else if (iexch==1.and.icorr==4.and.igcx==24.and.igcc==0) then
+        shortname = 'VDW-DF-OB86'
+     else if (iexch==1.and.icorr==4.and.igcx==23.and.igcc==0) then
+        shortname = 'VDW-DF-OBK8'
      end if
-  else if ( inlc_==2 ) then
-     if (iexch_==1.and.icorr_==4.and.igcx_==13.and.igcc_==0) then
-        shortname_ = 'VDW-DF2'
-     else if (iexch_==1.and.icorr_==4.and.igcx_==16.and.igcc_==0) then
-        shortname_ = 'VDW-DF2-C09'
-     else if (iexch_==1.and.icorr_==4.and.igcx_==26.and.igcc_==0) then
-        shortname_ = 'VDW-DF2-B86R'
-     else if ( inlc_==3) then
-        shortname_ = 'RVV10'
+  else if ( inlc==2 ) then
+     if (iexch==1.and.icorr==4.and.igcx==13.and.igcc==0) then
+        shortname = 'VDW-DF2'
+     else if (iexch==1.and.icorr==4.and.igcx==16.and.igcc==0) then
+        shortname = 'VDW-DF2-C09'
+     else if (iexch==1.and.icorr==4.and.igcx==26.and.igcc==0) then
+        shortname = 'VDW-DF2-B86R'
+     else if ( inlc==3) then
+        shortname = 'RVV10'
      end if
   end if
-
-  write(longname_,'(4a5)') exc(iexch_),corr(icorr_),gradx(igcx_),gradc(igcc_)
+  !
+  get_dft_short = shortname
+  !
+  end function get_dft_short
+  !
+  !---------------------------------------------------------------------
+  function get_dft_long( )
+  !---------------------------------------------------------------------
+  !
+  character (len=25) :: get_dft_long
+  character (len=25) :: longname
+  !
+  write(longname,'(4a5)') exc(iexch),corr(icorr),gradx(igcx),gradc(igcc)
   if ( imeta > 0 ) then
-     longname_=longname_(1:20)//trim(meta(imeta_))
-  else if ( inlc_ > 0 ) then
-     longname_=longname_(1:20)//trim(nonlocc(inlc_))
+     longname = longname(1:20)//trim(meta(imeta))
+  else if ( inlc > 0 ) then
+     longname = longname(1:20)//trim(nonlocc(inlc))
   end if
+  get_dft_long = longname
 
-  return
-end subroutine dft_name
+end function get_dft_long
 
 !-----------------------------------------------------------------------
 subroutine write_dft_name
