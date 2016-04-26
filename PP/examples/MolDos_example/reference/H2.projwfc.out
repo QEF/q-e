@@ -1,0 +1,142 @@
+
+     Program PROJWFC v.5.3.0 (svn rev. 11974) starts on 21Apr2016 at  9:31:37 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     1 processors
+
+     Reading data from directory:
+     /opt/QE/espresso-5.3.0/tempdir/H2.save
+
+   Info: using nr1, nr2, nr3 values from input
+
+   Info: using nr1, nr2, nr3 values from input
+
+     IMPORTANT: XC functional enforced from input :
+     Exchange-correlation      = PBE ( 1  4  3  4 0 0)
+     Any further DFT definition will be discarded
+     Please, verify this is what you really want
+
+
+    ============================================================
+    |  pseudopotential report for atomic species:  1           |
+    |        pseudo potential version   7   3   2              |
+    ------------------------------------------------------------
+    |  hydrogen            PBE                  exchange-corr  |
+    |  z =   1.    zv( 1) =   1.    exfact =   5.00000         |
+    |  ifpcor =  0           atomic energy =  -0.91772 Ry      |
+    |  index    orbital      occupation    energy              |
+    |    1        100           1.00       -0.48               |
+    |  rinner =  0.5000                                        |
+    |    new generation scheme:                                |
+    |    nbeta =  1     kkbeta =  271     rcloc =    0.6000    |
+    |    ibeta    l     epsilon   rcut                         |
+    |      1       0      -0.48   0.80                         |
+    ============================================================
+ 
+     G-vector sticks info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Sum         305     305     89                 8279     8279    1205
+ 
+
+     negative rho (up, down):  5.691E-03 0.000E+00
+
+     Gaussian broadening (read from input): ngauss,degauss=   0    0.014700
+
+
+     Calling projwave .... 
+
+     Atomic states used for projection
+     (read from pseudopotential files):
+
+     state #   1: atom   1 (H  ), wfc  1 (l=0 m= 1)
+     state #   2: atom   2 (H  ), wfc  1 (l=0 m= 1)
+
+ k =   0.0000000000  0.0000000000  0.0312500000
+==== e(   1) =   -10.19326 eV ==== 
+     psi = 0.476*[#   1]+0.476*[#   2]+
+    |psi|^2 = 0.952
+==== e(   2) =    -0.84105 eV ==== 
+     psi = 0.114*[#   1]+0.114*[#   2]+
+    |psi|^2 = 0.227
+==== e(   3) =    -0.43001 eV ==== 
+     psi = 0.217*[#   1]+0.217*[#   2]+
+    |psi|^2 = 0.434
+==== e(   4) =     2.80939 eV ==== 
+     psi = 0.015*[#   1]+0.015*[#   2]+
+    |psi|^2 = 0.030
+==== e(   5) =     5.73130 eV ==== 
+     psi = 0.125*[#   1]+0.125*[#   2]+
+    |psi|^2 = 0.249
+
+ k =   0.0000000000  0.0000000000  0.0937500000
+==== e(   1) =   -10.19397 eV ==== 
+     psi = 0.476*[#   1]+0.476*[#   2]+
+    |psi|^2 = 0.952
+==== e(   2) =    -1.12404 eV ==== 
+     psi = 0.177*[#   1]+0.177*[#   2]+
+    |psi|^2 = 0.354
+==== e(   3) =    -0.01049 eV ==== 
+     psi = 0.141*[#   1]+0.141*[#   2]+
+    |psi|^2 = 0.281
+==== e(   4) =     2.68989 eV ==== 
+     psi = 0.046*[#   1]+0.046*[#   2]+
+    |psi|^2 = 0.093
+==== e(   5) =     5.50645 eV ==== 
+     psi = 0.085*[#   1]+0.085*[#   2]+
+    |psi|^2 = 0.169
+
+ k =   0.0000000000  0.0000000000  0.1562500000
+==== e(   1) =   -10.19448 eV ==== 
+     psi = 0.476*[#   1]+0.476*[#   2]+
+    |psi|^2 = 0.952
+==== e(   2) =    -1.32425 eV ==== 
+     psi = 0.201*[#   1]+0.201*[#   2]+
+    |psi|^2 = 0.401
+==== e(   3) =     0.43000 eV ==== 
+     psi = 0.087*[#   1]+0.087*[#   2]+
+    |psi|^2 = 0.173
+==== e(   4) =     2.46423 eV ==== 
+     psi = 0.104*[#   1]+0.104*[#   2]+
+    |psi|^2 = 0.208
+==== e(   5) =     5.25160 eV ==== 
+     psi = 0.037*[#   1]+0.037*[#   2]+
+    |psi|^2 = 0.074
+
+ k =   0.0000000000  0.0000000000  0.2187500000
+==== e(   1) =   -10.19420 eV ==== 
+     psi = 0.476*[#   1]+0.476*[#   2]+
+    |psi|^2 = 0.952
+==== e(   2) =    -1.42641 eV ==== 
+     psi = 0.211*[#   1]+0.211*[#   2]+
+    |psi|^2 = 0.423
+==== e(   3) =     0.76768 eV ==== 
+     psi = 0.031*[#   1]+0.031*[#   2]+
+    |psi|^2 = 0.062
+==== e(   4) =     2.23197 eV ==== 
+     psi = 0.170*[#   1]+0.170*[#   2]+
+    |psi|^2 = 0.339
+==== e(   5) =     5.10350 eV ==== 
+     psi = 0.006*[#   1]+0.006*[#   2]+
+    |psi|^2 = 0.012
+
+Lowdin Charges: 
+
+     Atom #   1: total charge =   0.9517, s =  0.9517, 
+     Atom #   2: total charge =   0.9517, s =  0.9517, 
+     Spilling Parameter:   0.0483
+ 
+     PROJWFC      :     0.21s CPU         0.22s WALL
+
+ 
+   This run was terminated on:   9:31:37  21Apr2016            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=

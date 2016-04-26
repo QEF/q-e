@@ -1,0 +1,31 @@
+#!/usr/bin/gnuplot
+#
+set term post color solid enh
+set out 'project_chainH2_onto_H2.ps'
+set xlabel "Energy (eV)"
+set ylabel "DOS (states/eV)"
+ef=1.6649
+set xra [-15:5]
+set yzeroaxis
+set style data lines
+set origin 0,0
+set size 1,1
+set multiplot
+
+set origin 0,1./2
+set size 0.5,1./2
+plot 'chainH2_onto_H2.mopdos_tot' u ($1-ef):2 lc 3 t "total H_2-projected DOS"
+
+set origin 0,0./2
+set size 0.5,1./2
+plot "<awk '($1==1)' chainH2_onto_H2.mopdos" u ($2-ef):3 t "bonding H_2 orbital",  "<awk '($1==2)' chainH2_onto_H2.mopdos" u ($2-ef):3 t "anti-bonding H_2 orbital"
+
+set origin 0.5,0
+set size 0.5,1
+#set ytics 0.5
+set ylabel "k_z (crystal)"
+scaledos=20
+set key title "K-resolved"
+plot "<awk '($2==1)' chainH2_onto_H2.k.mopdos" u ($3-ef):(($1-1)/20*0.5+$4/scaledos) t "bonding H_2 orbital", "<awk '($2==2)' chainH2_onto_H2.k.mopdos" u ($3-ef):(($1-1)/20*0.5+$4/scaledos) t "anti-bonding H_2 orbital"
+
+unset multiplot
