@@ -1,3 +1,16 @@
+New in 6.0 version:
+
+Fixed in 6.0 version:
+
+  * TDDFPT, PWCOND, GWW: redirection to /dev/null broke Windows executable
+    (commit 12357)
+
+Incompatible changes in 6.0 version:
+
+  * Support for AIX removed
+
+                               * * * * *
+
 New in 5.4 version:
 
   * Calculation of the Magnetic anisotropy energy is implemented (in the limit 
@@ -8,6 +21,8 @@ New in 5.4 version:
   * Support for QM-MM using MPI (C. Cavazzoni and M. Ippolito)
   * Phonons with vdw-DF (S. de Gironcoli and R. Sabatini) and with DFT-D2
     (P. Giannozzi and F. Masullo) 
+  * Addition of EPW to compute electron-phonon properties using Wannier 
+    interpolations (S. Poncé, E. R. Margine, C. Verdi, and F. Giustino).
 
 Fixed in 5.4 version:
 

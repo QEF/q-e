@@ -640,7 +640,6 @@ if none is found, it will search for an external FFTW v.3 library;
 if none is found, it will fall back to the internal  copy of FFTW.
 \configure\ will add the appropriate preprocessing options:
 \begin{itemize}
-\item \texttt{-D\_\_ESSL} for ESSL on IBM AIX machines,
 \item \texttt{-D\_\_LINUX\_ESSL} for ESSL on IBM Linux machines,
 \item \texttt{-DASL} for NEC ASL library on NEC machines,
 \item \texttt{-D\_\_ARM\_LIB} for ARM Performance library,
@@ -962,18 +961,7 @@ Older Cray machines: T3D, T3E, X1, are no longer supported.
 
 \subsubsection{IBM AIX}
 
-v.4.3.1 of the CP code, Wannier-function dynamics, crashes with
-``segmentation violation'' on some AIX v.6 machines.
-Workaround: compile it with \texttt{mpxlf95} instead of
-\texttt{mpxlf90}. (Info by Roberto Scipioni, June 2011)
-
-On IBM machines with ESSL libraries installed, there is a
-potential conflict between a few LAPACK routines that are also part of ESSL,
-but with a different calling sequence. The appearance of run-time errors like {\em
-    ON ENTRY TO ZHPEV  PARAMETER NUMBER  1 HAD AN ILLEGAL VALUE}
-is a signal that you are calling the bad routine. If you have defined
-\texttt{-D\_\_ESSL} you should load ESSL before LAPACK: see
-variable LAPACK\_LIBS in make.sys.
+As of v.6.0 IBM machines with AIX are no longer supported.
 
 \subsubsection{IBM BlueGene}
 
