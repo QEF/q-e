@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2007 Quantum ESPRESSO group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -22,8 +22,8 @@ SUBROUTINE atomic_wfc_nc_proj (ik, wfcatom)
   USE ions_base,  ONLY : nat, ntyp => nsp, ityp, tau
   USE basis,      ONLY : natomwfc
   USE gvect,      ONLY : mill, eigts1, eigts2, eigts3, g
-  USE klist,      ONLY : xk
-  USE wvfct,      ONLY : npwx, npw, nbnd, igk
+  USE klist,      ONLY : xk, ngk, igk_k
+  USE wvfct,      ONLY : npwx, nbnd
   USE us,         ONLY : tab_at, dq
   USE uspp_param, ONLY : upf
   USE noncollin_module, ONLY : noncolin, npol, angle1, angle2
@@ -35,7 +35,7 @@ SUBROUTINE atomic_wfc_nc_proj (ik, wfcatom)
   COMPLEX(DP), INTENT(out) :: wfcatom (npwx, npol, natomwfc)
   !
   INTEGER :: n_starting_wfc, lmax_wfc, nt, l, nb, na, m, lm, ig, iig, &
-             i0, i1, i2, i3, nwfcm
+             i0, i1, i2, i3, nwfcm, npw
   real(DP), ALLOCATABLE :: qg(:), ylm (:,:), chiq (:,:,:), gk (:,:)
   COMPLEX(DP), ALLOCATABLE :: sk (:), aux(:)
   COMPLEX(DP) :: kphase, lphase
@@ -50,14 +50,15 @@ SUBROUTINE atomic_wfc_nc_proj (ik, wfcatom)
   ENDDO
   !
   nwfcm = maxval ( upf(1:ntyp)%nwfc )
+  npw = ngk(ik)
   !
   ALLOCATE ( ylm (npw,(lmax_wfc+1)**2), chiq(npw,nwfcm,ntyp), &
              sk(npw), gk(3,npw), qg(npw) )
   !
   DO ig = 1, npw
-     gk (1,ig) = xk(1, ik) + g(1, igk(ig) )
-     gk (2,ig) = xk(2, ik) + g(2, igk(ig) )
-     gk (3,ig) = xk(3, ik) + g(3, igk(ig) )
+     gk (1,ig) = xk(1, ik) + g(1, igk_k(ig,ik) )
+     gk (2,ig) = xk(2, ik) + g(2, igk_k(ig,ik) )
+     gk (3,ig) = xk(3, ik) + g(3, igk_k(ig,ik) )
      qg(ig) = gk(1, ig)**2 +  gk(2, ig)**2 + gk(3, ig)**2
   ENDDO
   !
@@ -107,7 +108,7 @@ SUBROUTINE atomic_wfc_nc_proj (ik, wfcatom)
      !     sk is the structure factor
      !
      DO ig = 1, npw
-        iig = igk (ig)
+        iig = igk_k(ig,ik)
         sk (ig) = kphase * eigts1 (mill(1,iig), na) * &
                            eigts2 (mill(2,iig), na) * &
                            eigts3 (mill(3,iig), na)

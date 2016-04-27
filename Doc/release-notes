@@ -4,6 +4,8 @@ Fixed in 6.0 version:
 
   * TDDFPT, PWCOND, GWW: redirection to /dev/null broke Windows executable
     (commit 12357)
+  * PDOS in the noncolinear case was broken by recent changes in indexing 
+    (courtesy Mitsuaki Kawamura) (commit (12366)
 
 Incompatible changes in 6.0 version:
 
