@@ -26,5 +26,5 @@ tldeps :
 	( cd ../.. ; $(MAKE) $(TLDEPS) || exit 1 ) ; fi
 
 clean :
-	rm -f ../bin/turbo_spectrum.x *.x *.o *.mod *.F90
+	rm -f ../bin/turbo_spectrum.x *.x *.o *.mod *_tmp.f90
 

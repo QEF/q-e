@@ -63,7 +63,7 @@ tldeps :
 	test -n "$(TLDEPS)" && ( cd ../.. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :
 
 clean :
-	- /bin/rm -f *.x *.o *~ *.F90 *.d *.mod *.i *.L
+	- /bin/rm -f *.x *.o *~ *_tmp.f90 *.d *.mod *.i *.L
 	- /bin/rm -f ../../bin/xspectra.x
 
 include make.depend

@@ -184,7 +184,7 @@ tldeps :
 
 
 clean :
-	- /bin/rm -f *.o *.a *.d *.i *~ *.F90 *.mod *.L version.f90
+	- /bin/rm -f *.o *.a *.d *.i *~ *_tmp.f90 *.mod *.L version.f90
 
 # .PHONY forces execution of a rule irrespective of the presence of an
 # updated file with the same name of the rule. In this way, the script 

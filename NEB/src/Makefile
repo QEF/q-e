@@ -66,7 +66,7 @@ tldeps :
 	( cd ../.. ; $(MAKE) $(TLDEPS) || exit 1 ) ; fi
 
 clean :
-	- /bin/rm -f *.x *.o *.a *~ *.F90 *.d *.mod *.i *.L
+	- /bin/rm -f *.x *.o *.a *~ *_tmp.f90 *.d *.mod *.i *.L
 	- /bin/rm -f ../../bin/neb.x
 	- /bin/rm -f ../../bin/path_interpolation.x
 

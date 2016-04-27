@@ -65,7 +65,7 @@ tldeps :
 	( cd ../.. ; $(MAKE) $(TLDEPS) || exit 1 ) ; fi
 
 clean :
-	- /bin/rm -f *.x *.o *~ *.F90 *.d *.mod *.i *.a *.L
+	- /bin/rm -f *.x *.o *~ *_tmp.f90 *.d *.mod *.i *.a *.L
 	- /bin/rm -f ../../bin/pwcond.x
 
 include make.depend

@@ -26,7 +26,7 @@ la_test.x : test.o libqela.a
 TEST : la_test.x
 
 clean :
-	- /bin/rm -f *.o *.a *.d *.i *~ *.F90 *.mod *.L *.x
+	- /bin/rm -f *.o *.a *.d *.i *~ *_tmp.f90 *.mod *.L *.x
 
 # .PHONY forces execution of a rule irrespective of the presence of an
 # updated file with the same name of the rule. In this way, the script 

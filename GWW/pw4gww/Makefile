@@ -75,7 +75,7 @@ libpw4gww.a : $(PW4GWWOBJS)
 	$(RANLIB) $@
 
 clean :
-	- /bin/rm -fv *.x *.o *~ *.F90 *.d *.mod *.i *.L libpw4gww.a
+	- /bin/rm -fv *.x *.o *~ *_tmp.f90 *.d *.mod *.i *.L libpw4gww.a
 
 include make.depend
 # DO NOT DELETE

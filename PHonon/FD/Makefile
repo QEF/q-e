@@ -47,7 +47,7 @@ libfd.a : $(FDOBJS)
 	$(RANLIB) $@
 
 clean :
-	- /bin/rm -f *.x *.o *~ *.F90 *.d *.mod *.i *.L libfd.a
+	- /bin/rm -f *.x *.o *~ *_tmp.f90 *.d *.mod *.i *.L libfd.a
 
 include make.depend
 # DO NOT DELETE

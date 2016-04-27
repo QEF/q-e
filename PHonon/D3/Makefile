@@ -81,7 +81,7 @@ tldeps :
 	( cd .. ; $(MAKE) phonon || exit 1 )
 
 clean :
-	- /bin/rm -f d3.x *.o *~ *.F90 *.d *.i *.mod *.L
+	- /bin/rm -f d3.x *.o *~ *_tmp.f90 *.d *.i *.mod *.L
 	- /bin/rm -f ../../bin/d3.x
 
 include make.depend

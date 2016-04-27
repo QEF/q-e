@@ -34,7 +34,7 @@ TEST : test.o libqefft.a
 	$(LD) $(LDFLAGS) -o fft_test.x test.o libqefft.a $(LIBS)
 
 clean :
-	- /bin/rm -f *.o *.a *.d *.i *~ *.F90 *.mod *.L 
+	- /bin/rm -f *.o *.a *.d *.i *~ *_tmp.f90 *.mod *.L 
 
 # .PHONY forces execution of a rule irrespective of the presence of an
 # updated file with the same name of the rule. In this way, the script 

@@ -125,7 +125,7 @@ tldeps :
 	( cd ../.. ; $(MAKE) $(TLDEPS) || exit 1 ) ; fi
 
 clean:
-	- /bin/rm -f *.o *.F90 *.x *~ *.d *.mod *.tmp.* *.L
+	- /bin/rm -f *.o *_tmp.f90 *.x *~ *.d *.mod *.tmp.* *.L
 	- /bin/rm -f ../../bin/ld1.x
 
 include make.depend

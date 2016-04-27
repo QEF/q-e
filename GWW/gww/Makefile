@@ -75,7 +75,7 @@ tldeps :
 	( cd ../.. ; $(MAKE) $(TLDEPS) || exit 1 ) ; fi
 
 clean :
-	- /bin/rm -f -v gww.x gww_fit.x *.o *~ *.F90 *.d *.mod *.i *.a
+	- /bin/rm -f -v gww.x gww_fit.x *.o *~ *_tmp.f90 *.d *.mod *.i *.a
 
 include make.depend
 
