@@ -10,7 +10,7 @@ SUBROUTINE writedyn ( )
   !
   USE ions_base, ONLY : nat, tau, ityp, ntyp => nsp, atm, amass
   USE run_info,  ONLY : title
-  USE cell_base, ONLY : ibrav, celldm
+  USE cell_base, ONLY : ibrav, celldm, at
 
   USE constants, ONLY : amu_ry
   USE cgcom
