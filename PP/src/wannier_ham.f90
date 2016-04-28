@@ -85,7 +85,7 @@ SUBROUTINE new_hamiltonian(form, plot_bands)
   USE io_files
   USE kinds, ONLY: DP
   USE wannier_new, ONLY: nwan, pp, wannier_occ, wannier_energy, wan_in
-  USE klist, ONLY: nks, xk, wk, igk_k
+  USE klist, ONLY: nks, xk, wk, ngk, igk_k
   USE lsda_mod, ONLY: isk, current_spin, lsda, nspin
   USE wvfct, ONLY: nbnd, npwx, igk, npw, g2kin, et
   USE gvecw, ONLY : gcutw
@@ -130,7 +130,7 @@ SUBROUTINE new_hamiltonian(form, plot_bands)
   ! Generating igk for orthoatwfc()
 
   DO ik = 1, nks
-     CALL gk_sort( xk(1,ik), ngm, g, gcutw, npw, igk_k(1,ik), g2kin )
+     CALL gk_sort( xk(1,ik), ngm, g, gcutw, ngk(ik), igk_k(1,ik), g2kin )
   ENDDO
   !
   CALL orthoatwfc( .true. )
