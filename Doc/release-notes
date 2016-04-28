@@ -6,6 +6,8 @@ Fixed in 6.0 version:
     (commit 12357)
   * PDOS in the noncolinear case was broken by recent changes in indexing 
     (courtesy Mitsuaki Kawamura) (commit (12366)
+  * Incorrect format (old version) of the dynamical matrix if ibrav=0 in PHCG
+    (commit (12367)
 
 Incompatible changes in 6.0 version:
 
