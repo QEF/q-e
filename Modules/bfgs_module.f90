@@ -56,7 +56,7 @@ MODULE bfgs_module
    !
    ! ... public methods
    !
-   PUBLIC :: bfgs, terminate_bfgs
+   PUBLIC :: bfgs, terminate_bfgs, bfgs_get_n_iter 
    !
    ! ... public variables
    !
@@ -941,4 +941,18 @@ CONTAINS
       !
    END SUBROUTINE terminate_bfgs
    !
+   FUNCTION bfgs_get_n_iter (what)  RESULT(n_iter)
+   !  
+   IMPLICIT NONE
+   INTEGER                         :: n_iter
+   CHARACTER(10),INTENT(IN)        :: what
+   SELECT CASE (TRIM(what)) 
+      CASE ('bfgs_iter') 
+           n_iter = bfgs_iter
+      CASE ( 'scf_iter') 
+           n_iter = scf_iter
+      CASE default 
+           n_iter = -1
+   END SELECT
+   END FUNCTION bfgs_get_n_iter
 END MODULE bfgs_module

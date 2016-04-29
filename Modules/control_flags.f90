@@ -173,9 +173,12 @@ MODULE control_flags
     niter,            &! the maximum number of iteration
     nmix,             &! the number of iteration kept in the history
     imix               ! the type of mixing (0=plain,1=TF,2=local-TF)
-  REAL(DP), PUBLIC  :: &
+  INTEGER,  PUBLIC :: &
+    n_scf_steps        ! number of scf iterations to reach convergence
+  REAL(DP), PUBLIC :: &
     mixing_beta,      &! the mixing parameter
-    tr2                ! the convergence threshold for potential
+    tr2,              &! the convergence threshold for potential
+    scf_error=0.0      ! actual convergence reached
 
   LOGICAL, PUBLIC :: &
     conv_elec          ! if .TRUE. electron convergence has been reached

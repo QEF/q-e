@@ -67,7 +67,6 @@ plugin_variables.o \
 pseudo_types.o \
 pw_dot.o \
 qexml.o \
-qexml_xsd.o \
 qmmm.o \
 radial_grids.o \
 random_numbers.o \
@@ -105,6 +104,11 @@ xc_vdW_DF.o \
 xc_rVV10.o \
 xml_input.o \
 xml_io_base.o \
+qes_module.o  \
+qes_types.o \
+qes_libs.o  \
+qexsd.o   \
+qexsd_input.o \
 xsf.o \
 wypos.o \
 zdotc_wrapper.o  \
@@ -137,6 +141,7 @@ rgen.o \
 recips.o \
 remove_tot_torque.o \
 set_hubbard_l.o \
+set_hubbard_n.o \
 simpsn.o \
 sort.o \
 sph_bes.o \

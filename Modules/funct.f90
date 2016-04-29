@@ -45,7 +45,8 @@ module funct
   ! subroutines/functions managing dft name and indices
   PUBLIC  :: set_dft_from_indices, set_dft_from_name
   PUBLIC  :: enforce_input_dft, write_dft_name
-  PUBLIC  :: get_dft_name, get_dft_short, get_dft_long
+  PUBLIC  :: get_dft_name, get_dft_short, get_dft_long,&
+             get_nonlocc_name
   PUBLIC  :: get_iexch, get_icorr, get_igcx, get_igcc, get_meta, get_inlc
   PUBLIC  :: dft_is_gradient, dft_is_meta, dft_is_hybrid, dft_is_nonlocc, igcc_is_lyp
 
@@ -856,6 +857,12 @@ CONTAINS
      get_inlc = inlc
      return
   end function get_inlc
+  !-----------------------------------------------------------------------
+  function get_nonlocc_name ()
+     character(10) get_nonlocc_name
+     get_nonlocc_name = TRIM(nonlocc(inlc))
+     return
+  end function get_nonlocc_name
  !-----------------------------------------------------------------------
   function dft_is_nonlocc ()
     logical :: dft_is_nonlocc
@@ -953,7 +960,7 @@ CONTAINS
      call set_auxiliary_flags
      return
   end subroutine set_dft_from_indices
-  !---------------------------------------------------------------------
+  !------------------------------------------------------------------------------- 
   function get_dft_short ( )
   !---------------------------------------------------------------------
   !

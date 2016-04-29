@@ -162,6 +162,8 @@ print_clock_pw.o \
 print_ks_energies.o \
 punch.o \
 pw_restart.o \
+add_qexsd_step.o \
+pw_init_qexsd_input.o \
 pwcom.o \
 pw2blip.o \
 pw2casino.o \
