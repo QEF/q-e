@@ -1,8 +1,0 @@
-
-
-  &INPUT
-    prefix='silicon'
-    work_dir='./'
-    ib = 4
-    ik = 2
-  /

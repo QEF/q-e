@@ -118,10 +118,6 @@ WannierHam_example:
     This example shows how to generate a model Hamiltonian in a
     Wannier functions basis, using pw.x and wannier_ham.x.
 
-QExml_example:
-    The example shows how to use qexml.f90 to read files
-    written by pw.x and cp.x
-
 MolDos_example:
     This example calculates the projection of the density of states of
     a system, containing a molecule, on the molecular orbitals of the
