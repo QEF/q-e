@@ -5,7 +5,7 @@
 !
 !     Matteo Calandra
 !
-subroutine read_wfc_rspace_and_fwfft( evc , ik , lrec ,  iunit , n_plane_waves , igmap )
+subroutine read_wfc_rspace_and_fwfft( evc , ik , lrec ,  iunit , npw , igmap )
   use kinds,           ONLY : DP
   use wvfct,       ONLY : npwx, nbnd
   USE noncollin_module,     ONLY : noncolin, npol, nspin_mag
@@ -20,7 +20,7 @@ subroutine read_wfc_rspace_and_fwfft( evc , ik , lrec ,  iunit , n_plane_waves ,
   IMPLICIT NONE
   INTEGER, INTENT (IN)      :: ik                    ! k-point to read
   INTEGER, INTENT (IN)      :: lrec                  ! length of the record
-  INTEGER, INTENT (IN)      :: n_plane_waves         ! number of plane waves
+  INTEGER, INTENT (IN)      :: npw                   ! number of plane waves
   INTEGER, INTENT (IN)      :: iunit                 ! input iunit from where to read
   INTEGER, INTENT (IN)      :: igmap(npwx)           ! index for the mapping of the g
   COMPLEX(DP), INTENT (OUT) :: evc(npol*npwx,nbnd)   ! wavefunction in g space
@@ -63,13 +63,13 @@ subroutine read_wfc_rspace_and_fwfft( evc , ik , lrec ,  iunit , n_plane_waves ,
 #endif
      
      call fwfft('Wave',evc_r(:,1),dffts)
-     do ig = 1, n_plane_waves
+     do ig = 1, npw
         evc (ig,ibnd) = evc_r (nls (igmap (ig) ), 1 )
      enddo
      
      IF (noncolin) THEN
         CALL fwfft ('Wave', evc_r(:,2), dffts)
-        DO ig = 1, n_plane_waves
+        DO ig = 1, npw
            evc (ig+npwx,ibnd) = evc_r (nls(igmap(ig)),2)
         ENDDO
      ENDIF

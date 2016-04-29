@@ -943,6 +943,7 @@ MODULE exx
 
     IMPLICIT NONE
     !
+    INTEGER, EXTERNAL  :: n_plane_waves
     INTEGER  :: npwq, npwx_, ibnd, ikq, j, h_ibnd, ibnd_loop_start
     INTEGER,ALLOCATABLE     :: igkq(:)   !  order of wavefunctions at k+q[+G]
     INTEGER,ALLOCATABLE     :: ngkq(:)   !  number of plane waves at k+q[+G]
@@ -962,7 +963,7 @@ MODULE exx
     ! equivalent by symmetry)
     !
     ALLOCATE(ngkq(nkqs))
-    CALL n_plane_waves (gcutw, nkqs, xkq_collect, g, ngm, npwq, ngkq)
+    npwq = n_plane_waves (gcutw, nkqs, xkq_collect, g, ngm)
     npwq = MAX (npwx, npwq)
     !
     ! Dirty trick to prevent gk_sort from stopping with an error message:
