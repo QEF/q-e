@@ -64,7 +64,7 @@
   USE constants,         ONLY:   e2,bohr_radius_angs
   USE ions_base,         ONLY:   iob_tau=>tau
   USE cell_base,         ONLY:   cb_at => at, cb_alat => alat, cb_iforceh => iforceh
-  USE funct,             ONLY:   get_dft_is_hybrid => dft_is_hybrid, get_inlc, get_dft_index,       &
+  USE funct,             ONLY:   get_dft_is_hybrid => dft_is_hybrid, get_inlc,        &
                                  get_dft_is_nonlocc => dft_is_nonlocc, get_nonlocc_name, get_dft_short
   USE uspp_param,        ONLY:   upf
   USE qes_module
