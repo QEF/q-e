@@ -78,7 +78,7 @@
   CHARACTER(80)                            ::   tau_units,dft_name, diagonalization
   CHARACTER(256)                           ::   tagname
   REAL(DP),ALLOCATABLE                     ::   tau(:,:)
-  REAL(DP)                                 ::   alat,a1(3),a2(3),a3(3)
+  REAL(DP)                                 ::   alat, a1(3), a2(3), a3(3), gamma_xk(3,1), gamma_wk(1)
   INTEGER                                  ::   inlc,nt
   REAL(DP),POINTER                         ::   ns_null(:,:,:,:)=>NULL()
   COMPLEX(DP),POINTER                      ::   ns_nc_null(:,:,:,:)=>NULL()
@@ -225,8 +225,17 @@
   !--------------------------------------------------------------------------------------------------------------------------------
   !                                                   K POINTS IBZ ELEMENT
   !------------------------------------------------------------------------------------------------------------------------------ 
-  CALL qexsd_init_k_points_ibz( obj%k_points_ibz, ip_k_points, calculation, nk1, nk2, nk3, k1, k2, k3, nkstot, ip_xk, &
-                                ip_wk,alat,a1) 
+  IF (TRIM(ip_k_points) .EQ. 'gamma' ) THEN 
+      gamma_xk(:,1)=[0._DP, 0._DP, 0._DP]
+      gamma_wk(1)=1._DP
+      CALL qexsd_init_k_points_ibz( obj%k_points_ibz, ip_k_points, calculation, nk1, nk2, nk3, k1, k2, k3, 1,         &
+                                    gamma_xk, gamma_wk ,alat,a1) 
+
+  ELSE 
+     CALL qexsd_init_k_points_ibz(obj%k_points_ibz, ip_k_points, calculation, nk1, nk2, nk3, k1, k2, k3, nkstot,      &
+                                   ip_xk, ip_wk,alat,a1)
+
+  END IF
   !--------------------------------------------------------------------------------------------------------------------------------
   !                                                       ION CONTROL ELEMENT
   !--------------------------------------------------------------------------------------------------------------------------------
