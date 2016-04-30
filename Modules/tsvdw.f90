@@ -2096,7 +2096,7 @@ PRIVATE :: GetVdWParam
           DO i=1,3
             !
             FtsvdW_period(i,ia)=FtsvdW_period(i,ia)+(D1A*FDRi(i)+D2A*FRRi(i))
-            FtsvdW_period(i,ib)=FtsvdW_period(i,ib)-(D1A*FDRi(i)+D2A*FRRi(i))
+            FtsvdW_period(i,ib)=FtsvdW_period(i,ib)+(-D1A*FDRi(i)-D2A*FRRi(i))
             !
             DO j=1,3
               !
