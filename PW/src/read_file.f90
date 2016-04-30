@@ -16,7 +16,6 @@ SUBROUTINE read_file()
   USE buffers,              ONLY : open_buffer, close_buffer
   USE wvfct,                ONLY : nbnd, npwx
   USE noncollin_module,     ONLY : npol
-  USE klist,                ONLY : nks
   USE paw_variables,        ONLY : okpaw, ddd_PAW
   USE paw_onecenter,        ONLY : paw_potential
   USE uspp,                 ONLY : becsum
@@ -27,6 +26,9 @@ SUBROUTINE read_file()
   USE ldaU,                 ONLY : lda_plus_u, U_projection
   USE pw_restart,           ONLY : pw_readfile
   USE control_flags,        ONLY : io_level
+  USE klist,                ONLY : init_igk
+  USE gvect,                ONLY : ngm, g
+  USE gvecw,                ONLY : gcutw
   !
   IMPLICIT NONE 
   INTEGER :: ierr
@@ -47,6 +49,11 @@ SUBROUTINE read_file()
   nwordwfc = nbnd*npwx*npol
   io_level = 1
   CALL open_buffer ( iunwfc, 'wfc', nwordwfc, io_level, exst )
+  !
+  ! ... Allocate and compute k+G indices and number of plane waves
+  ! ... FIXME: should be read from file, not re-computed
+  !
+  CALL init_igk ( npwx, ngm, g, gcutw ) 
   !
   ! ... Read orbitals, write them in 'distributed' form to iunwfc
   !

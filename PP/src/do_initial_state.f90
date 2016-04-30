@@ -34,8 +34,8 @@ SUBROUTINE do_initial_state (excite)
   USE extfield,   ONLY : tefield, forcefield
   USE uspp,       ONLY : nkb, vkb
   USE uspp_param, ONLY : nh
-  USE klist,      ONLY : nks, xk
-  USE wvfct,      ONLY : npw, npwx, igk
+  USE klist,      ONLY : nks, xk, ngk, igk_k
+  USE wvfct,      ONLY : npwx
   USE ener,       ONLY : ef
   USE parameters, ONLY : ntypx
   USE control_flags, ONLY: gamma_only
@@ -139,7 +139,7 @@ SUBROUTINE do_initial_state (excite)
 
      IF ( nks == 1 ) THEN
         ik = 1
-        IF ( nkb > 0 ) CALL init_us_2( npw, igk, xk(1,ik), vkb )
+        IF ( nkb > 0 ) CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb )
      ENDIF
      shift_nl = - shift_nl
      shift_lc = - shift_lc
@@ -158,7 +158,7 @@ SUBROUTINE do_initial_state (excite)
      IF(nkb>0) ALLOCATE(vkb(npwx,nkb))
      IF ( nks == 1 ) THEN
         ik = 1
-        IF ( nkb > 0 ) CALL init_us_2( npw, igk, xk(1,ik), vkb )
+        IF ( nkb > 0 ) CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb )
      ENDIF
   ENDIF
 

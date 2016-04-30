@@ -134,10 +134,6 @@ PROGRAM bgw2pw
 
   CALL read_file ( )
 
-  ! this is needed to compute k+G indices and store them into igk_k
- 
-  CALL hinit0 ( )
-
   CALL openfil_pp ( )
 
   IF ( wfng_flag ) THEN

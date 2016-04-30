@@ -26,7 +26,7 @@ SUBROUTINE clean_pw( lflag )
   USE gvecs,                ONLY : nls, nlsm
   USE fixed_occ,            ONLY : f_inp
   USE ktetra,               ONLY : tetra
-  USE klist,                ONLY : ngk, igk_k
+  USE klist,                ONLY : deallocate_igk
   USE gvect,                ONLY : ig_l2g
   USE vlocal,               ONLY : strf, vloc
   USE wvfct,                ONLY : igk, g2kin, et, wg, btype
@@ -142,8 +142,6 @@ SUBROUTINE clean_pw( lflag )
   !
   ! ... arrays allocated in allocate_nlpot.f90 ( and never deallocated )
   !
-  IF ( ALLOCATED( ngk ) )        DEALLOCATE( ngk )
-  IF ( ALLOCATED( igk_k ) )      DEALLOCATE( igk_k )
   IF ( ALLOCATED( igk ) )        DEALLOCATE( igk )
   IF ( ALLOCATED( g2kin ) )      DEALLOCATE( g2kin )
   IF ( ALLOCATED( qrad ) )       DEALLOCATE( qrad )
@@ -153,6 +151,7 @@ SUBROUTINE clean_pw( lflag )
      IF ( ALLOCATED( fcoef ) )   DEALLOCATE( fcoef )
   END IF
   !
+  CALL deallocate_igk ( )
   CALL deallocate_uspp() 
   CALL deallocate_gth() 
   CALL deallocate_noncol() 

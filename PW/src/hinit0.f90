@@ -18,7 +18,7 @@ SUBROUTINE hinit0()
   USE basis,        ONLY : startingconfig
   USE cell_base,    ONLY : at, bg, omega, tpiba2
   USE cellmd,       ONLY : omega_old, at_old, lmovecell
-  USE klist,        ONLY : nks, xk, ngk, igk_k
+  USE klist,        ONLY : init_igk
   USE wvfct,        ONLY : npw, npwx, igk
   USE fft_base,     ONLY : dfftp
   USE gvect,        ONLY : ngm, ig_l2g, g, eigts1, eigts2, eigts3
@@ -44,20 +44,7 @@ SUBROUTINE hinit0()
   IF ( lda_plus_U .AND. ( U_projection == 'pseudo' ) ) CALL init_q_aeps()
   CALL init_at_1()
   !
-  ! ... The following loop must NOT be called more than once in a run
-  ! ... or else there will be problems with variable-cell calculations
-  ! ... Note that with just one k-point all one needs are npw and igk
-  !
-  ALLOCATE ( gk(npwx) )
-  igk_k(:,:) = 0
-  DO ik = 1, nks
-     !
-     CALL gk_sort( xk(1,ik), ngm, g, gcutw, npw, igk, gk )
-     ngk(ik) = npw
-     igk_k(1:npw,ik)= igk(1:npw)
-     !
-  END DO
-  DEALLOCATE ( gk )
+  CALL init_igk ( npwx, ngm, g, gcutw )
   !
   IF ( lmovecell .AND. startingconfig == 'file' ) THEN
      !

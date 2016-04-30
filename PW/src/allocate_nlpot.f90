@@ -15,7 +15,6 @@ SUBROUTINE allocate_nlpot
   !
   ! It computes the following global quantities:
   !
-  !     ngk           !  number of plane waves (for each k point)
   !     npwx          !  maximum number of plane waves
   !     nqx           !  number of points of the interpolation table
   !     nqxq          !  as above, for q-function interpolation table
@@ -24,7 +23,7 @@ SUBROUTINE allocate_nlpot
   USE ions_base,        ONLY : nat, nsp, ityp
   USE cellmd,           ONLY : cell_factor
   USE gvect,            ONLY : ngm, gcutm, g
-  USE klist,            ONLY : xk, wk, ngk, nks, qnorm, igk_k
+  USE klist,            ONLY : xk, wk, nks, qnorm
   USE lsda_mod,         ONLY : nspin
   USE ldaU,             ONLY : Hubbard_lmax
   USE scf,              ONLY : rho
@@ -48,13 +47,10 @@ SUBROUTINE allocate_nlpot
   !
   !   calculate number of PWs for all kpoints
   !
-  ALLOCATE (ngk( nks ))
-  !
   npwx = n_plane_waves (gcutw, nks, xk, g, ngm)
   !
   !   igk relates the index of PW k+G to index in the list of G vector
   !
-  ALLOCATE ( igk_k( npwx,nks ) )
   ALLOCATE (igk( npwx ), g2kin ( npwx ) )
   !
   ! Note: computation of the number of beta functions for

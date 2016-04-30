@@ -19,8 +19,7 @@ PROGRAM initial_state
   USE kinds,      ONLY : DP
   USE io_files,   ONLY : prefix, tmp_dir, iunwfc, nwordwfc
   USE ions_base,  ONLY : nat
-  USE klist,      ONLY : nks, xk
-  USE wvfct,      ONLY : npw, igk
+  USE klist,      ONLY : nks, xk, igk_k, ngk
   USE uspp,       ONLY : nkb, vkb
   USE wavefunctions_module, ONLY : evc
   USE parameters, ONLY : ntypx
@@ -78,15 +77,12 @@ PROGRAM initial_state
   !
   CALL read_file
   CALL openfil_pp
-  CALL hinit0
   IF ( nks == 1 ) THEN
      ik = 1
      CALL davcio( evc, 2*nwordwfc, iunwfc, ik, -1 )
-     IF ( nkb > 0 ) CALL init_us_2( npw, igk, xk(1,ik), vkb )
+     IF ( nkb > 0 ) CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb )
   ENDIF
 
-  !CALL sum_band
-  !
   CALL do_initial_state (excite)
   !
   CALL environment_end ( 'initstate' )

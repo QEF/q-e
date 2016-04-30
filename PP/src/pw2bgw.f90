@@ -286,9 +286,6 @@ PROGRAM pw2bgw
     'with real wavefunctions are not implemented, compute them in ' // &
     'Sigma using VXC.', 7)
 
-  ! this is needed to compute k+G indices and store them into igk_k
-  CALL hinit0 ( )
-
   CALL openfil_pp ( )
 
   if ( ionode ) WRITE ( 6, '("")' )
