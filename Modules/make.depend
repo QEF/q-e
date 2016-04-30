@@ -222,6 +222,8 @@ qexml.o : kind.o
 qexml.o : wrappers.o
 qexsd.o : ../iotk/src/iotk_base.o
 qexsd.o : ../iotk/src/iotk_module.o
+qexsd.o : cell_base.o
+qexsd.o : clocks.o
 qexsd.o : constants.o
 qexsd.o : input_parameters.o
 qexsd.o : ions_base.o
@@ -356,6 +358,7 @@ recvec_subs.o : recvec.o
 remove_tot_torque.o : kind.o
 rgen.o : kind.o
 set_hubbard_l.o : io_global.o
+set_hubbard_n.o : io_global.o
 set_signal.o : io_global.o
 set_signal.o : mp.o
 set_signal.o : mp_world.o
