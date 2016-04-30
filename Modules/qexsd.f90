@@ -258,7 +258,7 @@ CONTAINS
       CALL qexsd_set_closed()
       CALL iotk_write_begin(ounit, "cputime", attr="",new_line=.FALSE.)
       !
-      WRITE(ounit, '(I0$)')  nint(get_clock('PWSCF'))
+      WRITE(ounit, '(I0)', advance = 'no' )  nint(get_clock('PWSCF'))
       CALL iotk_write_end(ounit, "cputime",indentation=.FALSE.)
       CALL qes_write_closed(ounit, qexsd_closed_element)
       CALL iotk_close_write(ounit, IERR=ierr)

@@ -1,4 +1,4 @@
-
+ 
 MODULE qes_libs_module
 
    USE qes_types_module
@@ -27,7 +27,7 @@ SUBROUTINE qes_write_closed(iun, obj)
 
    CALL iotk_write_begin(iun, TRIM(obj%tagname), attr=TRIM(attr),new_line=.FALSE.)
       !
-      WRITE(iun, '(a$)')  TRIM(obj%closed)
+      WRITE(iun, '(A)',advance='no')  TRIM(obj%closed)
    CALL iotk_write_end(iun, TRIM(obj%tagname),indentation=.FALSE.)
    !
 END SUBROUTINE qes_write_closed
@@ -102,7 +102,7 @@ SUBROUTINE qes_reset_status(obj)
    INTEGER  :: i
 
    obj%tagname = ""
-   
+
 
 END SUBROUTINE qes_reset_status
 
@@ -853,23 +853,23 @@ SUBROUTINE qes_write_magnetization(iun, obj)
       !
       CALL iotk_write_begin(iun, 'lsda',new_line=.FALSE.)
          IF (obj%lsda) THEN
-            WRITE(iun, '(a$)')  'true'
+            WRITE(iun, '(A)',advance='no')  'true'
          ELSE
-            WRITE(iun, '(a$)')  'false'
+            WRITE(iun, '(A)',advance='no')  'false'
          ENDIF
       CALL iotk_write_end(iun, 'lsda',indentation=.FALSE.)
       CALL iotk_write_begin(iun, 'noncolin',new_line=.FALSE.)
          IF (obj%noncolin) THEN
-            WRITE(iun, '(a$)')  'true'
+            WRITE(iun, '(A)',advance='no')  'true'
          ELSE
-            WRITE(iun, '(a$)')  'false'
+            WRITE(iun, '(A)',advance='no')  'false'
          ENDIF
       CALL iotk_write_end(iun, 'noncolin',indentation=.FALSE.)
       CALL iotk_write_begin(iun, 'spinorbit',new_line=.FALSE.)
          IF (obj%spinorbit) THEN
-            WRITE(iun, '(a$)')  'true'
+            WRITE(iun, '(A)',advance='no')  'true'
          ELSE
-            WRITE(iun, '(a$)')  'false'
+            WRITE(iun, '(A)',advance='no')  'false'
          ENDIF
       CALL iotk_write_end(iun, 'spinorbit',indentation=.FALSE.)
       CALL iotk_write_begin(iun, 'total')
@@ -880,9 +880,9 @@ SUBROUTINE qes_write_magnetization(iun, obj)
       CALL iotk_write_end(iun, 'absolute')
       CALL iotk_write_begin(iun, 'do_magnetization',new_line=.FALSE.)
          IF (obj%do_magnetization) THEN
-            WRITE(iun, '(a$)')  'true'
+            WRITE(iun, '(A)',advance='no')  'true'
          ELSE
-            WRITE(iun, '(a$)')  'false'
+            WRITE(iun, '(A)',advance='no')  'false'
          ENDIF
       CALL iotk_write_end(iun, 'do_magnetization',indentation=.FALSE.)
    CALL iotk_write_end(iun, TRIM(obj%tagname))
@@ -994,7 +994,7 @@ SUBROUTINE qes_write_basisSetItem(iun, obj)
 
    CALL iotk_write_begin(iun, TRIM(obj%tagname), attr=TRIM(attr),new_line=.FALSE.)
       !
-      WRITE(iun, '(a$)')  TRIM(obj%basisSetItem)
+      WRITE(iun, '(A)',advance='no')  TRIM(obj%basisSetItem)
    CALL iotk_write_end(iun, TRIM(obj%tagname),indentation=.FALSE.)
    !
 END SUBROUTINE qes_write_basisSetItem
@@ -1116,7 +1116,7 @@ END IF
 
    CALL iotk_write_begin(iun, TRIM(obj%tagname), attr=TRIM(attr),new_line=.FALSE.)
       !
-      WRITE(iun, '(a$)')  TRIM(obj%info)
+      WRITE(iun, '(A)',advance='no')  TRIM(obj%info)
    CALL iotk_write_end(iun, TRIM(obj%tagname),indentation=.FALSE.)
    !
 END SUBROUTINE qes_write_info
@@ -1316,23 +1316,23 @@ SUBROUTINE qes_write_algorithmic_info(iun, obj)
       !
       CALL iotk_write_begin(iun, 'real_space_q',new_line=.FALSE.)
          IF (obj%real_space_q) THEN
-            WRITE(iun, '(a$)')  'true'
+            WRITE(iun, '(A)',advance='no')  'true'
          ELSE
-            WRITE(iun, '(a$)')  'false'
+            WRITE(iun, '(A)',advance='no')  'false'
          ENDIF
       CALL iotk_write_end(iun, 'real_space_q',indentation=.FALSE.)
       CALL iotk_write_begin(iun, 'uspp',new_line=.FALSE.)
          IF (obj%uspp) THEN
-            WRITE(iun, '(a$)')  'true'
+            WRITE(iun, '(A)',advance='no')  'true'
          ELSE
-            WRITE(iun, '(a$)')  'false'
+            WRITE(iun, '(A)',advance='no')  'false'
          ENDIF
       CALL iotk_write_end(iun, 'uspp',indentation=.FALSE.)
       CALL iotk_write_begin(iun, 'paw',new_line=.FALSE.)
          IF (obj%paw) THEN
-            WRITE(iun, '(a$)')  'true'
+            WRITE(iun, '(A)',advance='no')  'true'
          ELSE
-            WRITE(iun, '(a$)')  'false'
+            WRITE(iun, '(A)',advance='no')  'false'
          ENDIF
       CALL iotk_write_end(iun, 'paw',indentation=.FALSE.)
    CALL iotk_write_end(iun, TRIM(obj%tagname))
@@ -1486,7 +1486,7 @@ SUBROUTINE qes_write_species(iun, obj)
       ENDIF
       !
       CALL iotk_write_begin(iun, 'pseudo_file',new_line=.FALSE.)
-         WRITE(iun, '(a$)')  TRIM(obj%pseudo_file)
+         WRITE(iun, '(A)',advance='no')  TRIM(obj%pseudo_file)
       CALL iotk_write_end(iun, 'pseudo_file',indentation=.FALSE.)
       IF(obj%starting_magnetization_ispresent) THEN
          CALL iotk_write_begin(iun, 'starting_magnetization')
@@ -1887,7 +1887,7 @@ SUBROUTINE qes_write_spin_constraints(iun, obj)
    CALL iotk_write_begin(iun, TRIM(obj%tagname), attr=TRIM(attr))
       !
       CALL iotk_write_begin(iun, 'spin_constraints',new_line=.FALSE.)
-         WRITE(iun, '(a$)')  TRIM(obj%spin_constraints)
+         WRITE(iun, '(A)',advance='no')  TRIM(obj%spin_constraints)
       CALL iotk_write_end(iun, 'spin_constraints',indentation=.FALSE.)
       CALL iotk_write_begin(iun, 'lagrange_multiplier')
          WRITE(iun, '(E20.7)') obj%lagrange_multiplier
@@ -2033,7 +2033,7 @@ SUBROUTINE qes_write_atomic_constraint(iun, obj)
          WRITE(iun, '(4(E20.7))') obj%constr_parms
       CALL iotk_write_end(iun, 'constr_parms')
       CALL iotk_write_begin(iun, 'constr_type',new_line=.FALSE.)
-         WRITE(iun, '(a$)')  TRIM(obj%constr_type)
+         WRITE(iun, '(A)',advance='no')  TRIM(obj%constr_type)
       CALL iotk_write_end(iun, 'constr_type',indentation=.FALSE.)
       CALL iotk_write_begin(iun, 'constr_target')
          WRITE(iun, '(E20.7)') obj%constr_target
@@ -2189,14 +2189,14 @@ SUBROUTINE qes_write_electric_field(iun, obj)
    CALL iotk_write_begin(iun, TRIM(obj%tagname), attr=TRIM(attr))
       !
       CALL iotk_write_begin(iun, 'electric_potential',new_line=.FALSE.)
-         WRITE(iun, '(a$)')  TRIM(obj%electric_potential)
+         WRITE(iun, '(A)',advance='no')  TRIM(obj%electric_potential)
       CALL iotk_write_end(iun, 'electric_potential',indentation=.FALSE.)
       IF(obj%dipole_correction_ispresent) THEN
          CALL iotk_write_begin(iun, 'dipole_correction',new_line=.FALSE.)
             IF (obj%dipole_correction) THEN
-               WRITE(iun, '(a$)')  'true'
+               WRITE(iun, '(A)',advance='no')  'true'
             ELSE
-               WRITE(iun, '(a$)')  'false'
+               WRITE(iun, '(A)',advance='no')  'false'
             ENDIF
          CALL iotk_write_end(iun, 'dipole_correction',indentation=.FALSE.)
       ENDIF
@@ -2365,13 +2365,13 @@ SUBROUTINE qes_write_symmetries(iun, obj)
    CALL iotk_write_begin(iun, TRIM(obj%tagname), attr=TRIM(attr))
       !
       CALL iotk_write_begin(iun, 'nsym',new_line=.FALSE.)
-         WRITE(iun, '(I0$)') obj%nsym
+         WRITE(iun, '(I0)',advance='no') obj%nsym
       CALL iotk_write_end(iun, 'nsym',indentation=.FALSE.)
       CALL iotk_write_begin(iun, 'nrot',new_line=.FALSE.)
-         WRITE(iun, '(I0$)') obj%nrot
+         WRITE(iun, '(I0)',advance='no') obj%nrot
       CALL iotk_write_end(iun, 'nrot',indentation=.FALSE.)
       CALL iotk_write_begin(iun, 'space_group',new_line=.FALSE.)
-         WRITE(iun, '(I0$)') obj%space_group
+         WRITE(iun, '(I0)',advance='no') obj%space_group
       CALL iotk_write_end(iun, 'space_group',indentation=.FALSE.)
       DO i = 1, obj%ndim_symmetry
          CALL qes_write_symmetry(iun, obj%symmetry(i))
@@ -2489,7 +2489,7 @@ SUBROUTINE qes_write_esm(iun, obj)
    CALL iotk_write_begin(iun, TRIM(obj%tagname), attr=TRIM(attr))
       !
       CALL iotk_write_begin(iun, 'bc',new_line=.FALSE.)
-         WRITE(iun, '(a$)')  TRIM(obj%bc)
+         WRITE(iun, '(A)',advance='no')  TRIM(obj%bc)
       CALL iotk_write_end(iun, 'bc',indentation=.FALSE.)
       CALL iotk_write_begin(iun, 'nfit')
          WRITE(iun, '(I12)') obj%nfit
@@ -2548,7 +2548,7 @@ SUBROUTINE qes_write_boundary_conditions(iun, obj)
    CALL iotk_write_begin(iun, TRIM(obj%tagname), attr=TRIM(attr))
       !
       CALL iotk_write_begin(iun, 'assume_isolated',new_line=.FALSE.)
-         WRITE(iun, '(a$)')  TRIM(obj%assume_isolated)
+         WRITE(iun, '(A)',advance='no')  TRIM(obj%assume_isolated)
       CALL iotk_write_end(iun, 'assume_isolated',indentation=.FALSE.)
       CALL qes_write_esm(iun, obj%esm)
       !
@@ -2598,44 +2598,44 @@ SUBROUTINE qes_write_symmetry_flags(iun, obj)
       !
       CALL iotk_write_begin(iun, 'nosym',new_line=.FALSE.)
          IF (obj%nosym) THEN
-            WRITE(iun, '(a$)')  'true'
+            WRITE(iun, '(A)',advance='no')  'true'
          ELSE
-            WRITE(iun, '(a$)')  'false'
+            WRITE(iun, '(A)',advance='no')  'false'
          ENDIF
       CALL iotk_write_end(iun, 'nosym',indentation=.FALSE.)
       CALL iotk_write_begin(iun, 'nosym_evc',new_line=.FALSE.)
          IF (obj%nosym_evc) THEN
-            WRITE(iun, '(a$)')  'true'
+            WRITE(iun, '(A)',advance='no')  'true'
          ELSE
-            WRITE(iun, '(a$)')  'false'
+            WRITE(iun, '(A)',advance='no')  'false'
          ENDIF
       CALL iotk_write_end(iun, 'nosym_evc',indentation=.FALSE.)
       CALL iotk_write_begin(iun, 'noinv',new_line=.FALSE.)
          IF (obj%noinv) THEN
-            WRITE(iun, '(a$)')  'true'
+            WRITE(iun, '(A)',advance='no')  'true'
          ELSE
-            WRITE(iun, '(a$)')  'false'
+            WRITE(iun, '(A)',advance='no')  'false'
          ENDIF
       CALL iotk_write_end(iun, 'noinv',indentation=.FALSE.)
       CALL iotk_write_begin(iun, 'no_t_rev',new_line=.FALSE.)
          IF (obj%no_t_rev) THEN
-            WRITE(iun, '(a$)')  'true'
+            WRITE(iun, '(A)',advance='no')  'true'
          ELSE
-            WRITE(iun, '(a$)')  'false'
+            WRITE(iun, '(A)',advance='no')  'false'
          ENDIF
       CALL iotk_write_end(iun, 'no_t_rev',indentation=.FALSE.)
       CALL iotk_write_begin(iun, 'force_symmorphic',new_line=.FALSE.)
          IF (obj%force_symmorphic) THEN
-            WRITE(iun, '(a$)')  'true'
+            WRITE(iun, '(A)',advance='no')  'true'
          ELSE
-            WRITE(iun, '(a$)')  'false'
+            WRITE(iun, '(A)',advance='no')  'false'
          ENDIF
       CALL iotk_write_end(iun, 'force_symmorphic',indentation=.FALSE.)
       CALL iotk_write_begin(iun, 'use_all_frac',new_line=.FALSE.)
          IF (obj%use_all_frac) THEN
-            WRITE(iun, '(a$)')  'true'
+            WRITE(iun, '(A)',advance='no')  'true'
          ELSE
-            WRITE(iun, '(a$)')  'false'
+            WRITE(iun, '(A)',advance='no')  'false'
          ENDIF
       CALL iotk_write_end(iun, 'use_all_frac',indentation=.FALSE.)
    CALL iotk_write_end(iun, TRIM(obj%tagname))
@@ -2741,7 +2741,7 @@ SUBROUTINE qes_write_cell_control(iun, obj)
    CALL iotk_write_begin(iun, TRIM(obj%tagname), attr=TRIM(attr))
       !
       CALL iotk_write_begin(iun, 'cell_dynamics',new_line=.FALSE.)
-         WRITE(iun, '(a$)')  TRIM(obj%cell_dynamics)
+         WRITE(iun, '(A)',advance='no')  TRIM(obj%cell_dynamics)
       CALL iotk_write_end(iun, 'cell_dynamics',indentation=.FALSE.)
       IF(obj%wmass_ispresent) THEN
          CALL iotk_write_begin(iun, 'wmass')
@@ -2758,9 +2758,9 @@ SUBROUTINE qes_write_cell_control(iun, obj)
       IF(obj%fix_volume_ispresent) THEN
          CALL iotk_write_begin(iun, 'fix_volume',new_line=.FALSE.)
             IF (obj%fix_volume) THEN
-               WRITE(iun, '(a$)')  'true'
+               WRITE(iun, '(A)',advance='no')  'true'
             ELSE
-               WRITE(iun, '(a$)')  'false'
+               WRITE(iun, '(A)',advance='no')  'false'
             ENDIF
          CALL iotk_write_end(iun, 'fix_volume',indentation=.FALSE.)
       ENDIF
@@ -2768,9 +2768,9 @@ SUBROUTINE qes_write_cell_control(iun, obj)
       IF(obj%fix_area_ispresent) THEN
          CALL iotk_write_begin(iun, 'fix_area',new_line=.FALSE.)
             IF (obj%fix_area) THEN
-               WRITE(iun, '(a$)')  'true'
+               WRITE(iun, '(A)',advance='no')  'true'
             ELSE
-               WRITE(iun, '(a$)')  'false'
+               WRITE(iun, '(A)',advance='no')  'false'
             ENDIF
          CALL iotk_write_end(iun, 'fix_area',indentation=.FALSE.)
       ENDIF
@@ -2778,9 +2778,9 @@ SUBROUTINE qes_write_cell_control(iun, obj)
       IF(obj%isotropic_ispresent) THEN
          CALL iotk_write_begin(iun, 'isotropic',new_line=.FALSE.)
             IF (obj%isotropic) THEN
-               WRITE(iun, '(a$)')  'true'
+               WRITE(iun, '(A)',advance='no')  'true'
             ELSE
-               WRITE(iun, '(a$)')  'false'
+               WRITE(iun, '(A)',advance='no')  'false'
             ENDIF
          CALL iotk_write_end(iun, 'isotropic',indentation=.FALSE.)
       ENDIF
@@ -2891,13 +2891,13 @@ SUBROUTINE qes_write_md(iun, obj)
    CALL iotk_write_begin(iun, TRIM(obj%tagname), attr=TRIM(attr))
       !
       CALL iotk_write_begin(iun, 'pot_extrapolation',new_line=.FALSE.)
-         WRITE(iun, '(a$)')  TRIM(obj%pot_extrapolation)
+         WRITE(iun, '(A)',advance='no')  TRIM(obj%pot_extrapolation)
       CALL iotk_write_end(iun, 'pot_extrapolation',indentation=.FALSE.)
       CALL iotk_write_begin(iun, 'wfc_extrapolation',new_line=.FALSE.)
-         WRITE(iun, '(a$)')  TRIM(obj%wfc_extrapolation)
+         WRITE(iun, '(A)',advance='no')  TRIM(obj%wfc_extrapolation)
       CALL iotk_write_end(iun, 'wfc_extrapolation',indentation=.FALSE.)
       CALL iotk_write_begin(iun, 'ion_temperature',new_line=.FALSE.)
-         WRITE(iun, '(a$)')  TRIM(obj%ion_temperature)
+         WRITE(iun, '(A)',advance='no')  TRIM(obj%ion_temperature)
       CALL iotk_write_end(iun, 'ion_temperature',indentation=.FALSE.)
       CALL iotk_write_begin(iun, 'timestep')
          WRITE(iun, '(E20.7)') obj%timestep
@@ -3041,7 +3041,7 @@ SUBROUTINE qes_write_ion_control(iun, obj)
    CALL iotk_write_begin(iun, TRIM(obj%tagname), attr=TRIM(attr))
       !
       CALL iotk_write_begin(iun, 'ion_dynamics',new_line=.FALSE.)
-         WRITE(iun, '(a$)')  TRIM(obj%ion_dynamics)
+         WRITE(iun, '(A)',advance='no')  TRIM(obj%ion_dynamics)
       CALL iotk_write_end(iun, 'ion_dynamics',indentation=.FALSE.)
       IF(obj%upscale_ispresent) THEN
          CALL iotk_write_begin(iun, 'upscale')
@@ -3052,9 +3052,9 @@ SUBROUTINE qes_write_ion_control(iun, obj)
       IF(obj%remove_rigid_rot_ispresent) THEN
          CALL iotk_write_begin(iun, 'remove_rigid_rot',new_line=.FALSE.)
             IF (obj%remove_rigid_rot) THEN
-               WRITE(iun, '(a$)')  'true'
+               WRITE(iun, '(A)',advance='no')  'true'
             ELSE
-               WRITE(iun, '(a$)')  'false'
+               WRITE(iun, '(A)',advance='no')  'false'
             ENDIF
          CALL iotk_write_end(iun, 'remove_rigid_rot',indentation=.FALSE.)
       ENDIF
@@ -3062,9 +3062,9 @@ SUBROUTINE qes_write_ion_control(iun, obj)
       IF(obj%refold_pos_ispresent) THEN
          CALL iotk_write_begin(iun, 'refold_pos',new_line=.FALSE.)
             IF (obj%refold_pos) THEN
-               WRITE(iun, '(a$)')  'true'
+               WRITE(iun, '(A)',advance='no')  'true'
             ELSE
-               WRITE(iun, '(a$)')  'false'
+               WRITE(iun, '(A)',advance='no')  'false'
             ENDIF
          CALL iotk_write_end(iun, 'refold_pos',indentation=.FALSE.)
       ENDIF
@@ -3172,23 +3172,23 @@ SUBROUTINE qes_write_band_structure(iun, obj)
       !
       CALL iotk_write_begin(iun, 'lsda',new_line=.FALSE.)
          IF (obj%lsda) THEN
-            WRITE(iun, '(a$)')  'true'
+            WRITE(iun, '(A)',advance='no')  'true'
          ELSE
-            WRITE(iun, '(a$)')  'false'
+            WRITE(iun, '(A)',advance='no')  'false'
          ENDIF
       CALL iotk_write_end(iun, 'lsda',indentation=.FALSE.)
       CALL iotk_write_begin(iun, 'noncolin',new_line=.FALSE.)
          IF (obj%noncolin) THEN
-            WRITE(iun, '(a$)')  'true'
+            WRITE(iun, '(A)',advance='no')  'true'
          ELSE
-            WRITE(iun, '(a$)')  'false'
+            WRITE(iun, '(A)',advance='no')  'false'
          ENDIF
       CALL iotk_write_end(iun, 'noncolin',indentation=.FALSE.)
       CALL iotk_write_begin(iun, 'spinorbit',new_line=.FALSE.)
          IF (obj%spinorbit) THEN
-            WRITE(iun, '(a$)')  'true'
+            WRITE(iun, '(A)',advance='no')  'true'
          ELSE
-            WRITE(iun, '(a$)')  'false'
+            WRITE(iun, '(A)',advance='no')  'false'
          ENDIF
       CALL iotk_write_end(iun, 'spinorbit',indentation=.FALSE.)
       CALL iotk_write_begin(iun, 'nbnd')
@@ -3320,7 +3320,7 @@ SUBROUTINE qes_write_monkhorst_pack(iun, obj)
 
    CALL iotk_write_begin(iun, TRIM(obj%tagname), attr=TRIM(attr),new_line=.FALSE.)
       !
-      WRITE(iun, '(a$)')  TRIM(obj%monkhorst_pack)
+      WRITE(iun, '(A)',advance='no')  TRIM(obj%monkhorst_pack)
    CALL iotk_write_end(iun, TRIM(obj%tagname),indentation=.FALSE.)
    !
 END SUBROUTINE qes_write_monkhorst_pack
@@ -3560,10 +3560,10 @@ SUBROUTINE qes_write_electron_control(iun, obj)
    CALL iotk_write_begin(iun, TRIM(obj%tagname), attr=TRIM(attr))
       !
       CALL iotk_write_begin(iun, 'diagonalization',new_line=.FALSE.)
-         WRITE(iun, '(a$)')  TRIM(obj%diagonalization)
+         WRITE(iun, '(A)',advance='no')  TRIM(obj%diagonalization)
       CALL iotk_write_end(iun, 'diagonalization',indentation=.FALSE.)
       CALL iotk_write_begin(iun, 'mixing_mode',new_line=.FALSE.)
-         WRITE(iun, '(a$)')  TRIM(obj%mixing_mode)
+         WRITE(iun, '(A)',advance='no')  TRIM(obj%mixing_mode)
       CALL iotk_write_end(iun, 'mixing_mode',indentation=.FALSE.)
       CALL iotk_write_begin(iun, 'mixing_beta')
          WRITE(iun, '(E20.7)') obj%mixing_beta
@@ -3579,9 +3579,9 @@ SUBROUTINE qes_write_electron_control(iun, obj)
       CALL iotk_write_end(iun, 'max_nstep')
       CALL iotk_write_begin(iun, 'real_space_q',new_line=.FALSE.)
          IF (obj%real_space_q) THEN
-            WRITE(iun, '(a$)')  'true'
+            WRITE(iun, '(A)',advance='no')  'true'
          ELSE
-            WRITE(iun, '(a$)')  'false'
+            WRITE(iun, '(A)',advance='no')  'false'
          ENDIF
       CALL iotk_write_end(iun, 'real_space_q',indentation=.FALSE.)
       CALL iotk_write_begin(iun, 'diago_thr_init')
@@ -3589,9 +3589,9 @@ SUBROUTINE qes_write_electron_control(iun, obj)
       CALL iotk_write_end(iun, 'diago_thr_init')
       CALL iotk_write_begin(iun, 'diago_full_acc',new_line=.FALSE.)
          IF (obj%diago_full_acc) THEN
-            WRITE(iun, '(a$)')  'true'
+            WRITE(iun, '(A)',advance='no')  'true'
          ELSE
-            WRITE(iun, '(a$)')  'false'
+            WRITE(iun, '(A)',advance='no')  'false'
          ENDIF
       CALL iotk_write_end(iun, 'diago_full_acc',indentation=.FALSE.)
       CALL iotk_write_begin(iun, 'diago_cg_maxiter')
@@ -3661,9 +3661,9 @@ SUBROUTINE qes_write_basis_set(iun, obj)
       IF(obj%gamma_only_ispresent) THEN
          CALL iotk_write_begin(iun, 'gamma_only',new_line=.FALSE.)
             IF (obj%gamma_only) THEN
-               WRITE(iun, '(a$)')  'true'
+               WRITE(iun, '(A)',advance='no')  'true'
             ELSE
-               WRITE(iun, '(a$)')  'false'
+               WRITE(iun, '(A)',advance='no')  'false'
             ENDIF
          CALL iotk_write_end(iun, 'gamma_only',indentation=.FALSE.)
       ENDIF
@@ -3807,9 +3807,9 @@ SUBROUTINE qes_write_basis(iun, obj)
       IF(obj%gamma_only_ispresent) THEN
          CALL iotk_write_begin(iun, 'gamma_only',new_line=.FALSE.)
             IF (obj%gamma_only) THEN
-               WRITE(iun, '(a$)')  'true'
+               WRITE(iun, '(A)',advance='no')  'true'
             ELSE
-               WRITE(iun, '(a$)')  'false'
+               WRITE(iun, '(A)',advance='no')  'false'
             ENDIF
          CALL iotk_write_end(iun, 'gamma_only',indentation=.FALSE.)
       ENDIF
@@ -3989,7 +3989,7 @@ SUBROUTINE qes_write_occupations(iun, obj)
 
    CALL iotk_write_begin(iun, TRIM(obj%tagname), attr=TRIM(attr),new_line=.FALSE.)
       !
-      WRITE(iun, '(a$)')  TRIM(obj%occupations)
+      WRITE(iun, '(A)',advance='no')  TRIM(obj%occupations)
    CALL iotk_write_end(iun, TRIM(obj%tagname),indentation=.FALSE.)
    !
 END SUBROUTINE qes_write_occupations
@@ -4036,7 +4036,7 @@ SUBROUTINE qes_write_smearing(iun, obj)
 
    CALL iotk_write_begin(iun, TRIM(obj%tagname), attr=TRIM(attr),new_line=.FALSE.)
       !
-      WRITE(iun, '(a$)')  TRIM(obj%smearing)
+      WRITE(iun, '(A)',advance='no')  TRIM(obj%smearing)
    CALL iotk_write_end(iun, TRIM(obj%tagname),indentation=.FALSE.)
    !
 END SUBROUTINE qes_write_smearing
@@ -4201,23 +4201,23 @@ SUBROUTINE qes_write_spin(iun, obj)
       !
       CALL iotk_write_begin(iun, 'lsda',new_line=.FALSE.)
          IF (obj%lsda) THEN
-            WRITE(iun, '(a$)')  'true'
+            WRITE(iun, '(A)',advance='no')  'true'
          ELSE
-            WRITE(iun, '(a$)')  'false'
+            WRITE(iun, '(A)',advance='no')  'false'
          ENDIF
       CALL iotk_write_end(iun, 'lsda',indentation=.FALSE.)
       CALL iotk_write_begin(iun, 'noncolin',new_line=.FALSE.)
          IF (obj%noncolin) THEN
-            WRITE(iun, '(a$)')  'true'
+            WRITE(iun, '(A)',advance='no')  'true'
          ELSE
-            WRITE(iun, '(a$)')  'false'
+            WRITE(iun, '(A)',advance='no')  'false'
          ENDIF
       CALL iotk_write_end(iun, 'noncolin',indentation=.FALSE.)
       CALL iotk_write_begin(iun, 'spinorbit',new_line=.FALSE.)
          IF (obj%spinorbit) THEN
-            WRITE(iun, '(a$)')  'true'
+            WRITE(iun, '(A)',advance='no')  'true'
          ELSE
-            WRITE(iun, '(a$)')  'false'
+            WRITE(iun, '(A)',advance='no')  'false'
          ENDIF
       CALL iotk_write_end(iun, 'spinorbit',indentation=.FALSE.)
    CALL iotk_write_end(iun, TRIM(obj%tagname))
@@ -4266,7 +4266,7 @@ SUBROUTINE qes_write_vdW(iun, obj)
    CALL iotk_write_begin(iun, TRIM(obj%tagname), attr=TRIM(attr))
       !
       CALL iotk_write_begin(iun, 'vdw_corr',new_line=.FALSE.)
-         WRITE(iun, '(a$)')  TRIM(obj%vdw_corr)
+         WRITE(iun, '(A)',advance='no')  TRIM(obj%vdw_corr)
       CALL iotk_write_end(iun, 'vdw_corr',indentation=.FALSE.)
       CALL iotk_write_begin(iun, 'london_s6')
          WRITE(iun, '(E20.7)') obj%london_s6
@@ -4604,7 +4604,7 @@ SUBROUTINE qes_write_dftU(iun, obj)
       !
       IF(obj%lda_plus_u_kind_ispresent) THEN
          CALL iotk_write_begin(iun, 'lda_plus_u_kind',new_line=.FALSE.)
-            WRITE(iun, '(I0$)') obj%lda_plus_u_kind
+            WRITE(iun, '(I0)',advance='no') obj%lda_plus_u_kind
          CALL iotk_write_end(iun, 'lda_plus_u_kind',indentation=.FALSE.)
       ENDIF
       !
@@ -4659,7 +4659,7 @@ SUBROUTINE qes_write_dftU(iun, obj)
       !
       IF(obj%U_projection_type_ispresent) THEN
          CALL iotk_write_begin(iun, 'U_projection_type',new_line=.FALSE.)
-            WRITE(iun, '(a$)')  TRIM(obj%U_projection_type)
+            WRITE(iun, '(A)',advance='no')  TRIM(obj%U_projection_type)
          CALL iotk_write_end(iun, 'U_projection_type',indentation=.FALSE.)
       ENDIF
       !
@@ -4857,7 +4857,7 @@ SUBROUTINE qes_write_qpoint_grid(iun, obj)
 
    CALL iotk_write_begin(iun, TRIM(obj%tagname), attr=TRIM(attr),new_line=.FALSE.)
       !
-      WRITE(iun, '(a$)')  TRIM(obj%qpoint_grid)
+      WRITE(iun, '(A)',advance='no')  TRIM(obj%qpoint_grid)
    CALL iotk_write_end(iun, TRIM(obj%tagname),indentation=.FALSE.)
    !
 END SUBROUTINE qes_write_qpoint_grid
@@ -4923,13 +4923,13 @@ SUBROUTINE qes_write_hybrid(iun, obj)
          WRITE(iun, '(E20.7)') obj%screening_parameter
       CALL iotk_write_end(iun, 'screening_parameter')
       CALL iotk_write_begin(iun, 'exxdiv_treatment',new_line=.FALSE.)
-         WRITE(iun, '(a$)')  TRIM(obj%exxdiv_treatment)
+         WRITE(iun, '(A)',advance='no')  TRIM(obj%exxdiv_treatment)
       CALL iotk_write_end(iun, 'exxdiv_treatment',indentation=.FALSE.)
       CALL iotk_write_begin(iun, 'x_gamma_extrapolation',new_line=.FALSE.)
          IF (obj%x_gamma_extrapolation) THEN
-            WRITE(iun, '(a$)')  'true'
+            WRITE(iun, '(A)',advance='no')  'true'
          ELSE
-            WRITE(iun, '(a$)')  'false'
+            WRITE(iun, '(A)',advance='no')  'false'
          ENDIF
       CALL iotk_write_end(iun, 'x_gamma_extrapolation',indentation=.FALSE.)
       CALL iotk_write_begin(iun, 'ecutvcut')
@@ -5031,7 +5031,7 @@ SUBROUTINE qes_write_dft(iun, obj)
    CALL iotk_write_begin(iun, TRIM(obj%tagname), attr=TRIM(attr))
       !
       CALL iotk_write_begin(iun, 'functional',new_line=.FALSE.)
-         WRITE(iun, '(a$)')  TRIM(obj%functional)
+         WRITE(iun, '(A)',advance='no')  TRIM(obj%functional)
       CALL iotk_write_end(iun, 'functional',indentation=.FALSE.)
       IF(obj%hybrid_ispresent) THEN
          CALL qes_write_hybrid(iun, obj%hybrid)
@@ -5827,46 +5827,46 @@ SUBROUTINE qes_write_control_variables(iun, obj)
    CALL iotk_write_begin(iun, TRIM(obj%tagname), attr=TRIM(attr))
       !
       CALL iotk_write_begin(iun, 'title',new_line=.FALSE.)
-         WRITE(iun, '(a$)')  TRIM(obj%title)
+         WRITE(iun, '(A)',advance='no')  TRIM(obj%title)
       CALL iotk_write_end(iun, 'title',indentation=.FALSE.)
       CALL iotk_write_begin(iun, 'calculation',new_line=.FALSE.)
-         WRITE(iun, '(a$)')  TRIM(obj%calculation)
+         WRITE(iun, '(A)',advance='no')  TRIM(obj%calculation)
       CALL iotk_write_end(iun, 'calculation',indentation=.FALSE.)
       CALL iotk_write_begin(iun, 'restart_mode',new_line=.FALSE.)
-         WRITE(iun, '(a$)')  TRIM(obj%restart_mode)
+         WRITE(iun, '(A)',advance='no')  TRIM(obj%restart_mode)
       CALL iotk_write_end(iun, 'restart_mode',indentation=.FALSE.)
       CALL iotk_write_begin(iun, 'prefix',new_line=.FALSE.)
-         WRITE(iun, '(a$)')  TRIM(obj%prefix)
+         WRITE(iun, '(A)',advance='no')  TRIM(obj%prefix)
       CALL iotk_write_end(iun, 'prefix',indentation=.FALSE.)
       CALL iotk_write_begin(iun, 'pseudo_dir',new_line=.FALSE.)
-         WRITE(iun, '(a$)')  TRIM(obj%pseudo_dir)
+         WRITE(iun, '(A)',advance='no')  TRIM(obj%pseudo_dir)
       CALL iotk_write_end(iun, 'pseudo_dir',indentation=.FALSE.)
       CALL iotk_write_begin(iun, 'outdir',new_line=.FALSE.)
-         WRITE(iun, '(a$)')  TRIM(obj%outdir)
+         WRITE(iun, '(A)',advance='no')  TRIM(obj%outdir)
       CALL iotk_write_end(iun, 'outdir',indentation=.FALSE.)
       CALL iotk_write_begin(iun, 'stress',new_line=.FALSE.)
          IF (obj%stress) THEN
-            WRITE(iun, '(a$)')  'true'
+            WRITE(iun, '(A)',advance='no')  'true'
          ELSE
-            WRITE(iun, '(a$)')  'false'
+            WRITE(iun, '(A)',advance='no')  'false'
          ENDIF
       CALL iotk_write_end(iun, 'stress',indentation=.FALSE.)
       CALL iotk_write_begin(iun, 'forces',new_line=.FALSE.)
          IF (obj%forces) THEN
-            WRITE(iun, '(a$)')  'true'
+            WRITE(iun, '(A)',advance='no')  'true'
          ELSE
-            WRITE(iun, '(a$)')  'false'
+            WRITE(iun, '(A)',advance='no')  'false'
          ENDIF
       CALL iotk_write_end(iun, 'forces',indentation=.FALSE.)
       CALL iotk_write_begin(iun, 'wf_collect',new_line=.FALSE.)
          IF (obj%wf_collect) THEN
-            WRITE(iun, '(a$)')  'true'
+            WRITE(iun, '(A)',advance='no')  'true'
          ELSE
-            WRITE(iun, '(a$)')  'false'
+            WRITE(iun, '(A)',advance='no')  'false'
          ENDIF
       CALL iotk_write_end(iun, 'wf_collect',indentation=.FALSE.)
       CALL iotk_write_begin(iun, 'disk_io',new_line=.FALSE.)
-         WRITE(iun, '(a$)')  TRIM(obj%disk_io)
+         WRITE(iun, '(A)',advance='no')  TRIM(obj%disk_io)
       CALL iotk_write_end(iun, 'disk_io',indentation=.FALSE.)
       CALL iotk_write_begin(iun, 'max_seconds')
          WRITE(iun, '(I12)') obj%max_seconds
@@ -5881,7 +5881,7 @@ SUBROUTINE qes_write_control_variables(iun, obj)
          WRITE(iun, '(E20.7)') obj%press_conv_thr
       CALL iotk_write_end(iun, 'press_conv_thr')
       CALL iotk_write_begin(iun, 'verbosity',new_line=.FALSE.)
-         WRITE(iun, '(a$)')  TRIM(obj%verbosity)
+         WRITE(iun, '(A)',advance='no')  TRIM(obj%verbosity)
       CALL iotk_write_end(iun, 'verbosity',indentation=.FALSE.)
       CALL iotk_write_begin(iun, 'print_every')
          WRITE(iun, '(I12)') obj%print_every
@@ -6273,7 +6273,7 @@ SUBROUTINE qes_write_created(iun, obj)
 
    CALL iotk_write_begin(iun, TRIM(obj%tagname), attr=TRIM(attr),new_line=.FALSE.)
       !
-      WRITE(iun, '(a$)')  TRIM(obj%created)
+      WRITE(iun, '(A)',advance='no')  TRIM(obj%created)
    CALL iotk_write_end(iun, TRIM(obj%tagname),indentation=.FALSE.)
    !
 END SUBROUTINE qes_write_created
@@ -6325,7 +6325,7 @@ SUBROUTINE qes_write_creator(iun, obj)
 
    CALL iotk_write_begin(iun, TRIM(obj%tagname), attr=TRIM(attr),new_line=.FALSE.)
       !
-      WRITE(iun, '(a$)')  TRIM(obj%creator)
+      WRITE(iun, '(A)',advance='no')  TRIM(obj%creator)
    CALL iotk_write_end(iun, TRIM(obj%tagname),indentation=.FALSE.)
    !
 END SUBROUTINE qes_write_creator
@@ -6377,7 +6377,7 @@ SUBROUTINE qes_write_xml_format(iun, obj)
 
    CALL iotk_write_begin(iun, TRIM(obj%tagname), attr=TRIM(attr),new_line=.FALSE.)
       !
-      WRITE(iun, '(a$)')  TRIM(obj%xml_format)
+      WRITE(iun, '(A)',advance='no')  TRIM(obj%xml_format)
    CALL iotk_write_end(iun, TRIM(obj%tagname),indentation=.FALSE.)
    !
 END SUBROUTINE qes_write_xml_format
@@ -6434,7 +6434,7 @@ SUBROUTINE qes_write_general_info(iun, obj)
       CALL qes_write_created(iun, obj%created)
       !
       CALL iotk_write_begin(iun, 'job',new_line=.FALSE.)
-         WRITE(iun, '(a$)')  TRIM(obj%job)
+         WRITE(iun, '(A)',advance='no')  TRIM(obj%job)
       CALL iotk_write_end(iun, 'job',indentation=.FALSE.)
    CALL iotk_write_end(iun, TRIM(obj%tagname))
    !
