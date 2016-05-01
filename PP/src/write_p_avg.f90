@@ -17,9 +17,9 @@ SUBROUTINE write_p_avg(filp, spin_component, firstk, lastk)
   USE gvect,                ONLY : ngm, nl, g
   USE lsda_mod,             ONLY : nspin
   USE ener,                 ONLY : ef
-  USE wvfct,                ONLY : et, nbnd, npwx, npw, igk, g2kin
+  USE wvfct,                ONLY : et, nbnd, npwx
   USE gvecw,                ONLY : gcutw
-  USE klist,                ONLY : xk, nks, nkstot
+  USE klist,                ONLY : xk, nks, nkstot, ngk, igk_k
   USE io_files,             ONLY : nwordwfc, iunwfc
   USE uspp,                 ONLY : nkb, vkb, okvan
   USE becmod,               ONLY : bec_type, becp, calbec, &
@@ -34,7 +34,7 @@ SUBROUTINE write_p_avg(filp, spin_component, firstk, lastk)
   !
   IMPLICIT NONE
   !
-  INTEGER :: spin_component, nks1, nks2, firstk, lastk
+  INTEGER :: spin_component, nks1, nks2, firstk, lastk, npw
   INTEGER :: iunout, ios, ik, ibnd, jbnd, ipol, nbnd_occ
   COMPLEX(DP) :: zdotc
   COMPLEX(DP), ALLOCATABLE :: ppsi(:,:), ppsi_us(:,:), matp(:,:,:)
@@ -88,21 +88,14 @@ SUBROUTINE write_p_avg(filp, spin_component, firstk, lastk)
      ALLOCATE(ppsi(npwx*npol,nbnd_occ))
      IF (okvan) ALLOCATE(ppsi_us(npwx*npol,nbnd_occ))
      !
-     !    prepare the indices of this k point
-     !
-     CALL gk_sort (xk (1, ik), ngm, g, gcutw, npw, igk, g2kin)
-     !
-     CALL init_us_2 (npw, igk, xk (1, ik), vkb)
+     npw = ngk(ik)
+     CALL init_us_2 (npw, igk_k(1,ik), xk(1,ik), vkb)
      !
      !   read eigenfunctions
      !
      CALL davcio (evc, 2*nwordwfc, iunwfc, ik, - 1)
 
-     IF (noncolin) THEN
-        CALL calbec ( npw, vkb, evc, becp, nbnd_occ )
-     ELSE
-        CALL calbec ( npw, vkb, evc, becp, nbnd_occ )
-     ENDIF
+     CALL calbec ( npw, vkb, evc, becp, nbnd_occ )
 
      DO ipol=1,3
         CALL compute_ppsi(ppsi, ppsi_us, ik, ipol, nbnd_occ, spin_component)
