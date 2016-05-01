@@ -14,17 +14,15 @@ SUBROUTINE add_shift_us( shift_nl )
   ! ... wrapper
   !
   USE kinds,                ONLY : DP
-  USE wvfct,                ONLY : g2kin
-  USE gvecw,                ONLY : gcutw
   USE control_flags,        ONLY : gamma_only
   USE cell_base,            ONLY : at, bg
   USE ions_base,            ONLY : nat, ntyp => nsp , ityp
-  USE klist,                ONLY : nks, xk
+  USE klist,                ONLY : nks, xk, ngk, igk_k
   USE gvect,                ONLY : g, ngm
   USE uspp,                 ONLY : nkb, vkb, qq, deeq
   USE uspp_param,           ONLY : upf, nh, newpseudo
-  USE wvfct,                ONLY : nbnd, npw, npwx, igk, wg, et
-  USE lsda_mod,             ONLY : lsda, current_spin, isk
+  USE wvfct,                ONLY : nbnd, wg, et
+  USE lsda_mod,             ONLY : lsda, isk
   USE symme,                ONLY : symscalar
   USE wavefunctions_module, ONLY : evc
   USE io_files,             ONLY : iunwfc, nwordwfc
@@ -66,7 +64,7 @@ SUBROUTINE add_shift_us( shift_nl )
        REAL(DP), ALLOCATABLE    :: rbecp(:,:), shift_(:)
        ! auxiliary variables contain <beta|psi>
        REAL(DP) :: ps
-       INTEGER       :: ik, ibnd, ih, jh, na, nt, ikb, jkb, ijkb0
+       INTEGER  :: npw, ik, is, ibnd, ih, jh, na, nt, ikb, jkb, ijkb0
        ! counters
        !
        !
@@ -78,12 +76,12 @@ SUBROUTINE add_shift_us( shift_nl )
        ! ... the forces are a sum over the K points and the bands
        !
        DO ik = 1, nks
-          IF ( lsda ) current_spin = isk(ik)
           !
-          CALL gk_sort (xk(1,ik), ngm, g, gcutw, npw, igk, g2kin)
+          is = isk(ik)
+          npw = ngk(ik)
           IF ( nks > 1 ) THEN
              CALL davcio( evc, 2*nwordwfc, iunwfc, ik, -1 )
-             IF ( nkb > 0 ) CALL init_us_2( npw, igk, xk(1,ik), vkb )
+             IF ( nkb > 0 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
           ENDIF
           !
           CALL calbec ( npw, vkb, evc, rbecp )
@@ -95,7 +93,7 @@ SUBROUTINE add_shift_us( shift_nl )
                    DO ih = 1, nh(nt)
                       ikb = ijkb0 + ih
                       DO ibnd = 1, nbnd
-                         ps = deeq(ih,ih,na,current_spin) - &
+                         ps = deeq(ih,ih,na,is) - &
                               et(ibnd,ik) * qq(ih,ih,nt)
                          shift_(na) = shift_(na) + ps * wg(ibnd,ik) * &
                                       rbecp(ikb,ibnd) * rbecp(ikb,ibnd)
@@ -110,7 +108,7 @@ SUBROUTINE add_shift_us( shift_nl )
                          DO jh = ( ih + 1 ), nh(nt)
                             jkb = ijkb0 + jh
                             DO ibnd = 1, nbnd
-                               ps = deeq(ih,jh,na,current_spin) - &
+                               ps = deeq(ih,jh,na,is) - &
                                     et(ibnd,ik) * qq(ih,jh,nt)
                                shift_(na) = shift_(na) + ps * wg(ibnd,ik) * &
                                      2.d0 *rbecp(ikb,ibnd) *rbecp(jkb,ibnd)
@@ -159,7 +157,7 @@ SUBROUTINE add_shift_us( shift_nl )
        !  contains products of wavefunctions and beta
 
        REAL(DP) :: ps
-       INTEGER       :: ik, ibnd, ih, jh, na, nt, ikb, jkb, ijkb0
+       INTEGER  :: npw, ik, is, ibnd, ih, jh, na, nt, ikb, jkb, ijkb0
        ! counters
        !
        ALLOCATE( becp(nkb,nbnd), shift_( nat ) )
@@ -168,12 +166,12 @@ SUBROUTINE add_shift_us( shift_nl )
        ! ... the shifts are a sum over the K points and the bands
        !
        DO ik = 1, nks
-          IF ( lsda ) current_spin = isk(ik)
           !
-          CALL gk_sort (xk(1,ik), ngm, g, gcutw, npw, igk, g2kin)
+          is = isk(ik)
+          npw = ngk(ik)
           IF ( nks > 1 ) THEN
              CALL davcio( evc, 2*nwordwfc, iunwfc, ik, -1 )
-             IF ( nkb > 0 ) CALL init_us_2( npw, igk, xk(1,ik), vkb )
+             IF ( nkb > 0 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
           ENDIF
           !
           CALL calbec( npw, vkb, evc, becp )
@@ -185,7 +183,7 @@ SUBROUTINE add_shift_us( shift_nl )
                    DO ih = 1, nh(nt)
                       ikb = ijkb0 + ih
                       DO ibnd = 1, nbnd
-                         ps = deeq(ih,ih,na,current_spin) - &
+                         ps = deeq(ih,ih,na,is) - &
                               et(ibnd,ik) * qq(ih,ih,nt)
                          shift_(na) = shift_(na) + ps * wg(ibnd,ik) * &
                                       dble( conjg( becp(ikb,ibnd) ) * &
@@ -201,7 +199,7 @@ SUBROUTINE add_shift_us( shift_nl )
                          DO jh = ( ih + 1 ), nh(nt)
                             jkb = ijkb0 + jh
                             DO ibnd = 1, nbnd
-                               ps = deeq(ih,jh,na,current_spin) - &
+                               ps = deeq(ih,jh,na,is) - &
                                     et(ibnd,ik) * qq (ih,jh,nt)
                                shift_(na) = shift_ (na) + ps * wg(ibnd,ik) * &
                                       2.d0 * dble( conjg( becp(ikb,ibnd) ) * &

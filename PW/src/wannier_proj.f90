@@ -16,7 +16,8 @@ subroutine wannier_proj(ik, wan_func)
   USE io_files
   USE wannier_new,      ONLY : wan_in, nwan, use_energy_int
   USE ions_base,        ONLY : nat, ityp
-  USE wvfct,            ONLY : nbnd, npw, npwx, et
+  USE wvfct,            ONLY : nbnd, npwx, et
+  USE klist,            ONLY : ngk
   USE lsda_mod,         ONLY : lsda, isk
   USE constants,        ONLY : rytoev
   USE basis,            ONLY : swfcatom
@@ -36,7 +37,7 @@ subroutine wannier_proj(ik, wan_func)
   COMPLEX(DP), ALLOCATABLE :: pp(:,:)
   COMPLEX(DP), ALLOCATABLE :: trialwf(:,:)
   
-  INTEGER :: current_spin, i,j,k, ierr, ibnd, iwan
+  INTEGER :: current_spin, npw, i,j,k, ierr, ibnd, iwan
   
   REAL(DP), EXTERNAL :: ddot
   COMPLEX(DP) :: zdotc
@@ -46,6 +47,7 @@ subroutine wannier_proj(ik, wan_func)
   
   current_spin = 1
   IF (lsda) current_spin  = isk(ik)
+  npw = ngk(ik)
   
   ! Read current wavefunctions
   !
@@ -62,7 +64,7 @@ subroutine wannier_proj(ik, wan_func)
   trialwf = ZERO
   do iwan=1, nwan
      do j=1,wan_in(iwan,current_spin)%ning
-        do k=1,npwx
+        do k=1,npw
            trialwf(k,iwan) = trialwf(k,iwan) + &
                 CMPLX(wan_in(iwan,current_spin)%ing(j)%c,0.d0,KIND=DP) * &
                 swfcatom(k,wan_in(iwan,current_spin)%ing(j)%iatomwfc)
@@ -75,7 +77,7 @@ subroutine wannier_proj(ik, wan_func)
   pp = ZERO
   DO ibnd = 1, nbnd
      DO iwan = 1, nwan
-        pp (iwan, ibnd) = zdotc (npwx, trialwf (1, iwan), 1, evc (1, ibnd), 1)
+        pp (iwan, ibnd) = zdotc (npw, trialwf (1, iwan), 1, evc (1, ibnd), 1)
      ENDDO
   ENDDO
 

@@ -26,10 +26,10 @@ SUBROUTINE projwave_boxes( filpdos, filproj, n_proj_boxes, irmin, irmax, plotbox
   USE constants, ONLY: rytoev
   USE gvect
   USE gvecs,     ONLY: dual
-  USE gvecw,     ONLY: gcutw, ecutwfc
-  USE klist,     ONLY: xk, nks, nkstot
+  USE gvecw,     ONLY: ecutwfc
+  USE klist,     ONLY: xk, nks, nkstot, ngk, igk_k
   USE lsda_mod,  ONLY: nspin, isk, current_spin, lsda
-  USE wvfct, ONLY: npw, npwx, nbnd, g2kin, igk, et, wg
+  USE wvfct, ONLY: npwx, nbnd, et, wg
   USE control_flags, ONLY: gamma_only
   USE uspp,      ONLY: okvan
   USE noncollin_module, ONLY: noncolin, npol
@@ -50,11 +50,11 @@ SUBROUTINE projwave_boxes( filpdos, filproj, n_proj_boxes, irmin, irmax, plotbox
   INTEGER, PARAMETER :: N_MAX_BOXES = 999
   CHARACTER (len=256) :: filpdos
   CHARACTER (len=*) :: filproj
-  INTEGER :: n_proj_boxes, irmin(3,*), irmax(3,*)
+  INTEGER :: n_proj_boxes, irmin(3,*), irmax(3,*), nri(3)
   LOGICAL :: plotboxes
   !
-  INTEGER :: ik, ibnd, i, ir, ig, ipol, ibox, ir1, ir2, ir3, c_tab, is, iunproj
-  INTEGER :: nri(3)
+  INTEGER :: ik, ibnd, i, ir, ig, ipol, npw
+  INTEGER :: ibox, ir1, ir2, ir3, c_tab, is, iunproj
   CHARACTER (len=33) :: filextension
   CHARACTER (len=256):: fileout
   COMPLEX(DP), ALLOCATABLE :: caux(:)
@@ -225,7 +225,7 @@ SUBROUTINE projwave_boxes( filpdos, filproj, n_proj_boxes, irmin, irmax, plotbox
   k_loop: DO ik = 1, nks
      !
      IF ( lsda ) current_spin = isk(ik)
-     CALL gk_sort (xk (1, ik), ngm, g, gcutw, npw, igk, g2kin)
+     npw = ngk(ik)
      CALL davcio (evc, 2*nwordwfc, iunwfc, ik, - 1)
      !
      bnd_loop: DO ibnd = 1, nbnd
@@ -234,8 +234,8 @@ SUBROUTINE projwave_boxes( filpdos, filproj, n_proj_boxes, irmin, irmax, plotbox
            !
            psic_nc = (0.d0,0.d0)
            DO ig = 1, npw
-              psic_nc(nl(igk(ig)),1)=evc(ig     ,ibnd)
-              psic_nc(nl(igk(ig)),2)=evc(ig+npwx,ibnd)
+              psic_nc(nl(igk_k(ig,ik)),1)=evc(ig     ,ibnd)
+              psic_nc(nl(igk_k(ig,ik)),2)=evc(ig+npwx,ibnd)
            ENDDO
            raux=0._DP
            DO ipol=1,npol
@@ -248,11 +248,11 @@ SUBROUTINE projwave_boxes( filpdos, filproj, n_proj_boxes, irmin, irmax, plotbox
            !
            caux(1:dfftp%nnr) = (0._DP,0._DP)
            DO ig = 1, npw
-              caux (nl (igk (ig) ) ) = evc (ig, ibnd)
+              caux (nl (igk_k (ig,ik) ) ) = evc (ig, ibnd)
            ENDDO
            IF (gamma_only) THEN
               DO ig = 1, npw
-                 caux (nlm(igk (ig) ) ) = conjg(evc (ig, ibnd))
+                 caux (nlm(igk_k (ig,ik) ) ) = conjg(evc (ig, ibnd))
               ENDDO
            ENDIF
            CALL invfft ('Dense', caux, dfftp)

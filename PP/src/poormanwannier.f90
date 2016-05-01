@@ -133,7 +133,6 @@ SUBROUTINE projection (first_band, last_band, min_energy, max_energy, sigma, iop
   USE constants,  ONLY: rytoev
   USE gvect
   USE klist
-  USE gvecw,      ONLY : gcutw
   USE wvfct,      ONLY : nbnd, npwx, et
   USE ldaU,       ONLY : is_Hubbard, Hubbard_lmax, Hubbard_l, &
                          oatwfc, offsetU, nwfcU, wfcU, copy_U_wfc
@@ -261,7 +260,6 @@ SUBROUTINE projection (first_band, last_band, min_energy, max_energy, sigma, iop
   ALLOCATE (gk(npwx))
   DO ik = 1, nks
      !
-     CALL gk_sort (xk (1, ik), ngm, g, gcutw, ngk(ik), igk_k(1,ik), gk)
      npw = ngk(ik)
 
      CALL davcio (evc, 2*nwordwfc, iunwfc, ik, - 1)

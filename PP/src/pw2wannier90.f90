@@ -1038,13 +1038,13 @@ SUBROUTINE compute_mmn
    !
    USE io_global,  ONLY : stdout, ionode
    USE kinds,           ONLY: DP
-   USE wvfct,           ONLY : nbnd, npw, npwx, igk, g2kin
+   USE wvfct,           ONLY : nbnd, npwx
    USE control_flags,   ONLY : gamma_only
    USE wavefunctions_module, ONLY : evc, psic, psic_nc
    USE fft_base,        ONLY : dffts, dfftp
    USE fft_interfaces,  ONLY : fwfft, invfft
    USE gvecs,         ONLY : nls, nlsm
-   USE klist,           ONLY : nkstot, xk
+   USE klist,           ONLY : nkstot, xk, igk_k, ngk
    USE io_files,        ONLY : nwordwfc, iunwfc
    USE gvect,           ONLY : g, ngm, gstart
    USE cell_base,       ONLY : omega, alat, tpiba, at, bg
@@ -1066,14 +1066,14 @@ SUBROUTINE compute_mmn
    !
    complex(DP), parameter :: cmplx_i=(0.0_DP,1.0_DP)
    !
-   INTEGER :: mmn_tot, ik, ikp, ipol, ib, npwq, i, m, n
+   INTEGER :: npw, mmn_tot, ik, ikp, ipol, ib, npwq, i, m, n
    INTEGER :: ikb, jkb, ih, jh, na, nt, ijkb0, ind, nbt
    INTEGER :: ikevc, ikpevcq, s, counter
    COMPLEX(DP), ALLOCATABLE :: phase(:), aux(:), aux2(:), evcq(:,:), &
                                becp2(:,:), Mkb(:,:), aux_nc(:,:) 
    real(DP), ALLOCATABLE    :: rbecp2(:,:)
    COMPLEX(DP), ALLOCATABLE :: qb(:,:,:,:), qgm(:)
-   real(DP), ALLOCATABLE    :: qg(:), ylm(:,:), dxk(:,:)
+   real(DP), ALLOCATABLE    :: qg(:), ylm(:,:), dxk(:,:), g2kin(:)
    INTEGER, ALLOCATABLE     :: igkq(:)
    COMPLEX(DP)              :: mmn, zdotc, phase1
    real(DP)                 :: arg, g_(3)
@@ -1180,6 +1180,7 @@ SUBROUTINE compute_mmn
    WRITE(stdout,'(a,i8)') '  MMN: iknum = ',iknum
    !
    ALLOCATE( Mkb(nbnd,nbnd) )
+   ALLOCATE( g2kin(npwx) )
    !
    ind = 0
    DO ik=1,iknum
@@ -1188,12 +1189,12 @@ SUBROUTINE compute_mmn
       FLUSH(stdout)
       ikevc = ik + ikstart - 1
          CALL davcio (evc, 2*nwordwfc, iunwfc, ikevc, -1 )
-      CALL gk_sort (xk(1,ik), ngm, g, gcutw, npw, igk, g2kin)
+      npw = ngk(ik)
       !
       !  USPP
       !
       IF(any_uspp) THEN
-         CALL init_us_2 (npw, igk, xk(1,ik), vkb)
+         CALL init_us_2 (npw, igk_k(1,ik), xk(1,ik), vkb)
          ! below we compute the product of beta functions with |psi>
          CALL calbec (npw, vkb, evc, becp)
       ENDIF
@@ -1292,7 +1293,7 @@ SUBROUTINE compute_mmn
                DO ipol=1,2!npol
                   istart=(ipol-1)*npwx+1
                   iend=istart+npw-1
-                  psic_nc(nls (igk (1:npw) ),ipol ) = evc(istart:iend, m)
+                  psic_nc(nls (igk_k(1:npw,ik) ),ipol ) = evc(istart:iend, m)
                   CALL invfft ('Wave', psic_nc(:,ipol), dffts)
                   psic_nc(1:dffts%nnr,ipol) = psic_nc(1:dffts%nnr,ipol) * &
                                                  phase(1:dffts%nnr)
@@ -1301,8 +1302,8 @@ SUBROUTINE compute_mmn
                ENDDO
             ELSE
                psic(:) = (0.d0, 0.d0)
-               psic(nls (igk (1:npw) ) ) = evc (1:npw, m)
-               IF(gamma_only) psic(nlsm(igk (1:npw) ) ) = conjg(evc (1:npw, m))
+               psic(nls (igk_k (1:npw,ik) ) ) = evc (1:npw, m)
+               IF(gamma_only) psic(nlsm(igk_k(1:npw,ik) ) ) = conjg(evc (1:npw, m))
                CALL invfft ('Wave', psic, dffts)
                psic(1:dffts%nnr) = psic(1:dffts%nnr) * phase(1:dffts%nnr)
                CALL fwfft ('Wave', psic, dffts)
@@ -1367,7 +1368,7 @@ SUBROUTINE compute_mmn
 
       ENDDO !ib
    ENDDO  !ik
-
+   DEALLOCATE(g2kin)
    
    IF (ionode .and. wan_mode=='standalone') CLOSE (iun_mmn)
 
@@ -1404,13 +1405,13 @@ SUBROUTINE compute_spin
    !
    USE io_global,  ONLY : stdout, ionode
    USE kinds,           ONLY: DP
-   USE wvfct,           ONLY : nbnd, npw, npwx, igk, g2kin
+   USE wvfct,           ONLY : nbnd, npwx
    USE control_flags,   ONLY : gamma_only
    USE wavefunctions_module, ONLY : evc, psic, psic_nc
    USE fft_base,        ONLY : dffts, dfftp
    USE fft_interfaces,  ONLY : fwfft, invfft
    USE gvecs,         ONLY : nls, nlsm
-   USE klist,           ONLY : nkstot, xk
+   USE klist,           ONLY : nkstot, xk, ngk
    USE io_files,        ONLY : nwordwfc, iunwfc
    USE gvect,           ONLY : g, ngm, gstart
    USE cell_base,       ONLY : alat, at, bg
@@ -1438,7 +1439,7 @@ SUBROUTINE compute_spin
    !
    complex(DP), parameter :: cmplx_i=(0.0_DP,1.0_DP)
    !
-   INTEGER :: mmn_tot, ik, ikp, ipol, ib, npwq, i, m, n
+   INTEGER :: npw, mmn_tot, ik, ikp, ipol, ib, npwq, i, m, n
    INTEGER :: ikb, jkb, ih, jh, na, nt, ijkb0, ind, nbt
    INTEGER :: ikevc, ikpevcq, s, counter
    COMPLEX(DP)              :: mmn, zdotc, phase1
@@ -1490,7 +1491,7 @@ SUBROUTINE compute_spin
       WRITE (stdout,'(i8)') ik
       ikevc = ik + ikstart - 1
       CALL davcio (evc, 2*nwordwfc, iunwfc, ikevc, -1 )
-      CALL gk_sort (xk(1,ik), ngm, g, gcutw, npw, igk, g2kin)
+      npw = ngk(ik)
       IF(write_spn.and.noncolin) THEN
          counter=0
          DO m=1,nbnd
@@ -1549,13 +1550,13 @@ SUBROUTINE compute_orb
    !
    USE io_global,  ONLY : stdout, ionode
    USE kinds,           ONLY: DP
-   USE wvfct,           ONLY : nbnd, npw, npwx, igk, g2kin
+   USE wvfct,           ONLY : nbnd, npwx, g2kin
    USE control_flags,   ONLY : gamma_only
    USE wavefunctions_module, ONLY : evc, psic, psic_nc
    USE fft_base,        ONLY : dffts, dfftp
    USE fft_interfaces,  ONLY : fwfft, invfft
    USE gvecs,         ONLY : nls, nlsm
-   USE klist,           ONLY : nkstot, xk
+   USE klist,           ONLY : nkstot, xk, ngk, igk_k
    USE io_files,        ONLY : nwordwfc, iunwfc
    USE gvect,           ONLY : g, ngm, gstart
    USE cell_base,       ONLY : tpiba2, alat, at, bg
@@ -1583,7 +1584,7 @@ SUBROUTINE compute_orb
    !
    complex(DP), parameter :: cmplx_i=(0.0_DP,1.0_DP)
    !
-   INTEGER :: mmn_tot, ik, ikp, ipol, ib, npwq, i, m, n
+   INTEGER :: mmn_tot, ik, ikp, ipol, ib, npw, npwq, i, m, n
    INTEGER :: ikb, jkb, ih, jh, na, nt, ijkb0, ind, nbt
    INTEGER :: ikevc, ikpevcq, s, counter
    COMPLEX(DP), ALLOCATABLE :: phase(:), aux(:), aux2(:), evcq(:,:), &
@@ -1718,8 +1719,8 @@ SUBROUTINE compute_orb
         write (stdout,'(i8)') ik
         !
         ! sort the wfc at k and set up stuff for h_psi
-        CALL gk_sort(xk(1,ik), ngm, g, gcutw, npw, igk, g2kin)
-        CALL init_us_2(npw,igk,xk(1,ik),vkb)
+        npw = ngk(ik)
+        CALL init_us_2(npw,igk_k(1,ik),xk(1,ik),vkb)
         !
         ! compute  " H | u_n,k+b2 > "
         !
@@ -1755,7 +1756,7 @@ SUBROUTINE compute_orb
                     call fwfft ('Wave', psic_nc(:,ipol), dffts)
                     ! save the result
                     iend=istart+npw-1
-                    evc_aux(istart:iend,n) = psic_nc(nls (igk(1:npw) ),ipol ) 
+                    evc_aux(istart:iend,n) = psic_nc(nls (igk_k(1:npw,ik) ),ipol ) 
                  end do
               else ! this is modeled after the pre-existing code at 1162
                  psic = ( 0.0D0, 0.0D0 )
@@ -1764,16 +1765,16 @@ SUBROUTINE compute_orb
                  call invfft ('Wave', psic, dffts)
                  psic(1:dffts%nnr) = psic(1:dffts%nnr) * conjg(phase(1:dffts%nnr)) 
                  call fwfft ('Wave', psic, dffts)
-                 evc_aux(1:npw,n) = psic(nls (igk(1:npw) ) ) 
+                 evc_aux(1:npw,n) = psic(nls (igk_k(1:npw,ik) ) ) 
               end if
            end do !n
 
            if(write_uHu) then !ivo
               !
               ! gk_sort overwrites the kinetic energy - recalculate at ik
-              g2kin(1:npw) = ( ( xk(1,ik) + g(1,igk(1:npw)) )**2 + &
-                   ( xk(2,ik) + g(2,igk(1:npw)) )**2 + &
-                   ( xk(3,ik) + g(3,igk(1:npw)) )**2 ) * tpiba2
+              g2kin(1:npw) = ( ( xk(1,ik) + g(1,igk_k(1:npw,ik)) )**2 + &
+                   ( xk(2,ik) + g(2,igk_k(1:npw,ik)) )**2 + &
+                   ( xk(3,ik) + g(3,igk_k(1:npw,ik)) )**2 ) * tpiba2
               !
               CALL h_psi(npwx, npw, nbnd, evc_aux, H_evc)
            endif
@@ -1813,7 +1814,7 @@ SUBROUTINE compute_orb
                        psic_nc(1:dffts%nnr,ipol) = psic_nc(1:dffts%nnr,ipol) * conjg(phase(1:dffts%nnr))
                        call fwfft ('Wave', psic_nc(:,ipol), dffts)
                        ! save the result
-                       aux_nc(1:npw,ipol) = psic_nc(nls (igk(1:npw) ),ipol ) 
+                       aux_nc(1:npw,ipol) = psic_nc(nls (igk_k(1:npw,ik) ),ipol ) 
                     end do
                  else ! this is modeled after the pre-existing code at 1162
                     aux  = ( 0.0D0 )
@@ -1824,7 +1825,7 @@ SUBROUTINE compute_orb
                     !psic(1:nrxxs) = psic(1:nrxxs) * conjg(phase(1:nrxxs)) 
                     psic(1:dffts%nnr) = psic(1:dffts%nnr) * conjg(phase(1:dffts%nnr)) 
                     call fwfft ('Wave', psic, dffts)
-                    aux(1:npw) = psic(nls (igk(1:npw) ) ) 
+                    aux(1:npw) = psic(nls (igk_k(1:npw,ik) ) ) 
                  end if
 
                 !
@@ -1964,8 +1965,8 @@ SUBROUTINE compute_amn
    !
    USE io_global,  ONLY : stdout, ionode
    USE kinds,           ONLY : DP
-   USE klist,           ONLY : nkstot, xk
-   USE wvfct,           ONLY : nbnd, npw, npwx, igk, g2kin
+   USE klist,           ONLY : nkstot, xk, ngk, igk_k
+   USE wvfct,           ONLY : nbnd, npwx
    USE control_flags,   ONLY : gamma_only
    USE wavefunctions_module, ONLY : evc
    USE io_files,        ONLY : nwordwfc, iunwfc
@@ -1989,7 +1990,7 @@ SUBROUTINE compute_amn
    COMPLEX(DP) :: amn, zdotc,amn_tmp,fac(2)
    real(DP):: ddot
    COMPLEX(DP), ALLOCATABLE :: sgf(:,:)
-   INTEGER :: ik, ibnd, ibnd1, iw,i, ikevc, nt, ipol
+   INTEGER :: ik, npw, ibnd, ibnd1, iw,i, ikevc, nt, ipol
    CHARACTER (len=9)  :: cdate,ctime
    CHARACTER (len=60) :: header
    LOGICAL            :: any_uspp, opnd, exst,spin_z_pos, spin_z_neg
@@ -2045,13 +2046,13 @@ SUBROUTINE compute_amn
 !      else
          CALL davcio (evc, 2*nwordwfc, iunwfc, ikevc, -1 )
 !      end if
-      CALL gk_sort (xk(1,ik), ngm, g, gcutw, npw, igk, g2kin)
+      npw = ngk(ik)
       CALL generate_guiding_functions(ik)   ! they are called gf(npw,n_proj)
       !
       !  USPP
       !
       IF(any_uspp) THEN
-         CALL init_us_2 (npw, igk, xk (1, ik), vkb)
+         CALL init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb)
          ! below we compute the product of beta functions with trial func.
          IF (gamma_only) THEN
             CALL calbec ( npw, vkb, gf, becp, n_proj )
@@ -2198,32 +2199,33 @@ SUBROUTINE generate_guiding_functions(ik)
    !
    USE io_global,  ONLY : stdout
    USE constants, ONLY : pi, tpi, fpi, eps8
-   USE wvfct, ONLY : npw, igk
    USE control_flags, ONLY : gamma_only
    USE gvect, ONLY : g, gstart
    USE cell_base,  ONLY : tpiba
    USE wannier
-   USE klist,      ONLY : xk
+   USE klist,      ONLY : xk, ngk, igk_k
    USE cell_base, ONLY : bg
    USE mp, ONLY : mp_sum
    USE mp_global, ONLY : intra_pool_comm
 
    IMPLICIT NONE
 
+   INTEGER, INTENT(in) :: ik
    INTEGER, PARAMETER :: lmax=3, lmax2=(lmax+1)**2
-   INTEGER :: iw, ig, ik, bgtau(3), isph, l, mesh_r
+   INTEGER :: npw, iw, ig, bgtau(3), isph, l, mesh_r
    INTEGER :: lmax_iw, lm, ipol, n1, n2, n3, nr1, nr2, nr3, iig
    real(DP) :: arg, anorm, fac, alpha_w2, yy, alfa, ddot
    COMPLEX(DP) :: zdotc, kphase, lphase, gff, lph
    real(DP), ALLOCATABLE :: gk(:,:), qg(:), ylm(:,:), radial(:,:)
    COMPLEX(DP), ALLOCATABLE :: sk(:)
    !
+   npw = ngk(ik)
    ALLOCATE( gk(3,npw), qg(npw), ylm(npw,lmax2), sk(npw), radial(npw,0:lmax) )
    !
    DO ig = 1, npw
-      gk (1,ig) = xk(1, ik) + g(1, igk(ig) )
-      gk (2,ig) = xk(2, ik) + g(2, igk(ig) )
-      gk (3,ig) = xk(3, ik) + g(3, igk(ig) )
+      gk (1,ig) = xk(1, ik) + g(1, igk_k(ig,ik) )
+      gk (2,ig) = xk(2, ik) + g(2, igk_k(ig,ik) )
+      gk (3,ig) = xk(3, ik) + g(3, igk_k(ig,ik) )
       qg(ig) = gk(1, ig)**2 +  gk(2, ig)**2 + gk(3, ig)**2
    ENDDO
 
@@ -2247,7 +2249,7 @@ SUBROUTINE generate_guiding_functions(ik)
          ENDDO !ig
       ENDDO ! lm
       DO ig=1,npw
-         iig = igk(ig)
+         iig = igk_k(ig,ik)
          arg = ( gk(1,ig)*center_w(1,iw) + gk(2,ig)*center_w(2,iw) + &
                                            gk(3,ig)*center_w(3,iw) ) * tpi
          ! center_w are cartesian coordinates in units of alat
@@ -2312,14 +2314,14 @@ END SUBROUTINE write_band
 
 SUBROUTINE write_plot
    USE io_global,  ONLY : stdout, ionode
-   USE wvfct, ONLY : nbnd, npw, igk, g2kin
+   USE wvfct, ONLY : nbnd
    USE gvecw, ONLY : gcutw
    USE control_flags, ONLY : gamma_only
    USE wavefunctions_module, ONLY : evc, psic
    USE io_files, ONLY : nwordwfc, iunwfc
    USE wannier
    USE gvecs,         ONLY : nls, nlsm
-   USE klist,           ONLY : nkstot, xk
+   USE klist,           ONLY : nkstot, xk, ngk, igk_k
    USE gvect,           ONLY : g, ngm
    USE fft_base,        ONLY : dffts
    USE scatter_mod,     ONLY : gather_grid
@@ -2330,7 +2332,7 @@ SUBROUTINE write_plot
    !
    INTEGER, EXTERNAL :: find_free_unit
    !
-   INTEGER ik, ibnd, ibnd1, ikevc, i1, j, spin
+   INTEGER ik, npw, ibnd, ibnd1, ikevc, i1, j, spin
    CHARACTER*20 wfnname
 
    ! aam: 1/5/06: for writing smaller unk files
@@ -2395,15 +2397,15 @@ SUBROUTINE write_plot
    ENDIF
 
       CALL davcio (evc, 2*nwordwfc, iunwfc, ik, -1 )
-      CALL gk_sort (xk(1,ik), ngm, g, gcutw, npw, igk, g2kin)
 
+      npw = ngk(ik)
       ibnd1 = 0
       DO ibnd=1,nbnd
          IF (excluded_band(ibnd)) CYCLE
          ibnd1=ibnd1 + 1
          psic(:) = (0.d0, 0.d0)
-         psic(nls (igk (1:npw) ) ) = evc (1:npw, ibnd)
-         IF (gamma_only)  psic(nlsm(igk (1:npw) ) ) = conjg(evc (1:npw, ibnd))
+         psic(nls (igk_k (1:npw,ik) ) ) = evc (1:npw, ibnd)
+         IF (gamma_only)  psic(nlsm(igk_k(1:npw,ik))) = conjg(evc (1:npw, ibnd))
          CALL invfft ('Wave', psic, dffts)
          IF (reduce_unk) pos=0
 #ifdef __MPI
@@ -2486,13 +2488,13 @@ SUBROUTINE write_parity
    USE mp_world,             ONLY : mpime, nproc
    USE mp,                   ONLY : mp_sum
    USE io_global,            ONLY : stdout, ionode
-   USE wvfct,                ONLY : nbnd, npw, igk, g2kin
+   USE wvfct,                ONLY : nbnd
    USE gvecw,                ONLY : gcutw
    USE control_flags,        ONLY : gamma_only
    USE wavefunctions_module, ONLY : evc
    USE io_files,             ONLY : nwordwfc, iunwfc
    USE wannier
-   USE klist,                ONLY : nkstot, xk
+   USE klist,                ONLY : nkstot, xk, igk_k, ngk
    USE gvect,                ONLY : g, ngm
    USE cell_base,            ONLY : at
    USE constants,            ONLY : eps6
@@ -2501,7 +2503,7 @@ SUBROUTINE write_parity
    !
    INTEGER, EXTERNAL :: find_free_unit
    !
-   INTEGER                      :: ibnd,igv,kgamma,ik,i,ig_idx(32)
+   INTEGER                      :: npw,ibnd,igv,kgamma,ik,i,ig_idx(32)
    INTEGER,DIMENSION(nproc)     :: num_G,displ
 
    real(kind=dp)                :: g_abc_1D(32),g_abc_gathered(3,32)
@@ -2543,7 +2545,7 @@ SUBROUTINE write_parity
    ! building the evc array corresponding to the Gamma point
    !
    CALL davcio (evc, 2*nwordwfc, iunwfc, kgamma, -1 )
-   CALL gk_sort (xk(1,kgamma), ngm, g, gcutw, npw, igk, g2kin)
+   npw = ngk(kgamma)
    !
    ! opening the <seedname>.unkg file
    !
@@ -2558,7 +2560,7 @@ SUBROUTINE write_parity
    !
    ALLOCATE(g_abc(3,npw))
    DO igv=1,npw
-       g_abc(:,igk(igv))=matmul(transpose(at),g(:,igk(igv)))
+       g_abc(:,igk_k(igv,kgamma))=matmul(transpose(at),g(:,igk_k(igv,kgamma)))
    ENDDO
    !
    ! Count and identify the G vectors we will be extracting for each
@@ -2848,7 +2850,8 @@ SUBROUTINE write_parity
    ! on icpu and stored sequencially, ready for a lateral mp_sum
    !
    DO igv=1,num_G(mpime+1)
-       g_abc_pre_gather(:,igv+displ(mpime+1)-1,mpime+1)=matmul(transpose(at),g(:,ig_idx(igk(igv))))
+       g_abc_pre_gather(:,igv+displ(mpime+1)-1,mpime+1) = &
+            matmul(transpose(at),g(:,ig_idx(igk_k(igv,kgamma))))
    ENDDO
    !
    ! Gather evc_sub and  g_abc_pre_gather into common arrays to each cpu
@@ -2897,9 +2900,9 @@ SUBROUTINE wan2sic
   USE gvect, ONLY : g, ngm
   USE gvecs, ONLY: nls
   USE wavefunctions_module, ONLY : evc, psic
-  USE wvfct, ONLY : nbnd, npwx, npw, igk, g2kin
+  USE wvfct, ONLY : nbnd, npwx
   USE gvecw, ONLY : gcutw
-  USE klist, ONLY : nkstot, xk, wk
+  USE klist, ONLY : nkstot, xk, wk, ngk
   USE wannier
 
   INTEGER :: i, j, nn, ik, ibnd, iw, ikevc
@@ -2928,7 +2931,7 @@ SUBROUTINE wan2sic
   DO ik=1,iknum
      ikevc = ik + ikstart - 1
      CALL davcio (evc, 2*nwordwfc, iunwfc, ikevc, -1)
-     CALL gk_sort (xk(1,ik), ngm, g, gcutw, npw, igk, g2kin)
+     npw = ngk(ik)
      WRITE(stdout,*) 'npw ',npw
      DO iw=1,n_wannier
         DO j=1,npw

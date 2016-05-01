@@ -18,7 +18,6 @@ SUBROUTINE write_p_avg(filp, spin_component, firstk, lastk)
   USE lsda_mod,             ONLY : nspin
   USE ener,                 ONLY : ef
   USE wvfct,                ONLY : et, nbnd, npwx
-  USE gvecw,                ONLY : gcutw
   USE klist,                ONLY : xk, nks, nkstot, ngk, igk_k
   USE io_files,             ONLY : nwordwfc, iunwfc
   USE uspp,                 ONLY : nkb, vkb, okvan

@@ -1,4 +1,3 @@
-
 !
 ! Copyright (C) 2006 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
@@ -16,19 +15,19 @@ SUBROUTINE compute_ppsi (ppsi, ppsi_us, ik, ipol, nbnd_occ, current_spin)
   !            ppsi_us contains the additional term required for US PP.
   !            See J. Chem. Phys. 120, 9935 (2004) Eq. 10.
   !
-  ! (vkb,evc,igk must be set)
+  ! (important: vkb and evc must have been initialized for this k-point)
   !
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ityp, ntyp => nsp
   USE cell_base,            ONLY : tpiba
   USE io_global,            ONLY : stdout
   USE wavefunctions_module, ONLY : evc
-  USE wvfct,                ONLY : et, nbnd, npwx, npw, igk, g2kin
+  USE wvfct,                ONLY : et, nbnd, npwx
   USE uspp,                 ONLY : nkb, vkb, deeq, qq, qq_so, deeq_nc, okvan
   USE spin_orb,             ONLY : lspinorb
   USE lsda_mod,             ONLY : nspin
   USE gvect,                ONLY : g
-  USE klist,                ONLY : xk, nks
+  USE klist,                ONLY : xk, nks, ngk, igk_k
   USE noncollin_module,     ONLY : noncolin, npol
   USE becmod,               ONLY : bec_type, becp, calbec
   USE uspp_param,           ONLY : nh, nhm
@@ -39,12 +38,12 @@ SUBROUTINE compute_ppsi (ppsi, ppsi_us, ik, ipol, nbnd_occ, current_spin)
   COMPLEX(DP) :: ppsi(npwx,npol,nbnd_occ), ppsi_us(npwx,npol,nbnd_occ)
   ! Local variables
   !
-  INTEGER :: ig, na, ibnd, ikb, jkb, nt, ih, jh, ip, ijkb0
+  INTEGER :: npw, ig, na, ibnd, ikb, jkb, nt, ih, jh, ip, ijkb0
   ! counters
 
   REAL(DP), ALLOCATABLE  :: gk (:,:)
   ! the derivative of |k+G|
-  REAL(DP)  :: vers(3)
+  REAL(DP)  :: vers(3), gk2
 
   COMPLEX(DP), ALLOCATABLE :: ps2(:,:,:), dvkb (:,:), dvkb1 (:,:),   &
        work (:,:), becp2(:,:), becp2_nc(:,:,:), psc(:,:,:,:), ps(:), &
@@ -68,11 +67,11 @@ SUBROUTINE compute_ppsi (ppsi, ppsi_us, ik, ipol, nbnd_occ, current_spin)
      dvkb (:,:) = (0.d0, 0.d0)
      dvkb1(:,:) = (0.d0, 0.d0)
   ENDIF
+  npw = ngk(ik)
   DO ig = 1, npw
-     gk (1, ig) = (xk (1, ik) + g (1, igk (ig) ) ) * tpiba
-     gk (2, ig) = (xk (2, ik) + g (2, igk (ig) ) ) * tpiba
-     gk (3, ig) = (xk (3, ik) + g (3, igk (ig) ) ) * tpiba
-     g2kin (ig) = gk (1, ig) **2 + gk (2, ig) **2 + gk (3, ig) **2
+     gk (1, ig) = (xk (1, ik) + g (1, igk_k(ig,ik) ) ) * tpiba
+     gk (2, ig) = (xk (2, ik) + g (2, igk_k(ig,ik) ) ) * tpiba
+     gk (3, ig) = (xk (3, ik) + g (3, igk_k(ig,ik) ) ) * tpiba
   ENDDO
   !
   ! this is the kinetic contribution to p :  (k+G)_ipol * psi
@@ -84,6 +83,17 @@ SUBROUTINE compute_ppsi (ppsi, ppsi_us, ik, ipol, nbnd_occ, current_spin)
         ENDDO
      ENDDO
   ENDDO
+  !
+  ! from now on we need (k+G)_ipol / |k+G|
+  !
+  DO ig = 1, npw
+     gk2 = gk (1, ig) **2 + gk (2, ig) **2 + gk (3, ig) **2
+     IF (gk2 < 1.0d-10) THEN
+        gk (:, ig) = 0.d0
+     ELSE
+        gk (:, ig) = gk (:, ig) / sqrt (gk2 )
+     ENDIF
+  ENDDO
 
   !
   ! and this is the contribution from nonlocal pseudopotentials
@@ -92,17 +102,6 @@ SUBROUTINE compute_ppsi (ppsi, ppsi_us, ik, ipol, nbnd_occ, current_spin)
   vers=0.d0
   vers(ipol)=1.d0
   CALL gen_us_dy (ik, vers, dvkb1)
-  DO ig = 1, npw
-     IF (g2kin (ig) < 1.0d-10) THEN
-        gk (1, ig) = 0.d0
-        gk (2, ig) = 0.d0
-        gk (3, ig) = 0.d0
-     ELSE
-        gk (1, ig) = gk (1, ig) / sqrt (g2kin (ig) )
-        gk (2, ig) = gk (2, ig) / sqrt (g2kin (ig) )
-        gk (3, ig) = gk (3, ig) / sqrt (g2kin (ig) )
-     ENDIF
-  ENDDO
 
   jkb = 0
   DO nt = 1, ntyp

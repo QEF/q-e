@@ -22,7 +22,7 @@ SUBROUTINE local_dos_mag(spin_component, kpoint, kband, raux)
   USE gvect,                ONLY : ngm, g
   USE fft_base,             ONLY : dfftp
   USE gvecs,                ONLY : nls, doublegrid
-  USE klist,                ONLY : nks, xk
+  USE klist,                ONLY : nks, xk, ngk, igk_k
   USE scf,                  ONLY : rho
   USE io_files,             ONLY : iunwfc, nwordwfc
   USE uspp,                 ONLY : nkb, vkb, becsum, nhtol, nhtoj, indv, okvan
@@ -30,15 +30,14 @@ SUBROUTINE local_dos_mag(spin_component, kpoint, kband, raux)
   USE wavefunctions_module, ONLY : evc, psic_nc
   USE noncollin_module,     ONLY : noncolin, npol
   USE spin_orb,             ONLY : lspinorb, fcoef
-  USE wvfct,                ONLY : nbnd, npwx, npw, igk, g2kin
-  USE gvecw,                ONLY : gcutw
+  USE wvfct,                ONLY : nbnd, npwx
   USE becmod,               ONLY : calbec
   !
   IMPLICIT NONE
   !
   ! ... local variables
   !
-  INTEGER :: spin_component, kpoint, kband
+  INTEGER :: spin_component, kpoint, kband, npw
   REAL(DP) :: raux(dfftp%nnr)
 
   INTEGER :: ikb, jkb, ijkb0, ih, jh, ijh, na, np
@@ -71,9 +70,9 @@ SUBROUTINE local_dos_mag(spin_component, kpoint, kband, raux)
   !
   DO ik = 1, nks
      IF (ik == kpoint) THEN
-        CALL gk_sort (xk (1, ik), ngm, g, gcutw, npw, igk, g2kin)
+        npw = ngk(ik)
         CALL davcio (evc, 2*nwordwfc, iunwfc, ik, - 1)
-        IF (nkb > 0) CALL init_us_2 (npw, igk, xk (1, ik), vkb)
+        IF (nkb > 0) CALL init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb)
         CALL calbec ( npw, vkb, evc, becp_nc)
         !
         !
@@ -82,8 +81,8 @@ SUBROUTINE local_dos_mag(spin_component, kpoint, kband, raux)
            IF (ibnd == kband) THEN
               psic_nc = (0.D0,0.D0)
               DO ig = 1, npw
-                 psic_nc(nls(igk(ig)),1)=evc(ig     ,ibnd)
-                 psic_nc(nls(igk(ig)),2)=evc(ig+npwx,ibnd)
+                 psic_nc(nls(igk_k(ig,ik)),1)=evc(ig     ,ibnd)
+                 psic_nc(nls(igk_k(ig,ik)),2)=evc(ig+npwx,ibnd)
               ENDDO
               DO ipol=1,npol
                  CALL invfft ('Wave', psic_nc(:,ipol), dffts)

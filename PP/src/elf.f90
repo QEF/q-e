@@ -31,12 +31,11 @@ SUBROUTINE do_elf (elf)
   USE gvect, ONLY: gcutm, g, ngm, nl, nlm
   USE gvecs, ONLY : nls, nlsm, ngms, doublegrid, dual
   USE io_files, ONLY: iunwfc, nwordwfc
-  USE klist, ONLY: nks, xk
+  USE klist, ONLY: nks, xk, ngk, igk_k
   USE lsda_mod, ONLY: nspin
   USE scf, ONLY: rho
   USE symme, ONLY: sym_rho, sym_rho_init
-  USE wvfct, ONLY: npw, igk, g2kin, nbnd, wg
-  USE gvecw, ONLY: gcutw
+  USE wvfct, ONLY: nbnd, wg
   USE control_flags, ONLY: gamma_only
   USE wavefunctions_module,  ONLY: evc
   USE mp_global,            ONLY: inter_pool_comm, intra_pool_comm
@@ -65,10 +64,6 @@ SUBROUTINE do_elf (elf)
   !
   DO ik = 1, nks
      !
-     !    prepare the indices of this k point
-     !
-     CALL gk_sort (xk (1, ik), ngm, g, gcutw, npw, igk, g2kin)
-     !
      !   reads the eigenfunctions
      !
      CALL davcio (evc, 2*nwordwfc, iunwfc, ik, - 1)
@@ -77,11 +72,11 @@ SUBROUTINE do_elf (elf)
         DO j = 1, 3
            aux(:) = (0.d0,0.d0)
            w1 = wg (ibnd, ik) / omega
-           DO i = 1, npw
-              gv (j) = (xk (j, ik) + g (j, igk (i) ) ) * tpiba
-              aux (nls(igk (i) ) ) = cmplx(0d0, gv (j) ,kind=DP) * evc (i, ibnd)
+           DO i = 1, ngk(ik)
+              gv (j) = (xk (j, ik) + g (j, igk_k (i,ik) ) ) * tpiba
+              aux (nls(igk_k(i,ik) ) ) = cmplx(0d0, gv (j) ,kind=DP) * evc(i,ibnd)
               IF (gamma_only) THEN
-                 aux (nlsm(igk (i) ) ) = cmplx(0d0, -gv (j) ,kind=DP) * &
+                 aux (nlsm(igk_k(i,ik) ) ) = cmplx(0d0, -gv (j) ,kind=DP) * &
                       conjg ( evc (i, ibnd) )
               ENDIF
            ENDDO

@@ -31,15 +31,15 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
   USE fft_interfaces,       ONLY : fwfft, invfft
   USE gvect,                ONLY : nl, ngm, g
   USE gvecs,                ONLY : nls, nlsm, doublegrid
-  USE klist,                ONLY : lgauss, degauss, ngauss, nks, wk, xk, nkstot
+  USE klist,                ONLY : lgauss, degauss, ngauss, nks, wk, xk, &
+                                   nkstot, ngk, igk_k
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE scf,                  ONLY : rho
   USE symme,                ONLY : sym_rho, sym_rho_init
   USE uspp,                 ONLY : nkb, vkb, becsum, nhtol, nhtoj, indv
   USE uspp_param,           ONLY : upf, nh, nhm
   USE wavefunctions_module, ONLY : evc, psic, psic_nc
-  USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et, g2kin
-  USE gvecw,                ONLY : gcutw
+  USE wvfct,                ONLY : nbnd, npwx, wg, et
   USE control_flags,        ONLY : gamma_only
   USE noncollin_module,     ONLY : noncolin, npol
   USE spin_orb,             ONLY : lspinorb, fcoef
@@ -62,7 +62,7 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
   !
   !    local variables
   !
-  INTEGER :: ikb, jkb, ijkb0, ih, jh, kh, na, ijh, np
+  INTEGER :: npw, ikb, jkb, ijkb0, ih, jh, kh, na, ijh, np
   ! counters for US PPs
   INTEGER :: ir, is, ig, ibnd, ik, irm, isup, isdw, ipol, kkb, is1, is2
   ! counters
@@ -137,7 +137,7 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
      ENDDO
   ENDDO
 
-  IF ( iflag == 0 .AND. npool > 1 ) THEN
+  IF ( iflag == 0 .and. npool > 1 ) THEN
      CALL xk_pool( kpoint, nkstot, kpoint_pool,  which_pool )
      IF ( kpoint_pool < 1 .or. kpoint_pool > nks ) &
         CALL errore('local_dos','problems with xk_pool',1)
@@ -155,9 +155,9 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
   DO ik = 1, nks
      IF (ik == kpoint_pool .and.i_am_the_pool.or. iflag /= 0) THEN
         IF (lsda) current_spin = isk (ik)
-        CALL gk_sort (xk (1, ik), ngm, g, gcutw, npw, igk, g2kin)
         CALL davcio (evc, 2*nwordwfc, iunwfc, ik, - 1)
-        CALL init_us_2 (npw, igk, xk (1, ik), vkb)
+        npw = ngk(ik)
+        CALL init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb)
 
         IF (gamma_only) THEN
            CALL calbec ( npw, vkb, evc, rbecp )
@@ -174,8 +174,8 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
               IF (noncolin) THEN
                  psic_nc = (0.d0,0.d0)
                  DO ig = 1, npw
-                    psic_nc(nls(igk(ig)),1)=evc(ig     ,ibnd)
-                    psic_nc(nls(igk(ig)),2)=evc(ig+npwx,ibnd)
+                    psic_nc(nls(igk_k(ig,ik)),1)=evc(ig     ,ibnd)
+                    psic_nc(nls(igk_k(ig,ik)),2)=evc(ig+npwx,ibnd)
                  ENDDO
                  DO ipol=1,npol
                     CALL invfft ('Wave', psic_nc(:,ipol), dffts)
@@ -183,11 +183,11 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
               ELSE
                  psic(1:dffts%nnr) = (0.d0,0.d0)
                  DO ig = 1, npw
-                    psic (nls (igk (ig) ) ) = evc (ig, ibnd)
+                    psic (nls (igk_k(ig,ik) ) ) = evc (ig, ibnd)
                  ENDDO
                  IF (gamma_only) THEN
                     DO ig = 1, npw
-                       psic (nlsm(igk (ig) ) ) = conjg(evc (ig, ibnd))
+                       psic (nlsm(igk_k (ig,ik) ) ) = conjg(evc (ig, ibnd))
                     ENDDO
                  ENDIF
                  CALL invfft ('Wave', psic, dffts)
@@ -380,13 +380,13 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
   !
   !    Here we add the US contribution to the charge
   !
-  if ( tqr ) then
+  IF ( tqr ) THEN
    CALL addusdens_r(rho%of_r(:,:),.false.)
-  else
+  ELSE
   !
   CALL addusdens(rho%of_r(:,:))
   !
-  endif 
+  ENDIF
   !
   IF (nspin == 1 .or. nspin==4) THEN
      is = 1
@@ -434,7 +434,7 @@ SUBROUTINE xk_pool( ik, nkstot, ik_pool,  which_pool )
 !------------------------------------------------------------------------
 !
 !  This routine is a simplified version of set_kpoint_vars in
-!  xml_io_files. It recieves the index ik of a k_point in the complete
+!  xml_io_files. It receives the index ik of a k_point in the complete
 !  k point list and return the index within the pool ik_pool, and
 !  the number of the pool that has that k point.
 !

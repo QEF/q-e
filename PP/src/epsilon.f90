@@ -1300,10 +1300,9 @@ END SUBROUTINE offdiag_calc
 SUBROUTINE dipole_calc( ik, dipole_aux, metalcalc, nbndmin, nbndmax )
   !------------------------------------------------------------------
   USE kinds,                ONLY : DP
-  USE wvfct,                ONLY : npw, nbnd, igk, g2kin
-  USE gvecw,                ONLY : gcutw
+  USE wvfct,                ONLY : nbnd
   USE wavefunctions_module, ONLY : evc
-  USE klist,                ONLY : xk
+  USE klist,                ONLY : xk, ngk, igk_k
   USE gvect,                ONLY : ngm, g
   USE io_files,             ONLY : nwordwfc, iunwfc
   USE grid_module,          ONLY : focc
@@ -1318,18 +1317,13 @@ IMPLICIT NONE
   LOGICAL, INTENT(in)        :: metalcalc
   !
   ! local variables
-  INTEGER :: iband1,iband2,ig
+  INTEGER :: iband1,iband2,ig,npw
   COMPLEX(DP)   :: caux
 
   !
   ! Routine Body
   !
   CALL start_clock( 'dipole_calc' )
-
-  !
-  ! setup k+G grids for each kpt
-  !
-  CALL gk_sort (xk (1, ik), ngm, g, gcutw, npw, igk, g2kin)
   !
   ! read wfc for the given kpt
   !
@@ -1339,6 +1333,7 @@ IMPLICIT NONE
   !
   dipole_aux(:,:,:) = (0.0_DP,0.0_DP)
   !
+  npw = ngk(ik)
   DO iband2 = nbndmin,nbndmax
       IF ( focc(iband2,ik) <  2.0d0) THEN
   DO iband1 = nbndmin,nbndmax
@@ -1351,7 +1346,7 @@ IMPLICIT NONE
                  caux= conjg(evc(ig,iband1))*evc(ig,iband2)
                  !
                  dipole_aux(:,iband1,iband2) = dipole_aux(:,iband1,iband2) + &
-                       ( g(:,igk(ig)) ) * caux
+                       ( g(:,igk_k(ig,ik)) ) * caux
                  !
             ENDDO
       ENDIF
@@ -1372,7 +1367,7 @@ IMPLICIT NONE
           caux= conjg(evc(ig,iband1))*evc(ig,iband1)
           !
           dipole_aux(:,iband1,iband1) = dipole_aux(:,iband1,iband1) + &
-                                        ( g(:,igk(ig))+ xk(:,ik) ) * caux
+                                        ( g(:,igk_k(ig,ik))+ xk(:,ik) ) * caux
           !
         ENDDO
      ENDDO

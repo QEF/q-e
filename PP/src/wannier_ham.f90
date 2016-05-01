@@ -85,10 +85,9 @@ SUBROUTINE new_hamiltonian(form, plot_bands)
   USE io_files
   USE kinds, ONLY: DP
   USE wannier_new, ONLY: nwan, pp, wannier_occ, wannier_energy, wan_in
-  USE klist, ONLY: nks, xk, wk, ngk, igk_k
+  USE klist, ONLY: nks, xk, wk
   USE lsda_mod, ONLY: isk, current_spin, lsda, nspin
-  USE wvfct, ONLY: nbnd, npwx, igk, npw, g2kin, et
-  USE gvecw, ONLY : gcutw
+  USE wvfct, ONLY: nbnd, npwx, et
   USE gvect
   USE constants,  ONLY : rytoev , tpi
   USE buffers
@@ -124,15 +123,9 @@ SUBROUTINE new_hamiltonian(form, plot_bands)
   ENDIF
 
   current_spin = 1
-  CALL init_us_1
-  CALL init_at_1
+  CALL init_us_1 ! already called in read_file
+  CALL init_at_1 ! already called in read_file
 
-  ! Generating igk for orthoatwfc()
-
-  DO ik = 1, nks
-     CALL gk_sort( xk(1,ik), ngm, g, gcutw, ngk(ik), igk_k(1,ik), g2kin )
-  ENDDO
-  !
   CALL orthoatwfc( .true. )
 
   wan_func = ZERO
@@ -141,7 +134,6 @@ SUBROUTINE new_hamiltonian(form, plot_bands)
 
   DO ik = 1, nks
      write(stdout,*) '       Computing k-point', ik
-     CALL gk_sort (xk (1, ik), ngm, g, gcutw, npw, igk, g2kin)
      IF (lsda) current_spin  = isk(ik)
      CALL wannier_proj(ik,wan_func)
 

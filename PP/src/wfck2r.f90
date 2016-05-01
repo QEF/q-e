@@ -20,9 +20,8 @@ PROGRAM wfck2r
   USE kinds, ONLY : DP
   USE io_files,  ONLY : prefix, tmp_dir, diropn
   USE mp_global, ONLY : npool, mp_startup,  intra_image_comm
-  USE wvfct,     ONLY : nbnd, npwx, igk, npw , g2kin
-  USE gvecw,     ONLY : gcutw
-  USE klist,     ONLY : xk     , nks
+  USE wvfct,     ONLY : nbnd, npwx
+  USE klist,     ONLY : xk, nks, ngk, igk_k
   USE io_global, ONLY : ionode, ionode_id, stdout
   USE mp,        ONLY : mp_bcast, mp_barrier
   USE mp_world,  ONLY : world_comm
@@ -41,8 +40,8 @@ PROGRAM wfck2r
   CHARACTER (len=256) :: outdir
   CHARACTER(LEN=256), external :: trimcheck
   character(len=256) :: filename
-  INTEGER             :: iunitout,ios,ik,i,iuwfcr,lrwfcr,ibnd, ig, is
-  LOGICAL             :: exst
+  INTEGER            :: npw, iunitout,ios,ik,i,iuwfcr,lrwfcr,ibnd, ig, is
+  LOGICAL            :: exst
   COMPLEX(DP), ALLOCATABLE :: evc_r(:,:), dist_evc_r(:,:)
 
   NAMELIST / inputpp / outdir, prefix
@@ -110,26 +109,22 @@ PROGRAM wfck2r
   
 
   DO ik = 1,nks
-
-     !
-     !    prepare the indices of this k point
-     !
-     CALL gk_sort (xk (1, ik), ngm, g, gcutw, npw, igk, g2kin)
      
+     npw = ngk(ik)
      CALL davcio (evc, 2*nwordwfc, iunwfc, ik, - 1)
 
      do ibnd=1,nbnd 
-     !
-     ! I perform fourier transform
-     !
+        !
+        ! perform the fourier transform
+        !
         evc_r = cmplx(0.d0, 0.d0)     
         do ig = 1, npw
-           evc_r (nls (igk (ig) ),1 ) = evc (ig,ibnd)
+           evc_r (nls (igk_k(ig,ik) ),1 ) = evc (ig,ibnd)
         enddo
         CALL invfft ('Wave', evc_r(:,1), dffts)
         IF (noncolin) THEN
            DO ig = 1, npw
-              evc_r (nls(igk(ig)),2) = evc (ig+npwx, ibnd)
+              evc_r (nls(igk_k(ig,ik)),2) = evc (ig+npwx, ibnd)
            ENDDO
            CALL invfft ('Wave', evc_r(:,2), dffts)
         ENDIF
@@ -152,10 +147,6 @@ PROGRAM wfck2r
      !
      ! ... First task is the only task allowed to write the file
      !
-
-     
-
-
 
   enddo
 

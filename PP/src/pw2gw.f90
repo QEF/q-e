@@ -108,13 +108,13 @@ SUBROUTINE compute_gw( use_gmaps )
   USE constants, ONLY : eps8, pi, AUTOEV, rytoev
   USE cell_base, ONLY : alat, tpiba2, at, bg, omega
   USE symm_base, ONLY : s, nsym
-  USE wvfct,     ONLY : npw, npwx, nbnd, igk, g2kin, wg, et
+  USE wvfct,     ONLY : npwx, nbnd, wg, et
   USE gvecw,     ONLY : gcutw
   USE control_flags, ONLY : gamma_only
   USE gvect,         ONLY : ngm, g, gg, ig_l2g, nl
   USE fft_base,  ONLY: dfftp
   USE fft_interfaces, ONLY : fwfft, invfft
-  USE klist ,        ONLY : nks, xk, wk
+  USE klist ,        ONLY : nks, xk, wk, ngk, igk_k
   USE lsda_mod,      ONLY : nspin
   USE io_files,      ONLY : nwordwfc, iunwfc
   USE wavefunctions_module, ONLY : evc, psic
@@ -138,7 +138,7 @@ SUBROUTINE compute_gw( use_gmaps )
   LOGICAL, INTENT(in) :: use_gmaps
 
   INTEGER :: ii(16), ngw, nkpt, ig, ik, ir, n, i,j,k, io = 98, iband1, iband2
-  INTEGER :: omax, o, iproc
+  INTEGER :: npw, omax, o, iproc
   INTEGER, ALLOCATABLE :: in1(:), in2(:), in3(:)
   INTEGER, ALLOCATABLE :: in1_tmp(:), in2_tmp(:), in3_tmp(:)
   INTEGER, ALLOCATABLE :: inx_rcv(:), ig_l2g_rcv(:)
@@ -292,20 +292,19 @@ SUBROUTINE compute_gw( use_gmaps )
   !  GW codes require on input psi_k(G), using the same set of G
   !
   g2max = 0.0d0
-  g2kin(:) = 0.0d0
   !DEBUG
   IF (ionode) WRITE(6,*) ' nks ', nks
   IF (ionode) WRITE(6,*) ' k points in  cartesian coordinates'
   IF (ionode) WRITE(6,'(1x,3f10.6)') ( (xk(i,ik),i=1,3), ik=1,nks)
   !DEBUG
   igwx  = 0  !  maximum G vector index
+  g2max = gcutw ! RAGGIO DELLA SFERA |G+k|<cut
   DO ik = 1, nks
-     CALL gk_sort (xk (1, ik), ngm, g, gcutw, npw, igk, g2kin)
-     g2max = max ( g2max, maxval (g2kin(1:npw)) )
+     npw = ngk(ik)
      ! WRITE( 6, * ) 'DEBUG g2max ', g2max
      ! g2max, g2kin = RAGGIO DELLA SFERA |G+k|<cut, non MASSIMO |G| nella sfera
      ! g2max <= gcutw   PER COSTRUZIONE
-     igwx = max( igwx, maxval( igk(1:npw) ) )
+     igwx = max( igwx, maxval( igk_k(1:npw,ik) ) )
   ENDDO
   !IF (ionode) write(*,*) "igwx = ", igwx
   !
@@ -631,13 +630,12 @@ SUBROUTINE compute_gw( use_gmaps )
 
   DO ik = 1, nkpt
     !
-    CALL gk_sort (xk (1, ik), ngm, g, gcutw, npw, igk, g2kin)
-    !
+    npw = ngk(ik)
     ALLOCATE( igk_l2g( npw ) )
     !
     DO ig = 1, npw
        !
-       igk_l2g(ig) = ig_l2g(igk(ig))
+       igk_l2g(ig) = ig_l2g(igk_k(ig,ik))
        !
     ENDDO
     !
@@ -655,7 +653,7 @@ SUBROUTINE compute_gw( use_gmaps )
       ! into array c0 with |G| ordering
       !
       DO ig = 1, npw
-         IF( igk(ig) < 1 .or. igk(ig) > size( c0 ) ) &
+         IF( igk_k(ig,ik) < 1 .or. igk_k(ig,ik) > size( c0 ) ) &
             CALL errore(' pw2gw ', ' c0 too small ', 1 )
       ENDDO
 
@@ -670,7 +668,7 @@ SUBROUTINE compute_gw( use_gmaps )
         ! important: missing components must be set to zero
         c0 (:) = 0.d0
         DO ig=1,npw
-          c0(igk(ig)) = evc(ig,i)
+          c0(igk_k(ig,ik)) = evc(ig,i)
         ENDDO
         c0_m(:,i)=c0(:)
 
@@ -687,7 +685,7 @@ SUBROUTINE compute_gw( use_gmaps )
      ! k + g thet must be in 2piba units
      kpg(:,:) = 0.d0
      DO ig=1,npw
-        kpg(:,igk(ig))= xk_s(:,ik)+g(:,igk(ig))
+        kpg(:,igk_k(ig,ik))= xk_s(:,ik)+g(:,igk_k(ig,ik))
      ENDDO
 
      DO iband1 = 1,n
@@ -742,12 +740,12 @@ SUBROUTINE compute_gw( use_gmaps )
    ALLOCATE ( vxc(dfftp%nnr,nspin) )
    CALL v_xc (rho, rho_core, rhog_core, etxc, vtxc, vxc)
    DO ik=1,nkpt
-      CALL gk_sort (xk (1, ik), ngm, g, gcutw, npw, igk, g2kin)
+      npw = ngk(ik)
       CALL davcio( evc, 2*nwordwfc, iunwfc, ik, -1 )
       DO iband1 = 1, nbnd
          psic(:) = (0.d0, 0.d0)
          DO ig = 1, npw
-            psic(nl(igk(ig)))  = evc(ig,iband1)
+            psic(nl(igk_k(ig,ik)))  = evc(ig,iband1)
          ENDDO
 
          CALL invfft ('Dense', psic, dfftp)
@@ -847,7 +845,7 @@ SUBROUTINE write_gmaps ( kunit)
   USE gvect,     ONLY : ngm, ngm_g, ig_l2g, g
   USE lsda_mod,  ONLY : nspin, isk
   USE ions_base, ONLY : ntyp => nsp, tau, ityp
-  USE wvfct,     ONLY : nbnd, npw, npwx, et, g2kin
+  USE wvfct,     ONLY : nbnd, npwx, et, g2kin
   USE gvecw,     ONLY : gcutw
   USE klist,     ONLY : nkstot, ngk, nks, xk
   USE wavefunctions_module,  ONLY : evc
@@ -862,7 +860,7 @@ SUBROUTINE write_gmaps ( kunit)
   IMPLICIT NONE
   INTEGER :: kunit
 
-  INTEGER :: i, j, k, ig, ik, ibnd, na, ngg, ikw
+  INTEGER :: npw, i, j, k, ig, ik, ibnd, na, ngg, ikw
   INTEGER, ALLOCATABLE :: kisort(:)
   INTEGER :: npool, nkbl, nkl, nkr, npwx_g
   INTEGER :: ike, iks, npw_g, ispin

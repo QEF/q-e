@@ -149,7 +149,6 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, no_overlap)
   USE klist,                ONLY : xk, nks, nkstot, ngk, igk_k
   USE io_files,             ONLY : iunpun, nwordwfc, iunwfc
   USE wvfct,                ONLY : nbnd, et, npwx
-  USE gvecw,                ONLY : gcutw
   USE uspp,                 ONLY : nkb, vkb, qq
   USE uspp_param,           ONLY : upf, nh, nhm
   USE noncollin_module,     ONLY : noncolin, npol

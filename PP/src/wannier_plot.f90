@@ -95,10 +95,9 @@ SUBROUTINE plot_wannier(nc,n0)
   USE io_files
   USE kinds,         ONLY : DP
   USE wannier_new,   ONLY : nwan,plot_wan_num,plot_wan_spin
-  USE klist,         ONLY : nks, xk, wk
-  USE lsda_mod,      ONLY : isk, current_spin, lsda, nspin
-  USE wvfct,         ONLY : nbnd, npwx, igk, npw, g2kin
-  USE gvecw,         ONLY : gcutw
+  USE klist,         ONLY : nks, xk, wk, ngk, igk_k
+  USE lsda_mod,      ONLY : isk, lsda, nspin
+  USE wvfct,         ONLY : nbnd, npwx, g2kin
   USE constants,     ONLY : rytoev , tpi
   USE buffers
   USE symm_base,     ONLY : nsym
@@ -114,7 +113,7 @@ SUBROUTINE plot_wannier(nc,n0)
 
   IMPLICIT NONE
   INTEGER, INTENT(in) :: nc(3), n0(3)
-  INTEGER :: i,j, k, ik, n, ir, ios, n1, n2, n3,i1,j1,k1
+  INTEGER :: npw, is, i,j, k, ik, n, ir, ios, n1, n2, n3,i1,j1,k1
   COMPLEX(DP) :: phase
   COMPLEX(DP), ALLOCATABLE :: wan_func(:,:), pp_ort(:,:), psic(:), psic3(:,:,:), psic3_0(:,:,:), psic_sum(:,:,:,:), paux(:,:)
   real(DP), ALLOCATABLE :: rho(:,:,:,:), raux(:)
@@ -137,15 +136,14 @@ SUBROUTINE plot_wannier(nc,n0)
   CALL struc_fact (nat, tau, ntyp, ityp, ngm, g, bg, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
        strf, eigts1, eigts2, eigts3)
 
-  current_spin = 1
   wan_func = ZERO
   psic3 = ZERO
   psic3_0 = ZERO
   psic_sum = ZERO
 
   DO ik = 1, nks
-     CALL gk_sort (xk (1, ik), ngm, g, gcutw, npw, igk, g2kin)
-     IF (lsda) current_spin  = isk(ik)
+     npw = ngk(ik)
+     is  = isk(ik)
 
      wan_func = ZERO
      CALL get_buffer( wan_func, nwordwf, iunwf, ik)
@@ -153,7 +151,7 @@ SUBROUTINE plot_wannier(nc,n0)
      psic(1:dffts%nnr) = ZERO
      rho = ZERO
      DO j = 1, npw
-        psic (nls (igk (j) ) ) = wan_func (j, plot_wan_num)
+        psic (nls (igk_k(j,ik) ) ) = wan_func (j, plot_wan_num)
      ENDDO
 
      CALL invfft ('Wave', psic, dffts)
@@ -180,7 +178,7 @@ SUBROUTINE plot_wannier(nc,n0)
               i1 = i - floor(dble(i-0.01)/dble(dffts%nr1x-1))*(dffts%nr1x-1)
               j1 = j - floor(dble(j-0.01)/dble(dffts%nr2x-1))*(dffts%nr2x-1)
               k1 = k - floor(dble(k-0.01)/dble(dffts%nr3x-1))*(dffts%nr3x-1)
-              psic_sum(i,j,k,current_spin) = psic_sum(i,j,k,current_spin)+ &
+              psic_sum(i,j,k,is) = psic_sum(i,j,k,is)+ &
                    cmplx(wk(ik),0.d0,kind=DP)*psic3_0(i1,j1,k1)*phase
            ENDDO
         ENDDO
@@ -190,11 +188,12 @@ SUBROUTINE plot_wannier(nc,n0)
 
   rho = 0.d0
 
-  DO n=1, nspin
+  DO is=1, nspin
      DO i=1, dffts%nr1x*nc(1)
         DO j=1, dffts%nr2x*nc(2)
            DO k=1,dffts%nr3x*nc(3)
-              rho(i,j,k,n) = dreal(psic_sum(i,j,k,n))**2+aimag(psic_sum(i,j,k,n))**2
+              rho(i,j,k,is) = dreal(psic_sum(i,j,k,is))**2 +  &
+                              aimag(psic_sum(i,j,k,is))**2
            ENDDO
         ENDDO
      ENDDO
