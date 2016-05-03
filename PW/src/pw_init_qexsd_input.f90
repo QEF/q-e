@@ -89,7 +89,7 @@
   INTEGER                                  ::   lung,l 
   CHARACTER,EXTERNAL                       ::   capital
   CHARACTER(len=20)                        ::   dft_shortname
-  CHARACTER(len=25)                        ::   dft_longname  
+  CHARACTER(len=25)                        ::   dft_longname   
   !
   ! 
   obj%tagname=TRIM(obj_tagname)
@@ -175,7 +175,8 @@
      END IF
   END IF
   !
-  CALL qexsd_init_dft (obj%dft,TRIM(dft_name),dft_is_hybrid,ip_nqx1,ip_nqx2,ip_nqx3,ip_ecutfock,exx_fraction,      &
+  CALL qexsd_init_dft (obj%dft,TRIM(dft_name),dft_is_hybrid,max(ip_nqx1,1) ,max(ip_nqx2,1), max(ip_nqx3,1), &
+                       ip_ecutfock,exx_fraction,      &
                        screening_parameter,exxdiv_treatment, x_gamma_extrapolation, ip_ecutvcut,          &
                        ip_lda_plus_U,ip_lda_plus_u_kind,2*hubbard_lmax+1,ip_nspin,ntyp,0,ip_nat,atm,    &
                        ip_ityp,ip_hubbard_u,ip_hubbard_j0,ip_hubbard_alpha,ip_hubbard_beta,ip_hubbard_j,           &
