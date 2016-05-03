@@ -561,7 +561,7 @@ MODULE qexsd_input
    ! 
    CHARACTER(LEN=*),PARAMETER                   :: TAGNAME="electric_field",&
                                                    SAWTOOTH="sawtooth_potential",&
-                                                   HOMOGENEOUS="homogenous_electric_field",&
+                                                   HOMOGENEOUS="homogenous_field",&
                                                    BERRYPHASE="Berry_Phase"
    REAL(DP)                                     :: emaxpos_loc=0.d0,eopreg_loc=0.d0,electric_field_amplitude=0.d0
    REAL(DP),DIMENSION(3)                        :: efield_cart_loc=0.d0
