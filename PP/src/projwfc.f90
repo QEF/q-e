@@ -457,8 +457,8 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
   CALL allocate_bec_type (nkb, natomwfc, becp )
   ALLOCATE(e (natomwfc) )
   !  
-  CALL init_us_1 ! already called in read_file
-  CALL init_at_1 ! already called in read_file
+  CALL init_us_1
+  CALL init_at_1
   !
   !    loop on k points
   !
@@ -947,8 +947,8 @@ SUBROUTINE projwave_nc(filproj, lsym, lwrite_ovp, lbinary, ef_0 )
   ENDIF
   ovps_aux  = (0.d0, 0.d0)
   !
-  CALL init_us_1 ! already called in read_file
-  CALL init_at_1 ! already called in read_file
+  CALL init_us_1
+  CALL init_at_1
   !
   IF (lspinorb) THEN
      !
@@ -1588,8 +1588,8 @@ SUBROUTINE projwave_paw( filproj)
   !
   CALL allocate_bec_type (nkb, nbnd, becp )
   !
-  CALL init_us_1 ! already called in read_file
-  CALL init_at_1 ! already called in read_file
+  CALL init_us_1
+  CALL init_at_1
   !
   !    loop on k points
   !
@@ -1970,8 +1970,8 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
   !
   ALLOCATE(e (natomwfc) )
   !
-  CALL init_us_1 ! already called in read_file
-  CALL init_at_1 ! already called in read_file
+  CALL init_us_1
+  CALL init_at_1
   !
   !    loop on k points
   !

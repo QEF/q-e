@@ -97,6 +97,7 @@ PROGRAM do_bands
      lp=.false.
      no_overlap=.true.
   ENDIF
+  IF (lsym) no_overlap=.true.
 
   IF ( npool > 1 .and..not.(lsym.or.no_overlap)) CALL errore('bands', &
                                              'pools not implemented',npool)
@@ -115,7 +116,6 @@ PROGRAM do_bands
   !
   CALL openfil_pp()
   !
-  IF (lsym) no_overlap=.true.
   IF (plot_2d) THEN
      CALL punch_band_2d(filband,spin_component)
   ELSE
@@ -749,6 +749,7 @@ SUBROUTINE punch_plottable_bands ( filband, nks1tot, nks2tot, nkstot, nbnd, &
      ELSE
         WRITE (iunpun0,'(2f10.4)') (kx(n), et(i,n),n=nks2tot,nks1tot,-1)
      ENDIF
+     WRITE (iunpun0,*)
   ENDDO
   !
   WRITE ( stdout, &

@@ -123,8 +123,8 @@ SUBROUTINE new_hamiltonian(form, plot_bands)
   ENDIF
 
   current_spin = 1
-  CALL init_us_1 ! already called in read_file
-  CALL init_at_1 ! already called in read_file
+  CALL init_us_1
+  CALL init_at_1
 
   CALL orthoatwfc( .true. )
 

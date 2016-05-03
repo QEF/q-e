@@ -22,7 +22,8 @@ SUBROUTINE local_dos1d (ik, kband, plan)
   USE lsda_mod, ONLY: current_spin
   USE uspp, ONLY: becsum, indv, nhtol, nhtoj
   USE uspp_param, ONLY: upf, nh, nhm
-  USE wvfct, ONLY: npw, npwx, wg, igk
+  USE wvfct, ONLY: npwx, wg
+  USE klist, ONLY: ngk, igk_k
   USE noncollin_module, ONLY: noncolin, npol
   USE spin_orb, ONLY: lspinorb, fcoef
   USE wavefunctions_module,  ONLY: evc, psic, psic_nc
@@ -41,7 +42,7 @@ SUBROUTINE local_dos1d (ik, kband, plan)
   !    Additional local variables for Ultrasoft PP's
   !
 
-  INTEGER :: ikb, jkb, ijkb0, ih, jh, na, ijh, ipol, np
+  INTEGER :: npw, ikb, jkb, ijkb0, ih, jh, na, ijh, ipol, np
   ! counter on beta functions
   ! counter on beta functions
   ! auxiliary variable for ijkb0
@@ -77,6 +78,7 @@ SUBROUTINE local_dos1d (ik, kband, plan)
   aux(:) = 0.d0
   becsum(:,:,:) = 0.d0
 
+  npw = ngk(ik)
   wg (kband, ik) = 1.d0
   !
   !
@@ -86,8 +88,8 @@ SUBROUTINE local_dos1d (ik, kband, plan)
   IF (noncolin) THEN
      psic_nc = (0.d0,0.d0)
      DO ig = 1, npw
-        psic_nc (nls (igk (ig) ), 1 ) = evc (ig     , kband)
-        psic_nc (nls (igk (ig) ), 2 ) = evc (ig+npwx, kband)
+        psic_nc (nls (igk_k (ig,ik) ), 1 ) = evc (ig     , kband)
+        psic_nc (nls (igk_k (ig,ik) ), 2 ) = evc (ig+npwx, kband)
      ENDDO
      DO ipol=1,npol
         CALL invfft ('Wave', psic_nc(:,ipol), dffts)
@@ -103,7 +105,7 @@ SUBROUTINE local_dos1d (ik, kband, plan)
   ELSE
      psic(1:dffts%nnr) = (0.d0,0.d0)
      DO ig = 1, npw
-        psic (nls (igk (ig) ) ) = evc (ig, kband)
+        psic (nls (igk_k (ig,ik) ) ) = evc (ig, kband)
      ENDDO
      CALL invfft ('Wave', psic, dffts)
 

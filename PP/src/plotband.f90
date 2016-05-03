@@ -328,6 +328,7 @@ PROGRAM plotband
            ELSE
               WRITE (2,'(2f10.4)') (kx(n), e(i,n),n=nks,1,-1)
            ENDIF
+           WRITE (2,*)
         ENDIF
      ENDDO
      CLOSE (unit = 2)

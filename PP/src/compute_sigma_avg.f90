@@ -16,9 +16,9 @@ SUBROUTINE compute_sigma_avg(sigma_avg,becp_nc,ik,lsigma)
   USE spin_orb,             ONLY : fcoef
   USE uspp,                 ONLY : nkb,qq,vkb,nhtol,nhtoj,nhtolm,indv
   USE uspp_param,           ONLY : upf, nh, nhm
-  USE wvfct,                ONLY : nbnd, npwx, npw, igk
+  USE wvfct,                ONLY : nbnd, npwx
   USE wavefunctions_module, ONLY : evc, psic_nc
-  USE klist,                ONLY : nks, xk
+  USE klist,                ONLY : nks, xk, ngk, igk_k
   USE gvect,                ONLY : g,gg
   USE gvecs,                ONLY : nls, nlsm, doublegrid
   USE scf,                  ONLY : rho
@@ -36,10 +36,10 @@ SUBROUTINE compute_sigma_avg(sigma_avg,becp_nc,ik,lsigma)
   COMPLEX(DP) :: becp_nc(nkb,npol,nbnd)
   !
   REAL(kind=DP) :: sigma_avg(4,nbnd)
-  INTEGER :: ik
+  INTEGER, INTENT(in) :: ik
 
   INTEGER :: ibnd, ig, ir, ijkb0, na, np, ih, ikb, jh
-  INTEGER :: ipol, kh, kkb, is1, is2, npwi, npwf
+  INTEGER :: ipol, kh, kkb, is1, is2, npw, npwi, npwf
   INTEGER :: li, mi, lj, mj, mi1, i, j, k, ijk
   REAL(DP) :: magtot1(4), magtot2(4)
   REAL(DP) :: x0, y0, dx, dy, r_cut, r_aux, xx, yy
@@ -102,6 +102,7 @@ SUBROUTINE compute_sigma_avg(sigma_avg,becp_nc,ik,lsigma)
      ENDDO
   ENDDO
 
+  npw = ngk(ik)
   DO ibnd = 1, nbnd
      rho%of_r = 0.d0
      magtot1 = 0.d0
@@ -110,8 +111,8 @@ SUBROUTINE compute_sigma_avg(sigma_avg,becp_nc,ik,lsigma)
      !--  Pseudo part
      psic_nc = (0.D0,0.D0)
      DO ig = 1, npw
-        psic_nc(nls(igk(ig)), 1)=evc(ig     ,ibnd)
-        psic_nc(nls(igk(ig)), 2)=evc(ig+npwx,ibnd)
+        psic_nc(nls(igk_k(ig,ik)), 1)=evc(ig     ,ibnd)
+        psic_nc(nls(igk_k(ig,ik)), 2)=evc(ig+npwx,ibnd)
      ENDDO
      DO ipol=1,npol
         CALL invfft ('Wave', psic_nc(:,ipol), dffts)
@@ -152,9 +153,9 @@ SUBROUTINE compute_sigma_avg(sigma_avg,becp_nc,ik,lsigma)
            dfy = 0.d0
            npwi=(ipol-1)*npwx+1
            npwf=(ipol-1)*npwx+npw
-           dfx(nls(igk(1:npw))) = (xk(1,ik)+g(1,igk(1:npw)))*tpiba* &
+           dfx(nls(igk_k(1:npw,ik))) = (xk(1,ik)+g(1,igk_k(1:npw,ik)))*tpiba* &
                 (0.d0,1.d0)*evc(npwi:npwf,ibnd)
-           dfy(nls(igk(1:npw))) = (xk(2,ik)+g(2,igk(1:npw)))*tpiba* &
+           dfy(nls(igk_k(1:npw,ik))) = (xk(2,ik)+g(2,igk_k(1:npw,ik)))*tpiba* &
                 (0.d0,1.d0)*evc(npwi:npwf,ibnd)
            CALL invfft ('Wave', dfx, dffts)
            CALL invfft ('Wave', dfy, dffts)
