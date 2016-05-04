@@ -38,9 +38,9 @@ SUBROUTINE punch( what )
   ! ... save here wavefunctions to file if never saved before
   !
   IF ( .NOT. twfcollect .AND. nks == 1 ) THEN
-     if(io_level < 1)  CALL diropn( iunwfc, 'wfc', 2*nwordwfc, exst )
+     IF (io_level < 1) CALL diropn( iunwfc, 'wfc', 2*nwordwfc, exst )
      CALL davcio ( evc, 2*nwordwfc, iunwfc, nks, 1 )
-     CLOSE ( UNIT=iunwfc, STATUS='keep' )
+     IF (io_level < 1) CLOSE ( UNIT=iunwfc, STATUS='keep' )
   END IF
   iunpun = 4
   !
