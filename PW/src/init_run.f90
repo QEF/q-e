@@ -28,8 +28,10 @@ SUBROUTINE init_run()
   USE wannier_new,        ONLY : use_wannier    
   USE dfunct,             ONLY : newd
   USE esm,                ONLY : do_comp_esm, esm_init
-  USE mp_bands,           ONLY : intra_bgrp_comm
+  USE mp_bands,           ONLY : intra_bgrp_comm, inter_bgrp_comm, nproc_bgrp, root_bgrp
+  USE mp,                 ONLY : mp_bcast
   USE tsvdw_module,       ONLY : tsvdw_initialize
+  USE wavefunctions_module, ONLY : evc
   !
   IMPLICIT NONE
   !
@@ -110,6 +112,10 @@ SUBROUTINE init_run()
 #endif
   !
   IF ( lmd ) CALL allocate_dyn_vars()
+  !
+  IF( nproc_bgrp > 1 ) THEN
+     CALL mp_bcast( evc, root_bgrp, inter_bgrp_comm )
+  ENDIF
   !
   CALL stop_clock( 'init_run' )
   !
