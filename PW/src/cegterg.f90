@@ -199,6 +199,10 @@ SUBROUTINE cegterg( npw, npwx, nvec, nvecx, npol, evc, ethr, &
      ! ... diagonalize the reduced hamiltonian
      !
      CALL cdiaghg( nbase, nvec, hc, sc, nvecx, ew, vc )
+     IF( nbgrp > 1 ) THEN
+        CALL mp_bcast( vc, root_bgrp, inter_bgrp_comm )
+        CALL mp_bcast( ew, root_bgrp, inter_bgrp_comm )
+     ENDIF
      !
      e(1:nvec) = ew(1:nvec)
      !
@@ -352,6 +356,10 @@ SUBROUTINE cegterg( npw, npwx, nvec, nvecx, npol, evc, ethr, &
      ! ... diagonalize the reduced hamiltonian
      !
      CALL cdiaghg( nbase, nvec, hc, sc, nvecx, ew, vc )
+     IF( nbgrp > 1 ) THEN
+        CALL mp_bcast( vc, root_bgrp, inter_bgrp_comm )
+        CALL mp_bcast( ew, root_bgrp, inter_bgrp_comm )
+     ENDIF
      !
      ! ... test for convergence
      !
@@ -710,6 +718,10 @@ SUBROUTINE pcegterg( npw, npwx, nvec, nvecx, npol, evc, ethr, &
      !     Calling block parallel algorithm
      !
      CALL pcdiaghg( nbase, hl, sl, nx, ew, vl, desc )
+     IF( nbgrp > 1 ) THEN
+        CALL mp_bcast( vl, root_bgrp, inter_bgrp_comm )
+        CALL mp_bcast( ew, root_bgrp, inter_bgrp_comm )
+     ENDIF
      !
      e(1:nvec) = ew(1:nvec)
      !
@@ -834,6 +846,10 @@ SUBROUTINE pcegterg( npw, npwx, nvec, nvecx, npol, evc, ethr, &
      !     Call block parallel algorithm
      !
      CALL pcdiaghg( nbase, hl, sl, nx, ew, vl, desc )
+     IF( nbgrp > 1 ) THEN
+        CALL mp_bcast( vl, root_bgrp, inter_bgrp_comm )
+        CALL mp_bcast( ew, root_bgrp, inter_bgrp_comm )
+     ENDIF
      !
      ! ... test for convergence
      !
