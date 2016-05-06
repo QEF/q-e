@@ -20,7 +20,8 @@ PROGRAM do_bands
   USE environment,   ONLY : environment_start, environment_end
   USE wvfct,     ONLY : nbnd
   USE klist,     ONLY : nkstot, two_fermi_energies
-  USE noncollin_module, ONLY : i_cons
+  USE noncollin_module, ONLY : noncolin, i_cons
+  USE lsda_mod,  ONLY : nspin
   USE io_global, ONLY : ionode, ionode_id, stdout
   USE mp,        ONLY : mp_bcast
   USE mp_world,  ONLY : world_comm
@@ -101,6 +102,8 @@ PROGRAM do_bands
 
   IF ( npool > 1 .and..not.(lsym.or.no_overlap)) CALL errore('bands', &
                                              'pools not implemented',npool)
+  IF ( spin_component < 1 .OR. spin_component > 2 ) &
+     CALL errore('bands','incorrect spin_component',1)
   !
   !   Now allocate space for pwscf variables, read and check them.
   !
@@ -113,6 +116,10 @@ PROGRAM do_bands
   IF (two_fermi_energies.or.i_cons /= 0) &
      CALL errore('bands',&
      'The bands code with constrained magnetization has not been tested',1)
+  IF ( ANY(lsigma) .AND. .NOT.noncolin ) &
+     CALL errore ('punch_band', 'lsigma requires noncollinear run', 1 )
+  IF ( spin_component/=1 .and. nspin/=2 ) &
+     CALL errore('punch_bands','incorrect spin_component',1)
   !
   CALL openfil_pp()
   !
@@ -145,7 +152,6 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, no_overlap)
   USE cell_base,            ONLY : at
   USE constants,            ONLY : rytoev
   USE gvect,                ONLY : g, ngm
-  USE lsda_mod,             ONLY : nspin
   USE klist,                ONLY : xk, nks, nkstot, ngk, igk_k
   USE io_files,             ONLY : iunpun, nwordwfc, iunwfc
   USE wvfct,                ONLY : nbnd, et, npwx
@@ -199,15 +205,8 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, no_overlap)
   ! scalar product with the S matrix
 
   IF (filband == ' ') RETURN
-  DO ipol=1,4
-     IF (lsigma(ipol).and..not.noncolin) THEN
-        CALL errore ('punch_band', 'lsigma requires noncollinear run', &
-                    ipol )
-        lsigma=.false.
-     ENDIF
-  ENDDO
 
-  iunpun = 18
+  iunpun = 19
   maxdeg = 30 * npol
   !
   ios(:) = 0
@@ -251,11 +250,6 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, no_overlap)
   ALLOCATE (ok (nbnd), il (nbnd,nkstot))
   ALLOCATE (degeneracy(nbnd), edeg(nbnd))
   ALLOCATE (idx(nbnd), degbands(nbnd,maxdeg))
-  !
-  IF (spin_component/=1.and.nspin/=2) &
-     CALL errore('punch_bands','incorrect spin_component',1)
-  IF (spin_component<1.or.spin_component>2) &
-     CALL errore('punch_bands','incorrect lsda spin_component',1)
 
   CALL find_nks1nks2(1,nkstot,nks1tot,nks1,nks2tot,nks2,spin_component)
 
@@ -617,7 +611,7 @@ SUBROUTINE punch_plottable_bands ( filband, nks1tot, nks2tot, nkstot, nbnd, &
   INTEGER, INTENT(IN) :: nks1tot, nks2tot, nkstot, nbnd
   REAL(dp), INTENT(IN) :: xk(3,nkstot), et(nbnd,nkstot)
   !
-  INTEGER, PARAMETER :: max_lines = 100, stdout=6, iunpun0=19
+  INTEGER, PARAMETER :: max_lines = 100, stdout=6, iunpun0=18
   INTEGER:: ios, i, n, nlines, npoints(max_lines), point(max_lines)
   LOGICAL :: high_symmetry(nkstot), opnd
   REAL(dp) :: k1(3), k2(3), kx(nkstot), ps, dxmod, dxmod_save

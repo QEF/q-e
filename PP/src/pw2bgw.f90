@@ -709,9 +709,8 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
 
   DO ik = 1, nk_l
     npw = ngk ( ik )
-    igk(1:npw) = igk_k(1:npw,ik)
     DO ig = 1, npw
-      igk_l2g ( ig, ik ) = ig_l2g ( igk ( ig ) )
+      igk_l2g ( ig, ik ) = ig_l2g ( igk_k (ig, ik) )
     ENDDO
     DO ig = npw + 1, npwx
       igk_l2g ( ig, ik ) = 0

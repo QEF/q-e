@@ -687,6 +687,7 @@ SUBROUTINE find_band_sym_so (ik,evc,et,nsym,s,ftau,d_spin,gk, &
   USE rap_point_group_is, ONLY : gname_is
   USE gvect,              ONLY : ngm, nl
   USE wvfct,              ONLY : nbnd, npwx
+  USE klist,              ONLY : ngk
   USE spin_orb,           ONLY : domag
   USE uspp,               ONLY : vkb, nkb, okvan
   USE noncollin_module,   ONLY : npol
@@ -773,6 +774,7 @@ SUBROUTINE find_band_sym_so (ik,evc,et,nsym,s,ftau,d_spin,gk, &
      !
      !   and apply S in the US case.
      !
+     npw = ngk(ik)
      IF ( okvan ) THEN
         CALL calbec( npw, vkb, evcr, becp )
         CALL s_psi( npwx, npw, nbnd, evcr, evcr )

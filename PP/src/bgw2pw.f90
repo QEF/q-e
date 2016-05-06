@@ -198,7 +198,7 @@ SUBROUTINE write_evc ( input_file_name, real_or_complex, &
 #ifdef __MPI
   USE parallel_include, ONLY : MPI_INTEGER, MPI_DOUBLE_COMPLEX
 #endif
-  USE wvfct, ONLY : npwx, igk
+  USE wvfct, ONLY : npwx
 
   IMPLICIT NONE
 
@@ -509,9 +509,8 @@ SUBROUTINE write_evc ( input_file_name, real_or_complex, &
   npw_g = 0
   DO ik = 1, nks
     npw = ngk ( ik )
-    igk(1:npw) = igk_k(1:npw,ik)
     DO ig = 1, npw
-      igk_l2g = ig_l2g ( igk ( ig ) )
+      igk_l2g = ig_l2g ( igk_k (ig, ik) )
       IF ( igk_l2g .GT. npw_g ) npw_g = igk_l2g
     ENDDO
   ENDDO
