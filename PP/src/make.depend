@@ -338,7 +338,7 @@ partialdos.o : ../../Modules/io_global.o
 partialdos.o : ../../Modules/ions_base.o
 partialdos.o : ../../PW/src/atomic_wfc_mod.o
 partialdos.o : ../../PW/src/pwcom.o
-partialdos.o : projwfc.o
+partialdos.o : projections_mod.o
 paw_postproc.o : ../../Modules/atom.o
 paw_postproc.o : ../../Modules/cell_base.o
 paw_postproc.o : ../../Modules/constants.o
@@ -432,6 +432,11 @@ postproc.o : ../../Modules/noncol.o
 postproc.o : ../../Modules/paw_variables.o
 postproc.o : ../../Modules/recvec.o
 postproc.o : ../../PW/src/pwcom.o
+projections_mod.o : ../../Modules/ions_base.o
+projections_mod.o : ../../Modules/kind.o
+projections_mod.o : ../../Modules/noncol.o
+projections_mod.o : ../../Modules/uspp.o
+projections_mod.o : ../../PW/src/pwcom.o
 projwfc.o : ../../LAXlib/la_types.o
 projwfc.o : ../../LAXlib/ptoolkit.o
 projwfc.o : ../../LAXlib/zhpev_drv.o
@@ -461,6 +466,7 @@ projwfc.o : ../../PW/src/atomic_wfc_mod.o
 projwfc.o : ../../PW/src/pwcom.o
 projwfc.o : ../../PW/src/symm_base.o
 projwfc.o : ../../iotk/src/iotk_module.o
+projwfc.o : projections_mod.o
 projwfc_box.o : ../../FFTXlib/fft_interfaces.o
 projwfc_box.o : ../../FFTXlib/scatter_mod.o
 projwfc_box.o : ../../Modules/atom.o
