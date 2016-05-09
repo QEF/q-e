@@ -1,5 +1,7 @@
 New in 6.0 version:
 
+  * New XML data file according to the XML Schema
+
 Fixed in 6.0 version:
 
   * TDDFPT, PWCOND, GWW: redirection to /dev/null broke Windows executable
@@ -7,7 +9,12 @@ Fixed in 6.0 version:
   * PDOS in the noncolinear case was broken by recent changes in indexing 
     (courtesy Mitsuaki Kawamura) (commit (12366)
   * Incorrect format (old version) of the dynamical matrix if ibrav=0 in PHCG
-    (commit (12367)
+    (commit 12367,12369) and incorrect format if more than 99 atoms
+    (commit 12393) (courtesy Shaofeng Wang)
+  * disk_io='high' crashing in MD runs (courtesy David Strubbe)
+    (commit (12388)
+  * Fix for NEB+hybrid functionals (courtesy Davide Colleoni)
+    (commit (12391)
 
 Incompatible changes in 6.0 version:
 

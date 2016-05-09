@@ -39,7 +39,7 @@ SUBROUTINE writedyn ( )
        &         //,5x,"q = ( ",3f14.9," ) ",/)') 0.0d0,0.0d0,0.0d0
   DO na = 1, nat
      DO nb = 1, nat
-        WRITE(iudyn, '(2i3)') na, nb
+        WRITE(iudyn, '(2i5)') na, nb
         WRITE(iudyn,'(3e24.12)') &
              ( (dyn(3*(na-1)+i,3*(nb-1)+j),0.d0,j=1,3),i=1,3)
      ENDDO
