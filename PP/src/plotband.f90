@@ -306,7 +306,7 @@ PROGRAM plotband
      ENDIF
   ENDDO
   !
-  WRITE(*,'("output file (xmgr) > ")', advance="NO")
+  WRITE(*,'("output file (gnuplot/xmgr) > ")', advance="NO")
   READ(5,'(a)', end=25, err=25)  filename
   IF (filename == ' ' ) THEN
      WRITE(*,'("skipping ...")')
@@ -377,6 +377,7 @@ PROGRAM plotband
                        WRITE (2,'(3f10.4)') (kx(n), e(i,n), sumproj(i,n), &
                           n=point(ilines+1),point(ilines),-1)
                     ENDIF
+                    WRITE (2,*)
                  ELSE
                  !!!
                     IF ( mod(i,2) /= 0) THEN
@@ -386,6 +387,7 @@ PROGRAM plotband
                        WRITE (2,'(2f10.4)') (kx(n), e(i,n),n=point(ilines+1), &
                                                           point(ilines),-1 )
                     ENDIF
+                    WRITE (2,*)
                  ENDIF
               ENDIF
            ENDDO
@@ -468,6 +470,7 @@ PROGRAM plotband
                        WRITE (2,'(3f10.4)') (kx(n), e_rap(i,n), p_rap(i,n), &
                           n=point(ilines+1),point(ilines),-1)
                     ENDIF
+                    WRITE (2,*)
                  ELSE
                  !!!
                     IF ( mod(i,2) /= 0) THEN
@@ -477,6 +480,7 @@ PROGRAM plotband
                        WRITE (2,'(2f10.4)') (kx(n), e_rap(i,n), &
                                           n=point(ilines+1),point(ilines),-1)
                     ENDIF
+                    WRITE (2,*)
                  ENDIF
               ENDIF
            ENDDO
