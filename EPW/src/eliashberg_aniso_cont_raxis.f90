@@ -32,7 +32,7 @@
   USE phcom,         ONLY : nmodes
   USE elph2,         ONLY : wqf, wf
   USE epwcom,        ONLY : nqstep, degaussq, nsiter, conv_thr_racon, fsthick, & 
-                            lpade, eps_acustic
+                            lacon, lpade, eps_acustic
   USE eliashbergcom, ONLY : nsw, estemp, dwsph, ws, wsph, gap, Agap, Gp, Gm, ADsumi, AZsumi, &                           
                             Delta, Znorm, ADelta, ADeltap, AZnorm, AZnormp, g2, lacon_fly, & 
                             a2fij, wkfs, dosef, ixkqf, ixqfs, nqfs, w0g, nkfs, nbndfs, ef0, ekfs
@@ -216,7 +216,7 @@
   !
   IF ( errdelta .lt. conv_thr_racon ) conv = .true.
   IF ( errdelta .lt. conv_thr_racon .OR. iter .eq. nsiter ) THEN
-     CALL eliashberg_write_cont_raxis( itemp )
+     CALL eliashberg_write_cont_raxis( itemp, lacon )
   ENDIF
   !
   IF ( conv .OR. iter .eq. nsiter ) THEN
@@ -286,7 +286,7 @@
   !
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
-  USE epwcom,        ONLY : fsthick
+  USE epwcom,        ONLY : fsthick, lpade
   USE eliashbergcom, ONLY : nsw, ws, wsi, gap, Agap, Delta, Znorm, & 
                             ADelta, AZnorm, ADeltai, AZnormi, &              
                             wkfs, dosef, w0g, nkfs, nbndfs, ef0, ekfs
@@ -386,7 +386,7 @@
      conv = .true.
      WRITE(stdout,'(5x,a,i6,a,d18.9,a,d18.9,a,d18.9)') 'pade = ', N, '   error = ', errdelta, &
                   '   Re[Znorm(1)] = ', real(Znorm(1)), '   Re[Delta(1)] = ', real(Delta(1))
-     CALL eliashberg_write_cont_raxis( itemp )
+     CALL eliashberg_write_cont_raxis( itemp, lpade )
   ENDIF
 #ifdef __PARA
   ENDIF

@@ -29,7 +29,7 @@
   !
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
-  USE epwcom,        ONLY : nqstep, nsiter, conv_thr_racon, lpade
+  USE epwcom,        ONLY : nqstep, nsiter, conv_thr_racon, lpade, lacon
   USE eliashbergcom, ONLY : nsw, estemp, dwsph, ws, gap, a2f_iso, Dsumi, Zsumi, & 
                             Delta, Deltap, Znorm, Znormp, Gp, Gm
   USE constants_epw, ONLY : pi, ci
@@ -118,7 +118,7 @@
   !
   IF ( errdelta .lt. conv_thr_racon ) conv = .true.
   IF ( errdelta .lt. conv_thr_racon .OR. iter .eq. nsiter ) THEN
-     CALL eliashberg_write_cont_raxis
+     CALL eliashberg_write_cont_raxis( itemp, lacon )
   ENDIF
   !
   IF ( conv .OR. iter .eq. nsiter ) THEN
@@ -155,7 +155,7 @@
   !
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
-  USE epwcom,        ONLY : nqstep
+  USE epwcom,        ONLY : nqstep, lpade
   USE eliashbergcom, ONLY : nsw, ws, wsi, gap, Delta, Znorm, Deltai, Znormi, estemp
   USE constants_epw, ONLY : cone, ci
   ! 
@@ -165,7 +165,7 @@
   REAL(DP) :: absdelta, reldelta, errdelta
   COMPLEX(DP) :: a(N), b(N), z(N), u(N), v(N)
   COMPLEX(DP) :: omega, padapp, Deltaold(nsw)
-  LOGICAL :: lgap, conv
+  LOGICAL :: conv
   !
   Deltaold(:) = gap(itemp)
   absdelta = 0.d0
@@ -204,7 +204,7 @@
      conv = .true.
      WRITE(stdout,'(5x,a,i6,a,d18.9,a,d18.9,a,d18.9)') 'pade = ', N, '   error = ', errdelta, &
                   '   Re[Znorm(1)] = ', real(Znorm(1)), '   Re[Delta(1)] = ', real(Delta(1))
-     CALL eliashberg_write_cont_raxis
+     CALL eliashberg_write_cont_raxis( itemp, lpade )
   ENDIF
   !
 !  IF ( .not. conv ) THEN

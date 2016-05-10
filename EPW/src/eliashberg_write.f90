@@ -19,7 +19,7 @@
   USE io_epw,        ONLY : iufilgap
   USE io_files,      ONLY : prefix
   USE control_flags, ONLY : iverbosity
-  USE epwcom,        ONLY : fsthick, laniso, liso
+  USE epwcom,        ONLY : fsthick, laniso, liso, limag
   USE eliashbergcom, ONLY : nsiw, estemp, Agap, wsi, & 
                             NAZnormi, AZnormi, ADeltai, NZnormi, Znormi, & 
                             Deltai, nkfs, nbndfs, ef0, ekfs
@@ -55,7 +55,7 @@
      ENDDO ! iw
      CLOSE(iufilgap)
      !
-     CALL gap_distribution_FS ( itemp )
+     CALL gap_distribution_FS ( itemp, limag )
      !
      CALL gap_FS ( itemp )
      !
@@ -82,7 +82,7 @@
   END SUBROUTINE eliashberg_write_iaxis
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE eliashberg_write_cont_raxis( itemp )
+  SUBROUTINE eliashberg_write_cont_raxis( itemp, lgname )
   !-----------------------------------------------------------------------
   !
   !
@@ -106,7 +106,7 @@
   !
   INTEGER :: iw, itemp, ik, ibnd
   REAL(DP) :: weight, temp
-  LOGICAL :: lgap
+  LOGICAL :: lgap, lgname
   CHARACTER(len=256) :: name1
   !
   temp = estemp(itemp) / kelvin2eV
@@ -114,15 +114,15 @@
   IF ( laniso ) THEN 
      IF ( iverbosity .eq. 2 ) THEN
         IF ( temp .lt. 10.d0 ) THEN
-           IF ( lpade ) THEN
+           IF ( lgname .eqv. lpade ) THEN
               WRITE(name1,'(a,a13,f4.2)') TRIM(prefix),'.pade_aniso_0', temp
-           ELSEIF ( lacon ) THEN
+           ELSEIF ( lgname .eqv. lacon ) THEN
               WRITE(name1,'(a,a13,f4.2)') TRIM(prefix),'.acon_aniso_0', temp
            ENDIF
         ELSEIF ( temp .ge. 10.d0 ) THEN
-           IF ( lpade ) THEN
+           IF ( lgname .eqv. lpade ) THEN
               WRITE(name1,'(a,a12,f5.2)') TRIM(prefix),'.pade_aniso_', temp
-           ELSEIF ( lacon ) THEN
+           ELSEIF ( lgname .eqv. lacon ) THEN
               WRITE(name1,'(a,a12,f5.2)') TRIM(prefix),'.acon_aniso_', temp
            ENDIF
         ENDIF
@@ -155,7 +155,11 @@
      ENDDO ! ik
      IF ( iverbosity .eq. 2 ) CLOSE(iufilgap)
      !
-     CALL gap_distribution_FS ( itemp )
+     IF ( lgname .eqv. lpade ) THEN 
+        CALL gap_distribution_FS ( itemp, lpade )
+     ELSEIF ( lgname .eqv. lacon ) THEN
+        CALL gap_distribution_FS ( itemp, lacon )
+     ENDIF
      !
   ENDIF
   !
@@ -163,15 +167,15 @@
   ! SP: Only write isotropic for laniso if user really wants that
   IF ( ( laniso .AND. iverbosity .eq. 2 ) .OR. liso ) THEN
      IF ( temp .lt. 10.d0 ) THEN
-        IF ( lpade ) THEN
+        IF ( lgname .eqv. lpade ) THEN
            WRITE(name1,'(a,a11,f4.2)') TRIM(prefix),'.pade_iso_0', temp
-        ELSEIF ( lacon ) THEN
+        ELSEIF ( lgname .eqv. lacon ) THEN
            WRITE(name1,'(a,a11,f4.2)') TRIM(prefix),'.acon_iso_0', temp
         ENDIF
      ELSEIF ( temp .ge. 10.d0 ) THEN
-        IF ( lpade ) THEN
+        IF ( lgname .eqv. lpade ) THEN
            WRITE(name1,'(a,a10,f5.2)') TRIM(prefix),'.pade_iso_', temp
-        ELSEIF ( lacon ) THEN
+        ELSEIF ( lgname .eqv. lacon ) THEN
            WRITE(name1,'(a,a10,f5.2)') TRIM(prefix),'.acon_iso_', temp
         ENDIF
      ENDIF
@@ -192,12 +196,14 @@
      CLOSE(iufilgap)
   ENDIF
   !
+  lgname = .FALSE. 
+  !
   RETURN
   !
   END SUBROUTINE eliashberg_write_cont_raxis
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE gap_distribution_FS ( itemp )
+  SUBROUTINE gap_distribution_FS ( itemp, lgname )
   !-----------------------------------------------------------------------
   !
   ! This routine writes to files the distribution of the superconducting 
@@ -219,6 +225,7 @@
   REAL(DP), ALLOCATABLE :: delta_k_bin(:)
   REAL(DP), EXTERNAL :: w0gauss
   CHARACTER (len=256) :: name1
+  LOGICAL :: lgname
   !
   temp = estemp(itemp) / kelvin2eV
   !
@@ -241,19 +248,19 @@
   ENDDO
   !
   IF ( temp .lt. 10.d0 ) THEN
-     IF ( limag ) THEN
+     IF ( lgname .eqv. limag ) THEN
         WRITE(name1,'(a,a18,f4.2)') TRIM(prefix),'.imag_aniso_gap0_0', temp
-     ELSEIF ( lpade ) THEN
+     ELSEIF ( lgname .eqv. lpade ) THEN
         WRITE(name1,'(a,a18,f4.2)') TRIM(prefix),'.pade_aniso_gap0_0', temp
-     ELSEIF ( lacon ) THEN
+     ELSEIF ( lgname .eqv. lacon ) THEN
         WRITE(name1,'(a,a18,f4.2)') TRIM(prefix),'.acon_aniso_gap0_0', temp
      ENDIF
   ELSEIF ( temp .ge. 10.d0 ) THEN
-     IF ( limag ) THEN
+     IF ( lgname .eqv. limag ) THEN
         WRITE(name1,'(a,a17,f5.2)') TRIM(prefix),'.imag_aniso_gap0_', temp
-     ELSEIF ( lpade ) THEN
+     ELSEIF ( lgname .eqv. lpade ) THEN
         WRITE(name1,'(a,a17,f5.2)') TRIM(prefix),'.pade_aniso_gap0_', temp
-     ELSEIF ( lacon ) THEN
+     ELSEIF ( lgname .eqv. lacon ) THEN
         WRITE(name1,'(a,a17,f4.2)') TRIM(prefix),'.acon_aniso_gap0_', temp
      ENDIF
   ENDIF
@@ -265,6 +272,8 @@
   CLOSE(iufilgap)
   !
   IF ( ALLOCATED(delta_k_bin) ) DEALLOCATE(delta_k_bin)
+  !
+  lgname = .FALSE. 
   !
   RETURN
   !
