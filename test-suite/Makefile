@@ -37,8 +37,13 @@ run-custom-test : prolog pseudo
 create-reference : pseudo prolog
 	${TESTCODE_DIR}/bin/testcode.py --processors=0 --category=_default_ make-benchmarks
 
-compare :
-	${TESTCODE_DIR}/bin/testcode.py --processors=0 --category=_default_  --verbose compare 2>&1 | tee out.`date +%Y%m%d_%H%M%S`
+compare-cp :
+	${TESTCODE_DIR}/bin/testcode.py --processors=0 --category=cp_all  --verbose compare 2>&1 | tee out.CP.`date +%Y%m%d_%H%M%S`
+
+compare-pw :
+	${TESTCODE_DIR}/bin/testcode.py --processors=0 --category=pw_all  --verbose compare 2>&1 | tee out.PW.`date +%Y%m%d_%H%M%S`
+
+compare : compare-cp compare-pw
 
 clean: prolog
 	@for x in `find pw_* -name "test*"`; do rm -rf $$x; done
