@@ -558,6 +558,7 @@ SUBROUTINE rotate_all_psi(ik,psic,evcr,s,ftau,gk)
   nr2x=dfftp%nr2x
   nr3x=dfftp%nr3x
   nrxx=dfftp%nnr
+  npw = ngk(ik)
   !
   ALLOCATE(psir(nrxx))
   !
@@ -613,7 +614,6 @@ SUBROUTINE rotate_all_psi(ik,psic,evcr,s,ftau,gk)
      psic_collect(:,ibnd)=psir_collect(:)
   ENDDO
   !
-  npw = ngk(ik)
   DO ibnd=1, nbnd
      CALL cscatter_sym_many( dfftp, psic_collect, psir, ibnd, nbnd, &
                                                  nbnd_proc, start_band_proc )

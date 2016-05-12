@@ -315,19 +315,14 @@ PROGRAM plotband
   IF (.NOT.exist_rap) THEN
 !
 !  Here the symmetry analysis has not been done. So simply save the bands
-!  on output. The odd one from left to right, the even one from right to
-!  left.
+!  on output. 
 !
      OPEN (unit=2,file=filename,form='formatted',status='unknown',&
            iostat=ios)
      ! draw bands
      DO i=1,nbnd
         IF (is_in_range(i)) THEN
-           IF ( mod(i,2) /= 0) THEN
-              WRITE (2,'(2f10.4)') (kx(n), e(i,n),n=1,nks)
-           ELSE
-              WRITE (2,'(2f10.4)') (kx(n), e(i,n),n=nks,1,-1)
-           ENDIF
+           WRITE (2,'(2f10.4)') (kx(n), e(i,n),n=1,nks)
            WRITE (2,*)
         ENDIF
      ENDDO
@@ -370,25 +365,16 @@ PROGRAM plotband
               IF (is_in_range(i)) THEN
                  !!!
                  IF (exist_proj) THEN
-                    IF ( mod(i,2) /= 0) THEN
-                       WRITE (2,'(3f10.4)') (kx(n), e(i,n), sumproj(i,n), &
+                    WRITE (2,'(3f10.4)') (kx(n), e(i,n), sumproj(i,n), &
                           n=point(ilines),point(ilines+1))
-                    ELSE
-                       WRITE (2,'(3f10.4)') (kx(n), e(i,n), sumproj(i,n), &
-                          n=point(ilines+1),point(ilines),-1)
-                    ENDIF
                     WRITE (2,*)
                  ELSE
                  !!!
-                    IF ( mod(i,2) /= 0) THEN
-                       WRITE (2,'(2f10.4)') (kx(n), e(i,n),n=point(ilines),&
+                    WRITE (2,'(2f10.4)') (kx(n), e(i,n),n=point(ilines),&
                                                           point(ilines+1))
-                    ELSE
-                       WRITE (2,'(2f10.4)') (kx(n), e(i,n),n=point(ilines+1), &
-                                                          point(ilines),-1 )
-                    ENDIF
                     WRITE (2,*)
                  ENDIF
+                 WRITE (2,*)
               ENDIF
            ENDDO
            CLOSE (unit = 2)
@@ -492,7 +478,7 @@ PROGRAM plotband
         ENDDO
      ENDDO
   ENDIF
-  WRITE(*,'("bands in xmgr format written to file ",a)') filename
+  WRITE(*,'("bands in gnuplot/xmgr format written to file ",a)') filename
   !
 25 CONTINUE
   IF (exist_rap) THEN
