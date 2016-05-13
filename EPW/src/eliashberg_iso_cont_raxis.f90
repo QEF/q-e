@@ -41,6 +41,7 @@
   COMPLEX(DP) :: esqrt, root
   COMPLEX(DP), ALLOCATABLE, SAVE :: Deltaold(:)
   LOGICAL :: conv
+  CHARACTER (len=256) :: cname
   !
   IF ( iter .eq. 1 ) THEN
      IF ( .not. ALLOCATED(Delta) )    ALLOCATE( Delta(nsw) )
@@ -118,7 +119,8 @@
   !
   IF ( errdelta .lt. conv_thr_racon ) conv = .true.
   IF ( errdelta .lt. conv_thr_racon .OR. iter .eq. nsiter ) THEN
-     CALL eliashberg_write_cont_raxis( itemp, lacon )
+     cname = 'acon'
+     CALL eliashberg_write_cont_raxis( itemp, cname )
   ENDIF
   !
   IF ( conv .OR. iter .eq. nsiter ) THEN
@@ -166,6 +168,7 @@
   COMPLEX(DP) :: a(N), b(N), z(N), u(N), v(N)
   COMPLEX(DP) :: omega, padapp, Deltaold(nsw)
   LOGICAL :: conv
+  CHARACTER (len=256) :: cname
   !
   Deltaold(:) = gap(itemp)
   absdelta = 0.d0
@@ -204,7 +207,8 @@
      conv = .true.
      WRITE(stdout,'(5x,a,i6,a,d18.9,a,d18.9,a,d18.9)') 'pade = ', N, '   error = ', errdelta, &
                   '   Re[Znorm(1)] = ', real(Znorm(1)), '   Re[Delta(1)] = ', real(Delta(1))
-     CALL eliashberg_write_cont_raxis( itemp, lpade )
+     cname = 'pade'
+     CALL eliashberg_write_cont_raxis( itemp, cname )
   ENDIF
   !
 !  IF ( .not. conv ) THEN

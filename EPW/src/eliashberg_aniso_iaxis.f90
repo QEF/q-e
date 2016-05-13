@@ -41,79 +41,79 @@
   CALL start_clock( 'aniso_iaxis' )
   !
   DO itemp = 1, nstemp ! loop over temperature
-    !
-    WRITE(stdout,'(a)') '  '
-    WRITE(stdout,'(5x,a,i3,a,f8.4,a,a,i3,a)') 'temp(', itemp, ') = ', estemp(itemp)/kelvin2eV, ' K '
-    WRITE(stdout,'(a)') '  '
-    IF ( limag .AND. .not. imag_read ) THEN 
-      WRITE(stdout,'(5x,a)') 'Solve anisotropic Eliashberg equations on imaginary-axis ' 
-    ELSEIF ( limag .AND. imag_read ) THEN
-      WRITE(stdout,'(5x,a)') 'Read from file Delta and Znorm on imaginary-axis '
-    ENDIF
-    WRITE(stdout,'(a)') '  '
-    WRITE(stdout,'(5x,a,i6,a,i6)') 'Total number of frequency points nsiw ( ', itemp, ' ) = ', nsiw(itemp)
-    WRITE(stdout,'(5x,a,f10.4)') 'Cutoff frequency wscut = ', (2.d0*nsiw(itemp)+1)*pi*estemp(itemp)
-    WRITE(stdout,'(a)') '  '
-    CALL start_clock( 'iaxis_imag' )
-    CALL gen_freqgrid_iaxis( itemp )
-    !
-    IF ( ( limag .AND. .not. imag_read ) .OR. ( limag .AND. imag_read .AND. itemp .ne. 1 ) ) THEN
-      iter = 1
-      conv = .false.
-      DO WHILE ( .not. conv .AND. iter .le. nsiter ) 
-        CALL sum_eliashberg_aniso_iaxis( itemp, iter, conv )
+     !
+     WRITE(stdout,'(a)') '  '
+     WRITE(stdout,'(5x,a,i3,a,f8.4,a,a,i3,a)') 'temp(', itemp, ') = ', estemp(itemp)/kelvin2eV, ' K '
+     WRITE(stdout,'(a)') '  '
+     IF ( limag .AND. .not. imag_read ) THEN 
+        WRITE(stdout,'(5x,a)') 'Solve anisotropic Eliashberg equations on imaginary-axis ' 
+     ELSEIF ( limag .AND. imag_read ) THEN
+        WRITE(stdout,'(5x,a)') 'Read from file Delta and Znorm on imaginary-axis '
+     ENDIF
+     WRITE(stdout,'(a)') '  '
+     WRITE(stdout,'(5x,a,i6,a,i6)') 'Total number of frequency points nsiw ( ', itemp, ' ) = ', nsiw(itemp)
+     WRITE(stdout,'(5x,a,f10.4)') 'Cutoff frequency wscut = ', (2.d0*nsiw(itemp)+1)*pi*estemp(itemp)
+     WRITE(stdout,'(a)') '  '
+     CALL start_clock( 'iaxis_imag' )
+     CALL gen_freqgrid_iaxis( itemp )
+     !
+     IF ( ( limag .AND. .not. imag_read ) .OR. ( limag .AND. imag_read .AND. itemp .ne. 1 ) ) THEN
+        iter = 1
+        conv = .false.
+        DO WHILE ( .not. conv .AND. iter .le. nsiter ) 
+           CALL sum_eliashberg_aniso_iaxis( itemp, iter, conv )
 #ifdef __PARA 
-        IF (mpime .eq. ionode_id) THEN
+           IF (mpime .eq. ionode_id) THEN
 #endif  
-          DO ik = 1, nkfs
-            DO ibnd = 1, nbndfs
-              IF ( abs( ekfs(ibnd,ik) - ef0 ) .lt. fsthick ) THEN
-                CALL mix_broyden_aniso( ik, ibnd, nsiw(itemp), & 
-                     ADeltai(ibnd,ik,:), ADeltaip(ibnd,ik,:), broyden_beta, iter, broyden_ndim, conv )
-              ENDIF
-            ENDDO
-          ENDDO
+              DO ik = 1, nkfs
+                 DO ibnd = 1, nbndfs
+                    IF ( abs( ekfs(ibnd,ik) - ef0 ) .lt. fsthick ) THEN
+                       CALL mix_broyden_aniso( ik, ibnd, nsiw(itemp), & 
+                            ADeltai(ibnd,ik,:), ADeltaip(ibnd,ik,:), broyden_beta, iter, broyden_ndim, conv )
+                    ENDIF
+                 ENDDO
+              ENDDO
 #ifdef __PARA
-        ENDIF
-        CALL mp_bcast( ADeltai, ionode_id, inter_pool_comm )
-        CALL mp_bcast( ADeltaip, ionode_id, inter_pool_comm )
-        CALL mp_barrier(inter_pool_comm)
+           ENDIF
+           CALL mp_bcast( ADeltai, ionode_id, inter_pool_comm )
+           CALL mp_bcast( ADeltaip, ionode_id, inter_pool_comm )
+           CALL mp_barrier(inter_pool_comm)
 #endif
-        iter = iter + 1
-      ENDDO ! iter
-      !
-      IF ( conv ) THEN
-        IF ( ALLOCATED(ADeltaip) ) DEALLOCATE(ADeltaip)
-          !
-          ! SP : Only print the Free energy if the user want it
-          !
-          IF ( iverbosity .eq. 2 ) THEN
+           iter = iter + 1
+        ENDDO ! iter
+        !
+        IF ( conv ) THEN
+           IF ( ALLOCATED(ADeltaip) ) DEALLOCATE(ADeltaip)
+           !
+           ! SP : Only print the Free energy if the user want it
+           !
+           IF ( iverbosity .eq. 2 ) THEN
 #ifdef __PARA 
-            IF (mpime .eq. ionode_id) THEN
+              IF (mpime .eq. ionode_id) THEN
 #endif 
-            CALL free_energy( itemp, dFE )
+                 CALL free_energy( itemp, dFE )
 #ifdef __PARA
-            ENDIF
-            CALL mp_barrier(inter_pool_comm)
+              ENDIF
+              CALL mp_barrier(inter_pool_comm)
 #endif
-          ENDIF
-          !
-          WRITE(stdout,'(a)') '  '
-          CALL stop_clock( 'iaxis_imag' )
-          CALL print_clock( 'iaxis_imag' )
+           ENDIF
+           !
+           WRITE(stdout,'(a)') '  '
+           CALL stop_clock( 'iaxis_imag' )
+           CALL print_clock( 'iaxis_imag' )
         ELSEIF ( .not. conv .AND. (iter-1) .eq. nsiter ) THEN
-          CALL deallocate_eliashberg
-          WRITE(stdout,'(a)') 'not converged  '
-          CALL stop_clock( 'iaxis_imag' )
-          CALL print_clock( 'iaxis_imag' )
-          CALL errore('sum_eliashberg_aniso_iaxis','convergence was not reached',1)
-          RETURN
+           CALL deallocate_eliashberg
+           WRITE(stdout,'(a)') 'not converged  '
+           CALL stop_clock( 'iaxis_imag' )
+           CALL print_clock( 'iaxis_imag' )
+           CALL errore('sum_eliashberg_aniso_iaxis','convergence was not reached',1)
+           RETURN
         ENDIF
-      ELSEIF ( limag .AND. imag_read .AND. itemp .eq. 1 ) THEN
+     ELSEIF ( limag .AND. imag_read .AND. itemp .eq. 1 ) THEN
         CALL eliashberg_read_aniso_iaxis( itemp )
-      ENDIF
-      !
-      If ( lpade ) THEN 
+     ENDIF
+     !
+     IF ( lpade ) THEN 
         WRITE(stdout,'(a)') '  '  
         WRITE(stdout,'(5x,a)') 'Pade approximant of anisotropic Eliashberg equations from imaginary-axis to real-axis'
         WRITE(stdout,'(5x,a,f10.4)') 'Cutoff frequency wscut = ', wscut
@@ -126,28 +126,28 @@
         !
         IF ( conv ) THEN
 #ifdef __PARA 
-          IF (mpime .eq. ionode_id) THEN
+           IF (mpime .eq. ionode_id) THEN
 #endif
-            CALL dos_quasiparticle( itemp )
+              CALL dos_quasiparticle( itemp )
 #ifdef __PARA
-          ENDIF
-          CALL mp_barrier(inter_pool_comm)
+           ENDIF
+           CALL mp_barrier(inter_pool_comm)
 #endif     
-          WRITE(stdout,'(a)') '  '
-          CALL stop_clock( 'raxis_pade' )
-          CALL print_clock( 'raxis_pade' )
-          WRITE(stdout,'(a)') '  '
+           WRITE(stdout,'(a)') '  '
+           CALL stop_clock( 'raxis_pade' )
+           CALL print_clock( 'raxis_pade' )
+           WRITE(stdout,'(a)') '  '
         ELSEIF ( .not. conv  .AND. (iter-1) .eq. nsiter ) THEN
-          CALL deallocate_eliashberg
-          WRITE(stdout,'(a)') '  '
-          CALL stop_clock( 'raxis_pade' )
-          CALL print_clock( 'raxis_pade' )
-          CALL errore('pade_cont_iso_iaxis_to_raxis','converged was not reached',1)
-          RETURN
+           CALL deallocate_eliashberg
+           WRITE(stdout,'(a)') '  '
+           CALL stop_clock( 'raxis_pade' )
+           CALL print_clock( 'raxis_pade' )
+           CALL errore('pade_cont_iso_iaxis_to_raxis','converged was not reached',1)
+           RETURN
         ENDIF
-      ENDIF
-      !
-      IF ( lacon ) THEN 
+     ENDIF
+     !
+     IF ( lacon ) THEN 
         WRITE(stdout,'(a)') '  '
         WRITE(stdout,'(5x,a)') 'Analytic continuation of anisotropic Eliashberg equations from imaginary-axis to real-axis'
         WRITE(stdout,'(a)') '  '
@@ -159,74 +159,74 @@
         iter = 1
         conv = .false.
         DO WHILE ( .not. conv .AND. iter .le. nsiter )
-          CALL analytic_cont_aniso_iaxis_to_raxis( itemp, iter, conv )
+           CALL analytic_cont_aniso_iaxis_to_raxis( itemp, iter, conv )
 #ifdef __PARA 
-          IF (mpime .eq. ionode_id) THEN
+           IF (mpime .eq. ionode_id) THEN
 #endif
-            DO ik = 1, nkfs
-              DO ibnd = 1, nbndfs
-                IF ( abs( ekfs(ibnd,ik) - ef0 ) .lt. fsthick ) THEN
-                  rdeltain(:)  = real(ADeltap(ibnd,ik,:))
-                  cdeltain(:)  = aimag(ADeltap(ibnd,ik,:))
-                  rdeltaout(:) = real(ADelta(ibnd,ik,:))
-                  cdeltaout(:) = aimag(ADelta(ibnd,ik,:))
-                  CALL mix_broyden_aniso ( ik, ibnd, nsw, rdeltaout, rdeltain, broyden_beta, iter, broyden_ndim, conv )
-                  CALL mix_broyden2_aniso( ik, ibnd, nsw, cdeltaout, cdeltain, broyden_beta, iter, broyden_ndim, conv )
-                  ADeltap(ik,ibnd,:) = rdeltain(:) + ci * cdeltain(:)
-                ENDIF
+              DO ik = 1, nkfs
+                 DO ibnd = 1, nbndfs
+                    IF ( abs( ekfs(ibnd,ik) - ef0 ) .lt. fsthick ) THEN
+                       rdeltain(:)  = real(ADeltap(ibnd,ik,:))
+                       cdeltain(:)  = aimag(ADeltap(ibnd,ik,:))
+                       rdeltaout(:) = real(ADelta(ibnd,ik,:))
+                       cdeltaout(:) = aimag(ADelta(ibnd,ik,:))
+                       CALL mix_broyden_aniso ( ik, ibnd, nsw, rdeltaout, rdeltain, broyden_beta, iter, broyden_ndim, conv )
+                       CALL mix_broyden2_aniso( ik, ibnd, nsw, cdeltaout, cdeltain, broyden_beta, iter, broyden_ndim, conv )
+                       ADeltap(ik,ibnd,:) = rdeltain(:) + ci * cdeltain(:)
+                    ENDIF
+                 ENDDO
               ENDDO
-            ENDDO
 #ifdef __PARA
-          ENDIF
-          CALL mp_bcast( ADelta, ionode_id, inter_pool_comm )
-          CALL mp_bcast( ADeltap, ionode_id, inter_pool_comm )
-          CALL mp_barrier(inter_pool_comm)
+           ENDIF
+           CALL mp_bcast( ADelta, ionode_id, inter_pool_comm )
+           CALL mp_bcast( ADeltap, ionode_id, inter_pool_comm )
+           CALL mp_barrier(inter_pool_comm)
 #endif
-          iter = iter + 1
+           iter = iter + 1
         ENDDO ! iter
         !
         IF ( conv ) THEN 
 #ifdef __PARA 
-          IF (mpime .eq. ionode_id) THEN
+           IF (mpime .eq. ionode_id) THEN
 #endif
-            CALL dos_quasiparticle( itemp )
+              CALL dos_quasiparticle( itemp )
 #ifdef __PARA
-        ENDIF
-        CALL mp_barrier(inter_pool_comm)
+           ENDIF
+           CALL mp_barrier(inter_pool_comm)
 #endif
-        WRITE(stdout,'(a)') '  '
-        CALL stop_clock( 'raxis_acon' )
-        CALL print_clock( 'raxis_acon' )
-      ELSEIF ( .not. conv .AND. (iter-1) .eq. nsiter ) THEN
-        CALL deallocate_eliashberg
-        WRITE(stdout,'(a)') '  '
-        CALL stop_clock( 'raxis_acon' )
-        CALL print_clock( 'raxis_acon' )
-        CALL errore('analytic_cont_aniso_iaxis_to_raxis','convergence was not reached',1)
-        RETURN
-      ENDIF
-      !
-    ENDIF
-    !
-    CALL deallocate_eliashberg_aniso_iaxis
-    ! remove memory allocated for wsi, Deltai, Znormi, NZnormi, ADeltai, AZnormi, NAZnormi
-    imelt = ( 4 + 3 * nbndfs * nkfs ) * nsiw(itemp) 
-    CALL mem_size_eliashberg( -imelt )
-    !
-    CALL deallocate_eliashberg_aniso_raxis
-    IF ( lpade ) THEN
-      ! remove memory allocated for ws, Delta, Znorm, ADelta, AZnorm
-      imelt = nsw + 2 * ( 2 + 2 * nbndfs * nkfs ) * nsw
-      CALL mem_size_eliashberg( -imelt )
-    ELSEIF ( lacon ) THEN 
-      ! remove memory allocated for ws, Delta, Znorm, ADelta, ADeltap, AZnorm, AZnormp
-      imelt = nsw + 2 * ( 2 + 4 * nbndfs * nkfs ) * nsw
-      CALL mem_size_eliashberg( -imelt )
-    ENDIF
-    ! 
-    tcpu = get_clock('aniso_iaxis')
-    WRITE(stdout,'(5x,a,i3,a,f18.2,a)') 'itemp = ', itemp, '   total cpu time :', tcpu, ' secs'
-    !
+           WRITE(stdout,'(a)') '  '
+           CALL stop_clock( 'raxis_acon' )
+           CALL print_clock( 'raxis_acon' )
+        ELSEIF ( .not. conv .AND. (iter-1) .eq. nsiter ) THEN
+           CALL deallocate_eliashberg
+           WRITE(stdout,'(a)') '  '
+           CALL stop_clock( 'raxis_acon' )
+           CALL print_clock( 'raxis_acon' )
+           CALL errore('analytic_cont_aniso_iaxis_to_raxis','convergence was not reached',1)
+           RETURN
+        ENDIF
+        !
+     ENDIF
+     !
+     CALL deallocate_eliashberg_aniso_iaxis
+     ! remove memory allocated for wsi, Deltai, Znormi, NZnormi, ADeltai, AZnormi, NAZnormi
+     imelt = ( 4 + 3 * nbndfs * nkfs ) * nsiw(itemp) 
+     CALL mem_size_eliashberg( -imelt )
+     !
+     CALL deallocate_eliashberg_aniso_raxis
+     IF ( lpade ) THEN
+        ! remove memory allocated for ws, Delta, Znorm, ADelta, AZnorm
+        imelt = nsw + 2 * ( 2 + 2 * nbndfs * nkfs ) * nsw
+        CALL mem_size_eliashberg( -imelt )
+     ELSEIF ( lacon ) THEN 
+        ! remove memory allocated for ws, Delta, Znorm, ADelta, ADeltap, AZnorm, AZnormp
+        imelt = nsw + 2 * ( 2 + 4 * nbndfs * nkfs ) * nsw
+        CALL mem_size_eliashberg( -imelt )
+     ENDIF
+     ! 
+     tcpu = get_clock('aniso_iaxis')
+     WRITE(stdout,'(5x,a,i3,a,f18.2,a)') 'itemp = ', itemp, '   total cpu time :', tcpu, ' secs'
+     !
   ENDDO ! itemp
   !
   CALL stop_clock( 'aniso_iaxis' )
