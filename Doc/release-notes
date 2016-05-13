@@ -1,6 +1,8 @@
 New in 6.0 version:
 
   * New XML data file according to the XML Schema
+  * Non-collinear magnetism implemented in epsilon.x, code restructuring
+   (Andrea Ferretti, Tae-Yun Kim Cheol-Hwan Park)
 
 Fixed in 6.0 version:
 

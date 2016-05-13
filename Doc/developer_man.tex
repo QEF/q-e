@@ -1142,6 +1142,50 @@ See file \texttt{include/defs.h.README} for more info.
 % \subsection{Adding new directories or routines}
 
 \section{Algorithms}
+
+\subsection{$G$ vectors and plane waves}
+
+``$G$ vectors are generated in the \texttt{ggen} subroutine in
+\texttt{Modules/recvec\_subs.f90}. You may also have a look at routine
+\texttt{PW/src/n\_plane\_waves.f90} to understand how things work.
+In general, $G$ vectors are determined by the condition
+\begin{equation}
+  { \hbar^2 G^2 \over 2m_e} \le E^\rho_c = 4 E^w_c
+\end{equation}
+(without the k point; the code always uses Rydberg atomic units unless
+otherwise specified). This is a sphere in reciprocal space centered
+around (0,0,0).
+
+Concerning each orbital corresponding to a specific k point, you
+use the condition
+\begin{equation}
+  { \hbar^2 ({\bf k}+{\bf G})^2 \over 2m_e} \le E^w_c
+\end{equation}
+In this case the $G$ vectors are a subset of the vectors used for the
+density and form a sphere in reciprocal space shifted from the origin.
+Depending on k you can have a different set of $G$ vectors included
+in the sphere and also their number could differ.
+
+In order to manage the $G$ vectors for each $k$-point, you can use the arrays
+ngk (number of $G$ vectors for each $k$-point) and igk\_k (index of $G$
+corresponding to a given index of $k+G$; basically an index that allows
+you to identify the $G$ vectors corresponding to a given $k$ and order them).
+
+For example the kinetic energy corresponding to a given $k$-point \texttt{ik}
+is
+\begin{verbatim}
+ g2kin(1:ngk(ik)) = ( ( xk(1,ik) + g(1,igk_k(1:ngk(ik),ik)) )**2 + &
+                      ( xk(2,ik) + g(2,igk_k(1:ngk(ik),ik)) )**2 + &
+                      ( xk(3,ik) + g(3,igk_k(1:ngk(ik),ik)) )**2 ) * tpiba2
+\end{verbatim}
+where \texttt{tpiba2} $= (2\pi/a)^2$.
+
+There is only one FFT for the wavefunctions so the grid does not depend
+upon the k-points; however, for a given wavefunction, only the components
+corresponding to a $G$ vector that satisfy
+$ { \hbar^2 ({\bf k}+{\bf G})^2 / 2m_e} \le E^w_c$
+are different from 0'' (adapted from an answer by Dario Rocca).
+
 % \subsection{Diagonalization}
 % \subsection{Self-consistency}
 % \subsection{Structural optimization}
