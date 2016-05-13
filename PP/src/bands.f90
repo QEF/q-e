@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2012 Quantum ESPRESSO group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -11,7 +11,7 @@ PROGRAM do_bands
   !-----------------------------------------------------------------------
   !
   ! See files INPUT_BANDS.* in Doc/ directory for usage
-  ! IMPORTANT: since v.5 namelist name is &bands and no longer &inputpp
+  ! 
   !
   USE io_files,  ONLY : prefix, tmp_dir
   USE mp_global, ONLY : npool, nproc_pool, nproc_file, &
@@ -51,15 +51,15 @@ PROGRAM do_bands
   CALL get_environment_variable( 'ESPRESSO_TMPDIR', outdir )
   IF ( trim( outdir ) == ' ' ) outdir = './'
   filband = 'bands.out'
-  lsym=.false.
+  lsym=.true.
+  no_overlap=.true.
+  plot_2d=.false.
   lsigma=.false.
-  filp='p_avg.dat'
   lp=.false.
+  filp='p_avg.dat'
   firstk=0
   lastk=10000000
   spin_component = 1
-  plot_2d=.false.
-  no_overlap=.false.
   !
   ios = 0
   !
@@ -167,49 +167,28 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, no_overlap)
 
   IMPLICIT NONE
   CHARACTER (len=*) :: filband
-  COMPLEX(DP) :: pro
-  ! the product of wavefunctions
-  INTEGER :: spin_component
-  LOGICAL :: lsigma(4)
+  INTEGER, INTENT(IN) :: spin_component
+  LOGICAL, INTENT(IN) :: lsigma(4), no_overlap
 
-  COMPLEX(DP), ALLOCATABLE :: psiold (:,:), old (:), new (:)
-  ! psiold: eigenfunctions at previous k-point, ordered
-  ! old, new: contain one band resp. at previous and current k-point
-  TYPE(bec_type):: becp, becpold
+  TYPE(bec_type):: becp
   ! becp   : <psi|beta> at current  k-point
-  ! becpold: <psi|beta> at previous k-point
-  COMPLEX(DP), ALLOCATABLE :: psiold_nc (:,:), old_nc(:,:), new_nc(:,:)
-  LOGICAL :: no_overlap
-  ! as above for the noncolinear case
-  INTEGER :: ibnd, jbnd, ik, ikold, ikb, ig, npw, npwold, nks1, nks2, ipol
-  INTEGER :: nks1tot, nks2tot
-  ! counters
-  INTEGER, ALLOCATABLE :: ok (:), il (:,:)
-  ! ok: keeps track of which bands have been already ordered
-  ! il: band ordering
-  INTEGER :: maxdeg
-  ! maxdeg : max allowed degeneracy
-  INTEGER :: ndeg, deg, nd
-  ! ndeg : number of degenerate states
-  INTEGER, ALLOCATABLE :: degeneracy(:), degbands(:,:), idx(:)
-  ! degbands keeps track of which states are degenerate
-  INTEGER :: iunpun_sigma(4), ios(0:4), indjbnd
+  INTEGER :: ibnd, jbnd, i, ik, ig, ig1, ig2, ipol, npw, ngmax, jmax
+  INTEGER :: nks1tot, nks2tot, nks1, nks2
+  INTEGER :: iunpun_sigma(4), ios(0:4), done(nbnd)
   CHARACTER(len=256) :: nomefile
-  REAL(DP), ALLOCATABLE:: edeg(:)
-  REAL(DP), ALLOCATABLE:: sigma_avg(:,:,:)
-  ! expectation value of sigma
-  REAL(DP), PARAMETER :: eps = 0.00001d0
-  ! threshold (Ry) for degenerate states
-  REAL(DP) :: minene
-  COMPLEX(DP), EXTERNAL :: cgracsc, cgracsc_nc
-  ! scalar product with the S matrix
+  REAL(dp):: pscur, psmax, psr(nbnd)
+  COMPLEX(dp), ALLOCATABLE :: psi(:,:), spsi(:,:), ps(:,:)
+  INTEGER, ALLOCATABLE :: work(:), igg(:)
+  INTEGER, ALLOCATABLE :: closest_band(:,:)! index for band ordering
+  REAL(DP), ALLOCATABLE:: sigma_avg(:,:,:) ! expectation value of sigma
+  REAL(DP), ALLOCATABLE:: et_(:,:) ! reordered eigenvalues in eV
 
+  
   IF (filband == ' ') RETURN
 
   iunpun = 19
-  maxdeg = 30 * npol
-  !
   ios(:) = 0
+  !
   IF ( ionode ) THEN
      !
      OPEN (unit = iunpun, file = filband, status = 'unknown', form = &
@@ -236,211 +215,158 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, no_overlap)
         CALL errore ('punch_band', 'Opening filband.N file ', ipol)
   ENDDO
   !
-  CALL allocate_bec_type(nkb, nbnd, becp)
-  CALL allocate_bec_type(nkb, nbnd, becpold)
-  IF (noncolin) THEN
-     ALLOCATE (psiold_nc( npwx*npol, nbnd))
-     ALLOCATE (old_nc(ngm,npol), new_nc(ngm,npol))
-     ALLOCATE (sigma_avg(4,nbnd,nkstot))
-  ELSE
-     ALLOCATE (psiold( npwx, nbnd))
-     ALLOCATE (old(ngm), new(ngm))
-  ENDIF
-
-  ALLOCATE (ok (nbnd), il (nbnd,nkstot))
-  ALLOCATE (degeneracy(nbnd), edeg(nbnd))
-  ALLOCATE (idx(nbnd), degbands(nbnd,maxdeg))
-
   CALL find_nks1nks2(1,nkstot,nks1tot,nks1,nks2tot,nks2,spin_component)
-
-  il=0
-  DO ik=nks1,nks2
-     DO ibnd = 1, nbnd
-        il (ibnd,ik) = ibnd
-     ENDDO
-  ENDDO
-
+  !
+  ! index of largest G in plane-wave basis set across k-points
+  !
+  ALLOCATE ( closest_band(nbnd,nkstot)  )
+  DO ik=1,nkstot
+     !
+     ! default ordering: leave bands as they are
+     !
+     DO ibnd=1,nbnd
+        closest_band(ibnd,ik) = ibnd
+     END DO
+  END DO
+  !
+  IF ( noncolin ) ALLOCATE ( sigma_avg(4,nbnd,nkstot) )
+  ALLOCATE ( psi(npwx*npol,nbnd), spsi(npwx*npol,nbnd), ps(nbnd,nbnd) )
+  CALL allocate_bec_type(nkb, nbnd, becp)
+  !
   DO ik = nks1, nks2
      !
-     IF (.not.no_overlap.or.lsigma(1).or.lsigma(2).or.lsigma(3).or.lsigma(4)) THEN
-        !
-        !   read eigenfunctions
-        !
-        CALL davcio (evc, 2*nwordwfc, iunwfc, ik, - 1)
-        !
-        ! calculate becp = <psi|beta>
-        !
-        npw = ngk(ik)
-        CALL init_us_2 (npw, igk_k(1,ik), xk(1,ik), vkb)
-        CALL calbec ( npw, vkb, evc, becp )
-        IF (noncolin) &
+     !   read eigenfunctions
+     !
+     CALL davcio (evc, 2*nwordwfc, iunwfc, ik, - 1)
+     !
+     ! calculate becp = <psi|beta>, needed to compute spsi = S|psi>
+     !
+     npw = ngk(ik)
+     CALL init_us_2 (npw, igk_k(1,ik), xk(1,ik), vkb)
+     CALL calbec ( npw, vkb, evc, becp )
+     !
+     ! calculate average magnetization for noncolinear case
+     !
+     IF (noncolin) &
            CALL compute_sigma_avg(sigma_avg(1,1,ik),becp%nc,ik,lsigma)
-     ENDIF
      !
-     IF (ik==nks1.or.no_overlap) THEN
+     IF ( ik > nks1 .AND. .NOT. no_overlap ) THEN
         !
-        !  first k-point in the list:
-        !  save eigenfunctions in the current order (increasing energy)
+        ! compute correspondence between k+G_i indices at current and previous k
         !
-        DO ibnd = 1, nbnd
-           il (ibnd,ik) = ibnd
-        ENDDO
-     ELSE
+        ngmax = MAXVAL ( igk_k(:,ik-1:ik) )
+        ALLOCATE ( work(ngmax), igg(ngmax) )
+        work(:) = 0
+        DO ig1 = 1, ngk(ik-1)
+           work( igk_k(ig1,ik-1)) = ig1
+        END DO
+        igg(:) = 0
+        DO ig2 = 1, npw
+           ig1 = work( igk_k(ig2,ik)) 
+           IF (ig1 > 0) igg(ig2) = ig1
+        END DO
         !
-        !  following  k-points in the list:
-        !  determine eigenfunction order in array il
-        
-        DO ibnd = 1, nbnd
-           ok (ibnd) = 0
-        ENDDO
-!
-! The bands are checked in order of increasing energy.
-!
+        ! compute overlap <\psi_k|S\psi_{k-1}> (without the Bloch factor)
+        ! psi(G) = \psi(k+G) (order of G-vectors same as for previous k)
+        !
+        psi(:,:) = (0.0_dp,0.0_dp)
+        DO ig2 = 1, npw
+           IF ( igg(ig2) > 0 ) psi(igg(ig2),:) = evc(ig2,:)
+        END DO
+        IF ( noncolin) THEN
+           DO ig2 = 1, npw
+              IF ( igg(ig2) > 0 ) psi(npwx+igg(ig2),:) = evc(npwx+ig2,:)
+           END DO
+        END IF
+        DEALLOCATE (igg, work)
+        CALL calbec (ngk(ik-1), spsi, psi, ps )
+        !
+        ! ps(ibnd,jbnd) = <S\psi_{k-1,ibnd} | \psi_{k,jbnd}>
+        !
+        ! assign bands on the basis of the relative overlap
+        ! simple cases first: large or very small overlap
+        !
+        closest_band(:,ik) = -1
+        done(:) =0
+        !ndone = 0
+        !nlost = 0
         DO ibnd=1,nbnd
-           idx(ibnd)=ibnd
-           edeg(ibnd)=et(il(ibnd,ik),ik-1)
-        ENDDO
-        CALL hpsort(nbnd, edeg, idx)
-        DO ibnd = 1, nbnd
-           IF (noncolin) THEN
-              old_nc = (0.d0, 0.d0)
-              DO ig = 1, npwold
-                 old_nc(igk_k(ig,ikold), 1)=psiold_nc(ig     ,idx(ibnd))
-                 old_nc(igk_k(ig,ikold), 2)=psiold_nc(ig+npwx,idx(ibnd))
-              ENDDO
-           ELSE
-              old = (0.d0, 0.d0)
-              DO ig = 1, npwold
-                 old (igk_k (ig,ikold) ) = psiold (ig, idx(ibnd))
-              ENDDO
-           ENDIF
-           DO jbnd = 1, nbnd
-              IF (ok (jbnd) == 0) THEN
-                 IF (noncolin) THEN
-                    new_nc = (0.d0, 0.d0)
-                    DO ig = 1, npw
-                       new_nc (igk_k(ig,ik), 1) = evc (ig     , jbnd)
-                       new_nc (igk_k(ig,ik), 2) = evc (ig+npwx, jbnd)
-                    ENDDO
-                    pro = cgracsc_nc (nkb,becp%nc(1,1,jbnd), &
-                              becpold%nc(1,1,idx(ibnd)), nhm, ntyp, nh, &
-                              nat, ityp, ngm, npol, new_nc, old_nc, upf)
-                 ELSE
-                    new (:) = (0.d0, 0.d0)
-                    DO ig = 1, npw
-                       new (igk_k (ig,ik) ) = evc (ig, jbnd)
-                    ENDDO
-                    pro=cgracsc(nkb,becp%k(:,jbnd),becpold%k(:,idx(ibnd)), &
-                         nhm, ntyp, nh, qq, nat, ityp, ngm, NEW, old, upf)
-                 ENDIF
-!                 write(6,'(3i5,f15.10)') ik,idx(ibnd), jbnd, abs(pro)
-                 IF (abs (pro) > 1.d-2 ) THEN
-                    il (idx(ibnd),ik) = jbnd
-                    GOTO 10
-                 ENDIF
-              ENDIF
-           ENDDO
-!           WRITE(6,*) '  no band found', ik, il(idx(ibnd),ikold), &
-!                        et(il(idx(ibnd),ikold),ik-1)*rytoev
-!
-!     no band found. Takes the closest in energy. NB: This should happen only
-!     for high energy bands.
-!
-           minene=1.d10
-           DO jbnd = 1, nbnd
-              IF (ok (jbnd) == 0) THEN
-                 IF (abs(et(idx(ibnd),ik)-et(jbnd,ik))<minene) THEN
-                    indjbnd=jbnd
-                    minene=abs(et(idx(ibnd),ik)-et(jbnd,ik))
-                 ENDIF
-              ENDIF
-           ENDDO
-           il(idx(ibnd),ik)=indjbnd
-10         CONTINUE
-           ok (il (idx(ibnd),ik) ) = 1
-        ENDDO
+           !
+           psr(:) = real(ps(ibnd,:))**2+aimag(ps(ibnd,:))**2
+           psmax = MAXVAL( psr )
+           !
+           IF ( psmax > 0.75 ) THEN
+              ! simple case: large overlap with one specific band
+              closest_band(ibnd,ik) = MAXLOC( psr, 1 )
+              ! record that this band at ik has been linked to a band at ik-1 
+              done( closest_band(ibnd,ik) ) = 1
+              ! ndone = ndone + 1
+              !
+        !   ELSE IF ( psmax < 0.05 ) THEN
+        !      ! simple case: negligible overlap with all bands
+        !      closest_band(ibnd,ik) = 0
+        !      nlost = nlost + 1
+              !
+           END IF
+        END DO
+        !  
+        ! assign remaining bands so as to maximise overlap
         !
-        !  if there were bands crossing at degenerate eigenvalues
-        !  at previous k-point, re-order those bands so as to keep
-        !  lower band indices corresponding to lower bands
-        !
-        DO nd = 1, ndeg
-           DO deg = 1, degeneracy (nd)
-              idx(deg) = il(degbands(nd,deg),ik)
-              edeg (deg) = et(il(degbands(nd,deg),ik), ik)
-           ENDDO
-           CALL hpsort(degeneracy (nd), edeg, idx)
-           DO deg = 1, degeneracy (nd)
-              il(degbands(nd,deg),ik) = idx(deg)
-           ENDDO
-        ENDDO
+        DO ibnd=1,nbnd
+           !
+           ! for unassigned bands ...
+           !
+           IF ( closest_band(ibnd,ik) == -1 ) THEN
+              psmax = 0.0_dp
+              jmax  = 0
+              DO jbnd = 1, nbnd
+                 !
+                 ! check if this band was already assigne ...
+                 !
+                 IF ( done(jbnd) > 0 ) CYCLE
+                 pscur = real(ps(ibnd,jbnd))**2+aimag(ps(ibnd,jbnd))**2
+                 IF ( pscur > psmax ) THEN
+                    psmax = pscur
+                    jmax = jbnd
+                 END IF
+              END DO
+              closest_band(ibnd,ik) = jmax
+              done(jmax) = 1
+           END IF
+        END DO
      ENDIF
      !
-     !   Now the order of eigenfunctions has been established
-     !   for this k-point -- prepare data for next k point
+     IF ( ik < nks2 .AND. .NOT. no_overlap ) THEN
+        !
+        ! compute S\psi_k to be used at next k-point
+        !
+        CALL s_psi( npwx, npw, nbnd, evc, spsi )
+        !
+     END IF
      !
-     IF (.not.no_overlap.or.lsigma(1).or.lsigma(2).or.lsigma(3).or.lsigma(4)) THEN
-        DO ibnd = 1, nbnd
-           IF (noncolin) THEN
-              psiold_nc(:,ibnd) = evc(:,il(ibnd,ik))
-              DO ipol=1,npol
-                 DO ikb = 1, nkb
-                    becpold%nc(ikb, ipol, ibnd)=becp%nc(ikb,ipol,il(ibnd,ik))
-                 ENDDO
-              ENDDO
-           ELSE
-              DO ig = 1, npw
-                psiold (ig, ibnd) = evc (ig, il (ibnd,ik) )
-              ENDDO
-              DO ikb = 1, nkb
-                 becpold%k (ikb, ibnd) = becp%k (ikb, il (ibnd,ik) )
-              ENDDO
-           ENDIF
-        ENDDO
-        ikold  = ik
-        npwold = npw
-        !
-        !  find degenerate eigenvalues
-        !
-        deg  = 0
-        ndeg = 0
-        DO ibnd = 2, nbnd
-           IF ( abs (et(ibnd, ik) - et(ibnd-1, ik)) < eps ) THEN
-              IF ( deg == 0 ) THEN
-                 ndeg = ndeg + 1
-                 edeg (ndeg) = et(ibnd, ik)
-              ENDIF
-              deg = 1
-           ELSE
-              deg = 0
-           ENDIF
-        ENDDO
-        !
-        !  locate band crossings at degenerate eigenvalues
-        !
-        DO nd = 1, ndeg
-           deg = 0
-           DO ibnd = 1, nbnd
-              IF ( abs (et(il(ibnd,ik), ik) - edeg (nd)) < eps ) THEN
-                 deg = deg + 1
-                 IF (deg > maxdeg) CALL errore ('punch_band', &
-                      ' increase maxdeg', deg)
-                 degbands(nd,deg) = ibnd
-              ENDIF
-           ENDDO
-           degeneracy (nd) = deg
-        ENDDO
-     ENDIF
   ENDDO
-#ifdef __MPI
+  !
   IF (noncolin) CALL poolrecover(sigma_avg,4*nbnd,nkstot,nks)
-  CALL ipoolrecover(il,nbnd,nkstot,nks)
-#endif
+  !
+  CALL deallocate_bec_type(becp)
+  DEALLOCATE ( psi, spsi, ps )
   !
   IF ( ionode ) THEN
      !
+     ! Re-order eigenvalues according to overlap
+     ! (ibnd=band index, jbnd=re-ordered index)
+     !
+     ALLOCATE (et_(nbnd,nkstot))
+     DO ibnd=1,nbnd
+        jbnd = ibnd
+        DO ik=nks1tot,nks2tot
+           et_(ibnd,ik) = et(jbnd,ik)* rytoev
+           jbnd = closest_band(jbnd,ik)
+        END DO
+     END DO
+     !
      CALL punch_plottable_bands ( filband, nks1tot, nks2tot, nkstot, nbnd, &
-                                  xk, et )
+                                  xk, et_ )
      !
      DO ik=nks1tot,nks2tot
         IF (ik == nks1) THEN
@@ -453,33 +379,22 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, no_overlap)
            ENDDO
         ENDIF
         WRITE (iunpun, '(10x,3f10.6)') xk(1,ik),xk(2,ik),xk(3,ik)
-        WRITE (iunpun, '(10f8.3)') (et (il(ibnd,ik), ik)             &
-             * rytoev, ibnd = 1, nbnd)
+        WRITE (iunpun, '(10f8.3)') (et_(ibnd, ik), ibnd = 1, nbnd)
         DO ipol=1,4
            IF (lsigma(ipol)) THEN
               WRITE (iunpun_sigma(ipol), '(10x,3f10.6)')            &
                                           xk(1,ik),xk(2,ik),xk(3,ik)
               WRITE (iunpun_sigma(ipol), '(10f8.3)')                &
-                            (sigma_avg(ipol, il(ibnd,ik) , ik), ibnd = 1, nbnd)
+                            (sigma_avg(ipol, ibnd, ik), ibnd = 1, nbnd)
            ENDIF
         ENDDO
-        !
      ENDDO
+     !
+     DEALLOCATE ( et_ )
+     !
   ENDIF
   !
-  DEALLOCATE (idx, degbands)
-  DEALLOCATE (edeg, degeneracy)
-  DEALLOCATE (il, ok)
-  CALL deallocate_bec_type(becp)
-  CALL deallocate_bec_type(becpold)
-  IF (noncolin) THEN
-     DEALLOCATE (sigma_avg)
-     DEALLOCATE (new_nc, old_nc)
-     DEALLOCATE (psiold_nc)
-  ELSE
-     DEALLOCATE (new, old)
-     DEALLOCATE (psiold)
-  ENDIF
+  IF (noncolin) DEALLOCATE (sigma_avg)
   !
   IF ( ionode ) THEN
      CLOSE (iunpun)
@@ -609,12 +524,12 @@ SUBROUTINE punch_plottable_bands ( filband, nks1tot, nks2tot, nkstot, nbnd, &
   IMPLICIT NONE
   CHARACTER(LEN=*), INTENT(IN) :: filband
   INTEGER, INTENT(IN) :: nks1tot, nks2tot, nkstot, nbnd
-  REAL(dp), INTENT(IN) :: xk(3,nkstot), et(nbnd,nkstot)
+  REAL(dp), INTENT(IN) :: xk(3,nkstot), et(nbnd,nks1tot)
   !
   INTEGER, PARAMETER :: max_lines = 100, stdout=6, iunpun0=18
   INTEGER:: ios, i, n, nlines, npoints(max_lines), point(max_lines)
   LOGICAL :: high_symmetry(nkstot), opnd
-  REAL(dp) :: k1(3), k2(3), kx(nkstot), ps, dxmod, dxmod_save
+  REAL(dp):: k1(3), k2(3), kx(nkstot), ps, dxmod, dxmod_save
   !
   !
   IF ( nks1tot < 1 .OR. nks2tot > nkstot .OR. nkstot < 1 .OR. nbnd < 1 ) THEN
@@ -735,19 +650,13 @@ SUBROUTINE punch_plottable_bands ( filband, nks1tot, nks2tot, nkstot, nbnd, &
      ENDIF
   ENDDO
   !
-  !  Write odd bands from left to right, even ones from right to left
-  !
   DO i=1,nbnd
-     IF ( mod(i,2) /= 0) THEN
-        WRITE (iunpun0,'(2f10.4)') (kx(n), et(i,n),n=nks1tot,nks2tot)
-     ELSE
-        WRITE (iunpun0,'(2f10.4)') (kx(n), et(i,n),n=nks2tot,nks1tot,-1)
-     ENDIF
+     WRITE (iunpun0,'(2f10.4)') (kx(n), et(i,n),n=nks1tot,nks2tot)
      WRITE (iunpun0,*)
   ENDDO
   !
   WRITE ( stdout, &
-       '(/,5x,"Plottable bands written to file ",A)') TRIM(filband)//'.gnu'
+       '(/,5x,"Plottable bands (eV) written to file ",A)') TRIM(filband)//'.gnu'
   CLOSE(unit=iunpun0, STATUS='KEEP')
 
   RETURN

@@ -108,12 +108,6 @@ bgw2pw.o : ../../PW/src/scf_mod.o
 bgw2pw.o : ../../PW/src/symm_base.o
 bgw2pw.o : ../../iotk/src/iotk_module.o
 cft.o : ../../Modules/kind.o
-cgracsc.o : ../../Modules/kind.o
-cgracsc.o : ../../Modules/mp.o
-cgracsc.o : ../../Modules/mp_global.o
-cgracsc.o : ../../Modules/pseudo_types.o
-cgracsc.o : ../../Modules/uspp.o
-cgracsc.o : ../../PW/src/pwcom.o
 chdens.o : ../../FFTXlib/fft_interfaces.o
 chdens.o : ../../FFTXlib/scatter_mod.o
 chdens.o : ../../Modules/cell_base.o

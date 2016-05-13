@@ -4,20 +4,27 @@ input_description -distribution {Quantum Espresso} -package PWscf -program bands
 
     intro {
 	Purpose of bands.x:
-	    Rewrite the bands ordering them using the overlap 
-	    of the wave-functions on neighbor k points
-	    and calculate properties of each eigen-function.
-
-	Presently it can calculate:
-
+	   Re-order bands, computes band-related properties. Corrently,
+	   re-ordering can be done with two different algorithms:
+	   (a) by maximising the overlap with bands at previous k-point
+           (b) by computing symmetry properties of each wavefunction
+           Bands-related properties that can be computed are currently
 	   (a) The expectation value of the spin operator on each spinor
-               wave-function.
-           (b) The symmetry properties of each wavefunction. With this option
-               the bands are not ordered according to the overlap.
+               wave-function (noncolinear case only)
+	   (b) The expectation value of p
 
-        The input data of this program are read from standard input
-        or from a file and have the following format:
-	
+        The input data can be read from standard input or from file using
+	command-line options "bands.x -i file-name" (same syntax as for pw.x)	
+
+	Output files:
+	- file "filband" containing the band structure, in a format
+	  suitable for plotting code "plotband.x"
+	- file "filband".rap (if lsym is .t.)  with symmetry information,
+	  to be read by plotting code "plotband.x"
+	- if (lsigma(i)): file "filband".i, i=1,2,3, with expectation values
+	  of the spin operator in the noncolinear case
+	- file "filband".gnu with bands in eV, directly plottable using gnuplot	
+	- file "filp" with matrix elements of p
 
         Structure of the input data:
 	============================
@@ -30,6 +37,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program bands
     namelist BANDS {
 
 	var prefix -type CHARACTER {   
+            default {'pwscf'}
 	    info {
 		prefix of files saved by program pw.x
 	    }
@@ -45,8 +53,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program bands
         }
 
 	var filband -type CHARACTER {     
+            default {'bands.out'}
 	    info {
-		file "filband" contains the bands
+		file name for band output (to be read by "plotband.x")
 	    }
 	}
 
@@ -61,9 +70,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program bands
 
 	dimension lsigma  -start 1 -end 3 -type LOGICAL { 
 	    info {
-		If true writes a file filband.i with the expectation
-		values of the spin operator on the spinor wave-functions.
-		(only in the noncollinear case).
+		If true computes expectation values of the spin operator
+		on the spinor wave-functions (only in the noncollinear case),
+		writes them to a file "filband".i, i=1,2,3
 	    }
 	}
 
@@ -71,7 +80,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program bands
             default { .false. }
             info {
                 If .true. matrix elements of the momentum operator p between
-                conduction and valence bands are written to file "filp" 
+                conduction and valence bands are computed and written to file
+		specified in "filp" 
             }
 
         }      
@@ -83,19 +93,20 @@ input_description -distribution {Quantum Espresso} -package PWscf -program bands
 
         }      
 	var lsym -type LOGICAL {
+	    default { .true. }
 	    info {
 		If .true. the bands are classified according to the
-		irreducible representations of the small group of k. A
-		file "filband".rap with the same format of "filband"
-		is written.
+		irreducible representations of the small group of k.
+		A file "filband".rap with the same format of "filband"
+		is written, for usage by "plotband.x"
 	    }
 	}
 	 
 	var no_overlap -type LOGICAL { 
-	    default { .false. }
+	    default { .true. }
 	    info {		
-		If .true. writes the eigenvalues in the output file
-		without changing their order.
+		If .false., and if lsym is .false., writes the eigenvalues
+		in the order that maximises overlap with the neighbor k-points
 
 	    }
 	}
