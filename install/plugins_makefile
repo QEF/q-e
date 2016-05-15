@@ -498,8 +498,8 @@ gipaw_veryclean: gipaw_clean
 	rm -rf ./configure-gipaw
 
 gipaw_distclean:
-	if test -d ../GIPAW; then (rm -R -f ../GIPAW ); fi
-	if test -d ../$(GIPAW); then (rm -R -f ../$(GIPAW) ); fi
+	#if test -d ../GIPAW; then (rm -R -f ../GIPAW ); fi
+	#if test -d ../$(GIPAW); then (rm -R -f ../$(GIPAW) ); fi
 	rm -f ../archive/$(GIPAW).tar.gz
 
 epw_clean:
@@ -533,7 +533,7 @@ w90_distclean:
 want_clean:
 	if test -d ../WANT; then (cd ../WANT; \
 	$(MAKE) clean); fi
-	- rm -rf ./make-want ./configure-want
+	- rm -rf ./configure.h ./make-want ./configure-want
 
 want_veryclean: want_clean
 	if test -d ../WANT; then (rm -R -f ../WANT); fi
