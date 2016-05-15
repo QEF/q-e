@@ -6057,8 +6057,8 @@ then
         f90rule="\$(MPIF90) \$(F90FLAGS) -c \$<"
         echo "${ECHO_T}no"
 else
-        f90rule="\$(CPP) \$(CPPFLAGS) \$< -o \$(*).F90 ; \\
-        \$(MPIF90) \$(F90FLAGS) -c \$(*).F90 -o \$(*).o"
+        f90rule="\$(CPP) \$(CPPFLAGS) \$< -o \$(*)_tmp.f90 ; \\
+        \$(MPIF90) \$(F90FLAGS) -c \$(*)_tmp.f90 -o \$(*).o"
         echo "${ECHO_T}yes"
 fi
 
