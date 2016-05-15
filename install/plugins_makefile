@@ -511,6 +511,8 @@ epw_veryclean: epw_clean
 # dir is not deleted for compatibility with the repository
 
 epw_distclean:
+	if test -d ../EPW; then (cd ../EPW; \
+	$(MAKE) distclean); fi
 	rm -f ../archive/$(EPW).tar.gz
 
 w90_clean:
