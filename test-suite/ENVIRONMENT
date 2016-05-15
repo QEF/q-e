@@ -10,7 +10,7 @@
 #export ESPRESSO_ROOT=/home/fspiga/my_q-e
 
 # Edit this line every time a new reference is created
-export REFERENCE_VERSION=v5.3.0
+export REFERENCE_VERSION=SVN
 
 ####################################################################################
 
@@ -21,3 +21,5 @@ export ESPRESSO_PSEUDO=${ESPRESSO_ROOT}/pseudo
 export ESPRESSO_TMPDIR=/tmp/save/
 export NETWORK_PSEUDO=http://www.quantum-espresso.org/wp-content/uploads/upf_files/
 export TESTCODE_DIR=${ESPRESSO_ROOT}/test-suite/testcode
+
+export TESTCODE_NPROCS=4

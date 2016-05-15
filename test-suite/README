@@ -4,44 +4,41 @@
 TEST-SUITE  v1.0.0
 ------------------
 
+Type 'make' for the list of possible 
+
 You can run make with several options:
 
-A) Run all PW and CP tests and show a final report
+A) Run all PW and CP tests in serial and show a final report
 
-$ make
+$ make run-tests
 
-
-B) Run only PW tests and show a final report
-
-$ make run-tests-pw 
+If 'run-tests-parallel', it runs the custo mtest in parallel (4 MPI)
 
 
-C) Run only CP tests and show a final report
-
-$ make run-tests-cp
-
-
-D) Run the test that is in a single directory and show a final report
+B) Run the test that is in a single directory and show a final report
 
 $ make run-custom-test testdir=name_of_directory
 
 For example, the following runs only the tests in the pw_spinorbit directory
 $ make run-custom-test testdir=pw_spinorbit
 
+If 'run-custom-test-parallel', it runs the specified test in parallel (4 MPI)
 
-E) After computing all tests, it also run a comparison-only steps and redirect
-   the output to a file called "out.`date +%Y%m%d_%H%M%S`" (python buffers both
-   stdout and stderr)
+
+C) Compare the latest run of tests (SERIAL or PARALLEl) and redirect
+   the output to various files called "out.XXX.`date +%Y%m%d_%H%M%S`" (python 
+   buffers both stdout and stderr). 'XXX' is replaced by the name of the
+   package (e.g. 'PW')
 
 $ make compare
 
 
-F) Regenerate all benchmark reference files
+D) Regenerate all benchmark reference files -- WORKS ONLY IN THE SERIAL MODE
 
 $ make create_reference
 
 
-G) Clean all test files create so far and leave only benchmark reference
+E) Clean all test files create so far and leave only benchmark reference
 
 $ make clean
 

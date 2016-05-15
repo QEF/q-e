@@ -12,9 +12,11 @@
 
 include ${ESPRESSO_ROOT}/test-suite/ENVIRONMENT
 
-# -- Uncomment to run in parallel
-#export PARA_PREFIX="mpirun -np 4"
-unset PARA_PREFIX
+if [ $QE_USE_MPI == 1 ]; then
+  export PARA_PREFIX="mpirun -np ${TESTCODE_NPROCS}"
+else
+  unset PARA_PREFIX
+fi
 
 ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/cp.x "$@"
 
