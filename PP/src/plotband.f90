@@ -367,12 +367,10 @@ PROGRAM plotband
                  IF (exist_proj) THEN
                     WRITE (2,'(3f10.4)') (kx(n), e(i,n), sumproj(i,n), &
                           n=point(ilines),point(ilines+1))
-                    WRITE (2,*)
                  ELSE
                  !!!
                     WRITE (2,'(2f10.4)') (kx(n), e(i,n),n=point(ilines),&
                                                           point(ilines+1))
-                    WRITE (2,*)
                  ENDIF
                  WRITE (2,*)
               ENDIF
@@ -449,25 +447,14 @@ PROGRAM plotband
               IF (is_in_range_rap(i)) THEN
                  !!!
                  IF (exist_proj) THEN
-                    IF ( mod(i,2) /= 0) THEN
-                       WRITE (2,'(3f10.4)') (kx(n), e_rap(i,n), p_rap(i,n), &
+                    WRITE (2,'(3f10.4)') (kx(n), e_rap(i,n), p_rap(i,n), &
                           n=point(ilines),point(ilines+1))
-                    ELSE
-                       WRITE (2,'(3f10.4)') (kx(n), e_rap(i,n), p_rap(i,n), &
-                          n=point(ilines+1),point(ilines),-1)
-                    ENDIF
-                    WRITE (2,*)
                  ELSE
                  !!!
-                    IF ( mod(i,2) /= 0) THEN
-                       WRITE (2,'(2f10.4)') (kx(n), e_rap(i,n), &
+                    WRITE (2,'(2f10.4)') (kx(n), e_rap(i,n), &
                                            n=point(ilines),point(ilines+1))
-                    ELSE
-                       WRITE (2,'(2f10.4)') (kx(n), e_rap(i,n), &
-                                          n=point(ilines+1),point(ilines),-1)
-                    ENDIF
-                    WRITE (2,*)
                  ENDIF
+                 WRITE (2,*)
               ENDIF
            ENDDO
            IF (minval(nbnd_rapk)==0) THEN
