@@ -130,7 +130,7 @@ MODULE read_namelists_module
        !
        CALL get_environment_variable( 'QEXML', input_xml_schema_file )
        IF ( TRIM(input_xml_schema_file) == ' ') &
-          input_xml_schema_file='./qes.xsd'
+          input_xml_schema_file='./qes.xml'
        !
        RETURN
        !

@@ -20,8 +20,9 @@ TYPE :: status_type
    CHARACTER(len=100) :: tagname
    LOGICAL  :: lread = .true.
    LOGICAL  :: lwrite = .true.
-   INTEGER  :: status
    !
+   !
+   INTEGER  :: status
    !
 END TYPE status_type
 

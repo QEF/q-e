@@ -88,8 +88,8 @@ SUBROUTINE qes_init_status(obj, tagname, status)
 
    TYPE(status_type) :: obj
    CHARACTER(len=*) :: tagname
-   INTEGER          :: status
    INTEGER  :: i
+   INTEGER  :: status
 
    obj%tagname = TRIM(tagname)
    obj%status = status
@@ -3931,11 +3931,8 @@ SUBROUTINE qes_write_inputOccupations(iun, obj)
 
    CALL iotk_write_begin(iun, TRIM(obj%tagname), attr=TRIM(attr))
       !
-      CALL iotk_write_begin(iun,'vec')
          WRITE(fmtstr,'(a)') '(5E20.7)'
          WRITE(iun, fmtstr) obj%vec
-      CALL iotk_write_end(iun,'vec')
-      !
    CALL iotk_write_end(iun, TRIM(obj%tagname))
    !
 END SUBROUTINE qes_write_inputOccupations
@@ -4437,11 +4434,8 @@ SUBROUTINE qes_write_starting_ns(iun, obj)
 
    CALL iotk_write_begin(iun, TRIM(obj%tagname), attr=TRIM(attr))
       !
-      CALL iotk_write_begin(iun,'vec')
          WRITE(fmtstr,'(a)') '(5E20.7)'
          WRITE(iun, fmtstr) obj%vec
-      CALL iotk_write_end(iun,'vec')
-      !
    CALL iotk_write_end(iun, TRIM(obj%tagname))
    !
 END SUBROUTINE qes_write_starting_ns
