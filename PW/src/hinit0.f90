@@ -19,7 +19,7 @@ SUBROUTINE hinit0()
   USE cell_base,    ONLY : at, bg, omega, tpiba2
   USE cellmd,       ONLY : omega_old, at_old, lmovecell
   USE klist,        ONLY : init_igk
-  USE wvfct,        ONLY : npw, npwx, igk
+  USE wvfct,        ONLY : npw, npwx
   USE fft_base,     ONLY : dfftp
   USE gvect,        ONLY : ngm, ig_l2g, g, eigts1, eigts2, eigts3
   USE vlocal,       ONLY : strf

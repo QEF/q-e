@@ -24,7 +24,7 @@ SUBROUTINE force_hub(forceh)
    USE basis,                ONLY : natomwfc
    USE symme,                ONLY : symvector
    USE io_files,             ONLY : prefix
-   USE wvfct,                ONLY : nbnd, npwx, npw, igk
+   USE wvfct,                ONLY : nbnd, npwx
    USE control_flags,        ONLY : gamma_only
    USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
    USE scf,                  ONLY : v
@@ -47,7 +47,7 @@ SUBROUTINE force_hub(forceh)
    COMPLEX (DP), ALLOCATABLE :: spsi(:,:), wfcatom(:,:) 
    REAL (DP), ALLOCATABLE :: dns(:,:,:,:)
    !       dns(ldim,ldim,nspin,nat) ! the derivative of the atomic occupations
-   INTEGER :: alpha, na, nt, is, m1, m2, ipol, ldim, ik, ijkb0
+   INTEGER :: npw, alpha, na, nt, is, m1, m2, ipol, ldim, ik, ijkb0
    INTEGER :: nb_s, nb_e, mykey
 
    IF (U_projection .NE. "atomic") CALL errore("force_hub", &
@@ -79,7 +79,6 @@ SUBROUTINE force_hub(forceh)
       !
       IF (lsda) current_spin = isk(ik)
       npw = ngk (ik)
-      igk(1:npw) = igk_k(1:npw,ik)
 
       IF (nks > 1) &
          CALL get_buffer (evc, nwordwfc, iunwfc, ik)

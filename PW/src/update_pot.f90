@@ -629,7 +629,7 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
   USE io_global,            ONLY : stdout
   USE klist,                ONLY : nks, ngk, xk, igk_k
   USE lsda_mod,             ONLY : lsda, current_spin, isk
-  USE wvfct,                ONLY : nbnd, npwx, current_k
+  USE wvfct,                ONLY : nbnd, npwx
   USE ions_base,            ONLY : nat, tau
   USE io_files,             ONLY : nwordwfc, iunwfc, iunoldwfc, &
                                    iunoldwfc2, diropn
