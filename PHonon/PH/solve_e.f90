@@ -60,6 +60,7 @@ subroutine solve_e
   USE qpoint,                ONLY : npwq, nksq
   USE eqv,                   ONLY : dpsi, dvpsi, eprec
   USE control_lr,            ONLY : nbnd_occ, lgamma
+  USE dv_of_drho_lr
 
   implicit none
 

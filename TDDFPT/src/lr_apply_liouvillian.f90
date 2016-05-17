@@ -60,6 +60,7 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
   USE noncollin_module,     ONLY : npol
   USE becmod,               ONLY : bec_type, becp, calbec
   USE lr_exx_kernel
+  USE dv_of_drho_lr
 #ifdef __ENVIRON
   USE plugin_flags,         ONLY : use_environ
   USE scf,                  ONLY : rho

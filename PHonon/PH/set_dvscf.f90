@@ -19,6 +19,7 @@
   USE lsda_mod,ONLY : nspin
   USE units_ph, ONLY : iudrho, lrdrho
   USE output,   ONLY : fildrho
+  USE dv_of_drho_lr
   implicit none
 
   complex(DP) :: dvscfs (dffts%nnr,3)

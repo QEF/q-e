@@ -43,6 +43,7 @@ lr_alloc_init.o : lr_charg_resp.o
 lr_alloc_init.o : lr_variables.o
 lr_apply_liouvillian.o : ../../FFTXlib/fft_interfaces.o
 lr_apply_liouvillian.o : ../../FFTXlib/fft_parallel.o
+lr_apply_liouvillian.o : ../../LR_Modules/dv_of_drho.o
 lr_apply_liouvillian.o : ../../Modules/becmod.o
 lr_apply_liouvillian.o : ../../Modules/cell_base.o
 lr_apply_liouvillian.o : ../../Modules/control_flags.o
@@ -65,6 +66,7 @@ lr_apply_liouvillian.o : lr_exx_kernel.o
 lr_apply_liouvillian.o : lr_variables.o
 lr_apply_liouvillian_eels.o : ../../FFTXlib/fft_interfaces.o
 lr_apply_liouvillian_eels.o : ../../FFTXlib/fft_parallel.o
+lr_apply_liouvillian_eels.o : ../../LR_Modules/dv_of_drho.o
 lr_apply_liouvillian_eels.o : ../../LR_Modules/lrcom.o
 lr_apply_liouvillian_eels.o : ../../Modules/cell_base.o
 lr_apply_liouvillian_eels.o : ../../Modules/fft_base.o
@@ -183,6 +185,7 @@ lr_dav_main.o : lr_dav_routines.o
 lr_dav_main.o : lr_dav_variables.o
 lr_dav_main.o : lr_variables.o
 lr_dav_routines.o : ../../FFTXlib/scatter_mod.o
+lr_dav_routines.o : ../../LR_Modules/dv_of_drho.o
 lr_dav_routines.o : ../../Modules/cell_base.o
 lr_dav_routines.o : ../../Modules/control_flags.o
 lr_dav_routines.o : ../../Modules/fft_base.o

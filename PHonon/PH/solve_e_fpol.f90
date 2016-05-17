@@ -50,6 +50,7 @@ subroutine solve_e_fpol ( iw )
 
   USE eqv,                   ONLY : dpsi, dvpsi, eprec
   USE control_lr,            ONLY : nbnd_occ, lgamma
+  USE dv_of_drho_lr
 
   implicit none
 

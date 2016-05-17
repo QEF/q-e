@@ -42,6 +42,7 @@ subroutine zstar_eu_us
   USE lrus,       ONLY : int3, int3_paw
   USE eqv,        ONLY : dvpsi, dpsi
   USE qpoint,     ONLY : nksq, npwq
+  USE dv_of_drho_lr
   !
   implicit none
   integer :: ibnd, jbnd, ipol, jpol, imode0, irr, imode, nrec, mode
@@ -146,7 +147,7 @@ subroutine zstar_eu_us
      !
      ! call davcio_drho(dvscf(1,1,ipol),lrdrho,iudrho,ipol,-1)
      !
-     call dv_of_drho (dvscf (1, 1, ipol), .false.)
+     call dv_of_drho (dvscf (:, :, ipol), .false.)
   enddo
   call psyme (dvscf)
 

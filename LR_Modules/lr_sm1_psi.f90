@@ -689,7 +689,7 @@ SUBROUTINE sm1_psiq_nc()
     !
     ! Noncollinear case
     ! Note: 1) the implementation of this routine is not finished...
-    !       2) the array bbk must be deallocated somewhere
+    !       2) the array bbnc must be deallocated somewhere
     !          outside of this routine.
     !
     USE becmod,     ONLY : bec_type, becp, calbec

@@ -23,6 +23,7 @@ subroutine dvscf (nu_i, dvloc, xq_x)
   USE uspp,       ONLY: nlcc_any
   use phcom
   use d3com
+  !USE dv_of_drho_lr
   !
   implicit none
   integer :: nu_i

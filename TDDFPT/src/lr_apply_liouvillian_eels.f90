@@ -42,6 +42,7 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
   USE qpoint,               ONLY : npwq, igkq, ikks, ikqs, nksq
   USE eqv,                  ONLY : evq, dpsi, dvpsi
   USE control_lr,           ONLY : nbnd_occ
+  USE dv_of_drho_lr
  
   IMPLICIT NONE
   !

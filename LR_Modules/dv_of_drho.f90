@@ -5,6 +5,10 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+MODULE dv_of_drho_lr
+
+CONTAINS
+
 !-----------------------------------------------------------------------
 subroutine dv_of_drho (dvscf, add_nlcc, drhoc)
   !-----------------------------------------------------------------------
@@ -234,3 +238,5 @@ subroutine dv_of_drho (dvscf, add_nlcc, drhoc)
   RETURN
   !
 end subroutine dv_of_drho
+
+END MODULE dv_of_drho_lr

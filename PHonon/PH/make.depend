@@ -478,6 +478,7 @@ dvpsi_e.o : ../../PW/src/buffers.o
 dvpsi_e.o : ../../PW/src/pwcom.o
 dvpsi_e.o : phcom.o
 dvpsi_e.o : ramanm.o
+dvpsi_e2.o : ../../LR_Modules/dv_of_drho.o
 dvpsi_e2.o : ../../LR_Modules/lrcom.o
 dvpsi_e2.o : ../../Modules/cell_base.o
 dvpsi_e2.o : ../../Modules/fft_base.o
@@ -519,6 +520,7 @@ dyndia.o : ../../Modules/io_global.o
 dyndia.o : ../../Modules/kind.o
 dyndia.o : io_dyn_mat.o
 dyndia.o : phcom.o
+dynmat.o : ../../LR_Modules/dynmat_sub.o
 dynmat.o : ../../Modules/constants.o
 dynmat.o : ../../Modules/environment.o
 dynmat.o : ../../Modules/io_global.o
@@ -1234,6 +1236,7 @@ set_drhoc.o : ../../Modules/ions_base.o
 set_drhoc.o : ../../Modules/kind.o
 set_drhoc.o : ../../Modules/recvec.o
 set_drhoc.o : ../../Modules/uspp.o
+set_dvscf.o : ../../LR_Modules/dv_of_drho.o
 set_dvscf.o : ../../Modules/fft_base.o
 set_dvscf.o : ../../Modules/kind.o
 set_dvscf.o : ../../Modules/recvec.o
@@ -1282,6 +1285,7 @@ setlocq.o : ../../Modules/constants.o
 setlocq.o : ../../Modules/kind.o
 sgam_ph.o : ../../Modules/kind.o
 solve_e.o : ../../FFTXlib/fft_parallel.o
+solve_e.o : ../../LR_Modules/dv_of_drho.o
 solve_e.o : ../../LR_Modules/lrcom.o
 solve_e.o : ../../Modules/cell_base.o
 solve_e.o : ../../Modules/check_stop.o
@@ -1305,6 +1309,7 @@ solve_e.o : ../../PW/src/pwcom.o
 solve_e.o : ../../PW/src/scf_mod.o
 solve_e.o : phcom.o
 solve_e.o : write_rec.o
+solve_e2.o : ../../LR_Modules/dv_of_drho.o
 solve_e2.o : ../../LR_Modules/lrcom.o
 solve_e2.o : ../../Modules/cell_base.o
 solve_e2.o : ../../Modules/check_stop.o
@@ -1325,6 +1330,7 @@ solve_e2.o : phcom.o
 solve_e2.o : ramanm.o
 solve_e2.o : write_rec.o
 solve_e_fpol.o : ../../FFTXlib/fft_interfaces.o
+solve_e_fpol.o : ../../LR_Modules/dv_of_drho.o
 solve_e_fpol.o : ../../LR_Modules/lrcom.o
 solve_e_fpol.o : ../../Modules/becmod.o
 solve_e_fpol.o : ../../Modules/cell_base.o
@@ -1354,6 +1360,7 @@ solve_e_nscf.o : ../../PW/src/buffers.o
 solve_e_nscf.o : ../../PW/src/pwcom.o
 solve_e_nscf.o : phcom.o
 solve_linter.o : ../../FFTXlib/fft_parallel.o
+solve_linter.o : ../../LR_Modules/dv_of_drho.o
 solve_linter.o : ../../LR_Modules/lrcom.o
 solve_linter.o : ../../Modules/cell_base.o
 solve_linter.o : ../../Modules/check_stop.o
@@ -1537,6 +1544,7 @@ zstar_eu.o : ../../PW/src/pwcom.o
 zstar_eu.o : ../../PW/src/symme.o
 zstar_eu.o : ph_restart.o
 zstar_eu.o : phcom.o
+zstar_eu_us.o : ../../LR_Modules/dv_of_drho.o
 zstar_eu_us.o : ../../LR_Modules/lrcom.o
 zstar_eu_us.o : ../../Modules/cell_base.o
 zstar_eu_us.o : ../../Modules/fft_base.o

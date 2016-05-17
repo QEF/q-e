@@ -42,6 +42,7 @@ subroutine solve_e2
   USE eqv,       ONLY : dpsi, dvpsi
   USE qpoint,    ONLY : npwq, igkq, nksq
   USE control_lr, ONLY : nbnd_occ, lgamma
+  USE dv_of_drho_lr
 
   implicit none
 

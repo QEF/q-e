@@ -31,6 +31,7 @@ subroutine dvpsi_e2
   USE mp_pools,        ONLY : my_pool_id, inter_pool_comm
   USE mp_bands,        ONLY : intra_bgrp_comm
   USE mp,        ONLY: mp_sum
+  USE dv_of_drho_lr
 
   implicit none
 
@@ -151,7 +152,7 @@ subroutine dvpsi_e2
            aux6 (ir, ipa) = CMPLX(raux6 (ir, ipa), 0.d0,kind=DP)
         enddo
      endif
-     call dv_of_drho (aux6(1, ipa), .false.)
+     call dv_of_drho (aux6(:, ipa), .false.)
   enddo
 
   if (doublegrid) deallocate (auxs1)

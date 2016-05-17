@@ -1357,6 +1357,7 @@ contains
     use cell_base,              only : omega
     use mp,                   only : mp_barrier
     use mp_world,               only : world_comm
+    use dv_of_drho_lr
 
     implicit none
     integer :: v1,c1,v2,c2,ia,ir

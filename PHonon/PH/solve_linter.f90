@@ -72,6 +72,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   USE eqv,          ONLY : dvpsi, dpsi, evq, eprec
   USE qpoint,       ONLY : xq, npwq, igkq, nksq, ikks, ikqs
   USE control_lr,   ONLY : alpha_pv, nbnd_occ, lgamma
+  USE dv_of_drho_lr
 
   implicit none
 

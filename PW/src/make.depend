@@ -810,12 +810,14 @@ init_run.o : ../../Modules/control_flags.o
 init_run.o : ../../Modules/fft_base.o
 init_run.o : ../../Modules/funct.o
 init_run.o : ../../Modules/ions_base.o
+init_run.o : ../../Modules/mp.o
 init_run.o : ../../Modules/mp_bands.o
 init_run.o : ../../Modules/paw_variables.o
 init_run.o : ../../Modules/recvec_subs.o
 init_run.o : ../../Modules/tsvdw.o
 init_run.o : ../../Modules/uspp.o
 init_run.o : ../../Modules/wannier_new.o
+init_run.o : ../../Modules/wavefunctions.o
 init_run.o : bp_mod.o
 init_run.o : dynamics_module.o
 init_run.o : esm.o
@@ -1318,6 +1320,7 @@ punch.o : ../../Modules/control_flags.o
 punch.o : ../../Modules/io_files.o
 punch.o : ../../Modules/io_global.o
 punch.o : ../../Modules/wavefunctions.o
+punch.o : ../../Modules/wrappers.o
 punch.o : a2fmod.o
 punch.o : pw_restart.o
 punch.o : pwcom.o
