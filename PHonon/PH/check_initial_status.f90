@@ -271,7 +271,7 @@ SUBROUTINE check_initial_status(auxdyn)
   !  it is not found in the running directory.
   !
   filename=TRIM(fildyn)//'0'
- 
+  ierr=0 
   IF (ionode.and..NOT.elph_mat) THEN
      INQUIRE (FILE = TRIM(filename), EXIST = exst)
      ierr=0
