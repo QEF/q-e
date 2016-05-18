@@ -110,7 +110,7 @@ then
         mpif90=$f90
 else
         # clear cached values (not sure when and why this is needed)
-        unset FC ac_cv_prog_ac_ct_FC ac_cv_fc_compiler_gnu ac_cv_prog_fc_g
+        unset ac_cv_prog_ac_ct_FC ac_cv_fc_compiler_gnu ac_cv_prog_fc_g
         if test "$mpif90" = "" ; then 
 	   mpif90="$try_mpif90 $f90"
            AC_PROG_FC($mpif90)
