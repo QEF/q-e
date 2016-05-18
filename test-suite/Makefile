@@ -44,27 +44,27 @@ run-tests-parallel : run-tests-cp-parallel run-tests-pw-parallel
 
 
 run-tests-cp-serial : prolog pseudo
-	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --category=cp_all
+	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=cp_all
 
 run-tests-cp-parallel : prolog pseudo
-	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --category=cp_all
+	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=cp_all
 
 run-tests-pw-serial : prolog pseudo
-	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --category=pw_all
+	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=pw_all
 
 run-tests-pw-parallel : prolog pseudo
-	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --category=pw_all
+	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=pw_all
 
 
 run-custom-test : run-custom-test-serial
 
 run-custom-test-serial : prolog pseudo
 	@if test -d $(testdir); then \
-	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --category=$(testdir) ; fi
+	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=$(testdir) ; fi
 
 run-custom-test-parallel : prolog pseudo
 	@if test -d $(testdir); then \
-	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --category=$(testdir) ; fi
+	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=$(testdir) ; fi
 
 
 compare : compare-cp compare-pw

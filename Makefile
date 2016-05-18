@@ -312,7 +312,7 @@ tar :
 	@if test -f espresso.tar.gz ; then /bin/rm espresso.tar.gz ; fi
 	# do not include unneeded stuff 
 	find ./ -type f | grep -v -e /.svn/ -e'/\.' -e'\.o$$' -e'\.mod$$'\
-             -e'\.a$$' -e'\.d$$' -e'\.i$$' -e'_tmp\.f90$$' -e'\.x$$' \
+  		 -e /.git/ -e'\.a$$' -e'\.d$$' -e'\.i$$' -e'_tmp\.f90$$' -e'\.x$$' \
 	     -e'~$$' -e'\./GUI' -e '\./tempdir' | xargs tar rvf espresso.tar
 	gzip espresso.tar
 
