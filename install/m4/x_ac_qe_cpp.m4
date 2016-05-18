@@ -10,9 +10,10 @@ if test "$cpp" = "" ; then cpp=$try_cpp; fi
 echo setting CPP... $cpp
 
 echo $ECHO_N "setting CPPFLAGS... $ECHO_C"
+# Note: option -C makes trouble with recent gcc versions and pgi
 case $cpp in
-        cpp)  try_cppflags="-P -C -traditional" ;;
-        fpp)  try_cppflags="-P -C "              ;;
+        cpp)  try_cppflags="-P -traditional" ;;
+        fpp)  try_cppflags="-P "              ;;
         *)    try_cppflags=""                ;;
 esac
 if test "$cppflags" = "" ; then cppflags=$try_cppflags ; fi

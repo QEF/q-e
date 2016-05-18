@@ -14,7 +14,7 @@ AC_ARG_WITH(internal-lapack,
    fi],
    [use_internal_lapack=0])
    
-# check for lapack
+# check for lapack - almost all cases implemented here are OBSOLETE
 #
 # same supported vendor replacements as for blas
 # internal version is used if none is found
@@ -30,7 +30,7 @@ if test "$use_internal_lapack" -eq 0
 
         ia32:* | ia64:*| x86_64:* )
                 # check for mkl_lapack (if mkl found and acml not found)
-                # OBSOLESCENT - recent versions of mkl contain lapack
+                # OBSOLETE - recent versions of mkl contain lapack
                 if test "$have_mkl" -ne 0 && test "$have_acml" -eq 0
                 then
                         unset ac_cv_search_dspev ac_lib # clear cached value
@@ -43,7 +43,7 @@ if test "$use_internal_lapack" -eq 0
                 ;;
 
         sparc:* )
-                # check for SUNperf library
+                # check for SUNperf library - likely OBSOLETE 
                 unset ac_cv_search_dspev # clear cached value
                 FFLAGS="$test_fflags"
                 LDFLAGS="$test_ldflags"
@@ -52,7 +52,7 @@ if test "$use_internal_lapack" -eq 0
                                lapack_libs="-xlic_lib=sunperf $LIBS")
                 ;;
         aix:* )
-                # check for essl
+                # check for essl - OBSOLETE 
                 unset ac_cv_search_dspev # clear cached value
                 FFLAGS="$test_fflags"
                 LDFLAGS="$test_ldflags"
@@ -77,8 +77,7 @@ if test "$use_internal_lapack" -eq 0
                 ;;
 
         necsx:* )
-                #sx5-nec or sx6-nec or sx8-nec: check in (/SX)/usr/lib
-                #sx8-nec-idris: check in /SX/opt/mathkeisan/inst/lib0
+                # OBSOLETE
                 try_libdirs="/SX/usr/lib /SX/opt/mathkeisan/inst/lib0"
                 for dir in none $try_libdirs
                 do
@@ -149,6 +148,7 @@ else
     # IBM essl or atlas: add missing lapack routines - must be loaded after lib
     # atlas: add missing lapack routines so as to complete atlas
     # note that some compilers do not like to have multiple symbols
+    # OBSOLETE
       lapack_libs="$lapack_libs $topdir/lapack-3.2/lapack.a"
       lapack_libs_switch="internal"
     else

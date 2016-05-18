@@ -23,8 +23,8 @@ AC_ARG_WITH(internal-blas,
 # check for blas
 # supported vendor replacements:
 #   mkl and acml on Intel/AMD architectures
-#   essl on aix
-#   SUNperf on sparc
+#   essl on aix - OBSOLETE
+#   SUNperf on sparc - likely OBSOLETE
 # atlas is used over blas if available
 # internal version is used if none is found
 
