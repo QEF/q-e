@@ -13,19 +13,8 @@ or http://www.gnu.org/copyleft/gpl.txt .
 /* fortran-to-C naming convention, for functions with and without
    underscores in the name (some compilers treat them differently) */ 
 
-#if defined(__CRAY)
-/* AC_F77_WRAPPERS seems bugged if CRAY compilers are used. Since 
-   --disable-wrappers is necessary, here a workaround... */
-   
-#define F77_FUNC(name,NAME) name ## _
-#define F77_FUNC_(name,NAME) name ## _
-
-#else
-
 #undef F77_FUNC
 #undef F77_FUNC_
-
-#endif
 
 /* do we have the mallinfo structure (see clib/memstat.c) ? */
 
