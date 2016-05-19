@@ -533,13 +533,13 @@ w90_distclean:
 want_clean:
 	if test -d ../WANT; then (cd ../WANT; \
 	$(MAKE) clean); fi
-	- rm -rf ./configure.h ./make-want ./configure-want
+	- rm -rf ./make-want ./configure-want
 
 want_veryclean: want_clean
 	if test -d ../WANT; then (rm -R -f ../WANT); fi
 	if test -d ../$(WANT); then (rm -R -f ../$(WANT)); fi
 	if test -e ../archive/$(WANT).tar.gz ; then (rm -f ../archive/$(WANT).tar.gz); fi
-	- rm -rf ./uncompress-want
+	- rm -rf ./uncompress-want ./configure.h
 
 want_distclean: 
 	rm -f ../archive/$(WANT).tar.gz
