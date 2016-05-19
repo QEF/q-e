@@ -14,9 +14,11 @@ Fixed in 6.0 version:
     (commit 12367,12369) and incorrect format if more than 99 atoms
     (commit 12393) (courtesy Shaofeng Wang)
   * disk_io='high' crashing in MD runs (courtesy David Strubbe)
-    (commit (12388)
+    (commit 12388)
   * Fix for NEB+hybrid functionals (courtesy Davide Colleoni)
-    (commit (12391)
+    (commit 12391)
+  * Incorrect Wyckoff site labels for group #138, origin_choice=2
+    (courtesy Marton Voros) (commit 12426)
 
 Incompatible changes in 6.0 version:
 

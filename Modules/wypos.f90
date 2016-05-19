@@ -4882,11 +4882,11 @@ CONTAINS
                ENDIF
               
             ELSEIF (origin_choice==2) THEN
-               IF (TRIM(wp)=='2a') THEN
+               IF (TRIM(wp)=='4a') THEN
                   tau(1)=0.75_DP
                   tau(2)=0.25_DP
                   tau(3)=0.0_DP
-               ELSEIF (TRIM(wp)=='2b') THEN
+               ELSEIF (TRIM(wp)=='4b') THEN
                   tau(1)=0.75_DP
                   tau(2)=0.25_DP
                   tau(3)=0.75_DP
