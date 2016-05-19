@@ -446,22 +446,25 @@ CONTAINS
           ! by one processor only, i.e. ionode)
           CALL block_distribute( nrm, me_image, nproc_image, nr_s, nr_e, mykey )
           !
-          sum_on_R : &
-          DO nr = nr_s, nr_e
-              rr   = SQRT(r2(nr)) * alat
-              qdr = tpi * (  q (1) * (r(1, nr) + tau (1)) &
-                          + q (2) * (r(2, nr) + tau (2)) &
-                          + q (3) * (r(3, nr) + tau (3)) )
-              !
-              IF (ABS(qdr) < eps16) THEN
-                  facr = - e2*one
-              ELSE
-                  facr = - e2*EXP(ii*qdr) !CMPLX(cos(qdr), sin(qdr), kind=dp)
-              ENDIF
-              !
-              F_abc = F_abc + facr*d3f_abc(r(1:3,nr),rr,abc,eta)
-              !
-          ENDDO sum_on_R
+          ! If we have more CPUs than nrm some will do nothing
+          IF(mykey==0)THEN
+            sum_on_R : &
+            DO nr = nr_s, nr_e
+                rr   = SQRT(r2(nr)) * alat
+                qdr = tpi * (  q (1) * (r(1, nr) + tau (1)) &
+                            + q (2) * (r(2, nr) + tau (2)) &
+                            + q (3) * (r(3, nr) + tau (3)) )
+                !
+                IF (ABS(qdr) < eps16) THEN
+                    facr = - e2*one
+                ELSE
+                    facr = - e2*CMPLX(cos(qdr), sin(qdr), kind=DP)
+                ENDIF
+                !
+                F_abc = F_abc + facr*d3f_abc(r(1:3,nr),rr,abc,eta)
+                !
+            ENDDO sum_on_R
+          ENDIF
           !
         ENDIF
         !
