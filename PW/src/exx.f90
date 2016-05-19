@@ -1004,14 +1004,14 @@ MODULE exx
             IF (ibnd < ibnd_end) THEN
                ! two ffts at the same time
                DO j = 1, ngkq(ikq)
-                  fp = (phi (nls(igkq(j))) + phi (nlsm(igkq(j))))*0.5d0
-                  fm = (phi (nls(igkq(j))) - phi (nlsm(igkq(j))))*0.5d0
+                  fp = (phi (nls(j)) + phi (nlsm(j)))*0.5d0
+                  fm = (phi (nls(j)) - phi (nlsm(j)))*0.5d0
                   evcq( j, ibnd)   = CMPLX( DBLE(fp), AIMAG(fm),kind=DP)
                   evcq( j, ibnd+1) = CMPLX(AIMAG(fp),- DBLE(fm),kind=DP)
                ENDDO
             ELSE
                DO j = 1, ngkq(ikq)
-                  evcq(j, ibnd)   =  phi(nls(igkq(j)))
+                  evcq(j, ibnd)   =  phi(nls(j))
                ENDDO
             ENDIF
          ENDDO

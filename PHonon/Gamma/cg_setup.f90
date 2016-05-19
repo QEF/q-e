@@ -27,7 +27,7 @@ SUBROUTINE cg_setup
   USE klist,      ONLY: xk, ngk, igk_k
   USE lsda_mod,   ONLY: nspin, current_spin
   USE vlocal,     ONLY: strf
-  USE wvfct,      ONLY: nbnd, npwx, npw, g2kin, igk
+  USE wvfct,      ONLY: nbnd, npwx, npw
   USE gvecw,      ONLY: gcutw
   USE cgcom
   !
@@ -115,15 +115,11 @@ SUBROUTINE cg_setup
   ELSE
      CLOSE(unit=iunpun,status='delete')
   ENDIF
-  CALL gk_sort (xk(1,kpoint),ngm,g,gcutw,npw,igk,g2kin)
-  ! TEMP: used in gen_us_dj, to be removed
-  ngk(kpoint)=npw
-  igk_k(:,kpoint)=igk(:)
-  ! TEMP: end
   !
   !  Kleinman-Bylander PPs
   !
-  CALL init_us_2 (npw, igk, xk(1,kpoint), vkb)
+  npw = ngk(kpoint)
+  CALL init_us_2 (npw, igk_k(1,kpoint), xk(1,kpoint), vkb)
   !
   CALL stop_clock('cg_setup')
   !

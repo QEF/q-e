@@ -19,8 +19,8 @@ SUBROUTINE rhod2vkb(dyn0)
   USE lsda_mod,  ONLY : current_spin
   USE gvect,  ONLY : ngm, g, igtongl, nl
   USE gvecw,  ONLY: gcutw
-  USE wvfct,  ONLY: nbnd, npwx, npw, igk
-  USE klist,  ONLY : xk, nks, wk
+  USE wvfct,  ONLY: nbnd, npwx, npw
+  USE klist,  ONLY : wk
   USE scf,    ONLY : rho
   USE vlocal, ONLY: vloc
   USE wavefunctions_module,  ONLY: evc, psic
@@ -102,15 +102,13 @@ SUBROUTINE rhod2vkb(dyn0)
   ALLOCATE  ( becp1( nkb, nbnd, 3))
   ALLOCATE  ( becp2( nkb, nbnd, 6))
   !
-  DO kpoint = 1,nks
+  kpoint = 1
      ! the sum has four terms which can be reduced to two (note factor 2 in weight):
      !
      ! sum_G sum_G' sum_j sum_l [ psi_j*(G) V_na,l(G)(-iGu_ipol) V^*_na,l(G')( iG'u_jpol) psi_j(G')
      ! sum_G sum_G' sum_j sum_l [ psi_j*(G) V_na,l(G)  V^*_na,l(G') ( iG'u_ipol)( iG'u_jpol) psi_j(G')
      !
      weight = 2.0d0*wk(kpoint)
-     CALL gk_sort(xk(1,kpoint),ngm,g,gcutw,npw,igk,psic)
-     IF (nks>1) CALL davcio(evc,lrwfc,iuwfc,kpoint,-1)
      !
      CALL calbec ( npw, vkb, evc, becp )
      !
@@ -119,7 +117,7 @@ SUBROUTINE rhod2vkb(dyn0)
      DO ipol = 1, 3
         DO jkb = 1, nkb
            DO i = 1,npw
-              dvkb(i,jkb) = vkb(i,jkb) * cmplx(0.d0,-tpiba,kind=DP) * g(ipol,igk(i))
+              dvkb(i,jkb) = vkb(i,jkb) * cmplx(0.d0,-tpiba,kind=DP) * g(ipol,i)
            ENDDO
         ENDDO
         !
@@ -133,7 +131,7 @@ SUBROUTINE rhod2vkb(dyn0)
         DO jpol = ipol, 3
            DO jkb = 1, nkb
               DO i = 1,npw
-                 dvkb(i,jkb) = vkb(i,jkb) * tpiba2 * g(ipol,igk(i))* g(jpol,igk(i))
+                 dvkb(i,jkb) = vkb(i,jkb) * tpiba2 * g(ipol,i)* g(jpol,i)
               ENDDO
            ENDDO
            !
@@ -175,7 +173,6 @@ SUBROUTINE rhod2vkb(dyn0)
            ENDIF
         ENDDO
      ENDDO
-  ENDDO
   !
   DEALLOCATE ( becp2)
   DEALLOCATE ( becp1)

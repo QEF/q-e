@@ -13,7 +13,7 @@ SUBROUTINE A_h(e,h,ah)
   USE cell_base,ONLY : alat, omega, tpiba2
   USE uspp,     ONLY : vkb, nkb
   USE lsda_mod, ONLY : current_spin, nspin
-  USE wvfct, ONLY: nbnd, npwx, npw, g2kin, igk
+  USE wvfct, ONLY: nbnd, npwx, npw, g2kin
   USE wavefunctions_module,  ONLY: evc, psic
   USE scf,      ONLY : vrs, rho
   USE fft_base, ONLY : dffts, dfftp
@@ -57,17 +57,17 @@ SUBROUTINE A_h(e,h,ah)
      IF (ibnd<nbnd) THEN
         ! two ffts at the same time
         DO j = 1,npw
-           psic (nl (igk(j))) = evc(j,ibnd) + (0.0d0,1.d0)* evc(j,ibnd+1)
-           dpsic(nl (igk(j))) =   h(j,ibnd) + (0.0d0,1.d0)*   h(j,ibnd+1)
-           psic (nlm(igk(j)))= conjg(evc(j,ibnd)-(0.0d0,1.d0)* evc(j,ibnd+1))
-           dpsic(nlm(igk(j)))= conjg(  h(j,ibnd)-(0.0d0,1.d0)*   h(j,ibnd+1))
+           psic (nl (j)) = evc(j,ibnd) + (0.0d0,1.d0)* evc(j,ibnd+1)
+           dpsic(nl (j)) =   h(j,ibnd) + (0.0d0,1.d0)*   h(j,ibnd+1)
+           psic (nlm(j))= conjg(evc(j,ibnd)-(0.0d0,1.d0)* evc(j,ibnd+1))
+           dpsic(nlm(j))= conjg(  h(j,ibnd)-(0.0d0,1.d0)*   h(j,ibnd+1))
         ENDDO
      ELSE
         DO j = 1,npw
-           psic (nl (igk(j))) = evc(j,ibnd)
-           dpsic(nl (igk(j))) =   h(j,ibnd)
-           psic (nlm(igk(j))) = conjg( evc(j,ibnd))
-           dpsic(nlm(igk(j))) = conjg(   h(j,ibnd))
+           psic (nl (j)) = evc(j,ibnd)
+           dpsic(nl (j)) =   h(j,ibnd)
+           psic (nlm(j)) = conjg( evc(j,ibnd))
+           dpsic(nlm(j)) = conjg(   h(j,ibnd))
         ENDDO
      ENDIF
      CALL invfft ('Wave', psic, dffts)
@@ -81,14 +81,14 @@ SUBROUTINE A_h(e,h,ah)
      IF (ibnd<nbnd) THEN
         ! two ffts at the same time
         DO j = 1,npw
-           fp = (dpsic (nl(igk(j))) + dpsic (nlm(igk(j))))*0.5d0
-           fm = (dpsic (nl(igk(j))) - dpsic (nlm(igk(j))))*0.5d0
+           fp = (dpsic (nl(j)) + dpsic (nlm(j)))*0.5d0
+           fm = (dpsic (nl(j)) - dpsic (nlm(j)))*0.5d0
            ah(j,ibnd  ) = ah(j,ibnd)  +cmplx( dble(fp), aimag(fm),kind=DP)
            ah(j,ibnd+1) = ah(j,ibnd+1)+cmplx(aimag(fp),- dble(fm),kind=DP)
         ENDDO
      ELSE
         DO j = 1,npw
-           ah(j,ibnd) = ah(j,ibnd)  + dpsic (nl(igk(j)))
+           ah(j,ibnd) = ah(j,ibnd)  + dpsic (nl(j))
         ENDDO
      ENDIF
   ENDDO

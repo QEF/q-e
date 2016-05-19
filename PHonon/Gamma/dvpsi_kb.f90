@@ -23,7 +23,7 @@ SUBROUTINE dvpsi_kb(kpoint,nu)
   USE fft_interfaces, ONLY : invfft
   USE gvect,      ONLY : gstart, nl, nlm, ngl, ngm, g, gg, gl, igtongl
   USE vlocal,     ONLY: vloc
-  USE wvfct,      ONLY: nbnd, npwx, npw, igk
+  USE wvfct,      ONLY: nbnd, npwx, npw
   USE wavefunctions_module,  ONLY: evc, psic
   USE cgcom
   !
@@ -110,9 +110,9 @@ SUBROUTINE dvpsi_kb(kpoint,nu)
               DO ih = 1,nh(nt)
                  DO ik = 1,npw
                     work(ik,ih) = vkb(ik,jkb+ih) * cmplx(0.d0,-1.d0,kind=DP) * &
-                                    (tpiba*( g(1,igk(ik))*u(mu+1,nu) +  &
-                                             g(2,igk(ik))*u(mu+2,nu) +  &
-                                             g(3,igk(ik))*u(mu+3,nu) ) )
+                                    (tpiba*( g(1,ik)*u(mu+1,nu) +  &
+                                             g(2,ik)*u(mu+2,nu) +  &
+                                             g(3,ik)*u(mu+3,nu) ) )
                  ENDDO
               ENDDO
               !

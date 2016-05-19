@@ -15,7 +15,6 @@ SUBROUTINE vloc_psi_gamma(lda, n, m, psi, v, hpsi)
   USE parallel_include
   USE kinds,   ONLY : DP
   USE gvecs, ONLY : nls, nlsm
-  USE wvfct,   ONLY : igk
   USE mp_bands,      ONLY : me_bgrp
   USE fft_base,      ONLY : dffts
   USE fft_parallel,  ONLY : tg_gather
@@ -76,15 +75,15 @@ SUBROUTINE vloc_psi_gamma(lda, n, m, psi, v, hpsi)
         DO idx = 1, 2*dffts%nogrp, 2
            IF( idx + ibnd - 1 < m ) THEN
               DO j = 1, n
-                 tg_psic(nls (igk(j))+ioff) =        psi(j,idx+ibnd-1) + &
+                 tg_psic(nls (j)+ioff) =        psi(j,idx+ibnd-1) + &
                                       (0.0d0,1.d0) * psi(j,idx+ibnd)
-                 tg_psic(nlsm(igk(j))+ioff) = conjg( psi(j,idx+ibnd-1) - &
+                 tg_psic(nlsm(j)+ioff) = conjg( psi(j,idx+ibnd-1) - &
                                       (0.0d0,1.d0) * psi(j,idx+ibnd) )
               ENDDO
            ELSEIF( idx + ibnd - 1 == m ) THEN
               DO j = 1, n
-                 tg_psic(nls (igk(j))+ioff) =        psi(j,idx+ibnd-1)
-                 tg_psic(nlsm(igk(j))+ioff) = conjg( psi(j,idx+ibnd-1) )
+                 tg_psic(nls (j)+ioff) =        psi(j,idx+ibnd-1)
+                 tg_psic(nlsm(j)+ioff) = conjg( psi(j,idx+ibnd-1) )
               ENDDO
            ENDIF
 
@@ -98,13 +97,13 @@ SUBROUTINE vloc_psi_gamma(lda, n, m, psi, v, hpsi)
         IF (ibnd < m) THEN
            ! two ffts at the same time
            DO j = 1, n
-              psic(nls (igk(j)))=      psi(j,ibnd) + (0.0d0,1.d0)*psi(j,ibnd+1)
-              psic(nlsm(igk(j)))=conjg(psi(j,ibnd) - (0.0d0,1.d0)*psi(j,ibnd+1))
+              psic(nls (j))=      psi(j,ibnd) + (0.0d0,1.d0)*psi(j,ibnd+1)
+              psic(nlsm(j))=conjg(psi(j,ibnd) - (0.0d0,1.d0)*psi(j,ibnd+1))
            ENDDO
         ELSE
            DO j = 1, n
-              psic (nls (igk(j))) =       psi(j, ibnd)
-              psic (nlsm(igk(j))) = conjg(psi(j, ibnd))
+              psic (nls (j)) =       psi(j, ibnd)
+              psic (nlsm(j)) = conjg(psi(j, ibnd))
            ENDDO
         ENDIF
         !
@@ -146,10 +145,10 @@ SUBROUTINE vloc_psi_gamma(lda, n, m, psi, v, hpsi)
            !
            IF( idx + ibnd - 1 < m ) THEN
               DO j = 1, n
-                 fp= ( tg_psic( nls(igk(j)) + ioff ) +  &
-                       tg_psic( nlsm(igk(j)) + ioff ) ) * 0.5d0
-                 fm= ( tg_psic( nls(igk(j)) + ioff ) -  &
-                       tg_psic( nlsm(igk(j)) + ioff ) ) * 0.5d0
+                 fp= ( tg_psic( nls(j) + ioff ) +  &
+                       tg_psic( nlsm(j) + ioff ) ) * 0.5d0
+                 fm= ( tg_psic( nls(j) + ioff ) -  &
+                       tg_psic( nlsm(j) + ioff ) ) * 0.5d0
                  hpsi (j, ibnd+idx-1) = hpsi (j, ibnd+idx-1) + &
                                         cmplx( dble(fp), aimag(fm),kind=DP)
                  hpsi (j, ibnd+idx  ) = hpsi (j, ibnd+idx  ) + &
@@ -158,7 +157,7 @@ SUBROUTINE vloc_psi_gamma(lda, n, m, psi, v, hpsi)
            ELSEIF( idx + ibnd - 1 == m ) THEN
               DO j = 1, n
                  hpsi (j, ibnd+idx-1) = hpsi (j, ibnd+idx-1) + &
-                                         tg_psic( nls(igk(j)) + ioff )
+                                         tg_psic( nls(j) + ioff )
               ENDDO
            ENDIF
            !
@@ -170,8 +169,8 @@ SUBROUTINE vloc_psi_gamma(lda, n, m, psi, v, hpsi)
         IF (ibnd < m) THEN
            ! two ffts at the same time
            DO j = 1, n
-              fp = (psic (nls(igk(j))) + psic (nlsm(igk(j))))*0.5d0
-              fm = (psic (nls(igk(j))) - psic (nlsm(igk(j))))*0.5d0
+              fp = (psic (nls(j)) + psic (nlsm(j)))*0.5d0
+              fm = (psic (nls(j)) - psic (nlsm(j)))*0.5d0
               hpsi (j, ibnd)   = hpsi (j, ibnd)   + &
                                  cmplx( dble(fp), aimag(fm),kind=DP)
               hpsi (j, ibnd+1) = hpsi (j, ibnd+1) + &
@@ -179,7 +178,7 @@ SUBROUTINE vloc_psi_gamma(lda, n, m, psi, v, hpsi)
            ENDDO
         ELSE
            DO j = 1, n
-              hpsi (j, ibnd)   = hpsi (j, ibnd)   + psic (nls(igk(j)))
+              hpsi (j, ibnd)   = hpsi (j, ibnd)   + psic (nls(j))
            ENDDO
         ENDIF
      ENDIF

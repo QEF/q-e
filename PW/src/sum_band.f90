@@ -311,15 +311,15 @@ SUBROUTINE sum_band()
                    !
                    IF( idx + ibnd - 1 < ibnd_end ) THEN
                       DO j = 1, npw
-                         tg_psi(nls (igk_k(j,ik))+ioff)=     evc(j,idx+ibnd-1)+&
+                         tg_psi(nls (j)+ioff)=     evc(j,idx+ibnd-1)+&
                               (0.0d0,1.d0) * evc(j,idx+ibnd)
-                         tg_psi(nlsm(igk_k(j,ik))+ioff)=CONJG(evc(j,idx+ibnd-1) -&
+                         tg_psi(nlsm(j)+ioff)=CONJG(evc(j,idx+ibnd-1) -&
                               (0.0d0,1.d0) * evc(j,idx+ibnd) )
                       END DO
                    ELSE IF( idx + ibnd - 1 == ibnd_end ) THEN
                       DO j = 1, npw
-                         tg_psi(nls (igk_k(j,ik))+ioff)=       evc(j,idx+ibnd-1)
-                         tg_psi(nlsm(igk_k(j,ik))+ioff)=CONJG( evc(j,idx+ibnd-1) )
+                         tg_psi(nls (j)+ioff)=       evc(j,idx+ibnd-1)
+                         tg_psi(nlsm(j)+ioff)=CONJG( evc(j,idx+ibnd-1) )
                       END DO
                    END IF
 
@@ -369,15 +369,15 @@ SUBROUTINE sum_band()
                    !
                    ! ... two ffts at the same time
                    !
-                   psic(nls(igk_k(1:npw,ik)))  = evc(1:npw,ibnd) + &
+                   psic(nls(1:npw))  = evc(1:npw,ibnd) + &
                                            ( 0.D0, 1.D0 ) * evc(1:npw,ibnd+1)
-                   psic(nlsm(igk_k(1:npw,ik))) = CONJG( evc(1:npw,ibnd) - &
+                   psic(nlsm(1:npw)) = CONJG( evc(1:npw,ibnd) - &
                                            ( 0.D0, 1.D0 ) * evc(1:npw,ibnd+1) )
                    !
                 ELSE
                    !
-                   psic(nls (igk_k(1:npw,ik)))  = evc(1:npw,ibnd)
-                   psic(nlsm(igk_k(1:npw,ik))) = CONJG( evc(1:npw,ibnd) )
+                   psic(nls (1:npw))  = evc(1:npw,ibnd)
+                   psic(nlsm(1:npw)) = CONJG( evc(1:npw,ibnd) )
                    !
                 END IF
                 !
@@ -407,20 +407,20 @@ SUBROUTINE sum_band()
                 DO j=1,3
                    psic(:) = ( 0.D0, 0.D0 )
                    !
-                   kplusg (1:npw) = (xk(j,ik)+g(j,igk_k(1:npw,ik))) * tpiba
+                   kplusg (1:npw) = (xk(j,ik)+g(j,1:npw)) * tpiba
 
                    IF ( ibnd < ibnd_end ) THEN
                       ! ... two ffts at the same time
-                      psic(nls (igk_k(1:npw,ik)))=CMPLX(0d0, kplusg(1:npw),kind=DP) * &
+                      psic(nls (1:npw))=CMPLX(0d0, kplusg(1:npw),kind=DP) * &
                                             ( evc(1:npw,ibnd) + &
                                             ( 0.D0, 1.D0 ) * evc(1:npw,ibnd+1) )
-                      psic(nlsm(igk_k(1:npw,ik))) = CMPLX(0d0, -kplusg(1:npw),kind=DP) * &
+                      psic(nlsm(1:npw)) = CMPLX(0d0, -kplusg(1:npw),kind=DP) * &
                                        CONJG( evc(1:npw,ibnd) - &
                                             ( 0.D0, 1.D0 ) * evc(1:npw,ibnd+1) )
                    ELSE
-                      psic(nls(igk_k(1:npw,ik))) = CMPLX(0d0, kplusg(1:npw),kind=DP) * &
+                      psic(nls(1:npw)) = CMPLX(0d0, kplusg(1:npw),kind=DP) * &
                                               evc(1:npw,ibnd)
-                      psic(nlsm(igk_k(1:npw,ik))) = CMPLX(0d0, -kplusg(1:npw),kind=DP) * &
+                      psic(nlsm(1:npw)) = CMPLX(0d0, -kplusg(1:npw),kind=DP) * &
                                        CONJG( evc(1:npw,ibnd) )
                    END IF
                    !

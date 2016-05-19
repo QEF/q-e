@@ -189,7 +189,6 @@ SUBROUTINE init_wfc ( ik )
   USE random_numbers,       ONLY : randy
   USE mp_bands,             ONLY : intra_bgrp_comm, inter_bgrp_comm, my_bgrp_id
   USE mp,                   ONLY : mp_sum
-  USE control_flags,        ONLY : gamma_only
   !
   IMPLICIT NONE
   !

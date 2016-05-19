@@ -19,7 +19,7 @@ SUBROUTINE solve_ph ( )
   USE becmod,                ONLY : bec_type, becp, calbec, &
                                     allocate_bec_type, deallocate_bec_type
   USE klist,                 ONLY : xk
-  USE wvfct,                 ONLY : nbnd, npwx, npw, g2kin, igk, et
+  USE wvfct,                 ONLY : nbnd, npwx, npw, g2kin, et
   USE gvect,                 ONLY : g
   USE cell_base,             ONLY : tpiba2
   USE cgcom
@@ -44,9 +44,7 @@ SUBROUTINE solve_ph ( )
   !
   kpoint = 1
   DO i = 1,npw
-     g2kin(i) = ( (xk(1,kpoint)+g(1,igk(i)))**2 +                   &
-                  (xk(2,kpoint)+g(2,igk(i)))**2 +                   &
-                  (xk(3,kpoint)+g(3,igk(i)))**2 ) * tpiba2
+     g2kin(i) = ( g(1,i)**2 + g(2,i)**2 + g(3,i)**2 ) * tpiba2
   ENDDO
   !
   orthonormal = .false.
