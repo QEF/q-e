@@ -19,7 +19,8 @@ SUBROUTINE punch( what )
   USE pw_restart,           ONLY : pw_writefile
 #ifdef __XSD
   USE pw_restart,           ONLY : pw_write_schema
-  USE io_files,             ONLY : outdir, xmlpun_schema
+  USE io_files,             ONLY : xmlpun_schema
+  USE input_parameters,     ONLY : outdir
   USE wrappers,             ONLY : f_copy
 #endif
   USE a2F,                  ONLY : la2F, a2Fsave

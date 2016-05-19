@@ -205,49 +205,15 @@ USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, delete_if_present, &
       ! PW dimensions need to be properly computed 
       ! reducing across MPI tasks
       !
-      IF ( nkstot > 0 ) THEN
-         !
-         ! ... find out the number of pools
-         !
-         npool = nproc_image / nproc_pool
-         !
-         ! ... find out number of k points blocks
-         !
-         nkbl = nkstot / kunit
-         !
-         ! ... k points per pool
-         !
-         nkl = kunit * ( nkbl / npool )
-         !
-         ! ... find out the reminder
-         !
-         nkr = ( nkstot - nkl * npool ) / kunit
-         !
-         ! ... Assign the reminder to the first nkr pools
-         !
-         IF ( my_pool_id < nkr ) nkl = nkl + kunit
-         !
-         ! ... find out the index of the first k point in this pool
-         !
-         iks = nkl*my_pool_id + 1
-         !
-         IF ( my_pool_id >= nkr ) iks = iks + nkr*kunit
-         !
-         ! ... find out the index of the last k point in this pool
-         !
-         ike = iks + nkl - 1
-         !
-      END IF
-
       ALLOCATE( ngk_g( nkstot ) )
       !
-      ngk_g = 0
-      ngk_g(iks:ike) = ngk(1:nks)
       !
-      CALL mp_sum( ngk_g, inter_pool_comm)
-      CALL mp_sum( ngk_g, intra_pool_comm)
-      !
-      ngk_g = ngk_g / nbgrp
+      ngk_g(1:nks) = ngk(:)
+      CALL mp_sum( ngk_g(1:nks), intra_bgrp_comm )
+      CALL ipoolrecover( ngk_g, 1, nkstot, nks )
+      !CALL mp_bcast( ngk_g, root_bgrp, intra_bgrp_comm )
+      !CALL mp_bcast( ngk_g, root_bgrp, inter_bgrp_comm )
+
       !
       ! ... compute the maximum number of G vector among all k points
       !
