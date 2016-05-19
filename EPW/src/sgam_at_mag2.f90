@@ -21,7 +21,6 @@
   !     point group is true if this operation is also an operation of the
   !     total point group
   !
-#include "f_defs.h"
   USE io_epw,     ONLY : stdout
   USE kinds
   implicit none

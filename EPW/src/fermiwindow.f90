@@ -16,8 +16,6 @@
   ! 
   !-----------------------------------------------------------------------
   !
-#include "f_defs.h"
-  !
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
   USE elph2,         ONLY : etf, ibndmin, ibndmax, nkqf

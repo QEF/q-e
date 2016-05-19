@@ -33,7 +33,6 @@
   !
   !--------------------------------------------------------------------------
   !
-#include "f_defs.h"
   USE kinds,     ONLY : DP
   USE pwcom,     ONLY : at, bg, omega
   USE phcom,     ONLY : nq1, nq2, nq3

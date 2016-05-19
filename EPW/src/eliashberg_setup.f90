@@ -13,8 +13,6 @@
   ! This routine initializes the control variables needed to solve the eliashberg 
   ! equations
   !
-#include "f_defs.h"
-  !
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
   USE epwcom,        ONLY : eliashberg, nkf1, nkf2, nkf3, nsiter, nqstep, &
@@ -178,8 +176,6 @@
   !
   ! computes the isotropic spectral function a2F(w), total lambda, and 
   ! distribution of lambda
-  !
-#include "f_defs.h"
   !
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
@@ -534,8 +530,6 @@
   ! this subroutine estimates the Tc using Allen-Dynes formula and 
   ! the BCS superconducting gap as the initial guess for Delta 
   !  
-#include "f_defs.h"
-  !
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
   USE epwcom,        ONLY : nqstep, muc, tempsmin, tempsmax, temps

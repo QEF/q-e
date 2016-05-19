@@ -22,9 +22,7 @@
   !
   !   No ultrasoft now
   !
-  !
   !----------------------------------------------------------------------
-#include "f_defs.h"
   USE kinds,         ONLY : DP
   USE pwcom,         ONLY : ngm
   USE constants_epw, ONLY : twopi, ci, cone

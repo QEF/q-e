@@ -16,8 +16,6 @@
   !    A second routine readfile reads the variables saved on a file
   !    by the self-consistent program.
   !
-#include "f_defs.h"
-  !
   USE ions_base,     ONLY : nat, ntyp => nsp
   USE io_global,     ONLY : ionode_id
   USE mp,            ONLY : mp_bcast 

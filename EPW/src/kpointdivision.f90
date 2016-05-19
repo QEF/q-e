@@ -14,8 +14,6 @@
   !
   !---------------------------------------------------------------------
   !
-#include "f_defs.h"
-  !
 #ifdef __PARA
 !  use para
   USE mp_global,   ONLY : my_pool_id,npool

@@ -14,8 +14,6 @@
   ! even though this is for phonons, I use the same notations
   ! adopted for the electronic case (nmodes->nmodes etc)
   !
-  !
-#include "f_defs.h"
   USE kinds,         only : DP
   USE epwcom,        only : parallel_k, parallel_q, etf_mem
   USE io_epw,        only : iunepmatwp

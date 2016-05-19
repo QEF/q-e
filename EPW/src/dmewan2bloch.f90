@@ -19,7 +19,6 @@
   !
   !--------------------------------------------------------------------------
   !
-#include "f_defs.h"
   USE kinds,         ONLY : DP
   USE elph2,         ONLY : cdmew
   USE epwcom,        ONLY : eig_read

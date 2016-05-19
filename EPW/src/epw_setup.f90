@@ -17,8 +17,6 @@
   ! RM - Nov 2014 
   ! Noncolinear case implemented
   !
-#include "f_defs.h"
-  !
   USE kinds,         ONLY : DP
   USE ions_base,     ONLY : tau, nat, ntyp => nsp, ityp
   USE cell_base,     ONLY : at, bg  

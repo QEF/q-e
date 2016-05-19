@@ -21,8 +21,7 @@
 #else
 #  define DIRECT_IO_FACTOR 8
 #endif
-
-#include "f_defs.h"   
+  !
   USE io_files,  ONLY : prefix
   USE units_ph,  ONLY : lrdrho
   USE kinds,     ONLY : DP

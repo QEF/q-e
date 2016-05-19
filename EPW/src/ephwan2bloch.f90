@@ -12,7 +12,6 @@
          xk, cufkk, cufkq, epmatf, nmodes)
   !---------------------------------------------------------------------------
   !
-#include "f_defs.h"
   USE kinds,         ONLY : DP
   USE constants_epw, ONLY : twopi, ci, czero, cone
   implicit none

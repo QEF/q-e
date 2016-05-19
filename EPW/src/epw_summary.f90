@@ -14,7 +14,6 @@
   !
   !    still looks like phq_summary
   !
-#include "f_defs.h"
   USE ions_base,     ONLY : nat, ityp, atm, tau, ntyp => nsp, amass
   USE io_global,     ONLY : stdout
   USE cell_base,     ONLY : at, bg, ibrav, alat, omega, celldm

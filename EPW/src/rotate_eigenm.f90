@@ -40,7 +40,6 @@
   !
   !
   !--------------------------------------------------------------------------
-#include "f_defs.h"
   USE kinds,         ONLY : DP
   use io_global,     ONLY : stdout
   use elph2,         ONLY : dynq

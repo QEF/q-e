@@ -29,8 +29,6 @@
   !    deltain   mixed Delta
   !    deltaout  deltaout-deltain
   !
-#include "f_defs.h"
-  !
   USE kinds, ONLY : DP
   USE epwcom, ONLY : nsiter
   !
@@ -175,8 +173,6 @@
   !    deltain   mixed Delta
   !    deltaout  deltaout-deltain
   !
-#include "f_defs.h"
-  !
   USE kinds, ONLY : DP
   USE epwcom, ONLY : nsiter
   !
@@ -319,8 +315,6 @@
   !
   !    deltain   mixed Delta
   !    deltaout  deltaout-deltain
-  !
-#include "f_defs.h"
   !
   USE kinds, ONLY : DP
   USE epwcom, ONLY : nsiter
@@ -468,8 +462,6 @@
   !
   !    deltain   mixed Delta
   !    deltaout  deltaout-deltain
-  !
-#include "f_defs.h"
   !
   USE kinds, ONLY : DP
   USE epwcom, ONLY : nsiter

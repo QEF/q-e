@@ -25,8 +25,6 @@
   !
   ! conv   - convergence flag 
   !
-#include "f_defs.h"
-  !
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
   USE epwcom,        ONLY : nqstep, nsiter, conv_thr_racon, lpade, lacon
@@ -152,8 +150,6 @@
   ! output 
   !
   ! conv   - convergence flag 
-  !
-#include "f_defs.h"
   !
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout

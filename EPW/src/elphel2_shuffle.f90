@@ -54,8 +54,6 @@
   ! 
   !---------------------------------------------------------------------
   !
-#include "f_defs.h"
-  !
 #ifdef __PARA
   USE mp_global,     ONLY : my_pool_id, nproc_pool,    & 
                             intra_image_comm, intra_pool_comm, &

@@ -13,8 +13,6 @@
   ! This routine writes to files results from the solutions of the Eliashberg equations
   ! on the imaginary-axis
   !
-#include "f_defs.h"
-  !
   USE kinds,         ONLY : DP
   USE io_epw,        ONLY : iufilgap
   USE io_files,      ONLY : prefix
@@ -90,8 +88,6 @@
   !
   ! This routine writes to files results from the solutions of the Eliashberg
   ! equations on the real-axis 
-  !
-#include "f_defs.h"
   !
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
@@ -189,8 +185,6 @@
   ! This routine writes to files the distribution of the superconducting 
   ! gap on the Fermi surface
   !
-#include "f_defs.h"
-  !
   USE kinds,         ONLY : DP
   USE io_epw,        ONLY : iufilgap
   USE io_files,      ONLY : prefix
@@ -249,9 +243,6 @@
   !-----------------------------------------------------------------------
   !
   ! This routine writes to files the superconducting gap on the Fermi surface
-  !
-  !
-#include "f_defs.h"
   !
   USE kinds,         ONLY : DP
   USE io_epw,        ONLY : iufilgapFS

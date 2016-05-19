@@ -12,8 +12,6 @@
   !
   ! read the eliashberg spectral function from fila2f
   !
-#include "f_defs.h"
-  !
   USE io_global,     ONLY : stdout
   USE epwcom,        ONLY : nqstep, fila2f
   USE eliashbergcom, ONLY : wsphmax, wsph, a2f_iso, memlt_pool
@@ -70,8 +68,6 @@
   !-----------------------------------------------------------------------
   !
   ! read the frequencies obtained from a previous epw run
-  !
-#include "f_defs.h"
   !
   USE io_global, ONLY : stdout
   USE io_epw,    ONLY : iufilfreq
@@ -150,8 +146,6 @@
   !-----------------------------------------------------------------------
   !
   ! read the eigenvalues obtained from a previous epw run
-  !
-#include "f_defs.h"
   !
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
@@ -302,8 +296,6 @@
   !-----------------------------------------------------------------------
   !
   ! read the map index of k+(sign)q on the k-mesh
-  !
-#include "f_defs.h"
   !
   USE kinds,     ONLY : DP
   USE io_global, ONLY : stdout
@@ -570,8 +562,6 @@
   !-----------------------------------------------------------------------
   !
   ! read the electron-phonon matrix elements 
-  !
-#include "f_defs.h"
   !
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout

@@ -30,7 +30,6 @@
   ! Only for 1 proc/pool (This limitation can be removed)
   !
   ! ----------------------------------------------------------------------
-#include "f_defs.h"
   !
 #ifdef __PARA
   USE mp_global,            ONLY : my_pool_id, nproc_pool, &

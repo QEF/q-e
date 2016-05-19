@@ -25,8 +25,6 @@
   !
   ! conv   - convergence flag 
   !
-#include "f_defs.h"
-  !
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
   USE phcom,         ONLY : nmodes
@@ -283,8 +281,6 @@
   ! output 
   !
   ! conv   - convergence flag 
-  !
-#include "f_defs.h"
   !
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout

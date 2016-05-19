@@ -17,7 +17,6 @@
   !
   !--------------------------------------------------------------------------
   !
-#include "f_defs.h"
   USE kinds,    only : DP
   use pwcom,    only : at, bg, celldm, nkstot
   use elph2,    only : cvmew

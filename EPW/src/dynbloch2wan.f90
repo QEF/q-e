@@ -24,7 +24,6 @@
   !
   !---------------------------------------------------------------------
   !
-#include "f_defs.h"
   USE kinds,         ONLY : DP
   USE pwcom,         ONLY : at, bg, celldm, omega
   USE ions_base,     ONLY : nat, tau

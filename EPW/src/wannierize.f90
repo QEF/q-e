@@ -89,7 +89,6 @@
   !  windows USEd for the disentanglement, and the initial projections.
   !  JN - 10/2008  projections now in elph.in file  
   !------------------------------------------------------------
-#include "f_defs.h"
   !
   USE io_files,    ONLY : prefix
   USE io_epw,      ONLY : iuwinfil
@@ -164,7 +163,6 @@
   ! the computed Wannier functions
   ! 07/2010  Needs work.  Right now this sub is nearly worthless  
   !------------------------------------------------------------
-#include "f_defs.h"
   !
   USE io_files,    ONLY : prefix 
   USE io_global,   ONLY : stdout

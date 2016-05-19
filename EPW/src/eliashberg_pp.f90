@@ -12,8 +12,6 @@
   !
   ! computes the quasiparticle density of states in the superconducting state
   !
-#include "f_defs.h"
-  !
   USE kinds,         ONLY : DP
   USE io_epw,        ONLY : iuqdos
   USE io_files,      ONLY : prefix
@@ -88,8 +86,6 @@
   !
   ! computes the free energy difference between the superconducting and normal
   ! states
-  !
-#include "f_defs.h"
   !
   USE kinds,         ONLY : DP
   USE io_epw,        ONLY : iufe

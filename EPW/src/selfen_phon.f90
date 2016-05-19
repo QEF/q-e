@@ -26,7 +26,6 @@
   !  cleaned up the subroutine
   !
   !-----------------------------------------------------------------------
-#include "f_defs.h"
   USE kinds,      ONLY : DP
   USE io_global,  ONLY : stdout
   USE io_epw,     ONLY : iunepmatf, iuetf
@@ -338,7 +337,6 @@ END SUBROUTINE selfen_phon_q
   !  k-point paralellization
   !
   !-----------------------------------------------------------------------
-#include "f_defs.h"
   USE kinds,      ONLY : DP
   USE io_global,  ONLY : stdout
   USE io_epw,     ONLY : iunepmatf, iuetf, lambda_phself, linewidth_phself

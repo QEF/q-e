@@ -14,7 +14,6 @@
   !  RM : this subroutine should be tested
   !  SP : Modified so that it works with the current plotband.x of QE 5
   !-----------------------------------------------------------------------
-#include "f_defs.h"
   USE kinds,      ONLY : DP
   USE cell_base,  ONLY : at, bg
   USE phcom,      ONLY : nmodes

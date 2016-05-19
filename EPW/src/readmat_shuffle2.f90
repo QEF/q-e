@@ -15,7 +15,6 @@
   ! iq_first, iq_first+1, ... iq_first+nq-1
   !
   !-----------------------------------------------------------------------
-#include "f_defs.h"
   USE kinds,            ONLY : DP
   use io_files,         ONLY : prefix 
   USE cell_base,        ONLY : ibrav, celldm, omega, at, bg

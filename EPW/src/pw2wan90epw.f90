@@ -22,7 +22,6 @@
   ! Imported the noncolinear case implemented by xlzhang
   !
   !------------------------------------------------------------------------
-#include "f_defs.h"
   USE io_global,  ONLY : stdout
   USE klist,      ONLY : nkstot
   USE io_files,   ONLY : prefix

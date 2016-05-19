@@ -24,8 +24,6 @@
   !  RM - add noncolin case
   !-----------------------------------------------------------------------
   !
-  !
-#include "f_defs.h"
   USE kinds,         ONLY : DP
   USE pwcom,         ONLY : nbnd, nks, nkstot, isk, &
                             et, xk, at, bg, ef,  nelec

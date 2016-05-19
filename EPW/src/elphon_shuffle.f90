@@ -20,8 +20,6 @@
   !
   !-----------------------------------------------------------------------
   !
-#include "f_defs.h"
-  !
 #ifdef __PARA
   USE mp,        ONLY : mp_barrier, mp_sum
   USE mp_global, ONLY : my_pool_id, nproc_pool,npool,kunit,&

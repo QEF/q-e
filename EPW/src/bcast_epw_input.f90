@@ -19,8 +19,6 @@
   !
   !
 #ifdef __PARA
-#include "f_defs.h"
-
   USE phcom,         ONLY : zue, trans, tr2_ph, recover, nmix_ph, niter_ph, &
                             lnscf, ldisp, fildvscf, fildrho, epsil, alpha_mix 
   USE epwcom,        ONLY : epexst, epbwrite, ep_coupling, eminabs, emaxabs, &
@@ -210,8 +208,6 @@ SUBROUTINE bcast_ph_input1
   !-----------------------------------------------------------------------
   !
 #ifdef __PARA
-#include "f_defs.h"
-
   USE pwcom
   USE phcom
   USE mp,         ONLY: mp_bcast

@@ -24,7 +24,6 @@
   !  10/2015 RM: added calcution of Tc based on Allen-Dynes formula 
   !-----------------------------------------------------------------------
   !
-#include "f_defs.h"
   USE kinds,     ONLY : DP
   USE phcom,     ONLY : nmodes
   USE epwcom,    ONLY : degaussq, delta_qsmear, nqsmear, nqstep, nsmear, eps_acustic, & 

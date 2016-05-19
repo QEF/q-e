@@ -38,7 +38,6 @@
   !     Modified by SdG to include the "small group of q" stuff for the
   !     linear-response preparation run.
   !
-#include "f_defs.h"
   USE kinds, only : DP
   implicit none
   !
@@ -230,7 +229,6 @@ subroutine sgam_at_mag (nrot, s, nat, tau, ityp, at, bg, nr1, nr2, &
   !     point group is true if this operation is also an operation of the
   !     total point group
   !
-#include "f_defs.h"
   USE io_global,   ONLY : stdout
   USE kinds
   implicit none
@@ -530,7 +528,6 @@ subroutine sgam_at (nrot, s, nat, tau, ityp, at, bg, nr1, nr2, &
   !     point group is true if this operation is also an operation of the
   !     total point group
   !
-#include "f_defs.h"
   USE io_global,  ONLY : stdout
   USE kinds
   implicit none
@@ -700,7 +697,6 @@ end subroutine sgam_at
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !-----------------------------------------------------------------------
 
 subroutine mode_group (modenum, xq, at, bg, nat, nrot, s, irt, &
@@ -1052,7 +1048,6 @@ subroutine irrek (npk, nks, xk, wk, at, bg, nrot, invs, nsym, irg, &
   !  group, finds the equivalent special points in the IW of one of
   !  its subgroups.
   !
-#include "f_defs.h"
   USE kinds, only : DP
   implicit none
   !

@@ -24,7 +24,6 @@
   !  01/2014 Modified by Roxana Margine 
   !
   !-----------------------------------------------------------------------
-#include "f_defs.h"
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
   USE io_epw,        ONLY : iunepmatf, iospectral_sup ,iuetf, iospectral
@@ -433,7 +432,6 @@
   !  01/2014 Modified by Roxana Margine 
   !
   !-----------------------------------------------------------------------
-#include "f_defs.h"
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
   USE io_epw,        ONLY : iunepmatf, iospectral_sup ,iuetf, iospectral

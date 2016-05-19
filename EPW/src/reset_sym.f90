@@ -14,7 +14,6 @@
   ! appropriate to the small-qroup of q.
   !
   !-----------------------------------------------------------------------
-#include "f_defs.h"
   USE kinds,         only : DP
   USE phcom,         only : t, tmq, npertx, u, npert, nirr
   USE lr_symm_base,  ONLY : irotmq, minus_q, nsymq, gi, gimq, irgq

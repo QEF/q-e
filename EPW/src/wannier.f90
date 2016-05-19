@@ -9,8 +9,6 @@
   !
   ! Adapted from QE.
   !
-#include "f_defs.h"
-  !
 module wannier
    USE kinds, only : DP
    !integer, allocatable :: nnb(:)       ! #b  (ik)

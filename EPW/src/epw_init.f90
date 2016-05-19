@@ -15,7 +15,6 @@
   !     not all of the following code is necessary.  More adaptation from
   !     phq_init is needed   
   !
-#include "f_defs.h"
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp, tau
   USE becmod,               ONLY : calbec
   USE phus,                 ONLY : alphap

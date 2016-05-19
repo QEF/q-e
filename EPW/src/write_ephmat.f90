@@ -18,7 +18,6 @@
   !
   !
   !-----------------------------------------------------------------------
-#include "f_defs.h"
   USE kinds,      ONLY : DP
   USE io_global,  ONLY : stdout
   USE io_epw,     ONLY : iunepmatf, iufilfreq, iufilegnv, iufileph, iuetf
@@ -290,7 +289,6 @@
   !-----------------------------------------------------------------------
   SUBROUTINE count_kpoints( iq )
   !-----------------------------------------------------------------------
-#include "f_defs.h"
   USE kinds,     ONLY : DP
   USE io_global, ONLY : stdout
   USE io_epw,    ONLY : iuetf

@@ -29,7 +29,6 @@
   !  redefined the size of sigmar_all, sigmai_all, and zi_all within the fermi windwow
   !
   !-----------------------------------------------------------------------
-#include "f_defs.h"
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
   USE io_epw,        ONLY : iunepmatf, iuetf, linewidth_elself
@@ -403,7 +402,6 @@
   !  from ep-wannier interpolation
   !
   !-----------------------------------------------------------------------
-#include "f_defs.h"
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
   USE io_epw,        ONLY : iunepmatf, iuetf, linewidth_elself

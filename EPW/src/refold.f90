@@ -28,7 +28,6 @@
   !   the large sphere (density set).
   !
   !-----------------------------------------------------------------
-#include "f_defs.h"
   use io_global,     ONLY : stdout
   use io_epw,        ONLY : iukgmap
   USE control_flags, ONLY : iverbosity

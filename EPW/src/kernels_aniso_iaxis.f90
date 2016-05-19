@@ -14,8 +14,6 @@
   ! compute kernels K_{+}(ik,iq,ibnd,jbnd;n,n',T) and K_{-}(ik,iq,ibnd,jbnd;n,n',T)
   ! and store them in memory
   !
-#include "f_defs.h"
-  !
   USE kinds,         ONLY : DP
   USE epwcom,        ONLY : fsthick
   USE eliashbergcom, ONLY : nkfs, nbndfs, nsiw, estemp, AKeri, ekfs, ef0, ixkqf, ixqfs, nqfs
@@ -64,8 +62,6 @@
   !  
   ! estimate the memory requirements for anisotropic Eliashberg equations 
   ! on imaginary axis
-  !
-#include "f_defs.h"
   !
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
@@ -167,7 +163,6 @@
   !
   ! lampda_eph - electron-phonon coupling lambda_ij(k,k+q;n-n')
   !
-#include "f_defs.h"
   !
   USE kinds,         ONLY : DP
   USE phcom,         ONLY : nmodes
@@ -214,8 +209,6 @@
   !
   ! lampda_eph - electron-phonon coupling lambda_ij(k,k+q;n-n')
   !
-#include "f_defs.h"
-  !
   USE kinds,         ONLY : DP
   USE epwcom,        ONLY : nqstep
   USE eliashbergcom, ONLY : a2fij, wsph, dwsph
@@ -242,8 +235,6 @@
   !  
   ! computes kernels K_{+}(w,iw_n,T) and K_{-}(w,iw_n,T)
   ! reference F. Masiglio, M. Schossmann, and J. Carbotte, PRB 37, 4965 (1988)
-  !
-#include "f_defs.h"
   !
   USE kinds,         ONLY : DP
   USE elph2,         ONLY : wqf
@@ -352,8 +343,6 @@
   !        
   ! lampda_eph - electron-phonon coupling lambda_ij(k,k+q;w-iw_n)
   !        
-#include "f_defs.h"
-  !     
   USE kinds,         ONLY : DP
   USE phcom,         ONLY : nmodes
   USE elph2,         ONLY : wf
@@ -404,8 +393,6 @@
   !        
   ! lampda_eph - electron-phonon coupling lambda_ij(k,k+q;w-iw_n)
   !        
-#include "f_defs.h"
-  !     
   USE kinds,         ONLY : DP
   USE epwcom,        ONLY : nqstep
   USE eliashbergcom, ONLY : a2fij, dwsph, wsph
@@ -433,8 +420,6 @@
   !-----------------------------------------------------------------------
   !
   ! computes the anisotropic spectral function a2F(k,k',w) 
-  !
-#include "f_defs.h"
   !
   USE kinds,         ONLY : DP
   USE phcom,         ONLY : nmodes
@@ -488,7 +473,6 @@
   ! estimate the memory requirements for the anisotropic Eliashberg funtion
   ! used for analytic continuation from imaginary to real axis
   !
-#include "f_defs.h"
   !
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout

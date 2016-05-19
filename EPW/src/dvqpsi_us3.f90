@@ -21,8 +21,6 @@
   ! RM - Nov/Dec 2014 
   ! Imported the noncolinear case implemented by xlzhang
   !
-#include "f_defs.h"
-  !
   USE kinds,                 ONLY : DP
   USE ions_base,             ONLY : nat, ityp
   USE cell_base,             ONLY : tpiba

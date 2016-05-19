@@ -24,8 +24,6 @@
   ! kernelp - phonon kernel K_{+}(w,w',T)
   ! kernelm - phonon kernel K_{-}(w,w',T)
   !
-#include "f_defs.h"
-  !
   USE kinds,         ONLY : DP
   USE constants_epw, ONLY : pi, ci
   USE epwcom,        ONLY : nqstep

@@ -18,7 +18,6 @@
   !   and some crazy packing scheme was needed to use poolscatter
   !   subsequently it is just a bcast followed by an appropriate assignment
   !-----------------------------------------------------------------------
-#include "f_defs.h"
     USE kinds,         only : DP
     use klist_epw,     only : kmap   
     use epwcom,        only : filukk

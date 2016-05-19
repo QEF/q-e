@@ -24,8 +24,6 @@
   ! rgammap = -bose_einstein( w' ) - fermi_dirac(  w + w' )
   ! rgammam =  bose_einstein( w' ) + fermi_dirac( -w + w' )
   !
-#include "f_defs.h"
-  !
   USE kinds, ONLY : DP
   ! 
   IMPLICIT NONE

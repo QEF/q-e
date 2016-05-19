@@ -12,8 +12,6 @@
   !
   ! Automatic generation of the frequency-grid for real-axis calculations.
   !
-#include "f_defs.h"
-  !
   USE io_global,     ONLY : stdout
   USE epwcom,        ONLY : nswfc, nswc, pwc, wsfc, wscut, lunif
   USE eliashbergcom, ONLY : nsw, ws, dws
@@ -74,8 +72,6 @@
   ! input
   !
   ! itemp  - temperature point
-  !
-#include "f_defs.h"
   !
   USE constants,     ONLY : pi
   USE epwcom,        ONLY : nqstep, lpade, lacon 

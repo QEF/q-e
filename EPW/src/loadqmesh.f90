@@ -13,7 +13,6 @@ SUBROUTINE loadqmesh_para
   !  Load fine q mesh and distribute among pools
   !
   !-----------------------------------------------------------------------
-#include "f_defs.h"
 #ifdef __PARA
   USE io_global, ONLY : ionode_id
   USE mp_global, ONLY : inter_pool_comm, my_pool_id, npool
@@ -190,7 +189,6 @@ SUBROUTINE loadqmesh_serial
 !  Load fine q mesh
 !
 !-----------------------------------------------------------------------
-#include "f_defs.h"
 #ifdef __PARA
   USE io_global, ONLY : ionode_id
   USE mp_global, ONLY : inter_pool_comm, root_pool, intra_pool_comm

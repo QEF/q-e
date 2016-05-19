@@ -19,7 +19,6 @@
   !  from ep-wannier interpolation. 
   !
   !-----------------------------------------------------------------------
-#include "f_defs.h"
   USE kinds,     only : DP
   USE io_global, ONLY : stdout
   USE io_epw,    ONLY : iuetf
@@ -186,7 +185,6 @@ ENDIF
   !  account in the energy selection rule.
   !
   !-----------------------------------------------------------------------
-#include "f_defs.h"
   USE kinds,     only : DP
   USE io_global, ONLY : stdout
   USE io_epw,    ONLY : iuetf

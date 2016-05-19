@@ -13,8 +13,6 @@
   ! This routine is the driver of the self-consistent cycle for the isotropic 
   ! Eliashberg equations on the real-axis.  
   !
-#include "f_defs.h"
-  !
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
   USE io_epw,        ONLY : iufilgap
@@ -119,8 +117,6 @@
   !
   ! conv   - convergence flag 
   !  
-#include "f_defs.h"
-  !
   USE kinds,         ONLY : DP
   USE io_epw,        ONLY : iufilker, iufilgap
   USE io_global,     ONLY : stdout

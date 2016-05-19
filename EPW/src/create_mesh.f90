@@ -13,8 +13,6 @@
   !   This routine defines the nr. of k-points on the fine k-mesh 
   !   within the Fermi shell
   !
-#include "f_defs.h"
-  !
   USE kinds,     ONLY : DP
   USE io_global, ONLY : stdout
   USE io_files,  ONLY : prefix, tmp_dir
@@ -193,8 +191,6 @@
   !-----------------------------------------------------------------------
   !
   ! this routine finds the index of k+sign*q on the fine k-mesh
-  !
-#include "f_defs.h"
   !
   USE kinds,     ONLY : DP
   USE io_global, ONLY : stdout
@@ -444,8 +440,6 @@
   !-----------------------------------------------------------------------
   !
   ! this routine finds the index of k+q or k-q point on the fine k-mesh
-  !
-#include "f_defs.h"
   !
   USE kinds,     ONLY : DP
   USE epwcom,    ONLY : nkf1, nkf2, nkf3

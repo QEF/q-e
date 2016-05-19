@@ -27,7 +27,6 @@
   !
   !--------------------------------------------------------------------------
   !
-#include "f_defs.h"
   USE kinds,         ONLY : DP
   USE constants_epw, ONLY : twopi, ci, czero
   !

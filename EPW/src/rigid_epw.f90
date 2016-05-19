@@ -347,7 +347,6 @@ END SUBROUTINE rgd_blk_epw2
 SUBROUTINE dyndia_epw (nmodes, xq, dyn, uq, wq)
 !-----------------------------------------------------------------------------
 !
-#include "f_defs.h"
   USE kinds, ONLY : DP
   USE pwcom, ONLY : at, bg, celldm, omega
   USE ions_base, ONLY : amass, tau, nat, ntyp => nsp, ityp
@@ -432,7 +431,6 @@ SUBROUTINE compute_bmn_para2 (nbnd, nkstot, cufkk, cufkq, bmatf)
 !
 ! calculates overlap U_k+q U_k^\dagger
 !
-#include "f_defs.h"
   USE kinds,     ONLY : DP
   USE constants_epw, ONLY : twopi, ci, czero, cone
   USE mp_global, ONLY : my_pool_id
@@ -473,7 +471,6 @@ SUBROUTINE compute_bmn_para3 (nbnd, nbndsub, nks, cuk, cukq, bmat)
 !
 ! calculates <u_mk+q|e^iGr|u_nk> in the approximation q+G->0
 !
-#include "f_defs.h"
   USE kinds,     ONLY : DP
   USE constants_epw, ONLY : twopi, ci, czero, cone
   USE mp_global, ONLY : my_pool_id

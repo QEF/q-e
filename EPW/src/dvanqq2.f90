@@ -32,8 +32,6 @@
   ! RM - Nov/Dec 2014 
   ! Imported the noncolinear case implemented by xlzhang
   !
-#include "f_defs.h"
-  !
   USE ions_base,        ONLY : nat, ityp, ntyp => nsp
   USE io_files,         ONLY : prefix, tmp_dir
   USE io_global,        ONLY : stdout

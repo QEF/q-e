@@ -13,7 +13,6 @@ SUBROUTINE loadkmesh_para
   !  load fine k mesh and distribute among pools
   !
   !-----------------------------------------------------------------------
-#include "f_defs.h"
 #ifdef __PARA
   USE io_global, ONLY : ionode_id
   USE mp_global, ONLY : inter_pool_comm, my_pool_id, npool
@@ -243,7 +242,6 @@ SUBROUTINE loadkmesh_serial
 !  Load fine k mesh
 !
 !-----------------------------------------------------------------------
-#include "f_defs.h"
 #ifdef __PARA
   USE io_global, ONLY : ionode_id
   USE mp_global, ONLY : inter_pool_comm, root_pool, intra_pool_comm

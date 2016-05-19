@@ -16,7 +16,6 @@
   ! Imported the noncolinear case implemented by xlzhang
   !
   !-------------------------------------------------------------
-#include "f_defs.h"
   USE io_files, ONLY : prefix, tmp_dir
   USE units_ph, ONLY : lrwfc, iuwfc
   USE kinds,    ONLY : DP

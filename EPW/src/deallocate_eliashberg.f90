@@ -12,8 +12,6 @@
   !
   !  deallocates the variables allocated by allocate_eliashberg
   !
-#include "f_defs.h"
-  !
   USE epwcom,        ONLY : liso, laniso, limag
   USE eliashbergcom, ONLY : wsph, estemp, gap, wsph, agap
   !
@@ -52,8 +50,6 @@
   !
   !----------------------------------------------------------------------
   !
-#include "f_defs.h"
-  !
   USE eliashbergcom
   !
   IMPLICIT NONE
@@ -74,8 +70,6 @@
   !----------------------------------------------------------------------
   !
   !  deallocates the variables allocated by allocate_eliashberg_iso_raxis
-  !
-#include "f_defs.h"
   !
   USE epwcom, ONLY : lreal, limag, lacon
   USE eliashbergcom
@@ -115,8 +109,6 @@
   !
   !  deallocates the variables allocated by allocate_eliashberg_aniso_iaxis
   !
-#include "f_defs.h"
-  !
   USE eliashbergcom
   !
   IMPLICIT NONE
@@ -141,8 +133,6 @@
   !
   !  deallocates the variables allocated by allocate_eliashberg_aniso_raxis
   !
-#include "f_defs.h"
-  !
   USE eliashbergcom
   !
   IMPLICIT NONE
@@ -166,8 +156,6 @@
   !----------------------------------------------------------------------
   !
   !  deallocates the variables allocated by 
-  !
-#include "f_defs.h"
   !
   USE elph2,       ONLY : wf, wqf
   USE eliashbergcom, ONLY : ekfs, xkfs, wkfs, xkff, g2, a2f_iso, w0g, ixkff, ixkqf, ixqfs, nqfs

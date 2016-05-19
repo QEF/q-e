@@ -14,7 +14,6 @@
   ! computes kernels K_{+}(n,n',T) and K_{-}(n,n'T)
   ! reference W. E. Pickett, PRB 26, 1186 (1982)
   !
-#include "f_defs.h"
   !
   USE kinds, ONLY : DP
   USE constants_epw, ONLY : pi
@@ -54,7 +53,6 @@
   !
   ! lampda_eph - electron-phonon coupling lambda(n-n')
   !
-#include "f_defs.h"
   !
   USE kinds, ONLY : DP
   USE epwcom, ONLY : nqstep
@@ -83,7 +81,6 @@
   ! computes kernels K_{+}(w,iw_n,T) and K_{-}(w,iw_n,T)
   ! reference F. Masiglio, M. Schossmann, and J. Carbotte, PRB 37, 4965 (1988)
   !
-#include "f_defs.h"
   !
   USE kinds,         ONLY : DP
   USE epwcom,        ONLY : muc
@@ -143,7 +140,6 @@
   !
   ! lampda_eph - electron-phonon coupling lambda(w-iw_n)
   !
-#include "f_defs.h"
   !
   USE kinds, ONLY : DP
   USE epwcom,        ONLY : nqstep

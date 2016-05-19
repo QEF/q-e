@@ -19,8 +19,6 @@
   ! RM - Nov/Dec 2014 
   ! Imported the noncolinear case implemented by xlzhang
   !
-#include "f_defs.h"
-  !
   USE ions_base,    ONLY : nat, ntyp => nsp
   USE pwcom,        ONLY : igk, npwx, nbnd, ngm, nspin, nks
   USE noncollin_module, ONLY : noncolin, npol
