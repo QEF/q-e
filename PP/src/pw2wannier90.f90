@@ -1073,7 +1073,7 @@ SUBROUTINE compute_mmn
                                becp2(:,:), Mkb(:,:), aux_nc(:,:) 
    real(DP), ALLOCATABLE    :: rbecp2(:,:)
    COMPLEX(DP), ALLOCATABLE :: qb(:,:,:,:), qgm(:)
-   real(DP), ALLOCATABLE    :: qg(:), ylm(:,:), dxk(:,:), g2kin(:)
+   real(DP), ALLOCATABLE    :: qg(:), ylm(:,:), dxk(:,:), workg(:)
    INTEGER, ALLOCATABLE     :: igkq(:)
    COMPLEX(DP)              :: mmn, zdotc, phase1
    real(DP)                 :: arg, g_(3)
@@ -1180,7 +1180,7 @@ SUBROUTINE compute_mmn
    WRITE(stdout,'(a,i8)') '  MMN: iknum = ',iknum
    !
    ALLOCATE( Mkb(nbnd,nbnd) )
-   ALLOCATE( g2kin(npwx) )
+   ALLOCATE( workg(npwx) )
    !
    ind = 0
    DO ik=1,iknum
@@ -1211,7 +1211,7 @@ SUBROUTINE compute_mmn
 !         else
             CALL davcio (evcq, 2*nwordwfc, iunwfc, ikpevcq, -1 )
 !         end if
-         CALL gk_sort (xk(1,ikp), ngm, g, gcutw, npwq, igkq, g2kin)
+         CALL gk_sort (xk(1,ikp), ngm, g, gcutw, npwq, igkq, workg)
 ! compute the phase
          phase(:) = (0.d0,0.d0)
          IF ( ig_(ik,ib)>0) phase( nls(ig_(ik,ib)) ) = (1.d0,0.d0)
@@ -1368,7 +1368,7 @@ SUBROUTINE compute_mmn
 
       ENDDO !ib
    ENDDO  !ik
-   DEALLOCATE(g2kin)
+   DEALLOCATE(workg)
    
    IF (ionode .and. wan_mode=='standalone') CLOSE (iun_mmn)
 
@@ -1550,7 +1550,7 @@ SUBROUTINE compute_orb
    !
    USE io_global,  ONLY : stdout, ionode
    USE kinds,           ONLY: DP
-   USE wvfct,           ONLY : nbnd, npwx, g2kin
+   USE wvfct,           ONLY : nbnd, npwx, igk
    USE control_flags,   ONLY : gamma_only
    USE wavefunctions_module, ONLY : evc, psic, psic_nc
    USE fft_base,        ONLY : dffts, dfftp
@@ -1591,7 +1591,7 @@ SUBROUTINE compute_orb
                                becp2(:,:), Mkb(:,:), aux_nc(:,:) 
    real(DP), ALLOCATABLE    :: rbecp2(:,:)
    COMPLEX(DP), ALLOCATABLE :: qb(:,:,:,:), qgm(:)
-   real(DP), ALLOCATABLE    :: qg(:), ylm(:,:)
+   real(DP), ALLOCATABLE    :: qg(:), ylm(:,:), workg(:)
    INTEGER, ALLOCATABLE     :: igkq(:)
    COMPLEX(DP)              :: mmn, zdotc, phase1
    real(DP)                 :: arg, g_(3)
@@ -1712,6 +1712,7 @@ SUBROUTINE compute_orb
 
      CALL set_vrs(vrs,vltot,v%of_r,kedtau,v%kin_r,dfftp%nnr,nspin,doublegrid)
      call allocate_bec_type ( nkb, nbnd, becp )
+     ALLOCATE( workg(npwx) )
 
      write(stdout,'(a,i8)') ' iknum = ',iknum
      do ik = 1, iknum ! loop over k points
@@ -1720,6 +1721,7 @@ SUBROUTINE compute_orb
         !
         ! sort the wfc at k and set up stuff for h_psi
         npw = ngk(ik)
+        igk(1:npw) = igk_k(1:npw,ik)
         CALL init_us_2(npw,igk_k(1,ik),xk(1,ik),vkb)
         !
         ! compute  " H | u_n,k+b2 > "
@@ -1731,8 +1733,8 @@ SUBROUTINE compute_orb
            !
 !           call davcio  (evc_b2, 2*nwordwfc, iunwfc, ikp_b2, -1 ) !ivo
            call davcio  (evc_b2, 2*nwordwfc, iunwfc, ikp_b2+ikstart-1, -1 ) !ivo
-!           call gk_sort (xk(1,ikp_b2), ngm, g, gcutw, npw_b1, igk_b1, g2kin) !ivo
-           call gk_sort (xk(1,ikp_b2), ngm, g, gcutw, npw_b2, igk_b2, g2kin) !ivo
+!           call gk_sort (xk(1,ikp_b2), ngm, g, gcutw, npw_b1, igk_b1, workg) !ivo
+           call gk_sort (xk(1,ikp_b2), ngm, g, gcutw, npw_b2, igk_b2, workg) !ivo
            !
            ! compute the phase
            phase(:) = ( 0.0D0, 0.0D0 )
@@ -1771,12 +1773,12 @@ SUBROUTINE compute_orb
 
            if(write_uHu) then !ivo
               !
-              ! gk_sort overwrites the kinetic energy - recalculate at ik
-              g2kin(1:npw) = ( ( xk(1,ik) + g(1,igk_k(1:npw,ik)) )**2 + &
-                   ( xk(2,ik) + g(2,igk_k(1:npw,ik)) )**2 + &
-                   ( xk(3,ik) + g(3,igk_k(1:npw,ik)) )**2 ) * tpiba2
+              ! calculate the kinetic energy at ik, used in h_psi
+              !
+              CALL g2_kin (ik)
               !
               CALL h_psi(npwx, npw, nbnd, evc_aux, H_evc)
+              !
            endif
            !
            ! compute  " < u_m,k+b1 | "
@@ -1788,8 +1790,8 @@ SUBROUTINE compute_orb
 !              call davcio  (evc_b1, 2*nwordwfc, iunwfc, ikp_b1, -1 ) !ivo
               call davcio  (evc_b1, 2*nwordwfc, iunwfc, ikp_b1+ikstart-1, -1 ) !ivo
 
-!              call gk_sort (xk(1,ikp_b1), ngm, g, gcutw, npw_b2, igk_b2, g2kin) !ivo
-              call gk_sort (xk(1,ikp_b1), ngm, g, gcutw, npw_b1, igk_b1, g2kin) !ivo
+!              call gk_sort (xk(1,ikp_b1), ngm, g, gcutw, npw_b2, igk_b2, workg) !ivo
+              call gk_sort (xk(1,ikp_b1), ngm, g, gcutw, npw_b1, igk_b1, workg) !ivo
               !
               ! compute the phase
               phase(:) = ( 0.0D0, 0.0D0 )
@@ -1890,6 +1892,7 @@ SUBROUTINE compute_orb
           end do ! i_b1
        end do ! i_b2
     end do ! ik
+    DEALLOCATE (workg)
     !
     deallocate(igk_b1,igk_b2,evc_b1,evc_b2,evc_aux)
     if(write_uHu) then

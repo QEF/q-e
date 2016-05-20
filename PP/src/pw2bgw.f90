@@ -427,7 +427,7 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
   USE start_k, ONLY : nk1, nk2, nk3, k1, k2, k3
   USE symm_base, ONLY : s, ftau, nsym
   USE wavefunctions_module, ONLY : evc
-  USE wvfct, ONLY : npwx, nbnd, npw, et, wg, igk
+  USE wvfct, ONLY : npwx, nbnd, npw, et, wg
   USE gvecw, ONLY : ecutwfc
   USE matrix_inversion
 #ifdef __MPI
@@ -1439,7 +1439,7 @@ SUBROUTINE calc_rhog (rhog_nvmin, rhog_nvmax)
   USE scf, ONLY : rho
   USE symme, ONLY : sym_rho, sym_rho_init
   USE wavefunctions_module, ONLY : evc, psic
-  USE wvfct, ONLY : npw, igk, wg
+  USE wvfct, ONLY : npw, wg
 
   IMPLICIT NONE
 
@@ -1464,12 +1464,11 @@ SUBROUTINE calc_rhog (rhog_nvmin, rhog_nvmax)
   DO ik = iks, ike
     is = isk (ik)
     npw = ngk ( ik - iks + 1 )
-    igk(1:npw) = igk_k(1:npw, ik - iks + 1 ) 
     CALL davcio (evc, 2*nwordwfc, iunwfc, ik - iks + 1, -1)
     DO ib = rhog_nvmin, rhog_nvmax
       psic (:) = (0.0D0, 0.0D0)
       DO ig = 1, npw
-        psic (nl (igk (ig))) = evc (ig, ib)
+        psic (nl (igk_k (ig, ik-iks+1))) = evc (ig, ib)
       ENDDO
       CALL invfft ('Dense', psic, dfftp)
       DO ir = 1, dfftp%nnr
@@ -1821,7 +1820,7 @@ SUBROUTINE write_vxc_r (output_file_name, diag_nmin, diag_nmax, &
     inter_pool_comm, npool
   USE scf, ONLY : rho, rho_core, rhog_core
   USE wavefunctions_module, ONLY : evc, psic
-  USE wvfct, ONLY : npw, nbnd, igk
+  USE wvfct, ONLY : npw, nbnd
 
   IMPLICIT NONE
 
@@ -1894,13 +1893,12 @@ SUBROUTINE write_vxc_r (output_file_name, diag_nmin, diag_nmax, &
 
   DO ik = iks, ike
     npw = ngk ( ik - iks + 1 )
-    igk(1:npw) = igk_k(1:npw, ik - iks + 1 ) 
     CALL davcio (evc, 2*nwordwfc, iunwfc, ik - iks + 1, -1)
     IF (ndiag .GT. 0) THEN
       DO ib = diag_nmin, diag_nmax
         psic (:) = (0.0D0, 0.0D0)
         DO ig = 1, npw
-          psic (nl (igk (ig))) = evc (ig, ib)
+          psic (nl (igk_k (ig,ik-iks+1))) = evc (ig, ib)
         ENDDO
         CALL invfft ('Dense', psic, dfftp)
         dummyr = 0.0D0
@@ -1917,13 +1915,13 @@ SUBROUTINE write_vxc_r (output_file_name, diag_nmin, diag_nmax, &
       DO ib = offdiag_nmin, offdiag_nmax
         psic (:) = (0.0D0, 0.0D0)
         DO ig = 1, npw
-          psic (nl (igk (ig))) = evc (ig, ib)
+          psic (nl (igk_k (ig,ik-iks+1))) = evc (ig, ib)
         ENDDO
         CALL invfft ('Dense', psic, dfftp)
         DO ib2 = offdiag_nmin, offdiag_nmax
           psic2 (:) = (0.0D0, 0.0D0)
           DO ig = 1, npw
-            psic2 (nl (igk (ig))) = evc (ig, ib2)
+            psic2 (nl (igk_k (ig,ik-iks+1))) = evc (ig, ib2)
           ENDDO
           CALL invfft ('Dense', psic2, dfftp)
           dummyc = (0.0D0, 0.0D0)
@@ -2087,7 +2085,7 @@ SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
 
   DO ik = iks, ike
     npw = ngk ( ik - iks + 1 )
-    igk(1:npw) = igk_k(1:npw, ik - iks + 1 ) 
+    igk(1:npw) = igk_k(1:npw, ik - iks + 1 ) ! used by vexx
     CALL davcio (evc, 2*nwordwfc, iunwfc, ik - iks + 1, -1)
     IF (ndiag .GT. 0) THEN
       DO ib = diag_nmin, diag_nmax
@@ -2439,7 +2437,7 @@ SUBROUTINE write_vkbg (output_file_name, symm_type, wfng_kgrid, &
   USE symm_base, ONLY : s, ftau, nsym
   USE uspp, ONLY : nkb, vkb, deeq
   USE uspp_param, ONLY : nhm, nh
-  USE wvfct, ONLY : npwx, npw, igk
+  USE wvfct, ONLY : npwx, npw
   USE gvecw, ONLY : ecutwfc
   USE matrix_inversion
 
@@ -2609,9 +2607,8 @@ SUBROUTINE write_vkbg (output_file_name, symm_type, wfng_kgrid, &
   igk_l2g = 0
   DO ik = 1, nks
     npw = ngk ( ik )
-    igk(1:npw) = igk_k(1:npw,ik) 
     DO ig = 1, npw
-      igk_l2g ( ig, ik ) = ig_l2g ( igk ( ig ) )
+      igk_l2g ( ig, ik ) = ig_l2g ( igk_k ( ig, ik ) )
     ENDDO
   ENDDO
   DO ik = 1, nks
@@ -2696,8 +2693,7 @@ SUBROUTINE write_vkbg (output_file_name, symm_type, wfng_kgrid, &
     local_pw = 0
     IF ( ik .GE. iks .AND. ik .LE. ike ) THEN
       npw = ngk ( ik - iks + 1 )
-      igk(1:npw) = igk_k(1:npw, ik - iks + 1 ) 
-      CALL init_us_2 ( npw, igk, xk ( 1, ik ), vkb )
+      CALL init_us_2 ( npw, igk_k(1, ik-iks+1), xk ( 1, ik ), vkb )
       local_pw = npw
     ENDIF
 

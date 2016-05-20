@@ -1125,8 +1125,7 @@ subroutine gen_us_djl (ik,npw,djl,size_tab,vec_tab, spline_ps, vec_tab_d2y)
   USE io_global,  ONLY : stdout
   USE constants,  ONLY : tpi
   USE cell_base,  ONLY : tpiba
-  USE klist,      ONLY : xk
-  USE wvfct,      ONLY : igk
+  USE klist,      ONLY : xk, igk_k
   USE gvect,      ONLY : g
   USE us,         ONLY : nqx, dq
   USE splinelib,  ONLY : splint_deriv
@@ -1156,9 +1155,9 @@ subroutine gen_us_djl (ik,npw,djl,size_tab,vec_tab, spline_ps, vec_tab_d2y)
   allocate ( q(npw) )
 
   do ig = 1, npw
-     gk (1, ig) = xk (1, ik) + g (1, igk (ig) )
-     gk (2, ig) = xk (2, ik) + g (2, igk (ig) )
-     gk (3, ig) = xk (3, ik) + g (3, igk (ig) )
+     gk (1, ig) = xk (1, ik) + g (1, igk_k (ig,ik) )
+     gk (2, ig) = xk (2, ik) + g (2, igk_k (ig,ik) )
+     gk (3, ig) = xk (3, ik) + g (3, igk_k (ig,ik) )
      q (ig) = gk(1, ig)**2 +  gk(2, ig)**2 + gk(3, ig)**2
   enddo
 
@@ -1212,8 +1211,7 @@ subroutine gen_us_vkb0 (ik,npw,vkb0,size_tab,vec_tab, spline_ps, vec_tab_d2y)
   USE io_global,  ONLY : stdout
   USE constants,  ONLY : tpi
   USE cell_base,  ONLY : tpiba
-  USE klist,      ONLY : xk
-  USE wvfct,      ONLY : igk
+  USE klist,      ONLY : xk, igk_k
   USE gvect,      ONLY : g
   USE us,         ONLY : nqx, dq
   USE splinelib,  ONLY : splint
@@ -1241,9 +1239,9 @@ subroutine gen_us_vkb0 (ik,npw,vkb0,size_tab,vec_tab, spline_ps, vec_tab_d2y)
   allocate ( q(npw) )
 
   do ig = 1, npw
-     gk (1, ig) = xk (1, ik) + g (1, igk (ig) )
-     gk (2, ig) = xk (2, ik) + g (2, igk (ig) )
-     gk (3, ig) = xk (3, ik) + g (3, igk (ig) )
+     gk (1, ig) = xk (1, ik) + g (1, igk_k (ig,ik) )
+     gk (2, ig) = xk (2, ik) + g (2, igk_k (ig,ik) )
+     gk (3, ig) = xk (3, ik) + g (3, igk_k (ig,ik) )
      q (ig) = gk(1, ig)**2 +  gk(2, ig)**2 + gk(3, ig)**2
   enddo
 
