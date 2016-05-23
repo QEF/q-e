@@ -267,6 +267,7 @@ cat > q2r.in <<EOF
 EOF
 
 $ECHO "  transforming C(q) => C(R)...\c"
+mv $PREFIX.dyn0 $PREFIX.dyn0.xml
 $Q2R_COMMAND < q2r.in > q2r.out
 check_failure $?
 $ECHO " done"
