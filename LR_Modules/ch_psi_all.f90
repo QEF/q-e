@@ -22,7 +22,8 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   USE becmod,               ONLY : bec_type, becp, calbec
   USE uspp,                 ONLY : nkb, vkb
   USE fft_base,             ONLY : dffts
-  USE wvfct,                ONLY : npwx, igk
+  USE wvfct,                ONLY : npwx, current_k
+  USE klist,                ONLY : igk_k
   USE qpoint,               ONLY : igkq
   USE noncollin_module,     ONLY : noncolin, npol
 
@@ -84,16 +85,20 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   !
   !   With task groups we use the Hpsi routine of PW parallelized
   !   on task groups
+  !   This ugly hack replaces indices of k+G, used by h_psi in scf calculations,
+  !   with indices for k+q+G, needed for finite-wavevector perturbations, and
+  !   sets the needed k-point index, also used by h_psi
   !
+     current_k = ik
      IF (.NOT.lgamma) THEN
         ALLOCATE(ibuf(npwx))
-        ibuf=igk
-        igk=igkq 
+        ibuf(:) = igk_k(:,ik)
+        igk_k(:,ik) = igkq(:) 
      ENDIF   
      CALL h_psi (npwx, n, m, h, hpsi)
      CALL s_psi (npwx, n, m, h, spsi)
      IF (.NOT.lgamma) THEN
-        igk=ibuf
+        igk_k(:,ik) = ibuf(:)
         DEALLOCATE(ibuf)
      ENDIF
   ELSE

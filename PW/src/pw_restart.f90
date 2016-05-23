@@ -129,7 +129,7 @@ USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, delete_if_present, &
       USE basis,                ONLY : natomwfc
       USE gvecs,                ONLY : ngms_g, dual
       USE fft_base,             ONLY : dffts
-      USE wvfct,                ONLY : npw, npwx, et, wg, nbnd
+      USE wvfct,                ONLY : npwx, et, wg, nbnd
       USE ener,                 ONLY : ef, ef_up, ef_dw, vtxc, etxc, ewld, etot, &
                                        ehart, eband, demet 
       USE gvecw,                ONLY : ecutwfc

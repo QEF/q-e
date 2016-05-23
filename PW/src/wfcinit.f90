@@ -27,7 +27,7 @@ SUBROUTINE wfcinit()
   USE buffers,              ONLY : open_buffer, get_buffer, save_buffer
   USE uspp,                 ONLY : nkb, vkb
   USE wavefunctions_module, ONLY : evc
-  USE wvfct,                ONLY : nbnd, npwx, npw, current_k, igk
+  USE wvfct,                ONLY : nbnd, npwx, current_k
   USE wannier_new,          ONLY : use_wannier
   USE pw_restart,           ONLY : pw_readfile
   USE mp_bands,             ONLY : nbgrp, root_bgrp,inter_bgrp_comm
@@ -134,12 +134,10 @@ SUBROUTINE wfcinit()
   !
   DO ik = 1, nks
      !
-     ! ... Hpsi initializations: PWs, k, spin, k+G indices, kinetic energy
+     ! ... Hpsi initialization: k-point index, spin, kinetic energy
      !
-     npw = ngk(ik)
      current_k = ik
      IF ( lsda ) current_spin = isk(ik)
-     igk(1:npw) = igk_k(1:npw,ik)
      call g2_kin (ik)
      !
      ! ... More Hpsi initialization: nonlocal pseudopotential projectors |beta>

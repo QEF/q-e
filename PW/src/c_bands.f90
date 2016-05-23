@@ -22,7 +22,7 @@ SUBROUTINE c_bands( iter )
   USE klist,                ONLY : nkstot, nks, xk, ngk, igk_k
   USE uspp,                 ONLY : vkb, nkb
   USE gvect,                ONLY : g
-  USE wvfct,                ONLY : et, nbnd, npwx, igk, npw, current_k
+  USE wvfct,                ONLY : et, nbnd, npwx, current_k
   USE control_flags,        ONLY : ethr, isolve, restart
   USE ldaU,                 ONLY : lda_plus_u, U_projection, wfcU
   USE lsda_mod,             ONLY : current_spin, lsda, isk
@@ -72,20 +72,15 @@ SUBROUTINE c_bands( iter )
   !
   k_loop: DO ik = ik_+1, nks
      !
-     ! ... Set k-point, spin, number of plane waves, k+G indices
+     ! ... Set k-point, spin, kinetic energy, needed by Hpsi
      !
      current_k = ik
      IF ( lsda ) current_spin = isk(ik)
-     npw = ngk(ik)
-     igk(1:npw) = igk_k(1:npw,ik)
+     call g2_kin( ik )
      !
      ! ... More stuff needed by the hamiltonian: nonlocal projectors
      !
-     IF ( nkb > 0 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
-     !
-     ! ... kinetic energy
-     !
-     call g2_kin( ik )
+     IF ( nkb > 0 ) CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb )
      !
      ! ... read in wavefunctions from the previous iteration
      !
@@ -160,8 +155,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   USE io_files,             ONLY : nwordwfc, iunefieldp, iunefieldm
   USE uspp,                 ONLY : vkb, nkb, okvan
   USE gvect,                ONLY : gstart
-  USE wvfct,                ONLY : g2kin, nbndx, et, nbnd, npwx, npw, &
-       current_k, btype
+  USE wvfct,                ONLY : g2kin, nbndx, et, nbnd, npwx, current_k, btype
   USE control_flags,        ONLY : ethr, lscf, max_cg_iter, isolve, &
                                    gamma_only, use_para_diag
   USE noncollin_module,     ONLY : noncolin, npol
@@ -172,7 +166,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                                    gdir, l3dstring, efield, efield_cry
   USE becmod,               ONLY : bec_type, becp, calbec, &
                                    allocate_bec_type, deallocate_bec_type
-  USE klist,                ONLY : nks
+  USE klist,                ONLY : nks, ngk
   USE mp_bands,             ONLY : nproc_bgrp, intra_bgrp_comm, inter_bgrp_comm, &
                                    set_bgrp_indices, my_bgrp_id, root_bgrp, nbgrp
   USE mp,                   ONLY : mp_sum, mp_bcast
@@ -185,7 +179,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   !
   REAL (KIND=DP) :: cg_iter
   ! (weighted) number of iterations in Conjugate-Gradient
-  INTEGER :: ig, dav_iter, ntry, notconv
+  INTEGER :: npw, ig, dav_iter, ntry, notconv
   ! number of iterations in Davidson
   ! number or repeated call to diagonalization in case of non convergence
   ! number of notconverged elements
@@ -202,15 +196,16 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   IF( ierr /= 0 ) &
      CALL errore( ' diag_bands ', ' cannot allocate s_diag ', ABS(ierr) )
   !
-  ! ... allocate space for <beta_i|psi_j> - used in h_psi and s_psi
-  !
   ipw=npwx
   CALL mp_sum(ipw, intra_bgrp_comm)
   IF ( nbndx > ipw ) &
      CALL errore ( 'diag_bands', 'too many bands, or too few plane waves',1)
   !
-     CALL allocate_bec_type ( nkb, nbnd, becp, intra_bgrp_comm )
+  ! ... allocate space for <beta_i|psi_j> - used in h_psi and s_psi
   !
+  CALL allocate_bec_type ( nkb, nbnd, becp, intra_bgrp_comm )
+  !
+  npw = ngk(ik)
   IF ( gamma_only ) THEN
      !
      CALL diag_bands_gamma()
@@ -302,7 +297,7 @@ CONTAINS
        !
        h_diag(1:npw, 1) = g2kin(1:npw) + v_of_0
        !
-       CALL usnldiag( h_diag, s_diag )
+       CALL usnldiag( npw, h_diag, s_diag )
        !
        ntry = 0
        !
@@ -355,7 +350,6 @@ CONTAINS
     REAL(dp) :: eps
     !  --- Define a small number ---
     eps=0.000001d0
-
     !
     IF ( lelfield ) THEN
        !
@@ -443,7 +437,7 @@ CONTAINS
           !
        END DO
        !
-       CALL usnldiag( h_diag, s_diag )
+       CALL usnldiag( npw, h_diag, s_diag )
        !
        ntry = 0
        !
@@ -582,7 +576,7 @@ SUBROUTINE c_bands_nscf( )
   USE klist,                ONLY : nkstot, nks, xk, ngk, igk_k
   USE uspp,                 ONLY : vkb, nkb
   USE gvect,                ONLY : g
-  USE wvfct,                ONLY : et, nbnd, npwx, igk, npw, current_k
+  USE wvfct,                ONLY : et, nbnd, npwx, current_k
   USE control_flags,        ONLY : ethr, restart, isolve, io_level, iverbosity
   USE ldaU,                 ONLY : lda_plus_u, U_projection, wfcU
   USE lsda_mod,             ONLY : current_spin, lsda, isk
@@ -627,20 +621,15 @@ SUBROUTINE c_bands_nscf( )
   !
   k_loop: DO ik = ik_+1, nks
      !
-     ! ... Set k-point, spin, number of plane waves, k+G indices
+     ! ... Set k-point, spin, kinetic energy, needed by Hpsi
      !
      current_k = ik
      IF ( lsda ) current_spin = isk(ik)
-     npw = ngk(ik)
-     igk(1:npw) = igk_k(1:npw,ik)
-     !
+     call g2_kin( ik )
+     ! 
      ! ... More stuff needed by the hamiltonian: nonlocal projectors
      !
-     IF ( nkb > 0 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
-     !
-     ! ... kinetic energy
-     !
-     call g2_kin( ik )
+     IF ( nkb > 0 ) CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb )
      !
      ! ... Needed for LDA+U
      !

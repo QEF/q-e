@@ -845,7 +845,7 @@ SUBROUTINE write_gmaps ( kunit)
   USE gvect,     ONLY : ngm, ngm_g, ig_l2g, g
   USE lsda_mod,  ONLY : nspin, isk
   USE ions_base, ONLY : ntyp => nsp, tau, ityp
-  USE wvfct,     ONLY : nbnd, npwx, et, g2kin
+  USE wvfct,     ONLY : nbnd, npwx, et
   USE gvecw,     ONLY : gcutw
   USE klist,     ONLY : nkstot, ngk, nks, xk
   USE wavefunctions_module,  ONLY : evc
@@ -869,6 +869,7 @@ SUBROUTINE write_gmaps ( kunit)
   INTEGER, ALLOCATABLE :: itmp( :, : )
   INTEGER, ALLOCATABLE :: igwk( : )
   INTEGER, ALLOCATABLE :: igk_l2g( :, : )
+  REAL(kind=8), ALLOCATABLE :: gk(:)
 
   real(kind=8) :: wfc_scal
   LOGICAL :: twf0, twfm, twrite_wfc
@@ -915,17 +916,18 @@ SUBROUTINE write_gmaps ( kunit)
 
 
   ! build the G+k array indexes
-  ALLOCATE ( kisort( npwx ) )
   ALLOCATE ( igk_l2g( npwx, ik ) )
+  ALLOCATE ( kisort( npwx ) )
+  ALLOCATE ( gk( npwx ) )
   DO ik = 1, nks
      kisort = 0
-     CALL gk_sort (xk (1, ik+iks-1), ngm, g, gcutw, npw, kisort(1), g2kin)
+     CALL gk_sort (xk (1, ik+iks-1), ngm, g, gcutw, npw, kisort(1), gk)
      DO ig = 1, npw
         igk_l2g(ig,ik) = ig_l2g(kisort(ig))
      ENDDO
      ngk (ik) = npw
   ENDDO
-  DEALLOCATE (kisort)
+  DEALLOCATE (gk, kisort)
 
   ! compute the global number of G+k vectors for each k point
   ALLOCATE( ngk_g( nkstot ) )

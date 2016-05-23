@@ -1550,7 +1550,7 @@ SUBROUTINE compute_orb
    !
    USE io_global,  ONLY : stdout, ionode
    USE kinds,           ONLY: DP
-   USE wvfct,           ONLY : nbnd, npwx, igk
+   USE wvfct,           ONLY : nbnd, npwx, current_k
    USE control_flags,   ONLY : gamma_only
    USE wavefunctions_module, ONLY : evc, psic, psic_nc
    USE fft_base,        ONLY : dffts, dfftp
@@ -1719,9 +1719,9 @@ SUBROUTINE compute_orb
         !
         write (stdout,'(i8)') ik
         !
-        ! sort the wfc at k and set up stuff for h_psi
         npw = ngk(ik)
-        igk(1:npw) = igk_k(1:npw,ik)
+        ! sort the wfc at k and set up stuff for h_psi
+        current_k=ik
         CALL init_us_2(npw,igk_k(1,ik),xk(1,ik),vkb)
         !
         ! compute  " H | u_n,k+b2 > "

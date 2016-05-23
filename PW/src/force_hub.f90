@@ -167,7 +167,7 @@ SUBROUTINE dndtau_k &
    USE ions_base,            ONLY : nat, ityp
    USE lsda_mod,             ONLY : nspin, current_spin
    USE ldaU,                 ONLY : is_hubbard, Hubbard_l, nwfcU, offsetU
-   USE wvfct,                ONLY : nbnd, npwx, npw, wg
+   USE wvfct,                ONLY : nbnd, npwx, wg
    USE mp_pools,             ONLY : intra_pool_comm, me_pool, nproc_pool
    USE mp,                   ONLY : mp_sum
    
@@ -253,7 +253,7 @@ SUBROUTINE dndtau_gamma &
    USE ions_base,            ONLY : nat, ityp
    USE lsda_mod,             ONLY : nspin, current_spin
    USE ldaU,                 ONLY : is_hubbard, Hubbard_l, nwfcU, offsetU
-   USE wvfct,                ONLY : nbnd, npwx, npw, wg
+   USE wvfct,                ONLY : nbnd, npwx, wg
    USE mp_pools,             ONLY : intra_pool_comm, me_pool, nproc_pool
    USE mp,                   ONLY : mp_sum
 

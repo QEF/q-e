@@ -21,7 +21,7 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi, pdir, e_field)
   USE kinds,    ONLY : DP
   USE spin_orb, ONLY: lspinorb
   USE us
-  USE wvfct,    ONLY : npwx, npw, nbnd, ik => current_k
+  USE wvfct,    ONLY : npwx, nbnd, ik => current_k
   USE ldaU,     ONLY : lda_plus_u
   USE lsda_mod, ONLY : current_spin, nspin
   USE scf,      ONLY : vrs  
@@ -61,21 +61,20 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi, pdir, e_field)
   INTEGER :: nkbtona(nkb)
    INTEGER :: nkbtonh(nkb)
   COMPLEX(DP) :: sca, sca1, pref
-  INTEGER nb,mb, jkb, nhjkb, na, np, nhjkbm,jkb1,i,j,iv
+  INTEGER :: npw, nb,mb, jkb, nhjkb, na, np, nhjkbm,jkb1,i,j,iv
   INTEGER :: jkb_bp,nt,ig, ijkb0,ibnd,jh,ih,ikb
   REAL(dp) :: eps
   COMPLEX(kind=DP), ALLOCATABLE :: sca_mat(:,:),sca_mat1(:,:)
   COMPLEX(kind=DP) :: pref0(4)
 
-
   !  --- Define a small number ---
   eps=0.000001d0
   if(ABS(e_field)<eps) return
-  
   call start_clock('h_epsi_apply')
 
   ALLOCATE( evct(npwx*npol,nbnd))
   call allocate_bec_type(nkb,nbnd,becp0)
+  npw = ngk(ik) 
   if(okvan) then
 !  --- Initialize arrays ---
      jkb_bp=0
@@ -90,12 +89,7 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi, pdir, e_field)
             END IF
          END DO
       END DO
-   endif
-
-
-
-  if(okvan) THEN
-     CALL calbec ( npw, vkb, psi, becp0, nbande )
+      CALL calbec ( npw, vkb, psi, becp0, nbande )
   endif
 
   allocate(sca_mat(nbnd,nbande),sca_mat1(nbnd,nbande))

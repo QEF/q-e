@@ -23,6 +23,9 @@ Fixed in 6.0 version:
 Incompatible changes in 6.0 version:
 
   * Support for AIX removed
+  * The hamiltonian h_psi no longer needs "npw" and "igk" to be initialized
+    via module "wvfct", but it needs "current_k" to be set to the index of
+    the current k-point
 
                                * * * * *
 

@@ -35,7 +35,7 @@ SUBROUTINE orbm_kubo()
   USE io_files,             ONLY : iunwfc, nwordwfc
   USE buffers,              ONLY : get_buffer
   USE noncollin_module,     ONLY : noncolin, npol
-  USE wvfct,                ONLY : npwx, nbnd, igk, et
+  USE wvfct,                ONLY : npwx, nbnd, et, current_k
   USE lsda_mod,             ONLY : nspin
   USE fft_base,             ONLY : dfftp
   USE gvect,                ONLY : ngm,ngm_g,g,gcutm,ig_l2g
@@ -168,10 +168,10 @@ SUBROUTINE orbm_kubo()
 
         ! Read wavefunction at k
         CALL get_buffer ( evc_k, nwordwfc, iunwfc, n )
-        ! recompute indices, projectors, kinetic energy, needed by h_psi
-        ! for the current k-point (n)
+        ! set current k-point (n), recompute projectors, kinetic energy
+        ! needed by h_psi
         npw_k = ngk(n)
-        igk(:)= igk_k(:,n)
+        current_k=n
         CALL init_us_2(npw_k,igk_k(1,n),xk(1,n),vkb)
         CALL g2_kin( n )
 
