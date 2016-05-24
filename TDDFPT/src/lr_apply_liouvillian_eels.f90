@@ -25,10 +25,10 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
   USE gvect,                ONLY : nl, nlm, ngm, g, gg
   USE io_global,            ONLY : stdout
   USE kinds,                ONLY : dp
-  USE klist,                ONLY : nks, xk
+  USE klist,                ONLY : nks, xk, igk_k
   USE lr_variables,         ONLY : evc0, no_hxc
   USE lsda_mod,             ONLY : nspin, current_spin
-  USE wvfct,                ONLY : nbnd, npwx, g2kin, et, npw, igk
+  USE wvfct,                ONLY : nbnd, npwx, g2kin, et, npw, igk, current_k
   USE gvecw,                ONLY : gcutw
   USE io_global,            ONLY : stdout
   USE uspp,                 ONLY : vkb
@@ -305,11 +305,12 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
         ! (see PH/ch_psi_all.f90)
         !
         ALLOCATE(ibuf(npwx))
-        ibuf = igk
-        igk = igkq
+        ibuf(:) = igk_k(:,ikk)
+        igk_k(:,ikk) = igkq(:)
+        current_k = ikk
         CALL h_psi (npwx, npwq, nbnd_occ(ikk), evc1(:,:,ik), hpsi)
         CALL s_psi (npwx, npwq, nbnd_occ(ikk), evc1(:,:,ik), spsi)
-        igk = ibuf
+        igk_k(:,ikk) = ibuf(:)
         DEALLOCATE(ibuf)
         !
      ELSE
