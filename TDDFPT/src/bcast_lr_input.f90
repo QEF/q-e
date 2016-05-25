@@ -18,7 +18,7 @@ SUBROUTINE bcast_lr_input
   USE realus,              ONLY: real_space, real_space_debug
   USE mp,                  ONLY: mp_bcast, mp_barrier
   USE io_files,            ONLY: tmp_dir, prefix, wfc_dir
-  USE control_flags,       ONLY: tqr
+  USE control_flags,       ONLY: tqr, tddfpt
   USE charg_resp,          ONLY: omeg, w_T_prefix, w_T_npol,epsil
   USE io_global,           ONLY: ionode, ionode_id
   USE mp_global,           ONLY: intra_image_comm
@@ -61,6 +61,7 @@ SUBROUTINE bcast_lr_input
   CALL mp_bcast (ecutfock, ionode_id, world_comm )
   CALL mp_bcast (d0psi_rs, ionode_id,world_comm )
   CALL mp_bcast (lshift_d0psi, ionode_id,world_comm )
+  CALL mp_bcast (tddfpt, ionode_id, world_comm )
   CALL plugin_arguments_bcast(ionode_id, world_comm)
 
   ! for EELS

@@ -42,6 +42,7 @@ PROGRAM lr_main
                                     ibnd_start, ibnd_end
   USE wvfct,                 ONLY : nbnd
   USE wavefunctions_module,  ONLY : psic
+  USE control_flags,         ONLY : tddfpt
   USE check_stop,            ONLY : check_stop_now, check_stop_init
   USE funct,                 ONLY : dft_is_hybrid
   USE fft_base,              ONLY : dffts
@@ -75,6 +76,11 @@ PROGRAM lr_main
   IF (lr_verbosity > 5) THEN
      WRITE(stdout,'("<lr_main>")')
   ENDIF
+  !
+  ! Let the routines of the Environ plugin know that 
+  ! they are doing TDDFPT.
+  !
+  tddfpt = .TRUE.
   !
   ! Reading input file and PWSCF xml, some initialisation;
   ! Read the input variables for TDDFPT;

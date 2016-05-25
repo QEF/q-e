@@ -29,7 +29,7 @@ PROGRAM lr_dav_main
                                     ibnd_start, ibnd_end
   USE wvfct,                 ONLY : nbnd
   USE wavefunctions_module,  ONLY : psic
-  USE control_flags,         ONLY : do_makov_payne
+  USE control_flags,         ONLY : tddfpt, do_makov_payne
   USE check_stop,            ONLY : check_stop_now, check_stop_init
   USE funct,                 ONLY : dft_is_hybrid
 
@@ -49,7 +49,16 @@ PROGRAM lr_dav_main
 #ifdef __MPI
   CALL mp_startup ( )
 #endif
-  davidson=.true. ! To tell the code that we are using davidson method
+  !
+  ! Let the routines of the Environ plugin know that 
+  ! they are doing TDDFPT. 
+  !
+  tddfpt = .true.
+  !
+  ! Tell to the code that we are using the Davidson method
+  !
+  davidson = .true.
+  !
   CALL environment_start ( code1 )
   CALL start_clock('lr_dav_main')
 
