@@ -185,7 +185,6 @@
     ENDIF
   ENDDO
   IF (iverbosity.eq.1) write (stdout, *) & 
-!$$  if (.true.) write (stdout, *) & 
      ik0, nset, (ndeg (iset) ,iset=1,nset)
   !
   ! -----------------------------------------------------------
