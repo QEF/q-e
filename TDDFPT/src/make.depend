@@ -270,7 +270,6 @@ lr_dvpsi_eels.o : ../../Modules/wavefunctions.o
 lr_dvpsi_eels.o : ../../PW/src/buffers.o
 lr_dvpsi_eels.o : ../../PW/src/pwcom.o
 lr_eels_main.o : ../../Modules/check_stop.o
-lr_eels_main.o : ../../Modules/control_flags.o
 lr_eels_main.o : ../../Modules/environment.o
 lr_eels_main.o : ../../Modules/fft_base.o
 lr_eels_main.o : ../../Modules/io_files.o

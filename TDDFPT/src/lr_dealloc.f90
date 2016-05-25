@@ -77,6 +77,8 @@ SUBROUTINE lr_dealloc()
   IF (eels) THEN
      IF (associated(evq))    DEALLOCATE(evq)
      IF (associated(igkq))   DEALLOCATE(igkq)
+  ELSE
+     IF (associated(evq))    NULLIFY(evq)
   ENDIF 
   !
   !IF (allocated(eval1)) DEALLOCATE(eval1)

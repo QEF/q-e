@@ -470,3 +470,4 @@ xsf.o : kind.o
 ylmr2.o : constants.o
 ylmr2.o : kind.o
 zdotc_wrapper.o : kind.o
+environment.o : ../include/configure.h

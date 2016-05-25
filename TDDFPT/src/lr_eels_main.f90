@@ -33,7 +33,6 @@ PROGRAM lr_eels_main
                                     ibnd_start, ibnd_end
   USE wvfct,                 ONLY : nbnd
   USE wavefunctions_module,  ONLY : psic
-  USE control_flags,         ONLY : tddfpt
   USE check_stop,            ONLY : check_stop_now, check_stop_init
   USE fft_base,              ONLY : dffts
   USE uspp,                  ONLY : okvan
@@ -64,10 +63,8 @@ PROGRAM lr_eels_main
      WRITE(stdout,'("<lr_eels_main>")')
   ENDIF
   !
-  ! Let the PHonon and TDDFPT routines know that 
-  ! they are doing tddfpt and eels.
+  ! Let the TDDFPT routines know that they are doing EELS.
   !
-  tddfpt = .TRUE.
   eels   = .TRUE.
   !
   ! Reading input file and PWSCF xml, some initialisation

@@ -80,18 +80,17 @@ SUBROUTINE lr_init_nfo()
   ENDIF
   !
   ! 2) Initialization of ikks, ikqs, and nksq.
+  !    Inspired by PH/initialize_ph.f90.
   !
   IF (eels) THEN
      !
-     ! EELS
+     ! EELS (q!=0)
      !
      ! nksq is the number of k-points, NOT including k+q points
-     ! The following block was copied from PH/initialize_ph.f90.
      !
      nksq = nks / 2
      !
      ALLOCATE(ikks(nksq), ikqs(nksq))
-     !
      DO ik = 1, nksq
         ikks(ik) = 2 * ik - 1
         ikqs(ik) = 2 * ik
@@ -99,9 +98,18 @@ SUBROUTINE lr_init_nfo()
      !
   ELSE
      !
-     ! Optical case
+     ! Optical case (q=0)
      !
      nksq = nks
+     !
+     ! Note: in this case the array ikqs is
+     ! needed only in order to use the routine
+     ! ch_psi_all
+     !
+     ALLOCATE(ikqs(nksq))
+     DO ik = 1, nksq
+        ikqs(ik) = ik
+     ENDDO
      !
   ENDIF
   !

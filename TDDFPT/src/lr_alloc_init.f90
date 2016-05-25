@@ -28,12 +28,10 @@ SUBROUTINE lr_alloc_init()
   USE noncollin_module,     ONLY : nspin_mag, npol, noncolin
   USE wavefunctions_module, ONLY : evc
   USE becmod,               ONLY : allocate_bec_type, bec_type, becp
-
-  USE lrus,       ONLY : int3, int3_nc, becp1
-  USE eqv,        ONLY : dmuxc, evq, dpsi, dvpsi
-  USE qpoint,     ONLY : igkq, nksq, eigqts
-  USE control_lr, ONLY : nbnd_occ
-
+  USE lrus,                 ONLY : int3, int3_nc, becp1
+  USE eqv,                  ONLY : dmuxc, evq, dpsi, dvpsi
+  USE qpoint,               ONLY : igkq, nksq, eigqts
+  USE control_lr,           ONLY : nbnd_occ
   !
   IMPLICIT NONE
   !
@@ -119,6 +117,25 @@ SUBROUTINE lr_alloc_init()
   d0psi(:,:,:,:)    = (0.0d0,0.0d0)
   !
   IF (eels) THEN
+     !
+     ! EELS (q!=0) : evq, igkq are allocated 
+     ! and correspond to k+q points
+     !
+     ALLOCATE (igkq(npwx))
+     ALLOCATE (evq(npwx*npol,nbnd))
+     evq(:,:) = (0.0d0, 0.0d0)  
+     ! 
+  ELSE
+     !
+     ! Optical case (q=0) : evq is a pointer to evc
+     ! (this is needed in order to use the routine ch_psi_all
+     ! which deals with the array evq)
+     !
+     evq => evc
+     !
+  ENDIF
+  !
+  IF (eels) THEN
      ALLOCATE(d0psi2(npwx*npol,nbnd,nksq,n_ipol))
      d0psi2(:,:,:,:) = (0.0d0,0.0d0)
   ENDIF
@@ -150,15 +167,10 @@ SUBROUTINE lr_alloc_init()
      !
   ENDIF
   !
-  ! EELS: evq, igkq are allocated and calculated at k+q 
-  ! 
   IF (eels) THEN
      !
-     ALLOCATE (evq(npwx*npol,nbnd))
      ALLOCATE (dpsi(npwx*npol,nbnd))
      ALLOCATE (dvpsi(npwx*npol,nbnd))
-     ALLOCATE (igkq(npwx))
-     evq(:,:)   = (0.0d0, 0.0d0)
      dpsi(:,:)  = (0.0d0, 0.0d0)
      dvpsi(:,:) = (0.0d0, 0.0d0)
      !

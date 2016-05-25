@@ -38,7 +38,7 @@ MODULE control_flags
             timing, memchk, trane, dt_old, ampre, tranp, amprp,              &
             tnosee, tnosep, tnoseh, tcp, tcap,                               &
             tconvthrs, tolp, convergence_criteria, tionstep, nstepe,         &
-            tscreen, gamma_only, force_pairing, lecrpa, tddfpt,  smallmem
+            tscreen, gamma_only, force_pairing, lecrpa, smallmem
   !
   PUBLIC :: fix_dependencies, check_flags
   PUBLIC :: tksw, trhor, thdyn, trhow
@@ -76,7 +76,6 @@ MODULE control_flags
   LOGICAL :: lkpoint_dir   = .TRUE.  ! save each k point in a different directory
   LOGICAL :: force_pairing = .FALSE. ! Force pairing
   LOGICAL :: lecrpa        = .FALSE. ! RPA correlation energy request
-  LOGICAL :: tddfpt        = .FALSE. ! use tddfpt specific tweaks to ph.x routines
   LOGICAL :: smallmem      = .FALSE. ! the memory per task is small
   !
   TYPE (convergence_criteria) :: tconvthrs

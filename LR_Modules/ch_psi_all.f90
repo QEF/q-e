@@ -1,11 +1,11 @@
 !
-! Copyright (C) 2001-2007 Quantum ESPRESSO group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-
+!
 !-----------------------------------------------------------------------
 SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   !-----------------------------------------------------------------------
@@ -16,7 +16,6 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   ! Merged with lr_ch_psi_all June 2011. This function is now used both
   ! in ph.x and turbo_lanczos.x
   !
-
   USE kinds,                ONLY : DP
   USE wvfct,                ONLY : npwx, nbnd
   USE becmod,               ONLY : bec_type, becp, calbec
@@ -26,17 +25,13 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   USE klist,                ONLY : igk_k
   USE qpoint,               ONLY : igkq
   USE noncollin_module,     ONLY : noncolin, npol
-
   USE eqv,                  ONLY : evq
   USE qpoint,               ONLY : ikqs
-
   USE mp_bands,             ONLY : intra_bgrp_comm, ntask_groups
   USE mp,                   ONLY : mp_sum
-
   USE control_lr,           ONLY : alpha_pv, nbnd_occ, lgamma
-
   !Needed only for TDDFPT
-  USE control_flags,        ONLY : gamma_only, tddfpt
+  USE control_flags,        ONLY : gamma_only
   USE wavefunctions_module, ONLY : evc
 
   IMPLICIT NONE
@@ -56,9 +51,8 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   !
   !   local variables
   !
-  INTEGER :: ibnd, ikq, ig
+  INTEGER :: ibnd, ig
   ! counter on bands
-  ! the point k+q
   ! counter on G vetors
 
   COMPLEX(DP), allocatable :: ps (:,:), hpsi (:,:), spsi (:,:)
@@ -123,26 +117,16 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
      ENDDO
   ENDIF
 
-  IF(gamma_only) THEN
-
-       CALL ch_psi_all_gamma()
-    ELSE
-
-       IF(tddfpt) THEN
-          ikq = ik
-          evq => evc
-       ELSE
-          ikq = ikqs(ik)
-       ENDIF
-          
-       CALL ch_psi_all_k()
+  IF (gamma_only) THEN
+     CALL ch_psi_all_gamma()
+  ELSE
+     CALL ch_psi_all_k()
   ENDIF
   
   DEALLOCATE (spsi)
   DEALLOCATE (hpsi)
   DEALLOCATE (ps)
 
-  IF (tddfpt) NULLIFY(evq)
   dffts%have_task_groups=.FALSE.
 
   CALL stop_clock ('last')
@@ -162,12 +146,15 @@ CONTAINS
     !   Here we compute the projector in the valence band
     !
     ps (:,:) = (0.d0, 0.d0)
-    
+    !
+    ! ikqs(ik) is the point k+q if q\=0
+    !          is the point k   if q=0
+    ! 
     IF (noncolin) THEN
-       CALL zgemm ('C', 'N', nbnd_occ (ikq) , m, npwx*npol, (1.d0, 0.d0) , evq, &
+       CALL zgemm ('C', 'N', nbnd_occ (ikqs(ik)) , m, npwx*npol, (1.d0, 0.d0) , evq, &
             npwx*npol, spsi, npwx*npol, (0.d0, 0.d0) , ps, nbnd)
     ELSE
-       CALL zgemm ('C', 'N', nbnd_occ (ikq) , m, n, (1.d0, 0.d0) , evq, &
+       CALL zgemm ('C', 'N', nbnd_occ (ikqs(ik)) , m, n, (1.d0, 0.d0) , evq, &
             npwx, spsi, npwx, (0.d0, 0.d0) , ps, nbnd)
     ENDIF
     ps (:,:) = ps(:,:) * alpha_pv
@@ -175,10 +162,10 @@ CONTAINS
     
     hpsi (:,:) = (0.d0, 0.d0)
     IF (noncolin) THEN
-       CALL zgemm ('N', 'N', npwx*npol, m, nbnd_occ (ikq) , (1.d0, 0.d0) , evq, &
+       CALL zgemm ('N', 'N', npwx*npol, m, nbnd_occ (ikqs(ik)) , (1.d0, 0.d0) , evq, &
             npwx*npol, ps, nbnd, (1.d0, 0.d0) , hpsi, npwx*npol)
     ELSE
-       CALL zgemm ('N', 'N', n, m, nbnd_occ (ikq) , (1.d0, 0.d0) , evq, &
+       CALL zgemm ('N', 'N', n, m, nbnd_occ (ikqs(ik)) , (1.d0, 0.d0) , evq, &
             npwx, ps, nbnd, (1.d0, 0.d0) , hpsi, npwx)
     END IF
     spsi(:,:) = hpsi(:,:)

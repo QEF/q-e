@@ -557,7 +557,7 @@ PROGRAM lr_calculate_spectrum
          !                            frequency       Re(1/eps)       -Im(1/eps)           Re(eps)        Im(eps)
          WRITE(18,'(5x,5(e21.15,2x))')  start,    dble(epsm1(1,1)), -aimag(epsm1(1,1)), dble(eps(1,1)), aimag(eps(1,1))
          !
-         ! The f-sum rule (see Eq.(60) in PRB 88, 064301 (2013)).
+         ! The f-sum rule (see Eq.(6) in Comput. Phys. Commun. 196, 460 (2015)).
          ! The f_sum will give the number of valence (and semicore) electrons
          ! in the unit cell.  
          !
@@ -692,7 +692,7 @@ PROGRAM lr_calculate_spectrum
         !
      ELSEIF (eels .and. units==1) THEN
         !
-        WRITE(stdout,'(/5x,"The f-sum rule is given by Eq.(60) in PRB 88, 064301 (2013).")') 
+        WRITE(stdout,'(/5x,"The f-sum rule is given by Eq.(6) in Comput. Phys. Commun. 196, 460 (2015).")') 
         WRITE(stdout,'(5x,"Integration in the range from",1x,f6.2,1x,"to",1x,f6.2,1x,"eV."/, &
                      & 5x,"The number of valence (and semicore) electrons in the unit cell:",1x,f6.2)') start_save, end, f_sum
         WRITE(stdout,'(5x,"The exact number of electrons:",1x,f6.2)') nelec

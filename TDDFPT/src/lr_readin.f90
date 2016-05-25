@@ -585,12 +585,12 @@ CONTAINS
        !
        ! Symmetry is not supported.
        !
-       IF (.NOT.nosym ) CALL errore( ' iosys ', 'Linear response calculation' // &
+       IF (.NOT.nosym ) CALL errore( 'lr_readin', 'Linear response calculation' // &
                                     & 'is not implemented with symmetry', 1 )
        !
        ! K-points are implemented but still unsupported (use at your own risk!)
        !
-       IF (.NOT. gamma_only ) CALL errore(' iosys', 'k-point algorithm is not tested yet',1)
+       IF (.NOT. gamma_only ) CALL errore('lr_readin', 'k-point algorithm is not tested yet',1)
        !
     ENDIF
     !
@@ -614,7 +614,7 @@ CONTAINS
     ! No taskgroups and EXX.
     !
     IF (dffts%have_task_groups .AND. dft_is_hybrid()) &
-         & CALL errore( ' iosys ', ' Linear response calculation ' // &
+         & CALL errore( 'lr_readin', ' Linear response calculation ' // &
          & 'not implemented for EXX+Task groups', 1 )
     !
     ! Experimental task groups warning.
@@ -626,13 +626,13 @@ CONTAINS
     ! No PAW support.
     !
     IF (okpaw) &
-         & CALL errore( ' iosys ', ' Linear response calculation ' // &
+         & CALL errore( 'lr_readin', ' Linear response calculation ' // &
          & 'not implemented for PAW', 1 )
     !
     ! No USPP+EXX support.
     !
     IF (okvan .AND. dft_is_hybrid()) &
-         & CALL errore( ' iosys ', ' Linear response calculation ' // &
+         & CALL errore( 'lr_readin', ' Linear response calculation ' // &
          & 'not implemented for EXX+Ultrasoft', 1 )
     !
     ! Spin-polarised case is not implemented, but partially accounted in

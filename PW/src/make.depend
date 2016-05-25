@@ -1317,6 +1317,7 @@ print_ks_energies.o : ../../Modules/mp_bands.o
 print_ks_energies.o : ../../Modules/mp_pools.o
 print_ks_energies.o : pwcom.o
 punch.o : ../../Modules/control_flags.o
+punch.o : ../../Modules/input_parameters.o
 punch.o : ../../Modules/io_files.o
 punch.o : ../../Modules/io_global.o
 punch.o : ../../Modules/wavefunctions.o

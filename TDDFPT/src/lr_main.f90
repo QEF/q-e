@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2015 Quantum ESPRESSO group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -42,7 +42,6 @@ PROGRAM lr_main
                                     ibnd_start, ibnd_end
   USE wvfct,                 ONLY : nbnd
   USE wavefunctions_module,  ONLY : psic
-  USE control_flags,         ONLY : tddfpt
   USE check_stop,            ONLY : check_stop_now, check_stop_init
   USE funct,                 ONLY : dft_is_hybrid
   USE fft_base,              ONLY : dffts
@@ -76,11 +75,6 @@ PROGRAM lr_main
   IF (lr_verbosity > 5) THEN
      WRITE(stdout,'("<lr_main>")')
   ENDIF
-  !
-  ! Let the PHonon and Environ routines know that 
-  ! they are doing tddfpt.
-  !
-  tddfpt = .TRUE.
   !
   ! Reading input file and PWSCF xml, some initialisation;
   ! Read the input variables for TDDFPT;
