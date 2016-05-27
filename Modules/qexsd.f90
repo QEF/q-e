@@ -262,11 +262,12 @@ CONTAINS
          WRITE(ounit, '(I0)', advance = 'no' )  nint(get_clock('PWSCF'))
          CALL iotk_write_end(ounit, "cputime",indentation=.FALSE.)
          CALL qes_write_closed(ounit, qexsd_closed_element)
+      END IF
          CALL iotk_close_write(ounit, IERR=ierr)
       !
          CALL errore(subname, 'closing xml input file', ierr)
       !
-      END IF
+      
     END SUBROUTINE qexsd_closeschema
     !
     !
