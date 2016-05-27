@@ -62,7 +62,7 @@ MODULE qexsd_module
   !
   CHARACTER(iotk_attlenx) :: attr
   ! 
-  TYPE (input_type)                :: input
+  TYPE (input_type)                :: qexsd_input_obj
   TYPE (general_info_type)         :: general_info
   TYPE (parallel_info_type)        :: parallel_info
   TYPE (berryPhaseOutput_type)     :: qexsd_bp_obj
@@ -77,7 +77,7 @@ MODULE qexsd_module
   PUBLIC :: qexsd_current_version, qexsd_default_version
   PUBLIC :: qexsd_current_version_init
   !
-  PUBLIC :: input 
+  PUBLIC :: qexsd_input_obj 
   ! 
   PUBLIC :: qexsd_init_schema,  qexsd_openschema, qexsd_closeschema
   !
@@ -178,8 +178,8 @@ CONTAINS
       CALL qes_reset_parallel_info(parallel_info) 
       IF ( check_file_exst(input_xml_schema_file) )  THEN
          CALL qexsd_cp_line_by_line(ounit,input_xml_schema_file, spec_tag="input")
-      ELSE
-         CALL qes_write_input(ounit,input)
+      ELSE IF ( TRIM(qexsd_input_obj%tagname) == "input") THEN 
+         CALL qes_write_input(ounit,qexsd_input_obj)
       END IF
       IF (ALLOCATED(steps) ) THEN 
          len_steps= step_counter 
@@ -254,17 +254,19 @@ CONTAINS
       CHARACTER(len=17) :: subname = 'qexsd_closeschema'
       INTEGER :: ierr
       !
-      CALL qes_write_status(ounit, exit_status) 
-      CALL qexsd_set_closed()
-      CALL iotk_write_begin(ounit, "cputime", attr="",new_line=.FALSE.)
+      IF (TRIM(exit_status%tagname) == "status") THEN 
+         CALL qes_write_status(ounit, exit_status) 
+         CALL qexsd_set_closed()
+         CALL iotk_write_begin(ounit, "cputime", attr="",new_line=.FALSE.)
       !
-      WRITE(ounit, '(I0)', advance = 'no' )  nint(get_clock('PWSCF'))
-      CALL iotk_write_end(ounit, "cputime",indentation=.FALSE.)
-      CALL qes_write_closed(ounit, qexsd_closed_element)
-      CALL iotk_close_write(ounit, IERR=ierr)
+         WRITE(ounit, '(I0)', advance = 'no' )  nint(get_clock('PWSCF'))
+         CALL iotk_write_end(ounit, "cputime",indentation=.FALSE.)
+         CALL qes_write_closed(ounit, qexsd_closed_element)
+         CALL iotk_close_write(ounit, IERR=ierr)
       !
-      CALL errore(subname, 'closing xml input file', ierr)
+         CALL errore(subname, 'closing xml input file', ierr)
       !
+      END IF
     END SUBROUTINE qexsd_closeschema
     !
     !

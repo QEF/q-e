@@ -292,7 +292,7 @@ SUBROUTINE iosys()
   USE input_parameters,      ONLY : deallocate_input_parameters
   USE wyckoff,               ONLY : nattot, sup_spacegroup
 #ifdef __XSD
-  USE qexsd_module,          ONLY : input
+  USE qexsd_module,          ONLY : qexsd_input_obj
   USE qes_types_module,      ONLY: input_type
   ! 
   IMPLICIT NONE
@@ -1539,7 +1539,7 @@ SUBROUTINE iosys()
   ! ... End of reading input parameters
   !
 #ifdef __XSD
-  CALL pw_init_qexsd_input(input,obj_tagname="input")
+  CALL pw_init_qexsd_input(qexsd_input_obj, obj_tagname="input")
 #endif 
   CALL deallocate_input_parameters ()  
   !
