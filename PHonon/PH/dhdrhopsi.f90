@@ -42,7 +42,7 @@ subroutine dhdrhopsi
   USE cell_base, ONLY : tpiba, at
   USE klist,     ONLY : xk, nkstot
   USE fft_base,  ONLY : dffts
-  USE wvfct,     ONLY : npw, npwx, nbnd, et, igk
+  USE wvfct,     ONLY : npw, npwx, nbnd, et, igk, current_k
   USE uspp,      ONLY : nkb, vkb
   USE wavefunctions_module,  ONLY: evc
   USE becmod,    ONLY : calbec, bec_type, allocate_bec_type, &
@@ -150,6 +150,7 @@ subroutine dhdrhopsi
      !
      if (nksq.gt.1) read (iunigk) npw, igk
      npwq = npw
+     current_k = ik
      chif (:,:,:) = (0.d0, 0.d0)
      !
      ! ev_sw contains the wavefunction of the k-point; the real value of the
