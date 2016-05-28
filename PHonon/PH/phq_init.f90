@@ -161,10 +161,6 @@ SUBROUTINE phq_init()
      ! ... if there is only one k-point evc, evq, npw, igk stay in memory
      !
      IF ( nksq > 1 ) WRITE( iunigk ) npw, igk
-     ! TEMP: used in gen_us_dj, to be removed
-     ngk(ik) = npw
-     igk_k(1:npw,ik) = igk(1:npw)
-     ! TEMP: end
      !
      IF ( lgamma ) THEN
         !

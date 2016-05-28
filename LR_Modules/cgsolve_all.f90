@@ -7,26 +7,24 @@
 !
 !
 !----------------------------------------------------------------------
-subroutine cgsolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
+subroutine cgsolve_all (ch_psi, cg_psi, e, d0psi, dpsi, h_diag, &
      ndmx, ndim, ethr, ik, kter, conv_root, anorm, nbnd, npol)
   !----------------------------------------------------------------------
   !
-  !     iterative solution of the linear system:
+  !     iterative solution of the linear systems (i=1,nbnd):
   !
-  !                 ( h - e + Q ) * dpsi = d0psi                      (1)
+  !                 ( H - e_i + Q ) * dpsi_i = d0psi_i                      (1)
   !
-  !                 where h is a complex hermitean matrix, e is a real sca
-  !                 dpsi and d0psi are complex vectors
+  !     where H is a complex hermitean matrix, e_ is a real scalar, Q is a
+  !     projector on occupied states, dpsi_i and d0psi_ are complex vectors
   !
   !     on input:
-  !                 h_psi    EXTERNAL  name of a subroutine:
-  !                          h_psi(ndim,psi,psip)
-  !                          Calculates  H*psi products.
-  !                          Vectors psi and psip should be dimensined
-  !                          (ndmx,nvec). nvec=1 is used!
+  !                 ch_psi   EXTERNAL  name of a subroutine:
+  !                          Calculates  (H-e+Q)*psi products.
+  !                          Vectors psi and psip should be dimensioned
+  !                          (ndmx,nbnd)
   !
   !                 cg_psi   EXTERNAL  name of a subroutine:
-  !                          g_psi(ndmx,ndim,notcnv,psi,e)
   !                          which calculates (h-e)^-1 * psi, with
   !                          some approximation, e.g. (diag(h)-e)
   !
@@ -83,7 +81,7 @@ subroutine cgsolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
              d0psi (ndmx*npol, nbnd)   ! input: the known term
 
   logical :: conv_root ! output: if true the root is converged
-  external h_psi       ! input: the routine computing h_psi
+  external ch_psi      ! input: the routine computing ch_psi
   external cg_psi      ! input: the routine computing cg_psi
   !
   !  here the local variables
@@ -136,7 +134,7 @@ subroutine cgsolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
      !    compute the gradient. can reuse information from previous step
      !
      if (iter == 1) then
-        call h_psi (ndim, dpsi, g, e, ik, nbnd)
+        call ch_psi (ndim, dpsi, g, e, ik, nbnd)
         do ibnd = 1, nbnd
            call zaxpy (ndim, (-1.d0,0.d0), d0psi(1,ibnd), 1, g(1,ibnd), 1)
         enddo
@@ -212,7 +210,7 @@ subroutine cgsolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
      !
      !        compute t = A*h
      !
-     call h_psi (ndim, hold, t, eu, ik, lbnd)
+     call ch_psi (ndim, hold, t, eu, ik, lbnd)
      !
      !        compute the coefficients a and c for the line minimization
      !        compute step length lambda

@@ -69,12 +69,7 @@ subroutine solve_head
 
   real(DP) :: tcpu, get_clock
   ! timing variables
-
   
-  ! the name of the file with the mixing potential
-
-  external ch_psi_all, cg_psi
-
   REAL(kind=DP), ALLOCATABLE :: head(:,:),head_tmp(:)
   COMPLEX(kind=DP) :: sca, sca2
   REAL(kind=DP), ALLOCATABLE :: x(:),w(:), freqs(:)

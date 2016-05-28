@@ -78,8 +78,6 @@ subroutine solve_e2
   ! the record number
   ! integer variable for I/O control
 
-  external ch_psi_all, cg_psi
-
   if (lsda) call errore ('solve_e2', ' LSDA not implemented', 1)
   if (okvan) call errore ('solve_e2', ' Ultrasoft PP not implemented', 1)
 
