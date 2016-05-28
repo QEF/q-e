@@ -29,7 +29,7 @@ subroutine read_wfc_rspace_and_fwfft( evc , ik , lrec ,  iunit , npw , igmap )
   COMPLEX(DP), ALLOCATABLE  :: evc_r(:,:), dist_evc_r(:,:)
 
   allocate( evc_r( dffts%nnr, npol ) )
-  allocate( dist_evc_r( dffts%nr1x*dffts%nr2x*dffts%nr3x , nspin_mag) )
+  allocate( dist_evc_r( dffts%nr1x*dffts%nr2x*dffts%nr3x , npol) )
   
   !
   ! Fourier transform it in reciprocal space
@@ -51,7 +51,7 @@ subroutine read_wfc_rspace_and_fwfft( evc , ik , lrec ,  iunit , npw , igmap )
           !
      ! ... distributes ddrho between between the tasks of the pool
      !
-     DO is = 1, nspin_mag
+     DO is = 1, npol
         !
         CALL scatter_grid ( dffts, dist_evc_r(:,is), evc_r(:,is) )
         !
