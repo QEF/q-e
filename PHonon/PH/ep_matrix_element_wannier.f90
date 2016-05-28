@@ -179,9 +179,11 @@ SUBROUTINE elphsum_wannier(q_index)
   USE lr_symm_base, ONLY : irotmq, irgq, gimq, gi
   USE qpoint,     ONLY : xq, nksq, ikks, ikqs
   USE control_lr, ONLY : lgamma
+  USE noncollin_module, ONLY : noncolin
   !
   IMPLICIT NONE
   !
+  LOGICAL :: lborn
   INTEGER :: q_index
   !
   !
@@ -209,7 +211,7 @@ SUBROUTINE elphsum_wannier(q_index)
   write(filelph,'(A5,f9.6,A1,f9.6,A1,f9.6)') 'elph.',xq(1),'.',xq(2),'.',xq(3)
   file_elphmat=trim(adjustl(prefix))//'_elph.mat.q_'// TRIM( int_to_char( q_index ) )
 
-  
+  lborn=.false.
   ! parallel case: only first node writes
   IF ( .not.ionode ) THEN
      iuelphmat = 0
@@ -227,6 +229,7 @@ SUBROUTINE elphsum_wannier(q_index)
      xk_dummy(:)=xq(:)
      call cryst_to_cart(1,xk_dummy,at,-1)
      WRITE (iuelphmat) xk_dummy
+     WRITE (iuelphmat) noncolin, nspin, lborn
      WRITE (iuelphmat) nelec
      WRITE (iuelphmat) elph_nbnd_min,elph_nbnd_max,nbnd
      WRITE (iuelphmat) nmodes, nksq, nat, ntyp
@@ -638,7 +641,7 @@ subroutine calculate_and_apply_phase(ik, ikqg, igqg, npwq_refolded, g_kpq, xk_ga
   USE qpoint, ONLY : nksq, npwq
    USE wavefunctions_module, ONLY : evc
 !  USE eqv,      ONLY : evq
-  USE noncollin_module,     ONLY : npol
+  USE noncollin_module,     ONLY : npol, noncolin
   USE el_phon, ONLY:iunwfcwann, lrwfcr
 
   IMPLICIT NONE
@@ -707,11 +710,25 @@ subroutine calculate_and_apply_phase(ik, ikqg, igqg, npwq_refolded, g_kpq, xk_ga
      evq(1:npwq_refolded,m) = psi_scratch(nls (igkq_(1:npwq_refolded) ) )
   enddo
 
-
+  if(noncolin) then
+     do m=1,nbnd
+        psi_scratch = (0.d0, 0.d0)
+        psi_scratch(nls (igk_ (1:npw_) ) ) = evq (npwx+1:npwx+npw_, m)
+        !       psi_scratch(nls (igk_ (1:npw) ) ) = evq (1:npw, m)
+        CALL invfft ('Wave', psi_scratch, dffts)
+        !     call cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, +2)
+        psi_scratch(1:dffts%nnr) = psi_scratch(1:dffts%nnr) * phase(1:dffts%nnr)
+        !     call cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -2)
+        CALL fwfft ('Wave', psi_scratch, dffts)
+        !       evq(npwx+1:npwx+npwq_refolded,m) = psi_scratch(nls (igkq_(1:npwq_refolded) ) )
+        evq((npwx+1):(npwx+npwq_refolded),m) = psi_scratch(nls (igkq_(1:npwq_refolded) ) )
+     enddo
+  endif
+ 
   deallocate(psi_scratch)
   DEALLOCATE(phase)
   deallocate(igk_, igkq_)
-
+  
   return
 end subroutine calculate_and_apply_phase
   
@@ -723,6 +740,10 @@ SUBROUTINE readmat_findq (iudyn, ibrav, celldm, nat, ntyp, ityp, omega, &
   !
   USE kinds, ONLY : DP
   USE constants, ONLY : amu_ry
+  USE control_ph, ONLY : xmldyn
+  USE output, ONLY : fildyn
+  USE io_dyn_mat,  ONLY : read_dyn_mat_param, read_dyn_mat_header, &
+                             read_dyn_mat, read_dyn_mat_tail
   IMPLICIT NONE
   ! Input
   INTEGER :: iudyn, ibrav, nat, ntyp, ityp (nat)
@@ -735,7 +756,18 @@ SUBROUTINE readmat_findq (iudyn, ibrav, celldm, nat, ntyp, ityp, omega, &
   INTEGER :: ntyp_, nat_, ibrav_, ityp_
   REAL(DP) :: celldm_ (6), amass_, tau_ (3), q_ (3)
   ! local
+  INTEGER :: nspin_mag, nqs
+  REAL(DP) :: at(3,3)
+  REAL(DP) :: bg(3,3)
+  REAL(DP) :: m_loc(3,nat)
+  INTEGER :: ityp__ (nat)
+  REAL(DP) :: amass__ (ntyp)
+  INTEGER :: iq
+  REAL(DP) :: xq(3)
+  COMPLEX(DP) :: u(3*nat,3*nat)
   REAL(DP) :: dynr (2, 3, nat, 3, nat), err_q(3)
+  COMPLEX(DP) :: dynr_c(3,3,nat,nat)
+
   CHARACTER(len=80) :: line
   CHARACTER(len=3)  :: atm
   INTEGER :: nt, na, nb, naa, nbb, nu, mu, i, j
@@ -743,28 +775,70 @@ SUBROUTINE readmat_findq (iudyn, ibrav, celldm, nat, ntyp, ityp, omega, &
   
   !
   !
-  REWIND (iudyn)
-  READ (iudyn, '(a)') line
-  READ (iudyn, '(a)') line
-  READ (iudyn, * ) ntyp_, nat_, ibrav_, celldm_
-  IF ( ntyp.NE.ntyp_ .OR. nat.NE.nat_ .OR.ibrav_.NE.ibrav .OR. &
-       ABS ( celldm_ (1) - celldm (1) ) > 1.0d-5) &
+   IF(xmldyn) THEN
+      CALL read_dyn_mat_param(fildyn, ntyp_, nat_ )
+      CALL read_dyn_mat_header(ntyp_, nat_, ibrav_, nspin_mag,  &
+               celldm_, at, bg, omega, atm, amass__, tau_, ityp__, m_loc, &
+               nqs )
+      IF ( ntyp.NE.ntyp_ .OR. nat.NE.nat_ .OR.ibrav_.NE.ibrav .OR. &
+           ABS ( celldm_ (1) - celldm (1) ) > 1.0d-5) &
+              CALL errore ('readmat', 'inconsistent data a', 1)
+      DO nt = 1, ntyp
+         IF ( ABS (amass__ (nt) - amass (nt) ) > 1.0d-5) &
+            CALL errore ( 'readmat', 'inconsistent data  b', 1 + nt)
+      ENDDO
+      DO na = 1, nat
+         IF (ityp__ (na).NE.ityp (na) ) CALL errore ('readmat', &
+              'inconsistent data c',  na)
+      ENDDO
+
+  ELSE
+     REWIND (iudyn)
+     READ (iudyn, '(a)') line
+     READ (iudyn, '(a)') line
+     READ (iudyn, * ) ntyp_, nat_, ibrav_, celldm_
+     IF ( ntyp.NE.ntyp_ .OR. nat.NE.nat_ .OR.ibrav_.NE.ibrav .OR. &
+          ABS ( celldm_ (1) - celldm (1) ) > 1.0d-5) &
           CALL errore ('readmat', 'inconsistent data', 1)
-  DO nt = 1, ntyp
-     READ (iudyn, * ) i, atm, amass_
-     IF ( nt.NE.i .OR. ABS (amass_ - amu_ry*amass (nt) ) > 1.0d-5) &
-        CALL errore ( 'readmat', 'inconsistent data', 1 + nt)
-  ENDDO
-  DO na = 1, nat
-     READ (iudyn, * ) i, ityp_, tau_
-     IF (na.NE.i.OR.ityp_.NE.ityp (na) ) CALL errore ('readmat', &
-          'inconsistent data', 10 + na)
-  ENDDO
+     DO nt = 1, ntyp
+        READ (iudyn, * ) i, atm, amass_
+        IF ( nt.NE.i .OR. ABS (amass_ - amu_ry*amass (nt) ) > 1.0d-5) &
+             CALL errore ( 'readmat', 'inconsistent data', 1 + nt)
+     ENDDO
+     DO na = 1, nat
+        READ (iudyn, * ) i, ityp_, tau_
+        IF (na.NE.i.OR.ityp_.NE.ityp (na) ) CALL errore ('readmat', &
+             'inconsistent data', 10 + na)
+     ENDDO
+
+  ENDIF
 
   lfound=.false.
+  iq=0
 
   do while(.not.lfound)
 
+  IF(xmldyn) THEN
+
+     iq = iq+1
+     CALL read_dyn_mat(nat,iq,xq,dynr_c)
+     !     CALL read_dyn_mat_tail(nat,omega,u)
+     err_q(1:3)=dabs(xq(1:3)-q(1:3))
+     
+     if(err_q(1).lt.1.d-7.and.err_q(2).lt.1.d-7.and.err_q(3).lt.1.d-7) lfound=.true.
+     
+     DO nb = 1, nat
+        DO j = 1, 3
+           DO na = 1, nat
+              DO i = 1, 3
+                 dynr (1, i, na, j, nb) = REAL(dynr_c(i, j, na, nb))
+                 dynr (2, i, na, j, nb) = AIMAG(dynr_c(i, j, na, nb))
+              ENDDO
+           ENDDO
+        ENDDO
+     ENDDO
+     
+  ELSE
      READ (iudyn, '(a)') line
      READ (iudyn, '(a)') line
      READ (iudyn, '(a)') line
@@ -789,41 +863,42 @@ SUBROUTINE readmat_findq (iudyn, ibrav, celldm, nat, ntyp, ityp, omega, &
         ENDDO
      ENDDO
 
-     if(lfound) then
-        !
-        ! divide the dynamical matrix by the (input) masses (in amu)
-        !
-        DO nb = 1, nat
-           DO j = 1, 3
-              DO na = 1, nat
-                 DO i = 1, 3
-                    dynr (1, i, na, j, nb) = dynr (1, i, na, j, nb) / SQRT (amass ( &
-                         ityp (na) ) * amass (ityp (nb) ) ) / amu_ry
-                    dynr (2, i, na, j, nb) = dynr (2, i, na, j, nb) / SQRT (amass ( &
-                         ityp (na) ) * amass (ityp (nb) ) ) / amu_ry
-                 ENDDO
+  ENDIF
+  
+  if(lfound) then
+     !
+     ! divide the dynamical matrix by the (input) masses (in amu)
+     !
+     DO nb = 1, nat
+        DO j = 1, 3
+           DO na = 1, nat
+              DO i = 1, 3
+                 dynr (1, i, na, j, nb) = dynr (1, i, na, j, nb) / SQRT (amass ( &
+                      ityp (na) ) * amass (ityp (nb) ) ) / amu_ry
+                 dynr (2, i, na, j, nb) = dynr (2, i, na, j, nb) / SQRT (amass ( &
+                      ityp (na) ) * amass (ityp (nb) ) ) / amu_ry
               ENDDO
            ENDDO
         ENDDO
-       !
-       ! solve the eigenvalue problem.
-       ! NOTA BENE: eigenvectors are overwritten on dyn
-       !
-       CALL cdiagh (3 * nat, dynr, 3 * nat, w2, dyn)
-       !
-       ! divide by sqrt(mass) to get displacements
-       !
-       DO nu = 1, 3 * nat
-          DO mu = 1, 3 * nat
-             na = (mu - 1) / 3 + 1
-             dyn (mu, nu) = dyn (mu, nu) / SQRT ( amu_ry * amass (ityp (na) ) )
-          ENDDO
-       ENDDO
-       !
-       !
-     endif
-  enddo
-
+     ENDDO
+     !
+     ! solve the eigenvalue problem.
+     ! NOTA BENE: eigenvectors are overwritten on dyn
+     !
+     CALL cdiagh (3 * nat, dynr, 3 * nat, w2, dyn)
+     !
+     ! divide by sqrt(mass) to get displacements
+     !
+     DO nu = 1, 3 * nat
+        DO mu = 1, 3 * nat
+           na = (mu - 1) / 3 + 1
+           dyn (mu, nu) = dyn (mu, nu) / SQRT ( amu_ry * amass (ityp (na) ) )
+        ENDDO
+     ENDDO
+     !
+     !
+  endif
+enddo
 
 
   RETURN
