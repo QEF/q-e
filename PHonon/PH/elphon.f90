@@ -45,8 +45,10 @@ SUBROUTINE elphon()
   ! counter on the representations
   ! counter on the modes
   ! the change of Vscf due to perturbations
+  INTEGER :: i,j
   COMPLEX(DP), POINTER :: dvscfin(:,:,:), dvscfins (:,:,:)
-
+  COMPLEX(DP), allocatable :: phip (:, :, :, :)
+  
   INTEGER :: ntyp_, nat_, ibrav_, nspin_mag_, mu, nu, na, nb, nta, ntb, nqs_
   REAL(DP) :: celldm_(6)
   CHARACTER(LEN=3) :: atm(ntyp)
@@ -113,6 +115,7 @@ SUBROUTINE elphon()
         CALL readmat (iudyn, ibrav, celldm, nat, ntyp, &
                       ityp, omega, amass, tau, xq, w2, dyn)
      ELSE
+        allocate( phip(3,3,nat,nat) )
         CALL read_dyn_mat_param(fildyn, ntyp_, nat_)
         IF ( ntyp_ /= ntyp .OR. nat_ /= nat ) &
            CALL errore('elphon','uncorrect nat or ntyp',1)
@@ -125,20 +128,27 @@ SUBROUTINE elphon()
              .OR. (nspin_mag_ /= nspin_mag ) ) CALL errore ('elphon', &
              'inconsistent data', 1)
 
-        CALL read_dyn_mat(nat,1,xq,dyn)
+        CALL read_dyn_mat(nat,1,xq,phip)
         !
         !  Diagonalize the dynamical matrix
         !
-        DO mu = 1, 3*nat
-           na = (mu - 1) / 3 + 1
-           nta = ityp (na)
-           DO nu = 1, 3*nat
-              nb = (nu - 1) / 3 + 1
-              ntb = ityp (nb)
-              dyn (mu, nu) = dyn (mu, nu) / &
-                             sqrt (amass (nta)*amass (ntb)) / amu_ry
-           ENDDO
-        ENDDO
+
+        
+        DO i=1,3
+           do na=1,nat
+              nta = ityp (na)
+              mu=3*(na-1)+i
+              do j=1,3
+                 do nb=1,nat
+                   nu=3*(nb-1)+j
+                   ntb = ityp (nb)
+                   dyn (mu, nu) = phip (i, j, na, nb) / &
+                     sqrt( amass(nta)*amass(ntb))/amu_ry
+                 enddo
+              enddo
+           enddo
+        enddo
+
         !
         CALL cdiagh (3 * nat, dyn, 3 * nat, w2, dyn)
         !
@@ -152,6 +162,8 @@ SUBROUTINE elphon()
         ENDDO
 
         CALL read_dyn_mat_tail(nat)
+  
+        deallocate( phip )
      ENDIF
   ENDIF
   !
