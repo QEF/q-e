@@ -23,7 +23,6 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   USE fft_base,             ONLY : dffts
   USE wvfct,                ONLY : npwx, current_k
   USE klist,                ONLY : igk_k
-  USE qpoint,               ONLY : igkq
   USE noncollin_module,     ONLY : noncolin, npol
   USE eqv,                  ONLY : evq
   USE qpoint,               ONLY : ikqs
@@ -75,30 +74,10 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   !
   !   compute the product of the hamiltonian with the h vector
   !
-  IF (dffts%have_task_groups) THEN
+  current_k = ikqs(ik)
+  CALL h_psi (npwx, n, m, h, hpsi)
+  CALL s_psi (npwx, n, m, h, spsi)
   !
-  !   With task groups we use the Hpsi routine of PW parallelized
-  !   on task groups
-  !   This ugly hack replaces indices of k+G, used by h_psi in scf calculations,
-  !   with indices for k+q+G, needed for finite-wavevector perturbations, and
-  !   sets the needed k-point index, also used by h_psi
-  !
-     current_k = ik
-     IF (.NOT.lgamma) THEN
-        ALLOCATE(ibuf(npwx))
-        ibuf(:) = igk_k(:,ik)
-        igk_k(:,ik) = igkq(:) 
-     ENDIF   
-     CALL h_psi (npwx, n, m, h, hpsi)
-     CALL s_psi (npwx, n, m, h, spsi)
-     IF (.NOT.lgamma) THEN
-        igk_k(:,ik) = ibuf(:)
-        DEALLOCATE(ibuf)
-     ENDIF
-  ELSE
-    CALL h_psiq (npwx, n, m, h, hpsi, spsi)
-  ENDIF
-
   CALL start_clock ('last')
   !
   !   then we compute the operator H-epsilon S
