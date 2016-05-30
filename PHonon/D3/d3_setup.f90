@@ -116,42 +116,7 @@ SUBROUTINE d3_setup()
   !
   ! 3) Computes the number of occupated bands for each k point
   !
-  IF (degauss /= 0.d0) THEN
-     !
-     ! discard conduction bands such that w0gauss(x,n) < small
-     !
-     ! hint:
-     !   small = 1.0333492677046d-2  ! corresponds to 2 gaussian sigma
-     !   small = 6.9626525973374d-5  ! corresponds to 3 gaussian sigma
-     !   small = 6.3491173359333d-8  ! corresponds to 4 gaussian sigma
-     !
-     small = 6.9626525973374d-5
-     !
-     ! - limit appropriated for gaussian broadening (used for all ngauss)
-     !
-     xmax = SQRT ( - LOG (SQRT (pi) * small) )
-     !
-     ! - limit appropriated for Fermi-Dirac
-     !
-     IF (ngauss == - 99) THEN
-        fac = 1.d0 / SQRT (small)
-        xmax = 2.d0 * LOG (0.5d0 * (fac + SQRT (fac * fac - 4.0d0) ) )
-     ENDIF
-     TARGET = ef + xmax * degauss
-     DO ik = 1, nks
-        DO ibnd = 1, nbnd
-           IF (et (ibnd, ik) < TARGET) nbnd_occ (ik) = ibnd
-        ENDDO
-        IF (nbnd_occ (ik) == nbnd) &
-             WRITE( stdout, '(5x,/,"Possibly too few bands at point ", &
-             & i4,3f10.5)') ik,  (xk (ipol, ik) , ipol = 1, 3)
-     ENDDO
-  ELSE
-     IF (lsda) CALL infomsg ('d3_setup', 'occupation numbers probably wrong')
-     DO ik = 1, nks
-        nbnd_occ (ik) = NINT (nelec) / degspin
-     ENDDO
-  ENDIF
+  call setup_nbnd_occ()
   !
   ! 4) Computes alpha_pv
   !
