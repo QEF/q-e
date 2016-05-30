@@ -17,7 +17,7 @@ subroutine dvpsi_e2
   USE kinds,           ONLY : DP
   USE cell_base,       ONLY : omega
   USE klist,           ONLY : wk
-  USE gvecs,         ONLY : doublegrid
+  USE gvecs,           ONLY : doublegrid
   USE wvfct,           ONLY : npw, npwx, nbnd, igk
   USE wavefunctions_module, ONLY: evc
   USE buffers,         ONLY : get_buffer
@@ -89,7 +89,7 @@ subroutine dvpsi_e2
 
      do ibnd = 1, nbnd_occ (ik)
         do ipa = 1, 3
-           call cft_wave (depsi (1, ibnd, ipa), aux3s (1, ipa), +1)
+           call cft_wave (ik, depsi (1, ibnd, ipa), aux3s (1, ipa), +1)
         enddo
         do ipa = 1, 6
            do ir = 1, dffts%nnr
@@ -110,9 +110,9 @@ subroutine dvpsi_e2
      call mp_sum ( ps, intra_bgrp_comm )
 
      do ibnd = 1, nbnd_occ (ik)
-        call cft_wave (evc (1, ibnd), aux3s (1,1), +1)
+        call cft_wave (ik, evc (1, ibnd), aux3s (1,1), +1)
         do jbnd = 1, nbnd_occ (ik)
-           call cft_wave (evc (1, jbnd), aux3s (1,2), +1)
+           call cft_wave (ik, evc (1, jbnd), aux3s (1,2), +1)
            do ipa = 1, 6
               do ir = 1, dffts%nnr
                  tmp =  aux3s (ir,1) *                           &
@@ -222,11 +222,11 @@ subroutine dvpsi_e2
         nrec = (ipa - 1) * nksq + ik
         call davcio (auxg, lrchf, iuchf, nrec, -1)
         do ibnd = 1, nbnd_occ (ik)
-           call cft_wave (evc (1, ibnd), auxs1, +1)
+           call cft_wave (ik, evc (1, ibnd), auxs1, +1)
            do ir = 1, dffts%nnr
               auxs2 (ir) = auxs1 (ir) * aux6s (ir, ipa)
            enddo
-           call cft_wave (auxg (1, ibnd), auxs2, -1)
+           call cft_wave (ik, auxg (1, ibnd), auxs2, -1)
         enddo
         nrec = (ipa - 1) * nksq + ik
         call davcio (auxg, lrba2, iuba2, nrec, +1)

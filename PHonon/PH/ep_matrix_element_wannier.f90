@@ -460,9 +460,9 @@ SUBROUTINE elphel_refolded (npe, imode0, dvscfins)
         !
 
         DO ibnd = 1, nbnd
-           CALL cft_wave (evc(1, ibnd), aux1, +1)
+           CALL cft_wave (ik, evc(1, ibnd), aux1, +1)
            CALL apply_dpot(dffts%nnr, aux1, dvscfins(1,1,ipert), current_spin)
-           CALL cft_wave (dvpsi(1, ibnd), aux1, -1)
+           CALL cft_wave (ik, dvpsi(1, ibnd), aux1, -1)
         END DO
         CALL adddvscf (ipert, ik)
         !

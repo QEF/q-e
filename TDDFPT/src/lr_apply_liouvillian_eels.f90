@@ -219,7 +219,7 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
               !
               ! FFT to R-space
               !
-              CALL cft_wave_tg(evc, tg_psic, 1, v_siz, ibnd, nbnd_occ(ikk) )
+              CALL cft_wave_tg(ik, evc, tg_psic, 1, v_siz, ibnd, nbnd_occ(ikk) )
               !
               ! Multiply the HXC potential with unperturbed wfct's
               !
@@ -227,13 +227,13 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
               !
               ! back-FFT to G-space
               !
-              CALL cft_wave_tg(dvpsi, tg_psic, -1, v_siz, ibnd, nbnd_occ(ikk))
+              CALL cft_wave_tg(ik,dvpsi, tg_psic,-1, v_siz, ibnd, nbnd_occ(ikk))
               !
            ELSE
               !
               ! FFT to R-space
               !
-              CALL cft_wave(evc(1,ibnd), revc, +1)
+              CALL cft_wave(ik, evc(1,ibnd), revc, +1)
               !
               ! Multiply the HXC potential with unperturbed wfct's 
               !
@@ -241,7 +241,7 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
               !
               ! back-FFT to G-space
               !
-              CALL cft_wave(dvpsi(1,ibnd), revc, -1)
+              CALL cft_wave(ik, dvpsi(1,ibnd), revc, -1)
               !
            ENDIF
            !

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2007 Quantum ESPRESSO group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -236,11 +236,11 @@ subroutine dhdrhopsi
      do ipa = 1, 3
         dvpsi (:,:) = (0.d0, 0.d0)
         do ibnd = 1, nbnd_occ (ik)
-           call cft_wave (evc (1, ibnd), auxr, +1 )
+           call cft_wave (ik, evc (1, ibnd), auxr, +1 )
            do ir = 1, dffts%nnr
               auxr (ir) = auxr (ir) * dvscfs (ir, ipa)
            enddo
-           call cft_wave (dvpsi (1, ibnd), auxr, -1 )
+           call cft_wave (ik, dvpsi (1, ibnd), auxr, -1 )
            do jbnd = 1, nbnd_occ (ik)
               ps2 (jbnd, ibnd, ipa ) = &
                      -zdotc (npwq, evc (1, jbnd), 1, dvpsi (1, ibnd), 1)
@@ -252,13 +252,13 @@ subroutine dhdrhopsi
         nrec = (ipa - 1) * nksq + ik
         call get_buffer (dpsi, lrdwf, iudwf, nrec)
         do ibnd = 1, nbnd_occ (ik)
-           call cft_wave (dpsi (1, ibnd), auxr, +1)
+           call cft_wave (ik, dpsi (1, ibnd), auxr, +1)
            do ipb = 1, 3
               auxg (:) = (0.d0, 0.d0)
               do ir = 1, dffts%nnr
                  au2r (ir) = auxr (ir) * dvscfs (ir, ipb)
               enddo
-              call cft_wave (auxg, au2r, -1)
+              call cft_wave (ik, auxg, au2r, -1)
               do jbnd = 1, nbnd_occ (ik)
                  call zaxpy (npwq, ps2 (jbnd, ibnd, ipb ), &
                             dpsi (1, jbnd), 1, auxg, 1)

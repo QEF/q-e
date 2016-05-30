@@ -242,15 +242,15 @@ subroutine solve_e
               aux2=(0.0_DP,0.0_DP)
               do ibnd = 1, nbnd_occ (ik), incr
                  IF ( dffts%have_task_groups ) THEN
-                    call cft_wave_tg (evc, tg_psic, 1, v_siz, ibnd, &
+                    call cft_wave_tg (ik, evc, tg_psic, 1, v_siz, ibnd, &
                                       nbnd_occ (ik) )
                     call apply_dpot(v_siz, tg_psic, tg_dv, 1)
-                    call cft_wave_tg (aux2, tg_psic, -1, v_siz, ibnd, &
+                    call cft_wave_tg (ik, aux2, tg_psic, -1, v_siz, ibnd, &
                                       nbnd_occ (ik))
                  ELSE
-                    call cft_wave (evc (1, ibnd), aux1, +1)
+                    call cft_wave (ik, evc (1, ibnd), aux1, +1)
                     call apply_dpot(dffts%nnr, aux1, dvscfins(1,1,ipol), current_spin)
-                    call cft_wave (aux2 (1, ibnd), aux1, -1)
+                    call cft_wave (ik, aux2 (1, ibnd), aux1, -1)
                  ENDIF
               enddo
               dvpsi=dvpsi+aux2

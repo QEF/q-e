@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2013 Quantum ESPRESSO group
+! Copyright (C) 2001-2015 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -396,13 +396,13 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
         aux2=(0.0_DP,0.0_DP)
         DO ibnd = 1, nbnd, incr
            IF ( dffts%have_task_groups ) THEN
-              CALL cft_wave_tg (evc, tg_psic, 1, v_siz, ibnd, nbnd )
+              CALL cft_wave_tg (ik, evc, tg_psic, 1, v_siz, ibnd, nbnd )
               CALL apply_dpot(v_siz, tg_psic, tg_dv, 1)
-              CALL cft_wave_tg (aux2, tg_psic, -1, v_siz, ibnd, nbnd)
+              CALL cft_wave_tg (ik, aux2, tg_psic, -1, v_siz, ibnd, nbnd)
            ELSE
-              CALL cft_wave (evc(1, ibnd), aux1, +1)
+              CALL cft_wave (ik, evc(1, ibnd), aux1, +1)
               CALL apply_dpot(dffts%nnr, aux1, dvscfins(1,1,ipert), current_spin)
-              CALL cft_wave (aux2(1, ibnd), aux1, -1)
+              CALL cft_wave (ik, aux2(1, ibnd), aux1, -1)
            ENDIF
         ENDDO
         dvpsi=dvpsi+aux2

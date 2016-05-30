@@ -155,7 +155,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   USE io_files,             ONLY : nwordwfc, iunefieldp, iunefieldm
   USE uspp,                 ONLY : vkb, nkb, okvan
   USE gvect,                ONLY : gstart
-  USE wvfct,                ONLY : g2kin, nbndx, et, nbnd, npwx, current_k, btype
+  USE wvfct,                ONLY : g2kin, nbndx, et, nbnd, npwx, btype
   USE control_flags,        ONLY : ethr, lscf, max_cg_iter, isolve, &
                                    gamma_only, use_para_diag
   USE noncollin_module,     ONLY : noncolin, npol

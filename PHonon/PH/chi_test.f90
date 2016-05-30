@@ -74,13 +74,13 @@ subroutine chi_test (dvscfs, chif, ik, depsi, auxr, auxg)
   enddo
 
   do ib = 1, nbnd_occ (ik)
-     call cft_wave ( evc (1, ib), au2r, +1 )
+     call cft_wave ( ik, evc (1, ib), au2r, +1 )
      do ip = 1, 3
         do ir = 1, dffts%nnr
            auxr (ir) = au2r (ir) * dvscfs (ir, ip)
         end do
         auxg (:) = (0.d0, 0.d0)
-        call cft_wave (auxg, auxr, -1 )
+        call cft_wave (ik, auxg, auxr, -1 )
         do jb = 1, nbnd_occ (ik)
            ps4 (ib, ip, jb) =                          &
                  zdotc (npwq, auxg, 1, evc (1, jb), 1)
@@ -107,13 +107,13 @@ subroutine chi_test (dvscfs, chif, ik, depsi, auxr, auxg)
 
   do ip = 1, 3
      do ib = 1, nbnd_occ (ik)
-        call cft_wave (depsi (1, ib, ip), au2r, +1 )
+        call cft_wave (ik, depsi (1, ib, ip), au2r, +1 )
         do ipa = 1, 3
            do ir = 1, dffts%nnr
               auxr (ir) = au2r (ir) * dvscfs (ir, ipa)
            enddo
            auxg (:) = (0.d0, 0.d0)
-           call cft_wave (auxg, auxr, -1 )
+           call cft_wave (ik, auxg, auxr, -1 )
            do ipb = 1, 3
               tmp = zdotc (npwq, auxg, 1, depsi (1, ib, ipb), 1)
               if (ipa.eq.ipb) tmp = tmp * 2.d0
@@ -133,12 +133,12 @@ subroutine chi_test (dvscfs, chif, ik, depsi, auxr, auxg)
      do ib = 1, nbnd_occ (ik)
         auxg (:) = (0.d0, 0.d0)
         call daxpy (2 * npwq, -1.d0, dvpsi (1,ib), 1, auxg, 1)
-        call cft_wave (evc (1, ib), auxr, +1 )
+        call cft_wave (ik, evc (1, ib), auxr, +1 )
 
         do ir = 1, dffts%nnr
            auxr (ir) = auxr (ir) * dvscfs (ir, ip)
         enddo
-        call cft_wave (auxg, auxr, -1 )
+        call cft_wave (ik, auxg, auxr, -1 )
         do jp = 1, 6
               ps2 (ib, ip, jp) =                             &
                   zdotc (npwq, auxg, 1, chif (1, ib, jp), 1)

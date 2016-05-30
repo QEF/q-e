@@ -107,18 +107,18 @@ SUBROUTINE lr_dvpsi_eels (ik, dvpsi1, dvpsi2)
      IF ( dffts%have_task_groups ) THEN
         !
         ! FFT to R-space
-        CALL cft_wave_tg(evc, tg_psic, 1, v_siz, ibnd, nbnd_occ(ikk) )
+        CALL cft_wave_tg(ik, evc, tg_psic, 1, v_siz, ibnd, nbnd_occ(ikk) )
         !
         ! back-FFT to G-space
-        CALL cft_wave_tg(dvpsi1, tg_psic, -1, v_siz, ibnd, nbnd_occ(ikk))
+        CALL cft_wave_tg(ik, dvpsi1, tg_psic, -1, v_siz, ibnd, nbnd_occ(ikk))
         !
      ELSE
         !
         ! FFT to R-space
-        CALL cft_wave(evc(1,ibnd), revc, +1)
+        CALL cft_wave(ik, evc(1,ibnd), revc, +1)
         !
         ! back-FFT to G-space
-        CALL cft_wave(dvpsi1(1,ibnd), revc, -1) 
+        CALL cft_wave(ik, dvpsi1(1,ibnd), revc, -1) 
         !
      ENDIF
      !

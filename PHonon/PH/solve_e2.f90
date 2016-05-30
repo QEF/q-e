@@ -155,11 +155,11 @@ subroutine solve_e2
            else
               call davcio (dvpsi, lrba2, iuba2, nrec, -1)
               do ibnd = 1, nbnd_occ (ik)
-                 call cft_wave (evc (1, ibnd), aux1, +1)
+                 call cft_wave (ik, evc (1, ibnd), aux1, +1)
                  do ir = 1, dffts%nnr
                     aux1 (ir) = aux1 (ir) * dvscfins (ir, 1, ipol)
                  enddo
-                 call cft_wave (dvpsi (1, ibnd), aux1, -1)
+                 call cft_wave (ik, dvpsi (1, ibnd), aux1, -1)
               enddo
               thresh = min (0.1d0 * sqrt(dr2), 1.0d-2)
            endif
