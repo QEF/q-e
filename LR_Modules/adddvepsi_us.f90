@@ -5,7 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-SUBROUTINE adddvepsi_us(becp1,becp2,ipol,kpoint,dvpsi)
+SUBROUTINE adddvepsi_us(becp1,becp2,ipol,ik,dvpsi)
   ! This subdoutine adds to dvpsi the terms which depend on the augmentation
   ! charge. It assumes that the variable dpqq, has been set and it is in
   ! the crystal basis.
@@ -28,7 +28,7 @@ SUBROUTINE adddvepsi_us(becp1,becp2,ipol,kpoint,dvpsi)
 
   implicit none
 
-  integer, intent(in) :: ipol, kpoint
+  integer, intent(in) :: ipol, ik
   TYPE(bec_type), intent(in) :: becp1
   TYPE(bec_type), intent(in) :: becp2
   COMPLEX(KIND=DP), INTENT(INOUT) :: dvpsi(npwx*npol,nbnd)
@@ -60,7 +60,7 @@ SUBROUTINE adddvepsi_us(becp1,becp2,ipol,kpoint,dvpsi)
               END IF
               do jh = 1, nh (nt)
                  jkb = ijkb0 + jh
-                 do ibnd=1, nbnd_occ(kpoint)
+                 do ibnd=1, nbnd_occ(ik)
                     IF (noncolin) THEN
                        IF (lspinorb) THEN
                           ijs=0
@@ -93,7 +93,7 @@ SUBROUTINE adddvepsi_us(becp1,becp2,ipol,kpoint,dvpsi)
                     END IF
                  enddo
               enddo
-              do ibnd = 1, nbnd_occ (kpoint)
+              do ibnd = 1, nbnd_occ (ik)
                  IF (noncolin) THEN
                     CALL zaxpy(npw,ps_nc(ibnd,1),vkb(1,ikb),1, &
                                                      dvpsi(1,ibnd),1)

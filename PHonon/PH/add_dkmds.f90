@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !--------------------------------------------------------------------------
-subroutine add_dkmds(kpoint, uact, jpol, dvkb)
+subroutine add_dkmds(ik, uact, jpol, dvkb)
   !--------=========-------------------------------------------------------
   !
   ! This subroutine adds to dvpsi the terms which depend on the augmentation
@@ -36,7 +36,7 @@ subroutine add_dkmds(kpoint, uact, jpol, dvkb)
 
   implicit none
 
-  integer, intent(in) :: kpoint, jpol
+  integer, intent(in) :: ik, jpol
   complex(DP), intent(in) :: uact (3 * nat)
   complex(DP), intent(in) :: dvkb (npwx,nkb,3)
 
@@ -87,7 +87,7 @@ subroutine add_dkmds(kpoint, uact, jpol, dvkb)
   !   First we calculate the alphadk = <d/dk d/du beta|psi>
   !   and becp2 = < d/dk beta | psi>
   !
-  if (lsda) current_spin = isk (kpoint)
+  if (lsda) current_spin = isk (ik)
   if (noncolin) then
      call calbec (npw, dvkb(:,:,jpol), evc, becp2_nc)
   else
@@ -103,12 +103,12 @@ subroutine add_dkmds(kpoint, uact, jpol, dvkb)
      do ibnd = 1, nbnd
         do ig = 1, npw
            aux1 (ig, ibnd) = evc(ig,ibnd) * tpiba * (0.d0,1.d0) * &
-                ( xk(ipol,kpoint) + g(ipol,igk(ig)) )
+                ( xk(ipol,ik) + g(ipol,igk(ig)) )
         enddo
         if (noncolin) then
            do ig = 1, npw
               aux1 (ig+npwx, ibnd) = evc(ig+npwx,ibnd)*tpiba*(0.d0,1.d0) * &
-                ( xk(ipol,kpoint) + g(ipol,igk(ig)) )
+                ( xk(ipol,ik) + g(ipol,igk(ig)) )
            enddo
         endif
      enddo
@@ -136,7 +136,7 @@ subroutine add_dkmds(kpoint, uact, jpol, dvkb)
                  do jh = 1, nh (nt)
                     jkb = ijkb0 + jh
                     do ipol = 1, 3
-                       do ibnd=1, nbnd_occ(kpoint)
+                       do ibnd=1, nbnd_occ(ik)
                           !
                           ! first we calculate the part coming from the
                           ! overlapp matrix S
@@ -170,29 +170,29 @@ subroutine add_dkmds(kpoint, uact, jpol, dvkb)
                                 !
                                 ps1_nc(ikb,1,ibnd)=ps1_nc(ikb,1,ibnd) +     &
                                          (dpqq_so(ih,jh,1,jpol,nt)*      &
-                                   alphap(ipol, kpoint)%nc(jkb,1,ibnd)+  &
+                                   alphap(ipol, ik)%nc(jkb,1,ibnd)+  &
                                           dpqq_so(ih,jh,2,jpol,nt)*          &
-                                   alphap(ipol, kpoint)%nc(jkb,2,ibnd) )*&
+                                   alphap(ipol, ik)%nc(jkb,2,ibnd) )*&
                                       uact (mu + ipol)
                                 ps1_nc(ikb,2,ibnd)=ps1_nc(ikb,2,ibnd) +     &
                                          (dpqq_so(ih,jh,3,jpol,nt)*   &
-                                   alphap(ipol, kpoint)%nc(jkb,1,ibnd)+  &
+                                   alphap(ipol, ik)%nc(jkb,1,ibnd)+  &
                                           dpqq_so(ih,jh,4,jpol,nt)*        &
-                                   alphap(ipol, kpoint)%nc(jkb,2,ibnd) )*&
+                                   alphap(ipol, ik)%nc(jkb,2,ibnd) )*&
                                       uact (mu + ipol)
                                 ps2_nc(ikb,1,ipol,ibnd)= &
                                        ps2_nc(ikb,1,ipol,ibnd) +      &
                                       (dpqq_so(ih,jh,1,jpol,nt)*         &
-                                       becp1(kpoint)%nc(jkb,1,ibnd)+   &
+                                       becp1(ik)%nc(jkb,1,ibnd)+   &
                                        dpqq_so(ih,jh,2,jpol,nt)*            &
-                                       becp1(kpoint)%nc(jkb,2,ibnd))*  &
+                                       becp1(ik)%nc(jkb,2,ibnd))*  &
                                       (0.d0,-1.d0)*uact(mu+ipol)*tpiba
                                 ps2_nc(ikb,2,ipol,ibnd)= &
                                        ps2_nc(ikb,2,ipol,ibnd) +      &
                                       (dpqq_so(ih,jh,3,jpol,nt)*          &
-                                       becp1(kpoint)%nc(jkb,1,ibnd)+   &
+                                       becp1(ik)%nc(jkb,1,ibnd)+   &
                                        dpqq_so(ih,jh,4,jpol,nt)*       &
-                                       becp1(kpoint)%nc(jkb,2,ibnd))*  &
+                                       becp1(ik)%nc(jkb,2,ibnd))*  &
                                       (0.d0,-1.d0)*uact(mu+ipol)*tpiba
                              else
                                 do is=1,npol
@@ -207,12 +207,12 @@ subroutine add_dkmds(kpoint, uact, jpol, dvkb)
 
                                    ps1_nc(ikb,is,ibnd)=ps1_nc(ikb,is,ibnd) + &
                                             dpqq(ih,jh,jpol,nt) *            &
-                                      alphap(ipol, kpoint)%nc(jkb, is, ibnd)* &
+                                      alphap(ipol, ik)%nc(jkb, is, ibnd)* &
                                       uact (mu + ipol)
                                    ps2_nc(ikb,is,ipol,ibnd)= &
                                           ps2_nc(ikb,is,ipol,ibnd) + &
                                           dpqq(ih,jh,jpol,nt)*(0.d0,-1.d0)* &
-                                          becp1(kpoint)%nc(jkb, is, ibnd)*  &
+                                          becp1(ik)%nc(jkb, is, ibnd)*  &
                                           uact (mu + ipol) * tpiba
                                 enddo
                              endif
@@ -230,11 +230,11 @@ subroutine add_dkmds(kpoint, uact, jpol, dvkb)
                           !
                              ps1 (ikb, ibnd) = ps1 (ikb, ibnd) +      &
                                   dpqq(ih,jh,jpol,nt) *               &
-                                 alphap(ipol, kpoint)%k(jkb, ibnd) *  &
+                                 alphap(ipol, ik)%k(jkb, ibnd) *  &
                                   uact (mu + ipol)
                              ps2 (ikb, ipol, ibnd) = ps2 (ikb, ipol, ibnd) + &
                                   dpqq(ih,jh,jpol,nt)*(0.d0,-1.d0)*           &
-                                  becp1(kpoint)%k(jkb, ibnd) *                 &
+                                  becp1(ik)%k(jkb, ibnd) *                 &
                                   uact (mu + ipol) * tpiba
                           endif
                        enddo
@@ -284,7 +284,7 @@ subroutine add_dkmds(kpoint, uact, jpol, dvkb)
         if (ok) then
            do ig = 1, npw
               igg = igkq (ig)
-              aux (ig) =  vkb(ig, ikb) * (xk(ipol, kpoint) + g(ipol, igg) )
+              aux (ig) =  vkb(ig, ikb) * (xk(ipol, ik) + g(ipol, igg) )
            enddo
            do ibnd = 1, nbnd
               if (noncolin) then
