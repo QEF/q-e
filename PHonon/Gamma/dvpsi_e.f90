@@ -7,7 +7,7 @@
 !
 !
 !----------------------------------------------------------------------
-SUBROUTINE dvpsi_e(kpoint,ipol)
+SUBROUTINE dvpsi_e(ik,ipol)
   !----------------------------------------------------------------------
   !
   ! Calculates x * psi_k  for each k-points and for the 3 polarizations
@@ -27,7 +27,7 @@ SUBROUTINE dvpsi_e(kpoint,ipol)
   USE cgcom
   !
   IMPLICIT NONE
-  INTEGER :: kpoint, ipol
+  INTEGER :: ik, ipol
   INTEGER :: i,l, na,nt, ibnd,jbnd, info, ih,jkb, iter
   real(DP) :: upol(3,3)
   real(DP), ALLOCATABLE :: gk(:,:), q(:), overlap(:,:), &
@@ -76,8 +76,8 @@ SUBROUTINE dvpsi_e(kpoint,ipol)
   ! and these are the contributions from nonlocal pseudopotentials
   ! ( upol(3,3) are the three unit vectors along x,y,z)
   !
-  CALL gen_us_dj(kpoint,dvkb)
-  CALL gen_us_dy(kpoint,upol(1,ipol),dvkb1)
+  CALL gen_us_dj(ik,dvkb)
+  CALL gen_us_dy(ik,upol(1,ipol),dvkb1)
   !
   DO jkb = 1, nkb
      DO i = 1,npw
@@ -141,7 +141,7 @@ SUBROUTINE dvpsi_e(kpoint,ipol)
   dvpsi(:,:) = (0.d0, 0.d0)
   !
   CALL cgsolve (H_h,npw,evc,npwx,nbnd,overlap,nbnd,   &
-       orthonormal,precondition,q,startwith0,et(1,kpoint),&
+       orthonormal,precondition,q,startwith0,et(1,ik),&
        dpsi,gr,h,dpsi,work,niter_ph,tr2_ph,iter,dvpsi)
   !
   DEALLOCATE(q)

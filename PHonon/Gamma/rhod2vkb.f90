@@ -36,7 +36,7 @@ SUBROUTINE rhod2vkb(dyn0)
   IMPLICIT NONE
   real(DP) :: dyn0(3*nat,3*nat)
   !
-  INTEGER :: i, ih, ibnd, na, nt, nu_i,nu_j,mu_i,mu_j, ir, ng, jkb, kpoint, &
+  INTEGER :: i, ih, ibnd, na, nt, nu_i,nu_j,mu_i,mu_j, ir, ng, jkb, ik, &
        ipol, jpol, ijpol
   real(DP) :: weight, fac, gtau
   real(DP), ALLOCATABLE :: dynloc(:,:), dynkb(:,:)
@@ -102,13 +102,13 @@ SUBROUTINE rhod2vkb(dyn0)
   ALLOCATE  ( becp1( nkb, nbnd, 3))
   ALLOCATE  ( becp2( nkb, nbnd, 6))
   !
-  kpoint = 1
+  ik = 1
      ! the sum has four terms which can be reduced to two (note factor 2 in weight):
      !
      ! sum_G sum_G' sum_j sum_l [ psi_j*(G) V_na,l(G)(-iGu_ipol) V^*_na,l(G')( iG'u_jpol) psi_j(G')
      ! sum_G sum_G' sum_j sum_l [ psi_j*(G) V_na,l(G)  V^*_na,l(G') ( iG'u_ipol)( iG'u_jpol) psi_j(G')
      !
-     weight = 2.0d0*wk(kpoint)
+     weight = 2.0d0*wk(ik)
      !
      CALL calbec ( npw, vkb, evc, becp )
      !

@@ -15,11 +15,11 @@ SUBROUTINE macro
   USE io_files,   ONLY : seqopn
   !
   IMPLICIT NONE
-  INTEGER:: kpoint, ipol
+  INTEGER:: ik, ipol
   CHARACTER(len=7) :: filbar
   LOGICAL :: here
   !
-  DO kpoint=1,nks
+  DO ik=1,nks
      ! NB: this version works only for nks = 1 !
      DO ipol=1,3
         WRITE(filbar,'("filbar",i1)') ipol
@@ -32,7 +32,7 @@ SUBROUTINE macro
         ! otherwise restart from x * psi that is present on from file
 !!!               read(iubar) dvpsi
 !!!            end if
-        CALL dvpsi_e(kpoint,ipol)
+        CALL dvpsi_e(ik,ipol)
         ! write x * psi
         REWIND(iubar)
         WRITE(iubar) dvpsi

@@ -33,7 +33,7 @@ SUBROUTINE cg_setup
   !
   IMPLICIT NONE
   !
-  INTEGER :: i, l, nt, kpoint
+  INTEGER :: i, l, nt, ik
   LOGICAL :: exst
   CHARACTER (len=256) :: filint
   REAL(DP) :: rhotot
@@ -108,8 +108,8 @@ SUBROUTINE cg_setup
   ENDIF
   !  read wave functions and calculate indices
   !
-  kpoint=1
-  CALL davcio(evc,lrwfc,iunpun,kpoint,-1)
+  ik=1
+  CALL davcio(evc,lrwfc,iunpun,ik,-1)
   IF ( exst ) THEN
      CLOSE(unit=iunpun,status='keep')
   ELSE
@@ -118,8 +118,8 @@ SUBROUTINE cg_setup
   !
   !  Kleinman-Bylander PPs
   !
-  npw = ngk(kpoint)
-  CALL init_us_2 (npw, igk_k(1,kpoint), xk(1,kpoint), vkb)
+  npw = ngk(ik)
+  CALL init_us_2 (npw, igk_k(1,ik), xk(1,ik), vkb)
   !
   CALL stop_clock('cg_setup')
   !

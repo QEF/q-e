@@ -7,7 +7,7 @@
 !
 !
 !----------------------------------------------------------------------
-SUBROUTINE dvpsi_kb(kpoint,nu)
+SUBROUTINE dvpsi_kb(ik,nu)
   !----------------------------------------------------------------------
   ! calculates dVion/dtau * psi and stores it in dvpsi
   !
@@ -28,7 +28,8 @@ SUBROUTINE dvpsi_kb(kpoint,nu)
   USE cgcom
   !
   IMPLICIT NONE
-  INTEGER :: ibnd, ir, ih, jkb, ik, na, nu, ng, mu, nt, kpoint
+  INTEGER :: ik, nu
+  INTEGER :: ibnd, ir, ih, jkb, ig, na, ng, mu, nt
   COMPLEX(DP), POINTER:: work(:,:), dvloc(:), dvb_cc(:)
   COMPLEX(DP) :: exc
   real(DP), POINTER :: bec1(:,:), bec2(:,:), rhocg(:), dv(:)
@@ -108,11 +109,11 @@ SUBROUTINE dvpsi_kb(kpoint,nu)
               !  second term: sum_l sum_G' [-i (G*u) V_l(G) V^*_l(G') psi(G')
               !
               DO ih = 1,nh(nt)
-                 DO ik = 1,npw
-                    work(ik,ih) = vkb(ik,jkb+ih) * cmplx(0.d0,-1.d0,kind=DP) * &
-                                    (tpiba*( g(1,ik)*u(mu+1,nu) +  &
-                                             g(2,ik)*u(mu+2,nu) +  &
-                                             g(3,ik)*u(mu+3,nu) ) )
+                 DO ig = 1,npw
+                    work(ig,ih) = vkb(ig,jkb+ih) * cmplx(0.d0,-1.d0,kind=DP) * &
+                                    (tpiba*( g(1,ig)*u(mu+1,nu) +  &
+                                             g(2,ig)*u(mu+2,nu) +  &
+                                             g(3,ig)*u(mu+3,nu) ) )
                  ENDDO
               ENDDO
               !

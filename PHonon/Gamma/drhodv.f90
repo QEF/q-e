@@ -21,14 +21,14 @@ SUBROUTINE drhodv(nu_i)
   IMPLICIT NONE
   INTEGER :: nu_i
   !
-  INTEGER :: nu_j, ibnd, kpoint
+  INTEGER :: nu_j, ibnd, ik
   real(DP) :: dynel(nmodes), work(nbnd)
   !
   CALL start_clock('drhodv')
   !
   dynel(:) = 0.d0
-  kpoint = 1
-  ! do kpoint=1,nks
+  ik = 1
+  ! do ik=1,nks
   !
   !** calculate the dynamical matrix (<DeltaV*psi(ion)|\DeltaPsi(ion)>)
   !
@@ -36,13 +36,13 @@ SUBROUTINE drhodv(nu_i)
      !
      ! DeltaV*psi(ion) for mode nu_j is recalculated
      !
-     CALL dvpsi_kb(kpoint,nu_j)
+     CALL dvpsi_kb(ik,nu_j)
      !
      !     this is the real part of <DeltaV*Psi(ion)|DeltaPsi(ion)>
      !
      CALL pw_dot('N',npw,nbnd,dvpsi,npwx,dpsi ,npwx,work)
      DO ibnd = 1,nbnd
-        dynel(nu_j) = dynel(nu_j) + 2.0d0*wk(kpoint)*work(ibnd)
+        dynel(nu_j) = dynel(nu_j) + 2.0d0*wk(ik)*work(ibnd)
      ENDDO
   ENDDO
 #ifdef __MPI

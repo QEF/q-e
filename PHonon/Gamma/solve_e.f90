@@ -24,7 +24,7 @@ SUBROUTINE solve_e
   !
   IMPLICIT NONE
   !
-  INTEGER :: ipol, nrec, i, ibnd, jbnd, info, iter, kpoint
+  INTEGER :: ipol, nrec, i, ibnd, jbnd, info, iter, ik
   real(DP), ALLOCATABLE ::diag(:)
   COMPLEX(DP), ALLOCATABLE :: gr(:,:), h(:,:), work(:,:)
   real(DP), ALLOCATABLE :: overlap(:,:)
@@ -41,7 +41,7 @@ SUBROUTINE solve_e
   ALLOCATE ( gr  ( npwx, nbnd) )
   ALLOCATE ( h   ( npwx, nbnd) )
   !
-  kpoint = 1
+  ik = 1
   DO i = 1,npw
      g2kin(i) = ( g(1,i)**2 + g(2,i)**2 + g(3,i)**2 ) * tpiba2
   ENDDO
@@ -86,7 +86,7 @@ SUBROUTINE solve_e
 !!!         end if
      CALL cgsolve (A_h,npw,evc,npwx,nbnd,overlap,nbnd, &
                    orthonormal,precondition,diag,      &
-                   startwith0,et(1,kpoint),dvpsi,gr,h, &
+                   startwith0,et(1,ik),dvpsi,gr,h, &
                    dvpsi,work,niter_ph,tr2_ph,iter,dpsi)
      !  write Delta*psi for an electric field
      REWIND (iudwf)
