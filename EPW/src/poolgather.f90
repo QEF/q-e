@@ -27,12 +27,12 @@
   implicit none  
   !
   INTEGER :: nsize, nks, nkstot
-    ! first dimension of vectors f_in and f_out
-    ! number of k-points per pool
-    ! total number of k-points
+  ! first dimension of vectors f_in and f_out
+  ! number of k-points per pool
+  ! total number of k-points
   REAL (KIND=DP) :: f_in(nsize,nks), f_out(nsize,nkstot)
-    ! input ( only for k-points of mypool )
-    ! output  ( contains values for all k-point )
+  ! input ( only for k-points of mypool )
+  ! output  ( contains values for all k-point )
   !
 #ifdef __PARA
   INTEGER :: rest, nbase
@@ -78,17 +78,17 @@
   implicit none
   !
   INTEGER :: nsize, nks, nkstot
-    ! first dimension of vectors f_in and f_out
-    ! number of k-points per pool
-    ! total number of k-points
+  ! first dimension of vectors f_in and f_out
+  ! number of k-points per pool
+  ! total number of k-points
   REAL (KIND=DP) :: f_in(nsize,nks), f_out(nsize,nkstot)
-    ! input ( only for k-points of mypool )
-    ! output  ( contains values for all k-point )
+  ! input ( only for k-points of mypool )
+  ! output  ( contains values for all k-point )
   !
 #ifdef __PARA
   INTEGER :: rest, nbase, nkst
-    ! the rest of the integer division nkstot / npo
-    ! the position in the original list
+  ! the rest of the integer division nkstot / npo
+  ! the position in the original list
   !
   nkst = 2 * ( nkstot / 2 / npool )
   rest = ( nkstot - nkst * npool ) / 2
@@ -112,5 +112,106 @@
   !
   end subroutine poolgather2
   !
-                                                            
- 
+  !----------------                                                         
+  subroutine poolgather_int1 ( nkstot, nks, f_in, f_out)
+  !--------------------------------------------------------------------
+  !
+  !  gather the kpoints and the electronic eigenvalues
+  !  across the pools 
+  !  works with the double grid (k and k+q)
+  !  define rest and nbase as in loadkmesh_para subroutine
+  !
+  !--------------------------------------------------------------------
+  USE kinds,     ONLY : DP
+#ifdef __PARA
+  USE mp_global, ONLY : my_pool_id, nproc_pool,    &
+                        inter_pool_comm, me_pool, root_pool, kunit,npool, my_pool_id
+  USE mp,        ONLY : mp_barrier, mp_bcast,mp_sum
+  USE mp_world,  ONLY : mpime
+#endif
+  implicit none
+  !
+  INTEGER :: nks, nkstot
+  ! number of k-points per pool
+  ! total number of k-points
+  INTEGER :: f_in(nks), f_out(nkstot)
+  ! input ( only for k-points of mypool )
+  ! output  ( contains values for all k-point )
+  !
+#ifdef __PARA
+  INTEGER :: rest, nbase
+  ! the rest of the integer division nkstot / npo
+  ! the position in the original list
+  !
+  rest = nkstot / kunit - ( nkstot / kunit / npool ) * npool
+  !
+  nbase = nks * my_pool_id
+  !
+  IF ( ( my_pool_id + 1 ) > rest ) nbase = nbase + rest * kunit
+  f_out = 0
+  f_out((nbase+1):(nbase+nks)) = f_in(1:nks)
+  !
+  ! ... reduce across the pools
+  !
+  CALL mp_sum(f_out,inter_pool_comm)
+  !
+#else
+  f_out(:) = f_in(:)
+  !
+#endif
+  !
+  end subroutine poolgather_int1
+  !                                                            
+  !--------------------------------------------------------------------
+  subroutine poolgather_int (nsize, nkstot, nks, f_in, f_out)
+  !--------------------------------------------------------------------
+  !
+  !  gather the kpoints and the electronic eigenvalues
+  !  across the pools 
+  !  works with the double grid (k and k+q)
+  !  define rest and nbase as in loadkmesh_para subroutine
+  !
+  !--------------------------------------------------------------------
+  USE kinds,     ONLY : DP
+#ifdef __PARA
+  USE mp_global, ONLY : my_pool_id, nproc_pool,    &
+                        inter_pool_comm, me_pool, root_pool, kunit,npool, my_pool_id
+  USE mp,        ONLY : mp_barrier, mp_bcast,mp_sum
+  USE mp_world,  ONLY : mpime
+#endif
+  implicit none
+  !
+  INTEGER :: nsize, nks, nkstot
+  ! first dimension of vectors f_in and f_out
+  ! number of k-points per pool
+  ! total number of k-points
+  INTEGER :: f_in(nsize,nks), f_out(nsize,nkstot)
+  ! input ( only for k-points of mypool )
+  ! output  ( contains values for all k-point )
+  !
+#ifdef __PARA
+  INTEGER :: rest, nbase
+  ! the rest of the integer division nkstot / npo
+  ! the position in the original list
+  !
+  rest = nkstot / kunit - ( nkstot / kunit / npool ) * npool
+  !
+  nbase = nks * my_pool_id
+  !
+  IF ( ( my_pool_id + 1 ) > rest ) nbase = nbase + rest * kunit
+  f_out = 0.d0
+  f_out(:,(nbase+1):(nbase+nks)) = f_in(:,1:nks)
+  !
+  ! ... reduce across the pools
+  !
+  CALL mp_sum(f_out,inter_pool_comm)
+  !
+#else
+  f_out(:,:) = f_in(:,:)
+  !
+#endif
+  !
+  end subroutine poolgather_int
+
+
+

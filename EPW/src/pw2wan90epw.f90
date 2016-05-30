@@ -451,8 +451,8 @@ SUBROUTINE compute_amn_para
 !
    USE io_global,       ONLY : stdout 
    USE kinds,           ONLY : DP
-   USE klist,           ONLY : xk, nks
-   USE wvfct,           ONLY : nbnd, npw, npwx, igk, g2kin
+   USE klist,           ONLY : xk, nks, igk_k, ngk
+   USE wvfct,           ONLY : nbnd, npw, npwx, g2kin
    USE gvecw,           ONLY : ecutwfc
    USE wavefunctions_module,  ONLY : evc
    USE units_ph,        ONLY : lrwfc, iuwfc
@@ -522,13 +522,13 @@ SUBROUTINE compute_amn_para
       CALL flush(6)
       CALL davcio( evc, lrwfc, iuwfc, ik, -1 )
       !
-      CALL gk_sort (xk(1,ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
+      CALL gk_sort (xk(1,ik), ngm, g, ecutwfc / tpiba2, npw, igk_k (1,ik), g2kin)
       CALL generate_guiding_functions(ik)   ! they are called gf(npw,n_proj)
       !
       !  USPP
       !
       IF (any_uspp) THEN
-         CALL init_us_2 (npw, igk, xk (1, ik), vkb)
+         CALL init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb)
          ! below we compute the product of beta functions with trial func.
          ! RM - changed according to QE4.0.3/PP/pw2wannie90.f90
          CALL calbec ( npw, vkb, gf, becp, n_proj )
@@ -610,7 +610,7 @@ SUBROUTINE compute_mmn_para
    USE mp_global,       ONLY : npool, intra_pool_comm
 #endif
    USE kinds,           ONLY : DP
-   USE wvfct,           ONLY : nbnd, npw, npwx, igk, g2kin
+   USE wvfct,           ONLY : nbnd, npw, npwx, g2kin
    USE gvecw,           ONLY : ecutwfc
    USE control_flags,   ONLY : gamma_only
    USE wavefunctions_module, ONLY : evc, psic, psic_nc
@@ -618,7 +618,7 @@ SUBROUTINE compute_mmn_para
    USE gvecs,           ONLY : nls, nlsm
    USE fft_base,        ONLY : dffts
    USE fft_interfaces,  ONLY : fwfft, invfft
-   USE klist,           ONLY : nkstot, xk, nks
+   USE klist,           ONLY : nkstot, xk, nks, igk_k
    USE gvect,           ONLY : g, ngm, gstart
    USE cell_base,       ONLY : tpiba2, omega, tpiba, bg
    USE ions_base,       ONLY : nat, ntyp => nsp, ityp, tau
@@ -778,12 +778,12 @@ SUBROUTINE compute_mmn_para
      !
      CALL readwfc(my_pool_id+1, ik, evc)
      !
-     CALL gk_sort (xk(1,ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
+     CALL gk_sort (xk(1,ik), ngm, g, ecutwfc / tpiba2, npw, igk_k(1,ik), g2kin)
      !
      !  USPP
      !
      IF (any_uspp) THEN
-        CALL init_us_2 (npw, igk, xk(1,ik), vkb)
+        CALL init_us_2 (npw, igk_k(1,ik), xk(1,ik), vkb)
         CALL calbec(npw, vkb, evc, becp) 
      ENDIF
      !
@@ -879,7 +879,7 @@ SUBROUTINE compute_mmn_para
               DO ipol=1,2!npol
                  istart=(ipol-1)*npwx+1
                  iend=istart+npw-1
-                 psic_nc(nls (igk (1:npw) ),ipol ) = evc(istart:iend, m)
+                 psic_nc(nls (igk_k (1:npw,ik) ),ipol ) = evc(istart:iend, m)
                  CALL invfft ('Wave', psic_nc(:,ipol), dffts)
                  psic_nc(1:dffts%nnr,ipol) = psic_nc(1:dffts%nnr,ipol) * &
                                                phase(1:dffts%nnr)
@@ -888,8 +888,8 @@ SUBROUTINE compute_mmn_para
               ENDDO
            ELSE
               psic(:) = (0.d0, 0.d0)
-              psic(nls (igk (1:npw) ) ) = evc (1:npw, m)
-              IF(gamma_only) psic(nlsm(igk (1:npw) ) ) = conjg(evc (1:npw, m))
+              psic(nls (igk_k (1:npw,ik) ) ) = evc (1:npw, m)
+              IF(gamma_only) psic(nlsm(igk_k (1:npw,ik) ) ) = conjg(evc (1:npw, m))
               CALL invfft ('Wave', psic, dffts)
               psic(1:dffts%nnr) = psic(1:dffts%nnr) * phase(1:dffts%nnr)
               CALL fwfft ('Wave', psic, dffts)
@@ -1003,8 +1003,8 @@ SUBROUTINE compute_pmn_para
    USE mp,              ONLY : mp_sum
 #endif
    USE kinds,           ONLY : DP
-   USE klist,           ONLY : xk, nks
-   USE wvfct,           ONLY : nbnd, npw, npwx, igk, g2kin
+   USE klist,           ONLY : xk, nks, igk_k
+   USE wvfct,           ONLY : nbnd, npw, npwx, g2kin
    USE gvecw,           ONLY : ecutwfc
    USE wavefunctions_module,  ONLY : evc
    USE units_ph,        ONLY : lrwfc, iuwfc
@@ -1032,7 +1032,7 @@ SUBROUTINE compute_pmn_para
       CALL davcio( evc, lrwfc, iuwfc, ik, -1 )
       !
       ! setup k+G grids for each kpt
-      CALL gk_sort (xk(1,ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
+      CALL gk_sort (xk(1,ik), ngm, g, ecutwfc / tpiba2, npw, igk_k(1,ik), g2kin)
       !
       dipole_aux = (0.d0, 0.d0)
       DO jbnd = 1,nbnd
@@ -1042,12 +1042,12 @@ SUBROUTINE compute_pmn_para
             !
             ! taken from PP/epsilon.f90 SUBROUTINE dipole_calc
             DO ig = 1, npw
-               IF (igk(ig) .gt. SIZE(g,2) .or. igk(ig).lt.1) CYCLE
+               IF (igk_k(ig,ik) .gt. SIZE(g,2) .or. igk_k(ig,ik).lt.1) CYCLE
                !
                caux = conjg(evc(ig,ibnd))*evc(ig,jbnd) 
                !
                dipole_aux(:,ibnd,jbnd) = dipole_aux(:,ibnd,jbnd) + &
-                                       ( g(:,igk(ig)) ) * caux
+                                       ( g(:,igk_k(ig,ik)) ) * caux
                !
                ! RM - this should cover the noncolin case
                IF (noncolin) THEN
@@ -1055,7 +1055,7 @@ SUBROUTINE compute_pmn_para
                   caux = conjg(evc(ig+npwx,ibnd))*evc(ig+npwx,jbnd)
                   !
                   dipole_aux(:,ibnd,jbnd) = dipole_aux(:,ibnd,jbnd) + &
-                                          ( g(:,igk(ig)) ) * caux
+                                          ( g(:,igk_k(ig,ik)) ) * caux
                   !
                ENDIF
                !
@@ -1066,12 +1066,12 @@ SUBROUTINE compute_pmn_para
       ! metal diagonal part
       DO ibnd = 1, nbnd
          DO ig = 1, npw
-            IF (igk(ig) .gt. SIZE(g,2) .or. igk(ig).lt.1) CYCLE
+            IF (igk_k(ig,ik) .gt. SIZE(g,2) .or. igk_k(ig,ik).lt.1) CYCLE
             !
             caux = conjg(evc(ig,ibnd))*evc(ig,ibnd) 
             !
             dipole_aux(:,ibnd,ibnd) = dipole_aux(:,ibnd,ibnd) + &
-                                    ( g(:,igk(ig)) + xk(:,ik) ) * caux
+                                    ( g(:,igk_k(ig,ik)) + xk(:,ik) ) * caux
             !
             ! RM - this should cover the noncolin case
             IF (noncolin) THEN
@@ -1079,7 +1079,7 @@ SUBROUTINE compute_pmn_para
                caux = conjg(evc(ig+npwx,ibnd))*evc(ig+npwx,ibnd)
                !
                dipole_aux(:,ibnd,ibnd) = dipole_aux(:,ibnd,ibnd) + &
-                                       ( g(:,igk(ig)) + xk(:,ik) ) * caux
+                                       ( g(:,igk_k(ig,ik)) + xk(:,ik) ) * caux
                !
             ENDIF
             !
@@ -1283,12 +1283,12 @@ SUBROUTINE generate_guiding_functions(ik)
    USE mp_global,      ONLY : intra_pool_comm
    USE mp,             ONLY : mp_sum
    USE constants,      ONLY : tpi, eps8
-   USE wvfct,          ONLY : npw, igk
+   USE wvfct,          ONLY : npw
    USE gvect,          ONLY : g
    USE cell_base,      ONLY : tpiba
    USE wannier,        ONLY : n_proj, gf, center_w, csph, alpha_w, &
                               r_w
-   USE klist,          ONLY : xk 
+   USE klist,          ONLY : xk, igk_k 
 
    implicit none
 
@@ -1303,9 +1303,9 @@ SUBROUTINE generate_guiding_functions(ik)
    ALLOCATE( gk(3,npw), qg(npw), ylm(npw,lmax2), sk(npw), radial(npw,0:lmax) )
    !
    DO ig = 1, npw
-      gk (1,ig) = xk(1, ik) + g(1, igk(ig) )
-      gk (2,ig) = xk(2, ik) + g(2, igk(ig) )
-      gk (3,ig) = xk(3, ik) + g(3, igk(ig) )
+      gk (1,ig) = xk(1, ik) + g(1, igk_k(ig,ik) )
+      gk (2,ig) = xk(2, ik) + g(2, igk_k(ig,ik) )
+      gk (3,ig) = xk(3, ik) + g(3, igk_k(ig,ik) )
       qg(ig) = gk(1, ig)**2 +  gk(2, ig)**2 + gk(3, ig)**2
    ENDDO
 
@@ -1330,7 +1330,7 @@ SUBROUTINE generate_guiding_functions(ik)
          ENDDO !ig
       ENDDO ! lm
       DO ig=1,npw
-         iig = igk(ig)
+         iig = igk_k(ig,ik)
          arg = ( gk(1,ig)*center_w(1,iw) + gk(2,ig)*center_w(2,iw) + &
                                            gk(3,ig)*center_w(3,iw) ) * tpi
          ! center_w are cartesian coordinates in units of alat 
@@ -1382,7 +1382,7 @@ SUBROUTINE write_plot
    USE kinds,           ONLY : DP
    USE io_global,       ONLY : stdout
    USE io_epw,          ONLY : iun_plot
-   USE wvfct,           ONLY : nbnd, npw, igk, g2kin
+   USE wvfct,           ONLY : nbnd, npw, g2kin
    USE gvecw,           ONLY : ecutwfc
    USE control_flags,   ONLY : gamma_only
    USE wavefunctions_module, ONLY : evc, psic
@@ -1390,7 +1390,7 @@ SUBROUTINE write_plot
    USE wannier,         ONLY : reduce_unk, wvfn_formatted, ispinw, nexband, &
                                excluded_band 
    USE gvecs,           ONLY : nls, nlsm
-   USE klist,           ONLY : xk, nks
+   USE klist,           ONLY : xk, nks, igk_k
    USE gvect,           ONLY : g, ngm 
    USE cell_base,       ONLY : tpiba2
    USE fft_base,        ONLY : dffts
@@ -1454,15 +1454,15 @@ SUBROUTINE write_plot
       ENDIF
       !
       CALL davcio (evc, lrwfc, iuwfc, ik, -1 )
-      CALL gk_sort (xk(1,ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
+      CALL gk_sort (xk(1,ik), ngm, g, ecutwfc / tpiba2, npw, igk_k(1,ik), g2kin)
       !
       ibnd1 = 0
       DO ibnd=1,nbnd
          IF (excluded_band(ibnd)) CYCLE
          ibnd1=ibnd1 + 1
          psic(:) = (0.d0, 0.d0)
-         psic(nls (igk (1:npw) ) ) = evc (1:npw, ibnd)
-         IF (gamma_only)  psic(nlsm(igk (1:npw) ) ) = conjg(evc (1:npw, ibnd))
+         psic(nls (igk_k (1:npw,ik) ) ) = evc (1:npw, ibnd)
+         IF (gamma_only)  psic(nlsm(igk_k (1:npw,ik) ) ) = conjg(evc (1:npw, ibnd))
          CALL invfft ('Wave', psic, dffts)
          IF (reduce_unk) pos=0
 #ifdef __PARA

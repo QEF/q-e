@@ -26,14 +26,14 @@
   use mp,              only : mp_sum
   use phcom,           only : lrwfc,  iuwfc, lrdrho
   use elph2,           only : umat, umat_all
-  use pwcom,           only : npw, igk, nbnd, nks
+  use pwcom,           only : nbnd, nks
   use epwcom,          only : tphases, iudvscf0
   use wavefunctions_module, only : evc
-  use io_files,        only : iunigk
   use control_flags,   only : iverbosity
   use lsda_mod,        only : nspin
   use ions_base,       only : nat
   USE fft_base,        ONLY : dffts
+  USE klist,           ONLY : igk_k, ngk
   !
   !
   implicit none
@@ -65,13 +65,7 @@
      deltav=deltav ** 3.d0
      !
      !
-     IF (nks.gt.1) rewind (unit = iunigk)
      DO ik=1,nks
-        IF (nks.gt.1) then
-           read (iunigk, err = 100, iostat = ios) npw, igk
-100        call errore ('setphases_wrap', 'reading igk', abs (ios) )
-        ENDIF
-        !
         !
         IF (nks.gt.1) then
            CALL davcio (evc, lrwfc, iuwfc, ik, - 1)
@@ -79,9 +73,7 @@
         !
         CALL ktokpmq ( xk(:,ik), zero_vect, +1, ipool, nkk, nkk_abs)
         !
-        !  CALL setphases ( 1, ik, npw, umat(:,:,ik),deltav)
-        ! FG: corrected after ifort checks
-        CALL setphases ( 1, ik, npw, umat(:,:,ik))
+        CALL setphases ( 1, ik, ngk(ik), umat(:,:,ik))
         umat_all(:,:,nkk_abs) = umat(:,:,ik)
         !
         !

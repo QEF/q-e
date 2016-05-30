@@ -19,7 +19,7 @@
   !
   !-----------------------------------------------------------------------
   use mp_global,        ONLY : me_pool
-  use io_files,         ONLY : prefix, iunigk, tmp_dir, &
+  use io_files,         ONLY : prefix, tmp_dir, &
                                diropn, seqopn
   use units_ph,         ONLY : iudrhous, lrdrhous, iudvkb3, iuwfc
   USE uspp,             ONLY : nkb, okvan
@@ -61,15 +61,6 @@
 #ifdef __PARA
 300  continue
 #endif
-  !
-  !   Here the sequential files
-  !
-  !   The igk at a given k (and k+q if q!=0)
-  !
-  iunigk = 24
-  filint = trim(prefix) //'.igk'
-  CALL seqopn (iunigk, 'igk', 'unformatted', exst)
-  !
   !
   !   file for setting unitary gauges of eigenstates
   !

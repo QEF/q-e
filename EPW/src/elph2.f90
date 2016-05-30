@@ -84,7 +84,11 @@
        irvec(:,:),             &!  crys coordinates of wigner-seitz vectors (both elec and phon)
        ndegen(:),              &!  corresponding degeneragy, electrons (old version)
        ndegen_k(:),            &!  corresponding degeneragy, electrons
-       ndegen_q(:)              !  corresponding degeneragy, phonons
+       ndegen_q(:),            &!  corresponding degeneragy, phonons
+       igk(:),                 &!  Index for k+G vector
+       igkq(:),                &!  Index for k+q+G vector
+       igk_k_all(:,:),         &!  Global index (in case of parallel)
+       ngk_all(:)               !  Global number of plane wave for each global k-point
   INTEGER, allocatable ::      &
        shift (:),              &!  for every k+q, index of the G0 which folds k+q into k+q+G0 of the first BZ
        gmap(:)                  !  the map G -> G-G_0 in the large (density) G vectors set, for every G_0

@@ -31,10 +31,11 @@
   USE noncollin_module, ONLY : noncolin, npol
   USE uspp,       ONLY : okvan, nkb, vkb
   USE uspp_param, ONLY : nh, nhm
-  USE qpoint,     ONLY : igkq, npwq
+  USE qpoint,     ONLY : npwq
   USE phus,       ONLY : int1, int1_nc, int2, int2_so, alphap
   USE lrus,       ONLY : becp1
   USE eqv,        ONLY : dvpsi
+  USE elph2,      ONLY : igkq
 
   implicit none
   !

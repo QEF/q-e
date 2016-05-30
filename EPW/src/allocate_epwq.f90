@@ -20,7 +20,7 @@
   ! Imported the noncolinear case implemented by xlzhang
   !
   USE ions_base,    ONLY : nat, ntyp => nsp
-  USE pwcom,        ONLY : igk, npwx, nbnd, ngm, nspin, nks
+  USE pwcom,        ONLY : npwx, nbnd, ngm, nspin, nks
   USE noncollin_module, ONLY : noncolin, npol
   USE wavefunctions_module,  ONLY: evc
   USE spin_orb,     ONLY : lspinorb
@@ -32,7 +32,7 @@
                            int4, int4_nc, int5, int5_so, becsum_nc, &
                            alphasum, alphasum_nc, alphap
   USE lr_symm_base, ONLY : rtau               
-  USE qpoint,       ONLY : igkq, eigqts
+  USE qpoint,       ONLY : eigqts
   USE lrus,         ONLY : becp1, int3, int3_nc, dpqq, dpqq_so
   USE elph2,        ONLY : elph, el_ph_mat
   USE becmod,       ONLY : becp, allocate_bec_type
@@ -56,16 +56,14 @@
   !
   IF (lgamma) THEN
      !
-     !  q=0  : evq and igkq are pointers to evc and igk
+     !  q=0  : evq is a pointers to evc
      !
      evq  => evc
-     igkq => igk
   ELSE
      !
-     !  q!=0 : evq, igkq are ALLOCATEd and calculated at point k+q
+     !  q!=0 : evq is ALLOCATEd and calculated at point k+q
      !
      ALLOCATE (evq ( npwx*npol, nbnd))    
-     ALLOCATE (igkq ( npwx ))    
   ENDIF
   !
   ALLOCATE (dvpsi ( npwx*npol, nbnd))    

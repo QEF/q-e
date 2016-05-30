@@ -14,7 +14,6 @@
   SUBROUTINE close_epw
   !------------------------------------------------------------------
   !
-  USE io_files, ONLY: iunigk
   USE io_epw,   ONLY: iunepmatf, iuetf
   USE phcom,    ONLY: iuwfc, iudwf, iudrhous, iudvkb3, fildrho, iudrho
   USE epwcom,   ONLY: elinterp, iuncuf
@@ -48,7 +47,5 @@
 !     CLOSE (unit = iunepmatwp, status = 'delete')
      !
   ENDIF
-     !
-  CLOSE (unit = iunigk, status = 'delete')
   !
   END SUBROUTINE close_epw

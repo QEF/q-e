@@ -63,28 +63,29 @@
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
   USE wavefunctions_module,  ONLY: evc
-  USE io_files,      ONLY : iunigk, diropn, seqopn
+  USE io_files,      ONLY : diropn, seqopn
   USE wvfct,         ONLY : npwx
   USE pwcom,         ONLY : current_spin, isk, tpiba, g, &
-                            lsda, nbnd, npw, xk, ngm, &
-                            igk, nks
+                            lsda, nbnd, xk, ngm, &
+                            nks
   USE uspp,          ONLY : vkb
   USE symm_base,     ONLY : s
   USE modes,         ONLY : u  
   USE phcom,         ONLY : iuwfc
-  USE qpoint,        ONLY : igkq, xq, npwq
+  USE qpoint,        ONLY : xq, npwq, ikqs, ikks
   USE eqv,           ONLY : dvpsi, evq
   USE units_ph,      ONLY : lrwfc
   USE phus,          ONLY : alphap
   USE lrus,          ONLY : becp1
   USE becmod,        ONLY : calbec 
-  USE elph2,         ONLY : shift, gmap, el_ph_mat, umat, umatq, &
-                            umat_all, xk_all, et_all, xkq, etq
+  USE elph2,         ONLY : shift, gmap, el_ph_mat, umat, umatq, igk_k_all, &
+                            umat_all, xk_all, et_all, xkq, etq, igkq, igk, &
+                            ngk_all
   USE fft_base,      ONLY : dffts
   USE constants_epw, ONLY : czero, cone, ci 
   USE control_flags, ONLY : iverbosity
   USE control_lr,    ONLY : lgamma
-  USE klist,         ONLY : nkstot
+  USE klist,         ONLY : nkstot, ngk, igk_k
   USE noncollin_module,     ONLY : noncolin, npol, nspin_mag
   ! 
   implicit none
@@ -102,7 +103,7 @@
   !
   integer :: ik, ipert, mode, ibnd, jbnd, ig, nkq, ipool, &
        ik0, igkq_tmp (npwx), imap, &
-       ipooltmp, nkq_abs, ipol
+       ipooltmp, nkq_abs, ipol, npw
   complex(kind=DP), ALLOCATABLE :: aux1 (:,:), elphmat (:,:,:), eptmp (:,:), aux2(:,:)
 !DBSP - NAG complains ...
   COMPLEX(DP),EXTERNAL :: ZDOTC
@@ -117,7 +118,7 @@
   REAL(kind=DP) :: g0vec_all_r(3,125) 
  
   !   G-vectors needed to fold the k+q grid into the k grid, cartesian coord.
-  INTEGER :: ng0vec, ngxx           
+  INTEGER :: ng0vec, ngxx, lower_bnd, upper_bnd
   !   number of inequivalent such translations
   !   bound for the allocation of the array gmap
   !
@@ -154,12 +155,16 @@
   IF (nproc_pool>1) call errore &
     ('elphel2_shuffle', 'ONLY one proc per pool in shuffle mode', 1)
 #endif
+  !
+  ! find the bounds of k-dependent arrays in the parallel case in each pool
+  CALL fkbounds( nkstot, lower_bnd, upper_bnd )
+  !
   IF (.not.lgamma) THEN
      !
      ! setup for k+q folding
      !
      CALL kpointdivision ( ik0 )
-     CALL readgmap ( nkstot, ngxx, ng0vec, g0vec_all_r )
+     CALL readgmap ( nkstot, ngxx, ng0vec, g0vec_all_r, lower_bnd)
      !
      IF (imode0.eq.0 .and. iverbosity.eq.1) WRITE(stdout, 5) ngxx
 5    FORMAT (5x,'Estimated size of gmap: ngxx =',i5)
@@ -169,7 +174,6 @@
   ! close all sequential files in order to re-open them as direct access
   ! close all .wfc files in order to prepare shuffled read
   !
-  CLOSE (unit = iunigk, status = 'keep')
   CLOSE (unit = iuwfc,  status = 'keep')
 #ifdef __PARA
   ! never remove this barrier
@@ -191,10 +195,7 @@
      ! below and also that the eigenvalues are taken correctly in ephwann)
      !
 #ifdef __PARA
-     !write(*,*)'ik ',ik
      ipooltmp= my_pool_id+1
-     !write(*,*)'ipooltmp',ipooltmp
-     !write(*,*)'ipool',ipool
 #endif
      !
      !
@@ -213,10 +214,20 @@
      ! in parallel mypool is for k and ipool is for k+q
      !
      CALL readwfc (ipooltmp, ik, evc)
-     CALL readigk (ipooltmp, ik, npw, igk)
-     !
      CALL readwfc (ipool, nkq, evq)
-     CALL readigk (ipool, nkq, npwq, igkq)
+     !
+     ! Now we define the igk and igkq from the global igk_k_all
+     ! 
+     npw  = ngk_all(ik+lower_bnd-1)
+     npwq = ngk_all(nkq_abs)
+     ! 
+     IF (ALLOCATED(igk)) DEALLOCATE(igk)
+     IF (ALLOCATED(igkq)) DEALLOCATE(igkq)
+     ALLOCATE( igk(npw)  )
+     ALLOCATE( igkq(npwq)  )
+     ! 
+     igk = igk_k_all(1:npw,ik+lower_bnd-1)
+     igkq = igk_k_all(1:npwq,nkq_abs)
      !
 #ifdef __PARA
      IF (.not.lgamma .and. nks.gt.1 .and. maxval(igkq(1:npwq)).gt.ngxx) &
@@ -364,13 +375,13 @@
         !
         aux2=(0.0_DP,0.0_DP)
         DO ibnd = 1, nbnd !, incr
-          CALL cft_wave (evc(:, ibnd), aux1, +1)
+          CALL cft_wave_epw (igk, npw, igkq, npwq, evc(:, ibnd), aux1, +1)
          IF (timerev) THEN
            CALL apply_dpot(dffts%nnr, aux1, CONJG(dvscfins(:,:,ipert)),current_spin)
          ELSE
             CALL apply_dpot(dffts%nnr, aux1, dvscfins(:,:,ipert),current_spin)
          ENDIF
-          CALL cft_wave (aux2(:, ibnd), aux1, -1)
+          CALL cft_wave_epw (igk, npw, igkq, npwq, aux2(:, ibnd), aux1, -1)
         ENDDO
         dvpsi=dvpsi+aux2
 !DBSP
@@ -432,7 +443,6 @@
   !
   !  restore original configuration of files
   !
-  CALL seqopn (iunigk, 'igk', 'unformatted', exst)
   CALL diropn (iuwfc, 'wfc', lrwfc, exst) 
 #ifdef __PARA
   ! never remove this barrier - > insures that wfcs are restored to each pool before moving on

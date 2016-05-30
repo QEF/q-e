@@ -53,7 +53,8 @@
                             iswitch, kmaps, nest_fn, eig_read, &
                             band_plot, specfun, dvscf_dir, lpolar
   USE elph2,         ONLY : epmatq, dynq, sumr, et_all, xk_all, et_mb, et_ks, &
-                            zstar, epsi, cu, cuq, lwin, lwinq, bmat
+                            zstar, epsi, cu, cuq, lwin, lwinq, bmat, igk_k_all, &
+                            ngk_all
   USE constants_epw, ONLY : ryd2ev 
   USE fft_base,      ONLY : dfftp
   USE control_ph,    ONLY : u_from_file
@@ -655,18 +656,20 @@
   !
   ! free up some memory
   !
-  IF ( ASSOCIATED (evq)  ) NULLIFY    (evq)
-  IF ( ALLOCATED  (evc)  ) DEALLOCATE (evc)
-  IF ( ASSOCIATED (igkq) ) NULLIFY    (igkq)
-  IF ( ALLOCATED  (igk)  ) DEALLOCATE (igk)
-  IF ( ALLOCATED  (dvpsi)) DEALLOCATE (dvpsi)
-  IF ( ALLOCATED  (dpsi) ) DEALLOCATE (dpsi)
-  IF ( ALLOCATED  (sumr) ) DEALLOCATE (sumr)
-  IF ( ALLOCATED (cu) )    DEALLOCATE (cu)
-  IF ( ALLOCATED (cuq) )   DEALLOCATE (cuq)
-  IF ( ALLOCATED (lwin) )  DEALLOCATE (lwin)
-  IF ( ALLOCATED (lwinq) ) DEALLOCATE (lwinq)
-  IF ( ALLOCATED (bmat) )  DEALLOCATE (bmat)
+  IF ( ASSOCIATED (evq)  )     NULLIFY    (evq)
+  IF ( ALLOCATED  (evc)  )     DEALLOCATE (evc)
+  IF ( ASSOCIATED (igkq) )     NULLIFY    (igkq)
+  IF ( ALLOCATED  (igk)  )     DEALLOCATE (igk)
+  IF ( ALLOCATED  (dvpsi))     DEALLOCATE (dvpsi)
+  IF ( ALLOCATED  (dpsi) )     DEALLOCATE (dpsi)
+  IF ( ALLOCATED  (sumr) )     DEALLOCATE (sumr)
+  IF ( ALLOCATED (cu) )        DEALLOCATE (cu)
+  IF ( ALLOCATED (cuq) )       DEALLOCATE (cuq)
+  IF ( ALLOCATED (lwin) )      DEALLOCATE (lwin)
+  IF ( ALLOCATED (lwinq) )     DEALLOCATE (lwinq)
+  IF ( ALLOCATED (bmat) )      DEALLOCATE (bmat)
+  IF ( ALLOCATED (igk_k_all) ) DEALLOCATE(igk_k_all)
+  IF ( ALLOCATED (ngk_all) )   DEALLOCATE(ngk_all)
   ! 
   CALL stop_clock ( 'elphon_wrap' )
 !DBSP

@@ -20,11 +20,12 @@
   USE phus,                 ONLY : alphap
   USE lrus,                 ONLY : becp1
   USE uspp,                 ONLY : vkb
-  USE io_files,             ONLY : iunigk
   USE pwcom,                ONLY : npwx, nbnd, tpi, nks, lsda, current_spin,&
-                                   tpiba2, npw, igk, tpiba, bg, &
+                                   tpiba2, tpiba, bg, &
                                    eigts1, eigts2, eigts3, g, g2kin, isk, &
                                    ngm, xk, strf, omega
+  USE klist,                ONLY : ngk, igk_k, nkstot
+  USE constants_epw,        ONLY : zero
   USE gvecw,                ONLY : ecutwfc
   USE atom,                 ONLY : msh, rgrid
   USE wavefunctions_module, ONLY : evc
@@ -36,6 +37,11 @@
   USE nlcc_ph,              ONLY : drc                           
   USE uspp,                 ONLY : nlcc_any
   USE fft_base,             ONLY : dfftp
+  USE elph2,                ONLY : igk_k_all, ngk_all
+#ifdef __PARA
+  USE mp,                   ONLY : mp_barrier
+  USE mp_global,            ONLY : inter_pool_comm
+#endif  
   !
   IMPLICIT NONE
   !
@@ -104,11 +110,7 @@
   ! parameters which define the non-local pseudopotential and
   ! which are independent of the k point for the US case
   !
-  !
-! this was in the phq_init routine.  uspp?
   CALL init_us_1()
-  !
-  REWIND( iunigk )
   !
   DO ik = 1, nks
      !
@@ -117,16 +119,15 @@
      !
      ! g2kin is used here as work space
      !
-     CALL gk_sort( xk(1,ik), ngm, g, ( ecutwfc / tpiba2 ), npw, igk, g2kin )
-     !
+     CALL gk_sort( xk(1,ik), ngm, g, ( ecutwfc / tpiba2 ), ngk(ik), igk_k(1,ik), g2kin )
+     ! 
      ! if there is only one k-point evc, evq, npw, igk stay in memory
      !
-     WRITE( iunigk ) npw, igk
+     npwq = ngk(ik)
      !
-     npwq = npw
      ! The functions vkb(k+G)
      !
-     CALL init_us_2( npw, igk, xk(1,ik), vkb )
+     CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb )
      !
      ! ... read the wavefunctions at k
      !
@@ -136,9 +137,9 @@
      ! the code
      !
      IF (noncolin) THEN
-        CALL calbec (npw, vkb, evc, becp1(ik)%nc(:,:,:) )
+        CALL calbec (ngk(ik), vkb, evc, becp1(ik)%nc(:,:,:) )
      ELSE
-        CALL calbec (npw, vkb, evc, becp1(ik)%k(:,:))
+        CALL calbec (ngk(ik), vkb, evc, becp1(ik)%k(:,:))
      ENDIF
      !
      ! we compute the derivative of the becp term with respect to an
@@ -147,26 +148,42 @@
      DO ipol = 1, 3
         aux1=(0.d0,0.d0)
         DO ibnd = 1, nbnd
-           DO ig = 1, npw
+           DO ig = 1, ngk(ik)
               aux1(ig,ibnd) = evc(ig,ibnd) * tpiba * ( 0.D0, 1.D0 ) * & 
-                              ( xk(ipol,ik) + g(ipol,igk(ig)) )
+                              ( xk(ipol,ik) + g(ipol,igk_k(ig,ik)) )
            ENDDO
            IF (noncolin) THEN
-              DO ig = 1, npw
+              DO ig = 1, ngk(ik)
                  aux1(ig+npwx,ibnd) = evc(ig+npwx,ibnd)*tpiba*(0.D0,1.D0)*& 
-                           ( xk(ipol,ik) + g(ipol,igk(ig)) )
+                           ( xk(ipol,ik) + g(ipol,igk_k(ig,ik)) )
               ENDDO
            ENDIF
         ENDDO
         IF (noncolin) THEN
-           CALL calbec (npw, vkb, aux1, alphap(ipol,ik)%nc(:,:,:) )
+           CALL calbec (ngk(ik), vkb, aux1, alphap(ipol,ik)%nc(:,:,:) )
         ELSE
-           CALL calbec (npw, vkb, aux1, alphap(ipol,ik)%k(:,:) )
+           CALL calbec (ngk(ik), vkb, aux1, alphap(ipol,ik)%k(:,:) )
         ENDIF
      ENDDO
      !
      !
   ENDDO
+  !
+  IF(.not. ALLOCATED(igk_k_all) ) ALLOCATE(igk_k_all( npwx, nkstot))
+  IF(.not. ALLOCATED(ngk_all) ) ALLOCATE(ngk_all(nkstot))
+  !
+#ifdef __PARA
+  !
+  CALL poolgather_int (npwx, nkstot, nks, igk_k(:,1:nks), igk_k_all ) 
+  CALL poolgather_int1 (nkstot, nks, ngk(1:nks), ngk_all ) 
+  CALL mp_barrier(inter_pool_comm)
+  !
+#else
+  !
+  igk_k_all = igk_k
+  ngk_all = ngk
+  !
+#endif
   !
   DEALLOCATE( aux1 )
   !

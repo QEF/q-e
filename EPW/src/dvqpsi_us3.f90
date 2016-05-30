@@ -32,20 +32,22 @@
   USE lsda_mod,              ONLY : lsda, isk
   USE noncollin_module,      ONLY : npol
   use uspp_param,            ONLY : upf
-  USE wvfct,                 ONLY : nbnd, npw, npwx, igk
+  USE wvfct,                 ONLY : nbnd, npwx
   USE wavefunctions_module,  ONLY : evc
   USE nlcc_ph,               ONLY : drc
   USE uspp,                  ONLY : nlcc_any
   USE eqv,                   ONLY : dvpsi, dmuxc, vlocq
-  USE qpoint,                ONLY : npwq, igkq, eigqts!, ikks
+  USE qpoint,                ONLY : eigqts, npwq !, ikks
+  USE klist,                 ONLY : ngk
+  USE elph2,                 ONLY : igkq, igk
 
   implicit none
   !
   !   The dummy variables
   !
-  integer :: ik
+  integer :: ik, npw
   ! input: the k point
-  real(kind=DP) :: xq0(3),xxk(3)
+  real(kind=DP) :: xq0(3), xxk(3)
   complex(DP) :: uact (3 * nat)
   ! input: the pattern of displacements
   logical :: addnlcc
@@ -75,6 +77,9 @@
   !IF (nlcc_any) THEN
   ! SP - changed according to QE5/PH/dvqpsi_us
   !htg = dffts%have_task_groups
+  npw  = ngk(ik)
+
+
   dffts%have_task_groups=.FALSE.
   IF (nlcc_any.AND.addnlcc) THEN
      ALLOCATE (aux( dfftp%nnr))

@@ -7,7 +7,7 @@
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
   !                                                                            
   !--------------------------------------------------------------
-  subroutine readgmap ( nkstot, ngxx, ng0vec, g0vec_all_r ) 
+  subroutine readgmap ( nkstot, ngxx, ng0vec, g0vec_all_r, lower_bnd) 
   !--------------------------------------------------------------
   !
   !  read map of G vectors G -> G-G_0 for a given q point
@@ -26,13 +26,13 @@
   use io_epw,   ONLY : iukgmap
   use wvfct,    ONLY : npwx
   use pwcom,    ONLY : nks
-  use elph2,    ONLY : shift, gmap 
-  USE io_files, ONLY : iunigk, prefix
+  use elph2,    ONLY : shift, gmap, igk_k_all, ngk_all
+  USE io_files, ONLY : prefix
   implicit none
   !
   ! variables for folding of k+q grid
   !
-  INTEGER ::  ng0vec, ngxx, iukmap, nkstot
+  INTEGER ::  ng0vec, ngxx, iukmap, nkstot, lower_bnd
   !   kpoint blocks (k points of all pools)
   !   number of inequivalent such translations
   !   bound for the allocation of the array gmap
@@ -42,7 +42,7 @@
   !
   !  work variables
   !
-  integer :: ik, ik1, ishift, ig0, ig, itmp, npw0, igk0 (npwx)
+  integer :: ik, ik1, ishift, ig0, ig, itmp
   integer :: ios
 #ifdef __PARA
   real(kind=DP) :: tmp
@@ -67,14 +67,12 @@
   !  does not matter
   !
   ngxx = 0
-    rewind (unit = iunigk)
-    DO ik = 1, nks
-      !
-      read (iunigk) npw0, igk0 ! k 
-      !
-      IF (maxval(igk0(1:npw0)).gt.ngxx) ngxx = maxval(igk0(1:npw0))
-      !
-    ENDDO
+  DO ik = 1, nks
+    !
+    IF (maxval(igk_k_all(1:ngk_all(ik+lower_bnd-1),ik+lower_bnd-1)).gt.ngxx)&
+           & ngxx = maxval(igk_k_all(1:ngk_all(ik+lower_bnd-1),ik+lower_bnd-1))
+    !
+  ENDDO
   !
 #ifdef __PARA
   tmp = dble (ngxx)
