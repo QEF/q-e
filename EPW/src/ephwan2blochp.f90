@@ -20,7 +20,7 @@
   USE elph2,         only : epmatwp
   USE constants_epw, ONLY : twopi, ci, czero
   USE io_global,     ONLY : ionode
-  USE io_files,      ONLY : prefix, diropn
+  USE io_files,      ONLY : prefix, tmp_dir
 #ifdef __PARA 
   USE mp_global,     ONLY : inter_pool_comm, intra_pool_comm, mp_sum
   USE mp_world,      ONLY : world_comm
@@ -82,7 +82,9 @@
   !
 #ifdef __PARA
   IF (.NOT. etf_mem) then
-    filint = trim(prefix)//'.epmatwp1'
+    ! Check for directory given by "outdir"
+    !      
+    filint = trim(tmp_dir)//trim(prefix)//'.epmatwp1'
     CALL MPI_FILE_OPEN(world_comm,filint,MPI_MODE_RDONLY,MPI_INFO_NULL,iunepmatwp2,ierr)
     IF( ierr /= 0 ) CALL errore( 'ephwan2blochp', 'error in MPI_FILE_OPEN',1 )
     IF( parallel_q ) CALL errore( 'ephwan2blochp', 'q-parallel+etf_mem=.false. is not supported',1 ) 
