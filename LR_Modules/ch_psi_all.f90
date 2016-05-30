@@ -11,10 +11,7 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   !-----------------------------------------------------------------------
   !
   ! This routine applies the operator ( H - \epsilon S + alpha_pv P_v)
-  ! to a vector h. The result is given in Ah.
-  !
-  ! Merged with lr_ch_psi_all June 2011. This function is now used both
-  ! in ph.x and turbo_lanczos.x
+  ! to a vector h. The result is given in ah.
   !
   USE kinds,                ONLY : DP
   USE wvfct,                ONLY : npwx, nbnd
@@ -72,7 +69,8 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   hpsi (:,:) = (0.d0, 0.d0)
   spsi (:,:) = (0.d0, 0.d0)
   !
-  !   compute the product of the hamiltonian with the h vector
+  !   compute an action of the Hamiltonian and the S operator
+  !   on the h vector (i.e. H*h and S*h, respectively).
   !
   current_k = ikqs(ik)
   CALL h_psi (npwx, n, m, h, hpsi)
@@ -80,26 +78,32 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   !
   CALL start_clock ('last')
   !
-  !   then we compute the operator H-epsilon S
+  !   then we compute ( H - \epsilon S ) * h
+  !   and put the result in ah
   !
   ah=(0.d0,0.d0)
   DO ibnd = 1, m
      DO ig = 1, n
-        ah (ig, ibnd) = hpsi (ig, ibnd) - e (ibnd) * spsi (ig, ibnd)
+        ah(ig, ibnd) = hpsi(ig, ibnd) - e(ibnd) * spsi(ig, ibnd)
      ENDDO
   ENDDO
   IF (noncolin) THEN
      DO ibnd = 1, m
         DO ig = 1, n
-           ah (ig+npwx,ibnd)=hpsi(ig+npwx,ibnd)-e(ibnd)*spsi(ig+npwx,ibnd)
+           ah(ig+npwx, ibnd) = hpsi(ig+npwx, ibnd) - e(ibnd) * spsi(ig+npwx, ibnd)
         ENDDO
      ENDDO
   ENDIF
-
-  IF (gamma_only) THEN
-     CALL ch_psi_all_gamma()
-  ELSE
-     CALL ch_psi_all_k()
+  !
+  !   lastly we compute alpha_pv * P_v * h (if alpha_pv.NE.0.0d0)
+  !   and add it to ah 
+  !
+  IF (alpha_pv.NE.0.0d0) THEN
+     IF (gamma_only) THEN
+        CALL ch_psi_all_gamma()
+     ELSE
+        CALL ch_psi_all_k()
+     ENDIF
   ENDIF
   
   DEALLOCATE (spsi)
@@ -113,11 +117,10 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   RETURN
 CONTAINS
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!K-point part
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   SUBROUTINE ch_psi_all_k()
-
+    !
+    ! K-point part
+    !
     USE becmod, ONLY : becp, calbec
     
     IMPLICIT NONE
@@ -126,8 +129,8 @@ CONTAINS
     !
     ps (:,:) = (0.d0, 0.d0)
     !
-    ! ikqs(ik) is the point k+q if q\=0
-    !          is the point k   if q=0
+    ! ikqs(ik) is the index of the point k+q if q\=0
+    !          is the index of the point k   if q=0
     ! 
     IF (noncolin) THEN
        CALL zgemm ('C', 'N', nbnd_occ (ikqs(ik)) , m, npwx*npol, (1.d0, 0.d0) , evq, &
@@ -168,15 +171,14 @@ CONTAINS
     return
   END SUBROUTINE ch_psi_all_k
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!gamma part
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   SUBROUTINE ch_psi_all_gamma()
-    
+    !
+    ! gamma_only case
+    !  
     USE becmod, ONLY : becp,  calbec
     USE realus, ONLY : real_space, real_space_debug, invfft_orbital_gamma, &
-         fwfft_orbital_gamma, calbec_rs_gamma,  s_psir_gamma
-    use gvect,                only : gstart
+                       fwfft_orbital_gamma, calbec_rs_gamma,  s_psir_gamma
+    use gvect,  only : gstart
 
     IMPLICIT NONE
 

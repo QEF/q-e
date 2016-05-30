@@ -113,7 +113,7 @@ SUBROUTINE lr_dvpsi_e(ik,ipol,dvpsi)
      ENDIF
   ENDDO
   !
-  igkq => igk ! PG: needed by h_psiq, called by ch_psi_all
+  igkq => igk ! PG: needed by h_psi, called by ch_psi_all
   !
   CALL cgsolve_all (ch_psi_all, cg_psi, et (1, ik), d0psi, dvpsi, &
        h_diag, npwx, ngk(ik), thresh, ik, lter, conv_root, anorm, &

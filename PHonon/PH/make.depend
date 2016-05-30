@@ -680,6 +680,7 @@ ep_matrix_element_wannier.o : ../../PW/src/buffers.o
 ep_matrix_element_wannier.o : ../../PW/src/pwcom.o
 ep_matrix_element_wannier.o : ../../PW/src/symm_base.o
 ep_matrix_element_wannier.o : elph.o
+ep_matrix_element_wannier.o : io_dyn_mat.o
 ep_matrix_element_wannier.o : phcom.o
 find_irrep.o : ../../LR_Modules/lrcom.o
 find_irrep.o : ../../Modules/control_flags.o

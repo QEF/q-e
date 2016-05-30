@@ -10,7 +10,7 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
   !------------------------------------------------------------------------------
   !
   ! This subroutine applies the linear response operator to response wavefunctions.
-  ! S^{-1} { (H - E)*psi(k+q) + P_c^+(k+q) V_HXC(q)*psi0(k) }
+  ! S^{-1} { (H - E*S)*psi(k+q) + P_c^+(k+q) V_HXC(q)*psi0(k) }
   !
   ! Inspired by PH/solve_linter.f90
   !
@@ -62,7 +62,6 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
                             & tg_psic(:,:), tg_dvrssc(:,:)
   ! Task groups: wfct in R-space
   ! Task groups: HXC potential
-  INTEGER, ALLOCATABLE :: ibuf(:)
   !
   CALL start_clock('lr_apply')
   !
@@ -157,7 +156,7 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
      CALL gk_sort( xk(1,ikq), ngm, g, gcutw, npwq, igkq, g2kin ) 
      !
      ! Calculate beta-functions vkb at k+q (Kleinman-Bylander projectors)
-     ! The vks's are needed for the non-local potential in h_psiq,
+     ! The vkb's are needed for the non-local potential in h_psi,
      ! and for the ultrasoft term.
      !
      CALL init_us_2 (npwq, igkq, xk(1,ikq), vkb)
@@ -274,7 +273,7 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
         !
      ENDIF
      !
-     ! 2) (H - E) * psi(k+q)
+     ! 2) (H - E*S) * psi(k+q)
      !
      ! Compute the kinetic energy g2kin: (k+q+G)^2
      !
@@ -284,68 +283,24 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
                        (xk (3,ikq) + g (3, igkq(ig)) ) **2 ) * tpiba2
      ENDDO
      !
-     ! Apply the operator ( H - \epsilon S + alpha_pv P_v) to evc1
-     ! where alpha_pv = 0
-     !
-     !call ch_psi_all (npwq, evc1(1,1,ik), sevc1_new(1,1,ik), et(1,ikk), ik, nbnd_occ(ikk)) 
-     !
-     ! Compute H*psi
-     !
      IF (noncolin) THEN
         IF (.NOT. ALLOCATED(psic_nc)) ALLOCATE(psic_nc(dfftp%nnr,npol))
      !ELSE
      !  IF (.NOT. ALLOCATED(psic)) ALLOCATE(psic(dfftp%nnr))
      ENDIF
      !
-     IF (ntask_groups > 1) dffts%have_task_groups = .TRUE. 
+     ! Apply the operator ( H - \epsilon S + alpha_pv P_v) to evc1
+     ! where alpha_pv = 0
      !
-     IF (dffts%have_task_groups) THEN
-        !
-        ! With task groups we use the H*psi routine of PW parallelized on task groups
-        ! (see PH/ch_psi_all.f90)
-        !
-        ALLOCATE(ibuf(npwx))
-        ibuf(:) = igk_k(:,ikk)
-        igk_k(:,ikk) = igkq(:)
-        current_k = ikk
-        CALL h_psi (npwx, npwq, nbnd_occ(ikk), evc1(:,:,ik), hpsi)
-        CALL s_psi (npwx, npwq, nbnd_occ(ikk), evc1(:,:,ik), spsi)
-        igk_k(:,ikk) = ibuf(:)
-        DEALLOCATE(ibuf)
-        !
-     ELSE
-        !
-        CALL h_psiq (npwx, npwq, nbnd_occ(ikk), evc1(:,:,ik), hpsi, spsi)
-        !
-     ENDIF
-     !
-     dffts%have_task_groups = .FALSE.
+     CALL ch_psi_all (npwq, evc1(:,:,ik), sevc1_new(:,:,ik), et(:,ikk), ik, nbnd_occ(ikk)) 
      !
      IF (noncolin) THEN
         IF (ALLOCATED(psic_nc)) DEALLOCATE(psic_nc)
      !ELSE
      !  IF (ALLOCATED(psic)) DEALLOCATE(psic)
-     ENDIF
+     ENDIF 
      !
-     ! Subtract the eigenevalues H*psi(k+q) - et*psi(k+q)
-     !
-     DO ibnd = 1, nbnd_occ(ikk)
-        DO ig = 1, npwq
-           sevc1_new(ig,ibnd,ik) = hpsi(ig,ibnd) - &
-                    &  cmplx(et(ibnd,ikk),0.0d0,dp) * spsi(ig,ibnd)
-        ENDDO
-     ENDDO
-     !
-     IF (noncolin) THEN
-        DO ibnd = 1, nbnd_occ(ikk)
-           DO ig = 1, npwq
-              sevc1_new(ig+npwx,ibnd,ik) = hpsi(ig+npwx,ibnd) - &
-                     cmplx(et(ibnd,ikk),0.0d0,dp) * spsi(ig+npwx,ibnd)
-           ENDDO
-        ENDDO
-     ENDIF
-     !
-     ! 3) Sum up the two terms : (H - E)*psi(k+q) + P_c^+(k+q) V_HXC(q)*psi0(k)
+     ! 3) Sum up the two terms : (H - E*S)*psi(k+q) + P_c^+(k+q) V_HXC(q)*psi0(k)
      !
      IF (interaction1) THEN
         !
