@@ -264,14 +264,11 @@ PROGRAM pw_export
   !   pseudo_dir   pseudopotential directory
   !   psfile(:)    name of the pp file for each species
   !
-
-
   USE wrappers,  ONLY : f_mkdir_safe
   USE pwcom
   USE fft_base,  ONLY : dfftp
   USE io_global, ONLY : stdout, ionode, ionode_id
-  USE io_files,  ONLY : psfile, pseudo_dir
-  USE io_files,  ONLY : prefix, tmp_dir, outdir
+  USE io_files,  ONLY : psfile, pseudo_dir, prefix, tmp_dir
   USE ions_base, ONLY : ntype => nsp
   USE iotk_module
   USE mp_global, ONLY : mp_startup
@@ -283,6 +280,7 @@ PROGRAM pw_export
   IMPLICIT NONE
   !
   CHARACTER(LEN=256), EXTERNAL :: trimcheck
+  CHARACTER(LEN=256) :: outdir
   !
   INTEGER :: ik, i, kunittmp, ios
 
@@ -334,7 +332,6 @@ PROGRAM pw_export
   ! ... Broadcasting variables
   !
   tmp_dir = trimcheck( outdir )
-  CALL mp_bcast( outdir, ionode_id, world_comm )
   CALL mp_bcast( tmp_dir, ionode_id, world_comm )
   CALL mp_bcast( prefix, ionode_id, world_comm )
   CALL mp_bcast( pp_file, ionode_id, world_comm )
@@ -387,7 +384,7 @@ SUBROUTINE write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   USE symm_base,      ONLY : nsym, s, invsym, sname, irt, ftau
   USE  uspp,          ONLY : nkb, vkb
   USE wavefunctions_module,  ONLY : evc
-  USE io_files,       ONLY : nd_nmbr, outdir, prefix, iunwfc, nwordwfc
+  USE io_files,       ONLY : nd_nmbr, tmp_dir, prefix, iunwfc, nwordwfc
   USE io_files,       ONLY : pseudo_dir, psfile
   USE io_base_export, ONLY : write_restart_wfc
   USE io_global,      ONLY : ionode, stdout
@@ -468,7 +465,7 @@ SUBROUTINE write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
 
   IF( ionode ) THEN
     WRITE(0,*) "Opening file "//trim(pp_file)
-    CALL iotk_open_write(50,file=trim(outdir)//'/'//trim(pp_file))
+    CALL iotk_open_write(50,file=trim(tmp_dir)//'/'//trim(pp_file))
     WRITE(0,*) "Reconstructing the main grid"
   ENDIF
 

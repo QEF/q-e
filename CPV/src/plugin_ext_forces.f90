@@ -14,7 +14,6 @@ SUBROUTINE plugin_ext_forces()
   USE mp,               ONLY : mp_bcast
   USE io_global,        ONLY : stdout, ionode, ionode_id
   USE kinds,            ONLY : DP
-  USE io_files,         ONLY : outdir
   !
   USE plugin_flags
   !

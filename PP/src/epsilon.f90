@@ -150,7 +150,7 @@ PROGRAM epsilon
   USE mp_world,    ONLY : world_comm
   USE iotk_module
   USE xml_io_base
-  USE io_files,    ONLY : tmp_dir, prefix, outdir
+  USE io_files,    ONLY : tmp_dir, prefix
   USE constants,   ONLY : RYTOEV
   USE ener,        ONLY : ef
   USE klist,       ONLY : lgauss
@@ -164,6 +164,7 @@ PROGRAM epsilon
   IMPLICIT NONE
   !
   CHARACTER(LEN=256), EXTERNAL :: trimcheck
+  CHARACTER(LEN=256) :: outdir
   !
   ! input variables
   !
@@ -244,7 +245,6 @@ PROGRAM epsilon
   CALL mp_bcast( prefix, ionode_id, world_comm )
   CALL mp_bcast( tmp_dir, ionode_id, world_comm )
   CALL mp_bcast( shift, ionode_id, world_comm )
-  CALL mp_bcast( outdir, ionode_id, world_comm )
   CALL mp_bcast( intrasmear, ionode_id, world_comm )
   CALL mp_bcast( intersmear, ionode_id, world_comm)
   CALL mp_bcast( wmax, ionode_id, world_comm )

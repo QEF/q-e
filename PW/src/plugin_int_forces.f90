@@ -14,7 +14,6 @@ USE mp,               ONLY : mp_bcast
 USE mp_images,        ONLY : intra_image_comm
 USE io_global,        ONLY : stdout, ionode, ionode_id
 USE kinds,            ONLY : DP
-USE io_files,         ONLY : outdir
 USE cell_base,        ONLY : at, bg, alat, omega
 USE ions_base,        ONLY : nat, ntyp => nsp, ityp, tau, zv, amass
 USE fft_base,         ONLY : dfftp

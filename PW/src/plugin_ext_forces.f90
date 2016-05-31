@@ -14,7 +14,6 @@ SUBROUTINE plugin_ext_forces()
   USE mp_images,        ONLY : intra_image_comm
   USE io_global,        ONLY : stdout, ionode, ionode_id
   USE kinds,            ONLY : DP
-  USE io_files,         ONLY : outdir
   !
   USE plugin_flags
   !

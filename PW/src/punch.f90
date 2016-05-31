@@ -13,14 +13,13 @@ SUBROUTINE punch( what )
   ! ... the information needed for further processing (phonon etc.)
   !
   USE io_global,            ONLY : stdout, ionode
-  USE io_files,             ONLY : prefix, iunpun, iunwfc, nwordwfc, diropn
+  USE io_files,             ONLY : prefix, iunpun, iunwfc, nwordwfc, diropn, tmp_dir
   USE control_flags,        ONLY : io_level, twfcollect, io_level
   USE klist,                ONLY : nks
   USE pw_restart,           ONLY : pw_writefile
 #ifdef __XSD
   USE pw_restart,           ONLY : pw_write_schema
   USE io_files,             ONLY : xmlpun_schema
-  USE input_parameters,     ONLY : outdir
   USE wrappers,             ONLY : f_copy
 #endif
   USE a2F,                  ONLY : la2F, a2Fsave
@@ -54,8 +53,8 @@ SUBROUTINE punch( what )
 #ifdef __XSD
   CALL pw_write_schema( TRIM( what ) )
   IF (ionode .and. TRIM(what) == 'all') THEN 
-     cp_source = TRIM(outdir)//'/'//TRIM(prefix)//'.save/'//xmlpun_schema
-     cp_dest   = TRIM(outdir)//'/'//TRIM(prefix)//'.xml'
+     cp_source = TRIM(tmp_dir)//'/'//TRIM(prefix)//'.save/'//xmlpun_schema
+     cp_dest   = TRIM(tmp_dir)//'/'//TRIM(prefix)//'.xml'
      cp_status = f_copy(cp_source, cp_dest)
   END IF
 #endif

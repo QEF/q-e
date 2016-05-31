@@ -24,7 +24,7 @@ PROGRAM fpmd_postproc
 
   USE kinds,      ONLY : DP
   USE constants,  ONLY : bohr => BOHR_RADIUS_ANGS
-  USE io_files,   ONLY : prefix, iunpun, xmlpun, tmp_dir, outdir
+  USE io_files,   ONLY : prefix, iunpun, xmlpun, tmp_dir
   USE mp_global,  ONLY : mp_startup, mp_global_end
 
   USE iotk_module
@@ -46,7 +46,7 @@ PROGRAM fpmd_postproc
   REAL(DP), ALLOCATABLE :: sigma(:,:), force(:,:)
   REAL(DP), ALLOCATABLE :: stau0(:,:), svel0(:,:), force0(:,:)
 
-  CHARACTER(len=256) :: filepp, fileout, output
+  CHARACTER(len=256) :: filepp, fileout, output, outdir
   CHARACTER(len=256) :: filecel, filepos, filefor, filepdb
   CHARACTER(len=256) :: print_state
   CHARACTER(len=3)   :: atm( maxsp ), lab
