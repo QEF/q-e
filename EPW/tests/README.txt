@@ -27,3 +27,11 @@ The following feature of the code is tested
 The following feature of the code is tested
 - Spin-orbit coupling
 - Wannier BS plotting to check Wannier interpolation
+
+##################
+# Test 05 : MgB2 #
+##################
+The following feature of the code is tested
+- Superconducting properties within the Migdal-Eliashberg framework
+- Isotropic superconducting properties with contour integration
+- Anisotropic superconducting properties with Pade continuation
