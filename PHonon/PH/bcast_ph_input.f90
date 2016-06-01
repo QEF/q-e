@@ -28,7 +28,7 @@ subroutine bcast_ph_input ( )
   USE partial, ONLY : nat_todo
   USE freq_ph, ONLY : fpol
   USE output, ONLY : fildvscf, fildyn, fildrho
-  use io_files, ONLY : outdir, prefix
+  use io_files, ONLY : tmp_dir, prefix
   USE control_flags, only: iverbosity, modenum
   USE ramanm, ONLY: lraman, elop, dek, eth_rps, eth_ns
   USE input_parameters, ONLY: max_seconds
@@ -114,7 +114,7 @@ subroutine bcast_ph_input ( )
   call mp_bcast (fildyn, meta_ionode_id, world_comm )
   call mp_bcast (fildvscf, meta_ionode_id, world_comm )
   call mp_bcast (fildrho, meta_ionode_id, world_comm )
-  call mp_bcast (outdir, meta_ionode_id, world_comm )
+  call mp_bcast (tmp_dir, meta_ionode_id, world_comm )
   call mp_bcast (prefix, meta_ionode_id, world_comm )
   call mp_bcast (electron_phonon, meta_ionode_id, world_comm )
   !

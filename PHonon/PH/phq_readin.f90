@@ -328,12 +328,12 @@ SUBROUTINE phq_readin()
   !
   ! ...  broadcast all input variables
   !
+  tmp_dir = trimcheck (outdir)
   CALL bcast_ph_input ( )
   CALL mp_bcast(nogg, meta_ionode_id, world_comm  )
   CALL mp_bcast(q2d, meta_ionode_id, world_comm  )
   CALL mp_bcast(q_in_band_form, meta_ionode_id, world_comm  )
   !
-  tmp_dir = trimcheck (outdir)
   drho_star%dir=trimcheck(drho_star%dir)
   dvscf_star%dir=trimcheck(dvscf_star%dir)
   ! filename for the star must always be automatically generated:
