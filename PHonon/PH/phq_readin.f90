@@ -51,7 +51,7 @@ SUBROUTINE phq_readin()
   USE partial,       ONLY : atomo, nat_todo, nat_todo_input
   USE output,        ONLY : fildyn, fildvscf, fildrho
   USE disp,          ONLY : nq1, nq2, nq3, x_q, wq, nqs, lgamma_iq
-  USE io_files,      ONLY : outdir, tmp_dir, prefix
+  USE io_files,      ONLY : tmp_dir, prefix
   USE noncollin_module, ONLY : i_cons, noncolin
   USE ldaU,          ONLY : lda_plus_u
   USE control_flags, ONLY : iverbosity, modenum, twfcollect
@@ -91,7 +91,7 @@ SUBROUTINE phq_readin()
     ! counter on types
   REAL(DP) :: amass_input(nsx)
     ! save masses read from input here
-  CHARACTER (LEN=256) :: filename
+  CHARACTER (LEN=256) :: outdir, filename
   CHARACTER (LEN=8)   :: verbosity
   CHARACTER(LEN=80)          :: card
   CHARACTER(LEN=1), EXTERNAL :: capital
@@ -247,10 +247,8 @@ SUBROUTINE phq_readin()
   elop         = .FALSE.
   max_seconds  =  1.E+7_DP
   reduce_io    = .FALSE.
-  IF ( TRIM(outdir) == './') THEN
-     CALL get_environment_variable( 'ESPRESSO_TMPDIR', outdir )
-     IF ( TRIM( outdir ) == ' ' ) outdir = './'
-  ENDIF
+  CALL get_environment_variable( 'ESPRESSO_TMPDIR', outdir )
+  IF ( TRIM( outdir ) == ' ' ) outdir = './'
   prefix       = 'pwscf'
   fildyn       = 'matdyn'
   fildrho      = ' '
@@ -558,7 +556,7 @@ SUBROUTINE phq_readin()
 !
 !   We check if the bands and the information on the pw run are in the directory
 !   written by the phonon code for the current q point. If the file exists
-!   we read from there, otherwise use the information in outdir.
+!   we read from there, otherwise use the information in tmp_dir.
 !
      IF (lqdir) THEN
         tmp_dir_phq= TRIM (tmp_dir_ph) //TRIM(prefix)//&

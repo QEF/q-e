@@ -11,8 +11,7 @@
 !==========================================
 program fd
   use constants,  ONLY : pi, bohr_radius_angs, amu_au, amu_ry
-  use io_files,   ONLY : prefix, tmp_dir, outdir
-  use io_files,   ONLY : psfile, pseudo_dir
+  use io_files,   ONLY : prefix, tmp_dir, psfile, pseudo_dir
   use io_global,  ONLY : stdout, ionode, ionode_id
   USE mp_global,  ONLY : mp_startup
   USE environment,ONLY : environment_start
@@ -103,12 +102,10 @@ program fd
     READ(5,verbatim,IOSTAT=ios)
     IF (ios /= 0) CALL errore ('FD', 'reading verbatim namelist', ABS(ios) )
     prefix=trim(fd_prefix)
-    outdir=trim(fd_outdir)
-    tmp_dir = trimcheck( outdir )
+    tmp_dir = trimcheck( fd_outdir )
     ios = f_mkdir_safe( TRIM( fd_outfile_dir ) )
   endif
 
-  CALL mp_bcast( outdir, ionode_id, world_comm )
   CALL mp_bcast( tmp_dir, ionode_id, world_comm )
   CALL mp_bcast( prefix, ionode_id, world_comm )
 
@@ -121,7 +118,7 @@ program fd
     write(6,*) '**************************************************'
     write(6,*) ''
     write(6,*) '    prefix=  ',trim(prefix)
-    write(6,*) '    outdir=  ',trim(outdir)
+    write(6,*) '    outdir=  ',trim(tmp_dir)
     write(6,*) '    ectuwfc= ',ecutwfc, 'Ry'
     natx=nat*nrx1*nrx2*nrx3
     ALLOCATE(atom_name(nat))
