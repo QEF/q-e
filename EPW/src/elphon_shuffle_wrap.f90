@@ -9,14 +9,14 @@
   !-----------------------------------------------------------------------
   SUBROUTINE elphon_shuffle_wrap
   !-----------------------------------------------------------------------
-  !
-  ! Electron-phonon calculation with Wannier functions: load all phonon q's
-  !
-  ! 09/2009 This subroutine is the main driver of the electron-phonon 
-  ! calculation. It first calculates the electron-phonon matrix elements
-  ! on the coarse mesh and then passes the data off to ephwann_shuffle
-  ! to perform the interpolation.
-  !
+  !!
+  !! Electron-phonon calculation with Wannier functions: load all phonon q's
+  !!
+  !! This subroutine is the main driver of the electron-phonon 
+  !! calculation. It first calculates the electron-phonon matrix elements
+  !! on the coarse mesh and then passes the data off to [[ephwann_shuffle]]
+  !! to perform the interpolation.
+  !!
   !-----------------------------------------------------------------------
   !
 #ifdef __PARA
@@ -64,49 +64,130 @@
 #ifdef __NAG
   USE f90_unix_io,    ONLY : flush
 #endif
+  ! --------------------------------------------------------------
   implicit none
-
-  !
-  integer :: sym_smallq(48) 
-  !
-  real(kind=DP), allocatable :: xqc_irr(:,:), wqlist_irr(:), xqc(:,:), wqlist(:)
-  ! the qpoints in the irr wedge
-  ! the corresponding weigths
-  ! the qpoints in the uniform mesh
-  ! the corresponding weigths
-  integer :: nqc_irr, nqc, max, nqxq_tmp, ibnd, ik, ios, &
-             dummy1, dummy2, ik_start, ik_stop
-  ! number of qpoints in the irreducible wedge
-  ! number of qpoints on the uniform grid
   ! 
-  ! symmetry-related variables
-  !
-  integer :: gmapsym(ngm,48)
-  !  correspondence G -> S(G)
-  complex(kind=DP) :: eigv (ngm, 48)
-  ! e^{ iGv} for 1...nsym (v the fractional translation)
-  complex(kind=DP) :: cz1( nmodes, nmodes), cz2(nmodes, nmodes)
-  !  the eigenvectors for the first q in the star
-  !  the rotated eigenvectors, for the current q in the star
-  !
-  integer :: nq, isq (48), imq 
-  ! degeneracy of the star of q
-  ! index of q in the star of a given sym.op.
-  ! index of -q in the star of q (0 if not present)
-  integer :: sym_sgq(48)
-  ! the symmetries giving the q point iq in the star
-  real(kind=DP) :: sxq (3, 48), et_tmp(nbnd, nkstot)
-  ! list of vectors in the star of q
-  integer :: i, j, iq, iq_irr, isym, &
-     iq_first, jsym, ism1, nsq, ipol, jpol, ierr, iunpun
-  real(kind=DP) xq0(3), aq(3), saq(3), raq(3), ft1, ft2, ft3
-!  REAL(DP) :: w2(3*nat) ! dummy here
-  logical :: sym(48),  eqvect_strict, nog, symmo, exst
-  character (len=256) :: tempfile, dirname,filename
+  character (len=256) :: tempfile
+  !! Temporary .eig file
+  character (len=256) :: dirname
+  !! Name of the directory
+  character (len=256) :: filename
+  !! Name of the file
 #ifdef __PARA
   character (len=3) :: filelab
+  !! Append the number of the core that works on that file
 #endif
-  CHARACTER(LEN=6), EXTERNAL :: int_to_char
+  character(len=6), external :: int_to_char
+  !! Transfor an int to a character
+  logical :: sym(48)
+  !! Logical vectors that says which crystal symmetries exists in our system
+  logical :: eqvect_strict
+  !! This function test if two tridimensional vectors are equal 
+  logical :: nog
+  !! Tell you if G=0 or not in $S(q0)+G=q$ 
+  logical :: symmo
+  !! Check whether the symmetry belongs to a symmorphic group
+  logical :: exst
+  !! Tells if a file exists.
+  !
+  integer :: sym_smallq(48) 
+  !! Set of all symmetries for the small group of one q.
+  !! This is a subset of total crystal symmetries that remains
+  !! after the q-point pertubation.
+  integer :: nqc_irr
+  !! Number of qpoints in the irreducible wedge
+  integer :: nqc
+  !! Number of qpoints on the uniform grid
+  integer :: maxvalue
+  !! Temporary integer for max value
+  integer :: nqxq_tmp
+  !! Maximum G+q length ? 
+  integer :: ibnd
+  !! Band index
+  integer :: ik
+  !! Total k-point index
+  integer :: ios
+  !! Contains the state of the opened file 
+  integer :: dummy1
+  !! Dummy variable
+  integer :: dummy2
+  !! Dummy variable
+  integer :: ik_start
+  !! Lower bound for the k-point of the coarse grid in parallel 
+  integer :: ik_stop
+  !! Higher bound for the k-point of the coarse grid in parallel 
+  integer :: gmapsym(ngm,48)
+  !! Correspondence G -> S(G)
+  integer :: nq
+  !! Degeneracy of the star of q
+  integer :: isq (48)
+  !! Index of q in the star of a given sym.op.
+  integer :: imq              
+  !! Index of -q in the star of q (0 if not present)
+  integer :: sym_sgq(48)
+  !! The symmetries giving the q point iq in the star
+  integer :: i
+  !! Index for the star of q points
+  integer :: j
+  !! Cartesian inddex
+  integer :: iq 
+  !! Q-index
+  integer :: iq_irr
+  !! Irreducible q-index
+  integer :: isym
+  !! Index of symmetry
+  integer :: iq_first
+  !! First q in the star of q
+  integer :: jsym
+  !! Symmetry index 
+  integer :: ism1
+  !! Inverse of the symmetry
+  integer :: nsq
+  !! The number of degeneracy of the small group for this iq in the star
+  integer :: ipol
+  !! Polarization index
+  integer :: jpol
+  !! Polarization index
+  integer :: ierr
+  !! Error index when reading/writing a file
+  integer :: iunpun
+  !! Unit of the file
+  ! 
+  real(kind=DP), allocatable :: xqc_irr(:,:)
+  !! The qpoints in the irr wedge
+  real(kind=DP), allocatable :: wqlist_irr(:)
+  !! The corresponding weigths
+  real(kind=DP), allocatable :: xqc(:,:)
+  !! The qpoints in the uniform mesh
+  real(kind=DP), allocatable :: wqlist(:)
+  !! The corresponding weigths
+  real(kind=DP) :: sxq (3, 48)
+  !! List of vectors in the star of q  
+  real(kind=DP) :: et_tmp(nbnd, nkstot)
+  !! Temporary array containing the eigenvalues (KS or GW) when read from files
+  real(kind=DP) :: xq0(3) 
+  !! Current coarse q-point
+  real(kind=DP) :: aq(3)
+  !! Store the current q-point for symmetry multiplication
+  real(kind=DP) :: saq(3)
+  !! Rotated q-point
+  real(kind=DP) :: raq(3)
+  !! Rotate q-point in cartesian coordinate
+  real(kind=DP) :: ft1
+  !! Fractional translation x
+  real(kind=DP) :: ft2
+  !! Fractional translation y
+  real(kind=DP) :: ft3
+  !! Fractional translation z
+  !
+  complex(kind=DP) :: eigv (ngm, 48)
+  !! $e^{ iGv}$ for 1...nsym (v the fractional translation)
+  complex(kind=DP) :: cz1( nmodes, nmodes)
+  !! The eigenvectors for the first q in the star
+  complex(kind=DP) :: cz2(nmodes, nmodes)
+  !! The rotated eigenvectors, for the current q in the star
+  !
+  ! ---------------------------------------------------------------------
   !
   CALL start_clock ( 'elphon_wrap' )
   !
@@ -139,16 +220,16 @@
 #endif
   !
   ! fix for uspp
-  max = nqxq
+  maxvalue = nqxq
   DO iq = 1, nqc_irr
      nqxq_tmp = INT( ( (sqrt(gcutm) + sqrt(xqc_irr(1,iq)**2 + &
           xqc_irr(2,iq)**2 + xqc_irr(3,iq)**2) ) &
           / dq + 4) * cell_factor )
-     IF (nqxq_tmp .gt. max)  max = nqxq_tmp
+     IF (nqxq_tmp .gt. maxvalue)  maxvalue = nqxq_tmp
   ENDDO
-  IF (max .gt. nqxq) then
+  IF (maxvalue .gt. nqxq) then
      IF (allocated(qrad)) deallocate(qrad)
-     allocate (qrad (max, nbetam*(nbetam+1)/2,lmaxq, nsp))
+     allocate (qrad (maxvalue, nbetam*(nbetam+1)/2,lmaxq, nsp))
   ENDIF
   IF (nkstot .ne. nk1*nk2*nk3 ) &
        CALL errore('elphon_shuffle_wrap','nscf run inconsistent with epw input',1)  

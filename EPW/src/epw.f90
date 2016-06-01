@@ -9,17 +9,17 @@
   ! Adapted from PH/ph.f90  
   !-----------------------------------------------------------------------
   PROGRAM epw
-  !-----------------------------------------------------------------------
-  !
-  ! This is the main EPW driver which sets the phases on the wavefunctions,
-  ! calls wannierize and elphon_shuffle_wrap
-  !
-  ! 8/13/08 removed epsil variables, fildyn, ldisp
-  !
-  ! 8/14/08 lnscf is unnecessary, as is nqs,iq_start
-  ! 8/15/08 recover has been cut
-  ! 02/2009 in state of v0.2  Barely resembles phonon.f90
-  !         
+  !! author: Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
+  !! version: v4.0
+  !! license: GNU
+  !! summary: EPW main driver 
+  !!  
+  !! This is the main EPW driver which sets the phases on the wavefunctions,
+  !! calls [[wann_run]] and [[elphon_shuffle_wrap]]
+  !!
+  !! @Note
+  !! 8/14/08 lnscf is unnecessary, as is nqs,iq_start
+  !!
   USE io_global,       ONLY : stdout
 #ifdef __PARA
   USE mp,              ONLY : mp_bcast, mp_barrier
@@ -31,14 +31,15 @@
   USE global_version,  ONLY : version_number
   USE epwcom,          ONLY : filukk, eliashberg, ep_coupling
   USE environment,     ONLY : environment_start
-  ! SP: Move elph from control_ph to el_phon
-  USE elph2,           ONLY : elph
+  USE elph2,           ONLY : elph 
+  ! Flag to perform an electron-phonon calculation. If .true. 
+  ! the code will enter in [[elphon_shuffle_wrap]]
   !
   !
   implicit none
   !
   CHARACTER (LEN=12)   :: code = 'EPW'
-  INTEGER :: ierr
+  !! Name of the program
   !
   version_number = '4.0.0'
   !
@@ -94,7 +95,7 @@ write(stdout,'(a)') "                                                           
   IF ( ep_coupling ) & 
   WRITE( stdout, '(/5x,"Ultrasoft (Vanderbilt) Pseudopotentials")' )
   !
-  ! read in the input file
+  ! Read in the input file
   !
   CALL epw_readin
   !
@@ -120,9 +121,10 @@ write(stdout,'(a)') "                                                           
      !
      CALL setphases_wrap
      !
-     !  Create U(k, k') localization matrix 
-     !
      IF (wannierize) THEN
+        !
+        !  Create U(k, k') localization matrix 
+        !      
         CALL wann_run
      ELSE
         !
