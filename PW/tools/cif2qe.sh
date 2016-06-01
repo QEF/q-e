@@ -1,7 +1,9 @@
-!/bin/bash
+#!/bin/bash
 
 #
 # CIF to Quantum Espresso format converter
+#               Date: 31-May-2016  Typo fixed; input file can be specified
+#                                  with .cif extension (Nick Thompson)
 #  Version 1.2  Date: 20-Mar-2015  Bug Fix
 #  Version 1.1  Date: 23-Dec-2014  Bug Fix
 #               Date: 30-Set-2014  -s option added (F. Zadra)
@@ -23,7 +25,7 @@
 #
 
 version="1.2"
-USAGE="cif2qe.sh Version ${version}\nUsage: cif2qe.sh [-i] [-s] File\n    ( -i uses the ibrav of QE. -s uses CRYSTAL sg atom position mode.\n Do not add .cif extension!) -  Requires File.cif\n"
+USAGE="cif2qe.sh Version ${version}\nUsage: cif2qe.sh [-i] [-s] File\n    ( -i uses the ibrav of QE. -s uses CRYSTAL sg atom position mode.\n"
 if [ $# == 0 -o $# -gt 2 ]; then
  printf "$USAGE"
  exit
@@ -44,12 +46,14 @@ if [ $# == 2 ]; then
  fi
 fi
 
-if [ ! -f $1.cif ]; then
- echo "Error. Cannot find file $1.cif"
+file_prefix=$(basename "$1" .cif)
+file="$file_prefix".cif
+if [ ! -f $file ] ; then
+ echo "Error. Cannot find file $file"
  exit
 fi
 
-awk -v FILE="$1" -v VERSION="$version" -v do_IBRAV=$do_ibrav -v SG=$sg '
+awk -v FILE_PREFIX="$file_prefix" -v FILE="$file" -v VERSION="$version" -v do_IBRAV=$do_ibrav -v SG=$sg '
 
 BEGIN {
  bohr = 0.52917721092
@@ -353,7 +357,7 @@ END {
  print "                restart_mode = \x027" "from_scratch\x027"
  print "                      outdir = \x027" "./1\x027"
  print "                  pseudo_dir = \x027" "../PP/atompaw\x027"
- print "                      prefix = \x027" FILE "\x027"
+ print "                      prefix = \x027" FILE_PREFIX "\x027"
  print "                     disk_io = \x027" "none\x027"
  print "                   verbosity = \x027" "default\x027"
  print "               etot_conv_thr = 0.0001"
@@ -473,5 +477,5 @@ if (SG==2) {
  }
  print "\n\n"
 
-} ' $1.cif
+} ' $file
 
