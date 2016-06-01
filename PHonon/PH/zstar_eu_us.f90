@@ -20,13 +20,12 @@ subroutine zstar_eu_us
   USE cell_base, ONLY : omega
   USE ions_base, ONLY : nat, ntyp => nsp, ityp
   USE buffers,   ONLY : get_buffer
-  USE klist,     ONLY : xk, wk
+  USE klist,     ONLY : xk, wk, ngk, igk_k
   USE gvecs,     ONLY : doublegrid
   USE fft_base,  ONLY : dfftp, dffts
   USE lsda_mod,  ONLY : nspin, current_spin, isk, lsda
-  USE io_files,  ONLY : iunigk
   USE uspp,      ONLY : okvan, nkb, vkb, nlcc_any
-  USE wvfct,     ONLY : nbnd, npw, npwx, igk
+  USE wvfct,     ONLY : nbnd, npwx
   USE paw_variables, ONLY : okpaw
   USE wavefunctions_module,    ONLY : evc
   USE uspp_param,       ONLY : upf, nhm, nh
@@ -41,12 +40,12 @@ subroutine zstar_eu_us
   USE control_lr, ONLY : nbnd_occ
   USE lrus,       ONLY : int3, int3_paw
   USE eqv,        ONLY : dvpsi, dpsi
-  USE qpoint,     ONLY : nksq, npwq
+  USE qpoint,     ONLY : nksq
   USE dv_of_drho_lr
   !
   implicit none
-  integer :: ibnd, jbnd, ipol, jpol, imode0, irr, imode, nrec, mode
-  integer :: ik,  ig, ir, is, i, j, mu, ipert
+  integer :: npw, ibnd, jbnd, ipol, jpol, imode0, irr, imode, nrec, mode
+  integer :: ik, ig, ir, is, i, j, mu, ipert
   integer :: ih, jh, ijh
   integer :: iuhxc, lrhxc
   !
@@ -87,13 +86,11 @@ subroutine zstar_eu_us
   ! Hartree and exchange and correlation potential , which we need later
   ! for the calculation of the Hartree and xc part
   !
-  if (nksq.gt.1) rewind (iunigk)
   do ik = 1, nksq
-     if (nksq.gt.1) read (iunigk) npw, igk
-     npwq = npw
+     npw = ngk(ik)
      if (nksq.gt.1) call get_buffer (evc, lrwfc, iuwfc, ik)
      if (lsda) current_spin = isk (ik)
-     call init_us_2 (npw, igk, xk(1,ik), vkb)
+     call init_us_2 (npw, igk_k(1,ik), xk(1,ik), vkb)
      weight = wk (ik)
      do jpol = 1, 3
         nrec = (jpol - 1) * nksq + ik
@@ -185,13 +182,11 @@ subroutine zstar_eu_us
   !  Calculate the part with the position operator
   !
   allocate (dvkb(npwx,nkb,3))
-  if (nksq.gt.1) rewind (iunigk)
   do ik = 1, nksq
-     if (nksq.gt.1) read (iunigk) npw, igk
-     npwq = npw
+     npw = ngk(ik)
      weight = wk (ik)
      if (nksq.gt.1) call get_buffer (evc, lrwfc, iuwfc, ik)
-     call init_us_2 (npw, igk, xk (1, ik), vkb)
+     call init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb)
      call dvkb3(ik, dvkb)
      imode0 = 0
      do irr = 1, nirr

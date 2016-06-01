@@ -19,13 +19,13 @@ subroutine psidspsi (ik, uact, pdsp)
   USE kinds,     ONLY : DP
   USE cell_base, ONLY : tpiba
   USE gvect,     ONLY : g
-  USE klist,     ONLY : xk
+  USE klist,     ONLY : xk, ngk, igk_k
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   USE lsda_mod,  ONLY : lsda, current_spin, isk
   USE spin_orb,  ONLY : lspinorb
   USE noncollin_module, ONLY : noncolin, npol
   USE wavefunctions_module,    ONLY : evc
-  USE wvfct,     ONLY : nbnd, npw, npwx, igk
+  USE wvfct,     ONLY : nbnd, npwx
   USE uspp,      ONLY: nkb, vkb, qq, qq_so
   USE uspp_param,ONLY : nh
   USE phus,      ONLY : alphap
@@ -48,7 +48,7 @@ subroutine psidspsi (ik, uact, pdsp)
   !
 
   integer :: na, nb, mu, nu, ikk, ikq, ig, igg, nt, ibnd, jbnd, ijkb0, &
-       ikb, jkb, ih, jh, ipol, is
+       ikb, jkb, ih, jh, ipol, is, npw
   ! counter on atoms
   ! counter on modes
   ! the point k
@@ -90,6 +90,7 @@ subroutine psidspsi (ik, uact, pdsp)
   if (lgamma) then
      ikk = ik
      ikq = ik
+     npw = ngk(ik)
   else
      call infomsg ('psidspsi', 'called for lgamma .eq. false')
   endif
@@ -209,7 +210,7 @@ subroutine psidspsi (ik, uact, pdsp)
         enddo
         if (ok) then
            do ig = 1, npw
-              igg = igk (ig)
+              igg = igk_k (ig,ikk)
               aux (ig) =  vkb(ig, ikb) *    &
                    (xk(ipol, ik) + g(ipol, igg) )
            enddo

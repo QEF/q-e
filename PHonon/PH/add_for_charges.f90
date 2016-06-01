@@ -17,15 +17,14 @@ subroutine add_for_charges (ik, uact)
   USE cell_base, ONLY : tpiba
   USE gvect, ONLY : g
   USE lsda_mod, ONLY: lsda, current_spin, isk
-  USE klist, ONLY : xk
+  USE klist, ONLY : xk, ngk, igk_k
   USE spin_orb, ONLY : lspinorb
   USE uspp, ONLY : nkb, qq, qq_so, vkb
-  USE wvfct, ONLY : npwx, npw, nbnd, igk
+  USE wvfct, ONLY : npwx, nbnd
   USE becmod, ONLY: calbec, bec_type, allocate_bec_type, deallocate_bec_type
   USE noncollin_module, ONLY : noncolin, npol
   USE uspp_param, only: nh
   USE eqv, ONLY : dvpsi, dpsi
-  USE qpoint, ONLY : igkq
   USE control_lr, ONLY : lgamma
   implicit none
   !
@@ -42,7 +41,7 @@ subroutine add_for_charges (ik, uact)
   !
 
   integer :: na, nb, mu, nu, ikk, ikq, ig, igg, nt, ibnd, ijkb0, &
-       ikb, jkb, ih, jh, ipol, is, js, ijs
+       ikb, jkb, ih, jh, ipol, is, js, ijs, npw
   ! counter on atoms
   ! counter on modes
   ! the point k
@@ -87,6 +86,7 @@ subroutine add_for_charges (ik, uact)
   if (lgamma) then
      ikk = ik
      ikq = ik
+     npw =ngk(ik)
   else
      call infomsg ('add_for_charges', 'called for lgamma .eq. false')
   endif
@@ -121,13 +121,13 @@ subroutine add_for_charges (ik, uact)
         do ig = 1, npw
            aux1 (ig, ibnd) = dpsi(ig,ibnd) *           &
                 tpiba * (0.d0,1.d0) *                  &
-                ( xk(ipol,ikk) + g(ipol,igk(ig)) )
+                ( xk(ipol,ikk) + g(ipol,igk_k(ig,ikk)) )
         enddo
         if (noncolin) then
            do ig = 1, npw
               aux1 (ig+npwx, ibnd) = dpsi(ig+npwx,ibnd) *           &
                    tpiba * (0.d0,1.d0) *                  &
-                  ( xk(ipol,ikk) + g(ipol,igk(ig)) )
+                  ( xk(ipol,ikk) + g(ipol,igk_k(ig,ikk)) )
            enddo
         endif
      enddo
@@ -225,7 +225,7 @@ subroutine add_for_charges (ik, uact)
         enddo
         if (ok) then
            do ig = 1, npw
-              igg = igkq (ig)
+              igg = igk_k (ig,ikq)
               aux (ig) =  vkb(ig, ikb) * (xk(ipol, ikq) + g(ipol, igg) )
            enddo
            do ibnd = 1, nbnd

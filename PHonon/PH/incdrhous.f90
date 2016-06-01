@@ -29,9 +29,9 @@ subroutine incdrhous (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
   USE mp_bands,  ONLY : intra_bgrp_comm
   USE mp,        ONLY : mp_sum
   USE becmod,    ONLY : bec_type
-
+  USE klist,     ONLY : ngk, igk_k
   USE lrus,      ONLY : becp1
-  USE qpoint,    ONLY : nksq, igkq, npwq, ikks
+  USE qpoint,    ONLY : nksq, ikqs, ikks
   USE eqv,       ONLY : evq, dpsi
   USE control_lr, ONLY: nbnd_occ
 
@@ -65,7 +65,7 @@ subroutine incdrhous (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
   ! the change of wavefunctions in real sp
 
   integer :: ibnd, jbnd, nt, na, mu, ih, jh, ikb, jkb, ijkb0, &
-       startb, lastb, ipol, ikk, ir, ig
+       startb, lastb, ipol, ikk, ir, ig, npwq, ikq
   ! counters
 
   call start_clock ('incdrhous')
@@ -75,6 +75,8 @@ subroutine incdrhous (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
   call divide (intra_bgrp_comm, nbnd, startb, lastb)
   ps1 (:,:) = (0.d0, 0.d0)
   ikk=ikks(ik)
+  ikq=ikqs(ik)
+  npwq = ngk(ikq)
   !
   !   Here we prepare the two terms
   !
@@ -118,7 +120,7 @@ subroutine incdrhous (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
      enddo
      dpsir(:) = (0.d0, 0.d0)
      do ig = 1, npwq
-        dpsir(nls(igkq(ig))) = dpsi (ig, ibnd)
+        dpsir(nls(igk_k(ig,ikq))) = dpsi (ig, ibnd)
      enddo
      CALL invfft ('Wave', dpsir, dffts)
      do ir = 1, dffts%nnr

@@ -12,16 +12,16 @@ subroutine add_dkmds(ik, uact, jpol, dvkb)
   ! This subroutine adds to dvpsi the terms which depend on the augmentation
   ! charge. It assumes that the variable dpqq, has been set. In the noncollinear
   ! and spin_orbit case the variable dpqq_so must be set.
+  ! NB: I think this routine is called only for q=0; case q/=0 not implemented
   !
-
   USE kinds, ONLY : DP
   USE cell_base, ONLY : at, tpiba
   USE gvect, ONLY : g
   USE lsda_mod, ONLY: lsda, current_spin, isk, nspin
-  USE klist, ONLY : xk
+  USE klist, ONLY : xk, ngk, igk_k
   USE spin_orb, ONLY : lspinorb
   USE uspp, ONLY : nkb, qq, qq_so, vkb
-  USE wvfct, ONLY : npwx, npw, nbnd, igk
+  USE wvfct, ONLY : npwx, nbnd
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   USE noncollin_module, ONLY : noncolin, npol
   USE wavefunctions_module,    ONLY : evc
@@ -29,7 +29,7 @@ subroutine add_dkmds(ik, uact, jpol, dvkb)
   USE becmod, ONLY: calbec
   USE phus,   ONLY : alphap
 
-  USE qpoint,     ONLY : igkq, npwq
+  USE qpoint,     ONLY : ikks, ikqs
   USE lrus,       ONLY : becp1, dpqq, dpqq_so
   USE eqv,        ONLY : dvpsi
   USE control_lr, ONLY : nbnd_occ
@@ -43,7 +43,7 @@ subroutine add_dkmds(ik, uact, jpol, dvkb)
 
   real(DP), parameter :: eps = 1.d-12
 
-  integer :: ipol, ijkb0, nt, na, ih, jh, ikb, jkb, ibnd, ig, igg, mu
+  integer :: npw, npwq, ipol, ijkb0, nt, na, ih, jh, ikb, jkb, ibnd, ig, igg, mu, ikq
 
   logical :: ok
 
@@ -88,6 +88,9 @@ subroutine add_dkmds(ik, uact, jpol, dvkb)
   !   and becp2 = < d/dk beta | psi>
   !
   if (lsda) current_spin = isk (ik)
+  npw = ngk(ik)
+  ikq = ik
+  npwq= ngk(ik)
   if (noncolin) then
      call calbec (npw, dvkb(:,:,jpol), evc, becp2_nc)
   else
@@ -103,12 +106,12 @@ subroutine add_dkmds(ik, uact, jpol, dvkb)
      do ibnd = 1, nbnd
         do ig = 1, npw
            aux1 (ig, ibnd) = evc(ig,ibnd) * tpiba * (0.d0,1.d0) * &
-                ( xk(ipol,ik) + g(ipol,igk(ig)) )
+                ( xk(ipol,ik) + g(ipol,igk_k(ig,ik)) )
         enddo
         if (noncolin) then
            do ig = 1, npw
               aux1 (ig+npwx, ibnd) = evc(ig+npwx,ibnd)*tpiba*(0.d0,1.d0) * &
-                ( xk(ipol,ik) + g(ipol,igk(ig)) )
+                ( xk(ipol,ik) + g(ipol,igk_k(ig,ik)) )
            enddo
         endif
      enddo
@@ -283,7 +286,7 @@ subroutine add_dkmds(ik, uact, jpol, dvkb)
         enddo
         if (ok) then
            do ig = 1, npw
-              igg = igkq (ig)
+              igg = igk_k (ig,ikq)
               aux (ig) =  vkb(ig, ikb) * (xk(ipol, ik) + g(ipol, igg) )
            enddo
            do ibnd = 1, nbnd

@@ -21,7 +21,7 @@ subroutine dvqpsi_us_only (ik, uact)
   USE kinds, only : DP
   USE cell_base, ONLY : tpiba
   USE gvect,     ONLY : g
-  USE klist,     ONLY : xk
+  USE klist,     ONLY : xk, ngk, igk_k
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   USE lsda_mod,  ONLY : lsda, current_spin, isk, nspin
   USE spin_orb,  ONLY : lspinorb
@@ -32,7 +32,7 @@ subroutine dvqpsi_us_only (ik, uact)
   USE phus,      ONLY : int1, int1_nc, int2, int2_so, alphap
 
   USE lrus,       ONLY : becp1
-  USE qpoint,     ONLY : igkq, npwq, ikks, ikqs
+  USE qpoint,     ONLY : ikks, ikqs
   USE eqv,        ONLY : dvpsi
   USE control_lr, ONLY : lgamma
 
@@ -50,7 +50,7 @@ subroutine dvqpsi_us_only (ik, uact)
   !
 
   integer :: na, nb, mu, nu, ikk, ikq, ig, igg, nt, ibnd, ijkb0, &
-       ikb, jkb, ih, jh, ipol, is, js, ijs
+       ikb, jkb, ih, jh, ipol, is, js, ijs, npwq
   ! counter on atoms
   ! counter on modes
   ! the point k
@@ -199,7 +199,8 @@ subroutine dvqpsi_us_only (ik, uact)
   enddo ! nbnd
   !
   !      This term is proportional to beta(k+q+G)
-  !
+  ! 
+  npwq = ngk(ikq)
   if (nkb.gt.0) then
      if (noncolin) then
         call zgemm ('N', 'N', npwq, nbnd*npol, nkb, &
@@ -227,7 +228,7 @@ subroutine dvqpsi_us_only (ik, uact)
         ENDIF
         if (ok) then
            do ig = 1, npwq
-              igg = igkq (ig)
+              igg = igk_k (ig,ikq)
               aux (ig) =  vkb(ig, ikb) * (xk(ipol, ikq) + g(ipol, igg) )
            enddo
            do ibnd = 1, nbnd

@@ -16,8 +16,8 @@ subroutine dvkb3(ik,dvkb)
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   USE gvect,     ONLY : g
   USE lsda_mod,  ONLY : lsda, current_spin, isk
-  USE klist,     ONLY : xk
-  USE wvfct,     ONLY : npw, npwx, igk, g2kin
+  USE klist,     ONLY : xk, ngk, igk_k
+  USE wvfct,     ONLY : npwx
   USE wavefunctions_module,    ONLY : evc
   USE uspp,      ONLY: nkb
   USE uspp_param,ONLY: nh
@@ -27,22 +27,24 @@ subroutine dvkb3(ik,dvkb)
   integer, intent(in) :: ik
   complex(DP), intent(out) :: dvkb (npwx,nkb,3)
 
-  integer :: jpol,  nt, na, ikb, jkb, ig
+  integer :: npw, jpol,  nt, na, ikb, jkb, ig
 
-  real(DP), allocatable  :: gk (:,:)
+  real(DP), allocatable  :: gk (:,:), g2kin(:)
 
   complex(DP), allocatable :: work (:,:)
 
   if (this_dvkb3_is_on_file(ik)) then
      call davcio (dvkb, lrdvkb3, iudvkb3, ik, -1)
   else
+     npw = ngk(ik)
      allocate (work(npwx,nkb))
-     allocate (gk(3, npwx))
-!
+     allocate (gk(3, npw))
+     allocate (g2kin(npw))
+     !
      do ig = 1, npw
-        gk (1, ig) = (xk (1, ik) + g (1, igk (ig) ) ) * tpiba
-        gk (2, ig) = (xk (2, ik) + g (2, igk (ig) ) ) * tpiba
-        gk (3, ig) = (xk (3, ik) + g (3, igk (ig) ) ) * tpiba
+        gk (1, ig) = (xk (1, ik) + g (1, igk_k (ig,ik) ) ) * tpiba
+        gk (2, ig) = (xk (2, ik) + g (2, igk_k (ig,ik) ) ) * tpiba
+        gk (3, ig) = (xk (3, ik) + g (3, igk_k (ig,ik) ) ) * tpiba
         g2kin (ig) = gk (1, ig) **2 + gk (2, ig) **2 + gk (3, ig) **2
         if (g2kin (ig) .lt.1.0d-10) then
            gk (1, ig) = 0.d0
@@ -80,6 +82,7 @@ subroutine dvkb3(ik,dvkb)
         enddo
      enddo
 
+     deallocate(g2kin)
      deallocate(gk)
      deallocate(work)
      call davcio (dvkb, lrdvkb3, iudvkb3, ik, 1)

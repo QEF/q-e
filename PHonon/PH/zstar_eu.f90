@@ -16,11 +16,10 @@ subroutine zstar_eu
   USE kinds,     ONLY : DP
   USE cell_base, ONLY : bg
   USE ions_base, ONLY : nat, zv, ityp
-  USE io_files,  ONLY : iunigk
   USE buffers,   ONLY : get_buffer
-  USE klist,     ONLY : wk, xk
+  USE klist,     ONLY : wk, xk, ngk, igk_k
   USE symme,     ONLY : symtensor
-  USE wvfct,     ONLY : npw, npwx, igk
+  USE wvfct,     ONLY : npwx
   USE uspp,      ONLY : okvan, vkb
   use noncollin_module, ONLY : npol
   USE wavefunctions_module,  ONLY: evc
@@ -41,7 +40,7 @@ subroutine zstar_eu
   implicit none
 
   integer :: ibnd, ipol, jpol, icart, na, nu, mu, imode0, irr, &
-       imode, nrec, mode, ik, ierr
+       imode, nrec, mode, ik, ierr, npw
   ! counters
   real(DP) :: weight
   complex(DP), external :: zdotc
@@ -52,13 +51,12 @@ subroutine zstar_eu
   zstareu0(:,:) = (0.d0,0.d0)
   zstareu (:,:,:) = 0.d0
 
-  if (nksq > 1) rewind (iunigk)
   do ik = 1, nksq
-     if (nksq > 1) read (iunigk) npw, igk
+     npw = ngk(ik)
      npwq = npw
      weight = wk (ik)
      if (nksq > 1) call get_buffer (evc, lrwfc, iuwfc, ik)
-     call init_us_2 (npw, igk, xk (1, ik), vkb)
+     call init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb)
      imode0 = 0
      do irr = 1, nirr
         do imode = 1, npert (irr)
