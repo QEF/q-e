@@ -37,8 +37,7 @@ subroutine deallocate_phq
                            vsgga, segni
   USE qpoint,       ONLY : eigqts, igkq, ikks, ikqs, nksq, xk_col
   USE eqv,          ONLY : dmuxc, vlocq, dpsi, dvpsi, evq, eprec
-  USE control_lr,   ONLY : lgamma
-
+  USE control_lr,   ONLY : lgamma, nbnd_occ
 
   IMPLICIT NONE
   INTEGER :: ik, ipol
@@ -137,6 +136,8 @@ subroutine deallocate_phq
   IF (allocated(with_symmetry))    DEALLOCATE(with_symmetry)
   IF (allocated(n_equiv_atoms))    DEALLOCATE(n_equiv_atoms)
   IF (allocated(equiv_atoms))      DEALLOCATE(equiv_atoms)
+
+  IF (allocated(nbnd_occ))         DEALLOCATE(nbnd_occ)
 
   return
 end subroutine deallocate_phq

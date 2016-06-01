@@ -30,7 +30,7 @@
   USE phus,              ONLY : int1, int1_nc, int2, int4, int4_nc
   USE lr_symm_base,      ONLY : rtau
   USE noncollin_module,  ONLY : m_loc
-  USE control_lr,        ONLY : lgamma
+  USE control_lr,        ONLY : lgamma, nbnd_occ
   USE becmod,            ONLY : becp, deallocate_bec_type
   USE elph2,             ONLY : el_ph_mat, epf17, epsi, etf,&
                                 etq, et_all, wf, wkf, wqf, wslen,&
@@ -108,6 +108,7 @@
   end if
   call deallocate_bec_type ( becp )
 
+  IF(ALLOCATED(nbnd_occ))  DEALLOCATE(nbnd_occ)
   IF(ALLOCATED(m_loc))     DEALLOCATE(m_loc)
   !
   IF(ALLOCATED(drc)) DEALLOCATE(drc)

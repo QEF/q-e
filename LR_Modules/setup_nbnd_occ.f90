@@ -33,6 +33,7 @@ SUBROUTINE setup_nbnd_occ
   !
   CALL start_clock ('setup_nbnd_occ')
   !
+  ALLOCATE ( nbnd_occ(nks) )
   IF (lgauss) THEN
      !
      ! Discard conduction bands such that w0gauss(x,n) < small

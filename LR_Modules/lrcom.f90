@@ -12,7 +12,6 @@
 MODULE qpoint
   !
   USE kinds,      ONLY : DP
-  USE parameters, ONLY : npk
   !
   ! ... The variables needed to specify various indices,
   ! ... number of plane waves and k points and their coordiantes.
@@ -39,13 +38,12 @@ END MODULE qpoint
 MODULE control_lr
   !
   USE kinds,      ONLY : DP
-  USE parameters, ONLY : npk
   !
   ! ... The variables controlling the run of linear response codes
   !
   SAVE
   !
-  INTEGER  :: nbnd_occ(npk)  ! occupated bands in metals
+  INTEGER, ALLOCATABLE :: nbnd_occ(:)  ! occupied bands in metals
   REAL(DP) :: alpha_pv       ! the alpha value for shifting the bands
   LOGICAL  :: lgamma         ! if .TRUE. this is a q=0 computation
   LOGICAL  :: lrpa           ! if .TRUE. uses the Random Phace Approximation

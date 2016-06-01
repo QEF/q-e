@@ -28,6 +28,7 @@ SUBROUTINE lr_dealloc()
                            & bbg, bbk, bbnc
   USE qpoint,         ONLY : ikks, ikqs, igkq, eigqts
   USE eqv,            ONLY : dmuxc, evq, dpsi, dvpsi
+  USE control_lr,     ONLY : nbnd_occ
   !
   IMPLICIT NONE
   !
@@ -92,6 +93,8 @@ SUBROUTINE lr_dealloc()
      ENDDO
      DEALLOCATE(becp1)
   ENDIF
+  !
+  IF (ALLOCATED(nbnd_occ)) DEALLOCATE(nbnd_occ)
   !
   IF (allocated(alpha_store)) DEALLOCATE(alpha_store)
   IF (allocated(beta_store))  DEALLOCATE(beta_store)

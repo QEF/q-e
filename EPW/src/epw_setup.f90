@@ -219,6 +219,7 @@
         xmax = 2.d0 * log (0.5d0 * (fac + sqrt (fac * fac - 4.d0) ) )
      ENDIF
      target = ef + xmax * degauss
+     ALLOCATE ( nbnd_occ(nks) )
      DO ik = 1, nks
         DO ibnd = 1, nbnd
            IF (et (ibnd, ik) .lt.target) nbnd_occ (ik) = ibnd
