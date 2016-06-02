@@ -1040,11 +1040,13 @@ TYPE :: wyckoff_positions_type
    LOGICAL  :: lread = .true.
    LOGICAL  :: lwrite = .true.
    !
-   LOGICAL  :: space_group_ispresent
    INTEGER :: space_group
    LOGICAL  :: more_options_ispresent
    CHARACTER(len=256) :: more_options
-   TYPE(atom_type) :: atom
+   TYPE(atom_type), DIMENSION(:), ALLOCATABLE :: atom
+   !
+   INTEGER  :: ndim_atom
+
    !
 END TYPE wyckoff_positions_type
 
@@ -1067,7 +1069,6 @@ TYPE :: atomic_structure_type
    LOGICAL  :: lread = .true.
    LOGICAL  :: lwrite = .true.
    !
-   LOGICAL  :: nat_ispresent
    INTEGER  :: nat
    LOGICAL  :: alat_ispresent
    REAL(DP) :: alat

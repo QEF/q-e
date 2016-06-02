@@ -473,7 +473,7 @@ CONTAINS
       !
       ! global init
       !
-      CALL qes_init_atomic_structure(obj, "atomic_structure", nat=nat, nat_ispresent=.TRUE., &
+      CALL qes_init_atomic_structure(obj, "atomic_structure", nat=nat, &
                      alat=alat, alat_ispresent=.TRUE., atomic_positions_ispresent=.TRUE., &
                      atomic_positions=atomic_pos, wyckoff_positions_ispresent=.FALSE., &
                      wyckoff_positions=wyckoff_pos, cell=cell )
@@ -481,7 +481,6 @@ CONTAINS
       ! cleanup 
       ! 
       CALL qes_reset_atomic_positions(atomic_pos)
-      CALL qes_reset_wyckoff_positions(wyckoff_pos)
       CALL qes_reset_cell(cell)
       !
     END SUBROUTINE qexsd_init_atomic_structure

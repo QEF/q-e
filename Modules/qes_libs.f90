@@ -1049,11 +1049,8 @@ SUBROUTINE qes_write_equivalent_atoms(iun, obj)
 
    CALL iotk_write_begin(iun, TRIM(obj%tagname), attr=TRIM(attr))
       !
-      CALL iotk_write_begin(iun,'index_list')
          WRITE(fmtstr,'(a)') '(12I6)'
          WRITE(iun, fmtstr) obj%index_list
-      CALL iotk_write_end(iun,'index_list')
-      !
    CALL iotk_write_end(iun, TRIM(obj%tagname))
    !
 END SUBROUTINE qes_write_equivalent_atoms
@@ -5204,40 +5201,37 @@ SUBROUTINE qes_write_wyckoff_positions(iun, obj)
 
    IF (.NOT. obj%lwrite) RETURN
    attr = " "
-   IF(obj%space_group_ispresent) THEN
-      CALL iotk_write_attr(attr, 'space_group', obj%space_group)
-   END IF
+   CALL iotk_write_attr(attr, 'space_group', obj%space_group)
    IF(obj%more_options_ispresent) THEN
       CALL iotk_write_attr(attr, 'more_options', TRIM(obj%more_options))
    END IF
 
    CALL iotk_write_begin(iun, TRIM(obj%tagname), attr=TRIM(attr))
       !
-      CALL qes_write_atom(iun, obj%atom)
-      !
+      DO i = 1, obj%ndim_atom
+         CALL qes_write_atom(iun, obj%atom(i))
+         !
+      END DO
    CALL iotk_write_end(iun, TRIM(obj%tagname))
    !
 END SUBROUTINE qes_write_wyckoff_positions
 
-SUBROUTINE qes_init_wyckoff_positions(obj, tagname, space_group, space_group_ispresent, &
-                              more_options, more_options_ispresent, atom)
+SUBROUTINE qes_init_wyckoff_positions(obj, tagname, space_group, more_options, more_options_ispresent, &
+                              ndim_atom, atom)
    IMPLICIT NONE
 
    TYPE(wyckoff_positions_type) :: obj
    CHARACTER(len=*) :: tagname
    INTEGER  :: i
-   LOGICAL  :: space_group_ispresent
-   INTEGER, OPTIONAL :: space_group
+   INTEGER :: space_group
    LOGICAL  :: more_options_ispresent
    CHARACTER(len=*), OPTIONAL :: more_options
-   TYPE(atom_type) :: atom
+   INTEGER  :: ndim_atom
+   TYPE(atom_type), DIMENSION(:) :: atom
 
    obj%tagname = TRIM(tagname)
 
-   obj%space_group_ispresent = space_group_ispresent
-   IF (obj%space_group_ispresent) THEN
-      obj%space_group = space_group
-   ENDIF
+   obj%space_group = space_group
 
 
    obj%more_options_ispresent = more_options_ispresent
@@ -5245,7 +5239,11 @@ SUBROUTINE qes_init_wyckoff_positions(obj, tagname, space_group, space_group_isp
       obj%more_options = TRIM(more_options)
    ENDIF
 
-   obj%atom = atom
+   ALLOCATE(obj%atom(SIZE(atom)))
+   DO i = 1, SIZE(atom)
+      obj%atom(i) = atom(i)
+   ENDDO
+   obj%ndim_atom = ndim_atom
 
 END SUBROUTINE qes_init_wyckoff_positions
 
@@ -5256,7 +5254,10 @@ SUBROUTINE qes_reset_wyckoff_positions(obj)
 
    obj%tagname = ""
 
-   CALL qes_reset_atom(obj%atom)
+   DO i = 1, SIZE(obj%atom)
+      CALL qes_reset_atom(obj%atom(i))
+   ENDDO
+   IF (ALLOCATED(obj%atom)) DEALLOCATE(obj%atom)
 
 END SUBROUTINE qes_reset_wyckoff_positions
 
@@ -5325,9 +5326,7 @@ SUBROUTINE qes_write_atomic_structure(iun, obj)
 
    IF (.NOT. obj%lwrite) RETURN
    attr = " "
-   IF(obj%nat_ispresent) THEN
-      CALL iotk_write_attr(attr, 'nat', obj%nat)
-   END IF
+   CALL iotk_write_attr(attr, 'nat', obj%nat)
    IF(obj%alat_ispresent) THEN
       CALL iotk_write_attr(attr, 'alat', obj%alat)
    END IF
@@ -5350,7 +5349,7 @@ SUBROUTINE qes_write_atomic_structure(iun, obj)
    !
 END SUBROUTINE qes_write_atomic_structure
 
-SUBROUTINE qes_init_atomic_structure(obj, tagname, nat, nat_ispresent, alat, alat_ispresent, &
+SUBROUTINE qes_init_atomic_structure(obj, tagname, nat, alat, alat_ispresent, &
                               atomic_positions_ispresent, atomic_positions, &
                               wyckoff_positions_ispresent, wyckoff_positions, cell)
    IMPLICIT NONE
@@ -5358,8 +5357,7 @@ SUBROUTINE qes_init_atomic_structure(obj, tagname, nat, nat_ispresent, alat, ala
    TYPE(atomic_structure_type) :: obj
    CHARACTER(len=*) :: tagname
    INTEGER  :: i
-   LOGICAL  :: nat_ispresent
-   INTEGER , OPTIONAL :: nat
+   INTEGER  :: nat
    LOGICAL  :: alat_ispresent
    REAL(DP), OPTIONAL :: alat
    LOGICAL  :: atomic_positions_ispresent
@@ -5370,10 +5368,7 @@ SUBROUTINE qes_init_atomic_structure(obj, tagname, nat, nat_ispresent, alat, ala
 
    obj%tagname = TRIM(tagname)
 
-   obj%nat_ispresent = nat_ispresent
-   IF (obj%nat_ispresent) THEN
-      obj%nat = nat
-   ENDIF
+   obj%nat = nat
 
 
    obj%alat_ispresent = alat_ispresent
