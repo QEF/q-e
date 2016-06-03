@@ -24,7 +24,7 @@ SUBROUTINE regterg( npw, npwx, nvec, nvecx, evc, ethr, &
   !
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
-  USE mp_bands,      ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp, nbgrp, my_bgrp_id
+  USE mp_bands,      ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, nbgrp, my_bgrp_id
   USE mp,            ONLY : mp_sum, mp_bcast
   !
   IMPLICIT NONE
@@ -196,12 +196,12 @@ SUBROUTINE regterg( npw, npwx, nvec, nvecx, evc, ethr, &
      !
      ! ... diagonalize the reduced hamiltonian
      !
-     IF( my_bgrp_id == root_bgrp ) THEN
+     IF( my_bgrp_id == root_bgrp_id ) THEN
         CALL rdiaghg( nbase, nvec, hr, sr, nvecx, ew, vr )
      END IF
      IF( nbgrp > 1 ) THEN
-        CALL mp_bcast( vr, root_bgrp, inter_bgrp_comm )
-        CALL mp_bcast( ew, root_bgrp, inter_bgrp_comm )
+        CALL mp_bcast( vr, root_bgrp_id, inter_bgrp_comm )
+        CALL mp_bcast( ew, root_bgrp_id, inter_bgrp_comm )
      ENDIF
 
      !
@@ -354,12 +354,12 @@ SUBROUTINE regterg( npw, npwx, nvec, nvecx, evc, ethr, &
      !
      ! ... diagonalize the reduced hamiltonian
      !
-     IF( my_bgrp_id == root_bgrp ) THEN
+     IF( my_bgrp_id == root_bgrp_id ) THEN
         CALL rdiaghg( nbase, nvec, hr, sr, nvecx, ew, vr )
      END IF
      IF( nbgrp > 1 ) THEN
-        CALL mp_bcast( vr, root_bgrp, inter_bgrp_comm )
-        CALL mp_bcast( ew, root_bgrp, inter_bgrp_comm )
+        CALL mp_bcast( vr, root_bgrp_id, inter_bgrp_comm )
+        CALL mp_bcast( ew, root_bgrp_id, inter_bgrp_comm )
      ENDIF
      !
      ! ... test for convergence
@@ -374,7 +374,7 @@ SUBROUTINE regterg( npw, npwx, nvec, nvecx, evc, ethr, &
         !
      END WHERE
      ! ... next line useful for band parallelization of exact exchange
-     IF ( nbgrp > 1 ) CALL mp_bcast(conv,root_bgrp,inter_bgrp_comm)
+     IF ( nbgrp > 1 ) CALL mp_bcast(conv,root_bgrp_id,inter_bgrp_comm)
      !
      notcnv = COUNT( .NOT. conv(:) )
      !
@@ -491,7 +491,7 @@ SUBROUTINE pregterg( npw, npwx, nvec, nvecx, evc, ethr, &
   !
   USE kinds,     ONLY : DP
   USE io_global, ONLY : stdout
-  USE mp_bands,  ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp, nbgrp, my_bgrp_id
+  USE mp_bands,  ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, nbgrp, my_bgrp_id
   USE mp_diag,   ONLY : ortho_comm, np_ortho, me_ortho, ortho_comm_id, leg_ortho, &
                         ortho_parent_comm, ortho_cntx
   USE descriptors,      ONLY : la_descriptor, descla_init, descla_local_dims
@@ -699,12 +699,12 @@ SUBROUTINE pregterg( npw, npwx, nvec, nvecx, evc, ethr, &
      ! ... diagonalize the reduced hamiltonian
      !     Calling block parallel algorithm
      !
-     IF( my_bgrp_id == root_bgrp ) THEN
+     IF( my_bgrp_id == root_bgrp_id ) THEN
         CALL prdiaghg( nbase, hl, sl, nx, ew, vl, desc )
      END IF
      IF( nbgrp > 1 ) THEN
-        CALL mp_bcast( vl, root_bgrp, inter_bgrp_comm )
-        CALL mp_bcast( ew, root_bgrp, inter_bgrp_comm )
+        CALL mp_bcast( vl, root_bgrp_id, inter_bgrp_comm )
+        CALL mp_bcast( ew, root_bgrp_id, inter_bgrp_comm )
      ENDIF
      !
      e(1:nvec) = ew(1:nvec)
@@ -820,12 +820,12 @@ SUBROUTINE pregterg( npw, npwx, nvec, nvecx, evc, ethr, &
      ! ... diagonalize the reduced hamiltonian
      !     Call block parallel algorithm
      !
-     IF( my_bgrp_id == root_bgrp ) THEN
+     IF( my_bgrp_id == root_bgrp_id ) THEN
         CALL prdiaghg( nbase, hl, sl, nx, ew, vl, desc )
      END IF
      IF( nbgrp > 1 ) THEN
-        CALL mp_bcast( vl, root_bgrp, inter_bgrp_comm )
-        CALL mp_bcast( ew, root_bgrp, inter_bgrp_comm )
+        CALL mp_bcast( vl, root_bgrp_id, inter_bgrp_comm )
+        CALL mp_bcast( ew, root_bgrp_id, inter_bgrp_comm )
      ENDIF
      !
      ! ... test for convergence
@@ -840,7 +840,7 @@ SUBROUTINE pregterg( npw, npwx, nvec, nvecx, evc, ethr, &
         !
      END WHERE
      ! ... next line useful for band parallelization of exact exchange
-     IF ( nbgrp > 1 ) CALL mp_bcast(conv,root_bgrp,inter_bgrp_comm)
+     IF ( nbgrp > 1 ) CALL mp_bcast(conv,root_bgrp_id,inter_bgrp_comm)
      !
      notcnv = COUNT( .NOT. conv(:) )
      !

@@ -168,7 +168,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                                    allocate_bec_type, deallocate_bec_type
   USE klist,                ONLY : nks, ngk
   USE mp_bands,             ONLY : nproc_bgrp, intra_bgrp_comm, inter_bgrp_comm, &
-                                   set_bgrp_indices, my_bgrp_id, root_bgrp, nbgrp
+                                   set_bgrp_indices, my_bgrp_id, nbgrp
   USE mp,                   ONLY : mp_sum, mp_bcast
   !
   IMPLICIT NONE
@@ -308,7 +308,6 @@ CONTAINS
           IF ( use_para_diag ) then
              !
 !             ! make sure that all processors have the same wfc
-!             IF ( nbgrp > 1 ) CALL mp_bcast(evc,root_bgrp,inter_bgrp_comm)
              CALL pregterg( npw, npwx, nbnd, nbndx, evc, ethr, &
                          okvan, gstart, et(1,ik), btype(1,ik), &
                          notconv, lrot, dav_iter )
