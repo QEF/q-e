@@ -24,19 +24,19 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE io_global,            ONLY : stdout, ionode
-  USE io_files,             ONLY : prefix, iunigk, diropn
+  USE io_files,             ONLY : prefix, diropn
   USE check_stop,           ONLY : check_stop_now
   USE wavefunctions_module, ONLY : evc
   USE constants,            ONLY : degspin
   USE cell_base,            ONLY : at, tpiba2
-  USE klist,                ONLY : lgauss, degauss, ngauss, xk, wk
+  USE klist,                ONLY : lgauss, degauss, ngauss, xk, wk, ngk, igk_k
   USE gvect,                ONLY : g
   USE gvecs,                ONLY : doublegrid
   USE fft_base,             ONLY : dfftp, dffts
   USE fft_parallel,         ONLY : tg_cgather
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE spin_orb,             ONLY : domag
-  USE wvfct,                ONLY : nbnd, npw, npwx, igk,g2kin,  et
+  USE wvfct,                ONLY : nbnd, npwx, g2kin,  et
   USE scf,                  ONLY : rho
   USE uspp,                 ONLY : okvan, vkb
   USE uspp_param,           ONLY : upf, nhm, nh
@@ -70,7 +70,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   USE lrus,         ONLY : int3_paw
   USE lr_symm_base, ONLY : irotmq, minus_q, nsymq, rtau
   USE eqv,          ONLY : dvpsi, dpsi, evq, eprec
-  USE qpoint,       ONLY : xq, npwq, igkq, nksq, ikks, ikqs
+  USE qpoint,       ONLY : xq, nksq, ikks, ikqs
   USE control_lr,   ONLY : alpha_pv, nbnd_occ, lgamma
   USE dv_of_drho_lr
 
@@ -136,6 +136,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
              ipol,       & ! counter on polarization
              mode          ! mode index
 
+  integer  :: npw, npwq
   integer  :: iq_dummy
   real(DP) :: tcpu, get_clock ! timing variables
   character(len=256) :: filename
@@ -239,22 +240,13 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
      dbecsum(:,:,:,:) = (0.d0, 0.d0)
      IF (noncolin) dbecsum_nc = (0.d0, 0.d0)
      !
-     if (nksq.gt.1) rewind (unit = iunigk)
      do ik = 1, nksq
-        if (nksq.gt.1) then
-           read (iunigk, err = 100, iostat = ios) npw, igk
-100        call errore ('solve_linter', 'reading igk', abs (ios) )
-        endif
-        if (lgamma)  npwq = npw
         ikk = ikks(ik)
         ikq = ikqs(ik)
+        npw = ngk(ikk)
+        npwq= ngk(ikq)
         if (lsda) current_spin = isk (ikk)
-        if (.not.lgamma.and.nksq.gt.1) then
-           read (iunigk, err = 200, iostat = ios) npwq, igkq
-200        call errore ('solve_linter', 'reading igkq', abs (ios) )
-
-        endif
-        call init_us_2 (npwq, igkq, xk (1, ikq), vkb)
+        call init_us_2 (npwq, igk_k(1,ikq), xk (1, ikq), vkb)
         !
         ! reads unperturbed wavefuctions psi(k) and psi(k+q)
         !
@@ -268,12 +260,12 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
 
         endif
         !
-        ! compute the kinetic energy
+        ! compute the kinetic energy, needed by ch_psi_all
         !
         do ig = 1, npwq
-           g2kin (ig) = ( (xk (1,ikq) + g (1, igkq(ig)) ) **2 + &
-                          (xk (2,ikq) + g (2, igkq(ig)) ) **2 + &
-                          (xk (3,ikq) + g (3, igkq(ig)) ) **2 ) * tpiba2
+           g2kin (ig) = ( (xk (1,ikq) + g (1, igk_k(ig,ikq)) ) **2 + &
+                          (xk (2,ikq) + g (2, igk_k(ig,ikq)) ) **2 + &
+                          (xk (3,ikq) + g (3, igk_k(ig,ikq)) ) **2 ) * tpiba2
         enddo
 
         h_diag=0.d0

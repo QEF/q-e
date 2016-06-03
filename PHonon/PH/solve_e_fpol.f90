@@ -22,26 +22,26 @@ subroutine solve_e_fpol ( iw )
   USE kinds,                 ONLY : DP
   USE ions_base,             ONLY : nat
   USE io_global,             ONLY : stdout, ionode
-  USE io_files,              ONLY : prefix, iunigk, diropn
+  USE io_files,              ONLY : prefix, diropn
   USE buffers,               ONLY : get_buffer, save_buffer
   USE check_stop,            ONLY : check_stop_now
   USE wavefunctions_module,  ONLY : evc
   USE cell_base,             ONLY : tpiba2
-  USE klist,                 ONLY : lgauss, nkstot, wk, xk
+  USE klist,                 ONLY : lgauss, nkstot, wk, xk, ngk, igk_k
   USE lsda_mod,              ONLY : lsda, nspin, current_spin, isk
   USE fft_base,              ONLY : dffts, dfftp
   USE fft_interfaces,        ONLY : fwfft, invfft
   USE gvect,                 ONLY : g
-  USE gvecs,               ONLY : doublegrid, nls
+  USE gvecs,                 ONLY : doublegrid, nls
   USE becmod,                ONLY : becp, calbec
-  USE wvfct,                 ONLY : npw, npwx, nbnd, igk, g2kin, et
+  USE wvfct,                 ONLY : npwx, nbnd, g2kin, et
   USE uspp,                  ONLY : okvan, vkb
   USE uspp_param,            ONLY : nhm
   USE control_ph,            ONLY : nmix_ph, tr2_ph, alpha_mix, convt, &
                                     niter_ph, &
                                     rec_code, flmixdpot
   USE output,                ONLY : fildrho
-  USE qpoint,                ONLY : nksq, npwq, igkq
+  USE qpoint,                ONLY : nksq
   USE units_ph,              ONLY : lrdwf, iudwf, lrwfc, iuwfc, iudrho, &
                                     lrdrho
   USE mp_pools,              ONLY : inter_pool_comm
@@ -77,6 +77,7 @@ subroutine solve_e_fpol ( iw )
   logical :: conv_root, exst
   ! conv_root: true if linear system is converged
 
+  integer :: npw, npwq
   integer :: kter, iter0, ipol, ibnd, jbnd, iter, lter, &
        ik, ig, irr, ir, is, nrec, ios
   ! counters
@@ -155,26 +156,22 @@ subroutine solve_e_fpol ( iw )
      dvscfout(:,:,:)=(0.d0,0.d0)
      dbecsum(:,:,:,:)=(0.d0,0.d0)
 
-     if (nksq.gt.1) rewind (unit = iunigk)
      do ik = 1, nksq
         if (lsda) current_spin = isk (ik)
-        if (nksq.gt.1) then
-           read (iunigk, err = 100, iostat = ios) npw, igk
-100        call errore ('solve_e_fpol', 'reading igk', abs (ios) )
-        endif
+        npw = ngk(ik)
+        npwq = npw    ! q=0 in ths routine
         !
         ! reads unperturbed wavefuctions psi_k in G_space, for all bands
         !
         if (nksq.gt.1) call get_buffer(evc, lrwfc, iuwfc, ik)
-        npwq = npw
-        call init_us_2 (npw, igk, xk (1, ik), vkb)
+        call init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb)
         !
-        ! compute the kinetic energy
+        ! compute the kinetic energy (needed by ch_psi_all)
         !
         do ig = 1, npwq
-           g2kin (ig) = ( (xk (1,ik ) + g (1,igkq (ig)) ) **2 + &
-                          (xk (2,ik ) + g (2,igkq (ig)) ) **2 + &
-                          (xk (3,ik ) + g (3,igkq (ig)) ) **2 ) * tpiba2
+           g2kin (ig) = ( (xk (1,ik ) + g (1,igk_k (ig,ik)) ) **2 + &
+                          (xk (2,ik ) + g (2,igk_k (ig,ik)) ) **2 + &
+                          (xk (3,ik ) + g (3,igk_k (ig,ik)) ) **2 ) * tpiba2
         enddo
         !
         do ipol = 1, 3
@@ -191,7 +188,7 @@ subroutine solve_e_fpol ( iw )
               do ibnd = 1, nbnd_occ (ik)
                  aux1(:) = (0.d0, 0.d0)
                  do ig = 1, npw
-                    aux1 (nls(igk(ig)))=evc(ig,ibnd)
+                    aux1 (nls(igk_k(ig,ik)))=evc(ig,ibnd)
                  enddo
                  CALL invfft ('Wave', aux1, dffts)
                  do ir = 1, dffts%nnr
@@ -199,7 +196,7 @@ subroutine solve_e_fpol ( iw )
                  enddo
                  CALL fwfft ('Wave', aux1, dffts)
                  do ig = 1, npwq
-                    dvpsi(ig,ibnd)=dvpsi(ig,ibnd)+aux1(nls(igkq(ig)))
+                    dvpsi(ig,ibnd)=dvpsi(ig,ibnd)+aux1(nls(igk_k(ig,ik)))
                  enddo
               enddo
               !
@@ -270,11 +267,8 @@ subroutine solve_e_fpol ( iw )
 
            conv_root = .true.
 
-!           call cgsolve_all (ch_psi_all,cg_psi,et(1,ik),dvpsi,dpsi, &
-!              h_diag,npwx,npw,thresh,ik,lter,conv_root,anorm,nbnd_occ(ik) )
            call gmressolve_all (cch_psi_all,ccg_psi,etc(1,ik),dvpsi,dpsi,  &
               h_diag,npwx,npw,thresh,ik,lter,conv_root,anorm,nbnd_occ(ik), 4 )
-
 
            ltaver = ltaver + lter
            lintercall = lintercall + 1

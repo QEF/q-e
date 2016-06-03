@@ -16,13 +16,12 @@ subroutine solve_e2
   USe kinds,                 ONLY : DP
   USE io_global,             ONLY : stdout
   USE cell_base,             ONLY : tpiba2
-  USE klist,                 ONLY : lgauss, wk, xk
+  USE klist,                 ONLY : lgauss, wk, xk, ngk, igk_k
   USE lsda_mod,              ONLY : lsda, nspin
   USE gvect,                 ONLY : g
   USE gvecs,                 ONLY : doublegrid
   USE fft_base,              ONLY : dfftp, dffts
-  USE wvfct,                 ONLY : npw, npwx, nbnd, igk, g2kin, et
-  USE io_files,  ONLY: prefix, iunigk
+  USE wvfct,                 ONLY : npwx, nbnd, g2kin, et
   USE buffers,   ONLY: get_buffer
   USE ions_base, ONLY: nat
   USE uspp,      ONLY: okvan, nkb, vkb
@@ -40,7 +39,7 @@ subroutine solve_e2
   USE mp,         ONLY : mp_sum
 
   USE eqv,       ONLY : dpsi, dvpsi
-  USE qpoint,    ONLY : npwq, igkq, nksq
+  USE qpoint,    ONLY : nksq, ikks, ikqs
   USE control_lr, ONLY : nbnd_occ, lgamma
   USE dv_of_drho_lr
 
@@ -66,6 +65,7 @@ subroutine solve_e2
   logical :: exst
   ! used to open the recover file
 
+  integer :: npw, npwq, ikk, ikq
   integer :: kter, iter0, ipol, ibnd, iter, ik, is, ig, iig, irr, ir, nrec, ios
   ! counter on iterations
   ! counter on perturbations
@@ -113,24 +113,23 @@ subroutine solve_e2
 
      dvscfout (:,:,:) = (0.d0, 0.d0)
      dbecsum (:,:) = (0.d0, 0.d0)
-     if (nksq.gt.1) rewind (unit = iunigk)
 
      do ik = 1, nksq
-        if (nksq.gt.1) then
-           read (iunigk, err = 100, iostat = ios) npw, igk
-100        call errore ('solve_e2', 'reading igk', abs (ios) )
-        endif
+        ! in this routine, ikk=ikq=ik always (q=0)
+        ikk = ikks(ik)
+        ikq = ikqs(ik)
         !
         ! reads unperturbed wavefuctions psi_k in G_space, for all bands
         !
-        if (nksq.gt.1) call get_buffer(evc, lrwfc, iuwfc, ik)
-        npwq = npw
-        call init_us_2 (npw, igk, xk (1, ik), vkb)
+        if (nksq.gt.1) call get_buffer(evc, lrwfc, iuwfc, ikk)
+        npw = ngk(ikk)
+        npwq= ngk(ikq)
+        call init_us_2 (npw, igk_k(1,ikk), xk (1, ikk), vkb)
         !
-        ! compute the kinetic energy
+        ! compute the kinetic energy (neede by ch_psi_all, called by pcgreen)
         !
         do ig = 1, npwq
-           iig = igkq (ig)
+           iig = igk_k (ig,ikq)
            g2kin (ig) = ( (xk (1, ik) + g (1, iig) ) **2 + &
                           (xk (2, ik) + g (2, iig) ) **2 + &
                           (xk (3, ik) + g (3, iig) ) **2 ) * tpiba2
@@ -183,9 +182,6 @@ subroutine solve_e2
            enddo
         enddo
      endif
-
-!     call addusddense (dvscfout, dbecsum)
-
      !
      !   After the loop over the perturbations we have the change of the pote
      !   for all the modes, and we symmetrize this potential

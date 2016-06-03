@@ -22,16 +22,16 @@ subroutine solve_e
   USE kinds,                 ONLY : DP
   USE ions_base,             ONLY : nat
   USE io_global,             ONLY : stdout, ionode
-  USE io_files,              ONLY : prefix, iunigk, diropn
+  USE io_files,              ONLY : prefix, diropn
   USE cell_base,             ONLY : tpiba2
-  USE klist,                 ONLY : lgauss, xk, wk
+  USE klist,                 ONLY : lgauss, xk, wk, ngk, igk_k
   USE gvect,                 ONLY : g
   USE gvecs,                 ONLY : doublegrid
   USE fft_base,              ONLY : dfftp, dffts
   USE fft_parallel,          ONLY : tg_cgather
   USE lsda_mod,              ONLY : lsda, nspin, current_spin, isk
   USE spin_orb,              ONLY : domag
-  USE wvfct,                 ONLY : nbnd, npw, npwx, igk, g2kin,  et
+  USE wvfct,                 ONLY : nbnd, npwx, g2kin, et
   USE check_stop,            ONLY : check_stop_now
   USE buffers,               ONLY : get_buffer, save_buffer
   USE wavefunctions_module,  ONLY : evc
@@ -57,7 +57,7 @@ subroutine solve_e
   USE mp,                    ONLY : mp_sum
 
   USE lrus,                  ONLY : int3_paw
-  USE qpoint,                ONLY : npwq, nksq
+  USE qpoint,                ONLY : nksq
   USE eqv,                   ONLY : dpsi, dvpsi, eprec
   USE control_lr,            ONLY : nbnd_occ, lgamma
   USE dv_of_drho_lr
@@ -90,6 +90,7 @@ subroutine solve_e
   logical :: conv_root, exst
   ! conv_root: true if linear system is converged
 
+  integer :: npw, npwq
   integer :: kter, iter0, ipol, ibnd, iter, lter, ik, ig, is, nrec, ndim, ios
   ! counters
   integer :: ltaver, lintercall, incr, jpol, v_siz
@@ -178,27 +179,22 @@ subroutine solve_e
      dbecsum(:,:,:,:)=(0.d0,0.d0)
      IF (noncolin) dbecsum_nc=(0.d0,0.d0)
 
-     if (nksq.gt.1) rewind (unit = iunigk)
      do ik = 1, nksq
+        npw = ngk(ik)
+        npwq= npw     ! q=0 always in this routine
         if (lsda) current_spin = isk (ik)
-!        write(6,*) 'current spin', current_spin, ik
-        if (nksq.gt.1) then
-           read (iunigk, err = 100, iostat = ios) npw, igk
-100        call errore ('solve_e', 'reading igk', abs (ios) )
-        endif
         !
         ! reads unperturbed wavefuctions psi_k in G_space, for all bands
         !
         if (nksq.gt.1) call get_buffer (evc, lrwfc, iuwfc, ik)
-        npwq = npw
-        call init_us_2 (npw, igk, xk (1, ik), vkb)
+        call init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb)
         !
-        ! compute the kinetic energy
+        ! compute the kinetic energy (used by ch_psi_all)
         !
         do ig = 1, npwq
-           g2kin (ig) = ( (xk (1,ik ) + g (1,igk(ig)) ) **2 + &
-                          (xk (2,ik ) + g (2,igk(ig)) ) **2 + &
-                          (xk (3,ik ) + g (3,igk(ig)) ) **2 ) * tpiba2
+           g2kin (ig) = ( (xk (1,ik ) + g (1,igk_k(ig,ik)) ) **2 + &
+                          (xk (2,ik ) + g (2,igk_k(ig,ik)) ) **2 + &
+                          (xk (3,ik ) + g (3,igk_k(ig,ik)) ) **2 ) * tpiba2
         enddo
         h_diag=0.d0
         do ibnd = 1, nbnd_occ (ik)

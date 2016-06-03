@@ -17,21 +17,20 @@ subroutine compute_becalp (becq, alpq)
 
   USE kinds, only : DP
   USE cell_base, ONLY : tpiba
-  USE klist,     ONLY : xk
+  USE klist,     ONLY : xk, ngk, igk_k
   USE gvect,     ONLY : g
   USE becmod, ONLY: calbec, bec_type, becscal
   USE buffers, ONLY: get_buffer
   USE uspp, ONLY: nkb, vkb
   USE noncollin_module, ONLY : noncolin, npol
-  USE io_files, ONLY: iunigk
-  USE wvfct,    ONLY : nbnd, npw, npwx, igk
+  USE wvfct,    ONLY : nbnd, npwx
   USE paw_variables, ONLY : okpaw
 
   USE units_ph, ONLY : lrwfc, iuwfc
   USE control_ph, ONLY : rec_code_read
   USE control_lr, ONLY : lgamma
   USE eqv, ONLY : evq
-  USE qpoint, ONLY : nksq, npwq, igkq, ikqs
+  USE qpoint, ONLY : nksq, ikqs
 
   implicit none
 
@@ -39,7 +38,7 @@ subroutine compute_becalp (becq, alpq)
   ! the becp with psi_{k+q}
   ! the alphap with psi_{k+q}
 
-  integer :: ik, ikq, ipol, ibnd, ig, ios
+  integer :: ik, ikq, ipol, ibnd, ig, ios, npwq
   ! counter on k points
   ! counter on polarizations, bands and
   ! used for i/o control
@@ -51,19 +50,10 @@ subroutine compute_becalp (becq, alpq)
   IF (rec_code_read >= -20.AND..NOT.okpaw) RETURN
 
   allocate (aux ( npwx*npol , nbnd))
-  if (nksq.gt.1) rewind (iunigk)
   do ik = 1, nksq
-
      ikq = ikqs(ik)
-     if (nksq.gt.1) then
-        read (iunigk, err = 100, iostat = ios) npw, igk
-
-100     call errore ('compute_becalp', 'reading igk', abs (ios) )
-        read (iunigk, err = 200, iostat = ios) npwq, igkq
-200     call errore ('compute_becalp', 'reading igkq', abs (ios) )
-
-     endif
-     call init_us_2 (npwq, igkq, xk (1, ikq), vkb)
+     npwq = ngk(ikq)
+     call init_us_2 (npwq, igk_k(1,ikq), xk (1, ikq), vkb)
      call get_buffer (evq, lrwfc, iuwfc, ikq)
      call calbec ( npwq, vkb, evq, becq(ik) )
      do ipol = 1, 3
@@ -71,12 +61,12 @@ subroutine compute_becalp (becq, alpq)
         do ibnd = 1, nbnd
            do ig = 1, npwq
               aux (ig, ibnd) = evq (ig, ibnd) * &
-                   (xk (ipol, ikq) + g (ipol, igkq(ig) ) )
+                   (xk (ipol, ikq) + g (ipol, igk_k(ig,ikq) ) )
            enddo
            IF (noncolin) THEN
               do ig = 1, npwq
                  aux (ig+npwx, ibnd) = evq (ig+npwx, ibnd) * &
-                   (xk (ipol, ikq) + g (ipol, igkq(ig) ) )
+                   (xk (ipol, ikq) + g (ipol, igk_k(ig,ikq) ) )
               enddo
            ENDIF
         enddo

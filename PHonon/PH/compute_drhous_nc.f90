@@ -18,19 +18,18 @@ subroutine compute_drhous_nc (drhous, dbecsum, wgg, becq, alpq)
   USE kinds,      ONLY : DP
   USE ions_base,  ONLY : nat
   USE lsda_mod,   ONLY : lsda, nspin, current_spin, isk
-  USE klist,      ONLY : xk, wk
+  USE klist,      ONLY : xk, wk, ngk, igk_k
   USE buffers,    ONLY : get_buffer
   USE fft_base,   ONLY : dffts, dfftp
   USE fft_interfaces, ONLY : invfft
   USE gvecs,    ONLY : nls
-  USE wvfct,      ONLY : npw, npwx, nbnd, igk
+  USE wvfct,      ONLY : npwx, nbnd
   USE noncollin_module, ONLY : npol, nspin_mag
   USE wavefunctions_module,  ONLY: evc
-  USE io_files,   ONLY: iunigk
   USE uspp,       ONLY: okvan, nkb, vkb
   USE uspp_param, ONLY: nhm
 
-  USE qpoint,     ONLY : nksq, igkq, npwq, ikks, ikqs
+  USE qpoint,     ONLY : nksq, ikks, ikqs
   USE eqv,        ONLY : evq
   USE control_lr, ONLY : lgamma
 
@@ -54,7 +53,7 @@ subroutine compute_drhous_nc (drhous, dbecsum, wgg, becq, alpq)
   real(DP) :: wgg (nbnd, nbnd, nksq)
   ! input: the weights
 
-  integer :: ik, ikq, ikk, ig, nu_i, ibnd, ios
+  integer :: npw, npwq, ik, ikq, ikk, ig, nu_i, ibnd, ios
   ! counter on k points
   ! the point k+q
   ! record for wfcs at k point
@@ -79,26 +78,17 @@ subroutine compute_drhous_nc (drhous, dbecsum, wgg, becq, alpq)
   drhous(:,:,:) = (0.d0, 0.d0)
   dbecsum  = (0.d0, 0.d0)
 
-  if (nksq.gt.1) rewind (unit = iunigk)
   do ik = 1, nksq
-     if (nksq.gt.1) then
-        read (iunigk, err = 110, iostat = ios) npw, igk
-110     call errore ('compute_drhous_nc', 'reading igk', abs (ios) )
-     endif
-     if (lgamma) npwq = npw
      ikk = ikks(ik)
      ikq = ikqs(ik)
+     npw = ngk(ikk)
+     npwq= ngk(ikq)
      weight = wk (ikk)
-
      if (lsda) current_spin = isk (ikk)
-     if (.not.lgamma.and.nksq.gt.1) then
-        read (iunigk, err = 210, iostat = ios) npwq, igkq
-210     call errore ('compute_drhous_nc', 'reading igkq', abs (ios) )
-     endif
      !
      !   For each k point we construct the beta functions
      !
-     call init_us_2 (npwq, igkq, xk (1, ikq), vkb)
+     call init_us_2 (npwq, igk_k(1,ikq), xk (1, ikq), vkb)
      !
      !   Read the wavefunctions at k and transform to real space
      !
@@ -107,8 +97,8 @@ subroutine compute_drhous_nc (drhous, dbecsum, wgg, becq, alpq)
      evcr = (0.d0, 0.d0)
      do ibnd = 1, nbnd
         do ig = 1, npw
-           evcr (nls (igk (ig) ), 1, ibnd) = evc (ig, ibnd)
-           evcr (nls (igk (ig) ), 2, ibnd) = evc (ig+npwx, ibnd)
+           evcr (nls (igk_k(ig,ikk) ), 1, ibnd) = evc (ig, ibnd)
+           evcr (nls (igk_k(ig,ikk) ), 2, ibnd) = evc (ig+npwx, ibnd)
         enddo
         CALL invfft ('Wave', evcr (:, 1, ibnd), dffts)
         CALL invfft ('Wave', evcr (:, 2, ibnd), dffts)

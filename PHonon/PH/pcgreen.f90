@@ -16,12 +16,13 @@ subroutine pcgreen (avg_iter, thresh, ik, et_ )
   ! previously and is in the common variable dvscfs
   !
   use kinds, only : DP
-  USE wvfct,     ONLY : nbnd, npw, npwx, g2kin
+  USE wvfct,     ONLY : nbnd, npwx, g2kin
+  USE klist,     ONLY : ngk
   USE wavefunctions_module,  ONLY: evc
   USE mp_bands,  ONLY: intra_bgrp_comm
   USE mp,        ONLY: mp_sum
   USE eqv,       ONLY: dpsi, dvpsi, eprec
-  USE control_lr, ONLY : nbnd_occ
+  USE control_lr,ONLY : nbnd_occ
   implicit none
 
   !
@@ -41,7 +42,7 @@ subroutine pcgreen (avg_iter, thresh, ik, et_ )
   logical :: conv_root
   ! .true. if linter is converged
 
-  integer :: ibnd, ig, lter
+  integer :: npw, ibnd, ig, lter
   ! counters on bands
   ! counter on G-points
   ! # of diagonalization iterations
@@ -57,10 +58,10 @@ subroutine pcgreen (avg_iter, thresh, ik, et_ )
 
   external   ch_psi_all, cg_psi
 
+  npw = ngk(ik)
   allocate (h_diag ( npwx, nbnd ))
   allocate (auxg   ( npwx ))
   allocate (ps     ( nbnd, nbnd ))
-
   !
   ! Orthogonalize dvpsi to valence states: ps = <evc|dvpsi>
   !

@@ -23,13 +23,12 @@ SUBROUTINE dynmat_us()
   USE fft_interfaces,       ONLY : fwfft
   USE buffers,              ONLY : get_buffer
   USE gvect,                ONLY : g, ngm, nl, igtongl
-  USE wvfct,                ONLY : npw, npwx, nbnd, igk, wg, et
+  USE wvfct,                ONLY : npwx, nbnd, wg, et
   USE lsda_mod,             ONLY : lsda, current_spin, isk, nspin
   USE vlocal,               ONLY : vloc
-  USE klist,                ONLY : xk
+  USE klist,                ONLY : xk, ngk, igk_k
   USE wavefunctions_module, ONLY : evc
   USE cell_base,            ONLY : omega, tpiba2
-  USE io_files,             ONLY : iunigk
   USE uspp_param,           ONLY : nh, nhm
   USE noncollin_module,     ONLY : noncolin, npol, nspin_lsda
   USE spin_orb,             ONLY : lspinorb
@@ -45,13 +44,13 @@ SUBROUTINE dynmat_us()
   USE mp,                   ONLY : mp_sum
 
   USE lrus,                 ONLY : becp1
-  USE qpoint,               ONLY : npwq, nksq, igkq, ikks
+  USE qpoint,               ONLY : nksq, ikks
   USE control_lr,           ONLY : nbnd_occ, lgamma
 
   IMPLICIT NONE
   INTEGER :: icart, jcart, na_icart, na_jcart, na, ng, nt, ik, &
        ig, is, ibnd, nu_i, nu_j, ijkb0, ikb, jkb, ih, jh, ikk, &
-       js,  ijs
+       js,  ijs, npw
   ! counters
   ! ikk: record position of wfc at k
 
@@ -131,17 +130,12 @@ SUBROUTINE dynmat_us()
   !
   ! Here we compute  the nonlocal Ultra-soft contribution
   !
-  IF (nksq > 1) REWIND (unit = iunigk)
   DO ik = 1, nksq
      ikk = ikks(ik)
      IF (lsda) current_spin = isk (ikk)
-     IF (nksq > 1) READ (iunigk) npw, igk
-
-     ! npwq and igkq are not actually used
-     IF (nksq >1 .AND. .NOT.lgamma) READ (iunigk) npwq, igkq
-
+     npw = ngk(ikk)
      IF (nksq > 1) CALL get_buffer (evc, lrwfc, iuwfc, ikk)
-     CALL init_us_2 (npw, igk, xk (1, ikk), vkb)
+     CALL init_us_2 (npw, igk_k(1,ikk), xk (1, ikk), vkb)
      !
      !    We first prepare the gamma terms, which are the second derivatives
      !    becp terms.
@@ -152,14 +146,14 @@ SUBROUTINE dynmat_us()
            DO ibnd = 1, nbnd
               DO ig = 1, npw
                  aux1 (ig, ibnd) = - evc (ig, ibnd) * tpiba2 * &
-                      (xk (icart, ikk) + g (icart, igk (ig) ) ) * &
-                      (xk (jcart, ikk) + g (jcart, igk (ig) ) )
+                      (xk (icart, ikk) + g (icart, igk_k(ig,ikk) ) ) * &
+                      (xk (jcart, ikk) + g (jcart, igk_k(ig,ikk) ) )
               ENDDO
               IF (noncolin) THEN
                  DO ig = 1, npw
                     aux1 (ig+npwx, ibnd) = - evc (ig+npwx, ibnd) * tpiba2 * &
-                      (xk (icart, ikk) + g (icart, igk (ig) ) ) * &
-                      (xk (jcart, ikk) + g (jcart, igk (ig) ) )
+                      (xk (icart, ikk) + g (icart, igk_k(ig,ikk) ) ) * &
+                      (xk (jcart, ikk) + g (jcart, igk_k(ig,ikk) ) )
                  ENDDO
               END IF
            ENDDO

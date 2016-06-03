@@ -14,14 +14,14 @@ subroutine dvpsi_e (ik, ipol)
   !            (projected on at(*,ipol) )
   !
   ! dvpsi is READ from file if this_pcxpsi_is_on_file(ik,ipol)=.true.
-  ! otherwise dvpsi is COMPUTED and WRITTEN on file (vkb,evc,igk must be set)
+  ! otherwise dvpsi is COMPUTED and WRITTEN on file (vkb and evc must be set)
   !
   USE kinds,           ONLY : DP
   USE cell_base,       ONLY : tpiba2
   USE io_global,       ONLY : stdout
-  USE klist,           ONLY : xk
+  USE klist,           ONLY : xk, ngk, igk_k
   USE gvect,           ONLY : g
-  USE wvfct,           ONLY : npw, npwx, nbnd, igk, g2kin, et
+  USE wvfct,           ONLY : npwx, nbnd, g2kin, et
   USE wavefunctions_module, ONLY: evc
   USE buffers,         ONLY : save_buffer, get_buffer
   USE noncollin_module,ONLY : noncolin, npol
@@ -34,7 +34,7 @@ subroutine dvpsi_e (ik, ipol)
                               lrebar, iuebar
 
   USE lrus,            ONLY : becp1
-  USE qpoint,          ONLY : nksq, npwq
+  USE qpoint,          ONLY : nksq
   USE eqv,             ONLY : dpsi, dvpsi, eprec
   USE control_lr,      ONLY : nbnd_occ
 
@@ -44,6 +44,7 @@ subroutine dvpsi_e (ik, ipol)
   !
   ! Local variables
   !
+  integer :: npw
   integer :: ig, na, ibnd, jbnd, ikb, jkb, nt, lter, ih, jh, ijkb0,  &
              nrec, is, js, ijs
   ! counters
@@ -80,15 +81,15 @@ subroutine dvpsi_e (ik, ipol)
   !    Apply -P^+_c
   !    NB it uses dvpsi as workspace
   !
-  CALL orthogonalize(dpsi, evc, ik, ik, dvpsi, npwq, .false.)
+  npw = ngk(ik)
+  CALL orthogonalize(dpsi, evc, ik, ik, dvpsi, npw, .false.)
   dpsi=-dpsi
   !
   !   dpsi contains P^+_c [H-eS,x] psi_v for the three crystal polarizations
   !   Now solve the linear systems (H-e_vS)*P_c(x*psi_v)=P_c^+ [H-e_vS,x]*psi_v
   !
-
   do ig = 1, npw
-     g2kin (ig) = SUM((xk(1:3,ik) +g (1:3, igk (ig)) ) **2) *tpiba2
+     g2kin (ig) = SUM((xk(1:3,ik) +g (1:3, igk_k(ig,ik)) ) **2) *tpiba2
   enddo
   allocate (h_diag( npwx*npol, nbnd))
   h_diag=0.d0

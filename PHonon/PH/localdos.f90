@@ -25,10 +25,10 @@ subroutine localdos_paw (ldos, ldoss, becsum1, dos_ef)
   USE fft_interfaces, ONLY: invfft
   USE buffers, ONLY : get_buffer
   USE gvecs,   ONLY : doublegrid, nls
-  USE klist,     ONLY : xk, wk, degauss, ngauss
+  USE klist,     ONLY : xk, wk, ngk, igk_k, degauss, ngauss
   USE lsda_mod,  ONLY : nspin, lsda, current_spin, isk
   USE noncollin_module, ONLY : noncolin, npol, nspin_mag
-  USE wvfct,     ONLY : nbnd, npw, npwx, igk, et
+  USE wvfct,     ONLY : nbnd, npwx, et
   USE becmod, ONLY: calbec, bec_type, allocate_bec_type, deallocate_bec_type
   USE wavefunctions_module,  ONLY: evc, psic, psic_nc
   USE uspp, ONLY: okvan, nkb, vkb
@@ -37,7 +37,6 @@ subroutine localdos_paw (ldos, ldoss, becsum1, dos_ef)
   USE control_lr, ONLY : nbnd_occ
   USE units_ph,   ONLY : iuwfc, lrwfc
 
-  USE io_files, ONLY: iunigk
   USE mp_pools,        ONLY : inter_pool_comm
   USE mp,               ONLY : mp_sum
 
@@ -64,7 +63,7 @@ subroutine localdos_paw (ldos, ldoss, becsum1, dos_ef)
   ! weights
   real(DP), external :: w0gauss
   !
-  integer :: ik, is, ig, ibnd, j, is1, is2
+  integer :: npw, ik, is, ig, ibnd, j, is1, is2
   ! counters
   integer :: ios
   ! status flag for i/o
@@ -86,19 +85,15 @@ subroutine localdos_paw (ldos, ldoss, becsum1, dos_ef)
   !
   !  loop over kpoints
   !
-  if (nksq > 1) rewind (unit = iunigk)
   do ik = 1, nksq
      if (lsda) current_spin = isk (ik)
-     if (nksq > 1) then
-        read (iunigk, err = 100, iostat = ios) npw, igk
-100     call errore ('solve_linter', 'reading igk', abs (ios) )
-     endif
+     npw = ngk(ik)
      weight = wk (ik)
      !
      ! unperturbed wfs in reciprocal space read from unit iuwfc
      !
      if (nksq > 1) call get_buffer (evc, lrwfc, iuwfc, ik)
-     call init_us_2 (npw, igk, xk (1, ik), vkb)
+     call init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb)
      !
      call calbec ( npw, vkb, evc, becp)
      do ibnd = 1, nbnd_occ (ik)
@@ -110,8 +105,8 @@ subroutine localdos_paw (ldos, ldoss, becsum1, dos_ef)
         IF (noncolin) THEN
            psic_nc = (0.d0, 0.d0)
            do ig = 1, npw
-              psic_nc (nls (igk (ig)), 1 ) = evc (ig, ibnd)
-              psic_nc (nls (igk (ig)), 2 ) = evc (ig+npwx, ibnd)
+              psic_nc (nls (igk_k(ig,ik)), 1 ) = evc (ig, ibnd)
+              psic_nc (nls (igk_k(ig,ik)), 2 ) = evc (ig+npwx, ibnd)
            enddo
            CALL invfft ('Smooth', psic_nc(:,1), dffts)
            CALL invfft ('Smooth', psic_nc(:,2), dffts)
@@ -140,7 +135,7 @@ subroutine localdos_paw (ldos, ldoss, becsum1, dos_ef)
         ELSE
            psic (:) = (0.d0, 0.d0)
            do ig = 1, npw
-              psic (nls (igk (ig) ) ) = evc (ig, ibnd)
+              psic (nls (igk_k(ig,ik) ) ) = evc (ig, ibnd)
            enddo
            CALL invfft ('Smooth', psic, dffts)
            do j = 1, dffts%nnr
