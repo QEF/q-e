@@ -24,7 +24,7 @@ SUBROUTINE regterg( npw, npwx, nvec, nvecx, evc, ethr, &
   !
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
-  USE mp_bands,      ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp, nbgrp
+  USE mp_bands,      ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp, nbgrp, my_bgrp_id
   USE mp,            ONLY : mp_sum, mp_bcast
   !
   IMPLICIT NONE
@@ -196,7 +196,14 @@ SUBROUTINE regterg( npw, npwx, nvec, nvecx, evc, ethr, &
      !
      ! ... diagonalize the reduced hamiltonian
      !
-     CALL rdiaghg( nbase, nvec, hr, sr, nvecx, ew, vr )
+     IF( my_bgrp_id == root_bgrp ) THEN
+        CALL rdiaghg( nbase, nvec, hr, sr, nvecx, ew, vr )
+     END IF
+     IF( nbgrp > 1 ) THEN
+        CALL mp_bcast( vr, root_bgrp, inter_bgrp_comm )
+        CALL mp_bcast( ew, root_bgrp, inter_bgrp_comm )
+     ENDIF
+
      !
      e(1:nvec) = ew(1:nvec)
      !
@@ -347,7 +354,13 @@ SUBROUTINE regterg( npw, npwx, nvec, nvecx, evc, ethr, &
      !
      ! ... diagonalize the reduced hamiltonian
      !
-     CALL rdiaghg( nbase, nvec, hr, sr, nvecx, ew, vr )
+     IF( my_bgrp_id == root_bgrp ) THEN
+        CALL rdiaghg( nbase, nvec, hr, sr, nvecx, ew, vr )
+     END IF
+     IF( nbgrp > 1 ) THEN
+        CALL mp_bcast( vr, root_bgrp, inter_bgrp_comm )
+        CALL mp_bcast( ew, root_bgrp, inter_bgrp_comm )
+     ENDIF
      !
      ! ... test for convergence
      !
@@ -478,7 +491,7 @@ SUBROUTINE pregterg( npw, npwx, nvec, nvecx, evc, ethr, &
   !
   USE kinds,     ONLY : DP
   USE io_global, ONLY : stdout
-  USE mp_bands,  ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp, nbgrp
+  USE mp_bands,  ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp, nbgrp, my_bgrp_id
   USE mp_diag,   ONLY : ortho_comm, np_ortho, me_ortho, ortho_comm_id, leg_ortho, &
                         ortho_parent_comm, ortho_cntx
   USE descriptors,      ONLY : la_descriptor, descla_init, descla_local_dims
@@ -686,7 +699,13 @@ SUBROUTINE pregterg( npw, npwx, nvec, nvecx, evc, ethr, &
      ! ... diagonalize the reduced hamiltonian
      !     Calling block parallel algorithm
      !
-     CALL prdiaghg( nbase, hl, sl, nx, ew, vl, desc )
+     IF( my_bgrp_id == root_bgrp ) THEN
+        CALL prdiaghg( nbase, hl, sl, nx, ew, vl, desc )
+     END IF
+     IF( nbgrp > 1 ) THEN
+        CALL mp_bcast( vl, root_bgrp, inter_bgrp_comm )
+        CALL mp_bcast( ew, root_bgrp, inter_bgrp_comm )
+     ENDIF
      !
      e(1:nvec) = ew(1:nvec)
      !
@@ -801,7 +820,13 @@ SUBROUTINE pregterg( npw, npwx, nvec, nvecx, evc, ethr, &
      ! ... diagonalize the reduced hamiltonian
      !     Call block parallel algorithm
      !
-     CALL prdiaghg( nbase, hl, sl, nx, ew, vl, desc )
+     IF( my_bgrp_id == root_bgrp ) THEN
+        CALL prdiaghg( nbase, hl, sl, nx, ew, vl, desc )
+     END IF
+     IF( nbgrp > 1 ) THEN
+        CALL mp_bcast( vl, root_bgrp, inter_bgrp_comm )
+        CALL mp_bcast( ew, root_bgrp, inter_bgrp_comm )
+     ENDIF
      !
      ! ... test for convergence
      !
