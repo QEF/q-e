@@ -23,6 +23,7 @@ MODULE mp_bands
   INTEGER :: me_bgrp     = 0  ! index of the processor within a band group
   INTEGER :: root_bgrp   = 0  ! index of the root processor within a band group
   INTEGER :: my_bgrp_id  = 0  ! index of my band group
+  INTEGER :: root_bgrp_id     = 0  ! index of root band group
   INTEGER :: inter_bgrp_comm  = 0  ! inter band group communicator
   INTEGER :: intra_bgrp_comm  = 0  ! intra band group communicator  
   ! Next variable is .T. if band parallelization is performed inside H\psi 
