@@ -12,7 +12,7 @@ subroutine commutator_Hx_psi (ik, nbnd_occ, becp1, becp2, ipol, dpsi)
   ! On output: dpsi contains [H,x_ipol] | psi_ik > in crystal axis 
   !            (projected on at(*,ipol) )
   !
-  ! vkb,evc,igk must be properly set for the appropriate k-point
+  ! vkb and evc must be properly set for the appropriate k-point
   ! in addition becp1 must be set equal to becp1 = <vkb|evc>
   ! as it is done in PH/phq_init.f90 for the k-point ik
   ! NB: here the last index of becp1 is missing, hence it refers 
@@ -24,9 +24,9 @@ subroutine commutator_Hx_psi (ik, nbnd_occ, becp1, becp2, ipol, dpsi)
   USE cell_base,       ONLY : tpiba, at
   USE ions_base,       ONLY : nat, ityp, ntyp => nsp
   USE io_global,       ONLY : stdout
-  USE klist,           ONLY : xk
+  USE klist,           ONLY : xk, igk_k, ngk
   USE gvect,           ONLY : g
-  USE wvfct,           ONLY : npw, npwx, nbnd, igk, g2kin, et
+  USE wvfct,           ONLY : npwx, nbnd, et
   USE wavefunctions_module, ONLY: evc
   USE lsda_mod,        ONLY : nspin
   USE noncollin_module,ONLY : noncolin, npol
@@ -44,11 +44,11 @@ subroutine commutator_Hx_psi (ik, nbnd_occ, becp1, becp2, ipol, dpsi)
   !
   ! Local variables
   !
-  integer :: ig, na, ibnd, jbnd, ikb, jkb, nt, lter, ih, jh, ijkb0,  &
+  integer :: npw, ig, na, ibnd, jbnd, ikb, jkb, nt, lter, ih, jh, ijkb0,  &
              nrec, is, js, ijs
   ! counters
 
-  real(DP), allocatable  :: gk (:,:)
+  real(DP), allocatable  :: gk (:,:), g2k(:)
   ! the derivative of |k+G|
   complex(DP), allocatable :: ps2(:,:,:), dvkb (:,:), dvkb1 (:,:),  &
        work (:,:), psc(:,:,:,:), deff_nc(:,:,:,:)
@@ -58,10 +58,11 @@ subroutine commutator_Hx_psi (ik, nbnd_occ, becp1, becp2, ipol, dpsi)
   CALL start_clock ('commutator_Hx_psi')
   dpsi=(0.d0, 0.d0)
   !
-  allocate (gk ( 3, npwx))    
+  npw = ngk(ik)
+  allocate (gk(3, npw), g2k(npw) )    
   do ig = 1, npw
-     gk (1:3, ig) = (xk (1:3, ik) + g (1:3, igk (ig) ) ) * tpiba
-     g2kin (ig) = SUM(gk (1:3, ig) **2 )
+     gk (1:3, ig) = (xk (1:3, ik) + g (1:3, igk_k(ig,ik) ) ) * tpiba
+     g2k (ig) = SUM(gk (1:3, ig) **2 )
   enddo
   !
   ! this is  the kinetic contribution to [H,x]:  -2i (k+G)_ipol * psi
@@ -103,14 +104,14 @@ subroutine commutator_Hx_psi (ik, nbnd_occ, becp1, becp2, ipol, dpsi)
   call gen_us_dj (ik, dvkb)
   call gen_us_dy (ik, at (1, ipol), dvkb1)
   do ig = 1, npw
-     if (g2kin (ig) < 1.0d-10) then
+     if (g2k (ig) < 1.0d-10) then
         gk (1, ig) = 0.d0
         gk (2, ig) = 0.d0
         gk (3, ig) = 0.d0
      else
-        gk (1, ig) = gk (1, ig) / sqrt (g2kin (ig) )
-        gk (2, ig) = gk (2, ig) / sqrt (g2kin (ig) )
-        gk (3, ig) = gk (3, ig) / sqrt (g2kin (ig) )
+        gk (1, ig) = gk (1, ig) / sqrt (g2k (ig) )
+        gk (2, ig) = gk (2, ig) / sqrt (g2k (ig) )
+        gk (3, ig) = gk (3, ig) / sqrt (g2k (ig) )
      endif
   enddo
 
@@ -131,7 +132,7 @@ subroutine commutator_Hx_psi (ik, nbnd_occ, becp1, becp2, ipol, dpsi)
         endif
      enddo
   enddo
-  deallocate (gk)
+  deallocate (g2k, gk)
 
   ! In the case of gamma point systems becp2 is real
   ! so we have to include a factor of i before calling

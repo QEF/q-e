@@ -16,13 +16,14 @@ subroutine incdrhoscf (drhoscf, weight, ik, dbecsum, dpsi)
   USE kinds,                ONLY : DP
   USE cell_base,            ONLY : omega
   USE ions_base,            ONLY : nat
-  USE fft_base,             ONLY: dffts
-  USE fft_interfaces,       ONLY: invfft
+  USE fft_base,             ONLY : dffts
+  USE fft_interfaces,       ONLY : invfft
   USE gvecs,                ONLY : nls
-  USE wvfct,                ONLY : npw, igk, npwx, nbnd
-  USE uspp_param,           ONLY: nhm
-  USE wavefunctions_module, ONLY: evc
-  USE qpoint,               ONLY : npwq, igkq, ikks
+  USE wvfct,                ONLY : npwx, nbnd
+  USE uspp_param,           ONLY : nhm
+  USE wavefunctions_module, ONLY : evc
+  USE klist,                ONLY : ngk,igk_k
+  USE qpoint,               ONLY : ikks, ikqs
   USE control_lr,           ONLY : nbnd_occ
   USE mp_bands,             ONLY : me_bgrp, inter_bgrp_comm, ntask_groups
   USE mp,                   ONLY : mp_sum
@@ -49,7 +50,8 @@ subroutine incdrhoscf (drhoscf, weight, ik, dbecsum, dpsi)
   ! the change of wavefunctions in real space
   COMPLEX(DP), ALLOCATABLE :: tg_psi(:), tg_dpsi(:), tg_drho(:)
 
-  INTEGER :: ibnd, ikk, ir, ig, incr, v_siz, idx, ioff
+  INTEGER :: npw, npwq, ikk, ikq
+  INTEGER :: ibnd, ir, ig, incr, v_siz, idx, ioff
   ! counters
 
   CALL start_clock ('incdrhoscf')
@@ -61,6 +63,9 @@ subroutine incdrhoscf (drhoscf, weight, ik, dbecsum, dpsi)
   !
   wgt = 2.d0 * weight / omega
   ikk = ikks(ik)
+  ikq = ikqs(ik)
+  npw = ngk(ikk)
+  npwq= ngk(ikq)
   incr = 1
   !
   IF (dffts%have_task_groups) THEN
@@ -96,10 +101,10 @@ subroutine incdrhoscf (drhoscf, weight, ik, dbecsum, dpsi)
            IF( idx + ibnd - 1 <= nbnd_occ(ikk) ) THEN
               !
               DO ig = 1, npw
-                 tg_psi( nls( igk( ig ) ) + ioff ) = evc( ig, idx+ibnd-1 )
+                 tg_psi( nls( igk_k( ig,ikk ) ) + ioff ) = evc( ig, idx+ibnd-1 )
               END DO
               DO ig = 1, npwq
-                 tg_dpsi( nls( igkq( ig ) ) + ioff ) = dpsi( ig, idx+ibnd-1 )
+                 tg_dpsi( nls( igk_k( ig,ikq ) ) + ioff ) = dpsi( ig, idx+ibnd-1 )
               END DO
               !
            END IF
@@ -141,7 +146,7 @@ subroutine incdrhoscf (drhoscf, weight, ik, dbecsum, dpsi)
         !
         psi (:) = (0.d0, 0.d0)
         do ig = 1, npw
-           psi (nls (igk (ig) ) ) = evc (ig, ibnd)
+           psi (nls (igk_k(ig,ikk) ) ) = evc (ig, ibnd)
         enddo
         CALL invfft ('Wave', psi, dffts)
         !
@@ -149,7 +154,7 @@ subroutine incdrhoscf (drhoscf, weight, ik, dbecsum, dpsi)
         !
         dpsic(:) = (0.d0, 0.d0)
         do ig = 1, npwq
-           dpsic (nls (igkq (ig) ) ) = dpsi (ig, ibnd)
+           dpsic (nls (igk_k(ig,ikq) ) ) = dpsi (ig, ibnd)
         enddo
         CALL invfft ('Wave', dpsic, dffts)
         !
