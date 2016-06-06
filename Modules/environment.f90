@@ -247,32 +247,33 @@ CONTAINS
 #include "configure.h"
 ! #include "build_date.h"
 !
-     !WRITE( stdout, "(2x,'        BUILT :',4x,a)" ) &
-     !    TRIM( ADJUSTL( __CONF_BUILD_DATE  ))
+     !WRITE( stdout, "(2x,'        BUILT :',4x,a)" ) TRIM( ADJUSTL( &
+     !__CONF_BUILD_DATE  ))
      WRITE( stdout, * ) 
-     !
-     WRITE( stdout, "(2x,'         HOST :',4x,a)" ) &
-           TRIM( ADJUSTL( __CONF_HOST        ))
-     WRITE( stdout, "(2x,'         ARCH :',4x,a)" ) &
-           TRIM( ADJUSTL( __CONF_ARCH        ))
-     WRITE( stdout, "(2x,'           CC :',4x,a)" ) &
-           TRIM( ADJUSTL( __CONF_CC          ))
-     WRITE( stdout, "(2x,'          CPP :',4x,a)" ) &
-           TRIM( ADJUSTL( __CONF_CPP         ))
-     WRITE( stdout, "(2x,'          F90 :',4x,a)" ) &
-           TRIM( ADJUSTL( __CONF_MPIF90      ))
-     WRITE( stdout, "(2x,'          F77 :',4x,a)" ) &
-           TRIM( ADJUSTL( __CONF_F77         ))
-     WRITE( stdout, "(2x,'       DFLAGS :',4x,a)" ) &
-           TRIM( ADJUSTL( __CONF_DFLAGS      ))
-     WRITE( stdout, "(2x,'    BLAS LIBS :',4x,a)" ) &
-           TRIM( ADJUSTL( __CONF_BLAS_LIBS   ))
-     WRITE( stdout, "(2x,'  LAPACK LIBS :',4x,a)" ) &
-           TRIM( ADJUSTL( __CONF_LAPACK_LIBS ))
-     WRITE( stdout, "(2x,'     FFT LIBS :',4x,a)" ) &
-           TRIM( ADJUSTL( __CONF_FFT_LIBS    ))
-     WRITE( stdout, "(2x,'    MASS LIBS :',4x,a)" ) &
-           TRIM( ADJUSTL( __CONF_MASS_LIBS   ))
+     ! note: if any preprocessed variables __CONF_* exceeds 128 characters,
+     ! the compilation may give error because the line exceeds 132 characters
+     WRITE( stdout, "(2x,'         HOST :',4x,a)" ) TRIM( ADJUSTL( &
+__CONF_HOST))
+     WRITE( stdout, "(2x,'         ARCH :',4x,a)" ) TRIM( ADJUSTL( &
+__CONF_ARCH))
+     WRITE( stdout, "(2x,'           CC :',4x,a)" ) TRIM( ADJUSTL( &
+__CONF_CC))
+     WRITE( stdout, "(2x,'          CPP :',4x,a)" ) TRIM( ADJUSTL( &
+__CONF_CPP))
+     WRITE( stdout, "(2x,'          F90 :',4x,a)" ) TRIM( ADJUSTL( &
+__CONF_MPIF90))
+     WRITE( stdout, "(2x,'          F77 :',4x,a)" ) TRIM( ADJUSTL( &
+__CONF_F77))
+     WRITE( stdout, "(2x,'       DFLAGS :',4x,a)" ) TRIM( ADJUSTL( &
+__CONF_DFLAGS))
+     WRITE( stdout, "(2x,'    BLAS LIBS :',4x,a)" ) TRIM( ADJUSTL( &
+__CONF_BLAS_LIBS))
+     WRITE( stdout, "(2x,'  LAPACK LIBS :',4x,a)" ) TRIM( ADJUSTL( &
+__CONF_LAPACK_LIBS))
+     WRITE( stdout, "(2x,'     FFT LIBS :',4x,a)" ) TRIM( ADJUSTL( &
+__CONF_FFT_LIBS))
+     WRITE( stdout, "(2x,'    MASS LIBS :',4x,a)" ) TRIM( ADJUSTL( &
+__CONF_MASS_LIBS))
      !
    END SUBROUTINE compilation_info
 
