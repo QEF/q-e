@@ -24,7 +24,7 @@
   USE noncollin_module, ONLY : noncolin, npol
   USE wavefunctions_module,  ONLY: evc
   USE spin_orb,     ONLY : lspinorb
-  USE control_lr,   ONLY : lgamma
+  USE control_lr,   ONLY : lgamma, nbnd_occ
   USE phcom,        ONLY : evq, dvpsi, dpsi, vlocq,&
                            dmuxc, w2, dyn00, t, tmq,&
                            npertx 
@@ -113,6 +113,7 @@
 ! SP : from new PHonon/PH/allocate_phq.f90 
   ALLOCATE (becp1(nks))
   ALLOCATE (alphap(3,nks))
+  ALLOCATE(nbnd_occ(nks))
   DO ik=1,nks
      call allocate_bec_type ( nkb, nbnd, becp1(ik) )
      DO ipol=1,3
