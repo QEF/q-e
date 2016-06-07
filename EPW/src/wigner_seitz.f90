@@ -61,7 +61,7 @@
    !
    INTEGER :: nind
    !
-   nind = 20*nk1*nk3*nk3
+   nind = 20*nk1*nk2*nk3
    IF (nind .lt. 125) then
       nind = 125
    ENDIF
