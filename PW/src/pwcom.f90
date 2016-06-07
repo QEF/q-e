@@ -59,7 +59,10 @@ CONTAINS
     REAL(dp), ALLOCATABLE :: gk (:)
     INTEGER :: ik
     !
-    ALLOCATE ( igk_k(npwx,nks), ngk(nks) )
+
+    IF(.NOT.ALLOCATED(igk_k)) ALLOCATE ( igk_k(npwx,nks))
+    IF(.NOT.ALLOCATED(ngk)) ALLOCATE ( ngk(nks))
+    
     ALLOCATE ( gk(npwx) )
     igk_k(:,:) = 0
     !
