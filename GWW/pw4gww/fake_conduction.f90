@@ -34,7 +34,7 @@ CONTAINS
    USE gvect
    USE constants, ONLY : e2, pi, tpi, fpi
    USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2
-   USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, et, wg
+   USE wvfct,    ONLY : g2kin, npwx, npw, nbnd, et, wg
    USE gvecw,    ONLY : ecutwfc
    USE wavefunctions_module, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
@@ -48,7 +48,7 @@ CONTAINS
    USE noncollin_module,     ONLY : noncolin, npol
    USE becmod,           ONLY : becp
    USE uspp,                 ONLY : vkb, nkb, okvan
-   USE klist,                ONLY : xk
+   USE klist,                ONLY : xk,igk_k
    USE fft_custom_gwl
    USE mp_wave, ONLY : mergewf,splitwf
    USE fft_base,             ONLY : dfftp
@@ -187,9 +187,9 @@ CONTAINS
 
   !state_fc are first obtained on the ordering of the normconserving grid
 
-  g2kin(1:npw) = ( (g(1,igk(1:npw)) )**2 + &
-       ( g(2,igk(1:npw)) )**2 + &
-       ( g(3,igk(1:npw)) )**2 ) * tpiba2
+  g2kin(1:npw) = ( (g(1,igk_k(1:npw,1)) )**2 + &
+       ( g(2,igk_k(1:npw,1)) )**2 + &
+       ( g(3,igk_k(1:npw,1)) )**2 ) * tpiba2
   
   num_fc=0
   do ig=1,npw
@@ -1417,7 +1417,7 @@ subroutine fake_conduction_wannier_real( cutoff, s_cutoff )
    USE gvect
    USE constants, ONLY : e2, pi, tpi, fpi
    USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2
-   USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, et
+   USE wvfct,    ONLY : g2kin, npwx, npw, nbnd, et
    USE gvecw,    ONLY : ecutwfc
    USE wavefunctions_module, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
@@ -1430,7 +1430,7 @@ subroutine fake_conduction_wannier_real( cutoff, s_cutoff )
    USE noncollin_module,     ONLY : noncolin, npol
    USE becmod,           ONLY : becp
    USE uspp,                 ONLY : vkb, nkb, okvan
-   USE klist,                ONLY : xk
+   USE klist,                ONLY : xk,igk_k
    USE fft_custom_gwl
    USE mp_wave, ONLY : mergewf,splitwf
    USE fft_base,             ONLY : dfftp
@@ -1567,9 +1567,9 @@ subroutine fake_conduction_wannier_real( cutoff, s_cutoff )
 
   !state_fc are first obtained on the ordering of the normconserving grid
 
-  g2kin(1:npw) = ( (g(1,igk(1:npw)) )**2 + &
-       ( g(2,igk(1:npw)) )**2 + &
-       ( g(3,igk(1:npw)) )**2 ) * tpiba2
+  g2kin(1:npw) = ( (g(1,igk_k(1:npw,1)) )**2 + &
+       ( g(2,igk_k(1:npw,1)) )**2 + &
+       ( g(3,igk_k(1:npw,1)) )**2 ) * tpiba2
   
   num_fc=0
   do ig=1,npw
@@ -2179,7 +2179,7 @@ end subroutine fake_conduction_wannier_real
    USE noncollin_module,     ONLY : noncolin, npol
    USE becmod,           ONLY : becp
    USE uspp,                 ONLY : vkb, nkb, okvan
-   USE klist,                ONLY : xk
+   USE klist,                ONLY : xk,igk_k
    USE fft_custom_gwl
    USE mp_wave, ONLY : mergewf,splitwf
    USE fft_base,             ONLY : dfftp
@@ -2323,9 +2323,9 @@ end subroutine fake_conduction_wannier_real
 
   !state_fc are first obtained on the ordering of the normconserving grid
 
-  g2kin(1:npw) = ( (g(1,igk(1:npw)) )**2 + &
-       ( g(2,igk(1:npw)) )**2 + &
-       ( g(3,igk(1:npw)) )**2 ) * tpiba2
+  g2kin(1:npw) = ( (g(1,igk_k(1:npw,1)) )**2 + &
+       ( g(2,igk_k(1:npw,1)) )**2 + &
+       ( g(3,igk_k(1:npw,1)) )**2 ) * tpiba2
   
   num_fc=0
   do ig=1,npw

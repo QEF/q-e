@@ -30,6 +30,7 @@ SUBROUTINE dvpsi_e(kpoint,ipol,dvpsi2)
   USE mp_world,             ONLY : world_comm
   use bse_wannier, ONLY:num_nbndv
   USE gvecw,              ONLY :  ecutwfc
+  USE klist, ONLY : igk_k
 !  USE cgcom
   !
   IMPLICIT NONE
@@ -54,8 +55,8 @@ SUBROUTINE dvpsi_e(kpoint,ipol,dvpsi2)
   !
   CALL start_clock('dvpsi_e')
 
-  CALL gk_sort (xk(1,kpoint),ngm,g,ecutwfc/tpiba2,npw,igk,g2kin)
-  CALL init_us_2 (npw, igk, xk(1,kpoint), vkb)
+  CALL gk_sort (xk(1,kpoint),ngm,g,ecutwfc/tpiba2,npw,igk_k(1,1),g2kin)
+  CALL init_us_2 (npw, igk_k(1,1), xk(1,kpoint), vkb)
   
   gamma_only=.true.
   debug=.true.
@@ -83,9 +84,9 @@ SUBROUTINE dvpsi_e(kpoint,ipol,dvpsi2)
   ALLOCATE ( dpsi2 (npwx , num_nbndv(1)))
   !
   DO i = 1,npw
-     gk(1,i) = (xk(1,kpoint)+g(1,igk(i)))*tpiba
-     gk(2,i) = (xk(2,kpoint)+g(2,igk(i)))*tpiba
-     gk(3,i) = (xk(3,kpoint)+g(3,igk(i)))*tpiba
+     gk(1,i) = (xk(1,kpoint)+g(1,igk_k(i,1)))*tpiba
+     gk(2,i) = (xk(2,kpoint)+g(2,igk_k(i,1)))*tpiba
+     gk(3,i) = (xk(3,kpoint)+g(3,igk_k(i,1)))*tpiba
      g2kin(i)= gk(1,i)**2 + gk(2,i)**2 + gk(3,i)**2
   ENDDO
   !

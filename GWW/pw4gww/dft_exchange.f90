@@ -20,7 +20,7 @@ subroutine dft_exchange(nbnd_v,nbnd_s,n_set, e_x,ks_wfcs)
   USE basis
   USE klist
   USE constants, ONLY : e2, pi, tpi, fpi, RYTOEV
-  USE wvfct,     ONLY : igk, npwx, npw, nbnd, wg
+  USE wvfct,     ONLY : npwx, npw, nbnd, wg
   USE gvecw,     ONLY : gcutw
   USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2,bg
   USE wannier_gw
@@ -104,11 +104,7 @@ subroutine dft_exchange(nbnd_v,nbnd_s,n_set, e_x,ks_wfcs)
    CALL gk_sort(xk(1,1),ngm,g,gcutw,npw0,igk0,g2kin_bp)
 
  
-   if(okvan) allocate(becpr(nkb,nbnd_s))
-   if  ( nkb > 0 .and. okvan) then
-      CALL init_us_2( npw, igk, xk(1,1), vkb )
-     ! CALL ccalbec( nkb, npwx, npw, nbnd_s, becpr, vkb, evc) ATTENZIONE
-   endif
+  
 
 
    allocate(tmpreal1(dfftp%nnr))
@@ -126,13 +122,13 @@ subroutine dft_exchange(nbnd_v,nbnd_s,n_set, e_x,ks_wfcs)
             psic(:)=(0.d0,0.d0)
             psic(:)=(0.d0,0.d0)
             IF ( hw < min(iiv*n_set,nbnd_v(isv))) then
-               psic(nls(igk(1:npw0)))  = ks_wfcs(1:npw0,hw,isv) + &
+               psic(nls(1:npw0))  = ks_wfcs(1:npw0,hw,isv) + &
                     ( 0.D0, 1.D0 ) * ks_wfcs(1:npw0,hw+1,isv)
-               psic(nlsm(igk(1:npw0))) = CONJG( ks_wfcs(1:npw,hw,isv) - &
+               psic(nlsm(1:npw0)) = CONJG( ks_wfcs(1:npw,hw,isv) - &
                     ( 0.D0, 1.D0 ) * ks_wfcs(1:npw0,hw+1,isv) )
             ELSE
-               psic(nls(igk(1:npw0)))  = ks_wfcs(1:npw0,hw,isv)
-               psic(nlsm(igk(1:npw0))) = CONJG( ks_wfcs(1:npw0,hw,isv) )
+               psic(nls(1:npw0))  = ks_wfcs(1:npw0,hw,isv)
+               psic(nlsm(1:npw0)) = CONJG( ks_wfcs(1:npw0,hw,isv) )
             END IF
          
             CALL invfft ('Wave', psic, dffts)
@@ -161,13 +157,13 @@ subroutine dft_exchange(nbnd_v,nbnd_s,n_set, e_x,ks_wfcs)
                psic(:)=(0.d0,0.d0)
                psic(:)=(0.d0,0.d0)
                IF ( hw < min(jjs*n_set,nbnd_s)) then
-                  psic(nls(igk(1:npw0)))  = ks_wfcs(1:npw0,hw,isv) + &
+                  psic(nls(1:npw0))  = ks_wfcs(1:npw0,hw,isv) + &
                        ( 0.D0, 1.D0 ) * ks_wfcs(1:npw0,hw+1,isv)
-                  psic(nlsm(igk(1:npw0))) = CONJG( ks_wfcs(1:npw,hw,isv) - &
+                  psic(nlsm(1:npw0)) = CONJG( ks_wfcs(1:npw,hw,isv) - &
                        ( 0.D0, 1.D0 ) * ks_wfcs(1:npw0,hw+1,isv) )
                ELSE
-                  psic(nls(igk(1:npw0)))  = ks_wfcs(1:npw0,hw,isv)
-                  psic(nlsm(igk(1:npw0))) = CONJG( ks_wfcs(1:npw0,hw,isv) )
+                  psic(nls(1:npw0))  = ks_wfcs(1:npw0,hw,isv)
+                  psic(nlsm(1:npw0)) = CONJG( ks_wfcs(1:npw0,hw,isv) )
                END IF
                   
                CALL invfft ('Wave', psic, dffts)
@@ -200,8 +196,8 @@ subroutine dft_exchange(nbnd_v,nbnd_s,n_set, e_x,ks_wfcs)
 !NOT_TO_BE_INCLUDED_START
                   do ks=1,nbnd_s,1
                      psic(:)=(0.d0,0.d0)
-                     psic(nls(igk(1:npw0)))  = ks_wfcs(1:npw0,ks,isv)
-                     psic(nlsm(igk(1:npw0))) = CONJG( ks_wfcs(1:npw0,ks,isv) )
+                     psic(nls(1:npw0))  = ks_wfcs(1:npw0,ks,isv)
+                     psic(nlsm(1:npw0)) = CONJG( ks_wfcs(1:npw0,ks,isv) )
                      CALL invfft ('Wave', psic, dffts)
                      prod_c(1:dfftp%nnr)=dcmplx(dble(psic(1:dfftp%nnr))*tmpreal_v(1:dfftp%nnr,iv-(iiv-1)*n_set)&
                           &  ,0.d0)

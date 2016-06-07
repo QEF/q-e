@@ -22,7 +22,7 @@ subroutine pola_basis_lanczos(n_set,nstates,numpw, nsteps,ispin)
    USE gvect
    USE constants, ONLY : e2, pi, tpi, fpi
    USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2
-   USE wvfct,     ONLY : igk, npwx, npw, nbnd
+   USE wvfct,     ONLY : npwx, npw, nbnd
    USE gvecw,     ONLY : ecutwfc
    USE wavefunctions_module, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
@@ -540,7 +540,7 @@ subroutine pc_operator(state,ispin,l_cond)
    USE io_global,            ONLY : stdout
    USE kinds,    ONLY : DP
    USE gvect
-   USE wvfct,    ONLY : igk, npwx, npw, nbnd
+   USE wvfct,    ONLY : npwx, npw, nbnd
    USE wavefunctions_module, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
    USE mp_world, ONLY : world_comm
@@ -590,7 +590,7 @@ subroutine pc_operator_t(state,evc_t,ispin, fc)
    USE io_global,            ONLY : stdout
    USE kinds,    ONLY : DP
    USE gvect
-   USE wvfct,    ONLY : igk, npwx, npw, nbnd
+   USE wvfct,    ONLY : npwx, npw, nbnd
    USE wavefunctions_module, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
    USE mp_world, ONLY : world_comm
@@ -640,7 +640,7 @@ subroutine lanczos_state(zstates, nstates, itype, nsteps,istate,ispin)
   USE gvect
   USE constants, ONLY : e2, pi, tpi, fpi
   USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2
-  USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd
+  USE wvfct,    ONLY : g2kin, npwx, npw, nbnd
   USE wavefunctions_module, ONLY : evc, psic
   USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
   USE mp_world, ONLY : mpime, nproc, world_comm
@@ -648,7 +648,7 @@ subroutine lanczos_state(zstates, nstates, itype, nsteps,istate,ispin)
   USE g_psi_mod,            ONLY : h_diag, s_diag
   USE becmod,           ONLY : becp,allocate_bec_type,deallocate_bec_type
   USE uspp,                 ONLY : vkb, nkb, okvan
-  USE klist,                ONLY : xk
+  USE klist,                ONLY : xk,igk_k
   USE noncollin_module,     ONLY : noncolin, npol
   USE fft_base,             ONLY : dfftp, dffts
   USE fft_interfaces,       ONLY : fwfft, invfft
@@ -729,10 +729,10 @@ subroutine lanczos_state(zstates, nstates, itype, nsteps,istate,ispin)
 
   call allocate_bec_type ( nkb, l_blk, becp)
 
-  IF ( nkb > 0 )  CALL init_us_2( npw, igk, xk(1,1), vkb )
-  g2kin(1:npw) = ( (g(1,igk(1:npw)) )**2 + &
-       ( g(2,igk(1:npw)) )**2 + &
-       ( g(3,igk(1:npw)) )**2 ) * tpiba2
+  IF ( nkb > 0 )  CALL init_us_2( npw, igk_k(1,1), xk(1,1), vkb )
+  g2kin(1:npw) = ( (g(1,igk_k(1:npw,1)) )**2 + &
+       ( g(2,igk_k(1:npw,1)) )**2 + &
+       ( g(3,igk_k(1:npw,1)) )**2 ) * tpiba2
 
   ip=0
   do iv=1,nstates,l_blk
@@ -1142,7 +1142,7 @@ subroutine orthonormalize_two_manifolds( state1, n1,state2, n2, threshold, state
    USE io_global,            ONLY : stdout, ionode, ionode_id
    USE kinds,    ONLY : DP
    USE gvect
-   USE wvfct,    ONLY : igk, npwx, npw, nbnd
+   USE wvfct,    ONLY : npwx, npw, nbnd
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
    USE mp_world, ONLY : world_comm
    USE fft_base,             ONLY : dfftp, dffts
@@ -1287,7 +1287,7 @@ subroutine global_pola_lanczos(nstates,nstates_eff,threshold,nglobal,nsteps,nump
   USE kinds,    ONLY : DP
   USE wannier_gw, ONLY : num_nbndv,max_ngm,l_pmatrix
   USE gvect
-  USE wvfct,    ONLY : igk, npwx, npw, nbnd
+  USE wvfct,    ONLY : npwx, npw, nbnd
   USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
   USE mp_world, ONLY : world_comm
   USE wavefunctions_module, ONLY : evc, psic
@@ -1296,6 +1296,7 @@ subroutine global_pola_lanczos(nstates,nstates_eff,threshold,nglobal,nsteps,nump
   USE fft_base,             ONLY : dfftp, dffts
   USE fft_interfaces,       ONLY : fwfft, invfft
   USE wannier_gw, ONLY : l_verbose
+  USE klist, ONLY : igk_k
 
   implicit none
   
@@ -1531,8 +1532,8 @@ subroutine global_pola_lanczos(nstates,nstates_eff,threshold,nglobal,nsteps,nump
      do iv=1,num_nbndv(ispin),num_nbndv(ispin)-1!ATTENZIONE
 !put iv on real space
         psic(:)=(0.d0,0.d0)
-        psic(nls(igk(1:npw)))  = evc(1:npw,iv)
-        psic(nlsm(igk(1:npw))) = CONJG( evc(1:npw,iv) )
+        psic(nls(igk_k(1:npw,1)))  = evc(1:npw,iv)
+        psic(nlsm(igk_k(1:npw,1))) = CONJG( evc(1:npw,iv) )
         CALL invfft ('Wave', psic, dffts)
         wv_real(:)= DBLE(psic(:))
 !loop on wannier_products
@@ -1549,7 +1550,7 @@ subroutine global_pola_lanczos(nstates,nstates_eff,threshold,nglobal,nsteps,nump
 !!form products with w_v and trasfrom in G space
            psic(:)=cmplx(tmp_r(:)*wv_real(:),0.d0)
            CALL fwfft ('Wave', psic, dffts)
-           wp_prod(1:npw) = psic(nls(igk(1:npw)))
+           wp_prod(1:npw) = psic(nls(igk_k(1:npw,1)))
 !!project on conduction subspace
            call pc_operator(wp_prod(:),ispin, .false.)
 !!do scalar product
@@ -1602,7 +1603,7 @@ subroutine orthonormalize_two_manifolds_scalapack( state1, n1,state2, n2, thresh
    USE io_global,            ONLY : stdout, ionode, ionode_id
    USE kinds,    ONLY : DP
    USE gvect
-   USE wvfct,    ONLY : igk, npwx, npw, nbnd
+   USE wvfct,    ONLY : npwx, npw, nbnd
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
    USE mp_world, ONLY : world_comm
    USE wannier_gw, ONLY : p_mpime,p_nproc, npcol, nprow,icontxt,myrow,mycol
@@ -1782,7 +1783,7 @@ subroutine orthonormalize_two_manifolds_prj( state1, n1,state2, n2, threshold, s
    USE io_global,            ONLY : stdout, ionode, ionode_id
    USE kinds,    ONLY : DP
    USE gvect
-   USE wvfct,    ONLY : igk, npwx, npw, nbnd
+   USE wvfct,    ONLY : npwx, npw, nbnd
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
    USE mp_world, ONLY : world_comm
    USE wannier_gw, ONLY : l_verbose
@@ -1938,7 +1939,7 @@ subroutine pc_operator_test(state)
    USE io_global,            ONLY : stdout
    USE kinds,    ONLY : DP
    USE gvect
-   USE wvfct,    ONLY : igk, npwx, npw, nbnd
+   USE wvfct,    ONLY : npwx, npw, nbnd
    USE wavefunctions_module, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
    USE mp_world, ONLY : world_comm
@@ -1972,7 +1973,7 @@ subroutine pc_operator_t_m(numpw,state,evc_t,ispin,fc)
    USE io_global,            ONLY : stdout
    USE kinds,    ONLY : DP
    USE gvect
-   USE wvfct,    ONLY : igk, npwx, npw, nbnd
+   USE wvfct,    ONLY : npwx, npw, nbnd
    USE wavefunctions_module, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
    USE mp_world, ONLY : world_comm
@@ -2023,7 +2024,7 @@ subroutine pc_operator_t_r(numpw,state,evc_r,ispin,fc)
    USE io_global,            ONLY : stdout
    USE kinds,    ONLY : DP
    USE gvect
-   USE wvfct,    ONLY : igk, npwx, npw, nbnd
+   USE wvfct,    ONLY : npwx, npw, nbnd
    USE wavefunctions_module, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
    USE mp_world, ONLY : world_comm
@@ -2078,7 +2079,7 @@ subroutine  h_psi_self( lda, n, m, psi, hpsi )
   !
   USE kinds,    ONLY : DP
   USE gvect,    ONLY : gstart
-  USE wvfct,    ONLY : igk, npwx, npw, nbnd,et
+  USE wvfct,    ONLY : npwx, npw, nbnd,et
   USE wavefunctions_module, ONLY : evc
   USE wannier_gw, ONLY : n_gw_states, ene_gw, delta_self
   USE mp, ONLY : mp_sum
@@ -2136,7 +2137,7 @@ subroutine  h_psi_scissor( ispin,lda, n, m, psi, hpsi )
 
   USE kinds,    ONLY : DP
   USE gvect,    ONLY : gstart
-  USE wvfct,    ONLY : igk, npwx, npw, nbnd,et
+  USE wvfct,    ONLY : npwx, npw, nbnd,et
   USE wavefunctions_module, ONLY : evc
   USE wannier_gw, ONLY : num_nbndv,scissor
   USE mp, ONLY : mp_sum
@@ -2192,7 +2193,7 @@ subroutine pola_basis_lanczos_real(n_set,nstates,numpw, nsteps,ispin)
    USE gvect
    USE constants, ONLY : e2, pi, tpi, fpi
    USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2
-   USE wvfct,    ONLY : igk, npwx, npw, nbnd
+   USE wvfct,    ONLY : npwx, npw, nbnd
    USE gvecw,     ONLY : ecutwfc
    USE wavefunctions_module, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast

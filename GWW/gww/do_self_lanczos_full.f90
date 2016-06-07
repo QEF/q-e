@@ -102,7 +102,7 @@ subroutine do_self_lanczos_full(ss, tf ,options,l_real_axis,energy)
   if(options%whole_s) then
      l_single=.false.
   endif
-  write(stdout,*) 'Routine do_self_lanczos_time'
+  write(stdout,*) 'Routine do_self_lanczos_time_full'
   FLUSH(stdout)
 
 

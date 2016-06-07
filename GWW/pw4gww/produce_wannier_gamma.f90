@@ -480,7 +480,7 @@
                    call start_clock('self_basis')
                    call davcio(evc,2*nwordwfc,iunwfc,is,-1)
                    if(.not.l_real) then 
-                      call self_basis_lanczos(nset,n_self_lanczos,numw_prod,nsteps_lanczos_self,is,l_full,n_full)
+                      call self_basis_lanczos(nset,n_self_lanczos,numw_prod,nsteps_lanczos_self,is,l_full,n_full(is))
                    else
 !NOT_TO_BE_INCLUDED_START
                       call self_basis_lanczos_real(nset,n_self_lanczos,numw_prod,nsteps_lanczos_self,is)

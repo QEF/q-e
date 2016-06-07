@@ -20,12 +20,12 @@ SUBROUTINE wfc_gamma_real(itask,ispin)
   USE gvect,                ONLY : gstart
   USE gvecs,              ONLY : nls, nlsm, doublegrid
    USE io_files,             ONLY : iunwfc, nwordwfc, diropn
-  USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et
+  USE wvfct,                ONLY : nbnd, npwx, npw, wg, et
   USE mp,                   ONLY : mp_bcast
   USE io_global,            ONLY : stdout
   USE klist,                ONLY : lgauss, degauss, ngauss, nks, &
                                    nkstot, wk, xk, nelec, nelup, neldw, &
-                                   two_fermi_energies
+                                   two_fermi_energies, igk_k
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE wavefunctions_module, ONLY : evc, psic
   USE io_files,             ONLY : diropn
@@ -67,7 +67,7 @@ SUBROUTINE wfc_gamma_real(itask,ispin)
   !
   
   if  ( nkb > 0 .and. okvan) then
-     CALL init_us_2( npw, igk, xk(1,1), vkb )
+     CALL init_us_2( npw, igk_k(1,1), xk(1,1), vkb )
      if(itask/=1) then
         !CALL ccalbec( nkb, npwx, npw, nbnd, becp_gw, vkb, evc )
      else
@@ -96,15 +96,15 @@ SUBROUTINE wfc_gamma_real(itask,ispin)
                 !
                 ! ... two ffts at the same time
                 !
-        psic(nls(igk(1:npw)))  = evc(1:npw,ibnd) + &
+        psic(nls(igk_k(1:npw,1)))  = evc(1:npw,ibnd) + &
              ( 0.D0, 1.D0 ) * evc(1:npw,ibnd+1)
-        psic(nlsm(igk(1:npw))) = CONJG( evc(1:npw,ibnd) - &
+        psic(nlsm(igk_k(1:npw,1))) = CONJG( evc(1:npw,ibnd) - &
              ( 0.D0, 1.D0 ) * evc(1:npw,ibnd+1) )
                 !
      ELSE
         !
-        psic(nls(igk(1:npw)))  = evc(1:npw,ibnd)
-        psic(nlsm(igk(1:npw))) = CONJG( evc(1:npw,ibnd) )
+        psic(nls(igk_k(1:npw,1)))  = evc(1:npw,ibnd)
+        psic(nlsm(igk_k(1:npw,1))) = CONJG( evc(1:npw,ibnd) )
            !
      END IF
              !

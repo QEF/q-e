@@ -12,7 +12,7 @@ MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules \
 
 #location of needed libraries
 LIBOBJS= ../../iotk/src/libiotk.a  \
-         ../../clib/clib.a 
+         ../../clib/clib.a ../../flib/flib.a
 
 BSEOBJS = \
 openfil_bse.o \

@@ -115,7 +115,7 @@ H       -1.198204546  -1.198204546   1.198204546
 H        1.198204546  -1.198204546  -1.198204546
 H       -1.198204546   1.198204546  -1.198204546
 C        0.000000000   0.000000000   0.000000000
-
+K_POINTS {gamma}
 EOF
     $ECHO "  running the scf calculation for methane...\c"
     $PW_COMMAND < methane_scf.in > methane_scf.out

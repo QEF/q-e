@@ -288,7 +288,7 @@
           else
              n_int_loc=n_int
           endif
-
+         
 
           do ix=-n_int_loc+1,n_int_loc
              do iy=-n_int_loc+1,n_int_loc
@@ -300,11 +300,21 @@
 
                
                    qq(:)=qx(:)+qy(:)+qz(:)+g(:,ig)
-
-
                    qq_fact=qq(1)**2+qq(2)**2+qq(3)**2
                    
-                   vg_q(ig)=vg_q(ig)+1.d0/qq_fact
+                   if(ig==1.and. gstart==2) then
+                      vg_q(1)=vg_q(ig)+1.d0/qq_fact
+                   else
+                      
+                      qq(1:3)=g(1:3,ig)*(8.d0*(dble(n_int_loc))**3.d0)
+                       qq_fact=qq(1)**2+qq(2)**2+qq(3)**2
+                       !vg_q(ig)=vg_q(ig)+1.d0/qq_fact
+                      vg_q(ig)=1.d0/qq_fact
+                       
+                   endif
+
+
+                   
                 enddo
              enddo
           enddo

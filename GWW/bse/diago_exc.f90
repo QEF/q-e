@@ -5,12 +5,12 @@ subroutine diago_exc(a,v,cstate,wcstate)
 USE kinds,            ONLY : DP
 USE exciton
 use bse_basic_structures
-USE wvfct,            ONLY : igk,g2kin,npwx
+USE wvfct,            ONLY : g2kin,npwx
 USE noncollin_module, ONLY : npol
 USE uspp,             ONLY : vkb,nkb
 USE becmod,           ONLY : becp,allocate_bec_type,deallocate_bec_type
 USE g_psi_mod,        ONLY : h_diag, s_diag
-USE klist,            ONLY : xk
+USE klist,            ONLY : xk, igk_k
 USE gvect
 USE cell_base,        ONLY: tpiba,tpiba2
 USE constants,        ONLY: RYTOEV 
@@ -71,10 +71,10 @@ a2%a(1:a2%npw,1:a2%numb_v)=a%a(1:a%npw,1:a%numb_v)
 
 call allocate_bec_type ( nkb, a%numb_v, becp)
 
-IF ( nkb > 0 )  CALL init_us_2( a%npw, igk, xk(1,1), vkb )
-g2kin(1:a%npw) = ( (g(1,igk(1:a%npw)) )**2 + &
-       ( g(2,igk(1:a%npw)) )**2 + &
-       ( g(3,igk(1:a%npw)) )**2 ) * tpiba2
+IF ( nkb > 0 )  CALL init_us_2( a%npw, igk_k(1,1), xk(1,1), vkb )
+g2kin(1:a%npw) = ( (g(1,igk_k(1:a%npw,1)) )**2 + &
+       ( g(2,igk_k(1:a%npw,1)) )**2 + &
+       ( g(3,igk_k(1:a%npw,1)) )**2 ) * tpiba2
 
 
 psi_1(1:a%npw,1:a%numb_v)=a%a(1:a%npw,1:a%numb_v)

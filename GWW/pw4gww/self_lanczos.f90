@@ -980,7 +980,11 @@ endif
   !if required writes global s vectors on disk
   if(lfull) then
        iunc = find_free_unit()
-       CALL diropn( iunc, 'sreal2full',dffts%nnr, exst)
+       if(ispin==1) then
+          CALL diropn( iunc, 'sreal2full',dffts%nnr, exst)
+       else
+          CALL diropn( iunc, 'sreal2full2_',dffts%nnr, exst)
+       endif
        do ii=1,nglobal,2
           psic(1:dffts%nnr)=(0.d0,0.d0)
           do ig=1,npw

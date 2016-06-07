@@ -25,7 +25,6 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
   !       e_h
   USE kinds,    ONLY : DP
   USE uspp,     ONLY : vkb, nkb
-  USE wvfct,    ONLY : igk
   USE gvecs,  ONLY : nls, doublegrid
   USE gvect,                ONLY : ngm, gstart, nl, nlm, g, gg, gcutm
   USE cell_base,            ONLY :  alat, omega
@@ -46,7 +45,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
 
   USE exx,      ONLY : vexx !Suriano
   USE funct,    ONLY : exx_is_active,dft_is_hybrid
-
+  USE klist, ONLY : igk_k
 
   !
   IMPLICIT NONE
@@ -130,7 +129,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
           !
           psic(1:dffts%nnr) = ( 0.D0, 0.D0 )
           !
-          psic(nls(igk(1:n))) = psi(1:n,ibnd)
+          psic(nls(igk_k(1:n,1))) = psi(1:n,ibnd)
           !
           CALL invfft ('Wave', psic, dffts)
 
@@ -151,7 +150,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
           !
           e_xc(ibnd)=0.d0
           do ig=1,n
-             e_xc(ibnd)=e_xc(ibnd)+real(conjg(psi(ig,ibnd))*psic(nls(igk(ig))))
+             e_xc(ibnd)=e_xc(ibnd)+real(conjg(psi(ig,ibnd))*psic(nls(igk_k(ig,1))))
           enddo
           call mp_sum(e_xc(ibnd),world_comm)
           write(stdout,*) 'energies_xc :', ibnd, e_xc(ibnd)*rytoev
@@ -171,7 +170,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
 
           CALL start_clock( 'firstfft' )
           psic(1:dffts%nnr) = ( 0.D0, 0.D0 )
-          psic(nls(igk(1:n))) = psi(1:n,ibnd)
+          psic(nls(igk_k(1:n,1))) = psi(1:n,ibnd)
 
           CALL invfft ('Wave', psic, dffts)
 
@@ -185,7 +184,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
           CALL fwfft ('Wave', psic, dffts)
           e_h(ibnd)=0.d0
           do ig=1,n
-             e_h(ibnd)=e_h(ibnd)+real(conjg(psi(ig,ibnd))*psic(nls(igk(ig))))
+             e_h(ibnd)=e_h(ibnd)+real(conjg(psi(ig,ibnd))*psic(nls(igk_k(ig,1))))
           enddo
           call mp_sum(e_h(ibnd),world_comm)
           write(stdout,*) 'energies_h :', ibnd, e_h(ibnd)*rytoev
@@ -249,7 +248,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
          if(l_verbose) write(stdout,*) 'ATTENZIONE2'
          FLUSH(stdout)
 
-         IF ( nkb > 0 )  CALL init_us_2( npw, igk, xk(1,1), vkb )
+         IF ( nkb > 0 )  CALL init_us_2( npw, igk_k(1,1), xk(1,1), vkb )
          !call ccalbec( nkb, npwx, npw, nbnd, becp%r, vkb, evc )
         !if(nkb> 0)CALL calbec ( npw, vkb, psi, becp, nbnd)
 
@@ -260,9 +259,9 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
          if(l_verbose)write(stdout,*) 'ATTENZIONE4'
          FLUSH(stdout)
 
-         g2kin(1:npw) = ( ( xk(1,1) + g(1,igk(1:npw)) )**2 + &
-              ( xk(2,1) + g(2,igk(1:npw)) )**2 + &
-              ( xk(3,1) + g(3,igk(1:npw)) )**2 ) * tpiba2
+         g2kin(1:npw) = ( ( xk(1,1) + g(1,igk_k(1:npw,1)) )**2 + &
+              ( xk(2,1) + g(2,igk_k(1:npw,1)) )**2 + &
+              ( xk(3,1) + g(3,igk_k(1:npw,1)) )**2 ) * tpiba2
 
 
          if(l_verbose)write(stdout,*) 'ATTENZIONE5'

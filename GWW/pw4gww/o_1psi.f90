@@ -435,7 +435,7 @@ SUBROUTINE o_1psi_gamma( numv, v_states, psi, opsi,l_freq,hdiag, ptype,fcw_numbe
    USE gvect
    USE constants, ONLY : e2, pi, tpi, fpi
    USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2
-   USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, et
+   USE wvfct,    ONLY : g2kin, npwx, npw, nbnd, et
    USE wavefunctions_module, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
    USE mp_world, ONLY : world_comm, mpime, nproc
@@ -446,7 +446,7 @@ SUBROUTINE o_1psi_gamma( numv, v_states, psi, opsi,l_freq,hdiag, ptype,fcw_numbe
    USE becmod,           ONLY : becp,allocate_bec_type,deallocate_bec_type
    USE uspp,                 ONLY : vkb, nkb, okvan
    USE g_psi_mod,            ONLY : h_diag, s_diag
-   USE klist,                ONLY : xk
+   USE klist,                ONLY : xk,igk_k
    
   !
   IMPLICIT NONE
@@ -503,7 +503,7 @@ SUBROUTINE o_1psi_gamma( numv, v_states, psi, opsi,l_freq,hdiag, ptype,fcw_numbe
   if(pmat_type==0) then
      call start_clock('opsi_total')
      call allocate_bec_type ( nkb, numv, becp)
-     IF ( nkb > 0 )  CALL init_us_2( npw, igk, xk(1,1), vkb )
+     IF ( nkb > 0 )  CALL init_us_2( npw, igk_k(1,1), xk(1,1), vkb )
      if(.not.associated(tmp_psi)) then
         allocate( tmp_psi(npw,num_nbndv(1)))
         lfirst=.true.
@@ -633,7 +633,7 @@ SUBROUTINE o_1psi_gamma( numv, v_states, psi, opsi,l_freq,hdiag, ptype,fcw_numbe
            opsi(1:npw)=opsi(1:npw)-0.5d0*(psic(nls(1:npw))+conjg(psic(nlsm(1:npw))))
            opsi(1:npw)=opsi(1:npw)-(0.d0,-0.5d0)*(psic(nls(1:npw))-conjg(psic(nlsm(1:npw))))
         else
-           opsi(1:npw)=opsi(1:npw)-psic(nls(igk(1:npw)))
+           opsi(1:npw)=opsi(1:npw)-psic(nls(igk_k(1:npw,1)))
         endif
      enddo
      deallocate(h_diag,s_diag)
@@ -731,7 +731,7 @@ SUBROUTINE o_1psi_gamma( numv, v_states, psi, opsi,l_freq,hdiag, ptype,fcw_numbe
            opsi(1:npw)=opsi(1:npw)-0.5d0*(psic(nls(1:npw))+conjg(psic(nlsm(1:npw))))
            opsi(1:npw)=opsi(1:npw)-(0.d0,-0.5d0)*(psic(nls(1:npw))-conjg(psic(nlsm(1:npw))))
         else
-           opsi(1:npw)=opsi(1:npw)-psic(nls(igk(1:npw)))
+           opsi(1:npw)=opsi(1:npw)-psic(nls(igk_k(1:npw,1)))
         endif
 
      enddo
@@ -747,15 +747,15 @@ SUBROUTINE o_1psi_gamma( numv, v_states, psi, opsi,l_freq,hdiag, ptype,fcw_numbe
      
      psic(:)=cmplx(psi_r(:,1),0.d0)
      CALL fwfft ('Wave', psic, dffts)
-     psi_g(1:npw,1)=psic(nls(igk(1:npw)))
+     psi_g(1:npw,1)=psic(nls(igk_k(1:npw,1)))
      if(gstart==2) psi_g(1,1)=dble(psi_g(1,1))
      
      call pc_operator(psi_g(:,1),1,.false.)
      psi_g(1:npw,1)=psi_g(1:npw,1)*hdiag(1:npw)
      call pc_operator(psi_g(:,1),1,.false.)
 
-     psic(nls(igk(1:npw)))  = psi_g(1:npw,1)
-     psic(nlsm(igk(1:npw))) = CONJG( psi_g(1:npw,1) )
+     psic(nls(igk_k(1:npw,1)))  = psi_g(1:npw,1)
+     psic(nlsm(igk_k(1:npw,1))) = CONJG( psi_g(1:npw,1) )
      CALL invfft ('Wave', psic, dffts)
      psi_r(:,1)=dble(psic(:))
   
@@ -767,7 +767,7 @@ SUBROUTINE o_1psi_gamma( numv, v_states, psi, opsi,l_freq,hdiag, ptype,fcw_numbe
 
      psic(:)=cmplx(psi_r(:,1),0.d0)
      CALL fwfft ('Wave', psic, dffts)
-     opsi(1:npw)=-psic(nls(igk(1:npw)))
+     opsi(1:npw)=-psic(nls(igk_k(1:npw,1)))
     
   else!cases 3,4
 !form scalar products
@@ -821,12 +821,13 @@ SUBROUTINE evc_to_real(numv, v_states)
 
    USE io_global,            ONLY : stdout, ionode, ionode_id
    USE kinds,    ONLY : DP
-   USE wvfct,    ONLY : igk, npwx, npw, nbnd
+   USE wvfct,    ONLY : npwx, npw, nbnd
    USE wavefunctions_module, ONLY : evc, psic
    USE gvecs,              ONLY : nls, nlsm, doublegrid
    USE fft_base,             ONLY : dfftp, dffts
    USE fft_interfaces,       ONLY : fwfft, invfft
-  
+   USE klist,  ONLY : igk_k
+
    implicit none
 
   INTEGER, INTENT(in) :: numv!number of states to be transformed
@@ -837,11 +838,11 @@ SUBROUTINE evc_to_real(numv, v_states)
   do iv=1,numv,2
      psic(:)=(0.d0,0.d0)
      if(iv < numv) then
-        psic(nls(igk(1:npw)))  = evc(1:npw,iv)+(0.d0,1.d0)*evc(1:npw,iv+1)
-        psic(nlsm(igk(1:npw))) = CONJG( evc(1:npw,iv) )+(0.d0,1.d0)*CONJG(evc(1:npw,iv+1))
+        psic(nls(igk_k(1:npw,1)))  = evc(1:npw,iv)+(0.d0,1.d0)*evc(1:npw,iv+1)
+        psic(nlsm(igk_k(1:npw,1))) = CONJG( evc(1:npw,iv) )+(0.d0,1.d0)*CONJG(evc(1:npw,iv+1))
      else
-        psic(nls(igk(1:npw)))  = evc(1:npw,iv)
-        psic(nlsm(igk(1:npw))) = CONJG( evc(1:npw,iv) )
+        psic(nls(igk_k(1:npw,1)))  = evc(1:npw,iv)
+        psic(nlsm(igk_k(1:npw,1))) = CONJG( evc(1:npw,iv) )
      endif
      CALL invfft ('Wave', psic, dffts)
      if(iv<numv) then
@@ -865,12 +866,12 @@ SUBROUTINE o_basis_init(numpw,o_basis,numv,v_states,cutoff, ptype,fcw_number,fcw
   USE gvect, ONLY : g
   USE io_global,            ONLY : stdout, ionode, ionode_id
   USE kinds,    ONLY : DP
-  USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd
+  USE wvfct,    ONLY : g2kin, npwx, npw, nbnd
   USE wavefunctions_module, ONLY : evc, psic
   USE gvecs,              ONLY : nls, nlsm, doublegrid
   USE constants, ONLY : tpi
   USE random_numbers, ONLY : randy
-  USE klist,                ONLY : xk
+  USE klist,                ONLY : xk,igk_k
   USE cell_base,            ONLY : tpiba2
   USE fft_base,             ONLY : dfftp, dffts
   USE fft_interfaces,       ONLY : fwfft, invfft
@@ -899,9 +900,9 @@ SUBROUTINE o_basis_init(numpw,o_basis,numv,v_states,cutoff, ptype,fcw_number,fcw
   
    allocate(hdiag(npw))
 
-   g2kin(1:npw) = ( (g(1,igk(1:npw)) )**2 + &
-        ( g(2,igk(1:npw)) )**2 + &
-        ( g(3,igk(1:npw)) )**2 ) * tpiba2
+   g2kin(1:npw) = ( (g(1,igk_k(1:npw,1)) )**2 + &
+        ( g(2,igk_k(1:npw,1)) )**2 + &
+        ( g(3,igk_k(1:npw,1)) )**2 ) * tpiba2
 
   
    do ig=1,npw
@@ -926,7 +927,7 @@ SUBROUTINE o_basis_init(numpw,o_basis,numv,v_states,cutoff, ptype,fcw_number,fcw
          arg = tpi * randy()
                    !
          o_basis(ig,iw) = CMPLX( rr*COS( arg ), rr*SIN( arg ) ) / &
-              ( g(1,igk(ig))**2 +  g(2,igk(ig))**2 + g(3,igk(ig))**2 + 1.D0) 
+              ( g(1,igk_k(ig,1))**2 +  g(2,igk_k(ig,1))**2 + g(3,igk_k(ig,1))**2 + 1.D0) 
                    !
       END DO
                 !
@@ -954,7 +955,7 @@ SUBROUTINE o_basis_init(numpw,o_basis,numv,v_states,cutoff, ptype,fcw_number,fcw
 !this subroutines writes the basis of the polarization on file
    USE io_global,            ONLY : stdout, ionode, ionode_id
    USE kinds,    ONLY : DP
-   USE wvfct,    ONLY : igk, npwx, npw, nbnd
+   USE wvfct,    ONLY : npwx, npw, nbnd
    USE wavefunctions_module, ONLY : evc, psic
    USE gvecs,              ONLY : nls, nlsm, doublegrid
    USE wavefunctions_module, ONLY : psic
@@ -965,7 +966,7 @@ SUBROUTINE o_basis_init(numpw,o_basis,numv,v_states,cutoff, ptype,fcw_number,fcw
    USE gvect, ONLY : nl
    USE fft_base,             ONLY : dfftp, dffts
    USE fft_interfaces,       ONLY : fwfft, invfft
-  
+   USE klist,   ONLY : igk_k
 
    implicit none 
 
@@ -1003,8 +1004,8 @@ SUBROUTINE o_basis_init(numpw,o_basis,numv,v_states,cutoff, ptype,fcw_number,fcw
    do iw=1,numpw
 
       psic(:)=(0.d0,0.d0)
-      psic(nls(igk(1:npw)))  = o_basis(1:npw,iw)
-      psic(nlsm(igk(1:npw))) = CONJG( o_basis(1:npw,iw))
+      psic(nls(igk_k(1:npw,1)))  = o_basis(1:npw,iw)
+      psic(nlsm(igk_k(1:npw,1))) = CONJG( o_basis(1:npw,iw))
       tmp_g(1:max_ngm)=psic(nl(1:max_ngm))
       if(gstart==2) tmp_g(1)=(0.d0,0.d0)
       CALL davcio(tmp_g, max_ngm*2,iungprod,iw,1)
@@ -1040,14 +1041,14 @@ SUBROUTINE o_1psi_gamma_real( numv, v_states, psi, opsi)
    USE gvect
    USE constants, ONLY : e2, pi, tpi, fpi
    USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2
-   USE wvfct,    ONLY : igk, npwx, npw, nbnd
+   USE wvfct,    ONLY : npwx, npw, nbnd
    USE wavefunctions_module, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
    USE mp_world, ONLY : mpime, world_comm
    USE gvecs,              ONLY : nls, nlsm, doublegrid
    USE fft_base,             ONLY : dfftp, dffts
    USE fft_interfaces,       ONLY : fwfft, invfft
-  
+   USE klist,  ONLY : igk_k
 
   USE kinds, ONLY : DP
   !
@@ -1071,8 +1072,8 @@ SUBROUTINE o_1psi_gamma_real( numv, v_states, psi, opsi)
   opsi(1:npw)=(0.d0,0.d0)
 
   psic(:)=(0.d0,0.d0)
-  psic(nls(igk(1:npw)))  = psi(1:npw)
-  psic(nlsm(igk(1:npw))) = CONJG( psi(1:npw) )
+  psic(nls(igk_k(1:npw,1)))  = psi(1:npw)
+  psic(nlsm(igk_k(1:npw,1))) = CONJG( psi(1:npw) )
   CALL invfft ('Wave', psic, dffts)
   psi_v(1:dffts%nnr)= DBLE(psic(1:dffts%nnr))
   psi_w(:)=0.d0
@@ -1102,7 +1103,7 @@ SUBROUTINE o_1psi_gamma_real( numv, v_states, psi, opsi)
 
   psic(:)=cmplx(psi_w(:),0.d0)
   CALL fwfft ('Wave', psic, dffts)
-  opsi(1:npw)=psic(nls(igk(1:npw)))
+  opsi(1:npw)=psic(nls(igk_k(1:npw,1)))
 
 
   if(gstart==2) opsi(1)=dble(opsi(1))
@@ -1121,7 +1122,7 @@ END SUBROUTINE o_1psi_gamma_real
 !this subroutines writes the basis of the polarization on file      
    USE io_global,            ONLY : stdout, ionode, ionode_id
    USE kinds,    ONLY : DP
-   USE wvfct,    ONLY : igk, npwx, npw, nbnd
+   USE wvfct,    ONLY : npwx, npw, nbnd
    USE wavefunctions_module, ONLY : evc, psic
    USE gvecs,              ONLY : nls, nlsm, doublegrid
    USE wavefunctions_module, ONLY : psic
@@ -1134,7 +1135,7 @@ END SUBROUTINE o_1psi_gamma_real
    USE mp_world, ONLY : world_comm
    USE fft_base,             ONLY : dfftp, dffts
    USE fft_interfaces,       ONLY : fwfft, invfft
-  
+   USE klist, ONLY : igk_k
 
 
 
@@ -1177,7 +1178,7 @@ END SUBROUTINE o_1psi_gamma_real
          psic(nlsm(ig))=conjg(tmp_g(ig))
       enddo
       do ig=1,npw
-         psi1(ig)=psic(nls(igk(ig)))
+         psi1(ig)=psic(nls(igk_k(ig,1)))
       enddo
 
       call o_1psi_gamma( numv, v_states, psi1, psi2)

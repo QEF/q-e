@@ -142,7 +142,7 @@ SUBROUTINE o_bands(numv, v_states,numpw,o_basis,ethr,cutoff,ptype)
         write(stdout,*) 'call o_rcgdiagg',max_cg_iter
         FLUSH(stdout)
      !precondition(:)=hdiag(:)
-        do il=1,50
+        do il=1,1!ATTENZIONE DEBUG
            
            call  o_rcgdiagg( npw, npw, numpw, o_basis, o_values, precondition, &
                 ethr, 100, .true., notconv, avg_iter, numv, v_states,hdiag,ptype,fcw_number,fcw_state,fcw_mat)

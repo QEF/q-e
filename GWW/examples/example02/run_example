@@ -183,6 +183,7 @@ Si 0.25000 0.25000 0.25000
 Si 0.75000 0.75000 0.25000
 Si 0.75000 0.25000 0.75000
 Si 0.25000 0.75000 0.75000
+K_POINTS (gamma)
 
 EOF
     $ECHO "  running the nscf calculation for Si...\c"
