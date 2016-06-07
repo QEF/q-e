@@ -11,7 +11,7 @@ MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules \
           $(MOD_FLAG)../../PW/src $(MOD_FLAG)../../FFTXlib $(MOD_FLAG)../../LAXlib $(MOD_FLAG).
 
 #location of needed libraries
-LIBOBJS= ../../iotk/src/libiotk.a ../../clib/clib.a ../../flib/flib.a
+LIBOBJS= ../../iotk/src/libiotk.a ../../clib/clib.a 
 
 PW4GWWOBJS = \
 allocate_wannier.o \
