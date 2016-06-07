@@ -197,7 +197,7 @@ MODULE wannier_gw
   INTEGER, ALLOCATABLE :: i_list(:,:) !list of KS states to be computed 
 
   LOGICAL :: l_full!if true prepare data for further post-processing for a full-relativistic calculation
-  INTEGER :: n_full!numeber of proper relativistic states in G of GW
+  INTEGER :: n_full(2)!numeber of proper relativistic states in G of GW for collinear spin channel
 
 !variables for splitting the head calculation in blocks in order to reduce memory usage
 !no effect on results
