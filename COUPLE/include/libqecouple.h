@@ -11,18 +11,23 @@
 #ifndef QE_LIBCOUPLE_H
 #define QE_LIBCOUPLE_H
 
+/* API version of the COUPLE library C interface.
+ * Increment, if incompatible changes are made to the API. */
+
+#define QE_LIBCOUPLE_API_VERSION 1
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /* interface to pw.x */
 /* launch a pw.x-like calculation */
-void c2libpwscf(int lib_comm, int nimage, int npool, int ntaskgroup,
+void c2libpwscf(int lib_comm, int nimage, int npot, int npool, int ntaskgroup,
                 int nband, int ndiag, int *exit_status, char *input_file);
 
 /* interface to cp.x */
 /* launch a cp.x-like calculation */
-void c2libcpv(int lib_comm, int nimage, int npool, int ntaskgroup,
+void c2libcpv(int lib_comm, int nimage, int npot, int npool, int ntaskgroup,
               int nband, int ndiag, int *exit_status, char *input_file);
 
 /* accessing the qmmm.f90 module */

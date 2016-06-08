@@ -5,7 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-SUBROUTINE c2libpwscf(lib_comm,nim,npl,nta,nbn,ndg,retval,infile) BIND(C) 
+SUBROUTINE c2libpwscf(lib_comm,nim,npt,npl,nta,nbn,ndg,retval,infile) BIND(C)
   !----------------------------------------------------------------------------
   !
   ! ... C wrapper for library interface to the Pwscf
@@ -13,15 +13,16 @@ SUBROUTINE c2libpwscf(lib_comm,nim,npl,nta,nbn,ndg,retval,infile) BIND(C)
   !
   IMPLICIT NONE
   !
-  INTEGER (kind=C_INT), VALUE :: lib_comm, nim, npl, nta, nbn, ndg
+  INTEGER (kind=C_INT), VALUE :: lib_comm, nim, npt, npl, nta, nbn, ndg
   INTEGER (kind=C_INT), INTENT(OUT) :: retval
   CHARACTER (kind=C_CHAR), INTENT(IN) :: infile(*)
-  INTEGER  :: i, lib_comm_, nim_, npl_, nta_, nbn_, ndg_, retval_
+  INTEGER  :: i, lib_comm_, nim_, npt_, npl_, nta_, nbn_, ndg_, retval_
   CHARACTER(LEN=80)  :: infile_
   !
   ! ... Copy C data types to Fortran data types
   lib_comm_ = lib_comm
   nim_ = nim
+  npt_ = npt
   npl_ = npl
   nta_ = nta
   nbn_ = nbn
@@ -35,13 +36,13 @@ SUBROUTINE c2libpwscf(lib_comm,nim,npl,nta,nbn,ndg,retval,infile) BIND(C)
       infile_ = TRIM(infile_) // infile(i)
   END DO
   !
-  CALL f2libpwscf(lib_comm_,nim_,npl_,nta_,nbn_,ndg_,retval_,infile_)
+  CALL f2libpwscf(lib_comm_,nim_,npt_,npl_,nta_,nbn_,ndg_,retval_,infile_)
   retval = retval_
   !
 END SUBROUTINE c2libpwscf
 !
 !----------------------------------------------------------------------------
-SUBROUTINE f2libpwscf(lib_comm,nim,npl,nta,nbn,ndg,retval,infile) 
+SUBROUTINE f2libpwscf(lib_comm,nim,npt,npl,nta,nbn,ndg,retval,infile)
   !----------------------------------------------------------------------------
   !
   ! ... Library interface to the Plane Wave Self-Consistent Field code
@@ -53,7 +54,7 @@ SUBROUTINE f2libpwscf(lib_comm,nim,npl,nta,nbn,ndg,retval,infile)
   USE parallel_include
   !
   IMPLICIT NONE
-  INTEGER, INTENT(IN)    :: lib_comm, nim, npl, nta, nbn, ndg
+  INTEGER, INTENT(IN)    :: lib_comm, nim, npt, npl, nta, nbn, ndg
   INTEGER, INTENT(INOUT) :: retval
   CHARACTER(LEN=80)      :: infile
   !
@@ -64,7 +65,7 @@ SUBROUTINE f2libpwscf(lib_comm,nim,npl,nta,nbn,ndg,retval,infile)
       CALL MPI_ERROR_STRING(ierr, infile, 80, retval)
       PRINT*,'MPI Error: ', infile
       STOP 100
-  END IF 
+  END IF
   CALL MPI_COMM_RANK(lib_comm,me,ierr)
   IF (me == 0) THEN
       PRINT*, 'Calling PW library interface with these flags:'

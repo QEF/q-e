@@ -15,11 +15,12 @@ PROGRAM qecouple
   INCLUDE 'mpif.h'
   !
   INTEGER :: i, exit_status, ierr, ncpu, me, key, new_comm, nargs
-  INTEGER :: nimage, npools, ntg, nband, ndiag, nres
+  INTEGER :: nimage, npots, npools, ntg, nband, ndiag, nres
   CHARACTER(LEN=80) :: input_file, arg
   !
   ! set defaults
   nimage = 1
+  npots  = 1
   npools = 1 
   ntg    = 1
   nband  = 1 
@@ -85,7 +86,7 @@ PROGRAM qecouple
   CALL mpi_comm_split(MPI_COMM_WORLD, key, me, new_comm, ierr)
 
   IF (new_comm /= MPI_COMM_NULL) THEN
-      CALL f2libpwscf(new_comm,nimage,npools,ntg,nband,ndiag, &
+      CALL f2libpwscf(new_comm,nimage,npots,npools,ntg,nband,ndiag, &
             exit_status, input_file)
       PRINT *, 'Call to libpwscf finished with exit status', exit_status
   ELSE

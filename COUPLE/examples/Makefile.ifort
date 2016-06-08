@@ -3,13 +3,13 @@ include ../../make.sys
 
 # FLAGS for OpenMPI when QE was compiled with Intel Fortran 13.x
 MPICXX=mpiicpc
-MPICXXFLAGS=-DOMPI_SKIP_MPICXX=1 -O2 -Wall -DDEBUG_QECOUPLE -g
-MPILIBS=-Wl,-Bstatic,-lifport,-lifcore,-limf,-Bdynamic  -lmpi_f77 -lmpi
+MPICXXFLAGS=-DOMPI_SKIP_MPICXX=1 -O2 -Wall -g
+MPILIBS=-Wl,-Bstatic,-lifport,-lifcore,-limf,-Bdynamic  -lmpi_mpifh -lmpi
 
 # location of required libraries
 PWOBJS = ../src/libqecouple.a ../../PW/src/libpw.a ../../Modules/libqemod.a
 CPOBJS = ../src/libqecouple.a ../../CPV/src/libcp.a ../../Modules/libqemod.a
-LIBOBJS	= ../../flib/ptools.a ../../flib/flib.a ../../clib/clib.a ../../iotk/src/libiotk.a
+LIBOBJS	= ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../clib/clib.a ../../iotk/src/libiotk.a
 
 TLDEPS=couple
 
