@@ -27,6 +27,19 @@ tolerance = ( (1.0e-5, None, 'e1'),
 skip_program = grep
 skip_args = 'not present in this version'
 
+[EPW]
+exe = XXXXXX/test-suite/run-epw.sh
+extract_program = XXXXXX/test-suite/extract-pw.x
+inputs_args = ('*.in', '')
+run_cmd_template = tc.program tc.args tc.input tc.output tc.error
+tolerance = ( (1.0e-5, None, 'e1'),
+              (1.0e-5, None, 's1'),
+              (1.0e-2, None, 'v1u'),
+              (1.0e-2, None, 'v1d'),
+              (1.0e-5, None, 't1') )
+skip_program = grep
+skip_args = 'not present in this version'
+
 [user]
 benchmark = SVN
 date_fmt = %d%m%y
