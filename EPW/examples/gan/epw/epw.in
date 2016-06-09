@@ -10,6 +10,7 @@
   epbwrite    = .true.
   epbread     = .false.
 
+  etf_mem     = .false.
   lpolar      = .true.
 
   epwwrite    = .true.

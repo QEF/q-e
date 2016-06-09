@@ -18,6 +18,8 @@ try:
 except ValueError:
   raise Exception('The value you enter is not an integer!')
 
+os.system('mkdir save')
+
 for iqpt in np.arange(1,nqpt+1):
   label = str(iqpt)
 
