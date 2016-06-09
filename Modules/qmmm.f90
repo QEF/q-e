@@ -39,6 +39,7 @@ MODULE qmmm
   INTEGER, PARAMETER :: QMMM_TAG_SIZE=1
   INTEGER, PARAMETER :: QMMM_TAG_COORD=2
   INTEGER, PARAMETER :: QMMM_TAG_FORCE=3
+  INTEGER, PARAMETER :: QMMM_TAG_FORCE2=4
   !
   ! convert forces to LAMMPS "real" units
   REAL(DP), PARAMETER :: QMMM_FORCE_CONV = 592.91102087727177_DP
@@ -79,7 +80,7 @@ CONTAINS
     IF (PRESENT(mode)) qmmm_mode = mode
     IF (PRESENT(comm)) qmmm_comm = comm
     IF (PRESENT(verbose)) qmmm_verb = verbose
-    IF (PRESENT(step)) qmmm_step = step
+    IF (PRESENT(step)) qmmm_step = step + 1  ! fix step count discrepancy
 
   END SUBROUTINE qmmm_config
 
@@ -393,7 +394,7 @@ END SUBROUTINE qmmm_minimum_image
         !!!! Note, not used if ec_alg is false. Optimize excluding this send as well
         force_mm = force_mm * QMMM_FORCE_CONV
         CALL mpi_send(force_mm,3*nat_mm,MPI_DOUBLE_PRECISION, &
-              0,QMMM_TAG_FORCE,qmmm_comm,ierr)
+              0,QMMM_TAG_FORCE2,qmmm_comm,ierr)
     END IF
 #else
         WRITE(stdout,*) 'Use of QM/MM requires compilation with MPI support'
