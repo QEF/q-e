@@ -656,6 +656,11 @@
           CALL createkmap ( xq )
           !
           xq0 = -xq0
+          ! 
+          CALL loadumat ( nbnd, nbndsub, nks, nkstot, xq, cu, cuq, lwin, lwinq )
+          !
+          ! Calculate overlap U_k+q U_k^\dagger
+          IF (lpolar) CALL compute_bmn_para3 ( nbnd, nbndsub, nks, cu, cuq,bmat(:,:,:,nqc) )
           !
           CALL elphon_shuffle ( iq_irr, nqc_irr, nqc, gmapsym, eigv, isym, invs, xq0, .true. )
           !
