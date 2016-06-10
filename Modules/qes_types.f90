@@ -69,6 +69,8 @@ TYPE :: atom_type
    CHARACTER(len=256) :: name
    LOGICAL  :: position_ispresent
    CHARACTER(len=256) :: position
+   LOGICAL  :: index_ispresent
+   INTEGER  :: index
    REAL(DP), DIMENSION(3) :: atom
    !
 END TYPE atom_type
@@ -796,6 +798,7 @@ TYPE :: occupations_type
    LOGICAL  :: lread = .true.
    LOGICAL  :: lwrite = .true.
    !
+   LOGICAL  :: spin_ispresent
    INTEGER  :: spin
    CHARACTER(len=256) :: occupations
    !
@@ -877,6 +880,7 @@ TYPE :: Hubbard_ns_type
    CHARACTER(len=256) :: specie
    CHARACTER(len=256) :: label
    INTEGER  :: spin
+   INTEGER  :: index
    !
    INTEGER  :: ndim1_mat
    INTEGER  :: ndim2_mat
@@ -1072,6 +1076,8 @@ TYPE :: atomic_structure_type
    INTEGER  :: nat
    LOGICAL  :: alat_ispresent
    REAL(DP) :: alat
+   LOGICAL  :: bravais_index_ispresent
+   INTEGER  :: bravais_index
    LOGICAL  :: atomic_positions_ispresent
    TYPE(atomic_positions_type) :: atomic_positions
    LOGICAL  :: wyckoff_positions_ispresent

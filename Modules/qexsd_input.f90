@@ -130,7 +130,8 @@ MODULE qexsd_input
   ELSE 
      spin_degeneracy = 2
   END IF
-  CALL  qes_init_occupations(occup_obj, "occupations", spin_degeneracy, occupations = TRIM(occupations))
+  CALL  qes_init_occupations(occup_obj, "occupations", spin= spin_degeneracy, & 
+                              spin_ispresent =.FALSE., occupations = TRIM(occupations))
   !
   IF (PRESENT(input_occupations) ) THEN 
      inp_occ_arepresent = .TRUE.

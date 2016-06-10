@@ -307,7 +307,7 @@ USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, delete_if_present, &
 !-------------------------------------------------------------------------------
          !         
          CALL qexsd_init_atomic_structure(output%atomic_structure, nsp, atm, ityp, &
-                       nat, tau, 'Bohr', alat, at(:,1), at(:,2), at(:,3) )
+                       nat, tau, 'Bohr', alat, at(:,1), at(:,2), at(:,3), ibrav )
          !
 !-------------------------------------------------------------------------------
 ! ... SYMMETRIES

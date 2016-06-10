@@ -1,4 +1,4 @@
- 
+
 MODULE qes_libs_module
 
    USE qes_types_module
@@ -270,6 +270,9 @@ SUBROUTINE qes_write_atom(iun, obj)
    IF(obj%position_ispresent) THEN
       CALL iotk_write_attr(attr, 'position', TRIM(obj%position))
    END IF
+   IF(obj%index_ispresent) THEN
+      CALL iotk_write_attr(attr, 'index', obj%index)
+   END IF
 
    CALL iotk_write_begin(iun, TRIM(obj%tagname), attr=TRIM(attr))
       !
@@ -278,7 +281,8 @@ SUBROUTINE qes_write_atom(iun, obj)
    !
 END SUBROUTINE qes_write_atom
 
-SUBROUTINE qes_init_atom(obj, tagname, name, position, position_ispresent, atom)
+SUBROUTINE qes_init_atom(obj, tagname, name, position, position_ispresent, index, index_ispresent, &
+                              atom)
    IMPLICIT NONE
 
    TYPE(atom_type) :: obj
@@ -287,6 +291,8 @@ SUBROUTINE qes_init_atom(obj, tagname, name, position, position_ispresent, atom)
    CHARACTER(len=*) :: name
    LOGICAL  :: position_ispresent
    CHARACTER(len=*), OPTIONAL :: position
+   LOGICAL  :: index_ispresent
+   INTEGER , OPTIONAL :: index
    REAL(DP), DIMENSION(3) :: atom
 
    obj%tagname = TRIM(tagname)
@@ -297,6 +303,12 @@ SUBROUTINE qes_init_atom(obj, tagname, name, position, position_ispresent, atom)
    obj%position_ispresent = position_ispresent
    IF (obj%position_ispresent) THEN
       obj%position = TRIM(position)
+   ENDIF
+
+
+   obj%index_ispresent = index_ispresent
+   IF (obj%index_ispresent) THEN
+      obj%index = index
    ENDIF
 
    obj%atom = atom
@@ -3979,7 +3991,9 @@ SUBROUTINE qes_write_occupations(iun, obj)
 
    IF (.NOT. obj%lwrite) RETURN
    attr = " "
-   CALL iotk_write_attr(attr, 'spin', obj%spin)
+   IF(obj%spin_ispresent) THEN
+      CALL iotk_write_attr(attr, 'spin', obj%spin)
+   END IF
 
    CALL iotk_write_begin(iun, TRIM(obj%tagname), attr=TRIM(attr),new_line=.FALSE.)
       !
@@ -3988,18 +4002,22 @@ SUBROUTINE qes_write_occupations(iun, obj)
    !
 END SUBROUTINE qes_write_occupations
 
-SUBROUTINE qes_init_occupations(obj, tagname, spin, occupations)
+SUBROUTINE qes_init_occupations(obj, tagname, spin, spin_ispresent, occupations)
    IMPLICIT NONE
 
    TYPE(occupations_type) :: obj
    CHARACTER(len=*) :: tagname
    INTEGER  :: i
-   INTEGER  :: spin
+   LOGICAL  :: spin_ispresent
+   INTEGER , OPTIONAL :: spin
    CHARACTER(len=*) :: occupations
 
    obj%tagname = TRIM(tagname)
 
-   obj%spin = spin
+   obj%spin_ispresent = spin_ispresent
+   IF (obj%spin_ispresent) THEN
+      obj%spin = spin
+   ENDIF
 
    obj%occupations = occupations
 
@@ -4362,6 +4380,7 @@ SUBROUTINE qes_write_Hubbard_ns(iun, obj)
    CALL iotk_write_attr(attr, 'specie', TRIM(obj%specie))
    CALL iotk_write_attr(attr, 'label', TRIM(obj%label))
    CALL iotk_write_attr(attr, 'spin', obj%spin)
+   CALL iotk_write_attr(attr, 'index', obj%index)
 
    CALL iotk_write_begin(iun, TRIM(obj%tagname), attr=TRIM(attr))
       !
@@ -4374,7 +4393,7 @@ SUBROUTINE qes_write_Hubbard_ns(iun, obj)
    !
 END SUBROUTINE qes_write_Hubbard_ns
 
-SUBROUTINE qes_init_Hubbard_ns(obj, tagname, specie, label, spin, &
+SUBROUTINE qes_init_Hubbard_ns(obj, tagname, specie, label, spin, index, &
                               ndim1_mat, ndim2_mat, mat)
    IMPLICIT NONE
 
@@ -4384,6 +4403,7 @@ SUBROUTINE qes_init_Hubbard_ns(obj, tagname, specie, label, spin, &
    CHARACTER(len=*) :: specie
    CHARACTER(len=*) :: label
    INTEGER  :: spin
+   INTEGER  :: index
    INTEGER  :: ndim1_mat
    INTEGER  :: ndim2_mat
    REAL(DP), DIMENSION(:,:) :: mat
@@ -4397,6 +4417,9 @@ SUBROUTINE qes_init_Hubbard_ns(obj, tagname, specie, label, spin, &
 
 
    obj%spin = spin
+
+
+   obj%index = index
 
    ALLOCATE(obj%mat(ndim1_mat,ndim2_mat))
    obj%mat(:,:) = mat(:,:)
@@ -5330,6 +5353,9 @@ SUBROUTINE qes_write_atomic_structure(iun, obj)
    IF(obj%alat_ispresent) THEN
       CALL iotk_write_attr(attr, 'alat', obj%alat)
    END IF
+   IF(obj%bravais_index_ispresent) THEN
+      CALL iotk_write_attr(attr, 'bravais_index', obj%bravais_index)
+   END IF
 
    CALL iotk_write_begin(iun, TRIM(obj%tagname), attr=TRIM(attr))
       !
@@ -5350,6 +5376,7 @@ SUBROUTINE qes_write_atomic_structure(iun, obj)
 END SUBROUTINE qes_write_atomic_structure
 
 SUBROUTINE qes_init_atomic_structure(obj, tagname, nat, alat, alat_ispresent, &
+                              bravais_index, bravais_index_ispresent, &
                               atomic_positions_ispresent, atomic_positions, &
                               wyckoff_positions_ispresent, wyckoff_positions, cell)
    IMPLICIT NONE
@@ -5360,6 +5387,8 @@ SUBROUTINE qes_init_atomic_structure(obj, tagname, nat, alat, alat_ispresent, &
    INTEGER  :: nat
    LOGICAL  :: alat_ispresent
    REAL(DP), OPTIONAL :: alat
+   LOGICAL  :: bravais_index_ispresent
+   INTEGER , OPTIONAL :: bravais_index
    LOGICAL  :: atomic_positions_ispresent
    TYPE(atomic_positions_type) :: atomic_positions
    LOGICAL  :: wyckoff_positions_ispresent
@@ -5374,6 +5403,12 @@ SUBROUTINE qes_init_atomic_structure(obj, tagname, nat, alat, alat_ispresent, &
    obj%alat_ispresent = alat_ispresent
    IF (obj%alat_ispresent) THEN
       obj%alat = alat
+   ENDIF
+
+
+   obj%bravais_index_ispresent = bravais_index_ispresent
+   IF (obj%bravais_index_ispresent) THEN
+      obj%bravais_index = bravais_index
    ENDIF
 
    obj%atomic_positions_ispresent = atomic_positions_ispresent

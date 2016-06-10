@@ -125,7 +125,7 @@
   !tau=tau*bohr_radius_angs
   !  
   CALL qexsd_init_atomic_structure (obj%atomic_structure, ntyp, atm, ip_ityp, ip_nat, tau, tau_units = tau_units,     &
-                                    alat = sqrt(sum(a1(1:3)*a1(1:3))), a1 = a1,a2 = a2, a3 = a3)
+                                    alat = sqrt(sum(a1(1:3)*a1(1:3))), a1 = a1,a2 = a2, a3 = a3 , ibrav = 0 )
   DEALLOCATE ( tau ) 
   ! 
   !--------------------------------------------------------------------------------------------------------------------------

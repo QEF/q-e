@@ -432,7 +432,7 @@ CONTAINS
     !
     !------------------------------------------------------------------------
     SUBROUTINE qexsd_init_atomic_structure(obj, nsp, atm, ityp, nat, tau, tau_units, &
-                                           alat, a1, a2, a3)
+                                           alat, a1, a2, a3, ibrav)
       !------------------------------------------------------------------------
       IMPLICIT NONE
       !
@@ -444,6 +444,7 @@ CONTAINS
       CHARACTER(LEN=*), INTENT(IN) :: tau_units
       REAL(DP),         INTENT(IN) :: alat
       REAL(DP),         INTENT(IN) :: a1(:), a2(:), a3(:)
+      INTEGER,          INTENT(IN) :: ibrav
       !
       INTEGER         :: ia
       TYPE(atom_type), ALLOCATABLE :: atom(:)
@@ -451,13 +452,21 @@ CONTAINS
       TYPE(atomic_positions_type)  :: atomic_pos
       TYPE(wyckoff_positions_type) :: wyckoff_pos
       REAL(DP)                     :: new_alat
+      LOGICAL                      :: ibrav_ispresent
       !
       ! atomic positions
+      !
+      IF ( ibrav .gt. 0 ) THEN 
+         ibrav_ispresent = .TRUE.
+      ELSE
+         ibrav_ispresent = .FALSE.
+      END IF
       !
       ALLOCATE(atom(nat))
       DO ia = 1, nat
           CALL qes_init_atom( atom(ia), "atom", name=trim(atm(ityp(ia))), &
-                             position="", position_ispresent=.FALSE., atom=tau(1:3,ia))
+                             position="", position_ispresent=.FALSE., atom=tau(1:3,ia), index_ispresent = .TRUE.,&
+                             index = ia )
       ENDDO
       !
       CALL qes_init_atomic_positions(atomic_pos, "atomic_positions", SIZE(atom), atom)
@@ -476,7 +485,8 @@ CONTAINS
       CALL qes_init_atomic_structure(obj, "atomic_structure", nat=nat, &
                      alat=alat, alat_ispresent=.TRUE., atomic_positions_ispresent=.TRUE., &
                      atomic_positions=atomic_pos, wyckoff_positions_ispresent=.FALSE., &
-                     wyckoff_positions=wyckoff_pos, cell=cell )
+                     wyckoff_positions=wyckoff_pos, cell=cell ,& 
+                     bravais_index_ispresent = ibrav_ispresent, bravais_index=ibrav)
       ! 
       ! cleanup 
       ! 
@@ -487,8 +497,8 @@ CONTAINS
     !
     !
     !------------------------------------------------------------------------
-    SUBROUTINE qexsd_init_symmetries(obj, nsym, nrot, space_group, s, ft, sname, t_rev, nat, irt, class_names,&
-                                     verbosity, noncolin)
+    SUBROUTINE qexsd_init_symmetries(obj, nsym, nrot, space_group, s, ft, sname, t_rev, nat, irt, &
+                                     class_names, verbosity, noncolin)
       !------------------------------------------------------------------------
       IMPLICIT NONE
       !
@@ -737,7 +747,7 @@ CONTAINS
              DO is = 1, nspin
                 ind = ind+1
                 CALL qes_init_Hubbard_ns(Hubbard_ns_(ind),"Hubbard_ns", TRIM(species(ityp(i))),TRIM(label(ityp(i))), &
-                                       is, ldim, ldim, Hubbard_ns(:,:,is,i) )
+                                       is, i, ldim, ldim, Hubbard_ns(:,:,is,i) )
              ENDDO
           ENDDO
           !
@@ -1089,7 +1099,7 @@ CONTAINS
     CALL qes_reset_scf_conv(scf_conv_obj)
     ! 
     CALL qexsd_init_atomic_structure(atomic_struct_obj, ntyp, atm, ityp, nat, tau, "bohr", &
-                                     alat, a1, a2, a3)
+                                     alat, a1, a2, a3, 0)
     step_obj%atomic_structure=atomic_struct_obj
     CALL qes_reset_atomic_structure( atomic_struct_obj )
     ! 
@@ -1150,7 +1160,8 @@ CONTAINS
     DO iat =1, nat 
        WRITE(mod_string,'("(mod" ,I1,")")') mod_ion(iat) 
        CALL qes_init_phase(ion_phase,"phase", 0.d0,.FALSE.,0.d0,.FALSE.,TRIM(mod_string),.TRUE., pdl_ion(iat) )
-       CALL qes_init_atom(atom_obj,"ion",name=TRIM(atm(ityp(iat))),position_ispresent=.FALSE.,atom = tau(:,iat))
+       CALL qes_init_atom(atom_obj,"ion",name=TRIM(atm(ityp(iat))),position_ispresent=.FALSE.,atom = tau(:,iat), &
+                          index_ispresent = .FALSE.)
        CALL qes_init_ionicPolarization(ion_pol_obj(iat), "ionicPolarization", atom_obj, zv(ityp(iat)), ion_phase )       
        CALL qes_reset_phase(ion_phase)
        CALL qes_reset_atom(atom_obj)
