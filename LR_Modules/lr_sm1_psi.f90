@@ -373,9 +373,12 @@ CONTAINS
        !
     ENDIF
     !
+    IF (n.NE.ngk(ik)) CALL errore( 'sm1_psi_k', &
+                    & 'Mismatch in the number of plane waves', 1 )
+    !
     ! Calculate beta-functions vkb for a given k point 'ik'.
     !
-    CALL init_us_2(ngk(ik),igk_k(:,ik),xk(1,ik),vkb)
+    CALL init_us_2(n,igk_k(:,ik),xk(1,ik),vkb)
     !
     ! Compute the product of the beta-functions vkb with the functions psi
     ! at point k, and put the result in becp%k.
@@ -417,7 +420,7 @@ END SUBROUTINE lr_sm1_psi
 
 
 !----------------------------------------------------------------------------
-SUBROUTINE lr_sm1_psiq (recalculate, ik, lda, n, ig, m, psi, spsi)
+SUBROUTINE lr_sm1_psiq (recalculate, ik, lda, n, m, psi, spsi)
   !----------------------------------------------------------------------------
   !
   ! This subroutine applies the S^{-1} matrix to m wavefunctions psi
@@ -433,7 +436,6 @@ SUBROUTINE lr_sm1_psiq (recalculate, ik, lda, n, ig, m, psi, spsi)
   !        ik            k point under consideration
   !        lda           leading dimension of arrays psi, spsi
   !        n             true dimension of psi, spsi
-  !        ig            index igkq
   !        m             number of states psi
   !        psi           the wavefunction to which the S^{-1} 
   !                      matrix is applied
@@ -446,9 +448,12 @@ SUBROUTINE lr_sm1_psiq (recalculate, ik, lda, n, ig, m, psi, spsi)
   !
   USE kinds,            ONLY : DP
   USE control_flags,    ONLY : gamma_only
+  USE klist,            ONLY : xk, igk_k, ngk
+  USE qpoint,           ONLY : ikks, ikqs, nksq
   USE uspp,             ONLY : okvan, vkb, nkb, qq
   USE uspp_param,       ONLY : nh, upf
   USE ions_base,        ONLY : ityp,nat,ntyp=>nsp
+  USE becmod,           ONLY : bec_type, becp, calbec
   USE mp,               ONLY : mp_sum
   USE mp_global,        ONLY : intra_bgrp_comm
   USE noncollin_module, ONLY : noncolin, npol, nspin_mag
@@ -456,7 +461,7 @@ SUBROUTINE lr_sm1_psiq (recalculate, ik, lda, n, ig, m, psi, spsi)
   !
   IMPLICIT NONE
   LOGICAL, INTENT(in)      :: recalculate
-  INTEGER, INTENT(in)      :: lda, n, m, ik, ig(lda)
+  INTEGER, INTENT(in)      :: lda, n, m, ik
   COMPLEX(DP), INTENT(in)  :: psi(lda*npol,m)
   COMPLEX(DP), INTENT(out) :: spsi(lda*npol,m)
   !
@@ -487,21 +492,17 @@ CONTAINS
     ! Note: the array bbk must be deallocated somewhere
     ! outside of this routine.
     !
-    USE becmod,    ONLY : bec_type, becp, calbec
-    USE klist,     ONLY : xk
-    USE qpoint,    ONLY : igkq, ikks, ikqs, nksq
-    USE gvect,     ONLY : ngm, g
-    USE wvfct,     ONLY : g2kin
-    USE gvecw,     ONLY : gcutw
     USE lrus,      ONLY : bbk
     !
     IMPLICIT NONE
     !
     ! ... local variables
     !
-    INTEGER :: ikb, jkb, ih, jh, na, nt, ijkb0, &
-             & ibnd, ii, ik1, ikk, ikq, npwq_
-    INTEGER, ALLOCATABLE :: igkq_(:)
+    INTEGER :: ikb, jkb, ih, jh, na, nt, ijkb0, ibnd, ii
+    INTEGER :: ik1, & ! dummy index for k points
+               ikk, & ! index of the point k
+               ikq, & ! index of the point k+q
+               npwq   ! number of the plane-waves at point k+q
     COMPLEX(DP), ALLOCATABLE :: ps(:,:)
     !
     ! Initialize spsi : spsi = psi
@@ -509,8 +510,6 @@ CONTAINS
     CALL ZCOPY( lda*m, psi, 1, spsi, 1 )
     !
     IF ( nkb == 0 .OR. .NOT. okvan ) RETURN
-    !
-    ALLOCATE(igkq_(lda))
     !
     ! If this is the first entry, we calculate and save the coefficients B from Eq.(15)
     ! B. Walker and R. Gebauer, J. Chem. Phys. 127, 164106 (2007).
@@ -532,21 +531,18 @@ CONTAINS
        !
        DO ik1 = 1, nksq
           !
-          ikk = ikks(ik1)
-          ikq = ikqs(ik1)
-          !
-          ! Determination of npwq_, igkq_; g2kin is used here as a workspace.
-          !
-          CALL gk_sort( xk(1,ikq), ngm, g, gcutw, npwq_, igkq_, g2kin )
+          ikk  = ikks(ik1)
+          ikq  = ikqs(ik1)
+          npwq = ngk(ikq)
           !
           ! Calculate beta-functions vkb for a given k+q point.
           !
-          CALL init_us_2 (npwq_, igkq_, xk(1,ikq), vkb)
+          CALL init_us_2 (npwq, igk_k(1,ikq), xk(1,ikq), vkb)
           !
           ! Calculate the coefficients B_ij defined by Eq.(15).
           ! B_ij = <beta(i)|beta(j)>, where beta(i) = vkb(i).
           !
-          CALL zgemm('C','N',nkb,nkb,npwq_,(1.d0,0.d0),vkb, &
+          CALL zgemm('C','N',nkb,nkb,npwq,(1.d0,0.d0),vkb, &
                 & lda,vkb,lda,(0.d0,0.d0),bbk(1,1,ik1),nkb)
           !
 #ifdef __MPI
@@ -640,12 +636,19 @@ CONTAINS
        !
     ENDIF
     !
+    ! Now set up the indices ikk and ikq such that they
+    ! correspond to the points k and k+q using the index ik,
+    ! which was passed to this routine as an input.
+    !
     ikk = ikks(ik)
     ikq = ikqs(ik)
     !
+    IF (n.NE.ngk(ikq)) CALL errore( 'sm1_psiq_k', &
+                     & 'Mismatch in the number of plane waves', 1 )
+    !
     ! Calculate beta-functions vkb for a given k+q point.
     !
-    CALL init_us_2 (n, ig, xk(1,ikq), vkb)
+    CALL init_us_2 (n, igk_k(1,ikq), xk(1,ikq), vkb)
     !
     ! Compute the product of the beta-functions vkb with the functions psi
     ! at point k+q, and put the result in becp%k.
@@ -678,7 +681,6 @@ CONTAINS
                 & lda, ps, nkb, (1.D0, 0.D0), spsi, lda )
     !
     DEALLOCATE(ps)
-    DEALLOCATE(igkq_)
     !
     RETURN
     !
@@ -692,12 +694,6 @@ SUBROUTINE sm1_psiq_nc()
     !       2) the array bbnc must be deallocated somewhere
     !          outside of this routine.
     !
-    USE becmod,     ONLY : bec_type, becp, calbec
-    USE klist,      ONLY : xk
-    USE qpoint,     ONLY : ikks, ikqs, nksq
-    USE gvect,      ONLY : ngm, g
-    USE wvfct,      ONLY : g2kin
-    USE gvecw,      ONLY : gcutw
     USE uspp,       ONLY : qq_so
     USE spin_orb,   ONLY : lspinorb
     USE lrus,       ONLY : bbnc
@@ -706,9 +702,11 @@ SUBROUTINE sm1_psiq_nc()
     !
     ! ... local variables
     !
-    INTEGER :: ikb, jkb, ih, jh, na, nt, ijkb0, &
-             & ibnd, ii, ik1, ikk, ikq, ipol, npwq_
-    INTEGER, ALLOCATABLE :: igkq_(:)
+    INTEGER :: ikb, jkb, ih, jh, na, nt, ijkb0, ibnd, ii, ipol
+    INTEGER :: ik1, & ! dummy index for k points
+               ikk, & ! index of the point k
+               ikq, & ! index of the point k+q
+               npwq   ! number of the plane-waves at point k+q
     COMPLEX(DP), ALLOCATABLE :: ps(:,:,:)
     !
     ! Initialize spsi : spsi = psi
@@ -718,8 +716,6 @@ SUBROUTINE sm1_psiq_nc()
     IF ( nkb == 0 .OR. .NOT. okvan ) RETURN
     !
     CALL errore( 'sm1_psiq_nc', 'USPP + noncolin is not implemented', 1 )
-    !
-    ALLOCATE(igkq_(lda))
     !
     ! If this is the first entry, we calculate and save the coefficients B from Eq.(15)
     ! B. Walker and R. Gebauer, J. Chem. Phys. 127, 164106 (2007).
@@ -741,21 +737,18 @@ SUBROUTINE sm1_psiq_nc()
        !
        DO ik1 = 1, nksq
           !
-          ikk = ikks(ik1)
-          ikq = ikqs(ik1)
-          !
-          ! Determination of npwq_, igkq_; g2kin is used here as a workspace.
-          !
-          CALL gk_sort( xk(1,ikq), ngm, g, gcutw, npwq_, igkq_, g2kin )
+          ikk  = ikks(ik1)
+          ikq  = ikqs(ik1)
+          npwq = ngk(ikq)
           !
           ! Calculate beta-functions vkb for a given k+q point.
           !
-          CALL init_us_2 (npwq_, igkq_, xk(1,ikq), vkb)
+          CALL init_us_2 (npwq, igk_k(1,ikq), xk(1,ikq), vkb)
           !
           ! Calculate the coefficients B_ij defined by Eq.(15).
           ! B_ij = <beta(i)|beta(j)>, where beta(i) = vkb(i).
           !
-          CALL ZGEMM('C','N',nkb,nkb,npwq_,(1.d0,0.d0),vkb, &
+          CALL ZGEMM('C','N',nkb,nkb,npwq,(1.d0,0.d0),vkb, &
                & lda,vkb,lda,(0.d0,0.d0),bbnc(1,1,1,ik1),nkb)
           !
           IF (lspinorb) THEN
@@ -891,12 +884,19 @@ SUBROUTINE sm1_psiq_nc()
        !
     endif
     !
+    ! Now set up the indices ikk and ikq such that they
+    ! correspond to the points k and k+q using the index ik,
+    ! which was passed to this routine as an input.
+    !
     ikk = ikks(ik)
     ikq = ikqs(ik)
     !
+    IF (n.NE.ngk(ikq)) CALL errore( 'sm1_psiq_nc', &
+                     & 'Mismatch in the number of plane waves', 1 )
+    !
     ! Calculate beta-functions vkb for a given k+q point.
     !
-    CALL init_us_2 (n, ig, xk(1,ikq), vkb)
+    CALL init_us_2 (n, igk_k(1,ikq), xk(1,ikq), vkb)
     !
     ! Compute the product of the beta-functions vkb with the functions psi
     ! at point k+q, and put the result in becp%k.
@@ -944,7 +944,6 @@ SUBROUTINE sm1_psiq_nc()
                      & lda, ps, nkb, (1.D0, 0.D0), spsi, lda )
     !
     DEALLOCATE(ps)
-    DEALLOCATE(igkq_)
     !
     RETURN
     !

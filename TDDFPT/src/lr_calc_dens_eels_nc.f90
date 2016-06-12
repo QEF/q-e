@@ -25,10 +25,10 @@ SUBROUTINE lr_calc_dens_eels_nc (drhoscf, dpsi)
   USE ions_base,             ONLY : nat
   USE gvect,                 ONLY : ngm, g
   USE fft_base,              ONLY : dffts, dfftp
-  USE klist,                 ONLY : xk, wk
-  USE wvfct,                 ONLY : nbnd, npwx, npw, igk, g2kin
+  USE klist,                 ONLY : xk, wk, igk_k, ngk
+  USE wvfct,                 ONLY : nbnd, npwx
   USE gvecw,                 ONLY : gcutw
-  USE qpoint,                ONLY : npwq, igkq, nksq, ikks, ikqs
+  USE qpoint,                ONLY : nksq, ikks, ikqs
   USE wavefunctions_module,  ONLY : evc
   USE noncollin_module,      ONLY : npol, nspin_mag
   USE uspp_param,            ONLY : nhm
@@ -49,9 +49,12 @@ SUBROUTINE lr_calc_dens_eels_nc (drhoscf, dpsi)
   COMPLEX(DP), ALLOCATABLE :: drhoscfh(:,:), dbecsum(:,:,:), dbecsum_nc(:,:,:,:)
   ! the accumulated change to the charge density on the smooth mesh
   ! the ultrasoft term
-  INTEGER :: ik, ikk, ikq, is
-  REAL(DP) :: weight
-  ! the effective weight of the k point
+  INTEGER ::  is,  & 
+              ik,  &
+              ikk, & ! index of the point k
+              ikq, & ! index of the point k+q
+              npwq   ! number of the plane-waves at point k+q
+  REAL(DP) :: weight ! weight of the k point
   !
   CALL start_clock ('lr_calc_dens')
   !
@@ -67,14 +70,9 @@ SUBROUTINE lr_calc_dens_eels_nc (drhoscf, dpsi)
   !
   DO ik = 1, nksq
      !
-     ikk = ikks(ik)
-     ikq = ikqs(ik)
-     !
-     ! Determination of npw, igk, and npwq, igkq;
-     ! g2kin is used here as work space.
-     !
-     CALL gk_sort( xk(1,ikk), ngm, g, gcutw, npw,  igk,  g2kin )
-     CALL gk_sort( xk(1,ikq), ngm, g, gcutw, npwq, igkq, g2kin )
+     ikk  = ikks(ik)
+     ikq  = ikqs(ik)
+     npwq = ngk(ikq)
      !
      ! Read the unperturbed wavefuctions evc(k)
      !
@@ -86,7 +84,7 @@ SUBROUTINE lr_calc_dens_eels_nc (drhoscf, dpsi)
      !
      ! Calculate beta-functions vkb at point k+q
      ! 
-     IF (okvan) CALL init_us_2 (npwq, igkq, xk(1,ikq), vkb)
+     IF (okvan) CALL init_us_2 (npwq, igk_k(1,ikq), xk(1,ikq), vkb)
      !
      ! Calculation of the response charge density
      !

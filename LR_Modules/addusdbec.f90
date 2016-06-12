@@ -15,13 +15,13 @@ subroutine addusdbec (ik, wgt, dpsi, dbecsum)
   USE kinds,      ONLY : DP
   USE ions_base,  ONLY : nat, ityp, ntyp => nsp
   USE becmod,     ONLY : calbec
-  USE wvfct,      ONLY : npw, npwx, nbnd
+  USE wvfct,      ONLY : npwx, nbnd
   USE uspp,       ONLY : nkb, vkb, okvan, ijtoh
   USE uspp_param, ONLY : upf, nh, nhm
   USE mp_bands,   ONLY : intra_bgrp_comm
-
+  USE klist,      ONLY : ngk
   USE lrus,       ONLY : becp1
-  USE qpoint,     ONLY : npwq, ikks
+  USE qpoint,     ONLY : ikks, ikqs
   USE control_lr, ONLY : nbnd_occ
   !
   IMPLICIT NONE
@@ -38,7 +38,7 @@ subroutine addusdbec (ik, wgt, dpsi, dbecsum)
   !
   !     here the local variables
   !
-  INTEGER :: na, nt, ih, jh, ibnd, ikk, ikb, jkb, ijh, startb, &
+  INTEGER :: na, nt, ih, jh, ibnd, ikb, jkb, ijh, startb, &
        lastb, ijkb0
   ! counter on atoms
   ! counter on atomic type
@@ -51,6 +51,10 @@ subroutine addusdbec (ik, wgt, dpsi, dbecsum)
   ! composite index for dbecsum
   ! divide among processors the sum
   ! auxiliary variable for counting
+  INTEGER :: ikk, ikq, npwq
+  ! index of the point k
+  ! index of the point k+q
+  ! number of the plane-waves at point k+q
 
   COMPLEX(DP), ALLOCATABLE :: dbecq (:,:)
   ! the change of becq
@@ -60,7 +64,10 @@ subroutine addusdbec (ik, wgt, dpsi, dbecsum)
   CALL start_clock ('addusdbec')
   !
   ALLOCATE (dbecq( nkb, nbnd))
-  ikk = ikks(ik)
+  !
+  ikk  = ikks(ik)
+  ikq  = ikqs(ik)
+  npwq = ngk(ikq)
   !
   ! First compute the product of dpsi and vkb
   !

@@ -824,7 +824,6 @@ plugin_energy.o : ../../Modules/io_files.o
 plugin_energy.o : ../../Modules/io_global.o
 plugin_energy.o : ../../Modules/kind.o
 plugin_energy.o : ../../Modules/plugin_flags.o
-plugin_ext_forces.o : ../../Modules/io_files.o
 plugin_ext_forces.o : ../../Modules/io_global.o
 plugin_ext_forces.o : ../../Modules/kind.o
 plugin_ext_forces.o : ../../Modules/mp.o

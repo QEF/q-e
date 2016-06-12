@@ -104,11 +104,6 @@ MODULE lr_variables
   !
   INTEGER :: LR_iteration, LR_polarization ! polarization directions 1:x 2:y 3:z
   !
-  ! variables for diagonalising the coefficient matrix
-  !real(kind=dp) :: lanc_norm
-  !real(kind=dp), ALLOCATABLE :: eval1(:),eval2(:)
-  !real(kind=dp), ALLOCATABLE :: vl(:,:),vr(:,:)
-  !
   REAL(kind=dp) :: norm0(3)
   !
   LOGICAL :: davidson = .false.           

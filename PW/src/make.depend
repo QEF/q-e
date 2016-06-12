@@ -1204,7 +1204,6 @@ paw_symmetry.o : symm_base.o
 plugin_clean.o : ../../Modules/plugin_flags.o
 plugin_clock.o : ../../Modules/io_global.o
 plugin_clock.o : ../../Modules/plugin_flags.o
-plugin_ext_forces.o : ../../Modules/io_files.o
 plugin_ext_forces.o : ../../Modules/io_global.o
 plugin_ext_forces.o : ../../Modules/kind.o
 plugin_ext_forces.o : ../../Modules/mp.o
@@ -1230,7 +1229,6 @@ plugin_int_forces.o : ../../FFTXlib/fft_interfaces.o
 plugin_int_forces.o : ../../Modules/cell_base.o
 plugin_int_forces.o : ../../Modules/control_flags.o
 plugin_int_forces.o : ../../Modules/fft_base.o
-plugin_int_forces.o : ../../Modules/io_files.o
 plugin_int_forces.o : ../../Modules/io_global.o
 plugin_int_forces.o : ../../Modules/ions_base.o
 plugin_int_forces.o : ../../Modules/kind.o
@@ -1317,7 +1315,6 @@ print_ks_energies.o : ../../Modules/mp_bands.o
 print_ks_energies.o : ../../Modules/mp_pools.o
 print_ks_energies.o : pwcom.o
 punch.o : ../../Modules/control_flags.o
-punch.o : ../../Modules/input_parameters.o
 punch.o : ../../Modules/io_files.o
 punch.o : ../../Modules/io_global.o
 punch.o : ../../Modules/wavefunctions.o

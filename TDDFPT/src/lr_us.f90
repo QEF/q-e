@@ -22,7 +22,7 @@ SUBROUTINE lr_apply_s(vect, svect)
     USE kinds,              ONLY : dp
     USE io_global,          ONLY : stdout
     USE uspp,               ONLY : okvan, vkb, nkb
-    USE wvfct,              ONLY : npwx, npw, nbnd
+    USE wvfct,              ONLY : npwx, nbnd
     USE klist,              ONLY : nks, xk, ngk, igk_k
     USE becmod,             ONLY : becp, calbec
     USE noncollin_module,   ONLY : npol
@@ -93,8 +93,8 @@ SUBROUTINE lr_apply_s_optical()
           !
           ! Not real space 
           !
-          CALL calbec(npw,vkb,vect(:,:,1),becp)
-          CALL s_psi(npwx,npw,nbnd,vect(1,1,1),svect(1,1,1))
+          CALL calbec(ngk(1),vkb,vect(:,:,1),becp)
+          CALL s_psi(npwx,ngk(1),nbnd,vect(1,1,1),svect(1,1,1))
           !
        ENDIF
        !
@@ -121,28 +121,25 @@ SUBROUTINE lr_apply_s_eels()
    ! EELS
    ! Written by I. Timrov (2013)
    !
-   USE qpoint,          ONLY : nksq, npwq, igkq, ikks, ikqs
-   USE gvect,           ONLY : ngm, g
-   USE wvfct,           ONLY : g2kin
-   USE gvecw,           ONLY : gcutw
+   USE qpoint,          ONLY : nksq, ikks, ikqs
    USE control_lr,      ONLY : nbnd_occ
 
    IMPLICIT NONE
    !
-   INTEGER :: ikk, ikq
+   INTEGER :: ik,  &
+              ikk, & ! index of the point k
+              ikq, & ! index of the point k+q
+              npwq   ! number of the plane-waves at point k+q
    !
    DO ik = 1, nksq
       !
-      ikk = ikks(ik)
-      ikq = ikqs(ik)
-      !
-      ! Determination of npwq, igkq; g2kin is used here as a workspace.
-      !
-      CALL gk_sort( xk(1,ikq), ngm, g, gcutw, npwq, igkq, g2kin )
+      ikk  = ikks(ik)
+      ikq  = ikqs(ik)
+      npwq = ngk(ikq)
       !
       ! Calculate beta-functions vkb at point k+q
       !
-      CALL init_us_2(npwq, igkq, xk(1,ikq), vkb)
+      CALL init_us_2(npwq, igk_k(1,ikq), xk(1,ikq), vkb)
       !
       ! Calculate the product of beta-functions vkb with vect:
       ! becp%k = <vkb|vect>
@@ -171,8 +168,7 @@ FUNCTION lr_dot_us(vect1,vect2)
    ! Modified by Iurii Timrov, Nov. 2013
    !
    USE kinds,              ONLY : dp
-   USE wvfct,              ONLY : npwx, npw, nbnd
-   USE klist,              ONLY : nks
+   USE wvfct,              ONLY : npwx, nbnd
    USE noncollin_module,   ONLY : npol
    USE qpoint,             ONLY : nksq
 

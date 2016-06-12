@@ -30,7 +30,7 @@ SUBROUTINE lr_solve_e
                                    & d0psi_rs, eels
   USE lsda_mod,             ONLY : lsda, isk, current_spin
   USE uspp,                 ONLY : vkb
-  USE wvfct,                ONLY : igk, nbnd, npwx, npw, et, current_k
+  USE wvfct,                ONLY : nbnd, npwx, et, current_k
   USE control_flags,        ONLY : gamma_only
   USE wavefunctions_module, ONLY : evc
   USE mp_global,            ONLY : inter_pool_comm, intra_bgrp_comm
@@ -79,10 +79,7 @@ SUBROUTINE lr_solve_e
         !
         ! Ultrasoft case: calculate beta-functions vkb.
         !
-        npw = ngk(ik)
-        igk(:) = igk_k(:,ik)
-        !
-        CALL init_us_2(npw,igk,xk(1,ik),vkb)
+        CALL init_us_2(ngk(ik), igk_k(:,ik), xk(:,ik), vkb)
         !
         !   Computes/reads P_c^+ x psi_kpoint into d0psi array
         !
@@ -254,7 +251,7 @@ SUBROUTINE compute_d0psi_rs( n_ipol )
   ! Orthogonalized batch orbitals to occupied minifold
   ! 
   DO ip = 1, n_ipol
-     CALL orthogonalize(d0psi(:,:,1,ip), evc0(:,:,1), 1, 1, sevc0(:,:,1), npw, .true.)
+     CALL orthogonalize(d0psi(:,:,1,ip), evc0(:,:,1), 1, 1, sevc0(:,:,1), ngk(1), .true.)
      d0psi(:,:,1,ip) = -d0psi(:,:,1,ip)
   ENDDO
   !

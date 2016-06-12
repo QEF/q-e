@@ -12,7 +12,7 @@ SUBROUTINE lr_dvpsi_e(ik,ipol,dvpsi)
   ! On output: dvpsi contains P_c^+ x | psi_ik > in crystal axis
   !            (projected on at(*,ipol) )
   !
-  ! dvpsi is COMPUTED and WRITTEN on file (vkb,evc,igk must be set) 
+  ! dvpsi is COMPUTED and WRITTEN on file (vkb and evc must be set) 
   ! OBM:                  ^ This is now handled elesewhere
   !
   ! See J. Tobik and A. Dal Corso, JCP 120, 9934 (2004)
@@ -22,12 +22,13 @@ SUBROUTINE lr_dvpsi_e(ik,ipol,dvpsi)
   ! Rebased wrt PHONON routines. S J Binnie (2011)
   !
   USE kinds,                ONLY : DP
-  USE cell_base,            ONLY : tpiba, at
+  USE cell_base,            ONLY : tpiba2, at
   USE ions_base,            ONLY : ntyp => nsp
   USE io_global,            ONLY : stdout
-  USE klist,                ONLY : xk, ngk
-  USE wvfct,                ONLY : npw, npwx, nbnd, igk, g2kin, et
+  USE klist,                ONLY : xk, ngk, igk_k
+  USE wvfct,                ONLY : npwx, nbnd, g2kin, et
   USE wavefunctions_module, ONLY : evc
+  USE gvect,                ONLY : g
   USE noncollin_module,     ONLY : noncolin, npol
   USE becmod,               ONLY : allocate_bec_type, calbec, becp, &
                                    & deallocate_bec_type,  bec_type
@@ -37,7 +38,6 @@ SUBROUTINE lr_dvpsi_e(ik,ipol,dvpsi)
   USE control_lr,           ONLY : nbnd_occ
   USE lr_variables,         ONLY : lr_verbosity, sevc0
   USE io_global,            ONLY : stdout
-  USE qpoint,               ONLY : igkq
   USE lrus,                 ONLY : dpqq
   !
   IMPLICIT NONE
@@ -47,8 +47,9 @@ SUBROUTINE lr_dvpsi_e(ik,ipol,dvpsi)
   !
   ! Local variables
   !  
-  INTEGER :: ig, ibnd, lter
+  INTEGER :: ig, ibnd, lter, npw
   ! counters
+  ! npw: number of plane-waves at point ik
   REAL(kind=dp) :: atnorm
   COMPLEX(kind=dp),ALLOCATABLE :: d0psi(:,:)
   REAL(DP), ALLOCATABLE  :: h_diag (:,:), eprec(:)
@@ -79,20 +80,28 @@ SUBROUTINE lr_dvpsi_e(ik,ipol,dvpsi)
   ALLOCATE (h_diag( npwx*npol, nbnd))
   h_diag = 0.d0
   !
+  npw = ngk(ik)
+  !
   CALL allocate_bec_type ( nkb, nbnd, becp1 )
   !
-  CALL calbec ( ngk(ik), vkb, evc, becp1 )
+  CALL calbec ( npw, vkb, evc, becp1 )
   !
   CALL allocate_bec_type ( nkb, nbnd, becp2 )
   !
   CALL commutator_Hx_psi (ik, nbnd_occ(ik), becp1, becp2, ipol, d0psi )
   !
-  IF (okvan) CALL calbec ( ngk(ik), vkb, evc, becp, nbnd)
+  IF (okvan) CALL calbec ( npw, vkb, evc, becp, nbnd)
   !
   ! Orthogonalize d0psi to the valence subspace. Apply P_c^+
   !
-  CALL orthogonalize(d0psi, evc, ik, ik, sevc0(:,:,ik), ngk(ik), .true.)
+  CALL orthogonalize(d0psi, evc, ik, ik, sevc0(:,:,ik), npw, .true.)
   d0psi = -d0psi
+  !
+  ! Calculate the kinetic energy g2kin
+  !
+  DO ig = 1, npw
+     g2kin(ig) = SUM((xk(1:3,ik) + g(1:3,igk_k(ig,ik)))**2) * tpiba2
+  ENDDO
   !
   !   d0psi contains P^+_c [H-eS,x] psi_v for the polarization direction ipol
   !   Now solve the linear systems (H-e_vS)*P_c(x*psi_v)=P_c^+ [H-e_vS,x]*psi_v
@@ -103,20 +112,18 @@ SUBROUTINE lr_dvpsi_e(ik,ipol,dvpsi)
   CALL lr_calc_eprec(eprec)
   !
   DO ibnd = 1, nbnd_occ (ik)
-     DO ig = 1, ngk(ik)
+     DO ig = 1, npw
         h_diag (ig, ibnd) = 1.d0 / max (1.0d0, g2kin (ig) / eprec (ibnd) )
      ENDDO
      IF (noncolin) THEN
-        DO ig = 1, ngk(ik)
+        DO ig = 1, npw
            h_diag (ig+npwx, ibnd) = 1.d0/max(1.0d0,g2kin(ig)/eprec(ibnd))
         ENDDO
      ENDIF
   ENDDO
   !
-  igkq => igk ! PG: needed by h_psi, called by ch_psi_all
-  !
   CALL cgsolve_all (ch_psi_all, cg_psi, et (1, ik), d0psi, dvpsi, &
-       h_diag, npwx, ngk(ik), thresh, ik, lter, conv_root, anorm, &
+       h_diag, npwx, npw, thresh, ik, lter, conv_root, anorm, &
        nbnd_occ(ik), 1)
   !
   IF (.not.conv_root) WRITE( stdout, '(5x,"ik",i4," ibnd",i4, &
@@ -138,8 +145,8 @@ SUBROUTINE lr_dvpsi_e(ik,ipol,dvpsi)
      ! for effective charges
      !
      ALLOCATE (spsi ( npwx*npol, nbnd))
-     CALL calbec (ngk(ik), vkb, dvpsi, becp )
-     CALL s_psi(npwx,ngk(ik),nbnd,dvpsi,spsi)
+     CALL calbec (npw, vkb, dvpsi, becp )
+     CALL s_psi(npwx,npw,nbnd,dvpsi,spsi)
      CALL DCOPY(2*npwx*npol*nbnd,spsi,1,dvpsi,1)
      DEALLOCATE (spsi)
      ALLOCATE (dpqq( nhm, nhm, 3, ntyp))
@@ -150,11 +157,11 @@ SUBROUTINE lr_dvpsi_e(ik,ipol,dvpsi)
      !
   ENDIF
   !
-  IF (okvan) CALL calbec ( ngk(ik), vkb, evc, becp, nbnd)
+  IF (okvan) CALL calbec ( npw, vkb, evc, becp, nbnd)
   !
   ! Orthogonalize dvpsi to the valence subspace. Apply P_c^+
   !
-  CALL orthogonalize(dvpsi, evc, ik, ik, sevc0(:,:,ik), ngk(ik), .true.)
+  CALL orthogonalize(dvpsi, evc, ik, ik, sevc0(:,:,ik), npw, .true.)
   dvpsi = -dvpsi
   !
   DEALLOCATE (h_diag)
@@ -195,7 +202,7 @@ CONTAINS
 
     USE kinds,                ONLY : DP
     USE gvect,                ONLY : gstart
-    USE wvfct,                ONLY : npw, npwx, nbnd, g2kin
+    USE wvfct,                ONLY : npwx, nbnd, g2kin
     USE wavefunctions_module, ONLY : evc
     USE klist,                ONLY : ngk
     USE mp,                   ONLY : mp_sum

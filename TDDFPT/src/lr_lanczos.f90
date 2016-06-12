@@ -49,7 +49,7 @@ SUBROUTINE one_lanczos_step()
                                          alpha_store, beta_store, gamma_store, zeta_store,     &
                                          charge_response, size_evc, LR_polarization, LR_iteration
     USE uspp,                     ONLY : vkb, nkb, okvan
-    USE wvfct,                    ONLY : nbnd, npwx, npw
+    USE wvfct,                    ONLY : nbnd, npwx
     USE control_flags,            ONLY : gamma_only, tqr
     USE becmod,                   ONLY : bec_type, becp, calbec
     USE realus,                   ONLY : real_space, invfft_orbital_gamma, initialisation_level,    &

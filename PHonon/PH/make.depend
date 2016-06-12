@@ -221,7 +221,6 @@ compute_alphasum.o : phcom.o
 compute_becalp.o : ../../LR_Modules/lrcom.o
 compute_becalp.o : ../../Modules/becmod.o
 compute_becalp.o : ../../Modules/cell_base.o
-compute_becalp.o : ../../Modules/io_files.o
 compute_becalp.o : ../../Modules/kind.o
 compute_becalp.o : ../../Modules/noncol.o
 compute_becalp.o : ../../Modules/paw_variables.o
@@ -242,7 +241,6 @@ compute_drhous.o : ../../FFTXlib/fft_interfaces.o
 compute_drhous.o : ../../LR_Modules/lrcom.o
 compute_drhous.o : ../../Modules/becmod.o
 compute_drhous.o : ../../Modules/fft_base.o
-compute_drhous.o : ../../Modules/io_files.o
 compute_drhous.o : ../../Modules/ions_base.o
 compute_drhous.o : ../../Modules/kind.o
 compute_drhous.o : ../../Modules/recvec.o
@@ -255,7 +253,6 @@ compute_drhous_nc.o : ../../FFTXlib/fft_interfaces.o
 compute_drhous_nc.o : ../../LR_Modules/lrcom.o
 compute_drhous_nc.o : ../../Modules/becmod.o
 compute_drhous_nc.o : ../../Modules/fft_base.o
-compute_drhous_nc.o : ../../Modules/io_files.o
 compute_drhous_nc.o : ../../Modules/ions_base.o
 compute_drhous_nc.o : ../../Modules/kind.o
 compute_drhous_nc.o : ../../Modules/noncol.o
@@ -399,7 +396,6 @@ drhodv.o : ../../LR_Modules/lrcom.o
 drhodv.o : ../../Modules/becmod.o
 drhodv.o : ../../Modules/cell_base.o
 drhodv.o : ../../Modules/fft_base.o
-drhodv.o : ../../Modules/io_files.o
 drhodv.o : ../../Modules/io_global.o
 drhodv.o : ../../Modules/ions_base.o
 drhodv.o : ../../Modules/kind.o
@@ -545,7 +541,6 @@ dynmat_us.o : ../../Modules/becmod.o
 dynmat_us.o : ../../Modules/cell_base.o
 dynmat_us.o : ../../Modules/constants.o
 dynmat_us.o : ../../Modules/fft_base.o
-dynmat_us.o : ../../Modules/io_files.o
 dynmat_us.o : ../../Modules/io_global.o
 dynmat_us.o : ../../Modules/ions_base.o
 dynmat_us.o : ../../Modules/kind.o
@@ -777,7 +772,6 @@ localdos.o : ../../LR_Modules/lrcom.o
 localdos.o : ../../Modules/becmod.o
 localdos.o : ../../Modules/cell_base.o
 localdos.o : ../../Modules/fft_base.o
-localdos.o : ../../Modules/io_files.o
 localdos.o : ../../Modules/ions_base.o
 localdos.o : ../../Modules/kind.o
 localdos.o : ../../Modules/mp.o
@@ -1172,7 +1166,6 @@ raman_mat.o : ../../LR_Modules/lrcom.o
 raman_mat.o : ../../Modules/becmod.o
 raman_mat.o : ../../Modules/cell_base.o
 raman_mat.o : ../../Modules/constants.o
-raman_mat.o : ../../Modules/io_files.o
 raman_mat.o : ../../Modules/ions_base.o
 raman_mat.o : ../../Modules/kind.o
 raman_mat.o : ../../Modules/mp.o
@@ -1315,7 +1308,6 @@ solve_e2.o : ../../LR_Modules/lrcom.o
 solve_e2.o : ../../Modules/cell_base.o
 solve_e2.o : ../../Modules/check_stop.o
 solve_e2.o : ../../Modules/fft_base.o
-solve_e2.o : ../../Modules/io_files.o
 solve_e2.o : ../../Modules/io_global.o
 solve_e2.o : ../../Modules/ions_base.o
 solve_e2.o : ../../Modules/kind.o
@@ -1531,7 +1523,6 @@ yambo.o : elph.o
 yambo.o : phcom.o
 zstar_eu.o : ../../LR_Modules/lrcom.o
 zstar_eu.o : ../../Modules/cell_base.o
-zstar_eu.o : ../../Modules/io_files.o
 zstar_eu.o : ../../Modules/ions_base.o
 zstar_eu.o : ../../Modules/kind.o
 zstar_eu.o : ../../Modules/mp.o
@@ -1549,7 +1540,6 @@ zstar_eu_us.o : ../../LR_Modules/dv_of_drho.o
 zstar_eu_us.o : ../../LR_Modules/lrcom.o
 zstar_eu_us.o : ../../Modules/cell_base.o
 zstar_eu_us.o : ../../Modules/fft_base.o
-zstar_eu_us.o : ../../Modules/io_files.o
 zstar_eu_us.o : ../../Modules/ions_base.o
 zstar_eu_us.o : ../../Modules/kind.o
 zstar_eu_us.o : ../../Modules/mp.o

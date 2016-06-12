@@ -23,7 +23,7 @@ SUBROUTINE lr_write_restart()
                                    nbnd_total, charge_response,lr_verbosity,&
                                    bgz_suffix, eels, q1, q2, q3, sum_rule, tmp_dir_lr
   USE charg_resp,           ONLY : resonance_condition, rho_1_tot, rho_1_tot_im
-  USE wvfct,                ONLY : nbnd, npwx, npw
+  USE wvfct,                ONLY : nbnd, npwx
   USE fft_base,             ONLY : dfftp
   USE io_global,            ONLY : ionode, stdout
   USE klist,                ONLY : nks, nelec

@@ -14,12 +14,13 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   ! to a vector h. The result is given in ah.
   !
   USE kinds,                ONLY : DP
-  USE wvfct,                ONLY : npwx, nbnd
+  USE cell_base,            ONLY : tpiba
+  USE wvfct,                ONLY : npwx, nbnd, current_k
   USE becmod,               ONLY : bec_type, becp, calbec
   USE uspp,                 ONLY : nkb, vkb
   USE fft_base,             ONLY : dffts
-  USE wvfct,                ONLY : npwx, current_k
-  USE klist,                ONLY : igk_k
+  USE gvect,                ONLY : g
+  USE klist,                ONLY : xk, igk_k
   USE noncollin_module,     ONLY : noncolin, npol
   USE eqv,                  ONLY : evq
   USE qpoint,               ONLY : ikqs

@@ -21,7 +21,7 @@ FUNCTION lr_dot(x,y)
   USE io_global,            ONLY : stdout
   USE klist,                ONLY : nks, xk, wk, ngk
   USE lsda_mod,             ONLY : nspin
-  USE wvfct,                ONLY : npwx,nbnd,wg,npw,igk,g2kin
+  USE wvfct,                ONLY : npwx,nbnd,wg
   USE gvecw,                ONLY : gcutw
   USE control_flags,        ONLY : gamma_only
   USE gvect,                ONLY : gstart, ngm, g
@@ -30,7 +30,7 @@ FUNCTION lr_dot(x,y)
   USE lr_variables,         ONLY : lr_verbosity, eels
   USE noncollin_module,     ONLY : noncolin, npol
   USE control_lr,           ONLY : nbnd_occ
-  USE qpoint,               ONLY : npwq, igkq, ikks, ikqs, nksq
+  USE qpoint,               ONLY : nksq
   !
   IMPLICIT NONE
   !
@@ -140,19 +140,20 @@ CONTAINS
     ! EELS
     ! Noncollinear case is implemented
     !
+    USE qpoint,      ONLY : ikks, ikqs
+    !
     IMPLICIT NONE
-    INTEGER :: ios, ikk, ikq
-    !
-    !IF (nksq > 1) rewind (unit = iunigk)
-    !
+    INTEGER :: ios
+    INTEGER :: ik,  &
+               ikk, & ! index of the point k
+               ikq, & ! index of the point k+q
+               npwq   ! number of the plane-waves at point k+q
+    ! 
     DO ik = 1, nksq
        !
-       ikk = ikks(ik)
-       ikq = ikqs(ik)
-       !
-       ! Determination of the number of plane waves npwq at point k+q (ikq).
-       !
-       CALL gk_sort( xk(1,ikq), ngm, g, gcutw, npwq, igkq, g2kin)
+       ikk  = ikks(ik)
+       ikq  = ikqs(ik)
+       npwq = ngk(ikq)
        !
        DO ibnd = 1, nbnd_occ(ikk)
           !

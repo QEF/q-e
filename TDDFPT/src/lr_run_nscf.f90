@@ -52,6 +52,10 @@ SUBROUTINE lr_run_nscf( )
   ! and k+q required by the linear response calculation at finite q.
   !
   CALL lr_setup_nscf ()
+  !
+  ! The variables igk_k and ngk are re-set up here (because there 
+  ! are not only poins k but also points k+q) through the path:
+  ! init_run -> hinit0 -> init_igk
   ! 
   CALL init_run()
   !

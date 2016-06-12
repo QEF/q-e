@@ -6,25 +6,25 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 SUBROUTINE adddvepsi_us(becp1,becp2,ipol,ik,dvpsi)
+  !
   ! This subdoutine adds to dvpsi the terms which depend on the augmentation
   ! charge. It assumes that the variable dpqq, has been set and it is in
   ! the crystal basis.
   ! It calculates the last two terms of Eq.10 in JCP 21, 9934 (2004).
   ! P^+_c is applied in solve_e.
   !
-
-  USE kinds, only : DP
-  USE spin_orb, ONLY : lspinorb
-  USE uspp,  ONLY : nkb, vkb, qq, qq_so
-  USE wvfct, ONLY : npwx, npw, nbnd
-  USE ions_base, ONLY : nat, ityp, ntyp => nsp
-  USE noncollin_module, ONLY : noncolin, npol
-  USE uspp_param, only: nh
-  USE becmod,   ONLY : bec_type
-  USE control_flags, ONLY : gamma_only
-  
-  USE lrus,       ONLY : dpqq, dpqq_so
-  USE control_lr, ONLY : nbnd_occ
+  USE kinds,             ONLY : DP
+  USE spin_orb,          ONLY : lspinorb
+  USE uspp,              ONLY : nkb, vkb, qq, qq_so
+  USE wvfct,             ONLY : npwx, nbnd
+  USE ions_base,         ONLY : nat, ityp, ntyp => nsp
+  USE noncollin_module,  ONLY : noncolin, npol
+  USE uspp_param,        ONLY : nh
+  USE becmod,            ONLY : bec_type
+  USE control_flags,     ONLY : gamma_only
+  USE klist,             ONLY : ngk 
+  USE lrus,              ONLY : dpqq, dpqq_so
+  USE control_lr,        ONLY : nbnd_occ
 
   implicit none
 
@@ -36,6 +36,9 @@ SUBROUTINE adddvepsi_us(becp1,becp2,ipol,ik,dvpsi)
   complex(DP), allocatable :: ps(:), ps_nc(:,:)
   REAL(KIND=DP), ALLOCATABLE :: ps_r(:)
   integer:: ijkb0, nt, na, ih, jh, ikb, jkb, ibnd, is, js, ijs
+  INTEGER :: npw ! number of plane waves at point k
+
+  npw = ngk(ik)
 
   IF (noncolin) THEN
      allocate (ps_nc(nbnd,npol))
@@ -120,7 +123,6 @@ SUBROUTINE adddvepsi_us(becp1,becp2,ipol,ik,dvpsi)
   ELSE 
      deallocate(ps)
   END IF
-
 
   RETURN
 END SUBROUTINE adddvepsi_us

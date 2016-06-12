@@ -26,7 +26,7 @@ SUBROUTINE lr_restart(iter_restart,rflag)
                                    bgz_suffix, beta_store, gamma_store, zeta_store, norm0, &
                                    lr_verbosity, charge_response, LR_polarization, n_ipol, eels, sum_rule
   USE charg_resp,           ONLY : resonance_condition, rho_1_tot,rho_1_tot_im
-  USE wvfct,                ONLY : npw, igk, nbnd, g2kin, npwx
+  USE wvfct,                ONLY : nbnd, g2kin, npwx
   USE becmod,               ONLY : bec_type, becp, calbec
   USE uspp,                 ONLY : vkb 
   USE io_global,            ONLY : ionode
@@ -73,7 +73,7 @@ SUBROUTINE lr_restart(iter_restart,rflag)
         !
      ENDDO
      !
-     CALL init_us_2(npw,igk,xk(1,1),vkb)
+     CALL init_us_2(ngk(1),igk_k(:,1),xk(:,1),vkb)
      !
   ENDIF
   !

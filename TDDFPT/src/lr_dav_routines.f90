@@ -182,7 +182,7 @@ contains
     use lr_variables,         only : evc0, sevc0 ,revc0, evc0_virt,&
                                    & sevc0_virt, nbnd_total, davidson, restart
     use io_global,    only : stdout
-    use wvfct,       only : npwx,nbnd,et,npw
+    use wvfct,       only : npwx,nbnd,et
     use gvect,                only : gstart
     use uspp,           only : okvan
     use lr_us
@@ -430,7 +430,7 @@ contains
     use kinds,                only : dp
     use lr_variables,         only : ltammd,&
                                      evc0, sevc0, d0psi
-    use wvfct,                only : nbnd, npwx, npw
+    use wvfct,                only : nbnd, npwx
     use mp,                   only : mp_bcast,mp_barrier                  
     use mp_world,             only : world_comm
     use lr_us
@@ -521,7 +521,7 @@ contains
     use kinds,                only : dp
     use lr_variables,         only : ltammd,&
                                      evc0, sevc0, d0psi
-    use wvfct,                only : nbnd, npwx, npw
+    use wvfct,                only : nbnd, npwx
     use mp,                   only : mp_bcast,mp_barrier
     use mp_world,             only : world_comm
     use lr_us
@@ -653,7 +653,7 @@ contains
     use lr_variables,    only : evc0, sevc0
     use kinds,  only : dp
     use io_global, only : stdout
-    use wvfct,                only : nbnd, npwx, npw
+    use wvfct,                only : nbnd, npwx
     use lr_dav_debug
     use lr_us
     
@@ -968,7 +968,7 @@ contains
     
     use kinds,                only : dp
     use klist,                only : nks
-    use wvfct,                only : npwx,nbnd,npw
+    use wvfct,                only : npwx,nbnd
     use lr_us
     
     implicit none
@@ -988,7 +988,7 @@ contains
     
     use kinds,                only : dp
     use klist,                only : nks
-    use wvfct,                only : npwx,nbnd,npw
+    use wvfct,                only : npwx,nbnd
     
     implicit none
     complex(kind=dp),external :: lr_dot
@@ -1006,23 +1006,24 @@ contains
     ! This routine apply pre-condition to the residue to speed up the
     ! convergence
     use kinds,       only : dp
-    use wvfct,       only : g2kin,npwx,nbnd,et,npw
+    use wvfct,       only : g2kin,npwx,nbnd,et
+    use klist,       only : ngk
     use lr_dav_variables, only : reference, diag_of_h, tr_energy,eign_value_order,&
                      &turn2planb
     use g_psi_mod
     
     implicit none
     complex(dp)  :: vect(npwx,nbnd)
-    integer :: ia,ib,ieign,flag
+    integer :: ig,ibnd,ieign,flag
     real(dp) :: temp,minimum
     
     minimum=0.0001d0
-    do ib = 1, nbnd
-      do ia = 1, npw
-        !temp = g2kin(ia)-et(ib,1)
-        temp = g2kin(ia)-et(ib,1)-reference
+    do ibnd = 1, nbnd
+      do ig = 1, ngk(1)
+        !temp = g2kin(ig)-et(ibnd,1)
+        temp = g2kin(ig)-et(ibnd,1)-reference
         !if( abs(temp) .lt. minimum ) temp = sign(minimum,temp)
-        vect(ia,ib) = vect(ia,ib)/temp
+        vect(ig,ibnd) = vect(ig,ibnd)/temp
       enddo
     enddo
     
@@ -1416,8 +1417,9 @@ contains
     ! Created by X.Ge in Jan. 2013
     !-------------------------------------------------------------------------------
     ! calculate the inner product between two wfcs
-    use kinds,          only : dp
-    use wvfct,                only : npwx, npw
+    use kinds,                only : dp
+    use wvfct,                only : npwx
+    use klist,                only : ngk
     use lr_dav_variables 
     use gvect,                only : gstart
     use mp_global,            only : intra_bgrp_comm
@@ -1429,7 +1431,7 @@ contains
     complex(dp) :: x(npwx), y (npwx)
     integer :: i
 
-    wfc_dot=2.D0*ddot(2*npw,x(:),1,y(:),1)
+    wfc_dot=2.D0*ddot(2*ngk(1),x(:),1,y(:),1)
     if(gstart==2) wfc_dot=wfc_dot-dble(x(1))*dble(y(1))
 
 #ifdef __MPI
@@ -1470,9 +1472,9 @@ contains
     ! This routine initiate basis set with radom vectors
 
     use kinds,          only : dp
-    use wvfct,          only : g2kin,npwx,nbnd,et,npw
+    use wvfct,          only : g2kin,npwx,nbnd,et
     use gvect,          only : gstart
-    use klist,          only : nks
+    use klist,          only : nks, ngk
     use io_global,      only : stdout
     use uspp,           only : okvan
     use lr_variables,   only : evc0, sevc0
@@ -1486,7 +1488,7 @@ contains
     write(stdout,'(5x,"Preconditional random vectors are used as initial vectors ...")')
     do ib = 1, num_init
       do ibnd = 1, nbnd
-        do ipw = 1, npw
+        do ipw = 1, ngk(1)
           call random_number(R)
           call random_number(R2)
           !apply precondition

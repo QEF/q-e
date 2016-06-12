@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2015 Quantum ESPRESSO group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -29,14 +29,13 @@ SUBROUTINE lr_addus_dvpsi ( ik, lda, n, m, psi, dpsi )
   USE noncollin_module,     ONLY : npol, noncolin
   USE uspp,                 ONLY : vkb, nkb, indv_ijkb0
   USE cell_base,            ONLY : omega
-
   USE lrus,                 ONLY : becp1
   USE qpoint,               ONLY : xq, eigqts
   !
   IMPLICIT NONE
   !
   INTEGER, INTENT(in) :: ik, lda, n, m
-  COMPLEX(DP), INTENT(in) ::   psi(lda*npol,m)
+  COMPLEX(DP), INTENT(in) :: psi(lda*npol,m)
   ! input: wavefunction u_n,k
   COMPLEX(DP), INTENT(out) :: dpsi(lda*npol,m)
   ! output: sum of the input wavefunction and the USPP term
@@ -78,7 +77,7 @@ SUBROUTINE lr_addus_dvpsi ( ik, lda, n, m, psi, dpsi )
   DO nt = 1, ntyp
     IF (upf(nt)%tvanp) THEN
       !
-      ! Calculate the Fourier transform of the Q functions, Q^*(q).
+      ! Calculate the Fourier transform of the Q functions.
       !
       ALLOCATE (qqc(nh(nt),nh(nt)))
       qqc(:,:) = (0.d0, 0.d0)

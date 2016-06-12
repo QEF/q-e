@@ -44,7 +44,7 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
   USE uspp,                 ONLY : vkb, nkb, okvan
   USE uspp_param,           ONLY : nhm, nh
   USE wavefunctions_module, ONLY : psic
-  USE wvfct,                ONLY : nbnd, npwx, igk, g2kin, et
+  USE wvfct,                ONLY : nbnd, npwx, g2kin, et
   USE control_flags,        ONLY : gamma_only
   USE realus,               ONLY : real_space, invfft_orbital_gamma,&
                                    & initialisation_level,&
@@ -558,16 +558,8 @@ CONTAINS
     !
     IF (lr_exx .AND. .NOT.interaction) CALL lr_exx_kernel_noint(evc1,evc1_new)
     !
-    ! Kinetic energy
-    ! It has been already computed in commutator_Hx_psi.
-    !
-    !do ig = 1,ngk(1)
-    !   !
-    !   g2kin(ig) = ((xk(1,1) + g(1,igk_k(ig,1)))**2 &
-    !               +(xk(2,1) + g(2,igk_k(ig,1)))**2 &
-    !               +(xk(3,1) + g(3,igk_k(ig,1)))**2)*tpiba2
-    !   !
-    !enddo
+    ! Note: In the gamma_only case the kinetic energy g2kin has
+    ! been already computed in lr_dvpsi_e.
     !
     !  Call h_psi on evc1 such that h.evc1 = sevc1_new
     !
@@ -605,7 +597,7 @@ SUBROUTINE lr_apply_liouvillian_k()
     ! Generalised k-point case
     !
     USE lr_variables,        ONLY : becp1_c
-    USE wvfct,               ONLY : current_k, npw
+    USE wvfct,               ONLY : current_k
     !
     IMPLICIT NONE
     !
@@ -716,7 +708,6 @@ SUBROUTINE lr_apply_liouvillian_k()
     ENDIF
     !
     !   Call h_psi on evc1
-    !   h_psi uses arrays igk and npw, so restore those
     !
     IF (lr_exx .AND. .NOT.interaction) CALL lr_exx_kernel_noint(evc1,evc1_new)
     !
@@ -732,9 +723,7 @@ SUBROUTINE lr_apply_liouvillian_k()
           !
        ENDDO
        !
-       igk(:) = igk_k(:,ik)
        current_k = ik
-       npw = ngk(ik)
        !
        CALL h_psi(npwx,ngk(ik),nbnd,evc1(1,1,ik),sevc1_new(1,1,ik))
        !

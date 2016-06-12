@@ -356,7 +356,6 @@ lr_normalise.o : ../../LR_Modules/lrcom.o
 lr_normalise.o : ../../Modules/becmod.o
 lr_normalise.o : ../../Modules/cell_base.o
 lr_normalise.o : ../../Modules/control_flags.o
-lr_normalise.o : ../../Modules/gvecw.o
 lr_normalise.o : ../../Modules/io_global.o
 lr_normalise.o : ../../Modules/kind.o
 lr_normalise.o : ../../Modules/noncol.o
@@ -535,11 +534,9 @@ lr_test_restart.o : lr_variables.o
 lr_us.o : ../../LR_Modules/lrcom.o
 lr_us.o : ../../Modules/becmod.o
 lr_us.o : ../../Modules/control_flags.o
-lr_us.o : ../../Modules/gvecw.o
 lr_us.o : ../../Modules/io_global.o
 lr_us.o : ../../Modules/kind.o
 lr_us.o : ../../Modules/noncol.o
-lr_us.o : ../../Modules/recvec.o
 lr_us.o : ../../Modules/uspp.o
 lr_us.o : ../../PW/src/pwcom.o
 lr_us.o : ../../PW/src/realus.o
@@ -564,9 +561,7 @@ print_clock_lr.o : lr_variables.o
 sd0psi.o : ../../LR_Modules/lrcom.o
 sd0psi.o : ../../Modules/becmod.o
 sd0psi.o : ../../Modules/control_flags.o
-sd0psi.o : ../../Modules/gvecw.o
 sd0psi.o : ../../Modules/io_global.o
-sd0psi.o : ../../Modules/recvec.o
 sd0psi.o : ../../Modules/uspp.o
 sd0psi.o : ../../PW/src/pwcom.o
 sd0psi.o : ../../PW/src/realus.o

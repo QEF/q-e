@@ -376,6 +376,12 @@ SUBROUTINE lr_readin
   ! I. Timrov: Allocate space for PW scf variables (EELS: for PW nscf files,
   ! if restart=.true.), read and check them.
   !
+  ! Optical case: the variables igk_k and ngk are set up through this path:
+  ! read_file -> init_igk.
+  ! EELS: the variables igk_k and ngk will be re-set up later (because there 
+  ! will be not only poins k but also points k+q) through the path:
+  ! lr_run_nscf -> init_run -> hinit0 -> init_igk 
+  !
   CALL read_file()
   !
   !   Set wfc_dir - this is done here because read_file sets wfc_dir = tmp_dir

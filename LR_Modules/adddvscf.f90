@@ -15,7 +15,6 @@ subroutine adddvscf (ipert, ik)
   !     system and adds it to dvpsi.
   !     It implements the second term in Eq. B30 of PRB 64, 235118 (2001).
   !
-
   USE kinds,      ONLY : DP
   USE uspp_param, ONLY : upf, nh
   USE uspp,       ONLY : vkb, okvan
@@ -23,11 +22,11 @@ subroutine adddvscf (ipert, ik)
   USE lsda_mod,   ONLY : lsda, current_spin, isk
   USE ions_base,  ONLY : ntyp => nsp, nat, ityp
   USE wvfct,      ONLY : nbnd, npwx
+  USE klist,      ONLY : ngk
   USE noncollin_module, ONLY : noncolin, npol
 ! modules from phcom
-
   USE lrus,       ONLY : int3, int3_nc, becp1
-  USE qpoint,     ONLY : npwq, ikks
+  USE qpoint,     ONLY : ikks, ikqs
   USE eqv,        ONLY : dvpsi
 
   implicit none
@@ -40,7 +39,7 @@ subroutine adddvscf (ipert, ik)
   !
   !   And the local variables
   !
-  integer :: na, nt, ibnd, ih, jh, ijkb0, ikk, ikb, jkb, is, js, ijs
+  integer :: na, nt, ibnd, ih, jh, ijkb0, ikb, jkb, is, js, ijs
   ! counter on atoms
   ! counter on atomic types
   ! counter on bands
@@ -50,13 +49,23 @@ subroutine adddvscf (ipert, ik)
   ! counter on the k points
   ! counter on vkb
   ! counter on vkb
+  integer :: ikk, ikq, npwq
+  ! index of the point k
+  ! index of the point k+q
+  ! number of the plane-waves at point k+q
   complex(DP) :: sum, sum_nc(npol)
   ! auxiliary variable
 
   if (.not.okvan) return
+  !
   call start_clock ('adddvscf')
-  ikk = ikks(ik)
-  if (lsda) current_spin = isk (ikk)
+  !
+  ikk  = ikks(ik)
+  ikq  = ikqs(ik)
+  npwq = ngk(ikq)
+  !
+  if (lsda) current_spin = isk(ikk)
+  !
   ijkb0 = 0
   do nt = 1, ntyp
      if (upf(nt)%tvanp  ) then
@@ -108,7 +117,9 @@ subroutine adddvscf (ipert, ik)
         enddo
      endif
   enddo
-
+  !
   call stop_clock ('adddvscf')
+  !
   return
+  !
 end subroutine adddvscf

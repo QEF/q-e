@@ -30,7 +30,7 @@ SUBROUTINE lr_alloc_init()
   USE becmod,               ONLY : allocate_bec_type, bec_type, becp
   USE lrus,                 ONLY : int3, int3_nc, becp1
   USE eqv,                  ONLY : dmuxc, evq, dpsi, dvpsi
-  USE qpoint,               ONLY : igkq, nksq, eigqts
+  USE qpoint,               ONLY : nksq, eigqts
   USE control_lr,           ONLY : nbnd_occ
   !
   IMPLICIT NONE
@@ -118,10 +118,9 @@ SUBROUTINE lr_alloc_init()
   !
   IF (eels) THEN
      !
-     ! EELS (q!=0) : evq, igkq are allocated 
-     ! and correspond to k+q points
+     ! EELS (q!=0) : allocate wfct's evq, 
+     ! which correspond to points k+q
      !
-     ALLOCATE (igkq(npwx))
      ALLOCATE (evq(npwx*npol,nbnd))
      evq(:,:) = (0.0d0, 0.0d0)  
      ! 

@@ -22,7 +22,7 @@ SUBROUTINE lr_normalise (evc1, norm)
   USE klist,                ONLY : nks, xk, ngk, igk_k
   USE lsda_mod,             ONLY : nspin
   USE uspp,                 ONLY : vkb, nkb, okvan
-  USE wvfct,                ONLY : nbnd, npwx, npw, wg
+  USE wvfct,                ONLY : nbnd, npwx, wg
   USE control_flags,        ONLY : gamma_only
   USE lr_variables,         ONLY : lr_verbosity, eels
   USE noncollin_module,     ONLY : npol
@@ -165,15 +165,15 @@ CONTAINS
     ! EELS: generalized k-point case
     !
     use becmod,              only : becp, calbec
-    use qpoint,              only : npwq, igkq, ikks, ikqs
-    use gvect,               only : ngm, g
-    use wvfct,               only : g2kin
-    use gvecw,               only : gcutw
+    use qpoint,              only : ikks, ikqs
     use control_lr,          only : nbnd_occ
     !
     IMPLICIT NONE
     !
-    INTEGER :: ikk, ikq
+    INTEGER :: ik,  &
+               ikk, & ! index of the point k
+               ikq, & ! index of the point k+q
+               npwq   ! number of the plane-waves at point k+q
     REAL(kind=dp) :: prod
     COMPLEX(kind=dp), EXTERNAL :: lr_dot
     !
@@ -181,18 +181,15 @@ CONTAINS
     !
     DO ik = 1, nksq
        !
-       ikk = ikks(ik)
-       ikq = ikqs(ik)
-       !
-       ! Determination of npwq, igkq; g2kin is used here as a workspace.
-       !
-       CALL gk_sort( xk(1,ikq), ngm, g, gcutw, npwq, igkq, g2kin)
+       ikk  = ikks(ik)
+       ikq  = ikqs(ik)
+       npwq = ngk(ikq)
        !
        IF ( okvan .and. nkb > 0 ) THEN
           !
           ! Calculate beta-functions vkb at point k+q
           !
-          CALL init_us_2(npwq, igkq, xk(1,ikq), vkb)
+          CALL init_us_2(npwq, igk_k(1,ikq), xk(1,ikq), vkb)
           !
           ! Calculate the product of beta-functions vkb with
           ! the response orbitals evc1 : becp%k = <vkb|evc1>

@@ -40,7 +40,7 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
                                      & lr_exx
   USE lsda_mod,               ONLY : current_spin, isk
   USE wavefunctions_module,   ONLY : psic
-  USE wvfct,                  ONLY : nbnd, et, wg, npwx, npw
+  USE wvfct,                  ONLY : nbnd, et, wg, npwx
   USE control_flags,          ONLY : gamma_only
   USE uspp,                   ONLY : vkb, nkb, okvan, qq, becsum
   USE uspp_param,             ONLY : upf, nh
@@ -333,7 +333,6 @@ CONTAINS
     USE realus,              ONLY : tg_psic
     USE fft_base,            ONLY : dffts
     USE fft_parallel,        ONLY : tg_gather
-    USE wvfct,               ONLY : igk
 
     IMPLICIT NONE
     !
