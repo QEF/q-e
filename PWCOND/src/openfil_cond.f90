@@ -15,7 +15,7 @@ SUBROUTINE openfil_cond()
   USE kinds,            ONLY : DP
   USE io_global,        ONLY : stdout
   USE wvfct,            ONLY : nbnd, npwx
-  USE io_files,         ONLY : prefix, iunpun, iunsat, iunwfc, iunigk, &
+  USE io_files,         ONLY : prefix, iunpun, iunsat, iunwfc, &
                                nwordwfc, nwordatwfc, iunefield, &
                                iunefieldm, iunefieldp
   USE noncollin_module, ONLY : npol

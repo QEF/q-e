@@ -16,7 +16,6 @@ SUBROUTINE close_phq( flag )
   ! ... Called at the end of the run with flag=.TRUE. (removes 'recover')
   ! ... or during execution with flag=.FALSE. (does not remove 'recover')
   !
-  USE io_files,      ONLY : iunigk
   USE control_flags, ONLY : twfcollect
   USE mp_global,     ONLY : me_pool
   USE io_global,     ONLY : ionode, stdout
@@ -81,8 +80,6 @@ SUBROUTINE close_phq( flag )
      CLOSE ( UNIT=iud2w, STATUS = 'keep' )
      CLOSE ( UNIT=iuba2, STATUS = 'keep' )
   ENDIF
-  !
-  CLOSE( UNIT = iunigk, STATUS = 'DELETE' )
   !
   RETURN
   !

@@ -15,7 +15,7 @@ subroutine solve_head
   !
   USE ions_base,             ONLY : nat
   USE io_global,             ONLY : stdout, ionode,ionode_id
-  USE io_files,              ONLY : diropn,prefix, iunigk, tmp_dir
+  USE io_files,              ONLY : diropn,prefix, tmp_dir
   use pwcom
   USE check_stop,            ONLY : max_seconds
   USE wavefunctions_module,  ONLY : evc
@@ -255,7 +255,6 @@ subroutine solve_head
 
 
 !loop on k points
-     if (nksq.gt.1) rewind (unit = iunigk)
      do ik=1, nksq
         if(len_head_block_wfc==0) then
            nbnd_block=nbnd_occ(ik)
@@ -278,17 +277,13 @@ subroutine solve_head
         ww = fpi * weight / omega
       
         if (lsda) current_spin = isk (ik)
-        if (nksq.gt.1) then
-           read (iunigk, err = 100, iostat = ios) npw, igk
-100     call errore ('solve_head', 'reading igk', abs (ios) )
-        endif
+        npw = ngk(ik)
      !
      ! reads unperturbed wavefuctions psi_k in G_space, for all bands
      !
-    ! if (nksq.gt.1) call davcio (evc, lrwfc, iuwfc, ik, - 1)
         if (nksq.gt.1)  call get_buffer(evc, lrwfc, iuwfc, ik)
         npwq = npw
-        call init_us_2 (npw, igk, xk (1, ik), vkb)
+        call init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb)
 
 
 
@@ -296,9 +291,9 @@ subroutine solve_head
      ! compute the kinetic energy
      !
         do ig = 1, npwq
-           g2kin (ig) = ( (xk (1,ik ) + g (1,igk (ig)) ) **2 + &
-                (xk (2,ik ) + g (2,igk (ig)) ) **2 + &
-                (xk (3,ik ) + g (3,igk (ig)) ) **2 ) * tpiba2
+           g2kin (ig) = ( (xk (1,ik ) + g (1,igk_k (ig,ik)) ) **2 + &
+                (xk (2,ik ) + g (2,igk_k (ig,ik)) ) **2 + &
+                (xk (3,ik ) + g (3,igk_k (ig,ik)) ) **2 ) * tpiba2
         enddo
       !
         do ib=1,n_block
@@ -320,7 +315,7 @@ subroutine solve_head
            !trasform valence wavefunctions to real space                                                                                        
            do ibnd=1,lenb
               psi_v(:,ibnd) = ( 0.D0, 0.D0 )
-              psi_v(nls(igk(1:npw)),ibnd) = evc(1:npw,first_b+ibnd-1)
+              psi_v(nls(igk_k(1:npw,ik)),ibnd) = evc(1:npw,first_b+ibnd-1)
               CALL invfft ('Wave',  psi_v(:,ibnd), dffts)
            enddo
 
@@ -405,7 +400,7 @@ subroutine solve_head
                          &(0.d0,0.d0),psi_tmp,npwx) 
 !fourier trasform
                     prod(:) = ( 0.D0, 0.D0 )
-                    prod(nls(igk(1:npw))) = psi_tmp(1:npw)
+                    prod(nls(igk_k(1:npw,ik))) = psi_tmp(1:npw)
                     CALL invfft ('Wave', prod, dffts)
            
 
