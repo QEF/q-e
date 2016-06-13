@@ -16,15 +16,14 @@ subroutine dvpsi_e2
   !
   USE kinds,           ONLY : DP
   USE cell_base,       ONLY : omega
-  USE klist,           ONLY : wk
+  USE klist,           ONLY : wk, ngk
   USE gvecs,           ONLY : doublegrid
-  USE wvfct,           ONLY : npw, npwx, nbnd, igk
+  USE wvfct,           ONLY : npwx, nbnd
   USE wavefunctions_module, ONLY: evc
   USE buffers,         ONLY : get_buffer
   USE fft_base,        ONLY : dfftp, dffts
   USE scf,             ONLY : rho
-  USE io_files,        ONLY : iunigk
-  USE qpoint,          ONLY : npwq, nksq
+  USE qpoint,          ONLY : nksq
   USE units_ph,        ONLY : lrdrho, iudrho, lrdwf, iudwf, lrwfc, iuwfc
   USE control_lr,      ONLY : nbnd_occ
   USE ramanm,          ONLY : lrba2, iuba2, lrchf, iuchf, a1j, a2j
@@ -35,6 +34,7 @@ subroutine dvpsi_e2
 
   implicit none
 
+  INTEGER :: npw, npwq
   integer :: ik, ipa, ipb, ir, ibnd, jbnd, nrec
   ! counter on k-points
   ! counter on polarizations
@@ -73,13 +73,10 @@ subroutine dvpsi_e2
   allocate (ps     (nbnd,nbnd,3,3))
 
   raux6 (:,:) = 0.d0
-  if (nksq.gt.1) rewind (iunigk)
   do ik = 1, nksq
-     if (nksq.gt.1) then
-        read (iunigk) npw, igk
-        npwq = npw
-        call get_buffer (evc, lrwfc, iuwfc, ik)
-     endif
+     npw = ngk(ik)
+     npwq = npw
+     if (nksq.gt.1) call get_buffer (evc, lrwfc, iuwfc, ik)
      weight = 2.d0 * wk(ik) / omega
 
      do ipa = 1, 3
@@ -93,8 +90,7 @@ subroutine dvpsi_e2
         enddo
         do ipa = 1, 6
            do ir = 1, dffts%nnr
-              tmp = CONJG(aux3s (ir, a1j (ipa))) *    &
-                           aux3s (ir, a2j (ipa))
+              tmp = CONJG(aux3s (ir, a1j (ipa))) * aux3s (ir, a2j (ipa))
               raux6 (ir, ipa) = raux6 (ir, ipa) + weight *  DBLE (tmp)
            enddo
         enddo
@@ -211,13 +207,10 @@ subroutine dvpsi_e2
   allocate (auxs1  (dffts%nnr))
   allocate (auxs2  (dffts%nnr))
 
-  if (nksq.gt.1) rewind (iunigk)
   do ik = 1, nksq
-     if (nksq.gt.1) then
-        read (iunigk) npw, igk
-        npwq = npw
-        call get_buffer(evc, lrwfc, iuwfc, ik)
-     endif
+     npw = ngk(ik)
+     npwq = npw
+     if (nksq.gt.1) call get_buffer (evc, lrwfc, iuwfc, ik)
      do ipa = 1, 6
         nrec = (ipa - 1) * nksq + ik
         call davcio (auxg, lrchf, iuchf, nrec, -1)

@@ -14,14 +14,13 @@ subroutine add_zstar_ue (imode0, npe)
   ! trans =.true. is needed for this calculation to be meaningful
   !
   USE kinds, only : DP
-  USE klist, ONLY : xk, wk
+  USE klist, ONLY : xk, wk, ngk, igk_k
   USE uspp,  ONLY : vkb
-  USE wvfct, ONLY : npwx, npw, igk
+  USE wvfct, ONLY : npwx
   USE wavefunctions_module,  ONLY: evc
   USE noncollin_module,      ONLY: noncolin
-  USE io_files, ONLY: iunigk
   USE buffers,  ONLY : get_buffer
-  USE qpoint,   ONLY: npwq, nksq
+  USE qpoint,   ONLY: nksq
   USE eqv,      ONLY: dpsi, dvpsi
   USE efield_mod, ONLY: zstarue0_rec
   USE units_ph,   ONLY : iudwf, lrdwf, iuwfc, lrwfc
@@ -38,6 +37,7 @@ subroutine add_zstar_ue (imode0, npe)
   ! counter on records
   ! counter on modes
   ! counter on k points
+  INTEGER :: npw, npwq
 
   real(DP) :: weight
 
@@ -45,13 +45,12 @@ subroutine add_zstar_ue (imode0, npe)
 
   call start_clock('add_zstar_ue')
   zstarue0_rec=(0.0_DP,0.0_DP)
-  if (nksq.gt.1) rewind (iunigk)
   do ik = 1, nksq
-     if (nksq.gt.1) read (iunigk) npw, igk
+     npw = ngk(ik)
      npwq = npw
      weight = wk (ik)
      if (nksq.gt.1) call get_buffer (evc, lrwfc, iuwfc, ik)
-     call init_us_2 (npw, igk, xk (1, ik), vkb)
+     call init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb)
      do jpol = 1, 3
         !
         ! read/compute DeltaV*psi(bare) for electric field

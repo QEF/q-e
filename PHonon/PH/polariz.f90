@@ -14,12 +14,11 @@ subroutine polariz ( iw, iu )
   !
 
   USE io_global,    ONLY : stdout
-  USE io_files,     ONLY : iunigk
   USE constants,    ONLY : fpi
   USE cell_base,    ONLY : at, bg, omega
-  USE klist,        ONLY : wk
+  USE klist,        ONLY : wk, ngk
   USE symme,        ONLY : symmatrix, crys_to_cart
-  USE wvfct,        ONLY : npw, npwx, igk
+  USE wvfct,        ONLY : npwx
   USE kinds,        ONLY : DP
   USE control_lr,   ONLY : nbnd_occ
   USE units_ph,     ONLY : lrdwf, iudwf, lrebar, iuebar
@@ -53,9 +52,7 @@ subroutine polariz ( iw, iu )
 
   call start_clock ('polariz')
   repsilon(:,:) = 0.d0
-  if (nksq > 1) rewind (unit = iunigk)
   do ik = 1, nksq
-     if (nksq > 1) read (iunigk) npw, igk
      weight = wk (ik)
      w = fpi * weight / omega
      do ipol = 1, 3
@@ -69,7 +66,7 @@ subroutine polariz ( iw, iu )
               !  this is the real part of <DeltaV*psi(E)|DeltaPsi(E)>
               !
               repsilon(ipol,jpol)=repsilon(ipol,jpol)-4.d0*w*REAL( &
-                   zdotc (npw, dvpsi (1, ibnd), 1, dpsi (1, ibnd), 1) )
+                   zdotc ( ngk(ik), dvpsi (1, ibnd), 1, dpsi (1, ibnd), 1) )
            enddo
         enddo
      enddo

@@ -17,14 +17,13 @@ subroutine add_zstar_ue_us(imode0,npe)
   !
 
   USE kinds, ONLY : DP
-  USE klist, ONLY : xk, wk
+  USE klist, ONLY : xk, wk, ngk, igk_k
   USE uspp,  ONLY : nkb, vkb
-  USE wvfct, ONLY : npwx, npw, nbnd, igk
+  USE wvfct, ONLY : npwx, nbnd
   USE noncollin_module,   ONLY : npol
   USE wavefunctions_module,    ONLY : evc
-  USE io_files, ONLY: iunigk
   USE buffers, ONLY: get_buffer
-  USE qpoint,     ONLY : npwq, nksq
+  USE qpoint,     ONLY : nksq
   USE efield_mod, ONLY: zstarue0_rec
   USE eqv,        ONLY : dpsi, dvpsi
   USE modes,      ONLY : u
@@ -39,7 +38,7 @@ subroutine add_zstar_ue_us(imode0,npe)
   integer, intent(in) :: imode0, npe
 
   integer :: ik, jpol, nrec, mode, ipert, ibnd, jbnd, i,j
-
+  INTEGER :: npw, npwq
   real(DP) :: weight
 
   complex(DP), allocatable :: pdsp(:,:)
@@ -51,13 +50,12 @@ subroutine add_zstar_ue_us(imode0,npe)
 
   allocate (pdsp(nbnd,nbnd))
   allocate (dvkb(npwx,nkb,3))
-  if (nksq.gt.1) rewind (iunigk)
   do ik = 1, nksq
-     if (nksq.gt.1) read (iunigk) npw, igk
+     npw = ngk(ik)
      npwq = npw
      weight = wk (ik)
      if (nksq.gt.1) call get_buffer (evc, lrwfc, iuwfc, ik)
-     call init_us_2 (npw, igk, xk (1, ik), vkb)
+     call init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb)
      call dvkb3(ik,dvkb)
      do ipert = 1, npe
         mode = imode0 + ipert

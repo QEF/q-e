@@ -7,29 +7,26 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine hdiag( max_iter, avg_iter, xk_, et_ )
+subroutine hdiag( npw, max_iter, avg_iter, et_ )
   !
   ! Diagonalizes the unperturbed Hamiltonian in a non-selfconsistent way
   ! by Conjugate Gradient (band-by-band)
   !
   USE kinds,     ONLY : DP
-  USE cell_base, ONLY: tpiba2
   USE gvect,     ONLY: g, gstart
-  USE wvfct,     ONLY: g2kin, igk, nbnd, npwx, npw
+  USE wvfct,     ONLY: g2kin, nbnd, npwx
   USE uspp,      ONLY: vkb, okvan
   USE noncollin_module,    ONLY: npol
   USE wavefunctions_module,ONLY: evc
   USE ramanm,    ONLY: eth_ns
   implicit none
-
   !
   !     I/O variables:
   !
-  integer :: max_iter
+  integer :: npw, max_iter
   ! maximum number of iterations
-  real(DP) :: avg_iter, xk_(3), et_(nbnd)
+  real(DP) :: avg_iter, et_(nbnd)
   ! iteration number in the diagonalization
-  ! k-point
   ! eigenvalues of the diagonalization
   !
   !     Local variables:
@@ -48,19 +45,10 @@ subroutine hdiag( max_iter, avg_iter, xk_, et_ )
   call start_clock ('hdiag')
 
   allocate (h_prec( npwx), btype(nbnd))
-  btype(:) = 1
   !
   !   various initializations
   !
-  call init_us_2 (npw, igk, xk_, vkb)
-  !
-  !    sets the kinetic energy
-  !
-  do ig = 1, npw
-     g2kin (ig) =((xk_ (1) + g (1, igk (ig) ) ) **2 + &
-                  (xk_ (2) + g (2, igk (ig) ) ) **2 + &
-                  (xk_ (3) + g (3, igk (ig) ) ) **2 ) * tpiba2
-  enddo
+  btype(:) = 1
   !
   ! Conjugate-Gradient diagonalization
   !

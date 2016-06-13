@@ -37,12 +37,11 @@ subroutine dhdrhopsi
   !         i, j are band indexes
 
   USE kinds,     ONLY : DP
-  USE io_files,  ONLY : iunigk
   USE buffers,   ONLY : get_buffer
   USE cell_base, ONLY : tpiba, at
-  USE klist,     ONLY : xk, nkstot
+  USE klist,     ONLY : xk, nkstot, ngk, igk_k
   USE fft_base,  ONLY : dffts
-  USE wvfct,     ONLY : npw, npwx, nbnd, et, igk, current_k
+  USE wvfct,     ONLY : npwx, nbnd, et, current_k
   USE uspp,      ONLY : nkb, vkb
   USE wavefunctions_module,  ONLY: evc
   USE becmod,    ONLY : calbec, bec_type, allocate_bec_type, &
@@ -52,7 +51,7 @@ subroutine dhdrhopsi
 
   USE lrus,      ONLY : becp1
   USE eqv,       ONLY : dpsi, dvpsi
-  USE qpoint,    ONLY : npwq, nksq
+  USE qpoint,    ONLY : nksq
   USE control_lr, ONLY : nbnd_occ
 
   USE mp_pools,  ONLY : inter_pool_comm
@@ -64,6 +63,7 @@ subroutine dhdrhopsi
   logical :: d_test
   ! .true. ==> re-calculates the dielectric constant
 
+  integer :: npw, npwq
   integer :: ik, isg, ibnd, jbnd, ir, ipa, ipb, nrec, max_iter
   ! counter on k-points
   ! sign in xk +/- delta_xk
@@ -88,7 +88,6 @@ subroutine dhdrhopsi
   complex(DP) , allocatable :: ev_sw (:,:),  chif (:,:,:),  &
          depsi (:,:,:), auxg(:), dvscfs (:,:), &
          auxr (:), au2r (:), ps0 (:), ps1 (:,:), ps2 (:,:,:)
-  TYPE(bec_type) :: becp1_sw
   ! wavefunctions swap space
   ! the chi-wavefunction
   ! auxiliary space
@@ -97,6 +96,7 @@ subroutine dhdrhopsi
   ! auxiliary wavefunct. in G-space
   ! potential on the smooth grid
   ! auxiliary wavefunct. in real space
+  TYPE(bec_type) :: becp1_sw
   ! scalar products
   complex(DP) :: itdba, tmpc
   ! i / ( 2 * delta_xk )
@@ -122,10 +122,7 @@ subroutine dhdrhopsi
   write (6,'(/5x,''Derivative coefficient:'',f10.6, &
            & ''    Threshold:'',1pe9.2)') dek, eth_ns
   itdba = CMPLX(0.d0, 0.5d0 / (dek * tpiba),kind=DP)
-  npwq = npw
   max_iter = 20
-  if (nksq.gt.1) rewind (iunigk)
-
   !
   ! d_test = .true. ==> computes the dielectric tensor in an alternative way
   !   ( this is used only for testing or debugging purposes )
@@ -148,14 +145,14 @@ subroutine dhdrhopsi
      ! Computes the derivative with respect to the k-point by finite
      !    differentiation
      !
-     if (nksq.gt.1) read (iunigk) npw, igk
-     npwq = npw
+     npw =ngk(ik)
+     npwq= npw
      current_k = ik
-     chif (:,:,:) = (0.d0, 0.d0)
      !
      ! ev_sw contains the wavefunction of the k-point; the real value of the
      !   k-point and of the eigenvalues are written on a swap space
      !
+     chif (:,:,:) = (0.d0, 0.d0)
      call dcopy (3, xk (1, ik), 1, xk_sw, 1)
      call dcopy (nbnd, et (1, ik), 1, et_sw, 1)
      call beccopy (becp1(ik), becp1_sw, nkb, nbnd)
@@ -168,24 +165,25 @@ subroutine dhdrhopsi
            ! We are deriving with respect to the three crystal axes
            !
            do ipb = 1, 3
-              xk(ipb,ik) = xk_sw(ipb) + &
-                     DBLE(isg)*dek*at(ipb,ipa)
+              xk(ipb,ik) = xk_sw(ipb) + DBLE(isg)*dek*at(ipb,ipa)
            enddo
            !
            ! Calculates in a non self-consistent way the wavefunction
            ! at xk+dek and stores in evc
            !
            call zcopy (npwx * nbnd, ev_sw, 1, evc, 1) ! set an initial value
-           call hdiag ( max_iter, avg_iter1, xk(1,ik), et(1,ik) )
-
-!           call init_us_2 (npw, igk, xk (1, ik), vkb)
+           call g2_kin (ik)
+           call init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb)
+           !
+           call hdiag ( npw, max_iter, avg_iter1, et(1,ik) )
+           !
            call calbec (npw, vkb, evc, becp1(ik) )
            do ipb = 1, 3
               !
               ! Calculates in a non-scf way the derivative of the
               ! wavefunction at xk+dek.
               !    solve_e_nscf uses:
-              !    vkb, g2kin  --common variables previously calcd. by hdiag--
+              !    vkb, g2kin  --common variables previously calculated
               !    evc         --contains the wavefunction at xk+dek--
               !    dvscfs      --self consist. part of the potential deriv.--
               !    The derivatives of the wavefunctions are stored in dpsi

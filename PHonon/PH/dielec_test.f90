@@ -16,10 +16,8 @@ subroutine dielec_test
   USE kinds,    ONLY : DP
   USE constants,ONLY : fpi
   USE cell_base,ONLY : omega, at, bg
-  USE klist,    ONLY : wk
-  USE wvfct,    ONLY : npw, igk
+  USE klist,    ONLY : wk, ngk
   USE symme,    ONLY : symmatrix, crys_to_cart
-  USE io_files, ONLY : iunigk
   USE buffers,  ONLY : get_buffer
   USE wavefunctions_module,  ONLY: evc
   USE efield_mod, ONLY : epsilon
@@ -35,14 +33,14 @@ subroutine dielec_test
 
   implicit none
 
+  INTEGER :: npw
   integer :: ibnd, ipol, jpol, nrec, ik, i1, i2
   real(DP) :: w_, weight, tmp
   complex(DP), external :: zdotc
 
   epsilon (:,:) = 0.d0
-  if (nksq > 1) rewind (unit=iunigk)
   do ik = 1, nksq
-     if (nksq > 1) read (iunigk) npw, igk
+     npw = ngk(ik)
      weight = wk (ik)
      w_ = - fpi * weight / omega
      call get_buffer (evc, lrwfc, iuwfc, ik)

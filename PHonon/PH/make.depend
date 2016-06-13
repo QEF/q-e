@@ -20,7 +20,6 @@ add_for_charges.o : ../../Modules/recvec.o
 add_for_charges.o : ../../Modules/uspp.o
 add_for_charges.o : ../../PW/src/pwcom.o
 add_zstar_ue.o : ../../LR_Modules/lrcom.o
-add_zstar_ue.o : ../../Modules/io_files.o
 add_zstar_ue.o : ../../Modules/kind.o
 add_zstar_ue.o : ../../Modules/noncol.o
 add_zstar_ue.o : ../../Modules/uspp.o
@@ -29,7 +28,6 @@ add_zstar_ue.o : ../../PW/src/buffers.o
 add_zstar_ue.o : ../../PW/src/pwcom.o
 add_zstar_ue.o : phcom.o
 add_zstar_ue_us.o : ../../LR_Modules/lrcom.o
-add_zstar_ue_us.o : ../../Modules/io_files.o
 add_zstar_ue_us.o : ../../Modules/kind.o
 add_zstar_ue_us.o : ../../Modules/mp.o
 add_zstar_ue_us.o : ../../Modules/mp_bands.o
@@ -334,7 +332,6 @@ dhdrhopsi.o : ../../LR_Modules/lrcom.o
 dhdrhopsi.o : ../../Modules/becmod.o
 dhdrhopsi.o : ../../Modules/cell_base.o
 dhdrhopsi.o : ../../Modules/fft_base.o
-dhdrhopsi.o : ../../Modules/io_files.o
 dhdrhopsi.o : ../../Modules/kind.o
 dhdrhopsi.o : ../../Modules/mp.o
 dhdrhopsi.o : ../../Modules/mp_bands.o
@@ -362,7 +359,6 @@ dielec.o : phcom.o
 dielec_test.o : ../../LR_Modules/lrcom.o
 dielec_test.o : ../../Modules/cell_base.o
 dielec_test.o : ../../Modules/constants.o
-dielec_test.o : ../../Modules/io_files.o
 dielec_test.o : ../../Modules/kind.o
 dielec_test.o : ../../Modules/mp.o
 dielec_test.o : ../../Modules/mp_bands.o
@@ -478,7 +474,6 @@ dvpsi_e2.o : ../../LR_Modules/dv_of_drho.o
 dvpsi_e2.o : ../../LR_Modules/lrcom.o
 dvpsi_e2.o : ../../Modules/cell_base.o
 dvpsi_e2.o : ../../Modules/fft_base.o
-dvpsi_e2.o : ../../Modules/io_files.o
 dvpsi_e2.o : ../../Modules/kind.o
 dvpsi_e2.o : ../../Modules/mp.o
 dvpsi_e2.o : ../../Modules/mp_bands.o
@@ -696,7 +691,6 @@ generate_effective_charges_c.o : ../../PW/src/symme.o
 gmressolve_all.o : ../../Modules/kind.o
 gmressolve_all.o : ../../Modules/mp.o
 gmressolve_all.o : ../../Modules/mp_bands.o
-hdiag.o : ../../Modules/cell_base.o
 hdiag.o : ../../Modules/kind.o
 hdiag.o : ../../Modules/noncol.o
 hdiag.o : ../../Modules/recvec.o
@@ -1011,7 +1005,6 @@ phqscf.o : write_rec.o
 polariz.o : ../../LR_Modules/lrcom.o
 polariz.o : ../../Modules/cell_base.o
 polariz.o : ../../Modules/constants.o
-polariz.o : ../../Modules/io_files.o
 polariz.o : ../../Modules/io_global.o
 polariz.o : ../../Modules/kind.o
 polariz.o : ../../Modules/mp.o
