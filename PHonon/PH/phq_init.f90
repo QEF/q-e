@@ -41,11 +41,10 @@ SUBROUTINE phq_init()
   USE lsda_mod,             ONLY : lsda, current_spin, isk
   USE buffers,              ONLY : get_buffer
   USE io_global,            ONLY : stdout
-  USE io_files,             ONLY : iunigk
   USE atom,                 ONLY : msh, rgrid
   USE vlocal,               ONLY : strf
   USE spin_orb,             ONLY : lspinorb
-  USE wvfct,                ONLY : igk, g2kin, npwx, npw, nbnd
+  USE wvfct,                ONLY : npwx, nbnd
   USE gvecw,                ONLY : gcutw
   USE wavefunctions_module, ONLY : evc
   USE noncollin_module,     ONLY : noncolin, npol
@@ -64,7 +63,7 @@ SUBROUTINE phq_init()
   USE wannier_gw,           ONLY : l_head
 
   USE lrus,                 ONLY : becp1, dpqq, dpqq_so
-  USE qpoint,               ONLY : xq, igkq, npwq, nksq, eigqts, ikks, ikqs
+  USE qpoint,               ONLY : xq, nksq, eigqts, ikks, ikqs
   USE eqv,                  ONLY : vlocq, evq, eprec
   USE control_lr,           ONLY : nbnd_occ, lgamma
   !
@@ -82,6 +81,8 @@ SUBROUTINE phq_init()
     ! counter on atoms
     ! counter on G vectors
   INTEGER :: ikqg         !for the case elph_mat=.true.
+  INTEGER :: npw, npwq
+  REAL(DP), ALLOCATABLE :: gk(:)
   REAL(DP) :: arg
     ! the argument of the phase
   COMPLEX(DP), ALLOCATABLE :: aux1(:,:)
@@ -92,8 +93,6 @@ SUBROUTINE phq_init()
   IF (all_done) RETURN
   !
   CALL start_clock( 'phq_init' )
-  !
-  ALLOCATE( aux1( npwx*npol, nbnd ) )
   !
   DO na = 1, nat
      !
@@ -125,8 +124,6 @@ SUBROUTINE phq_init()
      !
   END DO
   !
-  IF ( nksq > 1 ) REWIND( iunigk )
-  !
   ! only for electron-phonon coupling with wannier functions
   ! 
   if(elph_mat) then
@@ -145,32 +142,20 @@ SUBROUTINE phq_init()
     call get_equivalent_kpq(xk_gamma,xq,kpq,g_kpq,igqg)
 
   endif
-
- 
+  !
+  ALLOCATE( aux1( npwx*npol, nbnd ) )
+  ALLOCATE( gk(npwx) )
+  !
   DO ik = 1, nksq
      !
      ikk  = ikks(ik)
      ikq  = ikqs(ik)
+     npw = ngk(ikk)
+     npwq= ngk(ikq)
      !
      IF ( lsda ) current_spin = isk( ikk )
      !
-     ! ... g2kin is used here as work space
-     !
-     CALL gk_sort( xk(1,ikk), ngm, g, gcutw, npw, igk, g2kin )
-     !
-     ! ... if there is only one k-point evc, evq, npw, igk stay in memory
-     !
-     IF ( nksq > 1 ) WRITE( iunigk ) npw, igk
-     !
-     IF ( lgamma ) THEN
-        !
-        npwq = npw
-        !
-     ELSE
-        !
-        CALL gk_sort( xk(1,ikq), ngm, g, gcutw, npwq, igkq, g2kin )
-        !
-        IF ( nksq > 1 ) WRITE( iunigk ) npwq, igkq
+     IF ( .NOT. lgamma ) THEN
         !
         IF ( ABS( xq(1) - ( xk(1,ikq) - xk(1,ikk) ) ) > eps8 .OR. &
              ABS( xq(2) - ( xk(2,ikq) - xk(2,ikk) ) ) > eps8 .OR. &
@@ -187,12 +172,12 @@ SUBROUTINE phq_init()
      !
      ! ... d) The functions vkb(k+G)
      !
-     CALL init_us_2( npw, igk, xk(1,ikk), vkb )
+     CALL init_us_2( npw, igk_k(1,ikk), xk(1,ikk), vkb )
      !
      ! ... read the wavefunctions at k
      !
     if(elph_mat) then
-       call read_wfc_rspace_and_fwfft( evc , ik , lrwfcr , iunwfcwann , npw , igk )
+        call read_wfc_rspace_and_fwfft( evc, ik, lrwfcr, iunwfcwann, npw, igk_k(1,ikk) )
 !       CALL davcio (evc, lrwfc, iunwfcwann, ik, - 1)
     else
        CALL get_buffer( evc, lrwfc, iuwfc, ikk )
@@ -213,12 +198,12 @@ SUBROUTINE phq_init()
         DO ibnd = 1, nbnd
            DO ig = 1, npw
               aux1(ig,ibnd) = evc(ig,ibnd) * tpiba * ( 0.D0, 1.D0 ) * &
-                              ( xk(ipol,ikk) + g(ipol,igk(ig)) )
+                              ( xk(ipol,ikk) + g(ipol,igk_k(ig,ikk)) )
            END DO
            IF (noncolin) THEN
               DO ig = 1, npw
                  aux1(ig+npwx,ibnd)=evc(ig+npwx,ibnd)*tpiba*(0.D0,1.D0)*&
-                           ( xk(ipol,ikk) + g(ipol,igk(ig)) )
+                           ( xk(ipol,ikk) + g(ipol,igk_k(ig,ikk)) )
               END DO
            END IF
         END DO
@@ -243,10 +228,11 @@ SUBROUTINE phq_init()
         ! I read the wavefunction in real space and fwfft it
         !
         ikqg = kpq(ik)
-        call read_wfc_rspace_and_fwfft( evq , ikqg , lrwfcr , iunwfcwann , npwq , igkq )
+        call read_wfc_rspace_and_fwfft( evq, ikqg, lrwfcr, iunwfcwann, npwq, &
+                                        igk_k(1,ikq) )
 !        CALL davcio (evq, lrwfc, iunwfcwann, ikqg, - 1)
         call calculate_and_apply_phase(ik, ikqg, igqg, &
-           npwq_refolded, g_kpq,xk_gamma, evq, .false.)
+           npwq_refolded, g_kpq, xk_gamma, evq, .false.)
      ENDIF
   ENDIF
 !!!!!!!!!!!!!!!!!!!!!!!! END OF ACFDT TEST !!!!!!!!!!!!!!!!
@@ -255,17 +241,17 @@ SUBROUTINE phq_init()
      ! needed for preconditioning
      !
      do ig = 1, npwq
-        g2kin (ig) = ( (xk (1,ikq) + g (1, igkq(ig)) ) **2 + &
-                       (xk (2,ikq) + g (2, igkq(ig)) ) **2 + &
-                       (xk (3,ikq) + g (3, igkq(ig)) ) **2 ) * tpiba2
+        gk (ig) = ( (xk (1,ikq) + g (1, igk_k(ig,ikq)) ) **2 + &
+                    (xk (2,ikq) + g (2, igk_k(ig,ikq)) ) **2 + &
+                    (xk (3,ikq) + g (3, igk_k(ig,ikq)) ) **2 ) * tpiba2
      enddo
      aux1=(0.d0,0.d0)
      DO ig = 1, npwq
-        aux1 (ig,1:nbnd_occ(ikk)) = g2kin (ig) * evq (ig, 1:nbnd_occ(ikk))
+        aux1 (ig,1:nbnd_occ(ikk)) = gk (ig) * evq (ig, 1:nbnd_occ(ikk))
      END DO
      IF (noncolin) THEN
         DO ig = 1, npwq
-           aux1 (ig+npwx,1:nbnd_occ(ikk)) = g2kin (ig)* &
+           aux1 (ig+npwx,1:nbnd_occ(ikk)) = gk (ig)* &
                                   evq (ig+npwx, 1:nbnd_occ(ikk))
         END DO
      END IF
@@ -276,6 +262,7 @@ SUBROUTINE phq_init()
   END DO
   CALL mp_sum ( eprec, intra_bgrp_comm )
   !
+  DEALLOCATE( gk ) 
   DEALLOCATE( aux1 )
   !
   CALL dvanqq()

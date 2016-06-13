@@ -8,19 +8,23 @@
 !
 subroutine write_igk
   !
-  use pwcom
-  use phcom
-  USE io_files, ONLY : iunigk
-
-  use qpoint,     ONLY : npwq, nksq, igkq
-  use control_lr, ONLY : lgamma
+  USE klist,      ONLY: ngk, igk_k
+  USE wvfct,      ONLY: npwx
+  USE io_files,   ONLY: iunigk
+  USE qpoint,     ONLY: nksq, ikks, ikqs
+  USE control_lr, ONLY: lgamma
 
   implicit none
-
-  if (nksq.ne.1) return
+  integer :: ik, ikk, ikq
+  
   rewind (unit = iunigk)
-  write (iunigk) npw, igk
-
-  if (.not.lgamma) write (iunigk) npwq, igkq
+  do ik =1,nksq
+     ikk=ikks(ik)
+     write (iunigk) ngk(ikk), igk_k(:,ikk)
+     if (.not.lgamma) then
+        ikq=ikqs(ik)
+        write (iunigk) ngk(ikq), igk_k(:,ikq)
+     end if
+  end do
   return
 end subroutine write_igk

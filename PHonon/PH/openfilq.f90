@@ -31,7 +31,7 @@ SUBROUTINE openfilq()
   USE lsda_mod,        ONLY : nspin
   USE uspp,            ONLY : nkb, okvan
   USE uspp_param,      ONLY : nhm
-  USE io_files,        ONLY : prefix, iunigk
+  USE io_files,        ONLY : prefix
   USE noncollin_module,ONLY : npol, nspin_mag
   USE paw_variables,   ONLY : okpaw
   USE control_flags,   ONLY : twfcollect
@@ -45,7 +45,7 @@ SUBROUTINE openfilq()
   USE dfile_star,      ONLY : dvscf_star
   USE dfile_autoname,  ONLY : dfile_name
 
-  USE qpoint,          ONLY : xq, nksq
+  USE qpoint,          ONLY : xq
   USE control_lr,      ONLY : lgamma
   !
   IMPLICIT NONE
@@ -133,14 +133,6 @@ SUBROUTINE openfilq()
   !
   iudrho = 23
   lrdrho = 2 * dfftp%nr1x * dfftp%nr2x * dfftp%nr3x * nspin_mag
-  !
-  !
-  !   Here the sequential files
-  !
-  !   The igk at a given k (and k+q if q!=0)
-  !
-  iunigk = 24
-  IF (nksq > 1) CALL seqopn (iunigk, 'igk', 'unformatted', exst)
   !
   !   a formatted file which contains the dynamical matrix in cartesian
   !   coordinates is opened in the current directory

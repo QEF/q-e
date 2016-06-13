@@ -13,7 +13,6 @@ SUBROUTINE close_phq( flag )
   ! ... Called at the end of the run with flag=.TRUE. (removes 'recover')
   ! ... or during execution with flag=.FALSE. (does not remove 'recover')
   !
-  USE io_files,      ONLY : iunigk
   USE control_flags, ONLY : twfcollect
   USE paw_variables, ONLY : okpaw
   USE io_global,     ONLY : ionode, stdout
@@ -99,9 +98,6 @@ SUBROUTINE close_phq( flag )
      IF (opnd) CLOSE ( UNIT=iuba2, STATUS = 'KEEP' )
   ENDIF
   !
-  INQUIRE( UNIT=iunigk, OPENED=opnd ) 
-  IF (opnd) CLOSE( UNIT = iunigk, STATUS = 'DELETE' )
-
   IF (elph_mat) THEN
     INQUIRE( UNIT=iunwfcwann, OPENED=opnd ) 
     IF (opnd) CLOSE( UNIT = iunwfcwann, STATUS = 'KEEP' ) 
