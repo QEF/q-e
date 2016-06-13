@@ -1,5 +1,5 @@
 
-     Program PWSCF v.5.4.0 (svn rev. 12487) starts on 13Jun2016 at 11:46:56 
+     Program PWSCF v.5.4.0 (svn rev. 12487) starts on 13Jun2016 at 12:11: 0 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -68,7 +68,7 @@ EXX: grid of k+q points same as grid of k-points
      number of Kohn-Sham states=            4
      kinetic-energy cutoff     =      25.0000  Ry
      charge density cutoff     =     100.0000  Ry
-     cutoff for Fock operator  =     100.0000  Ry
+     cutoff for Fock operator  =      25.0000  Ry
      convergence threshold     =      1.0E-10
      mixing beta               =       0.7000
      number of iterations used =            8  plain     mixing
@@ -149,7 +149,7 @@ EXX: grid of k+q points same as grid of k-points
 
      total cpu time spent up to now is        0.1 secs
 
-     per-process dynamical memory:     2.9 Mb
+     per-process dynamical memory:     3.4 Mb
 
      Self-consistent Calculation
 
@@ -249,7 +249,7 @@ EXX: grid of k+q points same as grid of k-points
 
      total cpu time spent up to now is        0.2 secs
 
-     per-process dynamical memory:     4.4 Mb
+     per-process dynamical memory:     3.4 Mb
 
      Self-consistent Calculation
 
@@ -263,173 +263,179 @@ EXX: grid of k+q points same as grid of k-points
      Davidson diagonalization with overlap
      ethr =  3.11E-05,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        0.3 secs
+     total cpu time spent up to now is        0.2 secs
 
      iteration #  3     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  6.56E-07,  avg # of iterations =  2.0
+     ethr =  6.71E-07,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        0.3 secs
+     total cpu time spent up to now is        0.2 secs
 
      iteration #  4     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.05E-07,  avg # of iterations =  2.0
+     ethr =  1.09E-07,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        0.3 secs
+     total cpu time spent up to now is        0.2 secs
 
      iteration #  5     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.10E-09,  avg # of iterations =  2.0
+     ethr =  1.07E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        0.4 secs
+     total cpu time spent up to now is        0.2 secs
 
      iteration #  6     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  6.00E-11,  avg # of iterations =  2.0
+     ethr =  5.40E-11,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        0.4 secs
+     total cpu time spent up to now is        0.3 secs
 
      iteration #  7     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  8.36E-12,  avg # of iterations =  2.0
+     ethr =  6.78E-12,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        0.4 secs
+     total cpu time spent up to now is        0.3 secs
 
      End of self-consistent calculation
 
           k = 0.0000 0.0000 0.0000 (  3562 PWs)   bands (ev):
 
-   -25.2248 -14.1871 -14.1871 -14.1871
+   -25.2271 -14.1876 -14.1876 -14.1876
 
-     highest occupied level (ev):   -14.1871
+     highest occupied level (ev):   -14.1876
 
      convergence has been achieved in   7 iterations
 
-     total energy              =     -15.47652577 Ry
-     Harris-Foulkes estimate   =     -15.47652577 Ry
-     est. exchange err (dexx)  =       0.00408421 Ry
-     - averaged Fock potential =      11.48507353 Ry
-     + Fock energy             =      -5.78006522 Ry
+     total energy              =     -15.47734596 Ry
+     Harris-Foulkes estimate   =     -15.47734596 Ry
+     est. exchange err (dexx)  =       0.00407644 Ry
+     - averaged Fock potential =      11.48694075 Ry
+     + Fock energy             =      -5.78107076 Ry
 
      EXX: now go back to refine exchange calculation
 
-     total cpu time spent up to now is        0.4 secs
+     total cpu time spent up to now is        0.3 secs
 
-     per-process dynamical memory:     4.4 Mb
+     per-process dynamical memory:     3.2 Mb
 
      Self-consistent Calculation
 
      iteration #  1     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  8.36E-12,  avg # of iterations =  7.0
+     ethr =  6.78E-12,  avg # of iterations =  7.0
 
-     total cpu time spent up to now is        0.5 secs
+     total cpu time spent up to now is        0.3 secs
 
      iteration #  2     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  5.24E-06,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        0.6 secs
+     total cpu time spent up to now is        0.3 secs
 
      iteration #  3     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  5.91E-08,  avg # of iterations =  2.0
+     ethr =  5.90E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        0.6 secs
+     total cpu time spent up to now is        0.3 secs
 
      iteration #  4     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.36E-09,  avg # of iterations =  2.0
+     ethr =  1.67E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        0.6 secs
+     total cpu time spent up to now is        0.3 secs
 
      iteration #  5     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  3.15E-10,  avg # of iterations =  2.0
+     ethr =  8.90E-11,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        0.6 secs
+     total cpu time spent up to now is        0.3 secs
 
      iteration #  6     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  2.12E-11,  avg # of iterations =  2.0
+     ethr =  2.87E-11,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        0.7 secs
+     total cpu time spent up to now is        0.4 secs
+
+     iteration #  7     ecut=    25.00 Ry     beta=0.70
+     Davidson diagonalization with overlap
+     ethr =  1.41E-12,  avg # of iterations =  2.0
+
+     total cpu time spent up to now is        0.4 secs
 
      End of self-consistent calculation
 
           k = 0.0000 0.0000 0.0000 (  3562 PWs)   bands (ev):
 
-   -25.2040 -14.2263 -14.2263 -14.2263
+   -25.2059 -14.2265 -14.2265 -14.2265
 
-     highest occupied level (ev):   -14.2263
+     highest occupied level (ev):   -14.2265
 
-     convergence has been achieved in   6 iterations
+     convergence has been achieved in   7 iterations
 
-     total energy              =     -15.47876805 Ry
-     Harris-Foulkes estimate   =     -15.47876805 Ry
-     est. exchange err (dexx)  =       0.00065572 Ry
-     - averaged Fock potential =      11.58687212 Ry
-     + Fock energy             =      -5.80746262 Ry
+     total energy              =     -15.47958571 Ry
+     Harris-Foulkes estimate   =     -15.47958571 Ry
+     est. exchange err (dexx)  =       0.00065515 Ry
+     - averaged Fock potential =      11.58892135 Ry
+     + Fock energy             =      -5.80850573 Ry
 
      EXX: now go back to refine exchange calculation
 
-     total cpu time spent up to now is        0.7 secs
+     total cpu time spent up to now is        0.4 secs
 
-     per-process dynamical memory:     4.4 Mb
+     per-process dynamical memory:     3.2 Mb
 
      Self-consistent Calculation
 
      iteration #  1     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  2.12E-11,  avg # of iterations =  6.0
+     ethr =  1.41E-12,  avg # of iterations =  6.0
 
-     total cpu time spent up to now is        0.8 secs
+     total cpu time spent up to now is        0.4 secs
 
      iteration #  2     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.05E-06,  avg # of iterations =  2.0
+     ethr =  1.04E-06,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        0.8 secs
+     total cpu time spent up to now is        0.4 secs
 
      iteration #  3     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.93E-08,  avg # of iterations =  2.0
+     ethr =  1.89E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        0.8 secs
+     total cpu time spent up to now is        0.4 secs
 
      iteration #  4     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.53E-09,  avg # of iterations =  2.0
+     ethr =  1.46E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        0.9 secs
+     total cpu time spent up to now is        0.4 secs
 
      iteration #  5     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  1.03E-11,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        0.9 secs
+     total cpu time spent up to now is        0.5 secs
 
      End of self-consistent calculation
 
           k = 0.0000 0.0000 0.0000 (  3562 PWs)   bands (ev):
 
-   -25.1960 -14.2458 -14.2458 -14.2458
+   -25.1978 -14.2459 -14.2459 -14.2459
 
-     highest occupied level (ev):   -14.2458
+     highest occupied level (ev):   -14.2459
 
      convergence has been achieved in   5 iterations
 
-     total energy              =     -15.47917221 Ry
-     Harris-Foulkes estimate   =     -15.47917221 Ry
-     est. exchange err (dexx)  =       0.00012324 Ry
-     - averaged Fock potential =      11.62564128 Ry
-     + Fock energy             =      -5.81830190 Ry
+     total energy              =     -15.47998957 Ry
+     Harris-Foulkes estimate   =     -15.47998957 Ry
+     est. exchange err (dexx)  =       0.00012315 Ry
+     - averaged Fock potential =      11.62773878 Ry
+     + Fock energy             =      -5.81935620 Ry
 
      EXX: now go back to refine exchange calculation
 
-     total cpu time spent up to now is        0.9 secs
+     total cpu time spent up to now is        0.5 secs
 
-     per-process dynamical memory:     4.4 Mb
+     per-process dynamical memory:     3.2 Mb
 
      Self-consistent Calculation
 
@@ -437,101 +443,101 @@ EXX: grid of k+q points same as grid of k-points
      Davidson diagonalization with overlap
      ethr =  1.03E-11,  avg # of iterations =  5.0
 
-     total cpu time spent up to now is        1.0 secs
+     total cpu time spent up to now is        0.5 secs
 
      iteration #  2     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  2.27E-07,  avg # of iterations =  2.0
+     ethr =  2.26E-07,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        1.0 secs
+     total cpu time spent up to now is        0.5 secs
 
      iteration #  3     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  7.76E-09,  avg # of iterations =  2.0
+     ethr =  7.68E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        1.0 secs
+     total cpu time spent up to now is        0.5 secs
 
      iteration #  4     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  7.82E-10,  avg # of iterations =  2.0
+     ethr =  7.76E-10,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        1.0 secs
+     total cpu time spent up to now is        0.5 secs
 
      iteration #  5     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.95E-12,  avg # of iterations =  2.0
+     ethr =  1.96E-12,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        1.1 secs
+     total cpu time spent up to now is        0.5 secs
 
      End of self-consistent calculation
 
           k = 0.0000 0.0000 0.0000 (  3562 PWs)   bands (ev):
 
-   -25.1940 -14.2560 -14.2560 -14.2560
+   -25.1958 -14.2561 -14.2561 -14.2561
 
-     highest occupied level (ev):   -14.2560
+     highest occupied level (ev):   -14.2561
 
      convergence has been achieved in   5 iterations
 
-     total energy              =     -15.47925195 Ry
-     Harris-Foulkes estimate   =     -15.47925195 Ry
-     est. exchange err (dexx)  =       0.00002477 Ry
-     - averaged Fock potential =      11.64096586 Ry
-     + Fock energy             =      -5.82268874 Ry
+     total energy              =     -15.48006925 Ry
+     Harris-Foulkes estimate   =     -15.48006925 Ry
+     est. exchange err (dexx)  =       0.00002476 Ry
+     - averaged Fock potential =      11.64307702 Ry
+     + Fock energy             =      -5.82374558 Ry
 
      EXX: now go back to refine exchange calculation
 
-     total cpu time spent up to now is        1.1 secs
+     total cpu time spent up to now is        0.5 secs
 
-     per-process dynamical memory:     4.4 Mb
+     per-process dynamical memory:     3.2 Mb
 
      Self-consistent Calculation
 
      iteration #  1     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.95E-12,  avg # of iterations =  5.0
+     ethr =  1.96E-12,  avg # of iterations =  5.0
 
-     total cpu time spent up to now is        1.2 secs
+     total cpu time spent up to now is        0.6 secs
 
      iteration #  2     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  5.09E-08,  avg # of iterations =  2.0
+     ethr =  5.08E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        1.2 secs
+     total cpu time spent up to now is        0.6 secs
 
      iteration #  3     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  2.58E-09,  avg # of iterations =  2.0
+     ethr =  2.56E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        1.2 secs
+     total cpu time spent up to now is        0.6 secs
 
      iteration #  4     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  2.07E-10,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        1.2 secs
+     total cpu time spent up to now is        0.6 secs
 
      End of self-consistent calculation
 
           k = 0.0000 0.0000 0.0000 (  3562 PWs)   bands (ev):
 
-   -25.1938 -14.2612 -14.2612 -14.2612
+   -25.1956 -14.2613 -14.2613 -14.2613
 
-     highest occupied level (ev):   -14.2612
+     highest occupied level (ev):   -14.2613
 
      convergence has been achieved in   4 iterations
 
-     total energy              =     -15.47926837 Ry
-     Harris-Foulkes estimate   =     -15.47926837 Ry
-     est. exchange err (dexx)  =       0.00000516 Ry
-     - averaged Fock potential =      11.64718830 Ry
-     + Fock energy             =      -5.82450472 Ry
+     total energy              =     -15.48008566 Ry
+     Harris-Foulkes estimate   =     -15.48008566 Ry
+     est. exchange err (dexx)  =       0.00000515 Ry
+     - averaged Fock potential =      11.64930237 Ry
+     + Fock energy             =      -5.82556194 Ry
 
      EXX: now go back to refine exchange calculation
 
-     total cpu time spent up to now is        1.3 secs
+     total cpu time spent up to now is        0.6 secs
 
-     per-process dynamical memory:     4.4 Mb
+     per-process dynamical memory:     3.2 Mb
 
      Self-consistent Calculation
 
@@ -539,95 +545,95 @@ EXX: grid of k+q points same as grid of k-points
      Davidson diagonalization with overlap
      ethr =  2.07E-10,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is        1.3 secs
+     total cpu time spent up to now is        0.6 secs
 
      iteration #  2     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  1.15E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        1.3 secs
+     total cpu time spent up to now is        0.6 secs
 
      iteration #  3     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  7.38E-10,  avg # of iterations =  2.0
+     ethr =  7.37E-10,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        1.4 secs
+     total cpu time spent up to now is        0.7 secs
 
      iteration #  4     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  4.55E-11,  avg # of iterations =  2.0
+     ethr =  4.56E-11,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        1.4 secs
+     total cpu time spent up to now is        0.7 secs
 
      End of self-consistent calculation
 
           k = 0.0000 0.0000 0.0000 (  3562 PWs)   bands (ev):
 
-   -25.1939 -14.2637 -14.2637 -14.2637
+   -25.1957 -14.2638 -14.2638 -14.2638
 
-     highest occupied level (ev):   -14.2637
+     highest occupied level (ev):   -14.2638
 
      convergence has been achieved in   4 iterations
 
-     total energy              =     -15.47927182 Ry
-     Harris-Foulkes estimate   =     -15.47927182 Ry
+     total energy              =     -15.48008911 Ry
+     Harris-Foulkes estimate   =     -15.48008911 Ry
      est. exchange err (dexx)  =       0.00000109 Ry
-     - averaged Fock potential =      11.64977203 Ry
-     + Fock energy             =      -5.82526840 Ry
+     - averaged Fock potential =      11.65188637 Ry
+     + Fock energy             =      -5.82632552 Ry
 
      EXX: now go back to refine exchange calculation
 
-     total cpu time spent up to now is        1.4 secs
+     total cpu time spent up to now is        0.7 secs
 
-     per-process dynamical memory:     4.4 Mb
+     per-process dynamical memory:     3.2 Mb
 
      Self-consistent Calculation
 
      iteration #  1     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  4.55E-11,  avg # of iterations =  4.0
+     ethr =  4.56E-11,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is        1.5 secs
+     total cpu time spent up to now is        0.7 secs
 
      iteration #  2     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  2.58E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        1.5 secs
+     total cpu time spent up to now is        0.7 secs
 
      iteration #  3     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  1.92E-10,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        1.5 secs
+     total cpu time spent up to now is        0.7 secs
 
      iteration #  4     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  9.51E-12,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        1.6 secs
+     total cpu time spent up to now is        0.7 secs
 
      End of self-consistent calculation
 
           k = 0.0000 0.0000 0.0000 (  3562 PWs)   bands (ev):
 
-   -25.1941 -14.2650 -14.2650 -14.2650
+   -25.1959 -14.2651 -14.2651 -14.2651
 
-     highest occupied level (ev):   -14.2650
+     highest occupied level (ev):   -14.2651
 
      convergence has been achieved in   4 iterations
 
-     total energy              =     -15.47927255 Ry
-     Harris-Foulkes estimate   =     -15.47927255 Ry
+     total energy              =     -15.48008984 Ry
+     Harris-Foulkes estimate   =     -15.48008984 Ry
      est. exchange err (dexx)  =       0.00000023 Ry
-     - averaged Fock potential =      11.65086400 Ry
-     + Fock energy             =      -5.82559583 Ry
+     - averaged Fock potential =      11.65297811 Ry
+     + Fock energy             =      -5.82665282 Ry
 
      EXX: now go back to refine exchange calculation
 
-     total cpu time spent up to now is        1.6 secs
+     total cpu time spent up to now is        0.7 secs
 
-     per-process dynamical memory:     4.4 Mb
+     per-process dynamical memory:     3.2 Mb
 
      Self-consistent Calculation
 
@@ -635,47 +641,47 @@ EXX: grid of k+q points same as grid of k-points
      Davidson diagonalization with overlap
      ethr =  9.51E-12,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is        1.6 secs
+     total cpu time spent up to now is        0.8 secs
 
      iteration #  2     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  5.75E-10,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        1.7 secs
+     total cpu time spent up to now is        0.8 secs
 
      iteration #  3     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  4.71E-11,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        1.7 secs
+     total cpu time spent up to now is        0.8 secs
 
      iteration #  4     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  1.96E-12,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        1.7 secs
+     total cpu time spent up to now is        0.8 secs
 
      End of self-consistent calculation
 
           k = 0.0000 0.0000 0.0000 (  3562 PWs)   bands (ev):
 
-   -25.1942 -14.2656 -14.2656 -14.2656
+   -25.1960 -14.2657 -14.2657 -14.2657
 
-     highest occupied level (ev):   -14.2656
+     highest occupied level (ev):   -14.2657
 
      convergence has been achieved in   4 iterations
 
-     total energy              =     -15.47927271 Ry
-     Harris-Foulkes estimate   =     -15.47927271 Ry
+     total energy              =     -15.48008999 Ry
+     Harris-Foulkes estimate   =     -15.48008999 Ry
      est. exchange err (dexx)  =       0.00000005 Ry
-     - averaged Fock potential =      11.65133438 Ry
-     + Fock energy             =      -5.82573860 Ry
+     - averaged Fock potential =      11.65344827 Ry
+     + Fock energy             =      -5.82679550 Ry
 
      EXX: now go back to refine exchange calculation
 
-     total cpu time spent up to now is        1.7 secs
+     total cpu time spent up to now is        0.8 secs
 
-     per-process dynamical memory:     4.4 Mb
+     per-process dynamical memory:     3.2 Mb
 
      Self-consistent Calculation
 
@@ -683,41 +689,41 @@ EXX: grid of k+q points same as grid of k-points
      Davidson diagonalization with overlap
      ethr =  1.96E-12,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is        1.8 secs
+     total cpu time spent up to now is        0.8 secs
 
      iteration #  2     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  1.27E-10,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        1.8 secs
+     total cpu time spent up to now is        0.8 secs
 
      iteration #  3     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  1.11E-11,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        1.9 secs
+     total cpu time spent up to now is        0.8 secs
 
      End of self-consistent calculation
 
           k = 0.0000 0.0000 0.0000 (  3562 PWs)   bands (ev):
 
-   -25.1942 -14.2658 -14.2658 -14.2658
+   -25.1961 -14.2659 -14.2659 -14.2659
 
-     highest occupied level (ev):   -14.2658
+     highest occupied level (ev):   -14.2659
 
      convergence has been achieved in   3 iterations
 
-     total energy              =     -15.47927274 Ry
-     Harris-Foulkes estimate   =     -15.47927274 Ry
+     total energy              =     -15.48009003 Ry
+     Harris-Foulkes estimate   =     -15.48009003 Ry
      est. exchange err (dexx)  =       0.00000001 Ry
-     - averaged Fock potential =      11.65153834 Ry
-     + Fock energy             =      -5.82579976 Ry
+     - averaged Fock potential =      11.65365210 Ry
+     + Fock energy             =      -5.82685661 Ry
 
      EXX: now go back to refine exchange calculation
 
-     total cpu time spent up to now is        1.9 secs
+     total cpu time spent up to now is        0.9 secs
 
-     per-process dynamical memory:     4.4 Mb
+     per-process dynamical memory:     3.2 Mb
 
      Self-consistent Calculation
 
@@ -725,160 +731,160 @@ EXX: grid of k+q points same as grid of k-points
      Davidson diagonalization with overlap
      ethr =  1.11E-11,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is        1.9 secs
+     total cpu time spent up to now is        0.9 secs
 
      iteration #  2     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  2.51E-11,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        2.0 secs
+     total cpu time spent up to now is        0.9 secs
 
      iteration #  3     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.98E-12,  avg # of iterations =  2.0
+     ethr =  1.99E-12,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        2.0 secs
-
-     End of self-consistent calculation
-
-          k = 0.0000 0.0000 0.0000 (  3562 PWs)   bands (ev):
-
-   -25.1943 -14.2660 -14.2660 -14.2660
-
-     highest occupied level (ev):   -14.2660
-
-     convergence has been achieved in   3 iterations
-
-     total energy              =     -15.47927275 Ry
-     Harris-Foulkes estimate   =     -15.47927275 Ry
-     est. exchange err (dexx)  =       0.00000000 Ry
-     - averaged Fock potential =      11.65162822 Ry
-     + Fock energy             =      -5.82582846 Ry
-
-     EXX: now go back to refine exchange calculation
-
-     total cpu time spent up to now is        2.0 secs
-
-     per-process dynamical memory:     4.4 Mb
-
-     Self-consistent Calculation
-
-     iteration #  1     ecut=    25.00 Ry     beta=0.70
-     Davidson diagonalization with overlap
-     ethr =  1.98E-12,  avg # of iterations =  3.0
-
-     total cpu time spent up to now is        2.1 secs
-
-     iteration #  2     ecut=    25.00 Ry     beta=0.70
-     Davidson diagonalization with overlap
-     ethr =  5.05E-12,  avg # of iterations =  2.0
-
-     total cpu time spent up to now is        2.1 secs
+     total cpu time spent up to now is        0.9 secs
 
      End of self-consistent calculation
 
           k = 0.0000 0.0000 0.0000 (  3562 PWs)   bands (ev):
 
-   -25.1943 -14.2661 -14.2661 -14.2661
+   -25.1961 -14.2661 -14.2661 -14.2661
 
      highest occupied level (ev):   -14.2661
 
-     convergence has been achieved in   2 iterations
+     convergence has been achieved in   3 iterations
 
-     total energy              =     -15.47927275 Ry
-     Harris-Foulkes estimate   =     -15.47927275 Ry
+     total energy              =     -15.48009004 Ry
+     Harris-Foulkes estimate   =     -15.48009004 Ry
      est. exchange err (dexx)  =       0.00000000 Ry
-     - averaged Fock potential =      11.65167340 Ry
-     + Fock energy             =      -5.82584494 Ry
+     - averaged Fock potential =      11.65374189 Ry
+     + Fock energy             =      -5.82688529 Ry
 
      EXX: now go back to refine exchange calculation
 
-     total cpu time spent up to now is        2.1 secs
+     total cpu time spent up to now is        0.9 secs
 
-     per-process dynamical memory:     4.4 Mb
+     per-process dynamical memory:     3.2 Mb
 
      Self-consistent Calculation
 
      iteration #  1     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  5.05E-12,  avg # of iterations =  2.0
+     ethr =  1.99E-12,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is        2.1 secs
+     total cpu time spent up to now is        0.9 secs
+
+     iteration #  2     ecut=    25.00 Ry     beta=0.70
+     Davidson diagonalization with overlap
+     ethr =  5.06E-12,  avg # of iterations =  2.0
+
+     total cpu time spent up to now is        0.9 secs
+
+     End of self-consistent calculation
+
+          k = 0.0000 0.0000 0.0000 (  3562 PWs)   bands (ev):
+
+   -25.1962 -14.2662 -14.2662 -14.2662
+
+     highest occupied level (ev):   -14.2662
+
+     convergence has been achieved in   2 iterations
+
+     total energy              =     -15.48009004 Ry
+     Harris-Foulkes estimate   =     -15.48009004 Ry
+     est. exchange err (dexx)  =       0.00000000 Ry
+     - averaged Fock potential =      11.65378705 Ry
+     + Fock energy             =      -5.82690176 Ry
+
+     EXX: now go back to refine exchange calculation
+
+     total cpu time spent up to now is        0.9 secs
+
+     per-process dynamical memory:     3.2 Mb
+
+     Self-consistent Calculation
+
+     iteration #  1     ecut=    25.00 Ry     beta=0.70
+     Davidson diagonalization with overlap
+     ethr =  5.06E-12,  avg # of iterations =  2.0
+
+     total cpu time spent up to now is        1.0 secs
 
      iteration #  2     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  1.77E-12,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        2.2 secs
+     total cpu time spent up to now is        1.0 secs
 
      End of self-consistent calculation
 
           k = 0.0000 0.0000 0.0000 (  3562 PWs)   bands (ev):
 
-   -25.1943 -14.2661 -14.2661 -14.2661
+   -25.1962 -14.2662 -14.2662 -14.2662
 
-     highest occupied level (ev):   -14.2661
+     highest occupied level (ev):   -14.2662
 
      convergence has been achieved in   2 iterations
 
-!    total energy              =     -15.47927275 Ry
-     Harris-Foulkes estimate   =     -15.47927275 Ry
+!    total energy              =     -15.48009004 Ry
+     Harris-Foulkes estimate   =     -15.48009004 Ry
      est. exchange err (dexx)  =       0.00000000 Ry
-     - averaged Fock potential =      11.65169593 Ry
-     + Fock energy             =      -5.82585099 Ry
+     - averaged Fock potential =      11.65380957 Ry
+     + Fock energy             =      -5.82690781 Ry
 
      EXX self-consistency reached
 
      Writing output data file CH4.save
  
-     init_run     :      0.04s CPU      0.04s WALL (       1 calls)
-     electrons    :      1.93s CPU      2.01s WALL (      13 calls)
+     init_run     :      0.03s CPU      0.03s WALL (       1 calls)
+     electrons    :      0.83s CPU      0.88s WALL (      13 calls)
 
      Called by init_run:
-     wfcinit      :      0.01s CPU      0.00s WALL (       1 calls)
-     potinit      :      0.01s CPU      0.01s WALL (       1 calls)
+     wfcinit      :      0.00s CPU      0.00s WALL (       1 calls)
+     potinit      :      0.00s CPU      0.00s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :      1.67s CPU      1.72s WALL (      61 calls)
-     sum_band     :      0.07s CPU      0.08s WALL (      61 calls)
-     v_of_rho     :      0.06s CPU      0.06s WALL (      63 calls)
-     mix_rho      :      0.04s CPU      0.04s WALL (      61 calls)
+     c_bands      :      0.54s CPU      0.55s WALL (      62 calls)
+     sum_band     :      0.07s CPU      0.08s WALL (      62 calls)
+     v_of_rho     :      0.06s CPU      0.06s WALL (      64 calls)
+     mix_rho      :      0.05s CPU      0.05s WALL (      62 calls)
 
      Called by c_bands:
-     init_us_2    :      0.00s CPU      0.01s WALL (     148 calls)
-     regterg      :      1.67s CPU      1.71s WALL (      61 calls)
+     init_us_2    :      0.00s CPU      0.01s WALL (     150 calls)
+     regterg      :      0.54s CPU      0.54s WALL (      62 calls)
 
      Called by sum_band:
 
      Called by *egterg:
-     h_psi        :      1.55s CPU      1.59s WALL (     209 calls)
-     g_psi        :      0.00s CPU      0.00s WALL (     147 calls)
-     rdiaghg      :      0.09s CPU      0.09s WALL (     196 calls)
+     h_psi        :      0.44s CPU      0.44s WALL (     211 calls)
+     g_psi        :      0.00s CPU      0.00s WALL (     148 calls)
+     rdiaghg      :      0.08s CPU      0.08s WALL (     198 calls)
 
      Called by h_psi:
-     add_vuspsi   :      0.00s CPU      0.00s WALL (     209 calls)
+     add_vuspsi   :      0.00s CPU      0.00s WALL (     211 calls)
 
      General routines
-     calbec       :      0.00s CPU      0.01s WALL (     234 calls)
-     fft          :      0.07s CPU      0.08s WALL (     236 calls)
-     fftw         :      0.21s CPU      0.21s WALL (     962 calls)
-     fftc         :      0.94s CPU      0.96s WALL (    2968 calls)
-     fftcw        :      0.29s CPU      0.28s WALL (    1122 calls)
+     calbec       :      0.00s CPU      0.00s WALL (     236 calls)
+     fft          :      0.08s CPU      0.08s WALL (     240 calls)
+     fftw         :      0.22s CPU      0.21s WALL (     972 calls)
+     fftc         :      0.16s CPU      0.16s WALL (    3004 calls)
+     fftcw        :      0.07s CPU      0.07s WALL (    1135 calls)
      davcio       :      0.00s CPU      0.00s WALL (       1 calls)
  
      Parallel routines
-     fft_scatter  :      0.86s CPU      0.79s WALL (    5288 calls)
+     fft_scatter  :      0.12s CPU      0.13s WALL (    5351 calls)
 
      EXX routines
      exx_grid     :      0.00s CPU      0.00s WALL (       1 calls)
-     exxinit      :      0.02s CPU      0.02s WALL (      13 calls)
-     vexx         :      1.34s CPU      1.38s WALL (     177 calls)
-     exxenergy    :      0.11s CPU      0.12s WALL (      25 calls)
+     exxinit      :      0.01s CPU      0.01s WALL (      13 calls)
+     vexx         :      0.24s CPU      0.24s WALL (     179 calls)
+     exxenergy    :      0.02s CPU      0.02s WALL (      25 calls)
  
-     PWSCF        :     2.15s CPU         2.22s WALL
+     PWSCF        :     0.94s CPU         1.00s WALL
 
  
-   This run was terminated on:  11:46:58  13Jun2016            
+   This run was terminated on:  12:11: 1  13Jun2016            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

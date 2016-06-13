@@ -1,6 +1,6 @@
 &control
     calculation = 'scf'
-    title = 'TDDFPT CH4 Test (TDHF)'
+    title = 'TDDFPT CH4 Test (PBE0)'
     restart_mode='from_scratch',
     pseudo_dir = '../pseudo',
     outdir='./out',

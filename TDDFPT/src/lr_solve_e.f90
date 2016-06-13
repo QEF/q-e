@@ -27,7 +27,7 @@ SUBROUTINE lr_solve_e
   USE klist,                ONLY : nks, xk, ngk, igk_k, degauss
   USE lr_variables,         ONLY : nwordd0psi, iund0psi,LR_polarization, test_case_no, &
                                    & n_ipol, evc0, d0psi, d0psi2, evc1, lr_verbosity, &
-                                   & d0psi_rs, eels
+                                   & d0psi_rs, eels, lr_exx
   USE lsda_mod,             ONLY : lsda, isk, current_spin
   USE uspp,                 ONLY : vkb
   USE wvfct,                ONLY : nbnd, npwx, et, current_k
@@ -68,6 +68,17 @@ SUBROUTINE lr_solve_e
   ELSE
      !
      ! Optical case
+     !
+     ! TDDFPT+hybrids: Current implementation of the commutator [H,r] 
+     ! (commutator_Hx_psi) does not contain the contribution [V_EXX,r], 
+     ! hence the relative intensities of the peaks in the spectrum
+     ! will be wrong. One should use d0psi_rs=.true. in this case
+     ! (see the documentation and the explanation in CPC 185, 2080 (2014)).
+     ! 
+     !
+     IF (lr_exx .AND. .NOT.d0psi_rs) WRITE( stdout, '(/5X,"WARNING!!!", &
+         & " TDDFPT + hybrids will give wrong intensities.",            &
+         & /5x,"Set d0psi_rs=.true. in order to have correct intensities.")' ) 
      !
      DO ik = 1, nks
         !

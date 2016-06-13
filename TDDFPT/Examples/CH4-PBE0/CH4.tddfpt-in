@@ -6,5 +6,6 @@
 /
 &lr_control
     itermax=500,
-    ipol=4
+    ipol=4,
+    d0psi_rs=.true.
 /

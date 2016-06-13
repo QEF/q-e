@@ -4,24 +4,24 @@
     restart_mode='from_scratch',
     pseudo_dir = '../pseudo',
     outdir='./out',
-    prefix='ch4'
-    etot_conv_thr=1d-6
+    prefix='CH4'
  /
  &system
     ibrav = 1,
     celldm(1) = 15,
     nat = 5,
     ntyp = 2,
-    ecutwfc = 25,
-    input_dft = 'hf',
+    ecutwfc  = 25,
+    ecutfock = 25,
+    input_dft = 'HF',
     nosym=.true.
-/
- &electrons
-
  /
-&ions
-/
-
+ &electrons
+    diagonalization='david'
+    mixing_mode = 'plain'
+    mixing_beta = 0.7
+    conv_thr =  1.0d-10
+ /
 ATOMIC_SPECIES
 C 1.0 C.pz-vbc.UPF
 H 1.0 H.pz-vbc.UPF

@@ -1,12 +1,12 @@
 &lr_input
-    prefix="ch4",
+    prefix="CH4",
     outdir='./out',
     restart_step=250,
+    restart=.false.
 /
 &lr_control
     itermax=500,
-    ipol=4
-    
-    ecutfock=25d0
+    ipol=4,
+    d0psi_rs=.true.
+    ecutfock=25
 /
-
