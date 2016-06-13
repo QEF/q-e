@@ -25,7 +25,6 @@ SUBROUTINE ep_matrix_element_wannier()
   USE io_global, ONLY : stdout
   USE mp_pools,  ONLY : me_pool, root_pool
   USE klist, ONLY : xk
-  USE wvfct, ONLY : npwx
   USE el_phon, ONLY: elph_mat, kpq, g_kpq, igqg, xk_gamma
   USE uspp,                 ONLY: okvan
   USE paw_variables, ONLY : okpaw
@@ -330,12 +329,12 @@ SUBROUTINE elphel_refolded (npe, imode0, dvscfins)
   USE kinds, ONLY : DP
   USE fft_base, ONLY : dffts
   USE wavefunctions_module,  ONLY: evc
-  USE io_files, ONLY: iunigk, prefix, diropn
-  USE klist, ONLY: xk
+  USE io_files, ONLY: prefix, diropn
+  USE klist, ONLY: xk, ngk, igk_k
   USE lsda_mod, ONLY: lsda, current_spin, isk
   USE noncollin_module, ONLY : noncolin, npol, nspin_mag
   USE buffers, ONLY : get_buffer
-  USE wvfct, ONLY: nbnd, npw, npwx, igk
+  USE wvfct, ONLY: nbnd, npwx
   USE uspp, ONLY : vkb
   USE el_phon, ONLY : el_ph_mat, iunwfcwann, igqg, kpq, g_kpq, &
            xk_gamma, npwq_refolded, lrwfcr
@@ -350,7 +349,7 @@ SUBROUTINE elphel_refolded (npe, imode0, dvscfins)
   USE gvecs, ONLY : nls
 
   USE eqv,        ONLY : dvpsi!, evq
-  USE qpoint,     ONLY : igkq, npwq, nksq, ikks, ikqs
+  USE qpoint,     ONLY : nksq, ikks, ikqs
   USE control_lr, ONLY : lgamma
 
   IMPLICIT NONE
@@ -362,6 +361,7 @@ SUBROUTINE elphel_refolded (npe, imode0, dvscfins)
 
   ! LOCAL variables
   logical :: exst
+  INTEGER :: npw, npwq
   INTEGER :: nrec, ik, ikk, ikq, ikqg,ipert, mode, ibnd, jbnd, ir, ig, &
        ios
 
@@ -382,37 +382,22 @@ SUBROUTINE elphel_refolded (npe, imode0, dvscfins)
   !
   !  Start the loops over the k-points
   !
-  IF (nksq.GT.1) REWIND (unit = iunigk)
-
   
   DO ik = 1, nksq
-     
-     IF (nksq.GT.1) THEN
-        READ (iunigk, err = 100, iostat = ios) npw, igk
-100     CALL errore ('elphel_refolded', 'reading igk', ABS (ios) )
-     ENDIF
      !
      !  ik = counter of k-points with vector k
      !  ikk= index of k-point with vector k
      !  ikq= index of k-point with vector k+q
      !       k and k+q are alternated if q!=0, are the same if q=0
      !
-     IF (lgamma) npwq = npw
      ikk = ikks(ik)
      ikq = ikqs(ik)
      ikqg = kpq(ik)
-
-
+     npw = ngk(ikk)
+     npwq= ngk(ikq)
      IF (lsda) current_spin = isk (ikk)
-     IF (.NOT.lgamma.AND.nksq.GT.1) THEN
-        READ (iunigk, err = 200, iostat = ios) npwq, igkq
-200     CALL errore ('elphel_refolded', 'reading igkq', ABS (ios) )
-     ENDIF
-
-     
-
      !
-     CALL init_us_2 (npwq, igkq, xk (1, ikq), vkb)
+     CALL init_us_2 (npwq, igk_k(1,ikq), xk (1, ikq), vkb)
      !
      ! read unperturbed wavefuctions psi(k) and psi(k+q)
      !
@@ -437,7 +422,7 @@ SUBROUTINE elphel_refolded (npe, imode0, dvscfins)
 !     ENDIF
      !
 
-     call read_wfc_rspace_and_fwfft( evc , ik , lrwfcr , iunwfcwann , npw , igk )
+     call read_wfc_rspace_and_fwfft( evc , ik , lrwfcr , iunwfcwann , npw , igk_k(1,ikk) )
 
 
      call calculate_and_apply_phase(ik, ikqg, igqg, npwq_refolded, g_kpq,xk_gamma, evq, .true.)
@@ -632,15 +617,14 @@ end subroutine get_equivalent_kpq
 subroutine calculate_and_apply_phase(ik, ikqg, igqg, npwq_refolded, g_kpq, xk_gamma, evq, lread)
   USE kinds, ONLY : DP
   USE fft_base, ONLY : dffts
-  USE fft_interfaces,        ONLY : fwfft, invfft
-  USE wvfct, ONLY: nbnd, npw, npwx,  g2kin, nbnd
+  USE fft_interfaces,  ONLY : fwfft, invfft
+  USE wvfct, ONLY: nbnd, npwx
   USE gvect, ONLY : ngm, g
   USE gvecs, ONLY : nls
   USE gvecw, ONLY : gcutw
   USE cell_base, ONLY : bg
-  USE qpoint, ONLY : nksq, npwq
-   USE wavefunctions_module, ONLY : evc
-!  USE eqv,      ONLY : evq
+  USE qpoint, ONLY : nksq
+  USE wavefunctions_module, ONLY : evc
   USE noncollin_module,     ONLY : npol, noncolin
   USE el_phon, ONLY:iunwfcwann, lrwfcr
 
@@ -656,10 +640,11 @@ subroutine calculate_and_apply_phase(ik, ikqg, igqg, npwq_refolded, g_kpq, xk_ga
   INTEGER :: npw_, m,i
   INTEGER, allocatable :: igk_(:), igkq_(:)
   REAL(DP) :: xkqg(3), g_(3), g_scra(3,ngm)
+  REAL(DP), ALLOCATABLE :: gk(:)
   COMPLEX (DP), allocatable :: psi_scratch(:)
   complex(DP), allocatable :: phase(:)
 
-  allocate(igk_(npwx), igkq_(npwx))
+  allocate(igk_(npwx), igkq_(npwx), gk(npwx) )
   allocate (psi_scratch ( dffts%nnr) )
   allocate (phase(dffts%nnr))
   FLUSH (6)
@@ -676,13 +661,13 @@ subroutine calculate_and_apply_phase(ik, ikqg, igqg, npwq_refolded, g_kpq, xk_ga
   igkq_=0
 
 
-  call gk_sort (xk_gamma(1,ikqg), ngm, g_scra, gcutw, npw_, igk_, g2kin)
+  call gk_sort (xk_gamma(1,ikqg), ngm, g_scra, gcutw, npw_, igk_, gk)
 
   if(lread) then
      call read_wfc_rspace_and_fwfft( evq , ikqg , lrwfcr , iunwfcwann , npw_ , igk_ )
   endif
 
-  call gk_sort (xkqg, ngm, g_scra, gcutw, npwq_refolded, igkq_, g2kin)
+  call gk_sort (xkqg, ngm, g_scra, gcutw, npwq_refolded, igkq_, gk)
 
   phase(:) = CMPLX(0.d0,0.d0)
 
@@ -727,7 +712,7 @@ subroutine calculate_and_apply_phase(ik, ikqg, igqg, npwq_refolded, g_kpq, xk_ga
  
   deallocate(psi_scratch)
   DEALLOCATE(phase)
-  deallocate(igk_, igkq_)
+  deallocate(gk, igk_, igkq_)
   
   return
 end subroutine calculate_and_apply_phase

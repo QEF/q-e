@@ -274,12 +274,11 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   USE fft_base, ONLY : dffts
   USE fft_parallel, ONLY : tg_cgather
   USE wavefunctions_module,  ONLY: evc
-  USE io_files, ONLY: iunigk
   USE buffers,  ONLY : get_buffer
-  USE klist, ONLY: xk
+  USE klist, ONLY: xk, ngk, igk_k
   USE lsda_mod, ONLY: lsda, current_spin, isk
   USE noncollin_module, ONLY : noncolin, npol, nspin_mag
-  USE wvfct, ONLY: nbnd, npw, npwx, igk
+  USE wvfct, ONLY: nbnd, npwx
   USE buffers, ONLY : get_buffer
   USE uspp, ONLY : vkb
   USE el_phon, ONLY : el_ph_mat, el_ph_mat_rec, el_ph_mat_rec_col, &
@@ -294,7 +293,7 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   USE mp,        ONLY: mp_sum
 
   USE eqv,        ONLY : dvpsi, evq
-  USE qpoint,     ONLY : igkq, npwq, nksq, ikks, ikqs, nksqtot
+  USE qpoint,     ONLY : nksq, ikks, ikqs, nksqtot
   USE control_lr, ONLY : lgamma
 
   IMPLICIT NONE
@@ -302,6 +301,7 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   INTEGER, INTENT(IN) :: irr, npe, imode0
   COMPLEX(DP), INTENT(IN) :: dvscfins (dffts%nnr, nspin_mag, npe)
   ! LOCAL variables
+  INTEGER :: npw, npwq
   INTEGER :: nrec, ik, ikk, ikq, ipert, mode, ibnd, jbnd, ir, ig, &
        ipol, ios, ierr
   COMPLEX(DP) , ALLOCATABLE :: aux1 (:,:), elphmat (:,:,:), tg_dv(:,:), &
@@ -329,28 +329,20 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   !
   !  Start the loops over the k-points
   !
-  IF (nksq.GT.1) REWIND (unit = iunigk)
   DO ik = 1, nksq
-     IF (nksq.GT.1) THEN
-        READ (iunigk, err = 100, iostat = ios) npw, igk
-100     CALL errore ('elphel', 'reading igk', ABS (ios) )
-     ENDIF
      !
      !  ik = counter of k-points with vector k
      !  ikk= index of k-point with vector k
      !  ikq= index of k-point with vector k+q
      !       k and k+q are alternated if q!=0, are the same if q=0
      !
-     IF (lgamma) npwq = npw
      ikk = ikks(ik)
      ikq = ikqs(ik)
      IF (lsda) current_spin = isk (ikk)
-     IF (.NOT.lgamma.AND.nksq.GT.1) THEN
-        READ (iunigk, err = 200, iostat = ios) npwq, igkq
-200     CALL errore ('elphel', 'reading igkq', ABS (ios) )
-     ENDIF
+     npw = ngk(ikk)
+     npwq= ngk(ikq)
      !
-     CALL init_us_2 (npwq, igkq, xk (1, ikq), vkb)
+     CALL init_us_2 (npwq, igk_k(1,ikq), xk (1, ikq), vkb)
      !
      ! read unperturbed wavefuctions psi(k) and psi(k+q)
      !
