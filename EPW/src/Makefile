@@ -87,7 +87,6 @@ poolgather.o \
 print_clock_epw.o \
 readdvscf.o \
 readgmap.o \
-readigk.o \
 readmat_shuffle2.o \
 readwfc.o \
 refold.o \

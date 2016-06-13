@@ -375,13 +375,13 @@
         !
         aux2=(0.0_DP,0.0_DP)
         DO ibnd = 1, nbnd !, incr
-          CALL cft_wave_epw (igk, npw, igkq, npwq, evc(:, ibnd), aux1, +1)
+           CALL invfft_wave (npw, igk, evc(:, ibnd), aux1)
          IF (timerev) THEN
            CALL apply_dpot(dffts%nnr, aux1, CONJG(dvscfins(:,:,ipert)),current_spin)
          ELSE
             CALL apply_dpot(dffts%nnr, aux1, dvscfins(:,:,ipert),current_spin)
          ENDIF
-          CALL cft_wave_epw (igk, npw, igkq, npwq, aux2(:, ibnd), aux1, -1)
+           CALL fwfft_wave (npwq, igkq, aux2(:, ibnd), aux1)
         ENDDO
         dvpsi=dvpsi+aux2
 !DBSP
