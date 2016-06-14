@@ -24,7 +24,6 @@ allocate_epwq.o \
 printout_base.o \
 bcast_epw_input.o \
 broyden.o \
-cft_wave_epw.o \
 close_epw.o \
 constants_epw.o \
 create_mesh.o \
