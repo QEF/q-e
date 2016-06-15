@@ -23,7 +23,7 @@ subroutine solve_e_nscf( avg_iter, thresh, ik, ipol, dvscfs, auxr )
   USE buffers,               ONLY : get_buffer
   USE gvect,                 ONLY : g
   USE gvecs,                 ONLY : nls
-  USE wvfct,                 ONLY : g2kin,  et
+  USE wvfct,                 ONLY : et
   USE wavefunctions_module,  ONLY : evc
   USE eqv,                   ONLY : dpsi, dvpsi
   USE units_ph,              ONLY : this_pcxpsi_is_on_file, lrdwf, iudwf
@@ -63,11 +63,8 @@ subroutine solve_e_nscf( avg_iter, thresh, ik, ipol, dvscfs, auxr )
   call dvpsi_e (ik, ipol)
   npw = ngk(ik)
   npwq= npw     ! note: q=0
-  do ig = 1, npw
-     g2kin (ig) = ( (xk (1, ik) + g(1, igk_k (ig,ik)) ) **2 + &
-                    (xk (2, ik) + g(2, igk_k (ig,ik)) ) **2 + &
-                    (xk (3, ik) + g(3, igk_k (ig,ik)) ) **2 ) *tpiba2
-  enddo
+  !
+  CALL g2_kin (ik) ! needed by pcgreen
   !
   ! Calculates dvscf*psi_k in G_space
   !

@@ -161,18 +161,15 @@ subroutine solve_e_fpol ( iw )
         npw = ngk(ik)
         npwq = npw    ! q=0 in ths routine
         !
-        ! reads unperturbed wavefuctions psi_k in G_space, for all bands
+        ! read unperturbed wavefunctions psi_k in G_space, for all bands
         !
         if (nksq.gt.1) call get_buffer(evc, lrwfc, iuwfc, ik)
-        call init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb)
         !
-        ! compute the kinetic energy (needed by ch_psi_all)
+        ! compute beta functions and kinetic energy for k-point ik
+        ! needed by h_psi, called by cch_psi_all, called by gmressolve_all
         !
-        do ig = 1, npwq
-           g2kin (ig) = ( (xk (1,ik ) + g (1,igk_k (ig,ik)) ) **2 + &
-                          (xk (2,ik ) + g (2,igk_k (ig,ik)) ) **2 + &
-                          (xk (3,ik ) + g (3,igk_k (ig,ik)) ) **2 ) * tpiba2
-        enddo
+        CALL init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb)
+        CALL g2_kin(ik)
         !
         do ipol = 1, 3
            !

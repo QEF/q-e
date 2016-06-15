@@ -188,7 +188,6 @@ subroutine dhdrhopsi
               !    dvscfs      --self consist. part of the potential deriv.--
               !    The derivatives of the wavefunctions are stored in dpsi
               !
-
               call solve_e_nscf( avg_iter2, eth_ns, ik, ipb, dvscfs, auxr )
               !
               ! Now sets chi =  i * d/dk (sum_j |Du(j)><u(j)|) |u>

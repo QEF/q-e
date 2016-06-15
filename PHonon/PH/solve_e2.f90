@@ -21,7 +21,7 @@ subroutine solve_e2
   USE gvect,                 ONLY : g
   USE gvecs,                 ONLY : doublegrid
   USE fft_base,              ONLY : dfftp, dffts
-  USE wvfct,                 ONLY : npwx, nbnd, g2kin, et
+  USE wvfct,                 ONLY : npwx, nbnd, et
   USE buffers,   ONLY: get_buffer
   USE ions_base, ONLY: nat
   USE uspp,      ONLY: okvan, nkb, vkb
@@ -119,21 +119,17 @@ subroutine solve_e2
         ikk = ikks(ik)
         ikq = ikqs(ik)
         !
-        ! reads unperturbed wavefuctions psi_k in G_space, for all bands
+        ! reads unperturbed wavefunctions psi_k in G_space, for all bands
         !
         if (nksq.gt.1) call get_buffer(evc, lrwfc, iuwfc, ikk)
         npw = ngk(ikk)
         npwq= ngk(ikq)
-        call init_us_2 (npw, igk_k(1,ikk), xk (1, ikk), vkb)
         !
-        ! compute the kinetic energy (neede by ch_psi_all, called by pcgreen)
+        ! compute beta functions and kinetic energy for k-point ikk
+        ! needed by h_psi, called by pcgreen
         !
-        do ig = 1, npwq
-           iig = igk_k (ig,ikq)
-           g2kin (ig) = ( (xk (1, ik) + g (1, iig) ) **2 + &
-                          (xk (2, ik) + g (2, iig) ) **2 + &
-                          (xk (3, ik) + g (3, iig) ) **2 ) * tpiba2
-        enddo
+        CALL init_us_2 (npw, igk_k(1,ikk), xk (1, ikk), vkb)
+        CALL g2_kin(ikk)
         !
         ! The counter on the polarizations runs only on the 6 inequivalent
         ! indexes --see the comment on raman.F--

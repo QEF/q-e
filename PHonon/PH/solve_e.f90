@@ -184,18 +184,16 @@ subroutine solve_e
         npwq= npw     ! q=0 always in this routine
         if (lsda) current_spin = isk (ik)
         !
-        ! reads unperturbed wavefuctions psi_k in G_space, for all bands
+        ! reads unperturbed wavefunctions psi_k in G_space, for all bands
         !
         if (nksq.gt.1) call get_buffer (evc, lrwfc, iuwfc, ik)
-        call init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb)
         !
-        ! compute the kinetic energy (used by ch_psi_all)
+        ! compute beta functions and kinetic energy for k-point ik
+        ! needed by h_psi, called by ch_psi_all, called by cgsolve_all
         !
-        do ig = 1, npwq
-           g2kin (ig) = ( (xk (1,ik ) + g (1,igk_k(ig,ik)) ) **2 + &
-                          (xk (2,ik ) + g (2,igk_k(ig,ik)) ) **2 + &
-                          (xk (3,ik ) + g (3,igk_k(ig,ik)) ) **2 ) * tpiba2
-        enddo
+        CALL init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb)
+        CALL g2_kin(ik)
+        !
         h_diag=0.d0
         do ibnd = 1, nbnd_occ (ik)
            do ig = 1, npw

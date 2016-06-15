@@ -88,9 +88,8 @@ subroutine dvpsi_e (ik, ipol)
   !   dpsi contains P^+_c [H-eS,x] psi_v for the three crystal polarizations
   !   Now solve the linear systems (H-e_vS)*P_c(x*psi_v)=P_c^+ [H-e_vS,x]*psi_v
   !
-  do ig = 1, npw
-     g2kin (ig) = SUM((xk(1:3,ik) +g (1:3, igk_k(ig,ik)) ) **2) *tpiba2
-  enddo
+  CALL g2_kin(ik)
+  !
   allocate (h_diag( npwx*npol, nbnd))
   h_diag=0.d0
   do ibnd = 1, nbnd_occ (ik)
