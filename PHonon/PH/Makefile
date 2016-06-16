@@ -27,7 +27,6 @@ yambo.o \
 bcast_ph_input.o \
 cch_psi_all.o \
 ccg_psi.o \
-cgsolve_all_imfreq.o \
 check_if_partial_dyn.o \
 check_initial_status.o \
 check_q_points_sym.o \

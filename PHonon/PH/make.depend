@@ -154,9 +154,6 @@ cch_psi_all.o : ../../Modules/mp_bands.o
 cch_psi_all.o : ../../Modules/noncol.o
 cch_psi_all.o : ../../Modules/uspp.o
 cch_psi_all.o : ../../PW/src/pwcom.o
-cgsolve_all_imfreq.o : ../../Modules/kind.o
-cgsolve_all_imfreq.o : ../../Modules/mp.o
-cgsolve_all_imfreq.o : ../../Modules/mp_world.o
 check_if_partial_dyn.o : ../../LR_Modules/lrcom.o
 check_if_partial_dyn.o : ../../Modules/control_flags.o
 check_if_partial_dyn.o : ../../Modules/ions_base.o
@@ -199,7 +196,6 @@ clean_pw_ph.o : phcom.o
 clean_pw_ph.o : save_ph_input.o
 clinear.o : ../../Modules/kind.o
 close_phq.o : ../../Modules/control_flags.o
-close_phq.o : ../../Modules/io_files.o
 close_phq.o : ../../Modules/io_global.o
 close_phq.o : ../../Modules/paw_variables.o
 close_phq.o : ../../Modules/uspp.o
@@ -798,14 +794,10 @@ mix_pot.o : ../../Modules/mp.o
 mix_pot.o : ../../Modules/mp_bands.o
 mode_group.o : ../../Modules/constants.o
 mode_group.o : ../../Modules/kind.o
-obsolete.o : ../../FFTXlib/fft_interfaces.o
 obsolete.o : ../../LR_Modules/lrcom.o
-obsolete.o : ../../Modules/becmod.o
 obsolete.o : ../../Modules/cell_base.o
 obsolete.o : ../../Modules/constants.o
 obsolete.o : ../../Modules/control_flags.o
-obsolete.o : ../../Modules/fft_base.o
-obsolete.o : ../../Modules/io_files.o
 obsolete.o : ../../Modules/io_global.o
 obsolete.o : ../../Modules/ions_base.o
 obsolete.o : ../../Modules/kind.o
@@ -815,9 +807,6 @@ obsolete.o : ../../Modules/noncol.o
 obsolete.o : ../../Modules/random_numbers.o
 obsolete.o : ../../Modules/recvec.o
 obsolete.o : ../../Modules/run_info.o
-obsolete.o : ../../Modules/uspp.o
-obsolete.o : ../../Modules/wavefunctions.o
-obsolete.o : ../../PW/src/buffers.o
 obsolete.o : ../../PW/src/pwcom.o
 obsolete.o : ../../PW/src/symm_base.o
 obsolete.o : dfile_star.o
@@ -896,7 +885,6 @@ phq_init.o : ../../Modules/becmod.o
 phq_init.o : ../../Modules/cell_base.o
 phq_init.o : ../../Modules/constants.o
 phq_init.o : ../../Modules/gvecw.o
-phq_init.o : ../../Modules/io_files.o
 phq_init.o : ../../Modules/io_global.o
 phq_init.o : ../../Modules/ions_base.o
 phq_init.o : ../../Modules/kind.o
