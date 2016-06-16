@@ -31,7 +31,7 @@
                                 ip_hubbard_j => hubbard_j,  starting_ns_eigenvalue, u_projection_type,                &
                                 london_s6, london_rcut, london_c6, xdm_a1, xdm_a2,                                    &
                                 ip_noncolin => noncolin, ip_spinorbit => lspinorb,                                    &
-                                nbnd, smearing, degauss, ip_occupations=>occupations, tot_charge,                     &
+                                nbnd, smearing, degauss, ip_occupations=>occupations, tot_charge, tot_magnetization,  &
                                 ip_k_points => k_points, ecutwfc, ip_ecutrho => ecutrho, ip_nr1 => nr1, ip_nr2=>nr2,  &
                                 ip_nr3 => nr3, ip_nr1s => nr1s, ip_nr2s => nr2s,ip_nr3s => nr3s, ip_nr1b=>nr1b,       &
                                 ip_nr2b=>nr2b, ip_nr3b => nr3b,                                                       &
@@ -195,7 +195,6 @@
   !                                                    BANDS ELEMENT
   !-------------------------------------------------------------------------------------------------------------------------
   IF (tf_inp) THEN
-     print '("le occupazioni da input sono",20f10.6)',f_inp
      SELECT CASE (ip_nspin) 
         CASE (2)  
            CALL qexsd_init_bands(obj%bands, nbnd, smearing, degauss, ip_occupations, tot_charge, ip_nspin, &
@@ -205,7 +204,12 @@
                                                                                 input_occupations=f_inp(:,1) )
      END SELECT    
   ELSE 
-     CALL qexsd_init_bands(obj%bands, nbnd, smearing, degauss, ip_occupations, tot_charge, ip_nspin)
+     IF ( tot_magnetization .LT. 0 ) THEN 
+        CALL qexsd_init_bands(obj%bands, nbnd, smearing, degauss, ip_occupations, tot_charge, ip_nspin)
+     ELSE
+        CALL qexsd_init_bands(obj%bands, nbnd, smearing, degauss, ip_occupations, tot_charge, ip_nspin, &
+                              TOT_MAG  = tot_magnetization)
+     END IF
   END IF 
   !----------------------------------------------------------------------------------------------------------------------------
   !                                                    BASIS ELEMENT
@@ -260,7 +264,11 @@
      obj%boundary_conditions_ispresent=.FALSE.
   ELSE 
      obj%boundary_conditions_ispresent = .TRUE.
-     CALL qexsd_init_boundary_conditions(obj%boundary_conditions, assume_isolated, esm_bc,esm_nfit, esm_w,esm_efield)
+     IF ( TRIM ( assume_isolated) .EQ. "esm") THEN 
+        CALL qexsd_init_boundary_conditions(obj%boundary_conditions, assume_isolated, esm_bc,esm_nfit, esm_w,esm_efield)
+     ELSE 
+        CALL qexsd_init_boundary_conditions(obj%boundary_conditions, assume_isolated) 
+     END IF 
   END IF
   !----------------------------------------------------------------------------------------------------------------------------
   !                                                              EKIN FUNCTIONAL 

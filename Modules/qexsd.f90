@@ -826,7 +826,7 @@ CONTAINS
     ! 
     !---------------------------------------------------------------------------------------
     SUBROUTINE qexsd_init_band_structure(obj, lsda,noncolin, lspinorb, nbnd, nelec, &
-                                         fermi_energy, et, wg, nks, xk, ngk, wk)
+                                         fermi_energy, two_fermi_energies, ef_updw, et, wg, nks, xk, ngk, wk)
     !----------------------------------------------------------------------------------------
     IMPLICIT NONE
     !
@@ -838,6 +838,8 @@ CONTAINS
     REAL(DP),DIMENSION(:,:),INTENT(IN)    :: et, wg, xk
     REAL(DP),DIMENSION(:),INTENT(IN)      :: wk
     INTEGER,DIMENSION(:),INTENT(IN)       :: ngk      
+    REAL(DP),DIMENSION(2),INTENT(IN)       :: ef_updw 
+    LOGICAL,INTENT(IN)                    :: two_fermi_energies
     ! 
     LOGICAL                               :: nbnd_up_ispresent, nbnd_dw_ispresent, &
                                              fermi_energy_ispresent
@@ -865,7 +867,7 @@ CONTAINS
        nbnd_up_ispresent=.false.
        nbnd_dw_ispresent=.false. 
     END IF 
-    IF (fermi_energy.GT.-1.D6) THEN
+    IF (fermi_energy.GT.-1.D6 .AND. ( .NOT. two_fermi_energies ) ) THEN
       fermi_energy_ispresent=.TRUE.
     ELSE 
       fermi_energy_ispresent=.FALSE.
@@ -878,7 +880,7 @@ CONTAINS
     DO ik=1,ndim_ks_energies
        CALL qes_init_k_point(kp_obj,"k_point",wk(ik),.true.,xk(:,ik))
        IF ( lsda ) THEN 
-          eigenvalues(1:nbnd_up)=et(1:nbnd_up,ik)
+          eigenvalues(1:nbnd_up)=et(1:nbnd_up,ik)/e2
           eigenvalues(nbnd_up+1:nbnd_tot)=et(1:nbnd_dw,ndim_ks_energies+ik)/e2
        ELSE 
           eigenvalues(1:nbnd_tot)= et(1:nbnd_tot,ik)/e2
@@ -888,7 +890,7 @@ CONTAINS
        IF (lsda) THEN 
           IF ( ABS(wk(ik)).GT.1.d-10) THEN 
              occupations(1:nbnd_up)=wg(1:nbnd_up,ik)/wk(ik)
-             occupations(nbnd_up+1:nbnd_tot)=wg(1:nbnd_dw,ik)/wk(ik)
+             occupations(nbnd_up+1:nbnd_tot)=wg(1:nbnd_dw,ndim_ks_energies+ik)/wk(ndim_ks_energies+ik)
           ELSE 
              occupations(1:nbnd_up)=wg(1:nbnd_up,ik)
              occupations(nbnd_up+1:nbnd_tot)=wg(1:nbnd_dw,ik) 
@@ -912,7 +914,7 @@ CONTAINS
     !
     CALL qes_init_band_structure(obj,TAGNAME,lsda,noncolin,lspinorb,nbnd_tot,nbnd_up_ispresent,&
                   nbnd_up,nbnd_dw_ispresent,nbnd_dw,nelec,fermi_energy_ispresent,&
-                  fermi_energy/e2, ndim_ks_energies,ndim_ks_energies,ks_objs)
+                  fermi_energy/e2, two_fermi_energies, 2, ef_updw/e2, ndim_ks_energies,ndim_ks_energies,ks_objs)
     DO ik=1,ndim_ks_energies
        CALL qes_reset_ks_energies(ks_objs(ik))
     END DO

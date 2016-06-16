@@ -144,18 +144,6 @@ TYPE :: electronicPolarization_type
    !
 END TYPE electronicPolarization_type
 
-TYPE :: vector_type
-   !
-   CHARACTER(len=100) :: tagname
-   LOGICAL  :: lread = .true.
-   LOGICAL  :: lwrite = .true.
-   !
-   !
-   INTEGER  :: ndim_vec
-   REAL(DP), DIMENSION(:), ALLOCATABLE :: vec
-   !
-END TYPE vector_type
-
 TYPE :: BerryPhaseOutput_type
    !
    CHARACTER(len=100) :: tagname
@@ -172,6 +160,18 @@ TYPE :: BerryPhaseOutput_type
 
    !
 END TYPE BerryPhaseOutput_type
+
+TYPE :: vector_type
+   !
+   CHARACTER(len=100) :: tagname
+   LOGICAL  :: lread = .true.
+   LOGICAL  :: lwrite = .true.
+   !
+   !
+   INTEGER  :: ndim_vec
+   REAL(DP), DIMENSION(:), ALLOCATABLE :: vec
+   !
+END TYPE vector_type
 
 TYPE :: ks_energies_type
    !
@@ -532,6 +532,7 @@ TYPE :: boundary_conditions_type
    LOGICAL  :: lwrite = .true.
    !
    CHARACTER(len=256) :: assume_isolated
+   LOGICAL  :: esm_ispresent
    TYPE(esm_type) :: esm
    !
 END TYPE boundary_conditions_type
@@ -655,6 +656,10 @@ TYPE :: band_structure_type
    REAL(DP) :: nelec
    LOGICAL  :: fermi_energy_ispresent
    REAL(DP) :: fermi_energy
+   LOGICAL  :: two_fermi_energies_ispresent
+   !
+   INTEGER  :: ndim_two_fermi_energies
+   REAL(DP), DIMENSION(:), ALLOCATABLE :: two_fermi_energies
    INTEGER  :: nks
    TYPE(ks_energies_type), DIMENSION(:), ALLOCATABLE :: ks_energies
    !
@@ -827,6 +832,8 @@ TYPE :: bands_type
    TYPE(smearing_type) :: smearing
    LOGICAL  :: tot_charge_ispresent
    REAL(DP) :: tot_charge
+   LOGICAL  :: tot_magnetization_ispresent
+   REAL(DP) :: tot_magnetization
    TYPE(occupations_type) :: occupations
    LOGICAL  :: inputOccupations_ispresent
    TYPE(inputOccupations_type), DIMENSION(:), ALLOCATABLE :: inputOccupations

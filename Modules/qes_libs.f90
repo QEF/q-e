@@ -76,9 +76,9 @@ SUBROUTINE qes_write_status(iun, obj)
    attr = " "
 
    CALL iotk_write_begin(iun, TRIM(obj%tagname), attr=TRIM(attr))
-   !
-   WRITE(iun, '(I12)') obj%status
-   !
+      !
+         WRITE(iun, '(I12)') obj%status
+         !
    CALL iotk_write_end(iun, TRIM(obj%tagname))
    !
 END SUBROUTINE qes_write_status
@@ -650,55 +650,6 @@ SUBROUTINE qes_reset_electronicPolarization(obj)
 END SUBROUTINE qes_reset_electronicPolarization
 
 
-SUBROUTINE qes_write_vector(iun, obj)
-   IMPLICIT NONE
-
-   INTEGER  :: iun
-   TYPE(vector_type) :: obj
-   !
-   INTEGER  :: i
-
-   IF (.NOT. obj%lwrite) RETURN
-   attr = " "
-
-   CALL iotk_write_begin(iun, TRIM(obj%tagname), attr=TRIM(attr))
-      !
-      CALL iotk_write_begin(iun,'vec')
-         WRITE(fmtstr,'(a)') '(5E20.7)'
-         WRITE(iun, fmtstr) obj%vec
-      CALL iotk_write_end(iun,'vec')
-      !
-   CALL iotk_write_end(iun, TRIM(obj%tagname))
-   !
-END SUBROUTINE qes_write_vector
-
-SUBROUTINE qes_init_vector(obj, tagname, ndim_vec, vec)
-   IMPLICIT NONE
-
-   TYPE(vector_type) :: obj
-   CHARACTER(len=*) :: tagname
-   INTEGER  :: i
-   INTEGER  :: ndim_vec
-   REAL(DP), DIMENSION(:) :: vec
-
-   obj%tagname = TRIM(tagname)
-   ALLOCATE(obj%vec(ndim_vec))
-   obj%vec(:) = vec(:)
-
-END SUBROUTINE qes_init_vector
-
-SUBROUTINE qes_reset_vector(obj)
-   IMPLICIT NONE
-   TYPE(vector_type) :: obj
-   INTEGER  :: i
-
-   obj%tagname = ""
-
-   IF (ALLOCATED(obj%vec))  DEALLOCATE(obj%vec)
-
-END SUBROUTINE qes_reset_vector
-
-
 SUBROUTINE qes_write_BerryPhaseOutput(iun, obj)
    IMPLICIT NONE
 
@@ -778,6 +729,55 @@ SUBROUTINE qes_reset_BerryPhaseOutput(obj)
    IF (ALLOCATED(obj%electronicPolarization)) DEALLOCATE(obj%electronicPolarization)
 
 END SUBROUTINE qes_reset_BerryPhaseOutput
+
+
+SUBROUTINE qes_write_vector(iun, obj)
+   IMPLICIT NONE
+
+   INTEGER  :: iun
+   TYPE(vector_type) :: obj
+   !
+   INTEGER  :: i
+
+   IF (.NOT. obj%lwrite) RETURN
+   attr = " "
+
+   CALL iotk_write_begin(iun, TRIM(obj%tagname), attr=TRIM(attr))
+      !
+      CALL iotk_write_begin(iun,'vec')
+         WRITE(fmtstr,'(a)') '(5E20.7)'
+         WRITE(iun, fmtstr) obj%vec
+      CALL iotk_write_end(iun,'vec')
+      !
+   CALL iotk_write_end(iun, TRIM(obj%tagname))
+   !
+END SUBROUTINE qes_write_vector
+
+SUBROUTINE qes_init_vector(obj, tagname, ndim_vec, vec)
+   IMPLICIT NONE
+
+   TYPE(vector_type) :: obj
+   CHARACTER(len=*) :: tagname
+   INTEGER  :: i
+   INTEGER  :: ndim_vec
+   REAL(DP), DIMENSION(:) :: vec
+
+   obj%tagname = TRIM(tagname)
+   ALLOCATE(obj%vec(ndim_vec))
+   obj%vec(:) = vec(:)
+
+END SUBROUTINE qes_init_vector
+
+SUBROUTINE qes_reset_vector(obj)
+   IMPLICIT NONE
+   TYPE(vector_type) :: obj
+   INTEGER  :: i
+
+   obj%tagname = ""
+
+   IF (ALLOCATED(obj%vec))  DEALLOCATE(obj%vec)
+
+END SUBROUTINE qes_reset_vector
 
 
 SUBROUTINE qes_write_ks_energies(iun, obj)
@@ -2559,24 +2559,31 @@ SUBROUTINE qes_write_boundary_conditions(iun, obj)
       CALL iotk_write_begin(iun, 'assume_isolated',new_line=.FALSE.)
          WRITE(iun, '(A)',advance='no')  TRIM(obj%assume_isolated)
       CALL iotk_write_end(iun, 'assume_isolated',indentation=.FALSE.)
-      CALL qes_write_esm(iun, obj%esm)
+      IF(obj%esm_ispresent) THEN
+         CALL qes_write_esm(iun, obj%esm)
+         !
+      ENDIF
       !
    CALL iotk_write_end(iun, TRIM(obj%tagname))
    !
 END SUBROUTINE qes_write_boundary_conditions
 
-SUBROUTINE qes_init_boundary_conditions(obj, tagname, assume_isolated, esm)
+SUBROUTINE qes_init_boundary_conditions(obj, tagname, assume_isolated, esm_ispresent, esm)
    IMPLICIT NONE
 
    TYPE(boundary_conditions_type) :: obj
    CHARACTER(len=*) :: tagname
    INTEGER  :: i
    CHARACTER(len=*) :: assume_isolated
+   LOGICAL  :: esm_ispresent
    TYPE(esm_type) :: esm
 
    obj%tagname = TRIM(tagname)
    obj%assume_isolated = assume_isolated
-   obj%esm = esm
+   obj%esm_ispresent = esm_ispresent
+   IF(obj%esm_ispresent) THEN
+      obj%esm = esm
+   ENDIF
 
 END SUBROUTINE qes_init_boundary_conditions
 
@@ -2587,7 +2594,10 @@ SUBROUTINE qes_reset_boundary_conditions(obj)
 
    obj%tagname = ""
 
-   CALL qes_reset_esm(obj%esm)
+   IF(obj%esm_ispresent) THEN
+      CALL qes_reset_esm(obj%esm)
+      obj%esm_ispresent = .FALSE.
+   ENDIF
 
 END SUBROUTINE qes_reset_boundary_conditions
 
@@ -3224,6 +3234,14 @@ SUBROUTINE qes_write_band_structure(iun, obj)
          CALL iotk_write_end(iun, 'fermi_energy')
       ENDIF
       !
+      IF(obj%two_fermi_energies_ispresent) THEN
+         CALL iotk_write_begin(iun,'two_fermi_energies')
+            WRITE(fmtstr,'(a)') '(5E20.7)'
+            WRITE(iun, fmtstr) obj%two_fermi_energies
+         CALL iotk_write_end(iun,'two_fermi_energies')
+         !
+      ENDIF
+      !
       CALL iotk_write_begin(iun, 'nks')
          WRITE(iun, '(I12)') obj%nks
       CALL iotk_write_end(iun, 'nks')
@@ -3237,7 +3255,9 @@ END SUBROUTINE qes_write_band_structure
 
 SUBROUTINE qes_init_band_structure(obj, tagname, lsda, noncolin, spinorbit, nbnd, &
                               nbnd_up_ispresent, nbnd_up, nbnd_dw_ispresent, nbnd_dw, &
-                              nelec, fermi_energy_ispresent, fermi_energy, nks, &
+                              nelec, fermi_energy_ispresent, fermi_energy, &
+                              two_fermi_energies_ispresent, &
+                              ndim_two_fermi_energies, two_fermi_energies, nks, &
                               ndim_ks_energies, ks_energies)
    IMPLICIT NONE
 
@@ -3255,6 +3275,9 @@ SUBROUTINE qes_init_band_structure(obj, tagname, lsda, noncolin, spinorbit, nbnd
    REAL(DP) :: nelec
    LOGICAL  :: fermi_energy_ispresent
    REAL(DP) :: fermi_energy
+   LOGICAL  :: two_fermi_energies_ispresent
+   INTEGER  :: ndim_two_fermi_energies
+   REAL(DP), DIMENSION(:) :: two_fermi_energies
    INTEGER  :: nks
    INTEGER  :: ndim_ks_energies
    TYPE(ks_energies_type), DIMENSION(:) :: ks_energies
@@ -3276,6 +3299,11 @@ SUBROUTINE qes_init_band_structure(obj, tagname, lsda, noncolin, spinorbit, nbnd
    obj%fermi_energy_ispresent = fermi_energy_ispresent
    IF(obj%fermi_energy_ispresent) THEN
       obj%fermi_energy = fermi_energy
+   ENDIF
+   obj%two_fermi_energies_ispresent = two_fermi_energies_ispresent
+   IF(obj%two_fermi_energies_ispresent) THEN
+   ALLOCATE(obj%two_fermi_energies(ndim_two_fermi_energies))
+   obj%two_fermi_energies(:) = two_fermi_energies(:)
    ENDIF
    obj%nks = nks
    ALLOCATE(obj%ks_energies(SIZE(ks_energies)))
@@ -3301,6 +3329,10 @@ SUBROUTINE qes_reset_band_structure(obj)
    ENDIF
    IF(obj%fermi_energy_ispresent) THEN
       obj%fermi_energy_ispresent = .FALSE.
+   ENDIF
+   IF(obj%two_fermi_energies_ispresent) THEN
+   IF (ALLOCATED(obj%two_fermi_energies))  DEALLOCATE(obj%two_fermi_energies)
+      obj%two_fermi_energies_ispresent = .FALSE.
    ENDIF
    DO i = 1, SIZE(obj%ks_energies)
       CALL qes_reset_ks_energies(obj%ks_energies(i))
@@ -4111,6 +4143,12 @@ SUBROUTINE qes_write_bands(iun, obj)
          CALL iotk_write_end(iun, 'tot_charge')
       ENDIF
       !
+      IF(obj%tot_magnetization_ispresent) THEN
+         CALL iotk_write_begin(iun, 'tot_magnetization')
+            WRITE(iun, '(E20.7)') obj%tot_magnetization
+         CALL iotk_write_end(iun, 'tot_magnetization')
+      ENDIF
+      !
       CALL qes_write_occupations(iun, obj%occupations)
       !
       IF(obj%inputOccupations_ispresent) THEN
@@ -4125,7 +4163,8 @@ SUBROUTINE qes_write_bands(iun, obj)
 END SUBROUTINE qes_write_bands
 
 SUBROUTINE qes_init_bands(obj, tagname, nbnd_ispresent, nbnd, smearing_ispresent, smearing, &
-                              tot_charge_ispresent, tot_charge, occupations, &
+                              tot_charge_ispresent, tot_charge, &
+                              tot_magnetization_ispresent, tot_magnetization, occupations, &
                               inputOccupations_ispresent, ndim_inputOccupations, &
                               inputOccupations)
    IMPLICIT NONE
@@ -4139,6 +4178,8 @@ SUBROUTINE qes_init_bands(obj, tagname, nbnd_ispresent, nbnd, smearing_ispresent
    TYPE(smearing_type) :: smearing
    LOGICAL  :: tot_charge_ispresent
    REAL(DP) :: tot_charge
+   LOGICAL  :: tot_magnetization_ispresent
+   REAL(DP) :: tot_magnetization
    TYPE(occupations_type) :: occupations
    LOGICAL  :: inputOccupations_ispresent
    INTEGER  :: ndim_inputOccupations
@@ -4156,6 +4197,10 @@ SUBROUTINE qes_init_bands(obj, tagname, nbnd_ispresent, nbnd, smearing_ispresent
    obj%tot_charge_ispresent = tot_charge_ispresent
    IF(obj%tot_charge_ispresent) THEN
       obj%tot_charge = tot_charge
+   ENDIF
+   obj%tot_magnetization_ispresent = tot_magnetization_ispresent
+   IF(obj%tot_magnetization_ispresent) THEN
+      obj%tot_magnetization = tot_magnetization
    ENDIF
    obj%occupations = occupations
    obj%inputOccupations_ispresent = inputOccupations_ispresent
@@ -4185,6 +4230,9 @@ SUBROUTINE qes_reset_bands(obj)
    ENDIF
    IF(obj%tot_charge_ispresent) THEN
       obj%tot_charge_ispresent = .FALSE.
+   ENDIF
+   IF(obj%tot_magnetization_ispresent) THEN
+      obj%tot_magnetization_ispresent = .FALSE.
    ENDIF
    CALL qes_reset_occupations(obj%occupations)
    IF(obj%inputOccupations_ispresent) THEN

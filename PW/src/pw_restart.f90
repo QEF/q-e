@@ -384,7 +384,8 @@ USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, delete_if_present, &
 !-------------------------------------------------------------------------------------
          !
          CALL  qexsd_init_band_structure(output%band_structure,lsda,noncolin,lspinorb, &
-                                         nbnd,nelec,ef,et,wg,nkstot,xk,ngk_g,wk)
+                                         nbnd,nelec,ef,two_fermi_energies, [ef_up,ef_dw],&
+                                         et,wg,nkstot,xk,ngk_g,wk)
          !
 !-------------------------------------------------------------------------------------------
 ! ... TOTAL ENERGY
