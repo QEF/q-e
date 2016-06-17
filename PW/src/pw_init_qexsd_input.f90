@@ -29,7 +29,8 @@
                                 ip_hubbard_u => hubbard_u, ip_hubbard_j0 => hubbard_j0,                               &
                                 ip_hubbard_beta => hubbard_beta, ip_hubbard_alpha => hubbard_alpha,                   &
                                 ip_hubbard_j => hubbard_j,  starting_ns_eigenvalue, u_projection_type,                &
-                                london_s6, london_rcut, london_c6, xdm_a1, xdm_a2,                                    &
+                                vdw_corr, london, london_s6, london_c6, london_rcut, london_c6, xdm_a1, xdm_a2,       &
+                                ts_vdw_econv_thr, ts_vdw_isolated,                                                    &
                                 ip_noncolin => noncolin, ip_spinorbit => lspinorb,                                    &
                                 nbnd, smearing, degauss, ip_occupations=>occupations, tot_charge, tot_magnetization,  &
                                 ip_k_points => k_points, ecutwfc, ip_ecutrho => ecutrho, ip_nr1 => nr1, ip_nr2=>nr2,  &
@@ -89,7 +90,8 @@
   INTEGER                                  ::   lung,l 
   CHARACTER,EXTERNAL                       ::   capital
   CHARACTER(len=20)                        ::   dft_shortname
-  CHARACTER(len=25)                        ::   dft_longname   
+  CHARACTER(len=25)                        ::   dft_longname
+  CHARACTER(LEN=80)                        ::  vdw_corr_  
   !
   ! 
   obj%tagname=TRIM(obj_tagname)
@@ -175,13 +177,15 @@
      END IF
   END IF
   !
-  CALL qexsd_init_dft (obj%dft,TRIM(dft_name),dft_is_hybrid,max(ip_nqx1,1) ,max(ip_nqx2,1), max(ip_nqx3,1), &
-                       ip_ecutfock,exx_fraction,      &
+  vdw_corr_ = vdw_corr
+  IF ( london ) vdw_corr_ = 'grimme-d2'
+  CALL qexsd_init_dft (obj%dft,TRIM(dft_name),dft_is_hybrid,ip_nqx1,ip_nqx2,ip_nqx3,ip_ecutfock,exx_fraction,      &
                        screening_parameter,exxdiv_treatment, x_gamma_extrapolation, ip_ecutvcut,          &
                        ip_lda_plus_U,ip_lda_plus_u_kind,2*hubbard_lmax+1,ip_nspin,ntyp,0,ip_nat,atm,    &
                        ip_ityp,ip_hubbard_u,ip_hubbard_j0,ip_hubbard_alpha,ip_hubbard_beta,ip_hubbard_j,           &
                        starting_ns_eigenvalue,ns_null,ns_nc_null,u_projection_type,dft_is_nonlocc,                    &
-                       TRIM(get_nonlocc_name()),london_s6,london_rcut,xdm_a1,xdm_a2,is_hubbard,upf(1:ntyp)%psd)
+                       vdw_corr_, london_s6, london_c6, london_rcut,  &
+                       xdm_a1,xdm_a2, ts_vdw_econv_thr, ts_vdw_isolated,  is_hubbard,upf(1:ntyp)%psd)
   !------------------------------------------------------------------------------------------------------------------------
   !                                                   SPIN ELEMENT
   !-------------------------------------------------------------------------------------------------------------------------

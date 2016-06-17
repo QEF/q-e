@@ -855,19 +855,17 @@ TYPE :: spin_type
    !
 END TYPE spin_type
 
-TYPE :: vdW_type
+TYPE :: HubbardCommon_type
    !
    CHARACTER(len=100) :: tagname
    LOGICAL  :: lread = .true.
    LOGICAL  :: lwrite = .true.
    !
-   CHARACTER(len=256) :: vdw_corr
-   REAL(DP) :: london_s6
-   REAL(DP) :: london_rcut
-   REAL(DP) :: xdm_a1
-   REAL(DP) :: xdm_a2
+   CHARACTER(len=256) :: specie
+   CHARACTER(len=256) :: label
+   REAL(DP) :: HubbardCommon
    !
-END TYPE vdW_type
+END TYPE HubbardCommon_type
 
 TYPE :: HubbardProj_type
    !
@@ -922,17 +920,32 @@ TYPE :: HubbardJ_type
    !
 END TYPE HubbardJ_type
 
-TYPE :: HubbardCommon_type
+TYPE :: vdW_type
    !
    CHARACTER(len=100) :: tagname
    LOGICAL  :: lread = .true.
    LOGICAL  :: lwrite = .true.
    !
-   CHARACTER(len=256) :: specie
-   CHARACTER(len=256) :: label
-   REAL(DP) :: HubbardCommon
+   CHARACTER(len=256) :: vdw_corr
+   LOGICAL  :: london_s6_ispresent
+   REAL(DP) :: london_s6
+   LOGICAL  :: ts_vdw_econv_thr_ispresent
+   REAL(DP) :: ts_vdw_econv_thr
+   LOGICAL  :: ts_vdw_isolated_ispresent
+   LOGICAL  :: ts_vdw_isolated
+   LOGICAL  :: london_rcut_ispresent
+   REAL(DP) :: london_rcut
+   LOGICAL  :: xdm_a1_ispresent
+   REAL(DP) :: xdm_a1
+   LOGICAL  :: xdm_a2_ispresent
+   REAL(DP) :: xdm_a2
+   LOGICAL  :: london_c6_ispresent
+   TYPE(HubbardCommon_type), DIMENSION(:), ALLOCATABLE :: london_c6
    !
-END TYPE HubbardCommon_type
+   INTEGER  :: ndim_london_c6
+
+   !
+END TYPE vdW_type
 
 TYPE :: dftU_type
    !

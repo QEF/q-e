@@ -265,9 +265,8 @@ CONTAINS
       END IF
          CALL iotk_close_write(ounit, IERR=ierr)
       !
-         CALL errore(subname, 'closing xml input file', ierr)
+      CALL errore(subname, 'closing xml input file', ierr)
       !
-      
     END SUBROUTINE qexsd_closeschema
     !
     !
@@ -606,8 +605,8 @@ CONTAINS
                                   exxdiv_treatment, x_gamma_extrapolation, ecutvcut, &
                    dft_is_lda_plus_U, lda_plus_U_kind, llmax, nspin, nsp, ldim, nat, species, ityp, Hubbard_U, Hubbard_J0, &
                                   Hubbard_alpha, Hubbard_beta, Hubbard_J, starting_ns, Hubbard_ns, Hubbard_ns_nc, &
-                                  U_projection_type, &
-                   dft_is_vdW, vdw_corr, london_s6, london_rcut, xdm_a1, xdm_a2 ,is_hubbard,psd)
+                                  U_projection_type, dft_is_vdW, vdw_corr, london_s6, london_c6, london_rcut, &
+                                  xdm_a1, xdm_a2 ,ts_vdw_econv_thr, ts_vdw_isolated,   is_hubbard, psd)
       !------------------------------------------------------------------------
       USE  parameters,           ONLY:  lqmax
       USE  input_parameters,     ONLY:  nspinx
@@ -641,14 +640,15 @@ CONTAINS
       LOGICAL,INTENT(IN)           :: is_hubbard(nsp)
       CHARACTER(LEN=2),INTENT(IN)  :: psd(nsp)
       !
-      LOGICAL,          INTENT(IN) :: dft_is_vdW
+      LOGICAL,          INTENT(IN) :: dft_is_vdW, ts_vdw_isolated
       CHARACTER(len=*), INTENT(IN) :: vdw_corr
       REAL(DP),         INTENT(IN) :: london_s6
       REAL(DP),         INTENT(IN) :: london_rcut
       REAL(DP),         INTENT(IN) :: xdm_a1
       REAL(DP),         INTENT(IN) :: xdm_a2
+      REAL(DP),         INTENT(IN) :: london_c6(nsp), ts_vdw_econv_thr
       !
-      INTEGER  :: i, is, ind,hubb_l,hubb_n
+      INTEGER  :: i, is, isp, ind,hubb_l,hubb_n
       TYPE(hybrid_type) :: hybrid
       TYPE(qpoint_grid_type) :: qpoint_grid
       TYPE(dftU_type) :: dftU
@@ -660,6 +660,7 @@ CONTAINS
       TYPE(HubbardJ_type),      ALLOCATABLE :: Hubbard_J_(:)
       TYPE(starting_ns_type),   ALLOCATABLE :: starting_ns_(:)
       TYPE(Hubbard_ns_type),    ALLOCATABLE :: Hubbard_ns_(:)
+      TYPE(HubbardCommon_type), ALLOCATABLE :: london_c6_obj(:)
       LOGICAL  :: Hubbard_U_ispresent
       LOGICAL  :: Hubbard_J0_ispresent
       LOGICAL  :: Hubbard_alpha_ispresent
@@ -667,6 +668,10 @@ CONTAINS
       LOGICAL  :: Hubbard_J_ispresent
       LOGICAL  :: starting_ns_ispresent
       LOGICAL  :: Hubbard_ns_ispresent
+      LOGICAL  :: london_c6_ispresent, london_s6_ispresent, london_rvdw_ispresent, ts_vdw_econv_thr_ispresent, & 
+                  london_rcut_ispresent, ts_vdw_isolated_ispresent, xdm_a1_ispresent, xdm_a2_ispresent, &
+                  empirical_vdw = .FALSE. 
+      INTEGER  :: ndim_london_c6                   
       CHARACTER(10), ALLOCATABLE :: label(:)
       CHARACTER                  :: hubbard_shell 
       INTEGER,EXTERNAL           :: set_hubbard_l,set_hubbard_n
@@ -790,18 +795,73 @@ CONTAINS
           !
       ENDIF
       !
-      IF ( dft_is_vdW ) THEN
+      SELECT CASE ( TRIM (vdw_corr )) 
+      CASE ( 'grimme-d2', 'Grimme-D2', 'DFT-D', 'dft-d') 
+           empirical_vdw = .TRUE.
+           london_s6_ispresent = .TRUE. 
+           london_rcut_ispresent = .TRUE. 
+           xdm_a1_ispresent = .TRUE. 
+           xdm_a2_ispresent = .TRUE. 
+           IF ( ANY(london_c6 .GT.  0.d0 )) THEN 
+              london_c6_ispresent = .TRUE.
+              ALLOCATE (london_c6_obj(nsp))
+              ndim_london_c6 = 0 
+              DO isp = 1, nsp 
+                 IF ( london_c6(isp) .GT. 0.d0 ) THEN 
+                    ndim_london_c6 = ndim_london_c6 + 1
+                    CALL qes_init_hubbardcommon(london_c6_obj(ndim_london_c6), "london_c6", TRIM(species(isp)),"",&
+                                                london_c6(isp))
+                 END IF 
+              END DO                        
+           ELSE 
+              london_c6_ispresent = .FALSE. 
+           END IF
+           ts_vdw_econv_thr_ispresent = .FALSE. 
+           ts_vdw_isolated_ispresent = .FALSE. 
+      CASE ( 'TS', 'ts', 'ts-vdw', 'ts-vdW', 'tkatchenko-scheffler')
+           empirical_vdw = .TRUE.
+           london_s6_ispresent =   .FALSE.
+           london_c6_ispresent = .FALSE.
+           london_rcut_ispresent = .FALSE.
+           xdm_a1_ispresent =      .FALSE.
+           xdm_a2_ispresent =      .FALSE.
+           london_c6_ispresent   = .FALSE. 
+           ts_vdw_econv_thr_ispresent = .TRUE. 
+           ts_vdw_isolated_ispresent  = .TRUE. 
+      CASE default 
+           empirical_vdw = .FALSE.
+           ts_vdw_econv_thr_ispresent = .FALSE.
+           ts_vdw_isolated_ispresent = .FALSE.
+           london_c6_ispresent = .FALSE.
+           london_s6_ispresent =   .FALSE.
+           london_c6_ispresent = .FALSE.
+           london_rcut_ispresent = .FALSE.
+           xdm_a1_ispresent =      .FALSE.
+           xdm_a2_ispresent =      .FALSE.
+           london_c6_ispresent   = .FALSE.
+      END SELECT 
+
+      IF ( dft_is_vdW .OR. empirical_vdw ) THEN
           !
-          CALL qes_init_vdW(vdW, "vdW", vdw_corr, london_s6, london_rcut, xdm_a1, xdm_a2 )
+          CALL qes_init_vdW(vdW, "vdW", TRIM(vdw_corr), london_s6_ispresent, london_s6, ts_vdw_econv_thr_ispresent, &
+                            ts_vdw_econv_thr, ts_vdw_isolated_ispresent, ts_vdw_isolated, london_rcut_ispresent, &
+                            london_rcut, xdm_a1_ispresent, xdm_a1, xdm_a2_ispresent, xdm_a2, london_c6_ispresent, &
+                            ndim_london_c6, london_c6_obj(1:ndim_london_c6) )
           !
+          IF (london_c6_ispresent )   THEN
+             DO isp=1, ndim_london_c6
+                CALL qes_reset_hubbardcommon(london_c6_obj(isp))
+             END DO 
+             DEALLOCATE ( london_c6_obj) 
+          END IF
       ENDIF
         
       CALL qes_init_dft(obj, "dft", functional, dft_is_hybrid, hybrid, &
-                             dft_is_lda_plus_U, dftU, dft_is_vdW, vdW)
+                             dft_is_lda_plus_U, dftU, (dft_is_vdW .OR. empirical_vdw) , vdW)
       !
       IF (dft_is_hybrid)      CALL qes_reset_hybrid(hybrid)
       IF (dft_is_lda_plus_U)  CALL qes_reset_dftU(dftU)
-      IF (dft_is_vdW)         CALL qes_reset_vdW(vdW)
+      IF (dft_is_vdW .OR. empirical_vdw )  CALL qes_reset_vdW(vdW)
       !
     END SUBROUTINE qexsd_init_dft
     !

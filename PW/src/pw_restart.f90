@@ -168,10 +168,11 @@ USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, delete_if_present, &
       USE martyna_tuckerman,    ONLY : do_comp_mt
       USE esm,                  ONLY : do_comp_esm, esm_nfit, esm_efield, esm_w, &
                                        esm_a, esm_bc
-      USE london_module,        ONLY : scal6, lon_rcut
+      USE london_module,        ONLY : scal6, lon_rcut, in_c6
       USE xdm_module,           ONLY : xdm_a1=>a1i, xdm_a2=>a2i
-      USE tsvdw_module,         ONLY : vdw_isolated
-      USE input_parameters,     ONLY : space_group, verbosity, calculation, ion_dynamics, starting_ns_eigenvalue
+      USE tsvdw_module,         ONLY : vdw_isolated, vdw_econv_thr
+      USE input_parameters,     ONLY : space_group, verbosity, calculation, ion_dynamics, starting_ns_eigenvalue, &
+                                       vdw_corr, london
       USE bp,                   ONLY : lelfield, lberry, bp_mod_el_pol => el_pol, bp_mod_ion_pol => ion_pol
       !
       USE rap_point_group,      ONLY : elem, nelem, name_class
@@ -187,6 +188,7 @@ USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, delete_if_present, &
       CHARACTER(15)         :: subname="pw_write_schema"
       CHARACTER(LEN=20)     :: dft_name
       CHARACTER(LEN=256)    :: dirname, filename
+      CHARACTER(LEN=80)     :: vdw_corr_
       INTEGER               :: i, ig, ik, ngg, ierr, ipol, num_k_points
       INTEGER               :: npool, nkbl, nkl, nkr, npwx_g
       INTEGER               :: ike, iks, npw_g, ispin, inlc
@@ -206,7 +208,6 @@ USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, delete_if_present, &
       ! reducing across MPI tasks
       !
       ALLOCATE( ngk_g( nkstot ) )
-      !
       !
       ngk_g(1:nks) = ngk(:)
       CALL mp_sum( ngk_g(1:nks), intra_bgrp_comm )
@@ -362,14 +363,16 @@ USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, delete_if_present, &
          !
          IF ( lda_plus_u .AND. noncolin) CALL errore(subname,"LDA+U and non-collinear case not implemented in qexsd",10)
          !
+         vdw_corr_ = vdw_corr
+         IF ( london ) vdw_corr_ = 'grimme-d2'
          CALL qexsd_init_dft(output%dft, dft_name, &
                              dft_is_hybrid(), nq1, nq2, nq3, ecutfock, &
-                                  get_exx_fraction(), get_screening_parameter(), exxdiv_treatment, &
-                                  x_gamma_extrapolation, ecutvcut, &
-                             lda_plus_u, lda_plus_u_kind, 2*Hubbard_lmax+1, nspin, nsp, 2*Hubbard_lmax+1, nat, atm, ityp, &
-                                  Hubbard_U, Hubbard_J0, Hubbard_alpha, Hubbard_beta, Hubbard_J, &
-                                  starting_ns_eigenvalue, rho%ns, rho%ns_nc, U_projection, &
-                             dft_is_nonlocc(), TRIM(get_nonlocc_name()), scal6, lon_rcut, xdm_a1, xdm_a2,is_hubbard,upf(1:nsp)%psd)
+                             get_exx_fraction(), get_screening_parameter(), exxdiv_treatment, &
+                             x_gamma_extrapolation, ecutvcut, lda_plus_u, lda_plus_u_kind, 2*Hubbard_lmax+1, &
+                             nspin, nsp, 2*Hubbard_lmax+1, nat, atm, ityp, Hubbard_U, Hubbard_J0, Hubbard_alpha, &
+                             Hubbard_beta, Hubbard_J, starting_ns_eigenvalue, rho%ns, rho%ns_nc, U_projection, &
+                             dft_is_nonlocc(), TRIM(vdw_corr_), scal6, in_c6, lon_rcut, xdm_a1, xdm_a2,&
+                             vdw_econv_thr, vdw_isolated, is_hubbard, upf(1:nsp)%psd)
          !
 !-------------------------------------------------------------------------------
 ! ... MAGNETIZATION

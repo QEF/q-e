@@ -4312,68 +4312,56 @@ SUBROUTINE qes_reset_spin(obj)
 END SUBROUTINE qes_reset_spin
 
 
-SUBROUTINE qes_write_vdW(iun, obj)
+SUBROUTINE qes_write_HubbardCommon(iun, obj)
    IMPLICIT NONE
 
    INTEGER  :: iun
-   TYPE(vdW_type) :: obj
+   TYPE(HubbardCommon_type) :: obj
    !
    INTEGER  :: i
 
    IF (.NOT. obj%lwrite) RETURN
    attr = " "
+   CALL iotk_write_attr(attr, 'specie', TRIM(obj%specie))
+   CALL iotk_write_attr(attr, 'label', TRIM(obj%label))
 
    CALL iotk_write_begin(iun, TRIM(obj%tagname), attr=TRIM(attr))
       !
-      CALL iotk_write_begin(iun, 'vdw_corr',new_line=.FALSE.)
-         WRITE(iun, '(A)',advance='no')  TRIM(obj%vdw_corr)
-      CALL iotk_write_end(iun, 'vdw_corr',indentation=.FALSE.)
-      CALL iotk_write_begin(iun, 'london_s6')
-         WRITE(iun, '(E20.7)') obj%london_s6
-      CALL iotk_write_end(iun, 'london_s6')
-      CALL iotk_write_begin(iun, 'london_rcut')
-         WRITE(iun, '(E20.7)') obj%london_rcut
-      CALL iotk_write_end(iun, 'london_rcut')
-      CALL iotk_write_begin(iun, 'xdm_a1')
-         WRITE(iun, '(E20.7)') obj%xdm_a1
-      CALL iotk_write_end(iun, 'xdm_a1')
-      CALL iotk_write_begin(iun, 'xdm_a2')
-         WRITE(iun, '(E20.7)') obj%xdm_a2
-      CALL iotk_write_end(iun, 'xdm_a2')
+      WRITE(iun, '(E20.7)') obj%HubbardCommon
    CALL iotk_write_end(iun, TRIM(obj%tagname))
    !
-END SUBROUTINE qes_write_vdW
+END SUBROUTINE qes_write_HubbardCommon
 
-SUBROUTINE qes_init_vdW(obj, tagname, vdw_corr, london_s6, london_rcut, xdm_a1, xdm_a2)
+SUBROUTINE qes_init_HubbardCommon(obj, tagname, specie, label, HubbardCommon)
    IMPLICIT NONE
 
-   TYPE(vdW_type) :: obj
+   TYPE(HubbardCommon_type) :: obj
    CHARACTER(len=*) :: tagname
    INTEGER  :: i
-   CHARACTER(len=*) :: vdw_corr
-   REAL(DP) :: london_s6
-   REAL(DP) :: london_rcut
-   REAL(DP) :: xdm_a1
-   REAL(DP) :: xdm_a2
+   CHARACTER(len=*) :: specie
+   CHARACTER(len=*) :: label
+   REAL(DP) :: HubbardCommon
 
    obj%tagname = TRIM(tagname)
-   obj%vdw_corr = vdw_corr
-   obj%london_s6 = london_s6
-   obj%london_rcut = london_rcut
-   obj%xdm_a1 = xdm_a1
-   obj%xdm_a2 = xdm_a2
 
-END SUBROUTINE qes_init_vdW
+   obj%specie = TRIM(specie)
 
-SUBROUTINE qes_reset_vdW(obj)
+
+   obj%label = TRIM(label)
+
+   obj%HubbardCommon = HubbardCommon
+
+END SUBROUTINE qes_init_HubbardCommon
+
+SUBROUTINE qes_reset_HubbardCommon(obj)
    IMPLICIT NONE
-   TYPE(vdW_type) :: obj
+   TYPE(HubbardCommon_type) :: obj
    INTEGER  :: i
 
    obj%tagname = ""
 
 
-END SUBROUTINE qes_reset_vdW
+END SUBROUTINE qes_reset_HubbardCommon
 
 
 SUBROUTINE qes_write_HubbardProj(iun, obj)
@@ -4599,56 +4587,172 @@ SUBROUTINE qes_reset_HubbardJ(obj)
 END SUBROUTINE qes_reset_HubbardJ
 
 
-SUBROUTINE qes_write_HubbardCommon(iun, obj)
+SUBROUTINE qes_write_vdW(iun, obj)
    IMPLICIT NONE
 
    INTEGER  :: iun
-   TYPE(HubbardCommon_type) :: obj
+   TYPE(vdW_type) :: obj
    !
    INTEGER  :: i
 
    IF (.NOT. obj%lwrite) RETURN
    attr = " "
-   CALL iotk_write_attr(attr, 'specie', TRIM(obj%specie))
-   CALL iotk_write_attr(attr, 'label', TRIM(obj%label))
 
    CALL iotk_write_begin(iun, TRIM(obj%tagname), attr=TRIM(attr))
       !
-      WRITE(iun, '(E20.7)') obj%HubbardCommon
+      CALL iotk_write_begin(iun, 'vdw_corr',new_line=.FALSE.)
+         WRITE(iun, '(A)',advance='no')  TRIM(obj%vdw_corr)
+      CALL iotk_write_end(iun, 'vdw_corr',indentation=.FALSE.)
+      IF(obj%london_s6_ispresent) THEN
+         CALL iotk_write_begin(iun, 'london_s6')
+            WRITE(iun, '(E20.7)') obj%london_s6
+         CALL iotk_write_end(iun, 'london_s6')
+      ENDIF
+      !
+      IF(obj%ts_vdw_econv_thr_ispresent) THEN
+         CALL iotk_write_begin(iun, 'ts_vdw_econv_thr')
+            WRITE(iun, '(E20.7)') obj%ts_vdw_econv_thr
+         CALL iotk_write_end(iun, 'ts_vdw_econv_thr')
+      ENDIF
+      !
+      IF(obj%ts_vdw_isolated_ispresent) THEN
+         CALL iotk_write_begin(iun, 'ts_vdw_isolated',new_line=.FALSE.)
+            IF (obj%ts_vdw_isolated) THEN
+               WRITE(iun, '(A)',advance='no')  'true'
+            ELSE
+               WRITE(iun, '(A)',advance='no')  'false'
+            ENDIF
+         CALL iotk_write_end(iun, 'ts_vdw_isolated',indentation=.FALSE.)
+      ENDIF
+      !
+      IF(obj%london_rcut_ispresent) THEN
+         CALL iotk_write_begin(iun, 'london_rcut')
+            WRITE(iun, '(E20.7)') obj%london_rcut
+         CALL iotk_write_end(iun, 'london_rcut')
+      ENDIF
+      !
+      IF(obj%xdm_a1_ispresent) THEN
+         CALL iotk_write_begin(iun, 'xdm_a1')
+            WRITE(iun, '(E20.7)') obj%xdm_a1
+         CALL iotk_write_end(iun, 'xdm_a1')
+      ENDIF
+      !
+      IF(obj%xdm_a2_ispresent) THEN
+         CALL iotk_write_begin(iun, 'xdm_a2')
+            WRITE(iun, '(E20.7)') obj%xdm_a2
+         CALL iotk_write_end(iun, 'xdm_a2')
+      ENDIF
+      !
+      IF(obj%london_c6_ispresent) THEN
+         DO i = 1, obj%ndim_london_c6
+            CALL qes_write_HubbardCommon(iun, obj%london_c6(i))
+            !
+         END DO
+      ENDIF
+      !
    CALL iotk_write_end(iun, TRIM(obj%tagname))
    !
-END SUBROUTINE qes_write_HubbardCommon
+END SUBROUTINE qes_write_vdW
 
-SUBROUTINE qes_init_HubbardCommon(obj, tagname, specie, label, HubbardCommon)
+SUBROUTINE qes_init_vdW(obj, tagname, vdw_corr, london_s6_ispresent, london_s6, &
+                              ts_vdw_econv_thr_ispresent, ts_vdw_econv_thr, &
+                              ts_vdw_isolated_ispresent, ts_vdw_isolated, &
+                              london_rcut_ispresent, london_rcut, xdm_a1_ispresent, xdm_a1, &
+                              xdm_a2_ispresent, xdm_a2, london_c6_ispresent, &
+                              ndim_london_c6, london_c6)
    IMPLICIT NONE
 
-   TYPE(HubbardCommon_type) :: obj
+   TYPE(vdW_type) :: obj
    CHARACTER(len=*) :: tagname
    INTEGER  :: i
-   CHARACTER(len=*) :: specie
-   CHARACTER(len=*) :: label
-   REAL(DP) :: HubbardCommon
+   CHARACTER(len=*) :: vdw_corr
+   LOGICAL  :: london_s6_ispresent
+   REAL(DP) :: london_s6
+   LOGICAL  :: ts_vdw_econv_thr_ispresent
+   REAL(DP) :: ts_vdw_econv_thr
+   LOGICAL  :: ts_vdw_isolated_ispresent
+   LOGICAL  :: ts_vdw_isolated
+   LOGICAL  :: london_rcut_ispresent
+   REAL(DP) :: london_rcut
+   LOGICAL  :: xdm_a1_ispresent
+   REAL(DP) :: xdm_a1
+   LOGICAL  :: xdm_a2_ispresent
+   REAL(DP) :: xdm_a2
+   LOGICAL  :: london_c6_ispresent
+   INTEGER  :: ndim_london_c6
+   TYPE(HubbardCommon_type), DIMENSION(:) :: london_c6
 
    obj%tagname = TRIM(tagname)
+   obj%vdw_corr = vdw_corr
+   obj%london_s6_ispresent = london_s6_ispresent
+   IF(obj%london_s6_ispresent) THEN
+      obj%london_s6 = london_s6
+   ENDIF
+   obj%ts_vdw_econv_thr_ispresent = ts_vdw_econv_thr_ispresent
+   IF(obj%ts_vdw_econv_thr_ispresent) THEN
+      obj%ts_vdw_econv_thr = ts_vdw_econv_thr
+   ENDIF
+   obj%ts_vdw_isolated_ispresent = ts_vdw_isolated_ispresent
+   IF(obj%ts_vdw_isolated_ispresent) THEN
+      obj%ts_vdw_isolated = ts_vdw_isolated
+   ENDIF
+   obj%london_rcut_ispresent = london_rcut_ispresent
+   IF(obj%london_rcut_ispresent) THEN
+      obj%london_rcut = london_rcut
+   ENDIF
+   obj%xdm_a1_ispresent = xdm_a1_ispresent
+   IF(obj%xdm_a1_ispresent) THEN
+      obj%xdm_a1 = xdm_a1
+   ENDIF
+   obj%xdm_a2_ispresent = xdm_a2_ispresent
+   IF(obj%xdm_a2_ispresent) THEN
+      obj%xdm_a2 = xdm_a2
+   ENDIF
+   obj%london_c6_ispresent = london_c6_ispresent
+   IF(obj%london_c6_ispresent) THEN
+      ALLOCATE(obj%london_c6(SIZE(london_c6)))
+      DO i = 1, SIZE(london_c6)
+         obj%london_c6(i) = london_c6(i)
+      ENDDO
+   obj%ndim_london_c6 = ndim_london_c6
+   ENDIF
 
-   obj%specie = TRIM(specie)
+END SUBROUTINE qes_init_vdW
 
-
-   obj%label = TRIM(label)
-
-   obj%HubbardCommon = HubbardCommon
-
-END SUBROUTINE qes_init_HubbardCommon
-
-SUBROUTINE qes_reset_HubbardCommon(obj)
+SUBROUTINE qes_reset_vdW(obj)
    IMPLICIT NONE
-   TYPE(HubbardCommon_type) :: obj
+   TYPE(vdW_type) :: obj
    INTEGER  :: i
 
    obj%tagname = ""
 
+   IF(obj%london_s6_ispresent) THEN
+      obj%london_s6_ispresent = .FALSE.
+   ENDIF
+   IF(obj%ts_vdw_econv_thr_ispresent) THEN
+      obj%ts_vdw_econv_thr_ispresent = .FALSE.
+   ENDIF
+   IF(obj%ts_vdw_isolated_ispresent) THEN
+      obj%ts_vdw_isolated_ispresent = .FALSE.
+   ENDIF
+   IF(obj%london_rcut_ispresent) THEN
+      obj%london_rcut_ispresent = .FALSE.
+   ENDIF
+   IF(obj%xdm_a1_ispresent) THEN
+      obj%xdm_a1_ispresent = .FALSE.
+   ENDIF
+   IF(obj%xdm_a2_ispresent) THEN
+      obj%xdm_a2_ispresent = .FALSE.
+   ENDIF
+   IF(obj%london_c6_ispresent) THEN
+      DO i = 1, SIZE(obj%london_c6)
+         CALL qes_reset_HubbardCommon(obj%london_c6(i))
+      ENDDO
+      IF (ALLOCATED(obj%london_c6)) DEALLOCATE(obj%london_c6)
+      obj%london_c6_ispresent = .FALSE.
+   ENDIF
 
-END SUBROUTINE qes_reset_HubbardCommon
+END SUBROUTINE qes_reset_vdW
 
 
 SUBROUTINE qes_write_dftU(iun, obj)
