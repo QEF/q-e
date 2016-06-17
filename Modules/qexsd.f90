@@ -600,7 +600,7 @@ CONTAINS
     !
     !
     !------------------------------------------------------------------------
-    SUBROUTINE qexsd_init_dft(obj, functional, &
+    SUBROUTINE qexsd_init_dft(obj, functional, root_is_output, &
                    dft_is_hybrid, nqx1, nqx2, nqx3, ecutfock, exx_fraction, screening_parameter, &
                                   exxdiv_treatment, x_gamma_extrapolation, ecutvcut, &
                    dft_is_lda_plus_U, lda_plus_U_kind, llmax, nspin, nsp, ldim, nat, species, ityp, Hubbard_U, Hubbard_J0, &
@@ -615,6 +615,7 @@ CONTAINS
       TYPE(dft_type)    :: obj
       CHARACTER(len=*), INTENT(IN) :: functional
       LOGICAL,          INTENT(IN) :: dft_is_hybrid
+      LOGICAL,          INTENT(IN) :: root_is_output
       INTEGER,          INTENT(IN) :: nqx1, nqx2, nqx3
       REAL(DP),         INTENT(IN) :: ecutfock
       REAL(DP),         INTENT(IN) :: exx_fraction
@@ -843,10 +844,10 @@ CONTAINS
 
       IF ( dft_is_vdW .OR. empirical_vdw ) THEN
           !
-          CALL qes_init_vdW(vdW, "vdW", TRIM(vdw_corr), london_s6_ispresent, london_s6, ts_vdw_econv_thr_ispresent, &
-                            ts_vdw_econv_thr, ts_vdw_isolated_ispresent, ts_vdw_isolated, london_rcut_ispresent, &
-                            london_rcut, xdm_a1_ispresent, xdm_a1, xdm_a2_ispresent, xdm_a2, london_c6_ispresent, &
-                            ndim_london_c6, london_c6_obj(1:ndim_london_c6) )
+          CALL qes_init_vdW(vdW, "vdW", TRIM(vdw_corr), root_is_output, dft_is_vdW, london_s6_ispresent, london_s6, &
+                            ts_vdw_econv_thr_ispresent, ts_vdw_econv_thr, ts_vdw_isolated_ispresent, ts_vdw_isolated,& 
+                            london_rcut_ispresent, london_rcut, xdm_a1_ispresent, xdm_a1, xdm_a2_ispresent, xdm_a2, &
+                            london_c6_ispresent, ndim_london_c6, london_c6_obj(1:ndim_london_c6) )
           !
           IF (london_c6_ispresent )   THEN
              DO isp=1, ndim_london_c6

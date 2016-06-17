@@ -365,7 +365,7 @@ USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, delete_if_present, &
          !
          vdw_corr_ = vdw_corr
          IF ( london ) vdw_corr_ = 'grimme-d2'
-         CALL qexsd_init_dft(output%dft, dft_name, &
+         CALL qexsd_init_dft(output%dft, dft_name, .TRUE., &
                              dft_is_hybrid(), nq1, nq2, nq3, ecutfock, &
                              get_exx_fraction(), get_screening_parameter(), exxdiv_treatment, &
                              x_gamma_extrapolation, ecutvcut, lda_plus_u, lda_plus_u_kind, 2*Hubbard_lmax+1, &

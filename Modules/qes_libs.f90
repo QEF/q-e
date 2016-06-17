@@ -4603,6 +4603,16 @@ SUBROUTINE qes_write_vdW(iun, obj)
       CALL iotk_write_begin(iun, 'vdw_corr',new_line=.FALSE.)
          WRITE(iun, '(A)',advance='no')  TRIM(obj%vdw_corr)
       CALL iotk_write_end(iun, 'vdw_corr',indentation=.FALSE.)
+      IF(obj%non_local_dft_ispresent) THEN
+         CALL iotk_write_begin(iun, 'non_local_dft',new_line=.FALSE.)
+            IF (obj%non_local_dft) THEN
+               WRITE(iun, '(A)',advance='no')  'true'
+            ELSE
+               WRITE(iun, '(A)',advance='no')  'false'
+            ENDIF
+         CALL iotk_write_end(iun, 'non_local_dft',indentation=.FALSE.)
+      ENDIF
+      !
       IF(obj%london_s6_ispresent) THEN
          CALL iotk_write_begin(iun, 'london_s6')
             WRITE(iun, '(E20.7)') obj%london_s6
@@ -4654,9 +4664,9 @@ SUBROUTINE qes_write_vdW(iun, obj)
    !
 END SUBROUTINE qes_write_vdW
 
-SUBROUTINE qes_init_vdW(obj, tagname, vdw_corr, london_s6_ispresent, london_s6, &
-                              ts_vdw_econv_thr_ispresent, ts_vdw_econv_thr, &
-                              ts_vdw_isolated_ispresent, ts_vdw_isolated, &
+SUBROUTINE qes_init_vdW(obj, tagname, vdw_corr, non_local_dft_ispresent, non_local_dft, &
+                              london_s6_ispresent, london_s6, ts_vdw_econv_thr_ispresent, &
+                              ts_vdw_econv_thr, ts_vdw_isolated_ispresent, ts_vdw_isolated, &
                               london_rcut_ispresent, london_rcut, xdm_a1_ispresent, xdm_a1, &
                               xdm_a2_ispresent, xdm_a2, london_c6_ispresent, &
                               ndim_london_c6, london_c6)
@@ -4666,6 +4676,8 @@ SUBROUTINE qes_init_vdW(obj, tagname, vdw_corr, london_s6_ispresent, london_s6, 
    CHARACTER(len=*) :: tagname
    INTEGER  :: i
    CHARACTER(len=*) :: vdw_corr
+   LOGICAL  :: non_local_dft_ispresent
+   LOGICAL  :: non_local_dft
    LOGICAL  :: london_s6_ispresent
    REAL(DP) :: london_s6
    LOGICAL  :: ts_vdw_econv_thr_ispresent
@@ -4684,6 +4696,10 @@ SUBROUTINE qes_init_vdW(obj, tagname, vdw_corr, london_s6_ispresent, london_s6, 
 
    obj%tagname = TRIM(tagname)
    obj%vdw_corr = vdw_corr
+   obj%non_local_dft_ispresent = non_local_dft_ispresent
+   IF(obj%non_local_dft_ispresent) THEN
+      obj%non_local_dft = non_local_dft
+   ENDIF
    obj%london_s6_ispresent = london_s6_ispresent
    IF(obj%london_s6_ispresent) THEN
       obj%london_s6 = london_s6
@@ -4726,6 +4742,9 @@ SUBROUTINE qes_reset_vdW(obj)
 
    obj%tagname = ""
 
+   IF(obj%non_local_dft_ispresent) THEN
+      obj%non_local_dft_ispresent = .FALSE.
+   ENDIF
    IF(obj%london_s6_ispresent) THEN
       obj%london_s6_ispresent = .FALSE.
    ENDIF

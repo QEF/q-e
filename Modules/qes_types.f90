@@ -927,6 +927,8 @@ TYPE :: vdW_type
    LOGICAL  :: lwrite = .true.
    !
    CHARACTER(len=256) :: vdw_corr
+   LOGICAL  :: non_local_dft_ispresent
+   LOGICAL  :: non_local_dft
    LOGICAL  :: london_s6_ispresent
    REAL(DP) :: london_s6
    LOGICAL  :: ts_vdw_econv_thr_ispresent
