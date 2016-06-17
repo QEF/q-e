@@ -30,7 +30,8 @@ PROGRAM GENERATE_KERNEL_
 ! The proper spin extension of vdW-DF, i.e. svdW-DF, uses the same
 ! kernel and is derived in
 !
-!    T. Thonhauser et al., TBD
+!    T. Thonhauser, S. Zuluaga, C. A. Arter, K. Berland, E. Schroeder,
+!    and P. Hyldgaard, Phys. Rev. Lett. 115, 136402 (2015).
 !
 ! henceforth refered to THONHAUSER.
 !
@@ -61,7 +62,7 @@ PROGRAM GENERATE_KERNEL_
 ! this is not done here. It was found that, with q's chosen judiciously
 ! ahead of time, the kernel and the second derivatives required for
 ! interpolation could be tabulated ahead of time for faster use of the
-! vdW_FD functional. Through testing we found no need to soften the
+! vdW-DF functional. Through testing we found no need to soften the
 ! kernel and correct for this later (see SOLER eqations 6-7).
 !
 ! The algorithm employed here is "embarrassingly parallel," meaning that
