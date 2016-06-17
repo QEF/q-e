@@ -1,7 +1,6 @@
 This is the distribution of the Quantum ESPRESSO suite of codes (ESPRESSO: 
-opEn-Source Package for Research in Electronic Structure, Simulation, 
-and Optimization), promoted by the IOM-DEMOCRITOS National Simulation Center 
-of the Italian CNR (http://www.democritos.it). 
+opEn-Source Package for Research in Electronic Structure, Simulation, and
+Optimization).
 
 Quick installation instructions for the impatient:
    ./configure [options]
