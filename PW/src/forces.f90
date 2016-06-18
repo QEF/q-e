@@ -344,7 +344,7 @@ SUBROUTINE forces()
   !
   CALL stop_clock( 'forces' )
   !
-  IF ( ( sumfor < 10.D0*sumscf ) .AND. ( sumfor > eps ) ) &
+  IF ( ( sumfor < 10.D0*sumscf ) .AND. ( sumfor > nat*eps ) ) &
   WRITE( stdout,'(5x,"SCF correction compared to forces is large: ", &
                    &  "reduce conv_thr to get better values")')
   !
