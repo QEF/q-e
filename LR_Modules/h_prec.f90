@@ -41,7 +41,6 @@ subroutine h_prec (ik, h_diag)
         !
      enddo
      IF (noncolin) THEN
-        h_diag(ig,ibnd)=1.0_dp/max(1.0_dp,g2kin(ig)/eprec(ibnd,ik))
         do ig = 1, ngk(ikq)
            h_diag(ig+npwx,ibnd)=h_diag(ig,ibnd)
         enddo
