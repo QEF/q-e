@@ -101,7 +101,7 @@ SUBROUTINE invfft_wave (npw, igk, evc_g, evc_r )
   
   evc_r = (0.0_dp, 0.0_dp)
   DO ig = 1, npw
-     evc_r (nls (igk (ig) ),1 ) = evc_g (ig)
+     evc_r (nls (igk(ig) ),1 ) = evc_g (ig)
   ENDDO
   CALL invfft ('Wave', evc_r(:,1), dffts)
   IF (noncolin) THEN

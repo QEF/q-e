@@ -58,7 +58,7 @@ subroutine solve_e
 
   USE lrus,                  ONLY : int3_paw
   USE qpoint,                ONLY : nksq
-  USE eqv,                   ONLY : dpsi, dvpsi, eprec
+  USE eqv,                   ONLY : dpsi, dvpsi
   USE control_lr,            ONLY : nbnd_occ, lgamma
   USE dv_of_drho_lr
 
@@ -194,17 +194,9 @@ subroutine solve_e
         CALL init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb)
         CALL g2_kin(ik)
         !
-        h_diag=0.d0
-        do ibnd = 1, nbnd_occ (ik)
-           do ig = 1, npw
-              h_diag(ig,ibnd)=1.d0/max(1.0d0,g2kin(ig)/eprec(ibnd,ik))
-           enddo
-           IF (noncolin) THEN
-              do ig = 1, npw
-                 h_diag(ig+npwx,ibnd)=1.d0/max(1.0d0,g2kin(ig)/eprec(ibnd,ik))
-              enddo
-           END IF
-        enddo
+        ! compute preconditioning matrix h_diag used by cgsolve_all
+        !
+        CALL h_prec (ik, h_diag)
         !
         do ipol = 1, 3
            !

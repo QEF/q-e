@@ -21,7 +21,7 @@ subroutine pcgreen (avg_iter, thresh, ik, et_ )
   USE wavefunctions_module,  ONLY: evc
   USE mp_bands,  ONLY: intra_bgrp_comm
   USE mp,        ONLY: mp_sum
-  USE eqv,       ONLY: dpsi, dvpsi, eprec
+  USE eqv,       ONLY: dpsi, dvpsi
   USE control_lr,ONLY : nbnd_occ
   implicit none
 
@@ -91,11 +91,10 @@ subroutine pcgreen (avg_iter, thresh, ik, et_ )
   ! iterative solution of the linear system (H-e)*dpsi=dvpsi
   ! dvpsi=-P_c+ (dvbare+dvscf)*psi , dvscf fixed.
   !
-  do ibnd = 1, nbnd_occ (ik)
-     do ig = 1, npw
-        h_diag (ig, ibnd) = 1.d0 / max (1.0d0, g2kin (ig) / eprec (ibnd,ik) )
-     enddo
-  enddo
+  ! compute preconditioning matrix h_diag used by cgsolve_all
+  !
+  CALL h_prec (ik, h_diag)
+  !
   conv_root = .true.
 
   call cgsolve_all( ch_psi_all, cg_psi, et_, dvpsi, dpsi, h_diag, &

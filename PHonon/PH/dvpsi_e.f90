@@ -35,7 +35,7 @@ subroutine dvpsi_e (ik, ipol)
 
   USE lrus,            ONLY : becp1
   USE qpoint,          ONLY : nksq
-  USE eqv,             ONLY : dpsi, dvpsi, eprec
+  USE eqv,             ONLY : dpsi, dvpsi
   USE control_lr,      ONLY : nbnd_occ
 
   implicit none
@@ -90,18 +90,10 @@ subroutine dvpsi_e (ik, ipol)
   !
   CALL g2_kin(ik)
   !
+  ! compute preconditioning matrix h_diag used by cgsolve_all
+  !
   allocate (h_diag( npwx*npol, nbnd))
-  h_diag=0.d0
-  do ibnd = 1, nbnd_occ (ik)
-     do ig = 1, npw
-        h_diag (ig, ibnd) = 1.d0 / max (1.0d0, g2kin (ig) / eprec (ibnd,ik) )
-     enddo
-     IF (noncolin) THEN
-        do ig = 1, npw
-           h_diag (ig+npwx, ibnd) = 1.d0/max(1.0d0,g2kin(ig)/eprec(ibnd,ik))
-        enddo
-     END IF
-  enddo
+  CALL h_prec (ik, h_diag)
   !
   dvpsi(:,:) = (0.d0, 0.d0)
   !

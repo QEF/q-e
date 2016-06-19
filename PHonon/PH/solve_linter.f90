@@ -69,7 +69,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
 
   USE lrus,         ONLY : int3_paw
   USE lr_symm_base, ONLY : irotmq, minus_q, nsymq, rtau
-  USE eqv,          ONLY : dvpsi, dpsi, evq, eprec
+  USE eqv,          ONLY : dvpsi, dpsi, evq
   USE qpoint,       ONLY : xq, nksq, ikks, ikqs
   USE control_lr,   ONLY : alpha_pv, nbnd_occ, lgamma
   USE dv_of_drho_lr
@@ -265,21 +265,11 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
         ! needed by h_psi, called by ch_psi_all, called by cgsolve_all
         !
         CALL init_us_2 (npwq, igk_k(1,ikq), xk (1, ikq), vkb)
-        CALL g2_kin (ikq)
+        CALL g2_kin (ikq) 
         !
-        ! vector used for preconditioning by cgsolve_all
+        ! compute preconditioning matrix h_diag used by cgsolve_all
         !
-        h_diag=0.d0
-        do ibnd = 1, nbnd_occ (ikk)
-           do ig = 1, npwq
-              h_diag(ig,ibnd)=1.d0/max(1.0d0,g2kin(ig)/eprec(ibnd,ik))
-           enddo
-           IF (noncolin) THEN
-              do ig = 1, npwq
-                 h_diag(ig+npwx,ibnd)=1.d0/max(1.0d0,g2kin(ig)/eprec(ibnd,ik))
-              enddo
-           END IF
-        enddo
+        CALL h_prec (ik, h_diag)
         !
         do ipert = 1, npe
            mode = imode0 + ipert
