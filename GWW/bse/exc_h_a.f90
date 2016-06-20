@@ -45,7 +45,7 @@ real(kind=DP) prod_test1
 real(kind=DP) prod_test2 
 
 call start_clock('exc_h_a')
-debug=.true.
+debug=.false.
 
   if(debug) then 
      write(stdout,*) 'Starting exc_h_a subroutine'
@@ -128,7 +128,7 @@ debug=.true.
 !       first rotate the excitonic wave function wave vector to use the wannier
 !       wavefunctions
         if(debug) write(stdout,*)  'DEBUG1'
-        Call urot_a(a_in,a_rot,1)
+        Call urot_a(a_in,a_rot,0)
         if(debug) write(stdout,*)  'DEBUG2'
         if(.not.l_contraction) then
            call direct_v_exc(a_rot,fc,a_dirv)
@@ -139,7 +139,7 @@ debug=.true.
         call pc_operator_exc(a_dirv,vstate,1)
         if(debug) write(stdout,*)  'DEBUG4'
 !        and rotate back
-        call urot_a(a_dirv,a_rot,0)
+        call urot_a(a_dirv,a_rot,1)
         a_dirv%a(1:a_dirv%npw,1:a_dirv%numb_v)=a_rot%a(1:a_rot%npw,1:a_rot%numb_v)
 
         if(debug) write(stdout,*)  'DEBUG5'
@@ -153,7 +153,7 @@ debug=.true.
 
   
         if(.not.l_tdhf) then
-           call urot_a(a_in,a_rot,1)
+           call urot_a(a_in,a_rot,0)
 
            if(debug) then 
               write(stdout,*) 'Before direct_W_exc'
@@ -168,7 +168,7 @@ debug=.true.
            call pc_operator_exc(a_dirw,vstate,1)
 
 !           and rotate back
-           call urot_a(a_dirw,a_rot,0)
+           call urot_a(a_dirw,a_rot,1)
            a_dirw%a(1:a_dirw%npw,1:a_dirw%numb_v)=a_rot%a(1:a_rot%npw,1:a_rot%numb_v)
 
            call mp_barrier(world_comm)

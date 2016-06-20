@@ -37,7 +37,7 @@ subroutine rotate_wannier_gamma_bse( rot_u,a_in,a_out,ispin, itrasp)
   logical debug
 
   call start_clock('rotate_wannier_gamma_bse')
-  debug=.true.
+  debug=.false.
 
   allocate( evc0(npw,a_in%numb_v))
   allocate( evc_re(npw,a_in%numb_v))
