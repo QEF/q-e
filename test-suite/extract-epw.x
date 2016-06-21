@@ -33,6 +33,14 @@ rsig=`grep "Re\[Sigma\]=" $fname | awk '{print $7}'`
 isig=`grep "Im\[Sigma\]=" $fname | awk '{print $10}'` 
 z1=`grep " Z=" $fname | awk '{print $13}'`
 lam=`grep "lam= " $fname | awk '{print $15}'`
+lambda=`grep "  lambda(" $fname | awk '{print $4}'`
+gamma=`grep " gamma=" $fname | awk '{print $6}'`
+omega=`grep " omega=" $fname | awk '{print $9}'`
+lam_tot=`grep " lambda :" $fname | awk '{print $3}'`
+lam_tr=`grep " lambda_tr :" $fname | awk '{print $3}'`
+logavg=`grep " logavg =" $fname | awk '{print $3}'`
+l_a2F=`grep "l_a2F =" $fname | awk '{print $6}'`
+
 
 if test "$q1" != ""; then
         echo q1
@@ -69,7 +77,40 @@ if test "$lam" != ""; then
         for x in $lam; do echo $x; done
 fi
 
+if test "$lamda" != ""; then
+        echo lamda
+        for x in $lamda; do echo $x; done
+fi
 
+if test "$gamma" != ""; then
+        echo gamma
+        for x in $gamma; do echo $x; done
+fi
+
+if test "$omega" != ""; then
+        echo omega
+        for x in $omega; do echo $x; done
+fi
+
+if test "$lam_tot" != ""; then
+        echo lam_tot
+        echo $lam_tot
+fi
+
+if test "$lam_tr" != ""; then
+        echo lam_tr
+        echo $lam_tr
+fi
+
+if test "$logavg" != ""; then
+        echo logavg
+        echo $logavg
+fi
+
+if test "$l_a2F" != ""; then
+        echo l_a2F
+        echo $l_a2F
+fi
 
 if test "$e1" != ""; then
 	echo e1

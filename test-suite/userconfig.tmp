@@ -46,7 +46,14 @@ tolerance = ( (1.0e-6, None, 'e1'),
               (1.0e-5, None, 'rsig'),
               (1.0e-5, None, 'isig'),
               (1.0e-5, None, 'z1'),
-              (1.0e-5, None, 'lam'))
+              (1.0e-5, None, 'lam'),
+              (1.0e-5, None, 'lambda'),
+              (1.0e-5, None, 'gamma'),
+              (1.0e-5, None, 'omega'),
+              (1.0e-5, None, 'lam_tot'),
+              (1.0e-5, None, 'lam_tr'),
+              (1.0e-5, None, 'logavg'),
+              (1.0e-5, None, 'l_a2F'))
 
 
 skip_program = grep

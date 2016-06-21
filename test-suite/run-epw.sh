@@ -22,18 +22,18 @@ fi
 echo $0" "$@
 if [[ "$1" == "1" ]]
 then
-  echo "do pw"
+  echo "Running PW ..."
   ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/pw.x < $2 > $3 2> $4
   echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/pw.x < $2 > $3 2> $4"
 elif [[ "$1" == "2" ]]
 then
-  echo "do ph"
+  echo "Running PH ..."
   ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/ph.x < $2 > $3 2> $4
   echo "gather results in save" 
   python pp.py < pp.in
 elif [[ "$1" == "3" ]]
 then
-  echo "do epw"
+  echo "Running EPW ..."
   ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/epw.x < $2 > $3 2> $4
 fi
 
