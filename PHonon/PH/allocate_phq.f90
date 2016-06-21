@@ -43,7 +43,7 @@ subroutine allocate_phq
 
   USE lrus,         ONLY : becp1, dpqq, dpqq_so
   USE qpoint,       ONLY : nksq, eigqts, igkq, xk_col
-  USE eqv,          ONLY : dpsi, evq, vlocq, dmuxc, dvpsi, eprec
+  USE eqv,          ONLY : dpsi, evq, vlocq, dmuxc, dvpsi
   USE lr_symm_base, ONLY : rtau
   USE control_lr,   ONLY : lgamma
 
@@ -71,7 +71,6 @@ subroutine allocate_phq
   !
   allocate (vlocq ( ngm , ntyp))
   allocate (dmuxc ( dfftp%nnr , nspin_mag , nspin_mag))
-  allocate (eprec ( nbnd, nksq) )
   !
   allocate (eigqts ( nat))
   allocate (rtau ( 3, 48, nat))

@@ -48,7 +48,7 @@ subroutine solve_e_fpol ( iw )
   USE mp_bands,              ONLY : intra_bgrp_comm
   USE mp,                    ONLY : mp_sum
 
-  USE eqv,                   ONLY : dpsi, dvpsi, eprec
+  USE eqv,                   ONLY : dpsi, dvpsi
   USE control_lr,            ONLY : nbnd_occ, lgamma
   USE dv_of_drho_lr
 
@@ -83,10 +83,10 @@ subroutine solve_e_fpol ( iw )
   ! counters
   integer :: ltaver, lintercall
 
-  real(DP) :: tcpu, get_clock
-  ! timing variables
-
-  real(DP) :: iw  !frequency
+  real(DP) :: tcpu
+  real(DP) :: eprec1 ! 1.35<ek>, for preconditioning
+  real(DP) :: iw     !frequency
+  real(dp), external :: ddot, get_clock
 
   external cch_psi_all, ccg_psi
 
@@ -249,10 +249,14 @@ subroutine solve_e_fpol ( iw )
               !
               if ( (abs(iw).lt.0.05) .or. (abs(iw).gt.1.d0) ) then
                  !
+                 DO ig = 1, npwq
+                    auxg (ig) = g2kin (ig) * evc (ig, ibnd)
+                 END DO
+                 eprec1 = 1.35_dp*ddot(2*npwq,evc(1,ibnd),1,auxg,1)
+                 !
                  do ig = 1, npw
-!                   h_diag(ig,ibnd)=1.d0/max(1.0d0,g2kin(ig)/eprec(ibnd,ik))
                     h_diag(ig,ibnd)=CMPLX(1.d0, 0.d0,kind=DP) / &
-                    CMPLX( max(1.0d0,g2kin(ig)/eprec(ibnd,ik))-et(ibnd,ik),-iw ,kind=DP)
+                    CMPLX( max(1.0d0,g2kin(ig)/eprec1)-et(ibnd,ik),-iw ,kind=DP)
                  end do
               else
                  do ig = 1, npw

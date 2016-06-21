@@ -36,7 +36,7 @@ subroutine deallocate_phq
   USE gc_lr,        ONLY : grho, gmag, dvxc_rr,  dvxc_sr,  dvxc_ss, dvxc_s, &
                            vsgga, segni
   USE qpoint,       ONLY : eigqts, igkq, ikks, ikqs, nksq, xk_col
-  USE eqv,          ONLY : dmuxc, vlocq, dpsi, dvpsi, evq, eprec
+  USE eqv,          ONLY : dmuxc, vlocq, dpsi, dvpsi, evq
   USE control_lr,   ONLY : lgamma, nbnd_occ
 
   IMPLICIT NONE
@@ -56,7 +56,6 @@ subroutine deallocate_phq
   !
   if(allocated(vlocq)) deallocate (vlocq)
   if(allocated(dmuxc)) deallocate (dmuxc)
-  if(allocated(eprec)) deallocate (eprec)
   !
   if(allocated(ikks)) deallocate (ikks)
   if(allocated(ikqs)) deallocate (ikqs)
