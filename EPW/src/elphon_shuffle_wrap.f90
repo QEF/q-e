@@ -84,7 +84,7 @@
   logical :: eqvect_strict
   !! This function test if two tridimensional vectors are equal 
   logical :: nog
-  !! Tell you if G=0 or not in $S(q0)+G=q$ 
+  !! Tell you if G=0 or not in $$S(q_0)+G=q$$ 
   logical :: symmo
   !! Check whether the symmetry belongs to a symmorphic group
   logical :: exst

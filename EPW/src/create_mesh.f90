@@ -20,9 +20,8 @@
   USE pwcom,     ONLY : ef
   USE io_epw,    ONLY : iufilikmap
   USE elph2,     ONLY : xkf, wkf, etf, nkf, nkqtotf, ibndmin, ibndmax
-  USE eliashbergcom, ONLY : nkfs, ixkf, equivk, xkfs, wkfs, ekfs, nbndfs
+  USE eliashbergcom, ONLY : nkfs, ixkf, equivk, xkfs, wkfs, ekfs, nbndfs, memlt_pool
 #ifdef __PARA
-  USE eliashbergcom, ONLY : memlt_pool
   USE io_global, ONLY : ionode_id
   USE mp_global, ONLY : inter_pool_comm, my_pool_id, npool
   USE mp,        ONLY : mp_bcast, mp_barrier, mp_sum
@@ -45,6 +44,9 @@
 #ifdef __PARA
   IF ( .not. ALLOCATED(memlt_pool) ) ALLOCATE(memlt_pool(npool))
   memlt_pool(:) = 0.d0
+#else
+  IF ( .not. ALLOCATED(memlt_pool) ) ALLOCATE(memlt_pool(1))
+  memlt_pool(1) = 0.d0
 #endif
   !
   ! get the size of required memory for ekf_, wkf_, xkf_
