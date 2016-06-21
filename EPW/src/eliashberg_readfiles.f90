@@ -608,7 +608,11 @@
   !
   DO ipool = 1, npool ! nr of pools 
      CALL set_ndnmbr(0,ipool,1,npool,filelab)
+#ifdef __PARA
      filephmat = trim(tmp_dir) // trim(prefix) // '.ephmat' // filelab
+#else
+     filephmat = trim(tmp_dir) // trim(prefix) // '.ephmat'
+#endif
      !OPEN(iufileph, file=filephmat, status='old', form='formatted', err=100, iostat=ios)
      OPEN(iufileph, file=filephmat, status='old', form='unformatted', err=100, iostat=ios)
 100 CALL errore('read_ephmat','opening file '//filephmat,abs(ios))
@@ -646,7 +650,11 @@
   nnq(:) = 0
   DO ipool = 1, npool ! nr of pools 
      CALL set_ndnmbr(0,ipool,1,npool,filelab)
+#ifdef __PARA
      filephmat = trim(tmp_dir) // trim(prefix) // '.ephmat' // filelab
+#else
+     filephmat = trim(tmp_dir) // trim(prefix) // '.ephmat'
+#endif     
      !OPEN(iufileph, file=filephmat, status='old', form='formatted')
      !READ(iufileph,'(2i7)') tmp_pool_id, nks
      OPEN(iufileph, file=filephmat, status='old', form='unformatted')
