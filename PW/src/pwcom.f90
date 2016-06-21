@@ -270,7 +270,8 @@ MODULE force_mod
   !
   REAL(DP), ALLOCATABLE :: &
        force(:,:)       ! the force on each atom
-  REAL(DP)              :: sumfor ! norm of the force matrix (total force)
+  REAL(DP) :: &
+       sumfor           ! norm of the gradient (forces)
   REAL(DP) :: &
        sigma(3,3)       ! the stress acting on the system
   LOGICAL :: &

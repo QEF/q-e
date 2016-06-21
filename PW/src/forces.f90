@@ -32,7 +32,7 @@ SUBROUTINE forces()
   USE lsda_mod,      ONLY : nspin
   USE symme,         ONLY : symvector
   USE vlocal,        ONLY : strf, vloc
-  USE force_mod,     ONLY : force, lforce
+  USE force_mod,     ONLY : force, lforce, sumfor
   USE scf,           ONLY : rho
   USE ions_base,     ONLY : if_pos
   USE ldaU,          ONLY : lda_plus_u, U_projection
@@ -69,8 +69,8 @@ SUBROUTINE forces()
 !
   COMPLEX(DP), ALLOCATABLE :: auxg(:), auxr(:)
 !
-  REAL(DP) :: sumfor, sumscf, sum_mm
-  REAL(DP),PARAMETER :: eps = 1.e-12_dp
+  REAL(DP) :: sumscf, sum_mm
+  REAL(DP), PARAMETER :: eps = 1.e-12_dp
   INTEGER  :: ipol, na
     ! counter on polarization
     ! counter on atoms
