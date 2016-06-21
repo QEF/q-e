@@ -1601,7 +1601,6 @@ scale_h.o : ../../Modules/cell_base.o
 scale_h.o : ../../Modules/constants.o
 scale_h.o : ../../Modules/control_flags.o
 scale_h.o : ../../Modules/funct.o
-scale_h.o : ../../Modules/input_parameters.o
 scale_h.o : ../../Modules/io_global.o
 scale_h.o : ../../Modules/kind.o
 scale_h.o : ../../Modules/mp.o
