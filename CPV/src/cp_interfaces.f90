@@ -626,7 +626,7 @@
       SUBROUTINE printout_new_x &
          ( nfi, tfirst, tfilei, tprint, tps, h, stress, tau0, vels, &
            fion, ekinc, temphc, tempp, temps, etot, enthal, econs, econt, &
-           vnhh, xnhh0, vnhp, xnhp0, atot, ekin, epot, print_forces, print_stress,tstdout )
+           vnhh, xnhh0, vnhp, xnhp0, vnhe, xnhe0, atot, ekin, epot, print_forces, print_stress,tstdout )
          USE kinds,          ONLY: DP
          IMPLICIT NONE
          INTEGER, INTENT(IN) :: nfi
@@ -639,7 +639,7 @@
          REAL(DP), INTENT(IN) :: fion( :, : )  ! real forces
          REAL(DP), INTENT(IN) :: ekinc, temphc, tempp, etot, enthal, econs, econt
          REAL(DP), INTENT(IN) :: temps( : ) ! partial temperature for different ionic species
-         REAL(DP), INTENT(IN) :: vnhh( 3, 3 ), xnhh0( 3, 3 ), vnhp( 1 ), xnhp0( 1 )
+         REAL(DP), INTENT(IN) :: vnhh( 3, 3 ), xnhh0( 3, 3 ), vnhp( 1 ), xnhp0( 1 ), vnhe, xnhe0
          REAL(DP), INTENT(IN) :: atot! enthalpy of system for c.g. case
          REAL(DP), INTENT(IN) :: ekin
          REAL(DP), INTENT(IN) :: epot ! ( epseu + eht + exc )

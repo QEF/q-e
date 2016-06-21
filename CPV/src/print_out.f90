@@ -11,7 +11,7 @@
    SUBROUTINE printout_new_x   &
      ( nfi, tfirst, tfilei, tprint, tps, h, stress, tau0, vels, &
        fion, ekinc, temphc, tempp, temps, etot, enthal, econs, econt, &
-       vnhh, xnhh0, vnhp, xnhp0, atot, ekin, epot, print_forces, print_stress, &
+       vnhh, xnhh0, vnhp, xnhp0, vnhe, xnhe0, atot, ekin, epot, print_forces, print_stress, &
        tstdout)
 !=----------------------------------------------------------------------------=!
 
@@ -61,7 +61,7 @@
       REAL(DP), INTENT(IN) :: fion( :, : )  ! real forces
       REAL(DP), INTENT(IN) :: ekinc, temphc, tempp, etot, enthal, econs, econt
       REAL(DP), INTENT(IN) :: temps( : ) ! partial temperature for different ionic species
-      REAL(DP), INTENT(IN) :: vnhh( 3, 3 ), xnhh0( 3, 3 ), vnhp( 1 ), xnhp0( 1 )
+      REAL(DP), INTENT(IN) :: vnhh( 3, 3 ), xnhh0( 3, 3 ), vnhp( 1 ), xnhp0( 1 ), vnhe, xnhe0
       REAL(DP), INTENT(IN) :: atot! enthalpy of system for c.g. case
       REAL(DP), INTENT(IN) :: ekin
       REAL(DP), INTENT(IN) :: epot ! ( epseu + eht + exc )
@@ -276,7 +276,7 @@
               !
             END IF
             !
-            IF( tfile ) WRITE( 39, 2949 ) nfi,tps,vnhh(3,3),xnhh0(3,3),vnhp(1),xnhp0(1)
+            IF( tfile ) WRITE( 39, 2949 ) nfi,tps,vnhh(3,3),xnhh0(3,3),vnhp(1),xnhp0(1), vnhe, xnhe0
             !
             !print Wannier centers at every iprint steps in .wfc file
             !
@@ -480,7 +480,7 @@
 29482 FORMAT( I7,4(2X,ES12.6),4(2X,F18.8),2X,ES12.6,2X,F12.5,2X,F15.8 )
 29483 FORMAT( I7,4(2X,ES12.6),4(2X,F18.8),2X,ES12.6,2X,F12.5 )
 29484 FORMAT( I7,2(2X,ES12.6),6(2X,F18.8) )
-2949  FORMAT( I7,2X,ES12.6,4(1X,F15.8) )
+2949  FORMAT( I7,2X,ES12.6,6(1X,F15.8) )
       !
       RETURN
    END SUBROUTINE printout_new_x
