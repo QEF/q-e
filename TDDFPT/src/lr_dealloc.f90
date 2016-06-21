@@ -64,11 +64,11 @@ SUBROUTINE lr_dealloc()
   IF (allocated(dmuxc))  DEALLOCATE(dmuxc)
   IF (allocated(igk_k))  DEALLOCATE(igk_k)
   IF (allocated(ngk))    DEALLOCATE(ngk)
+  IF (allocated(ikks))   DEALLOCATE(ikks)
+  IF (allocated(ikqs))   DEALLOCATE(ikqs)
   !
   ! EELS-related variables
   !
-  IF (allocated(ikks))    DEALLOCATE(ikks)
-  IF (allocated(ikqs))    DEALLOCATE(ikqs)
   IF (allocated(dpsi))    DEALLOCATE(dpsi)
   IF (allocated(dvpsi))   DEALLOCATE(dvpsi)
   IF (allocated(eigqts))  DEALLOCATE(eigqts)

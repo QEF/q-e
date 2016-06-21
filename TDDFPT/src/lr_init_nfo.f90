@@ -80,12 +80,12 @@ SUBROUTINE lr_init_nfo()
      !
      nksq = nks
      !
-     ! Note: in this case the array ikqs is
-     ! needed only in order to use the routine
-     ! ch_psi_all
+     ! Note: in this case the arrays ikks and ikqs 
+     ! are needed only in h_prec and ch_psi_all.
      !
-     ALLOCATE(ikqs(nksq))
+     ALLOCATE(ikks(nksq), ikqs(nksq))
      DO ik = 1, nksq
+        ikks(ik) = ik
         ikqs(ik) = ik
      ENDDO
      !

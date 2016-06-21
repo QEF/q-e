@@ -16,21 +16,13 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
   !
   ! Written by Iurii Timrov (2013)
   !
-  USE ions_base,            ONLY : ityp, nat, ntyp=>nsp
-  USE cell_base,            ONLY : tpiba2
+  USE kinds,                ONLY : DP
   USE fft_base,             ONLY : dfftp, dffts
   USE fft_parallel,         ONLY : tg_cgather
-  USE fft_interfaces,       ONLY : fwfft, invfft
-  USE gvecs,                ONLY : nls, nlsm, ngms, doublegrid
-  USE gvect,                ONLY : nl, nlm, ngm, g, gg
-  USE io_global,            ONLY : stdout
-  USE kinds,                ONLY : dp
-  USE klist,                ONLY : nks, xk, igk_k, ngk
-  USE lr_variables,         ONLY : evc0, no_hxc
-  USE lsda_mod,             ONLY : nspin, current_spin
-  USE wvfct,                ONLY : nbnd, npwx, g2kin, et, current_k
-  USE gvecw,                ONLY : gcutw
-  USE io_global,            ONLY : stdout
+  USE klist,                ONLY : xk, igk_k, ngk
+  USE lr_variables,         ONLY : no_hxc
+  USE lsda_mod,             ONLY : current_spin
+  USE wvfct,                ONLY : nbnd, npwx, et, current_k
   USE uspp,                 ONLY : vkb
   USE io_files,             ONLY : iunwfc, nwordwfc
   USE wavefunctions_module, ONLY : evc, psic, psic_nc
@@ -46,12 +38,12 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
  
   IMPLICIT NONE
   !
-  COMPLEX(kind=dp),INTENT(in)  :: evc1(npwx*npol,nbnd,nksq)
-  COMPLEX(kind=dp),INTENT(out) :: evc1_new(npwx*npol,nbnd,nksq)
+  COMPLEX(DP), INTENT(IN)  :: evc1(npwx*npol,nbnd,nksq)
+  COMPLEX(DP), INTENT(OUT) :: evc1_new(npwx*npol,nbnd,nksq)
+  LOGICAL,     INTENT(IN)  :: interaction
   !
   ! Local variables
   !
-  LOGICAL, INTENT(in) :: interaction
   LOGICAL :: interaction1
   INTEGER :: i,j,ir, ibnd, ig, ia, ios, is, incr, v_siz, ipol
   INTEGER :: ik,  &
@@ -63,8 +55,7 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
                             & sevc1_new(:,:,:), &
   ! Change of the Hartree and exchange-correlation (HXC) potential
                             & tg_psic(:,:), tg_dvrssc(:,:)
-  ! Task groups: wfct in R-space
-  ! Task groups: HXC potential
+  ! Task groups: wfct in R-space and the response HXC potential
   !
   CALL start_clock('lr_apply')
   !
@@ -266,11 +257,7 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
      !
      ! Compute the kinetic energy g2kin: (k+q+G)^2
      !
-     DO ig = 1, npwq
-        g2kin (ig) = ( (xk (1,ikq) + g (1, igk_k(ig,ikq)) ) **2 + &
-                       (xk (2,ikq) + g (2, igk_k(ig,ikq)) ) **2 + &
-                       (xk (3,ikq) + g (3, igk_k(ig,ikq)) ) **2 ) * tpiba2
-     ENDDO
+     CALL g2_kin(ikq)
      !
      IF (noncolin) THEN
         IF (.NOT. ALLOCATED(psic_nc)) ALLOCATE(psic_nc(dfftp%nnr,npol))

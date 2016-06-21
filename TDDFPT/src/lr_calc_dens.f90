@@ -323,7 +323,6 @@ CONTAINS
     USE io_global,           ONLY : stdout
     USE realus,              ONLY : real_space, invfft_orbital_gamma,&
                                     & initialisation_level,&
-                                    & fwfft_orbital_gamma,&
                                     & calbec_rs_gamma,&
                                     & add_vuspsir_gamma, v_loc_psir,&
                                     & real_space_debug 

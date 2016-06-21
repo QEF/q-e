@@ -18,15 +18,14 @@ SUBROUTINE lr_restart(iter_restart,rflag)
   USE io_global,            ONLY : stdout, ionode_id
   USE control_flags,        ONLY : gamma_only
   USE klist,                ONLY : nks, xk, ngk, igk_k
-  USE cell_base,            ONLY : tpiba2
-  USE gvect,                ONLY : g
   USE io_files,             ONLY : tmp_dir, prefix, diropn, wfc_dir
   USE lr_variables,         ONLY : itermax, evc1, evc1_old, &
                                    restart, nwordrestart, iunrestart,project,nbnd_total,F, &
                                    bgz_suffix, beta_store, gamma_store, zeta_store, norm0, &
-                                   lr_verbosity, charge_response, LR_polarization, n_ipol, eels, sum_rule
+                                   lr_verbosity, charge_response, LR_polarization, n_ipol, &
+                                   eels, sum_rule
   USE charg_resp,           ONLY : resonance_condition, rho_1_tot,rho_1_tot_im
-  USE wvfct,                ONLY : nbnd, g2kin, npwx
+  USE wvfct,                ONLY : nbnd
   USE becmod,               ONLY : bec_type, becp, calbec
   USE uspp,                 ONLY : vkb 
   USE io_global,            ONLY : ionode
@@ -37,9 +36,10 @@ SUBROUTINE lr_restart(iter_restart,rflag)
 
   IMPLICIT NONE
   !
+  INTEGER, INTENT(OUT) :: iter_restart
+  LOGICAL, INTENT(OUT) :: rflag
+  !
   CHARACTER(len=6), EXTERNAL :: int_to_char
-  INTEGER, INTENT(out) :: iter_restart
-  LOGICAL, INTENT(out) :: rflag
   !
   ! local variables
   !
@@ -61,20 +61,15 @@ SUBROUTINE lr_restart(iter_restart,rflag)
   !
   rflag = .false.
   !
-  ! Optical case: restarting kintic-energy and ultrasoft
+  ! Optical case: recompute the kintic-energy g2kin and 
+  ! beta functions vkb (needed only in the US case).
+  ! Note, this is done only in the gamma_only case,
+  ! because in the k-points version all is recomputed
+  ! on-the-fly for every k point.
   !
   IF (gamma_only) THEN
-     !
-     DO ig=1,npwx
-        !
-        g2kin(ig)=((xk(1,1)+g(1,igk_k(ig,1)))**2 &
-                 + (xk(2,1)+g(2,igk_k(ig,1)))**2 &
-                 + (xk(3,1)+g(3,igk_k(ig,1)))**2)*tpiba2
-        !
-     ENDDO
-     !
+     CALL g2_kin(1)
      CALL init_us_2(ngk(1),igk_k(:,1),xk(:,1),vkb)
-     !
   ENDIF
   !
   ! Reading Lanczos coefficients

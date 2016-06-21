@@ -21,13 +21,14 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
   !
   ! interaction=.true. corresponds to eq.(32)
   ! interaction=.false. corresponds to eq.(33)
-  ! in Ralph Gebauer, Brent Walker  J. Chem. Phys., 127, 164106 (2007)
+  ! in B. Walker and R. Gebauer, J. Chem. Phys., 127, 164106 (2007)
   !
   ! Modified by Osman Baris Malcioglu in 2009
   ! Modified by Simone Binnie in 2012 (EXX)
   ! Modified by Xiaochuan Ge  in 2013 (Davidson)
   ! Modified by Iurii Timrov  in 2014 (Environ)
   !
+  USE kinds,                ONLY : DP
   USE ions_base,            ONLY : ityp, nat, ntyp=>nsp
   USE cell_base,            ONLY : tpiba2
   USE fft_base,             ONLY : dffts, dfftp
@@ -35,7 +36,6 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
   USE gvecs,                ONLY : nls, nlsm
   USE gvect,                ONLY : nl, ngm, gstart, g, gg
   USE io_global,            ONLY : stdout
-  USE kinds,                ONLY : dp
   USE klist,                ONLY : nks, xk, ngk, igk_k
   USE lr_variables,         ONLY : evc0, sevc0, revc0, rho_1, rho_1c, &
                                  & ltammd, size_evc, no_hxc, lr_exx, &
@@ -69,23 +69,22 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
   !
   IMPLICIT NONE
   !
-  COMPLEX(kind=dp),INTENT(in)  :: evc1(npwx*npol,nbnd,nks)
-  COMPLEX(kind=dp),INTENT(out) :: evc1_new(npwx*npol,nbnd,nks)
-  LOGICAL, INTENT(in) :: interaction
+  COMPLEX(DP), INTENT(IN)  :: evc1(npwx*npol,nbnd,nks)
+  COMPLEX(DP), INTENT(OUT) :: evc1_new(npwx*npol,nbnd,nks)
+  LOGICAL,     INTENT(IN)  :: interaction
   !
   ! Local variables
   !
   INTEGER :: ir, ibnd, ik, ig, ia, mbia
   INTEGER :: ijkb0, na, nt, ih, jh, ikb, jkb, iqs,jqs
-  REAL(kind=dp), ALLOCATABLE :: dvrs(:,:), dvrss(:),           &
-                                & d_deeq(:,:,:,:), w1(:), w2(:)
-  COMPLEX(kind=dp), ALLOCATABLE :: dvrs_temp(:,:), spsi1(:,:), &
-                                   & dvrsc(:,:), dvrssc(:),    &
-                                   & sevc1_new(:,:,:)
+  REAL(DP), ALLOCATABLE :: dvrs(:,:), dvrss(:), d_deeq(:,:,:,:), &
+                           & w1(:), w2(:)
+  COMPLEX(DP), ALLOCATABLE :: dvrs_temp(:,:), spsi1(:,:), dvrsc(:,:), &
+                              & dvrssc(:), sevc1_new(:,:,:)
   !
   ! Environ related arrays
   !
-  REAL(kind=dp), ALLOCATABLE :: &
+  REAL(DP), ALLOCATABLE :: &
           dv_pol(:), &  ! response polarization potential
           dv_epsilon(:) ! response dielectric potential
   !
@@ -157,7 +156,7 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
            !
            ALLOCATE( dvrs_temp(dfftp%nnr, nspin) )
            !
-           dvrs_temp = CMPLX( dvrs, 0.0d0, kind=dp )         
+           dvrs_temp = CMPLX( dvrs, 0.0d0, kind=DP )         
            !
            DEALLOCATE ( dvrs )  ! to save memory
            !
@@ -254,7 +253,7 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
      ! Here we add the two terms: 
      ! [H(k) - E(k)] * evc1(k) + dV_HXC * revc0(k)
      !
-     CALL zaxpy(size_evc,CMPLX(1.0d0,0.0d0,kind=dp),&
+     CALL zaxpy(size_evc,CMPLX(1.0d0,0.0d0,kind=DP),&
                        & evc1_new(:,:,:), 1, sevc1_new(:,:,:), 1)
      !
   ELSEIF ( interaction .and. ltammd ) THEN
@@ -266,7 +265,7 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
      !
      !   Here evc1_new contains the interaction
      !
-     CALL zaxpy(size_evc,CMPLX(0.5d0,0.0d0,kind=dp),&
+     CALL zaxpy(size_evc,CMPLX(0.5d0,0.0d0,kind=DP),&
                        & evc1_new(:,:,:) , 1, sevc1_new(:,:,:),1)
      !
   ELSE
@@ -279,7 +278,7 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
   ENDIF
   !
   IF (gstart == 2 .AND. gamma_only ) sevc1_new(1,:,:) = &
-                & CMPLX( REAL( sevc1_new(1,:,:), dp ), 0.0d0 ,dp )
+                & CMPLX( REAL( sevc1_new(1,:,:), DP ), 0.0d0, DP )
   !
   IF (gstart==2 .and. gamma_only) THEN
      DO ik=1,nks
@@ -358,8 +357,8 @@ CONTAINS
     !
     IMPLICIT NONE
     !
-    REAL(kind=dp), ALLOCATABLE :: becp2(:,:)
-    REAL(kind=dp), ALLOCATABLE :: tg_dvrss(:)
+    REAL(DP), ALLOCATABLE :: becp2(:,:)
+    REAL(DP), ALLOCATABLE :: tg_dvrss(:)
     LOGICAL :: use_tg
     INTEGER :: v_siz, incr, ioff
     INTEGER :: ibnd_start_gamma, ibnd_end_gamma
@@ -454,7 +453,7 @@ CONTAINS
              !
              DO ir=1, dffts%nr1x*dffts%nr2x*dffts%tg_npp( me_bgrp + 1 )
                 !
-                tg_psic(ir) = tg_revc0(ir,ibnd,1)*CMPLX(tg_dvrss(ir),0.0d0,dp)
+                tg_psic(ir) = tg_revc0(ir,ibnd,1)*CMPLX(tg_dvrss(ir),0.0d0,DP)
                 !
              ENDDO
              !
@@ -462,7 +461,7 @@ CONTAINS
              !
              DO ir = 1,dffts%nnr
                 !
-                psic(ir) = revc0(ir,ibnd,1)*CMPLX(dvrss(ir),0.0d0,dp)
+                psic(ir) = revc0(ir,ibnd,1)*CMPLX(dvrss(ir),0.0d0,DP)
                 !
              ENDDO
              !
@@ -558,14 +557,14 @@ CONTAINS
     !
     IF (lr_exx .AND. .NOT.interaction) CALL lr_exx_kernel_noint(evc1,evc1_new)
     !
-    ! Note: In the gamma_only case the kinetic energy g2kin has
-    ! been already computed in lr_dvpsi_e.
+    ! The kinetic energy g2kin was already computed when
+    ! calling the routine lr_solve_e.
     !
-    !  Call h_psi on evc1 such that h.evc1 = sevc1_new
+    ! Compute sevc1_new = H*evc1
     !
-    CALL h_psi(npwx,ngk(1),nbnd,evc1(1,1,1),sevc1_new(1,1,1)) ! g2kin is needed here
+    CALL h_psi(npwx,ngk(1),nbnd,evc1(1,1,1),sevc1_new(1,1,1))
     !
-    ! spsi1 = s*evc1
+    ! Compute spsi1 = S*evc1 
     !
     IF (real_space_debug > 9 ) THEN
         DO ibnd = 1,nbnd,2
@@ -581,7 +580,7 @@ CONTAINS
     !
     DO ibnd = 1,nbnd
        !
-       CALL zaxpy(ngk(1), CMPLX(-(et(ibnd,1)-scissor),0.0d0,dp), &
+       CALL zaxpy(ngk(1), CMPLX(-(et(ibnd,1)-scissor),0.0d0,DP), &
                       & spsi1(:,ibnd), 1, sevc1_new(:,ibnd,1), 1)
        !
     ENDDO
@@ -601,7 +600,7 @@ SUBROUTINE lr_apply_liouvillian_k()
     !
     IMPLICIT NONE
     !
-    COMPLEX(kind=dp), ALLOCATABLE :: becp2(:,:)
+    COMPLEX(DP), ALLOCATABLE :: becp2(:,:)
     !
     IF ( nkb > 0 .AND. okvan ) THEN
        !
@@ -711,35 +710,32 @@ SUBROUTINE lr_apply_liouvillian_k()
     !
     IF (lr_exx .AND. .NOT.interaction) CALL lr_exx_kernel_noint(evc1,evc1_new)
     !
-    DO ik=1,nks
+    DO ik = 1, nks
        !
-       CALL init_us_2(ngk(ik),igk_k(1,ik),xk(1,ik),vkb)
+       ! US case: Compute the beta function vkb at point k
        !
-       DO ig = 1, ngk(ik)
-          !
-          g2kin(ig)=((xk(1,ik)+g(1,igk_k(ig,ik)))**2 &
-                    +(xk(2,ik)+g(2,igk_k(ig,ik)))**2 &
-                    +(xk(3,ik)+g(3,igk_k(ig,ik)))**2)*tpiba2
-          !
-       ENDDO
+       CALL init_us_2(ngk(ik), igk_k(1,ik), xk(1,ik), vkb)
+       !
+       ! Compute the kinetic energy g2kin: (k+G)^2
+       !
+       CALL g2_kin(ik)
        !
        current_k = ik
        !
+       ! Compute sevc1_new = H*evc1
+       !
        CALL h_psi(npwx,ngk(ik),nbnd,evc1(1,1,ik),sevc1_new(1,1,ik))
+       !
+       ! Compute spsi1 = S*evc1
        !
        CALL s_psi(npwx,ngk(ik),nbnd,evc1(1,1,ik),spsi1)
        !
        ! Subtract the eigenvalues
-       ! IT: One may want to add scissor 
        !
-       DO ibnd=1,nbnd
+       DO ibnd = 1, nbnd
           !
-          DO ig=1,ngk(ik)
-             !
-             sevc1_new(ig,ibnd,ik)=sevc1_new(ig,ibnd,ik) &
-                  -cmplx(et(ibnd,ik),0.0d0,dp)*spsi1(ig,ibnd)
-             !
-          ENDDO
+          CALL zaxpy(ngk(ik), CMPLX(-(et(ibnd,ik)-scissor),0.0d0,dp), &
+                      & spsi1(:,ibnd), 1, sevc1_new(:,ibnd,ik), 1)
           !
        ENDDO
        !
