@@ -15,7 +15,7 @@ subroutine cgsolve_all (ch_psi, cg_psi, e, d0psi, dpsi, h_diag, &
   !
   !                 ( H - e_i + Q ) * dpsi_i = d0psi_i                      (1)
   !
-  !     where H is a complex hermitean matrix, e_ is a real scalar, Q is a
+  !     where H is a complex hermitean matrix, e_i is a real scalar, Q is a
   !     projector on occupied states, dpsi_i and d0psi_ are complex vectors
   !
   !     on input:

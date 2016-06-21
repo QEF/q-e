@@ -196,7 +196,7 @@ subroutine solve_e
         !
         ! compute preconditioning matrix h_diag used by cgsolve_all
         !
-        CALL h_prec (ik, h_diag)
+        CALL h_prec (ik, evc, h_diag)
         !
         do ipol = 1, 3
            !

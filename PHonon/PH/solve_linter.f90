@@ -269,7 +269,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
         !
         ! compute preconditioning matrix h_diag used by cgsolve_all
         !
-        CALL h_prec (ik, h_diag)
+        CALL h_prec (ik, evq, h_diag)
         !
         do ipert = 1, npe
            mode = imode0 + ipert

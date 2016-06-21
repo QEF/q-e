@@ -93,7 +93,7 @@ subroutine dvpsi_e (ik, ipol)
   ! compute preconditioning matrix h_diag used by cgsolve_all
   !
   allocate (h_diag( npwx*npol, nbnd))
-  CALL h_prec (ik, h_diag)
+  CALL h_prec (ik, evc, h_diag)
   !
   dvpsi(:,:) = (0.d0, 0.d0)
   !

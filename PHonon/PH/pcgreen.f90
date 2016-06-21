@@ -93,7 +93,7 @@ subroutine pcgreen (avg_iter, thresh, ik, et_ )
   !
   ! compute preconditioning matrix h_diag used by cgsolve_all
   !
-  CALL h_prec (ik, h_diag)
+  CALL h_prec (ik, evc, h_diag)
   !
   conv_root = .true.
 
