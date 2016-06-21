@@ -656,4 +656,119 @@ SUBROUTINE tg_cgather( dffts, v, tg_v )
 #endif
 
 END SUBROUTINE tg_cgather
+
+!--------------------------------------------------------------------------------
+!   Auxiliary routines to read/write from/to a distributed array
+!   NOT optimized for efficiency .... just to show how one can access the data
+!--------------------------------------------------------------------------------
+!
+COMPLEX (DP) FUNCTION get_f_of_R (i,j,k,f,dfft)
+!------  read from a distributed complex array f(:) in direct space
+!
+  USE fft_types,  ONLY : fft_dlay_descriptor
+  IMPLICIT NONE
+#if defined(__MPI)
+  INCLUDE 'mpif.h'
+#endif
+  TYPE (fft_dlay_descriptor), INTENT(IN) :: dfft
+  INTEGER, INTENT (IN) :: i,j,k
+  COMPLEX(DP), INTENT (IN) :: f(:)
+  INTEGER :: kk, ii, jj, ierr
+  COMPLEX(DP) :: f_aux
+
+  IF ( i <= 0 .OR. i > dfft%nr1 ) CALL fftx_error__( ' get_f_of_R', ' first  index out of range ', 1 )
+  IF ( j <= 0 .OR. j > dfft%nr2 ) CALL fftx_error__( ' get_f_of_R', ' second index out of range ', 2 )
+  IF ( k <= 0 .OR. k > dfft%nr3 ) CALL fftx_error__( ' get_f_of_R', ' third  index out of range ', 3 )
+
+  do jj = 1, dfft%nproc
+     if ( dfft%ipp(jj) < k ) kk = jj
+  end do
+  ii  = i + dfft%nr1x * ( j - 1 ) + dfft%nr1x * dfft%nr2x * ( k - dfft%ipp(kk) - 1 )
+  f_aux = (0.d0,0.d0)
+  if (kk == dfft%mype +1) f_aux = f(ii)
+#ifdef __MPI
+  CALL MPI_ALLREDUCE( f_aux, get_f_of_R,   2, MPI_DOUBLE_PRECISION, MPI_SUM, dfft%comm, ierr )
+#else
+  get_f_of_R = f_aux
+#endif
+END FUNCTION get_f_of_R
+
+SUBROUTINE put_f_of_R (f_in,i,j,k,f,dfft)
+!------  write on a distributed complex array f(:) in direct space
+!
+  USE fft_types,  ONLY : fft_dlay_descriptor
+  IMPLICIT NONE
+#if defined(__MPI)
+  INCLUDE 'mpif.h'
+#endif
+  TYPE (fft_dlay_descriptor), INTENT(IN) :: dfft
+  INTEGER, INTENT (IN) :: i,j,k
+  COMPLEX(DP), INTENT (IN) :: f_in
+  COMPLEX(DP), INTENT (INOUT) :: f(:)
+  INTEGER :: kk, ii, jj, ierr
+
+  IF ( i <= 0 .OR. i > dfft%nr1 ) CALL fftx_error__( ' put_f_of_R', ' first  index out of range ', 1 )
+  IF ( j <= 0 .OR. j > dfft%nr2 ) CALL fftx_error__( ' put_f_of_R', ' second index out of range ', 2 )
+  IF ( k <= 0 .OR. k > dfft%nr3 ) CALL fftx_error__( ' put_f_of_R', ' third  index out of range ', 3 )
+
+  do jj = 1, dfft%nproc
+     if ( dfft%ipp(jj) < k ) kk = jj
+  end do
+  ii  = i + dfft%nr1x * ( j - 1 ) + dfft%nr1x * dfft%nr2x * ( k - dfft%ipp(kk) - 1 )
+  if (kk == dfft%mype +1) f(ii) = f_in
+
+END SUBROUTINE put_f_of_R
+
+COMPLEX (DP) FUNCTION get_f_of_G (i,j,k,f,dfft)
+!------  read from a distributed complex array f(:) in reciprocal space
+!
+  USE fft_types,  ONLY : fft_dlay_descriptor
+  IMPLICIT NONE
+#if defined(__MPI)
+  INCLUDE 'mpif.h'
+#endif
+  INTEGER, INTENT (IN) :: i,j,k
+  COMPLEX(DP), INTENT (IN) :: f(:)
+  TYPE (fft_dlay_descriptor), INTENT(IN) :: dfft
+  INTEGER :: ii, jj, ierr
+  COMPLEX(DP) :: f_aux
+
+  IF ( i <= 0 .OR. i > dfft%nr1 ) CALL fftx_error__( ' get_f_of_G', ' first  index out of range ', 1 )
+  IF ( j <= 0 .OR. j > dfft%nr2 ) CALL fftx_error__( ' get_f_of_G', ' second index out of range ', 2 )
+  IF ( k <= 0 .OR. k > dfft%nr3 ) CALL fftx_error__( ' get_f_of_G', ' third  index out of range ', 3 )
+
+  ii = i + dfft%nr1x * (j -1)
+  jj = dfft%isind(ii)  ! if jj is zero this G vector does not belong to this processor
+  f_aux = (0.d0,0.d0)
+  if ( jj > 0 ) f_aux = f( k + dfft%nr3x * (jj -1))
+#ifdef __MPI
+  CALL MPI_ALLREDUCE( f_aux, get_f_of_G,   2, MPI_DOUBLE_PRECISION, MPI_SUM, dfft%comm, ierr )
+#else
+  get_f_of_G = f_aux
+#endif
+END FUNCTION get_f_of_G
+
+SUBROUTINE put_f_of_G (f_in,i,j,k,f,dfft)
+!------  write on a distributed complex array f(:) in reciprocal space
+!
+  USE fft_types,  ONLY : fft_dlay_descriptor
+  IMPLICIT NONE
+#if defined(__MPI)
+  INCLUDE 'mpif.h'
+#endif
+  COMPLEX(DP), INTENT (IN) :: f_in
+  INTEGER, INTENT (IN) :: i,j,k
+  COMPLEX(DP), INTENT (INOUT) :: f(:)
+  TYPE (fft_dlay_descriptor), INTENT(IN) :: dfft
+  INTEGER :: ii, jj
+
+  IF ( i <= 0 .OR. i > dfft%nr1 ) CALL fftx_error__( ' put_f_of_G', ' first  index out of range ', 1 )
+  IF ( j <= 0 .OR. j > dfft%nr2 ) CALL fftx_error__( ' put_f_of_G', ' second index out of range ', 2 )
+  IF ( k <= 0 .OR. k > dfft%nr3 ) CALL fftx_error__( ' put_f_of_G', ' third  index out of range ', 3 )
+
+  ii = i + dfft%nr1x * (j -1)
+  jj = dfft%isind(ii)  ! if jj is zero this G vector does not belong to this processor
+  if ( jj > 0 )   f( k + dfft%nr3x * (jj -1)) = f_in
+END SUBROUTINE put_f_of_G
+
 END MODULE fft_parallel

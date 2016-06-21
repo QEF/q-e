@@ -1105,7 +1105,6 @@ END SUBROUTINE write_matrix_strange_idx
       RETURN
     END SUBROUTINE sticks_deallocate
 
-
 !=----------------------------------------------------------------------=
    END MODULE stick_base
 !=----------------------------------------------------------------------=

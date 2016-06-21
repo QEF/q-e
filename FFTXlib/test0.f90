@@ -12,6 +12,7 @@
 program test
   USE fft_types, ONLY: fft_dlay_descriptor, fft_dlay_deallocate
   USE stick_set, ONLY: pstickset
+  USE fft_interfaces
   USE fft_parallel
   USE fft_support
   IMPLICIT NONE
@@ -51,6 +52,7 @@ program test
   !
   COMPLEX(DP), ALLOCATABLE :: psis(:,:)
   COMPLEX(DP), ALLOCATABLE :: aux(:)
+  COMPLEX(DP) :: f_aux
   !
   integer :: nargs
   CHARACTER(LEN=80) :: arg
@@ -194,6 +196,7 @@ program test
     write(*,*) 'dffts:  nr1 = ', dffts%nr1 ,' nr2 = ', dffts%nr2 , ' nr3 = ', dffts%nr3
     write(*,*) '        nr1x= ', dffts%nr1x,' nr2x= ', dffts%nr2x, ' nr3x= ', dffts%nr3x
   end if
+
   dfftp%nr1   = good_fft_order( nx )
   dfftp%nr2   = good_fft_order( ny )
   dfftp%nr3   = good_fft_order( nz )
@@ -231,145 +234,34 @@ program test
   ! Test FFT for wave functions - First calls may be biased by MPI and FFT initialization
   !
   aux = 0.0d0
-  aux(1) = 1.0d0
-  aux(2) = 0.7d0
-  aux(3) = 0.1d0
+  f_aux = (1.0,0.0)
+  call put_f_of_G(f_aux,1,1,1,aux,dffts)
+  f_aux = (0.d0,0.7d0)
+  call put_f_of_G(f_aux,1,1,2,aux,dffts)
+  f_aux = (0.d0,0.5d0)
+  call put_f_of_G(f_aux,2,1,1,aux,dffts)
 
   write (*,*) (aux(i),i=1,5)
+
   CALL MPI_BARRIER( MPI_COMM_WORLD, ierr)
-  CALL pack_group_sticks( aux, psis(:,1), dffts )
-  CALL fw_tg_cft3_z( psis(:,1), dffts, aux )
-  CALL fw_tg_cft3_scatter( psis(:,1), dffts, aux )
-  CALL fw_tg_cft3_xy( psis(:,1), dffts )
 
-  write (*,*) (psis(i,1),i=1,5)
-
-  CALL bw_tg_cft3_xy( psis(:,1), dffts )
-  CALL bw_tg_cft3_scatter( psis(:,1), dffts, aux )
-  CALL bw_tg_cft3_z( psis(:,1), dffts, aux )
-  CALL unpack_group_sticks( psis(:,1), aux, dffts )
-
+  call invfft ('Dense',aux,dffts)
   write (*,*) (aux(i),i=1,5)
-
+  write (3,*) aux
+  write (*,*) get_f_of_R(1,1,1,aux,dffts),get_f_of_R(2,1,1,aux,dffts),get_f_of_R(3,1,1,aux,dffts),get_f_of_R(4,1,1,aux,dffts)
+  call fwfft  ('Dense',aux,dffts)
+  write (*,*) (aux(i),i=1,5)
+  write (4,*) aux
+  write (*,*) get_f_of_G(1,1,1,aux,dffts),get_f_of_G(2,1,1,aux,dffts),get_f_of_G(3,1,1,aux,dffts),get_f_of_G(4,1,1,aux,dffts)
   !
   ! Execute FFT calls once more and Take time
   !
-  ncount = 0
   !
+
+  CALL MPI_BARRIER( MPI_COMM_WORLD, ierr)
   wall = MPI_WTIME() 
-  !
-#ifdef __DOUBLE_BUFFER
-  ireq = 1
-  ipsi = MOD( ireq + 1, 2 ) + 1 
-  !
-  CALL pack_group_sticks_i( aux, psis(:, ipsi ), dffts, req_p( ireq ) )
-  !
-  nreq = 0
-  DO ib = 1, nbnd, 2*dffts%nogrp 
-    nreq = nreq + 1
-  END DO
-  ! 
-  DO ib = 1, nbnd, 2*dffts%nogrp 
- 
-     ireq = ireq + 1
-
-     aux = 0.0d0
-     aux(1) = 1.0d0
-
-     tempo(1) = MPI_WTIME()
-
-     IF( ireq <= nreq ) THEN
-        ipsi = MOD( ireq + 1, 2 ) + 1 
-        CALL pack_group_sticks_i( aux, psis(:,ipsi), dffts, req_p(ireq) )
-     END IF
-
-     ipsi = MOD(ipsi-1,2)+1 
-
-     CALL MPI_WAIT( req_p( ireq - 1 ),MPI_STATUS_IGNORE)
-
-     tempo(2) = MPI_WTIME()
-
-     CALL fw_tg_cft3_z( psis( :, ipsi ), dffts, aux )
-     tempo(3) = MPI_WTIME()
-     CALL fw_tg_cft3_scatter( psis( :, ipsi ), dffts, aux )
-     tempo(4) = MPI_WTIME()
-     CALL fw_tg_cft3_xy( psis( :, ipsi ), dffts )
-     tempo(5) = MPI_WTIME()
-     !
-     tmp1=1.d0
-     tmp2=0.d0
-     !
-     do iloop = 1,10 
-       CALL DAXPY(10000, pi*iloop, tmp1, 1, tmp2, 1)
-     end do 
-     !
-     tempo(6) = MPI_WTIME()
-     CALL bw_tg_cft3_xy( psis( :, ipsi ), dffts )
-     tempo(7) = MPI_WTIME()
-     CALL bw_tg_cft3_scatter( psis( :, ipsi ), dffts, aux )
-     tempo(8) = MPI_WTIME()
-     CALL bw_tg_cft3_z( psis( :, ipsi ), dffts, aux )
-     tempo(9) = MPI_WTIME()
-     !
-     CALL unpack_group_sticks( psis( :, ipsi ), aux, dffts )
-     !
-     tempo(10) = MPI_WTIME()
-     !
-     do i = 2, 10
-        tempo_mio(i) = tempo_mio(i) + (tempo(i) - tempo(i-1))
-     end do
-     !
-     ncount = ncount + 1
-     !
-  enddo
-#else
-  ipsi = 1 
-  ! 
-  DO ib = 1, nbnd, 2*dffts%nogrp 
- 
-     aux = 0.0d0
-     aux(1) = 1.0d0
-
-     tempo(1) = MPI_WTIME()
-
-     CALL pack_group_sticks( aux, psis(:,ipsi), dffts )
-
-     tempo(2) = MPI_WTIME()
-
-     CALL fw_tg_cft3_z( psis( :, ipsi ), dffts, aux )
-     tempo(3) = MPI_WTIME()
-     CALL fw_tg_cft3_scatter( psis( :, ipsi ), dffts, aux )
-     tempo(4) = MPI_WTIME()
-     CALL fw_tg_cft3_xy( psis( :, ipsi ), dffts )
-     tempo(5) = MPI_WTIME()
-     !
-     tmp1=1.d0
-     tmp2=0.d0
-     do iloop = 1,10 
-       CALL DAXPY(10000, pi*iloop, tmp1, 1, tmp2, 1)
-     end do 
-     !
-     tempo(6) = MPI_WTIME()
-     CALL bw_tg_cft3_xy( psis( :, ipsi ), dffts )
-     tempo(7) = MPI_WTIME()
-     CALL bw_tg_cft3_scatter( psis( :, ipsi ), dffts, aux )
-     tempo(8) = MPI_WTIME()
-     CALL bw_tg_cft3_z( psis( :, ipsi ), dffts, aux )
-     tempo(9) = MPI_WTIME()
-
-     CALL unpack_group_sticks( psis( :, ipsi ), aux, dffts )
-
-     tempo(10) = MPI_WTIME()
-
-     do i = 2, 10
-        tempo_mio(i) = tempo_mio(i) + (tempo(i) - tempo(i-1))
-     end do
-
-     ncount = ncount + 1
-
-  enddo
-#endif
-
+  call invfft ('Dense',aux,dffts)
+  call fwfft  ('Dense',aux,dffts)
   wall = MPI_WTIME() - wall
 
   DEALLOCATE( psis, aux )
