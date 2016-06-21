@@ -8,7 +8,8 @@
 # of the License. See the file `License' in the root directory
 # of the present distribution.
 #
-# Maintainer: Filippo Spiga (filippo.spiga@quantum-espresso.org)
+# Maintainers: Filippo Spiga (filippo.spiga@quantum-espresso.org)
+#              Samuel Ponce
   
 fname=$1
 
@@ -24,7 +25,52 @@ eh1=`grep "highest occupied" $fname | awk '{print $7}'`
 el1=`grep "highest occupied" $fname | awk '{print $8}'`
 tf1=`grep " P = " $fname | head -1 | awk '{printf "%7.5f", $3}'`
 
- 
+# EPW
+q1=`grep "   q(" $fname | awk '{print $6 $7 $8}'`
+dos1=`grep "DOS =" $fname | awk '{print $3}'`
+e2=`grep " E(" $fname | awk '{print $4}'`
+rsig=`grep "Re\[Sigma\]=" $fname | awk '{print $7}'` 
+isig=`grep "Im\[Sigma\]=" $fname | awk '{print $10}'` 
+z1=`grep " Z=" $fname | awk '{print $13}'`
+lam=`grep "lam= " $fname | awk '{print $15}'`
+
+if test "$q1" != ""; then
+        echo q1
+        for x in $q1; do echo $x; done
+fi
+
+if test "$dos1" != ""; then
+        echo dos1
+        echo $dos1
+fi
+
+if test "$e2" != ""; then
+        echo e2
+        for x in $e2; do echo $x; done
+fi
+
+if test "$rsig" != ""; then
+        echo rsig
+        for x in $rsig; do echo $x; done
+fi
+
+if test "$isig" != ""; then
+        echo isig
+        for x in $isig; do echo $x; done
+fi
+
+if test "$z1" != ""; then
+        echo z1
+        for x in $z1; do echo $x; done
+fi
+
+if test "$lam" != ""; then
+        echo lam
+        for x in $lam; do echo $x; done
+fi
+
+
+
 if test "$e1" != ""; then
 	echo e1
 	echo $e1
