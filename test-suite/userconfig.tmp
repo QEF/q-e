@@ -53,7 +53,13 @@ tolerance = ( (1.0e-6, None, 'e1'),
               (1.0e-5, None, 'lam_tot'),
               (1.0e-5, None, 'lam_tr'),
               (1.0e-5, None, 'logavg'),
-              (1.0e-5, None, 'l_a2F'))
+              (1.0e-5, None, 'l_a2F'),
+              (1.0e-5, None, 'efm'),
+              (1.0e-5, None, 'lam_max'),
+              (1.0e-5, None, 'lam_kmax'),
+              (1.0e-5, None, 'elph'),
+              (1.0e-5, None, 'allDyn'),
+              (1.0e-5, None, 'bcsgap'))
 
 
 skip_program = grep

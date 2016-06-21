@@ -1,0 +1,12 @@
+--
+&inputph
+  prefix   = 'pb'
+  fildvscf = 'dvscf'
+  ldisp    = .true
+  outdir   = './'
+  fildyn   = 'pb.dyn'
+  nq1=3,
+  nq2=3,
+  nq3=3,
+  tr2_ph   =  1.0d-12
+ /

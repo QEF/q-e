@@ -1,0 +1,71 @@
+<?xml version="1.0"?>
+<?iotk version="1.2.0"?>
+<?iotk file_version="1.0"?>
+<?iotk binary="F"?>
+<?iotk qe_syntax="F"?>
+<Root>
+  <IRREPS_INFO>
+    <QPOINT_NUMBER type="integer" size="1">
+         3
+    </QPOINT_NUMBER>
+    <QPOINT_GROUP_RANK type="integer" size="1">
+         8
+    </QPOINT_GROUP_RANK>
+    <MINUS_Q_SYM type="logical" size="1">
+F
+    </MINUS_Q_SYM>
+    <NUMBER_IRR_REP type="integer" size="1">
+         2
+    </NUMBER_IRR_REP>
+    <REPRESENTION.1>
+      <NUMBER_OF_PERTURBATIONS type="integer" size="1">
+         1
+      </NUMBER_OF_PERTURBATIONS>
+      <PERTURBATION.1>
+        <SYMMETRY_TYPE_CODE type="integer" size="1">
+         1
+        </SYMMETRY_TYPE_CODE>
+        <SYMMETRY_TYPE type="character" size="1" len="15">
+A_1  G_1 D_1   
+        </SYMMETRY_TYPE>
+        <DISPLACEMENT_PATTERN type="complex" size="3">
+ 1.760642079444959E-016, 2.541534466859332E-017
+-1.000000000000000E+000,-0.000000000000000E+000
+-1.235426228190444E-032, 2.285706775051602E-017
+        </DISPLACEMENT_PATTERN>
+      </PERTURBATION.1>
+    </REPRESENTION.1>
+    <REPRESENTION.2>
+      <NUMBER_OF_PERTURBATIONS type="integer" size="1">
+         2
+      </NUMBER_OF_PERTURBATIONS>
+      <PERTURBATION.1>
+        <SYMMETRY_TYPE_CODE type="integer" size="1">
+         5
+        </SYMMETRY_TYPE_CODE>
+        <SYMMETRY_TYPE type="character" size="1" len="15">
+E    G_5 D_5   
+        </SYMMETRY_TYPE>
+        <DISPLACEMENT_PATTERN type="complex" size="3">
+-6.101323863593060E-001,-2.775557561562891E-017
+-5.822658446655129E-017,-6.458045006187657E-017
+ 7.418531235146091E-001, 2.781949213179785E-001
+        </DISPLACEMENT_PATTERN>
+      </PERTURBATION.1>
+      <PERTURBATION.2>
+        <SYMMETRY_TYPE_CODE type="integer" size="1">
+         5
+        </SYMMETRY_TYPE_CODE>
+        <SYMMETRY_TYPE type="character" size="1" len="15">
+E    G_5 D_5   
+        </SYMMETRY_TYPE>
+        <DISPLACEMENT_PATTERN type="complex" size="3">
+-7.922994832230414E-001,-0.000000000000000E+000
+-8.876523568768186E-017,-4.878501523164005E-017
+-5.712847555280475E-001,-2.142317833230178E-001
+        </DISPLACEMENT_PATTERN>
+      </PERTURBATION.2>
+    </REPRESENTION.2>
+  </IRREPS_INFO>
+</Root>
+
