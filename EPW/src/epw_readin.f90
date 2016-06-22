@@ -46,12 +46,13 @@
                             eliashberg, imag_read, kerread, kerwrite, lunif, specfun, &
                             fermi_energy, efermi_read, max_memlt, fila2f, &
                             ep_coupling, nw_specfun, wmax_specfun, &
-                            wmin_specfun, laniso, lpolar, epstrict, tphases, elinterp, &
+                            wmin_specfun, laniso, lpolar, epstrict, elinterp, &
                             proj, write_wfn, phinterp, iswitch, neptemp, &
                             ntempxx, liso, lacon, lpade, etf_mem, epbwrite, &
                             tshuffle2, tshuffle, nsiter, conv_thr_racon, &
-                            pwc, nswc, nswfc, nswi, filukq, filukk, fildvscf0, &
+                            pwc, nswc, nswfc, nswi, filukq, filukk, &
                             nbndsub, nbndskip, system_2d, delta_approx, title
+!  USE epwcom,        ONLY : tphases, fildvscf0                  
   USE elph2,         ONLY : elph
   USE start_k,       ONLY : nk1, nk2, nk3
   USE constants_epw, ONLY : ryd2mev, ryd2ev, ev2cmm1, kelvin2eV
@@ -88,8 +89,7 @@
        amass, outdir, prefix, iverbosity, time_max, fildvscf,                  &
        tshuffle, tshuffle2, phinterp, elinterp, epstrict,                      &
        elph, nq1, nq2, nq3, nk1, nk2, nk3, nbndskip,  nbndsub,                 &
-       tphases, fildvscf0, filukk, filukq,                                     &
-       epbread, epbwrite, epwread, epwwrite, etf_mem, kmaps,                   &
+       filukk, filukq, epbread, epbwrite, epwread, epwwrite, etf_mem, kmaps,   &
        eig_read, wepexst, epexst, vme,                                         &
        degaussw, fsthick, eptemp,  nsmear, delta_smear, eminabs, emaxabs,      &
        deltaeabs, dvscf_dir, ngaussw,                                          &
@@ -108,6 +108,7 @@
        lunif, kerwrite, kerread, imag_read, eliashberg,                        & 
        ep_coupling, fila2f, max_memlt, efermi_read, fermi_energy,              &
        specfun, wmin_specfun, wmax_specfun, nw_specfun, system_2d, delta_approx
+  ! tphases, fildvscf0
   !
   ! amass    : atomic masses
   ! iverbosity   : verbosity control
@@ -308,12 +309,12 @@
   epstrict     = .false.
   selfen_type  = 2
   elinterp     = .true.
-  tphases      = .false.
+!  tphases      = .false.
   parallel_k   = .true.
   parallel_q   = .false.
   a2f          = .false.
   etf_mem      = .true.
-  fildvscf0    = ' '
+!  fildvscf0    = ' '
   ngaussw      = 1
   time_max     = 10000000.d0
   outdir       = '.'
@@ -426,8 +427,8 @@
   IF (iverbosity.ne.0.and.iverbosity.ne.1.and.iverbosity.ne.2.and.iverbosity.ne.3) CALL errore ('epw_readin', &
        &' Wrong  iverbosity ', 1)
   IF (time_max.lt.1.d0) CALL errore ('epw_readin', ' Wrong time_max', 1)
-  IF (tphases.and.fildvscf0.eq.' ') CALL errore ('epw_readin', &
-       &' tphases requires fildvscf0', 1)
+!  IF (tphases.and.fildvscf0.eq.' ') CALL errore ('epw_readin', &
+!       &' tphases requires fildvscf0', 1)
   IF (epbread.and.epbwrite) CALL errore ('epw_readin', &
        &' epbread cannot be used with epbwrite', 1)
   IF (degaussw*4.d0.gt.fsthick) CALL errore ('epw_readin', &

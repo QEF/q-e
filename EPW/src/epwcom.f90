@@ -177,8 +177,9 @@ MODULE units_epw
   !
   SAVE
   !
-  INTEGER :: iudvscf0, iuncuf, &
-       lrcuf, lrepmatf, lretf
+  INTEGER :: iuncuf, &
+      lrcuf, lrepmatf, lretf
+  !INTEGER :: iudvscf0
   !
   ! iudvscf0: the unit where the delta Vscf is read to generate the fake perturbation 
   ! iuncuf: unit with rotation matrix on fine mesh

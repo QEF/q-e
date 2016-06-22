@@ -29,7 +29,7 @@
                             broyden_beta, band_plot, a2f, lacon, &
                             kmaps, kerwrite, kerread, indabs, imag_read, &
                             gap_edge, fsthick, filukq, filukk, filqf, filkf, &
-                            filelph, fileig, fildvscf0, fila2f, fermi_energy, &
+                            filelph, fileig, fila2f, fermi_energy, &
                             etf_mem, epwwrite, epwread, eptemp, epstrict, &
                             eps_acustic, ephwrite, epbread, nsiter, nqstep, &
                             nqsmear, nqf3, nqf2, nqf1, nkf3, nkf2, nkf1, &
@@ -44,6 +44,7 @@
                             wmax_specfun, wmax, wepexst, wannierize, &
                             vme, twophoton, tshuffle2, tshuffle, tphases, &
                             tempsmin, tempsmax, temps, delta_approx, title
+!  USE epwcom,        ONLY : fildvscf0                    
   USE elph2,         ONLY : elph 
   USE mp,            ONLY : mp_bcast
   USE mp_world,      ONLY : world_comm
@@ -194,7 +195,7 @@
   CALL mp_bcast (filukk, ionode_id, world_comm)    ! FG
   CALL mp_bcast (filukq, ionode_id, world_comm)    ! FG
   CALL mp_bcast (fileig, ionode_id, world_comm)    ! FG
-  CALL mp_bcast (fildvscf0, ionode_id, world_comm) !
+!  CALL mp_bcast (fildvscf0, ionode_id, world_comm) !
   CALL mp_bcast (dvscf_dir, ionode_id, world_comm)
   CALL mp_bcast (fila2f, ionode_id, world_comm)     ! RM
 #endif

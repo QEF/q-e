@@ -713,6 +713,7 @@
         WRITE(stdout,'(/5x,"Reading epmatq from .epb files"/)') 
         READ  (iuepb) nqc, xqc, et, dynq, epmatq, zstar, epsi
         CLOSE (iuepb)
+        WRITE(stdout,'(/5x,"The .epb files have been correctly read"/)')
      ENDIF
      !
      IF (epbwrite) THEN
@@ -720,6 +721,7 @@
         WRITE(stdout,'(/5x,"Writing epmatq on .epb files"/)') 
         WRITE (iuepb) nqc, xqc, et, dynq, epmatq, zstar, epsi
         CLOSE (iuepb)
+        WRITE(stdout,'(/5x,"The .epb files have been correctly written"/)')
      ENDIF
   ENDIF
   !

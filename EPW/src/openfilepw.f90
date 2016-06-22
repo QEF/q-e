@@ -28,10 +28,10 @@
   USE wvfct,            ONLY : nbnd, npwx
   USE noncollin_module, ONLY : npol,nspin_mag
   use phcom,            ONLY : lrwfc, fildvscf, iudvscf, lrdvkb3, lrdrho
-  use epwcom,           ONLY : fildvscf0, iudvscf0, tphases, elinterp, &
+  use epwcom,           ONLY : elinterp, &
                                iuncuf, nbndsub, lrcuf
   USE fft_base,         ONLY : dfftp
-  USE fft_base,         ONLY : dfftp
+  !USE epwcom,           ONLY : iudvscf0, tphases, fildvscf0
   !
   implicit none
   INTEGER, EXTERNAL :: find_free_unit
@@ -68,19 +68,19 @@
   ! RM - nspin corresponds to nspin_mag according to QE5.0.3
   !    - this will have to change when we move to QE5.0.3 
   !
-  lrdrho = 2 * dfftp%nr1x *dfftp%nr2x *dfftp%nr3x * nspin_mag
-  IF (fildvscf0 .eq. fildvscf) THEN
-     iudvscf0 = iudvscf
-  ELSE
-     iudvscf0 = find_free_unit()
-     IF ( me_pool == 0 .and. tphases) THEN
-        tmp_dir_save=tmp_dir 
-        spot=INDEX(fildvscf0,'/',.true.)
-        tmp_dir=fildvscf0(1:spot) 
-        CALL diropn (iudvscf0, 'dvscf', lrdrho, exst)
-        tmp_dir=tmp_dir_save
-     END IF
-  ENDIF
+  !lrdrho = 2 * dfftp%nr1x *dfftp%nr2x *dfftp%nr3x * nspin_mag
+  !IF (fildvscf0 .eq. fildvscf) THEN
+  !   iudvscf0 = iudvscf
+  !ELSE
+  !   iudvscf0 = find_free_unit()
+  !   IF ( me_pool == 0 .and. tphases) THEN
+  !      tmp_dir_save=tmp_dir 
+  !      spot=INDEX(fildvscf0,'/',.true.)
+  !      tmp_dir=fildvscf0(1:spot) 
+  !      CALL diropn (iudvscf0, 'dvscf', lrdrho, exst)
+  !      tmp_dir=tmp_dir_save
+  !   END IF
+  !ENDIF
   !
   !
   IF (elinterp) then

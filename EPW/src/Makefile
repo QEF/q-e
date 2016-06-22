@@ -94,7 +94,6 @@ rotate_epmat.o \
 selfen_elec.o \
 selfen_phon.o \
 set_ndnmbr.o \
-setphases.o \
 setphases_wrap.o \
 sgama2.o \
 sgam_at2.o \
@@ -110,6 +109,7 @@ pw2wan90epw.o \
 wigner_seitz2.o \
 wigner_seitz.o \
 write_ephmat.o 
+# setphases.o \ : SP: We keep it in case its usefull in the future but now depreciated.
 
 #default : epw
 
@@ -124,7 +124,7 @@ LIBOBJS = ../../clib/clib.a ../../iotk/src/libiotk.a
 
 TLDEPS= bindir mods libs pw-lib pw ph
 
-all :   pw ph wannier wcorr pp ld1 upf libepw.a epw.x 
+all :   pw ph wannier pp ld1 upf libepw.a epw.x 
 
 libepw.a : $(EPWOBJS)
 	$(AR) $(ARFLAGS) $@ $?
