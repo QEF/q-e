@@ -2,10 +2,19 @@
 XSPECTRA : X-ray spectra calculation
 
 ---------
-by C. Gougoussis, M. Calandra, A. Seitsonen and F. Mauri
+by C. Gougoussis, O. Bunau, A. Seitsonen, F. Mauri and M. Calandra
 
+K 
 The theoretical approach on which XSpectra is based was
 described in:
+
+L23 edges,
+
+O. Bunau and M. Calandra
+Projector augmented wave calculation of x-ray absorption spectra at the L2,3 edges
+Phys. Rev. B 87, 205105 (2013) 
+
+K edges
 
 Christos Gougoussis, Matteo Calandra, Ari P. Seitsonen, Francesco Mauri,
 "First principles calculations of X-ray absorption in an ultrasoft
@@ -26,8 +35,7 @@ The implementation of the DFT+U approximation and its application to
 K-edge XAS in NiO was performed in:
 
 C. Gougoussis, M. Calandra, A. Seitsonen, Ch. Brouder, A. Shukla, F. Mauri
-" Intrinsic charge transfer gap in NiO from  Ni K -edge x-ray absorption spectroscopy", Phys. Rev. B 79, 045118 (2009)
-
+" Intrinsic charge transfer gap in NiO from  Ni K -edge x-ray absorption spectroscopy", Phys. Rev. B 79, 045118 (2009)
 
 Finally you should cite properly the Quantum Espresso package.
 
