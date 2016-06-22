@@ -4,21 +4,21 @@
   amass(1)    = 12.01078
   outdir      = './'
 
-  iverbosity  = 0
+  iverbosity  = 3
 
   elph        = .true.
-  epbwrite    = .true.
+  epbwrite    = .false.
   epbread     = .false.
 
-  etf_mem     = .false.
+  etf_mem     = .true.
 
-  epwwrite    = .true.
-  epwread     = .false.
+  epwwrite    = .false.
+  epwread     = .true.
 
   nbndsub     =  4
   nbndskip    =  0
 
-  wannierize  = .true.
+  wannierize  = .false.
   num_iter    = 300
   iprint      = 2
   dis_win_max = 12
@@ -30,14 +30,18 @@
 
   tshuffle2   = .true.
 
-  tphases     = .false.
-
   elecselfen  = .true.
+  nest_fn     = .true.
   phonselfen  = .false.
   a2f         = .false.
 
-  parallel_k  = .true.
-  parallel_q  = .false.
+  specfun      = .true.
+  wmin_specfun = -4
+  wmax_specfun = 1
+  nw_specfun   = 20
+
+  parallel_k  = .false.
+  parallel_q  = .true.
 
   fsthick     = 15 ! eV 
   eptemp      = 300 ! K (same as PRB 76, 165108)
