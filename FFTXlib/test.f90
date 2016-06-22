@@ -35,11 +35,11 @@ program test
   REAL*8  :: ecutrho
   REAL*8  :: ecutwfc
   REAL*8  :: tpiba, alat, alat_in
-  REAL*8  :: tempo(100)
-  REAL*8  :: tempo_mio(100)
-  REAL*8  :: tempo_min(100)
-  REAL*8  :: tempo_max(100)
-  REAL*8  :: tempo_avg(100)
+  REAL*8  :: time(100)
+  REAL*8  :: my_time(100)
+  REAL*8  :: time_min(100)
+  REAL*8  :: time_max(100)
+  REAL*8  :: time_avg(100)
   REAL*8  :: wall
   REAL*8  :: wall_avg
   !
@@ -221,11 +221,11 @@ program test
   ALLOCATE( req_u(nbnd) )
   ALLOCATE( aux( dffts%tg_nnr * dffts%nogrp ) )
 
-  tempo = 0.0d0
-  tempo_mio = 0.0d0
-  tempo_min = 0.0d0
-  tempo_max = 0.0d0
-  tempo_avg = 0.0d0
+  time = 0.0d0
+  my_time = 0.0d0
+  time_min = 0.0d0
+  time_max = 0.0d0
+  time_avg = 0.0d0
 
   !
   ! Test FFT for wave functions - First calls may be biased by MPI and FFT initialization
@@ -276,7 +276,7 @@ program test
      aux = 0.0d0
      aux(1) = 1.0d0
 
-     tempo(1) = MPI_WTIME()
+     time(1) = MPI_WTIME()
 
      IF( ireq <= nreq ) THEN
         ipsi = MOD( ireq + 1, 2 ) + 1 
@@ -287,14 +287,14 @@ program test
 
      CALL MPI_WAIT( req_p( ireq - 1 ),MPI_STATUS_IGNORE)
 
-     tempo(2) = MPI_WTIME()
+     time(2) = MPI_WTIME()
 
      CALL fw_tg_cft3_z( psis( :, ipsi ), dffts, aux )
-     tempo(3) = MPI_WTIME()
+     time(3) = MPI_WTIME()
      CALL fw_tg_cft3_scatter( psis( :, ipsi ), dffts, aux )
-     tempo(4) = MPI_WTIME()
+     time(4) = MPI_WTIME()
      CALL fw_tg_cft3_xy( psis( :, ipsi ), dffts )
-     tempo(5) = MPI_WTIME()
+     time(5) = MPI_WTIME()
      !
      tmp1=1.d0
      tmp2=0.d0
@@ -303,20 +303,20 @@ program test
        CALL DAXPY(10000, pi*iloop, tmp1, 1, tmp2, 1)
      end do 
      !
-     tempo(6) = MPI_WTIME()
+     time(6) = MPI_WTIME()
      CALL bw_tg_cft3_xy( psis( :, ipsi ), dffts )
-     tempo(7) = MPI_WTIME()
+     time(7) = MPI_WTIME()
      CALL bw_tg_cft3_scatter( psis( :, ipsi ), dffts, aux )
-     tempo(8) = MPI_WTIME()
+     time(8) = MPI_WTIME()
      CALL bw_tg_cft3_z( psis( :, ipsi ), dffts, aux )
-     tempo(9) = MPI_WTIME()
+     time(9) = MPI_WTIME()
      !
      CALL unpack_group_sticks( psis( :, ipsi ), aux, dffts )
      !
-     tempo(10) = MPI_WTIME()
+     time(10) = MPI_WTIME()
      !
      do i = 2, 10
-        tempo_mio(i) = tempo_mio(i) + (tempo(i) - tempo(i-1))
+        my_time(i) = my_time(i) + (time(i) - time(i-1))
      end do
      !
      ncount = ncount + 1
@@ -330,18 +330,18 @@ program test
      aux = 0.0d0
      aux(1) = 1.0d0
 
-     tempo(1) = MPI_WTIME()
+     time(1) = MPI_WTIME()
 
      CALL pack_group_sticks( aux, psis(:,ipsi), dffts )
 
-     tempo(2) = MPI_WTIME()
+     time(2) = MPI_WTIME()
 
      CALL fw_tg_cft3_z( psis( :, ipsi ), dffts, aux )
-     tempo(3) = MPI_WTIME()
+     time(3) = MPI_WTIME()
      CALL fw_tg_cft3_scatter( psis( :, ipsi ), dffts, aux )
-     tempo(4) = MPI_WTIME()
+     time(4) = MPI_WTIME()
      CALL fw_tg_cft3_xy( psis( :, ipsi ), dffts )
-     tempo(5) = MPI_WTIME()
+     time(5) = MPI_WTIME()
      !
      tmp1=1.d0
      tmp2=0.d0
@@ -349,20 +349,20 @@ program test
        CALL DAXPY(10000, pi*iloop, tmp1, 1, tmp2, 1)
      end do 
      !
-     tempo(6) = MPI_WTIME()
+     time(6) = MPI_WTIME()
      CALL bw_tg_cft3_xy( psis( :, ipsi ), dffts )
-     tempo(7) = MPI_WTIME()
+     time(7) = MPI_WTIME()
      CALL bw_tg_cft3_scatter( psis( :, ipsi ), dffts, aux )
-     tempo(8) = MPI_WTIME()
+     time(8) = MPI_WTIME()
      CALL bw_tg_cft3_z( psis( :, ipsi ), dffts, aux )
-     tempo(9) = MPI_WTIME()
+     time(9) = MPI_WTIME()
 
      CALL unpack_group_sticks( psis( :, ipsi ), aux, dffts )
 
-     tempo(10) = MPI_WTIME()
+     time(10) = MPI_WTIME()
 
      do i = 2, 10
-        tempo_mio(i) = tempo_mio(i) + (tempo(i) - tempo(i-1))
+        my_time(i) = my_time(i) + (time(i) - time(i-1))
      end do
 
      ncount = ncount + 1
@@ -379,24 +379,24 @@ program test
   CALL fft_dlay_deallocate( dfft3d )
 
   if( ncount > 0 ) then
-     tempo_mio = tempo_mio / DBLE(ncount)
+     my_time = my_time / DBLE(ncount)
   endif
 
-!write(*,*)tempo_mio(2), tempo_mio(3), tempo_mio(4)
+!write(*,*)my_time(2), my_time(3), my_time(4)
 
 #ifdef __MPI
-  CALL MPI_ALLREDUCE( tempo_mio, tempo_min, 10, MPI_DOUBLE_PRECISION, MPI_MIN, MPI_COMM_WORLD, ierr )
-  CALL MPI_ALLREDUCE( tempo_mio, tempo_max, 10, MPI_DOUBLE_PRECISION, MPI_MAX, MPI_COMM_WORLD, ierr )
-  CALL MPI_ALLREDUCE( tempo_mio, tempo_avg, 10, MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, ierr )
+  CALL MPI_ALLREDUCE( my_time, time_min, 10, MPI_DOUBLE_PRECISION, MPI_MIN, MPI_COMM_WORLD, ierr )
+  CALL MPI_ALLREDUCE( my_time, time_max, 10, MPI_DOUBLE_PRECISION, MPI_MAX, MPI_COMM_WORLD, ierr )
+  CALL MPI_ALLREDUCE( my_time, time_avg, 10, MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, ierr )
   CALL MPI_ALLREDUCE( wall, wall_avg,       1, MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, ierr )
 #else
-  tempo_min = tempo
-  tempo_max = tempo
+  time_min = time
+  time_max = time
 #endif
 
-!write(*,*)tempo_min(2), tempo_min(3), tempo_min(4)
+!write(*,*)time_min(2), time_min(3), time_min(4)
 
-  tempo_avg = tempo_avg / npes
+  time_avg = time_avg / npes
   wall_avg = wall_avg / npes
 
   if( mype == 0 ) then
@@ -411,15 +411,15 @@ program test
     write(*,100) 
     write(*,1) 
     write(*,100) 
-    write(*,2) tempo_min(2), tempo_max(2), tempo_avg(2)
-    write(*,3) tempo_min(3), tempo_max(3), tempo_avg(3)
-    write(*,4) tempo_min(4), tempo_max(4), tempo_avg(4)
-    write(*,5) tempo_min(5), tempo_max(5), tempo_avg(5)
-    write(*,6) tempo_min(6), tempo_max(6), tempo_avg(6)
-    write(*,7) tempo_min(7), tempo_max(7), tempo_avg(7)
-    write(*,8) tempo_min(8), tempo_max(8), tempo_avg(8)
-    write(*,9) tempo_min(9), tempo_max(9), tempo_avg(9)
-    write(*,10) tempo_min(10), tempo_max(10), tempo_avg(10)
+    write(*,2) time_min(2), time_max(2), time_avg(2)
+    write(*,3) time_min(3), time_max(3), time_avg(3)
+    write(*,4) time_min(4), time_max(4), time_avg(4)
+    write(*,5) time_min(5), time_max(5), time_avg(5)
+    write(*,6) time_min(6), time_max(6), time_avg(6)
+    write(*,7) time_min(7), time_max(7), time_avg(7)
+    write(*,8) time_min(8), time_max(8), time_avg(8)
+    write(*,9) time_min(9), time_max(9), time_avg(9)
+    write(*,10) time_min(10), time_max(10), time_avg(10)
     write(*,11) wall 
     write(*,100) 
 

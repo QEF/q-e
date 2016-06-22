@@ -1,0 +1,61 @@
+#!/bin/sh
+
+# run from directory where this script is
+cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+EXAMPLE_DIR=`pwd`
+
+# check whether echo has the -e option
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : starting"
+$ECHO
+$ECHO "This example shows how to use the FFTTXlib library to perform"
+$ECHO "3D Fourier transform in a scalar and parallel setup."
+
+# set the needed environment variables
+. ../../environment_variables
+
+# required executables and pseudopotentials
+BIN_LIST="fft_test0.x fft_test.x"
+
+BIN_DIR="../../"
+
+$ECHO
+$ECHO "  executables directory: $BIN_DIR"
+$ECHO "  checking that needed directories and files exist...\c"
+
+# check for directories
+for DIR in "$BIN_DIR" ; do
+    if test ! -d $DIR ; then
+        $ECHO
+        $ECHO "ERROR: $DIR not existent or not a directory"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results" ; do
+    if test ! -d $DIR ; then
+        mkdir $DIR
+    fi
+done
+cd $EXAMPLE_DIR/results
+
+# check for executables
+for FILE in $BIN_LIST ; do
+    if test ! -x $BIN_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $BIN_DIR/$FILE not existent or not executable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+
+$ECHO " done"
+
+# how to run executables
+PW_COMMAND="$PARA_PREFIX $BIN_DIR/fft_test0.x $PARA_POSTFIX"
+$PARA_PREFIX $BIN_DIR/fft_test0.x   >  fft_test0.out
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : done"
