@@ -93,6 +93,7 @@ The output spectrum can be separated in its spin-up and
 spin-down polarizations.
 DFT+U calculations  and collinear magnetism are possible.
 Ultrasoft pseudopotentials are allowed.
+Hybrid functionals not yet allowed.
 
  
 
