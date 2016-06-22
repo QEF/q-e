@@ -121,7 +121,6 @@ readgmap.o : elph2.o
 readmat_shuffle.o : elph2.o
 readmat_shuffle.o : epwcom.o
 refold.o : kfold.o
-reset_sym.o : epwcom.o
 rigid_epw.o : constants_epw.o
 rigid_epw.o : elph2.o
 rotate_eigenm.o : elph2.o
