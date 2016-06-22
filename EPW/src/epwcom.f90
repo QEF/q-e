@@ -149,6 +149,7 @@
   CHARACTER(len=100) :: dvscf_dir ='./' ! directory for .dvscf and .dyn files (wannier interpolation)
   CHARACTER(len=80) :: filelph, fileig ! output file for the electron-phonon coefficients
   CHARACTER(len=256), dimension(200) :: proj, wdata ! projections and any extra info for W90 
+  CHARACTER(LEN=75) :: title ! ...  title of the simulation  
   REAL (kind=DP), dimension(25) :: eptemp 
   REAL (kind=DP), dimension(50) :: temps ! temperature entering in the Eliashberg equtions (units of Kelvin)
   integer :: iswitch

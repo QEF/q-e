@@ -23,7 +23,7 @@
   USE gvecw,         ONLY : ecutwfc
   USE symm_base,     ONLY : s, sname, ftau, s_axis_to_cart,sr
   USE funct,         ONLY : write_dft_name
-  USE printout_base, ONLY : title
+  USE epwcom,        ONLY : title
   USE phcom,         ONLY : DP, tr2_ph, nmix_ph, alpha_mix
   USE lr_symm_base,  ONLY : irotmq, minus_q, nsymq, irgq
   USE control_flags, ONLY : iverbosity

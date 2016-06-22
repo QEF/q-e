@@ -43,7 +43,7 @@
                             wsfc, wscut, write_wfn, wmin_specfun, wmin, &
                             wmax_specfun, wmax, wepexst, wannierize, &
                             vme, twophoton, tshuffle2, tshuffle, tphases, &
-                            tempsmin, tempsmax, temps, delta_approx
+                            tempsmin, tempsmax, temps, delta_approx, title
   USE elph2,         ONLY : elph 
   USE mp,            ONLY : mp_bcast
   USE mp_world,      ONLY : world_comm
@@ -53,9 +53,7 @@
   USE io_global,     ONLY : ionode_id
   USE control_flags, ONLY : iverbosity
   USE ions_base,     ONLY : amass
-  USE printout_base, ONLY : title   ! title of the run
-
-
+  !
   implicit none
   !
   ! logicals

@@ -1,27 +1,3 @@
-# Makefile for EPW
-
-include ../../make.sys
-include make.libs
-
-#
-# use recursive definitions in Makefile to modify the PATH for modules
-#
-
-IFLAGS   = -I../../include  
-MODFLAGS = -I../../iotk/src -I../../Modules -I../../LAXlib -I../../iotk/src \
-	   -I../../FFTXlib -I../../PW/src -I../../LR_Modules -I../../PHonon/PH -I../../PP/src -I.
-
-#
-# The above is in alphabetical order except when order matter during compilation
-#
-
-EPWOBJS = \
-io_epw.o\
-elph2.o \
-epw.o \
-a2f.o \
-allocate_epwq.o \
-printout_base.o \
 bcast_epw_input.o \
 broyden.o \
 close_epw.o \

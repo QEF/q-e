@@ -51,13 +51,12 @@
                             ntempxx, liso, lacon, lpade, etf_mem, epbwrite, &
                             tshuffle2, tshuffle, nsiter, conv_thr_racon, &
                             pwc, nswc, nswfc, nswi, filukq, filukk, fildvscf0, &
-                            nbndsub, nbndskip, system_2d, delta_approx
+                            nbndsub, nbndskip, system_2d, delta_approx, title
   USE elph2,         ONLY : elph
   USE start_k,       ONLY : nk1, nk2, nk3
   USE constants_epw, ONLY : ryd2mev, ryd2ev, ev2cmm1, kelvin2eV
   USE io_files,      ONLY : tmp_dir, prefix
   USE control_flags, ONLY : iverbosity, modenum, gamma_only
-  USE printout_base, ONLY : title
   USE ions_base,     ONLY : amass
   USE mp_world,      ONLY : world_comm
   USE partial,       ONLY : atomo, nat_todo
