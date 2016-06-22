@@ -68,7 +68,7 @@
   ! RM - nspin corresponds to nspin_mag according to QE5.0.3
   !    - this will have to change when we move to QE5.0.3 
   !
-  !lrdrho = 2 * dfftp%nr1x *dfftp%nr2x *dfftp%nr3x * nspin_mag
+  lrdrho = 2 * dfftp%nr1x *dfftp%nr2x *dfftp%nr3x * nspin_mag
   !IF (fildvscf0 .eq. fildvscf) THEN
   !   iudvscf0 = iudvscf
   !ELSE

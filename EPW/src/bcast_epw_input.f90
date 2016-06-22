@@ -42,9 +42,9 @@
                             nw_specfun, nw, nswi, nswfc, nswc, nstemp, nsmear, &
                             wsfc, wscut, write_wfn, wmin_specfun, wmin, &
                             wmax_specfun, wmax, wepexst, wannierize, &
-                            vme, twophoton, tshuffle2, tshuffle, tphases, &
+                            vme, twophoton, tshuffle2, tshuffle,  &
                             tempsmin, tempsmax, temps, delta_approx, title
-!  USE epwcom,        ONLY : fildvscf0                    
+!  USE epwcom,        ONLY : fildvscf0, tphases
   USE elph2,         ONLY : elph 
   USE mp,            ONLY : mp_bcast
   USE mp_world,      ONLY : world_comm
@@ -78,7 +78,7 @@
   CALL mp_bcast (epbwrite, ionode_id, world_comm)  !
   CALL mp_bcast (phinterp, ionode_id, world_comm)  !
   CALL mp_bcast (elinterp, ionode_id, world_comm)  !
-  CALL mp_bcast (tphases, ionode_id, world_comm)   !
+!  CALL mp_bcast (tphases, ionode_id, world_comm)   !
   CALL mp_bcast (epstrict, ionode_id, world_comm)  !
   CALL mp_bcast (fsthick, ionode_id, world_comm)   !
   CALL mp_bcast (eptemp, ionode_id, world_comm)    !

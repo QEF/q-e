@@ -73,7 +73,7 @@ integer :: fstat,statb(13)
   !
   open  (iudvscf, file = tempfile, form = 'unformatted', &
           access = 'direct', iostat=ios,recl = unf_recl,status='old')
-  IF (ios /= 0) call errore ('readdvscf','error opening' // tempfile, iudvscf)
+  IF (ios /= 0) call errore ('readdvscf','error opening ' // tempfile, iudvscf)
   !
   ! check that the binary file is long enough
   ! this is tricky to track through error dumps
