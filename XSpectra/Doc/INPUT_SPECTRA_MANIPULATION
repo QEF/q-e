@@ -1,0 +1,108 @@
+!
+! Spectra manipulation tool by Oana Bunau and Matteo Calandra, Agust 2015
+!
+!   This small code allows to
+!
+!      1) Remove states below a certain energy from the spectrum
+!           In large gap insulator it should work as the usual
+!           cut_occupied_states option but it is much much faster
+!           In metals/semimetals the normal and more time consuming
+!           option cut_occupied_states=.true. used in XSpectra 
+!           should work better. The procedure use here can sometimes
+!           work for metals but care is needed.
+!
+!      2) For L23 edges, this code generates the full L23 spectrum from
+!           the L2 edge only. the L3 edge is obtained multiplying by two the
+!           L2 and shifting it by the spin-orbit splitting between 2p1/2
+!           and 2p3/2. Thus the spectrum in input must be the L2 edge.
+!
+!      3) Convolute a given spectrum known on a regular energy grid with
+!         a constant lorentz brodening gamma_hole, or with an atan 
+!         broadening. In more details (s_in, s_out are cross sections):
+!
+!        s_out(W)=integral s_in(om)*Gamma(W)/(Gamma(W)**2+(om-W)**2)/pi
+!
+!        and the integral is over all the space (-infty, infty). 
+!
+!        If conv_type='lorentz' then Gamma(W)=gamma_hole constant
+!
+!        If conv_type='lorentz_atan' then 
+!              Gamma(W)=gamma_hole   for W < xe0
+!                      =Gamma_MAX*(0.5+atan(e-1/(e*e))) otherwise
+!          where e=(W-xe0)/(Ectr-xe0)
+!          and Ectr is the inflection point of the atan and xe0 is
+!          the pre-edge onset.
+!          For the definition of e see Eq. 7 and below in 
+!           O. Bunau and M. Calandra, PRB 87, 205105 (2013) 
+!       
+!          Finally emin_conv, emax_conv and nenergy_conv define
+!          the energy grid of the convoluted spectrum (energies labeled W above).
+!          If omitted, the energy grid is the same as in the input cross section.
+!
+!          Important, please note that the convolution adds on TOP of the
+!          width of your original spectrum. So you should run xspectra with a 
+!          tiny xgamma.
+!------------------------------------------------------------------------------------
+!  How to use:
+!      
+!      1) Use in single processor, no parallelization
+!
+!      2) Input file description:
+!
+!              case (i): removal of occupied states from the spectrum
+!
+!                     &input_manip 
+!                       cross_section_file='xanes.dat', 
+!                       option='cut_occ_states',
+!                       xe0=13.0, 
+!                       shift_spectrum=.false.,
+!                     &end
+!
+!                     if shift_spectrum=.true. the spectrum is shifted in xe0
+!
+!              case (ii): removal of occupied states from the spectrum
+!
+!                     &input_manip
+!                       cross_section_file='xanes.dat',
+!                       option='add_L2_L3',
+!                       element='Cu',
+!                     &end
+!
+!                     element is used to read the spin orbit splitting 2p1/2, 2p3/2
+!
+!              The cross_section_file is the xanes.dat file with the cross section.
+!
+!              case (iii) - lorentz
+!
+!                       &input_manip 
+!                         cross_section_file='xanes.dat.L23', 
+!                         option='convolution',
+!                         shift_spectrum=.false.,
+!                         element='Cu',
+!                         conv_type='lorentz',
+!                         gamma_hole=1.0, 
+!                         emin_conv=-50.0,
+!                         emax_conv=100.0,
+!                         nenergy_conv=1000,
+!                       &end
+!                        
+!                       emin_conv, emax_conv and nenergy_conv can be omitted
+!
+!
+!              case (iii) - lorentz_atan
+!
+!                    &input_manip 
+!                       cross_section_file='xanes.dat.L23', 
+!                       option='convolution',
+!                       shift_spectrum=.false.,
+!                       element='Cu',
+!                       conv_type='lorentz_atan',
+!                       gamma_hole=0.05, 
+!                       gamma_max=6.0, 
+!                       ectr=-8.0,
+!                       xe0=-19.0,
+!                    &end
+!
+!
+!                 
+!----------------------------------------------------------------------------
