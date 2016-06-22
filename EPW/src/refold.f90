@@ -28,24 +28,25 @@
   !   the large sphere (density set).
   !
   !-----------------------------------------------------------------
-  use io_global,     ONLY : stdout
-  use io_epw,        ONLY : iukgmap
-  USE control_flags, ONLY : iverbosity
+  USE io_global,     ONLY : stdout
+  USE io_epw,        ONLY : iukgmap
+! SP: Sucidal. Produce too much data. Only use for debugging. 
+!  USE control_flags, ONLY : iverbosity
   USE kfold
 #ifdef __PARA
-  use mp_global,     ONLY : my_pool_id,me_pool 
+  USE mp_global,     ONLY : my_pool_id,me_pool 
 #endif
   implicit none
   integer :: ngm_g, mill_g( 3, ngm_g ), ig0, ig1, ig2, ig2_guess, i, j, k, &
              notfound, indold, indnew, guess_skip,itoj(ngm_g),jtoi(ngm_g),ig1_use,ig2_use
   logical :: tfound
   !
-  IF (iverbosity.eq.1) then 
-    WRITE(stdout,*) '  There are ',ng0vec,'inequivalent folding G_0 vectors'
-    DO ig0 = 1, ng0vec
-      WRITE(stdout,'(a,i1,a,3i3)') 'g0vec_all( ',ig0,') = ',g0vec_all(:,ig0)
-    ENDDO
-  ENDIF
+!  IF (iverbosity.eq.1) then 
+!    WRITE(stdout,*) '  There are ',ng0vec,'inequivalent folding G_0 vectors'
+!    DO ig0 = 1, ng0vec
+!      WRITE(stdout,'(a,i1,a,3i3)') 'g0vec_all( ',ig0,') = ',g0vec_all(:,ig0)
+!    ENDDO
+!  ENDIF
   !
   allocate ( gmap ( ngm_g, ng0vec ) )
   guess_skip=0
@@ -63,8 +64,8 @@
      indold = indnew
      !
      !
-    IF (iverbosity.eq.1) &
-      WRITE(stdout,'(i3,4x,3i3)') ig0, g0vec_all(:, ig0 )
+!    IF (iverbosity.eq.1) &
+!      WRITE(stdout,'(i3,4x,3i3)') ig0, g0vec_all(:, ig0 )
     notfound = 0
     DO ig1 = 1, ngm_g
       ig1_use=itoj(ig1)
@@ -74,16 +75,16 @@
       i = mill_g(1, ig1_use)
       j = mill_g(2, ig1_use)
       k = mill_g(3, ig1_use)
-      IF (iverbosity.eq.1) &
-        WRITE(stdout,'(5x,i5,4x,3i5)') ig1_use, i,j,k 
+!      IF (iverbosity.eq.1) &
+!        WRITE(stdout,'(5x,i5,4x,3i5)') ig1_use, i,j,k 
       !
       !  the final G-vector
       !
       i = i + g0vec_all(1, ig0 )
       j = j + g0vec_all(2, ig0 )
       k = k + g0vec_all(3, ig0 )
-      IF (iverbosity.eq.1) &
-        WRITE(stdout,'(5x,i5,4x,3i5)') ig1_use, i,j,k 
+!      IF (iverbosity.eq.1) &
+!        WRITE(stdout,'(5x,i5,4x,3i5)') ig1_use, i,j,k 
       !
       ig2 = 0
       tfound = .false.
@@ -106,8 +107,8 @@
         tfound = (i.eq.mill_g(1, ig2_use)).and. & 
                  (j.eq.mill_g(2, ig2_use)).and. & 
                  (k.eq.mill_g(3, ig2_use))
-        IF (iverbosity.eq.1) &
-          WRITE(stdout,'(10x,i5,4x,3i5,2x,i1)') ig2_use, mill_g(:, ig2_use), tfound
+ !       IF (iverbosity.eq.1) &
+ !         WRITE(stdout,'(10x,i5,4x,3i5,2x,L)') ig2_use, mill_g(:, ig2_use), tfound
         !
       ENDDO
       IF (tfound) then
@@ -120,8 +121,8 @@
       !
     ENDDO
     !
-    IF (iverbosity.eq.1) &
-      WRITE(stdout,*) 'ig0 = ',ig0,' not found = ', notfound, ' out of ',ngm_g
+!    IF (iverbosity.eq.1) &
+!      WRITE(stdout,*) 'ig0 = ',ig0,' not found = ', notfound, ' out of ',ngm_g
     ! 
   ENDDO
   ! 

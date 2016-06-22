@@ -651,7 +651,7 @@
   !
   CALL mp_sum(sigmar_all,inter_pool_comm)
   CALL mp_sum(sigmai_all,inter_pool_comm)
-  CALL mp_sum(sigmai_mode,inter_pool_comm)
+  IF (iverbosity == 3) CALL mp_sum(sigmai_mode,inter_pool_comm)
   CALL mp_sum(zi_all,inter_pool_comm)
   CALL mp_sum(fermicount, inter_pool_comm)
   CALL mp_barrier(inter_pool_comm)

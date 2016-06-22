@@ -7,10 +7,13 @@ The following feature of the code are tested
 - Phonon & electron self-energy
 - Eliashberg a2F
 - Homogeneous fine k and q-grid integration
-- Test parallel_k and parallel_q
-- Test restart feature epwread = .true.
 - Test nesting function
 - Test spectral function
+- Test parallel_k (epw1.in)
+- Test parallel_q (epw2.in)
+- Test restart feature epwread = .true. (epw2.in)
+- Test band_plot (epw3.in)
+- Test iverbosity = 1 (epw4.in)
 
 #################
 # Test 02 : SiC #

@@ -23,7 +23,8 @@
   USE io_files,      ONLY : prefix
   USE klist_epw,     ONLY : kmap
   USE kfold,         ONLY : g0vec_all, ng0vec, shift, g0vec_all_r
-  USE control_flags, ONLY : iverbosity
+! SP: iverbosity cannot be tested here. Generates Tb of data ...  
+!  USE control_flags, ONLY : iverbosity 
 #ifdef __PARA
   USE mp_global,     ONLY : inter_pool_comm,my_pool_id
   USE mp,            ONLY : mp_barrier
@@ -88,8 +89,8 @@
     in_the_list = abs(xx-nint(xx)).le.eps .and. &
                   abs(yy-nint(yy)).le.eps .and. &
                   abs(zz-nint(zz)).le.eps
-    IF (iverbosity.eq.1) &
-      WRITE(stdout,'(a,3i3)') '  q in integer coord:',nint(xx),nint(yy),nint(zz)
+!    IF (iverbosity.eq.1) &
+!      WRITE(stdout,'(a,3i3)') '  q in integer coord:',nint(xx),nint(yy),nint(zz)
     IF (.not.in_the_list) CALL errore('createkmap','q-vec not commensurate',1)
     !
     !  bring all the k's in crystal coordinates 
@@ -122,8 +123,8 @@
       xx = xk(1, ik)*nk1
       yy = xk(2, ik)*nk2
       zz = xk(3, ik)*nk3
-      IF (iverbosity.eq.1) &
-        WRITE(stdout,'(a,i3,a,3i3)') 'ik = ',ik,',   k   in integer coord:',nint(xx),nint(yy),nint(zz)
+!      IF (iverbosity.eq.1) &
+!        WRITE(stdout,'(a,i3,a,3i3)') 'ik = ',ik,',   k   in integer coord:',nint(xx),nint(yy),nint(zz)
       in_the_list = abs(xx-nint(xx)).le.eps .and. &
                     abs(yy-nint(yy)).le.eps .and. &
                     abs(zz-nint(zz)).le.eps
@@ -139,8 +140,8 @@
       xx = xk_q(1)*nk1
       yy = xk_q(2)*nk2
       zz = xk_q(3)*nk3
-      IF (iverbosity.eq.1) &
-        WRITE(stdout,'(a,i3,a,3i3)') 'ik = ',ik,',   k+q in integer coord:',nint(xx),nint(yy),nint(zz)
+!      IF (iverbosity.eq.1) &
+!        WRITE(stdout,'(a,i3,a,3i3)') 'ik = ',ik,',   k+q in integer coord:',nint(xx),nint(yy),nint(zz)
       in_the_list = abs(xx-nint(xx)).le.eps .and. &
                     abs(yy-nint(yy)).le.eps .and. &
                     abs(zz-nint(zz)).le.eps
@@ -151,8 +152,8 @@
       i = mod ( nint ( xx + 2*nk1), nk1 ) 
       j = mod ( nint ( yy + 2*nk2), nk2 ) 
       k = mod ( nint ( zz + 2*nk3), nk3 ) 
-      IF (iverbosity.eq.1) &
-        WRITE(stdout,'(a,i3,a,3i3)') 'ik = ',ik,', f-k+q in integer coord:',i,j,k
+!      IF (iverbosity.eq.1) &
+!        WRITE(stdout,'(a,i3,a,3i3)') 'ik = ',ik,', f-k+q in integer coord:',i,j,k
       !
       xx_n = xx
       yy_n = yy
@@ -203,10 +204,10 @@
 !         WRITE(*,'(a,8i6,3f14.7)') 'here ', ik, ng0vec, i, j, k, nint(xx), nint(yy), nint(zz), xk_q(:)
 !      ENDIF
 
-      IF (iverbosity.eq.1) THEN
-        WRITE(stdout,'(a,i3,a,3i3)') 'ik = ',ik,',   G_0 in integer coord:',g0vec(:)
-        WRITE(stdout,'(2i5)') ik, kmap(ik)
-      ENDIF
+!      IF (iverbosity.eq.1) THEN
+!        WRITE(stdout,'(a,i3,a,3i3)') 'ik = ',ik,',   G_0 in integer coord:',g0vec(:)
+!        WRITE(stdout,'(2i5)') ik, kmap(ik)
+!      ENDIF
       !
       !  now store the shift for this k+q point
       !
@@ -222,10 +223,10 @@
       !
       IF (.not.in_the_list) CALL errore &
          ('createkmap','cannot find the folding vector in the list',1)
-      IF (iverbosity.eq.1) THEN
-        WRITE(stdout,'(a,i3,10x,a,i3)') 'ik = ',ik,'shift code:', shift(ik)
-        WRITE(stdout,*) 
-      ENDIF
+!      IF (iverbosity.eq.1) THEN
+!        WRITE(stdout,'(a,i3,10x,a,i3)') 'ik = ',ik,'shift code:', shift(ik)
+!        WRITE(stdout,*) 
+!      ENDIF
       !
       !  obsolete:
       !
@@ -246,22 +247,22 @@
     g0vec_all_r = dble ( g0vec_all )
     CALL cryst_to_cart ( ng0vec, g0vec_all_r, bg, 1)
     !
-    IF (iverbosity.eq.1) THEN
-      WRITE(stdout,*) 
-      WRITE(stdout,*) '  ik, kmap(ik), shift(ik)'
-      DO ik = 1, nkstot
-        WRITE(stdout,'(3i4)') ik, kmap(ik), shift(ik)
-      ENDDO
-      WRITE(stdout,*) '  There are ',ng0vec,'inequivalent folding G_0 vectors'
-      WRITE(stdout,*) '  crystal coordinates: '
-      DO ig0 = 1,ng0vec
-        WRITE(stdout,'(a,i3,a,3i3)') 'g0vec( ',ig0,') = ',g0vec_all(:,ig0)
-      ENDDO
-      WRITE(stdout,*) '  cartesian coordinates: '
-      DO ig0 = 1,ng0vec
-        WRITE(stdout,'(3f9.5)') g0vec_all_r(:,ig0)
-      ENDDO
-    ENDIF
+!    IF (iverbosity.eq.1) THEN
+!      WRITE(stdout,*) 
+!      WRITE(stdout,*) '  ik, kmap(ik), shift(ik)'
+!      DO ik = 1, nkstot
+!        WRITE(stdout,'(3i4)') ik, kmap(ik), shift(ik)
+!      ENDDO
+!      WRITE(stdout,*) '  There are ',ng0vec,'inequivalent folding G_0 vectors'
+!      WRITE(stdout,*) '  crystal coordinates: '
+!      DO ig0 = 1,ng0vec
+!        WRITE(stdout,'(a,i3,a,3i3)') 'g0vec( ',ig0,') = ',g0vec_all(:,ig0)
+!      ENDDO
+!      WRITE(stdout,*) '  cartesian coordinates: '
+!      DO ig0 = 1,ng0vec
+!        WRITE(stdout,'(3f9.5)') g0vec_all_r(:,ig0)
+!      ENDDO
+!    ENDIF
     !
     !  the unit with kmap(ik) and shift(ik)
     ! 
@@ -299,7 +300,8 @@
   USE start_k,       ONLY : nk1, nk2, nk3
   USE epwcom,        ONLY : xk_cryst
   USE io_global,     ONLY : stdout
-  USE control_flags, ONLY : iverbosity
+! SP: iverbosity cannot be tested. Generate too much data  
+!  USE control_flags, ONLY : iverbosity
   USE elph2,         ONLY : xkq
   implicit none
   !
@@ -323,8 +325,8 @@
   in_the_list = abs(xx-nint(xx)).le.eps .and. &
                 abs(yy-nint(yy)).le.eps .and. &
                 abs(zz-nint(zz)).le.eps
-  IF (iverbosity.eq.1) &
-    WRITE(stdout,'(a,3i3)') '  q in integer coord:',nint(xx),nint(yy),nint(zz)
+!  IF (iverbosity.eq.1) &
+!    WRITE(stdout,'(a,3i3)') '  q in integer coord:',nint(xx),nint(yy),nint(zz)
   IF (.not.in_the_list) CALL errore('createkmap2','q-vec not commensurate',1)
   IF (.not. allocated(xkq) ) ALLOCATE(xkq (3, nkstot) )
   !
@@ -339,8 +341,8 @@
     xx = xk(1, ik)*nk1
     yy = xk(2, ik)*nk2
     zz = xk(3, ik)*nk3
-    IF (iverbosity.eq.1) &
-      WRITE(stdout,'(a,i3,a,3i3)') 'ik = ',ik,',   k   in integer coord:',nint(xx),nint(yy),nint(zz)
+!    IF (iverbosity.eq.1) &
+!      WRITE(stdout,'(a,i3,a,3i3)') 'ik = ',ik,',   k   in integer coord:',nint(xx),nint(yy),nint(zz)
     in_the_list = abs(xx-nint(xx)).le.eps .and. &
                   abs(yy-nint(yy)).le.eps .and. &
                   abs(zz-nint(zz)).le.eps
@@ -356,8 +358,8 @@
     xx = xkq(1, ik)*nk1
     yy = xkq(2, ik)*nk2
     zz = xkq(3, ik)*nk3
-    IF (iverbosity.eq.1) &
-      WRITE(stdout,'(a,i3,a,3i3)') 'ik = ',ik,',   k+q in integer coord:',nint(xx),nint(yy),nint(zz)
+!    IF (iverbosity.eq.1) &
+!      WRITE(stdout,'(a,i3,a,3i3)') 'ik = ',ik,',   k+q in integer coord:',nint(xx),nint(yy),nint(zz)
     in_the_list = abs(xx-nint(xx)).le.eps .and. &
                   abs(yy-nint(yy)).le.eps .and. &
                   abs(zz-nint(zz)).le.eps
@@ -432,7 +434,9 @@ USE io_files,      ONLY : prefix
 USE gvecs,         ONLY : ngms, gcutms, ngms_g
 USE gvect,         ONLY : gg, ngm, ngm_g, gcutm,&
                          ig_l2g ,nl
-USE control_flags, ONLY : iverbosity,gamma_only
+USE control_flags, ONLY : gamma_only
+!SP: Cannot be tested
+!USE control_flags, ONLY : iverbosity
 USE constants,     ONLY : eps8
 USE fft_base,      ONLY : dfftp
 USE kfold
@@ -527,8 +531,8 @@ DO ik=1,nkstot
    xx=xkq_all(1,ik)*nk1
    yy=xkq_all(2,ik)*nk2
    zz=xkq_all(3,ik)*nk3
-   IF (iverbosity.eq.1) &
-        WRITE(stdout,'(a,i3,a,3i3)') 'ik = ', ik, ',   k in integer coord: ', nint(xx), nint(yy),nint(zz)
+!   IF (iverbosity.eq.1) &
+!        WRITE(stdout,'(a,i3,a,3i3)') 'ik = ', ik, ',   k in integer coord: ', nint(xx), nint(yy),nint(zz)
    i=mod ( nint (xx+ 2*nk1), nk1 )
    j=mod ( nint (yy+ 2*nk2), nk2 )
    k=mod ( nint (zz+ 2*nk3), nk3 )
