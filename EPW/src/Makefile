@@ -96,7 +96,6 @@ selfen_phon.o \
 set_ndnmbr.o \
 setphases_wrap.o \
 sgama2.o \
-sgam_at2.o \
 sort.o \
 spectral_func.o \
 star_q2.o \
