@@ -4,6 +4,7 @@ program lax_test
   IMPLICIT NONE
 #ifdef __MPI
   include 'mpif.h'
+  INTEGER    STATUS(MPI_STATUS_SIZE)
 #endif
 #include "la_param.f90"
   INTEGER :: mype, npes, comm, ntgs, root
@@ -37,6 +38,7 @@ program lax_test
   !
   REAL(DP) :: time1, time2 
   REAL*8  :: tempo(100)
+  REAL*8, allocatable :: tempo_tutti(:)
   REAL*8  :: tempo_mio(100)
   REAL*8  :: tempo_min(100)
   REAL*8  :: tempo_max(100)
@@ -44,10 +46,14 @@ program lax_test
 
   TYPE(la_descriptor) :: desc
   INTEGER :: i, ir, ic, nx, n, nr, nc  ! size of the matrix
-  INTEGER :: n_in
+  INTEGER :: n_in, nlen, dest, sour, tag, ii
   !
   integer :: nargs
   CHARACTER(LEN=80) :: arg
+  CHARACTER(LEN=MPI_MAX_PROCESSOR_NAME), allocatable :: proc_name(:)
+#if defined(__OPENMP)
+  INTEGER, EXTERNAL :: omp_get_max_threads
+#endif
   !
 #if defined(__OPENMP)
   INTEGER :: PROVIDED
@@ -75,6 +81,7 @@ program lax_test
 #else
   CALL MPI_Init(ierr)
 #endif
+
   CALL mpi_comm_rank(MPI_COMM_WORLD,mype,ierr)
   CALL mpi_comm_size(MPI_COMM_WORLD,npes,ierr)
   comm = MPI_COMM_WORLD
@@ -102,7 +109,9 @@ program lax_test
   !
   !  Broadcast input parameter first
   !
+#ifdef __MPI
   CALL MPI_BCAST(n_in, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, ierr )
+#endif
 
   n = n_in
 
@@ -116,9 +125,164 @@ program lax_test
     write(*,*)
     write(*,*) 'matrix size = ', n, ' x ', n
     write(*,*) 'num. procs  = ', npes
+    write(*,*) 'thr x proc  = ', omp_get_max_threads()
     write(*,*)
 
   endif
+
+  allocate( proc_name( npes ) )
+
+  do i = 1, npes
+#ifdef __MPI
+     if( mype == i-1 ) then
+         call MPI_Get_processor_name( proc_name(i), nlen, ierr )
+     end if
+     CALL MPI_BCAST( nlen, 1, MPI_INT, i-1, MPI_COMM_WORLD, ierr )
+     CALL MPI_BCAST( proc_name(i), MPI_MAX_PROCESSOR_NAME, MPI_CHARACTER, i-1, MPI_COMM_WORLD, ierr )
+#else
+     proc_name(i) = 'localhost'
+#endif
+     if( mype == 0 ) then
+!        write(*,310)  i, proc_name(i)
+     end if
+310 FORMAT('pe = ',I5,' name = ', A20) 
+  end do
+  
+  ! Check core speed
+  !
+#ifdef __MPI
+  CALL MPI_BARRIER( MPI_COMM_WORLD, ierr)
+#endif
+  nx = 1024
+  ALLOCATE( s( nx, nx ) )
+  ALLOCATE( a( nx, nx ) )
+  ALLOCATE( c( nx, nx ) )
+  ALLOCATE( tempo_tutti( npes ) )
+  tempo_tutti = 0.0d0
+  a = 1.0d0
+  s = 1.0d0
+  c = 1.0d0
+  CALL dgemm('n', 'n', nx, nx, nx, 1.0d0, A, nx, s, nx, 1.0d0, C, nx)
+#ifdef __MPI
+  tempo(1) = MPI_WTIME()
+#endif
+  CALL dgemm('n', 'n', nx, nx, nx, 1.0d0, A, nx, s, nx, 1.0d0, C, nx)
+  CALL dgemm('n', 'n', nx, nx, nx, 1.0d0, A, nx, s, nx, 1.0d0, C, nx)
+  CALL dgemm('n', 'n', nx, nx, nx, 1.0d0, A, nx, s, nx, 1.0d0, C, nx)
+  CALL dgemm('n', 'n', nx, nx, nx, 1.0d0, A, nx, s, nx, 1.0d0, C, nx)
+  CALL dgemm('n', 'n', nx, nx, nx, 1.0d0, A, nx, s, nx, 1.0d0, C, nx)
+#ifdef __MPI
+  tempo(2) = MPI_WTIME()
+#endif
+  DEALLOCATE( s )
+  DEALLOCATE( a )
+  DEALLOCATE( c )
+  tempo_tutti(mype+1) = tempo(2)-tempo(1)
+#ifdef __MPI
+  CALL MPI_ALLREDUCE( MPI_IN_PLACE, tempo_tutti, npes, MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, ierr )
+#endif
+  if( mype == 0 ) then
+     write(*,*)
+     write(*,*)
+     write(*,*)
+     write(*,*) '+-----------------------------------+'
+     write(*,*) '|    measured task performances     |'
+     write(*,*) '+-----------------------------------+'
+     do i = 1, npes
+        write(*,300)  i, 5.0d0*DBLE(nx*nx*nx)*2.0d0/tempo_tutti(i)/1.0D+9, proc_name(i)
+     end do
+  end if
+300 FORMAT('pe = ',I5,',', F8.3, ' GFlops', ',  node: ', A20) 
+  !
+  ! Check network speed
+  !
+  nx = 2048
+  ALLOCATE( s( nx, nx ) )
+  tempo_tutti = 0.0d0
+
+  do i = 1, npes
+     sour = 0
+     dest = i-1
+     tag = i
+#ifdef __MPI
+     CALL MPI_BARRIER( MPI_COMM_WORLD, ierr)
+     if( ( mype == sour ) .or. ( mype == dest ) ) THEN
+        tempo(1) = MPI_WTIME()
+        if( mype == dest ) then
+           CALL MPI_SEND(s, nx*nx, MPI_DOUBLE_PRECISION, sour, TAG, MPI_COMM_WORLD, ierr)
+           CALL MPI_RECV(s, nx*nx, MPI_DOUBLE_PRECISION, sour, TAG, MPI_COMM_WORLD, status, ierr)
+        else if( mype == sour ) then
+           CALL MPI_RECV(s, nx*nx, MPI_DOUBLE_PRECISION, dest, TAG, MPI_COMM_WORLD, status, ierr)
+           CALL MPI_SEND(s, nx*nx, MPI_DOUBLE_PRECISION, dest, TAG, MPI_COMM_WORLD, ierr)
+        endif
+        tempo(2) = MPI_WTIME()
+        if( mype == dest ) then
+           tempo_tutti(mype+1) = tempo(2)-tempo(1)
+        end if
+     END IF
+     CALL MPI_BARRIER( MPI_COMM_WORLD, ierr)
+#endif
+  end do
+#ifdef __MPI
+  CALL MPI_ALLREDUCE( MPI_IN_PLACE, tempo_tutti, npes, MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, ierr )
+#endif
+  if( mype == 0 ) then
+     write(*,*)
+     write(*,*)
+     write(*,*)
+     write(*,*) '+-----------------------------------+'
+     write(*,*) '|    ping-pong network bandwidth    |'
+     write(*,*) '+-----------------------------------+'
+     do i = 1, npes
+        write(*,320)  i, 2.0d0*DBLE(nx*nx)*8.0d0/tempo_tutti(i)/1.0D+9, proc_name(i)
+     end do
+  end if
+320 FORMAT('pe = ',I5,',', F8.3, ' GBytes', ',  node: ', A20) 
+  DEALLOCATE( s )
+  !
+  ! Check network latency
+  !
+  tempo_tutti = 0.0d0
+  do i = 1, npes
+     sour = 0
+     dest = i-1
+     tag = i
+#ifdef __MPI
+     CALL MPI_BARRIER( MPI_COMM_WORLD, ierr)
+     if( ( mype == sour ) .or. ( mype == dest ) ) THEN
+        tempo(1) = MPI_WTIME()
+        if( mype == dest ) then
+           CALL MPI_SEND(ii, 1, MPI_BYTE, sour, TAG, MPI_COMM_WORLD, ierr)
+           CALL MPI_RECV(ii, 1, MPI_BYTE, sour, TAG, MPI_COMM_WORLD, status, ierr)
+        else if( mype == sour ) then
+           CALL MPI_RECV(ii, 1, MPI_BYTE, dest, TAG, MPI_COMM_WORLD, status, ierr)
+           CALL MPI_SEND(ii, 1, MPI_BYTE, dest, TAG, MPI_COMM_WORLD, ierr)
+        endif
+        tempo(2) = MPI_WTIME()
+        if( mype == dest ) then
+           tempo_tutti(mype+1) = tempo(2)-tempo(1)
+        end if
+     END IF
+     CALL MPI_BARRIER( MPI_COMM_WORLD, ierr)
+#endif
+  end do
+#ifdef __MPI
+  CALL MPI_ALLREDUCE( MPI_IN_PLACE, tempo_tutti, npes, MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, ierr )
+#endif
+  if( mype == 0 ) then
+     write(*,*)
+     write(*,*)
+     write(*,*)
+     write(*,*) '+-----------------------------------+'
+     write(*,*) '|    ping-pong network latency      |'
+     write(*,*) '+-----------------------------------+'
+     do i = 1, npes
+        write(*,330)  i, tempo_tutti(i), proc_name(i)
+     end do
+  end if
+330 FORMAT('pe = ',I5,',', E10.3, ' sec', ',  node: ', A20) 
+
+  DEALLOCATE( tempo_tutti )
 
   call mp_start_diag()
   !
@@ -224,6 +388,7 @@ program lax_test
 
   end if
 
+  deallocate( proc_name )
 
 
 #ifdef __MPI
