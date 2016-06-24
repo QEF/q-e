@@ -200,9 +200,9 @@ program lax_test
   ALLOCATE( s( nx, nx ) )
   tempo_tutti = 0.0d0
 
-  do i = 1, npes
+  do i = 1, npes-1
      sour = 0
-     dest = i-1
+     dest = i
      tag = i
 #ifdef __MPI
      CALL MPI_BARRIER( MPI_COMM_WORLD, ierr)
@@ -210,10 +210,10 @@ program lax_test
         tempo(1) = MPI_WTIME()
         if( mype == dest ) then
            CALL MPI_SEND(s, nx*nx, MPI_DOUBLE_PRECISION, sour, TAG, MPI_COMM_WORLD, ierr)
-           CALL MPI_RECV(s, nx*nx, MPI_DOUBLE_PRECISION, sour, TAG, MPI_COMM_WORLD, status, ierr)
+           CALL MPI_RECV(s, nx*nx, MPI_DOUBLE_PRECISION, sour, TAG+NPES, MPI_COMM_WORLD, status, ierr)
         else if( mype == sour ) then
            CALL MPI_RECV(s, nx*nx, MPI_DOUBLE_PRECISION, dest, TAG, MPI_COMM_WORLD, status, ierr)
-           CALL MPI_SEND(s, nx*nx, MPI_DOUBLE_PRECISION, dest, TAG, MPI_COMM_WORLD, ierr)
+           CALL MPI_SEND(s, nx*nx, MPI_DOUBLE_PRECISION, dest, TAG+NPES, MPI_COMM_WORLD, ierr)
         endif
         tempo(2) = MPI_WTIME()
         if( mype == dest ) then
@@ -232,9 +232,10 @@ program lax_test
      write(*,*)
      write(*,*) '+-----------------------------------+'
      write(*,*) '|    ping-pong network bandwidth    |'
+     write(*,*) '|            with pe = 0            |'
      write(*,*) '+-----------------------------------+'
-     do i = 1, npes
-        write(*,320)  i, 2.0d0*DBLE(nx*nx)*8.0d0/tempo_tutti(i)/1.0D+9, proc_name(i)
+     do i = 2, npes
+        write(*,320)  i-1, 2.0d0*DBLE(nx*nx)*8.0d0/tempo_tutti(i)/1.0D+9, proc_name(i)
      end do
   end if
 320 FORMAT('pe = ',I5,',', F8.3, ' GBytes', ',  node: ', A20) 
@@ -243,9 +244,9 @@ program lax_test
   ! Check network latency
   !
   tempo_tutti = 0.0d0
-  do i = 1, npes
+  do i = 1, npes-1
      sour = 0
-     dest = i-1
+     dest = i
      tag = i
 #ifdef __MPI
      CALL MPI_BARRIER( MPI_COMM_WORLD, ierr)
@@ -253,10 +254,10 @@ program lax_test
         tempo(1) = MPI_WTIME()
         if( mype == dest ) then
            CALL MPI_SEND(ii, 1, MPI_BYTE, sour, TAG, MPI_COMM_WORLD, ierr)
-           CALL MPI_RECV(ii, 1, MPI_BYTE, sour, TAG, MPI_COMM_WORLD, status, ierr)
+           CALL MPI_RECV(ii, 1, MPI_BYTE, sour, TAG+NPES, MPI_COMM_WORLD, status, ierr)
         else if( mype == sour ) then
            CALL MPI_RECV(ii, 1, MPI_BYTE, dest, TAG, MPI_COMM_WORLD, status, ierr)
-           CALL MPI_SEND(ii, 1, MPI_BYTE, dest, TAG, MPI_COMM_WORLD, ierr)
+           CALL MPI_SEND(ii, 1, MPI_BYTE, dest, TAG+NPES, MPI_COMM_WORLD, ierr)
         endif
         tempo(2) = MPI_WTIME()
         if( mype == dest ) then
@@ -275,9 +276,10 @@ program lax_test
      write(*,*)
      write(*,*) '+-----------------------------------+'
      write(*,*) '|    ping-pong network latency      |'
+     write(*,*) '|            with pe = 0            |'
      write(*,*) '+-----------------------------------+'
-     do i = 1, npes
-        write(*,330)  i, tempo_tutti(i), proc_name(i)
+     do i = 2, npes
+        write(*,330)  i-1, tempo_tutti(i), proc_name(i)
      end do
   end if
 330 FORMAT('pe = ',I5,',', E10.3, ' sec', ',  node: ', A20) 
