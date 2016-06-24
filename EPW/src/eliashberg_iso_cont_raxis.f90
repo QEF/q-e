@@ -112,8 +112,9 @@
   errdelta = reldelta / absdelta
   Deltaold(:) = Delta(:)
   !
-  WRITE(stdout,'(5x,a,i6,a,d18.9,a,d18.9,a,d18.9)') 'iter = ', iter, '   error = ', errdelta, &
-                              '   Re[Znorm(1)] = ', real(Znorm(1)), '   Re[Delta(1)] = ', real(Delta(1))
+  WRITE(stdout,'(5x,a,i6,a,ES20.10,a,ES20.10,a,ES20.10)') 'iter = ', iter, & 
+               '   error = ', errdelta, '   Re[Znorm(1)] = ', real(Znorm(1)), & 
+               '   Re[Delta(1)] = ', real(Delta(1))
   !
   IF ( errdelta .lt. conv_thr_racon ) conv = .true.
   IF ( errdelta .lt. conv_thr_racon .OR. iter .eq. nsiter ) THEN
@@ -201,8 +202,9 @@
   !
   IF ( errdelta .gt. 0.d0 ) THEN 
      conv = .true.
-     WRITE(stdout,'(5x,a,i6,a,d18.9,a,d18.9,a,d18.9)') 'pade = ', N, '   error = ', errdelta, &
-                  '   Re[Znorm(1)] = ', real(Znorm(1)), '   Re[Delta(1)] = ', real(Delta(1))
+     WRITE(stdout,'(5x,a,i6,a,ES20.10,a,ES20.10,a,ES20.10)') 'pade = ', N, & 
+            '   error = ', errdelta, '   Re[Znorm(1)] = ', real(Znorm(1)), & 
+            '   Re[Delta(1)] = ', real(Delta(1))
      cname = 'pade'
      CALL eliashberg_write_cont_raxis( itemp, cname )
   ENDIF

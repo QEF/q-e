@@ -45,7 +45,9 @@
 #ifndef __NAG
 integer :: fstat,statb(13)
 #endif
-
+  ! 
+  integer :: iotemp,iofactor
+  !  
   integer :: recn, iq, nqc, iudvscf
   !  perturbation number
   !  the current q point
@@ -63,10 +65,17 @@ integer :: fstat,statb(13)
   !  a file label by exploiting an existing subroutine
   !  (if you look at the sub you will find that the original 
   !  purpose was for pools and nodes)
-  !
+
+  ! DBSP:
+  !  Iotemp is a output variable and it does not matter whether it is integer or any other type. 
+  !INQUIRE (IOLENGTH=iofactor)iotemp
+  !   
   CALL set_ndnmbr ( 0, iq, 1, nqc, filelab)
   tempfile = trim(dvscf_dir) // trim(prefix) // '.dvscf_q' // filelab
   unf_recl = DIRECT_IO_FACTOR * lrdrho
+  !unf_recl = iofactor * lrdrho
+  !DBSP
+  !print*,'iofactor ',iofactor
   !
   !
   !  open the dvscf file, read and close

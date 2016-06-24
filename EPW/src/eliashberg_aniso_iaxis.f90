@@ -418,9 +418,9 @@
   errdelta = reldelta / absdelta
   Deltaold(:) = Deltai(:)
   !
-  WRITE(stdout,'(5x,a,i6,a,d18.9,a,d18.9,a,d18.9,a,d18.9)') 'iter = ', iter, '   relerr = ', errdelta, &
-                                      '   abserr = ', reldelta / dble(nsiw(itemp)), &
-                                      '   Znormi(1) = ', Znormi(1), '   Deltai(1) = ', Deltai(1)
+  WRITE(stdout,'(5x,a,i6,a,ES20.10,a,ES20.10,a,ES20.10,a,ES20.10)') 'iter = ', iter, & 
+               '   relerr = ', errdelta, '   abserr = ', reldelta / dble(nsiw(itemp)), &
+               '   Znormi(1) = ', Znormi(1), '   Deltai(1) = ', Deltai(1)
   !
   IF ( errdelta .lt. conv_thr_iaxis) conv = .true.
   IF ( errdelta .lt. conv_thr_iaxis .OR. iter .eq. nsiter ) THEN

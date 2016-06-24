@@ -29,9 +29,9 @@
   ! nswc  = nr. of grid points between (wsfc,wscut)
   !
   WRITE(stdout,'(a)') '    '
-  WRITE(stdout,'(a,i6,a)') ' Total number of nsw = ', nsw, ' grid-points are divided in:'
-  WRITE(stdout,'(a,i6,a,f12.6,a,f12.6)') ' nswfc = ', nswfc, '  from ', 0, ' to ', wsfc  
-  WRITE(stdout,'(a,i6,a,f12.6,a,f12.6)') ' nswc  = ', nswc,  '  from ', wsfc, ' to ', wscut
+  WRITE(stdout,'(5x,a,i6,a)') 'Total number of nsw = ', nsw, ' grid-points are divided in:'
+  WRITE(stdout,'(5x,a,i6,a,f12.6,a,f12.6)') 'nswfc = ', nswfc, '  from ', 0, ' to ', wsfc  
+  WRITE(stdout,'(5x,a,i6,a,f12.6,a,f12.6)') 'nswc  = ', nswc,  '  from ', wsfc, ' to ', wscut
   WRITE(stdout,'(a)') '    '
   !
   IF ( .not. ALLOCATED(ws) )  ALLOCATE( ws(nsw) )
@@ -43,12 +43,14 @@
      dws(iw) = wsfc / dble(nswfc)
      ws(iw) = dble(iw) * dws(iw)
   ENDDO
-  DO iw = 1, nswc
+  DO iw = nswfc + 1, nsw
      dws(iw) = ( wscut - wsfc ) / dble(nswc)
-     ws(iw) = wsfc + dble(iw) * dws(iw)
-     ! RM this needs to be checked
-     IF ( .not. lunif ) & 
+     IF ( lunif ) THEN 
+        ws(iw) = wsfc + dble(iw) * dws(iw)
+     ELSE 
+        ! RM this needs to be checked
         ws(iw) = wsfc + dble( iw/nswc )**pwc * (wscut - wsfc)
+     ENDIF
   ENDDO
   !
   IF ( .not. lunif ) THEN 

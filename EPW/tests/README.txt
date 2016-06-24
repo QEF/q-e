@@ -42,7 +42,9 @@ The following feature of the code is tested
 The following feature of the code is tested
 - Superconducting properties within the Migdal-Eliashberg framework
 - Isotropic superconducting properties with contour integration
+- Isotropic superconducting properties along the real axis
 - Anisotropic superconducting properties with Pade continuation
+
 
 #################
 # Test 06 : GaN #

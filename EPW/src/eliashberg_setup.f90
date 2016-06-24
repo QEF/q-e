@@ -51,8 +51,10 @@
        CALL errore('eliashberg_init', 'lpade requires limag true',1)
   IF ( eliashberg .AND. lacon .AND. (.not.limag .OR. .not.lpade ) ) & 
        CALL errore('eliashberg_init', 'lacon requires both limag and lpade true',1)
-  IF ( eliashberg .AND. lreal .AND. (kerread .OR. kerwrite) ) & 
+  IF ( eliashberg .AND. lreal .AND. (kerread .AND. kerwrite) ) & 
        CALL errore('eliashberg_init', 'kerread cannot be used with kerwrite',1)
+  IF ( eliashberg .AND. lreal .AND. (.not.kerread .AND. .not.kerwrite) ) &
+       CALL errore('eliashberg_init', 'kerread or kerwrite must be true',1)
   IF ( eliashberg .AND. lreal .AND. wsfc .gt. wscut ) CALL errore('eliashberg_init', &
        'wsfc should be .lt. wscut',1)
   IF ( eliashberg .AND. lreal .AND. wsfc .lt. 0.d0 ) CALL errore('eliashberg_init', &
@@ -116,7 +118,7 @@
      ENDIF
      nsw = nswfc + nswc  
      WRITE(stdout,'(5x,a7,f12.6,a11,f12.6)') 'wsfc = ', wsfc, '   wscut = ', wscut
-     WRITE(stdout,'(5x,a8,i8,a10,i8,a90,i8)') 'nswfc = ', nswfc, '   nswc = ', nswc, & 
+     WRITE(stdout,'(5x,a8,i8,a10,i8,a9,i8)') 'nswfc = ', nswfc, '   nswc = ', nswc, & 
                                               '   nsw = ', nsw 
      IF ( nsw .eq. 0 ) CALL errore('eliashberg_setup','wrong number of nsw',1)
      !
