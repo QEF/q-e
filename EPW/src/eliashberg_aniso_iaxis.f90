@@ -32,7 +32,7 @@
   IMPLICIT NONE
   !
   INTEGER :: itemp, iter, N, ik, ibnd, imelt
-  REAL(DP) :: dFE, tcpu, rdeltaout(nsw), rdeltain(nsw), cdeltaout(nsw), cdeltain(nsw)
+  REAL(DP) :: tcpu, rdeltaout(nsw), rdeltain(nsw), cdeltaout(nsw), cdeltain(nsw)
   REAL(DP), EXTERNAL :: get_clock
   LOGICAL :: conv 
   !
@@ -89,7 +89,7 @@
 #ifdef __PARA 
               IF (mpime .eq. ionode_id) THEN
 #endif 
-                 CALL free_energy( itemp, dFE )
+                 CALL free_energy( itemp )
 #ifdef __PARA
               ENDIF
               CALL mp_barrier(inter_pool_comm)
@@ -575,6 +575,9 @@
   gap0 = gap(itemp)
   !
   CALL gap_FS( itemp )
+  !
+  IF ( iverbosity .eq. 2 ) &
+     CALL free_energy( itemp )
   !
 #ifdef __PARA
   ENDIF

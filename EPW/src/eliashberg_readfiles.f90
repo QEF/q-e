@@ -43,7 +43,7 @@
      READ(iua2ffil,*) wsph(iwph), a2f_iso(iwph) ! freq from meV to eV
      wsph(iwph) = wsph(iwph) / 1000.d0
   ENDDO
-  wsphmax = 1.1d0 * wsph(nqstep) ! increase by 10%
+  wsphmax = wsph(nqstep) 
   CLOSE(iua2ffil)
 #ifdef __PARA
   ENDIF

@@ -81,7 +81,7 @@
   END SUBROUTINE dos_quasiparticle
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE free_energy( itemp, dFE )
+  SUBROUTINE free_energy( itemp )
   !-----------------------------------------------------------------------
   !
   ! computes the free energy difference between the superconducting and normal

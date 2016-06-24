@@ -140,6 +140,8 @@
                                    real(ADelta(ibnd,ik,iw)), aimag(ADelta(ibnd,ik,iw))
                  ENDIF
               ENDDO ! iw
+              IF ( lgap ) & 
+                 Agap(ibnd,ik,itemp) = real(ADelta(ibnd,ik,1))
            ENDIF
         ENDDO ! ibnd
      ENDDO ! ik
@@ -172,6 +174,8 @@
                                      real(Delta(iw)), aimag(Delta(iw))
      ENDDO ! iw
      CLOSE(iufilgap)
+     IF ( lgap ) & 
+        gap(itemp) = real(Delta(1))
   ENDIF
   !
   RETURN

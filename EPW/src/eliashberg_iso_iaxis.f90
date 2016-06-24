@@ -31,7 +31,7 @@
   IMPLICIT NONE
   !
   INTEGER :: itemp, iter, N
-  REAL(DP) :: dFE, tcpu, rdeltaout(nsw), rdeltain(nsw), cdeltaout(nsw), cdeltain(nsw)
+  REAL(DP) :: tcpu, rdeltaout(nsw), rdeltain(nsw), cdeltaout(nsw), cdeltain(nsw)
   REAL(DP), EXTERNAL :: get_clock
   LOGICAL :: conv
   !
@@ -65,7 +65,7 @@
           ! SP : Only print the Free energy if the user want it
           !
           IF ( iverbosity .eq. 2 ) THEN
-            CALL free_energy( itemp, dFE )
+            CALL free_energy( itemp )
           ENDIF
           WRITE(stdout,'(a)') '  '
           CALL stop_clock( 'iaxis_imag' )

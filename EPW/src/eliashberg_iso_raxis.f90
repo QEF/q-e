@@ -149,11 +149,7 @@
      IF ( .not. ALLOCATED(Znorm) )  ALLOCATE( Znorm(nsw) )
      gap(itemp) = 0.d0
      Deltap(:)  = (0.d0, 0.d0)
-     IF ( itemp .eq. 1 ) THEN
-        Deltap(:)  = gap0 
-     ELSE
-        Deltap(:)  = gap(itemp-1) 
-     ENDIF
+     Deltap(:)  = gap0 
      IF ( .not. ALLOCATED(fdwp) ) ALLOCATE( fdwp(nsw) )
      IF ( .not. ALLOCATED(Kp) )   ALLOCATE( Kp(nsw,nsw) )
      IF ( .not. ALLOCATED(Km) )   ALLOCATE( Km(nsw,nsw) )
@@ -167,7 +163,8 @@
   ELSEIF ( temp .ge. 10.d0 ) THEN 
      WRITE(name2,'(a,a5,f5.2)') TRIM(prefix),'.ker_', temp
   ENDIF
-  OPEN(iufilker, file=name2, form='formatted')
+  !OPEN(iufilker, file=name2, form='formatted')
+  OPEN(iufilker, file=name2, form='unformatted')
   !
   IF ( iter .eq. 1 ) THEN
      IF ( .not. ALLOCATED(Deltaold) ) ALLOCATE( Deltaold(nsw) )
@@ -188,7 +185,8 @@
            !
            ! read the kernels from file if they were calculated before otherwise calculate them
            IF ( kerread ) THEN 
-              READ(iufilker,'(4ES20.10)') a, b, c, d
+              !READ(iufilker,'(4ES20.10)') a, b, c, d
+              READ(iufilker) a, b, c, d
               Kp(iw,iwp) = a + ci*b
               Km(iw,iwp) = c + ci*d
            ENDIF
@@ -196,8 +194,10 @@
               CALL kernel_raxis( iw, iwp, itemp, kernelp, kernelm )
               Kp(iw,iwp) = kernelp
               Km(iw,iwp) = kernelm
-              WRITE(iufilker,'(4ES20.10)') real(Kp(iw,iwp)), aimag(Kp(iw,iwp)), &
-                                          real(Km(iw,iwp)), aimag(Km(iw,iwp))
+              !WRITE(iufilker,'(4ES20.10)') real(Kp(iw,iwp)), aimag(Kp(iw,iwp)), &
+              !                             real(Km(iw,iwp)), aimag(Km(iw,iwp))
+              WRITE(iufilker) real(Kp(iw,iwp)), aimag(Kp(iw,iwp)), &
+                              real(Km(iw,iwp)), aimag(Km(iw,iwp))
            ENDIF
         ENDIF
         !
@@ -235,7 +235,6 @@
   !
   IF ( errdelta .lt. conv_thr_raxis) conv = .true.
   IF ( errdelta .lt. conv_thr_raxis .OR. iter .eq. nsiter ) THEN
-     lgap = .true. 
      IF ( temp .lt. 10.d0 ) THEN
         WRITE(name1,'(a,a7,f4.2)') TRIM(prefix),'.gapr_0', temp
      ELSEIF ( temp .ge. 10.d0 ) THEN
@@ -244,26 +243,22 @@
      OPEN(iufilgap, file=name1, form='formatted')
      !
      WRITE(iufilgap,'(5a18)') 'w', 'Re[Znorm(w)]', 'Im[Znorm(w)]', 'Re[Delta(w)]', 'Im[Delta(w)]'
-     DO iw = 1, nsw
+     lgap = .true.
+     ! DO iw = 1, nsw
+     DO iw = 1, nsw-1   ! this change is to prevent segfault in Delta(iw+1) and ws(iw+1)
         IF ( lgap .AND. iw .lt. (nqstep) .AND. real(Delta(iw)) .gt. 0.d0 .AND. real(Delta(iw+1)) .gt. 0.d0 .AND. &
              ( ws(iw) - real(Delta(iw)) )*( ws(iw+1) - real(Delta(iw+1)) ) .lt. 0.d0 ) THEN
            gap(itemp) = ( ( real(Delta(iw)) - ws(iw) ) * ws(iw+1) - ( real(Delta(iw+1)) - ws(iw+1) ) * ws(iw) ) &
                       / ( ( real(Delta(iw)) - ws(iw) ) - ( real(Delta(iw+1)) - ws(iw+1) ) )
-           WRITE(stdout,'(a)') '   '
-           WRITE(stdout,'(5x,a)') 'Estimated superconducting gap edge: '
-           WRITE(stdout,'(5x,a,i6,4ES20.10,i6)') 'iw = ', iw, ws(iw), real(Delta(iw)), aimag(Delta(iw)), & 
-                                            gap(itemp), itemp
-           WRITE(stdout,'(5x,a,i6,4ES20.10,i6)') 'iw = ', iw+1, ws(iw+1), real(Delta(iw+1)), aimag(Delta(iw+1)), &
-                                            gap(itemp), itemp
-           WRITE(stdout,'(a)') '   '
-           !
-         !  lgap = .false.
-           !
+           lgap = .false.
         ENDIF
         WRITE(iufilgap,'(5ES20.10)') ws(iw), real(Znorm(iw)), aimag(Znorm(iw)), &
                                     real(Delta(iw)), aimag(Delta(iw))
      ENDDO
      CLOSE(iufilgap)
+     IF ( lgap ) & 
+        gap(itemp) =  real(Delta(1))
+     gap0 = gap(itemp)
   ENDIF
   !
   IF( ALLOCATED(wesqrt) ) DEALLOCATE(wesqrt)
