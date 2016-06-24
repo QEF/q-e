@@ -17,5 +17,5 @@ python pp.py < pp.in
 mpirun -np 4 ../../../../bin/pw.x < scf_epw.in > scf_epw.out
 mpirun -np 4 ../../../../bin/pw.x -npool 4 < nscf_epw.in > nscf_epw.out
 mpirun -np 4 ../../../src/epw.x -npool 4 < epw_iso.in > epw_iso.out
-mpirun -np 4 ../../../src/epw.x -npool 4 < epw_iso_real.out > epw_iso_real.out
+mpirun -np 4 ../../../src/epw.x -npool 4 < epw_iso_real.in > epw_iso_real.out
 mpirun -np 4 ../../../src/epw.x -npool 4 < epw_aniso.in > epw_aniso.out
