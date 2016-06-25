@@ -1,5 +1,5 @@
 # Makefile for PW
-sinclude ../make.sys
+sinclude ../make.inc
 
 default: all
 

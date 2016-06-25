@@ -27,7 +27,7 @@
 
 # Top QE directory, not used in QE but useful for linking QE libs with plugins
 # The following syntax should always point to TOPDIR:
-#   $(dir $(abspath $(filter %make.sys,$(MAKEFILE_LIST))))
+#   $(dir $(abspath $(filter %make.inc,$(MAKEFILE_LIST))))
 
 TOPDIR = @topdir@
 

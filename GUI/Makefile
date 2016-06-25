@@ -1,5 +1,5 @@
 # makefile for pwgui
-sinclude ../make.sys
+sinclude ../make.inc
 # do nothing by default !!!
 default:
 

@@ -4,7 +4,7 @@ Each example can be run separately by running "make" in its designated directory
 
 "make clean" resets the tests.
 
-make.sys can be edited for parallel executions of tests by editing "RUNNER" variable 
+make.inc can be edited for parallel executions of tests by editing "RUNNER" variable 
 (e.g. RUNNER = mpirun -np 4)
 
 Examples: 

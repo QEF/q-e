@@ -136,7 +136,7 @@ EOF
   tmp_var=\$\(${ADDSON_NAME}_OBJECTS\)
   
   echo "-- modifying $WHERE_LINKS/Makefile"
-  sed < $destination/$WHERE_LINKS/Makefile.pre$ADDSON_NAME > $destination/$WHERE_LINKS/tmp.1 '/make.sys/ a\
+  sed < $destination/$WHERE_LINKS/Makefile.pre$ADDSON_NAME > $destination/$WHERE_LINKS/tmp.1 '/make.inc/ a\
   include '"${ADDSON_NAME}"'.inc \
    '
   sed < $destination/$WHERE_LINKS/tmp.1 > $destination/$WHERE_LINKS/Makefile '/= \\/ a\

@@ -1002,7 +1002,7 @@ After the condition is met, the code will try to stop cleanly as soon as possibl
 If the previous execution of the code has stopped properly, restarting is possible setting restart\_mode=``restart'' in the control namelist.
 
 \subsubsection{Signal trapping (experimental!)}
-In order to compile signal-trapping add \mbox{"-D\_\_TERMINATE\_GRACEFULLY"} to \mbox{MANUAL\_DFLAGS} in the make.sys file. Currently the code intercepts \mbox{SIGINT}, \mbox{SIGTERM}, \mbox{SIGUSR1}, \mbox{SIGUSR2}, \mbox{SIGXCPU}; signals can be added or removed editing the file {\tt clib/custom\_signals.c}.
+In order to compile signal-trapping add \mbox{"-D\_\_TERMINATE\_GRACEFULLY"} to \mbox{MANUAL\_DFLAGS} in the make.doc file. Currently the code intercepts \mbox{SIGINT}, \mbox{SIGTERM}, \mbox{SIGUSR1}, \mbox{SIGUSR2}, \mbox{SIGXCPU}; signals can be added or removed editing the file {\tt clib/custom\_signals.c}.
 
 Common queue systems will send a signal some time before killing a job. The exact behaviour depends on the queue systems and could be configured. Some examples:
   

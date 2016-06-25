@@ -1,6 +1,6 @@
 # Makefile for TDDFPT tools
 
-include ../../make.sys
+include ../../make.inc
 IFLAGS         = -I../../include
 LIBOBJS        = ../../clib/clib.a ../../iotk/src/libiotk.a 
 

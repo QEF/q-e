@@ -123,7 +123,7 @@ _repack_pwgui:
 	rm pwgui.tar
 
 _create_starkit_vfs: _clean_scratch
-	cd $(PWGUI_VFS); touch make.sys make.versions; make distclean
+	cd $(PWGUI_VFS); touch make.inc make.versions; make distclean
 	TOPDIR=$(HERE) PWGUI_VFS=$(PWGUI_VFS) \
 	PWGUI_VERSION=$(PWGUI_VERSION) PWGUI_DIRNAME=$(PWGUI_DIRNAME) \
 	GUIB_VERSION=$(_GUIB_VERSION) GUIB_DIRNAME=$(_GUIB_DIRNAME) $(STARKIT)

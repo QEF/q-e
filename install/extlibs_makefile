@@ -3,7 +3,7 @@
 # espresso
 #===============================
 #
-include ../make.sys
+include ../make.inc
 
 #
 # MAIN target

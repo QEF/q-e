@@ -1,6 +1,6 @@
 # Makefile for BSE
 #
- include ../../make.sys
+ include ../../make.inc
 
 # location of include files
 IFLAGS=-I../../include

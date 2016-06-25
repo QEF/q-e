@@ -6,7 +6,7 @@
 # of the License. See the file `License' in the root directory
 # of the present distribution.
 
-include make.sys
+include make.inc
 
 default :
 	@echo 'to install Quantum ESPRESSO, type at the shell prompt:'
@@ -272,7 +272,7 @@ test-suite: pw cp touch-dummy
 
 # remove object files and executables
 clean : doc_clean
-	touch make.sys 
+	touch make.inc 
 	for dir in \
 		CPV LAXlib FFTXlib Modules PP PW \
 		NEB ACFDT COUPLE GWW XSpectra \
@@ -287,8 +287,6 @@ clean : doc_clean
 	- @(cd install ; $(MAKE) -f plugins_makefile clean)
 	- @(cd install ; $(MAKE) -f extlibs_makefile clean)
 	- /bin/rm -rf bin/*.x tmp
-	- cd PW/tests; /bin/rm -rf CRASH *.out *.out? ; cd -
-	- cd CPV/tests; /bin/rm -rf CRASH *.out *.out? 
 
 # remove files produced by "configure" as well
 veryclean : clean
@@ -302,7 +300,7 @@ veryclean : clean
 	- cd install; ./clean.sh ; cd -
 	- cd include; ./clean.sh ; cd -
 	- rm -f espresso.tar.gz
-	- rm -rf make.sys
+	- rm -rf make.inc
 
 # remove everything not in the original distribution 
 distclean : veryclean

@@ -1,5 +1,5 @@
 # Makefile for PH
-sinclude ../make.sys
+sinclude ../make.inc
 
 default: all
 

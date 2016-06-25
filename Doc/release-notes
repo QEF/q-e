@@ -29,9 +29,10 @@ Incompatible changes in 6.0 version:
   * k-point dependent variables npw, igk, and (in LR codes) npwq, igkq, 
     become local and point to global variables "ngk" and "igk_k", via the
     k-point index "ik" or, in LR codes, via "ikks" and "ikkq" indices.
-    The global variable are computed once, stored in memory, no I/O is done.
+    The global variables are computed once, stored in memory, no I/O is done.
   * "nbnd_occ" variable is now dynamically allocated
   * Duplicated and confusing "outdir" variable removed from "io_files"
+  * Due to frequent problems with mailers, "make.sys" is now "make.inc"
 
                                * * * * *
 

@@ -25,7 +25,7 @@ MANUAL=" Usage
  <conf_flags>         these flags will be passed to 
                       the autoconf configure
 
- After configuration, the make.sys file will created in the
+ After configuration, the make.inc file will created in the
  QE home (current) directory
  
  ---------------------------------------------------------------
@@ -51,22 +51,22 @@ esac
 # run the autoconf configure with the
 # given cong_flags 
 #
-test -e ./install/make.sys       && rm ./install/make.sys
+test -e ./install/make.inc       && rm ./install/make.inc
 test -e ./install/configure.msg  && rm ./install/configure.msg
 #test -e ./install/Makefile  && rm ./install/Makefile
 
 # SAFEGUARD: if you run configure without clean everything first there 
 #            are chances that something goes wrong. Forcing veryclean then.
-if [[ (-e make.sys) && (-e Makefile) && !($@ =~ "--help") ]] ; then
+if [[ (-e make.inc) && (-e Makefile) && !($@ =~ "--help") ]] ; then
   make -f Makefile veryclean
 fi
 
 ./install/configure "$@"
 
-# copy make.sys in the home dir
+# copy make.inc in the home dir
 # and final clean up
 #
-test -e ./install/make.sys && mv ./install/make.sys .
+test -e ./install/make.inc && mv ./install/make.inc .
 test -e config.log        && mv config.log    ./install/
 test -e config.status     && mv config.status ./install/
 test -e configure.msg     && mv configure.msg ./install/

@@ -1,5 +1,5 @@
 # Makefile for library coupling interface
-include ../../make.sys
+include ../../make.inc
 
 # location of required modules and include files
 MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules $(MOD_FLAG)../../FFTXlib $(MOD_FLAG)../../CPV/src

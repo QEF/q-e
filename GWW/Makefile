@@ -1,4 +1,4 @@
-include ../make.sys
+include ../make.inc
 
 all: libminpack pw4gwwa heada gwwa  bsea
 

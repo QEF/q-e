@@ -1,6 +1,6 @@
 # Makefile for FFTXlib
 
-include ../make.sys
+include ../make.inc
 
 # location of needed modules
 #MODFLAGS= $(MOD_FLAG)../iotk/src $(MOD_FLAG).

@@ -18,7 +18,7 @@ mv espresso/ espresso-$version/
 cd espresso-$version
 
 # generate version.f90 (requires svn files)
-touch make.sys
+touch make.unc
 cd Modules
 make version.f90
 # save version.f90 (make veryclean removes it)
@@ -42,7 +42,7 @@ chmod -x install/update_version
 # in order to build html files for user guide and developer manual,
 # "latex2html" and "convert" (from Image-Magick) are needed
 
-touch make.sys
+touch make.inc
 make doc
 
 # generate PWGUI

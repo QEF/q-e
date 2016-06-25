@@ -1,6 +1,6 @@
 # Makefile for Modules
 
-include ../make.sys
+include ../make.inc
 
 # location of needed modules
 MODFLAGS= $(MOD_FLAG)../iotk/src $(MOD_FLAG)../ELPA/src $(MOD_FLAG)../FFTXlib $(MOD_FLAG)../LAXlib $(MOD_FLAG).

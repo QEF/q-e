@@ -124,7 +124,7 @@ AC_CONFIG_FILES([include/fft_defs.h:include/fft_defs.h.in])
 AC_CONFIG_FILES([include/configure.h:include/configure.h.in])
 
 #AC_CONFIG_FILES(Makefile.cpu)
-AC_CONFIG_FILES(make.sys)
+AC_CONFIG_FILES(make.inc)
 AC_CONFIG_FILES(configure.msg)
 AC_CONFIG_FILES(install/make_wannier90.sys)
 

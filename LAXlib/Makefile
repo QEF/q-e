@@ -1,6 +1,6 @@
 # Makefile for LAXlib
 
-include ../make.sys
+include ../make.inc
 
 MODFLAGS= $(MOD_FLAG)../ELPA/src
 

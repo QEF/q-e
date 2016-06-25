@@ -1,5 +1,5 @@
 
-include make.sys
+include make.inc
 include make.versions
 
 VFSDIR=pwgui.vfs
@@ -59,4 +59,4 @@ clean:
 	-rm -rf pwgui pwgui.kit *~ pwgui*tgz pwgui*zip 
 
 distclean: clean
-	-rm -rf $(VFSDIR) tclkit-runtime make.sys main.tcl.sh make.versions
+	-rm -rf $(VFSDIR) tclkit-runtime make.inc main.tcl.sh make.versions

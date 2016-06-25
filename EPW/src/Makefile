@@ -1,6 +1,6 @@
 # Makefile for EPW
 
-include ../../make.sys
+include ../../make.inc
 include make.libs
 
 #

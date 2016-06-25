@@ -1,7 +1,7 @@
 # Makefile for GWW
 # Author: G. Stenuit and L. Martin-Samos
 #
-include ../../make.sys
+include ../../make.inc
 
 # location of include files
 IFLAGS=

@@ -1,6 +1,6 @@
 # Makefile for clib
 
-include ../make.sys
+include ../make.inc
 
 OBJS = \
 customize_signals.o \

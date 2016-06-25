@@ -1,5 +1,5 @@
 # Makefile for PostProc
-sinclude ../make.sys
+sinclude ../make.inc
 
 default: all
 

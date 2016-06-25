@@ -465,7 +465,7 @@ Additional instructions for special machines:
 \noindent \configure\ generates the following files:
 
 \begin{tabular}{ll}
-\texttt{make.sys} &      compilation rules and flags (used by \texttt{Makefile})\\
+\texttt{make.inc} &      compilation rules and flags (used by \texttt{Makefile})\\
 \texttt{install/configure.msg} & a report of the configuration run (not needed for compilation)\\
 \texttt{install/config.log} & detailed log of the configuration run (may be needed for debugging)\\
 \texttt{include/fft\_defs.h} &    defines fortran variable for C pointer (used only by FFTW)\\
@@ -475,7 +475,10 @@ Additional instructions for special machines:
 NOTA BENE: unlike previous versions, \configure\ no longer runs the
 \texttt{makedeps.sh} shell script that updates dependencies. If you modify the
 sources, run \texttt{./install/makedeps.sh} or type \texttt{make depend}
-to update files \texttt{make.depend} in the various subdirectories.
+to update files \texttt{make.depend} in the various subdirectories.\\
+NOTA BENE 2: ``make.inc'' used to be called ``make.sys'' until v.6.0. The
+change of name is due to frequent probelms with mailers assuming that
+whatever ends in ``sys'' is a suspect virus.
 
 You should always be able to compile the \qe\ suite
 of programs without having to edit any of the generated files. However you
@@ -573,15 +576,15 @@ see the Developer Manual.
 \subsubsection{Manual configuration}
 \label{SubSec:manconf}
 If \configure\ stops before the end, and you don't find a way to fix
-it, you have to write working \texttt{make.sys}, \texttt{include/fft\_defs.h}
+it, you have to write working \texttt{make.inc}, \texttt{include/fft\_defs.h}
 and \texttt{include/c\_defs.h} files.
 For the latter two files, follow the explanations in
 \texttt{include/defs.h.README}.
 
 If \configure\ has run till the end, you should need only to
-edit \texttt{make.sys}. A few sample \texttt{make.sys} files
+edit \texttt{make.inc}. A few sample \texttt{make.inc} files
 are provided in \texttt{install/Make.}{\em system}. The template used
-by \configure\ is also found there as \texttt{install/make.sys.in}
+by \configure\ is also found there as \texttt{install/make.inc.in}
 and contains explanations of the meaning
 of the various variables. Note that you may need
 to select appropriate preprocessing flags
@@ -647,8 +650,8 @@ if none is found, it will fall back to the internal  copy of FFTW.
 \item \texttt{-D\_\_FFTW3} for FFTW3 (external),
 \item \texttt{-D\_\_FFTW}) for FFTW (internal library),
 \end{itemize}
-to \texttt{DFLAGS} in the \texttt{make.sys} file.
-If you edit \texttt{make.sys} manually, please note that one and
+to \texttt{DFLAGS} in the \texttt{make.inc} file.
+If you edit \texttt{make.inc} manually, please note that one and
 only one among the mentioned preprocessing option must be set.
 
 If you have MKL libraries, you may either use the provided FFTW3
@@ -672,7 +675,7 @@ The \configure\ script attempts to find optimized libraries, but may fail
 if they have been installed in non-standard places. You should examine
 the final value of \texttt{BLAS\_LIBS, LAPACK\_LIBS, FFT\_LIBS, MPI\_LIBS} (if needed),
 \texttt{MASS\_LIBS} (IBM only), either in the output of \configure\ or in the generated
-\texttt{make.sys}, to check whether it found all the libraries that you intend to use.
+\texttt{make.inc}, to check whether it found all the libraries that you intend to use.
 
 If some library was not found, you can specify a list of directories to search
 in the environment variable \texttt{LIBDIRS},
@@ -730,7 +733,7 @@ At your choice, you may compile the complete \qe\ suite of programs
                            recompiles \PWscf\ and \CP\ with \texttt{PLUMED}
                            support
 \item \texttt{make w90} downloads \texttt{wannier90}, unpacks it, copies an appropriate
-                       \texttt{make.sys} file,  produces all executables
+                       \texttt{make.inc} file,  produces all executables
                        in \texttt{W90/wannier90.x} and in \texttt{bin/}
 \item \texttt{make want} downloads \texttt{WanT} from \texttt{QE-FORGE},
 			 unpacks it, runs its \configure,
@@ -941,7 +944,7 @@ For Cray XE machines:
 \begin{verbatim}
 $ module swap PrgEnv-cray PrgEnv-pgi
 $ ./configure --enable-openmp --enable-parallel --with-scalapack
-$ vim make.sys
+$ vim make.inc
 \end{verbatim}
 then manually add \texttt{-D\_\_IOTK\_WORKAROUND1} at the end of \texttt{DFLAGS} line.
 
@@ -1072,7 +1075,7 @@ can be freely downloaded from the AMD site.
 It is recognized by \configure\ but little tested. It sort of works
 but it fails to pass several tests (info by Paolo Giannozzi, March 2010).
 "I have configured for Pathscale, then switched to the Open64 compiler by
-editing make.sys. "make pw" succeeded and pw.x did process my file, but with
+editing make.inc. "make pw" succeeded and pw.x did process my file, but with
 "make all" I get an internal compiler error [in CPV/wf.f90]" (info by Cezary
 Sliwa, April 2011).
 
@@ -1323,7 +1326,7 @@ multithreading FFTs. If you are using MKL,\footnote{Beware:
 MKL v.10.2.2 has a buggy \texttt{dsyev} yielding wrong results
 with more than one thread; fixed in v.10.2.4}
 you may want to select FFTW3 (set \texttt{CPPFLAGS=-D\_\_FFTW3...}
-in \texttt{make.sys}) and to link with the MKL interface to FFTW3.
+in \texttt{make.inc}) and to link with the MKL interface to FFTW3.
 You will get a decent speedup ($\sim 25$\%) on two cores.
 
 Explicit OpenMP is a recent addition, still under
@@ -1471,7 +1474,7 @@ Since v.4.1, ScaLAPACK can be used to diagonalize block distributed
 matrices, yielding better speed-up than the internal algorithms for
 large ($ > 1000\times 1000$) matrices, when using a large number of processors
 ($> 512$). You need to have \texttt{-D\_\_SCALAPACK} added to DFLAGS
-in \texttt{make.sys}, LAPACK\_LIBS set to something like:
+in \texttt{make.inc}, LAPACK\_LIBS set to something like:
 \begin{verbatim}
     LAPACK_LIBS = -lscalapack -lblacs -lblacsF77init -lblacs -llapack
 \end{verbatim}

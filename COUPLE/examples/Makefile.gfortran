@@ -1,5 +1,5 @@
 # Makefile for library coupling interface
-include ../../make.sys
+include ../../make.inc
 
 # FLAGS for OpenMPI when QE was compiled with GNU Fortran 4.x
 MPICXX=mpicxx

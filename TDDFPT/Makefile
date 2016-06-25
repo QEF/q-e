@@ -1,5 +1,5 @@
 # Makefile for TDDFPT
-include ../make.sys
+include ../make.inc
 
 default: all
 

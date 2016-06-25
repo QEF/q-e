@@ -3,7 +3,6 @@ TODO (datafile & High throughput & reproducibility specific) - April 2016
 
 1) XML input in AIDA (what do we need to have these two working in harmony?)
 2) Datafile recording _all_ input info for reproducibility (some format decisions have to be made here) 
-3) Storing make.sys ? WanT trick is implemented in configure.
 4) Run time writing strategies at each scf step (do we really want this? can a new,optional "scf_history" file suffice? like bfgs history?)
 5) Datafile writing strategies for (vc)relax/md (data-file.0.xml 1.xml ...? giving the option to have the first and the last only)
 6) Finally, writing the output data in the datafile, fixing the redundant or missing pieces, and changing the language a bit so an outsider too can understand the content without too much suffering. 

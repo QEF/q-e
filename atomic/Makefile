@@ -1,6 +1,6 @@
 # Makefile for atomic
 
-sinclude ../make.sys
+sinclude ../make.inc
 
 default: all
 

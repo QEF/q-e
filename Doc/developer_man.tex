@@ -16,7 +16,7 @@
 \def\configure{\texttt{configure}}
 \def\configurac{\texttt{configure.ac}}
 \def\autoconf{\texttt{autoconf}}
-\def\make.sys{\texttt{make.sys}}
+\def\make.inc{\texttt{make.inc}}
 \def\Makefile{\texttt{Makefile}}
 
 \def\qeImage{quantum_espresso.pdf}
@@ -477,7 +477,7 @@ libraries, installation utilities, general documentation.
 Common files and directories in the \texttt{espresso/} directory are:
 \begin{verbatim}
    install/                 configure
-   include/                 make.sys
+   include/                 make.inc
    archive/                 Makefile
    dev-tools/               License
    pseudo/                  README
@@ -491,7 +491,7 @@ obvious, the other files and directories are related to
 \begin{itemize}
 \item {\em Installation} (i.e. compilation and linking):\\
 \texttt{install/}, \texttt{dev-tools/}, \texttt{archive/},
-\configure, \make.sys
+\configure, \make.inc
 \item  {\em Testing} (running tests and examples):\\
 \texttt{pseudo/}, \texttt{environment\_variables}
 \item  {\em General documentation} (not package-specific):
@@ -534,7 +534,7 @@ Let us review the files related to compilation and linking:
 \item[--] \texttt{install/}: documentation and utilities for compilation
 and linking
 \item[--] \configure: wrapper for \texttt{install/configure} script
-\item[--] \make.sys: produced by \texttt{configure}, contains
+\item[--] \make.inc: produced by \texttt{configure}, contains
 machine-specific compilation and linking options
 \item[--] \Makefile: contains dependencies and targets used by
 command \texttt{make}.
@@ -542,7 +542,7 @@ command \texttt{make}.
 pre-processed.
 \end{itemize}
 \texttt{./configure} {\em options} cleans executbales,
-runs \texttt{install/configure}, produces file \make.sys.
+runs \texttt{install/configure}, produces file \make.inc.
 See Sec.\ref{SubSec:conf} for some details on how to change the
 behavior of \configure.
 
@@ -558,9 +558,9 @@ in each source directory. These files {\em must be updated} if you change
 the sources, running script \texttt{install/makedeps.sh} or using command
 \texttt{make depend}.
 
-\paragraph{make.sys}
+\paragraph{make.inc}
 This file is produced by \configure\ using the template in
-\texttt{install/make.sys.in} and contains all system-specific
+\texttt{install/make.inc.in} and contains all system-specific
 information on
 \begin{itemize}
 \item C and Fortran compilers name, pre-processing and compilation options
@@ -569,18 +569,18 @@ information on
 \item available optimized mathematical libraries, libraries to be downloaded
 \item Miscellanous stuff
 \end{itemize}
-The \make.sys\ file is included into all \Makefile's,
+The \make.inc\ file is included into all \Makefile's,
 using the corresponding syntax. The best documentation for the
-\make.sys\ file is the file itself. Note that if you want to
+\make.inc\ file is the file itself. Note that if you want to
 change something or to add more documentation into this file,
-you may need to modify the template file \texttt{install/make.sys.in}.
+you may need to modify the template file \texttt{install/make.inc.in}.
 
 \paragraph{Makefile}
 The top-level \Makefile\ contains the instructions to download,
 unpack, compile and link what is required. Sample contents
 (comments in italic):
 \begin{verbatim}
-include make.sys
+include make.inc
 \end{verbatim}
 {\em Contains machine- and \qe-specific definitions}
 \begin{verbatim}
@@ -614,7 +614,7 @@ libblas : touch-dummy
      cd install ; $(MAKE) -f extlibs_makefile $@
 \end{verbatim}
 {\em Target {\tt libblas}: this is an external library, that may or may
-not be needed, depending upon what is written in {\tt make.sys}. If
+not be needed, depending upon what is written in {\tt make.inc}. If
 needed, go into directory {\tt install/} where {\tt make libblas} using
 {\tt extlibs\_makefile} as Makefile will check if BLAS are there, download
 from the network if not,
@@ -624,7 +624,7 @@ compile and build the library}
 Second-level \Makefile\ contains only targets related to a given
 subdirectory or package. Sample contents:
 \begin{verbatim}
-sinclude ../make.sys
+sinclude ../make.inc
 default : all
 all: pw pwtools
 pw:
@@ -647,7 +647,7 @@ The most important and most complex Makefile is the one in the
 source directory. It is also the one you need to modify if you
 add something.
 \begin{verbatim}
-include ../../make.sys
+include ../../make.inc
 \end{verbatim}
 {\em Contains machine- and \qe-specific definitions}
 \begin{verbatim}
@@ -655,7 +655,7 @@ MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules $(MOD_FLAG).\
           $(MOD_FLAG)../../FFTXlib $(MOD_FLAG)../../LAXlib
 \end{verbatim}
 {\em Location of needed modules; {\rm \texttt{MOD\_FLAG}} is defined in
-\texttt{make.sys}}
+\texttt{make.inc}}
 \begin{verbatim}
 PWOBJS = \
 pwscf.o
@@ -698,7 +698,7 @@ pw.x : $(PWOBJS) libpw.a $(LIBOBJS) $(QEMODS)
 It also produces a link to the executable in {\tt espresso/bin/}.
 Do not forget tabulators even if you do not see them!
 All variables (introduced by \$) are either defined locally
-in {\tt Makefile} or imported from {\tt make.sys}}
+in {\tt Makefile} or imported from {\tt make.inc}}
 \begin{verbatim}
 libpw.a : $(PWLIBS)
         $(AR) $(ARFLAGS) $@ $?
@@ -749,12 +749,12 @@ or do not implement properly preprocessing. In this case the
 preprocessing is done using \texttt{cpp}.
 Normally, \configure\ takes care of this, by selecting the
 appropriate rule \texttt{@f90rule@} below, in this section
-of file \texttt{make.sys.in}:
+of file \texttt{make.inc.in}:
 \begin{verbatim}
 .f90.o:
 	@f90rule@
 \end{verbatim}
-and producing the appropriate file \make.sys.
+and producing the appropriate file \make.inc.
 
 Preprocessing is useful to
 \begin{itemize}
@@ -828,7 +828,7 @@ except that:
 
 You may refer to the GNU \autoconf\ Manual for more info.
 
-\texttt{make.sys.in} is the source file for \make.sys, that
+\texttt{make.inc.in} is the source file for \make.inc, that
 \configure\ generates: you might want to edit that file as well.
 The generation procedure is as follows: if \configurac\ contains the macro
 "AC\_SUBST(name)", then every occurrence of "@name@" in the source
@@ -850,10 +850,10 @@ error messages.  Note that it is normal for some checks to fail.
 In order to support a previously unsupported architecture, first you
 have to figure out which compilers, compilation flags, libraries
 etc. should be used on that architecture.
-In other words, you have to write a \make.sys\ that works: you may use
+In other words, you have to write a \make.inc\ that works: you may use
 the manual configuration procedure for that (see the
 User Guide).  Then, you have to modify \configure\ so that it can
-generate that \make.sys\ automatically.
+generate that \make.inc\ automatically.
 
 To do that, you have to add the case for your architecture in several
 places throughout \configurac:

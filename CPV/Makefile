@@ -1,5 +1,5 @@
 # Makefile for CPV
-sinclude ../make.sys
+sinclude ../make.inc
 
 default: all
 

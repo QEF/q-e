@@ -8,7 +8,7 @@
 !--------------------------------------------------------------------------
 ! Wrapper for nonstandard implementation of complex BLAS function zdotc
 ! (e.g. some versions of optimized BLAS for Mac)
-! In order to activate it, add -Dzdotc=zdotc_wrapper to DFLAGS in make.sys
+! In order to activate it, add -Dzdotc=zdotc_wrapper to DFLAGS in make.inc
 !--------------------------------------------------------------------------
 FUNCTION zdotc_wrapper(n,a,ia,b,ib) RESULT(c)
 !--------------------------------------------------------------------------

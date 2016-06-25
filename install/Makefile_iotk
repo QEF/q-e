@@ -74,7 +74,7 @@
 # IDE HOME variable set to DEFAULT
 IDEHOME=../..
 # Default configuratione file
-CONFIG_FILE=../../../make.sys
+CONFIG_FILE=../../../make.inc
 #
 # Objects to be linked in the library
 OBJ_LIB= iotk_attr+CHARACTER1_0.o iotk_attr+COMPLEX1_0.o iotk_attr+COMPLEX1_3.o\
@@ -119,12 +119,12 @@ OBJ_LIB= iotk_attr+CHARACTER1_0.o iotk_attr+COMPLEX1_0.o iotk_attr+COMPLEX1_3.o\
 #
 
 # Macros to link the present library
-# (may be change by make.sys to the path of installed library)
+# (may be change by make.inc to the path of installed library)
 LIB_IOTK=libiotk.a
 LIB_IOTK_INCLUDE=-I. -I$(IDEHOME)/iotk/include
 
 # Switch to enable actual compilation
-# (may be change by make.sys to "external")
+# (may be change by make.inc to "external")
 LIB_IOTK_SWITCH=internal
 # Path for include
 AUTO_INCLUDE=$(LIB_IOTK_INCLUDE) 

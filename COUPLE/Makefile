@@ -1,6 +1,6 @@
 # Makefile for COUPLE
 
-sinclude ../make.sys
+sinclude ../make.inc
 
 default: all
 

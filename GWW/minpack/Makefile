@@ -1,6 +1,6 @@
 # Makefile for Minpack 
 
-include ../../make.sys
+include ../../make.inc
 
 MINOBJS = \
 dpmpar.o \
