@@ -12394,7 +12394,7 @@ ac_config_files="$ac_config_files include/configure.h:include/configure.h.in"
 
 
 #AC_CONFIG_FILES(Makefile.cpu)
-ac_config_files="$ac_config_files make.sys"
+ac_config_files="$ac_config_files make.inc"
 
 ac_config_files="$ac_config_files configure.msg"
 
@@ -13000,7 +13000,7 @@ do
     "include/c_defs.h") CONFIG_HEADERS="$CONFIG_HEADERS include/c_defs.h:include/c_defs.h.in" ;;
     "include/fft_defs.h") CONFIG_FILES="$CONFIG_FILES include/fft_defs.h:include/fft_defs.h.in" ;;
     "include/configure.h") CONFIG_FILES="$CONFIG_FILES include/configure.h:include/configure.h.in" ;;
-    "make.sys") CONFIG_FILES="$CONFIG_FILES make.sys" ;;
+    "make.inc") CONFIG_FILES="$CONFIG_FILES make.inc" ;;
     "configure.msg") CONFIG_FILES="$CONFIG_FILES configure.msg" ;;
     "install/make_wannier90.sys") CONFIG_FILES="$CONFIG_FILES install/make_wannier90.sys" ;;
 
