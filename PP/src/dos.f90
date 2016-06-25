@@ -19,8 +19,10 @@ PROGRAM do_dos
   USE io_global,  ONLY : stdout, ionode, ionode_id
   USE io_files,   ONLY : prefix, tmp_dir
   USE constants,  ONLY : rytoev
+  USE ener,       ONLY : ef, ef_up, ef_dw 
   USE kinds,      ONLY : DP
-  USE klist,      ONLY : xk, wk, degauss, ngauss, lgauss, nks, nkstot
+  USE klist,      ONLY : xk, wk, degauss, ngauss, lgauss, nks, nkstot,&
+                         two_fermi_energies
   USE ktetra,     ONLY : ntetra, tetra, ltetra
   USE wvfct,      ONLY : nbnd, et
   USE lsda_mod,   ONLY : nspin
@@ -35,6 +37,7 @@ PROGRAM do_dos
   CHARACTER(LEN=256), EXTERNAL :: trimcheck
   !
   CHARACTER(len=256) :: fildos, outdir
+  CHARACTER(LEN=33) :: fermi_str
   REAL(DP) :: E, DOSofE (2), DOSint, DeltaE, Emin, Emax, &
               degauss1, E_unset=1000000.d0
   INTEGER :: ik, n, ndos, ngauss1, ios
@@ -132,10 +135,17 @@ PROGRAM do_dos
      !
      IF ( fildos == ' ' ) fildos = trim(prefix)//'.dos'
      OPEN (unit = 4, file = fildos, status = 'unknown', form = 'formatted')
-     IF (nspin==1.or.nspin==4) THEN
-        WRITE(4,'("#  E (eV)   dos(E)     Int dos(E)")')
+     IF ( two_fermi_energies ) THEN
+        WRITE(fermi_str,'(" EFermi = ",2f7.3," eV")') ef_up*rytoev, ef_dw*rytoev
      ELSE
-        WRITE(4,'("#  E (eV)   dosup(E)     dosdw(E)   Int dos(E)")')
+        WRITE(fermi_str,'(" EFermi = ",f7.3," eV")') ef*rytoev
+     ENDIF
+
+     IF (nspin==1.or.nspin==4) THEN
+           WRITE(4,'("#  E (eV)   dos(E)     Int dos(E)",A)') TRIM(fermi_str)
+     ELSE
+        WRITE(4,'("#  E (eV)   dosup(E)     dosdw(E)   Int dos(E)",A)')&
+        &          TRIM(fermi_str)
      ENDIF
      DO n= 1, ndos
         E = Emin + (n - 1) * DeltaE
