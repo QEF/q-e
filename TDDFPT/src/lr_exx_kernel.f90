@@ -73,19 +73,20 @@ SUBROUTINE lr_exx_alloc()
      nrxxs= exx_fft%dfftt%nnr
   ELSE
      nrxxs= dffts%nnr
-  END IF
+  ENDIF
   !
   ALLOCATE (vhart(nrxxs,nspin))
   ALLOCATE (pseudo_dens_c(nrxxs))
-  ALLOCATE (revc_int(nrxxs,nbnd))
-  !
   ALLOCATE (red_revc0(nrxxs,nbnd,nkqs))
   red_revc0 = (0.0_dp, 0.0_dp)
   !
-  IF ( .NOT. gamma_only ) THEN
+  IF (gamma_only) THEN
+     ALLOCATE (revc_int(nrxxs,nbnd))
+  ELSE
+     ALLOCATE(revc_int_c(nrxxs,nbnd,nks))
      ALLOCATE(k2q(nks)) 
      k2q=0
-  END IF
+  ENDIF
   !
 END SUBROUTINE lr_exx_alloc
 !
@@ -95,7 +96,7 @@ SUBROUTINE lr_exx_dealloc()
 
   DEALLOCATE(pseudo_dens_c, vhart, red_revc0)
   !
-  IF(gamma_only) THEN
+  IF (gamma_only) THEN
      DEALLOCATE(revc_int)
   ELSE
      DEALLOCATE(revc_int_c, k2q)
