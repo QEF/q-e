@@ -4,7 +4,7 @@
 #=======================================
 
 # read in the QE config
-include ../../make.sys
+include ../../make.inc
 
 # here we use sed to re-write the library paths. This is only relevant
 # if we are using the Q-E internal lapack and blas. Q-E refers to them
