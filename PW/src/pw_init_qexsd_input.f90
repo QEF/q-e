@@ -184,7 +184,7 @@
                        ip_lda_plus_U,ip_lda_plus_u_kind,2*hubbard_lmax+1,ip_nspin,ntyp,0,ip_nat,atm,                  &
                        ip_ityp,ip_hubbard_u,ip_hubbard_j0,ip_hubbard_alpha,ip_hubbard_beta,ip_hubbard_j,              &
                        starting_ns_eigenvalue,ns_null,ns_nc_null,u_projection_type,dft_is_nonlocc,                    &
-                       vdw_corr_, london_s6, london_c6, london_rcut,  &
+                       vdw_corr_, TRIM (get_nonlocc_name()), london_s6, london_c6, london_rcut,                       &
                        xdm_a1,xdm_a2, ts_vdw_econv_thr, ts_vdw_isolated,  is_hubbard,upf(1:ntyp)%psd)
   !------------------------------------------------------------------------------------------------------------------------
   !                                                   SPIN ELEMENT

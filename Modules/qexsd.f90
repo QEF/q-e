@@ -605,7 +605,7 @@ CONTAINS
                                   exxdiv_treatment, x_gamma_extrapolation, ecutvcut, &
                    dft_is_lda_plus_U, lda_plus_U_kind, llmax, nspin, nsp, ldim, nat, species, ityp, Hubbard_U, Hubbard_J0, &
                                   Hubbard_alpha, Hubbard_beta, Hubbard_J, starting_ns, Hubbard_ns, Hubbard_ns_nc, &
-                                  U_projection_type, dft_is_vdW, vdw_corr, london_s6, london_c6, london_rcut, &
+                                  U_projection_type, dft_is_vdW, vdw_corr, nonlocal_term, london_s6, london_c6, london_rcut, &
                                   xdm_a1, xdm_a2 ,ts_vdw_econv_thr, ts_vdw_isolated,   is_hubbard, psd)
       !------------------------------------------------------------------------
       USE  parameters,           ONLY:  lqmax
@@ -613,7 +613,7 @@ CONTAINS
       IMPLICIT NONE
       !
       TYPE(dft_type)    :: obj
-      CHARACTER(len=*), INTENT(IN) :: functional
+      CHARACTER(len=*), INTENT(IN) :: functional, nonlocal_term 
       LOGICAL,          INTENT(IN) :: dft_is_hybrid
       LOGICAL,          INTENT(IN) :: root_is_output
       INTEGER,          INTENT(IN) :: nqx1, nqx2, nqx3
@@ -844,7 +844,7 @@ CONTAINS
 
       IF ( dft_is_vdW .OR. empirical_vdw ) THEN
           !
-          CALL qes_init_vdW(vdW, "vdW", TRIM(vdw_corr), root_is_output, dft_is_vdW, london_s6_ispresent, london_s6, &
+          CALL qes_init_vdW(vdW, "vdW", TRIM(vdw_corr), root_is_output,  TRIM(nonlocal_term), london_s6_ispresent, london_s6, &
                             ts_vdw_econv_thr_ispresent, ts_vdw_econv_thr, ts_vdw_isolated_ispresent, ts_vdw_isolated,& 
                             london_rcut_ispresent, london_rcut, xdm_a1_ispresent, xdm_a1, xdm_a2_ispresent, xdm_a2, &
                             london_c6_ispresent, ndim_london_c6, london_c6_obj(1:ndim_london_c6) )
@@ -886,14 +886,14 @@ CONTAINS
     !
     ! 
     !---------------------------------------------------------------------------------------
-    SUBROUTINE qexsd_init_band_structure(obj, lsda,noncolin, lspinorb, nbnd, nelec, &
+    SUBROUTINE qexsd_init_band_structure(obj, lsda, noncolin, lspinorb, nbnd, nelec, occupations_are_fixed, & 
                                          fermi_energy, two_fermi_energies, ef_updw, et, wg, nks, xk, ngk, wk)
     !----------------------------------------------------------------------------------------
     IMPLICIT NONE
     !
     TYPE(band_structure_type)             :: obj
     CHARACTER(LEN=*), PARAMETER           :: TAGNAME="band_structure"
-    LOGICAL,INTENT(IN)                    :: lsda, noncolin, lspinorb
+    LOGICAL,INTENT(IN)                    :: lsda, noncolin, lspinorb, occupations_are_fixed
     INTEGER,INTENT(IN)                    :: nbnd, nks
     REAL(DP),INTENT(IN)                   :: nelec, fermi_energy
     REAL(DP),DIMENSION(:,:),INTENT(IN)    :: et, wg, xk
@@ -903,12 +903,12 @@ CONTAINS
     LOGICAL,INTENT(IN)                    :: two_fermi_energies
     ! 
     LOGICAL                               :: nbnd_up_ispresent, nbnd_dw_ispresent, &
-                                             fermi_energy_ispresent
+                                             fermi_energy_ispresent, HOL_ispresent 
     INTEGER                               :: nbnd_up,nbnd_dw
     INTEGER                               :: ndim_ks_energies,nbnd_tot,ik
     TYPE(k_point_type)                    :: kp_obj
     TYPE(ks_energies_type),ALLOCATABLE    :: ks_objs(:)
-    REAL(DP),DIMENSION(:),ALLOCATABLE     :: eigenvalues,occupations
+    REAL(DP),DIMENSION(:),ALLOCATABLE     :: eigenvalues, occupations
 
     !
     !
@@ -929,9 +929,16 @@ CONTAINS
        nbnd_dw_ispresent=.false. 
     END IF 
     IF (fermi_energy.GT.-1.D6 .AND. ( .NOT. two_fermi_energies ) ) THEN
-      fermi_energy_ispresent=.TRUE.
+      IF ( occupations_are_fixed ) THEN 
+         fermi_energy_ispresent = .FALSE. 
+         HOL_ispresent = .TRUE. 
+      ELSE 
+         fermi_energy_ispresent = .TRUE.
+         HOL_ispresent = .FALSE. 
+      END IF 
     ELSE 
       fermi_energy_ispresent=.FALSE.
+      HOL_ispresent = .FALSE.
     END IF  
     !
     !   
@@ -939,7 +946,7 @@ CONTAINS
     ALLOCATE(ks_objs(ndim_ks_energies))
     !  
     DO ik=1,ndim_ks_energies
-       CALL qes_init_k_point(kp_obj,"k_point",wk(ik),.true.,xk(:,ik))
+       CALL qes_init_k_point(kp_obj,"k_point",wk(ik),.true.,"",.FALSE., xk(:,ik))
        IF ( lsda ) THEN 
           eigenvalues(1:nbnd_up)=et(1:nbnd_up,ik)/e2
           eigenvalues(nbnd_up+1:nbnd_tot)=et(1:nbnd_dw,ndim_ks_energies+ik)/e2
@@ -975,7 +982,8 @@ CONTAINS
     !
     CALL qes_init_band_structure(obj,TAGNAME,lsda,noncolin,lspinorb,nbnd_tot,nbnd_up_ispresent,&
                   nbnd_up,nbnd_dw_ispresent,nbnd_dw,nelec,fermi_energy_ispresent,&
-                  fermi_energy/e2, two_fermi_energies, 2, ef_updw/e2, ndim_ks_energies,ndim_ks_energies,ks_objs)
+                  fermi_energy/e2, HOL_ispresent, fermi_energy/e2, two_fermi_energies, 2, ef_updw/e2, &
+                  ndim_ks_energies,ndim_ks_energies,ks_objs)
     DO ik=1,ndim_ks_energies
        CALL qes_reset_ks_energies(ks_objs(ik))
     END DO
@@ -1241,7 +1249,7 @@ CONTAINS
         ELSE 
            ispin = 2 
         END IF
-        CALL qes_init_k_point(kp_obj, "firstKeyPoint", wstring(istring), .TRUE., xk(:,indstring))
+        CALL qes_init_k_point(kp_obj, "firstKeyPoint", wstring(istring), .TRUE., "",.FALSE., xk(:,indstring))
         CALL qes_init_electronicPolarization(str_pol_obj(istring),"electronicPolarization", kp_obj, spin_is, ispin, &
                                              el_phase )
         CALL qes_reset_phase ( el_phase ) 

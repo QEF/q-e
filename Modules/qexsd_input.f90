@@ -291,13 +291,15 @@ MODULE qexsd_input
           kdim=NINT(sum(wk(1:nk-1)))+1
           ALLOCATE (kp_obj(kdim))
           kcount=1
-          CALL qes_init_k_point(kp_obj(kcount),"k_point",1.d0,.TRUE.,xk(:,1))
+          CALL qes_init_k_point(kp_obj(kcount),"k_point",1.d0,.TRUE.,LABEL= "", LABEL_ISPRESENT=.FALSE., &
+                                K_POINT = xk(:,1))
           kcount=kcount+1
           DO ik=1,nk-1
              DO jk=1,NINT(wk(ik))
                 my_xk=xk(:,ik)+(DBLE(jk)/wk(ik))*(xk(:,ik+1)-xk(:,ik))
                 my_xk=my_xk*scale_factor
-                CALL qes_init_k_point(kp_obj(kcount),"k_point",1.d0,.TRUE.,my_xk)
+                CALL qes_init_k_point(kp_obj(kcount),"k_point",1.d0,.TRUE.,LABEL="", LABEL_ISPRESENT = .FALSE., &
+                                      K_POINT = my_xk)
                 kcount=kcount+1
              END DO
           END DO
@@ -306,7 +308,7 @@ MODULE qexsd_input
           ALLOCATE  (kp_obj(kdim))      
           DO ik=1,kdim
              my_xk=xk(:,ik)*scale_factor
-             CALL qes_init_k_point(kp_obj(ik),"k_point",wk(ik),.TRUE.,my_xk)
+             CALL qes_init_k_point(kp_obj(ik),"k_point",wk(ik),.TRUE.,label="",label_ispresent=.FALSE.,K_POINT=my_xk)
           END DO
       END IF
       CALL qes_init_k_points_IBZ(obj,TAGNAME,monkhorst_pack_ispresent=.FALSE.,&
@@ -459,7 +461,7 @@ MODULE qexsd_input
    REAL(DP),OPTIONAL,INTENT(IN)                 :: esm_w,esm_efield
    ! 
    TYPE (esm_type)                              :: esm_obj
-   LOGICAL                                      :: esm_ispresent
+   LOGICAL                                      :: esm_ispresent = .FALSE.
    CHARACTER(LEN=*),PARAMETER                   :: TAGNAME="boundary_conditions"
    !
    IF ( TRIM(assume_isolated) .EQ. "esm" ) THEN 

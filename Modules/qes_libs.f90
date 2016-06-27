@@ -216,6 +216,9 @@ SUBROUTINE qes_write_k_point(iun, obj)
    IF(obj%weight_ispresent) THEN
       CALL iotk_write_attr(attr, 'weight', obj%weight)
    END IF
+   IF(obj%label_ispresent) THEN
+      CALL iotk_write_attr(attr, 'label', TRIM(obj%label))
+   END IF
 
    CALL iotk_write_begin(iun, TRIM(obj%tagname), attr=TRIM(attr))
       !
@@ -224,7 +227,8 @@ SUBROUTINE qes_write_k_point(iun, obj)
    !
 END SUBROUTINE qes_write_k_point
 
-SUBROUTINE qes_init_k_point(obj, tagname, weight, weight_ispresent, k_point)
+SUBROUTINE qes_init_k_point(obj, tagname, weight, weight_ispresent, label, label_ispresent, &
+                              k_point)
    IMPLICIT NONE
 
    TYPE(k_point_type) :: obj
@@ -232,6 +236,8 @@ SUBROUTINE qes_init_k_point(obj, tagname, weight, weight_ispresent, k_point)
    INTEGER  :: i
    LOGICAL  :: weight_ispresent
    REAL(DP), OPTIONAL :: weight
+   LOGICAL  :: label_ispresent
+   CHARACTER(len=*), OPTIONAL :: label
    REAL(DP), DIMENSION(3) :: k_point
 
    obj%tagname = TRIM(tagname)
@@ -239,6 +245,12 @@ SUBROUTINE qes_init_k_point(obj, tagname, weight, weight_ispresent, k_point)
    obj%weight_ispresent = weight_ispresent
    IF (obj%weight_ispresent) THEN
       obj%weight = weight
+   ENDIF
+
+
+   obj%label_ispresent = label_ispresent
+   IF (obj%label_ispresent) THEN
+      obj%label = TRIM(label)
    ENDIF
 
    obj%k_point = k_point
@@ -3234,6 +3246,12 @@ SUBROUTINE qes_write_band_structure(iun, obj)
          CALL iotk_write_end(iun, 'fermi_energy')
       ENDIF
       !
+      IF(obj%highestOccupiedLevel_ispresent) THEN
+         CALL iotk_write_begin(iun, 'highestOccupiedLevel')
+            WRITE(iun, '(E20.7)') obj%highestOccupiedLevel
+         CALL iotk_write_end(iun, 'highestOccupiedLevel')
+      ENDIF
+      !
       IF(obj%two_fermi_energies_ispresent) THEN
          CALL iotk_write_begin(iun,'two_fermi_energies')
             WRITE(fmtstr,'(a)') '(5E20.7)'
@@ -3256,6 +3274,7 @@ END SUBROUTINE qes_write_band_structure
 SUBROUTINE qes_init_band_structure(obj, tagname, lsda, noncolin, spinorbit, nbnd, &
                               nbnd_up_ispresent, nbnd_up, nbnd_dw_ispresent, nbnd_dw, &
                               nelec, fermi_energy_ispresent, fermi_energy, &
+                              highestOccupiedLevel_ispresent, highestOccupiedLevel, &
                               two_fermi_energies_ispresent, &
                               ndim_two_fermi_energies, two_fermi_energies, nks, &
                               ndim_ks_energies, ks_energies)
@@ -3275,6 +3294,8 @@ SUBROUTINE qes_init_band_structure(obj, tagname, lsda, noncolin, spinorbit, nbnd
    REAL(DP) :: nelec
    LOGICAL  :: fermi_energy_ispresent
    REAL(DP) :: fermi_energy
+   LOGICAL  :: highestOccupiedLevel_ispresent
+   REAL(DP) :: highestOccupiedLevel
    LOGICAL  :: two_fermi_energies_ispresent
    INTEGER  :: ndim_two_fermi_energies
    REAL(DP), DIMENSION(:) :: two_fermi_energies
@@ -3299,6 +3320,10 @@ SUBROUTINE qes_init_band_structure(obj, tagname, lsda, noncolin, spinorbit, nbnd
    obj%fermi_energy_ispresent = fermi_energy_ispresent
    IF(obj%fermi_energy_ispresent) THEN
       obj%fermi_energy = fermi_energy
+   ENDIF
+   obj%highestOccupiedLevel_ispresent = highestOccupiedLevel_ispresent
+   IF(obj%highestOccupiedLevel_ispresent) THEN
+      obj%highestOccupiedLevel = highestOccupiedLevel
    ENDIF
    obj%two_fermi_energies_ispresent = two_fermi_energies_ispresent
    IF(obj%two_fermi_energies_ispresent) THEN
@@ -3329,6 +3354,9 @@ SUBROUTINE qes_reset_band_structure(obj)
    ENDIF
    IF(obj%fermi_energy_ispresent) THEN
       obj%fermi_energy_ispresent = .FALSE.
+   ENDIF
+   IF(obj%highestOccupiedLevel_ispresent) THEN
+      obj%highestOccupiedLevel_ispresent = .FALSE.
    ENDIF
    IF(obj%two_fermi_energies_ispresent) THEN
    IF (ALLOCATED(obj%two_fermi_energies))  DEALLOCATE(obj%two_fermi_energies)
@@ -4603,14 +4631,10 @@ SUBROUTINE qes_write_vdW(iun, obj)
       CALL iotk_write_begin(iun, 'vdw_corr',new_line=.FALSE.)
          WRITE(iun, '(A)',advance='no')  TRIM(obj%vdw_corr)
       CALL iotk_write_end(iun, 'vdw_corr',indentation=.FALSE.)
-      IF(obj%non_local_dft_ispresent) THEN
-         CALL iotk_write_begin(iun, 'non_local_dft',new_line=.FALSE.)
-            IF (obj%non_local_dft) THEN
-               WRITE(iun, '(A)',advance='no')  'true'
-            ELSE
-               WRITE(iun, '(A)',advance='no')  'false'
-            ENDIF
-         CALL iotk_write_end(iun, 'non_local_dft',indentation=.FALSE.)
+      IF(obj%non_local_term_ispresent) THEN
+         CALL iotk_write_begin(iun, 'non_local_term',new_line=.FALSE.)
+            WRITE(iun, '(A)',advance='no')  TRIM(obj%non_local_term)
+         CALL iotk_write_end(iun, 'non_local_term',indentation=.FALSE.)
       ENDIF
       !
       IF(obj%london_s6_ispresent) THEN
@@ -4664,7 +4688,7 @@ SUBROUTINE qes_write_vdW(iun, obj)
    !
 END SUBROUTINE qes_write_vdW
 
-SUBROUTINE qes_init_vdW(obj, tagname, vdw_corr, non_local_dft_ispresent, non_local_dft, &
+SUBROUTINE qes_init_vdW(obj, tagname, vdw_corr, non_local_term_ispresent, non_local_term, &
                               london_s6_ispresent, london_s6, ts_vdw_econv_thr_ispresent, &
                               ts_vdw_econv_thr, ts_vdw_isolated_ispresent, ts_vdw_isolated, &
                               london_rcut_ispresent, london_rcut, xdm_a1_ispresent, xdm_a1, &
@@ -4676,8 +4700,8 @@ SUBROUTINE qes_init_vdW(obj, tagname, vdw_corr, non_local_dft_ispresent, non_loc
    CHARACTER(len=*) :: tagname
    INTEGER  :: i
    CHARACTER(len=*) :: vdw_corr
-   LOGICAL  :: non_local_dft_ispresent
-   LOGICAL  :: non_local_dft
+   LOGICAL  :: non_local_term_ispresent
+   CHARACTER(len=*) :: non_local_term
    LOGICAL  :: london_s6_ispresent
    REAL(DP) :: london_s6
    LOGICAL  :: ts_vdw_econv_thr_ispresent
@@ -4696,9 +4720,9 @@ SUBROUTINE qes_init_vdW(obj, tagname, vdw_corr, non_local_dft_ispresent, non_loc
 
    obj%tagname = TRIM(tagname)
    obj%vdw_corr = vdw_corr
-   obj%non_local_dft_ispresent = non_local_dft_ispresent
-   IF(obj%non_local_dft_ispresent) THEN
-      obj%non_local_dft = non_local_dft
+   obj%non_local_term_ispresent = non_local_term_ispresent
+   IF(obj%non_local_term_ispresent) THEN
+      obj%non_local_term = non_local_term
    ENDIF
    obj%london_s6_ispresent = london_s6_ispresent
    IF(obj%london_s6_ispresent) THEN
@@ -4742,8 +4766,8 @@ SUBROUTINE qes_reset_vdW(obj)
 
    obj%tagname = ""
 
-   IF(obj%non_local_dft_ispresent) THEN
-      obj%non_local_dft_ispresent = .FALSE.
+   IF(obj%non_local_term_ispresent) THEN
+      obj%non_local_term_ispresent = .FALSE.
    ENDIF
    IF(obj%london_s6_ispresent) THEN
       obj%london_s6_ispresent = .FALSE.

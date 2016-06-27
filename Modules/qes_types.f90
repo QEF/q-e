@@ -56,6 +56,8 @@ TYPE :: k_point_type
    !
    LOGICAL  :: weight_ispresent
    REAL(DP) :: weight
+   LOGICAL  :: label_ispresent
+   CHARACTER(len=256) :: label
    REAL(DP), DIMENSION(3) :: k_point
    !
 END TYPE k_point_type
@@ -656,6 +658,8 @@ TYPE :: band_structure_type
    REAL(DP) :: nelec
    LOGICAL  :: fermi_energy_ispresent
    REAL(DP) :: fermi_energy
+   LOGICAL  :: highestOccupiedLevel_ispresent
+   REAL(DP) :: highestOccupiedLevel
    LOGICAL  :: two_fermi_energies_ispresent
    !
    INTEGER  :: ndim_two_fermi_energies
@@ -927,8 +931,8 @@ TYPE :: vdW_type
    LOGICAL  :: lwrite = .true.
    !
    CHARACTER(len=256) :: vdw_corr
-   LOGICAL  :: non_local_dft_ispresent
-   LOGICAL  :: non_local_dft
+   LOGICAL  :: non_local_term_ispresent
+   CHARACTER(len=256) :: non_local_term
    LOGICAL  :: london_s6_ispresent
    REAL(DP) :: london_s6
    LOGICAL  :: ts_vdw_econv_thr_ispresent

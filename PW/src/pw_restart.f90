@@ -172,7 +172,7 @@ USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, delete_if_present, &
       USE xdm_module,           ONLY : xdm_a1=>a1i, xdm_a2=>a2i
       USE tsvdw_module,         ONLY : vdw_isolated, vdw_econv_thr
       USE input_parameters,     ONLY : space_group, verbosity, calculation, ion_dynamics, starting_ns_eigenvalue, &
-                                       vdw_corr, london
+                                       vdw_corr, london, input_parameters_occupations => occupations
       USE bp,                   ONLY : lelfield, lberry, bp_mod_el_pol => el_pol, bp_mod_ion_pol => ion_pol
       !
       USE rap_point_group,      ONLY : elem, nelem, name_class
@@ -194,12 +194,13 @@ USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, delete_if_present, &
       INTEGER               :: ike, iks, npw_g, ispin, inlc
       INTEGER,  ALLOCATABLE :: ngk_g(:)
       INTEGER,  ALLOCATABLE :: igk_l2g(:,:), igk_l2g_kdip(:,:), mill_g(:,:)
-      LOGICAL               :: lwfc, lrho, lxsd
+      LOGICAL               :: lwfc, lrho, lxsd, occupations_are_fixed
       CHARACTER(iotk_attlenx)  :: attr
       INTEGER                  :: iclass, isym, ielem
       CHARACTER(LEN=15)        :: symop_2_class(48)
       LOGICAL                  :: opt_conv_ispresent
-      INTEGER                  :: n_opt_steps
+      INTEGER                  :: n_opt_steps, h_band
+      REAL(DP)                 :: h_energy
       !
       TYPE(output_type) :: output
       
@@ -371,7 +372,7 @@ USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, delete_if_present, &
                              x_gamma_extrapolation, ecutvcut, lda_plus_u, lda_plus_u_kind, 2*Hubbard_lmax+1, &
                              nspin, nsp, 2*Hubbard_lmax+1, nat, atm, ityp, Hubbard_U, Hubbard_J0, Hubbard_alpha, &
                              Hubbard_beta, Hubbard_J, starting_ns_eigenvalue, rho%ns, rho%ns_nc, U_projection, &
-                             dft_is_nonlocc(), TRIM(vdw_corr_), scal6, in_c6, lon_rcut, xdm_a1, xdm_a2,&
+                             dft_is_nonlocc(), TRIM(vdw_corr_), TRIM ( get_nonlocc_name()), scal6, in_c6, lon_rcut, xdm_a1, xdm_a2,&
                              vdw_econv_thr, vdw_isolated, is_hubbard, upf(1:nsp)%psd)
          !
 !-------------------------------------------------------------------------------
@@ -386,8 +387,20 @@ USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, delete_if_present, &
 ! ... BAND STRUCTURE
 !-------------------------------------------------------------------------------------
          !
+         IF (TRIM(input_parameters_occupations) == 'fixed') THEN 
+            occupations_are_fixed = .TRUE. 
+            IF ( nspin == 1 ) THEN 
+               h_band = NINT ( nelec/2.d0) 
+            ELSE 
+               h_band = NINT ( nelec ) 
+            END IF  
+            h_energy =MAXVAL (et(h_band, 1:nkstot))
+         ELSE 
+            occupations_are_fixed = .FALSE. 
+            h_energy  = ef 
+         END IF 
          CALL  qexsd_init_band_structure(output%band_structure,lsda,noncolin,lspinorb, &
-                                         nbnd,nelec,ef,two_fermi_energies, [ef_up,ef_dw],&
+                                         nbnd,nelec,occupations_are_fixed, h_energy,two_fermi_energies, [ef_up,ef_dw],&
                                          et,wg,nkstot,xk,ngk_g,wk)
          !
 !-------------------------------------------------------------------------------------------
