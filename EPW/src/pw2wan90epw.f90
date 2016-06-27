@@ -944,15 +944,26 @@ SUBROUTINE compute_mmn_para
            ENDIF
         ENDDO   ! m
         !
-        ibnd_n = 0
+        ! SP: This should be the correct implementation but requires also changes
+        !     at the level of m_mat a_mat dim etc. 
+        !     Currently EPW uses all bands. exclude_band cannot be used. 
+        !     We use nbndskip
+        !ibnd_n = 0
+        !DO n=1,nbnd
+        !   IF (excluded_band(n)) CYCLE
+        !   ibnd_n = ibnd_n + 1
+        !   ibnd_m = 0
+        !   DO m=1,nbnd
+        !      IF (excluded_band(m)) CYCLE
+        !      ibnd_m = ibnd_m + 1
+        !      m_mat(ibnd_m,ibnd_n,ib,ik_g)=Mkb(m,n)
+        !   ENDDO
+        !ENDDO
         DO n=1,nbnd
            IF (excluded_band(n)) CYCLE
-           ibnd_n = ibnd_n + 1
-           ibnd_m = 0
            DO m=1,nbnd
               IF (excluded_band(m)) CYCLE
-              ibnd_m = ibnd_m + 1
-              m_mat(ibnd_m,ibnd_n,ib,ik)=Mkb(m,n)
+              m_mat(m,n,ib,ik_g)=Mkb(m,n)
            ENDDO
         ENDDO
         !
