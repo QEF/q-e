@@ -654,6 +654,7 @@ SUBROUTINE compute_mmn_para
    logical                  :: any_uspp, exst
    integer                  :: nkq, nkq_abs, ipool, ipol, istart, iend
    integer                  :: ik_g, ikp_g, ind0 !, iummn
+   INTEGER                  :: ibnd_n, ibnd_m
    ! 
    any_uspp = ANY( upf(:)%tvanp )
    !
@@ -943,11 +944,15 @@ SUBROUTINE compute_mmn_para
            ENDIF
         ENDDO   ! m
         !
+        ibnd_n = 0
         DO n=1,nbnd
            IF (excluded_band(n)) CYCLE
+           ibnd_n = ibnd_n + 1
+           ibnd_m = 0
            DO m=1,nbnd
               IF (excluded_band(m)) CYCLE
-              m_mat(m,n,ib,ik_g)=Mkb(m,n)
+              ibnd_m = ibnd_m + 1
+              m_mat(ibnd_m,ibnd_n,ib,ik)=Mkb(m,n)
            ENDDO
         ENDDO
         !
