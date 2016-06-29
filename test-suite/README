@@ -12,7 +12,7 @@ A) Run all PW and CP tests in serial and show a final report
 
 $ make run-tests
 
-If 'run-tests-parallel', it runs the custo mtest in parallel (4 MPI)
+If 'run-tests-parallel', it runs the custom test in parallel (4 MPI)
 
 
 B) Run the test that is in a single directory and show a final report
