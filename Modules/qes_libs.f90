@@ -6090,6 +6090,12 @@ SUBROUTINE qes_write_control_variables(iun, obj)
       CALL iotk_write_begin(iun, 'max_seconds')
          WRITE(iun, '(I12)') obj%max_seconds
       CALL iotk_write_end(iun, 'max_seconds')
+      IF(obj%nstep_ispresent) THEN
+         CALL iotk_write_begin(iun, 'nstep')
+            WRITE(iun, '(I12)') obj%nstep
+         CALL iotk_write_end(iun, 'nstep')
+      ENDIF
+      !
       CALL iotk_write_begin(iun, 'etot_conv_thr')
          WRITE(iun, '(E20.7)') obj%etot_conv_thr
       CALL iotk_write_end(iun, 'etot_conv_thr')
@@ -6111,8 +6117,8 @@ END SUBROUTINE qes_write_control_variables
 
 SUBROUTINE qes_init_control_variables(obj, tagname, title, calculation, restart_mode, &
                               prefix, pseudo_dir, outdir, stress, forces, wf_collect, &
-                              disk_io, max_seconds, etot_conv_thr, forc_conv_thr, &
-                              press_conv_thr, verbosity, print_every)
+                              disk_io, max_seconds, nstep_ispresent, nstep, etot_conv_thr, &
+                              forc_conv_thr, press_conv_thr, verbosity, print_every)
    IMPLICIT NONE
 
    TYPE(control_variables_type) :: obj
@@ -6129,6 +6135,8 @@ SUBROUTINE qes_init_control_variables(obj, tagname, title, calculation, restart_
    LOGICAL  :: wf_collect
    CHARACTER(len=*) :: disk_io
    INTEGER  :: max_seconds
+   LOGICAL  :: nstep_ispresent
+   INTEGER  :: nstep
    REAL(DP) :: etot_conv_thr
    REAL(DP) :: forc_conv_thr
    REAL(DP) :: press_conv_thr
@@ -6147,6 +6155,10 @@ SUBROUTINE qes_init_control_variables(obj, tagname, title, calculation, restart_
    obj%wf_collect = wf_collect
    obj%disk_io = disk_io
    obj%max_seconds = max_seconds
+   obj%nstep_ispresent = nstep_ispresent
+   IF(obj%nstep_ispresent) THEN
+      obj%nstep = nstep
+   ENDIF
    obj%etot_conv_thr = etot_conv_thr
    obj%forc_conv_thr = forc_conv_thr
    obj%press_conv_thr = press_conv_thr
@@ -6162,6 +6174,9 @@ SUBROUTINE qes_reset_control_variables(obj)
 
    obj%tagname = ""
 
+   IF(obj%nstep_ispresent) THEN
+      obj%nstep_ispresent = .FALSE.
+   ENDIF
 
 END SUBROUTINE qes_reset_control_variables
 

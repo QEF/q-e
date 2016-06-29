@@ -1211,6 +1211,8 @@ TYPE :: control_variables_type
    LOGICAL  :: wf_collect
    CHARACTER(len=256) :: disk_io
    INTEGER  :: max_seconds
+   LOGICAL  :: nstep_ispresent
+   INTEGER  :: nstep
    REAL(DP) :: etot_conv_thr
    REAL(DP) :: forc_conv_thr
    REAL(DP) :: press_conv_thr

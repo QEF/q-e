@@ -35,7 +35,7 @@ MODULE qexsd_input
   SUBROUTINE  qexsd_init_control_variables(obj,title,calculation,restart_mode,&
                   prefix,pseudo_dir,outdir,stress,forces,wf_collect,disk_io,  &
                   max_seconds,etot_conv_thr,forc_conv_thr,press_conv_thr,verbosity, &
-                  iprint) 
+                  iprint, nstep) 
   !---------------------------------------------------------------------------------------------------------------------
   !
   TYPE(control_variables_type)         :: obj
@@ -44,12 +44,13 @@ MODULE qexsd_input
   LOGICAL,INTENT(IN)                   :: stress,forces,wf_collect
   REAL(DP),INTENT(IN)                  :: max_seconds,etot_conv_thr,forc_conv_thr,&
                                           press_conv_thr   
-  INTEGER,INTENT(IN)                   :: iprint
+  INTEGER,INTENT(IN)                   :: iprint, nstep
   !
   !
   CHARACTER(LEN=*),PARAMETER           :: TAGNAME='control_variables'
   CHARACTER(LEN=256)                   :: verbosity_value, disk_io_value
   INTEGER                              :: int_max_seconds
+  LOGICAL                              :: nstep_ispresent
 
   int_max_seconds=nint(max_seconds)
   IF ( TRIM( verbosity ) .EQ. 'default' ) THEN 
@@ -62,13 +63,30 @@ MODULE qexsd_input
   ELSE
      disk_io_value=TRIM(disk_io)
   END IF
+  !
+  SELECT CASE ( TRIM (calculation)) 
+    CASE ('scf', 'nscf', 'bands') 
+       IF ( nstep == 1) THEN 
+          nstep_ispresent = .FALSE. 
+       ELSE 
+          nstep_ispresent = .TRUE. 
+       END IF 
+   CASE DEFAULT 
+       IF ( nstep == 50 ) THEN 
+          nstep_ispresent = .FALSE. 
+       ELSE 
+          nstep_ispresent = .TRUE.
+       END IF 
+  END SELECT 
+  !
   CALL qes_init_control_variables(obj,tagname,title=title,calculation=calculation,&
                                   restart_mode=restart_mode,prefix=prefix,        &
                                   pseudo_dir=pseudo_dir,outdir=outdir,disk_io=disk_io_value,&
                                   verbosity=TRIM(verbosity_value),stress=stress,forces=forces,    &
                                   wf_collect=wf_collect,max_seconds=int_max_seconds,  &
                                   etot_conv_thr=etot_conv_thr,forc_conv_thr=forc_conv_thr, &
-                                  press_conv_thr=press_conv_thr,print_every=iprint)
+                                  press_conv_thr=press_conv_thr,print_every=iprint, NSTEP = nstep, &
+                                  NSTEP_ISPRESENT = nstep_ispresent )
 
   END SUBROUTINE qexsd_init_control_variables
   !

@@ -68,6 +68,7 @@
   USE funct,             ONLY:   get_dft_is_hybrid => dft_is_hybrid, get_inlc,        &
                                  get_dft_is_nonlocc => dft_is_nonlocc, get_nonlocc_name, get_dft_short
   USE uspp_param,        ONLY:   upf
+  USE control_flags,     ONLY:   cf_nstep => nstep 
   USE qes_module
   USE qexsd_module,      ONLY: qexsd_init_atomic_species, qexsd_init_atomic_structure, qexsd_init_dft
   USE qexsd_input  
@@ -103,7 +104,7 @@
                                     restart_mode=restart_mode,prefix=prefix,pseudo_dir=pseudo_dir,outdir=outdir,       &
                                     stress=tstress,forces=tprnfor, wf_collect=wf_collect,disk_io=disk_io,              &
                                     max_seconds=max_seconds,etot_conv_thr=etot_conv_thr,forc_conv_thr=forc_conv_thr,   &
-                                    press_conv_thr=press_conv_thr,verbosity=verbosity,iprint=iprint)
+                                    press_conv_thr=press_conv_thr,verbosity=verbosity,iprint=iprint, NSTEP = cf_nstep )
   !------------------------------------------------------------------------------------------------------------------------
   !                                                 ATOMIC SPECIES                                                      
   !------------------------------------------------------------------------------------------------------------------------
