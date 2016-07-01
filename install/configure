@@ -13002,7 +13002,7 @@ do
     "include/configure.h") CONFIG_FILES="$CONFIG_FILES include/configure.h:include/configure.h.in" ;;
     "make.inc") CONFIG_FILES="$CONFIG_FILES make.inc" ;;
     "configure.msg") CONFIG_FILES="$CONFIG_FILES configure.msg" ;;
-    "install/make_wannier90.sys") CONFIG_FILES="$CONFIG_FILES install/make_wannier90.sys" ;;
+    "install/make_wannier90.inc") CONFIG_FILES="$CONFIG_FILES install/make_wannier90.inc" ;;
 
   *) { { $as_echo "$as_me:$LINENO: error: invalid argument: $ac_config_target" >&5
 $as_echo "$as_me: error: invalid argument: $ac_config_target" >&2;}
