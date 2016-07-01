@@ -159,7 +159,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 
 	var nstep -type INTEGER {
 	    info {
-		number of ionic + electronic steps performed in this run
+		number of molecular-dynamics or structural optimization steps 
+                performed in this run
 	    }
 	    default {
 		1  if calculation = 'scf', 'nscf', 'bands';

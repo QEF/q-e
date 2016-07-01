@@ -137,11 +137,10 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
 
 	var nstep -type INTEGER {
 	    info {
-		number of ionic + electronic steps
+                number of Car-Parrinello steps performed in this run
 	    }
 	    default {
-		1  if calculation = 'scf', 'nscf', 'bands';
-		50 for the other cases
+		50
 	    }
 	}
 	
