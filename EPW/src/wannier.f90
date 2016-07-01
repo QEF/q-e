@@ -29,6 +29,8 @@ module wannier
                             write_amn, write_mmn, reduce_unk, write_spn
    ! input data from nnkp file
    real(DP), allocatable :: center_w(:,:)     ! center_w(3,n_wannier)
+   integer,  allocatable :: spin_eig(:)
+   real(DP), allocatable :: spin_qaxis(:,:)   
    integer, allocatable  :: l_w(:), mr_w(:) ! l and mr of wannier (n_wannier) as from table 3.1,3.2 of spec.
    integer, allocatable  :: r_w(:)      ! index of radial function (n_wannier) as from table 3.3 of spec.
    real(DP), allocatable :: xaxis(:,:),zaxis(:,:) ! xaxis and zaxis(3,n_wannier)
@@ -46,7 +48,7 @@ module wannier
    integer               :: num_bands      ! number of bands left after exclusions
    character(len=3), allocatable :: atsym(:) ! atomic symbols. atsym(nat)
    integer               :: num_nnmax=12
-   complex(DP), allocatable :: m_mat(:,:,:,:), a_mat(:,:,:)
+   complex(DP), allocatable :: m_mat(:,:,:,:), a_mat(:,:,:), spn_mat(:,:,:)
    complex(DP), allocatable :: u_mat(:,:,:), u_mat_opt(:,:,:)
    logical, allocatable     :: lwindow(:,:)
    real(DP), allocatable    :: wann_centers(:,:),wann_spreads(:)

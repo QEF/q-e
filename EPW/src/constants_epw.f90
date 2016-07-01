@@ -41,5 +41,16 @@
   REAL(DP), PARAMETER :: kelvin2eV= 8.6173427909d-05
   REAL(DP), PARAMETER :: ryd2ghz  = 3.289828d6
   !
+  ! ... zero up to a given accuracy
+  !
+  REAL(DP), PARAMETER :: eps4  = 1.0E-4_DP
+  REAL(DP), PARAMETER :: eps6  = 1.0E-6_DP
+  REAL(DP), PARAMETER :: eps8  = 1.0E-8_DP
+  REAL(DP), PARAMETER :: eps12 = 1.0E-12_DP
+  REAL(DP), PARAMETER :: eps14 = 1.0E-14_DP
+  REAL(DP), PARAMETER :: eps16 = 1.0E-16_DP
+  REAL(DP), PARAMETER :: eps24 = 1.0E-24_DP
+  REAL(DP), PARAMETER :: eps32 = 1.0E-32_DP
+  !   
   END MODULE constants_epw
 

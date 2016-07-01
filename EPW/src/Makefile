@@ -9,7 +9,7 @@ include make.libs
 
 IFLAGS   = -I../../include  
 MODFLAGS = -I../../iotk/src -I../../Modules -I../../LAXlib -I../../iotk/src \
-	   -I../../FFTXlib -I../../PW/src -I../../LR_Modules -I../../PHonon/PH -I../../PP/src -I.
+	   -I../../FFTXlib -I../../PW/src -I../../LR_Modules -I../../PHonon/PH -I../../PP/src/ -I.
 
 #
 # The above is in alphabetical order except when order matter during compilation
@@ -115,7 +115,7 @@ write_ephmat.o
 
 PHOBJS = ../../PHonon/PH/libph.a
 PWOBJS = ../../PW/src/libpw.a
-W90LIB = ../../wannier90-2.0.1/libwannier.a
+W90LIB = ../../wannier90-2.0.1/libwannier.a 
 LRMODS = ../../LR_Modules/liblrmod.a
 PWOBJS = ../../PW/src/libpw.a
 QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a
@@ -123,7 +123,7 @@ LIBOBJS = ../../clib/clib.a ../../iotk/src/libiotk.a
 
 TLDEPS= bindir mods libs pw-lib pw ph
 
-all :   pw ph wannier pp ld1 upf libepw.a epw.x 
+all :   pw ph wannier wcorr pp ld1 upf libepw.a epw.x 
 
 libepw.a : $(EPWOBJS)
 	$(AR) $(ARFLAGS) $@ $?

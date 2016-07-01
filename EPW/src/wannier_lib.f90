@@ -183,11 +183,12 @@ subroutine wannier_setup(seed__name,mp_grid_loc,num_kpts_loc,&
      exclude_bands_loc(1:num_exclude_bands) = exclude_bands(1:num_exclude_bands)
   end if
 
-  if (postproc_setup) then
+! SP: could not made postproc_setup = .true. from EPW
+!  if (postproc_setup) then
    call kmesh_write()
    write(stdout,'(1x,a25,f11.3,a)') 'Time to write kmesh      ',io_time(),' (sec)'
    write(stdout,'(/a)') ' '//trim(seedname)//'.nnkp written.'
-  endif
+!  endif
 
 
   call kmesh_dealloc()
@@ -209,8 +210,8 @@ end subroutine wannier_setup
 subroutine wannier_run(seed__name,mp_grid_loc,num_kpts_loc, &
      real_lattice_loc,recip_lattice_loc,kpt_latt_loc,num_bands_loc, &
      num_wann_loc,nntot_loc,num_atoms_loc,atom_symbols_loc, &
-     atoms_cart_loc,gamma_only_loc,M_matrix_loc,A_matrix_loc,eigenvalues_loc, &
-     U_matrix_loc,U_matrix_opt_loc,lwindow_loc,wann_centres_loc, &
+     atoms_cart_loc,gamma_only_loc,m_matrix_loc,A_matrix_loc,eigenvalues_loc, &
+     u_matrix_loc,u_matrix_opt_loc,lwindow_loc,wann_centres_loc, &
      wann_spreads_loc,spread_loc)
 
 
@@ -240,11 +241,11 @@ subroutine wannier_run(seed__name,mp_grid_loc,num_kpts_loc, &
   character(len=*), dimension(num_atoms_loc), intent(in) :: atom_symbols_loc
   real(kind=dp), dimension(3,num_atoms_loc), intent(in) :: atoms_cart_loc
   logical, intent(in) :: gamma_only_loc
-  complex(kind=dp), dimension(num_bands_loc,num_bands_loc,nntot_loc,num_kpts_loc), intent(in) :: M_matrix_loc
+  complex(kind=dp), dimension(num_bands_loc,num_bands_loc,nntot_loc,num_kpts_loc), intent(in) :: m_matrix_loc
   complex(kind=dp), dimension(num_bands_loc,num_wann_loc,num_kpts_loc), intent(in) :: A_matrix_loc
   real(kind=dp), dimension(num_bands_loc,num_kpts_loc), intent(in) :: eigenvalues_loc
-  complex(kind=dp), dimension(num_wann_loc,num_wann_loc,num_kpts_loc), intent(out) :: U_matrix_loc
-  complex(kind=dp), dimension(num_bands_loc,num_wann_loc,num_kpts_loc), optional, intent(out) :: U_matrix_opt_loc
+  complex(kind=dp), dimension(num_wann_loc,num_wann_loc,num_kpts_loc), intent(out) :: u_matrix_loc
+  complex(kind=dp), dimension(num_bands_loc,num_wann_loc,num_kpts_loc), optional, intent(out) :: u_matrix_opt_loc
   logical, dimension(num_bands_loc,num_kpts_loc), optional, intent(out) :: lwindow_loc
   real(kind=dp), dimension(3,num_wann_loc), optional, intent(out) :: wann_centres_loc
   real(kind=dp), dimension(num_wann_loc), optional, intent(out) :: wann_spreads_loc

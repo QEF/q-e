@@ -10,17 +10,16 @@
   !------------------------------------------------------------------------
   SUBROUTINE pw2wan90epw 
   !------------------------------------------------------------------------
-  ! This is the interface to the Wannier90 code: see http://www.wannier.org
-  !
-  !
-  ! 10/2008  Parellel computation of Amn and Mmn 
-  ! 12/2008  Added phase setting of overlap matrix elements
-  ! 02/2009  works with standard nk1*nk2*nk3 grids
-  ! 12/2009  works with USPP 
-  !
-  ! RM - Nov/Dec 2014
-  ! Imported the noncolinear case implemented by xlzhang
-  !
+  !! This is the interface to the Wannier90 code: see http://www.wannier.org
+  !!
+  !!
+  !! 10/2008  Parellel computation of Amn and Mmn 
+  !! 12/2008  Added phase setting of overlap matrix elements
+  !! 02/2009  works with standard nk1*nk2*nk3 grids
+  !! 12/2009  works with USPP 
+  !! 12/2014  RM: Imported the noncolinear case implemented by xlzhang
+  !! 06/2016  SP: Debug of SOC + print/reading of nnkp file
+  !!
   !------------------------------------------------------------------------
   USE io_global,  ONLY : stdout
   USE klist,      ONLY : nkstot
@@ -29,11 +28,12 @@
   USE noncollin_module, ONLY : noncolin
   USE wannier,    ONLY : seedname2, wvfn_formatted, reduce_unk, ispinw, &
                          ikstart, ikstop, iknum
-!  use w90_wannierise,    ONLY : seedname
   !
   IMPLICIT NONE
   CHARACTER(LEN=4)   :: spin_component
+  !! Determine the spin case
   CHARACTER(len=256) :: outdir
+  !! Name of the output directory
   !
   !
   outdir = './'
@@ -41,7 +41,6 @@
   spin_component = 'none'
   wvfn_formatted = .false.
   reduce_unk= .false.
-  !
   !
   !
   WRITE(stdout,*)
@@ -92,9 +91,10 @@
   !
   END SUBROUTINE pw2wan90epw
 !
-!-----------------------------------------------------------------------
+!-------------------------------------------------------------------------
 SUBROUTINE lib_dealloc
   !-----------------------------------------------------------------------
+  !! Routine to de-allocate Wannier related matrices. 
   !
   USE wannier
   !
@@ -109,10 +109,23 @@ SUBROUTINE lib_dealloc
 
 END SUBROUTINE lib_dealloc
 !
-!-----------------------------------------------------------------------
+!-------------------------------------------------------------------------
 SUBROUTINE setup_nnkp (  )
   !-----------------------------------------------------------------------
-  !
+  !! 
+  !! This routine write and read the .nnkp file. 
+  !! The file specifies
+  !! 1) The initial projections functions in the format
+  !! num_proj
+  !! proj_site(1,i),proj_site(2,i),proj_site(3,i) proj_l(i),proj_m(i),proj_radial(i)
+  !! proj_z(1,i),proj_z(2,i),proj_z(3,i),proj_x(1,i),proj_x(2,i),proj_x(3,i), proj_zona(i)
+  !! proj_s(i), proj_s_qaxis(1,i),proj_s_qaxis(2,i),proj_s_qaxis(3,i) 
+  !!
+  !! 2) begin nnkpts: the nearest neighbours of each         
+  !! k-point, and therefore provides the information required to      
+  !! calculate the M_mn(k,b) matrix elements 
+  !! 
+  ! ---------------------------------------------------------------------- 
 #ifdef __PARA
   USE io_global, ONLY : ionode
 #endif
@@ -126,17 +139,30 @@ SUBROUTINE setup_nnkp (  )
   USE mp,        ONLY : mp_bcast
   USE wvfct,     ONLY : nbnd, npwx
   USE wannier,   ONLY : num_nnmax, mp_grid, atcart, atsym, kpb, g_kpb, &
-                        center_w, alpha_w, l_w, mr_w, r_w, zaxis,  &
-                        xaxis, excluded_band, rlatt, glatt, gf,    &
-                        csph, ig_, iknum, seedname2, kpt_latt, nnb, &
-                        num_bands, n_wannier, nexband, nnbx, n_proj
+                        center_w, alpha_w, l_w, mr_w, r_w, zaxis,      &
+                        xaxis, excluded_band, rlatt, glatt, gf,        &
+                        csph, ig_, iknum, seedname2, kpt_latt, nnb,    &
+                        num_bands, n_wannier, nexband, nnbx, n_proj,   &
+                        spin_eig, spin_qaxis
   USE noncollin_module, ONLY : noncolin
   USE constants_epw,    ONLY : bohr
+!  USE w90_parameters,   ONLY : postproc_setup
+#ifdef __PARA
+   USE mp_global,       ONLY : intra_pool_comm, mp_sum
+#endif
+  ! 
   implicit none
   real(DP) :: g_(3), gg_
-  integer  :: ik, ib, ig, iw, ia, indexb, type
+  integer  :: ik, ib, ig, iw, ia, indexb, type, idum, ipol
+  INTEGER, ALLOCATABLE :: ig_check(:,:)
   real(DP) :: xnorm, znorm, coseno
-  integer  :: exclude_bands(nbnd)
+  integer  :: exclude_bands(nbnd), i, iun_nnkp
+  LOGICAL  :: have_nnkp
+  !! Check if the .nnkp file exists.
+  LOGICAL  :: found
+  !! Check if the section in the .nnkp file is found. 
+  INTEGER, EXTERNAL :: find_free_unit
+  !! Look for a free unit for the .nnkp file.
 
 ! SP: An interface is required because the Wannier routine has optional
 !     arguments
@@ -227,122 +253,270 @@ SUBROUTINE setup_nnkp (  )
   ENDDO
 
 #ifdef __PARA
-   IF (ionode) THEN
+  IF (ionode) THEN
 #endif
-      CALL wannier_setup(seedname2, mp_grid, iknum,       &  ! input
+!      postproc_setup = .true.
+    CALL wannier_setup(seedname2, mp_grid, iknum,      &  ! input
            rlatt, glatt, kpt_latt, nbnd,                 &  ! input
            nat, atsym, atcart, .false., noncolin,        &  ! input
            nnb, kpb, g_kpb, num_bands, n_wannier,        &  ! output
            center_w, l_w, mr_w, r_w, zaxis,              &  ! output
            xaxis, alpha_w, exclude_bands)                   ! output
+   ! SP: In wannier_setup, the .nnkp file is produced.
 #ifdef __PARA
-   ENDIF
+  ENDIF
 #endif
    
-   CALL mp_bcast(nnb,          ionode_id, world_comm )
-   CALL mp_bcast(kpb,          ionode_id, world_comm )
-   CALL mp_bcast(g_kpb,        ionode_id, world_comm )
-   CALL mp_bcast(num_bands,    ionode_id, world_comm )
-   CALL mp_bcast(n_wannier,    ionode_id, world_comm )
-   CALL mp_bcast(center_w,     ionode_id, world_comm )
-   CALL mp_bcast(l_w,          ionode_id, world_comm )
-   CALL mp_bcast(mr_w,         ionode_id, world_comm )
-   CALL mp_bcast(r_w,          ionode_id, world_comm )
-   CALL mp_bcast(zaxis,        ionode_id, world_comm )
-   CALL mp_bcast(xaxis,        ionode_id, world_comm )
-   CALL mp_bcast(alpha_w,      ionode_id, world_comm )
-   CALL mp_bcast(exclude_bands,ionode_id, world_comm )
-   CALL mp_bcast(noncolin,     ionode_id, world_comm )
-   !
-   !
-   ! n_proj = nr. of projections (=#WF unless spinors then =#WF/2) 
-   IF (noncolin) THEN
-      n_proj=n_wannier/2
-   ELSE
-      n_proj=n_wannier
-   ENDIF
-   !
-   WRITE (stdout,*)
-   WRITE (stdout,*) '    Initial Wannier projections'
-   WRITE (stdout,*)
-   ! RM changed according to QE4.0.3/PP/pw2wannier90 
-   DO iw=1,n_proj
-   !DO iw=1,n_wannier
-      WRITE (stdout, '(5x,"(",3f10.5,") :  l = ",i3, " mr = ", i3)') center_w(:,iw), l_w(iw), mr_w(iw)
-   ENDDO
-   !
-   WRITE(stdout,'(/,"      - Number of bands is (",i3,")")') num_bands 
-   WRITE(stdout,'("      - Number of wannier functions is (",i3,")")') n_wannier 
-   !
-   ! RM changed according to QE4.0.3/PP/pw2wannier90
-   ALLOCATE( gf(npwx,n_proj), csph(16,n_proj) )
-   !ALLOCATE( gf(npwx,n_wannier), csph(16,n_wannier) ) 
-   !
-   excluded_band(1:nbnd)=.false.
-   nexband=0
-   band_loop: DO ib=1,nbnd
-      indexb=exclude_bands(ib)
-      IF (indexb>nbnd .or. indexb<0) THEN
-         CALL errore('setup_nnkp',' wrong excluded band index ', 1)
-      ELSEIF (indexb.eq.0) THEN
-         exit band_loop
-      ELSE
-         nexband=nexband+1
-         excluded_band(indexb)=.true.
-      ENDIF
-   ENDDO band_loop
- 
-   IF ( (nbnd-nexband).ne.num_bands ) &
-       CALL errore('setup_nnkp',' something wrong with num_bands',1)
- 
-   ! RM changed according to QE4.0.3/PP/pw2wannier90 
-   DO iw=1,n_proj
-   !DO iw=1,n_wannier
+  CALL mp_bcast(nnb,          ionode_id, world_comm )
+  CALL mp_bcast(kpb,          ionode_id, world_comm )
+  CALL mp_bcast(g_kpb,        ionode_id, world_comm )
+  CALL mp_bcast(num_bands,    ionode_id, world_comm )
+  CALL mp_bcast(n_wannier,    ionode_id, world_comm )
+  CALL mp_bcast(center_w,     ionode_id, world_comm )
+  CALL mp_bcast(l_w,          ionode_id, world_comm )
+  CALL mp_bcast(mr_w,         ionode_id, world_comm )
+  CALL mp_bcast(r_w,          ionode_id, world_comm )
+  CALL mp_bcast(zaxis,        ionode_id, world_comm )
+  CALL mp_bcast(xaxis,        ionode_id, world_comm )
+  CALL mp_bcast(alpha_w,      ionode_id, world_comm )
+  CALL mp_bcast(exclude_bands,ionode_id, world_comm )
+  CALL mp_bcast(noncolin,     ionode_id, world_comm )
+  !
+  ! SP: Commented because we now write on file the .nnkp file and read from it.
+  ! 
+  ! n_proj = nr. of projections (=#WF unless spinors then =#WF/2) 
+  !IF (noncolin) THEN
+  !   n_proj=n_wannier/2
+  !ELSE
+     n_proj=n_wannier
+  !ENDIF
+  !
+  WRITE (stdout,*)
+  WRITE (stdout,*) '    Initial Wannier projections'
+  WRITE (stdout,*)
+  !
+  DO iw=1,n_proj
+     WRITE (stdout, '(5x,"(",3f10.5,") :  l = ",i3, " mr = ", i3)') center_w(:,iw), l_w(iw), mr_w(iw)
+  ENDDO
+  !
+  WRITE(stdout,'(/,"      - Number of bands is (",i3,")")') num_bands 
+  WRITE(stdout,'("      - Number of wannier functions is (",i3,")")') n_wannier 
+  !
+  excluded_band(1:nbnd)=.false.
+  nexband=0
+  band_loop: DO ib=1,nbnd
+     indexb=exclude_bands(ib)
+     IF (indexb>nbnd .or. indexb<0) THEN
+        CALL errore('setup_nnkp',' wrong excluded band index ', 1)
+     ELSEIF (indexb.eq.0) THEN
+        exit band_loop
+     ELSE
+        nexband=nexband+1
+        excluded_band(indexb)=.true.
+     ENDIF
+  ENDDO band_loop
+  !
+  IF ( (nbnd-nexband).ne.num_bands ) &
+      CALL errore('setup_nnkp',' something wrong with num_bands',1)
+  ! 
+  ! Now we read the .nnkp file 
+  ! 
+#ifdef __PARA   
+  IF (ionode) CLOSE (iun_nnkp)
+  IF (ionode) THEN  ! Read nnkp file on ionode only
+#endif     
+    INQUIRE(file=trim(seedname2)//".nnkp",exist=have_nnkp)
+    IF(.not. have_nnkp) THEN
+       CALL errore( 'pw2wannier90', 'Could not find the file '&
+          &//trim(seedname2)//'.nnkp', 1 )
+    ENDIF
+
+    iun_nnkp = find_free_unit()
+    OPEN (unit=iun_nnkp, file=trim(seedname2)//".nnkp",form='formatted')
+#ifdef __PARA
+  ENDIF
+#endif
+#ifdef __PARA
+  IF (ionode) THEN   ! read from ionode only
+#endif
+    IF(noncolin) THEN
+       CALL scan_file_to(iun_nnkp,'spinor_projections',found)
+       IF(.not.found) THEN
+          !try old style projections
+          CALL scan_file_to(iun_nnkp,'projections',found)
+       ENDIF
+    ELSE
+       CALL scan_file_to(iun_nnkp,'projections',found)
+       IF(.not.found) THEN
+          CALL errore( 'pw2wannier90', 'Could not find projections block in '&
+             &//trim(seedname2)//'.nnkp', 1 )
+       ENDIF
+    ENDIF
+    READ(iun_nnkp,*) n_proj
+#ifdef __PARA
+  ENDIF
+  CALL mp_bcast(n_proj,ionode_id, world_comm)
+  ! 
+  ALLOCATE( gf(npwx,n_proj), csph(16,n_proj) )
+  IF(noncolin) ALLOCATE( spin_eig(n_proj),spin_qaxis(3,n_proj) )
+  ! 
+  IF (ionode) THEN   ! read from ionode only
+#endif
+    DO iw=1,n_proj
+      READ(iun_nnkp,*) (center_w(i,iw), i=1,3), l_w(iw), mr_w(iw), r_w(iw)
+      READ(iun_nnkp,*) (zaxis(i,iw),i=1,3),(xaxis(i,iw),i=1,3),alpha_w(iw)
       xnorm = sqrt(xaxis(1,iw)*xaxis(1,iw) + xaxis(2,iw)*xaxis(2,iw) + &
            xaxis(3,iw)*xaxis(3,iw))
-      IF (xnorm < eps6) CALL errore ('setup_nnkp',' |xaxis| < eps ',1)
+      IF (xnorm < eps6) CALL errore ('read_nnkp',' |xaxis| < eps ',1)
       znorm = sqrt(zaxis(1,iw)*zaxis(1,iw) + zaxis(2,iw)*zaxis(2,iw) + &
            zaxis(3,iw)*zaxis(3,iw))
-      IF (znorm < eps6) CALL errore ('setup_nnkp',' |zaxis| < eps ',1)
+      IF (znorm < eps6) CALL errore ('read_nnkp',' |zaxis| < eps ',1)
       coseno = (xaxis(1,iw)*zaxis(1,iw) + xaxis(2,iw)*zaxis(2,iw) + &
            xaxis(3,iw)*zaxis(3,iw))/xnorm/znorm
       IF (abs(coseno) > eps6) &
-           CALL errore('setup_nnkp',' xaxis and zaxis are not orthogonal !',1)
+           CALL errore('read_nnkp',' xaxis and zaxis are not orthogonal !',1)
       IF (alpha_w(iw) < eps6) &
-           CALL errore('setup_nnkp',' zona value must be positive', 1)
+           CALL errore('read_nnkp',' zona value must be positive', 1)
       ! convert wannier center in cartesian coordinates (in unit of alat)
       CALL cryst_to_cart( 1, center_w(:,iw), at, 1 )
-   ENDDO
-   WRITE(stdout,*) '     - All guiding functions are given '
-
-   nnbx=0
-   nnb=max(nnbx,nnb)
- 
-   ALLOCATE( ig_(iknum,nnb) )
- 
-   DO ik=1, iknum
+      IF(noncolin) THEN
+         READ(iun_nnkp,*) spin_eig(iw),(spin_qaxis(i,iw),i=1,3)
+         xnorm = sqrt(spin_qaxis(1,iw)*spin_qaxis(1,iw) + spin_qaxis(2,iw)*spin_qaxis(2,iw) + &
+           spin_qaxis(3,iw)*spin_qaxis(3,iw))
+         IF (xnorm < eps6) CALL errore ('read_nnkp',' |xaxis| < eps ',1)
+         spin_qaxis(:,iw)=spin_qaxis(:,iw)/xnorm
+      ENDIF
+    ENDDO
+#ifdef __PARA
+  ENDIF
+#endif
+  ! 
+  WRITE(stdout,*) '     - All guiding functions are given '
+  ! 
+#ifdef __PARA
+  ! Broadcast
+  CALL mp_bcast(center_w,ionode_id, world_comm)
+  CALL mp_bcast(l_w,ionode_id, world_comm)
+  CALL mp_bcast(mr_w,ionode_id, world_comm)
+  CALL mp_bcast(r_w,ionode_id, world_comm)
+  CALL mp_bcast(zaxis,ionode_id, world_comm)
+  CALL mp_bcast(xaxis,ionode_id, world_comm)
+  CALL mp_bcast(alpha_w,ionode_id, world_comm)
+  IF(noncolin) THEN
+     CALL mp_bcast(spin_eig,ionode_id, world_comm)
+     CALL mp_bcast(spin_qaxis,ionode_id, world_comm)
+  ENDIF
+#endif
+  !
+#ifdef __PARA
+  IF (ionode) THEN   ! read from ionode only
+#endif
+    CALL scan_file_to(iun_nnkp,'nnkpts',found)
+    IF(.not.found) THEN
+       CALL errore( 'pw2wannier90epw', 'Could not find nnkpts block in '&
+          &//trim(seedname2)//'.nnkp', 1 )
+    ENDIF
+    READ (iun_nnkp,*) nnb
+#ifdef __PARA
+  ENDIF
+  ! Broadcast
+  CALL mp_bcast(nnb,ionode_id, world_comm)
+  !
+#endif
+  !
+  nnbx = 0
+  nnbx = max (nnbx, nnb )
+  ALLOCATE ( ig_(iknum,nnbx), ig_check(iknum,nnbx) )
+  !
+  ! Read data about neighbours
+  WRITE(stdout,*)
+  WRITE(stdout,*) ' Reading data about k-point neighbours '
+  WRITE(stdout,*)
+#ifdef __PARA
+  IF (ionode) THEN
+#endif
+    DO ik=1, iknum
       DO ib = 1, nnb
-         g_(:) = REAL( g_kpb(:,ik,ib) )
-         CALL cryst_to_cart (1, g_, bg, 1)
-         gg_ = g_(1)*g_(1) + g_(2)*g_(2) + g_(3)*g_(3)
-         ig_(ik,ib) = 0
-         ig = 1
-         DO WHILE  (gg(ig) <= gg_ + eps6)
-            IF ( (abs(g(1,ig)-g_(1)) < eps6) .and.  &
-                 (abs(g(2,ig)-g_(2)) < eps6) .and.  &
-                 (abs(g(3,ig)-g_(3)) < eps6)  ) ig_(ik,ib) = ig
-            ig= ig +1
-         ENDDO
+        READ(iun_nnkp,*) idum, kpb(ik,ib), (g_kpb(ipol,ik,ib), ipol =1,3)
       ENDDO
-   ENDDO
-   WRITE(stdout,*) '     - All neighbours are found '
-   WRITE(stdout,*)
-   !
-   RETURN
-   !
+    ENDDO
+#ifdef __PARA
+  ENDIF
+  ! Broadcast
+  CALL mp_bcast(kpb,ionode_id, world_comm)
+  CALL mp_bcast(g_kpb,ionode_id, world_comm)
+#endif
+  ! 
+  DO ik=1, iknum
+    DO ib = 1, nnb
+      g_(:) = REAL( g_kpb(:,ik,ib) )
+      CALL cryst_to_cart (1, g_, bg, 1)
+      gg_ = g_(1)*g_(1) + g_(2)*g_(2) + g_(3)*g_(3)
+      ig_(ik,ib) = 0
+      ig = 1
+      DO WHILE  (gg(ig) <= gg_ + eps6)
+        IF ( (abs(g(1,ig)-g_(1)) < eps6) .and.  &
+             (abs(g(2,ig)-g_(2)) < eps6) .and.  &
+             (abs(g(3,ig)-g_(3)) < eps6)  ) ig_(ik,ib) = ig
+        ig= ig +1
+      ENDDO
+    ENDDO
+  ENDDO
+  ig_check(:,:) = ig_(:,:)
+#ifdef __PARA
+  CALL mp_sum( ig_check, intra_pool_comm )
+#endif
+  DO ik=1, iknum
+    DO ib = 1, nnb
+      IF (ig_check(ik,ib) ==0) &
+        CALL errore('read_nnkp', &
+                    ' g_kpb vector is not in the list of Gs', 100*ik+ib )
+    ENDDO
+  ENDDO
+  DEALLOCATE (ig_check)
+  !
+  WRITE(stdout,*) '     - All neighbours are found '
+  WRITE(stdout,*)
+  !
+#ifdef __PARA
+  IF (ionode)THEN
+#endif
+    CLOSE (iun_nnkp)
+#ifdef __PARA
+  ENDIF
+#endif
+  RETURN
+  !
 END SUBROUTINE setup_nnkp
- !
- !-----------------------------------------------------------------------
+!--------------------------------------------------------------------------
+!--------------------------------------------------------------------------
+SUBROUTINE scan_file_to (iun_nnkp,keyword,found)
+   !-----------------------------------------------------------------------
+   !
+   USE io_global,  ONLY : stdout
+   IMPLICIT NONE
+   CHARACTER(len=*), intent(in) :: keyword
+   INTEGER, intent(in)          :: iun_nnkp
+   logical, intent(out)         :: found
+   CHARACTER(len=80)            :: line1, line2
+!
+! by uncommenting the following line the file scan restarts every time
+! from the beginning thus making the reading independent on the order
+! of data-blocks
+!   rewind (iun_nnkp)
+!
+10 CONTINUE
+   READ(iun_nnkp,*,end=20) line1, line2
+   IF(line1/='begin')  GOTO 10
+   IF(line2/=keyword) GOTO 10
+   found=.true.
+   RETURN
+20 found=.false.
+   rewind (iun_nnkp)
+
+END SUBROUTINE scan_file_to
+! ------------------------------------------------------------------------
+! ------------------------------------------------------------------------
 SUBROUTINE run_wannier
   !-----------------------------------------------------------------------
   !
@@ -350,7 +524,6 @@ SUBROUTINE run_wannier
 #ifdef __PARA
   USE io_global, ONLY : ionode
 #endif
-!  USE io_epw,    ONLY : iummn
   USE ions_base, ONLY : nat
   USE mp,        ONLY : mp_bcast
   USE mp_world,  ONLY : world_comm
@@ -360,9 +533,9 @@ SUBROUTINE run_wannier
   USE epwcom,    ONLY : eig_read
   USE wvfct,     ONLY : nbnd
   USE constants_epw, ONLY : czero, bohr
-
+  !
   implicit none
-
+  ! 
   integer             :: i, ik, ibnd, dummy1, dummy2, ios
   character (len=256) :: tempfile
   !
@@ -403,7 +576,7 @@ SUBROUTINE run_wannier
 !      WRITE(iummn) m_mat
 !      CLOSE(iummn)
 
-      CALL wannier_run(seedname2, mp_grid, iknum,    &                 ! input
+      CALL wannier_run(seedname2, mp_grid, iknum,   &                 ! input
            rlatt, glatt, kpt_latt, num_bands,       &                 ! input
            n_wannier, nnb, nat, atsym,              &                 ! input
            atcart, .false., m_mat, a_mat, eigval,   &                 ! input
@@ -449,147 +622,189 @@ SUBROUTINE compute_amn_para
 !  parallelization on k-points has been added
 !  10/2008 Jesse Noffsinger UC Berkeley
 !
-   USE io_global,       ONLY : stdout 
-   USE kinds,           ONLY : DP
-   USE klist,           ONLY : xk, nks, igk_k, ngk
-   USE wvfct,           ONLY : nbnd, npw, npwx, g2kin
-   USE gvecw,           ONLY : ecutwfc
-   USE wavefunctions_module,  ONLY : evc
-   USE units_ph,        ONLY : lrwfc, iuwfc
-   USE gvect,           ONLY : g, ngm
-   USE cell_base,       ONLY : tpiba2
-   USE uspp,            ONLY : nkb, vkb
-   USE becmod,          ONLY : becp, calbec, deallocate_bec_type, allocate_bec_type
-   USE wannier,         ONLY : csph, excluded_band, gf, num_bands, &
-                               n_wannier, iknum, n_proj, a_mat 
-   USE uspp_param,      ONLY : upf
-   USE noncollin_module,ONLY : noncolin, npol
-   USE constants_epw,   ONLY : czero
+  USE io_global,       ONLY : stdout 
+  USE kinds,           ONLY : DP
+  USE klist,           ONLY : xk, nks, igk_k, ngk
+  USE wvfct,           ONLY : nbnd, npw, npwx, g2kin
+  USE gvecw,           ONLY : ecutwfc
+  USE wavefunctions_module,  ONLY : evc
+  USE units_ph,        ONLY : lrwfc, iuwfc
+  USE gvect,           ONLY : g, ngm
+  USE cell_base,       ONLY : tpiba2
+  USE uspp,            ONLY : nkb, vkb
+  USE becmod,          ONLY : becp, calbec, deallocate_bec_type, allocate_bec_type
+  USE wannier,         ONLY : csph, excluded_band, gf, num_bands, &
+                              n_wannier, iknum, n_proj, a_mat,  spin_qaxis, &
+                              spin_eig
+  USE uspp_param,      ONLY : upf
+  USE noncollin_module,ONLY : noncolin, npol
+  USE constants_epw,   ONLY : czero, eps6
+  USE mp_global,       ONLY : my_pool_id
 #ifdef __NAG
-   USE f90_unix_io,    ONLY : flush
+  USE f90_unix_io,    ONLY : flush
 #endif
 #ifdef __PARA
-   USE mp_global,       ONLY : npool, intra_pool_comm, inter_pool_comm
-   USE mp,              ONLY : mp_sum
+  USE mp_global,       ONLY : npool, intra_pool_comm, inter_pool_comm
+  USE mp,              ONLY : mp_sum
 #endif
-
-   implicit none
-  
-   complex(DP) :: amn, ZDOTC
-   complex(DP), allocatable :: sgf(:,:)
-   integer :: amn_tot, ik, ibnd, ibnd1, iw, nkq, nkq_abs, ipool, ik_g, ipol, &
-              istart
-   logical            :: any_uspp
-   real(kind=DP)      :: zero_vect(3)
-   !
-   !nocolin: we have half as many projections g(r) defined as wannier
-   !         functions. We project onto (1,0) (ie up spin) and then onto
-   !         (0,1) to obtain num_wann projections. jry
-   !
-   any_uspp = ANY( upf(:)%tvanp )
-   !
-   IF (any_uspp .and. noncolin) CALL errore('pw2wan90epw',&
-       'noncolin calculation not implimented with USP',1)
-   !
-   ALLOCATE( a_mat(num_bands,n_wannier,iknum))
-   ! RM - changed according to QE4.0.3/PP/pw2wannie90.f90
-   ALLOCATE( sgf(npwx,n_proj) )
-   !ALLOCATE( sgf(npwx,n_wannier) )
-   !
-   !
-   ! initialize
-   a_mat = czero
-   zero_vect = 0.d0
-   !
-   amn_tot = iknum * nbnd * n_wannier
-   !
-   WRITE (stdout,'(5x,a)') 'AMN'
-   !
-   IF (any_uspp) then
-      CALL deallocate_bec_type ( becp )
-      CALL allocate_bec_type ( nkb, n_wannier, becp )
-      CALL init_us_1
-   ENDIF
-   !
+  ! 
+  implicit none
+  ! 
+  complex(DP) :: amn, ZDOTC, amn_tmp, fac(2)
+  complex(DP), allocatable :: sgf(:,:)
+  integer :: ik, ibnd, ibnd1, iw, nkq, nkq_abs, ipool, ik_g, ipol, &
+             istart
+  logical            :: any_uspp, spin_z_pos, spin_z_neg
+  real(kind=DP)      :: zero_vect(3)
+  !
+  !nocolin: we have half as many projections g(r) defined as wannier
+  !         functions. We project onto (1,0) (ie up spin) and then onto
+  !         (0,1) to obtain num_wann projections. jry
+  !
+  any_uspp = ANY( upf(:)%tvanp )
+  !
+  IF (any_uspp .and. noncolin) CALL errore('pw2wan90epw',&
+      'noncolin calculation not implimented with USP',1)
+  !
+  ALLOCATE( a_mat(num_bands,n_wannier,iknum))
+  ALLOCATE( sgf(npwx,n_proj) )
+  !
+  ! initialize
+  a_mat = czero
+  zero_vect = 0.d0
+  !
+  WRITE (stdout,'(5x,a)') 'AMN'
+  !
+  IF (any_uspp) then
+     CALL deallocate_bec_type ( becp )
+     CALL allocate_bec_type ( nkb, n_wannier, becp )
+     CALL init_us_1
+  ENDIF
+  !
 #ifdef __PARA
-   WRITE(stdout,'(6x,a,i5,a,i4,a)') 'k points = ',iknum, ' in ', npool, ' pools'
+  WRITE(stdout,'(6x,a,i5,a,i4,a)') 'k points = ',iknum, ' in ', npool, ' pools'
 #endif
-   DO ik=1,nks
-      CALL ktokpmq ( xk(:,ik), zero_vect, +1, ipool, nkq, nkq_abs )
-      ik_g = nkq_abs
-      !
-      WRITE (stdout,'(5x,i8, " of ", i4,a)') ik , nks, ' on ionode'
-      CALL flush(6)
-      CALL davcio( evc, lrwfc, iuwfc, ik, -1 )
-      !
-      CALL gk_sort (xk(1,ik), ngm, g, ecutwfc / tpiba2, npw, igk_k (1,ik), g2kin)
-      CALL generate_guiding_functions(ik)   ! they are called gf(npw,n_proj)
-      !
-      !  USPP
-      !
-      IF (any_uspp) THEN
-         CALL init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb)
-         ! below we compute the product of beta functions with trial func.
-         ! RM - changed according to QE4.0.3/PP/pw2wannie90.f90
-         CALL calbec ( npw, vkb, gf, becp, n_proj )
-         !CALL calbec(npw, vkb, gf, becp) 
-         ! and we use it for the product S|trial_func>
-         ! RM - changed according to QE4.0.3/PP/pw2wannie90.f90
-         CALL s_psi (npwx, npw, n_proj, gf, sgf)  
-         !CALL s_psi (npwx, npw, n_wannier, gf, sgf)
-      ELSE
-         sgf(:,:) = gf(:,:)
-      ENDIF
-      !
-      ! RM changed according to QE4.0.3/PP/pw2wannier90 
-      IF (noncolin) THEN
-         ! we do the projection as g(r)*a(r) and g(r)*b(r)
-         DO ipol=1,npol
-            istart = (ipol-1)*npwx + 1
-            DO iw = 1,n_proj
-               ibnd1 = 0
-               DO ibnd = 1,nbnd
-                  IF (excluded_band(ibnd)) CYCLE
-                  amn = (0.0d0,0.0d0)
-                  amn = ZDOTC(npw,evc(istart,ibnd),1,sgf(1,iw),1)
-#ifdef __PARA
-                  CALL mp_sum(amn, intra_pool_comm)
-#endif
-                  ibnd1=ibnd1+1
-                  a_mat(ibnd1,iw+n_proj*(ipol-1),ik_g) = amn
-               ENDDO
-            ENDDO
-         ENDDO
-      ELSE
-         DO iw = 1,n_proj
+  ! 
+  DO ik=1,nks
+    CALL ktokpmq ( xk(:,ik), zero_vect, +1, ipool, nkq, nkq_abs )
+    ik_g = nkq_abs
+    !
+    WRITE (stdout,'(5x,i8, " of ", i4,a)') ik , nks, ' on ionode'
+    CALL flush(6)
+    ! SP: Replaced by our wrapper to deal with parallel
+    CALL readwfc(my_pool_id+1, ik, evc) 
+    !CALL davcio( evc, lrwfc, iuwfc, ik, -1 )
+    !
+    CALL gk_sort (xk(1,ik), ngm, g, ecutwfc / tpiba2, npw, igk_k (1,ik), g2kin)
+    CALL generate_guiding_functions(ik)   ! they are called gf(npw,n_proj)
+    !
+    !  USPP
+    !
+    IF (any_uspp) THEN
+       CALL init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb)
+       ! below we compute the product of beta functions with trial func.
+       CALL calbec ( npw, vkb, gf, becp, n_proj )
+       ! and we use it for the product S|trial_func>
+       CALL s_psi (npwx, npw, n_proj, gf, sgf)  
+    ELSE
+       sgf(:,:) = gf(:,:)
+    ENDIF
+    !
+    IF (noncolin) THEN
+      ! we do the projection as g(r)*a(r) and g(r)*b(r)
+      DO iw = 1,n_proj
+         spin_z_pos=.false.;spin_z_neg=.false.
+         ! detect if spin quantisation axis is along z
+         if((abs(spin_qaxis(1,iw)-0.0d0)<eps6).and.(abs(spin_qaxis(2,iw)-0.0d0)<eps6) &
+              .and.(abs(spin_qaxis(3,iw)-1.0d0)<eps6)) then
+            spin_z_pos=.true.
+         elseif(abs(spin_qaxis(1,iw)-0.0d0)<eps6.and.abs(spin_qaxis(2,iw)-0.0d0)<eps6 &
+              .and.abs(spin_qaxis(3,iw)+1.0d0)<eps6) then
+            spin_z_neg=.true.
+         endif
+         IF(spin_z_pos .or. spin_z_neg) THEN
             ibnd1 = 0
             DO ibnd = 1,nbnd
                IF (excluded_band(ibnd)) CYCLE
+               IF(spin_z_pos) THEN
+                  ipol=(3-spin_eig(iw))/2
+               ELSE
+                  ipol=(3+spin_eig(iw))/2
+               ENDIF
+               istart = (ipol-1)*npwx + 1
                amn=(0.0_dp,0.0_dp)
-               amn = ZDOTC(npw,evc(1,ibnd),1,sgf(1,iw),1)
+               amn = zdotc(npw,evc(istart,ibnd),1,sgf(1,iw),1)
 #ifdef __PARA
                CALL mp_sum(amn, intra_pool_comm)
 #endif
                ibnd1=ibnd1+1
+               ! 
+               ! a_mat(ibnd1,iw+n_proj*(ipol-1),ik_g) = amn
                a_mat(ibnd1,iw,ik_g) = amn
-            ENDDO !bands
-         ENDDO !wannier fns
-      ENDIF
-   ENDDO  ! k-points
-   !
-   DEALLOCATE (sgf,csph)
-   IF (any_uspp) CALL deallocate_bec_type ( becp )
-   !
+            ENDDO
+         ELSE
+           ! general routine
+           ! for quantisation axis (a,b,c) 
+           ! 'up'    eigenvector is 1/sqrt(1+c) [c+1,a+ib]
+           ! 'down'  eigenvector is 1/sqrt(1-c) [c-1,a+ib]
+           IF(spin_eig(iw)==1) THEN
+              fac(1)=(1.0_dp/sqrt(1+spin_qaxis(3,iw)))*(spin_qaxis(3,iw)+1)*cmplx(1.0d0,0.0d0,dp)
+              fac(2)=(1.0_dp/sqrt(1+spin_qaxis(3,iw)))*cmplx(spin_qaxis(1,iw),spin_qaxis(2,iw),dp)
+           ELSE
+              fac(1)=(1.0_dp/sqrt(1+spin_qaxis(3,iw)))*(spin_qaxis(3,iw))*cmplx(1.0d0,0.0d0,dp)
+              fac(2)=(1.0_dp/sqrt(1-spin_qaxis(3,iw)))*cmplx(spin_qaxis(1,iw),spin_qaxis(2,iw),dp)
+           ENDIF
+           ibnd1 = 0
+           DO ibnd = 1,nbnd
+              IF (excluded_band(ibnd)) CYCLE
+              amn=(0.0_dp,0.0_dp)
+              DO ipol=1,npol
+                 istart = (ipol-1)*npwx + 1
+                 amn_tmp=(0.0_dp,0.0_dp)
+                 amn_tmp = zdotc(npw,evc(istart,ibnd),1,sgf(1,iw),1)
 #ifdef __PARA
-   CALL mp_sum(a_mat, inter_pool_comm)
+                 CALL mp_sum(amn_tmp, intra_pool_comm)
 #endif
-   !
-   !
-   !
-   WRITE(stdout,*)
-   WRITE(stdout,'(5x,a)') 'AMN calculated'
-   !
-   RETURN
+                 amn=amn+fac(ipol)*amn_tmp
+              ENDDO
+              ibnd1=ibnd1+1
+              !a_mat(ibnd1,iw+n_proj*(ipol-1),ik_g) = amn
+              a_mat(ibnd1,iw,ik_g) = amn
+           ENDDO
+         ENDIF ! spin_z_pos
+      ENDDO
+! -----------
+    ELSE ! scalar wavefunction
+      DO iw = 1,n_proj
+         ibnd1 = 0
+         DO ibnd = 1,nbnd
+            IF (excluded_band(ibnd)) CYCLE
+            amn=(0.0_dp,0.0_dp)
+            amn = ZDOTC(npw,evc(1,ibnd),1,sgf(1,iw),1)
+#ifdef __PARA
+            CALL mp_sum(amn, intra_pool_comm)
+#endif
+            ibnd1=ibnd1+1
+            a_mat(ibnd1,iw,ik_g) = amn
+         ENDDO !bands
+      ENDDO !wannier fns
+    ENDIF
+  ENDDO  ! k-points
+  !
+  DEALLOCATE (sgf)
+  DEALLOCATE (csph)
+  IF (any_uspp) CALL deallocate_bec_type ( becp )
+  !
+#ifdef __PARA
+  CALL mp_sum(a_mat, inter_pool_comm)
+#endif
+  !
+  !
+  WRITE(stdout,*)
+  WRITE(stdout,'(5x,a)') 'AMN calculated'
+  !
+  !
+  RETURN
 !-----------------------------------------------------------------------
 END SUBROUTINE compute_amn_para
 !-----------------------------------------------------------------------
@@ -663,16 +878,14 @@ SUBROUTINE compute_mmn_para
    !
    ALLOCATE( phase(dffts%nnr) ) 
    ALLOCATE( igkq(npwx) )
-   ! RM changed according to QE4.0.3/PP/pw2wannie90.f90
    ALLOCATE( evcq(npol*npwx,nbnd) )
-   ! ALLOCATE( evcq(npwx,nbnd) )
    !
    IF (noncolin) THEN
       ALLOCATE( aux_nc(npwx,npol) )
    ELSE
       ALLOCATE( aux(npwx) )
    ENDIF
-
+   !
    IF (gamma_only) ALLOCATE(aux2(npwx))
    !
    ALLOCATE(m_mat(num_bands,num_bands,nnb,iknum))
@@ -701,7 +914,6 @@ SUBROUTINE compute_mmn_para
    mmn_tot = iknum * nnb * nbnd * nbnd
    !
    !   USPP
-   !
    !
    IF(any_uspp) THEN
       CALL init_us_1
@@ -757,7 +969,6 @@ SUBROUTINE compute_mmn_para
   ENDIF
   !
   !
-  
   ALLOCATE( Mkb(nbnd,nbnd) )
   !
 #ifdef __PARA
@@ -774,7 +985,6 @@ SUBROUTINE compute_mmn_para
      !
      WRITE (stdout,'(5x,i8, " of ", i4,a)') ik , nks, ' on ionode'
      CALL flush(6)
-     !
      !
      !
      CALL readwfc(my_pool_id+1, ik, evc)
@@ -992,7 +1202,6 @@ SUBROUTINE compute_mmn_para
          DEALLOCATE (becp2)
       ENDIF
    ENDIF
-
   !
   !
   WRITE(stdout,'(5x,a)') 'MMN calculated'
@@ -1350,7 +1559,7 @@ SUBROUTINE generate_guiding_functions(ik)
          arg = ( gk(1,ig)*center_w(1,iw) + gk(2,ig)*center_w(2,iw) + &
                                            gk(3,ig)*center_w(3,iw) ) * tpi
          ! center_w are cartesian coordinates in units of alat 
-         sk(ig) = CMPLX(cos(arg), -sin(arg) )
+         sk(ig) = CMPLX(cos(arg), -sin(arg) , kind=DP)
          gf(ig,iw) = gf(ig,iw) * sk(ig) 
       ENDDO
       anorm = REAL(ZDOTC(npw,gf(1,iw),1,gf(1,iw),1))
@@ -1970,7 +2179,7 @@ SUBROUTINE radialpart(ng, q, alfa, rvalue, lmax, radial)
   DO l = 0, lmax
      DO ig=1,ng
        CALL sph_bes (mesh_r, r(1), q(ig), l, bes)
-       aux(:) = bes(:) * func_r(:) * r(:)
+       aux(:) = bes(:) * func_r(:) * r(:) * r(:)
        CALL simpson (mesh_r, aux, rij, rad_int)
        radial(ig,l) = rad_int * pref
      ENDDO
