@@ -172,6 +172,11 @@ SUBROUTINE print_clock_pw()
       CALL print_clock( 'exx_grid' )
       CALL print_clock( 'exxinit' )
       CALL print_clock( 'vexx' )
+!civn 
+      CALL print_clock( 'matcalc' )
+      CALL print_clock( 'aceupdate' )
+      CALL print_clock( 'vexxace' )
+      CALL print_clock( 'aceinit' )
       CALL print_clock( 'exxenergy' )
       IF( okvan) THEN
         WRITE( stdout, '(/,5X,"EXX+US  routines")' )

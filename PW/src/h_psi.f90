@@ -96,7 +96,7 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
                        fwfft_orbital_gamma, calbec_rs_gamma, &
                        add_vuspsir_gamma, v_loc_psir
   USE fft_base, ONLY : dffts
-  USE exx,      ONLY : vexx
+  USE exx,      ONLY : vexx, vexxace_gamma, vexxace_k
   USE funct,    ONLY : exx_is_active
   !
   IMPLICIT NONE
@@ -106,6 +106,7 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   COMPLEX(DP), INTENT(OUT) :: hpsi(lda*npol,m)   
   !
   INTEGER     :: ipol, ibnd, incr
+  REAL(dp)    :: ee
   !
   CALL start_clock( 'h_psi' )
   !  
@@ -169,6 +170,7 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
      ELSE
         ! ... usual reciprocal-space algorithm
         CALL vloc_psi_gamma ( lda, n, m, psi, vrs(1,current_spin), hpsi ) 
+        !
      ENDIF 
      !
   ELSE IF ( noncolin ) THEN 
@@ -193,7 +195,17 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
      CALL stop_clock( 'h_psi:vnl' )
      !
   END IF
-  IF ( exx_is_active() ) CALL vexx( lda, n, m, psi, hpsi, becp )
+  IF ( exx_is_active() ) THEN
+#ifdef __EXX_ACE 
+     IF (gamma_only) THEN
+        CALL vexxace_gamma(lda,m,psi,ee,hpsi)
+     ELSE
+        CALL vexxace_k(lda,m,psi,ee,hpsi) 
+     END IF
+#else  
+     CALL vexx( lda, n, m, psi, hpsi, becp )
+#endif
+  END IF
   !
   ! ... electric enthalpy if required
   !

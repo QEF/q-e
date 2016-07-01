@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2013 Quantum ESPRESSO group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -19,7 +19,7 @@ SUBROUTINE electrons()
   USE fft_base,             ONLY : dfftp
   USE gvecs,                ONLY : doublegrid
   USE gvect,                ONLY : ecutrho
-  USE lsda_mod,             ONLY : lsda, nspin, magtot, absmag, isk
+  USE lsda_mod,             ONLY : lsda, nspin, magtot, absmag, isk, current_spin
   USE ener,                 ONLY : etot, hwf_energy, eband, deband, ehart, &
                                    vtxc, etxc, etxcc, ewld, demet, epaw, &
                                    elondon, ef_up, ef_dw
@@ -29,24 +29,24 @@ SUBROUTINE electrons()
                                    do_makov_payne
   USE io_files,             ONLY : iunwfc, iunmix, nwordwfc, output_drho, &
                                    iunres, iunefield, seqopn
-  USE buffers,              ONLY : save_buffer, close_buffer
+  USE buffers,              ONLY : save_buffer, close_buffer, get_buffer
   USE ldaU,                 ONLY : eth
   USE extfield,             ONLY : tefield, etotefield
   USE wavefunctions_module, ONLY : evc
-  USE wvfct,                ONLY : nbnd, wg, et
-  USE klist,                ONLY : nks
+  USE wvfct,                ONLY : nbnd, wg, et, npw, npwx, current_k
+  USE klist,                ONLY : nks, ngk, igk_k
   USE noncollin_module,     ONLY : noncolin, magtot_nc, i_cons,  bfield, &
                                    lambda, report
   USE uspp,                 ONLY : okvan
   USE exx,                  ONLY : exxinit, exxenergy2, exxbuff, &
-                                   fock0, fock1, fock2, dexx
+                                   fock0, fock1, fock2, dexx, &
+                                   vexxace_gamma, vexxace_k, domat
   USE funct,                ONLY : dft_is_hybrid, exx_is_active
-  USE control_flags,        ONLY : adapt_thr, tr2_init, tr2_multi
+  USE control_flags,        ONLY : adapt_thr, tr2_init, tr2_multi, gamma_only
   !
   USE paw_variables,        ONLY : okpaw, ddd_paw, total_core_energy, only_paw
   USE paw_onecenter,        ONLY : PAW_potential
   USE paw_symmetry,         ONLY : PAW_symmetrize_ddd
-  USE uspp_param,           ONLY : nh, nhm ! used for PAW
   !
   !
   IMPLICIT NONE
@@ -54,7 +54,8 @@ SUBROUTINE electrons()
   ! ... a few local variables
   !
   REAL(DP) :: &
-      charge         ! the total charge
+      charge,       &! the total charge
+      ee, exxen
   INTEGER :: &
       idum,         &! dummy counter on iterations
       iter,         &! counter on iterations
@@ -67,11 +68,13 @@ SUBROUTINE electrons()
   LOGICAL :: first, exst
   !
   !
+  exxen = 0.0d0
   iter = 0
   first = .true.
   tr2_final = tr2
   IF ( dft_is_hybrid() ) THEN
-     printout = 0  ! do not print etot and energy components at each scf step
+     ! printout = 0  : do not print etot and energy components at each scf step
+     printout = 1  ! print etot, not energy components at each scf step
   ELSE IF ( lmd ) THEN
      printout = 1  ! print etot, not energy components at each scf step
   ELSE
@@ -130,7 +133,7 @@ SUBROUTINE electrons()
      ! ... Self-consistency loop. For hybrid functionals the exchange potential
      ! ... is calculated with the orbitals at previous step (none at first step)
      !
-     CALL electrons_scf ( printout )
+     CALL electrons_scf ( printout, exxen )
      !
      IF ( .NOT. dft_is_hybrid() ) RETURN
      !
@@ -166,13 +169,42 @@ SUBROUTINE electrons()
         ! then calculate exchange energy (will be useful at next step)
         !
         CALL exxinit()
+#ifdef __EXX_ACE 
+        domat = .true.
+        fock2=0.0d0
+        if(gamma_only) then 
+          do ik = 1, nks
+            npw = ngk (ik)
+            current_k = ik
+            IF ( lsda ) current_spin = isk(ik)
+            IF (nks > 1) CALL get_buffer(evc, nwordwfc, iunwfc, ik)
+            call vexxace_gamma(npw,nbnd,evc,ee)
+            fock2 = fock2 + ee
+          end do 
+        else
+          do ik = 1, nks
+            npw = ngk (ik)
+            current_k = ik
+            IF ( lsda ) current_spin = isk(ik)
+            IF (nks > 1) CALL get_buffer(evc, nwordwfc, iunwfc, ik)
+            call vexxace_k(npw,nbnd,evc,ee)
+            fock2 = fock2 + ee 
+          end do
+        end if
+        domat = .false.
+#else  
         fock2 = exxenergy2()
+#endif
+        exxen = 0.50d0*fock2 
+        etot = etot - etxc 
         !
         ! Recalculate potential because XC functional has changed,
         ! start self-consistency loop on exchange
         !
         CALL v_of_rho( rho, rho_core, rhog_core, &
              ehart, etxc, vtxc, eth, etotefield, charge, v)
+        etot = etot + etxc + exxen
+        !
         IF (okpaw) CALL PAW_potential(rho%bec, ddd_PAW, epaw)
         CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, &
              nspin, doublegrid )
@@ -182,7 +214,32 @@ SUBROUTINE electrons()
         ! fock1 is the exchange energy calculated for orbitals at step n,
         !       using orbitals at step n-1 in the expression of exchange
         !
+#ifdef __EXX_ACE
+        domat = .true.
+        fock1 = 0.0d0
+        if(gamma_only) then 
+          do ik = 1, nks
+            npw = ngk (ik)
+            current_k = ik
+            IF ( lsda ) current_spin = isk(ik)
+            IF (nks > 1) CALL get_buffer(evc, nwordwfc, iunwfc, ik)
+            call vexxace_gamma(npw,nbnd,evc,ee)
+            fock1 = fock1 + ee
+          end do 
+        else 
+          do ik = 1, nks
+            npw = ngk (ik)
+            current_k = ik
+            IF ( lsda ) current_spin = isk(ik)
+            IF (nks > 1) CALL get_buffer(evc, nwordwfc, iunwfc, ik)
+            call vexxace_k(npw,nbnd,evc,ee)
+            fock1 = fock1 + ee
+          end do
+        end if
+        domat = .false.
+#else  
         fock1 = exxenergy2()
+#endif
         !
         ! Set new orbitals for the calculation of the exchange term
         !
@@ -193,7 +250,32 @@ SUBROUTINE electrons()
         ! fock0 is fock2 at previous step
         !
         fock0 = fock2
+#ifdef __EXXACE 
+        domat = .true.
+        fock2 = 0.0d0
+        if(gamma_only) then 
+          do ik = 1, nks
+            npw = ngk (ik)
+            current_k = ik
+            IF ( lsda ) current_spin = isk(ik)
+            IF (nks > 1) CALL get_buffer(evc, nwordwfc, iunwfc, ik)
+            call vexxace_gamma(npw,nbnd,evc,ee)
+            fock2 = fock2 + ee 
+          end do 
+        else
+          do ik = 1, nks
+            npw = ngk (ik)
+            current_k = ik
+            IF ( lsda ) current_spin = isk(ik)
+            IF (nks > 1) CALL get_buffer(evc, nwordwfc, iunwfc, ik)
+            call vexxace_k(npw,nbnd,evc,ee)
+            fock2 = fock2 + ee
+          end do
+        end if
+        domat = .false.
+#else  
         fock2 = exxenergy2()
+#endif
         !
         ! check for convergence. dexx is positive definite: if it isn't,
         ! there is some numerical problem. One such cause could be that
@@ -203,7 +285,9 @@ SUBROUTINE electrons()
         IF ( dexx < 0d0 ) CALL errore( 'electrons', 'dexx is negative! &
            &  Check that exxdiv_treatment is appropriate for the system', 1 )
         !
+        exxen = 0.5D0*fock2 
         etot = etot + 0.5D0*fock2 - fock1
+        write(*,*) '@chken', etot
         hwf_energy = hwf_energy + 0.5D0*fock2 - fock1
         IF ( dexx < tr2_final ) THEN
            WRITE( stdout, 9066 ) '!', etot, hwf_energy, dexx
@@ -262,7 +346,7 @@ SUBROUTINE electrons()
 END SUBROUTINE electrons
 !
 !----------------------------------------------------------------------------
-SUBROUTINE electrons_scf ( printout )
+SUBROUTINE electrons_scf ( printout,exxen )
   !----------------------------------------------------------------------------
   !
   ! ... This routine is a driver of the self-consistent cycle.
@@ -288,6 +372,7 @@ SUBROUTINE electrons_scf ( printout )
   USE lsda_mod,             ONLY : lsda, nspin, magtot, absmag, isk
   USE vlocal,               ONLY : strf
   USE wvfct,                ONLY : nbnd, et, npwx
+!
   USE gvecw,                ONLY : ecutwfc
   USE ener,                 ONLY : etot, hwf_energy, eband, deband, ehart, &
                                    vtxc, etxc, etxcc, ewld, demet, epaw, &
@@ -325,7 +410,6 @@ SUBROUTINE electrons_scf ( printout )
   USE paw_variables,        ONLY : okpaw, ddd_paw, total_core_energy, only_paw
   USE paw_onecenter,        ONLY : PAW_potential
   USE paw_symmetry,         ONLY : PAW_symmetrize_ddd
-  USE uspp_param,           ONLY : nh, nhm ! used for PAW
   USE dfunct,               ONLY : newd
   USE esm,                  ONLY : do_comp_esm, esm_printpot, esm_ewald
   USE fcp_variables,        ONLY : lfcpopt, lfcpdyn
@@ -336,6 +420,7 @@ SUBROUTINE electrons_scf ( printout )
   IMPLICIT NONE
   !
   INTEGER, INTENT (IN) :: printout
+  real(DP),intent(in)  :: exxen
   !
   ! ... a few local variables
   !
@@ -685,6 +770,7 @@ SUBROUTINE electrons_scf ( printout )
      END IF
      !
      etot = eband + ( etxc - etxcc ) + ewld + ehart + deband + demet + descf
+     write(*,*) '@chk', etot - exxen
      !
      IF (okpaw) etot = etot + epaw
      IF ( lda_plus_u ) etot = etot + eth

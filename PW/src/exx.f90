@@ -45,6 +45,11 @@ MODULE exx
 
   COMPLEX(DP), ALLOCATABLE :: exxbuff(:,:,:)
                                          ! temporary buffer for wfc storage
+!civn 
+  complex(DP), allocatable :: xi(:,:,:)
+  integer :: nbndproj 
+  logical :: domat, firstexx
+  real(DP) :: eexx, ee, eeace
   !
   !
   ! let xk(:,ik) + xq(:,iq) = xkq(:,ikq) = S(isym)*xk(ik') + G
@@ -143,7 +148,7 @@ MODULE exx
     CALL data_structure_custom(exx_fft, gamma_only)
     CALL ggent(exx_fft)
     exx_fft%initialized = .true.
-    !
+
     RETURN
     !------------------------------------------------------------------------
   END SUBROUTINE exx_fft_create
@@ -167,6 +172,8 @@ MODULE exx
     IF ( ALLOCATED(x_occupation) ) DEALLOCATE(x_occupation)
     IF ( ALLOCATED(xkq_collect) )  DEALLOCATE(xkq_collect)
     IF ( ALLOCATED(exxbuff) )      DEALLOCATE(exxbuff)
+!civn 
+    IF ( ALLOCATED(xi) )      DEALLOCATE(xi)
     !
     IF(ALLOCATED(becxx)) THEN
       DO ikq = 1, nkqs
@@ -580,7 +587,7 @@ MODULE exx
     USE wavefunctions_module, ONLY : evc, psic
     USE io_files,             ONLY : nwordwfc, iunwfc
     USE buffers,              ONLY : get_buffer
-    USE wvfct,                ONLY : nbnd, npwx, wg
+    USE wvfct,                ONLY : nbnd, npwx, wg, current_k
     USE control_flags,        ONLY : gamma_only
     USE klist,                ONLY : ngk, nks, nkstot, wk, igk_k
     USE symm_base,            ONLY : nsym, s, sr, ftau
@@ -596,6 +603,8 @@ MODULE exx
     USE us_exx,               ONLY : becxx
     USE paw_variables,        ONLY : okpaw
     USE paw_exx,              ONLY : PAW_init_keeq
+!civn 
+    USE lsda_mod,             ONLY : current_spin, lsda, isk
 
     IMPLICIT NONE
     INTEGER :: ik,ibnd, i, j, k, ir, isym, ikq, ig
@@ -739,7 +748,7 @@ MODULE exx
              CALL invfft ('CustomWave', psic, exx_fft%dfftt)
 
              exxbuff(1:nrxxs,h_ibnd,ik)=psic(1:nrxxs)
-             
+
           END DO
           !
        ELSE IF_GAMMA_ONLY 
@@ -836,6 +845,36 @@ MODULE exx
     !   lot of RAM but it is not easy to implement a better algorithm)
     ! 
     IF (npool>1) CALL mp_sum(exxbuff, inter_pool_comm)
+#ifdef __EXX_ACE
+    nbndproj = nbnd 
+    IF (.NOT. allocated(xi)) ALLOCATE( xi(npwx*npol,nbndproj,nks) )
+    eexx = 0.0d0
+    xi = (0.0d0,0.0d0)
+    if(gamma_only) then 
+      do ik = 1, nks
+        npw = ngk (ik)
+        current_k = ik
+        IF ( lsda ) current_spin = isk(ik)
+        IF ( nks > 1 ) CALL get_buffer(evc, nwordwfc, iunwfc, ik)
+        call aceinit_gamma(npw,nbnd,evc,xi(1,1,ik),ee)
+        eexx = eexx + ee
+      end do
+      write(*,*) 'EXACT--Energy', eexx
+    else
+      eexx = 0.0d0
+      do ik = 1, nks
+        npw = ngk (ik)
+        current_k = ik
+        IF ( lsda ) current_spin = isk(ik)
+        evc = (0.0d0,0.0d0)
+        IF ( nks > 1 ) CALL get_buffer(evc, nwordwfc, iunwfc, ik)
+        call aceinit_k(npw,nbnd,evc,xi(1,1,ik),ee)
+        eexx = eexx + ee
+      end do
+      write(*,*) 'EXACT--Energy', eexx
+    end if
+    domat = .false.
+#endif
     !
     ! For US/PAW only: prepare space for <beta_I|phi_j> scalar products
     !
@@ -1092,7 +1131,7 @@ MODULE exx
     USE gvect,          ONLY : ngm, g
     USE wvfct,          ONLY : npwx, current_k
     USE control_flags,  ONLY : gamma_only
-    USE klist,          ONLY : xk, nks, nkstot, ngk, igk_k
+    USE klist,          ONLY : xk, nks, nkstot, igk_k
     USE fft_interfaces, ONLY : fwfft, invfft
     USE becmod,         ONLY : bec_type
     USE mp_bands,       ONLY : inter_bgrp_comm, intra_bgrp_comm, my_bgrp_id, nbgrp
@@ -2743,6 +2782,376 @@ MODULE exx
     !-----------------------------------------------------------------------
   END FUNCTION exx_stress
   !-----------------------------------------------------------------------
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+subroutine matprt(label,n,m,A)
+implicit none
+  integer :: n,m,i
+  real*8 :: A(n,m)
+  character(len=50) :: frmt
+  character(len=*) :: label
+
+  write(*,'(A)') label
+  frmt = ' '
+  write(frmt,'(A,I4,A)') '(',m,'f16.10)'
+  do i = 1,n
+    write(*,frmt) A(i,:)
+  end do 
+end subroutine
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+subroutine errinfo(routine,message,INFO)
+implicit none
+  integer :: INFO
+  character(len=*) :: routine,message
+
+  if(INFO.ne.0) then 
+    write(*,*) routine,' exited with INFO= ',INFO
+    CALL errore(routine,message,1)
+  end if  
+
+end subroutine
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+subroutine aceinit_gamma(nnpw,nbnd,phi,xitmp,exxe)
+USE becmod,               ONLY : bec_type, calbec
+USE wvfct,                ONLY : current_k
+!
+! compute xi(npw,nbndproj) for the ACE method
+!
+implicit none
+  integer :: nnpw,nbnd
+  complex(DP) :: phi(nnpw,nbnd)
+  real(DP), allocatable :: mexx(:,:)
+  complex(DP) :: xitmp(nnpw,nbndproj)
+  integer :: i
+  real(DP) :: exxe
+  real(DP), parameter :: Zero=0.0d0, One=1.0d0, Two=2.0d0, Pt5=0.50d0 
+  type(bec_type) :: becpsi
+
+  call start_clock( 'aceinit' )
+
+  if(nbndproj.gt.nbnd) call errore('aceinit','nbndproj grater than nbnd.',1)
+  if(nbndproj.le.0) call errore('aceinit','nbndproj le 0.',1)
+
+  allocate( mexx(nbndproj,nbndproj) )
+  xitmp = (Zero,Zero)
+  mexx = Zero 
+! |xi> = Vx[phi]|phi>
+  call vexx(nnpw, nnpw, nbndproj, phi, xitmp, becpsi)
+! mexx = <phi|Vx[phi]|phi>
+  call matcalc('exact',.true.,.false.,nnpw,nbndproj,nbndproj,phi,xitmp,mexx,exxe)
+! |xi> = -One * Vx[phi]|phi> * rmexx^T
+  call aceupdate(nbndproj,nnpw,xitmp,mexx)
+  write(*,'(A)') 'xi overwritten by aceupdate.'  
+  deallocate( mexx )
+
+  call stop_clock( 'aceinit' )
+
+end subroutine
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+subroutine vexxace_gamma(nnpw,nbnd,phi,exxe,vphi)
+USE becmod,   ONLY : calbec
+USE wvfct,    ONLY : current_k, wg
+USE lsda_mod, ONLY : current_spin 
+!
+! do the ACE potential and 
+! (optional) print the ACE matrix representation 
+!
+implicit none
+  real(DP) :: exxe
+  integer :: nnpw,nbnd,i,ik
+  complex(DP) :: phi(nnpw,nbnd)
+  complex(DP),optional :: vphi(nnpw,nbnd)
+  real*8,allocatable :: rmexx(:,:)
+  complex(DP),allocatable :: cmexx(:,:), vv(:,:)
+  real*8, parameter :: Zero=0.0d0, One=1.0d0, Two=2.0d0, Pt5=0.50d0 
+
+  call start_clock('vexxace')
+
+  allocate( vv(nnpw,nbnd) )
+  if(present(vphi)) then 
+    vv = vphi
+  else 
+    vv = (Zero, Zero)
+  end if
+
+! do the ACE potential 
+  allocate( rmexx(nbndproj,nbnd),cmexx(nbndproj,nbnd) )
+  rmexx = Zero 
+  cmexx = (Zero,Zero)
+! <xi|phi>
+  call matcalc('<xi|phi>',.false.,.false.,nnpw,nbndproj,nbnd,xi(1,1,current_k),phi,rmexx,exxe)
+! |vv> = |vphi> + (-One) * |xi> * <xi|phi> 
+  cmexx = (One,Zero)*rmexx
+  call ZGEMM ('N','N',nnpw,nbnd,nbndproj,-(One,Zero),xi(1,1,current_k), &
+                      nnpw,cmexx,nbndproj,(One,Zero),vv,nnpw)
+  deallocate( cmexx,rmexx )
+
+  if(domat) then 
+    allocate( rmexx(nbnd,nbnd) )
+    call matcalc('ACE',.true.,.false.,nnpw,nbnd,nbnd,phi,vv,rmexx,exxe)
+    deallocate( rmexx )
+    write(*,'(4(A,I3),A,I9,A,f12.6)') 'vexxace: nbnd=', nbnd, ' nbndproj=',nbndproj, &
+                                              ' k=',current_k,' spin=',current_spin,' npw=',nnpw, ' E=',exxe
+  else
+    write(*,'(4(A,I3),A,I9)')         'vexxace: nbnd=', nbnd, ' nbndproj=',nbndproj, &
+                                              ' k=',current_k,' spin=',current_spin,' npw=',nnpw
+  end if
+
+  if(present(vphi)) vphi = vv
+  deallocate( vv )
+
+  call stop_clock('vexxace')
+
+end subroutine vexxace_gamma
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+subroutine matcalc(label,DoE,PrtMat,ninner,n,m,U,V,mat,ee)
+USE becmod,   ONLY : calbec
+USE wvfct,    ONLY : current_k, wg
+implicit none
+!
+! compute the (n,n) matrix representation <U|V> 
+! and energy from V (m,n) and U(m,n)
+!
+  integer :: ninner,n,m,i
+  real(DP) :: ee
+  complex(DP) :: U(ninner,n), V(ninner,m)
+  real(DP) :: mat(n,m)
+  real(DP), parameter :: Zero=0.0d0, One=1.0d0, Two=2.0d0, Pt5=0.50d0 
+  character(len=*) :: label
+  character(len=2) :: string
+  logical :: DoE,PrtMat
+ 
+  call start_clock('matcalc')
+
+  string = 'M-'
+  mat = Zero
+  CALL calbec(ninner, U, V, mat, m)
+
+  If(DoE) then 
+    If(n.ne.m) call errore('matcalc','no trace for rectangular matrix.',1)
+    If(PrtMat) call matprt(string//label,n,m,mat)
+    string = 'E-'
+    ee = Zero 
+    do i = 1,n
+     ee = ee + wg(i,current_k)*mat(i,i)
+    end do 
+    write(*,'(A,f16.8,A)') string//label, ee, ' Ry'
+  end if
+
+  call stop_clock('matcalc')
+
+end subroutine
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+subroutine aceupdate(nbndproj,nnpw,xitmp,rmexx)
+implicit none
+  integer :: INFO,nbndproj,nnpw
+  real(DP) :: rmexx(nbndproj,nbndproj)
+  complex(DP),allocatable :: cmexx(:,:)  
+  complex(DP) ::  xitmp(nnpw,nbndproj) 
+  real(DP), parameter :: Zero=0.0d0, One=1.0d0, Two=2.0d0, Pt5=0.50d0 
+
+  call start_clock('aceupdate')
+
+! rmexx = -(Cholesky(rmexx))^-1
+  INFO = -1
+  rmexx = -rmexx
+  call DPOTRF( 'L', nbndproj, rmexx, nbndproj, INFO )
+  call errinfo('DPOTRF','Cholesky failed in aceupdate.',INFO)
+  INFO = -1
+  call DTRTRI( 'L', 'N', nbndproj, rmexx, nbndproj, INFO )
+  call errinfo('DTRTRI','inversion failed in aceupdate.',INFO)
+
+! |xi> = -One * Vx[phi]|phi> * rmexx^T
+  allocate( cmexx(nbndproj,nbndproj) )
+  cmexx = (One,Zero)*rmexx
+  call ZTRMM('R','L','C','N',nnpw,nbndproj,(One,Zero),cmexx,nbndproj,xitmp,nnpw)
+  deallocate( cmexx )
+
+  call stop_clock('aceupdate')
+
+end subroutine
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+subroutine aceinit_k(nnpw,nbnd,phi,xitmp,exxe)
+USE becmod,               ONLY : bec_type, calbec
+USE wvfct,                ONLY : current_k, npwx
+USE noncollin_module,     ONLY : npol
+!
+! compute xi(npw,nbndproj) for the ACE method
+!
+implicit none
+  integer :: nnpw,nbnd,i
+  complex(DP) :: phi(npwx*npol,nbnd),xitmp(npwx*npol,nbndproj) 
+  complex(DP), allocatable :: mexx(:,:), mexx0(:,:) 
+  real(DP) :: exxe, exxe0
+  real(DP), parameter :: Zero=0.0d0, One=1.0d0, Two=2.0d0, Pt5=0.50d0 
+  type(bec_type) :: becpsi
+
+  call start_clock( 'aceinit' )
+
+  if(nbndproj.gt.nbnd) call errore('aceinit_k','nbndproj grater than nbnd.',1)
+  if(nbndproj.le.0) call errore('aceinit_k','nbndproj le 0.',1)  
+  
+  allocate( mexx(nbndproj,nbndproj), mexx0(nbndproj,nbndproj) )
+  xitmp = (Zero,Zero)
+  mexx  = (Zero,Zero)
+  mexx0 = (Zero,Zero)
+! |xi> = Vx[phi]|phi>
+  call vexx(npwx, nnpw, nbndproj, phi, xitmp, becpsi)
+! mexx = <phi|Vx[phi]|phi>
+  call matcalc_k('exact',.true.,.false.,current_k,npwx*npol,nbndproj,nbndproj,phi,xitmp,mexx,exxe)
+
+  write(*,'(3(A,I3),A,I9,A,f12.6)') 'aceinit_k: nbnd=', nbnd, ' nbndproj=',nbndproj, &
+                                    ' k=',current_k,' npw=',nnpw,' Ex(k)=',exxe
+  
+! |xi> = -One * Vx[phi]|phi> * rmexx^T
+  call aceupdate_k(nbndproj,nnpw,xitmp,mexx)
+
+  deallocate( mexx )
+
+  call stop_clock( 'aceinit' )
+
+end subroutine
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+subroutine matcalc_k(label,DoE,PrtMat,ik,ninner,n,m,U,V,mat,ee)
+USE wvfct,                ONLY : wg, npwx
+USE becmod,               ONLY : calbec
+USE noncollin_module,     ONLY : noncolin, npol
+implicit none
+!
+! compute the (n,n) matrix representation <U|V> 
+! and energy from V (m,n) and U(m,n)
+!
+  integer :: ninner,n,m,i,ik, neff
+  real(DP) :: ee
+  complex(DP) :: U(ninner,n), V(ninner,m), mat(n,m) 
+  real(DP), parameter :: Zero=0.0d0, One=1.0d0, Two=2.0d0, Pt5=0.50d0 
+  character(len=*) :: label
+  character(len=2) :: string
+  logical :: DoE,PrtMat
+
+  call start_clock('matcalc')
+
+  string = 'M-'
+  mat = (Zero,Zero)
+  if(noncolin) then 
+    noncolin = .false.
+    CALL calbec(ninner, U, V, mat, m)  
+    noncolin = .true.
+  else 
+    CALL calbec(ninner, U, V, mat, m)  
+  end if
+
+  If(DoE) then 
+    If(n.ne.m) call errore('matcalc','no trace for rectangular matrix.',1)
+    If(PrtMat) call matprt_k(string//label,n,m,mat)
+    string = 'E-'
+    ee = Zero 
+    do i = 1,n
+      ee = ee + wg(i,ik)*x_occupation(i,ik)*dreal(mat(i,i))
+    end do 
+!   write(*,'(A,f16.8,A)') string//label, ee, ' Ry'
+  end if
+
+  call stop_clock('matcalc')
+
+end subroutine
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+subroutine matprt_k(label,n,m,A)
+implicit none
+  integer :: n,m,i
+  complex(DP) :: A(n,m)
+  character(len=50) :: frmt
+  character(len=*) :: label
+
+  write(*,'(A)') label//'(real)'
+  frmt = ' '
+  write(frmt,'(A,I4,A)') '(',m,'f12.6)'
+  do i = 1,n
+    write(*,frmt) dreal(A(i,:))
+  end do 
+
+  write(*,'(A)') label//'(imag)'
+  frmt = ' '
+  write(frmt,'(A,I4,A)') '(',m,'f12.6)'
+  do i = 1,n
+    write(*,frmt) aimag(A(i,:))
+  end do 
+end subroutine
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+subroutine aceupdate_k(nbndproj,nnpw,xitmp,mexx)
+USE wvfct ,               ONLY : npwx
+USE noncollin_module,     ONLY : noncolin, npol
+implicit none
+  integer :: INFO,nbndproj,nnpw
+  complex(DP) :: mexx(nbndproj,nbndproj), xitmp(npwx*npol,nbndproj) 
+  real(DP), parameter :: Zero=0.0d0, One=1.0d0, Two=2.0d0, Pt5=0.50d0 
+
+  call start_clock('aceupdate')
+
+! mexx = -(Cholesky(mexx))^-1
+  INFO = -1
+  mexx = -mexx
+  call ZPOTRF( 'L', nbndproj, mexx, nbndproj, INFO )
+  call errinfo('DPOTRF','Cholesky failed in aceupdate.',INFO)
+  INFO = -1
+  call ZTRTRI( 'L', 'N', nbndproj, mexx, nbndproj, INFO )
+  call errinfo('DTRTRI','inversion failed in aceupdate.',INFO)
+! |xi> = -One * Vx[phi]|phi> * mexx^T
+  call ZTRMM('R','L','C','N',npwx*npol,nbndproj,(One,Zero),mexx,nbndproj,xitmp,npwx*npol)
+
+  call stop_clock('aceupdate')
+
+end subroutine
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+subroutine vexxace_k(nnpw,nbnd,phi,exxe,vphi)
+USE becmod,               ONLY : calbec
+USE wvfct,                ONLY : current_k, npwx
+USE noncollin_module,     ONLY : npol
+!
+! do the ACE potential and 
+! (optional) print the ACE matrix representation 
+!
+implicit none
+  real(DP) :: exxe
+  integer :: nnpw,nbnd,i
+  complex(DP) :: phi(npwx*npol,nbnd)
+  complex(DP),optional :: vphi(npwx*npol,nbnd)
+  complex(DP),allocatable :: cmexx(:,:), vv(:,:)
+  real*8, parameter :: Zero=0.0d0, One=1.0d0, Two=2.0d0, Pt5=0.50d0 
+
+  call start_clock('vexxace')
+
+  allocate( vv(npwx*npol,nbnd) )
+  if(present(vphi)) then 
+    vv = vphi
+  else 
+    vv = (Zero, Zero)
+  end if
+
+! do the ACE potential 
+  allocate( cmexx(nbndproj,nbnd) )
+  cmexx = (Zero,Zero)
+! <xi|phi>
+  call matcalc_k('<xi|phi>',.false.,.false.,current_k,npwx*npol,nbndproj,nbnd,xi(1,1,current_k),phi,cmexx,exxe)
+
+! |vv> = |vphi> + (-One) * |xi> * <xi|phi> 
+  call ZGEMM ('N','N',npwx*npol,nbnd,nbndproj,-(One,Zero),xi(1,1,current_k),npwx*npol,cmexx,nbndproj,(One,Zero),vv,npwx*npol)
+
+  if(domat) then 
+     call matcalc_k('ACE',.true.,.false.,current_k,npwx*npol,nbnd,nbnd,phi,vv,cmexx,exxe)
+    write(*,'(3(A,I3),A,I9,A,f12.6)') 'vexxace_k: nbnd=', nbnd, ' nbndproj=',nbndproj, &
+                   ' k=',current_k,' npw=',nnpw, ' Ex(k)=',exxe
+  else
+    write(*,'(3(A,I3),A,I9)') 'vexxace_k: nbnd=', nbnd, ' nbndproj=',nbndproj, &
+                   ' k=',current_k,' npw=',nnpw
+  end if
+
+  if(present(vphi)) vphi = vv
+  deallocate( vv,cmexx )
+
+  call stop_clock('vexxace')
+
+end subroutine
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !-----------------------------------------------------------------------
 END MODULE exx
 !-----------------------------------------------------------------------

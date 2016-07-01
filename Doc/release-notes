@@ -3,6 +3,8 @@ New in 6.0 version:
   * New XML data file according to the XML Schema
   * Non-collinear magnetism implemented in epsilon.x, code restructuring
    (Andrea Ferretti, Tae-Yun Kim Cheol-Hwan Park)
+  * Lin Lin's ACE (Adaptively Compressed Exchange) for hybrid functionals
+    (Ivan Carnimeo)
 
 Fixed in 6.0 version:
 
