@@ -190,7 +190,7 @@ uncompress-w90: touch-dummy
 configure-w90: touch-dummy
 	cd ../W90 ; \
 	if (test -e ../install/make_wannier90.sys) || (test -d ../W90); then \
-	(cp ../install/make_wannier90.sys ../W90/make.inc); fi 
+	(cp ../install/make_wannier90.inc ../W90/make.sys); fi 
 	touch ./configure-w90
 
 ###########################################################

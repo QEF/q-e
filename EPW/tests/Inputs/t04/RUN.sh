@@ -15,3 +15,5 @@ python pp.py < pp.in
 mpirun -np 4 ../../../../bin/pw.x < scf_epw.in > scf_epw.out
 mpirun -np 4 ../../../../bin/pw.x -npool 4 < nscf_epw.in > nscf_epw.out
 mpirun -np 4 ../../../src/epw.x -npool 4 < epw.in > epw.out
+
+

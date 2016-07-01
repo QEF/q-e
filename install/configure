@@ -12398,7 +12398,7 @@ ac_config_files="$ac_config_files make.inc"
 
 ac_config_files="$ac_config_files configure.msg"
 
-ac_config_files="$ac_config_files install/make_wannier90.sys"
+ac_config_files="$ac_config_files install/make_wannier90.inc"
 
 
 
