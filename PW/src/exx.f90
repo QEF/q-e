@@ -589,7 +589,7 @@ MODULE exx
     USE buffers,              ONLY : get_buffer
     USE wvfct,                ONLY : nbnd, npwx, wg, current_k
     USE control_flags,        ONLY : gamma_only
-    USE klist,                ONLY : ngk, nks, nkstot, wk, igk_k
+    USE klist,                ONLY : ngk, nks, nkstot, xk, wk, igk_k
     USE symm_base,            ONLY : nsym, s, sr, ftau
     USE mp_pools,             ONLY : npool, nproc_pool, me_pool, inter_pool_comm
     USE mp_bands,             ONLY : me_bgrp, set_bgrp_indices, nbgrp
@@ -598,8 +598,9 @@ MODULE exx
                                      get_screening_parameter, get_gau_parameter
     USE scatter_mod,          ONLY : gather_grid, scatter_grid
     USE fft_interfaces,       ONLY : invfft
-    USE becmod,               ONLY : allocate_bec_type, bec_type
-    USE uspp,                 ONLY : nkb, okvan
+    USE becmod,               ONLY : allocate_bec_type, deallocate_bec_type, &
+         bec_type, calbec
+    USE uspp,                 ONLY : nkb, vkb, okvan
     USE us_exx,               ONLY : becxx
     USE paw_variables,        ONLY : okpaw
     USE paw_exx,              ONLY : PAW_init_keeq
@@ -621,7 +622,8 @@ MODULE exx
     COMPLEX(DP) :: d_spin(2,2,48)
     INTEGER :: npw, current_ik
     integer :: find_current_k
-
+    TYPE(bec_type) :: becpsi
+    
     CALL start_clock ('exxinit')
     !
     !  prepare the symmetry matrices for the spin part
@@ -845,36 +847,6 @@ MODULE exx
     !   lot of RAM but it is not easy to implement a better algorithm)
     ! 
     IF (npool>1) CALL mp_sum(exxbuff, inter_pool_comm)
-#ifdef __EXX_ACE
-    nbndproj = nbnd 
-    IF (.NOT. allocated(xi)) ALLOCATE( xi(npwx*npol,nbndproj,nks) )
-    eexx = 0.0d0
-    xi = (0.0d0,0.0d0)
-    if(gamma_only) then 
-      do ik = 1, nks
-        npw = ngk (ik)
-        current_k = ik
-        IF ( lsda ) current_spin = isk(ik)
-        IF ( nks > 1 ) CALL get_buffer(evc, nwordwfc, iunwfc, ik)
-        call aceinit_gamma(npw,nbnd,evc,xi(1,1,ik),ee)
-        eexx = eexx + ee
-      end do
-      write(*,*) 'EXACT--Energy', eexx
-    else
-      eexx = 0.0d0
-      do ik = 1, nks
-        npw = ngk (ik)
-        current_k = ik
-        IF ( lsda ) current_spin = isk(ik)
-        evc = (0.0d0,0.0d0)
-        IF ( nks > 1 ) CALL get_buffer(evc, nwordwfc, iunwfc, ik)
-        call aceinit_k(npw,nbnd,evc,xi(1,1,ik),ee)
-        eexx = eexx + ee
-      end do
-      write(*,*) 'EXACT--Energy', eexx
-    end if
-    domat = .false.
-#endif
     !
     ! For US/PAW only: prepare space for <beta_I|phi_j> scalar products
     !
@@ -892,6 +864,33 @@ MODULE exx
     !    \int \psi_a(r)\phi_a(r)\phi_b(r')\psi_b(r')/|r-r'|
     !
     IF(okpaw) CALL PAW_init_keeq()
+    !
+#ifdef __EXX_ACE
+    nbndproj = nbnd 
+    IF (.NOT. allocated(xi)) ALLOCATE( xi(npwx*npol,nbndproj,nks) )
+    IF ( okvan ) CALL allocate_bec_type( nkb, nbnd, becpsi)
+    eexx = 0.0d0
+    xi = (0.0d0,0.0d0)
+    DO ik = 1, nks
+       npw = ngk (ik)
+       current_k = ik
+       IF ( lsda ) current_spin = isk(ik)
+       IF ( nks > 1 ) CALL get_buffer(evc, nwordwfc, iunwfc, ik)
+       IF ( okvan ) THEN
+          CALL init_us_2(npw, igk_k(1,ik), xk(:,ik), vkb)
+          CALL calbec ( nkb, vkb, evc, becpsi, nbnd )
+       END IF
+       IF (gamma_only) THEN
+          call aceinit_gamma(npw,nbnd,evc,xi(1,1,ik),becpsi,ee)
+       ELSE
+          call aceinit_k(npw,nbnd,evc,xi(1,1,ik),becpsi,ee)
+       END IF
+       eexx = eexx + ee
+    END DO
+    write(*,*) 'EXACT--Energy', eexx
+    IF ( okvan ) CALL deallocate_bec_type(becpsi)
+    domat = .false.
+#endif
     !
     CALL stop_clock ('exxinit')  
     !
@@ -2810,8 +2809,8 @@ implicit none
 
 end subroutine
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-subroutine aceinit_gamma(nnpw,nbnd,phi,xitmp,exxe)
-USE becmod,               ONLY : bec_type, calbec
+subroutine aceinit_gamma(nnpw,nbnd,phi,xitmp,becpsi,exxe)
+USE becmod,               ONLY : bec_type
 USE wvfct,                ONLY : current_k
 !
 ! compute xi(npw,nbndproj) for the ACE method
@@ -2824,7 +2823,7 @@ implicit none
   integer :: i
   real(DP) :: exxe
   real(DP), parameter :: Zero=0.0d0, One=1.0d0, Two=2.0d0, Pt5=0.50d0 
-  type(bec_type) :: becpsi
+  type(bec_type), intent(in) :: becpsi
 
   call start_clock( 'aceinit' )
 
@@ -2848,7 +2847,6 @@ implicit none
 end subroutine
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 subroutine vexxace_gamma(nnpw,nbnd,phi,exxe,vphi)
-USE becmod,   ONLY : calbec
 USE wvfct,    ONLY : current_k, wg
 USE lsda_mod, ONLY : current_spin 
 !
@@ -2970,20 +2968,20 @@ implicit none
 
 end subroutine
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-subroutine aceinit_k(nnpw,nbnd,phi,xitmp,exxe)
-USE becmod,               ONLY : bec_type, calbec
+subroutine aceinit_k(nnpw,nbnd,phi,xitmp,becpsi,exxe)
+USE becmod,               ONLY : bec_type
 USE wvfct,                ONLY : current_k, npwx
 USE noncollin_module,     ONLY : npol
 !
 ! compute xi(npw,nbndproj) for the ACE method
 !
 implicit none
-  integer :: nnpw,nbnd,i
-  complex(DP) :: phi(npwx*npol,nbnd),xitmp(npwx*npol,nbndproj) 
-  complex(DP), allocatable :: mexx(:,:), mexx0(:,:) 
-  real(DP) :: exxe, exxe0
-  real(DP), parameter :: Zero=0.0d0, One=1.0d0, Two=2.0d0, Pt5=0.50d0 
-  type(bec_type) :: becpsi
+integer :: nnpw,nbnd,i
+complex(DP) :: phi(npwx*npol,nbnd),xitmp(npwx*npol,nbndproj) 
+complex(DP), allocatable :: mexx(:,:), mexx0(:,:) 
+real(DP) :: exxe, exxe0
+real(DP), parameter :: Zero=0.0d0, One=1.0d0, Two=2.0d0, Pt5=0.50d0 
+type(bec_type), intent(in) :: becpsi
 
   call start_clock( 'aceinit' )
 
