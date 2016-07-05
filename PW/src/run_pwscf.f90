@@ -144,8 +144,6 @@ SUBROUTINE run_pwscf ( exit_status )
      !
      ! ... send out forces to MM code in QM/MM run
      !
-     CALL qmmm_update_forces( force, rho%of_r, nspin, dfftp)
-     !
      IF ( lmd .OR. lbfgs ) THEN
         !
         if (fix_volume) CALL impose_deviatoric_stress(sigma)
@@ -171,6 +169,8 @@ SUBROUTINE run_pwscf ( exit_status )
      END IF
      !
      CALL stop_clock( 'ions' )
+     !
+     CALL qmmm_update_forces( force, rho%of_r, nspin, dfftp)
      !
      ! ... exit condition (ionic convergence) is checked here
      !
