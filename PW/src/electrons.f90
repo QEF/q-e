@@ -19,7 +19,7 @@ SUBROUTINE electrons()
   USE fft_base,             ONLY : dfftp
   USE gvecs,                ONLY : doublegrid
   USE gvect,                ONLY : ecutrho
-  USE lsda_mod,             ONLY : lsda, nspin, magtot, absmag, isk, current_spin
+  USE lsda_mod,             ONLY : nspin, magtot, absmag
   USE ener,                 ONLY : etot, hwf_energy, eband, deband, ehart, &
                                    vtxc, etxc, etxcc, ewld, demet, epaw, &
                                    elondon, ef_up, ef_dw
@@ -27,20 +27,17 @@ SUBROUTINE electrons()
                                    kedtau, vnew
   USE control_flags,        ONLY : tr2, niter, conv_elec, restart, lmd, &
                                    do_makov_payne
-  USE io_files,             ONLY : iunwfc, iunmix, nwordwfc, output_drho, &
+  USE io_files,             ONLY : iunmix, output_drho, &
                                    iunres, iunefield, seqopn
-  USE buffers,              ONLY : save_buffer, close_buffer, get_buffer
   USE ldaU,                 ONLY : eth
   USE extfield,             ONLY : tefield, etotefield
-  USE wavefunctions_module, ONLY : evc
-  USE wvfct,                ONLY : nbnd, wg, et, npw, npwx, current_k
-  USE klist,                ONLY : nks, ngk, igk_k
+  USE wvfct,                ONLY : nbnd, wg, et
+  USE klist,                ONLY : nks
   USE noncollin_module,     ONLY : noncolin, magtot_nc, i_cons,  bfield, &
                                    lambda, report
   USE uspp,                 ONLY : okvan
   USE exx,                  ONLY : exxinit, exxenergy2, exxbuff, &
-                                   fock0, fock1, fock2, dexx, &
-                                   vexxace_gamma, vexxace_k, domat
+                                   fock0, fock1, fock2, dexx
   USE funct,                ONLY : dft_is_hybrid, exx_is_active
   USE control_flags,        ONLY : adapt_thr, tr2_init, tr2_multi, gamma_only
   !
@@ -56,6 +53,7 @@ SUBROUTINE electrons()
   REAL(DP) :: &
       charge,       &! the total charge
       ee, exxen      ! used to compute exchange energy
+  REAL(dp), EXTERNAL :: exxenergyace
   INTEGER :: &
       idum,         &! dummy counter on iterations
       iter,         &! counter on iterations
@@ -170,28 +168,7 @@ SUBROUTINE electrons()
         !
         CALL exxinit()
 #ifdef __EXX_ACE 
-        domat = .true.
-        fock2=0.0d0
-        if(gamma_only) then 
-          do ik = 1, nks
-            npw = ngk (ik)
-            current_k = ik
-            IF ( lsda ) current_spin = isk(ik)
-            IF (nks > 1) CALL get_buffer(evc, nwordwfc, iunwfc, ik)
-            call vexxace_gamma(npw,nbnd,evc,ee)
-            fock2 = fock2 + ee
-          end do 
-        else
-          do ik = 1, nks
-            npw = ngk (ik)
-            current_k = ik
-            IF ( lsda ) current_spin = isk(ik)
-            IF (nks > 1) CALL get_buffer(evc, nwordwfc, iunwfc, ik)
-            call vexxace_k(npw,nbnd,evc,ee)
-            fock2 = fock2 + ee 
-          end do
-        end if
-        domat = .false.
+        fock2 = exxenergyace()
 #else  
         fock2 = exxenergy2()
 #endif
@@ -215,28 +192,7 @@ SUBROUTINE electrons()
         !       using orbitals at step n-1 in the expression of exchange
         !
 #ifdef __EXX_ACE
-        domat = .true.
-        fock1 = 0.0d0
-        if(gamma_only) then 
-          do ik = 1, nks
-            npw = ngk (ik)
-            current_k = ik
-            IF ( lsda ) current_spin = isk(ik)
-            IF (nks > 1) CALL get_buffer(evc, nwordwfc, iunwfc, ik)
-            call vexxace_gamma(npw,nbnd,evc,ee)
-            fock1 = fock1 + ee
-          end do 
-        else 
-          do ik = 1, nks
-            npw = ngk (ik)
-            current_k = ik
-            IF ( lsda ) current_spin = isk(ik)
-            IF (nks > 1) CALL get_buffer(evc, nwordwfc, iunwfc, ik)
-            call vexxace_k(npw,nbnd,evc,ee)
-            fock1 = fock1 + ee
-          end do
-        end if
-        domat = .false.
+        fock1 = exxenergyace()
 #else  
         fock1 = exxenergy2()
 #endif
@@ -251,28 +207,7 @@ SUBROUTINE electrons()
         !
         fock0 = fock2
 #ifdef __EXXACE 
-        domat = .true.
-        fock2 = 0.0d0
-        if(gamma_only) then 
-          do ik = 1, nks
-            npw = ngk (ik)
-            current_k = ik
-            IF ( lsda ) current_spin = isk(ik)
-            IF (nks > 1) CALL get_buffer(evc, nwordwfc, iunwfc, ik)
-            call vexxace_gamma(npw,nbnd,evc,ee)
-            fock2 = fock2 + ee 
-          end do 
-        else
-          do ik = 1, nks
-            npw = ngk (ik)
-            current_k = ik
-            IF ( lsda ) current_spin = isk(ik)
-            IF (nks > 1) CALL get_buffer(evc, nwordwfc, iunwfc, ik)
-            call vexxace_k(npw,nbnd,evc,ee)
-            fock2 = fock2 + ee
-          end do
-        end if
-        domat = .false.
+        fock2 = exxenergyace()
 #else  
         fock2 = exxenergy2()
 #endif
@@ -373,8 +308,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
                                    two_fermi_energies, tot_charge
   USE lsda_mod,             ONLY : lsda, nspin, magtot, absmag, isk
   USE vlocal,               ONLY : strf
-  USE wvfct,                ONLY : nbnd, et, npwx
-!
+  USE wvfct,                ONLY : nbnd, et
   USE gvecw,                ONLY : ecutwfc
   USE ener,                 ONLY : etot, hwf_energy, eband, deband, ehart, &
                                    vtxc, etxc, etxcc, ewld, demet, epaw, &
@@ -389,13 +323,11 @@ SUBROUTINE electrons_scf ( printout, exxen )
                                    restart, io_level, do_makov_payne,  &
                                    gamma_only, iverbosity, textfor,     &
                                    llondon, scf_must_converge, lxdm, ts_vdw
-  USE io_files,             ONLY : iunwfc, iunmix, nwordwfc, output_drho, &
+  USE io_files,             ONLY : iunmix, output_drho, &
                                    iunres, iunefield, seqopn
-  USE buffers,              ONLY : save_buffer, close_buffer
   USE ldaU,                 ONLY : eth, Hubbard_U, Hubbard_lmax, &
                                    niter_with_fixed_ns, lda_plus_u
   USE extfield,             ONLY : tefield, etotefield
-  USE wavefunctions_module, ONLY : evc
   USE noncollin_module,     ONLY : noncolin, magtot_nc, i_cons,  bfield, &
                                    lambda, report
   USE spin_orb,             ONLY : domag
@@ -1236,3 +1168,44 @@ SUBROUTINE electrons_scf ( printout, exxen )
   END SUBROUTINE print_energies
   !
 END SUBROUTINE electrons_scf
+!
+!----------------------------------------------------------------------------
+FUNCTION exxenergyace ( )
+  !--------------------------------------------------------------------------
+  !
+  ! ... Compute exchange energy using ACE
+  !
+  USE kinds,    ONLY : DP
+  USE buffers,  ONLY : get_buffer
+  USE exx,      ONLY : vexxace_gamma, vexxace_k, domat
+  USE klist,    ONLY : nks, ngk, igk_k
+  USE wvfct,    ONLY : nbnd, npwx, current_k
+  USE lsda_mod, ONLY : lsda, isk, current_spin
+  USE io_files, ONLY : iunwfc, nwordwfc
+  USE control_flags,        ONLY : gamma_only
+  USE wavefunctions_module, ONLY : evc
+  !
+  IMPLICIT NONE
+  !
+  REAL (dp) :: exxenergyace  ! computed energy
+  !
+  REAL (dp) :: ex
+  INTEGER :: ik, npw
+  !
+  domat = .true.
+  exxenergyace=0.0_dp
+  DO ik = 1, nks
+     npw = ngk (ik)
+     current_k = ik
+     IF ( lsda ) current_spin = isk(ik)
+     IF (nks > 1) CALL get_buffer(evc, nwordwfc, iunwfc, ik)
+     IF (gamma_only) THEN
+        call vexxace_gamma ( npw, nbnd, evc, ex )
+     ELSE
+        call vexxace_k ( npw, nbnd, evc, ex )
+     END IF
+     exxenergyace = exxenergyace + ex
+  END DO
+  domat = .false.
+  !
+END FUNCTION exxenergyace
