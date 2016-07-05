@@ -37,7 +37,8 @@
   ! degeneracy of WS points
   ! n of bands
   ! n of electronic WS points
-  complex(kind=DP) :: epmatw ( nbnd, nbnd, nrr_k, nmodes), cuf (nmodes, nmodes)
+  complex(kind=DP), allocatable :: epmatw ( :,:,:,:)
+  complex(kind=DP) :: cuf (nmodes, nmodes)  
   ! e-p matrix in Wanner representation
   ! rotation matrix U(k)
   real(kind=DP) :: xxq(3)
@@ -104,11 +105,17 @@
   ENDDO
   ! 
   IF (etf_mem) then
-    DO ir = ir_start, ir_stop
-      eptmp(:,:,:,:) = eptmp(:,:,:,:) +&
-        cfac(ir)*epmatwp( :, :, :, :, ir)
-    ENDDO
+    !DO ir = ir_start, ir_stop
+    !  eptmp(:,:,:,:) = eptmp(:,:,:,:) +&
+    !    cfac(ir)*epmatwp( :, :, :, :, ir)
+    !ENDDO
+    ! SP: This is faster by 20 % 
+    Call zgemv( 'n',  nbnd * nbnd * nrr_k * nmodes, ir_stop - ir_start + 1, ( 1.d0, 0.d0 ),&
+             epmatwp(1,1,1,1,ir_start), nbnd * nbnd * nrr_k * nmodes, cfac(ir_start),1,( 0.d0, 0.d0),eptmp, 1 )    
+    !
   ELSE
+    !
+    ALLOCATE(epmatw ( nbnd, nbnd, nrr_k, nmodes))
     !
     lrepmatw2   = 2 * nbnd * nbnd * nrr_k * nmodes
     ! 
@@ -125,29 +132,32 @@
       !        Here we want non blocking because not all the process have the same nb of ir. 
       !
       CALL MPI_FILE_SEEK(iunepmatwp2,lrepmatw,MPI_SEEK_SET,ierr)
-      IF( ierr /= 0 ) CALL errore( 'ephwan2blochp', 'error in MPI_FILE_SET_VIEW',1 )
-      CALL MPI_FILE_READ(iunepmatwp2, aux, lrepmatw2, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE,ierr)
+      IF( ierr /= 0 ) CALL errore( 'ephwan2blochp', 'error in MPI_FILE_SEEK',1 )
+      !CALL MPI_FILE_READ(iunepmatwp2, aux, lrepmatw2, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE,ierr)
+      CALL MPI_FILE_READ(iunepmatwp2, epmatw, lrepmatw2, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE,ierr)
       IF( ierr /= 0 ) CALL errore( 'ephwan2blochp', 'error in MPI_FILE_READ_ALL',1 )
       ! 
-      i = 0
-      DO imode = 1, nmodes
-       DO ip = 1, nrr_k
-        DO jbnd = 1, nbnd
-         DO ibnd = 1, nbnd
-           i = i + 1
-           epmatw ( ibnd, jbnd, ip, imode ) = aux (i)
-           ! 
-         ENDDO
-        ENDDO
-       ENDDO
-      ENDDO
+     ! i = 0
+     ! DO imode = 1, nmodes
+     !  DO ip = 1, nrr_k
+     !   DO jbnd = 1, nbnd
+     !    DO ibnd = 1, nbnd
+     !      i = i + 1
+     !      epmatw ( ibnd, jbnd, ip, imode ) = aux (i)
+     !      ! 
+     !    ENDDO
+     !   ENDDO
+     !  ENDDO
+     ! ENDDO
 #else      
       call rwepmatw ( epmatw, nbnd, nrr_k, nmodes, ir, iunepmatwp, -1)
 #endif
       !
-      eptmp = eptmp + cfac(ir)*epmatw
+      !eptmp = eptmp + cfac(ir)*epmatw
+      CALL ZAXPY(nbnd * nbnd * nrr_k * nmodes, cfac(ir), epmatw, 1, eptmp, 1)
       ! 
     ENDDO
+    DEALLOCATE(epmatw)
   ENDIF
   !
 #ifdef __PARA
