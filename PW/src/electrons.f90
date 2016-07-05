@@ -55,7 +55,7 @@ SUBROUTINE electrons()
   !
   REAL(DP) :: &
       charge,       &! the total charge
-      ee, exxen
+      ee, exxen      ! used to compute exchange energy
   INTEGER :: &
       idum,         &! dummy counter on iterations
       iter,         &! counter on iterations
@@ -285,9 +285,11 @@ SUBROUTINE electrons()
         IF ( dexx < 0d0 ) CALL errore( 'electrons', 'dexx is negative! &
            &  Check that exxdiv_treatment is appropriate for the system', 1 )
         !
+        !   remove the estimate exchange energy exxen used in the inner SCF
+        !
+        etot = etot + exxen + 0.5D0*fock2 - fock1
         exxen = 0.5D0*fock2 
-        etot = etot + 0.5D0*fock2 - fock1
-        write(*,*) '@chken', etot
+        ! write(*,*) '@chken', etot
         hwf_energy = hwf_energy + 0.5D0*fock2 - fock1
         IF ( dexx < tr2_final ) THEN
            WRITE( stdout, 9066 ) '!', etot, hwf_energy, dexx
@@ -346,7 +348,7 @@ SUBROUTINE electrons()
 END SUBROUTINE electrons
 !
 !----------------------------------------------------------------------------
-SUBROUTINE electrons_scf ( printout,exxen )
+SUBROUTINE electrons_scf ( printout, exxen )
   !----------------------------------------------------------------------------
   !
   ! ... This routine is a driver of the self-consistent cycle.
@@ -420,7 +422,7 @@ SUBROUTINE electrons_scf ( printout,exxen )
   IMPLICIT NONE
   !
   INTEGER, INTENT (IN) :: printout
-  real(DP),intent(in)  :: exxen
+  REAL(DP),INTENT (IN) :: exxen    ! current estimate of the echange energy
   !
   ! ... a few local variables
   !
@@ -770,7 +772,9 @@ SUBROUTINE electrons_scf ( printout,exxen )
      END IF
      !
      etot = eband + ( etxc - etxcc ) + ewld + ehart + deband + demet + descf
-     write(*,*) '@chk', etot - exxen
+     ! for hybrid calculations, add the current estimate of exchange energy
+     etot = etot - exxen  
+     ! write(*,*) '@chk', etot 
      !
      IF (okpaw) etot = etot + epaw
      IF ( lda_plus_u ) etot = etot + eth
