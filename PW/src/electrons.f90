@@ -206,7 +206,7 @@ SUBROUTINE electrons()
         ! fock0 is fock2 at previous step
         !
         fock0 = fock2
-#ifdef __EXXACE 
+#ifdef __EXX_ACE 
         fock2 = exxenergyace()
 #else  
         fock2 = exxenergy2()
