@@ -2282,9 +2282,40 @@ GIPAW http://qeforge.qe-forge.org/svn/qe-gipaw/trunk
 Git is a very populare versioning control system for collaborative development 
 nowadays. The web is full of tutorials and guide about how to use it, covering 
 simple novice concepts to master the most sophisticated functionalities. The 
-following links contain an introduction to \texttt{git}:\\
-https://git-scm.com/book/en/v2/Getting-Started-Git-Basics\\
+following links contain an introduction to \texttt{git}:
+\begin{verbatim}
+https://git-scm.com/book/en/v2/Getting-Started-Git-Basics
 https://git-scm.com/course/svn.html
+\end{verbatim}
+Very quick guide for the impatient:
+\begin{itemize}
+\item Initial download, equivalent to \texttt{svn co}:\\
+  \texttt{git clone ssh://username@qeforge.qe-forge.org/gitroot/q-e-private}
+\item In order to align the local repository to the svn mirror
+  (equivalent to \texttt{svn update}):\\
+  If no changes are present in the local repository, use
+  \begin{quote}
+  \texttt{git pull}
+  \end{quote}
+  If the local repository was modified, use the following sequence:
+  \begin{quote}
+  \texttt{git add}     (add to the list of modified files)\\
+  \texttt{git commit}  (save locally modified files)\\
+  \texttt{git merge}   (merge local changes with repository changes)
+  \end{quote}
+  Alternatively, use the stash to make merge by hand:
+  \begin{quote}
+  \texttt{git stash save}     (save and remove modified files)\\
+  \texttt{git pull}           (update files)\\
+  \texttt{git stash apply}    (overwrite with locally modified files)
+  \end{quote}
+  In order to clear the stash:   \texttt{git clear}
+\item A few useful commands:
+  \begin{quote}
+  \texttt{git status}\\
+  \texttt{git diff}
+  \end{quote}
+\end{itemize}
 
 \section{Bibliography}
 
