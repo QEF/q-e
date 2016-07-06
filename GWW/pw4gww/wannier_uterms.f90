@@ -306,11 +306,10 @@
                       vg_q(1)=vg_q(ig)+1.d0/qq_fact
                    else
                       
-                      qq(1:3)=g(1:3,ig)*(8.d0*(dble(n_int_loc))**3.d0)
+                      
                        qq_fact=qq(1)**2+qq(2)**2+qq(3)**2
-                       !vg_q(ig)=vg_q(ig)+1.d0/qq_fact
-                      vg_q(ig)=1.d0/qq_fact
-                       
+                       vg_q(ig)=vg_q(ig)+1.d0/qq_fact
+                                             
                    endif
 
 
