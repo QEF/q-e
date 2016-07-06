@@ -13,7 +13,6 @@ MODULE bse_wannier
                       ! of the Hamiltonian  
   INTEGER :: plotn_min!start plotting from plot_nmin eigenstate 
   INTEGER :: plotn_max!end plotting at plot_nmax eigenstate
-  INTEGER :: nbndt! total number of bands
   INTEGER :: spectra_nstep! number of frequencies for which the spectrum will be
                           !computed 
   INTEGER :: l_restart! if 1 restart from the computation of the n_eig_start
@@ -58,6 +57,7 @@ MODULE bse_wannier
   REAL(kind=DP) :: spectra_broad!range of broadening for the spectra (in eV) 
   LOGICAL :: l_contraction!if true uses contraction for speeding-up
   LOGICAL :: l_gtrick!save arrays in G space for limiting memory usage
+  LOGICAL :: l_dielectric!if true in case of l_lanczos=.false. calculates the dielectric function from excitonic amplitudes
 
 END MODULE bse_wannier
 

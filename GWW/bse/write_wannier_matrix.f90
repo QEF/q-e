@@ -48,6 +48,12 @@
         if(ionode) read(iunu) u_trans(1:nbnd,iw,is)
         call mp_bcast(u_trans(1:nbnd,iw,is),ionode_id, world_comm)       
      enddo
+!DEBUG
+!     u_trans=0.d0
+!     do iw=1,nbnd
+!        u_trans(iw,iw,is)=1.d0
+!     enddo
+
   enddo
   if(ionode) close(iunu)
   

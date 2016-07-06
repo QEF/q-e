@@ -127,6 +127,7 @@ debug=.false.
 
 !       first rotate the excitonic wave function wave vector to use the wannier
 !       wavefunctions
+
         if(debug) write(stdout,*)  'DEBUG1'
         Call urot_a(a_in,a_rot,0)
         if(debug) write(stdout,*)  'DEBUG2'

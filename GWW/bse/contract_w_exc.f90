@@ -96,9 +96,9 @@ INTEGER ::  kilobytes
 
 
 call start_clock('direct_w_exc')
-CALL memstat( kilobytes )
-write(stdout,*) 'memory0', kilobytes
-FLUSH(stdout)
+!CALL memstat( kilobytes )
+!write(stdout,*) 'memory0', kilobytes
+!FLUSH(stdout)
 
 
 
@@ -149,9 +149,10 @@ enddo
 call mp_barrier(world_comm)
 
 close(iungprod)
-CALL memstat( kilobytes )
-write(stdout,*) 'memory1', kilobytes
-FLUSH(stdout)
+!CALL memstat( kilobytes )
+!write(stdout,*) 'memory1', kilobytes
+!FLUSH(stdout)
+
 ! FFT to real space (dual grid)
 allocate(p_basis_t(fc%npwt,z%numw_prod)) 
 allocate(p_basis_r(fc%nrxxt,z%numw_prod))
@@ -198,9 +199,9 @@ call read_polaw_global(0, pw)
 
 call mp_barrier(world_comm)
 
-CALL memstat( kilobytes )
-write(stdout,*) 'memory2', kilobytes
-FLUSH(stdout)
+!CALL memstat( kilobytes )
+!write(stdout,*) 'memory2', kilobytes
+!FLUSH(stdout)
 
 
 ! allocate tmp matrix
@@ -210,7 +211,7 @@ FLUSH(stdout)
 
 !!!!!!!!!!!!!!!!!dgemm subroutine!!!!!!!!!!!!!!!!!!!!!
 call start_clock('direct_w_dgemv')
-write(stdout,*) 'memory2',z%numw_prod,iimat%np_max
+!write(stdout,*) 'memory2',z%numw_prod,iimat%np_max
 allocate(zp(z%numw_prod,iimat%np_max))
 !!allocate(pizeta(z%numw_prod,iimat%np_max)) 
 !!allocate(vphipizeta(fc%nrxxt,iimat%np_max)) 
@@ -240,15 +241,13 @@ else
 endif
 write(stdout,*)  'VPHIZETA_SAVE :', fc%nrxxt,vpmax_tot
 !
-CALL memstat( kilobytes )
-write(stdout,*) 'memory3', kilobytes
-FLUSH(stdout)
+!CALL memstat( kilobytes )
+!write(stdout,*) 'memory3', kilobytes
+!FLUSH(stdout)
 do iv=1, iimat%numb_v
    zp(1:z%numw_prod,1:iimat%np_max)=0.d0
    vpmax=0
  
-   write(stdout,*) 'DEBUG1'
-   FLUSH(stdout)
    call start_clock('dgemv1')
    do ii=1, iimat%np_max
       if (iimat%iimat(ii,iv)==0) cycle
@@ -257,8 +256,7 @@ do iv=1, iimat%numb_v
          zp(k,vpmax)=z%z(k,ii,iv)!ATTENZIONE era zp(ii)
       enddo
    enddo
-   write(stdout,*) 'DEBUG2'
-  FLUSH(stdout)
+
   if(vpmax>0) then
      allocate(pizeta(z%numw_prod,vpmax)) 
      allocate(vphipizeta(fc%nrxxt,vpmax)) 
@@ -269,16 +267,14 @@ do iv=1, iimat%numb_v
    call stop_clock('dgemv1')
 
 
-   call start_clock('dgemv2.1')
-   write(stdout,*) 'DEBUG2', z%numw_prod,pw%numpw
-   FLUSH(stdout)
+   call start_clock('dgemv2')
+
 
    call dgemm('N','N', z%numw_prod,vpmax, z%numw_prod,1.d0,pw%pw,z%numw_prod,zp,&
               z%numw_prod,0.d0,pizeta,z%numw_prod)
    call stop_clock('dgemv2')
 
-   write(stdout,*) 'DEBUG3'
-   FLUSH(stdout)
+
    call start_clock('dgemv3')
    call dgemm('N','N', fc%nrxxt, vpmax, z%numw_prod,1.d0,p_basis_r(1,1),fc%nrxxt,&
               pizeta(1,1), z%numw_prod, 0.d0, vphipizeta(1,1),fc%nrxxt)
@@ -303,8 +299,7 @@ do iv=1, iimat%numb_v
          endif
       enddo
    endif
-     write(stdout,*) 'DEBUG4'
-     FLUSH(stdout)
+
    !
 !
    deallocate(pizeta)
@@ -321,10 +316,9 @@ call free_memory_polaw(pw)
 call free_imat(iimat)
 
 
-FLUSH( stdout )
-CALL memstat( kilobytes )
-write(stdout,*) 'memory4', kilobytes
-FLUSH(stdout)
+!CALL memstat( kilobytes )
+!write(stdout,*) 'memory4', kilobytes
+!FLUSH(stdout)
 call stop_clock('direct_w_exc')
 
 return

@@ -12,7 +12,7 @@ USE fft_custom_gwl
 USE wvfct,    ONLY : npw,npwx,nbnd
 USE bse_wannier, ONLY:num_nbndv,eps,lambda,maxit,n_eig,l_cgrad,l_plotexc,&
                       plotn_min,plotn_max,l_plotaverage,l_restart,l_verbose,&
-                      n_eig_start,l_finite,l_contraction,l_gtrick
+                      n_eig_start,l_finite,l_contraction,l_gtrick,l_dielectric
 USE mp,          ONLY : mp_barrier
 USE mp_world,             ONLY : world_comm
 USE constants,   ONLY : RYTOEV
@@ -72,8 +72,6 @@ if(l_contraction) then
    call contract_v_build(fc)
 endif
 
-write(stdout,*) 'FIND_EIG 1'
-FLUSH(stdout)
 
 do i=1,n_eig
    call initialize_exc(bse_spectrum(i))
@@ -84,8 +82,7 @@ do i=1,n_eig
 enddo
 
 
-write(stdout,*) 'FIND_EIG 2'
-FLUSH(stdout)
+
 
 if(l_restart==1)then
    nstart=n_eig_start
@@ -97,8 +94,7 @@ else
    nstart=1
 endif
 
-write(stdout,*) 'FIND_EIG 3'
-FLUSH(stdout)
+
 
 !compute the eigenfunction and eigenvalues
 if(l_restart<2) then
@@ -124,42 +120,50 @@ if(l_gtrick)  call v_wfng_to_wfnr(vstate,fc,vstate_r)
 
 !compute the optical amplitudes 
 
+if(l_dielectric) then
 !compute the  |psibar(iv)>
-if(.not.l_finite) then
-   allocate (dvpsi ( npwx , num_nbndv(1)))
-   do ipol=1,3 
-      call initialize_v_state(psibar(ipol))
-      psibar(ipol)%nspin= vstate%nspin
-      psibar(ipol)%numb_v(:)=vstate%numb_v(:)
-      psibar(ipol)%npw=npw
-      psibar(ipol)%gstart=vstate%gstart
-      
-      allocate( psibar(ipol)%wfn(psibar(ipol)%npw,psibar(ipol)%numb_v(1),psibar(ipol)%nspin))
+   if(.not.l_finite) then
+      allocate (dvpsi ( npwx , num_nbndv(1)))
+      do ipol=1,3 
+         call initialize_v_state(psibar(ipol))
+         psibar(ipol)%nspin= vstate%nspin
+         psibar(ipol)%numb_v(:)=vstate%numb_v(:)
+         psibar(ipol)%npw=npw
+         psibar(ipol)%gstart=vstate%gstart
+         
+         allocate( psibar(ipol)%wfn(psibar(ipol)%npw,psibar(ipol)%numb_v(1),psibar(ipol)%nspin))
      
-      call dvpsi_e (1, ipol,dvpsi(1,1))
-      do i=1,num_nbndv(1)
-         psibar(ipol)%wfn(1:npw,i,1)&
-             & = dvpsi(1:npw,i)
+         call dvpsi_e (1, ipol,dvpsi(1,1))
+         do i=1,num_nbndv(1)
+            psibar(ipol)%wfn(1:npw,i,1)&
+                 & = dvpsi(1:npw,i)
+         enddo
       enddo
-   enddo
-   deallocate (dvpsi)
-endif
-call mp_barrier(world_comm)
+      deallocate (dvpsi)
+   endif
+   call mp_barrier(world_comm)
 
-do ipol=1,3
-   do i=1,n_eig
-      call absorption(vstate_r,psibar(ipol)%wfn(1,1,1),fc,i,bse_sp%a(i,ipol),ipol)
+   do ipol=1,3
+      do i=1,n_eig
+         call absorption(vstate_r,psibar(ipol)%wfn(1,1,1),fc,i,bse_sp%a(i,ipol),ipol)
 !      if(ionode) write(stdout,*)'Eigv#',i,'E',bse_spectrum(i)%e, 'Amp',bse_sp%a(i)  
 !      if(ionode) write(stdout,*)'Eigv#',i,'E',bse_sp%en(i), 'Amp',bse_sp%a(i)  
+      enddo
    enddo
-enddo
-call mp_barrier(world_comm)
+   call mp_barrier(world_comm)
 
 !build up the spectrum
-do ipol=1,3
-   call build_spectrum(bse_sp%a(1,ipol),bse_sp%en(1),ipol)
-enddo
-call mp_barrier(world_comm)
+   do ipol=1,3
+      call build_spectrum(bse_sp%a(1,ipol),bse_sp%en(1),ipol)
+   enddo
+
+   deallocate(bse_spectrum)
+   call free_memory_spectrum(bse_sp)
+   do ipol=1,3
+      call free_v_state(psibar(ipol))
+   enddo
+
+endif
 
 !plot the excitonic wfn
 if(l_plotexc) then
@@ -177,12 +181,6 @@ do i=1,n_eig
    call free_memory_exc_a(bse_spectrum(i))
 enddo
 
-deallocate(bse_spectrum)
-
-call free_memory_spectrum(bse_sp)
-do ipol=1,3
-   call free_v_state(psibar(ipol))
-enddo
 
 if(l_contraction) then
    call free_memory_contrac_w

@@ -28,11 +28,11 @@ use bse_wannier, ONLY: num_nbndv,&
            lambda,eps,&
            l_cgrad,maxit,cg_nreset,lm_delta,n_eig,eps_eig, scissor,&
            l_plotexc,plotn_min,plotn_max,r_hole,l_plotaverage,&
-           l_tspace,nbndt,l_finite,r_pola,&
+           l_tspace,l_finite,r_pola,&
            spectra_e_min,spectra_e_max,spectra_nstep,spectra_broad,&
            l_restart,n_eig_start, nit_lcz,l_lanczos, l_restart_lcz, nlcz_restart,&
            l_tdhf,l_fullbse,l_lf,l_rpa, l_contraction, l_gtrick, qpe_imin, qpe_imax,&
-           l_scissor
+           l_scissor,l_dielectric
 implicit none
 INTEGER, EXTERNAL :: find_free_unit
 
@@ -69,11 +69,11 @@ NAMELIST /inputbse/ prefix,num_nbndv,dual_bse,outdir,l_truncated_coulomb,&
                     truncation_radius, numw_prod, l_verbose,lambda,eps,&
                     l_cgrad,maxit,cg_nreset,lm_delta,n_eig,eps_eig,&
                     scissor,l_plotexc,plotn_min,plotn_max,r_hole,&
-                    l_plotaverage,l_tspace,nbndt,l_finite,r_pola,&
+                    l_plotaverage,l_tspace,l_finite,r_pola,&
                     spectra_e_min,spectra_e_max,spectra_nstep,spectra_broad,&
                     l_restart,n_eig_start, nit_lcz,l_lanczos, l_restart_lcz, nlcz_restart,&
                     l_fullbse,l_tdhf,l_lf,l_rpa,l_contraction,l_gtrick, qpe_imin, qpe_imax,&
-                    l_scissor
+                    l_scissor,l_dielectric 
 
 debug=.false.
             
@@ -100,14 +100,14 @@ l_truncated_coulomb = .false.
 truncation_radius = 10.d0
 numw_prod=1
 dual_bse=1.d0
-l_verbose=.true.
+l_verbose=.false.
 lambda=0.001d0
 eps=0.0001d0
-maxit=100
-cg_nreset=50
-l_cgrad=.false.
+maxit=400
+cg_nreset=25
+l_cgrad=.true.
 lm_delta=0.3
-n_eig=10
+n_eig=1
 eps_eig=0.0000000001
 scissor=0.d0
 l_plotexc=.false.
@@ -116,7 +116,6 @@ plotn_max=0
 r_hole(1:3)=0.d0
 l_plotaverage=.false.
 l_tspace=.false.
-nbndt=1
 l_finite=.false.
 r_pola(1:3)=1.d0
 spectra_e_min=0.d0
@@ -133,11 +132,12 @@ l_fullbse=.true.
 l_tdhf=.false.
 l_lf=.false.
 l_rpa=.false.
-l_contraction=.false.
-l_gtrick=.false.
+l_contraction=.true.
+l_gtrick=.true.
 qpe_imin=1
 qpe_imax=1
 l_scissor=.true.
+l_dielectric=.false.
 !
 !    Reading input file
 !
@@ -190,7 +190,6 @@ ENDIF
   CALL mp_bcast( r_hole, ionode_id, world_comm ) 
   CALL mp_bcast( l_plotaverage, ionode_id, world_comm ) 
   CALL mp_bcast( l_tspace, ionode_id, world_comm ) 
-  CALL mp_bcast( nbndt, ionode_id, world_comm ) 
   CALL mp_bcast( l_finite, ionode_id, world_comm ) 
   CALL mp_bcast( r_pola, ionode_id, world_comm ) 
   CALL mp_bcast( spectra_e_min, ionode_id, world_comm ) 
@@ -212,6 +211,7 @@ ENDIF
   CALL mp_bcast( l_scissor, ionode_id, world_comm)
   CALL mp_bcast( qpe_imin, ionode_id, world_comm)
   CALL mp_bcast( qpe_imax, ionode_id, world_comm)
+  CALL mp_bcast( l_dielectric, ionode_id, world_comm)
 
   call read_file 
 ! after read_file everything is known
