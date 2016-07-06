@@ -14,7 +14,7 @@
   SUBROUTINE close_epw
   !------------------------------------------------------------------
   !
-  USE io_epw,   ONLY: iunepmatf, iuetf
+  USE io_epw,   ONLY: iunepmatf
   USE phcom,    ONLY: iuwfc, iudwf, iudrhous, iudvkb3, fildrho, iudrho
   USE epwcom,   ONLY: elinterp
   USE uspp,     ONLY: okvan      
@@ -41,7 +41,6 @@
      !  the temporary storage for Wannier interpolation
      !
      CLOSE (unit = iunepmatf,  status = 'delete')
-     CLOSE (unit = iuetf,      status = 'delete')
 !     CLOSE (unit = iunepmatwe, status = 'delete')
 !     CLOSE (unit = iunepmatwp, status = 'delete')
      !

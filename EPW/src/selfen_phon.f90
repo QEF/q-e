@@ -28,7 +28,7 @@
   !-----------------------------------------------------------------------
   USE kinds,      ONLY : DP
   USE io_global,  ONLY : stdout
-  USE io_epw,     ONLY : iunepmatf, iuetf
+  USE io_epw,     ONLY : iunepmatf
   use phcom,      ONLY : nmodes
   USE control_lr, ONLY : lgamma
   use epwcom,     ONLY : nbndsub, lrepmatf, fsthick, &
@@ -156,16 +156,6 @@
                    DDOT(3, vkk(:,ibnd), 1, vkk(:,ibnd),1)
            ENDDO
         ENDDO
-        !
-        ! we read the hamiltonian eigenvalues (those at k+q depend on q!) 
-        !
-        ! when we see references to iq for file readinq, it is always = 1 
-        IF (.not. etf_mem) then
-           nrec = ikk
-           CALL davcio ( etf (ibndmin:ibndmax, ikk), ibndmax-ibndmin+1, iuetf, nrec, - 1)
-           nrec = ikq
-           CALL davcio ( etf (ibndmin:ibndmax, ikq), ibndmax-ibndmin+1, iuetf, nrec, - 1)
-        ENDIF
         !
         ! here we must have ef, not ef0, to be consistent with ephwann_shuffle
         IF ( ( minval ( abs(etf (:, ikk) - ef) ) .lt. fsthick ) .AND. &
@@ -339,7 +329,7 @@ END SUBROUTINE selfen_phon_q
   !-----------------------------------------------------------------------
   USE kinds,      ONLY : DP
   USE io_global,  ONLY : stdout
-  USE io_epw,     ONLY : iunepmatf, iuetf, lambda_phself, linewidth_phself
+  USE io_epw,     ONLY : iunepmatf, lambda_phself, linewidth_phself
   use phcom,      ONLY : nmodes
   USE control_lr, ONLY : lgamma
   use epwcom,     ONLY : nbndsub, lrepmatf, fsthick, &
@@ -490,16 +480,6 @@ END SUBROUTINE selfen_phon_q
                   DDOT(3, vkk(:,ibnd), 1, vkk(:,ibnd),1)
           ENDDO
        ENDDO
-       !
-       ! we read the hamiltonian eigenvalues (those at k+q depend on q!) 
-       !
-       ! when we see references to iq for file readinq, it is always = 1 
-       IF (.not. etf_mem) then
-          nrec = ikk
-          CALL davcio ( etf (ibndmin:ibndmax, ikk), ibndmax-ibndmin+1, iuetf, nrec, - 1)
-          nrec = ikq
-          CALL davcio ( etf (ibndmin:ibndmax, ikq), ibndmax-ibndmin+1, iuetf, nrec, - 1)
-       ENDIF
        !
        ! here we must have ef, not ef0, to be consistent with ephwann_shuffle
        IF ( ( minval ( abs(etf (:, ikk) - ef) ) .lt. fsthick ) .AND. &

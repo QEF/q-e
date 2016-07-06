@@ -31,7 +31,7 @@
   USE ions_base,     ONLY : amass, ityp
   USE phcom,         ONLY : nq1, nq2, nq3, nmodes, w2
   USE control_lr,    ONLY : lgamma
-  USE epwcom,        ONLY : nbndsub, lrepmatf, fsthick, lretf, epwread,   &
+  USE epwcom,        ONLY : nbndsub, lrepmatf, fsthick, epwread,          &
                             epwwrite, ngaussw, degaussw, lpolar,          &
                             nbndskip, parallel_k, parallel_q, etf_mem,    &
                             elecselfen, phonselfen, nest_fn, a2f, indabs, &
@@ -43,7 +43,7 @@
   USE io_files,      ONLY : prefix, diropn
   USE io_global,     ONLY : stdout, ionode
   USE io_epw,        ONLY : lambda_phself,linewidth_phself,linewidth_elself, iunepmatf, &
-                            iuetf, iunepmatwe, iunepmatwp
+                            iunepmatwe, iunepmatwp
   USE elph2,         ONLY : nrr_k, nrr_q, cu, cuq, lwin, lwinq, irvec, ndegen_k, ndegen_q, &
                             wslen, chw, chw_ks, cvmew, cdmew, rdw, epmatwp, epmatq, &
                             wf, etf, etf_k, etf_ks, xqf, xkf, wkf, wqf, &
@@ -431,9 +431,6 @@
        lrepmatf  = 2 * (ibndmax-ibndmin+1) * (ibndmax-ibndmin+1)
        CALL diropn (iunepmatf, 'epf', lrepmatf, exst)
        !
-       lretf     = (ibndmax-ibndmin+1)
-       CALL diropn (iuetf, 'etf', lretf, exst)
-       !
     ENDIF
     !      
     DO iq = 1, nqf
@@ -443,7 +440,7 @@
        ! In case of big calculation, show progression of iq (especially usefull when
        ! elecselfen = true as nothing happen during the calculation otherwise. 
        !
-       IF ((.not. etf_mem) .AND. (.not. phonselfen) ) THEN 
+       IF ( phonselfen) THEN 
          IF (MOD(iq,100) == 0) THEN
            WRITE(stdout, '(a,i10,a,i10)' ) '     Progression iq (fine) = ',iq,'/',nqf
          ENDIF
@@ -542,15 +539,6 @@
                 CALL vmewan2bloch &
                      ( nbndsub, nrr_k, irvec, ndegen_k, xkq, cufkq, vmef (:,:,:, ikq), etf(:,ikq), etf_ks(:,ikq), chw)
              ENDIF
-          ENDIF
-          !
-          !
-          IF (.not. etf_mem) THEN
-             nrec  = ikk
-             CALL davcio ( etf (ibndmin:ibndmax, ikk), ibndmax-ibndmin+1, iuetf, nrec, + 1)
-             nrec  = ikq
-             CALL davcio ( etf (ibndmin:ibndmax, ikq), ibndmax-ibndmin+1, iuetf, nrec, + 1)
-             !
           ENDIF
           !
           ! interpolate ONLY when (k,k+q) both have at least one band 
@@ -656,13 +644,10 @@
        !
     ELSE
        !
-       !  open epf and etf files with the correct record length
+       !  open epf file with the correct record length
        !
        lrepmatf  = 2 * (ibndmax-ibndmin+1) * (ibndmax-ibndmin+1)
        CALL diropn (iunepmatf, 'epf', lrepmatf, exst)
-       !
-       lretf     = (ibndmax-ibndmin+1)
-       CALL diropn (iuetf, 'etf', lretf, exst)
        !
     ENDIF
     !
@@ -761,15 +746,6 @@
               CALL vmewan2bloch &
                    ( nbndsub, nrr_k, irvec, ndegen_k, xkq, cufkq, vmef (:,:,:, ikq), etf(:,ikq), etf_ks(:,ikq), chw)
            ENDIF
-        ENDIF
-        !
-        !
-        IF (.not. etf_mem) THEN
-           nrec  = ikk
-           CALL davcio ( etf (ibndmin:ibndmax, ikk), ibndmax-ibndmin+1, iuetf, nrec, + 1)
-           nrec  = ikq
-           CALL davcio ( etf (ibndmin:ibndmax, ikq), ibndmax-ibndmin+1, iuetf, nrec, + 1)
-           !
         ENDIF
         !
         ! interpolate ONLY when (k,k+q) both have at least one band 

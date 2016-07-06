@@ -26,7 +26,7 @@
             iufilgap, iospectral_sup, iua2ftrfil, iufilgapFS, iufillambdaFS
   PUBLIC :: epwdata, iundmedata, iunvmedata, iunksdata, iudyn, iukgmap, iuepb,&
             iunepmatf, iurecover, iufilfreq, iufilegnv, iufileph, iufilkqmap, &
-            iufilikmap, iuetf, iueig, iunepmatwp, iunepmatwe, iunkf, iunqf, &
+            iufilikmap, iueig, iunepmatwp, iunepmatwe, iunkf, iunqf, &
             iufileig
   PUBLIC :: iuwinfil, iun_plot, iuukk, iuprojfil !, iummn
   !
@@ -77,7 +77,7 @@
                                     ! [.ephmat]
   INTEGER :: iufilikmap      = 112  ! Index of k+(sign)q on the irreducible k-mesh
                                     ! [.ikmap]
-  INTEGER :: iuetf           = 113  ! Interpolated hamiltonian eigenvalues
+!  INTEGER :: iuetf           = 113  ! Interpolated hamiltonian eigenvalues
   INTEGER :: iueig           = 114  ! Temporary eig for interpolation    
 
   INTEGER :: iunepmatwp      = 115  ! The unit with the e-ph matrix in Wannier-Wannier representation

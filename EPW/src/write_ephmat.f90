@@ -20,7 +20,7 @@
   !-----------------------------------------------------------------------
   USE kinds,      ONLY : DP
   USE io_global,  ONLY : stdout
-  USE io_epw,     ONLY : iunepmatf, iufilfreq, iufilegnv, iufileph, iuetf
+  USE io_epw,     ONLY : iunepmatf, iufilfreq, iufilegnv, iufileph
   USE io_files,   ONLY : prefix, tmp_dir
   USE phcom,      ONLY : nmodes
   USE control_lr, ONLY : lgamma
@@ -110,13 +110,6 @@
         ikk = 2 * ik - 1
         ikq = ikk + 1
         !
-        IF (.not. etf_mem) then
-           nrec = ikk
-           CALL davcio( etf(ibndmin:ibndmax,ikk), ibndmax-ibndmin+1, iuetf, nrec, -1 )
-           nrec = ikq
-           CALL davcio( etf(ibndmin:ibndmax,ikq), ibndmax-ibndmin+1, iuetf, nrec, -1 )
-        ENDIF
-        !
         IF ( equivk(lower_bnd+ik-1) .eq. lower_bnd+ik-1 ) THEN
            IF ( minval( abs( etf(:,ikk) - ef  ) ) .lt. fsthick ) THEN
               fermicount = fermicount + 1 
@@ -201,15 +194,6 @@
      !
      IF ( equivk(lower_bnd+ik-1) .eq. (lower_bnd+ik-1) ) THEN 
         !
-        ! we read the hamiltonian eigenvalues (those at k+q depend on q!)
-        ! when we see references to iq for file reading, it is always = 1 
-        IF (.not. etf_mem) then
-           nrec = ikk
-           CALL davcio( etf(ibndmin:ibndmax,ikk), ibndmax-ibndmin+1, iuetf, nrec, -1 )
-           nrec = ikq
-           CALL davcio( etf(ibndmin:ibndmax,ikq), ibndmax-ibndmin+1, iuetf, nrec, -1 )
-        ENDIF
-        !
         ! here we must have ef, not ef0, to be consistent with ephwann_shuffle
         !
         !   IF ( ixkf(lower_bnd+ik-1) .gt. 0 .AND. ixkqf(ixkf(lower_bnd+ik-1),iq) .gt. 0 ) THEN
@@ -291,7 +275,6 @@
   !-----------------------------------------------------------------------
   USE kinds,     ONLY : DP
   USE io_global, ONLY : stdout
-  USE io_epw,    ONLY : iuetf
   USE epwcom,    ONLY : nbndsub, fsthick, ngaussw, degaussw, & 
                         etf_mem, efermi_read, fermi_energy, mp_mesh_k
   USE pwcom,     ONLY : nelec, ef, isk
@@ -331,15 +314,6 @@
         !
         ikk = 2 * ik - 1
         ikq = ikk + 1
-        !
-        IF (.not. etf_mem) then
-           nrec = (iq-1) * nkqf + ikk
-           nrec = ikk
-           CALL davcio( etf(ibndmin:ibndmax,ikk), ibndmax-ibndmin+1, iuetf, nrec, -1 )
-           nrec = (iq-1) * nkqf + ikq
-           nrec = ikq
-           CALL davcio( etf(ibndmin:ibndmax,ikq), ibndmax-ibndmin+1, iuetf, nrec, -1 )
-        ENDIF
         !
         IF ( minval( abs( etf(:,ikk) - ef  ) ) .lt. fsthick ) &
            fermicount = fermicount + 1 

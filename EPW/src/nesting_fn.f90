@@ -21,7 +21,6 @@
   !-----------------------------------------------------------------------
   USE kinds,     only : DP
   USE io_global, ONLY : stdout
-  USE io_epw,    ONLY : iuetf
   use epwcom,    only : nbndsub, fsthick, &
                         eptemp, ngaussw, degaussw,     &
                         etf_mem, &
@@ -99,16 +98,6 @@ ENDIF
      ikk = 2 * ik - 1
      ikq = ikk + 1
      ! 
-     ! we read the hamiltonian eigenvalues (those at k+q depend on q!) 
-     !
-     ! when we see references to iq for file readins, it is always = 1 
-     IF (.not. etf_mem) then
-        nrec = ikk
-        CALL davcio ( etf (ibndmin:ibndmax, ikk), ibndmax-ibndmin+1, iuetf, nrec, - 1)
-        nrec = ikq
-        CALL davcio ( etf (ibndmin:ibndmax, ikq), ibndmax-ibndmin+1, iuetf, nrec, - 1)
-     ENDIF
-     !
      ! here we must have ef, not ef0, to be consistent with ephwann_shuffle
      IF ( ( minval ( abs(etf (:, ikk) - ef) ) .lt. fsthick ) .and. &
           ( minval ( abs(etf (:, ikq) - ef) ) .lt. fsthick ) ) then
@@ -187,7 +176,6 @@ ENDIF
   !-----------------------------------------------------------------------
   USE kinds,     only : DP
   USE io_global, ONLY : stdout
-  USE io_epw,    ONLY : iuetf
   use epwcom,    only : nbndsub, fsthick, &
                         eptemp, ngaussw, degaussw,     &
                         etf_mem, &
@@ -285,16 +273,6 @@ ENDIF
        ikq = 2 * iq
        ikk = ikq - 1
        ! 
-       ! we read the hamiltonian eigenvalues (those at k+q depend on q!) 
-       !
-       ! when we see references to iq for file readins, it is always = 1 
-       IF (.not. etf_mem) then
-          nrec = ikk
-          CALL davcio ( etf (ibndmin:ibndmax, ikk), ibndmax-ibndmin+1, iuetf, nrec, - 1)
-          nrec = ikq
-          CALL davcio ( etf (ibndmin:ibndmax, ikq), ibndmax-ibndmin+1, iuetf, nrec, - 1)
-       ENDIF
-       !
        ! here we must have ef, not ef0, to be consistent with ephwann_shuffle
        IF ( ( minval ( abs(etf (:, ikk) - ef) ) .lt. fsthick ) .and. &
             ( minval ( abs(etf (:, ikq) - ef) ) .lt. fsthick ) ) then
