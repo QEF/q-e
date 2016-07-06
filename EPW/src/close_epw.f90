@@ -16,7 +16,7 @@
   !
   USE io_epw,   ONLY: iunepmatf, iuetf
   USE phcom,    ONLY: iuwfc, iudwf, iudrhous, iudvkb3, fildrho, iudrho
-  USE epwcom,   ONLY: elinterp, iuncuf
+  USE epwcom,   ONLY: elinterp
   USE uspp,     ONLY: okvan      
 #ifdef __PARA
   USE mp_global, ONLY : me_pool,root_pool
@@ -40,7 +40,6 @@
      !
      !  the temporary storage for Wannier interpolation
      !
-     CLOSE (unit = iuncuf,     status = 'delete')
      CLOSE (unit = iunepmatf,  status = 'delete')
      CLOSE (unit = iuetf,      status = 'delete')
 !     CLOSE (unit = iunepmatwe, status = 'delete')

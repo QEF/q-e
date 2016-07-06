@@ -27,11 +27,9 @@
   ! wavefunctions
   USE wvfct,            ONLY : nbnd, npwx
   USE noncollin_module, ONLY : npol,nspin_mag
-  use phcom,            ONLY : lrwfc, fildvscf, iudvscf, lrdvkb3, lrdrho
-  use epwcom,           ONLY : elinterp, &
-                               iuncuf, nbndsub, lrcuf
+  use phcom,            ONLY : lrwfc, fildvscf, iudvscf, lrdvkb3
+  use epwcom,           ONLY : elinterp, nbndsub, lrcuf
   USE fft_base,         ONLY : dfftp
-  !USE epwcom,           ONLY : iudvscf0, tphases, fildvscf0
   !
   implicit none
   INTEGER, EXTERNAL :: find_free_unit
@@ -64,11 +62,10 @@
   !
   !   file for setting unitary gauges of eigenstates
   !
-  !
   ! RM - nspin corresponds to nspin_mag according to QE5.0.3
   !    - this will have to change when we move to QE5.0.3 
   !
-  lrdrho = 2 * dfftp%nr1x *dfftp%nr2x *dfftp%nr3x * nspin_mag
+  !lrdrho = 2 * dfftp%nr1x *dfftp%nr2x *dfftp%nr3x * nspin_mag
   !IF (fildvscf0 .eq. fildvscf) THEN
   !   iudvscf0 = iudvscf
   !ELSE
@@ -81,28 +78,6 @@
   !      tmp_dir=tmp_dir_save
   !   END IF
   !ENDIF
-  !
-  !
-  IF (elinterp) then
-    !
-    !  open the file for writing the rotation matrix and the
-    !  electron-phonon matrix on the fine mesh (too big to stay
-    !  in memory for BC53). Use direct access because the nested
-    !  loops on modes and k points. @ FG
-    !
-    !  currently not used.  Should probably add this back in for big systems
-    !  The size is about nbnd^2
-    !
-    iuncuf    = find_free_unit()
-    IF (nbndsub .ne. 0) THEN
-       lrcuf  = 2 * nbndsub * nbndsub
-    ELSE
-       lrcuf  = 2 * nbnd * nbnd
-    ENDIF
-    filint    = trim(prefix)//'.cuf'
-    CALL diropn (iuncuf, 'cuf', lrcuf, exst)  
-    !
-  ENDIF
   !
   !
   !    In the USPP case we also need a file in  order to store derivatives 
