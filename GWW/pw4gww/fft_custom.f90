@@ -177,7 +177,7 @@ CONTAINS
   USE mp_world,   ONLY : world_comm, nproc
   USE stick_base
   USE fft_support, ONLY : good_fft_dimension
-  USE fft_types,  ONLY : fft_dlay_allocate, fft_dlay_set, fft_dlay_scalar
+  USE fft_types,  ONLY : fft_dlay_allocate, fft_dlay_set, fft_dlay_scalar, fft_dlay_set_dims
   !
   !
   IMPLICIT NONE
@@ -337,15 +337,14 @@ CONTAINS
     ENDIF
   ENDIF
 
-  CALL fft_dlay_allocate( fc%dfftt, me_pool,root_pool,nproc_pool,intra_pool_comm ,0, fc%nrx1t,  fc%nrx2t  )
- 
+  CALL fft_dlay_set_dims( fc%dfftt, fc%nr1t, fc%nr2t, fc%nr3t, fc%nrx1t, fc%nrx2t, fc%nrx3t )
 
+  CALL fft_dlay_allocate( fc%dfftt, me_pool,root_pool,nproc_pool,intra_pool_comm ,0 )
+ 
   !  here set the fft data layout structures for dense and smooth mesh,
   !  according to stick distribution
 
-  CALL fft_dlay_set( fc%dfftt, &
-       tk, nct, fc%nr1t, fc%nr2t, fc%nr3t, fc%nrx1t, fc%nrx2t, fc%nrx3t, ub, lb, idx, in1(:), in2(:), ncp, nkcp, ngp, ngkp, st, stw)
-
+  CALL fft_dlay_set( fc%dfftt, tk, nct, ub, lb, idx, in1(:), in2(:), ncp, nkcp, ngp, ngkp, st, stw)
 
   !  if tk = .FALSE. only half reciprocal space is considered, then we
   !  need to correct the number of sticks
@@ -432,8 +431,9 @@ CONTAINS
   nxx   = fc%nrxxt
   nxxs  = fc%nrxxt
 
-  CALL fft_dlay_allocate( fc%dfftt, me_pool,root_pool,nproc_pool, intra_pool_comm,0,max(fc%nrx1t, fc%nrx3t),  fc%nrx2t  )
- 
+  CALL fft_dlay_set_dims( fc%dfftt, fc%nr1t, fc%nr2t, fc%nr3t, fc%nrx1t, fc%nrx2t, fc%nrx3t )
+
+  CALL fft_dlay_allocate( fc%dfftt, me_pool,root_pool,nproc_pool, intra_pool_comm,0 )
 
   CALL calculate_gkcut()
 
@@ -486,8 +486,7 @@ CONTAINS
 10   CONTINUE
   ENDDO
 
-  CALL fft_dlay_scalar( fc%dfftt, ub, lb, fc%nr1t, fc%nr2t, fc%nr3t, fc%nrx1t, fc%nrx2t, fc%nrx3t, stw )
-
+  CALL fft_dlay_scalar( fc%dfftt, ub, lb, stw )
 
   DEALLOCATE( stw )
 

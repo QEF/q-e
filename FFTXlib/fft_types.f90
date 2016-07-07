@@ -27,6 +27,8 @@ MODULE fft_types
     INTEGER :: nr1x   = 0  ! FFT grids leading dimensions
     INTEGER :: nr2x   = 0  ! dimensions of the arrays for the 3D grid (global)
     INTEGER :: nr3x   = 0  ! may differ from nr1 ,nr2 ,nr3 in order to boost performances
+    LOGICAL :: dimensions_have_been_set = .FALSE.
+
     INTEGER :: npl    = 0  ! number of "Z" planes for this processor = npp( mpime + 1 )
     INTEGER :: nnp    = 0  ! number of 0 and non 0 sticks in a plane ( ~nr1*nr2/nproc )
     INTEGER :: nnr    = 0  ! local number of FFT grid elements  ( ~nr1*nr2*nr3/proc )
@@ -93,10 +95,54 @@ MODULE fft_types
 
 CONTAINS
 
-  SUBROUTINE fft_dlay_allocate( desc, mype, root, nproc, comm, nogrp, nx, ny )
+!=----------------------------------------------------------------------------=!
+
+  SUBROUTINE fft_dlay_set_dims( desc, nr1, nr2, nr3, nr1x, nr2x, nr3x)
+  !
+  ! routine that defines the dimensions of fft_dlay_descriptor
+  ! must be called before fft_dlay_allocate and fft_dlay_set
+  !
     TYPE (fft_dlay_descriptor) :: desc
-    INTEGER, INTENT(in) :: mype, root, nproc, comm, nx, ny ! mype starting from 0
+    INTEGER, INTENT(in) :: nr1, nr2, nr3    ! size of real space grid
+    INTEGER, INTENT(in) :: nr1x, nr2x, nr3x ! padded size of real space grid
+
+    IF (desc%dimensions_have_been_set ) &
+        CALL fftx_error__(' fft_dlay_set_dims ', ' fft dimensions already set ', 1 )
+
+    !  Set fft actual and leading dimensions of fft_dlay_descriptor from input
+
+    IF( nr1 > nr1x ) CALL fftx_error__( ' fft_dlay_set_dims ', ' wrong fft dimensions ', 1 )
+    IF( nr2 > nr2x ) CALL fftx_error__( ' fft_dlay_set_dims ', ' wrong fft dimensions ', 2 )
+    IF( nr3 > nr3x ) CALL fftx_error__( ' fft_dlay_set_dims ', ' wrong fft dimensions ', 3 )
+
+    desc%nr1  = nr1
+    desc%nr2  = nr2
+    desc%nr3  = nr3
+    desc%nr1x = nr1x
+    desc%nr2x = nr2x
+    desc%nr3x = nr3x
+
+    desc%dimensions_have_been_set = .true.
+
+  END SUBROUTINE fft_dlay_set_dims
+
+!-------------------------------------------------------
+  SUBROUTINE fft_dlay_allocate( desc, mype, root, nproc, comm, nogrp )
+  !
+  ! routine that defines the dimensions of fft_dlay_descriptor
+  ! must be called before fft_dlay_allocate and fft_dlay_set
+  !
+    TYPE (fft_dlay_descriptor) :: desc
+    INTEGER, INTENT(in) :: mype, root, nproc, comm ! mype starting from 0
     INTEGER, INTENT(in) :: nogrp   ! number of task groups
+    INTEGER :: nx, ny
+
+    IF (.NOT. desc%dimensions_have_been_set ) &
+        CALL fftx_error__(' fft_dlay_set_allocate ', ' fft dimensions not yet set ', 1 )
+
+    nx = desc%nr1x 
+    ny = desc%nr2x
+
     ALLOCATE( desc%nsp( nproc ) )
     ALLOCATE( desc%nsw( nproc ) )
     ALLOCATE( desc%ngl( nproc ) )
@@ -154,7 +200,6 @@ CONTAINS
     NULLIFY( desc%tg_rdsp )
 
   END SUBROUTINE fft_dlay_allocate
-
 
   SUBROUTINE fft_dlay_deallocate( desc )
     TYPE (fft_dlay_descriptor) :: desc
@@ -219,18 +264,14 @@ CONTAINS
     desc%have_task_groups = .false.
   END SUBROUTINE fft_box_deallocate
 
-
 !=----------------------------------------------------------------------------=!
 
-  SUBROUTINE fft_dlay_set( desc, tk, nst, nr1, nr2, nr3, nr1x, nr2x, nr3x, &
-    ub, lb, idx, in1, in2, ncp, ncpw, ngp, ngpw, st, stw )
+  SUBROUTINE fft_dlay_set( desc, tk, nst, ub, lb, idx, in1, in2, ncp, ncpw, ngp, ngpw, st, stw )
 
     TYPE (fft_dlay_descriptor) :: desc
 
     LOGICAL, INTENT(in) :: tk               ! gamma/not-gamma logical
     INTEGER, INTENT(in) :: nst              ! total number of stiks 
-    INTEGER, INTENT(in) :: nr1, nr2, nr3    ! size of real space grid
-    INTEGER, INTENT(in) :: nr1x, nr2x, nr3x ! padded size of real space grid
     INTEGER, INTENT(in) :: ub(3), lb(3)     ! upper and lower bound of real space indices
     INTEGER, INTENT(in) :: idx(:)           ! sorting index of the sticks
     INTEGER, INTENT(in) :: in1(:)           ! x-index of a stick
@@ -245,17 +286,31 @@ CONTAINS
     INTEGER :: npp( desc%nproc ), n3( desc%nproc ), nsp( desc%nproc )
     INTEGER :: np, nq, i, is, iss, i1, i2, m1, m2, n1, n2, ip
     INTEGER :: ncpx, nppx
+    INTEGER :: nr1, nr2, nr3    ! size of real space grid 
+    INTEGER :: nr1x, nr2x, nr3x ! padded size of real space grid
 
     !  Task-grouping C. Bekas
     !
     INTEGER :: sm
 
-    IF( ( size( desc%ngl ) < desc%nproc ) .or. ( size( desc%npp ) < desc%nproc ) .or.  &
-        ( size( desc%ipp ) < desc%nproc ) .or. ( size( desc%iss ) < desc%nproc ) )     &
-      CALL fftx_error__( ' fft_dlay_set ', ' wrong descriptor dimensions ', 1 )
+    IF (.NOT. desc%dimensions_have_been_set ) &
+        CALL fftx_error__(' fft_dlay_set ', ' fft dimensions not yet set ', 1 )
+
+    !  Set fft actual and leading dimensions to be used internally
+
+    nr1  = desc%nr1
+    nr2  = desc%nr2
+    nr3  = desc%nr3
+    nr1x = desc%nr1x
+    nr2x = desc%nr2x
+    nr3x = desc%nr3x
 
     IF( ( nr1 > nr1x ) .or. ( nr2 > nr2x ) .or. ( nr3 > nr3x ) ) &
-      CALL fftx_error__( ' fft_dlay_set ', ' wrong fft dimensions ', 2 )
+      CALL fftx_error__( ' fft_dlay_set ', ' wrong fft dimensions ', 1 )
+
+    IF( ( size( desc%ngl ) < desc%nproc ) .or. ( size( desc%npp ) < desc%nproc ) .or.  &
+        ( size( desc%ipp ) < desc%nproc ) .or. ( size( desc%iss ) < desc%nproc ) )     &
+      CALL fftx_error__( ' fft_dlay_set ', ' wrong descriptor dimensions ', 2 )
 
     IF( ( size( idx ) < nst ) .or. ( size( in1 ) < nst ) .or. ( size( in2 ) < nst ) ) &
       CALL fftx_error__( ' fft_dlay_set ', ' wrong number of stick dimensions ', 3 )
@@ -313,16 +368,8 @@ CONTAINS
       desc%nst  = nst
     ENDIF
 
-    !  Set fft actual and leading dimensions
-
-    desc%nr1  = nr1
-    desc%nr2  = nr2
-    desc%nr3  = nr3
-    desc%nr1x = nr1x
-    desc%nr2x = nr2x
-    desc%nr3x = nr3x
-
-    desc%nnp  = nr1x * nr2x  ! dimension of the xy plane. see ncplane
+    ! dimension of the xy plane. see ncplane
+    desc%nnp  = nr1x * nr2x  
 
     !  Set fft local workspace dimension
 
@@ -552,7 +599,7 @@ CONTAINS
 
 !=----------------------------------------------------------------------------=!
 
-  SUBROUTINE fft_dlay_scalar( desc, ub, lb, nr1, nr2, nr3, nr1x, nr2x, nr3x, stw )
+  SUBROUTINE fft_dlay_scalar( desc, ub, lb, stw )
 
     IMPLICIT NONE
 
@@ -563,18 +610,22 @@ CONTAINS
     INTEGER :: nr1, nr2, nr3, nr1x, nr2x, nr3x
     INTEGER :: m1, m2, i1, i2
 
+    IF (.NOT. desc%dimensions_have_been_set ) &
+        CALL fftx_error__(' fft_dlay_scalar ', ' fft dimensions not yet set ', 1 )
+
+    nr1  = desc%nr1
+    nr2  = desc%nr2
+    nr3  = desc%nr3
+    nr1x = desc%nr1x
+    nr2x = desc%nr2x
+    nr3x = desc%nr3x
+
     IF( size( desc%iplw ) < nr1x .or. size( desc%isind ) < nr1x * nr2x ) &
       CALL fftx_error__(' fft_dlay_scalar ', ' wrong dimensions ', 1 )
 
     desc%isind = 0
     desc%iplw  = 0
     desc%iplp  = 1
-    desc%nr1   = nr1
-    desc%nr2   = nr2
-    desc%nr3   = nr3
-    desc%nr1x  = nr1x
-    desc%nr2x  = nr2x
-    desc%nr3x  = nr3x
 
     ! here we are setting parameter as if we were
     ! in a serial code, sticks are along X dimension
