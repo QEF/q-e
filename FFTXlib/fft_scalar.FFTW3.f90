@@ -498,8 +498,8 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
   !----------------------------------------------------------------------
   !
   implicit none
-
      INTEGER, PARAMETER  :: stdout = 6
+
   integer :: nx, ny, nz, ldx, ldy, ldz, isign
   !
   !   logical dimensions of the fft
