@@ -680,16 +680,17 @@ COMPLEX (DP) FUNCTION get_f_of_R (i,j,k,f,dfft)
   IF ( j <= 0 .OR. j > dfft%nr2 ) CALL fftx_error__( ' get_f_of_R', ' second index out of range ', 2 )
   IF ( k <= 0 .OR. k > dfft%nr3 ) CALL fftx_error__( ' get_f_of_R', ' third  index out of range ', 3 )
 
+#if defined(__MPI)
   do jj = 1, dfft%nproc
      if ( dfft%ipp(jj) < k ) kk = jj
   end do
   ii  = i + dfft%nr1x * ( j - 1 ) + dfft%nr1x * dfft%nr2x * ( k - dfft%ipp(kk) - 1 )
   f_aux = (0.d0,0.d0)
   if (kk == dfft%mype +1) f_aux = f(ii)
-#ifdef __MPI
   CALL MPI_ALLREDUCE( f_aux, get_f_of_R,   2, MPI_DOUBLE_PRECISION, MPI_SUM, dfft%comm, ierr )
 #else
-  get_f_of_R = f_aux
+  ii = i + dfft%nr1 * (j-1) + dfft%nr1*dfft%nr2 * (k-1)
+  get_f_of_R = f(ii)
 #endif
 END FUNCTION get_f_of_R
 
@@ -711,11 +712,16 @@ SUBROUTINE put_f_of_R (f_in,i,j,k,f,dfft)
   IF ( j <= 0 .OR. j > dfft%nr2 ) CALL fftx_error__( ' put_f_of_R', ' second index out of range ', 2 )
   IF ( k <= 0 .OR. k > dfft%nr3 ) CALL fftx_error__( ' put_f_of_R', ' third  index out of range ', 3 )
 
+#if defined(__MPI)
   do jj = 1, dfft%nproc
      if ( dfft%ipp(jj) < k ) kk = jj
   end do
   ii  = i + dfft%nr1x * ( j - 1 ) + dfft%nr1x * dfft%nr2x * ( k - dfft%ipp(kk) - 1 )
   if (kk == dfft%mype +1) f(ii) = f_in
+#else
+  ii = i + dfft%nr1 * (j-1) + dfft%nr1*dfft%nr2 * (k-1)
+  f(ii) = f_in
+#endif
 
 END SUBROUTINE put_f_of_R
 
@@ -737,14 +743,15 @@ COMPLEX (DP) FUNCTION get_f_of_G (i,j,k,f,dfft)
   IF ( j <= 0 .OR. j > dfft%nr2 ) CALL fftx_error__( ' get_f_of_G', ' second index out of range ', 2 )
   IF ( k <= 0 .OR. k > dfft%nr3 ) CALL fftx_error__( ' get_f_of_G', ' third  index out of range ', 3 )
 
+#if defined(__MPI)
   ii = i + dfft%nr1x * (j -1)
   jj = dfft%isind(ii)  ! if jj is zero this G vector does not belong to this processor
   f_aux = (0.d0,0.d0)
   if ( jj > 0 ) f_aux = f( k + dfft%nr3x * (jj -1))
-#ifdef __MPI
   CALL MPI_ALLREDUCE( f_aux, get_f_of_G,   2, MPI_DOUBLE_PRECISION, MPI_SUM, dfft%comm, ierr )
 #else
-  get_f_of_G = f_aux
+  ii = i + dfft%nr1 * (j-1) + dfft%nr1*dfft%nr2 * (k-1)
+  get_f_of_G = f(ii)
 #endif
 END FUNCTION get_f_of_G
 
@@ -766,9 +773,14 @@ SUBROUTINE put_f_of_G (f_in,i,j,k,f,dfft)
   IF ( j <= 0 .OR. j > dfft%nr2 ) CALL fftx_error__( ' put_f_of_G', ' second index out of range ', 2 )
   IF ( k <= 0 .OR. k > dfft%nr3 ) CALL fftx_error__( ' put_f_of_G', ' third  index out of range ', 3 )
 
+#if defined(__MPI)
   ii = i + dfft%nr1x * (j -1)
   jj = dfft%isind(ii)  ! if jj is zero this G vector does not belong to this processor
   if ( jj > 0 )   f( k + dfft%nr3x * (jj -1)) = f_in
+#else
+  ii = i + dfft%nr1 * (j-1) + dfft%nr1*dfft%nr2 * (k-1)
+  f(ii) = f_in
+#endif
 END SUBROUTINE put_f_of_G
 
 END MODULE fft_parallel

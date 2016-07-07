@@ -55,6 +55,7 @@ $ECHO " done"
 
 # how to run executables
 PW_COMMAND="$PARA_PREFIX $BIN_DIR/fft_test0.x $PARA_POSTFIX"
+$ECHO "$PARA_PREFIX $BIN_DIR/fft_test0.x   >  fft_test0.out "
 $PARA_PREFIX $BIN_DIR/fft_test0.x   >  fft_test0.out
 
 $ECHO

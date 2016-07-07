@@ -491,7 +491,7 @@ END SUBROUTINE write_matrix_strange_idx
     !
     !     stick map for wave functions, note that map is taken in YZ plane
     !
-    INTEGER, INTENT(out) :: stw( lb(2) : ub(2), lb(3) : ub(3) )
+    INTEGER, INTENT(out) :: stw( lb(1) : ub(1), lb(2) : ub(2) )
 
     INTEGER :: i1, i2, i3, n1, n2, n3
     REAL(DP) :: amod
@@ -528,8 +528,8 @@ END SUBROUTINE write_matrix_strange_idx
              IF (amod <= gcutm)  ngm  = ngm  + 1
              IF (amod <= gcutms) ngms = ngms + 1
              IF (amod <= gkcut ) THEN
-                stw( i2, i3 ) = 1
-                IF (lgamma) stw( -i2, -i3 ) = 1
+                stw( i1, i2 ) = 1
+                IF (lgamma) stw( -i1, -i2 ) = 1
              ENDIF
           ENDDO loop3
        ENDDO loop2

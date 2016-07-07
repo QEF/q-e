@@ -14,13 +14,13 @@ program test
   USE stick_set, ONLY: pstickset
   USE fft_interfaces
   USE fft_parallel
+  USE fft_scalar
   USE fft_support
   IMPLICIT NONE
 #ifdef __MPI
   include 'mpif.h'
-  include 'fft_param.f90'
-  INTEGER, ALLOCATABLE :: req_p(:),req_u(:)
 #endif
+  include 'fft_param.f90'
   TYPE(fft_dlay_descriptor) :: dfftp, dffts, dfft3d
   INTEGER :: nx = 128
   INTEGER :: ny = 128
@@ -122,11 +122,13 @@ program test
   !
   !  Broadcast input parameter first
   !
+#ifdef __MPI
   CALL MPI_BCAST(ecutrho, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, ierr )
   CALL MPI_BCAST(ecutwfc, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, ierr )
   CALL MPI_BCAST(alat_in, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, ierr )
   CALL MPI_BCAST(ntgs,    1, MPI_INTEGER, 0, MPI_COMM_WORLD, ierr )
   CALL MPI_BCAST(nbnd,    1, MPI_INTEGER, 0, MPI_COMM_WORLD, ierr )
+#endif
   !
   ecutw  = ecutwfc
   ! dual
@@ -214,9 +216,10 @@ program test
         dfftp, dffts, ngw_ , ngm_ , ngs_ , mype, root, &
         npes, comm, ntgs, iope, stdout, dfft3d )
 
+
+!  write (6,'(25i5)') dffts%isind
+
   ALLOCATE( psis( dffts%tg_nnr * dffts%nogrp, 2 ) )
-  ALLOCATE( req_p(nbnd) )
-  ALLOCATE( req_u(nbnd) )
   ALLOCATE( aux( dffts%tg_nnr * dffts%nogrp ) )
 
   time = 0.0d0
@@ -241,7 +244,20 @@ program test
   f_aux = (0.d0,0.3d0);  call put_f_of_G(f_aux,1,2,1,aux,dffts) ! something varying along y
   f_aux = (0.d0,0.7d0);  call put_f_of_G(f_aux,1,1,2,aux,dffts) ! something varying along z
 
+  if( mype == 0 ) write (*,*) 'function in Reciprocal space '
+  do k =1, 5
+     if( mype == 0 ) write (*,*) 'k = ',k
+     do j =1,5
+        do i =1,5
+           ff(i) = get_f_of_G(i,j,k,aux,dffts)
+        end do
+        if( mype == 0 ) write (*,'(5("(",2f10.6,")",3x))') (ff(i),i=1,5)
+     end do
+  end do
+
+#ifdef __MPI
   CALL MPI_BARRIER( MPI_COMM_WORLD, ierr)
+#endif
 
   call invfft ('Dense',aux,dffts)
 
@@ -270,15 +286,91 @@ program test
   end do
 
   !
-  ! Execute FFT calls once more and Take time
+  ! Execute FFT calls once more, this time as Wave, and Take time
   !
   !
+  if( mype == 0 ) write (*,*) ' Execute FFT calls once more, this time as Wave !'
 
+#ifdef __MPI
   CALL MPI_BARRIER( MPI_COMM_WORLD, ierr)
   wall = MPI_WTIME() 
-  call invfft ('Dense',aux,dffts)
-  call fwfft  ('Dense',aux,dffts)
+#endif
+
+  call invfft ('Wave',aux,dffts)
+
+  if( mype == 0 ) write (*,*) 'function in Real space (i,j,k)'
+  do k =1, 5
+     if( mype == 0 ) write (*,*) 'k = ',k
+     do j =1,5
+        do i =1,5
+           ff(i) = get_f_of_R(i,j,k,aux,dffts)
+        end do
+        if( mype == 0 ) write (*,'(5("(",2f10.6,")",3x))') (ff(i),i=1,5)
+     end do
+  end do
+
+  call fwfft  ('Wave',aux,dffts)
+
+  if( mype == 0 ) write (*,*) 'function in Reciprocal space '
+  do k =1, 5
+     if( mype == 0 ) write (*,*) 'k = ',k
+     do j =1,5
+        do i =1,5
+           ff(i) = get_f_of_G(i,j,k,aux,dffts)
+        end do
+        if( mype == 0 ) write (*,'(5("(",2f10.6,")",3x))') (ff(i),i=1,5)
+     end do
+  end do
+
+  DEALLOCATE( aux )
+
+  if( mype == 0 ) write (*,*) ' Execute FFT calls once more, this time as with cft3ds !'
+
+  ALLOCATE( aux (dffts%nr1x * dffts%nr2x * dffts%nr3x ) )
+
+#ifdef __MPI
+  CALL MPI_BARRIER( MPI_COMM_WORLD, ierr)
+  wall = MPI_WTIME() 
+#endif
+
+  aux = 0.0d0
+  f_aux = (1.0,0.0)   ; i=1;j=1;k=1;  aux( i+dffts%nr1x *(j-1) + dffts%nr1x*dffts%nr2x*(k-1) ) = f_aux
+  f_aux = (0.d0,0.5d0); i=2;j=1;k=1;  aux( i+dffts%nr1x *(j-1) + dffts%nr1x*dffts%nr2x*(k-1) ) = f_aux
+  f_aux = (0.d0,0.3d0); i=1;j=2;k=1;  aux( i+dffts%nr1x *(j-1) + dffts%nr1x*dffts%nr2x*(k-1) ) = f_aux 
+  f_aux = (0.d0,0.7d0); i=1;j=1;k=2;  aux( i+dffts%nr1x *(j-1) + dffts%nr1x*dffts%nr2x*(k-1) ) = f_aux 
+  
+  CALL cfft3ds( aux, dffts%nr1, dffts%nr2, dffts%nr3, &
+                   dffts%nr1x,dffts%nr2x,dffts%nr3x, 1, &
+                   dffts%isind, dffts%iplw )
+
+  if( mype == 0 ) write (*,*) 'function in Real space (i,j,k)'
+  do k =1, 5
+     if( mype == 0 ) write (*,*) 'k = ',k
+     do j =1,5
+        do i =1,5
+           ff(i) =aux (i+dffts%nr1x *(j-1) + dffts%nr1x*dffts%nr2x*(k-1) )
+        end do
+        if( mype == 0 ) write (*,'(5("(",2f10.6,")",3x))') (ff(i),i=1,5)
+     end do
+  end do
+
+  CALL cfft3ds( aux, dffts%nr1, dffts%nr2, dffts%nr3, &
+                   dffts%nr1x,dffts%nr2x,dffts%nr3x, -1, &
+                   dffts%isind, dffts%iplw )
+
+  if( mype == 0 ) write (*,*) 'function in Reciprocal space '
+  do k =1, 5
+     if( mype == 0 ) write (*,*) 'k = ',k
+     do j =1,5
+        do i =1,5
+           ff(i) =aux (i+dffts%nr1x *(j-1) + dffts%nr1x*dffts%nr2x*(k-1) )
+        end do
+        if( mype == 0 ) write (*,'(5("(",2f10.6,")",3x))') (ff(i),i=1,5)
+     end do
+  end do
+#ifdef __MPI
   wall = MPI_WTIME() - wall
+#endif
 
   DEALLOCATE( psis, aux )
 

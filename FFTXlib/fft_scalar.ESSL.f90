@@ -466,12 +466,12 @@
 !
 
 SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
-     do_fft_x, do_fft_y)
+     do_fft_z, do_fft_y)
   !
   !     driver routine for 3d complex "reduced" fft - see cfft3d
   !     The 3D fft are computed only on lines and planes which have
   !     non zero elements. These lines and planes are defined by
-  !     the two integer vectors do_fft_x(ldy*nz) and do_fft_y(nz)
+  !     the two integer vectors do_fft_y(nx) and do_fft_z(ldx*ldy)
   !     (1 = perform fft, 0 = do not perform fft)
   !     This routine is implemented only for fftw, essl, acml
   !     If not implemented, cfft3d is called instead
@@ -487,7 +487,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
   !   sign of the transformation
 
   complex(DP) :: f ( ldx * ldy * ldz )
-  integer :: do_fft_x(:), do_fft_y(:)
+  integer :: do_fft_y(:), do_fft_z(:)
   !
   integer :: m, incx1, incx2
   INTEGER :: i, k, j, err, idir, ip,  ii, jj
@@ -502,8 +502,8 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
   tscale = 1.0_DP
 
   ! WRITE( stdout, fmt="('DEBUG cfft3ds :',6I6)") nx, ny, nz, ldx, ldy, ldz
-  ! WRITE( stdout, fmt="('DEBUG cfft3ds :',24I2)") do_fft_x
   ! WRITE( stdout, fmt="('DEBUG cfft3ds :',24I2)") do_fft_y
+  ! WRITE( stdout, fmt="('DEBUG cfft3ds :',24I2)") do_fft_z
 
 
   IF( ny /= ldy ) &
@@ -533,19 +533,19 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
        !
        tscale = 1.0_DP
        !  x - direction
-       incx1 = 1; incx2 = ldx; m = 1
+       incx1 = 1; incx2 = ldx; m = ldy*nz
        CALL DCFT ( 1, f(1), incx1, incx2, f(1), incx1, incx2, nx, m,  1, 1.0_DP, &
           fw_table( 1, 1, icurrent), ltabl, work(1), lwork )
        CALL DCFT ( 1, f(1), incx1, incx2, f(1), incx1, incx2, nx, m, -1, 1.0_DP, &
           bw_table(1, 1, icurrent), ltabl, work(1), lwork )
        !  y - direction
-       incx1 = ldx; incx2 = 1; m = nx;
+       incx1 = ldx; incx2 = ldx*ldy; m = nz;
        CALL DCFT ( 1, f(1), incx1, incx2, f(1), incx1, incx2, ny, m,  1, 1.0_DP, &
           fw_table( 1, 2, icurrent), ltabl, work(1), lwork )
        CALL DCFT ( 1, f(1), incx1, incx2, f(1), incx1, incx2, ny, m, -1, 1.0_DP, &
           bw_table(1, 2, icurrent), ltabl, work(1), lwork )
        !  z - direction
-       incx1 = ldx * ldy; incx2 = 1; m = ldx * ny
+       incx1 = ldx * ldy; incx2 = 1; m = 1
        CALL DCFT ( 1, f(1), incx1, incx2, f(1), incx1, incx2, nz, m,  1, 1.0_DP, &
           fw_table(1, 3, icurrent), ltabl, work(1), lwork )
        CALL DCFT ( 1, f(1), incx1, incx2, f(1), incx1, incx2, nz, m, -1, 1.0_DP, &
@@ -562,86 +562,82 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
      IF ( isign > 0 ) THEN
 
         !
-        !  i - direction ...
+        !  k-direction ...
         !
 
-        incx1 = 1;  incx2 = ldx;  m = 1
-
-        do k = 1, nz
-           do j = 1, ny
-              jj = j + ( k - 1 ) * ldy
-              ii = 1 + ldx * ( jj - 1 )
-              if ( do_fft_x( jj ) == 1 ) THEN
-                call dcft (0, f (ii), incx1,incx2, f (ii), incx1,incx2, nx, m, &
-                -isign, 1.0_DP, bw_table ( 1, 1,  ip ), ltabl, work( 1 ), lwork)
-              endif
-           enddo
-        enddo
+        incx1 = ldx * ldy;  incx2 = 1;  m = 1
+        do i =1,nx
+           do j =1,ny
+              ii = i + ldx *(j -1)
+              if ( do_fft_z(ii) == 1 ) then
+                 call dcft (0, f( ii ), incx1, incx2, f( ii ), incx1, incx2, nz, m, &
+                   -isign, 1.0_DP, bw_table ( 1, 3, ip ), ltabl, work( 1 ), lwork)
+              end if
+           end do
+        end do
 
         !
         !  ... j-direction ...
         !
 
-        incx1 = ldx;  incx2 = 1;  m = nx
+        incx1 = ldx;  incx2 = ldx*ldy;  m = nz
 
-        do k = 1, nz
-           ii = 1 + ldx * ldy * ( k - 1 )
-           if ( do_fft_y( k ) == 1 ) then
-             call dcft (0, f (ii), incx1, incx2, f (ii), incx1, incx2, nx, m, &
-               -isign, 1.0_DP, bw_table ( 1, 2,  ip ), ltabl, work( 1 ), lwork)
+        do i = 1, nx
+           if ( do_fft_y( i ) == 1 ) then
+              call dcft (0, f (i), incx1, incx2, f (i), incx1, incx2, nx, m, &
+                -isign, 1.0_DP, bw_table ( 1, 2,  ip ), ltabl, work( 1 ), lwork)
            endif
         enddo
 
         !
-        !     ... k-direction
+        !  ... i - direction
         !
 
-        incx1 = ldx * ldy;  incx2 = 1;  m = ldx * ny
+        incx1 = 1;  incx2 = ldx;  m = ldy * nz
 
-        call dcft (0, f( 1 ), incx1, incx2, f( 1 ), incx1, incx2, nz, m, &
-          -isign, 1.0_DP, bw_table ( 1, 3, ip ), ltabl, work( 1 ), lwork)
+        call dcft (0, f (1), incx1,incx2, f (1), incx1,incx2, nx, m, &
+          -isign, 1.0_DP, bw_table ( 1, 1,  ip ), ltabl, work( 1 ), lwork)
+
 
      ELSE
 
         !
-        !     ... k-direction
+        !  i - direction ...
         !
 
-        incx1 = ldx * ny;  incx2 = 1;  m = ldx * ny
+        incx1 = 1;  incx2 = ldx;  m = ldy*nz
 
-         call dcft (0, f( 1 ), incx1, incx2, f( 1 ), incx1, incx2, nz, m, &
-          -isign, 1.0_DP, fw_table ( 1, 3, ip ), ltabl, work( 1 ), lwork)
+        call dcft (0, f (1), incx1,incx2, f (1), incx1,incx2, nx, m, &
+          -isign, 1.0_DP, fw_table ( 1, 1, ip ), ltabl, work( 1 ), lwork)
 
         !
-        !     ... j-direction ...
+        !  ... j-direction ...
         !
 
-        incx1 = ldx;  incx2 = 1;  m = nx
+        incx1 = ldx;  incx2 = ldx*ldy;  m = nz
 
-        do k = 1, nz
-           ii = 1 + ldx * ldy * ( k - 1 )
-           if ( do_fft_y ( k ) == 1 ) then
-             call dcft (0, f (ii), incx1, incx2, f (ii), incx1, incx2, ny, m, &
-               -isign, 1.0_DP, fw_table ( 1, 2, ip ), ltabl, work( 1 ), lwork)
+        do i = 1, nx
+           if ( do_fft_y ( i ) == 1 ) then
+              call dcft (0, f (i), incx1, incx2, f (i), incx1, incx2, ny, m, &
+                -isign, 1.0_DP, fw_table ( 1, 2, ip ), ltabl, work( 1 ), lwork)
            endif
         enddo
 
         !
-        !     i - direction ...
+        !  ... k-direction
         !
 
-        incx1 = 1;  incx2 = ldx;  m = 1
+        incx1 = ldx * ny;  incx2 = 1;  m = 1
 
-        do k = 1, nz
+        do i = 1, nx
            do j = 1, ny
-              jj = j + ( k - 1 ) * ldy
-              ii = 1 + ldx * ( jj - 1 )
-              if ( do_fft_x( jj ) == 1 ) then
-                call dcft (0, f (ii), incx1,incx2, f (ii), incx1,incx2, nx, m, &
-                 -isign, 1.0_DP, fw_table ( 1, 1, ip ), ltabl, work( 1 ), lwork)
-              endif
-           enddo
-        enddo
+              ii = i + ldx * (j-1)
+              if (do_fft_z(ii) == 1 ) then
+                 call dcft (0, f( ii ), incx1, incx2, f( ii ), incx1, incx2, nz, m, &
+                  -isign, 1.0_DP, fw_table ( 1, 3, ip ), ltabl, work( 1 ), lwork)
+              end if
+           end do
+        end do
 
         call DSCAL (2 * ldx * ldy * nz, 1.0_DP/(nx * ny * nz), f(1), 1)
 

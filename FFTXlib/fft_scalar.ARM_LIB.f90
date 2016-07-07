@@ -475,12 +475,12 @@ END IF
 !
 
 SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
-     do_fft_x, do_fft_y)
+     do_fft_z, do_fft_y)
   !
   !     driver routine for 3d complex "reduced" fft - see cfft3d
   !     The 3D fft are computed only on lines and planes which have
   !     non zero elements. These lines and planes are defined by
-  !     the two integer vectors do_fft_x(ldy*nz) and do_fft_y(nz)
+  !     the two integer vectors do_fft_y(nx) and do_fft_z(ldx*ldy)
   !     (1 = perform fft, 0 = do not perform fft)
   !     This routine is implemented only for fftw, essl, acml
   !     If not implemented, cfft3d is called instead
@@ -496,7 +496,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
   !   sign of the transformation
 
   complex(DP) :: f ( ldx * ldy * ldz )
-  integer :: do_fft_x(:), do_fft_y(:)
+  integer :: do_fft_y(:), do_fft_z(:)
   !
   integer :: m, incx1, incx2
   INTEGER :: i, k, j, err, idir, ip,  ii, jj
@@ -527,83 +527,73 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
      END IF
 
 
-     IF ( isign > 0 ) THEN
+     IF ( isign > 0 ) THEN (G -> R)
 
         !
-        !  i - direction ...
+        !  k-direction ...
         !
 
-        incx1 = 1;  incx2 = ldx;  m = 1
-
-        do k = 1, nz
+        incx1 = ldx * ldy;  incx2 = 1;  m = 1 
+        do i = 1, nx
            do j = 1, ny
-              jj = j + ( k - 1 ) * ldy
-              ii = 1 + ldx * ( jj - 1 )
-              if ( do_fft_x( jj ) == 1 ) THEN
-                  CALL ZFFT1MX(1, 1.0_DP, .TRUE., m, nx, f(ii), incx1, incx2, f(ii), incx1, incx2, bw_table(1, 1, ip), INFO)
-              endif
-           enddo
-        enddo
+              ii = i + ldx * ( j - 1 )
+              if ( do_fft_z( ii ) == 1 ) then
+                 CALL ZFFT1MX(1, 1.0_DP, .TRUE., m, nz, f(ii), incx1, incx2, f(ii), incx1, incx2, bw_table(1, 3, ip), INFO)
+              end if
+           end do
+        end do
 
         !
         !  ... j-direction ...
         !
 
-        incx1 = ldx;  incx2 = 1;  m = nx
-
-        do k = 1, nz
-           ii = 1 + ldx * ldy * ( k - 1 )
-           if ( do_fft_y( k ) == 1 ) then
-               CALL ZFFT1MX(1, 1.0_DP, .TRUE., m, ny, f(ii), incx1, incx2, f(ii), incx1, incx2, bw_table(1, 2, ip), INFO)
+        incx1 = ldx;  incx2 = ldx*ldy ;  m = nz
+        do i = 1, nx
+           if ( do_fft_y( i ) == 1 ) then
+               CALL ZFFT1MX(1, 1.0_DP, .TRUE., m, ny, f(i), incx1, incx2, f(i), incx1, incx2, bw_table(1, 2, ip), INFO)
            endif
         enddo
 
         !
-        !     ... k-direction
+        !  ... i - direction
         !
 
-        incx1 = ldx * ldy;  incx2 = 1;  m = ldx * ny
-
-        CALL ZFFT1MX(1, 1.0_DP, .TRUE., m, nz, f(1), incx1, incx2, f(1), incx1, incx2, bw_table(1, 3, ip), INFO)
+        incx1 = 1;  incx2 = ldx;  m = ldy * nz
+        CALL ZFFT1MX(1, 1.0_DP, .TRUE., m, nx, f(1), incx1, incx2, f(1), incx1, incx2, bw_table(1, 1, ip), INFO)
 
      ELSE
 
         !
-        !     ... k-direction
+        !  i - direction ...
         !
 
-        incx1 = ldx * ny;  incx2 = 1;  m = ldx * ny
-
-        CALL ZFFT1MX(-1, 1.0_DP, .TRUE., m, nz, f(1), incx1, incx2, f(1), incx1, incx2, fw_table(1, 3, ip), INFO)
+        incx1 = 1;  incx2 = ldx;  m = ldy * nz
+        CALL ZFFT1MX(-1, 1.0_DP, .TRUE., m, nx, f(1), incx1, incx2, f(1), incx1, incx2, fw_table(1, 1, ip), INFO)
 
         !
-        !     ... j-direction ...
+        !  ... j-direction ...
         !
 
-        incx1 = ldx;  incx2 = 1;  m = nx
-
-        do k = 1, nz
-           ii = 1 + ldx * ldy * ( k - 1 )
-           if ( do_fft_y ( k ) == 1 ) then
-               CALL ZFFT1MX(-1, 1.0_DP, .TRUE., m, ny, f(ii), incx1, incx2, f(ii), incx1, incx2, fw_table(1, 2, ip), INFO)
+        incx1 = ldx;  incx2 = ldx*ldy ;  m = nz
+        do i = 1, nx
+           if ( do_fft_y ( i ) == 1 ) then
+               CALL ZFFT1MX(-1, 1.0_DP, .TRUE., m, ny, f(i), incx1, incx2, f(i), incx1, incx2, fw_table(1, 2, ip), INFO)
            endif
         enddo
 
         !
-        !     i - direction ...
+        !  ... k-direction
         !
 
-        incx1 = 1;  incx2 = ldx;  m = 1
-
-        do k = 1, nz
+        incx1 = ldx * ldy;  incx2 = 1;  m = 1
+        do i = 1, nx
            do j = 1, ny
-              jj = j + ( k - 1 ) * ldy
-              ii = 1 + ldx * ( jj - 1 )
-              if ( do_fft_x( jj ) == 1 ) then
-                  CALL ZFFT1MX(-1, 1.0_DP, .TRUE., m, nx, f(ii), incx1, incx2, f(ii), incx1, incx2, fw_table(1, 1, ip), INFO)
-              endif
-           enddo
-        enddo
+              ii = i + ldx * ( j - 1 )
+              if ( do_fft_z( ii ) == 1 ) then
+                 CALL ZFFT1MX(-1, 1.0_DP, .TRUE., m, nz, f(ii), incx1, incx2, f(ii), incx1, incx2, fw_table(1, 3, ip), INFO)
+              end if
+           end do
+        end do
 
         call DSCAL (2 * ldx * ldy * nz, 1.0_DP/(nx * ny * nz), f(1), 1)
 
@@ -627,19 +617,19 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
 
      SUBROUTINE init_plan()
          !  x - direction
-         incx1 = 1; incx2 = ldx; m = 1
+         incx1 = 1;  incx2 = ldx;  m = ldy * nz
 
          CALL ZFFT1MX(0, 1.0_DP, .TRUE., m, nx, f(1), incx1, incx2, f(1), incx1, incx2, fw_table(1, 1, icurrent), INFO)
          CALL ZFFT1MX(0, 1.0_DP, .TRUE., m, nx, f(1), incx1, incx2, f(1), incx1, incx2, bw_table(1, 1, icurrent), INFO)
 
          !  y - direction
-         incx1 = ldx; incx2 = 1; m = nx;
+         incx1 = ldx; incx2 = ldx*ldy ;  m = nz
 
          CALL ZFFT1MX(0, 1.0_DP, .TRUE., m, ny, f(1), incx1, incx2, f(1), incx1, incx2, fw_table(1, 2, icurrent), INFO)
          CALL ZFFT1MX(0, 1.0_DP, .TRUE., m, ny, f(1), incx1, incx2, f(1), incx1, incx2, bw_table(1, 2, icurrent), INFO)
 
          !  z - direction
-         incx1 = ldx * ldy; incx2 = 1; m = ldx * ny
+         incx1 = ldx * ldy;  incx2 = 1;  m = 1
 
          CALL ZFFT1MX(0, 1.0_DP, .TRUE., m, nz, f(1), incx1, incx2, f(1), incx1, incx2, fw_table(1, 3, icurrent), INFO)
          CALL ZFFT1MX(0, 1.0_DP, .TRUE., m, nz, f(1), incx1, incx2, f(1), incx1, incx2, bw_table(1, 3, icurrent), INFO)

@@ -29,7 +29,7 @@ MODULE pw2blip
 
    INTEGER,ALLOCATABLE :: map_igk_to_fft(:)
    INTEGER,ALLOCATABLE :: map_minus_igk_to_fft(:) ! gamma_only
-   INTEGER,ALLOCATABLE :: do_fft_x(:),do_fft_y(:)
+   INTEGER,ALLOCATABLE :: do_fft_z(:),do_fft_y(:)
 
    INTEGER :: nr(3)
    INTEGER,ALLOCATABLE :: g_int(:,:)
@@ -94,18 +94,18 @@ CONTAINS
          ALLOCATE(map_minus_igk_to_fft(ngtot))
 !         map_minus_igk_to_fft(1) = 1
       ENDIF
-      ALLOCATE(do_fft_x(blipgrid(3)*ld_bg(2)),do_fft_y(blipgrid(3)))
-      do_fft_x(:)=0 ; do_fft_y(:)=0
+      ALLOCATE(do_fft_z(ld_bg(1)*ld_bg(2)),do_fft_y(blipgrid(1)))
+      do_fft_z(:)=0 ; do_fft_y(:)=0
 !      do_fft_x(1)=1 ; do_fft_y(1)=1
       DO ig=1,ngtot
          g_idx(:) = modulo(g_int(:,ig),blipgrid(:))
-         do_fft_x(1 + g_idx(2) + ld_bg(2)*g_idx(3)) = 1
-         do_fft_y(1 + g_idx(3)) = 1
+         do_fft_z(1 + g_idx(1) + ld_bg(1)*g_idx(2)) = 1
+         do_fft_y(1 + g_idx(1)) = 1
          map_igk_to_fft (ig) = 1 + g_idx(1) + ld_bg(1)*(g_idx(2) + ld_bg(2)*g_idx(3))
          IF(gamma_only)THEN ! gamma_only
             g_idx(:) = modulo(-g_int(:,ig),blipgrid(:))
-            do_fft_x(1 + g_idx(2) + ld_bg(2)*g_idx(3)) = 1
-            do_fft_y(1 + g_idx(3)) = 1
+            do_fft_z(1 + g_idx(1) + ld_bg(1)*g_idx(2)) = 1
+            do_fft_y(1 + g_idx(1)) = 1
             map_minus_igk_to_fft (ig) = 1 + g_idx(1) + ld_bg(1)*(g_idx(2) + ld_bg(2)*g_idx(3))
          ENDIF
       ENDDO
@@ -144,7 +144,7 @@ CONTAINS
 
    SUBROUTINE pw2blip_cleanup
       DEALLOCATE(psic,gamma,g_int)
-      DEALLOCATE(map_igk_to_fft,do_fft_x,do_fft_y)
+      DEALLOCATE(map_igk_to_fft,do_fft_z,do_fft_y)
       IF(gamma_only)DEALLOCATE(map_minus_igk_to_fft)
    END SUBROUTINE pw2blip_cleanup
 
@@ -163,7 +163,7 @@ CONTAINS
 
       ! perform the transformation
       CALL cfft3ds (psic,blipgrid(1),blipgrid(2),blipgrid(3),&
-       &ld_bg(1),ld_bg(2),ld_bg(3),+1,do_fft_x(:),do_fft_y(:))
+       &ld_bg(1),ld_bg(2),ld_bg(3),+1,do_fft_z(:),do_fft_y(:))
    END SUBROUTINE
 
    SUBROUTINE pw2blip_transform2(psi1,psi2)
@@ -183,7 +183,7 @@ CONTAINS
 
       ! perform the transformation
       CALL cfft3ds (psic,blipgrid(1),blipgrid(2),blipgrid(3),&
-       &ld_bg(1),ld_bg(2),ld_bg(3),+1,do_fft_x(:),do_fft_y(:))
+       &ld_bg(1),ld_bg(2),ld_bg(3),+1,do_fft_z(:),do_fft_y(:))
    END SUBROUTINE
 
    SUBROUTINE pw2blip_get(node)

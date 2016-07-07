@@ -461,6 +461,7 @@ xml_io_base.o : io_global.o
 xml_io_base.o : kind.o
 xml_io_base.o : mp.o
 xml_io_base.o : mp_bands.o
+xml_io_base.o : mp_global.o
 xml_io_base.o : mp_images.o
 xml_io_base.o : mp_wave.o
 xml_io_base.o : parser.o

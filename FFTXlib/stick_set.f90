@@ -205,7 +205,7 @@
              DEALLOCATE( stw )
              ALLOCATE( stw( lb(2) : ub(2), lb(3) : ub(3) ) )
              CALL sticks_maps_scalar( (.not.tk), ub, lb, bg(:,1),bg(:,2),bg(:,3), gcut, gkcut, gcuts, stw, ngm_ , ngs_ )
-             CALL fft_dlay_allocate( dfft3d, mype, root, nproc, comm, 1, max(dffts%nr1x, dffts%nr3x), dffts%nr2x )
+             CALL fft_dlay_allocate( dfft3d, mype, root, nproc, comm, 1, dffts%nr1x, dffts%nr2x )
              CALL fft_dlay_scalar( dfft3d, ub, lb, dffts%nr1, dffts%nr2, dffts%nr3, dffts%nr1x, dffts%nr2x, dffts%nr3x, stw )
           END IF
 
@@ -220,8 +220,8 @@
           IF( ngm_ /= ngm ) CALL fftx_error__( ' pstickset ', ' inconsistent ngm ', abs( ngm - ngm_ ) )
           IF( ngs_ /= ngs ) CALL fftx_error__( ' pstickset ', ' inconsistent ngs ', abs( ngs - ngs_ ) )
 
-          CALL fft_dlay_allocate( dfftp, mype, root, nproc, comm, 1, max(dfftp%nr1x, dfftp%nr3x),  dfftp%nr2x  )
-          CALL fft_dlay_allocate( dffts, mype, root, nproc, comm, 1, max(dffts%nr1x, dffts%nr3x), dffts%nr2x )
+          CALL fft_dlay_allocate( dfftp, mype, root, nproc, comm, 1, dfftp%nr1x, dfftp%nr2x  )
+          CALL fft_dlay_allocate( dffts, mype, root, nproc, comm, 1, dffts%nr1x, dffts%nr2x )
 
           CALL fft_dlay_scalar( dfftp, ub, lb, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, stw )
           CALL fft_dlay_scalar( dffts, ub, lb, dffts%nr1, dffts%nr2, dffts%nr3, dffts%nr1x, dffts%nr2x, dffts%nr3x, stw )
@@ -449,7 +449,7 @@
 
           IF( ngs_ /= ngs ) CALL fftx_error__( ' pstickset_custom ', ' inconsistent ngs ', abs( ngs - ngs_ ) )
 
-          CALL fft_dlay_allocate( dffts, mype, root, nproc, comm, 1, max(dffts%nr1x, dffts%nr3x), dffts%nr2x )
+          CALL fft_dlay_allocate( dffts, mype, root, nproc, comm, 1, dffts%nr1x, dffts%nr2x )
 
           CALL fft_dlay_scalar( dffts, ub, lb, dffts%nr1, dffts%nr2, dffts%nr3, dffts%nr1x, dffts%nr2x, dffts%nr3x, stw )
 

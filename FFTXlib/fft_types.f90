@@ -227,20 +227,20 @@ CONTAINS
 
     TYPE (fft_dlay_descriptor) :: desc
 
-    LOGICAL, INTENT(in) :: tk
-    INTEGER, INTENT(in) :: nst
+    LOGICAL, INTENT(in) :: tk               ! gamma/not-gamma logical
+    INTEGER, INTENT(in) :: nst              ! total number of stiks 
     INTEGER, INTENT(in) :: nr1, nr2, nr3    ! size of real space grid
     INTEGER, INTENT(in) :: nr1x, nr2x, nr3x ! padded size of real space grid
     INTEGER, INTENT(in) :: ub(3), lb(3)     ! upper and lower bound of real space indices
-    INTEGER, INTENT(in) :: idx(:)
-    INTEGER, INTENT(in) :: in1(:)
-    INTEGER, INTENT(in) :: in2(:)
-    INTEGER, INTENT(in) :: ncp(:)
-    INTEGER, INTENT(in) :: ncpw(:)
-    INTEGER, INTENT(in) :: ngp(:)
-    INTEGER, INTENT(in) :: ngpw(:)
-    INTEGER, INTENT(in) :: st( lb(1) : ub(1), lb(2) : ub(2) )
-    INTEGER, INTENT(in) :: stw( lb(1) : ub(1), lb(2) : ub(2) )
+    INTEGER, INTENT(in) :: idx(:)           ! sorting index of the sticks
+    INTEGER, INTENT(in) :: in1(:)           ! x-index of a stick
+    INTEGER, INTENT(in) :: in2(:)           ! y-index of a stick
+    INTEGER, INTENT(in) :: ncp(:)           ! number of rho  columns per processor
+    INTEGER, INTENT(in) :: ncpw(:)          ! number of wave columns per processor
+    INTEGER, INTENT(in) :: ngp(:)           ! number of rho  G-vectors per processor
+    INTEGER, INTENT(in) :: ngpw(:)          ! number of wave G-vectors per processor
+    INTEGER, INTENT(in) :: st( lb(1) : ub(1), lb(2) : ub(2) )   ! stick owner of a given rho stick
+    INTEGER, INTENT(in) :: stw( lb(1) : ub(1), lb(2) : ub(2) )  ! stick owner of a given wave stick
 
     INTEGER :: npp( desc%nproc ), n3( desc%nproc ), nsp( desc%nproc )
     INTEGER :: np, nq, i, is, iss, i1, i2, m1, m2, n1, n2, ip
@@ -268,16 +268,16 @@ CONTAINS
 
     sm  = 0
     npp = 0
-    IF ( desc%nproc == 1 ) THEN
+    IF ( desc%nproc == 1 ) THEN      ! sigle processor: npp(1)=nr3
       npp(1) = nr3
-    ELSEIF( desc%nproc <= nr3 ) THEN
+    ELSEIF( desc%nproc <= nr3 ) THEN ! normal case, more planes than processors.
       np = nr3 / desc%nproc
       nq = nr3 - np * desc%nproc
       DO i = 1, desc%nproc
         npp(i) = np
         IF ( i <= nq ) npp(i) = np + 1
       ENDDO
-    ELSE
+    ELSE                             ! less planes than processors. distribute them round robin with step nogrp...
       DO ip = 1, nr3  !  some compiler complains for empty DO loops
         DO i = 1, desc%nproc, desc%nogrp
              npp(i) = npp(i) + 1
@@ -288,8 +288,11 @@ CONTAINS
       ENDDO
     ENDIF
 
-    desc%npp( 1:desc%nproc )  = npp
-    desc%npl = npp( desc%mype + 1 )
+    !-- npp(1:nproc) is the number of planes per processor
+    !-- npl is the number of planes per processor of this processor
+
+    desc%npp( 1:desc%nproc )  = npp    
+    desc%npl = npp( desc%mype + 1 )    
 
     !  Find out the index of the starting plane on each proc
 
@@ -298,9 +301,11 @@ CONTAINS
       n3(i) = n3(i-1) + npp(i-1)
     ENDDO
 
+    !-- ipp(1:proc) is the index-offset of the starting plane of each processor 
+
     desc%ipp( 1:desc%nproc )  = n3
 
-    !  Set the proper number of sticks
+    !  Set the proper number of sticks (the total number of 1d fft along z to be done)
 
     IF( .not. tk ) THEN
       desc%nst  = 2*nst - 1
@@ -316,34 +321,33 @@ CONTAINS
     desc%nr1x = nr1x
     desc%nr2x = nr2x
     desc%nr3x = nr3x
-    desc%nnp  = nr1x * nr2x   ! see ncplane
+
+    desc%nnp  = nr1x * nr2x  ! dimension of the xy plane. see ncplane
 
     !  Set fft local workspace dimension
 
     nppx = 0
     ncpx = 0
     DO i = 1, desc%nproc
-       nppx = MAX( nppx, npp( i ) )
-       ncpx = MAX( ncpx, ncp( i ) )
+       nppx = MAX( nppx, npp( i ) )  ! maximum number of planes per processor
+       ncpx = MAX( ncpx, ncp( i ) )  ! maximum number of columns per processor 
     END DO
 
     IF ( desc%nproc == 1 ) THEN
       desc%nnr  = nr1x * nr2x * nr3x
       desc%tg_nnr = desc%nnr
     ELSE
-      desc%nnr  = max( nr3x * ncpx, nr1x * nr2x * nppx )
+      desc%nnr  = max( nr3x * ncpx, nr1x * nr2x * nppx )  ! this is required to contain the local data in R and G space
       desc%nnr  = max( desc%nnr, ncpx * nppx * desc%nproc )  ! this is required to use ALLTOALL instead of ALLTOALLV
       desc%nnr  = max( 1, desc%nnr ) ! ensure that desc%nrr > 0 ( for extreme parallelism )
       desc%tg_nnr = desc%nnr
-      desc%tg_nnr = max( desc%tg_nnr, nr3x * ncpx )
-      desc%tg_nnr = max( desc%tg_nnr, nr1x * nr2x * nppx )
+      desc%tg_nnr = max( desc%tg_nnr, nr3x * ncpx ) ! this is required to contain the local data in G space (should be already granted!)
+      desc%tg_nnr = max( desc%tg_nnr, nr1x * nr2x * nppx ) ! this is required to contain the local data in R space (should be already granted!)
       desc%tg_nnr = max( 1, desc%tg_nnr ) ! ensure that desc%nrr > 0 ( for extreme parallelism )
     ENDIF
 
-
-
-    desc%ngl( 1:desc%nproc )  = ngp( 1:desc%nproc )
-    desc%nwl( 1:desc%nproc )  = ngpw( 1:desc%nproc )
+    desc%ngl( 1:desc%nproc )  = ngp( 1:desc%nproc )  ! local number of g vectors (rho) per processor
+    desc%nwl( 1:desc%nproc )  = ngpw( 1:desc%nproc ) ! local number of g vectors (wave) per processor
 
     IF( size( desc%isind ) < ( nr1x * nr2x ) ) &
       CALL fftx_error__( ' fft_dlay_set ', ' wrong descriptor dimensions, isind ', 5 )
@@ -359,9 +363,9 @@ CONTAINS
     !     this are used in the FFT transform along Y
     !
 
-    desc%isind = 0
-    desc%iplp   = 0
-    desc%iplw   = 0
+    desc%isind = 0    ! will contain the +ve or -ve of the processor number, if any, that owns the stick
+    desc%iplp  = 0    ! 1 if the given x-plane location is active in rho  y-fft
+    desc%iplw  = 0    ! 1 if the given x-plane location is active in wave y-fft
 
     DO iss = 1, nst
       is = idx( iss )
@@ -404,29 +408,31 @@ CONTAINS
       ENDIF
     ENDDO
 
+    ! iss(1:nproc) is the index offset of the first column of a given processor
+
     IF( size( desc%ismap ) < ( nst ) ) &
       CALL fftx_error__( ' fft_dlay_set ', ' wrong descriptor dimensions ', 6 )
 
     !
     !  1. Set the array desc%ismap which maps stick indexes to
-    !     position in the palne  ( iss )
+    !     position in the plane  ( iss )
     !  2. Re-set the array "desc%isind",  that maps position
     !     in the plane with stick indexes (it is the inverse of desc%ismap )
     !
 
     !  wave function sticks first
 
-    desc%ismap = 0
-    nsp        = 0
+    desc%ismap = 0     ! will be the global xy stick index in the global list of processor-ordered sticks
+    nsp        = 0     ! will be the number of sticks of a given procesor
     DO iss = 1, size( desc%isind )
-      ip = desc%isind( iss )
-      IF( ip > 0 ) THEN
+      ip = desc%isind( iss ) ! processor that owns iss wave stick. if it's a rho stick it's negative !
+      IF( ip > 0 ) THEN ! only operates on wave sticks
         nsp( ip ) = nsp( ip ) + 1
         desc%ismap( nsp( ip ) + desc%iss( ip ) ) = iss
         IF( ip == ( desc%mype + 1 ) ) THEN
-          desc%isind( iss ) = nsp( ip )
+          desc%isind( iss ) = nsp( ip ) ! isind is OVERWRITTEN as the ordered index in this processor stick list
         ELSE
-          desc%isind( iss ) = 0
+          desc%isind( iss ) = 0         ! zero otherwise...
         ENDIF
       ENDIF
     ENDDO
@@ -440,19 +446,19 @@ CONTAINS
       CALL fftx_error__( ' fft_dlay_set ', ' inconsistent number of sticks ', 7 )
     ENDIF
 
-    desc%nsw( 1:desc%nproc ) = nsp( 1:desc%nproc )
+    desc%nsw( 1:desc%nproc ) = nsp( 1:desc%nproc )  ! -- number of wave sticks per porcessor
 
     !  then add pseudopotential stick
 
     DO iss = 1, size( desc%isind )
-      ip = desc%isind( iss )
+      ip = desc%isind( iss ) ! -ve of processor that owns iss rho stick. if it was a wave stick it's something non negative !
       IF( ip < 0 ) THEN
         nsp( -ip ) = nsp( -ip ) + 1
         desc%ismap( nsp( -ip ) + desc%iss( -ip ) ) = iss
         IF( -ip == ( desc%mype + 1 ) ) THEN
-          desc%isind( iss ) = nsp( -ip )
+          desc%isind( iss ) = nsp( -ip ) ! isind is OVERWRITTEN as the ordered index in this processor stick list
         ELSE
-          desc%isind( iss ) = 0
+          desc%isind( iss ) = 0         ! zero otherwise...
         ENDIF
       ENDIF
     ENDDO
@@ -466,7 +472,7 @@ CONTAINS
       CALL fftx_error__( ' fft_dlay_set ', ' inconsistent number of sticks ', 8 )
     ENDIF
 
-    desc%nsp( 1:desc%nproc ) = nsp( 1:desc%nproc )
+    desc%nsp( 1:desc%nproc ) = nsp( 1:desc%nproc ) ! -- number of rho sticks per porcessor
 
     icount    = icount + 1
     desc%id   = icount
@@ -552,12 +558,12 @@ CONTAINS
 
     TYPE (fft_dlay_descriptor) :: desc
     INTEGER, INTENT(in) :: lb(:), ub(:)
-    INTEGER, INTENT(in) :: stw( lb(2) : ub(2), lb(3) : ub(3) )
+    INTEGER, INTENT(in) :: stw( lb(1) : ub(1), lb(2) : ub(2) )
 
     INTEGER :: nr1, nr2, nr3, nr1x, nr2x, nr3x
-    INTEGER :: m1, m2, i2, i3
+    INTEGER :: m1, m2, i1, i2
 
-    IF( size( desc%iplw ) < nr3x .or. size( desc%isind ) < nr2x * nr3x ) &
+    IF( size( desc%iplw ) < nr1x .or. size( desc%isind ) < nr1x * nr2x ) &
       CALL fftx_error__(' fft_dlay_scalar ', ' wrong dimensions ', 1 )
 
     desc%isind = 0
@@ -574,13 +580,13 @@ CONTAINS
     ! in a serial code, sticks are along X dimension
     ! and not along Z
 
-    DO i2 = lb( 2 ), ub( 2 )
-      DO i3 = lb( 3 ), ub( 3 )
-        m1 = i2 + 1; IF ( m1 < 1 ) m1 = m1 + nr2
-        m2 = i3 + 1; IF ( m2 < 1 ) m2 = m2 + nr3
-        IF( stw( i2, i3 ) > 0 ) THEN
-          desc%isind( m1 + ( m2 - 1 ) * nr2x ) =  1  ! st( i1, i2 )
-          desc%iplw( m2 ) = 1
+    DO i1 = lb( 1 ), ub( 1 )
+      DO i2 = lb( 2 ), ub( 2 )
+        m1 = i1 + 1; IF ( m1 < 1 ) m1 = m1 + nr1
+        m2 = i2 + 1; IF ( m2 < 1 ) m2 = m2 + nr2
+        IF( stw( i1, i2 ) > 0 ) THEN
+          desc%isind( m1 + ( m2 - 1 ) * nr1x ) =  1  ! st( i1, i2 )
+          desc%iplw( m1 ) = 1
         ENDIF
       ENDDO
     ENDDO
