@@ -211,7 +211,7 @@
 
           IF( PRESENT( dfft3d ) ) THEN
              DEALLOCATE( stw )
-             ALLOCATE( stw( lb(2) : ub(2), lb(3) : ub(3) ) )
+             ALLOCATE( stw( lb(1) : ub(1), lb(2) : ub(2) ) )
              CALL sticks_maps_scalar( (.not.tk), ub, lb, bg(:,1),bg(:,2),bg(:,3), gcut, gkcut, gcuts, stw, ngm_ , ngs_ )
              CALL fft_dlay_set_dims( dfft3d, dffts%nr1, dffts%nr2, dffts%nr3, dffts%nr1x, dffts%nr2x, dffts%nr3x )
              CALL fft_dlay_allocate( dfft3d, mype, root, nproc, comm, 1 )
@@ -221,7 +221,7 @@
 #else
 
           DEALLOCATE( stw )
-          ALLOCATE( stw( lb(2) : ub(2), lb(3) : ub(3) ) )
+          ALLOCATE( stw( lb(1) : ub(1), lb(2) : ub(2) ) )
 
           CALL sticks_maps_scalar( (.not.tk), ub, lb, bg(:,1),bg(:,2),bg(:,3), gcut, gkcut, gcuts, stw, ngm_ , ngs_ )
 
