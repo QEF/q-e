@@ -48,8 +48,7 @@ MODULE exx
 !civn
   COMPLEX(DP), ALLOCATABLE :: xi(:,:,:)
   INTEGER :: nbndproj
-  LOGICAL :: domat, firstexx
-  real(DP) :: eexx, ee, eeace
+  LOGICAL :: domat
   !
   !
   ! let xk(:,ik) + xq(:,iq) = xkq(:,ikq) = S(isym)*xk(ik') + G
@@ -604,8 +603,6 @@ MODULE exx
     USE us_exx,               ONLY : becxx
     USE paw_variables,        ONLY : okpaw
     USE paw_exx,              ONLY : PAW_init_keeq
-!civn
-    USE lsda_mod,             ONLY : current_spin, lsda, isk
 
     IMPLICIT NONE
     INTEGER :: ik,ibnd, i, j, k, ir, isym, ikq, ig
@@ -622,7 +619,6 @@ MODULE exx
     COMPLEX(DP) :: d_spin(2,2,48)
     INTEGER :: npw, current_ik
     INTEGER :: find_current_k
-    TYPE(bec_type) :: becpsi
 
     CALL start_clock ('exxinit')
     !
@@ -866,30 +862,7 @@ MODULE exx
     IF(okpaw) CALL PAW_init_keeq()
     !
 #ifdef __EXX_ACE
-    nbndproj = nbnd
-    IF (.not. allocated(xi)) ALLOCATE( xi(npwx*npol,nbndproj,nks) )
-    IF ( okvan ) CALL allocate_bec_type( nkb, nbnd, becpsi)
-    eexx = 0.0d0
-    xi = (0.0d0,0.0d0)
-    DO ik = 1, nks
-       npw = ngk (ik)
-       current_k = ik
-       IF ( lsda ) current_spin = isk(ik)
-       IF ( nks > 1 ) CALL get_buffer(evc, nwordwfc, iunwfc, ik)
-       IF ( okvan ) THEN
-          CALL init_us_2(npw, igk_k(1,ik), xk(:,ik), vkb)
-          CALL calbec ( nkb, vkb, evc, becpsi, nbnd )
-       ENDIF
-       IF (gamma_only) THEN
-          CALL aceinit_gamma(npw,nbnd,evc,xi(1,1,ik),becpsi,ee)
-       ELSE
-          CALL aceinit_k(npw,nbnd,evc,xi(1,1,ik),becpsi,ee)
-       ENDIF
-       eexx = eexx + ee
-    ENDDO
-    WRITE(*,*) 'EXACT--Energy', eexx
-    IF ( okvan ) CALL deallocate_bec_type(becpsi)
-    domat = .false.
+    CALL aceinit ( )
 #endif
     !
     CALL stop_clock ('exxinit')
@@ -1129,7 +1102,6 @@ MODULE exx
     USE cell_base,      ONLY : omega
     USE gvect,          ONLY : ngm, g
     USE wvfct,          ONLY : npwx, current_k
-    USE control_flags,  ONLY : gamma_only
     USE klist,          ONLY : xk, nks, nkstot, igk_k
     USE fft_interfaces, ONLY : fwfft, invfft
     USE becmod,         ONLY : bec_type
@@ -1410,7 +1382,6 @@ MODULE exx
     USE cell_base,      ONLY : omega
     USE gvect,          ONLY : ngm, g
     USE wvfct,          ONLY : npwx, current_k
-    USE control_flags,  ONLY : gamma_only
     USE klist,          ONLY : xk, nks, nkstot, igk_k
     USE fft_interfaces, ONLY : fwfft, invfft
     USE becmod,         ONLY : bec_type
@@ -2179,7 +2150,6 @@ MODULE exx
     USE symm_base,               ONLY : nsym, s
     USE gvect,                   ONLY : ngm, gstart, g, nl
     USE wvfct,                   ONLY : nbnd, npwx, wg
-    USE control_flags,           ONLY : gamma_only
     USE wavefunctions_module,    ONLY : evc
     USE klist,                   ONLY : xk, ngk, nks, nkstot, igk_k
     USE lsda_mod,                ONLY : lsda, current_spin, isk
@@ -2808,6 +2778,56 @@ IMPLICIT NONE
   ENDIF
 
 END SUBROUTINE
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE aceinit( )
+  !
+  USE wvfct,      ONLY : nbnd, npwx, current_k
+  USE klist,      ONLY : nks, xk, ngk, igk_k
+  USE uspp,       ONLY : nkb, vkb, okvan
+  USE becmod,     ONLY : allocate_bec_type, deallocate_bec_type, &
+                         bec_type, calbec
+  USE lsda_mod,   ONLY : current_spin, lsda, isk
+  USE io_files,   ONLY : nwordwfc, iunwfc
+  USE buffers,    ONLY : get_buffer
+  USE mp_pools,   ONLY : inter_pool_comm
+  USE mp_bands,   ONLY : intra_bgrp_comm
+  USE mp,         ONLY : mp_sum
+  USE control_flags,        ONLY : gamma_only
+  USE wavefunctions_module, ONLY : evc
+  !
+  IMPLICIT NONE
+  !
+  REAL (DP) :: ee, eexx
+  INTEGER :: ik, npw
+  TYPE(bec_type) :: becpsi
+  !
+  nbndproj = nbnd
+  IF (.not. allocated(xi)) ALLOCATE( xi(npwx*npol,nbndproj,nks) )
+  IF ( okvan ) CALL allocate_bec_type( nkb, nbnd, becpsi)
+  eexx = 0.0d0
+  xi = (0.0d0,0.0d0)
+  DO ik = 1, nks
+     npw = ngk (ik)
+     current_k = ik
+     IF ( lsda ) current_spin = isk(ik)
+     IF ( nks > 1 ) CALL get_buffer(evc, nwordwfc, iunwfc, ik)
+     IF ( okvan ) THEN
+        CALL init_us_2(npw, igk_k(1,ik), xk(:,ik), vkb)
+        CALL calbec ( nkb, vkb, evc, becpsi, nbnd )
+     ENDIF
+     IF (gamma_only) THEN
+        CALL aceinit_gamma(npw,nbnd,evc,xi(1,1,ik),becpsi,ee)
+     ELSE
+        CALL aceinit_k(npw,nbnd,evc,xi(1,1,ik),becpsi,ee)
+     ENDIF
+     eexx = eexx + ee
+  ENDDO
+  CALL mp_sum( eexx, intra_bgrp_comm)
+  CALL mp_sum( eexx, inter_pool_comm )
+  WRITE(*,*) 'EXACT--Energy', eexx
+  IF ( okvan ) CALL deallocate_bec_type(becpsi)
+  domat = .false.
+END SUBROUTINE aceinit
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 SUBROUTINE aceinit_gamma(nnpw,nbnd,phi,xitmp,becpsi,exxe)
 USE becmod,               ONLY : bec_type

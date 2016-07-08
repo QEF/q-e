@@ -1182,6 +1182,9 @@ FUNCTION exxenergyace ( )
   USE wvfct,    ONLY : nbnd, npwx, current_k
   USE lsda_mod, ONLY : lsda, isk, current_spin
   USE io_files, ONLY : iunwfc, nwordwfc
+  USE mp_pools, ONLY : inter_pool_comm
+  USE mp_bands, ONLY : intra_bgrp_comm
+  USE mp,       ONLY : mp_sum
   USE control_flags,        ONLY : gamma_only
   USE wavefunctions_module, ONLY : evc
   !
@@ -1206,6 +1209,8 @@ FUNCTION exxenergyace ( )
      END IF
      exxenergyace = exxenergyace + ex
   END DO
+  CALL mp_sum( exxenergyace, intra_bgrp_comm)
+  CALL mp_sum( exxenergyace, inter_pool_comm )
   domat = .false.
   !
 END FUNCTION exxenergyace
