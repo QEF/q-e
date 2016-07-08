@@ -1243,7 +1243,7 @@ CONTAINS
         indstring = 1+(istring-1)*nppstr
         WRITE(mod_string,'("(mod ",I1,")")') mod_elec(istring)
         CALL qes_init_phase(el_phase, "phase", 0.d0, .FALSE., 0.d0, .FALSE., TRIM (mod_string), .TRUE., &
-                            pdl_elec(iat) )
+                            pdl_elec(istring) )
         IF (istring .LE. nstring/nspin_lsda) THEN 
            ispin = 1 
         ELSE 
