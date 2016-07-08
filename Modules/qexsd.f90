@@ -805,17 +805,24 @@ CONTAINS
            xdm_a2_ispresent = .TRUE. 
            IF ( ANY(london_c6 .GT.  0.d0 )) THEN 
               london_c6_ispresent = .TRUE.
-              ALLOCATE (london_c6_obj(nsp))
               ndim_london_c6 = 0 
               DO isp = 1, nsp 
                  IF ( london_c6(isp) .GT. 0.d0 ) THEN 
                     ndim_london_c6 = ndim_london_c6 + 1
+                 END IF 
+              END DO
+              ALLOCATE (london_c6_obj(ndim_london_c6))
+              ndim_london_c6 = 0 
+              DO isp = 1, nsp
+                 IF ( london_c6(isp) .GT. 0.d0) THEN
+                    ndim_london_c6 = ndim_london_c6 + 1  
                     CALL qes_init_hubbardcommon(london_c6_obj(ndim_london_c6), "london_c6", TRIM(species(isp)),"",&
                                                 london_c6(isp))
                  END IF 
               END DO                        
            ELSE 
               london_c6_ispresent = .FALSE. 
+              ALLOCATE ( london_c6_obj(1))
            END IF
            ts_vdw_econv_thr_ispresent = .FALSE. 
            ts_vdw_isolated_ispresent = .FALSE. 
@@ -823,19 +830,19 @@ CONTAINS
            empirical_vdw = .TRUE.
            london_s6_ispresent =   .FALSE.
            london_c6_ispresent = .FALSE.
+           ALLOCATE ( london_c6_obj(1)) 
            london_rcut_ispresent = .FALSE.
            xdm_a1_ispresent =      .FALSE.
            xdm_a2_ispresent =      .FALSE.
-           london_c6_ispresent   = .FALSE. 
            ts_vdw_econv_thr_ispresent = .TRUE. 
            ts_vdw_isolated_ispresent  = .TRUE. 
       CASE default 
            empirical_vdw = .FALSE.
            ts_vdw_econv_thr_ispresent = .FALSE.
            ts_vdw_isolated_ispresent = .FALSE.
-           london_c6_ispresent = .FALSE.
            london_s6_ispresent =   .FALSE.
            london_c6_ispresent = .FALSE.
+           ALLOCATE (london_c6_obj(1))
            london_rcut_ispresent = .FALSE.
            xdm_a1_ispresent =      .FALSE.
            xdm_a2_ispresent =      .FALSE.
@@ -847,14 +854,14 @@ CONTAINS
           CALL qes_init_vdW(vdW, "vdW", TRIM(vdw_corr), root_is_output,  TRIM(nonlocal_term), london_s6_ispresent, london_s6, &
                             ts_vdw_econv_thr_ispresent, ts_vdw_econv_thr, ts_vdw_isolated_ispresent, ts_vdw_isolated,& 
                             london_rcut_ispresent, london_rcut, xdm_a1_ispresent, xdm_a1, xdm_a2_ispresent, xdm_a2, &
-                            london_c6_ispresent, ndim_london_c6, london_c6_obj(1:ndim_london_c6) )
+                            london_c6_ispresent, ndim_london_c6, london_c6_obj )
           !
           IF (london_c6_ispresent )   THEN
              DO isp=1, ndim_london_c6
                 CALL qes_reset_hubbardcommon(london_c6_obj(isp))
              END DO 
-             DEALLOCATE ( london_c6_obj) 
           END IF
+          DEALLOCATE ( london_c6_obj) 
       ENDIF
         
       CALL qes_init_dft(obj, "dft", functional, dft_is_hybrid, hybrid, &

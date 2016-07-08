@@ -1221,7 +1221,7 @@ SUBROUTINE qes_init_matrix(obj, tagname, ndim1_mat, ndim2_mat, mat)
    INTEGER  :: i
    INTEGER  :: ndim1_mat
    INTEGER  :: ndim2_mat
-   REAL(DP), DIMENSION(:,:) :: mat
+   REAL(DP), DIMENSION(ndim1_mat,ndim2_mat) :: mat
 
    obj%tagname = TRIM(tagname)
    ALLOCATE(obj%mat(ndim1_mat,ndim2_mat))
