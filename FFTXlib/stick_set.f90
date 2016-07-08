@@ -14,8 +14,9 @@
 !  ... initialize FFT descriptors for both dense and smooth grids
 
       USE stick_base
-      USE fft_types, ONLY: fft_dlay_descriptor, fft_dlay_allocate, &
-                           fft_dlay_set, fft_dlay_scalar, fft_dlay_set_dims
+      USE fft_types, ONLY: fft_dlay_descriptor, fft_dlay_set_dims, &
+                           fft_dlay_allocate, fft_dlay_deallocate, &
+                           fft_dlay_set, fft_dlay_scalar
 
       IMPLICIT NONE
 
@@ -47,7 +48,6 @@
           INTEGER, INTENT(IN) :: stdout
 
           TYPE(fft_dlay_descriptor), OPTIONAL, INTENT(inout) :: dfft3d
-
 
           LOGICAL :: tk
 
@@ -119,6 +119,14 @@
         INTEGER, ALLOCATABLE :: ist(:,:)    ! sticks indices ordered
         INTEGER :: ip, ngm_ , ngs_, ipg
         INTEGER, ALLOCATABLE :: idx(:)
+
+!
+! fft descriptors are initialized in this routine even if they were already defined previously !
+! therefore they are preliminarily cleaned (auxiliary arrays deallocated, logical flags reset) 
+! to avoid memory leaks and confusion 
+!
+       CALL fft_dlay_deallocate ( dffts ) ;  CALL fft_dlay_deallocate ( dfftp )
+       if (present(dfft3d) ) CALL fft_dlay_deallocate( dfft3d )
 
           tk    = .not. gamma_only
           ub(1) = ( dfftp%nr1 - 1 ) / 2
@@ -443,7 +451,7 @@
 #else
 
           DEALLOCATE( stw )
-          ALLOCATE( stw( lb(2) : ub(2), lb(3) : ub(3) ) )
+          ALLOCATE( stw( lb(1) : ub(1), lb(2) : ub(2) ) )
 
           CALL sticks_maps_scalar( (.not.tk), ub, lb, bg(:,1),bg(:,2),bg(:,3), gcut, gkcut, gcuts, stw, ngm_ , ngs_ )
 

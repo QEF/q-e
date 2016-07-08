@@ -10,11 +10,13 @@
 MODULE fft_types
 
   IMPLICIT NONE
+
   SAVE
 
   INTEGER :: stdout = 6
 
   TYPE fft_dlay_descriptor
+
     INTEGER :: nst      ! total number of sticks
     INTEGER, POINTER :: nsp(:)   ! number of sticks per processor ( potential )
                                  ! using proc index starting from 1 !!
@@ -28,6 +30,8 @@ MODULE fft_types
     INTEGER :: nr2x   = 0  ! dimensions of the arrays for the 3D grid (global)
     INTEGER :: nr3x   = 0  ! may differ from nr1 ,nr2 ,nr3 in order to boost performances
     LOGICAL :: dimensions_have_been_set = .FALSE.
+    LOGICAL :: arrays_have_been_allocated = .FALSE.
+    LOGICAL :: arrays_have_been_initialized = .FALSE.
 
     INTEGER :: npl    = 0  ! number of "Z" planes for this processor = npp( mpime + 1 )
     INTEGER :: nnp    = 0  ! number of 0 and non 0 sticks in a plane ( ~nr1*nr2/nproc )
@@ -44,6 +48,7 @@ MODULE fft_types
     INTEGER, POINTER :: ismap(:) ! for each stick in the plane indicate the position
     INTEGER, POINTER :: iplp(:)  ! indicate which "Y" plane should be FFTed ( potential )
     INTEGER, POINTER :: iplw(:)  ! indicate which "Y" plane should be FFTed ( wave func )
+
     !
     !  descriptor id and pointer, for future use
     !
@@ -137,8 +142,11 @@ CONTAINS
     INTEGER, INTENT(in) :: nogrp   ! number of task groups
     INTEGER :: nx, ny
 
+    IF (desc%arrays_have_been_allocated ) &
+        CALL fftx_error__(' fft_dlay_allocate ', ' fft arrays already allocated ', 1 )
+
     IF (.NOT. desc%dimensions_have_been_set ) &
-        CALL fftx_error__(' fft_dlay_set_allocate ', ' fft dimensions not yet set ', 1 )
+        CALL fftx_error__(' fft_dlay_allocate ', ' fft dimensions not yet set ', 1 )
 
     nx = desc%nr1x 
     ny = desc%nr2x
@@ -197,6 +205,8 @@ CONTAINS
     NULLIFY( desc%tg_usdsp )
     NULLIFY( desc%tg_rdsp )
 
+    desc%arrays_have_been_allocated = .TRUE.
+
   END SUBROUTINE fft_dlay_allocate
 
   SUBROUTINE fft_dlay_deallocate( desc )
@@ -224,7 +234,12 @@ CONTAINS
        IF ( associated( desc%tg_usdsp ) )   DEALLOCATE( desc%tg_usdsp )
        IF ( associated( desc%tg_rdsp ) )   DEALLOCATE( desc%tg_rdsp )
     ENDIF
-    desc%have_task_groups = .false.
+    desc%have_task_groups = .FALSE.
+
+    desc%arrays_have_been_allocated = .FALSE.
+
+    desc%dimensions_have_been_set = .FALSE.
+
   END SUBROUTINE fft_dlay_deallocate
 
 !=----------------------------------------------------------------------------=!
@@ -290,6 +305,9 @@ CONTAINS
     !  Task-grouping C. Bekas
     !
     INTEGER :: sm
+
+    IF (.NOT. desc%arrays_have_been_allocated ) &
+        CALL fftx_error__(' fft_dlay_allocate ', ' fft arrays not yet allocated ', 1 )
 
     IF (.NOT. desc%dimensions_have_been_set ) &
         CALL fftx_error__(' fft_dlay_set ', ' fft dimensions not yet set ', 1 )
@@ -367,6 +385,7 @@ CONTAINS
     ENDIF
 
     ! dimension of the xy plane. see ncplane
+
     desc%nnp  = nr1x * nr2x  
 
     !  Set fft local workspace dimension
@@ -468,7 +487,7 @@ CONTAINS
     !  wave function sticks first
 
     desc%ismap = 0     ! will be the global xy stick index in the global list of processor-ordered sticks
-    nsp        = 0     ! will be the number of sticks of a given procesor
+    nsp        = 0     ! will be the number of sticks of a given processor
     DO iss = 1, size( desc%isind )
       ip = desc%isind( iss ) ! processor that owns iss wave stick. if it's a rho stick it's negative !
       IF( ip > 0 ) THEN ! only operates on wave sticks
@@ -517,7 +536,7 @@ CONTAINS
       CALL fftx_error__( ' fft_dlay_set ', ' inconsistent number of sticks ', 8 )
     ENDIF
 
-    desc%nsp( 1:desc%nproc ) = nsp( 1:desc%nproc ) ! -- number of rho sticks per porcessor
+    desc%nsp( 1:desc%nproc ) = nsp( 1:desc%nproc ) ! -- number of rho sticks per processor
 
     icount    = icount + 1
     desc%id   = icount
