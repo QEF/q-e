@@ -39,7 +39,7 @@ MODULE fft_types
     INTEGER, POINTER :: nwl(:)   ! per proc. no. of non zero wave function plane components
     INTEGER, POINTER :: npp(:)   ! number of "Z" planes per processor
     INTEGER, POINTER :: ipp(:)   ! offset of the first "Z" plane on each proc ( 0 on the first proc!!!)
-    INTEGER, POINTER :: iss(:)   ! index of the first stick on each proc
+    INTEGER, POINTER :: iss(:)   ! index of the first rho stick on each proc
     INTEGER, POINTER :: isind(:) ! for each position in the plane indicate the stick index
     INTEGER, POINTER :: ismap(:) ! for each stick in the plane indicate the position
     INTEGER, POINTER :: iplp(:)  ! indicate which "Y" plane should be FFTed ( potential )
@@ -129,8 +129,8 @@ CONTAINS
 !-------------------------------------------------------
   SUBROUTINE fft_dlay_allocate( desc, mype, root, nproc, comm, nogrp )
   !
-  ! routine that defines the dimensions of fft_dlay_descriptor
-  ! must be called before fft_dlay_allocate and fft_dlay_set
+  ! routine that allocate arrays of fft_dlay_descriptor
+  ! must be called before fft_dlay_set
   !
     TYPE (fft_dlay_descriptor) :: desc
     INTEGER, INTENT(in) :: mype, root, nproc, comm ! mype starting from 0
@@ -173,9 +173,7 @@ CONTAINS
     desc%comm  = comm
     desc%nproc = nproc
     desc%root  = root
-    desc%have_task_groups = .false.
-    IF( nogrp > 1 ) &
-       desc%have_task_groups = .true.
+    desc%have_task_groups = ( nogrp > 1 )
     desc%me_pgrp = 0
     !
     IF( MOD( nproc, MAX( 1, nogrp ) ) /= 0 ) &

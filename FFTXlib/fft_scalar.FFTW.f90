@@ -576,7 +576,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
   !     driver routine for 3d complex "reduced" fft - see cfft3d
   !     The 3D fft are computed only on lines and planes which have
   !     non zero elements. These lines and planes are defined by
-  !     the two integer vectors do_fft_y(nx) and do_fft_zy(ldx*ldy)
+  !     the two integer vectors do_fft_y(nx) and do_fft_z(ldx*ldy)
   !     (1 = perform fft, 0 = do not perform fft)
   !     This routine is implemented only for fftw, essl, acml
   !     If not implemented, cfft3d is called instead
@@ -592,7 +592,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
   !   sign of the transformation
 
   complex(DP) :: f ( ldx * ldy * ldz )
-  integer :: do_fft_x(:), do_fft_y(:)
+  integer :: do_fft_z(:), do_fft_y(:)
   !
   integer :: m, incx1, incx2
   INTEGER :: i, k, j, err, idir, ip,  ii, jj
