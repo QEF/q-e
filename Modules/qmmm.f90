@@ -40,6 +40,9 @@ MODULE qmmm
   INTEGER, PARAMETER :: QMMM_TAG_COORD=2
   INTEGER, PARAMETER :: QMMM_TAG_FORCE=3
   INTEGER, PARAMETER :: QMMM_TAG_FORCE2=4
+  INTEGER, PARAMETER :: QMMM_TAG_CELL=5
+  INTEGER, PARAMETER :: QMMM_TAG_RADII=6
+  INTEGER, PARAMETER :: QMMM_TAG_CHARGE=7
   !
   ! convert forces to LAMMPS "real" units
   REAL(DP), PARAMETER :: QMMM_FORCE_CONV = 592.91102087727177_DP
@@ -50,7 +53,7 @@ MODULE qmmm
   ! center of mass of the system
   REAL(DP), DIMENSION(3) :: r0 = (/ 0.0_DP, 0.0_DP, 0.0_DP /)
   LOGICAL :: do_init_r0 = .TRUE. 
-!!!!!!!!!!!!!!!
+  !
   REAL(DP), ALLOCATABLE :: charge(:)
   REAL(DP), ALLOCATABLE :: aradii(:)
   REAL(DP), ALLOCATABLE :: tau_mm(:,:)
@@ -65,8 +68,7 @@ MODULE qmmm
   INTEGER  :: nat_mm
   INTEGER  :: nat_qm
   INTEGER  :: nat_all
-
-!!!!!!!!!!!!!!!   
+  !
 
   PUBLIC :: qmmm_config, qmmm_initialization, qmmm_shutdown, qmmm_mode
   PUBLIC :: qmmm_update_positions, qmmm_update_forces, qmmm_add_esf, qmmm_force_esf
@@ -85,6 +87,7 @@ CONTAINS
 
   END SUBROUTINE qmmm_config
 
+  !---------------------------------------------------------------------!
 
   SUBROUTINE qmmm_initialization
     USE input_parameters, ONLY : calculation, nstep, nat
@@ -131,23 +134,22 @@ CONTAINS
 
     ! only ionode communicates with MM master
     IF (ionode) THEN
-        IF (qmmm_comm /= MPI_COMM_NULL) THEN
+       IF (qmmm_comm /= MPI_COMM_NULL) THEN
 #if defined(__MPI)
-        CALL mpi_send(nat_qm,1,MPI_INTEGER,0,QMMM_TAG_SIZE,qmmm_comm,ierr)
+          CALL mpi_send(nat_qm,1,MPI_INTEGER,0,QMMM_TAG_SIZE,qmmm_comm,ierr)
 #else
-          WRITE(stdout,*) 'Use of QM/MM requires compilation with MPI'
-            STOP 200
+          CALL errore( 'qmmm_initialization', 'Use of QM/MM requires compilation with MPI', 1 )
 #endif
-        END IF
+       END IF
     END IF
     CALL mp_bcast(nstep, ionode_id, world_comm)
     ! temporary storage
     ALLOCATE( tmp_buf(3,nat_qm) )
     
-    
   END SUBROUTINE qmmm_initialization
 
-  ! private subroutine
+  !---------------------------------------------------------------------!
+
   SUBROUTINE qmmm_center_molecule
     USE cell_base, ONLY : alat, at
     USE ions_base, ONLY : nat
@@ -176,9 +178,8 @@ CONTAINS
         tau(3,i) = tau(3,i) - gc(3) + r0(3)
     END DO
 
-  ! print *, "XXX DEBUG XXXYYY delta IS: ", r0 - gc
-  ! Also do the same on tau_mm, if the electrostatic coupling is enabled,
-  ! but without keeping the mm atoms in account in the compute of gc/
+    ! Also do the same on tau_mm, if the electrostatic coupling is enabled,
+    ! but without keeping the mm atoms in account in the compute of gc/
 
     IF( qmmm_mode == 2 ) THEN
        DO i = 1, nat_mm
@@ -188,10 +189,9 @@ CONTAINS
        ENDDO
     ENDIF
 
-
-
   END SUBROUTINE qmmm_center_molecule
 
+  !---------------------------------------------------------------------!
 
 SUBROUTINE qmmm_minimum_image()
   USE constants, ONLY : bohr_radius_angs, eps8
@@ -233,8 +233,9 @@ SUBROUTINE qmmm_minimum_image()
 END SUBROUTINE qmmm_minimum_image
 
 
-
+  !---------------------------------------------------------------------!
   ! update positions of the QM system from MM-master
+
   SUBROUTINE qmmm_update_positions
     USE constants, ONLY : bohr_radius_angs
     USE cell_base, ONLY : alat
@@ -244,23 +245,25 @@ END SUBROUTINE qmmm_minimum_image
     INTEGER :: irecv_buf(3)
 
     IF (qmmm_mode < 0) RETURN
+
 #if defined(__MPI)
    
     IF (ionode .and. (qmmm_verb > 0)) &
-         WRITE(stdout,'(/,5X,A)') 'QMMM: update positions'
+        WRITE(stdout,'(/,5X,A)') 'QMMM: update positions'
 
     IF( ionode ) THEN
-        CALL mpi_recv( irecv_buf, 3, MPI_INTEGER, 0, QMMM_TAG_COORD, qmmm_comm, MPI_STATUS_IGNORE, ierr )
-        IF( qmmm_verb > 0 ) THEN
-           WRITE(stdout,*) '    QMMM: nat_all = ', nat_all
-           WRITE(stdout,*) '    QMMM: nat_qm  = ', nat_qm  ! num_qm in lammps
-           WRITE(stdout,*) '    QMMM: nat_mm  = ', nat_mm  ! num_mm in lammps
-        END IF
+        CALL mpi_recv( irecv_buf, 3, MPI_INTEGER, 0, QMMM_TAG_SIZE, qmmm_comm, MPI_STATUS_IGNORE, ierr )
     END IF
     CALL mp_bcast( irecv_buf, ionode_id, world_comm )
     nat_all = irecv_buf(1)
     nat_qm  = irecv_buf(2)
     nat_mm  = irecv_buf(3)
+    IF (ionode .and. (qmmm_verb > 0 )) THEN
+        WRITE(stdout,*) '    QMMM: nat_all = ', nat_all
+        WRITE(stdout,*) '    QMMM: nat_qm  = ', nat_qm  ! num_qm in lammps
+        WRITE(stdout,*) '    QMMM: nat_mm  = ', nat_mm  ! num_mm in lammps
+    END IF
+
 
     IF( .NOT. ALLOCATED( rc_mm ) ) THEN
         ALLOCATE( rc_mm( nat_all ) )
@@ -291,16 +294,16 @@ END SUBROUTINE qmmm_minimum_image
     IF (ionode) THEN
 
         CALL mpi_recv( cell_mm, 9, MPI_DOUBLE_PRECISION, &
-              0, QMMM_TAG_COORD, qmmm_comm, MPI_STATUS_IGNORE, ierr )
+              0, QMMM_TAG_CELL, qmmm_comm, MPI_STATUS_IGNORE, ierr )
 
         CALL mpi_recv(aradii(1),nat_all,MPI_DOUBLE_PRECISION, &
-              0,QMMM_TAG_COORD,qmmm_comm,MPI_STATUS_IGNORE,ierr)
+              0,QMMM_TAG_RADII,qmmm_comm,MPI_STATUS_IGNORE,ierr)
 
         CALL mpi_recv(tau(1,1),3*nat_qm,MPI_DOUBLE_PRECISION, &
               0,QMMM_TAG_COORD,qmmm_comm,MPI_STATUS_IGNORE,ierr)
  
         CALL mpi_recv(charge(1),nat_qm,MPI_DOUBLE_PRECISION, &
-              0,QMMM_TAG_COORD,qmmm_comm,MPI_STATUS_IGNORE,ierr)
+              0,QMMM_TAG_CHARGE,qmmm_comm,MPI_STATUS_IGNORE,ierr)
 
         CALL mpi_recv(charge_mm(1),nat_all,MPI_DOUBLE_PRECISION, &
               0,QMMM_TAG_COORD,qmmm_comm,MPI_STATUS_IGNORE,ierr)
@@ -310,7 +313,6 @@ END SUBROUTINE qmmm_minimum_image
 
         CALL mpi_recv(tau_mask(1),nat_all,MPI_INTEGER, &
               0,QMMM_TAG_COORD,qmmm_comm,MPI_STATUS_IGNORE,ierr)
-
 
         ! convert from angstrom to alat units
         tau = tau / (alat * bohr_radius_angs)
@@ -341,36 +343,33 @@ END SUBROUTINE qmmm_minimum_image
     ! Convert radii to Bohr units
     rc_mm = rc_mm / (alat * bohr_radius_angs)
 
-
-
-    IF( ionode ) THEN
+    IF (ionode) THEN
        WRITE(stdout,*)
-       WRITE(stdout,'(5X,A)') 'QMMM: cell_mm    '
-       WRITE(stdout,'(9F6.3)') cell_mm(:)
+       WRITE(stdout,'(5X,A)') 'QMMM: cell_mm'
+       WRITE(stdout,'(11X,A,3F6.3)') 'X (lo,hi,len): ',cell_mm(1),cell_mm(4),cell_mm(4)-cell_mm(1)
+       WRITE(stdout,'(11X,A,3F6.3)') 'Y (lo,hi,len): ',cell_mm(2),cell_mm(5),cell_mm(5)-cell_mm(2)
+       WRITE(stdout,'(11X,A,3F6.3)') 'Z (lo,hi,len): ',cell_mm(3),cell_mm(6),cell_mm(6)-cell_mm(3)
+       WRITE(stdout,'(11X,A,3F6.3)') '  (xy,xz,yz) : ',cell_mm(7),cell_mm(8),cell_mm(9)
        WRITE(stdout,*)
        DO i = 1, nat_qm
-          WRITE(stdout,'(5X,A,3F10.6,2X,A,F10.6)') &
-             'QMMM: tau    ', tau(:,i)   , ' charge    ', charge(i)
+           WRITE(stdout,'(5X,A,3F10.6,2X,A,F10.6)') &
+                'QMMM: tau    ',tau(:,i), ' charge    ',charge(i)
        END DO
        WRITE(stdout,*)
        DO i = 1, nat_all
-          WRITE(stdout,'(5X,A,3F10.6,2X,A,F10.6,2X,A,I1)') &
-             'QMMM: tau_mm ', tau_mm(:,i), ' charge_mm ', charge_mm(i), ' QA ', tau_mask(i)
+           WRITE(stdout,'(5X,A,3F10.6,2X,A,F10.6,2X,A,I2)') &
+                'QMMM: tau_mm ',tau_mm(:,i),' charge_mm ',charge_mm(i),' QA ',tau_mask(i)
        END DO
     END IF
 
-    !call mpi_barrier(MPI_COMM_WORLD,ierr)
-    !call mpi_finalize()
-    !stop 1
-
 
 #else
-        WRITE(stdout,*) 'Use of QM/MM requires compilation with MPI support'
-        STOP 201
+    CALL errore( 'qmmm_update_positions', 'Use of QM/MM requires compilation with MPI', 1 )
 #endif
 
   END SUBROUTINE qmmm_update_positions
 
+  !---------------------------------------------------------------------!
   ! communicate forces of the QM system to MM-master
   !
   SUBROUTINE qmmm_update_forces( force, rho, nspin, dfftp )
@@ -385,17 +384,17 @@ END SUBROUTINE qmmm_minimum_image
     IF (qmmm_mode < 0) RETURN
 
 #if defined(__MPI)
-    IF (ionode .and. (qmmm_verb > 0)) &
-        WRITE(stdout,'(/,5X,A)') 'QMMM: update forces'
 
     IF( qmmm_mode == 2 ) THEN
+       IF (ionode .and. (qmmm_verb > 0)) &
+          WRITE(stdout,'(/,5X,A)') 'QMMM: compute EC forces'
        CALL qmmm_force_esf( rho, nspin, dfftp )
     END IF
 
     IF (ionode) THEN
+        IF (qmmm_verb > 0) WRITE(stdout,'(5X,A)') 'QMMM: update forces'
         ! convert from atomic to real units
         IF( qmmm_mode == 2 ) THEN
-           !!!! Note check if force and force_qm are in the same units!!!!
            tmp_buf = (force + force_qm) * QMMM_FORCE_CONV
         ELSE
            tmp_buf = force * QMMM_FORCE_CONV
@@ -408,11 +407,11 @@ END SUBROUTINE qmmm_minimum_image
         CALL mpi_send(force_mm,3*nat_mm,MPI_DOUBLE_PRECISION, 0,QMMM_TAG_FORCE2,qmmm_comm,ierr)
     END IF
 #else
-        WRITE(stdout,*) 'Use of QM/MM requires compilation with MPI support'
-        STOP 201
+    CALL errore( 'qmmm_update_forces', 'Use of QM/MM requires compilation with MPI', 1 )
 #endif
   END SUBROUTINE qmmm_update_forces
 
+  !---------------------------------------------------------------------!
   ! add electrostatic field of MM system to QM system
 
   SUBROUTINE qmmm_add_esf( vltot, dfftp )
@@ -446,7 +445,6 @@ END SUBROUTINE qmmm_minimum_image
     !
     REAL(DP) :: esfcontrib
     REAL(DP),ALLOCATABLE :: esfcontrib_all(:)
-    REAL(DP) :: sigma_esf
     !
     ! if either the MS2 or EC aren't enabled, exit immediately
     IF( qmmm_mode /= 2 ) RETURN
@@ -455,7 +453,6 @@ END SUBROUTINE qmmm_minimum_image
     !
     ALLOCATE(esfcontrib_all(dfftp%nnr))
     esfcontrib_all(:) = 0.D0
-    !sigma_esf = 0.5D0 / (alat * bohr_radius_angs)
     !
     index0 = 0
     !
@@ -485,13 +482,13 @@ END SUBROUTINE qmmm_minimum_image
        esfcontrib = 0.0D0
        !
        DO i_mm = 1, nat_mm 
+
           if(tau_mask(i_mm) .ne. -1)cycle ! only MM atoms contribute to ESF
-           dist=sqrt((tau_mm(1, i_mm)-r(1))**2 +   &
-                    (tau_mm(2, i_mm)-r(2))**2 +   &
-                    (tau_mm(3, i_mm)-r(3))**2)
+
+          dist=sqrt((tau_mm(1, i_mm)-r(1))**2 + (tau_mm(2, i_mm)-r(2))**2 + (tau_mm(3, i_mm)-r(3))**2)
           !
           if(dist .LE. r_nn) then
-               esfcontrib = esfcontrib - e2*charge_mm(i_mm)*(rc_mm(i_mm)**4 -dist**4)/(rc_mm(i_mm)**5 -dist**5) / alat
+              esfcontrib = esfcontrib - e2*charge_mm(i_mm)*(rc_mm(i_mm)**4 -dist**4)/(rc_mm(i_mm)**5 -dist**5) / alat
           end if
        ENDDO
        !
@@ -560,8 +557,9 @@ END SUBROUTINE qmmm_minimum_image
 
   END SUBROUTINE qmmm_add_esf
 
+  !---------------------------------------------------------------------!
+
   SUBROUTINE qmmm_force_esf(rho,nspin,dfftp)
-    !--------------------------------------------------------------------------
     !
     !   This routine computes the forces on the MM atoms due to the QM part
     !
@@ -603,8 +601,11 @@ END SUBROUTINE qmmm_minimum_image
     force_mm = 0.d0
     !
     ! Compute forces on MM atoms due to valence electrons 
+    !
     DO i_mm = 1, nat_mm
+       !
        if(tau_mask(i_mm) .ne. -1)cycle
+       !
        DO is=1,nspin
           DO ir = 1, dfftp%nnr
              !
@@ -623,12 +624,9 @@ END SUBROUTINE qmmm_minimum_image
 
              !
              r=matmul(at,s)
-             dist = sqrt((tau_mm(1, i_mm)-r(1))**2 +    &
-                       (tau_mm(2, i_mm)-r(2))**2 +    &
-                       (tau_mm(3, i_mm)-r(3))**2)
+             dist = sqrt((tau_mm(1, i_mm)-r(1))**2 + (tau_mm(2, i_mm)-r(2))**2 + (tau_mm(3, i_mm)-r(3))**2)
              !
-             !!!!!   derivata dell'energia potenziale come definita nella formula (3) del
-             !!!!!   j.chem. phys 116 di Laio
+             !  see equation (3) from  j.chem. phys 116 by Laio
              !
              fder = ( 5.d0*(dist**4)*( rc_mm(i_mm)**4 - dist**4 ) -   &
                          4.d0*(dist**3)*( rc_mm(i_mm)**5 - dist**5 ) ) / & 
@@ -641,6 +639,7 @@ END SUBROUTINE qmmm_minimum_image
              !
           END DO
        END DO
+       !
        force_mm(1,i_mm) = force_mm(1,i_mm) * charge_mm(i_mm)
        force_mm(2,i_mm) = force_mm(2,i_mm) * charge_mm(i_mm)
        force_mm(3,i_mm) = force_mm(3,i_mm) * charge_mm(i_mm)
@@ -691,6 +690,8 @@ END SUBROUTINE qmmm_minimum_image
     RETURN
     
   END SUBROUTINE qmmm_force_esf
+
+  !---------------------------------------------------------------------!
 
   SUBROUTINE qmmm_shutdown
     !
