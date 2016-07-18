@@ -755,8 +755,8 @@ TYPE :: basis_set_type
    LOGICAL  :: ecutrho_ispresent
    REAL(DP) :: ecutrho
    TYPE(basisSetItem_type) :: fft_grid
-   LOGICAL  :: fft_smoooth_ispresent
-   TYPE(basisSetItem_type) :: fft_smoooth
+   LOGICAL  :: fft_smooth_ispresent
+   TYPE(basisSetItem_type) :: fft_smooth
    LOGICAL  :: fft_box_ispresent
    TYPE(basisSetItem_type) :: fft_box
    INTEGER  :: ngm

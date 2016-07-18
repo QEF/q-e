@@ -55,7 +55,7 @@
                                 lberry,nppstr,nberrycyc,                                                              &
                                 nconstr_inp, nc_fields, constr_type_inp, constr_target_inp, constr_inp, tconstr,      &
                                 constr_tol_inp, constrained_magnetization, lambda, fixed_magnetization, input_dft,    &
-                                tf_inp
+                                tf_inp, ip_ibrav => ibrav
 !
   USE fixed_occ,         ONLY:  f_inp               
                                 
@@ -84,7 +84,7 @@
   INTEGER                                  ::   inlc,nt
   REAL(DP),POINTER                         ::   ns_null(:,:,:,:)=>NULL()
   COMPLEX(DP),POINTER                      ::   ns_nc_null(:,:,:,:)=>NULL()
-  LOGICAL                                  ::   lsda,dft_is_hybrid,dft_is_nonlocc,is_hubbard(ntypx)=.FALSE.
+  LOGICAL                                  ::   lsda,dft_is_hybrid,dft_is_nonlocc,is_hubbard(ntypx)=.FALSE., ibrav_lattice
   INTEGER                                  ::   Hubbard_l=0,Hubbard_lmax=0
   INTEGER                                  ::   iexch, icorr, igcx, igcc, imeta, my_vec(6) 
   INTEGER,EXTERNAL                         ::   set_hubbard_l
@@ -96,6 +96,11 @@
   !
   ! 
   obj%tagname=TRIM(obj_tagname)
+  IF ( ABS(ip_ibrav)  .GT. 0 ) THEN  
+     ibrav_lattice = .TRUE. 
+  ELSE
+     ibrav_lattice = .FALSE. 
+  END IF
   !
   !------------------------------------------------------------------------------------------------------------------------
   !                                                 CONTROL VARIABLES ELEMENT
@@ -126,9 +131,14 @@
   tau(1:3,1:ip_nat) = iob_tau(1:3,1:ip_nat)*alat
   tau_units="Bohr"
   !tau=tau*bohr_radius_angs
-  !  
-  CALL qexsd_init_atomic_structure (obj%atomic_structure, ntyp, atm, ip_ityp, ip_nat, tau, tau_units = tau_units,     &
-                                    alat = sqrt(sum(a1(1:3)*a1(1:3))), a1 = a1,a2 = a2, a3 = a3 , ibrav = 0 )
+  !
+  IF ( ibrav_lattice ) THEN 
+     CALL qexsd_init_atomic_structure (obj%atomic_structure, ntyp, atm, ip_ityp, ip_nat, tau, tau_units = tau_units,     &
+                                       ALAT = alat, a1 = a1, a2 = a2, a3 = a3 , ibrav = ip_ibrav )
+  ELSE 
+     CALL qexsd_init_atomic_structure (obj%atomic_structure, ntyp, atm, ip_ityp, ip_nat, tau, TAU_UNITS = tau_units,     &
+                                    alat = sqrt(sum(a1(1:3)*a1(1:3))), A1 = a1, A2 = a2, A3 = a3 , IBRAV = 0 )
+  END IF 
   DEALLOCATE ( tau ) 
   ! 
   !--------------------------------------------------------------------------------------------------------------------------
@@ -219,7 +229,7 @@
   !----------------------------------------------------------------------------------------------------------------------------
   !                                                    BASIS ELEMENT
   !---------------------------------------------------------------------------------------------------------------------------
-  CALL qexsd_init_basis(obj%basis, ip_k_points, ecutwfc, ip_ecutrho, ip_nr1, ip_nr2, ip_nr3, ip_nr1s, ip_nr2s, ip_nr3s,& 
+  CALL qexsd_init_basis(obj%basis, ip_k_points, ecutwfc/e2, ip_ecutrho/e2, ip_nr1, ip_nr2, ip_nr3, ip_nr1s, ip_nr2s, ip_nr3s,& 
                         ip_nr1b, ip_nr2b,ip_nr3b) 
   !-----------------------------------------------------------------------------------------------------------------------------
   !                                                    ELECTRON CONTROL
@@ -239,11 +249,11 @@
       gamma_xk(:,1)=[0._DP, 0._DP, 0._DP]
       gamma_wk(1)=1._DP
       CALL qexsd_init_k_points_ibz( obj%k_points_ibz, ip_k_points, calculation, nk1, nk2, nk3, k1, k2, k3, 1,         &
-                                    gamma_xk, gamma_wk ,alat,a1) 
+                                    gamma_xk, gamma_wk ,alat,a1,ibrav_lattice) 
 
   ELSE 
      CALL qexsd_init_k_points_ibz(obj%k_points_ibz, ip_k_points, calculation, nk1, nk2, nk3, k1, k2, k3, nkstot,      &
-                                   ip_xk, ip_wk,alat,a1)
+                                   ip_xk, ip_wk,alat,a1, ibrav_lattice)
 
   END IF
   !--------------------------------------------------------------------------------------------------------------------------------

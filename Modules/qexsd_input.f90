@@ -268,7 +268,7 @@ MODULE qexsd_input
    !
    !
    !-------------------------------------------------------------------------------------------------
-   SUBROUTINE qexsd_init_k_points_ibz(obj,k_points,calculation,nk1,nk2,nk3,s1,s2,s3,nk,xk,wk,alat,a1)
+   SUBROUTINE qexsd_init_k_points_ibz(obj,k_points,calculation,nk1,nk2,nk3,s1,s2,s3,nk,xk,wk,alat,a1, ibrav_lattice)
    ! 
    IMPLICIT NONE
    ! 
@@ -277,6 +277,7 @@ MODULE qexsd_input
    INTEGER,INTENT(IN)                   :: nk1,nk2,nk3,s1,s2,s3,nk
    REAL(DP),INTENT(IN)                  :: xk(:,:),wk(:)
    REAL(DP),INTENT(IN)                  :: alat,a1(3)
+   LOGICAL,INTENT(IN)                   :: ibrav_lattice
    !
    CHARACTER(LEN=*),PARAMETER           :: TAGNAME="k_points_IBZ"
    TYPE(monkhorst_pack_type)            :: mpack_obj
@@ -302,7 +303,11 @@ MODULE qexsd_input
                                  nk=0,k_point_ispresent=.FALSE.,ndim_k_point=0,k_point=kp_obj)
       CALL qes_reset_monkhorst_pack(mpack_obj)
    ELSE
-      scale_factor=alat/sqrt(a1(1)*a1(1)+a1(2)*a1(2)+a1(3)*a1(3))
+      IF ( ibrav_lattice ) THEN 
+         scale_factor = 1.d0
+      ELSE 
+         scale_factor=alat/sqrt(a1(1)*a1(1)+a1(2)*a1(2)+a1(3)*a1(3))
+      END IF 
       !
       IF (TRIM(calculation).NE.'bands' .AND. (TRIM(k_points).EQ.'tpiba_b' .OR. &
                                               TRIM(k_points) .EQ. 'crystal_b')) THEN

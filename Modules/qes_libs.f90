@@ -702,9 +702,9 @@ SUBROUTINE qes_init_BerryPhaseOutput(obj, tagname, polarization, totalPhase, &
    TYPE(polarization_type) :: polarization
    TYPE(phase_type) :: totalPhase
    INTEGER  :: ndim_ionicPolarization
-   TYPE(ionicPolarization_type), DIMENSION(:) :: ionicPolarization
+   TYPE(ionicPolarization_type ), DIMENSION( ndim_ionicPolarization )  :: ionicPolarization
    INTEGER  :: ndim_electronicPolarization
-   TYPE(electronicPolarization_type), DIMENSION(:) :: electronicPolarization
+   TYPE(electronicPolarization_type ), DIMENSION( ndim_electronicPolarization )  :: electronicPolarization
 
    obj%tagname = TRIM(tagname)
    obj%polarization = polarization
@@ -772,11 +772,12 @@ SUBROUTINE qes_init_vector(obj, tagname, ndim_vec, vec)
    CHARACTER(len=*) :: tagname
    INTEGER  :: i
    INTEGER  :: ndim_vec
-   REAL(DP), DIMENSION(:) :: vec
+   REAL(DP), DIMENSION(ndim_vec) :: vec
 
    obj%tagname = TRIM(tagname)
    ALLOCATE(obj%vec(ndim_vec))
    obj%vec(:) = vec(:)
+   obj%ndim_vec = ndim_vec
 
 END SUBROUTINE qes_init_vector
 
@@ -834,17 +835,19 @@ SUBROUTINE qes_init_ks_energies(obj, tagname, k_point, npw, ndim_eigenvalues, ei
    TYPE(k_point_type) :: k_point
    INTEGER  :: npw
    INTEGER  :: ndim_eigenvalues
-   REAL(DP), DIMENSION(:) :: eigenvalues
+   REAL(DP), DIMENSION(ndim_eigenvalues) :: eigenvalues
    INTEGER  :: ndim_occupations
-   REAL(DP), DIMENSION(:) :: occupations
+   REAL(DP), DIMENSION(ndim_occupations) :: occupations
 
    obj%tagname = TRIM(tagname)
    obj%k_point = k_point
    obj%npw = npw
    ALLOCATE(obj%eigenvalues(ndim_eigenvalues))
    obj%eigenvalues(:) = eigenvalues(:)
+   obj%ndim_eigenvalues = ndim_eigenvalues
    ALLOCATE(obj%occupations(ndim_occupations))
    obj%occupations(:) = occupations(:)
+   obj%ndim_occupations = ndim_occupations
 
 END SUBROUTINE qes_init_ks_energies
 
@@ -1087,7 +1090,7 @@ SUBROUTINE qes_init_equivalent_atoms(obj, tagname, nat, ndim_index_list, index_l
    INTEGER  :: i
    INTEGER  :: nat
    INTEGER  :: ndim_index_list
-   INTEGER, DIMENSION(:) :: index_list
+   INTEGER, DIMENSION(ndim_index_list) :: index_list
 
    obj%tagname = TRIM(tagname)
 
@@ -1095,6 +1098,7 @@ SUBROUTINE qes_init_equivalent_atoms(obj, tagname, nat, ndim_index_list, index_l
 
    ALLOCATE(obj%index_list(ndim_index_list))
    obj%index_list(:) = index_list(:)
+   obj%ndim_index_list = ndim_index_list
 
 END SUBROUTINE qes_init_equivalent_atoms
 
@@ -1226,6 +1230,8 @@ SUBROUTINE qes_init_matrix(obj, tagname, ndim1_mat, ndim2_mat, mat)
    obj%tagname = TRIM(tagname)
    ALLOCATE(obj%mat(ndim1_mat,ndim2_mat))
    obj%mat(:,:) = mat(:,:)
+   obj%ndim1_mat = ndim1_mat
+   obj%ndim2_mat = ndim2_mat
 
 END SUBROUTINE qes_init_matrix
 
@@ -2129,7 +2135,7 @@ SUBROUTINE qes_init_atomic_constraints(obj, tagname, num_of_constraints, toleran
    INTEGER  :: num_of_constraints
    REAL(DP) :: tolerance
    INTEGER  :: ndim_atomic_constraint
-   TYPE(atomic_constraint_type), DIMENSION(:) :: atomic_constraint
+   TYPE(atomic_constraint_type ), DIMENSION( ndim_atomic_constraint )  :: atomic_constraint
 
    obj%tagname = TRIM(tagname)
    obj%num_of_constraints = num_of_constraints
@@ -2413,7 +2419,7 @@ SUBROUTINE qes_init_symmetries(obj, tagname, nsym, nrot, space_group, ndim_symme
    INTEGER :: nrot
    INTEGER :: space_group
    INTEGER  :: ndim_symmetry
-   TYPE(symmetry_type), DIMENSION(:) :: symmetry
+   TYPE(symmetry_type ), DIMENSION( ndim_symmetry )  :: symmetry
 
    obj%tagname = TRIM(tagname)
    obj%nsym = nsym
@@ -2738,11 +2744,13 @@ SUBROUTINE qes_init_integerMatrix(obj, tagname, ndim1_int_mat, ndim2_int_mat, in
    INTEGER  :: i
    INTEGER  :: ndim1_int_mat
    INTEGER  :: ndim2_int_mat
-   INTEGER, DIMENSION(:,:) :: int_mat
+   INTEGER, DIMENSION(ndim1_int_mat,ndim2_int_mat) :: int_mat
 
    obj%tagname = TRIM(tagname)
    ALLOCATE(obj%int_mat(ndim1_int_mat,ndim2_int_mat))
    obj%int_mat(:,:) = int_mat(:,:)
+   obj%ndim1_int_mat = ndim1_int_mat
+   obj%ndim2_int_mat = ndim2_int_mat
 
 END SUBROUTINE qes_init_integerMatrix
 
@@ -3298,10 +3306,10 @@ SUBROUTINE qes_init_band_structure(obj, tagname, lsda, noncolin, spinorbit, nbnd
    REAL(DP) :: highestOccupiedLevel
    LOGICAL  :: two_fermi_energies_ispresent
    INTEGER  :: ndim_two_fermi_energies
-   REAL(DP), DIMENSION(:) :: two_fermi_energies
+   REAL(DP), DIMENSION(ndim_two_fermi_energies) :: two_fermi_energies
    INTEGER  :: nks
    INTEGER  :: ndim_ks_energies
-   TYPE(ks_energies_type), DIMENSION(:) :: ks_energies
+   TYPE(ks_energies_type ), DIMENSION( ndim_ks_energies )  :: ks_energies
 
    obj%tagname = TRIM(tagname)
    obj%lsda = lsda
@@ -3329,6 +3337,7 @@ SUBROUTINE qes_init_band_structure(obj, tagname, lsda, noncolin, spinorbit, nbnd
    IF(obj%two_fermi_energies_ispresent) THEN
    ALLOCATE(obj%two_fermi_energies(ndim_two_fermi_energies))
    obj%two_fermi_energies(:) = two_fermi_energies(:)
+   obj%ndim_two_fermi_energies = ndim_two_fermi_energies
    ENDIF
    obj%nks = nks
    ALLOCATE(obj%ks_energies(SIZE(ks_energies)))
@@ -3490,7 +3499,7 @@ SUBROUTINE qes_init_k_points_IBZ(obj, tagname, monkhorst_pack_ispresent, monkhor
    INTEGER  :: nk
    LOGICAL  :: k_point_ispresent
    INTEGER  :: ndim_k_point
-   TYPE(k_point_type), DIMENSION(:) :: k_point
+   TYPE(k_point_type ), DIMENSION( ndim_k_point )  :: k_point
 
    obj%tagname = TRIM(tagname)
    obj%monkhorst_pack_ispresent = monkhorst_pack_ispresent
@@ -3748,8 +3757,8 @@ SUBROUTINE qes_write_basis_set(iun, obj)
       !
       CALL qes_write_basisSetItem(iun, obj%fft_grid)
       !
-      IF(obj%fft_smoooth_ispresent) THEN
-         CALL qes_write_basisSetItem(iun, obj%fft_smoooth)
+      IF(obj%fft_smooth_ispresent) THEN
+         CALL qes_write_basisSetItem(iun, obj%fft_smooth)
          !
       ENDIF
       !
@@ -3777,8 +3786,8 @@ SUBROUTINE qes_write_basis_set(iun, obj)
 END SUBROUTINE qes_write_basis_set
 
 SUBROUTINE qes_init_basis_set(obj, tagname, gamma_only_ispresent, gamma_only, ecutwfc, &
-                              ecutrho_ispresent, ecutrho, fft_grid, fft_smoooth_ispresent, &
-                              fft_smoooth, fft_box_ispresent, fft_box, ngm, ngms_ispresent, &
+                              ecutrho_ispresent, ecutrho, fft_grid, fft_smooth_ispresent, &
+                              fft_smooth, fft_box_ispresent, fft_box, ngm, ngms_ispresent, &
                               ngms, npwx, reciprocal_lattice)
    IMPLICIT NONE
 
@@ -3791,8 +3800,8 @@ SUBROUTINE qes_init_basis_set(obj, tagname, gamma_only_ispresent, gamma_only, ec
    LOGICAL  :: ecutrho_ispresent
    REAL(DP) :: ecutrho
    TYPE(basisSetItem_type) :: fft_grid
-   LOGICAL  :: fft_smoooth_ispresent
-   TYPE(basisSetItem_type) :: fft_smoooth
+   LOGICAL  :: fft_smooth_ispresent
+   TYPE(basisSetItem_type) :: fft_smooth
    LOGICAL  :: fft_box_ispresent
    TYPE(basisSetItem_type) :: fft_box
    INTEGER  :: ngm
@@ -3812,9 +3821,9 @@ SUBROUTINE qes_init_basis_set(obj, tagname, gamma_only_ispresent, gamma_only, ec
       obj%ecutrho = ecutrho
    ENDIF
    obj%fft_grid = fft_grid
-   obj%fft_smoooth_ispresent = fft_smoooth_ispresent
-   IF(obj%fft_smoooth_ispresent) THEN
-      obj%fft_smoooth = fft_smoooth
+   obj%fft_smooth_ispresent = fft_smooth_ispresent
+   IF(obj%fft_smooth_ispresent) THEN
+      obj%fft_smooth = fft_smooth
    ENDIF
    obj%fft_box_ispresent = fft_box_ispresent
    IF(obj%fft_box_ispresent) THEN
@@ -3844,9 +3853,9 @@ SUBROUTINE qes_reset_basis_set(obj)
       obj%ecutrho_ispresent = .FALSE.
    ENDIF
    CALL qes_reset_basisSetItem(obj%fft_grid)
-   IF(obj%fft_smoooth_ispresent) THEN
-      CALL qes_reset_basisSetItem(obj%fft_smoooth)
-      obj%fft_smoooth_ispresent = .FALSE.
+   IF(obj%fft_smooth_ispresent) THEN
+      CALL qes_reset_basisSetItem(obj%fft_smooth)
+      obj%fft_smooth_ispresent = .FALSE.
    ENDIF
    IF(obj%fft_box_ispresent) THEN
       CALL qes_reset_basisSetItem(obj%fft_box)
@@ -4015,7 +4024,7 @@ SUBROUTINE qes_init_inputOccupations(obj, tagname, ispin, spin_factor, ndim_vec,
    INTEGER  :: ispin
    REAL(DP) :: spin_factor
    INTEGER  :: ndim_vec
-   REAL(DP), DIMENSION(:) :: vec
+   REAL(DP), DIMENSION(ndim_vec) :: vec
 
    obj%tagname = TRIM(tagname)
 
@@ -4026,6 +4035,7 @@ SUBROUTINE qes_init_inputOccupations(obj, tagname, ispin, spin_factor, ndim_vec,
 
    ALLOCATE(obj%vec(ndim_vec))
    obj%vec(:) = vec(:)
+   obj%ndim_vec = ndim_vec
 
 END SUBROUTINE qes_init_inputOccupations
 
@@ -4211,7 +4221,7 @@ SUBROUTINE qes_init_bands(obj, tagname, nbnd_ispresent, nbnd, smearing_ispresent
    TYPE(occupations_type) :: occupations
    LOGICAL  :: inputOccupations_ispresent
    INTEGER  :: ndim_inputOccupations
-   TYPE(inputOccupations_type), DIMENSION(:) :: inputOccupations
+   TYPE(inputOccupations_type ), DIMENSION( ndim_inputOccupations )  :: inputOccupations
 
    obj%tagname = TRIM(tagname)
    obj%nbnd_ispresent = nbnd_ispresent
@@ -4470,7 +4480,7 @@ SUBROUTINE qes_init_Hubbard_ns(obj, tagname, specie, label, spin, index, &
    INTEGER  :: index
    INTEGER  :: ndim1_mat
    INTEGER  :: ndim2_mat
-   REAL(DP), DIMENSION(:,:) :: mat
+   REAL(DP), DIMENSION(ndim1_mat,ndim2_mat) :: mat
 
    obj%tagname = TRIM(tagname)
 
@@ -4487,6 +4497,8 @@ SUBROUTINE qes_init_Hubbard_ns(obj, tagname, specie, label, spin, index, &
 
    ALLOCATE(obj%mat(ndim1_mat,ndim2_mat))
    obj%mat(:,:) = mat(:,:)
+   obj%ndim1_mat = ndim1_mat
+   obj%ndim2_mat = ndim2_mat
 
 END SUBROUTINE qes_init_Hubbard_ns
 
@@ -4534,7 +4546,7 @@ SUBROUTINE qes_init_starting_ns(obj, tagname, specie, label, spin, ndim_vec, vec
    CHARACTER(len=*) :: label
    INTEGER  :: spin
    INTEGER  :: ndim_vec
-   REAL(DP), DIMENSION(:) :: vec
+   REAL(DP), DIMENSION(ndim_vec) :: vec
 
    obj%tagname = TRIM(tagname)
 
@@ -4548,6 +4560,7 @@ SUBROUTINE qes_init_starting_ns(obj, tagname, specie, label, spin, ndim_vec, vec
 
    ALLOCATE(obj%vec(ndim_vec))
    obj%vec(:) = vec(:)
+   obj%ndim_vec = ndim_vec
 
 END SUBROUTINE qes_init_starting_ns
 
@@ -4716,7 +4729,7 @@ SUBROUTINE qes_init_vdW(obj, tagname, vdw_corr, non_local_term_ispresent, non_lo
    REAL(DP) :: xdm_a2
    LOGICAL  :: london_c6_ispresent
    INTEGER  :: ndim_london_c6
-   TYPE(HubbardCommon_type), DIMENSION(:) :: london_c6
+   TYPE(HubbardCommon_type ), DIMENSION( ndim_london_c6 )  :: london_c6
 
    obj%tagname = TRIM(tagname)
    obj%vdw_corr = vdw_corr
@@ -4894,25 +4907,25 @@ SUBROUTINE qes_init_dftU(obj, tagname, lda_plus_u_kind_ispresent, lda_plus_u_kin
    INTEGER :: lda_plus_u_kind
    LOGICAL  :: Hubbard_U_ispresent
    INTEGER  :: ndim_Hubbard_U
-   TYPE(HubbardCommon_type), DIMENSION(:) :: Hubbard_U
+   TYPE(HubbardCommon_type ), DIMENSION( ndim_Hubbard_U )  :: Hubbard_U
    LOGICAL  :: Hubbard_J0_ispresent
    INTEGER  :: ndim_Hubbard_J0
-   TYPE(HubbardCommon_type), DIMENSION(:) :: Hubbard_J0
+   TYPE(HubbardCommon_type ), DIMENSION( ndim_Hubbard_J0 )  :: Hubbard_J0
    LOGICAL  :: Hubbard_alpha_ispresent
    INTEGER  :: ndim_Hubbard_alpha
-   TYPE(HubbardCommon_type), DIMENSION(:) :: Hubbard_alpha
+   TYPE(HubbardCommon_type ), DIMENSION( ndim_Hubbard_alpha )  :: Hubbard_alpha
    LOGICAL  :: Hubbard_beta_ispresent
    INTEGER  :: ndim_Hubbard_beta
-   TYPE(HubbardCommon_type), DIMENSION(:) :: Hubbard_beta
+   TYPE(HubbardCommon_type ), DIMENSION( ndim_Hubbard_beta )  :: Hubbard_beta
    LOGICAL  :: Hubbard_J_ispresent
    INTEGER  :: ndim_Hubbard_J
-   TYPE(HubbardJ_type), DIMENSION(:) :: Hubbard_J
+   TYPE(HubbardJ_type ), DIMENSION( ndim_Hubbard_J )  :: Hubbard_J
    LOGICAL  :: starting_ns_ispresent
    INTEGER  :: ndim_starting_ns
-   TYPE(starting_ns_type), DIMENSION(:) :: starting_ns
+   TYPE(starting_ns_type ), DIMENSION( ndim_starting_ns )  :: starting_ns
    LOGICAL  :: Hubbard_ns_ispresent
    INTEGER  :: ndim_Hubbard_ns
-   TYPE(Hubbard_ns_type), DIMENSION(:) :: Hubbard_ns
+   TYPE(Hubbard_ns_type ), DIMENSION( ndim_Hubbard_ns )  :: Hubbard_ns
    LOGICAL  :: U_projection_type_ispresent
    CHARACTER(len=*) :: U_projection_type
 
@@ -5445,7 +5458,7 @@ SUBROUTINE qes_init_wyckoff_positions(obj, tagname, space_group, more_options, m
    LOGICAL  :: more_options_ispresent
    CHARACTER(len=*), OPTIONAL :: more_options
    INTEGER  :: ndim_atom
-   TYPE(atom_type), DIMENSION(:) :: atom
+   TYPE(atom_type ), DIMENSION( ndim_atom )  :: atom
 
    obj%tagname = TRIM(tagname)
 
@@ -5508,7 +5521,7 @@ SUBROUTINE qes_init_atomic_positions(obj, tagname, ndim_atom, atom)
    CHARACTER(len=*) :: tagname
    INTEGER  :: i
    INTEGER  :: ndim_atom
-   TYPE(atom_type), DIMENSION(:) :: atom
+   TYPE(atom_type ), DIMENSION( ndim_atom )  :: atom
 
    obj%tagname = TRIM(tagname)
    ALLOCATE(obj%atom(SIZE(atom)))
@@ -5748,7 +5761,7 @@ SUBROUTINE qes_init_atomic_species(obj, tagname, ntyp, ndim_species, species)
    INTEGER  :: i
    INTEGER  :: ntyp
    INTEGER  :: ndim_species
-   TYPE(species_type), DIMENSION(:) :: species
+   TYPE(species_type ), DIMENSION( ndim_species )  :: species
 
    obj%tagname = TRIM(tagname)
 

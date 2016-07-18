@@ -323,6 +323,10 @@ SUBROUTINE electrons_scf ( printout, exxen )
                                    restart, io_level, do_makov_payne,  &
                                    gamma_only, iverbosity, textfor,     &
                                    llondon, scf_must_converge, lxdm, ts_vdw
+#ifdef __XSD 
+  USE control_flags,        ONLY : n_scf_steps, scf_error
+#endif
+
   USE io_files,             ONLY : iunmix, output_drho, &
                                    iunres, iunefield, seqopn
   USE ldaU,                 ONLY : eth, Hubbard_U, Hubbard_lmax, &
@@ -678,6 +682,13 @@ SUBROUTINE electrons_scf ( printout, exxen )
      WRITE( stdout, 9000 ) get_clock( 'PWSCF' )
      !
      IF ( conv_elec ) WRITE( stdout, 9101 )
+#ifdef __XSD 
+     IF ( conv_elec ) THEN 
+           scf_error = dr2
+           n_scf_steps = iter
+     END IF  
+#endif
+
      !
      IF ( conv_elec .OR. MOD( iter, iprint ) == 0 ) THEN
         !
@@ -1064,6 +1075,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
        USE constants, ONLY : eps8
        INTEGER, INTENT (IN) :: printout
        !
+   
        IF ( printout == 0 ) RETURN
        IF ( ( conv_elec .OR. MOD(iter,iprint) == 0 ) .AND. printout > 1 ) THEN
           !

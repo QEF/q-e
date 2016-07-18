@@ -1,4 +1,3 @@
-!
 ! Copyright (C) 2003-2015 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
@@ -516,38 +515,54 @@ CONTAINS
       TYPE(info_type)              :: info
       TYPE(matrix_type)            :: matrix
       CHARACTER(LEN=15)            :: classname
+      CHARACTER(LEN=256)            :: la_info
       LOGICAL                      :: class_ispresent = .FALSE., time_reversal_ispresent = .FALSE.
       INTEGER                      :: i
       
-      ALLOCATE(symm(nsym))
+      ALLOCATE(symm(nrot))
       !
       IF ( TRIM(verbosity) .EQ. 'high' .OR. TRIM(verbosity) .EQ. 'medium')  class_ispresent= .TRUE.
       IF ( noncolin  ) time_reversal_ispresent = .TRUE.
-      DO i = 1, nsym
+      DO i = 1, nrot
           !
           classname = class_names(i)
+          IF ( i .LE. nsym ) THEN 
+             la_info = "crystal_symmetry"
+          ELSE 
+             la_info = "lattice_symmetry"
+          END IF
           CALL qes_init_info(info, "info", name=sname(i), name_ispresent=.TRUE., &
                              class=classname, class_ispresent = class_ispresent,   &
                              time_reversal=(t_rev(i)==1), time_reversal_ispresent = time_reversal_ispresent, &
-                             info= '')
+                             INFO= TRIM(la_info) )
           !
           CALL qes_init_matrix(matrix, "rotation", ndim1_mat=3, ndim2_mat=3, mat=real(s(:,:,i),DP))
           !
-          CALL qes_init_equivalent_atoms(equiv_atm, "equivalent_atoms", nat=nat, ndim_index_list=nat, &
+          IF ( i .LE. nsym ) THEN 
+             CALL qes_init_equivalent_atoms(equiv_atm, "equivalent_atoms", nat=nat, ndim_index_list=nat, &
                                          index_list=irt(i,1:nat)  )
           !
-          CALL qes_init_symmetry(symm(i),"symmetry", info=info, rotation=matrix, &
+             CALL qes_init_symmetry(symm(i),"symmetry", info=info, rotation=matrix, &
                                  fractional_translation_ispresent=.TRUE., fractional_translation=ft(:,i), &
                                  equivalent_atoms_ispresent=.TRUE., equivalent_atoms=equiv_atm)
+          ELSE 
+             CALL qes_init_symmetry ( symm(i), "symmetry", INFO = info, ROTATION = matrix, &
+                                      FRACTIONAL_TRANSLATION_ISPRESENT = .FALSE., FRACTIONAL_TRANSLATION=ft(:,i), &
+                                      EQUIVALENT_ATOMS_ISPRESENT = .FALSE.,  EQUIVALENT_ATOMS=equiv_atm) 
+          END IF
           !
           CALL qes_reset_info(info)
           CALL qes_reset_matrix(matrix)
-          CALL qes_reset_equivalent_atoms(equiv_atm)
+          IF ( i .LT. nsym ) THEN 
+             CALL qes_reset_equivalent_atoms( equiv_atm )
+          ELSE IF ( i .EQ. nrot ) THEN  
+            CALL qes_reset_equivalent_atoms( equiv_atm )
+          END IF
           !
       ENDDO
       !
-      CALL qes_init_symmetries(obj,"symmetries",nsym=nsym, nrot=nrot, space_group=space_group, &
-                               ndim_symmetry=SIZE(symm), symmetry=symm )
+      CALL qes_init_symmetries(obj,"symmetries",NSYM = nsym, NROT=nrot, SPACE_GROUP = space_group, &
+                               NDIM_SYMMETRY=SIZE(symm), SYMMETRY=symm )
       !
       DO i = 1, nsym
          CALL qes_reset_symmetry(symm(i))
@@ -587,7 +602,7 @@ CONTAINS
 
       CALL qes_init_basis_set(obj, "basis_set", gamma_only_ispresent=.TRUE., gamma_only=gamma_only, &
                               ecutwfc=ecutwfc, ecutrho_ispresent=.TRUE., ecutrho=ecutrho, fft_grid=fft_grid, &
-                              fft_smoooth_ispresent=.TRUE., fft_smoooth=fft_smooth, &
+                              fft_smooth_ispresent=.TRUE., fft_smooth=fft_smooth, &
                               fft_box_ispresent=fft_box_ispresent, fft_box=fft_box, ngm=ngm, &
                               ngms_ispresent=.TRUE., ngms=ngms, npwx=npwx, reciprocal_lattice=recipr_latt)
       !
@@ -987,7 +1002,7 @@ CONTAINS
        CALL qes_reset_k_point(kp_obj)  
     END DO 
     !
-    CALL qes_init_band_structure(obj,TAGNAME,lsda,noncolin,lspinorb,nbnd_tot,nbnd_up_ispresent,&
+    CALL qes_init_band_structure(obj,TAGNAME,lsda,noncolin,lspinorb, nbnd , nbnd_up_ispresent,&
                   nbnd_up,nbnd_dw_ispresent,nbnd_dw,nelec,fermi_energy_ispresent,&
                   fermi_energy/e2, HOL_ispresent, fermi_energy/e2, two_fermi_energies, 2, ef_updw/e2, &
                   ndim_ks_energies,ndim_ks_energies,ks_objs)

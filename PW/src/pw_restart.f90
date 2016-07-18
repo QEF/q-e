@@ -75,7 +75,7 @@ USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, delete_if_present, &
   !
   PUBLIC :: pw_writefile, pw_readfile
 #ifdef __XSD
-  PUBLIC :: pw_write_schema
+  PUBLIC   ::  pw_write_schema 
 #endif
   !
   INTEGER, PRIVATE :: iunout
@@ -104,7 +104,7 @@ USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, delete_if_present, &
       USE control_flags,        ONLY : istep, twfcollect, conv_ions, &
                                        lscf, lkpoint_dir, gamma_only, &
                                        tqr, noinv, do_makov_payne, smallmem, &
-                                       llondon, lxdm, ts_vdw, scf_error, n_scf_steps
+                                       llondon, lxdm, ts_vdw, n_scf_steps, scf_error
       USE realus,               ONLY : real_space
       USE uspp,                 ONLY : okvan
       USE paw_variables,        ONLY : okpaw
@@ -257,10 +257,6 @@ USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, delete_if_present, &
 !-------------------------------------------------------------------------------
 ! ... CONVERGENCE_INFO
 !-------------------------------------------------------------------------------
-         !
-         ! AF: convergence vars should be better traced
-         !     n_opt_steps var still missing
-         !
          SELECT CASE (TRIM( calculation )) 
             CASE ( "relax","vc-relax" )
                 opt_conv_ispresent = .TRUE.
@@ -295,10 +291,11 @@ USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, delete_if_present, &
          !
          IF (noncolin) THEN
              CALL qexsd_init_atomic_species(output%atomic_species, nsp, atm, psfile, &
-                                        amass, angle1=angle1,angle2=angle2)
+                                        amass, STARTING_MAGNETIZATION = starting_magnetization, &
+                                        ANGLE1=angle1, ANGLE2=angle2)
          ELSE IF (nspin==2) THEN 
              CALL qexsd_init_atomic_species(output%atomic_species, nsp, atm, psfile, &
-                                           amass,starting_magnetization=starting_magnetization)
+                                           amass, STARTING_MAGNETIZATION=starting_magnetization)
          ELSE 
              CALL qexsd_init_atomic_species(output%atomic_species, nsp, atm,psfile, &
                                           amass)
@@ -309,7 +306,7 @@ USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, delete_if_present, &
 !-------------------------------------------------------------------------------
          !         
          CALL qexsd_init_atomic_structure(output%atomic_structure, nsp, atm, ityp, &
-                       nat, tau, 'Bohr', alat, at(:,1), at(:,2), at(:,3), ibrav )
+                       nat, tau, 'Bohr', alat, alat*at(:,1), alat*at(:,2), alat*at(:,3), ibrav)
          !
 !-------------------------------------------------------------------------------
 ! ... SYMMETRIES
@@ -318,7 +315,7 @@ USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, delete_if_present, &
          symop_2_class="not found"
          IF (TRIM (verbosity) == 'medium' .OR. TRIM(verbosity) == 'high') THEN
             IF ( noncolin )  THEN 
-               symmetries_so_loop:DO isym = 1, nsym 
+               symmetries_so_loop:DO isym = 1, nrot 
                   classes_so_loop:DO iclass = 1, 24
                      elements_so_loop:DO ielem=1, nelem_so(iclass)
                         IF ( elem_so(ielem,iclass) == isym) THEN 
@@ -330,7 +327,7 @@ USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, delete_if_present, &
                END DO symmetries_so_loop
             !
             ELSE
-               symmetries_loop:DO isym = 1, nsym
+               symmetries_loop:DO isym = 1, nrot
                   classes_loop:DO iclass = 1, 12
                      elements_loop:DO ielem=1, nelem (iclass)
                         IF ( elem(ielem,iclass) == isym) THEN
@@ -343,14 +340,14 @@ USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, delete_if_present, &
             END IF
          END IF
          CALL qexsd_init_symmetries(output%symmetries, nsym, nrot, space_group, &
-                                    s, ft, sname, t_rev, nat, irt,symop_2_class(1:nsym), verbosity, &
+                                    s, ft, sname, t_rev, nat, irt,symop_2_class(1:nrot), verbosity, &
                                     noncolin)
          !
 !-------------------------------------------------------------------------------
 ! ... BASIS SET
 !-------------------------------------------------------------------------------
          !
-         CALL qexsd_init_basis_set(output%basis_set, gamma_only, ecutwfc, ecutwfc*dual, &
+         CALL qexsd_init_basis_set(output%basis_set, gamma_only, ecutwfc/e2, ecutwfc*dual/e2, &
                                    dfftp%nr1, dfftp%nr2, dfftp%nr3, dffts%nr1, dffts%nr2, dffts%nr3, &
                                    .FALSE., dfftp%nr1, dfftp%nr2, dfftp%nr3, ngm_g, ngms_g, npwx_g, &
                                    bg(:,1), bg(:,2), bg(:,3) )
@@ -419,7 +416,13 @@ USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, delete_if_present, &
 ! ... FORCES
 !----------------------------------------------------------------------------------------------
          !
-         CALL qexsd_init_forces(output%forces,nat,force,lforce)
+         IF ( lforce ) THEN 
+            output%forces_ispresent = .TRUE.
+            CALL qexsd_init_forces(output%forces,nat,force,lforce)
+         ELSE 
+            output%forces_ispresent = .FALSE.
+            output%forces%lwrite = .FALSE.  
+         END IF 
          !
 !------------------------------------------------------------------------------------------------
 ! ... STRESS 
@@ -477,7 +480,7 @@ USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, delete_if_present, &
       USE control_flags,        ONLY : twfcollect, conv_ions, &
                                        lscf, lkpoint_dir, gamma_only, &
                                        tqr, noinv, do_makov_payne, smallmem, &
-                                       llondon, lxdm, ts_vdw
+                                       llondon, lxdm, ts_vdw 
       USE realus,               ONLY : real_space
       USE global_version,       ONLY : version_number
       USE cell_base,            ONLY : at, bg, alat, tpiba, tpiba2, &
