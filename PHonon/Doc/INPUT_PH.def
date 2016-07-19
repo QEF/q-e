@@ -481,7 +481,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
                           for the name of the output files, see below
         dvscf_star%basis (character, default: "cartesian") the basis on which 
                           the rotated dvscf will be saved
-        dvscf_star%pat   (logical, default: true) save an optional file with the
+        dvscf_star%pat   (logical, default: false) save an optional file with the
                          displacement patterns and q vector for each dvscf file
 
         IF dvscf_star%open is .true. use symmetry to compute and store the variation
@@ -519,7 +519,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
                          for the name of the output files, see below
         drho_star%basis (character, default: "modes") the basis on which
                          the rotated drho will be saved
-        drho_star%pat   (logical, default: false) save an optional file with the
+        drho_star%pat   (logical, default: true) save an optional file with the
                          displacement patterns and q vector for each drho file
 
         Like dvscf_star, but for the perturbation of the charge density.
