@@ -459,7 +459,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                     and tx, ty, tz as for case ibrav=5
                     Note: if you prefer x,y,z as axis in the cubic limit,
                           set  u = tz + 2*sqrt(2)*ty,  v = tz - sqrt(2)*ty
-                          See also the note in flib/latgen.f90 
+                          See also the note in Modules/latgen.f90 
               
                 6          Tetragonal P (st)               celldm(3)=c/a
                     v1 = a(1,0,0),  v2 = a(0,1,0),  v3 = a(0,0,c/a)
@@ -990,7 +990,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	    default { .FALSE. }
 	    status {
 		DFT+U (formerly known as LDA+U) currently works only for 
-                a few selected elements. Modify flib/set_hubbard_l.f90 and 
+                a few selected elements. Modify Modules/set_hubbard_l.f90 and 
                 PW/src/tabd.f90 if you plan to use DFT+U with an element that 
                 is not configured there.
 	    }

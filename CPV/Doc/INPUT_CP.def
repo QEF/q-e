@@ -375,7 +375,7 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
                     and tx, ty, tz as for case ibrav=5
                     Note: if you prefer x,y,z as axis in the cubic limit,  
                           set  u = tz + 2*sqrt(2)*ty,  v = tz - sqrt(2)*ty
-                          See also the note in flib/latgen.f90
+                          See also the note in Modules/latgen.f90
 
                 6          Tetragonal P (st)               celldm(3)=c/a
                     v1 = a(1,0,0),  v2 = a(0,1,0),  v3 = a(0,0,c/a)

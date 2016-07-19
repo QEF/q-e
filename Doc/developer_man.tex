@@ -1001,8 +1001,7 @@ others.  In that case, define them as "\$(FFLAGS) -something\_else".
 
 - "try\_fflags\_noopt": flags for Fortran 77 with all optimizations
 turned off: this is usually "-O0".
-These flags must be used for compiling flib/dlamch.f (part of our
-version of Lapack): it won't work properly with optimization.
+These flags used to be needed to compile flib/dlamch.f; likely obsolete
 
 - "try\_ldflags": flags for the linking phase (not including the list
 of libraries: this is decided later).

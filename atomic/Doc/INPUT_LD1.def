@@ -198,7 +198,7 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
 		'PBE'   Perdew, Becke and Ernzerhof GGA
 		'BLYP'  ...
 
-		For the complete list, see module "functionals" in ../flib/
+		For the complete list, see module "functionals" in ../Modules/
 		The default is 'PZ' for all-electron calculations,
 		it is read from the PP file in a PP calculation.
 	    }

@@ -234,7 +234,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program projw
 		    1, cos(phi), sin(phi), cos(2*phi), sin(2*phi), .., cos(l*phi), sin(l*phi)
 		
 		where phi is the polar angle:x=r cos(theta)cos(phi), y=r cos(theta)sin(phi)
-		This is determined in file flib/ylmr2.f90 that calculates spherical harmonics.
+		This is determined in file Modules/ylmr2.f90 that calculates spherical harmonics.
 
 	        for l=1:
 	          1 pz     (m=0)
