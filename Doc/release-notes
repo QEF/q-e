@@ -21,6 +21,8 @@ Fixed in 6.0 version:
     (commit 12391)
   * Incorrect Wyckoff site labels for group #138, origin_choice=2
     (courtesy Marton Voros) (commit 12426)
+  * PHonon: support for Goedecker-Hutter-Teter pseudopotentials was missing
+    (courtesy of Sebastiano Caravati)
 
 Incompatible changes in 6.0 version:
 

@@ -50,6 +50,7 @@ SUBROUTINE phq_init()
   USE noncollin_module,     ONLY : noncolin, npol
   USE uspp,                 ONLY : okvan, vkb, nlcc_any
   USE uspp_param,           ONLY : upf
+  USE m_gth,                ONLY : setlocq_gth
   USE phus,                 ONLY : alphap
   USE nlcc_ph,              ONLY : drc
   USE control_ph,           ONLY : trans, zue, epsil, all_done
@@ -114,6 +115,8 @@ SUBROUTINE phq_init()
      !
      IF (upf(nt)%tcoulombp) then
         CALL setlocq_coul ( xq, upf(nt)%zp, tpiba2, ngm, g, omega, vlocq(1,nt) )
+     ELSE IF (upf(nt)%is_gth) then
+        CALL setlocq_gth ( nt, xq, upf(nt)%zp, tpiba2, ngm, g, omega, vlocq(1,nt) )
      ELSE
         CALL setlocq( xq, rgrid(nt)%mesh, msh(nt), rgrid(nt)%rab, rgrid(nt)%r,&
                    upf(nt)%vloc(1), upf(nt)%zp, tpiba2, ngm, g, omega, &
