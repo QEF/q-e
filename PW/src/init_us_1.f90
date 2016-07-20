@@ -267,21 +267,10 @@ subroutine init_us_1
                     ( l <=     upf(nt)%lll(nb) + upf(nt)%lll(mb)  ) .and. &
                     (mod (l+upf(nt)%lll(nb)+upf(nt)%lll(mb), 2) == 0) ) then
                  ijv = mb * (mb-1) / 2 + nb
-                 paw : & ! in PAW formalism aug. charge is computed elsewhere
-                 if (upf(nt)%q_with_l .or. upf(nt)%tpawp) then
+                 paw : & ! in PAW and now in US as well q(r) is stored in an l-dependent array
+                 if (upf(nt)%tvanp .or. upf(nt)%tpawp) then
                      qtot(1:upf(nt)%kkbeta,ijv) =&
                                  upf(nt)%qfuncl(1:upf(nt)%kkbeta,ijv,l)
-                 else
-                    do ir = 1, upf(nt)%kkbeta
-                    if (rgrid(nt)%r(ir) >=upf(nt)%rinner (l+1) ) then
-                        qtot (ir, ijv) = upf(nt)%qfunc(ir,ijv)
-                    else
-                        ilast = ir
-                    endif
-                    enddo
-                    if ( upf(nt)%rinner (l+1) > 0.0_dp) &
-                        call setqfnew( upf(nt)%nqf,upf(nt)%qfcoef(1,l+1,nb,mb),&
-                                ilast, rgrid(nt)%r, l, 2, qtot(1,ijv) )
                  endif paw
               endif respect_sum_rule
               enddo ! mb

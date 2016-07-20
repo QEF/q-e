@@ -246,11 +246,7 @@ MODULE realus
             DO ijv = 1, upf(nt)%nbeta*(upf(nt)%nbeta+1)/2
                DO indm = upf(nt)%mesh,1,-1
                   !
-                  IF( upf(nt)%q_with_l ) THEN
-                     aux = sum(abs( upf(nt)%qfuncl(indm,ijv,:) ))
-                  ELSE
-                     aux = abs( upf(nt)%qfunc(indm,ijv) )
-                  ENDIF
+                  aux = sum(abs( upf(nt)%qfuncl(indm,ijv,:) ))
                   IF ( aux > eps16 ) THEN
                      boxrad(nt) = max( rgrid(nt)%r(indm), boxrad(nt) )
                      exit
@@ -401,7 +397,7 @@ MODULE realus
       INTEGER, INTENT(IN) :: ia, nt, mbia
       TYPE(realsp_augmentation), INTENT(INOUT), POINTER :: tab(:)
       !
-      INTEGER  :: l, nb, mb, ijv, lllnbnt, lllmbnt, ilast, ir, nfuncs, lm, &
+      INTEGER  :: l, nb, mb, ijv, lllnbnt, lllmbnt, ir, nfuncs, lm, &
            i, ijh, ih, jh, ipol
       REAL(dp) :: first, second, qtot_int
       REAL(dp), ALLOCATABLE :: qtot(:), dqtot(:), xsp(:), wsp(:), &
@@ -454,55 +450,28 @@ MODULE realus
                             l <= lllnbnt + lllmbnt        .and. &
                             mod( l + lllnbnt + lllmbnt, 2 ) == 0 ) ) CYCLE
                !
-               ilast = 0 
-               IF( upf(nt)%q_with_l ) THEN
+               IF( upf(nt)%tvanp ) THEN
                   qtot(1:upf(nt)%kkbeta) = &
                        upf(nt)%qfuncl(1:upf(nt)%kkbeta,ijv,l) &
                        / rgrid(nt)%r(1:upf(nt)%kkbeta)**2
-               ELSE
-                  DO ir = 1, upf(nt)%kkbeta
-                     IF ( rgrid(nt)%r(ir) >= upf(nt)%rinner(l+1) ) THEN
-                        qtot(ir) = upf(nt)%qfunc(ir,ijv) / &
-                             rgrid(nt)%r(ir)**2
-                     ELSE
-                        ilast = ir
-                     ENDIF
-                  ENDDO
                ENDIF
-               !
-               IF ( upf(nt)%rinner(l+1) > 0.D0 ) &
-                    CALL setqfnew( upf(nt)%nqf, upf(nt)%qfcoef(1,l+1,nb,mb),&
-                    ilast, rgrid(nt)%r, l, 0, qtot )
                !
                ! ... compute the first derivative
                !
                ! ... analytical derivative up to r = rinner, numerical beyond
                !
                CALL radial_gradient(qtot, dqtot, rgrid(nt)%r, upf(nt)%kkbeta, 1)
-               IF ( upf(nt)%rinner(l+1) > 0.D0 ) &
-                    CALL setdqf( upf(nt)%nqf, upf(nt)%qfcoef(1,l+1,nb,mb), &
-                    ilast, rgrid(nt)%r(1), l, dqtot  )
                !
                ! ... we need the first and second derivatives in the first point
                !
                first = dqtot(1)
-               IF ( upf(nt)%rinner(l+1) > 0.D0 ) THEN
-                  second = 0.0_dp
-                  DO i = max( 3-l, 1 ), upf(nt)%nqf
-                     second = second + upf(nt)%qfcoef(i,l+1,nb,mb) * &
-                          rgrid(nt)%r(1)**(2*i-4+l)*(2*i-2+l)*(2*i-3+l)
-                  ENDDO
-                  IF (l==0) second = second + 2.0_dp*upf(nt)%qfcoef(2,l+1,nb,mb) 
-               ELSE
-                  !
-                  ! ... if we don't have the analitical coefficients, try the same
-                  ! ... numerically (note that setting first=0.0 and second=0.0
-                  ! ... makes almost no difference) - wsp is used as work space
-                  !
-                  CALL radial_gradient(dqtot, wsp, rgrid(nt)%r, upf(nt)%kkbeta, 1)
-                  second = wsp(1) ! second derivative in first point
-                  !
-               ENDIF
+               !
+               ! ... if we don't have the analitical coefficients, try the same
+               ! ... numerically (note that setting first=0.0 and second=0.0
+               ! ... makes almost no difference) - wsp is used as work space
+               !
+               CALL radial_gradient(dqtot, wsp, rgrid(nt)%r, upf(nt)%kkbeta, 1)
+               second = wsp(1) ! second derivative in first point
                !
                ! ... call spline for interpolation of Q(r)
                !
@@ -510,21 +479,10 @@ MODULE realus
                !
                DO ir = 1, tab(ia)%maxbox
                   !
-                  IF ( tab(ia)%dist(ir) < upf(nt)%rinner(l+1) ) THEN
-                     !
-                     ! ... if in the inner radius just compute the
-                     ! ... polynomial
-                     !
-                     CALL setqfnew( upf(nt)%nqf, upf(nt)%qfcoef(1,l+1,nb,mb),&
-                          1, tab(ia)%dist(ir), l, 0, qtot_int )
-                     !
-                  ELSE
-                     !
-                     ! ... spline interpolation
-                     !
-                     qtot_int = splint( xsp, qtot, wsp, tab(ia)%dist(ir) )
-                     !
-                  ENDIF
+                  ! ... spline interpolation
+                  !
+                  qtot_int = splint( xsp, qtot, wsp, tab(ia)%dist(ir) )
+                  !
                   !
                   ijh = 0
                   DO ih = 1, nh(nt)
@@ -577,7 +535,7 @@ MODULE realus
       INTEGER, INTENT(IN) :: ia, nt, mbia, nfuncs
       REAL(dp),INTENT(OUT):: dqr(mbia,nfuncs,3)
       !
-      INTEGER  :: l, nb, mb, ijv, lllnbnt, lllmbnt, ilast, ir, lm, &
+      INTEGER  :: l, nb, mb, ijv, lllnbnt, lllmbnt, ir, lm, &
            i, ijh, ih, jh, ipol
       REAL(dp) :: first, second, qtot_int, dqtot_int, dqxyz(3)
       REAL(dp), ALLOCATABLE :: qtot(:), dqtot(:), xsp(:), wsp(:,:), &
@@ -631,55 +589,28 @@ MODULE realus
                             l <= lllnbnt + lllmbnt        .and. &
                             mod( l + lllnbnt + lllmbnt, 2 ) == 0 ) ) CYCLE
                !
-               ilast = 0 
-               IF( upf(nt)%q_with_l ) THEN
+               IF( upf(nt)%tvanp ) THEN
                   qtot(1:upf(nt)%kkbeta) = &
                        upf(nt)%qfuncl(1:upf(nt)%kkbeta,ijv,l) &
                        / rgrid(nt)%r(1:upf(nt)%kkbeta)**2
-               ELSE
-                  DO ir = 1, upf(nt)%kkbeta
-                     IF ( rgrid(nt)%r(ir) >= upf(nt)%rinner(l+1) ) THEN
-                        qtot(ir) = upf(nt)%qfunc(ir,ijv) / &
-                             rgrid(nt)%r(ir)**2
-                     ELSE
-                        ilast = ir
-                     ENDIF
-                  ENDDO
                ENDIF
-               !
-               IF ( upf(nt)%rinner(l+1) > 0.D0 ) &
-                    CALL setqfnew( upf(nt)%nqf, upf(nt)%qfcoef(1,l+1,nb,mb),&
-                    ilast, rgrid(nt)%r, l, 0, qtot )
                !
                ! ... compute the first derivative
                !
                ! ... analytical derivative up to r = rinner, numerical beyond
                !
                CALL radial_gradient(qtot, dqtot, rgrid(nt)%r, upf(nt)%kkbeta, 1)
-               IF ( upf(nt)%rinner(l+1) > 0.D0 ) &
-                    CALL setdqf( upf(nt)%nqf, upf(nt)%qfcoef(1,l+1,nb,mb), &
-                    ilast, rgrid(nt)%r(1), l, dqtot  )
                !
                ! ... we need the first and second derivatives in the first point
                !
                first = dqtot(1)
-               IF ( upf(nt)%rinner(l+1) > 0.D0 ) THEN
-                  second = 0.0_dp
-                  DO i = max( 3-l, 1 ), upf(nt)%nqf
-                     second = second + upf(nt)%qfcoef(i,l+1,nb,mb) * &
-                          rgrid(nt)%r(1)**(2*i-4+l)*(2*i-2+l)*(2*i-3+l)
-                  ENDDO
-                  IF (l==0) second = second + 2.0_dp*upf(nt)%qfcoef(2,l+1,nb,mb) 
-               ELSE
-                  !
-                  ! ... if we don't have the analitical coefficients, try the same
-                  ! ... numerically (note that setting first=0.0 and second=0.0
-                  ! ... makes almost no difference) - wsp is used as work space
-                  !
-                  CALL radial_gradient(dqtot, wsp, rgrid(nt)%r, upf(nt)%kkbeta, 1)
-                  second = wsp(1,1) ! second derivative in first point
-                  !
-               ENDIF
+               !
+               ! ... if we don't have the analitical coefficients, try the same
+               ! ... numerically (note that setting first=0.0 and second=0.0
+               ! ... makes almost no difference) - wsp is used as work space
+               !
+               CALL radial_gradient(dqtot, wsp, rgrid(nt)%r, upf(nt)%kkbeta, 1)
+               second = wsp(1,1) ! second derivative in first point
                !
                ! ... call spline for interpolation of Q(r)
                !
@@ -691,23 +622,10 @@ MODULE realus
                !
                DO ir = 1, tabp(ia)%maxbox
                   !
-                  IF ( tabp(ia)%dist(ir) < upf(nt)%rinner(l+1) ) THEN
-                     !
-                     ! ... if in the inner radius just compute the
-                     ! ... polynomial
-                     !
-                     CALL setqfnew( upf(nt)%nqf, upf(nt)%qfcoef(1,l+1,nb,mb),&
-                          1, tabp(ia)%dist(ir), l, 0, qtot_int )
-                     CALL setdqf( upf(nt)%nqf, upf(nt)%qfcoef(1,l+1,nb,mb), &
-                          1, tabp(ia)%dist(ir), l, dqtot_int)
-                  ELSE
-                     !
-                     ! ... spline interpolation
-                     !
-                     qtot_int = splint( xsp, qtot, wsp(:,1), tabp(ia)%dist(ir) )
-                     dqtot_int= splint( xsp,dqtot, wsp(:,2), tabp(ia)%dist(ir) )
-                     !
-                  ENDIF
+                  ! ... spline interpolation
+                  !
+                  qtot_int = splint( xsp, qtot, wsp(:,1), tabp(ia)%dist(ir) )
+                  dqtot_int= splint( xsp,dqtot, wsp(:,2), tabp(ia)%dist(ir) )
                   !
                   ! ... prevent floating-point error if dist = 0
                   !

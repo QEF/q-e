@@ -42,20 +42,9 @@ SUBROUTINE calc_btq(ql,qr_k,idbes)
               !       only need to calculate for l=lmin,lmin+2 ...lmax-2,lmax
               DO l = ilmin,ilmax,2
                  aux(:) = 0.0_DP
-                 IF (upf(np)%q_with_l .or. upf(np)%tpawp) then
+                 IF (upf(np)%tvanp .or. upf(np)%tpawp) then
                      aux(1:upf(np)%kkbeta) =  &
                                  upf(np)%qfuncl(1:upf(np)%kkbeta,ijv,l)
-                 ELSE
-                    DO i = 1, upf(np)%kkbeta
-                       IF (rgrid(np)%r(i) >=upf(np)%rinner (l+1) ) THEN
-                          aux (i) = upf(np)%qfunc(i,ijv)
-                       ELSE
-                          ilast = i
-                       ENDIF
-                    ENDDO
-                    IF ( upf(np)%rinner (l+1) > 0.0_dp) &
-                       CALL setqfnew( upf(np)%nqf, upf(np)%qfcoef(1,l+1,iv,jv),&
-                                      ilast, rgrid(np)%r, l, 2, aux(1) )
                  ENDIF
                  IF (idbes == 1) THEN
                     !
