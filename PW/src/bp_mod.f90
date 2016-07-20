@@ -21,7 +21,6 @@ MODULE bp
            ion_pol, el_pol, fc_pol, l_el_pol_old, el_pol_old, el_pol_acc, &
            nx_el, l3dstring, efield, efield_cart, efield_cry, transform_el,&
            mapg_owner, phase_control
-  PUBLIC :: lcalc_z2, z2_m_threshold, z2_z_threshold
   PUBLIC :: allocate_bp_efield, deallocate_bp_efield, bp_global_map
   PUBLIC :: pdl_tot
   !
@@ -29,9 +28,6 @@ MODULE bp
        lberry  =.false., & ! if .TRUE. calculate polarization using Berry phase
        lelfield=.false., & ! if .TRUE. finite electric field using Berry phase
        lorbm=.false.       ! if .TRUE. calculate orbital magnetization (Kubo terms)
-  LOGICAL :: &
-       lcalc_z2 =.false.   ! if .TRUE. calculate Z2 without inversion symmetry
-  REAL(DP) :: z2_m_threshold, z2_z_threshold
   INTEGER :: &
        gdir,        &! G-vector for polarization calculation
        nppstr,      &! number of k-points (parallel vector)
@@ -81,7 +77,7 @@ CONTAINS
 
    IMPLICIT NONE
 
-   IF ( lberry .OR. lelfield .OR. lorbm .OR. lcalc_z2) THEN
+   IF ( lberry .OR. lelfield .OR. lorbm ) THEN
       ALLOCATE(mapgp_global(ngm_g,3))
       ALLOCATE(mapgm_global(ngm_g,3))
       ALLOCATE(mapg_owner(2,ngm_g))
@@ -99,7 +95,7 @@ CONTAINS
 
    IMPLICIT NONE
 
-   IF ( lberry .OR. lelfield .OR. lorbm .OR. lcalc_z2) THEN
+   IF ( lberry .OR. lelfield .OR. lorbm ) THEN
       IF ( ALLOCATED(mapgp_global) ) DEALLOCATE(mapgp_global)
       IF ( ALLOCATED(mapgm_global) ) DEALLOCATE(mapgm_global)
       IF ( ALLOCATED(nx_el) ) DEALLOCATE(nx_el)
@@ -125,7 +121,7 @@ CONTAINS
     INTEGER, ALLOCATABLE :: ln_g(:,:,:)
     INTEGER, ALLOCATABLE :: g_ln(:,:)
 
-    IF ( .NOT.lberry .AND. .NOT. lelfield .AND. .NOT. lorbm .AND. .NOT. lcalc_z2) RETURN
+    IF ( .NOT.lberry .AND. .NOT. lelfield .AND. .NOT. lorbm ) RETURN
     ! set up correspondence ln_g ix,iy,iz ---> global g index in
     ! (for now...) coarse grid
     ! and inverse realtion global g (coarse) to ix,iy,iz

@@ -13,7 +13,7 @@
   ! ... diagonalization of the KS hamiltonian in the non-scf case
   !
   USE kinds,                ONLY : DP
-  USE bp,                   ONLY : lelfield, lberry, lorbm, lcalc_z2
+  USE bp,                   ONLY : lelfield, lberry, lorbm
   USE check_stop,           ONLY : stopped_by_user
   USE control_flags,        ONLY : io_level, conv_elec, lbands
   USE ener,                 ONLY : ef
