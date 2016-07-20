@@ -153,7 +153,7 @@ SUBROUTINE clean_pw( lflag )
   !
   CALL deallocate_igk ( )
   CALL deallocate_uspp() 
-  CALL deallocate_gth() 
+  CALL deallocate_gth(.true.) 
   CALL deallocate_noncol() 
   !
   ! ... arrays allocated in init_run.f90 ( and never deallocated )
