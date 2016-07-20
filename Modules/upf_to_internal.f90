@@ -82,7 +82,7 @@ subroutine set_pseudo_upf (is, upf, grid)
   ! tweaking with the augmentation charge.
   !
   if ( upf%tvanp .and. .not.upf%q_with_l ) then
-     ALLOCATE( upf%qfuncl ( upf%mesh, upf%nbeta*(upf%nbeta+1)/2, 0:2*upf%lmax ) )
+     ALLOCATE( upf%qfuncl ( upf%mesh, upf%nbeta*(upf%nbeta+1)/2, 0:upf%nqlc-1 ) )
      upf%qfuncl  = 0.0_DP
 
      do nb = 1, upf%nbeta
@@ -91,12 +91,12 @@ subroutine set_pseudo_upf (is, upf, grid)
            ijv = mb * (mb-1) / 2 + nb
            l1=upf%lll(nb) ; l2=upf%lll(mb)
 ! copy q(r) to the l-dependent grid 
-           DO l=abs(l1-l2),l1+l2
+           DO l=abs(l1-l2),l1+l2,2
               upf%qfuncl(1:upf%mesh,ijv,l) = upf%qfunc(1:upf%mesh,ijv)
            END DO
 ! adjust the inner values on the l-dependent grid if nqf and rinner are defined
            if ( upf%nqf > 0 ) then
-              do l = abs(l1-l2),l1+l2
+              do l = abs(l1-l2),l1+l2, 2
                  if ( upf%rinner (l+1) > 0.0_dp) then
                     do ir = 1, upf%kkbeta
                        if (upf%r(ir) <upf%rinner (l+1) ) ilast = ir
