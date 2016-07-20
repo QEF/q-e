@@ -107,7 +107,6 @@ subroutine set_pseudo_upf (is, upf, grid)
            end if
         enddo
      enddo
-     upf%q_with_l = .true.
   end if
 
 end subroutine set_pseudo_upf
