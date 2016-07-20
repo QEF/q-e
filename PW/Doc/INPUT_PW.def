@@ -351,7 +351,17 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	    }
 	}
 
-	var lorbm -type LOGICAL { 
+	var efield_phase -type CHARACTER {
+	    default { 'none' }
+	    info {
+	    	'read':      set the zero of the electronic polarization (with lelfield=.true..) 
+                              to the result of a previous calculation
+		'write':     write on disk data on electronic polarization to be read in another 
+                             calculation   	   
+                'none':      none of the above points
+             }  
+	  }
+       var lorbm -type LOGICAL { 
 	    default { .FALSE. }
 	    info {
 		If .TRUE. perform orbital magnetization calculation.
