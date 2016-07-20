@@ -86,6 +86,7 @@ recvec_subs.o \
 run_info.o \
 space_group.o \
 set_signal.o \
+setqf.o \
 splinelib.o \
 timestep.o\
 tsvdw.o\

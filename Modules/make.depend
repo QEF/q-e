@@ -362,6 +362,7 @@ set_hubbard_n.o : io_global.o
 set_signal.o : io_global.o
 set_signal.o : mp.o
 set_signal.o : mp_world.o
+setqf.o : kind.o
 simpsn.o : kind.o
 sort.o : kind.o
 space_group.o : kind.o
@@ -461,7 +462,6 @@ xml_io_base.o : io_global.o
 xml_io_base.o : kind.o
 xml_io_base.o : mp.o
 xml_io_base.o : mp_bands.o
-xml_io_base.o : mp_global.o
 xml_io_base.o : mp_images.o
 xml_io_base.o : mp_wave.o
 xml_io_base.o : parser.o

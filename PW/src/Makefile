@@ -108,6 +108,7 @@ hinit1.o \
 init_ns.o \
 init_q_aeps.o \
 init_run.o \
+init_us_0.o \
 init_us_1.o \
 init_us_2.o \
 init_at_1.o \
@@ -195,7 +196,6 @@ set_kup_and_kdw.o \
 set_rhoc.o \
 set_vrs.o \
 setlocal.o \
-setqf.o \
 setup.o \
 spinor.o \
 sph_ind.o \

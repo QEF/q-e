@@ -884,6 +884,7 @@ phq_init.o : ../../Modules/atom.o
 phq_init.o : ../../Modules/becmod.o
 phq_init.o : ../../Modules/cell_base.o
 phq_init.o : ../../Modules/constants.o
+phq_init.o : ../../Modules/gth.o
 phq_init.o : ../../Modules/gvecw.o
 phq_init.o : ../../Modules/io_global.o
 phq_init.o : ../../Modules/ions_base.o

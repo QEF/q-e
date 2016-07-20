@@ -394,7 +394,6 @@ write_aux.o : d3com.o
 write_d3dyn.o : ../../Modules/kind.o
 write_igk.o : ../../LR_Modules/lrcom.o
 write_igk.o : ../../Modules/io_files.o
-write_igk.o : ../../PHonon/PH/phcom.o
 write_igk.o : ../../PW/src/pwcom.o
 writed3dyn_5.o : ../../Modules/io_global.o
 writed3dyn_5.o : ../../Modules/ions_base.o
