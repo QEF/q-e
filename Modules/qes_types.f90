@@ -656,6 +656,8 @@ TYPE :: band_structure_type
    LOGICAL  :: nbnd_dw_ispresent
    INTEGER  :: nbnd_dw
    REAL(DP) :: nelec
+   LOGICAL  :: num_of_atomic_wfc_ispresent
+   INTEGER  :: num_of_atomic_wfc
    LOGICAL  :: fermi_energy_ispresent
    REAL(DP) :: fermi_energy
    LOGICAL  :: highestOccupiedLevel_ispresent

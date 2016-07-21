@@ -25,6 +25,11 @@ SUBROUTINE read_file()
   USE dfunct,               ONLY : newd
   USE ldaU,                 ONLY : lda_plus_u, U_projection
   USE pw_restart,           ONLY : pw_readfile
+#ifdef __XSD 
+  USE pw_restart,           ONLY :  read_collected_to_evc
+  USE control_flags,        ONLY : twfcollect
+  USE io_files,             ONLY : tmp_dir, prefix
+#endif
   USE control_flags,        ONLY : io_level
   USE klist,                ONLY : init_igk
   USE gvect,                ONLY : ngm, g
@@ -33,6 +38,10 @@ SUBROUTINE read_file()
   IMPLICIT NONE 
   INTEGER :: ierr
   LOGICAL :: exst
+  CHARACTER( 256 )  :: dirname
+  !
+  !
+  ierr = 0 
   !
   ! ... Read the contents of the xml data file
   !
@@ -57,7 +66,14 @@ SUBROUTINE read_file()
   !
   ! ... Read orbitals, write them in 'distributed' form to iunwfc
   !
+#ifdef __XSD 
+  dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save'
+  IF ( twfcollect )  CALL read_collected_to_evc ( TRIM ( dirname ) , ierr ) 
+  IF ( ierr /= 0 ) CALL errore ( 'read_collected_to_evc', 'failed to read and redistribute '// &
+                                  'wave functions', ierr ) 
+#else
   CALL pw_readfile( 'wave', ierr )
+#endif
   !
   ! ... Assorted initialization: pseudopotentials, PAW
   ! ... Not sure which ones (if any) should be done here
@@ -108,7 +124,7 @@ SUBROUTINE read_xml_file_internal(withbs)
   USE klist,                ONLY : nkstot, nks, xk, wk
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE wvfct,                ONLY : nbnd, nbndx, et, wg
-  USE symm_base,            ONLY : irt, d1, d2, d3, checkallsym
+  USE symm_base,            ONLY : irt, d1, d2, d3, checkallsym, nsym
   USE ktetra,               ONLY : tetra, ntetra 
   USE extfield,             ONLY : forcefield, tefield
   USE cellmd,               ONLY : cell_factor, lmovecell
@@ -127,6 +143,11 @@ SUBROUTINE read_xml_file_internal(withbs)
   USE io_files,             ONLY : tmp_dir, prefix, iunpun, nwordwfc, iunwfc
   USE noncollin_module,     ONLY : noncolin, npol, nspin_lsda, nspin_mag, nspin_gga
   USE pw_restart,           ONLY : pw_readfile
+#ifdef __XSD
+  USE pw_restart,           ONLY :  pw_readschema_file, init_vars_from_schema 
+  USE qes_types_module,     ONLY :  output_type, input_type, parallel_info_type, general_info_type
+  USE qes_libs_module,      ONLY :  qes_reset_output, qes_reset_input, qes_reset_general_info, qes_reset_parallel_info 
+#endif
   USE io_rho_xml,           ONLY : read_rho
   USE read_pseudo_mod,      ONLY : readpp
   USE xml_io_base,          ONLY : pp_check_file
@@ -152,10 +173,25 @@ SUBROUTINE read_xml_file_internal(withbs)
   REAL(DP) :: rdum(1,1), ehart, etxc, vtxc, etotefield, charge
   REAL(DP) :: sr(3,3,48)
   CHARACTER(LEN=20) dft_name
+#ifdef __XSD 
+  TYPE ( output_type), ALLOCATABLE   :: output_obj
+  TYPE ( input_type ), ALLOCATABLE   :: input_obj 
+  TYPE (parallel_info_type),ALLOCATABLE :: parinfo_obj
+  TYPE (general_info_type ),ALLOCATABLE :: geninfo_obj 
+#endif
   !
+  !
+#ifdef __XSD
+  ALLOCATE ( output_obj, input_obj, parinfo_obj, geninfo_obj ) 
+  CALL pw_readschema_file ( ierr, output_obj, input_obj, parinfo_obj, geninfo_obj)
+  IF ( ierr /= 0 ) CALL errore ( 'read_schema', 'unable to read xml file', ierr ) 
   ! ... first we get the version of the qexml file
   !     if not already read
-  !
+  CALL init_vars_from_schema ( 'header', ierr, output_obj, input_obj, parinfo_obj, geninfo_obj )
+  CALL errore( 'read_xml_file ', 'unable to determine qexml version', ABS(ierr) )
+#else
+  ! ... first we get the version of the qexml file
+  !     if not already read
   CALL pw_readfile( 'header', ierr )
   CALL errore( 'read_xml_file ', 'unable to determine qexml version', ABS(ierr) )
   !
@@ -164,17 +200,26 @@ SUBROUTINE read_xml_file_internal(withbs)
   IF ( .NOT. pp_check_file() ) CALL infomsg( 'read_xml_file', &
                & 'file ' // TRIM( tmp_dir ) // TRIM( prefix ) &
                & // '.save not guaranteed to be safe for post-processing' )
+#endif
   !
   ! ... a reset of the internal flags is necessary because some codes call
   ! ... read_xml_file() more than once
   !
+#ifdef __XSD
+  CALL init_vars_from_schema ( 'reset', ierr, output_obj, input_obj, parinfo_obj, geninfo_obj  )
+#else
   CALL pw_readfile( 'reset', ierr )
+#endif
   !
   ! ... here we read the variables that dimension the system
   ! ... in parallel execution, only root proc reads the file
   ! ... and then broadcasts the values to all other procs
   !
+#ifdef __XSD
+  CALL init_vars_from_schema( 'dim',   ierr , output_obj, input_obj, parinfo_obj, geninfo_obj )
+#else
   CALL pw_readfile( 'dim',   ierr )
+#endif
   CALL errore( 'read_xml_file ', 'problem reading file ' // &
              & TRIM( tmp_dir ) // TRIM( prefix ) // '.save', ierr )
   !
@@ -229,11 +274,19 @@ SUBROUTINE read_xml_file_internal(withbs)
   !
   ! ... here we read all the variables defining the system
   !
-  if (withbs .eqv. .true.) then
+#ifdef __XSD
+  IF (withbs .eqv. .true.) THEN
+     CALL init_vars_from_schema ( 'nowave', ierr, output_obj, input_obj, parinfo_obj, geninfo_obj )
+  ELSE  
+     CALL init_vars_from_schema ( 'nowavenobs', ierr, output_obj, input_obj, parinfo_obj, geninfo_obj ) 
+  END IF
+#else
+  IF  ( withbs .EQV. .TRUE. ) THEN  
      CALL pw_readfile( 'nowave', ierr )
-  else 
+  ELSE
      CALL pw_readfile( 'nowavenobs', ierr )
-  end if
+  END IF
+#endif 
   !
   ! ... distribute across pools k-points and related variables.
   ! ... nks is defined by the following routine as the number 
@@ -265,7 +318,13 @@ SUBROUTINE read_xml_file_internal(withbs)
   !
   ! ... read pseudopotentials
   !
+
+#ifdef __XSD 
+  CALL init_vars_from_schema ( 'pseudo', ierr, output_obj, input_obj, parinfo_obj, geninfo_obj ) 
+#else
   CALL pw_readfile( 'pseudo', ierr )
+#endif
+
   dft_name = get_dft_name () ! already set, should not be set again
   CALL readpp ( dft_name )
   !
@@ -286,7 +345,11 @@ SUBROUTINE read_xml_file_internal(withbs)
   CALL allocate_fft()
   CALL ggen ( gamma_only, at, bg ) 
   IF (do_comp_esm) THEN
+#ifdef __XSD 
+    CALL init_vars_from_schema ( 'esm', ierr, output_obj, input_obj, parinfo_obj, geninfo_obj ) 
+#else
     CALL pw_readfile( 'esm', ierr )
+#endif
     CALL esm_init()
   END IF
   CALL gshells ( lmovecell ) 
@@ -333,13 +396,26 @@ SUBROUTINE read_xml_file_internal(withbs)
   !
   ! ... read info needed for hybrid functionals
   !
+#ifdef __XSD
+  CALL init_vars_from_schema( 'exx', ierr, output_obj, input_obj, parinfo_obj, geninfo_obj ) 
+#else
   CALL pw_readfile('exx', ierr)
+#endif
   !
   ! ... recalculate the potential
   !
   CALL v_of_rho( rho, rho_core, rhog_core, &
                  ehart, etxc, vtxc, eth, etotefield, charge, v )
   !
+  !
+#ifdef __XSD 
+  CALL qes_reset_output ( output_obj ) 
+  CALL qes_reset_input ( input_obj ) 
+  CALL qes_reset_general_info ( geninfo_obj ) 
+  CALL qes_reset_parallel_info ( parinfo_obj ) 
+  DEALLOCATE ( output_obj, input_obj, geninfo_obj, parinfo_obj ) 
+  ! 
+#endif 
   RETURN
   !
   CONTAINS

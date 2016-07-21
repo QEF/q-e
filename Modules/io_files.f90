@@ -33,6 +33,10 @@ MODULE io_files
   CHARACTER(len=256) :: qexml_version = ' '       ! the format of the current qexml datafile 
   LOGICAL            :: qexml_version_init = .FALSE.  ! whether the fmt has been read or not
   !
+#ifdef __XSD 
+  CHARACTER(LEN=256) :: qexsd_fmt = ' ', qexsd_version = ' '
+  LOGICAL            :: qexsd_init = .FALSE. 
+#endif  
   CHARACTER(LEN=256) :: input_drho = ' '          ! name of the file with the input drho
   CHARACTER(LEN=256) :: output_drho = ' '         ! name of the file with the output drho
   !

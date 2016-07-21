@@ -600,11 +600,11 @@ CONTAINS
       CALL qes_init_basisSetItem(fft_box, "fft_box", nr1b, nr2b, nr3b, "" )
       CALL qes_init_reciprocal_lattice(recipr_latt, "reciprocal_lattice", b1, b2, b3)
 
-      CALL qes_init_basis_set(obj, "basis_set", gamma_only_ispresent=.TRUE., gamma_only=gamma_only, &
-                              ecutwfc=ecutwfc, ecutrho_ispresent=.TRUE., ecutrho=ecutrho, fft_grid=fft_grid, &
-                              fft_smooth_ispresent=.TRUE., fft_smooth=fft_smooth, &
-                              fft_box_ispresent=fft_box_ispresent, fft_box=fft_box, ngm=ngm, &
-                              ngms_ispresent=.TRUE., ngms=ngms, npwx=npwx, reciprocal_lattice=recipr_latt)
+      CALL qes_init_basis_set(obj, "basis_set", GAMMA_ONLY_ISPRESENT=.TRUE., GAMMA_ONLY=gamma_only, &
+                              ECUTWFC=ecutwfc, ECUTRHO_ISPRESENT=.TRUE., ECUTRHO=ecutrho, FFT_GRID=fft_grid, &
+                              FFT_SMOOTH_ISPRESENT=.TRUE., FFT_SMOOTH=fft_smooth, &
+                              FFT_BOX_ISPRESENT=fft_box_ispresent, FFT_BOX=fft_box, NGM=ngm, &
+                              NGMS_ISPRESENT=.TRUE., NGMS=ngms, NPWX=npwx, RECIPROCAL_LATTICE=recipr_latt )
       !
       CALL qes_reset_basisSetItem(fft_grid)
       CALL qes_reset_basisSetItem(fft_smooth)
@@ -908,7 +908,7 @@ CONTAINS
     !
     ! 
     !---------------------------------------------------------------------------------------
-    SUBROUTINE qexsd_init_band_structure(obj, lsda, noncolin, lspinorb, nbnd, nelec, occupations_are_fixed, & 
+    SUBROUTINE qexsd_init_band_structure(obj, lsda, noncolin, lspinorb, nbnd, nelec, n_wfc_at, occupations_are_fixed, & 
                                          fermi_energy, two_fermi_energies, ef_updw, et, wg, nks, xk, ngk, wk)
     !----------------------------------------------------------------------------------------
     IMPLICIT NONE
@@ -916,16 +916,17 @@ CONTAINS
     TYPE(band_structure_type)             :: obj
     CHARACTER(LEN=*), PARAMETER           :: TAGNAME="band_structure"
     LOGICAL,INTENT(IN)                    :: lsda, noncolin, lspinorb, occupations_are_fixed
-    INTEGER,INTENT(IN)                    :: nbnd, nks
+    INTEGER,INTENT(IN)                    :: nbnd, nks, n_wfc_at
     REAL(DP),INTENT(IN)                   :: nelec, fermi_energy
     REAL(DP),DIMENSION(:,:),INTENT(IN)    :: et, wg, xk
     REAL(DP),DIMENSION(:),INTENT(IN)      :: wk
     INTEGER,DIMENSION(:),INTENT(IN)       :: ngk      
-    REAL(DP),DIMENSION(2),INTENT(IN)       :: ef_updw 
+    REAL(DP),DIMENSION(2),INTENT(IN)      :: ef_updw 
     LOGICAL,INTENT(IN)                    :: two_fermi_energies
     ! 
     LOGICAL                               :: nbnd_up_ispresent, nbnd_dw_ispresent, &
-                                             fermi_energy_ispresent, HOL_ispresent 
+                                             fermi_energy_ispresent, HOL_ispresent, & 
+                                             n_wfc_at_ispresent = .TRUE.  
     INTEGER                               :: nbnd_up,nbnd_dw
     INTEGER                               :: ndim_ks_energies,nbnd_tot,ik
     TYPE(k_point_type)                    :: kp_obj
@@ -1002,10 +1003,10 @@ CONTAINS
        CALL qes_reset_k_point(kp_obj)  
     END DO 
     !
-    CALL qes_init_band_structure(obj,TAGNAME,lsda,noncolin,lspinorb, nbnd , nbnd_up_ispresent,&
-                  nbnd_up,nbnd_dw_ispresent,nbnd_dw,nelec,fermi_energy_ispresent,&
-                  fermi_energy/e2, HOL_ispresent, fermi_energy/e2, two_fermi_energies, 2, ef_updw/e2, &
-                  ndim_ks_energies,ndim_ks_energies,ks_objs)
+    CALL qes_init_band_structure( obj,TAGNAME,lsda,noncolin,lspinorb, nbnd , nbnd_up_ispresent,&
+                  nbnd_up,nbnd_dw_ispresent,nbnd_dw,nelec, n_wfc_at_ispresent, n_wfc_at,       & 
+                  fermi_energy_ispresent, fermi_energy/e2, HOL_ispresent, fermi_energy/e2, &  
+                  two_fermi_energies, 2, ef_updw/e2, ndim_ks_energies,ndim_ks_energies,ks_objs )
     DO ik=1,ndim_ks_energies
        CALL qes_reset_ks_energies(ks_objs(ik))
     END DO

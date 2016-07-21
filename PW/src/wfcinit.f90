@@ -18,25 +18,34 @@ SUBROUTINE wfcinit()
   USE basis,                ONLY : natomwfc, starting_wfc
   USE bp,                   ONLY : lelfield
   USE klist,                ONLY : xk, nks, ngk, igk_k
-  USE control_flags,        ONLY : io_level, lscf
+  USE control_flags,        ONLY : io_level, lscf, twfcollect 
   USE fixed_occ,            ONLY : one_atom_occupations
   USE ldaU,                 ONLY : lda_plus_u, U_projection, wfcU
   USE lsda_mod,             ONLY : lsda, current_spin, isk
   USE io_files,             ONLY : nwordwfc, nwordwfcU, iunhub, iunwfc,&
-                                   diropn
+                                   diropn, tmp_dir, prefix
   USE buffers,              ONLY : open_buffer, get_buffer, save_buffer
   USE uspp,                 ONLY : nkb, vkb
   USE wavefunctions_module, ONLY : evc
   USE wvfct,                ONLY : nbnd, npwx, current_k
   USE wannier_new,          ONLY : use_wannier
   USE pw_restart,           ONLY : pw_readfile
+#ifdef __XSD 
+  USE pw_restart,           ONLY : pw_readschema_file, read_collected_to_evc
+  USE qes_types_module,     ONLY : input_type
+  USE qes_libs_module,      ONLY : qes_reset_input 
+#endif
   USE mp_bands,             ONLY : nbgrp, root_bgrp,inter_bgrp_comm
   USE mp,                   ONLY : mp_bcast
   !
   IMPLICIT NONE
   !
   INTEGER :: ik, ierr
-  LOGICAL :: exst, exst_mem, exst_file, opnd_file
+  LOGICAL :: exst, exst_mem, exst_file, opnd_file, twfcollect_file = .FALSE.
+  CHARACTER (256 )                        :: dirname 
+#ifdef __XSD
+  TYPE ( input_type ), ALLOCATABLE      :: input_obj
+#endif
   !
   !
   CALL start_clock( 'wfcinit' )
@@ -61,7 +70,19 @@ SUBROUTINE wfcinit()
      ! ... rewrite them (in pw_readfile) using the internal format
      !
      ierr = 1
+#ifdef __XSD
+     ALLOCATE (input_obj )  
+     CALL pw_readschema_file(IERR = ierr, RESTART_INPUT = input_obj )
+     IF ( ierr == 0 ) THEN 
+        twfcollect_file = input_obj%control_variables%wf_collect   
+        dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save' 
+        IF ( twfcollect_file ) CALL read_collected_to_evc(dirname, ierr )
+     END IF 
+     CALL qes_reset_input ( input_obj ) 
+     DEALLOCATE ( input_obj )    
+#else
      CALL pw_readfile( 'wave', ierr )
+#endif
      IF ( ierr > 0 ) THEN
         WRITE( stdout, '(5X,"Cannot read wfc : file not found")' )
         starting_wfc = 'atomic+random'

@@ -243,6 +243,11 @@ qexsd_input.o : input_parameters.o
 qexsd_input.o : kind.o
 qexsd_input.o : qes_module.o
 qexsd_input.o : qexsd.o
+qexsd_reader_module.o : ../iotk/src/iotk_module.o
+qexsd_reader_module.o : io_global.o
+qexsd_reader_module.o : kind.o
+qexsd_reader_module.o : parameters.o
+qexsd_reader_module.o : qes_module.o
 qmmm.o : ../FFTXlib/fft_types.o
 qmmm.o : cell_base.o
 qmmm.o : constants.o

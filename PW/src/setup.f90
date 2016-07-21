@@ -80,6 +80,13 @@ SUBROUTINE setup()
                                  angle1, angle2, bfield, ux, nspin_lsda, &
                                  nspin_gga, nspin_mag
   USE pw_restart,         ONLY : pw_readfile
+!
+#ifdef __XSD 
+  USE pw_restart,         ONLY : pw_readschema_file, init_vars_from_schema 
+  USE qes_libs_module,    ONLY : qes_reset_output, qes_reset_input, qes_reset_parallel_info, qes_reset_general_info
+  USE qes_types_module,   ONLY : output_type, input_type, parallel_info_type, general_info_type 
+#endif
+!
   USE exx,                ONLY : ecutfock, exx_grid_init, exx_div_check
   USE funct,              ONLY : dft_is_meta, dft_is_hybrid, dft_is_gradient
   USE paw_variables,      ONLY : okpaw
@@ -92,6 +99,12 @@ SUBROUTINE setup()
   REAL(DP) :: iocc, ionic_charge, one
   !
   LOGICAL, EXTERNAL  :: check_para_diag
+#ifdef __XSD 
+  TYPE(output_type),ALLOCATABLE             :: output_obj 
+  TYPE(input_type),ALLOCATABLE              :: input_obj
+  TYPE(parallel_info_type),ALLOCATABLE      :: parinfo_obj
+  TYPE(general_info_type),ALLOCATABLE       :: geninfo_obj
+#endif  
   !
   ! ... okvan/okpaw = .TRUE. : at least one pseudopotential is US/PAW
   !
@@ -145,13 +158,27 @@ SUBROUTINE setup()
   !
   nelec = ionic_charge - tot_charge
   !
+#if defined (__XSD)
+     IF ( lbands .OR. ( (lfcpopt .OR. lfcpdyn ) .AND. restart )) THEN 
+        ALLOCATE ( output_obj, input_obj, parinfo_obj, geninfo_obj )
+        CALL pw_readschema_file( ierr , output_obj, input_obj, parinfo_obj, geninfo_obj )
+      END IF 
+#endif 
   IF ( lfcpopt .AND. restart ) THEN
+#if defined (__XSD)
+     CALL init_vars_from_schema( 'fcpopt', ierr,  output_obj, input_obj, parinfo_obj, geninfo_obj) 
+#else
      CALL pw_readfile( 'fcpopt', ierr )
+#endif
      tot_charge = ionic_charge - nelec
   END IF
   !
   IF ( lfcpdyn .AND. restart ) THEN
+#if defined (__XSD)
+     CALL init_vars_from_schema( 'fcpdyn', ierr,  output_obj, input_obj, parinfo_obj, geninfo_obj ) 
+#else
      CALL pw_readfile( 'fcpdyn', ierr )
+#endif
      tot_charge = ionic_charge - nelec
   END IF
   !
@@ -537,8 +564,13 @@ SUBROUTINE setup()
      !
      ! ... if calculating bands, we read the Fermi energy
      !
+#if defined (__XSD)
+     CALL init_vars_from_schema( 'reset', ierr, output_obj, input_obj, parinfo_obj, geninfo_obj )
+     CALL init_vars_from_schema( 'ef',   ierr , output_obj, input_obj,parinfo_obj, geninfo_obj)
+#else
      CALL pw_readfile( 'reset', ierr )
      CALL pw_readfile( 'ef',   ierr )
+#endif 
      CALL errore( 'setup ', 'problem reading ef from file ' // &
              & TRIM( tmp_dir ) // TRIM( prefix ) // '.save', ierr )
 
@@ -555,6 +587,15 @@ SUBROUTINE setup()
           nk1, nk2, nk3, nkstot, xk, wk, ntetra, tetra )
      !
   END IF
+#ifdef __XSD 
+  IF ( lbands .OR. ( (lfcpopt .OR. lfcpdyn ) .AND. restart ) ) THEN 
+     CALL qes_reset_output ( output_obj ) 
+     CALL qes_reset_input ( input_obj ) 
+     CALL qes_reset_parallel_info ( parinfo_obj ) 
+     CALL qes_reset_general_info ( geninfo_obj ) 
+     DEALLOCATE ( output_obj, input_obj, parinfo_obj, geninfo_obj ) 
+  END IF 
+#endif
   !
   !
   IF ( lsda ) THEN
