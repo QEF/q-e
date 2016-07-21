@@ -81,7 +81,6 @@
 !  CALL mp_bcast (tphases, ionode_id, world_comm)   !
   CALL mp_bcast (epstrict, ionode_id, world_comm)  !
   CALL mp_bcast (fsthick, ionode_id, world_comm)   !
-  CALL mp_bcast (eptemp, ionode_id, world_comm)    !
   CALL mp_bcast (wmin, ionode_id, world_comm)      !
   CALL mp_bcast (wmax, ionode_id, world_comm)      !
   CALL mp_bcast (epwread, ionode_id, world_comm)   !
@@ -180,6 +179,7 @@
   CALL mp_bcast (muc, ionode_id, world_comm )            !
   CALL mp_bcast (max_memlt, ionode_id, world_comm)       !
   CALL mp_bcast (fermi_energy, ionode_id, world_comm)    !
+  CALL mp_bcast (eptemp, ionode_id, world_comm)    !
   !
   ! characters
   !

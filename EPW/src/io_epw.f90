@@ -23,7 +23,8 @@
   !
   PUBLIC :: lambda_phself, linewidth_phself, linewidth_elself, iospectral, &
             iua2ffil, iudosfil, iufillambda, iuqdos, iufe, iufilker, &
-            iufilgap, iospectral_sup, iua2ftrfil, iufilgapFS, iufillambdaFS
+            iufilgap, iospectral_sup, iua2ftrfil, iufilgapFS, iufillambdaFS, &
+            iuwanep, iuwane
   PUBLIC :: epwdata, iundmedata, iunvmedata, iunksdata, iudyn, iukgmap, iuepb,&
             iunepmatf, iurecover, iufilfreq, iufilegnv, iufileph, iufilkqmap, &
             iufilikmap, iueig, iunepmatwp, iunepmatwe, iunkf, iunqf, &
@@ -57,6 +58,10 @@
   INTEGER :: iudyn           = 81  ! Dvscf_q files
   INTEGER :: iufilkqmap      = 82  ! Map of k+q
   INTEGER :: iukgmap         = 96  ! Map of folding G-vector indexes [.kgmap]
+  INTEGER :: iuwanep         = 97  ! Spatial decay of e-p matrix elements in wannier basis 
+                                   ! Electrons + phonons [epmat_wanep]
+  INTEGER :: iuwane          = 98  ! Spatial decay of matrix elements in Wannier basis    
+                                   ! [.epwane]  
 
   !
   ! Output of quantity for restarting purposes (101-200)

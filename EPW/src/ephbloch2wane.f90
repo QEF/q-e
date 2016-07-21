@@ -12,16 +12,17 @@
   SUBROUTINE ephbloch2wane ( nbnd, nbndsub, nks, nkstot, lgamma, xk, &
        cu, cuq, lwin, lwinq, epmatk, nrr, irvec, wslen, epmatw)
   !-----------------------------------------------------------------------
-  !
-  !  From the electron-phonon matrix elements in Bloch representation (coarse 
-  !  mesh), find the corresponding matrix elements in Wannier representation
-  !
-  !
+  !!
+  !!  From the electron-phonon matrix elements in Bloch representation (coarse 
+  !!  mesh), find the corresponding matrix elements in Wannier representation
+  !!
+  !!
   !-----------------------------------------------------------------------
   !
   USE kinds,     ONLY : DP
   USE pwcom,     ONLY : at, bg, celldm
   USE constants_epw, ONLY : bohr2ang, twopi, ci, czero, cone
+  USE io_epw,    ONLY : iuwane
 #ifdef __PARA
   USE io_global, ONLY : ionode_id
   USE mp_global, ONLY : inter_pool_comm,my_pool_id
@@ -32,30 +33,43 @@
   !
   !  input variables
   !
-  integer :: nbnd, nbndsub, nks, nrr, irvec (3, nrr), nkstot
-  ! number of bands
-  ! number of bands in the optimal subspace
-  ! number of kpoints
-  ! number of kpoint blocks, in the pool
-  ! number of kpoint blocks, total
-  ! number of WS points and coordinates
-  logical :: lgamma
-  ! true if we are working with q=0
-  real(kind=DP) :: xk (3, nks), wslen (nrr)
-  ! kpoint coordinates (cartesian in units of 2piba)
-  ! WS vectors length (alat units)
-  complex(kind=DP) :: cu (nbnd, nbndsub, nks), cuq (nbnd, nbndsub, nks), epmatk ( nbnd, nbnd, nks)
-  ! rotation matrix from wannier code
-  ! e-p matrix in bloch representation, coarse mesh
-  logical :: lwin( nbnd, nks ), lwinq( nbnd, nks )
-  ! identify bands within outer energy window (for disentanglement)
+  INTEGER, INTENT (in) :: nbnd
+  !! Number of bands
+  INTEGER, INTENT (in) :: nbndsub
+  !! Number of bands in the optimal subspace
+  INTEGER, INTENT (in) :: nks
+  !! Number of kpoints
+  INTEGER, INTENT (in) :: nrr
+  !! Number of kpoint blocks, in the pool
+  INTEGER, INTENT (in) :: nkstot
+  !! Number of kpoint blocks, total
+  INTEGER, INTENT (in) :: irvec (3, nrr)
+  !! Number of WS points and coordinates
+  !
+  LOGICAL, INTENT (in) :: lgamma
+  !! True if we are working with q=0
+  LOGICAL, INTENT (in) :: lwin( nbnd, nks )
+  !! Identify bands within outer energy window (for disentanglement)
+  LOGICAL, INTENT (in) :: lwinq( nbnd, nks )
+  !! Identify bands within outer energy window (for disentanglement)
+  !
+  REAL(kind=DP), INTENT (in) :: xk (3, nks)
+  !! kpoint coordinates (cartesian in units of 2piba)
+  REAL(kind=DP), INTENT (in) :: wslen (nrr)
+  !! WS vectors length (alat units)
+  COMPLEX(kind=DP), INTENT (in) :: cu (nbnd, nbndsub, nks)
+  !! Rotation matrix from wannier code
+  COMPLEX(kind=DP), INTENT (in) :: cuq (nbnd, nbndsub, nks)
+  !! Rotation matrix from wannier code
+  COMPLEX(kind=DP), INTENT (in) :: epmatk ( nbnd, nbnd, nks)
+  !! e-p matrix in bloch representation, coarse mesh
   !
   ! output variables 
   !
-  complex(kind=DP) :: epmatw ( nbndsub, nbndsub, nrr)
-  !  e-p matrix  in wannier basis 
+  COMPLEX(kind=DP), INTENT(out) :: epmatw ( nbndsub, nbndsub, nrr)
+  !!  e-p matrix  in wannier basis 
   !
-  ! work variables 
+  ! Work variables 
   !
   complex(kind=DP) :: epmats (nbndsub, nbndsub, nks), eptmp(nbndsub, nbnd)
   !  e-p matrix  in smooth Bloch basis, coarse mesh
@@ -131,22 +145,22 @@
   CALL cryst_to_cart (nks, xk, bg, 1)
   !
   !
-  !  check spatial decay of matrix elements in Wannier basis
+  !  Sheck spatial decay of matrix elements in Wannier basis
   !  the unit in r-space is angstrom, and I am plotting 
   !  the matrix for the first mode only
   !
 #ifdef __PARA
     IF (mpime.eq.ionode_id) THEN
 #endif
-      OPEN (unit=301,file='decay.epwane')
-      WRITE(301, '(/3x,a/)') '#Spatial decay of e-p matrix elements in Wannier basis'
+      OPEN (unit=iuwane,file='decay.epwane')
+      WRITE(iuwane, '(a)') '# Spatial decay of e-p matrix elements in Wannier basis'
       DO ir = 1, nrr
         ! 
         tmp =  maxval ( abs(epmatw(:,:,ir)) ) 
-        WRITE(301, *) wslen(ir) * celldm (1) * bohr2ang, tmp
+        WRITE(iuwane, *) wslen(ir) * celldm (1) * bohr2ang, tmp
         !
       ENDDO
-      CLOSE(301)
+      CLOSE(iuwane)
 #ifdef __PARA
     ENDIF
 #endif
