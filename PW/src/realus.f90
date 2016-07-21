@@ -29,8 +29,8 @@ MODULE realus
   REAL(DP), ALLOCATABLE :: spher_beta(:,:,:)
   !General
   LOGICAL               :: real_space
-  INTEGER :: real_space_debug = 0 ! FIXME: must disappear
   ! if true perform calculations in real spave
+  INTEGER :: real_space_debug = 0 ! FIXME: must disappear
   INTEGER               :: initialisation_level
   ! init_realspace_vars sets this to 3; qpointlist adds 5; betapointlist adds 7
   ! so the value should be 15 if the real space routine is initialised properly
@@ -246,7 +246,7 @@ MODULE realus
             DO ijv = 1, upf(nt)%nbeta*(upf(nt)%nbeta+1)/2
                DO indm = upf(nt)%mesh,1,-1
                   !
-                  aux = sum(abs( upf(nt)%qfuncl(indm,ijv,:) ))
+                  aux = maxval(abs( upf(nt)%qfuncl(indm,ijv,:) ))
                   IF ( aux > eps16 ) THEN
                      boxrad(nt) = max( rgrid(nt)%r(indm), boxrad(nt) )
                      exit
@@ -387,6 +387,7 @@ MODULE realus
       ! ... strictly speaking we do not use interpolation but just compute
       ! ... the correct value
       !
+      USE constants,  ONLY : eps16
       USE uspp,       ONLY : indv, nhtol, nhtolm, ap, nhtoj
       USE uspp_param, ONLY : upf, lmaxq, nh
       USE atom,       ONLY : rgrid
@@ -454,6 +455,7 @@ MODULE realus
                   qtot(1:upf(nt)%kkbeta) = &
                        upf(nt)%qfuncl(1:upf(nt)%kkbeta,ijv,l) &
                        / rgrid(nt)%r(1:upf(nt)%kkbeta)**2
+                  if (rgrid(nt)%r(1)< eps16) qtot(1) = qtot(2)
                ENDIF
                !
                ! ... compute the first derivative
