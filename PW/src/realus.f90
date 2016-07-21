@@ -29,6 +29,7 @@ MODULE realus
   REAL(DP), ALLOCATABLE :: spher_beta(:,:,:)
   !General
   LOGICAL               :: real_space
+  LOGICAL               :: do_not_use_spline_inside_rinner = .true.
   ! if true perform calculations in real spave
   INTEGER :: real_space_debug = 0 ! FIXME: must disappear
   INTEGER               :: initialisation_level
@@ -481,10 +482,23 @@ MODULE realus
                !
                DO ir = 1, tab(ia)%maxbox
                   !
-                  ! ... spline interpolation
-                  !
-                  qtot_int = splint( xsp, qtot, wsp, tab(ia)%dist(ir) )
-                  !
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! IF .not. do_not_use_spline_inside_rinner IT DIFFERS ! it changes the energy by 1.4d-5
+                  IF ( tab(ia)%dist(ir) < upf(nt)%rinner(l+1) .and. do_not_use_spline_inside_rinner) THEN
+                     !
+                     ! ... if in the inner radius just compute the
+                     ! ... polynomial
+                     !
+                     CALL setqfnew( upf(nt)%nqf, upf(nt)%qfcoef(1,l+1,nb,mb),&
+                          1, tab(ia)%dist(ir), l, 0, qtot_int )
+                     !
+                  ELSE
+                     !
+                     ! ... spline interpolation
+                     !
+                     qtot_int = splint( xsp, qtot, wsp, tab(ia)%dist(ir) )
+                     !
+                  ENDIF
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
                   !
                   ijh = 0
                   DO ih = 1, nh(nt)
@@ -526,7 +540,7 @@ MODULE realus
       !                             - q(|r-tau_i|) * (dY_lm(r-tau_i)/dtau_{i,a})
       ! ... This routine follows the same logic of real_space_q 
       !
-      USE constants,  ONLY : eps8
+      USE constants,  ONLY : eps8, eps16
       USE uspp,       ONLY : indv, nhtol, nhtolm, ap, nhtoj
       USE uspp_param, ONLY : upf, lmaxq, nh
       USE atom,       ONLY : rgrid
@@ -595,6 +609,7 @@ MODULE realus
                   qtot(1:upf(nt)%kkbeta) = &
                        upf(nt)%qfuncl(1:upf(nt)%kkbeta,ijv,l) &
                        / rgrid(nt)%r(1:upf(nt)%kkbeta)**2
+                  if (rgrid(nt)%r(1)< eps16) qtot(1) = qtot(2)
                ENDIF
                !
                ! ... compute the first derivative
@@ -624,10 +639,25 @@ MODULE realus
                !
                DO ir = 1, tabp(ia)%maxbox
                   !
-                  ! ... spline interpolation
-                  !
-                  qtot_int = splint( xsp, qtot, wsp(:,1), tabp(ia)%dist(ir) )
-                  dqtot_int= splint( xsp,dqtot, wsp(:,2), tabp(ia)%dist(ir) )
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! IF .not. do_not_use_spline_inside_rinner IT DIFFERS ! it changes the ther force on Oxygen by 0.004
+                  IF ( tabp(ia)%dist(ir) < upf(nt)%rinner(l+1) .and. do_not_use_spline_inside_rinner ) THEN
+                     !
+                     ! ... if in the inner radius just compute the
+                     ! ... polynomial
+                     !
+                     CALL setqfnew( upf(nt)%nqf, upf(nt)%qfcoef(1,l+1,nb,mb),&
+                          1, tabp(ia)%dist(ir), l, 0, qtot_int )
+                     CALL setdqf( upf(nt)%nqf, upf(nt)%qfcoef(1,l+1,nb,mb), &
+                          1, tabp(ia)%dist(ir), l, dqtot_int)
+                  ELSE
+                     !
+                     ! ... spline interpolation
+                     !
+                     qtot_int = splint( xsp, qtot, wsp(:,1), tabp(ia)%dist(ir) )
+                     dqtot_int= splint( xsp,dqtot, wsp(:,2), tabp(ia)%dist(ir) )
+                     !
+                  ENDIF
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
                   !
                   ! ... prevent floating-point error if dist = 0
                   !
