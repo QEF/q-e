@@ -30,7 +30,7 @@ p1=`grep "P= " $fname | tail -1 | awk '{print $6}'`
 #if [[ "$args" == "2" ]]
 #then
 # NSCF
-ef1=`grep Fermi $fname | awk '{print $5}'`
+ef1=`grep "the Fermi energy is" $fname | awk '{print $5}'`
 eh1=`grep "highest occupied" $fname | awk '{print $7}'`
 el1=`grep "highest occupied" $fname | awk '{print $8}'`
 tf1=`grep " P = " $fname | head -1 | awk '{printf "%7.5f", $3}'`
@@ -63,7 +63,7 @@ bcsgap=`grep "Estimated BCS superconducting gap =" $fname | awk '{print $6}'`
 
 if test "$efm" != ""; then
         echo efm
-        echo $efm
+        for x in $efm; do echo $x; done
 fi
 
 if test "$lam_max" != ""; then
@@ -98,7 +98,7 @@ fi
 
 if test "$dos1" != ""; then
         echo dos1
-        echo $dos1
+        for x in $dos1; do echo $x; done
 fi
 
 if test "$e2" != ""; then
@@ -184,7 +184,7 @@ fi
 
 if test "$ef1" != ""; then
 	echo ef1
-	for x in $ef1; do echo $x; done
+        for x in $ef1; do echo $x; done
 fi
 
 if test "$eh1" != ""; then
