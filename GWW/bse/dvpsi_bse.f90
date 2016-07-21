@@ -7,7 +7,7 @@
 !
 !
 !----------------------------------------------------------------------
-SUBROUTINE dvpsi_e(kpoint,ipol,dvpsi2)
+SUBROUTINE dvpsi_e(kpoint,ipol,dvpsi2,l_lr)
   !----------------------------------------------------------------------
   ! MARGHE: DA RIPULIRE E OTTIMIZZARE
   ! Calculates x * psi_k  for each k-points and for the 3 polarizations
@@ -34,6 +34,9 @@ SUBROUTINE dvpsi_e(kpoint,ipol,dvpsi2)
 !  USE cgcom
   !
   IMPLICIT NONE
+
+  LOGICAL :: l_lr!if true calculates first-order valence wave-functions
+
   INTEGER :: kpoint, ipol,is,niter_ph
   INTEGER :: i,l, na,nt, ibnd,jbnd, info, ih,jkb, iter
   real(DP) :: upol(3,3),tr2_ph
@@ -42,7 +45,7 @@ SUBROUTINE dvpsi_e(kpoint,ipol,dvpsi2)
   real(DP), ALLOCATABLE :: becp2_(:,:), dbec2(:,:), dbec2_(:,:)
   COMPLEX(DP), ALLOCATABLE :: dvkb(:,:), dvkb1(:,:), work(:,:), &
        &           gr(:,:), h(:,:)
-  COMPLEX(DP), ALLOCATABLE:: dpsi(:,:), evc2(:,:),dpsi2(:,:)
+  COMPLEX(DP), ALLOCATABLE:: evc2(:,:),dpsi2(:,:)
   COMPLEX(DP) :: dvpsi(npwx , nbnd)
   COMPLEX(DP) :: dvpsi2(npwx , num_nbndv(1))
   
@@ -80,7 +83,6 @@ SUBROUTINE dvpsi_e(kpoint,ipol,dvpsi2)
   ALLOCATE ( dvkb1( npwx, nkb) )
   ALLOCATE ( becp_(nkb,nbnd), dbec ( nkb, nbnd), dbec_(nkb, nbnd) )
   ALLOCATE ( becp2_(nkb,num_nbndv(1)), dbec2 ( nkb, num_nbndv(1)), dbec2_(nkb, num_nbndv(1)) )
-  ALLOCATE ( dpsi (npwx , nbnd))
   ALLOCATE ( dpsi2 (npwx , num_nbndv(1)))
   !
   DO i = 1,npw
@@ -92,14 +94,9 @@ SUBROUTINE dvpsi_e(kpoint,ipol,dvpsi2)
   !
   !  this is  the kinetic contribution to [H,x]:  -2i (k+G)_ipol * psi
   !
-  dpsi(1:npwx,1:nbnd)=(0.d0,0.d0)  
+
   dpsi2(1:npwx,1:num_nbndv(1))=(0.d0,0.d0)  
   
-  DO ibnd = 1,nbnd
-     DO i = 1,npw
-        dpsi(i,ibnd) = gk(ipol,i)*(0.0d0,-2.0d0) * evc(i,ibnd)
-     ENDDO
-  ENDDO
   DO ibnd = 1,num_nbndv(1)
      DO i = 1,npw
         dpsi2(i,ibnd) = gk(ipol,i)*(0.0d0,-2.0d0) * evc2(i,ibnd)
@@ -158,16 +155,13 @@ SUBROUTINE dvpsi_e(kpoint,ipol,dvpsi2)
   !
   IF (jkb/=nkb) CALL errore('dvpsi_e','unexpected error',1)
   !
-  CALL dgemm ('N', 'N', 2*npw, nbnd, nkb,-1.d0, vkb, &
-       2*npwx, dbec_, nkb, 1.d0, dpsi, 2*npwx)
+
 
   CALL dgemm ('N', 'N', 2*npw, num_nbndv(1), nkb,-1.d0, vkb, &
        2*npwx, dbec2_, nkb, 1.d0, dpsi2, 2*npwx)
 
   FLUSH( stdout )
 
-  CALL dgemm ('N', 'N', 2*npw, nbnd, nkb, 1.d0,dvkb, &
-       2*npwx, becp_, nkb, 1.d0, dpsi, 2*npwx)
 
   CALL dgemm ('N', 'N', 2*npw, num_nbndv(1), nkb, 1.d0,dvkb, &
        2*npwx, becp2_, nkb, 1.d0, dpsi2, 2*npwx)
@@ -216,31 +210,32 @@ SUBROUTINE dvpsi_e(kpoint,ipol,dvpsi2)
        orthonormal,precondition,q,startwith0,et(1,1),&
        dpsi2,gr,h,dpsi2,work,niter_ph,tr2_ph,iter,dvpsi2)
 
-!  IF (precondition) THEN
-!     DO i = 1,npw
-!        q(i) = 1.0d0/max(1.d0,g2kin(i))
-!     ENDDO
-!     CALL zvscal(npw,npwx,nbnd,q,evc,work)
-!     CALL calbec ( npw, work, evc, overlap)
-!     CALL DPOTRF('U',nbnd,overlap,nbnd,info)
-!     IF (info/=0) CALL errore('solve_ph','cannot factorize',info)
-!  ENDIF
-!  !
-!  startwith0= .true.
-!  dvpsi(:,:) = (0.d0, 0.d0)
-!  niter_ph = 50
-!  tr2_ph = 1.0d-12
-  !
-!  CALL cgsolve (H_h,npw,evc,npwx,nbnd,overlap,nbnd,   &
-!       orthonormal,precondition,q,startwith0,et(1,1),&
-!       dpsi,gr,h,dpsi,work,niter_ph,tr2_ph,iter,dvpsi)
-  !
+  if(l_lr) then
+     dpsi2(1:npwx,1:num_nbndv(1))=dvpsi2(1:npwx,1:num_nbndv(1))
+     IF (precondition) THEN
+        DO i = 1,npw
+           q(i) = 1.0d0/max(1.d0,g2kin(i))
+        ENDDO
+        CALL zvscal(npw,npwx,num_nbndv(1),q,evc2,work)
+        CALL calbec ( npw, work, evc2, overlap)
+        CALL DPOTRF('U',num_nbndv(1),overlap,num_nbndv(1),info)
+        IF (info/=0) CALL errore('solve_ph','cannot factorize',info)
+     ENDIF
+     startwith0= .true.
+     dvpsi2(:,:) = (0.d0, 0.d0)
+     niter_ph = 50
+     tr2_ph = 1.0d-12
+     CALL cgsolve (npw,evc2,npwx,num_nbndv(1),overlap,num_nbndv(1),   &
+          orthonormal,precondition,q,startwith0,et(1,1),&
+          dpsi2,gr,h,dpsi2,work,niter_ph,tr2_ph,iter,dvpsi2)
+
+  endif
+
   DEALLOCATE(q)
   DEALLOCATE(h)
   DEALLOCATE(gr)
   DEALLOCATE(work)
   DEALLOCATE(overlap)
-  DEALLOCATE(dpsi)
   DEALLOCATE(evc)
   DEALLOCATE(dpsi2)
   DEALLOCATE(evc2)

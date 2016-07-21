@@ -139,7 +139,7 @@ do ipol=1,3
 !     compute the  |psibar(iv)> and set it as initial excitonic state |i-1> for 
 !     the lanczos procedure
       if(debug) write(*,*) 'before dvpsi'
-      call dvpsi_e (1, ipol,dvpsi(1,1))
+      call dvpsi_e (1, ipol,dvpsi(1,1),.false.)
       if(debug) write(*,*) 'after dvpsi'
       do i=1,num_nbndv(1)
          im1_s%a(1:npw,i)= dvpsi(1:npw,i)

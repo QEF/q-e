@@ -133,7 +133,7 @@ if(l_dielectric) then
          
          allocate( psibar(ipol)%wfn(psibar(ipol)%npw,psibar(ipol)%numb_v(1),psibar(ipol)%nspin))
      
-         call dvpsi_e (1, ipol,dvpsi(1,1))
+         call dvpsi_e (1, ipol,dvpsi(1,1),.false.)
          do i=1,num_nbndv(1)
             psibar(ipol)%wfn(1:npw,i,1)&
                  & = dvpsi(1:npw,i)
