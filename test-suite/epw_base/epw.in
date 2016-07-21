@@ -30,8 +30,6 @@
 
   tshuffle2   = .true.
 
-  tphases     = .false.
-
   elecselfen  = .true.
   phonselfen  = .false.
   a2f         = .false.

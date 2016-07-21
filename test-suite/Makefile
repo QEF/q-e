@@ -67,7 +67,7 @@ run-custom-test-parallel : prolog pseudo
 	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=$(testdir) ; fi
 
 
-compare : compare-cp compare-pw
+compare : compare-cp compare-pw compare-epw
 
 # All comparison outputs are, so far, generated only in SERIAL
 create-reference : pseudo prolog
@@ -79,6 +79,8 @@ compare-cp : prolog
 compare-pw : prolog
 	${TESTCODE_DIR}/bin/testcode.py --category=pw_all  --verbose compare 2>&1 | tee out.PW.`date +%Y%m%d_%H%M%S`
 
+compare-epw : prolog
+	${TESTCODE_DIR}/bin/testcode.py --category=epw_all  --verbose compare 2>&1 | tee out.EPW.`date +%Y%m%d_%H%M%S`
 
 clean:
 	@for x in `find pw_* -name "test*"`; do rm -rf $$x; done

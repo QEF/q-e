@@ -12,21 +12,34 @@
 #              Samuel Ponce
   
 fname=$1
+args=$(echo $fname | awk -F= '{print $NF}')
 
+#echo $fname > /dev/stderr
+#echo $args > /dev/stderr
+
+#if [[ "$args" == "1" ]]
+#then
 # SCF
 e1=`grep ! $fname | tail -1 | awk '{printf "%12.6f\n", $5}'`
 n1=`grep 'convergence has' $fname | tail -1 | awk '{print $6}'`
 f1=`grep "Total force" $fname | head -1 | awk '{printf "%8.4f\n", $4}'`
 p1=`grep "P= " $fname | tail -1 | awk '{print $6}'`
+#fi
 
+
+#if [[ "$args" == "2" ]]
+#then
 # NSCF
 ef1=`grep Fermi $fname | awk '{print $5}'`
 eh1=`grep "highest occupied" $fname | awk '{print $7}'`
 el1=`grep "highest occupied" $fname | awk '{print $8}'`
 tf1=`grep " P = " $fname | head -1 | awk '{printf "%7.5f", $3}'`
+#fi
 
+#if [[ "$args" == "3" ]]
+#then
 # EPW
-q1=`grep "   q(" $fname | awk '{print $6 $7 $8}'`
+q1=`grep "   q(" $fname | awk '{print $6; print $7; print $8}'`
 dos1=`grep "DOS =" $fname | awk '{print $3}'`
 e2=`grep " E(" $fname | awk '{print $4}'`
 rsig=`grep "Re\[Sigma\]=" $fname | awk '{print $7}'` 
@@ -46,6 +59,7 @@ lam_kmax=`grep "lambda_k_max =" $fname | awk '{print $6}'`
 elph=`grep "Electron-phonon coupling strength =" $fname | awk '{print $5}'`
 allDyn=`grep "Estimated Allen-Dynes Tc =" $fname | awk '{print $5}'`
 bcsgap=`grep "Estimated BCS superconducting gap =" $fname | awk '{print $6}'`
+#fi
 
 if test "$efm" != ""; then
         echo efm
