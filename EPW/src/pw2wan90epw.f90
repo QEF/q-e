@@ -357,8 +357,10 @@ SUBROUTINE setup_nnkp (  )
   ENDIF
   CALL mp_bcast(n_proj,ionode_id, world_comm)
   ! 
+#endif
   ALLOCATE( gf(npwx,n_proj), csph(16,n_proj) )
   IF(noncolin) ALLOCATE( spin_eig(n_proj),spin_qaxis(3,n_proj) )
+#ifdef __PARA
   ! 
   IF (ionode) THEN   ! read from ionode only
 #endif
