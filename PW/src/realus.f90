@@ -29,8 +29,8 @@ MODULE realus
   REAL(DP), ALLOCATABLE :: spher_beta(:,:,:)
   !General
   LOGICAL               :: real_space
-  LOGICAL               :: do_not_use_spline_inside_rinner = .true.
   ! if true perform calculations in real spave
+  LOGICAL               :: do_not_use_spline_inside_rinner = .true.
   INTEGER :: real_space_debug = 0 ! FIXME: must disappear
   INTEGER               :: initialisation_level
   ! init_realspace_vars sets this to 3; qpointlist adds 5; betapointlist adds 7
@@ -639,7 +639,7 @@ MODULE realus
                !
                DO ir = 1, tabp(ia)%maxbox
                   !
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! IF .not. do_not_use_spline_inside_rinner IT DIFFERS ! it changes the ther force on Oxygen by 0.004
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! IF .not. do_not_use_spline_inside_rinner IT DIFFERS ! it changes the force on Oxygen by 0.004
                   IF ( tabp(ia)%dist(ir) < upf(nt)%rinner(l+1) .and. do_not_use_spline_inside_rinner ) THEN
                      !
                      ! ... if in the inner radius just compute the
