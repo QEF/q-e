@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2015 Quantum ESPRESSO group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -17,10 +17,12 @@ SUBROUTINE lr_read_d0psi()
   !
   USE klist,                ONLY : nks,degauss
   USE io_files,             ONLY : prefix, diropn, tmp_dir, wfc_dir
-  USE lr_variables,         ONLY : d0psi, d0psi2, n_ipol, LR_polarization, lr_verbosity, &
-                                 & nwordd0psi, iund0psi, eels
+  USE lr_variables,         ONLY : d0psi, d0psi2, n_ipol, LR_polarization, &
+                                   & lr_verbosity, nwordd0psi, iund0psi, eels
   USE wvfct,                ONLY : nbnd, npwx, et
   USE io_global,            ONLY : stdout
+  USE qpoint,               ONLY : nksq
+  USE noncollin_module,     ONLY : npol
   !
   IMPLICIT NONE
   !
@@ -34,6 +36,8 @@ SUBROUTINE lr_read_d0psi()
   If (lr_verbosity > 5) THEN
     WRITE(stdout,'("<lr_read_d0psi>")')
   endif
+  !
+  nwordd0psi = 2 * nbnd * npwx * npol * nksq
   !
   ! This is a parallel read, done in wfc_dir
   !
@@ -100,6 +104,8 @@ SUBROUTINE lr_read_d0psi()
   ! End of file i/o
   !
   tmp_dir = tmp_dir_saved
+  !
+  RETURN
   !
 END SUBROUTINE lr_read_d0psi
 !-----------------------------------------------------------------------

@@ -23,6 +23,7 @@ Fixed in 6.0 version:
     (courtesy Marton Voros) (commit 12426)
   * PHonon: support for Goedecker-Hutter-Teter pseudopotentials was missing
     (courtesy of Sebastiano Caravati)
+  * turboTDDFPT: Problem if empty states were also computed. 
 
 Incompatible changes in 6.0 version:
 

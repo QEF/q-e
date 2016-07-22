@@ -27,9 +27,10 @@ SUBROUTINE lr_write_restart()
   USE fft_base,             ONLY : dfftp
   USE io_global,            ONLY : ionode, stdout
   USE klist,                ONLY : nks, nelec
-  USE noncollin_module,     ONLY : nspin_mag, noncolin
-  use lsda_mod,             only : nspin
+  USE noncollin_module,     ONLY : nspin_mag, noncolin, npol
+  use lsda_mod,             ONLY : nspin
   USE cell_base,            ONLY : alat, omega
+  USE qpoint,               ONLY : nksq
   !
   IMPLICIT NONE
   CHARACTER(len=6), EXTERNAL :: int_to_char
@@ -165,7 +166,7 @@ SUBROUTINE lr_write_restart()
     !
     ! Writing wavefuncion files for restart
     !
-    !nwordrestart = 2 * nbnd * npwx * nks
+    nwordrestart = 2 * nbnd * npwx * npol * nksq
     !
     CALL diropn ( iunrestart, 'restart_lanczos.'//trim(int_to_char(LR_polarization)), nwordrestart, exst)
     !

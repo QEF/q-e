@@ -66,8 +66,6 @@ SUBROUTINE lr_read_wf()
      CALL normal_read()
   ENDIF
   !
-  !WRITE(stdout,'(5x,"Finished reading wfc.")')
-  !
   IF (.NOT.eels) evc(:,:) = evc0(:,:,1)
   !
   IF ( dft_is_hybrid() ) THEN
@@ -116,8 +114,10 @@ SUBROUTINE normal_read()
   WRITE( stdout, '(/5x,"Normal read")' )
   !
   use_tg = dffts%have_task_groups
-  size_evc = nksq * nbnd * npwx * npol
   incr = 2
+  !
+  size_evc = nbnd * npwx * npol * nksq
+  nwordwfc = nbnd * npwx * npol
   !
   ! Read in the ground state wavefunctions.
   ! This is a parallel read, done in wfc_dir.
@@ -334,7 +334,8 @@ SUBROUTINE virt_read()
      !
   ENDIF
   !
-  size_evc = nksq * nbnd_occ(1) * npwx * npol
+  size_evc = nbnd_occ(1) * npwx * npol * nksq
+  nwordwfc = nbnd * npwx * npol                 ! nbnd > nbnd_occ(1)
   !
   ! Read in the ground state wavefunctions
   ! This is a parallel read, done in wfc_dir
@@ -434,6 +435,8 @@ SUBROUTINE virt_read()
   ! X. Ge: Very important, otherwise there will be bugs.
   !
   nbnd = nbnd_occ(1)
+  !
+  nwordwfc = nbnd * npwx * npol ! needed for EXX
   !
   CALL deallocate_bec_type(becp)
   CALL allocate_bec_type ( nkb, nbnd, becp )

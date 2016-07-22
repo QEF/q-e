@@ -373,8 +373,10 @@ lr_psym_eels.o : ../../Modules/fft_base.o
 lr_psym_eels.o : ../../Modules/kind.o
 lr_psym_eels.o : ../../Modules/mp_global.o
 lr_psym_eels.o : ../../Modules/noncol.o
+lr_read_d0psi.o : ../../LR_Modules/lrcom.o
 lr_read_d0psi.o : ../../Modules/io_files.o
 lr_read_d0psi.o : ../../Modules/io_global.o
+lr_read_d0psi.o : ../../Modules/noncol.o
 lr_read_d0psi.o : ../../PW/src/pwcom.o
 lr_read_d0psi.o : lr_variables.o
 lr_read_wf.o : ../../FFTXlib/fft_interfaces.o
@@ -432,6 +434,7 @@ lr_readin.o : ../../iotk/src/iotk_module.o
 lr_readin.o : lr_charg_resp.o
 lr_readin.o : lr_dav_variables.o
 lr_readin.o : lr_variables.o
+lr_restart.o : ../../LR_Modules/lrcom.o
 lr_restart.o : ../../Modules/becmod.o
 lr_restart.o : ../../Modules/control_flags.o
 lr_restart.o : ../../Modules/fft_base.o
@@ -489,6 +492,7 @@ lr_solve_e.o : ../../Modules/ions_base.o
 lr_solve_e.o : ../../Modules/kind.o
 lr_solve_e.o : ../../Modules/mp.o
 lr_solve_e.o : ../../Modules/mp_global.o
+lr_solve_e.o : ../../Modules/noncol.o
 lr_solve_e.o : ../../Modules/recvec.o
 lr_solve_e.o : ../../Modules/uspp.o
 lr_solve_e.o : ../../Modules/wavefunctions.o
@@ -533,6 +537,7 @@ lr_us.o : ../../PW/src/realus.o
 lr_us.o : lr_variables.o
 lr_variables.o : ../../Modules/control_flags.o
 lr_variables.o : ../../Modules/kind.o
+lr_write_restart.o : ../../LR_Modules/lrcom.o
 lr_write_restart.o : ../../Modules/cell_base.o
 lr_write_restart.o : ../../Modules/fft_base.o
 lr_write_restart.o : ../../Modules/io_files.o

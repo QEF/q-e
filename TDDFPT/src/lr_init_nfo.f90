@@ -21,8 +21,8 @@ SUBROUTINE lr_init_nfo()
   USE klist,                ONLY : nks,xk,ngk,igk_k
   USE wvfct,                ONLY : nbnd
   USE realus,               ONLY : real_space
-  USE lr_variables,         ONLY : lr_verbosity, eels, nwordd0psi, &
-                                   nwordrestart, restart, size_evc, tmp_dir_lr
+  USE lr_variables,         ONLY : lr_verbosity, eels, restart, &
+                                   size_evc, tmp_dir_lr
   USE io_global,            ONLY : stdout
   USE constants,            ONLY : tpi, eps8
   USE noncollin_module,     ONLY : npol
@@ -91,15 +91,12 @@ SUBROUTINE lr_init_nfo()
      !
   ENDIF
   !
-  ! The length of the arrays d0psi, evc1 etc.
-  !
-  nwordd0psi   = 2 * nbnd * npwx * npol * nksq
-  nwordrestart = 2 * nbnd * npwx * npol * nksq
-  nwordwfc     =     nbnd * npwx * npol 
-  !
   ! 2) EELS-specific operations
   !
   IF (eels) THEN
+     !
+     size_evc = nbnd * npwx * npol * nksq
+     nwordwfc = nbnd * npwx * npol
      !
      ! Open file to read the wavefunctions at k and k+q points 
      ! after the nscf calculation.
@@ -111,8 +108,6 @@ SUBROUTINE lr_init_nfo()
      IF (.NOT.exst .AND. .NOT.exst_mem) THEN
         CALL errore ('lr_init_nfo', 'file '//trim(prefix)//'.wfc not found', 1)
      ENDIF
-     !
-     size_evc = nksq * nbnd * npwx * npol 
      !
      ! If restart=.true. recalculate the small group of q.
      !

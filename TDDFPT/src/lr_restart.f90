@@ -25,14 +25,15 @@ SUBROUTINE lr_restart(iter_restart,rflag)
                                    lr_verbosity, charge_response, LR_polarization, n_ipol, &
                                    eels, sum_rule
   USE charg_resp,           ONLY : resonance_condition, rho_1_tot,rho_1_tot_im
-  USE wvfct,                ONLY : nbnd
+  USE wvfct,                ONLY : nbnd, npwx
   USE becmod,               ONLY : bec_type, becp, calbec
   USE uspp,                 ONLY : vkb 
   USE io_global,            ONLY : ionode
   USE mp,                   ONLY : mp_bcast
   USE mp_world,             ONLY : world_comm
   USE fft_base,             ONLY : dfftp
-  USE noncollin_module,     ONLY : nspin_mag
+  USE noncollin_module,     ONLY : nspin_mag, npol
+  USE qpoint,               ONLY : nksq
 
   IMPLICIT NONE
   !
@@ -179,6 +180,8 @@ SUBROUTINE lr_restart(iter_restart,rflag)
   ! Parallel reading
   ! Note: Restart files are always in outdir
   ! Reading Lanczos vectors
+  !
+  nwordrestart = 2 * nbnd * npwx * npol * nksq
   !
   CALL diropn ( iunrestart, 'restart_lanczos.'//trim(int_to_char(LR_polarization)), nwordrestart, exst)
   !

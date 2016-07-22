@@ -38,6 +38,7 @@ SUBROUTINE lr_solve_e
   USE realus,               ONLY : real_space, real_space_debug 
   USE control_lr,           ONLY : alpha_pv
   USE qpoint,               ONLY : nksq
+  USE noncollin_module,     ONLY : npol
   !
   IMPLICIT NONE
   INTEGER :: ibnd, ik, is, ip
@@ -128,6 +129,8 @@ SUBROUTINE lr_solve_e
   !
   ! Writing of d0psi to the file. 
   ! This is a parallel writing, done in wfc_dir 
+  !
+  nwordd0psi = 2 * nbnd * npwx * npol * nksq
   !
   tmp_dir_saved = tmp_dir
   !
