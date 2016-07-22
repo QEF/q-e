@@ -28,8 +28,9 @@ default :
 	@echo 'ENVIRONMENT and Makefile files'
 
 prolog :
-	@if [ ! -f userconfig ]; then \
+#	@if [ ! -f userconfig ]; then \
 	sed "s|XXXXXX|$(ESPRESSO_ROOT)|g" < userconfig.tmp > userconfig; fi
+	@sed "s|XXXXXX|$(ESPRESSO_ROOT)|g" < userconfig.tmp > userconfig
 
 pseudo :
 	@./check_pseudo.sh pw_

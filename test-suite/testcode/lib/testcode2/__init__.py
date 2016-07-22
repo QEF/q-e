@@ -554,20 +554,39 @@ Assume function is executed in self.path.'''
                     if verbose > 2:
                         print('Analysing output using %s in %s.' %
                                 (cmd, self.path))
-                    extract_popen = subprocess.Popen(cmd, shell=True,
-                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                    extract_popen.wait()
+                    # Samuel Ponce: Popen.wait() creates deadlock if the data is too large
+                    # See documented issue for example in: 
+                    # https://docs.python.org/2/library/subprocess.html#subprocess.Popen.returncode
+                    #
+                    # Previous code that create deadlock:
+                    #extract_popen = subprocess.Popen(cmd, shell=True,
+                    #        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                    #extract_popen.wait()
+                    #
+                    # New code (this might not be the best but work for me):
+                    extract_popen = subprocess.Popen(cmd, bufsize=1, shell=True,
+                         stdin=open(os.devnull), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+                    lines = []
+                    for line in iter(extract_popen.stdout.readline, ''):
+                      #print line,
+                      lines.append(line)                    
+
                 except OSError:
                     # slightly odd syntax in order to be compatible with python
                     # 2.5 and python 2.6/3
                     err = 'Analysing output failed: %s' % (sys.exc_info()[1],)
                     raise exceptions.AnalysisError(err)
                 # Convert data string from extract command to dictionary format.
-                if extract_popen.returncode != 0:
-                    err = extract_popen.communicate()[1].decode('utf-8')
-                    err = 'Analysing output failed: %s' % (err)
-                    raise exceptions.AnalysisError(err)
-                data_string = extract_popen.communicate()[0].decode('utf-8')
+                
+                # SP: Because of the above change, the test below cannot be done:
+                #if extract_popen.returncode != 0:
+                #    err = extract_popen.communicate()[1].decode('utf-8')
+                #    err = 'Analysing output failed: %s' % (err)
+                #    raise exceptions.AnalysisError(err)
+                #data_string = extract_popen.communicate()[0].decode('utf-8')
+                data_string = ''.join(lines)                 
+
                 if self.test_program.extract_fmt == 'table':
                     outputs.append(util.dict_table_string(data_string))
                 elif self.test_program.extract_fmt == 'yaml':

@@ -25,20 +25,20 @@ echo $0" "$@
 if [[ "$1" == "1" ]]
 then
   echo "Running PW ..."
-  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/pw.x ${PARA_SUFFIX} < $2 > $3 2> $4
   echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/pw.x ${PARA_SUFFIX} < $2 > $3 2> $4"
+  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/pw.x ${PARA_SUFFIX} < $2 > $3 2> $4
 elif [[ "$1" == "2" ]]
 then
   echo "Running PH ..."
-  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/ph.x < $2 > $3 2> $4
   echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/ph.x < $2 > $3 2> $4"  
+  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/ph.x < $2 > $3 2> $4
   echo "Gather results in save" 
   python pp.py < pp.in
 elif [[ "$1" == "3" ]]
 then
   echo "Running EPW ..."
-  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/epw.x ${PARA_SUFFIX} < $2 > $3 2> $4
   echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/epw.x ${PARA_SUFFIX} < $2 > $3 2> $4"  
+  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/epw.x ${PARA_SUFFIX} < $2 > $3 2> $4
 fi
 
 #rm -f input_tmp.in

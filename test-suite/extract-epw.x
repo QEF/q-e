@@ -10,34 +10,33 @@
 #
 # Maintainers: Filippo Spiga (filippo.spiga@quantum-espresso.org)
 #              Samuel Ponce
+#
+# SP: This can lead to issue if you reach the OS pipe buffer 
+#     You can increase the buffer in /proc/sys/fs/pipe-max-size  
+
   
 fname=$1
 args=$(echo $fname | awk -F= '{print $NF}')
 
-#echo $fname > /dev/stderr
-#echo $args > /dev/stderr
+##echo $fname > /home/sponce/program/espresso/test-suite/tmp.txt 
+###    echo $args >> /home/sponce/program/espresso/test-suite/tmp.txt
 
-#if [[ "$args" == "1" ]]
-#then
+### if [[ "$args" == "1" ]]
+##  then
 # SCF
 e1=`grep ! $fname | tail -1 | awk '{printf "%12.6f\n", $5}'`
 n1=`grep 'convergence has' $fname | tail -1 | awk '{print $6}'`
 f1=`grep "Total force" $fname | head -1 | awk '{printf "%8.4f\n", $4}'`
 p1=`grep "P= " $fname | tail -1 | awk '{print $6}'`
-#fi
+### fi
 
 
-#if [[ "$args" == "2" ]]
-#then
 # NSCF
 ef1=`grep "the Fermi energy is" $fname | awk '{print $5}'`
 eh1=`grep "highest occupied" $fname | awk '{print $7}'`
 el1=`grep "highest occupied" $fname | awk '{print $8}'`
 tf1=`grep " P = " $fname | head -1 | awk '{printf "%7.5f", $3}'`
-#fi
 
-#if [[ "$args" == "3" ]]
-#then
 # EPW
 q1=`grep "   q(" $fname | awk '{print $6; print $7; print $8}'`
 dos1=`grep "DOS =" $fname | awk '{print $3}'`
@@ -49,7 +48,7 @@ lam=`grep "lam= " $fname | awk '{print $15}'`
 lambda=`grep "  lambda(" $fname | awk '{print $4}'`
 gamma=`grep " gamma=" $fname | awk '{print $6}'`
 omega=`grep " omega=" $fname | awk '{print $9}'`
-lam_tot=`grep " lambda :" $fname | awk '{print $3}'`
+lamtot=`grep " lambda :" $fname | awk '{print $3}'`
 lam_tr=`grep " lambda_tr :" $fname | awk '{print $3}'`
 logavg=`grep " logavg =" $fname | awk '{print $3}'`
 l_a2F=`grep "l_a2F =" $fname | awk '{print $6}'`
@@ -59,7 +58,6 @@ lam_kmax=`grep "lambda_k_max =" $fname | awk '{print $6}'`
 elph=`grep "Electron-phonon coupling strength =" $fname | awk '{print $5}'`
 allDyn=`grep "Estimated Allen-Dynes Tc =" $fname | awk '{print $5}'`
 bcsgap=`grep "Estimated BCS superconducting gap =" $fname | awk '{print $6}'`
-#fi
 
 if test "$efm" != ""; then
         echo efm
@@ -75,6 +73,7 @@ if test "$lam_kmax" != ""; then
         echo lam_kmax
         echo $lam_kmax
 fi
+
 
 if test "$elph" != ""; then
         echo elph
@@ -141,9 +140,10 @@ if test "$omega" != ""; then
         for x in $omega; do echo $x; done
 fi
 
-if test "$lam_tot" != ""; then
-        echo lam_tot
-        echo $lam_tot
+
+if test "$lamtot" != ""; then
+        echo lamtot
+        echo $lamtot
 fi
 
 if test "$lam_tr" != ""; then
@@ -176,6 +176,7 @@ if test "$f1" != ""; then
 	echo $f1
 fi
 
+echo 'We are 5' >> /home/sponce/program/espresso/test-suite/tmp.txt
 if test "$p1" != ""; then
 	echo p1
 	echo $p1
@@ -197,6 +198,7 @@ if test "$el1" != ""; then
         for x in $el1; do echo $x; done
 fi
 
+echo 'We are 6' >> /home/sponce/program/espresso/test-suite/tmp.txt
 if test "$tf1" != ""; then
         echo tf1
         for x in $tf1; do echo $x; done
