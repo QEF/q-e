@@ -170,16 +170,16 @@
              lambda_tr_tot = lambda_tr_tot + wqf(iq) * lambda_v_all(imode,iq,isig)
        ENDDO
     ENDDO
-    WRITE (6,'(5x,a,f12.7)') "lambda : ", lambda_tot
-    WRITE (6,'(5x,a,f12.7)') "lambda_tr : ", lambda_tr_tot
-    WRITE(6,*)
+    WRITE (stdout,'(5x,a,f12.7)') "lambda : ", lambda_tot
+    WRITE (stdout,'(5x,a,f12.7)') "lambda_tr : ", lambda_tr_tot
+    WRITE (stdout,'(a)') " "
     !
     !
     ! Allen-Dynes estimate of Tc for ismear = 1
     !
-    WRITE(6,'(5x,a,f12.7,a)') "Estimated Allen-Dynes Tc"
-    WRITE(6,*)
-    WRITE(6,'(5x,a,f12.7,a,f12.7)') "logavg = ", logavg(1), " l_a2F = ", l_a2F(1)
+    WRITE(stdout,'(5x,a,f12.7,a)') "Estimated Allen-Dynes Tc"
+    WRITE (stdout,'(a)') " "
+    WRITE(stdout,'(5x,a,f12.7,a,f12.7)') "logavg = ", logavg(1), " l_a2F = ", l_a2F(1)
     DO i = 1, 6
        !
        mu = 0.1d0 + 0.02d0 * dble(i-1)
@@ -188,7 +188,10 @@
        ! tc in K
        !
        tc = tc * ryd2ev / kelvin2eV
-       WRITE(6,'(5x,a,f6.2,a,f22.12,a)') "mu = ", mu, " Tc = ", tc, " K"
+       !SP: IF Tc is too big, it is not physical
+       IF (tc < 1000.0 ) THEN
+         WRITE(stdout,'(5x,a,f6.2,a,f22.12,a)') "mu = ", mu, " Tc = ", tc, " K"
+       ENDIF 
        !
     ENDDO
     !

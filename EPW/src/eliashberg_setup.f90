@@ -422,7 +422,9 @@
 #ifdef __PARA 
   ! collect contributions from all pools 
   CALL mp_sum( lambda_k, inter_pool_comm )
-  CALL mp_sum( lambda_pairs, inter_pool_comm )
+  IF ( iverbosity .eq. 2 ) THEN  
+    CALL mp_sum( lambda_pairs, inter_pool_comm )
+  ENDIF
   CALL mp_sum( lambda_k_bin, inter_pool_comm )
   CALL mp_barrier(inter_pool_comm)
 #endif      

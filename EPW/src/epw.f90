@@ -159,7 +159,7 @@ write(stdout,'(a)') "                                                           
   !
   ! ... Print statistics and exit gracefully    
   !
-  CALL stop_epw( .TRUE. )
+  CALL stop_epw
   !
   STOP
   !
