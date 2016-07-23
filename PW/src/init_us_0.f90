@@ -21,6 +21,7 @@ subroutine init_us_0
   !   the filter function is     filter(x,a,nn) = exp(-axx) * \sum_{k=0,nn} (axx)**k/k!
   !
   USE kinds,        ONLY : DP
+  USE gvect,        ONLY : ecutrho
   USE io_global,    ONLY : stdout
   USE constants,    ONLY : fpi, sqrt2
   USE atom,         ONLY : rgrid
@@ -98,7 +99,8 @@ subroutine init_us_0
   !   Q functions.
   !   
   call divide (intra_bgrp_comm, nqxq, startq, lastq)
-  qmax = dq * nqxq * tpiba
+  qmax = sqrt(ecutrho)
+  write (6, *) ' qmax : sqrt(ecutrho) =',sqrt(ecutrho), dq*nqxq*tpiba 
   write (6,'(a,f6.2,a,i4,a,f16.10)') 'FILTER : a=',a,', nn=',nn,', filter(1.d0)=', filter(1.d0,a,nn)
   !
   do nt = 1, ntyp

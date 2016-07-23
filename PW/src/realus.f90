@@ -30,7 +30,7 @@ MODULE realus
   !General
   LOGICAL               :: real_space
   ! if true perform calculations in real spave
-  LOGICAL               :: do_not_use_spline_inside_rinner = .true.
+  LOGICAL               :: do_not_use_spline_inside_rinner = .false.
   INTEGER :: real_space_debug = 0 ! FIXME: must disappear
   INTEGER               :: initialisation_level
   ! init_realspace_vars sets this to 3; qpointlist adds 5; betapointlist adds 7
