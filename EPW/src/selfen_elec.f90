@@ -9,25 +9,25 @@
   !-----------------------------------------------------------------------
   SUBROUTINE selfen_elec_q ( iq )
   !-----------------------------------------------------------------------
-  !
-  !  Compute the imaginary part of the electron self energy due to electron-
-  !  phonon interaction in the Migdal approximation. This corresponds to 
-  !  the electron linewidth (half width). The phonon frequency is taken into
-  !  account in the energy selection rule.
-  !
-  !  Use matrix elements, electronic eigenvalues and phonon frequencies
-  !  from ep-wannier interpolation
-  !
-  !  02/06/2013 Modified by Roxana Margine 
-  !
-  !  This subroutine computes the contribution from phonon iq to all k-points
-  !  The outer loop in ephwann_shuffle.f90 will loop over all iq points
-  !  The contribution from each iq is summed at the end of this subroutine for iq=nqtotf 
-  !  to recover the per-ik electron self energy
-  !
-  !  RM 24/02/2014
-  !  redefined the size of sigmar_all, sigmai_all, and zi_all within the fermi windwow
-  !
+  !! 
+  !!  Compute the imaginary part of the electron self energy due to electron-
+  !!  phonon interaction in the Migdal approximation. This corresponds to 
+  !!  the electron linewidth (half width). The phonon frequency is taken into
+  !!  account in the energy selection rule.
+  !!
+  !!  Use matrix elements, electronic eigenvalues and phonon frequencies
+  !!  from ep-wannier interpolation
+  !!
+  !!  02/06/2013 Modified by Roxana Margine 
+  !!
+  !!  This subroutine computes the contribution from phonon iq to all k-points
+  !!  The outer loop in ephwann_shuffle.f90 will loop over all iq points
+  !!  The contribution from each iq is summed at the end of this subroutine for iq=nqtotf 
+  !!  to recover the per-ik electron self energy
+  !!
+  !!  RM 24/02/2014
+  !!  redefined the size of sigmar_all, sigmai_all, and zi_all within the fermi windwow
+  !!
   !-----------------------------------------------------------------------
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
@@ -42,19 +42,36 @@
                             epf17, wkf, nkf, nqtotf, wf, wqf, xkf, nkqtotf, &
                             sigmar_all, sigmai_all, sigmai_mode, zi_all, efnew, nqf
   USE control_flags, ONLY : iverbosity
-  USE constants_epw, ONLY : ryd2mev, one, ryd2ev, two, zero, pi, ci
+  USE constants_epw, ONLY : ryd2mev, one, ryd2ev, two, zero, pi, ci, eps6
 #ifdef __PARA
   USE mp,            ONLY : mp_barrier, mp_sum
   USE mp_global,     ONLY : me_pool, inter_pool_comm, my_pool_id
 #endif
   implicit none
   !
+  INTEGER :: n
+  !! Integer for the degenerate average over eigenstates
   integer :: ik, ikk, ikq, ibnd, jbnd, imode, nrec, iq, fermicount
-  complex(kind=DP) epf (ibndmax-ibndmin+1, ibndmax-ibndmin+1)
+  REAL(kind=DP) :: tmp
+  !! Temporary variable to store real part of Sigma for the degenerate average
+  REAL(kind=DP) :: tmp2
+  !! Temporary variable to store imag part of Sigma for the degenerate average
+  REAL(kind=DP) :: tmp3
+  !! Temporary variable to store Z for the degenerate average
+  REAL(kind=DP) :: ekk2
+  !! Temporary variable to the eigenenergies for the degenerate average
+  REAL(kind=DP) :: sigmar_tmp(ibndmax-ibndmin+1)
+  !! Temporary array to store the real-part of Sigma 
+  REAL(kind=DP) :: sigmai_tmp(ibndmax-ibndmin+1)
+  !! Temporary array to store the imag-part of Sigma 
+  REAL(kind=DP) :: zi_tmp(ibndmax-ibndmin+1)
+  !! Temporary array to store the Z
+
   REAL(kind=DP) :: g2, ekk, ekq, wq, ef0, wgq, wgkq, weight, dosef, eptemp0,&
                    w0g1, w0g2, inv_wq, inv_eptemp0, g2_tmp,&
                    inv_degaussw
   REAL(kind=DP), external :: efermig, dos_ef, wgauss, w0gauss
+  complex(kind=DP) epf (ibndmax-ibndmin+1, ibndmax-ibndmin+1)
   !
   ! variables for collecting data from all pools in parallel case 
   !
@@ -232,7 +249,7 @@
 !@                 if ( abs(ekq-ekk) .gt. ecutse ) weight = 0.d0
                  !
                  zi_all(ibnd,ik+lower_bnd-1) = zi_all(ibnd,ik+lower_bnd-1) + g2 * weight
-                 !
+                 ! 
               ENDDO !jbnd
               !
            ENDDO !ibnd
@@ -272,6 +289,40 @@
      !
 #endif
      !
+     ! Average over degenerate eigenstates:
+     WRITE(stdout,'(5x,"Average over degenerate eigenstates is performed")')
+     ! 
+     DO ik = 1, nksqtotf
+       ikk = 2 * ik - 1
+       ikq = ikk + 1
+       ! 
+       DO ibnd = 1, ibndmax-ibndmin+1
+         ekk = etf_all (ibndmin-1+ibnd, ikk)
+         n = 0
+         tmp = 0.0_DP
+         tmp2 = 0.0_DP
+         tmp3 = 0.0_DP
+         DO jbnd = 1, ibndmax-ibndmin+1
+           ekk2 = etf_all (ibndmin-1+jbnd, ikk) 
+           IF ( ABS(ekk2-ekk) < eps6 ) THEN
+             n = n + 1
+             tmp =  tmp + sigmar_all (jbnd,ik)
+             tmp2 =  tmp2 + sigmai_all (jbnd,ik)
+             tmp3 =  tmp3 + zi_all (jbnd,ik)
+           ENDIF
+           ! 
+         ENDDO ! jbnd
+         sigmar_tmp(ibnd) = tmp / float(n)
+         sigmai_tmp(ibnd) = tmp2 / float(n)
+         zi_tmp(ibnd) = tmp3 / float(n)
+         !
+       ENDDO ! ibnd
+       sigmar_all (:,ik) = sigmar_tmp(:) 
+       sigmai_all (:,ik) = sigmai_tmp(:)
+       zi_all (:,ik)  = zi_tmp(:)
+       ! 
+     ENDDO ! nksqtotf
+     !  
      ! Output electron SE here after looping over all q-points (with their contributions 
      ! summed in sigmar_all, etc.)
      !
@@ -288,13 +339,8 @@
      ! 
      DO ik = 1, nksqtotf
         !
-        IF (lgamma) THEN
-           ikk = ik
-           ikq = ik
-        ELSE
-           ikk = 2 * ik - 1
-           ikq = ikk + 1
-        ENDIF
+        ikk = 2 * ik - 1
+        ikq = ikk + 1
         !
         WRITE(stdout,'(/5x,"ik = ",i7," coord.: ", 3f12.7)') ik, xkf_all(:,ikk)
         WRITE(stdout,'(5x,a)') repeat('-',67)
@@ -335,13 +381,8 @@
         !
         DO ik = 1, nksqtotf
            !
-           IF (lgamma) THEN
-              ikk = ik
-              ikq = ik
-           ELSE
-              ikk = 2 * ik - 1
-              ikq = ikk + 1
-           ENDIF
+           ikk = 2 * ik - 1
+           ikq = ikk + 1
            !
            ! note that ekk does not depend on q 
            ekk = etf_all (ibndmin-1+ibnd, ikk) - ef0
@@ -404,7 +445,7 @@
   USE elph2,         ONLY : etf, ibndmin, ibndmax, nkqf, etf_k, &
                             epf17, wkf, nkf, nqtotf, wf, wqf, xkf, nkqtotf, &
                             sigmar_all, sigmai_all, sigmai_mode, zi_all, efnew, nqf
-  USE constants_epw, ONLY : ryd2mev, one, ryd2ev, two, zero, pi, ci
+  USE constants_epw, ONLY : ryd2mev, one, ryd2ev, two, zero, pi, ci, eps6
   USE control_flags, ONLY : iverbosity
 #ifdef __PARA
   USE mp,            ONLY : mp_barrier, mp_sum, mp_bcast
@@ -414,7 +455,23 @@
 #endif
   implicit none
   !
+  INTEGER :: n
+  !! Integer for the degenerate average over eigenstates
   integer :: ik, ikk, ikq, ibnd, jbnd, imode, nrec, iq, fermicount
+  REAL(kind=DP) :: tmp
+  !! Temporary variable to store real part of Sigma for the degenerate average
+  REAL(kind=DP) :: tmp2
+  !! Temporary variable to store imag part of Sigma for the degenerate average
+  REAL(kind=DP) :: tmp3
+  !! Temporary variable to store Z for the degenerate average
+  REAL(kind=DP) :: ekk2
+  !! Temporary variable to the eigenenergies for the degenerate average
+  REAL(kind=DP) :: sigmar_tmp(ibndmax-ibndmin+1)
+  !! Temporary array to store the real-part of Sigma 
+  REAL(kind=DP) :: sigmai_tmp(ibndmax-ibndmin+1)
+  !! Temporary array to store the imag-part of Sigma 
+  REAL(kind=DP) :: zi_tmp(ibndmax-ibndmin+1)
+  !! Temporary array to store the Z
   complex(kind=DP) epf (ibndmax-ibndmin+1, ibndmax-ibndmin+1)
   REAL(kind=DP) :: g2, ekk, ekq, wq, ef0, wgq, wgkq, weight, dosef, eptemp0,&
                    w0g1, w0g2, inv_wq, inv_eptemp0, g2_tmp,&
@@ -638,13 +695,38 @@
   !
 #endif  
   !
-  IF (lgamma) THEN
-     ikk = ik
-     ikq = ik
-  ELSE
-     ikk = 2 * ik - 1
-     ikq = ikk + 1
-  ENDIF  
+  ! Average over degenerate eigenstates:
+  WRITE(stdout,'(5x,"Average over degenerate eigenstates is performed")')
+  ! 
+  ikk = 2 * ik - 1
+  ikq = ikk + 1
+  ! 
+  DO ibnd = 1, ibndmax-ibndmin+1
+    ekk = etf_k (ibndmin-1+ibnd, ikk)
+    n = 0
+    tmp = 0.0_DP
+    tmp2 = 0.0_DP
+    tmp3 = 0.0_DP
+    DO jbnd = 1, ibndmax-ibndmin+1
+      ekk2 = etf_k (ibndmin-1+jbnd, ikk)
+      IF ( ABS(ekk2-ekk) < eps6 ) THEN
+        n = n + 1
+        tmp =  tmp + sigmar_all (jbnd,ik)
+        tmp2 =  tmp2 + sigmai_all (jbnd,ik)
+        tmp3 =  tmp3 + zi_all (jbnd,ik)
+      ENDIF
+      ! 
+    ENDDO ! jbnd
+    sigmar_tmp(ibnd) = tmp / float(n)
+    sigmai_tmp(ibnd) = tmp2 / float(n)
+    zi_tmp(ibnd) = tmp3 / float(n)
+    !
+  ENDDO ! ibnd
+  sigmar_all (:,ik) = sigmar_tmp(:)
+  sigmai_all (:,ik) = sigmai_tmp(:)
+  zi_all (:,ik)  = zi_tmp(:)
+  ! 
+  ! ---
   !
   WRITE(stdout,'(/5x,"ik = ",i7," coord.: ", 3f12.7)') ik, xkf(:,ikk)
   WRITE(stdout,'(5x,a)') repeat('-',67)
