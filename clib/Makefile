@@ -14,6 +14,7 @@ md5.o \
 md5_from_file.o \
 memstat.o \
 ptrace.o \
+qmmm_aux.o \
 qsort.o
 
 all : clib.a

@@ -7,4 +7,5 @@ md5_from_file.o : ../include/c_defs.h
 md5_from_file.o : 
 memstat.o : ../include/c_defs.h
 ptrace.o : ../include/c_defs.h
+qmmm_aux.o : ../include/c_defs.h
 stack.o : ../include/c_defs.h
