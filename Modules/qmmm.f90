@@ -43,6 +43,8 @@ MODULE qmmm
   INTEGER, PARAMETER :: QMMM_TAG_CELL=5
   INTEGER, PARAMETER :: QMMM_TAG_RADII=6
   INTEGER, PARAMETER :: QMMM_TAG_CHARGE=7
+  INTEGER, PARAMETER :: QMMM_TAG_TYPE=8
+  INTEGER, PARAMETER :: QMMM_TAG_MASS=9
   !
   ! convert forces to LAMMPS "real" units
   REAL(DP), PARAMETER :: QMMM_FORCE_CONV = 592.91102087727177_DP
@@ -62,12 +64,14 @@ MODULE qmmm
   INTEGER, ALLOCATABLE :: tau_mask(:)
   REAL(DP), ALLOCATABLE :: rc_mm(:)
   REAL(DP), ALLOCATABLE :: charge_mm(:)
+  REAL(DP), ALLOCATABLE :: mass(:)
   INTEGER, ALLOCATABLE :: types(:)
   REAL(DP) :: cell_data(9) 
   REAL(DP) :: cell_mm(9) 
   INTEGER  :: nat_mm
   INTEGER  :: nat_qm
   INTEGER  :: nat_all
+  INTEGER  :: ntypes
   !
 
   PUBLIC :: qmmm_config, qmmm_initialization, qmmm_shutdown, qmmm_mode
@@ -242,7 +246,7 @@ END SUBROUTINE qmmm_minimum_image
     USE ions_base, ONLY : tau
     IMPLICIT NONE
     INTEGER :: ierr,i
-    INTEGER :: irecv_buf(3)
+    INTEGER :: irecv_buf(8)
 
     IF (qmmm_mode < 0) RETURN
 
@@ -252,16 +256,18 @@ END SUBROUTINE qmmm_minimum_image
         WRITE(stdout,'(/,5X,A)') 'QMMM: update positions'
 
     IF( ionode ) THEN
-        CALL mpi_recv( irecv_buf, 3, MPI_INTEGER, 0, QMMM_TAG_SIZE, qmmm_comm, MPI_STATUS_IGNORE, ierr )
+        CALL mpi_recv( irecv_buf, 4, MPI_INTEGER, 0, QMMM_TAG_SIZE, qmmm_comm, MPI_STATUS_IGNORE, ierr )
     END IF
     CALL mp_bcast( irecv_buf, ionode_id, world_comm )
     nat_all = irecv_buf(1)
     nat_qm  = irecv_buf(2)
     nat_mm  = irecv_buf(3)
+    ntypes  = irecv_buf(4)
     IF (ionode .and. (qmmm_verb > 0 )) THEN
         WRITE(stdout,*) '    QMMM: nat_all = ', nat_all
         WRITE(stdout,*) '    QMMM: nat_qm  = ', nat_qm  ! num_qm in lammps
         WRITE(stdout,*) '    QMMM: nat_mm  = ', nat_mm  ! num_mm in lammps
+        WRITE(stdout,*) '    QMMM: ntypes  = ', ntypes  ! num_mm in lammps
     END IF
 
 
@@ -289,15 +295,19 @@ END SUBROUTINE qmmm_minimum_image
     IF( .NOT. ALLOCATED( force_mm ) ) THEN
         ALLOCATE( force_mm(3,nat_mm) )
     END IF
+    IF( .NOT. ALLOCATED( types ) ) THEN
+        ALLOCATE( types( nat_all ) )
+    END IF
+    IF( .NOT. ALLOCATED( mass ) ) THEN
+        ! add 1 to take into account the atom type "0"
+        ALLOCATE( mass( ntypes + 1 ) ) 
+    END IF
 
     ! Receive coordinates (from LAMMPS) and broadcast to all processors
     IF (ionode) THEN
 
         CALL mpi_recv( cell_mm, 9, MPI_DOUBLE_PRECISION, &
               0, QMMM_TAG_CELL, qmmm_comm, MPI_STATUS_IGNORE, ierr )
-
-        CALL mpi_recv(aradii(1),nat_all,MPI_DOUBLE_PRECISION, &
-              0,QMMM_TAG_RADII,qmmm_comm,MPI_STATUS_IGNORE,ierr)
 
         CALL mpi_recv(tau(1,1),3*nat_qm,MPI_DOUBLE_PRECISION, &
               0,QMMM_TAG_COORD,qmmm_comm,MPI_STATUS_IGNORE,ierr)
@@ -314,6 +324,12 @@ END SUBROUTINE qmmm_minimum_image
         CALL mpi_recv(tau_mask(1),nat_all,MPI_INTEGER, &
               0,QMMM_TAG_COORD,qmmm_comm,MPI_STATUS_IGNORE,ierr)
 
+        CALL mpi_recv(types(1),nat_all,MPI_INTEGER, &
+              0,QMMM_TAG_TYPE,qmmm_comm,MPI_STATUS_IGNORE,ierr)
+
+        CALL mpi_recv(mass(1),ntypes+1,MPI_DOUBLE_PRECISION, &
+              0,QMMM_TAG_MASS,qmmm_comm,MPI_STATUS_IGNORE,ierr)
+
         ! convert from angstrom to alat units
         tau = tau / (alat * bohr_radius_angs)
 
@@ -321,6 +337,9 @@ END SUBROUTINE qmmm_minimum_image
 
         CALL qmmm_center_molecule
         CALL qmmm_minimum_image
+
+        ! set atomic radii
+        CALL ec_fill_radii( aradii, nat_mm, mass, types, ntypes, 1 )
 
     END IF
 
@@ -331,6 +350,8 @@ END SUBROUTINE qmmm_minimum_image
     CALL mp_bcast(charge_mm, ionode_id, world_comm)    
     CALL mp_bcast(tau_mm, ionode_id, world_comm)    
     CALL mp_bcast(tau_mask, ionode_id, world_comm)    
+    CALL mp_bcast(types, ionode_id, world_comm)    
+    CALL mp_bcast(mass, ionode_id, world_comm)    
 
     ! clear charge for QM atoms
     DO i = 1, nat_mm
@@ -338,7 +359,6 @@ END SUBROUTINE qmmm_minimum_image
        charge_mm(i) = 0.0d0
     ENDDO
 
-    ! set atomic radii
     rc_mm = aradii
     ! Convert radii to Bohr units
     rc_mm = rc_mm / (alat * bohr_radius_angs)
@@ -714,6 +734,8 @@ END SUBROUTINE qmmm_minimum_image
     IF( ALLOCATED( charge ) ) DEALLOCATE( charge )
     IF( ALLOCATED( force_qm ) ) DEALLOCATE( force_qm )
     IF( ALLOCATED( force_mm ) ) DEALLOCATE( force_mm )
+    IF( ALLOCATED( types ) ) DEALLOCATE( types )
+    IF( ALLOCATED( mass ) ) DEALLOCATE( mass )
 
   END SUBROUTINE qmmm_shutdown
 
