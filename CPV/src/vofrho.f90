@@ -794,11 +794,13 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
             detmp = -1.0d0 * MATMUL( dxc, TRANSPOSE( h ) ) / omega * au_gpa * 10.0d0
             WRITE( stdout,5555) ((detmp(i,j),j=1,3),i=1,3)
             !
-            WRITE( stdout,*) "derivative of e(TS-vdW)"
-            WRITE( stdout,5555) ((HtsvdW(i,j),j=1,3),i=1,3)
-            WRITE( stdout,*) "kbar"
-            detmp = -1.0d0 * MATMUL( HtsvdW, TRANSPOSE( h ) ) / omega * au_gpa * 10.0d0
-            WRITE( stdout,5555) ((detmp(i,j),j=1,3),i=1,3)
+            IF (ts_vdw) THEN
+               WRITE( stdout,*) "derivative of e(TS-vdW)"
+               WRITE( stdout,5555) ((HtsvdW(i,j),j=1,3),i=1,3)
+               WRITE( stdout,*) "kbar"
+               detmp = -1.0d0 * MATMUL( HtsvdW, TRANSPOSE( h ) ) / omega * au_gpa * 10.0d0
+               WRITE( stdout,5555) ((detmp(i,j),j=1,3),i=1,3)
+            END IF
          ENDIF
       ENDIF
 
