@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+<?iotk version="1.2.0"?>
+<?iotk file_version="1.0"?>
+<?iotk binary="F"?>
+<?iotk qe_syntax="F"?>
+<Root>
+  <HEADER>
+    <FORMAT NAME="QEXML" VERSION="1.4.0"/>
+    <CREATOR NAME="PH" VERSION="5.4.0"/>
+  </HEADER>
+  <CONTROL>
+    <DISPERSION_RUN type="logical" size="1">
+T
+    </DISPERSION_RUN>
+    <ELECTRIC_FIELD type="logical" size="1">
+F
+    </ELECTRIC_FIELD>
+    <PHONON_RUN type="logical" size="1">
+T
+    </PHONON_RUN>
+    <ELECTRON_PHONON type="logical" size="1">
+F
+    </ELECTRON_PHONON>
+    <EFFECTIVE_CHARGE_EU type="logical" size="1">
+F
+    </EFFECTIVE_CHARGE_EU>
+    <EFFECTIVE_CHARGE_PH type="logical" size="1">
+F
+    </EFFECTIVE_CHARGE_PH>
+    <RAMAN_TENSOR type="logical" size="1">
+F
+    </RAMAN_TENSOR>
+    <ELECTRO_OPTIC type="logical" size="1">
+F
+    </ELECTRO_OPTIC>
+    <FREQUENCY_DEP_POL type="logical" size="1">
+F
+    </FREQUENCY_DEP_POL>
+  </CONTROL>
+  <Q_POINTS>
+    <NUMBER_OF_Q_POINTS type="integer" size="1">
+         4
+    </NUMBER_OF_Q_POINTS>
+    <MESH_DIMENSIONS type="integer" size="3" columns="3">
+         3          3          3
+    </MESH_DIMENSIONS>
+    <UNITS_FOR_Q-POINT UNITS="2 pi / a"/>
+    <Q-POINT_COORDINATES type="real" size="12" columns="3">
+ 0.000000000000000E+000  0.000000000000000E+000  0.000000000000000E+000 
+-3.333333333333333E-001  3.333333333333333E-001 -3.333333333333333E-001 
+ 0.000000000000000E+000  6.666666666666666E-001  0.000000000000000E+000 
+ 6.666666666666667E-001 -5.551115123125783E-017  6.666666666666667E-001
+    </Q-POINT_COORDINATES>
+  </Q_POINTS>
+</Root>
+

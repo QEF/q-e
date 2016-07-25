@@ -24,6 +24,7 @@ $ make run-custom-test testdir=pw_spinorbit
 
 If 'run-custom-test-parallel', it runs the specified test in parallel (4 MPI)
 
+$ make run-custom-test-parallel testdir=epw_base
 
 C) Compare the latest run of tests (SERIAL or PARALLEl) and redirect
    the output to various files called "out.XXX.`date +%Y%m%d_%H%M%S`" (python 

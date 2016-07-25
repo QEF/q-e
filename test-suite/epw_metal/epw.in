@@ -49,12 +49,12 @@
   parallel_q  = .false.
 
   fsthick     = 6 ! eV
-  eptemp      = 2000 ! K
-  degaussw    = 1.0  ! eV
+  eptemp      = 500 ! K
+  degaussw    = 0.1  ! eV
   degaussq    = 0.05 ! meV
 
   dvscf_dir   = './save'
-  filukk      = './pb.ukk'
+  filukk      = './SiC.ukk'
 
   nkf1        = 6
   nkf2        = 6
