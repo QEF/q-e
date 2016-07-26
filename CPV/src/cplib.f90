@@ -1541,8 +1541,9 @@ END SUBROUTINE print_lambda_x
       USE uspp,               ONLY: nkb, qq
       USE uspp_param,         ONLY: nh, ish, nvb
       USE mp,                 ONLY: mp_sum
-      USE mp_global,          ONLY: intra_bgrp_comm, nbgrp
+      USE mp_global,          ONLY: intra_bgrp_comm, nbgrp, inter_bgrp_comm
       USE cp_interfaces,      ONLY: nlsm1
+      USE electrons_base,     ONLY: ispin, ispin_bgrp, nbspx_bgrp, ibgrp_g2l, iupdwn, nupdwn, nbspx
 !
       IMPLICIT NONE
 !
@@ -1552,55 +1553,85 @@ END SUBROUTINE print_lambda_x
       REAL(DP) rsum, csc(n) ! automatic array
       COMPLEX(DP) temp(ngw) ! automatic array
  
-      REAL(DP), ALLOCATABLE::  becp(:,:)
+      REAL(DP), ALLOCATABLE::  becp(:,:), cp_tmp(:), becp_tmp(:)
       INTEGER i,kmax,nnn,k,ig,is,ia,iv,jv,inl,jnl
+      INTEGER :: ibgrp_i, ibgrp_k
 !
-      IF( nbgrp > 1 ) &
-         CALL errore( ' dotcsc ', ' parallelization over bands not yet implemented ', 1 ) 
-!
-      ALLOCATE(becp(nkb,n))
+      ALLOCATE( becp( nkb, nbspx_bgrp ) )
+      ALLOCATE( cp_tmp( SIZE( cp, 1 ) ) )
+      ALLOCATE( becp_tmp( nkb ) )
 !
 !     < beta | phi > is real. only the i lowest:
 !
+
+      CALL nlsm1( nbspx_bgrp, 1, nvb, eigr, cp, becp )
+
       nnn = MIN( 12, n )
 
       DO i = nnn, 1, -1
+
+         csc = 0.0d0
+
+         ibgrp_i = ibgrp_g2l( i )
+         IF( ibgrp_i > 0 ) THEN
+            cp_tmp = cp( :, ibgrp_i )
+         ELSE 
+            cp_tmp = 0.0d0
+         END IF
+
+         CALL mp_sum( cp_tmp, inter_bgrp_comm )
+
          kmax = i
-         CALL nlsm1(i,1,nvb,eigr,cp,becp)
 !
          DO k=1,kmax
-            DO ig=1,ngw
-               temp(ig)=CONJG(cp(ig,k))*cp(ig,i)
-            END DO
-            csc(k)=2.d0*DBLE(SUM(temp))
-            IF (gstart == 2) csc(k)=csc(k)-DBLE(temp(1))
+            ibgrp_k = ibgrp_g2l( k )
+            IF( ibgrp_k > 0 ) THEN
+               DO ig=1,ngw
+                  temp(ig)=CONJG(cp(ig,ibgrp_k))*cp_tmp(ig)
+               END DO
+               csc(k)=2.d0*DBLE(SUM(temp))
+               IF (gstart == 2) csc(k)=csc(k)-DBLE(temp(1))
+            END IF
          END DO
 
          CALL mp_sum( csc( 1:kmax ), intra_bgrp_comm )
 
+         IF( ibgrp_i > 0 ) THEN
+            becp_tmp = becp( :, ibgrp_i )
+         ELSE 
+            becp_tmp = 0.0d0
+         END IF
+
+         CALL mp_sum( becp_tmp, inter_bgrp_comm )
+
          DO k=1,kmax
             rsum=0.d0
-            DO is=1,nvb
-               DO iv=1,nh(is)
-                  DO jv=1,nh(is)
-                     DO ia=1,na(is)
-                        inl=ish(is)+(iv-1)*na(is)+ia
-                        jnl=ish(is)+(jv-1)*na(is)+ia
-                        rsum = rsum +                                    &
-     &                   qq(iv,jv,is)*becp(inl,i)*becp(jnl,k)
+            ibgrp_k = ibgrp_g2l( k )
+            IF( ibgrp_k > 0 ) THEN
+               DO is=1,nvb
+                  DO iv=1,nh(is)
+                     DO jv=1,nh(is)
+                        DO ia=1,na(is)
+                           inl=ish(is)+(iv-1)*na(is)+ia
+                           jnl=ish(is)+(jv-1)*na(is)+ia
+                           rsum = rsum + qq(iv,jv,is)*becp_tmp(inl)*becp(jnl,ibgrp_k)
+                        END DO
                      END DO
                   END DO
                END DO
-            END DO
+            END IF
             csc(k)=csc(k)+rsum
          END DO
 !
+         CALL mp_sum( csc( 1:kmax ), inter_bgrp_comm )
          WRITE( stdout,'("dotcsc =",12f18.15)') (csc(k),k=1,i)
 !
       END DO
       WRITE( stdout,*)
 !
       DEALLOCATE(becp)
+      DEALLOCATE(cp_tmp)
+      DEALLOCATE(becp_tmp)
 !
       RETURN
       END SUBROUTINE dotcsc_x
