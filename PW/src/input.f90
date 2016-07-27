@@ -147,6 +147,7 @@ SUBROUTINE iosys()
                             noinv_            => noinv, &
                             lkpoint_dir_      => lkpoint_dir, &
                             tqr_              => tqr, &
+                            tq_smoothing_     => tq_smoothing, &
                             io_level, ethr, lscf, lbfgs, lmd, &
                             lbands, lconstrain, restart, twfcollect, &
                             llondon, do_makov_payne, lxdm, &
@@ -245,7 +246,8 @@ SUBROUTINE iosys()
   !
   USE input_parameters, ONLY : electron_maxstep, mixing_mode, mixing_beta, &
                                mixing_ndim, mixing_fixed_ns, conv_thr,     &
-                               tqr, diago_thr_init, diago_cg_maxiter,      &
+                               tqr, tq_smoothing,                          &
+                               diago_thr_init, diago_cg_maxiter,           &
                                diago_david_ndim, diagonalization,          &
                                diago_full_acc, startingwfc, startingpot,   &
                                real_space, scf_must_converge
@@ -1082,6 +1084,8 @@ SUBROUTINE iosys()
   END SELECT
   tqr_        = tqr
   real_space_ = real_space
+  !
+  tq_smoothing_ = tq_smoothing
   !
   title_      = title
   lkpoint_dir_=lkpoint_dir

@@ -15,7 +15,7 @@ SUBROUTINE sum_band()
   !
   USE kinds,                ONLY : DP
   USE ener,                 ONLY : eband
-  USE control_flags,        ONLY : diago_full_acc, gamma_only, tqr, lxdm
+  USE control_flags,        ONLY : diago_full_acc, gamma_only, lxdm
   USE cell_base,            ONLY : at, bg, omega, tpiba
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE fft_base,             ONLY : dfftp, dffts

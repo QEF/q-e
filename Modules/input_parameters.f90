@@ -896,6 +896,9 @@ MODULE input_parameters
         LOGICAL :: tqr = .false.
           ! US contributions are added in real space
 
+        LOGICAL :: tq_smoothing = .false.
+          ! US augmentation charge is smoothed before use
+
         LOGICAL :: occupation_constraints = .false.
           ! If true perform CP dynamics with constrained occupations
           ! to be used together with penalty functional ...
@@ -933,7 +936,8 @@ MODULE input_parameters
           diis_temp, diis_achmix, diis_g0chmix, diis_g1chmix,          &
           diis_nchmix, diis_nrot, diis_rothr, diis_ethr, diis_chguess, &
           mixing_mode, mixing_beta, mixing_ndim, mixing_fixed_ns,      &
-          tqr, diago_cg_maxiter, diago_david_ndim, diagonalization,    &
+          tqr, tq_smoothing,                                           &
+          diago_cg_maxiter, diago_david_ndim, diagonalization,         &
           startingpot, startingwfc , conv_thr,                         &
           adaptive_thr, conv_thr_init, conv_thr_multi,                 &
           diago_thr_init, n_inner, fermi_energy, rotmass, occmass,     &

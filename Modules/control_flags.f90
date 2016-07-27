@@ -257,6 +257,10 @@ MODULE control_flags
 
   !LOGICAL,          PUBLIC :: real_space=.false. ! beta functions in real space
   !
+  ! ... Augmetation charge smoothing
+  !
+  LOGICAL,          PUBLIC :: tq_smoothing=.FALSE. ! if true the Q are smoothed 
+  !
   ! ... External Forces on Ions
   !
   LOGICAL,          PUBLIC :: textfor = .FALSE.

@@ -37,7 +37,7 @@ subroutine init_us_0
   !     here a few local variables
   !
   logical, parameter :: tprint=.false.    ! whether the q_l(r) and its relatives are printed or not
-  logical, parameter :: smoothing=.false.  ! whether the q_l(r) are smoothed or not
+  logical, parameter :: smoothing=.true.  ! whether the q_l(r) are smoothed or not
   integer, parameter :: nn=16   ! smoothing parameter, order of the polynomial inverse gaussian approximant
   real(DP), parameter:: a=22.0  ! smoothing parameter, exponent of the gaussian decaying factor
                                 ! a=0.d0 ; nn=0 would be no smoothing.
@@ -105,6 +105,25 @@ subroutine init_us_0
   !
   do nt = 1, ntyp
      !
+!-
+     if (tprint) then
+        filename = 'qr'                 !  the radial q_l(r) as defined in the pseudopotential
+        do nb=1, upf(nt)%nbeta 
+           do mb=nb, upf(nt)%nbeta
+              ijv = mb * (mb - 1) / 2 + nb
+              lnb = upf(nt)%lll(nb) ; lmb = upf(nt)%lll(mb)
+              WRITE (filename( 3:3 ),'(i1)') nb ; WRITE (filename( 4:4 ),'(i1)') mb ; WRITE (filename( 5:5 ),'(i1)') nt
+              OPEN (4,file=filename,form='formatted', status='unknown')
+              write (4, *) ' nb :', nb,lnb,' mb :',mb,lmb,' lmax :',lnb+lmb, ' kkbeta :',upf(nt)%kkbeta
+              do ir =1,upf(nt)%kkbeta
+                 write (4,'(12f16.10)') rgrid(nt)%r(ir), (upf(nt)%qfuncl(ir,ijv,l), l=0,lnb+lmb)
+              end do
+              CLOSE (4)
+           end do
+        end do
+     end if
+!-
+
      if (lmaxq > 0) qrad0(:,:,:)= 0.d0 ; qrad1(:,:,:)= 0.d0 ; qrad2(:,:,:)= 0.d0
 
      if ( upf(nt)%tvanp ) then
@@ -198,24 +217,10 @@ subroutine init_us_0
         do nb=1, upf(nt)%nbeta 
            do mb=nb, upf(nt)%nbeta
               ijv = mb * (mb - 1) / 2 + nb
-              lnb = upf(nt)%lll(nb)
-              lmb = upf(nt)%lll(mb)
+              lnb = upf(nt)%lll(nb) ; lmb = upf(nt)%lll(mb)
+              WRITE (filename( 3:3 ),'(i1)') nb ; WRITE (filename( 4:4 ),'(i1)') mb ; WRITE (filename( 5:5 ),'(i1)') nt
 !-
-              filename = 'qr'                 !  the radial q_l(r) as defined in the pseudopotential
-              WRITE (filename( 3:3 ),'(i1)') nb
-              WRITE (filename( 4:4 ),'(i1)') mb
-              WRITE (filename( 5:5 ),'(i1)') nt
-              OPEN (4,file=filename,form='formatted', status='unknown')
-              write (4, *) ' nb :', nb,lnb,' mb :',mb,lmb,' kkbeta',upf(nt)%kkbeta
-              do ir =1,upf(nt)%kkbeta
-                 write (4,'(12f16.10)') rgrid(nt)%r(ir), (upf(nt)%qfuncl(ir,ijv,l), l=0,lnb+lmb)
-              end do
-              CLOSE (4)
-!-
-              filename = 'qq'                 ! the radial fourier transform of q_l in reciprcal space
-              WRITE (filename( 3:3 ),'(i1)') nb
-              WRITE (filename( 4:4 ),'(i1)') mb
-              WRITE (filename( 5:5 ),'(i1)') nt
+              filename(1:2) = 'qq'                 ! the radial fourier transform of q_l in reciprcal space
               OPEN (4,file=filename,form='formatted', status='unknown')
               write (4, *) ' nb :', nb,lnb,' mb :',mb,lmb,' lmax :',lnb+lmb, ' nqxq :',nqxq
               do iq=1,nqxq
@@ -224,10 +229,7 @@ subroutine init_us_0
               end do
               CLOSE (4)
 !-
-              filename = 'qs'                 ! the smoothed radial fourier transform of q_l in reciprcal space
-              WRITE (filename( 3:3 ),'(i1)') nb
-              WRITE (filename( 4:4 ),'(i1)') mb
-              WRITE (filename( 5:5 ),'(i1)') nt
+              filename(1:2) = 'qs'                 ! the smoothed radial fourier transform of q_l in reciprcal space
               OPEN (4,file=filename,form='formatted', status='unknown')
               write (4, *) ' nb :', nb,lnb,' mb :',mb,lmb,' lmax :',lnb+lmb, ' nqxq :',nqxq
               do iq=1,nqxq
@@ -236,10 +238,7 @@ subroutine init_us_0
               end do
               CLOSE (4)
 !-
-              filename = 'rq'                 ! the radial q_l(r) as obtained back-transforming the q_l(q)
-              WRITE (filename( 3:3 ),'(i1)') nb
-              WRITE (filename( 4:4 ),'(i1)') mb
-              WRITE (filename( 5:5 ),'(i1)') nt
+              filename(1:2) = 'rq'                 ! the radial q_l(r) as obtained back-transforming the q_l(q)
               OPEN (4,file=filename,form='formatted', status='unknown')
               write (4, *) ' nb :', nb,lnb,' mb :',mb,lmb,' lmax :',lnb+lmb, ' kkbeta :',upf(nt)%kkbeta
               do ir=1,upf(nt)%kkbeta
@@ -247,10 +246,7 @@ subroutine init_us_0
               end do
               CLOSE (4)
 !-
-              filename = 'rs'                 ! the radial q_l(r) as obtained back-transforming the smoothed q_l(q)
-              WRITE (filename( 3:3 ),'(i1)') nb
-              WRITE (filename( 4:4 ),'(i1)') mb
-              WRITE (filename( 5:5 ),'(i1)') nt
+              filename(1:2) = 'rs'                 ! the radial q_l(r) as obtained back-transforming the smoothed q_l(q)
               OPEN (4,file=filename,form='formatted', status='unknown')
               write (4, *) ' nb :', nb,lnb,' mb :',mb,lmb,' lmax :',lnb+lmb, ' kkbeta :',upf(nt)%kkbeta
               do ir=1,upf(nt)%kkbeta

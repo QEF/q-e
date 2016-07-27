@@ -63,7 +63,7 @@ SUBROUTINE setup()
                                  find_sym, inverse_s, no_t_rev, allfrac
   USE wvfct,              ONLY : nbnd, nbndx
   USE control_flags,      ONLY : tr2, ethr, lscf, lmd, david, lecrpa,  &
-                                 isolve, niter, noinv, ts_vdw, tqr, &
+                                 isolve, niter, noinv, ts_vdw, &
                                  lbands, use_para_diag, gamma_only, &
                                  restart
   USE cellmd,             ONLY : calc

@@ -26,7 +26,7 @@ SUBROUTINE hinit0()
   USE gvecw,        ONLY : gcutw
   USE realus,       ONLY : generate_qpointlist,betapointlist,init_realspace_vars,real_space
   use ldaU,         ONLY : lda_plus_U, U_projection
-  USE control_flags,ONLY : tqr 
+  USE control_flags,ONLY : tqr, tq_smoothing
   USE io_global,    ONLY : stdout
   !
   IMPLICIT NONE
@@ -40,7 +40,7 @@ SUBROUTINE hinit0()
   !
   ! ... k-point independent parameters of non-local pseudopotentials
   !
-  CALL init_us_0()
+  if (tq_smoothing) CALL init_us_0()
   CALL init_us_1()
   IF ( lda_plus_U .AND. ( U_projection == 'pseudo' ) ) CALL init_q_aeps()
   CALL init_at_1()
