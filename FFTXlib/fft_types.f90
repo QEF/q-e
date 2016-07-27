@@ -341,23 +341,14 @@ CONTAINS
     npp = 0
     IF ( desc%nproc == 1 ) THEN      ! sigle processor: npp(1)=nr3
       npp(1) = nr3
-    ELSEIF( desc%nproc <= nr3 ) THEN ! normal case, more planes than processors.
+    ELSE
       np = nr3 / desc%nproc
       nq = nr3 - np * desc%nproc
       DO i = 1, desc%nproc
         npp(i) = np
         IF ( i <= nq ) npp(i) = np + 1
       ENDDO
-    ELSE                             ! less planes than processors. distribute them round robin with step nogrp...
-      DO ip = 1, nr3  !  some compiler complains for empty DO loops
-        DO i = 1, desc%nproc, desc%nogrp
-             npp(i) = npp(i) + 1
-             sm = sm + 1
-             IF ( sm == nr3 ) exit
-        ENDDO
-        IF ( sm == nr3 ) exit
-      ENDDO
-    ENDIF
+    END IF
 
     !-- npp(1:nproc) is the number of planes per processor
     !-- npl is the number of planes per processor of this processor
