@@ -847,7 +847,8 @@
       WRITE(lambda_phself, *) '#Modes     ',(imode, imode=1,nmodes)
       DO iq = 1, nqtotf
           !
-        myfmt = "(*(3x,E15.5))"
+          !myfmt = "(*(3x,E15.5))"  This does not work with PGI
+        myfmt = "(1000(3x,E15.5))"
         WRITE(lambda_phself,'(i9,4x)',advance='no') iq
         WRITE(lambda_phself, fmt=myfmt) (REAL(lambda_all(imode,iq,1)),imode=1,nmodes)
           !
@@ -863,7 +864,7 @@
       WRITE(linewidth_phself, '(/2x,a/)') ' '
       DO iq = 1, nqtotf
         !
-        myfmt = "(*(3x,E15.5))"
+        myfmt = "(1000(3x,E15.5))"
         WRITE(linewidth_phself,'(i9,4x)',advance='no') iq
         WRITE(linewidth_phself, fmt=myfmt) (ryd2mev*REAL(gamma_all(imode,iq,1)), imode=1,nmodes)
         !
