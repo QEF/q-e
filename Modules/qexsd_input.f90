@@ -261,7 +261,7 @@ MODULE qexsd_input
   CALL qes_init_electron_control(obj,TAGNAME,diagonalization=diagonalization,&
                                 mixing_mode=mixing_mode,mixing_beta=mixing_beta,&
                                 conv_thr=conv_thr,mixing_ndim=mixing_ndim,max_nstep=max_nstep,&
-                                real_space_q=tqr,tq_smoothing=tq_smoothing,diago_thr_init=diago_thr_init,& 
+                                real_space_q=tqr,tqr_smoothing=tq_smoothing,diago_thr_init=diago_thr_init,& 
                                 diago_full_acc=diago_full_acc,diago_cg_maxiter=diago_cg_maxiter)
    !
    END SUBROUTINE qexsd_init_electron_control

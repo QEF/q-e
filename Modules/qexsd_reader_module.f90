@@ -1236,7 +1236,7 @@ INTEGER                                     :: ierr
 CHARACTER(LEN=256)                          :: diago_str_, mixing_str_ 
 REAL(DP)                                    :: mixing_beta_, conv_thr_, diago_thr_init_
 INTEGER                                     :: mixing_ndim_, max_nstep_, diago_cg_maxiter_
-LOGICAL                                     :: real_space_q_, diago_full_acc_
+LOGICAL                                     :: real_space_q_, diago_full_acc_, tqr_smoothing_
 ! 
 ispresent = .FALSE.
 CALL iotk_scan_begin( iunit, "electron_control", FOUND = ispresent, IERR = ierr )
@@ -1263,6 +1263,9 @@ IF ( ierr /= 0 ) RETURN
 CALL  iotk_scan_dat( iunit, "real_space_q" , real_space_q_, IERR = ierr )
 IF ( ierr /= 0 ) RETURN
 ! 
+CALL iotk_scan_dat ( iunit, "tqr_smoothing", tqr_smoothing_, IERR = ierr ) 
+IF ( ierr /= 0 ) RETURN 
+!
 CALL  iotk_scan_dat( iunit, "diago_thr_init" , diago_thr_init_, IERR = ierr )
 IF ( ierr /= 0 ) RETURN
 !
@@ -1278,7 +1281,7 @@ IF  ( ierr /= 0 ) THEN
    RETURN 
 END IF
 CALL qes_init_electron_control ( obj, "electron_control", diago_str_, mixing_str_, mixing_beta_, & 
-                                 conv_thr_, mixing_ndim_, max_nstep_, real_space_q_, diago_thr_init_, &
+                                 conv_thr_, mixing_ndim_, max_nstep_, real_space_q_, tqr_smoothing_, diago_thr_init_, &
                                  diago_full_acc_, diago_cg_maxiter_) 
 ! 
 END SUBROUTINE qexsd_get_electron_control

@@ -3678,6 +3678,13 @@ SUBROUTINE qes_write_electron_control(iun, obj)
             WRITE(iun, '(A)',advance='no')  'false'
          ENDIF
       CALL iotk_write_end(iun, 'real_space_q',indentation=.FALSE.)
+      CALL iotk_write_begin(iun, 'tqr_smoothing',new_line=.FALSE.)
+         IF (obj%tqr_smoothing) THEN
+            WRITE(iun, '(A)',advance='no')  'true'
+         ELSE
+            WRITE(iun, '(A)',advance='no')  'false'
+         ENDIF
+      CALL iotk_write_end(iun, 'tqr_smoothing',indentation=.FALSE.)
       CALL iotk_write_begin(iun, 'diago_thr_init')
          WRITE(iun, '(E20.7)') obj%diago_thr_init
       CALL iotk_write_end(iun, 'diago_thr_init')
@@ -3697,7 +3704,8 @@ END SUBROUTINE qes_write_electron_control
 
 SUBROUTINE qes_init_electron_control(obj, tagname, diagonalization, mixing_mode, &
                               mixing_beta, conv_thr, mixing_ndim, max_nstep, real_space_q, &
-                              diago_thr_init, diago_full_acc, diago_cg_maxiter)
+                              tqr_smoothing, diago_thr_init, diago_full_acc, &
+                              diago_cg_maxiter)
    IMPLICIT NONE
 
    TYPE(electron_control_type) :: obj
@@ -3710,6 +3718,7 @@ SUBROUTINE qes_init_electron_control(obj, tagname, diagonalization, mixing_mode,
    INTEGER  :: mixing_ndim
    INTEGER  :: max_nstep
    LOGICAL  :: real_space_q
+   LOGICAL  :: tqr_smoothing
    REAL(DP) :: diago_thr_init
    LOGICAL  :: diago_full_acc
    INTEGER  :: diago_cg_maxiter
@@ -3722,6 +3731,7 @@ SUBROUTINE qes_init_electron_control(obj, tagname, diagonalization, mixing_mode,
    obj%mixing_ndim = mixing_ndim
    obj%max_nstep = max_nstep
    obj%real_space_q = real_space_q
+   obj%tqr_smoothing = tqr_smoothing
    obj%diago_thr_init = diago_thr_init
    obj%diago_full_acc = diago_full_acc
    obj%diago_cg_maxiter = diago_cg_maxiter
