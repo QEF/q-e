@@ -937,6 +937,7 @@ MODULE read_namelists_module
        CALL mp_bcast( mixing_ndim,          ionode_id, intra_image_comm )
        CALL mp_bcast( tqr,                  ionode_id, intra_image_comm )
        CALL mp_bcast( tq_smoothing,         ionode_id, intra_image_comm )
+       CALL mp_bcast( tbeta_smoothing,      ionode_id, intra_image_comm )
        CALL mp_bcast( diagonalization,      ionode_id, intra_image_comm )
        CALL mp_bcast( diago_thr_init,       ionode_id, intra_image_comm )
        CALL mp_bcast( diago_cg_maxiter,     ionode_id, intra_image_comm )

@@ -104,7 +104,8 @@ USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, delete_if_present, &
       !
       USE control_flags,        ONLY : istep, twfcollect, conv_ions, &
                                        lscf, lkpoint_dir, gamma_only, &
-                                       tqr, tq_smoothing, noinv, do_makov_payne, smallmem, &
+                                       tqr, tq_smoothing, tbeta_smoothing, &
+                                       noinv, do_makov_payne, smallmem, &
                                        llondon, lxdm, ts_vdw, scf_error, n_scf_steps
       USE realus,               ONLY : real_space
       USE uspp,                 ONLY : okvan
@@ -480,7 +481,8 @@ USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, delete_if_present, &
       !
       USE control_flags,        ONLY : twfcollect, conv_ions, &
                                        lscf, lkpoint_dir, gamma_only, &
-                                       tqr, tq_smoothing, noinv, do_makov_payne, smallmem, &
+                                       tqr, tq_smoothing, tbeta_smoothing, &
+                                       noinv, do_makov_payne, smallmem, &
                                        llondon, lxdm, ts_vdw 
       USE realus,               ONLY : real_space
       USE global_version,       ONLY : version_number
@@ -759,8 +761,8 @@ USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, delete_if_present, &
 !-------------------------------------------------------------------------------
          !
          CALL qexml_write_control( PP_CHECK_FLAG=conv_ions, LKPOINT_DIR=lkpoint_dir, &
-                            Q_REAL_SPACE=tqr, TQ_SMOOTHING=tq_smoothing,             &
-                            BETA_REAL_SPACE=real_space )
+                            Q_REAL_SPACE=tqr, TQ_SMOOTHING=tq_smoothing, &
+                            BETA_REAL_SPACE=real_space, TBETA_SMOOTHING=tbeta_smoothing )
          !
 !-------------------------------------------------------------------------------
 ! ... CELL

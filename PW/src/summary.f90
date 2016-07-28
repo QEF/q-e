@@ -36,7 +36,7 @@ SUBROUTINE summary()
                               nelec, nelup, neldw, two_fermi_energies
   USE ktetra,          ONLY : ltetra
   USE control_flags,   ONLY : imix, nmix, mixing_beta, nstep, lscf, &
-                              tr2, isolve, lmd, lbfgs, iverbosity, tqr, tq_smoothing
+                              tr2, isolve, lmd, lbfgs, iverbosity, tqr, tq_smoothing, tbeta_smoothing
   USE noncollin_module,ONLY : noncolin
   USE spin_orb,        ONLY : domag, lspinorb
   USE funct,           ONLY : write_dft_name, dft_is_hybrid
@@ -375,6 +375,7 @@ SUBROUTINE summary()
   IF ( real_space ) WRITE( stdout, &
        & '(5x,"Real space treatment of Beta functions,", &
        &      " V.1 (BE SURE TO CHECK MANUAL!)")' )
+  IF ( tbeta_smoothing ) WRITE( stdout, '(5x,"Beta functions are smoothed ")' )
   IF ( tqr ) WRITE( stdout, '(5x,"Real space treatment of Q(r)")' )
   IF ( tq_smoothing ) WRITE( stdout, '(5x,"Augmentation charges are smoothed ")' )
 

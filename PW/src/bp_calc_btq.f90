@@ -42,10 +42,7 @@ SUBROUTINE calc_btq(ql,qr_k,idbes)
               !       only need to calculate for l=lmin,lmin+2 ...lmax-2,lmax
               DO l = ilmin,ilmax,2
                  aux(:) = 0.0_DP
-                 IF (upf(np)%tvanp .or. upf(np)%tpawp) then
-                     aux(1:upf(np)%kkbeta) =  &
-                                 upf(np)%qfuncl(1:upf(np)%kkbeta,ijv,l)
-                 ENDIF
+                 aux(1:upf(np)%kkbeta) =  upf(np)%qfuncl(1:upf(np)%kkbeta,ijv,l)
                  IF (idbes == 1) THEN
                     !
                     CALL sph_dbes( upf(np)%kkbeta, rgrid(np)%r, ql, l, jl )

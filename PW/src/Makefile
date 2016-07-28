@@ -109,6 +109,7 @@ init_ns.o \
 init_q_aeps.o \
 init_run.o \
 init_us_0.o \
+init_us_b0.o \
 init_us_1.o \
 init_us_2.o \
 init_at_1.o \

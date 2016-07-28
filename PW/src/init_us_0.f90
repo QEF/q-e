@@ -37,7 +37,6 @@ subroutine init_us_0
   !     here a few local variables
   !
   logical, parameter :: tprint=.false.    ! whether the q_l(r) and its relatives are printed or not
-  logical, parameter :: smoothing=.true.  ! whether the q_l(r) are smoothed or not
   integer, parameter :: nn=16   ! smoothing parameter, order of the polynomial inverse gaussian approximant
   real(DP), parameter:: a=22.0  ! smoothing parameter, exponent of the gaussian decaying factor
                                 ! a=0.d0 ; nn=0 would be no smoothing.
@@ -52,19 +51,11 @@ subroutine init_us_0
   ! q-point grid for interpolation
   real(DP), allocatable :: ylmk0 (:)
   ! the spherical harmonics
-  integer :: n1, m0, m1, n, li, mi, vi, vj, ijs, is1, is2, lk, mk, vk, kh, lh, ijkb0
   integer, external :: sph_ind
   integer :: lnb, lmb
-  complex(DP) :: qgm(1)
   real(DP) ::  qmax
   !
-  real(DP), allocatable :: xdata(:)
-  real(DP) :: d1
   character(LEN=5) :: filename
-  !
-  ! if no smoothing is desired just quit here
-  !
-  if (.not. smoothing) return
   !
   call start_clock ('init_us_0')
   !

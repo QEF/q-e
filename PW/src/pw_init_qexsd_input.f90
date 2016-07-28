@@ -37,7 +37,7 @@
                                 ip_nr3 => nr3, ip_nr1s => nr1s, ip_nr2s => nr2s,ip_nr3s => nr3s, ip_nr1b=>nr1b,       &
                                 ip_nr2b=>nr2b, ip_nr3b => nr3b,                                                       &
                                 ip_diagonalization=>diagonalization, mixing_mode, mixing_beta,                        &
-                                mixing_ndim, tqr, tq_smoothing, electron_maxstep,                                     &
+                                mixing_ndim, tqr, tq_smoothing, tbeta_smoothing, electron_maxstep,                    &
                                 diago_thr_init, diago_full_acc, diago_cg_maxiter, diago_david_ndim,                   &
                                 nk1, nk2, nk3, k1, k2, k3, nkstot, ip_xk => xk, ip_wk => wk,                          &
                                 ion_dynamics, upscale, remove_rigid_rot, refold_pos, pot_extrapolation,               &
@@ -240,8 +240,8 @@
     diagonalization = ip_diagonalization
   END IF
   CALL qexsd_init_electron_control(obj%electron_control, diagonalization, mixing_mode, mixing_beta, conv_thr,         &
-                                   mixing_ndim, electron_maxstep, tqr, tq_smoothing, diago_thr_init, diago_full_acc,  &
-                                   diago_cg_maxiter,  diago_david_ndim )
+                                   mixing_ndim, electron_maxstep, tqr, tq_smoothing, tbeta_smoothing, diago_thr_init, &
+                                   diago_full_acc,  diago_cg_maxiter,  diago_david_ndim )
   !--------------------------------------------------------------------------------------------------------------------------------
   !                                                   K POINTS IBZ ELEMENT
   !------------------------------------------------------------------------------------------------------------------------------ 

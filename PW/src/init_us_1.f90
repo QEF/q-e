@@ -267,12 +267,9 @@ subroutine init_us_1
                     ( l <=     upf(nt)%lll(nb) + upf(nt)%lll(mb)  ) .and. &
                     (mod (l+upf(nt)%lll(nb)+upf(nt)%lll(mb), 2) == 0) ) then
                  ijv = mb * (mb-1) / 2 + nb
-                 paw : & ! in PAW and now in US as well q(r) is stored in an l-dependent array
-                 if (upf(nt)%tvanp .or. upf(nt)%tpawp) then
-                     qtot(1:upf(nt)%kkbeta,ijv) =&
-                                 upf(nt)%qfuncl(1:upf(nt)%kkbeta,ijv,l)
-                 endif paw
-              endif respect_sum_rule
+                 ! in PAW and now in US as well q(r) is stored in an l-dependent array
+                 qtot(1:upf(nt)%kkbeta,ijv) = upf(nt)%qfuncl(1:upf(nt)%kkbeta,ijv,l)
+               endif respect_sum_rule
               enddo ! mb
            enddo ! nb
            !

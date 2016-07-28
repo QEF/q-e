@@ -107,7 +107,7 @@ SUBROUTINE compute_el_dip(emaxpos, eopreg, edir, charge, e_dipole)
   !--------------------------  
   
   !
-  ! Case with edir = 3 (in the formula changes only tha rgument of saw, i for
+  ! Case with edir = 3 (in the formula changes only the argument of saw, i for
   ! edir=1 and j for edir = 2)
   !
   ! P_{ele} = \sum_{ijk} \rho_{r_{ijk}} Saw\left( \frac{k}{nr3} \right) 

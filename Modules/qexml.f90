@@ -648,11 +648,11 @@ CONTAINS
     !
     !
     !------------------------------------------------------------------------  
-    SUBROUTINE qexml_write_control( pp_check_flag, lkpoint_dir, q_real_space, tq_smoothing, beta_real_space)
+    SUBROUTINE qexml_write_control( pp_check_flag, lkpoint_dir, q_real_space, tq_smoothing, tbeta_smoothing, beta_real_space)
       !------------------------------------------------------------------------
       !
       IMPLICIT NONE
-      LOGICAL, OPTIONAL, INTENT(IN) :: pp_check_flag, lkpoint_dir, q_real_space, tq_smoothing, beta_real_space
+      LOGICAL, OPTIONAL, INTENT(IN) :: pp_check_flag, lkpoint_dir, q_real_space, tq_smoothing, tbeta_smoothing, beta_real_space
 
 
       CALL iotk_write_begin( ounit, "CONTROL" )
@@ -674,6 +674,9 @@ CONTAINS
       ! This flag says if the Q are being smoothed 
       IF ( PRESENT( tq_smoothing ) ) &
          CALL iotk_write_dat( ounit, "TQ_SMOOTHING", tq_smoothing )
+      ! This flag says if the beta are being smoothed 
+      IF ( PRESENT( tbeta_smoothing ) ) &
+         CALL iotk_write_dat( ounit, "TBETA_SMOOTHING", tbeta_smoothing )
       !
       CALL iotk_write_end( ounit, "CONTROL" )
       !

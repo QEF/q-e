@@ -705,6 +705,9 @@ CONTAINS
     CASE ( 'tq_smoothing' ) 
        CALL iotk_scan_dat_inside( xmlinputunit, tq_smoothing, ierr = ierr )
        !
+    CASE ( 'tbeta_smoothing' ) 
+       CALL iotk_scan_dat_inside( xmlinputunit, tbeta_smoothing, ierr = ierr )
+       !
     CASE ( 'trust_radius_ini' ) 
        CALL iotk_scan_dat_inside( xmlinputunit, trust_radius_ini, ierr = ierr )
        !
