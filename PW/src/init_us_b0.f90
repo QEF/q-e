@@ -32,7 +32,7 @@ subroutine init_us_b0
   logical, parameter :: tprint=.false.     ! whether the beta_l(r) and its relatives are printed or not
   integer, parameter :: nn=16   ! smoothing parameter, order of the polynomial inverse gaussian approximant
   real(DP), parameter:: a=22.0  ! smoothing parameter, exponent of the gaussian decaying factor
-  real (DP) :: aa, rcut  ! parameter to be used in the mask function, localization radius of the mask function
+  real (DP) :: rcut, drcut ! beta function cutoff radius and estimated increase of it due to the filtering
 
   integer :: nqx
   real(DP),allocatable :: tab0(:,:), tab(:,:), beta(:,:), betas(:,:)
@@ -41,7 +41,7 @@ subroutine init_us_b0
   ! various counters
   real(DP), allocatable :: aux (:), besr (:)
   ! various work space
-  real(DP) :: pref, q, qi, qmax
+  real(DP) :: pref, q, qi, qmax, r0
   ! the prefactor of the beta functions
   ! the modulus of g for each shell
   ! q-point grid for interpolation
@@ -55,10 +55,9 @@ subroutine init_us_b0
 
   call start_clock ('init_us_b0')
   !
-  !    Initialization of the variables
+  !    Initialization of variables
   !
-
-  aa = ecutwfc / abs (log (eps8)) ;  rcut = abs(log(eps8))/sqrt(ecutwfc) 
+  drcut = abs(log(eps8))/sqrt(ecutwfc)/2.d0 
   qmax = 3.d0 * sqrt(ecutwfc)
   nqx = int( qmax / dq + 4)  ! Think about what happens in a variable cell calculations
   
@@ -66,8 +65,9 @@ subroutine init_us_b0
 
   if (tprint) write ( stdout, * ) 'upf(nt)%kkbeta ', upf(1:ntyp)%kkbeta
   do nt=1,ntyp
+     rcut = rgrid(nt)%r(upf(nt)%kkbeta)
      do ir = upf(nt)%kkbeta, upf(nt)%mesh
-        if ( rgrid(nt)%r(ir) < rcut ) upf(nt)%kkbeta=ir
+        if ( rgrid(nt)%r(ir) < rcut + drcut ) upf(nt)%kkbeta=ir
      end do
   end do
 
@@ -84,7 +84,7 @@ subroutine init_us_b0
      write ( stdout, * ) " PSEUDOPOTENTIAL REPORT "
      write ( stdout, * ) ' NDM :', ndm, '   ', upf(1:ntyp)%kkbeta
      write ( stdout, * ) ' NQX :', nqx, ' NBETAM :', nbetam
-     write ( stdout, * ) ' r(ndm):', (rgrid(nt)%r(upf(nt)%kkbeta),nt=1,ntyp), ' rcut :', rcut
+     write ( stdout, * ) ' r(ndm):', (rgrid(nt)%r(upf(nt)%kkbeta),nt=1,ntyp), ' drcut :', drcut
   end if
 
   !
