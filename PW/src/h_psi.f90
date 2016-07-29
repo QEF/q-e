@@ -159,6 +159,15 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
      !
   END IF  
   CALL stop_clock( 'h_psi:vloc' )
+
+  IF ( nkb > 0 .AND. .NOT. real_space) THEN
+     !
+     CALL start_clock( 'h_psi:vnl' )
+     CALL calbec ( n, vkb, psi, becp, m )
+     CALL add_vuspsi( lda, n, m, hpsi )
+     CALL stop_clock( 'h_psi:vnl' )
+     !
+  END IF
   !  
   ! ... Here we add the kinetic energy (k+G)^2 psi
   !
@@ -187,14 +196,6 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   ! ... Here the product with the non local potential V_NL psi
   ! ... (not in the real-space case: it is done together with V_loc)
   !
-  IF ( nkb > 0 .AND. .NOT. real_space) THEN
-     !
-     CALL start_clock( 'h_psi:vnl' )
-     CALL calbec ( n, vkb, psi, becp, m )
-     CALL add_vuspsi( lda, n, m, hpsi )
-     CALL stop_clock( 'h_psi:vnl' )
-     !
-  END IF
   IF ( exx_is_active() ) THEN
 #ifdef __EXX_ACE 
      IF (gamma_only) THEN
