@@ -11,6 +11,7 @@
 
 program test
   USE fft_types, ONLY: fft_dlay_descriptor, fft_dlay_deallocate
+  USE task_groups, ONLY: task_groups_descriptor, task_groups_deallocate
   USE stick_set, ONLY: pstickset
   USE fft_parallel
   USE fft_support
@@ -21,6 +22,7 @@ program test
   INTEGER, ALLOCATABLE :: req_p(:),req_u(:)
 #endif
   TYPE(fft_dlay_descriptor) :: dfftp, dffts, dfft3d
+  TYPE(task_groups_descriptor) :: dtgs
   INTEGER :: nx = 128
   INTEGER :: ny = 128
   INTEGER :: nz = 256
@@ -210,16 +212,16 @@ program test
 
   gamma_only = .true.
   stdout     = 6
-  
+
 
   CALL pstickset( gamma_only, bg, gcutm, gkcut, gcutms, &
         dfftp, dffts, ngw_ , ngm_ , ngs_ , mype, root, &
-        npes, comm, ntgs, iope, stdout, dfft3d )
+        npes, comm, ntgs, iope, stdout, dtgs, dfft3d )
 
-  ALLOCATE( psis( dffts%tg_nnr * dffts%nogrp, 2 ) )
+  ALLOCATE( psis( dtgs%tg_nnr * dtgs%nogrp, 2 ) )
   ALLOCATE( req_p(nbnd) )
   ALLOCATE( req_u(nbnd) )
-  ALLOCATE( aux( dffts%tg_nnr * dffts%nogrp ) )
+  ALLOCATE( aux( dtgs%tg_nnr * dtgs%nogrp ) )
 
   time = 0.0d0
   my_time = 0.0d0
@@ -237,17 +239,17 @@ program test
 
   write (*,*) (aux(i),i=1,5)
   CALL MPI_BARRIER( MPI_COMM_WORLD, ierr)
-  CALL pack_group_sticks( aux, psis(:,1), dffts )
-  CALL fw_tg_cft3_z( psis(:,1), dffts, aux )
-  CALL fw_tg_cft3_scatter( psis(:,1), dffts, aux )
-  CALL fw_tg_cft3_xy( psis(:,1), dffts )
+  CALL pack_group_sticks( aux, psis(:,1), dtgs )
+  CALL fw_tg_cft3_z( psis(:,1), dffts, aux, dtgs )
+  CALL fw_tg_cft3_scatter( psis(:,1), dffts, aux, dtgs )
+  CALL fw_tg_cft3_xy( psis(:,1), dffts, dtgs )
 
   write (*,*) (psis(i,1),i=1,5)
 
-  CALL bw_tg_cft3_xy( psis(:,1), dffts )
-  CALL bw_tg_cft3_scatter( psis(:,1), dffts, aux )
-  CALL bw_tg_cft3_z( psis(:,1), dffts, aux )
-  CALL unpack_group_sticks( psis(:,1), aux, dffts )
+  CALL bw_tg_cft3_xy( psis(:,1), dffts, dtgs )
+  CALL bw_tg_cft3_scatter( psis(:,1), dffts, aux, dtgs )
+  CALL bw_tg_cft3_z( psis(:,1), dffts, aux, dtgs )
+  CALL unpack_group_sticks( psis(:,1), aux, dtgs )
 
   write (*,*) (aux(i),i=1,5)
 
@@ -325,22 +327,22 @@ program test
 #else
   ipsi = 1 
   ! 
-  DO ib = 1, nbnd, 2*dffts%nogrp 
+  DO ib = 1, nbnd, 2*dtgs%nogrp 
  
      aux = 0.0d0
      aux(1) = 1.0d0
 
      time(1) = MPI_WTIME()
 
-     CALL pack_group_sticks( aux, psis(:,ipsi), dffts )
+     CALL pack_group_sticks( aux, psis(:,ipsi), dtgs )
 
      time(2) = MPI_WTIME()
 
-     CALL fw_tg_cft3_z( psis( :, ipsi ), dffts, aux )
+     CALL fw_tg_cft3_z( psis( :, ipsi ), dffts, aux, dtgs )
      time(3) = MPI_WTIME()
-     CALL fw_tg_cft3_scatter( psis( :, ipsi ), dffts, aux )
+     CALL fw_tg_cft3_scatter( psis( :, ipsi ), dffts, aux, dtgs )
      time(4) = MPI_WTIME()
-     CALL fw_tg_cft3_xy( psis( :, ipsi ), dffts )
+     CALL fw_tg_cft3_xy( psis( :, ipsi ), dffts, dtgs )
      time(5) = MPI_WTIME()
      !
      tmp1=1.d0
@@ -350,14 +352,14 @@ program test
      end do 
      !
      time(6) = MPI_WTIME()
-     CALL bw_tg_cft3_xy( psis( :, ipsi ), dffts )
+     CALL bw_tg_cft3_xy( psis( :, ipsi ), dffts, dtgs )
      time(7) = MPI_WTIME()
-     CALL bw_tg_cft3_scatter( psis( :, ipsi ), dffts, aux )
+     CALL bw_tg_cft3_scatter( psis( :, ipsi ), dffts, aux, dtgs )
      time(8) = MPI_WTIME()
-     CALL bw_tg_cft3_z( psis( :, ipsi ), dffts, aux )
+     CALL bw_tg_cft3_z( psis( :, ipsi ), dffts, aux, dtgs )
      time(9) = MPI_WTIME()
 
-     CALL unpack_group_sticks( psis( :, ipsi ), aux, dffts )
+     CALL unpack_group_sticks( psis( :, ipsi ), aux, dtgs )
 
      time(10) = MPI_WTIME()
 
@@ -377,6 +379,7 @@ program test
   CALL fft_dlay_deallocate( dffts )
   CALL fft_dlay_deallocate( dfftp )
   CALL fft_dlay_deallocate( dfft3d )
+  CALL task_groups_deallocate( dtgs )
 
   if( ncount > 0 ) then
      my_time = my_time / DBLE(ncount)

@@ -18,7 +18,7 @@ SUBROUTINE sum_band()
   USE control_flags,        ONLY : diago_full_acc, gamma_only, lxdm
   USE cell_base,            ONLY : at, bg, omega, tpiba
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
-  USE fft_base,             ONLY : dfftp, dffts
+  USE fft_base,             ONLY : dfftp, dffts, dtgs
   USE fft_interfaces,       ONLY : fwfft, invfft
   USE gvect,                ONLY : ngm, g, nl, nlm
   USE gvecs,                ONLY : nls, nlsm, doublegrid
@@ -255,7 +255,7 @@ SUBROUTINE sum_band()
        !
        use_tg = dffts%have_task_groups 
        dffts%have_task_groups = ( dffts%have_task_groups ) .AND. &
-                                ( this_bgrp_nbnd >= dffts%nogrp )
+                                ( this_bgrp_nbnd >= dtgs%nogrp )
        !
        incr = 2
        !
@@ -264,12 +264,12 @@ SUBROUTINE sum_band()
           IF( dft_is_meta() .OR. lxdm) &
              CALL errore( ' sum_band ', ' task groups with meta dft, not yet implemented ', 1 )
           !
-          v_siz = dffts%tg_nnr * dffts%nogrp
+          v_siz = dtgs%tg_nnr * dtgs%nogrp
           !
           ALLOCATE( tg_psi( v_siz ) )
           ALLOCATE( tg_rho( v_siz ) )
           !
-          incr  = 2 * dffts%nogrp
+          incr  = 2 * dtgs%nogrp
           !
        END IF
        !
@@ -305,9 +305,9 @@ SUBROUTINE sum_band()
                 tg_psi(:) = ( 0.D0, 0.D0 )
                 ioff   = 0
                 !
-                DO idx = 1, 2*dffts%nogrp, 2
+                DO idx = 1, 2*dtgs%nogrp, 2
                    !
-                   ! ... 2*dffts%nogrp ffts at the same time
+                   ! ... 2*dtgs%nogrp ffts at the same time
                    !
                    IF( idx + ibnd - 1 < ibnd_end ) THEN
                       DO j = 1, npw
@@ -323,11 +323,11 @@ SUBROUTINE sum_band()
                       END DO
                    END IF
 
-                   ioff = ioff + dffts%tg_nnr
+                   ioff = ioff + dtgs%tg_nnr
 
                 END DO
                 !
-                CALL invfft ('Wave', tg_psi, dffts)
+                CALL invfft ('Wave', tg_psi, dffts, dtgs)
                 !
                 ! Now the first proc of the group holds the first two bands
                 ! of the 2*dffts%nogrp bands that we are processing at the same time,
@@ -336,8 +336,8 @@ SUBROUTINE sum_band()
                 !
                 ! Compute the proper factor for each band
                 !
-                DO idx = 1, dffts%nogrp
-                   IF( dffts%nolist( idx ) == me_bgrp ) EXIT
+                DO idx = 1, dtgs%nogrp
+                   IF( dtgs%nolist( idx ) == me_bgrp ) EXIT
                 END DO
                 !
                 ! Remember two bands are packed in a single array :
@@ -358,7 +358,7 @@ SUBROUTINE sum_band()
                    w2 = w1
                 END IF
                 !
-                CALL get_rho_gamma(tg_rho, dffts%tg_npp( me_bgrp + 1 ) * &
+                CALL get_rho_gamma(tg_rho, dtgs%tg_npp( me_bgrp + 1 ) * &
                                    dffts%nr1x * dffts%nr2x, w1, w2, tg_psi)
                 !
              ELSE
@@ -445,12 +445,12 @@ SUBROUTINE sum_band()
              !
              ! reduce the group charge
              !
-             CALL mp_sum( tg_rho, gid = dffts%ogrp_comm )
+             CALL mp_sum( tg_rho, gid = dtgs%ogrp_comm )
              !
              ioff = 0
-             DO idx = 1, dffts%nogrp
-                IF( me_bgrp == dffts%nolist( idx ) ) EXIT
-                ioff = ioff + dffts%nr1x * dffts%nr2x * dffts%npp( dffts%nolist( idx ) + 1 )
+             DO idx = 1, dtgs%nogrp
+                IF( me_bgrp == dtgs%nolist( idx ) ) EXIT
+                ioff = ioff + dffts%nr1x * dffts%nr2x * dffts%npp( dtgs%nolist( idx ) + 1 )
              END DO
              !
              ! copy the charge back to the processor location
@@ -509,14 +509,14 @@ SUBROUTINE sum_band()
        !
        use_tg = dffts%have_task_groups
        dffts%have_task_groups = ( dffts%have_task_groups )        .AND. &
-                                ( this_bgrp_nbnd >= dffts%nogrp ) .AND. &
+                                ( this_bgrp_nbnd >= dtgs%nogrp ) .AND. &
                                 ( .NOT. (dft_is_meta() .OR. lxdm) )
        !
        incr = 1
        !
        IF( dffts%have_task_groups ) THEN
           !
-          v_siz = dffts%tg_nnr * dffts%nogrp
+          v_siz = dtgs%tg_nnr * dtgs%nogrp
           !
           IF (noncolin) THEN
              ALLOCATE( tg_psi_nc( v_siz, npol ) )
@@ -526,7 +526,7 @@ SUBROUTINE sum_band()
              ALLOCATE( tg_rho( v_siz ) )
           ENDIF
           !
-          incr  = dffts%nogrp
+          incr  = dtgs%nogrp
           !
        END IF
        !
@@ -554,7 +554,7 @@ SUBROUTINE sum_band()
           DO ibnd = ibnd_start, ibnd_end, incr
              !
              IF( dffts%have_task_groups ) THEN
-                DO idx = 1, dffts%nogrp
+                DO idx = 1, dtgs%nogrp
                    IF( idx + ibnd - 1 <= ibnd_end ) eband = eband + et( idx + ibnd - 1, ik ) * wg( idx + ibnd - 1, ik )
                 END DO
              ELSE
@@ -573,7 +573,7 @@ SUBROUTINE sum_band()
                    !
                    ioff   = 0
                    !
-                   DO idx = 1, dffts%nogrp
+                   DO idx = 1, dtgs%nogrp
                       !
                       ! ... dffts%nogrp ffts at the same time
                       !
@@ -586,12 +586,12 @@ SUBROUTINE sum_band()
                          END DO
                       END IF
 
-                      ioff = ioff + dffts%tg_nnr
+                      ioff = ioff + dtgs%tg_nnr
 
                    END DO
                    !
-                   CALL invfft ('Wave', tg_psi_nc(:,1), dffts)
-                   CALL invfft ('Wave', tg_psi_nc(:,2), dffts)
+                   CALL invfft ('Wave', tg_psi_nc(:,1), dffts, dtgs)
+                   CALL invfft ('Wave', tg_psi_nc(:,2), dffts, dtgs)
                    !
                    ! Now the first proc of the group holds the first band
                    ! of the dffts%nogrp bands that we are processing at the same time,
@@ -599,8 +599,8 @@ SUBROUTINE sum_band()
                    !
                    ! Compute the proper factor for each band
                    !
-                   DO idx = 1, dffts%nogrp
-                      IF( dffts%nolist( idx ) == me_bgrp ) EXIT
+                   DO idx = 1, dtgs%nogrp
+                      IF( dtgs%nolist( idx ) == me_bgrp ) EXIT
                    END DO
                    !
                    ! Remember
@@ -615,12 +615,12 @@ SUBROUTINE sum_band()
                    END IF
                    !
                    DO ipol=1,npol
-                      CALL get_rho(tg_rho_nc(:,1), dffts%tg_npp( me_bgrp + 1 ) &
+                      CALL get_rho(tg_rho_nc(:,1), dtgs%tg_npp( me_bgrp + 1 ) &
                           * dffts%nr1x * dffts%nr2x, w1, tg_psi_nc(:,ipol))
                    ENDDO
                    !
                    IF (domag) CALL get_rho_domag(tg_rho_nc(:,:), &
-                          dffts%tg_npp( me_bgrp + 1 )*dffts%nr1x*dffts%nr2x, &
+                          dtgs%tg_npp( me_bgrp + 1 )*dffts%nr1x*dffts%nr2x, &
                           w1, tg_psi_nc(:,:))
                    !
                 ELSE
@@ -665,7 +665,7 @@ SUBROUTINE sum_band()
                    !
                    ioff   = 0
                    !
-                   DO idx = 1, dffts%nogrp
+                   DO idx = 1, dtgs%nogrp
                       !
                       ! ... dffts%nogrp ffts at the same time
                       !
@@ -677,12 +677,12 @@ SUBROUTINE sum_band()
 !$omp end do
                       END IF
 
-                      ioff = ioff + dffts%tg_nnr
+                      ioff = ioff + dtgs%tg_nnr
 
                    END DO
 !$omp end parallel
                    !
-                   CALL invfft ('Wave', tg_psi, dffts)
+                   CALL invfft ('Wave', tg_psi, dffts, dtgs)
                    !
                    ! Now the first proc of the group holds the first band
                    ! of the dffts%nogrp bands that we are processing at the same time,
@@ -690,8 +690,8 @@ SUBROUTINE sum_band()
                    !
                    ! Compute the proper factor for each band
                    !
-                   DO idx = 1, dffts%nogrp
-                      IF( dffts%nolist( idx ) == me_bgrp ) EXIT
+                   DO idx = 1, dtgs%nogrp
+                      IF( dtgs%nolist( idx ) == me_bgrp ) EXIT
                    END DO
                    !
                    ! Remember
@@ -705,7 +705,7 @@ SUBROUTINE sum_band()
                       w1 = 0.0d0
                    END IF
                    !
-                   CALL get_rho(tg_rho, dffts%tg_npp( me_bgrp + 1 ) * dffts%nr1x * dffts%nr2x, w1, tg_psi)
+                   CALL get_rho(tg_rho, dtgs%tg_npp( me_bgrp + 1 ) * dffts%nr1x * dffts%nr2x, w1, tg_psi)
                    !
                 ELSE
                    !
@@ -746,15 +746,15 @@ SUBROUTINE sum_band()
              ! reduce the group charge
              !
              IF (noncolin) THEN
-                CALL mp_sum( tg_rho_nc, gid = dffts%ogrp_comm )
+                CALL mp_sum( tg_rho_nc, gid = dtgs%ogrp_comm )
              ELSE
-                CALL mp_sum( tg_rho, gid = dffts%ogrp_comm )
+                CALL mp_sum( tg_rho, gid = dtgs%ogrp_comm )
              ENDIF
              !
              ioff = 0
-             DO idx = 1, dffts%nogrp
-                IF( me_bgrp == dffts%nolist( idx ) ) EXIT
-                ioff = ioff + dffts%nr1x * dffts%nr2x * dffts%npp( dffts%nolist( idx ) + 1 )
+             DO idx = 1, dtgs%nogrp
+                IF( me_bgrp == dtgs%nolist( idx ) ) EXIT
+                ioff = ioff + dffts%nr1x * dffts%nr2x * dffts%npp( dtgs%nolist( idx ) + 1 )
              END DO
              !
              ! copy the charge back to the proper processor location

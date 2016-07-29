@@ -8,7 +8,7 @@ SUBROUTINE exx_psi(c, psitot2,nnrtot,my_nbsp, my_nxyz, nbsp)
     !
     USE kinds,                   ONLY  : DP
     USE fft_interfaces,          ONLY  : invfft
-    USE fft_base,                ONLY  : dffts, dfftp
+    USE fft_base,                ONLY  : dffts, dfftp, dtgs
     USE gvecw,                   ONLY  : ngw
     USE mp_global,               ONLY  : nproc_image, me_image,intra_image_comm
     USE cell_base,               ONLY  : omega
@@ -105,7 +105,7 @@ SUBROUTINE exx_psi(c, psitot2,nnrtot,my_nbsp, my_nxyz, nbsp)
       !write(stdout,'("dffts%nnr*nogrp:",I10)'), dffts%nnr*nogrp
       !write(stdout,'("nogrp*nr3 should be smaller or equal to nproc_image:")')
       !
-      nogrp = dffts%nogrp
+      nogrp = dtgs%nogrp
       !
       ALLOCATE( sdispls(nproc_image), sendcount(nproc_image) ); sdispls=0; sendcount=0
       ALLOCATE( rdispls(nproc_image), recvcount(nproc_image) ); rdispls=0; recvcount=0 
@@ -168,14 +168,14 @@ SUBROUTINE exx_psi(c, psitot2,nnrtot,my_nbsp, my_nxyz, nbsp)
           !
         END DO
         !
-        CALL invfft( 'Wave', psis, dffts )
+        CALL invfft( 'Wave', psis, dffts, dtgs )
         !
 #ifdef __MPI
         !
-        CALL mp_barrier( dffts%ogrp_comm )
+        CALL mp_barrier( dtgs%ogrp_comm )
         CALL MPI_ALLTOALLV(psis, sendcount1, sdispls1, MPI_DOUBLE_COMPLEX, &
             &         psis1, recvcount1, rdispls1, MPI_DOUBLE_COMPLEX, &
-            &         dffts%ogrp_comm, ierr)
+            &         dtgs%ogrp_comm, ierr)
 #endif
         !
         ngpww1 = 0

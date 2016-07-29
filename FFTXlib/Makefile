@@ -6,6 +6,7 @@ include ../make.inc
 #MODFLAGS= $(MOD_FLAG)../iotk/src $(MOD_FLAG).
 
 FFTX = \
+task_groups.o \
 scatter_mod.o  \
 fft_scalar.o  \
 fft_parallel.o  \
@@ -16,8 +17,7 @@ fft_smallbox.o  \
 fft_support.o  \
 fft_error.o  \
 fft_stick.o  \
-fft_types.o \
-task_groups.o 
+fft_types.o 
 
 
 all : libqefft.a

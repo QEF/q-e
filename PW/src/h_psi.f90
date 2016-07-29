@@ -96,7 +96,7 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   USE realus,   ONLY : real_space, invfft_orbital_gamma, initialisation_level, &
                        fwfft_orbital_gamma, calbec_rs_gamma, &
                        add_vuspsir_gamma, v_loc_psir_inplace
-  USE fft_base, ONLY : dffts
+  USE fft_base, ONLY : dffts, dtgs
   USE exx,      ONLY : vexx, vexxace_gamma, vexxace_k
   USE funct,    ONLY : exx_is_active
   !
@@ -125,8 +125,8 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
         ! ... real-space algorithm
         ! ... fixme: real_space without beta functions does not make sense
         !
-        IF ( dffts%have_task_groups .AND. ( m >= dffts%nogrp )) then 
-           incr = 2 * dffts%nogrp
+        IF ( dffts%have_task_groups .AND. ( m >= dtgs%nogrp )) then 
+           incr = 2 * dtgs%nogrp
         ELSE
            incr = 2
         ENDIF

@@ -271,7 +271,7 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   !      Original routine written by Francesco Mauri
   !
   USE kinds, ONLY : DP
-  USE fft_base, ONLY : dffts
+  USE fft_base, ONLY : dffts, dtgs
   USE fft_parallel, ONLY : tg_cgather
   USE wavefunctions_module,  ONLY: evc
   USE buffers,  ONLY : get_buffer
@@ -320,10 +320,10 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   incr=1
   IF ( dffts%have_task_groups ) THEN
      !
-     v_siz =  dffts%tg_nnr * dffts%nogrp
+     v_siz =  dtgs%tg_nnr * dtgs%nogrp
      ALLOCATE( tg_dv   ( v_siz, nspin_mag ) )
      ALLOCATE( tg_psic( v_siz, npol ) )
-     incr = dffts%nogrp
+     incr = dtgs%nogrp
      !
   ENDIF
   !
@@ -373,15 +373,15 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
         IF ( ntask_groups > 1 ) dffts%have_task_groups=.TRUE.
         IF ( dffts%have_task_groups ) THEN
            IF (noncolin) THEN
-              CALL tg_cgather( dffts, dvscfins(:,1,ipert), tg_dv(:,1))
+              CALL tg_cgather( dffts, dtgs, dvscfins(:,1,ipert), tg_dv(:,1))
               IF (domag) THEN
                  DO ipol=2,4
-                    CALL tg_cgather( dffts, dvscfins(:,ipol,ipert), &
+                    CALL tg_cgather( dffts, dtgs, dvscfins(:,ipol,ipert), &
                                                           tg_dv(:,ipol))
                  ENDDO
               ENDIF
            ELSE
-              CALL tg_cgather( dffts, dvscfins(:,current_spin,ipert), &
+              CALL tg_cgather( dffts, dtgs, dvscfins(:,current_spin,ipert), &
                                                             tg_dv(:,1))
            ENDIF
         ENDIF

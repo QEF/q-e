@@ -27,7 +27,7 @@ SUBROUTINE lr_dvpsi_eels (ik, dvpsi1, dvpsi2)
   !
   USE kinds,                 ONLY : DP
   USE wvfct,                 ONLY : npwx, nbnd
-  USE fft_base,              ONLY : dffts
+  USE fft_base,              ONLY : dffts, dtgs
   USE gvecw,                 ONLY : gcutw
   USE qpoint,                ONLY : ikks, ikqs, nksq 
   USE eqv,                   ONLY : evq, dpsi 
@@ -68,11 +68,11 @@ SUBROUTINE lr_dvpsi_eels (ik, dvpsi1, dvpsi2)
   !
   IF ( dffts%have_task_groups ) THEN
      !
-     v_siz =  dffts%tg_nnr * dffts%nogrp
+     v_siz =  dtgs%tg_nnr * dtgs%nogrp
      !
      ALLOCATE( tg_psic(v_siz,npol) )
      !
-     incr = dffts%nogrp
+     incr = dtgs%nogrp
      !
   ENDIF 
   !

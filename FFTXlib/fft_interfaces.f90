@@ -21,12 +21,14 @@ MODULE fft_interfaces
      !! and to the "box-grid" version **invfft_b**, used only in CP 
      !! (the latter has an additional argument)
      
-     SUBROUTINE invfft_x( grid_type, f, dfft )
+     SUBROUTINE invfft_x( grid_type, f, dfft, dtgs )
        USE fft_types,  ONLY: fft_dlay_descriptor
+       USE task_groups,   ONLY: task_groups_descriptor
        IMPLICIT NONE
        INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
        CHARACTER(LEN=*),  INTENT(IN) :: grid_type
        TYPE(fft_dlay_descriptor), INTENT(IN) :: dfft
+       TYPE(task_groups_descriptor), OPTIONAL, INTENT(IN) :: dtgs
        COMPLEX(DP) :: f(:)
      END SUBROUTINE invfft_x
      !
@@ -42,12 +44,14 @@ MODULE fft_interfaces
   END INTERFACE
 
   INTERFACE fwfft
-     SUBROUTINE fwfft_x( grid_type, f, dfft )
+     SUBROUTINE fwfft_x( grid_type, f, dfft, dtgs )
        USE fft_types,  ONLY: fft_dlay_descriptor
+       USE task_groups,   ONLY: task_groups_descriptor
        IMPLICIT NONE
        INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
        CHARACTER(LEN=*), INTENT(IN) :: grid_type
        TYPE(fft_dlay_descriptor), INTENT(IN) :: dfft
+       TYPE(task_groups_descriptor), OPTIONAL, INTENT(IN) :: dtgs
        COMPLEX(DP) :: f(:)
      END SUBROUTINE fwfft_x
   END INTERFACE
@@ -56,7 +60,7 @@ END MODULE fft_interfaces
 !=---------------------------------------------------------------------------=!
 !
 !=---------------------------------------------------------------------------=!
-SUBROUTINE invfft_x( grid_type, f, dfft )
+SUBROUTINE invfft_x( grid_type, f, dfft, dtgs )
   !! Compute G-space to R-space for a specific grid type
   !! 
   !! **grid_type = 'Dense'** : 
@@ -88,6 +92,7 @@ SUBROUTINE invfft_x( grid_type, f, dfft )
   USE fft_smallbox,  ONLY: cft_b, cft_b_omp
   USE fft_parallel,  ONLY: tg_cft3s
   USE fft_types,     ONLY: fft_dlay_descriptor
+  USE task_groups,   ONLY: task_groups_descriptor
 
   IMPLICIT NONE
 
@@ -96,6 +101,7 @@ SUBROUTINE invfft_x( grid_type, f, dfft )
   TYPE(fft_dlay_descriptor), INTENT(IN) :: dfft
   CHARACTER(LEN=*), INTENT(IN) :: grid_type
   COMPLEX(DP) :: f(:)
+  TYPE(task_groups_descriptor), OPTIONAL, INTENT(IN) :: dtgs
   !
   IF( grid_type == 'Dense' ) THEN
      CALL start_clock( 'fft' )
@@ -119,7 +125,14 @@ SUBROUTINE invfft_x( grid_type, f, dfft )
        grid_type == 'Custom' ) THEN
      CALL tg_cft3s( f, dfft, 1 )
   ELSE IF( grid_type == 'Wave' .OR. grid_type == 'CustomWave' ) THEN
-     CALL tg_cft3s( f, dfft, 2, dfft%have_task_groups )
+     IF( PRESENT( dtgs ) ) THEN
+        CALL tg_cft3s( f, dfft, 2, dtgs, dfft%have_task_groups )
+     ELSE
+        IF( dfft%have_task_groups ) THEN
+           CALL fftx_error__( ' invfft ', ' have_task_groups is true but dtgs is not present ', 1 )
+        END IF
+        CALL tg_cft3s( f, dfft, 2 )
+     END IF
   END IF
 
 #else
@@ -162,7 +175,7 @@ END SUBROUTINE invfft_x
 !=---------------------------------------------------------------------------=!
 !
 !=---------------------------------------------------------------------------=!
-SUBROUTINE fwfft_x( grid_type, f, dfft )
+SUBROUTINE fwfft_x( grid_type, f, dfft, dtgs )
   !! Compute R-space to G-space for a specific grid type
   !! 
   !! **grid_type = 'Dense'**
@@ -193,6 +206,7 @@ SUBROUTINE fwfft_x( grid_type, f, dfft )
   USE fft_scalar,    ONLY: cfft3d, cfft3ds
   USE fft_parallel,  ONLY: tg_cft3s
   USE fft_types,     ONLY: fft_dlay_descriptor
+  USE task_groups,   ONLY: task_groups_descriptor
 
   IMPLICIT NONE
 
@@ -201,6 +215,7 @@ SUBROUTINE fwfft_x( grid_type, f, dfft )
   TYPE(fft_dlay_descriptor), INTENT(IN) :: dfft
   CHARACTER(LEN=*), INTENT(IN) :: grid_type
   COMPLEX(DP) :: f(:)
+  TYPE(task_groups_descriptor), OPTIONAL, INTENT(IN) :: dtgs
 
   IF( grid_type == 'Dense' ) THEN
      CALL start_clock( 'fft' )
@@ -222,7 +237,14 @@ SUBROUTINE fwfft_x( grid_type, f, dfft )
       grid_type == 'Custom' ) THEN
      CALL tg_cft3s(f,dfft,-1)
   ELSE IF( grid_type == 'Wave' .OR. grid_type == 'CustomWave' ) THEN
-     CALL tg_cft3s(f,dfft,-2, dfft%have_task_groups )
+     IF( PRESENT( dtgs ) ) THEN
+        CALL tg_cft3s(f,dfft,-2, dtgs, dfft%have_task_groups )
+     ELSE
+        IF( dfft%have_task_groups ) THEN
+           CALL fftx_error__( ' fwfft ', ' have_task_groups is true but dtgs is not present ', 1 )
+        END IF
+        CALL tg_cft3s(f,dfft,-2 )
+     END IF
   END IF
 
 #else 

@@ -33,9 +33,9 @@
 
       SUBROUTINE pstickset( gamma_only, bg, gcut, gkcut, gcuts, &
           dfftp, dffts, ngw, ngm, ngs, mype, root, nproc, comm, nogrp_ , &
-          ionode, stdout, dfft3d )
+          ionode, stdout, dtgs, dfft3d )
 
-          USE task_groups, ONLY: task_groups_init
+          USE task_groups, ONLY: task_groups_descriptor, task_groups_init
 
           LOGICAL, INTENT(in) :: gamma_only
 ! ...     bg(:,1), bg(:,2), bg(:,3) reciprocal space base vectors.
@@ -49,6 +49,7 @@
           LOGICAL, INTENT(IN) :: ionode
           INTEGER, INTENT(IN) :: stdout
 
+          TYPE(task_groups_descriptor), OPTIONAL, INTENT(inout) :: dtgs
           TYPE(fft_dlay_descriptor), OPTIONAL, INTENT(inout) :: dfft3d
 
           LOGICAL :: tk
@@ -248,7 +249,16 @@
           !  Initialize task groups.
           !  Note that this call modify dffts adding task group data.
           !
-          CALL task_groups_init( dffts )
+          IF( PRESENT( dtgs ) ) THEN
+             CALL task_groups_init( dffts, dtgs, nogrp_ )
+          ELSE
+             dffts%have_task_groups = .FALSE.
+             dtgs%have_task_groups = .FALSE.
+             IF( nogrp_ > 1 ) THEN
+                CALL fftx_error__( ' pstickset ', &
+                & ' more than one Task Groups is requested, but the Task Group descriptor is not initialized ', 1 )
+             END IF
+          END IF
           !
           IF (ionode) THEN
              WRITE( stdout,*)

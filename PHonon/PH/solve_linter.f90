@@ -32,7 +32,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   USE klist,                ONLY : lgauss, degauss, ngauss, xk, wk, ngk, igk_k
   USE gvect,                ONLY : g
   USE gvecs,                ONLY : doublegrid
-  USE fft_base,             ONLY : dfftp, dffts
+  USE fft_base,             ONLY : dfftp, dffts, dtgs
   USE fft_parallel,         ONLY : tg_cgather
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE spin_orb,             ONLY : domag
@@ -173,10 +173,10 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   incr=1
   IF ( dffts%have_task_groups ) THEN
      !
-     v_siz =  dffts%tg_nnr * dffts%nogrp
+     v_siz =  dtgs%tg_nnr * dtgs%nogrp
      ALLOCATE( tg_dv   ( v_siz, nspin_mag ) )
      ALLOCATE( tg_psic( v_siz, npol ) )
-     incr = dffts%nogrp
+     incr = dtgs%nogrp
      !
   ENDIF
   !
@@ -290,16 +290,16 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
               IF ( ntask_groups > 1 ) dffts%have_task_groups=.TRUE.
               IF( dffts%have_task_groups ) THEN
                  IF (noncolin) THEN
-                    CALL tg_cgather( dffts, dvscfins(:,1,ipert), &
+                    CALL tg_cgather( dffts, dtgs, dvscfins(:,1,ipert), &
                                                                 tg_dv(:,1))
                     IF (domag) THEN
                        DO ipol=2,4
-                          CALL tg_cgather( dffts, dvscfins(:,ipol,ipert), &
+                          CALL tg_cgather( dffts, dtgs, dvscfins(:,ipol,ipert), &
                                                              tg_dv(:,ipol))
                        ENDDO
                     ENDIF
                  ELSE
-                    CALL tg_cgather( dffts, dvscfins(:,current_spin,ipert), &
+                    CALL tg_cgather( dffts, dtgs, dvscfins(:,current_spin,ipert), &
                                                              tg_dv(:,1))
                  ENDIF
               ENDIF

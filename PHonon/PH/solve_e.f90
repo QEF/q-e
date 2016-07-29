@@ -27,7 +27,7 @@ subroutine solve_e
   USE klist,                 ONLY : lgauss, xk, wk, ngk, igk_k
   USE gvect,                 ONLY : g
   USE gvecs,                 ONLY : doublegrid
-  USE fft_base,              ONLY : dfftp, dffts
+  USE fft_base,              ONLY : dfftp, dffts, dtgs
   USE fft_parallel,          ONLY : tg_cgather
   USE lsda_mod,              ONLY : lsda, nspin, current_spin, isk
   USE spin_orb,              ONLY : domag
@@ -143,10 +143,10 @@ subroutine solve_e
   incr=1
   IF ( dffts%have_task_groups ) THEN
      !
-     v_siz =  dffts%tg_nnr * dffts%nogrp
+     v_siz =  dtgs%tg_nnr * dtgs%nogrp
      ALLOCATE( tg_dv   ( v_siz, nspin_mag ) )
      ALLOCATE( tg_psic( v_siz, npol ) )
-     incr = dffts%nogrp
+     incr = dtgs%nogrp
      !
   ENDIF
   !
@@ -212,16 +212,16 @@ subroutine solve_e
               IF ( ntask_groups > 1) dffts%have_task_groups=.TRUE.
               IF( dffts%have_task_groups ) THEN
                  IF (noncolin) THEN
-                    CALL tg_cgather( dffts, dvscfins(:,1,ipol), &
+                    CALL tg_cgather( dffts, dtgs, dvscfins(:,1,ipol), &
                                                                 tg_dv(:,1))
                     IF (domag) THEN
                        DO jpol=2,4
-                          CALL tg_cgather( dffts, dvscfins(:,jpol,ipol), &
+                          CALL tg_cgather( dffts, dtgs, dvscfins(:,jpol,ipol), &
                                                              tg_dv(:,jpol))
                        ENDDO
                     ENDIF
                  ELSE
-                    CALL tg_cgather( dffts, dvscfins(:,current_spin,ipol), &
+                    CALL tg_cgather( dffts, dtgs, dvscfins(:,current_spin,ipol), &
                                                              tg_dv(:,1))
                  ENDIF
               ENDIF

@@ -108,7 +108,7 @@ MODULE realus
     !This subroutine should be called to allocate/reset real space related variables.
     !---------------------------------------------------------------------------
      USE control_flags,        ONLY : tqr
-     USE fft_base,             ONLY : dffts
+     USE fft_base,             ONLY : dffts, dtgs
      USE io_global,            ONLY : stdout
 
 
@@ -124,8 +124,8 @@ MODULE realus
         !
         IF (allocated( tg_psic ) ) DEALLOCATE( tg_psic )
         !
-        ALLOCATE( tg_psic( dffts%tg_nnr * dffts%nogrp ) )
-        ALLOCATE( tg_vrs( dffts%tg_nnr * dffts%nogrp ) )
+        ALLOCATE( tg_psic( dtgs%tg_nnr * dtgs%nogrp ) )
+        ALLOCATE( tg_vrs( dtgs%tg_nnr * dtgs%nogrp ) )
         !
      ENDIF
      !
@@ -1294,7 +1294,7 @@ MODULE realus
     USE wavefunctions_module,  ONLY : psic
     USE ions_base,             ONLY : nat, ntyp => nsp, ityp
     USE uspp_param,            ONLY : nh, nhm
-    USE fft_base,              ONLY : dffts
+    USE fft_base,              ONLY : dffts, dtgs
     USE fft_parallel,          ONLY : tg_gather
     USE mp_bands,              ONLY : intra_bgrp_comm
     USE mp,        ONLY : mp_sum
@@ -1313,7 +1313,7 @@ MODULE realus
     !
     CALL start_clock( 'calbec_rs' )
     !
-    IF( ( dffts%have_task_groups ) .and. ( last >= dffts%nogrp ) ) THEN
+    IF( ( dffts%have_task_groups ) .and. ( last >= dtgs%nogrp ) ) THEN
 
      CALL errore( 'calbec_rs_gamma', 'task_groups not implemented', 1 )
 
@@ -1398,7 +1398,7 @@ MODULE realus
     USE ions_base,             ONLY : nat, ntyp => nsp, ityp
     USE uspp_param,            ONLY : nh, nhm
     USE becmod,                ONLY : bec_type, becp
-    USE fft_base,              ONLY : dffts
+    USE fft_base,              ONLY : dffts, dtgs
     USE fft_parallel,          ONLY : tg_gather
     !
     IMPLICIT NONE
@@ -1416,7 +1416,7 @@ MODULE realus
     !
     CALL start_clock( 'calbec_rs' )
     !
-    IF( ( dffts%have_task_groups ) .and. ( last >= dffts%nogrp ) ) THEN
+    IF( ( dffts%have_task_groups ) .and. ( last >= dtgs%nogrp ) ) THEN
 
      CALL errore( 'calbec_rs_k', 'task_groups not implemented', 1 )
 
@@ -1481,7 +1481,7 @@ MODULE realus
       USE lsda_mod,               ONLY : current_spin
       USE uspp,                   ONLY : qq
       USE becmod,                 ONLY : bec_type, becp
-      USE fft_base,               ONLY : dffts
+      USE fft_base,               ONLY : dffts, dtgs
       USE fft_parallel,           ONLY : tg_gather
       !
       IMPLICIT NONE
@@ -1495,7 +1495,7 @@ MODULE realus
       REAL(DP), EXTERNAL :: ddot
       !
       CALL start_clock( 's_psir' )
-      IF( ( dffts%have_task_groups ) .and. ( last >= dffts%nogrp ) ) THEN
+      IF( ( dffts%have_task_groups ) .and. ( last >= dtgs%nogrp ) ) THEN
          CALL errore( 's_psir_gamma', 'task_groups not implemented', 1 )
       ELSE
       ! non task groups part starts here
@@ -1565,7 +1565,7 @@ MODULE realus
       USE lsda_mod,               ONLY : current_spin
       USE uspp,                   ONLY : qq
       USE becmod,                 ONLY : bec_type, becp
-      USE fft_base,               ONLY : dffts
+      USE fft_base,               ONLY : dffts, dtgs
       USE fft_parallel,           ONLY : tg_gather
       !
       IMPLICIT NONE
@@ -1580,7 +1580,7 @@ MODULE realus
       !
 
       CALL start_clock( 's_psir' )
-      IF( ( dffts%have_task_groups ) .and. ( last >= dffts%nogrp ) ) THEN
+      IF( ( dffts%have_task_groups ) .and. ( last >= dtgs%nogrp ) ) THEN
         CALL errore( 's_psir_k', 'task_groups not implemented', 1 )
       ELSE
       !non task groups part starts here
@@ -1653,7 +1653,7 @@ MODULE realus
   USE lsda_mod,               ONLY : current_spin
   USE uspp,                   ONLY : deeq
   USE becmod,                 ONLY : bec_type, becp
-  USE fft_base,               ONLY : dffts
+  USE fft_base,               ONLY : dffts, dtgs
   USE fft_parallel,           ONLY : tg_gather
   !
   IMPLICIT NONE
@@ -1668,7 +1668,7 @@ MODULE realus
   !
   CALL start_clock( 'add_vuspsir' )
 
-  IF( ( dffts%have_task_groups ) .and. ( last >= dffts%nogrp ) ) THEN
+  IF( ( dffts%have_task_groups ) .and. ( last >= dtgs%nogrp ) ) THEN
 
     CALL errore( 'add_vuspsir_gamma', 'task_groups not implemented', 1 )
 
@@ -1753,7 +1753,7 @@ MODULE realus
   USE lsda_mod,               ONLY : current_spin
   USE uspp,                   ONLY : deeq
   USE becmod,                 ONLY : bec_type, becp
-  USE fft_base,               ONLY : dffts
+  USE fft_base,               ONLY : dffts, dtgs
   USE fft_parallel,           ONLY : tg_gather
   !
   IMPLICIT NONE
@@ -1769,7 +1769,7 @@ MODULE realus
   !
   CALL start_clock( 'add_vuspsir' )
 
-  IF( ( dffts%have_task_groups ) .and. ( last >= dffts%nogrp ) ) THEN
+  IF( ( dffts%have_task_groups ) .and. ( last >= dtgs%nogrp ) ) THEN
     CALL errore( 'add_vuspsir_k', 'task_groups not implemented', 1 )
   ELSE
    ! non task groups part starts here
@@ -1846,7 +1846,7 @@ MODULE realus
     USE gvecs,         ONLY : nls,nlsm,doublegrid
     USE klist,         ONLY : ngk, igk_k
     USE kinds,         ONLY : DP
-    USE fft_base,      ONLY : dffts
+    USE fft_base,      ONLY : dffts, dtgs
     USE fft_parallel,  ONLY : tg_gather
     USE fft_interfaces,ONLY : invfft
 
@@ -1873,7 +1873,7 @@ MODULE realus
     ! the number of bands is smaller than the number of task groups
     !
     use_tg = dffts%have_task_groups
-    dffts%have_task_groups = ( dffts%have_task_groups ) .and. ( last >= dffts%nogrp )
+    dffts%have_task_groups = ( dffts%have_task_groups ) .and. ( last >= dtgs%nogrp )
 
     IF( dffts%have_task_groups ) THEN
         !
@@ -1881,7 +1881,7 @@ MODULE realus
         tg_psic = (0.d0, 0.d0)
         ioff   = 0
         !
-        DO idx = 1, 2*dffts%nogrp, 2
+        DO idx = 1, 2*dtgs%nogrp, 2
 
            IF( idx + ibnd - 1 < last ) THEN
               DO j = 1, ngk(1)
@@ -1897,17 +1897,17 @@ MODULE realus
               ENDDO
            ENDIF
 
-           ioff = ioff + dffts%tg_nnr
+           ioff = ioff + dtgs%tg_nnr
 
         ENDDO
         !
         !
-        CALL invfft ('Wave', tg_psic, dffts)
+        CALL invfft ('Wave', tg_psic, dffts, dtgs)
         !
         !
         IF (present(conserved)) THEN
          IF (conserved .eqv. .true.) THEN
-          IF (.not. allocated(tg_psic_temp)) ALLOCATE( tg_psic_temp( dffts%tg_nnr * dffts%nogrp ) )
+          IF (.not. allocated(tg_psic_temp)) ALLOCATE( tg_psic_temp( dtgs%tg_nnr * dtgs%nogrp ) )
           tg_psic_temp=tg_psic
          ENDIF
         ENDIF
@@ -1968,7 +1968,7 @@ MODULE realus
     USE klist,         ONLY : ngk, igk_k
     USE gvecs,         ONLY : nls,nlsm,doublegrid
     USE kinds,         ONLY : DP
-    USE fft_base,      ONLY : dffts
+    USE fft_base,      ONLY : dffts, dtgs
     USE fft_parallel,  ONLY : tg_gather
     USE fft_interfaces,ONLY : fwfft
     USE mp_bands,      ONLY : me_bgrp
@@ -1993,14 +1993,14 @@ MODULE realus
     CALL start_clock( 'fwfft_orbital' )
     !New task_groups versions
     use_tg = dffts%have_task_groups
-    dffts%have_task_groups = ( dffts%have_task_groups ) .and. ( last >= dffts%nogrp )
+    dffts%have_task_groups = ( dffts%have_task_groups ) .and. ( last >= dtgs%nogrp )
     IF( dffts%have_task_groups ) THEN
        !
-        CALL fwfft ('Wave', tg_psic, dffts )
+        CALL fwfft ('Wave', tg_psic, dffts, dtgs )
         !
         ioff   = 0
         !
-        DO idx = 1, 2*dffts%nogrp, 2
+        DO idx = 1, 2*dtgs%nogrp, 2
            !
            IF( idx + ibnd - 1 < last ) THEN
               DO j = 1, ngk(1)
@@ -2077,7 +2077,7 @@ MODULE realus
     USE wavefunctions_module,     ONLY : psic
     USE klist,                    ONLY : ngk, igk_k
     USE gvecs,                    ONLY : nls, nlsm, doublegrid
-    USE fft_base,                 ONLY : dffts
+    USE fft_base,                 ONLY : dffts, dtgs
     USE fft_interfaces,           ONLY : invfft
 
     IMPLICIT NONE
@@ -2096,14 +2096,14 @@ MODULE realus
 
     CALL start_clock( 'invfft_orbital' )
     use_tg = dffts%have_task_groups
-    dffts%have_task_groups = ( dffts%have_task_groups ) .and. ( last >= dffts%nogrp )
+    dffts%have_task_groups = ( dffts%have_task_groups ) .and. ( last >= dtgs%nogrp )
 
     IF( dffts%have_task_groups ) THEN
        !
        tg_psic = ( 0.D0, 0.D0 )
        ioff   = 0
        !
-       DO idx = 1, dffts%nogrp
+       DO idx = 1, dtgs%nogrp
           !
           IF( idx + ibnd - 1 <= last ) THEN
              !DO j = 1, size(orbital,1)
@@ -2111,15 +2111,15 @@ MODULE realus
              !END DO
           ENDIF
 
-          ioff = ioff + dffts%tg_nnr
+          ioff = ioff + dtgs%tg_nnr
 
        ENDDO
        !
-       CALL invfft ('Wave', tg_psic, dffts)
+       CALL invfft ('Wave', tg_psic, dffts, dtgs)
        IF (present(conserved)) THEN
           IF (conserved .eqv. .true.) THEN
              IF (.not. allocated(tg_psic_temp)) &
-                  &ALLOCATE( tg_psic_temp( dffts%tg_nnr * dffts%nogrp ) )
+                  &ALLOCATE( tg_psic_temp( dtgs%tg_nnr * dtgs%nogrp ) )
              tg_psic_temp=tg_psic
           ENDIF
        ENDIF
@@ -2161,7 +2161,7 @@ MODULE realus
     USE klist,                    ONLY : ngk, igk_k
     USE gvecs,                    ONLY : nls, nlsm, doublegrid
     USE kinds,                    ONLY : DP
-    USE fft_base,                 ONLY : dffts
+    USE fft_base,                 ONLY : dffts, dtgs
     USE fft_interfaces,           ONLY : fwfft
     USE mp_bands,                 ONLY : me_bgrp
 
@@ -2180,15 +2180,15 @@ MODULE realus
 
    CALL start_clock( 'fwfft_orbital' )
    use_tg = dffts%have_task_groups
-   dffts%have_task_groups = ( dffts%have_task_groups ) .and. ( last >= dffts%nogrp )
+   dffts%have_task_groups = ( dffts%have_task_groups ) .and. ( last >= dtgs%nogrp )
 
     IF( dffts%have_task_groups ) THEN
        !
-       CALL fwfft ('Wave', tg_psic, dffts)
+       CALL fwfft ('Wave', tg_psic, dffts, dtgs)
        !
        ioff   = 0
        !
-       DO idx = 1, dffts%nogrp
+       DO idx = 1, dtgs%nogrp
           !
           IF( idx + ibnd - 1 <= last ) THEN
              orbital (:, ibnd+idx-1) = tg_psic( nls(igk_k(:,ik)) + ioff )
@@ -2231,7 +2231,7 @@ MODULE realus
                        ONLY : psic
     USE gvecs,         ONLY : nls,nlsm,doublegrid
     USE kinds,         ONLY : DP
-    USE fft_base,      ONLY : dffts
+    USE fft_base,      ONLY : dffts, dtgs
     USE fft_parallel,  ONLY : tg_gather
     USE mp_bands,      ONLY : me_bgrp
     USE scf,           ONLY : vrs
@@ -2248,13 +2248,13 @@ MODULE realus
     REAL(DP),    ALLOCATABLE :: tg_v(:)
     CALL start_clock( 'v_loc_psir' )
 
-    IF( dffts%have_task_groups .and. last >= dffts%nogrp  ) THEN
+    IF( dffts%have_task_groups .and. last >= dtgs%nogrp  ) THEN
         IF (ibnd == 1 ) THEN
-          CALL tg_gather( dffts, vrs(:,current_spin), tg_v )
+          CALL tg_gather( dffts, dtgs, vrs(:,current_spin), tg_v )
           !if ibnd==1 this is a new calculation, and tg_v should be distributed.
         ENDIF
         !
-        DO j = 1, dffts%nr1x*dffts%nr2x*dffts%tg_npp( me_bgrp + 1 )
+        DO j = 1, dffts%nr1x*dffts%nr2x*dtgs%tg_npp( me_bgrp + 1 )
            tg_psic (j) = tg_psic (j) + tg_psic_temp (j) * tg_v(j)
         ENDDO
         !
@@ -2281,7 +2281,7 @@ MODULE realus
                        ONLY : psic
     USE gvecs,         ONLY : nls,nlsm,doublegrid
     USE kinds,         ONLY : DP
-    USE fft_base,      ONLY : dffts
+    USE fft_base,      ONLY : dffts, dtgs
     USE fft_parallel,  ONLY : tg_gather
     USE mp_bands,      ONLY : me_bgrp
     USE scf,           ONLY : vrs
@@ -2297,13 +2297,13 @@ MODULE realus
     REAL(DP),    ALLOCATABLE :: tg_v(:)
     CALL start_clock( 'v_loc_psir' )
 
-    IF( dffts%have_task_groups .and. last >= dffts%nogrp  ) THEN
+    IF( dffts%have_task_groups .and. last >= dtgs%nogrp  ) THEN
         IF (ibnd == 1 ) THEN
-          CALL tg_gather( dffts, vrs(:,current_spin), tg_v )
+          CALL tg_gather( dffts, dtgs, vrs(:,current_spin), tg_v )
           !if ibnd==1 this is a new calculation, and tg_v should be distributed.
         ENDIF
         !
-        DO j = 1, dffts%nr1x*dffts%nr2x*dffts%tg_npp( me_bgrp + 1 )
+        DO j = 1, dffts%nr1x*dffts%nr2x*dtgs%tg_npp( me_bgrp + 1 )
            tg_psic (j) = tg_v(j) * tg_psic(j)
         ENDDO
         !

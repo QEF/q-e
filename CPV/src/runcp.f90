@@ -29,7 +29,7 @@
       USE mp_global,           ONLY : me_bgrp, &
                                       my_bgrp_id, nbgrp, inter_bgrp_comm
       USE mp,                  ONLY : mp_sum
-      USE fft_base,            ONLY : dffts
+      USE fft_base,            ONLY : dffts, dtgs
       USE fft_parallel,        ONLY : tg_gather
       use wave_base,           only : wave_steepest, wave_verlet
       use control_flags,       only : lwf, tsde
@@ -82,8 +82,8 @@
      END IF
 
      IF( dffts%have_task_groups ) THEN
-        tg_rhos_siz = dffts%nogrp * dffts%tg_nnr
-        c2_siz      = dffts%nogrp * ngwx
+        tg_rhos_siz = dtgs%nogrp * dtgs%tg_nnr
+        c2_siz      = dtgs%nogrp * ngwx
      ELSE
         tg_rhos_siz = 1
         c2_siz      = ngw 
@@ -132,10 +132,10 @@
            !  processors of an orbital TASK-GROUP
            !
            DO i = 1, nspin
-              CALL tg_gather( dffts, rhos(:,i), tg_rhos(:,i) )
+              CALL tg_gather( dffts, dtgs, rhos(:,i), tg_rhos(:,i) )
            END DO
 
-           incr = 2 * dffts%nogrp
+           incr = 2 * dtgs%nogrp
 
         ELSE
 

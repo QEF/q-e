@@ -29,7 +29,7 @@ SUBROUTINE lr_read_wf()
   USE wvfct,                ONLY : nbnd, npwx
   USE control_flags,        ONLY : gamma_only,io_level
   USE gvecs,                ONLY : nls, nlsm
-  USE fft_base,             ONLY : dffts
+  USE fft_base,             ONLY : dffts, dtgs
   USE fft_interfaces,       ONLY : invfft
   USE uspp,                 ONLY : vkb, nkb, okvan
   USE becmod,               ONLY : bec_type, becp, calbec
@@ -219,8 +219,8 @@ SUBROUTINE normal_read()
   !
   IF ( dffts%have_task_groups ) THEN
        !
-       v_siz =  dffts%tg_nnr * dffts%nogrp
-       incr = 2 * dffts%nogrp
+       v_siz =  dtgs%tg_nnr * dtgs%nogrp
+       incr = 2 * dtgs%nogrp
        tg_revc0 = (0.0d0,0.0d0)
        !
   ELSE
@@ -237,7 +237,7 @@ SUBROUTINE normal_read()
         !
         IF (dffts%have_task_groups) THEN               
            !
-           DO j = 1, dffts%nr1x*dffts%nr2x*dffts%tg_npp( me_bgrp + 1 )
+           DO j = 1, dffts%nr1x*dffts%nr2x*dtgs%tg_npp( me_bgrp + 1 )
                !
                tg_revc0(j,ibnd,1) = tg_psic(j)
                !  

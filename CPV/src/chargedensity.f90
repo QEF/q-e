@@ -117,7 +117,7 @@
       USE cg_module,          ONLY: tcg
       USE cp_interfaces,      ONLY: stress_kin, enkin
       USE fft_interfaces,     ONLY: fwfft, invfft
-      USE fft_base,           ONLY: dffts, dfftp, dfft3d
+      USE fft_base,           ONLY: dffts, dfftp, dfft3d, dtgs
       USE cp_interfaces,      ONLY: checkrho, ennl, calrhovan, dennl
       USE cp_main_variables,  ONLY: iprint_stdout, descla
       USE wannier_base,       ONLY: iwf
@@ -510,15 +510,15 @@
          REAL(DP), ALLOCATABLE :: tmp_rhos(:,:)
          COMPLEX(DP), ALLOCATABLE :: aux(:)
 
-         ALLOCATE( psis( dffts%tg_nnr * dffts%nogrp ) ) 
-         ALLOCATE( aux( dffts%tg_nnr * dffts%nogrp ) ) 
+         ALLOCATE( psis( dtgs%tg_nnr * dtgs%nogrp ) ) 
+         ALLOCATE( aux( dtgs%tg_nnr * dtgs%nogrp ) ) 
          !
-         ALLOCATE( tmp_rhos ( dffts%nr1x * dffts%nr2x * dffts%tg_npp( me_bgrp + 1 ), nspin ) )
+         ALLOCATE( tmp_rhos ( dffts%nr1x * dffts%nr2x * dtgs%tg_npp( me_bgrp + 1 ), nspin ) )
          !
          tmp_rhos = 0_DP
 
 
-         do i = 1, nbsp_bgrp, 2*dffts%nogrp
+         do i = 1, nbsp_bgrp, 2*dtgs%nogrp
             !
             !  Initialize wave-functions in Fourier space (to be FFTed)
             !  The size of psis is nnr: which is equal to the total number
@@ -541,7 +541,14 @@
             !
             eig_offset = 0
 
-            do eig_index = 1, 2*dffts%nogrp, 2   
+!!$omp  parallel
+!!$omp  single
+
+            do eig_index = 1, 2*dtgs%nogrp, 2   
+               !
+!!$omp task default(none) &
+!!$omp          firstprivate( i, eig_offset, nbsp_bgrp, ngw, eig_index  ) &
+!!$omp          shared(  aux, c_bgrp, dffts )
                !
                !  here we pack 2*nogrp electronic states in the psis array
                !  note that if nogrp == nproc_bgrp each proc perform a full 3D
@@ -551,14 +558,18 @@
                   !
                   !  The  eig_index loop is executed only ONCE when NOGRP=1.
                   !
-                  CALL c2psi( aux(eig_offset*dffts%tg_nnr+1), dffts%tg_nnr, &
+                  CALL c2psi( aux(eig_offset*dtgs%tg_nnr+1), dtgs%tg_nnr, &
                         c_bgrp( 1, i+eig_index-1 ), c_bgrp( 1, i+eig_index ), ngw, 2 )
                   !
-                  eig_offset = eig_offset + 1
-                  !
                ENDIF
+!!$omp end task
+               !
+               eig_offset = eig_offset + 1
                !
             end do
+
+!!$omp  end single
+!!$omp  end parallel
             !
             !  2*NOGRP are trasformed at the same time
             !  psis: holds the fourier coefficients of the current proccesor
@@ -567,18 +578,18 @@
             !  now redistribute data
             !
             !
-            IF( dffts%nogrp == dffts%nproc ) THEN
-               CALL pack_group_sticks( aux, psis, dffts )
-               CALL maps_sticks_to_3d( dffts, psis, SIZE(psis), aux, 2 )
+            IF( dtgs%nogrp == dtgs%nproc ) THEN
+               CALL pack_group_sticks( aux, psis, dtgs )
+               CALL maps_sticks_to_3d( dffts, dtgs, psis, SIZE(psis), aux, 2 )
                CALL cfft3ds( aux, dfft3d%nr1, dfft3d%nr2, dfft3d%nr3, &
                              dfft3d%nr1x,dfft3d%nr2x,dfft3d%nr3x, 1, dfft3d%isind, dfft3d%iplw )
                psis = aux
             ELSE
                !
-               CALL pack_group_sticks( aux, psis, dffts )
-               CALL fw_tg_cft3_z( psis, dffts, aux )
-               CALL fw_tg_cft3_scatter( psis, dffts, aux )
-               CALL fw_tg_cft3_xy( psis, dffts )
+               CALL pack_group_sticks( aux, psis, dtgs )
+               CALL fw_tg_cft3_z( psis, dffts, aux, dtgs )
+               CALL fw_tg_cft3_scatter( psis, dffts, aux, dtgs )
+               CALL fw_tg_cft3_xy( psis, dffts, dtgs )
 
             END IF
 #else
@@ -587,7 +598,7 @@
 
             CALL c2psi( psis, dffts%nnr, c_bgrp( 1, i ), c_bgrp( 1, i+1 ), ngw, 2 )
 
-            CALL invfft('Wave',psis, dffts )
+            CALL invfft('Wave', psis, dffts )
 
 #endif
             !
@@ -598,8 +609,8 @@
             !
             ! Compute the proper factor for each band
             !
-            DO ii = 1, dffts%nogrp
-               IF( dffts%nolist( ii ) == me_bgrp ) EXIT
+            DO ii = 1, dtgs%nogrp
+               IF( dtgs%nolist( ii ) == me_bgrp ) EXIT
             END DO
             !
             ! Remember two bands are packed in a single array :
@@ -640,11 +651,11 @@
             !code this should be equal to the total number of planes
             !
 
-            ir =  dffts%nr1x*dffts%nr2x*dffts%tg_npp( me_bgrp + 1 ) 
+            ir =  dffts%nr1x*dffts%nr2x*dtgs%tg_npp( me_bgrp + 1 ) 
             IF( ir > SIZE( psis ) ) &
                CALL errore( ' rhoofr ', ' psis size too small ', ir )
 
-            do ir = 1, dffts%nr1x*dffts%nr2x*dffts%tg_npp( me_bgrp + 1 )
+            do ir = 1, dffts%nr1x*dffts%nr2x*dtgs%tg_npp( me_bgrp + 1 )
                tmp_rhos(ir,iss1) = tmp_rhos(ir,iss1) + sa1*( real(psis(ir)))**2
                tmp_rhos(ir,iss2) = tmp_rhos(ir,iss2) + sa2*(aimag(psis(ir)))**2
             end do
@@ -660,8 +671,8 @@
          !   CALL MPI_REDUCE( rho(1+ioff*nr1*nr2,1), rhos(1,1), dffts%nnr, MPI_DOUBLE_PRECISION, MPI_SUM, ip-1, intra_bgrp_comm, ierr)
          !   ioff = ioff + dffts%npp( ip )
          !END DO
-         IF ( dffts%nogrp > 1 ) THEN
-            CALL mp_sum( tmp_rhos, gid = dffts%ogrp_comm )
+         IF ( dtgs%nogrp > 1 ) THEN
+            CALL mp_sum( tmp_rhos, gid = dtgs%ogrp_comm )
          ENDIF
          !
          !BRING CHARGE DENSITY BACK TO ITS ORIGINAL POSITION
@@ -670,9 +681,9 @@
          !orbital group then does a local copy (reshuffling) of its data
          !
          from = 1
-         DO ii = 1, dffts%nogrp
-            IF ( dffts%nolist( ii ) == me_bgrp ) EXIT !Exit the loop
-            from = from +  dffts%nr1x*dffts%nr2x*dffts%npp( dffts%nolist( ii ) + 1 )! From where to copy initially
+         DO ii = 1, dtgs%nogrp
+            IF ( dtgs%nolist( ii ) == me_bgrp ) EXIT !Exit the loop
+            from = from +  dffts%nr1x*dffts%nr2x*dffts%npp( dtgs%nolist( ii ) + 1 )! From where to copy initially
          ENDDO
          !
          DO ir = 1, nspin
@@ -682,7 +693,6 @@
          DEALLOCATE( tmp_rhos )
          DEALLOCATE( aux ) 
          DEALLOCATE( psis ) 
-!call errore('stop','qui',1) ! debug
 
          RETURN
       END SUBROUTINE loop_over_states

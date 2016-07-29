@@ -17,6 +17,7 @@
         USE parallel_include
 
         USE fft_types, ONLY: fft_dlay_descriptor
+        USE task_groups, ONLY: task_groups_descriptor
 
         IMPLICIT NONE
 
@@ -37,12 +38,16 @@
              !  of the atomic augmentation part of the 
              !  charge density used in USPP (to speed up CPV iterations)
         TYPE ( fft_dlay_descriptor ) :: dfft3d
+             !
+        TYPE ( task_groups_descriptor ) :: dtgs
+             !  Dimensions of the task groups
 
         SAVE
 
         PRIVATE
 
         PUBLIC :: dfftp, dffts, dfftb, dfft3d, fft_dlay_descriptor
+        PUBLIC :: dtgs, task_groups_descriptor
 
 !=----------------------------------------------------------------------=!
    END MODULE fft_base

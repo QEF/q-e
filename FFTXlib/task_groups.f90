@@ -17,44 +17,44 @@
 
       INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
 
-  TYPE task_groups_descriptor
-    !
-    !  parent group parallelization
-    !
-    INTEGER :: mype     = 0          ! my processor id (starting from 0) in the parent fft group
-    INTEGER :: comm     = 0          ! communicator of the parent fft gruop 
-    INTEGER :: nproc    = 1          ! number of processor in the parent fft group
-    INTEGER :: root     = 0          ! root processor
-    !
-    !  task groups
-    !
-    LOGICAL :: have_task_groups
-    !
-    INTEGER :: me_pgrp   = 0          ! task id for plane wave task group
-    INTEGER :: nogrp     = 1          ! number of proc. in an orbital "task group"
-    INTEGER :: npgrp     = 1          ! number of proc. in a plane-wave "task group"
-    INTEGER :: ogrp_comm = 0          ! orbital group communicator
-    INTEGER :: pgrp_comm = 0          ! plane-wave group communicator
-    INTEGER, ALLOCATABLE :: nolist(:) ! list of pes in orbital group
-    INTEGER, ALLOCATABLE :: nplist(:) ! list of pes in pw group
-    !
-    INTEGER :: tg_nnr = 0            ! maximum among nnr
-    INTEGER, ALLOCATABLE :: tg_nsw(:) ! number of sticks per task group ( wave func )
-    INTEGER, ALLOCATABLE :: tg_npp(:) ! number of "Z" planes per task group
-    INTEGER, ALLOCATABLE :: tg_snd(:) ! number of element to be sent in group redist
-    INTEGER, ALLOCATABLE :: tg_rcv(:) ! number of element to be received in group redist
-    INTEGER, ALLOCATABLE :: tg_psdsp(:)! send displacement for all to all (pack)
-    INTEGER, ALLOCATABLE :: tg_usdsp(:)! send displacement for all to all (unpack)
-    INTEGER, ALLOCATABLE :: tg_rdsp(:)! receive displacement for all to all
-    INTEGER :: tg_nppx = 0  ! max of tg_npp
-    INTEGER :: tg_ncpx = 0  ! max of tg_ncpx
-    !
-  END TYPE
+      TYPE task_groups_descriptor
+        !
+        !  parent group parallelization
+        !
+        INTEGER :: mype     = 0          ! my processor id (starting from 0) in the parent fft group
+        INTEGER :: comm     = 0          ! communicator of the parent fft gruop 
+        INTEGER :: nproc    = 1          ! number of processor in the parent fft group
+        INTEGER :: root     = 0          ! root processor
+        !
+        !  task groups
+        !
+        LOGICAL :: have_task_groups
+        !
+        INTEGER :: me_pgrp   = 0          ! task id for plane wave task group
+        INTEGER :: nogrp     = 1          ! number of proc. in an orbital "task group"
+        INTEGER :: npgrp     = 1          ! number of proc. in a plane-wave "task group"
+        INTEGER :: ogrp_comm = 0          ! orbital group communicator
+        INTEGER :: pgrp_comm = 0          ! plane-wave group communicator
+        INTEGER, ALLOCATABLE :: nolist(:) ! list of pes in orbital group
+        INTEGER, ALLOCATABLE :: nplist(:) ! list of pes in pw group
+        !
+        INTEGER :: tg_nnr = 0            ! maximum among nnr
+        INTEGER, ALLOCATABLE :: tg_nsw(:) ! number of sticks per task group ( wave func )
+        INTEGER, ALLOCATABLE :: tg_npp(:) ! number of "Z" planes per task group
+        INTEGER, ALLOCATABLE :: tg_snd(:) ! number of element to be sent in group redist
+        INTEGER, ALLOCATABLE :: tg_rcv(:) ! number of element to be received in group redist
+        INTEGER, ALLOCATABLE :: tg_psdsp(:)! send displacement for all to all (pack)
+        INTEGER, ALLOCATABLE :: tg_usdsp(:)! send displacement for all to all (unpack)
+        INTEGER, ALLOCATABLE :: tg_rdsp(:)! receive displacement for all to all
+        INTEGER :: tg_nppx = 0  ! max of tg_npp
+        INTEGER :: tg_ncpx = 0  ! max of tg_ncpx
+        !
+      END TYPE
 
       PRIVATE
       SAVE
 
-      PUBLIC :: task_groups_init
+      PUBLIC :: task_groups_init, task_groups_descriptor, task_groups_deallocate
 
 !=----------------------------------------------------------------------=
    CONTAINS
@@ -65,7 +65,7 @@
 ! Revised by C. Cavazzoni
 !--------------------------------------------
 
-SUBROUTINE task_groups_init( dffts )
+SUBROUTINE task_groups_init( dffts, dtgs, nogrp )
 
    !
    USE fft_types,      ONLY : fft_dlay_descriptor
@@ -81,6 +81,8 @@ SUBROUTINE task_groups_init( dffts )
 
 
    TYPE(fft_dlay_descriptor), INTENT(inout) :: dffts
+   TYPE(task_groups_descriptor), INTENT(inout) :: dtgs
+   INTEGER, INTENT(in) :: nogrp   ! number of task groups
 
    INTEGER :: stdout = 6
 
@@ -95,7 +97,14 @@ SUBROUTINE task_groups_init( dffts )
    INTEGER  :: pgroup( dffts%nproc )
    INTEGER  :: strd
 
-   CALL task_groups_init_first( dffts )
+   CALL task_groups_deallocate( dtgs )
+
+   dtgs%mype  = dffts%mype
+   dtgs%comm  = dffts%comm
+   dtgs%nproc = dffts%nproc
+   dtgs%root  = dffts%root
+
+   CALL task_groups_init_first( dffts, dtgs, nogrp )
    !
 #if defined(DEBUG)
    IF ( dffts%nogrp > 1 ) WRITE( stdout, 100 ) dffts%nogrp, dffts%npgrp
@@ -112,7 +121,7 @@ SUBROUTINE task_groups_init( dffts )
    strd = dffts%nnr
 #endif
 
-   IF( strd /= dffts%tg_nnr ) CALL fftx_error__( ' task_groups_init ', ' inconsistent nnr ', 1 )
+   IF( strd /= dtgs%tg_nnr ) CALL fftx_error__( ' task_groups_init ', ' inconsistent nnr ', 1 )
 
    !-------------------------------------------------------------------------------------
    !C. Bekas...TASK GROUP RELATED. FFT DATA STRUCTURES ARE ALREADY DEFINED ABOVE
@@ -125,51 +134,51 @@ SUBROUTINE task_groups_init( dffts )
    !-------------------------------------------------------------------------------------
    !
    !
-   ALLOCATE( dffts%tg_nsw(dffts%nproc))
-   ALLOCATE( dffts%tg_npp(dffts%nproc))
+   ALLOCATE( dtgs%tg_nsw(dtgs%nproc))
+   ALLOCATE( dtgs%tg_npp(dtgs%nproc))
 
    num_sticks = 0
    num_planes = 0
-   DO i = 1, dffts%nogrp
-      num_sticks = num_sticks + dffts%nsw( dffts%nolist(i) + 1 )
-      num_planes = num_planes + dffts%npp( dffts%nolist(i) + 1 )
+   DO i = 1, dtgs%nogrp
+      num_sticks = num_sticks + dffts%nsw( dtgs%nolist(i) + 1 )
+      num_planes = num_planes + dffts%npp( dtgs%nolist(i) + 1 )
    ENDDO
 
 #if defined(__MPI)
-   CALL MPI_ALLGATHER(num_sticks, 1, MPI_INTEGER, dffts%tg_nsw(1), 1, MPI_INTEGER, dffts%comm, IERR)
-   CALL MPI_ALLGATHER(num_planes, 1, MPI_INTEGER, dffts%tg_npp(1), 1, MPI_INTEGER, dffts%comm, IERR)
+   CALL MPI_ALLGATHER(num_sticks, 1, MPI_INTEGER, dtgs%tg_nsw(1), 1, MPI_INTEGER, dtgs%comm, IERR)
+   CALL MPI_ALLGATHER(num_planes, 1, MPI_INTEGER, dtgs%tg_npp(1), 1, MPI_INTEGER, dtgs%comm, IERR)
 #else
-   dffts%tg_nsw(1) = num_sticks
-   dffts%tg_npp(1) = num_planes
+   dtgs%tg_nsw(1) = num_sticks
+   dtgs%tg_npp(1) = num_planes
 #endif
 
-   ALLOCATE( dffts%tg_snd( dffts%nogrp ) )
-   ALLOCATE( dffts%tg_rcv( dffts%nogrp ) )
-   ALLOCATE( dffts%tg_psdsp( dffts%nogrp ) )
-   ALLOCATE( dffts%tg_usdsp( dffts%nogrp ) )
-   ALLOCATE( dffts%tg_rdsp( dffts%nogrp ) )
+   ALLOCATE( dtgs%tg_snd( dtgs%nogrp ) )
+   ALLOCATE( dtgs%tg_rcv( dtgs%nogrp ) )
+   ALLOCATE( dtgs%tg_psdsp( dtgs%nogrp ) )
+   ALLOCATE( dtgs%tg_usdsp( dtgs%nogrp ) )
+   ALLOCATE( dtgs%tg_rdsp( dtgs%nogrp ) )
 
-   dffts%tg_snd(1)   = dffts%nr3x * dffts%nsw( dffts%mype + 1 )
-   IF( dffts%nr3x * dffts%nsw( dffts%mype + 1 ) > dffts%tg_nnr ) THEN
-      CALL fftx_error__( ' task_groups_init ', ' inconsistent dffts%tg_nnr ', 1 )
+   dtgs%tg_snd(1)   = dffts%nr3x * dffts%nsw( dffts%mype + 1 )
+   IF( dffts%nr3x * dffts%nsw( dffts%mype + 1 ) > dtgs%tg_nnr ) THEN
+      CALL fftx_error__( ' task_groups_init ', ' inconsistent dtgs%tg_nnr ', 1 )
    ENDIF
-   dffts%tg_psdsp(1) = 0
-   dffts%tg_usdsp(1) = 0
-   dffts%tg_rcv(1)  = dffts%nr3x * dffts%nsw( dffts%nolist(1) + 1 )
-   dffts%tg_rdsp(1) = 0
-   DO i = 2, dffts%nogrp
-      dffts%tg_snd(i)  = dffts%nr3x * dffts%nsw( dffts%mype + 1 )
-      dffts%tg_psdsp(i) = dffts%tg_psdsp(i-1) + dffts%tg_nnr
-      dffts%tg_usdsp(i) = dffts%tg_usdsp(i-1) + dffts%tg_snd(i-1)
-      dffts%tg_rcv(i)  = dffts%nr3x * dffts%nsw( dffts%nolist(i) + 1 )
-      dffts%tg_rdsp(i) = dffts%tg_rdsp(i-1) + dffts%tg_rcv(i-1)
+   dtgs%tg_psdsp(1) = 0
+   dtgs%tg_usdsp(1) = 0
+   dtgs%tg_rcv(1)  = dffts%nr3x * dffts%nsw( dtgs%nolist(1) + 1 )
+   dtgs%tg_rdsp(1) = 0
+   DO i = 2, dtgs%nogrp
+      dtgs%tg_snd(i)  = dffts%nr3x * dffts%nsw( dffts%mype + 1 )
+      dtgs%tg_psdsp(i) = dtgs%tg_psdsp(i-1) + dtgs%tg_nnr
+      dtgs%tg_usdsp(i) = dtgs%tg_usdsp(i-1) + dtgs%tg_snd(i-1)
+      dtgs%tg_rcv(i)  = dffts%nr3x * dffts%nsw( dtgs%nolist(i) + 1 )
+      dtgs%tg_rdsp(i) = dtgs%tg_rdsp(i-1) + dtgs%tg_rcv(i-1)
    ENDDO
 
-   dffts%tg_ncpx = 0
-   dffts%tg_nppx = 0
-   DO i = 1, dffts%npgrp
-      dffts%tg_ncpx = max( dffts%tg_ncpx, dffts%tg_nsw ( dffts%nplist(i) + 1 ) )
-      dffts%tg_nppx = max( dffts%tg_nppx, dffts%tg_npp ( dffts%nplist(i) + 1 ) )
+   dtgs%tg_ncpx = 0
+   dtgs%tg_nppx = 0
+   DO i = 1, dtgs%npgrp
+      dtgs%tg_ncpx = max( dtgs%tg_ncpx, dtgs%tg_nsw ( dtgs%nplist(i) + 1 ) )
+      dtgs%tg_nppx = max( dtgs%tg_nppx, dtgs%tg_npp ( dtgs%nplist(i) + 1 ) )
    ENDDO
 
 
@@ -179,7 +188,7 @@ END SUBROUTINE task_groups_init
 
 
   !
-SUBROUTINE task_groups_init_first( dffts )
+SUBROUTINE task_groups_init_first( dffts, dtgs, nogrp )
    !
    USE fft_types,      ONLY : fft_dlay_descriptor
    !
@@ -189,22 +198,62 @@ SUBROUTINE task_groups_init_first( dffts )
 #endif
    !
    TYPE(fft_dlay_descriptor), INTENT(inout) :: dffts
+   TYPE(task_groups_descriptor), INTENT(inout) :: dtgs
+
+   INTEGER, INTENT(in) :: nogrp   ! number of task groups
     !
     INTEGER :: i, n1, ipos, color, key, ierr, itsk, ntsk
+    INTEGER :: nppx, ncpx
     INTEGER :: pgroup( dffts%nproc )
     !
     !SUBDIVIDE THE PROCESSORS IN GROUPS
     !
+    dffts%have_task_groups = ( nogrp > 1 )
+    dtgs%me_pgrp = 0
+
+    IF( MOD( dtgs%nproc, MAX( 1, nogrp ) ) /= 0 ) &
+       CALL fftx_error__( " task_groups_init_first ", "the number of task groups should be a divisor of the number of MPI task ", 1 )
+    IF( nogrp > dtgs%nproc ) &
+       CALL fftx_error__( " task_groups_init_first ", "the number of task groups should be less than the number of MPI task ", 1 )
+
+    dtgs%nogrp = MAX( 1, nogrp )
+    dtgs%npgrp = dtgs%nproc / MAX( 1, nogrp )
+    dtgs%ogrp_comm = 0
+    dtgs%pgrp_comm = 0
+    ALLOCATE( dtgs%nolist( dtgs%nogrp ) )
+    ALLOCATE( dtgs%nplist( dtgs%npgrp ) )
+    dtgs%nolist = 0
+    dtgs%nplist = 0
+
+    nppx = 0
+    ncpx = 0
     DO i = 1, dffts%nproc
+       nppx = MAX( nppx, dffts%npp( i ) )  ! maximum number of planes per processor
+       ncpx = MAX( ncpx, dffts%nsp( i ) )  ! maximum number of columns per processor
+    END DO
+
+    IF ( dtgs%nproc == 1 ) THEN
+      dtgs%tg_nnr = dffts%nnr
+    ELSE
+      dtgs%tg_nnr = dffts%nnr
+      ! this is required to contain the local data in G space (should be already granted!)
+      dtgs%tg_nnr = max( dtgs%tg_nnr, dffts%nr3x * ncpx ) 
+      ! this is required to contain the local data in R space (should be already granted!)
+      dtgs%tg_nnr = max( dtgs%tg_nnr, dffts%nr1x * dffts%nr2x * nppx ) 
+      dtgs%tg_nnr = max( 1, dtgs%tg_nnr ) ! ensure that dffts%nrr > 0 ( for extreme parallelism )
+    ENDIF
+
+
+    DO i = 1, dtgs%nproc
        pgroup( i ) = i - 1
     ENDDO
     !
 #if defined(__TASK_GROUP_WAVE_ORDER)
-    n1 = ( dffts%mype / dffts%npgrp ) * dffts%npgrp 
-    ipos = dffts%mype - n1
+    n1 = ( dtgs%mype / dtgs%npgrp ) * dtgs%npgrp 
+    ipos = dtgs%mype - n1
 #else
-    n1 = ( dffts%mype / dffts%nogrp ) * dffts%nogrp 
-    ipos = dffts%mype - n1
+    n1 = ( dtgs%mype / dtgs%nogrp ) * dtgs%nogrp 
+    ipos = dtgs%mype - n1
 #endif
     !
     !LIST OF PROCESSORS IN MY ORBITAL GROUP 
@@ -212,22 +261,22 @@ SUBROUTINE task_groups_init_first( dffts )
     !
     !  processors in these group have contiguous indexes
     !
-    DO i = 1, dffts%nogrp
+    DO i = 1, dtgs%nogrp
 #if defined(__TASK_GROUP_WAVE_ORDER)
-       dffts%nolist( i ) = pgroup( ipos + ( i - 1 ) * dffts%npgrp + 1 )
+       dtgs%nolist( i ) = pgroup( ipos + ( i - 1 ) * dtgs%npgrp + 1 )
 #else
-       dffts%nolist( i ) = pgroup( n1 + i )
+       dtgs%nolist( i ) = pgroup( n1 + i )
 #endif
     ENDDO
     !
     !LIST OF PROCESSORS IN MY PLANE WAVE GROUP
     !     (processors dealing with different pw's of my same orbital)
     !
-    DO i = 1, dffts%npgrp
+    DO i = 1, dtgs%npgrp
 #if defined(__TASK_GROUP_WAVE_ORDER)
-       dffts%nplist( i ) = pgroup( n1 + i )
+       dtgs%nplist( i ) = pgroup( n1 + i )
 #else
-       dffts%nplist( i ) = pgroup( ipos + ( i - 1 ) * dffts%nogrp + 1 )
+       dtgs%nplist( i ) = pgroup( ipos + ( i - 1 ) * dtgs%nogrp + 1 )
 #endif
     ENDDO
     !
@@ -239,22 +288,22 @@ SUBROUTINE task_groups_init_first( dffts )
     ! processes with the same color are in the same new communicator
 
 #if defined(__TASK_GROUP_WAVE_ORDER)
-    color = MOD( dffts%mype , dffts%npgrp )
-    key   = dffts%mype / dffts%npgrp
+    color = MOD( dtgs%mype , dtgs%npgrp )
+    key   = dtgs%mype / dtgs%npgrp
 #else
-    color = dffts%mype / dffts%nogrp
-    key   = MOD( dffts%mype , dffts%nogrp )
+    color = dtgs%mype / dtgs%nogrp
+    key   = MOD( dtgs%mype , dtgs%nogrp )
 #endif
 
 
-    CALL MPI_COMM_SPLIT( dffts%comm, color, key, dffts%ogrp_comm, ierr )
+    CALL MPI_COMM_SPLIT( dtgs%comm, color, key, dtgs%ogrp_comm, ierr )
     if( ierr /= 0 ) &
          CALL fftx_error__( ' task_groups_init_first ', ' creating ogrp_comm ', ABS(ierr) )
-    CALL MPI_COMM_RANK( dffts%ogrp_comm, itsk, IERR )
-    CALL MPI_COMM_SIZE( dffts%ogrp_comm, ntsk, IERR )
-    IF( dffts%nogrp /= ntsk ) CALL fftx_error__( ' task_groups_init_first ', ' ogrp_comm size ', ntsk )
-    DO i = 1, dffts%nogrp
-       IF( dffts%mype == dffts%nolist( i ) ) THEN
+    CALL MPI_COMM_RANK( dtgs%ogrp_comm, itsk, IERR )
+    CALL MPI_COMM_SIZE( dtgs%ogrp_comm, ntsk, IERR )
+    IF( dtgs%nogrp /= ntsk ) CALL fftx_error__( ' task_groups_init_first ', ' ogrp_comm size ', ntsk )
+    DO i = 1, dtgs%nogrp
+       IF( dtgs%mype == dtgs%nolist( i ) ) THEN
           IF( (i-1) /= itsk ) CALL fftx_error__( ' task_groups_init_first ', ' ogrp_comm rank ', itsk )
        END IF
     END DO
@@ -266,30 +315,45 @@ SUBROUTINE task_groups_init_first( dffts )
     ! processes with the same color are in the same new communicator
 
 #if defined(__TASK_GROUP_WAVE_ORDER)
-    color = dffts%mype / dffts%npgrp
-    key   = MOD( dffts%mype , dffts%npgrp )
+    color = dtgs%mype / dtgs%npgrp
+    key   = MOD( dtgs%mype , dtgs%npgrp )
 #else
-    color = MOD( dffts%mype , dffts%nogrp )
-    key   = dffts%mype / dffts%nogrp
+    color = MOD( dtgs%mype , dtgs%nogrp )
+    key   = dtgs%mype / dtgs%nogrp
 #endif
 
-    CALL MPI_COMM_SPLIT( dffts%comm, color, key, dffts%pgrp_comm, ierr )
+    CALL MPI_COMM_SPLIT( dtgs%comm, color, key, dtgs%pgrp_comm, ierr )
     if( ierr /= 0 ) &
          CALL fftx_error__( ' task_groups_init_first ', ' creating pgrp_comm ', ABS(ierr) )
-    CALL MPI_COMM_RANK( dffts%pgrp_comm, itsk, IERR )
-    CALL MPI_COMM_SIZE( dffts%pgrp_comm, ntsk, IERR )
-    IF( dffts%npgrp /= ntsk ) CALL fftx_error__( ' task_groups_init_first ', ' pgrp_comm size ', ntsk )
-    DO i = 1, dffts%npgrp
-       IF( dffts%mype == dffts%nplist( i ) ) THEN
+    CALL MPI_COMM_RANK( dtgs%pgrp_comm, itsk, IERR )
+    CALL MPI_COMM_SIZE( dtgs%pgrp_comm, ntsk, IERR )
+    IF( dtgs%npgrp /= ntsk ) CALL fftx_error__( ' task_groups_init_first ', ' pgrp_comm size ', ntsk )
+    DO i = 1, dtgs%npgrp
+       IF( dtgs%mype == dtgs%nplist( i ) ) THEN
           IF( (i-1) /= itsk ) CALL fftx_error__( ' task_groups_init_first ', ' pgrp_comm rank ', itsk )
        END IF
     END DO
-    dffts%me_pgrp = itsk
+    dtgs%me_pgrp = itsk
 #endif
 
     RETURN
   END SUBROUTINE task_groups_init_first
   !
+
+  SUBROUTINE task_groups_deallocate ( desc )
+    TYPE (task_groups_descriptor), INTENT(inout) :: desc
+    IF ( ALLOCATED( desc%nolist ) )   DEALLOCATE( desc%nolist )
+    IF ( ALLOCATED( desc%nplist ) )   DEALLOCATE( desc%nplist )
+    IF ( ALLOCATED( desc%tg_nsw ) )   DEALLOCATE( desc%tg_nsw )
+    IF ( ALLOCATED( desc%tg_npp ) )   DEALLOCATE( desc%tg_npp )
+    IF ( ALLOCATED( desc%tg_snd ) )   DEALLOCATE( desc%tg_snd )
+    IF ( ALLOCATED( desc%tg_rcv ) )   DEALLOCATE( desc%tg_rcv )
+    IF ( ALLOCATED( desc%tg_psdsp ) )   DEALLOCATE( desc%tg_psdsp )
+    IF ( ALLOCATED( desc%tg_usdsp ) )   DEALLOCATE( desc%tg_usdsp )
+    IF ( ALLOCATED( desc%tg_rdsp ) )   DEALLOCATE( desc%tg_rdsp )
+    desc%have_task_groups = .FALSE.
+    RETURN
+  END SUBROUTINE task_groups_deallocate
 
 !=----------------------------------------------------------------------=
    END MODULE task_groups

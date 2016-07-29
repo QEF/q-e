@@ -73,6 +73,7 @@ MODULE fft_types
     !
     LOGICAL :: have_task_groups
     !
+#ifdef PIPPONE
     INTEGER :: me_pgrp   = 0          ! task id for plane wave task group
     INTEGER :: nogrp     = 1          ! number of proc. in an orbital "task group"
     INTEGER :: npgrp     = 1          ! number of proc. in a plane-wave "task group"
@@ -91,6 +92,7 @@ MODULE fft_types
     INTEGER, POINTER :: tg_rdsp(:)! receive displacement for all to all
     INTEGER :: tg_nppx = 0  ! max of tg_npp
     INTEGER :: tg_ncpx = 0  ! max of tg_ncpx
+#endif
     !
   END TYPE
 
@@ -182,28 +184,6 @@ CONTAINS
     desc%nproc = nproc
     desc%root  = root
     desc%have_task_groups = ( nogrp > 1 )
-    desc%me_pgrp = 0
-    !
-    IF( MOD( nproc, MAX( 1, nogrp ) ) /= 0 ) &
-       CALL fftx_error__( " fft_dlay_allocate ", "the number of task groups should be a divisor of the number of MPI task ", 1 )
-    IF( nogrp > nproc ) &
-       CALL fftx_error__( " fft_dlay_allocate ", "the number of task groups should be less than the number of MPI task ", 1 )
-
-    desc%nogrp = MAX( 1, nogrp )
-    desc%npgrp = nproc / MAX( 1, nogrp )
-    desc%ogrp_comm = 0
-    desc%pgrp_comm = 0
-    ALLOCATE( desc%nolist( desc%nogrp ) )
-    ALLOCATE( desc%nplist( desc%npgrp ) )
-    desc%nolist = 0
-    desc%nplist = 0
-    NULLIFY( desc%tg_nsw )
-    NULLIFY( desc%tg_npp )
-    NULLIFY( desc%tg_snd )
-    NULLIFY( desc%tg_rcv )
-    NULLIFY( desc%tg_psdsp )
-    NULLIFY( desc%tg_usdsp )
-    NULLIFY( desc%tg_rdsp )
 
     desc%arrays_have_been_allocated = .TRUE.
 
@@ -222,22 +202,9 @@ CONTAINS
     IF ( associated( desc%ismap ) )  DEALLOCATE( desc%ismap )
     IF ( associated( desc%iplp ) )   DEALLOCATE( desc%iplp )
     IF ( associated( desc%iplw ) )   DEALLOCATE( desc%iplw )
-    IF ( associated( desc%nolist ) ) DEALLOCATE( desc%nolist )
-    IF ( associated( desc%nplist ) ) DEALLOCATE( desc%nplist )
     desc%id = 0
-    IF( desc%have_task_groups ) THEN
-       IF ( associated( desc%tg_nsw ) )   DEALLOCATE( desc%tg_nsw )
-       IF ( associated( desc%tg_npp ) )   DEALLOCATE( desc%tg_npp )
-       IF ( associated( desc%tg_snd ) )   DEALLOCATE( desc%tg_snd )
-       IF ( associated( desc%tg_rcv ) )   DEALLOCATE( desc%tg_rcv )
-       IF ( associated( desc%tg_psdsp ) )   DEALLOCATE( desc%tg_psdsp )
-       IF ( associated( desc%tg_usdsp ) )   DEALLOCATE( desc%tg_usdsp )
-       IF ( associated( desc%tg_rdsp ) )   DEALLOCATE( desc%tg_rdsp )
-    ENDIF
     desc%have_task_groups = .FALSE.
-
     desc%arrays_have_been_allocated = .FALSE.
-
     desc%dimensions_have_been_set = .FALSE.
 
   END SUBROUTINE fft_dlay_deallocate
@@ -390,15 +357,10 @@ CONTAINS
 
     IF ( desc%nproc == 1 ) THEN
       desc%nnr  = nr1x * nr2x * nr3x
-      desc%tg_nnr = desc%nnr
     ELSE
       desc%nnr  = max( nr3x * ncpx, nr1x * nr2x * nppx )  ! this is required to contain the local data in R and G space
       desc%nnr  = max( desc%nnr, ncpx * nppx * desc%nproc )  ! this is required to use ALLTOALL instead of ALLTOALLV
       desc%nnr  = max( 1, desc%nnr ) ! ensure that desc%nrr > 0 ( for extreme parallelism )
-      desc%tg_nnr = desc%nnr
-      desc%tg_nnr = max( desc%tg_nnr, nr3x * ncpx ) ! this is required to contain the local data in G space (should be already granted!)
-      desc%tg_nnr = max( desc%tg_nnr, nr1x * nr2x * nppx ) ! this is required to contain the local data in R space (should be already granted!)
-      desc%tg_nnr = max( 1, desc%tg_nnr ) ! ensure that desc%nrr > 0 ( for extreme parallelism )
     ENDIF
 
     desc%ngl( 1:desc%nproc )  = ngp( 1:desc%nproc )  ! local number of g vectors (rho) per processor
@@ -655,7 +617,6 @@ CONTAINS
     desc%nnp  = nr1x * nr2x
     desc%npp  = nr3
     desc%ipp  = 0
-    desc%tg_nnr = desc%nnr
     !
     desc%have_task_groups = .false.
 

@@ -103,8 +103,12 @@ program lax_test
   iope = .true.
 
 #endif
+
+
+  OPEN ( unit = 6, file = TRIM('test.out'), status='unknown' )
+
   !
-  !write(*,*) 'mype = ', mype, ' npes = ', npes
+  !write(6,*) 'mype = ', mype, ' npes = ', npes
   !
   !
   !  Broadcast input parameter first
@@ -117,16 +121,16 @@ program lax_test
 
   if( mype == 0 ) then
 
-    write(*,*) '+-----------------------------------+'
-    write(*,*) '|         QE Linear Algebra         |'
-    write(*,*) '|          testing & timing         |'
-    write(*,*) '|         by Carlo Cavazzoni        |'
-    write(*,*) '+-----------------------------------+'
-    write(*,*)
-    write(*,*) 'matrix size = ', n, ' x ', n
-    write(*,*) 'num. procs  = ', npes
-    write(*,*) 'thr x proc  = ', omp_get_max_threads()
-    write(*,*)
+    write(6,*) '+-----------------------------------+'
+    write(6,*) '|         QE Linear Algebra         |'
+    write(6,*) '|          testing & timing         |'
+    write(6,*) '|         by Carlo Cavazzoni        |'
+    write(6,*) '+-----------------------------------+'
+    write(6,*)
+    write(6,*) 'matrix size = ', n, ' x ', n
+    write(6,*) 'num. procs  = ', npes
+    write(6,*) 'thr x proc  = ', omp_get_max_threads()
+    write(6,*)
 
   endif
 
@@ -143,7 +147,7 @@ program lax_test
      proc_name(i) = 'localhost'
 #endif
      if( mype == 0 ) then
-!        write(*,310)  i, proc_name(i)
+!        write(6,310)  i, proc_name(i)
      end if
 310 FORMAT('pe = ',I5,' name = ', A20) 
   end do
@@ -182,14 +186,14 @@ program lax_test
   CALL MPI_ALLREDUCE( MPI_IN_PLACE, tempo_tutti, npes, MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, ierr )
 #endif
   if( mype == 0 ) then
-     write(*,*)
-     write(*,*)
-     write(*,*)
-     write(*,*) '+-----------------------------------+'
-     write(*,*) '|    measured task performances     |'
-     write(*,*) '+-----------------------------------+'
+     write(6,*)
+     write(6,*)
+     write(6,*)
+     write(6,*) '+-----------------------------------+'
+     write(6,*) '|    measured task performances     |'
+     write(6,*) '+-----------------------------------+'
      do i = 1, npes
-        write(*,300)  i, 5.0d0*DBLE(nx*nx*nx)*2.0d0/tempo_tutti(i)/1.0D+9, proc_name(i)
+        write(6,300)  i, 5.0d0*DBLE(nx*nx*nx)*2.0d0/tempo_tutti(i)/1.0D+9, proc_name(i)
      end do
   end if
 300 FORMAT('pe = ',I5,',', F8.3, ' GFlops', ',  node: ', A20) 
@@ -227,15 +231,15 @@ program lax_test
   CALL MPI_ALLREDUCE( MPI_IN_PLACE, tempo_tutti, npes, MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, ierr )
 #endif
   if( mype == 0 ) then
-     write(*,*)
-     write(*,*)
-     write(*,*)
-     write(*,*) '+-----------------------------------+'
-     write(*,*) '|    ping-pong network bandwidth    |'
-     write(*,*) '|            with pe = 0            |'
-     write(*,*) '+-----------------------------------+'
+     write(6,*)
+     write(6,*)
+     write(6,*)
+     write(6,*) '+-----------------------------------+'
+     write(6,*) '|    ping-pong network bandwidth    |'
+     write(6,*) '|            with pe = 0            |'
+     write(6,*) '+-----------------------------------+'
      do i = 2, npes
-        write(*,320)  i-1, 2.0d0*DBLE(nx*nx)*8.0d0/tempo_tutti(i)/1.0D+9, proc_name(i)
+        write(6,320)  i-1, 2.0d0*DBLE(nx*nx)*8.0d0/tempo_tutti(i)/1.0D+9, proc_name(i)
      end do
   end if
 320 FORMAT('pe = ',I5,',', F8.3, ' GBytes', ',  node: ', A20) 
@@ -271,18 +275,18 @@ program lax_test
   CALL MPI_ALLREDUCE( MPI_IN_PLACE, tempo_tutti, npes, MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, ierr )
 #endif
   if( mype == 0 ) then
-     write(*,*)
-     write(*,*)
-     write(*,*)
-     write(*,*) '+-----------------------------------+'
-     write(*,*) '|    ping-pong network latency      |'
-     write(*,*) '|            with pe = 0            |'
-     write(*,*) '+-----------------------------------+'
+     write(6,*)
+     write(6,*)
+     write(6,*)
+     write(6,*) '+-----------------------------------+'
+     write(6,*) '|    ping-pong network latency      |'
+     write(6,*) '|            with pe = 0            |'
+     write(6,*) '+-----------------------------------+'
      do i = 2, npes
-        write(*,330)  i-1, tempo_tutti(i), proc_name(i)
+        write(6,330)  i-1, tempo_tutti(i)*1000000.0d0, proc_name(i)
      end do
   end if
-330 FORMAT('pe = ',I5,',', E10.3, ' sec', ',  node: ', A20) 
+330 FORMAT('pe = ',I5,',', F8.3, ' usec', ',  node: ', A20) 
 
   DEALLOCATE( tempo_tutti )
 
@@ -347,39 +351,39 @@ program lax_test
   tempo_avg = tempo_avg / npes
   !
   IF( mype == 0 ) THEN
-     write(*,*) 
-     write(*,*) ' Matrix eigenvalues '
-     write(*,*) 
+     write(6,*) 
+     write(6,*) ' Matrix eigenvalues '
+     write(6,*) 
      IF ( n <= 16 ) THEN
        DO i = 1, n
-         write(*,*) ' D(',i,')=',d(i)
+         write(6,*) ' D(',i,')=',d(i)
        END DO
      ELSE
        DO i = 1, 8
-         write(*,*) ' D(',i,')=',d(i)
+         write(6,*) ' D(',i,')=',d(i)
        END DO
-       write(*,*) ' ... '
+       write(6,*) ' ... '
        DO i = n-8, n 
-         write(*,*) ' D(',i,')=',d(i)
+         write(6,*) ' D(',i,')=',d(i)
        END DO
      END IF
-     write(*,*) 
+     write(6,*) 
   ENDIF
 
   if( mype == 0 ) then
 
-    write(*,*) '**** LA Timing ****'
-    write(*,*) 
-    write(*,200) 2.0d0*n*n*n / 1.D9 / tempo_avg(3)
-    write(*,*) 
+    write(6,*) '**** LA Timing ****'
+    write(6,*) 
+    write(6,200) 2.0d0*n*n*n / 1.D9 / tempo_avg(3)
+    write(6,*) 
 
-    write(*,100)
-    write(*,1)
-    write(*,100)
-    write(*,2) tempo_min(2), tempo_max(2), tempo_avg(2)
-    write(*,100)
-    write(*,3) tempo_min(3), tempo_max(3), tempo_avg(3)
-    write(*,100)
+    write(6,100)
+    write(6,1)
+    write(6,100)
+    write(6,2) tempo_min(2), tempo_max(2), tempo_avg(2)
+    write(6,100)
+    write(6,3) tempo_min(3), tempo_max(3), tempo_avg(3)
+    write(6,100)
 
 200 FORMAT(' GFlops = ', F14.2 )
 100 FORMAT(' +--------------------+----------------+-----------------+----------------+' )
