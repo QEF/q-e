@@ -28,7 +28,7 @@
         !
         !  task groups
         !
-        LOGICAL :: have_task_groups
+        LOGICAL :: have_task_groups = .FALSE.
         !
         INTEGER :: me_pgrp   = 0          ! task id for plane wave task group
         INTEGER :: nogrp     = 1          ! number of proc. in an orbital "task group"

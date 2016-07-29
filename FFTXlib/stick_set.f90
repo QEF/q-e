@@ -253,7 +253,6 @@
              CALL task_groups_init( dffts, dtgs, nogrp_ )
           ELSE
              dffts%have_task_groups = .FALSE.
-             dtgs%have_task_groups = .FALSE.
              IF( nogrp_ > 1 ) THEN
                 CALL fftx_error__( ' pstickset ', &
                 & ' more than one Task Groups is requested, but the Task Group descriptor is not initialized ', 1 )
