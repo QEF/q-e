@@ -206,9 +206,9 @@ SUBROUTINE task_groups_init_first( dffts, dtgs, nogrp )
     dtgs%me_pgrp = 0
 
     IF( MOD( dtgs%nproc, MAX( 1, nogrp ) ) /= 0 ) &
-       CALL fftx_error__( " task_groups_init_first ", "the number of task groups should be a divisor of the number of MPI task ", 1 )
+       CALL fftx_error__("task_groups_init_first","the number of task groups should be a divisor of the number of MPI task",1)
     IF( nogrp > dtgs%nproc ) &
-       CALL fftx_error__( " task_groups_init_first ", "the number of task groups should be less than the number of MPI task ", 1 )
+       CALL fftx_error__( "task_groups_init_first","the number of task groups should be less than the number of MPI task",1)
 
     dtgs%nogrp = MAX( 1, nogrp )
     dtgs%npgrp = dtgs%nproc / MAX( 1, nogrp )
