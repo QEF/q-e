@@ -81,6 +81,7 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   ! ...    hpsi  H*psi
   !
   USE kinds,    ONLY : DP
+  USE wavefunctions_module, ONLY : psic
   USE bp,       ONLY : lelfield,l3dstring,gdir, efield, efield_cry
   USE becmod,   ONLY : bec_type, becp, calbec
   USE lsda_mod, ONLY : current_spin
@@ -94,7 +95,7 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   USE noncollin_module, ONLY: npol, noncolin
   USE realus,   ONLY : real_space, invfft_orbital_gamma, initialisation_level, &
                        fwfft_orbital_gamma, calbec_rs_gamma, &
-                       add_vuspsir_gamma, v_loc_psir
+                       add_vuspsir_gamma, v_loc_psir_inplace
   USE fft_base, ONLY : dffts
   USE exx,      ONLY : vexx, vexxace_gamma, vexxace_k
   USE funct,    ONLY : exx_is_active
@@ -109,32 +110,9 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   REAL(dp)    :: ee
   !
   CALL start_clock( 'h_psi' )
-  !  
-  ! ... Here we apply the kinetic energy (k+G)^2 psi
-  !
-  DO ibnd = 1, m
-     hpsi (1:n, ibnd) = g2kin (1:n) * psi (1:n, ibnd)
-     hpsi (n+1:lda,ibnd) = (0.0_dp, 0.0_dp)
-     IF ( noncolin ) THEN
-        hpsi (lda+1:lda+n, ibnd) = g2kin (1:n) * psi (lda+1:lda+n, ibnd)
-        hpsi (lda+n+1:lda*npol, ibnd) = (0.0_dp, 0.0_dp)
-     END IF
-  END DO
-  !
-  if (dft_is_meta()) call h_psi_meta (lda, n, m, psi, hpsi)
-  !
-  ! ... Here we add the Hubbard potential times psi
-  !
-  IF ( lda_plus_u .AND. U_projection.NE."pseudo" ) THEN
-     !
-     IF (noncolin) THEN
-        CALL vhpsi_nc( lda, n, m, psi, hpsi )
-     ELSE
-        call vhpsi( lda, n, m, psi, hpsi )
-     ENDIF
-     !
-  ENDIF
-  !
+
+  hpsi (:, 1:m) = (0.0_dp, 0.0_dp)
+
   !
   ! ... the local potential V_Loc psi
   !
@@ -153,18 +131,16 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
            incr = 2
         ENDIF
         DO ibnd = 1, m, incr
-           ! ... transform psi to real space, saved in temporary memory
-           CALL invfft_orbital_gamma(psi,ibnd,m,.true.) 
-           ! ... becp%r = < beta|psi> on psi in real space
+           ! ... transform psi to real space -> psic 
+           CALL invfft_orbital_gamma(psi,ibnd,m) 
+           ! ... compute becp%r = < beta|psi> from psic in real space
            CALL calbec_rs_gamma(ibnd,m,becp%r) 
-           ! ... psi is now replaced by hpsi ??? WHAT FOR ???
-           CALL invfft_orbital_gamma(hpsi,ibnd,m)
-           ! ... hpsi -> hpsi + psi*vrs  (psi read from temporary memory)
-           CALL v_loc_psir(ibnd,m) 
-           ! ... hpsi -> hpsi + vusp
+           ! ... psic -> vrs * psic (psic overwritten will become hpsi)
+           CALL v_loc_psir_inplace(ibnd,m) 
+           ! ... psic (hpsi) -> psic + vusp
            CALL  add_vuspsir_gamma(ibnd,m)
-           ! ... transform back hpsi, clear psi in temporary memory
-           CALL fwfft_orbital_gamma(hpsi,ibnd,m,.true.) 
+           ! ... transform psic back in reciprocal space and assign it to hpsi
+           CALL fwfft_orbital_gamma(hpsi,ibnd,m) 
         END DO
         !
      ELSE
@@ -183,6 +159,30 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
      !
   END IF  
   CALL stop_clock( 'h_psi:vloc' )
+  !  
+  ! ... Here we add the kinetic energy (k+G)^2 psi
+  !
+  DO ibnd = 1, m
+     hpsi (1:n, ibnd) = hpsi(1:n, ibnd) + g2kin (1:n) * psi (1:n, ibnd)
+     IF ( noncolin ) THEN
+        hpsi (lda+1:lda+n, ibnd) = hpsi(lda+1:lda+n,ibnd) + g2kin (1:n) * psi (lda+1:lda+n, ibnd)
+     END IF
+  END DO
+  !
+  if (dft_is_meta()) call h_psi_meta (lda, n, m, psi, hpsi)
+  !
+  ! ... Here we add the Hubbard potential times psi
+  !
+  IF ( lda_plus_u .AND. U_projection.NE."pseudo" ) THEN
+     !
+     IF (noncolin) THEN
+        CALL vhpsi_nc( lda, n, m, psi, hpsi )
+     ELSE
+        call vhpsi( lda, n, m, psi, hpsi )
+     ENDIF
+     !
+  ENDIF
+  !
   !
   ! ... Here the product with the non local potential V_NL psi
   ! ... (not in the real-space case: it is done together with V_loc)

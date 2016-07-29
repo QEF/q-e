@@ -67,7 +67,7 @@ MODULE realus
   ! variables for real-space beta, followed by routines
   PUBLIC :: real_space, initialisation_level, real_space_debug, &
        tg_psic, betasave, maxbox_beta, box_beta
-  PUBLIC :: betapointlist, init_realspace_vars, v_loc_psir
+  PUBLIC :: betapointlist, init_realspace_vars, v_loc_psir, v_loc_psir_inplace
   PUBLIC :: invfft_orbital_gamma, fwfft_orbital_gamma, s_psir_gamma, &
             calbec_rs_gamma, add_vuspsir_gamma, invfft_orbital_k,    &
             fwfft_orbital_k, s_psir_k, calbec_rs_k, add_vuspsir_k
@@ -1864,7 +1864,6 @@ MODULE realus
     LOGICAL :: use_tg
 
     !Task groups
-    INTEGER :: v_siz
 
     !The new task group version based on vloc_psi
     !print *, "->Real space"
@@ -1990,7 +1989,6 @@ MODULE realus
     LOGICAL :: use_tg
 
     !Task groups
-    INTEGER :: v_siz
     !print *, "->fourier space"
     CALL start_clock( 'fwfft_orbital' )
     !New task_groups versions
@@ -2248,7 +2246,6 @@ MODULE realus
     INTEGER :: j
     !Task groups
     REAL(DP),    ALLOCATABLE :: tg_v(:)
-    INTEGER :: v_siz
     CALL start_clock( 'v_loc_psir' )
 
     IF( dffts%have_task_groups .and. last >= dffts%nogrp  ) THEN
@@ -2271,6 +2268,55 @@ MODULE realus
      ENDIF
   CALL stop_clock( 'v_loc_psir' )
   END SUBROUTINE v_loc_psir
+  !--------------------------------------------------------------------------
+  SUBROUTINE v_loc_psir_inplace (ibnd, last)
+    !--------------------------------------------------------------------------
+    ! The same thing as v_loc_psir but 
+    ! - on input  psic contains the wavefunction
+    ! - on output psic overwritten to contain v_loc_psir 
+    ! Therefore must be the first term to be considered whn building hpsi
+    ! SdG 290716
+    !
+    USE wavefunctions_module, &
+                       ONLY : psic
+    USE gvecs,         ONLY : nls,nlsm,doublegrid
+    USE kinds,         ONLY : DP
+    USE fft_base,      ONLY : dffts
+    USE fft_parallel,  ONLY : tg_gather
+    USE mp_bands,      ONLY : me_bgrp
+    USE scf,           ONLY : vrs
+    USE lsda_mod,      ONLY : current_spin
+
+    IMPLICIT NONE
+
+    INTEGER, INTENT(in) :: ibnd,& ! index of the band currently being operated on
+                           last   ! index of the last band that you want to operate on
+    !Internal temporary variables
+    INTEGER :: j
+    !Task groups
+    REAL(DP),    ALLOCATABLE :: tg_v(:)
+    CALL start_clock( 'v_loc_psir' )
+
+    IF( dffts%have_task_groups .and. last >= dffts%nogrp  ) THEN
+        IF (ibnd == 1 ) THEN
+          CALL tg_gather( dffts, vrs(:,current_spin), tg_v )
+          !if ibnd==1 this is a new calculation, and tg_v should be distributed.
+        ENDIF
+        !
+        DO j = 1, dffts%nr1x*dffts%nr2x*dffts%tg_npp( me_bgrp + 1 )
+           tg_psic (j) = tg_v(j) * tg_psic(j)
+        ENDDO
+        !
+        DEALLOCATE( tg_v )
+     ELSE
+        !   product with the potential v on the smooth grid
+        !
+        DO j = 1, dffts%nnr
+           psic (j) = vrs(j,current_spin) * psic(j)
+        ENDDO
+     ENDIF
+  CALL stop_clock( 'v_loc_psir' )
+  END SUBROUTINE v_loc_psir_inplace
     !--------------------------------------------------------------------------
   !
 END MODULE realus
