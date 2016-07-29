@@ -247,19 +247,14 @@ SUBROUTINE sum_band()
        INTEGER  :: npw, idx, ioff, incr, v_siz, j
        COMPLEX(DP), ALLOCATABLE :: tg_psi(:)
        REAL(DP),    ALLOCATABLE :: tg_rho(:)
-       LOGICAL  :: use_tg
        !
        !
        ! ... here we sum for each k point the contribution
        ! ... of the wavefunctions to the charge
        !
-       use_tg = dffts%have_task_groups 
-       dffts%have_task_groups = ( dffts%have_task_groups ) .AND. &
-                                ( this_bgrp_nbnd >= dtgs%nogrp )
-       !
        incr = 2
        !
-       IF( dffts%have_task_groups ) THEN
+       IF( dtgs%have_task_groups .AND. ( this_bgrp_nbnd >= dtgs%nogrp ) ) THEN
           !
           IF( dft_is_meta() .OR. lxdm) &
              CALL errore( ' sum_band ', ' task groups with meta dft, not yet implemented ', 1 )
@@ -275,7 +270,7 @@ SUBROUTINE sum_band()
        !
        k_loop: DO ik = 1, nks
           !
-          IF( dffts%have_task_groups ) tg_rho = 0.0_DP
+          IF( dtgs%have_task_groups .AND. ( this_bgrp_nbnd >= dtgs%nogrp ) ) tg_rho = 0.0_DP
           IF ( lsda ) current_spin = isk(ik)
           !
           npw = ngk(ik)
@@ -300,7 +295,7 @@ SUBROUTINE sum_band()
           !
           DO ibnd = ibnd_start, ibnd_end, incr
              !
-             IF( dffts%have_task_groups ) THEN
+             IF( dtgs%have_task_groups .AND. ( this_bgrp_nbnd >= dtgs%nogrp ) ) THEN
                 !
                 tg_psi(:) = ( 0.D0, 0.D0 )
                 ioff   = 0
@@ -441,7 +436,7 @@ SUBROUTINE sum_band()
              !
           END DO
           !
-          IF( dffts%have_task_groups ) THEN
+          IF( dtgs%have_task_groups .AND. ( this_bgrp_nbnd >= dtgs%nogrp ) ) THEN
              !
              ! reduce the group charge
              !
@@ -471,11 +466,10 @@ SUBROUTINE sum_band()
        !
        IF( okvan .AND. becp%comm /= mp_get_comm_null() ) CALL mp_sum( becsum, becp%comm )
        !
-       IF( dffts%have_task_groups ) THEN
+       IF( dtgs%have_task_groups .AND. ( this_bgrp_nbnd >= dtgs%nogrp ) ) THEN
           DEALLOCATE( tg_psi )
           DEALLOCATE( tg_rho )
        END IF
-       dffts%have_task_groups = use_tg
        !
        RETURN
        !
@@ -507,14 +501,13 @@ SUBROUTINE sum_band()
        ! ... here we sum for each k point the contribution
        ! ... of the wavefunctions to the charge
        !
-       use_tg = dffts%have_task_groups
-       dffts%have_task_groups = ( dffts%have_task_groups )        .AND. &
+       use_tg = ( dtgs%have_task_groups ) .AND. &
                                 ( this_bgrp_nbnd >= dtgs%nogrp ) .AND. &
                                 ( .NOT. (dft_is_meta() .OR. lxdm) )
        !
        incr = 1
        !
-       IF( dffts%have_task_groups ) THEN
+       IF( use_tg ) THEN
           !
           v_siz = dtgs%tg_nnr * dtgs%nogrp
           !
@@ -532,7 +525,7 @@ SUBROUTINE sum_band()
        !
        k_loop: DO ik = 1, nks
           !
-          IF( dffts%have_task_groups ) THEN
+          IF( use_tg ) THEN
             IF (noncolin) THEN
                tg_rho_nc = 0.0_DP
             ELSE
@@ -553,7 +546,7 @@ SUBROUTINE sum_band()
           !
           DO ibnd = ibnd_start, ibnd_end, incr
              !
-             IF( dffts%have_task_groups ) THEN
+             IF( use_tg ) THEN
                 DO idx = 1, dtgs%nogrp
                    IF( idx + ibnd - 1 <= ibnd_end ) eband = eband + et( idx + ibnd - 1, ik ) * wg( idx + ibnd - 1, ik )
                 END DO
@@ -567,7 +560,7 @@ SUBROUTINE sum_band()
              w1 = wg(ibnd,ik) / omega
              !
              IF (noncolin) THEN
-                IF( dffts%have_task_groups ) THEN
+                IF( use_tg ) THEN
                    !
                    tg_psi_nc = ( 0.D0, 0.D0 )
                    !
@@ -654,7 +647,7 @@ SUBROUTINE sum_band()
                 !
              ELSE
                 !
-                IF( dffts%have_task_groups ) THEN
+                IF( use_tg ) THEN
                    !
 !$omp parallel default(shared), private(j,ioff,idx)
 !$omp do
@@ -741,7 +734,7 @@ SUBROUTINE sum_band()
              !
           END DO
           !
-          IF( dffts%have_task_groups ) THEN
+          IF( use_tg ) THEN
              !
              ! reduce the group charge
              !
@@ -792,7 +785,7 @@ SUBROUTINE sum_band()
           !
        END DO k_loop
 
-       IF( dffts%have_task_groups ) THEN
+       IF( use_tg ) THEN
           IF (noncolin) THEN
              DEALLOCATE( tg_psi_nc )
              DEALLOCATE( tg_rho_nc )
@@ -801,7 +794,6 @@ SUBROUTINE sum_band()
              DEALLOCATE( tg_rho )
           END IF
        END IF
-       dffts%have_task_groups = use_tg
        !
        RETURN
        !

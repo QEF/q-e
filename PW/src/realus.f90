@@ -120,7 +120,7 @@ MODULE realus
 
      !real space, allocation for task group fft work arrays
 
-     IF( dffts%have_task_groups ) THEN
+     IF( dtgs%have_task_groups ) THEN
         !
         IF (allocated( tg_psic ) ) DEALLOCATE( tg_psic )
         !
@@ -1313,7 +1313,7 @@ MODULE realus
     !
     CALL start_clock( 'calbec_rs' )
     !
-    IF( ( dffts%have_task_groups ) .and. ( last >= dtgs%nogrp ) ) THEN
+    IF( ( dtgs%have_task_groups ) .and. ( last >= dtgs%nogrp ) ) THEN
 
      CALL errore( 'calbec_rs_gamma', 'task_groups not implemented', 1 )
 
@@ -1416,7 +1416,7 @@ MODULE realus
     !
     CALL start_clock( 'calbec_rs' )
     !
-    IF( ( dffts%have_task_groups ) .and. ( last >= dtgs%nogrp ) ) THEN
+    IF( ( dtgs%have_task_groups ) .and. ( last >= dtgs%nogrp ) ) THEN
 
      CALL errore( 'calbec_rs_k', 'task_groups not implemented', 1 )
 
@@ -1495,7 +1495,7 @@ MODULE realus
       REAL(DP), EXTERNAL :: ddot
       !
       CALL start_clock( 's_psir' )
-      IF( ( dffts%have_task_groups ) .and. ( last >= dtgs%nogrp ) ) THEN
+      IF( ( dtgs%have_task_groups ) .and. ( last >= dtgs%nogrp ) ) THEN
          CALL errore( 's_psir_gamma', 'task_groups not implemented', 1 )
       ELSE
       ! non task groups part starts here
@@ -1580,7 +1580,7 @@ MODULE realus
       !
 
       CALL start_clock( 's_psir' )
-      IF( ( dffts%have_task_groups ) .and. ( last >= dtgs%nogrp ) ) THEN
+      IF( ( dtgs%have_task_groups ) .and. ( last >= dtgs%nogrp ) ) THEN
         CALL errore( 's_psir_k', 'task_groups not implemented', 1 )
       ELSE
       !non task groups part starts here
@@ -1668,7 +1668,7 @@ MODULE realus
   !
   CALL start_clock( 'add_vuspsir' )
 
-  IF( ( dffts%have_task_groups ) .and. ( last >= dtgs%nogrp ) ) THEN
+  IF( ( dtgs%have_task_groups ) .and. ( last >= dtgs%nogrp ) ) THEN
 
     CALL errore( 'add_vuspsir_gamma', 'task_groups not implemented', 1 )
 
@@ -1769,7 +1769,7 @@ MODULE realus
   !
   CALL start_clock( 'add_vuspsir' )
 
-  IF( ( dffts%have_task_groups ) .and. ( last >= dtgs%nogrp ) ) THEN
+  IF( ( dtgs%have_task_groups ) .and. ( last >= dtgs%nogrp ) ) THEN
     CALL errore( 'add_vuspsir_k', 'task_groups not implemented', 1 )
   ELSE
    ! non task groups part starts here
@@ -1861,7 +1861,6 @@ MODULE realus
 
     !Internal temporary variables
     INTEGER :: j, idx, ioff
-    LOGICAL :: use_tg
 
     !Task groups
 
@@ -1872,10 +1871,7 @@ MODULE realus
     ! The following is dirty trick to prevent usage of task groups if
     ! the number of bands is smaller than the number of task groups
     !
-    use_tg = dffts%have_task_groups
-    dffts%have_task_groups = ( dffts%have_task_groups ) .and. ( last >= dtgs%nogrp )
-
-    IF( dffts%have_task_groups ) THEN
+    IF( dtgs%have_task_groups .and. ( last >= dtgs%nogrp ) ) THEN
         !
 
         tg_psic = (0.d0, 0.d0)
@@ -1940,8 +1936,6 @@ MODULE realus
 
     ENDIF
 
-    dffts%have_task_groups = use_tg
-
     CALL stop_clock( 'invfft_orbital' )
 
   END SUBROUTINE invfft_orbital_gamma
@@ -1986,15 +1980,12 @@ MODULE realus
     !Internal temporary variables
     COMPLEX(DP) :: fp, fm
     INTEGER :: j, idx, ioff
-    LOGICAL :: use_tg
 
     !Task groups
     !print *, "->fourier space"
     CALL start_clock( 'fwfft_orbital' )
     !New task_groups versions
-    use_tg = dffts%have_task_groups
-    dffts%have_task_groups = ( dffts%have_task_groups ) .and. ( last >= dtgs%nogrp )
-    IF( dffts%have_task_groups ) THEN
+    IF( ( dtgs%have_task_groups ) .and. ( last >= dtgs%nogrp ) ) THEN
        !
         CALL fwfft ('Wave', tg_psic, dffts, dtgs )
         !
@@ -2052,7 +2043,6 @@ MODULE realus
          ENDIF
         ENDIF
     ENDIF
-    dffts%have_task_groups = use_tg
     !
     CALL stop_clock( 'fwfft_orbital' )
 
@@ -2092,13 +2082,10 @@ MODULE realus
 
     ! Internal variables
     INTEGER :: ioff, idx
-    LOGICAL :: use_tg
 
     CALL start_clock( 'invfft_orbital' )
-    use_tg = dffts%have_task_groups
-    dffts%have_task_groups = ( dffts%have_task_groups ) .and. ( last >= dtgs%nogrp )
 
-    IF( dffts%have_task_groups ) THEN
+    IF( ( dtgs%have_task_groups ) .and. ( last >= dtgs%nogrp ) ) THEN
        !
        tg_psic = ( 0.D0, 0.D0 )
        ioff   = 0
@@ -2139,7 +2126,6 @@ MODULE realus
        ENDIF
        !
     ENDIF
-    dffts%have_task_groups = use_tg
     CALL stop_clock( 'invfft_orbital' )
   END SUBROUTINE invfft_orbital_k
   !--------------------------------------------------------------------------
@@ -2176,13 +2162,10 @@ MODULE realus
 
     ! Internal variables
     INTEGER :: ioff, idx
-    LOGICAL :: use_tg
 
    CALL start_clock( 'fwfft_orbital' )
-   use_tg = dffts%have_task_groups
-   dffts%have_task_groups = ( dffts%have_task_groups ) .and. ( last >= dtgs%nogrp )
 
-    IF( dffts%have_task_groups ) THEN
+    IF( ( dtgs%have_task_groups ) .and. ( last >= dtgs%nogrp ) ) THEN
        !
        CALL fwfft ('Wave', tg_psic, dffts, dtgs)
        !
@@ -2215,7 +2198,6 @@ MODULE realus
           ENDIF
        ENDIF
     ENDIF
-    dffts%have_task_groups = use_tg
     CALL stop_clock( 'fwfft_orbital' )
 
   END SUBROUTINE fwfft_orbital_k
@@ -2248,7 +2230,7 @@ MODULE realus
     REAL(DP),    ALLOCATABLE :: tg_v(:)
     CALL start_clock( 'v_loc_psir' )
 
-    IF( dffts%have_task_groups .and. last >= dtgs%nogrp  ) THEN
+    IF( dtgs%have_task_groups .and. last >= dtgs%nogrp  ) THEN
         IF (ibnd == 1 ) THEN
           CALL tg_gather( dffts, dtgs, vrs(:,current_spin), tg_v )
           !if ibnd==1 this is a new calculation, and tg_v should be distributed.
@@ -2297,7 +2279,7 @@ MODULE realus
     REAL(DP),    ALLOCATABLE :: tg_v(:)
     CALL start_clock( 'v_loc_psir' )
 
-    IF( dffts%have_task_groups .and. last >= dtgs%nogrp  ) THEN
+    IF( dtgs%have_task_groups .and. last >= dtgs%nogrp  ) THEN
         IF (ibnd == 1 ) THEN
           CALL tg_gather( dffts, dtgs, vrs(:,current_spin), tg_v )
           !if ibnd==1 this is a new calculation, and tg_v should be distributed.

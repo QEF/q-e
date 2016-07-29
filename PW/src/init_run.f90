@@ -22,7 +22,7 @@ SUBROUTINE init_run()
   USE paw_init,           ONLY : paw_post_init
 #endif
   USE bp,                 ONLY : allocate_bp_efield, bp_global_map
-  USE fft_base,           ONLY : dffts
+  USE fft_base,           ONLY : dffts, dtgs
   USE funct,              ONLY : dft_is_hybrid
   USE recvec_subs,        ONLY : ggen
   USE wannier_new,        ONLY : use_wannier    
@@ -46,7 +46,7 @@ SUBROUTINE init_run()
   !
   CALL allocate_fft()
   !
-  IF ( dft_is_hybrid() .AND. dffts%have_task_groups ) &
+  IF ( dft_is_hybrid() .AND. dtgs%have_task_groups ) &
      CALL errore ('init_run', '-ntg option incompatible with EXX',1)
   !
   ! ... generate reciprocal-lattice vectors and fft indices

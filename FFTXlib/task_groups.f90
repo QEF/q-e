@@ -106,12 +106,6 @@ SUBROUTINE task_groups_init( dffts, dtgs, nogrp )
 
    CALL task_groups_init_first( dffts, dtgs, nogrp )
    !
-#if defined(DEBUG)
-   IF ( dffts%nogrp > 1 ) WRITE( stdout, 100 ) dffts%nogrp, dffts%npgrp
-
-100 FORMAT( /,3X,'Task Groups are in USE',/,3X,'groups and procs/group : ',I5,I5 )
-#endif
-
    !Find maximum chunk of local data concerning coefficients of eigenfunctions in g-space
 
 #if defined(__MPI)
@@ -208,7 +202,7 @@ SUBROUTINE task_groups_init_first( dffts, dtgs, nogrp )
     !
     !SUBDIVIDE THE PROCESSORS IN GROUPS
     !
-    dffts%have_task_groups = ( nogrp > 1 )
+    dtgs%have_task_groups = ( nogrp > 1 )
     dtgs%me_pgrp = 0
 
     IF( MOD( dtgs%nproc, MAX( 1, nogrp ) ) /= 0 ) &

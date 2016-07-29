@@ -23,7 +23,7 @@ SUBROUTINE lr_readin
                                   & do_makov_payne
   USE scf,                 ONLY : vltot, v, vrs, vnew, &
                                   & destroy_scf_type, rho
-  USE fft_base,            ONLY : dfftp, dffts
+  USE fft_base,            ONLY : dfftp, dffts, dtgs
   USE gvecs,               ONLY : doublegrid
   USE wvfct,               ONLY : nbnd, et, wg, current_k
   USE lsda_mod,            ONLY : isk
@@ -413,14 +413,6 @@ SUBROUTINE lr_readin
   !
   CALL input_sanity()
   !
-  ! EELS: Task groups are used only in some places (like in PHonon). 
-  ! Activated only in some places, namely where the FFTs create
-  ! a bottleneck of a calculation.
-  !
-  IF (eels) THEN
-     IF (ntask_groups > 1) dffts%have_task_groups = .FALSE.
-  ENDIF
-  !
 #ifdef __ENVIRON
   !
   ! Self-consistent continuum solvation model
@@ -619,13 +611,13 @@ CONTAINS
     !
     ! No taskgroups and EXX.
     !
-    IF (dffts%have_task_groups .AND. dft_is_hybrid()) &
+    IF (dtgs%have_task_groups .AND. dft_is_hybrid()) &
          & CALL errore( 'lr_readin', ' Linear response calculation ' // &
          & 'not implemented for EXX+Task groups', 1 )
     !
     ! Experimental task groups warning.
     !
-    IF (dffts%have_task_groups) &
+    IF (dtgs%have_task_groups) &
          & CALL infomsg( 'lr_readin','Usage of task &
          &groups with TDDFPT is still experimental. Use at your own risk.' )
     !

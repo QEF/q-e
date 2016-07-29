@@ -69,31 +69,6 @@ MODULE fft_types
     INTEGER :: nproc    = 1          ! number of processor in the fft group
     INTEGER :: root     = 0          ! root processor
     !
-    !  task groups
-    !
-    LOGICAL :: have_task_groups
-    !
-#ifdef PIPPONE
-    INTEGER :: me_pgrp   = 0          ! task id for plane wave task group
-    INTEGER :: nogrp     = 1          ! number of proc. in an orbital "task group"
-    INTEGER :: npgrp     = 1          ! number of proc. in a plane-wave "task group"
-    INTEGER :: ogrp_comm = 0          ! orbital group communicator
-    INTEGER :: pgrp_comm = 0          ! plane-wave group communicator
-    INTEGER, POINTER :: nolist(:) ! list of pes in orbital group
-    INTEGER, POINTER :: nplist(:) ! list of pes in pw group
-    !
-    INTEGER :: tg_nnr = 0            ! maximum among nnr
-    INTEGER, POINTER :: tg_nsw(:) ! number of sticks per task group ( wave func )
-    INTEGER, POINTER :: tg_npp(:) ! number of "Z" planes per task group
-    INTEGER, POINTER :: tg_snd(:) ! number of element to be sent in group redist
-    INTEGER, POINTER :: tg_rcv(:) ! number of element to be received in group redist
-    INTEGER, POINTER :: tg_psdsp(:)! send displacement for all to all (pack)
-    INTEGER, POINTER :: tg_usdsp(:)! send displacement for all to all (unpack)
-    INTEGER, POINTER :: tg_rdsp(:)! receive displacement for all to all
-    INTEGER :: tg_nppx = 0  ! max of tg_npp
-    INTEGER :: tg_ncpx = 0  ! max of tg_ncpx
-#endif
-    !
   END TYPE
 
 
@@ -183,7 +158,6 @@ CONTAINS
     desc%comm  = comm
     desc%nproc = nproc
     desc%root  = root
-    desc%have_task_groups = ( nogrp > 1 )
 
     desc%arrays_have_been_allocated = .TRUE.
 
@@ -203,7 +177,6 @@ CONTAINS
     IF ( associated( desc%iplp ) )   DEALLOCATE( desc%iplp )
     IF ( associated( desc%iplw ) )   DEALLOCATE( desc%iplw )
     desc%id = 0
-    desc%have_task_groups = .FALSE.
     desc%arrays_have_been_allocated = .FALSE.
     desc%dimensions_have_been_set = .FALSE.
 
@@ -230,7 +203,6 @@ CONTAINS
     desc%nproc = nproc
     desc%comm = comm
     desc%root = root
-    desc%have_task_groups = .false.
   END SUBROUTINE fft_box_allocate
 
   SUBROUTINE fft_box_deallocate( desc )
@@ -241,7 +213,6 @@ CONTAINS
     IF( associated( desc%npp ) ) DEALLOCATE( desc%npp )
     IF( associated( desc%ipp ) ) DEALLOCATE( desc%ipp )
     IF( associated( desc%np3 ) ) DEALLOCATE( desc%np3 )
-    desc%have_task_groups = .false.
   END SUBROUTINE fft_box_deallocate
 
 !=----------------------------------------------------------------------------=!
@@ -562,7 +533,6 @@ CONTAINS
 
     ENDDO
 
-    desc%have_task_groups = .false.
 
   END SUBROUTINE fft_box_set
 
@@ -618,7 +588,6 @@ CONTAINS
     desc%npp  = nr3
     desc%ipp  = 0
     !
-    desc%have_task_groups = .false.
 
     RETURN
   END SUBROUTINE fft_dlay_scalar

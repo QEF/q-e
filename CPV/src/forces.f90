@@ -159,7 +159,7 @@
          iss2 = iss1
       END IF
       !
-      IF( dffts%have_task_groups ) THEN
+      IF( dtgs%have_task_groups ) THEN
          !
 !===============================================================================
 !exx_wf related
@@ -293,7 +293,7 @@
 !$omp task default(none)  &
 !$omp          private( fi, fip, fp, fm, ig ) &
 !$omp          firstprivate( eig_offset, igno, idx, nogrp_, ngw, tpiba2, me_bgrp, i, n, tens ) &
-!$omp          shared( f, aux, df, da, c, dffts, g2kin, nls, nlsm )
+!$omp          shared( f, aux, df, da, c, dffts, dtgs, g2kin, nls, nlsm )
 
          IF( idx + i - 1 <= n ) THEN
             if (tens) then
@@ -303,7 +303,7 @@
                fi = -0.5d0*f(i+idx-1)
                fip = -0.5d0*f(i+idx)
             endif
-            IF( dffts%have_task_groups ) THEN
+            IF( dtgs%have_task_groups ) THEN
                DO ig=1,ngw
                   fp= aux(nls(ig)+eig_offset) +  aux(nlsm(ig)+eig_offset)
                   fm= aux(nls(ig)+eig_offset) -  aux(nlsm(ig)+eig_offset)

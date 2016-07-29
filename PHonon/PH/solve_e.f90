@@ -104,8 +104,6 @@ subroutine solve_e
   !
   !  This routine is task group aware
   !
-  IF ( ntask_groups > 1 ) dffts%have_task_groups=.TRUE.
-
   allocate (dvscfin( dfftp%nnr, nspin_mag, 3))
   if (doublegrid) then
      allocate (dvscfins(dffts%nnr, nspin_mag, 3))
@@ -141,7 +139,7 @@ subroutine solve_e
      iter0 = 0
   endif
   incr=1
-  IF ( dffts%have_task_groups ) THEN
+  IF ( dtgs%have_task_groups ) THEN
      !
      v_siz =  dtgs%tg_nnr * dtgs%nogrp
      ALLOCATE( tg_dv   ( v_siz, nspin_mag ) )
@@ -209,8 +207,7 @@ subroutine solve_e
               ! calculates dvscf_q*psi_k in G_space, for all bands, k=kpoint
               ! dvscf_q from previous iteration (mix_potential)
               !
-              IF ( ntask_groups > 1) dffts%have_task_groups=.TRUE.
-              IF( dffts%have_task_groups ) THEN
+              IF( dtgs%have_task_groups ) THEN
                  IF (noncolin) THEN
                     CALL tg_cgather( dffts, dtgs, dvscfins(:,1,ipol), &
                                                                 tg_dv(:,1))
@@ -227,7 +224,7 @@ subroutine solve_e
               ENDIF
               aux2=(0.0_DP,0.0_DP)
               do ibnd = 1, nbnd_occ (ik), incr
-                 IF ( dffts%have_task_groups ) THEN
+                 IF ( dtgs%have_task_groups ) THEN
                     call cft_wave_tg (ik, evc, tg_psic, 1, v_siz, ibnd, &
                                       nbnd_occ (ik) )
                     call apply_dpot(v_siz, tg_psic, tg_dv, 1)
@@ -429,14 +426,12 @@ subroutine solve_e
   deallocate (dvscfin)
   if (noncolin) deallocate(dbecsum_nc)
   deallocate(aux2)
-  IF ( ntask_groups > 1 ) dffts%have_task_groups=.TRUE.
-  IF ( dffts%have_task_groups ) THEN
+  IF ( dtgs%have_task_groups ) THEN
      !
      DEALLOCATE( tg_dv  )
      DEALLOCATE( tg_psic)
      !
   ENDIF
-  dffts%have_task_groups=.FALSE.
 
   call stop_clock ('solve_e')
   return

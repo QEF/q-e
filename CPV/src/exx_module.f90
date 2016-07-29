@@ -381,7 +381,7 @@ CONTAINS
         !
       ELSE
         !
-        IF ( dffts%have_task_groups ) THEN
+        IF ( dtgs%have_task_groups ) THEN
           !
           ALLOCATE( exx_potential(dffts%nnr,nproc_image/dtgs%nogrp) )
           !

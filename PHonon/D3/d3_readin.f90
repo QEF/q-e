@@ -143,8 +143,6 @@ SUBROUTINE d3_readin()
   IF (noncolin) call errore('d3_readin', &
      'd3 is not working in the noncolinear case', 1)
   !
-  IF (ntask_groups > 1) dffts%have_task_groups=.FALSE.
-  !
   !   band group not available
   !
   IF (nbgrp /=1 ) &

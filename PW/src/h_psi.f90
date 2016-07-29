@@ -125,7 +125,7 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
         ! ... real-space algorithm
         ! ... fixme: real_space without beta functions does not make sense
         !
-        IF ( dffts%have_task_groups .AND. ( m >= dtgs%nogrp )) then 
+        IF ( dtgs%have_task_groups .AND. ( m >= dtgs%nogrp )) then 
            incr = 2 * dtgs%nogrp
         ELSE
            incr = 2

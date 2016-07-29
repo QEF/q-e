@@ -359,11 +359,9 @@ CONTAINS
     !
     REAL(DP), ALLOCATABLE :: becp2(:,:)
     REAL(DP), ALLOCATABLE :: tg_dvrss(:)
-    LOGICAL :: use_tg
     INTEGER :: v_siz, incr, ioff
     INTEGER :: ibnd_start_gamma, ibnd_end_gamma
     !
-    use_tg = dffts%have_task_groups
     incr = 2
     !
     IF ( nkb > 0 .and. okvan ) THEN
@@ -420,7 +418,7 @@ CONTAINS
           !end: calculation of becp2
        ENDIF
 
-      IF ( dffts%have_task_groups ) THEN
+      IF ( dtgs%have_task_groups ) THEN
          !
          v_siz =  dtgs%tg_nnr * dtgs%nogrp
          !
@@ -449,7 +447,7 @@ CONTAINS
           ! Product with the potential vrs = (vltot+vr)
           ! revc0 is on smooth grid. psic is used up to smooth grid
           !
-          IF (dffts%have_task_groups) THEN
+          IF (dtgs%have_task_groups) THEN
              !
              DO ir=1, dffts%nr1x*dffts%nr2x*dtgs%tg_npp( me_bgrp + 1 )
                 !
@@ -542,7 +540,7 @@ CONTAINS
 #ifdef __MPI
        CALL mp_sum( evc1_new(:,:,1), inter_bgrp_comm )
 #endif
-       IF (dffts%have_task_groups) DEALLOCATE (tg_dvrss)
+       IF (dtgs%have_task_groups) DEALLOCATE (tg_dvrss)
        !
        IF( nkb > 0 .and. okvan .and. real_space_debug <= 7) THEN
           !The non real_space part

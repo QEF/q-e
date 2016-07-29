@@ -45,7 +45,7 @@ PROGRAM lr_eels_main
   !
   INTEGER             :: ip, na, pol_index, ibnd
   INTEGER             :: iter_restart, iteration
-  LOGICAL             :: rflag, tg_tmp
+  LOGICAL             :: rflag
   INTEGER(kind=c_int) :: kilobytes
   LOGICAL, EXTERNAL   :: test_restart
   !
@@ -115,8 +115,6 @@ PROGRAM lr_eels_main
   !
   CALL set_bgrp_indices(nbnd, ibnd_start, ibnd_end)
   !
-  tg_tmp = dffts%have_task_groups
-  !
   ! Set up initial response orbitals (starting Lanczos vectors)
   !
   IF ( test_restart(1) ) THEN
@@ -124,8 +122,6 @@ PROGRAM lr_eels_main
   ELSE
      CALL lr_solve_e()
   ENDIF
-  !
-  dffts%have_task_groups = tg_tmp
   !
   DEALLOCATE( psic )
   !

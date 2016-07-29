@@ -336,7 +336,6 @@ CONTAINS
     IMPLICIT NONE
     !
     INTEGER :: ibnd_start_gamma, ibnd_end_gamma
-    LOGICAL :: use_tg
     INTEGER :: v_siz, incr, ioff, idx
     REAL(DP), ALLOCATABLE :: tg_rho(:)
     !
@@ -344,10 +343,9 @@ CONTAINS
     IF (MOD(ibnd_start, 2)==0) ibnd_start_gamma = ibnd_start + 1
     ibnd_end_gamma = MAX(ibnd_end, ibnd_start_gamma)
     !
-    use_tg = dffts%have_task_groups
     incr = 2
     !
-    IF ( dffts%have_task_groups ) THEN
+    IF ( dtgs%have_task_groups ) THEN
        !
        v_siz =  dtgs%tg_nnr * dtgs%nogrp
        !
@@ -364,7 +362,7 @@ CONTAINS
        !
        CALL invfft_orbital_gamma(evc1(:,:,1),ibnd,nbnd)
        !
-       IF (dffts%have_task_groups) THEN
+       IF (dtgs%have_task_groups) THEN
           !
           ! Now the first proc of the group holds the first two bands
           ! of the 2*dtgs%nogrp bands that we are processing at the same time,
@@ -451,7 +449,7 @@ CONTAINS
        !
     ENDDO
     !
-    IF (dffts%have_task_groups) THEN
+    IF (dtgs%have_task_groups) THEN
        !
        ! reduce the group charge
        !
@@ -566,7 +564,7 @@ CONTAINS
        !
     ENDIF
     !
-    IF ( dffts%have_task_groups ) THEN
+    IF ( dtgs%have_task_groups ) THEN
        DEALLOCATE( tg_rho )
     END IF
     !   

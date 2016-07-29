@@ -149,8 +149,6 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
 !
 !  This routine is task group aware
 !
-  IF ( ntask_groups > 1 ) dffts%have_task_groups=.TRUE.
-
   allocate (dvscfin ( dfftp%nnr , nspin_mag , npe))
   if (doublegrid) then
      allocate (dvscfins (dffts%nnr , nspin_mag , npe))
@@ -171,7 +169,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   allocate (aux2(npwx*npol, nbnd))
   allocate (drhoc(dfftp%nnr))
   incr=1
-  IF ( dffts%have_task_groups ) THEN
+  IF ( dtgs%have_task_groups ) THEN
      !
      v_siz =  dtgs%tg_nnr * dtgs%nogrp
      ALLOCATE( tg_dv   ( v_siz, nspin_mag ) )
@@ -287,8 +285,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
               ! dvscf_q from previous iteration (mix_potential)
               !
               call start_clock ('vpsifft')
-              IF ( ntask_groups > 1 ) dffts%have_task_groups=.TRUE.
-              IF( dffts%have_task_groups ) THEN
+              IF( dtgs%have_task_groups ) THEN
                  IF (noncolin) THEN
                     CALL tg_cgather( dffts, dtgs, dvscfins(:,1,ipert), &
                                                                 tg_dv(:,1))
@@ -305,7 +302,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
               ENDIF
               aux2=(0.0_DP,0.0_DP)
               do ibnd = 1, nbnd_occ (ikk), incr
-                 IF( dffts%have_task_groups ) THEN
+                 IF( dtgs%have_task_groups ) THEN
                     call cft_wave_tg (ik, evc, tg_psic, 1, v_siz, ibnd, &
                                       nbnd_occ (ikk) )
                     call apply_dpot(v_siz, tg_psic, tg_dv, 1)
@@ -318,7 +315,6 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
                  ENDIF
               enddo
               dvpsi=dvpsi+aux2
-              dffts%have_task_groups=.FALSE.
               call stop_clock ('vpsifft')
               !
               !  In the case of US pseudopotentials there is an additional
@@ -604,12 +600,10 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   deallocate (dvscfin)
   deallocate(aux2)
   deallocate(drhoc)
-  IF ( ntask_groups > 1) dffts%have_task_groups=.TRUE.
-  IF ( dffts%have_task_groups ) THEN
+  IF ( dtgs%have_task_groups ) THEN
      DEALLOCATE( tg_dv )
      DEALLOCATE( tg_psic )
   ENDIF
-  dffts%have_task_groups=.FALSE.
 
   call stop_clock ('solve_linter')
 END SUBROUTINE solve_linter

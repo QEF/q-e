@@ -108,12 +108,10 @@ SUBROUTINE normal_read()
   !
   IMPLICIT NONE
   !
-  LOGICAL :: use_tg
   INTEGER :: v_siz, incr, ioff, j
   !
   WRITE( stdout, '(/5x,"Normal read")' )
   !
-  use_tg = dffts%have_task_groups
   incr = 2
   !
   size_evc = nbnd * npwx * npol * nksq
@@ -217,7 +215,7 @@ SUBROUTINE normal_read()
   ! Calculation of the unperturbed wavefunctions in R-space revc0.
   ! Inverse Fourier transform of evc0.
   !
-  IF ( dffts%have_task_groups ) THEN
+  IF ( dtgs%have_task_groups ) THEN
        !
        v_siz =  dtgs%tg_nnr * dtgs%nogrp
        incr = 2 * dtgs%nogrp
@@ -235,7 +233,7 @@ SUBROUTINE normal_read()
         !
         CALL invfft_orbital_gamma ( evc0(:,:,1), ibnd, nbnd)
         !
-        IF (dffts%have_task_groups) THEN               
+        IF (dtgs%have_task_groups) THEN               
            !
            DO j = 1, dffts%nr1x*dffts%nr2x*dtgs%tg_npp( me_bgrp + 1 )
                !
@@ -264,9 +262,7 @@ SUBROUTINE normal_read()
                !
            ENDDO
            !
-           dffts%have_task_groups = .false.
            CALL invfft ('Wave', revc0(:,ibnd,ik), dffts)
-           dffts%have_task_groups=use_tg
            !
         ENDDO
      ENDDO
@@ -301,7 +297,7 @@ SUBROUTINE virt_read()
   !
   WRITE( stdout, '(/5x,"Virt read")' )
   !  
-  IF (dffts%have_task_groups) CALL errore ( 'virt_read', 'Task &
+  IF (dtgs%have_task_groups) CALL errore ( 'virt_read', 'Task &
      & groups not supported when there are virtual states in the &
      & input.', 1 )
   !

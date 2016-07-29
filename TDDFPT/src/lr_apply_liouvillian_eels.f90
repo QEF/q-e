@@ -59,8 +59,6 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
   !
   CALL start_clock('lr_apply')
   !
-  IF ( ntask_groups > 1 ) dffts%have_task_groups = .TRUE.
-  !
   ALLOCATE (hpsi(npwx*npol,nbnd))
   ALLOCATE (spsi(npwx*npol,nbnd))
   ALLOCATE (sevc1_new(npwx*npol,nbnd,nksq))
@@ -77,7 +75,7 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
   !
   incr = 1
   !
-  IF ( dffts%have_task_groups ) THEN
+  IF ( dtgs%have_task_groups ) THEN
      !
      v_siz =  dtgs%tg_nnr * dtgs%nogrp
      !
@@ -167,13 +165,11 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
      !
      IF (interaction1) THEN
         !
-        IF ( ntask_groups > 1 ) dffts%have_task_groups = .TRUE.
-        !
         ! The potential in dvrssc is distributed across all processors.
         ! We need to redistribute it so that it is completely contained in the
         ! processors of an orbital TASK-GROUP.
         !
-        IF ( dffts%have_task_groups ) THEN
+        IF ( dtgs%have_task_groups ) THEN
            !
            IF (noncolin) THEN
               !
@@ -195,7 +191,7 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
         !
         DO ibnd = 1, nbnd_occ(ikk), incr
            !
-           IF ( dffts%have_task_groups ) THEN
+           IF ( dtgs%have_task_groups ) THEN
               !
               ! FFT to R-space
               !
@@ -226,8 +222,6 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
            ENDIF
            !
         ENDDO
-        !
-        dffts%have_task_groups = .FALSE.
         !
         ! In the case of US pseudopotentials there is an additional term.
         ! See second term in Eq.(11) in J. Chem. Phys. 127, 164106 (2007)
@@ -314,14 +308,10 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
   DEALLOCATE (sevc1_new)
   IF (ALLOCATED(psic)) DEALLOCATE(psic)
   !
-  IF ( ntask_groups > 1) dffts%have_task_groups = .TRUE.
-  !
-  IF ( dffts%have_task_groups ) THEN
+  IF ( dtgs%have_task_groups ) THEN
      DEALLOCATE( tg_dvrssc )
      DEALLOCATE( tg_psic )
   ENDIF
-  !
-  dffts%have_task_groups = .FALSE.
   !
   IF (interaction1)      CALL stop_clock('lr_apply_int')
   IF (.NOT.interaction1) CALL stop_clock('lr_apply_no')

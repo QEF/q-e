@@ -63,12 +63,8 @@ subroutine dvqpsi_us (ik, uact, addnlcc)
   complex(DP) , allocatable, target :: aux (:)
   complex(DP) , allocatable :: aux1 (:), aux2 (:)
   complex(DP) , pointer :: auxs (:)
-  ! work space
-  logical :: htg
 
   call start_clock ('dvqpsi_us')
-  htg = dffts%have_task_groups
-  dffts%have_task_groups=.FALSE.
   if (nlcc_any.and.addnlcc) then
      allocate (aux( dfftp%nnr))
      if (doublegrid) then
@@ -209,7 +205,6 @@ subroutine dvqpsi_us (ik, uact, addnlcc)
   !
   call dvqpsi_us_only (ik, uact)
 
-  dffts%have_task_groups=htg
   call stop_clock ('dvqpsi_us')
   return
 end subroutine dvqpsi_us

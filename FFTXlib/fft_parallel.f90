@@ -31,7 +31,7 @@ CONTAINS
 !  General purpose driver, including Task groups parallelization
 !
 !----------------------------------------------------------------------------
-SUBROUTINE tg_cft3s( f, dfft, isgn, dtgs, use_task_groups )
+SUBROUTINE tg_cft3s( f, dfft, isgn, dtgs )
   !----------------------------------------------------------------------------
   !
   !! ... isgn = +-1 : parallel 3d fft for rho and for the potential
@@ -77,7 +77,6 @@ SUBROUTINE tg_cft3s( f, dfft, isgn, dtgs, use_task_groups )
   TYPE (fft_dlay_descriptor), INTENT(in) :: dfft
                                            ! descriptor of fft data layout
   INTEGER, INTENT(in)           :: isgn    ! fft direction
-  LOGICAL, OPTIONAL, INTENT(in) :: use_task_groups
   TYPE (task_groups_descriptor), OPTIONAL, INTENT(in) :: dtgs
                                            ! specify if you want to use task groups parallelization
   !
@@ -98,14 +97,11 @@ SUBROUTINE tg_cft3s( f, dfft, isgn, dtgs, use_task_groups )
   LOGICAL                    :: use_tg
   !
   !
-  IF( present( use_task_groups ) ) THEN
-     use_tg = use_task_groups
+  IF( present( dtgs ) ) THEN
+     use_tg = dtgs%have_task_groups
   ELSE
      use_tg = .false.
   ENDIF
-  !
-  IF( use_tg .and. .not. dfft%have_task_groups ) &
-     CALL fftx_error__( ' tg_cft3s ', ' call requiring task groups for a descriptor without task groups ', 1 )
   !
   n1  = dfft%nr1
   n2  = dfft%nr2

@@ -56,8 +56,6 @@ SUBROUTINE lr_dvpsi_eels (ik, dvpsi1, dvpsi2)
   !
   CALL start_clock ('lr_dvpsi_eels') 
   !
-  IF ( ntask_groups > 1 ) dffts%have_task_groups = .TRUE.
-  !
   ALLOCATE (revc(dffts%nnr,npol))
   revc(:,:)   = (0.d0, 0.d0)
   dpsi(:,:)   = (0.d0, 0.d0)
@@ -66,7 +64,7 @@ SUBROUTINE lr_dvpsi_eels (ik, dvpsi1, dvpsi2)
   !
   incr = 1
   !
-  IF ( dffts%have_task_groups ) THEN
+  IF ( dtgs%have_task_groups ) THEN
      !
      v_siz =  dtgs%tg_nnr * dtgs%nogrp
      !
@@ -92,7 +90,7 @@ SUBROUTINE lr_dvpsi_eels (ik, dvpsi1, dvpsi2)
   !
   DO ibnd = 1, nbnd_occ(ikk), incr
      !
-     IF ( dffts%have_task_groups ) THEN
+     IF ( dtgs%have_task_groups ) THEN
         !
         ! FFT to R-space
         CALL cft_wave_tg(ik, evc, tg_psic, 1, v_siz, ibnd, nbnd_occ(ikk) )
@@ -111,8 +109,6 @@ SUBROUTINE lr_dvpsi_eels (ik, dvpsi1, dvpsi2)
      ENDIF
      !
   ENDDO
-  !
-  dffts%have_task_groups = .FALSE.
   !
   ! Compute and add the US term.
   !
@@ -150,13 +146,9 @@ SUBROUTINE lr_dvpsi_eels (ik, dvpsi1, dvpsi2)
   !
   DEALLOCATE (revc)
   !
-  IF ( ntask_groups > 1) dffts%have_task_groups = .TRUE.
-  !
-  IF ( dffts%have_task_groups ) THEN
+  IF ( dtgs%have_task_groups ) THEN
      DEALLOCATE( tg_psic )
   ENDIF
-  !
-  dffts%have_task_groups = .FALSE.
   !
   CALL stop_clock ('lr_dvpsi_eels')
   !

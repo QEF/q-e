@@ -76,11 +76,8 @@
   CALL start_clock ('dvqpsi_us')
   !IF (nlcc_any) THEN
   ! SP - changed according to QE5/PH/dvqpsi_us
-  !htg = dffts%have_task_groups
   npw  = ngk(ik)
 
-
-  dffts%have_task_groups=.FALSE.
   IF (nlcc_any.AND.addnlcc) THEN
      ALLOCATE (aux( dfftp%nnr))
      IF (doublegrid) then

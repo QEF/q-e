@@ -59,7 +59,7 @@ PROGRAM lr_main
   !
   INTEGER            :: ip,na,pol_index,ibnd
   INTEGER            :: iter_restart,iteration
-  LOGICAL            :: rflag, tg_tmp
+  LOGICAL            :: rflag
   COMPLEX(kind=dp)   :: temp
   LOGICAL, EXTERNAL  :: test_restart
   !
@@ -121,8 +121,6 @@ PROGRAM lr_main
   !
   CALL set_bgrp_indices(nbnd,ibnd_start,ibnd_end)
   !
-  tg_tmp = dffts%have_task_groups
-  !
   ! Set up initial response orbitals (starting Lanczos vectors)
   !
   IF ( test_restart(1) ) THEN
@@ -134,8 +132,6 @@ PROGRAM lr_main
   !do ip = 1, n_ipol
   !  temp = wfc_dot(ibnd)
   !enddo
-  !
-  dffts%have_task_groups = tg_tmp
   !
   DEALLOCATE( psic )
   !

@@ -141,7 +141,7 @@ SUBROUTINE lr_alloc_init()
   !
   ! Allocate the R-space unperturbed orbitals
   !
-  IF (dffts%have_task_groups) THEN
+  IF (dtgs%have_task_groups) THEN
      ALLOCATE(tg_revc0(dtgs%tg_nnr * dtgs%nogrp,nbnd,nksq))
      IF (.NOT. ALLOCATED(tg_psic)) &
           & ALLOCATE( tg_psic(dtgs%tg_nnr * dtgs%nogrp) )

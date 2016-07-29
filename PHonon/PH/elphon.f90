@@ -310,7 +310,6 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   COMPLEX(DP), EXTERNAL :: zdotc
   !
   IF (.NOT. comp_elph(irr) .OR. done_elph(irr)) RETURN
-  IF ( ntask_groups > 1 ) dffts%have_task_groups=.TRUE.
 
   ALLOCATE (aux1    (dffts%nnr, npol))
   ALLOCATE (elphmat ( nbnd , nbnd , npe))
@@ -318,7 +317,7 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   el_ph_mat_rec=(0.0_DP,0.0_DP)
   ALLOCATE (aux2(npwx*npol, nbnd))
   incr=1
-  IF ( dffts%have_task_groups ) THEN
+  IF ( dtgs%have_task_groups ) THEN
      !
      v_siz =  dtgs%tg_nnr * dtgs%nogrp
      ALLOCATE( tg_dv   ( v_siz, nspin_mag ) )
@@ -370,8 +369,7 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
         !
         ! calculate dvscf_q*psi_k
         !
-        IF ( ntask_groups > 1 ) dffts%have_task_groups=.TRUE.
-        IF ( dffts%have_task_groups ) THEN
+        IF ( dtgs%have_task_groups ) THEN
            IF (noncolin) THEN
               CALL tg_cgather( dffts, dtgs, dvscfins(:,1,ipert), tg_dv(:,1))
               IF (domag) THEN
@@ -387,7 +385,7 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
         ENDIF
         aux2=(0.0_DP,0.0_DP)
         DO ibnd = 1, nbnd, incr
-           IF ( dffts%have_task_groups ) THEN
+           IF ( dtgs%have_task_groups ) THEN
               CALL cft_wave_tg (ik, evc, tg_psic, 1, v_siz, ibnd, nbnd )
               CALL apply_dpot(v_siz, tg_psic, tg_dv, 1)
               CALL cft_wave_tg (ik, aux2, tg_psic, -1, v_siz, ibnd, nbnd)
@@ -398,7 +396,6 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
            ENDIF
         ENDDO
         dvpsi=dvpsi+aux2
-        dffts%have_task_groups=.FALSE.
 
         CALL adddvscf (ipert, ik)
         !
@@ -443,12 +440,10 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   DEALLOCATE (elphmat)
   DEALLOCATE (aux1)
   DEALLOCATE (aux2)
-  IF ( ntask_groups > 1) dffts%have_task_groups=.TRUE.
-  IF ( dffts%have_task_groups ) THEN
+  IF ( dtgs%have_task_groups ) THEN
      DEALLOCATE( tg_dv )
      DEALLOCATE( tg_psic )
   ENDIF
-  dffts%have_task_groups=.FALSE.
   !
   RETURN
 END SUBROUTINE elphel

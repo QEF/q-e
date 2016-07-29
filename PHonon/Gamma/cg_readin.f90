@@ -96,10 +96,6 @@ SUBROUTINE cg_readin()
   IF ( llondon ) CALL errore('cg_readin', &
       'phonons with DFT-D not implemented',1)
   !
-  !   Task groups not used. 
-  !
-  IF (ntask_groups > 1) dffts%have_task_groups=.FALSE.
-  !
   !   band group not available
   !
   IF (nbgrp /=1 ) &

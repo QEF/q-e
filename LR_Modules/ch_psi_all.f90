@@ -18,7 +18,7 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   USE wvfct,                ONLY : npwx, nbnd, current_k
   USE becmod,               ONLY : bec_type, becp, calbec
   USE uspp,                 ONLY : nkb, vkb
-  USE fft_base,             ONLY : dffts
+  USE fft_base,             ONLY : dffts, dtgs
   USE gvect,                ONLY : g
   USE klist,                ONLY : xk, igk_k
   USE noncollin_module,     ONLY : noncolin, npol
@@ -62,8 +62,6 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   !
   !  This routine is task groups aware
   !
-  IF (ntask_groups > 1) dffts%have_task_groups=.TRUE.
-
   ALLOCATE (ps  ( nbnd , m))
   ALLOCATE (hpsi( npwx*npol , m))
   ALLOCATE (spsi( npwx*npol , m))
@@ -110,8 +108,6 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   DEALLOCATE (spsi)
   DEALLOCATE (hpsi)
   DEALLOCATE (ps)
-
-  dffts%have_task_groups=.FALSE.
 
   CALL stop_clock ('last')
   CALL stop_clock ('ch_psi')

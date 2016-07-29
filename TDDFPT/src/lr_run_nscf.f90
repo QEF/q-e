@@ -73,11 +73,6 @@ SUBROUTINE lr_run_nscf( )
   !
   CALL close_files(.TRUE.)
   !   
-  !  PWscf has run with task groups if available, but in the TDDFPT 
-  !  they are used only in some places. In that case it is activated.
-  !
-  IF (ntask_groups > 1) dffts%have_task_groups = .FALSE.
-  !
   CALL stop_clock( 'lr_run_nscf' )
   !
   RETURN

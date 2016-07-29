@@ -114,12 +114,6 @@ SUBROUTINE run_nscf(do_band, iq)
 
   bands_computed=.TRUE.
   !
-  !  PWscf has run with task groups if available, but in the phonon 
-  !  they are not used, apart in particular points, where they are
-  !  activated.
-  !
-  IF (ntask_groups > 1) dffts%have_task_groups=.FALSE.
-  !
   CALL stop_clock( 'PWSCF' )
   !
   RETURN

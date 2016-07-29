@@ -126,11 +126,8 @@ SUBROUTINE invfft_x( grid_type, f, dfft, dtgs )
      CALL tg_cft3s( f, dfft, 1 )
   ELSE IF( grid_type == 'Wave' .OR. grid_type == 'CustomWave' ) THEN
      IF( PRESENT( dtgs ) ) THEN
-        CALL tg_cft3s( f, dfft, 2, dtgs, dfft%have_task_groups )
+        CALL tg_cft3s( f, dfft, 2, dtgs )
      ELSE
-        IF( dfft%have_task_groups ) THEN
-           CALL fftx_error__( ' invfft ', ' have_task_groups is true but dtgs is not present ', 1 )
-        END IF
         CALL tg_cft3s( f, dfft, 2 )
      END IF
   END IF
@@ -238,11 +235,8 @@ SUBROUTINE fwfft_x( grid_type, f, dfft, dtgs )
      CALL tg_cft3s(f,dfft,-1)
   ELSE IF( grid_type == 'Wave' .OR. grid_type == 'CustomWave' ) THEN
      IF( PRESENT( dtgs ) ) THEN
-        CALL tg_cft3s(f,dfft,-2, dtgs, dfft%have_task_groups )
+        CALL tg_cft3s(f,dfft,-2, dtgs )
      ELSE
-        IF( dfft%have_task_groups ) THEN
-           CALL fftx_error__( ' fwfft ', ' have_task_groups is true but dtgs is not present ', 1 )
-        END IF
         CALL tg_cft3s(f,dfft,-2 )
      END IF
   END IF
