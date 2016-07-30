@@ -902,8 +902,9 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   USE klist,         ONLY : ngk
   USE noncollin_module,     ONLY : noncolin, npol
   USE wavefunctions_module, ONLY : evc
-  USE realus,        ONLY : real_space, invfft_orbital_gamma, initialisation_level,&
-                            fwfft_orbital_gamma, calbec_rs_gamma, s_psir_gamma
+  USE realus,        ONLY : real_space, &
+                            invfft_orbital_gamma, calbec_rs_gamma, &
+                            invfft_orbital_k, calbec_rs_k
   USE mp_bands,      ONLY : nbgrp,inter_bgrp_comm
   USE mp,            ONLY : mp_sum
   USE funct,         ONLY : exx_is_active
@@ -923,11 +924,19 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
      ! calbec computes becp = <vkb_i|psi_j>
      CALL calbec( npw, vkb, evc, becp )
   ELSE
-     do ibnd = ibnd_start, ibnd_end, 2
-        call invfft_orbital_gamma(evc,ibnd,ibnd_end) 
-        call calbec_rs_gamma(ibnd,ibnd_end,becp%r)
-     enddo
-     call mp_sum(becp%r,inter_bgrp_comm)
+     if (gamma_only) then
+        do ibnd = ibnd_start, ibnd_end, 2
+           call invfft_orbital_gamma(evc,ibnd,ibnd_end) 
+           call calbec_rs_gamma(ibnd,ibnd_end,becp%r)
+        enddo
+        call mp_sum(becp%r,inter_bgrp_comm)
+     else
+        do ibnd = ibnd_start, ibnd_end
+           call invfft_orbital_k(evc,ibnd,ibnd_end) 
+           call calbec_rs_k(ibnd,ibnd_end)
+        enddo
+	call mp_sum(becp%r,inter_bgrp_comm)
+     endif
   ENDIF
   !
   CALL start_clock( 'sum_band:becsum' )

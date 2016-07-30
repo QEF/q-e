@@ -93,9 +93,10 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   USE funct,    ONLY : dft_is_meta
   USE control_flags,    ONLY : gamma_only
   USE noncollin_module, ONLY: npol, noncolin
-  USE realus,   ONLY : real_space, invfft_orbital_gamma, initialisation_level, &
-                       fwfft_orbital_gamma, calbec_rs_gamma, &
-                       add_vuspsir_gamma, v_loc_psir_inplace
+  USE realus,   ONLY : real_space, &
+                       invfft_orbital_gamma, fwfft_orbital_gamma, calbec_rs_gamma, add_vuspsir_gamma, & 
+                       invfft_orbital_k, fwfft_orbital_k, calbec_rs_k, add_vuspsir_k, & 
+                       v_loc_psir_inplace
   USE fft_base, ONLY : dffts, dtgs
   USE exx,      ONLY : vexx, vexxace_gamma, vexxace_k
   USE funct,    ONLY : exx_is_active
@@ -154,8 +155,35 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
      CALL vloc_psi_nc ( lda, n, m, psi, vrs, hpsi )
      !
   ELSE  
-     !
-     CALL vloc_psi_k ( lda, n, m, psi, vrs(1,current_spin), hpsi )
+     ! 
+     IF ( real_space .and. nkb > 0  ) then 
+        !
+        ! ... real-space algorithm
+        ! ... fixme: real_space without beta functions does not make sense
+        !
+        IF ( dtgs%have_task_groups .AND. ( m >= dtgs%nogrp )) then 
+           incr = dtgs%nogrp
+        ELSE
+           incr = 1
+        ENDIF
+        DO ibnd = 1, m
+           ! ... transform psi to real space -> psic 
+           CALL invfft_orbital_k(psi,ibnd,m) 
+           ! ... compute becp%r = < beta|psi> from psic in real space
+           CALL calbec_rs_k(ibnd,m) 
+           ! ... psic -> vrs * psic (psic overwritten will become hpsi)
+           CALL v_loc_psir_inplace(ibnd,m) 
+           ! ... psic (hpsi) -> psic + vusp
+           CALL  add_vuspsir_k(ibnd,m)
+           ! ... transform psic back in reciprocal space and assign it to hpsi
+           CALL fwfft_orbital_k(hpsi,ibnd,m) 
+        END DO
+        !
+     ELSE
+        !
+        CALL vloc_psi_k ( lda, n, m, psi, vrs(1,current_spin), hpsi )
+        !
+     END IF  
      !
   END IF  
   CALL stop_clock( 'h_psi:vloc' )

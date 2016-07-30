@@ -2050,22 +2050,24 @@ MODULE realus
   !
   !--------------------------------------------------------------------------
   SUBROUTINE invfft_orbital_k (orbital, ibnd, last, ik, conserved)
-  !--------------------------------------------------------------------------
-  !
-  ! OBM 110908
-  ! This subroutine transforms the given orbital using fft and puts the result
-  ! in psic
-  ! Warning! In order to be fast, no checks on the supplied data are performed!
-  !
-  ! orbital: the array of orbitals to be transformed
-  ! ibnd: band index of the band currently being transformed
-  ! last: index of the last band you want to transform (usually the total number 
-  !       of bands but can be different in band parallelization)
-  ! ik:   kpoint index of the bands
-  !
+    !--------------------------------------------------------------------------
+    !
+    ! OBM 110908
+    ! This subroutine transforms the given orbital using fft and puts the result
+    ! in psic
+    ! Warning! In order to be fast, no checks on the supplied data are performed!
+    !
+    ! orbital: the array of orbitals to be transformed
+    ! ibnd: band index of the band currently being transformed
+    ! last: index of the last band you want to transform (usually the total number 
+    !       of bands but can be different in band parallelization)
+    !
+    !  current_k  variable  must contain the index of the desired kpoint
+    !
     USE kinds,                    ONLY : DP
     USE wavefunctions_module,     ONLY : psic
     USE klist,                    ONLY : ngk, igk_k
+    USE wvfct,                    ONLY : current_k
     USE gvecs,                    ONLY : nls, nlsm, doublegrid
     USE fft_base,                 ONLY : dffts, dtgs
     USE fft_interfaces,           ONLY : invfft
@@ -2073,17 +2075,19 @@ MODULE realus
     IMPLICIT NONE
 
     INTEGER, INTENT(in) :: ibnd,& ! index of the band currently being transformed
-                           last,& ! index of the last band that you want to transform
-                           ik     ! kpoint index of the bands
+                           last   ! index of the last band that you want to transform
 
     COMPLEX(DP),INTENT(in) :: orbital(:,:)
+    INTEGER, OPTIONAL :: ik
     LOGICAL, OPTIONAL :: conserved
     !if this flag is true, the orbital is stored in temporary memory
 
     ! Internal variables
-    INTEGER :: ioff, idx
+    INTEGER :: ioff, idx, ik_
 
     CALL start_clock( 'invfft_orbital' )
+
+    ik_ = current_k ; if (present(ik)) ik_ = ik
 
     IF( ( dtgs%have_task_groups ) .and. ( last >= dtgs%nogrp ) ) THEN
        !
@@ -2094,7 +2098,7 @@ MODULE realus
           !
           IF( idx + ibnd - 1 <= last ) THEN
              !DO j = 1, size(orbital,1)
-             tg_psic( nls( igk_k(:, ik) ) + ioff ) = orbital(:,idx+ibnd-1)
+             tg_psic( nls( igk_k(:, ik_) ) + ioff ) = orbital(:,idx+ibnd-1)
              !END DO
           ENDIF
 
@@ -2115,7 +2119,7 @@ MODULE realus
        !
        psic(1:dffts%nnr) = ( 0.D0, 0.D0 )
        !
-       psic(nls(igk_k(1:ngk(ik), ik))) = orbital(1:ngk(ik),ibnd)
+       psic(nls(igk_k(1:ngk(ik_), ik_))) = orbital(1:ngk(ik_),ibnd)
        !
        CALL invfft ('Wave', psic, dffts)
        IF (present(conserved)) THEN
@@ -2141,10 +2145,12 @@ MODULE realus
     ! ibnd: band index of the band currently being transformed
     ! last: index of the last band you want to transform (usually the total number 
     !       of bands but can be different in band parallelization)
-    ! ik:   kpoint index of the bands
+    !
+    !  current_k  variable  must contain the index of the desired kpoint
     !
     USE wavefunctions_module,     ONLY : psic
     USE klist,                    ONLY : ngk, igk_k
+    USE wvfct,                    ONLY : current_k
     USE gvecs,                    ONLY : nls, nlsm, doublegrid
     USE kinds,                    ONLY : DP
     USE fft_base,                 ONLY : dffts, dtgs
@@ -2154,16 +2160,19 @@ MODULE realus
     IMPLICIT NONE
 
     INTEGER, INTENT(in) :: ibnd,& ! index of the band currently being transformed
-                           last,& ! index of the last band that you want to transform
-                           ik     ! kpoint index of the bands
+                           last   ! index of the last band that you want to transform
+
     COMPLEX(DP),INTENT(out) :: orbital(:,:)
+    INTEGER, OPTIONAL :: ik
     LOGICAL, OPTIONAL :: conserved
     !if this flag is true, the orbital is stored in temporary memory
 
     ! Internal variables
-    INTEGER :: ioff, idx
+    INTEGER :: ioff, idx, ik_
 
-   CALL start_clock( 'fwfft_orbital' )
+    CALL start_clock( 'fwfft_orbital' )
+
+    ik_ = current_k ; if (present(ik)) ik_ = ik
 
     IF( ( dtgs%have_task_groups ) .and. ( last >= dtgs%nogrp ) ) THEN
        !
@@ -2174,7 +2183,8 @@ MODULE realus
        DO idx = 1, dtgs%nogrp
           !
           IF( idx + ibnd - 1 <= last ) THEN
-             orbital (:, ibnd+idx-1) = tg_psic( nls(igk_k(:,ik)) + ioff )
+             orbital (:, ibnd+idx-1) = tg_psic( nls(igk_k(:,ik_)) + ioff )
+
           ENDIF
           !
           ioff = ioff + dffts%nr3x * dffts%nsw( me_bgrp + 1 )
@@ -2190,7 +2200,7 @@ MODULE realus
        !
        CALL fwfft ('Wave', psic, dffts)
        !
-       orbital(1:ngk(ik),ibnd) = psic(nls(igk_k(1:ngk(ik),ik)))
+       orbital(1:ngk(ik_),ibnd) = psic(nls(igk_k(1:ngk(ik_),ik_)))
        !
        IF (present(conserved)) THEN
           IF (conserved .eqv. .true.) THEN
@@ -2218,7 +2228,6 @@ MODULE realus
     USE mp_bands,      ONLY : me_bgrp
     USE scf,           ONLY : vrs
     USE lsda_mod,      ONLY : current_spin
-
 
     IMPLICIT NONE
 

@@ -92,8 +92,9 @@ SUBROUTINE s_psi_( lda, n, m, psi, spsi )
   USE ions_base,  ONLY : nat, nsp, ityp
   USE control_flags,    ONLY: gamma_only 
   USE noncollin_module, ONLY: npol, noncolin
-  USE realus,     ONLY :  real_space, invfft_orbital_gamma, initialisation_level,&
-                          fwfft_orbital_gamma, calbec_rs_gamma, s_psir_gamma
+  USE realus,     ONLY :  real_space, &
+                  invfft_orbital_gamma, fwfft_orbital_gamma, calbec_rs_gamma, s_psir_gamma, &
+                  invfft_orbital_k, fwfft_orbital_k, calbec_rs_k, s_psir_k
   !
   IMPLICIT NONE
   !
@@ -136,7 +137,20 @@ SUBROUTINE s_psi_( lda, n, m, psi, spsi )
      !
   ELSE 
      !
-     CALL s_psi_k()
+     IF (real_space ) THEN
+        !
+        DO ibnd = 1, m
+           !   transform the orbital to real space
+           CALL invfft_orbital_k(psi,ibnd,m) 
+           CALL s_psir_k(ibnd,m)
+           CALL fwfft_orbital_k(spsi,ibnd,m)
+        END DO
+        !
+     ELSE
+        !
+        CALL s_psi_k()
+        !
+     END IF    
      !
   END IF    
   !
