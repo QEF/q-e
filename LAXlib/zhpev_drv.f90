@@ -1558,10 +1558,10 @@ CONTAINS
 
      IF( tv ) h = v
 #endif
-     IF( ALLOCATED (rwork) )DEALLOCATE( work )
+     IF ( ALLOCATED (work) )DEALLOCATE( work )
      IF ( ALLOCATED (rwork) )DEALLOCATE( rwork )
      IF ( ALLOCATED (iwork) )DEALLOCATE( iwork )
-     IF( ALLOCATED( v ) ) DEALLOCATE( v )
+     IF ( ALLOCATED( v ) ) DEALLOCATE( v )
      RETURN
   END SUBROUTINE pzheevd_drv
 
