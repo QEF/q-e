@@ -50,7 +50,7 @@
 !   with a defined topology, like on bluegene and cray machine
 !
 !-----------------------------------------------------------------------
-SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, dtgs, use_tg )
+SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, dtgs )
   !-----------------------------------------------------------------------
   !
   ! transpose the fft grid across nodes
@@ -79,8 +79,7 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, dtgs, 
   !    f_aux contains input planes, is destroyed on output
   !    f_in  contains output columns
   !
-  !
-  !  If optional argument "use_tg" is true the subroutines performs
+  !  If optional argument "dtgs" is present the subroutines performs
   !  the trasposition using the Task Groups distribution
   !
   IMPLICIT NONE
@@ -92,7 +91,6 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, dtgs, 
   INTEGER, INTENT(in)           :: nr3x, nxx_, isgn, ncp_ (:), npp_ (:)
   COMPLEX (DP), INTENT(inout)   :: f_in (nxx_), f_aux (nxx_)
   TYPE (task_groups_descriptor), OPTIONAL, INTENT(in) :: dtgs
-  LOGICAL, OPTIONAL, INTENT(in) :: use_tg
 
 #if defined(__MPI)
 
@@ -106,7 +104,7 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, dtgs, 
 
   use_tg_ = .false.
 
-  IF( present( use_tg ) ) use_tg_ = use_tg
+  IF( present( dtgs ) ) use_tg_ = .true.
 
   me     = dfft%mype + 1
   !
@@ -334,8 +332,6 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, dtgs, 
         gcomm = dfft%comm
      ENDIF
 
-     ! CALL mpi_barrier (gcomm, ierr)  ! why barrier? for buggy openmpi over ib
-
      CALL mpi_alltoall (f_in(1), sendsiz, MPI_DOUBLE_COMPLEX, f_aux(1), sendsiz, MPI_DOUBLE_COMPLEX, gcomm, ierr)
 
      IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', 'info<>0', abs(ierr) )
@@ -386,7 +382,7 @@ END SUBROUTINE fft_scatter
 !   like infiniband, ethernet, myrinet
 !
 !-----------------------------------------------------------------------
-SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg )
+SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, dtgs )
   !-----------------------------------------------------------------------
   !
   ! transpose the fft grid across nodes
@@ -413,7 +409,7 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
   !
   !  The output is overwritten on f_in ; f_aux is used as work space
   !
-  !  If optional argument "use_tg" is true the subroutines performs
+  !  If optional argument "dtgs" is present the subroutines performs
   !  the trasposition using the Task Groups distribution
   !
   IMPLICIT NONE
@@ -424,7 +420,7 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
   TYPE (fft_dlay_descriptor), INTENT(in) :: dfft
   INTEGER, INTENT(in)           :: nr3x, nxx_, isgn, ncp_ (:), npp_ (:)
   COMPLEX (DP), INTENT(inout)   :: f_in (nxx_), f_aux (nxx_)
-  LOGICAL, OPTIONAL, INTENT(in) :: use_tg
+  TYPE (task_groups_descriptor), OPTIONAL, INTENT(in) :: dtgs
 
 #if defined(__MPI)
 
@@ -445,7 +441,7 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
 
   use_tg_ = .false.
 
-  IF( present( use_tg ) ) use_tg_ = use_tg
+  IF( present( dtgs ) ) use_tg_ = .true.
 
   me     = dfft%mype + 1
   !
@@ -453,10 +449,10 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
   nppx = 0
   IF( use_tg_ ) THEN
      !  This is the number of procs. in the plane-wave group
-     nprocp = dfft%npgrp
-     ncpx   = dfft%tg_ncpx
-     nppx   = dfft%tg_nppx
-     gcomm  = dfft%pgrp_comm
+     nprocp = dtgs%npgrp
+     ncpx   = dtgs%tg_ncpx
+     nppx   = dtgs%tg_nppx
+     gcomm  = dtgs%pgrp_comm
   ELSE
      nprocp = dfft%nproc
      DO proc = 1, nprocp
@@ -481,7 +477,7 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
 
      IF( use_tg_ ) THEN
         DO proc = 1, nprocp
-           gproc = dfft%nplist(proc)+1
+           gproc = dtgs%nplist(proc)+1
            kdest = ( proc - 1 ) * sendsiz
            kfrom = offset - 1
            DO k = 1, ncp_ (me)
@@ -553,10 +549,10 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
      ELSE
 
         IF( use_tg_ ) THEN
-           npp  = dfft%tg_npp( me )
+           npp  = dtgs%tg_npp( me )
            nnp  = dfft%nr1x * dfft%nr2x
-           nblk = dfft%nproc / dfft%nogrp
-           nsiz = dfft%nogrp
+           nblk = dtgs%nproc / dtgs%nogrp
+           nsiz = dtgs%nogrp
         ELSE
            npp  = dfft%npp( me )
            nnp  = dfft%nnp
@@ -637,10 +633,10 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
      ELSE
 
         IF( use_tg_ ) THEN
-           npp  = dfft%tg_npp( me )
+           npp  = dtgs%tg_npp( me )
            nnp  = dfft%nr1x * dfft%nr2x
-           nblk = dfft%nproc / dfft%nogrp
-           nsiz = dfft%nogrp
+           nblk = dtgs%nproc / dtgs%nogrp
+           nsiz = dtgs%nogrp
         ELSE
            npp  = dfft%npp( me )
            nnp  = dfft%nnp
@@ -711,7 +707,7 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
 
      IF( use_tg_ ) THEN
         DO proc = 1, nprocp
-           gproc = dfft%nplist(proc) + 1
+           gproc = dtgs%nplist(proc) + 1
            kdest = ( proc - 1 ) * sendsiz
            kfrom = offset - 1
            DO k = 1, ncp_ (me)

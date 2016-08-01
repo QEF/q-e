@@ -222,7 +222,7 @@ CONTAINS
         !
         IF( use_tg ) THEN
            !
-           CALL fft_scatter( dfft, aux, nx3, dtgs%nogrp*dtgs%tg_nnr, f, dtgs%tg_nsw, dtgs%tg_npp, iopt, dtgs, use_tg )
+           CALL fft_scatter( dfft, aux, nx3, dtgs%nogrp*dtgs%tg_nnr, f, dtgs%tg_nsw, dtgs%tg_npp, iopt, dtgs )
            !
         ELSE
            !
@@ -251,7 +251,7 @@ CONTAINS
         !
         IF( use_tg ) THEN
            !
-           CALL fft_scatter( dfft, aux, nx3, dtgs%nogrp*dtgs%tg_nnr, f, dtgs%tg_nsw, dtgs%tg_npp, iopt, dtgs, use_tg )
+           CALL fft_scatter( dfft, aux, nx3, dtgs%nogrp*dtgs%tg_nnr, f, dtgs%tg_nsw, dtgs%tg_npp, iopt, dtgs )
            !
         ELSE
            !
@@ -330,7 +330,7 @@ SUBROUTINE fw_tg_cft3_scatter( f, dfft, aux, dtgs )
   TYPE (fft_dlay_descriptor), INTENT(in) :: dfft     ! descriptor of fft data layout
   TYPE (task_groups_descriptor), INTENT(in) :: dtgs ! descriptor of fft data layout
   !
-  CALL fft_scatter( dfft, aux, dfft%nr3x, dtgs%nogrp*dtgs%tg_nnr, f, dtgs%tg_nsw, dtgs%tg_npp, 2, dtgs, .true. )
+  CALL fft_scatter( dfft, aux, dfft%nr3x, dtgs%nogrp*dtgs%tg_nnr, f, dtgs%tg_nsw, dtgs%tg_npp, 2, dtgs )
   !
 END SUBROUTINE fw_tg_cft3_scatter
 !
@@ -348,7 +348,7 @@ SUBROUTINE bw_tg_cft3_scatter( f, dfft, aux, dtgs )
   TYPE (fft_dlay_descriptor), INTENT(in) :: dfft     ! descriptor of fft data layout
   TYPE (task_groups_descriptor), INTENT(in) :: dtgs ! descriptor of fft data layout
   !
-  CALL fft_scatter( dfft, aux, dfft%nr3x, dtgs%nogrp*dtgs%tg_nnr, f, dtgs%tg_nsw, dtgs%tg_npp, -2, dtgs, .true. )
+  CALL fft_scatter( dfft, aux, dfft%nr3x, dtgs%nogrp*dtgs%tg_nnr, f, dtgs%tg_nsw, dtgs%tg_npp, -2, dtgs )
   !
 END SUBROUTINE bw_tg_cft3_scatter
 !

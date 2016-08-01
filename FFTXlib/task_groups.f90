@@ -196,9 +196,10 @@ SUBROUTINE task_groups_init_first( dffts, dtgs, nogrp )
 
    INTEGER, INTENT(in) :: nogrp   ! number of task groups
     !
-    INTEGER :: i, n1, ipos, color, key, ierr, itsk, ntsk
+    INTEGER :: i, nlen, n1, ipos, color, key, ierr, itsk, ntsk
     INTEGER :: nppx, ncpx
-    INTEGER :: pgroup( dffts%nproc )
+    CHARACTER(LEN=MPI_MAX_PROCESSOR_NAME), ALLOCATABLE :: proc_name(:)
+    INTEGER, ALLOCATABLE :: proc_id(:)
     !
     !SUBDIVIDE THE PROCESSORS IN GROUPS
     !
@@ -219,6 +220,7 @@ SUBROUTINE task_groups_init_first( dffts, dtgs, nogrp )
     dtgs%nolist = 0
     dtgs%nplist = 0
 
+
     nppx = 0
     ncpx = 0
     DO i = 1, dffts%nproc
@@ -237,51 +239,17 @@ SUBROUTINE task_groups_init_first( dffts, dtgs, nogrp )
       dtgs%tg_nnr = max( 1, dtgs%tg_nnr ) ! ensure that dffts%nrr > 0 ( for extreme parallelism )
     ENDIF
 
-
-    DO i = 1, dtgs%nproc
-       pgroup( i ) = i - 1
-    ENDDO
-    !
-#if defined(__TASK_GROUP_WAVE_ORDER)
-    n1 = ( dtgs%mype / dtgs%npgrp ) * dtgs%npgrp 
-    ipos = dtgs%mype - n1
-#else
-    n1 = ( dtgs%mype / dtgs%nogrp ) * dtgs%nogrp 
-    ipos = dtgs%mype - n1
-#endif
-    !
-    !LIST OF PROCESSORS IN MY ORBITAL GROUP 
-    !     (processors dealing with my same pw's of different orbitals)
-    !
-    !  processors in these group have contiguous indexes
-    !
-    DO i = 1, dtgs%nogrp
-#if defined(__TASK_GROUP_WAVE_ORDER)
-       dtgs%nolist( i ) = pgroup( ipos + ( i - 1 ) * dtgs%npgrp + 1 )
-#else
-       dtgs%nolist( i ) = pgroup( n1 + i )
-#endif
-    ENDDO
-    !
-    !LIST OF PROCESSORS IN MY PLANE WAVE GROUP
-    !     (processors dealing with different pw's of my same orbital)
-    !
-    DO i = 1, dtgs%npgrp
-#if defined(__TASK_GROUP_WAVE_ORDER)
-       dtgs%nplist( i ) = pgroup( n1 + i )
-#else
-       dtgs%nplist( i ) = pgroup( ipos + ( i - 1 ) * dtgs%nogrp + 1 )
-#endif
-    ENDDO
     !
     !SET UP THE GROUPS
     !
     !CREATE ORBITAL GROUPS
+    !LIST OF PROCESSORS IN MY ORBITAL GROUP 
+    !     (processors dealing with my same pw's of different orbitals)
     !
 #if defined(__MPI)
     ! processes with the same color are in the same new communicator
 
-#if defined(__TASK_GROUP_WAVE_ORDER)
+#ifdef __TASK_GROUP_WAVE_ORDER
     color = MOD( dtgs%mype , dtgs%npgrp )
     key   = dtgs%mype / dtgs%npgrp
 #else
@@ -289,45 +257,89 @@ SUBROUTINE task_groups_init_first( dffts, dtgs, nogrp )
     key   = MOD( dtgs%mype , dtgs%nogrp )
 #endif
 
-
     CALL MPI_COMM_SPLIT( dtgs%comm, color, key, dtgs%ogrp_comm, ierr )
     if( ierr /= 0 ) &
          CALL fftx_error__( ' task_groups_init_first ', ' creating ogrp_comm ', ABS(ierr) )
     CALL MPI_COMM_RANK( dtgs%ogrp_comm, itsk, IERR )
     CALL MPI_COMM_SIZE( dtgs%ogrp_comm, ntsk, IERR )
     IF( dtgs%nogrp /= ntsk ) CALL fftx_error__( ' task_groups_init_first ', ' ogrp_comm size ', ntsk )
-    DO i = 1, dtgs%nogrp
-       IF( dtgs%mype == dtgs%nolist( i ) ) THEN
-          IF( (i-1) /= itsk ) CALL fftx_error__( ' task_groups_init_first ', ' ogrp_comm rank ', itsk )
-       END IF
-    END DO
+    dtgs%nolist = 0
+    dtgs%nolist( itsk + 1 ) = dtgs%mype
+    CALL MPI_ALLREDUCE(MPI_IN_PLACE, dtgs%nolist, dtgs%nogrp, MPI_INTEGER, MPI_SUM, dtgs%ogrp_comm, ierr)
 #endif
     !
     !CREATE PLANEWAVE GROUPS
+    !LIST OF PROCESSORS IN MY PLANE WAVE GROUP
+    !     (processors dealing with different pw's of my same orbital)
+    !
     !
 #if defined(__MPI)
     ! processes with the same color are in the same new communicator
 
-#if defined(__TASK_GROUP_WAVE_ORDER)
-    color = dtgs%mype / dtgs%npgrp
-    key   = MOD( dtgs%mype , dtgs%npgrp )
-#else
-    color = MOD( dtgs%mype , dtgs%nogrp )
-    key   = dtgs%mype / dtgs%nogrp
-#endif
-
-    CALL MPI_COMM_SPLIT( dtgs%comm, color, key, dtgs%pgrp_comm, ierr )
+    CALL MPI_COMM_SPLIT( dtgs%comm, key, color, dtgs%pgrp_comm, ierr )
     if( ierr /= 0 ) &
          CALL fftx_error__( ' task_groups_init_first ', ' creating pgrp_comm ', ABS(ierr) )
     CALL MPI_COMM_RANK( dtgs%pgrp_comm, itsk, IERR )
     CALL MPI_COMM_SIZE( dtgs%pgrp_comm, ntsk, IERR )
     IF( dtgs%npgrp /= ntsk ) CALL fftx_error__( ' task_groups_init_first ', ' pgrp_comm size ', ntsk )
-    DO i = 1, dtgs%npgrp
-       IF( dtgs%mype == dtgs%nplist( i ) ) THEN
-          IF( (i-1) /= itsk ) CALL fftx_error__( ' task_groups_init_first ', ' pgrp_comm rank ', itsk )
-       END IF
-    END DO
+    dtgs%nplist = 0
+    dtgs%nplist( itsk + 1 ) = dtgs%mype
+    CALL MPI_ALLREDUCE(MPI_IN_PLACE, dtgs%nplist, dtgs%npgrp, MPI_INTEGER, MPI_SUM, dtgs%pgrp_comm, ierr)
     dtgs%me_pgrp = itsk
+#endif
+
+#ifdef __TASK_MAPPING
+
+    allocate( proc_name( dtgs%nproc ) )
+    allocate( proc_id( dtgs%nproc ) )
+
+    do i = 1, dtgs%nproc
+#ifdef __MPI
+       if( dtgs%mype == i-1 ) then
+          call MPI_Get_processor_name( proc_name(i), nlen, ierr )
+       end if
+       CALL MPI_BCAST( nlen, 1, MPI_INT, i-1, dtgs%comm, ierr )
+       CALL MPI_BCAST( proc_name(i), MPI_MAX_PROCESSOR_NAME, MPI_CHARACTER, i-1, dtgs%comm, ierr )
+#else
+       proc_name(i) = 'localhost'
+#endif
+    end do
+
+    IF( dtgs%mype == 0 ) THEN
+       WRITE(6, 70) 
+       DO i = 1, dtgs%nproc
+          WRITE(6,100)  i-1, proc_name( i )
+       END DO
+    END IF
+ 70 FORMAT( 'MPI Task to node MAP' )
+100 FORMAT( I5, '   ', A20 )
+
+    proc_id = 0
+    CALL MPI_COMM_RANK( dtgs%ogrp_comm, itsk, IERR )
+    proc_id( dtgs%mype + 1 ) = itsk
+    CALL MPI_ALLREDUCE(MPI_IN_PLACE, proc_id, dtgs%nproc, MPI_INTEGER, MPI_SUM, dtgs%comm, ierr)
+    IF( dtgs%mype == 0 ) THEN
+       WRITE(6, 90) 
+       DO i = 1, dtgs%nproc
+          WRITE(6,100) proc_id( i ), proc_name( i )
+       END DO
+    END IF
+ 90 FORMAT( 'Task Group: Orbital Groups' )
+    proc_id = 0
+    CALL MPI_COMM_RANK( dtgs%pgrp_comm, itsk, IERR )
+    proc_id( dtgs%mype + 1 ) = itsk
+    CALL MPI_ALLREDUCE(MPI_IN_PLACE, proc_id, dtgs%nproc, MPI_INTEGER, MPI_SUM, dtgs%comm, ierr)
+    IF( dtgs%mype == 0 ) THEN
+       WRITE(6, 80) 
+       DO i = 1, dtgs%nproc
+          WRITE(6,100) proc_id( i ), proc_name( i )
+       END DO
+    END IF
+ 80 FORMAT( 'Task Group: Wave Groups' )
+    
+    deallocate( proc_id )
+    deallocate( proc_name )
+
 #endif
 
     RETURN
