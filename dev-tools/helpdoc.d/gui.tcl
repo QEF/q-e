@@ -255,16 +255,14 @@ proc ::helpdoc::def_getItemLowercaseName {name} {
 }
 
 proc ::helpdoc::def_registerItems {tree node action} {
-    variable def_item
-    variable def_itemL
     variable arr
 
     set tag  [$tree get $node tag]
     set attr [getFromTree $tree $node attributes]
 
+    catch {unset arr}
     attr2array_ arr $attr
     set name [arr name]
-    set lowercase_name [string tolower $name]
 
     switch -- $tag {
 	var - keyword - dimension - namelist - table {
