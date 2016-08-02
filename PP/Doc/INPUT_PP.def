@@ -38,7 +38,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pp.x 
 
     namelist INPUTPP {
 
-	var prefix -type CHARATER {
+	var prefix -type CHARACTER {
 	    info { 
 		prefix of files saved by program pw.x 
 	    }
