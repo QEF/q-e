@@ -1,0 +1,169 @@
+#!/bin/sh
+# the next line restarts using tclsh \
+exec tclsh "$0" "$@"
+
+###
+# Purpose: this script generates Emacs major mode elisp file for
+#          requested Quantum ESPRESSO mode
+##
+
+# directories
+
+set basedir [file normalize [file dirname [info script]]]
+set topdir  [file normalize [file join $basedir ..]]
+#set qe_modes_template_dir [file join $basedir qe-modes.templates]
+set qe_modes_template_dir [file join $topdir GUI QE-modes qe-modes.templates]
+			   
+set helpdocdir [file join $basedir helpdoc.d]
+source [file join $helpdocdir modules.tcl]; # load which modules do we support
+
+set usage "
+Usage: 
+
+  either: $argv0  \[OPTIONS\] module1 \[module2 module3 ...\]
+  or:     $argv0  \[OPTIONS\] INPUT_*.def \[INPUT_*.def  INPUT_*.def ...\]
+  
+  Where possible values for modules are:
+  
+      [::helpdoc::get_supported_modules]
+
+  While INPUT_*.def are what the name suggests.
+
+  OPTIONS are:
+
+  -mode  value
+
+        The \"mode\" stands for the short name of the mode, i.e., the
+        generate name of major mode file will be \${mode}-mode.el
+        (default value is the same as the name of the command-line
+        specified either module or the lowercase spelled PROG part of the
+        INPUT_PROG.def file).
+
+  -modename value
+         
+        The \"modename\" is the textual name of mode; for example if
+        mode = pw, then modename can be set to QE-pw.x 
+        (default value = QE-\${mode}.x).
+
+  -nmlprefix value
+
+        The \"nmlprefix\" is the prefix character of the fortran namelists 
+        (default value = '&').
+
+  -funcs
+
+       If this option is specified then the function \$mode-funcs.el file is generated.
+
+   -masteronly
+
+       If this option is specified then only the master \$mode-modes.el file is generated.
+
+The $argv0 generates an emacs major-mode elisp file for easier editing 
+of input files of specified Quantum ESPRESSO package.
+"
+
+# parse command-line
+
+if { $argc < 1 } {
+    puts stderr $usage
+    exit 1
+}
+
+package require cmdline 1.5
+
+set options {
+    {funcs             "generate $mode-funcs.el file"}
+    {masteronly        "generate $mode-modes.el master file"}
+    {mode.arg       {} "short name of mode; the corresponding mode file will be named $mode-mode.el"}
+    {modename.arg   {} "textual name of mode"}
+    {nmlprefix.arg  &  "symbol used for fortran namelist prefix"}
+}
+
+set argv_orig $argv
+
+namespace eval ::helpdoc {
+    variable opt
+    array set opt [::cmdline::getoptions ::argv $options $usage]
+    
+    if { [llength $::argv] == 0 } {
+	puts stderr "
+### no module specified on the command line:  [concat $::argv0 $::argv_orig]
+"
+	exit 1
+    }
+
+    puts "
+Input specs:
+-----------"
+    parray opt
+    foreach module $argv {    
+	puts "module([incr i]) = $module"
+    }
+    puts ""
+}
+
+# load the helpdoc package
+
+source [file join $helpdocdir helpdoc.tcl]
+
+# source the gen-emacs-mode.tcl
+
+source [file join $basedir gen-emacs-mode.tcl]
+
+namespace eval ::helpdoc {
+
+    # for -masteronly generates only the master mode file
+    
+    if { $opt(masteronly) } {	
+	qe_master_generate $argv
+	exit 0
+    }
+
+    # initialize the qe-mode generation
+
+    qe_mode_init
+
+
+    # parse each module file ...
+
+    variable module
+    foreach module $argv {
+
+	# find whether module is a name of the name of INPUT_*.def file
+    
+	set deffile $module
+
+	if { ! [file exists $module] } {
+	    # seems $module is a module name
+	    
+	    puts -nonewline "
+  trying the $module as a module name ... "
+
+	    set deffile [get_def_filename $module]
+	    puts "\[OK\]"
+	} else {    
+	    # extract module name from INPUT_*.def as:
+	
+	    set module [modulename_from_defname $deffile]	
+	}
+
+	lappend module_list $module
+    
+	if { $opt(mode) eq {} } {
+	    set opt(mode) $module
+	}
+	if { $opt(modename) eq {} } {
+	    set opt(modename) QE-$opt(mode).x
+	}
+	
+	# process this def file
+	
+	qe_mode_process_def $deffile
+    }
+
+    # generate a $opt(mode)-mode.el file
+    
+    qe_mode_generate $module_list
+}
+
+
