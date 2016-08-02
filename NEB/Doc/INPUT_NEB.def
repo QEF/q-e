@@ -14,10 +14,13 @@ input_description -distribution {Quantum Espresso} -package NEB -program neb.x {
 	===============================================================================
         
         neb.x DOES NOT READ FROM STANDARD INPUT
+	
         There are two ways for running a calculation with neb.x:
-        1) specifying a file to parse with the ./neb.x -inp or
-         neb.x -input command line option.
-        2) or specifying the number of copies of PWscf input ./neb.x -input\_images. 
+	
+        1) specifying a file to parse with the ./neb.x -inp or ./neb.x -input
+           command line option.
+    
+        2) or specifying the number of copies of PWscf input ./neb.x -input_images. 
 
         For case 1) a file containing KEYWORDS has to be written (see below).
         These KEYWORDS tells the parser which part of the file regards neb specifics
