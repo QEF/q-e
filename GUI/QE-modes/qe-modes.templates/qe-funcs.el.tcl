@@ -23,7 +23,7 @@ $header
 ;;
 ;; * "CARD" is the uppercase name for a given card
 ;;
-;; * "variable" is the lowercase name for a given namelist’ variable
+;; * "variable" is the lowercase name for a given namelist variable
 ;;
 ;; Note that in the above commands the spelling of namelist and card
 ;; names are intentionally made uppercase as to differentiate them from
