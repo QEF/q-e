@@ -4,6 +4,12 @@
 
 proc ::helpdoc::attr2array_ {arrayVar attributes} {
     upvar $arrayVar attr
+
+    catch {array unset attr}; # EXPERIMENTAL: this should be the
+			      # desired behavior, because one wants to
+			      # tranform attribute-list to associative
+			      # array, hence the previous key-value
+			      # pairs should be cleared
     
     foreach {name value} [::textutil::splitx $attributes "=\"|\"\[ \n\r\\t\]|\"$"] {
 	if { $name != "" } {
@@ -12,6 +18,14 @@ proc ::helpdoc::attr2array_ {arrayVar attributes} {
     }
 }
 
+proc ::helpdoc::arr {elem} {
+    variable arr
+
+    if { [info exists arr($elem)] } {
+	return $arr($elem)
+    } 
+    return ""
+}
 
 proc ::helpdoc::printf {content {extraSpace 0}} {
     variable txtDepth
@@ -50,15 +64,6 @@ proc helpdoc::labelMsg {label msg} {
         }
     }
     return $message
-}
-
-proc ::helpdoc::arr {elem} {
-    variable arr
-
-    if { [info exists arr($elem)] } {
-	return $arr($elem)
-    } 
-    return ""
 }
 
 
