@@ -48,7 +48,9 @@ default :
 	@echo '  doc          build documentation'
 	@echo '  links        create links to all executables in bin/'
 	@echo '  tar          create a tarball of the source tree'
-	@echo '  tar-gui      create a standalone PWgui tarball from the GUI sources'
+	@if test -d GUI/; then \
+		echo '  tar-gui      create a standalone PWgui tarball from the GUI sources'; \
+		echo '  tar-qe-modes create a tarball for QE-modes (Emacs major modes for Quantum ESPRESSO)'; fi
 	@echo '  clean        remove executables and objects'
 	@echo '  veryclean    remove files produced by "configure" as well'
 	@echo '  distclean    revert distribution to the original status'
@@ -294,7 +296,7 @@ veryclean : clean
 	- @(cd install ; $(MAKE) -f extlibs_makefile veryclean)
 	- rm -rf install/patch-plumed
 	- cd install ; rm -f config.log configure.msg config.status \
-	CPV/version.h ChangeLog* intel.pcl */intel.pcl
+		CPV/version.h ChangeLog* intel.pcl */intel.pcl
 	- cd install ; rm -fr autom4te.cache
 	- cd pseudo; ./clean_ps ; cd -
 	- cd install; ./clean.sh ; cd -
@@ -310,8 +312,8 @@ tar :
 	@if test -f espresso.tar.gz ; then /bin/rm espresso.tar.gz ; fi
 	# do not include unneeded stuff 
 	find ./ -type f | grep -v -e /.svn/ -e'/\.' -e'\.o$$' -e'\.mod$$'\
-  		 -e /.git/ -e'\.a$$' -e'\.d$$' -e'\.i$$' -e'_tmp\.f90$$' -e'\.x$$' \
-	     -e'~$$' -e'\./GUI' -e '\./tempdir' | xargs tar rvf espresso.tar
+		-e /.git/ -e'\.a$$' -e'\.d$$' -e'\.i$$' -e'_tmp\.f90$$' -e'\.x$$' \
+		-e'~$$' -e'\./GUI' -e '\./tempdir' | xargs tar rvf espresso.tar
 	gzip espresso.tar
 
 #########################################################
@@ -325,6 +327,17 @@ tar-gui :
 	else \
 	    echo ; \
 	    echo "  Sorry, tar-gui works only for svn sources !!!" ; \
+	    echo ; \
+	fi
+
+tar-qe-modes :
+	@if test -d GUI/QE-modes ; then \
+	    cd GUI/QE-modes ; \
+	    $(MAKE) TLDEPS= veryclean tar; \
+	    mv QE-modes-*.tar.gz ../.. ; \
+	else \
+	    echo ; \
+	    echo "  Sorry, tar-qe-modes works only for svn sources !!!" ; \
 	    echo ; \
 	fi
 
