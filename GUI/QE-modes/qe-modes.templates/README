@@ -7,7 +7,7 @@ In this directory are two types of files:
 
 1. *.el.tcl 
 
-   These are various elisp templates: these are parsed by gen-qe-mode
+   These are various elisp templates: these are parsed by gen-emacs-mode
    Tcl script, which substitutes all $-prefixed variables therein appearing
    (variables are single-word strings prefixed by $, i.e. $variable)
 
@@ -29,7 +29,7 @@ Description of *.el.tcl files:
 * File: qe-mode.el.tcl
 
 This is the template for various QE major modes. It is used by
-gen-qe-mode script to generate the real corresponding elisp major mode
+gen-emacs-mode script to generate the real corresponding elisp major mode
 files for various QE programs.
 
 
