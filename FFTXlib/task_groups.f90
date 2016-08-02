@@ -198,8 +198,10 @@ SUBROUTINE task_groups_init_first( dffts, dtgs, nogrp )
     !
     INTEGER :: i, nlen, n1, ipos, color, key, ierr, itsk, ntsk
     INTEGER :: nppx, ncpx
+#ifdef __TASK_MAPPING
     CHARACTER(LEN=MPI_MAX_PROCESSOR_NAME), ALLOCATABLE :: proc_name(:)
     INTEGER, ALLOCATABLE :: proc_id(:)
+#endif
     !
     !SUBDIVIDE THE PROCESSORS IN GROUPS
     !
