@@ -6,13 +6,17 @@ proc ::helpdoc::tag {{level -2}} {
 }
 
 
-proc helpdoc::indent {depth {extraDepth 0}} {      
+proc helpdoc::indent {depth {extraDepth 0}} {
+    # PURPOSE
+    # return the proper number of whitespaces for the indent at level $depth
     variable indentNum
     return [::textutil::blank [expr ($depth + $extraDepth) * $indentNum]]
 }
 
 
 proc ::helpdoc::formatString {string {depth 0}} {
+    # PURPOSE
+    # return properly indented string
     variable indentNum
     set indent [indent $depth]
     return [::textutil::indent \
@@ -32,4 +36,16 @@ proc ::helpdoc::trimEmpty {text} {
     return $text
 }
 
+
+proc ::helpdoc::value_of {varname} {
+    # PURPOSE
+    # return the value of variable or "" if the variable is not defined
+    upvar $varname var
+    
+    if { [ info exists var] } {
+	return $var
+    } else {
+	return ""
+    }
+}
 
