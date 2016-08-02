@@ -11,49 +11,29 @@ exec tclsh "$0" "$@"
 #
 
 if { ! [info exists env(PWGUI)] } {
-	# try with: ../GUI/PWgui
-	set env(PWGUI) [file normalize [file join .. GUI PWgui]]
+    # try with: ../GUI/PWgui
+    set env(PWGUI) [file normalize [file join .. GUI PWgui]]
 }
 if { ! [info exists env(GUIB)] } {
-	# try with: ../GUI/Guib
-	set env(GUIB) [file normalize [file join .. GUI Guib]]
+    # try with: ../GUI/Guib
+    set env(GUIB) [file normalize [file join .. GUI Guib]]
 }
 
-proc Usage {} {
-    global argv0
+set basedir [file normalize [file dirname [info script]]]
+set topdir  [file normalize [file join $basedir ..]]
+set helpdocdir [file join $basedir helpdoc.d]
 
-    puts stderr [subst {
-  Usage: $argv0 module
-  
-  Where module is one of:
-  
-  \tpw
-  \tneb
-  \tph 
-  \tpp 
-  \tprojwfc
-  \tbands
-  \tdos
-  \tatomic
-  \td3
-    }]
-    exit 1
-}
+source [file join $helpdocdir modules.tcl]; # load which modules do we support
 
 if { $argc != 1 } {
-    Usage
+    helpdoc::prog_module_usage
 }
 
 set module [lindex $argv 0]
 
-set basedir [file normalize [file dirname [info script]]]
-set topdir  [file normalize [file join $basedir ..]]
-
 # load helpdoc
 
-set helpdocdir [file join $basedir helpdoc.d]
 source [file join $helpdocdir helpdoc.tcl]
-
 
 # load Guib
 
@@ -72,49 +52,35 @@ source [file join $pwguidir init.tcl]
 
 # map from module to def- and module-file
 
-set mappings {
-    pw        PW/Doc     INPUT_PW 
-    neb       NEB/Doc    INPUT_NEB
-    ph        PHonon/Doc INPUT_PH
-    pp        PP/Doc     INPUT_PP
-    projwfc   PP/Doc     INPUT_PROJWFC
-    bands     PP/Doc     INPUT_BANDS
-    dos       PP/Doc     INPUT_DOS
-    atomic    atomic/Doc INPUT_LD1
-    d3        PHonon/Doc INPUT_D3
-}
+set deffile    [helpdoc::get_def_filename $module]
+set modulefile [helpdoc::get_gui_module_filename $module]
 
-foreach {mod subdir def_prefix} $mappings {
-    if { $mod == $module } {
-	set deffile    [file join $topdir $subdir $def_prefix.def]
-	set modulefile [file join  $moduledir $mod $mod.tcl]
+# compile the $deffile
 
-	# compile the $deffile
-	cd [file join $topdir $subdir]
-	catch {exec make $def_prefix.html}
-	cd $basedir
+cd [file dirname $deffile]
+catch {exec make [file rootname [file tail $deffile]].html}
+cd $basedir
 	
-	# output info
-	puts "Checking PWgui module: $mod"
-	puts "    *     module file: $modulefile"
-	puts "    * definition file: $deffile"
+# output info
 
-	# the current $mod-help.tcl file will interfere the process, rename it:	
-	
-	if { [file exists [file join $moduledir $mod $mod-help.tcl]] } {
-	    puts "Renaming the current $mod-help.tcl file to $mod-help.tcl.bak"
-	    file rename -force [file join $moduledir $mod $mod-help.tcl] [file join $moduledir $mod $mod-help.tcl.bak]
-	}
+puts "
+Checking PWgui module: $module
 
-	# make a black $mod-help.tcl file
+    *     module file: $modulefile
+    * definition file: $deffile
+"
 
-	close [open [file join $moduledir $mod $mod-help.tcl] w]
-    } 
+# the current $module-help.tcl file will interfere the process, rename it:	
+
+if { [file exists [file join $moduledir $module $module-help.tcl]] } {
+    puts "Renaming the current $module-help.tcl file to $module-help.tcl.bak"
+    file rename -force [file join $moduledir $module $module-help.tcl] [file join $moduledir $module $module-help.tcl.bak]
 }
 
-if { ! [info exists deffile] } {
-    Usage
-}
+# make a blanck $module-help.tcl file
+
+close [open [file join $moduledir $module $module-help.tcl] w]
+
 
 # read & load both the def & module file
 

@@ -11,34 +11,17 @@ exec tclsh "$0" "$@"
 # Purpose: compares the current PWgui help file with the one in $topdir/GUI/PWgui/modules/$module/
 #
 
-proc Usage {} {
-    global argv0
+set basedir [file normalize [file dirname [info script]]]
+set topdir  [file normalize [file join $basedir ..]]
 
-    puts stderr [subst {
-  Usage: $argv0 module
-  
-  Where module is one of:
-  
-  \tpw
-  \tph 
-  \tneb
-  \tpp 
-  \tprojwfc
-  \tdos
-  \tbands
-  \tatomic
-  \td3
-    }]
-    exit 1
-}
+set helpdocdir [file join $basedir helpdoc.d]
+source [file join $helpdocdir modules.tcl]; # load which modules do we support
 
 if { $argc != 1 } {
-    Usage
+    helpdoc::prog_module_usage
 }
 
 set module  [lindex $argv 0]
-set basedir [file normalize [file dirname [info script]]]
-set topdir  [file normalize [file join $basedir ..]]
 
 # PWgui's modules dir 
 
@@ -46,7 +29,9 @@ set pwguidir  [file join $topdir GUI PWgui]
 set moduledir [file join $pwguidir modules]
 
 if { ! [file exists $module-help.tcl] } {
-    puts stderr "ERROR: run the \"check_gui $module\" first ..."
+    puts stderr "
+ERROR: run the \"check_gui $module\" first ...
+"
     exit 1
 }
 
