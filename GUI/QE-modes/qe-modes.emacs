@@ -21,7 +21,7 @@
 ;; (BEWARE: more general patterns must be specified first)
 
 ;; automatically open the *.in files with generic QE mode
-(add-to-list ’auto-mode-alist ’("\\.in\\’" . qe-mode))
+(add-to-list 'auto-mode-alist '("\\.in\\'" . qe-mode))
 
 ;;  automatically open the the pw*.in, scf*.in, nscf*in, relax*in,
 ;;  vc-relax*.in, md*.in, vc-md*.in files by pw.x mode
@@ -29,16 +29,16 @@
 	     '("\\(pw\\|n?scf\\|\\(?:vc-\\)?\\(?:md\\|relax\\)\\).*\\.in\\'" . pw-mode))
 
 ;; automatically open the cp*.in files with cp.x mode
-(add-to-list ’auto-mode-alist ’("cp.*\\.in\\’" . ph-mode))
+(add-to-list 'auto-mode-alist '("cp.*\\.in\\'" . ph-mode))
 
 ;; automatically open the ph*.in files with ph.x mode
-(add-to-list ’auto-mode-alist ’("ph.*\\.in\\’" . ph-mode))
+(add-to-list 'auto-mode-alist '("ph.*\\.in\\'" . ph-mode))
 
 ;; automatically open the ld1*.in files with ld1 mode
-(add-to-list ’auto-mode-alist ’("ld1.*\\.in\\’" . ld1-mode))
+(add-to-list 'auto-mode-alist '("ld1.*\\.in\\'" . ld1-mode))
 
 ;; automatically open the pp*.in files with pp.x mode
-(add-to-list ’auto-mode-alist ’("pp.*\\.in\\’" . pp-mode))
+(add-to-list 'auto-mode-alist '("pp.*\\.in\\'" . pp-mode))
 
 
 ;;; default indentation offset is 3; uncomment below line and set the
