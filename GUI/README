@@ -3,9 +3,12 @@
  ==============================================================================
 
 
-This directory contains the Graphical-User-Interface (GUI) for PWscf.
+This directory contains the (1) PWgui: a Graphical-User-Interface for
+PWscf and (2) QE-modes package: a collection of Emacs major-modes for
+Quantum ESPRESSO input files.
 
-This directory hosts two subdirectories:
+
+Info about the PWgui and its directory structure:
 
   1. PWgui/ -- the GUI itself
   2. Guib/  -- the engine that the PWgui uses
