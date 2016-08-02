@@ -1,0 +1,15 @@
+&PROJWFC
+   ! ngauss:
+   !     0  = Simple Gaussian (default)
+   !     1  = Methfessel-Paxton of order 1
+   !    -1  = Marzari-Vanderbilt \"cold smearing\"
+   !    -99 = Fermi-Dirac function
+   
+   ngauss  = 0 ,
+   degauss = 0.007 , ! in Ry
+   DeltaE  = 0.02 ,  ! in eV
+   
+   prefix  = 'prefix' ,
+   outdir  = 'dir' ,
+   filpdos = 'prefix' ,
+/

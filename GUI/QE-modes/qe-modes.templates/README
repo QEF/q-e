@@ -1,0 +1,60 @@
+
+This directory contains "template" files for creating the Emacs major
+mode(s) for editing Quantum ESPRESSO (QE) input files.
+
+
+In this directory are two types of files:
+
+1. *.el.tcl 
+
+   These are various elisp templates: these are parsed by gen-qe-mode
+   Tcl script, which substitutes all $-prefixed variables therein appearing
+   (variables are single-word strings prefixed by $, i.e. $variable)
+
+2. *.in
+
+   These are QE input file templates, where * stands for module
+   name (i.e. pw, pp, ph, projwfc, ...). For all *.in files contained
+   in this directory, the corresponding insert-template function will
+   be constructed. Then one can get in emacs a given template by
+   keymap (e.g. for pw.x): M-x pw-insert-template
+
+   BEWARE: *** double quotes must be escaped in these *.in files !!!
+           (hence instead of "whatever" write \"whatever\")
+
+
+Description of *.el.tcl files:
+=============================
+
+* File: qe-mode.el.tcl
+
+This is the template for various QE major modes. It is used by
+gen-qe-mode script to generate the real corresponding elisp major mode
+files for various QE programs.
+
+
+* File: qe-funcs.el.tcl
+
+This is template for creating various emacs functions, such as,
+functions for inserting input templates, input variables, etc.
+
+
+* File: header.el.tcl
+
+Template for the header that will be inserted into each generated *.el file.
+
+
+* Files:
+    qe-all-modes.el.tcl -- template for creating the master qe-all-modes.el file
+    autoload-specific.el.tcl -- template for auto-loading specific QE modes
+                                (used by qe-all-modes.el.tcl)
+
+
+* Files:
+    insert-template.el.tcl -- function template (ft) for insert-template functions
+    namelist.el.tcl        -- ft for insert-namelist functions
+    stringvar.el.tcl       -- ft for insert-namelist-variable of string type
+    var.el.tcl             -- ft for insert-namelist-variable of non-string type
+    card.el.tcl            -- ft for insert-card functions (for cards with flags)
+    card-noflags.el.tcl    -- ft for insert-card functions (for flagless cards)
+

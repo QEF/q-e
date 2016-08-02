@@ -1,0 +1,35 @@
+&INPUTPP
+   ! plot_num:
+   !    0  = electron (pseudo-)charge density
+   !    1  = total potential V_bare + V_H + V_xc
+   !    2  = local ionic potential V_bare
+   !    3  = local density of states at E_fermi
+   !    4  = local density of electronic entropy
+   !    5  = STM images
+   !    6  = rho(up) - rho(down)
+   !    7  = |psi|^2
+   !    8  = ELF
+   !    9  = rho(scf) - superposition of atomic densities
+   !    10 = ILDOS
+   !    11 = electrostatic potential (V_bare + V_H)
+   !    12 = sawtooth electric field potential (if present)
+   !    13 = noncollinear magnetization.
+   !    17 = PAW all-electron valence charge density
+   !    18 = XC field (noncollinear case)
+   !    19 = reduced density gradient 
+   !    20 = rho * second-eigenvalue-electron-density-Hessian-matrix
+   !    21 = PAW all-electron charge density (valence+core).      
+   plot_num = 0
+   outdir   = '...'
+   plot_num = 0
+/
+
+&PLOT
+   nfile     = 1 
+   weight(1) = 1.0
+
+   iflag         = 3 
+   output_format = 5
+
+   fileout = '...' 
+/

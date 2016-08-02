@@ -1,0 +1,40 @@
+&CONTROL 
+   calculation = 'relax'
+/
+
+&SYSTEM
+   ! ibrav:  0 = free lattice,   1 = PC,   2 = FCC,   3 = BCC,
+   !         4 = hex or trigonal P,
+   !         5 = trigonal R (axis c),   -5 = trigonal R (axis <111>),
+   !         6 = tetragonal P,   7 = tetragonal I,
+   !         8 = orthorombic P,   9 = orthorombic base-C,   -9 = as 9 (alter description),
+   !         10 = orthorombic FC,   11 = orthorombic body-C,
+   !         12 = monoclinic P (axis c),   -12 = monoclinic P (axis b),
+   !         13 = monoclinic base-C,   14 = triclinic
+   ibrav     = 0
+   celldm(1) = 1
+   nat       = 1
+   ntyp      = 1
+   ecutwfc   = 30.0
+/
+
+&ELECTRONS
+   conv_thr = 1d-7
+/
+
+&IONS
+/
+
+CELL_PARAMETERS { alat | bohr | angstrom } 
+   1.00   0.00   0.00
+   0.00   1.00   0.00
+   0.00   0.00   1.00
+
+ATOMIC_SPECIES
+   atomLabel   atomMass   atomPseudoPotential
+
+ATOMIC_POSITIONS { alat | bohr | angstrom | crystal | crystal_sg } 
+   atomLabel   0.00   0.00   0.00
+
+K_POINTS { tpiba | automatic | crystal | gamma | tpiba_b | crystal_b | tpiba_c | crystal_c } 
+   ...insert-if-not-gamma...

@@ -1,0 +1,12 @@
+&PATH
+   string_method  = 'neb' ,
+   nstep_path     = 100 ,
+   num_of_images  = 10 ,
+   opt_scheme     = 'broyden' ,
+   CI_scheme      = 'auto' ,
+   first_last_opt = .false. ,
+   minimum_image  = .true. ,
+   path_thr       = 0.05 ,
+   use_freezing   = .true. ,
+   use_masses     = .false. ,
+ /
