@@ -9,6 +9,7 @@ namespace eval ::helpdoc::schema {
     proc define      {name code} { uplevel 1 [list ::helpdoc::define $name $code] }    
     proc text        {}          { uplevel 1 [list ::helpdoc::text] }
     proc string      {}          { uplevel 1 [list ::helpdoc::String] }
+    proc clist       {}          { uplevel 1 [list ::helpdoc::clist] }
     proc ref         {name}      { uplevel 1 [list ::helpdoc::ref $name] }
     proc ident       {}          { uplevel 1 [list ::helpdoc::ident] }
     proc optional    {code}      { uplevel 1 [list ::helpdoc::optional $code] }    
@@ -139,6 +140,15 @@ proc ::helpdoc::String {} {
     variable elemArr
     set currentElem [$stackArr(currentElem) peek]
     set elemArr(STRING,$currentElem) 1
+}
+
+
+proc ::helpdoc::clist {} { 
+    # BEWARE: clist can be called only from element
+    variable stackArr 
+    variable elemArr
+    set currentElem [$stackArr(currentElem) peek]
+    set elemArr(CLIST,$currentElem) 1
 }
 
 
