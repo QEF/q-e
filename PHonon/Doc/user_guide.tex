@@ -71,12 +71,13 @@ of the main \qe\ tree:
 \texttt{PH/}      & : source files for phonon calculations 
                    and analysis\\
 \texttt{Gamma/}  & : source files for Gamma-only phonon calculation\\
-\texttt{D3/}     & : source files for third-order derivative
-                  calculations \\
 \end{tabular}\\
 {\em Important Notice:} since v.5.4, many modules and routines that were
 common to all linear-response \qe\ codes are moved into the new 
-\texttt{LR\_Modules} subdirectory of the main tree.
+\texttt{LR\_Modules} subdirectory of the main tree. Since v.6.0, the
+\texttt{D3} code for anharmonic force constant calculations has been 
+superseded by the \texttt{D3Q} coda, available on 
+\texttt{http://www.qe-forge.org/gf/project/d3q/}.
 
 The codes available in the \PHonon\ package can perform the following 
 types of calculations:
@@ -86,7 +87,6 @@ types of calculations:
   \item effective charges and dielectric tensors;
   \item electron-phonon interaction coefficients for metals;
   \item interatomic force constants in real space;
-  \item third-order anharmonic phonon lifetimes;
   \item Infrared and Raman (nonresonant) cross section.
 \end{itemize}
 
@@ -163,10 +163,6 @@ from the \PHonon\ directory, produces the following codes:
    plus $T_c$ for  superconductivity using the McMillan formula
 \item \texttt{PH/fqha.x}: a simple code to calculate vibrational entropy with
    the quasi-harmonic approximation
-\item \texttt{D3/d3.x}:
-  calculates anharmonic phonon lifetimes (third-order derivatives
-  of the energy), using data produced by \pwx\ and \phx\ (USPP 
-  and PAW not supported). 
 \item \texttt{Gamma/phcg.x}: 
   a version of \phx\ that calculates phonons at ${\bf q} = 0$ using
   conjugate-gradient minimization of the density functional expanded to

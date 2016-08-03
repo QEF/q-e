@@ -120,8 +120,7 @@ example12:
     modes of a molecule (SiH4) at Gamma.
 
 example13:
-    This example shows how to use pw.x, ph.x and d3.x to calculate the
-    third-order expansion coefficients of the total energy of Si.
+    Deleted
 
 example14:
     This example shows how to use ph.x to calculate the phonon frequencies
