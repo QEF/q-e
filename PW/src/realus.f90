@@ -18,6 +18,7 @@ MODULE realus
   ! ... Cleanup, GWW-specific stuff moved out by P. Giannozzi (2015)
   ! ... Computation of dQ/dtau_i needed for forces added by P. Giannozzi (2015)
   ! ... Some comments about the way some routines act added by S. de Gironcoli  (2015)
+  ! ... extended to generic k by S. de Gironcoli (2016)
   !
   IMPLICIT NONE
   REAL(DP), ALLOCATABLE :: boxrad(:) ! radius of boxes, does not depend on the grid
@@ -727,6 +728,7 @@ MODULE realus
       ! The source inspired by qsave
       !
       USE constants,  ONLY : pi
+      USE control_flags, ONLY : gamma_only
       USE ions_base,  ONLY : nat, nsp, ityp, tau
       USE cell_base,  ONLY : at, bg, omega, alat
       USE uspp,       ONLY : okvan, indv, nhtol, nhtolm, ap
@@ -744,6 +746,7 @@ MODULE realus
       INTEGER               :: roughestimate, goodestimate, lamx2, nt
       INTEGER,  ALLOCATABLE :: buffpoints(:,:)
       REAL(DP), ALLOCATABLE :: buffdist(:,:)
+      REAL(DP), ALLOCATABLE :: buff_xyz_beta(:,:,:)
       REAL(DP)              :: distsq, qtot_int, first, second
       INTEGER               :: idx0, idx, ir
       INTEGER               :: i, j, k, ipol, lm, nb
@@ -809,7 +812,8 @@ MODULE realus
       ALLOCATE( buffpoints( roughestimate, nat ) )
       ALLOCATE( buffdist(   roughestimate, nat ) )
       !
-      ALLOCATE( xyz_beta( 3, roughestimate, nat ) )
+      IF ( allocated( xyz_beta ) ) DEALLOCATE( xyz_beta )
+      ALLOCATE( buff_xyz_beta( 3, roughestimate, nat ) )
       !
       buffpoints(:,:) = 0
       buffdist(:,:) = 0.D0
@@ -873,7 +877,7 @@ MODULE realus
                maxbox_beta(ia)     = mbia
                buffpoints(mbia,ia) = ir
                buffdist(mbia,ia)   = sqrt( distsq )*alat
-               xyz_beta(:,mbia,ia) = posi(:)*alat
+               buff_xyz_beta(:,mbia,ia) = posi(:)*alat
                !
             ENDIF
          ENDDO
@@ -889,12 +893,15 @@ MODULE realus
       IF ( allocated( box_beta ) )     DEALLOCATE( box_beta )
       IF ( allocated( boxdist_beta ) ) DEALLOCATE( boxdist_beta )
       !
+      ALLOCATE( xyz_beta ( 3, goodestimate, nat ) )
       ALLOCATE( box_beta    ( goodestimate, nat ) )
       ALLOCATE( boxdist_beta( goodestimate, nat ) )
       !
+      xyz_beta(:,:,:)   = buff_xyz_beta(:,1:goodestimate,:)
       box_beta(:,:)     = buffpoints(1:goodestimate,:)
       boxdist_beta(:,:) = buffdist(1:goodestimate,:)
       !
+      DEALLOCATE( buff_xyz_beta )
       DEALLOCATE( buffpoints )
       DEALLOCATE( buffdist )
       !
@@ -930,7 +937,7 @@ MODULE realus
          !
       ENDDO
       !
-      DEALLOCATE( xyz_beta )
+      if (gamma_only) DEALLOCATE( xyz_beta )
       !
       CALL stop_clock( 'realus:spher' )
       CALL start_clock( 'realus:tabp' )
@@ -1392,7 +1399,12 @@ MODULE realus
     ! The k_point generalised version of calbec_rs_gamma. Basically same as above,
     ! but becp is used instead of becp_r, skipping the gamma point reduction
     ! derived from above by OBM 051108
+    ! k-point phase factor fixed by SdG 030816
+    !
     USE kinds,                 ONLY : DP
+    USE wvfct,                 ONLY : current_k
+    USE klist,                 ONLY : xk
+    USE cell_base,             ONLY : tpiba
     USE cell_base,             ONLY : omega
     USE wavefunctions_module,  ONLY : psic
     USE ions_base,             ONLY : nat, ntyp => nsp, ityp
@@ -1400,16 +1412,19 @@ MODULE realus
     USE becmod,                ONLY : bec_type, becp
     USE fft_base,              ONLY : dffts, dtgs
     USE fft_parallel,          ONLY : tg_gather
+    USE mp_bands,              ONLY : intra_bgrp_comm
+    USE mp,                    ONLY : mp_sum
     !
     IMPLICIT NONE
     !
     INTEGER, INTENT(in) :: ibnd, last
     INTEGER :: ikb, nt, ia, ih, mbia
-    REAL(DP) :: fac
+    REAL(DP) :: fac, arg
     REAL(DP), ALLOCATABLE, DIMENSION(:) :: wr, wi
+    COMPLEX(DP), ALLOCATABLE :: cphase (:)
     REAL(DP) :: bcr, bci
     !COMPLEX(DP), allocatable, dimension(:) :: bt
-    !integer :: ir, k
+    integer :: ir
     !
     REAL(DP), EXTERNAL :: ddot
     !
@@ -1434,19 +1449,28 @@ MODULE realus
              IF ( ityp(ia) == nt ) THEN
                 !
                 mbia = maxbox_beta(ia)
+                ALLOCATE( cphase(mbia) )
+                do ir =1, mbia
+                   arg = ( xk(1,current_k) * xyz_beta(1,ir,ia) + &
+                           xk(2,current_k) * xyz_beta(2,ir,ia) + &
+                           xk(3,current_k) * xyz_beta(3,ir,ia) ) * tpiba
+                   cphase (ir) = CMPLX(COS(arg),SIN(arg))
+                end do
+
                 ALLOCATE( wr(mbia), wi(mbia) )
                 DO ih = 1, nh(nt)
                    ! nh is the number of beta functions, or something similar
                    !
                    ikb = ikb + 1
-                   wr(:) = dble ( psic( box_beta(1:mbia,ia) ) )
-                   wi(:) = aimag( psic( box_beta(1:mbia,ia) ) )
+                   wr(:) = dble ( psic( box_beta(1:mbia,ia) ) * cphase(1:mbia))
+                   wi(:) = aimag( psic( box_beta(1:mbia,ia) ) * cphase(1:mbia))
                    bcr  = ddot( mbia, betasave(ia,ih,:), 1, wr(:) , 1 )
                    bci  = ddot( mbia, betasave(ia,ih,:), 1, wi(:) , 1 )
                    becp%k(ikb,ibnd)   = fac * cmplx( bcr, bci,kind=DP)
                    !
                 ENDDO
                 DEALLOCATE( wr, wi )
+                DEALLOCATE( cphase )
                 !
              ENDIF
              !
@@ -1456,6 +1480,7 @@ MODULE realus
        !
        !
     ENDIF
+    CALL mp_sum( becp%k( :, ibnd ), intra_bgrp_comm )
     CALL stop_clock( 'calbec_rs' )
     !
     RETURN
@@ -1557,7 +1582,11 @@ MODULE realus
   ! 1) Only one band is considered at a time
   ! 2) Becp is a complex entity now
   ! Derived from s_psir_gamma by OBM 061108
+  ! k-point phase factor fixed by SdG 030816
       USE kinds,                  ONLY : DP
+      USE wvfct,                  ONLY : current_k
+      USE klist,                  ONLY : xk
+      USE cell_base,              ONLY : tpiba
       USE cell_base,              ONLY : omega
       USE wavefunctions_module,   ONLY : psic
       USE ions_base,              ONLY : nat, ntyp => nsp, ityp
@@ -1573,8 +1602,8 @@ MODULE realus
       INTEGER, INTENT(in) :: ibnd, last
       !
       INTEGER :: ih, jh, ikb, jkb, nt, ia, ir, mbia
-      REAL(DP) :: fac
-      COMPLEX(DP) , ALLOCATABLE, DIMENSION(:) :: w1
+      REAL(DP) :: fac, arg
+      COMPLEX(DP) , ALLOCATABLE :: w1(:), cphase(:)
       !
       REAL(DP), EXTERNAL :: ddot
       !
@@ -1596,6 +1625,15 @@ MODULE realus
             IF ( ityp(ia) == nt ) THEN
                !
                mbia = maxbox_beta(ia)
+
+               ALLOCATE( cphase(mbia) )
+               do ir =1, mbia
+                  arg = ( xk(1,current_k) * xyz_beta(1,ir,ia) + &
+                          xk(2,current_k) * xyz_beta(2,ir,ia) + &
+                          xk(3,current_k) * xyz_beta(3,ir,ia) ) * tpiba
+                  cphase (ir) = CMPLX(COS(arg),-SIN(arg))
+               end do
+
                ALLOCATE( w1(nh(nt)) )
                w1 = 0.D0
                !
@@ -1613,13 +1651,14 @@ MODULE realus
                   !
                   DO ir = 1, mbia
                      !
-                     psic( box_beta(ir,ia) ) = psic(  box_beta(ir,ia) ) + betasave(ia,ih,ir)*w1(ih)
+                     psic( box_beta(ir,ia) ) = psic(  box_beta(ir,ia) ) + cphase(ir)*betasave(ia,ih,ir)*w1(ih)
                      !
                   ENDDO
                   !
                ENDDO
                !
                DEALLOCATE( w1 )
+               DEALLOCATE( cphase )
                !
             ENDIF
             !
@@ -1745,7 +1784,12 @@ MODULE realus
   ! Subroutine written by Stefano de Gironcoli, modified by O. Baris Malcioglu
   ! WARNING ! for the sake of speed, no checks performed in this subroutine
   !
+  ! k-point phase factor fixed by SdG 030816
+  !
   USE kinds,                  ONLY : DP
+  USE wvfct,                  ONLY : current_k
+  USE klist,                  ONLY : xk
+  USE cell_base,              ONLY : tpiba
   USE cell_base,              ONLY : omega
   USE wavefunctions_module,   ONLY : psic
   USE ions_base,              ONLY : nat, ntyp => nsp, ityp
@@ -1761,9 +1805,9 @@ MODULE realus
   INTEGER, INTENT(in) :: ibnd, last
   !
   INTEGER :: ih, jh, ikb, jkb, nt, ia, ir, mbia
-  REAL(DP) :: fac
+  REAL(DP) :: fac, arg
   !
-  COMPLEX(DP), ALLOCATABLE, DIMENSION(:) :: w1
+  COMPLEX(DP), ALLOCATABLE :: w1(:), cphase(:)
   !
   REAL(DP), EXTERNAL :: ddot
   !
@@ -1785,7 +1829,16 @@ MODULE realus
          IF ( ityp(ia) == nt ) THEN
             !
             mbia = maxbox_beta(ia)
-            ALLOCATE( w1(nh(nt)) )
+
+            ALLOCATE( cphase(mbia) )
+            do ir =1, mbia
+               arg = ( xk(1,current_k) * xyz_beta(1,ir,ia) + &
+                       xk(2,current_k) * xyz_beta(2,ir,ia) + &
+                       xk(3,current_k) * xyz_beta(3,ir,ia) ) * tpiba
+               cphase (ir) = CMPLX(COS(arg),-SIN(arg))
+            end do
+
+            ALLOCATE( w1(nh(nt)))
             w1 = (0.d0, 0d0)
             !
             DO ih = 1, nh(nt)
@@ -1807,14 +1860,14 @@ MODULE realus
                !
                DO ir = 1, mbia
                   !
-                  psic( box_beta(ir,ia) ) = psic(  box_beta(ir,ia) ) + &
-                       betasave(ia,ih,ir)*w1(ih)
+                  psic( box_beta(ir,ia) ) = psic(  box_beta(ir,ia) ) + cphase(ir)*betasave(ia,ih,ir)*w1(ih)
                   !
                ENDDO
                !
             ENDDO
             !
-            DEALLOCATE( w1)
+            DEALLOCATE( w1 )
+            DEALLOCATE( cphase )
             !
          ENDIF
          !

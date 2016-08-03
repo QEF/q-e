@@ -483,7 +483,7 @@ SUBROUTINE sum_band()
        ! ... k-points version
        !
        USE mp_bands,     ONLY : me_bgrp
-       USE mp,           ONLY : mp_sum
+       USE mp,           ONLY : mp_sum, mp_get_comm_null
        !
        IMPLICIT NONE
        !
@@ -784,6 +784,11 @@ SUBROUTINE sum_band()
           IF ( okvan ) CALL sum_bec ( ik, current_spin, ibnd_start,ibnd_end,this_bgrp_nbnd ) 
           !
        END DO k_loop
+       !
+       ! ... with distributed <beta|psi>, sum over bands
+       !
+       IF( okvan .AND. becp%comm /= mp_get_comm_null() ) CALL mp_sum( becsum, becp%comm )
+       !
 
        IF( use_tg ) THEN
           IF (noncolin) THEN
@@ -898,7 +903,7 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   USE ions_base,     ONLY : nat, ntyp => nsp, ityp
   USE uspp,          ONLY : nkb, vkb, becsum, indv_ijkb0
   USE uspp_param,    ONLY : upf, nh, nhm
-  USE wvfct,         ONLY : nbnd, wg
+  USE wvfct,         ONLY : nbnd, wg, current_k
   USE klist,         ONLY : ngk
   USE noncollin_module,     ONLY : noncolin, npol
   USE wavefunctions_module, ONLY : evc
@@ -931,11 +936,13 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
         enddo
         call mp_sum(becp%r,inter_bgrp_comm)
      else
+        current_k = ik
+        becp%k = (0.d0,0.d0)
         do ibnd = ibnd_start, ibnd_end
            call invfft_orbital_k(evc,ibnd,ibnd_end) 
            call calbec_rs_k(ibnd,ibnd_end)
         enddo
-	call mp_sum(becp%r,inter_bgrp_comm)
+	call mp_sum(becp%k,inter_bgrp_comm)
      endif
   ENDIF
   !
