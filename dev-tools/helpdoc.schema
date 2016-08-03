@@ -13,6 +13,7 @@
 #   attribute   -- used to describe an attribute
 #   text        -- tells that the content of an element or attribute is a simple text
 #   string      -- tells that the content of an element or attribute is a single word
+#   clist       -- tells that the content of an element is a comma-separated list (i.e. "word1, word2, word3, ...")
 #   ident       -- tells that element has an identifier (syntax: myelem myIdent { ... })
 #   ref         -- used to specify the reference to an element 
 #                  (but the element is defined elsewhere)
@@ -83,7 +84,7 @@ element default { text }
 element status  { text }
 element label   { text }
 element message { text }
-element see     { string }
+element see     { clist }
 element keyword { ident }
 
 #

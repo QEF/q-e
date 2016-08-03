@@ -6,7 +6,7 @@
     ***
 -->
 
-<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">    
+<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
   <!--<xsl:strip-space elements="*"/>-->
   <xsl:output method="html"/>  
@@ -795,10 +795,23 @@
     <tr>
       <td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "> <i>See:</i> </td>
       <td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; ">
-	<a href="#{normalize-space(.)}"><xsl:value-of select="."/></a>
-	<!--<xsl:value-of select="."/>-->
+	<xsl:call-template name="tokenize_see"> 
+	  <xsl:with-param name="refs" select="."/> 
+	</xsl:call-template>  
       </td>
     </tr>
+ </xsl:template>
+
+ <xsl:template name="tokenize_see">
+   <xsl:param name="refs"/>
+   <xsl:variable name="first-ref" select="normalize-space(substring-before(concat($refs, ','), ','))" /> 
+   <xsl:if test="$first-ref">
+     <a href="#{normalize-space($first-ref)}"><xsl:value-of select="$first-ref"/></a>
+     <xsl:if test="not($first-ref = normalize-space($refs))">, </xsl:if>
+     <xsl:call-template name="tokenize_see"> 
+       <xsl:with-param name="refs" select="substring-after($refs,',')" /> 
+     </xsl:call-template>    
+   </xsl:if>  
  </xsl:template>
  
  <xsl:template match="info">
