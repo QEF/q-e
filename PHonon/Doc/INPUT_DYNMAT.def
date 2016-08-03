@@ -1,0 +1,143 @@
+input_description -distribution {Quantum Espresso} -package PWscf -program dynmat.x {
+
+    toc {}
+
+    intro {
+	Purpose of dynmat.x:
+
+	- reads a dynamical matrix file produced by the phonon code
+
+	- adds the non-analytical part (if Z* and epsilon are read from
+          file), applies the chosen Acoustic Sum Rule (if q=0)
+	
+	- diagonalise the dynamical matrix
+	
+	- calculates IR and Raman cross sections (if Z* and Raman
+	  tensors are read from file, respectively)
+	  
+	- writes the results to files, both for inspection and for
+          plotting
+
+	
+        Structure of the input data:
+	========================================================================
+
+        &INPUT
+	   ...specs of namelist variables...
+	/
+    }
+    
+    namelist INPUT {
+
+	var fildyn -type CHARACTER {
+	    info {
+		input file containing the dynamical matrix
+	    }
+	    default { 'matdyn' }
+	}
+
+	dimension q -start 1 -end 3 -type REAL {
+	    info {
+		calculate LO modes (add non-analytic terms) along the direction q (Cartesian axis)
+	    }
+	    default { q = (0,0,0) }
+	}
+
+	dimension amass -start 1 -end ntyp -type REAL {
+	    info {
+		mass for each atom type
+	    }
+	    default { amass is read from file fildyn }
+	}
+
+	var  asr -type  CHARACTER {
+	    info {
+		Indicates the type of Acoustic Sum Rule imposed.
+
+		Allowed values:
+
+		- 'no': no Acoustic Sum Rules imposed (default)
+		
+		- 'simple': previous implementation of the asr used
+		            (3 translational asr imposed by correction of
+			    the diagonal elements of the dynamical matrix)
+		
+                - 'crystal': 3 translational asr imposed by optimized
+                             correction of the dyn. matrix (projection)
+			     
+                - 'one-dim': 3 translational asr + 1 rotational asr imposed
+		             by optimized correction of the dyn. mat. (the
+                             rotation axis is the direction of periodicity; it
+                             will work only if this axis considered is one of
+                             the Cartesian axis).
+			     
+                - 'zero-dim': 3 translational asr + 3 rotational asr imposed
+		              by optimized correction of the dyn. mat.
+
+                Note that in certain cases, not all the rotational asr
+                can be applied (e.g. if there are only 2 atoms in a
+                molecule or if all the atoms are aligned, etc.).  In
+                these cases the supplementary asr are canceled during
+                the orthonormalization procedure (see below).
+
+		Finally, in all cases except 'no' a simple correction
+                on the effective charges is performed (same as in the
+                previous implementation).
+	    }
+	}	
+		
+	var axis -type INTEGER {
+	    info {
+		indicates the rotation axis for a 1D system (1=Ox, 2=Oy, 3=Oz)
+	    }
+	    default { 3 }
+	}
+	
+	var lperm -type LOGICAL {
+	    info {
+		if .true. then calculate Gamma-point mode contributions to
+		dielectric permittivity tensor
+	    }
+	    default { .false. }
+	}
+
+	var lplasma -type LOGICAL {
+	    info {
+		if .true. then calculate Gamma-point mode effective plasma 
+		frequencies, automatically triggers lperm = .true.
+	    }
+	    default { .false. }
+	}
+
+	var filout -type CHARACTER {
+	    info {
+		output file containing phonon frequencies and normalized
+		phonon displacements (i.e. eigenvectors divided by the
+                square root of the mass and then normalized; they are
+	        not orthogonal)
+	    }
+	    default { 'dynmat.out' }
+	}
+		
+	var fileig -type CHARACTER {
+	    info {
+		output file containing phonon frequencies and eigenvectors
+                of the dynamical matrix (they are orthogonal)
+	    }
+	    default { ' ' }
+	}
+	var filmol -type CHARACTER {
+	    info {
+		as above, in a format suitable for 'molden'
+	    }
+	    default { 'dynmat.mold' }
+	}
+
+	var filxsf -type CHARACTER {
+	    info {
+		as above, in axsf format suitable for xcrysden
+	    }	
+	    default { 'dynmat.axsf' }
+	}
+    }
+}

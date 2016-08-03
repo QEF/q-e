@@ -68,9 +68,8 @@ developer_man: developer_man.pdf
 	@echo ""
 
 
-defs: link_input_xx INPUT_PH.txt INPUT_PH.html link_on_main_doc
-INPUT_PH.txt: %.txt: %.def
-	$(HELPDOC) $<
+defs: link_input_xx INPUT_PH.txt INPUT_PH.html INPUT_DYNMAT.txt INPUT_DYNMAT.html link_on_main_doc
+
 link_input_xx:
 	@(if test ! -f input_xx.xsl; then \
 	(if test -f ../../dev-tools/input_xx.xsl; then \
@@ -82,6 +81,13 @@ link_input_xx:
 	fi) ; fi)
 
 INPUT_PH.html: %.html: %.def input_xx.xsl
+	$(HELPDOC) $<
+INPUT_PH.txt: %.txt: %.def
+	$(HELPDOC) $<
+
+INPUT_DYNMAT.html: %.html: %.def input_xx.xsl
+	$(HELPDOC) $<
+INPUT_DYNMAT.txt: %.txt: %.def
 	$(HELPDOC) $<
 
 link_on_main_doc:
