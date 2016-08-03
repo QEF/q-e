@@ -67,7 +67,7 @@
   REAL(kind=DP) :: zi_tmp(ibndmax-ibndmin+1)
   !! Temporary array to store the Z
 
-  REAL(kind=DP) :: g2, ekk, ekq, wq, ef0, wgq, wgkq, weight, dosef, eptemp0,&
+  REAL(kind=DP) :: g2, ekk, ekq, wq, ef0, wgq, wgkq, weight, dosef, &
                    w0g1, w0g2, inv_wq, inv_eptemp0, g2_tmp,&
                    inv_degaussw
   REAL(kind=DP), external :: efermig, dos_ef, wgauss, w0gauss
@@ -78,14 +78,10 @@
   integer :: nksqtotf, lower_bnd, upper_bnd
   REAL(kind=DP), ALLOCATABLE :: xkf_all(:,:), etf_all(:,:)
   !
-  ! loop over temperatures can be introduced
-  !
-  eptemp0 = eptemp(1)
-  !
   ! SP: Define the inverse so that we can efficiently multiply instead of
   ! dividing
   ! 
-  inv_eptemp0 = 1.0/eptemp0
+  inv_eptemp0 = 1.0/eptemp
   inv_degaussw = 1.0/degaussw
   !
   IF ( iq .eq. 1 ) THEN
@@ -97,7 +93,7 @@
      IF ( fsthick .lt. 1.d3 ) &
         WRITE(stdout, '(/5x,a,f10.6,a)' ) 'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
      WRITE(stdout, '(/5x,a,f10.6,a)' ) &
-           'Golden Rule strictly enforced with T = ',eptemp0 * ryd2ev, ' eV'
+           'Golden Rule strictly enforced with T = ',eptemp * ryd2ev, ' eV'
      !
   ENDIF
   !
@@ -473,7 +469,7 @@
   REAL(kind=DP) :: zi_tmp(ibndmax-ibndmin+1)
   !! Temporary array to store the Z
   complex(kind=DP) epf (ibndmax-ibndmin+1, ibndmax-ibndmin+1)
-  REAL(kind=DP) :: g2, ekk, ekq, wq, ef0, wgq, wgkq, weight, dosef, eptemp0,&
+  REAL(kind=DP) :: g2, ekk, ekq, wq, ef0, wgq, wgkq, weight, dosef, &
                    w0g1, w0g2, inv_wq, inv_eptemp0, g2_tmp,&
                    inv_degaussw
   REAL(kind=DP), external :: efermig, dos_ef, wgauss, w0gauss, dos_ef_seq
@@ -482,14 +478,10 @@
   !
   integer :: nksqtotf, lower_bnd, upper_bnd
   !
-  ! loop over temperatures can be introduced
-  !
-  eptemp0 = eptemp(1)
-  !
   ! SP: Define the inverse so that we can efficiently multiply instead of
   ! dividing
   ! 
-  inv_eptemp0 = 1.0/eptemp0
+  inv_eptemp0 = 1.0/eptemp
   inv_degaussw = 1.0/degaussw
   !
   IF ( ik .eq. 1 ) THEN
@@ -501,7 +493,7 @@
      IF ( fsthick .lt. 1.d3 ) &
         WRITE(stdout, '(/5x,a,f10.6,a)' ) 'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
      WRITE(stdout, '(/5x,a,f10.6,a)' ) &
-           'Golden Rule strictly enforced with T = ',eptemp0 * ryd2ev, ' eV'
+           'Golden Rule strictly enforced with T = ',eptemp * ryd2ev, ' eV'
      !
      WRITE(stdout,'(5x,"WARNING: only the eigenstates within the Fermi window are meaningful")')
      OPEN(unit=linewidth_elself,file='linewidth.elself')

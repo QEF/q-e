@@ -48,17 +48,13 @@
   integer :: iw, ik, ikk, ikq, ibnd, jbnd, imode, nrec, iq, fermicount
   complex(kind=DP) epf (ibndmax-ibndmin+1, ibndmax-ibndmin+1)
   real(kind=DP) :: g2, ekk, ekq, wq, ef0, wgq, wgkq, ww, dw, weight
-  real(kind=DP) :: dosef, eptemp0, specfun_sum, esigmar0
+  real(kind=DP) :: dosef, specfun_sum, esigmar0
   real(kind=DP) :: fermi(nw_specfun)
   !
   ! variables for collecting data from all pools in parallel case 
   !
   integer :: nksqtotf, lower_bnd, upper_bnd
   real(kind=DP), allocatable :: xkf_all(:,:) , etf_all(:,:)
-  !
-  ! loop over temperatures can be introduced
-  !
-  eptemp0 = eptemp(1)
   ! 
   ! energy range and spacing for spectral function
   !
@@ -73,7 +69,7 @@
      IF ( fsthick .lt. 1.d3 ) &
         WRITE(stdout, '(/5x,a,f10.6,a)' ) 'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
      WRITE(stdout, '(/5x,a,f10.6,a)' ) &
-           'Golden Rule strictly enforced with T = ',eptemp0 * ryd2ev, ' eV'
+           'Golden Rule strictly enforced with T = ',eptemp * ryd2ev, ' eV'
      !
   ENDIF
   !
@@ -147,7 +143,7 @@
            !
            ! the phonon frequency and Bose occupation
            wq = wf (imode, iq)
-           wgq = wgauss( -wq/eptemp0, -99)
+           wgq = wgauss( -wq/eptemp, -99)
            wgq = wgq / ( one - two * wgq )
            !
            !  we read the e-p matrix
@@ -168,7 +164,7 @@
                  !
                  !  the fermi occupation for k+q
                  ekq = etf (ibndmin-1+jbnd, ikq) - ef0
-                 wgkq = wgauss( -ekq/eptemp0, -99)  
+                 wgkq = wgauss( -ekq/eptemp, -99)  
                  !
                  ! here we take into account the zero-point sqrt(hbar/2M\omega)
                  ! with hbar = 1 and M already contained in the eigenmodes
@@ -318,7 +314,7 @@
         DO iw = 1, nw_specfun
            !
            ww = wmin_specfun + dble (iw-1) * dw
-           fermi(iw) = wgauss(-ww/eptemp0, -99) 
+           fermi(iw) = wgauss(-ww/eptemp, -99) 
            WRITE(stdout,'(2x,i7,2x,f12.4,2x,e12.5)') ik, ryd2ev * ww, a_all(iw,ik) / ryd2mev
            !
            specfun_sum = specfun_sum + a_all(iw,ik)* fermi(iw) * dw !/ ryd2mev
@@ -455,10 +451,6 @@
   ! variables for collecting data from all pools in parallel case 
   !
   integer :: nksqtotf, lower_bnd, upper_bnd
-  !
-  ! loop over temperatures can be introduced
-  !
-  eptemp0 = eptemp(1)
   ! 
   ! energy range and spacing for spectral function
   !
@@ -473,7 +465,7 @@
      IF ( fsthick .lt. 1.d3 ) &
         WRITE(stdout, '(/5x,a,f10.6,a)' ) 'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
      WRITE(stdout, '(/5x,a,f10.6,a)' ) &
-           'Golden Rule strictly enforced with T = ',eptemp0 * ryd2ev, ' eV'
+           'Golden Rule strictly enforced with T = ',eptemp * ryd2ev, ' eV'
      !
   ENDIF
   !
@@ -547,7 +539,7 @@
            !
            ! the phonon frequency and Bose occupation
            wq = wf (imode, iq)
-           wgq = wgauss( -wq/eptemp0, -99)
+           wgq = wgauss( -wq/eptemp, -99)
            wgq = wgq / ( one - two * wgq )
            !
            !  we read the e-p matrix
@@ -568,7 +560,7 @@
                  !
                  !  the fermi occupation for k+q
                  ekq = etf (ibndmin-1+jbnd, ikq) - ef0
-                 wgkq = wgauss( -ekq/eptemp0, -99)  
+                 wgkq = wgauss( -ekq/eptemp, -99)  
                  !
                  ! here we take into account the zero-point sqrt(hbar/2M\omega)
                  ! with hbar = 1 and M already contained in the eigenmodes
@@ -689,7 +681,7 @@
   DO iw = 1, nw_specfun
     !
     ww = wmin_specfun + dble (iw-1) * dw
-    fermi(iw) = wgauss(-ww/eptemp0, -99) 
+    fermi(iw) = wgauss(-ww/eptemp, -99) 
     WRITE(stdout,'(2x,i7,2x,f12.4,2x,e12.5)') ik, ryd2ev * ww, a_all(iw,ik) / ryd2mev
     !
     specfun_sum = specfun_sum + a_all(iw,ik)* fermi(iw) * dw !/ ryd2mev

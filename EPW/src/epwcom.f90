@@ -23,7 +23,7 @@
   ! 
   INTEGER :: ngaussw, nw, selfen_type, nbndsub, nbndskip, num_iter, iprint, &
        nsmear, rand_nq, rand_nk, nqf1, nqf2, nqf3, nkf1, nkf2, nkf3, &
-       nqsmear, nqstep, neptemp, nswfc, nswc, nswi, nstemp, nsiter, broyden_ndim, &
+       nqsmear, nqstep, nswfc, nswc, nswi, nstemp, nsiter, broyden_ndim, &
        nw_specfun
   ! ngaussw: smearing type for Fermi surface average in e-ph coupling after wann. interp.
   ! nw: nr. of bins for frequency scan in \delta( e_k - e_k+q - w ) when strict sel. rule is applied
@@ -40,7 +40,6 @@
   ! nkf1,nkf2,nkf3: kx,ky,kz sizes of the uniform electron fine mesh to be used
   ! nqsmear: nr. of smearings used to calculate a2f 
   ! nqstep: nr. of steps used to calculate a2f 
-  ! neptemp: nr. temperature values for the electronic Fermi occupations in the e-p calculation (not used for now)
   ! @RM
   ! nswfc    : nr. of grid points between (0,wsfc)
   ! nswc     : nr. of grid points between (wsfc,wscut)
@@ -150,7 +149,7 @@
   CHARACTER(len=80) :: filelph, fileig ! output file for the electron-phonon coefficients
   CHARACTER(len=256), dimension(200) :: proj, wdata ! projections and any extra info for W90 
   CHARACTER(LEN=75) :: title ! ...  title of the simulation  
-  REAL (kind=DP), dimension(25) :: eptemp 
+  REAL (kind=DP) :: eptemp 
   REAL (kind=DP), dimension(50) :: temps ! temperature entering in the Eliashberg equtions (units of Kelvin)
   integer :: iswitch
 

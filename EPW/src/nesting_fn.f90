@@ -43,7 +43,7 @@
   integer :: ik, ikk, ikq, ibnd, jbnd, nrec, iq, fermicount, ismear
   real(kind=DP) :: ekk, ekq, ef0, &
      weight, w0g1, w0g2, w0gauss, wgauss, dosef, dos_ef, gamma, &
-     degaussw0, eptemp0
+     degaussw0
   !
   real(kind=DP), external :: efermig
   !
@@ -57,7 +57,7 @@
           WRITE(stdout, '(/5x,a,f10.6,a)' ) &
           'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
      WRITE(stdout, '(/5x,a,f10.6,a)' ) &
-          'Golden Rule strictly enforced with T = ',eptemp(1) * ryd2ev, ' eV'
+          'Golden Rule strictly enforced with T = ',eptemp * ryd2ev, ' eV'
   ENDIF
   !
   ! SP: The Gamma function needs to be put to 0 for each q
@@ -67,7 +67,6 @@
   DO ismear = 1, nsmear
   !
   degaussw0 = (ismear-1)*delta_smear+degaussw
-  eptemp0 = (ismear-1)*delta_smear+eptemp(1)
   !
   ! Fermi level and corresponding DOS
   !
@@ -83,10 +82,10 @@
   !   N(Ef) in the equation for lambda is the DOS per spin
   dosef = dosef / two
   !
-IF (iq.eq.1) then
-  WRITE (stdout, 100) degaussw0 * ryd2ev, ngaussw
-  WRITE (stdout, 101) dosef / ryd2ev, ef0 * ryd2ev
-ENDIF
+  IF (iq.eq.1) then
+    WRITE (stdout, 100) degaussw0 * ryd2ev, ngaussw
+    WRITE (stdout, 101) dosef / ryd2ev, ef0 * ryd2ev
+  ENDIF
   !
   !
   CALL start_clock('nesting')
@@ -201,7 +200,7 @@ ENDIF
              lower_bnd, upper_bnd
   real(kind=DP) :: ekk, ekq, ef0, &
      weight, w0g1, w0g2, w0gauss, wgauss, dosef, dos_ef,  &
-     degaussw0, eptemp0
+     degaussw0
   real(kind=DP), external :: efermig_seq, dos_ef_seq
   REAL(kind=DP), ALLOCATABLE :: xqf_all(:,:), wqf_all(:,:)
   !
@@ -217,7 +216,7 @@ ENDIF
           WRITE(stdout, '(/5x,a,f10.6,a)' ) &
           'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
      WRITE(stdout, '(/5x,a,f10.6,a)' ) &
-          'Golden Rule strictly enforced with T = ',eptemp(1) * ryd2ev, ' eV'
+          'Golden Rule strictly enforced with T = ',eptemp * ryd2ev, ' eV'
      IF ( .not. ALLOCATED (gamma_nest) )    ALLOCATE( gamma_nest (nqtotf,nsmear) )
      gamma_nest(:,:)   = zero
   ENDIF
@@ -226,7 +225,6 @@ ENDIF
   DO ismear = 1, nsmear
     !
     degaussw0 = (ismear-1)*delta_smear+degaussw
-    eptemp0 = (ismear-1)*delta_smear+eptemp(1)
     !
     ! Fermi level and corresponding DOS
     !

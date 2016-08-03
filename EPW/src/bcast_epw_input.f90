@@ -33,7 +33,7 @@
                             etf_mem, epwwrite, epwread, eptemp, epstrict, &
                             eps_acustic, ephwrite, epbread, nsiter, nqstep, &
                             nqsmear, nqf3, nqf2, nqf1, nkf3, nkf2, nkf1, &
-                            ngaussw, nest_fn, neptemp, nbndsub, nbndskip, &
+                            ngaussw, nest_fn,  nbndsub, nbndskip, &
                             muc, mp_mesh_q, mp_mesh_k, max_memlt, lunif, &
                             lreal, lpolar, lpade, liso, limag, laniso, &
                             specfun, selfen_type, &
@@ -142,7 +142,6 @@
   CALL mp_bcast (nqf3, ionode_id, world_comm)
   CALL mp_bcast (nqsmear, ionode_id, world_comm )    ! 
   CALL mp_bcast (nqstep, ionode_id, world_comm)      ! 
-  CALL mp_bcast (neptemp, ionode_id, world_comm)     !
   CALL mp_bcast (nswfc, ionode_id, world_comm )      ! 
   CALL mp_bcast (nswc, ionode_id, world_comm )       !
   CALL mp_bcast (nswi, ionode_id, world_comm )       !

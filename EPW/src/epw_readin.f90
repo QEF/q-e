@@ -47,7 +47,7 @@
                             fermi_energy, efermi_read, max_memlt, fila2f, &
                             ep_coupling, nw_specfun, wmax_specfun, &
                             wmin_specfun, laniso, lpolar, epstrict, elinterp, &
-                            proj, write_wfn, phinterp, iswitch, neptemp, &
+                            proj, write_wfn, phinterp, iswitch, &
                             ntempxx, liso, lacon, lpade, etf_mem, epbwrite, &
                             tshuffle2, tshuffle, nsiter, conv_thr_racon, &
                             pwc, nswc, nswfc, nswi, filukq, filukk, &
@@ -303,8 +303,7 @@
   eps_acustic  = 5.d0 ! cm-1
   nw           = 10
   fsthick      = 1.d10 ! eV
-  eptemp(:)    = 0.000d0
-  eptemp(1)    = 300.0d0
+  eptemp       = 300.0d0
   degaussw     = 0.025d0 ! eV
   epstrict     = .false.
   selfen_type  = 2
@@ -496,14 +495,17 @@
      fermi_energy = fermi_energy / ryd2ev
   ENDIF
   ! eptemp : temperature for the electronic Fermi occupations in the e-p calculation (units of Kelvin)
-  DO i = 1, ntempxx
-     IF (eptemp(i) .gt. 0.d0) THEN
-        neptemp = i
-        ! 1 K in eV = 8.6173423e-5
-        ! from K to Ryd
-        eptemp(i) = eptemp(i) * kelvin2eV / ryd2ev
-     ENDIF
-  ENDDO
+  ! 1 K in eV = 8.6173423e-5
+  ! from K to Ryd
+  ! Out-of bound issue with GCC compiler. Multiple Fermi temp is not used anyway.
+  eptemp = eptemp * kelvin2eV / ryd2ev
+  !DO i = 1, ntempxx
+  !   IF (eptemp(i) .gt. 0.d0) THEN
+  !      ! 1 K in eV = 8.6173423e-5
+  !      ! from K to Ryd
+  !      eptemp(i) = eptemp(i) * kelvin2eV / ryd2ev
+  !   ENDIF
+  !ENDDO
   !
   ! from cm-1 to Ryd
   eps_acustic = eps_acustic / ev2cmm1 / ryd2ev 

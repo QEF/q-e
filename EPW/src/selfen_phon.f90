@@ -70,7 +70,7 @@
           WRITE(stdout, '(/5x,a,f10.6,a)' ) &
           'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
      WRITE(stdout, '(/5x,a,f10.6,a)' ) &
-          'Golden Rule strictly enforced with T = ',eptemp(1) * ryd2ev, ' eV'
+          'Golden Rule strictly enforced with T = ',eptemp * ryd2ev, ' eV'
      !
      IF ( .not. ALLOCATED (lambda_all) )    ALLOCATE( lambda_all  (nmodes, nqtotf, nsmear) )
      IF ( .not. ALLOCATED (lambda_v_all) )  ALLOCATE( lambda_v_all(nmodes, nqtotf, nsmear) )
@@ -86,7 +86,7 @@
   DO ismear = 1, nsmear
      !
      degaussw0 = (ismear-1) * delta_smear + degaussw
-     eptemp0   = (ismear-1) * delta_smear + eptemp(1)
+     eptemp0   = (ismear-1) * delta_smear + eptemp
      ! 
      ! SP: Multiplication is faster than division ==> Important if called a lot
      !     in inner loops
@@ -377,7 +377,7 @@ END SUBROUTINE selfen_phon_q
           WRITE(stdout, '(/5x,a,f10.6,a)' ) &
           'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
      WRITE(stdout, '(/5x,a,f10.6,a)' ) &
-          'Golden Rule strictly enforced with T = ',eptemp(1) * ryd2ev, ' eV'
+          'Golden Rule strictly enforced with T = ',eptemp * ryd2ev, ' eV'
      !
      IF ( .not. ALLOCATED (lambda_all) )    ALLOCATE( lambda_all  (nmodes, nqtotf, nsmear) )
      IF ( .not. ALLOCATED (lambda_v_all) )  ALLOCATE( lambda_v_all(nmodes, nqtotf, nsmear) )
@@ -393,7 +393,7 @@ END SUBROUTINE selfen_phon_q
   DO ismear = 1, nsmear
     !
     degaussw0 = (ismear-1) * delta_smear + degaussw
-    eptemp0   = (ismear-1) * delta_smear + eptemp(1)
+    eptemp0   = (ismear-1) * delta_smear + eptemp
     ! 
     ! SP: Multiplication is faster than division ==> Important if called a lot
     !     in inner loops
