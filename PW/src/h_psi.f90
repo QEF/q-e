@@ -114,10 +114,10 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
 
   hpsi (:, 1:m) = (0.0_dp, 0.0_dp)
 
+  CALL start_clock( 'h_psi:pot' )
   !
   ! ... the local potential V_Loc psi
   !
-  CALL start_clock( 'h_psi:vloc' )
   !
   IF ( gamma_only ) THEN
      ! 
@@ -135,7 +135,9 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
            ! ... transform psi to real space -> psic 
            CALL invfft_orbital_gamma(psi,ibnd,m) 
            ! ... compute becp%r = < beta|psi> from psic in real space
+     CALL start_clock( 'h_psi:calbec' )
            CALL calbec_rs_gamma(ibnd,m,becp%r) 
+     CALL stop_clock( 'h_psi:calbec' )
            ! ... psic -> vrs * psic (psic overwritten will become hpsi)
            CALL v_loc_psir_inplace(ibnd,m) 
            ! ... psic (hpsi) -> psic + vusp
@@ -170,7 +172,9 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
            ! ... transform psi to real space -> psic 
            CALL invfft_orbital_k(psi,ibnd,m) 
            ! ... compute becp%r = < beta|psi> from psic in real space
+     CALL start_clock( 'h_psi:calbec' )
            CALL calbec_rs_k(ibnd,m) 
+     CALL stop_clock( 'h_psi:calbec' )
            ! ... psic -> vrs * psic (psic overwritten will become hpsi)
            CALL v_loc_psir_inplace(ibnd,m) 
            ! ... psic (hpsi) -> psic + vusp
@@ -186,17 +190,18 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
      END IF  
      !
   END IF  
-  CALL stop_clock( 'h_psi:vloc' )
 
   IF ( nkb > 0 .AND. .NOT. real_space) THEN
      !
-     CALL start_clock( 'h_psi:vnl' )
+     CALL start_clock( 'h_psi:calbec' )
      CALL calbec ( n, vkb, psi, becp, m )
+     CALL stop_clock( 'h_psi:calbec' )
      CALL add_vuspsi( lda, n, m, hpsi )
-     CALL stop_clock( 'h_psi:vnl' )
      !
   END IF
   !  
+  CALL stop_clock( 'h_psi:pot' )
+  !
   ! ... Here we add the kinetic energy (k+G)^2 psi
   !
   DO ibnd = 1, m

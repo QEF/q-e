@@ -512,7 +512,7 @@ CONTAINS
                            iqs = jqs + ir
                            psic( box_beta(ir,ia) ) = &
                                 &psic(  box_beta(ir,ia) ) + &
-                                &betasave(ia,ih,ir)*&
+                                &betasave(ir,ih,ia)*&
                                 &CMPLX( w1(ih), w2(ih) )
                           !
                           ENDDO

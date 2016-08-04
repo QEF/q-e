@@ -944,7 +944,7 @@ MODULE realus
       !
       ! ... let's do the main work
       !
-      ALLOCATE( betasave( nat, nhm, goodestimate )  )
+      ALLOCATE( betasave( goodestimate, nhm, nat )  )
       !
       betasave = 0.D0
       ! Box is set, Y_lm is known in the box, now the calculation can commence
@@ -1009,7 +1009,7 @@ MODULE realus
                !
                qtot_int = splint( xsp, ysp, wsp, boxdist_beta(ir,ia) ) !the value of f_l(r) in point ir in atom ia
                !
-               betasave(ia,ih,ir) = qtot_int*spher_beta(ir,lm,ia) !spher_beta is the Y_lm in point ir for atom ia
+               betasave(ir,ih,ia) = qtot_int*spher_beta(ir,lm,ia) !spher_beta is the Y_lm in point ir for atom ia
                !
             ENDDO
          ENDDO
@@ -1350,22 +1350,23 @@ MODULE realus
                 ! different from zero
                 !
                 ALLOCATE( wr(mbia), wi(mbia) )
-                ! just working arrays
+                ! just working arrays to order the points in the clever way
+                wr(:) = dble ( psic( box_beta(1:mbia,ia) ) )
+                wi(:) = aimag( psic( box_beta(1:mbia,ia) ) )
+                !
                 !
                 DO ih = 1, nh(nt)
                    ! nh is the number of beta functions, or something similar
                    !
                    ikb = ikb + 1
-                   wr(:) = dble ( psic( box_beta(1:mbia,ia) ) )
-                   wi(:) = aimag( psic( box_beta(1:mbia,ia) ) )
                    !print *, "betasave check", betasave(ia,ih,:)
                    ! box_beta contains explictly the points of the real space grid in
                    ! which the beta functions are differet from zero. Remember
                    ! that dble(psic) corresponds to ibnd, and aimag(psic) to ibnd+1:
                    ! this is the standard way to perform fourier transform in pwscf
                    ! in the gamma_only case
-                   bcr  = ddot( mbia, betasave(ia,ih,:), 1, wr(:) , 1 )
-                   bci  = ddot( mbia, betasave(ia,ih,:), 1, wi(:) , 1 )
+                   bcr  = ddot( mbia, betasave(:,ih,ia), 1, wr(:) , 1 )
+                   bci  = ddot( mbia, betasave(:,ih,ia), 1, wi(:) , 1 )
                    ! in the previous two lines the real space integral is performed, using
                    ! few points of the real space mesh only
                    becp_r(ikb,ibnd)   = fac * bcr
@@ -1464,8 +1465,8 @@ MODULE realus
                    ikb = ikb + 1
                    wr(:) = dble ( psic( box_beta(1:mbia,ia) ) * cphase(1:mbia))
                    wi(:) = aimag( psic( box_beta(1:mbia,ia) ) * cphase(1:mbia))
-                   bcr  = ddot( mbia, betasave(ia,ih,:), 1, wr(:) , 1 )
-                   bci  = ddot( mbia, betasave(ia,ih,:), 1, wi(:) , 1 )
+                   bcr  = ddot( mbia, betasave(:,ih,ia), 1, wr(:) , 1 )
+                   bci  = ddot( mbia, betasave(:,ih,ia), 1, wi(:) , 1 )
                    becp%k(ikb,ibnd)   = fac * cmplx( bcr, bci,kind=DP)
                    !
                 ENDDO
@@ -1556,7 +1557,7 @@ MODULE realus
                DO ih = 1, nh(nt)
                   !
                   DO ir = 1, mbia
-                     psic( box_beta(ir,ia) ) = psic(  box_beta(ir,ia) ) + betasave(ia,ih,ir)*cmplx( w1(ih), w2(ih) ,kind=DP)
+                     psic( box_beta(ir,ia) ) = psic(  box_beta(ir,ia) ) + betasave(ir,ih,ia)*cmplx( w1(ih), w2(ih) ,kind=DP)
                   ENDDO
                   !
                ENDDO
@@ -1651,7 +1652,7 @@ MODULE realus
                   !
                   DO ir = 1, mbia
                      !
-                     psic( box_beta(ir,ia) ) = psic(  box_beta(ir,ia) ) + cphase(ir)*betasave(ia,ih,ir)*w1(ih)
+                     psic( box_beta(ir,ia) ) = psic(  box_beta(ir,ia) ) + cphase(ir)*betasave(ir,ih,ia)*w1(ih)
                      !
                   ENDDO
                   !
@@ -1752,7 +1753,7 @@ MODULE realus
                DO ir = 1, mbia
                   !
                   psic( box_beta(ir,ia) ) = psic(  box_beta(ir,ia) ) + &
-                       betasave(ia,ih,ir)*cmplx( w1(ih), w2(ih) ,kind=DP)
+                       betasave(ir,ih,ia)*cmplx( w1(ih), w2(ih) ,kind=DP)
                   !
                ENDDO
                   !
@@ -1860,7 +1861,7 @@ MODULE realus
                !
                DO ir = 1, mbia
                   !
-                  psic( box_beta(ir,ia) ) = psic(  box_beta(ir,ia) ) + cphase(ir)*betasave(ia,ih,ir)*w1(ih)
+                  psic( box_beta(ir,ia) ) = psic(  box_beta(ir,ia) ) + cphase(ir)*betasave(ir,ih,ia)*w1(ih)
                   !
                ENDDO
                !
