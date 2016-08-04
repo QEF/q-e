@@ -637,18 +637,14 @@ END SUBROUTINE selfen_phon_q
       ENDDO
       CLOSE(lambda_phself)
       OPEN(unit=linewidth_phself,file='linewidth.phself')
-      WRITE(linewidth_phself, '(/2x,a/)') '#Phonon lifetime (meV) '
-      WRITE(linewidth_phself,'(2x,a)',advance='no') '#Q-point     '
-      Do imode=1, nmodes
-        WRITE(linewidth_phself, '(a)',advance='no') '      Mode'
-        WRITE(linewidth_phself, '(i3)',advance='no') imode
-      enddo
-      WRITE(linewidth_phself, '(/2x,a/)') '  '
+      WRITE(linewidth_phself, '(a)') '# Phonon frequency and phonon lifetime in meV '
+      WRITE(linewidth_phself,'(a)') '# Q-point  Mode   Phonon freq (meV)   Phonon linewidth (meV)'
       DO iq = 1, nqtotf
         !
-        myfmt = "(1000(3x,E15.5))"
-        WRITE(linewidth_phself,'(i9,4x)',advance='no') iq
-        WRITE(linewidth_phself, fmt=myfmt) (ryd2mev*REAL(gamma_all(imode,iq,1)), imode=1,nmodes)
+        DO imode=1, nmodes
+          WRITE(linewidth_phself,'(i9,i6,E20.8,E22.10)') iq,imode,&
+                                 ryd2mev*wf_all(imode,iq),ryd2mev*REAL(gamma_all(imode,iq,1)) 
+        ENDDO
         !
       ENDDO
       CLOSE(linewidth_phself)
