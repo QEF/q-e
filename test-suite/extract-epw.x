@@ -48,7 +48,7 @@ lam=`grep "lam= " $fname | awk '{print $15}'`
 lambda=`grep "  lambda(" $fname | awk '{print $4}'`
 gamma=`grep " gamma=" $fname | awk '{print $6}'`
 omega=`grep " omega=" $fname | awk '{print $9}'`
-lamtot=`grep " lambda :" $fname | awk '{print $3}'`
+lam_tot=`grep " lambda :" $fname | awk '{print $3}'`
 lam_tr=`grep " lambda_tr :" $fname | awk '{print $3}'`
 logavg=`grep " logavg =" $fname | awk '{print $3}'`
 l_a2F=`grep "l_a2F =" $fname | awk '{print $6}'`
@@ -141,9 +141,9 @@ if test "$omega" != ""; then
 fi
 
 
-if test "$lamtot" != ""; then
-        echo lamtot
-        echo $lamtot
+if test "$lam_tot" != ""; then
+        echo lam_tot
+        echo $lam_tot
 fi
 
 if test "$lam_tr" != ""; then
