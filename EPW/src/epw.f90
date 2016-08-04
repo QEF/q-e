@@ -24,7 +24,7 @@
 #ifdef __PARA
   USE mp,              ONLY : mp_bcast, mp_barrier
   USE mp_world,        ONLY : mpime  
-  USE mp_global,       ONLY : my_pool_id, mp_startup, ionode_id, mp_global_end
+  USE mp_global,       ONLY : mp_startup, ionode_id, mp_global_end
 #endif
   USE control_flags,   ONLY : gamma_only
   USE control_epw,     ONLY : wannierize

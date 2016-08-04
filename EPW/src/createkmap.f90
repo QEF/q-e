@@ -9,33 +9,44 @@
   !-----------------------------------------------------------------------
   SUBROUTINE createkmap ( xq )
   !-----------------------------------------------------------------------
-  !  
-  !  This subroutine is called from elphon_shuffle_wrap for each
-  !  nq1*nq2*nq3 phonon on the coarse mesh.    
-  !
-  !
+  !!  
+  !!  This subroutine is called from elphon_shuffle_wrap for each
+  !!  nq1*nq2*nq3 phonon on the coarse mesh.    
+  !!
+  !!
   USE kinds,         ONLY : DP
   USE cell_base,     ONLY : at, bg
   USE klist,         ONLY : nkstot, xk
   USE start_k,       ONLY : nk1, nk2, nk3
   USE epwcom,        ONLY : xk_cryst
-  USE io_global,     ONLY : stdout
   USE io_files,      ONLY : prefix
   USE klist_epw,     ONLY : kmap
   USE kfold,         ONLY : g0vec_all, ng0vec, shift, g0vec_all_r
 ! SP: iverbosity cannot be tested here. Generates Tb of data ...  
 !  USE control_flags, ONLY : iverbosity 
 #ifdef __PARA
-  USE mp_global,     ONLY : inter_pool_comm,my_pool_id
+  USE mp_global,     ONLY : inter_pool_comm
   USE mp,            ONLY : mp_barrier
   USE mp_world,      ONLY : mpime
 #endif
   USE elph2,       ONLY : xkq
   implicit none
   !
-  real(kind=DP) :: eps, xq (3), xk_q(3)
+  REAL(kind=DP), INTENT(in) ::  xq (3)
+  !! Q-point 
   !
-  integer :: ik, jk, j
+  ! Local variables
+  INTEGER :: ik
+  !! K-point index
+  INTEGER :: jk
+  !! other k-point index
+  INTEGER :: i
+  !! Index of the k+q in the k-grid
+  INTEGER :: j
+  !! Index of the k+q in the k-grid
+  INTEGER :: k
+  !! Index of the k+q in the k-grid
+  real(kind=DP) :: eps, xk_q(3)
   !
   !  obsolete: 
   !
@@ -60,7 +71,7 @@
   !
   !
   real(kind=DP) :: xx, yy, zz, xx_n, yy_n, zz_n, xx_c, yy_c, zz_c
-  integer :: i, k, n, g0vec(3), ig0, iukmap, ig1, ig2, ig3
+  integer :: n, g0vec(3), ig0, iukmap, ig1, ig2, ig3
   logical :: in_the_list, found
   !
   IF (.not. ALLOCATED(xkq) ) ALLOCATE(xkq (3, nkstot) )
@@ -299,15 +310,22 @@
   USE klist_epw,     ONLY : kmap  
   USE start_k,       ONLY : nk1, nk2, nk3
   USE epwcom,        ONLY : xk_cryst
-  USE io_global,     ONLY : stdout
 ! SP: iverbosity cannot be tested. Generate too much data  
 !  USE control_flags, ONLY : iverbosity
   USE elph2,         ONLY : xkq
   implicit none
   !
-  real(kind=DP) :: eps, xxq (3), xx, yy, zz, xx_c, yy_c, zz_c
-  integer :: n, ik, jk
-!  integer :: i,j,k
+  REAL(kind=DP), INTENT(in) :: xxq (3)
+  !! The current q-point 
+  ! 
+  ! Local variables
+  INTEGER :: ik
+  !! K-point index
+  INTEGER :: jk
+  !! Another k-point index
+  INTEGER :: n
+  !! Mapping index
+  real(kind=DP) :: eps, xx, yy, zz, xx_c, yy_c, zz_c
   logical :: in_the_list, found
   !
   !  the first proc keeps a copy of all kpoints !
@@ -420,10 +438,10 @@
   !-------------------------------------------------------------------------
   SUBROUTINE createkmap_pw2(xk_all,nkstot,xq0)
   !-------------------------------------------------------------------------
-  !
-  ! Creates the first instances of [prefix].kmap and [prefix].kgmap. Previously
-  ! this was done in PW2 (or set_kplusq, refold, etc. even earlier).
-  !
+  !!
+  !! Creates the first instances of [prefix].kmap and [prefix].kgmap. Previously
+  !! this was done in PW2 (or set_kplusq, refold, etc. even earlier).
+  !!
   !-------------------------------------------------------------------------
 USE kinds,         ONLY : DP
 USE pwcom,         ONLY : at,bg
@@ -444,7 +462,7 @@ USE kfold
   USE f90_unix_io,    ONLY : flush
 #endif
 #ifdef __PARA
-  USE mp_global,   ONLY : inter_pool_comm, my_pool_id
+  USE mp_global,   ONLY : inter_pool_comm
   USE mp,          ONLY : mp_barrier
   USE mp_world,    ONLY : mpime
 #endif
@@ -452,10 +470,14 @@ USE kfold
 IMPLICIT NONE
 
 INTEGER, INTENT(IN) :: nkstot
+!! Total number of k-points
+REAL(kind=DP), INTENT(IN) :: xq0(3)
+!! K-point coordinate
 REAL(kind=DP), INTENT(IN), DIMENSION(3,nkstot) :: xk_all
-real(kind=DP) :: xkq_all(3,nkstot) 
+!! All the k-points coordinate among all pools
+!
 ! Local variables
-REAL(kind=DP) :: xq0(3)
+real(kind=DP) :: xkq_all(3,nkstot) 
 INTEGER:: ik, jk, j
 REAL(KIND=DP) :: xx, yy, zz, xx_n, yy_n, zz_n, xx_c, yy_c, zz_c, eps
 INTEGER :: i,k,n,g0vec(3),ig0,iukmap,iukgmap,ig_1,ig_2,ig_3, s
@@ -520,7 +542,7 @@ END DO
 ! ONLY the even points are from the result of a k+q operation
 DO ik=1,nkstot       
 !
-           IF (ik.eq.1) THEN
+           IF (ik == 1) THEN
               WRITE(6,'(5x,"Progress  kmap: ")',advance='no')
               indold = 0
            ENDIF

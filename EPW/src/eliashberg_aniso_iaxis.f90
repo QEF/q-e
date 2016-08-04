@@ -15,17 +15,16 @@
   !
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
-  USE io_files,      ONLY : prefix
   USE control_flags, ONLY : iverbosity
   USE epwcom,        ONLY : nsiter, nstemp, broyden_beta, broyden_ndim, & 
                             limag, lpade, lacon, fsthick, imag_read, wscut
-  USE eliashbergcom, ONLY : nsw, nsiw, ADelta, ADeltap, ADeltai, ADeltaip, Agap, gap, &
-                            Delta, Deltai, estemp, nkfs, nbndfs, ekfs, ef0
+  USE eliashbergcom, ONLY : nsw, nsiw, ADelta, ADeltap, ADeltai, ADeltaip, &
+                            estemp, nkfs, nbndfs, ekfs, ef0
   USE constants_epw, ONLY : kelvin2eV, ci, pi
 #ifdef __PARA
   USE io_global,     ONLY : ionode_id
-  USE mp_global,     ONLY : inter_pool_comm, my_pool_id, npool
-  USE mp,            ONLY : mp_bcast, mp_barrier, mp_sum
+  USE mp_global,     ONLY : inter_pool_comm
+  USE mp,            ONLY : mp_bcast, mp_barrier
   USE mp_world,      ONLY : mpime
 #endif
   ! 
@@ -251,10 +250,8 @@
   !
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
-  USE io_files,      ONLY : prefix
   USE elph2,         ONLY : wqf
-  USE epwcom,        ONLY : nsiter, nstemp, muc, conv_thr_iaxis, fsthick, nkf1, &
-                            nkf2, nkf3
+  USE epwcom,        ONLY : nsiter, nstemp, muc, conv_thr_iaxis, fsthick
   USE eliashbergcom, ONLY : nsiw, estemp, gap0, gap, Agap, wsi, AKeri, limag_fly, & 
                             NAZnormi, AZnormi, ADeltai, ADeltaip, NZnormi, Znormi, & 
                             Deltai, wsphmax, nkfs, nbndfs, dosef, ef0, ixkqf, ixqfs, & 
@@ -262,7 +259,7 @@
   USE constants_epw, ONLY : pi  
 #ifdef __PARA
   USE io_global,     ONLY : ionode_id
-  USE mp_global,     ONLY : inter_pool_comm, my_pool_id, npool
+  USE mp_global,     ONLY : inter_pool_comm
   USE mp_world,      ONLY : mpime
   USE mp,            ONLY : mp_bcast, mp_barrier, mp_sum
 #endif
@@ -479,13 +476,14 @@
   !-----------------------------------------------------------------------
   SUBROUTINE eliashberg_read_aniso_iaxis( itemp )
   !-----------------------------------------------------------------------
-  !  
-  ! This routine reads from file the anisotropic Delta and Znorm on the imaginary-axis
-  ! 
-  ! input
-  !
-  ! itemp  - temperature point
-  ! 
+  !!  
+  !! This routine reads from file the anisotropic Delta and Znorm on the imaginary-axis
+  !! 
+  !! input
+  !!
+  !! itemp  - temperature point
+  !!
+  !---------------------------------------------------------------------- 
   USE kinds,         ONLY : DP
   USE io_epw,        ONLY : iufilgap
   USE io_files,      ONLY : prefix
@@ -497,14 +495,26 @@
   USE constants_epw, ONLY : kelvin2eV
 #ifdef __PARA
   USE io_global, ONLY : ionode_id
-  USE mp_global, ONLY : inter_pool_comm, my_pool_id, npool
+  USE mp_global, ONLY : inter_pool_comm
   USE mp_world,  ONLY : mpime
   USE mp,        ONLY : mp_bcast, mp_barrier, mp_sum
 #endif
   ! 
   IMPLICIT NONE
   !
-  INTEGER :: i, iw, itemp, ik, ibnd, imelt, ios
+  INTEGER, INTENT(in) :: itemp
+  !
+  ! Local variables
+  INTEGER :: iw
+  !! Counter on frequency
+  INTEGER :: ik
+  !! Counter on k-poin
+  INTEGER :: ibnd
+  !! Counter on band
+  INTEGER :: imelt
+  !! Required allocation of memory
+  INTEGER :: ios
+  !! Status variables when reading a file
   REAL(DP) :: temp, eband, omega, weight
   REAL(DP) :: eps=1.0d-6
   CHARACTER (len=256) :: name1, word

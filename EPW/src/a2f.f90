@@ -32,7 +32,6 @@
   USE constants_epw, ONLY : ryd2mev, ryd2ev, kelvin2eV, two, zero
 #ifdef __PARA
   USE mp,        ONLY : mp_barrier, mp_sum
-  USE mp_global, ONLY : my_pool_id, npool
   USE mp_world,  ONLY : mpime, world_comm
   USE io_global, ONLY : ionode_id
 #endif

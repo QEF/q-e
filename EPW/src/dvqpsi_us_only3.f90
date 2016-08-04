@@ -12,15 +12,15 @@
   !----------------------------------------------------------------------
   subroutine dvqpsi_us_only3 (ik, uact,xxk)
   !----------------------------------------------------------------------
-  !
-  ! This routine calculates dV_bare/dtau * psi for one perturbation
-  ! with a given q. The displacements are described by a vector uact.
-  ! The result is stored in dvpsi. The routine is called for each k point
-  ! and for each pattern u. It computes simultaneously all the bands.
-  ! This routine implements Eq. B29 of PRB 64, 235118 (2001).
-  ! Only the contribution of the nonlocal potential is calculated here.
-  !
-  !
+  !!
+  !! This routine calculates dV_bare/dtau * psi for one perturbation
+  !! with a given q. The displacements are described by a vector uact.
+  !! The result is stored in dvpsi. The routine is called for each k point
+  !! and for each pattern u. It computes simultaneously all the bands.
+  !! This routine implements Eq. B29 of PRB 64, 235118 (2001).
+  !! Only the contribution of the nonlocal potential is calculated here.
+  !!
+  !-----------------------------------------------------------------------
   USE kinds,      ONLY : DP
   USE cell_base,  ONLY : tpiba
   USE gvect,      ONLY : g
@@ -39,37 +39,51 @@
 
   implicit none
   !
-  !   The dummy variables
-  !
-
-  integer :: ik
-  ! input: the k point
-  real(kind=DP) :: xxk(3) 
-  ! input: the k point (cartesian coordinates)
-  complex(DP) :: uact (3 * nat)
-  ! input: the pattern of displacements
+  INTEGER, INTENT(in) :: ik
+  !! Input: the k point
+  REAL(kind=DP), INTENT(in) :: xxk(3) 
+  !! input: the k point (cartesian coordinates)
+  COMPLEX(kind=DP), INTENT(in) :: uact (3 * nat)
+  !! input: the pattern of displacements
   !
   !   And the local variables
   !
+  INTEGER :: na
+  !! Counter on atoms
+  INTEGER :: nb
+  !! Counter on atoms
+  INTEGER :: mu
+  !! Counter on modes
+  INTEGER :: nu
+  !! Counter on modes
+  INTEGER :: ig
+  !! Counter on G vectors
+  INTEGER :: igg
+  !! Auxiliary counter on G vectors
+  INTEGER :: nt
+  !! Counter on atomic types
+  INTEGER :: ibnd
+  !! Counter on bands
+  INTEGER :: ijkb0
+  !! Auxiliary variable for counting
+  INTEGER :: ikb
+  !! Counter on becp functions
+  INTEGER :: jkb
+  !! Counter on becp functions
+  INTEGER :: ipol
+  !! Counter on polarizations
+  INTEGER :: ih
+  !! Counter on nh
+  INTEGER :: jh
+  !! Counter on nh
+  INTEGER :: is
+  !! Counter on polarization
+  INTEGER :: js
+  !! Counter on polarization
+  INTEGER ::  ijs
+  !! Counter on combined is and js polarization
 
-  integer :: na, nb, mu, nu, ig, igg, nt, ibnd, ijkb0, &
-       ikb, jkb, ih, jh, ipol, is, js, ijs
-  ! counter on atoms
-  ! counter on modes
-  ! the point k
-  ! the point k+q
-  ! counter on G vectors
-  ! auxiliary counter on G vectors
-  ! counter on atomic types
-  ! counter on bands
-  ! auxiliary variable for counting
-  ! counter on becp functions
-  ! counter on becp functions
-  ! counter on n index
-  ! counter on m index
-  ! counter on polarizations
-
-  real(DP), parameter :: eps = 1.d-12
+  REAL(kind=DP), parameter :: eps = 1.d-12
 
   complex(DP), allocatable :: ps1 (:,:), ps2 (:,:,:), aux (:), deff_nc(:,:,:,:)
   real(DP), allocatable :: deff(:,:,:)

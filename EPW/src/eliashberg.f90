@@ -15,12 +15,6 @@
   USE io_global,     ONLY : stdout 
   USE epwcom,        ONLY : liso, fila2f, gap_edge, lreal, limag, laniso 
   USE eliashbergcom, ONLY : gap0
-#ifdef __PARA
-  USE io_global,     ONLY : ionode_id
-  USE mp_global,     ONLY : inter_pool_comm, my_pool_id
-  USE mp_world,      ONLY : mpime
-  USE mp,            ONLY : mp_bcast, mp_barrier, mp_sum
-#endif
   !
   IMPLICIT NONE
   !

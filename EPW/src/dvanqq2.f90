@@ -58,22 +58,22 @@
   !
   !   And the local variables
   !
-  integer :: nt, na, nb, ig, nta, ntb, ir, ih, jh, ijh, ipol, jpol, is, nspin0
+  INTEGER :: nt, na, nb, ig, nta, ntb, ir, ih, jh, ijh, ipol, jpol, is, nspin0
   !
-  real(DP), ALLOCATABLE :: qmod (:), qmodg (:), qpg (:,:), &
+  real(kind=DP), ALLOCATABLE :: qmod (:), qmodg (:), qpg (:,:), &
        ylmkq (:,:), ylmk0 (:,:)
   ! the modulus of q+G
   ! the modulus of G
   ! the  q+G vectors
   ! the spherical harmonics
 
-  complex(DP) :: fact, fact1, ZDOTC
-  complex(DP), ALLOCATABLE :: aux1 (:), aux2 (:),&
+  COMPLEX(kind=DP) :: fact, fact1, ZDOTC
+  COMPLEX(kind=DP), ALLOCATABLE :: aux1 (:), aux2 (:),&
        aux3 (:), aux5 (:), veff (:,:), sk(:)
   ! work space
-  complex(DP), ALLOCATABLE, TARGET :: qgm(:)
+  complex(kind=DP), ALLOCATABLE, TARGET :: qgm(:)
   ! the augmentation function at G
-  complex(DP), POINTER :: qgmq (:)
+  complex(kind=DP), POINTER :: qgmq (:)
   ! the augmentation function at q+G
   character (len=256) :: tempfile
 #ifdef __PARA
@@ -124,11 +124,11 @@
   DO is = 1, nspin
      IF (nspin.ne.4.or.is==1) THEN
         DO ir = 1, dfftp%nnr
-           veff (ir, is) = CMPLX (vltot (ir) + v%of_r (ir, is), 0.d0)
+           veff (ir, is) = CMPLX (vltot (ir) + v%of_r (ir, is), 0.d0, kind=DP)
         ENDDO
      ELSE
         DO ir = 1, dfftp%nnr
-           veff (ir, is) = CMPLX (v%of_r (ir, is), 0.d0)
+           veff (ir, is) = CMPLX (v%of_r (ir, is), 0.d0, kind=DP)
         ENDDO
      ENDIF
      CALL fwfft ('Dense', veff(:,is), dfftp)
@@ -136,7 +136,7 @@
   !
   !     We compute here two of the three integrals needed in the phonon
   !
-  fact1 = CMPLX (0.d0, - tpiba * omega)
+  fact1 = CMPLX (0.d0, - tpiba * omega, kind=DP)
   !
   tempfile = trim(tmp_dir) // trim(prefix) // '.recover' 
 #ifdef __PARA

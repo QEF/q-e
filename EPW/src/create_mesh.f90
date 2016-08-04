@@ -23,7 +23,7 @@
   USE eliashbergcom, ONLY : nkfs, ixkf, equivk, xkfs, wkfs, ekfs, nbndfs, memlt_pool
 #ifdef __PARA
   USE io_global, ONLY : ionode_id
-  USE mp_global, ONLY : inter_pool_comm, my_pool_id, npool
+  USE mp_global, ONLY : inter_pool_comm, npool
   USE mp,        ONLY : mp_bcast, mp_barrier, mp_sum
   USE mp_world,  ONLY : mpime
 #endif
@@ -203,7 +203,7 @@
   USE symm_base, ONLY : nrot
 #ifdef __PARA
   USE io_global, ONLY : ionode_id
-  USE mp_global, ONLY : inter_pool_comm, my_pool_id, npool
+  USE mp_global, ONLY : inter_pool_comm
   USE mp,        ONLY : mp_bcast, mp_barrier, mp_sum
   USE mp_world,  ONLY : mpime
 #endif
@@ -446,9 +446,7 @@
   USE kinds,     ONLY : DP
   USE epwcom,    ONLY : nkf1, nkf2, nkf3
 #ifdef __PARA
-  USE mp_global, ONLY : inter_pool_comm, my_pool_id, npool
   USE mp,        ONLY : mp_bcast, mp_barrier
-  USE mp_world,  ONLY : mpime
 #endif
   ! 
   IMPLICIT NONE

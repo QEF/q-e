@@ -30,14 +30,14 @@
   USE phcom,         ONLY : nmodes
   USE elph2,         ONLY : wqf, wf
   USE epwcom,        ONLY : nqstep, degaussq, nsiter, conv_thr_racon, fsthick, & 
-                            lacon, lpade, eps_acustic
+                            lpade, eps_acustic
   USE eliashbergcom, ONLY : nsw, estemp, dwsph, ws, wsph, gap, Agap, Gp, Gm, ADsumi, AZsumi, &                           
                             Delta, Znorm, ADelta, ADeltap, AZnorm, AZnormp, g2, lacon_fly, & 
                             a2fij, wkfs, dosef, ixkqf, ixqfs, nqfs, w0g, nkfs, nbndfs, ef0, ekfs
   USE constants_epw, ONLY : pi, ci
 #ifdef __PARA
   USE io_global, ONLY : ionode_id
-  USE mp_global, ONLY : inter_pool_comm, my_pool_id, npool
+  USE mp_global, ONLY : inter_pool_comm
   USE mp_world,  ONLY : mpime
   USE mp,        ONLY : mp_bcast, mp_barrier, mp_sum
 #endif
@@ -46,12 +46,15 @@
   !
   INTEGER :: i, iw, iwp, iwph, itemp, iter, ik, iq, iq0, ibnd, jbnd, imode, & 
              lower_bnd, upper_bnd, imelt
-  REAL(DP) :: rgammap, rgammam, absdelta, reldelta, errdelta, weight, a2f_
-  REAL(DP), EXTERNAL :: w0gauss
-  COMPLEX(DP) :: esqrt, root
+  REAL(kind=DP) :: rgammap, rgammam, absdelta, reldelta, errdelta, weight, a2f_
+  REAL(kind=DP), EXTERNAL :: w0gauss
+  COMPLEX(kind=DP) :: esqrt, root
   COMPLEX(DP), ALLOCATABLE, SAVE :: Deltaold(:)
   LOGICAL :: conv
   CHARACTER (len=256) :: cname
+  !
+  ! SP: Need initialization
+  a2f_ = 0.0_DP
   !
   IF ( iter .eq. 1 ) THEN
      !
@@ -285,14 +288,14 @@
   !
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
-  USE epwcom,        ONLY : fsthick, lpade
+  USE epwcom,        ONLY : fsthick
   USE eliashbergcom, ONLY : nsw, ws, wsi, gap, Agap, Delta, Znorm, & 
                             ADelta, AZnorm, ADeltai, AZnormi, &              
                             wkfs, dosef, w0g, nkfs, nbndfs, ef0, ekfs
   USE constants_epw, ONLY : cone, ci
 #ifdef __PARA
   USE io_global, ONLY : ionode_id
-  USE mp_global, ONLY : inter_pool_comm, my_pool_id, npool
+  USE mp_global, ONLY : inter_pool_comm
   USE mp_world,  ONLY : mpime
   USE mp,        ONLY : mp_bcast, mp_barrier, mp_sum
 #endif
