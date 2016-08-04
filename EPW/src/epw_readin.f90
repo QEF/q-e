@@ -475,6 +475,8 @@
      CALL errore('epw_readin', 'ephwrite requires nkf1,nkf2,nkf3 to be multiple of nqf1,nqf2,nqf3',1)
   IF (band_plot .and. filkf .eq. ' ' .and. filqf .eq. ' ') CALL errore('epw_readin', &
       &'plot band structure and phonon dispersion requires k- and q-points read from filkf and filqf files',1)
+  IF (band_plot .and. parallel_q ) CALL errore('epw_readin', &
+      &'band_plot can only be used with parallel_k',1)    
   IF ( filkf .ne. ' ' .and. .not.efermi_read ) CALL errore('epw_readin', &
       &'WARNING: if k-points are along a line, then efermi_read=.true. and fermi_energy must be given in the input file',-1)
   !
