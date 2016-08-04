@@ -128,11 +128,11 @@ SUBROUTINE print_clock_pw()
    END IF
    !
    WRITE( stdout, '(/5x,"Called by h_psi:")' )
-   IF ( iverbosity > 0 )  THEN
+!   IF ( iverbosity > 0 )  THEN
       CALL print_clock( 'h_psi:init' )
       CALL print_clock( 'h_psi:pot' )
       CALL print_clock( 'h_psi:calbec' )
-  END IF
+!  END IF
    CALL print_clock( 'add_vuspsi' ) ; CALL print_clock ( 'add_vuspsir' )
    CALL print_clock( 'vhpsi' )
    CALL print_clock( 'h_psi_meta' )

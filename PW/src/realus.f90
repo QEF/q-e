@@ -28,11 +28,14 @@ MODULE realus
   REAL(DP), ALLOCATABLE :: boxrad_beta(:)
   REAL(DP), ALLOCATABLE :: boxdist_beta(:,:), xyz_beta(:,:,:)
   REAL(DP), ALLOCATABLE :: spher_beta(:,:,:)
+  COMPLEX(DP), ALLOCATABLE :: xkphase(:,:)  ! kpoint-related phase factor around each atom
+  INTEGER               :: current_phase_kpoint=-1 ! the kpoint index for which the xkphase is currently set
+                                                    ! negative initial value  means not set
   !General
   LOGICAL               :: real_space
   ! if true perform calculations in real spave
   LOGICAL               :: do_not_use_spline_inside_rinner = .false.
-  INTEGER :: real_space_debug = 0 ! FIXME: must disappear
+  INTEGER               :: real_space_debug = 0 ! FIXME: must disappear
   INTEGER               :: initialisation_level
   ! init_realspace_vars sets this to 3; qpointlist adds 5; betapointlist adds 7
   ! so the value should be 15 if the real space routine is initialised properly
@@ -74,6 +77,7 @@ MODULE realus
             fwfft_orbital_k, s_psir_k, calbec_rs_k, add_vuspsir_k
   !
   CONTAINS
+  
     !------------------------------------------------------------------------
     SUBROUTINE generate_qpointlist
       !------------------------------------------------------------------------
@@ -896,10 +900,12 @@ MODULE realus
       ALLOCATE( xyz_beta ( 3, goodestimate, nat ) )
       ALLOCATE( box_beta    ( goodestimate, nat ) )
       ALLOCATE( boxdist_beta( goodestimate, nat ) )
+      ALLOCATE( xkphase     ( goodestimate, nat ) )
       !
       xyz_beta(:,:,:)   = buff_xyz_beta(:,1:goodestimate,:)
       box_beta(:,:)     = buffpoints(1:goodestimate,:)
       boxdist_beta(:,:) = buffdist(1:goodestimate,:)
+      call set_xkphase(1)
       !
       DEALLOCATE( buff_xyz_beta )
       DEALLOCATE( buffpoints )
@@ -1276,6 +1282,43 @@ MODULE realus
       RETURN
     END SUBROUTINE addusforce_r
     !
+    !------------------------------------------------------------------------
+    SUBROUTINE set_xkphase(ik)
+    !--------------------------------------------------------------------------
+    ! in the calculation of becp or when performing add_vuspsir the wavefunction
+    ! psi_k and  not its periodic part (which is what we get from the FFT) should be
+    ! used. A k-dependent phase exp(-xk(current_k*(r-tau(ia))) ) must be added
+    !
+    USE kinds,      ONLY : DP
+    USE klist,      ONLY : xk
+    USE cell_base,  ONLY : tpiba
+    USE ions_base,  ONLY : nat
+
+    IMPLICIT NONE
+  
+    INTEGER, INTENT (IN) :: ik
+
+    INTEGER :: ia, mbia, ir
+    REAL(DP) :: arg
+
+    if (.not.allocated ( xkphase ) ) call errore ('set_xkphase',' array not allocated yes',1)
+    if (ik .eq. current_phase_kpoint ) return
+    !
+    DO ia = 1, nat
+       mbia = maxbox_beta(ia)
+       do ir =1, mbia
+          arg = ( xk(1,ik) * xyz_beta(1,ir,ia) + &
+                  xk(2,ik) * xyz_beta(2,ir,ia) + &
+                  xk(3,ik) * xyz_beta(3,ir,ia) ) * tpiba
+          xkphase( ir, ia ) = CMPLX(COS(arg),-SIN(arg))
+       end do
+    end do
+    !
+    current_phase_kpoint = ik
+    !
+    return
+    END SUBROUTINE set_xkphase
+
     !--------------------------------------------------------------------------
     SUBROUTINE calbec_rs_gamma ( ibnd, last, becp_r )
 
@@ -1404,8 +1447,6 @@ MODULE realus
     !
     USE kinds,                 ONLY : DP
     USE wvfct,                 ONLY : current_k
-    USE klist,                 ONLY : xk
-    USE cell_base,             ONLY : tpiba
     USE cell_base,             ONLY : omega
     USE wavefunctions_module,  ONLY : psic
     USE ions_base,             ONLY : nat, ntyp => nsp, ityp
@@ -1420,9 +1461,8 @@ MODULE realus
     !
     INTEGER, INTENT(in) :: ibnd, last
     INTEGER :: ikb, nt, ia, ih, mbia
-    REAL(DP) :: fac, arg
+    REAL(DP) :: fac
     REAL(DP), ALLOCATABLE, DIMENSION(:) :: wr, wi
-    COMPLEX(DP), ALLOCATABLE :: cphase (:)
     REAL(DP) :: bcr, bci
     !COMPLEX(DP), allocatable, dimension(:) :: bt
     integer :: ir
@@ -1432,11 +1472,9 @@ MODULE realus
     !
     CALL start_clock( 'calbec_rs' )
     !
-    IF( ( dtgs%have_task_groups ) .and. ( last >= dtgs%nogrp ) ) THEN
+    IF( ( dtgs%have_task_groups ) .and. ( last >= dtgs%nogrp ) ) CALL errore( 'calbec_rs_k', 'task_groups not implemented', 1 )
 
-     CALL errore( 'calbec_rs_k', 'task_groups not implemented', 1 )
-
-    ELSE !non task groups part starts here
+    call set_xkphase(current_k)
 
     fac = sqrt(omega) / (dffts%nr1*dffts%nr2*dffts%nr3)
     !
@@ -1450,28 +1488,20 @@ MODULE realus
              IF ( ityp(ia) == nt ) THEN
                 !
                 mbia = maxbox_beta(ia)
-                ALLOCATE( cphase(mbia) )
-                do ir =1, mbia
-                   arg = ( xk(1,current_k) * xyz_beta(1,ir,ia) + &
-                           xk(2,current_k) * xyz_beta(2,ir,ia) + &
-                           xk(3,current_k) * xyz_beta(3,ir,ia) ) * tpiba
-                   cphase (ir) = CMPLX(COS(arg),SIN(arg))
-                end do
 
                 ALLOCATE( wr(mbia), wi(mbia) )
                 DO ih = 1, nh(nt)
                    ! nh is the number of beta functions, or something similar
                    !
                    ikb = ikb + 1
-                   wr(:) = dble ( psic( box_beta(1:mbia,ia) ) * cphase(1:mbia))
-                   wi(:) = aimag( psic( box_beta(1:mbia,ia) ) * cphase(1:mbia))
+                   wr(:) = dble ( psic( box_beta(1:mbia,ia) ) * CONJG(xkphase(1:mbia,ia)))
+                   wi(:) = aimag( psic( box_beta(1:mbia,ia) ) * CONJG(xkphase(1:mbia,ia)))
                    bcr  = ddot( mbia, betasave(:,ih,ia), 1, wr(:) , 1 )
                    bci  = ddot( mbia, betasave(:,ih,ia), 1, wi(:) , 1 )
                    becp%k(ikb,ibnd)   = fac * cmplx( bcr, bci,kind=DP)
                    !
                 ENDDO
                 DEALLOCATE( wr, wi )
-                DEALLOCATE( cphase )
                 !
              ENDIF
              !
@@ -1479,8 +1509,6 @@ MODULE realus
           !
        ENDDO
        !
-       !
-    ENDIF
     CALL mp_sum( becp%k( :, ibnd ), intra_bgrp_comm )
     CALL stop_clock( 'calbec_rs' )
     !
@@ -1521,10 +1549,9 @@ MODULE realus
       REAL(DP), EXTERNAL :: ddot
       !
       CALL start_clock( 's_psir' )
-      IF( ( dtgs%have_task_groups ) .and. ( last >= dtgs%nogrp ) ) THEN
-         CALL errore( 's_psir_gamma', 'task_groups not implemented', 1 )
-      ELSE
-      ! non task groups part starts here
+
+      IF( ( dtgs%have_task_groups ) .and. ( last >= dtgs%nogrp ) ) CALL errore( 's_psir_gamma', 'task_groups not implemented', 1 )
+
       !
       fac = sqrt(omega)
       !
@@ -1570,7 +1597,6 @@ MODULE realus
          !
       ENDDO
       !
-      ENDIF
       CALL stop_clock( 's_psir' )
       !
       RETURN
@@ -1586,8 +1612,6 @@ MODULE realus
   ! k-point phase factor fixed by SdG 030816
       USE kinds,                  ONLY : DP
       USE wvfct,                  ONLY : current_k
-      USE klist,                  ONLY : xk
-      USE cell_base,              ONLY : tpiba
       USE cell_base,              ONLY : omega
       USE wavefunctions_module,   ONLY : psic
       USE ions_base,              ONLY : nat, ntyp => nsp, ityp
@@ -1603,17 +1627,18 @@ MODULE realus
       INTEGER, INTENT(in) :: ibnd, last
       !
       INTEGER :: ih, jh, ikb, jkb, nt, ia, ir, mbia
-      REAL(DP) :: fac, arg
-      COMPLEX(DP) , ALLOCATABLE :: w1(:), cphase(:)
+      REAL(DP) :: fac
+      COMPLEX(DP) , ALLOCATABLE :: w1(:)
       !
       REAL(DP), EXTERNAL :: ddot
       !
 
       CALL start_clock( 's_psir' )
-      IF( ( dtgs%have_task_groups ) .and. ( last >= dtgs%nogrp ) ) THEN
-        CALL errore( 's_psir_k', 'task_groups not implemented', 1 )
-      ELSE
-      !non task groups part starts here
+   
+      IF( ( dtgs%have_task_groups ) .and. ( last >= dtgs%nogrp ) ) CALL errore( 's_psir_k', 'task_groups not implemented', 1 )
+
+      call set_xkphase(current_k)
+
       !
       fac = sqrt(omega)
       !
@@ -1626,14 +1651,6 @@ MODULE realus
             IF ( ityp(ia) == nt ) THEN
                !
                mbia = maxbox_beta(ia)
-
-               ALLOCATE( cphase(mbia) )
-               do ir =1, mbia
-                  arg = ( xk(1,current_k) * xyz_beta(1,ir,ia) + &
-                          xk(2,current_k) * xyz_beta(2,ir,ia) + &
-                          xk(3,current_k) * xyz_beta(3,ir,ia) ) * tpiba
-                  cphase (ir) = CMPLX(COS(arg),-SIN(arg))
-               end do
 
                ALLOCATE( w1(nh(nt)) )
                w1 = 0.D0
@@ -1652,14 +1669,13 @@ MODULE realus
                   !
                   DO ir = 1, mbia
                      !
-                     psic( box_beta(ir,ia) ) = psic(  box_beta(ir,ia) ) + cphase(ir)*betasave(ir,ih,ia)*w1(ih)
+                     psic( box_beta(ir,ia) ) = psic(  box_beta(ir,ia) ) + xkphase(ir,ia)*betasave(ir,ih,ia)*w1(ih)
                      !
                   ENDDO
                   !
                ENDDO
                !
                DEALLOCATE( w1 )
-               DEALLOCATE( cphase )
                !
             ENDIF
             !
@@ -1667,7 +1683,6 @@ MODULE realus
          !
       ENDDO
       !
-      ENDIF
       CALL stop_clock( 's_psir' )
       !
       RETURN
@@ -1789,8 +1804,6 @@ MODULE realus
   !
   USE kinds,                  ONLY : DP
   USE wvfct,                  ONLY : current_k
-  USE klist,                  ONLY : xk
-  USE cell_base,              ONLY : tpiba
   USE cell_base,              ONLY : omega
   USE wavefunctions_module,   ONLY : psic
   USE ions_base,              ONLY : nat, ntyp => nsp, ityp
@@ -1806,18 +1819,17 @@ MODULE realus
   INTEGER, INTENT(in) :: ibnd, last
   !
   INTEGER :: ih, jh, ikb, jkb, nt, ia, ir, mbia
-  REAL(DP) :: fac, arg
+  REAL(DP) :: fac
   !
-  COMPLEX(DP), ALLOCATABLE :: w1(:), cphase(:)
+  COMPLEX(DP), ALLOCATABLE :: w1(:)
   !
   REAL(DP), EXTERNAL :: ddot
   !
   CALL start_clock( 'add_vuspsir' )
 
-  IF( ( dtgs%have_task_groups ) .and. ( last >= dtgs%nogrp ) ) THEN
-    CALL errore( 'add_vuspsir_k', 'task_groups not implemented', 1 )
-  ELSE
-   ! non task groups part starts here
+  IF( ( dtgs%have_task_groups ) .and. ( last >= dtgs%nogrp ) ) CALL errore( 'add_vuspsir_k', 'task_groups not implemented', 1 )
+
+  call set_xkphase(current_k)
    !
    fac = sqrt(omega)
    !
@@ -1830,14 +1842,6 @@ MODULE realus
          IF ( ityp(ia) == nt ) THEN
             !
             mbia = maxbox_beta(ia)
-
-            ALLOCATE( cphase(mbia) )
-            do ir =1, mbia
-               arg = ( xk(1,current_k) * xyz_beta(1,ir,ia) + &
-                       xk(2,current_k) * xyz_beta(2,ir,ia) + &
-                       xk(3,current_k) * xyz_beta(3,ir,ia) ) * tpiba
-               cphase (ir) = CMPLX(COS(arg),-SIN(arg))
-            end do
 
             ALLOCATE( w1(nh(nt)))
             w1 = (0.d0, 0d0)
@@ -1861,21 +1865,19 @@ MODULE realus
                !
                DO ir = 1, mbia
                   !
-                  psic( box_beta(ir,ia) ) = psic(  box_beta(ir,ia) ) + cphase(ir)*betasave(ir,ih,ia)*w1(ih)
+                  psic( box_beta(ir,ia) ) = psic(  box_beta(ir,ia) ) + xkphase(ir,ia)*betasave(ir,ih,ia)*w1(ih)
                   !
                ENDDO
                !
             ENDDO
             !
             DEALLOCATE( w1 )
-            DEALLOCATE( cphase )
             !
          ENDIF
          !
       ENDDO
       !
    ENDDO
-   ENDIF
    CALL stop_clock( 'add_vuspsir' )
    RETURN
   !
