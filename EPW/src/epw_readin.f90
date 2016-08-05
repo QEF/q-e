@@ -37,7 +37,7 @@
                             twophoton, a2f, rand_k, rand_nq, rand_q, &
                             parallel_q, parallel_k, selfen_type, nkf1, &
                             nkf2, nkf3, nqf1, nqf2, nqf3, rand_nk, indabs, &
-                            nest_fn, eps_acustic, nw, wmax, wmin, filelph, &
+                            nest_fn, eps_acustic, nw, wmax, wmin, &
                             mp_mesh_q, filqf, filkf, delta_qsmear, degaussq, &
                             band_plot, ephwrite, mp_mesh_k, nstemp, broyden_beta, &
                             conv_thr_raxis, tempsmax, tempsmin, temps, broyden_ndim, &
@@ -49,7 +49,7 @@
                             wmin_specfun, laniso, lpolar, epstrict, elinterp, &
                             proj, write_wfn, phinterp, iswitch, &
                             ntempxx, liso, lacon, lpade, etf_mem, epbwrite, &
-                            tshuffle2, tshuffle, nsiter, conv_thr_racon, &
+                            nsiter, conv_thr_racon, &
                             pwc, nswc, nswfc, nswi, filukq, filukk, &
                             nbndsub, nbndskip, system_2d, delta_approx, title
 !  USE epwcom,        ONLY : tphases, fildvscf0                  
@@ -87,7 +87,7 @@
   character(len=256) :: outdir
   namelist / inputepw / &
        amass, outdir, prefix, iverbosity, time_max, fildvscf,                  &
-       tshuffle, tshuffle2, phinterp, elinterp, epstrict,                      &
+       phinterp, elinterp, epstrict,                                           &
        elph, nq1, nq2, nq3, nk1, nk2, nk3, nbndskip,  nbndsub,                 &
        filukk, filukq, epbread, epbwrite, epwread, epwwrite, etf_mem, kmaps,   &
        eig_read, wepexst, epexst, vme,                                         &
@@ -99,7 +99,7 @@
        selfen_type, elecselfen, phonselfen, parallel_k, parallel_q,            &
        rand_q, rand_nq, rand_k, rand_nk,                                       &
        nqf1, nqf2, nqf3, nkf1, nkf2, nkf3,                                     &
-       mp_mesh_k, mp_mesh_q, filqf, filkf, filelph, ephwrite,                  & 
+       mp_mesh_k, mp_mesh_q, filqf, filkf, ephwrite,                           & 
        band_plot, degaussq, delta_qsmear, nqsmear, nqstep,                     &
        nswfc, nswc, nswi, pwc, wsfc, wscut,                                    &
        broyden_beta, broyden_ndim, nstemp, tempsmin, tempsmax, temps,          &
@@ -116,14 +116,11 @@
   ! elph     : if true calculate electron-phonon coefficients
   ! time_max : maximum cputime for this run
   ! prefix   : the prefix of files produced by pwscf
-  ! filelph  : output file for electron-phonon coefficients
   ! fildvscf : output file containing deltavsc
   ! fildrho  : output file containing deltarho
   !
   ! added by @ FG
   !
-  ! tshuffle : elphel2 calculates e-ph matrix elements by using kpoints
-  !            of the 1st BZ only (k+q folded back into k+q+G_0)
   ! phinterp : if true perform phonon interpolation of e-p matrix
   ! elinterp : if true perform electron interpolation of e-p matrix
   ! ngaussw  : smearing type for FS average after wann interp
@@ -142,7 +139,6 @@
   ! wmax     : max    "  "  "                                    (units of eV)                   
   ! selfen_type : choice of real/imag part of phonon selfenergy calcuation when epstrict = .true.
   ! nbndsub  : number of bands in the optimal subspace (when disentanglement is used)
-  ! tshuffle2: shuffle mode for electrons + load all phonons at once
   ! elecselfen: if .TRUE. calculate imaginary part of electron selfenergy due to e-p interaction
   ! phonselfen: if .TRUE. calculate imaginary part of phonon selfenergy due to e-p interaction
   ! dvscf_dir: the dir containing all the .dvscf and .dyn files
@@ -270,8 +266,6 @@
   amass(:)     = 0.d0
   iverbosity   = 0
   elph         = .false.
-  tshuffle     = .false.
-  tshuffle2    = .true.
   elecselfen   = .false.
   phonselfen   = .false.
   specfun      = .false.
@@ -321,7 +315,6 @@
   prefix       = 'pwscf'
   filqf        = ' '
   filkf        = ' '
-  filelph      = ' '
   fildrho      = ' '
   fildvscf     = ' '
   filukk       = ' '

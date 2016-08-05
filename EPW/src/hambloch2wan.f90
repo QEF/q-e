@@ -8,7 +8,7 @@
   !                                                                            
   !
   !--------------------------------------------------------------------------
-  SUBROUTINE hambloch2wan ( nbnd, nbndsub, nks, nkstot, lgamma, et, xk, cu, &
+  SUBROUTINE hambloch2wan ( nbnd, nbndsub, nks, nkstot, et, xk, cu, &
      lwin, nrr, irvec, wslen, chw )
   !--------------------------------------------------------------------------
   !
@@ -37,8 +37,6 @@
   ! number of kpoint blocks, in the pool
   ! number of kpoint blocks, total 
   ! number of WS points and coordinates
-  logical :: lgamma
-  ! true if we are working with q=0
   real(kind=DP) :: et (nbnd, nks), xk (3, nks), wslen (nrr) 
   ! hamiltonian eigenvalues, coarse mesh
   ! kpoint coordinates (cartesian in units of 2piba)

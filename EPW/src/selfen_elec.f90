@@ -33,7 +33,6 @@
   USE io_global,     ONLY : stdout
   USE io_epw,        ONLY : iunepmatf, linewidth_elself
   USE phcom,         ONLY : nmodes
-  USE control_lr,    ONLY : lgamma
   USE epwcom,        ONLY : nbndsub, lrepmatf, &
                            fsthick, eptemp, ngaussw, degaussw, &
                            etf_mem, eps_acustic, efermi_read, fermi_energy
@@ -148,13 +147,8 @@
   fermicount = 0 
   DO ik = 1, nkf
      !
-     IF (lgamma) THEN
-        ikk = ik
-        ikq = ik
-     ELSE
-        ikk = 2 * ik - 1
-        ikq = ikk + 1
-     ENDIF
+     ikk = 2 * ik - 1
+     ikq = ikk + 1
      !
      ! here we must have ef, not ef0, to be consistent with ephwann_shuffle
      ! (but in this case they are the same)
@@ -433,7 +427,6 @@
   USE io_global,     ONLY : stdout
   USE io_epw,        ONLY : iunepmatf, linewidth_elself
   USE phcom,         ONLY : nmodes
-  USE control_lr,    ONLY : lgamma
   USE epwcom,        ONLY : nbndsub, lrepmatf, &
                            fsthick, eptemp, ngaussw, degaussw, &
                            etf_mem, eps_acustic, efermi_read, fermi_energy
@@ -566,13 +559,8 @@
   fermicount = 0 
   DO iq = 1, nqf
      !
-     IF (lgamma) THEN
-        ikk = iq
-        ikq = iq
-     ELSE
-        ikq = 2 * iq
-        ikk = ikq - 1
-     ENDIF
+     ikq = 2 * iq
+     ikk = ikq - 1
      !
      ! here we must have ef, not ef0, to be consistent with ephwann_shuffle
      ! (but in this case they are the same)

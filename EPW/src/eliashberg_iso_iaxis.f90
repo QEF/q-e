@@ -9,36 +9,37 @@
   !-----------------------------------------------------------------------
   SUBROUTINE eliashberg_iso_iaxis
   !-----------------------------------------------------------------------
-  !
-  ! This routine is the driver of the self-consistent cycle for the isotropic 
-  ! Eliashberg equations on the imaginary-axis.  
+  !!
+  !! This routine is the driver of the self-consistent cycle for the isotropic 
+  !! Eliashberg equations on the imaginary-axis.  
+  !!
   !
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
-  USE io_files,      ONLY : prefix
   USE control_flags, ONLY : iverbosity
   USE epwcom,        ONLY : nsiter, nstemp, broyden_beta, broyden_ndim, &
                             limag, lpade, lacon
-  USE eliashbergcom, ONLY : nsw, nsiw, Deltai, Deltaip, Delta, Deltap, estemp, gap
+  USE eliashbergcom, ONLY : nsw, nsiw, Deltai, Deltaip, Delta, Deltap, estemp
   USE constants_epw, ONLY : kelvin2eV, ci
 #ifdef __PARA
-  USE io_global, ONLY : ionode_id
-  USE mp_global, ONLY : inter_pool_comm, my_pool_id
   USE mp,        ONLY : mp_bcast, mp_barrier, mp_sum
-  USE mp_world,  ONLY : mpime
 #endif
   ! 
   IMPLICIT NONE
   !
-  INTEGER :: itemp, iter, N
+  ! Local variables
+  INTEGER :: itemp
+  !! Counter on temperature index
+  INTEGER :: iter
+  !! Counter on iteration steps
+  INTEGER :: N
+  !! Maximum frequency 
   REAL(DP) :: tcpu, rdeltaout(nsw), rdeltain(nsw), cdeltaout(nsw), cdeltain(nsw)
   REAL(DP), EXTERNAL :: get_clock
   LOGICAL :: conv
   !
   CALL start_clock( 'iso_iaxis' )
-!#ifdef __PARA 
-!  IF (mpime .eq. ionode_id) THEN
-!#endif
+  !
   DO itemp = 1, nstemp ! loop over temperature
      !
      WRITE(stdout,'(a)') '    '
@@ -157,11 +158,6 @@
      !
   ENDDO ! itemp
   !
-!#ifdef __PARA 
-!  ENDIF
-!  CALL mp_barrier()
-!#endif 
-  !
   CALL stop_clock( 'iso_iaxis' )
   !
   RETURN
@@ -171,18 +167,9 @@
   !-----------------------------------------------------------------------
   SUBROUTINE sum_eliashberg_iso_iaxis( itemp, iter, conv ) 
   !-----------------------------------------------------------------------
-  !
-  ! This routine solves the isotropic Eliashberg equations on the imaginary-axis
-  !
-  ! input
-  !
-  ! itemp  - temperature point
-  ! iter   - iteration number
-  ! conv   - convergence flag 
-  !
-  ! output 
-  !
-  ! conv   - convergence flag 
+  !!
+  !! This routine solves the isotropic Eliashberg equations on the imaginary-axis
+  !!
   !
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
@@ -192,11 +179,18 @@
   ! 
   IMPLICIT NONE
   !
-  INTEGER :: iw, iwp, itemp, iter
+  INTEGER, INTENT (in) :: itemp
+  !! Counter on temperature
+  INTEGER, INTENT(in) :: iter
+  !! Counter on iteration steps
+  LOGICAL, INTENT(inout) :: conv
+  !! True if the calculation is converged
+  ! 
+  ! Local variables
+  INTEGER :: iw, iwp 
   REAL(DP) :: esqrt, kernelp, kernelm, lambdap, lambdam, absdelta, reldelta, errdelta
   REAL(DP), ALLOCATABLE :: wesqrt(:), desqrt(:)
   REAL(DP), ALLOCATABLE, SAVE :: Deltaold(:)
-  LOGICAL :: conv
   !
   IF ( .not. ALLOCATED(wesqrt) ) ALLOCATE( wesqrt(nsiw(itemp)) )
   IF ( .not. ALLOCATED(desqrt) ) ALLOCATE( desqrt(nsiw(itemp)) )

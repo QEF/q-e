@@ -193,6 +193,7 @@
   !
   IF ( elinterp .and. (.not.phinterp ) ) CALL errore &
         ('elphon_shuffle_wrap','elinterp requires phinterp' ,1)
+  IF (lgamma) CALL errore('elphon_shuffle_wrap','EPW does not support Gamma only calculation ',1)
   !
   ! READ qpoint list from stdin
   !
@@ -298,11 +299,6 @@
 #ifdef __PARA
   CALL mp_barrier(inter_pool_comm)
 #endif
-  !  if we start with a gamma point calculation, ../PW/set_kplusq.f90
-  !  is not active and the gmap has not been produced...
-  !
-  IF (lgamma) CALL errore &
-    ('elphon_shuffle_wrap','tshuffle2 requires q!=0 starting nscf calculation',1)
   !
   !  allocate dynamical matrix and ep matrix for all q's
   !

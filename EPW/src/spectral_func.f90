@@ -28,7 +28,6 @@
   USE io_global,     ONLY : stdout
   USE io_epw,        ONLY : iunepmatf, iospectral_sup ,iospectral
   USE phcom,         ONLY : nmodes
-  USE control_lr,    ONLY : lgamma
   USE epwcom,        ONLY : nbndsub, lrepmatf, etf_mem, eps_acustic, &
                             fsthick, eptemp, ngaussw, degaussw, wmin_specfun,&
                             wmax_specfun, nw_specfun, &
@@ -124,13 +123,8 @@
   fermicount = 0 
   DO ik = 1, nkf
      !
-     IF (lgamma) THEN
-        ikk = ik
-        ikq = ik
-     ELSE
-        ikk = 2 * ik - 1
-        ikq = ikk + 1
-     ENDIF
+     ikk = 2 * ik - 1
+     ikq = ikk + 1
      !
      ! here we must have ef, not ef0, to be consistent with ephwann_shuffle
      ! (but in this case they are the same)
@@ -273,13 +267,8 @@
      !
      DO ik = 1, nksqtotf
         !
-        IF (lgamma) then
-           ikk = ik
-           ikq = ik
-        ELSE
-           ikk = 2 * ik - 1
-           ikq = ikk + 1
-        ENDIF
+        ikk = 2 * ik - 1
+        ikq = ikk + 1
         !
         WRITE(stdout,'(/5x,"ik = ",i5," coord.: ", 3f12.7)') ik, xkf_all (:,ikk)
         WRITE(stdout,'(5x,a)') repeat('-',67)
@@ -346,13 +335,8 @@
         !
         DO ik = 1, nksqtotf
            !
-           IF (lgamma) THEN
-              ikk = ik
-              ikq = ik
-           ELSE
-              ikk = 2 * ik - 1
-              ikq = ikk + 1
-           ENDIF
+           ikk = 2 * ik - 1
+           ikq = ikk + 1
            !
            !  the energy of the electron at k
            ekk = etf_all (ibndmin-1+ibnd, ikk) - ef0
@@ -422,7 +406,6 @@
   USE io_global,     ONLY : stdout
   USE io_epw,        ONLY : iunepmatf, iospectral_sup, iospectral
   USE phcom,         ONLY : nmodes
-  USE control_lr,    ONLY : lgamma
   USE epwcom,        ONLY : nbndsub, lrepmatf, etf_mem, eps_acustic, &
                             fsthick, eptemp, ngaussw, degaussw, wmin_specfun,&
                             wmax_specfun, nw_specfun, &
@@ -520,13 +503,8 @@
   fermicount = 0 
   DO iq = 1, nqf
      !
-     IF (lgamma) THEN
-        ikk = iq
-        ikq = iq
-     ELSE
-        ikq = 2 * iq
-        ikk = ikq - 1
-     ENDIF
+     ikq = 2 * iq
+     ikk = ikq - 1
      !
      ! here we must have ef, not ef0, to be consistent with ephwann_shuffle
      ! (but in this case they are the same)
@@ -643,13 +621,8 @@
   !
   WRITE(stdout,'(5x,"WARNING: only the eigenstates within the Fermi window are meaningful")')
   !
-  IF (lgamma) then
-     ikk = ik
-     ikq = ik
-  ELSE
-     ikk = 2 * ik - 1
-     ikq = ikk + 1
-  ENDIF
+  ikk = 2 * ik - 1
+  ikq = ikk + 1
   !
   WRITE(stdout,'(/5x,"ik = ",i5," coord.: ", 3f12.7)') ik, xkf(:,ikk)
   WRITE(stdout,'(5x,a)') repeat('-',67)
@@ -704,14 +677,8 @@
     !
   DO ibnd = 1, ibndmax-ibndmin+1
     !
-    !
-    IF (lgamma) THEN
-      ikk = ik
-      ikq = ik
-    ELSE
-      ikk = 2 * ik - 1
-      ikq = ikk + 1
-    ENDIF
+    ikk = 2 * ik - 1
+    ikq = ikk + 1
     !
     !  the energy of the electron at k
     ekk = etf_k (ibndmin-1+ibnd, ikk) - ef0

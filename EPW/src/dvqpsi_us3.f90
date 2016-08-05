@@ -94,13 +94,6 @@
   !    reciprocal space while the product with the wavefunction is done in
   !    real space
   !
-! RM - I don't think we need this
-!  IF (lgamma) THEN
-!     ikk = ik
-!  ELSE
-!     ikk = 2 * ik - 1
-!  ENDIF
- ! ikk = ikks(ik)
   dvpsi(:,:) = (0.d0, 0.d0)
   aux1(:) = (0.d0, 0.d0)
   DO na = 1, nat

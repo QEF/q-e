@@ -84,7 +84,6 @@
   USE fft_base,      ONLY : dffts
   USE constants_epw, ONLY : czero, cone, ci 
   USE control_flags, ONLY : iverbosity
-  USE control_lr,    ONLY : lgamma
   USE klist,         ONLY : nkstot, ngk, igk_k
   USE noncollin_module,     ONLY : noncolin, npol, nspin_mag
   ! 
@@ -159,17 +158,14 @@
   ! find the bounds of k-dependent arrays in the parallel case in each pool
   CALL fkbounds( nkstot, lower_bnd, upper_bnd )
   !
-  IF (.not.lgamma) THEN
-     !
-     ! setup for k+q folding
-     !
-     CALL kpointdivision ( ik0 )
-     CALL readgmap ( nkstot, ngxx, ng0vec, g0vec_all_r, lower_bnd)
-     !
-     IF (imode0.eq.0 .and. iverbosity.eq.1) WRITE(stdout, 5) ngxx
-5    FORMAT (5x,'Estimated size of gmap: ngxx =',i5)
-     !
-  ENDIF
+  ! setup for k+q folding
+  !
+  CALL kpointdivision ( ik0 )
+  CALL readgmap ( nkstot, ngxx, ng0vec, g0vec_all_r, lower_bnd)
+  !
+  IF (imode0.eq.0 .and. iverbosity.eq.1) WRITE(stdout, 5) ngxx
+5 FORMAT (5x,'Estimated size of gmap: ngxx =',i5)
+  !
   !
   ! close all sequential files in order to re-open them as direct access
   ! close all .wfc files in order to prepare shuffled read
@@ -230,7 +226,7 @@
      igkq = igk_k_all(1:npwq,nkq_abs)
      !
 #ifdef __PARA
-     IF (.not.lgamma .and. nks.gt.1 .and. maxval(igkq(1:npwq)).gt.ngxx) &
+     IF (nks.gt.1 .and. maxval(igkq(1:npwq)).gt.ngxx) &
           CALL errore ('elphel2_shuffle', 'ngxx too small', 1 )
 #endif
      !

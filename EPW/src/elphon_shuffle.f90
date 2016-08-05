@@ -9,14 +9,15 @@
   !-----------------------------------------------------------------------
   SUBROUTINE elphon_shuffle ( iq_irr, nqc_irr, iq, gmapsym, eigv, isym, invs0, xq0, timerev )
   !-----------------------------------------------------------------------
-  !
-  ! Electron-phonon calculation from data saved in fildvscf
-  ! Shuffle2 mode (shuffle on electrons + load all phonon q's)
-  !
-  ! no ultrasoft yet
-  !
-  ! RM - Nov/Dec 2014
-  ! Imported the noncolinear case implemented by xlzhang
+  !!
+  !! Electron-phonon calculation from data saved in fildvscf
+  !! Shuffle2 mode (shuffle on electrons + load all phonon q's)
+  !!
+  !! no ultrasoft yet
+  !!
+  !! RM - Nov/Dec 2014
+  !! Imported the noncolinear case implemented by xlzhang
+  !!
   !
   !-----------------------------------------------------------------------
   !
@@ -31,7 +32,6 @@
   USE pwcom,     ONLY : nbnd, ngm, doublegrid, nks
   USE kinds,     ONLY : DP
   USE modes,     ONLY : nmodes, nirr, npert, u
-  USE epwcom,    ONLY : tshuffle, tshuffle2
   USE elph2,     ONLY : epmatq, el_ph_mat
   USE constants_epw, ONLY : czero, cone
   USE fft_base,  ONLY : dfftp, dffts
@@ -67,10 +67,6 @@
   ! the first q in the star (cartesian)
   !
   CALL start_clock ('elphon')
-  !
-  ! tshuffle2 implies tshuffle
-  !
-  IF (tshuffle2) tshuffle = .true.
   !
   ik0 = 0
   tmp_pool_id = 0

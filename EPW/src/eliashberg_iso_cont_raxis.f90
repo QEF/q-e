@@ -10,35 +10,33 @@
   !-----------------------------------------------------------------------
   SUBROUTINE analytic_cont_iso_iaxis_to_raxis( itemp, iter, conv ) 
   !-----------------------------------------------------------------------
-  !
-  ! This routine does the analyic continuation of the isotropic Eliashberg equations 
-  ! from the imaginary-axis to the real axis
-  ! reference F. Marsiglio, M. Schossmann, and J. Carbotte, Phys. Rev. B 37, 4965 (1988)
-  !
-  ! input
-  !
-  ! itemp  - temperature point
-  ! iter   - iteration number
-  ! conv   - convergence flag 
-  !
-  ! output 
-  !
-  ! conv   - convergence flag 
+  !!
+  !! This routine does the analyic continuation of the isotropic Eliashberg equations 
+  !! from the imaginary-axis to the real axis
+  !! reference F. Marsiglio, M. Schossmann, and J. Carbotte, Phys. Rev. B 37, 4965 (1988)
+  !!
   !
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
-  USE epwcom,        ONLY : nqstep, nsiter, conv_thr_racon, lpade, lacon
+  USE epwcom,        ONLY : nqstep, nsiter, conv_thr_racon, lpade
   USE eliashbergcom, ONLY : nsw, estemp, dwsph, ws, gap, a2f_iso, Dsumi, Zsumi, & 
                             Delta, Deltap, Znorm, Znormp, Gp, Gm
   USE constants_epw, ONLY : pi, ci
   ! 
   IMPLICIT NONE
   !
-  INTEGER :: i, iw, iwp, itemp, iter 
-  REAL(DP) :: rgammap, rgammam, absdelta, reldelta, errdelta
-  COMPLEX(DP) :: esqrt, root
+  INTEGER, INTENT(in) :: itemp
+  !! Counter on iteration
+  INTEGER, INTENT(in) :: iter
+  !! Counter on the iteration number
+  LOGICAL, INTENT(inout) :: conv
+  !! True if the calculation is converged
+  ! 
+  ! Local variables
+  INTEGER :: i, iw, iwp 
+  REAL(kind=DP) :: rgammap, rgammam, absdelta, reldelta, errdelta
+  COMPLEX(kind=DP) :: esqrt, root
   COMPLEX(DP), ALLOCATABLE, SAVE :: Deltaold(:)
-  LOGICAL :: conv
   CHARACTER (len=256) :: cname
   !
   IF ( iter .eq. 1 ) THEN
@@ -154,17 +152,24 @@
   !
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
-  USE epwcom,        ONLY : nqstep, lpade
-  USE eliashbergcom, ONLY : nsw, ws, wsi, gap, Delta, Znorm, Deltai, Znormi, estemp
+  USE epwcom,        ONLY : lpade
+  USE eliashbergcom, ONLY : nsw, ws, wsi, gap, Delta, Znorm, Deltai, Znormi
   USE constants_epw, ONLY : cone, ci
   ! 
   IMPLICIT NONE
   !
-  INTEGER :: iw, itemp, N
+  INTEGER, INTENT (in) :: itemp
+  !! Counter on temperature
+  INTEGER, INTENT (in) :: N
+  !! Maximum number of frequency 
+  LOGICAL, INTENT (inout) :: conv
+  !! True if the calculation is converged
+  ! 
+  ! Local variable
+  INTEGER :: iw
   REAL(DP) :: absdelta, reldelta, errdelta
   COMPLEX(DP) :: a(N), b(N), z(N), u(N), v(N)
   COMPLEX(DP) :: omega, padapp, Deltaold(nsw)
-  LOGICAL :: conv
   CHARACTER (len=256) :: cname
   !
   Deltaold(:) = gap(itemp)

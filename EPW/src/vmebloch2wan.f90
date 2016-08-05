@@ -8,13 +8,13 @@
   !                                                                            
   !
   !--------------------------------------------------------------------------
-  subroutine vmebloch2wan ( nbnd, nbndsub, nks, nksq, nkbl, lgamma, xk, cu, &
+  subroutine vmebloch2wan ( nbnd, nbndsub, nks, nksq, nkbl, xk, cu, &
      nrr, irvec, wslen )
   !--------------------------------------------------------------------------
-  !
-  !  Calculate the velocity matrix elements in the Wannier basis
-  !  at no point do we actually have the coarse mesh v-ME. 
-  !
+  !!
+  !!  Calculate the velocity matrix elements in the Wannier basis
+  !!  at no point do we actually have the coarse mesh v-ME. 
+  !!
   !--------------------------------------------------------------------------
   !
   USE kinds,    only : DP
@@ -32,7 +32,9 @@
   !
   !  input variables
   !
-  integer :: nbnd, nbndsub, nks, nksq, nkbl, nrr, irvec (3, nrr), &
+  INTEGER, INTENT (in) :: nbnd
+  !! Number of bands
+  integer :: nbndsub, nks, nksq, nkbl, nrr, irvec (3, nrr), &
        ipool, nkb, nkb_abs, ipol, nnb, ib
   ! number of bands 
   ! number of bands in the optimal subspace 
@@ -40,8 +42,6 @@
   ! number of kpoint blocks, in the pool
   ! number of kpoint blocks, total 
   ! number of WS points and coordinates
-  logical :: lgamma
-  ! true if we are working with q=0
   real(kind=DP) :: xk (3, nks), wslen (nrr) , b_tmp(3)
   ! hamiltonian eigenvalues, coarse mesh
   ! kpoint coordinates (cartesian in units of 2piba)

@@ -9,7 +9,7 @@
   !                                                                            
   ! 
   !-----------------------------------------------------------------------
-  SUBROUTINE ephbloch2wane ( nbnd, nbndsub, nks, nkstot, lgamma, xk, &
+  SUBROUTINE ephbloch2wane ( nbnd, nbndsub, nks, nkstot, xk, &
        cu, cuq, lwin, lwinq, epmatk, nrr, irvec, wslen, epmatw)
   !-----------------------------------------------------------------------
   !!
@@ -46,8 +46,6 @@
   INTEGER, INTENT (in) :: irvec (3, nrr)
   !! Number of WS points and coordinates
   !
-  LOGICAL, INTENT (in) :: lgamma
-  !! True if we are working with q=0
   LOGICAL, INTENT (in) :: lwin( nbnd, nks )
   !! Identify bands within outer energy window (for disentanglement)
   LOGICAL, INTENT (in) :: lwinq( nbnd, nks )

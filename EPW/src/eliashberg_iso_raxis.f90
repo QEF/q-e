@@ -9,9 +9,10 @@
   !-----------------------------------------------------------------------
   SUBROUTINE eliashberg_iso_raxis
   !-----------------------------------------------------------------------
-  !
-  ! This routine is the driver of the self-consistent cycle for the isotropic 
-  ! Eliashberg equations on the real-axis.  
+  !!
+  !! This routine is the driver of the self-consistent cycle for the isotropic 
+  !! Eliashberg equations on the real-axis.  
+  !!
   !
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
@@ -21,14 +22,12 @@
   USE eliashbergcom, ONLY : nsw, Delta, Deltap, gap, estemp
   USE constants_epw, ONLY : kelvin2eV, ci
 #ifdef __PARA
-  USE io_global, ONLY : ionode_id
-  USE mp_global, ONLY : inter_pool_comm, my_pool_id
   USE mp,        ONLY : mp_bcast, mp_barrier, mp_sum
-  USE mp_world,  ONLY : mpime
 #endif
   ! 
   IMPLICIT NONE
   !
+  ! Local variables
   INTEGER :: itemp, iter
   REAL(DP) :: tcpu, rdeltaout(nsw), rdeltain(nsw), cdeltaout(nsw), cdeltain(nsw)
   REAL(DP), EXTERNAL :: get_clock
@@ -36,9 +35,6 @@
   CHARACTER (len=256) :: filgap
   !
   CALL start_clock( 'iso_raxis' ) 
-!#ifdef __PARA
-!  IF (mpime .eq. ionode_id) THEN
-!#endif
   !
   WRITE(stdout,'(5x,a)') 'Solve isotropic Eliashberg equations on real-axis'
   !
@@ -90,10 +86,6 @@
      WRITE(iufilgap,'(2f12.6)') estemp(itemp)/kelvin2eV, gap(itemp)
   ENDDO
   CLOSE(iufilgap)
-!#ifdef __PARA 
-!  ENDIF    
-!  CALL mp_barrier()
-!#endif     
   !    
   CALL stop_clock( 'iso_raxis' )
   ! 
@@ -104,19 +96,10 @@
   !-----------------------------------------------------------------------
   SUBROUTINE integrate_eliashberg_iso_raxis( itemp, iter, conv ) 
   !-----------------------------------------------------------------------
+  !!
+  !! This routine solves the isotropic Eliashberg equations on the real-axis
+  !!
   !
-  ! This routine solves the isotropic Eliashberg equations on the real-axis
-  !
-  ! input
-  !
-  ! itemp  - temperature point
-  ! iter   - iteration number
-  ! conv   - convergence flag 
-  !
-  ! output 
-  !
-  ! conv   - convergence flag 
-  !  
   USE kinds,         ONLY : DP
   USE io_epw,        ONLY : iufilker, iufilgap
   USE io_global,     ONLY : stdout
@@ -129,14 +112,22 @@
   ! 
   IMPLICIT NONE
   !
-  INTEGER :: iw, iwp, itemp, iter
+  INTEGER, INTENT (in) :: itemp
+  !! Counter on temperature
+  INTEGER, INTENT(in) :: iter
+  !! Counter on iteration steps
+  LOGICAL, INTENT(inout) :: conv
+  !! True if the calculation is converged  
+  ! 
+  ! Local variables
+  INTEGER :: iw, iwp
   REAL(DP) :: dstep, a, b, c, d, absdelta, reldelta, errdelta, temp
   REAL(DP), ALLOCATABLE :: wesqrt(:), desqrt(:)
   REAL(DP) :: eps=1.0d-6
   COMPLEX(DP) :: kernelp, kernelm, esqrt
   COMPLEX(DP), ALLOCATABLE, SAVE :: Deltaold(:)
   REAL(DP), EXTERNAL :: wgauss
-  LOGICAL :: conv, lgap
+  LOGICAL :: lgap
   CHARACTER(len=256) :: name1, name2
   !
   IF ( .not. ALLOCATED(wesqrt) ) ALLOCATE( wesqrt(nsw) )

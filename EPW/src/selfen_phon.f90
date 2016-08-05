@@ -30,7 +30,6 @@
   USE io_global,  ONLY : stdout
   USE io_epw,     ONLY : iunepmatf
   use phcom,      ONLY : nmodes
-  USE control_lr, ONLY : lgamma
   use epwcom,     ONLY : nbndsub, lrepmatf, fsthick, &
                          eptemp, ngaussw, degaussw, &
                          etf_mem, nsmear, delta_smear, eps_acustic, &
@@ -128,13 +127,8 @@
      !
      DO ik = 1, nkf
         !
-        IF (lgamma) THEN
-           ikk = ik
-           ikq = ik
-        ELSE
-           ikk = 2 * ik - 1
-           ikq = ikk + 1
-        ENDIF
+        ikk = 2 * ik - 1
+        ikq = ikk + 1
         ! 
         coskkq = 0.d0
         DO ibnd = 1, ibndmax-ibndmin+1
@@ -331,7 +325,6 @@ END SUBROUTINE selfen_phon_q
   USE io_global,  ONLY : stdout
   USE io_epw,     ONLY : iunepmatf, lambda_phself, linewidth_phself
   use phcom,      ONLY : nmodes
-  USE control_lr, ONLY : lgamma
   use epwcom,     ONLY : nbndsub, lrepmatf, fsthick, &
                          eptemp, ngaussw, degaussw, &
                          etf_mem, nsmear, delta_smear, eps_acustic, &
@@ -452,13 +445,8 @@ END SUBROUTINE selfen_phon_q
     !
     DO iq = 1, nqf
        !
-       IF (lgamma) THEN
-         ikq = iq
-         ikk = iq
-       ELSE
-         ikq = 2 * iq
-         ikk = ikq - 1
-       ENDIF
+       ikq = 2 * iq
+       ikk = ikq - 1
        ! 
        coskkq = 0.d0
        DO ibnd = 1, ibndmax-ibndmin+1

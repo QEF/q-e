@@ -86,7 +86,7 @@
   ! wmin_specfun : min frequency in electron spectral function due to e-p interaction 
   ! wmax_specfun : max frequency in electron spectral function due to e-p `interaction
   !
-  logical :: phinterp , elinterp, tphases, epstrict, tshuffle2, elecselfen, phonselfen, &
+  logical :: phinterp , elinterp, tphases, epstrict, elecselfen, phonselfen, &
        epbread, epbwrite, epwread, epwwrite, specfun, wannierize, spinors, parallel_k,      &
        parallel_q, a2f, etf_mem, write_wfn, kmaps, nest_fn, rand_q, rand_k, &
        mp_mesh_q, mp_mesh_k, indabs, eig_read, wepexst, epexst, vme, twophoton, & 
@@ -97,7 +97,6 @@
   ! elinterp: if .TRUE. perform electron interpolation of e-p matrix
   ! tphases:  if .TRUE. set absolute reference for unitary gauge of the eigenvectors
   ! epstrict: if .TRUE. use strict selection rule in phonon linewidth calculation
-  ! tshuffle2: shuffle mode for electrons + load all phonons at once
   ! elecselfen: if .TRUE. calculate electron selfenergy due to e-p interaction
   ! phonselfen: if .TRUE. calculate phonon selfenergy due to e-p interaction
   ! epbread: if .TRUE. read epmatq from files .epb
@@ -146,7 +145,7 @@
   ! system_2d : if .true. the system is 2 dimensional (vaccum is in z-direction)
   ! delta_approx : if .true. the double delta approximation is used for the phonon self energy
   CHARACTER(len=100) :: dvscf_dir ='./' ! directory for .dvscf and .dyn files (wannier interpolation)
-  CHARACTER(len=80) :: filelph, fileig ! output file for the electron-phonon coefficients
+  CHARACTER(len=80) :: fileig ! output file for the electron-phonon coefficients
   CHARACTER(len=256), dimension(200) :: proj, wdata ! projections and any extra info for W90 
   CHARACTER(LEN=75) :: title ! ...  title of the simulation  
   REAL (kind=DP) :: eptemp 
@@ -163,8 +162,7 @@ USE parameters, ONLY :npk
 !
 SAVE
 !
-INTEGER :: kmap(npk)  ! map of k+q grid into k grid (only when tshuffle=.true.)
-LOGICAL :: tshuffle   ! if .TRUE. refold k+q grid into k grid
+INTEGER :: kmap(npk)  ! map of k+q grid into k grid 
 REAL(DP) :: xk_cryst(3,npk) ! List of all kpoints in crystal coordinates
 
 END MODULE klist_epw

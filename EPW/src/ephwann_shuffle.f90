@@ -30,7 +30,6 @@
   USE start_k,       ONLY : nk1, nk2, nk3
   USE ions_base,     ONLY : amass, ityp
   USE phcom,         ONLY : nq1, nq2, nq3, nmodes, w2
-  USE control_lr,    ONLY : lgamma
   USE epwcom,        ONLY : nbndsub, lrepmatf, fsthick, epwread,          &
                             epwwrite, ngaussw, degaussw, lpolar,          &
                             nbndskip, parallel_k, parallel_q, etf_mem,    &
@@ -167,20 +166,20 @@
      ! Hamiltonian
      !
      CALL hambloch2wan &
-          ( nbnd, nbndsub, nks, nkstot, lgamma, et, xk, cu, lwin, nrr_k, irvec, wslen, chw )
+          ( nbnd, nbndsub, nks, nkstot, et, xk, cu, lwin, nrr_k, irvec, wslen, chw )
      !
      ! Kohn-Sham eigenvalues
      !
      IF (eig_read) THEN
        WRITE (6,'(5x,a)') "Interpolating MB and KS eigenvalues"
        CALL hambloch2wan &
-            ( nbnd, nbndsub, nks, nkstot, lgamma, et_ks, xk, cu, lwin, nrr_k, irvec, wslen, chw_ks )
+            ( nbnd, nbndsub, nks, nkstot, et_ks, xk, cu, lwin, nrr_k, irvec, wslen, chw_ks )
      ENDIF
      !
      ! Dipole
      !
     ! CALL dmebloch2wan &
-    !      ( nbnd, nbndsub, nks, nkstot, nkstot, lgamma, dmec, xk, cu, nrr_k, irvec, wslen )
+    !      ( nbnd, nbndsub, nks, nkstot, nkstot, dmec, xk, cu, nrr_k, irvec, wslen )
      CALL dmebloch2wan &
           ( nbnd, nbndsub, nks, nkstot, dmec, xk, cu, nrr_k, irvec, wslen )
      !
@@ -192,7 +191,7 @@
      ! Transform of position matrix elements
      ! PRB 74 195118  (2006)
      IF (vme) CALL vmebloch2wan &
-         ( nbnd, nbndsub, nks, nks, nkstot, lgamma, xk, cu, nrr_k, irvec, wslen )
+         ( nbnd, nbndsub, nks, nks, nkstot, xk, cu, nrr_k, irvec, wslen )
      !
      ! Electron-Phonon vertex (Bloch el and Bloch ph -> Wannier el and Bloch ph)
      !
@@ -208,11 +207,11 @@
          !
          IF (etf_mem) THEN 
            CALL ephbloch2wane &
-             ( nbnd, nbndsub, nks, nkstot, lgamma, xk, cu, cuq, lwin, lwinq, &
+             ( nbnd, nbndsub, nks, nkstot, xk, cu, cuq, lwin, lwinq, &
              epmatq (:,:,:,imode,iq), nrr_k, irvec, wslen, epmatwe(:,:,:,imode,iq) )
          ELSE
            CALL ephbloch2wane &
-             ( nbnd, nbndsub, nks, nkstot, lgamma, xk, cu, cuq, lwin, lwinq, &
+             ( nbnd, nbndsub, nks, nkstot, xk, cu, cuq, lwin, lwinq, &
              epmatq (:,:,:,imode,iq), nrr_k, irvec, wslen, epmatwe_mem(:,:,:,imode) )
            !
          ENDIF

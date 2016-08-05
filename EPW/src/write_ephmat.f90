@@ -23,7 +23,6 @@
   USE io_epw,     ONLY : iunepmatf, iufilfreq, iufilegnv, iufileph
   USE io_files,   ONLY : prefix, tmp_dir
   USE phcom,      ONLY : nmodes
-  USE control_lr, ONLY : lgamma
   USE epwcom,     ONLY : nbndsub, lrepmatf, fsthick, ngaussw, degaussw, & 
                          etf_mem, nkf1, nkf2, nkf3, eps_acustic, &
                          efermi_read, fermi_energy
@@ -182,13 +181,8 @@
   !
   DO ik = 1, nkf
      !  
-     IF (lgamma) THEN
-        ikk = ik
-        ikq = ik
-     ELSE
-        ikk = 2 * ik - 1
-        ikq = ikk + 1
-     ENDIF
+     ikk = 2 * ik - 1
+     ikq = ikk + 1
      !
      ! go only over irreducible k-points
      !

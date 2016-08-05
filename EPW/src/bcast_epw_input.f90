@@ -29,7 +29,7 @@
                             broyden_beta, band_plot, a2f, lacon, &
                             kmaps, kerwrite, kerread, indabs, imag_read, &
                             gap_edge, fsthick, filukq, filukk, filqf, filkf, &
-                            filelph, fileig, fila2f, fermi_energy, &
+                            fileig, fila2f, fermi_energy, &
                             etf_mem, epwwrite, epwread, eptemp, epstrict, &
                             eps_acustic, ephwrite, epbread, nsiter, nqstep, &
                             nqsmear, nqf3, nqf2, nqf1, nkf3, nkf2, nkf1, &
@@ -42,7 +42,7 @@
                             nw_specfun, nw, nswi, nswfc, nswc, nstemp, nsmear, &
                             wsfc, wscut, write_wfn, wmin_specfun, wmin, &
                             wmax_specfun, wmax, wepexst, wannierize, &
-                            vme, twophoton, tshuffle2, tshuffle,  &
+                            vme, twophoton,  &
                             tempsmin, tempsmax, temps, delta_approx, title
 !  USE epwcom,        ONLY : fildvscf0, tphases
   USE elph2,         ONLY : elph 
@@ -66,8 +66,6 @@
   CALL mp_bcast (elph, ionode_id, world_comm)
   CALL mp_bcast (lnscf, ionode_id, world_comm)
   CALL mp_bcast (ldisp, ionode_id, world_comm)
-  CALL mp_bcast (tshuffle, ionode_id, world_comm)  ! 
-  CALL mp_bcast (tshuffle2, ionode_id, world_comm) !
   CALL mp_bcast (elecselfen, ionode_id, world_comm)!
   CALL mp_bcast (phonselfen, ionode_id, world_comm)!
   CALL mp_bcast (ephwrite, ionode_id, world_comm)! RM
@@ -183,7 +181,6 @@
   ! characters
   !
   CALL mp_bcast (title, ionode_id, world_comm)
-  CALL mp_bcast (filelph, ionode_id, world_comm)
   CALL mp_bcast (fildvscf, ionode_id, world_comm)
   CALL mp_bcast (fildrho, ionode_id, world_comm)
   CALL mp_bcast (tmp_dir, ionode_id, world_comm)
