@@ -9,7 +9,42 @@
 ! by F. Affinito and C. Cavazzoni, Cineca
 !  & S. de Gironcoli, SISSA
 
-program test
+program test 
+  !! This mini-app provides a tool for testing and benchmarking the FFT drivers
+  !! contained in the FFTXlib.
+  !!
+  !! The mini-app mimics a charge-density transformation from complex-to-real
+  !! space and back.
+  !!
+  !! To compile the test program, once you have properly edit the make.sys file 
+  !! included in the FFTXlib and type:
+  !!
+  !!      make TEST
+  !!
+  !! Then you can run your FFT tests using command like:
+  !!
+  !!      mpirun -np 4 ./fft_test.x -ecutwfc 80 -alat 20  -nbnd 128 -ntg 4
+  !!
+  !! or, in case of serial build
+  !!
+  !!      ./fft_test.x -ecutwfc 80 -alat 20  -nbnd 128 -ntg 4
+  !!
+  !! Command line arguments:
+  !! 
+  !!-ecutwfc  Plane wave energy cut off
+  !!
+  !!-alat     Lattice parameter
+  !!
+  !!-nbnd     Number of bands (fft cycles)
+  !!
+  !!-ntg      Number of task groups
+  !!
+  !! Timings of different stages of execution are provided at the end of the
+  !! run.
+  !! In the present version, a preliminar implementation with non-blocking MPI
+  !! calls as been implemented. This version requires the precompilation flags
+  !! -D__NON_BLOCKING_SCATTER and -D__DOUBLE_BUFFER
+  !!  
   USE fft_types, ONLY: fft_dlay_descriptor, fft_dlay_deallocate
   USE task_groups, ONLY: task_groups_descriptor, task_groups_deallocate
   USE stick_set, ONLY: pstickset
@@ -24,19 +59,31 @@ program test
   TYPE(fft_dlay_descriptor) :: dfftp, dffts, dfft3d
   TYPE(task_groups_descriptor) :: dtgs
   INTEGER :: nx = 128
+   !! grid points along x (modified after)
   INTEGER :: ny = 128
+   !! grid points along y (modified after)
   INTEGER :: nz = 256
+   !! grid points along z (modified after)
   !
-  INTEGER :: mype, npes, comm, ntgs, root, nbnd
+  INTEGER :: mype, npes, comm, root 
+   !! MPI handles
+  INTEGER :: ntgs
+   !! number of taskgroups
+  INTEGER :: nbnds
+   !! number of bands
   LOGICAL :: iope
+   !! I/O process
   INTEGER :: ierr, i, ncount, ib, ireq, nreq, ipsi, iloop
   INTEGER :: stdout
   INTEGER :: ngw_ , ngm_ , ngs_
   REAL*8  :: gcutm, gkcut, gcutms
   REAL*8  :: ecutm, ecutw, ecutms
   REAL*8  :: ecutrho
+  !! cut-off for density 
   REAL*8  :: ecutwfc
+  !! cut-off for the wave-function
   REAL*8  :: tpiba, alat, alat_in
+  !! lattice parameters
   REAL*8  :: time(100)
   REAL*8  :: my_time(100)
   REAL*8  :: time_min(100)
@@ -48,11 +95,14 @@ program test
   REAL*8  :: tmp1(10000),tmp2(10000)
   !
   LOGICAL :: gamma_only
+   !! if calculations require only gamma point
   REAL*8  :: at(3,3), bg(3,3)
   REAL(DP), PARAMETER :: pi     = 3.14159265358979323846_DP
   !
   COMPLEX(DP), ALLOCATABLE :: psis(:,:)
+   !! fake wave-function to be (anti-)transformed 
   COMPLEX(DP), ALLOCATABLE :: aux(:)
+   !! fake argument returned by the FFT 
   !
   integer :: nargs
   CHARACTER(LEN=80) :: arg
