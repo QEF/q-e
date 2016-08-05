@@ -7,7 +7,7 @@
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
   !                                                                            
   !-----------------------------------------------------------------------
-  SUBROUTINE elphon_shuffle ( iq_irr, nqc_irr, iq, gmapsym, eigv, isym, invs0, xq0, timerev )
+  SUBROUTINE elphon_shuffle ( iq_irr, nqc_irr, iq, gmapsym, eigv, isym, xq0, timerev )
   !-----------------------------------------------------------------------
   !!
   !! Electron-phonon calculation from data saved in fildvscf
@@ -57,10 +57,9 @@
   integer :: iks, nkl, nkr
 #endif
   !
-  integer :: gmapsym ( ngm, 48 ), isym, invs0 (48)
+  integer :: gmapsym ( ngm, 48 ), isym
   ! the correspondence G-->S(G)
   ! the symmetry which generates the current q in the star
-  ! the index of the inverse operations
   complex(kind=DP) :: eigv (ngm, 48)
   ! e^{ iGv} for 1...nsym ( v the fractional translation)
   real(kind=DP) :: xq0(3)
@@ -132,7 +131,7 @@
         dvscfins => dvscfin
      ENDIF
      !
-     CALL elphel2_shuffle (npert(irr), imode0, dvscfins, gmapsym, eigv, isym, invs0, xq0, timerev)
+     CALL elphel2_shuffle (npert(irr), imode0, dvscfins, gmapsym, eigv, isym, xq0, timerev)
      !
      imode0 = imode0 + npert (irr)
      IF (doublegrid) DEALLOCATE (dvscfins)

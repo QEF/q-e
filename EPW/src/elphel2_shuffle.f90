@@ -8,56 +8,56 @@
   !                                                                            
   ! 
   !---------------------------------------------------------------------
-  SUBROUTINE elphel2_shuffle (npe, imode0, dvscfins, gmapsym, eigv, isym, invs, xq0, timerev)
+  SUBROUTINE elphel2_shuffle (npe, imode0, dvscfins, gmapsym, eigv, isym, xq0, timerev)
   !---------------------------------------------------------------------
-  !
-  !      Calculation of the electron-phonon matrix elements el_ph_mat
-  !      <\psi(k+q)|dV_{SCF}/du^q_{i a}|\psi(k)>
-  !
-  !      Written by Feliciano Giustino based on the routine elphel. 
-  !      Main difference w.r.t. to original routine is gauge fixing, 
-  !      shuffle (umklapp) mode and all-q implementation.
-  !
-  !      Shuffle mode implemented on may 7 2006
-  !
-  !      Nota Bene: this subroutine is intended only for one proc per pool, 
-  !      i.e. with no G-vector parallelization (some work on the igkq is 
-  !      required for that in the g-mapping)
-  !
-  !      In order to allow a pool reading the wfc file of another
-  !      pool, I had to modify the bound npwx in PW/n_plane_waves.f90
-  !      which is now the max across all pools. In this way lrwfc is
-  !      the same for all pools.
-  !
-  !      RM - Nov/Dec 2014
-  !      Imported the noncolinear case implemented by xlzhang
-  !
-  !      SP - Nov 2015
-  !      We want g(k,Sq) = < k+S(q)(r) | V_S(q)(r) | k(r) >
-  !                      = < k+S(q)(r) | V_q({S|v}^-1 r) | k(r) > 
-  !                      = < k+S(q)({S|v}r) | V_q (r) | k({S|v}r) > 
-  !
-  !      It is important to note that the KB projectors that are applied to the V need
-  !      to be computed at (r) and not ({S|v}r). Therefore, for the KB proj (computed in 
-  !      init_us_2, we need to provide the < Sk+q (r)| and |Sk (r)>.
-  !      See Eq. 11.40 and 11.41 of the R. Martin Electronic Structure book.
-  ! 
-  !      Note that in QE Sq is defined as S^-1(q)                
-  ! 
-  !      In case of time-reversal
-  !      ------------------------
-  !       g(k,-Sq) = < k-S(q)({S|v}r) | V^loc_-q (r) + (V^nloc_q)* | k({S|v}r) > 
-  !       where V^loc_{-q} is obtained with setlocq and V^nloc_q = CONGJ(u_pattern)*dvscfins*u_pattern.
-  !       We have to do this splitting because we do not have V^nloc_-q and
-  !       V^loc has to be computed at -q to be mappable with the vkb of the wavefunctions
-  !       computed in init_us_2.
-  ! 
+  !!
+  !!      Calculation of the electron-phonon matrix elements el_ph_mat
+  !!      <\psi(k+q)|dV_{SCF}/du^q_{i a}|\psi(k)>
+  !!
+  !!      Written by Feliciano Giustino based on the routine elphel. 
+  !!      Main difference w.r.t. to original routine is gauge fixing, 
+  !!      shuffle (umklapp) mode and all-q implementation.
+  !!
+  !!      Shuffle mode implemented on may 7 2006
+  !!
+  !!      Nota Bene: this subroutine is intended only for one proc per pool, 
+  !!      i.e. with no G-vector parallelization (some work on the igkq is 
+  !!      required for that in the g-mapping)
+  !!
+  !!      In order to allow a pool reading the wfc file of another
+  !!      pool, I had to modify the bound npwx in PW/n_plane_waves.f90
+  !!      which is now the max across all pools. In this way lrwfc is
+  !!      the same for all pools.
+  !!
+  !!      RM - Nov/Dec 2014
+  !!      Imported the noncolinear case implemented by xlzhang
+  !!
+  !!      SP - Nov 2015
+  !!      We want g(k,Sq) = < k+S(q)(r) | V_S(q)(r) | k(r) >
+  !!                      = < k+S(q)(r) | V_q({S|v}^-1 r) | k(r) > 
+  !!                      = < k+S(q)({S|v}r) | V_q (r) | k({S|v}r) > 
+  !!
+  !!      It is important to note that the KB projectors that are applied to the V need
+  !!      to be computed at (r) and not ({S|v}r). Therefore, for the KB proj (computed in 
+  !!      init_us_2, we need to provide the < Sk+q (r)| and |Sk (r)>.
+  !!      See Eq. 11.40 and 11.41 of the R. Martin Electronic Structure book.
+  !! 
+  !!      Note that in QE Sq is defined as S^-1(q)                
+  !! 
+  !!      In case of time-reversal
+  !!      ------------------------
+  !!       g(k,-Sq) = < k-S(q)({S|v}r) | V^loc_-q (r) + (V^nloc_q)* | k({S|v}r) > 
+  !!       where V^loc_{-q} is obtained with setlocq and V^nloc_q = CONGJ(u_pattern)*dvscfins*u_pattern.
+  !!       We have to do this splitting because we do not have V^nloc_-q and
+  !!       V^loc has to be computed at -q to be mappable with the vkb of the wavefunctions
+  !!       computed in init_us_2.
+  !! 
   !---------------------------------------------------------------------
   !
 #ifdef __PARA
   USE mp_global,     ONLY : my_pool_id, nproc_pool,    & 
-                            intra_image_comm, intra_pool_comm, &
-                            me_pool, root_pool, inter_pool_comm
+                            intra_pool_comm, &
+                            inter_pool_comm
   USE mp,            ONLY : mp_barrier, mp_bcast, mp_put,mp_sum
 #endif
   USE kinds,         ONLY : DP
@@ -72,7 +72,7 @@
   USE symm_base,     ONLY : s
   USE modes,         ONLY : u  
   USE phcom,         ONLY : iuwfc
-  USE qpoint,        ONLY : xq, npwq, ikqs, ikks
+  USE qpoint,        ONLY : xq, npwq
   USE eqv,           ONLY : dvpsi, evq
   USE units_ph,      ONLY : lrwfc
   USE phus,          ONLY : alphap
@@ -84,58 +84,50 @@
   USE fft_base,      ONLY : dffts
   USE constants_epw, ONLY : czero, cone, ci 
   USE control_flags, ONLY : iverbosity
-  USE klist,         ONLY : nkstot, ngk, igk_k
+  USE klist,         ONLY : nkstot
   USE noncollin_module,     ONLY : noncolin, npol, nspin_mag
   ! 
   implicit none
   !
-  integer :: npe, imode0
-  !  pert for this irrep
-  !  mode number
-  !  unit for e-ph matrix elements
-  complex(kind=DP) :: dvscfins (dffts%nnr, nspin_mag, npe)
-  !  delta scf potential
-
-  logical :: exst!, addnlcc
+  INTEGER, INTENT (in) :: npe
+  !! Pert for this irrep
+  INTEGER, INTENT (in) :: imode0
+  !! Mode number
+  INTEGER, INTENT (in) :: gmapsym ( ngm, 48 )
+  !! the map G->S(G)  
+  INTEGER, INTENT (in) :: isym
+  !! The symmetry which generates the current q in the star  
+  REAL(kind=DP), INTENT (in) :: xq0(3)
+  !! First q in the star (Cartesian)
+  COMPLEX(kind=DP), INTENT (in) :: dvscfins (dffts%nnr, nspin_mag, npe)
+  !! Delta scf potential
+  COMPLEX(kind=DP), INTENT (in) :: eigv (ngm, 48)
+  !! $e^{iGv}$ for 1...nsym ( v the fractional translation)
+  LOGICAL, INTENT (in) :: timerev
+  !!  true if we are using time reversal
   !
-  ! work variables
+  ! Local variables
+  logical :: exst!, addnlcc
   !
   integer :: ik, ipert, mode, ibnd, jbnd, ig, nkq, ipool, &
        ik0, igkq_tmp (npwx), imap, &
        ipooltmp, nkq_abs, ipol, npw
-  complex(kind=DP), ALLOCATABLE :: aux1 (:,:), elphmat (:,:,:), eptmp (:,:), aux2(:,:)
-!DBSP - NAG complains ...
-  COMPLEX(DP),EXTERNAL :: ZDOTC
-  real(kind=DP) :: xktmp(3), sxk(3)
-!DBSP
-!  REAL(kind=DP) :: b,c
-!END
-
-  !
-  ! variables for folding of k+q grid
-  !
-  REAL(kind=DP) :: g0vec_all_r(3,125) 
- 
-  !   G-vectors needed to fold the k+q grid into the k grid, cartesian coord.
-  INTEGER :: ng0vec, ngxx, lower_bnd, upper_bnd
+  INTEGER :: ng0vec, ngxx, lower_bnd, upper_bnd, nkk, nkk_abs
   !   number of inequivalent such translations
   !   bound for the allocation of the array gmap
   !
   ! variables for rotating the wavefunctions (in order to USE q in the irr wedge)
-  !
-  INTEGER :: gmapsym ( ngm, 48 ), isym, invs(48)
-  ! the map G->S(G)
-  ! the symmetry which generates the current q in the star
-  ! index of the inverse operation
-  complex(kind=DP) :: eigv (ngm, 48)
-  real(kind=DP) :: xq0(3)
-  real(kind=DP) :: zero_vect(3) 
-  integer :: nkk, nkk_abs
-  !  the fractional traslation
-  !  work variable
-  !  the first q in the star (cartesian)
-  logical :: timerev
-  !  true if we are using time reversal
+  real(kind=DP) :: xktmp(3), sxk(3)
+  REAL(kind=DP) :: g0vec_all_r(3,125)
+  !! Variables for folding of k+q grid
+  REAL(kind=DP) :: zero_vect(3)
+  !!  
+  COMPLEX(kind=DP), ALLOCATABLE :: aux1 (:,:), elphmat (:,:,:), eptmp (:,:), aux2(:,:)
+!DBSP - NAG complains ...
+  COMPLEX(DP),EXTERNAL :: ZDOTC
+!DBSP
+!  REAL(kind=DP) :: b,c
+!END
   !
   IF ( .not. ALLOCATED (elphmat) ) ALLOCATE ( elphmat( nbnd, nbnd, npe) ) 
   IF ( .not. ALLOCATED (eptmp) )   ALLOCATE ( eptmp ( nbnd, nbnd) ) 

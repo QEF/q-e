@@ -9,9 +9,9 @@
   !-----------------------------------------------------------------------
   SUBROUTINE dos_quasiparticle( itemp )
   !-----------------------------------------------------------------------
-  !
-  ! computes the quasiparticle density of states in the superconducting state
-  !
+  !!
+  !! Computes the quasiparticle density of states in the superconducting state
+  !!
   USE kinds,         ONLY : DP
   USE io_epw,        ONLY : iuqdos
   USE io_files,      ONLY : prefix
@@ -19,20 +19,19 @@
   USE eliashbergcom, ONLY : nsw, estemp, dwsph, ws, dws, Delta, ADelta, & 
                             wkfs, w0g, nkfs, nbndfs, ef0, ekfs
   USE constants_epw, ONLY : kelvin2eV, ci
-#ifdef __PARA
-  USE io_global, ONLY : ionode_id
-  USE mp_global, ONLY : inter_pool_comm, my_pool_id, npool
-  USE mp,        ONLY : mp_bcast, mp_barrier, mp_sum
-  USE mp_world,  ONLY : mpime
-#endif
   !
   IMPLICIT NONE
   !
-  INTEGER :: iw, ik, ibnd, itemp
-  REAL(DP) :: degaussw0, temp, weight
-  REAL(DP), ALLOCATABLE :: dos_qp(:)
-  COMPLEX(DP) :: omega
+  INTEGER, INTENT (in) :: itemp
+  !! Counter on temperature
+  INTEGER :: iw, ik, ibnd
+  REAL(kind=DP) :: degaussw0, temp, weight
+  REAL(kind=DP), ALLOCATABLE :: dos_qp(:)
+  COMPLEX(kind=DP) :: omega
   CHARACTER (len=256) :: fildos
+  !
+  ! SP: This needs to be initialized
+  degaussw0 = 0.0_DP
   !
   IF ( lreal ) THEN 
      degaussw0 = 1.d0 * dws(1)
@@ -83,9 +82,10 @@
   !-----------------------------------------------------------------------
   SUBROUTINE free_energy( itemp )
   !-----------------------------------------------------------------------
-  !
-  ! computes the free energy difference between the superconducting and normal
-  ! states
+  !!
+  !! Computes the free energy difference between the superconducting and normal
+  !! states
+  !!
   !
   USE kinds,         ONLY : DP
   USE io_epw,        ONLY : iufe
@@ -95,16 +95,14 @@
                             Deltai, Znormi, NZnormi, &
                             wkfs, w0g, nkfs, nbndfs, ef0, ekfs
   USE constants_epw, ONLY : pi, kelvin2eV
-#ifdef __PARA
-  USE io_global, ONLY : ionode_id
-  USE mp_global, ONLY : inter_pool_comm, my_pool_id, npool
-  USE mp,        ONLY : mp_bcast, mp_barrier, mp_sum
-  USE mp_world,  ONLY : mpime
-#endif
   !
   IMPLICIT NONE
   !
-  INTEGER :: iw, ik, ibnd, itemp
+  INTEGER, INTENT (in) :: itemp
+  !! Counter on temperature
+  ! 
+  ! Local variables
+  INTEGER :: iw, ik, ibnd 
   REAL(DP) :: dFE, omega, temp, weight
   CHARACTER (len=256) :: filfe
   !

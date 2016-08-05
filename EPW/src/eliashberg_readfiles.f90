@@ -9,9 +9,9 @@
   !-----------------------------------------------------------------------
   SUBROUTINE read_a2f
   !-----------------------------------------------------------------------
-  !
-  ! read the eliashberg spectral function from fila2f
-  !
+  !!
+  !! Read the eliashberg spectral function from fila2f
+  !!
   USE io_global,     ONLY : stdout
   USE epwcom,        ONLY : nqstep, fila2f
   USE eliashbergcom, ONLY : wsphmax, wsph, a2f_iso, memlt_pool
@@ -26,7 +26,10 @@
   ! 
   IMPLICIT NONE
   !
-  INTEGER :: iwph, ios
+  INTEGER :: iwph
+  !! Counter for the number of freq
+  INTEGER :: ios
+  !! Status when opening a2F file
   !
   IF ( .not. ALLOCATED(a2f_iso) ) ALLOCATE(a2f_iso(nqstep))
   IF ( .not. ALLOCATED(wsph) ) ALLOCATE(wsph(nqstep)) 
@@ -560,9 +563,9 @@
   !-----------------------------------------------------------------------
   SUBROUTINE read_ephmat
   !-----------------------------------------------------------------------
-  !
-  ! read the electron-phonon matrix elements 
-  !
+  !!
+  !! Read the electron-phonon matrix elements 
+  !!
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
   USE io_epw,        ONLY : iufileph
@@ -574,21 +577,16 @@
   USE constants_epw, ONLY : ryd2ev
   USE mp_global,     ONLY : npool
 #ifdef __PARA
-  USE io_global,     ONLY : ionode_id
   USE mp,            ONLY : mp_barrier, mp_bcast, mp_sum
-  USE mp_global,     ONLY : me_pool, inter_pool_comm
-! USE mp_global,     ONLY : my_pool_id
-  USE mp_world,      ONLY : mpime
+  USE mp_global,     ONLY : inter_pool_comm
 #endif
   !  
   IMPLICIT NONE
   !
   INTEGER :: ik, iq, ibnd, jbnd, imode, nnk, nnq(nkfs), ipool, tmp_pool_id, ios, & 
              lower_bnd, upper_bnd, nkpool(npool), nmin, nmax, nks, imelt
-!  INTEGER :: iufil  
   REAL(DP) :: gmat
   CHARACTER (len=256) :: filephmat
-!  CHARACTER (len=256) :: tempfile
   CHARACTER (len=3) :: filelab
   !
   CALL fkbounds( nkfs, lower_bnd, upper_bnd )
@@ -629,11 +627,6 @@
   CALL mp_barrier(inter_pool_comm)
 #endif
   !
-  !CALL set_ndnmbr(0,my_pool_id+1,1,npool,filelab)
-  !tempfile = trim(tmp_dir) // trim(prefix) // '.temp' // filelab
-  !OPEN(iufil, file = tempfile, form = 'formatted')
-  !WRITE(iufil,'(2i7)') lower_bnd, upper_bnd
-  !
   nmin = npool
   nmax = npool
   DO ipool = npool, 1, -1
@@ -643,7 +636,6 @@
      IF ( upper_bnd .le. nkpool(ipool) ) THEN
         nmax = ipool
      ENDIF
-     !WRITE(iufil,'(4i7)') ipool, nkpool(ipool), nmin, nmax
   ENDDO
   !
   nnk = 0

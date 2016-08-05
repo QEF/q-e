@@ -615,7 +615,7 @@
         ! are equal to 5+ digits)
         ! For any volunteers, please write to giustino@civet.berkeley.edu
         !
-        CALL elphon_shuffle ( iq_irr, nqc_irr, nqc, gmapsym, eigv, isym, invs, xq0, .false. )
+        CALL elphon_shuffle ( iq_irr, nqc_irr, nqc, gmapsym, eigv, isym, xq0, .false. )
         !
         !  bring epmatq in the mode representation of iq_first, 
         !  and then in the cartesian representation of iq

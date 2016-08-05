@@ -378,7 +378,11 @@
   IF ( .not. ALLOCATED(lambda_k_bin) ) ALLOCATE ( lambda_k_bin(nbink) )
   lambda_k_bin(:) = 0.d0
   !
-  IF ( iverbosity .eq. 2 ) THEN
+  !SP : Should be initialized
+  nbin = 0
+  dbin = 0.0_DP
+  !
+  IF ( iverbosity == 2 ) THEN
      nbin = int( 1.25d0 * maxval(lambda_max(:)) / 0.005d0 )
      dbin = 1.25d0 * maxval(lambda_max(:)) / dble(nbin)
      IF ( .not. ALLOCATED(lambda_pairs) ) ALLOCATE ( lambda_pairs(nbin) )
@@ -400,7 +404,7 @@
                     weight = wqf(iq) * w0g(jbnd,ixkqf(ik,iq0)) / dosef
                     CALL lambdar_aniso_ver1( ik, iq, ibnd, jbnd, 0.d0, lambda_eph )
                     lambda_k(ik,ibnd) = lambda_k(ik,ibnd) +  weight * lambda_eph
-                    IF ( iverbosity .eq. 2 ) THEN
+                    IF ( iverbosity == 2 ) THEN
                        DO ibin = 1, nbin
                           sigma = 1.d0 * dbin
                           weight = w0gauss( ( lambda_eph - dble(ibin) * dbin ) / sigma, 0 ) / sigma
@@ -455,7 +459,7 @@
   CLOSE(iufillambda)
   !
   ! SP: Produced if user really wants it 
-  IF ( iverbosity .eq. 2 ) THEN  
+  IF ( iverbosity == 2 ) THEN  
     OPEN( unit = iufillambda, file = TRIM(prefix)//".lambda_pairs", form = 'formatted')
     DO ibin = 1, nbin
       WRITE(iufillambda,'(2f21.7)') dbin*dble(ibin), lambda_pairs(ibin)/maxval(lambda_pairs(:))
@@ -541,16 +545,12 @@
   USE constants_epw, ONLY : kelvin2eV
 #ifdef __PARA
   USE io_global, ONLY : ionode_id
-  USE mp_global, ONLY : inter_pool_comm, my_pool_id
+  USE mp_global, ONLY : inter_pool_comm
   USE mp_world,  ONLY : mpime
   USE mp,        ONLY : mp_bcast, mp_barrier, mp_sum
 #endif
   !  
   IMPLICIT NONE
-#ifndef __PARA
-  INTEGER, PARAMETER :: npool = 1, my_pool_id = 0 ! this is only a quick fix since the subroutine was written
-                                                  ! for parallel execution - FG June 2014
-#endif
   !  
   INTEGER :: iwph
   REAL(DP):: l_a2f, logavg, tc
@@ -623,7 +623,6 @@
   USE eliashbergcom, ONLY : memlt_pool
 #ifdef __PARA
   USE mp_global,     ONLY : inter_pool_comm, my_pool_id
-  USE mp_world,      ONLY : mpime
   USE mp,            ONLY : mp_bcast, mp_barrier, mp_sum
 #endif
   !
@@ -677,7 +676,6 @@
   USE eliashbergcom, ONLY : memlt_pool
 #ifdef __PARA
   USE mp_global,     ONLY : inter_pool_comm, my_pool_id
-  USE mp_world,      ONLY : mpime
   USE mp,            ONLY : mp_bcast, mp_barrier, mp_sum
 #endif
   !

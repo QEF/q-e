@@ -9,15 +9,15 @@
   !-----------------------------------------------------------------------
   SUBROUTINE eliashberg_write_iaxis( itemp )
   !-----------------------------------------------------------------------
-  !
-  ! This routine writes to files results from the solutions of the Eliashberg equations
-  ! on the imaginary-axis
-  !
+  !!
+  !! This routine writes to files results from the solutions of the Eliashberg equations
+  !! on the imaginary-axis
+  !!
   USE kinds,         ONLY : DP
   USE io_epw,        ONLY : iufilgap
   USE io_files,      ONLY : prefix
   USE control_flags, ONLY : iverbosity
-  USE epwcom,        ONLY : fsthick, laniso, liso, limag
+  USE epwcom,        ONLY : fsthick, laniso, liso
   USE eliashbergcom, ONLY : nsiw, estemp, Agap, wsi, & 
                             NAZnormi, AZnormi, ADeltai, NZnormi, Znormi, & 
                             Deltai, nkfs, nbndfs, ef0, ekfs
@@ -25,7 +25,11 @@
   ! 
   IMPLICIT NONE
   !
-  INTEGER  :: iw, itemp, ik, ibnd
+  INTEGER, INTENT (in) :: itemp
+  !! Counter for temperature
+  !
+  ! Local variables
+  INTEGER  :: iw, ik, ibnd
   REAL(DP) :: temp
   CHARACTER (len=256) :: name1, cname
   !
@@ -90,20 +94,19 @@
   ! equations on the real-axis 
   !
   USE kinds,         ONLY : DP
-  USE io_global,     ONLY : stdout
   USE io_epw,        ONLY : iufilgap
   USE io_files,      ONLY : prefix
   USE control_flags, ONLY : iverbosity
-  USE epwcom,        ONLY : nqstep, fsthick, laniso, liso, lpade, lacon
+  USE epwcom,        ONLY : nqstep, fsthick, laniso, liso
   USE eliashbergcom, ONLY : nsw, estemp, ws, gap, Agap, &
-                            Delta, Znorm, ADelta, AZnorm, ADeltai, AZnormi, &
-                            wkfs, w0g, nkfs, nbndfs, ef0, ekfs
+                            Delta, Znorm, ADelta, AZnorm, &
+                            nkfs, nbndfs, ef0, ekfs
   USE constants_epw, ONLY : kelvin2eV
   !
   IMPLICIT NONE
   !
   INTEGER :: iw, itemp, ik, ibnd
-  REAL(DP) :: weight, temp
+  REAL(DP) :: temp
   LOGICAL :: lgap
   CHARACTER(len=256) :: name1, cname
   !
@@ -192,7 +195,7 @@
   USE kinds,         ONLY : DP
   USE io_epw,        ONLY : iufilgap
   USE io_files,      ONLY : prefix
-  USE epwcom,        ONLY : fsthick, limag, lpade, lacon
+  USE epwcom,        ONLY : fsthick
   USE eliashbergcom, ONLY : estemp, Agap, nkfs, nbndfs, ef0, ekfs
   USE constants_epw, ONLY : kelvin2eV
   !
