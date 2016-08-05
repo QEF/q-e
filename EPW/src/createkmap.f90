@@ -542,13 +542,13 @@ END DO
 ! ONLY the even points are from the result of a k+q operation
 DO ik=1,nkstot       
 !
-           IF (ik == 1) THEN
-              WRITE(6,'(5x,"Progress  kmap: ")',advance='no')
-              indold = 0
-           ENDIF
-           indnew = nint(dble(ik)/dble(nkstot)*40)
-           IF (indnew.ne.indold) WRITE(6,'(a)',advance='no') '#'
-           indold = indnew
+   IF (ik == 1) THEN
+      WRITE(6,'(5x,"Progress  kmap: ")',advance='no')
+      indold = 0
+   ENDIF
+   indnew = nint(dble(ik)/dble(nkstot)*40)
+   IF (indnew.ne.indold) WRITE(6,'(a)',advance='no') '#'
+   indold = indnew
 !
    xx=xkq_all(1,ik)*nk1
    yy=xkq_all(2,ik)*nk2

@@ -152,7 +152,6 @@
   !
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
-  USE epwcom,        ONLY : lpade
   USE eliashbergcom, ONLY : nsw, ws, wsi, gap, Delta, Znorm, Deltai, Znormi
   USE constants_epw, ONLY : cone, ci
   ! 

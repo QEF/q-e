@@ -175,7 +175,11 @@
 #ifdef __PARA
   IF ( mpime .eq. ionode_id ) THEN
 #endif
-  ! 
+  !
+  ! SP: Needs to be initialized
+  nbnd_ = 0 
+  nkfs = 0
+  !
   ! read eigenvalues on the irreducible fine k-mesh
   !  
   filegnv = trim(tmp_dir) // trim(prefix) // '.egnv'
@@ -226,7 +230,7 @@
   !
   ! at each k-point keep only the bands within the Fermi shell
   !
-  IF ( .not. ALLOCATED(ekf_) ) ALLOCATE(ekf_(nbnd_,nkfs))
+  ALLOCATE(ekf_(nbnd_,nkfs))
   ekf_(:,:) = 0.d0
   !
   ! nbndfs - nr of bands within the Fermi shell

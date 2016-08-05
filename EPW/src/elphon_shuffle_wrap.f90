@@ -19,13 +19,11 @@
   !!
   !-----------------------------------------------------------------------
   !
-#ifdef __PARA
   USE mp_global,     ONLY : my_pool_id, inter_pool_comm, root_pool, &
                             intra_pool_comm,npool
   USE mp_world,      ONLY : mpime, root
   USE mp,            ONLY : mp_barrier, mp_bcast
   USE io_global,     ONLY : ionode_id
-#endif
   USE us,            ONLY : nqxq, dq, qrad
   USE gvect,         ONLY : gcutm
   USE cellmd,        ONLY : cell_factor
@@ -73,10 +71,8 @@
   !! Name of the directory
   character (len=256) :: filename
   !! Name of the file
-#ifdef __PARA
   character (len=3) :: filelab
   !! Append the number of the core that works on that file
-#endif
   character(len=6), external :: int_to_char
   !! Transfor an int to a character
   logical :: sym(48)
@@ -197,28 +193,19 @@
   !
   ! READ qpoint list from stdin
   !
-#ifdef __PARA
-  IF (mpime.eq.ionode_id) &
-#endif
-  READ(5,*) nqc_irr
-#ifdef __PARA
+  IF (mpime.eq.ionode_id) READ(5,*) nqc_irr
   CALL mp_bcast (nqc_irr, ionode_id, inter_pool_comm)
   CALL mp_bcast (nqc_irr, root_pool, intra_pool_comm)
-#endif
   allocate ( xqc_irr(3,nqc_irr), wqlist_irr(nqc_irr) )
   allocate ( xqc(3,nq1*nq2*nq3), wqlist(nq1*nq2*nq3) )
   !  
-#ifdef __PARA
   IF (mpime.eq.ionode_id) then
-#endif
     DO iq = 1, nqc_irr
       READ (5,*) xqc_irr (:,iq), wqlist_irr (iq)
     ENDDO
-#ifdef __PARA
   ENDIF
   CALL mp_bcast (xqc_irr, ionode_id, inter_pool_comm)
   CALL mp_bcast (xqc_irr, root_pool, intra_pool_comm)
-#endif
   !
   ! fix for uspp
   maxvalue = nqxq
@@ -242,35 +229,31 @@
   et_ks(:,:) = 0.d0
   et_mb(:,:) = 0.d0
   IF (eig_read) then
-#ifdef __PARA
-  IF (mpime.eq.ionode_id) then
-#endif
-   WRITE (stdout,'(5x,a,i5,a,i5,a)') "Reading external electronic eigenvalues (", &
-        nbnd, ",", nkstot,")"
-   tempfile=trim(prefix)//'.eig'
-   OPEN(1, file=tempfile, form='formatted', action='read', iostat=ios)
-   IF (ios /= 0) CALL errore ('elphon_shuffle_wrap','error opening' // tempfile, 1)
+  IF (mpime.eq.ionode_id) THEN
+    WRITE (stdout,'(5x,a,i5,a,i5,a)') "Reading external electronic eigenvalues (", &
+         nbnd, ",", nkstot,")"
+    tempfile=trim(prefix)//'.eig'
+    OPEN(1, file=tempfile, form='formatted', action='read', iostat=ios)
+    IF (ios /= 0) CALL errore ('elphon_shuffle_wrap','error opening' // tempfile, 1)
     DO ik = 1, nkstot
-       DO ibnd = 1, nbnd
-          READ (1,*) dummy1, dummy2, et_tmp (ibnd,ik)
-          IF (dummy1.ne.ibnd) CALL errore('elphon_shuffle_wrap', "Incorrect eigenvalue file", 1)
-          IF (dummy2.ne.ik)   CALL errore('elphon_shuffle_wrap', "Incorrect eigenvalue file", 1)
-       ENDDO
+      DO ibnd = 1, nbnd
+        READ (1,*) dummy1, dummy2, et_tmp (ibnd,ik)
+        IF (dummy1.ne.ibnd) CALL errore('elphon_shuffle_wrap', "Incorrect eigenvalue file", 1)
+        IF (dummy2.ne.ik)   CALL errore('elphon_shuffle_wrap', "Incorrect eigenvalue file", 1)
+      ENDDO
     ENDDO
     CLOSE(1)
     ! from eV to Ryd
     et_tmp = et_tmp / ryd2ev
-#ifdef __PARA
     ENDIF
     CALL mp_bcast (et_tmp, ionode_id, inter_pool_comm)
     CALL mp_bcast (et_tmp, root_pool, intra_pool_comm)
-#endif
     !
     CALL ckbounds(ik_start, ik_stop)
     et_ks(:,:)  = et(:,1:nks)
     et(:,1:nks) = et_tmp(:,ik_start:ik_stop)
     et_mb(:,:)  = et(:,1:nks)
- ENDIF
+  ENDIF
   !
   ! compute coarse grid dipole matrix elements.  Very fast 
   CALL compute_pmn_para
@@ -296,9 +279,8 @@
      ! 
      WRITE (stdout, '(/5x,a)')  'Using kmap and kgmap from disk'
   ENDIF
-#ifdef __PARA
+  !
   CALL mp_barrier(inter_pool_comm)
-#endif
   !
   !  allocate dynamical matrix and ep matrix for all q's
   !
@@ -427,25 +409,21 @@
       !
       CALL sgam_ph_new (at, bg, nsym, s, irt, tau, rtau, nat)
       !
-#ifdef __PARA
-     IF ( .not. allocated(sumr) ) allocate ( sumr(2,3,nat,3) )
-     IF (mpime.eq.ionode_id) then
-#endif
-        CALL readmat_shuffle2 ( iq_irr, nqc_irr, nq, iq_first, sxq, imq,isq,&
-                              invs, s, irt, rtau)
-#ifdef __PARA
-     ENDIF
-     CALL mp_barrier(inter_pool_comm)
-     CALL mp_barrier(intra_pool_comm)
-     CALL mp_bcast (zstar, ionode_id, inter_pool_comm)
-     CALL mp_bcast (zstar, root_pool, intra_pool_comm)
-     CALL mp_bcast (epsi, ionode_id, inter_pool_comm)
-     CALL mp_bcast (epsi, root_pool, intra_pool_comm)
-     CALL mp_bcast (dynq, ionode_id, inter_pool_comm)
-     CALL mp_bcast (dynq, root_pool, intra_pool_comm)
-     CALL mp_bcast (sumr, ionode_id, inter_pool_comm)
-     CALL mp_bcast (sumr, root_pool, intra_pool_comm)
-#endif
+      IF ( .not. allocated(sumr) ) allocate ( sumr(2,3,nat,3) )
+      IF (mpime.eq.ionode_id) THEN
+         CALL readmat_shuffle2 ( iq_irr, nqc_irr, nq, iq_first, sxq, imq,isq,&
+                               invs, s, irt, rtau)
+      ENDIF
+      CALL mp_barrier(inter_pool_comm)
+      CALL mp_barrier(intra_pool_comm)
+      CALL mp_bcast (zstar, ionode_id, inter_pool_comm)
+      CALL mp_bcast (zstar, root_pool, intra_pool_comm)
+      CALL mp_bcast (epsi, ionode_id, inter_pool_comm)
+      CALL mp_bcast (epsi, root_pool, intra_pool_comm)
+      CALL mp_bcast (dynq, ionode_id, inter_pool_comm)
+      CALL mp_bcast (dynq, root_pool, intra_pool_comm)
+      CALL mp_bcast (sumr, ionode_id, inter_pool_comm)
+      CALL mp_bcast (sumr, root_pool, intra_pool_comm)
       !
       ! now dynq is the cartesian dyn mat (NOT divided by the masses)
       !
@@ -697,28 +675,26 @@
     ! in .epb files (one for each pool)
     !
     tempfile = trim(tmp_dir) // trim(prefix) // '.epb' 
-#ifdef __PARA
-     CALL set_ndnmbr (0,my_pool_id+1,1,npool,filelab)
-     tempfile = trim(tmp_dir) // trim(prefix) // '.epb' // filelab
-#endif
-     !
-     IF (epbread)  THEN
-        inquire(file = tempfile, exist=exst)
-        IF (.not. exst ) CALL errore( 'elphon_shuffle_wrap', 'epb files not found ', 1)
-        OPEN  (iuepb, file = tempfile, form = 'unformatted')
-        WRITE(stdout,'(/5x,"Reading epmatq from .epb files"/)') 
-        READ  (iuepb) nqc, xqc, et, dynq, epmatq, zstar, epsi
-        CLOSE (iuepb)
-        WRITE(stdout,'(/5x,"The .epb files have been correctly read"/)')
-     ENDIF
-     !
-     IF (epbwrite) THEN
-        OPEN  (iuepb, file = tempfile, form = 'unformatted')
-        WRITE(stdout,'(/5x,"Writing epmatq on .epb files"/)') 
-        WRITE (iuepb) nqc, xqc, et, dynq, epmatq, zstar, epsi
-        CLOSE (iuepb)
-        WRITE(stdout,'(/5x,"The .epb files have been correctly written"/)')
-     ENDIF
+    CALL set_ndnmbr (0,my_pool_id+1,1,npool,filelab)
+    tempfile = trim(tmp_dir) // trim(prefix) // '.epb' // filelab
+    !
+    IF (epbread)  THEN
+       inquire(file = tempfile, exist=exst)
+       IF (.not. exst ) CALL errore( 'elphon_shuffle_wrap', 'epb files not found ', 1)
+       OPEN  (iuepb, file = tempfile, form = 'unformatted')
+       WRITE(stdout,'(/5x,"Reading epmatq from .epb files"/)') 
+       READ  (iuepb) nqc, xqc, et, dynq, epmatq, zstar, epsi
+       CLOSE (iuepb)
+       WRITE(stdout,'(/5x,"The .epb files have been correctly read"/)')
+    ENDIF
+    !
+    IF (epbwrite) THEN
+       OPEN  (iuepb, file = tempfile, form = 'unformatted')
+       WRITE(stdout,'(/5x,"Writing epmatq on .epb files"/)') 
+       WRITE (iuepb) nqc, xqc, et, dynq, epmatq, zstar, epsi
+       CLOSE (iuepb)
+       WRITE(stdout,'(/5x,"The .epb files have been correctly written"/)')
+    ENDIF
   ENDIF
   !
   IF ( .not.epbread .and. epwread ) THEN
@@ -729,10 +705,7 @@
   !
   ENDIF
   !
-  !
-#ifdef __PARA
   CALL mp_barrier(inter_pool_comm)
-#endif
   !
   !   now dynq is the cartesian dyn mat ( NOT divided by the masses)
   !   and epmatq is the epmat in cartesian representation (rotation in elphon_shuffle)
