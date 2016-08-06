@@ -279,7 +279,7 @@
                   end do
                end if
 !
-               call invfft( 'Box', qv, dfftb, ia+isa )
+               call invfft( qv, dfftb, ia+isa )
                !
                ! note that a factor 1/2 is hidden in fac if nspin=2
                !
@@ -415,7 +415,7 @@
                end do
             endif
 !
-            call invfft( 'Box', qv, dfftb, isa+ia )
+            call invfft( qv, dfftb, isa+ia )
 !
             call box2grid(irb(1,ia+isa),1,qv,wrk1)
             if (nfft.eq.2) call box2grid(irb(1,ia+1+isa),2,qv,wrk1)

@@ -69,7 +69,7 @@ program test
    !! MPI handles
   INTEGER :: ntgs
    !! number of taskgroups
-  INTEGER :: nbnds
+  INTEGER :: nbnd
    !! number of bands
   LOGICAL :: iope
    !! I/O process

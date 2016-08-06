@@ -28,11 +28,12 @@
        !
        USE fft_support, only: good_fft_dimension, good_fft_order
        USE fft_types,  only: fft_dlay_descriptor
+       USE fft_smallbox_type,  only: fft_box_descriptor
        !
        IMPLICIT NONE
        !
        TYPE(fft_dlay_descriptor), INTENT(IN)    :: dfftp
-       TYPE(fft_dlay_descriptor), INTENT(INOUT) :: dfftb
+       TYPE(fft_box_descriptor), INTENT(INOUT) :: dfftb
        !
        ! no default values for grid box: if nr*b=0, ignore
 
@@ -62,9 +63,9 @@
      SUBROUTINE smallbox_grid_info( dfftb )
        !
        USE io_global,  ONLY: stdout, ionode
-       USE fft_types,  ONLY: fft_dlay_descriptor
+       USE fft_smallbox_type,  only: fft_box_descriptor
        !
-       TYPE(fft_dlay_descriptor), INTENT(IN) :: dfftb
+       TYPE(fft_box_descriptor), INTENT(IN) :: dfftb
        !
        IF ( ionode ) THEN
          IF ( dfftb%nr1 > 0 .AND. dfftb%nr2 > 0 .AND. dfftb%nr3 > 0 ) THEN

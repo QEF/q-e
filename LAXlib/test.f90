@@ -236,12 +236,14 @@ program lax_test
      write(6,*)
      write(6,*) '+-----------------------------------+'
      write(6,*) '|    ping-pong network bandwidth    |'
-     write(6,*) '|            with pe = 0            |'
      write(6,*) '+-----------------------------------+'
+     write(6,*) 
+     write(6,315)  0, proc_name(1)
      do i = 2, npes
         write(6,320)  i-1, 2.0d0*DBLE(nx*nx)*8.0d0/tempo_tutti(i)/1.0D+9, proc_name(i)
      end do
   end if
+315 FORMAT('pe = ',I5,',  sender GBytes', ',  node: ', A20) 
 320 FORMAT('pe = ',I5,',', F8.3, ' GBytes', ',  node: ', A20) 
   DEALLOCATE( s )
   !
@@ -280,12 +282,14 @@ program lax_test
      write(6,*)
      write(6,*) '+-----------------------------------+'
      write(6,*) '|    ping-pong network latency      |'
-     write(6,*) '|            with pe = 0            |'
      write(6,*) '+-----------------------------------+'
+     write(6,*) 
+     write(6,325)  0, proc_name(1)
      do i = 2, npes
         write(6,330)  i-1, tempo_tutti(i)*1000000.0d0, proc_name(i)
      end do
   end if
+325 FORMAT('pe = ',I5,',  sender usec', ',  node: ', A20) 
 330 FORMAT('pe = ',I5,',', F8.3, ' usec', ',  node: ', A20) 
 
   DEALLOCATE( tempo_tutti )

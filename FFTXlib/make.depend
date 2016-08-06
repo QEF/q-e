@@ -1,6 +1,7 @@
 fft_interfaces.o : fft_parallel.o
 fft_interfaces.o : fft_scalar.o
 fft_interfaces.o : fft_smallbox.o
+fft_interfaces.o : fft_smallbox_type.o
 fft_interfaces.o : fft_types.o
 fft_interfaces.o : task_groups.o
 fft_parallel.o : fft_scalar.o

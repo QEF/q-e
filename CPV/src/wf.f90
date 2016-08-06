@@ -329,7 +329,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
 #ifdef __MPI
               irb3=irb(3,isa)
 #endif
-              CALL invfft('Box',qv,dfftb,isa)
+              CALL invfft(qv,dfftb,isa)
               iqv=1
               qvt=(0.D0,0.D0)
               qvt=boxdotgridcplx(irb(1,isa),qv,expo(1,inw))
@@ -370,7 +370,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
                     qv(npb(ig))=eigrb(ig,isa)*qgb(ig,ijv,is)
                     qv(nmb(ig))=CONJG(eigrb(ig,isa)*qgb(ig,ijv,is))
                  END DO
-                 CALL invfft('Box',qv,dfftb,isa)
+                 CALL invfft(qv,dfftb,isa)
                  iqv=1
                  qvt=0.D0
                  qvt=boxdotgridcplx(irb(1,isa),qv,expo(1,inw))

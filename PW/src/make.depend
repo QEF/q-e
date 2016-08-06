@@ -693,6 +693,7 @@ gradcorr.o : ../../Modules/recvec.o
 gradcorr.o : ../../Modules/wavefunctions.o
 gradcorr.o : pwcom.o
 gweights.o : ../../Modules/kind.o
+h_1psi.o : ../../Modules/control_flags.o
 h_1psi.o : ../../Modules/kind.o
 h_1psi.o : ../../Modules/noncol.o
 h_1psi.o : bp_mod.o

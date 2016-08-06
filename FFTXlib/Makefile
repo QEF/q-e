@@ -14,6 +14,7 @@ fft_interfaces.o  \
 stick_base.o  \
 stick_set.o  \
 fft_smallbox.o  \
+fft_smallbox_type.o  \
 fft_support.o  \
 fft_error.o  \
 fft_stick.o  \

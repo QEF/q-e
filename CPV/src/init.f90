@@ -256,7 +256,7 @@
       USE ions_positions,   ONLY: allocate_ions_positions, tau0, taus
       use cp_restart,       only: cp_read_cell
       USE fft_base,         ONLY: dfftb
-      USE fft_types,        ONLY: fft_box_allocate
+      USE fft_smallbox_type,      ONLY: fft_box_allocate
       USE cp_main_variables,ONLY: ht0, htm, taub
       USE cp_interfaces,    ONLY: newinit
       USE constants,        ONLY: amu_au

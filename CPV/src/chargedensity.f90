@@ -1001,7 +1001,7 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
                         END DO
                      ENDIF
                      !
-                     CALL invfft( 'Box', qv, dfftb, isa )
+                     CALL invfft( qv, dfftb, isa )
                      !
                      !  qv = US contribution in real space on box grid
                      !       for atomic species is, real(qv)=atom ia, imag(qv)=atom ia+1
@@ -1084,7 +1084,7 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
      &                    +       ci*CONJG(eigrb(ig,isa)*dqgbt(ig,2))
                      END DO
 
-                     CALL invfft('Box',qv, dfftb, isa )
+                     CALL invfft(qv, dfftb, isa )
                      !
                      !  qv is the now the US augmentation charge for atomic species is
                      !  and atom ia: real(qv)=spin up, imag(qv)=spin down
@@ -1294,7 +1294,7 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
                ENDIF
 
 
-               CALL invfft( 'Box', qv, dfftb, isa )
+               CALL invfft( qv, dfftb, isa )
                !
                !  qv = US augmentation charge in real space on box grid
                !       for atomic species is, real(qv)=atom ia, imag(qv)=atom ia+1
@@ -1404,7 +1404,7 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
      &                  + ci*   CONJG(eigrb(ig,isa)*qgbt(ig,2))
                END DO
 !
-               CALL invfft('Box',qv,dfftb,isa)
+               CALL invfft( qv,dfftb,isa)
 !
 !  qv is the now the US augmentation charge for atomic species is
 !  and atom ia: real(qv)=spin up, imag(qv)=spin down

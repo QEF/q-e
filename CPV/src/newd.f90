@@ -131,7 +131,7 @@
                      END DO
                   END IF
 !
-                  CALL invfft( 'Box', qv, dfftb, isa )
+                  CALL invfft( qv, dfftb, isa )
 !
                   DO iss=1,nspin
                      res = boxdotgrid(irb(1,isa),1,qv,vr(1,iss))
@@ -251,7 +251,7 @@
                      END DO
                   END DO
 !
-                  CALL invfft('Box',qv,dfftb,isa)
+                  CALL invfft( qv, dfftb, isa)
 !
                   res = boxdotgrid(irb(1,isa),1,qv,vr(1,iss))
                   fvan(ik,ia,is) = res
@@ -310,7 +310,7 @@
                      END DO
                   END DO
 !
-                  CALL invfft('Box',qv,dfftb,isa)
+                  CALL invfft( qv, dfftb, isa)
 !
                   fvan(ik,ia,is) =                                      &
      &                    boxdotgrid(irb(1,isa),isup,qv,vr(1,isup)) + &

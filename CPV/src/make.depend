@@ -243,6 +243,7 @@ cprstart.o : ../../Modules/mp_global.o
 cprstart.o : ../../Modules/mp_images.o
 cprstart.o : ../../Modules/read_input.o
 cprstart.o : input.o
+dealloc.o : ../../FFTXlib/fft_smallbox_type.o
 dealloc.o : ../../FFTXlib/fft_types.o
 dealloc.o : ../../FFTXlib/stick_base.o
 dealloc.o : ../../Modules/electrons_base.o
@@ -492,7 +493,7 @@ gtable.o : ../../Modules/parallel_include.o
 gtable.o : ../../Modules/recvec.o
 gtable.o : efield.o
 init.o : ../../FFTXlib/fft_smallbox.o
-init.o : ../../FFTXlib/fft_types.o
+init.o : ../../FFTXlib/fft_smallbox_type.o
 init.o : ../../FFTXlib/stick_set.o
 init.o : ../../Modules/cell_base.o
 init.o : ../../Modules/constants.o
@@ -1037,11 +1038,12 @@ sic.o : ../../Modules/kind.o
 smallbox.o : ../../Modules/constants.o
 smallbox.o : ../../Modules/io_global.o
 smallbox.o : ../../Modules/kind.o
+smallbox_grid.o : ../../FFTXlib/fft_smallbox_type.o
 smallbox_grid.o : ../../FFTXlib/fft_support.o
 smallbox_grid.o : ../../FFTXlib/fft_types.o
 smallbox_grid.o : ../../Modules/io_global.o
 smallbox_gvec.o : ../../Modules/kind.o
-smallbox_lib.o : ../../FFTXlib/fft_types.o
+smallbox_lib.o : ../../FFTXlib/fft_smallbox_type.o
 smallbox_lib.o : ../../Modules/cell_base.o
 smallbox_lib.o : ../../Modules/control_flags.o
 smallbox_lib.o : ../../Modules/fft_base.o
