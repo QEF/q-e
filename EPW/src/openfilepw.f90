@@ -46,14 +46,6 @@
   CALL diropn(iuwfc,'wfc',lrwfc,exst) 
   IF (.not. exst) CALL errore ('openfilepw','file '//TRIM( prefix )//'.wfc'//' not found',1)
   !
-  !
-#ifdef __PARA
-      IF (me_pool /= 0) goto 300 
-#endif
-#ifdef __PARA
-300  continue
-#endif
-  !
   !   file for setting unitary gauges of eigenstates
   !
   ! RM - nspin corresponds to nspin_mag according to QE5.0.3

@@ -21,15 +21,11 @@
   !
   !-----------------------------------------------------------------------
   !
-#ifdef __PARA
   USE mp,        ONLY : mp_barrier, mp_sum
   USE mp_global, ONLY : my_pool_id, nproc_pool,npool,kunit,&
                           inter_pool_comm
   USE mp_images, ONLY : nproc_image
-  USE pwcom,     ONLY : nkstot
-#endif
-  !
-  USE pwcom,     ONLY : nbnd, ngm, doublegrid, nks
+  USE pwcom,     ONLY : nbnd, ngm, doublegrid, nks, nkstot
   USE kinds,     ONLY : DP
   USE modes,     ONLY : nmodes, nirr, npert, u
   USE elph2,     ONLY : epmatq, el_ph_mat
@@ -52,11 +48,7 @@
   !  true if we are using time reversal
   !
   integer :: tmp_pool_id, ik0, ik, ibnd, jbnd
-  ! 
-#ifdef __PARA
   integer :: iks, nkl, nkr
-#endif
-  !
   integer :: gmapsym ( ngm, 48 ), isym
   ! the correspondence G-->S(G)
   ! the symmetry which generates the current q in the star
@@ -69,8 +61,6 @@
   !
   ik0 = 0
   tmp_pool_id = 0
-  !
-#ifdef __PARA
   !
   npool =  nproc_image / nproc_pool
   IF (npool.gt.1) THEN
@@ -92,8 +82,6 @@
     !
   ENDIF
   !
-#endif
-  !    
   ! read Delta Vscf and calculate electron-phonon coefficients
   !
   imode0 = 0
@@ -108,17 +96,13 @@
      !   read the <prefix>.dvscf_q[iq] files
      !
      dvscfin = (0.d0,0.d0)
-#ifdef __PARA
      IF (my_pool_id.eq.0) THEN
-#endif
         DO ipert = 1, npert (irr)
            CALL readdvscf ( dvscfin(1,1,ipert), imode0 + ipert, iq_irr, nqc_irr )
         ENDDO
-#ifdef __PARA
      ENDIF
      CALL mp_sum(dvscfin,inter_pool_comm)
      !
-#endif
      !
      IF (doublegrid) THEN
         ALLOCATE (dvscfins ( dffts%nnr , nspin_mag , npert(irr)) )
@@ -138,9 +122,7 @@
      DEALLOCATE (dvscfin)
   ENDDO
   !
-#ifdef __PARA
   CALL mp_barrier(inter_pool_comm)
-#endif
   !
   !  the output e-p matrix in the pattern representation
   !  must be transformed in the cartesian basis

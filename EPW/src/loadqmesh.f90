@@ -13,12 +13,10 @@ SUBROUTINE loadqmesh_para
   !!  Load fine q mesh and distribute among pools
   !!
   !-----------------------------------------------------------------------
-#ifdef __PARA
   USE io_global, ONLY : ionode_id
   USE mp_global, ONLY : inter_pool_comm, my_pool_id, npool
   USE mp,        ONLY : mp_bcast, mp_sum
   USE mp_world,  ONLY : mpime 
-#endif
   USE kinds,     ONLY : DP
   USE io_global, ONLY : stdout
   USE epwcom,    ONLY : filqf, nqf1, nqf2, nqf3, &
@@ -35,12 +33,10 @@ SUBROUTINE loadqmesh_para
   real(kind=DP), ALLOCATABLE :: xqf_(:,:), wqf_(:)
   integer :: iq, lower_bnd, upper_bnd, i, j, k, ios
   !
-#ifdef __PARA
   !
   integer :: rest
   !
   IF (mpime .eq. ionode_id) THEN
-#endif
     IF (filqf .ne. '') THEN ! load from file (crystal coordinates)
        !
        WRITE(stdout, *) '     Using q-mesh file: ', trim(filqf)
@@ -124,8 +120,9 @@ SUBROUTINE loadqmesh_para
     ELSE ! don't know how to get grid
        CALL errore('loadqmesh_para', "Cannot load fine q points", 1)
     ENDIF
-#ifdef __PARA
  ENDIF
+ !
+#ifdef __MPI
  CALL mp_bcast (nqtotf, ionode_id, inter_pool_comm)
  !
  !  scatter the q points of the fine mesh across the pools
@@ -189,12 +186,10 @@ SUBROUTINE loadqmesh_serial
 !!  Load fine q mesh
 !!
 !-----------------------------------------------------------------------
-#ifdef __PARA
   USE io_global, ONLY : ionode_id
   USE mp_global, ONLY : inter_pool_comm
   USE mp,        ONLY : mp_bcast
   USE mp_world,  ONLY : mpime
-#endif
   USE io_global, ONLY : stdout
   USE epwcom,    ONLY : filqf, nqf1, nqf2, nqf3, &
                         rand_q, rand_nq, mp_mesh_q, system_2d
@@ -206,111 +201,107 @@ SUBROUTINE loadqmesh_serial
   !
   integer :: iq, i, j, k, ios
   !
-#ifdef __PARA
   IF (mpime .eq. ionode_id) THEN
-#endif
-  IF (filqf .ne. '') THEN ! load from file (crystal coordinates)
-     !
-     ! Each pool gets its own copy from the action=read statement
-     !
-     WRITE (stdout, *) '     Using q-mesh file: ', trim(filqf)
-     OPEN ( unit = iunqf, file = filqf, status = 'old', form = 'formatted', err=100, iostat=ios)
-100  CALL errore('loadqmesh_serial','opening file '//filqf,abs(ios))
-     READ(iunqf, *) nqtotf
-     ALLOCATE (xqf(3, nqtotf), wqf(nqtotf))
-     DO iq = 1, nqtotf
-        READ (iunqf, *) xqf (:, iq), wqf(iq)
-     ENDDO
-     CLOSE(iunqf)
-     !
-     ! bring xqf in crystal coordinates
-     ! CALL cryst_to_cart (nqtotf, xqf, at, -1)
-     !
-  ELSEIF ( (nqf1.ne.0) .and. (nqf2.ne.0) .and. (nqf3.ne.0) ) THEN ! generate grid
-     IF (mp_mesh_q) THEN
-        ! get size of the mp_mesh in the irr wedge 
-        WRITE (stdout, '(a,3i4)') '     Using uniform q-mesh: ', nqf1, nqf2, nqf3
-        call set_sym_bl ( )
-        !                                         
-        ALLOCATE ( xqf (3, nqf1*nqf2*nqf3), wqf(nqf1*nqf2*nqf3) )
-        ! the result of this call is just nkqtotf
-        CALL kpoint_grid ( nrot, time_reversal, s, t_rev, bg, nqf1*nqf2*nqf3, &
-             0,0,0, nqf1,nqf2,nqf3, nqtotf, xqf, wqf)
-        DEALLOCATE ( xqf, wqf) 
-        ALLOCATE ( xqf(3, nqtotf), wqf(nqtotf)) 
-        CALL kpoint_grid ( nrot, time_reversal, s, t_rev, bg, nqf1*nqf2*nqf3, &
-             0,0,0, nqf1,nqf2,nqf3, nqtotf, xqf, wqf)
-        !
-        ! bring xqf in crystal coordinates       
-        CALL cryst_to_cart (nqtotf, xqf, at, -1)
-        !
-     ELSE
-        ! currently no offset.  
-        ! q's are in crystal coordinates in xqf
-        WRITE (stdout, '(a,3i4)') '     Using uniform q-mesh: ', nqf1, nqf2, nqf3
-        !
-        nqtotf = nqf1 * nqf2 * nqf3
-        ALLOCATE ( xqf (3, nqtotf), wqf(nqtotf) )
-        wqf(:) = 1.d0 / (dble(nqtotf))
-        DO i = 1, nqf1
-           DO j = 1, nqf2
-              DO k = 1, nqf3
-                 iq = (i-1)*nqf2*nqf3 + (j-1)*nqf3 + k
-                 xqf(1, iq) = dble(i-1)/dble(nqf1)
-                 xqf(2, iq) = dble(j-1)/dble(nqf2)
-                 xqf(3, iq) = dble(k-1)/dble(nqf3)
-              ENDDO
-           ENDDO
-        ENDDO
-        !
-        !WRITE(stdout,'(a)') '  '
-        !DO iq = 1, nqtotf
-           !WRITE(stdout,'(4f12.7)') xqf(:,iq), wqf(iq)
-        !ENDDO
-        !WRITE(stdout,'(a)') '  '
-        !
-     ENDIF
-  ELSEIF (rand_q) THEN  ! random points
-     ! random grid
-     WRITE (stdout, *) '    Using random q-mesh: ', rand_nq
-     !
-     nqtotf = rand_nq
-     ALLOCATE (xqf(3, nqtotf), wqf(nqtotf))
-     !WRITE(stdout,'(a)') '  '
-     wqf(:) = 1.d0/(dble(nqtotf))
-     !
-     CALL init_random_seed()
-     !
-     DO iq = 1, nqtotf
-        !
-        IF ( system_2d ) THEN
-           CALL random_number(xqf(1:2,iq))
-           xqf(3,iq) = 0.d0
-        ELSE
-           CALL random_number(xqf(:,iq))
-        ENDIF
-        !
-        !WRITE(stdout,'(4f12.7)') xqf(:,iq), wqf(iq)
-        !
-     ENDDO
-     !WRITE(stdout,'(a)') '  '
-     !
-  ELSE ! don't know how to get grid
-     CALL errore('loadqmesh_serial', "Cannot load fine q points", 1)
+    IF (filqf .ne. '') THEN ! load from file (crystal coordinates)
+       !
+       ! Each pool gets its own copy from the action=read statement
+       !
+       WRITE (stdout, *) '     Using q-mesh file: ', trim(filqf)
+       OPEN ( unit = iunqf, file = filqf, status = 'old', form = 'formatted', err=100, iostat=ios)
+100    CALL errore('loadqmesh_serial','opening file '//filqf,abs(ios))
+       READ(iunqf, *) nqtotf
+       ALLOCATE (xqf(3, nqtotf), wqf(nqtotf))
+       DO iq = 1, nqtotf
+          READ (iunqf, *) xqf (:, iq), wqf(iq)
+       ENDDO
+       CLOSE(iunqf)
+       !
+       ! bring xqf in crystal coordinates
+       ! CALL cryst_to_cart (nqtotf, xqf, at, -1)
+       !
+    ELSEIF ( (nqf1.ne.0) .and. (nqf2.ne.0) .and. (nqf3.ne.0) ) THEN ! generate grid
+       IF (mp_mesh_q) THEN
+          ! get size of the mp_mesh in the irr wedge 
+          WRITE (stdout, '(a,3i4)') '     Using uniform q-mesh: ', nqf1, nqf2, nqf3
+          call set_sym_bl ( )
+          !                                         
+          ALLOCATE ( xqf (3, nqf1*nqf2*nqf3), wqf(nqf1*nqf2*nqf3) )
+          ! the result of this call is just nkqtotf
+          CALL kpoint_grid ( nrot, time_reversal, s, t_rev, bg, nqf1*nqf2*nqf3, &
+               0,0,0, nqf1,nqf2,nqf3, nqtotf, xqf, wqf)
+          DEALLOCATE ( xqf, wqf) 
+          ALLOCATE ( xqf(3, nqtotf), wqf(nqtotf)) 
+          CALL kpoint_grid ( nrot, time_reversal, s, t_rev, bg, nqf1*nqf2*nqf3, &
+               0,0,0, nqf1,nqf2,nqf3, nqtotf, xqf, wqf)
+          !
+          ! bring xqf in crystal coordinates       
+          CALL cryst_to_cart (nqtotf, xqf, at, -1)
+          !
+       ELSE
+          ! currently no offset.  
+          ! q's are in crystal coordinates in xqf
+          WRITE (stdout, '(a,3i4)') '     Using uniform q-mesh: ', nqf1, nqf2, nqf3
+          !
+          nqtotf = nqf1 * nqf2 * nqf3
+          ALLOCATE ( xqf (3, nqtotf), wqf(nqtotf) )
+          wqf(:) = 1.d0 / (dble(nqtotf))
+          DO i = 1, nqf1
+             DO j = 1, nqf2
+                DO k = 1, nqf3
+                   iq = (i-1)*nqf2*nqf3 + (j-1)*nqf3 + k
+                   xqf(1, iq) = dble(i-1)/dble(nqf1)
+                   xqf(2, iq) = dble(j-1)/dble(nqf2)
+                   xqf(3, iq) = dble(k-1)/dble(nqf3)
+                ENDDO
+             ENDDO
+          ENDDO
+          !
+          !WRITE(stdout,'(a)') '  '
+          !DO iq = 1, nqtotf
+             !WRITE(stdout,'(4f12.7)') xqf(:,iq), wqf(iq)
+          !ENDDO
+          !WRITE(stdout,'(a)') '  '
+          !
+       ENDIF
+    ELSEIF (rand_q) THEN  ! random points
+       ! random grid
+       WRITE (stdout, *) '    Using random q-mesh: ', rand_nq
+       !
+       nqtotf = rand_nq
+       ALLOCATE (xqf(3, nqtotf), wqf(nqtotf))
+       !WRITE(stdout,'(a)') '  '
+       wqf(:) = 1.d0/(dble(nqtotf))
+       !
+       CALL init_random_seed()
+       !
+       DO iq = 1, nqtotf
+          !
+          IF ( system_2d ) THEN
+             CALL random_number(xqf(1:2,iq))
+             xqf(3,iq) = 0.d0
+          ELSE
+             CALL random_number(xqf(:,iq))
+          ENDIF
+          !
+          !WRITE(stdout,'(4f12.7)') xqf(:,iq), wqf(iq)
+          !
+       ENDDO
+       !WRITE(stdout,'(a)') '  '
+       !
+    ELSE ! don't know how to get grid
+       CALL errore('loadqmesh_serial', "Cannot load fine q points", 1)
+    ENDIF
+    !
+    ! Since serial 
+    nqf = nqtotf 
   ENDIF
   !
-  ! Since serial 
-  nqf = nqtotf 
-#ifdef __PARA
- ENDIF
- !
- CALL mp_bcast (nqf, ionode_id, inter_pool_comm)
- CALL mp_bcast (nqtotf, ionode_id, inter_pool_comm)
- IF (.not.ALLOCATED(xqf)) ALLOCATE (xqf(3,nqtotf))
- IF (.not.ALLOCATED(wqf)) ALLOCATE (wqf(  nqtotf))
- CALL mp_bcast(xqf, ionode_id, inter_pool_comm)
- CALL mp_bcast(wqf, ionode_id, inter_pool_comm)
-#endif
+  CALL mp_bcast (nqf, ionode_id, inter_pool_comm)
+  CALL mp_bcast (nqtotf, ionode_id, inter_pool_comm)
+  IF (.not.ALLOCATED(xqf)) ALLOCATE (xqf(3,nqtotf))
+  IF (.not.ALLOCATED(wqf)) ALLOCATE (wqf(  nqtotf))
+  CALL mp_bcast(xqf, ionode_id, inter_pool_comm)
+  CALL mp_bcast(wqf, ionode_id, inter_pool_comm)
   !
   IF (abs(sum (wqf) - 1.d0) .gt. 1.d-4 ) &
     WRITE(stdout,'(5x,"WARNING: q-point weigths do not add up to 1 [loadqmesh_serial]")') 

@@ -18,11 +18,10 @@
   !!
   !--------------------------------------------------------------------
   USE kinds,     only : DP
-#ifdef __PARA
   USE mp_global, ONLY : my_pool_id,  &
                         inter_pool_comm, kunit,npool, my_pool_id
   USE mp,        ONLY : mp_barrier, mp_bcast,mp_sum
-#endif
+  !
   implicit none  
   !
   INTEGER, INTENT (in) :: nsize
@@ -36,7 +35,7 @@
   REAL (KIND=DP), INTENT (out) :: f_out(nsize,nkstot)
   !! output  ( contains values for all k-point )
   !
-#ifdef __PARA
+#ifdef __MPI
   INTEGER :: rest, nbase
   ! the rest of the integer division nkstot / npo
   ! the position in the original list
@@ -71,11 +70,9 @@
   !!
   !--------------------------------------------------------------------
   USE kinds,     ONLY : DP
-#ifdef __PARA
   USE mp_global, ONLY : my_pool_id,    &
                         inter_pool_comm, npool, my_pool_id
   USE mp,        ONLY : mp_barrier, mp_bcast,mp_sum
-#endif
   implicit none
   !
   INTEGER, INTENT (in) :: nsize
@@ -89,7 +86,7 @@
   REAL (KIND=DP), INTENT (out) :: f_out(nsize,nkstot)
   ! output  ( contains values for all k-point )
   !
-#ifdef __PARA
+#ifdef __MPI
   INTEGER :: rest, nbase, nkst
   ! the rest of the integer division nkstot / npo
   ! the position in the original list
@@ -127,11 +124,9 @@
   !!
   !--------------------------------------------------------------------
   USE kinds,     ONLY : DP
-#ifdef __PARA
   USE mp_global, ONLY : my_pool_id,  &
                         inter_pool_comm, kunit,npool, my_pool_id
   USE mp,        ONLY : mp_barrier, mp_bcast,mp_sum
-#endif
   implicit none
   !
   INTEGER, INTENT (in) :: nks
@@ -143,7 +138,7 @@
   INTEGER, INTENT (out) :: f_out(nkstot)
   !! output  ( contains values for all k-point )
   !
-#ifdef __PARA
+#ifdef __MPI
   INTEGER :: rest, nbase
   ! the rest of the integer division nkstot / npo
   ! the position in the original list
@@ -178,11 +173,9 @@
   !!
   !--------------------------------------------------------------------
   USE kinds,     ONLY : DP
-#ifdef __PARA
   USE mp_global, ONLY : my_pool_id,  &
                         inter_pool_comm, kunit,npool, my_pool_id
   USE mp,        ONLY : mp_barrier, mp_bcast,mp_sum
-#endif
   implicit none
   !
   INTEGER, INTENT (in) :: nsize
@@ -196,7 +189,7 @@
   INTEGER, INTENT (out) :: f_out(nsize,nkstot)
   !! output  ( contains values for all k-point )
   !
-#ifdef __PARA
+#ifdef __MPI
   INTEGER :: rest, nbase
   ! the rest of the integer division nkstot / npo
   ! the position in the original list

@@ -18,9 +18,7 @@
   USE phcom,    ONLY: iuwfc, iudwf, iudrhous, iudvkb3, fildrho, iudrho
   USE epwcom,   ONLY: elinterp
   USE uspp,     ONLY: okvan      
-#ifdef __PARA
   USE mp_global, ONLY : me_pool,root_pool
-#endif
   !
   implicit none
   !
@@ -28,22 +26,18 @@
   CLOSE (unit = iudwf, status = 'keep')
   IF(okvan) CLOSE(unit = iudrhous, status = 'delete')
   IF(okvan) CLOSE (unit = iudvkb3, status = 'delete')
-#ifdef __PARA
-   IF (me_pool  /= root_pool ) go to 100  
-#endif
+  IF (me_pool  /= root_pool ) go to 100  
   IF (fildrho.ne.' ') CLOSE (unit = iudrho, status = 'keep')
-#ifdef __PARA
 100 continue
-#endif
   
   IF (elinterp) then
-     !
-     !  the temporary storage for Wannier interpolation
-     !
-     CLOSE (unit = iunepmatf,  status = 'delete')
-!     CLOSE (unit = iunepmatwe, status = 'delete')
-!     CLOSE (unit = iunepmatwp, status = 'delete')
-     !
+    !
+    !  the temporary storage for Wannier interpolation
+    !
+    CLOSE (unit = iunepmatf,  status = 'delete')
+!    CLOSE (unit = iunepmatwe, status = 'delete')
+!    CLOSE (unit = iunepmatwp, status = 'delete')
+    !
   ENDIF
   !
   END SUBROUTINE close_epw

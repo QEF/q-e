@@ -13,12 +13,10 @@ SUBROUTINE loadkmesh_para
   !!  load fine k mesh and distribute among pools
   !!
   !-----------------------------------------------------------------------
-#ifdef __PARA
   USE io_global, ONLY : ionode_id
   USE mp_global, ONLY : inter_pool_comm, my_pool_id, npool
   USE mp,        ONLY : mp_bcast, mp_sum
   USE mp_world,  ONLY : mpime 
-#endif
   USE kinds,     ONLY : DP
   USE io_global, ONLY : stdout
   USE epwcom,    ONLY : filkf, nkf1, nkf2, nkf3, &
@@ -36,12 +34,10 @@ SUBROUTINE loadkmesh_para
        wkf_tmp(:)
   integer :: ik, ikk, ikq, lower_bnd, upper_bnd, i, j, k, ios
   !
-#ifdef __PARA
   !
   integer :: rest
   !
   IF (mpime .eq. ionode_id) THEN
-#endif
     IF (filkf .ne. '') THEN ! load from file (crystal coordinates)
        !
        WRITE(stdout, *) '     Using k-mesh file: ', trim(filkf)
@@ -178,7 +174,7 @@ SUBROUTINE loadkmesh_para
     ELSE ! don't know how to get grid
        CALL errore('loadkmesh_para', "Cannot load fine k points", 1)
     ENDIF
-#ifdef __PARA
+#ifdef __MPI
  ENDIF
  CALL mp_bcast (nkqtotf, ionode_id, inter_pool_comm)
  !
@@ -242,12 +238,10 @@ SUBROUTINE loadkmesh_serial
 !!  Load fine k mesh
 !!
 !-----------------------------------------------------------------------
-#ifdef __PARA
   USE io_global, ONLY : ionode_id
   USE mp_global, ONLY : inter_pool_comm
   USE mp,        ONLY : mp_bcast
   USE mp_world,  ONLY : mpime
-#endif
   USE kinds,     ONLY : DP
   USE io_global, ONLY : stdout
   USE epwcom,    ONLY : filkf, nkf1, nkf2, nkf3, &
@@ -261,160 +255,156 @@ SUBROUTINE loadkmesh_serial
   integer :: ik, i, j, k, ios, ikk, ikq
   real(kind=DP), ALLOCATABLE ::  xkf_tmp(:,:), wkf_tmp(:)
   !
-#ifdef __PARA
   IF (mpime .eq. ionode_id) THEN
-#endif
-  IF (filkf .ne. '') THEN ! load from file (crystal coordinates)
-     !
-     ! Each pool gets its own copy from the action=read statement
-     !
-     WRITE (stdout, *) '     Using k-mesh file: ', trim(filkf)
-     OPEN ( unit = iunkf, file = filkf, status = 'old', form = 'formatted', err=100, iostat=ios)
-100  CALL errore('loadkmesh_serial','opening file '//filkf,abs(ios))
-     READ(iunkf, *) nkqtotf
-     ALLOCATE (xkf(3, 2*nkqtotf), wkf(2*nkqtotf))
-     !DO ik = 1, nkqtotf
-     !   READ (iunkf, *) xkf (:, ik), wkf(ik)
-     !ENDDO
-     DO ik = 1, nkqtotf
+    IF (filkf .ne. '') THEN ! load from file (crystal coordinates)
        !
-       ikk = 2 * ik - 1
-       ikq = ikk + 1
+       ! Each pool gets its own copy from the action=read statement
        !
-       READ (iunkf, *) xkf (:, ikk ), wkf (ikk)
+       WRITE (stdout, *) '     Using k-mesh file: ', trim(filkf)
+       OPEN ( unit = iunkf, file = filkf, status = 'old', form = 'formatted', err=100, iostat=ios)
+100    CALL errore('loadkmesh_serial','opening file '//filkf,abs(ios))
+       READ(iunkf, *) nkqtotf
+       ALLOCATE (xkf(3, 2*nkqtotf), wkf(2*nkqtotf))
+       !DO ik = 1, nkqtotf
+       !   READ (iunkf, *) xkf (:, ik), wkf(ik)
+       !ENDDO
+       DO ik = 1, nkqtotf
+         !
+         ikk = 2 * ik - 1
+         ikq = ikk + 1
+         !
+         READ (iunkf, *) xkf (:, ikk ), wkf (ikk)
+         !
+         ! SP: This is so we can input a weight of 1 to random file 
+         !     This way you can feed the same file for the k and q grid  
+         wkf (ikk) = wkf (ikk)*2.d0
+         !
+         !  bring the k point to crystal coordinates
+         ! CALL cryst_to_cart ( 1, xkf_ (:,ikk), at, -1)
+         !
+         xkf (:, ikq) = xkf (:, ikk)
+         wkf ( ikq ) = 0.d0
+         !
+       ENDDO
+       CLOSE(iunkf)
        !
-       ! SP: This is so we can input a weight of 1 to random file 
-       !     This way you can feed the same file for the k and q grid  
-       wkf (ikk) = wkf (ikk)*2.d0
+       ! redefine nkqtotf to include the k+q points
        !
-       !  bring the k point to crystal coordinates
-       ! CALL cryst_to_cart ( 1, xkf_ (:,ikk), at, -1)
+       nkqtotf = 2 * nkqtotf
        !
-       xkf (:, ikq) = xkf (:, ikk)
-       wkf ( ikq ) = 0.d0
        !
-     ENDDO
-     CLOSE(iunkf)
-     !
-     ! redefine nkqtotf to include the k+q points
-     !
-     nkqtotf = 2 * nkqtotf
-     !
-     !
-     ! bring xkf in crystal coordinates
-     ! CALL cryst_to_cart (nkqtotf, xkf, at, -1)
-     !
-  ELSEIF ( (nkf1.ne.0) .and. (nkf2.ne.0) .and. (nkf3.ne.0) ) THEN ! generate grid
-     IF (mp_mesh_k) THEN
-        ! get size of the mp_mesh in the irr wedge 
-        WRITE (stdout, '(a,3i4)') '     Using uniform k-mesh: ', nkf1, nkf2, nkf3
-        call set_sym_bl ( )
-        !                                         
-        ALLOCATE ( xkf (3, 2*nkf1*nkf2*nkf3), wkf(2*nkf1*nkf2*nkf3) )
-        ! the result of this call is just nkqtotf
-        CALL kpoint_grid ( nrot, time_reversal, s, t_rev, bg, nkf1*nkf2*nkf3, &
-             0,0,0, nkf1,nkf2,nkf3, nkqtotf, xkf, wkf)
-        DEALLOCATE ( xkf, wkf) 
-        ALLOCATE ( xkf(3, 2*nkqtotf), wkf(2*nkqtotf))
-        ALLOCATE (xkf_tmp (3,nkqtotf), wkf_tmp(nkqtotf))
-        CALL kpoint_grid ( nrot, time_reversal, s, t_rev, bg, nkf1*nkf2*nkf3, &
-             0,0,0, nkf1,nkf2,nkf3, nkqtotf, xkf_tmp, wkf_tmp)
-        !  
-        ! assign to k and k+q for xkf and wkf 
-        ! 
-        DO ik = 1, nkqtotf
-           ikk = 2 * ik - 1
-           ikq = ikk + 1
-           xkf(:,ikk) = xkf_tmp(:,ik)
-           xkf(:,ikq) = xkf_tmp(:,ik)
-           wkf(ikk)   = 2.d0 * wkf_tmp(ik)
-           wkf(ikq)   = 0.d0
-        ENDDO
-        DEALLOCATE (xkf_tmp, wkf_tmp)
-        !       
-        ! bring the k point to crystal coordinates       
-        CALL cryst_to_cart (2*nkqtotf, xkf, at, -1)
-        !
-        ! redefine nkqtotf to include the k+q points
-        !
-        nkqtotf = 2 * nkqtotf
-        !
-     ELSE
-        WRITE (stdout, '(a,3i4)') '     Using uniform k-mesh: ', nkf1, nkf2, nkf3
-        !
-        nkqtotf = 2 * nkf1 * nkf2 * nkf3
-        ALLOCATE ( xkf(3, nkqtotf), wkf(nkqtotf) )
-        wkf(:) = 0.d0
-        DO ik = 1, nkf1 * nkf2 * nkf3
-           wkf(2*ik-1) = 2.d0/(dble(nkqtotf/2))
-        ENDDO
-        DO i = 1, nkf1
-           DO j = 1, nkf2
-              DO k = 1, nkf3
-                 ik = (i-1)*nkf2*nkf3 + (j-1)*nkf3 + k
-                 ikk = 2 * ik - 1
-                 ikq = ikk + 1
-                 xkf(1, ikk) = dble(i-1)/dble(nkf1)
-                 xkf(2, ikk) = dble(j-1)/dble(nkf2)
-                 xkf(3, ikk) = dble(k-1)/dble(nkf3)
-                 xkf(1, ikq) = xkf(1, ikk)
-                 xkf(2, ikq) = xkf(2, ikk)
-                 xkf(3, ikq) = xkf(3, ikk)
-              ENDDO
-           ENDDO
-        ENDDO
-        !
-     ENDIF
-  ELSEIF (rand_k) THEN  ! random points
-    WRITE (stdout, *) '    Using random k-mesh: ', rand_nk
-    !
-    nkqtotf = rand_nk
-    ALLOCATE (xkf(3, 2*nkqtotf), wkf(2*nkqtotf))
-    !
-    CALL init_random_seed()
-    !
-    DO ik = 1, nkqtotf
+       ! bring xkf in crystal coordinates
+       ! CALL cryst_to_cart (nkqtotf, xkf, at, -1)
        !
-       ikk = 2 * ik - 1
-       ikq = ikk + 1
-       !
-       wkf(ikk) = 2.d0/ dble(nkqtotf)
-       wkf(ikq) = 0.d0
-       !
-       IF ( system_2d ) THEN
-          CALL random_number(xkf(1:2,ikk))
-          xkf(3,ikk) = 0.d0
+    ELSEIF ( (nkf1.ne.0) .and. (nkf2.ne.0) .and. (nkf3.ne.0) ) THEN ! generate grid
+       IF (mp_mesh_k) THEN
+          ! get size of the mp_mesh in the irr wedge 
+          WRITE (stdout, '(a,3i4)') '     Using uniform k-mesh: ', nkf1, nkf2, nkf3
+          call set_sym_bl ( )
+          !                                         
+          ALLOCATE ( xkf (3, 2*nkf1*nkf2*nkf3), wkf(2*nkf1*nkf2*nkf3) )
+          ! the result of this call is just nkqtotf
+          CALL kpoint_grid ( nrot, time_reversal, s, t_rev, bg, nkf1*nkf2*nkf3, &
+               0,0,0, nkf1,nkf2,nkf3, nkqtotf, xkf, wkf)
+          DEALLOCATE ( xkf, wkf) 
+          ALLOCATE ( xkf(3, 2*nkqtotf), wkf(2*nkqtotf))
+          ALLOCATE (xkf_tmp (3,nkqtotf), wkf_tmp(nkqtotf))
+          CALL kpoint_grid ( nrot, time_reversal, s, t_rev, bg, nkf1*nkf2*nkf3, &
+               0,0,0, nkf1,nkf2,nkf3, nkqtotf, xkf_tmp, wkf_tmp)
+          !  
+          ! assign to k and k+q for xkf and wkf 
+          ! 
+          DO ik = 1, nkqtotf
+             ikk = 2 * ik - 1
+             ikq = ikk + 1
+             xkf(:,ikk) = xkf_tmp(:,ik)
+             xkf(:,ikq) = xkf_tmp(:,ik)
+             wkf(ikk)   = 2.d0 * wkf_tmp(ik)
+             wkf(ikq)   = 0.d0
+          ENDDO
+          DEALLOCATE (xkf_tmp, wkf_tmp)
+          !       
+          ! bring the k point to crystal coordinates       
+          CALL cryst_to_cart (2*nkqtotf, xkf, at, -1)
+          !
+          ! redefine nkqtotf to include the k+q points
+          !
+          nkqtotf = 2 * nkqtotf
+          !
        ELSE
-          CALL random_number(xkf(:,ikk))
+          WRITE (stdout, '(a,3i4)') '     Using uniform k-mesh: ', nkf1, nkf2, nkf3
+          !
+          nkqtotf = 2 * nkf1 * nkf2 * nkf3
+          ALLOCATE ( xkf(3, nkqtotf), wkf(nkqtotf) )
+          wkf(:) = 0.d0
+          DO ik = 1, nkf1 * nkf2 * nkf3
+             wkf(2*ik-1) = 2.d0/(dble(nkqtotf/2))
+          ENDDO
+          DO i = 1, nkf1
+             DO j = 1, nkf2
+                DO k = 1, nkf3
+                   ik = (i-1)*nkf2*nkf3 + (j-1)*nkf3 + k
+                   ikk = 2 * ik - 1
+                   ikq = ikk + 1
+                   xkf(1, ikk) = dble(i-1)/dble(nkf1)
+                   xkf(2, ikk) = dble(j-1)/dble(nkf2)
+                   xkf(3, ikk) = dble(k-1)/dble(nkf3)
+                   xkf(1, ikq) = xkf(1, ikk)
+                   xkf(2, ikq) = xkf(2, ikk)
+                   xkf(3, ikq) = xkf(3, ikk)
+                ENDDO
+             ENDDO
+          ENDDO
+          !
        ENDIF
-       !
-       xkf(:,ikq) = xkf(:,ikk)
-       !
-    ENDDO
+    ELSEIF (rand_k) THEN  ! random points
+      WRITE (stdout, *) '    Using random k-mesh: ', rand_nk
+      !
+      nkqtotf = rand_nk
+      ALLOCATE (xkf(3, 2*nkqtotf), wkf(2*nkqtotf))
+      !
+      CALL init_random_seed()
+      !
+      DO ik = 1, nkqtotf
+         !
+         ikk = 2 * ik - 1
+         ikq = ikk + 1
+         !
+         wkf(ikk) = 2.d0/ dble(nkqtotf)
+         wkf(ikq) = 0.d0
+         !
+         IF ( system_2d ) THEN
+            CALL random_number(xkf(1:2,ikk))
+            xkf(3,ikk) = 0.d0
+         ELSE
+            CALL random_number(xkf(:,ikk))
+         ENDIF
+         !
+         xkf(:,ikq) = xkf(:,ikk)
+         !
+      ENDDO
+      !
+      ! redefine nkqtotf to include the k+q points
+      !
+      nkqtotf = 2 * nkqtotf
+      ! 
+    ELSE ! don't know how to get grid
+       CALL errore('loadkmesh_serial', "Cannot load fine k points", 1)
+    ENDIF
     !
-    ! redefine nkqtotf to include the k+q points
+    ! Serial
+    nkf = nkqtotf/2
+    nkqf = nkqtotf
     !
-    nkqtotf = 2 * nkqtotf
-    ! 
-  ELSE ! don't know how to get grid
-     CALL errore('loadkmesh_serial', "Cannot load fine k points", 1)
   ENDIF
   !
-  ! Serial
-  nkf = nkqtotf/2
-  nkqf = nkqtotf
-  !
-#ifdef __PARA
- ENDIF
- !
- CALL mp_bcast (nkf, ionode_id, inter_pool_comm)
- CALL mp_bcast (nkqf, ionode_id, inter_pool_comm)
- CALL mp_bcast (nkqtotf, ionode_id, inter_pool_comm)
- IF (.not.ALLOCATED(xkf)) ALLOCATE (xkf(3,nkqtotf))
- IF (.not.ALLOCATED(wkf)) ALLOCATE (wkf(  nkqtotf))
- CALL mp_bcast(xkf, ionode_id, inter_pool_comm)
- CALL mp_bcast(wkf, ionode_id, inter_pool_comm)
-#endif
+  CALL mp_bcast (nkf, ionode_id, inter_pool_comm)
+  CALL mp_bcast (nkqf, ionode_id, inter_pool_comm)
+  CALL mp_bcast (nkqtotf, ionode_id, inter_pool_comm)
+  IF (.not.ALLOCATED(xkf)) ALLOCATE (xkf(3,nkqtotf))
+  IF (.not.ALLOCATED(wkf)) ALLOCATE (wkf(  nkqtotf))
+  CALL mp_bcast(xkf, ionode_id, inter_pool_comm)
+  CALL mp_bcast(wkf, ionode_id, inter_pool_comm)
   !
   IF (abs(sum (wkf) - 2.d0) .gt. 1.d-4 ) &
     WRITE(stdout,'(5x,"WARNING: k-point weigths do not add up to 1 [loadkmesh_serial]")') 

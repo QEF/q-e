@@ -9,14 +9,14 @@
   !-----------------------------------------------------------------------
   SUBROUTINE write_ephmat( iq )
   !-----------------------------------------------------------------------
-  !
-  !  This subroutine writes the elph matrix elements in a format required 
-  !  by Eliashberg equations
-  ! 
-  !  Use matrix elements, electronic eigenvalues and phonon frequencies
-  !  from ep-wannier interpolation
-  !
-  !
+  !!
+  !!  This subroutine writes the elph matrix elements in a format required 
+  !!  by Eliashberg equations
+  !! 
+  !!  Use matrix elements, electronic eigenvalues and phonon frequencies
+  !!  from ep-wannier interpolation
+  !!
+  !!
   !-----------------------------------------------------------------------
   USE kinds,      ONLY : DP
   USE io_global,  ONLY : stdout
@@ -31,10 +31,8 @@
   USE eliashbergcom, ONLY : equivk, nkfs, ekfs, wkfs, xkfs, ef0, dosef, ixkf, ixkqf, nbndfs
   USE constants_epw, ONLY : ryd2ev, two
   USE mp_global,  ONLY :  my_pool_id
-#ifdef __PARA
   USE mp,         ONLY : mp_barrier, mp_sum
   USE mp_global,  ONLY : inter_pool_comm, my_pool_id, npool
-#endif
   !
   IMPLICIT NONE
   INTEGER :: ik, ikk, ikq, ibnd, jbnd, imode, iq, nrec, fermicount, & 
@@ -43,41 +41,35 @@
   COMPLEX(kind=DP) epf (ibndmax-ibndmin+1, ibndmax-ibndmin+1)
   REAL(DP), EXTERNAL :: efermig, dos_ef
   CHARACTER (len=256) :: filfreq, filegnv, filephmat
-#ifdef __PARA
   CHARACTER (len=3) :: filelab
-#endif
   !
   ! write phonon frequencies to file
-#ifdef __PARA 
-  IF ( my_pool_id .eq. 0 ) THEN
-#endif
-  filfreq = trim(tmp_dir) // trim(prefix) // '.freq' 
-  IF ( iq .eq. 1 ) THEN
-     !OPEN(iufilfreq, file = filfreq, form = 'formatted')
-     !WRITE(iufilfreq,'(2i7)') nqtotf, nmodes
-     !WRITE(iufilfreq,'(3f15.9)') xqf(1,iq), xqf(2,iq), xqf(3,iq)
-     !WRITE(iufilfreq,'(20ES20.10)') (wf(imode,iq), imode=1,nmodes)
-     OPEN(iufilfreq, file = filfreq, form = 'unformatted')
-     WRITE(iufilfreq) nqtotf, nmodes
-     WRITE(iufilfreq) xqf(1,iq), xqf(2,iq), xqf(3,iq)
-     DO imode = 1, nmodes
-        WRITE(iufilfreq) wf(imode,iq)
-     ENDDO
-     CLOSE(iufilfreq)
-  ELSE
-     !OPEN(iufilfreq, file = filfreq, access = 'append', form = 'formatted')
-     !WRITE(iufilfreq,'(3f15.9)') xqf(1,iq), xqf(2,iq), xqf(3,iq)
-     !WRITE(iufilfreq,'(20ES20.10)') (wf(imode,iq), imode=1,nmodes)
-     OPEN(iufilfreq, file = filfreq, position='append', form = 'unformatted')
-     WRITE(iufilfreq) xqf(1,iq), xqf(2,iq), xqf(3,iq)
-     DO imode = 1, nmodes
-        WRITE(iufilfreq) wf(imode,iq)
-     ENDDO
-     CLOSE(iufilfreq)
+  IF ( my_pool_id == 0 ) THEN
+    filfreq = trim(tmp_dir) // trim(prefix) // '.freq' 
+    IF ( iq .eq. 1 ) THEN
+       !OPEN(iufilfreq, file = filfreq, form = 'formatted')
+       !WRITE(iufilfreq,'(2i7)') nqtotf, nmodes
+       !WRITE(iufilfreq,'(3f15.9)') xqf(1,iq), xqf(2,iq), xqf(3,iq)
+       !WRITE(iufilfreq,'(20ES20.10)') (wf(imode,iq), imode=1,nmodes)
+       OPEN(iufilfreq, file = filfreq, form = 'unformatted')
+       WRITE(iufilfreq) nqtotf, nmodes
+       WRITE(iufilfreq) xqf(1,iq), xqf(2,iq), xqf(3,iq)
+       DO imode = 1, nmodes
+          WRITE(iufilfreq) wf(imode,iq)
+       ENDDO
+       CLOSE(iufilfreq)
+    ELSE
+       !OPEN(iufilfreq, file = filfreq, access = 'append', form = 'formatted')
+       !WRITE(iufilfreq,'(3f15.9)') xqf(1,iq), xqf(2,iq), xqf(3,iq)
+       !WRITE(iufilfreq,'(20ES20.10)') (wf(imode,iq), imode=1,nmodes)
+       OPEN(iufilfreq, file = filfreq, position='append', form = 'unformatted')
+       WRITE(iufilfreq) xqf(1,iq), xqf(2,iq), xqf(3,iq)
+       DO imode = 1, nmodes
+          WRITE(iufilfreq) wf(imode,iq)
+       ENDDO
+       CLOSE(iufilfreq)
+    ENDIF
   ENDIF
-#ifdef __PARA
-  ENDIF
-#endif
   ! 
   ! Fermi level and corresponding DOS
   !  
@@ -98,67 +90,59 @@
   CALL fkbounds( nkftot, lower_bnd, upper_bnd )
   !
   IF (iq.eq.1) THEN
-     !
-     ! find fermicount - nr of k-points within the Fermi shell per pool
-     ! for mp_mesh_k=true. femicount is the nr of irreducible k-points within the Fermi shell per pool
-     ! 
-     fermicount = 0
-     DO ik = 1, nkf
-        !
-        ikk = 2 * ik - 1
-        ikq = ikk + 1
-        !
-        IF ( equivk(lower_bnd+ik-1) .eq. lower_bnd+ik-1 ) THEN
-           IF ( minval( abs( etf(:,ikk) - ef  ) ) .lt. fsthick ) THEN
-              fermicount = fermicount + 1 
-           ENDIF
-       ENDIF
+    !
+    ! find fermicount - nr of k-points within the Fermi shell per pool
+    ! for mp_mesh_k=true. femicount is the nr of irreducible k-points within the Fermi shell per pool
+    ! 
+    fermicount = 0
+    DO ik = 1, nkf
        !
-     ENDDO
-     !
-     ! nks = irr nr of k-points within the Fermi shell (fine mesh)
-     nks = fermicount
-     !
-#ifdef __PARA
-     !
-     ! collect contributions from all pools (sum over k-points)
-     CALL mp_sum( nks, inter_pool_comm )
-     CALL mp_barrier(inter_pool_comm)
-     !
-#endif
-     !
-     ! write eigenvalues to file
-#ifdef __PARA 
-  IF ( my_pool_id .eq. 0 ) THEN
-#endif 
-     filegnv = trim(tmp_dir) // trim(prefix) // '.egnv'
-     !OPEN(iufilegnv, file = filegnv, form = 'formatted')
-     OPEN(iufilegnv, file = filegnv, form = 'unformatted')
-     IF ( nks .ne. nkfs ) CALL errore('write_ephmat', &
-       'nks should be equal to nr. of irreducible k-points within the Fermi shell on the fine mesh',1)
-     !WRITE(iufilegnv,'(5i7)') nkftot, nkf1, nkf2, nkf3, nks
-     !WRITE(iufilegnv,'(i7,5ES20.10)') ibndmax-ibndmin+1, ef, ef0, dosef, degaussw, fsthick
-     WRITE(iufilegnv) nkftot, nkf1, nkf2, nkf3, nks
-     WRITE(iufilegnv) ibndmax-ibndmin+1, ef, ef0, dosef, degaussw, fsthick
-     DO ik = 1, nks
-        !WRITE(iufilegnv,'(4f15.9)') wkfs(ik), xkfs(1,ik), xkfs(2,ik), xkfs(3,ik) 
-        WRITE(iufilegnv) wkfs(ik), xkfs(1,ik), xkfs(2,ik), xkfs(3,ik) 
-        DO ibnd = 1, ibndmax-ibndmin+1
-           !WRITE(iufilegnv,'(ES20.10)') ekfs(ibnd,ik)
-           WRITE(iufilegnv) ekfs(ibnd,ik)
-        ENDDO
-     ENDDO
-     CLOSE(iufilegnv)
-#ifdef __PARA
-  ENDIF
-#endif
-     !
+       ikk = 2 * ik - 1
+       ikq = ikk + 1
+       !
+       IF ( equivk(lower_bnd+ik-1) .eq. lower_bnd+ik-1 ) THEN
+          IF ( minval( abs( etf(:,ikk) - ef  ) ) .lt. fsthick ) THEN
+             fermicount = fermicount + 1 
+          ENDIF
+      ENDIF
+      !
+    ENDDO
+    !
+    ! nks = irr nr of k-points within the Fermi shell (fine mesh)
+    nks = fermicount
+    !
+    ! collect contributions from all pools (sum over k-points)
+    CALL mp_sum( nks, inter_pool_comm )
+    CALL mp_barrier(inter_pool_comm)
+    !
+    ! write eigenvalues to file
+    IF ( my_pool_id == 0 ) THEN
+      filegnv = trim(tmp_dir) // trim(prefix) // '.egnv'
+      !OPEN(iufilegnv, file = filegnv, form = 'formatted')
+      OPEN(iufilegnv, file = filegnv, form = 'unformatted')
+      IF ( nks .ne. nkfs ) CALL errore('write_ephmat', &
+        'nks should be equal to nr. of irreducible k-points within the Fermi shell on the fine mesh',1)
+      !WRITE(iufilegnv,'(5i7)') nkftot, nkf1, nkf2, nkf3, nks
+      !WRITE(iufilegnv,'(i7,5ES20.10)') ibndmax-ibndmin+1, ef, ef0, dosef, degaussw, fsthick
+      WRITE(iufilegnv) nkftot, nkf1, nkf2, nkf3, nks
+      WRITE(iufilegnv) ibndmax-ibndmin+1, ef, ef0, dosef, degaussw, fsthick
+      DO ik = 1, nks
+         !WRITE(iufilegnv,'(4f15.9)') wkfs(ik), xkfs(1,ik), xkfs(2,ik), xkfs(3,ik) 
+         WRITE(iufilegnv) wkfs(ik), xkfs(1,ik), xkfs(2,ik), xkfs(3,ik) 
+         DO ibnd = 1, ibndmax-ibndmin+1
+            !WRITE(iufilegnv,'(ES20.10)') ekfs(ibnd,ik)
+            WRITE(iufilegnv) ekfs(ibnd,ik)
+         ENDDO
+      ENDDO
+      CLOSE(iufilegnv)
+    ENDIF
+    !
   ENDIF ! iq
   !
   ! write the e-ph matrix elements in the Bloch representation on the fine mesh
   ! in .ephmat files (one for each pool)
   !
-#ifdef __PARA
+#ifdef __MPI
   CALL set_ndnmbr(0,my_pool_id+1,1,npool,filelab)
   filephmat = trim(tmp_dir) // trim(prefix) // '.ephmat' // filelab
 #else
@@ -273,10 +257,8 @@
   USE pwcom,     ONLY : nelec, ef, isk
   USE elph2,     ONLY : etf, nkqf, wkf, nkf, nkqtotf
   USE constants_epw, ONLY : two
-#ifdef __PARA
   USE mp,        ONLY : mp_barrier, mp_sum
   USE mp_global, ONLY : inter_pool_comm
-#endif
   !
   IMPLICIT NONE
   INTEGER :: ik, ikk, ikq, iq, fermicount, nks
@@ -315,13 +297,9 @@
      ! nks =  nr of k-points within the Fermi shell (fine mesh)
      nks = fermicount
      !
-#ifdef __PARA
-     !
      ! collect contributions from all pools (sum over k-points)
      CALL mp_sum( nks, inter_pool_comm )
      CALL mp_barrier(inter_pool_comm)
-     !
-#endif
      !
      IF ( mp_mesh_k) THEN
         WRITE(stdout,'(5x,a,i9,a,i9)') 'Nr irreducible k-points within the Fermi shell = ', nks, ' out of ', nkqtotf / 2

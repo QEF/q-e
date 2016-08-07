@@ -63,9 +63,7 @@
   USE partial,       ONLY : atomo, nat_todo
   USE constants,     ONLY : AMU_RY
   USE control_lr,    ONLY : lgamma
-#ifdef __PARA
   USE mp_global,     ONLY : my_pool_id, me_pool
-#endif
 #ifdef __NAG
   USE F90_UNIX_ENV,  ONLY : iargc, getarg
 #endif
@@ -234,9 +232,7 @@
   nk1tmp = 0
   nk2tmp = 0
   nk3tmp = 0
-#ifdef __PARA
   IF (me_pool /=0 .or. my_pool_id /=0) goto 400 
-#endif
   !
   !
   ! ... Input from file ?
@@ -526,10 +522,8 @@
   tmp_dir = trim(outdir)
   dvscf_dir = trim(dvscf_dir)//'/'
   !
-#ifdef __PARA
 400 continue
   CALL bcast_ph_input
-#endif
   xqq(:) = xq(:) 
   !
   !   Here we finished the reading of the input file.
@@ -543,7 +537,7 @@
   ! nbnd comes out of readfile
   IF (nbndsub.eq.0) nbndsub = nbnd
   !
-#ifdef __PARA
+#ifdef __MPI
   IF (.not.(me_pool /=0 .or. my_pool_id /=0)) THEN
      nk1 = nk1tmp
      nk2 = nk2tmp
@@ -581,9 +575,7 @@
   !   partial computation of the dynamical matrix. Read them here
   !
   CALL allocate_part ( nat )
-#ifdef __PARA
-   IF (me_pool /= 0 .or. my_pool_id /=0) goto 800 
-#endif
+  IF (me_pool /= 0 .or. my_pool_id /=0) goto 800 
   IF (nat_todo < 0 .OR. nat_todo > nat) CALL errore ('epw_readin', &
        'nat_todo is wrong', 1)
   IF (nat_todo.NE.0) THEN
@@ -591,10 +583,8 @@
 700  CALL errore ('epw_readin', 'reading atomo', abs (ios) )
      CALL mp_bcast(atomo, ionode_id, world_comm )
   ENDIF
-#ifdef __PARA
 800 continue
   CALL bcast_ph_input1
-#endif
 
 
   DO it = 1, ntyp
@@ -605,8 +595,6 @@
   IF (mod (nks, 2) .ne.0) CALL errore ('epw_readin', &
       'k-points are odd', 0)
   !
-#ifdef __PARA
-  !
   !  broadcast the values of nq1, nq2, nq3
   !
   CALL mp_bcast( nq1, ionode_id, world_comm )
@@ -615,7 +603,6 @@
   CALL mp_bcast( nk1, ionode_id, world_comm )
   CALL mp_bcast( nk2, ionode_id, world_comm )
   CALL mp_bcast( nk3, ionode_id, world_comm )
-#endif
   !
   amass = AMU_RY * amass
   !

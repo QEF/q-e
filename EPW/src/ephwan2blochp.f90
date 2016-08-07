@@ -19,11 +19,10 @@
   USE elph2,         only : epmatwp
   USE constants_epw, ONLY : twopi, ci, czero
   USE io_files,      ONLY : prefix, tmp_dir
-#ifdef __PARA 
+  USE io_epw,        ONLY : iunepmatwp
   USE mp_global,     ONLY : mp_sum
   USE mp_world,      ONLY : world_comm
   USE parallel_include
-#endif
   implicit none
   !
   !  input variables
@@ -77,7 +76,6 @@
      CALL errore ('ephwan2blochp', 'Problem with parallel_k/q scheme', nrr_q)
   ENDIF
   !
-#ifdef __PARA
   IF (.NOT. etf_mem) then
     ! Check for directory given by "outdir"
     !      
@@ -87,7 +85,6 @@
     IF( parallel_q ) CALL errore( 'ephwan2blochp', 'q-parallel+etf_mem=.false. is not supported',1 ) 
     !CALL MPI_COMM_RANK(world_comm,my_id,ierr)
   ENDIF
-#endif
   !
   eptmp = czero
   cfac(:) = czero
@@ -116,7 +113,7 @@
     lrepmatw2   = 2 * nbnd * nbnd * nrr_k * nmodes
     ! 
     DO ir = ir_start, ir_stop
-#ifdef __PARA
+#ifdef __MPI
       ! DEBUG: print*,'Process ',my_id,' do ',ir,'/ ',ir_stop
       !
       !  Direct read of epmatwp for this ir
@@ -156,13 +153,11 @@
     DEALLOCATE(epmatw)
   ENDIF
   !
-#ifdef __PARA
   IF (parallel_k) CALL mp_sum(eptmp, world_comm)
   IF (.NOT. etf_mem) then
     CALL MPI_FILE_CLOSE(iunepmatwp2,ierr)
     IF( ierr /= 0 ) CALL errore( 'ephwan2blochp', 'error in MPI_FILE_CLOSE',1 )
   ENDIF  
-#endif
   !
   !----------------------------------------------------------
   !  STEP 4: un-rotate to Bloch space, fine grid

@@ -9,15 +9,15 @@
   !-----------------------------------------------------------------------
   subroutine nesting_fn_q (iq )
   !-----------------------------------------------------------------------
-  !
-  !  compute the imaginary part of the phonon self energy due to electron-
-  !  phonon interaction in the Migdal approximation. This corresponds to 
-  !  the phonon linewidth (half width). The phonon frequency is taken into
-  !  account in the energy selection rule.
-  !
-  !  Use matrix elements, electronic eigenvalues and phonon frequencies
-  !  from ep-wannier interpolation. 
-  !
+  !!
+  !!  compute the imaginary part of the phonon self energy due to electron-
+  !!  phonon interaction in the Migdal approximation. This corresponds to 
+  !!  the phonon linewidth (half width). The phonon frequency is taken into
+  !!  account in the energy selection rule.
+  !!
+  !!  Use matrix elements, electronic eigenvalues and phonon frequencies
+  !!  from ep-wannier interpolation. 
+  !!
   !-----------------------------------------------------------------------
   USE kinds,     only : DP
   USE io_global, ONLY : stdout
@@ -32,10 +32,8 @@
 #ifdef __NAG
   USE f90_unix_io,  ONLY : flush
 #endif
-#ifdef __PARA
   use mp,        only : mp_barrier,mp_sum
   use mp_global, only : inter_pool_comm
-#endif
   !
   implicit none
   !
@@ -131,15 +129,12 @@
      ENDIF ! endif fsthick
      !
   ENDDO ! loop on k
-#ifdef __PARA
   !
   ! collect contributions from all pools (sum over k-points)
   ! this finishes the integral over the BZ  (k)
   !
   CALL mp_sum(gamma,inter_pool_comm) 
   CALL mp_sum(fermicount, inter_pool_comm)
-  !
-#endif
   !
   WRITE(stdout,'(/5x,"iq = ",i5," coord.: ", 3f9.5, " wt: ", f9.5)') iq, xqf(:,iq) , wqf(iq)
   WRITE(stdout,'(5x,a)') repeat('-',67)
@@ -165,12 +160,12 @@
   !-----------------------------------------------------------------------
   subroutine nesting_fn_k ( ik )
   !-----------------------------------------------------------------------
-  !
-  !  Compute the imaginary part of the phonon self energy due to electron-
-  !  phonon interaction in the Migdal approximation. This corresponds to 
-  !  the phonon linewidth (half width). The phonon frequency is taken into
-  !  account in the energy selection rule.
-  !
+  !!
+  !!  Compute the imaginary part of the phonon self energy due to electron-
+  !!  phonon interaction in the Migdal approximation. This corresponds to 
+  !!  the phonon linewidth (half width). The phonon frequency is taken into
+  !!  account in the energy selection rule.
+  !!
   !-----------------------------------------------------------------------
   USE kinds,     only : DP
   USE io_global, ONLY : stdout
@@ -185,12 +180,10 @@
 #ifdef __NAG
   USE f90_unix_io,  ONLY : flush
 #endif
-#ifdef __PARA
   use mp,        only : mp_barrier,mp_sum, mp_bcast
   use mp_global, only : inter_pool_comm
   USE mp_world,  ONLY : mpime
   USE io_global, ONLY : ionode_id
-#endif
   !
   implicit none
   !
@@ -230,26 +223,18 @@
     IF ( efermi_read ) THEN
        ef0 = fermi_energy 
     ELSE
-#ifdef __PARA
        IF (mpime .eq. ionode_id) THEN
-#endif
-       ef0 = efermig_seq(etf_k, nbndsub, nkqf, nelec, wkf, degaussw0, ngaussw, 0, isk)
-#ifdef __PARA
+         ef0 = efermig_seq(etf_k, nbndsub, nkqf, nelec, wkf, degaussw0, ngaussw, 0, isk)
        ENDIF
        CALL mp_bcast (ef0, ionode_id, inter_pool_comm)
-#endif 
     ENDIF
     !
-#ifdef __PARA
     IF (mpime .eq. ionode_id) THEN
-#endif
       dosef = dos_ef_seq (ngaussw, degaussw0, ef0, etf_k, wkf, nkqf, nbndsub)
       !   N(Ef) in the equation for lambda is the DOS per spin
       dosef = dosef / two
-#ifdef __PARA
     ENDIF
     CALL mp_bcast (dosef, ionode_id, inter_pool_comm)
-#endif
     !
     IF (ik.eq.1) then
       WRITE (stdout, 100) degaussw0 * ryd2ev, ngaussw
@@ -314,7 +299,7 @@
     xqf_all(:,:) = zero
     wqf_all(:,:) = zero
     ! 
-#ifdef __PARA
+#ifdef __MPI
     !
     ! note that poolgather2 works with the doubled grid (k and k+q)
     !

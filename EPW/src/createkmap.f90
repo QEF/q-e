@@ -24,11 +24,9 @@
   USE kfold,         ONLY : g0vec_all, ng0vec, shift, g0vec_all_r
 ! SP: iverbosity cannot be tested here. Generates Tb of data ...  
 !  USE control_flags, ONLY : iverbosity 
-#ifdef __PARA
   USE mp_global,     ONLY : inter_pool_comm
   USE mp,            ONLY : mp_barrier
   USE mp_world,      ONLY : mpime
-#endif
   USE elph2,       ONLY : xkq
   implicit none
   !
@@ -76,9 +74,7 @@
   !
   IF (.not. ALLOCATED(xkq) ) ALLOCATE(xkq (3, nkstot) )
   !
-#ifdef __PARA
-  IF (mpime.eq.0) THEN
-#endif
+  IF (mpime == 0) THEN
     !
     !  the first proc keeps a copy of all kpoints !
     !
@@ -285,13 +281,10 @@
     ENDDO
     CLOSE ( unit = iukmap )
     !
-#ifdef __PARA
   ENDIF
   CALL mp_barrier(inter_pool_comm)
-#endif
   !
   END SUBROUTINE createkmap
-
 
   !-----------------------------------------------------------------------
   SUBROUTINE createkmap2 ( xxq )
@@ -443,199 +436,192 @@
   !! this was done in PW2 (or set_kplusq, refold, etc. even earlier).
   !!
   !-------------------------------------------------------------------------
-USE kinds,         ONLY : DP
-USE pwcom,         ONLY : at,bg
-USE start_k,       ONLY : nk1, nk2, nk3
-USE epwcom,        ONLY : xk_cryst
-USE io_global,     ONLY : stdout
-USE io_files,      ONLY : prefix
-USE gvecs,         ONLY : ngms, gcutms, ngms_g
-USE gvect,         ONLY : gg, ngm, ngm_g, gcutm,&
-                         ig_l2g ,nl
-USE control_flags, ONLY : gamma_only
-!SP: Cannot be tested
-!USE control_flags, ONLY : iverbosity
-USE constants,     ONLY : eps8
-USE fft_base,      ONLY : dfftp
-USE kfold
+  USE kinds,         ONLY : DP
+  USE pwcom,         ONLY : at,bg
+  USE start_k,       ONLY : nk1, nk2, nk3
+  USE epwcom,        ONLY : xk_cryst
+  USE io_global,     ONLY : stdout
+  USE io_files,      ONLY : prefix
+  USE gvecs,         ONLY : ngms, gcutms, ngms_g
+  USE gvect,         ONLY : gg, ngm, ngm_g, gcutm,&
+                           ig_l2g ,nl
+  USE control_flags, ONLY : gamma_only
+  !SP: Cannot be tested
+  !USE control_flags, ONLY : iverbosity
+  USE constants,     ONLY : eps8
+  USE fft_base,      ONLY : dfftp
+  USE kfold
 #ifdef __NAG
   USE f90_unix_io,    ONLY : flush
 #endif
-#ifdef __PARA
   USE mp_global,   ONLY : inter_pool_comm
   USE mp,          ONLY : mp_barrier
   USE mp_world,    ONLY : mpime
-#endif
 
-IMPLICIT NONE
+  IMPLICIT NONE
 
-INTEGER, INTENT(IN) :: nkstot
-!! Total number of k-points
-REAL(kind=DP), INTENT(IN) :: xq0(3)
-!! K-point coordinate
-REAL(kind=DP), INTENT(IN), DIMENSION(3,nkstot) :: xk_all
-!! All the k-points coordinate among all pools
-!
-! Local variables
-real(kind=DP) :: xkq_all(3,nkstot) 
-INTEGER:: ik, jk, j
-REAL(KIND=DP) :: xx, yy, zz, xx_n, yy_n, zz_n, xx_c, yy_c, zz_c, eps
-INTEGER :: i,k,n,g0vec(3),ig0,iukmap,iukgmap,ig_1,ig_2,ig_3, s
-LOGICAL :: in_the_list, found
-
-! variables for modified ggen.f90 section of this routine
-INTEGER, ALLOCATABLE :: igsrt(:)
-INTEGER, ALLOCATABLE :: mill_g(:,:)
-INTEGER, ALLOCATABLE :: jtoi(:),itoj(:)
-REAL(KIND=DP),ALLOCATABLE :: g2sort_g(:),esort(:)
-REAL(KIND=DP) :: t(3), tt, swap
-INTEGER :: ngmx,n1,n2,n3
-INTEGER :: ipol,ng,iswap,indsw, indnew, indold
-! New local variables  
-REAL(KIND=DP) :: gg_2(ngm), g_2(3,ngm)
-INTEGER :: ngm_2
-INTEGER :: nl_2(ngm)
-
-#ifdef __PARA
+  INTEGER, INTENT(IN) :: nkstot
+  !! Total number of k-points
+  REAL(kind=DP), INTENT(IN) :: xq0(3)
+  !! K-point coordinate
+  REAL(kind=DP), INTENT(IN), DIMENSION(3,nkstot) :: xk_all
+  !! All the k-points coordinate among all pools
+  !
+  ! Local variables
+  real(kind=DP) :: xkq_all(3,nkstot) 
+  INTEGER:: ik, jk, j
+  REAL(KIND=DP) :: xx, yy, zz, xx_n, yy_n, zz_n, xx_c, yy_c, zz_c, eps
+  INTEGER :: i,k,n,g0vec(3),ig0,iukmap,iukgmap,ig_1,ig_2,ig_3, s
+  LOGICAL :: in_the_list, found
+  
+  ! variables for modified ggen.f90 section of this routine
+  INTEGER, ALLOCATABLE :: igsrt(:)
+  INTEGER, ALLOCATABLE :: mill_g(:,:)
+  INTEGER, ALLOCATABLE :: jtoi(:),itoj(:)
+  REAL(KIND=DP),ALLOCATABLE :: g2sort_g(:),esort(:)
+  REAL(KIND=DP) :: t(3), tt, swap
+  INTEGER :: ngmx,n1,n2,n3
+  INTEGER :: ipol,ng,iswap,indsw, indnew, indold
+  ! New local variables  
+  REAL(KIND=DP) :: gg_2(ngm), g_2(3,ngm)
+  INTEGER :: ngm_2
+  INTEGER :: nl_2(ngm)
   INTEGER :: m1,m2,mc
+  ! 
   IF (mpime==0) THEN
-#endif 
-!
-eps = 1.d-5
-     !
-     iukmap=97   ! unit for the file prefix.kmap
-     iukgmap=96  ! unit for the file prefix.kgmap
-     !
-     !
-     WRITE(stdout, '(/5x,a)') 'Calculating kmap and kgmap'
-     CALL flush(stdout)
-     !
-     OPEN(UNIT=iukmap, file = trim(prefix)//'.kmap', form='formatted')
-     OPEN(UNIT=iukgmap,file = trim(prefix)//'.kgmap',form='formatted')
-     ! 
-     IF ( .NOT. ALLOCATED(shift)) ALLOCATE ( shift(nkstot) )
+    eps = 1.d-5
+    !
+    iukmap=97   ! unit for the file prefix.kmap
+    iukgmap=96  ! unit for the file prefix.kgmap
+    !
+    !
+    WRITE(stdout, '(/5x,a)') 'Calculating kmap and kgmap'
+    CALL flush(stdout)
+    !
+    OPEN(UNIT=iukmap, file = trim(prefix)//'.kmap', form='formatted')
+    OPEN(UNIT=iukgmap,file = trim(prefix)//'.kgmap',form='formatted')
+    ! 
+    IF ( .NOT. ALLOCATED(shift)) ALLOCATE ( shift(nkstot) )
 
-! Fold the k+q back into the k grid for Wannier interpolation. This is 
-! meaningful ONLY when q is commensurate.
-
-! bring the kpoints into crystal coordinates 
-DO ik = 1, nkstot
-   xkq_all(:,ik) = xk_all(:,ik) + xq0(:)
-ENDDO
-!
-CALL cryst_to_cart(nkstot,xk_all,at,-1)
-CALL cryst_to_cart(nkstot,xkq_all,at,-1)
-! the 5^3 possible G translations
-ng0vec=0
-DO ig_1=-2,2
-   DO ig_2=-2,2
-      DO ig_3=-2,2
-         ng0vec=ng0vec+1
-         g0vec_all(1,ng0vec)=ig_1
-         g0vec_all(2,ng0vec)=ig_2
-         g0vec_all(3,ng0vec)=ig_3
-      END DO
-   END DO
-END DO
-!
-! go through all the k+q points and find their index in the k grid
-! ONLY the even points are from the result of a k+q operation
-DO ik=1,nkstot       
-!
-   IF (ik == 1) THEN
-      WRITE(6,'(5x,"Progress  kmap: ")',advance='no')
-      indold = 0
-   ENDIF
-   indnew = nint(dble(ik)/dble(nkstot)*40)
-   IF (indnew.ne.indold) WRITE(6,'(a)',advance='no') '#'
-   indold = indnew
-!
-   xx=xkq_all(1,ik)*nk1
-   yy=xkq_all(2,ik)*nk2
-   zz=xkq_all(3,ik)*nk3
-!   IF (iverbosity.eq.1) &
-!        WRITE(stdout,'(a,i3,a,3i3)') 'ik = ', ik, ',   k in integer coord: ', nint(xx), nint(yy),nint(zz)
-   i=mod ( nint (xx+ 2*nk1), nk1 )
-   j=mod ( nint (yy+ 2*nk2), nk2 )
-   k=mod ( nint (zz+ 2*nk3), nk3 )
-   xx_n = xx
-   yy_n = yy
-   zz_n = zz
-   !
-   !  make sure xx_n, yy_n and zz_n are in 1st BZ
-   !
-   CALL backtoBZ( xx_n, yy_n, zz_n, nk1, nk2, nk3)
-   !
-   n = 0
-   found = .false.
-   DO jk = 1, nkstot
-      xx_c = xk_cryst(1,jk)*nk1
-      yy_c = xk_cryst(2,jk)*nk2
-      zz_c = xk_cryst(3,jk)*nk3
-      !  
-      ! check that the k-mesh was defined in the positive region of 1st BZ
-      !
-      IF ( xx_c .lt. -eps .or. yy_c .lt. -eps .or. zz_c .lt. -eps ) &
-         call errore('ktokpmq','coarse k-mesh needs to be strictly positive in 1st BZ',1)
-      !
-      found = nint(xx_c) .eq. nint(xx_n) .and. &
-              nint(yy_c) .eq. nint(yy_n) .and. &
-              nint(zz_c) .eq. nint(zz_n)
-      IF (found) THEN
-         n = jk
-         EXIT
-      ENDIF
-   ENDDO
-   !
-   !  26/06/2012 RM  
-   !  since coarse k- and q- meshes are commensurate, one can easily find n
-   !
-!   n = nint(xx_n) * nk2 * nk3 + nint(yy_n) * nk3 + nint(zz_n) + 1
-   !
-   !  n represents the index of k+q on the coarse k-grid.
-   !
-   IF (n .eq. 0) call errore('createkmap_pw2','problem indexing k+q',1)
-   !
-   WRITE(iukmap,*) ik,n
-   ! determine the G_0 such that k+q+G_0 belongs to the first BZ
-   g0vec(1) = ( i - nint(xx) )/ nk1
-   g0vec(2) = ( j - nint(yy) )/ nk2
-   g0vec(3) = ( k - nint(zz) )/ nk3
-   in_the_list = .false.
-   ig0=0
-   DO WHILE ((ig0<ng0vec) .and. (.not. in_the_list))
-      ig0=ig0+1
-      in_the_list = ( (abs(g0vec(1) - g0vec_all(1,ig0)) .le. eps) .and. &
-                      (abs(g0vec(2) - g0vec_all(2,ig0)) .le. eps) .and. &
-                      (abs(g0vec(3) - g0vec_all(3,ig0)) .le. eps))
-   END DO
-   shift( ik ) = ig0
-END DO
-
-! go back to cartesian coordinates
-CALL cryst_to_cart(nkstot,xk_all,bg,1)
-CALL cryst_to_cart(nkstot,xkq_all,bg,1)
-
-g0vec_all_r = dble ( g0vec_all )
-CALL cryst_to_cart ( ng0vec, g0vec_all_r,bg,1)
-
-   
-
-DO ik=1,nkstot
-   WRITE(iukgmap, '(3i6)') ik, shift(ik)
-END DO
-WRITE(iukgmap, '(i5)') ng0vec
-DO ig0=1,ng0vec
-   WRITE(iukgmap,'(3f20.15)') g0vec_all_r (:,ig0)
-END DO
-
-IF (allocated(shift) ) DEALLOCATE(shift)
-CLOSE(iukmap)
-
-#ifdef __PARA
+    ! Fold the k+q back into the k grid for Wannier interpolation. This is 
+    ! meaningful ONLY when q is commensurate.
+    
+    ! bring the kpoints into crystal coordinates 
+    DO ik = 1, nkstot
+       xkq_all(:,ik) = xk_all(:,ik) + xq0(:)
+    ENDDO
+    !
+    CALL cryst_to_cart(nkstot,xk_all,at,-1)
+    CALL cryst_to_cart(nkstot,xkq_all,at,-1)
+    ! the 5^3 possible G translations
+    ng0vec=0
+    DO ig_1=-2,2
+       DO ig_2=-2,2
+          DO ig_3=-2,2
+             ng0vec=ng0vec+1
+             g0vec_all(1,ng0vec)=ig_1
+             g0vec_all(2,ng0vec)=ig_2
+             g0vec_all(3,ng0vec)=ig_3
+          END DO
+       END DO
+    END DO
+    !
+    ! go through all the k+q points and find their index in the k grid
+    ! ONLY the even points are from the result of a k+q operation
+    DO ik=1,nkstot       
+    !
+       IF (ik == 1) THEN
+          WRITE(6,'(5x,"Progress  kmap: ")',advance='no')
+          indold = 0
+       ENDIF
+       indnew = nint(dble(ik)/dble(nkstot)*40)
+       IF (indnew.ne.indold) WRITE(6,'(a)',advance='no') '#'
+       indold = indnew
+    !
+       xx=xkq_all(1,ik)*nk1
+       yy=xkq_all(2,ik)*nk2
+       zz=xkq_all(3,ik)*nk3
+    !   IF (iverbosity.eq.1) &
+    !        WRITE(stdout,'(a,i3,a,3i3)') 'ik = ', ik, ',   k in integer coord: ', nint(xx), nint(yy),nint(zz)
+       i=mod ( nint (xx+ 2*nk1), nk1 )
+       j=mod ( nint (yy+ 2*nk2), nk2 )
+       k=mod ( nint (zz+ 2*nk3), nk3 )
+       xx_n = xx
+       yy_n = yy
+       zz_n = zz
+       !
+       !  make sure xx_n, yy_n and zz_n are in 1st BZ
+       !
+       CALL backtoBZ( xx_n, yy_n, zz_n, nk1, nk2, nk3)
+       !
+       n = 0
+       found = .false.
+       DO jk = 1, nkstot
+          xx_c = xk_cryst(1,jk)*nk1
+          yy_c = xk_cryst(2,jk)*nk2
+          zz_c = xk_cryst(3,jk)*nk3
+          !  
+          ! check that the k-mesh was defined in the positive region of 1st BZ
+          !
+          IF ( xx_c .lt. -eps .or. yy_c .lt. -eps .or. zz_c .lt. -eps ) &
+             call errore('ktokpmq','coarse k-mesh needs to be strictly positive in 1st BZ',1)
+          !
+          found = nint(xx_c) .eq. nint(xx_n) .and. &
+                  nint(yy_c) .eq. nint(yy_n) .and. &
+                  nint(zz_c) .eq. nint(zz_n)
+          IF (found) THEN
+             n = jk
+             EXIT
+          ENDIF
+       ENDDO
+       !
+       !  26/06/2012 RM  
+       !  since coarse k- and q- meshes are commensurate, one can easily find n
+       !
+    !   n = nint(xx_n) * nk2 * nk3 + nint(yy_n) * nk3 + nint(zz_n) + 1
+       !
+       !  n represents the index of k+q on the coarse k-grid.
+       !
+       IF (n .eq. 0) call errore('createkmap_pw2','problem indexing k+q',1)
+       !
+       WRITE(iukmap,*) ik,n
+       ! determine the G_0 such that k+q+G_0 belongs to the first BZ
+       g0vec(1) = ( i - nint(xx) )/ nk1
+       g0vec(2) = ( j - nint(yy) )/ nk2
+       g0vec(3) = ( k - nint(zz) )/ nk3
+       in_the_list = .false.
+       ig0=0
+       DO WHILE ((ig0<ng0vec) .and. (.not. in_the_list))
+          ig0=ig0+1
+          in_the_list = ( (abs(g0vec(1) - g0vec_all(1,ig0)) .le. eps) .and. &
+                          (abs(g0vec(2) - g0vec_all(2,ig0)) .le. eps) .and. &
+                          (abs(g0vec(3) - g0vec_all(3,ig0)) .le. eps))
+       END DO
+       shift( ik ) = ig0
+    END DO
+    
+    ! go back to cartesian coordinates
+    CALL cryst_to_cart(nkstot,xk_all,bg,1)
+    CALL cryst_to_cart(nkstot,xkq_all,bg,1)
+    
+    g0vec_all_r = dble ( g0vec_all )
+    CALL cryst_to_cart ( ng0vec, g0vec_all_r,bg,1)
+    
+       
+    
+    DO ik=1,nkstot
+       WRITE(iukgmap, '(3i6)') ik, shift(ik)
+    END DO
+    WRITE(iukgmap, '(i5)') ng0vec
+    DO ig0=1,ng0vec
+       WRITE(iukgmap,'(3f20.15)') g0vec_all_r (:,ig0)
+    END DO
+    
+    IF (allocated(shift) ) DEALLOCATE(shift)
+    CLOSE(iukmap)
+    
 END IF  
 CALL mp_barrier(inter_pool_comm)
-#endif
 
 ! below are the routines previously found in the modified ggen.f90 code 
 
@@ -746,7 +732,7 @@ ngms = 0
     j = mill_g(2, ng)
     k = mill_g(3, ng)
 
-#ifdef __PARA
+#ifdef __MPI
     m1 = MOD (i, dfftp%nr1) + 1
     IF (m1.LT.1) m1 = m1 + dfftp%nr1
     m2 = MOD (j, dfftp%nr2) + 1
@@ -779,9 +765,7 @@ ngms = 0
       esort (ngm_2) = 0.d0
     ENDIF
 
-#ifdef __PARA
 1   CONTINUE
-#endif
   ENDDO
 
      IF (ngm_2.NE.ngmx) &
@@ -843,9 +827,8 @@ ngms = 0
      !
      CALL refold( ngm_g, mill_g, itoj, jtoi )
      !
-#ifdef __PARA
   CALL mp_barrier(inter_pool_comm)
-#endif
+  !
   DEALLOCATE(ig_l2g,mill_g,igsrt,g2sort_g,jtoi,itoj)
   !
   END SUBROUTINE createkmap_pw2

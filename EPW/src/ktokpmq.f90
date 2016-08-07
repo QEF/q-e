@@ -23,11 +23,9 @@
   use pwcom,          only : nkstot, at
   USE start_k,        ONLY : nk1, nk2, nk3
   use epwcom,         only : xk_cryst
-#ifdef __PARA
   USE mp_global,      only : nproc_pool, npool
   USE mp_images,      ONLY : nproc_image
   USE mp,             only : mp_barrier, mp_bcast
-#endif
   implicit none
   !
   INTEGER, INTENT (in) :: sign
@@ -51,9 +49,7 @@
   real(kind=DP) :: xx, yy, zz, xx_c, yy_c, zz_c, eps
   logical :: in_the_list, found
   !
-#ifdef __PARA
   integer :: iks, nkl, nkr, jpool
-#endif
   !
   kunit =1 
   ! loosy tolerance, no problem since we use integer comparisons
@@ -131,7 +127,7 @@
   !  In the parallel case we have to find the corresponding pool 
   !  and index in the pool
   !
-#ifdef __PARA
+#ifdef __MPI
   !
   npool = nproc_image/nproc_pool
   !
@@ -169,22 +165,19 @@
 !---------------------------------
 subroutine ckbounds(lower, upper)
 !---------------------------------
-!
-!   Subroutine finds the lower and upper
-!   bounds of the coarse k-grid in parallel
-!
+!!
+!!   Subroutine finds the lower and upper
+!!   bounds of the coarse k-grid in parallel
+!!
 !---------------------------------
   !
-  use pwcom,         only : nkstot
-#ifdef __PARA
-  use mp_global
-  use mp
-#endif
+  use pwcom,         ONLY : nkstot
+  use mp_global,     ONLY : my_pool_id, npool
   !
   implicit none
   integer, intent(out):: lower, upper
   !
-#ifdef __PARA
+#ifdef __MPI
   !
   integer :: nkst, nkstott, rest
   !
@@ -204,27 +197,25 @@ subroutine ckbounds(lower, upper)
   lower = 1
   upper = nkstot
 #endif
+
 end subroutine
 
 !---------------------------------
 subroutine para_bounds(lower, upper, total)
 !---------------------------------
-!
-!   Subroutine finds the lower and upper
-!   bounds if we split some quantity over pools
-!
+!!
+!!   Subroutine finds the lower and upper
+!!   bounds if we split some quantity over pools
+!!
 !---------------------------------
   !
-#ifdef __PARA
-  use mp_global
-  use mp
-#endif
+  use mp_global,   ONLY : my_pool_id, npool 
   !
   implicit none
   integer, intent(out):: lower, upper
   integer, intent(in):: total
   !
-#ifdef __PARA
+#ifdef __MPI
   !  
   integer :: rest, nrst
   !
@@ -257,12 +248,12 @@ end subroutine
 !---------------------------------
 subroutine backtoBZ ( xx, yy, zz, n1, n2, n3 )
 !---------------------------------
-!
-!   RM : brings xx, yy, and zz  into first BZ 
-!
-!---------------------------------
+  !!
+  !!  Brings xx, yy, and zz  into first BZ 
+  !!
+  !---------------------------------
   !
-  USE kinds,  only : DP
+  USE kinds,  ONLY : DP
   !
   implicit none
   integer, intent(in) :: n1, n2, n3

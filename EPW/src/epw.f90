@@ -21,11 +21,9 @@
   !! 8/14/08 lnscf is unnecessary, as is nqs,iq_start
   !!
   USE io_global,       ONLY : stdout
-#ifdef __PARA
   USE mp,              ONLY : mp_bcast, mp_barrier
   USE mp_world,        ONLY : mpime  
   USE mp_global,       ONLY : mp_startup, ionode_id, mp_global_end
-#endif
   USE control_flags,   ONLY : gamma_only
   USE control_epw,     ONLY : wannierize
   USE global_version,  ONLY : version_number
@@ -51,14 +49,10 @@
   !
   gamma_only = .FALSE.
   !
-#ifdef __PARA
   CALL mp_startup()
-#endif
   !
   ! Display the logo
-#ifdef __PARA
   IF (mpime.eq.ionode_id) then
-#endif
 write(stdout,'(a)') "                                                                                      "
 write(stdout,'(a)') "                                       ``:oss/                                        "
 write(stdout,'(a)') "                           `.+s+.     .+ys--yh+     `./ss+.                           "
@@ -86,9 +80,7 @@ write(stdout,'(a)') "   shdddddddddddddddddddddddddddddhhhhhhhhyyyyyssssssssssss
 write(stdout,'(a)') "                                                                                      "
 write(stdout,'(a)') "  S. Ponce, E. R. Margine, C. Verdi, and F. Giustino, http://arxiv.org/abs/1604.03525 "
 write(stdout,'(a)') "                                                                                      "
-#ifdef __PARA
   ENDIF
-#endif  
   !
   CALL environment_start ( code )
   !

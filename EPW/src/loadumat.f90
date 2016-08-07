@@ -24,12 +24,10 @@
   USE epwcom,        ONLY : filukk
   USE constants_epw, ONLY : czero
   USE io_epw,        ONLY : iunukk
-#ifdef __PARA
   USE io_global, ONLY : ionode_id
   USE mp_global, ONLY : inter_pool_comm
   USE mp,        ONLY : mp_sum, mp_barrier, mp_bcast
   USE mp_world,  ONLY : mpime
-#endif
   implicit none
   ! 
   LOGICAL, INTENT (out) :: lwin( nbnd, nks )
@@ -62,9 +60,7 @@
   !
   cu_big = czero
   cuq_big = czero
-#ifdef __PARA
   IF (mpime.eq.ionode_id) then
-#endif
     !
     ! first proc read rotation matrix (coarse mesh) from file
     !
@@ -104,14 +100,11 @@
        lwinq_big (:, ik) = lwin_big (:, kmap(ik) )
     ENDDO
     !
-#ifdef __PARA
   ENDIF
   CALL mp_sum (cu_big,  inter_pool_comm)
   CALL mp_sum (cuq_big, inter_pool_comm)
   CALL mp_bcast (lwin_big, ionode_id, inter_pool_comm)
   CALL mp_bcast (lwinq_big, ionode_id, inter_pool_comm)
-  !
-#endif
   !
   CALL ckbounds(ik_start, ik_stop)
   IF ( (ik_stop-ik_start+1) .ne. nks) call errore('loadumat',"Improper parallel ukk load",1)

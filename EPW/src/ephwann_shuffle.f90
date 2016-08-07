@@ -52,12 +52,10 @@
   USE f90_unix_io,   ONLY : flush
 !  USE,INTRINSIC :: f90_unix_file, ONLY:fstat, stat_t
 #endif
-#ifdef __PARA
   USE mp,            ONLY : mp_barrier, mp_bcast, mp_sum
   USE io_global,     ONLY : ionode_id
   USE mp_global,     ONLY : inter_pool_comm
   USE mp_world,      ONLY : mpime
-#endif
   !
   implicit none
   !
@@ -236,9 +234,7 @@
        ENDIF
      ENDIF
      !
-#ifdef __PARA
      CALL mp_barrier(inter_pool_comm)
-#endif
      !
      IF ( epwwrite ) THEN
         CALL epw_write 
@@ -369,17 +365,13 @@
      !  
      IF (parallel_k) efnew = efermig(etf, nbndsub, nkqf, nelec, wkf, degaussw, ngaussw, 0, isk)
      IF (parallel_q) THEN 
-#ifdef __PARA
-       IF (mpime .eq. ionode_id) THEN
-#endif
-         efnew = efermig_seq(etf, nbndsub, nkqf, nelec, wkf, degaussw, ngaussw, 0, isk)
-         ! etf on the full k-grid is later required for selfen_phon_k          
-         etf_k = etf
-#ifdef __PARA
-       ENDIF
-       CALL mp_bcast (efnew, ionode_id, inter_pool_comm)
-       CALL mp_bcast (etf_k, ionode_id, inter_pool_comm)
-#endif     
+     IF (mpime .eq. ionode_id) THEN
+       efnew = efermig_seq(etf, nbndsub, nkqf, nelec, wkf, degaussw, ngaussw, 0, isk)
+       ! etf on the full k-grid is later required for selfen_phon_k          
+       etf_k = etf
+     ENDIF
+     CALL mp_bcast (efnew, ionode_id, inter_pool_comm)
+     CALL mp_bcast (etf_k, ionode_id, inter_pool_comm)
      ENDIF
      !
      WRITE(6, '(/5x,a,f10.6,a)') &
@@ -832,10 +824,8 @@
   !
   ! SP: Added lambda and phonon lifetime writing to file.
   ! 
-#ifdef __PARA
   CALL mp_barrier(inter_pool_comm)
   IF (mpime.eq.ionode_id) THEN
-#endif
     !
     IF (phonselfen .and. parallel_k ) THEN
       OPEN(unit=lambda_phself,file='lambda.phself')
@@ -863,9 +853,7 @@
       ENDDO
       CLOSE(linewidth_phself)
     ENDIF
-#ifdef __PARA
   ENDIF
-#endif
   IF (band_plot) CALL plot_band
   !
   IF (a2f) CALL eliashberg_a2f
@@ -892,12 +880,10 @@ SUBROUTINE epw_write
   USE phcom,     ONLY : nmodes  
   USE io_epw,    ONLY : epwdata, iundmedata, iunvmedata, iunksdata, iunepmatwp
   USE io_files,  ONLY : prefix, diropn
-#ifdef __PARA
   USE mp,        ONLY : mp_barrier
   USE mp_global, ONLY : inter_pool_comm
   USE mp_world,  ONLY : mpime
   USE io_global, ONLY : ionode_id
-#endif
   !
   implicit none
   LOGICAL             :: exst
@@ -907,71 +893,66 @@ SUBROUTINE epw_write
   !
   WRITE(6,'(/5x,"Writing Hamiltonian, Dynamical matrix and EP vertex in Wann rep to file"/)')
   !
-#ifdef __PARA
-     IF (mpime.eq.ionode_id) THEN
-#endif     
-       !
-       OPEN(unit=epwdata,file='epwdata.fmt')
-       OPEN(unit=iundmedata,file='dmedata.fmt')
-       IF (vme) OPEN(unit=iunvmedata,file='vmedata.fmt')
-       IF (eig_read) OPEN(unit=iunksdata,file='ksdata.fmt')
-       WRITE (epwdata,*) ef
-       WRITE (epwdata,*) nbndsub, nrr_k, nmodes, nrr_q
-       WRITE (epwdata,*) zstar, epsi
-       !
-       DO ibnd = 1, nbndsub
-          DO jbnd = 1, nbndsub
-             DO irk = 1, nrr_k
-                WRITE (epwdata,*) chw(ibnd,jbnd,irk)
-                IF (eig_read) WRITE (iunksdata,*) chw_ks(ibnd,jbnd,irk)
-                DO ipol = 1,3
-                   WRITE (iundmedata,*) cdmew(ipol, ibnd,jbnd,irk)
-                   IF (vme) WRITE (iunvmedata,*) cvmew(ipol, ibnd,jbnd,irk)
-                ENDDO
+  IF (mpime.eq.ionode_id) THEN
+    !
+    OPEN(unit=epwdata,file='epwdata.fmt')
+    OPEN(unit=iundmedata,file='dmedata.fmt')
+    IF (vme) OPEN(unit=iunvmedata,file='vmedata.fmt')
+    IF (eig_read) OPEN(unit=iunksdata,file='ksdata.fmt')
+    WRITE (epwdata,*) ef
+    WRITE (epwdata,*) nbndsub, nrr_k, nmodes, nrr_q
+    WRITE (epwdata,*) zstar, epsi
+    !
+    DO ibnd = 1, nbndsub
+       DO jbnd = 1, nbndsub
+          DO irk = 1, nrr_k
+             WRITE (epwdata,*) chw(ibnd,jbnd,irk)
+             IF (eig_read) WRITE (iunksdata,*) chw_ks(ibnd,jbnd,irk)
+             DO ipol = 1,3
+                WRITE (iundmedata,*) cdmew(ipol, ibnd,jbnd,irk)
+                IF (vme) WRITE (iunvmedata,*) cvmew(ipol, ibnd,jbnd,irk)
              ENDDO
           ENDDO
        ENDDO
-       !
-       DO imode = 1, nmodes
-          DO jmode = 1, nmodes
-             DO irq = 1, nrr_q
-                WRITE (epwdata,*) rdw(imode,jmode,irq) 
-             ENDDO
+    ENDDO
+    !
+    DO imode = 1, nmodes
+       DO jmode = 1, nmodes
+          DO irq = 1, nrr_q
+             WRITE (epwdata,*) rdw(imode,jmode,irq) 
           ENDDO
        ENDDO
-       !
-       IF (etf_mem) THEN
-         lrepmatw   = 2 * nbndsub * nbndsub * nrr_k * nmodes * nrr_q
-         i = 0
-         DO irq = 1, nrr_q
-           DO imode = 1, nmodes
-             DO irk = 1, nrr_k
-               DO jbnd = 1, nbndsub
-                 DO ibnd = 1, nbndsub
-                   i = i + 1
-                   aux (i) = epmatwp(ibnd,jbnd,irk,imode,irq)
-                 ENDDO
-               ENDDO
-             ENDDO
-           ENDDO
-         ENDDO
-         filint    = trim(prefix)//'.epmatwp'
-         CALL diropn (iunepmatwp, 'epmatwp', lrepmatw, exst)
-         CALL davcio ( aux, lrepmatw, iunepmatwp, 1, +1 )
-         CLOSE(iunepmatwp)
-         IF (ALLOCATED(epmatwp)) DEALLOCATE ( epmatwp )
-       ENDIF 
-       !
-       CLOSE(epwdata)
-       CLOSE(iundmedata)
-       IF (vme) CLOSE(iunvmedata)
-       IF (eig_read) CLOSE(iunksdata)
-       !
-#ifdef __PARA
-    ENDIF
-    CALL mp_barrier(inter_pool_comm)
-#endif     
-     !
+    ENDDO
+    !
+    IF (etf_mem) THEN
+      lrepmatw   = 2 * nbndsub * nbndsub * nrr_k * nmodes * nrr_q
+      i = 0
+      DO irq = 1, nrr_q
+        DO imode = 1, nmodes
+          DO irk = 1, nrr_k
+            DO jbnd = 1, nbndsub
+              DO ibnd = 1, nbndsub
+                i = i + 1
+                aux (i) = epmatwp(ibnd,jbnd,irk,imode,irq)
+              ENDDO
+            ENDDO
+          ENDDO
+        ENDDO
+      ENDDO
+      filint    = trim(prefix)//'.epmatwp'
+      CALL diropn (iunepmatwp, 'epmatwp', lrepmatw, exst)
+      CALL davcio ( aux, lrepmatw, iunepmatwp, 1, +1 )
+      CLOSE(iunepmatwp)
+      IF (ALLOCATED(epmatwp)) DEALLOCATE ( epmatwp )
+    ENDIF 
+    !
+    CLOSE(epwdata)
+    CLOSE(iundmedata)
+    IF (vme) CLOSE(iunvmedata)
+    IF (eig_read) CLOSE(iunksdata)
+    !
+  ENDIF
+  CALL mp_barrier(inter_pool_comm)
 !---------------------------------
 END SUBROUTINE epw_write
 !---------------------------------
@@ -991,12 +972,10 @@ SUBROUTINE epw_read()
 #ifdef __NAG
   USE f90_unix_io,ONLY : flush
 #endif
-#ifdef __PARA
   USE io_global, ONLY : ionode_id
   USE mp,        ONLY : mp_barrier, mp_bcast
   USE mp_global, ONLY : intra_pool_comm, inter_pool_comm, root_pool
   USE mp_world,  ONLY : mpime
-#endif
   !
   implicit none
   !
@@ -1009,9 +988,7 @@ SUBROUTINE epw_read()
      !
   WRITE(stdout,'(/5x,"Reading Hamiltonian, Dynamical matrix and EP vertex in Wann rep from file"/)')
   call flush(6)
-#ifdef __PARA
   IF (mpime.eq.ionode_id) THEN
-#endif
     !
     OPEN(unit=epwdata,file='epwdata.fmt',status='old',iostat=ios)
     OPEN(unit=iundmedata,file='dmedata.fmt',status='old',iostat=ios)
@@ -1022,7 +999,6 @@ SUBROUTINE epw_read()
     READ (epwdata,*) nbndsub, nrr_k, nmodes, nrr_q
     READ (epwdata,*) zstar, epsi
     ! 
-#ifdef __PARA
   ENDIF
   CALL mp_bcast (ef, ionode_id, inter_pool_comm)
   CALL mp_bcast (ef, root_pool, intra_pool_comm)
@@ -1044,7 +1020,6 @@ SUBROUTINE epw_read()
   !
   CALL mp_bcast (epsi, ionode_id, inter_pool_comm)
   CALL mp_bcast (epsi, root_pool, intra_pool_comm)
-#endif
   !
   IF (.not. ALLOCATED(epmatwp)) ALLOCATE ( epmatwp ( nbndsub, nbndsub, nrr_k, nmodes, nrr_q) )
   IF (.not. ALLOCATED(chw)    ) ALLOCATE ( chw ( nbndsub, nbndsub, nrr_k )            )
@@ -1053,32 +1028,29 @@ SUBROUTINE epw_read()
   IF (.not. ALLOCATED(cdmew)  ) ALLOCATE ( cdmew ( 3, nbndsub, nbndsub, nrr_k )       )
   IF (vme .and. (.not.ALLOCATED(cvmew))  ) ALLOCATE ( cvmew   ( 3, nbndsub, nbndsub, nrr_k )     )
   !
-#ifdef __PARA
   IF (mpime.eq.ionode_id) THEN
-#endif
-     !
-     DO ibnd = 1, nbndsub
-        DO jbnd = 1, nbndsub
-           DO irk = 1, nrr_k
-              READ (epwdata,*) chw(ibnd,jbnd,irk)
-              IF (eig_read) READ (iunksdata,*) chw_ks(ibnd,jbnd,irk)
-              DO ipol = 1,3
-                 READ (iundmedata,*) cdmew(ipol, ibnd,jbnd,irk)
-                 IF (vme) READ (iunvmedata,*) cvmew(ipol, ibnd,jbnd,irk)
-              ENDDO
-           ENDDO
-        ENDDO
-     ENDDO
-     !
-     DO imode = 1, nmodes
-        DO jmode = 1, nmodes
-           DO irq = 1, nrr_q
-              READ (epwdata,*) rdw(imode,jmode,irq)
-           ENDDO
-        ENDDO
-     ENDDO
-     !
-#ifdef __PARA
+    !
+    DO ibnd = 1, nbndsub
+       DO jbnd = 1, nbndsub
+          DO irk = 1, nrr_k
+             READ (epwdata,*) chw(ibnd,jbnd,irk)
+             IF (eig_read) READ (iunksdata,*) chw_ks(ibnd,jbnd,irk)
+             DO ipol = 1,3
+                READ (iundmedata,*) cdmew(ipol, ibnd,jbnd,irk)
+                IF (vme) READ (iunvmedata,*) cvmew(ipol, ibnd,jbnd,irk)
+             ENDDO
+          ENDDO
+       ENDDO
+    ENDDO
+    !
+    DO imode = 1, nmodes
+       DO jmode = 1, nmodes
+          DO irq = 1, nrr_q
+             READ (epwdata,*) rdw(imode,jmode,irq)
+          ENDDO
+       ENDDO
+    ENDDO
+    !
   ENDIF
   !
   CALL mp_bcast (chw, ionode_id, inter_pool_comm)
@@ -1096,14 +1068,9 @@ SUBROUTINE epw_read()
   IF (vme) CALL mp_bcast (cvmew, ionode_id, inter_pool_comm)
   IF (vme) CALL mp_bcast (cvmew, root_pool, intra_pool_comm)
   !
-#endif
-  !
-  !
   IF (etf_mem) then
     epmatwp = czero
-#ifdef __PARA
     IF (mpime.eq.ionode_id) THEN
-#endif
       !
       lrepmatw   = 2 * nbndsub * nbndsub * nrr_k * nmodes * nrr_q
       filint    = trim(prefix)//'.epmatwp'
@@ -1122,26 +1089,19 @@ SUBROUTINE epw_read()
           ENDDO
         ENDDO
       ENDDO
-#ifdef __PARA
     ENDIF
     !
     CALL mp_bcast (epmatwp, ionode_id, inter_pool_comm)
     CALL mp_bcast (epmatwp, root_pool, intra_pool_comm)
     !
-#endif
-    !
   ENDIF
   !
-#ifdef __PARA
   CALL mp_barrier(inter_pool_comm)
   IF (mpime.eq.ionode_id) THEN
-#endif
     CLOSE(epwdata)
     CLOSE(iundmedata)
     IF (vme) CLOSE(iunvmedata)
-#ifdef __PARA
   ENDIF
-#endif
   !
   WRITE(stdout,'(/5x,"Finished reading Wann rep data from file"/)')
   !
@@ -1296,14 +1256,13 @@ end function sumkg_seq
   !-----------------------------------------------------------------
   subroutine rwepmatw ( epmatw, nbnd, np, nmodes, nrec, iun, iop)
   !-----------------------------------------------------------------
-  !
-  ! A simple wrapper to the davcio routine to read/write arrays
-  ! instead of vectors 
+  !!
+  !! A simple wrapper to the davcio routine to read/write arrays
+  !! instead of vectors 
+  !!
   !-----------------------------------------------------------------
   USE kinds, only : DP
-#ifdef __PARA
   use mp, only : mp_barrier
-#endif
   implicit none
   integer :: lrec, iun, nrec, iop, i, nbnd, np, nmodes, ibnd, jbnd, imode, ip
   !

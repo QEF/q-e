@@ -10,25 +10,25 @@
   !-----------------------------------------------------------------------
   SUBROUTINE mix_broyden( ndim, deltaout, deltain, alphamix, iter, n_iter, conv )
   !-----------------------------------------------------------------------
-  !
-  ! Modified Broyden's method for potential/charge density mixing
-  !             D.D.Johnson, PRB 38, 12807 (1988)
-  !
-  ! input :
-  !
-  !    ndim      dimension of arrays deltaout, deltain
-  !    deltaout  output Delta at current iteration
-  !    deltain   Delta at previous iteration
-  !    alphamix  mixing factor (0 < alphamix <= 1)
-  !    iter      current iteration number
-  !    n_iter    number of iterations used in the mixing
-  !    conv      if true convergence reached
-  !
-  ! output:
-  !
-  !    deltain   mixed Delta
-  !    deltaout  deltaout-deltain
-  !
+  !!
+  !! Modified Broyden's method for potential/charge density mixing
+  !!             D.D.Johnson, PRB 38, 12807 (1988)
+  !!
+  !! input :
+  !!
+  !!    ndim      dimension of arrays deltaout, deltain
+  !!    deltaout  output Delta at current iteration
+  !!    deltain   Delta at previous iteration
+  !!    alphamix  mixing factor (0 < alphamix <= 1)
+  !!    iter      current iteration number
+  !!    n_iter    number of iterations used in the mixing
+  !!    conv      if true convergence reached
+  !!
+  !! output:
+  !!
+  !!    deltain   mixed Delta
+  !!    deltaout  deltaout-deltain
+  !!
   USE kinds, ONLY : DP
   USE epwcom, ONLY : nsiter
   !

@@ -32,12 +32,11 @@
   USE elph2,         ONLY : rdw, epsi, zstar
   USE epwcom,        ONLY : lpolar
   USE constants_epw, ONLY : bohr2ang, twopi, ci
-#ifdef __PARA
   USE io_global,     ONLY : ionode_id
   USE mp_world,      ONLY : mpime
   USE mp,            ONLY : mp_barrier
   USE mp_global,     ONLY : inter_pool_comm
-#endif
+  ! 
   implicit none
   !
   !  input variables
@@ -112,22 +111,18 @@
   !  the unit in r-space is angstrom, and I am plotting
   !  the matrix for the first mode only
   !
-#ifdef __PARA
-    IF (mpime.eq.ionode_id) THEN
-#endif
-      OPEN(unit=302,file='decay.dynmat')
-      WRITE(302, '(/3x,a/)') '#Spatial decay of Dynamical matrix in Wannier basis'
-      DO ir = 1, nrr
-        !
-        tmp =  maxval ( abs( rdw (:,:,ir)) )
-        WRITE(302, *) wslen(ir) * celldm (1) * bohr2ang, tmp
-        !
-      ENDDO
-      CLOSE(302)
-#ifdef __PARA
-    ENDIF
-    CALL mp_barrier(inter_pool_comm)
-#endif
+  IF (mpime.eq.ionode_id) THEN
+    OPEN(unit=302,file='decay.dynmat')
+    WRITE(302, '(/3x,a/)') '#Spatial decay of Dynamical matrix in Wannier basis'
+    DO ir = 1, nrr
+      !
+      tmp =  maxval ( abs( rdw (:,:,ir)) )
+      WRITE(302, *) wslen(ir) * celldm (1) * bohr2ang, tmp
+      !
+    ENDDO
+    CLOSE(302)
+  ENDIF
+  CALL mp_barrier(inter_pool_comm)
   !
   END SUBROUTINE dynbloch2wan
   !-----------------------------------------------------

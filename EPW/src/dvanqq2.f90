@@ -46,10 +46,8 @@
                                int5_so, vlocq, int4_nc
   USE qpoint,           ONLY : xq, eigqts
   USE uspp_param,       ONLY : upf, lmaxq, nh
-#ifdef __PARA
   USE mp_global,        ONLY : my_pool_id, npool, intra_pool_comm
   USE mp,               ONLY : mp_sum
-#endif
   USE uspp,             ONLY : okvan
   USE fft_base,         ONLY : dfftp
   USE fft_interfaces,   ONLY : fwfft
@@ -76,9 +74,7 @@
   complex(kind=DP), POINTER :: qgmq (:)
   ! the augmentation function at q+G
   character (len=256) :: tempfile
-#ifdef __PARA
   character (len=3) :: filelab
-#endif
   logical :: exst
 
   IF (.not.okvan) RETURN
@@ -139,8 +135,8 @@
   fact1 = CMPLX (0.d0, - tpiba * omega, kind=DP)
   !
   tempfile = trim(tmp_dir) // trim(prefix) // '.recover' 
-#ifdef __PARA
-     CALL set_ndnmbr (0,my_pool_id+1,1,npool,filelab)
+#ifdef __MPI
+  CALL set_ndnmbr (0,my_pool_id+1,1,npool,filelab)
   tempfile = trim(tmp_dir) // trim(prefix) // '.recover' // filelab
 #endif
   !
@@ -262,19 +258,17 @@
         ENDDO
      ENDIF
   ENDDO
-#ifdef __PARA
   CALL mp_sum(  int1, intra_pool_comm )
   CALL mp_sum(  int2, intra_pool_comm )
   call mp_sum(  int4, intra_pool_comm )
   call mp_sum(  int5, intra_pool_comm )
-#endif
-     OPEN (iurecover, file = tempfile, form = 'unformatted')
-     IF (noncolin) THEN 
-        WRITE (iurecover) int1, int2, int4, int5
-     ELSE
-        WRITE (iurecover) int1, int2
-     ENDIF
-     CLOSE(iurecover)
+  OPEN (iurecover, file = tempfile, form = 'unformatted')
+  IF (noncolin) THEN 
+     WRITE (iurecover) int1, int2, int4, int5
+  ELSE
+     WRITE (iurecover) int1, int2
+  ENDIF
+  CLOSE(iurecover)
   ENDIF
   IF (noncolin) THEN
      CALL set_int12_nc(0)

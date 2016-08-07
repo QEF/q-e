@@ -52,10 +52,8 @@
   USE funct,         ONLY : dmxc, dmxc_spin, dmxc_nc, dft_is_gradient
   USE mp_global,     ONLY : world_comm
   USE mp,            ONLY : mp_bcast
-#ifdef __PARA
   USE mp,            ONLY : mp_max, mp_min
   USE mp_pools,      ONLY : inter_pool_comm
-#endif
   USE epwcom,        ONLY : xk_cryst
   USE fft_base,      ONLY : dfftp
   USE gvecs,         ONLY : doublegrid
@@ -279,10 +277,8 @@
         emin = min (emin, et (ibnd, ik) )
      ENDDO
   ENDDO
-#ifdef __PARA
   ! find the minimum across pools
   CALL mp_min( emin, inter_pool_comm )
-#endif
   IF (lgauss) THEN
      emax = target
      alpha_pv = emax - emin
@@ -293,10 +289,8 @@
            emax = max (emax, et (ibnd, ik) )
         ENDDO
      ENDDO
-#ifdef __PARA
      ! find the maximum across pools
      CALL mp_max( emax, inter_pool_comm )
-#endif
      alpha_pv = 2.d0 * (emax - emin)
   ENDIF
   ! avoid zero value for alpha_pv

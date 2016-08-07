@@ -21,12 +21,10 @@
   USE io_epw,    ONLY : iufilikmap
   USE elph2,     ONLY : xkf, wkf, etf, nkf, nkqtotf, ibndmin, ibndmax
   USE eliashbergcom, ONLY : nkfs, ixkf, equivk, xkfs, wkfs, ekfs, nbndfs, memlt_pool
-#ifdef __PARA
   USE io_global, ONLY : ionode_id
   USE mp_global, ONLY : inter_pool_comm, npool
   USE mp,        ONLY : mp_bcast, mp_barrier, mp_sum
   USE mp_world,  ONLY : mpime
-#endif
   !
   IMPLICIT NONE
   !
@@ -41,7 +39,7 @@
   nkf_mesh = nkqtotf / 2 
   nbndfs = ibndmax - ibndmin + 1
   !
-#ifdef __PARA
+#ifdef __MPI
   IF ( .not. ALLOCATED(memlt_pool) ) ALLOCATE(memlt_pool(npool))
   memlt_pool(:) = 0.d0
 #else
@@ -78,65 +76,59 @@
      wkf_(lower_bnd+nk-1)   = wkf(ikk)
      ekf_(:,lower_bnd+nk-1) = etf(ibndmin:ibndmax,ikk)
   ENDDO
-#ifdef __PARA
      !
      ! collect contributions from all pools (sum over k-points)
      CALL mp_sum( ekf_, inter_pool_comm )
      CALL mp_sum( xkf_, inter_pool_comm )
      CALL mp_sum( wkf_, inter_pool_comm )
      CALL mp_barrier(inter_pool_comm)
-#endif
   !
-#ifdef __PARA
   IF ( mpime .eq. ionode_id ) THEN
-#endif
-  DO nk = 1, nkf_mesh
-     equivk(nk)=nk
-  ENDDO
-  !
-  IF ( mp_mesh_k) THEN
-     WRITE(stdout,'(/5x,a,i9/)') 'Nr. of irreducible k-points on the uniform grid: ', nkf_mesh
-  ELSE
-     WRITE(stdout,'(/5x,a,i9/)') 'Nr. of k-points on the uniform grid: ', nkf_mesh
-  ENDIF
-  !
-  filikmap = trim(tmp_dir) // trim(prefix) // '.ikmap'
-  !OPEN(iufilikmap, file = filikmap, form = 'formatted')
-  !WRITE(iufilikmap,'(i9)') nkf_mesh
-  OPEN(iufilikmap, file = filikmap, form = 'unformatted')
-  WRITE(iufilikmap) nkf_mesh
-  !
-  ! nkfs - find nr of k-points within the Fermi shell (fine grid)
-  ! only a fraction of nkf_mesh are contained in the Fermi shell
-  !
-  ! ixkf - find the index of k-point within the Fermi shell (fine grid)
-  ! if the k-point lies outside the Fermi shell the index is 0
-  !
-  nkfs = 0  
-  DO nk = 1, nkf_mesh
-     IF ( minval( abs( ekf_(:,nk) - ef  ) ) .lt. fsthick ) THEN
-        nkfs = nkfs + 1
-        ixkf(nk) = nkfs
-     ELSE
-        ixkf(nk) = 0
-     ENDIF
-     !  bring back into to the first BZ
-     xx = xkf_(1,nk) * nkf1
-     yy = xkf_(2,nk) * nkf2
-     zz = xkf_(3,nk) * nkf3
-     CALL backtoBZ( xx, yy, zz, nkf1, nkf2, nkf3 )
-     xkf_(1,nk) = xx / dble(nkf1)
-     xkf_(2,nk) = yy / dble(nkf2)
-     xkf_(3,nk) = zz / dble(nkf3)
-     !WRITE(iufilikmap,'(i9)') ixkf(nk)
-     WRITE(iufilikmap) ixkf(nk)
-  ENDDO
-  CLOSE(iufilikmap)
-  !
-#ifdef __PARA
+    DO nk = 1, nkf_mesh
+       equivk(nk)=nk
+    ENDDO
+    !
+    IF ( mp_mesh_k) THEN
+       WRITE(stdout,'(/5x,a,i9/)') 'Nr. of irreducible k-points on the uniform grid: ', nkf_mesh
+    ELSE
+       WRITE(stdout,'(/5x,a,i9/)') 'Nr. of k-points on the uniform grid: ', nkf_mesh
+    ENDIF
+    !
+    filikmap = trim(tmp_dir) // trim(prefix) // '.ikmap'
+    !OPEN(iufilikmap, file = filikmap, form = 'formatted')
+    !WRITE(iufilikmap,'(i9)') nkf_mesh
+    OPEN(iufilikmap, file = filikmap, form = 'unformatted')
+    WRITE(iufilikmap) nkf_mesh
+    !
+    ! nkfs - find nr of k-points within the Fermi shell (fine grid)
+    ! only a fraction of nkf_mesh are contained in the Fermi shell
+    !
+    ! ixkf - find the index of k-point within the Fermi shell (fine grid)
+    ! if the k-point lies outside the Fermi shell the index is 0
+    !
+    nkfs = 0  
+    DO nk = 1, nkf_mesh
+       IF ( minval( abs( ekf_(:,nk) - ef  ) ) .lt. fsthick ) THEN
+          nkfs = nkfs + 1
+          ixkf(nk) = nkfs
+       ELSE
+          ixkf(nk) = 0
+       ENDIF
+       !  bring back into to the first BZ
+       xx = xkf_(1,nk) * nkf1
+       yy = xkf_(2,nk) * nkf2
+       zz = xkf_(3,nk) * nkf3
+       CALL backtoBZ( xx, yy, zz, nkf1, nkf2, nkf3 )
+       xkf_(1,nk) = xx / dble(nkf1)
+       xkf_(2,nk) = yy / dble(nkf2)
+       xkf_(3,nk) = zz / dble(nkf3)
+       !WRITE(iufilikmap,'(i9)') ixkf(nk)
+       WRITE(iufilikmap) ixkf(nk)
+    ENDDO
+    CLOSE(iufilikmap)
+    !
   ENDIF
   CALL mp_bcast( nkfs, ionode_id, inter_pool_comm )
-#endif
   !
   ! get the size of required memory for ekfs, wkfs, xkfs 
   imelt = ( nbndfs + 4 ) * nkfs
@@ -149,20 +141,17 @@
   wkfs(:) = 0.d0
   ekfs(:,:) = 0.d0
   !
-#ifdef __PARA
   IF ( mpime .eq. ionode_id ) THEN
-#endif
-  nks = 0
-  DO nk = 1, nkf_mesh
-     IF ( minval( abs( ekf_(:,nk) - ef  ) ) .lt. fsthick ) THEN
-        nks = nks + 1
-        IF ( nks .gt. nkf_mesh ) CALL errore('kmesh_fine','too many k-points',1)
-        wkfs(nks)   = wkf_(nk)
-        xkfs(:,nks) = xkf_(:,nk)
-        ekfs(:,nks) = ekf_(:,nk)
-     ENDIF
-  ENDDO
-#ifdef __PARA
+    nks = 0
+    DO nk = 1, nkf_mesh
+       IF ( minval( abs( ekf_(:,nk) - ef  ) ) .lt. fsthick ) THEN
+          nks = nks + 1
+          IF ( nks .gt. nkf_mesh ) CALL errore('kmesh_fine','too many k-points',1)
+          wkfs(nks)   = wkf_(nk)
+          xkfs(:,nks) = xkf_(:,nk)
+          ekfs(:,nks) = ekf_(:,nk)
+       ENDIF
+    ENDDO
   ENDIF
   !
   ! first node broadcasts everything to all nodes
@@ -172,7 +161,6 @@
   CALL mp_bcast( wkfs, ionode_id, inter_pool_comm )
   CALL mp_bcast( ekfs, ionode_id, inter_pool_comm )
   CALL mp_barrier(inter_pool_comm)
-#endif
   !
   IF ( ALLOCATED(ekf_) ) DEALLOCATE(ekf_)
   IF ( ALLOCATED(xkf_) ) DEALLOCATE(xkf_)
@@ -201,12 +189,10 @@
   USE elph2,     ONLY : nqtotf, xqf
   USE eliashbergcom, ONLY : ixkff, xkff, ixkf, xkfs, nkfs, ixkqf, ixqfs, nqfs
   USE symm_base, ONLY : nrot
-#ifdef __PARA
   USE io_global, ONLY : ionode_id
   USE mp_global, ONLY : inter_pool_comm
   USE mp,        ONLY : mp_bcast, mp_barrier, mp_sum
   USE mp_world,  ONLY : mpime
-#endif
   ! 
   IMPLICIT NONE
   !
@@ -234,109 +220,105 @@
   ! to map k+q onto k we need to define the index of k on the full mesh (ixkff) 
   ! using index of the k-point within the Fermi shell (ixkf)
   !
-#ifdef __PARA
   IF ( mpime .eq. ionode_id ) THEN
-#endif
-  !
-  IF ( mp_mesh_k ) CALL set_sym_bl( ) 
-  !
-  DO i = 1, nkf1
-     DO j = 1, nkf2
-        DO k = 1, nkf3
-           ik = (i-1)*nkf2*nkf3 + (j-1)*nkf3 + k
-           xkff(1,ik) = dble(i-1) / dble(nkf1)
-           xkff(2,ik) = dble(j-1) / dble(nkf2)
-           xkff(3,ik) = dble(k-1) / dble(nkf3)
-        ENDDO
-     ENDDO
-  ENDDO
-  !
-  IF ( .not. ALLOCATED(equiv_) ) ALLOCATE(equiv_(nkftot))
-  !  equiv_(nk) =nk : k-point nk is not equivalent to any previous k-point
-  !  equiv_(nk)!=nk : k-point nk is equivalent to k-point equiv(nk)
-  !
-  DO nk = 1, nkftot
-     equiv_(nk)=nk
-  ENDDO
-  !
-  IF ( mp_mesh_k ) THEN
-     DO nk = 1, nkftot
-        !  check if this k-point has already been found equivalent to another
-        IF ( equiv_(nk) .eq. nk ) THEN
-           !  check if there are equivalent k-point to this in the list
-           !  (excepted those previously found to be equivalent to another)
-           !  check both k and -k
-           DO ns = 1, nrot
-              DO i = 1, 3
-                 xkr(i) = s(i,1,ns) * xkff(1,nk) &
-                        + s(i,2,ns) * xkff(2,nk) &
-                        + s(i,3,ns) * xkff(3,nk)
-                 xkr(i) = xkr(i) - nint( xkr(i) )
-              ENDDO
-              IF ( t_rev(ns) .eq. 1 ) xkr = -xkr
-              xx = xkr(1)*nkf1
-              yy = xkr(2)*nkf2
-              zz = xkr(3)*nkf3
-              in_the_list = abs( xx-nint(xx) ) .le. eps .AND. &
-                            abs( yy-nint(yy) ) .le. eps .AND. &
-                            abs( zz-nint(zz) ) .le. eps
-              IF ( in_the_list ) THEN
-                 i = mod( nint( xkr(1)*nkf1 + 2*nkf1), nkf1 ) + 1
-                 j = mod( nint( xkr(2)*nkf2 + 2*nkf2), nkf2 ) + 1
-                 k = mod( nint( xkr(3)*nkf3 + 2*nkf3), nkf3 ) + 1
-                 n = (k-1) + (j-1)*nkf3 + (i-1)*nkf2*nkf3 + 1
-                 IF ( n .gt. nk .AND. equiv_(n) .eq. n ) THEN
-                    equiv_(n) = nk
-                 ELSE
-                    IF ( equiv_(n) .ne. nk .OR. n .lt. nk ) CALL errore('kmesh_fine', &
-                       'something wrong in the checking algorithm',1)
-                 ENDIF
-              ENDIF
-              IF ( time_reversal ) THEN
-                 xx = -xkr(1)*nkf1
-                 yy = -xkr(2)*nkf2
-                 zz = -xkr(3)*nkf3
-                 in_the_list = abs( xx-nint(xx) ) .le. eps .AND. &
-                               abs( yy-nint(yy) ) .le. eps .AND. &
-                               abs( zz-nint(zz) ) .le. eps
-                 IF ( in_the_list ) THEN
-                    i = mod( nint( -xkr(1)*nkf1 + 2*nkf1), nkf1 ) + 1
-                    j = mod( nint( -xkr(2)*nkf2 + 2*nkf2), nkf2 ) + 1
-                    k = mod( nint( -xkr(3)*nkf3 + 2*nkf3), nkf3 ) + 1
-                    n = (k-1) + (j-1)*nkf3 + (i-1)*nkf2*nkf3 + 1
-                    IF ( n .gt. nk .AND. equiv_(n) .eq. n ) THEN
-                       equiv_(n) = nk
-                    ELSE
-                       IF ( equiv_(n) .ne. nk .OR. n .lt. nk ) CALL errore('kmesh_fine', &
-                          'something wrong in the checking algorithm',2)
-                    ENDIF
-                 ENDIF
-              ENDIF
-           ENDDO
-        ENDIF
-     ENDDO
-  ENDIF
-  !
-  ! find index of k on the full mesh (ixkff) using index of k within the Fermi shell (ixkf)
-  ! 
-  nks = 0
-  DO nk = 1, nkftot
-     IF ( equiv_(nk) .eq. nk ) THEN
-        nks = nks + 1
-        ixkff(nk) = ixkf(nks)
-     ELSE
-        ixkff(nk) = ixkff(equiv_(nk))
-     ENDIF
-  ENDDO
-  !
-  IF ( ALLOCATED(equiv_) ) DEALLOCATE(equiv_)
-  !
-#ifdef __PARA
+    !
+    IF ( mp_mesh_k ) CALL set_sym_bl( ) 
+    !
+    DO i = 1, nkf1
+       DO j = 1, nkf2
+          DO k = 1, nkf3
+             ik = (i-1)*nkf2*nkf3 + (j-1)*nkf3 + k
+             xkff(1,ik) = dble(i-1) / dble(nkf1)
+             xkff(2,ik) = dble(j-1) / dble(nkf2)
+             xkff(3,ik) = dble(k-1) / dble(nkf3)
+          ENDDO
+       ENDDO
+    ENDDO
+    !
+    IF ( .not. ALLOCATED(equiv_) ) ALLOCATE(equiv_(nkftot))
+    !  equiv_(nk) =nk : k-point nk is not equivalent to any previous k-point
+    !  equiv_(nk)!=nk : k-point nk is equivalent to k-point equiv(nk)
+    !
+    DO nk = 1, nkftot
+       equiv_(nk)=nk
+    ENDDO
+    !
+    IF ( mp_mesh_k ) THEN
+       DO nk = 1, nkftot
+          !  check if this k-point has already been found equivalent to another
+          IF ( equiv_(nk) .eq. nk ) THEN
+             !  check if there are equivalent k-point to this in the list
+             !  (excepted those previously found to be equivalent to another)
+             !  check both k and -k
+             DO ns = 1, nrot
+                DO i = 1, 3
+                   xkr(i) = s(i,1,ns) * xkff(1,nk) &
+                          + s(i,2,ns) * xkff(2,nk) &
+                          + s(i,3,ns) * xkff(3,nk)
+                   xkr(i) = xkr(i) - nint( xkr(i) )
+                ENDDO
+                IF ( t_rev(ns) .eq. 1 ) xkr = -xkr
+                xx = xkr(1)*nkf1
+                yy = xkr(2)*nkf2
+                zz = xkr(3)*nkf3
+                in_the_list = abs( xx-nint(xx) ) .le. eps .AND. &
+                              abs( yy-nint(yy) ) .le. eps .AND. &
+                              abs( zz-nint(zz) ) .le. eps
+                IF ( in_the_list ) THEN
+                   i = mod( nint( xkr(1)*nkf1 + 2*nkf1), nkf1 ) + 1
+                   j = mod( nint( xkr(2)*nkf2 + 2*nkf2), nkf2 ) + 1
+                   k = mod( nint( xkr(3)*nkf3 + 2*nkf3), nkf3 ) + 1
+                   n = (k-1) + (j-1)*nkf3 + (i-1)*nkf2*nkf3 + 1
+                   IF ( n .gt. nk .AND. equiv_(n) .eq. n ) THEN
+                      equiv_(n) = nk
+                   ELSE
+                      IF ( equiv_(n) .ne. nk .OR. n .lt. nk ) CALL errore('kmesh_fine', &
+                         'something wrong in the checking algorithm',1)
+                   ENDIF
+                ENDIF
+                IF ( time_reversal ) THEN
+                   xx = -xkr(1)*nkf1
+                   yy = -xkr(2)*nkf2
+                   zz = -xkr(3)*nkf3
+                   in_the_list = abs( xx-nint(xx) ) .le. eps .AND. &
+                                 abs( yy-nint(yy) ) .le. eps .AND. &
+                                 abs( zz-nint(zz) ) .le. eps
+                   IF ( in_the_list ) THEN
+                      i = mod( nint( -xkr(1)*nkf1 + 2*nkf1), nkf1 ) + 1
+                      j = mod( nint( -xkr(2)*nkf2 + 2*nkf2), nkf2 ) + 1
+                      k = mod( nint( -xkr(3)*nkf3 + 2*nkf3), nkf3 ) + 1
+                      n = (k-1) + (j-1)*nkf3 + (i-1)*nkf2*nkf3 + 1
+                      IF ( n .gt. nk .AND. equiv_(n) .eq. n ) THEN
+                         equiv_(n) = nk
+                      ELSE
+                         IF ( equiv_(n) .ne. nk .OR. n .lt. nk ) CALL errore('kmesh_fine', &
+                            'something wrong in the checking algorithm',2)
+                      ENDIF
+                   ENDIF
+                ENDIF
+             ENDDO
+          ENDIF
+       ENDDO
+    ENDIF
+    !
+    ! find index of k on the full mesh (ixkff) using index of k within the Fermi shell (ixkf)
+    ! 
+    nks = 0
+    DO nk = 1, nkftot
+       IF ( equiv_(nk) .eq. nk ) THEN
+          nks = nks + 1
+          ixkff(nk) = ixkf(nks)
+       ELSE
+          ixkff(nk) = ixkff(equiv_(nk))
+       ENDIF
+    ENDDO
+    !
+    IF ( ALLOCATED(equiv_) ) DEALLOCATE(equiv_)
+    !
   ENDIF
   CALL mp_bcast( xkff, ionode_id, inter_pool_comm )
   CALL mp_bcast( ixkff, ionode_id, inter_pool_comm )
   CALL mp_barrier(inter_pool_comm)
-#endif
   !
   IF ( ALLOCATED(xkff) ) DEALLOCATE(xkff)
   !
@@ -389,12 +371,10 @@
      ENDDO ! loop over full set of q-points (fine mesh)
   ENDDO ! loop over irreducible k-points within the Fermi shell in each pool (fine mesh) 
   !
-#ifdef __PARA       
   ! collect contributions from all pools (sum over k-points)
   CALL mp_sum( ixkqf, inter_pool_comm )
   CALL mp_sum( nqfs,  inter_pool_comm )
   CALL mp_barrier(inter_pool_comm)
-#endif  
   !
   ! get the size of required memory for ixqfs
   imelt = nkfs * maxval(nqfs(:))
@@ -412,11 +392,9 @@
      ENDDO
   ENDDO
   !
-#ifdef __PARA
   ! collect contributions from all pools (sum over k-points)
   CALL mp_sum( ixqfs, inter_pool_comm )
   CALL mp_barrier(inter_pool_comm)
-#endif  
   !
   ! remove memory allocated for ixkff, ixqfs, index_, nqfs
   imelt = nkftot + nkfs * maxval(nqfs(:)) + nqtotf * ( upper_bnd - lower_bnd + 1 ) + nkfs
@@ -445,9 +423,7 @@
   !
   USE kinds,     ONLY : DP
   USE epwcom,    ONLY : nkf1, nkf2, nkf3
-#ifdef __PARA
   USE mp,        ONLY : mp_bcast, mp_barrier
-#endif
   ! 
   IMPLICIT NONE
   !

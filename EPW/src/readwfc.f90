@@ -20,21 +20,17 @@
   USE units_ph, ONLY : lrwfc, iuwfc
   USE kinds,    ONLY : DP
   USE wvfct,    ONLY : npwx
-  USE pwcom
+  USE pwcom,    ONLY : nbnd
   USE noncollin_module,ONLY : npol
-#ifdef __PARA
   USE mp_global,ONLY : nproc_pool, me_pool
   USE mp_global,ONLY : npool
-#endif
   !
   implicit none
   integer :: recn, ipool
   !  kpoint number
   !  poolfile to be read (not used in serial case)
   complex(kind=DP) :: evc0 ( npwx*npol, nbnd )
-#ifdef __PARA
   character (len=3) :: nd_nmbr0
-#endif
   ! node number for shuffle
   !
   integer :: unf_recl, ios
@@ -43,17 +39,15 @@
   !
   !  open the wfc file, read and close
   !
-#ifdef __PARA
   CALL set_ndnmbr ( ipool, me_pool, nproc_pool, npool, nd_nmbr0)
-
-#endif
+  !
 #if defined (__ALPHA)
 #  define DIRECT_IO_FACTOR 2    
 # else
 #  define DIRECT_IO_FACTOR 8
 #endif
 
-#ifdef __PARA
+#ifdef __MPI
   tempfile = trim(tmp_dir) // trim(prefix) // '.wfc' // nd_nmbr0
 # else
   tempfile = trim(tmp_dir) // trim(prefix) // '.wfc'

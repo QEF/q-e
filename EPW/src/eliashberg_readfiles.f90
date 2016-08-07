@@ -17,12 +17,10 @@
   USE eliashbergcom, ONLY : wsphmax, wsph, a2f_iso, memlt_pool
   USE mp_global,     ONLY : npool
   USE io_epw,        ONLY : iua2ffil 
-#ifdef __PARA
   USE io_global, ONLY : ionode_id
   USE mp_global, ONLY : inter_pool_comm
   USE mp,        ONLY : mp_bcast, mp_barrier, mp_sum
   USE mp_world,  ONLY : mpime
-#endif
   ! 
   IMPLICIT NONE
   !
@@ -36,26 +34,22 @@
   a2f_iso(:) = 0.d0
   wsph(:) = 0.d0
   !
-#ifdef __PARA
   IF ( mpime .eq. ionode_id ) THEN
-#endif
-  OPEN(iua2ffil, file=fila2f, status='unknown', err=100, iostat=ios)
-100 CALL errore('read_a2f','opening file'//fila2f,abs(ios))
+    OPEN(iua2ffil, file=fila2f, status='unknown', err=100, iostat=ios)
+100   CALL errore('read_a2f','opening file'//fila2f,abs(ios))
   !
-  DO iwph = 1, nqstep
-     READ(iua2ffil,*) wsph(iwph), a2f_iso(iwph) ! freq from meV to eV
-     wsph(iwph) = wsph(iwph) / 1000.d0
-  ENDDO
-  wsphmax = wsph(nqstep) 
-  CLOSE(iua2ffil)
-#ifdef __PARA
+    DO iwph = 1, nqstep
+       READ(iua2ffil,*) wsph(iwph), a2f_iso(iwph) ! freq from meV to eV
+       wsph(iwph) = wsph(iwph) / 1000.d0
+    ENDDO
+    wsphmax = wsph(nqstep) 
+    CLOSE(iua2ffil)
   ENDIF
   ! first node broadcasts everything to all nodes
   CALL mp_bcast( a2f_iso, ionode_id, inter_pool_comm )
   CALL mp_bcast( wsph, ionode_id, inter_pool_comm )
   CALL mp_bcast( wsphmax, ionode_id, inter_pool_comm )
   CALL mp_barrier(inter_pool_comm)
-#endif
   !
   WRITE(stdout,'(/5x,a/)') 'Finish reading a2f file '
   !
@@ -79,12 +73,10 @@
   USE elph2,   ONLY : nqtotf, wf, wqf, xqf
   USE eliashbergcom, ONLY : wsphmax
   USE constants_epw, ONLY : ryd2ev
-#ifdef __PARA
   USE io_global, ONLY : ionode_id 
   USE mp_global, ONLY : inter_pool_comm
   USE mp_world,  ONLY : mpime
   USE mp,        ONLY : mp_bcast, mp_barrier, mp_sum
-#endif     
   !
   IMPLICIT NONE
   !    
@@ -92,20 +84,16 @@
   CHARACTER (len=256) :: filfreq
   !
   ! read frequencies from file
-#ifdef __PARA
   IF ( mpime .eq. ionode_id ) THEN
-#endif
-  filfreq = trim(tmp_dir) // trim(prefix) // '.freq'
-  !OPEN(iufilfreq, file=filfreq, status='unknown', form='formatted', err=100, iostat=ios)
-  OPEN(iufilfreq, file=filfreq, status='unknown', form='unformatted', err=100, iostat=ios)
-100 CALL errore('read_frequencies','opening file '//filfreq,abs(ios))
-  !READ(iufilfreq,'(2i7)') nqtotf, nmodes
-  READ(iufilfreq) nqtotf, nmodes
-#ifdef __PARA
+    filfreq = trim(tmp_dir) // trim(prefix) // '.freq'
+    !OPEN(iufilfreq, file=filfreq, status='unknown', form='formatted', err=100, iostat=ios)
+    OPEN(iufilfreq, file=filfreq, status='unknown', form='unformatted', err=100, iostat=ios)
+100   CALL errore('read_frequencies','opening file '//filfreq,abs(ios))
+    !READ(iufilfreq,'(2i7)') nqtotf, nmodes
+    READ(iufilfreq) nqtotf, nmodes
   ENDIF
   CALL mp_bcast( nqtotf, ionode_id, inter_pool_comm )
   CALL mp_bcast( nmodes, ionode_id, inter_pool_comm )
-#endif 
   !
   IF ( .not. ALLOCATED(wf) )  ALLOCATE(wf(nmodes,nqtotf))
   IF ( .not. ALLOCATED(wqf) ) ALLOCATE(wqf(nqtotf))
@@ -114,29 +102,25 @@
   wqf(:) = 1.d0 / dble(nqtotf)
   xqf(:,:) = 0.d0
   !
-#ifdef __PARA
   IF ( mpime .eq. ionode_id ) THEN
-#endif  
-  DO iq = 1, nqtotf ! loop over q-points
-     !READ(iufilfreq,'(3f15.9)') xqf(1,iq), xqf(2,iq), xqf(3,iq)
-     !READ(iufilfreq,'(20ES20.10)') (wf(imode,iq), imode=1,nmodes)
-     READ(iufilfreq) xqf(1,iq), xqf(2,iq), xqf(3,iq)
-     DO imode = 1, nmodes
-        READ(iufilfreq) wf(imode,iq)
-     ENDDO
-  ENDDO 
-  CLOSE(iufilfreq)
-  ! go from Ryd to eV
-  wf(:,:) = wf(:,:) * ryd2ev ! in eV
-  wsphmax = 1.1d0 * maxval( wf(:,:) ) ! increase by 10%
-#ifdef __PARA
+    DO iq = 1, nqtotf ! loop over q-points
+       !READ(iufilfreq,'(3f15.9)') xqf(1,iq), xqf(2,iq), xqf(3,iq)
+       !READ(iufilfreq,'(20ES20.10)') (wf(imode,iq), imode=1,nmodes)
+       READ(iufilfreq) xqf(1,iq), xqf(2,iq), xqf(3,iq)
+       DO imode = 1, nmodes
+          READ(iufilfreq) wf(imode,iq)
+       ENDDO
+    ENDDO 
+    CLOSE(iufilfreq)
+    ! go from Ryd to eV
+    wf(:,:) = wf(:,:) * ryd2ev ! in eV
+    wsphmax = 1.1d0 * maxval( wf(:,:) ) ! increase by 10%
   ENDIF
   ! first node broadcasts everything to all nodes
   CALL mp_bcast( wf, ionode_id, inter_pool_comm )
   CALL mp_bcast( xqf, ionode_id, inter_pool_comm )
   CALL mp_bcast( wsphmax, ionode_id, inter_pool_comm )
   CALL mp_barrier(inter_pool_comm)
-#endif
   !
   WRITE(stdout,'(/5x,a/)') 'Finish reading .freq file '
   !
@@ -147,9 +131,9 @@
   !-----------------------------------------------------------------------
   SUBROUTINE read_eigenvalues
   !-----------------------------------------------------------------------
-  !
-  ! read the eigenvalues obtained from a previous epw run
-  !
+  !!
+  !! read the eigenvalues obtained from a previous epw run
+  !!
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
   USE io_files,      ONLY : prefix, tmp_dir
@@ -158,12 +142,10 @@
   USE eliashbergcom, ONLY : nkfs, nbndfs, dosef, ef0, ekfs, wkfs, xkfs, w0g
   USE constants_epw, ONLY : ryd2ev
   USE io_epw,        ONLY : iufilegnv
-#ifdef __PARA
   USE io_global, ONLY : ionode_id
   USE mp_global, ONLY : inter_pool_comm
   USE mp_world,  ONLY : mpime
   USE mp,        ONLY : mp_bcast, mp_barrier, mp_sum
-#endif
   ! 
   IMPLICIT NONE
   !
@@ -172,40 +154,37 @@
   CHARACTER (len=256) :: filegnv
   REAL(DP), EXTERNAL :: w0gauss
   !
-#ifdef __PARA
   IF ( mpime .eq. ionode_id ) THEN
-#endif
-  !
-  ! SP: Needs to be initialized
-  nbnd_ = 0 
-  nkfs = 0
-  !
-  ! read eigenvalues on the irreducible fine k-mesh
-  !  
-  filegnv = trim(tmp_dir) // trim(prefix) // '.egnv'
-  !OPEN(iufilegnv, file=filegnv, status='unknown', form='formatted', err=100, iostat=ios)
-  OPEN(iufilegnv, file=filegnv, status='unknown', form='unformatted', err=100, iostat=ios)
-100 CALL errore('read_eigenvalues','opening file '//filegnv,abs(ios))
-  !
-  !READ(iufilegnv,'(5i7)') nkftot, nkf1, nkf2, nkf3, nkfs 
-  !READ(iufilegnv,'(i7,5ES20.10)') nbnd_, ef, ef0, dosef, degaussw, fsthick
-  READ(iufilegnv) nkftot, nkf1, nkf2, nkf3, nkfs
-  READ(iufilegnv) nbnd_, ef, ef0, dosef, degaussw, fsthick
-  degaussw = degaussw * ryd2ev
-  ef0 = ef0 * ryd2ev
-  ef = ef * ryd2ev
-  fsthick = fsthick * ryd2ev
-  dosef = dosef / ryd2ev
-  WRITE(stdout,'(5x,a32,ES20.10)') 'Fermi level (eV) = ', ef0
-  WRITE(stdout,'(5x,a32,ES20.10)') 'DOS(states/spin/eV/Unit Cell) = ', dosef
-  WRITE(stdout,'(5x,a32,ES20.10)') 'Electron smearing (eV) = ', degaussw
-  WRITE(stdout,'(5x,a32,ES20.10)') 'Fermi window (eV) = ', fsthick
-  IF ( mp_mesh_k) THEN 
-     WRITE(stdout,'(5x,a,i9,a,i9)') 'Nr irreducible k-points within the Fermi shell = ', nkfs, ' out of ', nkftot
-  ELSE
-     WRITE(stdout,'(5x,a,i9,a,i9)') 'Nr k-points within the Fermi shell = ', nkfs, ' out of ', nkftot
-  ENDIF
-#ifdef __PARA
+    !
+    ! SP: Needs to be initialized
+    nbnd_ = 0 
+    nkfs = 0
+    !
+    ! read eigenvalues on the irreducible fine k-mesh
+    !  
+    filegnv = trim(tmp_dir) // trim(prefix) // '.egnv'
+    !OPEN(iufilegnv, file=filegnv, status='unknown', form='formatted', err=100, iostat=ios)
+    OPEN(iufilegnv, file=filegnv, status='unknown', form='unformatted', err=100, iostat=ios)
+100   CALL errore('read_eigenvalues','opening file '//filegnv,abs(ios))
+    !
+    !READ(iufilegnv,'(5i7)') nkftot, nkf1, nkf2, nkf3, nkfs 
+    !READ(iufilegnv,'(i7,5ES20.10)') nbnd_, ef, ef0, dosef, degaussw, fsthick
+    READ(iufilegnv) nkftot, nkf1, nkf2, nkf3, nkfs
+    READ(iufilegnv) nbnd_, ef, ef0, dosef, degaussw, fsthick
+    degaussw = degaussw * ryd2ev
+    ef0 = ef0 * ryd2ev
+    ef = ef * ryd2ev
+    fsthick = fsthick * ryd2ev
+    dosef = dosef / ryd2ev
+    WRITE(stdout,'(5x,a32,ES20.10)') 'Fermi level (eV) = ', ef0
+    WRITE(stdout,'(5x,a32,ES20.10)') 'DOS(states/spin/eV/Unit Cell) = ', dosef
+    WRITE(stdout,'(5x,a32,ES20.10)') 'Electron smearing (eV) = ', degaussw
+    WRITE(stdout,'(5x,a32,ES20.10)') 'Fermi window (eV) = ', fsthick
+    IF ( mp_mesh_k) THEN 
+       WRITE(stdout,'(5x,a,i9,a,i9)') 'Nr irreducible k-points within the Fermi shell = ', nkfs, ' out of ', nkftot
+    ELSE
+       WRITE(stdout,'(5x,a,i9,a,i9)') 'Nr k-points within the Fermi shell = ', nkfs, ' out of ', nkftot
+    ENDIF
   ENDIF
   ! first node broadcasts everything to all nodes
   CALL mp_bcast( nkf1, ionode_id, inter_pool_comm )
@@ -217,80 +196,71 @@
   CALL mp_bcast( dosef, ionode_id, inter_pool_comm )
   CALL mp_bcast( fsthick, ionode_id, inter_pool_comm )
   CALL mp_bcast( ef, ionode_id, inter_pool_comm )
-#endif
   !
   IF ( .not. ALLOCATED(wkfs) ) ALLOCATE(wkfs(nkfs))
   IF ( .not. ALLOCATED(xkfs) ) ALLOCATE(xkfs(3,nkfs))
   wkfs(:) = 0.d0
   xkfs(:,:) = 0.d0
   !
-#ifdef __PARA
   IF ( mpime .eq. ionode_id ) THEN
-#endif
-  !
-  ! at each k-point keep only the bands within the Fermi shell
-  !
-  ALLOCATE(ekf_(nbnd_,nkfs))
-  ekf_(:,:) = 0.d0
-  !
-  ! nbndfs - nr of bands within the Fermi shell
-  !
-  nbndfs = 0
-  DO ik = 1, nkfs ! loop over irreducible k-points
-     !READ(iufilegnv,'(4f15.9)') wkfs(ik), xkfs(1,ik), xkfs(2,ik), xkfs(3,ik)
-     READ(iufilegnv) wkfs(ik), xkfs(1,ik), xkfs(2,ik), xkfs(3,ik)
-     DO ibnd = 1, nbnd_
-        !READ(iufilegnv,'(ES20.10)') ekf_(ibnd,ik)
-        READ(iufilegnv) ekf_(ibnd,ik)
-     ENDDO
-     n = 0
-     DO ibnd = 1, nbnd_
-        ! go from Ryd to eV
-        ekf_(ibnd,ik) = ekf_(ibnd,ik) * ryd2ev
-        IF ( abs( ekf_(ibnd,ik) - ef0 ) .lt. fsthick ) THEN
-           n = n + 1
-           IF ( nbndfs .lt. n ) nbndfs = n
-        ENDIF
-     ENDDO
-  ENDDO
-  WRITE(stdout,'(5x,i7,a/)') nbndfs, ' bands within the Fermi window'
-  CLOSE(iufilegnv)
-  ! 
-#ifdef __PARA
+    !
+    ! at each k-point keep only the bands within the Fermi shell
+    !
+    ALLOCATE(ekf_(nbnd_,nkfs))
+    ekf_(:,:) = 0.d0
+    !
+    ! nbndfs - nr of bands within the Fermi shell
+    !
+    nbndfs = 0
+    DO ik = 1, nkfs ! loop over irreducible k-points
+       !READ(iufilegnv,'(4f15.9)') wkfs(ik), xkfs(1,ik), xkfs(2,ik), xkfs(3,ik)
+       READ(iufilegnv) wkfs(ik), xkfs(1,ik), xkfs(2,ik), xkfs(3,ik)
+       DO ibnd = 1, nbnd_
+          !READ(iufilegnv,'(ES20.10)') ekf_(ibnd,ik)
+          READ(iufilegnv) ekf_(ibnd,ik)
+       ENDDO
+       n = 0
+       DO ibnd = 1, nbnd_
+          ! go from Ryd to eV
+          ekf_(ibnd,ik) = ekf_(ibnd,ik) * ryd2ev
+          IF ( abs( ekf_(ibnd,ik) - ef0 ) .lt. fsthick ) THEN
+             n = n + 1
+             IF ( nbndfs .lt. n ) nbndfs = n
+          ENDIF
+       ENDDO
+    ENDDO
+    WRITE(stdout,'(5x,i7,a/)') nbndfs, ' bands within the Fermi window'
+    CLOSE(iufilegnv)
+    ! 
   ENDIF
   ! first node broadcasts everything to all nodes
   CALL mp_bcast( nbndfs, ionode_id, inter_pool_comm )
   CALL mp_bcast( wkfs, ionode_id, inter_pool_comm )
   CALL mp_bcast( xkfs, ionode_id, inter_pool_comm )
   CALL mp_barrier(inter_pool_comm)
-#endif
   !
   IF ( .not. ALLOCATED(ekfs) ) ALLOCATE(ekfs(nbndfs,nkfs))
   IF ( .not. ALLOCATED(w0g) )  ALLOCATE(w0g(nbndfs,nkfs))
   ! sanity choice
   ekfs(:,:) = ef0 - 10.d0 * fsthick
   w0g(:,:) = 0.d0
-#ifdef __PARA
   IF ( mpime .eq. ionode_id ) THEN
-#endif
-  DO ik = 1, nkfs ! loop over k-points
-     n = 0
-     DO ibnd = 1, nbnd_
-        IF ( abs( ekf_(ibnd,ik) - ef0 ) .lt. fsthick ) THEN
-           n = n + 1
-           ekfs(n,ik) = ekf_(ibnd,ik)
-           w0g(n,ik) = w0gauss( ( ekfs(n,ik) - ef0 ) / degaussw, 0 ) / degaussw
-        ENDIF
-     ENDDO
-  ENDDO
-  IF ( ALLOCATED(ekf_) ) DEALLOCATE(ekf_)
-#ifdef __PARA
+    DO ik = 1, nkfs ! loop over k-points
+       n = 0
+       DO ibnd = 1, nbnd_
+          IF ( abs( ekf_(ibnd,ik) - ef0 ) .lt. fsthick ) THEN
+             n = n + 1
+             ekfs(n,ik) = ekf_(ibnd,ik)
+             w0g(n,ik) = w0gauss( ( ekfs(n,ik) - ef0 ) / degaussw, 0 ) / degaussw
+          ENDIF
+       ENDDO
+    ENDDO
+    IF ( ALLOCATED(ekf_) ) DEALLOCATE(ekf_)
   ENDIF
   ! first node broadcasts everything to all nodes
   CALL mp_bcast( ekfs, ionode_id, inter_pool_comm )
   CALL mp_bcast( w0g, ionode_id, inter_pool_comm )
   CALL mp_barrier(inter_pool_comm)
-#endif
   !
   WRITE(stdout,'(/5x,a/)') 'Finish reading .egnv file '
   !
@@ -315,12 +285,10 @@
   USE eliashbergcom, ONLY : ixkff, xkff, ixkf, xkfs, nkfs, ixkqf, ixqfs, nbndfs, nqfs, memlt_pool
   USE mp_global,     ONLY : npool
   USE symm_base, ONLY : nrot
-#ifdef __PARA
   USE io_global, ONLY : ionode_id
   USE mp_global, ONLY : inter_pool_comm
   USE mp_world,  ONLY : mpime
   USE mp,        ONLY : mp_bcast, mp_barrier, mp_sum
-#endif
   ! 
   IMPLICIT NONE
   !
@@ -349,132 +317,128 @@
   IF ( .not. ALLOCATED(ixkff) ) ALLOCATE(ixkff(nkftot))
   ixkff(:) = 0
   !
-#ifdef __PARA
   IF ( mpime .eq. ionode_id ) THEN
-#endif
-  !
-  filikmap = trim(tmp_dir) // trim(prefix) // '.ikmap'
-  !OPEN(iufilikmap, file=filikmap, status='old', form='formatted', err=100, iostat=ios)
-  OPEN(iufilikmap, file=filikmap, status='old', form='unformatted', err=100, iostat=ios)
-100 CALL errore('read_kqmap','opening file '//filikmap,abs(ios))
-  !
-  ! nkf_irr - total nr of irreducible k-points
-  !READ(iufilikmap,'(i9)') nkf_irr
-  READ(iufilikmap) nkf_irr
-  !
-  IF ( .not. ALLOCATED(ixkf) ) ALLOCATE(ixkf(nkf_irr))
-  ixkf(:) = 0
-  !
-  DO ik = 1, nkf_irr
-     !READ(iufilikmap,'(i9)') ixkf(ik)
-     READ(iufilikmap) ixkf(ik)
-  ENDDO
-  CLOSE(iufilikmap)
-  !
-  IF ( mp_mesh_k ) CALL set_sym_bl( ) 
-  !
-  IF ( .not. ALLOCATED(xkff) )  ALLOCATE(xkff(3,nkftot))
-  xkff(:,:) = 0.d0
-  !
-  DO i = 1, nkf1
-     DO j = 1, nkf2
-        DO k = 1, nkf3
-           ik = (i-1)*nkf2*nkf3 + (j-1)*nkf3 + k
-           xkff(1,ik) = dble(i-1) / dble(nkf1)
-           xkff(2,ik) = dble(j-1) / dble(nkf2)
-           xkff(3,ik) = dble(k-1) / dble(nkf3)
-        ENDDO
-     ENDDO
-  ENDDO
-  !
-  IF ( .not. ALLOCATED(equiv_) )  ALLOCATE(equiv_(nkftot))
-  !  equiv_(nk) =nk : k-point nk is not equivalent to any previous k-point
-  !  equiv_(nk)!=nk : k-point nk is equivalent to k-point equiv(nk)
-  !
-  DO nk = 1, nkftot
-     equiv_(nk)=nk
-  ENDDO
-  !
-  IF ( mp_mesh_k ) THEN 
-     DO nk = 1, nkftot
-        !  check if this k-point has already been found equivalent to another
-        IF ( equiv_(nk) .eq. nk ) THEN
-           !  check if there are equivalent k-point to this in the list
-           !  (excepted those previously found to be equivalent to another)
-           !  check both k and -k
-           DO ns = 1, nrot
-              DO i = 1, 3
-                 xkr(i) = s(i,1,ns) * xkff(1,nk) &
-                        + s(i,2,ns) * xkff(2,nk) &
-                        + s(i,3,ns) * xkff(3,nk)
-                 xkr(i) = xkr(i) - nint( xkr(i) )
-              ENDDO
-              IF ( t_rev(ns) .eq. 1 ) xkr = -xkr
-              xx = xkr(1)*nkf1
-              yy = xkr(2)*nkf2
-              zz = xkr(3)*nkf3
-              in_the_list = abs( xx-nint(xx) ) .le. eps .AND. &
-                            abs( yy-nint(yy) ) .le. eps .AND. &
-                            abs( zz-nint(zz) ) .le. eps
-              IF ( in_the_list ) THEN
-                 i = mod( nint( xkr(1)*nkf1 + 2*nkf1), nkf1 ) + 1
-                 j = mod( nint( xkr(2)*nkf2 + 2*nkf2), nkf2 ) + 1
-                 k = mod( nint( xkr(3)*nkf3 + 2*nkf3), nkf3 ) + 1
-                 n = (k-1) + (j-1)*nkf3 + (i-1)*nkf2*nkf3 + 1
-                 IF ( n .gt. nk .AND. equiv_(n) .eq. n ) THEN
-                    equiv_(n) = nk
-                 ELSE
-                    IF ( equiv_(n) .ne. nk .OR. n .lt. nk ) CALL errore('kmesh_fine', &
-                       'something wrong in the checking algorithm',1)
-                 ENDIF
-              ENDIF
-              IF ( time_reversal ) THEN
-                 xx = -xkr(1)*nkf1
-                 yy = -xkr(2)*nkf2
-                 zz = -xkr(3)*nkf3
-                 in_the_list = abs( xx-nint(xx) ) .le. eps .AND. &
-                               abs( yy-nint(yy) ) .le. eps .AND. &
-                               abs( zz-nint(zz) ) .le. eps
-                 IF ( in_the_list ) THEN
-                    i = mod( nint( -xkr(1)*nkf1 + 2*nkf1), nkf1 ) + 1
-                    j = mod( nint( -xkr(2)*nkf2 + 2*nkf2), nkf2 ) + 1
-                    k = mod( nint( -xkr(3)*nkf3 + 2*nkf3), nkf3 ) + 1
-                    n = (k-1) + (j-1)*nkf3 + (i-1)*nkf2*nkf3 + 1
-                    IF ( n .gt. nk .AND. equiv_(n) .eq. n ) THEN
-                       equiv_(n) = nk
-                    ELSE
-                       IF ( equiv_(n) .ne. nk .OR. n .lt. nk ) CALL errore('kmesh_fine', &
-                          'something wrong in the checking algorithm',2)
-                    ENDIF
-                 ENDIF
-              ENDIF
-           ENDDO
-        ENDIF
-     ENDDO
-  ENDIF
-  !
-  !  define index of k on the full mesh (ixkff) using index of k-point within the
-  !  Fermi shell (ixkf)
-  !
-  nks = 0
-  DO nk = 1, nkftot
-     IF ( equiv_(nk) .eq. nk ) THEN
-        nks = nks + 1
-        ixkff(nk) = ixkf(nks)
-     ELSE
-        ixkff(nk) = ixkff(equiv_(nk))
-     ENDIF
-  ENDDO
-  IF ( nks .ne. nkf_irr) CALL errore('read_kmap_mp', 'something wrong with the mesh',1)
-  !
-  IF ( ALLOCATED(equiv_) ) DEALLOCATE(equiv_)
-  IF ( ALLOCATED(ixkf) )   DEALLOCATE(ixkf)
-  !
-#ifdef __PARA
+    !
+    filikmap = trim(tmp_dir) // trim(prefix) // '.ikmap'
+    !OPEN(iufilikmap, file=filikmap, status='old', form='formatted', err=100, iostat=ios)
+    OPEN(iufilikmap, file=filikmap, status='old', form='unformatted', err=100, iostat=ios)
+100   CALL errore('read_kqmap','opening file '//filikmap,abs(ios))
+    !
+    ! nkf_irr - total nr of irreducible k-points
+    !READ(iufilikmap,'(i9)') nkf_irr
+    READ(iufilikmap) nkf_irr
+    !
+    IF ( .not. ALLOCATED(ixkf) ) ALLOCATE(ixkf(nkf_irr))
+    ixkf(:) = 0
+    !
+    DO ik = 1, nkf_irr
+       !READ(iufilikmap,'(i9)') ixkf(ik)
+       READ(iufilikmap) ixkf(ik)
+    ENDDO
+    CLOSE(iufilikmap)
+    !
+    IF ( mp_mesh_k ) CALL set_sym_bl( ) 
+    !
+    IF ( .not. ALLOCATED(xkff) )  ALLOCATE(xkff(3,nkftot))
+    xkff(:,:) = 0.d0
+    !
+    DO i = 1, nkf1
+       DO j = 1, nkf2
+          DO k = 1, nkf3
+             ik = (i-1)*nkf2*nkf3 + (j-1)*nkf3 + k
+             xkff(1,ik) = dble(i-1) / dble(nkf1)
+             xkff(2,ik) = dble(j-1) / dble(nkf2)
+             xkff(3,ik) = dble(k-1) / dble(nkf3)
+          ENDDO
+       ENDDO
+    ENDDO
+    !
+    IF ( .not. ALLOCATED(equiv_) )  ALLOCATE(equiv_(nkftot))
+    !  equiv_(nk) =nk : k-point nk is not equivalent to any previous k-point
+    !  equiv_(nk)!=nk : k-point nk is equivalent to k-point equiv(nk)
+    !
+    DO nk = 1, nkftot
+       equiv_(nk)=nk
+    ENDDO
+    !
+    IF ( mp_mesh_k ) THEN 
+       DO nk = 1, nkftot
+          !  check if this k-point has already been found equivalent to another
+          IF ( equiv_(nk) .eq. nk ) THEN
+             !  check if there are equivalent k-point to this in the list
+             !  (excepted those previously found to be equivalent to another)
+             !  check both k and -k
+             DO ns = 1, nrot
+                DO i = 1, 3
+                   xkr(i) = s(i,1,ns) * xkff(1,nk) &
+                          + s(i,2,ns) * xkff(2,nk) &
+                          + s(i,3,ns) * xkff(3,nk)
+                   xkr(i) = xkr(i) - nint( xkr(i) )
+                ENDDO
+                IF ( t_rev(ns) .eq. 1 ) xkr = -xkr
+                xx = xkr(1)*nkf1
+                yy = xkr(2)*nkf2
+                zz = xkr(3)*nkf3
+                in_the_list = abs( xx-nint(xx) ) .le. eps .AND. &
+                              abs( yy-nint(yy) ) .le. eps .AND. &
+                              abs( zz-nint(zz) ) .le. eps
+                IF ( in_the_list ) THEN
+                   i = mod( nint( xkr(1)*nkf1 + 2*nkf1), nkf1 ) + 1
+                   j = mod( nint( xkr(2)*nkf2 + 2*nkf2), nkf2 ) + 1
+                   k = mod( nint( xkr(3)*nkf3 + 2*nkf3), nkf3 ) + 1
+                   n = (k-1) + (j-1)*nkf3 + (i-1)*nkf2*nkf3 + 1
+                   IF ( n .gt. nk .AND. equiv_(n) .eq. n ) THEN
+                      equiv_(n) = nk
+                   ELSE
+                      IF ( equiv_(n) .ne. nk .OR. n .lt. nk ) CALL errore('kmesh_fine', &
+                         'something wrong in the checking algorithm',1)
+                   ENDIF
+                ENDIF
+                IF ( time_reversal ) THEN
+                   xx = -xkr(1)*nkf1
+                   yy = -xkr(2)*nkf2
+                   zz = -xkr(3)*nkf3
+                   in_the_list = abs( xx-nint(xx) ) .le. eps .AND. &
+                                 abs( yy-nint(yy) ) .le. eps .AND. &
+                                 abs( zz-nint(zz) ) .le. eps
+                   IF ( in_the_list ) THEN
+                      i = mod( nint( -xkr(1)*nkf1 + 2*nkf1), nkf1 ) + 1
+                      j = mod( nint( -xkr(2)*nkf2 + 2*nkf2), nkf2 ) + 1
+                      k = mod( nint( -xkr(3)*nkf3 + 2*nkf3), nkf3 ) + 1
+                      n = (k-1) + (j-1)*nkf3 + (i-1)*nkf2*nkf3 + 1
+                      IF ( n .gt. nk .AND. equiv_(n) .eq. n ) THEN
+                         equiv_(n) = nk
+                      ELSE
+                         IF ( equiv_(n) .ne. nk .OR. n .lt. nk ) CALL errore('kmesh_fine', &
+                            'something wrong in the checking algorithm',2)
+                      ENDIF
+                   ENDIF
+                ENDIF
+             ENDDO
+          ENDIF
+       ENDDO
+    ENDIF
+    !
+    !  define index of k on the full mesh (ixkff) using index of k-point within the
+    !  Fermi shell (ixkf)
+    !
+    nks = 0
+    DO nk = 1, nkftot
+       IF ( equiv_(nk) .eq. nk ) THEN
+          nks = nks + 1
+          ixkff(nk) = ixkf(nks)
+       ELSE
+          ixkff(nk) = ixkff(equiv_(nk))
+       ENDIF
+    ENDDO
+    IF ( nks .ne. nkf_irr) CALL errore('read_kmap_mp', 'something wrong with the mesh',1)
+    !
+    IF ( ALLOCATED(equiv_) ) DEALLOCATE(equiv_)
+    IF ( ALLOCATED(ixkf) )   DEALLOCATE(ixkf)
+    !
   ENDIF
   CALL mp_bcast( ixkff, ionode_id, inter_pool_comm )
   CALL mp_barrier(inter_pool_comm)
-#endif
   !
   CALL fkbounds( nkfs, lower_bnd, upper_bnd )
   !
@@ -517,12 +481,10 @@
      ENDDO
   ENDDO
   !
-#ifdef __PARA       
   ! collect contributions from all pools (sum over k-points)
   CALL mp_sum( ixkqf, inter_pool_comm )
   CALL mp_sum( nqfs,  inter_pool_comm )
   CALL mp_barrier(inter_pool_comm)
-#endif  
   !
   ! get the size of required memory for ixqfs
   imelt = nkfs * maxval(nqfs(:))
@@ -540,11 +502,9 @@
      ENDDO
   ENDDO
   !
-#ifdef __PARA
   ! collect contributions from all pools (sum over k-points)
   CALL mp_sum( ixqfs, inter_pool_comm )
   CALL mp_barrier(inter_pool_comm)
-#endif  
   !
   IF ( ALLOCATED(index_) ) DEALLOCATE(index_)
   IF ( ALLOCATED(xqf) )    DEALLOCATE(xqf)
@@ -580,10 +540,8 @@
   USE eliashbergcom, ONLY : nkfs, nbndfs, ef0, ekfs, g2, ixkqf, nqfs
   USE constants_epw, ONLY : ryd2ev
   USE mp_global,     ONLY : npool
-#ifdef __PARA
   USE mp,            ONLY : mp_barrier, mp_bcast, mp_sum
   USE mp_global,     ONLY : inter_pool_comm
-#endif
   !  
   IMPLICIT NONE
   !
@@ -610,7 +568,7 @@
   !
   DO ipool = 1, npool ! nr of pools 
      CALL set_ndnmbr(0,ipool,1,npool,filelab)
-#ifdef __PARA
+#ifdef __MPI
      filephmat = trim(tmp_dir) // trim(prefix) // '.ephmat' // filelab
 #else
      filephmat = trim(tmp_dir) // trim(prefix) // '.ephmat'
@@ -627,9 +585,7 @@
      !WRITE(stdout,'(2i7)') tmp_pool_id, nkpool(ipool)
      CLOSE(iufileph)
   ENDDO
-#ifdef __PARA
   CALL mp_barrier(inter_pool_comm)
-#endif
   !
   nmin = npool
   nmax = npool
@@ -646,18 +602,13 @@
   nnq(:) = 0
   DO ipool = 1, npool ! nr of pools 
      CALL set_ndnmbr(0,ipool,1,npool,filelab)
-#ifdef __PARA
+#ifdef __MPI
      filephmat = trim(tmp_dir) // trim(prefix) // '.ephmat' // filelab
 #else
      filephmat = trim(tmp_dir) // trim(prefix) // '.ephmat'
 #endif     
-     !OPEN(iufileph, file=filephmat, status='old', form='formatted')
-     !READ(iufileph,'(2i7)') tmp_pool_id, nks
      OPEN(iufileph, file=filephmat, status='old', form='unformatted')
      READ(iufileph) tmp_pool_id, nks
-     !WRITE(stdout,'(2i7)') tmp_pool_id, nks
-     !WRITE(iufil,'(3i7)') tmp_pool_id, nks, nnk
-     !WRITE(iufil,'(3i7)') ipool, nmin, nmax
      IF ( ipool .ge. nmin .AND. ipool .le. nmax ) THEN
         DO iq = 1, nqtotf ! loop over q-points 
            DO ik = 1, nks ! loop over k-points in the pool
@@ -692,11 +643,8 @@
      IF ( ipool .eq. npool .AND. nnk .ne. nkfs )  CALL errore('read_ephmat', &
          'nnk should be equal to nkfs',1)
   ENDDO ! ipool
-  !CLOSE(iufil)
   !
-#ifdef __PARA
   CALL mp_barrier(inter_pool_comm)
-#endif
   !
   WRITE(stdout,'(/5x,a/)') 'Finish reading .ephmat files '
   !

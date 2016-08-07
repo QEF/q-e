@@ -38,10 +38,8 @@
   USE uspp,                 ONLY : nlcc_any
   USE fft_base,             ONLY : dfftp
   USE elph2,                ONLY : igk_k_all, ngk_all
-#ifdef __PARA
   USE mp,                   ONLY : mp_barrier
   USE mp_global,            ONLY : inter_pool_comm
-#endif  
   !
   IMPLICIT NONE
   !
@@ -172,7 +170,7 @@
   IF(.not. ALLOCATED(igk_k_all) ) ALLOCATE(igk_k_all( npwx, nkstot))
   IF(.not. ALLOCATED(ngk_all) ) ALLOCATE(ngk_all(nkstot))
   !
-#ifdef __PARA
+#ifdef __MPI
   !
   CALL poolgather_int (npwx, nkstot, nks, igk_k(:,1:nks), igk_k_all ) 
   CALL poolgather_int1 (nkstot, nks, ngk(1:nks), ngk_all ) 

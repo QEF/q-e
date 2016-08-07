@@ -21,11 +21,9 @@
   USE elph2,         ONLY : epmatwp
   USE constants_epw, ONLY : bohr2ang, twopi, ci, czero
   USE io_epw,        ONLY : iuwanep
-#ifdef __PARA
   USE io_global,     ONLY : ionode_id
   USE mp,            ONLY : mp_barrier
   USE mp_world,      ONLY : mpime
-#endif
   implicit none
   !
   !  Input variables - note irvec is dimensioned with nrr_k 
@@ -90,9 +88,7 @@
     !
     !  we plot: R_e, R_p, max_{m,n,nu} |g(m,n,nu;R_e,R_p)|
     !
-#ifdef __PARA
     IF (mpime.eq.ionode_id) THEN
-#endif
       IF (ir.eq.1) open(unit=iuwanep,file='decay.epmat_wanep',status='unknown')
       IF (ir.eq.1) WRITE(iuwanep, '(a)') '#  R_e,    R_p, max_{m,n,nu} |g(m,n,nu;R_e,R_p)| '
       DO ire = 1, nrk
@@ -114,9 +110,7 @@
                                 len2 * celldm (1) * bohr2ang, tmp
       ENDDO
       IF (ir.eq.nrr) close(iuwanep)
-#ifdef __PARA
     ENDIF
-#endif
     !
   ENDDO
   !
@@ -141,11 +135,9 @@
   USE pwcom,         ONLY : at, bg, celldm
   USE constants_epw, ONLY : bohr2ang, twopi, ci, czero
   USE io_epw,        ONLY : iunepmatwe, iunepmatwp, iuwanep
-#ifdef __PARA
   USE io_global,     ONLY : ionode_id
   USE mp,            ONLY : mp_barrier
   USE mp_world,      ONLY : mpime
-#endif
   implicit none
   !
   !  input variables - note irvec is dimensioned with nrr_k 
@@ -219,9 +211,7 @@
     !
     !  we plot: R_e, R_p, max_{m,n,nu} |g(m,n,nu;R_e,R_p)|
     !
-#ifdef __PARA
     IF (mpime.eq.ionode_id) THEN
-#endif
       IF (ir.eq.1) open(unit=iuwanep,file='decay.epmat_wanep',status='unknown')
       IF (ir.eq.1) WRITE(iuwanep, '(a)') '#  R_e,    R_p, max_{m,n,nu} |g(m,n,nu;R_e,R_p)| '
       DO ire = 1, nrk
@@ -243,9 +233,7 @@
                                 len2 * celldm (1) * bohr2ang, tmp
       ENDDO
       IF (ir.eq.nrr) close(iuwanep)
-#ifdef __PARA
     ENDIF
-#endif
     !
   ENDDO
   !

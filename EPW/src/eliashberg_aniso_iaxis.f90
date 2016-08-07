@@ -21,12 +21,10 @@
   USE eliashbergcom, ONLY : nsw, nsiw, ADelta, ADeltap, ADeltai, ADeltaip, &
                             estemp, nkfs, nbndfs, ekfs, ef0
   USE constants_epw, ONLY : kelvin2eV, ci, pi
-#ifdef __PARA
   USE io_global,     ONLY : ionode_id
   USE mp_global,     ONLY : inter_pool_comm
   USE mp,            ONLY : mp_bcast, mp_barrier
   USE mp_world,      ONLY : mpime
-#endif
   ! 
   IMPLICIT NONE
   !
@@ -59,9 +57,7 @@
         conv = .false.
         DO WHILE ( .not. conv .AND. iter .le. nsiter ) 
            CALL sum_eliashberg_aniso_iaxis( itemp, iter, conv )
-#ifdef __PARA 
            IF (mpime .eq. ionode_id) THEN
-#endif  
               DO ik = 1, nkfs
                  DO ibnd = 1, nbndfs
                     IF ( abs( ekfs(ibnd,ik) - ef0 ) .lt. fsthick ) THEN
@@ -70,12 +66,10 @@
                     ENDIF
                  ENDDO
               ENDDO
-#ifdef __PARA
            ENDIF
            CALL mp_bcast( ADeltai, ionode_id, inter_pool_comm )
            CALL mp_bcast( ADeltaip, ionode_id, inter_pool_comm )
            CALL mp_barrier(inter_pool_comm)
-#endif
            iter = iter + 1
         ENDDO ! iter
         !
@@ -85,14 +79,10 @@
            ! SP : Only print the Free energy if the user want it
            !
            IF ( iverbosity .eq. 2 ) THEN
-#ifdef __PARA 
               IF (mpime .eq. ionode_id) THEN
-#endif 
                  CALL free_energy( itemp )
-#ifdef __PARA
               ENDIF
               CALL mp_barrier(inter_pool_comm)
-#endif
            ENDIF
            !
            WRITE(stdout,'(a)') '  '
@@ -122,15 +112,10 @@
         CALL pade_cont_aniso_iaxis_to_raxis( itemp, N, conv )
         !
         IF ( conv ) THEN
-#ifdef __PARA 
            IF (mpime .eq. ionode_id) THEN
-#endif
               CALL dos_quasiparticle( itemp )
-#ifdef __PARA
            ENDIF
            CALL mp_barrier(inter_pool_comm)
-#endif     
-           WRITE(stdout,'(a)') '  '
            CALL stop_clock( 'raxis_pade' )
            CALL print_clock( 'raxis_pade' )
            WRITE(stdout,'(a)') '  '
@@ -157,9 +142,7 @@
         conv = .false.
         DO WHILE ( .not. conv .AND. iter .le. nsiter )
            CALL analytic_cont_aniso_iaxis_to_raxis( itemp, iter, conv )
-#ifdef __PARA 
            IF (mpime .eq. ionode_id) THEN
-#endif
               DO ik = 1, nkfs
                  DO ibnd = 1, nbndfs
                     IF ( abs( ekfs(ibnd,ik) - ef0 ) .lt. fsthick ) THEN
@@ -173,24 +156,18 @@
                     ENDIF
                  ENDDO
               ENDDO
-#ifdef __PARA
            ENDIF
            CALL mp_bcast( ADelta, ionode_id, inter_pool_comm )
            CALL mp_bcast( ADeltap, ionode_id, inter_pool_comm )
            CALL mp_barrier(inter_pool_comm)
-#endif
            iter = iter + 1
         ENDDO ! iter
         !
         IF ( conv ) THEN 
-#ifdef __PARA 
            IF (mpime .eq. ionode_id) THEN
-#endif
               CALL dos_quasiparticle( itemp )
-#ifdef __PARA
            ENDIF
            CALL mp_barrier(inter_pool_comm)
-#endif
            WRITE(stdout,'(a)') '  '
            CALL stop_clock( 'raxis_acon' )
            CALL print_clock( 'raxis_acon' )
@@ -257,12 +234,10 @@
                             Deltai, wsphmax, nkfs, nbndfs, dosef, ef0, ixkqf, ixqfs, & 
                             nqfs, wkfs, w0g, ekfs
   USE constants_epw, ONLY : pi  
-#ifdef __PARA
   USE io_global,     ONLY : ionode_id
   USE mp_global,     ONLY : inter_pool_comm
   USE mp_world,      ONLY : mpime
   USE mp,            ONLY : mp_bcast, mp_barrier, mp_sum
-#endif
   ! 
   IMPLICIT NONE
   !
@@ -376,68 +351,63 @@
   IF( ALLOCATED(wesqrt) ) DEALLOCATE(wesqrt)
   IF( ALLOCATED(desqrt) ) DEALLOCATE(desqrt)
   !
-#ifdef __PARA
   ! collect contributions from all pools 
   CALL mp_sum( AZnormi, inter_pool_comm )
   CALL mp_sum( NAZnormi, inter_pool_comm )
   CALL mp_sum( ADeltai, inter_pool_comm )
   CALL mp_barrier(inter_pool_comm)
-#endif
   !
-#ifdef __PARA 
   IF (mpime .eq. ionode_id) THEN
-#endif 
-  IF ( iter .eq. 1 ) THEN
-     IF ( .not. ALLOCATED(Deltaold) ) ALLOCATE( Deltaold(nsiw(itemp)) )
-     Deltaold(:) = gap0
-  ENDIF
-  absdelta = 0.d0
-  reldelta = 0.d0
-  DO iw = 1, nsiw(itemp) ! loop over omega
-     DO ik = 1, nkfs
-        DO ibnd = 1, nbndfs
-           IF ( abs( ekfs(ibnd,ik) - ef0 ) .lt. fsthick ) THEN
-              weight = 0.5d0 * wkfs(ik) * w0g(ibnd,ik) / dosef
-              Znormi(iw) = Znormi(iw) + weight * AZnormi(ibnd,ik,iw)
-              Deltai(iw) = Deltai(iw) + weight * ADeltai(ibnd,ik,iw)
-              NAZnormi(ibnd,ik,iw) = 1.d0 + pi * estemp(itemp) * NAZnormi(ibnd,ik,iw) / wsi(iw)
-              AZnormi(ibnd,ik,iw) = 1.d0 + pi * estemp(itemp) * AZnormi(ibnd,ik,iw) / wsi(iw)
-              ADeltai(ibnd,ik,iw) = pi * estemp(itemp) * ADeltai(ibnd,ik,iw) / AZnormi(ibnd,ik,iw)
-           ENDIF
-        ENDDO ! ibnd
-     ENDDO ! ik
-     NZnormi(iw) = 1.d0 + pi * estemp(itemp) * NZnormi(iw) / wsi(iw)
-     Znormi(iw) = 1.d0 + pi * estemp(itemp) * Znormi(iw) / wsi(iw)
-     Deltai(iw) = pi * estemp(itemp) * Deltai(iw) / Znormi(iw)
-     reldelta = reldelta + abs( Deltai(iw) - Deltaold(iw) )
-     absdelta = absdelta + abs( Deltai(iw) )
-  ENDDO ! iw
-  errdelta = reldelta / absdelta
-  Deltaold(:) = Deltai(:)
-  !
-  WRITE(stdout,'(5x,a,i6,a,ES20.10,a,ES20.10,a,ES20.10,a,ES20.10)') 'iter = ', iter, & 
-               '   relerr = ', errdelta, '   abserr = ', reldelta / dble(nsiw(itemp)), &
-               '   Znormi(1) = ', Znormi(1), '   Deltai(1) = ', Deltai(1)
-  !
-  IF ( errdelta .lt. conv_thr_iaxis) conv = .true.
-  IF ( errdelta .lt. conv_thr_iaxis .OR. iter .eq. nsiter ) THEN
-     gap(itemp) = Deltai(1)
-     gap0 = gap(itemp)
-     !
-     CALL eliashberg_write_iaxis( itemp )
-     !
-  ENDIF
-  !
-  IF ( conv .OR. iter .eq. nsiter ) THEN
-     IF( ALLOCATED(Deltaold) ) DEALLOCATE(Deltaold)
-     WRITE(stdout,'(5x,a,i6)') 'Convergence was reached in nsiter = ', iter
-  ENDIF
-  IF ( .not. conv .AND. iter .eq. nsiter ) THEN
-     WRITE(stdout,'(a)') ' '
-     WRITE(stdout,'(5x,a,i6)') 'Convergence was not reached in nsiter = ', iter
-     CALL errore('sum_eliashberg_aniso_iaxis','increase nsiter or reduce conv_thr_iaxis',1)
-  ENDIF
-#ifdef __PARA
+    IF ( iter .eq. 1 ) THEN
+       IF ( .not. ALLOCATED(Deltaold) ) ALLOCATE( Deltaold(nsiw(itemp)) )
+       Deltaold(:) = gap0
+    ENDIF
+    absdelta = 0.d0
+    reldelta = 0.d0
+    DO iw = 1, nsiw(itemp) ! loop over omega
+       DO ik = 1, nkfs
+          DO ibnd = 1, nbndfs
+             IF ( abs( ekfs(ibnd,ik) - ef0 ) .lt. fsthick ) THEN
+                weight = 0.5d0 * wkfs(ik) * w0g(ibnd,ik) / dosef
+                Znormi(iw) = Znormi(iw) + weight * AZnormi(ibnd,ik,iw)
+                Deltai(iw) = Deltai(iw) + weight * ADeltai(ibnd,ik,iw)
+                NAZnormi(ibnd,ik,iw) = 1.d0 + pi * estemp(itemp) * NAZnormi(ibnd,ik,iw) / wsi(iw)
+                AZnormi(ibnd,ik,iw) = 1.d0 + pi * estemp(itemp) * AZnormi(ibnd,ik,iw) / wsi(iw)
+                ADeltai(ibnd,ik,iw) = pi * estemp(itemp) * ADeltai(ibnd,ik,iw) / AZnormi(ibnd,ik,iw)
+             ENDIF
+          ENDDO ! ibnd
+       ENDDO ! ik
+       NZnormi(iw) = 1.d0 + pi * estemp(itemp) * NZnormi(iw) / wsi(iw)
+       Znormi(iw) = 1.d0 + pi * estemp(itemp) * Znormi(iw) / wsi(iw)
+       Deltai(iw) = pi * estemp(itemp) * Deltai(iw) / Znormi(iw)
+       reldelta = reldelta + abs( Deltai(iw) - Deltaold(iw) )
+       absdelta = absdelta + abs( Deltai(iw) )
+    ENDDO ! iw
+    errdelta = reldelta / absdelta
+    Deltaold(:) = Deltai(:)
+    !
+    WRITE(stdout,'(5x,a,i6,a,ES20.10,a,ES20.10,a,ES20.10,a,ES20.10)') 'iter = ', iter, & 
+                 '   relerr = ', errdelta, '   abserr = ', reldelta / dble(nsiw(itemp)), &
+                 '   Znormi(1) = ', Znormi(1), '   Deltai(1) = ', Deltai(1)
+    !
+    IF ( errdelta .lt. conv_thr_iaxis) conv = .true.
+    IF ( errdelta .lt. conv_thr_iaxis .OR. iter .eq. nsiter ) THEN
+       gap(itemp) = Deltai(1)
+       gap0 = gap(itemp)
+       !
+       CALL eliashberg_write_iaxis( itemp )
+       !
+    ENDIF
+    !
+    IF ( conv .OR. iter .eq. nsiter ) THEN
+       IF( ALLOCATED(Deltaold) ) DEALLOCATE(Deltaold)
+       WRITE(stdout,'(5x,a,i6)') 'Convergence was reached in nsiter = ', iter
+    ENDIF
+    IF ( .not. conv .AND. iter .eq. nsiter ) THEN
+       WRITE(stdout,'(a)') ' '
+       WRITE(stdout,'(5x,a,i6)') 'Convergence was not reached in nsiter = ', iter
+       CALL errore('sum_eliashberg_aniso_iaxis','increase nsiter or reduce conv_thr_iaxis',1)
+    ENDIF
   ENDIF
   CALL mp_bcast( Deltai, ionode_id, inter_pool_comm )
   CALL mp_bcast( Znormi, ionode_id, inter_pool_comm )
@@ -449,7 +419,6 @@
   CALL mp_bcast( Agap, ionode_id, inter_pool_comm )
   CALL mp_bcast( conv, ionode_id, inter_pool_comm )
   CALL mp_barrier(inter_pool_comm)
-#endif
   !
   IF ( conv .OR. iter .eq. nsiter ) THEN 
      !
@@ -493,12 +462,10 @@
                             AZnormi, NAZnormi, ADeltai, nkfs, nbndfs, ef0, ekfs, &
                             dosef, wkfs, w0g
   USE constants_epw, ONLY : kelvin2eV
-#ifdef __PARA
   USE io_global, ONLY : ionode_id
   USE mp_global, ONLY : inter_pool_comm
   USE mp_world,  ONLY : mpime
   USE mp,        ONLY : mp_bcast, mp_barrier, mp_sum
-#endif
   ! 
   IMPLICIT NONE
   !
@@ -540,56 +507,53 @@
   AZnormi(:,:,:) = 0.d0
   NAZnormi(:,:,:) = 0.d0
   !
-#ifdef __PARA                            
   IF (mpime .eq. ionode_id) THEN     
-#endif 
-  !   
-  temp = estemp(itemp) / kelvin2eV
-  ! anisotropic case
-  IF ( temp .lt. 10.d0 ) THEN
-     WRITE(name1,'(a,a13,f4.2)') TRIM(prefix),'.imag_aniso_0', temp
-  ELSEIF ( temp .ge. 10.d0 ) THEN
-     WRITE(name1,'(a,a12,f5.2)') TRIM(prefix),'.imag_aniso_', temp
-  ENDIF 
-  OPEN(iufilgap, file=name1, form='formatted', err=100, iostat=ios)
+    !   
+    temp = estemp(itemp) / kelvin2eV
+    ! anisotropic case
+    IF ( temp .lt. 10.d0 ) THEN
+       WRITE(name1,'(a,a13,f4.2)') TRIM(prefix),'.imag_aniso_0', temp
+    ELSEIF ( temp .ge. 10.d0 ) THEN
+       WRITE(name1,'(a,a12,f5.2)') TRIM(prefix),'.imag_aniso_', temp
+    ENDIF 
+    OPEN(iufilgap, file=name1, form='formatted', err=100, iostat=ios)
 100 CALL errore('eliashberg_read_aniso_iaxis','opening file '//name1,abs(ios))
-  READ(iufilgap,'(a)') word
-  DO iw = 1, nsiw(itemp) ! loop over omega
-     DO ik = 1, nkfs
-        DO ibnd = 1, nbndfs
-           IF ( abs( ekfs(ibnd,ik) - ef0 ) .lt. fsthick ) THEN
-              READ(iufilgap,'(5ES20.10)') omega, eband, AZnormi(ibnd,ik,iw), ADeltai(ibnd,ik,iw), NAZnormi(ibnd,ik,iw)
-              IF ( iw .eq. 1 ) & 
-                 Agap(ibnd,ik,itemp) = ADeltai(ibnd,ik,1)
-           ENDIF
-        ENDDO ! ibnd
-     ENDDO ! ik             
-     IF ( abs(wsi(iw)-omega) .gt. eps ) &
-        CALL errore('eliashberg_read_aniso_iaxis','temperature not the same with the input',1)
-  ENDDO ! iw
-  CLOSE(iufilgap)
-  !
-  DO iw = 1, nsiw(itemp) ! loop over omega
-     DO ik = 1, nkfs
-        DO ibnd = 1, nbndfs
-           IF ( abs( ekfs(ibnd,ik) - ef0 ) .lt. fsthick ) THEN
-              weight = 0.5d0 * wkfs(ik) * w0g(ibnd,ik) / dosef
-              Znormi(iw) = Znormi(iw) + weight * AZnormi(ibnd,ik,iw)
-              Deltai(iw) = Deltai(iw) + weight * ADeltai(ibnd,ik,iw)
-              NZnormi(iw) = NZnormi(iw) + weight * NAZnormi(ibnd,ik,iw)
-           ENDIF
-        ENDDO ! ibnd
-     ENDDO ! ik
-  ENDDO ! iw
-  gap(itemp) = Deltai(1)
-  gap0 = gap(itemp)
-  !
-  CALL gap_FS( itemp )
-  !
-  IF ( iverbosity .eq. 2 ) &
-     CALL free_energy( itemp )
-  !
-#ifdef __PARA
+    READ(iufilgap,'(a)') word
+    DO iw = 1, nsiw(itemp) ! loop over omega
+       DO ik = 1, nkfs
+          DO ibnd = 1, nbndfs
+             IF ( abs( ekfs(ibnd,ik) - ef0 ) .lt. fsthick ) THEN
+                READ(iufilgap,'(5ES20.10)') omega, eband, AZnormi(ibnd,ik,iw), ADeltai(ibnd,ik,iw), NAZnormi(ibnd,ik,iw)
+                IF ( iw .eq. 1 ) & 
+                   Agap(ibnd,ik,itemp) = ADeltai(ibnd,ik,1)
+             ENDIF
+          ENDDO ! ibnd
+       ENDDO ! ik             
+       IF ( abs(wsi(iw)-omega) .gt. eps ) &
+          CALL errore('eliashberg_read_aniso_iaxis','temperature not the same with the input',1)
+    ENDDO ! iw
+    CLOSE(iufilgap)
+    !
+    DO iw = 1, nsiw(itemp) ! loop over omega
+      DO ik = 1, nkfs
+         DO ibnd = 1, nbndfs
+            IF ( abs( ekfs(ibnd,ik) - ef0 ) .lt. fsthick ) THEN
+               weight = 0.5d0 * wkfs(ik) * w0g(ibnd,ik) / dosef
+               Znormi(iw) = Znormi(iw) + weight * AZnormi(ibnd,ik,iw)
+               Deltai(iw) = Deltai(iw) + weight * ADeltai(ibnd,ik,iw)
+               NZnormi(iw) = NZnormi(iw) + weight * NAZnormi(ibnd,ik,iw)
+            ENDIF
+         ENDDO ! ibnd
+      ENDDO ! ik
+    ENDDO ! iw
+    gap(itemp) = Deltai(1)
+    gap0 = gap(itemp)
+    !
+    CALL gap_FS( itemp )
+    !
+    IF ( iverbosity .eq. 2 ) &
+       CALL free_energy( itemp )
+    !
   ENDIF
   CALL mp_bcast( Deltai, ionode_id, inter_pool_comm )
   CALL mp_bcast( Znormi, ionode_id, inter_pool_comm )
@@ -601,7 +565,6 @@
   CALL mp_bcast( gap, ionode_id, inter_pool_comm )
   CALL mp_bcast( Agap, ionode_id, inter_pool_comm )
   CALL mp_barrier(inter_pool_comm)
-#endif
   !
   RETURN
   !

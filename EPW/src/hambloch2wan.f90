@@ -20,12 +20,11 @@
   USE kinds,     ONLY : DP
   USE pwcom,     ONLY : at, bg, celldm
   USE constants_epw, ONLY : bohr2ang, twopi, ci, czero
-#ifdef __PARA
   USE io_global, ONLY : ionode_id
   USE mp_global, ONLY : inter_pool_comm
   USE mp,        ONLY : mp_barrier,mp_sum
   USE mp_world,  ONLY : mpime
-#endif
+  !
   implicit none
   !
   LOGICAL, INTENT (in) :: lwin( nbnd, nks )
@@ -154,9 +153,7 @@
     ENDDO
     !
   ENDDO
-#ifdef __PARA
   CALL mp_sum(chw,inter_pool_comm) 
-#endif
   !
   ! bring xk back into cart coord
   !
@@ -166,9 +163,7 @@
     !  check spatial decay of Hamiltonian in Wannier basis
     !  the unit in r-space is angstrom
     !
-#ifdef __PARA
     IF (mpime.eq.ionode_id) THEN
-#endif
        open(unit=300,file='decay.H')
        WRITE(300, '(/3x,a/)') '#Spatial decay of Hamiltonian in Wannier basis'
       DO ir = 1, nrr
@@ -178,10 +173,8 @@
         !
       ENDDO
       close(300)
-#ifdef __PARA
     ENDIF
     CALL mp_barrier(inter_pool_comm)
-#endif
   !
   CALL stop_clock ( 'Ham: step 2' )
   !

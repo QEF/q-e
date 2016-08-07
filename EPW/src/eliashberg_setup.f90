@@ -192,15 +192,13 @@
   USE eliashbergcom, ONLY : nkfs, nbndfs, g2, ixkqf, ixqfs, nqfs, w0g, ekfs, ef0, dosef, wsph, &
                             wkfs, dwsph, a2f_iso, ixkff
   USE constants_epw, ONLY : ryd2ev
-#ifdef __PARA
   USE io_global,     ONLY : ionode_id
   USE mp_global,     ONLY : inter_pool_comm, my_pool_id, npool
   USE mp_world,      ONLY : mpime
   USE mp,            ONLY : mp_bcast, mp_barrier, mp_sum
-#endif
   ! 
   IMPLICIT NONE
-#ifndef __PARA
+#ifndef __MPI
   INTEGER, PARAMETER :: npool = 1, my_pool_id = 0 ! this is only a quick fix since the subroutine was written
                                                   ! for parallel execution - FG June 2014
 #endif
@@ -284,8 +282,6 @@
   lambda_k(:,:) = 2.d0 * lambda_k(:,:)
   lambda_max(:) = 2.d0 * dosef * lambda_max(:)
   !
-#ifdef __PARA
-  !
   ! collect contributions from all pools (sum over k-points)
   CALL mp_sum( l_sum, inter_pool_comm )
   CALL mp_sum( a2f, inter_pool_comm )
@@ -293,82 +289,77 @@
   CALL mp_sum( lambda_max, inter_pool_comm )
   CALL mp_sum( lambda_k, inter_pool_comm )
   CALL mp_barrier(inter_pool_comm)
-#endif
   !
-#ifdef __PARA
   IF ( mpime .eq. ionode_id ) THEN
-#endif
-  !
-  OPEN( unit = iua2ffil, file = TRIM(prefix)//".a2f", form = 'formatted')
-  OPEN( unit = iudosfil, file = TRIM(prefix)//".phdos", form = 'formatted')
-  !
-  IF ( .not. ALLOCATED(phdos) )     ALLOCATE( phdos(nqstep,nqsmear) )
-  IF ( .not. ALLOCATED(phdos_modeproj) ) ALLOCATE( phdos_modeproj(nmodes,nqstep) )
-  phdos(:,:) = 0.d0
-  phdos_modeproj(:,:) = 0.d0
-  !
-  DO ismear = 1, nqsmear
-     sigma = degaussq + (ismear-1) * delta_qsmear
-     DO iq = 1, nqtotf
-        DO imode = 1, nmodes
-           IF ( wf(imode,iq) .gt. eps_acustic ) THEN
-              DO iwph = 1, nqstep
-                 weightq  = w0gauss( ( wsph(iwph) - wf(imode,iq)) / sigma, 0 ) / sigma
-                 phdos(iwph,ismear) = phdos(iwph,ismear) + wqf(iq) * weightq
-                 IF ( ismear .eq. 1 ) THEN
-                    phdos_modeproj(imode,iwph) = phdos_modeproj(imode,iwph) + wqf(iq) * weightq
-                 ENDIF
-              ENDDO ! iwph
-           ENDIF ! wf
-        ENDDO ! imode
-     ENDDO ! iq
-  ENDDO ! ismear
-  !
-  IF ( .not. ALLOCATED(l_a2f) )   ALLOCATE( l_a2f(nqsmear) )
-  l_a2f(:) = 0.d0
-  !
-  DO ismear = 1, nqsmear
-     DO iwph = 1, nqstep
-        l_a2f(ismear) = l_a2f(ismear) + a2f(iwph,ismear) / wsph(iwph)
-        ! wsph in meV (from eV) and phdos in states/meV (from states/eV)
-        IF (ismear .eq. nqsmear) WRITE (iua2ffil,'(f12.7,15f12.7)') wsph(iwph)*1000.d0, a2f(iwph,:)
-        IF (ismear .eq. nqsmear) WRITE (iudosfil,'(f12.7,15f15.7)') wsph(iwph)*1000.d0, phdos(iwph,:)/1000.d0
-     ENDDO
-     l_a2f(ismear) = 2.d0 * l_a2f(ismear) * dwsph
-  ENDDO
-  !
-  WRITE(iua2ffil,*) "Integrated el-ph coupling"
-  WRITE(iua2ffil,'("  #         ", 15f12.7)') l_a2f(:)
-  WRITE(iua2ffil,*) "Phonon smearing (meV)" 
-  WRITE(iua2ffil,'("  #         ", 15f12.7)') ( (degaussq+(ismear-1)*delta_qsmear)*1000.d0,ismear=1,nqsmear )
-  WRITE(iua2ffil,'(" Electron smearing (eV)", f12.7)') degaussw
-  WRITE(iua2ffil,'(" Fermi window (eV)", f12.7)') fsthick
-  WRITE(iua2ffil,'(" Summed el-ph coupling ", f12.7)') l_sum
-  CLOSE(iua2ffil)
-  CLOSE(iudosfil)
-  !
-  a2f_iso(:) = a2f(:,1)
-  OPEN( unit = iua2ffil, file = TRIM(prefix)//".a2f_iso", form = 'formatted')
-  OPEN( unit = iudosfil, file = TRIM(prefix)//".phdos_proj", form = 'formatted')
-  DO iwph = 1, nqstep
-     ! wsph in meV (from eV) and phdos in states/meV (from states/eV)
-     WRITE(iua2ffil,'(f12.7,100f12.7)') wsph(iwph)*1000.d0, a2f_iso(iwph), a2f_modeproj(:,iwph)
-     WRITE(iudosfil,'(f12.7,100f15.7)') wsph(iwph)*1000.d0, phdos(iwph,1)/1000.d0, phdos_modeproj(:,iwph)/1000.d0
-  ENDDO
-  WRITE(iua2ffil,'(a,f18.7,a,f18.7)') 'lambda_int = ', l_a2f(1), '   lambda_sum = ',l_sum
-  CLOSE(iua2ffil)
-  CLOSE(iudosfil)
-  !
-  IF ( ALLOCATED(phdos) )          DEALLOCATE( phdos )
-  IF ( ALLOCATED(phdos_modeproj) ) DEALLOCATE( phdos_modeproj )
-  IF ( ALLOCATED(l_a2f) )          DEALLOCATE( l_a2f )
-  !
-#ifdef __PARA
+    !
+    OPEN( unit = iua2ffil, file = TRIM(prefix)//".a2f", form = 'formatted')
+    OPEN( unit = iudosfil, file = TRIM(prefix)//".phdos", form = 'formatted')
+    !
+    IF ( .not. ALLOCATED(phdos) )     ALLOCATE( phdos(nqstep,nqsmear) )
+    IF ( .not. ALLOCATED(phdos_modeproj) ) ALLOCATE( phdos_modeproj(nmodes,nqstep) )
+    phdos(:,:) = 0.d0
+    phdos_modeproj(:,:) = 0.d0
+    !
+    DO ismear = 1, nqsmear
+       sigma = degaussq + (ismear-1) * delta_qsmear
+       DO iq = 1, nqtotf
+          DO imode = 1, nmodes
+             IF ( wf(imode,iq) .gt. eps_acustic ) THEN
+                DO iwph = 1, nqstep
+                   weightq  = w0gauss( ( wsph(iwph) - wf(imode,iq)) / sigma, 0 ) / sigma
+                   phdos(iwph,ismear) = phdos(iwph,ismear) + wqf(iq) * weightq
+                   IF ( ismear .eq. 1 ) THEN
+                      phdos_modeproj(imode,iwph) = phdos_modeproj(imode,iwph) + wqf(iq) * weightq
+                   ENDIF
+                ENDDO ! iwph
+             ENDIF ! wf
+          ENDDO ! imode
+       ENDDO ! iq
+    ENDDO ! ismear
+    !
+    IF ( .not. ALLOCATED(l_a2f) )   ALLOCATE( l_a2f(nqsmear) )
+    l_a2f(:) = 0.d0
+    !
+    DO ismear = 1, nqsmear
+       DO iwph = 1, nqstep
+          l_a2f(ismear) = l_a2f(ismear) + a2f(iwph,ismear) / wsph(iwph)
+          ! wsph in meV (from eV) and phdos in states/meV (from states/eV)
+          IF (ismear .eq. nqsmear) WRITE (iua2ffil,'(f12.7,15f12.7)') wsph(iwph)*1000.d0, a2f(iwph,:)
+          IF (ismear .eq. nqsmear) WRITE (iudosfil,'(f12.7,15f15.7)') wsph(iwph)*1000.d0, phdos(iwph,:)/1000.d0
+       ENDDO
+       l_a2f(ismear) = 2.d0 * l_a2f(ismear) * dwsph
+    ENDDO
+    !
+    WRITE(iua2ffil,*) "Integrated el-ph coupling"
+    WRITE(iua2ffil,'("  #         ", 15f12.7)') l_a2f(:)
+    WRITE(iua2ffil,*) "Phonon smearing (meV)" 
+    WRITE(iua2ffil,'("  #         ", 15f12.7)') ( (degaussq+(ismear-1)*delta_qsmear)*1000.d0,ismear=1,nqsmear )
+    WRITE(iua2ffil,'(" Electron smearing (eV)", f12.7)') degaussw
+    WRITE(iua2ffil,'(" Fermi window (eV)", f12.7)') fsthick
+    WRITE(iua2ffil,'(" Summed el-ph coupling ", f12.7)') l_sum
+    CLOSE(iua2ffil)
+    CLOSE(iudosfil)
+    !
+    a2f_iso(:) = a2f(:,1)
+    OPEN( unit = iua2ffil, file = TRIM(prefix)//".a2f_iso", form = 'formatted')
+    OPEN( unit = iudosfil, file = TRIM(prefix)//".phdos_proj", form = 'formatted')
+    DO iwph = 1, nqstep
+       ! wsph in meV (from eV) and phdos in states/meV (from states/eV)
+       WRITE(iua2ffil,'(f12.7,100f12.7)') wsph(iwph)*1000.d0, a2f_iso(iwph), a2f_modeproj(:,iwph)
+       WRITE(iudosfil,'(f12.7,100f15.7)') wsph(iwph)*1000.d0, phdos(iwph,1)/1000.d0, phdos_modeproj(:,iwph)/1000.d0
+    ENDDO
+    WRITE(iua2ffil,'(a,f18.7,a,f18.7)') 'lambda_int = ', l_a2f(1), '   lambda_sum = ',l_sum
+    CLOSE(iua2ffil)
+    CLOSE(iudosfil)
+    !
+    IF ( ALLOCATED(phdos) )          DEALLOCATE( phdos )
+    IF ( ALLOCATED(phdos_modeproj) ) DEALLOCATE( phdos_modeproj )
+    IF ( ALLOCATED(l_a2f) )          DEALLOCATE( l_a2f )
+    !
   ENDIF
   !
   CALL mp_bcast( a2f_iso, ionode_id, inter_pool_comm )
   CALL mp_barrier(inter_pool_comm)
-#endif
   !
   IF ( ALLOCATED(a2f) )            DEALLOCATE( a2f )
   IF ( ALLOCATED(a2f_modeproj) )   DEALLOCATE( a2f_modeproj )
@@ -423,7 +414,6 @@
      ENDDO ! ibnd
   ENDDO ! ik
   !
-#ifdef __PARA 
   ! collect contributions from all pools 
   CALL mp_sum( lambda_k, inter_pool_comm )
   IF ( iverbosity .eq. 2 ) THEN  
@@ -431,97 +421,91 @@
   ENDIF
   CALL mp_sum( lambda_k_bin, inter_pool_comm )
   CALL mp_barrier(inter_pool_comm)
-#endif      
   !
-#ifdef __PARA
   IF ( mpime .eq. ionode_id ) THEN
-#endif
-  !
-  ! SP: Produced if user really wants it 
-  IF ( iverbosity .eq. 2 ) THEN
-    OPEN(unit = iufillambda, file = TRIM(prefix)//".lambda_aniso", form = 'formatted')
-    WRITE(iufillambda,'(2a12,2a7)') '# enk-e0[eV]','  lambda_nk','# kpt','# band'
-    DO ik = 1, nkfs
+    !
+    ! SP: Produced if user really wants it 
+    IF ( iverbosity .eq. 2 ) THEN
+      OPEN(unit = iufillambda, file = TRIM(prefix)//".lambda_aniso", form = 'formatted')
+      WRITE(iufillambda,'(2a12,2a7)') '# enk-e0[eV]','  lambda_nk','# kpt','# band'
+      DO ik = 1, nkfs
+         DO ibnd = 1, nbndfs
+            IF ( abs( ekfs(ibnd,ik) - ef0 ) .lt. fsthick ) THEN
+               WRITE(iufillambda,'(2f12.7,2i7)') ekfs(ibnd,ik) - ef0, lambda_k(ik,ibnd), ik, ibnd
+            ENDIF
+         ENDDO
+      ENDDO
+      CLOSE(iufillambda)
+    ENDIF
+    !
+    OPEN(unit = iufillambda, file = TRIM(prefix)//".lambda_k_pairs", form = 'formatted')
+    WRITE(iufillambda,'(a12,a30)') '# lambda_nk','  \rho(lambda_nk) scaled to 1.'
+    DO ibin = 1, nbink
+      WRITE(iufillambda,'(2f21.7)') dbink*dble(ibin), lambda_k_bin(ibin)/maxval(lambda_k_bin(:))
+    ENDDO
+    CLOSE(iufillambda)
+    !
+    ! SP: Produced if user really wants it 
+    IF ( iverbosity == 2 ) THEN  
+      OPEN( unit = iufillambda, file = TRIM(prefix)//".lambda_pairs", form = 'formatted')
+      DO ibin = 1, nbin
+        WRITE(iufillambda,'(2f21.7)') dbin*dble(ibin), lambda_pairs(ibin)/maxval(lambda_pairs(:))
+      ENDDO
+      CLOSE(iufillambda)
+    ENDIF
+    !
+    ! SP & RM: .cube file for VESTA plotting (only if iverbosity = 2)
+    !
+    ! RM - If the k-point is outside the Fermi shell,
+    ! ixkff(ik)=0 and lambda_k(0,ibnd) = 0.0
+    !
+    IF ( iverbosity .eq. 2 ) THEN
+       !
        DO ibnd = 1, nbndfs
-          IF ( abs( ekfs(ibnd,ik) - ef0 ) .lt. fsthick ) THEN
-             WRITE(iufillambda,'(2f12.7,2i7)') ekfs(ibnd,ik) - ef0, lambda_k(ik,ibnd), ik, ibnd
-          ENDIF
+          WRITE(name1,'(a,a8,i1,a5)') TRIM(prefix),'.lambda_', ibnd, '.cube'
+          OPEN(iufillambdaFS, file=name1, form='formatted')
+          WRITE(iufillambdaFS,*) 'Cubfile created from EPW calculation'
+          WRITE(iufillambdaFS,*) 'lambda'
+          WRITE(iufillambdaFS,'(i5,3f12.6)') 1, 0.0d0, 0.0d0, 0.0d0
+          WRITE(iufillambdaFS,'(i5,3f12.6)') nkf1, (bg(i,1)/DBLE(nkf1),i=1,3)
+          WRITE(iufillambdaFS,'(i5,3f12.6)') nkf2, (bg(i,2)/DBLE(nkf2),i=1,3)
+          WRITE(iufillambdaFS,'(i5,3f12.6)') nkf3, (bg(i,3)/DBLE(nkf3),i=1,3)
+          WRITE(iufillambdaFS,'(i5,4f12.6)') 1, 1.0d0, 0.0d0, 0.0d0, 0.0d0
+          WRITE(iufillambdaFS,'(6f12.6)') ( lambda_k(ixkff(ik),ibnd), ik=1,nkf1*nkf2*nkf3 )
+          CLOSE(iufillambdaFS)
        ENDDO
-    ENDDO
-    CLOSE(iufillambda)
-  ENDIF
-  !
-  OPEN(unit = iufillambda, file = TRIM(prefix)//".lambda_k_pairs", form = 'formatted')
-  WRITE(iufillambda,'(a12,a30)') '# lambda_nk','  \rho(lambda_nk) scaled to 1.'
-  DO ibin = 1, nbink
-    WRITE(iufillambda,'(2f21.7)') dbink*dble(ibin), lambda_k_bin(ibin)/maxval(lambda_k_bin(:))
-  ENDDO
-  CLOSE(iufillambda)
-  !
-  ! SP: Produced if user really wants it 
-  IF ( iverbosity == 2 ) THEN  
-    OPEN( unit = iufillambda, file = TRIM(prefix)//".lambda_pairs", form = 'formatted')
-    DO ibin = 1, nbin
-      WRITE(iufillambda,'(2f21.7)') dbin*dble(ibin), lambda_pairs(ibin)/maxval(lambda_pairs(:))
-    ENDDO
-    CLOSE(iufillambda)
-  ENDIF
-  !
-  ! SP & RM: .cube file for VESTA plotting (only if iverbosity = 2)
-  !
-  ! RM - If the k-point is outside the Fermi shell,
-  ! ixkff(ik)=0 and lambda_k(0,ibnd) = 0.0
-  !
-  IF ( iverbosity .eq. 2 ) THEN
-     !
-     DO ibnd = 1, nbndfs
-        WRITE(name1,'(a,a8,i1,a5)') TRIM(prefix),'.lambda_', ibnd, '.cube'
-        OPEN(iufillambdaFS, file=name1, form='formatted')
-        WRITE(iufillambdaFS,*) 'Cubfile created from EPW calculation'
-        WRITE(iufillambdaFS,*) 'lambda'
-        WRITE(iufillambdaFS,'(i5,3f12.6)') 1, 0.0d0, 0.0d0, 0.0d0
-        WRITE(iufillambdaFS,'(i5,3f12.6)') nkf1, (bg(i,1)/DBLE(nkf1),i=1,3)
-        WRITE(iufillambdaFS,'(i5,3f12.6)') nkf2, (bg(i,2)/DBLE(nkf2),i=1,3)
-        WRITE(iufillambdaFS,'(i5,3f12.6)') nkf3, (bg(i,3)/DBLE(nkf3),i=1,3)
-        WRITE(iufillambdaFS,'(i5,4f12.6)') 1, 1.0d0, 0.0d0, 0.0d0, 0.0d0
-        WRITE(iufillambdaFS,'(6f12.6)') ( lambda_k(ixkff(ik),ibnd), ik=1,nkf1*nkf2*nkf3 )
-        CLOSE(iufillambdaFS)
-     ENDDO
-     !
-  ENDIF
-  !
-  ! SP & RM : Write on file the lambda close to the Fermi surface along with 
-  ! Cartesian coordinate, band index, energy distance from Fermi level
-  ! and lambda value.
-  !
-  OPEN(unit = iufillambdaFS, file = TRIM(prefix)//".lambda_FS", form='formatted')
-  WRITE(iufillambdaFS,'(a75)') '#               k-point                  Band Enk-Ef [eV]            lambda'
-  DO i = 1, nkf1
-     DO j = 1, nkf2
-        DO k = 1, nkf3
-           ik = k + (j-1)*nkf3 + (i-1)*nkf2*nkf3
-           IF ( ixkff(ik) .gt. 0 ) THEN
-              DO ibnd = 1, nbndfs
-                 ! SP: Here take a 0.2 eV interval around the FS.
-                 IF ( abs( ekfs(ibnd,ixkff(ik)) - ef0 ) .lt. fsthick ) THEN
-                 !IF ( abs( ekfs(ibnd,ixkff(ik)) - ef0 ) .lt. 0.2 ) THEN
-                    x1 = bg(1,1)*(i-1)/nkf1+bg(1,2)*(j-1)/nkf2+bg(1,3)*(k-1)/nkf3
-                    x2 = bg(2,1)*(i-1)/nkf1+bg(2,2)*(j-1)/nkf2+bg(2,3)*(k-1)/nkf3
-                    x3 = bg(3,1)*(i-1)/nkf1+bg(3,2)*(j-1)/nkf2+bg(3,3)*(k-1)/nkf3
-                    WRITE(iufillambdaFS,'(3f12.6,i8,f12.6,f24.15)') x1, x2, x3, ibnd, &
-                                     ekfs(ibnd,ixkff(ik))-ef0, lambda_k(ixkff(ik),ibnd)
-                 ENDIF
-              ENDDO ! ibnd
-           ENDIF
-        ENDDO  ! k
-     ENDDO ! j
-  ENDDO ! i
-  CLOSE(iufillambdaFS)
-
-#ifdef __PARA
+       !
+    ENDIF
+    !
+    ! SP & RM : Write on file the lambda close to the Fermi surface along with 
+    ! Cartesian coordinate, band index, energy distance from Fermi level
+    ! and lambda value.
+    !
+    OPEN(unit = iufillambdaFS, file = TRIM(prefix)//".lambda_FS", form='formatted')
+    WRITE(iufillambdaFS,'(a75)') '#               k-point                  Band Enk-Ef [eV]            lambda'
+    DO i = 1, nkf1
+       DO j = 1, nkf2
+          DO k = 1, nkf3
+             ik = k + (j-1)*nkf3 + (i-1)*nkf2*nkf3
+             IF ( ixkff(ik) .gt. 0 ) THEN
+                DO ibnd = 1, nbndfs
+                   ! SP: Here take a 0.2 eV interval around the FS.
+                   IF ( abs( ekfs(ibnd,ixkff(ik)) - ef0 ) .lt. fsthick ) THEN
+                   !IF ( abs( ekfs(ibnd,ixkff(ik)) - ef0 ) .lt. 0.2 ) THEN
+                      x1 = bg(1,1)*(i-1)/nkf1+bg(1,2)*(j-1)/nkf2+bg(1,3)*(k-1)/nkf3
+                      x2 = bg(2,1)*(i-1)/nkf1+bg(2,2)*(j-1)/nkf2+bg(2,3)*(k-1)/nkf3
+                      x3 = bg(3,1)*(i-1)/nkf1+bg(3,2)*(j-1)/nkf2+bg(3,3)*(k-1)/nkf3
+                      WRITE(iufillambdaFS,'(3f12.6,i8,f12.6,f24.15)') x1, x2, x3, ibnd, &
+                                       ekfs(ibnd,ixkff(ik))-ef0, lambda_k(ixkff(ik),ibnd)
+                   ENDIF
+                ENDDO ! ibnd
+             ENDIF
+          ENDDO  ! k
+       ENDDO ! j
+    ENDDO ! i
+    CLOSE(iufillambdaFS)
   ENDIF
   CALL mp_barrier(inter_pool_comm)
-#endif
   !
   IF ( ALLOCATED(lambda_k) )     DEALLOCATE(lambda_k)
   IF ( ALLOCATED(lambda_pairs) ) DEALLOCATE(lambda_pairs)
@@ -543,67 +527,61 @@
   USE epwcom,        ONLY : nqstep, muc, tempsmin, tempsmax, temps
   USE eliashbergcom, ONLY : wsph, dwsph, a2f_iso, gap0
   USE constants_epw, ONLY : kelvin2eV
-#ifdef __PARA
   USE io_global, ONLY : ionode_id
   USE mp_global, ONLY : inter_pool_comm
   USE mp_world,  ONLY : mpime
   USE mp,        ONLY : mp_bcast, mp_barrier, mp_sum
-#endif
   !  
   IMPLICIT NONE
   !  
   INTEGER :: iwph
   REAL(DP):: l_a2f, logavg, tc
   !
-#ifdef __PARA
   IF ( mpime .eq. ionode_id ) THEN
-#endif
-  l_a2f  = 0.0d0 
-  logavg = 0.0d0
-  DO iwph = 1, nqstep
-     l_a2f  = l_a2f  + a2f_iso(iwph) / wsph(iwph)
-     logavg = logavg + a2f_iso(iwph) * log(wsph(iwph)) / wsph(iwph)
-  ENDDO
-  l_a2f  = l_a2f  * 2.d0 * dwsph
-  logavg = logavg * 2.d0 * dwsph
-  logavg = exp( logavg / l_a2f )
-  WRITE(stdout,'(5x,a,f12.7)') 'Electron-phonon coupling strength = ', l_a2f
-  WRITE(stdout,'(a)') ' '
-  !
-  ! Allen-Dynes estimate of Tc
-  !
-  tc = logavg / 1.2d0 * exp( - 1.04d0 * ( 1.d0 + l_a2f ) &
-                             / ( l_a2f - muc * ( 1.d0 + 0.62d0 * l_a2f ) ) )
-  !
-  ! initial guess for the gap edge using BCS superconducting ratio 3.52
-  !
-  gap0 = 3.52d0 * tc / 2.d0
-  IF ( gap0 .le. 0.d0 ) CALL errore('estimate_tc_gap', &
-     'initial guess for gap edge should be .gt. 0.d0',1)
-  !
-  ! tc in K
-  !
-  tc = tc / kelvin2eV
-  WRITE(stdout,'(5x,a,f15.7,a,f10.5)') 'Estimated Allen-Dynes Tc = ', tc, ' K for muc = ', muc
-  WRITE(stdout,'(a)') '  '
-  WRITE(stdout,'(5x,a,f15.7,a)') 'Estimated BCS superconducting gap = ', gap0, ' eV'
-  !
-  IF ( tempsmin .gt. 1.3d0*tc .OR. minval(temps(:)) .gt. 1.3d0*tc ) THEN
-     CALL errore('eliashberg_init','tempsmin or minval(temps) .gt. estimated Allen-Dynes 1.3*Tc',-1)
-  ELSEIF ( tempsmax .gt. tc .OR. maxval(temps(:)) .gt. tc ) THEN
-     WRITE(stdout,'(a)') '  '
-     WRITE(stdout,'(5x,a)') 'WARNING WARNING WARNING '
-     WRITE(stdout,'(a)') '  '
-     WRITE(stdout,'(5x,a)') 'The code will crash for tempsmax much larger than Allen-Dynes Tc'
-  ELSEIF ( tempsmax .gt. 1.5d0*tc .OR. maxval(temps(:)) .gt. 1.5d0*tc ) THEN
-     CALL errore('eliashberg_init','tempsmax or maxval(temps) .gt. estimated Allen-Dynes 1.5*Tc',-1)
-  ENDIF
-  !
-#ifdef __PARA
+    l_a2f  = 0.0d0 
+    logavg = 0.0d0
+    DO iwph = 1, nqstep
+       l_a2f  = l_a2f  + a2f_iso(iwph) / wsph(iwph)
+       logavg = logavg + a2f_iso(iwph) * log(wsph(iwph)) / wsph(iwph)
+    ENDDO
+    l_a2f  = l_a2f  * 2.d0 * dwsph
+    logavg = logavg * 2.d0 * dwsph
+    logavg = exp( logavg / l_a2f )
+    WRITE(stdout,'(5x,a,f12.7)') 'Electron-phonon coupling strength = ', l_a2f
+    WRITE(stdout,'(a)') ' '
+    !
+    ! Allen-Dynes estimate of Tc
+    !
+    tc = logavg / 1.2d0 * exp( - 1.04d0 * ( 1.d0 + l_a2f ) &
+                               / ( l_a2f - muc * ( 1.d0 + 0.62d0 * l_a2f ) ) )
+    !
+    ! initial guess for the gap edge using BCS superconducting ratio 3.52
+    !
+    gap0 = 3.52d0 * tc / 2.d0
+    IF ( gap0 .le. 0.d0 ) CALL errore('estimate_tc_gap', &
+       'initial guess for gap edge should be .gt. 0.d0',1)
+    !
+    ! tc in K
+    !
+    tc = tc / kelvin2eV
+    WRITE(stdout,'(5x,a,f15.7,a,f10.5)') 'Estimated Allen-Dynes Tc = ', tc, ' K for muc = ', muc
+    WRITE(stdout,'(a)') '  '
+    WRITE(stdout,'(5x,a,f15.7,a)') 'Estimated BCS superconducting gap = ', gap0, ' eV'
+    !
+    IF ( tempsmin .gt. 1.3d0*tc .OR. minval(temps(:)) .gt. 1.3d0*tc ) THEN
+       CALL errore('eliashberg_init','tempsmin or minval(temps) .gt. estimated Allen-Dynes 1.3*Tc',-1)
+    ELSEIF ( tempsmax .gt. tc .OR. maxval(temps(:)) .gt. tc ) THEN
+       WRITE(stdout,'(a)') '  '
+       WRITE(stdout,'(5x,a)') 'WARNING WARNING WARNING '
+       WRITE(stdout,'(a)') '  '
+       WRITE(stdout,'(5x,a)') 'The code will crash for tempsmax much larger than Allen-Dynes Tc'
+    ELSEIF ( tempsmax .gt. 1.5d0*tc .OR. maxval(temps(:)) .gt. 1.5d0*tc ) THEN
+       CALL errore('eliashberg_init','tempsmax or maxval(temps) .gt. estimated Allen-Dynes 1.5*Tc',-1)
+    ENDIF
+    !
   ENDIF
   CALL mp_bcast( gap0, ionode_id, inter_pool_comm )
   CALL mp_barrier(inter_pool_comm)
-#endif
   RETURN
   !
   END SUBROUTINE estimate_tc_gap
@@ -621,13 +599,11 @@
   USE kinds,         ONLY : DP
   USE epwcom,        ONLY : max_memlt
   USE eliashbergcom, ONLY : memlt_pool
-#ifdef __PARA
   USE mp_global,     ONLY : inter_pool_comm, my_pool_id
   USE mp,            ONLY : mp_bcast, mp_barrier, mp_sum
-#endif
   !
   IMPLICIT NONE
-#ifndef __PARA
+#ifndef __MPI
   INTEGER, PARAMETER :: npool = 1, my_pool_id = 0 ! this is only a quick fix since the subroutine was written
                                                   ! for parallel execution - FG June 2014
 #endif
@@ -642,11 +618,9 @@
   memlt_pool(:) = 0.d0
   memlt_pool(my_pool_id+1) = rmelt
   !
-#ifdef __PARA
   ! collect contributions from all pools
   CALL mp_sum( memlt_pool, inter_pool_comm )
   CALL mp_barrier(inter_pool_comm)
-#endif
   !
   IF ( maxval(memlt_pool(:)) .gt. max_memlt ) THEN
      WRITE(stdout,'(/,5x,a,a,f9.4,a)') "Size of required memory per pool :", &
@@ -674,13 +648,11 @@
   USE kinds,         ONLY : DP
   USE epwcom,        ONLY : max_memlt
   USE eliashbergcom, ONLY : memlt_pool
-#ifdef __PARA
   USE mp_global,     ONLY : inter_pool_comm, my_pool_id
   USE mp,            ONLY : mp_bcast, mp_barrier, mp_sum
-#endif
   !
   IMPLICIT NONE
-#ifndef __PARA
+#ifndef __MPI
   INTEGER, PARAMETER :: npool = 1, my_pool_id = 0 ! this is only a quick fix since the subroutine was written
                                                   ! for parallel execution - FG June 2014
 #endif
@@ -695,11 +667,9 @@
   memlt_pool(:) = 0.d0
   memlt_pool(my_pool_id+1) = rmelt
   !
-#ifdef __PARA
   ! collect contributions from all pools
   CALL mp_sum( memlt_pool, inter_pool_comm )
   CALL mp_barrier(inter_pool_comm)
-#endif
   !
   IF ( maxval(memlt_pool(:)) .gt. max_memlt ) THEN
      WRITE(stdout,'(/,5x,a,a,f9.4,a)') "Size of required memory per pool :", &

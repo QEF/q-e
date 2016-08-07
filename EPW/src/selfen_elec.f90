@@ -42,10 +42,9 @@
                             sigmar_all, sigmai_all, sigmai_mode, zi_all, efnew
   USE control_flags, ONLY : iverbosity
   USE constants_epw, ONLY : ryd2mev, one, ryd2ev, two, zero, pi, ci, eps6
-#ifdef __PARA
   USE mp,            ONLY : mp_barrier, mp_sum
   USE mp_global,     ONLY : inter_pool_comm
-#endif
+  !
   implicit none
   !
   INTEGER, INTENT (in) :: iq
@@ -161,18 +160,18 @@
   !
   ! Fermi level and corresponding DOS
   !
-   IF ( efermi_read ) THEN
-      !
-      ef0 = fermi_energy
-      !
-   ELSE
-      !
-      ef0 = efnew
-      !ef0 = efermig(etf,nbndsub,nkqf,nelec,wkf,degaussw,ngaussw,0,isk)
-      ! if some bands are skipped (nbndskip.neq.0), nelec has already been recalculated 
-      ! in ephwann_shuffle
-      !
-   ENDIF
+  IF ( efermi_read ) THEN
+    !
+    ef0 = fermi_energy
+    !
+  ELSE
+    !
+    ef0 = efnew
+    !ef0 = efermig(etf,nbndsub,nkqf,nelec,wkf,degaussw,ngaussw,0,isk)
+    ! if some bands are skipped (nbndskip.neq.0), nelec has already been recalculated 
+    ! in ephwann_shuffle
+    !
+  ENDIF
   !
   dosef = dos_ef (ngaussw, degaussw, ef0, etf, wkf, nkqf, nbndsub)
   !   N(Ef) in the equation for lambda is the DOS per spin
@@ -322,7 +321,7 @@
      xkf_all(:,:) = zero
      etf_all(:,:) = zero
      !
-#ifdef __PARA
+#ifdef __MPI
      !
      ! note that poolgather2 works with the doubled grid (k and k+q)
      !
@@ -498,12 +497,11 @@
                             sigmar_all, sigmai_all, sigmai_mode, zi_all, efnew, nqf
   USE constants_epw, ONLY : ryd2mev, one, ryd2ev, two, zero, pi, ci, eps6
   USE control_flags, ONLY : iverbosity
-#ifdef __PARA
   USE mp,            ONLY : mp_barrier, mp_sum, mp_bcast
   USE mp_global,     ONLY : inter_pool_comm
   USE mp_world,      ONLY : mpime
   USE io_global,     ONLY : ionode_id
-#endif
+  !
   implicit none
   !
   INTEGER :: n
@@ -576,17 +574,13 @@
      !
   ENDIF
   !  
-#ifdef __PARA
   IF (mpime .eq. ionode_id) THEN
-#endif
     !   N(Ef) in the equation for lambda is the DOS per spin
     !dosef = dosef / two
     dosef = dos_ef_seq (ngaussw, degaussw, ef0, etf_k, wkf, nkqf, nbndsub)/2
     !
-#ifdef __PARA
   ENDIF
   CALL mp_bcast (dosef, ionode_id, inter_pool_comm)
-#endif  
   !
   !dosef = dos_ef (ngaussw, degaussw, ef0, etf, wkf, nkqf, nbndsub)
   !   N(Ef) in the equation for lambda is the DOS per spin
@@ -723,8 +717,6 @@
      !
   ENDDO ! end loop on q
   !
-#ifdef __PARA
-  !
   ! collect contributions from all pools (sum over k-points)
   ! this finishes the integral over the BZ  (k)
   !
@@ -734,8 +726,6 @@
   CALL mp_sum(zi_all,inter_pool_comm)
   CALL mp_sum(fermicount, inter_pool_comm)
   CALL mp_barrier(inter_pool_comm)
-  !
-#endif  
   !
   ! Average over degenerate eigenstates:
   WRITE(stdout,'(5x,"Average over degenerate eigenstates is performed")')

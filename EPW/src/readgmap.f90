@@ -15,12 +15,10 @@
   !!    
   !!
   !--------------------------------------------------------------
-#ifdef __PARA
   USE mp_global,ONLY : inter_pool_comm
   USE mp,       ONLY : mp_bcast,mp_max,mp_min
   USE mp_world, ONLY : mpime
   use io_global,ONLY : ionode_id
-#endif
   USE kinds,    ONLY : DP
   use io_epw,   ONLY : iukgmap, iukmap
   use pwcom,    ONLY : nks
@@ -46,9 +44,7 @@
   !
   integer :: ik, ik1, ishift, ig0, ig, itmp
   integer :: ios
-#ifdef __PARA
   real(kind=DP) :: tmp
-#endif
   !
   allocate ( shift(nkstot) )
   !
@@ -76,15 +72,13 @@
     !
   ENDDO
   !
-#ifdef __PARA
+#ifdef __MPI
   tmp = dble (ngxx)
   CALL mp_max(tmp,inter_pool_comm)  
   ngxx = nint (tmp)
 #endif
   !
-#ifdef __PARA
   IF (mpime.eq.ionode_id) then
-#endif
     !
     open ( unit = iukgmap, file = trim(prefix)//'.kgmap', form = 'formatted',status='old',iostat=ios)
     IF (ios /=0) call errore ('readgmap', 'error opening kgmap file',iukgmap)
@@ -113,19 +107,15 @@
     ENDDO
     close (iukmap) 
     !
-#ifdef __PARA
   ENDIF
   !
   ! first node broadcasts ng0vec to all nodes for allocation of gmap
   !
   CALL mp_bcast( ng0vec, ionode_id, inter_pool_comm )
-#endif
   !
   allocate ( gmap (ngxx * ng0vec) )
   !
-#ifdef __PARA
   IF (mpime.eq.ionode_id) then
-#endif
      !
     DO ig0 = 1, ng0vec
       read (iukgmap,*) g0vec_all_r (:,ig0)
@@ -139,7 +129,6 @@
     !
     close (iukgmap)
     !
-#ifdef __PARA
   ENDIF
   !
   ! first node broadcasts everything to all nodes
@@ -147,8 +136,6 @@
   CALL mp_bcast( g0vec_all_r, ionode_id, inter_pool_comm )
   CALL mp_bcast( shift, ionode_id, inter_pool_comm )
   CALL mp_bcast( gmap, ionode_id, inter_pool_comm )
-  !
-#endif
   !
   end subroutine readgmap
 

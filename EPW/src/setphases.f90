@@ -31,11 +31,9 @@
   !
   ! ----------------------------------------------------------------------
   !
-#ifdef __PARA
   USE mp_global,            ONLY : my_pool_id, nproc_pool, &
                                    me_pool, intra_pool_comm
   USE mp,                   ONLY : mp_barrier, mp_sum
-#endif
   USE io_global,            ONLY : stdout
   USE kinds,                ONLY : DP
   USE wvfct,                ONLY : et
@@ -117,15 +115,12 @@
   !  perturbation is a number between 0 and 1.
 !$$
 
-#ifdef __PARA
-  !
   ! In the case of multiple procs per pool, the fake perturbation defined 
   ! by deltav (ir) = ir will depend on the division of nr1x*nr2x*nr3x
   ! (This can be removed by defined a serious perturbation below...)
   !
   IF (nproc_pool>1) call errore &
        ('setphases', 'only one proc per pool to guarantee the same gauge', 1)
-#endif
   !
   ! initialize
   !
@@ -283,9 +278,7 @@
          !
          ! ok I veryfied that when deltav(ir)=1, u is the unity matrix (othonormality)
          !
-#ifdef __PARA
          CALL mp_sum(u, intra_pool_comm)
-#endif
          !
          ! check hermiticity
          ! 

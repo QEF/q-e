@@ -82,22 +82,20 @@
   !------------------------------------------------------------
   SUBROUTINE write_winfil
   !------------------------------------------------------------
-  !
-  !
-  !  This SUBROUTINE write the prefix.win file which wannier90.x
-  !  needs to run.  Primarily it contains information about the 
-  !  windows USEd for the disentanglement, and the initial projections.
-  !  JN - 10/2008  projections now in elph.in file  
+  !!
+  !!
+  !!  This SUBROUTINE write the prefix.win file which wannier90.x
+  !!  needs to run.  Primarily it contains information about the 
+  !!  windows USEd for the disentanglement, and the initial projections.
+  !!  JN - 10/2008  projections now in elph.in file  
   !------------------------------------------------------------
   !
   USE io_files,    ONLY : prefix
   USE io_epw,      ONLY : iuwinfil
-#ifdef __PARA
   USE io_global,   ONLY : ionode
-#endif
-  USE epwcom,      ONLY: nbndsub, nwanxx, proj, iprint, dis_win_min, &
-                         dis_win_max, dis_froz_min, dis_froz_max, num_iter, &
-                         spinors, wdata 
+  USE epwcom,      ONLY : nbndsub, nwanxx, proj, iprint, dis_win_min, &
+                          dis_win_max, dis_froz_min, dis_froz_max, num_iter, &
+                          spinors, wdata 
   !
   implicit none
   !
@@ -105,51 +103,46 @@
   !
   logical :: random
   !
-#ifdef __PARA
   IF (ionode) THEN
-#endif
-  !
-  IF (nbndsub .gt. nwanxx) call errore('write_winfil',"Too many wannier bands",nbndsub)
-  !
-  OPEN (unit = iuwinfil, file = trim(prefix)//".win", form = 'formatted')
-  !    
-  !  more input and options for interfacing with w90 can/will be added later
-  WRITE (iuwinfil,'(a)') "begin projections"
-  !
-  random = .true.
-  DO i = 1, nbndsub+1
-     IF (proj(i) .ne. ' ') THEN
-        WRITE (iuwinfil,*) trim(proj(i))
-        random = .false.
-     ENDIF
-  ENDDO
-  !
-  IF (random) WRITE(iuwinfil,*) 'random' 
-  !
-  WRITE (iuwinfil,'(a)') "end projections"
-  !
-  WRITE (iuwinfil,'("num_wann ",i3)') nbndsub
-  WRITE (iuwinfil,'("iprint ",i3)') iprint
-  !
-  WRITE (iuwinfil, '("dis_win_min ", f9.3)')  dis_win_min
-  WRITE (iuwinfil, '("dis_win_max ", f9.3)')  dis_win_max
-  WRITE (iuwinfil, '("dis_froz_min ", f9.3)') dis_froz_min
-  WRITE (iuwinfil, '("dis_froz_max ", f9.3)') dis_froz_max
-  WRITE (iuwinfil, '("num_iter ", i7)')       num_iter
-  !
-  IF (spinors) WRITE (iuwinfil,'(a)') "spinors=.true."
-  !
-  ! write any extra parameters to the prefix.win file
-  DO i = 1, nwanxx
-     IF (wdata(i) .ne. ' ') WRITE(iuwinfil,*) wdata(i)
-  ENDDO
-  !
-  CLOSE (iuwinfil)
-  !
-#ifdef __PARA
+    !
+    IF (nbndsub .gt. nwanxx) call errore('write_winfil',"Too many wannier bands",nbndsub)
+    !
+    OPEN (unit = iuwinfil, file = trim(prefix)//".win", form = 'formatted')
+    !    
+    !  more input and options for interfacing with w90 can/will be added later
+    WRITE (iuwinfil,'(a)') "begin projections"
+    !
+    random = .true.
+    DO i = 1, nbndsub+1
+       IF (proj(i) .ne. ' ') THEN
+          WRITE (iuwinfil,*) trim(proj(i))
+          random = .false.
+       ENDIF
+    ENDDO
+    !
+    IF (random) WRITE(iuwinfil,*) 'random' 
+    !
+    WRITE (iuwinfil,'(a)') "end projections"
+    !
+    WRITE (iuwinfil,'("num_wann ",i3)') nbndsub
+    WRITE (iuwinfil,'("iprint ",i3)') iprint
+    !
+    WRITE (iuwinfil, '("dis_win_min ", f9.3)')  dis_win_min
+    WRITE (iuwinfil, '("dis_win_max ", f9.3)')  dis_win_max
+    WRITE (iuwinfil, '("dis_froz_min ", f9.3)') dis_froz_min
+    WRITE (iuwinfil, '("dis_froz_max ", f9.3)') dis_froz_max
+    WRITE (iuwinfil, '("num_iter ", i7)')       num_iter
+    !
+    IF (spinors) WRITE (iuwinfil,'(a)') "spinors=.true."
+    !
+    ! write any extra parameters to the prefix.win file
+    DO i = 1, nwanxx
+       IF (wdata(i) .ne. ' ') WRITE(iuwinfil,*) wdata(i)
+    ENDDO
+    !
+    CLOSE (iuwinfil)
+    !
   ENDIF
-#endif
-  !
   !
   END SUBROUTINE write_winfil
 
@@ -167,11 +160,9 @@
   USE io_files,    ONLY : prefix 
   USE io_global,   ONLY : stdout
   USE io_epw,      ONLY : iuprojfil
-#ifdef __PARA
   USE mp_global,   ONLY : inter_pool_comm
   USE io_global,   ONLY : stdout, ionode
   USE mp,          ONLY : mp_sum
-#endif
   USE epwcom,      ONLY : DP, dis_win_max, dis_win_min
   USE constants_epw, ONLY : ryd2ev 
   USE wannier,     ONLY : n_wannier
@@ -227,27 +218,23 @@
         ENDDO
      ENDDO
   ENDDO
-#ifdef __PARA
   !
   ! sum the contributions from all k-points
   CALL mp_sum(proj_wf, inter_pool_comm)
   !
   IF (ionode) THEN
-#endif
-     !
-     OPEN (unit = iuprojfil, file = trim(prefix)//".projw90", form = 'formatted')
-     !
-     WRITE(iuprojfil, '(5x,"Wannier energy projections")')
-     !
-     DO ie = 1, ne
-        en =  dble(ie)/dble(ne) * (dis_win_max - dis_win_min + 1) + dis_win_min
-        WRITE(iuprojfil, '(f9.3, 25f8.4)' )  en , proj_wf(:, ie)
-     ENDDO
-     !
-     CLOSE (iuprojfil)
-#ifdef __PARA
+    !
+    OPEN (unit = iuprojfil, file = trim(prefix)//".projw90", form = 'formatted')
+    !
+    WRITE(iuprojfil, '(5x,"Wannier energy projections")')
+    !
+    DO ie = 1, ne
+       en =  dble(ie)/dble(ne) * (dis_win_max - dis_win_min + 1) + dis_win_min
+       WRITE(iuprojfil, '(f9.3, 25f8.4)' )  en , proj_wf(:, ie)
+    ENDDO
+    !
+    CLOSE (iuprojfil)
   ENDIF
-#endif
   !
   IF ( ALLOCATED(proj_wf)) DEALLOCATE(proj_wf)
   IF ( ALLOCATED(cu))      DEALLOCATE(cu)

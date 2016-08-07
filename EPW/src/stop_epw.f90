@@ -13,23 +13,20 @@
   !-----------------------------------------------------------------------
   subroutine stop_epw
   !-----------------------------------------------------------------------
-  !
-  ! Close all files and synchronize processes before stopping.
-  ! Called at the end of the run (removes 'recover')
-  !
-#ifdef __PARA
-  use mp,            ONLY: mp_end, mp_barrier
-  USE mp_global,     ONLY :  inter_pool_comm, mp_global_end
-#endif
+  !!
+  !! Close all files and synchronize processes before stopping.
+  !! Called at the end of the run (removes 'recover')
+  !!
+  use mp,            ONLY : mp_end, mp_barrier
+  USE mp_global,     ONLY : inter_pool_comm, mp_global_end
+  ! 
   implicit none
   !
   CALL print_clock_epw
-#ifdef __PARA
   CALL mp_barrier(inter_pool_comm)
   CALL mp_end(inter_pool_comm)
   !
   CALL mp_global_end()
-#endif
 !#ifdef __T3E
 !  !
 !  ! set streambuffers off

@@ -30,11 +30,9 @@
                         delta_smear, degaussw, fsthick
   USE elph2,     ONLY : nqtotf, wf, wqf, lambda_all, lambda_v_all
   USE constants_epw, ONLY : ryd2mev, ryd2ev, kelvin2eV, two, zero
-#ifdef __PARA
   USE mp,        ONLY : mp_barrier, mp_sum
   USE mp_world,  ONLY : mpime, world_comm
   USE io_global, ONLY : ionode_id
-#endif
   USE io_global, ONLY : stdout
   USE io_epw,    ONLY : iua2ffil, iudosfil, iua2ftrfil
   USE io_files,  ONLY : prefix
@@ -50,9 +48,7 @@
   !
   !
   CALL start_clock('a2F')
-#ifdef __PARA
   IF (mpime .eq. ionode_id) THEN
-#endif
   !
   DO isig = 1, nsmear
     !
@@ -223,10 +219,8 @@
     !
   ENDDO ! isig
   !
-#ifdef __PARA
   ENDIF
   CALL mp_barrier(world_comm)
-#endif
   !
   CALL stop_clock('a2F')
   CALL print_clock('a2F')

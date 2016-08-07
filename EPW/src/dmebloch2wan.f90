@@ -21,12 +21,10 @@
   USE pwcom,         ONLY : at, bg, celldm
   USE elph2,         ONLY : cdmew
   USE constants_epw, ONLY : bohr2ang, twopi, ci, czero
-#ifdef __PARA
   USE io_global,     ONLY : ionode_id
   USE mp_global,     ONLY : inter_pool_comm
   USE mp_world,      ONLY : mpime
   USE mp,            ONLY : mp_barrier,mp_sum
-#endif
   implicit none
   !
   !  input variables
@@ -105,9 +103,7 @@
     ENDDO
     !
   ENDDO
-#ifdef __PARA
   CALL mp_sum(cdmew,inter_pool_comm) 
-#endif
   !
   ! bring xk back into cart coord
   !
@@ -117,22 +113,18 @@
   !  check spatial decay of Dipole in Wannier basis
   !  the unit in r-space is angstrom
   !
-#ifdef __PARA
-    IF (mpime.eq.ionode_id) then
-#endif
-       OPEN(unit=300,file='decay.P')
-       WRITE(300, '(/3x,a/)') '#Spatial decay of Dipole in Wannier basis'
-       DO ir = 1, nrr
-          !
-          tmp =  maxval ( abs( cdmew (:, :,:,ir)) )
-          WRITE(300, *) wslen(ir) * celldm (1) * bohr2ang, tmp
-          !
-       ENDDO
-       close(300)
-#ifdef __PARA
-    ENDIF
-    CALL mp_barrier(inter_pool_comm)
-#endif
+  IF (mpime.eq.ionode_id) then
+     OPEN(unit=300,file='decay.P')
+     WRITE(300, '(/3x,a/)') '#Spatial decay of Dipole in Wannier basis'
+     DO ir = 1, nrr
+        !
+        tmp =  maxval ( abs( cdmew (:, :,:,ir)) )
+        WRITE(300, *) wslen(ir) * celldm (1) * bohr2ang, tmp
+        !
+     ENDDO
+     close(300)
+  ENDIF
+  CALL mp_barrier(inter_pool_comm)
   !
   CALL stop_clock ( 'Dipole: step 2' )
   !

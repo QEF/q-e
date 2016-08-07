@@ -9,24 +9,19 @@
   !---------------------------------------------------------------------
   subroutine kpointdivision ( ik0 )
   !---------------------------------------------------------------------
-  !
-  ! This is just to find the first kpoint block in the pool
-  !
+  !!
+  !! This is just to find the first kpoint block in the pool
+  !!
   !---------------------------------------------------------------------
   !
-#ifdef __PARA
-!  use para
   USE mp_global,   ONLY : my_pool_id,npool
-  use pwcom, only :  nkstot
-#endif
+  use pwcom,       ONLY : nkstot
   ! 
   implicit none
   integer :: ik0
-#ifdef __PARA
   integer :: nkl, nkr, iks
-#endif
   !
-#ifdef __PARA
+#ifdef __MPI
   !
   !   number of kpoint blocks, kpoints per pool and reminder
   !
@@ -57,15 +52,12 @@
   !-----------------------------------------------------------------------
   SUBROUTINE fkbounds( nktot, lower_bnd, upper_bnd )
   !-----------------------------------------------------------------------
-  !
-  !   Subroutine finds the lower and upper bounds a k-grid in parallel
-  !
+  !!
+  !!   Subroutine finds the lower and upper bounds a k-grid in parallel
+  !!
   !-----------------------------------------------------------------------
   !
-#ifdef __PARA
-  USE mp_global
-  USE mp
-#endif
+  USE mp_global,    ONLY: my_pool_id, npool
   !
   IMPLICIT NONE
   !
@@ -73,7 +65,7 @@
   ! input: nktot k-points splited over pools
   ! output : lower_bnd, upper_bnd lower and upper bound for each pool 
   !
-#ifdef __PARA
+#ifdef __MPI
   !
   INTEGER :: nkl, nkr
   !

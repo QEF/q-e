@@ -37,10 +37,9 @@
                             epf17, wkf, nkf, nqtotf, wf, wqf, xkf, nkqtotf,&
                             esigmar_all, esigmai_all, a_all
   USE constants_epw, ONLY : ryd2mev, one, ryd2ev, two, zero, pi, ci
-#ifdef __PARA
   USE mp,            ONLY : mp_barrier, mp_sum
   USE mp_global,     ONLY : me_pool, inter_pool_comm
-#endif
+  !
   implicit none
   !
   INTEGER, INTENT (in) :: iq
@@ -215,7 +214,7 @@
      xkf_all(:,:) = zero
      etf_all(:,:) = zero
      !
-#ifdef __PARA
+#ifdef __MPI
      !
      ! note that poolgather2 works with the doubled grid (k and k+q)
      !
@@ -244,28 +243,19 @@
      IF (.not. ALLOCATED (a_all)) ALLOCATE ( a_all(nw_specfun, nksqtotf) )
      a_all(:,:) = zero
      !
-#ifdef __PARA
      IF (me_pool == 0) then
-#endif      
-     OPEN(unit=iospectral,file='specfun.elself') 
-     OPEN(unit=iospectral_sup,file='specfun_sup.elself') 
-#ifdef __PARA
+       OPEN(unit=iospectral,file='specfun.elself') 
+       OPEN(unit=iospectral_sup,file='specfun_sup.elself') 
      ENDIF
      IF (me_pool == 0) then
-#endif
-     WRITE(iospectral, '(/2x,a/)') '#Electronic spectral function (meV)'
-     WRITE(iospectral_sup, '(/2x,a/)') '#KS eigenenergies + real and im part of electronic self-energy (meV)' 
-#ifdef __PARA
+       WRITE(iospectral, '(/2x,a/)') '#Electronic spectral function (meV)'
+       WRITE(iospectral_sup, '(/2x,a/)') '#KS eigenenergies + real and im part of electronic self-energy (meV)' 
      ENDIF
      IF (me_pool == 0) then
-#endif
-     WRITE(iospectral, '(/2x,a/)') '#K-point    Energy[meV]     A(k,w)[meV^-1]'
-     WRITE(iospectral_sup, '(/2x,a/)') '#K-point    Band   e_nk[eV]   w[eV]   &
+       WRITE(iospectral, '(/2x,a/)') '#K-point    Energy[meV]     A(k,w)[meV^-1]'
+       WRITE(iospectral_sup, '(/2x,a/)') '#K-point    Band   e_nk[eV]   w[eV]   &
 &          Real Sigma[meV]  Im Sigma[meV]'
-#ifdef __PARA
      ENDIF
-#endif
-
      !
      DO ik = 1, nksqtotf
         !
@@ -310,28 +300,19 @@
            !
            specfun_sum = specfun_sum + a_all(iw,ik)* fermi(iw) * dw !/ ryd2mev
            !
-#ifdef __PARA
         IF (me_pool == 0) &
-#endif
-        WRITE(iospectral,'(2x,i7,2x,f10.5,2x,e12.5)') ik, ryd2ev * ww, a_all(iw,ik) / ryd2mev
+          WRITE(iospectral,'(2x,i7,2x,f10.5,2x,e12.5)') ik, ryd2ev * ww, a_all(iw,ik) / ryd2mev
            !
         ENDDO
         !
-#ifdef __PARA
         IF (me_pool == 0) &
-#endif
-        WRITE(iospectral,'(a)') ' '
-#ifdef __PARA
+          WRITE(iospectral,'(a)') ' '
         IF (me_pool == 0) &
-#endif
-        WRITE(iospectral,'(2x,a,2x,e12.5)') '# Integrated spectral function ',specfun_sum
+          WRITE(iospectral,'(2x,a,2x,e12.5)') '# Integrated spectral function ',specfun_sum
         !
      ENDDO
      !
-#ifdef __PARA
-     IF (me_pool == 0) &
-#endif      
-     CLOSE(iospectral)
+     IF (me_pool == 0)  CLOSE(iospectral)
      !
      DO ibnd = 1, ibndmax-ibndmin+1
         !
@@ -350,9 +331,7 @@
                 ibndmin-1+ibnd, ryd2ev * ekk, ryd2ev * ww, ryd2mev * esigmar_all(ibnd,ik,iw),&
                 ryd2mev * esigmai_all(ibnd,ik,iw)
               ! 
-#ifdef __PARA
               IF (me_pool == 0) &
-#endif
               WRITE(iospectral_sup,'(2i9,2x,f12.4,2x,f12.4,2x,f12.4,2x,f12.4,2x,f12.4)') ik,&
                 ibndmin-1+ibnd, ryd2ev * ekk, ryd2ev * ww, ryd2mev * esigmar_all(ibnd,ik,iw),&
                 ryd2mev * esigmai_all(ibnd,ik,iw)
@@ -365,10 +344,7 @@
         !
      ENDDO
      !
-#ifdef __PARA
-     IF (me_pool == 0) &
-#endif      
-     CLOSE(iospectral_sup)
+     IF (me_pool == 0)  CLOSE(iospectral_sup)
      !
      IF ( ALLOCATED(xkf_all) )      DEALLOCATE( xkf_all )
      IF ( ALLOCATED(etf_all) )      DEALLOCATE( etf_all )
@@ -389,21 +365,21 @@
   !-----------------------------------------------------------------------
   SUBROUTINE spectral_func_k ( ik )
   !-----------------------------------------------------------------------
-  !
-  !  Compute the electron spectral function including the  electron-
-  !  phonon interaction in the Migdal approximation. 
-  !  
-  !  We take the trace of the spectral function to simulate the photoemission
-  !  intensity. I do not consider the c-axis average for the time being.
-  !  The main approximation is constant dipole matrix element and diagonal
-  !  selfenergy. The diagonality can be checked numerically. 
-  !
-  !  Use matrix elements, electronic eigenvalues and phonon frequencies
-  !  from ep-wannier interpolation
-  !
-  !  01/2014 Modified by Roxana Margine 
-  !
-  !-----------------------------------------------------------------------
+  !!
+  !!  Compute the electron spectral function including the  electron-
+  !!  phonon interaction in the Migdal approximation. 
+  !!  
+  !!  We take the trace of the spectral function to simulate the photoemission
+  !!  intensity. I do not consider the c-axis average for the time being.
+  !!  The main approximation is constant dipole matrix element and diagonal
+  !!  selfenergy. The diagonality can be checked numerically. 
+  !!
+  !!  Use matrix elements, electronic eigenvalues and phonon frequencies
+  !!  from ep-wannier interpolation
+  !!
+  !!  01/2014 Modified by Roxana Margine 
+  !!
+  !!-----------------------------------------------------------------------
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
   USE io_epw,        ONLY : iunepmatf, iospectral_sup, iospectral
@@ -417,12 +393,11 @@
                             epf17, wkf, nqtotf, wf, wqf, xkf, nkqtotf,&
                             esigmar_all, esigmai_all, a_all, efnew
   USE constants_epw, ONLY : ryd2mev, one, ryd2ev, two, zero, pi, ci
-#ifdef __PARA
   USE mp,            ONLY : mp_barrier, mp_sum, mp_bcast
   USE mp_global,     ONLY : me_pool, inter_pool_comm
   USE mp_world,      ONLY : mpime
   USE io_global,     ONLY : ionode_id  
-#endif
+  ! 
   implicit none
   !
   real(kind=DP), external :: efermig, dos_ef, wgauss
@@ -442,16 +417,16 @@
   dw = ( wmax_specfun - wmin_specfun ) / dble (nw_specfun-1)
   !
   IF ( ik .eq. 1 ) THEN
-     !
-     WRITE(stdout,'(/5x,a)') repeat('=',67)
-     WRITE(stdout,'(5x,"Electron Spectral Function in the Migdal Approximation")')
-     WRITE(stdout,'(5x,a/)') repeat('=',67)
-     !
-     IF ( fsthick .lt. 1.d3 ) &
-        WRITE(stdout, '(/5x,a,f10.6,a)' ) 'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
-     WRITE(stdout, '(/5x,a,f10.6,a)' ) &
-           'Golden Rule strictly enforced with T = ',eptemp * ryd2ev, ' eV'
-     !
+    !
+    WRITE(stdout,'(/5x,a)') repeat('=',67)
+    WRITE(stdout,'(5x,"Electron Spectral Function in the Migdal Approximation")')
+    WRITE(stdout,'(5x,a/)') repeat('=',67)
+    !
+    IF ( fsthick .lt. 1.d3 ) &
+       WRITE(stdout, '(/5x,a,f10.6,a)' ) 'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
+    WRITE(stdout, '(/5x,a,f10.6,a)' ) &
+          'Golden Rule strictly enforced with T = ',eptemp * ryd2ev, ' eV'
+    !
   ENDIF
   !
   ! Fermi level and corresponding DOS
@@ -466,15 +441,11 @@
      !
   ENDIF
   !
-#ifdef __PARA
   IF (mpime .eq. ionode_id) THEN
-#endif
     !
     dosef = dos_ef_seq (ngaussw, degaussw, ef0, etf_k, wkf, nkqf, nbndsub)/2
-#ifdef __PARA
   ENDIF
   CALL mp_bcast (dosef, ionode_id, inter_pool_comm)
-#endif
   !
   IF ( ik .eq. 1 ) THEN 
      WRITE (stdout, 100) degaussw * ryd2ev, ngaussw
@@ -586,9 +557,7 @@
      !
   ENDDO ! end loop on q
   !
-#ifdef __PARA
-  !
-  ! collect contributions from all pools (sum over q-points)
+  ! Collect contributions from all pools (sum over q-points)
   ! this finishes the integral over the BZ  (q)
   !
   CALL mp_sum(esigmar_all,inter_pool_comm)
@@ -596,17 +565,13 @@
   CALL mp_sum(fermicount, inter_pool_comm)
   CALL mp_barrier(inter_pool_comm)
   !
-#endif 
-  !
   IF (.not. ALLOCATED (a_all)) ALLOCATE ( a_all(nw_specfun, nksqtotf) )
   a_all(:,:) = zero  
   !
   ! Output electron spectral function here after looping over all q-points 
   ! (with their contributions summed in a etc.)
   IF ( ik .eq. 1 ) THEN
-#ifdef __PARA
     IF (me_pool == 0) then
-#endif      
       !
       OPEN(unit=iospectral,file='specfun.elself')
       OPEN(unit=iospectral_sup,file='specfun_sup.elself')
@@ -616,9 +581,7 @@
       WRITE(iospectral_sup, '(/2x,a/)') '#K-point    Band   e_nk[eV]   w[eV]   &
 &         Real Sigma[meV]  Im Sigma[meV]'
       !
-#ifdef __PARA
     ENDIF
-#endif
   ENDIF
   !
   WRITE(stdout,'(5x,"WARNING: only the eigenstates within the Fermi window are meaningful")')
@@ -661,20 +624,14 @@
     !
     specfun_sum = specfun_sum + a_all(iw,ik)* fermi(iw) * dw !/ ryd2mev
     !
-#ifdef __PARA
     IF (me_pool == 0) &
-#endif
       WRITE(iospectral,'(2x,i7,2x,f10.5,2x,e12.5)') ik, ryd2ev * ww, a_all(iw,ik) / ryd2mev
       !
   ENDDO
   !
-#ifdef __PARA
   IF (me_pool == 0) &
-#endif
     WRITE(iospectral,'(a)') ' '
-#ifdef __PARA
   IF (me_pool == 0) &
-#endif
     WRITE(iospectral,'(2x,a,2x,e12.5)') '# Integrated spectral function ',specfun_sum
     !
   DO ibnd = 1, ibndmax-ibndmin+1
@@ -692,9 +649,7 @@
         ibndmin-1+ibnd, ryd2ev * ekk, ryd2ev * ww, ryd2mev * esigmar_all(ibnd,ik,iw),&
         ryd2mev * esigmai_all(ibnd,ik,iw)
       ! 
-#ifdef __PARA
       IF (me_pool == 0) &
-#endif
         WRITE(iospectral_sup,'(2i9,2x,f12.4,2x,f12.4,2x,f12.4,2x,f12.4,2x,f12.4)') ik,&
           ibndmin-1+ibnd, ryd2ev * ekk, ryd2ev * ww, ryd2mev * esigmar_all(ibnd,ik,iw),&
           ryd2mev * esigmai_all(ibnd,ik,iw)
@@ -711,14 +666,10 @@
     IF ( ALLOCATED(esigmai_all) )  DEALLOCATE( esigmai_all )
     IF ( ALLOCATED(a_all) )        DEALLOCATE( a_all )
     !
-#ifdef __PARA
     IF (me_pool == 0) THEN
-#endif      
       CLOSE(iospectral_sup)
       CLOSE(iospectral)
-#ifdef __PARA
     ENDIF
-#endif    
     !
   ENDIF
   !

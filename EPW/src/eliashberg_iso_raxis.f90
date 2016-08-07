@@ -21,9 +21,7 @@
   USE epwcom,        ONLY : nsiter, nstemp, broyden_beta, broyden_ndim
   USE eliashbergcom, ONLY : nsw, Delta, Deltap, gap, estemp
   USE constants_epw, ONLY : kelvin2eV, ci
-#ifdef __PARA
-  USE mp,        ONLY : mp_bcast, mp_barrier, mp_sum
-#endif
+  USE mp,            ONLY : mp_bcast, mp_barrier, mp_sum
   ! 
   IMPLICIT NONE
   !

@@ -126,9 +126,7 @@ SUBROUTINE setup_nnkp (  )
   !! calculate the M_mn(k,b) matrix elements 
   !! 
   ! ---------------------------------------------------------------------- 
-#ifdef __PARA
   USE io_global, ONLY : ionode
-#endif
   USE io_global, ONLY : stdout, ionode_id
   USE mp_world,  ONLY : world_comm
   USE kinds,     ONLY : DP
@@ -147,9 +145,7 @@ SUBROUTINE setup_nnkp (  )
   USE noncollin_module, ONLY : noncolin
   USE constants_epw,    ONLY : bohr
 !  USE w90_parameters,   ONLY : postproc_setup
-#ifdef __PARA
-   USE mp_global,       ONLY : intra_pool_comm, mp_sum
-#endif
+  USE mp_global,        ONLY : intra_pool_comm, mp_sum
   ! 
   implicit none
   real(DP) :: g_(3), gg_
@@ -252,10 +248,8 @@ SUBROUTINE setup_nnkp (  )
      atsym(ia)=atm(type)
   ENDDO
 
-#ifdef __PARA
   IF (ionode) THEN
-#endif
-!      postproc_setup = .true.
+!   postproc_setup = .true.
     CALL wannier_setup(seedname2, mp_grid, iknum,      &  ! input
            rlatt, glatt, kpt_latt, nbnd,                 &  ! input
            nat, atsym, atcart, .false., noncolin,        &  ! input
@@ -263,9 +257,7 @@ SUBROUTINE setup_nnkp (  )
            center_w, l_w, mr_w, r_w, zaxis,              &  ! output
            xaxis, alpha_w, exclude_bands)                   ! output
    ! SP: In wannier_setup, the .nnkp file is produced.
-#ifdef __PARA
   ENDIF
-#endif
    
   CALL mp_bcast(nnb,          ionode_id, world_comm )
   CALL mp_bcast(kpb,          ionode_id, world_comm )
@@ -321,10 +313,8 @@ SUBROUTINE setup_nnkp (  )
   ! 
   ! Now we read the .nnkp file 
   ! 
-#ifdef __PARA   
   IF (ionode) CLOSE (iun_nnkp)
   IF (ionode) THEN  ! Read nnkp file on ionode only
-#endif     
     INQUIRE(file=trim(seedname2)//".nnkp",exist=have_nnkp)
     IF(.not. have_nnkp) THEN
        CALL errore( 'pw2wannier90', 'Could not find the file '&
@@ -333,12 +323,8 @@ SUBROUTINE setup_nnkp (  )
 
     iun_nnkp = find_free_unit()
     OPEN (unit=iun_nnkp, file=trim(seedname2)//".nnkp",form='formatted')
-#ifdef __PARA
   ENDIF
-#endif
-#ifdef __PARA
   IF (ionode) THEN   ! read from ionode only
-#endif
     IF(noncolin) THEN
        CALL scan_file_to(iun_nnkp,'spinor_projections',found)
        IF(.not.found) THEN
@@ -353,17 +339,13 @@ SUBROUTINE setup_nnkp (  )
        ENDIF
     ENDIF
     READ(iun_nnkp,*) n_proj
-#ifdef __PARA
   ENDIF
   CALL mp_bcast(n_proj,ionode_id, world_comm)
   ! 
-#endif
   ALLOCATE( gf(npwx,n_proj), csph(16,n_proj) )
   IF(noncolin) ALLOCATE( spin_eig(n_proj),spin_qaxis(3,n_proj) )
-#ifdef __PARA
   ! 
   IF (ionode) THEN   ! read from ionode only
-#endif
     DO iw=1,n_proj
       READ(iun_nnkp,*) (center_w(i,iw), i=1,3), l_w(iw), mr_w(iw), r_w(iw)
       READ(iun_nnkp,*) (zaxis(i,iw),i=1,3),(xaxis(i,iw),i=1,3),alpha_w(iw)
@@ -389,13 +371,10 @@ SUBROUTINE setup_nnkp (  )
          spin_qaxis(:,iw)=spin_qaxis(:,iw)/xnorm
       ENDIF
     ENDDO
-#ifdef __PARA
   ENDIF
-#endif
   ! 
   WRITE(stdout,*) '     - All guiding functions are given '
   ! 
-#ifdef __PARA
   ! Broadcast
   CALL mp_bcast(center_w,ionode_id, world_comm)
   CALL mp_bcast(l_w,ionode_id, world_comm)
@@ -408,23 +387,18 @@ SUBROUTINE setup_nnkp (  )
      CALL mp_bcast(spin_eig,ionode_id, world_comm)
      CALL mp_bcast(spin_qaxis,ionode_id, world_comm)
   ENDIF
-#endif
   !
-#ifdef __PARA
   IF (ionode) THEN   ! read from ionode only
-#endif
     CALL scan_file_to(iun_nnkp,'nnkpts',found)
     IF(.not.found) THEN
        CALL errore( 'pw2wannier90epw', 'Could not find nnkpts block in '&
           &//trim(seedname2)//'.nnkp', 1 )
     ENDIF
     READ (iun_nnkp,*) nnb
-#ifdef __PARA
   ENDIF
   ! Broadcast
   CALL mp_bcast(nnb,ionode_id, world_comm)
   !
-#endif
   !
   nnbx = 0
   nnbx = max (nnbx, nnb )
@@ -434,20 +408,16 @@ SUBROUTINE setup_nnkp (  )
   WRITE(stdout,*)
   WRITE(stdout,*) ' Reading data about k-point neighbours '
   WRITE(stdout,*)
-#ifdef __PARA
   IF (ionode) THEN
-#endif
     DO ik=1, iknum
       DO ib = 1, nnb
         READ(iun_nnkp,*) idum, kpb(ik,ib), (g_kpb(ipol,ik,ib), ipol =1,3)
       ENDDO
     ENDDO
-#ifdef __PARA
   ENDIF
   ! Broadcast
   CALL mp_bcast(kpb,ionode_id, world_comm)
   CALL mp_bcast(g_kpb,ionode_id, world_comm)
-#endif
   ! 
   DO ik=1, iknum
     DO ib = 1, nnb
@@ -465,9 +435,7 @@ SUBROUTINE setup_nnkp (  )
     ENDDO
   ENDDO
   ig_check(:,:) = ig_(:,:)
-#ifdef __PARA
   CALL mp_sum( ig_check, intra_pool_comm )
-#endif
   DO ik=1, iknum
     DO ib = 1, nnb
       IF (ig_check(ik,ib) ==0) &
@@ -480,13 +448,9 @@ SUBROUTINE setup_nnkp (  )
   WRITE(stdout,*) '     - All neighbours are found '
   WRITE(stdout,*)
   !
-#ifdef __PARA
   IF (ionode)THEN
-#endif
     CLOSE (iun_nnkp)
-#ifdef __PARA
   ENDIF
-#endif
   RETURN
   !
 END SUBROUTINE setup_nnkp
@@ -521,10 +485,7 @@ END SUBROUTINE scan_file_to
 SUBROUTINE run_wannier
   !-----------------------------------------------------------------------
   !
-  USE io_global, ONLY : stdout, ionode_id
-#ifdef __PARA
-  USE io_global, ONLY : ionode
-#endif
+  USE io_global, ONLY : stdout, ionode_id, ionode
   USE ions_base, ONLY : nat
   USE mp,        ONLY : mp_bcast
   USE mp_world,  ONLY : world_comm
@@ -548,45 +509,41 @@ SUBROUTINE run_wannier
   !
   u_mat_opt = czero
   !
-#ifdef __PARA
-   IF (ionode) THEN
-#endif
-      ! read in external eigenvalues, e.g.  GW
-      IF (eig_read) then
-         WRITE (stdout,'(5x,a,i5,a,i5,a)') "Reading electronic eigenvalues (", &
-              nbnd, ",", iknum,")"
-         tempfile=trim(prefix)//'.eig'
-         OPEN(1, file=tempfile, form='formatted', action='read', iostat=ios)
-         IF (ios /= 0) CALL errore ('run_wannier','error opening' // tempfile, 1)
-         !
-         ! the form should be band, kpt, eigenvalue
-         !
-         DO ik = 1, iknum
-            DO ibnd = 1, nbnd
-               READ (1,*) dummy1, dummy2, eigval (ibnd,ik)
-               IF (dummy1.ne.ibnd) CALL errore('run_wannier', "Incorrect eigenvalue file", 1)
-               IF (dummy2.ne.ik) CALL errore('run_wannier', "Incorrect eigenvalue file", 1)
-            ENDDO
-         ENDDO
-         CLOSE(1)
-      ENDIF
-      !
+  IF (ionode) THEN
+     ! read in external eigenvalues, e.g.  GW
+     IF (eig_read) then
+        WRITE (stdout,'(5x,a,i5,a,i5,a)') "Reading electronic eigenvalues (", &
+             nbnd, ",", iknum,")"
+        tempfile=trim(prefix)//'.eig'
+        OPEN(1, file=tempfile, form='formatted', action='read', iostat=ios)
+        IF (ios /= 0) CALL errore ('run_wannier','error opening' // tempfile, 1)
+        !
+        ! the form should be band, kpt, eigenvalue
+        !
+        DO ik = 1, iknum
+           DO ibnd = 1, nbnd
+              READ (1,*) dummy1, dummy2, eigval (ibnd,ik)
+              IF (dummy1.ne.ibnd) CALL errore('run_wannier', "Incorrect eigenvalue file", 1)
+              IF (dummy2.ne.ik) CALL errore('run_wannier', "Incorrect eigenvalue file", 1)
+           ENDDO
+        ENDDO
+        CLOSE(1)
+     ENDIF
+     !
 ! SP : This file is not used for now. Only required to build the UNK file
 !      tempfile=trim(prefix)//'.mmn'
 !      OPEN(iummn, file=tempfile, iostat=ios, form='unformatted')
 !      WRITE(iummn) m_mat
 !      CLOSE(iummn)
 
-      CALL wannier_run(seedname2, mp_grid, iknum,   &                 ! input
+     CALL wannier_run(seedname2, mp_grid, iknum,   &                 ! input
            rlatt, glatt, kpt_latt, num_bands,       &                 ! input
            n_wannier, nnb, nat, atsym,              &                 ! input
            atcart, .false., m_mat, a_mat, eigval,   &                 ! input
            u_mat, u_mat_opt, lwindow, wann_centers, &                 ! output
            wann_spreads, spreads)                                     ! output
 
-#ifdef __PARA
-   ENDIF
-#endif
+  ENDIF
   !
   CALL mp_bcast(u_mat,       ionode_id, world_comm )
   CALL mp_bcast(u_mat_opt,   ionode_id, world_comm )
@@ -643,10 +600,8 @@ SUBROUTINE compute_amn_para
 #ifdef __NAG
   USE f90_unix_io,    ONLY : flush
 #endif
-#ifdef __PARA
   USE mp_global,       ONLY : npool, intra_pool_comm, inter_pool_comm
   USE mp,              ONLY : mp_sum
-#endif
   ! 
   implicit none
   ! 
@@ -681,7 +636,7 @@ SUBROUTINE compute_amn_para
      CALL init_us_1
   ENDIF
   !
-#ifdef __PARA
+#ifdef __MPI
   WRITE(stdout,'(6x,a,i5,a,i4,a)') 'k points = ',iknum, ' in ', npool, ' pools'
 #endif
   ! 
@@ -734,9 +689,7 @@ SUBROUTINE compute_amn_para
                istart = (ipol-1)*npwx + 1
                amn=(0.0_dp,0.0_dp)
                amn = zdotc(npw,evc(istart,ibnd),1,sgf(1,iw),1)
-#ifdef __PARA
                CALL mp_sum(amn, intra_pool_comm)
-#endif
                ibnd1=ibnd1+1
                ! 
                ! a_mat(ibnd1,iw+n_proj*(ipol-1),ik_g) = amn
@@ -762,9 +715,7 @@ SUBROUTINE compute_amn_para
                  istart = (ipol-1)*npwx + 1
                  amn_tmp=(0.0_dp,0.0_dp)
                  amn_tmp = zdotc(npw,evc(istart,ibnd),1,sgf(1,iw),1)
-#ifdef __PARA
                  CALL mp_sum(amn_tmp, intra_pool_comm)
-#endif
                  amn=amn+fac(ipol)*amn_tmp
               ENDDO
               ibnd1=ibnd1+1
@@ -781,9 +732,7 @@ SUBROUTINE compute_amn_para
             IF (excluded_band(ibnd)) CYCLE
             amn=(0.0_dp,0.0_dp)
             amn = ZDOTC(npw,evc(1,ibnd),1,sgf(1,iw),1)
-#ifdef __PARA
             CALL mp_sum(amn, intra_pool_comm)
-#endif
             ibnd1=ibnd1+1
             a_mat(ibnd1,iw,ik_g) = amn
          ENDDO !bands
@@ -795,9 +744,7 @@ SUBROUTINE compute_amn_para
   DEALLOCATE (csph)
   IF (any_uspp) CALL deallocate_bec_type ( becp )
   !
-#ifdef __PARA
   CALL mp_sum(a_mat, inter_pool_comm)
-#endif
   !
   !
   WRITE(stdout,*)
@@ -821,9 +768,7 @@ SUBROUTINE compute_mmn_para
    USE io_global,       ONLY : stdout, ionode
    USE io_files,        ONLY : diropn
    USE mp_global,       ONLY : my_pool_id
-#ifdef __PARA
    USE mp_global,       ONLY : npool, intra_pool_comm
-#endif
    USE kinds,           ONLY : DP
    USE wvfct,           ONLY : nbnd, npw, npwx, g2kin
    USE gvecw,           ONLY : ecutwfc
@@ -847,13 +792,11 @@ SUBROUTINE compute_mmn_para
 #ifdef __NAG
    USE f90_unix_io,     ONLY : flush
 #endif
-#ifdef __PARA
    USE mp,              ONLY : mp_sum
    USE mp_global,       ONLY : inter_pool_comm
-#endif
-
+   ! 
    implicit none
-
+   !
    integer :: mmn_tot ,ik, ikp, ib, npwq, i, m, n
    integer :: ikb, jkb, ih, jh, na, nt, ijkb0, ind, nbt
    complex(DP), allocatable :: phase(:), aux(:), aux2(:),  evcq(:,:), & 
@@ -903,9 +846,7 @@ SUBROUTINE compute_mmn_para
          xktot(:,i) = xk(:,i)
       ENDDO
    ENDIF
-#ifdef __PARA
    CALL mp_sum(xktot, inter_pool_comm)
-#endif
    !
    zero_vect = 0.0d0
    m_mat = czero
@@ -970,7 +911,7 @@ SUBROUTINE compute_mmn_para
   !
   ALLOCATE( Mkb(nbnd,nbnd) )
   !
-#ifdef __PARA
+#ifdef __MPI
   WRITE(stdout,'(6x,a,i5,a,i4,a)') 'k points = ',iknum, ' in ', npool, ' pools'
 #endif
   ! get the first k-point in this pool 
@@ -1119,9 +1060,7 @@ SUBROUTINE compute_mmn_para
                 IF (excluded_band(n)) CYCLE
                 mmn = zdotc (npwq, aux,1,evcq(1,n),1) &
                      + conjg(zdotc(npwq,aux2,1,evcq(1,n),1))
-#ifdef __PARA
                 CALL mp_sum(mmn, intra_pool_comm)
-#endif
                 Mkb(m,n) = mmn + Mkb(m,n)
                 IF (m/=n) Mkb(n,m) = Mkb(m,n) ! fill other half of matrix by symmetry
              ENDDO
@@ -1134,9 +1073,7 @@ SUBROUTINE compute_mmn_para
                  mmn = mmn + ZDOTC (npwq, aux_nc(1,1),1,evcq(1,n),1) &
                        + ZDOTC (npwq, aux_nc(1,2),1,evcq(npwx+1,n),1)
 !                 ENDDO
-#ifdef __PARA
                  CALL mp_sum(mmn, intra_pool_comm)
-#endif
                  Mkb(m,n) = mmn + Mkb(m,n)
                !  aa = aa + abs(mmn)**2
               ENDDO
@@ -1144,9 +1081,7 @@ SUBROUTINE compute_mmn_para
               DO n=1,nbnd
                  IF (excluded_band(n)) CYCLE
                  mmn = ZDOTC (npwq, aux,1,evcq(1,n),1)
-#ifdef __PARA
                  CALL mp_sum(mmn, intra_pool_comm)
-#endif
                  Mkb(m,n) = mmn + Mkb(m,n)
 !                 aa = aa + abs(mmn)**2
               ENDDO
@@ -1180,10 +1115,7 @@ SUBROUTINE compute_mmn_para
      ENDDO !ib
   ENDDO !ik
   !
-#ifdef __PARA
   CALL mp_sum(m_mat, inter_pool_comm)
-#endif
-  !
   !
   IF (gamma_only) DEALLOCATE(aux2)
   DEALLOCATE (Mkb, dxk, phase, evcq, igkq)
@@ -1222,9 +1154,7 @@ SUBROUTINE compute_pmn_para
 !  
 !
    USE io_global,       ONLY : stdout
-#ifdef __PARA
    USE mp,              ONLY : mp_sum
-#endif
    USE kinds,           ONLY : DP
    USE klist,           ONLY : xk, nks, igk_k
    USE wvfct,           ONLY : nbnd, npw, npwx, g2kin
@@ -1337,9 +1267,7 @@ SUBROUTINE write_filukk
    USE wannier,      ONLY : n_wannier, iknum, u_mat, u_mat_opt, lwindow
    USE epwcom,       ONLY : filukk
    USE constants_epw,ONLY : czero
-#ifdef __PARA
    USE io_global,    ONLY : ionode
-#endif
    !
    implicit none
    !
@@ -1348,47 +1276,43 @@ SUBROUTINE write_filukk
    !
    !
    !
-#ifdef __PARA
    IF (ionode) THEN
-#endif
-      !
-      ndimwin(:) = 0
-      DO ik = 1, iknum
-         DO jbnd = 1, nbnd
-            IF (lwindow(jbnd,ik)) ndimwin(ik) = ndimwin(ik) + 1
-         ENDDO
-      ENDDO
-      ALLOCATE( u_kc(nbnd, n_wannier, iknum) )
-      u_kc = czero
-      !
-      ! get the final rotation matrix, which is the product of the optimal
-      ! subspace and the rotation among the n_wannier wavefunctions
-      DO ik = 1, iknum
-         !
-         u_kc(1:ndimwin(ik),1:n_wannier,ik) = &
-              matmul (u_mat_opt(1:ndimwin(ik),:,ik), u_mat(:,1:n_wannier,ik))
-         !
-      ENDDO
-      !
-      open (unit = iuukk, file = filukk, form = 'formatted')
-      DO ik = 1,iknum
-         DO jbnd = 1, nbnd
-            DO k_wan = 1, n_wannier
-               WRITE (iuukk,*) u_kc(jbnd,k_wan,ik)
-            ENDDO
-         ENDDO
-      ENDDO
-      ! needs also lwindow when disentanglement is used
-      DO ik = 1,iknum
-         DO jbnd = 1,nbnd
-            WRITE (iuukk,*) lwindow(jbnd,ik)
-         ENDDO
-      ENDDO
-      close (iuukk)
-      IF ( ALLOCATED(u_kc) ) DEALLOCATE(u_kc)
-#ifdef __PARA
+     !
+     ndimwin(:) = 0
+     DO ik = 1, iknum
+        DO jbnd = 1, nbnd
+           IF (lwindow(jbnd,ik)) ndimwin(ik) = ndimwin(ik) + 1
+        ENDDO
+     ENDDO
+     ALLOCATE( u_kc(nbnd, n_wannier, iknum) )
+     u_kc = czero
+     !
+     ! get the final rotation matrix, which is the product of the optimal
+     ! subspace and the rotation among the n_wannier wavefunctions
+     DO ik = 1, iknum
+        !
+        u_kc(1:ndimwin(ik),1:n_wannier,ik) = &
+             matmul (u_mat_opt(1:ndimwin(ik),:,ik), u_mat(:,1:n_wannier,ik))
+        !
+     ENDDO
+     !
+     open (unit = iuukk, file = filukk, form = 'formatted')
+     DO ik = 1,iknum
+        DO jbnd = 1, nbnd
+           DO k_wan = 1, n_wannier
+              WRITE (iuukk,*) u_kc(jbnd,k_wan,ik)
+           ENDDO
+        ENDDO
+     ENDDO
+     ! needs also lwindow when disentanglement is used
+     DO ik = 1,iknum
+        DO jbnd = 1,nbnd
+           WRITE (iuukk,*) lwindow(jbnd,ik)
+        ENDDO
+     ENDDO
+     close (iuukk)
+     IF ( ALLOCATED(u_kc) ) DEALLOCATE(u_kc)
    ENDIF
-#endif
    !
 !-----------------------------------------------------------------------
 END SUBROUTINE write_filukk
@@ -1619,9 +1543,7 @@ SUBROUTINE write_plot
    USE fft_base,        ONLY : dffts
    USE fft_interfaces,  ONLY : invfft
    USE noncollin_module,ONLY : noncolin
-#ifdef __PARA
    USE scatter_mod,        ONLY : gather_grid
-#endif
    !
    implicit none
    integer ik, ibnd, ibnd1, j, spin, nkq, nkq_abs, ipool
@@ -1632,7 +1554,7 @@ SUBROUTINE write_plot
    COMPLEX(DP),allocatable :: psic_small(:)   
    real(kind=DP)      :: zero_vect(3)
    !-------------------------------------------!
-#ifdef __PARA
+#ifdef __MPI
    integer nxxs
    COMPLEX(DP),allocatable :: psic_all(:)
    nxxs = dffts%nr1x * dffts%nr2x * dffts%nr3x
@@ -1688,7 +1610,7 @@ SUBROUTINE write_plot
          IF (gamma_only)  psic(nlsm(igk_k (1:npw,ik) ) ) = conjg(evc (1:npw, ibnd))
          CALL invfft ('Wave', psic, dffts)
          IF (reduce_unk) pos=0
-#ifdef __PARA
+#ifdef __MPI
          CALL gather_grid(dffts,psic,psic_all)
          !
          IF (reduce_unk) THEN
@@ -1750,7 +1672,7 @@ SUBROUTINE write_plot
    !
    IF (reduce_unk) DEALLOCATE(psic_small)   
    !
-#ifdef __PARA
+#ifdef __MPI
    DEALLOCATE( psic_all )
 #endif
    !

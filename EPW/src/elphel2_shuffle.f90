@@ -54,12 +54,10 @@
   !! 
   !---------------------------------------------------------------------
   !
-#ifdef __PARA
   USE mp_global,     ONLY : my_pool_id, nproc_pool,    & 
                             intra_pool_comm, &
                             inter_pool_comm
   USE mp,            ONLY : mp_barrier, mp_bcast, mp_put,mp_sum
-#endif
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
   USE wavefunctions_module,  ONLY: evc
@@ -142,10 +140,8 @@
   IF (ALLOCATED(xkq) ) DEALLOCATE (xkq)                  
   IF (.not. ALLOCATED(xkq) ) ALLOCATE (xkq (3, nkstot) ) 
   xkq(:,:) = 0.d0
-#ifdef __PARA
   IF (nproc_pool>1) call errore &
     ('elphel2_shuffle', 'ONLY one proc per pool in shuffle mode', 1)
-#endif
   !
   ! find the bounds of k-dependent arrays in the parallel case in each pool
   CALL fkbounds( nkstot, lower_bnd, upper_bnd )
@@ -163,10 +159,8 @@
   ! close all .wfc files in order to prepare shuffled read
   !
   CLOSE (unit = iuwfc,  status = 'keep')
-#ifdef __PARA
   ! never remove this barrier
   CALL mp_barrier(inter_pool_comm)
-#endif
   !
   DO ik = 1, nks
      !
@@ -182,9 +176,7 @@
      ! (we need to make sure that xk(:,ikq) is really k+q for the KB projectors
      ! below and also that the eigenvalues are taken correctly in ephwann)
      !
-#ifdef __PARA
      ipooltmp= my_pool_id+1
-#endif
      !
      !
      CALL ktokpmq ( xk (:, ik), xq, +1, ipool, nkq, nkq_abs )
@@ -217,10 +209,8 @@
      igk = igk_k_all(1:npw,ik+lower_bnd-1)
      igkq = igk_k_all(1:npwq,nkq_abs)
      !
-#ifdef __PARA
      IF (nks.gt.1 .and. maxval(igkq(1:npwq)).gt.ngxx) &
           CALL errore ('elphel2_shuffle', 'ngxx too small', 1 )
-#endif
      !
      ! ----------------------------------------------------------------
      ! Set the gauge for the eigenstates: unitary transform and phases
@@ -396,9 +386,7 @@
 !     endif
 !END
  
-#ifdef __PARA
      CALL mp_sum(elphmat, intra_pool_comm)
-#endif
      !
      !  Rotate elphmat with the gauge matrices (this should be equivalent 
      !  to calculate elphmat with the truely rotated eigenstates)
@@ -432,10 +420,8 @@
   !  restore original configuration of files
   !
   CALL diropn (iuwfc, 'wfc', lrwfc, exst) 
-#ifdef __PARA
   ! never remove this barrier - > insures that wfcs are restored to each pool before moving on
   CALL mp_barrier(inter_pool_comm)
-#endif
   !
   DEALLOCATE (elphmat, eptmp, aux1, aux2)
   DEALLOCATE (gmap, shift)

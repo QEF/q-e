@@ -9,22 +9,22 @@
   !-----------------------------------------------------------------------
   SUBROUTINE selfen_phon_q (iq )
   !-----------------------------------------------------------------------
-  !
-  !  compute the imaginary part of the phonon self energy due to electron-
-  !  phonon interaction in the Migdal approximation. This corresponds to 
-  !  the phonon linewidth (half width). The phonon frequency is taken into
-  !  account in the energy selection rule.
-  !
-  !  Use matrix elements, electronic eigenvalues and phonon frequencies
-  !  from ep-wannier interpolation.  This routine is similar to the one above
-  !  but it is ONLY called from within ephwann_shuffle and calculates 
-  !  the selfenergy for one phonon at a time.  Much smaller footprint on
-  !  the disk
-  !
-  !  RM 24/02/2014
-  !  redefined the size of coskkq, vkk, vkq within the fermi windwow
-  !  cleaned up the subroutine
-  !
+  !!
+  !!  compute the imaginary part of the phonon self energy due to electron-
+  !!  phonon interaction in the Migdal approximation. This corresponds to 
+  !!  the phonon linewidth (half width). The phonon frequency is taken into
+  !!  account in the energy selection rule.
+  !!
+  !!  Use matrix elements, electronic eigenvalues and phonon frequencies
+  !!  from ep-wannier interpolation.  This routine is similar to the one above
+  !!  but it is ONLY called from within ephwann_shuffle and calculates 
+  !!  the selfenergy for one phonon at a time.  Much smaller footprint on
+  !!  the disk
+  !!
+  !!  RM 24/02/2014
+  !!  redefined the size of coskkq, vkk, vkq within the fermi windwow
+  !!  cleaned up the subroutine
+  !!
   !-----------------------------------------------------------------------
   USE kinds,      ONLY : DP
   USE io_global,  ONLY : stdout
@@ -41,10 +41,8 @@
                          lambda_all, lambda_v_all, &
                          dmef, gamma_all,gamma_v_all, efnew
   USE constants_epw, ONLY : ryd2mev, ryd2ev, two, zero, pi
-#ifdef __PARA
   use mp,         ONLY : mp_barrier, mp_sum
   use mp_global,  ONLY : me_pool, inter_pool_comm
-#endif
   !
   implicit none
   !
@@ -133,23 +131,9 @@
   !! It is therefore an approximation for a delta function
   REAL(kind=DP), external :: efermig
   !! Return the fermi energy
-
   !  
   COMPLEX(kind=DP) epf (ibndmax-ibndmin+1, ibndmax-ibndmin+1)
   !! Electron-phonon matrix element on the fine grid.
-
-
-  !
-  !integer :: ik, ikk, ikq, ibnd, jbnd, imode, nrec, iq, fermicount, ismear
-  !real(kind=DP) :: g2, ekk, ekq, wq, ef0, wgkk, wgkq, weight, dosef, &
-  !                 degaussw0, eptemp0, lambda_tot, lambda_tr_tot,&
-  !                 inv_wq, inv_degaussw0, g2_tmp, inv_eptemp0, w0g1, w0g2
-  !!
-  !real(kind=DP), external :: efermig, dos_ef, w0gauss, wgauss
-  !real(kind=DP) :: gamma(nmodes),gamma_v(nmodes)
-  !real(kind=DP) :: coskkq(ibndmax-ibndmin+1, ibndmax-ibndmin+1)
-  !real(kind=DP) :: DDOT, vkk(3,ibndmax-ibndmin+1), vkq(3,ibndmax-ibndmin+1)
-  !
   !
   IF ( iq .eq. 1 ) THEN 
      WRITE(stdout,'(/5x,a)') repeat('=',67)
@@ -333,8 +317,6 @@
      !
      CALL stop_clock('PH SELF-ENERGY')
      !
-#ifdef __PARA
-     !
      ! collect contributions from all pools (sum over k-points)
      ! this finishes the integral over the BZ  (k)
      !
@@ -342,8 +324,6 @@
      CALL mp_sum(gamma_v,inter_pool_comm) 
      CALL mp_sum(fermicount, inter_pool_comm)
      CALL mp_barrier(inter_pool_comm)
-     !
-#endif
      !
      WRITE(stdout,'(/5x,"ismear = ",i5," iq = ",i7," coord.: ", 3f9.5, " wt: ", f9.5)') ismear, iq, xqf(:,iq), wqf(iq)
      WRITE(stdout,'(5x,a)') repeat('-',67)
@@ -372,12 +352,8 @@
  !    WRITE(stdout, 105) lambda_tr_tot
      WRITE(stdout,'(5x,a/)') repeat('-',67)
      ! 
-     ! test ONLY
-#ifdef __PARA
      IF (me_pool == 0) &
-#endif
-     !     
-     WRITE( stdout, '(/5x,a,i8,a,i8/)' ) &
+       WRITE( stdout, '(/5x,a,i8,a,i8/)' ) &
            'Number of (k,k+q) pairs on the Fermi surface: ',fermicount, ' out of ', nkqtotf/2
      !
   ENDDO !smears
@@ -397,20 +373,20 @@ END SUBROUTINE selfen_phon_q
   !-----------------------------------------------------------------------
   SUBROUTINE selfen_phon_k (ik )
   !-----------------------------------------------------------------------
-  !
-  !  compute the imaginary part of the phonon self energy due to electron-
-  !  phonon interaction in the Migdal approximation. This corresponds to 
-  !  the phonon linewidth (half width). The phonon frequency is taken into
-  !  account in the energy selection rule.
-  !
-  !  Use matrix elements, electronic eigenvalues and phonon frequencies
-  !  from ep-wannier interpolation.  This routine is similar to the one above
-  !  but it is ONLY called from within ephwann_shuffle and calculates 
-  !  the selfenergy for one phonon at a time.  Much smaller footprint on
-  !  the disk
-  !
-  !  k-point paralellization
-  !
+  !!
+  !!  compute the imaginary part of the phonon self energy due to electron-
+  !!  phonon interaction in the Migdal approximation. This corresponds to 
+  !!  the phonon linewidth (half width). The phonon frequency is taken into
+  !!  account in the energy selection rule.
+  !!
+  !!  Use matrix elements, electronic eigenvalues and phonon frequencies
+  !!  from ep-wannier interpolation.  This routine is similar to the one above
+  !!  but it is ONLY called from within ephwann_shuffle and calculates 
+  !!  the selfenergy for one phonon at a time.  Much smaller footprint on
+  !!  the disk
+  !!
+  !!  k-point paralellization
+  !!
   !-----------------------------------------------------------------------
   USE kinds,      ONLY : DP
   USE io_global,  ONLY : stdout
@@ -427,12 +403,10 @@ END SUBROUTINE selfen_phon_q
                          lambda_all, lambda_v_all, &
                          dmef, gamma_all,gamma_v_all, efnew
   USE constants_epw, ONLY : ryd2mev, ryd2ev, two, zero, pi
-#ifdef __PARA
   use mp,         ONLY : mp_barrier, mp_sum, mp_bcast
   use mp_global,  ONLY : me_pool, inter_pool_comm
   USE mp_world,   ONLY : mpime
   USE io_global,  ONLY : ionode_id
-#endif
   !
   implicit none
   !
@@ -492,14 +466,10 @@ END SUBROUTINE selfen_phon_q
        !
     ELSE IF (nsmear > 1) THEN
        !
-#ifdef __PARA
-       IF (mpime .eq. ionode_id) THEN
-#endif
+       IF (mpime == ionode_id) THEN
          ef0 = efermig_seq(etf_k,nbndsub,nkqf,nelec,wkf,degaussw0,ngaussw,0,isk)
-#ifdef __PARA
        ENDIF
        CALL mp_bcast (ef0, ionode_id, inter_pool_comm)
-#endif 
        ! if some bands are skipped (nbndskip.neq.0), nelec has already been
        ! recalculated in ephwann_shuffle
        !
@@ -507,17 +477,13 @@ END SUBROUTINE selfen_phon_q
        ef0 = efnew
     ENDIF
     !
-#ifdef __PARA
-    IF (mpime .eq. ionode_id) THEN
-#endif
+    IF (mpime == ionode_id) THEN
       !   N(Ef) in the equation for lambda is the DOS per spin
       !dosef = dosef / two
       dosef = dos_ef_seq (ngaussw, degaussw0, ef0, etf_k, wkf, nkqf, nbndsub) / two
       !
-#ifdef __PARA
     ENDIF
     CALL mp_bcast (dosef, ionode_id, inter_pool_comm)
-#endif
     !   N(Ef) in the equation for lambda is the DOS per spin
     !dosef = dosef / two
     !
@@ -678,8 +644,6 @@ END SUBROUTINE selfen_phon_q
       ENDDO
     ENDDO  
     !
-#ifdef __PARA
-    !
     ! note that poolgather2 works with the doubled grid (k and k+q)
     !
     CALL poolgather2 ( 3,       nqtotf, nqf, xqf,    xqf_all  )
@@ -692,18 +656,12 @@ END SUBROUTINE selfen_phon_q
     CALL mp_sum(wf_all, inter_pool_comm)
     CALL mp_barrier(inter_pool_comm)
     !
-#else
-    !
     xqf_all = xqf
     DO iq = 1, nqtotf
       wqf_all(1,iq) = wqf(iq)
     ENDDO
     !
-#endif
-    !
-#ifdef __PARA
     IF (mpime.eq.ionode_id) THEN
-#endif
       OPEN(unit=lambda_phself,file='lambda.phself')
       WRITE(lambda_phself, '(/2x,a/)') '#Lambda phonon self-energy'
       WRITE(lambda_phself, *) '#Modes     ',(imode, imode=1,nmodes)
@@ -727,9 +685,7 @@ END SUBROUTINE selfen_phon_q
         !
       ENDDO
       CLOSE(linewidth_phself)
-#ifdef __PARA
     ENDIF
-#endif
     !
     DO ismear = 1, nsmear
       lambda_tot = 0.d0
@@ -759,11 +715,8 @@ END SUBROUTINE selfen_phon_q
         WRITE(stdout,'(5x,a/)') repeat('-',67)
         ! 
         ! test ONLY
-#ifdef __PARA
         IF (me_pool == 0) &
-#endif
-        !     
-        WRITE( stdout, '(/5x,a,i8,a,i8/)' ) &
+          WRITE( stdout, '(/5x,a,i8,a,i8/)' ) &
               'Number of (k,k+q) pairs on the Fermi surface: ',fermicount, ' out of ', nkqtotf/2
         !
       ENDDO 
