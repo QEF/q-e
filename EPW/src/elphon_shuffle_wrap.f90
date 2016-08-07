@@ -598,8 +598,8 @@
         !  bring epmatq in the mode representation of iq_first, 
         !  and then in the cartesian representation of iq
         !
-        CALL rotate_eigenm ( iq_first, iq, nqc, isym, nsym, s, invs, irt, &
-           rtau, xq, isq, cz1, cz2 )
+        CALL rotate_eigenm ( iq_first, nqc, isym, s, invs, irt, &
+           rtau, xq, cz1, cz2 )
         !
         CALL rotate_epmat ( cz1, cz2, xq, nqc, lwin, lwinq )
   !DBSP
@@ -641,8 +641,8 @@
           !  bring epmatq in the mode representation of iq_first, 
           !  and then in the cartesian representation of iq
           !
-          CALL rotate_eigenm ( iq_first, iq, nqc, isym, nsym, s, invs, irt, &
-             rtau, xq, isq, cz1, cz2 )
+          CALL rotate_eigenm ( iq_first, nqc, isym, s, invs, irt, &
+             rtau, xq, cz1, cz2 )
           !
           CALL rotate_epmat ( cz1, cz2, xq, nqc, lwin, lwinq )
           !

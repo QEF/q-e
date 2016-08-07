@@ -29,7 +29,6 @@
   USE pwcom,     ONLY : nkstot
 #endif
   !
-  USE ions_base, ONLY : nat
   USE pwcom,     ONLY : nbnd, ngm, doublegrid, nks
   USE kinds,     ONLY : DP
   USE modes,     ONLY : nmodes, nirr, npert, u

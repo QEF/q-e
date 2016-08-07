@@ -93,7 +93,7 @@
   USE io_files,    ONLY : prefix
   USE io_epw,      ONLY : iuwinfil
 #ifdef __PARA
-  USE io_global,   ONLY : stdout, ionode
+  USE io_global,   ONLY : ionode
 #endif
   USE epwcom,      ONLY: nbndsub, nwanxx, proj, iprint, dis_win_min, &
                          dis_win_max, dis_froz_min, dis_froz_max, num_iter, &

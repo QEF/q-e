@@ -26,7 +26,6 @@
   USE constants_epw, ONLY : cone, czero, ryd2mev
   USE pwcom,         ONLY : nbnd, nks
   USE ions_base,     ONLY : amass, ityp
-  USE modes,         ONLY : nirr, npert
   USE phcom,         ONLY : nq1, nq2, nq3
   implicit none
   !

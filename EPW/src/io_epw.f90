@@ -28,7 +28,7 @@
   PUBLIC :: epwdata, iundmedata, iunvmedata, iunksdata, iudyn, iukgmap, iuepb,&
             iunepmatf, iurecover, iufilfreq, iufilegnv, iufileph, iufilkqmap, &
             iufilikmap, iueig, iunepmatwp, iunepmatwe, iunkf, iunqf, &
-            iufileig
+            iufileig, iukmap
   PUBLIC :: iuwinfil, iun_plot, iuukk, iuprojfil !, iummn
   !
   ! Output of physically relevant quantities (60-100)
@@ -92,6 +92,7 @@
   INTEGER :: iunkf           = 117  ! The unit with the fine k-point mesh in crystal coord.
   INTEGER :: iunqf           = 118  ! The unit with the fine q-point mesh in crystal coord. 
   INTEGER :: iufileig        = 119  ! The unit with eigenenergies [band.eig]
+  INTEGER :: iukmap          = 120  ! Unit for the k-point map generation
 
   !
   ! Output quantites related to Wannier (201-250)

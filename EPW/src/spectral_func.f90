@@ -9,20 +9,20 @@
   !-----------------------------------------------------------------------
   SUBROUTINE spectral_func_q ( iq )
   !-----------------------------------------------------------------------
-  !
-  !  Compute the electron spectral function including the  electron-
-  !  phonon interaction in the Migdal approximation. 
-  !  
-  !  We take the trace of the spectral function to simulate the photoemission
-  !  intensity. I do not consider the c-axis average for the time being.
-  !  The main approximation is constant dipole matrix element and diagonal
-  !  selfenergy. The diagonality can be checked numerically. 
-  !
-  !  Use matrix elements, electronic eigenvalues and phonon frequencies
-  !  from ep-wannier interpolation
-  !
-  !  01/2014 Modified by Roxana Margine 
-  !
+  !!
+  !!  Compute the electron spectral function including the  electron-
+  !!  phonon interaction in the Migdal approximation. 
+  !!  
+  !!  We take the trace of the spectral function to simulate the photoemission
+  !!  intensity. I do not consider the c-axis average for the time being.
+  !!  The main approximation is constant dipole matrix element and diagonal
+  !!  selfenergy. The diagonality can be checked numerically. 
+  !!
+  !!  Use matrix elements, electronic eigenvalues and phonon frequencies
+  !!  from ep-wannier interpolation
+  !!
+  !!  01/2014 Modified by Roxana Margine 
+  !!
   !-----------------------------------------------------------------------
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
@@ -39,12 +39,14 @@
   USE constants_epw, ONLY : ryd2mev, one, ryd2ev, two, zero, pi, ci
 #ifdef __PARA
   USE mp,            ONLY : mp_barrier, mp_sum
-  USE mp_global,     ONLY : me_pool, inter_pool_comm, my_pool_id
+  USE mp_global,     ONLY : me_pool, inter_pool_comm
 #endif
   implicit none
   !
+  INTEGER, INTENT (in) :: iq
+  !! Current q-point index  
   real(kind=DP), external :: efermig, dos_ef, wgauss
-  integer :: iw, ik, ikk, ikq, ibnd, jbnd, imode, nrec, iq, fermicount
+  integer :: iw, ik, ikk, ikq, ibnd, jbnd, imode, nrec, fermicount
   complex(kind=DP) epf (ibndmax-ibndmin+1, ibndmax-ibndmin+1)
   real(kind=DP) :: g2, ekk, ekq, wq, ef0, wgq, wgkq, ww, dw, weight
   real(kind=DP) :: dosef, specfun_sum, esigmar0
@@ -410,14 +412,14 @@
                             fsthick, eptemp, ngaussw, degaussw, wmin_specfun,&
                             wmax_specfun, nw_specfun, &
                             efermi_read, fermi_energy
-  USE pwcom,         ONLY : nelec, ef, isk
+  USE pwcom,         ONLY : ef
   USE elph2,         ONLY : etf, ibndmin, ibndmax, nkqf, nqf, etf_k, &
-                            epf17, wkf, nkf, nqtotf, wf, wqf, xkf, nkqtotf,&
+                            epf17, wkf, nqtotf, wf, wqf, xkf, nkqtotf,&
                             esigmar_all, esigmai_all, a_all, efnew
   USE constants_epw, ONLY : ryd2mev, one, ryd2ev, two, zero, pi, ci
 #ifdef __PARA
   USE mp,            ONLY : mp_barrier, mp_sum, mp_bcast
-  USE mp_global,     ONLY : me_pool, inter_pool_comm, my_pool_id
+  USE mp_global,     ONLY : me_pool, inter_pool_comm
   USE mp_world,      ONLY : mpime
   USE io_global,     ONLY : ionode_id  
 #endif
@@ -427,13 +429,13 @@
   integer :: iw, ik, ikk, ikq, ibnd, jbnd, imode, nrec, iq, fermicount
   complex(kind=DP) epf (ibndmax-ibndmin+1, ibndmax-ibndmin+1)
   real(kind=DP) :: g2, ekk, ekq, wq, ef0, wgq, wgkq, ww, dw, weight
-  real(kind=DP) :: dosef, eptemp0, specfun_sum, esigmar0
+  real(kind=DP) :: dosef, specfun_sum, esigmar0
   real(kind=DP) :: fermi(nw_specfun)
    REAL(kind=DP), external ::  dos_ef_seq
   !
   ! variables for collecting data from all pools in parallel case 
   !
-  integer :: nksqtotf, lower_bnd, upper_bnd
+  integer :: nksqtotf
   ! 
   ! energy range and spacing for spectral function
   !

@@ -10,10 +10,10 @@
   subroutine readmat_shuffle2 ( iq_irr, nqc_irr, nq, iq_first, sxq, imq, isq,&
                                 invs, s, irt, rtau)
   !-----------------------------------------------------------------------
-  !
-  ! read dynamical matrix for the q points  
-  ! iq_first, iq_first+1, ... iq_first+nq-1
-  !
+  !!
+  !! read dynamical matrix for the q points  
+  !! iq_first, iq_first+1, ... iq_first+nq-1
+  !!
   !-----------------------------------------------------------------------
   USE kinds,            ONLY : DP
   use io_files,         ONLY : prefix 
@@ -31,10 +31,6 @@
   USE io_global,        ONLY : ionode, stdout
   USE constants_epw,    ONLY : cone, czero, twopi, rydcm1
   USE io_epw,           ONLY : iudyn
-#ifdef __PARA
-  USE mp_world,         ONLY : mpime
-  USE io_global,        ONLY : ionode_id
-#endif
   !
   implicit none
   !
@@ -42,7 +38,7 @@
   integer :: isym, invs (48), m1,m2,m3, s(3, 3, 48), sna, irt(48,nat), jsym, &
              neig, iwork( 5*nmodes ),  info, ifail( nmodes), isq (48), nsq, sym_sgq(48)
   ! 
-  logical :: timerev, eqvect_strict
+  logical :: eqvect_strict
   ! True if we are using time reversal
   !
   real(kind=DP) ::  arg, rwork( 7*nmodes ), aq(3), saq(3), raq(3)
@@ -423,6 +419,8 @@
     saq = xq
     call cryst_to_cart (1, aq, at, - 1)
     CALL cryst_to_cart (1, saq, at, -1)
+    ! Initialize isym
+    isym = 1
     DO jsym=1, nsq
       ism1 = invs (sym_sgq(jsym))
       raq = 0.d0

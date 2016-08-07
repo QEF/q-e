@@ -106,10 +106,10 @@
   !    Here we find the true symmetries of the crystal
   !
   IF ( magnetic_sym ) THEN
-     CALL sgam_at_mag (nrot, s, nat, tau, ityp, at, bg, &
+     CALL sgam_at_mag (nrot, s, nat, tau, ityp, bg, &
                   nr1, nr2, nr3, sym, irt, ftau, m_loc, sname, t_rev)
   ELSE
-     CALL sgam_at (nrot, s, nat, tau, ityp, at, bg, nr1, nr2, nr3, sym, &
+     CALL sgam_at (nrot, s, nat, tau, ityp, bg, nr1, nr2, nr3, sym, &
        irt, ftau)
   END IF
   !
@@ -216,7 +216,7 @@ end subroutine sgama2
 !
 !
 !-----------------------------------------------------------------------
-subroutine sgam_at_mag (nrot, s, nat, tau, ityp, at, bg, nr1, nr2, &
+subroutine sgam_at_mag (nrot, s, nat, tau, ityp, bg, nr1, nr2, &
      nr3, sym, irt, ftau, m_loc, sname, t_rev)
   !-----------------------------------------------------------------------
   !
@@ -236,7 +236,7 @@ subroutine sgam_at_mag (nrot, s, nat, tau, ityp, at, bg, nr1, nr2, &
   !     input variables
   !
   integer :: nrot, s (3, 3, 48), nat, ityp (nat), nr1, nr2, nr3
-  REAL(DP) :: m_loc(3,nat), tau (3, nat), at (3, 3), bg (3, 3)
+  REAL(DP) :: m_loc(3,nat), tau (3, nat), bg (3, 3)
   ! nrot : order of the parent group
   ! s    : symmetry operations of parent group
   ! nat  : number of atoms in the unit cell
@@ -515,7 +515,7 @@ END SUBROUTINE checksym_mag
 !
 !
 !-----------------------------------------------------------------------
-subroutine sgam_at (nrot, s, nat, tau, ityp, at, bg, nr1, nr2, &
+subroutine sgam_at (nrot, s, nat, tau, ityp, bg, nr1, nr2, &
      nr3, sym, irt, ftau)
   !-----------------------------------------------------------------------
   !
@@ -535,14 +535,13 @@ subroutine sgam_at (nrot, s, nat, tau, ityp, at, bg, nr1, nr2, &
   !     input variables
   !
   integer :: nrot, s (3, 3, 48), nat, ityp (nat), nr1, nr2, nr3
-  real(DP) :: tau (3, nat), at (3, 3), bg (3, 3)
+  real(DP) :: tau (3, nat), bg (3, 3)
   ! nrot : order of the parent group
   ! s    : symmetry operations of parent group
   ! nat  : number of atoms in the unit cell
   ! ityp : species of each atom in the unit cell
   ! nr*  : dimensions of the FFT mesh
   ! tau  : cartesian coordinates of the atoms
-  ! at   : basis of the real-space lattice
   ! bg   :  "   "   "  reciprocal-space lattice
   !
   !     output variables
@@ -781,9 +780,9 @@ subroutine mode_group (modenum, xq, at, bg, nat, nrot, s, irt, &
            enddo
            arg = arg * tpi
            if (isym.eq.nrot.and.minus_q) then
-              fase = CMPLX (cos (arg), sin (arg) )
+              fase = CMPLX (cos (arg), sin (arg), kind=DP )
            else
-              fase = CMPLX (cos (arg), - sin (arg) )
+              fase = CMPLX (cos (arg), - sin (arg), kind=DP )
            endif
            do ipol = 1, 3
               do jpol = 1, 3

@@ -37,27 +37,118 @@
   use pwcom,      ONLY : nelec, ef, isk
   use elph2,      ONLY : epf17, ibndmax, ibndmin, etf, &
                          wkf, xqf, wqf, nkqf, nqtotf,   &
-                         nkf, wf, nkqtotf, xqf, nqf, &
+                         nkf, wf, nkqtotf, xqf, &
                          lambda_all, lambda_v_all, &
                          dmef, gamma_all,gamma_v_all, efnew
   USE constants_epw, ONLY : ryd2mev, ryd2ev, two, zero, pi
 #ifdef __PARA
-  use mp,         ONLY : mp_barrier,mp_sum
-  use mp_global,  ONLY : me_pool,inter_pool_comm,my_pool_id,npool
+  use mp,         ONLY : mp_barrier, mp_sum
+  use mp_global,  ONLY : me_pool, inter_pool_comm
 #endif
   !
   implicit none
   !
-  integer :: ik, ikk, ikq, ibnd, jbnd, imode, nrec, iq, fermicount, ismear
-  complex(kind=DP) epf (ibndmax-ibndmin+1, ibndmax-ibndmin+1)
-  real(kind=DP) :: g2, ekk, ekq, wq, ef0, wgkk, wgkq, weight, dosef, &
-                   degaussw0, eptemp0, lambda_tot, lambda_tr_tot,&
-                   inv_wq, inv_degaussw0, g2_tmp, inv_eptemp0, w0g1, w0g2
+  INTEGER, INTENT (in) :: iq
+  !! Current q-point index
+  ! 
+  ! Local variables 
+  INTEGER :: ik
+  !! Counter on the k-point index 
+  INTEGER :: ikk
+  !! k-point index
+  INTEGER :: ikq
+  !! q-point index 
+  INTEGER :: ibnd
+  !! Counter on bands
+  INTEGER :: jbnd
+  !! Counter on bands
+  INTEGER :: imode
+  !! Counter on mode
+  INTEGER :: nrec
+  !! Record index for reading the e-f matrix
+  INTEGER :: fermicount
+  !! Number of states on the Fermi surface
+  INTEGER :: ismear
+  !! Upper bounds index after k or q paral
+  !! Smearing for the Gaussian function 
+  ! 
+  REAL(kind=DP) :: g2
+  !! Electron-phonon matrix elements squared in Ry^2
+  REAL(kind=DP) :: ekk
+  !! Eigen energy on the fine grid relative to the Fermi level
+  REAL(kind=DP) :: ekq
+  !! Eigen energy of k+q on the fine grid relative to the Fermi level
+  REAL(kind=DP) :: wq
+  !! Phonon frequency on the fine grid
+  REAL(kind=DP) :: ef0
+  !! Fermi energy level
+  REAL(kind=DP) :: wgkq
+  !! Fermi-Dirac occupation factor $f_{nk+q}(T)$
+  REAL(kind=DP) :: weight
+  !! Imaginary part of the phonhon self-energy factor 
+  !!$$ \pi N_q \Im(\frac{f_{nk}(T) - f_{mk+q(T)}}{\varepsilon_{nk}-\varepsilon_{mk+q}-\omega_{q\nu}+i\delta}) $$
+  !! In practice the imaginary is performed with a delta Dirac
+  REAL(kind=DP) :: dosef
+  !! Density of state N(Ef)
+  REAL(kind=DP) :: w0g1
+  !! Dirac delta for the imaginary part of $\Sigma$
+  REAL(kind=DP) :: w0g2
+  !! Dirac delta for the imaginary part of $\Sigma$
+  REAL(kind=DP) :: inv_wq
+  !! $frac{1}{2\omega_{q\nu}}$ defined for efficiency reasons
+  REAL(kind=DP) :: inv_eptemp0
+  !! Inverse of temperature define for efficiency reasons
+  REAL(kind=DP) :: g2_tmp
+  !! If the phonon frequency is too small discart g
+  REAL(kind=DP) :: gamma(nmodes)
+  !! Gamma is the imaginary part of the phonon self-energy 
+  REAL(kind=DP) :: gamma_v(nmodes)
+  !! Gamma is the imaginary part of the phonon self-energy multiplied by (1-coskkq)
+  REAL(kind=DP) :: coskkq(ibndmax-ibndmin+1, ibndmax-ibndmin+1)
+  !! $$(v_k \cdot v_{k+q}) / |v_k|^2$$
+  REAL(kind=DP) :: DDOT
+  !! Dot product function
+  REAL(kind=DP) :: degaussw0
+  !! degaussw0 = (ismear-1) * delta_smear + degaussw
+  REAL(kind=DP) :: inv_degaussw0
+  !! Inverse degaussw0 for efficiency reasons
+  REAL(kind=DP) :: lambda_tot
+  !! Integrated lambda function
+  REAL(kind=DP) :: lambda_tr_tot
+  !! Integrated transport lambda function
+  REAL(kind=DP) :: wgkk
+  !! Fermi-Dirac occupation factor $f_{nk}(T)$
+  REAL(kind=DP) :: eptemp0
+  !!eptemp0   = (ismear-1) * delta_smear + eptem
+  REAL(kind=DP) :: vkk(3,ibndmax-ibndmin+1)
+  !! Electronic velocity $v_{nk}$
+  REAL(kind=DP) :: vkq(3,ibndmax-ibndmin+1)
+  !! Electronic velocity $v_{nk+q}$
+  REAL(kind=DP), external :: dos_ef
+  !! Function to compute the Density of States at the Fermi level
+  REAL(kind=DP), external :: wgauss
+  !! Fermi-Dirac distribution function (when -99)
+  REAL(kind=DP), external :: w0gauss
+  !! This function computes the derivative of the Fermi-Dirac function
+  !! It is therefore an approximation for a delta function
+  REAL(kind=DP), external :: efermig
+  !! Return the fermi energy
+
+  !  
+  COMPLEX(kind=DP) epf (ibndmax-ibndmin+1, ibndmax-ibndmin+1)
+  !! Electron-phonon matrix element on the fine grid.
+
+
   !
-  real(kind=DP), external :: efermig, dos_ef, w0gauss, wgauss
-  real(kind=DP) :: gamma(nmodes),gamma_v(nmodes)
-  real(kind=DP) :: coskkq(ibndmax-ibndmin+1, ibndmax-ibndmin+1)
-  real(kind=DP) :: DDOT, vkk(3,ibndmax-ibndmin+1), vkq(3,ibndmax-ibndmin+1)
+  !integer :: ik, ikk, ikq, ibnd, jbnd, imode, nrec, iq, fermicount, ismear
+  !real(kind=DP) :: g2, ekk, ekq, wq, ef0, wgkk, wgkq, weight, dosef, &
+  !                 degaussw0, eptemp0, lambda_tot, lambda_tr_tot,&
+  !                 inv_wq, inv_degaussw0, g2_tmp, inv_eptemp0, w0g1, w0g2
+  !!
+  !real(kind=DP), external :: efermig, dos_ef, w0gauss, wgauss
+  !real(kind=DP) :: gamma(nmodes),gamma_v(nmodes)
+  !real(kind=DP) :: coskkq(ibndmax-ibndmin+1, ibndmax-ibndmin+1)
+  !real(kind=DP) :: DDOT, vkk(3,ibndmax-ibndmin+1), vkq(3,ibndmax-ibndmin+1)
   !
   !
   IF ( iq .eq. 1 ) THEN 
@@ -295,8 +386,8 @@
 101 FORMAT(5x,'DOS =',f10.6,' states/spin/eV/Unit Cell at Ef=',f10.6,' eV')
 102 FORMAT(5x,'lambda( ',i3,' )=',f15.6,'   gamma=',f15.6,' meV','   omega=',f12.4,' meV')
 103 FORMAT(5x,'lambda( tot )=',f15.6)
-104 FORMAT(5x,'lambda_tr( ',i3,' )=',f15.6,'   gamma_tr=',f15.6,' meV','   omega=',f12.4,' meV')
-105 FORMAT(5x,'lambda_tr( tot )=',f15.6)
+!104 FORMAT(5x,'lambda_tr( ',i3,' )=',f15.6,'   gamma_tr=',f15.6,' meV','   omega=',f12.4,' meV')
+!105 FORMAT(5x,'lambda_tr( tot )=',f15.6)
   !
   RETURN
   !
@@ -332,13 +423,13 @@ END SUBROUTINE selfen_phon_q
   use pwcom,      ONLY : nelec, ef, isk
   use elph2,      ONLY : epf17, ibndmax, ibndmin, etf, etf_k, &
                          wkf, xqf, wqf, nkqf, nqtotf,   &
-                         nkf, wf, nkqtotf, xqf, nqf, &
+                         wf, nkqtotf, xqf, nqf, &
                          lambda_all, lambda_v_all, &
                          dmef, gamma_all,gamma_v_all, efnew
   USE constants_epw, ONLY : ryd2mev, ryd2ev, two, zero, pi
 #ifdef __PARA
   use mp,         ONLY : mp_barrier, mp_sum, mp_bcast
-  use mp_global,  ONLY : me_pool,inter_pool_comm,my_pool_id,npool
+  use mp_global,  ONLY : me_pool, inter_pool_comm
   USE mp_world,   ONLY : mpime
   USE io_global,  ONLY : ionode_id
 #endif
@@ -358,8 +449,8 @@ END SUBROUTINE selfen_phon_q
   !
   ! variables for collecting data from all pools in parallel case 
   !
-  integer :: nksqtotf, lower_bnd, upper_bnd
-  REAL(kind=DP), ALLOCATABLE :: xqf_all(:,:), etf_all(:,:), wqf_all(:,:), wf_all(:,:)
+  integer :: lower_bnd, upper_bnd
+  REAL(kind=DP), ALLOCATABLE :: xqf_all(:,:), wqf_all(:,:), wf_all(:,:)
   !
   IF ( ik .eq. 1 ) THEN 
      WRITE(stdout,'(/5x,a)') repeat('=',67)
@@ -684,8 +775,8 @@ END SUBROUTINE selfen_phon_q
 101 FORMAT(5x,'DOS =',f10.6,' states/spin/eV/Unit Cell at Ef=',f10.6,' eV')
 102 FORMAT(5x,'lambda( ',i3,' )=',f15.6,'   gamma=',f15.6,' meV','   omega=',f12.4,' meV')
 103 FORMAT(5x,'lambda( tot )=',f15.6)
-104 FORMAT(5x,'lambda_tr( ',i3,' )=',f15.6,'   gamma_tr=',f15.6,' meV','   omega=',f12.4,' meV')
-105 FORMAT(5x,'lambda_tr( tot )=',f15.6)
+!104 FORMAT(5x,'lambda_tr( ',i3,' )=',f15.6,'   gamma_tr=',f15.6,' meV','   omega=',f12.4,' meV')
+!105 FORMAT(5x,'lambda_tr( tot )=',f15.6)
   !
 END SUBROUTINE selfen_phon_k
 !
@@ -694,7 +785,6 @@ FUNCTION dos_ef_seq (ngauss, degauss, ef, et, wk, nks, nbnd)
   !-----------------------------------------------------------------------
   !
   USE kinds, ONLY : DP
-  USE mp_pools, ONLY : inter_pool_comm
   USE mp,        ONLY : mp_sum
   IMPLICIT NONE
   REAL(DP) :: dos_ef_seq

@@ -9,16 +9,16 @@
   !-----------------------------------------------------------------------
   SUBROUTINE rgd_blk (nr1,nr2,nr3,nat,dyn,q,tau,epsil,zeu,bg,omega,sign)
   !-----------------------------------------------------------------------
-  ! This is adapted from QE PH/rigid.f90 
-  !
-  ! compute the rigid-ion (long-range) term for q 
-  ! The long-range term used here, to be added to or subtracted from the
-  ! dynamical matrices, is exactly the same of the formula introduced
-  ! in:
-  ! X. Gonze et al, PRB 50. 13035 (1994) . Only the G-space term is 
-  ! implemented: the Ewald parameter alpha must be large enough to 
-  ! have negligible r-space contribution
-  !
+  !! This is adapted from QE PH/rigid.f90 
+  !!
+  !! compute the rigid-ion (long-range) term for q 
+  !! The long-range term used here, to be added to or subtracted from the
+  !! dynamical matrices, is exactly the same of the formula introduced
+  !! in:
+  !! X. Gonze et al, PRB 50. 13035 (1994) . Only the G-space term is 
+  !! implemented: the Ewald parameter alpha must be large enough to 
+  !! have negligible r-space contribution
+  !!
   USE kinds, only: dp
   USE constants_epw, only: pi, fpi, e2
   implicit none
@@ -164,7 +164,7 @@ SUBROUTINE rgd_blk_epw(q,uq,epmat,nmodes,epsil,zeu,bmat,sign,aaa)
   !
   USE kinds, only: dp
   USE pwcom, ONLY : at, bg, omega, alat
-  USE ions_base, ONLY : amass, tau, nat, ntyp => nsp, ityp
+  USE ions_base, ONLY : tau, nat
   USE constants_epw, only: twopi, fpi, e2, ci, czero, cone, two, ryd2mev
   !
   implicit none
@@ -189,7 +189,7 @@ SUBROUTINE rgd_blk_epw(q,uq,epmat,nmodes,epsil,zeu,bmat,sign,aaa)
        qeq,            &! <q+G| epsil | q+G>
        arg, zaq,       &
        g1, g2, g3, gmax, alph, geg
-  integer :: na, nb, ipol, im, m1, m2, m3
+  integer :: na, ipol, im, m1, m2, m3
   complex(dp) :: fac, facqd, facq, aaa(nmodes)
   !
   IF (abs(sign) /= 1.0) &
@@ -244,8 +244,8 @@ SUBROUTINE rgd_blk_epw2(nr1,nr2,nr3,q,uq,epmat,nmodes,epsil,zeu,bmat,sign)
   !  to be added or subtracted from the vertex
   !
   USE kinds, only: dp
-  USE pwcom, ONLY : at, bg, omega, alat
-  USE ions_base, ONLY : amass, tau, nat, ntyp => nsp, ityp
+  USE pwcom, ONLY : bg, omega, alat
+  USE ions_base, ONLY : tau, nat
   USE constants_epw, only: twopi, fpi, e2, ci, czero, cone, two, ryd2mev
   !
   implicit none
@@ -270,8 +270,8 @@ SUBROUTINE rgd_blk_epw2(nr1,nr2,nr3,q,uq,epmat,nmodes,epsil,zeu,bmat,sign)
   real(DP) :: &
        qeq,            &! <q+G| epsil | q+G>
        arg, zaq,       &
-       g1, g2, g3, gmax, alph, geg, aaa1
-  integer :: na, nb, ipol, im, m1,m2,m3, nrx1,nrx2,nrx3
+       g1, g2, g3, gmax, alph, geg
+  integer :: na, ipol, im, m1,m2,m3, nrx1,nrx2,nrx3
   complex(dp) :: fac, facqd, facq, aaa(nmodes)
   !
   IF (abs(sign) /= 1.0) &
@@ -344,21 +344,20 @@ END SUBROUTINE rgd_blk_epw2
 !
 !
 !-----------------------------------------------------------------------------
-SUBROUTINE dyndia_epw (nmodes, xq, dyn, uq, wq)
+SUBROUTINE dyndia_epw (nmodes, dyn, uq, wq)
 !-----------------------------------------------------------------------------
-!
+!! 
+!! diagonalize dyn mat --> uq, wq
+!!
   USE kinds, ONLY : DP
-  USE pwcom, ONLY : at, bg, celldm, omega
-  USE ions_base, ONLY : amass, tau, nat, ntyp => nsp, ityp
+  USE ions_base, ONLY : amass, nat, ityp
   USE constants_epw, ONLY : twopi, ci, czero, rydcm1
-  USE io_global, ONLY : stdout
   !
   implicit none
   !
   ! input variables
   integer :: nmodes
   ! number of branches
-  real(kind=DP) :: xq(3)
   complex(kind=DP) :: dyn (nmodes, nmodes)
   ! dynamical matrix in bloch representation (Cartesian coordinates)
   !
@@ -371,11 +370,7 @@ SUBROUTINE dyndia_epw (nmodes, xq, dyn, uq, wq)
   complex(kind=DP) :: cwork( 2*nmodes ), u1(nmodes,nmodes)
   integer :: neig, info, ifail( nmodes ), iwork( 5*nmodes )
   real(kind=DP) :: w1(nmodes), rwork( 7*nmodes ), massfac
-  integer :: imode, jmode, na, nb, i, mu, nu
-  !
-  ! ------------------------------------------------------------------
-  ! diagonalize dyn mat --> uq, wq
-  ! ------------------------------------------------------------------
+  integer :: imode, jmode, na, nb, mu, nu
   !
   ! divide by the square root of masses 
   !
@@ -426,18 +421,17 @@ END SUBROUTINE dyndia_epw
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE compute_bmn_para2 (nbnd, nkstot, cufkk, cufkq, bmatf)
+SUBROUTINE compute_bmn_para2 (nbnd, cufkk, cufkq, bmatf)
 !-----------------------------------------------------------------------
-!
-! calculates overlap U_k+q U_k^\dagger
-!
+!!
+!! calculates overlap U_k+q U_k^\dagger
+!!
   USE kinds,     ONLY : DP
   USE constants_epw, ONLY : twopi, ci, czero, cone
-  USE mp_global, ONLY : my_pool_id
   implicit none
   !
   !  input variables
-  integer :: nbnd, nkstot
+  integer :: nbnd 
   ! number of bands (possibly in the optimal subspace)
   ! number of kpoint blocks, total
   complex(kind=DP) :: cufkk (nbnd, nbnd), cufkq (nbnd, nbnd)
@@ -447,9 +441,6 @@ SUBROUTINE compute_bmn_para2 (nbnd, nkstot, cufkk, cufkq, bmatf)
   !  output variables
   complex(kind=DP) :: bmatf (nbnd, nbnd)
   ! overlap wfcs in Bloch representation, fine grid
-  !
-  !  work variables 
-  complex(kind=DP) :: btmp( nbnd, nbnd)
   !
   !  every pool works with its own subset of k points on the fine grid
   !
@@ -468,29 +459,30 @@ END SUBROUTINE compute_bmn_para2
 !-----------------------------------------------------------------------
 SUBROUTINE compute_bmn_para3 (nbnd, nbndsub, nks, cuk, cukq, bmat)
 !-----------------------------------------------------------------------
-!
-! calculates <u_mk+q|e^iGr|u_nk> in the approximation q+G->0
-!
+!!
+!! calculates <u_mk+q|e^iGr|u_nk> in the approximation q+G->0
+!!
   USE kinds,     ONLY : DP
   USE constants_epw, ONLY : twopi, ci, czero, cone
-  USE mp_global, ONLY : my_pool_id
   USE io_global, ONLY : stdout
   implicit none
   !
-  !  input variables
-  integer :: nbnd, nbndsub, nks
-  ! number of bands
-  ! number of kpoint blocks, per pool
-  complex(kind=DP) :: cuk (nbnd,nbndsub,nks), cukq (nbnd,nbndsub,nks)
-  ! rotation matrix U(k)
-  ! rotation matrix U(k+q)
-  !
-  !  output variables
-  complex(kind=DP) :: bmat (nbnd, nbnd, nks)
-  ! overlap wfcs in Bloch representation, fine grid
+  INTEGER, INTENT (in) :: nbnd
+  !! number of bands
+  INTEGER, INTENT (in) :: nks
+  !! number of kpoint blocks, per pool
+  INTEGER, INTENT (in) :: nbndsub
+  !! Number of band on the subspace of Wannier
+  ! 
+  COMPLEX(kind=DP), INTENT (in) :: cuk (nbnd,nbndsub,nks)
+  !! rotation matrix U(k)
+  COMPLEX(kind=DP), INTENT (in) :: cukq (nbnd,nbndsub,nks)
+  !! rotation matrix U(k+q)
+  COMPLEX(kind=DP), INTENT (out) :: bmat (nbnd, nbnd, nks)
+  !! overlap wfcs in Bloch representation, fine grid
   !
   !  work variables 
-  integer :: ik,ibnd,jbnd
+  integer :: ik
   !
   !  every pool works with its own subset of k points on the fine grid
   !

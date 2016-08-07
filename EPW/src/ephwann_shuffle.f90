@@ -188,7 +188,7 @@
      ! Transform of position matrix elements
      ! PRB 74 195118  (2006)
      IF (vme) CALL vmebloch2wan &
-         ( nbnd, nbndsub, nks, nks, nkstot, xk, cu, nrr_k, irvec, wslen )
+         ( nbnd, nbndsub, nks, nkstot, xk, cu, nrr_k, irvec, wslen )
      !
      ! Electron-Phonon vertex (Bloch el and Bloch ph -> Wannier el and Bloch ph)
      !
@@ -555,7 +555,7 @@
              !
              IF (lpolar) THEN
                !
-               CALL compute_bmn_para2( nbndsub, nkstot, cufkk, cufkq, bmatf )
+               CALL compute_bmn_para2( nbndsub, cufkk, cufkq, bmatf )
                !
                IF ( (abs(xxq(1)).gt.eps) .or. (abs(xxq(2)).gt.eps) .or. (abs(xxq(3)).gt.eps) ) THEN
                   CALL cryst_to_cart (1, xxq, bg, 1)
@@ -763,7 +763,7 @@
            ! 
            IF (lpolar) THEN
              !
-             CALL compute_bmn_para2( nbndsub, nkstot, cufkk, cufkq, bmatf )
+             CALL compute_bmn_para2( nbndsub, cufkk, cufkq, bmatf )
              !
              IF ( (abs(xxq(1)).gt.eps) .or. (abs(xxq(2)).gt.eps) .or. (abs(xxq(3)).gt.eps) ) THEN
                 CALL cryst_to_cart (1, xxq, bg, 1)

@@ -22,7 +22,6 @@
   USE mp_global,     ONLY :  inter_pool_comm, mp_global_end
 #endif
   implicit none
-  INTEGER :: ierr
   !
   CALL print_clock_epw
 #ifdef __PARA

@@ -9,41 +9,34 @@
   !
   subroutine setphases_wrap
   !---------------------------------------------------------------------
-  !
-  !  This is the wrapper which is used to set the phases of the wavefunctions  
-  !  at k and k+q on the coarse mesh.  It should only be called once.
-  !  Note that the phases at k+q are for the input 'q' vector, not
-  !  the one in the dynamical coarse list.
-  !  
-  !  The phases for all wavefunctions are now stored in umat_all
-  !  
-  !
+  !!
+  !!  This is the wrapper which is used to set the phases of the wavefunctions  
+  !!  at k and k+q on the coarse mesh.  It should only be called once.
+  !!  Note that the phases at k+q are for the input 'q' vector, not
+  !!  the one in the dynamical coarse list.
+  !!  
+  !!  The phases for all wavefunctions are now stored in umat_all
+  !!  
+  !!
   !---------------------------------------------------------------------
   USE kinds,           ONLY : DP
-  use klist,           only : xk, nkstot
+  use klist,           only : nkstot
   use io_global,       only : ionode, stdout
   use mp_global,       only : inter_pool_comm, nproc_pool
   use mp,              only : mp_sum
-  use phcom,           only : lrwfc,  iuwfc, lrdrho
   use elph2,           only : umat, umat_all
   use pwcom,           only : nbnd, nks
 !  use epwcom,          only : tphases, iudvscf0
-  use wavefunctions_module, only : evc
-  use control_flags,   only : iverbosity
-  use lsda_mod,        only : nspin
-  use ions_base,       only : nat
-  USE fft_base,        ONLY : dffts
-  USE klist,           ONLY : igk_k, ngk
   !
   !
   implicit none
   !
-  complex(kind=DP) :: v1(dffts%nnr,nspin), v2(dffts%nnr,nspin), v3(dffts%nnr,nspin)
+  !complex(kind=DP) :: v1(dffts%nnr,nspin), v2(dffts%nnr,nspin), v3(dffts%nnr,nspin)
   ! tmp matrices to build deltav
-  real(kind=DP) :: deltav(dffts%nnr)
+  !real(kind=DP) :: deltav(dffts%nnr)
   ! the fake (local) perturbation in real space, it is real to guarantee 
   ! hermiticity
-  integer :: ik, ios, nkk, nkk_abs, ipool, ibnd, jbnd
+  integer :: ik, ibnd, jbnd
   real(kind=DP) :: zero_vect(3)
   !
   IF (nproc_pool>1) call errore &

@@ -8,36 +8,36 @@
   !                                                                            
   ! 
   !--------------------------------------------------------------------------
-  subroutine rotate_eigenm ( iq_first, iq, nqc, isym, nsym, s, invs, irt, &
-      rtau, xq, isq, cz1, cz2) 
+  subroutine rotate_eigenm ( iq_first, nqc, isym, s, invs, irt, &
+      rtau, xq, cz1, cz2) 
   !--------------------------------------------------------------------------
-  !
-  ! Here:
-  !
-  ! 1). determine the unitary matrix which gives the transformed eigenmodes
-  !    from the first q in the star to the present q
-  !
-  ! 2). rotate eigenmodes from the first q in the star (cz1) to the current 
-  !     q (cz2)
-  ! 
-  ! In rotate_epmat.f90:
-  !
-  ! 3). rotate the electron-phonon matrix from the cartesian representation
-  !    of the first qpoint of the star to the eigenmode representation 
-  !    (using cz1).
-  ! 
-  ! 4). rotate the electron-phonon matrix from the eigenmode representation
-  !    to the cartesian representation of the qpoint iq in the star (with cz2).
-  !
-  !    Step 3 requires using the rotated eigenmodes to set the phases 
-  !    (the diagonalizers of the rotated dyn mat will not
-  !    work because of the gages in deg. subspaces and the phases).
-  !
-  ! W.r.t. the standard method of q2qstar_ph.f90, here I construct the
-  ! unitary matrix Gamma defined in Maradudin & Vosko, RMP 1968.
-  ! In this way all rotations are just zgemm operations and we throw away  
-  ! all nasty indices.
-  !
+  !!
+  !!  Here:
+  !! 
+  !!  1). determine the unitary matrix which gives the transformed eigenmodes
+  !!     from the first q in the star to the present q
+  !! 
+  !!  2). rotate eigenmodes from the first q in the star (cz1) to the current 
+  !!      q (cz2)
+  !!  
+  !!  In rotate_epmat.f90:
+  !! 
+  !!  3). rotate the electron-phonon matrix from the cartesian representation
+  !!     of the first qpoint of the star to the eigenmode representation 
+  !!     (using cz1).
+  !!  
+  !!  4). rotate the electron-phonon matrix from the eigenmode representation
+  !!     to the cartesian representation of the qpoint iq in the star (with cz2).
+  !! 
+  !!     Step 3 requires using the rotated eigenmodes to set the phases 
+  !!     (the diagonalizers of the rotated dyn mat will not
+  !!     work because of the gages in deg. subspaces and the phases).
+  !! 
+  !!  W.r.t. the standard method of q2qstar_ph.f90, here I construct the
+  !!  unitary matrix Gamma defined in Maradudin & Vosko, RMP 1968.
+  !!  In this way all rotations are just zgemm operations and we throw away  
+  !!  all nasty indices.
+  !!
   !
   !--------------------------------------------------------------------------
   USE kinds,         ONLY : DP
@@ -50,7 +50,7 @@
   use ions_base,     ONLY : nat, amass, nat, ityp
   implicit none
   !
-  integer :: iq_first, nqc, isym, isq(48), nsym, iq
+  integer :: iq_first, nqc, isym
   !  originating q point of the star
   !  total number of qpoints
   !  fractional translation

@@ -34,23 +34,49 @@
   USE io_epw,        ONLY : iunepmatf, linewidth_elself
   USE phcom,         ONLY : nmodes
   USE epwcom,        ONLY : nbndsub, lrepmatf, &
-                           fsthick, eptemp, ngaussw, degaussw, &
-                           etf_mem, eps_acustic, efermi_read, fermi_energy
+                            fsthick, eptemp, ngaussw, degaussw, &
+                            etf_mem, eps_acustic, efermi_read, fermi_energy
   USE pwcom,         ONLY : ef !, nelec, isk
   USE elph2,         ONLY : etf, ibndmin, ibndmax, nkqf, &
-                            epf17, wkf, nkf, nqtotf, wf, wqf, xkf, nkqtotf, &
-                            sigmar_all, sigmai_all, sigmai_mode, zi_all, efnew, nqf
+                            nkf, epf17, wkf, nqtotf, wf, wqf, xkf, nkqtotf, &
+                            sigmar_all, sigmai_all, sigmai_mode, zi_all, efnew
   USE control_flags, ONLY : iverbosity
   USE constants_epw, ONLY : ryd2mev, one, ryd2ev, two, zero, pi, ci, eps6
 #ifdef __PARA
   USE mp,            ONLY : mp_barrier, mp_sum
-  USE mp_global,     ONLY : me_pool, inter_pool_comm, my_pool_id
+  USE mp_global,     ONLY : inter_pool_comm
 #endif
   implicit none
   !
+  INTEGER, INTENT (in) :: iq
+  !! Current q-point index 
+  !
+  ! Local variables 
   INTEGER :: n
   !! Integer for the degenerate average over eigenstates
-  integer :: ik, ikk, ikq, ibnd, jbnd, imode, nrec, iq, fermicount
+  INTEGER :: ik
+  !! Counter on the k-point index 
+  INTEGER :: ikk
+  !! k-point index
+  INTEGER :: ikq
+  !! q-point index 
+  INTEGER :: ibnd
+  !! Counter on bands
+  INTEGER :: jbnd
+  !! Counter on bands
+  INTEGER :: imode
+  !! Counter on mode
+  INTEGER :: nrec
+  !! Record index for reading the e-f matrix
+  INTEGER :: fermicount
+  !! Number of states on the Fermi surface
+  INTEGER :: nksqtotf
+  !! Total number of k+q points 
+  INTEGER :: lower_bnd
+  !! Lower bounds index after k or q paral
+  INTEGER :: upper_bnd
+  !! Upper bounds index after k or q paral
+  ! 
   REAL(kind=DP) :: tmp
   !! Temporary variable to store real part of Sigma for the degenerate average
   REAL(kind=DP) :: tmp2
@@ -65,17 +91,54 @@
   !! Temporary array to store the imag-part of Sigma 
   REAL(kind=DP) :: zi_tmp(ibndmax-ibndmin+1)
   !! Temporary array to store the Z
-
-  REAL(kind=DP) :: g2, ekk, ekq, wq, ef0, wgq, wgkq, weight, dosef, &
-                   w0g1, w0g2, inv_wq, inv_eptemp0, g2_tmp,&
-                   inv_degaussw
-  REAL(kind=DP), external :: efermig, dos_ef, wgauss, w0gauss
-  complex(kind=DP) epf (ibndmax-ibndmin+1, ibndmax-ibndmin+1)
-  !
-  ! variables for collecting data from all pools in parallel case 
-  !
-  integer :: nksqtotf, lower_bnd, upper_bnd
-  REAL(kind=DP), ALLOCATABLE :: xkf_all(:,:), etf_all(:,:)
+  REAL(kind=DP) :: g2
+  !! Electron-phonon matrix elements squared in Ry^2
+  REAL(kind=DP) :: ekk
+  !! Eigen energy on the fine grid relative to the Fermi level
+  REAL(kind=DP) :: ekq
+  !! Eigen energy of k+q on the fine grid relative to the Fermi level
+  REAL(kind=DP) :: wq
+  !! Phonon frequency on the fine grid
+  REAL(kind=DP) :: ef0
+  !! Fermi energy level
+  REAL(kind=DP) :: wgq
+  !! Bose occupation factor $n_{q\nu}(T)$
+  REAL(kind=DP) :: wgkq
+  !! Fermi-Dirac occupation factor $f_{nk+q}(T)$
+  REAL(kind=DP) :: weight
+  !! Self-energy factor 
+  !!$$ N_q \Re( \frac{f_{mk+q}(T) + n_{q\nu}(T)}{ \varepsilon_{nk} - \varepsilon_{mk+q} + \omega_{q\nu} - i\delta }) $$ 
+  !!$$ + N_q \Re( \frac{1- f_{mk+q}(T) + n_{q\nu}(T)}{ \varepsilon_{nk} - \varepsilon_{mk+q} - \omega_{q\nu} - i\delta }) $$ 
+  REAL(kind=DP) :: dosef
+  !! Density of state N(Ef)
+  REAL(kind=DP) :: w0g1
+  !! Dirac delta for the imaginary part of $\Sigma$
+  REAL(kind=DP) :: w0g2
+  !! Dirac delta for the imaginary part of $\Sigma$
+  REAL(kind=DP) :: inv_wq
+  !! $frac{1}{2\omega_{q\nu}}$ defined for efficiency reasons
+  REAL(kind=DP) :: inv_eptemp0
+  !! Inverse of temperature define for efficiency reasons
+  REAL(kind=DP) :: g2_tmp
+  !! If the phonon frequency is too small discart g
+  REAL(kind=DP) :: inv_degaussw
+  !! Inverse of the smearing for efficiency reasons
+  !REAL(kind=DP), external :: efermig
+  !! Function to compute the Fermi energy 
+  REAL(kind=DP), external :: dos_ef
+  !! Function to compute the Density of States at the Fermi level
+  REAL(kind=DP), external :: wgauss
+  !! Fermi-Dirac distribution function (when -99)
+  REAL(kind=DP), external :: w0gauss
+  !! This function computes the derivative of the Fermi-Dirac function
+  !! It is therefore an approximation for a delta function
+  REAL(kind=DP), ALLOCATABLE :: xkf_all(:,:)
+  !! Collect k-point coordinate from all pools in parallel case
+  REAL(kind=DP), ALLOCATABLE :: etf_all(:,:)
+  !! Collect eigenenergies from all pools in parallel case
+  !  
+  COMPLEX(kind=DP) epf (ibndmax-ibndmin+1, ibndmax-ibndmin+1)
+  !! Electron-phonon matrix element on the fine grid. 
   !
   ! SP: Define the inverse so that we can efficiently multiply instead of
   ! dividing
@@ -403,7 +466,6 @@
   100 FORMAT(5x,'Gaussian Broadening: ',f10.6,' eV, ngauss=',i4)
   101 FORMAT(5x,'DOS =',f10.6,' states/spin/eV/Unit Cell at Ef=',f10.6,' eV')
   102 FORMAT(5x,'E( ',i3,' )=',f9.4,' eV   Re[Sigma]=',f15.6,' meV Im[Sigma]=',f15.6,' meV     Z=',f15.6,' lam=',f15.6)
-  103 FORMAT(5x,'k( ',i7,' )=',f9.4,' eV   Re[Sigma]=',f15.6,' meV Im[Sigma]=',f15.6,' meV     Z=',f15.6)
   !
   RETURN
   !
@@ -413,15 +475,15 @@
   !-----------------------------------------------------------------------
   SUBROUTINE selfen_elec_k ( ik )
   !-----------------------------------------------------------------------
-  !
-  !  Compute the imaginary part of the electron self energy due to electron-
-  !  phonon interaction in the Migdal approximation. This corresponds to 
-  !  the electron linewidth (half width). The phonon frequency is taken into
-  !  account in the energy selection rule.
-  !
-  !  Use matrix elements, electronic eigenvalues and phonon frequencies
-  !  from ep-wannier interpolation
-  !
+  !!
+  !!  Compute the imaginary part of the electron self energy due to electron-
+  !!  phonon interaction in the Migdal approximation. This corresponds to 
+  !!  the electron linewidth (half width). The phonon frequency is taken into
+  !!  account in the energy selection rule.
+  !!
+  !!  Use matrix elements, electronic eigenvalues and phonon frequencies
+  !!  from ep-wannier interpolation
+  !!
   !-----------------------------------------------------------------------
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
@@ -432,13 +494,13 @@
                            etf_mem, eps_acustic, efermi_read, fermi_energy
   USE pwcom,         ONLY : ef !, nelec, isk
   USE elph2,         ONLY : etf, ibndmin, ibndmax, nkqf, etf_k, &
-                            epf17, wkf, nkf, nqtotf, wf, wqf, xkf, nkqtotf, &
+                            epf17, wkf, nqtotf, wf, wqf, xkf, nkqtotf, &
                             sigmar_all, sigmai_all, sigmai_mode, zi_all, efnew, nqf
   USE constants_epw, ONLY : ryd2mev, one, ryd2ev, two, zero, pi, ci, eps6
   USE control_flags, ONLY : iverbosity
 #ifdef __PARA
   USE mp,            ONLY : mp_barrier, mp_sum, mp_bcast
-  USE mp_global,     ONLY : me_pool, inter_pool_comm, my_pool_id
+  USE mp_global,     ONLY : inter_pool_comm
   USE mp_world,      ONLY : mpime
   USE io_global,     ONLY : ionode_id
 #endif
@@ -469,7 +531,7 @@
   !
   ! variables for collecting data from all pools in parallel case 
   !
-  integer :: nksqtotf, lower_bnd, upper_bnd
+  integer :: nksqtotf
   !
   ! SP: Define the inverse so that we can efficiently multiply instead of
   ! dividing
@@ -754,7 +816,6 @@
   100 FORMAT(5x,'Gaussian Broadening: ',f10.6,' eV, ngauss=',i4)
   101 FORMAT(5x,'DOS =',f10.6,' states/spin/eV/Unit Cell at Ef=',f10.6,' eV')
   102 FORMAT(5x,'E( ',i3,' )=',f9.4,' eV   Re[Sigma]=',f15.6,' meV Im[Sigma]=',f15.6,' meV     Z=',f15.6,' lam=',f15.6)
-  103 FORMAT(5x,'k( ',i7,' )=',f9.4,' eV   Re[Sigma]=',f15.6,' meV Im[Sigma]=',f15.6,' meV     Z=',f15.6)
   !
   RETURN
   !

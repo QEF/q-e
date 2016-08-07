@@ -8,7 +8,7 @@
   !                                                                            
   !
   !--------------------------------------------------------------------------
-  subroutine vmebloch2wan ( nbnd, nbndsub, nks, nksq, nkbl, xk, cu, &
+  subroutine vmebloch2wan ( nbnd, nbndsub, nks, nkbl, xk, cu, &
      nrr, irvec, wslen )
   !--------------------------------------------------------------------------
   !!
@@ -24,7 +24,7 @@
   use io_files, only : prefix
 #ifdef __PARA
   USE io_global, ONLY : ionode_id
-  USE mp_global, ONLY : inter_pool_comm, my_pool_id
+  USE mp_global, ONLY : inter_pool_comm
   USE mp, ONLY : mp_barrier,mp_sum
   USE mp_world,  ONLY : mpime
 #endif
@@ -34,7 +34,7 @@
   !
   INTEGER, INTENT (in) :: nbnd
   !! Number of bands
-  integer :: nbndsub, nks, nksq, nkbl, nrr, irvec (3, nrr), &
+  integer :: nbndsub, nks, nkbl, nrr, irvec (3, nrr), &
        ipool, nkb, nkb_abs, ipol, nnb, ib
   ! number of bands 
   ! number of bands in the optimal subspace 

@@ -24,7 +24,7 @@
   USE io_files,   ONLY : prefix, tmp_dir
   USE phcom,      ONLY : nmodes
   USE epwcom,     ONLY : nbndsub, lrepmatf, fsthick, ngaussw, degaussw, & 
-                         etf_mem, nkf1, nkf2, nkf3, eps_acustic, &
+                         etf_mem, nkf1, nkf2, nkf3, &
                          efermi_read, fermi_energy
   USE pwcom,      ONLY : nelec, ef, isk
   USE elph2,      ONLY : etf, ibndmin, ibndmax, nkqf, epf17, wkf, nkf, nqtotf, wf, xqf, nkqtotf
@@ -34,7 +34,6 @@
 #ifdef __PARA
   USE mp,         ONLY : mp_barrier, mp_sum
   USE mp_global,  ONLY : inter_pool_comm, my_pool_id, npool
-  USE mp_world,   ONLY : mpime
 #endif
   !
   IMPLICIT NONE
@@ -270,18 +269,17 @@
   USE kinds,     ONLY : DP
   USE io_global, ONLY : stdout
   USE epwcom,    ONLY : nbndsub, fsthick, ngaussw, degaussw, & 
-                        etf_mem, efermi_read, fermi_energy, mp_mesh_k
+                        efermi_read, fermi_energy, mp_mesh_k
   USE pwcom,     ONLY : nelec, ef, isk
-  USE elph2,     ONLY : etf, ibndmin, ibndmax, nkqf, wkf, nkf, nkqtotf
+  USE elph2,     ONLY : etf, nkqf, wkf, nkf, nkqtotf
   USE constants_epw, ONLY : two
 #ifdef __PARA
   USE mp,        ONLY : mp_barrier, mp_sum
-  USE mp_global, ONLY : inter_pool_comm, npool
-  USE mp_world,  ONLY : mpime
+  USE mp_global, ONLY : inter_pool_comm
 #endif
   !
   IMPLICIT NONE
-  INTEGER :: ik, ikk, ikq, iq, nrec, fermicount, nks
+  INTEGER :: ik, ikk, ikq, iq, fermicount, nks
   REAL(DP) :: ef0, dosef
   REAL(DP), EXTERNAL :: efermig, dos_ef
   ! 

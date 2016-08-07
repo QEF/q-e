@@ -495,7 +495,6 @@ END SUBROUTINE setup_nnkp
 SUBROUTINE scan_file_to (iun_nnkp,keyword,found)
    !-----------------------------------------------------------------------
    !
-   USE io_global,  ONLY : stdout
    IMPLICIT NONE
    CHARACTER(len=*), intent(in) :: keyword
    INTEGER, intent(in)          :: iun_nnkp
@@ -620,17 +619,16 @@ END SUBROUTINE run_wannier
 !-----------------------------------------------------------------------
 SUBROUTINE compute_amn_para
 !-----------------------------------------------------------------------
-!  adapted from compute_amn in pw2wannier90.f90
-!  parallelization on k-points has been added
-!  10/2008 Jesse Noffsinger UC Berkeley
-!
+!!  adapted from compute_amn in pw2wannier90.f90
+!!  parallelization on k-points has been added
+!!  10/2008 Jesse Noffsinger UC Berkeley
+!!
   USE io_global,       ONLY : stdout 
   USE kinds,           ONLY : DP
-  USE klist,           ONLY : xk, nks, igk_k, ngk
+  USE klist,           ONLY : xk, nks, igk_k
   USE wvfct,           ONLY : nbnd, npw, npwx, g2kin
   USE gvecw,           ONLY : ecutwfc
   USE wavefunctions_module,  ONLY : evc
-  USE units_ph,        ONLY : lrwfc, iuwfc
   USE gvect,           ONLY : g, ngm
   USE cell_base,       ONLY : tpiba2
   USE uspp,            ONLY : nkb, vkb
@@ -871,7 +869,6 @@ SUBROUTINE compute_mmn_para
    logical                  :: any_uspp, exst
    integer                  :: nkq, nkq_abs, ipool, ipol, istart, iend
    integer                  :: ik_g, ikp_g, ind0 !, iummn
-   INTEGER                  :: ibnd_n, ibnd_m
    ! 
    any_uspp = ANY( upf(:)%tvanp )
    !
@@ -1043,7 +1040,7 @@ SUBROUTINE compute_mmn_para
                  DO na = 1, nat
                     !
                     arg = DOT_PRODUCT( dxk(:,ind), tau(:,na) ) * twopi
-                    phase1 = CMPLX ( COS(arg), -SIN(arg) )
+                    phase1 = CMPLX ( COS(arg), -SIN(arg), kind=DP )
                     !
                     IF ( ityp(na) == nt ) THEN
                        DO jh = 1, nh(nt)
@@ -1226,7 +1223,6 @@ SUBROUTINE compute_pmn_para
 !
    USE io_global,       ONLY : stdout
 #ifdef __PARA
-   USE mp_global,       ONLY : intra_pool_comm
    USE mp,              ONLY : mp_sum
 #endif
    USE kinds,           ONLY : DP

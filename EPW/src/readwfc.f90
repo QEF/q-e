@@ -24,8 +24,7 @@
   USE noncollin_module,ONLY : npol
 #ifdef __PARA
   USE mp_global,ONLY : nproc_pool, me_pool
-  USE mp_global,ONLY : npool,my_pool_id 
-  USE mp_world, ONLY : mpime
+  USE mp_global,ONLY : npool
 #endif
   !
   implicit none
