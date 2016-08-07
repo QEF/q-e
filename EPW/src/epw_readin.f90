@@ -10,12 +10,12 @@
   !-----------------------------------------------------------------------
   SUBROUTINE epw_readin
   !-----------------------------------------------------------------------
-  !
-  !    This routine reads the control variables for the program epw.
-  !    from standard input (unit 5).
-  !    A second routine readfile reads the variables saved on a file
-  !    by the self-consistent program.
-  !
+  !!
+  !!    This routine reads the control variables for the program epw.
+  !!    from standard input (unit 5).
+  !!    A second routine readfile reads the variables saved on a file
+  !!    by the self-consistent program.
+  !!
   USE ions_base,     ONLY : nat, ntyp => nsp
   USE io_global,     ONLY : ionode_id
   USE mp,            ONLY : mp_bcast 
@@ -48,7 +48,7 @@
                             ep_coupling, nw_specfun, wmax_specfun, &
                             wmin_specfun, laniso, lpolar, epstrict, elinterp, &
                             proj, write_wfn, phinterp, iswitch, &
-                            ntempxx, liso, lacon, lpade, etf_mem, epbwrite, &
+                            liso, lacon, lpade, etf_mem, epbwrite, &
                             nsiter, conv_thr_racon, &
                             pwc, nswc, nswfc, nswi, filukq, filukk, &
                             nbndsub, nbndskip, system_2d, delta_approx, title
@@ -69,21 +69,26 @@
 #ifdef __NAG
   USE F90_UNIX_ENV,  ONLY : iargc, getarg
 #endif
-
+  !
   implicit none
-
+  !
 #ifndef __NAG
   integer :: iargc
 #endif
-  integer :: ios, na, it
-  ! integer variable for I/O control
-  ! counter on polarizations
-  ! counter on iterations
-  ! counter on atoms
-  ! counter on types
-  integer :: modenum_aux, i 
-  ! auxilary variable for saving the modenum
-  integer :: nk1tmp,nk2tmp,nk3tmp   ! temp vars for saving kgrid info
+  INTEGER :: ios
+  !! integer variable for I/O control
+  INTEGER :: na
+  !! counter on polarizations
+  INTEGER :: it
+  !! counter on iterations
+  INTEGER :: modenum_aux
+  !! auxilary variable for saving the modenum
+  INTEGER :: nk1tmp
+  !! temp vars for saving kgrid info
+  INTEGER :: nk2tmp
+  !! temp vars for saving kgrid info
+  INTEGER :: nk3tmp  
+  !! temp vars for saving kgrid info
   character(len=256) :: outdir
   namelist / inputepw / &
        amass, outdir, prefix, iverbosity, time_max, fildvscf,                  &
@@ -517,7 +522,6 @@
   !
   xq(:) = 0.d0
   !
-300 CALL errore ('epw_readin', 'reading xq', abs (ios) )
   lgamma = .false.
   tmp_dir = trim(outdir)
   dvscf_dir = trim(dvscf_dir)//'/'

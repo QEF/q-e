@@ -9,9 +9,9 @@
   !-----------------------------------------------------------------------
 SUBROUTINE loadqmesh_para
   !-----------------------------------------------------------------------
-  !
-  !  Load fine q mesh and distribute among pools
-  !
+  !!
+  !!  Load fine q mesh and distribute among pools
+  !!
   !-----------------------------------------------------------------------
 #ifdef __PARA
   USE io_global, ONLY : ionode_id
@@ -23,7 +23,7 @@ SUBROUTINE loadqmesh_para
   USE io_global, ONLY : stdout
   USE epwcom,    ONLY : filqf, nqf1, nqf2, nqf3, &
                         rand_q, rand_nq, mp_mesh_q, system_2d
-  USE elph2,     ONLY : nkqtotf, nkqf, xqf, wqf, nqf, nqtotf
+  USE elph2,     ONLY : xqf, wqf, nqf, nqtotf
   USE cell_base, ONLY : at, bg
   USE symm_base, ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
   USE io_epw,    ONLY : iunqf
@@ -33,7 +33,7 @@ SUBROUTINE loadqmesh_para
   implicit none
   !
   real(kind=DP), ALLOCATABLE :: xqf_(:,:), wqf_(:)
-  integer :: iq, ikk, ikq, lower_bnd, upper_bnd, i, j, k, ios
+  integer :: iq, lower_bnd, upper_bnd, i, j, k, ios
   !
 #ifdef __PARA
   !
@@ -185,13 +185,13 @@ END SUBROUTINE loadqmesh_para
 !-----------------------------------------------------------------------
 SUBROUTINE loadqmesh_serial
 !-----------------------------------------------------------------------
-!
-!  Load fine q mesh
-!
+!!
+!!  Load fine q mesh
+!!
 !-----------------------------------------------------------------------
 #ifdef __PARA
   USE io_global, ONLY : ionode_id
-  USE mp_global, ONLY : inter_pool_comm, root_pool, intra_pool_comm
+  USE mp_global, ONLY : inter_pool_comm
   USE mp,        ONLY : mp_bcast
   USE mp_world,  ONLY : mpime
 #endif

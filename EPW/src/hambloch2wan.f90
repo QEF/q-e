@@ -11,10 +11,10 @@
   SUBROUTINE hambloch2wan ( nbnd, nbndsub, nks, nkstot, et, xk, cu, &
      lwin, nrr, irvec, wslen, chw )
   !--------------------------------------------------------------------------
-  !
-  !  From the Hamiltonian in Bloch representationi (coarse mesh), 
-  !  find the corresponding Hamiltonian in Wannier representation 
-  !
+  !!
+  !!  From the Hamiltonian in Bloch representationi (coarse mesh), 
+  !!  find the corresponding Hamiltonian in Wannier representation 
+  !!
   !--------------------------------------------------------------------------
   !
   USE kinds,     ONLY : DP
@@ -28,36 +28,61 @@
 #endif
   implicit none
   !
-  !  input variables
+  LOGICAL, INTENT (in) :: lwin( nbnd, nks )
+  !! identify bands within outer energy window (for disentanglement)
   !
-  integer :: nbnd, nbndsub, nks, nkstot, nrr, irvec (3, nrr)
-  ! number of bands 
-  ! number of bands in the optimal subspace 
-  ! number of kpoints
-  ! number of kpoint blocks, in the pool
-  ! number of kpoint blocks, total 
-  ! number of WS points and coordinates
-  real(kind=DP) :: et (nbnd, nks), xk (3, nks), wslen (nrr) 
-  ! hamiltonian eigenvalues, coarse mesh
-  ! kpoint coordinates (cartesian in units of 2piba)
-  ! WS vectors length (alat units)
-  complex(kind=DP) :: cu (nbnd, nbndsub, nks)
-  ! rotation matrix from wannier code
-  logical :: lwin( nbnd, nks )
-  ! identify bands within outer energy window (for disentanglement)
+  INTEGER, INTENT (in) :: nbnd
+  !! number of bands 
+  INTEGER, INTENT (in) :: nbndsub
+  !! number of bands in the optimal subspace 
+  INTEGER, INTENT (in) :: nks
+  !! number of kpoints
+  INTEGER, INTENT (in) :: nkstot
+  !! number of kpoint blocks, in the pool
+  INTEGER, INTENT (in) ::  nrr
+  !! number of kpoint blocks, total 
+  INTEGER, INTENT (in) :: irvec (3, nrr)
+  !! number of WS points and coordinates
   !
-  !  output variables
+  REAL(kind=DP), INTENT (in) :: et (nbnd, nks)
+  !! hamiltonian eigenvalues, coarse mesh
+  REAL(kind=DP), INTENT (in) :: xk (3, nks)
+  !! kpoint coordinates (cartesian in units of 2piba)
+  REAL(kind=DP), INTENT (in) :: wslen (nrr)
+  !! WS vectors length (alat units)
+  !
+  COMPLEX(kind=DP), INTENT (in) :: cu (nbnd, nbndsub, nks)
+  !! rotation matrix from wannier code
+  COMPLEX(kind=DP), INTENT(OUT) :: chw ( nbndsub, nbndsub, nrr)
+  !! Hamiltonian in smooth Bloch basis, coarse mesh 
   !
   ! work variables 
   !
-  complex(kind=DP) :: chs(nbndsub, nbndsub, nks) 
-  complex(kind=DP), INTENT(OUT) :: chw ( nbndsub, nbndsub, nrr)
-  ! Hamiltonian in smooth Bloch basis, coarse mesh 
-  integer :: ik, ibnd, jbnd, ir, mbnd, j
-  real(kind=DP) :: rdotk, tmp
-  complex(kind=DP) :: cfac, ctmp
-  real(kind=dp)    :: et_opt(nbnd,nks)
-  ! hamiltonian eigenvalues within the outer window in the first ndimwin(ik) entries
+  INTEGER :: ik
+  !! Counter of k-point index
+  INTEGER :: ibnd
+  !! Counter on band index
+  INTEGER :: jbnd
+  !! Counter on band index
+  INTEGER :: ir
+  !! Counter on real-space index
+  INTEGER :: mbnd
+  !! Counter on band index 
+  INTEGER :: j
+  !! Counter on band index
+  REAL(kind=DP) :: rdotk
+  !! $$\mathbf{r}\cdot\mathbf{k}
+  REAL(kind=DP) :: tmp
+  !! Maximum value of the real space Hamiltonian
+  REAL(kind=dp)    :: et_opt(nbnd,nks)
+  !! hamiltonian eigenvalues within the outer window in the first ndimwin(ik) entries
+  !
+  COMPLEX(kind=DP) :: chs(nbndsub, nbndsub, nks) 
+  !! Hamiltonian
+  COMPLEX(kind=DP) :: cfac
+  !! $$e^{-i\mathbf{r}\cdot\mathbf{k}}$$
+  COMPLEX(kind=DP) :: ctmp
+  !! Temporary variable to store the Hamiltonian
   !
   !----------------------------------------------------------
   !    STEP 1: rotation to optimally smooth Bloch states

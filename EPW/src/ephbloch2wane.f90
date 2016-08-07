@@ -10,7 +10,7 @@
   ! 
   !-----------------------------------------------------------------------
   SUBROUTINE ephbloch2wane ( nbnd, nbndsub, nks, nkstot, xk, &
-       cu, cuq, lwin, lwinq, epmatk, nrr, irvec, wslen, epmatw)
+       cu, cuq, epmatk, nrr, irvec, wslen, epmatw)
   !-----------------------------------------------------------------------
   !!
   !!  From the electron-phonon matrix elements in Bloch representation (coarse 
@@ -25,7 +25,7 @@
   USE io_epw,    ONLY : iuwane
 #ifdef __PARA
   USE io_global, ONLY : ionode_id
-  USE mp_global, ONLY : inter_pool_comm,my_pool_id
+  USE mp_global, ONLY : inter_pool_comm
   USE mp       , ONLY : mp_sum 
   USE mp_world,  ONLY : mpime
 #endif
@@ -45,11 +45,6 @@
   !! Number of kpoint blocks, total
   INTEGER, INTENT (in) :: irvec (3, nrr)
   !! Number of WS points and coordinates
-  !
-  LOGICAL, INTENT (in) :: lwin( nbnd, nks )
-  !! Identify bands within outer energy window (for disentanglement)
-  LOGICAL, INTENT (in) :: lwinq( nbnd, nks )
-  !! Identify bands within outer energy window (for disentanglement)
   !
   REAL(kind=DP), INTENT (in) :: xk (3, nks)
   !! kpoint coordinates (cartesian in units of 2piba)

@@ -21,7 +21,7 @@
   !
   USE mp_global,     ONLY : my_pool_id, inter_pool_comm, root_pool, &
                             intra_pool_comm,npool
-  USE mp_world,      ONLY : mpime, root
+  USE mp_world,      ONLY : mpime
   USE mp,            ONLY : mp_barrier, mp_bcast
   USE io_global,     ONLY : ionode_id
   USE us,            ONLY : nqxq, dq, qrad
@@ -35,7 +35,7 @@
   USE io_global,     ONLY : stdout, ionode
   USE io_epw,        ONLY : iuepb 
   USE kinds,         ONLY : DP
-  USE pwcom,         ONLY : et, xk, ibrav, igk, nks, nbnd, nkstot, ngm
+  USE pwcom,         ONLY : et, xk, nks, nbnd, nkstot, ngm
   USE cell_base,     ONLY : at, bg
   USE symm_base,     ONLY : irt, s, nsym, ftau, sname, invs, &
                             s_axis_to_cart, sr, nrot, copy_sym, set_sym_bl, find_sym, inverse_s
@@ -47,9 +47,9 @@
   USE modes,         ONLY : nmodes
   USE lr_symm_base,  ONLY : minus_q, rtau, gi, gimq, irotmq, nsymq, invsymq
   USE epwcom,        ONLY : epbread, epbwrite, epwread, phinterp, &
-                            phonselfen, elecselfen, nbndsub, elinterp,    &
-                            iswitch, kmaps, nest_fn, eig_read, &
-                            band_plot, specfun, dvscf_dir, lpolar
+                            nbndsub, elinterp,    &
+                            iswitch, kmaps, eig_read, &
+                            dvscf_dir, lpolar
   USE elph2,         ONLY : epmatq, dynq, sumr, et_all, xk_all, et_mb, et_ks, &
                             zstar, epsi, cu, cuq, lwin, lwinq, bmat, igk_k_all, &
                             ngk_all
@@ -716,7 +716,6 @@
   IF ( ASSOCIATED (evq)  )     NULLIFY    (evq)
   IF ( ALLOCATED  (evc)  )     DEALLOCATE (evc)
   IF ( ASSOCIATED (igkq) )     NULLIFY    (igkq)
-  IF ( ALLOCATED  (igk)  )     DEALLOCATE (igk)
   IF ( ALLOCATED  (dvpsi))     DEALLOCATE (dvpsi)
   IF ( ALLOCATED  (dpsi) )     DEALLOCATE (dpsi)
   IF ( ALLOCATED  (sumr) )     DEALLOCATE (sumr)

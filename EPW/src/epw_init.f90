@@ -80,7 +80,7 @@
              xq(2) * tau(2,na) + &
              xq(3) * tau(3,na) ) * tpi
      !        
-     eigqts(na) = CMPLX( COS( arg ), - SIN( arg ) )
+     eigqts(na) = CMPLX( COS( arg ), - SIN( arg ), kind=DP )
      !
   END DO
   !

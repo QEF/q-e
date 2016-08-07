@@ -34,42 +34,39 @@
                             epwwrite, ngaussw, degaussw, lpolar,          &
                             nbndskip, parallel_k, parallel_q, etf_mem,    &
                             elecselfen, phonselfen, nest_fn, a2f, indabs, &
-                            epexst, vme, eig_read, ephwrite, mp_mesh_k,   & 
+                            vme, eig_read, ephwrite,                      & 
                             efermi_read, fermi_energy, specfun, band_plot
   USE noncollin_module, ONLY : noncolin
   USE constants_epw, ONLY : ryd2ev, ryd2mev, one, two
-  USE control_flags, ONLY : iverbosity
   USE io_files,      ONLY : prefix, diropn
   USE io_global,     ONLY : stdout, ionode
-  USE io_epw,        ONLY : lambda_phself,linewidth_phself,linewidth_elself, iunepmatf, &
+  USE io_epw,        ONLY : lambda_phself, linewidth_phself, iunepmatf, &
                             iunepmatwe, iunepmatwp
   USE elph2,         ONLY : nrr_k, nrr_q, cu, cuq, lwin, lwinq, irvec, ndegen_k, ndegen_q, &
                             wslen, chw, chw_ks, cvmew, cdmew, rdw, epmatwp, epmatq, &
-                            wf, etf, etf_k, etf_ks, xqf, xkf, wkf, wqf, &
+                            wf, etf, etf_k, etf_ks, xqf, xkf, wkf, &
                             dynq, nqtotf, nkqf, epf17, nkf, nqf, et_ks, &
                             ibndmin, ibndmax, lambda_all, dmec, dmef, vmef, &
-                            sigmai_all, sigmai_mode, gamma_all, nkqtotf, epsi, zstar, efnew
+                            sigmai_all, sigmai_mode, gamma_all, epsi, zstar, efnew
 #ifdef __NAG
   USE f90_unix_io,   ONLY : flush
-  USE,INTRINSIC :: f90_unix_file, ONLY:fstat, stat_t
+!  USE,INTRINSIC :: f90_unix_file, ONLY:fstat, stat_t
 #endif
 #ifdef __PARA
   USE mp,            ONLY : mp_barrier, mp_bcast, mp_sum
   USE io_global,     ONLY : ionode_id
-  USE mp_global,     ONLY : my_pool_id, nproc_pool, intra_image_comm, &
-                            inter_pool_comm, me_pool, root_pool, intra_pool_comm, &
-                            my_pool_id
+  USE mp_global,     ONLY : inter_pool_comm
   USE mp_world,      ONLY : mpime
 #endif
   !
   implicit none
   !
-#ifdef __NAG
-  TYPE(stat_t) :: statb
-#endif
-#ifndef __NAG
-  integer :: fstat,statb(13)
-#endif
+!#ifdef __NAG
+!  TYPE(stat_t) :: statb
+!#endif
+!#ifndef __NAG
+!  integer :: fstat,statb(13)
+!#endif
   !
   complex(kind=DP), ALLOCATABLE :: &
     epmatwe  (:,:,:,:,:),       &! e-p matrix  in wannier basis - electrons
@@ -86,12 +83,12 @@
   real(kind=DP) :: &
     xqc (3, nqc)                 ! qpoint list, coarse mesh
   !
-  integer :: iq, ik, ikk, ikq, ibnd, jbnd, imode, ir, na, nu, mu, &
-    fermicount, nrec, indnew, indold, lrepmatw, ios, irq
+  integer :: iq, ik, ikk, ikq, ibnd, jbnd, imode, na, nu, mu, &
+    fermicount, nrec, lrepmatw
   LOGICAL :: already_skipped, exst
   character (len=256) :: filint
   character (len=30)  :: myfmt
-  real(kind=DP) :: xxq(3), xxk(3), xkk(3), xkq(3), size_m
+  real(kind=DP) :: xxq(3), xxk(3), xkk(3), xkq(3) 
   real(kind=DP), external :: efermig
   real(kind=DP), external :: efermig_seq
   real(kind=DP), parameter :: eps = 0.01/ryd2mev
@@ -207,11 +204,11 @@
          !
          IF (etf_mem) THEN 
            CALL ephbloch2wane &
-             ( nbnd, nbndsub, nks, nkstot, xk, cu, cuq, lwin, lwinq, &
+             ( nbnd, nbndsub, nks, nkstot, xk, cu, cuq, &
              epmatq (:,:,:,imode,iq), nrr_k, irvec, wslen, epmatwe(:,:,:,imode,iq) )
          ELSE
            CALL ephbloch2wane &
-             ( nbnd, nbndsub, nks, nkstot, xk, cu, cuq, lwin, lwinq, &
+             ( nbnd, nbndsub, nks, nkstot, xk, cu, cuq, &
              epmatq (:,:,:,imode,iq), nrr_k, irvec, wslen, epmatwe_mem(:,:,:,imode) )
            !
          ENDIF
@@ -232,10 +229,10 @@
      IF (ionode) THEN
        IF (etf_mem) THEN
          CALL ephbloch2wanp &
-           ( nbndsub, nmodes, xqc, nqc, irvec, wslen, nrr_k, nrr_q, epmatwe )
+           ( nbndsub, nmodes, xqc, nqc, irvec, nrr_k, nrr_q, epmatwe )
        ELSE
           CALL ephbloch2wanp_mem &
-           ( nbndsub, nmodes, xqc, nqc, irvec, wslen, nrr_k, nrr_q, epmatwe_mem )
+           ( nbndsub, nmodes, xqc, nqc, irvec, nrr_k, nrr_q, epmatwe_mem )
        ENDIF
      ENDIF
      !
@@ -417,7 +414,7 @@
     ! get the size of the matrix elements stored in each pool
     ! for informational purposes.  Not necessary
     !
-    CALL mem_size(ibndmin, ibndmax, nmodes, nkf, nqf)
+    CALL mem_size(ibndmin, ibndmax, nmodes, nkf)
     !
     IF (etf_mem) THEN
        ! Fine mesh set of g-matrices.  It is large for memory storage
@@ -635,7 +632,7 @@
     ! get the size of the matrix elements stored in each pool
     ! for informational purposes.  Not necessary
     !
-    CALL mem_size(ibndmin, ibndmax, nmodes, nkf, nqf)
+    CALL mem_size(ibndmin, ibndmax, nmodes, nkf)
     !
     IF (etf_mem) THEN
        ! Fine mesh set of g-matrices.  It is large for memory storage
@@ -897,7 +894,7 @@ SUBROUTINE epw_write
   USE io_files,  ONLY : prefix, diropn
 #ifdef __PARA
   USE mp,        ONLY : mp_barrier
-  USE mp_global, ONLY : my_pool_id,inter_pool_comm
+  USE mp_global, ONLY : inter_pool_comm
   USE mp_world,  ONLY : mpime
   USE io_global, ONLY : ionode_id
 #endif
@@ -982,7 +979,7 @@ END SUBROUTINE epw_write
 SUBROUTINE epw_read()
 !---------------------------------
   USE kinds,     ONLY : DP
-  USE epwcom,    ONLY : nbndsub, vme, eig_read, wepexst, etf_mem
+  USE epwcom,    ONLY : nbndsub, vme, eig_read, etf_mem
   USE pwcom,     ONLY : ef
   USE elph2,     ONLY : nrr_k, nrr_q, chw, rdw, epmatwp, &
                         cdmew, cvmew, chw_ks, zstar, epsi
@@ -997,8 +994,7 @@ SUBROUTINE epw_read()
 #ifdef __PARA
   USE io_global, ONLY : ionode_id
   USE mp,        ONLY : mp_barrier, mp_bcast
-  USE mp_global, ONLY : my_pool_id, &
-                        intra_pool_comm, inter_pool_comm, root_pool
+  USE mp_global, ONLY : intra_pool_comm, inter_pool_comm, root_pool
   USE mp_world,  ONLY : mpime
 #endif
   !
@@ -1153,7 +1149,7 @@ SUBROUTINE epw_read()
 END SUBROUTINE epw_read
 !---------------------------------
 !---------------------------------
-SUBROUTINE mem_size(ibndmin, ibndmax, nmodes, nkf, nqf) 
+SUBROUTINE mem_size(ibndmin, ibndmax, nmodes, nkf) 
 !---------------------------------
 !
 !  SUBROUTINE estimates the amount of memory taken up by 
@@ -1165,7 +1161,7 @@ SUBROUTINE mem_size(ibndmin, ibndmax, nmodes, nkf, nqf)
   !
   implicit none
   !
-  integer :: imelt, ibndmin, ibndmax, nmodes, nkf, nqf
+  integer :: imelt, ibndmin, ibndmax, nmodes, nkf
   real(kind=DP)    :: rmelt
   character (len=256) :: chunit
   !
@@ -1258,7 +1254,6 @@ function sumkg_seq (et, nbnd, nks, wk, degauss, ngauss, e, is, isk)
   !
   !
   USE kinds
-  USE mp_pools, ONLY : inter_pool_comm
   USE mp,       ONLY : mp_sum
   implicit none
   ! Output variable
@@ -1308,7 +1303,6 @@ end function sumkg_seq
   USE kinds, only : DP
 #ifdef __PARA
   use mp, only : mp_barrier
-  use mp_global, only : my_pool_id
 #endif
   implicit none
   integer :: lrec, iun, nrec, iop, i, nbnd, np, nmodes, ibnd, jbnd, imode, ip

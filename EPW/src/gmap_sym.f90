@@ -9,49 +9,63 @@
   !-----------------------------------------------------------------------
   SUBROUTINE gmap_sym ( nsym, s, ftau, gmapsym, eigv, invs )
   !-----------------------------------------------------------------------
-  !
-  !   For every G vector, find S(G) for all the symmetry operations
-  !   of the crystal. Construct the matrix
-  !   eigv(ig,isym) = e^{i G v(S)} where v(S) is the (possible) 
-  !   fractional translation associated with the symmetry operation
-  !
-  !   No parallelization on G-vecs at the moment  
-  !   (actually this is done on the global array, but in elphel2.f90
-  !   every processor has just a chunk of the array, I may need some
-  !   communication)
-  !
-  !   No ultrasoft now
-  !
+  !!
+  !!   For every G vector, find S(G) for all the symmetry operations
+  !!   of the crystal. Construct the matrix
+  !!   eigv(ig,isym) = $e^{i G v(S)}$ where v(S) is the (possible) 
+  !!   fractional translation associated with the symmetry operation
+  !!
+  !!   No parallelization on G-vecs at the moment  
+  !!   (actually this is done on the global array, but in elphel2.f90
+  !!   every processor has just a chunk of the array, I may need some
+  !!   communication)
+  !!
+  !!   No ultrasoft now
+  !!
   !----------------------------------------------------------------------
   USE kinds,         ONLY : DP
   USE pwcom,         ONLY : ngm
   USE constants_epw, ONLY : twopi, ci, cone
   USE fft_base,      ONLY : dfftp
   USE gvect,         ONLY : mill
-#ifdef __PARA
-  USE mp_global,     ONLY : my_pool_id
-#endif
+  ! 
   implicit none
   !
-  ! input variables
-  !
-  integer :: nsym, s(3,3,48), ftau(3,48), invs(48)
-  ! the number of symmetries of the crystal
-  ! the symmetry matrices
-  ! the fractional traslations
-  !
-  ! output variables
-  !
-  integer :: gmapsym (ngm, 48)
-  ! the map S(G) = gmapsym (G,S) 1...nsym
-  complex(kind=DP) :: eigv (ngm, 48)
-  ! e^{ iGv} for 1...nsym
+  INTEGER, INTENT (in) :: nsym
+  !! the number of symmetries of the crystal
+  INTEGER, INTENT (in) :: s(3,3,48)
+  !! the symmetry matrices
+  INTEGER, INTENT (in) :: ftau(3,48)
+  !! the fractional traslations
+  INTEGER, INTENT (in) :: invs(48)
+  !! inverse symmetry matrix 
+  INTEGER, INTENT (out) :: gmapsym (ngm, 48)
+  !! the map S(G) = gmapsym (G,S) 1...nsym
+  COMPLEX(kind=DP), INTENT (out) :: eigv (ngm, 48)
+  !! e^{ iGv} for 1...nsym
   !
   ! local variables
   !
-  integer :: ig, jg, i, j, k, notfound, isym, ism1
-  logical :: tfound
-  real(kind=DP) :: rdotk
+  LOGICAL :: tfound
+  !!
+  INTEGER :: ig
+  !! Counter on the G-vector
+  INTEGER :: jg
+  !! Counter on the G-vector
+  INTEGER :: i
+  !! Index of the rotated G-vector
+  INTEGER :: j
+  !! Index of the rotated G-vector
+  INTEGER :: k
+  !! Index of the rotated G-vector
+  INTEGER :: notfound
+  !! Index to check wether the mapping is complete
+  INTEGER :: isym
+  !! Counter on the symmetry 
+  INTEGER :: ism1
+  !! Index for the inverse symmetry
+  REAL(kind=DP) :: rdotk
+  !! $$\mathbf{r}\cdot\mathbf{k}
   !
   !  loop on the symmetries of the crystal
   !

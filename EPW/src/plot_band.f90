@@ -18,7 +18,7 @@
   USE kinds,      ONLY : DP
   USE cell_base,  ONLY : at, bg
   USE phcom,      ONLY : nmodes
-  USE epwcom,     ONLY : nbndsub, etf_mem, filqf, filkf
+  USE epwcom,     ONLY : nbndsub, filqf, filkf
   USE elph2,      ONLY : etf, nkf, nqtotf, wf, xkf, xqf, nkqtotf
   USE constants_epw, ONLY : ryd2mev, ryd2ev
   USE io_epw,     ONLY : iufilfreq, iufileig
@@ -26,8 +26,7 @@
   USE elph2,      ONLY : nkqf
   USE io_global,  ONLY : ionode_id
   USE mp,         ONLY : mp_barrier, mp_sum
-  USE mp_global,  ONLY : me_pool, inter_pool_comm, my_pool_id, npool
-  USE mp_world,   ONLY : mpime
+  USE mp_global,  ONLY : inter_pool_comm, my_pool_id
 #endif
   !
   IMPLICIT NONE

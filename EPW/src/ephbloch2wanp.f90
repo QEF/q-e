@@ -7,7 +7,7 @@
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
   !                                                                            
   !--------------------------------------------------------------------------
-  SUBROUTINE ephbloch2wanp ( nbnd, nmodes, xk, nq, irvec, wslen, &
+  SUBROUTINE ephbloch2wanp ( nbnd, nmodes, xk, nq, irvec, &
     nrk, nrr, epmatwe )
   !--------------------------------------------------------------------------
   !!
@@ -46,8 +46,6 @@
   !
   REAL(kind=DP), INTENT(in) :: xk (3, nq)
   !! Kpoint coordinates (cartesian in units of 2piba) 
-  REAL(kind=DP), INTENT(in) :: wslen (nrr)
-  !! WS vectors length (alat units)
   ! 
   COMPLEX(kind=DP), INTENT(in) :: epmatwe (nbnd, nbnd, nrk, nmodes, nq)
   !! EP matrix in electron-wannier representation and phonon bloch representation
@@ -130,7 +128,7 @@
   !
   ! -----------------------------------------------------------
   !--------------------------------------------------------------------------
-  SUBROUTINE ephbloch2wanp_mem ( nbnd, nmodes, xk, nq, irvec, wslen, &
+  SUBROUTINE ephbloch2wanp_mem ( nbnd, nmodes, xk, nq, irvec, &
     nrk, nrr, epmatwe )
   !--------------------------------------------------------------------------
   !
@@ -168,8 +166,6 @@
   !
   REAL(kind=DP), INTENT(in) :: xk (3, nq)
   !! Kpoint coordinates (cartesian in units of 2piba) 
-  REAL(kind=DP), INTENT(in) :: wslen (nrr)
-  !! WS vectors length (alat units)
   ! 
   COMPLEX(kind=DP), INTENT(in) :: epmatwe (nbnd, nbnd, nrk, nmodes)
   !! EP matrix in electron-wannier representation and phonon bloch representation

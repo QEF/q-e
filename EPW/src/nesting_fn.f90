@@ -23,7 +23,6 @@
   USE io_global, ONLY : stdout
   use epwcom,    only : nbndsub, fsthick, &
                         eptemp, ngaussw, degaussw,     &
-                        etf_mem, &
                         nsmear, delta_smear, efermi_read, fermi_energy
   use pwcom,     only : nelec, ef, isk
   use elph2,     only : ibndmax, ibndmin, etf, &
@@ -35,14 +34,14 @@
 #endif
 #ifdef __PARA
   use mp,        only : mp_barrier,mp_sum
-  use mp_global, only : me_pool,inter_pool_comm,my_pool_id
+  use mp_global, only : inter_pool_comm
 #endif
   !
   implicit none
   !
-  integer :: ik, ikk, ikq, ibnd, jbnd, nrec, iq, fermicount, ismear
+  integer :: ik, ikk, ikq, ibnd, jbnd, iq, fermicount, ismear
   real(kind=DP) :: ekk, ekq, ef0, &
-     weight, w0g1, w0g2, w0gauss, wgauss, dosef, dos_ef, gamma, &
+     weight, w0g1, w0g2, w0gauss, dosef, dos_ef, gamma, &
      degaussw0
   !
   real(kind=DP), external :: efermig
@@ -177,30 +176,28 @@
   USE io_global, ONLY : stdout
   use epwcom,    only : nbndsub, fsthick, &
                         eptemp, ngaussw, degaussw,     &
-                        etf_mem, &
                         nsmear, delta_smear, efermi_read, fermi_energy
   use pwcom,     only : nelec, ef, isk
   use elph2,     only : ibndmax, ibndmin, etf, etf_k, &
                         wkf, xqf, wqf, nkqf, nqf, nqtotf, &
-                        nkf, nkqtotf, xqf, gamma_nest
+                        nkqtotf, xqf, gamma_nest
   USE constants_epw, ONLY : ryd2ev, two, pi, zero
 #ifdef __NAG
   USE f90_unix_io,  ONLY : flush
 #endif
 #ifdef __PARA
   use mp,        only : mp_barrier,mp_sum, mp_bcast
-  use mp_global, only : me_pool,inter_pool_comm,my_pool_id
+  use mp_global, only : inter_pool_comm
   USE mp_world,  ONLY : mpime
   USE io_global, ONLY : ionode_id
 #endif
   !
   implicit none
   !
-  integer :: ik, ikk, ikq, ibnd, jbnd, nrec, iq, fermicount, ismear, &
+  integer :: ik, ikk, ikq, ibnd, jbnd, iq, fermicount, ismear, &
              lower_bnd, upper_bnd
   real(kind=DP) :: ekk, ekq, ef0, &
-     weight, w0g1, w0g2, w0gauss, wgauss, dosef, dos_ef,  &
-     degaussw0
+     weight, w0g1, w0g2, w0gauss, dosef, degaussw0
   real(kind=DP), external :: efermig_seq, dos_ef_seq
   REAL(kind=DP), ALLOCATABLE :: xqf_all(:,:), wqf_all(:,:)
   !
