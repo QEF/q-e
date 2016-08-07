@@ -30,8 +30,6 @@
   elinterp    = .true.
   phinterp    = .true.
 
-  tshuffle2   = .true.
-
   elecselfen  = .true.
   phonselfen  = .false.
   a2f         = .false.

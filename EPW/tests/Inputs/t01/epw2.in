@@ -28,8 +28,6 @@
   elinterp    = .true.
   phinterp    = .true.
 
-  tshuffle2   = .true.
-
   elecselfen  = .true.
   nest_fn     = .true.
   phonselfen  = .false.

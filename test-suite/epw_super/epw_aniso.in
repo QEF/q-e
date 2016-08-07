@@ -32,8 +32,6 @@
   elinterp    = .true.
   phinterp    = .true.
 
-  tshuffle2   = .true.
-
   parallel_k  = .true.
   parallel_q  = .false.
 

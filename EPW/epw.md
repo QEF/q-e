@@ -1,5 +1,5 @@
 title: EPW
-project_dir: ./src
+src_dir: ./src
 output_dir: ./doc
 project_website: http://epw.org.uk/
 summary: EPW is the short name for "Electron-phonon Wannier". EPW is an open-source F90/MPI code which calculates properties related to the electron-phonon interaction using Density-Functional Perturbation Theory and Maximally Localized Wannier Functions.
