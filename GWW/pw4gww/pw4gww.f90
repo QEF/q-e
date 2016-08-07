@@ -431,7 +431,7 @@ program gwl_punch
   call summary()
 
 !
-! init some quantities igk,....
+! init some quantities ...
 !
   CALL hinit0()
 !
@@ -770,10 +770,8 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
            local_pw = 0
            IF( (ik >= iks) .AND. (ik <= ike) ) THEN
                
-               CALL gk_sort (xk (1, ik+iks-1), ngm, g, gcutw, npw, igk, g2kin)
                CALL davcio (evc, 2*nwordwfc, iunwfc, (ik-iks+1), - 1)
-
-               CALL init_us_2(npw, igk, xk(1, ik), vkb)
+               CALL init_us_2(npw, igk_k(1,ik-iks+1), xk(1, ik), vkb)
                local_pw = ngk(ik-iks+1)
                             
                IF ( gamma_only ) THEN

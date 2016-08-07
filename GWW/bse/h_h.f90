@@ -11,8 +11,7 @@ SUBROUTINE H_h(e,h,Ah)
   !-----------------------------------------------------------------------
   !
   USE kinds, ONLY: DP
-!  USE wvfct, ONLY: nbnd, npwx, npw, g2kin, igk
-  USE wvfct, ONLY: npwx, npw, g2kin, igk
+  USE wvfct, ONLY: npwx, npw, g2kin
   USE gvect, ONLY : gstart
   USE uspp,     ONLY : vkb, nkb
   USE lsda_mod, ONLY : current_spin

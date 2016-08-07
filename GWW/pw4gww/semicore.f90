@@ -47,14 +47,14 @@
     do iv=1,n_semicore,2
        psic(:)=(0.d0,0.d0)
        if(iv<n_semicore) then
-          psic(nls(igk(1:npw)))  = evc(1:npw,iv) + &
+          psic(nls(igk_k(1:npw,1)))  = evc(1:npw,iv) + &
                ( 0.D0, 1.D0 ) * evc(1:npw,iv+1)
-          psic(nlsm(igk(1:npw))) = CONJG( evc(1:npw,iv) - &
+          psic(nlsm(igk_k(1:npw,1))) = CONJG( evc(1:npw,iv) - &
                     ( 0.D0, 1.D0 ) * evc(1:npw,iv+1) )
 
        else
-          psic(nls(igk(1:npw)))  = evc(1:npw,iv)
-          psic(nlsm(igk(1:npw))) = CONJG( evc(1:npw,iv) )
+          psic(nls(igk_k(1:npw,1)))  = evc(1:npw,iv)
+          psic(nlsm(igk_k(1:npw,1))) = CONJG( evc(1:npw,iv) )
        endif
        CALL invfft ('Wave', psic, dffts)
        psi_sc(1:dfftp%nnr,iv)=dble(psic(1:dfftp%nnr))
@@ -88,8 +88,8 @@
 !fft
 
        psic(:)=(0.d0,0.d0)
-       psic(nls(igk(1:npw)))  = evc(1:npw,ii)
-       psic(nlsm(igk(1:npw))) = CONJG( evc(1:npw,ii) )
+       psic(nls(igk_k(1:npw,1)))  = evc(1:npw,ii)
+       psic(nlsm(igk_k(1:npw,1))) = CONJG( evc(1:npw,ii) )
 
        CALL invfft ('Wave', psic, dffts)
 

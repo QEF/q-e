@@ -10,7 +10,7 @@ subroutine rotate_wannier_gamma_bse( rot_u,a_in,a_out,ispin, itrasp)
 
   USE kinds,    ONLY : DP
   USE us
-  USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbndx,nbnd
+  USE wvfct,    ONLY : g2kin, npwx, npw, nbndx,nbnd
   USE gvect
   USE basis
   USE klist

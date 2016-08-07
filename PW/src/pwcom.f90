@@ -33,7 +33,7 @@ MODULE klist
   REAL(DP) :: &
        qnorm= 0.0_dp      ! |q|, used in phonon+US calculations only
   INTEGER, ALLOCATABLE :: &
-       igk_k(:,:),&       ! The g<->k correspondance for each k point
+       igk_k(:,:),&       ! index of G corresponding to a given index of k+G
        ngk(:)             ! number of plane waves for each k point
   !
   INTEGER :: &
@@ -220,8 +220,6 @@ MODULE wvfct
        nbnd,             &! number of bands
        npw,              &! the number of plane waves
        current_k          ! the index of k-point under consideration
-  INTEGER, ALLOCATABLE, TARGET :: &
-       igk(:)             ! index of G corresponding to a given index of k+G
   REAL(DP), ALLOCATABLE :: &
        et(:,:),          &! eigenvalues of the hamiltonian
        wg(:,:),          &! the weight of each k point and band

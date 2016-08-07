@@ -16,10 +16,9 @@ SUBROUTINE o_bands(numv, v_states,numpw,o_basis,ethr,cutoff,ptype)
   USE constants,            ONLY : eps4
   USE io_global,            ONLY : stdout, ionode,ionode_id
   USE cell_base,            ONLY : tpiba2
-  USE klist,                ONLY : nkstot, nks, wk, xk, nelec
+  USE klist,                ONLY : nkstot, nks, wk, xk, nelec, igk_k
   USE gvect,                ONLY : g, gstart
-  USE wvfct,                ONLY : g2kin, wg, et, nbnd, npwx, igk, &
-                                   npw, current_k
+  USE wvfct,                ONLY : g2kin, wg, et, nbnd, npwx, npw, current_k
   USE control_flags,        ONLY : max_cg_iter, david
   USE g_psi_mod,            ONLY : h_diag
   USE mp,                   ONLY : mp_sum,mp_bcast
@@ -91,13 +90,10 @@ SUBROUTINE o_bands(numv, v_states,numpw,o_basis,ethr,cutoff,ptype)
      write(stdout,*) 'setting preconditioning'
      FLUSH(stdout)
 
-!the following is for colling h_1psi routine
-   !  ALLOCATE( becp%r( nkb, 1) )
-    ! call allocate_bec_type ( nkb, 1, becp)
-    ! IF ( nkb > 0 )  CALL init_us_2( npw, igk, xk(1,1), vkb )
-     g2kin(1:npw) = ( (g(1,igk(1:npw)) )**2 + &
-          ( g(2,igk(1:npw)) )**2 + &
-          ( g(3,igk(1:npw)) )**2 ) * tpiba2
+!the following is for calling h_1psi routine
+     g2kin(1:npw) = ( (g(1,igk_k(1:npw,1)) )**2 + &
+          ( g(2,igk_k(1:npw,1)) )**2 + &
+          ( g(3,igk_k(1:npw,1)) )**2 ) * tpiba2
      
      do ig=1,npw
         if(g2kin(ig) <= cutoff) then
@@ -311,9 +307,9 @@ SUBROUTINE o_bands(numv, v_states,numpw,o_basis,ethr,cutoff,ptype)
      deallocate(fcw_mat,fcw_state)
   else if(ptype==5) then
 !just real plane waves
-     g2kin(1:npw) = ( (g(1,igk(1:npw)) )**2 + &
-          ( g(2,igk(1:npw)) )**2 + &
-          ( g(3,igk(1:npw)) )**2 ) * tpiba2
+     g2kin(1:npw) = ( (g(1,igk_k(1:npw,1)) )**2 + &
+          ( g(2,igk_k(1:npw,1)) )**2 + &
+          ( g(3,igk_k(1:npw,1)) )**2 ) * tpiba2
      
      num_fc=0
      do ig=1,npw
@@ -369,10 +365,9 @@ subroutine o_extra_pw( p_basis, numwp, numwp_max,cutoff)
   USE kinds,                ONLY : DP
   USE io_global,            ONLY : stdout, ionode,ionode_id
   USE cell_base,            ONLY : tpiba2
-  USE klist,                ONLY : nkstot, nks, wk, xk, nelec
+  USE klist,                ONLY : nkstot, nks, wk, xk, nelec, igk_k
   USE gvect,                ONLY : g, gstart
-  USE wvfct,                ONLY : g2kin, wg, et, nbnd, npwx, igk, &
-                                   npw, current_k
+  USE wvfct,                ONLY : g2kin, wg, et, nbnd, npwx, npw, current_k
   USE control_flags,        ONLY : max_cg_iter, david
   USE g_psi_mod,            ONLY : h_diag
   USE mp,                   ONLY : mp_sum,mp_bcast
@@ -391,9 +386,9 @@ subroutine o_extra_pw( p_basis, numwp, numwp_max,cutoff)
 
 
   !just real plane waves                        
-  g2kin(1:npw) = ( (g(1,igk(1:npw)) )**2 + &
-       ( g(2,igk(1:npw)) )**2 + &
-       ( g(3,igk(1:npw)) )**2 ) * tpiba2
+  g2kin(1:npw) = ( (g(1,igk_k(1:npw,1)) )**2 + &
+       ( g(2,igk_k(1:npw,1)) )**2 + &
+       ( g(3,igk_k(1:npw,1)) )**2 ) * tpiba2
 
   num_fc=0
   do ig=1,npw
@@ -454,10 +449,9 @@ subroutine  update_numwp(numwp, cutoff)
   USE kinds,                ONLY : DP
   USE io_global,            ONLY : stdout, ionode,ionode_id
   USE cell_base,            ONLY : tpiba2
-  USE klist,                ONLY : nkstot, nks, wk, xk, nelec
+  USE klist,                ONLY : nkstot, nks, wk, xk, nelec, igk_k
   USE gvect,                ONLY : g, gstart
-  USE wvfct,                ONLY : g2kin, wg, et, nbnd, npwx, igk, &
-                                   npw, current_k
+  USE wvfct,                ONLY : g2kin, wg, et, nbnd, npwx, npw, current_k
   USE control_flags,        ONLY : max_cg_iter, david
   USE g_psi_mod,            ONLY : h_diag
   USE mp,                   ONLY : mp_sum,mp_bcast
@@ -476,9 +470,9 @@ subroutine  update_numwp(numwp, cutoff)
 
   !just real plane waves 
 
-  g2kin(1:npw) = ( (g(1,igk(1:npw)) )**2 + &
-       ( g(2,igk(1:npw)) )**2 + &
-       ( g(3,igk(1:npw)) )**2 ) * tpiba2
+  g2kin(1:npw) = ( (g(1,igk_k(1:npw,1)) )**2 + &
+       ( g(2,igk_k(1:npw,1)) )**2 + &
+       ( g(3,igk_k(1:npw,1)) )**2 ) * tpiba2
 
   num_fc=0
   do ig=1,npw

@@ -28,7 +28,7 @@ SUBROUTINE allocate_nlpot
   USE ldaU,             ONLY : Hubbard_lmax
   USE scf,              ONLY : rho
   USE noncollin_module, ONLY : noncolin
-  USE wvfct,            ONLY : npwx, npw, igk, g2kin
+  USE wvfct,            ONLY : npwx, npw, g2kin
   USE gvecw,            ONLY : gcutw, ecutwfc
   USE us,               ONLY : qrad, tab, tab_d2y, tab_at, dq, nqx, &
                                nqxq, spline_ps
@@ -49,9 +49,9 @@ SUBROUTINE allocate_nlpot
   !
   npwx = n_plane_waves (gcutw, nks, xk, g, ngm)
   !
-  !   igk relates the index of PW k+G to index in the list of G vector
+  !   g2kin contains the kinetic energy \hbar^2(k+G)^2/2m
   !
-  ALLOCATE (igk( npwx ), g2kin ( npwx ) )
+  ALLOCATE (g2kin ( npwx ) )
   !
   ! Note: computation of the number of beta functions for
   ! each atomic type and the maximum number of beta functions

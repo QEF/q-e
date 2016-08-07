@@ -2011,7 +2011,7 @@ SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
     inter_pool_comm, npool
   USE scf, ONLY : rho, rho_core, rhog_core
   USE wavefunctions_module, ONLY : evc, psic
-  USE wvfct, ONLY : npwx, npw, nbnd, igk
+  USE wvfct, ONLY : npwx, npw, nbnd
 
   IMPLICIT NONE
 
@@ -2023,7 +2023,7 @@ SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
   logical, intent (in) :: vxc_zero_rho_core
 
   integer :: ik, is, ib, ig, ir, unit, nkbl, nkl, nkr, iks, ike, &
-    ndiag, noffdiag, ib2
+    ndiag, noffdiag, ib2, ikk
   complex (DP) :: dummy
   complex (DP), allocatable :: mtxeld (:, :)
   complex (DP), allocatable :: mtxelo (:, :, :)
@@ -2084,14 +2084,14 @@ SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
   CALL v_xc (rho, rho_core, rhog_core, etxc, vtxc, vxcr)
 
   DO ik = iks, ike
+    ikk = ik - iks + 1
     npw = ngk ( ik - iks + 1 )
-    igk(1:npw) = igk_k(1:npw, ik - iks + 1 ) ! used by vexx
     CALL davcio (evc, 2*nwordwfc, iunwfc, ik - iks + 1, -1)
     IF (ndiag .GT. 0) THEN
       DO ib = diag_nmin, diag_nmax
         psic (:) = (0.0D0, 0.0D0)
         DO ig = 1, npw
-          psic (nl (igk (ig))) = evc (ig, ib)
+          psic (nl (igk_k(ig,ikk))) = evc (ig, ib)
         ENDDO
         CALL invfft ('Dense', psic, dfftp)
         DO ir = 1, dfftp%nnr
@@ -2100,14 +2100,14 @@ SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
         CALL fwfft ('Dense', psic, dfftp)
         hpsi (:) = (0.0D0, 0.0D0)
         DO ig = 1, npw
-          hpsi (ig) = psic (nl (igk (ig)))
+          hpsi (ig) = psic (nl (igk_k(ig,ikk)))
         ENDDO
         psic (:) = (0.0D0, 0.0D0)
         DO ig = 1, npw
           psic (ig) = evc (ig, ib)
         ENDDO
-        IF (exx_is_active ()) CALL vexx (npwx, npw, 1, &
-          psic, hpsi)
+        IF (exx_is_active ()) &
+           CALL vexx (npwx, npw, 1, psic, hpsi)
         dummy = (0.0D0, 0.0D0)
         DO ig = 1, npw
           dummy = dummy + conjg (psic (ig)) * hpsi (ig)
@@ -2121,7 +2121,7 @@ SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
       DO ib = offdiag_nmin, offdiag_nmax
         psic (:) = (0.0D0, 0.0D0)
         DO ig = 1, npw
-          psic (nl (igk (ig))) = evc (ig, ib)
+          psic (nl (igk_k(ig,ikk))) = evc (ig, ib)
         ENDDO
         CALL invfft ('Dense', psic, dfftp)
         DO ir = 1, dfftp%nnr
@@ -2130,14 +2130,14 @@ SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
         CALL fwfft ('Dense', psic, dfftp)
         hpsi (:) = (0.0D0, 0.0D0)
         DO ig = 1, npw
-          hpsi (ig) = psic (nl (igk (ig)))
+          hpsi (ig) = psic (nl (igk_k (ig,ikk)))
         ENDDO
         psic (:) = (0.0D0, 0.0D0)
         DO ig = 1, npw
           psic (ig) = evc (ig, ib)
         ENDDO
-        IF (exx_is_active ()) CALL vexx (npwx, npw, 1, &
-          psic, hpsi)
+        IF (exx_is_active ()) &
+           CALL vexx (npwx, npw, 1, psic, hpsi)
         DO ib2 = offdiag_nmin, offdiag_nmax
           psic2 (:) = (0.0D0, 0.0D0)
           DO ig = 1, npw

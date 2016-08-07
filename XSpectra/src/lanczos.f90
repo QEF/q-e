@@ -1,12 +1,12 @@
 
 !------------------------------------------------------------------------------
 !------------------------------------------------------------------------------
-SUBROUTINE lanczos (a,b,psi,ncalcv,terminator)
+SUBROUTINE lanczos (a,b,npw,psi,ncalcv,terminator)
   !----------------------------------------------------------------------------
   ! subroutine written by CG
   USE kinds,     ONLY: DP
   USE constants, ONLY: rytoev
-  USE wvfct,     ONLY: npwx, nbnd,npw
+  USE wvfct,     ONLY: npwx, nbnd
   USE becmod,    ONLY: becp
   USE uspp,      ONLY: vkb, nkb
   !USE cell_base, ONLY: omega
@@ -26,7 +26,8 @@ SUBROUTINE lanczos (a,b,psi,ncalcv,terminator)
   ! 
   REAL(dp), DIMENSION (xnitermax), INTENT(INOUT) :: a, b
   COMPLEX(dp), DIMENSION (npwx),   INTENT(INOUT) :: psi
-  INTEGER, INTENT(INOUT) ::  ncalcv
+  INTEGER, INTENT(INOUT) :: ncalcv
+  INTEGER, INTENT(IN)    :: npw
   LOGICAL, INTENT(IN)    :: terminator
   LOGICAL                :: ldummy
 
@@ -200,11 +201,11 @@ END SUBROUTINE lanczos
 
 !------------------------------------------------------------------------------
 !------------------------------------------------------------------------------
-SUBROUTINE lanczos_uspp (a,b,psi,ncalcv,terminator)
+SUBROUTINE lanczos_uspp (a,b,npw,psi,ncalcv,terminator)
   !----------------------------------------------------------------------------
   ! subroutine written by CG
   USE kinds,     ONLY: DP
-  USE wvfct,     ONLY: npwx, nbnd,npw
+  USE wvfct,     ONLY: npwx, nbnd
   USE becmod,    ONLY: becp, calbec
   USE constants, ONLY: rytoev
   USE uspp,      ONLY: vkb, nkb
@@ -226,6 +227,7 @@ SUBROUTINE lanczos_uspp (a,b,psi,ncalcv,terminator)
   REAL (dp), DIMENSION (xnitermax), INTENT (inout) :: a, b
   COMPLEX (dp), DIMENSION (npwx),   INTENT (inout) :: psi
   INTEGER, INTENT (inout) :: ncalcv
+  INTEGER, INTENT (in)    :: npw
   LOGICAL, INTENT (in)    :: terminator
 
   !... local variables

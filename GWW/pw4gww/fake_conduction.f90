@@ -2165,7 +2165,7 @@ end subroutine fake_conduction_wannier_real
    USE gvect
    USE constants, ONLY : e2, pi, tpi, fpi
    USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2
-   USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, et, wg
+   USE wvfct,    ONLY : g2kin, npwx, npw, nbnd, et, wg
    USE gvecw,    ONLY : ecutwfc
    USE wavefunctions_module, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast

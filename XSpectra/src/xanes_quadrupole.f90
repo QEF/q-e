@@ -12,7 +12,7 @@ SUBROUTINE xanes_quadrupole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,&
   USE parameters,      ONLY: ntypx
   USE radial_grids,    ONLY: ndmx
   USE ions_base,       ONLY: nat, ntyp => nsp, ityp
-  USE wvfct,           ONLY: npwx,nbnd,npw,igk,g2kin,et, current_k
+  USE wvfct,           ONLY: npwx, nbnd, et, current_k
   USE gvecw,           ONLY: gcutw
   USE lsda_mod,        ONLY: nspin,lsda,isk,current_spin
   USE cell_base,       ONLY: tpiba2, bg
@@ -21,7 +21,8 @@ SUBROUTINE xanes_quadrupole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,&
        nkstot,               & ! total number of k-points
        nks,                  & ! number of k-points per pool
        xk,                   & ! k-points coordinates
-       wk                      ! k-points weight
+       wk,                   & ! k-points weight
+       ngk, igk_k
   USE gvect,           ONLY: g,ngm,ngl
   USE fft_base,        ONLY: dfftp
   USE paw_gipaw,       ONLY: &
@@ -65,7 +66,7 @@ SUBROUTINE xanes_quadrupole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,&
   !... Local variables
   !
   INTEGER :: is,ik,iabso,nr,ip,jp,l,j,icrd,ip_l,nrc,nt,na
-  INTEGER :: ipx,ipx_0,ipy,ipz,nline,nrest,npw_partial
+  INTEGER :: ipx,ipx_0,ipy,ipz,nline,nrest,npw, npw_partial
   INTEGER :: nunfinished
   LOGICAL :: recalc
   REAL (dp) :: pref,prefb,v_of_0,xnorm_partial,prefm2,prefm1,prefm0
@@ -222,12 +223,10 @@ SUBROUTINE xanes_quadrupole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,&
            timenow
 
      current_k=ik 
-     
      IF(lsda) current_spin=isk(ik)
+     CALL g2_kin(ik)
 
-     !... gk_sort : sort k-points and exit kinetic energies 
-     CALL gk_sort(xk (1,ik),ngm,g,gcutw,npw,igk,g2kin)  !CHECK
-     g2kin=g2kin*tpiba2                                 !CHECK
+     npw = ngk(ik)
 
      npw_partial = npw
      CALL mp_sum( npw_partial, intra_pool_comm )
@@ -243,9 +242,9 @@ SUBROUTINE xanes_quadrupole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,&
      ENDIF
 
      !<CG>
-     CALL init_gipaw_2(npw,igk,xk(1,ik),paw_vkb)
+     CALL init_gipaw_2(npw,igk_k(1,ik),xk(1,ik),paw_vkb)
      !</CG>
-     if(.not.lda_plus_u) CALL init_us_2(npw,igk,xk(1,ik),vkb)
+     if(.not.lda_plus_u) CALL init_us_2(npw,igk_k(1,ik),xk(1,ik),vkb)
      IF (lda_plus_u) CALL orthoUwfc_k(ik)
 
      ! Angular Matrix element
@@ -380,9 +379,9 @@ SUBROUTINE xanes_quadrupole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,&
      !... Starts the Lanczos procedure
 
      IF (okvan) THEN
-        CALL lanczos_uspp(a(:,1,ik),b(:,1,ik),psiwfc,ncalcv(1,ik), terminator)
+        CALL lanczos_uspp(a(:,1,ik),b(:,1,ik),npw,psiwfc,ncalcv(1,ik), terminator)
      ELSE
-        CALL lanczos(a(:,1,ik),b(:,1,ik),psiwfc,ncalcv(1,ik), terminator)
+        CALL lanczos(a(:,1,ik),b(:,1,ik),npw,psiwfc,ncalcv(1,ik), terminator)
      ENDIF
      
      !!      Then I write small report of the lanczos results

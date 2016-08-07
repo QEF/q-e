@@ -29,7 +29,7 @@ SUBROUTINE clean_pw( lflag )
   USE klist,                ONLY : deallocate_igk
   USE gvect,                ONLY : ig_l2g
   USE vlocal,               ONLY : strf, vloc
-  USE wvfct,                ONLY : igk, g2kin, et, wg, btype
+  USE wvfct,                ONLY : g2kin, et, wg, btype
   USE force_mod,            ONLY : force
   USE scf,                  ONLY : rho, v, vltot, rho_core, rhog_core, &
                                    vrs, kedtau, destroy_scf_type, vnew
@@ -142,7 +142,6 @@ SUBROUTINE clean_pw( lflag )
   !
   ! ... arrays allocated in allocate_nlpot.f90 ( and never deallocated )
   !
-  IF ( ALLOCATED( igk ) )        DEALLOCATE( igk )
   IF ( ALLOCATED( g2kin ) )      DEALLOCATE( g2kin )
   IF ( ALLOCATED( qrad ) )       DEALLOCATE( qrad )
   IF ( ALLOCATED( tab ) )        DEALLOCATE( tab )

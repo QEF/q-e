@@ -16,7 +16,7 @@ PROGRAM X_Spectra
   USE ions_base,       ONLY : nat, ntyp => nsp, ityp, tau
   USE ktetra,          ONLY : ltetra, ntetra, tetra
   USE start_k,         ONLY : nk1, nk2, nk3, k1, k2, k3
-  USE wvfct,           ONLY : npwx,nbnd,npw,igk,et, wg! et(nbnd,nkstot)
+  USE wvfct,           ONLY : npwx ,nbnd, et, wg ! et(nbnd,nkstot)
   USE radial_grids,    ONLY : ndmx
   USE atom,            ONLY : rgrid
   USE becmod,          ONLY : becp
@@ -38,6 +38,7 @@ PROGRAM X_Spectra
        nelec,nelup,neldw,             & !number of electrons
        xk,                & ! k-points coordinates
        wk ,               & ! k-points weight
+       ngk, igk_k,        & ! number of plane waves and indices of k+G
        npk,               &
        degauss,lgauss,ngauss,    &
        two_fermi_energies

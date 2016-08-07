@@ -381,7 +381,7 @@ MODULE bse_basic_structures
       USE kinds, ONLY : DP
       USE fft_custom_gwl
       USE bse_wannier, ONLY : dual_bse 
-      USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, nbndx
+      USE wvfct,    ONLY : g2kin, npwx, npw, nbnd, nbndx
       USE io_global, ONLY : stdout, ionode, ionode_id
       USE mp_world, ONLY : mpime, nproc,world_comm
       USE mp_wave, ONLY : mergewf,splitwf
@@ -466,7 +466,7 @@ MODULE bse_basic_structures
       USE kinds, ONLY : DP
       USE fft_custom_gwl
       USE bse_wannier, ONLY : dual_bse, num_nbndv 
-      USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, nbndx
+      USE wvfct,    ONLY : g2kin, npwx, npw, nbnd, nbndx
       USE io_global, ONLY : stdout, ionode, ionode_id
       USE mp_world, ONLY : mpime, nproc,world_comm
       USE mp_wave, ONLY : mergewf,splitwf

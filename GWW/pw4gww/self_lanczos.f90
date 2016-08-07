@@ -22,14 +22,13 @@ subroutine self_basis_lanczos(n_set,nstates,numpw, nsteps,ispin,lfull,nfull)
    USE gvect
    USE constants, ONLY : e2, pi, tpi, fpi
    USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2
-   USE wvfct,     ONLY : igk, npwx, npw, nbnd
+   USE wvfct,     ONLY : npwx, npw, nbnd
    USE gvecw,     ONLY : ecutwfc
    USE wavefunctions_module, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
    USE mp_world, ONLY : world_comm, mpime, nproc
    USE mp_pools, ONLY : intra_pool_comm
    USE gvecs,              ONLY : nls, nlsm, doublegrid
-   !USE exx, ONLY : exx_divergence_new, yukawa
    USE fft_custom_gwl
    USE mp_wave, ONLY : mergewf,splitwf
    USE fft_base,             ONLY : dfftp, dffts
@@ -563,13 +562,13 @@ subroutine global_self_lanczos(nstates,nstates_eff,threshold,nglobal,nsteps,nump
                                &num_nbndv,l_pmatrix,vg_q,s_first_state,s_last_state, l_verbose,&
                                &l_contour,l_big_system,l_list,n_list,i_list,optimal_options
   USE gvect
-  USE wvfct,    ONLY : igk, npwx, npw, nbnd
+  USE wvfct,    ONLY : npwx, npw, nbnd
   USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
   USE mp_world, ONLY : world_comm, mpime,nproc
   USE wavefunctions_module, ONLY : evc, psic
   USE gvect
   USE gvecs,              ONLY : nls, nlsm, doublegrid
-!  USE exx, ONLY : exx_divergence_new, yukawa
+  USE klist,    ONLY : igk_k
   USE constants, ONLY : e2, pi, tpi, fpi
   USE cell_base, ONLY : at, alat, tpiba, omega, tpiba2
   USE wvfct,     ONLY : et 
@@ -1096,8 +1095,8 @@ endif
      do iv=1,num_nbnds-1
 !put iv on real space
         psic(:)=(0.d0,0.d0)
-        psic(nls(igk(1:npw)))  = evc(1:npw,iv)
-        psic(nlsm(igk(1:npw))) = CONJG( evc(1:npw,iv) )
+        psic(nls (igk_k(1:npw,1)))  = evc(1:npw,iv)
+        psic(nlsm(igk_k(1:npw,1))) = CONJG( evc(1:npw,iv) )
         CALL invfft ('Wave', psic, dffts)
         wv_real(:)= DBLE(psic(:))
         
@@ -1116,7 +1115,7 @@ endif
 !!form products with w_v and trasfrom in G space
            psic(:)=cmplx(tmp_r(:)*wv_real(:),0.d0)
            CALL fwfft ('Wave', psic, dffts)
-           wp_prod(1:npw) = psic(nls(igk(1:npw)))
+           wp_prod(1:npw) = psic(nls(igk_k(1:npw,1)))
 
 !!do scalar product
            call dgemm('T','N',nglobal,1,2*npw,2.d0,old_basis,2*npw,wp_prod,2*npw,0.d0,t_mat,nglobal)
@@ -1175,7 +1174,7 @@ subroutine self_basis_lanczos_real(n_set,nstates,numpw, nsteps,ispin)
    USE gvect
    USE constants, ONLY : e2, pi, tpi, fpi
    USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2
-   USE wvfct,     ONLY : igk, npwx, npw, nbnd
+   USE wvfct,     ONLY : npwx, npw, nbnd
    USE gvecw,     ONLY : ecutwfc
    USE wavefunctions_module, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast

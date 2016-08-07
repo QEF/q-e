@@ -17,7 +17,7 @@ subroutine allocate_phq
   USE kinds, only : DP
   USE ions_base, ONLY : nat, ntyp => nsp
   USE klist, only : nks, nkstot
-  USE wvfct, ONLY : nbnd, igk, npwx
+  USE wvfct, ONLY : nbnd, npwx
   USE gvect, ONLY : ngm
   USE lsda_mod, ONLY : nspin
   USE noncollin_module, ONLY : noncolin, npol, nspin_mag
@@ -42,7 +42,7 @@ subroutine allocate_phq
   USE freq_ph, ONLY : polar, nfs
 
   USE lrus,         ONLY : becp1, dpqq, dpqq_so
-  USE qpoint,       ONLY : nksq, eigqts, igkq, xk_col
+  USE qpoint,       ONLY : nksq, eigqts, xk_col
   USE eqv,          ONLY : dpsi, evq, vlocq, dmuxc, dvpsi
   USE lr_symm_base, ONLY : rtau
   USE control_lr,   ONLY : lgamma
@@ -54,16 +54,14 @@ subroutine allocate_phq
   !
   if (lgamma) then
      !
-     !  q=0  : evq and igkq are pointers to evc and igk
+     !  q=0  : evq is a pointer to evc
      !
      evq  => evc
-     igkq => igk
   else
      !
-     !  q!=0 : evq, igkq are allocated and calculated at point k+q
+     !  q!=0 : evq is allocated and calculated at point k+q
      !
      allocate (evq ( npwx*npol , nbnd))
-     allocate (igkq ( npwx))
   endif
   !
   allocate (dvpsi ( npwx*npol , nbnd))

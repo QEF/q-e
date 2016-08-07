@@ -26,9 +26,9 @@ SUBROUTINE orthoUwfc_k(ik)
   USE io_files,   ONLY : iunhub, nwordwfcU, diropn
   USE ions_base,  ONLY : nat
   USE basis,      ONLY : natomwfc, swfcatom
-  USE klist,      ONLY : nks, xk, ngk
+  USE klist,      ONLY : nks, xk, ngk, igk_k
   USE ldaU,       ONLY : U_projection, wfcU, nwfcU, copy_U_wfc
-  USE wvfct,      ONLY : npwx, npw, igk
+  USE wvfct,      ONLY : npwx
   USE uspp,       ONLY : nkb, vkb
   USE becmod,     ONLY : allocate_bec_type, deallocate_bec_type, becp, calbec
   USE control_flags,    ONLY : gamma_only
@@ -38,7 +38,7 @@ SUBROUTINE orthoUwfc_k(ik)
   IMPLICIT NONE
   !
   INTEGER :: ik, ibnd, info, i, j, k, na, nb, nt, isym, n, ntemp, m, &
-       l, lm, ltot, ntot, ipol
+       l, lm, ltot, ntot, ipol, npw
   ! the k point under consideration
   ! counter on bands
   LOGICAL :: orthogonalize_wfc, normalize_only
@@ -83,10 +83,10 @@ SUBROUTINE orthoUwfc_k(ik)
   CALL allocate_bec_type (nkb,natomwfc, becp) 
     ! Allocate the array becp = <beta|wfcatom>
   CALL atomic_wfc (ik, wfcatom)
-  call init_us_2(npw, igk, xk (1, ik), vkb)
+  npw = ngk(ik)
+  CALL init_us_2(npw, igk_k(1,ik), xk (1, ik), vkb)
   CALL calbec (npw, vkb, wfcatom, becp)
   CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)
- 
 
   IF (orthogonalize_wfc) &
      CALL ortho_swfc ( normalize_only, natomwfc, wfcatom, swfcatom )
