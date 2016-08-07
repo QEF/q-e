@@ -32,8 +32,8 @@ MODULE fft_smallbox_type
     INTEGER :: nr3x   = 0  ! may differ from nr1 ,nr2 ,nr3 in order to boost performances
     INTEGER :: nnr    = 0 
     !
-    INTEGER, POINTER :: npp(:)   ! number of "Z" planes per processor
-    INTEGER, POINTER :: ipp(:)   ! offset of the first "Z" plane on each proc ( 0 on the first proc!!!)
+    INTEGER, ALLOCATABLE :: npp(:)   ! number of "Z" planes per processor
+    INTEGER, ALLOCATABLE :: ipp(:)   ! offset of the first "Z" plane on each proc ( 0 on the first proc!!!)
 
     LOGICAL :: dimensions_have_been_set = .FALSE.
     LOGICAL :: arrays_have_been_allocated = .FALSE.
