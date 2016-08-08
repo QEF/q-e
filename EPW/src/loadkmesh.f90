@@ -174,8 +174,9 @@ SUBROUTINE loadkmesh_para
     ELSE ! don't know how to get grid
        CALL errore('loadkmesh_para', "Cannot load fine k points", 1)
     ENDIF
-#ifdef __MPI
  ENDIF
+ !
+#ifdef __MPI
  CALL mp_bcast (nkqtotf, ionode_id, inter_pool_comm)
  !
  !  scatter the k points of the fine mesh across the pools

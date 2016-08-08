@@ -76,6 +76,7 @@
      CALL errore ('ephwan2blochp', 'Problem with parallel_k/q scheme', nrr_q)
   ENDIF
   !
+#ifdef __MPI
   IF (.NOT. etf_mem) then
     ! Check for directory given by "outdir"
     !      
@@ -85,6 +86,7 @@
     IF( parallel_q ) CALL errore( 'ephwan2blochp', 'q-parallel+etf_mem=.false. is not supported',1 ) 
     !CALL MPI_COMM_RANK(world_comm,my_id,ierr)
   ENDIF
+#endif  
   !
   eptmp = czero
   cfac(:) = czero
@@ -153,11 +155,13 @@
     DEALLOCATE(epmatw)
   ENDIF
   !
+#ifdef __MPI
   IF (parallel_k) CALL mp_sum(eptmp, world_comm)
   IF (.NOT. etf_mem) then
     CALL MPI_FILE_CLOSE(iunepmatwp2,ierr)
     IF( ierr /= 0 ) CALL errore( 'ephwan2blochp', 'error in MPI_FILE_CLOSE',1 )
   ENDIF  
+#endif  
   !
   !----------------------------------------------------------
   !  STEP 4: un-rotate to Bloch space, fine grid

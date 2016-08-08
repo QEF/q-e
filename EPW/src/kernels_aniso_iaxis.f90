@@ -75,13 +75,14 @@
   USE mp,        ONLY : mp_bcast, mp_barrier, mp_sum
   ! 
   IMPLICIT NONE
-#ifndef __MPI
-  INTEGER, PARAMETER :: my_pool_id = 0 ! this is only a quick fix since the subroutine was written
-                                                  ! for parallel execution - FG June 2014
-#endif
   !
   INTEGER  :: itemp, lower_bnd, upper_bnd, imelt
   REAL(DP) :: rmelt
+  !
+  ! This is only a quick fix since the subroutine was written for parallel execution - FG June 2014
+#ifndef __MPI
+  my_pool_id = 0
+#endif  
   !
   limag_fly = .false.
   !
@@ -469,13 +470,14 @@
   USE mp,        ONLY : mp_bcast, mp_barrier, mp_sum
   ! 
   IMPLICIT NONE
-#ifndef __MPI
-  INTEGER, PARAMETER ::  my_pool_id = 0 ! this is only a quick fix since the subroutine was written
-                                                  ! for parallel execution - FG June 2014
-#endif
   !
   INTEGER  :: lower_bnd, upper_bnd, imelt
   REAL(DP) :: rmelt
+  !
+  ! This is only a quick fix since the subroutine was written for parallel execution - FG June 2014
+#ifndef __MPI
+  my_pool_id = 0
+#endif  
   !
   lacon_fly = .false.
   !

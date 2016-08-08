@@ -198,10 +198,6 @@
   USE mp,            ONLY : mp_bcast, mp_barrier, mp_sum
   ! 
   IMPLICIT NONE
-#ifndef __MPI
-  INTEGER, PARAMETER :: npool = 1, my_pool_id = 0 ! this is only a quick fix since the subroutine was written
-                                                  ! for parallel execution - FG June 2014
-#endif
   !
   INTEGER :: ik, iq, iq0, iwph, ibnd, jbnd, imode, lower_bnd, upper_bnd, &
        ismear, ibin, nbin, nbink, i, j, k
@@ -211,6 +207,12 @@
        lambda_k_bin(:), lambda_pairs(:), a2f_modeproj(:,:), phdos_modeproj(:,:)
   REAL(DP), EXTERNAL :: w0gauss
   CHARACTER (len=256) :: name1
+  ! 
+  ! This is only a quick fix since the subroutine was written for parallel execution - FG June 2014
+#ifndef __MPI
+  npool = 1
+  my_pool_id = 0
+#endif
   !
   ! degaussq is read from the input file in meV and converted to Ryd in epw_readin.f90
   ! go from Ryd to eV
@@ -603,13 +605,14 @@
   USE mp,            ONLY : mp_bcast, mp_barrier, mp_sum
   !
   IMPLICIT NONE
-#ifndef __MPI
-  INTEGER, PARAMETER :: npool = 1, my_pool_id = 0 ! this is only a quick fix since the subroutine was written
-                                                  ! for parallel execution - FG June 2014
-#endif
   !
   INTEGER :: imelt
   REAL(DP) :: rmelt
+  ! 
+  ! This is only a quick fix since the subroutine was written for parallel execution - FG June 2014
+#ifndef __MPI
+  my_pool_id = 0
+#endif
   !
   rmelt = 0.d0
   rmelt = dble(imelt) * 8.d0 / 1073741824.d0 ! 8 bytes per number, value in Gb
@@ -652,13 +655,14 @@
   USE mp,            ONLY : mp_bcast, mp_barrier, mp_sum
   !
   IMPLICIT NONE
-#ifndef __MPI
-  INTEGER, PARAMETER :: npool = 1, my_pool_id = 0 ! this is only a quick fix since the subroutine was written
-                                                  ! for parallel execution - FG June 2014
-#endif
   !
   INTEGER :: imelt
   REAL(DP) :: rmelt
+  !
+  ! This is only a quick fix since the subroutine was written for parallel execution - FG June 2014
+#ifndef __MPI
+  my_pool_id = 0
+#endif  
   !
   rmelt = 0.d0
   rmelt = dble(imelt) * 4.d0 / 1073741824.d0 ! 4 bytes per number, value in Gb
