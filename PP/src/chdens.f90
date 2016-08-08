@@ -398,6 +398,7 @@ SUBROUTINE chdens (filplot,plot_num)
         gamma_only=.false.
 !       nproc_pool=1
         !
+        CALL data_structure ( gamma_only )
         CALL allocate_fft()
         !
         !    and rebuild G-vectors in reciprocal space

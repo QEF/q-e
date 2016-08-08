@@ -58,6 +58,7 @@ PROGRAM average
   USE scf,                  ONLY : rho
   USE mp_global,            ONLY : mp_startup
   USE environment,          ONLY : environment_start, environment_end
+  USE control_flags,        ONLY : gamma_only
   !
   IMPLICIT NONE
   !
@@ -179,7 +180,7 @@ PROGRAM average
 
      CALL realspace_grid_init ( dfftp, at, bg, gcutm )
      CALL realspace_grid_init ( dffts, at, bg, gcutms)
-
+     CALL data_structure ( gamma_only )
      CALL allocate_fft ( )
      !
      rho%of_r = 0.d0

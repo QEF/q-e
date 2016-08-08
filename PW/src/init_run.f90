@@ -42,12 +42,21 @@ SUBROUTINE init_run()
   !
   CALL pre_init()
   !
-  ! ... allocate memory for G- and R-space fft arrays
+  ! ... determine the data structure for fft arrays
   !
-  CALL allocate_fft()
+  CALL data_structure( gamma_only )
   !
   IF ( dft_is_hybrid() .AND. dtgs%have_task_groups ) &
      CALL errore ('init_run', '-ntg option incompatible with EXX',1)
+  !
+  ! ... print a summary and a memory estimate before starting allocating
+  !
+  CALL summary()
+  CALL memory_report()
+  !
+  ! ... allocate memory for G- and R-space fft arrays
+  !
+  CALL allocate_fft()
   !
   ! ... generate reciprocal-lattice vectors and fft indices
   !
@@ -64,8 +73,6 @@ SUBROUTINE init_run()
   !
   CALL sym_rho_init (gamma_only )
   !
-  CALL summary()
-  !
   ! ... allocate memory for all other arrays (potentials, wavefunctions etc)
   !
   CALL allocate_nlpot()
@@ -79,8 +86,6 @@ SUBROUTINE init_run()
   CALL bp_global_map()
   !
   call plugin_initbase()
-  !
-  CALL memory_report()
   !
   ALLOCATE( et( nbnd, nkstot ) , wg( nbnd, nkstot ), btype( nbnd, nkstot ) )
   !

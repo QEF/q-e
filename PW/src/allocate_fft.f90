@@ -9,8 +9,10 @@
 !-----------------------------------------------------------------------
 SUBROUTINE allocate_fft
   !-----------------------------------------------------------------------
-  !     This routine computes the data structure associated to the FFT
-  !     grid and allocate memory for all the arrays which depend upon
+  !
+  !     This routine allocates memory for FFT-related arrays - IMPORTANT:
+  !     routine "data_structure" must be called before it in order to
+  !     set the proper dimensions and grid distribution across processors
   !     these dimensions
   !
   USE io_global, ONLY : stdout
@@ -29,9 +31,7 @@ SUBROUTINE allocate_fft
   USE funct,     ONLY: dft_is_meta
   IMPLICIT NONE
   !
-  !     determines the data structure for fft arrays
-  !
-  CALL data_structure( gamma_only )
+  ! First a bunch of checks
   !
   IF (dfftp%nnr.lt.ngm) THEN
      WRITE( stdout, '(/,4x," nr1=",i4," nr2= ", i4, " nr3=",i4, &

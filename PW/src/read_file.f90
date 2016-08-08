@@ -342,6 +342,7 @@ SUBROUTINE read_xml_file_internal(withbs)
   ! ... allocate memory for G- and R-space fft arrays
   !
   CALL pre_init()
+  CALL data_structure ( gamma_only )
   CALL allocate_fft()
   CALL ggen ( gamma_only, at, bg ) 
   IF (do_comp_esm) THEN
