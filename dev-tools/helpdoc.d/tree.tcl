@@ -76,7 +76,6 @@ proc ::helpdoc::getDescendantAttribute {tree node args} {
 		# ok _tag is the attribute
 
 		set attr [getFromTree $tree $child attributes]
-		puts "attr = $attr"
 		attr2array_ arr $attr
 		
 		if { [info exists arr($att)] } {
