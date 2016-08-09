@@ -28,6 +28,9 @@
 (add-to-list 'auto-mode-alist
 	     '("\\(pw\\|n?scf\\|\\(?:vc-\\)?\\(?:md\\|relax\\)\\).*\\.in\\'" . pw-mode))
 
+;; automatically open the neb*.in files with neb.x mode
+(add-to-list 'auto-mode-alist '("neb.*\\.in\\'" . neb-mode))
+
 ;; automatically open the cp*.in files with cp.x mode
 (add-to-list 'auto-mode-alist '("cp.*\\.in\\'" . ph-mode))
 

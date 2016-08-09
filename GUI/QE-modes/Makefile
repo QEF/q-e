@@ -6,7 +6,7 @@ LATEX    = pdflatex
 ELISP_FILES = *.el *.elc
 
 # automatic ...
-ALL_DEF_FILES = $(shell find $(TOPDIR) | grep INPUT_ | egrep def$)
+ALL_DEF_FILES = $(shell find $(TOPDIR) | grep INPUT_ | egrep def$$)
 
 ## ... manual (i.e. perhaps more secure, as to have some control)
 #ALL_DEF_FILES = \
@@ -46,7 +46,7 @@ compile  = cd qe-modes; emacs --batch --eval "(add-to-list 'load-path \".\")"
 
 all: modes doc
 modes: make-modes make-master
-make-modes: qe pw ph pp ld1 cp
+make-modes: qe pw neb ph pp ld1 cp
 
 
 # generate specific modes ...
@@ -54,6 +54,10 @@ make-modes: qe pw ph pp ld1 cp
 pw: qe-funcs 
 	$(generate) pw
 	$(compile) --eval "(byte-compile-file \"pw-mode.el\")"
+
+neb: qe-funcs 
+	$(generate) $(TOPDIR)/NEB/Doc/INPUT_NEB.def $(TOPDIR)/PW/Doc/INPUT_PW.def
+	$(compile) --eval "(byte-compile-file \"neb-mode.el\")"
 
 ph: qe-funcs
 	$(generate) ph
@@ -98,7 +102,7 @@ clean:
 	- cd Doc; $(MAKE) clean
 
 veryclean: clean
-	- rm *~ */*~
+	- rm *~ */*~ */*.bak
 	- rm -rf qe-modes
 	- rm -rf QE-modes-$(VERSION)
 	- rm *.tar
