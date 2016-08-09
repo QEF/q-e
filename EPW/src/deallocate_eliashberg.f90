@@ -9,9 +9,9 @@
   !----------------------------------------------------------------------
   SUBROUTINE deallocate_eliashberg
   !----------------------------------------------------------------------
-  !
-  !  deallocates the variables allocated by allocate_eliashberg
-  !
+  !!
+  !!  deallocates the variables allocated by allocate_eliashberg
+  !!
   USE epwcom,        ONLY : liso, laniso, limag
   USE eliashbergcom, ONLY : wsph, estemp, gap, wsph, agap
   !
@@ -45,9 +45,9 @@
   !----------------------------------------------------------------------
   SUBROUTINE deallocate_eliashberg_iso_iaxis
   !----------------------------------------------------------------------
-  !
-  !  deallocates the variables allocated by allocate_eliashberg_iso_iaxis
-  !
+  !!
+  !!  deallocates the variables allocated by allocate_eliashberg_iso_iaxis
+  !!
   !----------------------------------------------------------------------
   !
   USE eliashbergcom
@@ -68,9 +68,9 @@
   !----------------------------------------------------------------------
   SUBROUTINE deallocate_eliashberg_iso_raxis
   !----------------------------------------------------------------------
-  !
-  !  deallocates the variables allocated by allocate_eliashberg_iso_raxis
-  !
+  !!
+  !!  deallocates the variables allocated by allocate_eliashberg_iso_raxis
+  !!
   USE epwcom, ONLY : lreal, limag, lacon
   USE eliashbergcom
   !
@@ -106,9 +106,9 @@
   !----------------------------------------------------------------------
   SUBROUTINE deallocate_eliashberg_aniso_iaxis
   !----------------------------------------------------------------------
-  !
-  !  deallocates the variables allocated by allocate_eliashberg_aniso_iaxis
-  !
+  !!
+  !!  deallocates the variables allocated by allocate_eliashberg_aniso_iaxis
+  !!
   USE eliashbergcom
   !
   IMPLICIT NONE
@@ -130,9 +130,9 @@
   !----------------------------------------------------------------------
   SUBROUTINE deallocate_eliashberg_aniso_raxis
   !----------------------------------------------------------------------
-  !
-  !  deallocates the variables allocated by allocate_eliashberg_aniso_raxis
-  !
+  !!
+  !!  deallocates the variables allocated by allocate_eliashberg_aniso_raxis
+  !!
   USE eliashbergcom
   !
   IMPLICIT NONE
@@ -154,10 +154,10 @@
   !----------------------------------------------------------------------
   SUBROUTINE deallocate_elphon
   !----------------------------------------------------------------------
-  !
-  !  deallocates the variables allocated by 
-  !
-  USE elph2,       ONLY : wf, wqf
+  !!
+  !!  deallocates the variables allocated by electron-phonon
+  !!
+  USE elph2,         ONLY : wf, wqf
   USE eliashbergcom, ONLY : ekfs, xkfs, wkfs, xkff, g2, a2f_iso, w0g, ixkff, ixkqf, ixqfs, nqfs
   !
   IMPLICIT NONE

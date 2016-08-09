@@ -4,19 +4,19 @@
   !--------------------------------------------------------------------------
   SUBROUTINE dmewan2bloch ( nbnd, nrr, irvec, ndegen, xk, cuf, dmef, etf, etf_ks)
   !--------------------------------------------------------------------------
-  !
-  !  From the Dipole in Wannier representation, find the corresponding
-  !  Dipole in Bloch representation for a given k point
-  !  
-  !  input  : number of bands nbnd
-  !           number of WS vectors, coordinates and degeneracy 
-  !           Dipole in Wannier representation  cdmew(3,nbnd,nbnd,nrr)
-  !           kpoint coordinate xk(3)
-  !
-  !  output : interpolated dipole matrix elements (dmef)
-  !
-  !  JN, EK 09/2010
-  !
+  !!
+  !!  From the Dipole in Wannier representation, find the corresponding
+  !!  Dipole in Bloch representation for a given k point
+  !!  
+  !!  input  : number of bands nbnd
+  !!           number of WS vectors, coordinates and degeneracy 
+  !!           Dipole in Wannier representation  cdmew(3,nbnd,nbnd,nrr)
+  !!           kpoint coordinate xk(3)
+  !!
+  !!  output : interpolated dipole matrix elements (dmef)
+  !!
+  !!  JN, EK 09/2010
+  !!
   !--------------------------------------------------------------------------
   !
   USE kinds,         ONLY : DP
@@ -26,23 +26,25 @@
   !
   implicit none
   !
-  !  input/output variables
+  INTEGER, INTENT (in) :: nbnd 
+  !! number of bands (possibly of the optimal subspace)
+  INTEGER, INTENT (in) :: nrr 
+  !! kpoint number for the interpolation
+  INTEGER, DIMENSION( 1:3, 1:nrr ), INTENT (in) :: irvec
+  !! record length and unit for direct write of rotation matrix
+  INTEGER, DIMENSION( 1:nrr      ), INTENT (in) :: ndegen
+  !! Number of degeneracies
   !
-  INTEGER, INTENT( IN ) :: nbnd, nrr 
-  ! number of bands (possibly of the optimal subspace)
-  ! kpoint number for the interpolation
-  INTEGER, DIMENSION( 1:3, 1:nrr ), INTENT( IN ) :: irvec
-  INTEGER, DIMENSION( 1:nrr      ), INTENT( In ) :: ndegen
-  ! record length and unit for direct write of rotation matrix
-  ! degeneracy
-  REAL   ( kind=DP ), DIMENSION( 1:3                  ), INTENT( IN  ) :: xk
-  !  kpoint coordinates for the interpolation
-  COMPLEX( kind=DP ), DIMENSION( 1:nbnd, 1:nbnd       ), INTENT( IN  ) :: cuf
-  ! Rotation matrix, fine mesh 
-  COMPLEX( kind=DP ), DIMENSION( 1:3, 1:nbnd, 1:nbnd  ), INTENT( OUT ) :: dmef
-  ! interpolated dipole matrix elements in Bloch basis, fine mesh
-  REAL   ( kind=DP ), DIMENSION( 1:nbnd               ), INTENT( IN  ) :: etf
-  REAL   ( kind=DP ), DIMENSION( 1:nbnd               ), INTENT( IN  ) :: etf_ks
+  REAL(kind=DP), DIMENSION (1:3), INTENT (in) :: xk
+  !!  kpoint coordinates for the interpolation
+  REAL(kind=DP), DIMENSION (1:nbnd), INTENT (in) :: etf
+  !! Eigenenergies on the fine grid
+  REAL(kind=DP), DIMENSION (1:nbnd), INTENT (in) :: etf_ks
+  !! 
+  COMPLEX(kind=DP), DIMENSION (1:nbnd, 1:nbnd), INTENT (in) :: cuf
+  !! Rotation matrix, fine mesh 
+  COMPLEX(kind=DP), DIMENSION (1:3, 1:nbnd, 1:nbnd, INTENT (out) :: dmef
+  !! interpolated dipole matrix elements in Bloch basis, fine mesh
   ! 
   ! local variables
   !

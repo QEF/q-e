@@ -12,15 +12,15 @@
   !----------------------------------------------------------------------
   SUBROUTINE dvqpsi_us3 (ik, uact, addnlcc, xxk, xq0)
   !----------------------------------------------------------------------
-  !
-  ! This routine calculates dV_bare/dtau * psi for one perturbation
-  ! with a given q. The displacements are described by a vector u.
-  ! The result is stored in dvpsi. The routine is called for each k point
-  ! and for each pattern u. It computes simultaneously all the bands.
-  !
-  ! RM - Nov/Dec 2014 
-  ! Imported the noncolinear case implemented by xlzhang
-  !
+  !!
+  !! This routine calculates dV_bare/dtau * psi for one perturbation
+  !! with a given q. The displacements are described by a vector u.
+  !! The result is stored in dvpsi. The routine is called for each k point
+  !! and for each pattern u. It computes simultaneously all the bands.
+  !!
+  !! RM - Nov/Dec 2014 
+  !! Imported the noncolinear case implemented by xlzhang
+  !!
   USE kinds,                 ONLY : DP
   USE ions_base,             ONLY : nat, ityp
   USE cell_base,             ONLY : tpiba
@@ -43,19 +43,22 @@
 
   implicit none
   !
-  !   The dummy variables
+  LOGICAL, INTENT (in) :: addnlcc
+  !! True if NLCC is present
   !
-  integer :: ik, npw
-  ! input: the k point
-  real(kind=DP) :: xq0(3), xxk(3)
-  complex(DP) :: uact (3 * nat)
-  ! input: the pattern of displacements
-  logical :: addnlcc
+  INTEGER, INTENT (in) :: ik
+  !! Counter on k-point
+  ! 
+  REAL(kind=DP), INTENT (in) :: xq0(3)
+  !! Current coarse q-point coordinate
+  REAL(kind=DP), INTENT (in) :: xxk(3)
+  !! k-point coordinate
+  ! 
+  COMPLEX(kind=DP), INTENT (in) :: uact (3 * nat)
+  !! the pattern of displacements
   !
-  !   And the local variables
-  !
-
-  integer :: na, mu, ig, nt, ibnd, ir, is, ip
+  ! Local variables
+  integer :: na, mu, ig, nt, ibnd, ir, is, ip, npw
   ! counter on atoms
   ! counter on modes
   ! the point k

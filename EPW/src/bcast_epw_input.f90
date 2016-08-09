@@ -200,8 +200,8 @@ END SUBROUTINE bcast_ph_input
 !
 !-----------------------------------------------------------------------
 SUBROUTINE bcast_ph_input1
-  !-----------------------------------------------------------------------
-  !
+!-----------------------------------------------------------------------
+!
 #ifdef __MPI
   USE pwcom
   USE phcom
@@ -209,7 +209,6 @@ SUBROUTINE bcast_ph_input1
   USE mp_world,   ONLY : world_comm
   USE io_global,  ONLY : ionode_id
   implicit none
-
   !
   ! integers
   !

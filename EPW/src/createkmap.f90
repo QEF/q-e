@@ -13,7 +13,7 @@
   !!  This subroutine is called from elphon_shuffle_wrap for each
   !!  nq1*nq2*nq3 phonon on the coarse mesh.    
   !!
-  !!
+  !
   USE kinds,         ONLY : DP
   USE cell_base,     ONLY : at, bg
   USE klist,         ONLY : nkstot, xk
@@ -27,7 +27,7 @@
   USE mp_global,     ONLY : inter_pool_comm
   USE mp,            ONLY : mp_barrier
   USE mp_world,      ONLY : mpime
-  USE elph2,       ONLY : xkq
+  USE elph2,         ONLY : xkq
   implicit none
   !
   REAL(kind=DP), INTENT(in) ::  xq (3)
@@ -230,10 +230,6 @@
       !
       IF (.not.in_the_list) CALL errore &
          ('createkmap','cannot find the folding vector in the list',1)
-!      IF (iverbosity.eq.1) THEN
-!        WRITE(stdout,'(a,i3,10x,a,i3)') 'ik = ',ik,'shift code:', shift(ik)
-!        WRITE(stdout,*) 
-!      ENDIF
       !
       !  obsolete:
       !
@@ -254,23 +250,6 @@
     g0vec_all_r = dble ( g0vec_all )
     CALL cryst_to_cart ( ng0vec, g0vec_all_r, bg, 1)
     !
-!    IF (iverbosity.eq.1) THEN
-!      WRITE(stdout,*) 
-!      WRITE(stdout,*) '  ik, kmap(ik), shift(ik)'
-!      DO ik = 1, nkstot
-!        WRITE(stdout,'(3i4)') ik, kmap(ik), shift(ik)
-!      ENDDO
-!      WRITE(stdout,*) '  There are ',ng0vec,'inequivalent folding G_0 vectors'
-!      WRITE(stdout,*) '  crystal coordinates: '
-!      DO ig0 = 1,ng0vec
-!        WRITE(stdout,'(a,i3,a,3i3)') 'g0vec( ',ig0,') = ',g0vec_all(:,ig0)
-!      ENDDO
-!      WRITE(stdout,*) '  cartesian coordinates: '
-!      DO ig0 = 1,ng0vec
-!        WRITE(stdout,'(3f9.5)') g0vec_all_r(:,ig0)
-!      ENDDO
-!    ENDIF
-    !
     !  the unit with kmap(ik) and shift(ik)
     ! 
     iukmap  = 97
@@ -289,12 +268,12 @@
   !-----------------------------------------------------------------------
   SUBROUTINE createkmap2 ( xxq )
   !-----------------------------------------------------------------------
-  !
-  !  generate the map k+q --> k for folding the rotation matrix U(k+q) 
-  !  
-  !  in parallel case, this subroutine must be called ONLY by first proc 
-  !  (which has all the kpoints)
-  !
+  !!
+  !!  generate the map k+q --> k for folding the rotation matrix U(k+q) 
+  !!  
+  !!  in parallel case, this subroutine must be called ONLY by first proc 
+  !!  (which has all the kpoints)
+  !!
   !-----------------------------------------------------------------------
   !
   USE kinds,         ONLY : DP
@@ -444,22 +423,20 @@
   USE io_files,      ONLY : prefix
   USE gvecs,         ONLY : ngms, gcutms, ngms_g
   USE gvect,         ONLY : gg, ngm, ngm_g, gcutm,&
-                           ig_l2g ,nl
+                            ig_l2g ,nl
   USE control_flags, ONLY : gamma_only
-  !SP: Cannot be tested
-  !USE control_flags, ONLY : iverbosity
   USE constants,     ONLY : eps8
   USE fft_base,      ONLY : dfftp
   USE kfold
 #ifdef __NAG
-  USE f90_unix_io,    ONLY : flush
+  USE f90_unix_io,   ONLY : flush
 #endif
-  USE mp_global,   ONLY : inter_pool_comm
-  USE mp,          ONLY : mp_barrier
-  USE mp_world,    ONLY : mpime
-
+  USE mp_global,     ONLY : inter_pool_comm
+  USE mp,            ONLY : mp_barrier
+  USE mp_world,      ONLY : mpime
+  !
   IMPLICIT NONE
-
+  !
   INTEGER, INTENT(IN) :: nkstot
   !! Total number of k-points
   REAL(kind=DP), INTENT(IN) :: xq0(3)

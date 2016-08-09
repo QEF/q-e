@@ -12,13 +12,13 @@
   !----------------------------------------------------------------------- 
   subroutine allocate_epwq
   !-----------------------------------------------------------------------
-  !
-  ! dynamical allocation of arrays: quantities needed for the linear
-  ! response problem
-  !
-  ! RM - Nov/Dec 2014 
-  ! Imported the noncolinear case implemented by xlzhang
-  !
+  !!
+  !! Dynamical allocation of arrays: quantities needed for the linear
+  !! response problem
+  !!
+  !! RM - Nov/Dec 2014 
+  !! Imported the noncolinear case implemented by xlzhang
+  !!
   USE ions_base,    ONLY : nat, ntyp => nsp
   USE pwcom,        ONLY : npwx, nbnd, ngm, nspin, nks
   USE noncollin_module, ONLY : noncolin, npol

@@ -9,19 +9,20 @@
   !-----------------------------------------------------------------------
   SUBROUTINE eliashberg_a2f
   !-----------------------------------------------------------------------
-  !
-  !  Compute the Eliasberg spectral function
-  !  in the Migdal approximation. 
-  !  
-  !  If the q-points are not on a uniform grid (i.e. a line)
-  !  the function will not be correct
-  !  
-  !  02/2009 works in serial on ionode at the moment.  can be parallelized
-  !  03/2009 added transport spectral function -- this involves a v_k dot v_kq term 
-  !          in the quantities coming from selfen_phon.f90.  Not fully implemented  
-  !  10/2009 the code is transitioning to 'on-the-fly' phonon selfenergies
-  !          and this routine is not currently functional
-  !  10/2015 RM: added calcution of Tc based on Allen-Dynes formula 
+  !!
+  !!  Compute the Eliasberg spectral function
+  !!  in the Migdal approximation. 
+  !!  
+  !!  If the q-points are not on a uniform grid (i.e. a line)
+  !!  the function will not be correct
+  !!  
+  !!  02/2009 works in serial on ionode at the moment.  can be parallelized
+  !!  03/2009 added transport spectral function -- this involves a v_k dot v_kq term 
+  !!          in the quantities coming from selfen_phon.f90.  Not fully implemented  
+  !!  10/2009 the code is transitioning to 'on-the-fly' phonon selfenergies
+  !!          and this routine is not currently functional
+  !!  10/2015 RM: added calcution of Tc based on Allen-Dynes formula 
+  !!
   !-----------------------------------------------------------------------
   !
   USE kinds,     ONLY : DP
@@ -38,7 +39,7 @@
   USE io_files,  ONLY : prefix
   implicit none
   !
-  integer :: imode, iq, iw, ismear, isig, i
+  integer       :: imode, iq, iw, ismear, isig, i
   real(kind=DP) :: weight
   real(kind=DP) :: lambda_tot, lambda_tr_tot
   real(kind=DP) :: iomega, sigma, a2F_tmp, a2F_tr_tmp, om_max, dw, w0, l, l_tr, tc, mu

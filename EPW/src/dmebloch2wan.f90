@@ -11,11 +11,10 @@
   SUBROUTINE dmebloch2wan ( nbnd, nbndsub, nks, nkbl, dme, xk, cu, &
      nrr, irvec, wslen )
   !--------------------------------------------------------------------------
-  !
-  !  From the Dipole in Bloch representationi (coarse mesh), 
-  !  find the corresponding Dipole in Wannier representation 
-  !
-  !--------------------------------------------------------------------------
+  !!
+  !!  From the Dipole in Bloch representationi (coarse mesh), 
+  !!  find the corresponding Dipole in Wannier representation 
+  !!
   !
   USE kinds,         ONLY : DP
   USE pwcom,         ONLY : at, bg, celldm
@@ -29,31 +28,46 @@
   !
   !  input variables
   !
-  integer :: nbnd, nbndsub, nks, nkbl, nrr, irvec (3, nrr), ipol
-  ! number of bands 
-  ! number of bands in the optimal subspace 
-  ! number of kpoints
-  ! number of kpoint blocks, in the pool
-  ! number of kpoint blocks, total 
-  ! number of WS points and coordinates
-  real(kind=DP) ::  xk (3, nks), wslen (nrr) 
-  ! kpoint coordinates (cartesian in units of 2piba)
-  ! WS vectors length (alat units)
-  complex(kind=DP) :: dme (3,nbnd, nbnd,nks)  
-  ! Dipole matrix elements on coarse mesh
-  complex(kind=DP) :: cu (nbnd, nbndsub, nks)
-  ! rotation matrix from wannier code
+  INTEGER, INTENT (in) :: nbnd
+  !! number of bands
+  INTEGER, INTENT (in) :: nbndsub
+  !! number of bands in the optimal subspace
+  INTEGER, INTENT (in) :: nks
+  !! number of kpoints
+  INTEGER, INTENT (in) :: nkbl
+  !! number of kpoint blocks, in the pool
+  INTEGER, INTENT (in) :: nrr
+  !! number of WS points 
+  INTEGER, INTENT (in) :: irvec (3, nrr) 
+  !! Coordinate of Wannier space points
+  ! 
+  REAL(kind=DP), INTENT (in) :: xk (3, nks)
+  !! kpoint coordinates (cartesian in units of 2piba) 
+  REAL(kind=DP), INTENT (in) :: wslen (nrr)
+  !! WS vectors length (alat units)
+  ! 
+  COMPLEX(kind=DP), INTENT (in) :: dme (3,nbnd, nbnd,nks)
+  !! Dipole matrix elements on coarse mesh
+  COMPLEX(kind=DP), INTENT (in) :: cu (nbnd, nbndsub, nks)
+  !! rotation matrix from wannier code
   !
-  !  output variables
-  !
-  ! work variables 
-  !
-  complex(kind=DP) :: cps(3, nbndsub, nbndsub, nks)
-  ! Hamiltonian in smooth Bloch basis, coarse mesh 
-  integer :: ik, ir
-  real(kind=DP) :: rdotk, tmp
-  complex(kind=DP) :: cfac
-  complex(kind=DP) :: dme_utmp(nbnd,nbndsub)
+  ! Local variables
+  INTEGER :: ipol
+  !! Counter on polarization
+  INTEGER :: ik
+  !! Counter on k-point
+  INTEGER :: ir
+  !! Counter on WS points
+  REAL(kind=DP) :: rdotk
+  !! $$ mathbf{r}\cdot\mathbf{k} $$
+  REAL(kind=DP) :: tmp
+  !! Temporary variables 
+  COMPLEX(kind=DP) :: cps(3, nbndsub, nbndsub, nks)
+  !! Hamiltonian in smooth Bloch basis, coarse mesh 
+  COMPLEX(kind=DP) :: cfac
+  !! $$ e^{-i\mathbf{r}\cdot\mathbf{k}} $$
+  COMPLEX(kind=DP) :: dme_utmp(nbnd,nbndsub)
+  !!
   !
   !----------------------------------------------------------
   !    STEP 1: rotation to optimally smooth Bloch states

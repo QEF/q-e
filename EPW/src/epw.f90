@@ -41,11 +41,9 @@
   !
   version_number = '4.0.0'
   !
-  !
   CALL init_clocks( .TRUE. )
   !
   CALL start_clock( 'EPW' )
-  ! 
   !
   gamma_only = .FALSE.
   !

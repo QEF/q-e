@@ -9,26 +9,26 @@
   !-----------------------------------------------------------------------
   SUBROUTINE gamma_acont( omega, omegap, temp, rgammap, rgammam )
   !-----------------------------------------------------------------------
-  !
-  ! computes gammam(w,wp)  (notes RM)
-  ! reference F. Masiglio, M. Schossmann, and J. Carbotte, PRB 37, 4965 (1988)
-  !
-  ! input
-  !
-  ! omega  - frequency w at point iw on the real-axis
-  ! omegap - frequency w' at point iwp on the real-axis
-  ! temp   - temperature in eV
-  !
-  ! output
-  !
-  ! rgammap = -bose_einstein( w' ) - fermi_dirac(  w + w' )
-  ! rgammam =  bose_einstein( w' ) + fermi_dirac( -w + w' )
+  !!
+  !! computes gammam(w,wp)  (notes RM)
+  !! reference F. Masiglio, M. Schossmann, and J. Carbotte, PRB 37, 4965 (1988)
+  !!
   !
   USE kinds, ONLY : DP
   ! 
   IMPLICIT NONE
   !
-  REAL(DP) :: temp, omega, omegap, rgammap, rgammam
+  REAL(kind=DP), INTENT (in) :: omega
+  !! frequency w at point iw on the real-axis
+  REAL(kind=DP), INTENT (in) :: omegap
+  !! frequency w' at point iwp on the real-axis
+  REAL(kind=DP), INTENT (in) :: temp
+  !! temperature in eV
+  REAL(kind=DP), INTENT (out) :: rgammap
+  !! -bose_einstein( w' ) - fermi_dirac(  w + w' )
+  REAL(kind=DP), INTENT (out) :: rgammam
+  !! bose_einstein( w' ) + fermi_dirac( -w + w' )
+  ! 
   REAL(DP) :: eps=1.0d-6
   !
   rgammap = 0.d0

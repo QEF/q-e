@@ -14,31 +14,28 @@
   !! Modified Broyden's method for potential/charge density mixing
   !!             D.D.Johnson, PRB 38, 12807 (1988)
   !!
-  !! input :
-  !!
-  !!    ndim      dimension of arrays deltaout, deltain
-  !!    deltaout  output Delta at current iteration
-  !!    deltain   Delta at previous iteration
-  !!    alphamix  mixing factor (0 < alphamix <= 1)
-  !!    iter      current iteration number
-  !!    n_iter    number of iterations used in the mixing
-  !!    conv      if true convergence reached
-  !!
-  !! output:
-  !!
-  !!    deltain   mixed Delta
-  !!    deltaout  deltaout-deltain
-  !!
+  ! 
   USE kinds, ONLY : DP
   USE epwcom, ONLY : nsiter
   !
   IMPLICIT NONE
   !
-  !   First the dummy variables
+  LOGICAL, INTENT (in) :: conv
+  !! If true convergence reache
   !
-  INTEGER :: ndim, iter, n_iter
-  REAL(DP) :: deltaout(ndim), deltain(ndim), alphamix
-  LOGICAL :: conv
+  INTEGER, INTENT (in) :: ndim
+  !! Dimension of arrays deltaout, deltain
+  INTEGER, INTENT (in) :: iter
+  !! Current iteration number
+  INTEGER, INTENT (in) :: n_iter
+  !! Number of iterations used in the mixing
+  !
+  REAL(kind=DP), INTENT (in) :: alphamix
+  !! Mixing factor (0 < alphamix <= 1)
+  REAL(kind=DP), INTENT (inout) :: deltaout(ndim)
+  !! output Delta at current iteration
+  REAL(kind=DP), INTENT (inout) :: deltain(ndim)
+  !! Delta at previous iteration
   !
   !   Here the local variables
   !
@@ -153,36 +150,32 @@
   !-----------------------------------------------------------------------
   SUBROUTINE mix_broyden2( ndim, deltaout, deltain, alphamix, iter, n_iter, conv )
   !-----------------------------------------------------------------------
-  !
-  ! Modified Broyden's method for potential/charge density mixing
-  !             D.D.Johnson, PRB 38, 12807 (1988)
-  !
-  ! input :
-  !
-  !    ndim      dimension of arrays deltaout, deltain
-  !    deltaout  output Delta at current iteration
-  !    deltain   Delta at previous iteration
-  !    alphamix  mixing factor (0 < alphamix <= 1)
-  !    tr2       threshold for selfconsistency
-  !    iter      current iteration number
-  !    n_iter    number of iterations used in the mixing
-  !    conv      if true convergence reached
-  !
-  ! output:
-  !
-  !    deltain   mixed Delta
-  !    deltaout  deltaout-deltain
+  !!
+  !! Modified Broyden's method for potential/charge density mixing
+  !!             D.D.Johnson, PRB 38, 12807 (1988)
+  !!
   !
   USE kinds, ONLY : DP
   USE epwcom, ONLY : nsiter
   !
   IMPLICIT NONE
   !
-  !   First the dummy variables
+  LOGICAL, INTENT (in) :: conv
+  !! If true convergence reache
   !
-  INTEGER :: ndim, iter, n_iter
-  REAL(DP) :: deltaout(ndim), deltain(ndim), alphamix
-  LOGICAL :: conv
+  INTEGER, INTENT (in) :: ndim
+  !! Dimension of arrays deltaout, deltain
+  INTEGER, INTENT (in) :: iter
+  !! Current iteration number
+  INTEGER, INTENT (in) :: n_iter
+  !! Number of iterations used in the mixing
+  !
+  REAL(kind=DP), INTENT (in) :: alphamix
+  !! Mixing factor (0 < alphamix <= 1)
+  REAL(kind=DP), INTENT (inout) :: deltaout(ndim)
+  !! output Delta at current iteration
+  REAL(kind=DP), INTENT (inout) :: deltain(ndim)
+  !! Delta at previous iteration  
   !
   !   Here the local variables
   !
@@ -297,37 +290,38 @@
   !-----------------------------------------------------------------------
   SUBROUTINE mix_broyden_aniso( ik, ibnd, ndim, deltaout, deltain, alphamix, iter, n_iter, conv )
   !-----------------------------------------------------------------------
-  !
-  ! Modified Broyden's method for potential/charge density mixing
-  !             D.D.Johnson, PRB 38, 12807 (1988)
-  !
-  ! input :
-  !
-  !    ndim      dimension of arrays deltaout, deltain
-  !    deltaout  output Delta at current iteration
-  !    deltain   Delta at previous iteration
-  !    alphamix  mixing factor (0 < alphamix <= 1)
-  !    iter      current iteration number
-  !    n_iter    number of iterations used in the mixing
-  !    conv      if true convergence reached
-  !
-  ! output:
-  !
-  !    deltain   mixed Delta
-  !    deltaout  deltaout-deltain
+  !!
+  !! Modified Broyden's method for potential/charge density mixing
+  !!             D.D.Johnson, PRB 38, 12807 (1988)
+  !!
   !
   USE kinds, ONLY : DP
   USE epwcom, ONLY : nsiter
   USE eliashbergcom, ONLY : nkfs, nbndfs
   !
   IMPLICIT NONE
+  ! 
+  LOGICAL, INTENT (in) :: conv
+  !! If true convergence reache
   !
-  !   First the dummy variables
+  INTEGER, INTENT (in) :: ik
+  !! K-point index
+  INTEGER, INTENT (in) :: ibnd
+  !! Band index
+  INTEGER, INTENT (in) :: ndim
+  !! Dimension of arrays deltaout, deltain
+  INTEGER, INTENT (in) :: iter
+  !! Current iteration number
+  INTEGER, INTENT (in) :: n_iter
+  !! Number of iterations used in the mixing
   !
-  INTEGER :: ndim, iter, n_iter, ik, ibnd
-  REAL(DP) :: deltaout(ndim), deltain(ndim), alphamix
-  LOGICAL :: conv
-  !
+  REAL(kind=DP), INTENT (in) :: alphamix
+  !! Mixing factor (0 < alphamix <= 1)
+  REAL(kind=DP), INTENT (inout) :: deltaout(ndim)
+  !! output Delta at current iteration
+  REAL(kind=DP), INTENT (inout) :: deltain(ndim)
+  !! Delta at previous iteration   
+  ! 
   !   Here the local variables
   !
   ! max number of iterations used in mixing: n_iter must be .le. maxter
@@ -444,24 +438,9 @@
   !-----------------------------------------------------------------------
   SUBROUTINE mix_broyden2_aniso( ik, ibnd, ndim, deltaout, deltain, alphamix, iter, n_iter, conv )
   !-----------------------------------------------------------------------
-  !
-  ! Modified Broyden's method for potential/charge density mixing
-  !             D.D.Johnson, PRB 38, 12807 (1988)
-  !
-  ! input :
-  !
-  !    ndim      dimension of arrays deltaout, deltain
-  !    deltaout  output Delta at current iteration
-  !    deltain   Delta at previous iteration
-  !    alphamix  mixing factor (0 < alphamix <= 1)
-  !    iter      current iteration number
-  !    n_iter    number of iterations used in the mixing
-  !    conv      if true convergence reached
-  !
-  ! output:
-  !
-  !    deltain   mixed Delta
-  !    deltaout  deltaout-deltain
+  !!
+  !! Modified Broyden's method for potential/charge density mixing
+  !!             D.D.Johnson, PRB 38, 12807 (1988)
   !
   USE kinds, ONLY : DP
   USE epwcom, ONLY : nsiter
@@ -469,11 +448,26 @@
   !
   IMPLICIT NONE
   !
-  !   First the dummy variables
+  LOGICAL, INTENT (in) :: conv
+  !! If true convergence reache
   !
-  INTEGER :: ndim, iter, n_iter, ik, ibnd
-  REAL(DP) :: deltaout(ndim), deltain(ndim), alphamix
-  LOGICAL :: conv
+  INTEGER, INTENT (in) :: ik
+  !! K-point index
+  INTEGER, INTENT (in) :: ibnd
+  !! Band index
+  INTEGER, INTENT (in) :: ndim
+  !! Dimension of arrays deltaout, deltain
+  INTEGER, INTENT (in) :: iter
+  !! Current iteration number
+  INTEGER, INTENT (in) :: n_iter
+  !! Number of iterations used in the mixing
+  !
+  REAL(kind=DP), INTENT (in) :: alphamix
+  !! Mixing factor (0 < alphamix <= 1)
+  REAL(kind=DP), INTENT (inout) :: deltaout(ndim)
+  !! output Delta at current iteration
+  REAL(kind=DP), INTENT (inout) :: deltain(ndim)
+  !! Delta at previous iteration
   !
   !   Here the local variables
   !

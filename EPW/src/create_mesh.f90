@@ -9,10 +9,10 @@
   !-----------------------------------------------------------------------
   SUBROUTINE kmesh_fine
   !-----------------------------------------------------------------------
-  !
-  !   This routine defines the nr. of k-points on the fine k-mesh 
-  !   within the Fermi shell
-  !
+  !!
+  !!   This routine defines the nr. of k-points on the fine k-mesh 
+  !!   within the Fermi shell
+  !!
   USE kinds,     ONLY : DP
   USE io_global, ONLY : stdout
   USE io_files,  ONLY : prefix, tmp_dir
@@ -179,9 +179,9 @@
   !-----------------------------------------------------------------------
   SUBROUTINE kqmap_fine
   !-----------------------------------------------------------------------
-  !
-  ! this routine finds the index of k+sign*q on the fine k-mesh
-  !
+  !!
+  !! this routine finds the index of k+sign*q on the fine k-mesh
+  !!
   USE kinds,     ONLY : DP
   USE io_global, ONLY : stdout
   USE symm_base, ONLY : s, t_rev, time_reversal, set_sym_bl
@@ -416,30 +416,36 @@
   END SUBROUTINE kqmap_fine
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE kpmq_map( xk, xq, sign, nkq )
+  SUBROUTINE kpmq_map( xk, xq, sign1, nkq )
   !-----------------------------------------------------------------------
-  !
-  ! this routine finds the index of k+q or k-q point on the fine k-mesh
-  !
+  !!
+  !! this routine finds the index of k+q or k-q point on the fine k-mesh
+  !!
   USE kinds,     ONLY : DP
   USE epwcom,    ONLY : nkf1, nkf2, nkf3
   USE mp,        ONLY : mp_bcast, mp_barrier
   ! 
   IMPLICIT NONE
   !
+  INTEGER, INTENT (in) :: sign1
+  !! +1 for searching k+q, -1 for k-q
+  INTEGER, INTENT (out) :: nkq
+  !! the index of k+sign*q
+  ! 
+  REAL(kind=DP), INTENT (in) :: xk(3)
+  !! coordinates of k points
+  REAL(kind=DP), INTENT (in) :: xq(3)
+  !! coordinates of q points
+  ! 
+  ! Local variables
   REAL(DP) :: xx, yy, zz, eps, xxk(3)
   LOGICAL :: in_the_list
-  REAL(DP) :: xk(3), xq(3)
   !
-  ! input: coordinates of k points and q points
-  INTEGER :: sign, nkq
-  ! input: +1 for searching k+q, -1 for k-q
-  ! output: the index of k+sign*q
   !
   ! loosy tolerance, no problem since we use integer comparisons
   eps = 1.d-5
   !
-  xxk(:) = xk(:) + dble(sign) * xq(:)
+  xxk(:) = xk(:) + dble(sign1) * xq(:)
   xx = xxk(1) * nkf1
   yy = xxk(2) * nkf2
   zz = xxk(3) * nkf3

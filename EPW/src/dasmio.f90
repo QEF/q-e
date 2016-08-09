@@ -9,18 +9,34 @@
   !--------------------------------------------------------------
   SUBROUTINE dasmio ( mat, nsize, lrec, iun, nrec, iop )  
   !--------------------------------------------------------------
+  !!
+  !! A simple wrapper to the davcio routine to read/write square 
+  !! matrices instead of vectors (Direc Access Square Matrix I/O)
+  !! by  FG
+  !!
+  !! iop =-1 : read
+  !! iop = 1 : write
   !
-  ! A simple wrapper to the davcio routine to read/write square 
-  ! matrices instead of vectors (Direc Access Square Matrix I/O)
-  ! by  FG
-  !
-  ! iop =-1 : read
-  ! iop = 1 : write
   !--------------------------------------------------------------
   USE kinds, ONLY : DP
+  ! 
   implicit none
-  integer :: nsize, lrec, iun, nrec, iop, i
-  complex(kind=DP):: mat(nsize,nsize), aux ( nsize*nsize ) 
+  ! 
+  INTEGER, INTENT (in) :: nsize
+  !! Size of the square matrix
+  INTEGER, INTENT (in) :: lrec
+  !! the dimension of matrix
+  INTEGER, INTENT (in) :: iun
+  !! the unit where to read/write
+  INTEGER, INTENT (in) :: nrec
+  !! the record where to read/write
+  INTEGER, INTENT (in) :: iop
+  !! flag if < 0 reading if > 0 writing
+  COMPLEX, INTENT (inout) :: mat(nsize,nsize)
+  !! Read or write square matrix
+  ! 
+  INTEGER :: i
+  COMPLEX(kind=DP):: aux ( nsize*nsize ) 
   !
   IF ( iop .eq. -1 ) then
      !

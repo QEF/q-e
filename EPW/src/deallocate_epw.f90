@@ -11,15 +11,15 @@
   !----------------------------------------------------------------------
   SUBROUTINE deallocate_epw
   !----------------------------------------------------------------------
-  !
-  !  deallocates the variables allocated by allocate_epw
-  !  this routine is unchanged as of 3/9/09 and should be cleaned and fixed
-  !  09/2009 Cleanup still necessary
-  !  12/2009 Added variables from elph.f90
-  !
-  ! RM - Nov/Dec 2014
-  ! Imported the noncolinear case implemented by xlzhang
-  !
+  !!
+  !!  deallocates the variables allocated by allocate_epw
+  !!  this routine is unchanged as of 3/9/09 and should be cleaned and fixed
+  !!  09/2009 Cleanup still necessary
+  !!  12/2009 Added variables from elph.f90
+  !!
+  !!  RM - Nov/Dec 2014
+  !!  Imported the noncolinear case implemented by xlzhang
+  !!
   !----------------------------------------------------------------------
   USE phcom,             ONLY : alphap, alphasum, alphasum_nc, &
                                 becsum_nc, dmuxc, dpsi,&
@@ -85,13 +85,8 @@
   IF(ALLOCATED(int2_so)) DEALLOCATE(int2_so)
   IF(ALLOCATED(int5_so)) DEALLOCATE(int5_so)
   IF(ALLOCATED(dpqq_so)) DEALLOCATE(dpqq_so)
-  !
-  !
   IF(ALLOCATED(alphasum)) DEALLOCATE (alphasum)
-  ! RM - code crashed when the 2 lines are not commented out
-!  IF(ALLOCATED(this_dvkb3_is_on_file)) DEALLOCATE (this_dvkb3_is_on_file)
-!  IF(ALLOCATED(this_pcxpsi_is_on_file)) DEALLOCATE (this_pcxpsi_is_on_file)
-
+  ! 
   if(allocated(alphap)) then
      do ik=1,nks
         do ipol=1,3

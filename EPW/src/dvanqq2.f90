@@ -12,25 +12,17 @@
   !----------------------------------------------------------------------
   SUBROUTINE dvanqq2
   !----------------------------------------------------------------------
-  !
-  ! New
-  ! This routine calculates two integrals of the Q functions and
-  ! its derivatives with c V_loc and V_eff which are used
-  ! to compute term dV_bare/dtau * psi  in addusdvqpsi.
-  ! The result is stored in int1,int2. The routine is called
-  ! for each q in nqc. 
-  ! 
-  !
-  ! OLD
-  ! This routine calculates four integrals of the Q functions and
-  ! its derivatives with c V_loc and V_eff which are used
-  ! to compute term dV_bare/dtau * psi  in addusdvqpsi and in addusdynmat.
-  ! The result is stored in int1,int2,int4,int5. The routine is called
-  ! ONLY once. int4 and int5 are deallocated after USE in
-  ! addusdynmat, and int1 and int2 saved on disk by that routine.
-  !
-  ! RM - Nov/Dec 2014 
-  ! Imported the noncolinear case implemented by xlzhang
+  !!
+  !! New
+  !! This routine calculates two integrals of the Q functions and
+  !! its derivatives with c V_loc and V_eff which are used
+  !! to compute term dV_bare/dtau * psi  in addusdvqpsi.
+  !! The result is stored in int1,int2. The routine is called
+  !! for each q in nqc. 
+  !! 
+  !! RM - Nov/Dec 2014 
+  !! Imported the noncolinear case implemented by xlzhang
+  !!
   !
   USE ions_base,        ONLY : nat, ityp, ntyp => nsp
   USE io_files,         ONLY : prefix, tmp_dir
