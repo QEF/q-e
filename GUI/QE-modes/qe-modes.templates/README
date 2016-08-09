@@ -52,6 +52,8 @@ Template for the header that will be inserted into each generated *.el file.
 
 * Files:
     insert-template.el.tcl -- function template (ft) for insert-template functions
+    supercard.el.tcl       -- ft for insert-supercard functions (for closed supercards)
+    supercard-open.el.tcl  -- ft for insert-supercard functions (for open supercards)
     namelist.el.tcl        -- ft for insert-namelist functions
     stringvar.el.tcl       -- ft for insert-namelist-variable of string type
     var.el.tcl             -- ft for insert-namelist-variable of non-string type

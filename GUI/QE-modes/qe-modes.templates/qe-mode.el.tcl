@@ -18,9 +18,13 @@ $header
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; basic variables
 
+;; ${mode}'s supercards (if any)
+(defvar $mode-open-supercards   (list $open_supercards))
+(defvar $mode-closed-supercards (list $closed_supercards))
+  
 ;; ${mode}'s namelists
 (defvar $mode-namelists (list $namelists))
-(defvar qe-end-namelist   (list "&END" "/"))
+(defvar qe-end-namelist (list "&END" "/"))
 
 ;; ${mode}'s variables
 (defvar $mode-vars (list $vars))
@@ -34,8 +38,12 @@ $header
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; derived variables
+  
+(defvar $mode-open-supercards-regexp   (regexp-opt $mode-open-supercards   'symbols)) ; may not exists
+(defvar $mode-closed-supercards-regexp (regexp-opt $mode-closed-supercards 'symbols)) ; may not exists
 
-(defvar $mode-cards-regexp (regexp-opt $mode-cards 'symbols))
+(defvar $mode-cards-regexp (regexp-opt
+			    (append $mode-cards $mode-open-supercards) 'symbols))
 (defvar $mode-flags-regexp (regexp-opt $mode-flags 'symbols))
 
 (defvar $mode-namelist-face (cons (regexp-opt (append $mode-namelists qe-end-namelist) 'symbols) font-lock-function-name-face))
@@ -47,16 +55,21 @@ $header
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; regexp for indentation
 (defvar $mode-decr-indent-fold-t-re (concat "^[ \t]*" (regexp-opt qe-end-namelist t)))
-(defvar $mode-decr-indent-re        (concat "^[ \t]*" (regexp-opt $mode-cards t)))
+(defvar $mode-decr-indent-re        (concat "^[ \t]*" (regexp-opt
+						       (append $mode-cards $mode-open-supercards $mode-closed-supercards) t)))
 ;;
 (defvar $mode-deindent-fold-t-re    (concat "^[ \t]*" (regexp-opt qe-end-namelist t)))
 ;;
 (defvar $mode-indent-fold-t-re      (concat "^[ \t]*" (regexp-opt $mode-namelists t)))
-(defvar $mode-indent-re             (concat "^[ \t]*" (regexp-opt $mode-cards t)))
+(defvar $mode-indent-re             (concat "^[ \t]*" (regexp-opt $mode-cards     t)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; cards and flags are case sensitive -- here are the corresponding matchers
+;; supercards, cards and flags are case sensitive -- here are the corresponding matchers
+
+(defun $mode-closed-supercards-matcher (limit)
+  (let ((case-fold-search nil))
+    (re-search-forward $mode-closed-supercards-regexp limit 'no-error)))
 
 (defun $mode-cards-matcher (limit)
   (let ((case-fold-search nil))
@@ -81,9 +94,10 @@ $header
 ;; register the keywords
 
 (font-lock-add-keywords '$mode-mode '(
-				   ($mode-cards-matcher 1 font-lock-keyword-face t)
-				   ($mode-flags-matcher 1 font-lock-type-face    t)
-				   ))
+				      ($mode-closed-supercards-matcher 1 font-lock-preprocessor-face t)
+				      ($mode-cards-matcher 1 font-lock-keyword-face t)
+				      ($mode-flags-matcher 1 font-lock-type-face    t)
+				      ))
 
 ;;(defvar $mode-keywords '($mode-namelist-face $mode-variable-face))
 (defvar $mode-keywords '(((list "") . font-lock-constant-face)))
@@ -162,6 +176,8 @@ $header
 (setq $mode-vars nil)
 (setq $mode-cards nil)
 (setq $mode-flags nil)
+(setq $mode-open-supercards   nil)
+(setq $mode-closed-supercards nil)
 
 
 (require 'qe-funcs)

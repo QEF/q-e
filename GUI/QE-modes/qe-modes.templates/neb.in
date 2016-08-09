@@ -1,12 +1,67 @@
+BEGIN
+BEGIN_PATH_INPUT
 &PATH
-   string_method  = 'neb' ,
-   nstep_path     = 100 ,
-   num_of_images  = 10 ,
-   opt_scheme     = 'broyden' ,
-   CI_scheme      = 'auto' ,
-   first_last_opt = .false. ,
-   minimum_image  = .true. ,
-   path_thr       = 0.05 ,
-   use_freezing   = .true. ,
-   use_masses     = .false. ,
- /
+   string_method  = 'neb'
+   nstep_path     = 100
+   num_of_images  = 10 
+   opt_scheme     = 'broyden'
+   CI_scheme      = 'auto'
+   path_thr       = 0.05
+   k_max          = 0.1
+   k_min          = 0.1
+   first_last_opt = .false.
+   minimum_image  = .false.
+   use_freezing   = .true.
+   use_masses     = .false.
+/
+END_PATH_INPUT
+
+BEGIN_ENGINE_INPUT
+&CONTROL 
+/
+
+&SYSTEM
+   ibrav     = 0
+   celldm(1) = 
+   nat       = 
+   ntyp      = 
+   ecutwfc   = 
+/
+
+&ELECTRONS
+   conv_thr = 1d-7
+/
+
+&IONS
+/
+
+CELL_PARAMETERS { alat | bohr | angstrom } 
+   1.00   0.00   0.00
+   0.00   1.00   0.00
+   0.00   0.00   1.00
+
+ATOMIC_SPECIES
+   atomLabel   atomMass   atomPseudoPotential
+
+K_POINTS { tpiba | automatic | crystal | gamma | tpiba_b | crystal_b | tpiba_c | crystal_c } 
+   ...insert-if-not-gamma...
+
+   
+BEGIN_POSITIONS
+FIRST_IMAGE
+ATOMIC_POSITIONS { alat | bohr | angstrom | crystal | crystal_sg } 
+   atomLabel   0.00   0.00   0.00   1 1 1
+   ...
+   
+INTERMEDIATE_IMAGE
+ATOMIC_POSITIONS { alat | bohr | angstrom | crystal | crystal_sg } 
+   atomLabel   0.00   0.00   0.00
+   ...
+   
+LAST_IMAGE
+ATOMIC_POSITIONS { alat | bohr | angstrom | crystal | crystal_sg } 
+   atomLabel   0.00   0.00   0.00
+   ...   
+END_POSITIONS   
+END_ENGINE_INPUT
+END
