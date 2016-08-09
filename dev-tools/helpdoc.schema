@@ -234,6 +234,39 @@ element optional    { ancestorElements }
 element conditional { ancestorElements }
 element group       { ancestorElements }
 
+element supercard {
+    ident 
+
+    optional {
+	interleave {
+	    attribute starttag { string }
+	    attribute endtag   { string }
+	    attribute remark   { text }
+	}
+    }
+    
+    interleave {
+	+ {
+	    optional {
+		ref supercard
+		ref namelist
+		ref card
+		ref linecard
+	    }
+	}
+
+	* {
+	    optional {
+		ref if
+		ref choose
+		ref label 
+		ref message
+		ref optional
+		ref conditional
+	    }
+	}
+    }
+}
 
 element namelist {
     ident
@@ -287,6 +320,7 @@ element linecard {
     interleave {
 	+ {
 	    optional {
+		ref keyword
 		ref var
 		ref vargroup
 		ref list
