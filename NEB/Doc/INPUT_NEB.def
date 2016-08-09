@@ -1,282 +1,331 @@
+# store a short description of ATOMIC_POSITIONS card, because it is used below three times
+
+set card_ATOMIC_POSITIONS {
+    card ATOMIC_POSITIONS {
+        message {
+            For the description of ATOMIC_POSITIONS card see file: INPUT_PW.html or INPUT_PW.txt
+        }                           
+        flag atompos_unit -use optional {
+            enum { alat | bohr | angstrom | crystal | crystal_sg }
+        }               
+    }
+}
+
+# standard *.def description follows
+
 input_description -distribution {Quantum Espresso} -package NEB -program neb.x {
 
     toc {}
 
     intro {
-	Input data format: { } = optional, [ ] = it depends, | = or
-	
-	All quantities whose dimensions are not explicitly specified are in
-	RYDBERG ATOMIC UNITS
+        Input data format: { } = optional, [ ] = it depends, | = or
+        
+        All quantities whose dimensions are not explicitly specified are in
+        RYDBERG ATOMIC UNITS
 
         BEWARE: TABS, DOS <CR><LF> CHARACTERS ARE POTENTIAL SOURCES OF TROUBLE 
 
-	General input file structure:
-	===============================================================================
+        General input file structure:
+        ===============================================================================
         
         neb.x DOES NOT READ FROM STANDARD INPUT
-	
+        
         There are two ways for running a calculation with neb.x:
-	
-        1) specifying a file to parse with the ./neb.x -inp or ./neb.x -input
-           command line option.
+        
+        (1) specifying a file to parse with the ./neb.x -inp or ./neb.x -input
+            command line option.
     
-        2) or specifying the number of copies of PWscf input ./neb.x -input_images. 
+        (2) or specifying the number of copies of PWscf input ./neb.x -input_images. 
 
-        For case 1) a file containing KEYWORDS has to be written (see below).
-        These KEYWORDS tells the parser which part of the file regards neb specifics
-        and which part regards the energy/force engine (at the moment only PW).
-        After the parsing different files are generated: neb.dat, with
-        neb specific variables and a set of pw_*.in PWscf input files like
-        one for each input position. All options for a single SCF calculation apply.
+        For case (1) a file containing special KEYWORDS (aka SUPERCARDS) has to be
+        written (see below). These KEYWORDS tells the parser which part of the file
+        contains neb specifics and which part contains the energy/force engine input
+        (at the moment only PW). After the parsing, different files are generated:
+        neb.dat, with neb specific variables and a set of pw_*.in PWscf input files,
+        i.e., one for each input position. All options for a single SCF calculation
+        apply.
 
         The general structure of the file to be parsed is:
 
         BEGIN
-        BEGIN_PATH_INPUT
-        ... neb specific namelists and cards
-        END_PATH_INPUT
-        BEGIN_ENGINE_INPUT
-        ...pw specific namelists and cards
-        BEGIN_POSITIONS
-        FIRST_IMAGE
-        ...pw ATOMIC_POSITIONS card
-        INTERMEDIATE_IMAGE
-        ...pw ATOMIC_POSITIONS card
-        LAST_IMAGE
-        ...pw ATOMIC_POSITIONS card
-        END_POSITIONS
-        ... other pw specific cards
-        END_ENGINE_INPUT
+          BEGIN_PATH_INPUT
+            ... neb specific namelists and cards
+          END_PATH_INPUT
+
+          BEGIN_ENGINE_INPUT
+            ...pw specific namelists and cards
+            BEGIN_POSITIONS
+              FIRST_IMAGE
+              ...pw ATOMIC_POSITIONS card
+              INTERMEDIATE_IMAGE
+              ...pw ATOMIC_POSITIONS card
+              LAST_IMAGE
+              ...pw ATOMIC_POSITIONS card
+            END_POSITIONS
+            ... other pw specific cards
+          END_ENGINE_INPUT
         END
 
-        For case 2) neb.dat and all pw_1.in, pw_2.in ... should be already present. 
+        For case (2) neb.dat and all pw_1.in, pw_2.in ... should be already present. 
 
-	Structure of the input data (file neb.dat) :
-	===============================================================================
+        Structure of the NEB input data (file neb.dat) :
+        ===============================================================================
 
-	&PATH
-	  ...
-	/
+        &PATH
+          ...
+        /
 
-	[ CLIMBING_IMAGES
-	   list of images, separated by a comma ]
+        [ CLIMBING_IMAGES
+           list of images, separated by a comma ]
     }
 
+    supercard BEGIN -endtag END {
+        
+        supercard BEGIN_PATH_INPUT -endtag END_PATH_INPUT {
 
-    namelist PATH {
+            namelist PATH {
 
-	var string_method -type CHARACTER {
-	    default { 'neb' }
-	    info {
-	     a string describing the task to be performed:
-                'neb', 
-                'smd'
+                var string_method -type CHARACTER {
+                    default { 'neb' }
+                    info {
+                        a string describing the task to be performed:
+                        'neb'
+                        'smd'
+                    }
+                }
+                
+                var restart_mode -type CHARACTER {
+                    default { 'from_scratch' }
+                    info {
+                        'from_scratch'  : from scratch
+                        
+                        'restart'       : from previous interrupted run
+                    }
+                }
+                
+                var nstep_path -type INTEGER {
+                    info {
+                        number of ionic + electronic steps
+                    }
+                    default {
+                        1 
+                    }
+                }
+                
+                var num_of_images -type INTEGER { 
+                    default { 0 }
+                    info {
+                        Number of points used to discretize the path
+                        (it must be larger than 3).
+                    }
+                }
 
-	    }
-	}
-	
-	var restart_mode -type CHARACTER {
-	    default { 'from_scratch' }
-	    info {
-		'from_scratch'  : from scratch
-	    
-		'restart'       : from previous interrupted run
-	    }
-	}
-	
-	var nstep_path -type INTEGER {
-	    info {
-		number of ionic + electronic steps
-	    }
-	    default {
-		1 
-	    }
-	}
-	
-	    var num_of_images -type INTEGER { 
-		default { 0 }
-		info {
-		    Number of points used to discretize the path
-		    (it must be larger than 3).
-		}
-	    }
+                var opt_scheme -type CHARACTER { 
+                    default { 'quick-min' }
+                    info {
+                        Specify the type of optimization scheme:
 
-	    var opt_scheme -type CHARACTER { 
-		default { 'quick-min' }
-		info {
-		    Specify the type of optimization scheme:
+                        'sd'         : steepest descent
 
-		    'sd'         : steepest descent
+                        'broyden'    : quasi-Newton Broyden's second method (suggested)
 
-		    'broyden'    : quasi-Newton Broyden's second method (suggested)
+                        'broyden2'   : another variant of the quasi-Newton Broyden's 
+                                       second method to be tested and compared with the
+                                       previous one.
 
-		    'broyden2'   : another variant of the quasi-Newton Broyden's 
-                                   second method to be tested and compared with the
-                                   previous one.
+                        'quick-min'  : an optimisation algorithm based on the
+                                       projected velocity Verlet scheme
 
-		    'quick-min'  : an optimisation algorithm based on the
-		                   projected velocity Verlet scheme
+                        'langevin'   : finite temperature langevin dynamics of the
+                                       string (smd only). It is used to compute the
+                                       average path and the free-energy profile.
+                    }
+                }
 
-		    'langevin'   : finite temperature langevin dynamics of the
-                                   string (smd only). It is used to compute the
-                                   average path and the free-energy profile.
-		}
-	    }
+                var CI_scheme -type CHARACTER {
+                    default { 'no-CI' }
+                    info {
+                        Specify the type of Climbing Image scheme:
 
-	    var CI_scheme -type CHARACTER {
-		default { 'no-CI' }
-		info {
-		    Specify the type of Climbing Image scheme:
+                        'no-CI'      : climbing image is not used
 
-		    'no-CI'      : climbing image is not used
+                        'auto'       : original CI scheme. The image highest in energy
+                                       does not feel the effect of springs and is
+                                       allowed to climb along the path
 
-		    'auto'       : original CI scheme. The image highest in energy
-	                           does not feel the effect of springs and is
-			           allowed to climb along the path
+                        'manual'     : images that have to climb are manually selected.
+                                       See also CLIMBING_IMAGES card
+                    }
+                }
 
-		    'manual'     : images that have to climb are manually selected.
-		                   See also CLIMBING_IMAGES card
-		}
-	    }
+                var first_last_opt -type LOGICAL { 
+                    default { .FALSE. }
+                    info {
+                        Also the first and the last configurations are optimized
+                        "on the fly" (these images do not feel the effect of the springs).
+                    }
+                }
 
-	    var first_last_opt -type LOGICAL { 
-		default { .FALSE. }
-		info {
-		    Also the first and the last configurations are optimized
-		    "on the fly" (these images do not feel the effect of the springs).
-		}
-	    }
+                var minimum_image -type LOGICAL { 
+                    default { .FALSE. }
+                    info {
+                        Assume a "minimum image criterion" to build the path. If an atom
+                        moves by more than half the length of a crystal axis between one
+                        image and the next in the input (before interpolation),
+                        an appropriate periodic replica of that atom is chosen.
+                        Useful to avoid jumps in the initial reaction path.
+                    }
+                }
 
-	    var minimum_image -type LOGICAL { 
-		default { .FALSE. }
-		info {
-		    Assume a "minimum image criterion" to build the path. If an atom
-                    moves by more than half the length of a crystal axis between one
-                    image and the next in the input (before interpolation),
-                    an appropriate periodic replica of that atom is chosen.
-                    Useful to avoid jumps in the initial reaction path.
-		}
-	    }
+                var temp_req -type REAL { 
+                    default { 0.D0 Kelvin }
+                    info {
+                        Temperature used for the langevin dynamics of the string.
+                    }
+                }
 
-	    var temp_req -type REAL { 
-		default { 0.D0 Kelvin }
-		info {
-		    Temperature used for the langevin dynamics of the string.
-		}
-	    }
+                var ds -type REAL { 
+                    default { 1.D0 }
+                    info {
+                        Optimisation step length ( Hartree atomic units ).
+                        If opt_scheme="broyden", ds is used as a guess for the
+                        diagonal part of the Jacobian matrix.
+                    }
+                }
 
-	    var ds -type REAL { 
-		default { 1.D0 }
-		info {
-		    Optimisation step length ( Hartree atomic units ).
-		    If opt_scheme="broyden", ds is used as a guess for the
-                    diagonal part of the Jacobian matrix.
-		}
-	    }
+                vargroup -type REAL {
+                    var k_max
+                    var k_min
+                    default { 0.1D0 Hartree atomic units }
+                    info {
+                        Set them to use a Variable Elastic Constants scheme
+                        elastic constants are in the range [ k_min, k_max ]
+                        this is useful to rise the resolution around the saddle point.
+                    }
+                }
 
-	    vargroup -type REAL {
-		var k_max
-		var k_min
-		default { 0.1D0 Hartree atomic units }
-		info {
-		    Set them to use a Variable Elastic Constants scheme
-		    elastic constants are in the range [ k_min, k_max ]
-		    this is useful to rise the resolution around the saddle point.
-		}
-	    }
+                var path_thr -type REAL { 
+                    default { 0.05D0 eV / Angstrom }
+                    info {
+                        The simulation stops when the error ( the norm of the force
+                        orthogonal to the path in eV/A ) is less than path_thr.
+                    }
+                }
 
-	    var path_thr -type REAL { 
-		default { 0.05D0 eV / Angstrom }
-		info {
-		    The simulation stops when the error ( the norm of the force
-	            orthogonal to the path in eV/A ) is less than path_thr.
-		}
-	    }
+                var use_masses -type LOGICAL { 
+                    default { .FALSE. }
+                    info {
+                        If. TRUE. the optimisation of the path is performed using
+                        mass-weighted coordinates. Useful together with quick-min
+                        optimization scheme, if some bonds are much stiffer than
+                        others. By assigning a larger (fictitious) mass to atoms
+                        with stiff bonds, one may use a longer time step "ds"
+                    }
+                }
 
-	    var use_masses -type LOGICAL { 
-		default { .FALSE. }
-		info {
-		    If. TRUE. the optimisation of the path is performed using
-		    mass-weighted coordinates. Useful together with quick-min
-                    optimization scheme, if some bonds are much stiffer than
-                    others. By assigning a larger (fictitious) mass to atoms
-                    with stiff bonds, one may use a longer time step "ds"
-		}
-	    }
+                var use_freezing -type LOGICAL { 
+                    default { .FALSE. }
+                    info {
+                        If. TRUE. the images are optimised according to their error:
+                        only those images with an error larger than half of the largest
+                        are optimised. The other images are kept frozen.
+                    }
+                }
 
-	    var use_freezing -type LOGICAL { 
-		default { .FALSE. }
-		info {
-		    If. TRUE. the images are optimised according to their error:
-		    only those images with an error larger than half of the largest
-		    are optimised. The other images are kept frozen.
-		}
-	    }
+                var lfcpopt -type LOGICAL {
+                    see { fcp_mu }
+                    default { .FALSE. }
+                    info {
+                        If .TRUE. perform a constant bias potential (constant-mu)
+                        calculation with ESM method (assume_isolated = 'esm' and
+                        esm_bc = 'bc2' or 'bc3' must be set in SYSTEM namelist).
+                        'fcp_mu' gives the target Fermi energy.
+                        See the header of PW/src/fcp.f90 for documentation
+                    }
+                }
 
-       var lfcpopt -type LOGICAL {
-           see { fcp_mu }
-           default { .FALSE. }
-           info {
-           If .TRUE. perform a constant bias potential (constant-mu)
-           calculation with ESM method (assume_isolated = 'esm' and
-           esm_bc = 'bc2' or 'bc3' must be set in SYSTEM namelist).
-           'fcp_mu' gives the target Fermi energy.
-           See the header of PW/src/fcp.f90 for documentation
-           }
-       }
+                var fcp_mu -type REAL {
+                    see { lfcpopt }
+                    default { 0.d0 }
+                    info {
+                        If lfcpopt = .TRUE., gives the target Fermi energy [Ry].
+                        One can specify the total charge of the system for the first
+                        and last image by giving 'fcp_tot_charge_first' and 'fcp_tot_charge_last'
+                        so that the Fermi energy of these systems will be the target value,
+                        otherwise 'first_last_opt' should be .TRUE. 
+                    }
+                }
 
-       var fcp_mu -type REAL {
-           see { lfcpopt }
-           default { 0.d0 }
-           info {
-               If lfcpopt = .TRUE., gives the target Fermi energy [Ry].
-               One can specify the total charge of the system for the first
-               and last image by giving 'fcp_tot_charge_first' and 'fcp_tot_charge_last'
-               so that the Fermi energy of these systems will be the target value,
-               otherwise 'first_last_opt' should be .TRUE. 
-           }
-       }
+                var fcp_tot_charge_first -type REAL {
+                    see { lfcpopt }
+                    default { 0.d0 }
+                    info {
+                        Total charge of the system ('tot_charge') for the first image.
+                        Initial 'tot_charge' for intermediate images will be given by
+                        linear interpolation of 'fcp_tot_charge_first' and 'fcp_tot_charge_last'
+                    }
+                }
 
-       var fcp_tot_charge_first -type REAL {
-           see { lfcpopt }
-           default { 0.d0 }
-           info {
-               Total charge of the system ('tot_charge') for the first image.
-               Initial 'tot_charge' for intermediate images will be given by
-               linear interpolation of 'fcp_tot_charge_first' and 'fcp_tot_charge_last'
-           }
-       }
-
-       var fcp_tot_charge_last -type REAL {
-           see { lfcpopt }
-           default { 0.d0 }
-           info {
-               Total charge of the system ('tot_charge') for the last image.
-               Initial 'tot_charge' for intermediate images will be given by
-               linear interpolation of 'fcp_tot_charge_first' and 'fcp_tot_charge_last'
-           }
-       }
-	}
+                var fcp_tot_charge_last -type REAL {
+                    see { lfcpopt }
+                    default { 0.d0 }
+                    info {
+                        Total charge of the system ('tot_charge') for the last image.
+                        Initial 'tot_charge' for intermediate images will be given by
+                        linear interpolation of 'fcp_tot_charge_first' and 'fcp_tot_charge_last'
+                    }
+                }
+            }
 
 
-    #
-    # CLIMBING_IMAGES
-    #
+            #
+            # CLIMBING_IMAGES
+            #
 
-    card CLIMBING_IMAGES {
-	label { 
-    	    Optional card, needed only if CI_scheme = 'manual', ignored otherwise ! 
-    	}
+            card CLIMBING_IMAGES {
+                label { 
+                    Optional card, needed only if CI_scheme == 'manual', ignored otherwise ! 
+                }
 
-    	syntax {
-    	    list climbing_images_list -type INTEGER {
-    		format { index1, index2, ... indexN }
-    		info {		
-    		    index1, index2, ..., indexN are indices of the images to which the 
-    		    Climbing-Image procedure apply. If more than one image is specified 
-    		    they must be separated by a comma.
-    		}
-    	    }
-    	}
+                syntax {
+                    list climbing_images_list -type INTEGER {
+                        format { index1, index2, ... indexN }
+                        info {          
+                            index1, index2, ..., indexN are indices of the images to which the 
+                            Climbing-Image procedure apply. If more than one image is specified 
+                            they must be separated by a comma.
+                        }
+                    }
+                }
+            }
+        }
+
+        supercard BEGIN_ENGINE_INPUT -endtag END_ENGINE_INPUT {
+            message {
+                Here comes the pw.x specific namelists and cards (see file: INPUT_PW.html or INPUT_PW.txt)
+                with the exception of ATOMIC_POSITIONS card, which are specified separately as described
+                below.
+
+                Atomic positions for given images are prefixed with the "FIRST_IMAGE", "INTERMEDIATE_IMAGE",
+                and "LAST_IMAGE" keywords. Note that intermediate images are optional, i.e., there can be
+                none or any number of "INTERMEDIATE_IMAGE" images.
+            }
+
+            supercard FIRST_IMAGE {
+                eval $card_ATOMIC_POSITIONS
+            }
+            
+            optional {
+                supercard INTERMEDIATE_IMAGE -remark {
+                    There can be any number (including zero) of INTERMEDIATE_IMAGE supercards.
+                } {
+                    eval $card_ATOMIC_POSITIONS
+                }
+            }
+            
+            supercard LAST_IMAGE {
+                eval $card_ATOMIC_POSITIONS
+            }
+        }       
     }
 }
