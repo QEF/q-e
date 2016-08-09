@@ -39,6 +39,7 @@
 \def\bvar#1{\texttt{\textit{#1}}}
 
 \def\qemode{\efn{qe-mode}}
+\def\nebmode{\efn{neb-mode}}
 \def\pwmode{\efn{pw-mode}}
 \def\cpmode{\efn{cp-mode}}
 \def\phmode{\efn{ph-mode}}
@@ -100,7 +101,7 @@ but not the least Sebastijan Peljhan is acknowledged for his work on
     highlighted elements: namelists and their variables (blue and
     brown), cards and their flags (purple and green), comments (red),
     string and logical variable values (burgundy and cyan,
-    respectively). Note that mistyped variable (i.e. \texttt{ibrv}
+    respectively). Note that mistyped variable (i.e.\ \texttt{ibrv}
     instead of \texttt{ibrav}) is not highlighted.}
   \label{fig:example}
 \end{figure}
@@ -139,7 +140,7 @@ An example snippet of \texttt{user-init-file} for \QEmodes\ is
 provided by the \texttt{qe-modes.emacs} file in the package root
 directory and the text below explains it. In particular, to use the
 installed \QEmodes\ in Emacs, add the following to your
-\verb+user-init-file+ (e.g. \verb+$HOME/.emacs+):
+\verb+user-init-file+ (e.g.\ \verb+$HOME/.emacs+):
 \begin{flushleft}
 {\color{red}
 \verb+   ;; make sure package is visible to emacs (if needed)+}\\
@@ -158,10 +159,11 @@ automatically recognize from the filename if it is some variant of the
 \qe\ input file.
 %
 Say that we use the \verb+.in+ extension for the \qe\ input files in
-general and more specifically, the \texttt{pw.} \texttt{scf.}
-\texttt{relax.}  \texttt{vc-relax.} prefixes for the \pwx\ input files
-and \texttt{ph.}  and \texttt{pp.} prefixes for the \phx\ and \ppx\
-input files. These filename recognitions can be achieved by:
+general and more specifically, the \texttt{pw.}, \texttt{scf.},
+\texttt{relax.}, and \texttt{vc-relax.} prefixes for the \pwx\ input files
+and \texttt{neb.}, \texttt{ph.},  and \texttt{pp.} prefixes for the
+\nebx, \phx, and \ppx\ input files. These filename recognitions can be
+achieved by:
 \begin{flushleft}
 {\color{red}
 \verb+   ;; automatically open the *.in files with generic QE mode+}\\
@@ -173,6 +175,9 @@ input files. These filename recognitions can be achieved by:
 \verb+   (add-to-list 'auto-mode-alist  '("scf.*\\.in\\'" . pw-mode))+\\
 \verb+   (add-to-list 'auto-mode-alist  '("relax.*\\.in\\'" . pw-mode))+\\
 \verb+   (add-to-list 'auto-mode-alist  '("vc-relax.*\\.in\\'" . pw-mode))+\\[1em]
+{\color{red}
+\verb+   ;; automatically open the neb*.in files with neb.x mode+}\\
+\verb+   (add-to-list 'auto-mode-alist  '("neb.*\\.in\\'" . neb-mode))+\\[1em]
 {\color{red}
 \verb+   ;; automatically open the ph*.in files with ph.x mode+}\\
 \verb+   (add-to-list 'auto-mode-alist  '("ph.*\\.in\\'" . ph-mode))+\\[1em]
@@ -209,7 +214,7 @@ highlighted as in Figure~\ref{fig:example}.
 \subsection{Available modes defined by \qemodes}
 
 The \QEmodes\ package contains a generic \qemode\ and the following
-specific modes: \pwmode, \cpmode, \phmode, \ldmode, and \ppmode.
+specific modes: \pwmode, \nebmode, \cpmode, \phmode, \ldmode, and \ppmode.
 %\subsubsection{Difference between generic \qemode\ and specific modes}
 The difference between them is only in the extent of the syntax
 highlighting and auto-indentation. Namely, these modes recognize and
@@ -237,7 +242,7 @@ The \QEmodes\ package provides the following commands:
 \begin{description}
 \item[$\bullet$ \efn{M-X \var{mode}-mode}]\hfill\\ toggles
   the respective mode, where \var{mode} is one of \texttt{qe},
-  \texttt{pw}, \texttt{cp}, \texttt{ph}, \texttt{ld1}, or \texttt{pp}
+  \texttt{pw}, \texttt{neb}, \texttt{cp}, \texttt{ph}, \texttt{ld1}, or \texttt{pp}
 
 \item[$\bullet$ \efn{M-x indent-region}] ~~{\rm or}~~ \efn{C-M-\textbackslash}\hfill\\
   indents region according to \qemodes\ rules, i.e., namelist and card
@@ -262,7 +267,7 @@ The \QEmodes\ package provides the following commands:
 The above italicized words have the following meaning:
 \begin{itemize}
 \item \var{prog} stands for the lowercase name of respective program
-  without the \texttt{.x} suffix (i.e. it is the lowercase variant of
+  without the \texttt{.x} suffix (i.e.\ it is the lowercase variant of
   the \var{PROG} in the respective \texttt{INPUT\_\var{PROG}.html}
   filename)
 \item \var{NAMELIST} is the uppercase name for a given Fortran namelist
@@ -319,7 +324,8 @@ following into your \texttt{user-init-file}
 \verb+   (setq qe-indent +\var{myOffset}\verb+)+
 \end{flushleft}
 where \var{myOffset} is the integer value of the offset of your
-choice.
+choice. For no indentation, set the \texttt{qe-indent} to 0 (this
+implies that auto-indentation will make all lines non-indented).
 
 To disable the auto-indentation for a given mode (are you really sure
 you want to do this), add the following into your
@@ -331,8 +337,8 @@ you want to do this), add the following into your
 \end{flushleft}
 }
 
-\noindent where \var{mode} is \texttt{qe}, \texttt{pw}, \texttt{cp},
-\texttt{ph}, \texttt{ld1}, or \texttt{pp}
+\noindent where \var{mode} is \texttt{qe}, \texttt{pw}, \texttt{neb}, \texttt{cp},
+\texttt{ph}, \texttt{ld1}, or \texttt{pp}.
 
 \subsection{Note to \texttt{Vi} users}
 
