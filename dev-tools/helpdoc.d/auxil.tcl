@@ -49,3 +49,19 @@ proc ::helpdoc::value_of {varname} {
     }
 }
 
+
+proc ::helpdoc::supercardStarttag {} {
+    # PURPOSE
+    # return the starttag of the supercard, i.e., value of the
+    # -starttag attribute if it is defined, otherwise return the supercard's ident (name)
+    
+    variable arr
+    if { ! [array exists arr] } { return "" }
+
+    set start [arr starttag]
+
+    if { $start eq {} } {
+	set start [arr name]
+    }
+    return $start    
+}

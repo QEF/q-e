@@ -236,28 +236,26 @@ switch -exact -- $tag {
     }
     supercard {
 	# rule is as follows: if -startag and -endtag exists use then, otherwise use the name instead.
-	set name  [arr name]
-	set start [arr starttag]
+	set start [supercardStarttag]
+	set name  $start
 	set end   [arr endtag]
 	set rem   [formatString [arr remark]]
 	
-	if { $start ne "" } { set name $start }
-	set starttag $name
-	if { $end   ne "" } { set name $name/$end }
+	if { $end ne "" } { set name $name/$end }
 
 	printf "########################################################################"
 	printf "| SUPERCARD: $name"
 	if { $end != "" } {
 	    printf "| this supercard is enclosed within the keywords:"
 	    printf "|"
-	    printf "| $starttag"
+	    printf "| $start"
 	    printf "|    ... content of the supercard here ..."
 	    printf "| $end"
 	    
 	} else {
 	    printf "| this supercard starts with the keyword:"
 	    printf "|"
-	    printf "| $starttag"
+	    printf "| $start"
 	    printf "|    ... content of the supercard here ..."
 	}
 	printf "|"

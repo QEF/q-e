@@ -127,11 +127,9 @@ switch -exact -- $tag {
 	printf "===END OF NAMELIST======================================================\n\n"
     }
     supercard {
-	set name  [arr name]
-	set start [arr starttag]
-	set end   [arr endtag]
+	set name [supercardStarttag]
+	set end  [arr endtag]
 
-	if { $start ne "" } { set name $start }
 	if { $end   ne "" } { set name $name/$end }
 	
 	incr txtDepth -1
