@@ -48,6 +48,18 @@ proc ::helpdoc::getFontlockKeys {tree node action} {
     if { $action == "enter" } {
 	
 	switch -- $tag {
+	    supercard {
+		set start [supercardStarttag]
+		set end   [arr endtag]
+		lappend defun($module,supercards) [list $start $end]
+		
+		if { $end ne {} } {
+		    lappend fontlock(begin_supercards)   $start
+		    lappend fontlock(end_supercards)     $end
+		} else {
+		    lappend fontlock(open_supercards)  $start
+		}
+	    }
 	    namelist {
 		set inside_namelist 1
 		lappend fontlock(namelists) $name
@@ -183,7 +195,15 @@ proc ::helpdoc::qe_mode_generate {module_list} {
     } else {
 	set modeName $opt(modename)
     }
-		
+
+    # closed supercards, i.e., with starttag & endtag
+    set sc_l [concat [value_of fontlock(begin_supercards)] [value_of fontlock(end_supercards)]]
+    set closed_supercards [quote_list [lsort -unique $sc_l]]
+    
+    # open supercards, i.e., with only starttag
+    set open_supercards  [quote_list [lsort -unique [value_of fontlock(open_supercards)]]]
+
+    # cards & flags, namelists & vars
     set cards_l   [concat [value_of fontlock(keywords)] [value_of fontlock(cards)]]
     set cards     [quote_list [lsort -unique $cards_l]]
     set flags     [quote_list [lsort -unique [value_of fontlock(flags)]]]
@@ -201,7 +221,9 @@ proc ::helpdoc::qe_mode_generate {module_list} {
     set card_template      [tclu::readFile [file join $qe_modes_template_dir card.el.tcl]]
     set card_noflags_template [tclu::readFile [file join $qe_modes_template_dir card-noflags.el.tcl]]
 
-
+    set closed_supercard_template [tclu::readFile [file join $qe_modes_template_dir supercard.el.tcl]]
+    set open_supercard_template   [tclu::readFile [file join $qe_modes_template_dir supercard-open.el.tcl]]
+    
     # substitute the Tcl variables inside the qe-mode.el.tcl and write the resulting content
 
     set file $mode-mode.el
@@ -319,8 +341,38 @@ writing Emacs major-mode file : $file
 	}
 
 	##################################################
+	# create elisp functions for each supercard
+	
+	
+	##################################################
 	# create elisp functions for each card
+	if { [value_of defun($module,supercards)] ne "" } {
+	    
+	    append keyword_functions "	   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; $module- supercards functions ...
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+"
+	    foreach start_end [lsort -unique $defun($module,supercards)] {
+		
+		set starttag [lindex $start_end 0]
+		set endtag   [lindex $start_end 1]
+
+		set supercard_uc [string toupper $starttag]
+
+		if { $endtag ne {} } {
+		    # it's a closed supercard		
+		    append keyword_functions [subst -nocommands -nobackslashes $closed_supercard_template]\n\n
+		} else {
+		    # it's an open supercard		
+		    append keyword_functions [subst -nocommands -nobackslashes $open_supercard_template]\n\n
+		}
+	    }
+	}
+	
 	if { [value_of defun($module,cards)] ne "" } {
 
 	    append keyword_functions "
