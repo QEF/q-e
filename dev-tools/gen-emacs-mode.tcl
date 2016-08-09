@@ -343,9 +343,6 @@ writing Emacs major-mode file : $file
 	##################################################
 	# create elisp functions for each supercard
 	
-	
-	##################################################
-	# create elisp functions for each card
 	if { [value_of defun($module,supercards)] ne "" } {
 	    
 	    append keyword_functions "	   
@@ -372,7 +369,10 @@ writing Emacs major-mode file : $file
 		}
 	    }
 	}
-	
+
+	##################################################
+	# create elisp functions for each card
+
 	if { [value_of defun($module,cards)] ne "" } {
 
 	    append keyword_functions "
