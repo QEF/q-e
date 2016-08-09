@@ -2,18 +2,18 @@
 # TXT
 #
 
-proc ::helpdoc::attr2array_ {arrayVar attributes} {
-    upvar $arrayVar attr
+proc ::helpdoc::attr2array_ {arrayName attributes} {
+    upvar $arrayName arrayVar
 
-    catch {array unset attr}; # EXPERIMENTAL: this should be the
-			      # desired behavior, because one wants to
-			      # tranform attribute-list to associative
-			      # array, hence the previous key-value
-			      # pairs should be cleared
+    catch {array unset arrayVar}; # EXPERIMENTAL: this should be the
+			          # desired behavior, because one wants to
+			          # tranform attribute-list to associative
+			          # array, hence the previous key-value
+			          # pairs should be cleared
     
     foreach {name value} [::textutil::splitx $attributes "=\"|\"\[ \n\r\\t\]|\"$"] {
 	if { $name != "" } {
-	    set attr($name) [string trim $value =]
+	    set arrayVar($name) [string trim $value =]
 	}
     }
 }
@@ -43,11 +43,9 @@ proc ::helpdoc::printf {content {extraSpace 0}} {
 
 proc helpdoc::printfNormalize {content} {
     variable txtDepth
-    variable indentNum
     variable fid
     
-    set indent [indent $txtDepth]
-    puts $fid(txt) [formatString $content]
+    puts $fid(txt) [formatString $content $txtDepth]
 }
 
 
@@ -104,7 +102,9 @@ proc ::helpdoc::txt_tag_leave {tree node tag attr content depth} {
     variable card
     variable rows
     variable cols
+    variable arr
 
+    attr2array_ arr $attr
     global sourcedir
     source [file join $sourcedir txt_leave.tcl]
 }

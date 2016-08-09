@@ -234,6 +234,43 @@ switch -exact -- $tag {
 	printf "NAMELIST: &[arr name]\n"
 	incr txtDepth
     }
+    supercard {
+	# rule is as follows: if -startag and -endtag exists use then, otherwise use the name instead.
+	set name  [arr name]
+	set start [arr starttag]
+	set end   [arr endtag]
+	set rem   [formatString [arr remark]]
+	
+	if { $start ne "" } { set name $start }
+	set starttag $name
+	if { $end   ne "" } { set name $name/$end }
+
+	printf "########################################################################"
+	printf "| SUPERCARD: $name"
+	if { $end != "" } {
+	    printf "| this supercard is enclosed within the keywords:"
+	    printf "|"
+	    printf "| $starttag"
+	    printf "|    ... content of the supercard here ..."
+	    printf "| $end"
+	    
+	} else {
+	    printf "| this supercard starts with the keyword:"
+	    printf "|"
+	    printf "| $starttag"
+	    printf "|    ... content of the supercard here ..."
+	}
+	printf "|"
+	if { $rem ne "" } {
+	    printf "| REMARK:"
+	    foreach line [split $rem \n] {
+		printf "| $rem"
+	    }
+	    printf "|"
+	}
+	printf "| The syntax of supercard's content follows below:\n"
+	incr txtDepth
+    }
     card {
 	if { ! [::tclu::lpresent $mode card] } {
 
@@ -265,13 +302,22 @@ switch -exact -- $tag {
 	    txt_subtree $tree $node syntax
 	    
 	    # now parse subtree in description mode
-	    
-	    printf "DESCRIPTION OF ITEMS:\n"
-	    incr txtDepth
-	    
-	    txt_subtree $tree $node description
 
-	    incr txtDepth -2
+	    # card's items will be described only when at least one of
+	    # info, status or see records is present.
+	    
+	    set Info   [getDescendantText $tree $node info]
+	    set Status [getDescendantText $tree $node status]
+	    set See    [getDescendantText $tree $node see]
+
+	    if { ($Info != "" || $Status != "" || $See != "") } {
+		printf "DESCRIPTION OF ITEMS:\n"
+		incr txtDepth	    
+		txt_subtree $tree $node description
+		incr txtDepth -1
+	    }
+
+	    incr txtDepth -1
 	    printf "===END OF CARD==========================================================\n\n"
 	  
 	    ::tclu::lpop mode
