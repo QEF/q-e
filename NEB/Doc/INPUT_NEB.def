@@ -38,12 +38,12 @@ input_description -distribution {Quantum Espresso} -package NEB -program neb.x {
         (2) or specifying the number of copies of PWscf input ./neb.x -input_images. 
 
         For case (1) a file containing special KEYWORDS (aka SUPERCARDS) has to be
-        written (see below). These KEYWORDS tells the parser which part of the file
-        contains neb specifics and which part contains the energy/force engine input
-        (at the moment only PW). After the parsing, different files are generated:
-        neb.dat, with neb specific variables and a set of pw_*.in PWscf input files,
-        i.e., one for each input position. All options for a single SCF calculation
-        apply.
+        written (see below). These KEYWORDS tell the parser which part of the file
+        contains the neb specifics and which part contains the energy/force engine
+	input (at the moment only PW).  After the parsing, different files are
+	generated: neb.dat, with the neb specific variables, and a set of pw_*.in
+	PWscf input files, i.e., one for each input position. All options for a
+	single SCF calculation apply.
 
         The general structure of the file to be parsed is:
 
@@ -306,7 +306,7 @@ input_description -distribution {Quantum Espresso} -package NEB -program neb.x {
                 with the exception of ATOMIC_POSITIONS cards, which are specified separately within the
 		BEGIN_POSITIONS/END_POSITIONS supercard as described below.
 
-                So the input that follows here is of the folowing structure:
+                So the input that follows here is of the following structure:
                 
                    &CONTROL
                       ...
@@ -324,7 +324,7 @@ input_description -distribution {Quantum Espresso} -package NEB -program neb.x {
                 message {
                     NB:
                     Atomic positions for all the images are specified within the BEGIN_POSITIONS / END_POSITIONS
-                    supercard, where each instance of ATOMIC_POSITONS card is prefixed either by "FIRST_IMAGE", 
+                    supercard, where each instance of ATOMIC_POSITIONS card is prefixed either by "FIRST_IMAGE", 
                     "INTERMEDIATE_IMAGE", or "LAST_IMAGE" keywords.
 
                     Note that intermediate images are optional, i.e., there can be none or any number of
