@@ -303,29 +303,49 @@ input_description -distribution {Quantum Espresso} -package NEB -program neb.x {
         supercard BEGIN_ENGINE_INPUT -endtag END_ENGINE_INPUT {
             message {
                 Here comes the pw.x specific namelists and cards (see file: INPUT_PW.html or INPUT_PW.txt)
-                with the exception of ATOMIC_POSITIONS card, which are specified separately as described
-                below.
+                with the exception of ATOMIC_POSITIONS cards, which are specified separately within the
+		BEGIN_POSITIONS/END_POSITIONS supercard as described below.
 
-                Atomic positions for given images are prefixed with the "FIRST_IMAGE", "INTERMEDIATE_IMAGE",
-                and "LAST_IMAGE" keywords. Note that intermediate images are optional, i.e., there can be
-                none or any number of "INTERMEDIATE_IMAGE" images.
+                So the input that follows here is of the folowing structure:
+                
+                   &CONTROL
+                      ...
+                   /
+                   &SYSTEM
+                     ...
+                   /
+                   &ELECTRONS
+                     ...
+                   /
+                   ...
             }
 
-            supercard FIRST_IMAGE {
-                eval $card_ATOMIC_POSITIONS
-            }
+            supercard BEGIN_POSITIONS -endtag END_POSITIONS {
+                message {
+                    NB:
+                    Atomic positions for all the images are specified within the BEGIN_POSITIONS / END_POSITIONS
+                    supercard, where each instance of ATOMIC_POSITONS card is prefixed either by "FIRST_IMAGE", 
+                    "INTERMEDIATE_IMAGE", or "LAST_IMAGE" keywords.
+
+                    Note that intermediate images are optional, i.e., there can be none or any number of
+                    "INTERMEDIATE_IMAGE" images.
+		}
+		supercard FIRST_IMAGE {
+		    eval $card_ATOMIC_POSITIONS
+		}
+		
+		optional {
+		    supercard INTERMEDIATE_IMAGE -remark {
+			There can be any number (including zero) of INTERMEDIATE_IMAGE supercards.
+		    } {
+			eval $card_ATOMIC_POSITIONS
+		    }
+		}
             
-            optional {
-                supercard INTERMEDIATE_IMAGE -remark {
-                    There can be any number (including zero) of INTERMEDIATE_IMAGE supercards.
-                } {
-                    eval $card_ATOMIC_POSITIONS
-                }
-            }
-            
-            supercard LAST_IMAGE {
-                eval $card_ATOMIC_POSITIONS
-            }
+		supercard LAST_IMAGE {
+		    eval $card_ATOMIC_POSITIONS
+		}
+	    }
         }       
     }
 }
