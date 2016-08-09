@@ -494,13 +494,13 @@ gtable.o : ../../Modules/recvec.o
 gtable.o : efield.o
 init.o : ../../FFTXlib/fft_smallbox.o
 init.o : ../../FFTXlib/fft_smallbox_type.o
+init.o : ../../FFTXlib/fft_types.o
 init.o : ../../FFTXlib/stick_set.o
 init.o : ../../Modules/cell_base.o
 init.o : ../../Modules/constants.o
 init.o : ../../Modules/control_flags.o
 init.o : ../../Modules/electrons_base.o
 init.o : ../../Modules/fft_base.o
-init.o : ../../Modules/griddim.o
 init.o : ../../Modules/gvecw.o
 init.o : ../../Modules/input_parameters.o
 init.o : ../../Modules/invmat.o

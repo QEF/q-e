@@ -49,7 +49,7 @@ PROGRAM average
   USE gvecs,                ONLY : doublegrid, gcutms, dual
   USE gvecw,                ONLY : ecutwfc
   USE fft_base,             ONLY : dfftp
-  USE grid_subroutines,     ONLY : realspace_grid_init
+  USE fft_types,            ONLY : fft_type_allocate
   USE fft_base,             ONLY : dffts
   USE ions_base,            ONLY : zv, tau, nat, ntyp => nsp, ityp, atm
   USE lsda_mod,             ONLY : nspin
@@ -57,6 +57,7 @@ PROGRAM average
   USE io_files,             ONLY : iunpun
   USE scf,                  ONLY : rho
   USE mp_global,            ONLY : mp_startup
+  USE mp_bands,             ONLY : intra_bgrp_comm
   USE environment,          ONLY : environment_start, environment_end
   USE control_flags,        ONLY : gamma_only
   !
@@ -178,8 +179,8 @@ PROGRAM average
 
      CALL volume (alat, at (1, 1), at (1, 2), at (1, 3), omega)
 
-     CALL realspace_grid_init ( dfftp, at, bg, gcutm )
-     CALL realspace_grid_init ( dffts, at, bg, gcutms)
+     CALL fft_type_allocate ( dfftp, at, bg, gcutm, intra_bgrp_comm )
+     CALL fft_type_allocate ( dffts, at, bg, gcutms, intra_bgrp_comm)
      CALL data_structure ( gamma_only )
      CALL allocate_fft ( )
      !

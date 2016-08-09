@@ -20,6 +20,7 @@ SUBROUTINE chdens (filplot,plot_num)
   USE io_files,   ONLY : nd_nmbr
   USE mp_pools,   ONLY : nproc_pool
   USE mp_world,   ONLY : world_comm
+  USE mp_bands,   ONLY : intra_bgrp_comm
   USE mp,         ONLY : mp_bcast
   USE parameters, ONLY : ntypx
   USE constants,  ONLY : pi, fpi
@@ -29,7 +30,7 @@ SUBROUTINE chdens (filplot,plot_num)
   USE fft_base,   ONLY : dfftp, dffts
   USE scatter_mod,   ONLY : scatter_grid
   USE fft_interfaces,  ONLY : fwfft
-  USE grid_subroutines,ONLY : realspace_grid_init
+  USE fft_types,  ONLY : fft_type_allocate
   USE gvect,      ONLY : ngm, nl, g, gcutm
   USE gvecs,      ONLY : gcutms, doublegrid, dual, ecuts 
   USE recvec_subs,ONLY: ggen 
@@ -274,8 +275,8 @@ SUBROUTINE chdens (filplot,plot_num)
 
      CALL recips (at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
      CALL volume (alat, at(1,1), at(1,2), at(1,3), omega)
-     CALL realspace_grid_init ( dfftp, at, bg, gcutm )
-     CALL realspace_grid_init ( dffts, at, bg, gcutms)
+     CALL fft_type_allocate ( dfftp, at, bg, gcutm, intra_bgrp_comm )
+     CALL fft_type_allocate ( dffts, at, bg, gcutms, intra_bgrp_comm)
   ENDIF
 
   ALLOCATE  (rhor(dfftp%nr1x*dfftp%nr2x*dfftp%nr3x))

@@ -16,7 +16,7 @@
 
         USE parallel_include
 
-        USE fft_types, ONLY: fft_dlay_descriptor
+        USE fft_types, ONLY: fft_type_descriptor
         USE task_groups, ONLY: task_groups_descriptor
         USE fft_smallbox_type, ONLY: fft_box_descriptor
 
@@ -26,10 +26,10 @@
         ! ... about fft data distribution for a given
         ! ... potential grid, and its wave functions sub-grid.
 
-        TYPE ( fft_dlay_descriptor ) :: dfftp ! descriptor for dense grid
+        TYPE ( fft_type_descriptor ) :: dfftp ! descriptor for dense grid
              !  Dimensions of the 3D real and reciprocal space FFT grid
              !  relative to the charge density and potential ("dense" grid)
-        TYPE ( fft_dlay_descriptor ) :: dffts ! descriptor for smooth grid
+        TYPE ( fft_type_descriptor ) :: dffts ! descriptor for smooth grid
              !  Dimensions of the 3D real and reciprocal space
              !  FFT grid relative to the smooth part of the charge density
              !  (may differ from the full charge density grid for USPP )
@@ -38,7 +38,7 @@
              !  FFT grid relative to the "small box" computation
              !  of the atomic augmentation part of the 
              !  charge density used in USPP (to speed up CPV iterations)
-        TYPE ( fft_dlay_descriptor ) :: dfft3d
+        TYPE ( fft_type_descriptor ) :: dfft3d
              !
         TYPE ( task_groups_descriptor ) :: dtgs
              !  Dimensions of the task groups
@@ -47,7 +47,7 @@
 
         PRIVATE
 
-        PUBLIC :: dfftp, dffts, dfft3d, fft_dlay_descriptor
+        PUBLIC :: dfftp, dffts, dfft3d, fft_type_descriptor
         PUBLIC :: dtgs, task_groups_descriptor
         PUBLIC :: dfftb, fft_box_descriptor
 

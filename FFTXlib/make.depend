@@ -8,6 +8,7 @@ fft_parallel.o : fft_scalar.o
 fft_parallel.o : fft_types.o
 fft_parallel.o : scatter_mod.o
 fft_parallel.o : task_groups.o
+fft_types.o : fft_support.o
 scatter_mod.o : fft_types.o
 scatter_mod.o : task_groups.o
 stick_set.o : fft_types.o
@@ -37,5 +38,6 @@ fft_stick.o : ../include/c_defs.h
 fft_stick.o : fftw.c
 fft_support.o : ../include/fft_defs.h
 fft_support.o : fft_param.f90
+fft_types.o : fft_param.f90
 fftw.o : 
 fftw.o : 

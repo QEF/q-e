@@ -45,7 +45,7 @@ program test
   !! calls as been implemented. This version requires the precompilation flags
   !! -D__NON_BLOCKING_SCATTER and -D__DOUBLE_BUFFER
   !!  
-  USE fft_types, ONLY: fft_dlay_descriptor, fft_dlay_deallocate
+  USE fft_types, ONLY: fft_type_descriptor, fft_type_deallocate
   USE task_groups, ONLY: task_groups_descriptor, task_groups_deallocate
   USE stick_set, ONLY: pstickset
   USE fft_parallel
@@ -56,7 +56,7 @@ program test
   include 'fft_param.f90'
   INTEGER, ALLOCATABLE :: req_p(:),req_u(:)
 #endif
-  TYPE(fft_dlay_descriptor) :: dfftp, dffts, dfft3d
+  TYPE(fft_type_descriptor) :: dfftp, dffts, dfft3d
   TYPE(task_groups_descriptor) :: dtgs
   INTEGER :: nx = 128
    !! grid points along x (modified after)
@@ -426,9 +426,9 @@ program test
 
   DEALLOCATE( psis, aux )
 
-  CALL fft_dlay_deallocate( dffts )
-  CALL fft_dlay_deallocate( dfftp )
-  CALL fft_dlay_deallocate( dfft3d )
+  CALL fft_type_deallocate( dffts )
+  CALL fft_type_deallocate( dfftp )
+  CALL fft_type_deallocate( dfft3d )
   CALL task_groups_deallocate( dtgs )
 
   if( ncount > 0 ) then

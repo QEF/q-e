@@ -68,7 +68,7 @@
 SUBROUTINE task_groups_init( dffts, dtgs, nogrp )
 
    !
-   USE fft_types,      ONLY : fft_dlay_descriptor
+   USE fft_types,      ONLY : fft_type_descriptor
 
    ! T.G.
    ! NPGRP:      Number of processors per group
@@ -80,7 +80,7 @@ SUBROUTINE task_groups_init( dffts, dtgs, nogrp )
 #endif
 
 
-   TYPE(fft_dlay_descriptor), INTENT(inout) :: dffts
+   TYPE(fft_type_descriptor), INTENT(inout) :: dffts
    TYPE(task_groups_descriptor), INTENT(inout) :: dtgs
    INTEGER, INTENT(in) :: nogrp   ! number of task groups
 
@@ -184,14 +184,14 @@ END SUBROUTINE task_groups_init
   !
 SUBROUTINE task_groups_init_first( dffts, dtgs, nogrp )
    !
-   USE fft_types,      ONLY : fft_dlay_descriptor
+   USE fft_types,      ONLY : fft_type_descriptor
    !
    IMPLICIT NONE
 #if defined(__MPI)
    INCLUDE 'mpif.h'
 #endif
    !
-   TYPE(fft_dlay_descriptor), INTENT(inout) :: dffts
+   TYPE(fft_type_descriptor), INTENT(inout) :: dffts
    TYPE(task_groups_descriptor), INTENT(inout) :: dtgs
 
    INTEGER, INTENT(in) :: nogrp   ! number of task groups

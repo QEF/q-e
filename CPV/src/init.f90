@@ -26,7 +26,7 @@
       use cell_base,            only: ainv, at, omega, alat
       use small_box,            only: small_box_set
       use smallbox_grid_dim,    only: smallbox_grid_init,smallbox_grid_info
-      USE grid_subroutines,     ONLY: realspace_grid_init, realspace_grids_info
+      USE fft_types,            ONLY: fft_type_allocate, realspace_grids_info
       use ions_base,            only: nat
       USE recvec_subs,          ONLY: ggen
       USE gvect,                ONLY: mill_g, eigts1,eigts2,eigts3, gg, &
@@ -93,15 +93,15 @@
         WRITE( stdout,'(3X,"ref_cell_a2 =",1X,3f14.8,3x,"ref_cell_b2 =",3f14.8)') ref_at(:,2)*ref_alat,ref_bg(:,2)/ref_alat
         WRITE( stdout,'(3X,"ref_cell_a3 =",1X,3f14.8,3x,"ref_cell_b3 =",3f14.8)') ref_at(:,3)*ref_alat,ref_bg(:,3)/ref_alat
         !
-        CALL realspace_grid_init( dfftp, ref_at, ref_bg, gcutm )
-        CALL realspace_grid_init( dffts, ref_at, ref_bg, gcutms)
-        CALL realspace_grid_init( dfft3d, ref_at, ref_bg, gcutms)
+        CALL fft_type_allocate( dfftp, ref_at, ref_bg, gcutm, intra_bgrp_comm )
+        CALL fft_type_allocate( dffts, ref_at, ref_bg, gcutms, intra_bgrp_comm)
+        CALL fft_type_allocate( dfft3d, ref_at, ref_bg, gcutms, intra_bgrp_comm)
         !
       ELSE
         !
-        CALL realspace_grid_init( dfftp, at, bg, gcutm )
-        CALL realspace_grid_init( dffts, at, bg, gcutms)
-        CALL realspace_grid_init( dfft3d, at, bg, gcutms)
+        CALL fft_type_allocate( dfftp, at, bg, gcutm, intra_bgrp_comm )
+        CALL fft_type_allocate( dffts, at, bg, gcutms, intra_bgrp_comm)
+        CALL fft_type_allocate( dfft3d, at, bg, gcutms, intra_bgrp_comm)
         !
       END IF
       !
@@ -150,7 +150,7 @@
       !
       ! ... Print real-space grid dimensions
       !
-      CALL realspace_grids_info ( dfftp, dffts, nproc_bgrp )
+      CALL realspace_grids_info ( dfftp, dffts, nproc_bgrp, ionode )
       CALL smallbox_grid_info ( dfftb )
       !
       ! ... generate g-space vectors (dense and smooth grid)

@@ -10,7 +10,7 @@
 !  & S. de Gironcoli, SISSA
 
 program test
-  USE fft_types, ONLY: fft_dlay_descriptor, fft_dlay_deallocate
+  USE fft_types, ONLY: fft_type_descriptor, fft_type_deallocate
   USE stick_set, ONLY: pstickset
   USE fft_interfaces
   USE fft_parallel
@@ -21,7 +21,7 @@ program test
   include 'mpif.h'
 #endif
   include 'fft_param.f90'
-  TYPE(fft_dlay_descriptor) :: dfftp, dffts, dfft3d
+  TYPE(fft_type_descriptor) :: dfftp, dffts, dfft3d
   INTEGER :: nx = 128
   INTEGER :: ny = 128
   INTEGER :: nz = 256
@@ -374,9 +374,9 @@ program test
 
   DEALLOCATE( psis, aux )
 
-  CALL fft_dlay_deallocate( dffts )
-  CALL fft_dlay_deallocate( dfftp )
-  CALL fft_dlay_deallocate( dfft3d )
+  CALL fft_type_deallocate( dffts )
+  CALL fft_type_deallocate( dfftp )
+  CALL fft_type_deallocate( dfft3d )
 
   if( ncount > 0 ) then
      my_time = my_time / DBLE(ncount)

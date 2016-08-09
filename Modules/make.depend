@@ -112,12 +112,6 @@ generate_function.o : kind.o
 generate_function.o : mp.o
 generate_function.o : mp_bands.o
 generate_k_along_lines.o : kind.o
-griddim.o : ../FFTXlib/fft_support.o
-griddim.o : ../FFTXlib/fft_types.o
-griddim.o : io_global.o
-griddim.o : kind.o
-griddim.o : mp.o
-griddim.o : mp_images.o
 gth.o : cell_base.o
 gth.o : constants.o
 gth.o : funct.o

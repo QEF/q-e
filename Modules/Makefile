@@ -33,7 +33,6 @@ fft_base.o \
 fft_custom.o \
 funct.o \
 generate_function.o \
-griddim.o \
 gth.o \
 gvecw.o \
 input_parameters.o \

@@ -208,12 +208,12 @@ MODULE realus
       USE uspp,       ONLY : okvan
       USE uspp_param, ONLY : upf, nh
       USE atom,       ONLY : rgrid
-      USE fft_types,  ONLY : fft_dlay_descriptor
+      USE fft_types,  ONLY : fft_type_descriptor
       USE mp_bands,   ONLY : me_bgrp
       !
       IMPLICIT NONE
       !
-      TYPE(fft_dlay_descriptor),INTENT(in)    :: dfft
+      TYPE(fft_type_descriptor),INTENT(in)    :: dfft
       TYPE(realsp_augmentation),POINTER,INTENT(inout) :: tabp(:)
       !
       INTEGER               :: ia, mbia

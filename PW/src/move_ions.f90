@@ -30,7 +30,7 @@ SUBROUTINE move_ions ( idone )
   USE ions_base,              ONLY : nat, ityp, zv, tau, if_pos
   USE fft_base,               ONLY : dfftp
   USE fft_base,               ONLY : dffts
-  USE grid_subroutines,       ONLY : realspace_grid_init
+  USE fft_types,              ONLY : fft_type_allocate
   USE gvect,                  ONLY : gcutm
   USE gvecs,                  ONLY : gcutms
   USE symm_base,              ONLY : checkallsym
@@ -42,6 +42,7 @@ SUBROUTINE move_ions ( idone )
   USE relax,                  ONLY : epse, epsf, epsp, starting_scf_threshold
   USE lsda_mod,               ONLY : lsda, absmag
   USE mp_images,              ONLY : intra_image_comm
+  USE mp_bands,               ONLY : intra_bgrp_comm
   USE io_global,              ONLY : ionode_id, ionode
   USE mp,                     ONLY : mp_bcast
   USE bfgs_module,            ONLY : bfgs, terminate_bfgs
@@ -331,15 +332,8 @@ SUBROUTINE move_ions ( idone )
      conv_ions = .FALSE.
      ! ... allow re-calculation of FFT grid
      !
-     dfftp%nr1=0; dfftp%nr2=0; dfftp%nr3=0; dffts%nr1=0; dffts%nr2=0; dffts%nr3=0
-     CALL realspace_grid_init (dfftp, at, bg, gcutm )
-     IF ( gcutms == gcutm ) THEN
-        ! ... No double grid, the two grids are the same
-        dffts%nr1 = dfftp%nr1 ; dffts%nr2 = dfftp%nr2 ; dffts%nr3 = dfftp%nr3
-        dffts%nr1x= dfftp%nr1x; dffts%nr2x= dfftp%nr2x; dffts%nr3x= dfftp%nr3x
-     ELSE          
-        CALL realspace_grid_init ( dffts, at, bg, gcutms)
-     END IF
+     CALL fft_type_allocate (dfftp, at, bg, gcutm, intra_bgrp_comm )
+     CALL fft_type_allocate (dffts, at, bg, gcutms, intra_bgrp_comm)
      !
      CALL init_run()
      !

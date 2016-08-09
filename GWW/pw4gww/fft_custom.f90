@@ -14,7 +14,7 @@ MODULE fft_custom_gwl
   USE kinds, ONLY: DP
   USE parallel_include
   
-  USE fft_types, ONLY: fft_dlay_descriptor
+  USE fft_types, ONLY: fft_type_descriptor
   
   IMPLICIT NONE
 
@@ -24,7 +24,7 @@ MODULE fft_custom_gwl
         ! ... about fft data distribution for a given
         ! ... potential grid, and its wave functions sub-grid.
 
-     TYPE ( fft_dlay_descriptor ) :: dfftt ! descriptor for custom grim
+     TYPE ( fft_type_descriptor ) :: dfftt ! descriptor for custom grim
   
      REAL(kind=DP) :: ecutt!custom cutoff in rydberg
      REAL(kind=DP) :: dual_t!dual facor
@@ -177,7 +177,7 @@ CONTAINS
   USE mp_world,   ONLY : world_comm, nproc
   USE stick_base
   USE fft_support, ONLY : good_fft_dimension
-  USE fft_types,  ONLY : fft_dlay_allocate, fft_dlay_set, fft_dlay_scalar, fft_dlay_set_dims
+  USE fft_types,  ONLY : fft_type_allocate, fft_type_set, fft_type_scalar
   !
   !
   IMPLICIT NONE
@@ -337,14 +337,12 @@ CONTAINS
     ENDIF
   ENDIF
 
-  CALL fft_dlay_set_dims( fc%dfftt, fc%nr1t, fc%nr2t, fc%nr3t, fc%nrx1t, fc%nrx2t, fc%nrx3t )
-
-  CALL fft_dlay_allocate( fc%dfftt, me_pool,root_pool,nproc_pool,intra_pool_comm ,0 )
+  CALL fft_type_allocate( fc%dfftt, fc%at_t, fc%bg_t, fc%gcutmt, intra_pool_comm )
  
   !  here set the fft data layout structures for dense and smooth mesh,
   !  according to stick distribution
 
-  CALL fft_dlay_set( fc%dfftt, tk, nct, ub, lb, idx, in1(:), in2(:), ncp, nkcp, ngp, ngkp, st, stw)
+  CALL fft_type_set( fc%dfftt, tk, nct, ub, lb, idx, in1(:), in2(:), ncp, nkcp, ngp, ngkp, st, stw)
 
   !  if tk = .FALSE. only half reciprocal space is considered, then we
   !  need to correct the number of sticks
@@ -431,9 +429,7 @@ CONTAINS
   nxx   = fc%nrxxt
   nxxs  = fc%nrxxt
 
-  CALL fft_dlay_set_dims( fc%dfftt, fc%nr1t, fc%nr2t, fc%nr3t, fc%nrx1t, fc%nrx2t, fc%nrx3t )
-
-  CALL fft_dlay_allocate( fc%dfftt, me_pool,root_pool,nproc_pool, intra_pool_comm,0 )
+  CALL fft_type_allocate( fc%dfftt, fc%at_t, fc%bg_t, fc%gcutmt, intra_pool_comm )
 
   CALL calculate_gkcut()
 
@@ -486,7 +482,7 @@ CONTAINS
 10   CONTINUE
   ENDDO
 
-  CALL fft_dlay_scalar( fc%dfftt, ub, lb, stw )
+  CALL fft_type_scalar( fc%dfftt, ub, lb, stw )
 
   DEALLOCATE( stw )
 
@@ -854,14 +850,14 @@ END SUBROUTINE ggent
         
 SUBROUTINE deallocate_fft_custom(fc)
 !this subroutine deallocates all the fft custom stuff
-  USE fft_types, ONLY : fft_dlay_deallocate
+  USE fft_types, ONLY : fft_type_deallocate
 
   implicit none
 
   TYPE(fft_cus) :: fc
 
   deallocate(fc%nlt,fc%nltm)
-  call fft_dlay_deallocate(fc%dfftt)
+  call fft_type_deallocate(fc%dfftt)
   deallocate(fc%ig_l2gt,fc%ggt,fc%gt)
   deallocate(fc%ig1t,fc%ig2t,fc%ig3t)
 

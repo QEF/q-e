@@ -15,7 +15,7 @@
    MODULE scatter_mod
 !=----------------------------------------------------------------------=!
 
-        USE fft_types, ONLY: fft_dlay_descriptor
+        USE fft_types, ONLY: fft_type_descriptor
         USE task_groups, ONLY: task_groups_descriptor
 
         IMPLICIT NONE
@@ -34,7 +34,7 @@
 
         PRIVATE
 
-        PUBLIC :: fft_dlay_descriptor
+        PUBLIC :: fft_type_descriptor
         PUBLIC :: fft_scatter, gather_grid, scatter_grid
         PUBLIC :: cgather_sym, cgather_sym_many, cscatter_sym_many
         PUBLIC :: maps_sticks_to_3d
@@ -87,7 +87,7 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, dtgs )
   INCLUDE 'mpif.h'
 #endif
 
-  TYPE (fft_dlay_descriptor), INTENT(in) :: dfft
+  TYPE (fft_type_descriptor), INTENT(in) :: dfft
   INTEGER, INTENT(in)           :: nr3x, nxx_, isgn, ncp_ (:), npp_ (:)
   COMPLEX (DP), INTENT(inout)   :: f_in (nxx_), f_aux (nxx_)
   TYPE (task_groups_descriptor), OPTIONAL, INTENT(in) :: dtgs
@@ -417,7 +417,7 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, dtgs )
   INCLUDE 'mpif.h'
 #endif
 
-  TYPE (fft_dlay_descriptor), INTENT(in) :: dfft
+  TYPE (fft_type_descriptor), INTENT(in) :: dfft
   INTEGER, INTENT(in)           :: nr3x, nxx_, isgn, ncp_ (:), npp_ (:)
   COMPLEX (DP), INTENT(inout)   :: f_in (nxx_), f_aux (nxx_)
   TYPE (task_groups_descriptor), OPTIONAL, INTENT(in) :: dtgs
@@ -759,7 +759,7 @@ SUBROUTINE maps_sticks_to_3d( dffts, dtgs, f_in, nxx_, f_aux, isgn )
   INCLUDE 'mpif.h'
 #endif
 
-  TYPE (fft_dlay_descriptor), INTENT(in) :: dffts
+  TYPE (fft_type_descriptor), INTENT(in) :: dffts
   TYPE (task_groups_descriptor), INTENT(in) :: dtgs
   INTEGER, INTENT(in)           :: nxx_, isgn
   COMPLEX (DP), INTENT(in)      :: f_in (nxx_)
@@ -811,7 +811,7 @@ SUBROUTINE gather_real_grid ( dfft, f_in, f_out )
   !
   REAL(DP), INTENT(in) :: f_in (:)
   REAL(DP), INTENT(inout):: f_out(:)
-  TYPE ( fft_dlay_descriptor ), INTENT(IN) :: dfft
+  TYPE ( fft_type_descriptor ), INTENT(IN) :: dfft
   !
 #if defined(__MPI)
   !
@@ -877,7 +877,7 @@ SUBROUTINE gather_complex_grid ( dfft, f_in, f_out )
   !
   COMPLEX(DP), INTENT(in) :: f_in (:)
   COMPLEX(DP), INTENT(inout):: f_out(:)
-  TYPE ( fft_dlay_descriptor ), INTENT(IN) :: dfft
+  TYPE ( fft_type_descriptor ), INTENT(IN) :: dfft
   !
 #if defined(__MPI)
   !
@@ -943,7 +943,7 @@ SUBROUTINE scatter_real_grid ( dfft, f_in, f_out )
   !
   REAL(DP), INTENT(in) :: f_in (:)
   REAL(DP), INTENT(inout):: f_out(:)
-  TYPE ( fft_dlay_descriptor ), INTENT(IN) :: dfft
+  TYPE ( fft_type_descriptor ), INTENT(IN) :: dfft
   !
 #if defined(__MPI)
   !
@@ -1011,7 +1011,7 @@ SUBROUTINE scatter_complex_grid ( dfft, f_in, f_out )
   !
   COMPLEX(DP), INTENT(in) :: f_in (:)
   COMPLEX(DP), INTENT(inout):: f_out(:)
-  TYPE ( fft_dlay_descriptor ), INTENT(IN) :: dfft
+  TYPE ( fft_type_descriptor ), INTENT(IN) :: dfft
   !
 #if defined(__MPI)
   !
@@ -1080,7 +1080,7 @@ SUBROUTINE cgather_sym( dfftp, f_in, f_out )
   INCLUDE 'mpif.h'
 #endif
   !
-  TYPE (fft_dlay_descriptor), INTENT(in) :: dfftp
+  TYPE (fft_type_descriptor), INTENT(in) :: dfftp
   COMPLEX(DP) :: f_in( : ), f_out(:)
   !
 #if defined(__MPI)
@@ -1141,7 +1141,7 @@ SUBROUTINE cgather_sym_many( dfftp, f_in, f_out, nbnd, nbnd_proc, start_nbnd_pro
   INCLUDE 'mpif.h'
 #endif
   !
-  TYPE (fft_dlay_descriptor), INTENT(in) :: dfftp
+  TYPE (fft_type_descriptor), INTENT(in) :: dfftp
   INTEGER :: nbnd, nbnd_proc(dfftp%nproc), start_nbnd_proc(dfftp%nproc)
   COMPLEX(DP) :: f_in(dfftp%nnr,nbnd)
   COMPLEX(DP) :: f_out(dfftp%nnp*dfftp%nr3x,nbnd_proc(dfftp%mype+1))
@@ -1219,7 +1219,7 @@ SUBROUTINE cscatter_sym_many( dfftp, f_in, f_out, target_ibnd, nbnd, nbnd_proc, 
   INCLUDE 'mpif.h'
 #endif
   !
-  TYPE (fft_dlay_descriptor), INTENT(in) :: dfftp
+  TYPE (fft_type_descriptor), INTENT(in) :: dfftp
   INTEGER :: nbnd, nbnd_proc(dfftp%nproc), start_nbnd_proc(dfftp%nproc)
   COMPLEX(DP) :: f_in(dfftp%nnp*dfftp%nr3x,nbnd_proc(dfftp%mype+1))
   COMPLEX(DP) :: f_out(dfftp%nnr)

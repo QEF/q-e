@@ -394,12 +394,12 @@ END SUBROUTINE qmmm_minimum_image
   !
   SUBROUTINE qmmm_update_forces( force, rho, nspin, dfftp )
     !
-    USE fft_types,          ONLY : fft_dlay_descriptor
+    USE fft_types,          ONLY : fft_type_descriptor
     IMPLICIT NONE
     REAL(DP), INTENT(IN) :: force(:,:)
     REAL(DP) :: rho(:,:)
     INTEGER  :: nspin
-    TYPE(fft_dlay_descriptor) :: dfftp
+    TYPE(fft_type_descriptor) :: dfftp
     INTEGER :: ierr, i
     IF (qmmm_mode < 0) RETURN
 
@@ -444,7 +444,7 @@ END SUBROUTINE qmmm_minimum_image
     USE ions_base,          ONLY : zv, tau
     USE constants,          ONLY : e2, eps8, bohr_radius_angs
     USE io_global,          ONLY : stdout,ionode
-    USE fft_types,          ONLY : fft_dlay_descriptor
+    USE fft_types,          ONLY : fft_type_descriptor
     USE kinds,              ONLY : DP
     !
     USE constraints_module, ONLY : pbc
@@ -452,7 +452,7 @@ END SUBROUTINE qmmm_minimum_image
     IMPLICIT NONE
     !
     REAL(DP) :: vltot(:)
-    TYPE(fft_dlay_descriptor) :: dfftp
+    TYPE(fft_type_descriptor) :: dfftp
     !
     ! local variables
     !
@@ -585,7 +585,7 @@ END SUBROUTINE qmmm_minimum_image
     !
     
     USE cell_base,          ONLY : alat, at, omega
-    USE fft_types,          ONLY : fft_dlay_descriptor
+    USE fft_types,          ONLY : fft_type_descriptor
     USE constants,          ONLY : e2, eps8
     USE io_global,          ONLY : stdout,ionode
     USE ions_base,          ONLY : zv, tau
@@ -595,7 +595,7 @@ END SUBROUTINE qmmm_minimum_image
     !
     REAL(DP) :: rho(:,:)
     INTEGER  :: nspin
-    TYPE(fft_dlay_descriptor) :: dfftp
+    TYPE(fft_type_descriptor) :: dfftp
     !
     ! local variables
     !

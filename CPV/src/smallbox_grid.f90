@@ -27,12 +27,12 @@
      SUBROUTINE smallbox_grid_init( dfftp, dfftb )
        !
        USE fft_support, only: good_fft_dimension, good_fft_order
-       USE fft_types,  only: fft_dlay_descriptor
+       USE fft_types,  only: fft_type_descriptor
        USE fft_smallbox_type,  only: fft_box_descriptor
        !
        IMPLICIT NONE
        !
-       TYPE(fft_dlay_descriptor), INTENT(IN)    :: dfftp
+       TYPE(fft_type_descriptor), INTENT(IN)    :: dfftp
        TYPE(fft_box_descriptor), INTENT(INOUT) :: dfftb
        !
        ! no default values for grid box: if nr*b=0, ignore

@@ -7,15 +7,21 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 
+!=----------------------------------------------------------------------------=!
 MODULE fft_types
+!=----------------------------------------------------------------------------=!
 
   IMPLICIT NONE
-
+  PRIVATE
   SAVE
 
-  INTEGER :: stdout = 6
+#if defined(__MPI)
+      INCLUDE 'mpif.h'
+#endif
 
-  TYPE fft_dlay_descriptor
+#include "fft_param.f90"
+
+  TYPE fft_type_descriptor
 
     INTEGER :: nst      ! total number of sticks
     INTEGER, POINTER :: nsp(:)   ! number of sticks per processor ( potential )
@@ -58,7 +64,11 @@ MODULE fft_types
     !  fft parallelization
     !
     INTEGER :: mype     = 0          ! my processor id (starting from 0) in the fft group
+#ifdef __MPI
+    INTEGER :: comm     = MPI_COMM_NULL
+#else
     INTEGER :: comm     = 0          ! communicator of the fft gruop 
+#endif
     INTEGER :: nproc    = 1          ! number of processor in the fft group
     INTEGER :: root     = 0          ! root processor
     !
@@ -67,28 +77,30 @@ MODULE fft_types
 
   INTEGER, PRIVATE :: icount = 0
 
+  PUBLIC :: fft_type_descriptor, fft_type_set, fft_type_scalar
+  PUBLIC :: realspace_grids_info, fft_type_allocate, fft_type_deallocate
 
 CONTAINS
 
 !=----------------------------------------------------------------------------=!
 
-  SUBROUTINE fft_dlay_set_dims( desc, nr1, nr2, nr3, nr1x, nr2x, nr3x)
+  SUBROUTINE fft_type_set_dims( desc, nr1, nr2, nr3, nr1x, nr2x, nr3x)
   !
-  ! routine that defines the dimensions of fft_dlay_descriptor
-  ! must be called before fft_dlay_allocate and fft_dlay_set
+  ! routine that defines the dimensions of fft_type_descriptor
+  ! must be called before fft_type_allocate and fft_type_set
   !
-    TYPE (fft_dlay_descriptor) :: desc
+    TYPE (fft_type_descriptor) :: desc
     INTEGER, INTENT(in) :: nr1, nr2, nr3    ! size of real space grid
     INTEGER, INTENT(in) :: nr1x, nr2x, nr3x ! padded size of real space grid
 
     IF (desc%dimensions_have_been_set ) &
-        CALL fftx_error__(' fft_dlay_set_dims ', ' fft dimensions already set ', 1 )
+        CALL fftx_error__(' fft_type_set_dims ', ' fft dimensions already set ', 1 )
 
-    !  Set fft actual and leading dimensions of fft_dlay_descriptor from input
+    !  Set fft actual and leading dimensions of fft_type_descriptor from input
 
-    IF( nr1 > nr1x ) CALL fftx_error__( ' fft_dlay_set_dims ', ' wrong fft dimensions ', 1 )
-    IF( nr2 > nr2x ) CALL fftx_error__( ' fft_dlay_set_dims ', ' wrong fft dimensions ', 2 )
-    IF( nr3 > nr3x ) CALL fftx_error__( ' fft_dlay_set_dims ', ' wrong fft dimensions ', 3 )
+    IF( nr1 > nr1x ) CALL fftx_error__( ' fft_type_set_dims ', ' wrong fft dimensions ', 1 )
+    IF( nr2 > nr2x ) CALL fftx_error__( ' fft_type_set_dims ', ' wrong fft dimensions ', 2 )
+    IF( nr3 > nr3x ) CALL fftx_error__( ' fft_type_set_dims ', ' wrong fft dimensions ', 3 )
 
     desc%nr1  = nr1
     desc%nr2  = nr2
@@ -99,24 +111,46 @@ CONTAINS
 
     desc%dimensions_have_been_set = .true.
 
-  END SUBROUTINE fft_dlay_set_dims
+  END SUBROUTINE fft_type_set_dims
 
 !-------------------------------------------------------
-  SUBROUTINE fft_dlay_allocate( desc, mype, root, nproc, comm, nogrp )
+  SUBROUTINE fft_type_allocate( desc, at, bg, gcutm, comm, fft_fact  )
   !
-  ! routine that allocate arrays of fft_dlay_descriptor
-  ! must be called before fft_dlay_set
+  ! routine that allocate arrays of fft_type_descriptor
+  ! must be called before fft_type_set
   !
-    TYPE (fft_dlay_descriptor) :: desc
-    INTEGER, INTENT(in) :: mype, root, nproc, comm ! mype starting from 0
-    INTEGER, INTENT(in) :: nogrp   ! number of task groups
-    INTEGER :: nx, ny
+    TYPE (fft_type_descriptor) :: desc
+    REAL(DP), INTENT(IN) :: at(3,3), bg(3,3)
+    REAL(DP), INTENT(IN) :: gcutm
+    INTEGER, INTENT(IN), OPTIONAL :: fft_fact(3)
+    INTEGER, INTENT(in) :: comm ! mype starting from 0
+    INTEGER :: nx, ny, ierr
+    INTEGER :: mype, root, nproc ! mype starting from 0
 
     IF (desc%arrays_have_been_allocated ) &
-        CALL fftx_error__(' fft_dlay_allocate ', ' fft arrays already allocated ', 1 )
+        CALL fftx_error__(' fft_type_allocate ', ' fft arrays already allocated ', 1 )
 
-    IF (.NOT. desc%dimensions_have_been_set ) &
-        CALL fftx_error__(' fft_dlay_allocate ', ' fft dimensions not yet set ', 1 )
+    IF (desc%dimensions_have_been_set ) &
+        CALL fftx_error__(' fft_type_allocate ', ' fft dimensions already set ', 1 )
+
+    desc%comm = comm 
+
+#ifdef __MPI
+    IF( desc%comm == MPI_COMM_NULL ) THEN
+       CALL fftx_error__( ' realspace_grid_init ', ' fft communicator is null ', 1 )
+    END IF
+#endif
+       !
+    mype = 0
+    nproc = 1
+    root = 0
+#ifdef __MPI
+    CALL MPI_COMM_RANK( comm, mype, ierr )
+    CALL MPI_COMM_SIZE( comm, nproc, ierr )
+#endif
+
+
+    CALL realspace_grid_init( desc, at, bg, gcutm, fft_fact )
 
     nx = desc%nr1x 
     ny = desc%nr2x
@@ -153,11 +187,12 @@ CONTAINS
     desc%root  = root
 
     desc%arrays_have_been_allocated = .TRUE.
+    desc%dimensions_have_been_set = .true.
 
-  END SUBROUTINE fft_dlay_allocate
+  END SUBROUTINE fft_type_allocate
 
-  SUBROUTINE fft_dlay_deallocate( desc )
-    TYPE (fft_dlay_descriptor) :: desc
+  SUBROUTINE fft_type_deallocate( desc )
+    TYPE (fft_type_descriptor) :: desc
     IF ( associated( desc%nsp ) )    DEALLOCATE( desc%nsp )
     IF ( associated( desc%nsw ) )    DEALLOCATE( desc%nsw )
     IF ( associated( desc%ngl ) )    DEALLOCATE( desc%ngl )
@@ -172,14 +207,22 @@ CONTAINS
     desc%id = 0
     desc%arrays_have_been_allocated = .FALSE.
     desc%dimensions_have_been_set = .FALSE.
-
-  END SUBROUTINE fft_dlay_deallocate
+#ifdef __MPI
+    desc%comm = MPI_COMM_NULL 
+#endif
+    desc%nr1    = 0 
+    desc%nr2    = 0  
+    desc%nr3    = 0  
+    desc%nr1x   = 0  
+    desc%nr2x   = 0  
+    desc%nr3x   = 0  
+  END SUBROUTINE fft_type_deallocate
 
 !=----------------------------------------------------------------------------=!
 
-  SUBROUTINE fft_dlay_set( desc, tk, nst, ub, lb, idx, in1, in2, ncp, ncpw, ngp, ngpw, st, stw )
+  SUBROUTINE fft_type_set( desc, tk, nst, ub, lb, idx, in1, in2, ncp, ncpw, ngp, ngpw, st, stw )
 
-    TYPE (fft_dlay_descriptor) :: desc
+    TYPE (fft_type_descriptor) :: desc
 
     LOGICAL, INTENT(in) :: tk               ! gamma/not-gamma logical
     INTEGER, INTENT(in) :: nst              ! total number of stiks 
@@ -205,10 +248,10 @@ CONTAINS
     INTEGER :: sm
 
     IF (.NOT. desc%arrays_have_been_allocated ) &
-        CALL fftx_error__(' fft_dlay_allocate ', ' fft arrays not yet allocated ', 1 )
+        CALL fftx_error__(' fft_type_allocate ', ' fft arrays not yet allocated ', 1 )
 
     IF (.NOT. desc%dimensions_have_been_set ) &
-        CALL fftx_error__(' fft_dlay_set ', ' fft dimensions not yet set ', 1 )
+        CALL fftx_error__(' fft_type_set ', ' fft dimensions not yet set ', 1 )
 
     !  Set fft actual and leading dimensions to be used internally
 
@@ -220,17 +263,17 @@ CONTAINS
     nr3x = desc%nr3x
 
     IF( ( nr1 > nr1x ) .or. ( nr2 > nr2x ) .or. ( nr3 > nr3x ) ) &
-      CALL fftx_error__( ' fft_dlay_set ', ' wrong fft dimensions ', 1 )
+      CALL fftx_error__( ' fft_type_set ', ' wrong fft dimensions ', 1 )
 
     IF( ( size( desc%ngl ) < desc%nproc ) .or. ( size( desc%npp ) < desc%nproc ) .or.  &
         ( size( desc%ipp ) < desc%nproc ) .or. ( size( desc%iss ) < desc%nproc ) )     &
-      CALL fftx_error__( ' fft_dlay_set ', ' wrong descriptor dimensions ', 2 )
+      CALL fftx_error__( ' fft_type_set ', ' wrong descriptor dimensions ', 2 )
 
     IF( ( size( idx ) < nst ) .or. ( size( in1 ) < nst ) .or. ( size( in2 ) < nst ) ) &
-      CALL fftx_error__( ' fft_dlay_set ', ' wrong number of stick dimensions ', 3 )
+      CALL fftx_error__( ' fft_type_set ', ' wrong number of stick dimensions ', 3 )
 
     IF( ( size( ncp ) < desc%nproc ) .or. ( size( ngp ) < desc%nproc ) ) &
-      CALL fftx_error__( ' fft_dlay_set ', ' wrong stick dimensions ', 4 )
+      CALL fftx_error__( ' fft_type_set ', ' wrong stick dimensions ', 4 )
 
     !  Set the number of "xy" planes for each processor
     !  in other word do a slab partition along the z axis
@@ -298,10 +341,10 @@ CONTAINS
     desc%nwl( 1:desc%nproc )  = ngpw( 1:desc%nproc ) ! local number of g vectors (wave) per processor
 
     IF( size( desc%isind ) < ( nr1x * nr2x ) ) &
-      CALL fftx_error__( ' fft_dlay_set ', ' wrong descriptor dimensions, isind ', 5 )
+      CALL fftx_error__( ' fft_type_set ', ' wrong descriptor dimensions, isind ', 5 )
 
     IF( size( desc%iplp ) < ( nr1x ) .or. size( desc%iplw ) < ( nr1x ) ) &
-      CALL fftx_error__( ' fft_dlay_set ', ' wrong descriptor dimensions, ipl ', 5 )
+      CALL fftx_error__( ' fft_type_set ', ' wrong descriptor dimensions, ipl ', 5 )
 
     !
     !  1. Temporarily store in the array "desc%isind" the index of the processor
@@ -359,7 +402,7 @@ CONTAINS
     ! iss(1:nproc) is the index offset of the first column of a given processor
 
     IF( size( desc%ismap ) < ( nst ) ) &
-      CALL fftx_error__( ' fft_dlay_set ', ' wrong descriptor dimensions ', 6 )
+      CALL fftx_error__( ' fft_type_set ', ' wrong descriptor dimensions ', 6 )
 
     !
     !  1. Set the array desc%ismap which maps stick indexes to
@@ -391,7 +434,7 @@ CONTAINS
       DO ip = 1, desc%nproc
         WRITE( stdout,*)  ' * ', ip, ' * ', nsp( ip ), ' /= ', ncpw( ip )
       ENDDO
-      CALL fftx_error__( ' fft_dlay_set ', ' inconsistent number of sticks ', 7 )
+      CALL fftx_error__( ' fft_type_set ', ' inconsistent number of sticks ', 7 )
     ENDIF
 
     desc%nsw( 1:desc%nproc ) = nsp( 1:desc%nproc )  ! -- number of wave sticks per porcessor
@@ -417,7 +460,7 @@ CONTAINS
       DO ip = 1, desc%nproc
         WRITE( stdout,*)  ' * ', ip, ' * ', nsp( ip ), ' /= ', ncp( ip )
       ENDDO
-      CALL fftx_error__( ' fft_dlay_set ', ' inconsistent number of sticks ', 8 )
+      CALL fftx_error__( ' fft_type_set ', ' inconsistent number of sticks ', 8 )
     ENDIF
 
     desc%nsp( 1:desc%nproc ) = nsp( 1:desc%nproc ) ! -- number of rho sticks per processor
@@ -430,15 +473,15 @@ CONTAINS
     desc%tptr = icount
 
     RETURN
-  END SUBROUTINE fft_dlay_set
+  END SUBROUTINE fft_type_set
 
 !=----------------------------------------------------------------------------=!
 
-  SUBROUTINE fft_dlay_scalar( desc, ub, lb, stw )
+  SUBROUTINE fft_type_scalar( desc, ub, lb, stw )
 
     IMPLICIT NONE
 
-    TYPE (fft_dlay_descriptor) :: desc
+    TYPE (fft_type_descriptor) :: desc
     INTEGER, INTENT(in) :: lb(:), ub(:)
     INTEGER, INTENT(in) :: stw( lb(1) : ub(1), lb(2) : ub(2) )
 
@@ -446,7 +489,7 @@ CONTAINS
     INTEGER :: m1, m2, i1, i2
 
     IF (.NOT. desc%dimensions_have_been_set ) &
-        CALL fftx_error__(' fft_dlay_scalar ', ' fft dimensions not yet set ', 1 )
+        CALL fftx_error__(' fft_type_scalar ', ' fft dimensions not yet set ', 1 )
 
     nr1  = desc%nr1
     nr2  = desc%nr2
@@ -456,7 +499,7 @@ CONTAINS
     nr3x = desc%nr3x
 
     IF( size( desc%iplw ) < nr1x .or. size( desc%isind ) < nr1x * nr2x ) &
-      CALL fftx_error__(' fft_dlay_scalar ', ' wrong dimensions ', 1 )
+      CALL fftx_error__(' fft_type_scalar ', ' wrong dimensions ', 1 )
 
     desc%isind = 0
     desc%iplw  = 0
@@ -485,6 +528,191 @@ CONTAINS
     !
 
     RETURN
-  END SUBROUTINE fft_dlay_scalar
+  END SUBROUTINE fft_type_scalar
 
+
+!=----------------------------------------------------------------------------=!
+!=----------------------------------------------------------------------------=!
+
+
+
+     SUBROUTINE realspace_grid_init( dfft, at, bg, gcutm, fft_fact )
+       !
+       ! ... Sets optimal values for dfft%nr[123] and dfft%nr[123]x
+       ! ... If fft_fact is present, force nr[123] to be multiple of fft_fac([123])
+       !
+       USE fft_support, only: good_fft_dimension, good_fft_order
+       !
+       IMPLICIT NONE
+       !
+       REAL(DP), INTENT(IN) :: at(3,3), bg(3,3)
+       REAL(DP), INTENT(IN) :: gcutm
+       INTEGER, INTENT(IN), OPTIONAL :: fft_fact(3)
+       TYPE(fft_type_descriptor), INTENT(INOUT) :: dfft
+       !
+       IF( dfft%nr1 == 0 .OR. dfft%nr2 == 0 .OR. dfft%nr3 == 0 ) THEN
+         !
+         ! ... calculate the size of the real-space dense grid for FFT
+         ! ... first, an estimate of nr1,nr2,nr3, based on the max values
+         ! ... of n_i indices in:   G = i*b_1 + j*b_2 + k*b_3
+         ! ... We use G*a_i = n_i => n_i .le. |Gmax||a_i|
+         !
+         dfft%nr1 = int ( sqrt (gcutm) * &
+               sqrt (at(1, 1)**2 + at(2, 1)**2 + at(3, 1)**2) ) + 1
+         dfft%nr2 = int ( sqrt (gcutm) * &
+               sqrt (at(1, 2)**2 + at(2, 2)**2 + at(3, 2)**2) ) + 1
+         dfft%nr3 = int ( sqrt (gcutm) * &
+               sqrt (at(1, 3)**2 + at(2, 3)**2 + at(3, 3)**2) ) + 1
+         !
+         CALL grid_set( dfft, bg, gcutm, dfft%nr1, dfft%nr2, dfft%nr3 )
+         !
+       ELSE
+          WRITE( stdout, '( /, 3X,"Info: using nr1, nr2, nr3 values from input" )' )
+       END IF
+
+       IF (PRESENT(fft_fact)) THEN
+          dfft%nr1 = good_fft_order( dfft%nr1, fft_fact(1) )
+          dfft%nr2 = good_fft_order( dfft%nr2, fft_fact(2) )
+          dfft%nr3 = good_fft_order( dfft%nr3, fft_fact(3) )
+       ELSE
+          dfft%nr1 = good_fft_order( dfft%nr1 )
+          dfft%nr2 = good_fft_order( dfft%nr2 )
+          dfft%nr3 = good_fft_order( dfft%nr3 )
+       END IF
+
+       dfft%nr1x  = good_fft_dimension( dfft%nr1 )
+       dfft%nr2x  = dfft%nr2
+       dfft%nr3x  = good_fft_dimension( dfft%nr3 )
+
+     END SUBROUTINE realspace_grid_init
+
+!=----------------------------------------------------------------------------=!
+
+    SUBROUTINE realspace_grids_info ( dfftp, dffts, nproc_ , ionode )
+
+      !  Print info on local and global dimensions for real space grids
+
+      IMPLICIT NONE
+
+
+      TYPE(fft_type_descriptor), INTENT(IN) :: dfftp, dffts
+      INTEGER, INTENT(IN) :: nproc_
+      LOGICAL, INTENT(IN) :: ionode
+
+      INTEGER :: i
+
+      IF(ionode) THEN
+
+        WRITE( stdout,*)
+        WRITE( stdout,*) '  Real Mesh'
+        WRITE( stdout,*) '  ---------'
+        WRITE( stdout,1000) dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1, dfftp%nr2, dfftp%npl, 1, 1, nproc_
+        WRITE( stdout,1010) dfftp%nr1x, dfftp%nr2x, dfftp%nr3x
+        WRITE( stdout,1020) dfftp%nnr
+        WRITE( stdout,*) '  Number of x-y planes for each processors: '
+        WRITE( stdout, fmt = '( 3X, "nr3l = ", 10I5 )' ) &
+           ( dfftp%npp( i ), i = 1, nproc_ )
+
+        WRITE( stdout,*)
+        WRITE( stdout,*) '  Smooth Real Mesh'
+        WRITE( stdout,*) '  ----------------'
+        WRITE( stdout,1000) dffts%nr1, dffts%nr2, dffts%nr3, dffts%nr1, dffts%nr2, dffts%npl,1,1, nproc_
+        WRITE( stdout,1010) dffts%nr1x, dffts%nr2x, dffts%nr3x
+        WRITE( stdout,1020) dffts%nnr
+        WRITE( stdout,*) '  Number of x-y planes for each processors: '
+        WRITE( stdout, fmt = '( 3X, "nr3sl = ", 10I5 )' ) &
+           ( dffts%npp( i ), i = 1, nproc_ )
+
+      END IF
+
+1000  FORMAT(3X, &
+         'Global Dimensions   Local  Dimensions   Processor Grid',/,3X, &
+         '.X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.',/, &
+         3(1X,I5),2X,3(1X,I5),2X,3(1X,I5) )
+1010  FORMAT(3X, 'Array leading dimensions ( nr1x, nr2x, nr3x )   = ', 3(1X,I5) )
+1020  FORMAT(3X, 'Local number of cell to store the grid ( nrxx ) = ', 1X, I9 )
+
+      RETURN
+      END SUBROUTINE realspace_grids_info
+
+
+   SUBROUTINE grid_set( dfft, bg, gcut, nr1, nr2, nr3 )
+
+!  this routine returns in nr1, nr2, nr3 the minimal 3D real-space FFT 
+!  grid required to fit the G-vector sphere with G^2 <= gcut
+!  On input, nr1,nr2,nr3 must be set to values that match or exceed
+!  the largest i,j,k (Miller) indices in G(i,j,k) = i*b1 + j*b2 + k*b3
+!  ----------------------------------------------
+
+      IMPLICIT NONE
+
+#if defined(__MPI)
+      INCLUDE 'mpif.h'
+#endif
+
+! ... declare arguments
+      TYPE(fft_type_descriptor), INTENT(IN) :: dfft
+      INTEGER, INTENT(INOUT) :: nr1, nr2, nr3
+      REAL(DP), INTENT(IN) :: bg(3,3), gcut
+
+! ... declare other variables
+      INTEGER :: i, j, k, nr, nb(3)
+      REAL(DP) :: gsq, g(3)
+
+!  ----------------------------------------------
+
+      nb     = 0
+
+! ... calculate moduli of G vectors and the range of indices where
+! ... |G|^2 < gcut (in parallel whenever possible)
+
+      DO k = -nr3, nr3
+        !
+        ! ... me_image = processor number, starting from 0
+        !
+        IF( MOD( k + nr3, dfft%nproc ) == dfft%mype ) THEN
+          DO j = -nr2, nr2
+            DO i = -nr1, nr1
+
+              g( 1 ) = DBLE(i)*bg(1,1) + DBLE(j)*bg(1,2) + DBLE(k)*bg(1,3)
+              g( 2 ) = DBLE(i)*bg(2,1) + DBLE(j)*bg(2,2) + DBLE(k)*bg(2,3)
+              g( 3 ) = DBLE(i)*bg(3,1) + DBLE(j)*bg(3,2) + DBLE(k)*bg(3,3)
+
+! ...         calculate modulus
+
+              gsq =  g( 1 )**2 + g( 2 )**2 + g( 3 )**2 
+
+              IF( gsq < gcut ) THEN
+
+! ...           calculate maximum index
+                nb(1) = MAX( nb(1), ABS( i ) )
+                nb(2) = MAX( nb(2), ABS( j ) )
+                nb(3) = MAX( nb(3), ABS( k ) )
+              END IF
+
+            END DO
+          END DO
+        END IF
+      END DO
+
+#ifdef __MPI
+      CALL MPI_ALLREDUCE( MPI_IN_PLACE, nb, 3, MPI_INTEGER, MPI_MAX, dfft%comm, i )
+#endif
+
+! ... the size of the required (3-dimensional) matrix depends on the
+! ... maximum indices. Note that the following choice is slightly
+! ... "small": 2*nb+2 would be needed in order to guarantee that the
+! ...  sphere in G-space never overlaps its periodic image
+
+      nr1 = 2 * nb(1) + 1
+      nr2 = 2 * nb(2) + 1
+      nr3 = 2 * nb(3) + 1
+
+      RETURN
+   
+   END SUBROUTINE grid_set
+
+!=----------------------------------------------------------------------------=!
 END MODULE fft_types
+!=----------------------------------------------------------------------------=!
+

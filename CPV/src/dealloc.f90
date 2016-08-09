@@ -28,7 +28,7 @@ SUBROUTINE deallocate_modules_var()
   USE betax,                ONLY : deallocate_betax
   USE wavefunctions_module, ONLY : deallocate_wavefunctions
   USE wannier_module,       ONLY : deallocate_wannier
-  USE fft_types,            ONLY : fft_dlay_descriptor, fft_dlay_deallocate
+  USE fft_types,            ONLY : fft_type_descriptor, fft_type_deallocate
   USE fft_smallbox_type,    ONLY : fft_box_deallocate
   USE fft_base,             ONLY : dfftp, dffts, dfftb
   USE stick_base,           ONLY : sticks_deallocate
@@ -68,8 +68,8 @@ SUBROUTINE deallocate_modules_var()
   CALL deallocate_qgb_mod()
   CALL deallocate_betax()
   !
-  CALL fft_dlay_deallocate( dfftp )
-  CALL fft_dlay_deallocate( dffts )
+  CALL fft_type_deallocate( dfftp )
+  CALL fft_type_deallocate( dffts )
   CALL fft_box_deallocate( dfftb )
   CALL sticks_deallocate()
   !

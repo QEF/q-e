@@ -11,7 +11,9 @@
   !! Number of different FFT tables that the module
   !!could keep into memory without reinitialization
 
-  INTEGER, PARAMETER :: ndims = 3
+  INTEGER, PARAMETER :: ndims = 10
   !!Max allowed fft dimension
 
   INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
+
+  INTEGER, PARAMETER :: stdout = 6    ! unit connected to standard output

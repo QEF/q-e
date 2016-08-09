@@ -130,7 +130,7 @@ SUBROUTINE read_xml_file_internal(withbs)
   USE cellmd,               ONLY : cell_factor, lmovecell
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft
-  USE grid_subroutines,     ONLY : realspace_grid_init
+  USE fft_types,            ONLY : fft_type_allocate
   USE recvec_subs,          ONLY : ggen
   USE gvect,                ONLY : gg, ngm, g, gcutm, &
                                    eigts1, eigts2, eigts3, nl, gstart
@@ -160,6 +160,7 @@ SUBROUTINE read_xml_file_internal(withbs)
   USE funct,                ONLY : get_inlc, get_dft_name
   USE kernel_table,         ONLY : initialize_kernel_table
   USE esm,                  ONLY : do_comp_esm, esm_init
+  USE mp_bands,             ONLY : intra_bgrp_comm
   !
   IMPLICIT NONE
 
@@ -241,8 +242,8 @@ SUBROUTINE read_xml_file_internal(withbs)
   ALLOCATE( tetra( 4, MAX( ntetra, 1 ) ) )
   !
   CALL set_dimensions()
-  CALL realspace_grid_init ( dfftp, at, bg, gcutm )
-  CALL realspace_grid_init ( dffts, at, bg, gcutms)
+  CALL fft_type_allocate ( dfftp, at, bg, gcutm, intra_bgrp_comm )
+  CALL fft_type_allocate ( dffts, at, bg, gcutms, intra_bgrp_comm)
   !
   ! ... check whether LSDA
   !

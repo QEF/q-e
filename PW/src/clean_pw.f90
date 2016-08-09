@@ -44,7 +44,7 @@ SUBROUTINE clean_pw( lflag )
   USE extfield,             ONLY : forcefield
   USE fft_base,             ONLY : dfftp, dffts  
   USE stick_base,           ONLY : sticks_deallocate
-  USE fft_types,            ONLY : fft_dlay_deallocate
+  USE fft_types,            ONLY : fft_type_deallocate
   USE spin_orb,             ONLY : lspinorb, fcoef
   USE noncollin_module,     ONLY : deallocate_noncol
   USE dynamics_module,      ONLY : deallocate_dyn_vars
@@ -168,8 +168,8 @@ SUBROUTINE clean_pw( lflag )
   !
   ! ... fft structures allocated in data_structure.f90  
   !
-  CALL fft_dlay_deallocate( dfftp )
-  CALL fft_dlay_deallocate( dffts )
+  CALL fft_type_deallocate( dfftp )
+  CALL fft_type_deallocate( dffts )
   !
   ! ... stick-owner matrix allocated in sticks_base
   !

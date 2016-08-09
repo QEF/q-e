@@ -64,7 +64,7 @@ SUBROUTINE tg_cft3s( f, dfft, isgn, dtgs )
   !
   USE fft_scalar, ONLY : cft_1z, cft_2xy
   USE scatter_mod,   ONLY : fft_scatter
-  USE fft_types,  ONLY : fft_dlay_descriptor
+  USE fft_types,  ONLY : fft_type_descriptor
   USE task_groups,    ONLY : task_groups_descriptor
 
   !
@@ -74,7 +74,7 @@ SUBROUTINE tg_cft3s( f, dfft, isgn, dtgs )
 #endif
   !
   COMPLEX(DP), INTENT(inout)    :: f( : )  ! array containing data to be transformed
-  TYPE (fft_dlay_descriptor), INTENT(in) :: dfft
+  TYPE (fft_type_descriptor), INTENT(in) :: dfft
                                            ! descriptor of fft data layout
   INTEGER, INTENT(in)           :: isgn    ! fft direction
   TYPE (task_groups_descriptor), OPTIONAL, INTENT(in) :: dtgs
@@ -277,7 +277,7 @@ SUBROUTINE fw_tg_cft3_z( f_in, dfft, f_out, dtgs )
   !----------------------------------------------------------------------------
   !
   USE fft_scalar, ONLY : cft_1z
-  USE fft_types,  ONLY : fft_dlay_descriptor
+  USE fft_types,  ONLY : fft_type_descriptor
   USE task_groups,  ONLY : task_groups_descriptor
   !
   IMPLICIT NONE
@@ -287,7 +287,7 @@ SUBROUTINE fw_tg_cft3_z( f_in, dfft, f_out, dtgs )
   !
   COMPLEX(DP), INTENT(inout)    :: f_in( : )  ! INPUT array containing data to be transformed
   COMPLEX(DP), INTENT(inout)   :: f_out (:)  ! OUTPUT
-  TYPE (fft_dlay_descriptor), INTENT(in) :: dfft ! descriptor of fft data layout
+  TYPE (fft_type_descriptor), INTENT(in) :: dfft ! descriptor of fft data layout
   TYPE (task_groups_descriptor), INTENT(in) :: dtgs ! descriptor of fft data layout
   !
   CALL cft_1z( f_in, dtgs%tg_nsw( dtgs%mype + 1 ), dfft%nr3, dfft%nr3x, 2, f_out )
@@ -299,7 +299,7 @@ SUBROUTINE bw_tg_cft3_z( f_out, dfft, f_in, dtgs )
   !----------------------------------------------------------------------------
   !
   USE fft_scalar, ONLY : cft_1z
-  USE fft_types,  ONLY : fft_dlay_descriptor
+  USE fft_types,  ONLY : fft_type_descriptor
   USE task_groups,  ONLY : task_groups_descriptor
   !
   IMPLICIT NONE
@@ -309,7 +309,7 @@ SUBROUTINE bw_tg_cft3_z( f_out, dfft, f_in, dtgs )
   !
   COMPLEX(DP), INTENT(inout)    :: f_out( : ) ! OUTPUT
   COMPLEX(DP), INTENT(inout)   :: f_in (:) ! INPUT array containing data to be transformed
-  TYPE (fft_dlay_descriptor), INTENT(in) :: dfft ! descriptor of fft data layout
+  TYPE (fft_type_descriptor), INTENT(in) :: dfft ! descriptor of fft data layout
   TYPE (task_groups_descriptor), INTENT(in) :: dtgs ! descriptor of fft data layout
   !
   CALL cft_1z( f_in, dtgs%tg_nsw( dtgs%mype + 1 ), dfft%nr3, dfft%nr3x, -2, f_out )
@@ -321,13 +321,13 @@ SUBROUTINE fw_tg_cft3_scatter( f, dfft, aux, dtgs )
   !----------------------------------------------------------------------------
   !
   USE scatter_mod,   ONLY : fft_scatter
-  USE fft_types,  ONLY : fft_dlay_descriptor
+  USE fft_types,  ONLY : fft_type_descriptor
   USE task_groups,  ONLY : task_groups_descriptor
   !
   IMPLICIT NONE
   !
   COMPLEX(DP), INTENT(inout)    :: f( : ), aux( : )  ! array containing data to be transformed
-  TYPE (fft_dlay_descriptor), INTENT(in) :: dfft     ! descriptor of fft data layout
+  TYPE (fft_type_descriptor), INTENT(in) :: dfft     ! descriptor of fft data layout
   TYPE (task_groups_descriptor), INTENT(in) :: dtgs ! descriptor of fft data layout
   !
   CALL fft_scatter( dfft, aux, dfft%nr3x, dtgs%nogrp*dtgs%tg_nnr, f, dtgs%tg_nsw, dtgs%tg_npp, 2, dtgs )
@@ -339,13 +339,13 @@ SUBROUTINE bw_tg_cft3_scatter( f, dfft, aux, dtgs )
   !----------------------------------------------------------------------------
   !
   USE scatter_mod,   ONLY : fft_scatter
-  USE fft_types,  ONLY : fft_dlay_descriptor
+  USE fft_types,  ONLY : fft_type_descriptor
   USE task_groups,  ONLY : task_groups_descriptor
   !
   IMPLICIT NONE
   !
   COMPLEX(DP), INTENT(inout)    :: f( : ), aux( : )  ! array containing data to be transformed
-  TYPE (fft_dlay_descriptor), INTENT(in) :: dfft     ! descriptor of fft data layout
+  TYPE (fft_type_descriptor), INTENT(in) :: dfft     ! descriptor of fft data layout
   TYPE (task_groups_descriptor), INTENT(in) :: dtgs ! descriptor of fft data layout
   !
   CALL fft_scatter( dfft, aux, dfft%nr3x, dtgs%nogrp*dtgs%tg_nnr, f, dtgs%tg_nsw, dtgs%tg_npp, -2, dtgs )
@@ -357,13 +357,13 @@ SUBROUTINE fw_tg_cft3_xy( f, dfft, dtgs )
   !----------------------------------------------------------------------------
   !
   USE fft_scalar, ONLY : cft_2xy
-  USE fft_types,  ONLY : fft_dlay_descriptor
+  USE fft_types,  ONLY : fft_type_descriptor
   USE task_groups,  ONLY : task_groups_descriptor
   !
   IMPLICIT NONE
   !
   COMPLEX(DP), INTENT(inout)    :: f( : ) ! INPUT/OUTPUT array containing data to be transformed
-  TYPE (fft_dlay_descriptor), INTENT(in) :: dfft ! descriptor of fft data layout
+  TYPE (fft_type_descriptor), INTENT(in) :: dfft ! descriptor of fft data layout
   TYPE (task_groups_descriptor), INTENT(in) :: dtgs ! descriptor of fft data layout
   INTEGER                    :: planes( dfft%nr1x )
   !
@@ -377,13 +377,13 @@ SUBROUTINE bw_tg_cft3_xy( f, dfft, dtgs )
   !----------------------------------------------------------------------------
   !
   USE fft_scalar, ONLY : cft_2xy
-  USE fft_types,  ONLY : fft_dlay_descriptor
+  USE fft_types,  ONLY : fft_type_descriptor
   USE task_groups,  ONLY : task_groups_descriptor
   !
   IMPLICIT NONE
   !
   COMPLEX(DP), INTENT(inout)    :: f( : ) ! INPUT/OUTPUT  array containing data to be transformed
-  TYPE (fft_dlay_descriptor), INTENT(in) :: dfft ! descriptor of fft data layout
+  TYPE (fft_type_descriptor), INTENT(in) :: dfft ! descriptor of fft data layout
   TYPE (task_groups_descriptor), INTENT(in) :: dtgs ! descriptor of fft data layout
   INTEGER                    :: planes( dfft%nr1x )
   !
@@ -395,7 +395,7 @@ END SUBROUTINE bw_tg_cft3_xy
 #ifdef __DOUBLE_BUFFER
   SUBROUTINE pack_group_sticks_i( f, yf, dfft, req)
 
-     USE fft_types,  ONLY : fft_dlay_descriptor
+     USE fft_types,  ONLY : fft_type_descriptor
 
      IMPLICIT NONE
 #if defined(__MPI)
@@ -404,7 +404,7 @@ END SUBROUTINE bw_tg_cft3_xy
 
      COMPLEX(DP), INTENT(in)    :: f( : )  ! array containing all bands, and gvecs distributed across processors
      COMPLEX(DP), INTENT(out)    :: yf( : )  ! array containing bands collected into task groups
-     TYPE (fft_dlay_descriptor), INTENT(in) :: dfft
+     TYPE (fft_type_descriptor), INTENT(in) :: dfft
      INTEGER                     :: ierr,req
      !
      IF( dfft%tg_rdsp(dfft%nogrp) + dfft%tg_rcv(dfft%nogrp) > size( yf ) ) THEN
@@ -541,7 +541,7 @@ END SUBROUTINE bw_tg_cft3_xy
 
 SUBROUTINE tg_gather( dffts, dtgs, v, tg_v )
    !
-   USE fft_types,      ONLY : fft_dlay_descriptor
+   USE fft_types,      ONLY : fft_type_descriptor
    USE task_groups,    ONLY : task_groups_descriptor
 
    ! T.G.
@@ -552,7 +552,7 @@ SUBROUTINE tg_gather( dffts, dtgs, v, tg_v )
   INCLUDE 'mpif.h'
 #endif
 
-   TYPE(fft_dlay_descriptor), INTENT(in) :: dffts
+   TYPE(fft_type_descriptor), INTENT(in) :: dffts
    TYPE(task_groups_descriptor), INTENT(in) :: dtgs
 
    REAL(DP) :: v(:)
@@ -605,7 +605,7 @@ END SUBROUTINE tg_gather
 !
 SUBROUTINE tg_cgather( dffts, dtgs, v, tg_v )
    !
-   USE fft_types,      ONLY : fft_dlay_descriptor
+   USE fft_types,      ONLY : fft_type_descriptor
    USE task_groups,    ONLY : task_groups_descriptor
 
    ! T.G.
@@ -616,7 +616,7 @@ SUBROUTINE tg_cgather( dffts, dtgs, v, tg_v )
    INCLUDE 'mpif.h'
 #endif
 
-   TYPE(fft_dlay_descriptor), INTENT(in) :: dffts
+   TYPE(fft_type_descriptor), INTENT(in) :: dffts
    TYPE(task_groups_descriptor), INTENT(in) :: dtgs
 
    COMPLEX(DP) :: v(:)
@@ -679,12 +679,12 @@ END SUBROUTINE tg_cgather
 COMPLEX (DP) FUNCTION get_f_of_R (i,j,k,f,dfft)
 !------  read from a distributed complex array f(:) in direct space
 !
-  USE fft_types,  ONLY : fft_dlay_descriptor
+  USE fft_types,  ONLY : fft_type_descriptor
   IMPLICIT NONE
 #if defined(__MPI)
   INCLUDE 'mpif.h'
 #endif
-  TYPE (fft_dlay_descriptor), INTENT(IN) :: dfft
+  TYPE (fft_type_descriptor), INTENT(IN) :: dfft
   INTEGER, INTENT (IN) :: i,j,k
   COMPLEX(DP), INTENT (IN) :: f(:)
   INTEGER :: kk, ii, jj, ierr
@@ -711,12 +711,12 @@ END FUNCTION get_f_of_R
 SUBROUTINE put_f_of_R (f_in,i,j,k,f,dfft)
 !------  write on a distributed complex array f(:) in direct space
 !
-  USE fft_types,  ONLY : fft_dlay_descriptor
+  USE fft_types,  ONLY : fft_type_descriptor
   IMPLICIT NONE
 #if defined(__MPI)
   INCLUDE 'mpif.h'
 #endif
-  TYPE (fft_dlay_descriptor), INTENT(IN) :: dfft
+  TYPE (fft_type_descriptor), INTENT(IN) :: dfft
   INTEGER, INTENT (IN) :: i,j,k
   COMPLEX(DP), INTENT (IN) :: f_in
   COMPLEX(DP), INTENT (INOUT) :: f(:)
@@ -742,14 +742,14 @@ END SUBROUTINE put_f_of_R
 COMPLEX (DP) FUNCTION get_f_of_G (i,j,k,f,dfft)
 !------  read from a distributed complex array f(:) in reciprocal space
 !
-  USE fft_types,  ONLY : fft_dlay_descriptor
+  USE fft_types,  ONLY : fft_type_descriptor
   IMPLICIT NONE
 #if defined(__MPI)
   INCLUDE 'mpif.h'
 #endif
   INTEGER, INTENT (IN) :: i,j,k
   COMPLEX(DP), INTENT (IN) :: f(:)
-  TYPE (fft_dlay_descriptor), INTENT(IN) :: dfft
+  TYPE (fft_type_descriptor), INTENT(IN) :: dfft
   INTEGER :: ii, jj, ierr
   COMPLEX(DP) :: f_aux
 
@@ -772,7 +772,7 @@ END FUNCTION get_f_of_G
 SUBROUTINE put_f_of_G (f_in,i,j,k,f,dfft)
 !------  write on a distributed complex array f(:) in reciprocal space
 !
-  USE fft_types,  ONLY : fft_dlay_descriptor
+  USE fft_types,  ONLY : fft_type_descriptor
   IMPLICIT NONE
 #if defined(__MPI)
   INCLUDE 'mpif.h'
@@ -780,7 +780,7 @@ SUBROUTINE put_f_of_G (f_in,i,j,k,f,dfft)
   COMPLEX(DP), INTENT (IN) :: f_in
   INTEGER, INTENT (IN) :: i,j,k
   COMPLEX(DP), INTENT (INOUT) :: f(:)
-  TYPE (fft_dlay_descriptor), INTENT(IN) :: dfft
+  TYPE (fft_type_descriptor), INTENT(IN) :: dfft
   INTEGER :: ii, jj
 
   IF ( i <= 0 .OR. i > dfft%nr1 ) CALL fftx_error__( ' put_f_of_G', ' first  index out of range ', 1 )

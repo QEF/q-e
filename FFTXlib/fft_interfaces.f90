@@ -22,12 +22,12 @@ MODULE fft_interfaces
      !! (the latter has an additional argument)
      
      SUBROUTINE invfft_x( grid_type, f, dfft, dtgs )
-       USE fft_types,  ONLY: fft_dlay_descriptor
+       USE fft_types,  ONLY: fft_type_descriptor
        USE task_groups,   ONLY: task_groups_descriptor
        IMPLICIT NONE
        INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
        CHARACTER(LEN=*),  INTENT(IN) :: grid_type
-       TYPE(fft_dlay_descriptor), INTENT(IN) :: dfft
+       TYPE(fft_type_descriptor), INTENT(IN) :: dfft
        TYPE(task_groups_descriptor), OPTIONAL, INTENT(IN) :: dtgs
        COMPLEX(DP) :: f(:)
      END SUBROUTINE invfft_x
@@ -44,12 +44,12 @@ MODULE fft_interfaces
 
   INTERFACE fwfft
      SUBROUTINE fwfft_x( grid_type, f, dfft, dtgs )
-       USE fft_types,  ONLY: fft_dlay_descriptor
+       USE fft_types,  ONLY: fft_type_descriptor
        USE task_groups,   ONLY: task_groups_descriptor
        IMPLICIT NONE
        INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
        CHARACTER(LEN=*), INTENT(IN) :: grid_type
-       TYPE(fft_dlay_descriptor), INTENT(IN) :: dfft
+       TYPE(fft_type_descriptor), INTENT(IN) :: dfft
        TYPE(task_groups_descriptor), OPTIONAL, INTENT(IN) :: dtgs
        COMPLEX(DP) :: f(:)
      END SUBROUTINE fwfft_x
@@ -90,14 +90,14 @@ SUBROUTINE invfft_x( grid_type, f, dfft, dtgs )
   USE fft_scalar,    ONLY: cfft3d, cfft3ds
   USE fft_smallbox,  ONLY: cft_b, cft_b_omp
   USE fft_parallel,  ONLY: tg_cft3s
-  USE fft_types,     ONLY: fft_dlay_descriptor
+  USE fft_types,     ONLY: fft_type_descriptor
   USE task_groups,   ONLY: task_groups_descriptor
 
   IMPLICIT NONE
 
   INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
 
-  TYPE(fft_dlay_descriptor), INTENT(IN) :: dfft
+  TYPE(fft_type_descriptor), INTENT(IN) :: dfft
   CHARACTER(LEN=*), INTENT(IN) :: grid_type
   COMPLEX(DP) :: f(:)
   TYPE(task_groups_descriptor), OPTIONAL, INTENT(IN) :: dtgs
@@ -199,14 +199,14 @@ SUBROUTINE fwfft_x( grid_type, f, dfft, dtgs )
   
   USE fft_scalar,    ONLY: cfft3d, cfft3ds
   USE fft_parallel,  ONLY: tg_cft3s
-  USE fft_types,     ONLY: fft_dlay_descriptor
+  USE fft_types,     ONLY: fft_type_descriptor
   USE task_groups,   ONLY: task_groups_descriptor
 
   IMPLICIT NONE
 
   INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
 
-  TYPE(fft_dlay_descriptor), INTENT(IN) :: dfft
+  TYPE(fft_type_descriptor), INTENT(IN) :: dfft
   CHARACTER(LEN=*), INTENT(IN) :: grid_type
   COMPLEX(DP) :: f(:)
   TYPE(task_groups_descriptor), OPTIONAL, INTENT(IN) :: dtgs
