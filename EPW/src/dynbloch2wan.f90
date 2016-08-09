@@ -10,19 +10,18 @@
   !------------------------------------------------------------------------
   SUBROUTINE dynbloch2wan ( nmodes, nq, xk, dynq, nrr, irvec, wslen )
   !------------------------------------------------------------------------
-  !
-  !  From the Dynamical Matrix in Bloch representation (coarse mesh), 
-  !  find the corresponding matrix in Wannier representation 
-  !
-  !  NOTA BENE: it seems to be very important that the matrix is kept real
-  !  physically these are truely the interatomic force constants.
-  !  If you use a complex matrix instead, you may get some spurious 
-  !  oscillations when you interpolate the phonon dispersions.
-  !
-  !  Note also that the acoustic sum rule for the q=0 case has been imposed
-  !  already in readmat_shuffle.f90
-  !
-  !---------------------------------------------------------------------
+  !!
+  !!  From the Dynamical Matrix in Bloch representation (coarse mesh), 
+  !!  find the corresponding matrix in Wannier representation 
+  !!
+  !!  NOTA BENE: it seems to be very important that the matrix is kept real
+  !!  physically these are truely the interatomic force constants.
+  !!  If you use a complex matrix instead, you may get some spurious 
+  !!  oscillations when you interpolate the phonon dispersions.
+  !!
+  !!  Note also that the acoustic sum rule for the q=0 case has been imposed
+  !!  already in readmat_shuffle.f90
+  !!
   !
   USE kinds,         ONLY : DP
   USE pwcom,         ONLY : at, bg, celldm, omega

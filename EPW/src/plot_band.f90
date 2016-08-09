@@ -103,17 +103,21 @@
        !
     ENDDO
     !
-    ALLOCATE ( xkf_all( 3, nkqtotf) , etf_all( nbndsub, nkqtotf) )
+    IF ( .not. ALLOCATED(xkf_all) ) ALLOCATE ( xkf_all( 3, nkqtotf)) 
+    IF ( .not. ALLOCATED(etf_all) ) ALLOCATE (etf_all( nbndsub, nkqtotf))
     !
+#ifdef __MPI    
     CALL poolgather2( 3,       nkqtotf, nkqf, xkf, xkf_all )
     CALL poolgather2( nbndsub, nkqtotf, nkqf, etf, etf_all )
     CALL mp_barrier(inter_pool_comm)
+#else    
     !
     xkf_all = xkf
     etf_all = etf
+#endif
     !
     IF ( my_pool_id .eq. ionode_id ) THEN
-    !
+      !
       OPEN(iufileig, file = "band.eig", form = 'formatted')
       WRITE(iufileig, '(" &plot nbnd=",i4,", nks=",i6," /")') nbndsub, nksqtotf
       !
@@ -150,8 +154,8 @@
     ENDIF
     CALL mp_barrier(inter_pool_comm)
     !
-    DEALLOCATE( xkf_all )
-    DEALLOCATE( etf_all )
+    IF ( ALLOCATED(xkf_all)) DEALLOCATE( xkf_all )
+    IF ( ALLOCATED(etf_all)) DEALLOCATE( etf_all )
     !
   ENDIF ! filkf
   !

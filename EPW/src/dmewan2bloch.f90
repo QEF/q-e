@@ -43,7 +43,7 @@
   !! 
   COMPLEX(kind=DP), DIMENSION (1:nbnd, 1:nbnd), INTENT (in) :: cuf
   !! Rotation matrix, fine mesh 
-  COMPLEX(kind=DP), DIMENSION (1:3, 1:nbnd, 1:nbnd, INTENT (out) :: dmef
+  COMPLEX(kind=DP), DIMENSION (1:3, 1:nbnd, 1:nbnd), INTENT (out) :: dmef
   !! interpolated dipole matrix elements in Bloch basis, fine mesh
   ! 
   ! local variables
