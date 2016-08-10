@@ -140,9 +140,10 @@
 
 ! ...       Fill in the stick maps, for given g-space base and cut-off
 
-          CALL sticks_maps( tk, ub, lb, bg(:,1), bg(:,2), bg(:,3), &
-                            gcut, gkcut, gcuts, st, stw, sts, mype, &
-                            nproc, comm )
+          !CALL sticks_maps( tk, ub, lb, bg(:,1), bg(:,2), bg(:,3), gcut, gkcut, gcuts, st, stw, sts, mype, nproc, comm )
+          CALL sticks_maps( tk, ub, lb, bg, gcut, st, comm )
+          CALL sticks_maps( tk, ub, lb, bg, gkcut, stw, comm )
+          CALL sticks_maps( tk, ub, lb, bg, gcuts, sts, comm )
 
 ! ...       Now count the number of stick nst and nstw
 
@@ -387,9 +388,9 @@
 
 ! ...       Fill in the stick maps, for given g-space base and cut-off
 
-          CALL sticks_maps( tk, ub, lb, bg(:,1), bg(:,2), bg(:,3), &
-                            gcut, gkcut, gcuts, st, stw, sts, mype, &
-                            nproc, comm )
+          CALL sticks_maps( tk, ub, lb, bg, gcut, st, comm )
+          CALL sticks_maps( tk, ub, lb, bg, gkcut, stw, comm )
+          CALL sticks_maps( tk, ub, lb, bg, gcuts, sts, comm )
 
 ! ...       Now count the number of stick nst and nstw
 

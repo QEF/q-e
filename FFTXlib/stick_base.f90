@@ -329,7 +329,127 @@ END SUBROUTINE write_matrix_strange_idx
    CONTAINS
 !=----------------------------------------------------------------------=
 
-      SUBROUTINE sticks_maps( tk, ub, lb, b1, b2, b3, gcut, gcutw, gcuts, st, stw, sts, me, nproc, comm )
+      SUBROUTINE sticks_maps( tk, ub, lb, bg, gcut, st, comm )
+
+#if defined(__MPI)
+          INCLUDE 'mpif.h'
+#endif
+
+          LOGICAL, INTENT(in) :: tk    !  if true use the full space grid
+          INTEGER, INTENT(in) :: ub(:) !  upper bounds for i-th grid dimension
+          INTEGER, INTENT(in) :: lb(:) !  lower bounds for i-th grid dimension
+          REAL(DP) , INTENT(in) :: bg(:,:) ! reciprocal space base vectors
+          REAL(DP) , INTENT(in) :: gcut   ! cut-off for potentials
+          INTEGER, INTENT(out) :: st( lb(1): ub(1), lb(2):ub(2) ) ! stick map 
+          INTEGER, INTENT(in) :: comm ! communicator of the g-vec group
+
+          INTEGER :: i, j, k, kip, ierr, mype, nproc
+          REAL(DP) :: b1(3), b2(3), b3(3) 
+          REAL(DP) :: gsq
+
+          b1(:) = bg(:,1)
+          b2(:) = bg(:,2)
+          b3(:) = bg(:,3)
+          st   = 0
+
+          mype = 0
+          nproc = 1
+#ifdef __MPI
+          CALL MPI_COMM_RANK( comm, mype, ierr )
+          CALL MPI_COMM_SIZE( comm, nproc, ierr )
+#endif
+
+! ...       Compute the basic maps of sticks
+! ...       st(i,j) will contain the number of G vectors of the stick whose
+! ...       indices are (i,j).
+
+#if defined (__EKO)
+          WRITE(*,*) ! Workaround for EKOPath compiler bug
+#endif
+          IF( .not. tk ) THEN
+
+            kip = 0 + abs(lb(3)) + 1
+            IF( mod( kip, nproc ) == mype ) THEN
+              st (0,0) = st (0,0) + 1
+            ENDIF
+
+            DO i= 0, 0
+              DO j= 0, 0
+                DO k= 1, ub(3)
+                  kip = k + abs(lb(3)) + 1
+                  IF( mod( kip, nproc ) == mype ) THEN
+                    gsq=    (dble(i)*b1(1)+dble(j)*b2(1)+dble(k)*b3(1) )**2
+                    gsq=gsq+(dble(i)*b1(2)+dble(j)*b2(2)+dble(k)*b3(2) )**2
+                    gsq=gsq+(dble(i)*b1(3)+dble(j)*b2(3)+dble(k)*b3(3) )**2
+                    IF(gsq<=gcut ) THEN
+                      st(i,j) = st(i,j) + 1
+                    ENDIF
+                  ENDIF
+                ENDDO
+              ENDDO
+            ENDDO
+
+            DO i = 0, 0
+              DO j = 1, ub(2)
+                DO k = lb(3), ub(3)
+                  kip = k + abs(lb(3)) + 1
+                  IF( mod( kip, nproc) == mype ) THEN
+                    gsq=    (dble(i)*b1(1)+dble(j)*b2(1)+dble(k)*b3(1) )**2
+                    gsq=gsq+(dble(i)*b1(2)+dble(j)*b2(2)+dble(k)*b3(2) )**2
+                    gsq=gsq+(dble(i)*b1(3)+dble(j)*b2(3)+dble(k)*b3(3) )**2
+                    IF(gsq<=gcut ) THEN
+                      st(i,j) = st(i,j) + 1
+                    ENDIF
+                  ENDIF
+                ENDDO
+              ENDDO
+            ENDDO
+
+            DO i = 1, ub(1)
+              DO j = lb(2), ub(2)
+                DO k = lb(3), ub(3)
+                  kip = k + abs(lb(3)) + 1
+                  IF( mod( kip, nproc) == mype ) THEN
+                    gsq=    (dble(i)*b1(1)+dble(j)*b2(1)+dble(k)*b3(1) )**2
+                    gsq=gsq+(dble(i)*b1(2)+dble(j)*b2(2)+dble(k)*b3(2) )**2
+                    gsq=gsq+(dble(i)*b1(3)+dble(j)*b2(3)+dble(k)*b3(3) )**2
+                    IF(gsq<=gcut ) THEN
+                      st(i,j) = st(i,j) + 1
+                    ENDIF
+                  ENDIF
+                ENDDO
+              ENDDO
+            ENDDO
+
+          ELSE
+
+            DO i= lb(1), ub(1)
+              DO j= lb(2), ub(2)
+                DO k= lb(3), ub(3)
+                  kip = k + abs(lb(3)) + 1
+                  IF( mod( kip, nproc ) == mype ) THEN
+                    gsq=    (dble(i)*b1(1)+dble(j)*b2(1)+dble(k)*b3(1) )**2
+                    gsq=gsq+(dble(i)*b1(2)+dble(j)*b2(2)+dble(k)*b3(2) )**2
+                    gsq=gsq+(dble(i)*b1(3)+dble(j)*b2(3)+dble(k)*b3(3) )**2
+                    IF(gsq<=gcut ) THEN
+                      st(i,j) = st(i,j) + 1
+                    ENDIF
+                  ENDIF
+                ENDDO
+              ENDDO
+            ENDDO
+
+          ENDIF
+
+#if defined(__MPI)
+          CALL MPI_ALLREDUCE(MPI_IN_PLACE, st, size(st), MPI_INTEGER, MPI_SUM, comm, ierr)
+#endif
+
+        RETURN
+      END SUBROUTINE sticks_maps
+
+
+      SUBROUTINE sticks_maps_all( tk, ub, lb, b1, b2, b3, gcut, gcutw, gcuts, st, stw, sts, me, nproc, comm )
 
 #if defined(__MPI)
           INCLUDE 'mpif.h'
@@ -473,7 +593,8 @@ END SUBROUTINE write_matrix_strange_idx
 #endif
 
         RETURN
-      END SUBROUTINE sticks_maps
+      END SUBROUTINE sticks_maps_all
+
 
 !=----------------------------------------------------------------------=
 
