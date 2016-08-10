@@ -3,7 +3,7 @@
 set card_ATOMIC_POSITIONS {
     card ATOMIC_POSITIONS {
         message {
-            For the description of ATOMIC_POSITIONS card see file: INPUT_PW.html or INPUT_PW.txt
+            For the description of ATOMIC_POSITIONS card see file: @link INPUT_PW.html or INPUT_PW.txt
         }                           
         flag atompos_unit -use optional {
             enum { alat | bohr | angstrom | crystal | crystal_sg }
@@ -154,7 +154,7 @@ input_description -distribution {Quantum Espresso} -package NEB -program neb.x {
                                        allowed to climb along the path
 
                         'manual'     : images that have to climb are manually selected.
-                                       See also CLIMBING_IMAGES card
+                                       See also @ref CLIMBING_IMAGES card
                     }
                 }
 
@@ -188,7 +188,7 @@ input_description -distribution {Quantum Espresso} -package NEB -program neb.x {
                     default { 1.D0 }
                     info {
                         Optimisation step length ( Hartree atomic units ).
-                        If opt_scheme="broyden", ds is used as a guess for the
+                        If @ref opt_scheme=="broyden", ds is used as a guess for the
                         diagonal part of the Jacobian matrix.
                     }
                 }
@@ -248,11 +248,11 @@ input_description -distribution {Quantum Espresso} -package NEB -program neb.x {
                     see { lfcpopt }
                     default { 0.d0 }
                     info {
-                        If lfcpopt = .TRUE., gives the target Fermi energy [Ry].
+                        If @ref lfcpopt == .TRUE., gives the target Fermi energy [Ry].
                         One can specify the total charge of the system for the first
-                        and last image by giving 'fcp_tot_charge_first' and 'fcp_tot_charge_last'
+                        and last image by giving @ref fcp_tot_charge_first and @ref fcp_tot_charge_last
                         so that the Fermi energy of these systems will be the target value,
-                        otherwise 'first_last_opt' should be .TRUE. 
+                        otherwise @ref first_last_opt should be .TRUE. 
                     }
                 }
 
@@ -262,7 +262,7 @@ input_description -distribution {Quantum Espresso} -package NEB -program neb.x {
                     info {
                         Total charge of the system ('tot_charge') for the first image.
                         Initial 'tot_charge' for intermediate images will be given by
-                        linear interpolation of 'fcp_tot_charge_first' and 'fcp_tot_charge_last'
+                        linear interpolation of @ref fcp_tot_charge_first and @ref fcp_tot_charge_last
                     }
                 }
 
@@ -272,7 +272,7 @@ input_description -distribution {Quantum Espresso} -package NEB -program neb.x {
                     info {
                         Total charge of the system ('tot_charge') for the last image.
                         Initial 'tot_charge' for intermediate images will be given by
-                        linear interpolation of 'fcp_tot_charge_first' and 'fcp_tot_charge_last'
+                        linear interpolation of @ref fcp_tot_charge_first and @ref fcp_tot_charge_last
                     }
                 }
             }
@@ -284,7 +284,7 @@ input_description -distribution {Quantum Espresso} -package NEB -program neb.x {
 
             card CLIMBING_IMAGES {
                 label { 
-                    Optional card, needed only if CI_scheme == 'manual', ignored otherwise ! 
+                    Optional card, needed only if @ref CI_scheme == 'manual', ignored otherwise ! 
                 }
 
                 syntax {
@@ -302,9 +302,9 @@ input_description -distribution {Quantum Espresso} -package NEB -program neb.x {
 
         supercard BEGIN_ENGINE_INPUT -endtag END_ENGINE_INPUT {
             message {
-                Here comes the pw.x specific namelists and cards (see file: INPUT_PW.html or INPUT_PW.txt)
-                with the exception of ATOMIC_POSITIONS cards, which are specified separately within the
-		BEGIN_POSITIONS/END_POSITIONS supercard as described below.
+                Here comes the pw.x specific namelists and cards (see file: @link INPUT_PW.html or INPUT_PW.txt)
+                with the exception of @ref ATOMIC_POSITIONS cards, which are specified separately within the
+		@ref BEGIN_POSITIONS/END_POSITIONS supercard as described below.
 
                 So the input that follows here is of the following structure:
                 
@@ -323,12 +323,12 @@ input_description -distribution {Quantum Espresso} -package NEB -program neb.x {
             supercard BEGIN_POSITIONS -endtag END_POSITIONS {
                 message {
                     NB:
-                    Atomic positions for all the images are specified within the BEGIN_POSITIONS / END_POSITIONS
-                    supercard, where each instance of ATOMIC_POSITIONS card is prefixed either by "FIRST_IMAGE", 
-                    "INTERMEDIATE_IMAGE", or "LAST_IMAGE" keywords.
+                    Atomic positions for all the images are specified within the @ref BEGIN_POSITIONS / END_POSITIONS
+                    supercard, where each instance of @ref ATOMIC_POSITIONS card is prefixed either by @ref FIRST_IMAGE, 
+                    @ref INTERMEDIATE_IMAGE, or @ref LAST_IMAGE keywords.
 
                     Note that intermediate images are optional, i.e., there can be none or any number of
-                    "INTERMEDIATE_IMAGE" images.
+                    @ref INTERMEDIATE_IMAGE images.
 		}
 		supercard FIRST_IMAGE {
 		    eval $card_ATOMIC_POSITIONS
