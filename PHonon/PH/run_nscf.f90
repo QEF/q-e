@@ -19,7 +19,13 @@ SUBROUTINE run_nscf(do_band, iq)
   USE lsda_mod,        ONLY : nspin
   USE control_flags,   ONLY : restart
   USE check_stop,      ONLY : check_stop_now
-  USE fft_base,        ONLY : dffts
+  USE fft_base,        ONLY : dffts, dfftp
+  !!!
+  USE fft_types, ONLY: fft_type_allocate
+  USE cell_base, ONLY: at, bg
+  USE gvect,     ONLY: gcutm
+  USE gvecs,     ONLY: gcutms
+  !!!
   USE disp,            ONLY : lgamma_iq
   USE control_ph,      ONLY : reduce_io, recover, tmp_dir_phq, &
                               ext_restart, bands_computed, newgrid, qplot, &
@@ -30,7 +36,7 @@ SUBROUTINE run_nscf(do_band, iq)
   USE grid_irr_iq,     ONLY : done_bands
   USE acfdtest,        ONLY : acfdt_is_active, acfdt_num_der, ir_point, delta_vrs
   USE scf,             ONLY : vrs
-  USE mp_bands,        ONLY : ntask_groups
+  USE mp_bands,        ONLY : ntask_groups, intra_bgrp_comm
 
   USE lr_symm_base,    ONLY : minus_q, nsymq, invsymq
   USE qpoint,          ONLY : xq
@@ -73,6 +79,10 @@ SUBROUTINE run_nscf(do_band, iq)
   restart = ext_restart
   conv_ions=.true.
   !
+  !!!
+  CALL fft_type_allocate ( dfftp, at, bg, gcutm, intra_bgrp_comm )
+  CALL fft_type_allocate ( dffts, at, bg, gcutms, intra_bgrp_comm)
+  !!!
   CALL setup_nscf ( newgrid, xq, elph_mat )
   CALL init_run()
 !!!!!!!!!!!!!!!!!!!!!!!! ACFDT TEST !!!!!!!!!!!!!!!!
