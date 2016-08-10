@@ -12,7 +12,7 @@ SUBROUTINE memory_report()
   ! Very rough estimate of the dynamical memory allocated by the pw.x code
   ! Should be called after the first steps of initialization are done, but
   ! before large arrays are actually allocated. Does not cover cases like:
-  ! real-space q/beta, hybrid and vdW functionals, finite electric fields
+  ! real-space q/beta, vdW functionals, finite electric fields.
   !
   USE io_global, ONLY : stdout
   USE kinds,     ONLY : dp 
@@ -20,6 +20,7 @@ SUBROUTINE memory_report()
   USE wvfct,     ONLY : nbnd, nbndx
   USE basis,     ONLY : natomwfc
   USE cell_base, ONLY : omega
+  USE exx,       ONLY : ecutfock, nkqs
   USE fft_base,  ONLY : dffts, dfftp
   USE gvect,     ONLY : ngm, ngm_g
   USE gvecs,     ONLY : ngms, doublegrid
@@ -34,14 +35,16 @@ SUBROUTINE memory_report()
   USE noncollin_module, ONLY : npol
   USE control_flags, ONLY: isolve, nmix, imix, gamma_only, lscf, io_level, &
        lxdm, smallmem
+  USE ions_base, ONLY : ntyp
   USE mp_diag,   ONLY : np_ortho
-  USE mp_bands,  ONLY : nproc_bgrp
+  USE mp_bands,  ONLY : nproc_bgrp, nbgrp
   USE mp_images, ONLY : nproc_image  
   !
   IMPLICIT NONE
   !
   INTEGER, PARAMETER :: Mb=1024*1024
-  INTEGER :: g_fact, nk, nbnd_l, npwx_g, npwx_l, mix_type_size, scf_type_size
+  INTEGER :: g_fact, mix_type_size, scf_type_size
+  INTEGER :: nk, nbnd_l, npwx_g, npwx_l, ngxx_g, nexx_l
   !
   ! these quantities are real in order to prevent integer overflow
   !
@@ -80,6 +83,21 @@ SUBROUTINE memory_report()
   ! Hubbard wavefunctions
   IF ( lda_plus_u .AND. U_projection .NE. 'pseudo' ) &
      ram = ram + complex_size * nwfcU * npol * npwx_l 
+  ! hybrid functionals
+  IF ( dft_is_hybrid () ) THEN
+     ! ngxx_g = estimated global number of G-vectors used in V_x\psi products
+     ! nexx_l = estimated local size of the FFT grid used in V_x\psi products
+     ngxx_g = NINT ( fpi/3.0_dp * SQRT(ecutfock)**3 / (tpi**3/omega) )
+     nexx_l = 16*ngxx_g/nproc_bgrp
+     ! nbnd_l : estimated number of bands per proc with band parallelization
+     nbnd_l = NINT( DBLE(nbnd) / nbgrp )
+     ! Stored wavefunctions in real space 
+     ram = ram + complex_size/g_fact * nexx_l * npol * nbnd_l * nkqs
+#ifdef __EXX_ACE
+     ! Projectors
+     ram = ram + complex_size * npwx_l * npol * nbnd * nks
+#endif
+  END IF
   ! Nonlocal pseudopotentials V_NL (beta functions), reciprocal space
   ram =  ram + complex_size * nkb * npwx_l
   ! Charge density and potentials - see scf_type in scf_mod
@@ -87,11 +105,10 @@ SUBROUTINE memory_report()
   IF ( dft_is_meta() .or. lxdm ) scf_type_size =  2 * scf_type_size
   ! rho, v, vnew
   ram =  ram + 3 * scf_type_size
-  ! vltot, vrs, rho_core, rhog_core, psic, kedtau if needed
-  ram =  ram + complex_size * ( dfftp%nnr + ngm) + &
+  ! vltot, vrs, rho_core, rhog_core, psic, strf, kedtau if needed
+  ram =  ram + complex_size * ( dfftp%nnr + ngm *( 1 + ntyp ) ) + &
        real_size * dfftp%nnr*(2+nspin)
   IF ( dft_is_meta() ) ram = ram + real_size * dfftp%nnr*nspin
-  
   ! arrays for rho mixing
   IF ( lscf ) THEN
      ! rhoin
@@ -101,7 +118,7 @@ SUBROUTINE memory_report()
      IF ( dft_is_meta() .or. lxdm ) mix_type_size =  2 * mix_type_size
      ! df, dv (if kept in memory)
      IF ( io_level < 2 ) &
-          ram =  ram + complex_size * mix_type_size * 2 * nmix
+          ram =  ram + mix_type_size * 2 * nmix
   END IF
   ! G-vectors: g, gg, mill, nl, nlm, ig_l2g, igtongl
   ram =  ram + real_size * ngm * 4 + int_size * ngm * 7
@@ -121,14 +138,13 @@ SUBROUTINE memory_report()
      IF ( okvan ) ram1 = ram1 + complex_size * nbndx * npol * npwx_l ! spsi
   END IF
   !
-  ! the following is needed during self-consistency in approx_screening2
-  ! but shouldn't actually raise the watermark
+  ! arrays allocated in approx_screening2 during charge mixing 
   !
   IF ( lscf .AND. imix > 1 ) &
      ram1 = MAX( ram1, complex_size * ngm * 27 + real_size * dffts%nnr )
 
   maxram = ram + ram1
-
+  !
   ! arrays used for global sorting in ggen:
   !    mill_g, mill_unsorted, igsrt, g2sort_g, total dimensions:
   !
@@ -137,9 +153,9 @@ SUBROUTINE memory_report()
 
   totram = maxram * nproc_image
   
-  WRITE( stdout, '(/5x,"Dynamical RAM per process     > ",F10.2,"Mb")' ) &
-       maxram/Mb
-  IF ( nproc_image > 1) WRITE( stdout, &
-       '(/5x,"Total allocated dynamical RAM > ",F10.2,"Mb")' ) totram/Mb
+  WRITE( stdout, '(/5x,"Estimated max dynamical RAM per process > ", &
+       & F10.2,"Mb")' ) maxram/Mb
+  IF ( nproc_image > 1) WRITE( stdout, '(/5x, &
+     & "Estimated total allocated dynamical RAM > ",F10.2,"Mb")' ) totram/Mb
   !
 END subroutine memory_report

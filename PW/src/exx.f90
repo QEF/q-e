@@ -270,7 +270,7 @@ MODULE exx
                    s(:,3,isym)*xk_cryst(3)
           ! add sxk to the auxiliary list IF it is not already present
           xk_not_found = .true.
-          ! *** do-loop skipped the first time because temp_nksq == 0
+          ! *** do-loop skipped the first time because temp_nkqs == 0
           DO ikq=1, temp_nkqs
             IF (xk_not_found ) THEN
                 dxk(:) = sxk(:)-temp_xkq(:,ikq) - nint(sxk(:)-temp_xkq(:,ikq))
