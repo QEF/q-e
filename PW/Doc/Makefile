@@ -60,7 +60,7 @@ link_input_xx:
 	echo ; \
 	fi) ; fi)
 
-INPUT_PW.html: %.html: %.def
+INPUT_PW.html: %.html: %.def input_xx.xsl
 	$(HELPDOC) $<
 INPUT_PW.txt: %.txt: %.def
 	$(HELPDOC) $<
