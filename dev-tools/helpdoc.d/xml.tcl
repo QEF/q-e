@@ -28,6 +28,26 @@ proc ::helpdoc::xml_attr_escape_chr {content} {
     return $content
 }
 
+proc ::helpdoc::xml_http {content} {
+    # PURPOSE: transform all instances of http://**** into links
+
+    set re {http://([[:alnum:]-]+\.)+[[:alnum:]-]+[-#/\w]*}
+    return [regsub -all $re $content {<link>\0</link>}]
+}
+
+proc ::helpdoc::xml_ref {content} {
+    # PURPOSE: transform all "@ref var" into <ref>var</ref>    
+    #          Note that Fortran structure names struct%var are supported
+    set re {(@ref)\s+(\w+([%]\w)*)}
+    return [regsub -all $re $content {<ref>\2</ref>}]
+}
+
+proc ::helpdoc::xml_link {content} {
+    # PURPOSE: transform all "@link document" into <link>document</link>    
+
+    set re {(@link)\s+([.,;:]*[\w\+-]+([.,;:][\w\+-])*)}
+    return [regsub -all $re $content {<link>\2</link>}]
+}
 
 proc ::helpdoc::xml_tag_enter {tag attr content depth} {
     variable fid
@@ -45,7 +65,7 @@ proc ::helpdoc::xml_tag_enter {tag attr content depth} {
     }
     
     set attr    [xml_attr_escape_chr $attr]
-    set content [formatString [xml_escape_chr $content]]
+    set content [formatString [xml_ref [xml_link [xml_http [xml_escape_chr $content]]]]]
 
     if { $attr != "" } {
 	puts $fid(xml) "${indent}<$tag ${attr}>${sep}${content}"

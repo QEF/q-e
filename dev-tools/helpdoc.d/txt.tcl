@@ -64,7 +64,10 @@ proc helpdoc::labelMsg {label msg} {
     return $message
 }
 
-
+proc ::helpdoc::txt_ref_link {content} {
+    set re {(@ref\s+|@link\s+)}
+    return [regsub -all $re $content {}]
+}
 proc ::helpdoc::txt_tag_enter {tree node tag attr content depth} {
     variable txtDepth
     variable indentNum
@@ -83,7 +86,7 @@ proc ::helpdoc::txt_tag_enter {tree node tag attr content depth} {
 	unset arr
     }
 
-    set content [formatString [trimEmpty $content]]    
+    set content [formatString [trimEmpty [txt_ref_link $content]]]
     attr2array_ arr $attr
 
     global sourcedir
