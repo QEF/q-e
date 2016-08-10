@@ -27,11 +27,19 @@ then
   echo "Running PW ..."
   echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/pw.x ${PARA_SUFFIX} < $2 > $3 2> $4"
   ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/pw.x ${PARA_SUFFIX} < $2 > $3 2> $4
+  if [[ -e CRASH ]]
+  then
+    cat $3
+  fi  
 elif [[ "$1" == "2" ]]
 then
   echo "Running PH ..."
   echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/ph.x < $2 > $3 2> $4"  
   ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/ph.x < $2 > $3 2> $4
+  if [[ -e CRASH ]]
+  then
+    cat $3
+  fi
   echo "Gather results in save" 
   python pp.py < pp.in
 elif [[ "$1" == "3" ]]
@@ -39,6 +47,10 @@ then
   echo "Running EPW ..."
   echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/epw.x ${PARA_SUFFIX} < $2 > $3 2> $4"  
   ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/epw.x ${PARA_SUFFIX} < $2 > $3 2> $4
+  if [[ -e CRASH ]]
+  then
+    cat $3
+  fi
 fi
 
 #rm -f input_tmp.in
