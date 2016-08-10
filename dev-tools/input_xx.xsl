@@ -236,7 +236,7 @@
       <h3>INTRODUCTION</h3>      
       <blockquote>
 	<pre>
-	  <xsl:value-of select="."/>
+	  <xsl:apply-templates/>
 	</pre>
       </blockquote>
     </blockquote>
@@ -258,6 +258,7 @@
 
   <xsl:template match="namelist">
     <a name="{generate-id(.)}"></a>
+    <a name="{@name}"></a>
     <table border="0" width="100%" style="margin-bottom: 20;">
       <tr>
 	<th bgcolor="#ddcba6">
@@ -276,10 +277,11 @@
     </table>
   </xsl:template>
 
-
   <!--    *** SUPERCARD *** -->
+  
   <xsl:template match="supercard">
     <a name="{generate-id(.)}"></a>
+    <a name="{@name}"></a>    
     <table style="table-layout: auto; width: 100%; border: 3px solid #1b587b; border-collapse: collapse; margin: 10 5 20 5; padding-right: 5px;">
       <tr>
 	<th bgcolor="#c8c4b7">
@@ -323,6 +325,7 @@
 
   <xsl:template match="card">
     <a name="{generate-id(.)}"></a>
+    <a name="{@name}"></a>
     <table border="0" style="margin-bottom: 20; table-layout: auto; width: 100%;">
       <tr>
 	<th bgcolor="#ddcba6">
@@ -735,16 +738,16 @@
   <!--    *** LABEL ***  -->
 
   <xsl:template match="label">
-    <b><xsl:value-of select="."/></b><p/>
+    <p><b><xsl:apply-templates/></b></p>
   </xsl:template>
 
 
   <!--    *** MESSAGE ***  -->
 
   <xsl:template match="message">
-    <pre>
-      <xsl:value-of select="."/>
-    </pre>
+    <p><pre>
+      <xsl:apply-templates/>
+    </pre></p>
   </xsl:template>
 
 
@@ -905,7 +908,7 @@
     <tr>
       <td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "> <i>Default:</i> </td>
       <td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; ">
-	<xsl:value-of select="."/>
+	<xsl:apply-templates/>
       </td>
     </tr>
   </xsl:template>
@@ -914,7 +917,7 @@
     <tr>
       <td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "> <i>Status:</i> </td>
       <td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; ">
-	<xsl:value-of select="."/>
+	<xsl:apply-templates/>
       </td>
     </tr>
   </xsl:template>
@@ -945,7 +948,10 @@
   <xsl:template match="info">
     <tr><td align="left" valign="top" colspan="2">
       <blockquote>
-	<pre><xsl:value-of select="."/></pre>
+	<pre>
+	  <!--<xsl:apply-templates/>-->
+	  <xsl:apply-templates/>
+	</pre>
       </blockquote>
     </td></tr>
   </xsl:template>
@@ -1054,8 +1060,20 @@
   
   <xsl:template match="text">
     <blockquote>
-      <pre><xsl:value-of select="."/></pre>
+      <pre><xsl:apply-templates/></pre>
     </blockquote>
+  </xsl:template>
+
+  <xsl:template match="link">
+    <a href="{.}">
+      <xsl:value-of select="."/>
+    </a>
+  </xsl:template>
+  
+  <xsl:template match="ref">
+    <a href="#{.}">
+      <xsl:value-of select="."/>
+    </a>
   </xsl:template>
   
 </xsl:stylesheet>
