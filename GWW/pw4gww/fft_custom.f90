@@ -280,11 +280,9 @@ CONTAINS
 !
 
 
-  !CALL sticks_maps( tk, ub, lb, fc%bg_t(:,1), fc%bg_t(:,2), fc%bg_t(:,3), fc%gcutmt, gkcut, fc%gcutmt, st, &
-  !     &stw, sts ,me_pool,nproc_pool,intra_pool_comm)
-  CALL sticks_maps( tk, ub, lb, fc%bg_t, fc%gcutmt, st, intra_pool_comm)
-  CALL sticks_maps( tk, ub, lb, fc%bg_t, gkcut, stw, intra_pool_comm)
-  CALL sticks_maps( tk, ub, lb, fc%bg_t, fc%gcutmt, sts , intra_pool_comm)
+  CALL sticks_map( (.not.tk), .true., ub, lb, fc%bg_t, fc%gcutmt, st, intra_pool_comm)
+  CALL sticks_map( (.not.tk), .true., ub, lb, fc%bg_t, gkcut, stw, intra_pool_comm)
+  CALL sticks_map( (.not.tk), .true., ub, lb, fc%bg_t, fc%gcutmt, sts , intra_pool_comm)
     
   nct  = count( st  > 0 )
   ncts = count( sts > 0 )

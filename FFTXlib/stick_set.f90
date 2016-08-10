@@ -120,6 +120,7 @@
         INTEGER, ALLOCATABLE :: ist(:,:)    ! sticks indices ordered
         INTEGER :: ip, ngm_ , ngs_, ipg
         INTEGER, ALLOCATABLE :: idx(:)
+        LOGICAL :: parallel
 
 !
           tk    = .not. gamma_only
@@ -140,10 +141,10 @@
 
 ! ...       Fill in the stick maps, for given g-space base and cut-off
 
-          !CALL sticks_maps( tk, ub, lb, bg(:,1), bg(:,2), bg(:,3), gcut, gkcut, gcuts, st, stw, sts, mype, nproc, comm )
-          CALL sticks_maps( tk, ub, lb, bg, gcut, st, comm )
-          CALL sticks_maps( tk, ub, lb, bg, gkcut, stw, comm )
-          CALL sticks_maps( tk, ub, lb, bg, gcuts, sts, comm )
+          parallel = .true.
+          CALL sticks_map( (.not.tk), parallel, ub, lb, bg, gcut, st, comm )
+          CALL sticks_map( (.not.tk), parallel, ub, lb, bg, gkcut, stw, comm )
+          CALL sticks_map( (.not.tk), parallel, ub, lb, bg, gcuts, sts, comm )
 
 ! ...       Now count the number of stick nst and nstw
 
@@ -201,9 +202,8 @@
           CALL fft_type_set( dffts, tk, nsts, ub, lb, idx, ist(:,1), ist(:,2), nstps, nstpw, sstps, sstpw, sts, stw )
 
           IF( PRESENT( dfft3d ) ) THEN
-             DEALLOCATE( stw )
-             ALLOCATE( stw( lb(1) : ub(1), lb(2) : ub(2) ) )
-             CALL sticks_maps_scalar( (.not.tk), ub, lb, bg(:,1),bg(:,2),bg(:,3), gcut, gkcut, gcuts, stw, ngm_ , ngs_ )
+             parallel = .false.
+             CALL sticks_map( (.not.tk), parallel, ub, lb, bg, gkcut, stw, comm )
              CALL fft_type_scalar( dfft3d, ub, lb, stw )
           END IF
 
@@ -212,10 +212,8 @@
           DEALLOCATE( stw )
           ALLOCATE( stw( lb(1) : ub(1), lb(2) : ub(2) ) )
 
-          CALL sticks_maps_scalar( (.not.tk), ub, lb, bg(:,1),bg(:,2),bg(:,3), gcut, gkcut, gcuts, stw, ngm_ , ngs_ )
-
-          IF( ngm_ /= ngm ) CALL fftx_error__( ' pstickset ', ' inconsistent ngm ', abs( ngm - ngm_ ) )
-          IF( ngs_ /= ngs ) CALL fftx_error__( ' pstickset ', ' inconsistent ngs ', abs( ngs - ngs_ ) )
+          parallel = .false.
+          CALL sticks_map( (.not.tk), parallel, ub, lb, bg, gkcut, stw )
 
           CALL fft_type_scalar( dfftp, ub, lb, stw )
 
@@ -388,9 +386,9 @@
 
 ! ...       Fill in the stick maps, for given g-space base and cut-off
 
-          CALL sticks_maps( tk, ub, lb, bg, gcut, st, comm )
-          CALL sticks_maps( tk, ub, lb, bg, gkcut, stw, comm )
-          CALL sticks_maps( tk, ub, lb, bg, gcuts, sts, comm )
+          CALL sticks_map( (.not.tk), .true., ub, lb, bg, gcut, st, comm )
+          CALL sticks_map( (.not.tk), .true., ub, lb, bg, gkcut, stw, comm )
+          CALL sticks_map( (.not.tk), .true., ub, lb, bg, gcuts, sts, comm )
 
 ! ...       Now count the number of stick nst and nstw
 
@@ -443,9 +441,7 @@
           DEALLOCATE( stw )
           ALLOCATE( stw( lb(1) : ub(1), lb(2) : ub(2) ) )
 
-          CALL sticks_maps_scalar( (.not.tk), ub, lb, bg(:,1),bg(:,2),bg(:,3), gcut, gkcut, gcuts, stw, ngm_ , ngs_ )
-
-          IF( ngs_ /= ngs ) CALL fftx_error__( ' pstickset_custom ', ' inconsistent ngs ', abs( ngs - ngs_ ) )
+          CALL sticks_map( (.not.tk), .false., ub, lb, bg, gkcut, stw, comm )
 
           CALL fft_type_scalar( dffts, ub, lb, stw )
 

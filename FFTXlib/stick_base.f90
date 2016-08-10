@@ -315,8 +315,8 @@ END SUBROUTINE write_matrix_strange_idx
         PRIVATE
         SAVE
 
-        PUBLIC :: sticks_maps, sticks_sort, sticks_countg, sticks_dist, sticks_pairup
-        PUBLIC :: sticks_owner, sticks_deallocate, sticks_maps_scalar, sticks_ordered_dist
+        PUBLIC :: sticks_map, sticks_sort, sticks_countg, sticks_dist, sticks_pairup
+        PUBLIC :: sticks_owner, sticks_deallocate, sticks_ordered_dist
 
 ! ...   sticks_owner :   stick owner, sticks_owner( i, j ) is the index of the processor
 ! ...     (starting from 1) owning the stick whose x and y coordinate  are i and j.
@@ -329,307 +329,54 @@ END SUBROUTINE write_matrix_strange_idx
    CONTAINS
 !=----------------------------------------------------------------------=
 
-      SUBROUTINE sticks_maps( tk, ub, lb, bg, gcut, st, comm )
 
-#if defined(__MPI)
-          INCLUDE 'mpif.h'
-#endif
+  SUBROUTINE sticks_map( lgamma, parallel, ub, lb, bg, gcut, st, comm )
 
-          LOGICAL, INTENT(in) :: tk    !  if true use the full space grid
-          INTEGER, INTENT(in) :: ub(:) !  upper bounds for i-th grid dimension
-          INTEGER, INTENT(in) :: lb(:) !  lower bounds for i-th grid dimension
-          REAL(DP) , INTENT(in) :: bg(:,:) ! reciprocal space base vectors
-          REAL(DP) , INTENT(in) :: gcut   ! cut-off for potentials
-          INTEGER, INTENT(out) :: st( lb(1): ub(1), lb(2):ub(2) ) ! stick map 
-          INTEGER, INTENT(in) :: comm ! communicator of the g-vec group
-
-          INTEGER :: i, j, k, kip, ierr, mype, nproc
-          REAL(DP) :: b1(3), b2(3), b3(3) 
-          REAL(DP) :: gsq
-
-          b1(:) = bg(:,1)
-          b2(:) = bg(:,2)
-          b3(:) = bg(:,3)
-          st   = 0
-
-          mype = 0
-          nproc = 1
-#ifdef __MPI
-          CALL MPI_COMM_RANK( comm, mype, ierr )
-          CALL MPI_COMM_SIZE( comm, nproc, ierr )
-#endif
-
-! ...       Compute the basic maps of sticks
-! ...       st(i,j) will contain the number of G vectors of the stick whose
-! ...       indices are (i,j).
-
-#if defined (__EKO)
-          WRITE(*,*) ! Workaround for EKOPath compiler bug
-#endif
-          IF( .not. tk ) THEN
-
-            kip = 0 + abs(lb(3)) + 1
-            IF( mod( kip, nproc ) == mype ) THEN
-              st (0,0) = st (0,0) + 1
-            ENDIF
-
-            DO i= 0, 0
-              DO j= 0, 0
-                DO k= 1, ub(3)
-                  kip = k + abs(lb(3)) + 1
-                  IF( mod( kip, nproc ) == mype ) THEN
-                    gsq=    (dble(i)*b1(1)+dble(j)*b2(1)+dble(k)*b3(1) )**2
-                    gsq=gsq+(dble(i)*b1(2)+dble(j)*b2(2)+dble(k)*b3(2) )**2
-                    gsq=gsq+(dble(i)*b1(3)+dble(j)*b2(3)+dble(k)*b3(3) )**2
-                    IF(gsq<=gcut ) THEN
-                      st(i,j) = st(i,j) + 1
-                    ENDIF
-                  ENDIF
-                ENDDO
-              ENDDO
-            ENDDO
-
-            DO i = 0, 0
-              DO j = 1, ub(2)
-                DO k = lb(3), ub(3)
-                  kip = k + abs(lb(3)) + 1
-                  IF( mod( kip, nproc) == mype ) THEN
-                    gsq=    (dble(i)*b1(1)+dble(j)*b2(1)+dble(k)*b3(1) )**2
-                    gsq=gsq+(dble(i)*b1(2)+dble(j)*b2(2)+dble(k)*b3(2) )**2
-                    gsq=gsq+(dble(i)*b1(3)+dble(j)*b2(3)+dble(k)*b3(3) )**2
-                    IF(gsq<=gcut ) THEN
-                      st(i,j) = st(i,j) + 1
-                    ENDIF
-                  ENDIF
-                ENDDO
-              ENDDO
-            ENDDO
-
-            DO i = 1, ub(1)
-              DO j = lb(2), ub(2)
-                DO k = lb(3), ub(3)
-                  kip = k + abs(lb(3)) + 1
-                  IF( mod( kip, nproc) == mype ) THEN
-                    gsq=    (dble(i)*b1(1)+dble(j)*b2(1)+dble(k)*b3(1) )**2
-                    gsq=gsq+(dble(i)*b1(2)+dble(j)*b2(2)+dble(k)*b3(2) )**2
-                    gsq=gsq+(dble(i)*b1(3)+dble(j)*b2(3)+dble(k)*b3(3) )**2
-                    IF(gsq<=gcut ) THEN
-                      st(i,j) = st(i,j) + 1
-                    ENDIF
-                  ENDIF
-                ENDDO
-              ENDDO
-            ENDDO
-
-          ELSE
-
-            DO i= lb(1), ub(1)
-              DO j= lb(2), ub(2)
-                DO k= lb(3), ub(3)
-                  kip = k + abs(lb(3)) + 1
-                  IF( mod( kip, nproc ) == mype ) THEN
-                    gsq=    (dble(i)*b1(1)+dble(j)*b2(1)+dble(k)*b3(1) )**2
-                    gsq=gsq+(dble(i)*b1(2)+dble(j)*b2(2)+dble(k)*b3(2) )**2
-                    gsq=gsq+(dble(i)*b1(3)+dble(j)*b2(3)+dble(k)*b3(3) )**2
-                    IF(gsq<=gcut ) THEN
-                      st(i,j) = st(i,j) + 1
-                    ENDIF
-                  ENDIF
-                ENDDO
-              ENDDO
-            ENDDO
-
-          ENDIF
-
-#if defined(__MPI)
-          CALL MPI_ALLREDUCE(MPI_IN_PLACE, st, size(st), MPI_INTEGER, MPI_SUM, comm, ierr)
-#endif
-
-        RETURN
-      END SUBROUTINE sticks_maps
-
-
-      SUBROUTINE sticks_maps_all( tk, ub, lb, b1, b2, b3, gcut, gcutw, gcuts, st, stw, sts, me, nproc, comm )
-
-#if defined(__MPI)
-          INCLUDE 'mpif.h'
-#endif
-
-          LOGICAL, INTENT(in) :: tk    !  if true use the full space grid
-          INTEGER, INTENT(in) :: ub(:) !  upper bounds for i-th grid dimension
-          INTEGER, INTENT(in) :: lb(:) !  lower bounds for i-th grid dimension
-          REAL(DP) , INTENT(in) :: b1(:), b2(:), b3(:) ! reciprocal space base vectors
-          REAL(DP) , INTENT(in) :: gcut   ! cut-off for potentials
-          REAL(DP) , INTENT(in) :: gcutw  ! cut-off for plane waves
-          REAL(DP) , INTENT(in) :: gcuts  ! cut-off for smooth mesh
-          INTEGER, INTENT(out) :: st( lb(1): ub(1), lb(2):ub(2) ) ! stick map for potential
-          INTEGER, INTENT(out) :: stw(lb(1): ub(1), lb(2):ub(2) ) ! stick map for wave functions
-          INTEGER, INTENT(out) :: sts(lb(1): ub(1), lb(2):ub(2) ) ! stick map for smooth mesh
-          INTEGER, INTENT(in) :: me ! my proc id (starting from 0)
-          INTEGER, INTENT(in) :: nproc ! number of proc in the g-vec group
-          INTEGER, INTENT(in) :: comm ! communicator of the g-vec group
-
-          INTEGER :: i, j, k, kip, ierr
-          REAL(DP) :: gsq
-
-          stw  = 0
-          st   = 0
-          sts  = 0
-
-! ...       Here find the basic maps of sticks st, stw and sts for the potential
-! ...       cut-off gcut, wavefunction cut-off gcutw, and smooth mesh cut-off gcuts
-
-! ...       st(i,j) will contain the number of G vectors of the stick whose
-! ...       indices are (i,j).
-
-#if defined (__EKO)
-          WRITE(*,*) ! Workaround for EKOPath compiler bug
-#endif
-          IF( .not. tk ) THEN
-
-            kip = 0 + abs(lb(3)) + 1
-            IF( mod( kip, nproc ) == me ) THEN
-              st (0,0) = st (0,0) + 1
-              stw(0,0) = stw(0,0) + 1
-              sts(0,0) = sts(0,0) + 1
-            ENDIF
-
-            DO i= 0, 0
-              DO j= 0, 0
-                DO k= 1, ub(3)
-                  kip = k + abs(lb(3)) + 1
-                  IF( mod( kip, nproc ) == me ) THEN
-                    gsq=    (dble(i)*b1(1)+dble(j)*b2(1)+dble(k)*b3(1) )**2
-                    gsq=gsq+(dble(i)*b1(2)+dble(j)*b2(2)+dble(k)*b3(2) )**2
-                    gsq=gsq+(dble(i)*b1(3)+dble(j)*b2(3)+dble(k)*b3(3) )**2
-                    IF(gsq<=gcut ) THEN
-                      st(i,j) = st(i,j) + 1
-                      IF(gsq<=gcutw) THEN
-                        stw(i,j) = stw(i,j) + 1
-                      ENDIF
-                      IF(gsq<=gcuts) THEN
-                        sts(i,j) = sts(i,j) + 1
-                      ENDIF
-                    ENDIF
-                  ENDIF
-                ENDDO
-              ENDDO
-            ENDDO
-
-            DO i = 0, 0
-              DO j = 1, ub(2)
-                DO k = lb(3), ub(3)
-                  kip = k + abs(lb(3)) + 1
-                  IF( mod( kip, nproc) == me ) THEN
-                    gsq=    (dble(i)*b1(1)+dble(j)*b2(1)+dble(k)*b3(1) )**2
-                    gsq=gsq+(dble(i)*b1(2)+dble(j)*b2(2)+dble(k)*b3(2) )**2
-                    gsq=gsq+(dble(i)*b1(3)+dble(j)*b2(3)+dble(k)*b3(3) )**2
-                    IF(gsq<=gcut ) THEN
-                      st(i,j) = st(i,j) + 1
-                      IF(gsq<=gcutw) THEN
-                        stw(i,j) = stw(i,j) + 1
-                      ENDIF
-                      IF(gsq<=gcuts) THEN
-                        sts(i,j) = sts(i,j) + 1
-                      ENDIF
-                    ENDIF
-                  ENDIF
-                ENDDO
-              ENDDO
-            ENDDO
-
-            DO i = 1, ub(1)
-              DO j = lb(2), ub(2)
-                DO k = lb(3), ub(3)
-                  kip = k + abs(lb(3)) + 1
-                  IF( mod( kip, nproc) == me ) THEN
-                    gsq=    (dble(i)*b1(1)+dble(j)*b2(1)+dble(k)*b3(1) )**2
-                    gsq=gsq+(dble(i)*b1(2)+dble(j)*b2(2)+dble(k)*b3(2) )**2
-                    gsq=gsq+(dble(i)*b1(3)+dble(j)*b2(3)+dble(k)*b3(3) )**2
-                    IF(gsq<=gcut ) THEN
-                      st(i,j) = st(i,j) + 1
-                      IF(gsq<=gcutw) THEN
-                        stw(i,j) = stw(i,j) + 1
-                      ENDIF
-                      IF(gsq<=gcuts) THEN
-                        sts(i,j) = sts(i,j) + 1
-                      ENDIF
-                    ENDIF
-                  ENDIF
-                ENDDO
-              ENDDO
-            ENDDO
-
-          ELSE
-
-            DO i= lb(1), ub(1)
-              DO j= lb(2), ub(2)
-                DO k= lb(3), ub(3)
-                  kip = k + abs(lb(3)) + 1
-                  IF( mod( kip, nproc ) == me ) THEN
-                    gsq=    (dble(i)*b1(1)+dble(j)*b2(1)+dble(k)*b3(1) )**2
-                    gsq=gsq+(dble(i)*b1(2)+dble(j)*b2(2)+dble(k)*b3(2) )**2
-                    gsq=gsq+(dble(i)*b1(3)+dble(j)*b2(3)+dble(k)*b3(3) )**2
-                    IF(gsq<=gcut ) THEN
-                      st(i,j) = st(i,j) + 1
-                    ENDIF
-                    IF(gsq<=gcutw) THEN
-                      stw(i,j) = stw(i,j) + 1
-                    ENDIF
-                    IF(gsq<=gcuts) THEN
-                      sts(i,j) = sts(i,j) + 1
-                    ENDIF
-                  ENDIF
-                ENDDO
-              ENDDO
-            ENDDO
-
-          ENDIF
-
-#if defined(__MPI)
-          CALL MPI_ALLREDUCE(MPI_IN_PLACE, st, size(st), MPI_INTEGER, MPI_SUM, comm, ierr)
-          CALL MPI_ALLREDUCE(MPI_IN_PLACE, stw, size(stw), MPI_INTEGER, MPI_SUM, comm, ierr)
-          CALL MPI_ALLREDUCE(MPI_IN_PLACE, sts, size(sts), MPI_INTEGER, MPI_SUM, comm, ierr)
-#endif
-
-        RETURN
-      END SUBROUTINE sticks_maps_all
-
-
-!=----------------------------------------------------------------------=
-
-  SUBROUTINE sticks_maps_scalar( lgamma, ub, lb, b1, b2, b3, gcutm, gkcut, gcutms, stw, ngm, ngms )
+    ! .. Compute the basic maps of sticks
+    ! .. st(i,j) will contain the number of G vectors of the stick whose indices are (i,j).
 
     LOGICAL, INTENT(in) :: lgamma !  if true use gamma point simmetry
+    LOGICAL, INTENT(in) :: parallel !  if true compute the map for a parallel fft
     INTEGER, INTENT(in) :: ub(:)  !  upper bounds for i-th grid dimension
     INTEGER, INTENT(in) :: lb(:)  !  lower bounds for i-th grid dimension
-    REAL(DP) , INTENT(in) :: b1(:), b2(:), b3(:) ! reciprocal space base vectors
-    REAL(DP) , INTENT(in) :: gcutm  ! cut-off for potentials
-    REAL(DP) , INTENT(in) :: gkcut  ! cut-off for plane waves
-    REAL(DP) , INTENT(in) :: gcutms  ! cut-off for smooth mesh
+    REAL(DP) , INTENT(in) :: bg(:,:) ! reciprocal space base vectors
+    REAL(DP) , INTENT(in) :: gcut  ! cut-off for potentials
+    INTEGER, OPTIONAL, INTENT(in) :: comm ! communicator of the g-vec group
     !
-    INTEGER, INTENT(out) :: ngm, ngms
+#if defined(__MPI)
+    INCLUDE 'mpif.h'
+#endif
     !
     !     stick map for wave functions, note that map is taken in YZ plane
     !
-    INTEGER, INTENT(out) :: stw( lb(1) : ub(1), lb(2) : ub(2) )
-
-    INTEGER :: i1, i2, i3, n1, n2, n3
+    INTEGER, INTENT(out) :: st( lb(1) : ub(1), lb(2) : ub(2) )
+    REAL(DP) :: b1(3), b2(3), b3(3) 
+    INTEGER :: i1, i2, i3, n1, n2, n3, mype, nproc, ierr
     REAL(DP) :: amod
 
-    ngm = 0
-    ngms = 0
-    stw = 0
+    st = 0
+    b1(:) = bg(:,1)
+    b2(:) = bg(:,2)
+    b3(:) = bg(:,3)
 
     n1 = max( abs( lb(1) ), abs( ub(1) ) )
     n2 = max( abs( lb(2) ), abs( ub(2) ) )
     n3 = max( abs( lb(3) ), abs( ub(3) ) )
 
+    mype = 0
+    nproc = 1
+#ifdef __MPI
+    IF( PRESENT( comm ) ) THEN
+       CALL MPI_COMM_RANK( comm, mype, ierr )
+       CALL MPI_COMM_SIZE( comm, nproc, ierr )
+    END IF
+#endif
+
     loop1: DO i1 = - n1, n1
        !
        ! Gamma-only: exclude space with x<0
        !
-       IF (lgamma .and. i1 < 0) CYCLE loop1
+       IF ( (lgamma .and. i1 < 0) .OR. ( MOD( i1 + n1, nproc ) /= mype )) CYCLE loop1
        !
        loop2: DO i2 = - n2, n2
           !
@@ -646,18 +393,26 @@ END SUBROUTINE write_matrix_strange_idx
              amod = (i1 * b1 (1) + i2 * b2 (1) + i3 * b3 (1) ) **2 + &
                     (i1 * b1 (2) + i2 * b2 (2) + i3 * b3 (2) ) **2 + &
                     (i1 * b1 (3) + i2 * b2 (3) + i3 * b3 (3) ) **2
-             IF (amod <= gcutm)  ngm  = ngm  + 1
-             IF (amod <= gcutms) ngms = ngms + 1
-             IF (amod <= gkcut ) THEN
-                stw( i1, i2 ) = 1
-                IF (lgamma) stw( -i1, -i2 ) = 1
+             IF (amod <= gcut ) THEN
+                IF( parallel ) THEN
+                   st( i1, i2 ) = st( i1, i2 ) + 1
+                ELSE
+                   st( i1, i2 ) = 1
+                   IF (lgamma) st( -i1, -i2 ) = 1
+                END IF
              ENDIF
           ENDDO loop3
        ENDDO loop2
     ENDDO loop1
 
+#if defined(__MPI)
+    IF( PRESENT( comm ) ) THEN
+       CALL MPI_ALLREDUCE(MPI_IN_PLACE, st, size(st), MPI_INTEGER, MPI_SUM, comm, ierr)
+    END IF
+#endif
+
     RETURN
-  END SUBROUTINE sticks_maps_scalar
+  END SUBROUTINE sticks_map
 
 
 !=----------------------------------------------------------------------=
