@@ -74,7 +74,6 @@ program test
   LOGICAL :: iope
    !! I/O process
   INTEGER :: ierr, i, ncount, ib, ireq, nreq, ipsi, iloop
-  INTEGER :: stdout
   INTEGER :: ngw_ , ngm_ , ngs_
   REAL*8  :: gcutm, gkcut, gcutms
   REAL*8  :: ecutm, ecutw, ecutms
@@ -261,7 +260,6 @@ program test
   dfft3d%nr3x  = good_fft_dimension( dfft3d%nr3 )
 
   gamma_only = .true.
-  stdout     = 6
 
 
   CALL pstickset( gamma_only, bg, gcutm, gkcut, gcutms, &
