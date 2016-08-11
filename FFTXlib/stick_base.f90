@@ -315,8 +315,10 @@ END SUBROUTINE write_matrix_strange_idx
         PRIVATE
         SAVE
 
-        PUBLIC :: sticks_map, sticks_sort, sticks_countg, sticks_dist, sticks_pairup
+        PUBLIC :: sticks_map, sticks_countg, sticks_dist, sticks_pairup
         PUBLIC :: sticks_owner, sticks_deallocate, sticks_ordered_dist
+        PUBLIC :: sticks_map_index, sticks_sort_new, sticks_dist_new
+        PUBLIC :: sticks_set_owner
 
 ! ...   sticks_owner :   stick owner, sticks_owner( i, j ) is the index of the processor
 ! ...     (starting from 1) owning the stick whose x and y coordinate  are i and j.
@@ -414,8 +416,144 @@ END SUBROUTINE write_matrix_strange_idx
     RETURN
   END SUBROUTINE sticks_map
 
+!=----------------------------------------------------------------------=
+
+    SUBROUTINE sticks_map_index( ub, lb, st, in1, in2, ngc, index_map )
+
+      INTEGER, INTENT(in) :: ub(:), lb(:)
+      INTEGER, INTENT(in) :: st( lb(1): ub(1), lb(2):ub(2) ) ! stick map for potential
+      INTEGER, INTENT(inout) :: index_map( lb(1): ub(1), lb(2):ub(2) ) ! keep track of sticks index
+
+      INTEGER, INTENT(out) :: in1(:), in2(:)
+      INTEGER, INTENT(out) :: ngc(:)
+
+      INTEGER :: j1, j2, i1, i2, i3, nct, min_size, ind
+      LOGICAL :: ok
+
+!
+! ...     initialize the sticks indexes array ist
+! ...     nct counts columns containing G-vectors for the dense grid
+! ...     ncts counts columns contaning G-vectors for the smooth grid
+!
+      nct   = MAXVAL( index_map )
+      ngc   = 0
+
+      min_size = min( size( in1 ), size( in2 ), size( ngc ) )
+
+      DO j2 = 0, ( ub(2) - lb(2) )
+        DO j1 = 0, ( ub(1) - lb(1) )
+          i1 = j1
+          IF( i1 > ub(1) ) i1 = lb(1) + ( i1 - ub(1) ) - 1
+          i2 = j2
+          IF( i2 > ub(2) ) i2 = lb(2) + ( i2 - ub(2) ) - 1
+          IF( st( i1, i2 ) > 0 ) THEN
+            IF( index_map( i1, i2 ) == 0 ) THEN
+              nct = nct + 1
+              index_map( i1, i2 ) = nct
+            END IF
+            ind = index_map( i1, i2 )
+            IF( nct > min_size ) &
+              CALL fftx_error__(' sticks_countg ',' too many sticks ', nct )
+            in1(ind) = i1
+            in2(ind) = i2
+            ngc(ind) = st( i1 , i2)
+          ENDIF
+        ENDDO
+      ENDDO
+
+      RETURN
+    END SUBROUTINE sticks_map_index
 
 !=----------------------------------------------------------------------=
+
+      SUBROUTINE sticks_sort_new( parallel, ng, nct, idx )
+
+! ...     This subroutine sorts the sticks indexes, according to
+! ...     the length and type of the sticks, wave functions sticks
+! ...     first, then smooth mesh sticks, and finally potential
+! ...     sticks
+
+        ! lengths of sticks, ngc for potential mesh, ngcw for wave functions mesh
+        ! and ngcs for smooth mesh
+
+        LOGICAL, INTENT(in) :: parallel
+        INTEGER, INTENT(in) :: ng(:)
+
+        ! nct, total number of sticks
+
+        INTEGER, INTENT(in) :: nct
+
+        ! index, on output, new sticks indexes
+
+        INTEGER, INTENT(inout) :: idx(:)
+
+        INTEGER  :: mc, ic, nc
+        INTEGER, ALLOCATABLE :: iaux(:)
+        INTEGER, ALLOCATABLE :: itmp(:)
+        REAL(DP), ALLOCATABLE :: aux(:)
+
+        !  we need to avoid sorting elements already sorted previously
+        !  build inverse indexes
+        ALLOCATE( iaux( nct ) )
+        iaux = 0
+        DO mc = 1, nct
+          IF( idx( mc ) > 0 ) iaux( idx( mc ) ) = mc
+        END DO
+        !
+        !  check idx has no "hole"
+        !
+        IF( idx( 1 ) == 0 ) THEN
+          ic = 0
+          DO mc = 2, nct
+            IF( idx( mc ) /= 0 ) THEN
+              CALL fftx_error__(' sticks_sort ',' non contiguous indexes 1 ', nct )
+            END IF
+          END DO
+        ELSE
+          ic = 1
+          DO mc = 2, nct
+            IF( idx( mc ) == 0 ) EXIT 
+            ic = ic + 1
+          END DO
+          DO mc = ic+1, nct
+            IF( idx( mc ) /= 0 ) THEN
+              CALL fftx_error__(' sticks_sort ',' non contiguous indexes 2 ', nct )
+            END IF
+          END DO
+        END IF
+
+        IF( parallel ) THEN
+          ALLOCATE( aux( nct ) )
+          ALLOCATE( itmp( nct ) )
+          itmp = 0
+          nc = 0
+          DO mc = 1, nct
+            IF( ng( mc ) > 0 .AND. iaux( mc ) == 0 ) THEN
+              nc = nc + 1
+              aux( nc ) = -ng(mc) 
+              itmp( nc ) = mc
+            END IF
+          ENDDO
+          CALL hpsort( nc, aux, itmp)
+          DO mc = 1, nc
+             idx( ic + mc ) = itmp( mc )
+          END DO
+          DEALLOCATE( itmp )
+          DEALLOCATE( aux )
+        ELSE
+          DO mc = 1, nct
+            IF( ng(mc) > 0 .AND. iaux(mc) == 0 ) THEN
+              ic = ic + 1
+              idx(ic) = mc
+            ENDIF
+          ENDDO
+        ENDIF
+
+        DEALLOCATE( iaux )
+
+        RETURN
+      END SUBROUTINE sticks_sort_new
+
 
       SUBROUTINE sticks_sort( ngc, ngcw, ngcs, nct, idx, nproc )
 
@@ -477,18 +615,6 @@ END SUBROUTINE write_matrix_strange_idx
             ENDIF
           ENDDO
         ENDIF
-
-!!! TO REMOVE BEFORE COMMIT INTO SVN !!!
-#if defined(__STICKS_DEBUG)
-        WRITE( 6,*) '-----------------'
-        WRITE( 6,*) 'STICKS_SORT DEBUG'
-        DO mc = 1, nct
-          WRITE( 6, fmt="(4I10)" ) idx(mc), ngcw( idx(mc) ), ngcs( idx(mc) ), ngc( idx(mc) )
-        ENDDO
-        WRITE( 6,*) '-----------------'
-#endif
-!!! TO REMOVE BEFORE COMMIT INTO SVN !!!
-
         RETURN
       END SUBROUTINE sticks_sort
 
@@ -554,7 +680,88 @@ END SUBROUTINE write_matrix_strange_idx
       RETURN
     END SUBROUTINE sticks_countg
 
+
 !=----------------------------------------------------------------------=
+
+    SUBROUTINE sticks_dist_new( lgamma, mype, nproc, ub, lb, idx, in1, in2, ngc, nct, ncp, ngp, stown, ng )
+
+      LOGICAL, INTENT(in) :: lgamma
+      INTEGER, INTENT(in) :: mype
+      INTEGER, INTENT(in) :: nproc
+
+      INTEGER, INTENT(in) :: ub(:), lb(:), idx(:)
+      INTEGER, INTENT(inout) :: stown(lb(1): ub(1), lb(2):ub(2) ) ! stick map for wave functions
+      INTEGER, INTENT(in) :: in1(:), in2(:)
+      INTEGER, INTENT(in) :: ngc(:)
+      INTEGER, INTENT(in) :: nct
+      INTEGER, INTENT(out) :: ncp(:)
+      INTEGER, INTENT(out) :: ngp(:)
+      INTEGER, INTENT(out) :: ng
+
+      INTEGER :: mc, i1, i2, j, jj, icnt
+
+      ncp = 0
+      ngp = 0
+      icnt = 0
+
+      DO mc = 1, nct
+
+         if( idx( mc ) < 1 ) CYCLE
+
+         i1 = in1( idx( mc ) )
+         i2 = in2( idx( mc ) )
+!
+         IF ( lgamma .and. ( (i1 < 0) .or. ( (i1 == 0) .and. (i2 < 0) ) ) ) GOTO 30
+!
+         jj = 1
+         IF ( ngc( idx(mc) ) > 0 .AND. stown(i1,i2) == 0 ) THEN
+            !jj = MOD( icnt, nproc ) + 1
+            !icnt = icnt + 1
+            DO j = 1, nproc
+               IF ( ngp(j) < ngp(jj) ) THEN
+                 jj = j
+               ELSEIF ( ( ngp(j) == ngp(jj) ) .and. ( ncp(j) < ncp(jj) ) ) THEN
+                 jj = j
+               ENDIF
+            ENDDO
+            stown(i1,i2) = jj
+         END IF
+         IF ( ngc( idx(mc) ) > 0 ) THEN
+            ncp( stown(i1,i2) ) = ncp( stown(i1,i2) ) + 1
+            ngp( stown(i1,i2) ) = ngp( stown(i1,i2) ) + ngc( idx(mc) )
+         ENDIF
+ 30      CONTINUE
+      ENDDO
+      !
+      ng = ngp( mype + 1 )
+      !
+      IF ( lgamma ) THEN
+        !  when gamma symmetry is used only the sticks of half reciprocal space
+        !  are generated, then here we pair-up the sticks with those of the other
+        !  half of the space, using the gamma symmetry relation
+        !  Note that the total numero of stick "nct" is not modified
+        DO mc = 1, nct
+           IF( idx( mc ) < 1 ) CYCLE
+           IF( ngc( idx(mc) ) < 1 ) CYCLE
+           i1 = in1( idx(mc) )
+           i2 = in2( idx(mc) )
+           IF( i1 == 0 .and. i2 == 0 ) THEN
+             jj = stown( i1, i2 )
+             IF( jj > 0 ) ngp( jj ) = ngp( jj ) + ngc( idx(mc) ) - 1
+           ELSE
+             jj = stown( i1, i2 )
+             IF( jj > 0 ) THEN
+               stown( -i1, -i2 ) = jj
+               ncp( jj ) = ncp( jj ) + 1
+               ngp( jj ) = ngp( jj ) + ngc( idx(mc) )
+             ENDIF
+           ENDIF
+        ENDDO
+      ENDIF
+
+      RETURN
+    END SUBROUTINE sticks_dist_new
+
 
     SUBROUTINE sticks_dist( tk, ub, lb, idx, in1, in2, ngc, ngcw, ngcs, nct, &
                             ncp, ncpw, ncps, ngp, ngpw, ngps, stown, stownw, stowns, mype, nproc )
@@ -719,7 +926,9 @@ END SUBROUTINE write_matrix_strange_idx
       RETURN
     END SUBROUTINE sticks_dist
 
+
 !=----------------------------------------------------------------------=
+
 
     SUBROUTINE sticks_pairup( tk, ub, lb, idx, in1, in2, ngc, ngcw, ngcs, nct, &
                              ncp, ncpw, ncps, ngp, ngpw, ngps, stown, stownw, stowns, nproc )
@@ -789,6 +998,17 @@ END SUBROUTINE write_matrix_strange_idx
 
       RETURN
     END SUBROUTINE sticks_pairup
+
+
+    SUBROUTINE sticks_set_owner( ub, lb, stown )
+      INTEGER, INTENT(in) :: ub(:), lb(:)
+      INTEGER, INTENT(inout) :: stown( lb(1): ub(1), lb(2):ub(2) ) ! stick map for potential
+      IF( allocated( sticks_owner ) ) DEALLOCATE( sticks_owner )
+      ALLOCATE( sticks_owner( lb(1): ub(1), lb(2):ub(2) ) )
+      sticks_owner( :, : ) = abs( stown( :, :) )
+      RETURN
+    END SUBROUTINE sticks_set_owner
+
 
 !=----------------------------------------------------------------------=
 

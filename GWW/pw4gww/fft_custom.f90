@@ -191,7 +191,7 @@ CONTAINS
   REAL(DP) :: amod
   ! modulus of G vectors
 
-  INTEGER, ALLOCATABLE :: stw(:,:)
+  INTEGER, ALLOCATABLE :: stw(:,:), index_map(:,:)
   ! sticks maps
 
   INTEGER :: ub(3), lb(3)
@@ -271,6 +271,7 @@ CONTAINS
   ALLOCATE( stw ( lb(1) : ub(1), lb(2) : ub(2) ) )
   ALLOCATE( st  ( lb(1) : ub(1), lb(2) : ub(2) ) )
   ALLOCATE( sts ( lb(1) : ub(1), lb(2) : ub(2) ) )
+  ALLOCATE( index_map ( lb(1) : ub(1), lb(2) : ub(2) ) )
 
  !
 ! ...     Fill in the stick maps, for given g-space base (b1,b2,b3)
@@ -313,10 +314,16 @@ CONTAINS
 ! ...     ncts counts columns contaning G-vectors for the smooth grid
 !
 
+  CALL sticks_map_index( ub, lb, st, in1, in2, ngc, index_map )
+  CALL sticks_map_index( ub, lb, stw, in1, in2, ngkc, index_map )
+  CALL sticks_map_index( ub, lb, sts, in1, in2, ngcs, index_map )
 
-  CALL sticks_countg( tk, ub, lb, st, stw, sts, in1, in2, ngc, ngkc, ngcs )
+  idx = 0
 
-  CALL sticks_sort( ngc, ngkc, ngcs, nct, idx ,nproc_pool)
+  CALL sticks_sort_new( nproc_pool>1, ngkc, nct, idx )
+  CALL sticks_sort_new( nproc_pool>1, ngcs, nct, idx )
+  CALL sticks_sort_new( nproc_pool>1, ngc, nct, idx )
+
 
   CALL sticks_dist( tk, ub, lb, idx, in1, in2, ngc, ngkc, ngcs, nct, &
           ncp, nkcp, ncps, ngp, ngkp, ngps, st, stw, sts , me_pool, nproc_pool)
@@ -381,7 +388,7 @@ CONTAINS
   ENDIF
   WRITE( stdout,*)
 
-  DEALLOCATE( stw, st, sts, in1, in2, idx, ngc, ngcs, ngkc )
+  DEALLOCATE( stw, st, sts, in1, in2, idx, ngc, ngcs, ngkc, index_map )
 
   !
   !   ncp0 = starting column for each processor

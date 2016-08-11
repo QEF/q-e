@@ -358,11 +358,13 @@ CONTAINS
     desc%iplp  = 0    ! 1 if the given x-plane location is active in rho  y-fft
     desc%iplw  = 0    ! 1 if the given x-plane location is active in wave y-fft
 
+    desc%nst = 0
     DO iss = 1, nst
       is = idx( iss )
       i1 = in1( is )
       i2 = in2( is )
       IF( st( i1, i2 ) > 0 ) THEN
+        desc%nst = desc%nst + 1
         m1 = i1 + 1; IF ( m1 < 1 ) m1 = m1 + nr1
         m2 = i2 + 1; IF ( m2 < 1 ) m2 = m2 + nr2
         IF( stw( i1, i2 ) > 0 ) THEN
@@ -373,6 +375,7 @@ CONTAINS
         ENDIF
         desc%iplp( m1 ) = 1
         IF( .not. tk ) THEN
+          IF( i1 /= 0 .OR. i2 /= 0 ) desc%nst = desc%nst + 1
           n1 = -i1 + 1; IF ( n1 < 1 ) n1 = n1 + nr1
           n2 = -i2 + 1; IF ( n2 < 1 ) n2 = n2 + nr2
           IF( stw( -i1, -i2 ) > 0 ) THEN

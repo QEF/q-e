@@ -29,13 +29,60 @@
    CONTAINS
 !=----------------------------------------------------------------------=
 
-      SUBROUTINE pstickset( gamma_only, bg, gcut, gkcut, gcuts, &
+
+      SUBROUTINE get_sticks(  parallel, lgamma, mype, nproc, comm, ub, lb, bg, gcut, &
+                              idx, ist, nstp, sstp, st, stown, index_map, nst, ng )
+
+         LOGICAL, INTENT(in) :: parallel
+         LOGICAL, INTENT(in) :: lgamma
+         INTEGER, INTENT(in) :: mype
+         INTEGER, INTENT(in) :: nproc
+         INTEGER, INTENT(in) :: comm
+         INTEGER, INTENT(in) :: ub(:), lb(:)
+         REAL(DP) , INTENT(in) :: bg(:,:) ! reciprocal space base vectors
+         REAL(DP) , INTENT(in) :: gcut  ! cut-off for potentials
+
+         INTEGER, INTENT(inout) :: idx(:)
+         INTEGER, INTENT(inout) :: ist(:,:)
+         INTEGER, INTENT(inout) :: stown(lb(1): ub(1), lb(2):ub(2) ) 
+         INTEGER, INTENT(inout) :: index_map(lb(1): ub(1), lb(2):ub(2) ) 
+
+         INTEGER, INTENT(out) :: st(lb(1): ub(1), lb(2):ub(2) ) 
+         INTEGER, INTENT(out) :: nstp(:)
+         INTEGER, INTENT(out) :: sstp(:)
+         INTEGER, INTENT(out) :: nst
+         INTEGER, INTENT(out) :: ng
+
+         INTEGER, ALLOCATABLE :: ngc(:)
+         INTEGER :: ic
+         ALLOCATE( ngc ( SIZE( idx ) ) )
+         st = 0
+         ngc = 0
+         CALL sticks_map( lgamma, parallel, ub, lb, bg, gcut, st, comm )
+         CALL sticks_map_index( ub, lb, st, ist(:,1), ist(:,2), ngc, index_map )
+         nst = count( st > 0 )
+         CALL sticks_sort_new( nproc>1, ngc, SIZE(idx), idx )
+         CALL sticks_dist_new( lgamma, mype, nproc, ub, lb, idx, ist(:,1), ist(:,2), ngc, SIZE(idx), nstp, sstp, stown, ng )
+         st = 0
+         DO ic = 1, SIZE( idx )
+            IF( idx( ic ) > 0 ) THEN
+            IF( ngc( idx( ic ) ) > 0 ) THEN
+                st( ist(idx( ic ),1), ist(idx( ic ),2) ) = stown( ist(idx( ic ),1),ist(idx( ic ),2))
+                if(lgamma) st(-ist(idx( ic ),1),-ist(idx( ic ),2)) = stown( ist(idx( ic ),1),ist(idx( ic ),2))
+            END IF
+            END IF
+         END DO
+         DEALLOCATE( ngc )
+         RETURN
+      END SUBROUTINE
+
+      SUBROUTINE pstickset( lgamma, bg, gcut, gkcut, gcuts, &
           dfftp, dffts, ngw, ngm, ngs, mype, root, nproc, comm, nogrp_ , &
           ionode, stdout, dtgs, dfft3d )
 
           USE task_groups, ONLY: task_groups_descriptor, task_groups_init
 
-          LOGICAL, INTENT(in) :: gamma_only
+          LOGICAL, INTENT(in) :: lgamma
 ! ...     bg(:,1), bg(:,2), bg(:,3) reciprocal space base vectors.
           REAL(DP), INTENT(in) :: bg(3,3)
           REAL(DP), INTENT(in) :: gcut, gkcut, gcuts
@@ -116,14 +163,19 @@
         INTEGER :: nsts
 ! ...   nsts      local number of sticks (smooth mesh)
 
+        INTEGER :: nstx ! a safe sup for the local number of sticksd
 
-        INTEGER, ALLOCATABLE :: ist(:,:)    ! sticks indices ordered
-        INTEGER :: ip, ngm_ , ngs_, ipg
+        INTEGER, ALLOCATABLE :: index_map(:,:)
+        INTEGER, ALLOCATABLE :: sticks_owner(:,:)
+
+        INTEGER, ALLOCATABLE :: ist(:,:)  ! array containing the X and Y coordinate of each stick
+        INTEGER, ALLOCATABLE :: ngc(:)  ! number of G vectors (height of the stick) for each stick
+        INTEGER :: ip, ngm_ , ngs_, ipg, ic, i1, i2
         INTEGER, ALLOCATABLE :: idx(:)
         LOGICAL :: parallel
 
 !
-          tk    = .not. gamma_only
+          tk    = .not. lgamma
           ub(1) = ( dfftp%nr1 - 1 ) / 2
           ub(2) = ( dfftp%nr2 - 1 ) / 2
           ub(3) = ( dfftp%nr3 - 1 ) / 2
@@ -131,67 +183,43 @@
 
           ! ...       Allocate maps
 
+          nstx = (dfftp%nr1+1) * (dfftp%nr2+1) ! we stay very large indeed
+
           ALLOCATE( stw ( lb(1):ub(1), lb(2):ub(2) ) )
           ALLOCATE( st  ( lb(1):ub(1), lb(2):ub(2) ) )
           ALLOCATE( sts ( lb(1):ub(1), lb(2):ub(2) ) )
+          ALLOCATE( index_map ( lb(1):ub(1), lb(2):ub(2) ) )
+          ALLOCATE( sticks_owner ( lb(1):ub(1), lb(2):ub(2) ) )
+          ALLOCATE( idx( nstx ) )
+          ALLOCATE( ist( nstx , 2) )
+          ALLOCATE( ngc( nstx ) )
+          ALLOCATE( nstp(nproc) )
+          ALLOCATE( sstp(nproc) )
+          ALLOCATE( nstpw(nproc) )
+          ALLOCATE( sstpw(nproc) )
+          ALLOCATE( nstps(nproc) )
+          ALLOCATE( sstps(nproc) )
 
-          st  = 0
-          stw = 0
-          sts = 0
-
-! ...       Fill in the stick maps, for given g-space base and cut-off
+          sticks_owner = 0
+          index_map = 0
+          idx = 0
 
           parallel = .true.
-          CALL sticks_map( (.not.tk), parallel, ub, lb, bg, gcut, st, comm )
-          CALL sticks_map( (.not.tk), parallel, ub, lb, bg, gkcut, stw, comm )
-          CALL sticks_map( (.not.tk), parallel, ub, lb, bg, gcuts, sts, comm )
 
-! ...       Now count the number of stick nst and nstw
+! ...     Fill in the stick maps, for given set of base vectors and cut-off
+! ...     count the number of sticks
+! ...     Sorts the sticks according to their length
 
-          nst  = count( st  > 0 )
-          nstw = count( stw > 0 )
-          nsts = count( sts > 0 )
+          CALL get_sticks(  parallel, lgamma, mype, nproc, comm, ub, lb, bg, gkcut, &
+                            idx, ist, nstpw, sstpw, stw, sticks_owner, index_map, nstw, ngw )
 
-          ALLOCATE(ist(nst,5))
+          CALL get_sticks(  parallel, lgamma, mype, nproc, comm, ub, lb, bg, gcuts, &
+                            idx, ist, nstps, sstps, sts, sticks_owner, index_map, nsts, ngs )
 
-          ALLOCATE(nstp(nproc))
-          ALLOCATE(sstp(nproc))
+          CALL get_sticks(  parallel, lgamma, mype, nproc, comm, ub, lb, bg, gcut, &
+                            idx, ist, nstp, sstp, st, sticks_owner, index_map, nst, ngm )
 
-          ALLOCATE(nstpw(nproc))
-          ALLOCATE(sstpw(nproc))
-
-          ALLOCATE(nstps(nproc))
-          ALLOCATE(sstps(nproc))
-
-! ...       initialize the sticks indexes array ist
-
-          CALL sticks_countg( tk, ub, lb, st, stw, sts, &
-            ist(:,1), ist(:,2), ist(:,4), ist(:,3), ist(:,5) )
-
-! ...       Sorts the sticks according to their length
-
-          ALLOCATE( idx( nst ) )
-
-          CALL sticks_sort( ist(:,4), ist(:,3), ist(:,5), nst, idx, nproc )
-
-          ! ... Set as first stick the stick containing the G=0
-          !
-          !  DO iss = 1, nst
-          !    IF( ist( idx( iss ), 1 ) == 0 .AND. ist( idx( iss ), 2 ) == 0 )  EXIT
-          !  END DO
-          !  itmp         = idx( 1 )
-          !  idx( 1 )   = idx( iss )
-          !  idx( iss ) = itmp
-
-          CALL sticks_dist( tk, ub, lb, idx, ist(:,1), ist(:,2), ist(:,4), ist(:,3), ist(:,5), &
-             nst, nstp, nstpw, nstps, sstp, sstpw, sstps, st, stw, sts, mype, nproc )
-
-          ngw = sstpw( mype + 1 )
-          ngm = sstp( mype + 1 )
-          ngs = sstps( mype + 1 )
-
-          CALL sticks_pairup( tk, ub, lb, idx, ist(:,1), ist(:,2), ist(:,4), ist(:,3), ist(:,5), &
-             nst, nstp, nstpw, nstps, sstp, sstpw, sstps, st, stw, sts, nproc )
+          CALL sticks_set_owner( ub, lb, sticks_owner )
 
           ! ...   Allocate and Set fft data layout descriptors
 
@@ -203,17 +231,14 @@
 
           IF( PRESENT( dfft3d ) ) THEN
              parallel = .false.
-             CALL sticks_map( (.not.tk), parallel, ub, lb, bg, gkcut, stw, comm )
+             CALL sticks_map( lgamma, parallel, ub, lb, bg, gkcut, stw, comm )
              CALL fft_type_scalar( dfft3d, ub, lb, stw )
           END IF
 
 #else
 
-          DEALLOCATE( stw )
-          ALLOCATE( stw( lb(1) : ub(1), lb(2) : ub(2) ) )
-
           parallel = .false.
-          CALL sticks_map( (.not.tk), parallel, ub, lb, bg, gkcut, stw )
+          CALL sticks_map( lgamma, parallel, ub, lb, bg, gkcut, stw )
 
           CALL fft_type_scalar( dfftp, ub, lb, stw )
 
@@ -267,8 +292,12 @@
 
           DEALLOCATE( ist )
           DEALLOCATE( idx )
-
-          DEALLOCATE( st, stw, sts )
+          DEALLOCATE( ngc )
+          DEALLOCATE( st )
+          DEALLOCATE( stw )
+          DEALLOCATE( sts )
+          DEALLOCATE( index_map )
+          DEALLOCATE( sticks_owner )
           DEALLOCATE( sstp )
           DEALLOCATE( nstp )
           DEALLOCATE( sstpw )
@@ -283,10 +312,10 @@
 
 !----------------------------------------------------------------------
 
-      SUBROUTINE pstickset_custom( gamma_only, bg, gcut, gkcut, gcuts, &
+      SUBROUTINE pstickset_custom( lgamma, bg, gcut, gkcut, gcuts, &
           dfftp, dffts, ngw, ngm, ngs, mype, root, nproc, comm, nogrp_ )
 
-          LOGICAL, INTENT(in) :: gamma_only
+          LOGICAL, INTENT(in) :: lgamma
 ! ...     bg(:,1), bg(:,2), bg(:,3) reciprocal space base vectors.
           REAL(DP), INTENT(in) :: bg(3,3)
           REAL(DP), INTENT(in) :: gcut, gkcut, gcuts
@@ -363,12 +392,13 @@
         INTEGER :: nsts
 ! ...   nsts      local number of sticks (smooth mesh)
 
+        INTEGER, ALLOCATABLE :: index_map(:,:)
 
         INTEGER, ALLOCATABLE :: ist(:,:)    ! sticks indices ordered
           INTEGER :: ip, ngm_ , ngs_
           INTEGER, ALLOCATABLE :: idx(:)
 
-          tk    = .not. gamma_only
+          tk    = .not. lgamma
           ub(1) = ( dfftp%nr1 - 1 ) / 2
           ub(2) = ( dfftp%nr2 - 1 ) / 2
           ub(3) = ( dfftp%nr3 - 1 ) / 2
@@ -379,6 +409,7 @@
           ALLOCATE( stw ( lb(1):ub(1), lb(2):ub(2) ) )
           ALLOCATE( st  ( lb(1):ub(1), lb(2):ub(2) ) )
           ALLOCATE( sts ( lb(1):ub(1), lb(2):ub(2) ) )
+          ALLOCATE( index_map ( lb(1):ub(1), lb(2):ub(2) ) )
 
           st  = 0
           stw = 0
@@ -409,14 +440,18 @@
 
 ! ...       initialize the sticks indexes array ist
 
-          CALL sticks_countg( tk, ub, lb, st, stw, sts, &
-            ist(:,1), ist(:,2), ist(:,4), ist(:,3), ist(:,5) )
+          CALL sticks_map_index( ub, lb, stw, ist(:,1), ist(:,2), ist(:,3), index_map )
+          CALL sticks_map_index( ub, lb, st, ist(:,1), ist(:,2), ist(:,4), index_map )
+          CALL sticks_map_index( ub, lb, sts, ist(:,1), ist(:,2), ist(:,5), index_map )
 
 ! ...       Sorts the sticks according to their length
 
           ALLOCATE( idx( nst ) )
+          idx = 0
 
-          CALL sticks_sort( ist(:,4), ist(:,3), ist(:,5), nst, idx, nproc )
+          CALL sticks_sort_new( nproc>1, ist(:,3), nst, idx )
+          CALL sticks_sort_new( nproc>1, ist(:,5), nst, idx )
+          CALL sticks_sort_new( nproc>1, ist(:,4), nst, idx )
 
 ! ...       Distribute the sticks as in dfftp
 
@@ -455,7 +490,7 @@
           DEALLOCATE( ist )
           DEALLOCATE( idx )
 
-          DEALLOCATE( st, stw, sts )
+          DEALLOCATE( st, stw, sts, index_map )
           DEALLOCATE( sstp )
           DEALLOCATE( nstp )
           DEALLOCATE( sstpw )
