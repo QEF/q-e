@@ -1017,6 +1017,7 @@ memory_report.o : ../../Modules/wannier_new.o
 memory_report.o : atomic_wfc_mod.o
 memory_report.o : ldaU.o
 memory_report.o : pwcom.o
+memory_report.o : exx.o
 mix_rho.o : ../../FFTXlib/fft_interfaces.o
 mix_rho.o : ../../Modules/cell_base.o
 mix_rho.o : ../../Modules/constants.o
