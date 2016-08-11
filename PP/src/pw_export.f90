@@ -44,7 +44,7 @@
       USE mp_wave
       USE mp, ONLY: mp_sum, mp_get, mp_max
       USE mp_pools, ONLY: me_pool, my_pool_id, &
-        nproc_pool, intra_pool_comm, root_pool
+        nproc_pool, intra_pool_comm, root_pool, npool
       USE mp_world,  ONLY: mpime, nproc, root, world_comm
       USE io_global, ONLY: ionode, ionode_id
       USE iotk_module
@@ -64,8 +64,8 @@
       LOGICAL, INTENT(in) :: t0, tm
 
       INTEGER :: i, j, ierr, idum = 0
-      INTEGER :: nkl, nkr, nkbl, iks, ike, nkt, ikt, igwx
-      INTEGER :: npool, ipmask( nproc ), ipsour
+      INTEGER :: iks, ike, nkt, ikt, igwx
+      INTEGER :: ipmask( nproc ), ipsour
       COMPLEX(DP), ALLOCATABLE :: wtmp(:)
       INTEGER, ALLOCATABLE :: igltot(:)
 
@@ -84,27 +84,7 @@
         ikt = ik
         nkt = nk
 
-        !  find out the number of pools
-        npool = nproc / nproc_pool
-
-        !  find out number of k points blocks
-        nkbl = nkt / kunit
-
-        !  k points per pool
-        nkl = kunit * ( nkbl / npool )
-
-        !  find out the reminder
-        nkr = ( nkt - nkl * npool ) / kunit
-
-        !  Assign the reminder to the first nkr pools
-        IF( my_pool_id < nkr ) nkl = nkl + kunit
-
-        !  find out the index of the first k point in this pool
-        iks = nkl * my_pool_id + 1
-        IF( my_pool_id >= nkr ) iks = iks + nkr * kunit
-
-        !  find out the index of the last k point in this pool
-        ike = iks + nkl - 1
+        CALL kpoint_global_indices (nkt, iks, ike)
 
         ipmask = 0
         ipsour = ionode_id
@@ -405,8 +385,7 @@ SUBROUTINE write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
 
   INTEGER :: i, j, k, ig, ik, ibnd, na, ngg,ig_, ierr
   real(DP) :: xyz(3), tmp(3)
-  INTEGER :: npool, nkbl, nkl, nkr, npwx_g
-  INTEGER :: ike, iks, npw_g, ispin, local_pw
+  INTEGER :: ike, iks, npw_g, npwx_g, ispin, local_pw
   INTEGER, ALLOCATABLE :: ngk_g( : )
   INTEGER, ALLOCATABLE :: itmp_g( :, : )
   real(DP),ALLOCATABLE :: rtmp_g( :, : )
@@ -432,27 +411,7 @@ SUBROUTINE write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
      IF( ( nproc_pool > nproc ) .or. ( mod( nproc, nproc_pool ) /= 0 ) ) &
        CALL errore( ' write_export ',' nproc_pool ', 1 )
 
-     !  find out the number of pools
-     npool = nproc / nproc_pool
-
-     !  find out number of k points blocks
-     nkbl = nkstot / kunit
-
-     !  k points per pool
-     nkl = kunit * ( nkbl / npool )
-
-     !  find out the reminder
-     nkr = ( nkstot - nkl * npool ) / kunit
-
-     !  Assign the reminder to the first nkr pools
-     IF( my_pool_id < nkr ) nkl = nkl + kunit
-
-     !  find out the index of the first k point in this pool
-     iks = nkl * my_pool_id + 1
-     IF( my_pool_id >= nkr ) iks = iks + nkr * kunit
-
-     !  find out the index of the last k point in this pool
-     ike = iks + nkl - 1
+     CALL kpoint_global_indices (nkstot, iks, ike)
 
   ENDIF
 

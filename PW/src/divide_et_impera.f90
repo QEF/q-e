@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2008 PWSCF group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -18,7 +18,6 @@ SUBROUTINE divide_et_impera( xk, wk, isk, lsda, nkstot, nks )
   ! ... in phonon calculations, when one has interspersed k_i and k_i+q and
   ! ... it is needed that they stay on the same processor
   !
-  USE io_global, only : stdout
   USE kinds,     ONLY : DP
   USE mp_pools,  ONLY : my_pool_id, npool, kunit
   !
@@ -30,16 +29,20 @@ SUBROUTINE divide_et_impera( xk, wk, isk, lsda, nkstot, nks )
     ! total number of k-points
   INTEGER, INTENT(INOUT) :: isk(nkstot)
     ! spin index of each kpoint (when lsda=.t.)
+  REAL (DP), INTENT(INOUT) :: xk(3,nkstot), wk(nkstot)
+    ! k-points (on all processors)
+    ! k-point weights
   INTEGER, INTENT(OUT)  :: nks
     ! number of k-points per pool
-  REAL (DP), INTENT(INOUT) :: xk(3,nkstot), wk(nkstot)
-    ! k-points
-    ! k-point weights
-  !
-#if defined (__MPI)
   !
   INTEGER :: ik, nbase, rest
   !
+  ! simple case: no pools
+  !
+  IF ( npool == 1 ) THEN
+     nks = nkstot
+     RETURN
+  END IF
   !
   IF ( MOD( nkstot, kunit ) /= 0 ) &
      CALL errore( 'divide_et_impera', ' nkstot/kunit is not an integer', nkstot )
@@ -69,15 +72,58 @@ SUBROUTINE divide_et_impera( xk, wk, isk, lsda, nkstot, nks )
      !
      IF ( lsda ) isk(1:nks) = isk(nbase+1:nbase+nks)
      !
-  !
   END IF
-  !
-#else
-  !
-  nks = nkstot
-  !
-#endif
   !
   RETURN
   !
 END SUBROUTINE divide_et_impera
+
+!----------------------------------------------------------------------------
+SUBROUTINE kpoint_global_indices (nkstot, iks, ike)
+  !----------------------------------------------------------------------------
+  
+  ! Returns the index of the first (iks) and last (ike) k-point on this pool
+  ! in the global list of k-points - see below of input, output, dependencies
+
+  USE mp_pools, ONLY : npool, my_pool_id, kunit
+
+  IMPLICIT NONE
+  
+  INTEGER, INTENT(IN)  :: nkstot
+  INTEGER, INTENT(OUT) :: ike, iks
+
+  INTEGER  :: nkbl, nkl, nkr
+
+  IF ( nkstot > 0 ) THEN
+     !
+     ! ... find out number of k points blocks
+     !
+     nkbl = nkstot / kunit
+     !
+     ! ... k points per pool
+     !
+     nkl = kunit * ( nkbl / npool )
+     !
+     ! ... find out the reminder
+     !
+     nkr = ( nkstot - nkl * npool ) / kunit
+     !
+     ! ... Assign the reminder to the first nkr pools
+     !
+     IF ( my_pool_id < nkr ) nkl = nkl + kunit
+     !
+     ! ... find out the index of the first k point in this pool
+     !
+     iks = nkl*my_pool_id + 1
+     IF ( my_pool_id >= nkr ) iks = iks + nkr*kunit
+     !
+     ! ... find out the index of the last k point in this pool
+     !
+     ike = iks + nkl - 1
+     !
+  ELSE
+     ike = 0
+     iks = 0
+  END IF
+
+END SUBROUTINE kpoint_global_indices

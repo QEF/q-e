@@ -35,7 +35,7 @@ SUBROUTINE memory_report()
   USE noncollin_module, ONLY : npol
   USE control_flags, ONLY: isolve, nmix, imix, gamma_only, lscf, io_level, &
        lxdm, smallmem
-  USE ions_base, ONLY : ntyp => nsp
+  USE ions_base, ONLY : ntyp=>nsp
   USE mp_diag,   ONLY : np_ortho
   USE mp_bands,  ONLY : nproc_bgrp, nbgrp
   USE mp_images, ONLY : nproc_image  

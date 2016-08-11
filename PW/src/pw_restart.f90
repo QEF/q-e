@@ -192,8 +192,7 @@ USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, delete_if_present, &
       CHARACTER(LEN=256)    :: dirname, filename
       CHARACTER(LEN=80)     :: vdw_corr_
       INTEGER               :: i, ig, ik, ngg, ierr, ipol, num_k_points
-      INTEGER               :: npool, nkbl, nkl, nkr, npwx_g
-      INTEGER               :: ike, iks, npw_g, ispin, inlc
+      INTEGER               :: npwx_g, npw_g, ispin, inlc
       INTEGER,  ALLOCATABLE :: ngk_g(:)
       INTEGER,  ALLOCATABLE :: igk_l2g(:,:), igk_l2g_kdip(:,:), mill_g(:,:)
       LOGICAL               :: lwfc, lrho, lxsd, occupations_are_fixed
@@ -553,7 +552,7 @@ USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, delete_if_present, &
       CHARACTER(LEN=20)     :: dft_name
       CHARACTER(LEN=256)    :: dirname, filename
       INTEGER               :: i, ig, ik, ngg, ierr, ipol, num_k_points
-      INTEGER               :: npool, nkbl, nkl, nkr, npwx_g
+      INTEGER               :: nkl, nkr, npwx_g
       INTEGER               :: ike, iks, npw_g, ispin, inlc
       INTEGER,  ALLOCATABLE :: ngk_g(:)
       INTEGER,  ALLOCATABLE :: igk_l2g(:,:), igk_l2g_kdip(:,:), mill_g(:,:)
@@ -621,39 +620,7 @@ USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, delete_if_present, &
          !
       END IF
       !
-      IF ( nkstot > 0 ) THEN
-         !
-         ! ... find out the number of pools
-         !
-         npool = nproc_image / nproc_pool
-         !
-         ! ... find out number of k points blocks
-         !
-         nkbl = nkstot / kunit
-         !
-         ! ... k points per pool
-         !
-         nkl = kunit * ( nkbl / npool )
-         !
-         ! ... find out the reminder
-         !
-         nkr = ( nkstot - nkl * npool ) / kunit
-         !
-         ! ... Assign the reminder to the first nkr pools
-         !
-         IF ( my_pool_id < nkr ) nkl = nkl + kunit
-         !
-         ! ... find out the index of the first k point in this pool
-         !
-         iks = nkl*my_pool_id + 1
-         !
-         IF ( my_pool_id >= nkr ) iks = iks + nkr*kunit
-         !
-         ! ... find out the index of the last k point in this pool
-         !
-         ike = iks + nkl - 1
-         !
-      END IF
+      CALL  kpoint_global_indices (nkstot, iks, ike)
       !
       ! ... find out the global number of G vectors: ngm_g
       !
@@ -4011,7 +3978,7 @@ USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, delete_if_present, &
       CHARACTER(LEN=256)   :: filename
       INTEGER              :: ik, ipol, ik_eff, num_k_points
       INTEGER, ALLOCATABLE :: kisort(:)
-      INTEGER              :: npool, nkbl, nkl, nkr, npwx_g
+      INTEGER              :: nkl, nkr, npwx_g
       INTEGER              :: nupdwn(2), ike, iks, npw_g, ispin
       INTEGER, ALLOCATABLE :: ngk_g(:)
       INTEGER, ALLOCATABLE :: igk_l2g(:,:), igk_l2g_kdip(:,:)
@@ -4033,39 +4000,7 @@ USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, delete_if_present, &
                     & 'wavefunctions unit (iunwfc) is not opened', 1 )
       END IF
       !
-      IF ( nkstot > 0 ) THEN
-         !
-         ! ... find out the number of pools
-         !
-         npool = nproc_image / nproc_pool
-         !
-         ! ... find out number of k points blocks
-         !
-         nkbl = nkstot / kunit
-         !
-         !  k points per pool
-         !
-         nkl = kunit * ( nkbl / npool )
-         !
-         ! ... find out the reminder
-         !
-         nkr = ( nkstot - nkl * npool ) / kunit
-         !
-         ! ... Assign the reminder to the first nkr pools
-         !
-         IF ( my_pool_id < nkr ) nkl = nkl + kunit
-         !
-         ! ... find out the index of the first k point in this pool
-         !
-         iks = nkl * my_pool_id + 1
-         !
-         IF ( my_pool_id >= nkr ) iks = iks + nkr * kunit
-         !
-         ! ... find out the index of the last k point in this pool
-         !
-         ike = iks + nkl - 1
-         !
-      END IF
+      CALL  kpoint_global_indices (nkstot, iks, ike)
       !
       ! ... find out the global number of G vectors: ngm_g  
       !
@@ -4346,7 +4281,7 @@ USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, delete_if_present, &
       CHARACTER(LEN=256)   :: filename
       INTEGER              :: ik, ipol, ik_eff, num_k_points
       INTEGER, ALLOCATABLE :: kisort(:)
-      INTEGER              :: npool, nkbl, nkl, nkr, npwx_g
+      INTEGER              :: nkl, nkr, npwx_g
       INTEGER              :: nupdwn(2), ike, iks, npw_g, ispin
       INTEGER, ALLOCATABLE :: ngk_g(:)
       INTEGER, ALLOCATABLE :: igk_l2g(:,:), igk_l2g_kdip(:,:)
@@ -4368,39 +4303,7 @@ USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, delete_if_present, &
                     & 'wavefunctions unit (iunwfc) is not opened', 1 )
       END IF
       ! 
-      IF ( nkstot > 0 ) THEN
-         !
-         ! ... find out the number of pools
-         !
-         npool = nproc_image / nproc_pool
-         !
-         ! ... find out number of k points blocks
-         !
-         nkbl = nkstot / kunit
-         !
-         !  k points per pool
-         !
-         nkl = kunit * ( nkbl / npool )
-         !
-         ! ... find out the reminder
-         !
-         nkr = ( nkstot - nkl * npool ) / kunit
-         !
-         ! ... Assign the reminder to the first nkr pools
-         !
-         IF ( my_pool_id < nkr ) nkl = nkl + kunit
-         !
-         ! ... find out the index of the first k point in this pool
-         !
-         iks = nkl * my_pool_id + 1
-         !
-         IF ( my_pool_id >= nkr ) iks = iks + nkr * kunit
-         !
-         ! ... find out the index of the last k point in this pool
-         !
-         ike = iks + nkl - 1
-         !
-      END IF
+      CALL  kpoint_global_indices (nkstot, iks, ike)
       !
       ! ... find out the global number of G vectors: ngm_g  
       !
@@ -4954,3 +4857,4 @@ USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, delete_if_present, &
     END SUBROUTINE gk_l2gmap_kdip
     !
 END MODULE pw_restart
+

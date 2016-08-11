@@ -210,7 +210,7 @@ SUBROUTINE write_evc ( input_file_name, real_or_complex, &
   logical :: f1, f2
   integer :: ierr, i, j, iu, ik, is, ib, ig, jg, fg, ir, &
     na, nk, ns, nb, nbgw, ng, ngkmax, ntran, cell_symmetry, &
-    nkbl, nkl, nkr, iks, ike, npw, npw_g, ngkdist_l, ngkdist_g, &
+    iks, ike, npw, npw_g, ngkdist_l, ngkdist_g, &
     igk_l2g, irecord, nrecord, ng_irecord, nr ( 3 )
   real ( DP ) :: ecutrho, ecutwfn, celvol, recvol, al, bl, xdel, &
     a ( 3, 3 ), b ( 3, 3 ), adot ( 3, 3 ), bdot ( 3, 3 )
@@ -498,13 +498,7 @@ SUBROUTINE write_evc ( input_file_name, real_or_complex, &
 
   CALL mp_bcast ( ngk_g, ionode_id, world_comm )
 
-  nkbl = nkstot / kunit
-  nkl = kunit * ( nkbl / npool )
-  nkr = ( nkstot - nkl * npool ) / kunit
-  IF ( my_pool_id .LT. nkr ) nkl = nkl + kunit
-  iks = nkl * my_pool_id + 1
-  IF ( my_pool_id .GE. nkr ) iks = iks + nkr * kunit
-  ike = iks + nkl - 1
+  CALL kpoint_global_indices (nkstot, iks, ike)
 
   npw_g = 0
   DO ik = 1, nks

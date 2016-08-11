@@ -420,8 +420,7 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
   USE klist, ONLY : xk, wk, ngk, nks, nkstot, igk_k
   USE lsda_mod, ONLY : nspin, isk
   USE mp, ONLY : mp_sum, mp_max, mp_get, mp_bcast, mp_barrier
-  USE mp_pools, ONLY : kunit, me_pool, &
-    root_pool, my_pool_id, npool, nproc_pool, intra_pool_comm
+  USE mp_pools, ONLY : me_pool, root_pool, npool, nproc_pool, intra_pool_comm
   USE mp_wave, ONLY : mergewf
   USE mp_world, ONLY : mpime, nproc, world_comm
   USE start_k, ONLY : nk1, nk2, nk3, k1, k2, k3
@@ -455,7 +454,7 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
   integer :: unit, i, j, k, cell_symmetry, nrecord
   integer :: id, ib, ik, iks, ike, is, ig, ierr
   integer :: nd, ntran, nb, nk_l, nk_g, ns, ng_l, ng_g
-  integer :: nkbl, nkl, nkr, ngg, npw_g, npwx_g
+  integer :: ngg, npw_g, npwx_g
   integer :: local_pw, ipsour, igwx, ngkdist_g, ngkdist_l
   real (DP) :: alat2, recvol, t1 ( 3 ), t2 ( 3 )
   real (DP) :: r1 ( 3, 3 ), r2 ( 3, 3 ), adot ( 3, 3 )
@@ -518,13 +517,7 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
   ng_l = ngm
   ng_g = ngm_g
 
-  nkbl = nkstot / kunit
-  nkl = kunit * ( nkbl / npool )
-  nkr = ( nkstot - nkl * npool ) / kunit
-  IF ( my_pool_id .LT. nkr ) nkl = nkl + kunit
-  iks = nkl * my_pool_id + 1
-  IF ( my_pool_id .GE. nkr ) iks = iks + nkr * kunit
-  ike = iks + nkl - 1
+  CALL kpoint_global_indices (nkstot, iks, ike)
 
   ALLOCATE ( kmap ( nk_g ) )
   ALLOCATE ( smap ( nk_g ) )
@@ -1434,7 +1427,7 @@ SUBROUTINE calc_rhog (rhog_nvmin, rhog_nvmax)
   USE lsda_mod, ONLY : nspin, isk
   USE mp, ONLY : mp_sum
   USE mp_world, ONLY : world_comm
-  USE mp_pools, ONLY : kunit, my_pool_id, inter_pool_comm, npool
+  USE mp_pools, ONLY : inter_pool_comm
   USE noncollin_module, ONLY : nspin_mag
   USE scf, ONLY : rho
   USE symme, ONLY : sym_rho, sym_rho_init
@@ -1446,15 +1439,9 @@ SUBROUTINE calc_rhog (rhog_nvmin, rhog_nvmax)
   integer, intent (in) :: rhog_nvmin
   integer, intent (in) :: rhog_nvmax
 
-  integer :: ik, is, ib, ig, ir, nkbl, nkl, nkr, iks, ike
+  integer :: ik, is, ib, ig, ir, iks, ike
 
-  nkbl = nkstot / kunit
-  nkl = kunit * (nkbl / npool)
-  nkr = (nkstot - nkl * npool) / kunit
-  IF (my_pool_id .LT. nkr) nkl = nkl + kunit
-  iks = nkl * my_pool_id + 1
-  IF (my_pool_id .GE. nkr) iks = iks + nkr * kunit
-  ike = iks + nkl - 1
+  CALL kpoint_global_indices (nkstot, iks, ike)
 
   CALL weights ()
 
@@ -1816,8 +1803,7 @@ SUBROUTINE write_vxc_r (output_file_name, diag_nmin, diag_nmax, &
   USE klist, ONLY : xk, nkstot, nks, ngk, igk_k
   USE lsda_mod, ONLY : nspin, isk
   USE mp, ONLY : mp_sum
-  USE mp_pools, ONLY : kunit, my_pool_id, intra_pool_comm, &
-    inter_pool_comm, npool
+  USE mp_pools, ONLY : intra_pool_comm, inter_pool_comm
   USE scf, ONLY : rho, rho_core, rhog_core
   USE wavefunctions_module, ONLY : evc, psic
   USE wvfct, ONLY : npw, nbnd
@@ -1831,8 +1817,7 @@ SUBROUTINE write_vxc_r (output_file_name, diag_nmin, diag_nmax, &
   integer, intent (inout) :: offdiag_nmax
   logical, intent (in) :: vxc_zero_rho_core
 
-  integer :: ik, is, ib, ig, ir, unit, nkbl, nkl, nkr, iks, ike, &
-    ndiag, noffdiag, ib2
+  integer :: ik, is, ib, ig, ir, unit, iks, ike, ndiag, noffdiag, ib2
   real (DP) :: dummyr
   complex (DP) :: dummyc
   real (DP), allocatable :: mtxeld (:, :)
@@ -1864,13 +1849,7 @@ SUBROUTINE write_vxc_r (output_file_name, diag_nmin, diag_nmax, &
 
   unit = 4
 
-  nkbl = nkstot / kunit
-  nkl = kunit * (nkbl / npool)
-  nkr = (nkstot - nkl * npool) / kunit
-  IF (my_pool_id .LT. nkr) nkl = nkl + kunit
-  iks = nkl * my_pool_id + 1
-  IF (my_pool_id .GE. nkr) iks = iks + nkr * kunit
-  ike = iks + nkl - 1
+  CALL kpoint_global_indices (nkstot, iks, ike)
 
   IF (ndiag .GT. 0) THEN
     ALLOCATE (mtxeld (ndiag, nkstot))
@@ -2007,8 +1986,7 @@ SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
   USE klist, ONLY : xk, nkstot, nks, ngk, igk_k
   USE lsda_mod, ONLY : nspin, isk
   USE mp, ONLY : mp_sum
-  USE mp_pools, ONLY : kunit, my_pool_id, intra_pool_comm, &
-    inter_pool_comm, npool
+  USE mp_pools, ONLY : intra_pool_comm, inter_pool_comm
   USE scf, ONLY : rho, rho_core, rhog_core
   USE wavefunctions_module, ONLY : evc, psic
   USE wvfct, ONLY : npwx, npw, nbnd
@@ -2022,8 +2000,7 @@ SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
   integer, intent (inout) :: offdiag_nmax
   logical, intent (in) :: vxc_zero_rho_core
 
-  integer :: ik, is, ib, ig, ir, unit, nkbl, nkl, nkr, iks, ike, &
-    ndiag, noffdiag, ib2, ikk
+  integer :: ik, is, ib, ig, ir, unit, iks, ike, ndiag, noffdiag, ib2, ikk
   complex (DP) :: dummy
   complex (DP), allocatable :: mtxeld (:, :)
   complex (DP), allocatable :: mtxelo (:, :, :)
@@ -2055,13 +2032,7 @@ SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
 
   unit = 4
 
-  nkbl = nkstot / kunit
-  nkl = kunit * (nkbl / npool)
-  nkr = (nkstot - nkl * npool) / kunit
-  IF (my_pool_id .LT. nkr) nkl = nkl + kunit
-  iks = nkl * my_pool_id + 1
-  IF (my_pool_id .GE. nkr) iks = iks + nkr * kunit
-  ike = iks + nkl - 1
+  CALL kpoint_global_indices (nkstot, iks, ike)
 
   IF (ndiag .GT. 0) THEN
     ALLOCATE (mtxeld (ndiag, nkstot))
@@ -2430,8 +2401,7 @@ SUBROUTINE write_vkbg (output_file_name, symm_type, wfng_kgrid, &
   USE lsda_mod, ONLY : nspin, isk
   USE mp, ONLY : mp_sum, mp_max, mp_get, mp_barrier
   USE mp_world, ONLY : mpime, nproc, world_comm
-  USE mp_pools, ONLY : kunit, me_pool, root_pool, my_pool_id, npool, &
-                       nproc_pool, intra_pool_comm
+  USE mp_pools, ONLY : me_pool, root_pool, npool, nproc_pool, intra_pool_comm
   USE mp_wave, ONLY : mergewf
   USE start_k, ONLY : nk1, nk2, nk3, k1, k2, k3
   USE symm_base, ONLY : s, ftau, nsym
@@ -2455,7 +2425,7 @@ SUBROUTINE write_vkbg (output_file_name, symm_type, wfng_kgrid, &
 
   character :: cdate*9, ctime*9, sdate*32, stime*32, stitle*32
   integer :: i, j, k, ierr, ik, is, ig, ikb, iat, isp, ih, jh, &
-    unit, nkbl, nkl, nkr, iks, ike, npw_g, npwx_g, ngg, ipsour, &
+    unit, iks, ike, npw_g, npwx_g, ngg, ipsour, &
     igwx, local_pw, id, nd, ntran, cell_symmetry, nrecord
   real (DP) :: alat2, recvol, t1 ( 3 ), t2 ( 3 )
   real (DP) :: r1 ( 3, 3 ), r2 ( 3, 3 ), adot ( 3, 3 )
@@ -2486,13 +2456,7 @@ SUBROUTINE write_vkbg (output_file_name, symm_type, wfng_kgrid, &
   nrecord = 1
   nd = 3
 
-  nkbl = nkstot / kunit
-  nkl = kunit * ( nkbl / npool )
-  nkr = ( nkstot - nkl * npool ) / kunit
-  IF ( my_pool_id .LT. nkr ) nkl = nkl + kunit
-  iks = nkl * my_pool_id + 1
-  IF ( my_pool_id .GE. nkr ) iks = iks + nkr * kunit
-  ike = iks + nkl - 1
+  CALL kpoint_global_indices (nkstot, iks, ike)
 
   ierr = 0
   IF ( ibrav .EQ. 0 ) THEN
