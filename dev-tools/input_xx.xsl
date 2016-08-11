@@ -1076,4 +1076,8 @@
     </a>
   </xsl:template>
   
+  <xsl:template match="a">
+    <xsl:copy-of select="."/>
+  </xsl:template>
+  
 </xsl:stylesheet>
