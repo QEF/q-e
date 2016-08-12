@@ -281,9 +281,9 @@ CONTAINS
 !
 
 
-  CALL sticks_map( (.not.tk), .true., ub, lb, fc%bg_t, fc%gcutmt, st, intra_pool_comm)
-  CALL sticks_map( (.not.tk), .true., ub, lb, fc%bg_t, gkcut, stw, intra_pool_comm)
-  CALL sticks_map( (.not.tk), .true., ub, lb, fc%bg_t, fc%gcutmt, sts , intra_pool_comm)
+  CALL sticks_map_set( (.not.tk), ub, lb, fc%bg_t, fc%gcutmt, st, intra_pool_comm)
+  CALL sticks_map_set( (.not.tk), ub, lb, fc%bg_t, gkcut, stw, intra_pool_comm)
+  CALL sticks_map_set( (.not.tk), ub, lb, fc%bg_t, fc%gcutmt, sts , intra_pool_comm)
     
   nct  = count( st  > 0 )
   ncts = count( sts > 0 )

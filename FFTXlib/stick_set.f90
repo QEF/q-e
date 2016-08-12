@@ -30,24 +30,12 @@
 !=----------------------------------------------------------------------=
 
 
-      SUBROUTINE get_sticks(  parallel, lgamma, mype, nproc, comm, ub, lb, bg, gcut, &
-                              idx, ist, nstp, sstp, st, stown, index_map, nst, ng )
+      SUBROUTINE get_sticks(  smap, gcut, nstp, sstp, st, nst, ng )
 
-         LOGICAL, INTENT(in) :: parallel
-         LOGICAL, INTENT(in) :: lgamma
-         INTEGER, INTENT(in) :: mype
-         INTEGER, INTENT(in) :: nproc
-         INTEGER, INTENT(in) :: comm
-         INTEGER, INTENT(in) :: ub(:), lb(:)
-         REAL(DP) , INTENT(in) :: bg(:,:) ! reciprocal space base vectors
+         TYPE( sticks_map ), INTENT(INOUT) :: smap
          REAL(DP) , INTENT(in) :: gcut  ! cut-off for potentials
 
-         INTEGER, INTENT(inout) :: idx(:)
-         INTEGER, INTENT(inout) :: ist(:,:)
-         INTEGER, INTENT(inout) :: stown(lb(1): ub(1), lb(2):ub(2) ) 
-         INTEGER, INTENT(inout) :: index_map(lb(1): ub(1), lb(2):ub(2) ) 
-
-         INTEGER, INTENT(out) :: st(lb(1): ub(1), lb(2):ub(2) ) 
+         INTEGER, INTENT(out) :: st(smap%lb(1): smap%ub(1), smap%lb(2):smap%ub(2) ) 
          INTEGER, INTENT(out) :: nstp(:)
          INTEGER, INTENT(out) :: sstp(:)
          INTEGER, INTENT(out) :: nst
@@ -55,26 +43,32 @@
 
          INTEGER, ALLOCATABLE :: ngc(:)
          INTEGER :: ic
-         ALLOCATE( ngc ( SIZE( idx ) ) )
          st = 0
+         CALL sticks_map_set( smap%lgamma, smap%ub, smap%lb, smap%bg, gcut, st, smap%comm )
+
+         ALLOCATE( ngc ( SIZE( smap%idx ) ) )
          ngc = 0
-         CALL sticks_map( lgamma, parallel, ub, lb, bg, gcut, st, comm )
-         CALL sticks_map_index( ub, lb, st, ist(:,1), ist(:,2), ngc, index_map )
+         CALL sticks_map_index( smap%ub, smap%lb, st, smap%ist(:,1), smap%ist(:,2), ngc, smap%indmap )
          nst = count( st > 0 )
-         CALL sticks_sort_new( nproc>1, ngc, SIZE(idx), idx )
-         CALL sticks_dist_new( lgamma, mype, nproc, ub, lb, idx, ist(:,1), ist(:,2), ngc, SIZE(idx), nstp, sstp, stown, ng )
+         CALL sticks_sort_new( smap%nproc>1, ngc, SIZE(smap%idx), smap%idx )
+         CALL sticks_dist_new( smap%lgamma, smap%mype, smap%nproc, smap%ub, smap%lb, smap%idx, &
+                               smap%ist(:,1), smap%ist(:,2), ngc, SIZE(smap%idx), nstp, sstp, smap%stown, ng )
          st = 0
-         DO ic = 1, SIZE( idx )
-            IF( idx( ic ) > 0 ) THEN
-            IF( ngc( idx( ic ) ) > 0 ) THEN
-                st( ist(idx( ic ),1), ist(idx( ic ),2) ) = stown( ist(idx( ic ),1),ist(idx( ic ),2))
-                if(lgamma) st(-ist(idx( ic ),1),-ist(idx( ic ),2)) = stown( ist(idx( ic ),1),ist(idx( ic ),2))
-            END IF
+         DO ic = 1, SIZE( smap%idx )
+            IF( smap%idx( ic ) > 0 ) THEN
+               IF( ngc( smap%idx( ic ) ) > 0 ) THEN
+                   st( smap%ist(smap%idx( ic ),1), smap%ist(smap%idx( ic ),2) ) = &
+                      smap%stown( smap%ist(smap%idx( ic ),1),smap%ist(smap%idx( ic ),2))
+                   if(smap%lgamma) st(-smap%ist(smap%idx( ic ),1),-smap%ist(smap%idx( ic ),2)) = &
+                      smap%stown( smap%ist(smap%idx( ic ),1),smap%ist(smap%idx( ic ),2))
+               END IF
             END IF
          END DO
          DEALLOCATE( ngc )
          RETURN
       END SUBROUTINE
+
+!=----------------------------------------------------------------------=
 
       SUBROUTINE pstickset( lgamma, bg, gcut, gkcut, gcuts, &
           dfftp, dffts, ngw, ngm, ngs, mype, root, nproc, comm, nogrp_ , &
@@ -97,11 +91,6 @@
           TYPE(task_groups_descriptor), OPTIONAL, INTENT(inout) :: dtgs
           TYPE(fft_type_descriptor), OPTIONAL, INTENT(inout) :: dfft3d
 
-          LOGICAL :: tk
-
-          INTEGER :: ub(3), lb(3)
-! ...     ub(i), lb(i) upper and lower miller indexes
-
 !
 ! ...     Plane Waves
 !
@@ -118,81 +107,54 @@
 ! ...     sticks length for processor ip = number of G-vectors
 ! ...     owned by the processor ip
 
-        INTEGER :: nstw, nstpwx
+        INTEGER :: nstw
 ! ...   nstw     local number of sticks (wave functions)
-! ...   nstpwx   maximum among all processors of nstw
-
 !
 ! ...     Potentials
 !
-
         INTEGER, ALLOCATABLE :: st(:,:)
 ! ...   stick map (potentials), st(i,j) = number of G-vector in the
 ! ...     stick whose x and y miller index are i and j
-
         INTEGER, ALLOCATABLE :: nstp(:)
 ! ...   number of sticks (potentials), nstp(ip) = number of stick
 ! ...     for processor ip
-
         INTEGER, ALLOCATABLE :: sstp(:)
 ! ...   number of G-vectors (potentials), sstp(ip) = sum of the
 ! ...     sticks length for processor ip = number of G-vectors
 ! ...     owned by the processor ip
-
-        INTEGER :: nst, nstpx
+        INTEGER :: nst
 ! ...   nst      local number of sticks (potentials)
-! ...   nstpx    maximum among all processors of nst
-
 !
 ! ...     Smooth Mesh
 !
-
         INTEGER, ALLOCATABLE :: sts(:,:)
 ! ...   stick map (smooth mesh), sts(i,j) = number of G-vector in the
 ! ...     stick whose x and y miller index are i and j
-
         INTEGER, ALLOCATABLE :: nstps(:)
 ! ...   number of sticks (smooth mesh), nstp(ip) = number of stick
 ! ...     for processor ip
-
         INTEGER, ALLOCATABLE :: sstps(:)
 ! ...   number of G-vectors (smooth mesh), sstps(ip) = sum of the
 ! ...     sticks length for processor ip = number of G-vectors
 ! ...     owned by the processor ip
-
         INTEGER :: nsts
 ! ...   nsts      local number of sticks (smooth mesh)
 
-        INTEGER :: nstx ! a safe sup for the local number of sticksd
-
-        INTEGER, ALLOCATABLE :: index_map(:,:)
-        INTEGER, ALLOCATABLE :: sticks_owner(:,:)
-
-        INTEGER, ALLOCATABLE :: ist(:,:)  ! array containing the X and Y coordinate of each stick
-        INTEGER, ALLOCATABLE :: ngc(:)  ! number of G vectors (height of the stick) for each stick
-        INTEGER :: ip, ngm_ , ngs_, ipg, ic, i1, i2
-        INTEGER, ALLOCATABLE :: idx(:)
-        LOGICAL :: parallel
-
+        TYPE(sticks_map) :: smap
+        
+#if defined(__MPI)
+        LOGICAL :: lpara = .true.
+#else
+        LOGICAL :: lpara = .false.
+#endif
 !
-          tk    = .not. lgamma
-          ub(1) = ( dfftp%nr1 - 1 ) / 2
-          ub(2) = ( dfftp%nr2 - 1 ) / 2
-          ub(3) = ( dfftp%nr3 - 1 ) / 2
-          lb    = - ub
+        CALL sticks_map_allocate( smap, lgamma, lpara, dfftp%nr1, dfftp%nr2, dfftp%nr3, bg, comm )
 
           ! ...       Allocate maps
 
-          nstx = (dfftp%nr1+1) * (dfftp%nr2+1) ! we stay very large indeed
-
-          ALLOCATE( stw ( lb(1):ub(1), lb(2):ub(2) ) )
-          ALLOCATE( st  ( lb(1):ub(1), lb(2):ub(2) ) )
-          ALLOCATE( sts ( lb(1):ub(1), lb(2):ub(2) ) )
-          ALLOCATE( index_map ( lb(1):ub(1), lb(2):ub(2) ) )
-          ALLOCATE( sticks_owner ( lb(1):ub(1), lb(2):ub(2) ) )
-          ALLOCATE( idx( nstx ) )
-          ALLOCATE( ist( nstx , 2) )
-          ALLOCATE( ngc( nstx ) )
+          ALLOCATE( stw ( smap%lb(1):smap%ub(1), smap%lb(2):smap%ub(2) ) )
+          ALLOCATE( st  ( smap%lb(1):smap%ub(1), smap%lb(2):smap%ub(2) ) )
+          ALLOCATE( sts ( smap%lb(1):smap%ub(1), smap%lb(2):smap%ub(2) ) )
           ALLOCATE( nstp(nproc) )
           ALLOCATE( sstp(nproc) )
           ALLOCATE( nstpw(nproc) )
@@ -200,59 +162,40 @@
           ALLOCATE( nstps(nproc) )
           ALLOCATE( sstps(nproc) )
 
-          sticks_owner = 0
-          index_map = 0
-          idx = 0
+! ...     Fill in the sticks, for given cutoff and a set of base vectors
+! ...     count the number of sticks, sorts the sticks according to their length
 
-          parallel = .true.
+          CALL get_sticks(  smap, gkcut, nstpw, sstpw, stw, nstw, ngw )
 
-! ...     Fill in the stick maps, for given set of base vectors and cut-off
-! ...     count the number of sticks
-! ...     Sorts the sticks according to their length
+          CALL get_sticks(  smap, gcuts, nstps, sstps, sts, nsts, ngs )
 
-          CALL get_sticks(  parallel, lgamma, mype, nproc, comm, ub, lb, bg, gkcut, &
-                            idx, ist, nstpw, sstpw, stw, sticks_owner, index_map, nstw, ngw )
+          CALL get_sticks(  smap, gcut,  nstp, sstp, st, nst, ngm )
 
-          CALL get_sticks(  parallel, lgamma, mype, nproc, comm, ub, lb, bg, gcuts, &
-                            idx, ist, nstps, sstps, sts, sticks_owner, index_map, nsts, ngs )
-
-          CALL get_sticks(  parallel, lgamma, mype, nproc, comm, ub, lb, bg, gcut, &
-                            idx, ist, nstp, sstp, st, sticks_owner, index_map, nst, ngm )
-
-          CALL sticks_set_owner( ub, lb, sticks_owner )
-
-          ! ...   Allocate and Set fft data layout descriptors
+          CALL sticks_set_owner( smap%ub, smap%lb, smap%stown )
 
 #if defined(__MPI)
 
-          CALL fft_type_set( dfftp, tk, nst, ub, lb, idx, ist(:,1), ist(:,2), nstp, nstpw, sstp, sstpw, st, stw )
+          ! ...   Allocate and Set fft data layout descriptors
 
-          CALL fft_type_set( dffts, tk, nsts, ub, lb, idx, ist(:,1), ist(:,2), nstps, nstpw, sstps, sstpw, sts, stw )
+          CALL fft_type_set( dfftp, .not.lgamma, nst, smap%ub, smap%lb, smap%idx, &
+                             smap%ist(:,1), smap%ist(:,2), nstp, nstpw, sstp, sstpw, st, stw )
+
+          CALL fft_type_set( dffts, .not.lgamma, nsts, smap%ub, smap%lb, smap%idx, &
+                             smap%ist(:,1), smap%ist(:,2), nstps, nstpw, sstps, sstpw, sts, stw )
 
           IF( PRESENT( dfft3d ) ) THEN
-             parallel = .false.
-             CALL sticks_map( lgamma, parallel, ub, lb, bg, gkcut, stw, comm )
-             CALL fft_type_scalar( dfft3d, ub, lb, stw )
+             CALL fft_type_scalar( dfft3d, smap%ub, smap%lb, stw )
           END IF
 
 #else
 
-          parallel = .false.
-          CALL sticks_map( lgamma, parallel, ub, lb, bg, gkcut, stw )
+          CALL fft_type_scalar( dfftp, smap%ub, smap%lb, stw )
 
-          CALL fft_type_scalar( dfftp, ub, lb, stw )
-
-          CALL fft_type_scalar( dffts, ub, lb, stw )
+          CALL fft_type_scalar( dffts, smap%ub, smap%lb, stw )
 
 #endif
-
-! ...     Maximum number of sticks (potentials)
-          nstpx  = maxval( nstp )
-! ...     Maximum number of sticks (wave func.)
-          nstpwx = maxval( nstpw  )
           !
-          !  Initialize task groups.
-          !  Note that this call modify dffts adding task group data.
+          !  Initialize task groups descriptor
           !
           IF( PRESENT( dtgs ) ) THEN
              CALL task_groups_init( dffts, dtgs, nogrp_ )
@@ -286,18 +229,14 @@
                 sum(sstp), sum(sstps), sum(sstpw)
              ! in the case k=0, the lines above and below differ:
              ! above all sticks, below only those in the half sphere
-             IF ( .NOT. tk ) &
+             IF ( lgamma ) &
                  WRITE( stdout,'(5X,"Tot",4X,2I8,I7)') nst, nsts, nstw
           ENDIF
 
-          DEALLOCATE( ist )
-          DEALLOCATE( idx )
-          DEALLOCATE( ngc )
+          CALL sticks_map_deallocate( smap )
           DEALLOCATE( st )
           DEALLOCATE( stw )
           DEALLOCATE( sts )
-          DEALLOCATE( index_map )
-          DEALLOCATE( sticks_owner )
           DEALLOCATE( sstp )
           DEALLOCATE( nstp )
           DEALLOCATE( sstpw )
@@ -347,9 +286,8 @@
 ! ...     sticks length for processor ip = number of G-vectors
 ! ...     owned by the processor ip
 
-        INTEGER :: nstw, nstpwx
+        INTEGER :: nstw
 ! ...   nstw     local number of sticks (wave functions)
-! ...   nstpwx   maximum among all processors of nstw
 
 !
 ! ...     Potentials
@@ -368,10 +306,8 @@
 ! ...     sticks length for processor ip = number of G-vectors
 ! ...     owned by the processor ip
 
-        INTEGER :: nst, nstpx
+        INTEGER :: nst
 ! ...   nst      local number of sticks (potentials)
-! ...   nstpx    maximum among all processors of nst
-
 !
 ! ...     Smooth Mesh
 !
@@ -395,7 +331,7 @@
         INTEGER, ALLOCATABLE :: index_map(:,:)
 
         INTEGER, ALLOCATABLE :: ist(:,:)    ! sticks indices ordered
-          INTEGER :: ip, ngm_ , ngs_
+          INTEGER :: ip
           INTEGER, ALLOCATABLE :: idx(:)
 
           tk    = .not. lgamma
@@ -414,12 +350,14 @@
           st  = 0
           stw = 0
           sts = 0
+          index_map = 0
+         
 
 ! ...       Fill in the stick maps, for given g-space base and cut-off
 
-          CALL sticks_map( (.not.tk), .true., ub, lb, bg, gcut, st, comm )
-          CALL sticks_map( (.not.tk), .true., ub, lb, bg, gkcut, stw, comm )
-          CALL sticks_map( (.not.tk), .true., ub, lb, bg, gcuts, sts, comm )
+          CALL sticks_map_set( (.not.tk), ub, lb, bg, gcut, st, comm )
+          CALL sticks_map_set( (.not.tk), ub, lb, bg, gkcut, stw, comm )
+          CALL sticks_map_set( (.not.tk), ub, lb, bg, gcuts, sts, comm )
 
 ! ...       Now count the number of stick nst and nstw
 
@@ -476,16 +414,11 @@
           DEALLOCATE( stw )
           ALLOCATE( stw( lb(1) : ub(1), lb(2) : ub(2) ) )
 
-          CALL sticks_map( (.not.tk), .false., ub, lb, bg, gkcut, stw, comm )
+          CALL sticks_map_set( (.not.tk), ub, lb, bg, gkcut, stw, comm )
 
           CALL fft_type_scalar( dffts, ub, lb, stw )
 
 #endif
-
-! ...     Maximum number of sticks (potentials)
-          nstpx  = maxval( nstp )
-! ...     Maximum number of sticks (wave func.)
-          nstpwx = maxval( nstpw  )
 
           DEALLOCATE( ist )
           DEALLOCATE( idx )

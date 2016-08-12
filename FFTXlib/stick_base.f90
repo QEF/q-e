@@ -315,30 +315,110 @@ END SUBROUTINE write_matrix_strange_idx
         PRIVATE
         SAVE
 
-        PUBLIC :: sticks_map, sticks_countg, sticks_dist, sticks_pairup
+#if defined(__MPI)
+        INCLUDE 'mpif.h'
+#endif
+
+        INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
+
+        PUBLIC :: sticks_map_set, sticks_countg, sticks_dist, sticks_pairup
         PUBLIC :: sticks_owner, sticks_deallocate, sticks_ordered_dist
         PUBLIC :: sticks_map_index, sticks_sort_new, sticks_dist_new
-        PUBLIC :: sticks_set_owner
+        PUBLIC :: sticks_set_owner, sticks_map, sticks_map_allocate
+        PUBLIC :: sticks_map_deallocate
+
+        TYPE sticks_map
+           LOGICAL :: lgamma=.false. ! true = the map has gamma symmetry
+           LOGICAL :: lpara=.false.  ! true = the map is set for parallel and serial, false = only serial 
+           INTEGER :: mype=0   ! my task id (starting from 0)
+           INTEGER :: nproc=1  ! number of task
+#ifdef __MPI
+           INTEGER :: comm     = MPI_COMM_NULL
+#else
+           INTEGER :: comm     = 0          ! communicator of the fft gruop 
+#endif
+           INTEGER :: nstx=0   ! a safe maximum number of sticks on the map
+           INTEGER :: lb(3)=0  ! map's lower bounds
+           INTEGER :: ub(3)=0  ! map's upper bounds
+           INTEGER, ALLOCATABLE :: idx(:)   ! the index of each stick
+           INTEGER, ALLOCATABLE :: ist(:,:) ! the cartesian coordinates of each stick
+           INTEGER, ALLOCATABLE :: stown(:,:) ! the owner of each stick
+           INTEGER, ALLOCATABLE :: indmap(:,:) ! the index of each stick (represented on the map)
+           REAL(DP) :: bg(3,3) ! base vectors, the generators of the mapped space
+        END TYPE
 
 ! ...   sticks_owner :   stick owner, sticks_owner( i, j ) is the index of the processor
 ! ...     (starting from 1) owning the stick whose x and y coordinate  are i and j.
 
         INTEGER, ALLOCATABLE, TARGET :: sticks_owner( : , : )
 
-        INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
 
 !=----------------------------------------------------------------------=
    CONTAINS
 !=----------------------------------------------------------------------=
 
+  SUBROUTINE sticks_map_deallocate( smap )
+     TYPE( sticks_map ) :: smap
+     IF( ALLOCATED( smap%idx ) ) DEALLOCATE( smap%idx )
+     IF( ALLOCATED( smap%ist ) ) DEALLOCATE( smap%ist )
+     IF( ALLOCATED( smap%stown ) ) DEALLOCATE( smap%stown )
+     IF( ALLOCATED( smap%indmap ) ) DEALLOCATE( smap%indmap )
+     smap%ub = 0
+     smap%lb = 0
+     smap%nstx = 0
+  END SUBROUTINE sticks_map_deallocate
 
-  SUBROUTINE sticks_map( lgamma, parallel, ub, lb, bg, gcut, st, comm )
+  SUBROUTINE sticks_map_allocate( smap, lgamma, lpara, nr1, nr2, nr3, bg, comm )
+     TYPE( sticks_map ) :: smap
+     LOGICAL, INTENT(IN) :: lgamma
+     LOGICAL, INTENT(IN) :: lpara
+     INTEGER, INTENT(IN) :: nr1, nr2, nr3
+     INTEGER, INTENT(IN) :: comm
+     REAL(DP), INTENT(IN) :: bg(3,3)
+     INTEGER :: lb(3), ub(3)
+     INTEGER :: nstx, ierr
+     ub(1) = ( nr1 - 1 ) / 2
+     ub(2) = ( nr2 - 1 ) / 2
+     ub(3) = ( nr3 - 1 ) / 2
+     lb    = - ub
+     nstx = (ub(1)-lb(1)+1)*(ub(2)-lb(2)+1) ! we stay very large indeed
+     IF( smap%nstx == 0 ) THEN
+        ! this map is clean, allocate
+        smap%mype = 0
+        smap%nproc = 1
+        smap%comm = comm
+#ifdef __MPI
+        CALL MPI_COMM_RANK( smap%comm, smap%mype, ierr )
+        CALL MPI_COMM_SIZE( smap%comm, smap%nproc, ierr )
+#endif
+        smap%lgamma = lgamma
+        smap%lpara = lpara
+        smap%comm = comm
+        smap%nstx = nstx
+        smap%ub = ub
+        smap%lb = lb
+        smap%bg = bg
+        ALLOCATE( smap%indmap ( lb(1):ub(1), lb(2):ub(2) ) )
+        ALLOCATE( smap%stown ( lb(1):ub(1), lb(2):ub(2) ) )
+        ALLOCATE( smap%idx( nstx ) )
+        ALLOCATE( smap%ist( nstx , 2) )
+        smap%stown = 0
+        smap%indmap = 0
+        smap%idx = 0
+        smap%ist = 0
+     ELSE IF( smap%nstx < nstx ) THEN
+        ! map resizing, re-allocate
+         CALL fftx_error__(' sticks_map_allocate ',' sticks map resizing, not yet implemented ', 1 )
+     END IF
+     RETURN
+  END SUBROUTINE
+
+  SUBROUTINE sticks_map_set( lgamma, ub, lb, bg, gcut, st, comm )
 
     ! .. Compute the basic maps of sticks
     ! .. st(i,j) will contain the number of G vectors of the stick whose indices are (i,j).
 
     LOGICAL, INTENT(in) :: lgamma !  if true use gamma point simmetry
-    LOGICAL, INTENT(in) :: parallel !  if true compute the map for a parallel fft
     INTEGER, INTENT(in) :: ub(:)  !  upper bounds for i-th grid dimension
     INTEGER, INTENT(in) :: lb(:)  !  lower bounds for i-th grid dimension
     REAL(DP) , INTENT(in) :: bg(:,:) ! reciprocal space base vectors
@@ -396,12 +476,7 @@ END SUBROUTINE write_matrix_strange_idx
                     (i1 * b1 (2) + i2 * b2 (2) + i3 * b3 (2) ) **2 + &
                     (i1 * b1 (3) + i2 * b2 (3) + i3 * b3 (3) ) **2
              IF (amod <= gcut ) THEN
-                IF( parallel ) THEN
-                   st( i1, i2 ) = st( i1, i2 ) + 1
-                ELSE
-                   st( i1, i2 ) = 1
-                   IF (lgamma) st( -i1, -i2 ) = 1
-                END IF
+                st( i1, i2 ) = st( i1, i2 ) + 1
              ENDIF
           ENDDO loop3
        ENDDO loop2
@@ -414,7 +489,7 @@ END SUBROUTINE write_matrix_strange_idx
 #endif
 
     RETURN
-  END SUBROUTINE sticks_map
+  END SUBROUTINE sticks_map_set
 
 !=----------------------------------------------------------------------=
 
@@ -453,7 +528,7 @@ END SUBROUTINE write_matrix_strange_idx
             END IF
             ind = index_map( i1, i2 )
             IF( nct > min_size ) &
-              CALL fftx_error__(' sticks_countg ',' too many sticks ', nct )
+              CALL fftx_error__(' sticks_map_index ',' too many sticks ', nct )
             in1(ind) = i1
             in2(ind) = i2
             ngc(ind) = st( i1 , i2)
