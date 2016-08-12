@@ -9,19 +9,19 @@
   !----------------------------------------------------------------------
   SUBROUTINE ephwann_shuffle( nqc, xqc )
   !---------------------------------------------------------------------
-  !
-  !  Wannier interpolation of electron-phonon vertex
-  !
-  !  Scalar implementation   Feb 2006
-  !  Parallel version        May 2006
-  !  Disentenglement         Oct 2006
-  !  Compact formalism       Dec 2006
-  !  Phonon irreducible zone Mar 2007
-  !
-  !  No ultrasoft now
-  !  No spin polarization
-  !
-  !  RM - add noncolin case
+  !!
+  !!  Wannier interpolation of electron-phonon vertex
+  !!
+  !!  Scalar implementation   Feb 2006
+  !!  Parallel version        May 2006
+  !!  Disentenglement         Oct 2006
+  !!  Compact formalism       Dec 2006
+  !!  Phonon irreducible zone Mar 2007
+  !!
+  !!  No ultrasoft now
+  !!  No spin polarization
+  !!
+  !!  RM - add noncolin case
   !-----------------------------------------------------------------------
   !
   USE kinds,         ONLY : DP
@@ -50,7 +50,6 @@
                             sigmai_all, sigmai_mode, gamma_all, epsi, zstar, efnew
 #ifdef __NAG
   USE f90_unix_io,   ONLY : flush
-!  USE,INTRINSIC :: f90_unix_file, ONLY:fstat, stat_t
 #endif
   USE mp,            ONLY : mp_barrier, mp_bcast, mp_sum
   USE io_global,     ONLY : ionode_id
@@ -59,37 +58,81 @@
   !
   implicit none
   !
-!#ifdef __NAG
-!  TYPE(stat_t) :: statb
-!#endif
-!#ifndef __NAG
-!  integer :: fstat,statb(13)
-!#endif
+  INTEGER, INTENT (in) :: nqc
+  !! number of qpoints in the coarse grid
   !
-  complex(kind=DP), ALLOCATABLE :: &
-    epmatwe  (:,:,:,:,:),       &! e-p matrix  in wannier basis - electrons
-    epmatwe_mem  (:,:,:,:),     &! e-p matrix  in wannier basis - electrons (written on disk)
-    epmatwef (:,:,:,:)           ! e-p matrix  in el wannier - fine Bloch phonon grid
-  complex(kind=DP), ALLOCATABLE :: &
-    epmatf( :, :, :),           &! e-p matrix  in smooth Bloch basis, fine mesh
-    cufkk ( :, :),              &! Rotation matrix, fine mesh, points k
-    cufkq ( :, :),              &! the same, for points k+q
-    uf    ( :, :),              &! Rotation matrix for phonons
-    bmatf ( :, :)                ! overlap U_k+q U_k^\dagger in smooth Bloch basis, fine mesh
-  integer :: &
-    nqc                          ! number of qpoints in the coarse grid
-  real(kind=DP) :: &
-    xqc (3, nqc)                 ! qpoint list, coarse mesh
+  REAL(kind=DP), INTENT (in) :: xqc(3,nqc)
+  !! qpoint list, coarse mesh
+  ! 
+  ! Local  variables
+  LOGICAL :: already_skipped
+  !! Skipping band during the Wannierization
+  LOGICAL :: exst
+  !! If the file exist
   !
-  integer :: iq, ik, ikk, ikq, ibnd, jbnd, imode, na, nu, mu, &
-    fermicount, nrec, lrepmatw
-  LOGICAL :: already_skipped, exst
-  character (len=256) :: filint
-  character (len=30)  :: myfmt
-  real(kind=DP) :: xxq(3), xxk(3), xkk(3), xkq(3) 
-  real(kind=DP), external :: efermig
-  real(kind=DP), external :: efermig_seq
-  real(kind=DP), parameter :: eps = 0.01/ryd2mev
+  CHARACTER (len=256) :: filint
+  !! Name of the file to write/read 
+  CHARACTER (len=30)  :: myfmt
+  !! Variable used for formatting output
+  ! 
+  INTEGER :: iq 
+  !! Counter on coarse q-point grid
+  INTEGER :: ik
+  !! Counter on coarse k-point grid
+  INTEGER :: ikk
+  !! Counter on k-point when you have paired k and q
+  INTEGER :: ikq
+  !! Paired counter so that q is adjacent to its k
+  INTEGER :: ibnd
+  !! Counter on band
+  INTEGER :: jbnd
+  !! Counter on band
+  INTEGER :: imode
+  !! Counter on mode
+  INTEGER :: na
+  !! Counter on atom
+  INTEGER :: mu
+  !! counter on mode
+  INTEGER :: nu
+  !! counter on mode
+  INTEGER :: fermicount
+  !! Number of states at the Fermi level
+  INTEGER :: nrec
+  !! record index when reading file
+  INTEGER :: lrepmatw
+  !! record length while reading file
+  !  
+  REAL(kind=DP) :: xxq(3)
+  !! Current q-point 
+  REAL(kind=DP) :: xxk(3)
+  !! Current k-point on the fine grid
+  REAL(kind=DP) :: xkk(3)
+  !! Current k-point on the fine grid
+  REAL(kind=DP) :: xkq(3)
+  !! Current k+q point on the fine grid
+  REAL(kind=DP), EXTERNAL :: efermig
+  !! External function to calculate the fermi energy
+  REAL(kind=DP), EXTERNAL :: efermig_seq
+  !! Same but in sequential
+  REAL(kind=DP), PARAMETER :: eps = 0.01/ryd2mev
+  !! Tolerence
+  !
+  COMPLEX(kind=DP), ALLOCATABLE :: epmatwe  (:,:,:,:,:)
+  !! e-p matrix  in wannier basis - electrons
+  COMPLEX(kind=DP), ALLOCATABLE :: epmatwe_mem  (:,:,:,:)
+  !! e-p matrix  in wannier basis - electrons (written on disk)
+  COMPLEX(kind=DP), ALLOCATABLE :: epmatwef (:,:,:,:)
+  !! e-p matrix  in el wannier - fine Bloch phonon grid
+  COMPLEX(kind=DP), ALLOCATABLE :: epmatf( :, :, :)
+  !! e-p matrix  in smooth Bloch basis, fine mesh
+  COMPLEX(kind=DP), ALLOCATABLE :: cufkk ( :, :)
+  !! Rotation matrix, fine mesh, points k
+  COMPLEX(kind=DP), ALLOCATABLE :: cufkq ( :, :)
+  !! the same, for points k+q
+  COMPLEX(kind=DP), ALLOCATABLE :: uf( :, :)
+  !! Rotation matrix for phonons
+  COMPLEX(kind=DP), ALLOCATABLE :: bmatf ( :, :)
+  !! overlap U_k+q U_k^\dagger in smooth Bloch basis, fine mesh
   ! 
   IF (nbndsub.ne.nbnd) &
        WRITE(stdout, '(/,14x,a,i4)' ) 'band disentanglement is used:  nbndsub = ', nbndsub
@@ -120,7 +163,6 @@
     CALL diropn (iunepmatwe, 'epmatwe', lrepmatw, exst)  
     filint    = trim(prefix)//'.epmatwp'
     CALL diropn (iunepmatwp, 'epmatwp', lrepmatw, exst)
-    !CALL seqopn (iunepmatwp, 'epmatwp', lrepmatw, exst)
   ENDIF
   ! 
   ! At this point, we will interpolate the Wannier rep to the Bloch rep 
@@ -149,8 +191,6 @@
      IF (vme) ALLOCATE(cvmew   ( 3, nbndsub, nbndsub, nrr_k ) )
      ! 
      ! SP : Let the user chose. If false use files on disk
-     !print*,'nrr_k',nrr_k
-     !print*,'nrr_q',nrr_q
      IF (etf_mem) THEN
        ALLOCATE(epmatwe ( nbndsub, nbndsub, nrr_k, nmodes, nqc))
        ALLOCATE (epmatwp ( nbndsub, nbndsub, nrr_k, nmodes, nrr_q))
@@ -176,7 +216,7 @@
     ! CALL dmebloch2wan &
     !      ( nbnd, nbndsub, nks, nkstot, nkstot, dmec, xk, cu, nrr_k, irvec, wslen )
      CALL dmebloch2wan &
-          ( nbnd, nbndsub, nks, nkstot, dmec, xk, cu, nrr_k, irvec, wslen )
+          ( nbnd, nbndsub, nks, nkstot, dmec, xk, cu, nrr_k, irvec, wslen, lwin )
      !
      ! Dynamical Matrix 
      !

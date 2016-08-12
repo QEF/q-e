@@ -8,8 +8,8 @@
   !                                                                            
   !
   !--------------------------------------------------------------------------
-  SUBROUTINE dmebloch2wan ( nbnd, nbndsub, nks, nkbl, dme, xk, cu, &
-     nrr, irvec, wslen )
+  SUBROUTINE dmebloch2wan ( nbnd, nbndsub, nks, nkbl, dmec, xk, cu, &
+     nrr, irvec, wslen, lwin )
   !--------------------------------------------------------------------------
   !!
   !!  From the Dipole in Bloch representationi (coarse mesh), 
@@ -46,10 +46,13 @@
   REAL(kind=DP), INTENT (in) :: wslen (nrr)
   !! WS vectors length (alat units)
   ! 
-  COMPLEX(kind=DP), INTENT (in) :: dme (3,nbnd, nbnd,nks)
+  COMPLEX(kind=DP), INTENT (in) :: dmec (3,nbnd, nbnd,nks)
   !! Dipole matrix elements on coarse mesh
   COMPLEX(kind=DP), INTENT (in) :: cu (nbnd, nbndsub, nks)
   !! rotation matrix from wannier code
+  !
+  LOGICAL, INTENT(in) :: lwin(nbnd,nks)
+  !! 
   !
   ! Local variables
   INTEGER :: ipol
@@ -58,6 +61,15 @@
   !! Counter on k-point
   INTEGER :: ir
   !! Counter on WS points
+  INTEGER :: i
+  !! Counter on total band index
+  INTEGER :: j
+  !! Counter on total band index
+  INTEGER :: ibnd
+  !! Counter on band that are in the Wannierized window
+  INTEGER :: jbnd
+  !! Counter on band that are in the Wannierized window
+  !
   REAL(kind=DP) :: rdotk
   !! $$ mathbf{r}\cdot\mathbf{k} $$
   REAL(kind=DP) :: tmp
@@ -66,14 +78,38 @@
   !! Hamiltonian in smooth Bloch basis, coarse mesh 
   COMPLEX(kind=DP) :: cfac
   !! $$ e^{-i\mathbf{r}\cdot\mathbf{k}} $$
-  COMPLEX(kind=DP) :: dme_utmp(nbnd,nbndsub)
-  !!
+  COMPLEX(kind=DP) :: dmec_utmp(nbnd,nbndsub)
+  !! dmec after multiplication with the Wannier rotation matrix cu.
+  COMPLEX(kind=DP) :: dmec_opt(3, nbnd,nbnd, nks)
+  !! dmec computed in pmn, rescaled down if skipping lwin.
   !
+  CALL start_clock ( 'Dipole: step 1' )
+  !
+  !--------------------------------------------------------------
+  !    STEP 0: Rescale the optical matrix on the coarse grid down
+  !            This is if you skip band during the Wannierization
+  !--------------------------------------------------------------
+  ! 
+  dmec_opt=czero
+  DO ik=1,nks
+     ibnd=0
+     DO i=1,nbnd
+        IF(lwin(i,ik)) THEN
+           ibnd=ibnd+1
+           jbnd=0
+           DO j=1,nbnd
+              IF(lwin(j,ik)) THEN
+                 jbnd=jbnd+1
+                 dmec_opt(:,ibnd,jbnd,ik)=dmec(:,i,j,ik)
+              END IF
+           END DO
+        END IF
+     END DO
+  END DO
+  ! 
   !----------------------------------------------------------
   !    STEP 1: rotation to optimally smooth Bloch states
   !----------------------------------------------------------
-  !
-  CALL start_clock ( 'Dipole: step 1' )
   !
   !  p~ (k) = U(k)^\dagger * p(k) * U(k)
   !  p~ (k) is cps( ipol, nbndsub, nbndsub, ik )
@@ -82,12 +118,11 @@
      DO ipol = 1, 3
         ! copied from ephbloch2wane.  produce equivalent results
         !
-        dme_utmp(:,:) = matmul( dme(ipol,:,:,ik), cu(:,:,ik) )
-        cps (ipol, :,:, ik) = matmul ( conjg(transpose( cu(:,:,ik))), dme_utmp (:,:) )
+        dmec_utmp(:,:) = matmul( dmec_opt(ipol,:,:,ik), cu(:,:,ik) )
+        cps (ipol, :,:, ik) = matmul ( conjg(transpose( cu(:,:,ik))), dmec_utmp (:,:) )
         !
     ENDDO
   ENDDO
-  !
   !
   !----------------------------------------------------------
   !  STEP 2: Fourier transform to go into Wannier basis
@@ -123,9 +158,8 @@
   !
   CALL cryst_to_cart (nks, xk, bg, 1)
   !
-  !
-  !  check spatial decay of Dipole in Wannier basis
-  !  the unit in r-space is angstrom
+  ! Check spatial decay of Dipole in Wannier basis
+  ! the unit in r-space is angstrom
   !
   IF (mpime.eq.ionode_id) then
      OPEN(unit=300,file='decay.P')

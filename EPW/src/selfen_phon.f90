@@ -350,12 +350,12 @@
         lambda_tr_tot = lambda_tr_tot + lambda_v_all( imode, iq, ismear )
         !
         WRITE(stdout, 102) imode, lambda_all(imode,iq,ismear),ryd2mev*gamma_all(imode,iq,ismear), ryd2mev*wq
-        !WRITE(stdout, 104) imode, lambda_v_all(imode,iq,ismear),ryd2mev*gamma_v(imode), ryd2mev*wq
+        WRITE(stdout, 104) imode, lambda_v_all(imode,iq,ismear),ryd2mev*gamma_v_all(imode,iq,ismear), ryd2mev*wq
         !
      ENDDO
      !
      WRITE(stdout, 103) lambda_tot
-     !WRITE(stdout, 105) lambda_tr_tot
+     WRITE(stdout, 105) lambda_tr_tot
      WRITE(stdout,'(5x,a/)') repeat('-',67)
      ! 
      IF (me_pool == 0) &
@@ -712,12 +712,12 @@ END SUBROUTINE selfen_phon_q
           lambda_tr_tot = lambda_tr_tot + lambda_v_all( imode, iq, ismear )
           !
           WRITE(stdout, 102) imode, lambda_all(imode,iq,ismear),ryd2mev*gamma_all(imode,iq,ismear), ryd2mev*wq
-!          WRITE(stdout, 102) imode, lambda_v_all(imode,iq,ismear),ryd2mev*gamma_v(imode), ryd2mev*wq
+          WRITE(stdout, 104) imode, lambda_v_all(imode,iq,ismear),ryd2mev*gamma_v_all(imode,iq,ismear), ryd2mev*wq
           !
         ENDDO
         !
         WRITE(stdout, 103) lambda_tot
- !       WRITE(stdout, 105) lambda_tr_tot
+        WRITE(stdout, 105) lambda_tr_tot
         WRITE(stdout,'(5x,a/)') repeat('-',67)
         ! 
         ! test ONLY
@@ -734,8 +734,8 @@ END SUBROUTINE selfen_phon_q
 101 FORMAT(5x,'DOS =',f10.6,' states/spin/eV/Unit Cell at Ef=',f10.6,' eV')
 102 FORMAT(5x,'lambda( ',i3,' )=',f15.6,'   gamma=',f15.6,' meV','   omega=',f12.4,' meV')
 103 FORMAT(5x,'lambda( tot )=',f15.6)
-!104 FORMAT(5x,'lambda_tr( ',i3,' )=',f15.6,'   gamma_tr=',f15.6,' meV','   omega=',f12.4,' meV')
-!105 FORMAT(5x,'lambda_tr( tot )=',f15.6)
+104 FORMAT(5x,'lambda_tr( ',i3,' )=',f15.6,'   gamma_tr=',f15.6,' meV','   omega=',f12.4,' meV')
+105 FORMAT(5x,'lambda_tr( tot )=',f15.6)
   !
 END SUBROUTINE selfen_phon_k
 !

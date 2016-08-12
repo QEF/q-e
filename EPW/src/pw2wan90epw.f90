@@ -1149,105 +1149,131 @@ END SUBROUTINE compute_mmn_para
 !-----------------------------------------------------------------------
 SUBROUTINE compute_pmn_para
 !-----------------------------------------------------------------------
-!  adapted from compute_amn_para
-!  06/2010  Jesse Noffsinger
-!  
 !
-   USE io_global,       ONLY : stdout
-   USE mp,              ONLY : mp_sum
-   USE kinds,           ONLY : DP
-   USE klist,           ONLY : xk, nks, igk_k
-   USE wvfct,           ONLY : nbnd, npw, npwx, g2kin
-   USE gvecw,           ONLY : ecutwfc
-   USE wavefunctions_module,  ONLY : evc
-   USE units_ph,        ONLY : lrwfc, iuwfc
-   USE gvect,           ONLY : g, ngm
-   USE cell_base,       ONLY : tpiba2, tpiba
-   USE noncollin_module,ONLY : noncolin
-   USE elph2,           ONLY : dmec
-   USE constants_epw,   ONLY : czero
-   implicit none
-  
-   integer :: ik, ibnd, ig, jbnd
-   COMPLEX(DP) :: dipole_aux(3,nbnd,nbnd), caux 
-   !
-   !
-   ALLOCATE( dmec(3,nbnd,nbnd,nks) )
-   !
-   ! initialize
-   dmec = czero
-   dipole_aux(:,:,:) = (0.0d0,0.0d0)
-   !
-   !
-   DO ik=1,nks
-      !
-      ! read wfc for the given kpt
-      CALL davcio( evc, lrwfc, iuwfc, ik, -1 )
-      !
-      ! setup k+G grids for each kpt
-      CALL gk_sort (xk(1,ik), ngm, g, ecutwfc / tpiba2, npw, igk_k(1,ik), g2kin)
-      !
-      dipole_aux = (0.d0, 0.d0)
-      DO jbnd = 1,nbnd
-         DO ibnd = 1,nbnd
+!!
+!!  Computes dipole matrix elements.
+!!  This can be used to compute the velocity in the local approximation.
+!!  The commutator with the non-local psp is neglected.
+!!
+!!  06/2010  Jesse Noffsinger: adapted from compute_amn_para
+!!  08/2016  Samuel Ponce: adapted to work with SOC
+!! 
+!
+  USE io_global,       ONLY : stdout
+  USE mp,              ONLY : mp_sum
+  USE kinds,           ONLY : DP
+  USE klist,           ONLY : xk, nks, igk_k
+  USE wvfct,           ONLY : nbnd, npw, npwx, g2kin
+  USE gvecw,           ONLY : ecutwfc
+  USE wavefunctions_module,  ONLY : evc
+  USE units_ph,        ONLY : lrwfc, iuwfc
+  USE gvect,           ONLY : g, ngm
+  USE cell_base,       ONLY : tpiba2, tpiba
+  USE noncollin_module,ONLY : noncolin
+  USE elph2,           ONLY : dmec
+  USE constants_epw,   ONLY : czero
+  USE uspp_param,      ONLY : upf
+  USE becmod,          ONLY : becp, deallocate_bec_type, allocate_bec_type
+  USE uspp,            ONLY : nkb
+  USE wannier,         ONLY : n_wannier
+  !
+  implicit none
+  !  
+  LOGICAL :: any_uspp
+  !! Check if USPP is present
+  !
+  INTEGER :: ik
+  !! Counter on k-point
+  INTEGER :: ibnd
+  !! Conter on bands
+  INTEGER :: jbnd
+  !! Conter on bands
+  INTEGER :: ig
+  !! Counter on G vector
+  ! 
+  COMPLEX(kind=DP) :: dipole_aux(3,nbnd,nbnd)
+  !! Auxilary dipole
+  COMPLEX(kind=DP) :: caux 
+  !! Wavefunction squared
+  !
+  any_uspp = ANY( upf(:)%tvanp )
+  !
+  IF (any_uspp .and. noncolin) CALL errore('pw2wan90epw',&
+             'noncolin calculation not implimented with USP',1)
+  !
+  ALLOCATE( dmec(3,nbnd,nbnd,nks) )
+  !
+  ! initialize
+  dmec = czero
+  dipole_aux(:,:,:) = (0.0d0,0.0d0)
+  !
+  IF (any_uspp) then
+    CALL deallocate_bec_type ( becp )
+    CALL allocate_bec_type ( nkb, n_wannier, becp )
+    CALL init_us_1
+  ENDIF
+  !
+  DO ik=1,nks
+    !
+    ! read wfc for the given kpt
+    CALL davcio( evc, lrwfc, iuwfc, ik, -1 )
+    !
+    ! setup k+G grids for each kpt
+    !CALL gk_sort (xk(1,ik), ngm, g, ecutwfc / tpiba2, npw, igk_k(1,ik), g2kin)
+    !
+    dipole_aux = (0.d0, 0.d0)
+    DO jbnd = 1,nbnd
+      DO ibnd = 1,nbnd
+        !
+        IF ( ibnd .eq. jbnd ) CYCLE
+        !
+        ! taken from PP/epsilon.f90 SUBROUTINE dipole_calc
+        DO ig = 1, npw
+          IF (igk_k(ig,ik) > SIZE(g,2) .or. igk_k(ig,ik) < 1) CYCLE
+          !
+          caux = conjg(evc(ig,ibnd))*evc(ig,jbnd) 
+          !
+          IF (noncolin) THEN
+             !
+             caux = caux + conjg(evc(ig+npwx,ibnd))*evc(ig+npwx,jbnd)
+             !
+          ENDIF
+          !
+          dipole_aux(:,ibnd,jbnd) = dipole_aux(:,ibnd,jbnd) + &
+                                  ( g(:,igk_k(ig,ik)) ) * caux
+          !
+        ENDDO
+        !
+      ENDDO !bands i
+    ENDDO ! bands j
+    ! metal diagonal part
+    DO ibnd = 1, nbnd
+       DO ig = 1, npw
+         IF (igk_k(ig,ik) > SIZE(g,2) .or. igk_k(ig,ik) < 1) CYCLE
+         !
+         caux = conjg(evc(ig,ibnd))*evc(ig,ibnd) 
+         !
+         IF (noncolin) THEN
             !
-            IF ( ibnd .eq. jbnd ) CYCLE
+            caux = caux + conjg(evc(ig+npwx,ibnd))*evc(ig+npwx,ibnd)
             !
-            ! taken from PP/epsilon.f90 SUBROUTINE dipole_calc
-            DO ig = 1, npw
-               IF (igk_k(ig,ik) .gt. SIZE(g,2) .or. igk_k(ig,ik).lt.1) CYCLE
-               !
-               caux = conjg(evc(ig,ibnd))*evc(ig,jbnd) 
-               !
-               dipole_aux(:,ibnd,jbnd) = dipole_aux(:,ibnd,jbnd) + &
-                                       ( g(:,igk_k(ig,ik)) ) * caux
-               !
-               ! RM - this should cover the noncolin case
-               IF (noncolin) THEN
-                  !
-                  caux = conjg(evc(ig+npwx,ibnd))*evc(ig+npwx,jbnd)
-                  !
-                  dipole_aux(:,ibnd,jbnd) = dipole_aux(:,ibnd,jbnd) + &
-                                          ( g(:,igk_k(ig,ik)) ) * caux
-                  !
-               ENDIF
-               !
-            ENDDO
-            !
-         ENDDO !bands i
-      ENDDO ! bands j
-      ! metal diagonal part
-      DO ibnd = 1, nbnd
-         DO ig = 1, npw
-            IF (igk_k(ig,ik) .gt. SIZE(g,2) .or. igk_k(ig,ik).lt.1) CYCLE
-            !
-            caux = conjg(evc(ig,ibnd))*evc(ig,ibnd) 
-            !
-            dipole_aux(:,ibnd,ibnd) = dipole_aux(:,ibnd,ibnd) + &
-                                    ( g(:,igk_k(ig,ik)) + xk(:,ik) ) * caux
-            !
-            ! RM - this should cover the noncolin case
-            IF (noncolin) THEN
-               !
-               caux = conjg(evc(ig+npwx,ibnd))*evc(ig+npwx,ibnd)
-               !
-               dipole_aux(:,ibnd,ibnd) = dipole_aux(:,ibnd,ibnd) + &
-                                       ( g(:,igk_k(ig,ik)) + xk(:,ik) ) * caux
-               !
-            ENDIF
-            !
-         ENDDO
-      ENDDO
-      ! need to divide by 2pi/a to fix the units
-      dmec(:,:,:,ik) = dipole_aux(:,:,:) * tpiba
-     !
-   ENDDO  ! k-points
-   !
-   !
-   WRITE(stdout,'(/5x,a)') 'Dipole matrix elements calculated'
-   WRITE(stdout,*)
-   !
-   RETURN
+         ENDIF
+         !
+         dipole_aux(:,ibnd,ibnd) = dipole_aux(:,ibnd,ibnd) + &
+                                         ( g(:,igk_k(ig,ik)) + xk(:,ik) ) * caux
+         !
+       ENDDO
+    ENDDO
+    ! need to divide by 2pi/a to fix the units
+    dmec(:,:,:,ik) = dipole_aux(:,:,:) * tpiba
+    !
+  ENDDO  ! k-points
+  !
+  !
+  WRITE(stdout,'(/5x,a)') 'Dipole matrix elements calculated'
+  WRITE(stdout,*)
+  !
+  RETURN
 END SUBROUTINE compute_pmn_para
 !-----------------------------------------------------------------------
 !!
