@@ -287,25 +287,6 @@
 ! ...   nstw     local number of sticks (wave functions)
 
 !
-! ...     Potentials
-!
-
-        INTEGER, ALLOCATABLE :: st(:,:)
-! ...   stick map (potentials), st(i,j) = number of G-vector in the
-! ...     stick whose x and y miller index are i and j
-
-        INTEGER, ALLOCATABLE :: nstp(:)
-! ...   number of sticks (potentials), nstp(ip) = number of stick
-! ...     for processor ip
-
-        INTEGER, ALLOCATABLE :: sstp(:)
-! ...   number of G-vectors (potentials), sstp(ip) = sum of the
-! ...     sticks length for processor ip = number of G-vectors
-! ...     owned by the processor ip
-
-        INTEGER :: nst
-! ...   nst      local number of sticks (potentials)
-!
 ! ...     Smooth Mesh
 !
 
@@ -338,10 +319,7 @@
           ! ...       Allocate maps
 
           ALLOCATE( stw ( smap%lb(1):smap%ub(1), smap%lb(2):smap%ub(2) ) )
-          ALLOCATE( st  ( smap%lb(1):smap%ub(1), smap%lb(2):smap%ub(2) ) )
           ALLOCATE( sts ( smap%lb(1):smap%ub(1), smap%lb(2):smap%ub(2) ) )
-          ALLOCATE(nstp(nproc))
-          ALLOCATE(sstp(nproc))
           ALLOCATE(nstpw(nproc))
           ALLOCATE(sstpw(nproc))
           ALLOCATE(nstps(nproc))
@@ -350,8 +328,6 @@
           CALL get_sticks(  smap, gkcut, nstpw, sstpw, stw, nstw, ngw )
 
           CALL get_sticks(  smap, gcuts, nstps, sstps, sts, nsts, ngs )
-
-          CALL get_sticks(  smap, gcut,  nstp, sstp, st, nst, ngm )
 
           ! ...   Allocate and Set fft data layout descriptors
 
@@ -362,13 +338,11 @@
 
 #else
 
-          CALL fft_type_scalar( dffts, ub, lb, stw )
+          CALL fft_type_scalar( dffts, smap%ub, smap%lb, stw )
 
 #endif
 
-          DEALLOCATE( st, stw, sts )
-          DEALLOCATE( sstp )
-          DEALLOCATE( nstp )
+          DEALLOCATE( stw, sts )
           DEALLOCATE( sstpw )
           DEALLOCATE( nstpw )
           DEALLOCATE( sstps )
