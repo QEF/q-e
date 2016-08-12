@@ -103,17 +103,12 @@
 !
         INTEGER, ALLOCATABLE :: stw(:,:)
 ! ...   stick map (wave functions), stw(i,j) = number of G-vector in the
-! ...     stick whose x and y miller index are i and j
-
+! ...   stick whose x and y miller index are i and j
         INTEGER, ALLOCATABLE :: nstpw(:)
-! ...   number of sticks (wave functions), nstpw(ip) = number of stick
-! ...     for processor ip
-
+! ...   number of sticks (wave functions), nstpw(ip) = number of stick for processor ip
         INTEGER, ALLOCATABLE :: sstpw(:)
 ! ...   number of G-vectors (wave functions), sstpw(ip) = sum of the
-! ...     sticks length for processor ip = number of G-vectors
-! ...     owned by the processor ip
-
+! ...   sticks length for processor ip = number of G-vectors owned by the processor ip
         INTEGER :: nstw
 ! ...   nstw     local number of sticks (wave functions)
 !
@@ -121,14 +116,12 @@
 !
         INTEGER, ALLOCATABLE :: st(:,:)
 ! ...   stick map (potentials), st(i,j) = number of G-vector in the
-! ...     stick whose x and y miller index are i and j
+! ...   stick whose x and y miller index are i and j
         INTEGER, ALLOCATABLE :: nstp(:)
-! ...   number of sticks (potentials), nstp(ip) = number of stick
-! ...     for processor ip
+! ...   number of sticks (potentials), nstp(ip) = number of stick for processor ip
         INTEGER, ALLOCATABLE :: sstp(:)
 ! ...   number of G-vectors (potentials), sstp(ip) = sum of the
-! ...     sticks length for processor ip = number of G-vectors
-! ...     owned by the processor ip
+! ...   sticks length for processor ip = number of G-vectors owned by the processor ip
         INTEGER :: nst
 ! ...   nst      local number of sticks (potentials)
 !
@@ -136,14 +129,12 @@
 !
         INTEGER, ALLOCATABLE :: sts(:,:)
 ! ...   stick map (smooth mesh), sts(i,j) = number of G-vector in the
-! ...     stick whose x and y miller index are i and j
+! ...   stick whose x and y miller index are i and j
         INTEGER, ALLOCATABLE :: nstps(:)
-! ...   number of sticks (smooth mesh), nstp(ip) = number of stick
-! ...     for processor ip
+! ...   number of sticks (smooth mesh), nstp(ip) = number of stick for processor ip
         INTEGER, ALLOCATABLE :: sstps(:)
 ! ...   number of G-vectors (smooth mesh), sstps(ip) = sum of the
-! ...     sticks length for processor ip = number of G-vectors
-! ...     owned by the processor ip
+! ...   sticks length for processor ip = number of G-vectors owned by the processor ip
         INTEGER :: nsts
 ! ...   nsts      local number of sticks (smooth mesh)
 
@@ -266,55 +257,15 @@
 
           INTEGER, INTENT(IN) :: mype, root, nproc, comm
           INTEGER, INTENT(IN) :: nogrp_
-
 !
-! ...     Plane Waves
-!
-        INTEGER, ALLOCATABLE :: stw(:,:)
-! ...   stick map (wave functions), stw(i,j) = number of G-vector in the
-! ...     stick whose x and y miller index are i and j
-
-        INTEGER, ALLOCATABLE :: nstpw(:)
-! ...   number of sticks (wave functions), nstpw(ip) = number of stick
-! ...     for processor ip
-
-        INTEGER, ALLOCATABLE :: sstpw(:)
-! ...   number of G-vectors (wave functions), sstpw(ip) = sum of the
-! ...     sticks length for processor ip = number of G-vectors
-! ...     owned by the processor ip
-
-        INTEGER :: nstw
-! ...   nstw     local number of sticks (wave functions)
-
-!
-! ...     Smooth Mesh
-!
-
-        INTEGER, ALLOCATABLE :: sts(:,:)
-! ...   stick map (smooth mesh), sts(i,j) = number of G-vector in the
-! ...     stick whose x and y miller index are i and j
-
-        INTEGER, ALLOCATABLE :: nstps(:)
-! ...   number of sticks (smooth mesh), nstp(ip) = number of stick
-! ...     for processor ip
-
-        INTEGER, ALLOCATABLE :: sstps(:)
-! ...   number of G-vectors (smooth mesh), sstps(ip) = sum of the
-! ...     sticks length for processor ip = number of G-vectors
-! ...     owned by the processor ip
-
-        INTEGER :: nsts
-! ...   nsts      local number of sticks (smooth mesh)
-
-          INTEGER :: ip
-
-#if defined(__MPI)
-        LOGICAL :: lpara = .true.
-#else
-        LOGICAL :: lpara = .false.
-#endif
-
-        CALL sticks_map_allocate( smap, lgamma, lpara, dfftp%nr1, dfftp%nr2, dfftp%nr3, bg, comm )
+          INTEGER, ALLOCATABLE :: stw(:,:)
+          INTEGER, ALLOCATABLE :: nstpw(:)
+          INTEGER, ALLOCATABLE :: sstpw(:)
+          INTEGER :: nstw
+          INTEGER, ALLOCATABLE :: sts(:,:)
+          INTEGER, ALLOCATABLE :: nstps(:)
+          INTEGER, ALLOCATABLE :: sstps(:)
+          INTEGER :: nsts
 
           ! ...       Allocate maps
 
