@@ -43,7 +43,7 @@ SUBROUTINE clean_pw( lflag )
   USE ldaU,                 ONLY : deallocate_ldaU
   USE extfield,             ONLY : forcefield
   USE fft_base,             ONLY : dfftp, dffts  
-  USE stick_base,           ONLY : sticks_deallocate
+  USE stick_set,            ONLY : pstickdealloc
   USE fft_types,            ONLY : fft_type_deallocate
   USE spin_orb,             ONLY : lspinorb, fcoef
   USE noncollin_module,     ONLY : deallocate_noncol
@@ -173,7 +173,7 @@ SUBROUTINE clean_pw( lflag )
   !
   ! ... stick-owner matrix allocated in sticks_base
   !
-  CALL sticks_deallocate()
+  CALL pstickdealloc()
   !
   ! ... arrays allocated for dynamics
   !

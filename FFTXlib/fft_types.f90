@@ -359,7 +359,7 @@ CONTAINS
     desc%iplw  = 0    ! 1 if the given x-plane location is active in wave y-fft
 
     desc%nst = 0
-    DO iss = 1, nst
+    DO iss = 1, SIZE( idx )
       is = idx( iss )
       i1 = in1( is )
       i2 = in2( is )

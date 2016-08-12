@@ -31,7 +31,6 @@ SUBROUTINE deallocate_modules_var()
   USE fft_types,            ONLY : fft_type_descriptor, fft_type_deallocate
   USE fft_smallbox_type,    ONLY : fft_box_deallocate
   USE fft_base,             ONLY : dfftp, dffts, dfftb
-  USE stick_base,           ONLY : sticks_deallocate
   USE electrons_module,     ONLY : deallocate_electrons
   USE ions_base,            ONLY : deallocate_ions_base
   ! USE polarization,         ONLY : deallocate_polarization ! obsolescent
@@ -43,6 +42,7 @@ SUBROUTINE deallocate_modules_var()
   USE kohn_sham_states,     ONLY : ks_states_closeup
   USE ldaU_cp,              ONLY : deallocate_lda_plus_u
   USE step_penalty,         ONLY : deallocate_step_pen
+  USE stick_set,            ONLY : pstickdealloc
 
   !
   IMPLICIT NONE
@@ -71,7 +71,7 @@ SUBROUTINE deallocate_modules_var()
   CALL fft_type_deallocate( dfftp )
   CALL fft_type_deallocate( dffts )
   CALL fft_box_deallocate( dfftb )
-  CALL sticks_deallocate()
+  CALL pstickdealloc( )
   !
   CALL deallocate_ions_base()
   !

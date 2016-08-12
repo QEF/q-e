@@ -23,12 +23,19 @@
       PRIVATE
       SAVE
 
-      PUBLIC :: pstickset, pstickset_custom
+      TYPE(sticks_map) :: smap
+
+      PUBLIC :: pstickset, pstickset_custom, pstickdealloc
 
 !=----------------------------------------------------------------------=
    CONTAINS
 !=----------------------------------------------------------------------=
 
+      SUBROUTINE pstickdealloc()
+         CALL sticks_map_deallocate( smap )
+      END SUBROUTINE pstickdealloc
+
+!=----------------------------------------------------------------------=
 
       SUBROUTINE get_sticks(  smap, gcut, nstp, sstp, st, nst, ng )
 
@@ -140,7 +147,6 @@
         INTEGER :: nsts
 ! ...   nsts      local number of sticks (smooth mesh)
 
-        TYPE(sticks_map) :: smap
         
 #if defined(__MPI)
         LOGICAL :: lpara = .true.
@@ -170,8 +176,6 @@
           CALL get_sticks(  smap, gcuts, nstps, sstps, sts, nsts, ngs )
 
           CALL get_sticks(  smap, gcut,  nstp, sstp, st, nst, ngm )
-
-          CALL sticks_set_owner( smap%ub, smap%lb, smap%stown )
 
 #if defined(__MPI)
 
@@ -233,7 +237,6 @@
                  WRITE( stdout,'(5X,"Tot",4X,2I8,I7)') nst, nsts, nstw
           ENDIF
 
-          CALL sticks_map_deallocate( smap )
           DEALLOCATE( st )
           DEALLOCATE( stw )
           DEALLOCATE( sts )
@@ -324,8 +327,6 @@
 
           INTEGER :: ip
 
-        TYPE(sticks_map) :: smap
-        
 #if defined(__MPI)
         LOGICAL :: lpara = .true.
 #else
@@ -351,8 +352,6 @@
           CALL get_sticks(  smap, gcuts, nstps, sstps, sts, nsts, ngs )
 
           CALL get_sticks(  smap, gcut,  nstp, sstp, st, nst, ngm )
-
-          CALL sticks_set_owner( smap%ub, smap%lb, smap%stown )
 
           ! ...   Allocate and Set fft data layout descriptors
 
