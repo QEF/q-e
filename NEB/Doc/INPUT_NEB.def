@@ -18,64 +18,65 @@ input_description -distribution {Quantum Espresso} -package NEB -program neb.x {
     toc {}
 
     intro {
-        Input data format: { } = optional, [ ] = it depends, | = or
+        @b {Input data format:} { } = optional, [ ] = it depends, | = or
         
         All quantities whose dimensions are not explicitly specified are in
         RYDBERG ATOMIC UNITS
 
-        BEWARE: TABS, DOS <CR><LF> CHARACTERS ARE POTENTIAL SOURCES OF TROUBLE 
+        @b BEWARE: TABS, DOS <CR><LF> CHARACTERS ARE POTENTIAL SOURCES OF TROUBLE 
 
-        General input file structure:
-        ===============================================================================
         
-        neb.x DOES NOT READ FROM STANDARD INPUT
+        @b {General input file structure:}
+        @hr
+        
+        @b {neb.x DOES NOT READ FROM STANDARD INPUT}
         
         There are two ways for running a calculation with neb.x:
         
-        (1) specifying a file to parse with the ./neb.x -inp or ./neb.x -input
+        (1) specifying a file to parse with the @b {./neb.x -inp} or @b {./neb.x -input}
             command line option.
     
-        (2) or specifying the number of copies of PWscf input ./neb.x -input_images. 
+        (2) or specifying the number of copies of PWscf inputs with the @b {./neb.x -input_images}
 
         For case (1) a file containing special KEYWORDS (aka SUPERCARDS) has to be
         written (see below). These KEYWORDS tell the parser which part of the file
         contains the neb specifics and which part contains the energy/force engine
-	input (at the moment only PW).  After the parsing, different files are
-	generated: neb.dat, with the neb specific variables, and a set of pw_*.in
-	PWscf input files, i.e., one for each input position. All options for a
-	single SCF calculation apply.
+        input (at the moment only PW).  After the parsing, different files are
+        generated: neb.dat, with the neb specific variables, and a set of pw_*.in
+        PWscf input files, i.e., one for each input position. All options for a
+        single SCF calculation apply.
 
         The general structure of the file to be parsed is:
 
-        BEGIN
-          BEGIN_PATH_INPUT
+        @b BEGIN
+          @b BEGIN_PATH_INPUT
             ... neb specific namelists and cards
-          END_PATH_INPUT
+          @b END_PATH_INPUT
 
-          BEGIN_ENGINE_INPUT
+          @b BEGIN_ENGINE_INPUT
             ...pw specific namelists and cards
-            BEGIN_POSITIONS
-              FIRST_IMAGE
+            @b BEGIN_POSITIONS
+              @b FIRST_IMAGE
               ...pw ATOMIC_POSITIONS card
-              INTERMEDIATE_IMAGE
+              @b INTERMEDIATE_IMAGE
               ...pw ATOMIC_POSITIONS card
-              LAST_IMAGE
+              @b LAST_IMAGE
               ...pw ATOMIC_POSITIONS card
-            END_POSITIONS
+            @b END_POSITIONS
             ... other pw specific cards
-          END_ENGINE_INPUT
-        END
+          @b END_ENGINE_INPUT
+        @b END
 
         For case (2) neb.dat and all pw_1.in, pw_2.in ... should be already present. 
 
-        Structure of the NEB input data (file neb.dat) :
+        @b {Structure of the NEB input data (file neb.dat) :}   
         ===============================================================================
 
-        &PATH
+        @b &PATH
           ...
-        /
+        @b /
 
-        [ CLIMBING_IMAGES
+        [ @b CLIMBING_IMAGES
            list of images, separated by a comma ]
     }
 
@@ -87,19 +88,21 @@ input_description -distribution {Quantum Espresso} -package NEB -program neb.x {
 
                 var string_method -type CHARACTER {
                     default { 'neb' }
-                    info {
-                        a string describing the task to be performed:
-                        'neb'
-                        'smd'
-                    }
+                    options {
+			info {
+			    A string describing the task to be performed. Options are:
+			}
+			opt -val 'neb' { nudget-elastic-band }
+                        opt -val 'smd' { string-method-dynamics }
+		    }
                 }
                 
                 var restart_mode -type CHARACTER {
                     default { 'from_scratch' }
-                    info {
-                        'from_scratch'  : from scratch
-                        
-                        'restart'       : from previous interrupted run
+                    options {
+			info {Options are:}
+                        opt -val 'from_scratch' { from scratch }                       
+                        opt -val 'restart'      { from previous interrupted run }			
                     }
                 }
                 
@@ -122,39 +125,51 @@ input_description -distribution {Quantum Espresso} -package NEB -program neb.x {
 
                 var opt_scheme -type CHARACTER { 
                     default { 'quick-min' }
-                    info {
-                        Specify the type of optimization scheme:
-
-                        'sd'         : steepest descent
-
-                        'broyden'    : quasi-Newton Broyden's second method (suggested)
-
-                        'broyden2'   : another variant of the quasi-Newton Broyden's 
-                                       second method to be tested and compared with the
-                                       previous one.
-
-                        'quick-min'  : an optimisation algorithm based on the
-                                       projected velocity Verlet scheme
-
-                        'langevin'   : finite temperature langevin dynamics of the
-                                       string (smd only). It is used to compute the
-                                       average path and the free-energy profile.
+		    options {
+			info {
+			    Specify the type of optimization scheme:
+			}			
+                        opt -val 'sd' {
+			    steepest descent
+			}
+                        opt -val 'broyden' {
+			    quasi-Newton Broyden's second method (suggested)
+			}
+                        opt -val 'broyden2' {
+			    another variant of the quasi-Newton Broyden's 
+			    second method to be tested and compared with the
+			    previous one.
+			}
+                        opt -val 'quick-min' {
+			    an optimisation algorithm based on the
+			    projected velocity Verlet scheme
+			}
+                        opt -val 'langevin' {
+			    finite temperature langevin dynamics of the
+			    string (smd only). It is used to compute the
+			    average path and the free-energy profile.
+			}
                     }
                 }
 
                 var CI_scheme -type CHARACTER {
                     default { 'no-CI' }
-                    info {
-                        Specify the type of Climbing Image scheme:
-
-                        'no-CI'      : climbing image is not used
-
-                        'auto'       : original CI scheme. The image highest in energy
-                                       does not feel the effect of springs and is
-                                       allowed to climb along the path
-
-                        'manual'     : images that have to climb are manually selected.
-                                       See also @ref CLIMBING_IMAGES card
+		    options {
+			info {
+			    Specify the type of Climbing Image scheme:
+			}
+                        opt -val 'no-CI' {
+			    climbing image is not used
+			}
+                        opt -val 'auto' {
+			    original CI scheme. The image highest in energy
+			    does not feel the effect of springs and is
+			    allowed to climb along the path
+			}
+                        opt -val 'manual' {
+			    images that have to climb are manually selected.
+			    See also @ref CLIMBING_IMAGES card
+			}
                     }
                 }
 
@@ -308,15 +323,15 @@ input_description -distribution {Quantum Espresso} -package NEB -program neb.x {
 
                 So the input that follows here is of the following structure:
                 
-                   &CONTROL
+                   @b &CONTROL
                       ...
-                   /
-                   &SYSTEM
+                   @b /
+                   @b &SYSTEM
                      ...
-                   /
-                   &ELECTRONS
+                   @b /
+                   @b &ELECTRONS
                      ...
-                   /
+                   @b /
                    ...
             }
 
@@ -345,6 +360,10 @@ input_description -distribution {Quantum Espresso} -package NEB -program neb.x {
 		supercard LAST_IMAGE {
 		    eval $card_ATOMIC_POSITIONS
 		}
+	    }
+
+	    message {
+		Here can follow other @b pw specific @b cards ...
 	    }
         }       
     }
