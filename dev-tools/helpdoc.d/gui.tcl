@@ -271,7 +271,7 @@ proc ::helpdoc::def_registerItems {tree node action} {
 	list {
 	    def_registerItem_ $tag $name
 
-	    set names [getDescendantText $tree $node format]
+	    set names [getTextFromDescendant $tree $node format]
 	    foreach name $names {
 		def_registerItem_ listvar $name
 	    }

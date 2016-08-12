@@ -81,12 +81,16 @@ proc ::helpdoc::txt_tag_enter {tree node tag attr content depth} {
     variable mode
     variable rows
     variable cols
-
+    variable info
+    variable options
+    variable options_first
+    
     if { [info exists arr] } {
 	unset arr
     }
 
-    set content [formatString [trimEmpty [txt_ref_link $content]]]
+    set content [formatString [trimEmpty [txt_atTags $content]]]
+    #set content [formatString [trimEmpty  $content]]
     attr2array_ arr $attr
 
     global sourcedir
@@ -106,6 +110,8 @@ proc ::helpdoc::txt_tag_leave {tree node tag attr content depth} {
     variable rows
     variable cols
     variable arr
+    variable options
+    variable options_first
 
     attr2array_ arr $attr
     global sourcedir
@@ -145,11 +151,12 @@ proc ::helpdoc::printableVarDescription {tree node} {
     # Purpose: the description of variable in the card is printed only
     # when at least one of info, status or see records is present.
 
-    set Info   [getDescendantText $tree $node info]
-    set Status [getDescendantText $tree $node status]
-    set See    [getDescendantText $tree $node see]
+    set Info   [getTextFromDescendant $tree $node info]
+    set Status [getTextFromDescendant $tree $node status]
+    set See    [getTextFromDescendant $tree $node see]
+    set Opt    [getTextFromDescendant $tree $node opt]
 
-    if { ! [::tclu::lpresent $mode card] || ($Info != "" || $Status != "" || $See != "") } {
+    if { ! [::tclu::lpresent $mode card] || ($Info != "" || $Status != "" || $See != "" || $Opt != "") } {
 	return 1
     } 
 

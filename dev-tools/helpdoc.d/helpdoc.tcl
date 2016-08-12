@@ -81,6 +81,8 @@ namespace eval ::helpdoc {
     variable dimensiongroup 0
     variable colgroup 0
     variable rowgroup 0
+    variable options 0
+    variable options_first 0
 }
 
 namespace eval ::helpdoc::tag {}
@@ -128,7 +130,7 @@ proc ::helpdoc::writeOutputs {} {
     # run XSLTPROC
 
     if { $xsltproc != "" } {
-	catch [list exec $xsltproc $head.xml > $head.html]    
+	catch [list exec $xsltproc --stringparam current-date [clock format [clock seconds]] $head.xml > $head.html]    
 	puts "File $head.html has been written."
     }
     
@@ -171,6 +173,9 @@ proc ::helpdoc::readSchema {} {
     
     puts "\n\n***\n*** Creating tags commands\n***\n"
     createTagCmds_
+
+    #puts "\n\n***\n*** Creating regexps for @-tags\n***\n"
+    createAtcmdRegexp_
 }
 
 

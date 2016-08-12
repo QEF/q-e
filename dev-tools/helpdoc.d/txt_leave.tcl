@@ -189,6 +189,12 @@ switch -exact -- $tag {
 	    incr txtDepth -1
 	}
     }
+    options {
+	if { ! [::tclu::lpresent $mode syntax] } {
+	    set options 0
+	    set options_first 0
+	}
+    }
 }
 
 

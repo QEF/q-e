@@ -1,6 +1,7 @@
 variable indentNum
 set var_chars 15
 set var_chars1 [expr $var_chars + 1]
+set var_chars_indent [expr 15 + 5]
 
 switch -exact -- $tag {
     
@@ -53,8 +54,29 @@ if { ! $vargroup && ! $dimensiongroup && ! $colgroup && ! $rowgroup && ! [::tclu
     switch -exact -- $tag {
 	
 	info {
-	    printf [labelMsg [format "%-${var_chars}s" Description:] $content]
+	    if { $options == 0 } {
+		printf [labelMsg [format "%-${var_chars}s" Description:] $content]
+	    } else {
+		if { ! $options_first } {		    
+		    printf " "
+		}
+		printf [labelMsg [format "%-${var_chars}s" {}] $content]
+		set options_first 0
+	    }
 	}    
+
+	opt {
+	    if { [string trim $content] ne {} } {
+		if { ! $options_first } {
+		    printf " "
+		}
+		printf [labelMsg [format "%-${var_chars}s" {}] "[arr val] :"]
+		printf [labelMsg [format "%-${var_chars_indent}s" {}] $content]
+	    } else {
+		printf [labelMsg [format "%-${var_chars_indent}s" {}] "[arr val]"]
+	    }
+	    set options_first 0
+	}
 	
 	"default" {
 	    printf [labelMsg [format "%-${var_chars}s" Default:] $content]
@@ -75,6 +97,14 @@ if { ! $vargroup && ! $dimensiongroup && ! $colgroup && ! $rowgroup && ! [::tclu
 
 
 switch -exact -- $tag {
+    options {
+	if { ! [::tclu::lpresent $mode syntax] } {	
+	    set options 1
+	    set options_first 1
+	    printf [format "%-${var_chars}s" Description:]
+	}
+    }
+
     var - col - row {
 	if { ! $vargroup && ! $colgroup && ! $rowgroup && ! [::tclu::lpresent $mode syntax] } {	    
 
@@ -157,7 +187,7 @@ switch -exact -- $tag {
     list { 
 	if { ! [::tclu::lpresent $mode syntax] } {
 	    if { [printableVarDescription $tree $node] } {
-		set vars [getDescendantText $tree $node format]
+		set vars [getTextFromDescendant $tree $node format]
 		printf +--------------------------------------------------------------------
 		printf [labelMsg [format "%-${var_chars}s" Variables:] $vars]\n
 		printf [labelMsg [format "%-${var_chars}s" Type:] [arr type]]
@@ -274,8 +304,8 @@ switch -exact -- $tag {
 
 	    lappend mode card
 
-	    set flags [getDescendantText $tree $node flag enum]
-	    set use   [getDescendantAttribute $tree $node flag use]
+	    set flags [string trim [getTextFromDescendant $tree $node enum]]
+	    set use   [getAttributeFromDescendantPath $tree $node flag use]
 	    
 	    if { $use == "optional" } {
 		set flag "{ $flags }"
@@ -304,11 +334,12 @@ switch -exact -- $tag {
 	    # card's items will be described only when at least one of
 	    # info, status or see records is present.
 	    
-	    set Info   [getDescendantText $tree $node info]
-	    set Status [getDescendantText $tree $node status]
-	    set See    [getDescendantText $tree $node see]
+	    set Info   [getTextFromDescendant $tree $node info]
+	    set Status [getTextFromDescendant $tree $node status]
+	    set See    [getTextFromDescendant $tree $node see]
+	    set Opt    [getTextFromDescendant $tree $node opt]
 
-	    if { ($Info != "" || $Status != "" || $See != "") } {
+	    if { $Info != "" || $Status != "" || $See != "" || $Opt != "" } {
 		printf "DESCRIPTION OF ITEMS:\n"
 		incr txtDepth	    
 		txt_subtree $tree $node description

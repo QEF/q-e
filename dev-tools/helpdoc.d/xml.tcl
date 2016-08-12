@@ -33,8 +33,15 @@ proc ::helpdoc::xml_http {content} {
 
     #set re {http(s)*://([[:alnum:]-]+\.)+[[:alnum:]-]+[-#/\w]*}
     set re {http(s)*://([^/?#\s]*)?([^?#\s]*)(\?([^#\s]*))?(#([^\s]*))?[^\s\.,;:]}
-    set prb {(PRB)[\s,]+([0-9]+)[\s,]+([A-Z]?[0-9]+)}
     return [regsub -all $re $content {<link>\0</link>}]
+}
+
+proc ::helpdoc::xml_doi {content} {
+    # PURPOSE: transform all instances of doi:10.**** into links
+    set re {([dD][oO][iI]:?\s*)(10.[0-9]{4})(\.[0-9]+)?(/[-#%/=&@!,:\.\?\w]+[^\s\.,;:])}    
+    #       1                  2            3          4
+
+    return [regsub -all $re $content  {<a href="http://dx.doi.org/\2\3\4">\0</a>}]
 }
 
 proc ::helpdoc::xml_prb {content} {
@@ -81,7 +88,8 @@ proc ::helpdoc::xml_tag_enter {tag attr content depth} {
     }
     
     set attr    [xml_attr_escape_chr $attr]
-    set content [formatString [xml_ref [xml_link [xml_prb [xml_prl [xml_http [xml_escape_chr $content]]]]]]]
+    #set content [formatString [xml_ref [xml_link [xml_prb [xml_prl [xml_doi [xml_http [xml_escape_chr $content]]]]]]]]
+    set content [formatString [xml_atTags [xml_prb [xml_prl [xml_doi [xml_http [xml_escape_chr $content]]]]]]]
 
     if { $attr != "" } {
 	puts $fid(xml) "${indent}<$tag ${attr}>${sep}${content}"
