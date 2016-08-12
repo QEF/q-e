@@ -273,6 +273,7 @@ CONTAINS
   ALLOCATE( sts ( lb(1) : ub(1), lb(2) : ub(2) ) )
   ALLOCATE( index_map ( lb(1) : ub(1), lb(2) : ub(2) ) )
 
+  index_map = 0
  !
 ! ...     Fill in the stick maps, for given g-space base (b1,b2,b3)
 ! ...     and cut-offs
@@ -307,6 +308,7 @@ CONTAINS
   ALLOCATE( in1( nct ), in2( nct ) )
   ALLOCATE( ngc( nct ), ngcs( nct ), ngkc( nct ) )
   ALLOCATE( idx( nct ) )
+  idx = 0
 
 !
 ! ...     initialize the sticks indexes array ist
