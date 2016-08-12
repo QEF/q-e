@@ -264,12 +264,6 @@
           INTEGER, INTENT(IN) :: mype, root, nproc, comm
           INTEGER, INTENT(IN) :: nogrp_
 
-
-          LOGICAL :: tk
-
-          INTEGER :: ub(3), lb(3)
-! ...     ub(i), lb(i) upper and lower miller indexes
-
 !
 ! ...     Plane Waves
 !
@@ -328,102 +322,52 @@
         INTEGER :: nsts
 ! ...   nsts      local number of sticks (smooth mesh)
 
-        INTEGER, ALLOCATABLE :: index_map(:,:)
-
-        INTEGER, ALLOCATABLE :: ist(:,:)    ! sticks indices ordered
           INTEGER :: ip
-          INTEGER, ALLOCATABLE :: idx(:)
 
-          tk    = .not. lgamma
-          ub(1) = ( dfftp%nr1 - 1 ) / 2
-          ub(2) = ( dfftp%nr2 - 1 ) / 2
-          ub(3) = ( dfftp%nr3 - 1 ) / 2
-          lb    = - ub
+        TYPE(sticks_map) :: smap
+        
+#if defined(__MPI)
+        LOGICAL :: lpara = .true.
+#else
+        LOGICAL :: lpara = .false.
+#endif
+
+        CALL sticks_map_allocate( smap, lgamma, lpara, dfftp%nr1, dfftp%nr2, dfftp%nr3, bg, comm )
 
           ! ...       Allocate maps
 
-          ALLOCATE( stw ( lb(1):ub(1), lb(2):ub(2) ) )
-          ALLOCATE( st  ( lb(1):ub(1), lb(2):ub(2) ) )
-          ALLOCATE( sts ( lb(1):ub(1), lb(2):ub(2) ) )
-          ALLOCATE( index_map ( lb(1):ub(1), lb(2):ub(2) ) )
-
-          st  = 0
-          stw = 0
-          sts = 0
-          index_map = 0
-         
-
-! ...       Fill in the stick maps, for given g-space base and cut-off
-
-          CALL sticks_map_set( (.not.tk), ub, lb, bg, gcut, st, comm )
-          CALL sticks_map_set( (.not.tk), ub, lb, bg, gkcut, stw, comm )
-          CALL sticks_map_set( (.not.tk), ub, lb, bg, gcuts, sts, comm )
-
-! ...       Now count the number of stick nst and nstw
-
-          nst  = count( st  > 0 )
-          nstw = count( stw > 0 )
-          nsts = count( sts > 0 )
-
-          ALLOCATE(ist(nst,5))
-
+          ALLOCATE( stw ( smap%lb(1):smap%ub(1), smap%lb(2):smap%ub(2) ) )
+          ALLOCATE( st  ( smap%lb(1):smap%ub(1), smap%lb(2):smap%ub(2) ) )
+          ALLOCATE( sts ( smap%lb(1):smap%ub(1), smap%lb(2):smap%ub(2) ) )
           ALLOCATE(nstp(nproc))
           ALLOCATE(sstp(nproc))
-
           ALLOCATE(nstpw(nproc))
           ALLOCATE(sstpw(nproc))
-
           ALLOCATE(nstps(nproc))
           ALLOCATE(sstps(nproc))
 
-! ...       initialize the sticks indexes array ist
+          CALL get_sticks(  smap, gkcut, nstpw, sstpw, stw, nstw, ngw )
 
-          CALL sticks_map_index( ub, lb, stw, ist(:,1), ist(:,2), ist(:,3), index_map )
-          CALL sticks_map_index( ub, lb, st, ist(:,1), ist(:,2), ist(:,4), index_map )
-          CALL sticks_map_index( ub, lb, sts, ist(:,1), ist(:,2), ist(:,5), index_map )
+          CALL get_sticks(  smap, gcuts, nstps, sstps, sts, nsts, ngs )
 
-! ...       Sorts the sticks according to their length
+          CALL get_sticks(  smap, gcut,  nstp, sstp, st, nst, ngm )
 
-          ALLOCATE( idx( nst ) )
-          idx = 0
-
-          CALL sticks_sort_new( nproc>1, ist(:,3), nst, idx )
-          CALL sticks_sort_new( nproc>1, ist(:,5), nst, idx )
-          CALL sticks_sort_new( nproc>1, ist(:,4), nst, idx )
-
-! ...       Distribute the sticks as in dfftp
-
-          CALL sticks_ordered_dist( tk, ub, lb, idx, ist(:,1), ist(:,2), ist(:,4), ist(:,3), ist(:,5), &
-             nst, nstp, nstpw, nstps, sstp, sstpw, sstps, st, stw, sts, nproc )
-
-          ngw = sstpw( mype + 1 )
-          ngm = sstp( mype + 1 )
-          ngs = sstps( mype + 1 )
-
-          CALL sticks_pairup( tk, ub, lb, idx, ist(:,1), ist(:,2), ist(:,4), ist(:,3), ist(:,5), &
-             nst, nstp, nstpw, nstps, sstp, sstpw, sstps, st, stw, sts, nproc )
+          CALL sticks_set_owner( smap%ub, smap%lb, smap%stown )
 
           ! ...   Allocate and Set fft data layout descriptors
 
 #if defined(__MPI)
 
-          CALL fft_type_set( dffts, tk, nsts, ub, lb, idx, ist(:,1), ist(:,2), nstps, nstpw, sstps, sstpw, sts, stw )
+          CALL fft_type_set( dffts, .not.lgamma, nsts, smap%ub, smap%lb, smap%idx, &
+                             smap%ist(:,1), smap%ist(:,2), nstps, nstpw, sstps, sstpw, sts, stw )
 
 #else
-
-          DEALLOCATE( stw )
-          ALLOCATE( stw( lb(1) : ub(1), lb(2) : ub(2) ) )
-
-          CALL sticks_map_set( (.not.tk), ub, lb, bg, gkcut, stw, comm )
 
           CALL fft_type_scalar( dffts, ub, lb, stw )
 
 #endif
 
-          DEALLOCATE( ist )
-          DEALLOCATE( idx )
-
-          DEALLOCATE( st, stw, sts, index_map )
+          DEALLOCATE( st, stw, sts )
           DEALLOCATE( sstp )
           DEALLOCATE( nstp )
           DEALLOCATE( sstpw )
