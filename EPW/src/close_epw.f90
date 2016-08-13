@@ -16,7 +16,6 @@
   !
   USE io_epw,    ONLY : iunepmatf
   USE phcom,     ONLY : iuwfc, iudwf, iudrhous, iudvkb3, fildrho, iudrho
-  USE epwcom,    ONLY : elinterp
   USE uspp,      ONLY : okvan      
   USE mp_global, ONLY : me_pool,root_pool
   !
@@ -29,13 +28,7 @@
   IF (me_pool  /= root_pool ) go to 100  
   IF (fildrho.ne.' ') CLOSE (unit = iudrho, status = 'keep')
 100 continue
-  ! 
-  IF (elinterp) then
-    !
-    !  the temporary storage for Wannier interpolation
-    !
-    CLOSE (unit = iunepmatf,  status = 'delete')
-    !
-  ENDIF
+  ! the temporary storage for Wannier interpolation
+  CLOSE (unit = iunepmatf,  status = 'delete')
   !
   END SUBROUTINE close_epw

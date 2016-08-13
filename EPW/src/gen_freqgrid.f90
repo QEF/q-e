@@ -9,9 +9,9 @@
   !-----------------------------------------------------------------------
   SUBROUTINE gen_freqgrid_raxis
   !-----------------------------------------------------------------------
-  !
-  ! Automatic generation of the frequency-grid for real-axis calculations.
-  !
+  !!
+  !! Automatic generation of the frequency-grid for real-axis calculations.
+  !!
   USE io_global,     ONLY : stdout
   USE epwcom,        ONLY : nswfc, nswc, pwc, wsfc, wscut, lunif
   USE eliashbergcom, ONLY : nsw, ws, dws

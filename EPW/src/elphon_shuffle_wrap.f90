@@ -37,8 +37,8 @@
   USE kinds,         ONLY : DP
   USE pwcom,         ONLY : et, xk, nks, nbnd, nkstot, ngm
   USE cell_base,     ONLY : at, bg
-  USE symm_base,     ONLY : irt, s, nsym, ftau, sname, invs, &
-                            s_axis_to_cart, sr, nrot, copy_sym, set_sym_bl, find_sym, inverse_s
+  USE symm_base,     ONLY : irt, s, nsym, ftau, sname, invs, s_axis_to_cart,&
+                            sr, nrot, copy_sym, set_sym_bl, find_sym, inverse_s
   USE start_k,       ONLY : nk1, nk2, nk3
   USE phcom,         ONLY : dpsi, dvpsi, evq, nq1, nq3, nq2 
   USE qpoint,        ONLY : igkq
@@ -46,10 +46,8 @@
   USE qpoint,        ONLY : xq
   USE modes,         ONLY : nmodes
   USE lr_symm_base,  ONLY : minus_q, rtau, gi, gimq, irotmq, nsymq, invsymq
-  USE epwcom,        ONLY : epbread, epbwrite, epwread, phinterp, &
-                            nbndsub, elinterp,    &
-                            iswitch, kmaps, eig_read, &
-                            dvscf_dir, lpolar
+  USE epwcom,        ONLY : epbread, epbwrite, epwread,  &
+                            nbndsub, iswitch, kmaps, eig_read, dvscf_dir, lpolar
   USE elph2,         ONLY : epmatq, dynq, sumr, et_all, xk_all, et_mb, et_ks, &
                             zstar, epsi, cu, cuq, lwin, lwinq, bmat, igk_k_all, &
                             ngk_all
@@ -187,8 +185,6 @@
   !
   CALL start_clock ( 'elphon_wrap' )
   !
-  IF ( elinterp .and. (.not.phinterp ) ) CALL errore &
-        ('elphon_shuffle_wrap','elinterp requires phinterp' ,1)
   IF (lgamma) CALL errore('elphon_shuffle_wrap','EPW does not support Gamma only calculation ',1)
   !
   ! READ qpoint list from stdin

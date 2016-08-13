@@ -9,10 +9,10 @@
   !----------------------------------------------------------------------------
   MODULE io_dyn_mat2
   !----------------------------------------------------------------------------
-  !
-  ! ... this module contains methods to read and write the dynamical
-  !     matrix and the interatomic force constants files in xml format.
-  !
+  !!
+  !!     This module contains methods to read and write the dynamical
+  !!     matrix and the interatomic force constants files in xml format.
+  !!
   USE iotk_module
   !
   USE kinds,     ONLY : DP
@@ -33,9 +33,17 @@
   CONTAINS
     !
     SUBROUTINE read_dyn_mat_param(fildyn, ntyp, nat )
-
+    !! 
+    !! Read paramters from the dynamical matrix
+    !! 
     CHARACTER(LEN=256), INTENT(IN) :: fildyn
-    INTEGER, INTENT(OUT) :: ntyp, nat
+    !! Name of the file to read
+    INTEGER, INTENT(OUT) :: ntyp
+    !! Number of type of atoms
+    INTEGER, INTENT(OUT) :: nat
+    !! Number of atoms
+    !
+    ! Local variables
     INTEGER :: ierr
 
     IF ( ionode ) THEN
@@ -71,13 +79,20 @@
     SUBROUTINE read_dyn_mat_header(ntyp, nat, ibrav, nspin_mag,  &
                celldm, at, bg, omega, atm, amass, tau, ityp, m_loc, &
                nqs, lrigid, epsil, zstareu, lraman, ramtns)
-
-    INTEGER, INTENT(IN) :: ntyp, nat
+    !!   
+    !! Read the dynamical matrix
+    !!
+    INTEGER, INTENT(IN) :: ntyp
+    !! Number of type of atoms
+    INTEGER, INTENT(IN) :: nat
+    !! Number of atoms
     INTEGER, INTENT(OUT) :: ibrav, nspin_mag, nqs
     CHARACTER(LEN=3), INTENT(OUT) :: atm(ntyp)
     REAL(DP), INTENT(OUT) :: celldm(6)
     REAL(DP), INTENT(OUT) :: at(3,3)
+    !! Real-space lattice
     REAL(DP), INTENT(OUT) :: bg(3,3)
+    !! Reciprocal-space latrice
     REAL(DP), INTENT(OUT) :: omega
     REAL(DP), INTENT(OUT) :: amass(ntyp)
     REAL(DP), INTENT(OUT) :: tau(3,nat)
@@ -164,10 +179,10 @@
     END SUBROUTINE read_dyn_mat_header
 
     SUBROUTINE read_dyn_mat(nat,iq,xq,dyn)
-!
-!   This routine reads the dynamical matrix file. The file is assumed to
-!   be already opened. iq is the number of the dynamical matrix to read.
-!
+    !!
+    !!   This routine reads the dynamical matrix file. The file is assumed to
+    !!   be already opened. iq is the number of the dynamical matrix to read.
+    !!
     INTEGER, INTENT(IN) :: nat, iq
     REAL(DP), INTENT(OUT) :: xq(3)
     COMPLEX(DP), INTENT(OUT) :: dyn(3,3,nat,nat)

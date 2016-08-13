@@ -27,9 +27,6 @@
 
   iverbosity  = 0
 
-  elinterp    = .true.
-  phinterp    = .true.
-
   elecselfen  = .true.
   phonselfen  = .true.
   a2f         = .true.

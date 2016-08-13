@@ -33,7 +33,7 @@
   USE epwcom,        ONLY : nbndsub, lrepmatf, fsthick, epwread,          &
                             epwwrite, ngaussw, degaussw, lpolar,          &
                             nbndskip, parallel_k, parallel_q, etf_mem,    &
-                            elecselfen, phonselfen, nest_fn, a2f, indabs, &
+                            elecselfen, phonselfen, nest_fn, a2f,         &
                             vme, eig_read, ephwrite,                      & 
                             efermi_read, fermi_energy, specfun, band_plot
   USE noncollin_module, ONLY : noncolin
@@ -572,8 +572,7 @@
           ! interpolate ONLY when (k,k+q) both have at least one band 
           ! within a Fermi shell of size fsthick 
           !
-          IF ( (( minval ( abs(etf (:, ikk) - ef) ) .lt. fsthick ) .and. &
-               ( minval ( abs(etf (:, ikq) - ef) ) .lt. fsthick )) .or. indabs ) THEN
+          IF ( (( minval ( abs(etf (:, ikk) - ef) ) < fsthick ) .and. ( minval ( abs(etf (:, ikq) - ef) ) < fsthick )) ) THEN
              !
              !  fermicount = fermicount + 1
              !
@@ -642,8 +641,6 @@
        IF (elecselfen ) CALL selfen_elec_q( iq )
        IF (nest_fn    ) CALL nesting_fn_q( iq )
        IF (specfun    ) CALL spectral_func_q( iq )
-  !     IF (indabs    ) CALL indabs (iq)
-  !     IF (twophoton ) CALL twophoton (iq)
        IF (ephwrite) THEN
           IF ( iq .eq. 1 ) THEN 
              CALL kmesh_fine
@@ -780,7 +777,7 @@
         ! within a Fermi shell of size fsthick 
         !
         IF ( (( minval ( abs(etf (:, ikk) - ef) ) .lt. fsthick ) .and. &
-             ( minval ( abs(etf (:, ikq) - ef) ) .lt. fsthick )) .or. indabs ) THEN
+             ( minval ( abs(etf (:, ikq) - ef) ) .lt. fsthick ))) THEN
            !
            !  fermicount = fermicount + 1
            !
