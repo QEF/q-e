@@ -117,10 +117,12 @@ PROGRAM molecularpdos
   kresolveddos = .false.
   !
   ios = 0
+  IF ( ionode ) THEN
+     CALL input_from_file ( )
+     READ (5, inputmopdos, iostat = ios)
+  END IF
   !
-  IF ( ionode ) READ (5, inputmopdos, iostat = ios)
   CALL mp_bcast (ios, ionode_id, world_comm )
-  !
   IF (ios /= 0) CALL errore ('molecularpdos', 'reading inputmopdos namelist', abs (ios) )
   !
   IF ( ionode ) THEN
