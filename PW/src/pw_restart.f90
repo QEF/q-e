@@ -54,7 +54,7 @@ MODULE pw_restart
 #ifdef __XSD
   USE io_files,  ONLY : iunpun_xsd, xmlpun_schema
 #endif
-USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, delete_if_present, &
+  USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, delete_if_present, &
                         qexml_version, qexml_version_init, pseudo_dir
   !
   USE io_global, ONLY : ionode, ionode_id
@@ -76,7 +76,8 @@ USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, delete_if_present, &
   PUBLIC :: pw_writefile, pw_readfile
 #ifdef __XSD
   ! 
-  PUBLIC :: pw_write_schema, pw_readschema_file, init_vars_from_schema, read_collected_to_evc
+  PUBLIC :: pw_write_schema, pw_readschema_file, init_vars_from_schema, &
+       read_collected_to_evc
 #endif
   !
   INTEGER, PRIVATE :: iunout
@@ -281,7 +282,7 @@ USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, delete_if_present, &
 !-------------------------------------------------------------------------------
          !
          CALL qexsd_init_algorithmic_info(output%algorithmic_info, &
-                                          real_space_q=real_space, uspp=okvan, paw=okpaw)
+              real_space_q=real_space, uspp=okvan, paw=okpaw)
          !
 !-------------------------------------------------------------------------------
 ! ... ATOMIC_SPECIES
@@ -291,15 +292,15 @@ USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, delete_if_present, &
          ! for nspin==1 or contrained magnetization calculations
          !
          IF (noncolin) THEN
-             CALL qexsd_init_atomic_species(output%atomic_species, nsp, atm, psfile, &
-                                        amass, STARTING_MAGNETIZATION = starting_magnetization, &
-                                        ANGLE1=angle1, ANGLE2=angle2)
+            CALL qexsd_init_atomic_species(output%atomic_species, nsp, atm, psfile, &
+                 amass, STARTING_MAGNETIZATION = starting_magnetization, &
+                 ANGLE1=angle1, ANGLE2=angle2)
          ELSE IF (nspin==2) THEN 
-             CALL qexsd_init_atomic_species(output%atomic_species, nsp, atm, psfile, &
-                                           amass, STARTING_MAGNETIZATION=starting_magnetization)
+            CALL qexsd_init_atomic_species(output%atomic_species, nsp, atm, psfile, &
+                 amass, STARTING_MAGNETIZATION=starting_magnetization)
          ELSE 
-             CALL qexsd_init_atomic_species(output%atomic_species, nsp, atm,psfile, &
-                                          amass)
+            CALL qexsd_init_atomic_species(output%atomic_species, nsp, atm,psfile, &
+                 amass)
          END IF
          !
 !-------------------------------------------------------------------------------
@@ -307,7 +308,7 @@ USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, delete_if_present, &
 !-------------------------------------------------------------------------------
          !         
          CALL qexsd_init_atomic_structure(output%atomic_structure, nsp, atm, ityp, &
-                       nat, tau, 'Bohr', alat, alat*at(:,1), alat*at(:,2), alat*at(:,3), ibrav)
+              nat, tau, 'Bohr', alat, alat*at(:,1), alat*at(:,2), alat*at(:,3), ibrav)
          !
 !-------------------------------------------------------------------------------
 ! ... SYMMETRIES
@@ -341,17 +342,17 @@ USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, delete_if_present, &
             END IF
          END IF
          CALL qexsd_init_symmetries(output%symmetries, nsym, nrot, space_group, &
-                                    s, ft, sname, t_rev, nat, irt,symop_2_class(1:nrot), verbosity, &
-                                    noncolin)
+              s, ft, sname, t_rev, nat, irt,symop_2_class(1:nrot), verbosity, &
+              noncolin)
          !
 !-------------------------------------------------------------------------------
 ! ... BASIS SET
 !-------------------------------------------------------------------------------
          !
          CALL qexsd_init_basis_set(output%basis_set, gamma_only, ecutwfc/e2, ecutwfc*dual/e2, &
-                                   dfftp%nr1, dfftp%nr2, dfftp%nr3, dffts%nr1, dffts%nr2, dffts%nr3, &
-                                   .FALSE., dfftp%nr1, dfftp%nr2, dfftp%nr3, ngm_g, ngms_g, npwx_g, &
-                                   bg(:,1), bg(:,2), bg(:,3) )
+              dfftp%nr1, dfftp%nr2, dfftp%nr3, dffts%nr1, dffts%nr2, dffts%nr3, &
+              .FALSE., dfftp%nr1, dfftp%nr2, dfftp%nr3, ngm_g, ngms_g, npwx_g, &
+              bg(:,1), bg(:,2), bg(:,3) )
          !
 !-------------------------------------------------------------------------------
 ! ... DFT
@@ -365,20 +366,20 @@ USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, delete_if_present, &
          vdw_corr_ = vdw_corr
          IF ( london ) vdw_corr_ = 'grimme-d2'
          CALL qexsd_init_dft(output%dft, dft_name, .TRUE., &
-                             dft_is_hybrid(), nq1, nq2, nq3, ecutfock, &
-                             get_exx_fraction(), get_screening_parameter(), exxdiv_treatment, &
-                             x_gamma_extrapolation, ecutvcut, lda_plus_u, lda_plus_u_kind, 2*Hubbard_lmax+1, &
-                             nspin, nsp, 2*Hubbard_lmax+1, nat, atm, ityp, Hubbard_U, Hubbard_J0, Hubbard_alpha, &
-                             Hubbard_beta, Hubbard_J, starting_ns_eigenvalue, rho%ns, rho%ns_nc, U_projection, &
-                             dft_is_nonlocc(), TRIM(vdw_corr_), TRIM ( get_nonlocc_name()), scal6, in_c6, lon_rcut, xdm_a1, xdm_a2,&
-                             vdw_econv_thr, vdw_isolated, is_hubbard, upf(1:nsp)%psd)
+              dft_is_hybrid(), nq1, nq2, nq3, ecutfock, &
+              get_exx_fraction(), get_screening_parameter(), exxdiv_treatment, &
+              x_gamma_extrapolation, ecutvcut, lda_plus_u, lda_plus_u_kind, 2*Hubbard_lmax+1, &
+              nspin, nsp, 2*Hubbard_lmax+1, nat, atm, ityp, Hubbard_U, Hubbard_J0, Hubbard_alpha, &
+              Hubbard_beta, Hubbard_J, starting_ns_eigenvalue, rho%ns, rho%ns_nc, U_projection, &
+              dft_is_nonlocc(), TRIM(vdw_corr_), TRIM ( get_nonlocc_name()), scal6, in_c6, lon_rcut, xdm_a1, xdm_a2,&
+              vdw_econv_thr, vdw_isolated, is_hubbard, upf(1:nsp)%psd)
          !
 !-------------------------------------------------------------------------------
 ! ... MAGNETIZATION
 !-------------------------------------------------------------------------------
          !
          CALL qexsd_init_magnetization(output%magnetization, lsda, noncolin, lspinorb, &
-                                       magtot, magtot_nc, absmag, domag )
+              magtot, magtot_nc, absmag, domag )
          !
 
 !--------------------------------------------------------------------------------------
@@ -398,8 +399,8 @@ USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, delete_if_present, &
             h_energy  = ef 
          END IF 
          CALL  qexsd_init_band_structure(output%band_structure,lsda,noncolin,lspinorb, &
-                                         nbnd,nelec, natomwfc, occupations_are_fixed, & 
-                                         h_energy,two_fermi_energies, [ef_up,ef_dw], et,wg,nkstot,xk,ngk_g,wk)
+              nbnd,nelec, natomwfc, occupations_are_fixed, & 
+              h_energy,two_fermi_energies, [ef_up,ef_dw], et,wg,nkstot,xk,ngk_g,wk)
          !
 !-------------------------------------------------------------------------------------------
 ! ... TOTAL ENERGY
@@ -407,10 +408,10 @@ USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, delete_if_present, &
          !
          IF (tefield) THEN
             CALL  qexsd_init_total_energy(output%total_energy,etot,eband,ehart,vtxc,etxc, &
-                                       ewld,degauss,demet, etotefield)
+                 ewld,degauss,demet, etotefield)
          ELSE 
             CALL  qexsd_init_total_energy(output%total_energy,etot,eband,ehart,vtxc,etxc, &
-                                       ewld,degauss,demet)
+                 ewld,degauss,demet)
          END IF
          !
 !---------------------------------------------------------------------------------------------
@@ -441,15 +442,15 @@ USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, delete_if_present, &
          IF ( lelfield ) THEN
             output%electric_field_ispresent = .TRUE. 
             CALL qexsd_init_outputElectricField(output%electric_field, lelfield, tefield, dipfield, &
-                                                lberry, el_pol = bp_mod_el_pol, ion_pol = bp_mod_ion_pol) 
+                 lberry, el_pol = bp_mod_el_pol, ion_pol = bp_mod_ion_pol) 
          ELSE IF ( lberry ) THEN 
             output%electric_field_ispresent = .TRUE.
             CALL qexsd_init_outputElectricField(output%electric_field, lelfield, tefield, dipfield, & 
-                                                lberry, bp_obj=qexsd_bp_obj) 
+                 lberry, bp_obj=qexsd_bp_obj) 
          ELSE IF ( tefield .AND. dipfield  ) THEN 
             output%electric_field_ispresent = .TRUE.
             CALL  qexsd_init_outputElectricField(output%electric_field, lelfield, tefield, dipfield, &
-                                                  lberry, dipole_obj = qexsd_dipol_obj )                     
+                 lberry, dipole_obj = qexsd_dipol_obj )                     
          ELSE 
             output%electric_field_ispresent = .FALSE.
          ENDIF
