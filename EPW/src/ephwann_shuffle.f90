@@ -468,7 +468,7 @@
        ! In case of big calculation, show progression of iq (especially usefull when
        ! elecselfen = true as nothing happen during the calculation otherwise. 
        !
-       IF ( phonselfen) THEN 
+       IF (.not. phonselfen) THEN 
          IF (MOD(iq,100) == 0) THEN
            WRITE(stdout, '(a,i10,a,i10)' ) '     Progression iq (fine) = ',iq,'/',nqf
          ENDIF
