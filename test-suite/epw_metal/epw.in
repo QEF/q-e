@@ -47,7 +47,7 @@
   parallel_q  = .false.
 
   fsthick     = 6 ! eV
-  eptemp      = 500 ! K
+  eptemp      = 300 ! K
   degaussw    = 0.1  ! eV
   degaussq    = 0.05 ! meV
 

@@ -46,10 +46,10 @@
   parallel_k  = .true.
   parallel_q  = .false.
 
-  fsthick     = 6 ! eV
-  eptemp      = 2000 ! K
-  degaussw    = 1.0  ! eV
-  degaussq    = 0.05 ! meV
+  fsthick     = 20 ! eV
+  eptemp      = 500 ! K
+  degaussw    = 0.2  ! eV
+  degaussq    = 0.1 ! meV
 
   dvscf_dir   = './save'
   filukk      = './SiC.ukk'

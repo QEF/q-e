@@ -539,7 +539,7 @@
             !
             symmo = (ftau(1,isym).eq.0 .and. ftau(2,isym).eq.0 .and. ftau(3,isym).eq.0)
             !
-            WRITE(stdout,'(3i5,2a)') iq, i, isym, nog, symmo
+            WRITE(stdout,'(3i5,L3,L3)') iq, i, isym, nog, symmo
             !
           ENDDO  
           !

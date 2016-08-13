@@ -46,6 +46,7 @@ isig=`grep "Im\[Sigma\]=" $fname | awk '{print $10}'`
 z1=`grep " Z=" $fname | awk '{print $13}'`
 lam=`grep "lam= " $fname | awk '{print $15}'`
 lambda=`grep "  lambda(" $fname | awk '{print $4}'`
+lambda_tr=`grep "  lambda_tr(" $fname | awk '{print $4}'`
 gamma=`grep " gamma=" $fname | awk '{print $6}'`
 omega=`grep " omega=" $fname | awk '{print $9}'`
 lam_tot=`grep " lambda :" $fname | awk '{print $3}'`
@@ -130,6 +131,11 @@ if test "$lamda" != ""; then
         for x in $lamda; do echo $x; done
 fi
 
+if test "$lambda_tr" != ""; then
+        echo lambda_tr
+        for x in $lambda_tr; do echo $x; done
+fi
+
 if test "$gamma" != ""; then
         echo gamma
         for x in $gamma; do echo $x; done
@@ -176,12 +182,10 @@ if test "$f1" != ""; then
 	echo $f1
 fi
 
-echo 'We are 5' >> /home/sponce/program/espresso/test-suite/tmp.txt
 if test "$p1" != ""; then
 	echo p1
 	echo $p1
 fi
-
 
 if test "$ef1" != ""; then
 	echo ef1
@@ -198,7 +202,6 @@ if test "$el1" != ""; then
         for x in $el1; do echo $x; done
 fi
 
-echo 'We are 6' >> /home/sponce/program/espresso/test-suite/tmp.txt
 if test "$tf1" != ""; then
         echo tf1
         for x in $tf1; do echo $x; done

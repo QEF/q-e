@@ -3,7 +3,7 @@
     prefix          = 'pb'
     restart_mode    = 'from_scratch'
     wf_collect      = .true.
-    pseudo_dir      = './'
+    pseudo_dir      = '.'
     outdir          = './'
     verbosity       = 'high'
     tprnfor         = .true.
@@ -29,4 +29,4 @@ ATOMIC_SPECIES
 ATOMIC_POSITIONS crystal
 Pb        0.000000000   0.000000000   0.000000000
 K_POINTS AUTOMATIC
-18 18 18 0 0 0
+6 6 6 0 0 0

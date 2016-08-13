@@ -11,9 +11,9 @@
   !-----------------------------------------------------------------------
   SUBROUTINE epw_summary
   !-----------------------------------------------------------------------
-  !
-  !    still looks like phq_summary
-  !
+  !!
+  !!    Output symmetry informations
+  !!
   USE ions_base,     ONLY : nat, ityp, atm, tau, ntyp => nsp, amass
   USE io_global,     ONLY : stdout
   USE cell_base,     ONLY : at, bg, ibrav, alat, omega, celldm
@@ -125,7 +125,8 @@
         ELSE
            isym = irgq (isymq)
         ENDIF
-        WRITE( stdout, '(/6x,"isym = ",i2,5x,a45/)') isymq, sname (isym)
+        !WRITE( stdout, '(6x,"isym = ",i2,5x,a)') isymq, sname (isym)
+        WRITE( stdout, *) 'isym = ', isymq, sname (isym)
       !  CALL s_axis_to_cart (s (1, 1, isym), sr, at, bg)
         CALL s_axis_to_cart ()
         IF (ftau (1, isym) .ne.0.or.ftau (2, isym) .ne.0.or.ftau (3, &
@@ -136,9 +137,9 @@
                 2, isym) / dfftp%nr2 + at (2, 3) * ftau (3, isym) / dfftp%nr3
            ft3 = at (3, 1) * ftau (1, isym) / dfftp%nr1 + at (3, 2) * ftau ( &
                 2, isym) / dfftp%nr2 + at (3, 3) * ftau (3, isym) / dfftp%nr3
-           WRITE( stdout, '(1x,"cryst.",3x,"s(",i2,") = (",3(i6,5x), &
-                &                    " )    f =( ",f10.7," )")') isymq,  (s (1, &
-                & ipol, isym) , ipol = 1, 3) ,DBLE(ftau (1, isym) )/DBLE (dfftp%nr1)
+           WRITE( stdout, '(1x,"cryst.",3x,"s(",i2,") = (",3i6, &
+                &                    " )    f =( ",f10.7," )")') isymq,  (s (1 &
+                &, ipol,isym) , ipol = 1, 3) , DBLE(ftau (1, isym) )/DBLE (dfftp%nr1)
            WRITE( stdout, '(17x," (",3(i6,5x), &
                 &                    " )       ( ",f10.7," )")')  (s (2, ipol, &
                 &isym) , ipol = 1, 3) , DBLE(ftau (2, isym) )  / DBLE(dfftp%nr2)
@@ -155,7 +156,7 @@
                 &                    " )       ( ",f10.7," )"/)')  (sr (3, ipol,isym &
                 &) , ipol = 1, 3) , ft3
         ELSE
-           WRITE( stdout, '(1x,"cryst.",3x,"s(",i2,") = (",3(i6,5x), &
+           WRITE( stdout, '(1x,"cryst.",3x,"s(",i2,") = (",3i6, &
                 &                    " )")') isymq,  (s (1, ipol, isym) , ipol = &
                 &1, 3)
            WRITE( stdout, '(17x," (",3(i6,5x)," )")') (s (2, ipol, isym) &
