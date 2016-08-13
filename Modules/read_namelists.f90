@@ -656,22 +656,6 @@ MODULE read_namelists_module
      !
      !=----------------------------------------------------------------------=!
      !
-#ifdef __XSD
-     !-----------------------------------------------------------------------
-     SUBROUTINE xsd_bcast()
-     !-----------------------------------------------------------------------
-       !
-       USE io_global, ONLY : ionode_id
-       USE mp,        ONLY : mp_bcast
-       USE mp_images, ONLY : intra_image_comm
-       !
-       IMPLICIT NONE
-       !
-       CALL mp_bcast( input_xml_schema_file, ionode_id, intra_image_comm )
-       !
-     END SUBROUTINE
-#endif
-     !
      !-----------------------------------------------------------------------
      SUBROUTINE control_bcast()
        !-----------------------------------------------------------------------
