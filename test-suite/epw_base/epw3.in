@@ -27,9 +27,6 @@
   dis_froz_max= 7
   proj(1)     = 'f=0,0,0:l=-3'   
 
-  elinterp    = .true.
-  phinterp    = .true.
-
   elecselfen  = .true.
   phonselfen  = .false.
   a2f         = .false.

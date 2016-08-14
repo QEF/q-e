@@ -900,7 +900,6 @@
   IF ( ALLOCATED(sigmai_all) )   DEALLOCATE( sigmai_all )
   IF ( ALLOCATED(sigmai_mode) )   DEALLOCATE( sigmai_mode )
   !
-  !
   CALL stop_clock ( 'ephwann' )
   !
   END SUBROUTINE ephwann_shuffle
