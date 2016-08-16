@@ -245,7 +245,7 @@ cegterg.o : ../../Modules/mp.o
 cegterg.o : ../../Modules/mp_bands.o
 cegterg.o : ../../Modules/mp_diag.o
 clean_pw.o : ../../FFTXlib/fft_types.o
-clean_pw.o : ../../FFTXlib/stick_base.o
+clean_pw.o : ../../FFTXlib/stick_set.o
 clean_pw.o : ../../Modules/atom.o
 clean_pw.o : ../../Modules/constraints_module.o
 clean_pw.o : ../../Modules/fft_base.o
@@ -329,7 +329,9 @@ d_matrix.o : ../../Modules/invmat.o
 d_matrix.o : ../../Modules/kind.o
 d_matrix.o : ../../Modules/random_numbers.o
 d_matrix.o : symm_base.o
+data_structure.o : ../../FFTXlib/fft_types.o
 data_structure.o : ../../FFTXlib/stick_set.o
+data_structure.o : ../../FFTXlib/task_groups.o
 data_structure.o : ../../Modules/cell_base.o
 data_structure.o : ../../Modules/fft_base.o
 data_structure.o : ../../Modules/gvecw.o
@@ -340,6 +342,7 @@ data_structure.o : ../../Modules/mp_bands.o
 data_structure.o : ../../Modules/mp_pools.o
 data_structure.o : ../../Modules/recvec.o
 data_structure.o : pwcom.o
+data_structure_custom.o : ../../FFTXlib/fft_types.o
 data_structure_custom.o : ../../FFTXlib/stick_set.o
 data_structure_custom.o : ../../Modules/cell_base.o
 data_structure_custom.o : ../../Modules/fft_base.o
@@ -359,7 +362,6 @@ divide_class_so.o : ../../Modules/io_global.o
 divide_class_so.o : ../../Modules/kind.o
 divide_class_so.o : ../../Modules/noncol.o
 divide_class_so.o : pwcom.o
-divide_et_impera.o : ../../Modules/io_global.o
 divide_et_impera.o : ../../Modules/kind.o
 divide_et_impera.o : ../../Modules/mp_pools.o
 dqvan2.o : ../../Modules/kind.o
@@ -457,7 +459,6 @@ ewald_dipole.o : ../../Modules/mp_bands.o
 ewald_dipole.o : ../../Modules/recvec.o
 ewald_dipole.o : pwcom.o
 exx.o : ../../FFTXlib/fft_interfaces.o
-exx.o : ../../FFTXlib/fft_types.o
 exx.o : ../../FFTXlib/scatter_mod.o
 exx.o : ../../Modules/becmod.o
 exx.o : ../../Modules/cell_base.o
@@ -1005,19 +1006,22 @@ memory_report.o : ../../Modules/cell_base.o
 memory_report.o : ../../Modules/constants.o
 memory_report.o : ../../Modules/control_flags.o
 memory_report.o : ../../Modules/fft_base.o
+memory_report.o : ../../Modules/funct.o
 memory_report.o : ../../Modules/gvecw.o
 memory_report.o : ../../Modules/io_global.o
+memory_report.o : ../../Modules/ions_base.o
 memory_report.o : ../../Modules/kind.o
 memory_report.o : ../../Modules/mp_bands.o
 memory_report.o : ../../Modules/mp_diag.o
+memory_report.o : ../../Modules/mp_images.o
 memory_report.o : ../../Modules/noncol.o
 memory_report.o : ../../Modules/recvec.o
 memory_report.o : ../../Modules/uspp.o
 memory_report.o : ../../Modules/wannier_new.o
 memory_report.o : atomic_wfc_mod.o
+memory_report.o : exx.o
 memory_report.o : ldaU.o
 memory_report.o : pwcom.o
-memory_report.o : exx.o
 mix_rho.o : ../../FFTXlib/fft_interfaces.o
 mix_rho.o : ../../Modules/cell_base.o
 mix_rho.o : ../../Modules/constants.o
@@ -1701,6 +1705,7 @@ setlocal.o : martyna_tuckerman.o
 setlocal.o : pwcom.o
 setlocal.o : scf_mod.o
 setup.o : ../../FFTXlib/fft_types.o
+setup.o : ../../FFTXlib/stick_set.o
 setup.o : ../../Modules/cell_base.o
 setup.o : ../../Modules/constants.o
 setup.o : ../../Modules/control_flags.o
