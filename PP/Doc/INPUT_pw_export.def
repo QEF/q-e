@@ -3,64 +3,69 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw_ex
     toc {}
 
     intro {
-	Structure of the input data:
-	============================
 
-	   &INPUTPP
-	     ...
-	   /
+        @b {Purpose of pw_export.x:}
+           Writes PWSCF data for postprocessing purposes in XML format using IOTK lib.
+           Wave-functions are collected and written using IO_BASE module.
+          
+        @b {Structure of the input data:}
+        ============================
+
+           @b &INPUTPP
+             ...
+           @b /
     }
 
     namelist INPUTPP {
 
-	var prefix  -type        STRING {
-	    status { MANDATORY }
-	    info {
-		the first part of the name of all the file written by the code
-		should be equal to the value given in the main calculations.
-	    }
-	}
+        var prefix  -type        STRING {
+            status { MANDATORY }
+            info {
+                the first part of the name of all the file written by the code
+                should be equal to the value given in the main calculations.
+            }
+        }
 
 
-	var outdir  -type        STRING {
-	    default { "./" }
-	    info {
-		the scratch directory where the massive data-files are written
-	    }
-	}
+        var outdir  -type        STRING {
+            default { "./" }
+            info {
+                the scratch directory where the massive data-files are written
+            }
+        }
 
-	var pseudo_dir  -type    STRING {
-	    default { "./" }
-	    info {
-		directory containing pseudopotential (PP) files
-	    }
-	}
+        var pseudo_dir  -type    STRING {
+            default { "./" }
+            info {
+                directory containing pseudopotential (PP) files
+            }
+        }
 
 
-	dimension psfile -start 1 -end ntyp -type     STRING {
-	    default { "" }
-	    info {
-		files containing i-th pseudopotential, where i=1, N_type.
-		PP numbering must follow the ordering defined in the input of pw.x
-	    }
-	}
+        dimension psfile -start 1 -end ntyp -type     STRING {
+            default { (empty string) }
+            info {
+                files containing i-th pseudopotential, where i=1, ntyp.
+                PP numbering must follow the ordering defined in the input of pw.x
+            }
+        }
 
-	var single_file  -type   LOGICAL {
-	    default { .FALSE. }
-	    info {
-		if .TRUE. one-file output is produced
-	    }
-	}
+        var single_file  -type   LOGICAL {
+            default { .FALSE. }
+            info {
+                if .TRUE. one-file output is produced
+            }
+        }
 
-	var ascii  -type         LOGICAL {
-	    default { .FALSE. }
-	    info {
-		if .TRUE. output files are textual, otherwise they are partly binary.
-	    }
-	}
+        var ascii  -type         LOGICAL {
+            default { .FALSE. }
+            info {
+                if .TRUE. output files are textual, otherwise they are partly binary.
+            }
+        }
 
-	var pp_file  -type       STRING {
-	    default { "prefix.export/" }
+        var pp_file  -type       STRING {
+            default { "@ref prefix.export/" }
 	    info {
 		Output file. 
 

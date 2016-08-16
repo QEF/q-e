@@ -3,10 +3,11 @@ input_description -distribution {Quantum Espresso} -package PWscf -program bgw2p
     toc {}
 
     intro {
-	Converts BerkeleyGW WFN and RHO files to the format of pw.x.
-	This can be useful, for example, if you generate the plane waves
-	on top of the valence bands and want to diagonalize them in pw.x.
-	Look at the documentation for SAPO code in BerkeleyGW for more information.
+	@b {Purpose of bgw2pw.x:}
+	   Converts BerkeleyGW WFN and RHO files to the format of pw.x.
+	   This can be useful, for example, if you generate the plane waves
+	   on top of the valence bands and want to diagonalize them in pw.x.
+	   Look at the documentation for SAPO code in BerkeleyGW for more information.
 
 	bgw2pw.x reads common parameters from file prefix.save/data-file.xml and
 	writes files prefix.save/charge-density.dat (charge density in R-space),

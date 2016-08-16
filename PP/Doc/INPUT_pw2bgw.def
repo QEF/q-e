@@ -3,31 +3,32 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw2bg
     toc {}
 
     intro {
-	Converts the output files produced by pw.x to the input files for BerkeleyGW.
+	@b {Purpose of pw2bgw.x:}
+           Converts the output files produced by pw.x to the input files for BerkeleyGW.
 
-	You cannot use USPP, PAW, or spinors in a pw.x run for BerkeleyGW.
+        You cannot use USPP, PAW, or spinors in a pw.x run for BerkeleyGW.
 
-	You cannot use "K_POINTS gamma" in a pw.x run for BerkeleyGW.
-	Use "K_POINTS { tpiba | automatic | crystal }" even for the
-	Gamma-point calculation.
+        You cannot use "K_POINTS gamma" in a pw.x run for BerkeleyGW.
+        Use "K_POINTS { tpiba | automatic | crystal }" even for the
+        Gamma-point calculation.
 
-	It is recommended to run a pw.x "bands" calculation with "K_POINTS crystal"
-	and a list of k-points produced by kgrid.x, which is a part of BerkeleyGW
-	package (see BerkeleyGW documentation for details).
+        It is recommended to run a pw.x "bands" calculation with "K_POINTS crystal"
+        and a list of k-points produced by kgrid.x, which is a part of BerkeleyGW
+        package (see BerkeleyGW documentation for details).
 
-	You can also run a pw.x "nscf" calculation instead of "bands", but in this
-	case pw.x may generate more k-points than provided in the input file of pw.x.
-	If this is the case for your calculation you will get errors in BerkeleyGW.
+        You can also run a pw.x "nscf" calculation instead of "bands", but in this
+        case pw.x may generate more k-points than provided in the input file of pw.x.
+        If this is the case for your calculation you will get errors in BerkeleyGW.
 
-	Examples showing how to run BerkeleyGW on top of Quantum ESPRESSO including
-	the input files for pw.x and pw2bgw.x are distributed together with the
-	BerkeleyGW package.
+        Examples showing how to run BerkeleyGW on top of Quantum ESPRESSO including
+        the input files for pw.x and pw2bgw.x are distributed together with the
+        BerkeleyGW package.
 
-	@b {Structure of the input data:}
-	============================
+        @b {Structure of the input data:}
+        ============================
 
-	   @b &INPUT_PW2BGW
-	     ...
+           @b &INPUT_PW2BGW
+             ...
 	   @b /
     }
 

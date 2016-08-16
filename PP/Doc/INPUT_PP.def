@@ -3,7 +3,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pp.x 
     toc {}
 
     intro {
-      Purpose of pp.x: data analysis and plotting.
+      @b {Purpose of pp.x:} data analysis and plotting.
     
       The code performs two steps:
       (1) reads the output file produced by pw.x, extract and calculate
