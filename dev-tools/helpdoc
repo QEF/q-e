@@ -7,21 +7,35 @@ set sourcedir [file join $basedir helpdoc.d]
 
 source [file join $sourcedir helpdoc.tcl]
 
+# custom XSLTPROC program
+#set ::helpdoc::xsltproc /path/to/xsltproc
+
 #
 # MAIN
 #
 
+set usage "
+    Usage: $argv0 \[--version value\] file1.def ?file2.def? ...
+"
+
 if { $argc < 1 } {
-    puts stderr "\nUsage: $argv0 file1.def ?file2.def? ...\n"
+    puts stderr $usage
     exit 1
 }
 
-# custom ROBODOC program
-#set ::helpdoc::robodoc /path/to/robodoc
-
-
-# custom XSLTPROC program
-#set ::helpdoc::xsltproc /path/to/xsltproc
+set options {
+    {version.arg {} "Quantum espresso version number"}
+}
+   
+set argv_orig $argv
+array set opt [::cmdline::getoptions argv $options $usage]
+	       
+if { [llength $::argv] == 0 } {
+        puts stderr "
+### no deffile specified on the command line:  [concat $::argv0 $::argv_orig]
+"
+        exit 1
+}
 
 
 # MAKE-IT-ALL
