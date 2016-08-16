@@ -11,6 +11,10 @@
   <!--<xsl:strip-space elements="*"/>-->
   <xsl:output method="html"/>  
 
+  <!-- params that are passed on command line -->
+  <xsl:param name="version"/>  
+  <xsl:param name="current-date"/>
+  
   <!-- *** ROOT *** -->
 
   <xsl:template match="/input_description">
@@ -38,7 +42,7 @@
 	  h3 {
 	  font-size:16px;
 	  }
-	  pre, tt {
+	  pre, tt, code {
 	  font-size:14px;
 	  }	  
 	  .syntax, .syntax table {
@@ -63,7 +67,12 @@
 	  <tr>
 	    <th style="margin: 3 3 3 10; background: #005789; background: linear-gradient(rgba(0,87,137,1),rgba(0,119,189,1)); color: #ffffee; ">
 	      <h1 style="margin: 10 10 10 15; text-align: left;"> Input File Description </h1>
-	      <h2 style="margin: 10 10 10 15; text-align: left;"> Program: <xsl:value-of select="@program"/> / <xsl:value-of select="@package"/> / <xsl:value-of select="@distribution"/></h2>
+	      <h2 style="margin: 10 10 10 15; text-align: left;"> Program:
+	      <xsl:value-of select="@program"/> / <xsl:value-of select="@package"/> / <xsl:value-of select="@distribution"/>
+	      <xsl:if test="$version">
+		<span style="font-weight: normal;"> (version: <xsl:value-of select="string($version)"/>)</span>
+	      </xsl:if>
+	      </h2>
 	    </th>
 	  </tr>
 	  <tr><td style="padding: 10 3 3 3; background: #ffffff; color: #222222; ">
@@ -71,7 +80,7 @@
 	  </td></tr>
 	</table>
 	<small>
-	  This file has been created by helpdoc utility on <xsl:value-of select="$current-date" />.
+	  This file has been created by helpdoc utility<xsl:if test="$version"> on <xsl:value-of select="$current-date" /></xsl:if>.
 	</small>
       </body>
     </html>
@@ -367,11 +376,7 @@
 		<h3>Description of items:</h3>
 		<blockquote>
 		  <!-- here: apply templates ... -->
-		  <!--<pre><xsl:value-of select="flag/info"/></pre>-->
-		  <table style="width: 100%; text-align: left;">
-		    <xsl:apply-templates select="flag/info | flag/options"/>
-		  </table>
-		  <xsl:apply-templates select="descendant::vargroup | descendant::var | descendant::list | descendant::table" mode="card_description"/>
+		  <xsl:apply-templates select="flag | descendant::vargroup | descendant::var | descendant::list | descendant::table" mode="card_description"/>
 		</blockquote>
 	      </td></tr>
 	    </xsl:if>
@@ -403,7 +408,6 @@
 	  <xsl:value-of select="ancestor::card/@name"/>
 	  <xsl:choose>
 	    <xsl:when test="normalize-space(@flag) = ''">
-	      <xsl:message>empty -flag</xsl:message>
 	      <xsl:choose>
 		<xsl:when test="ancestor::card/flag/@use = 'optional'">
 		  <xsl:text> { </xsl:text> 
@@ -421,7 +425,6 @@
 	      </xsl:choose>
 	    </xsl:when>
 	    <xsl:otherwise>
-	      <xsl:message>non-empty -flag; <xsl:value-of select="name(.)"/>;<xsl:value-of select="@flag"/>;</xsl:message>
 	      <xsl:text> </xsl:text><xsl:value-of select="@flag" /> 
 	    </xsl:otherwise>
 	  </xsl:choose>
@@ -485,7 +488,6 @@
   <!-- card//syntax//var -->      
 
   <xsl:template match="var" mode="syntax">
-    <xsl:message>var query = <xsl:value-of select="child::node()"/> </xsl:message>
     <i>
       <xsl:choose>	
 	<xsl:when test="info != '' or options != '' or status != '' or see != '' or
@@ -518,7 +520,6 @@
   <!-- sytntax//table/rows -->
 
   <xsl:template match="rows" mode="syntaxTableMode">
-    <xsl:message>//card//syntax//table/rows</xsl:message>
     <tr>
       <xsl:call-template name="row">
 	<xsl:with-param name="rowID"><xsl:value-of select="@start"/></xsl:with-param>
@@ -555,7 +556,6 @@
 
   <xsl:template name="row">
     <xsl:param name="rowID" select="1"/>   
-    <xsl:message>//card//syntax//table//rows->rows(<xsl:value-of select="name(.)"/>)</xsl:message>
     <xsl:apply-templates select="col | colgroup | optional | conditional" mode="rowMode">
       <xsl:with-param name="rowID" select="$rowID"/>
     </xsl:apply-templates>
@@ -591,8 +591,6 @@
     <td style="white-space:nowrap">  
       <xsl:text>&#160;</xsl:text>
       <i>
-	<xsl:message>col query = <xsl:value-of select="child::node()"/> </xsl:message>
-
 	<xsl:choose>	
 	  <xsl:when test="info != '' or options != '' or status != '' or see != ''
 			  or ../../colgroup/info != '' or ../../colgroup/options != ''">
@@ -610,7 +608,6 @@
   <!-- syntax//table/cols -->
 
   <xsl:template match="cols" mode="syntaxTableMode">
-    <xsl:message>//card//syntax//table/cols</xsl:message>
     <xsl:apply-templates select="row | rowgroup | optional | conditional" mode="colsMode">
       <xsl:with-param name="colsOptional"  select="false()"/>
       <xsl:with-param name="colsConditional" select="false()"/>
@@ -689,9 +686,6 @@
 
   <xsl:template name="insertCol">
     <xsl:param name="colID"/>
-    <xsl:message>
-      node=<xsl:value-of select="name(.)"/>
-    </xsl:message>
     <td>  
       <xsl:text>&#160;</xsl:text>
       <i>
@@ -830,19 +824,20 @@
     </xsl:if>
   </xsl:template>
 
-  <!--    *** VAR | DIMENSION | LIST ***  -->
+  <!--    *** VAR | DIMENSION | LIST | FLAG ***  -->
 
-  <xsl:template match="var | list | dimension" mode="card_description">
+  <xsl:template match="var | list | dimension | flag" mode="card_description">
     <!--<xsl:if test="child::node() != ''">-->
     <xsl:if test="info != '' or options != '' or status != '' or see != ''">
       <xsl:apply-templates select="."/>
     </xsl:if>
   </xsl:template>
 
-  <xsl:template match="var | list | dimension">
+  <xsl:template match="var | list | dimension | flag">
     <xsl:if test="name(..) != 'vargroup' and name(..) != 'dimensiongroup'">
       <a name="{generate-id(.)}"></a>
-      <a name="{@name}"></a>
+      <a name="{substring-before(concat(@name,'('),'(')}"></a>  <!-- to take care of cases if varname is specified as
+                                                                     dimension, i.e., varname(i,j,k) -->
       <table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 	<tr>
 	  <xsl:choose>
@@ -856,15 +851,31 @@
 		<xsl:value-of select="@name"/>(i), i=<xsl:value-of select="@start"/>,<xsl:value-of select="@end"/>
 	      </th>
 	    </xsl:when>
+	    <xsl:when test="name(.)='flag'">
+	      <th width="20%" style="white-space: nowrap; text-align: left; vertical-align: top; background: #ffff99; padding: 2 2 2 10; ">
+		<i>Card's options:</i>
+	      </th>
+	    </xsl:when>
 	    <xsl:otherwise>
 	      <th width="20%" style="white-space: nowrap; text-align: left; vertical-align: top; background: #ffff99; padding: 2 2 2 10; ">
 		<xsl:value-of select="format"/>
 	      </th>
 	    </xsl:otherwise>
 	  </xsl:choose>
-	  <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">
-	    <xsl:value-of select="@type"/>
-	  </td>
+	  <xsl:choose>
+	  <xsl:when test="name(.) != 'flag'">
+	    <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">
+	      <xsl:value-of select="@type"/>
+	    </td>
+	  </xsl:when>
+	  <xsl:otherwise>
+	    <th style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">
+	      <xsl:call-template name="tokenize_enum"> 
+		<xsl:with-param name="enums" select="enum"/> 
+	      </xsl:call-template>
+	    </th>
+	  </xsl:otherwise>
+	  </xsl:choose>
 	</tr>
 	<xsl:apply-templates select="default"/> 
 	<xsl:apply-templates select="status"/>
@@ -884,14 +895,15 @@
 	  <xsl:if test="name(.)='vargroup'">
 	    <xsl:for-each select="var">
 	      <a name="{generate-id(.)}"></a>
-	      <a name="{@name}"></a>
+	      <a name="{substring-before(concat(@name,'('),'(')}"></a>  <!-- to take care of cases if varname is specified as
+                                                                             dimension, i.e., varname(i,j,k) -->
 	      <xsl:value-of select="@name"/><xsl:if test="not(position()=last())">, </xsl:if>
 	    </xsl:for-each>	
 	  </xsl:if>
 	  <xsl:if test="name(.)='dimensiongroup'">
 	    <xsl:for-each select="dimension">
 	      <a name="{generate-id(.)}"></a>
-		<a name="{@name}"></a>
+		<a name="{substring-before(concat(@name,'('),'(')}"></a>
 		<xsl:value-of select="@name"/>(i), 
 		<xsl:if test="position()=last()"> 
 		  i=<xsl:value-of select="../@start"/>,<xsl:value-of select="../@end"/>
@@ -957,7 +969,7 @@
   <xsl:template match="info">
     <tr><td align="left" valign="top" colspan="2">
       <blockquote>
-	<pre>
+	<pre style="margin-bottom: -1em;">
 	  <!--<xsl:apply-templates/>-->
 	  <xsl:apply-templates/>
 	</pre>
@@ -973,21 +985,18 @@
       <blockquote>
 	<xsl:apply-templates select="info | opt" mode="options"/>
       </blockquote>
-      <br/>
     </td></tr>
   </xsl:template>
 
   <xsl:template match="info" mode="options">
-    <tt>
-      <p><xsl:apply-templates/></p>
-    </tt>
+    <pre style="margin-bottom: -1em;"><xsl:apply-templates/></pre>
   </xsl:template>
 
   <xsl:template match="opt" mode="options">
     <!--<span class="flag"><xsl:value-of select="@val"/></span><xsl:text> :</xsl:text>-->
-    <dl>
+    <dl style="margin-left: 1.5em;">
       <dt><tt><xsl:call-template name="tokenize_clist"><xsl:with-param name="clist" select="@val"/></xsl:call-template><xsl:if test="normalize-space(.) != ''"> :</xsl:if></tt></dt>
-      <dd><tt><xsl:apply-templates/></tt></dd>
+      <dd><pre style="margin-top: 0em; margin-bottom: -1em;"><xsl:apply-templates/></pre></dd>
     </dl>
   </xsl:template>
 
@@ -1120,10 +1129,18 @@
       <xsl:value-of select="."/>
     </a>
   </xsl:template>
-
-  <!-- support a subset of HTML tags (those specified in helpdoc.schema) -->
-  <xsl:template match="a | b | i | tt | u | sub | sup | pre | br | hr | p | ol | ul | li | dl | dt | dd">
+  
+  <xsl:template match="a">
+    <!-- this is used by ref & link -->
     <xsl:copy-of select="."/>
+  </xsl:template>
+  
+  <!-- support a subset of HTML tags (those specified in helpdoc.schema) -->
+  
+  <xsl:template match="b | i | tt | u | sub | sup | code | pre | br | hr | p | ol | ul | li | dl | dt | dd">
+    <xsl:copy>
+      <xsl:apply-templates/>
+    </xsl:copy>
   </xsl:template>
   
 </xsl:stylesheet>
