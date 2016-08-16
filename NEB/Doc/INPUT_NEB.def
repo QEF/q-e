@@ -24,12 +24,8 @@ input_description -distribution {Quantum Espresso} -package NEB -program neb.x {
         RYDBERG ATOMIC UNITS
 
         @b BEWARE: TABS, DOS <CR><LF> CHARACTERS ARE POTENTIAL SOURCES OF TROUBLE 
-
         
-        @b {General input file structure:}
-        @hr
-        
-        @b {neb.x DOES NOT READ FROM STANDARD INPUT}
+        @b {neb.x DOES NOT READ FROM STANDARD INPUT !}
         
         There are two ways for running a calculation with neb.x:
         
@@ -38,7 +34,7 @@ input_description -distribution {Quantum Espresso} -package NEB -program neb.x {
     
         (2) or specifying the number of copies of PWscf inputs with the @b {./neb.x -input_images}
 
-        For case (1) a file containing special KEYWORDS (aka SUPERCARDS) has to be
+        @b {For case (1)} a file containing special KEYWORDS (aka SUPERCARDS) has to be
         written (see below). These KEYWORDS tell the parser which part of the file
         contains the neb specifics and which part contains the energy/force engine
         input (at the moment only PW).  After the parsing, different files are
@@ -47,6 +43,7 @@ input_description -distribution {Quantum Espresso} -package NEB -program neb.x {
         single SCF calculation apply.
 
         The general structure of the file to be parsed is:
+	==================================================
 
         @b BEGIN
           @b BEGIN_PATH_INPUT
@@ -67,10 +64,11 @@ input_description -distribution {Quantum Espresso} -package NEB -program neb.x {
           @b END_ENGINE_INPUT
         @b END
 
-        For case (2) neb.dat and all pw_1.in, pw_2.in ... should be already present. 
+	
+        @b {For case (2)} neb.dat and all pw_1.in, pw_2.in ... should be already present. 
 
-        @b {Structure of the NEB input data (file neb.dat) :}   
-        ===============================================================================
+        Structure of the NEB-only input data (file neb.dat):
+        ====================================================
 
         @b &PATH
           ...
