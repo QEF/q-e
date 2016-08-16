@@ -23,12 +23,12 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw2bg
 	the input files for pw.x and pw2bgw.x are distributed together with the
 	BerkeleyGW package.
 
-	Structure of the input data:
+	@b {Structure of the input data:}
 	============================
 
-	   &INPUT_PW2BGW
+	   @b &INPUT_PW2BGW
 	     ...
-	   /
+	   @b /
     }
 
     namelist INPUT_PW2BGW {
@@ -51,22 +51,28 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw2bg
 	    default { 2 }
 	    info {
 		1 | 2
-		1 for real flavor of BerkeleyGW (for systems with inversion symmetry and
-		time-reversal symmetry) or 2 for complex flavor of BerkeleyGW (for systems
+		@b 1 for real flavor of BerkeleyGW (for systems with inversion symmetry and
+		time-reversal symmetry) or @b 2 for complex flavor of BerkeleyGW (for systems
 		without inversion symmetry and time-reversal symmetry)
 	    }
 	}
 
 	var symm_type -type STRING {
 	    default { 'cubic' }
-	    info {
-		'cubic' | 'hexagonal'
-		type of crystal system, 'cubic' for space groups 1 ... 142 and 195 ... 230
-		and 'hexagonal' for space groups 143 ... 194. Only used if ibrav = 0 in a
-		pw.x run. Written to BerkeleyGW WFN, RHO, VXC and VKB files but no longer
-		used (except in SAPO code in BerkeleyGW). You can use the default value for
-		all systems. Don't set to different values in different files for the same
-		system or you will get errors in BerkeleyGW.
+	    options {
+		info {
+		    Options are:
+		}
+		opt -val 'cubic' {}
+		opt -val 'hexagonal' {}
+		info {
+		    type of crystal system, @b 'cubic' for space groups 1 ... 142 and 195 ... 230
+		    and @b 'hexagonal' for space groups 143 ... 194. Only used if ibrav = 0 in a
+		    pw.x run. Written to BerkeleyGW WFN, RHO, VXC and VKB files but no longer
+		    used (except in SAPO code in BerkeleyGW). You can use the default value for
+		    all systems. Don't set to different values in different files for the same
+		    system or you will get errors in BerkeleyGW.
+		}
 	    }
 	}
 
@@ -80,7 +86,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw2bg
 	var wfng_file -type STRING {
 	    default { 'WFN' }
 	    info {
-		name of BerkeleyGW WFN output file. Not used if wfng_flag = .FALSE.
+		name of BerkeleyGW WFN output file. Not used if @ref wfng_flag = .FALSE.
 	    }
 	}
 
@@ -99,7 +105,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw2bg
 	    default { 0 }
 	    info {
 		number of k-points along b_1 reciprocal lattice vector.
-		Not used if wfng_kgrid = .FALSE.
+		Not used if @ref wfng_kgrid = .FALSE.
 	    }
 	}
 
@@ -107,7 +113,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw2bg
 	    default { 0 }
 	    info {
 		number of k-points along b_2 reciprocal lattice vector.
-		Not used if wfng_kgrid = .FALSE.
+		Not used if @ref wfng_kgrid = .FALSE.
 	    }
 	}
 
@@ -115,7 +121,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw2bg
 	    default { 0 }
 	    info {
 		number of k-points along b_3 reciprocal lattice vector.
-		Not used if wfng_kgrid = .FALSE.
+		Not used if @ref wfng_kgrid = .FALSE.
 	    }
 	}
 
@@ -123,7 +129,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw2bg
 	    default { 0.0 }
 	    info {
 		k-grid offset (0.0 unshifted, 0.5 shifted by half a grid step)
-		along b_1 reciprocal lattice vector. Not used if wfng_kgrid = .FALSE.
+		along b_1 reciprocal lattice vector. Not used if @ref wfng_kgrid = .FALSE.
 	    }
 	}
 
@@ -131,7 +137,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw2bg
 	    default { 0.0 }
 	    info {
 		k-grid offset (0.0 unshifted, 0.5 shifted by half a grid step)
-		along b_2 reciprocal lattice vector. Not used if wfng_kgrid = .FALSE.
+		along b_2 reciprocal lattice vector. Not used if @ref wfng_kgrid = .FALSE.
 	    }
 	}
 
@@ -139,7 +145,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw2bg
 	    default { 0.0 }
 	    info {
 		k-grid offset (0.0 unshifted, 0.5 shifted by half a grid step)
-		along b_3 reciprocal lattice vector. Not used if wfng_kgrid = .FALSE.
+		along b_3 reciprocal lattice vector. Not used if @ref wfng_kgrid = .FALSE.
 	    }
 	}
 
@@ -154,7 +160,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw2bg
 	    default { 0 }
 	    info {
 		index of the lowest occupied band (normally = 1).
-		Not used if wfng_occupation = .FALSE.
+		Not used if @ref wfng_occupation = .FALSE.
 	    }
 	}
 
@@ -162,7 +168,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw2bg
 	    default { 0 }
 	    info {
 		index of the highest occupied band (normally = number of occupied bands).
-		Not used if wfng_occupation = .FALSE.
+		Not used if @ref wfng_occupation = .FALSE.
 	    }
 	}
 
@@ -178,7 +184,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw2bg
 	    default { 'RHO' }
 	    info {
 		name of BerkeleyGW RHO output file. Only used for the GPP model in sigma
-		code in BerkeleyGW. Not used if rhog_flag = .FALSE.
+		code in BerkeleyGW. Not used if @ref rhog_flag = .FALSE.
 	    }
 	}
 
@@ -189,8 +195,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw2bg
 		needed if one wants to exclude semicore states from charge density used
 		for the GPP model in sigma code in BerkeleyGW. Make sure to include the
 		same k-points as in scf calculation. Self-consistent charge density is
-		used if rhog_nvmin = 0 and rhog_nvmax = 0. Not used if rhog_flag = .FALSE.
-		BEWARE: this feature is highly experimental and may not work at all in
+		used if rhog_nvmin = 0 and rhog_nvmax = 0. Not used if @ref rhog_flag = .FALSE.
+		@b BEWARE: this feature is highly experimental and may not work at all in
 		parallel, with pools, with spins, etc.
 	    }
 	}
@@ -208,7 +214,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw2bg
 	    info {
 		write local part of exchange-correlation potential in G-space to
 		BerkeleyGW VXC file. Only used in sigma code in BerkeleyGW, it is
-		recommended to use vxc_flag instead
+		recommended to use @ref vxc_flag instead
 	    }
 	}
 
@@ -216,7 +222,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw2bg
 	    default { 'VXC' }
 	    info {
 		name of BerkeleyGW VXC output file. Only used in sigma code in BerkeleyGW,
-		it is recommended to use vxc_flag instead. Not used if vxcg_flag = .FALSE.
+		it is recommended to use @ref vxc_flag instead. Not used if @ref vxcg_flag = .FALSE.
 	    }
 	}
 
@@ -231,7 +237,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw2bg
 	    default { 'vxc0.dat' }
 	    info {
 		name of output text file for Vxc(G = 0). Only for testing, not required for
-		BerkeleyGW. Not used if vxc0_flag = .FALSE.
+		BerkeleyGW. Not used if @ref vxc0_flag = .FALSE.
 	    }
 	}
 
@@ -247,7 +253,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw2bg
 	    default { 'vxc.dat' }
 	    info {
 		name of output text file for Vxc matrix elements. Only used in sigma code
-		in BerkeleyGW. Not used if vxc_flag = .FALSE.
+		in BerkeleyGW. Not used if @ref vxc_flag = .FALSE.
 	    }
 	}
 
@@ -257,35 +263,35 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw2bg
 		'g' | 'r'
 		'g' to compute matrix elements of exchange-correlation potential in G-space.
 		'r' to compute matrix elements of the local part of exchange-correlation
-		potential in R-space. It is recommended to use 'g'. Not used if vxc_flag = .FALSE.
+		potential in R-space. It is recommended to use 'g'. Not used if @ref vxc_flag = .FALSE.
 	    }
 	}
 
 	var vxc_diag_nmin -type INTEGER {
 	    default { 0 }
 	    info {
-		minimum band index for diagonal Vxc matrix elements. Not used if vxc_flag = .FALSE.
+		minimum band index for diagonal Vxc matrix elements. Not used if @ref vxc_flag = .FALSE.
 	    }
 	}
 
 	var vxc_diag_nmax -type INTEGER {
 	    default { 0 }
 	    info {
-		maximum band index for diagonal Vxc matrix elements. Not used if vxc_flag = .FALSE.
+		maximum band index for diagonal Vxc matrix elements. Not used if @ref vxc_flag = .FALSE.
 	    }
 	}
 
 	var vxc_offdiag_nmin -type INTEGER {
 	    default { 0 }
 	    info {
-		minimum band index for off-diagonal Vxc matrix elements. Not used if vxc_flag = .FALSE.
+		minimum band index for off-diagonal Vxc matrix elements. Not used if @ref vxc_flag = .FALSE.
 	    }
 	}
 
 	var vxc_offdiag_nmax -type INTEGER {
 	    default { 0 }
 	    info {
-		maximum band index for off-diagonal Vxc matrix elements. Not used if vxc_flag = .FALSE.
+		maximum band index for off-diagonal Vxc matrix elements. Not used if @ref vxc_flag = .FALSE.
 	    }
 	}
 
@@ -294,7 +300,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw2bg
 	    info {
 		set to .TRUE. to zero out NLCC or to .FALSE. to keep NLCC when computing
 		exchange-correlation potential. This flag has no effect for pseudopotentials
-		without NLCC. BEWARE: setting vxc_zero_rho_core to .FALSE. will produce
+		without NLCC.
+		@b BEWARE: setting @ref vxc_zero_rho_core to .FALSE. will produce
 		incorrect results. This functionality is only included for testing purposes
 		and is not meant to be used in a production environment
 	    }
@@ -312,7 +319,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw2bg
 	    default { 'VSC' }
 	    info {
 		name of BerkeleyGW VSC output file. Only used in SAPO code in BerkeleyGW.
-		Not used if vscg_flag = .FALSE.
+		Not used if @ref vscg_flag = .FALSE.
 	    }
 	}
 
@@ -328,7 +335,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw2bg
 	    default { 'VKB' }
 	    info {
 		name of BerkeleyGW VKB output file. Only used in SAPO code in BerkeleyGW.
-		Not used if vkbg_flag = .FALSE.
+		Not used if @ref vkbg_flag = .FALSE.
 	    }
 	}
 

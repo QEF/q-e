@@ -19,12 +19,12 @@ input_description -distribution {Quantum Espresso} -package PWscf -program bgw2p
 	file manually (for example, you will need to change the number of bands if you
 	are using bgw2pw.x in conjunction with SAPO code in BerkeleyGW).
 
-	Structure of the input data:
+	@b {Structure of the input data:}
 	============================
 
-	   &INPUT_BGW2PW
+	   @b &INPUT_BGW2PW
 	     ...
-	   /
+	   @b /
     }
 
     namelist INPUT_BGW2PW {
@@ -47,8 +47,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program bgw2p
 	    default { 2 }
 	    info {
 		1 | 2
-		1 for real flavor of BerkeleyGW (for systems with inversion symmetry and
-		time-reversal symmetry) or 2 for complex flavor of BerkeleyGW (for systems
+		@b 1 for real flavor of BerkeleyGW (for systems with inversion symmetry and
+		time-reversal symmetry) or @b 2 for complex flavor of BerkeleyGW (for systems
 		without inversion symmetry and time-reversal symmetry)
 	    }
 	}
@@ -63,14 +63,14 @@ input_description -distribution {Quantum Espresso} -package PWscf -program bgw2p
 	var wfng_file -type STRING {
 	    default { 'WFN' }
 	    info {
-		name of BerkeleyGW WFN input file. Not used if wfng_flag = .FALSE.
+		name of BerkeleyGW WFN input file. Not used if @ref wfng_flag = .FALSE.
 	    }
 	}
 
 	var wfng_nband -type INTEGER {
 	    default { 0 }
 	    info {
-		number of bands to write (0 = all). Not used if wfng_flag = .FALSE.
+		number of bands to write (0 = all). Not used if @ref wfng_flag = .FALSE.
 	    }
 	}
 
@@ -84,7 +84,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program bgw2p
 	var rhog_file -type STRING {
 	    default { 'RHO' }
 	    info {
-		name of BerkeleyGW RHO input file. Not used if rhog_flag = .FALSE.
+		name of BerkeleyGW RHO input file. Not used if @ref rhog_flag = .FALSE.
 	    }
 	}
 

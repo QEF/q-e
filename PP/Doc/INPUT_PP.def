@@ -14,23 +14,23 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pp.x 
       The input data of this program is read from standard input
       or from file and has the following format:
 
-      NAMELIST &INPUTPP
+      NAMELIST @b &INPUTPP
          containing the variables for step (1), followed by
 
-      NAMELIST &PLOT
+      NAMELIST @b &PLOT
          containing the variables for step (2)
 
       The two steps can be performed independently. In order to perform
-      only step (2), leave namelist &inputpp blank. In order to perform
-      only step (1), do not specify namelist &plot
+      only step (2), leave namelist &INPUTPP blank. In order to perform
+      only step (1), do not specify namelist &PLOT
 
       Intermediate results from step 1 can be saved to disk (see
-      variable "filplot" in &inputpp) and later read in step 2.
+      variable @ref filplot in &INPUTPP) and later read in step 2.
       Since the file with intermediate results is formatted, it
       can be safely transferred to a different machine. This 
       also allows plotting of a linear combination (for instance,
       charge differences) by saving two intermediate files and
-      combining them (see variables "weight" and "filepp" in &plot)
+      combining them (see variables @ref weight and @ref filepp in &PLOT)
 
       All output quantities are in ATOMIC (RYDBERG) UNITS unless
       otherwise explicitly specified.
@@ -46,11 +46,12 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pp.x 
 	
         var outdir -type CHARACTER {
             info {
-                   directory containing the input data,
-                   i.e. the same as in pw.x }
+		directory containing the input data, i.e. the same as in pw.x
+	    }
             default {
-                      value of the ESPRESSO_TMPDIR environment variable if set;
-                      current directory ('./') otherwise }
+		value of the @tt ESPRESSO_TMPDIR environment variable if set;
+		current directory ('./') otherwise
+	    }
         }
 	
 	var filplot -type CHARACTER {
@@ -223,8 +224,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pp.x 
 		
 		var emax -type REAL {
 		    info {
-			upper energy boundary (in eV), i.e. compute 
-			ILDOS from emin to emax
+			upper energy boundary (in eV),
+			i.e. compute ILDOS from @ref emin to @ref emax
 		    }
 		}
 		
@@ -298,7 +299,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pp.x 
 		default { filepp(1)=filplot } 
 		info {
 		    nfile = 1 : file containing the quantity to be plotted
-		    nfile > 1 : see "weight"
+		    nfile > 1 : see @ref weight
 		}
 	    }
 	    
@@ -312,7 +313,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pp.x 
 	    }	
 	    
 	    message {
-		BEWARE: atomic coordinates are read from the first file;
+		@b BEWARE: atomic coordinates are read from the first file;
 		        if their number is different for different files,
 		        the first file must have the largest number of atoms
 	    }     
@@ -352,10 +353,14 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pp.x 
 	}
 
 	var interpolation -type CHARACTER {
-	    default { "fourier" }
-	    info {
-		type of interpolation: "fourier" or "bspline" (EXPERIMENTAL!)
-	    }	
+	    default { 'fourier' }
+	    options {
+		info {
+		    Type of interpolation:
+		}
+		opt -val 'fourier' {}
+		opt -val 'bspline' { (EXPERIMENTAL) }
+	    }
 	}
 
 	choose {	    
@@ -365,19 +370,17 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pp.x 
 		dimension e1 -start 1 -end 3 -type REAL {
 		    info {
 			3D vector which determines the plotting line
+			(in alat units)
 		    }
 		}
 		
 		dimension x0 -start 1 -end 3  -type REAL {
 		    info {
 			3D vector, origin of the line
+			(in alat units)
 		    }
 		}
 		
-		message {
-		    !!! x0 and e1 are in alat units !!!
-		}
-
 		var nx -type INTEGER {
 		    info {
 			number of points in the line:
@@ -394,20 +397,19 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pp.x 
 		    dimension e2
 		    info {
 			3D vectors which determine the plotting plane
-			(must be orthogonal)
+			(in alat units)
+
+			BEWARE: @b e1 and @b e2 must be orthogonal
 		    }
 		}
 		
 		dimension x0 -start 1 -end 3 -type REAL {
 		    info {
 			3D vector, origin of the plane
+			(in alat units)
 		    }
 		}
 		
-		message {
-		    !!! x0, e1, e2 are in alat units !!!
-		}
-
 		vargroup -type INTEGER {
 		    var nx
 		    var ny

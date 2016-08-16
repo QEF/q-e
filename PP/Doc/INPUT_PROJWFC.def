@@ -3,179 +3,179 @@ input_description -distribution {Quantum Espresso} -package PWscf -program projw
     toc {}
 
     intro {
-	Purpose of projwfc.x: 
-	    projects wavefunctions onto orthogonalized atomic wavefunctions, 
-	    calculates Lowdin charges, spilling parameter, projected DOS 
-	    (separated into up and down components for lSDA)
+        @b {Purpose of projwfc.x:}
+            projects wavefunctions onto orthogonalized atomic wavefunctions, 
+            calculates Lowdin charges, spilling parameter, projected DOS 
+            (separated into up and down components for lSDA)
             alternatively, computes the local DOS(E), integrated in volumes
             given in input
 
-	Structure of the input data:
-	============================
+        @b {Structure of the input data:}
+        ============================
 
-	   &PROJWFC
-	     ...
-	   /
+           @b &PROJWFC
+             ...
+           @b /
     }
 
     namelist PROJWFC {
          
-	var prefix -type CHARACTER { 
-	    info { 
-		Prefix of input file produced by pw.x
-		(wavefunctions are needed).
-	    }
-	    default { 'pwscf' }
-	}
+        var prefix -type CHARACTER { 
+            info { 
+                Prefix of input file produced by pw.x
+                (wavefunctions are needed).
+            }
+            default { 'pwscf' }
+        }
 
-	var outdir -type CHARACTER {
-	    info {
-                   directory containing the input data,
-                   i.e. the same as in pw.x }
-	    default {
+        var outdir -type CHARACTER {
+            info {
+                directory containing the input data, i.e. the same as in pw.x
+            }
+            default {
                       value of the ESPRESSO_TMPDIR environment variable if set;
                       current directory ('./') otherwise }
-	}
+        }
 
-	var ngauss -type INTEGER {
-	    default { 0 }
-	    info {
-		Type of gaussian broadening:
-		    0 ... Simple Gaussian (default)
-		    1 ... Methfessel-Paxton of order 1
-		   -1 ... Marzari-Vanderbilt "cold smearing"
-		  -99 ... Fermi-Dirac function
-	    }
-	}
-	
-	var degauss -type REAL {
-	    default { 0.0 } 
-	    info { gaussian broadening, Ry (not eV!) }
-	}
+        var ngauss -type INTEGER {
+            default { 0 }
+            info {
+                Type of gaussian broadening:
+                    0 ... Simple Gaussian (default)
+                    1 ... Methfessel-Paxton of order 1
+                   -1 ... Marzari-Vanderbilt "cold smearing"
+                  -99 ... Fermi-Dirac function
+            }
+        }
+        
+        var degauss -type REAL {
+            default { 0.0 } 
+            info { gaussian broadening, Ry (not eV!) }
+        }
 
-	vargroup -type REAL {
-	    var Emin
-	    var Emax
-	    info { min & max energy (eV) for DOS plot }
-	    default { (band extrema) }
-	}
-	var DeltaE -type REAL {
-	    info { energy grid step (eV) }
-	}
-	
-	var lsym -type LOGICAL {
-	    default { .true. }
-	    info {
-		if true the projections are symmetrized
-                if false partial density of state cannot be computed
-	    }
-	}
+        vargroup -type REAL {
+            var Emin
+            var Emax
+            info { min & max energy (eV) for DOS plot }
+            default { (band extrema) }
+        }
+        var DeltaE -type REAL {
+            info { energy grid step (eV) }
+        }
+        
+        var lsym -type LOGICAL {
+            default { .true. }
+            info {
+                if .true. the projections are symmetrized
+                if .false. partial density of state cannot be computed
+            }
+        }
 
-	var pawproj -type LOGICAL {
-	    default { .false. }
-	    info {
-                if true, use PAW projectors and all-electron PAW basis
+        var pawproj -type LOGICAL {
+            default { .false. }
+            info {
+                if .true. use PAW projectors and all-electron PAW basis
                 functions to calculate weight factors for the partial 
                 densities of states. Following Bloechl, PRB 50, 17953 (1994), 
                 Eq. (4 & 6), the weight factors thus approximate the real
                 charge within the augmentation sphere of each atom.
-                Only for PAW, not implemented in the noncolinear case
-	    }
-	}
+                Only for PAW, not implemented in the noncolinear case.
+            }
+        }
 
-	var filpdos -type CHARACTER {
-	    info { prefix for output files containing PDOS(E) } 
-	    default { (value of prefix variable) }
-	}
-	
-	var filproj -type CHARACTER {
-	    default { (standard output) }
-	    info {
-		file containing the projections
-	    }
-	}
-
-	var lwrite_overlaps -type LOGICAL {
-	    default { .false. }
-	    info {
-		if .true., the overlap matrix of the atomic orbitals
-                prior to orthogonalization is written to the atomic_proj datafile.
-	    }
-	}
-
-	var lbinary_data -type LOGICAL {
-	    default { .false. }
-	    info {
-		if .true., the atomic_proj datafile is written in binary fmt.
-	    }
-	}
-
-	var kresolveddos -type LOGICAL {
-	    default { .false. }
+        var filpdos -type CHARACTER {
+            info { prefix for output files containing PDOS(E) } 
+            default { (value of prefix variable) }
+        }
+        
+        var filproj -type CHARACTER {
+            default { (standard output) }
             info {
-		if .true. the k-resolved DOS is computed: not summed over
+                file containing the projections
+            }
+        }
+
+        var lwrite_overlaps -type LOGICAL {
+            default { .false. }
+            info {
+                if .true., the overlap matrix of the atomic orbitals
+                prior to orthogonalization is written to the atomic_proj datafile.
+            }
+        }
+
+        var lbinary_data -type LOGICAL {
+            default { .false. }
+            info {
+                if .true., the atomic_proj datafile is written in binary fmt.
+            }
+        }
+
+        var kresolveddos -type LOGICAL {
+            default { .false. }
+            info {
+                if .true. the k-resolved DOS is computed: not summed over
                 all k-points but written as a function of the k-point index.
                 In this case all k-point weights are set to unity
-	    }
-	}
-
-	var tdosinboxes -type LOGICAL {
-	    default { .false. }
-            info {
-		if .true. compute the local DOS integrated in volumes
-		volumes are defined as boxes with edges parallel
-		to the unit cell, containing the points of the
-		(charge density) FFT grid included within
-		irmin and irmax, in the three dimensions:
-		from irmin(j,n) to irmax(j,n) for j=1,2,3
-		(n=1,n_proj_boxes)
             }
-	}       
+        }
 
-	var n_proj_boxes -type INTEGER {
-	    default { 1 }
+        var tdosinboxes -type LOGICAL {
+            default { .false. }
             info {
-		number of boxes where the local DOS is computed
+                if .true. compute the local DOS integrated in volumes
+                volumes are defined as boxes with edges parallel
+                to the unit cell, containing the points of the
+                (charge density) FFT grid included within
+                @ref irmin and @ref irmax, in the three dimensions:
+                from irmin(j,n) to irmax(j,n) for j=1,2,3
+                (n=1,n_proj_boxes)
             }
-	}       
+        }       
 
-	var irmin -type INTEGER {
-	    default { 1 for each box }
+        var n_proj_boxes -type INTEGER {
+            default { 1 }
             info {
-		
-		first point of the given box
-
-		BEWARE: irmin is a 2D array of the form: irmin(3,n_proj_boxes)
+                number of boxes where the local DOS is computed
             }
-	}       
+        }       
 
-	var irmax -type INTEGER {
-	    default { 0 for each box }
+        var irmin -type INTEGER {
+            default { 1 for each box }
             info {
-		
-		last point of the given box;
-		( 0 stands for the last point in the FFT grid )
+                
+                first point of the given box
 
-		BEWARE: irmax is a 2D array of the form: irmax(3,n_proj_boxes)
+                BEWARE: irmin is a 2D array of the form: irmin(3,n_proj_boxes)
             }
-	}       
+        }       
 
-	var plotboxes -type LOGICAL {
-	    default { .false. }
+        var irmax -type INTEGER {
+            default { 0 for each box }
             info {
-		if .true., the boxes are written in output as
-		as xsf files with 3D datagrids, valued 1.0
-		inside the box volume and 0 outside
-		(visualize them as isosurfaces with isovalue 0.5)
+                
+                last point of the given box;
+                ( 0 stands for the last point in the FFT grid )
+
+                BEWARE: irmax is a 2D array of the form: irmax(3,n_proj_boxes)
             }
-	}       
+        }       
+
+        var plotboxes -type LOGICAL {
+            default { .false. }
+            info {
+                if .true., the boxes are written in output as
+                as xsf files with 3D datagrids, valued 1.0
+                inside the box volume and 0 outside
+                (visualize them as isosurfaces with isovalue 0.5)
+            }
+        }       
     }
 
     section -title Notes {
-	subsection -title {Format of output files} {
-	    text {
-	        Projections are written to standard output,
-	        and also to file filproj if given as input.
+        subsection -title {Format of output files} {
+            text {
+                Projections are written to standard output, and also to file
+                @ref filproj if given as input.
 	        
 	        The total DOS and the sum of projected DOS are written to file 
 	        "filpdos".pdos_tot.
@@ -252,17 +252,17 @@ input_description -distribution {Quantum Espresso} -package PWscf -program projw
 
 	subsection -title {Defining boxes for the Local DOS(E)} {
 	    text {
-		Boxes are specified using the variables irmin and irmax:
+		Boxes are specified using the variables @ref irmin and @ref irmax:
 		
 		FFT grid points are included from irmin(j,n) to irmax(j,n)
 		for j=1,2,3 and n=1,...,n_proj_boxes
 		
-		irmin and irmax range from 1 to nr1 or nr2 or nr3
+		@ref irmin and @ref irmax range from 1 to nr1 or nr2 or nr3
 		
 		Values larger than nr1/2/3 or smaller than 1 are folded
 		to the unit cell.
 		
-		If irmax<irmin FFT grid points are included from 1 to irmax
+		If @ref irmax<@ref irmin FFT grid points are included from 1 to irmax
 		and from irmin to nr1/2/3.
 	    }
 	}
@@ -273,16 +273,16 @@ input_description -distribution {Quantum Espresso} -package PWscf -program projw
 		
 		* Gaussian broadening is used in all cases:
 
-		    - if degauss is set to some value in namelist &projwfc, that value
+		    - if @ref degauss is set to some value in namelist &PROJWFC, that value
 		      (and the optional value for ngauss) is used
 
-		    - if degauss is NOT set to any value in namelist &projwfc, the 
-		      value of degauss and of ngauss are read from the input data
+		    - if @ref degauss is NOT set to any value in namelist &PROJWFC, the 
+		      value of @ref degauss and of @ref ngauss are read from the input data
 		      file (they will be the same used in the pw.x calculations)
 
-		    - if degauss is NOT set to any value in namelist &projwfc, AND
-		      there is no value of degauss and of ngauss in the input data
-		      file, degauss=DeltaE (in Ry) and ngauss=0 will be used
+		    - if @ref degauss is NOT set to any value in namelist &PROJWFC, AND
+		      there is no value of @ref degauss and of @ref ngauss in the input data
+		      file, @ref degauss=@ref DeltaE (in Ry) and @ref ngauss=0 will be used
 		
 
 		Obsolete variables, ignored:

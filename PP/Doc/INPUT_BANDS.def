@@ -3,8 +3,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program bands
     toc {}
 
     intro {
-	Purpose of bands.x:
-	   Re-order bands, computes band-related properties. Corrently,
+	@b {Purpose of bands.x:}
+	   Re-order bands, computes band-related properties. Currently,
 	   re-ordering can be done with two different algorithms:
 	   (a) by maximising the overlap with bands at previous k-point
            (b) by computing symmetry properties of each wavefunction
@@ -17,21 +17,21 @@ input_description -distribution {Quantum Espresso} -package PWscf -program bands
 	command-line options "bands.x -i file-name" (same syntax as for pw.x)	
 
 	Output files:
-	- file "filband" containing the band structure, in a format
+	- file @ref filband containing the band structure, in a format
 	  suitable for plotting code "plotband.x"
-	- file "filband".rap (if lsym is .t.)  with symmetry information,
+	- file "filband".rap (if @ref lsym is .t.)  with symmetry information,
 	  to be read by plotting code "plotband.x"
-	- if (lsigma(i)): file "filband".i, i=1,2,3, with expectation values
+	- if (@ref lsigma(i)): file "filband".i, i=1,2,3, with expectation values
 	  of the spin operator in the noncolinear case
 	- file "filband".gnu with bands in eV, directly plottable using gnuplot	
-	- file "filp" with matrix elements of p
+	- file @ref filp with matrix elements of p
 
-        Structure of the input data:
+        @b {Structure of the input data:}
 	============================
 
-	   &BANDS
+	   @b &BANDS
 	     ...
-	   /
+	   @b /
     }
 
     namelist BANDS {
@@ -45,8 +45,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program bands
 
         var outdir -type CHARACTER {
             info {
-                   directory containing the input data,
-                   i.e. the same as in pw.x }
+		directory containing the input data, i.e. the same as in pw.x
+	    }
             default {
                       value of the ESPRESSO_TMPDIR environment variable if set;
                       current directory ('./') otherwise }
@@ -81,14 +81,14 @@ input_description -distribution {Quantum Espresso} -package PWscf -program bands
             info {
                 If .true. matrix elements of the momentum operator p between
                 conduction and valence bands are computed and written to file
-		specified in "filp" 
+		specified in @ref filp
             }
 
         }      
         var filp -type CHARACTER {
             default { 'p_avg.dat' }
             info {
-                If "lp" is set to .true., file name for matrix elements of p
+                If @ref lp is set to .true., file name for matrix elements of p
 	    }
 
         }      
@@ -105,7 +105,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program bands
 	var no_overlap -type LOGICAL { 
 	    default { .true. }
 	    info {		
-		If .false., and if lsym is .false., writes the eigenvalues
+		If .false., and if @ref lsym is .false., writes the eigenvalues
 		in the order that maximises overlap with the neighbor k-points
 
 	    }
@@ -118,10 +118,12 @@ input_description -distribution {Quantum Espresso} -package PWscf -program bands
                 in a 2D format readable by gnuplot. Band ordering is not 
                 changed. Each band is written in a different file called 
                 filband.# with the format:
-                xk, yk, energy
-                xk, yk, energy
-                ..  ..  ..
-                energies are written in eV and xk in units 2\pi/a.
+		@i {
+                   xk, yk, energy
+                   xk, yk, energy
+                   ..  ..  ..
+		}
+		energies are written in eV and xk in units 2\pi/a.
         }
 
       }           
@@ -129,7 +131,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program bands
 	    var firstk
 	    var lastk 
 	    info {		
-		if lsym=.true. makes the symmetry analysis only for k
+		if @ref lsym=.true. makes the symmetry analysis only for k
 		points between firstk to lastk		
 	    }
 	}

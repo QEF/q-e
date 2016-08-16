@@ -3,7 +3,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program molec
     toc {}
 
     intro {
-	Purpose of molecularpdos.x: 
+	@b {Purpose of molecularpdos.x:} 
 	    Takes the projections onto orthogonalized atomic wavefunctions
 	    as computed by projwfc.x (see outdir/prefix.save/atomic_proj.xml)
 	    to build an LCAO-like representation of the eigenvalues of a system
@@ -18,12 +18,12 @@ input_description -distribution {Quantum Espresso} -package PWscf -program molec
 	    DOI: 10.1038/srep24603 (Supp. Info).
 
 
-	Structure of the input data:
+	@b {Structure of the input data:}
 	============================
 
-	   &INPUTMOPDOS
+	   @b &INPUTMOPDOS
 	     ...
-	   /
+	   @b /
     }
 
     namelist INPUTMOPDOS {

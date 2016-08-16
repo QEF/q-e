@@ -3,18 +3,19 @@ input_description -distribution {Quantum Espresso} -package PWscf -program dos.x
     toc {}
 
     intro {
-	Purpose of dos.x:
+	@b {Purpose of dos.x:}
 	    calculates the Density of States (DOS) 
 	    (separated into up and down components for DSDA)
 
 
-	Structure of the input data:
+	@b {Structure of the input data:}
 	============================
 
-	   &DOS
+	   @b &DOS
 	     ...
-	   /
-        IMPORTANT: since v.5 namelist name is &dos and no longer &inputpp
+	   @b /
+	
+        IMPORTANT: since v.5 namelist name is &DOS and no longer &INPUTPP
     }
 
     namelist DOS {
@@ -22,17 +23,17 @@ input_description -distribution {Quantum Espresso} -package PWscf -program dos.x
 	var prefix -type CHARACTER {
 	    default { 'pwscf' } 
 	    info {
-		prefix of input file produced by pw.x    
+		prefix of input file produced by pw.x   
 		(wavefunctions are not needed)
 	    }
 	}
 
         var outdir -type CHARACTER {
             info {
-                   directory containing the input data,
-                   i.e. the same as in pw.x }
+		directory containing the input data, i.e. the same as in pw.x
+	    }
             default {
-                      value of the ESPRESSO_TMPDIR environment variable if set;
+                      value of the @tt ESPRESSO_TMPDIR environment variable if set;
                       current directory ('./') otherwise }
         }
 
@@ -54,7 +55,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program dos.x
 
 	var degauss -type REAL {       
 	    info {
-		gaussian broadening, Ry (not eV!)          see below
+		gaussian broadening, Ry (not eV!)
+		(see below)
 	    }
 	}
 	
@@ -87,7 +89,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program dos.x
     section -title Notes {
 	subsection -title Output {
 	    text {
-		The total DOS (states/eV plotted vs E in eV) is written to file "fildos"
+		The total DOS (states/eV plotted vs @i E in eV) is written to file @ref fildos
 	    }
 	}
 
@@ -103,16 +105,16 @@ input_description -distribution {Quantum Espresso} -package PWscf -program dos.x
 
 		Gaussian broadening is used in all other cases:
 
-		    - if degauss is set to some value in namelist &dos, that value
-		      (and the optional value for ngauss) is used
+		    - if @ref degauss is set to some value in namelist &DOS, that value
+		      (and the optional value for @ref ngauss) is used
 		    
-		    - if degauss is NOT set to any value in namelist &dos, the 
-		      value of degauss and of ngauss are read from the input data
+		    - if @ref degauss is NOT set to any value in namelist &DOS, the 
+		      value of @ref degauss and of @ref ngauss are read from the input data
 		      file (they will be the same used in the pw.x calculations)
 		    
-		    - if degauss is NOT set to any value in namelist &dos, AND
-		      there is no value of degauss and of ngauss in the input data
-		      file, degauss=DeltaE (in Ry) and ngauss=0 will be used
+		    - if @ref degauss is NOT set to any value in namelist &DOS, AND
+		      there is no value of @ref degauss and of @ref ngauss in the input data
+		      file, @ref degauss=@ref DeltaE (in Ry) and @ref ngauss=0 will be used
 	    }
 	}
     }

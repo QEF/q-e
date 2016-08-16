@@ -3,7 +3,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program impor
     toc {}
 
     intro {
-	Purpose of importexport_binary.x:
+	@b {Purpose of importexport_binary.x:}
 	    convert the binary file for the charge density (and
             for the spin polarization) from the native binary
             format, that is not machine-independent, to a text-only
@@ -11,13 +11,13 @@ input_description -distribution {Quantum Espresso} -package PWscf -program impor
             binary for restarting.
 
 
-	Structure of the input data:
+	@b {Structure of the input data:}
 	============================
 
-	   &INPUTPP
+	   @b &INPUTPP
 	     prefix = '...'
 	     ...
-	   /
+	   @b /
     }
 
     namelist INPUTPP {
@@ -32,35 +32,38 @@ input_description -distribution {Quantum Espresso} -package PWscf -program impor
 
         var outdir -type CHARACTER {
             info {
-                   directory containing the input data,
-                   i.e. the same as in pw.x }
+                   directory containing the input data, i.e. the same as in pw.x }
             default {
-                      value of the ESPRESSO_TMPDIR environment variable if set;
+                      value of the @tt ESPRESSO_TMPDIR environment variable if set;
                       current directory ('./') otherwise }
         }
 
         var direction -type CHARACTER {
-            info {
-                   selects the direction:
-
-		     'export': for converting the charge density from the 
-		               native binary format to text XML format
-
-		     'import': for converting a previously exported folder
-		               from text XML format to binary format
-		    }
-            default {
-                      'export' }
+	    options {
+		info {
+		    Selects the direction:
+		}
+		opt -val 'export' {
+		    for converting the charge density from the 
+		    native binary format to text XML format
+		}
+		opt -val 'import' {
+		    for converting a previously exported folder
+		    from text XML format to binary format
+		}
+	    }
+            default { 'export' }
         }
 
         var newoutdir -type CHARACTER {
             info {
-                   directory into which the export data is going to be
-                   generated; after the 'import' phase, it can be then used as
-                   the outdir to restart for instance a pw.x NSCF calculation }
+		directory into which the export data is going to be
+		generated; after the 'import' phase, it can be then used as
+		the outdir to restart for instance a pw.x NSCF calculation }
             default {
-                      './import' if the direction is 'import', 
-		      './export' if the direction is 'export' }
+		@tt './import' if the direction is @tt 'import', 
+		@br @tt './export' if the direction is @tt 'export'
+	    }
         }
 
     }
