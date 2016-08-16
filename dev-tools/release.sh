@@ -43,7 +43,7 @@ chmod -x install/update_version
 # "latex2html" and "convert" (from Image-Magick) are needed
 
 touch make.inc
-make doc
+make doc VERSION=$version
 
 # generate PWGUI
 make tar-gui PWGUI_VERSION=$version 
