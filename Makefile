@@ -253,11 +253,11 @@ links : bindir
 #########################################################
 
 install : touch-dummy
-	@if test -d bin ; then mkdir -p $(PREFIX) ; \
+	@if test -d bin ; then mkdir -p $(PREFIX)/bin ; \
 	for x in `find . -path ./test-suite -prune -o -name *.x -type f` ; do \
-		cp $$x $(PREFIX)/ ; done ; \
+		cp $$x $(PREFIX)/bin/ ; done ; \
 	fi
-	@echo 'Quantum ESPRESSO binaries installed in $(PREFIX)'
+	@echo 'Quantum ESPRESSO binaries installed in $(PREFIX)/bin'
 
 #########################################################
 # Run test-suite for numerical regression testing
