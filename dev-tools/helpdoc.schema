@@ -516,8 +516,6 @@ element text { text }
 #--------------------
 # let's support some basic HTML tags
 
-@ a { word }
-
 # text-styles
 @ b  { text }
 @ i  { text }
@@ -526,6 +524,7 @@ element text { text }
 @ sub { text }
 @ sup { text }
 
+@ code { text }
 @ pre { text }
 
 # breaks, rule, paragraph ...
