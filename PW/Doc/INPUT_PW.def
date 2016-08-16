@@ -8,16 +8,18 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
         All quantities whose dimensions are not explicitly specified are in
         RYDBERG ATOMIC UNITS. Charge is "number" charge (i.e. not multiplied 
         by e); potentials are in energy units (i.e. they are multiplied by e).
-	
+        
         @b BEWARE: TABS, DOS <CR><LF> CHARACTERS ARE POTENTIAL SOURCES OF TROUBLE 
-        Comment lines in namelists can be introduced by a "!", exactly as in 
-        fortran code. Comments lines in ``cards'' can be introduced by 
-        either a "!" or a "#" character in the first position of a line.
-        Do not start any line in ``cards'' with a "/" character.
 
-	
+        Comment lines in @i namelists can be introduced by a "!", exactly as in 
+        fortran code. Comments lines in @i cards can be introduced by 
+        either a "!" or a "#" character in the first position of a line.
+        Do not start any line in @i cards with a "/" character.
+
+        
         @b {Structure of the input data:} 
-        @hr     
+        ===============================================================================
+        
         @b &CONTROL
           ...
         @b /
@@ -130,22 +132,20 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
         var restart_mode -type CHARACTER {
             default { 'from_scratch' }
             options {
+                info { Available options are: }
+
                 opt -val 'from_scratch' {
-                    from scratch. This is the normal way
-                    to perform a PWscf calculation
+                    From scratch. This is the normal way to perform a PWscf calculation
                 }
                 
                 opt -val 'restart' {
-                    from previous interrupted run. Use this
-                    switch only if you want to continue an
-                    interrupted calculation, not to start a 
-                    new one, or to perform non-scf calculations.
-                    Works only if the calculation was cleanly 
-                    stopped using variable @ref max_seconds, or 
-                    by user request with an "exit file" (i.e.:
-                    create a file "prefix".EXIT, in directory
-                    "outdir"; see variables @ref prefix, @ref outdir).
-                    Overrides @ref startingwfc and @ref startingpot.
+                    From previous interrupted run. Use this switch only if you want to
+                    continue an interrupted calculation, not to start a new one, or to
+                    perform non-scf calculations.  Works only if the calculation was
+                    cleanly stopped using variable @ref max_seconds, or by user request
+                    with an "exit file" (i.e.: create a file "prefix".EXIT, in directory
+                    "outdir"; see variables @ref prefix, @ref outdir).  Overrides @ref startingwfc
+                    and @ref startingpot.
                 }
             }   
         }
@@ -304,7 +304,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 opt -val 'medium' {
                     save wavefunctions at each SCF step unless
                     there is a single k-point per process (in which
-                     case the behavior is the same as 'low')
+                    case the behavior is the same as 'low')
                 }
 
                 opt -val 'low' {
@@ -318,7 +318,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 }
             
                 info {
-                    Default is 'low' for the scf case, 'medium' otherwise.
+                    @b Default is @b 'low' for the scf case, @b 'medium' otherwise.
                     Note that the needed RAM increases as disk I/O decreases!
                     It is no longer needed to specify 'high' in order to be able
                     to restart from an interrupted calculation (see @ref restart_mode)
@@ -381,18 +381,20 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 
         var efield_phase -type CHARACTER {
             default { 'none' }
-	    options {		
+            options {
+                info { Available options are: }
+                
                 opt -val 'read' {
-		    set the zero of the electronic polarization (with @ref lelfield==.true..) 
-		    to the result of a previous calculation
-		}                
+                    set the zero of the electronic polarization (with @ref lelfield==.true..) 
+                    to the result of a previous calculation
+                }                
                 opt -val 'write' {
-		    write on disk data on electronic polarization to be read in another 
-		    calculation
-		}                
+                    write on disk data on electronic polarization to be read in another 
+                    calculation
+                }                
                 opt -val 'none' {
-		    none of the above points
-		}
+                    none of the above points
+                }
              }  
           }
        var lorbm -type LOGICAL { 
@@ -630,7 +632,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             default {
                 for an insulator, @ref nbnd = number of valence bands
                 (@ref nbnd = # of electrons /2);
-                for a metal, 20% more (minimum 4 more)
+                @br for a metal, 20% more (minimum 4 more)
             }
             info {
                 Number of electronic states (bands) to be calculated.
@@ -835,28 +837,30 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 
         var occupations -type CHARACTER {
             options {
+                info { Available options are: }
+                
                 opt -val 'smearing' {
-		    gaussian smearing for metals; 
-		    see variables @ref smearing and @ref degauss
-		}
+                    gaussian smearing for metals; 
+                    see variables @ref smearing and @ref degauss
+                }
                 opt -val 'tetrahedra' {
-		    especially suited for calculation of DOS
-		    (see P.E. Bloechl, PRB 49, 16223 (1994)).
-		    Requires uniform grid of k-points,
-		    automatically generated (see below).
-		    Not suitable (because not variational) for
-			force/optimization/dynamics calculations.
-		}
+                    especially suited for calculation of DOS
+                    (see P.E. Bloechl, PRB 49, 16223 (1994)).
+                    Requires uniform grid of k-points,
+                    automatically generated (see below).
+                    Not suitable (because not variational) for
+                    force/optimization/dynamics calculations.
+                }
                 opt -val 'fixed' {
-		    for insulators with a gap
-		}
+                    for insulators with a gap
+                }
                 opt -val 'from_input' {
-		    The occupation are read from input file,
-		    card @ref OCCUPATIONS. Option valid only for a
-		    single k-point, requires @ref nbnd to be set 
-		    in input. Occupations should be consistent 
-		    with the value of @ref tot_charge.
-		}
+                    The occupation are read from input file,
+                    card @ref OCCUPATIONS. Option valid only for a
+                    single k-point, requires @ref nbnd to be set 
+                    in input. Occupations should be consistent 
+                    with the value of @ref tot_charge.
+                }
             }
         }
 
@@ -1017,20 +1021,20 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 
 
         var exxdiv_treatment -type CHARACTER {
-            default {gygi-baldereschi}
+            default {'gygi-baldereschi'}
             options {
-		info {
-		    Specific for EXX. It selects the kind of approach to be used
-		    for treating the Coulomb potential divergencies at small q vectors.
-		}
+                info {
+                    Specific for EXX. It selects the kind of approach to be used
+                    for treating the Coulomb potential divergencies at small q vectors.
+                }
 
-                opt -val gygi-baldereschi { appropriate for cubic and quasi-cubic supercells }
+                opt -val 'gygi-baldereschi' { appropriate for cubic and quasi-cubic supercells }
                 
-                opt -val vcut_spherical { appropriate for cubic and quasi-cubic supercells }
+                opt -val 'vcut_spherical' { appropriate for cubic and quasi-cubic supercells }
 
-                opt -val vcut_ws { appropriate for strongly anisotropic supercells, see also @ref ecutvcut. }
+                opt -val 'vcut_ws' { appropriate for strongly anisotropic supercells, see also @ref ecutvcut. }
                 
-                opt -val none { sets Coulomb potential at G,q=0 to 0.0 (required for GAU-PBE) }
+                opt -val 'none' { sets Coulomb potential at G,q=0 to 0.0 (required for GAU-PBE) }
             }
         }
 
@@ -1070,8 +1074,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             default { .FALSE. }
             status {
                 DFT+U (formerly known as LDA+U) currently works only for 
-                a few selected elements. Modify Modules/set_hubbard_l.f90 and 
-                PW/src/tabd.f90 if you plan to use DFT+U with an element that 
+                a few selected elements. Modify @tt Modules/set_hubbard_l.f90 and 
+                @tt PW/src/tabd.f90 if you plan to use DFT+U with an element that 
                 is not configured there.
             }
             info { 
@@ -1090,10 +1094,10 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 Specifies the type of DFT+U calculation:
                 
                    0   simplified version of Cococcioni and de Gironcoli, 
-                       PRB 71, 035105 (2005), using Hubbard_U
+                       PRB 71, 035105 (2005), using @ref Hubbard_U
                 
                    1   rotationally invariant scheme of Liechtenstein et al., 
-                       using Hubbard_U and Hubbard_J
+                       using @ref Hubbard_U and @ref Hubbard_J
             }
         }
         dimension Hubbard_U -start 1 -end ntyp -type REAL {      
@@ -1156,33 +1160,33 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 
         var U_projection_type -type CHARACTER {   
             default { 'atomic' }
-	    options {
-		info {
-		    Only active when @ref lda_plus_U is .true., specifies the type
-		    of projector on localized orbital to be used in the DFT+U
-		    scheme.
-		    
-		    Currently available choices:
-		}
+            options {
+                info {
+                    Only active when @ref lda_plus_U is .true., specifies the type
+                    of projector on localized orbital to be used in the DFT+U
+                    scheme.
+                    
+                    Currently available choices:
+                }
                 
                 opt -val 'atomic' { use atomic wfc's (as they are) to build the projector }
 
                 opt -val 'ortho-atomic' { use Lowdin orthogonalized atomic wfc's }
                 
                 opt -val 'norm-atomic' {
-		    Lowdin normalization of atomic wfc. Keep in mind:
-		    atomic wfc are not orthogonalized in this case.
-		    This is a "quick and dirty" trick to be used when
-		    atomic wfc from the pseudopotential are not
-		    normalized (and thus produce occupation whose
+                    Lowdin normalization of atomic wfc. Keep in mind:
+                    atomic wfc are not orthogonalized in this case.
+                    This is a "quick and dirty" trick to be used when
+                    atomic wfc from the pseudopotential are not
+                    normalized (and thus produce occupation whose
                     value exceeds unity). If orthogonalized wfc are
-		    not needed always try @b 'atomic' first.
-		}
+                    not needed always try @b 'atomic' first.
+                }
                 opt -val 'file' {
-		    use the information from file "prefix".atwfc that must
-		    have been generated previously, for instance by pmw.x
-		    (see PP/src/poormanwannier.f90 for details).
-		}
+                    use the information from file "prefix".atwfc that must
+                    have been generated previously, for instance by pmw.x
+                    (see PP/src/poormanwannier.f90 for details).
+                }
 
                 opt -val 'pseudo' {
                     use the pseudopotential projectors. The charge density
@@ -1190,12 +1194,12 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                     N.B.: for atoms with +U, a pseudopotential with the 
                     all-electron atomic wavefunctions is required (i.e.,
                     as generated by ld1.x with lsave_wfc flag).
-		}
+                }
 
                 info {
-		    NB: forces and stress currently implemented only for the
-		    'atomic' and 'pseudo' choice.
-		}
+                    NB: forces and stress currently implemented only for the
+                    'atomic' and 'pseudo' choice.
+                }
             }
         }
 
@@ -1351,85 +1355,86 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
         
         var assume_isolated -type CHARACTER { 
             default { 'none' }
-	    options {
-		info { 
-		    Used to perform calculation assuming the system to be
-		    isolated (a molecule or a cluster in a 3D supercell).
-		    
-		    Currently available choices:
-		}
+            options {
+                info { 
+                    Used to perform calculation assuming the system to be
+                    isolated (a molecule or a cluster in a 3D supercell).
+                    
+                    Currently available choices:
+                }
 
                 opt -val 'none' {
-		    (default): regular periodic calculation w/o any correction.
-		}
+                    (default): regular periodic calculation w/o any correction.
+                }
                 opt -val {'makov-payne', 'm-p', 'mp'} {
-		    the Makov-Payne correction to the 
-		    total energy is computed. An estimate of the vacuum 
-		    level is also calculated so that eigenvalues can be 
-		    properly aligned. ONLY FOR CUBIC SYSTEMS (@ref ibrav=1,2,3).
-		    Theory: G.Makov, and M.C.Payne, 
+                    the Makov-Payne correction to the 
+                    total energy is computed. An estimate of the vacuum 
+                    level is also calculated so that eigenvalues can be 
+                    properly aligned. ONLY FOR CUBIC SYSTEMS (@ref ibrav=1,2,3).
+                    Theory: G.Makov, and M.C.Payne, 
                          "Periodic boundary conditions in ab initio
                          calculations" , PRB 51, 4014 (1995).
-		}
+                }
 
                 opt -val {'martyna-tuckerman', 'm-t', 'mt'} {
-		    Martyna-Tuckerman correction
-		    to both total energy and scf potential. Adapted from:
-		    G.J. Martyna, and M.E. Tuckerman,
-		    "A reciprocal space based method for treating long
+                    Martyna-Tuckerman correction
+                    to both total energy and scf potential. Adapted from:
+                    G.J. Martyna, and M.E. Tuckerman,
+                    "A reciprocal space based method for treating long
                     range interactions in ab-initio and force-field-based
                     calculation in clusters", J.Chem.Phys. 110, 2810 (1999).
-		}
+                }
 
                 opt -val 'esm' {
-		    Effective Screening Medium Method.
-		    For polarized or charged slab calculation, embeds
-		    the simulation cell within an effective semi-
-		    infinite medium in the perpendicular direction
-		    (along z). Embedding regions can be vacuum or
-		    semi-infinite metal electrodes (use 'esm_bc' to
-		    choose boundary conditions). If between two
-		    electrodes, an optional electric field
+                    Effective Screening Medium Method.
+                    For polarized or charged slab calculation, embeds
+                    the simulation cell within an effective semi-
+                    infinite medium in the perpendicular direction
+                    (along z). Embedding regions can be vacuum or
+                    semi-infinite metal electrodes (use 'esm_bc' to
+                    choose boundary conditions). If between two
+                    electrodes, an optional electric field
                     ('esm_efield') may be applied. Method described in
                     M. Otani and O. Sugino, "First-principles calculations 
                     of charged surfaces and interfaces: A plane-wave 
                     nonrepeated slab approach", PRB 73, 115407 (2006).
-		    @pre {NB:
-		       - Two dimensional (xy plane) average charge density
-		         and electrostatic potentials are printed out to
-		         'prefix.esm1'.			 
-		    
-		       - Requires cell with a_3 lattice vector along z,
-		         normal to the xy plane, with the slab centered
-		         around z=0. Also requires symmetry checking to be
-		         disabled along z, either by setting @ref nosym = .TRUE.
-		         or by very slight displacement (i.e., 5e-4 a.u.)
-		         of the slab along z.
-		    }	
-		    See @ref esm_bc, @ref esm_efield, @ref esm_w, @ref esm_nfit.
-		}
+
+		    NB:
+                       - Two dimensional (xy plane) average charge density
+                         and electrostatic potentials are printed out to
+                         'prefix.esm1'.                  
+                    
+                       - Requires cell with a_3 lattice vector along z,
+                         normal to the xy plane, with the slab centered
+                         around z=0. Also requires symmetry checking to be
+                         disabled along z, either by setting @ref nosym = .TRUE.
+                         or by very slight displacement (i.e., 5e-4 a.u.)
+                         of the slab along z.
+                       
+                    See @ref esm_bc, @ref esm_efield, @ref esm_w, @ref esm_nfit.
+                }
             }
         }
 
         var esm_bc -type CHARACTER {
             see { assume_isolated }
             default { 'pbc' }
-	    options {
-		info {
-		    If @ref assume_isolated = 'esm', determines the boundary
-		    conditions used for either side of the slab.
-		    
-		    Currently available choices:
-		}
+            options {
+                info {
+                    If @ref assume_isolated = 'esm', determines the boundary
+                    conditions used for either side of the slab.
+                    
+                    Currently available choices:
+                }
 
                 opt -val 'pbc' { (default): regular periodic calculation (no ESM). }
 
                 opt -val 'bc1' { Vacuum-slab-vacuum (open boundary conditions). }
 
                 opt -val 'bc2' {
-		    Metal-slab-metal (dual electrode configuration).
-		    See also @ref esm_efield.
-		}
+                    Metal-slab-metal (dual electrode configuration).
+                    See also @ref esm_efield.
+                }
                 opt -val 'bc3' { Vacuum-slab-metal }
             }
         }
@@ -1478,30 +1483,31 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
              see {
                  london_s6, london_rcut, london_c6, london_rvdw, ts_vdw_econv_thr, ts_vdw_isolated, xdm_a1, xdm_a2
              }
-	     options {
-		 info {
-		     Type of Van der Waals correction. Allowed values:
-		 }
+             options {
+                 info {
+                     Type of Van der Waals correction. Allowed values:
+                 }
 
-		 opt -val {'grimme-d2', 'Grimme-D2', 'DFT-D', 'dft-d' } {
-		     Semiempirical Grimme's DFT-D2.
-		     Optional variables: @ref london_s6, @ref london_rcut, @ref london_c6, @ref london_rvdw,
-		     @br S. Grimme, J. Comp. Chem. 27, 1787 (2006),
-		     @br V. Barone et al., J. Comp. Chem. 30, 934 (2009).
-		 }
+                 opt -val {'grimme-d2', 'Grimme-D2', 'DFT-D', 'dft-d' } {
+                     Semiempirical Grimme's DFT-D2.
+                     Optional variables: @ref london_s6, @ref london_rcut, @ref london_c6, @ref london_rvdw,
+                     S. Grimme, J. Comp. Chem. 27, 1787 (2006),
+                     V. Barone et al., J. Comp. Chem. 30, 934 (2009).
+                 }
 
-		 opt -val {'TS', 'ts', 'ts-vdw', 'ts-vdW', 'tkatchenko-scheffler'} {
-		     Tkatchenko-Scheffler dispersion corrections with first-principle derived C6 coefficients
-		     (implemented in CP only). Optional variables: @ref ts_vdw_econv_thr, @ref ts_vdw_isolated
-		     See A. Tkatchenko and M. Scheffler, PRL 102, 073005 (2009).
-		 }
+                 opt -val {'TS', 'ts', 'ts-vdw', 'ts-vdW', 'tkatchenko-scheffler'} {
+                     Tkatchenko-Scheffler dispersion corrections with first-principle derived
+                     C6 coefficients (implemented in CP only).
+                     Optional variables: @ref ts_vdw_econv_thr, @ref ts_vdw_isolated
+                     See A. Tkatchenko and M. Scheffler, PRL 102, 073005 (2009).
+                 }
 
-		 opt -val {'XDM', 'xdm'} {
-		     Exchange-hole dipole-moment model. Optional variables: @ref xdm_a1, @ref xdm_a2
-		     @br A. D. Becke and E. R. Johnson, J. Chem. Phys. 127, 154108 (2007)
-		     @br A. Otero de la Roza, E. R. Johnson, J. Chem. Phys. 136, 174109 (2012)
-		 }
-		 info { Note that non-local functionals (eg vdw-DF) are NOT specified here but in @ref input_dft }
+                 opt -val {'XDM', 'xdm'} {
+                     Exchange-hole dipole-moment model. Optional variables: @ref xdm_a1, @ref xdm_a2
+                     A. D. Becke and E. R. Johnson, J. Chem. Phys. 127, 154108 (2007)
+                     A. Otero de la Roza, E. R. Johnson, J. Chem. Phys. 136, 174109 (2012)
+                 }
+                 info { Note that non-local functionals (eg vdw-DF) are NOT specified here but in @ref input_dft }
              }
          }
 
@@ -1691,23 +1697,25 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             info {
                 When @ref adaptive_thr = .TRUE. the convergence threshold for 
                 each scf cycle is given by:
-                max( conv_thr, conv_thr_multi * dexx )
+                max( @ref conv_thr, @ref conv_thr_multi * dexx )
             }
         }
 
         var mixing_mode -type CHARACTER {
             default { 'plain' }
             options {
+                info { Available options are: }
+                
                 opt -val 'plain' { charge density Broyden mixing }
                 
                 opt -val 'TF' {
-		    as above, with simple Thomas-Fermi screening
-		    (for highly homogeneous systems)
-		}                
+                    as above, with simple Thomas-Fermi screening
+                    (for highly homogeneous systems)
+                }                
                 opt -val 'local-TF' {
-		    as above, with local-density-dependent TF screening
-		    (for highly inhomogeneous systems)
-		}
+                    as above, with local-density-dependent TF screening
+                    (for highly inhomogeneous systems)
+                }
             }
         }
 
@@ -1737,34 +1745,36 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
         var diagonalization -type CHARACTER {
             default { 'david' }
             options {
-		opt -val 'david' {
-		    Davidson iterative diagonalization with overlap matrix
-		    (default). Fast, may in some rare cases fail.
-		}
+                info { Available options are: }
+                
+                opt -val 'david' {
+                    Davidson iterative diagonalization with overlap matrix
+                    (default). Fast, may in some rare cases fail.
+                }
 
-		opt -val 'cg' {
-		    Conjugate-gradient-like band-by-band diagonalization.
-		    Typically slower than 'david' but it uses less memory
-		    and is more robust (it seldom fails).
-		}
+                opt -val 'cg' {
+                    Conjugate-gradient-like band-by-band diagonalization.
+                    Typically slower than 'david' but it uses less memory
+                    and is more robust (it seldom fails).
+                }
 
-		opt -val {'cg-serial', 'david-serial'} {
-		    OBSOLETE, use @b {-ndiag 1} instead.
-		    The subspace diagonalization in Davidson is performed
-		    by a fully distributed-memory parallel algorithm on
-		    4 or more processors, by default. The allocated memory
-		    scales down with the number of procs. Procs involved 
-		    in diagonalization can be changed with command-line
-		    option @b -ndiag @i N. On multicore CPUs it is often
-		    convenient to let just one core per CPU to work 
-		    on linear algebra.
-		}
+                opt -val {'cg-serial', 'david-serial'} {
+                    OBSOLETE, use @b {-ndiag 1} instead.
+                    The subspace diagonalization in Davidson is performed
+                    by a fully distributed-memory parallel algorithm on
+                    4 or more processors, by default. The allocated memory
+                    scales down with the number of procs. Procs involved 
+                    in diagonalization can be changed with command-line
+                    option @b -ndiag @i N. On multicore CPUs it is often
+                    convenient to let just one core per CPU to work 
+                    on linear algebra.
+                }
             }
         }
 
         var ortho_para -type INTEGER { 
             default { 0 }
-            status { OBSOLETE: use command-line option " -ndiag XX" instead  }
+            status { OBSOLETE: use command-line option @tt {"-ndiag XX"} instead  }
         }
 
         var diago_thr_init -type REAL {
@@ -1830,45 +1840,49 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 
         var startingpot -type CHARACTER {
             options {
-		opt -val 'atomic' {
-		    starting potential from atomic charge superposition
-		    (default for scf, *relax, *md)
-		}
+                info { Available options are: }
+                
+                opt -val 'atomic' {
+                    starting potential from atomic charge superposition
+                    (default for scf, *relax, *md)
+                }
 
-		opt -val 'file'  {
-		    start from existing "charge-density.xml" file in the
-		    directory specified by variables @ref prefix and @ref outdir
-		    For nscf and bands calculation this is the default
-		    and the only sensible possibility.
-		}
+                opt -val 'file'  {
+                    start from existing "charge-density.xml" file in the
+                    directory specified by variables @ref prefix and @ref outdir
+                    For nscf and bands calculation this is the default
+                    and the only sensible possibility.
+                }
             }
         }
 
         var startingwfc -type CHARACTER {
             default { 'atomic+random' }
             options {
-		opt -val 'atomic' {
-		    Start from superposition of atomic orbitals.
-		    If not enough atomic orbitals are available,
-		    fill with random numbers the remaining wfcs
-		    The scf typically starts better with this option,
-		    but in some high-symmetry cases one can "loose" 
-		    valence states, ending up in the wrong ground state.
-		}
-		opt -val 'atomic+random' {
-		    As above, plus a superimposed "randomization"
-		    of atomic orbitals. Prevents the "loss" of states 
-		    mentioned above.
-		}
-		opt -val 'random' {
-		    Start from random wfcs. Slower start of scf but safe.
-		    It may also reduce memory usage in conjunction with
-		    @ref diagonalization='cg'.
-		}
-		opt -val 'file' {
-		    Start from an existing wavefunction file in the 
-		    directory specified by variables @ref prefix and @ref outdir.
-		}
+                info { Available options are: }
+                
+                opt -val 'atomic' {
+                    Start from superposition of atomic orbitals.
+                    If not enough atomic orbitals are available,
+                    fill with random numbers the remaining wfcs
+                    The scf typically starts better with this option,
+                    but in some high-symmetry cases one can "loose" 
+                    valence states, ending up in the wrong ground state.
+                }
+                opt -val 'atomic+random' {
+                    As above, plus a superimposed "randomization"
+                    of atomic orbitals. Prevents the "loss" of states 
+                    mentioned above.
+                }
+                opt -val 'random' {
+                    Start from random wfcs. Slower start of scf but safe.
+                    It may also reduce memory usage in conjunction with
+                    @ref diagonalization='cg'.
+                }
+                opt -val 'file' {
+                    Start from an existing wavefunction file in the 
+                    directory specified by variables @ref prefix and @ref outdir.
+                }
             }
         }
 
@@ -1895,104 +1909,126 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
         }
     
         var ion_dynamics -type CHARACTER {
-            info {
-                Specify the type of ionic dynamics.
-
-                For different type of calculation different possibilities are
-                allowed and different default values apply:
-
-                CASE ( @ref calculation == 'relax' )
-                    @b 'bfgs' :   (default)   use BFGS quasi-newton algorithm,
-                                           based on the trust radius procedure,
-                                           for structural relaxation 
-                    @b 'damp' :               use damped (quick-min Verlet)
-                                           dynamics for structural relaxation
-                                           Can be used for constrained 
-                                           optimisation: see @ref CONSTRAINTS card
-
-                CASE ( @ref calculation == 'md' )
-                    @b 'verlet' : (default)   use Verlet algorithm to integrate
-                                           Newton's equation. For constrained 
-                                           dynamics, see @ref CONSTRAINTS card
-                    @b 'langevin'             ion dynamics is over-damped Langevin
-                    @b 'langevin-smc'         over-damped Langevin with Smart Monte Carlo:
-                                           see R.J.Rossky, JCP, 69, 4628(1978)
-
-
-                CASE ( @ref calculation == 'vc-relax' )
-                    @b 'bfgs' :   (default)   use BFGS quasi-newton algorithm;
-                                           cell_dynamics must be 'bfgs' too
-                    @b 'damp' :               use damped (Beeman) dynamics for
-                                           structural relaxation
-                CASE ( @ref calculation == 'vc-md' )
-                    @b 'beeman' : (default)   use Beeman algorithm to integrate
-                                           Newton's equation
+	    options {
+		info {
+		    Specify the type of ionic dynamics.
+		    
+		    For different type of calculation different possibilities are
+		    allowed and different default values apply:
+		    
+		    @b CASE ( @ref calculation == 'relax' )
+		}
+		opt -val 'bfgs' {
+		    @b (default)  use BFGS quasi-newton algorithm,
+		    based on the trust radius procedure,
+		    for structural relaxation
+		}
+		opt -val 'damp' {
+		    use damped (quick-min Verlet)
+		    dynamics for structural relaxation
+		    Can be used for constrained 
+		    optimisation: see @ref CONSTRAINTS card
+		}		
+		info {
+		    @b CASE ( @ref calculation == 'md' )
+		}
+		opt -val 'verlet' {
+		    @b (default)  use Verlet algorithm to integrate
+		    Newton's equation. For constrained 
+		    dynamics, see @ref CONSTRAINTS card
+		}
+		opt -val 'langevin' {
+		    ion dynamics is over-damped Langevin
+		}
+		opt -val 'langevin-smc' {
+		    over-damped Langevin with Smart Monte Carlo:
+		    see R.J. Rossky, JCP, 69, 4628(1978)
+		}
+		info {
+		    @b CASE ( @ref calculation == 'vc-relax' )
+		}
+		opt -val 'bfgs' {
+		    @b (default)  use BFGS quasi-newton algorithm;
+		    cell_dynamics must be 'bfgs' too
+		}
+		opt -val 'damp' {
+		    use damped (Beeman) dynamics for
+		    structural relaxation
+		}
+                info {
+		    @b CASE ( @ref calculation == 'vc-md' )
+		}
+		opt -val 'beeman' {
+		    @b (default)  use Beeman algorithm to integrate
+		    Newton's equation
+		}
             }
         }
 
         var ion_positions -type CHARACTER {
             default { 'default' }
             options {
-		opt -val 'default' {
-		    if restarting, use atomic positions read from the
-		    restart file; in all other cases, use atomic
-		    positions from standard input.
-		}
-
-		opt -val 'from_input' {
-		    restart the simulation with atomic positions read
-		    from standard input, even if restarting.
-		}
+		info { Available options are: }
+		
+                opt -val 'default' {
+                    if restarting, use atomic positions read from the
+                    restart file; in all other cases, use atomic
+                    positions from standard input.
+                }
+                opt -val 'from_input' {
+                    restart the simulation with atomic positions read
+                    from standard input, even if restarting.
+                }
             }
         }
  
         var pot_extrapolation -type CHARACTER { 
             default { 'atomic' }
             options {
-		info {
-		    Used to extrapolate the potential from preceding ionic steps.
-		}
-		opt -val 'none' { no extrapolation }
+                info {
+                    Used to extrapolate the potential from preceding ionic steps.
+                }
+                opt -val 'none' { no extrapolation }
 
-		opt -val 'atomic' {
-		    extrapolate the potential as if it was a sum of
-		    atomic-like orbitals
-		}
-		opt -val 'first_order' {
-		    extrapolate the potential with first-order
-		    formula
-		}
+                opt -val 'atomic' {
+                    extrapolate the potential as if it was a sum of
+                    atomic-like orbitals
+                }
+                opt -val 'first_order' {
+                    extrapolate the potential with first-order
+                    formula
+                }
 
-		opt -val 'second_order' {
-		    as above, with second order formula
-		}
-		info {
-		    Note: 'first_order' and 'second-order' extrapolation make sense
-		    only for molecular dynamics calculations
-		}
-	    }
+                opt -val 'second_order' {
+                    as above, with second order formula
+                }
+                info {
+                    Note: 'first_order' and 'second-order' extrapolation make sense
+                    only for molecular dynamics calculations
+                }
+            }
         }
 
         var wfc_extrapolation -type CHARACTER { 
             default { 'none' }
-	    options {
-		info {
-		    Used to extrapolate the wavefunctions from preceding ionic steps.
-		}
-		opt -val 'none' {  no extrapolation }
+            options {
+                info {
+                    Used to extrapolate the wavefunctions from preceding ionic steps.
+                }
+                opt -val 'none' {  no extrapolation }
 
-		opt -val 'first_order' {
-		    extrapolate the wave-functions with first-order formula.
-		}
+                opt -val 'first_order' {
+                    extrapolate the wave-functions with first-order formula.
+                }
 
-		opt -val 'second_order' {
-		    as above, with second order formula.
-		}
-		info {
-		    Note: @b 'first_order' and @b 'second-order' extrapolation make sense
-		    only for molecular dynamics calculations
-		}
-	    }
+                opt -val 'second_order' {
+                    as above, with second order formula.
+                }
+                info {
+                    Note: @b 'first_order' and @b 'second-order' extrapolation make sense
+                    only for molecular dynamics calculations
+                }
+            }
         }
 
         var remove_rigid_rot -type LOGICAL { 
@@ -2021,40 +2057,42 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 
             var ion_temperature -type CHARACTER {
                 default { 'not_controlled' }
-                options { 
+                options {
+		    info { Available options are: }
+		    
                     opt -val 'rescaling' {
-			control ionic temperature via velocity rescaling
-			(first method) see parameters @ref tempw, @ref tolp, and
-			@ref nraise (for VC-MD only). This rescaling method
-			is the only one currently implemented in VC-MD
-		    }
+                        control ionic temperature via velocity rescaling
+                        (first method) see parameters @ref tempw, @ref tolp, and
+                        @ref nraise (for VC-MD only). This rescaling method
+                        is the only one currently implemented in VC-MD
+                    }
                     opt -val 'rescale-v' {
-			control ionic temperature via velocity rescaling
-			(second method) see parameters @ref tempw and @ref nraise
-		    }
+                        control ionic temperature via velocity rescaling
+                        (second method) see parameters @ref tempw and @ref nraise
+                    }
                     opt -val 'rescale-T' {
-			control ionic temperature via velocity rescaling
-			(third method) see parameter @ref delta_t
-		    }
+                        control ionic temperature via velocity rescaling
+                        (third method) see parameter @ref delta_t
+                    }
                     opt -val 'reduce-T' {
-			reduce ionic temperature every @ref nraise steps
-			by the (negative) value @ref delta_t
-		    }
+                        reduce ionic temperature every @ref nraise steps
+                        by the (negative) value @ref delta_t
+                    }
                     opt -val 'berendsen' {
-			control ionic temperature using "soft" velocity
-			rescaling - see parameters @ref tempw and @ref nraise
-		    }
+                        control ionic temperature using "soft" velocity
+                        rescaling - see parameters @ref tempw and @ref nraise
+                    }
                     opt -val 'andersen' {
-			control ionic temperature using Andersen thermostat
-			see parameters @ref tempw and @ref nraise
-		    }
+                        control ionic temperature using Andersen thermostat
+                        see parameters @ref tempw and @ref nraise
+                    }
                     opt -val 'initial' {
-			initialize ion velocities to temperature @ref tempw
-			and leave uncontrolled further on
-		    }
+                        initialize ion velocities to temperature @ref tempw
+                        and leave uncontrolled further on
+                    }
                     opt -val 'not_controlled' {
-			(default) ionic temperature is not controlled
-		    }
+                        (default) ionic temperature is not controlled
+                    }
                 }
             }
 
@@ -2077,11 +2115,11 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             var delta_t -type REAL { 
                 default { 1.D0 }
                 info {
-                    if @ref ion_temperature='rescale-T':
+                    if @ref ion_temperature == 'rescale-T' :
                            at each step the instantaneous temperature is multiplied
                            by delta_t; this is done rescaling all the velocities.
 
-                    if @ref ion_temperature='reduce-T':
+                    if @ref ion_temperature == 'reduce-T' :
                            every 'nraise' steps the instantaneous temperature is
                            reduced by -@ref delta_t (i.e. @ref delta_t < 0 is added to T)
 
@@ -2099,23 +2137,23 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             var nraise -type INTEGER { 
                 default { 1 }
                 info {
-                    if @ref ion_temperature=='reduce-T':
-                           every 'nraise' steps the instantaneous temperature is
-                           reduced by -delta_T (.e. delta_t is added to the temperature)
+                    if @ref ion_temperature == 'reduce-T' :
+                           every @ref nraise steps the instantaneous temperature is
+                           reduced by -@ref delta_t (i.e. @ref delta_t is added to the temperature)
                 
-                    if @ref ion_temperature=='rescale-v':
-                           every 'nraise' steps the average temperature, computed from
-                           the last nraise steps, is rescaled to tempw
+                    if @ref ion_temperature == 'rescale-v' :
+                           every @ref nraise steps the average temperature, computed from
+                           the last @ref nraise steps, is rescaled to @ref tempw
 
-                    if @ref ion_temperature=='rescaling' and @ref calculation='vc-md':
-                           every 'nraise' steps the instantaneous temperature
-                           is rescaled to tempw
+                    if @ref ion_temperature == 'rescaling' and @ref calculation == 'vc-md' :
+                           every @ref nraise steps the instantaneous temperature
+                           is rescaled to @ref tempw
                     
-                    if @ref ion_temperature=='berendsen':
+                    if @ref ion_temperature == 'berendsen' :
                            the "rise time" parameter is given in units of the time step:
                            tau = nraise*dt, so dt/tau = 1/nraise
                     
-                    if @ref ion_temperature=='andersen':
+                    if @ref ion_temperature == 'andersen' :
                            the "collision frequency" parameter is given as nu=1/tau
                            defined above, so nu*dt = 1/nraise
                 }
@@ -2205,27 +2243,36 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
         }
 
         var cell_dynamics -type CHARACTER {
-            info {
-               Specify the type of dynamics for the cell.
-               For different type of calculation different possibilities
-               are allowed and different default values apply:
+	    options {
+		info {
+		    Specify the type of dynamics for the cell.
+		    For different type of calculation different possibilities
+		    are allowed and different default values apply:
 
-               CASE ( @ref calculation == 'vc-relax' )
-                 @b 'none':    no dynamics
-                 @b 'sd':      steepest descent ( not implemented )
-                 @b 'damp-pr': damped (Beeman) dynamics of the Parrinello-Rahman
-                            extended lagrangian
-                 @b 'damp-w':  damped (Beeman) dynamics of the new Wentzcovitch
-                            extended lagrangian
-                 @b 'bfgs':    BFGS quasi-newton algorithm (default)
-                            ion_dynamics must be 'bfgs' too
-
-               CASE ( @ref calculation == 'vc-md' )
-                 @b 'none':    no dynamics
-                 @b 'pr':      (Beeman) molecular dynamics of the Parrinello-Rahman
-                            extended lagrangian
-                 @b 'w':       (Beeman) molecular dynamics of the new Wentzcovitch
-                            extended lagrangian
+		    @b CASE ( @ref calculation == 'vc-relax' )
+		}
+		opt -val 'none' { no dynamics }
+		opt -val 'sd'   { steepest descent ( not implemented ) }
+		opt -val 'damp-pr' {
+		    damped (Beeman) dynamics of the Parrinello-Rahman extended lagrangian
+		}
+		opt -val 'damp-w' {
+		    damped (Beeman) dynamics of the new Wentzcovitch extended lagrangian
+		}
+		opt -val 'bfgs' {
+		    BFGS quasi-newton algorithm @b (default)
+		    @ref ion_dynamics must be @b 'bfgs' too
+		}
+		info {
+		    @b CASE ( @ref calculation == 'vc-md' )
+		}
+		opt -val 'none' { no dynamics }
+		opt -val 'pr' {
+		    (Beeman) molecular dynamics of the Parrinello-Rahman extended lagrangian
+		}
+		opt -val 'w' {
+		    (Beeman) molecular dynamics of the new Wentzcovitch extended lagrangian
+		}
             }
         }       
 
@@ -2267,25 +2314,27 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
         
         var cell_dofree -type CHARACTER { 
             default { 'all' }
-            info {
-                Select which of the cell parameters should be moved:
-                
-                @b 'all'     = all axis and angles are moved 
-                @b 'x'       = only the x component of axis 1 (v1_x) is moved
-                @b 'y'       = only the y component of axis 2 (v2_y) is moved
-                @b 'z'       = only the z component of axis 3 (v3_z) is moved
-                @b 'xy'      = only v1_x and v2_y are moved
-                @b 'xz'      = only v1_x and v3_z are moved
-                @b 'yz'      = only v2_y and v3_z are moved
-                @b 'xyz'     = only v1_x, v2_y, v3_z are moved
-                @b 'shape'   = all axis and angles, keeping the volume fixed
-                @b 'volume'  = the volume changes, keeping all angles fixed (i.e. only celldm(1) changes)
-                @b '2Dxy'    = only x and y components are allowed to change
-                @b '2Dshape' = as above, keeping the area in xy plane fixed
-
-                BEWARE: if axis are not orthogonal, some of these options do not
-                work (symmetry is broken). If you are not happy with them, 
-                edit subroutine init_dofree in file Modules/cell_base.f90
+	    options {
+		info {
+		    Select which of the cell parameters should be moved:
+		}                
+                opt -val 'all'     { all axis and angles are moved }
+                opt -val 'x'       { only the x component of axis 1 (v1_x) is moved }
+                opt -val 'y'       { only the y component of axis 2 (v2_y) is moved }
+                opt -val 'z'       { only the z component of axis 3 (v3_z) is moved }
+                opt -val 'xy'      { only v1_x and v2_y are moved }
+                opt -val 'xz'      { only v1_x and v3_z are moved }
+                opt -val 'yz'      { only v2_y and v3_z are moved }
+                opt -val 'xyz'     { only v1_x, v2_y, v3_z are moved }
+                opt -val 'shape'   { all axis and angles, keeping the volume fixed }
+                opt -val 'volume'  { the volume changes, keeping all angles fixed (i.e. only celldm(1) changes) }
+                opt -val '2Dxy'    { only x and y components are allowed to change }
+                opt -val '2Dshape' { as above, keeping the area in xy plane fixed }
+		info {
+		    BEWARE: if axis are not orthogonal, some of these options do not
+		            work (symmetry is broken). If you are not happy with them, 
+		            edit subroutine init_dofree in file Modules/cell_base.f90
+		}
             }
         }
     }
@@ -2500,52 +2549,52 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                     nk1, nk2, nk3 as in Monkhorst-Pack grids
                     k1, k2, k3 must be 0 ( no offset ) or 1 ( grid displaced
                     by half a grid step in the corresponding direction ) 
-                    @br BEWARE: only grids having the full symmetry of the crystal
+                    BEWARE: only grids having the full symmetry of the crystal
                             work with tetrahedra. Some grids with offset may not work.
-		}
+                }
  
                 opt -val crystal  {
-		    read k-points in crystal coordinates, i.e. in relative
-		    coordinates of the reciprocal lattice vectors
-		}
+                    read k-points in crystal coordinates, i.e. in relative
+                    coordinates of the reciprocal lattice vectors
+                }
 
                 opt -val gamma {
-		    use k = 0 (no need to list k-point specifications after card)
-		    In this case wavefunctions can be chosen as real, 
-		    and specialized subroutines optimized for calculations
-		    at the gamma point are used (memory and cpu requirements 
-		    are reduced by approximately one half).
-		}
+                    use k = 0 (no need to list k-point specifications after card)
+                    In this case wavefunctions can be chosen as real, 
+                    and specialized subroutines optimized for calculations
+                    at the gamma point are used (memory and cpu requirements 
+                    are reduced by approximately one half).
+                }
 
                 opt -val tpiba_b {
-		    Used for band-structure plots.
-		    k-points are in units of  2 pi/a. 
-		    nks points specify nks-1 lines in reciprocal space.
-		    Every couple of points identifies the initial and
-		    final point of a line. pw.x generates N intermediate
-		    points of the line where N is the weight of the first point.
-		}
+                    Used for band-structure plots.
+                    k-points are in units of  2 pi/a. 
+                    nks points specify nks-1 lines in reciprocal space.
+                    Every couple of points identifies the initial and
+                    final point of a line. pw.x generates N intermediate
+                    points of the line where N is the weight of the first point.
+                }
 
                 opt -val crystal_b {
-		    As tpiba_b, but k-points are in crystal coordinates.
-		}
+                    As tpiba_b, but k-points are in crystal coordinates.
+                }
 
                 opt -val tpiba_c {
-		    Used for band-structure contour plots. 
-		    k-points are in units of  2 @i pi/a. nks must be 3.
-		    3 k-points k_0, k_1, and k_2 specify a rectangle 
-		    in reciprocal space of vertices k_0, k_1, k_2, 
-		    k_1 + k_2 - k_0: k_0 + \alpha (k_1-k_0)+
-		    \beta (k_2-k_0) with 0 <\alpha,\beta < 1. 
-		    The code produces a uniform mesh n1 x n2 
-		    k points in this rectangle. n1 and n2 are 
-		    the weights of k_1 and k_2. The weight of k_0
-		    is not used.
-		}
+                    Used for band-structure contour plots. 
+                    k-points are in units of  2 @i pi/a. nks must be 3.
+                    3 k-points k_0, k_1, and k_2 specify a rectangle 
+                    in reciprocal space of vertices k_0, k_1, k_2, 
+                    k_1 + k_2 - k_0: k_0 + \alpha (k_1-k_0)+
+                    \beta (k_2-k_0) with 0 <\alpha,\beta < 1. 
+                    The code produces a uniform mesh n1 x n2 
+                    k points in this rectangle. n1 and n2 are 
+                    the weights of k_1 and k_2. The weight of k_0
+                    is not used.
+                }
 
-		opt -val crystal_c {
-		    As tpiba_c, but k-points are in crystal coordinates.
-		}
+                opt -val crystal_c {
+                    As tpiba_c, but k-points are in crystal coordinates.
+                }
             }
         }
 
@@ -2625,12 +2674,14 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             info {
                 Unit for lattice vectors; options are:
                 
-                'bohr' / 'angstrom': lattice vectors in bohr-radii / angstrom.
+                @b 'bohr' / @b 'angstrom':
+                                     lattice vectors in bohr-radii / angstrom.
                                      In this case the lattice parameter alat = sqrt(v1*v1).
                 
-                'alat' / nothing specified: lattice vectors in units of the lattice
-                                     parameter (either celldm(1) or a). Not specifying
-                                     units is DEPRECATED and will not be allowed in the future.
+                @b 'alat' / nothing specified:
+                                     lattice vectors in units of the lattice parameter (either
+                                     @ref celldm(1) or @ref A). Not specifying units is DEPRECATED
+		                     and will not be allowed in the future.
 
                 If neither unit nor lattice parameter are specified,
                 'bohr' is assumed - DEPRECATED, will no longer be allowed
@@ -2690,34 +2741,42 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             table constraints_table {
                 rows -start 1 -end nconstr {
                     col constr_type -type CHARACTER {
-                        info {
-                            Type of constrain :
-
-                            @b 'type_coord'      : constraint on global coordination-number, i.e. the
-                                                average number of atoms of type B surrounding the
-                                                atoms of type A. The coordination is defined by
-                                                using a Fermi-Dirac.
-                                                (four indexes must be specified).
-
-                            @b 'atom_coord'      : constraint on local coordination-number, i.e. the
-                                                average number of atoms of type A surrounding a
-                                                specific atom. The coordination is defined by
-                                                using a Fermi-Dirac.
-                                                (four indexes must be specified).
-
-                            @b 'distance'        : constraint on interatomic distance 
-                                                (two atom indexes must be specified).
-
-                            @b 'planar_angle'    : constraint on planar angle 
-                                                (three atom indexes must be specified).
-
-                            @b 'torsional_angle' : constraint on torsional angle 
-                                                (four atom indexes must be specified).
-
-                            @b 'bennett_proj'    : constraint on the projection onto a given direction
-                                                of the vector defined by the position of one atom
-                                                minus the center of mass of the others.
-                                                G.Roma,J.P.Crocombette: J.Nucl.Mater.403,32(2010)
+			options {
+                            info {
+                                Type of constraint :
+                            }
+                            opt -val 'type_coord' {
+				constraint on global coordination-number, i.e. the
+				average number of atoms of type B surrounding the
+				atoms of type A. The coordination is defined by
+				using a Fermi-Dirac.
+				(four indexes must be specified).
+			    }
+                            opt -val 'atom_coord' {
+				constraint on local coordination-number, i.e. the
+				average number of atoms of type A surrounding a
+				specific atom. The coordination is defined by
+				using a Fermi-Dirac.
+				(four indexes must be specified).
+			    }
+                            opt -val 'distance' {
+				constraint on interatomic distance 
+				(two atom indexes must be specified).
+			    }
+                            opt -val 'planar_angle' {
+				constraint on planar angle 
+				(three atom indexes must be specified).
+			    }
+                            opt -val 'torsional_angle' {
+				constraint on torsional angle 
+				(four atom indexes must be specified).
+			    }
+                            opt -val 'bennett_proj' {
+				constraint on the projection onto a given direction
+				of the vector defined by the position of one atom
+				minus the center of mass of the others.
+				G. Roma, J.P. Crocombette: J. Nucl. Mater. 403, 32 (2010)
+			    }
                         }                       
                     }
                     colgroup {
@@ -2730,23 +2789,28 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                         info {
                             These variables have different meanings for different constraint types:
 
-                            @b 'type_coord' : @i constr(1) is the first index of the atomic type involved
+                            @b 'type_coord' :
+			                   @i constr(1) is the first index of the atomic type involved
                                            @i constr(2) is the second index of the atomic type involved
                                            @i constr(3) is the cut-off radius for estimating the coordination
                                            @i constr(4) is a smoothing parameter
 
-                            @b 'atom_coord' : @i constr(1) is the atom index of the atom with constrained coordination
+                            @b 'atom_coord' :
+			                   @i constr(1) is the atom index of the atom with constrained coordination
                                            @i constr(2) is the index of the atomic type involved in the coordination
                                            @i constr(3) is the cut-off radius for estimating the coordination
                                            @i constr(4) is a smoothing parameter
 
-                            @b 'distance' :   atoms indices object of the constraint, as they appear in
+                            @b 'distance' :
+			                   atoms indices object of the constraint, as they appear in
                                            the @ref ATOMIC_POSITIONS card
 
-                            @b 'planar_angle', @b 'torsional_angle' : atoms indices object of the constraint, as they
-                                           appear in the @ref ATOMIC_POSITIONS card (beware the order)
+                            @b 'planar_angle', @b 'torsional_angle' :
+			                   atoms indices object of the constraint, as they appear in the
+			                   @ref ATOMIC_POSITIONS card (beware the order)
 
-                            @b 'bennett_proj' : @i constr(1) is the index of the atom whose position is constrained.
+                            @b 'bennett_proj' :
+			                   @i constr(1) is the index of the atom whose position is constrained.
                                            @i constr(2:4) are the three coordinates of the vector that specifies
                                            the constraint direction.
                         }
