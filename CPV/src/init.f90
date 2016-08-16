@@ -34,9 +34,9 @@
       use gvecs,                only: gcutms, gvecs_init
       use gvecw,                only: gkcut, gvecw_init, g2kin_init
       USE smallbox_subs,        ONLY: ggenb
-      USE fft_base,             ONLY: dfftp, dffts, dfftb, dfft3d, dtgs
+      USE fft_base,             ONLY: dfftp, dffts, dfftb, dfft3d, dtgs, fft_base_info
       USE fft_smallbox,         ONLY: cft_b_omp_init
-      USE stick_set,            ONLY: pstickset, smap
+      USE stick_set,            ONLY: smap
       USE control_flags,        ONLY: gamma_only, smallmem
       USE electrons_module,     ONLY: bmeshset
       USE electrons_base,       ONLY: distribute_bands
@@ -141,7 +141,16 @@
       !        for a left-handed triplet, ainv is minus the inverse of a)
       !
       CALL task_groups_init( dffts, dtgs, ntask_groups )
-      CALL pstickset( gamma_only, dfftp, dffts, ngw_ , ngm_ , ngs_ , ionode, stdout )
+      CALL fft_base_info( ionode, stdout )
+      ngw_ = dffts%nwl( dffts%mype + 1 )
+      ngs_ = dffts%ngl( dffts%mype + 1 )
+      ngm_ = dfftp%ngl( dfftp%mype + 1 )
+      IF( gamma_only ) THEN
+         ngw_ = (ngw_ + 1)/2
+         ngs_ = (ngs_ + 1)/2
+         ngm_ = (ngm_ + 1)/2
+      END IF
+
       !
       ! ... Initialize reciprocal space local and global dimensions
       !     NOTE in a parallel run ngm_ , ngw_ , ngs_ here are the 

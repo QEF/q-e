@@ -49,7 +49,45 @@
 
         PUBLIC :: dfftp, dffts, dfft3d, fft_type_descriptor
         PUBLIC :: dtgs, task_groups_descriptor
-        PUBLIC :: dfftb, fft_box_descriptor
+        PUBLIC :: dfftb, fft_box_descriptor, fft_base_info
+
+   CONTAINS
+
+
+      SUBROUTINE fft_base_info( ionode, stdout )
+
+          LOGICAL, INTENT(IN) :: ionode
+          INTEGER, INTENT(IN) :: stdout
+          !
+          !  Display fft basic information
+          !
+          IF (ionode) THEN
+             WRITE( stdout,*)
+             IF ( dfftp%nproc > 1 ) THEN
+                WRITE( stdout, '(5X,"Parallelization info")')
+             ELSE
+                WRITE( stdout, '(5X,"G-vector sticks info")')
+             ENDIF
+             WRITE( stdout, '(5X,"--------------------")')
+             WRITE( stdout, '(5X,"sticks:   dense  smooth     PW", &
+                            & 5X,"G-vecs:    dense   smooth      PW")') 
+             IF ( dfftp%nproc > 1 ) THEN
+                WRITE( stdout,'(5X,"Min",4X,2I8,I7,12X,2I9,I8)') &
+                   minval(dfftp%nsp), minval(dffts%nsp), minval(dffts%nsw), &
+                   minval(dfftp%ngl), minval(dffts%ngl), minval(dffts%nwl)
+                WRITE( stdout,'(5X,"Max",4X,2I8,I7,12X,2I9,I8)') &
+                   maxval(dfftp%nsp), maxval(dffts%nsp), maxval(dffts%nsw), &
+                   maxval(dfftp%ngl), maxval(dffts%ngl), maxval(dffts%nwl)
+             END IF
+             WRITE( stdout,'(5X,"Sum",4X,2I8,I7,12X,2I9,I8)') &
+                sum(dfftp%nsp), sum(dffts%nsp), sum(dffts%nsw), &
+                sum(dfftp%ngl), sum(dffts%ngl), sum(dffts%nwl)
+          ENDIF
+
+          IF(ionode) WRITE( stdout,*)
+
+          RETURN
+        END SUBROUTINE fft_base_info
 
 !=----------------------------------------------------------------------=!
    END MODULE fft_base

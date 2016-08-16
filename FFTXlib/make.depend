@@ -12,7 +12,6 @@ fft_types.o : fft_support.o
 fft_types.o : stick_base.o
 scatter_mod.o : fft_types.o
 scatter_mod.o : task_groups.o
-stick_set.o : fft_types.o
 stick_set.o : stick_base.o
 task_groups.o : fft_types.o
 test.o : fft_parallel.o
