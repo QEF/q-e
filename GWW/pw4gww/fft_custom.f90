@@ -203,7 +203,6 @@ CONTAINS
   INTEGER  :: ncplane, nxx
   INTEGER  :: ncplanes, nxxs
 
-#ifdef __MPI
   INTEGER, ALLOCATABLE :: st(:,:), sts(:,:), stown(:,:)
   ! sticks maps
 
@@ -211,6 +210,7 @@ CONTAINS
   INTEGER  ::  ncp (nproc), nct, nkcp (nproc), ncts, ncps(nproc)
   INTEGER  ::  ngp (nproc), ngps(nproc), ngkp (nproc), ncp_(nproc),&
        i, j, jj, idum, ic, ngw, ngs, ngm
+#ifdef __MPI
 
   !      nxx              !  local fft data dim
   !      ncplane,        &!  number of columns in a plane
@@ -519,7 +519,7 @@ CONTAINS
 10   CONTINUE
   ENDDO
 
-  CALL fft_type_scalar( fc%dfftt, ub, lb, stw )
+  CALL fft_type_scalar( fc%dfftt, ub, lb, ncp, nkcp, ngp, ngkp, stw, stw )
 
   DEALLOCATE( stw )
 
