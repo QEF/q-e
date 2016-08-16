@@ -24,10 +24,10 @@ MODULE fft_types
   TYPE fft_type_descriptor
 
     INTEGER :: nst      ! total number of sticks
-    INTEGER, POINTER :: nsp(:)   ! number of sticks per processor ( potential )
+    INTEGER, ALLOCATABLE :: nsp(:)   ! number of sticks per processor ( potential )
                                  ! using proc index starting from 1 !!
                                  ! on proc mpime -> nsp( mpime + 1 )
-    INTEGER, POINTER :: nsw(:)   ! number of sticks per processor ( wave func )
+    INTEGER, ALLOCATABLE :: nsw(:)   ! number of sticks per processor ( wave func )
                                  ! using proc index as above
     INTEGER :: nr1    = 0  !
     INTEGER :: nr2    = 0  ! effective FFT dimensions of the 3D grid (global)
