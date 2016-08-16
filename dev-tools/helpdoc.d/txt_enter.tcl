@@ -5,12 +5,15 @@ set var_chars_indent [expr 15 + 5]
 
 switch -exact -- $tag {
     
-    input_description {	
+    input_description {
+	if { [info exists ::opt(version)] && $::opt(version) ne {} } {
+	    set arr(version) "(version: $::opt(version))"
+	}
 	printfNormalize [subst {
 	    ------------------------------------------------------------------------
 	    INPUT FILE DESCRIPTION
 	    
-	    Program: [arr program] / [arr package] / [arr distribution]
+	    Program: [arr program] / [arr package] / [arr distribution] [arr version]
 	    ------------------------------------------------------------------------
 	}]
 	printf \n

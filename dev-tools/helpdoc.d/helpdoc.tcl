@@ -120,18 +120,29 @@ proc ::helpdoc::writeOutputs {} {
     variable rbd_info
 
     #$tree destroy
-    
+
+    # TXT
+    puts $fid(txt) "This file has been created by helpdoc utility on [clock format [clock seconds]]"
+
     puts ""
     foreach fmt [array names fid] {
 	puts "File $head.$fmt has been written."
 	close $fid($fmt)
     }
-    
+    flush stdout
+
     # run XSLTPROC
 
     if { $xsltproc != "" } {
-	catch [list exec $xsltproc --stringparam current-date [clock format [clock seconds]] $head.xml > $head.html]    
-	puts "File $head.html has been written."
+	puts -nonewline "   Executing:  $xsltproc --stringparam version \"$::opt(version)\" --stringparam current-date \"[clock format [clock seconds]]\" $head.xml > $head.html ..."
+	
+	if { [catch [list exec $xsltproc --stringparam version "$::opt(version)" --stringparam current-date [clock format [clock seconds]] $head.xml > $head.html] errorMsg] } {
+	    puts " \[Error\]"
+	    puts "Execution of xsltproc failed with error message:\n\n$errorMsg"
+	} else {
+	    puts " \[OK\]"
+	    puts "File $head.html has been written."
+	}	
     }
     
     # run ROBODOC 
