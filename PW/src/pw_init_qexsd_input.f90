@@ -240,8 +240,8 @@
     diagonalization = ip_diagonalization
   END IF
   CALL qexsd_init_electron_control(obj%electron_control, diagonalization, mixing_mode, mixing_beta, conv_thr,         &
-                                   mixing_ndim, electron_maxstep, tqr, tq_smoothing, tbeta_smoothing, diago_thr_init, &
-                                   diago_full_acc,  diago_cg_maxiter,  diago_david_ndim )
+                                   mixing_ndim, electron_maxstep, tqr, tq_smoothing, tbeta_smoothing, diago_thr_init, & 
+                                   diago_full_acc, diago_cg_maxiter,  diago_david_ndim )
   !--------------------------------------------------------------------------------------------------------------------------------
   !                                                   K POINTS IBZ ELEMENT
   !------------------------------------------------------------------------------------------------------------------------------ 

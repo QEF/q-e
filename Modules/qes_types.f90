@@ -739,7 +739,8 @@ TYPE :: electron_control_type
    INTEGER  :: mixing_ndim
    INTEGER  :: max_nstep
    LOGICAL  :: real_space_q
-   LOGICAL  :: tqr_smoothing
+   LOGICAL  :: tq_smoothing
+   LOGICAL  :: tbeta_smoothing
    REAL(DP) :: diago_thr_init
    LOGICAL  :: diago_full_acc
    INTEGER  :: diago_cg_maxiter
