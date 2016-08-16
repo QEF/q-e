@@ -74,7 +74,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program impor
 	    text {	    
 	       The utility will also expect to find, and copy, the 
 	       outdir/data-file.xml and the *.UPF pseudopotential files in the
-	       prefix.save subdirectory, and will copy them from the outdir
+	       @ref prefix.save subdirectory, and will copy them from the outdir
 	       to the newoutdir. It will then convert the charge density and
 	       spin polarization files in the correct format. Other files,
 	       in particular wavefunctions and the band structure (files

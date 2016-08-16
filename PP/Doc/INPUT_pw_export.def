@@ -69,9 +69,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw_ex
 	    info {
 		Output file. 
 
-		If it is omitted, a directory "prefix.export/" is created 
+		If it is omitted, a directory "@ref prefix.export/" is created 
 		in outdir and some output files are put there. Anyway all the data
-		are accessible through the "prefix.export/index.xml" file which
+		are accessible through the "@ref prefix.export/index.xml" file which
 		contains implicit pointers to all the other files in the
 		export directory. If reading is done by the IOTK library
 		all data appear to be in index.xml even if physically it is not.

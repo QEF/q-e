@@ -85,7 +85,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program projw
 
         var filpdos -type CHARACTER {
             info { prefix for output files containing PDOS(E) } 
-            default { (value of prefix variable) }
+            default { (value of @ref prefix variable) }
         }
         
         var filproj -type CHARACTER {

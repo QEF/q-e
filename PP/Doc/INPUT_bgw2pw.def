@@ -9,14 +9,14 @@ input_description -distribution {Quantum Espresso} -package PWscf -program bgw2p
 	   on top of the valence bands and want to diagonalize them in pw.x.
 	   Look at the documentation for SAPO code in BerkeleyGW for more information.
 
-	bgw2pw.x reads common parameters from file prefix.save/data-file.xml and
-	writes files prefix.save/charge-density.dat (charge density in R-space),
-	prefix.save/gvectors.dat (G-vectors for charge density and potential),
-	prefix.save/K$n/eigenval.xml (eigenvalues and occupations for nth k-point),
-	prefix.save/K$n/evc.dat (wavefunctions in G-space for nth k-point), and
-	prefix.save/K$n/gkvectors.dat (G-vectors for nth k-point).
+	bgw2pw.x reads common parameters from file @ref prefix.save/data-file.xml and
+	writes files @ref prefix.save/charge-density.dat (charge density in R-space),
+	@ref prefix.save/gvectors.dat (G-vectors for charge density and potential),
+	@ref prefix.save/K$n/eigenval.xml (eigenvalues and occupations for nth k-point),
+	@ref prefix.save/K$n/evc.dat (wavefunctions in G-space for nth k-point), and
+	@ref prefix.save/K$n/gkvectors.dat (G-vectors for nth k-point).
 
-	bgw2pw.x doesn't modify file prefix.save/data-file.xml so make changes to this
+	bgw2pw.x doesn't modify file @ref prefix.save/data-file.xml so make changes to this
 	file manually (for example, you will need to change the number of bands if you
 	are using bgw2pw.x in conjunction with SAPO code in BerkeleyGW).
 
