@@ -13,12 +13,13 @@ SUBROUTINE data_structure_custom(fc, gamma_only)
   ! In the parallel case, it distributes columns to processes, too
   !
   USE kinds,      ONLY : DP
-  USE cell_base,  ONLY : bg, tpiba, tpiba2
+  USE cell_base,  ONLY : at, bg, tpiba, tpiba2
   USE klist,      ONLY : xk, nks
   USE mp,         ONLY : mp_sum, mp_max,mp_barrier
   USE mp_bands,   ONLY : me_bgrp, nproc_bgrp, inter_bgrp_comm, &
                          intra_bgrp_comm, root_bgrp, ntask_groups 
-  USE stick_set,  ONLY : pstickset_custom
+  USE stick_set,  ONLY : smap
+  USE fft_types,  ONLY : fft_type_init
   USE fft_custom, ONLY : fft_cus, gvec_init
   USE fft_base,   ONLY : dfftp
   USE gvect,      ONLY : gcutm
@@ -33,6 +34,12 @@ SUBROUTINE data_structure_custom(fc, gamma_only)
   INTEGER :: me, nproc, inter_comm, intra_comm, root
 
   INTEGER :: kpoint
+#if defined __MPI
+  LOGICAL :: lpara = .true.
+#else
+  LOGICAL :: lpara = .false.
+#endif
+
   ! sticks coordinates
   
   !
@@ -73,9 +80,11 @@ SUBROUTINE data_structure_custom(fc, gamma_only)
   !
   ! ... set up fft descriptors, including parallel stuff: sticks, planes, etc.
   !
-  CALL pstickset_custom( gamma_only, bg, gcutm, gkcut, fc%gcutmt, &
-                  dfftp, fc%dfftt, ngw_ , ngm_, ngs_, me, root, nproc, &
-                  intra_comm, nogrp )
+  CALL fft_type_init( fc%dfftt, smap, "rho", gamma_only, lpara, intra_comm, at, bg, fc%gcutmt, fc%gcutmt/gkcut )
+  ngs_ = fc%dfftt%ngl( fc%dfftt%mype + 1 )
+  IF( gamma_only ) THEN
+     ngs_ = (ngs_ + 1)/2
+  END IF
   !
   !     on output, ngm_ and ngs_ contain the local number of G-vectors
   !     for the two grids. Initialize local and global number of G-vectors

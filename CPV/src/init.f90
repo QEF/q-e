@@ -26,7 +26,7 @@
       use cell_base,            only: ainv, at, omega, alat
       use small_box,            only: small_box_set
       use smallbox_grid_dim,    only: smallbox_grid_init,smallbox_grid_info
-      USE fft_types,            ONLY: fft_type_allocate, realspace_grids_info
+      USE fft_types,            ONLY: fft_type_allocate, realspace_grids_info, fft_type_init
       use ions_base,            only: nat
       USE recvec_subs,          ONLY: ggen
       USE gvect,                ONLY: mill_g, eigts1,eigts2,eigts3, gg, &
@@ -36,7 +36,7 @@
       USE smallbox_subs,        ONLY: ggenb
       USE fft_base,             ONLY: dfftp, dffts, dfftb, dfft3d, dtgs
       USE fft_smallbox,         ONLY: cft_b_omp_init
-      USE stick_set,            ONLY: pstickset
+      USE stick_set,            ONLY: pstickset, smap
       USE control_flags,        ONLY: gamma_only, smallmem
       USE electrons_module,     ONLY: bmeshset
       USE electrons_base,       ONLY: distribute_bands
@@ -47,6 +47,7 @@
       USE input_parameters,     ONLY: ref_cell, ref_alat
       use cell_base,            ONLY: ref_at, ref_bg
       USE exx_module,           ONLY: h_init
+      USE task_groups,          ONLY: task_groups_init
 
       implicit none
 ! 
@@ -54,6 +55,12 @@
       real(dp) :: rat1, rat2, rat3
       real(dp) :: bg(3,3), tpiba2 
       integer :: ng_, ngs_, ngm_ , ngw_ 
+#if defined(__MPI)
+      LOGICAL :: lpara = .true.
+#else
+      LOGICAL :: lpara = .false.
+#endif
+
 
       CALL start_clock( 'init_dim' )
 
@@ -93,17 +100,19 @@
         WRITE( stdout,'(3X,"ref_cell_a2 =",1X,3f14.8,3x,"ref_cell_b2 =",3f14.8)') ref_at(:,2)*ref_alat,ref_bg(:,2)/ref_alat
         WRITE( stdout,'(3X,"ref_cell_a3 =",1X,3f14.8,3x,"ref_cell_b3 =",3f14.8)') ref_at(:,3)*ref_alat,ref_bg(:,3)/ref_alat
         !
-        CALL fft_type_allocate( dfftp, ref_at, ref_bg, gcutm, intra_bgrp_comm )
-        CALL fft_type_allocate( dffts, ref_at, ref_bg, gcutms, intra_bgrp_comm)
-        CALL fft_type_allocate( dfft3d, ref_at, ref_bg, gcutms, intra_bgrp_comm)
+        !
+        CALL fft_type_init( dffts, smap, "wave", gamma_only, lpara, intra_bgrp_comm, ref_at, ref_bg, gkcut )
+        CALL fft_type_init( dfftp, smap, "rho", gamma_only, lpara, intra_bgrp_comm, ref_at, ref_bg,  gcutm )
+        CALL fft_type_init( dfft3d, smap, "wave", gamma_only, .false., intra_bgrp_comm, ref_at, ref_bg, gkcut)
         !
       ELSE
         !
-        CALL fft_type_allocate( dfftp, at, bg, gcutm, intra_bgrp_comm )
-        CALL fft_type_allocate( dffts, at, bg, gcutms, intra_bgrp_comm)
-        CALL fft_type_allocate( dfft3d, at, bg, gcutms, intra_bgrp_comm)
+        CALL fft_type_init( dffts, smap, "wave", gamma_only, lpara, intra_bgrp_comm, at, bg, gkcut )
+        CALL fft_type_init( dfftp, smap, "rho", gamma_only, lpara, intra_bgrp_comm, at, bg,  gcutm )
+        CALL fft_type_init( dfft3d, smap, "wave", gamma_only, .false., intra_bgrp_comm, at, bg, gkcut)
         !
       END IF
+      !
       !
       CALL smallbox_grid_init( dfftp, dfftb )
 
@@ -131,15 +140,8 @@
       !       (but only if the axis triplet is right-handed, otherwise
       !        for a left-handed triplet, ainv is minus the inverse of a)
       !
-
-      ! ... set the sticks mesh and distribute g vectors among processors
-      ! ... pstickset lso sets the local real-space grid dimensions
-      !
-
-      CALL pstickset( gamma_only, bg, gcutm, gkcut, gcutms, &
-        dfftp, dffts, ngw_ , ngm_ , ngs_ , me_bgrp, root_bgrp, &
-        nproc_bgrp, intra_bgrp_comm, ntask_groups, ionode, stdout, dtgs, dfft3d )
-      !
+      CALL task_groups_init( dffts, dtgs, ntask_groups )
+      CALL pstickset( gamma_only, dfftp, dffts, ngw_ , ngm_ , ngs_ , ionode, stdout )
       !
       ! ... Initialize reciprocal space local and global dimensions
       !     NOTE in a parallel run ngm_ , ngw_ , ngs_ here are the 

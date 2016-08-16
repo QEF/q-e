@@ -45,15 +45,15 @@ MODULE fft_types
                            ! size of the arrays allocated for the FFT, local to each processor:
                            ! in parallel execution may differ from nr1x*nr2x*nr3x
                            ! Not to be confused either with nr1*nr2*nr3 
-    INTEGER, POINTER :: ngl(:)   ! per proc. no. of non zero charge density/potential components
-    INTEGER, POINTER :: nwl(:)   ! per proc. no. of non zero wave function plane components
-    INTEGER, POINTER :: npp(:)   ! number of "Z" planes per processor
-    INTEGER, POINTER :: ipp(:)   ! offset of the first "Z" plane on each proc ( 0 on the first proc!!!)
-    INTEGER, POINTER :: iss(:)   ! index of the first rho stick on each proc
-    INTEGER, POINTER :: isind(:) ! for each position in the plane indicate the stick index
-    INTEGER, POINTER :: ismap(:) ! for each stick in the plane indicate the position
-    INTEGER, POINTER :: iplp(:)  ! indicate which "Y" plane should be FFTed ( potential )
-    INTEGER, POINTER :: iplw(:)  ! indicate which "Y" plane should be FFTed ( wave func )
+    INTEGER, ALLOCATABLE :: ngl(:)   ! per proc. no. of non zero charge density/potential components
+    INTEGER, ALLOCATABLE :: nwl(:)   ! per proc. no. of non zero wave function plane components
+    INTEGER, ALLOCATABLE :: npp(:)   ! number of "Z" planes per processor
+    INTEGER, ALLOCATABLE :: ipp(:)   ! offset of the first "Z" plane on each proc ( 0 on the first proc!!!)
+    INTEGER, ALLOCATABLE :: iss(:)   ! index of the first rho stick on each proc
+    INTEGER, ALLOCATABLE :: isind(:) ! for each position in the plane indicate the stick index
+    INTEGER, ALLOCATABLE :: ismap(:) ! for each stick in the plane indicate the position
+    INTEGER, ALLOCATABLE :: iplp(:)  ! indicate which "Y" plane should be FFTed ( potential )
+    INTEGER, ALLOCATABLE :: iplw(:)  ! indicate which "Y" plane should be FFTed ( wave func )
 
     !
     !  descriptor id and pointer, for future use
@@ -75,45 +75,17 @@ MODULE fft_types
   END TYPE
 
 
+  REAL(DP) :: fft_dual = 4.0d0
+
   INTEGER, PRIVATE :: icount = 0
 
-  PUBLIC :: fft_type_descriptor, fft_type_set, fft_type_scalar
+  PUBLIC :: fft_type_descriptor, fft_type_set, fft_type_scalar, fft_type_init
   PUBLIC :: realspace_grids_info, fft_type_allocate, fft_type_deallocate
 
 CONTAINS
 
 !=----------------------------------------------------------------------------=!
 
-  SUBROUTINE fft_type_set_dims( desc, nr1, nr2, nr3, nr1x, nr2x, nr3x)
-  !
-  ! routine that defines the dimensions of fft_type_descriptor
-  ! must be called before fft_type_allocate and fft_type_set
-  !
-    TYPE (fft_type_descriptor) :: desc
-    INTEGER, INTENT(in) :: nr1, nr2, nr3    ! size of real space grid
-    INTEGER, INTENT(in) :: nr1x, nr2x, nr3x ! padded size of real space grid
-
-    IF (desc%dimensions_have_been_set ) &
-        CALL fftx_error__(' fft_type_set_dims ', ' fft dimensions already set ', 1 )
-
-    !  Set fft actual and leading dimensions of fft_type_descriptor from input
-
-    IF( nr1 > nr1x ) CALL fftx_error__( ' fft_type_set_dims ', ' wrong fft dimensions ', 1 )
-    IF( nr2 > nr2x ) CALL fftx_error__( ' fft_type_set_dims ', ' wrong fft dimensions ', 2 )
-    IF( nr3 > nr3x ) CALL fftx_error__( ' fft_type_set_dims ', ' wrong fft dimensions ', 3 )
-
-    desc%nr1  = nr1
-    desc%nr2  = nr2
-    desc%nr3  = nr3
-    desc%nr1x = nr1x
-    desc%nr2x = nr2x
-    desc%nr3x = nr3x
-
-    desc%dimensions_have_been_set = .true.
-
-  END SUBROUTINE fft_type_set_dims
-
-!-------------------------------------------------------
   SUBROUTINE fft_type_allocate( desc, at, bg, gcutm, comm, fft_fact  )
   !
   ! routine that allocate arrays of fft_type_descriptor
@@ -193,17 +165,17 @@ CONTAINS
 
   SUBROUTINE fft_type_deallocate( desc )
     TYPE (fft_type_descriptor) :: desc
-    IF ( associated( desc%nsp ) )    DEALLOCATE( desc%nsp )
-    IF ( associated( desc%nsw ) )    DEALLOCATE( desc%nsw )
-    IF ( associated( desc%ngl ) )    DEALLOCATE( desc%ngl )
-    IF ( associated( desc%nwl ) )    DEALLOCATE( desc%nwl )
-    IF ( associated( desc%npp ) )    DEALLOCATE( desc%npp )
-    IF ( associated( desc%ipp ) )    DEALLOCATE( desc%ipp )
-    IF ( associated( desc%iss ) )    DEALLOCATE( desc%iss )
-    IF ( associated( desc%isind ) )  DEALLOCATE( desc%isind )
-    IF ( associated( desc%ismap ) )  DEALLOCATE( desc%ismap )
-    IF ( associated( desc%iplp ) )   DEALLOCATE( desc%iplp )
-    IF ( associated( desc%iplw ) )   DEALLOCATE( desc%iplw )
+    IF ( ALLOCATED( desc%nsp ) )    DEALLOCATE( desc%nsp )
+    IF ( ALLOCATED( desc%nsw ) )    DEALLOCATE( desc%nsw )
+    IF ( ALLOCATED( desc%ngl ) )    DEALLOCATE( desc%ngl )
+    IF ( ALLOCATED( desc%nwl ) )    DEALLOCATE( desc%nwl )
+    IF ( ALLOCATED( desc%npp ) )    DEALLOCATE( desc%npp )
+    IF ( ALLOCATED( desc%ipp ) )    DEALLOCATE( desc%ipp )
+    IF ( ALLOCATED( desc%iss ) )    DEALLOCATE( desc%iss )
+    IF ( ALLOCATED( desc%isind ) )  DEALLOCATE( desc%isind )
+    IF ( ALLOCATED( desc%ismap ) )  DEALLOCATE( desc%ismap )
+    IF ( ALLOCATED( desc%iplp ) )   DEALLOCATE( desc%iplp )
+    IF ( ALLOCATED( desc%iplw ) )   DEALLOCATE( desc%iplw )
     desc%id = 0
     desc%arrays_have_been_allocated = .FALSE.
     desc%dimensions_have_been_set = .FALSE.
@@ -242,8 +214,6 @@ CONTAINS
     INTEGER :: ncpx, nppx
     INTEGER :: nr1, nr2, nr3    ! size of real space grid 
     INTEGER :: nr1x, nr2x, nr3x ! padded size of real space grid
-
-    !  Task-grouping C. Bekas
     !
     INTEGER :: sm
 
@@ -308,14 +278,6 @@ CONTAINS
 
     desc%ipp( 1:desc%nproc )  = n3
 
-    !  Set the proper number of sticks (the total number of 1d fft along z to be done)
-
-    IF( .not. tk ) THEN
-      desc%nst  = 2*nst - 1
-    ELSE
-      desc%nst  = nst
-    ENDIF
-
     ! dimension of the xy plane. see ncplane
 
     desc%nnp  = nr1x * nr2x  
@@ -358,6 +320,8 @@ CONTAINS
     desc%iplp  = 0    ! 1 if the given x-plane location is active in rho  y-fft
     desc%iplw  = 0    ! 1 if the given x-plane location is active in wave y-fft
 
+    !  Set nst the proper number of sticks (the total number of 1d fft along z to be done)
+    !
     desc%nst = 0
     DO iss = 1, SIZE( idx )
       is = idx( iss )
@@ -533,6 +497,112 @@ CONTAINS
     RETURN
   END SUBROUTINE fft_type_scalar
 
+!=----------------------------------------------------------------------------=!
+
+  SUBROUTINE fft_type_init( dfft, smap, pers, lgamma, lpara, comm, at, bg, gcut_in, dual_in )
+
+     USE stick_base
+
+     TYPE (fft_type_descriptor), INTENT(INOUT) :: dfft 
+     TYPE (sticks_map), INTENT(INOUT) :: smap
+     CHARACTER(LEN=*), INTENT(IN) :: pers ! fft personality
+     LOGICAL, INTENT(IN) :: lpara
+     LOGICAL, INTENT(IN) :: lgamma
+     INTEGER, INTENT(IN) :: comm
+     REAL(DP), INTENT(IN) :: gcut_in
+     REAL(DP), INTENT(IN) :: bg(3,3)
+     REAL(DP), INTENT(IN) :: at(3,3)
+     REAL(DP), OPTIONAL, INTENT(IN) :: dual_in
+!
+!    Potential or dual
+!
+     INTEGER, ALLOCATABLE :: st(:,:)
+! ...   stick map, st(i,j) = number of G-vector in the
+! ...   stick whose x and y miller index are i and j
+     INTEGER, ALLOCATABLE :: nstp(:)
+! ...   number of sticks, nstp(ip) = number of stick for processor ip
+     INTEGER, ALLOCATABLE :: sstp(:)
+! ...   number of G-vectors, sstp(ip) = sum of the
+! ...   sticks length for processor ip = number of G-vectors owned by the processor ip
+     INTEGER :: nst
+! ...   nst      local number of sticks
+!
+! ...     Plane wave
+!
+     INTEGER, ALLOCATABLE :: stw(:,:)
+! ...   stick map (wave functions), stw(i,j) = number of G-vector in the
+! ...   stick whose x and y miller index are i and j
+     INTEGER, ALLOCATABLE :: nstpw(:)
+! ...   number of sticks (wave functions), nstpw(ip) = number of stick for processor ip
+     INTEGER, ALLOCATABLE :: sstpw(:)
+! ...   number of G-vectors (wave functions), sstpw(ip) = sum of the
+! ...   sticks length for processor ip = number of G-vectors owned by the processor ip
+     INTEGER :: nstw
+! ...   nstw     local number of sticks (wave functions)
+
+
+     REAL(DP) :: gcut, gkcut, dual
+     INTEGER  :: ngm, ngw
+
+     dual = fft_dual
+     IF( PRESENT( dual_in ) ) dual = dual_in
+
+     IF( pers == 'rho' ) THEN
+        gcut = gcut_in
+        gkcut = gcut / dual
+     ELSE IF ( pers == 'wave' ) THEN
+        gkcut = gcut_in
+        gcut = gkcut * dual
+     ELSE
+        CALL fftx_error__(' fft_type_init ', ' unknown FFT personality ', 1 )
+     END IF
+
+     IF( .NOT. dfft%arrays_have_been_allocated ) THEN
+        CALL fft_type_allocate( dfft, at, bg, gcut, comm  )
+     ELSE
+        IF( dfft%comm /= comm ) THEN
+           CALL fftx_error__(' fft_type_init ', ' FFT already allocated with a different communicator ', 1 )
+        END IF
+     END IF
+
+     CALL sticks_map_allocate( smap, lgamma, lpara, dfft%nr1, dfft%nr2, dfft%nr3, bg, dfft%comm )
+
+     ALLOCATE( stw ( smap%lb(1):smap%ub(1), smap%lb(2):smap%ub(2) ) )
+     ALLOCATE( st  ( smap%lb(1):smap%ub(1), smap%lb(2):smap%ub(2) ) )
+     ALLOCATE( nstp(smap%nproc) )
+     ALLOCATE( sstp(smap%nproc) )
+     ALLOCATE( nstpw(smap%nproc) )
+     ALLOCATE( sstpw(smap%nproc) )
+
+     CALL get_sticks(  smap, gkcut, nstpw, sstpw, stw, nstw, ngw )
+     CALL get_sticks(  smap, gcut,  nstp, sstp, st, nst, ngm )
+
+#if defined(__MPI)
+
+     ! ...   Allocate and Set fft data layout descriptors
+
+     IF( lpara  ) THEN
+        CALL fft_type_set( dfft, .not.smap%lgamma, nst, smap%ub, smap%lb, smap%idx, &
+                             smap%ist(:,1), smap%ist(:,2), nstp, nstpw, sstp, sstpw, st, stw )
+     ELSE
+        CALL fft_type_scalar( dfft, smap%ub, smap%lb, stw )
+     END IF
+
+#else
+
+     CALL fft_type_scalar( dfft, smap%ub, smap%lb, stw )
+
+#endif
+
+     DEALLOCATE( st )
+     DEALLOCATE( stw )
+     DEALLOCATE( nstp )
+     DEALLOCATE( sstp )
+     DEALLOCATE( nstpw )
+     DEALLOCATE( sstpw )
+
+
+  END SUBROUTINE fft_type_init
 
 !=----------------------------------------------------------------------------=!
 !=----------------------------------------------------------------------------=!

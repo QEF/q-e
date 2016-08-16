@@ -15,7 +15,7 @@
         PUBLIC :: sticks_map_set
         PUBLIC :: sticks_map_index, sticks_sort_new, sticks_dist_new
         PUBLIC :: sticks_map, sticks_map_allocate
-        PUBLIC :: sticks_map_deallocate
+        PUBLIC :: sticks_map_deallocate, get_sticks
 
         TYPE sticks_map
            LOGICAL :: lgamma=.false. ! true = the map has gamma symmetry
@@ -61,6 +61,7 @@
      REAL(DP), INTENT(IN) :: bg(3,3)
      INTEGER :: lb(3), ub(3)
      INTEGER :: nstx, ierr
+     INTEGER, ALLOCATABLE :: indmap(:,:), stown(:,:), idx(:), ist(:,:)
      ub(1) = ( nr1 - 1 ) / 2
      ub(2) = ( nr2 - 1 ) / 2
      ub(3) = ( nr3 - 1 ) / 2
@@ -91,8 +92,52 @@
         smap%idx = 0
         smap%ist = 0
      ELSE IF( smap%nstx < nstx ) THEN
-        ! map resizing, re-allocate
-         CALL fftx_error__(' sticks_map_allocate ',' sticks map resizing, not yet implemented ', 1 )
+        !  change the size of the map, but keep the data already there
+        IF( smap%lgamma /= lgamma ) THEN
+           CALL fftx_error__(' sticks_map_allocate ',' changing gamma symmetry not allowed ', 1 )
+        END IF
+        IF( smap%comm /= comm ) THEN
+           CALL fftx_error__(' sticks_map_allocate ',' changing communicator not allowed ', 1 )
+        END IF
+        ALLOCATE( indmap ( lb(1):ub(1), lb(2):ub(2) ) )
+        ALLOCATE( stown ( lb(1):ub(1), lb(2):ub(2) ) )
+        ALLOCATE( idx( nstx ) )
+        ALLOCATE( ist( nstx , 2) )
+        idx = 0
+        ist = 0 
+        indmap = 0
+        stown  = 0
+        idx( 1:smap%nstx )      = smap%idx
+        ist( 1:smap%nstx, : ) = smap%ist 
+        indmap( smap%lb(1):smap%ub(1), smap%lb(2):smap%ub(2) ) = smap%indmap( smap%lb(1):smap%ub(1), smap%lb(2):smap%ub(2) )
+        stown( smap%lb(1):smap%ub(1), smap%lb(2):smap%ub(2) ) = smap%stown( smap%lb(1):smap%ub(1), smap%lb(2):smap%ub(2) )
+        DEALLOCATE( smap%indmap )
+        DEALLOCATE( smap%stown )
+        DEALLOCATE( smap%idx )
+        DEALLOCATE( smap%ist )
+        ALLOCATE( smap%indmap ( lb(1):ub(1), lb(2):ub(2) ) )
+        ALLOCATE( smap%stown ( lb(1):ub(1), lb(2):ub(2) ) )
+        ALLOCATE( smap%idx( nstx ) )
+        ALLOCATE( smap%ist( nstx , 2) )
+        smap%indmap = indmap
+        smap%stown = stown
+        smap%idx = idx
+        smap%ist = ist
+        DEALLOCATE( indmap )
+        DEALLOCATE( stown )
+        DEALLOCATE( idx )
+        DEALLOCATE( ist )
+        smap%nstx = nstx
+        smap%ub = ub
+        smap%lb = lb
+        smap%bg = bg
+     ELSE
+        IF( smap%lgamma /= lgamma ) THEN
+           CALL fftx_error__(' sticks_map_allocate ',' changing gamma symmetry not allowed ', 2 )
+        END IF
+        IF( smap%comm /= comm ) THEN
+           CALL fftx_error__(' sticks_map_allocate ',' changing communicator not allowed ', 1 )
+        END IF
      END IF
      RETURN
   END SUBROUTINE
@@ -393,6 +438,51 @@
 
       RETURN
     END SUBROUTINE sticks_dist_new
+
+!---------------------------------------------------------------------
+
+      SUBROUTINE get_sticks(  smap, gcut, nstp, sstp, st, nst, ng )
+
+         TYPE( sticks_map ), INTENT(INOUT) :: smap
+         REAL(DP) , INTENT(in) :: gcut  ! cut-off for potentials
+
+         INTEGER, INTENT(out) :: st(smap%lb(1): smap%ub(1), smap%lb(2):smap%ub(2) )
+         INTEGER, INTENT(out) :: nstp(:)
+         INTEGER, INTENT(out) :: sstp(:)
+         INTEGER, INTENT(out) :: nst
+         INTEGER, INTENT(out) :: ng
+
+         INTEGER, ALLOCATABLE :: ngc(:)
+         INTEGER :: ic
+
+         IF( .NOT. ALLOCATED( smap%stown ) ) THEN
+            CALL fftx_error__(' get_sticks ',' sticks map, not allocated ', 1 )
+         END IF
+
+         st = 0
+         CALL sticks_map_set( smap%lgamma, smap%ub, smap%lb, smap%bg, gcut, st, smap%comm )
+
+         ALLOCATE( ngc ( SIZE( smap%idx ) ) )
+         ngc = 0
+         CALL sticks_map_index( smap%ub, smap%lb, st, smap%ist(:,1), smap%ist(:,2), ngc, smap%indmap )
+         nst = count( st > 0 )
+         CALL sticks_sort_new( smap%nproc>1, ngc, SIZE(smap%idx), smap%idx )
+         CALL sticks_dist_new( smap%lgamma, smap%mype, smap%nproc, smap%ub, smap%lb, smap%idx, &
+                               smap%ist(:,1), smap%ist(:,2), ngc, SIZE(smap%idx), nstp, sstp, smap%stown, ng )
+         st = 0
+         DO ic = 1, SIZE( smap%idx )
+            IF( smap%idx( ic ) > 0 ) THEN
+               IF( ngc( smap%idx( ic ) ) > 0 ) THEN
+                   st( smap%ist(smap%idx( ic ),1), smap%ist(smap%idx( ic ),2) ) = &
+                      smap%stown( smap%ist(smap%idx( ic ),1),smap%ist(smap%idx( ic ),2))
+                   if(smap%lgamma) st(-smap%ist(smap%idx( ic),1),-smap%ist(smap%idx( ic ),2)) = &
+                      smap%stown( smap%ist(smap%idx( ic ),1),smap%ist(smap%idx( ic ),2))
+               END IF
+            END IF
+         END DO
+         DEALLOCATE( ngc )
+         RETURN
+      END SUBROUTINE
 
 
 !---------------------------------------------------------------------

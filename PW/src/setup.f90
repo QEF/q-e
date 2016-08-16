@@ -45,7 +45,8 @@ SUBROUTINE setup()
   USE gvecw,              ONLY : gcutw, ecutwfc
   USE fft_base,           ONLY : dfftp
   USE fft_base,           ONLY : dffts
-  USE fft_types,          ONLY : fft_type_allocate
+  USE fft_types,          ONLY : fft_type_init, fft_type_allocate
+  USE stick_set,          ONLY : smap
   USE gvecs,              ONLY : doublegrid, gcutms, dual
   USE klist,              ONLY : xk, wk, nks, nelec, degauss, lgauss, &
                                  lxkcry, nkstot, &
@@ -106,6 +107,12 @@ SUBROUTINE setup()
   TYPE(parallel_info_type),ALLOCATABLE      :: parinfo_obj
   TYPE(general_info_type),ALLOCATABLE       :: geninfo_obj
 #endif  
+#if defined(__MPI)
+  LOGICAL :: lpara = .true.
+#else
+  LOGICAL :: lpara = .false.
+#endif
+
   !
   ! ... okvan/okpaw = .TRUE. : at least one pseudopotential is US/PAW
   !

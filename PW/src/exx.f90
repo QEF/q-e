@@ -124,7 +124,6 @@ MODULE exx
     USE klist,        ONLY : qnorm
     USE cell_base,    ONLY : at, bg, tpiba2
     USE fft_custom,   ONLY : set_custom_grid, ggent
-    USE fft_types,    ONLY : fft_type_allocate
     USE mp_bands,     ONLY : intra_bgrp_comm
 
 
@@ -145,7 +144,6 @@ MODULE exx
     ENDIF
     !
     exx_fft%gcutmt = exx_fft%dual_t*exx_fft%ecutt / tpiba2
-    CALL fft_type_allocate( exx_fft%dfftt, at, bg, exx_fft%gcutmt, intra_bgrp_comm)
     CALL data_structure_custom(exx_fft, gamma_only)
     CALL ggent(exx_fft)
     exx_fft%initialized = .true.
