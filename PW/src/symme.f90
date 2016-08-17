@@ -917,6 +917,8 @@ gloop:    DO jg=iig,ngm_
 
   SUBROUTINE sym_rho_deallocate ( )
     !
+    IMPLICIT NONE
+    INTEGER :: i
     IF ( ALLOCATED (rdispls) ) DEALLOCATE (rdispls) 
     IF ( ALLOCATED (recvcnt) ) DEALLOCATE (recvcnt) 
     IF ( ALLOCATED (sdispls) ) DEALLOCATE (sdispls) 
