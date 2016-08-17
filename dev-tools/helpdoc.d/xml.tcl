@@ -58,6 +58,14 @@ proc ::helpdoc::xml_prl {content} {
     
 }
 
+proc ::helpdoc::xml_arxiv {content} {
+    # PURPOSE: transform "arxiv:identifier" into link
+    set re {(ar[xX]iv:)([0-9]{4}.[0-9]+(v[0-9]+)?|[a-zA-Z\.\-]+/[0-9]+)}
+    #       1          2               3
+    return [regsub -all $re $content {<a href="https://arxiv.org/abs/\2">\0</a>}]
+    
+}
+
 proc ::helpdoc::xml_ref {content} {
     # PURPOSE: transform all "@ref var" into <ref>var</ref>    
     #          Note that Fortran structure names struct%var are supported
@@ -89,7 +97,7 @@ proc ::helpdoc::xml_tag_enter {tag attr content depth} {
     
     set attr    [xml_attr_escape_chr $attr]
     #set content [formatString [xml_ref [xml_link [xml_prb [xml_prl [xml_doi [xml_http [xml_escape_chr $content]]]]]]]]
-    set content [formatString [xml_atTags [xml_prb [xml_prl [xml_doi [xml_http [xml_escape_chr $content]]]]]]]
+    set content [formatString [xml_atTags [xml_arxiv [xml_prb [xml_prl [xml_doi [xml_http [xml_escape_chr $content]]]]]]]]
 
     if { $attr != "" } {
 	puts $fid(xml) "${indent}<$tag ${attr}>${sep}${content}"
