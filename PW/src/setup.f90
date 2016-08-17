@@ -46,7 +46,7 @@ SUBROUTINE setup()
   USE fft_base,           ONLY : dfftp
   USE fft_base,           ONLY : dffts
   USE fft_types,          ONLY : fft_type_init, fft_type_allocate
-  USE stick_set,          ONLY : smap
+  USE fft_base,           ONLY : smap
   USE gvecs,              ONLY : doublegrid, gcutms, dual
   USE klist,              ONLY : xk, wk, nks, nelec, degauss, lgauss, &
                                  lxkcry, nkstot, &

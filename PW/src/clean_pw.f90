@@ -46,7 +46,7 @@ SUBROUTINE clean_pw( lflag )
   USE ldaU,                 ONLY : deallocate_ldaU
   USE extfield,             ONLY : forcefield, forcemono
   USE fft_base,             ONLY : dfftp, dffts  
-  USE stick_set,            ONLY : pstickdealloc
+  USE fft_base,             ONLY : pstickdealloc
   USE fft_types,            ONLY : fft_type_deallocate
   USE spin_orb,             ONLY : lspinorb, fcoef
   USE noncollin_module,     ONLY : deallocate_noncol

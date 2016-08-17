@@ -18,10 +18,9 @@ SUBROUTINE data_structure_custom(fc, gamma_only)
   USE mp,         ONLY : mp_sum, mp_max,mp_barrier
   USE mp_bands,   ONLY : me_bgrp, nproc_bgrp, inter_bgrp_comm, &
                          intra_bgrp_comm, root_bgrp, ntask_groups 
-  USE stick_set,  ONLY : smap
   USE fft_types,  ONLY : fft_type_init
   USE fft_custom, ONLY : fft_cus, gvec_init
-  USE fft_base,   ONLY : dfftp
+  USE fft_base,   ONLY : dfftp, smap
   USE gvect,      ONLY : gcutm
   !
   !

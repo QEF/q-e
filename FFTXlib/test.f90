@@ -45,9 +45,9 @@ program test
   !! calls as been implemented. This version requires the precompilation flags
   !! -D__NON_BLOCKING_SCATTER and -D__DOUBLE_BUFFER
   !!  
-  USE fft_types, ONLY: fft_type_descriptor, fft_type_deallocate
-  USE task_groups, ONLY: task_groups_descriptor, task_groups_deallocate
-  USE stick_set, ONLY: pstickset
+  USE fft_types
+  USE stick_base
+  USE task_groups
   USE fft_parallel
   USE fft_support
   IMPLICIT NONE
@@ -58,6 +58,7 @@ program test
 #endif
   TYPE(fft_type_descriptor) :: dfftp, dffts, dfft3d
   TYPE(task_groups_descriptor) :: dtgs
+  TYPE(sticks_map) :: smap
   INTEGER :: nx = 128
    !! grid points along x (modified after)
   INTEGER :: ny = 128
@@ -229,42 +230,29 @@ program test
   ny = 2 * int ( sqrt (gcutm) * sqrt (at(1, 2)**2 + at(2, 2)**2 + at(3, 2)**2) ) + 1
   nz = 2 * int ( sqrt (gcutm) * sqrt (at(1, 3)**2 + at(2, 3)**2 + at(3, 3)**2) ) + 1
   !
-
   if( mype == 0 ) then
     write(*,*) 'nx = ', nx,' ny = ', ny, ' nz = ', nz
   end if
   !
-  dffts%nr1   = good_fft_order( nx )
-  dffts%nr2   = good_fft_order( ny )
-  dffts%nr3   = good_fft_order( nz )
-  dffts%nr1x  = good_fft_dimension( dffts%nr1 )
-  dffts%nr2x  = dffts%nr2
-  dffts%nr3x  = good_fft_dimension( dffts%nr3 )
+  gamma_only = .true.
+  CALL fft_type_init( dffts, smap, "wave", gamma_only, .true., comm, at, bg, gkcut )
+  CALL fft_type_init( dfftp, smap, "rho", gamma_only, .true., comm, at, bg,  gcutm )
+  CALL fft_type_init( dfft3d, smap, "wave", gamma_only, .false., comm, at, bg, gkcut)
   !
   if( mype == 0 ) then
     write(*,*) 'dffts:  nr1 = ', dffts%nr1 ,' nr2 = ', dffts%nr2 , ' nr3 = ', dffts%nr3
     write(*,*) '        nr1x= ', dffts%nr1x,' nr2x= ', dffts%nr2x, ' nr3x= ', dffts%nr3x
   end if
-  dfftp%nr1   = good_fft_order( nx )
-  dfftp%nr2   = good_fft_order( ny )
-  dfftp%nr3   = good_fft_order( nz )
-  dfftp%nr1x  = good_fft_dimension( dfftp%nr1 )
-  dfftp%nr2x  = dfftp%nr2
-  dfftp%nr3x  = good_fft_dimension( dfftp%nr3 )
-  !
-  dfft3d%nr1   = good_fft_order( nx )
-  dfft3d%nr2   = good_fft_order( ny )
-  dfft3d%nr3   = good_fft_order( nz )
-  dfft3d%nr1x  = good_fft_dimension( dfft3d%nr1 )
-  dfft3d%nr2x  = dfft3d%nr2
-  dfft3d%nr3x  = good_fft_dimension( dfft3d%nr3 )
 
-  gamma_only = .true.
-
-
-  CALL pstickset( gamma_only, bg, gcutm, gkcut, gcutms, &
-        dfftp, dffts, ngw_ , ngm_ , ngs_ , mype, root, &
-        npes, comm, ntgs, iope, stdout, dtgs, dfft3d )
+  CALL task_groups_init( dffts, dtgs, ntgs )
+  ngw_ = dffts%nwl( dffts%mype + 1 )
+  ngs_ = dffts%ngl( dffts%mype + 1 )
+  ngm_ = dfftp%ngl( dfftp%mype + 1 )
+  IF( gamma_only ) THEN
+     ngw_ = (ngw_ + 1)/2
+     ngs_ = (ngs_ + 1)/2
+     ngm_ = (ngm_ + 1)/2
+  END IF
 
   ALLOCATE( psis( dtgs%tg_nnr * dtgs%nogrp, 2 ) )
   ALLOCATE( req_p(nbnd) )

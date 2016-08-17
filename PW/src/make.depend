@@ -245,7 +245,6 @@ cegterg.o : ../../Modules/mp.o
 cegterg.o : ../../Modules/mp_bands.o
 cegterg.o : ../../Modules/mp_diag.o
 clean_pw.o : ../../FFTXlib/fft_types.o
-clean_pw.o : ../../FFTXlib/stick_set.o
 clean_pw.o : ../../Modules/atom.o
 clean_pw.o : ../../Modules/constraints_module.o
 clean_pw.o : ../../Modules/fft_base.o
@@ -330,7 +329,6 @@ d_matrix.o : ../../Modules/kind.o
 d_matrix.o : ../../Modules/random_numbers.o
 d_matrix.o : symm_base.o
 data_structure.o : ../../FFTXlib/fft_types.o
-data_structure.o : ../../FFTXlib/stick_set.o
 data_structure.o : ../../FFTXlib/task_groups.o
 data_structure.o : ../../Modules/cell_base.o
 data_structure.o : ../../Modules/fft_base.o
@@ -343,7 +341,6 @@ data_structure.o : ../../Modules/mp_pools.o
 data_structure.o : ../../Modules/recvec.o
 data_structure.o : pwcom.o
 data_structure_custom.o : ../../FFTXlib/fft_types.o
-data_structure_custom.o : ../../FFTXlib/stick_set.o
 data_structure_custom.o : ../../Modules/cell_base.o
 data_structure_custom.o : ../../Modules/fft_base.o
 data_structure_custom.o : ../../Modules/fft_custom.o
@@ -1705,7 +1702,6 @@ setlocal.o : martyna_tuckerman.o
 setlocal.o : pwcom.o
 setlocal.o : scf_mod.o
 setup.o : ../../FFTXlib/fft_types.o
-setup.o : ../../FFTXlib/stick_set.o
 setup.o : ../../Modules/cell_base.o
 setup.o : ../../Modules/constants.o
 setup.o : ../../Modules/control_flags.o
@@ -1929,6 +1925,7 @@ symm_base.o : ../../Modules/cell_base.o
 symm_base.o : ../../Modules/invmat.o
 symm_base.o : ../../Modules/io_global.o
 symm_base.o : ../../Modules/kind.o
+symm_base.o : pwcom.o
 symme.o : ../../Modules/cell_base.o
 symme.o : ../../Modules/constants.o
 symme.o : ../../Modules/kind.o

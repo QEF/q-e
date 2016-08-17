@@ -19,12 +19,12 @@ SUBROUTINE data_structure( gamma_only )
                          ntask_groups
   USE mp_pools,   ONLY : inter_pool_comm
   USE fft_base,   ONLY : dfftp, dffts, dtgs, fft_base_info
+  USE fft_base,   ONLY : smap
   USE fft_types,  ONLY : fft_type_init
   USE cell_base,  ONLY : at, bg, tpiba
   USE klist,      ONLY : xk, nks
   USE gvect,      ONLY : gcutm, gvect_init
   USE gvecs,      ONLY : gcutms, gvecs_init
-  USE stick_set,  ONLY : smap
   USE gvecw,      ONLY : gcutw, gkcut
   USE io_global,  ONLY : stdout, ionode
   USE task_groups,ONLY : task_groups_init

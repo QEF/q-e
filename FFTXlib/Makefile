@@ -12,7 +12,6 @@ fft_scalar.o  \
 fft_parallel.o  \
 fft_interfaces.o  \
 stick_base.o  \
-stick_set.o  \
 fft_smallbox.o  \
 fft_smallbox_type.o  \
 fft_support.o  \

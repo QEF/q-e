@@ -54,12 +54,6 @@ MODULE fft_types
     INTEGER, ALLOCATABLE :: ismap(:) ! for each stick in the plane indicate the position
     INTEGER, ALLOCATABLE :: iplp(:)  ! indicate which "Y" plane should be FFTed ( potential )
     INTEGER, ALLOCATABLE :: iplw(:)  ! indicate which "Y" plane should be FFTed ( wave func )
-
-    !
-    !  descriptor id and pointer, for future use
-    !
-    INTEGER :: id
-    INTEGER :: tptr
     !
     !  fft parallelization
     !
@@ -76,8 +70,6 @@ MODULE fft_types
 
 
   REAL(DP) :: fft_dual = 4.0d0
-
-  INTEGER, PRIVATE :: icount = 0
 
   PUBLIC :: fft_type_descriptor, fft_type_set, fft_type_scalar, fft_type_init
   PUBLIC :: fft_type_allocate, fft_type_deallocate
@@ -151,8 +143,6 @@ CONTAINS
     desc%iplp  = 0
     desc%iplw  = 0
 
-    desc%id    = 0
-
     desc%mype  = mype
     desc%comm  = comm
     desc%nproc = nproc
@@ -176,7 +166,6 @@ CONTAINS
     IF ( ALLOCATED( desc%ismap ) )  DEALLOCATE( desc%ismap )
     IF ( ALLOCATED( desc%iplp ) )   DEALLOCATE( desc%iplp )
     IF ( ALLOCATED( desc%iplw ) )   DEALLOCATE( desc%iplw )
-    desc%id = 0
     desc%arrays_have_been_allocated = .FALSE.
     desc%dimensions_have_been_set = .FALSE.
 #ifdef __MPI
@@ -431,13 +420,6 @@ CONTAINS
     ENDIF
 
     desc%nsp( 1:desc%nproc ) = nsp( 1:desc%nproc ) ! -- number of rho sticks per processor
-
-    icount    = icount + 1
-    desc%id   = icount
-
-    !  Initialize the pointer to the fft tables
-
-    desc%tptr = icount
 
     RETURN
   END SUBROUTINE fft_type_set
@@ -752,4 +734,3 @@ CONTAINS
 !=----------------------------------------------------------------------------=!
 END MODULE fft_types
 !=----------------------------------------------------------------------------=!
-

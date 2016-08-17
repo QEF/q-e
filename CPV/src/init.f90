@@ -36,7 +36,7 @@
       USE smallbox_subs,        ONLY: ggenb
       USE fft_base,             ONLY: dfftp, dffts, dfftb, dfft3d, dtgs, fft_base_info
       USE fft_smallbox,         ONLY: cft_b_omp_init
-      USE stick_set,            ONLY: smap
+      USE fft_base,             ONLY: smap
       USE control_flags,        ONLY: gamma_only, smallmem
       USE electrons_module,     ONLY: bmeshset
       USE electrons_base,       ONLY: distribute_bands

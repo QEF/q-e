@@ -11,7 +11,6 @@
 
 program test
   USE fft_types, ONLY: fft_type_descriptor, fft_type_deallocate
-  USE stick_set, ONLY: pstickset
   USE fft_interfaces
   USE fft_parallel
   USE fft_scalar

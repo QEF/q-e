@@ -245,7 +245,6 @@ cprstart.o : ../../Modules/read_input.o
 cprstart.o : input.o
 dealloc.o : ../../FFTXlib/fft_smallbox_type.o
 dealloc.o : ../../FFTXlib/fft_types.o
-dealloc.o : ../../FFTXlib/stick_set.o
 dealloc.o : ../../Modules/electrons_base.o
 dealloc.o : ../../Modules/fft_base.o
 dealloc.o : ../../Modules/gvecw.o
@@ -495,7 +494,6 @@ gtable.o : efield.o
 init.o : ../../FFTXlib/fft_smallbox.o
 init.o : ../../FFTXlib/fft_smallbox_type.o
 init.o : ../../FFTXlib/fft_types.o
-init.o : ../../FFTXlib/stick_set.o
 init.o : ../../FFTXlib/task_groups.o
 init.o : ../../Modules/cell_base.o
 init.o : ../../Modules/constants.o

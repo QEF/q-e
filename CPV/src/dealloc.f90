@@ -42,7 +42,7 @@ SUBROUTINE deallocate_modules_var()
   USE kohn_sham_states,     ONLY : ks_states_closeup
   USE ldaU_cp,              ONLY : deallocate_lda_plus_u
   USE step_penalty,         ONLY : deallocate_step_pen
-  USE stick_set,            ONLY : pstickdealloc
+  USE fft_base,             ONLY : pstickdealloc
 
   !
   IMPLICIT NONE
