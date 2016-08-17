@@ -33,7 +33,7 @@ $(PDFS): %.pdf: %.tex
 
 defs: link_input_xx $(HTMLS) link_on_main_doc
 
-$(HTMLS): %.html: %.def
+$(HTMLS): %.html: %.def input_xx.xsl
 	$(HELPDOC) $<
 
 $(TXTS): %.txt: %.def
