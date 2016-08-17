@@ -157,8 +157,9 @@ MODULE pw_restart
       USE scf,                  ONLY : rho
       USE force_mod,            ONLY : lforce, sumfor, force, sigma, lstres
       USE extfield,             ONLY : tefield, dipfield, edir, etotefield, &
-                                       emaxpos, eopreg, eamp,
-                                       monopole, zmon, relaxz, block, block_1, block_2, block_height ! TB
+                                       emaxpos, eopreg, eamp, &
+                                       monopole, zmon, relaxz, block, block_1,&
+                                       block_2, block_height ! TB
       USE io_rho_xml,           ONLY : write_rho
       USE mp_world,             ONLY : nproc
       USE mp_images,            ONLY : nproc_image
