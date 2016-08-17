@@ -11,34 +11,38 @@
   SUBROUTINE ephwan2bloch ( nbnd, nrr, irvec, ndegen, epmatw, &
          xk, cufkk, cufkq, epmatf, nmodes)
   !---------------------------------------------------------------------------
-  !
+  !!
+  !! Interpolation from Wannier to the fine Bloch grid of the electron-phonon 
+  !! matrix elements
+  !!
   USE kinds,         ONLY : DP
   USE constants_epw, ONLY : twopi, ci, czero, cone
   implicit none
   !
-  !  input variables
+  INTEGER, INTENT (in) :: nbnd
+  !! number of bands (possibly in the optimal subspace)
+  INTEGER, INTENT (in) :: nrr
+  !! Number of Wigner-Size points
+  INTEGER, INTENT (in) :: irvec ( 3, nrr)
+  !! Coordinates of WS points
+  INTEGER, INTENT (in) :: ndegen (nrr)
+  !! Degeneracy of WS points
+  INTEGER, INTENT (in) :: nmodes
+  !! number of phonon modes
   !
-  integer :: nbnd, nrr, irvec ( 3, nrr), ndegen (nrr), nmodes
-  ! number of bands (possibly in tyhe optimal subspace)
-  ! number of WS points
-  ! coordinates of WS points
-  ! degeneracy of WS points
-  ! number of phonon modes
-  complex(kind=DP) :: epmatw ( nbnd, nbnd, nrr, nmodes), cufkk (nbnd, nbnd), &
-    cufkq (nbnd, nbnd)
-  ! e-p matrix in Wannier representation
-  ! rotation matrix U(k)
-  ! rotation matrix U(k+q)
-  real(kind=DP) :: xk(3)
-  ! kpoint for the interpolation (WARNING: this must be in crystal coord!)
+  REAL(kind=DP), INTENT (in) :: xk(3)
+  !! kpoint for the interpolation (WARNING: this must be in crystal coord!)
   !
-  !  output variables
-  !
-  complex(kind=DP) :: epmatf (nbnd, nbnd, nmodes)
-  ! e-p matrix in Bloch representation, fine grid
+  COMPLEX(kind=DP), INTENT (in) :: epmatw ( nbnd, nbnd, nrr, nmodes)
+  !! e-p matrix in Wannier representation
+  COMPLEX(kind=DP), INTENT (in) :: cufkk (nbnd, nbnd)
+  !! rotation matrix U(k)
+  COMPLEX(kind=DP), INTENT (in) :: cufkq (nbnd, nbnd)
+  !! rotation matrix U(k+q)
+  COMPLEX(kind=DP), INTENT (out) :: epmatf (nbnd, nbnd, nmodes)
+  !! e-p matrix in Bloch representation, fine grid
   !
   ! work variables 
-  !
   integer :: ir, imode
   real(kind=DP) :: rdotk
   complex(kind=DP) :: cfac, eptmp( nbnd, nbnd)

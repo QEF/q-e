@@ -78,19 +78,19 @@
   ! slim down to the first ndimwin(ikq),ndimwin(ik) states within the outer window
   !
   DO ik=1,nks
-     ibnd=0
-     DO i=1,nbnd
-        IF(lwinq(i,ik)) THEN
-           ibnd=ibnd+1
-           jbnd=0
-           DO j=1,nbnd
-              IF(lwin(j,ik)) THEN
-                 jbnd=jbnd+1
-                 epmatq_opt(ibnd,jbnd,ik,:)=epmatq(i,j,ik,:,iq)
-              END IF
-           END DO
-        END IF
-     END DO
+    ibnd=0
+    DO i=1,nbnd
+      IF(lwinq(i,ik)) THEN
+        ibnd=ibnd+1
+        jbnd=0
+        DO j=1,nbnd
+          IF(lwin(j,ik)) THEN
+            jbnd=jbnd+1
+            epmatq_opt(ibnd,jbnd,ik,:)=epmatq(i,j,ik,:,iq)
+          END IF
+        END DO
+      END IF
+    END DO
   END DO
   ! 
   !  ep_mode (j) = cfac * sum_i ep_cart(i) * u(i,j)
@@ -107,7 +107,7 @@
        !
        IF (lpolar) THEN
           IF( (abs(xq(1)).gt.eps) .or. (abs(xq(2)).gt.eps) .or. (abs(xq(3)).gt.eps) ) THEN
-          CALL rgd_blk_epw2 (nq1, nq2, nq3, xq, cz2t, eptmp, &
+          CALL rgd_blk_epw (nq1, nq2, nq3, xq, cz2t, eptmp, &
                     nmodes, epsi, zstar, bmat(ibnd,jbnd,ik,iq), -1.d0)
           ENDIF
        ENDIF

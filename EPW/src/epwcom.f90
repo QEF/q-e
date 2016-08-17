@@ -241,6 +241,10 @@
   !! if .true. the iterative solution for BTE is compute. A first run with scattering_serta = .true. is required. 
   LOGICAL :: carrier
   !! if .true. computes the doped electronic mobilities.
+  LOGICAL :: longrange
+  !! if .true. computes the long range interaction of el-ph. Can only be .true. if lpolar is also true.
+  LOGICAL :: shortrange
+  !! if .true. computes the long range interaction of el-ph. Can only be .true. if lpolar is also true.  
   !
   CHARACTER(len=100) :: dvscf_dir ='./'
   !! directory for .dvscf and .dyn files (wannier interpolation)

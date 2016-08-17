@@ -53,7 +53,8 @@
                             pwc, nswc, nswfc, nswi, filukq, filukk, &
                             nbndsub, nbndskip, system_2d, delta_approx, &
                             title, int_mob, scissor, iterative_bte, scattering, &
-                            ncarrier, carrier, scattering_serta, scattering_0rta
+                            ncarrier, carrier, scattering_serta, &
+                            scattering_0rta, longrange, shortrange
 
 !  USE epwcom,        ONLY : tphases, fildvscf0                  
   USE elph2,         ONLY : elph
@@ -116,7 +117,7 @@
        ep_coupling, fila2f, max_memlt, efermi_read, fermi_energy,              &
        specfun, wmin_specfun, wmax_specfun, nw_specfun, system_2d,             & 
        delta_approx, scattering, int_mob, scissor, ncarrier, carrier,          &
-       iterative_bte, scattering_serta, scattering_0rta
+       iterative_bte, scattering_serta, scattering_0rta, longrange, shortrange
 
   ! tphases, fildvscf0
   !
@@ -233,21 +234,24 @@
   ! lpolar : if .true. enable the correct Wannier interpolation in the case of polar material.  
   ! 
   ! Added by SP
-  ! 
-  ! scattering: if .true. scattering rates are calculated
-  ! scattering_serta: if .true. scattering rates are calculated using self-energy relaxation-time-approx
-  ! scattering_0rta: if .true. scattering rates are calculated using 0th order relaxation-time-approx
-  ! int_mob  : if .true. computes the intrinsic mobilities. This means that the
-  !            electron and hole carrier density is equal. 
-  ! iterative_bte : if .true. computes the iterative solution to the BTE. Need a
-  !            prior run with ERTA. 
-  ! scissor  : Value of the scissor shitf in eV. This only affects the CBM of etf. Do you use in
-  !            metals obviously.
-  ! carrier  : if .true. computes the doped carrier mobilities. 
-  ! ncarrier : Set the Fermi level so that the carrier concentration is
-  !            "ncarrier". If ncarrier > 0, electron doping, hole doping otherwise
   !
-
+  ! scattering      : if .true. scattering rates are calculated
+  ! scattering_serta: if .true. scattering rates are calculated using self-energy relaxation-time-approx
+  ! scattering_0rta : if .true. scattering rates are calculated using 0th order relaxation-time-approx
+  ! int_mob         : if .true. computes the intrinsic mobilities. This means that the
+  !                   electron and hole carrier density is equal. 
+  ! iterative_bte   : if .true. computes the iterative solution to the BTE. Need a
+  !                   prior run with ERTA. 
+  ! scissor         : Value of the scissor shitf in eV. This only affects the CBM of etf. Do you use in
+  !                   metals obviously.
+  ! carrier         : if .true. computes the doped carrier mobilities. 
+  ! ncarrier        : Set the Fermi level so that the carrier concentration is
+  !            "      ncarrier". If ncarrier > 0, electron doping, hole doping otherwise
+  ! longrange       : if .true. computes the long-range part of the el-ph (can
+  !                   only be used with lpolar = .true. )
+  ! shortrange      : if .true. computes the short-range part of the el-ph (can
+  !                   only be used with lpolar = .true. )
+  !  
   CHARACTER (LEN=80)  :: input_file
   INTEGER             :: nargs, iiarg, ierr
   !
@@ -416,6 +420,8 @@
   scissor = 0.d0 ! eV
   carrier = .false.
   ncarrier = 0.d0 ! cm^-3
+  longrange = .false.
+  shortrange = .false.  
   !
   !     reading the namelist inputepw
   !
@@ -507,6 +513,10 @@
        'The absolute value of the doping carrier concentration must be larger than 1E5 cm^-3',1)
   IF ( (iterative_bte .AND. scattering_serta) .OR. (iterative_bte .AND.scattering_0rta)  ) CALL errore('epw_init', &
        'You should first do a run in the SRTA to get the initial scattering_rate files.',1)
+  IF ( (longrange .OR. shortrange) .AND. (.not. lpolar)) CALL errore('epw_init',&
+       &'Error: longrange or shortrange can only be true if lpolar is true as well.',1)
+  IF ( longrange .AND. shortrange) CALL errore('epw_init',&
+       &'Error: longrange and shortrange cannot be both true.',1)
   !
   ! thickness and smearing width of the Fermi surface  
   ! from eV to Ryd

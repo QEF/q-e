@@ -35,9 +35,10 @@
                             nbndskip, parallel_k, parallel_q, etf_mem,    &
                             elecselfen, phonselfen, nest_fn, a2f,         &
                             vme, eig_read, ephwrite,                      & 
-                            efermi_read, fermi_energy, specfun, band_plot
+                            efermi_read, fermi_energy, specfun, band_plot,&
+                            longrange
   USE noncollin_module, ONLY : noncolin
-  USE constants_epw, ONLY : ryd2ev, ryd2mev, one, two
+  USE constants_epw, ONLY : ryd2ev, ryd2mev, one, two, czero
   USE io_files,      ONLY : prefix, diropn
   USE io_global,     ONLY : stdout, ionode
   USE io_epw,        ONLY : lambda_phself, linewidth_phself, iunepmatf, &
@@ -316,7 +317,9 @@
        epmatf( nbndsub, nbndsub, nmodes), cufkk ( nbndsub, nbndsub), &
        cufkq ( nbndsub, nbndsub), uf ( nmodes, nmodes),              &
        bmatf( nbndsub, nbndsub) )
-
+  !
+  ! Need to be initialized
+  epmatf(:,:,:) = czero
   ! allocate dipole matrix elements after getting grid size
   !
   ALLOCATE ( dmef(3, nbndsub, nbndsub, 2 * nkf) )
@@ -580,23 +583,39 @@
              ! epmat : Wannier el and Bloch ph -> Bloch el and Bloch ph
              ! --------------------------------------------------------------
              !
-             !
-             CALL ephwan2bloch &
-                  ( nbndsub, nrr_k, irvec, ndegen_k, epmatwef, xkk, cufkk, cufkq, epmatf, nmodes )
+             ! SP: Note: In case of polar materials, computing the long-range and short-range term 
+             !     separately might help speed up the convergence. Indeed the long-range term should be 
+             !     much faster to compute. Note however that the short-range term still contains a linear
+             !     long-range part and therefore could still be a bit more difficult to converge than 
+             !     non-polar materials. 
+             ! 
+             IF (longrange) THEN
+               !      
+               epmatf = czero
+               !
+             ELSE        
+               !
+               CALL ephwan2bloch &
+                 ( nbndsub, nrr_k, irvec, ndegen_k, epmatwef, xkk, cufkk, cufkq, epmatf, nmodes )
+               !
+             ENDIF
              !
              IF (lpolar) THEN
                !
-               CALL compute_bmn_para2( nbndsub, cufkk, cufkq, bmatf )
+               CALL compute_umn_f( nbndsub, cufkk, cufkq, bmatf )
                !
-               IF ( (abs(xxq(1)).gt.eps) .or. (abs(xxq(2)).gt.eps) .or. (abs(xxq(3)).gt.eps) ) THEN
-                  CALL cryst_to_cart (1, xxq, bg, 1)
-                  DO ibnd = 1, nbndsub
-                    DO jbnd = 1, nbndsub
-                      CALL rgd_blk_epw2(nq1, nq2, nq3, xxq, uf, epmatf(ibnd,jbnd,:), &
-                            nmodes, epsi, zstar, bmatf(ibnd,jbnd), +1.d0)
-                    ENDDO
-                  ENDDO
-                  CALL cryst_to_cart (1, xxq, at, -1)
+               IF ( (abs(xxq(1)) > eps) .or. (abs(xxq(2)) > eps) .or. (abs(xxq(3)) > eps) ) THEN
+                 !      
+                 CALL cryst_to_cart (1, xxq, bg, 1)
+                 DO ibnd = 1, nbndsub
+                   DO jbnd = 1, nbndsub
+                     !    
+                     CALL rgd_blk_epw(nq1, nq2, nq3, xxq, uf, epmatf(ibnd,jbnd,:), &
+                           nmodes, epsi, zstar, bmatf(ibnd,jbnd), +1.d0)
+                   ENDDO
+                 ENDDO
+                 CALL cryst_to_cart (1, xxq, at, -1)
+                 !
                ENDIF
                !
              ENDIF
@@ -627,10 +646,36 @@
                 !
              ENDDO
              ! 
+             !DBSP
              !if (ik==2) then
-             !  do imode = 1, nmodes
-             !    write(*,*) 'epmatf ',SUM((REAL(REAL(epmatf(:,:,imode))))**2)+SUM((REAL(AIMAG(epmatf(:,:,imode))))**2)
-             !  enddo
+             !  !print*,'iq ',iq
+             !  !do imode = 1, nmodes
+             !    !write(*,*) 'epmatf ',SUM((REAL(REAL(epmatf(:,:,imode))))**2)+SUM((REAL(AIMAG(epmatf(:,:,imode))))**2)
+             !    F = SUM((REAL(REAL(epmatf(:,:,:))))**2)+SUM((REAL(AIMAG(epmatf(:,:,:))))**2)
+             !    !S = SUM((REAL(REAL(epmatfs(:,:,:))))**2)+SUM((REAL(AIMAG(epmatfs(:,:,:))))**2)
+             !    S = SUM((epmatfs(:,:,:))**2)
+             !    L = SUM((REAL(REAL(epmatfl(:,:,:))))**2)+SUM((REAL(AIMAG(epmatfl(:,:,:))))**2)
+             !    write(*,*) 'F, S+L', F, S+L
+             !    DO ibnd = 1, nbndsub
+             !      print*,'ibnd ',ibnd
+             !      DO jbnd = 1, nbndsub
+             !        print*,'jbnd ',jbnd
+             !        F = SUM((REAL(REAL(epmatf(ibnd,jbnd,:))))**2)+SUM((REAL(AIMAG(epmatf(ibnd,jbnd,:))))**2)
+             !        !S = SUM((REAL(REAL(epmatfs(ibnd,jbnd,:))))**2)+SUM((REAL(AIMAG(epmatfs(ibnd,jbnd,:))))**2)
+             !        S = SUM(epmatfs(ibnd,jbnd,:)**2)
+             !        L = SUM((REAL(REAL(epmatfl(ibnd,jbnd,:))))**2)+SUM((REAL(AIMAG(epmatfl(ibnd,jbnd,:))))**2)
+             !        write(*,*) 'F, S+L', F, S+L
+             !        DO imode = 1, nmodes
+             !          print*,'imode ',imode
+             !          F = (REAL(REAL(epmatf(ibnd,jbnd,imode))))**2+(REAL(AIMAG(epmatf(ibnd,jbnd,imode))))**2
+             !          !S = (REAL(REAL(epmatfs(ibnd,jbnd,imode))))**2+(REAL(AIMAG(epmatfs(ibnd,jbnd,imode))))**2
+             !          S = (epmatfs(ibnd,jbnd,imode))**2
+             !          L = (REAL(REAL(epmatfl(ibnd,jbnd,imode))))**2+(REAL(AIMAG(epmatfl(ibnd,jbnd,imode))))**2
+             !          write(*,*) 'F, S+L', F, S+L
+             !        ENDDO
+             !      ENDDO
+             !    ENDDO
+             !  !enddo
              !endif
              !
           ENDIF
@@ -785,20 +830,32 @@
            ! epmat : Wannier el and Bloch ph -> Bloch el and Bloch ph
            ! --------------------------------------------------------------
            !
-           !
-           CALL ephwan2bloch &
-                ( nbndsub, nrr_k, irvec, ndegen_k, epmatwef, xkk, cufkk, cufkq, epmatf, nmodes )
-           !
+           ! SP: Note: In case of polar materials, computing the long-range and short-range term 
+           !     separately might help speed up the convergence. Indeed the long-range term should be 
+           !     much faster to compute. Note however that the short-range term still contains a linear
+           !     long-range part and therefore could still be a bit more difficult to converge than 
+           !     non-polar materials. 
+           ! 
+           IF (longrange) THEN
+             !      
+             epmatf = czero
+             !
+           ELSE
+             !
+             CALL ephwan2bloch &
+               ( nbndsub, nrr_k, irvec, ndegen_k, epmatwef, xkk, cufkk, cufkq, epmatf, nmodes )
+             !
+           ENDIF           
            ! 
            IF (lpolar) THEN
              !
-             CALL compute_bmn_para2( nbndsub, cufkk, cufkq, bmatf )
+             CALL compute_umn_f( nbndsub, cufkk, cufkq, bmatf )
              !
              IF ( (abs(xxq(1)).gt.eps) .or. (abs(xxq(2)).gt.eps) .or. (abs(xxq(3)).gt.eps) ) THEN
                 CALL cryst_to_cart (1, xxq, bg, 1)
                 DO ibnd = 1, nbndsub
                   DO jbnd = 1, nbndsub
-                    CALL rgd_blk_epw2(nq1, nq2, nq3, xxq, uf, epmatf(ibnd,jbnd,:), &
+                    CALL rgd_blk_epw(nq1, nq2, nq3, xxq, uf, epmatf(ibnd,jbnd,:), &
                           nmodes, epsi, zstar, bmatf(ibnd,jbnd), +1.d0)
                   ENDDO
                 ENDDO
@@ -811,25 +868,25 @@
            !
            !
            DO imode = 1, nmodes
-              !
-              IF (etf_mem) THEN
-                 !
-                 DO jbnd = ibndmin, ibndmax
-                    DO ibnd = ibndmin, ibndmax
-                       !
-                       epf17(iq,jbnd-ibndmin+1,ibnd-ibndmin+1,imode) = epmatf(jbnd,ibnd,imode)
-                       !
-                    ENDDO
+             !
+             IF (etf_mem) THEN
+               !
+               DO jbnd = ibndmin, ibndmax
+                 DO ibnd = ibndmin, ibndmax
+                   !
+                   epf17(iq,jbnd-ibndmin+1,ibnd-ibndmin+1,imode) = epmatf(jbnd,ibnd,imode)
+                   !
                  ENDDO
-                 !
-              ELSE
-                 !
-                 nrec = (imode-1) * nqf + iq
-                 CALL dasmio ( epmatf(ibndmin:ibndmax,ibndmin:ibndmax,imode), &
-                      ibndmax-ibndmin+1, lrepmatf, iunepmatf, nrec, +1)
-                 !
-              ENDIF
-              !
+               ENDDO
+               !
+             ELSE
+               !
+               nrec = (imode-1) * nqf + iq
+               CALL dasmio ( epmatf(ibndmin:ibndmax,ibndmin:ibndmax,imode), &
+                    ibndmax-ibndmin+1, lrepmatf, iunepmatf, nrec, +1)
+               !
+             ENDIF
+             !
            ENDDO
            ! 
            !if (ik==2) then
@@ -940,24 +997,24 @@ SUBROUTINE epw_write
     WRITE (epwdata,*) zstar, epsi
     !
     DO ibnd = 1, nbndsub
-       DO jbnd = 1, nbndsub
-          DO irk = 1, nrr_k
-             WRITE (epwdata,*) chw(ibnd,jbnd,irk)
-             IF (eig_read) WRITE (iunksdata,*) chw_ks(ibnd,jbnd,irk)
-             DO ipol = 1,3
-                WRITE (iundmedata,*) cdmew(ipol, ibnd,jbnd,irk)
-                IF (vme) WRITE (iunvmedata,*) cvmew(ipol, ibnd,jbnd,irk)
-             ENDDO
+      DO jbnd = 1, nbndsub
+        DO irk = 1, nrr_k
+          WRITE (epwdata,*) chw(ibnd,jbnd,irk)
+          IF (eig_read) WRITE (iunksdata,*) chw_ks(ibnd,jbnd,irk)
+          DO ipol = 1,3
+            WRITE (iundmedata,*) cdmew(ipol, ibnd,jbnd,irk)
+            IF (vme) WRITE (iunvmedata,*) cvmew(ipol, ibnd,jbnd,irk)
           ENDDO
-       ENDDO
+        ENDDO
+      ENDDO
     ENDDO
     !
     DO imode = 1, nmodes
-       DO jmode = 1, nmodes
-          DO irq = 1, nrr_q
-             WRITE (epwdata,*) rdw(imode,jmode,irq) 
-          ENDDO
-       ENDDO
+      DO jmode = 1, nmodes
+        DO irq = 1, nrr_q
+          WRITE (epwdata,*) rdw(imode,jmode,irq) 
+        ENDDO
+      ENDDO
     ENDDO
     !
     IF (etf_mem) THEN
@@ -1014,7 +1071,6 @@ SUBROUTINE epw_read()
   USE mp_world,  ONLY : mpime
   !
   implicit none
-  !
   !
   LOGICAL             :: exst
   character (len=256) :: filint
@@ -1147,11 +1203,11 @@ END SUBROUTINE epw_read
 !---------------------------------
 SUBROUTINE mem_size(ibndmin, ibndmax, nmodes, nkf) 
 !---------------------------------
-!
-!  SUBROUTINE estimates the amount of memory taken up by 
-!  the <k+q| dV_q,nu |k> on the fine meshes and prints 
-!  out a useful(?) message   
-!
+  !!
+  !!  SUBROUTINE estimates the amount of memory taken up by 
+  !!  the $$<k+q| dV_q,nu |k>$$ on the fine meshes and prints 
+  !!  out a useful(?) message   
+  !!
   USE io_global,     ONLY : stdout
   USE kinds,         ONLY : DP
   !
@@ -1184,27 +1240,47 @@ END SUBROUTINE mem_size
 !--------------------------------------------------------------------
 FUNCTION efermig_seq (et, nbnd, nks, nelec, wk, Degauss, Ngauss, is, isk)
   !--------------------------------------------------------------------
-  !
-  !     Finds the Fermi energy - Gaussian Broadening
-  !     (see Methfessel and Paxton, PRB 40, 3616 (1989 )
-  !
+  !!
+  !!     Finds the Fermi energy - Gaussian Broadening
+  !!     (see Methfessel and Paxton, PRB 40, 3616 (1989 )
+  !!
   USE io_global, ONLY : stdout
   USE kinds,     ONLY : DP
   USE constants, ONLY : rytoev
+  !
   implicit none
-  !  I/O variables
-  integer, intent(in) :: nks, nbnd, Ngauss, is, isk(nks)
-  real(DP), intent(in) :: wk (nks), et (nbnd, nks), Degauss, nelec
+  !
+  INTEGER, INTENT (in) :: nks
+  !! Number of k-points per pool
+  INTEGER, INTENT (in) :: nbnd
+  !! Number of band
+  INTEGER, INTENT (in) :: Ngauss
+  !! 
+  INTEGER, INTENT (in) :: is
+  !! 
+  INTEGER, INTENT (in) :: isk(nks)
+  !! 
+  ! 
+  REAL (kind=DP), INTENT (in) :: wk (nks)
+  !!
+  REAL (kind=DP), INTENT (in) :: et (nbnd, nks)
+  !!
+  REAL (kind=DP), INTENT (in) :: Degauss
+  !!
+  REAL (kind=DP), INTENT (in) :: nelec
+  !! Number of electron (charge)
+  ! 
   real(DP) :: efermig_seq
   !
+  ! Local variables
+  ! 
   real(DP), parameter :: eps= 1.0d-10
   integer, parameter :: maxiter = 300
-  ! internal variables
   real(DP) :: Ef, Eup, Elw, sumkup, sumklw, sumkmid
   real(DP), external::  sumkg_seq
   integer :: i, kpoint
   !
-  !      find bounds for the Fermi energy. Very safe choice!
+  !  find bounds for the Fermi energy. Very safe choice!
   !
   Elw = et (1, 1)
   Eup = et (nbnd, 1)
@@ -1215,56 +1291,66 @@ FUNCTION efermig_seq (et, nbnd, nks, nelec, wk, Degauss, Ngauss, is, isk)
   Eup = Eup + 2 * Degauss
   Elw = Elw - 2 * Degauss
   !
-  !      Bisection method
+  !  Bisection method
   !
   sumkup = sumkg_seq (et, nbnd, nks, wk, Degauss, Ngauss, Eup, is, isk)
   sumklw = sumkg_seq (et, nbnd, nks, wk, Degauss, Ngauss, Elw, is, isk)
   if ( (sumkup - nelec) < -eps .or. (sumklw - nelec) > eps )  &
        call errore ('efermig_seq', 'internal error, cannot bracket Ef', 1)
-  do i = 1, maxiter
-     Ef = (Eup + Elw) / 2.d0
-     sumkmid = sumkg_seq (et, nbnd, nks, wk, Degauss, Ngauss, Ef, is, isk)
-     if (abs (sumkmid-nelec) < eps) then
-        efermig_seq = Ef
-        return
-     elseif ( (sumkmid-nelec) < -eps) then
-        Elw = Ef
-     else
-        Eup = Ef
-     endif
-  enddo
-  if (is /= 0) WRITE(stdout, '(5x,"Spin Component #",i3)') is
+  DO i = 1, maxiter
+    Ef = (Eup + Elw) / 2.d0
+    sumkmid = sumkg_seq (et, nbnd, nks, wk, Degauss, Ngauss, Ef, is, isk)
+    if (abs (sumkmid-nelec) < eps) then
+       efermig_seq = Ef
+       return
+    elseif ( (sumkmid-nelec) < -eps) then
+       Elw = Ef
+    else
+       Eup = Ef
+    endif
+  ENDDO
+  IF (is /= 0) WRITE(stdout, '(5x,"Spin Component #",i3)') is
   WRITE( stdout, '(5x,"Warning: too many iterations in bisection"/ &
        &      5x,"Ef = ",f10.6," sumk = ",f10.6," electrons")' ) &
        Ef * rytoev, sumkmid
   !
   efermig_seq = Ef
-  return
+  RETURN
 end FUNCTION efermig_seq
 
 !-----------------------------------------------------------------------
 function sumkg_seq (et, nbnd, nks, wk, degauss, ngauss, e, is, isk)
   !-----------------------------------------------------------------------
-  !
-  !     This function computes the number of states under a given energy e
-  !
-  !
-  USE kinds
-  USE mp,       ONLY : mp_sum
+  !!
+  !!  This function computes the number of states under a given energy e
+  !!
+  USE kinds, ONLY : DP
+  USE mp,    ONLY : mp_sum
+  ! 
   implicit none
-  ! Output variable
-  real(DP) :: sumkg_seq
-  ! Input variables
-  integer, intent(in) :: nks, nbnd, ngauss
-  ! input: the total number of K points
-  ! input: the number of bands
-  ! input: the type of smearing
-  real(DP), intent(in) :: wk (nks), et (nbnd, nks), degauss, e
-  ! input: the weight of the k points
-  ! input: the energy eigenvalues 
-  ! input: gaussian broadening
-  ! input: the energy to check
-  integer, intent(in) :: is, isk(nks)
+  ! 
+  INTEGER, INTENT (in) :: nks
+  !! the total number of K points
+  INTEGER, INTENT (in) :: nbnd
+  !! the number of bands
+  INTEGER, INTENT (in) :: ngauss
+  !! the type of smearing
+  INTEGER, INTENT (in) :: is
+  !!
+  INTEGER, INTENT (in) :: isk(nks)
+  !!
+  !
+  REAL(kind=DP), INTENT (in) :: wk (nks)
+  !! the weight of the k points
+  REAL(kind=DP), INTENT (in) :: et (nbnd, nks) 
+  !! the energy eigenvalues
+  REAL(kind=DP), INTENT (in) :: degauss
+  !! gaussian broadening
+  REAL(kind=DP), INTENT (in) :: e
+  !! the energy to check
+  !
+  REAL(kind=DP)  :: sumkg_seq 
+  !! 
   !
   ! local variables
   !
@@ -1276,17 +1362,17 @@ function sumkg_seq (et, nbnd, nks, wk, degauss, ngauss, e, is, isk)
   ! counter on the band energy
   !
   sumkg_seq = 0.d0
-  do ik = 1, nks
-     sum1 = 0.d0
-     if (is /= 0) then
-        if (isk(ik).ne.is) cycle
-     end if
-     do ibnd = 1, nbnd
-        sum1 = sum1 + wgauss ( (e-et (ibnd, ik) ) / degauss, ngauss)
-     enddo
-     sumkg_seq = sumkg_seq + wk (ik) * sum1
-  enddo
-  return
+  DO ik = 1, nks
+    sum1 = 0.d0
+    if (is /= 0) then
+       if (isk(ik).ne.is) cycle
+    end if
+    do ibnd = 1, nbnd
+       sum1 = sum1 + wgauss ( (e-et (ibnd, ik) ) / degauss, ngauss)
+    enddo
+    sumkg_seq = sumkg_seq + wk (ik) * sum1
+  ENDDO
+  RETURN
 end function sumkg_seq
 !
   !-----------------------------------------------------------------
@@ -1297,15 +1383,30 @@ end function sumkg_seq
   !! instead of vectors 
   !!
   !-----------------------------------------------------------------
-  USE kinds, only : DP
-  use mp, only : mp_barrier
+  USE kinds, ONLY : DP
+  USE mp,    ONLY : mp_barrier
+  ! 
   implicit none
-  integer :: lrec, iun, nrec, iop, i, nbnd, np, nmodes, ibnd, jbnd, imode, ip
+  ! 
+  INTEGER, INTENT (in) :: nbnd
+  !! Total number of bands
+  INTEGER, INTENT (in) :: np
+  !! np is either nrr_k or nq (epmatwe and epmatwp have the same structure)
+  INTEGER, INTENT (in) :: nmodes
+  !! Number of modes
+  INTEGER, INTENT (in) :: nrec
+  !! Place where to start reading/writing
+  INTEGER, INTENT (in) :: iun
+  !! Record number
+  INTEGER, INTENT (in) :: iop
+  !! If -1, read and if +1 write the matrix
+  ! 
+  COMPLEX(kind=DP), intent (inout) :: epmatw(nbnd,nbnd,np,nmodes)
+  !! El-ph matrix to read or write
   !
-  ! np is either nrr_k or nq (epmatwe and epmatwp have the same structure)
-  !
-  complex(kind=DP):: epmatw(nbnd,nbnd,np,nmodes), &
-     aux ( nbnd*nbnd*np*nmodes )
+  ! Local variables
+  integer :: lrec, i, ibnd, jbnd, imode, ip
+  complex(kind=DP):: aux ( nbnd*nbnd*np*nmodes )
   !
   lrec = 2 * nbnd * nbnd * np * nmodes
   !

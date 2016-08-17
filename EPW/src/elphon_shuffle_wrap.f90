@@ -579,7 +579,7 @@
         CALL loadumat ( nbnd, nbndsub, nks, nkstot, xq, cu, cuq, lwin, lwinq )
         !
         ! Calculate overlap U_k+q U_k^\dagger
-        IF (lpolar) CALL compute_bmn_para3 ( nbnd, nbndsub, nks, cu, cuq,bmat(:,:,:,nqc) )
+        IF (lpolar) CALL compute_umn_c ( nbnd, nbndsub, nks, cu, cuq, bmat(:,:,:,nqc) )
         !
         !   calculate the sandwiches
         !
@@ -630,7 +630,7 @@
           CALL loadumat ( nbnd, nbndsub, nks, nkstot, xq, cu, cuq, lwin, lwinq )
           !
           ! Calculate overlap U_k+q U_k^\dagger
-          IF (lpolar) CALL compute_bmn_para3 ( nbnd, nbndsub, nks, cu, cuq,bmat(:,:,:,nqc) )
+          IF (lpolar) CALL compute_umn_c ( nbnd, nbndsub, nks, cu, cuq, bmat(:,:,:,nqc) )
           !
           CALL elphon_shuffle ( iq_irr, nqc_irr, nqc, gmapsym, eigv, isym, xq0, .true. )
           !

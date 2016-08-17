@@ -60,11 +60,11 @@
   !
   !  subtract the long-range term from D(q)
   IF (lpolar) THEN
-     DO ik = 1, nq
-        CALL rgd_blk (nq1,nq2,nq3,nat,dynq(1,1,ik),xk(:,ik), &  !xk has to be in cart. coord.
-                  tau,epsi,zstar,bg,omega,-1.d0)
-      IF (iverbosity.eq.1) WRITE (6,'(a,i3)') "Done rigid ", ik
-     ENDDO
+    DO ik = 1, nq
+      !xk has to be in cart. coord.
+      CALL rgd_blk (nq1,nq2,nq3,nat,dynq(1,1,ik),xk(:,ik),tau,epsi,zstar,-1.d0)
+      !
+    ENDDO
   ENDIF
   !
   !----------------------------------------------------------
@@ -80,11 +80,6 @@
   !
   rdw ( :, :, :) = 0.d0
   ! 
-!DBSP
-!  DO ik = 1, nq
-!    write(*,*)'dynq ( :, :, ik )', SUM(dynq ( :, :, ik ))
-!  ENDDO
-!END
   DO ir = 1, nrr
     !
     DO ik = 1, nq

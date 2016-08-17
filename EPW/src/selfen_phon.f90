@@ -31,7 +31,7 @@
   USE io_epw,     ONLY : iunepmatf
   use phcom,      ONLY : nmodes
   use epwcom,     ONLY : nbndsub, lrepmatf, fsthick, &
-                         eptemp, ngaussw, degaussw, &
+                         eptemp, ngaussw, degaussw, shortrange, &
                          etf_mem, nsmear, delta_smear, eps_acustic, &
                          efermi_read, fermi_energy, delta_approx
   use pwcom,      ONLY : nelec, ef, isk
@@ -136,232 +136,238 @@
   !! Electron-phonon matrix element on the fine grid.
   !
   IF ( iq .eq. 1 ) THEN 
-     WRITE(stdout,'(/5x,a)') repeat('=',67)
-     WRITE(stdout,'(5x,"Phonon (Imaginary) Self-Energy in the Migdal Approximation")') 
-     WRITE(stdout,'(5x,a/)') repeat('=',67)
-     !
-     IF ( fsthick.lt.1.d3 ) &
-          WRITE(stdout, '(/5x,a,f10.6,a)' ) &
-          'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
-     WRITE(stdout, '(/5x,a,f10.6,a)' ) &
-          'Golden Rule strictly enforced with T = ',eptemp * ryd2ev, ' eV'
-     !
-     IF ( .not. ALLOCATED (lambda_all) )    ALLOCATE( lambda_all  (nmodes, nqtotf, nsmear) )
-     IF ( .not. ALLOCATED (lambda_v_all) )  ALLOCATE( lambda_v_all(nmodes, nqtotf, nsmear) )
-     lambda_all(:,:,:)   = zero
-     lambda_v_all(:,:,:) = zero
-     IF ( .not. ALLOCATED (gamma_all) )    ALLOCATE( gamma_all  (nmodes,nqtotf,nsmear) )
-     IF ( .not. ALLOCATED (gamma_v_all) )  ALLOCATE( gamma_v_all(nmodes,nqtotf,nsmear) )
-     gamma_all(:,:,:)   = zero
-     gamma_v_all(:,:,:) = zero
-     !
+    WRITE(stdout,'(/5x,a)') repeat('=',67)
+    WRITE(stdout,'(5x,"Phonon (Imaginary) Self-Energy in the Migdal Approximation")') 
+    WRITE(stdout,'(5x,a/)') repeat('=',67)
+    !
+    IF ( fsthick.lt.1.d3 ) &
+         WRITE(stdout, '(/5x,a,f10.6,a)' ) &
+         'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
+    WRITE(stdout, '(/5x,a,f10.6,a)' ) &
+         'Golden Rule strictly enforced with T = ',eptemp * ryd2ev, ' eV'
+    !
+    IF ( .not. ALLOCATED (lambda_all) )    ALLOCATE( lambda_all  (nmodes, nqtotf, nsmear) )
+    IF ( .not. ALLOCATED (lambda_v_all) )  ALLOCATE( lambda_v_all(nmodes, nqtotf, nsmear) )
+    lambda_all(:,:,:)   = zero
+    lambda_v_all(:,:,:) = zero
+    IF ( .not. ALLOCATED (gamma_all) )    ALLOCATE( gamma_all  (nmodes,nqtotf,nsmear) )
+    IF ( .not. ALLOCATED (gamma_v_all) )  ALLOCATE( gamma_v_all(nmodes,nqtotf,nsmear) )
+    gamma_all(:,:,:)   = zero
+    gamma_v_all(:,:,:) = zero
+    !
   ENDIF
   !
   DO ismear = 1, nsmear
-     !
-     degaussw0 = (ismear-1) * delta_smear + degaussw
-     eptemp0   = (ismear-1) * delta_smear + eptemp
-     ! 
-     ! SP: Multiplication is faster than division ==> Important if called a lot
-     !     in inner loops
-     inv_degaussw0 = 1.0/degaussw0
-     inv_eptemp0   = 1.0/eptemp0
-     !
-     ! Fermi level and corresponding DOS
-     !
-     IF ( efermi_read ) THEN
-        !
-        ef0 = fermi_energy
-        !
-     ELSE IF (nsmear > 1) THEN
-        !
-        ef0 = efermig(etf,nbndsub,nkqf,nelec,wkf,degaussw0,ngaussw,0,isk)
-        ! if some bands are skipped (nbndskip.neq.0), nelec has already been
-        ! recalculated 
-        ! in ephwann_shuffle
-        !
-     ELSE !SP: This is added for efficiency reason because the efermig routine is slow
-        ef0 = efnew
-     ENDIF
-     !
-     dosef = dos_ef (ngaussw, degaussw0, ef0, etf, wkf, nkqf, nbndsub)
-     !   N(Ef) in the equation for lambda is the DOS per spin
-     dosef = dosef / two
-     !
-     IF ( iq .eq. 1 ) THEN 
-        WRITE (stdout, 100) degaussw0 * ryd2ev, ngaussw
-        WRITE (stdout, 101) dosef / ryd2ev, ef0 * ryd2ev
-        !WRITE (stdout, 101) dosef / ryd2ev, ef  * ryd2ev
-     ENDIF
-     !
-     CALL start_clock('PH SELF-ENERGY')
-     !
-     fermicount = 0
-     gamma(:)   = zero
-     gamma_v(:) = zero
-     !
-     DO ik = 1, nkf
-        !
-        ikk = 2 * ik - 1
-        ikq = ikk + 1
-        ! 
-        coskkq = 0.d0
-        DO ibnd = 1, ibndmax-ibndmin+1
-           DO jbnd = 1, ibndmax-ibndmin+1
-              ! coskkq = (vk dot vkq) / |vk|^2  appears in Grimvall 8.20
-              ! this is different from :   coskkq = (vk dot vkq) / |vk||vkq|
-              ! In principle the only coskkq contributing to lambda_tr are both near the
-              ! Fermi surface and the magnitudes will not differ greatly between vk and vkq
-              ! we may implement the approximation to the angle between k and k+q vectors also 
-              ! listed in Grimvall
-              !
-              ! v_(k,i) = 1/m <ki|p|ki> = 2 * dmef (:, i,i,k)
-              ! 1/m  = 2 in Rydberg atomic units
-              !
-              vkk(:, ibnd ) = 2.0 * REAL (dmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk ) )
-              vkq(:, jbnd ) = 2.0 * REAL (dmef (:, ibndmin-1+jbnd, ibndmin-1+jbnd, ikq ) )
-              IF ( abs ( vkk(1,ibnd)**2 + vkk(2,ibnd)**2 + vkk(3,ibnd)**2) > 1.d-4) &
-                   coskkq(ibnd, jbnd ) = DDOT(3, vkk(:,ibnd ), 1, vkq(:,jbnd),1)  / &
-                   DDOT(3, vkk(:,ibnd), 1, vkk(:,ibnd),1)
-           ENDDO
+    !
+    degaussw0 = (ismear-1) * delta_smear + degaussw
+    eptemp0   = (ismear-1) * delta_smear + eptemp
+    ! 
+    ! SP: Multiplication is faster than division ==> Important if called a lot
+    !     in inner loops
+    inv_degaussw0 = 1.0/degaussw0
+    inv_eptemp0   = 1.0/eptemp0
+    !
+    ! Fermi level and corresponding DOS
+    !
+    IF ( efermi_read ) THEN
+      !
+      ef0 = fermi_energy
+      !
+    ELSE IF (nsmear > 1) THEN
+      !
+      ef0 = efermig(etf,nbndsub,nkqf,nelec,wkf,degaussw0,ngaussw,0,isk)
+      ! if some bands are skipped (nbndskip.neq.0), nelec has already been
+      ! recalculated 
+      ! in ephwann_shuffle
+      !
+    ELSE !SP: This is added for efficiency reason because the efermig routine is slow
+      ef0 = efnew
+    ENDIF
+    !
+    dosef = dos_ef (ngaussw, degaussw0, ef0, etf, wkf, nkqf, nbndsub)
+    !  N(Ef) in the equation for lambda is the DOS per spin
+    dosef = dosef / two
+    !
+    IF ( iq .eq. 1 ) THEN 
+      WRITE (stdout, 100) degaussw0 * ryd2ev, ngaussw
+      WRITE (stdout, 101) dosef / ryd2ev, ef0 * ryd2ev
+      !WRITE (stdout, 101) dosef / ryd2ev, ef  * ryd2ev
+    ENDIF
+    !
+    CALL start_clock('PH SELF-ENERGY')
+    !
+    fermicount = 0
+    gamma(:)   = zero
+    gamma_v(:) = zero
+    !
+    DO ik = 1, nkf
+      !
+      ikk = 2 * ik - 1
+      ikq = ikk + 1
+      ! 
+      coskkq = 0.d0
+      DO ibnd = 1, ibndmax-ibndmin+1
+        DO jbnd = 1, ibndmax-ibndmin+1
+          ! coskkq = (vk dot vkq) / |vk|^2  appears in Grimvall 8.20
+          ! this is different from :   coskkq = (vk dot vkq) / |vk||vkq|
+          ! In principle the only coskkq contributing to lambda_tr are both near the
+          ! Fermi surface and the magnitudes will not differ greatly between vk and vkq
+          ! we may implement the approximation to the angle between k and k+q vectors also 
+          ! listed in Grimvall
+          !
+          ! v_(k,i) = 1/m <ki|p|ki> = 2 * dmef (:, i,i,k)
+          ! 1/m  = 2 in Rydberg atomic units
+          !
+          vkk(:, ibnd ) = 2.0 * REAL (dmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk ) )
+          vkq(:, jbnd ) = 2.0 * REAL (dmef (:, ibndmin-1+jbnd, ibndmin-1+jbnd, ikq ) )
+          IF ( abs ( vkk(1,ibnd)**2 + vkk(2,ibnd)**2 + vkk(3,ibnd)**2) > 1.d-4) &
+              coskkq(ibnd, jbnd ) = DDOT(3, vkk(:,ibnd ), 1, vkq(:,jbnd),1)  / &
+              DDOT(3, vkk(:,ibnd), 1, vkk(:,ibnd),1)
         ENDDO
+      ENDDO
+      !
+      !DBSP
+      !if (ik==3) THEN
+      !  print*,'vkk(:, 2)',vkk(:, 2)
+      !  print*,'vkq(:, 2)',vkq(:, 2)
+      !ENDIF         
+      !
+      ! here we must have ef, not ef0, to be consistent with ephwann_shuffle
+      IF ( ( minval ( abs(etf (:, ikk) - ef) ) .lt. fsthick ) .AND. &
+          ( minval ( abs(etf (:, ikq) - ef) ) .lt. fsthick ) ) THEN
         !
-        !DBSP
-        !if (ik==3) THEN
-        !  print*,'vkk(:, 2)',vkk(:, 2)
-        !  print*,'vkq(:, 2)',vkq(:, 2)
-        !ENDIF         
+        fermicount = fermicount + 1
         !
-        ! here we must have ef, not ef0, to be consistent with ephwann_shuffle
-        IF ( ( minval ( abs(etf (:, ikk) - ef) ) .lt. fsthick ) .AND. &
-             ( minval ( abs(etf (:, ikq) - ef) ) .lt. fsthick ) ) THEN
-           !
-           fermicount = fermicount + 1
-           !
-           DO imode = 1, nmodes
+        DO imode = 1, nmodes
+          !
+          ! the phonon frequency
+          wq = wf (imode, iq)
+          !
+          ! SP : We should avoid branching statements (if statements) in
+          !      innerloops. Therefore we do it here.
+          inv_wq =  1.0/(two * wq)
+          ! the coupling from Gamma acoustic phonons is negligible
+          IF ( wq .gt. eps_acustic ) THEN
+            g2_tmp = 1.0
+          ELSE
+            g2_tmp = 0.0
+          ENDIF   
+          !
+          !  we read the e-p matrix from disk / memory
+          !
+          IF (etf_mem) then
+             epf(:,:) = epf17 ( ik, :, :, imode)
+          ELSE
+             nrec = (imode-1) * nkf + ik
+             CALL dasmio ( epf, ibndmax-ibndmin+1, lrepmatf, iunepmatf, nrec, -1)
+          ENDIF
+          !
+          DO ibnd = 1, ibndmax-ibndmin+1
+            !
+            !  the fermi occupation for k
+            ekk = etf (ibndmin-1+ibnd, ikk) - ef0
+            IF (delta_approx) THEN
+              w0g1 = w0gauss ( ekk / degaussw0, 0) / degaussw0
+            ELSE
+              wgkk = wgauss( -ekk*inv_eptemp0, -99)
+            ENDIF
+            !
+            DO jbnd = 1, ibndmax-ibndmin+1
               !
-              ! the phonon frequency
-              wq = wf (imode, iq)
+              !  the fermi occupation for k+q
+              ekq = etf (ibndmin-1+jbnd, ikq) - ef0
               !
-              ! SP : We should avoid branching statements (if statements) in
-              !      innerloops. Therefore we do it here.
-              inv_wq =  1.0/(two * wq)
-              ! the coupling from Gamma acoustic phonons is negligible
-              IF ( wq .gt. eps_acustic ) THEN
-                g2_tmp = 1.0
+              ! here we take into account the zero-point sqrt(hbar/2M\omega)
+              ! with hbar = 1 and M already contained in the eigenmodes
+              ! g2 is Ry^2, wkf must already account for the spin factor
+              !
+              IF ( shortrange) THEN
+                ! SP: The abs has to be removed. Indeed the epf can be a pure imaginary 
+                !     number, in which case its square will be a negative number. 
+                g2 = (epf (jbnd, ibnd)**two)*inv_wq*g2_tmp
               ELSE
-                g2_tmp = 0.0
-              ENDIF   
-              !
-              !  we read the e-p matrix from disk / memory
-              !
-              IF (etf_mem) then
-                 epf(:,:) = epf17 ( ik, :, :, imode)
-              ELSE
-                 nrec = (imode-1) * nkf + ik
-                 CALL dasmio ( epf, ibndmax-ibndmin+1, lrepmatf, iunepmatf, nrec, -1)
+                g2 = (abs(epf (jbnd, ibnd))**two)*inv_wq*g2_tmp
               ENDIF
               !
-              DO ibnd = 1, ibndmax-ibndmin+1
-                 !
-                 !  the fermi occupation for k
-                 ekk = etf (ibndmin-1+ibnd, ikk) - ef0
-                 IF (delta_approx) THEN
-                    w0g1 = w0gauss ( ekk / degaussw0, 0) / degaussw0
-                 ELSE
-                    wgkk = wgauss( -ekk*inv_eptemp0, -99)
-                 ENDIF
-                 !
-                 DO jbnd = 1, ibndmax-ibndmin+1
-                    !
-                    !  the fermi occupation for k+q
-                    ekq = etf (ibndmin-1+jbnd, ikq) - ef0
-                    !
-                    ! here we take into account the zero-point sqrt(hbar/2M\omega)
-                    ! with hbar = 1 and M already contained in the eigenmodes
-                    ! g2 is Ry^2, wkf must already account for the spin factor
-                    !
-                    g2 = (abs(epf (jbnd, ibnd))**two)*inv_wq*g2_tmp
-                    !
-                    IF (delta_approx) THEN 
-                       !
-                       w0g2 = w0gauss ( ekq / degaussw0, 0) / degaussw0
-                       ! the expression below is positive-definite, but also an
-                       ! approximation which neglects some fine features
-                       weight = pi * wq * wkf (ikk) * w0g1 * w0g2
-                       !
-                    ELSE
-                       !
-                       wgkq = wgauss( -ekq*inv_eptemp0, -99)
-                       !
-                       ! = k-point weight * [f(E_k) - f(E_k+q)]/ [E_k+q - E_k -w_q + id]
-                       ! This is the imaginary part of the phonon self-energy, sans
-                       ! the matrix elements
-                       !
-                       !weight = wkf (ikk) * (wgkk - wgkq) * &
-                       !     aimag ( cone / ( ekq - ekk - wq - ci * degaussw0 ) )
-                       !
-                       ! SP: The expression below (phonon self-energy) corresponds to
-                       !  = pi*k-point weight*[f(E_k) - f(E_k+q)]*delta[E_k+q - E_k - w_q]
-                       weight = pi * wkf (ikk) * (wgkk - wgkq)* &
-                            w0gauss ( (ekq - ekk - wq) / degaussw0, 0) / degaussw0
-                       !
-                    ENDIF  
-                    !
-                    gamma   (imode) = gamma   (imode) + weight * g2 
-                    gamma_v (imode) = gamma_v (imode) + weight * g2 * (1-coskkq(ibnd, jbnd) ) 
-                    !
-                 ENDDO ! jbnd
-                 !
-              ENDDO   ! ibnd
+              IF (delta_approx) THEN 
+                !
+                w0g2 = w0gauss ( ekq / degaussw0, 0) / degaussw0
+                ! the expression below is positive-definite, but also an
+                ! approximation which neglects some fine features
+                weight = pi * wq * wkf (ikk) * w0g1 * w0g2
+                !
+              ELSE
+                !
+                wgkq = wgauss( -ekq*inv_eptemp0, -99)
+                !
+                ! = k-point weight * [f(E_k) - f(E_k+q)]/ [E_k+q - E_k -w_q + id]
+                ! This is the imaginary part of the phonon self-energy, sans
+                ! the matrix elements
+                !
+                !weight = wkf (ikk) * (wgkk - wgkq) * &
+                !     aimag ( cone / ( ekq - ekk - wq - ci * degaussw0 ) )
+                !
+                ! SP: The expression below (phonon self-energy) corresponds to
+                !  = pi*k-point weight*[f(E_k) - f(E_k+q)]*delta[E_k+q - E_k - w_q]
+                weight = pi * wkf (ikk) * (wgkk - wgkq)* &
+                     w0gauss ( (ekq - ekk - wq) / degaussw0, 0) / degaussw0
+                !
+              ENDIF  
               !
-           ENDDO ! loop on q-modes
-           !
-        ENDIF ! endif fsthick
+              gamma   (imode) = gamma   (imode) + weight * g2 
+              gamma_v (imode) = gamma_v (imode) + weight * g2 * (1-coskkq(ibnd, jbnd) ) 
+              !
+            ENDDO ! jbnd
+            !
+          ENDDO   ! ibnd
+          !
+        ENDDO ! loop on q-modes
         !
-     ENDDO ! loop on k
-     !
-     CALL stop_clock('PH SELF-ENERGY')
-     !
-     ! collect contributions from all pools (sum over k-points)
-     ! this finishes the integral over the BZ  (k)
-     !
-     CALL mp_sum(gamma,inter_pool_comm) 
-     CALL mp_sum(gamma_v,inter_pool_comm) 
-     CALL mp_sum(fermicount, inter_pool_comm)
-     CALL mp_barrier(inter_pool_comm)
-     !
-     WRITE(stdout,'(/5x,"ismear = ",i5," iq = ",i7," coord.: ", 3f9.5, " wt: ", f9.5)') ismear, iq, xqf(:,iq), wqf(iq)
-     WRITE(stdout,'(5x,a)') repeat('-',67)
-     !
-     lambda_tot = 0.d0
-     lambda_tr_tot = 0.d0
-     !
-     DO imode = 1, nmodes
-        ! 
-        wq = wf (imode, iq)
-        IF ( wq .gt. eps_acustic ) THEN 
-           lambda_all  ( imode, iq, ismear ) = gamma  ( imode ) / pi / wq**two / dosef
-           lambda_v_all( imode, iq, ismear ) = gamma_v( imode ) / pi / wq**two / dosef
-        ENDIF
-        gamma_all  ( imode, iq, ismear ) = gamma  ( imode )
-        gamma_v_all( imode, iq, ismear ) = gamma_v( imode )
-        lambda_tot    = lambda_tot    + lambda_all  ( imode, iq, ismear )
-        lambda_tr_tot = lambda_tr_tot + lambda_v_all( imode, iq, ismear )
-        !
-        WRITE(stdout, 102) imode, lambda_all(imode,iq,ismear),ryd2mev*gamma_all(imode,iq,ismear), ryd2mev*wq
-        WRITE(stdout, 104) imode, lambda_v_all(imode,iq,ismear),ryd2mev*gamma_v_all(imode,iq,ismear), ryd2mev*wq
-        !
-     ENDDO
-     !
-     WRITE(stdout, 103) lambda_tot
-     WRITE(stdout, 105) lambda_tr_tot
-     WRITE(stdout,'(5x,a/)') repeat('-',67)
-     ! 
-     IF (me_pool == 0) &
-       WRITE( stdout, '(/5x,a,i8,a,i8/)' ) &
-           'Number of (k,k+q) pairs on the Fermi surface: ',fermicount, ' out of ', nkqtotf/2
-     !
+      ENDIF ! endif fsthick
+      !
+    ENDDO ! loop on k
+    !
+    CALL stop_clock('PH SELF-ENERGY')
+    !
+    ! collect contributions from all pools (sum over k-points)
+    ! this finishes the integral over the BZ  (k)
+    !
+    CALL mp_sum(gamma,inter_pool_comm) 
+    CALL mp_sum(gamma_v,inter_pool_comm) 
+    CALL mp_sum(fermicount, inter_pool_comm)
+    CALL mp_barrier(inter_pool_comm)
+    !
+    WRITE(stdout,'(/5x,"ismear = ",i5," iq = ",i7," coord.: ", 3f9.5, " wt: ", f9.5)') ismear, iq, xqf(:,iq), wqf(iq)
+    WRITE(stdout,'(5x,a)') repeat('-',67)
+    !
+    lambda_tot = 0.d0
+    lambda_tr_tot = 0.d0
+    !
+    DO imode = 1, nmodes
+      ! 
+      wq = wf (imode, iq)
+      IF ( wq .gt. eps_acustic ) THEN 
+        lambda_all  ( imode, iq, ismear ) = gamma  ( imode ) / pi / wq**two / dosef
+        lambda_v_all( imode, iq, ismear ) = gamma_v( imode ) / pi / wq**two / dosef
+      ENDIF
+      gamma_all  ( imode, iq, ismear ) = gamma  ( imode )
+      gamma_v_all( imode, iq, ismear ) = gamma_v( imode )
+      lambda_tot    = lambda_tot    + lambda_all  ( imode, iq, ismear )
+      lambda_tr_tot = lambda_tr_tot + lambda_v_all( imode, iq, ismear )
+      !
+      WRITE(stdout, 102) imode, lambda_all(imode,iq,ismear),ryd2mev*gamma_all(imode,iq,ismear), ryd2mev*wq
+      WRITE(stdout, 104) imode, lambda_v_all(imode,iq,ismear),ryd2mev*gamma_v_all(imode,iq,ismear), ryd2mev*wq
+      !
+    ENDDO
+    !
+    WRITE(stdout, 103) lambda_tot
+    WRITE(stdout, 105) lambda_tr_tot
+    WRITE(stdout,'(5x,a/)') repeat('-',67)
+    ! 
+    IF (me_pool == 0) &
+      WRITE( stdout, '(/5x,a,i8,a,i8/)' ) &
+          'Number of (k,k+q) pairs on the Fermi surface: ',fermicount, ' out of ', nkqtotf/2
+    !
   ENDDO !smears
   !
 100 FORMAT(5x,'Gaussian Broadening: ',f10.6,' eV, ngauss=',i4)
@@ -399,7 +405,7 @@ END SUBROUTINE selfen_phon_q
   USE io_epw,     ONLY : iunepmatf, lambda_phself, linewidth_phself
   use phcom,      ONLY : nmodes
   use epwcom,     ONLY : nbndsub, lrepmatf, fsthick, &
-                         eptemp, ngaussw, degaussw, &
+                         eptemp, ngaussw, degaussw, shortrange, &
                          etf_mem, nsmear, delta_smear, eps_acustic, &
                          efermi_read, fermi_energy, delta_approx
   use pwcom,      ONLY : nelec, ef, isk
@@ -433,25 +439,25 @@ END SUBROUTINE selfen_phon_q
   REAL(kind=DP), ALLOCATABLE :: xqf_all(:,:), wqf_all(:,:), wf_all(:,:)
   !
   IF ( ik .eq. 1 ) THEN 
-     WRITE(stdout,'(/5x,a)') repeat('=',67)
-     WRITE(stdout,'(5x,"Phonon (Imaginary) Self-Energy in the Migdal Approximation")') 
-     WRITE(stdout,'(5x,a/)') repeat('=',67)
-     !
-     IF ( fsthick.lt.1.d3 ) &
-          WRITE(stdout, '(/5x,a,f10.6,a)' ) &
-          'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
-     WRITE(stdout, '(/5x,a,f10.6,a)' ) &
-          'Golden Rule strictly enforced with T = ',eptemp * ryd2ev, ' eV'
-     !
-     IF ( .not. ALLOCATED (lambda_all) )    ALLOCATE( lambda_all  (nmodes, nqtotf, nsmear) )
-     IF ( .not. ALLOCATED (lambda_v_all) )  ALLOCATE( lambda_v_all(nmodes, nqtotf, nsmear) )
-     lambda_all(:,:,:)   = zero
-     lambda_v_all(:,:,:) = zero
-     IF ( .not. ALLOCATED (gamma_all) )    ALLOCATE( gamma_all  (nmodes,nqtotf,nsmear) )
-     IF ( .not. ALLOCATED (gamma_v_all) )  ALLOCATE( gamma_v_all(nmodes,nqtotf,nsmear) )
-     gamma_all(:,:,:)   = zero
-     gamma_v_all(:,:,:) = zero
-     !
+    WRITE(stdout,'(/5x,a)') repeat('=',67)
+    WRITE(stdout,'(5x,"Phonon (Imaginary) Self-Energy in the Migdal Approximation")') 
+    WRITE(stdout,'(5x,a/)') repeat('=',67)
+    !
+    IF ( fsthick.lt.1.d3 ) &
+         WRITE(stdout, '(/5x,a,f10.6,a)' ) &
+         'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
+    WRITE(stdout, '(/5x,a,f10.6,a)' ) &
+         'Golden Rule strictly enforced with T = ',eptemp * ryd2ev, ' eV'
+    !
+    IF ( .not. ALLOCATED (lambda_all) )    ALLOCATE( lambda_all  (nmodes, nqtotf, nsmear) )
+    IF ( .not. ALLOCATED (lambda_v_all) )  ALLOCATE( lambda_v_all(nmodes, nqtotf, nsmear) )
+    lambda_all(:,:,:)   = zero
+    lambda_v_all(:,:,:) = zero
+    IF ( .not. ALLOCATED (gamma_all) )    ALLOCATE( gamma_all  (nmodes,nqtotf,nsmear) )
+    IF ( .not. ALLOCATED (gamma_v_all) )  ALLOCATE( gamma_v_all(nmodes,nqtotf,nsmear) )
+    gamma_all(:,:,:)   = zero
+    gamma_v_all(:,:,:) = zero
+    !
   ENDIF
   !
   DO ismear = 1, nsmear
@@ -467,20 +473,20 @@ END SUBROUTINE selfen_phon_q
     ! Fermi level and corresponding DOS
     !
     IF ( efermi_read ) THEN
-       !
-       ef0 = fermi_energy
-       !
+      !
+      ef0 = fermi_energy
+      !
     ELSE IF (nsmear > 1) THEN
-       !
-       IF (mpime == ionode_id) THEN
-         ef0 = efermig_seq(etf_k,nbndsub,nkqf,nelec,wkf,degaussw0,ngaussw,0,isk)
-       ENDIF
-       CALL mp_bcast (ef0, ionode_id, inter_pool_comm)
-       ! if some bands are skipped (nbndskip.neq.0), nelec has already been
-       ! recalculated in ephwann_shuffle
-       !
+      !
+      IF (mpime == ionode_id) THEN
+        ef0 = efermig_seq(etf_k,nbndsub,nkqf,nelec,wkf,degaussw0,ngaussw,0,isk)
+      ENDIF
+      CALL mp_bcast (ef0, ionode_id, inter_pool_comm)
+      ! if some bands are skipped (nbndskip.neq.0), nelec has already been
+      ! recalculated in ephwann_shuffle
+      !
     ELSE !SP: This is added for efficiency reason because the efermig routine is slow
-       ef0 = efnew
+      ef0 = efnew
     ENDIF
     !
     IF (mpime == ionode_id) THEN
@@ -494,9 +500,9 @@ END SUBROUTINE selfen_phon_q
     !dosef = dosef / two
     !
     IF ( ik .eq. 1 ) THEN 
-       WRITE (stdout, 100) degaussw0 * ryd2ev, ngaussw
-       WRITE (stdout, 101) dosef / ryd2ev, ef0 * ryd2ev
-       !WRITE (stdout, 101) dosef / ryd2ev, ef  * ryd2ev
+      WRITE (stdout, 100) degaussw0 * ryd2ev, ngaussw
+      WRITE (stdout, 101) dosef / ryd2ev, ef0 * ryd2ev
+      !WRITE (stdout, 101) dosef / ryd2ev, ef  * ryd2ev
     ENDIF
     !
     ! find the bounds of q-dependent arrays in the parallel case in each pool
@@ -507,126 +513,132 @@ END SUBROUTINE selfen_phon_q
     fermicount = 0
     !
     DO iq = 1, nqf
-       !
-       ikq = 2 * iq
-       ikk = ikq - 1
-       ! 
-       coskkq = 0.d0
-       DO ibnd = 1, ibndmax-ibndmin+1
-          DO jbnd = 1, ibndmax-ibndmin+1
-             ! coskkq = (vk dot vkq) / |vk|^2  appears in Grimvall 8.20
-             ! this is different from :   coskkq = (vk dot vkq) / |vk||vkq|
-             ! In principle the only coskkq contributing to lambda_tr are both near the
-             ! Fermi surface and the magnitudes will not differ greatly between vk and vkq
-             ! we may implement the approximation to the angle between k and k+q vectors also 
-             ! listed in Grimvall
-             !
-             ! v_(k,i) = 1/m <ki|p|ki> = 2 * dmef (:, i,i,k)
-             ! 1/m  = 2 in Rydberg atomic units
-             !
-             vkk(:, ibnd ) = 2.0 * REAL (dmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk ) )
-             vkq(:, jbnd ) = 2.0 * REAL (dmef (:, ibndmin-1+jbnd, ibndmin-1+jbnd, ikq ) )
-             IF ( abs ( vkk(1,ibnd)**2 + vkk(2,ibnd)**2 + vkk(3,ibnd)**2) .gt. 1.d-4) &
-                  coskkq(ibnd, jbnd ) = DDOT(3, vkk(:,ibnd ), 1, vkq(:,jbnd),1)  / &
-                  DDOT(3, vkk(:,ibnd), 1, vkk(:,ibnd),1)
-          ENDDO
-       ENDDO
-       !
-       ! here we must have ef, not ef0, to be consistent with ephwann_shuffle
-       IF ( ( minval ( abs(etf (:, ikk) - ef) ) .lt. fsthick ) .AND. &
-            ( minval ( abs(etf (:, ikq) - ef) ) .lt. fsthick ) ) THEN
+      !
+      ikq = 2 * iq
+      ikk = ikq - 1
+      ! 
+      coskkq = 0.d0
+      DO ibnd = 1, ibndmax-ibndmin+1
+        DO jbnd = 1, ibndmax-ibndmin+1
+          ! coskkq = (vk dot vkq) / |vk|^2  appears in Grimvall 8.20
+          ! this is different from :   coskkq = (vk dot vkq) / |vk||vkq|
+          ! In principle the only coskkq contributing to lambda_tr are both near the
+          ! Fermi surface and the magnitudes will not differ greatly between vk and vkq
+          ! we may implement the approximation to the angle between k and k+q vectors also 
+          ! listed in Grimvall
           !
-          fermicount = fermicount + 1
+          ! v_(k,i) = 1/m <ki|p|ki> = 2 * dmef (:, i,i,k)
+          ! 1/m  = 2 in Rydberg atomic units
           !
-          DO imode = 1, nmodes
-             !
-             ! the phonon frequency
-             wq = wf (imode, iq)
-             !
-             ! SP : We should avoid branching statements (if statements) in
-             !      innerloops. Therefore we do it here.
-             inv_wq =  1.0/(two * wq)
-             ! the coupling from Gamma acoustic phonons is negligible
-             IF ( wq .gt. eps_acustic ) THEN
-               g2_tmp = 1.0
-             ELSE
-               g2_tmp = 0.0
-             ENDIF   
-             !
-             !  we read the e-p matrix from disk / memory
-             !
-             IF (etf_mem) then
-                epf(:,:) = epf17 ( iq, :, :, imode)
-             ELSE
-                nrec = (imode-1) * nqf + iq
-                CALL dasmio ( epf, ibndmax-ibndmin+1, lrepmatf, iunepmatf, nrec, -1)
-             ENDIF
-             !
-             DO ibnd = 1, ibndmax-ibndmin+1
+          vkk(:, ibnd ) = 2.0 * REAL (dmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk ) )
+          vkq(:, jbnd ) = 2.0 * REAL (dmef (:, ibndmin-1+jbnd, ibndmin-1+jbnd, ikq ) )
+          IF ( abs ( vkk(1,ibnd)**2 + vkk(2,ibnd)**2 + vkk(3,ibnd)**2) .gt. 1.d-4) &
+               coskkq(ibnd, jbnd ) = DDOT(3, vkk(:,ibnd ), 1, vkq(:,jbnd),1)  / &
+               DDOT(3, vkk(:,ibnd), 1, vkk(:,ibnd),1)
+        ENDDO
+      ENDDO
+      !
+      ! here we must have ef, not ef0, to be consistent with ephwann_shuffle
+      IF ( ( minval ( abs(etf (:, ikk) - ef) ) .lt. fsthick ) .AND. &
+          ( minval ( abs(etf (:, ikq) - ef) ) .lt. fsthick ) ) THEN
+        !
+        fermicount = fermicount + 1
+        !
+        DO imode = 1, nmodes
+          !
+          ! the phonon frequency
+          wq = wf (imode, iq)
+          !
+          ! SP : We should avoid branching statements (if statements) in
+          !      innerloops. Therefore we do it here.
+          inv_wq =  1.0/(two * wq)
+          ! the coupling from Gamma acoustic phonons is negligible
+          IF ( wq .gt. eps_acustic ) THEN
+            g2_tmp = 1.0
+          ELSE
+            g2_tmp = 0.0
+          ENDIF   
+          !
+          !  we read the e-p matrix from disk / memory
+          !
+          IF (etf_mem) then
+             epf(:,:) = epf17 ( iq, :, :, imode)
+          ELSE
+             nrec = (imode-1) * nqf + iq
+             CALL dasmio ( epf, ibndmax-ibndmin+1, lrepmatf, iunepmatf, nrec, -1)
+          ENDIF
+          !
+          DO ibnd = 1, ibndmax-ibndmin+1
+            !
+            !  the fermi occupation for k
+            ekk = etf (ibndmin-1+ibnd, ikk) - ef0
+            IF (delta_approx) THEN
+               w0g1 = w0gauss ( ekk / degaussw0, 0) / degaussw0
+            ELSE
+               wgkk = wgauss( -ekk*inv_eptemp0, -99)
+            ENDIF
+            !
+            DO jbnd = 1, ibndmax-ibndmin+1
+              !
+              !  the fermi occupation for k+q
+              ekq = etf (ibndmin-1+jbnd, ikq) - ef0
+              !
+              ! here we take into account the zero-point sqrt(hbar/2M\omega)
+              ! with hbar = 1 and M already contained in the eigenmodes
+              ! g2 is Ry^2, wkf must already account for the spin factor
+              !
+              IF ( shortrange) THEN
+                ! SP: The abs has to be removed. Indeed the epf can be a pure imaginary 
+                !     number, in which case its square will be a negative number. 
+                g2 = (epf (jbnd, ibnd)**two)*inv_wq*g2_tmp
+              ELSE
+                g2 = (abs(epf (jbnd, ibnd))**two)*inv_wq*g2_tmp
+              ENDIF
+              !
+              IF (delta_approx) THEN 
                 !
-                !  the fermi occupation for k
-                ekk = etf (ibndmin-1+ibnd, ikk) - ef0
-                IF (delta_approx) THEN
-                   w0g1 = w0gauss ( ekk / degaussw0, 0) / degaussw0
-                ELSE
-                   wgkk = wgauss( -ekk*inv_eptemp0, -99)
-                ENDIF
+                w0g2 = w0gauss ( ekq / degaussw0, 0) / degaussw0
+                ! the expression below is positive-definite, but also an
+                ! approximation which neglects some fine features
+                weight = pi * wq * wkf (ikk) * w0g1 * w0g2
                 !
-                DO jbnd = 1, ibndmax-ibndmin+1
-                   !
-                   !  the fermi occupation for k+q
-                   ekq = etf (ibndmin-1+jbnd, ikq) - ef0
-                   !
-                   ! here we take into account the zero-point sqrt(hbar/2M\omega)
-                   ! with hbar = 1 and M already contained in the eigenmodes
-                   ! g2 is Ry^2, wkf must already account for the spin factor
-                   !
-                   g2 = (abs(epf (jbnd, ibnd))**two)*inv_wq*g2_tmp
-                   !
-                   IF (delta_approx) THEN 
-                      !
-                      w0g2 = w0gauss ( ekq / degaussw0, 0) / degaussw0
-                      ! the expression below is positive-definite, but also an
-                      ! approximation which neglects some fine features
-                      weight = pi * wq * wkf (ikk) * w0g1 * w0g2
-                      !
-                   ELSE
-                      !
-                      wgkq = wgauss( -ekq*inv_eptemp0, -99)
-                      !
-                      ! = k-point weight * [f(E_k) - f(E_k+q)]/ [E_k+q - E_k -w_q + id]
-                      ! This is the imaginary part of the phonon self-energy,
-                      ! sans the matrix elements
-                      !
-                      !weight = wkf (ikk) * (wgkk - wgkq) * &
-                      !     aimag ( cone / ( ekq - ekk - wq - ci * degaussw0 ) )
-                      !
-                      ! SP: The expression below (phonon self-energy) corresponds to
-                      !  = pi*k-point weight*[f(E_k) - f(E_k+q)]*delta[E_k+q - E_k - w_q]
-                      weight = pi * wkf (ikk) * (wgkk - wgkq)* &
-                           w0gauss ( (ekq - ekk - wq) / degaussw0, 0) / degaussw0
-                      !
-                   ENDIF  
+              ELSE
+                !
+                wgkq = wgauss( -ekq*inv_eptemp0, -99)
+                !
+                ! = k-point weight * [f(E_k) - f(E_k+q)]/ [E_k+q - E_k -w_q + id]
+                ! This is the imaginary part of the phonon self-energy,
+                ! sans the matrix elements
+                !
+                !weight = wkf (ikk) * (wgkk - wgkq) * &
+                !     aimag ( cone / ( ekq - ekk - wq - ci * degaussw0 ) )
+                !
+                ! SP: The expression below (phonon self-energy) corresponds to
+                !  = pi*k-point weight*[f(E_k) - f(E_k+q)]*delta[E_k+q - E_k - w_q]
+                weight = pi * wkf (ikk) * (wgkk - wgkq)* &
+                     w0gauss ( (ekq - ekk - wq) / degaussw0, 0) / degaussw0
+                !
+              ENDIF  
 
-                   gamma_all(imode,iq+lower_bnd-1,ismear) = gamma_all(imode,iq+lower_bnd-1,ismear) + weight * g2 
-                   gamma_v_all(imode,iq+lower_bnd-1,ismear) = gamma_v_all(imode,iq+lower_bnd-1,ismear) &
-                                                              + weight * g2 * (1-coskkq(ibnd, jbnd) ) 
-                   ! 
-                   IF ( wq .gt. eps_acustic ) THEN
-                     lambda_all  ( imode, iq+lower_bnd-1, ismear ) = gamma_all(imode,iq+lower_bnd-1,ismear)&
-                                                                     / pi / wq**two / dosef
-                     lambda_v_all( imode, iq+lower_bnd-1, ismear ) = gamma_v_all(imode,iq+lower_bnd-1,ismear)&
-                                                                     / pi / wq**two / dosef
-                   ENDIF
-                   !
-                ENDDO ! jbnd
-                !
-             ENDDO   ! ibnd
-             !
-          ENDDO ! loop on q-modes
+              gamma_all(imode,iq+lower_bnd-1,ismear) = gamma_all(imode,iq+lower_bnd-1,ismear) + weight * g2 
+              gamma_v_all(imode,iq+lower_bnd-1,ismear) = gamma_v_all(imode,iq+lower_bnd-1,ismear) &
+                                                         + weight * g2 * (1-coskkq(ibnd, jbnd) ) 
+              ! 
+              IF ( wq .gt. eps_acustic ) THEN
+                lambda_all  ( imode, iq+lower_bnd-1, ismear ) = gamma_all(imode,iq+lower_bnd-1,ismear)&
+                                                                / pi / wq**two / dosef
+                lambda_v_all( imode, iq+lower_bnd-1, ismear ) = gamma_v_all(imode,iq+lower_bnd-1,ismear)&
+                                                                / pi / wq**two / dosef
+              ENDIF
+              !
+            ENDDO ! jbnd
+            !
+          ENDDO   ! ibnd
           !
-       ENDIF ! endif fsthick
-       !
+        ENDDO ! loop on q-modes
+        !
+      ENDIF ! endif fsthick
+      !
     ENDDO ! loop on q
     !
   ENDDO !smears

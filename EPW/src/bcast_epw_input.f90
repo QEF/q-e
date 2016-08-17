@@ -42,7 +42,7 @@
                             nw_specfun, nw, nswi, nswfc, nswc, nstemp, nsmear, &
                             wsfc, wscut, write_wfn, wmin_specfun, wmin, &
                             wmax_specfun, wmax, wepexst, wannierize, &
-                            vme, &
+                            vme, longrange, shortrange, &
                             tempsmin, tempsmax, temps, delta_approx, title
 !  USE epwcom,        ONLY : fildvscf0, tphases
   USE elph2,         ONLY : elph 
@@ -113,6 +113,8 @@
   CALL mp_bcast (wmin_specfun, ionode_id, world_comm)      !
   CALL mp_bcast (wmax_specfun, ionode_id, world_comm)      !
   CALL mp_bcast (delta_approx, ionode_id, world_comm)      !
+  CALL mp_bcast (longrange, ionode_id, world_comm)      !
+  CALL mp_bcast (shortrange, ionode_id, world_comm)      !  
   !
   ! integers
   !

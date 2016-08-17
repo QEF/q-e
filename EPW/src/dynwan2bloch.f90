@@ -9,28 +9,28 @@
   !--------------------------------------------------------------------------
   SUBROUTINE dynwan2bloch ( nbnd, nrr, irvec, ndegen, xq, cuf, eig)
   !--------------------------------------------------------------------------
-  !
-  !
-  !  WARNING: this SUBROUTINE is identical to hamwan2bloch.f90, except
-  !           that here rdw is a real array, not a complex one. This is
-  !           required to obtain proper phonon dispersion interpolation
-  !           and corresponds to the reality of the interatomic force
-  !           constants
-  !
-  ! -------------------------------------------------------------------------
-  !
-  !  From the Hamiltonian in Wannier representation, find the corresponding
-  !  Hamiltonian in Bloch representation for a given k point
-  !
-  !  input  : number of bands nbnd
-  !           number of WS vectors, coordinates and degeneracy
-  !           Hamiltonian in Wannier representation chw(nbnd, nbnd, nrr)
-  !           qpoint coordinate xq(3)
-  !
-  !  output : rotation matrix cuf (nbnd, nbnd)
-  !           interpolated hamiltonian eigenvalues eig(nbnd)
-  !
-  !
+  !!
+  !!
+  !!  WARNING: this SUBROUTINE is identical to hamwan2bloch.f90, except
+  !!           that here rdw is a real array, not a complex one. This is
+  !!           required to obtain proper phonon dispersion interpolation
+  !!           and corresponds to the reality of the interatomic force
+  !!           constants
+  !!
+  !! -------------------------------------------------------------------------
+  !!
+  !!  From the Hamiltonian in Wannier representation, find the corresponding
+  !!  Hamiltonian in Bloch representation for a given k point
+  !!
+  !!  input  : number of bands nbnd
+  !!           number of WS vectors, coordinates and degeneracy
+  !!           Hamiltonian in Wannier representation chw(nbnd, nbnd, nrr)
+  !!           qpoint coordinate xq(3)
+  !!
+  !!  output : rotation matrix cuf (nbnd, nbnd)
+  !!           interpolated hamiltonian eigenvalues eig(nbnd)
+  !!
+  !!
   !--------------------------------------------------------------------------
   !
   USE kinds,     ONLY : DP
@@ -91,11 +91,11 @@
   chf (:,:) = czero
   !
   DO ir = 1, nrr
-     !
-     rdotk = twopi * dot_product( xq, dble(irvec( :, ir) ))
-     cfac = exp( ci*rdotk ) / dble( ndegen(ir) )
-     chf = chf + cfac * rdw (:,:, ir )
-     !
+    !
+    rdotk = twopi * dot_product( xq, dble(irvec( :, ir) ))
+    cfac = exp( ci*rdotk ) / dble( ndegen(ir) )
+    chf = chf + cfac * rdw (:,:, ir )
+    !
   ENDDO
   !
   ! bring xq in cart. coordinates (needed for rgd_blk call)
@@ -103,21 +103,21 @@
   !
   !  add the long-range term to D(q)
   IF (lpolar) THEN
-     CALL rgd_blk (nq1,nq2,nq3,nat,chf,xq, &  !xq has to be in 2pi/a
-                  tau,epsi,zstar,bg,omega,+1.d0)
-   !WRITE (6,'(a)') "Done rigid"
+    ! xq has to be in 2pi/a     
+    CALL rgd_blk (nq1,nq2,nq3,nat,chf,xq,tau,epsi,zstar,+1.d0)
+    !
   ENDIF
   !
   !  divide by the square root of masses 
   !
   DO na = 1, nat
-   DO nb = 1, nat
+    DO nb = 1, nat
       massfac = 1.d0 / sqrt ( amass(ityp(na)) * amass(ityp(nb)) )
       !
       chf(3*(na-1)+1:3*na, 3*(nb-1)+1:3*nb) = &
          chf(3*(na-1)+1:3*na, 3*(nb-1)+1:3*nb) * massfac
       ! 
-   ENDDO
+    ENDDO
   ENDDO
   !
   ! bring xq back to crystal coordinates

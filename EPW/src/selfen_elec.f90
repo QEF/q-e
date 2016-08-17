@@ -33,7 +33,7 @@
   USE io_global,     ONLY : stdout
   USE io_epw,        ONLY : iunepmatf, linewidth_elself
   USE phcom,         ONLY : nmodes
-  USE epwcom,        ONLY : nbndsub, lrepmatf, &
+  USE epwcom,        ONLY : nbndsub, lrepmatf, shortrange, &
                             fsthick, eptemp, ngaussw, degaussw, &
                             etf_mem, eps_acustic, efermi_read, fermi_energy
   USE pwcom,         ONLY : ef !, nelec, isk
@@ -259,7 +259,13 @@
                  ! with hbar = 1 and M already contained in the eigenmodes
                  ! g2 is Ry^2, wkf must already account for the spin factor
                  !
-                 g2 = (abs(epf (jbnd, ibnd))**two)*inv_wq*g2_tmp
+                 IF ( shortrange) THEN
+                   ! SP: The abs has to be removed. Indeed the epf can be a pure imaginary 
+                   !     number, in which case its square will be a negative number. 
+                   g2 = (epf (jbnd, ibnd)**two)*inv_wq*g2_tmp
+                 ELSE
+                   g2 = (abs(epf (jbnd, ibnd))**two)*inv_wq*g2_tmp
+                 ENDIF        
                  !
                  ! There is a sign error for wq in Eq. 9 of Comp. Phys. Comm. 181, 2140 (2010). - RM
                  ! The sign was corrected according to Eq. (7.282) page 489 from Mahan's book 
@@ -488,7 +494,7 @@
   USE io_global,     ONLY : stdout
   USE io_epw,        ONLY : iunepmatf, linewidth_elself
   USE phcom,         ONLY : nmodes
-  USE epwcom,        ONLY : nbndsub, lrepmatf, &
+  USE epwcom,        ONLY : nbndsub, lrepmatf, shortrange, &
                            fsthick, eptemp, ngaussw, degaussw, &
                            etf_mem, eps_acustic, efermi_read, fermi_energy
   USE pwcom,         ONLY : ef !, nelec, isk
@@ -665,7 +671,13 @@
                  ! with hbar = 1 and M already contained in the eigenmodes
                  ! g2 is Ry^2, wkf must already account for the spin factor
                  !
-                 g2 = (abs(epf (jbnd, ibnd))**two)*inv_wq*g2_tmp
+                 IF ( shortrange) THEN
+                   ! SP: The abs has to be removed. Indeed the epf can be a pure imaginary 
+                   !     number, in which case its square will be a negative number. 
+                   g2 = (epf (jbnd, ibnd)**two)*inv_wq*g2_tmp
+                 ELSE
+                   g2 = (abs(epf (jbnd, ibnd))**two)*inv_wq*g2_tmp
+                 ENDIF
                  !
                  ! There is a sign error for wq in Eq. 9 of Comp. Phys. Comm. 181, 2140 (2010). - RM
                  ! The sign was corrected according to Eq. (7.282) page 489 from Mahan's book 
