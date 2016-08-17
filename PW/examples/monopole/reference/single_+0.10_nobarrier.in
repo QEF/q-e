@@ -1,0 +1,43 @@
+&control
+ calculation   = 'relax',
+ restart_mode  = 'from_scratch',
+ prefix        = 'single_+0.10_nob',
+ outdir        = '/home/paulatto/espresso/tempdir/',
+ nstep         = 300,
+ monopole      = .true.,
+ tefield       = .true.,
+ dipfield      = .true.,
+/
+&system
+ ibrav       = 4,
+ celldm(1)   = 5.9716,
+ celldm(3)   = 12,
+ nat         = 3,
+ ntyp        = 2,
+ ecutwfc     = 50,
+ ecutrho     = 410,
+ occupations = 'smearing',
+ degauss     = 0.002,
+ smearing    = 'gauss',
+ tot_charge  = +0.10,
+ relaxz      = .true.,
+ edir        = 3,
+ zmon        = 0.011,
+ emaxpos     = 0.000001,
+ eopreg      = 0.01,
+/
+&electrons
+ conv_thr = 1.0d-9,
+/
+&IONS
+ ion_dynamics='bfgs',
+/
+ATOMIC_SPECIES
+ Mo  95.94    Mo.pz-spn-rrkjus_psl.0.2.UPF
+ S   32.066   S.pz-n-rrkjus_psl.0.1.UPF
+ATOMIC_POSITIONS (alat)
+S        0.500000000   0.288675130   2.500000000    0   0   0
+Mo       0.000000000   0.577350270   2.987083433
+S        0.000000000  -0.577350270   3.474835516
+K_POINTS automatic
+16 16 1 0 0 0
