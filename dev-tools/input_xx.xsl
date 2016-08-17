@@ -90,12 +90,12 @@
   <!--  *** TOC ***  -->
 
   <xsl:template match="toc">
-    <blockquote>
+    <blockquote style="margin-bottom: 2em;">
       <h3>TABLE OF CONTENTS</h3>
       <blockquote>	
 	<xsl:apply-templates select=".." mode="toc"/>
       </blockquote>
-    </blockquote>
+    </blockquote>    
   </xsl:template>
 
   
@@ -125,15 +125,15 @@
   </xsl:template>
   
   <xsl:template match="linecard" mode="toc">
-    <a href="#{generate-id(.)}">Line-of-input:</a><xsl:text> </xsl:text>
-    <xsl:apply-templates select=".//var | .//dimension | .//list" mode="toc"/>
+    <p><a href="#{generate-id(.)}">Line-of-input:</a><xsl:text> </xsl:text>
+    <xsl:apply-templates select=".//var | .//dimension | .//list" mode="toc"/></p>
   </xsl:template>
 
   <xsl:template match="namelist | card" mode="toc">
-    <a href="#{generate-id(.)}">
+    <p><a href="#{generate-id(.)}">
       <xsl:if test="name(.)='namelist'">&#38;</xsl:if>
       <xsl:value-of select="@name"/>
-    </a>
+    </a></p>
     <xsl:if test=".//var != '' or
 		  .//dimension != '' or
 		  .//list != '' or
@@ -201,8 +201,8 @@
 
   <!-- aaaaa -->
   <xsl:template match="section" mode="toc">
-    <a href="#{generate-id(.)}"><xsl:value-of select="@title"/></a>		
-    <xsl:apply-templates select="subsection" mode="toc"/>
+    <p><a href="#{generate-id(.)}"><xsl:value-of select="@title"/></a></p>
+      <xsl:apply-templates select="subsection" mode="toc"/>
   </xsl:template>
   
   <!--new: END-->
@@ -759,7 +759,7 @@
   <xsl:template match="if">
     <table style="border-color: #bb9977; border-style: solid; border-width: 3; margin-bottom: 10; table-layout: auto; background-color: #FFddbb; width: 100%; padding: 5 5 0 5">
       <tr><td>
-	<b>IF </b>  <xsl:value-of select="@test"/> : <!-- <xsl:apply-templates select="label"/> -->
+	<b>IF </b>  <tt><em><xsl:value-of select="@test"/></em> :</tt> 
 	<blockquote>
 	  <xsl:apply-templates/>
 	</blockquote>
@@ -772,7 +772,7 @@
   <!--    *** CHOOSE ... ***  -->
 
   <xsl:template match="choose">
-    <table style="border-color: #bb9977; border-style: solid; border-width: 1; margin-bottom: 10; table-layout: auto; width: 100%; padding: 5 5 0 5">
+    <table style="border-color: #bb9977; border-style: solid; border-width: 3; margin-bottom: 10; table-layout: auto; width: 100%; padding: 5 5 0 5">
       <tr><td>
 	<xsl:apply-templates select="when"/>	
 	<xsl:apply-templates select="elsewhen"/>	
@@ -783,7 +783,7 @@
   </xsl:template>
 
   <xsl:template match="when">  
-    <b>IF </b> <em><xsl:value-of select="@test"/></em> : <!-- <xsl:apply-templates select="label"/> -->
+    <b>IF </b> <tt><em><xsl:value-of select="@test"/></em> :</tt>
     <blockquote>
       <table style="border-color: #bb9977; border-style: solid; border-width: 3; margin-bottom: 10; table-layout: auto; background-color: #FFddbb; width: 100%; padding: 5 5 0 30">
 	<tr><td>
@@ -794,7 +794,7 @@
   </xsl:template>
 
   <xsl:template match="elsewhen">  
-    <b>ELSEIF </b> <em><xsl:value-of select="@test"/></em> : <!-- <xsl:apply-templates select="label"/> -->
+    <b>ELSEIF </b> <tt><em><xsl:value-of select="@test"/></em> :</tt>
     <blockquote>
       <table style="border-color: #bb9977; border-style: solid; border-width: 3; margin-bottom: 10; table-layout: auto; background-color: #FFddbb; width: 100%; padding: 5 5 0 30">
 	<tr><td>
