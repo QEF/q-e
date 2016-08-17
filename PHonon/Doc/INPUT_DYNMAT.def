@@ -3,7 +3,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program dynma
     toc {}
 
     intro {
-	Purpose of dynmat.x:
+	@b {Purpose of dynmat.x:}
 
 	- reads a dynamical matrix file produced by the phonon code
 
@@ -19,12 +19,12 @@ input_description -distribution {Quantum Espresso} -package PWscf -program dynma
           plotting
 
 	
-        Structure of the input data:
+        @b {Structure of the input data:}
 	========================================================================
 
-        &INPUT
+        @b &INPUT
 	   ...specs of namelist variables...
-	/
+	@b /
     }
     
     namelist INPUT {
@@ -47,97 +47,106 @@ input_description -distribution {Quantum Espresso} -package PWscf -program dynma
 	    info {
 		mass for each atom type
 	    }
-	    default { amass is read from file fildyn }
+	    default { amass is read from file @ref fildyn }
 	}
 
 	var  asr -type  CHARACTER {
-	    info {
-		Indicates the type of Acoustic Sum Rule imposed.
+	    default { 'no' }
+            options {
+                info {
+                    Indicates the type of Acoustic Sum Rule imposed.
 
-		Allowed values:
+                    Allowed values:
+                }
+                opt -val 'no' {
+                    no Acoustic Sum Rules imposed @b (default)
+                }               
+                opt -val 'simple' {
+                    previous implementation of the asr used
+                    (3 translational asr imposed by correction of
+                     the diagonal elements of the dynamical matrix)
+                }               
+                opt -val 'crystal' {
+                    3 translational asr imposed by optimized
+                    correction of the dyn. matrix (projection)
+                }                            
+                opt -val 'one-dim' {
+                    3 translational asr + 1 rotational asr imposed
+                    by optimized correction of the dyn. mat. (the
+                    rotation axis is the direction of periodicity; it
+                    will work only if this axis considered is one of
+                    the Cartesian axis).
+                }         
+                opt -val 'zero-dim' {
+                    3 translational asr + 3 rotational asr imposed
+                    by optimized correction of the dyn. mat.
+                }
 
-		- 'no': no Acoustic Sum Rules imposed (default)
-		
-		- 'simple': previous implementation of the asr used
-		            (3 translational asr imposed by correction of
-			    the diagonal elements of the dynamical matrix)
-		
-                - 'crystal': 3 translational asr imposed by optimized
-                             correction of the dyn. matrix (projection)
-			     
-                - 'one-dim': 3 translational asr + 1 rotational asr imposed
-		             by optimized correction of the dyn. mat. (the
-                             rotation axis is the direction of periodicity; it
-                             will work only if this axis considered is one of
-                             the Cartesian axis).
-			     
-                - 'zero-dim': 3 translational asr + 3 rotational asr imposed
-		              by optimized correction of the dyn. mat.
+                info {
+                    Note that in certain cases, not all the rotational asr
+                    can be applied (e.g. if there are only 2 atoms in a
+                    molecule or if all the atoms are aligned, etc.).  In
+                    these cases the supplementary asr are canceled during
+                    the orthonormalization procedure (see below).
 
-                Note that in certain cases, not all the rotational asr
-                can be applied (e.g. if there are only 2 atoms in a
-                molecule or if all the atoms are aligned, etc.).  In
-                these cases the supplementary asr are canceled during
-                the orthonormalization procedure (see below).
+                    Finally, in all cases except @b 'no' a simple correction
+                    on the effective charges is performed (same as in the
+                    previous implementation).
+                }
+            }
+        }       
+                
+        var axis -type INTEGER {
+            info {
+                indicates the rotation axis for a 1D system (1=Ox, 2=Oy, 3=Oz)
+            }
+            default { 3 }
+        }
+        
+        var lperm -type LOGICAL {
+            info {
+                if .true. then calculate Gamma-point mode contributions to
+                dielectric permittivity tensor
+            }
+            default { .false. }
+        }
 
-		Finally, in all cases except 'no' a simple correction
-                on the effective charges is performed (same as in the
-                previous implementation).
-	    }
-	}	
-		
-	var axis -type INTEGER {
-	    info {
-		indicates the rotation axis for a 1D system (1=Ox, 2=Oy, 3=Oz)
-	    }
-	    default { 3 }
-	}
-	
-	var lperm -type LOGICAL {
-	    info {
-		if .true. then calculate Gamma-point mode contributions to
-		dielectric permittivity tensor
-	    }
-	    default { .false. }
-	}
+        var lplasma -type LOGICAL {
+            info {
+                if .true. then calculate Gamma-point mode effective plasma 
+                frequencies, automatically triggers @ref lperm = .true.
+            }
+            default { .false. }
+        }
 
-	var lplasma -type LOGICAL {
-	    info {
-		if .true. then calculate Gamma-point mode effective plasma 
-		frequencies, automatically triggers lperm = .true.
-	    }
-	    default { .false. }
-	}
-
-	var filout -type CHARACTER {
-	    info {
-		output file containing phonon frequencies and normalized
-		phonon displacements (i.e. eigenvectors divided by the
+        var filout -type CHARACTER {
+            info {
+                output file containing phonon frequencies and normalized
+                phonon displacements (i.e. eigenvectors divided by the
                 square root of the mass and then normalized; they are
-	        not orthogonal)
-	    }
-	    default { 'dynmat.out' }
-	}
-		
-	var fileig -type CHARACTER {
-	    info {
-		output file containing phonon frequencies and eigenvectors
+                not orthogonal)
+            }
+            default { 'dynmat.out' }
+        }
+                
+        var fileig -type CHARACTER {
+            info {
+                output file containing phonon frequencies and eigenvectors
                 of the dynamical matrix (they are orthogonal)
-	    }
-	    default { ' ' }
-	}
-	var filmol -type CHARACTER {
-	    info {
-		as above, in a format suitable for 'molden'
-	    }
-	    default { 'dynmat.mold' }
-	}
-
-	var filxsf -type CHARACTER {
-	    info {
-		as above, in axsf format suitable for xcrysden
-	    }	
-	    default { 'dynmat.axsf' }
-	}
+            }
+            default { ' ' }
+        }
+        var filmol -type CHARACTER {
+            info {
+                as above, in a format suitable for molden
+            }
+            default { 'dynmat.mold' }
+        }
+        var filxsf -type CHARACTER {
+            info {
+                as above, in axsf format suitable for xcrysden
+            }   
+            default { 'dynmat.axsf' }
+        }
     }
 }

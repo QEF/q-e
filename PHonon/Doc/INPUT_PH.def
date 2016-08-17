@@ -3,25 +3,25 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
     toc {}
 
     intro {
-	Input data format: { } = optional, [ ] = it depends, # = comment
+	@b {Input data format:} { } = optional, [ ] = it depends, # = comment
 
-	Structure of the input data:
+	@b {Structure of the input data:}
 	===============================================================================
 
 	title_line 
 
-	&INPUTPH
+	@b &INPUTPH
 	   ...
-	/
+	@b /
 
-	[ xq(1) xq(2) xq(3) ]                        # if ldisp != .true.  and  qplot != .true.
+	[ xq(1) xq(2) xq(3) ]                        @i {# if @ref ldisp != .true.  and  @ref qplot != .true.}
 
-        [ nqs                                        # if qplot == .true. 
+        [ nqs                                        @i {# if @ref qplot == .true. }
           xq(1,i)    xq(2,i)    xq(3,1)    nq(1)              
           ...
 	  xq(1,nqs)  xq(2,nqs)  xq(3,nqs)  nq(nqs) ]     
 
-	[ atom(1)  atom(2)  ... atom(nat_todo) ]     # if "nat_todo" was specified
+	[ atom(1)  atom(2)  ... atom(nat_todo) ]     @i {# if @ref nat_todo was specified}
     }
 
     linecard {
@@ -44,221 +44,233 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 
         var outdir -type CHARACTER {
             default {
-                value of the ESPRESSO_TMPDIR environment variable if set;
-                current directory ('./') otherwise
+                value of the @tt ESPRESSO_TMPDIR environment variable if set;
+                @br current directory ('./') otherwise
             }
             info {
-		Directory containing input, output, and scratch files; 
+                Directory containing input, output, and scratch files; 
                 must be the same as specified in the calculation of 
                 the unperturbed system.
             }
         }
     
-	var prefix -type CHARACTER { 
-	    default { 'pwscf' }
-	    info {
-		Prepended to input/output filenames; must be the same 
-		used in the calculation of unperturbed system.
-	    }
-	}
+        var prefix -type CHARACTER { 
+            default { 'pwscf' }
+            info {
+                Prepended to input/output filenames; must be the same 
+                used in the calculation of unperturbed system.
+            }
+        }
 
-	var niter_ph -type INTEGER { 
-	    default { maxter=100 }
-	    info {
-		Maximum number of iterations in a scf step. If you want
+        var niter_ph -type INTEGER { 
+            default { maxter=100 }
+            info {
+                Maximum number of iterations in a scf step. If you want
                 more than 100, edit variable "maxter" in PH/phcom.f90
-	    }
-	}
+            }
+        }
 
-	var tr2_ph   -type REAL { 
-	    default { 1e-12 }
-	    info     { Threshold for self-consistency. }
-	}
+        var tr2_ph   -type REAL { 
+            default { 1e-12 }
+            info     { Threshold for self-consistency. }
+        }
 
-	var alpha_mix(niter)  -type REAL { 
-	    default { alpha_mix(1)=0.7 }
-	    info { 
-		Mixing factor (for each iteration) for updating 
+        var alpha_mix(niter)  -type REAL { 
+            default { alpha_mix(1)=0.7 }
+            info { 
+                Mixing factor (for each iteration) for updating 
                 the scf potential:
 
-		vnew(in) = alpha_mix*vold(out) + (1-alpha_mix)*vold(in)
-	    }
-	}
+                vnew(in) = alpha_mix*vold(out) + (1-alpha_mix)*vold(in)
+            }
+        }
 
-	var nmix_ph   -type INTEGER { 
-	    default { 4 }
-	    info { Number of iterations used in potential mixing. }
-	}
+        var nmix_ph   -type INTEGER { 
+            default { 4 }
+            info { Number of iterations used in potential mixing. }
+        }
 
-	var verbosity -type CHARACTER { 
-	    default { 'default' }
-	    info {
-               'debug', 'high', 'medium'   = verbose output
-               'low', 'default', 'minimal' = short output
-	    }
-	}
+        var verbosity -type CHARACTER { 
+            default { 'default' }
+            options {
+                info { Options are: }
+                opt -val {'debug', 'high', 'medium'} { verbose output }
+                opt -val {'low', 'default', 'minimal'} { short output }
+            }
+        }
 
-	var reduce_io -type LOGICAL { 
-	    default { .false. }
-	    info { Reduce I/O to the strict minimum. }
-	}
+        var reduce_io -type LOGICAL { 
+            default { .false. }
+            info { Reduce I/O to the strict minimum. }
+        }
 
-	var max_seconds  -type REAL { 
-	    default { 1.d7 }
-	    info { Maximum allowed run time before the job stops smoothly. }
-	}
+        var max_seconds  -type REAL { 
+            default { 1.d7 }
+            info { Maximum allowed run time before the job stops smoothly. }
+        }
 
-	var fildyn -type CHARACTER { 
-	    default { 'matdyn' }
-	    info { File where the dynamical matrix is written. }
-	}
+        var fildyn -type CHARACTER { 
+            default { 'matdyn' }
+            info { File where the dynamical matrix is written. }
+        }
 
-	var fildrho -type CHARACTER { 
-	    default { ' ' }
-	    info { File where the charge density responses are written. }
-	}
+        var fildrho -type CHARACTER { 
+            default { ' ' }
+            info { File where the charge density responses are written. }
+        }
 
-	var fildvscf  -type CHARACTER { 
-	    default { ' ' }
-	    info {
-		File where the the potential variation is written 
-		(for later use in electron-phonon calculation).
-	    }
-	}
+        var fildvscf  -type CHARACTER { 
+            default { ' ' }
+            info {
+                File where the the potential variation is written 
+                (for later use in electron-phonon calculation).
+            }
+        }
 
 
-	var epsil  -type LOGICAL { 
-	    default { .false. }
-	    info {
-		If .true. in a q=0 calculation for a non metal the      
-		macroscopic dielectric constant of the system is 
-		computed. Do not set epsil to .true. if you have a
-		metallic system or q/=0: the code will complain and stop.
-	    }
-	}
+        var epsil  -type LOGICAL { 
+            default { .false. }
+            info {
+                If .true. in a q=0 calculation for a non metal the      
+                macroscopic dielectric constant of the system is 
+                computed. Do not set @ref epsil to .true. if you have a
+                metallic system or q/=0: the code will complain and stop.
+            }
+        }
 
-	var lrpa  -type LOGICAL { 
-	    default { .false. }
-	    info {
-		If .true. the dielectric constant is calculated at the
-		RPA level with DV_xc=0.
-	    }
-	}
+        var lrpa  -type LOGICAL { 
+            default { .false. }
+            info {
+                If .true. the dielectric constant is calculated at the
+                RPA level with DV_xc=0.
+            }
+        }
 
-	var lnoloc  -type LOGICAL { 
-	    default { .false. }
-	    info {
-		If .true. the dielectric constant is calculated without
-		local fields, i.e. by setting DV_H=0 and DV_xc=0. 
-	    }
-	}
+        var lnoloc  -type LOGICAL { 
+            default { .false. }
+            info {
+                If .true. the dielectric constant is calculated without
+                local fields, i.e. by setting DV_H=0 and DV_xc=0. 
+            }
+        }
 
-	var trans  -type LOGICAL { 
-	    default { .true. }
-	    info {
-		If .true. the phonons are computed.
-		If trans .and. epsil are .true. effective charges are 
-		calculated.
-	    }      
-	}
-	
-	var lraman -type  LOGICAL { 
-	    default { .false. }
-	    info { 
-		If .true. calculate non-resonant Raman coefficients      
-		using second-order response as in:
-		M. Lazzeri and F. Mauri, Phys. Rev. Lett. 90, 036401 (2003).
-	    }
-	}
+        var trans  -type LOGICAL { 
+            default { .true. }
+            info {
+                If .true. the phonons are computed.
+                If @ref trans .and. @ref epsil are .true. effective charges are 
+                calculated.
+            }      
+        }
+        
+        var lraman -type  LOGICAL { 
+            default { .false. }
+            info { 
+                If .true. calculate non-resonant Raman coefficients      
+                using second-order response as in:
+                M. Lazzeri and F. Mauri, PRL 90, 036401 (2003).
+            }
+        }
 
-	group {
-	    label { Optional variables for Raman: }
-	    
-	    var eth_rps -type REAL {
-		default { 1.0d-9 }
-		info { Threshold for calculation of  Pc R |psi>. }
-	    }
-	    var eth_ns  -type REAL { 
-		default { 1.0e-12 }
-		info { Threshold for non-scf wavefunction calculation. } 
-	    }
-	    var dek     -type REAL { 
-		default { 1.0e-3 }
-		info { Delta_xk used for wavefunction derivation wrt k.}
-	    }
-	}
+        group {
+            label { Optional variables for Raman: }
+            
+            var eth_rps -type REAL {
+                default { 1.0d-9 }
+                info { Threshold for calculation of  Pc R |psi>. }
+            }
+            var eth_ns  -type REAL { 
+                default { 1.0e-12 }
+                info { Threshold for non-scf wavefunction calculation. } 
+            }
+            var dek     -type REAL { 
+                default { 1.0e-3 }
+                info { Delta_xk used for wavefunction derivation wrt k.}
+            }
+        }
 
-	var recover  -type LOGICAL { 
-	    default { .false. }
-	    info { If .true. restart from an interrupted run.}
-	}
+        var recover  -type LOGICAL { 
+            default { .false. }
+            info { If .true. restart from an interrupted run.}
+        }
 
-	var low_directory_check  -type LOGICAL { 
-	    default { .false. }
-	    info { If .true. search in the phsave directory only the
+        var low_directory_check  -type LOGICAL { 
+            default { .false. }
+            info { If .true. search in the phsave directory only the
                   quantities requested in input.}
-	}
+        }
 
-	var only_init  -type LOGICAL { 
-	    default { .false. }
-	    info { If .true. only the bands and other 
-                   initialization quantities are calculated. 
-                   (used for GRID parallelization)}
-	}
+        var only_init  -type LOGICAL { 
+            default { .false. }
+            info {
+                If .true. only the bands and other initialization quantities are calculated.
+                (used for GRID parallelization)}
+        }
 
-	var qplot  -type LOGICAL { 
-	    default { .false. }
-	    info { If .true. a list of q points is read from input.}
-	}
+        var qplot  -type LOGICAL { 
+            default { .false. }
+            info { If .true. a list of q points is read from input.}
+        }
 
-	var q2d  -type LOGICAL { 
-	    default { .false. }
-	    info { If .true. three q points and relative weights are
-            read from input. The three q points define the rectangle 
-            q(:,1) + l (q(:,2)-q(:,1)) + m (q(:,3)-q(:,1)) where
-            0< l,m < 1. The weights are integer and those of points two
-            and three are the number of points in the two directions.}
+        var q2d  -type LOGICAL { 
+            default { .false. }
+            info {
+                If .true. three q points and relative weights are
+                read from input. The three q points define the rectangle 
+                q(:,1) + l (q(:,2)-q(:,1)) + m (q(:,3)-q(:,1)) where
+                0< l,m < 1. The weights are integer and those of points two
+                and three are the number of points in the two directions.
+            }
 	}
 
 	var q_in_band_form  -type LOGICAL { 
 	    default { .false. }
-	    info { This flag is used only when qplot is .true. and q2d is
-           .false.. When .true. each couple of q points q(:,i+1) and
-           q(:,i) define the line from q(:,i) to q(:,i+1) and nq
-           points are generated along that line. nq is the weigth of 
-           q(:,i). When .false. only the list of q points given as
-           input is calculated. The weights are not used.}
+	    info {
+		This flag is used only when qplot is .true. and q2d is
+		.false.. When .true. each couple of q points q(:,i+1) and
+		q(:,i) define the line from q(:,i) to q(:,i+1) and nq
+		points are generated along that line. nq is the weigth of 
+		q(:,i). When .false. only the list of q points given as
+		input is calculated. The weights are not used.
+	    }
 	}
 
 	var electron_phonon  -type CHARACTER { 
 	    default { ' ' }
-	    info {
-		If equal to 'simple' electron-phonon lambda coefficients 
-                are computed for a given q and a grid of k-points specified
-                by the variables nk1, nk2, nk3, k1, k2, k3.
-
-                If equal to 'interpolated' electron-phonon is calculated
-                by interpolation over the Brillouin Zone as in 
-                M. Wierzbowska, et al. arXiv:cond-mat/0504077	
-   	
-		For metals only, requires gaussian smearing.
+	    options {
+		info {
+		    Options are:
+		}
+		opt -val 'simple' {
+		    Electron-phonon lambda coefficients are computed
+		    for a given q and a grid of k-points specified by
+		    the variables nk1, nk2, nk3, k1, k2, k3.
+		}
+		opt -val 'interpolated' {
+		    Electron-phonon is calculated by interpolation
+		    over the Brillouin Zone as in M. Wierzbowska, et
+		    al. arXiv:cond-mat/0504077
+		}
+		info {
+		    For metals only, requires gaussian smearing.
 		
-		If trans=.true., the lambdas are calculated in the same
-		run, using the same k-point grid for phonons and lambdas.
-		If trans=.false., the lambdas are calculated using
-		previously saved DeltaVscf in fildvscf, previously saved
-		dynamical matrix, and the present punch file. This allows
-		the use of a different (larger) k-point grid.
+		    If @ref trans=.true., the lambdas are calculated in the same
+		    run, using the same k-point grid for phonons and lambdas.
+		    If @ref trans=.false., the lambdas are calculated using
+		    previously saved DeltaVscf in @ref fildvscf, previously saved
+		    dynamical matrix, and the present punch file. This allows
+		    the use of a different (larger) k-point grid.
+		}
 	    }
 	}
 
 	var zeu  -type LOGICAL { 
-	    default { zeu=epsil }
+	    default { zeu=@ref epsil }
 	    info {
 		If .true. in a q=0 calculation for a non metal the 
 		effective charges are computed from the dielectric
-		response. This is the default algorithm. If epsil=.true.
-                and zeu=.false. only the dielectric tensor is calculated.
+		response. This is the default algorithm. If @ref epsil=.true.
+                and @ref zeu=.false. only the dielectric tensor is calculated.
 	    }
 	}
 
@@ -268,7 +280,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 		If .true. in a q=0 calculation for a non metal the 
 		effective charges are computed from the phonon
 		density responses. This is an alternative algorithm,
-		different from the default one (if trans .and. epsil )
+		different from the default one (if @ref trans .and. @ref epsil )
 		The results should be the same within numerical noise.
 	    }
 	}
@@ -284,7 +296,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 	    default { .false. }
 	    info {        
                  If .true. calculate dynamic polarizabilities            
-                 Requires epsil=.true. ( experimental stage:
+                 Requires @ref epsil=.true. ( experimental stage:
                  see example09 for calculation of methane ).
 	    }
 	}
@@ -293,7 +305,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 	    default { .false. }
 	    info {
 		If .true. the run calculates phonons for a grid of      
-		q-points specified by nq1, nq2, nq3 - for direct
+		q-points specified by @ref nq1, @ref nq2, @ref nq3 - for direct
 		calculation of the entire phonon dispersion.
 	    }
 	}
@@ -317,8 +329,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 	    info {
 		If .true. forces the diagonalization of the dynamical
                 matrix also when only a part of the dynamical matrix
-                has been calculated. It is used together with start_irr
-                and last_irr. If all modes corresponding to a
+                has been calculated. It is used together with @ref start_irr
+                and @ref last_irr. If all modes corresponding to a
                 given irreducible representation have been calculated,
                 the phonon frequencies of that representation are
                 correct. The others are zero or wrong. Use with care.
@@ -329,8 +341,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 	    default { .false. }
 	    info {
 		If .true. ph.x creates inside outdir a separate subdirectory 
-                for each q vector. The flag is set to .true. when ldisp=
-                .true. and fildvscf /= ' ' or when an electron-phonon 
+                for each q vector. The flag is set to .true. when @ref ldisp=.true.
+		and @ref fildvscf /= ' ' or when an electron-phonon 
                 calculation is performed. The induced potential is saved 
                 separately for each q inside the subdirectories.
 	    }
@@ -351,7 +363,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 	    default { 0,0,0 }
 	    info {
 		Parameters of the Monkhorst-Pack grid (no offset) used
-		when ldisp=.true. Same meaning as for nk1, nk2, nk3
+		when @ref ldisp=.true. Same meaning as for nk1, nk2, nk3
 		in the input of pw.x.
 	    }
 	}
@@ -382,13 +394,13 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 		default { 1 }
 		see { last_irr }
 		info {      
-		    Perform calculations only from start_irr to last_irr 
+		    Perform calculations only from @ref start_irr to @ref last_irr 
 		    irreducible representations.
 		    
 		    IMPORTANT:
-		       * start_irr must be <= 3*nat
-		       * do not specify "nat_todo" together with 
-		         "start_irr", "last_irr"
+		       * @ref start_irr must be <= 3*nat
+		       * do not specify @ref nat_todo together with 
+		         @ref start_irr, @ref last_irr
 		}
 	    }
 
@@ -396,13 +408,13 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 		default { 3*nat }
 		see { start_irr }
 		info {      
-		    Perform calculations only from start_irr to last_irr 
+		    Perform calculations only from @ref start_irr to @ref last_irr 
 		    irreducible representations.
 		
 		    IMPORTANT:
-		       * start_irr must be <= 3*nat
-		       * do not specify "nat_todo" together with 
-		         "start_irr", "last_irr"
+		       * @ref start_irr must be <= 3*nat
+		       * do not specify @ref nat_todo together with 
+		         @ref start_irr, @ref last_irr
 		}
 	    }
 
@@ -410,13 +422,13 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 		default { 0, i.e. displace all atoms }
 		info {    
 		    Choose the subset of atoms to be used in the linear response 
-		    calculation: "nat_todo" atoms, specified in input (see below)
+		    calculation: @ref nat_todo atoms, specified in input (see below)
 		    are displaced. Can be used to estimate modes for a molecule
 		    adsorbed over a surface without performing a full fledged
 		    calculation. Use with care, at your own risk, and be aware
 		    that this is an approximation and may not work.
 		    IMPORTANT:
-		       * nat_todo <= nat
+		       * @ref nat_todo <= nat
                        * if linear-response is calculated for a given atom, it
                          should also be done for all symmetry-equivalent atoms,
 			 or else you will get incorrect results
@@ -446,12 +458,12 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 		see { last_q }
 		info {      
 		    Used only when ldisp=.true..
-		    Computes only the q points from start_q to last_q.
+		    Computes only the q points from @ref start_q to @ref last_q.
 		    
 		    IMPORTANT:
-		       * start_q must be <= nqs (number of q points found)
-		       * do not specify "nat_todo" together with 
-		         "start_q", "last_q"
+		       * @ref start_q must be <= @ref nqs (number of q points found)
+		       * do not specify @ref nat_todo together with 
+		         @ref start_q, @ref last_q
 		}
 	    }
 
@@ -459,30 +471,30 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 		default { number of q points }
 		see { start_q }
 		info {      
-		    Used only when ldisp=.true..
-		    Computes only the q points from start_q to last_q.
+		    Used only when @ref ldisp=.true..
+		    Computes only the q points from @ref start_q to @ref last_q.
 		
 		    IMPORTANT
-		       * last_q must be <= nqs (number of q points)
-		       * do not specify "nat_todo" together with 
-		         "start_q", "last_q"
+		       * @ref last_q must be <= @ref nqs (number of q points)
+		       * do not specify @ref nat_todo together with 
+		         @ref start_q, @ref last_q
 		}
 	    }	
 
 	    var dvscf_star  -type STRUCTURE { 
 		default { disabled }
 		info {      
-
         It contains the following components:
-        dvscf_star%open  (logical, default: .false.)
-        dvscf_star%dir   (character, default: outdir//"Rotated_DVSCF" or the 
+
+        @b dvscf_star%open  (logical, default: .false.)
+        @b dvscf_star%dir   (character, default: outdir//"Rotated_DVSCF" or the 
                           ESPRESSO_FILDVSCF_DIR environment variable)
-        dvscf_star%ext   (character, default: "dvscf") the extension to use 
+        @b dvscf_star%ext   (character, default: "dvscf") the extension to use 
                           for the name of the output files, see below
-        dvscf_star%basis (character, default: "cartesian") the basis on which 
+        @b dvscf_star%basis (character, default: "cartesian") the basis on which 
                           the rotated dvscf will be saved
-        dvscf_star%pat   (logical, default: false) save an optional file with the
-                         displacement patterns and q vector for each dvscf file
+        @b dvscf_star%pat   (logical, default: false) save an optional file with the
+                          displacement patterns and q vector for each dvscf file
 
         IF dvscf_star%open is .true. use symmetry to compute and store the variation
         of the self-consistent potential on every q* in the star of the present q.
@@ -510,19 +522,19 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 		see {dvscf_star }
 		default { disabled }
 		info {      
-
         It contains the following components:
-        drho_star%open  (logical, default: .false.)
-        drho_star%dir   (character, default: outdir//"Rotated_DRHO" or the 
+
+        @b drho_star%open  (logical, default: .false.)
+        @b drho_star%dir   (character, default: outdir//"Rotated_DRHO" or the 
                          ESPRESSO_FILDRHO_DIR environment variable)
-        drho_star%ext   (character, default: "drho") the extension to use
+        @b drho_star%ext   (character, default: "drho") the extension to use
                          for the name of the output files, see below
-        drho_star%basis (character, default: "modes") the basis on which
+        @b drho_star%basis (character, default: "modes") the basis on which
                          the rotated drho will be saved
-        drho_star%pat   (logical, default: true) save an optional file with the
+        @b drho_star%pat   (logical, default: true) save an optional file with the
                          displacement patterns and q vector for each drho file
 
-        Like dvscf_star, but for the perturbation of the charge density.
+        Like @ref dvscf_star, but for the perturbation of the charge density.
         Notice that the defaults are different.
     }
 	    } 	    
@@ -539,20 +551,20 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 		    info {
 			The phonon wavevector, in units of 2pi/a0
 			(a0 = lattice parameter).
-			Not used if ldisp=.true. or qplot=.true.
+			Not used if @ref ldisp=.true. or @ref qplot=.true.
 		    }
 		}
 	    }
 	} 
 	elsewhen -test "qplot == .true." {
 
-	    label { Specification q points when qplot=.true. }
+	    label { Specification of q points when @ref qplot == .true. }
 
 	    card qPointsSpecs -nameless 1 {
 		syntax {
 		    line {
 			var nqs -type INTEGER {
-			    info { Number of q points in the list. Used only if qplot=.true.
+			    info { Number of q points in the list. Used only if @ref qplot=.true.
 			    }
 			}
 		    }
@@ -561,7 +573,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 			rows -start 1 -end nqs {
 			    colgroup -type REAL {
 				info {
-                                    q-point coordinates; used only with ldisp=.true. and qplot=.true.
+                                    q-point coordinates; used only with @ref ldisp=.true. and qplot=.true.
 				    The phonon wavevector, in units of 2pi/a0 (a0 = lattice parameter). 
 				    The meaning of these q points and their weights nq depend on the 
 				    flags q2d and q_in_band_form. (NB: nq is integer)
@@ -583,13 +595,13 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
     }
 
     choose {
-	when -test "nat_todo was specified" {
+        when -test "nat_todo was specified" {
 	    linecard {
 		list nat_todo_list -type INTEGER {
 		    format { atom(1)  atom(2) ... atom(nat_todo) }
 		    info {
 			Contains the list of indices of atoms used in the
-			calculation if "nat_todo" is specified.
+			calculation if @ref nat_todo is specified.
 		    }
 		}
 	    }
@@ -630,22 +642,22 @@ This mechanism allows:
 
 NB: To split the q points in different machines, use the input
 variables start_q and last_q. To split the irreducible
-representations, use the input variables start_irr, last_irr. Please
+representations, use the input variables @ref start_irr, @ref last_irr. Please
 note that different machines will use, in general, different
 displacement patterns and it is not possible to recollect partial
 dynamical matrices generated with different displacement patterns.  A
 calculation split into different machines will run as follows: A
-preparatory run of ph.x with start_irr=0, last_irr=0 produces the sets
+preparatory run of ph.x with @ref start_irr=0, @ref last_irr=0 produces the sets
 of displacement patterns and save them on the patterns.#iq.xml files.
 These files are copied in all the tmp_dir/_ph0/{prefix}.phsave directories
 of the machines where you plan to run ph.x. ph.x is run in different
-machines with complementary sets of start_q, last_q, start_irr and
-last_irr variables.  All the files dynmat.#iq.#irr.xml are
+machines with complementary sets of start_q, last_q, @ref start_irr and
+@ref last_irr variables.  All the files dynmat.#iq.#irr.xml are
 collected on a single tmp_dir/_ph0/{prefix}.phsave directory (remember to
 collect also dynmat.#iq.0.xml).  A final run of ph.x in this
 machine collects all the data contained in the files and diagonalizes
 the dynamical matrices.  This is done requesting a complete dispersion
-calculation without using start_q, last_q, start_irr, or last_irr.
+calculation without using start_q, last_q, @ref start_irr, or @ref last_irr.
 See an example in examples/GRID_example.
 
 On parallel machines the q point and the irreps calculations can be split 
