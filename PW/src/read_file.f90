@@ -6,6 +6,11 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
+! TB
+! included allocation of the force field of the monopole, search for 'TB'
+!----------------------------------------------------------------------------
+!
+!----------------------------------------------------------------------------
 SUBROUTINE read_file()
   !----------------------------------------------------------------------------
   !
@@ -58,6 +63,11 @@ SUBROUTINE read_file()
   nwordwfc = nbnd*npwx*npol
   io_level = 1
   CALL open_buffer ( iunwfc, 'wfc', nwordwfc, io_level, exst )
+  !
+  ! ... Allocate and compute k+G indices and number of plane waves
+  ! ... FIXME: should be read from file, not re-computed
+  !
+  CALL init_igk ( npwx, ngm, g, gcutw ) 
   !
   ! ... Allocate and compute k+G indices and number of plane waves
   ! ... FIXME: should be read from file, not re-computed
@@ -126,7 +136,7 @@ SUBROUTINE read_xml_file_internal(withbs)
   USE wvfct,                ONLY : nbnd, nbndx, et, wg
   USE symm_base,            ONLY : irt, d1, d2, d3, checkallsym, nsym
   USE ktetra,               ONLY : tetra, ntetra 
-  USE extfield,             ONLY : forcefield, tefield
+  USE extfield,             ONLY : forcefield, tefield, monopole, forcemono
   USE cellmd,               ONLY : cell_factor, lmovecell
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft
@@ -237,6 +247,7 @@ SUBROUTINE read_xml_file_internal(withbs)
   ALLOCATE( extfor(  3, nat ) )
   !
   IF ( tefield ) ALLOCATE( forcefield( 3, nat ) )
+  IF ( monopole ) ALLOCATE( forcemono( 3, nat ) ) ! TB
   !
   ALLOCATE( irt( 48, nat ) )
   ALLOCATE( tetra( 4, MAX( ntetra, 1 ) ) )

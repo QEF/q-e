@@ -5,6 +5,10 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+!----------------------------------------------------------------------------
+! TB
+! included monopole related energy
+!----------------------------------------------------------------------------
 !
 !----------------------------------------------------------------------------
 SUBROUTINE electrons()
@@ -331,7 +335,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
                                    iunres, iunefield, seqopn
   USE ldaU,                 ONLY : eth, Hubbard_U, Hubbard_lmax, &
                                    niter_with_fixed_ns, lda_plus_u
-  USE extfield,             ONLY : tefield, etotefield
+  USE extfield,             ONLY : tefield, etotefield, monopole, etotmonofield !TB
   USE noncollin_module,     ONLY : noncolin, magtot_nc, i_cons,  bfield, &
                                    lambda, report
   USE spin_orb,             ONLY : domag
@@ -749,6 +753,11 @@ SUBROUTINE electrons_scf ( printout, exxen )
         etot = etot + etotefield
         hwf_energy = hwf_energy + etotefield
      END IF
+     ! TB monopole energy
+     IF ( monopole) THEN
+        etot = etot + etotmonofield
+        hwf_energy = hwf_energy + etotmonofield
+     END IF
      !
      IF ( lfcpopt .or. lfcpdyn ) THEN
         etot = etot + ef * tot_charge
@@ -1094,6 +1103,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
           IF ( ts_vdw )  WRITE ( stdout , 9076 ) 2.0d0*EtsvdW
           IF ( textfor)  WRITE ( stdout , 9077 ) eext
           IF ( tefield )            WRITE( stdout, 9061 ) etotefield
+          IF ( monopole )           WRITE( stdout, 9062 ) etotmonofield ! TB
           IF ( lda_plus_u )         WRITE( stdout, 9065 ) eth
           IF ( ABS (descf) > eps8 ) WRITE( stdout, 9069 ) descf
           IF ( okpaw )              WRITE( stdout, 9067 ) epaw
@@ -1152,6 +1162,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
             /'     xc contribution           =',F17.8,' Ry' &
             /'     ewald contribution        =',F17.8,' Ry' )
 9061 FORMAT( '     electric field correction =',F17.8,' Ry' )
+9062 FORMAT( '     monopole field correction =',F17.8,' Ry' ) ! TB
 9065 FORMAT( '     Hubbard energy            =',F17.8,' Ry' )
 9067 FORMAT( '     one-center paw contrib.   =',F17.8,' Ry' )
 9069 FORMAT( '     scf correction            =',F17.8,' Ry' )

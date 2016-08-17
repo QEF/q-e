@@ -5,6 +5,9 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+! TB
+! included deallocation of forcefield of monopole 'forcemono'
+!
 !----------------------------------------------------------------------
 SUBROUTINE clean_pw( lflag )
   !----------------------------------------------------------------------
@@ -41,7 +44,7 @@ SUBROUTINE clean_pw( lflag )
   USE uspp_param,           ONLY : upf
   USE m_gth,                ONLY : deallocate_gth
   USE ldaU,                 ONLY : deallocate_ldaU
-  USE extfield,             ONLY : forcefield
+  USE extfield,             ONLY : forcefield, forcemono
   USE fft_base,             ONLY : dfftp, dffts  
   USE stick_set,            ONLY : pstickdealloc
   USE fft_types,            ONLY : fft_type_deallocate
@@ -84,6 +87,7 @@ SUBROUTINE clean_pw( lflag )
      !
      IF ( ALLOCATED( force ) )      DEALLOCATE( force )
      IF ( ALLOCATED( forcefield ) ) DEALLOCATE( forcefield )
+     IF ( ALLOCATED( forcemono ) )  DEALLOCATE( forcemono )
      IF ( ALLOCATED( irt ) )        DEALLOCATE( irt )
      !
      CALL dealloca_london()

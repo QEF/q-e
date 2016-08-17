@@ -85,7 +85,7 @@ subroutine stres_loc (sigmaloc)
         ! normal case: dvloc contains dV_loc(G)/dG
         !
         call dvloc_of_g (rgrid(nt)%mesh, msh (nt), rgrid(nt)%rab, rgrid(nt)%r,&
-          upf(nt)%vloc(1), upf(nt)%zp, tpiba2, ngl, gl, omega, dvloc)
+          upf(nt)%vloc(:), upf(nt)%zp, tpiba2, ngl, gl, omega, dvloc)
         !
      END IF
      ! no G=0 contribution

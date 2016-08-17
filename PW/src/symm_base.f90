@@ -6,6 +6,16 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !--------------------------------------------------------------------------
+! TB
+! included test in subroutine sgam_at to disable symmetries which
+! involve the z-axis, search for 'TB' or 'TS'
+! (TS as Thibault Sohier had the idea)
+!
+! note that verbosity is still set to high in input.f90 in order
+! to check if everything works as intended
+!--------------------------------------------------------------------------
+!
+!--------------------------------------------------------------------------
 !
 MODULE symm_base
 
@@ -405,6 +415,7 @@ SUBROUTINE sgam_at ( nat, tau, ityp, nr1, nr2, nr3, sym )
   !     of the crystal symmetry point group
   !
   USE io_global,  ONLY : stdout
+  USE extfield,   ONLY : monopole ! TS & TB
   USE kinds
   IMPLICIT NONE
   !
@@ -423,7 +434,7 @@ SUBROUTINE sgam_at ( nat, tau, ityp, nr1, nr2, nr3, sym )
   ! sym(isym)    : flag indicating if sym.op. isym in the parent group
   !                is a true symmetry operation of the crystal
   !
-  INTEGER :: na, kpol, nb, irot, i, j
+  INTEGER :: na, kpol, nb, irot, i, j, isymTS ! TS & TB
   ! counters
   real(DP) , ALLOCATABLE :: xau (:,:), rau (:,:)
   ! atomic coordinates in crystal axis
@@ -564,6 +575,13 @@ SUBROUTINE sgam_at ( nat, tau, ityp, nr1, nr2, nr3, sym )
          ftau (:, irot) = nint (ftaux(:))
       ENDIF
   ENDDO
+  ! TS & TB disable all symmetries z -> -z when monopole is present
+  IF (monopole) THEN
+    do isymTS=1,48
+      if (s(3,3,isymTS).eq.-1) sym(isymTS)=.false.
+    enddo
+  ENDIF
+  ! TS & TB
   !
   !   deallocate work space
   !

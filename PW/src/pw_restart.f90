@@ -5,6 +5,10 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+!----------------------------------------------------------------------------
+! TB
+! included monopole related variables, search for 'TB'
+!----------------------------------------------------------------------------
 !
 !----------------------------------------------------------------------------
 MODULE pw_restart
@@ -153,7 +157,8 @@ MODULE pw_restart
       USE scf,                  ONLY : rho
       USE force_mod,            ONLY : lforce, sumfor, force, sigma, lstres
       USE extfield,             ONLY : tefield, dipfield, edir, etotefield, &
-                                       emaxpos, eopreg, eamp
+                                       emaxpos, eopreg, eamp,
+                                       monopole, zmon, relaxz, block, block_1, block_2, block_height ! TB
       USE io_rho_xml,           ONLY : write_rho
       USE mp_world,             ONLY : nproc
       USE mp_images,            ONLY : nproc_image
@@ -523,7 +528,9 @@ MODULE pw_restart
       USE kernel_table,         ONLY : vdw_table_name
       USE scf,                  ONLY : rho
       USE extfield,             ONLY : tefield, dipfield, edir, &
-                                       emaxpos, eopreg, eamp
+                                       emaxpos, eopreg, eamp, & !TB
+                                       monopole, zmon, block, block_1, &
+                                       block_2, block_height, relaxz
       USE io_rho_xml,           ONLY : write_rho
       USE mp_world,             ONLY : nproc
       USE mp_images,            ONLY : nproc_image
@@ -762,7 +769,9 @@ MODULE pw_restart
 ! ... ELECTRIC FIELD
 !-------------------------------------------------------------------------------
          !
-         CALL qexml_write_efield( tefield, dipfield, edir, emaxpos, eopreg, eamp) 
+         CALL qexml_write_efield( tefield, dipfield, edir, emaxpos, eopreg, eamp, &
+                                  monopole, zmon, relaxz, block, block_1, block_2,&
+                                  block_height ) 
          !
 !
 !-------------------------------------------------------------------------------
@@ -949,6 +958,10 @@ MODULE pw_restart
       !
       DEALLOCATE( mill_g )
       DEALLOCATE( ngk_g )
+      !
+      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
+      !
+      CALL errore( 'pw_writefile ', 'cannot save history', ierr )
       !
       CALL mp_bcast( ierr, ionode_id, intra_image_comm )
       !
@@ -2733,7 +2746,8 @@ MODULE pw_restart
     SUBROUTINE read_efield( ierr )
       !----------------------------------------------------------------------
       !
-      USE extfield, ONLY : tefield, dipfield, edir, emaxpos, eopreg, eamp
+      USE extfield, ONLY : tefield, dipfield, edir, emaxpos, eopreg, eamp, & !TB
+                           monopole, zmon, relaxz, block, block_1, block_2, block_height
       !
       IMPLICIT NONE
       !
@@ -2748,7 +2762,9 @@ MODULE pw_restart
          !
          CALL qexml_read_efield( TEFIELD=tefield, DIPFIELD=dipfield, EDIR=edir, &
                                  EMAXPOS=emaxpos, EOPREG=eopreg, EAMP=eamp, &
-                                 FOUND=found, IERR=ierr )
+                                 MONOPOLE=monopole, ZMON=zmon, RELAXZ=relaxz, & !TB
+                                 BLOCK=block, BLOCK_1=block_1, BLOCK_2=block_2, &
+                                 BLOCK_HEIGHT=block_height, FOUND=found, IERR=ierr )
       ENDIF
       !
       CALL mp_bcast( ierr, ionode_id, intra_image_comm )
@@ -2759,6 +2775,7 @@ MODULE pw_restart
          !
          tefield  = .FALSE.
          dipfield = .FALSE.
+         monopole = .FALSE.
          !
       END IF
       !
@@ -2768,6 +2785,13 @@ MODULE pw_restart
       CALL mp_bcast( emaxpos,  ionode_id, intra_image_comm )
       CALL mp_bcast( eopreg,   ionode_id, intra_image_comm )
       CALL mp_bcast( eamp,     ionode_id, intra_image_comm )
+      CALL mp_bcast( monopole, ionode_id, intra_image_comm )
+      CALL mp_bcast( zmon,     ionode_id, intra_image_comm )
+      CALL mp_bcast( relaxz,   ionode_id, intra_image_comm )
+      CALL mp_bcast( block,    ionode_id, intra_image_comm )
+      CALL mp_bcast( block_1,  ionode_id, intra_image_comm )
+      CALL mp_bcast( block_2,  ionode_id, intra_image_comm )
+      CALL mp_bcast( block_height, ionode_id, intra_image_comm )
       !
       lefield_read = .TRUE.
       !
@@ -3229,6 +3253,21 @@ MODULE pw_restart
          CALL mp_bcast( Hubbard_beta,  ionode_id, intra_image_comm )
          !
       END IF
+      !
+      IF ( llondon ) THEN
+         CALL mp_bcast( scal6, ionode_id, intra_image_comm )
+         CALL mp_bcast( lon_rcut, ionode_id, intra_image_comm )
+      END IF
+      !
+      IF ( ts_vdw ) THEN
+         CALL mp_bcast( vdw_isolated, ionode_id, intra_image_comm )
+      END IF
+      !
+      ! SCF EXX/RPA
+      !
+      CALL mp_bcast( acfdt_in_pw, ionode_id, intra_image_comm )
+      !
+      IF (acfdt_in_pw) dft_name = 'NOX-NOC'
 
       IF ( inlc == 1 .OR. inlc == 2 ) THEN
          CALL mp_bcast( vdw_table_name,  ionode_id, intra_image_comm )

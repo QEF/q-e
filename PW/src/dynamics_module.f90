@@ -5,6 +5,11 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+!----------------------------------------------------------------------------
+! TB
+! included test if relaxz=.true. to allow for movement of the center of mass
+! search for 'TB' 
+!----------------------------------------------------------------------------
 !
 #undef __NPT
 #if defined (__NPT)
@@ -751,6 +756,9 @@ CONTAINS
       !
       USE constraints_module, ONLY : remove_constr_force, check_constraint
       !
+      ! TB
+      USE extfield,      ONLY : relaxz
+      !
       IMPLICIT NONE
       LOGICAL, INTENT(OUT) :: conv_ions
       !
@@ -868,7 +876,12 @@ CONTAINS
       !
       tau_new(:,:) = tau(:,:) + step(:,:)*min( norm_step, step_max / alat )
       !
-      IF ( .not. any( if_pos(:,:) == 0 ) ) THEN
+      ! TB
+      !IF ( .not. any( if_pos(:,:) == 0 ) ) THEN
+      IF ( .not. any( if_pos(:,:) == 0 ) .AND. (relaxz) ) THEN
+         WRITE( stdout, '("relaxz = .true. => displacement of the center of mass is not subtracted")')
+      ENDIF
+      IF ( (.not. any( if_pos(:,:) == 0 )) .AND. (.not. relaxz) ) THEN
          !
          ! ... if no atom has been fixed  we compute the displacement of the
          ! ... center of mass and we subtract it from the displaced positions

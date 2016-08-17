@@ -188,9 +188,9 @@ SUBROUTINE add_efield(vpoten,etotefield,rho,iflag)
           !  If verbose prints also the different components
           !
           IF ( iverbosity > 0 ) THEN
-              WRITE( stdout, '(8X,"Elec. dipole ",1F15.4," Ry au,  ", 1F15.4," Debye")' ) &
+              WRITE( stdout, '(8X,"Elec. dipole ",1F15.4," Ry au, ", 1F15.4," Debye")' ) &
                                             e_dipole, (e_dipole*au_debye)
-              WRITE( stdout, '(8X,"Ion. dipole  ",1F15.4," Ry au,", 1F15.4," Debye")' ) &
+              WRITE( stdout, '(8X,"Ion. dipole  ",1F15.4," Ry au, ", 1F15.4," Debye")' ) &
                                           ion_dipole, (ion_dipole*au_debye)
           ENDIF
 
@@ -198,7 +198,8 @@ SUBROUTINE add_efield(vpoten,etotefield,rho,iflag)
                                             (tot_dipole* (omega/fpi)),   &
                                             ((tot_dipole* (omega/fpi))*au_debye)  
 
-          WRITE( stdout, '(8x,"Dipole field     ", f11.4," Ry au")') tot_dipole
+          WRITE( stdout, '(8x,"Dipole field ", 1F15.4," Ry au, ")') &
+                                             tot_dipole
           WRITE( stdout,*)
 
        ENDIF
