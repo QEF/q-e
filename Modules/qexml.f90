@@ -5,6 +5,9 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+! TB
+! included monopole related variables in qexml_write_efield and qexml_read_efield
+!
 !----------------------------------------------------------------------------
 MODULE qexml_module
   !----------------------------------------------------------------------------
@@ -528,6 +531,7 @@ CONTAINS
     END FUNCTION qexml_wfc_filename
     !
     !
+    !
     !------------------------------------------------------------------------
     SUBROUTINE qexml_copy_file( file_in, file_out, ierr )
       !------------------------------------------------------------------------
@@ -998,16 +1002,25 @@ CONTAINS
     !
     !
     !------------------------------------------------------------------------
-    SUBROUTINE qexml_write_efield( tefield, dipfield, edir, emaxpos, eopreg, eamp )
-      !------------------------------------------------------------------------
-      !
+    SUBROUTINE qexml_write_efield( tefield, dipfield, edir, emaxpos, eopreg, eamp, &
+                                   monopole, zmon, relaxz, block, block_1, block_2,&
+                                   block_height)
+     !------------------------------------------------------------------------
+     !
       LOGICAL, INTENT(in)   :: tefield        ! if .TRUE. a finite electric field
                                               ! is added to the local potential
       LOGICAL, INTENT(in)   :: dipfield       ! if .TRUE. the dipole field is subtracted
+      LOGICAL, INTENT(in)   :: monopole       ! if .TRUE. counter charge is represented by monopole (gate)
+      LOGICAL, INTENT(in)   :: block          ! add potential barrier
+      LOGICAL, INTENT(in)   :: relaxz         ! relax in z direction  
       INTEGER, INTENT(in)   :: edir           ! direction of the field
       REAL(DP), INTENT(in) :: emaxpos        ! position of the maximum of the field (0<emaxpos<1)
       REAL(DP), INTENT(in) :: eopreg         ! amplitude of the inverse region (0<eopreg<1)
       REAL(DP), INTENT(in) :: eamp           ! field amplitude (in a.u.) (1 a.u. = 51.44 10^11 V/m)
+      REAL(DP), INTENT(in) :: zmon           ! position of monopole plane in units of cell vector in z direction
+      REAL(DP), INTENT(in) :: block_1        ! potential barrier
+      REAL(DP), INTENT(in) :: block_2
+      REAL(DP), INTENT(in) :: block_height
       !
       !
       CALL iotk_write_begin( ounit, "ELECTRIC_FIELD" )
@@ -1023,6 +1036,20 @@ CONTAINS
       CALL iotk_write_dat( ounit, "INVERSE_REGION", eopreg )
       !
       CALL iotk_write_dat( ounit, "FIELD_AMPLITUDE", eamp )
+      !
+      CALL iotk_write_dat( ounit, "MONOPOLE_PLANE", monopole )
+      !
+      CALL iotk_write_dat( ounit, "MONOPOLE_POS", zmon )
+      !
+      CALL iotk_write_dat( ounit, "RELAX_Z", relaxz )
+      !
+      CALL iotk_write_dat( ounit, "BLOCK", block )
+      !
+      CALL iotk_write_dat( ounit, "BLOCK_1", block_1 )
+      !
+      CALL iotk_write_dat( ounit, "BLOCK_2", block_2 )
+      !
+      CALL iotk_write_dat( ounit, "BLOCK_HEIGHT", block_height )
       !
       CALL iotk_write_end( ounit, "ELECTRIC_FIELD" )
       !
@@ -1361,6 +1388,10 @@ CONTAINS
             CALL iotk_write_end( ounit, "TKATCHENKO-SCHEFFLER" )
          END IF
       END IF
+      !
+      IF ( PRESENT (acfdt_in_pw) ) THEN
+         CALL iotk_write_dat( ounit, "ACFDT_IN_PW", acfdt_in_pw )
+      ENDIF
       !
       IF ( PRESENT (acfdt_in_pw) ) THEN
          CALL iotk_write_dat( ounit, "ACFDT_IN_PW", acfdt_in_pw )
@@ -2862,20 +2893,22 @@ CONTAINS
     !
     !
     !------------------------------------------------------------------------
-    SUBROUTINE qexml_read_efield( tefield, dipfield, edir, emaxpos, eopreg, eamp, found, ierr )
+    SUBROUTINE qexml_read_efield( tefield, dipfield, edir, emaxpos, eopreg, eamp, &
+                                  monopole, zmon, relaxz, block, block_1, block_2,&
+                                  block_height, found, ierr )
       !----------------------------------------------------------------------
       !
       IMPLICIT NONE
       !
-      LOGICAL,   OPTIONAL, INTENT(out) :: tefield, dipfield
+      LOGICAL,   OPTIONAL, INTENT(out) :: tefield, dipfield, monopole, relaxz, block
       INTEGER,   OPTIONAL, INTENT(out) :: edir
-      REAL(DP),  OPTIONAL, INTENT(out) :: emaxpos, eopreg, eamp
+      REAL(DP),  OPTIONAL, INTENT(out) :: emaxpos, eopreg, eamp, zmon, block_1, block_2, block_height
       LOGICAL,             INTENT(out) :: found
       INTEGER,             INTENT(out) :: ierr
       !
-      LOGICAL   :: tefield_, dipfield_
+      LOGICAL   :: tefield_, dipfield_, monopole_, block_, relaxz_
       INTEGER   :: edir_
-      REAL(DP)  :: emaxpos_, eopreg_, eamp_
+      REAL(DP)  :: emaxpos_, eopreg_, eamp_, zmon_, block_1_, block_2_, block_height_
       !
       ierr = 0
       !
@@ -2901,6 +2934,27 @@ CONTAINS
       CALL iotk_scan_dat( iunit, "FIELD_AMPLITUDE", eamp_, IERR=ierr )
       IF ( ierr /= 0 ) RETURN
       !
+      CALL iotk_scan_dat( iunit, "MONOPOLE_PLANE", monopole_ )
+      IF ( ierr /= 0 ) RETURN
+      !
+      CALL iotk_scan_dat( iunit, "MONOPOLE_POS", zmon_ )
+      IF ( ierr /= 0 ) RETURN
+      !
+      CALL iotk_scan_dat( iunit, "RELAX_Z", relaxz_ )
+      IF ( ierr /= 0 ) RETURN
+      !
+      CALL iotk_scan_dat( iunit, "BLOCK", block_ )
+      IF ( ierr /= 0 ) RETURN
+      !
+      CALL iotk_scan_dat( iunit, "BLOCK_1", block_1_ )
+      IF ( ierr /= 0 ) RETURN
+      !
+      CALL iotk_scan_dat( iunit, "BLOCK_2", block_2_ )
+      IF ( ierr /= 0 ) RETURN
+      !
+      CALL iotk_scan_dat( iunit, "BLOCK_HEIGHT", block_height_ )
+      IF ( ierr /= 0 ) RETURN
+      !
       CALL iotk_scan_end( iunit, "ELECTRIC_FIELD", IERR=ierr )
       IF ( ierr /= 0 ) RETURN
       !
@@ -2911,6 +2965,13 @@ CONTAINS
       IF ( present(emaxpos) )        emaxpos      = emaxpos_
       IF ( present(eopreg) )         eopreg       = eopreg_
       IF ( present(eamp) )           eamp         = eamp_
+      IF ( present(monopole) )       monopole     = monopole_
+      IF ( present(zmon) )           zmon         = zmon_
+      IF ( present(relaxz) )         relaxz       = relaxz_
+      IF ( present(block) )          block        = block_
+      IF ( present(block_1) )        block_1      = block_1_
+      IF ( present(block_2) )        block_2      = block_2_
+      IF ( present(block_height) )   block_height = block_height_
       !
     END SUBROUTINE qexml_read_efield
     !
@@ -3426,6 +3487,11 @@ CONTAINS
          vdw_table_name_ = ' '
          !
       ENDIF
+      !
+      CALL iotk_scan_dat( iunit, "ACFDT_IN_PW", acfdt_in_pw_, FOUND=found, IERR=ierr )
+      IF ( ierr/=0 ) RETURN
+      IF ( .NOT. found ) acfdt_in_pw_ = .FALSE.
+!      IF (acfdt_in_pw) dft_name = 'NOX NOC NOGX NOGC'
       !
       CALL iotk_scan_dat( iunit, "ACFDT_IN_PW", acfdt_in_pw_, FOUND=found, IERR=ierr )
       IF ( ierr/=0 ) RETURN

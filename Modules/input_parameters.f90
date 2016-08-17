@@ -5,6 +5,10 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+!---------------------------------------------
+! TB
+! included monopole related stuff, search 'TB'
+!---------------------------------------------
 !
 !=----------------------------------------------------------------------------=!
 !
@@ -193,6 +197,11 @@ MODULE input_parameters
           ! if .TRUE. a sawtooth potential simulating a finite electric field
           ! is added to the local potential = only used in PW
 
+          ! TB - added monopole also below to the namelist
+        LOGICAL :: monopole = .FALSE.
+          ! if .TRUE. a monopole plane in charged systems is added with a
+          ! total charge which is opposite to the charge of the system
+
           LOGICAL :: tefield2  = .false.
           ! if .TRUE. a second finite electric field is added to the local potential
           ! only used in CP
@@ -276,7 +285,8 @@ MODULE input_parameters
           gdir, nppstr, wf_collect, lelfield, nberrycyc, refg,            &
           tefield2, saverho, tabps, lkpoint_dir, use_wannier, lecrpa,     &
           tqmmm, vdw_table_name, lorbm, memory, point_label_type,         &
-          lfcpopt, lfcpdyn, input_xml_schema_file                                                  
+          lcalc_z2, z2_m_threshold, z2_z_threshold, lfcpopt, lfcpdyn,     &
+          input_xml_schema_file, monopole                                        
 !
 !=----------------------------------------------------------------------------=!
 !  SYSTEM Namelist Input Parameters
@@ -434,6 +444,16 @@ MODULE input_parameters
         REAL(DP) :: eopreg = 0.0_DP
         REAL(DP) :: eamp = 0.0_DP
 
+          ! TB parameters for monopole representing the gate
+          ! and a possible potential barrier
+          ! added also below to the namelist
+        REAL(DP) :: zmon  = 0.5
+        LOGICAL  :: relaxz = .false.
+        LOGICAL  :: block = .false.
+        REAL(DP) :: block_1 = 0.45
+        REAL(DP) :: block_2 = 0.55
+        REAL(DP) :: block_height = 0.1
+
           ! Various parameters for noncollinear calculations
         LOGICAL  :: noncolin = .false.
         LOGICAL  :: lspinorb = .false.
@@ -588,7 +608,8 @@ MODULE input_parameters
              esm_bc, esm_efield, esm_w, esm_nfit, esm_debug, esm_debug_gpmax, &
              esm_a, esm_zb, fcp_mu, fcp_mass, fcp_tempw, fcp_relax_step,      &
              fcp_relax_crit,                                                  &
-             space_group, uniqueb, origin_choice, rhombohedral
+             space_group, uniqueb, origin_choice, rhombohedral,               &
+             zmon, relaxz, block, block_1, block_2, block_height
 
 !=----------------------------------------------------------------------------=!
 !  ELECTRONS Namelist Input Parameters

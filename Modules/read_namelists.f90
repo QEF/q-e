@@ -5,6 +5,11 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+!---------------------------------------------
+! TB
+! included monopole related stuff, search 'TB'
+!---------------------------------------------
+!
 !----------------------------------------------------------------------------
 MODULE read_namelists_module
   !----------------------------------------------------------------------------
@@ -107,6 +112,7 @@ MODULE read_namelists_module
        forc_conv_thr = 1.E-3_DP
        disk_io  = 'default'
        dipfield = .FALSE.
+       monopole = .FALSE. !TB
        lberry   = .FALSE.
        gdir     = 0
        nppstr   = 0
@@ -215,6 +221,14 @@ MODULE read_namelists_module
        emaxpos = 0.5_DP
        eopreg = 0.1_DP
        eamp = 0.0_DP
+       ! TB monopole related variables
+       zmon = 0.5
+       relaxz = .false.
+       block = .false.
+       block_1 = 0.45
+       block_2 = 0.55
+       block_height = 0.0
+
        !
        !  ... postprocessing of DOS & phonons & el-ph
        la2F = .FALSE.
@@ -709,6 +723,7 @@ MODULE read_namelists_module
        CALL mp_bcast( lfcpopt,       ionode_id, intra_image_comm )
        CALL mp_bcast( lfcpdyn,       ionode_id, intra_image_comm )
        CALL mp_bcast( input_xml_schema_file, ionode_id, intra_image_comm )
+       CALL mp_bcast( monopole,      ionode_id, intra_image_comm ) !TB
        !
        RETURN
        !
@@ -799,6 +814,7 @@ MODULE read_namelists_module
        CALL mp_bcast( eopreg,                 ionode_id, intra_image_comm )
        CALL mp_bcast( eamp,                   ionode_id, intra_image_comm )
        CALL mp_bcast( la2F,                   ionode_id, intra_image_comm )
+
        !
        ! ... non collinear broadcast
        !
@@ -859,6 +875,15 @@ MODULE read_namelists_module
        CALL mp_bcast( uniqueb,            ionode_id, intra_image_comm )
        CALL mp_bcast( origin_choice,      ionode_id, intra_image_comm )
        CALL mp_bcast( rhombohedral,       ionode_id, intra_image_comm )
+       !
+       ! TB - monopole broadcast
+       !
+       CALL mp_bcast( zmon,               ionode_id, intra_image_comm )
+       CALL mp_bcast( relaxz,             ionode_id, intra_image_comm )
+       CALL mp_bcast( block,              ionode_id, intra_image_comm )
+       CALL mp_bcast( block_1,            ionode_id, intra_image_comm )
+       CALL mp_bcast( block_2,            ionode_id, intra_image_comm )
+       CALL mp_bcast( block_height,       ionode_id, intra_image_comm )
 
        RETURN
        !
@@ -1296,6 +1321,11 @@ MODULE read_namelists_module
        IF( .NOT. allowed ) &
           CALL errore( sub_name, ' memory '''// &
                        & TRIM(memory)//''' not allowed ',1)
+       ! TB
+       IF ( monopole .and. tefield .and. (.not. dipfield) ) &
+          CALL errore(sub_name, ' monopole cannot be used with tefield if dipole correction is not active', 1)
+       IF ( monopole .and. dipfield .and. (.not. tefield) ) &
+          CALL errore(sub_name, ' dipole correction is not active if tefield = .false.', 1)
 
        RETURN
        !
@@ -1414,6 +1444,10 @@ MODULE read_namelists_module
                                           TRIM(exxdiv_treatment) == "vcut_spherical" ) ) &
           CALL errore(sub_name, ' x_gamma_extrapolation cannot be used with vcut', 1 )
        !
+       ! TB - monopole check
+       !
+       IF ( monopole .and. tot_charge == 0 ) &
+          CALL errore(sub_name, ' charged plane (monopole) to compensate tot_charge of 0', 1)
        RETURN
        !
      END SUBROUTINE
