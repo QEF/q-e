@@ -2787,7 +2787,10 @@ MODULE pw_restart
       TYPE ( electric_field_type),OPTIONAL, INTENT(IN)    :: efield_obj
       ! 
       !
-      IF (PRESENT (efield_obj) .AND. (TRIM(efield_obj%electric_potential) == 'sawtooth_potential')) THEN 
+      tefield = .FALSE. 
+      dipfield = .FALSE. 
+      IF ( .NOT. PRESENT( efield_obj) ) RETURN 
+      IF (TRIM(efield_obj%electric_potential) == 'sawtooth_potential') THEN 
          tefield = .TRUE. 
          IF ( efield_obj%dipole_correction_ispresent ) THEN 
             dipfield = efield_obj%dipole_correction
@@ -2814,10 +2817,8 @@ MODULE pw_restart
          ELSE 
             eamp = 1.d-3
          END IF
-     ELSE
-         tefield = .FALSE. 
-         dipfield = .FALSE. 
-     END IF
+      END IF 
+      !
   END SUBROUTINE readschema_efield  
 #endif
     !------------------------------------------------------------------------
