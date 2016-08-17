@@ -453,6 +453,24 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                   in @ref SYSTEM namelist.
             }
         }
+
+        var monopole -type LOGICAL {
+            default { .FALSE. }
+            info {
+               In the case of charged cells (tot_charge.ne.0) setting monopole = .TRUE.
+               represents the counter charge (i.e. -tot_charge) not by a homogenous
+               background charge but with a charged plate, which is placed at 'zmon'
+               (see below). Details of the monopole potential can be found in
+               T. Brumme, M. Calandra, F. Mauri; PRB 89, 245406 (2014).
+               Note, that in systems which are not symmetric with respect to the plate,
+               one needs to enable the dipole correction! (dipfield=.true.).
+               Currently, symmetry can be used with monopole=.true. but carefully check
+               that no symmetry is included which maps z to -z even if in principle one
+               could still use them for symmetric systems (i.e. no dipole correction).
+               For nosym=.false. verbosity is set to 'high'.
+            }
+        }
+
     }
     
 
@@ -1636,6 +1654,69 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                   the coordinates of the inequivalent atoms are given with
                   respect to the hexagonal axes. They are converted internally
                   to the rhombohedral axes and @ref ibrav=5 is used in both cases.
+             }
+         }
+         var zmon -type REAL {
+             default { 0.5 }
+             info {
+                used only if monopole = .TRUE.
+                Specifies the position of the charged plate which represents
+                the counter charge in doped systems (tot_charge.ne.0).
+                In units of the unit cell length in z direction, zmon in ]0,1[
+                Details of the monopole potential can be found in
+                T. Brumme, M. Calandra, F. Mauri; PRB 89, 245406 (2014).
+             }
+         }
+
+         var realxz -type LOGICAL {
+             default { .FALSE. }
+             info {
+                used only if monopole = .TRUE.
+                Allows the relaxation of the system towards the charged plate.
+                Use carefully and utilize either a layer of fixed atoms or a
+                potential barrier (block=.TRUE.) to avoid the atoms moving to
+                the position of the plate or the dipole of the dipole
+                correction (dipfield=.TRUE.).
+             }
+         }
+
+         var block -type LOGICAL {
+             default { .FALSE. }
+             info {
+                used only if monopole = .TRUE.
+                Adds a potential barrier to the total potential seen by the
+                electrons to mimic a dielectric in field effect configuration
+                and/or to avoid electrons spilling into the vacuum region for
+                electron doping. Potential barrier is from block_1 to block_2 and
+                has a height of block_height.
+                If dipfield = .TRUE. eopreg is used for a smooth increase and
+                decrease of the potential barrier.
+             }
+         }
+
+         var block_1 -type REAL {
+             default { 0.45 }
+             info {
+                used only if monopole = .TRUE. and block = .TRUE.
+                lower beginning of of the potential barrier, in units of the
+                unit cell size along z, block_1 in ]0,1[
+             }
+         }
+
+         var block_2 -type REAL {
+             default { 0.55 }
+             info {
+                used only if monopole = .TRUE. and block = .TRUE.
+                upper beginning of the potential barrier, in units of the
+                unit cell size along z, block_2 in ]0,1[
+             }
+         }
+
+         var block_height -type REAL {
+             default { 0.1 }
+             info {
+                used only if monopole = .TRUE. and block = .TRUE.
+                Height of the potential barrier in Rydberg.
              }
          }
 
