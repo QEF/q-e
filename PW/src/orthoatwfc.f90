@@ -192,6 +192,7 @@ SUBROUTINE ortho_swfc ( normalize_only, m, wfc, swfc )
   USE mp_bands,   ONLY : intra_bgrp_comm
   USE mp,         ONLY : mp_sum
   USE noncollin_module, ONLY : noncolin, npol
+  IMPLICIT NONE
   !
   INTEGER, INTENT(in) :: m
   LOGICAL, INTENT(in) :: normalize_only
@@ -201,6 +202,7 @@ SUBROUTINE ortho_swfc ( normalize_only, m, wfc, swfc )
   COMPLEX(DP) :: temp 
   COMPLEX(DP) , ALLOCATABLE ::  work (:,:), overlap (:,:)
   REAL(DP) , ALLOCATABLE :: e (:)
+  INTEGER :: i, j, k, ipol
 
   ALLOCATE (overlap( m , m))    
   ALLOCATE (work   ( m , m))    
