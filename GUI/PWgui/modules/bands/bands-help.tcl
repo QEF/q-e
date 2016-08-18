@@ -12,6 +12,8 @@ help prefix -helpfmt helpdoc -helptext {
 <li> <em>Variable: </em><big><b>prefix</b></big>
 </li>
 <br><li> <em>Type: </em>CHARACTER</li>
+<br><li> <em>Default: </em> 'pwscf'
+         </li>
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
@@ -35,8 +37,7 @@ current directory ('./') otherwise
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-directory containing the input data,
-i.e. the same as in pw.x
+directory containing the input data, i.e. the same as in pw.x
          </pre></blockquote>
 </ul>      
       
@@ -49,10 +50,12 @@ help filband -helpfmt helpdoc -helptext {
 <li> <em>Variable: </em><big><b>filband</b></big>
 </li>
 <br><li> <em>Type: </em>CHARACTER</li>
+<br><li> <em>Default: </em> 'bands.out'
+         </li>
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-file "filband" contains the bands
+file name for band output (to be read by "plotband.x")
          </pre></blockquote>
 </ul>      
       
@@ -87,9 +90,9 @@ help lsigma -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-If true writes a file filband.i with the expectation
-values of the spin operator on the spinor wave-functions.
-(only in the noncollinear case).
+If true computes expectation values of the spin operator
+on the spinor wave-functions (only in the noncollinear case),
+writes them to a file "filband".i, i=1,2,3
          </pre></blockquote>
 </ul>      
       
@@ -108,7 +111,8 @@ help lp -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 If .true. matrix elements of the momentum operator p between
-conduction and valence bands are written to file "filp"
+conduction and valence bands are computed and written to file
+specified in "filp"
          </pre></blockquote>
 </ul>      
       
@@ -139,13 +143,15 @@ help lsym -helpfmt helpdoc -helptext {
 <li> <em>Variable: </em><big><b>lsym</b></big>
 </li>
 <br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .true.
+         </li>
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
 If .true. the bands are classified according to the
-irreducible representations of the small group of k. A
-file "filband".rap with the same format of "filband"
-is written.
+irreducible representations of the small group of k.
+A file "filband".rap with the same format of "filband"
+is written, for usage by "plotband.x"
          </pre></blockquote>
 </ul>      
       
@@ -158,13 +164,13 @@ help no_overlap -helpfmt helpdoc -helptext {
 <li> <em>Variable: </em><big><b>no_overlap</b></big>
 </li>
 <br><li> <em>Type: </em>LOGICAL</li>
-<br><li> <em>Default: </em> .false.
+<br><li> <em>Default: </em> .true.
          </li>
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-If .true. writes the eigenvalues in the output file
-without changing their order.
+If .false., and if "lsym" is .false., writes the eigenvalues
+in the order that maximises overlap with the neighbor k-points
          </pre></blockquote>
 </ul>      
       
@@ -186,9 +192,11 @@ If .true. writes the eigenvalues in the output file
 in a 2D format readable by gnuplot. Band ordering is not
 changed. Each band is written in a different file called
 filband.# with the format:
-xk, yk, energy
-xk, yk, energy
-..  ..  ..
+<i>
+   xk, yk, energy
+   xk, yk, energy
+   ..  ..  ..
+</i>
 energies are written in eV and xk in units 2\pi/a.
          </pre></blockquote>
 </ul>      
@@ -205,7 +213,7 @@ grouphelp {firstk lastk} -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-if lsym=.true. makes the symmetry analysis only for k
+if "lsym"=.true. makes the symmetry analysis only for k
 points between firstk to lastk
          </pre></blockquote>
 </ul>
