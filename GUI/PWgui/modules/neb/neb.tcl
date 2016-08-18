@@ -132,6 +132,34 @@ module NEB -title "PWSCF GUI: module NEB.x" -script {
 	    var k_max -label "k_max:" -validate fortranposreal			
 	    var k_min -label "k_min:" -validate fortranposreal			
 	}
+
+	group fcp -decor normal {
+	    separator --label "--- Fictitious Charge Particle (FCP) options ---"
+
+	    var lfcpopt {
+		-label "Perform a constant bias potential calculation using ESM (lfcpopt):"
+		-textvalue { Yes No }
+		-value     { .TRUE. .FALSE. }
+		-widget    radiobox
+	    }
+
+	    group fcp_specs -decor none {	
+		var fcp_mu {
+		    -label "target Fermi energy in Ry (fcp_mu):"	    
+		    -validate fortranreal
+		}
+		
+		var fcp_tot_charge_first {
+		    -label "Total charge for the first image (fcp_tot_charge_first):"
+		    -validate fortranreal
+		}    
+		
+		var fcp_tot_charge_last {
+		    -label "Total charge for the last image (fcp_tot_charge_last):"
+		    -validate fortranreal
+		}
+	    }
+	}
     }
 
     # 
