@@ -36,8 +36,8 @@ help zed -helpfmt helpdoc -helptext {
 <blockquote><pre>
 The nuclear charge (1 &lt; zed &lt; 100).
 
-IMPORTANT:
-Specify either zed OR atom, not both!
+<b>IMPORTANT:</b>
+Specify either "zed" OR "atom", not both!
             </pre></blockquote>
 </ul>      
       
@@ -57,8 +57,8 @@ help atom -helpfmt helpdoc -helptext {
 <blockquote><pre>
 Atomic symbol: atom='H', 'He', 'Be', etc.
 
-IMPORTANT:
-Specify either atom OR zed, not both!
+<b>IMPORTANT:</b>
+Specify either "atom" OR "zed", not both!
             </pre></blockquote>
 </ul>      
       
@@ -72,7 +72,7 @@ help xmin -helpfmt helpdoc -helptext {
 </li>
 <br><li> <em>Type: </em>REAL</li>
 <br><li> <em>Default: </em>
--7.0 if iswitch&gt;1 or rel=0,
+-7.0 if "iswitch"&gt;1 or "rel"=0,
 -8.0 otherwise
             </li>
 <br><li> <em>See: </em> dx
@@ -93,7 +93,7 @@ help dx -helpfmt helpdoc -helptext {
 </li>
 <br><li> <em>Type: </em>REAL</li>
 <br><li> <em>Default: </em>
-0.0125 if iswitch&gt;1,
+0.0125 if "iswitch"&gt;1,
 0.008 otherwise
             </li>
 <br><li> <em>Description:</em>
@@ -353,7 +353,7 @@ help lsd -helpfmt helpdoc -helptext {
 0 ... non spin polarized calculation
 1 ... spin-polarized calculation
 
-BEWARE:
+<b>BEWARE:</b>
 not allowed if iswitch=3 (PP generation) or with full
 relativistic calculation
          </pre></blockquote>
@@ -374,14 +374,14 @@ help dft -helpfmt helpdoc -helptext {
 Exchange-correlation functional.
 
 Examples:
-'PZ'    Perdew and Zunger formula for LDA
-'PW91'  Perdew and Wang GGA
-'BP'    Becke and Perdew GGA
-'PBE'   Perdew, Becke and Ernzerhof GGA
-'BLYP'  ...
+<b>'PZ'</b>    Perdew and Zunger formula for LDA
+<b>'PW91'</b>  Perdew and Wang GGA
+<b>'BP'</b>    Becke and Perdew GGA
+<b>'PBE'</b>   Perdew, Becke and Ernzerhof GGA
+<b>'BLYP'</b>  ...
 
-For the complete list, see module "functionals" in ../flib/
-The default is 'PZ' for all-electron calculations,
+For the complete list, see module "functionals" in ../Modules/
+The default is <b>'PZ'</b> for all-electron calculations,
 it is read from the PP file in a PP calculation.
          </pre></blockquote>
 </ul>      
@@ -523,9 +523,9 @@ help verbosity -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-'low' or 'high'
+<b>'low'</b> or <b>'high'</b>
 
-if 'high' with iswitch=2,3 prints separately core and
+if <b>'high'</b> with iswitch=2,3 prints separately core and
 valence contributions to the energies. Print the
 frozen-core energy.
          </pre></blockquote>
@@ -569,17 +569,17 @@ A string with the electronic configuration.
 Example:
   '[Ar] 3d10 4s2 4p2.5'
 
-* If lsd=1, spin-up and spin-down state may appear twice
+* If "lsd"=1, spin-up and spin-down state may appear twice
   with the respective occupancy: 3p4 3p2 = 4 up,
   2 down. Otherwise, the Hund's rule is assumed.
 
-* If rel=2, states with jj=l-1/2 are filled first.
+* If "rel"=2, states with jj=l-1/2 are filled first.
   If a state appears twice, the first one has jj=l-1/2,
   the second one jj=l+1/2 (except S states)
   (Use rel_dist if you want to average the electrons
   over all available states.)
 
-* If config='default' the code uses zed to set the ground
+* If config='default' the code uses "zed" to set the ground
   state electronic configuration for the atom.
 
 Negative occupancies are used to flag unbound states;
@@ -602,7 +602,7 @@ help relpert -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 If .true. the relativistic corrections to the non-relativistic
-Kohn-Sham energy levels (rel=0 .and. lsd=0) are computed using
+Kohn-Sham energy levels ("rel"=0 .and. "lsd"=0) are computed using
 first-order perturbation theory in all-electron calculations.
 The corrections consist of the following terms:
    E_vel: velocity (p^4) correction
@@ -632,11 +632,11 @@ help rel_dist -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-'energy' or 'average'
+<b>'energy'</b> or <b>'average'</b>
 
-* if 'energy' the relativistic l-1/2 states are filled first.
+* if <b>'energy'</b> the relativistic l-1/2 states are filled first.
 
-* if 'average' the electrons are uniformly distributed
+* if <b>'average'</b> the electrons are uniformly distributed
   among all the states with the given l.
          </pre></blockquote>
 </ul>      
@@ -878,8 +878,8 @@ help rcloc -helpfmt helpdoc -helptext {
 </li>
 <br><li> <em>Type: </em>REAL</li>
 <br><li> <em>Status: </em>
-Must be specified only if lloc=-1, otherwise the
-corresponding value of rcut is used.
+Must be specified only if "lloc"=-1, otherwise the
+corresponding value of "rcut" is used.
          </li>
 <br><li> <em>Description:</em>
 </li>
@@ -904,7 +904,7 @@ help nlcc -helpfmt helpdoc -helptext {
 <blockquote><pre>
 If .true. produce a PP with the nonlinear core
 correction of Louie, Froyen, and Cohen
-[PRB 26, 1738 (1982)].
+["PRB 26, 1738 (1982)"].
          </pre></blockquote>
 </ul>      
       
@@ -960,10 +960,10 @@ help tm -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-* .true. for Troullier-Martins pseudization [PRB 43, 1993 (1991)]
+* .true. for Troullier-Martins pseudization ["PRB 43, 1993 (1991)"]
 
 * .false. for Rappe-Rabe-Kaxiras-Joannopoulos pseudization
-  [PRB 41, 1227 (1990), erratum PRB 44, 13175 (1991)]
+  ["PRB 41, 1227 (1990)", erratum "PRB 44, 13175 (1991)"]
          </pre></blockquote>
 </ul>      
       
@@ -1003,7 +1003,7 @@ help lpaw -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 If .true. produce a PAW dataset, experimental feature
-only for pseudotype=3
+only for "pseudotype"=3
          </pre></blockquote>
 </ul>      
       
@@ -1017,22 +1017,22 @@ help which_augfun -helpfmt helpdoc -helptext {
 </li>
 <br><li> <em>Type: </em>CHARACTER</li>
 <br><li> <em>Default: </em>
-'AE' for Vanderbilt-Ultrasoft pseudo-potentials and 'BESSEL' for PAW datasets.
+<tt>'AE'</tt> for Vanderbilt-Ultrasoft pseudo-potentials and 'BESSEL' for PAW datasets.
             </li>
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-If different from 'AE' the augmentation functions are pseudized
-before rmatch_augfun. The pseudization options are:
+If different from <b>'AE'</b> the augmentation functions are pseudized
+before "rmatch_augfun". The pseudization options are:
 
-* 'PSQ'        Use Bessel functions to pseudize Q
+* <b>'PSQ'</b>        Use Bessel functions to pseudize Q
                from the origin to rmatch_augfun.
 
 These features are available only for PAW:
 
-* 'BESSEL'     Use Bessel functions to pseudize the Q.
-* 'GAUSS'      Use 2 Gaussian functions to pseudize the Q.
-* 'BG'         Use original Bloechl's recipe with a single gaussian.
+* <b>'BESSEL'</b>     Use Bessel functions to pseudize the Q.
+* <b>'GAUSS'</b>      Use 2 Gaussian functions to pseudize the Q.
+* <b>'BG'</b>         Use original Bloechl's recipe with a single gaussian.
 
 Note: if lpaw is true and which_augfun is set to AE real all-
 electron charge will be used, which will produce extremely
@@ -1122,7 +1122,7 @@ Set it to .true. to generate pseudo-potentials containing the
 additional info required for reconstruction of all-electron
 orbitals, used by GIPAW. You will typically need to specify
 additional projectors beyond those used in the generation of
-pseudo-potentials. You should also specify 'file_recon'.
+pseudo-potentials. You should also specify "file_recon".
 
 All projectors used in the reconstruction must be listed BOTH
 in the test configuration after namelist &amp;test AND in the
@@ -1158,7 +1158,7 @@ In the default case, the GIPAW valence wavefunction and projectors
 are independent from the PAW ones and must be then specified as
 explained above in lgipaw_reconstruction.
 
-Setting this to .true. always implies lgipaw_reconstruction = .true.
+Setting this to .true. always implies "lgipaw_reconstruction" = .true.
          </pre></blockquote>
 </ul>      
       
@@ -1471,7 +1471,7 @@ grouphelp {ecutmin ecutmax decut} -helpfmt helpdoc -helptext {
 <br><li> <em>Default: </em>
 decut=5.0 Ry; ecutmin=ecutmax=0Ry
          </li>
-<br><li> <em>Status: </em> specify ecutmin and ecutmax if you want to perform this test
+<br><li> <em>Status: </em> specify "ecutmin" and "ecutmax" if you want to perform this test
          </li>
 <br><li> <em>Description:</em>
 </li>
@@ -1479,7 +1479,7 @@ decut=5.0 Ry; ecutmin=ecutmax=0Ry
 Parameters (Ry) used for test with a basis set of spherical
 Bessel functions j_l(qr) . The hamiltonian at fixed scf
 potential is diagonalized for various values of ecut:
-ecutmin, ecutmin+decut, ecutmin+2*decut ... up to ecutmax.
+"ecutmin", "ecutmin"+"decut", "ecutmin"+2*"decut" ... up to "ecutmax".
 This yields an indication of convergence with the
 corresponding plane-wave cutoff in solids, and shows
 in an unambiguous way if there are "ghost" states
