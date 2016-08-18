@@ -63,7 +63,7 @@
 
   <xsl:template match="var | dimension | vargroup | dimensiongroup |
 		       list | list/format" mode="card_description">
-    <xsl:if test="info != '' or status != '' or see != ''">
+    <xsl:if test="info != '' or options != '' or status != '' or see != ''">
       <xsl:apply-templates select="."/>
     </xsl:if>
   </xsl:template>
@@ -86,7 +86,7 @@
 	<xsl:apply-templates select="default"/> 
 	<xsl:apply-templates select="status"/>
 	<xsl:apply-templates select="see"/>
-	<xsl:apply-templates select="info"/>
+	<xsl:apply-templates select="info | options"/>
       </ul>      
       }
     </xsl:if>
@@ -102,7 +102,7 @@
       <xsl:apply-templates select="default"/> 
       <xsl:apply-templates select="status"/>
       <xsl:apply-templates select="see"/>
-      <xsl:apply-templates select="info"/>
+      <xsl:apply-templates select="info | options"/>
     </ul>      
     }
 
@@ -115,7 +115,7 @@
       <xsl:apply-templates select="default"/> 
       <xsl:apply-templates select="status"/>
       <xsl:apply-templates select="see"/>
-      <xsl:apply-templates select="info"/>
+      <xsl:apply-templates select="info | options"/>
     </ul>  
     }
   </xsl:template>
@@ -157,7 +157,7 @@
       <xsl:apply-templates select="default"/> 
       <xsl:apply-templates select="status"/>
       <xsl:apply-templates select="see"/>
-      <xsl:apply-templates select="info"/>
+      <xsl:apply-templates select="info | options"/>
     </ul>
     }
   </xsl:template>
@@ -166,23 +166,52 @@
   <!--    *** VAR's elements ***  -->
 
   <xsl:template match="default">
-    <li><xsl:text>&#160;</xsl:text> <em>Default: </em> <xsl:value-of select="."/></li><br/>
+    <li><xsl:text>&#160;</xsl:text> <em>Default: </em> <xsl:apply-templates/></li><br/>
   </xsl:template>
   
   <xsl:template match="status">
-    <li><xsl:text>&#160;</xsl:text> <em>Status: </em> <xsl:value-of select="."/></li><br/>
+    <li><xsl:text>&#160;</xsl:text> <em>Status: </em> <xsl:apply-templates/></li><br/>
   </xsl:template>
   
   <xsl:template match="see">
-    <li><xsl:text>&#160;</xsl:text> <em>See: </em> <xsl:value-of select="."/></li><br/>
+    <li><xsl:text>&#160;</xsl:text> <em>See: </em> <xsl:apply-templates/></li><br/>
   </xsl:template>
   
   <xsl:template match="info">
     <li><xsl:text>&#160;</xsl:text> <em>Description:</em></li>
-    <blockquote><pre><xsl:value-of select="."/></pre></blockquote>
+    <blockquote><pre><xsl:apply-templates/></pre></blockquote>
   </xsl:template>
   
-  
+  <xsl:template match="options">
+    <li><xsl:text>&#160;</xsl:text> <em>Description:</em></li>
+    <blockquote>
+      <xsl:apply-templates select="info | opt" mode="options"/>
+    </blockquote>
+  </xsl:template>
+
+   <xsl:template match="info" mode="options">
+    <pre><xsl:apply-templates/></pre>
+  </xsl:template>
+
+  <xsl:template match="opt" mode="options">
+    <!--<span class="flag"><xsl:value-of select="@val"/></span><xsl:text> :</xsl:text>-->
+    <dl style="margin-left: 1.5em;">
+      <dt><tt><xsl:call-template name="tokenize_clist"><xsl:with-param name="clist" select="@val"/></xsl:call-template><xsl:if test="normalize-space(.) != ''"> :</xsl:if></tt></dt>
+      <dd><pre style="margin-top: 0em; margin-bottom: -1em;"><xsl:apply-templates/></pre></dd>
+    </dl>
+  </xsl:template>
+
+  <xsl:template name="tokenize_clist">
+    <xsl:param name="clist"/>
+    <xsl:variable name="first-elem" select="normalize-space(substring-before(concat($clist, ','), ','))"/> 
+    <xsl:if test="$first-elem">
+      <b><xsl:value-of select="$first-elem"/></b><xsl:if test="not($first-elem = normalize-space($clist))"><xsl:text>, </xsl:text></xsl:if>
+      <xsl:call-template name="tokenize_clist"> 
+	<xsl:with-param name="clist" select="substring-after($clist,',')" /> 
+      </xsl:call-template>    
+    </xsl:if>  
+  </xsl:template>
+
   <!--    *** TABLE ***  -->
 
   <xsl:template match="table" mode="card_description">
@@ -215,7 +244,7 @@
 	<xsl:apply-templates select="default"/> 
 	<xsl:apply-templates select="status"/>
 	<xsl:apply-templates select="see"/>
-	<xsl:apply-templates select="info"/>
+	<xsl:apply-templates select="info | options"/>
       </ul>
     </xsl:if>
   </xsl:template>
@@ -232,8 +261,19 @@
 	<xsl:apply-templates select="default"/> 
 	<xsl:apply-templates select="status"/>
 	<xsl:apply-templates select="see"/>
-	<xsl:apply-templates select="info"/>
+	<xsl:apply-templates select="info | options"/>
       </ul>
     </xsl:if>
   </xsl:template>
+
+  <xsl:template match="link | ref | a">"<xsl:value-of select="."/>"</xsl:template>
+  
+  <!-- support a subset of HTML tags (subset of those specified in helpdoc.schema) -->
+  
+  <xsl:template match="b | i | tt | u | sub | sup | code | pre | br | hr | p | ol | ul | li | dl | dt | dd">
+    <xsl:copy>
+      <xsl:apply-templates/>
+    </xsl:copy>
+  </xsl:template>
+  
 </xsl:stylesheet>
