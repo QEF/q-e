@@ -32,14 +32,13 @@ help outdir -helpfmt helpdoc -helptext {
 </li>
 <br><li> <em>Type: </em>CHARACTER</li>
 <br><li> <em>Default: </em>
-value of the ESPRESSO_TMPDIR environment variable if set;
+value of the <tt>ESPRESSO_TMPDIR</tt> environment variable if set;
 current directory ('./') otherwise
          </li>
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-directory containing the input data,
-i.e. the same as in pw.x
+directory containing the input data, i.e. the same as in pw.x
          </pre></blockquote>
 </ul>      
       
@@ -83,7 +82,8 @@ help degauss -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-gaussian broadening, Ry (not eV!)          see below
+gaussian broadening, Ry (not eV!)
+(see below)
          </pre></blockquote>
 </ul>      
       
@@ -132,7 +132,7 @@ help fildos -helpfmt helpdoc -helptext {
 <li> <em>Variable: </em><big><b>fildos</b></big>
 </li>
 <br><li> <em>Type: </em>CHARACTER</li>
-<br><li> <em>Default: </em> "prefix".dos
+<br><li> <em>Default: </em> '"prefix".dos'
          </li>
 <br><li> <em>Description:</em>
 </li>
