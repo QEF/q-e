@@ -79,7 +79,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program dos.x
 	}
 
 	var fildos -type CHARACTER {
-	    default { "@ref prefix.dos" }
+	    default { '@ref prefix.dos' }
 	    info {
 		output file containing DOS(E)
 	    }

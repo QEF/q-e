@@ -127,8 +127,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program projw
                 to the unit cell, containing the points of the
                 (charge density) FFT grid included within
                 @ref irmin and @ref irmax, in the three dimensions:
-                from irmin(j,n) to irmax(j,n) for j=1,2,3
-                (n=1,n_proj_boxes)
+                from @ref irmin(j,n) to @ref irmax(j,n) for j=1,2,3
+                (n=1,@ref n_proj_boxes)
             }
         }       
 
@@ -139,24 +139,24 @@ input_description -distribution {Quantum Espresso} -package PWscf -program projw
             }
         }       
 
-        var irmin -type INTEGER {
+        var irmin(3,n_proj_boxes) -type INTEGER {
             default { 1 for each box }
             info {
                 
                 first point of the given box
 
-                BEWARE: irmin is a 2D array of the form: irmin(3,n_proj_boxes)
+                BEWARE: irmin is a 2D array of the form: irmin(3,@ref n_proj_boxes)
             }
         }       
 
-        var irmax -type INTEGER {
+        var irmax(3,n_proj_boxes) -type INTEGER {
             default { 0 for each box }
             info {
                 
                 last point of the given box;
                 ( 0 stands for the last point in the FFT grid )
 
-                BEWARE: irmax is a 2D array of the form: irmax(3,n_proj_boxes)
+                BEWARE: irmax is a 2D array of the form: irmax(3,@ref n_proj_boxes)
             }
         }       
 
@@ -255,7 +255,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program projw
 		Boxes are specified using the variables @ref irmin and @ref irmax:
 		
 		FFT grid points are included from irmin(j,n) to irmax(j,n)
-		for j=1,2,3 and n=1,...,n_proj_boxes
+		for j=1,2,3 and n=1,...,@ref n_proj_boxes
 		
 		@ref irmin and @ref irmax range from 1 to nr1 or nr2 or nr3
 		

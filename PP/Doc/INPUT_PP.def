@@ -94,8 +94,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pp.x 
                    9  = charge density minus superposition of atomic densities
 
 		   10 = integrated local density of states (ILDOS)
-                        from emin to emax (emin, emax in eV)
-                        if emax is not specified, emax=E_fermi
+                        from @ref emin to @ref emax (emin, emax in eV)
+                        if @ref emax is not specified, emax=E_fermi
 
 		   11 = the V_bare + V_H potential
 
