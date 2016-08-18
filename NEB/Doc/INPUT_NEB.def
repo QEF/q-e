@@ -252,7 +252,7 @@ input_description -distribution {Quantum Espresso} -package NEB -program neb.x {
                         If .TRUE. perform a constant bias potential (constant-mu)
                         calculation with ESM method (assume_isolated = 'esm' and
                         esm_bc = 'bc2' or 'bc3' must be set in SYSTEM namelist).
-                        'fcp_mu' gives the target Fermi energy.
+                        @ref fcp_mu gives the target Fermi energy.
                         See the header of PW/src/fcp.f90 for documentation
                     }
                 }
