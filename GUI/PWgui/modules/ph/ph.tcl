@@ -212,7 +212,7 @@ module PH\#auto -title "PWSCF GUI: module PH.x" -script {
 		##separator -label "--- Potential variations ---"
 
 		group dvscf -name "Potential variations" -decor normal {
-		    # to trich the chek_gui only
+		    # to trick the chek_gui only
 		    var dvscf_star
 		    #/
 		    var dvscf_star_open {
@@ -448,7 +448,7 @@ module PH\#auto -title "PWSCF GUI: module PH.x" -script {
 		    -label    "Threshold for selfconsistency (tr2_ph):"
 		    -validate fortranreal
 		}
-		var alpha_mix1 {
+		var alpha_mix {
 		    -variable alpha_mix(1) 
 		    -label    "Mixing factor for updating the SCF potential (alpha_mix(1)):"
 		    -validate fortranreal

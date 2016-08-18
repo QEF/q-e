@@ -48,8 +48,8 @@ help outdir -helpfmt helpdoc -helptext {
 </li>
 <br><li> <em>Type: </em>CHARACTER</li>
 <br><li> <em>Default: </em>
-value of the ESPRESSO_TMPDIR environment variable if set;
-current directory ('./') otherwise
+value of the <tt>ESPRESSO_TMPDIR</tt> environment variable if set;
+<br> current directory ('./') otherwise
          </li>
 <br><li> <em>Description:</em>
 </li>
@@ -119,7 +119,7 @@ help tr2_ph -helpfmt helpdoc -helptext {
 
 
 # ------------------------------------------------------------------------
-help alpha_mix1 -helpfmt helpdoc -helptext {
+help alpha_mix -helpfmt helpdoc -helptext {
       <ul>
 <li> <em>Variable: </em><big><b>alpha_mix(niter)</b></big>
 </li>
@@ -166,10 +166,20 @@ help verbosity -helpfmt helpdoc -helptext {
          </li>
 <br><li> <em>Description:</em>
 </li>
-<blockquote><pre>
-'debug', 'high', 'medium'   = verbose output
-'low', 'default', 'minimal' = short output
-         </pre></blockquote>
+<blockquote>
+<pre> Options are:
+            </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'debug'</b>, <b>'high'</b>, <b>'medium'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;"> verbose output
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'low'</b>, <b>'default'</b>, <b>'minimal'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;"> short output
+            </pre></dd>
+</dl>
+</blockquote>
 </ul>      
       
 }
@@ -275,7 +285,7 @@ help epsil -helpfmt helpdoc -helptext {
 <blockquote><pre>
 If .true. in a q=0 calculation for a non metal the
 macroscopic dielectric constant of the system is
-computed. Do not set epsil to .true. if you have a
+computed. Do not set "epsil" to .true. if you have a
 metallic system or q/=0: the code will complain and stop.
          </pre></blockquote>
 </ul>      
@@ -333,7 +343,7 @@ help trans -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 If .true. the phonons are computed.
-If trans .and. epsil are .true. effective charges are
+If "trans" .and. "epsil" are .true. effective charges are
 calculated.
          </pre></blockquote>
 </ul>      
@@ -354,7 +364,7 @@ help lraman -helpfmt helpdoc -helptext {
 <blockquote><pre>
 If .true. calculate non-resonant Raman coefficients
 using second-order response as in:
-M. Lazzeri and F. Mauri, Phys. Rev. Lett. 90, 036401 (2003).
+M. Lazzeri and F. Mauri, "PRL 90, 036401 (2003)".
          </pre></blockquote>
 </ul>      
       
@@ -459,9 +469,8 @@ help only_init -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-If .true. only the bands and other
-                  initialization quantities are calculated.
-                  (used for GRID parallelization)
+If .true. only the bands and other initialization quantities are calculated.
+(used for GRID parallelization)
          </pre></blockquote>
 </ul>      
       
@@ -497,10 +506,10 @@ help q2d -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 If .true. three q points and relative weights are
-           read from input. The three q points define the rectangle
-           q(:,1) + l (q(:,2)-q(:,1)) + m (q(:,3)-q(:,1)) where
-           0&lt; l,m &lt; 1. The weights are integer and those of points two
-           and three are the number of points in the two directions.
+read from input. The three q points define the rectangle
+q(:,1) + l (q(:,2)-q(:,1)) + m (q(:,3)-q(:,1)) where
+0&lt; l,m &lt; 1. The weights are integer and those of points two
+and three are the number of points in the two directions.
          </pre></blockquote>
 </ul>      
       
@@ -519,11 +528,11 @@ help q_in_band_form -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 This flag is used only when qplot is .true. and q2d is
-          .false.. When .true. each couple of q points q(:,i+1) and
-          q(:,i) define the line from q(:,i) to q(:,i+1) and nq
-          points are generated along that line. nq is the weigth of
-          q(:,i). When .false. only the list of q points given as
-          input is calculated. The weights are not used.
+.false.. When .true. each couple of q points q(:,i+1) and
+q(:,i) define the line from q(:,i) to q(:,i+1) and nq
+points are generated along that line. nq is the weigth of
+q(:,i). When .false. only the list of q points given as
+input is calculated. The weights are not used.
          </pre></blockquote>
 </ul>      
       
@@ -540,24 +549,37 @@ help electron_phonon -helpfmt helpdoc -helptext {
          </li>
 <br><li> <em>Description:</em>
 </li>
-<blockquote><pre>
-If equal to 'simple' electron-phonon lambda coefficients
-are computed for a given q and a grid of k-points specified
-by the variables nk1, nk2, nk3, k1, k2, k3.
-
-If equal to 'interpolated' electron-phonon is calculated
-by interpolation over the Brillouin Zone as in
-M. Wierzbowska, et al. arXiv:cond-mat/0504077
-
+<blockquote>
+<pre>
+Options are:
+            </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'simple'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Electron-phonon lambda coefficients are computed
+for a given q and a grid of k-points specified by
+the variables nk1, nk2, nk3, k1, k2, k3.
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'interpolated'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Electron-phonon is calculated by interpolation
+over the Brillouin Zone as in M. Wierzbowska, et
+al. "arXiv:cond-mat/0504077"
+            </pre></dd>
+</dl>
+<pre>
 For metals only, requires gaussian smearing.
 
-If trans=.true., the lambdas are calculated in the same
+If "trans"=.true., the lambdas are calculated in the same
 run, using the same k-point grid for phonons and lambdas.
-If trans=.false., the lambdas are calculated using
-previously saved DeltaVscf in fildvscf, previously saved
+If "trans"=.false., the lambdas are calculated using
+previously saved DeltaVscf in "fildvscf", previously saved
 dynamical matrix, and the present punch file. This allows
 the use of a different (larger) k-point grid.
-         </pre></blockquote>
+            </pre>
+</blockquote>
 </ul>      
       
 }
@@ -569,15 +591,15 @@ help zeu -helpfmt helpdoc -helptext {
 <li> <em>Variable: </em><big><b>zeu</b></big>
 </li>
 <br><li> <em>Type: </em>LOGICAL</li>
-<br><li> <em>Default: </em> zeu=epsil
+<br><li> <em>Default: </em> zeu="epsil"
          </li>
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
 If .true. in a q=0 calculation for a non metal the
 effective charges are computed from the dielectric
-response. This is the default algorithm. If epsil=.true.
-and zeu=.false. only the dielectric tensor is calculated.
+response. This is the default algorithm. If "epsil"=.true.
+and "zeu"=.false. only the dielectric tensor is calculated.
          </pre></blockquote>
 </ul>      
       
@@ -598,7 +620,7 @@ help zue -helpfmt helpdoc -helptext {
 If .true. in a q=0 calculation for a non metal the
 effective charges are computed from the phonon
 density responses. This is an alternative algorithm,
-different from the default one (if trans .and. epsil )
+different from the default one (if "trans" .and. "epsil" )
 The results should be the same within numerical noise.
          </pre></blockquote>
 </ul>      
@@ -636,7 +658,7 @@ help fpol -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 If .true. calculate dynamic polarizabilities
-Requires epsil=.true. ( experimental stage:
+Requires "epsil"=.true. ( experimental stage:
 see example09 for calculation of methane ).
          </pre></blockquote>
 </ul>      
@@ -656,7 +678,7 @@ help ldisp -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 If .true. the run calculates phonons for a grid of
-q-points specified by nq1, nq2, nq3 - for direct
+q-points specified by "nq1", "nq2", "nq3" - for direct
 calculation of the entire phonon dispersion.
          </pre></blockquote>
 </ul>      
@@ -702,8 +724,8 @@ help ldiag -helpfmt helpdoc -helptext {
 <blockquote><pre>
 If .true. forces the diagonalization of the dynamical
 matrix also when only a part of the dynamical matrix
-has been calculated. It is used together with start_irr
-and last_irr. If all modes corresponding to a
+has been calculated. It is used together with "start_irr"
+and "last_irr". If all modes corresponding to a
 given irreducible representation have been calculated,
 the phonon frequencies of that representation are
 correct. The others are zero or wrong. Use with care.
@@ -725,8 +747,8 @@ help lqdir -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 If .true. ph.x creates inside outdir a separate subdirectory
-for each q vector. The flag is set to .true. when ldisp=
-.true. and fildvscf /= ' ' or when an electron-phonon
+for each q vector. The flag is set to .true. when "ldisp"=.true.
+and "fildvscf" /= ' ' or when an electron-phonon
 calculation is performed. The induced potential is saved
 separately for each q inside the subdirectories.
          </pre></blockquote>
@@ -766,7 +788,7 @@ grouphelp {nq1 nq2 nq3} -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 Parameters of the Monkhorst-Pack grid (no offset) used
-when ldisp=.true. Same meaning as for nk1, nk2, nk3
+when "ldisp"=.true. Same meaning as for nk1, nk2, nk3
 in the input of pw.x.
          </pre></blockquote>
 </ul>
@@ -810,11 +832,11 @@ help start_irr -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-Perform calculations only from start_irr to last_irr
+Perform calculations only from "start_irr" to "last_irr"
 irreducible representations.
 
 IMPORTANT:
-   * start_irr must be &lt;= 3*nat
+   * "start_irr" must be &lt;= 3*nat
    * do not specify "nat_todo" together with
      "start_irr", "last_irr"
             </pre></blockquote>
@@ -836,11 +858,11 @@ help last_irr -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-Perform calculations only from start_irr to last_irr
+Perform calculations only from "start_irr" to "last_irr"
 irreducible representations.
 
 IMPORTANT:
-   * start_irr must be &lt;= 3*nat
+   * "start_irr" must be &lt;= 3*nat
    * do not specify "nat_todo" together with
      "start_irr", "last_irr"
             </pre></blockquote>
@@ -867,7 +889,7 @@ adsorbed over a surface without performing a full fledged
 calculation. Use with care, at your own risk, and be aware
 that this is an approximation and may not work.
 IMPORTANT:
-   * nat_todo &lt;= nat
+   * "nat_todo" &lt;= nat
    * if linear-response is calculated for a given atom, it
      should also be done for all symmetry-equivalent atoms,
      or else you will get incorrect results
@@ -916,10 +938,10 @@ help start_q -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 Used only when ldisp=.true..
-Computes only the q points from start_q to last_q.
+Computes only the q points from "start_q" to "last_q".
 
 IMPORTANT:
-   * start_q must be &lt;= nqs (number of q points found)
+   * "start_q" must be &lt;= "nqs" (number of q points found)
    * do not specify "nat_todo" together with
      "start_q", "last_q"
             </pre></blockquote>
@@ -941,11 +963,11 @@ help last_q -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-Used only when ldisp=.true..
-Computes only the q points from start_q to last_q.
+Used only when "ldisp"=.true..
+Computes only the q points from "start_q" to "last_q".
 
 IMPORTANT
-   * last_q must be &lt;= nqs (number of q points)
+   * "last_q" must be &lt;= "nqs" (number of q points)
    * do not specify "nat_todo" together with
      "start_q", "last_q"
             </pre></blockquote>
@@ -955,7 +977,7 @@ IMPORTANT
 
 
 # ------------------------------------------------------------------------
-help dvscf_star -helpfmt helpdoc -helptext {
+grouphelp {dvscf_star_open dvscf_star_dir dvscf_star_ext dvscf_star_basis dvscf_star_pat} -helpfmt helpdoc -helptext {
       <ul>
 <li> <em>Variable: </em><big><b>dvscf_star</b></big>
 </li>
@@ -966,15 +988,16 @@ help dvscf_star -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 It contains the following components:
-dvscf_star%open  (logical, default: .false.)
-dvscf_star%dir   (character, default: outdir//"Rotated_DVSCF" or the
+
+<b>dvscf_star%open</b>  (logical, default: .false.)
+<b>dvscf_star%dir</b>   (character, default: outdir//"Rotated_DVSCF" or the
                   ESPRESSO_FILDVSCF_DIR environment variable)
-dvscf_star%ext   (character, default: "dvscf") the extension to use
+<b>dvscf_star%ext</b>   (character, default: "dvscf") the extension to use
                   for the name of the output files, see below
-dvscf_star%basis (character, default: "cartesian") the basis on which
+<b>dvscf_star%basis</b> (character, default: "cartesian") the basis on which
                   the rotated dvscf will be saved
-dvscf_star%pat   (logical, default: true) save an optional file with the
-                 displacement patterns and q vector for each dvscf file
+<b>dvscf_star%pat</b>   (logical, default: false) save an optional file with the
+                  displacement patterns and q vector for each dvscf file
 
 IF dvscf_star%open is .true. use symmetry to compute and store the variation
 of the self-consistent potential on every q* in the star of the present q.
@@ -1002,7 +1025,7 @@ Note2: this feature is currently untested with image parallelisation.
 
 
 # ------------------------------------------------------------------------
-help drho_star -helpfmt helpdoc -helptext {
+grouphelp {drho_star_open drho_star_dir drho_star_ext drho_star_basis drho_star_pat} -helpfmt helpdoc -helptext {
       <ul>
 <li> <em>Variable: </em><big><b>drho_star</b></big>
 </li>
@@ -1015,17 +1038,18 @@ help drho_star -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 It contains the following components:
-drho_star%open  (logical, default: .false.)
-drho_star%dir   (character, default: outdir//"Rotated_DRHO" or the
+
+<b>drho_star%open</b>  (logical, default: .false.)
+<b>drho_star%dir</b>   (character, default: outdir//"Rotated_DRHO" or the
                  ESPRESSO_FILDRHO_DIR environment variable)
-drho_star%ext   (character, default: "drho") the extension to use
+<b>drho_star%ext</b>   (character, default: "drho") the extension to use
                  for the name of the output files, see below
-drho_star%basis (character, default: "modes") the basis on which
+<b>drho_star%basis</b> (character, default: "modes") the basis on which
                  the rotated drho will be saved
-drho_star%pat   (logical, default: false) save an optional file with the
+<b>drho_star%pat</b>   (logical, default: true) save an optional file with the
                  displacement patterns and q vector for each drho file
 
-Like dvscf_star, but for the perturbation of the charge density.
+Like "dvscf_star", but for the perturbation of the charge density.
 Notice that the defaults are different.
             </pre></blockquote>
 </ul>      
@@ -1045,7 +1069,7 @@ grouphelp {xq1 xq2 xq3} -helpfmt helpdoc -helptext {
 <blockquote><pre>
 The phonon wavevector, in units of 2pi/a0
 (a0 = lattice parameter).
-Not used if ldisp=.true. or qplot=.true.
+Not used if "ldisp"=.true. or "qplot"=.true.
                </pre></blockquote>
 </ul>  
     
@@ -1061,7 +1085,7 @@ help nqs -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-Number of q points in the list. Used only if qplot=.true.
+Number of q points in the list. Used only if "qplot"=.true.
                      </pre></blockquote>
 </ul>      
       
@@ -1077,7 +1101,7 @@ help qPoints -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-q-point coordinates; used only with ldisp=.true. and qplot=.true.
+q-point coordinates; used only with "ldisp"=.true. and qplot=.true.
 The phonon wavevector, in units of 2pi/a0 (a0 = lattice parameter).
 The meaning of these q points and their weights nq depend on the
 flags q2d and q_in_band_form. (NB: nq is integer)
