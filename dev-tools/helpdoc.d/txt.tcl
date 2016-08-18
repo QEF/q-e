@@ -65,8 +65,10 @@ proc helpdoc::labelMsg {label msg} {
 }
 
 proc ::helpdoc::txt_ref_link {content} {
-    set re {(@ref\s+|@link\s+)}
-    return [regsub -all $re $content {}]
+    set re_ref  {(@ref)\s+(\w+([%]\w)*)}
+    set re_link {(@link)\s+([.,;:]*[\w\+-]+([.,;:][\w\+-]+)*)}
+    set re "($re_ref|$re_link)"
+    return [regsub -all $re $content {"\3"}]
 }
 proc ::helpdoc::txt_tag_enter {tree node tag attr content depth} {
     variable txtDepth
@@ -89,7 +91,7 @@ proc ::helpdoc::txt_tag_enter {tree node tag attr content depth} {
 	unset arr
     }
 
-    set content [formatString [trimEmpty [txt_atTags $content]]]
+    set content [formatString [trimEmpty [txt_atTags [txt_ref_link $content]]]]
     #set content [formatString [trimEmpty  $content]]
     attr2array_ arr $attr
 
