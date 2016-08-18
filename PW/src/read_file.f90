@@ -199,7 +199,7 @@ SUBROUTINE read_xml_file_internal(withbs)
   ! ... first we get the version of the qexml file
   !     if not already read
   CALL init_vars_from_schema ( 'header', ierr, output_obj, input_obj, parinfo_obj, geninfo_obj )
-  CALL errore( 'read_xml_file ', 'unable to determine qexml version', ABS(ierr) )
+  CALL errore( 'read_xml_file ', 'unable to determine determine schema version', ABS(ierr) )
 #else
   ! ... first we get the version of the qexml file
   !     if not already read
