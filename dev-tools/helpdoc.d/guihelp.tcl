@@ -24,22 +24,73 @@ namespace eval ::helpdoc::gui_help {
 	append helpContent($names) ${helpTxt}\n
     }
 
+    proc if_exists_addHelp_ {name helpTxt} {
+	if { [info exists ::guib::moduleObj::module_item($name)] } {
+	    if { $::guib::moduleObj::module_item(ident,$name) != "" } {
+		switch -- $::guib::moduleObj::module_item($name) {
+		    var - dimension - table - text {
+			# important: we must pass from name to ident		    
+			
+			addHelp_ $::guib::moduleObj::module_item(ident,$name) $helpTxt
+			return 1
+		    }
+		}
+	    }
+	}
+	return 0
+    }
+
     proc grouphelp {names helpTxt} {
 	foreach name $names {
+	    
 	    if { [info exists ::guib::moduleObj::module_item($name)] } {
 		if { $::guib::moduleObj::module_item(ident,$name) != "" } {
 		    switch -- $::guib::moduleObj::module_item($name) {
 			var - dimension - table  {
 			    lappend ok_names $::guib::moduleObj::module_item(ident,$name)
 			}
+			
 		    }
 		}
-	    }
+	    } else {
+		# pehaps the variable name is a dimension-like name, i.e. dimen(i,j,k),
+		# and there is the "(i,j,k)" mismatch between module and def name;
+		# try to see if "dimen" only exists ...
+		
+		set name [lindex [split $name \(] 0]
+		
+		if { [info exists ::guib::moduleObj::module_item($name)] } {
+		    if { $::guib::moduleObj::module_item(ident,$name) != "" } {
+			switch -- $::guib::moduleObj::module_item($name) {
+			    var - dimension - table  {
+				lappend ok_names $::guib::moduleObj::module_item(ident,$name)
+			    }
+			    
+			}
+		    }
+		}
+	    }       	
 	}
 	if { [info exists ok_names] } {	    
 	    addHelp_ $ok_names $helpTxt
-	}	
+	}
     }
+
+    #proc grouphelp {names helpTxt} {
+    #	foreach name $names {
+    #	    if { ! [if_exists_addHelp_ $name $helpTxt] } {	     	
+    #
+    #		# pehaps the variable name is a dimension-like name, i.e. dimen(i,j,k),
+    #		# and there is the "(i,j,k)" mismatch between module and def name;
+    #		# try to see if "dimen" only exists ...
+    #		puts "pre.name = $name"
+    #		set name [lindex [split $name \(] 0]
+    #		puts "post.name = $name"
+    #		
+    #		if_exists_addHelp_ $name $helpTxt
+    #	    }
+    #	}
+    #}
 
     proc help {name helpTxt} {
 
@@ -64,7 +115,16 @@ namespace eval ::helpdoc::gui_help {
 		    # in module file we have alpha_mix(1)
 		    set name alpha_mix(1)
 		}
-	    }	    		    
+
+		# for the time being ...
+		if { $name eq "dvscf_star" || $name eq "drho_star" } {
+		    foreach elem {open dir ext basis pat} {
+			lappend names $name%$elem
+		    }
+		    grouphelp $names $helpTxt
+		    return
+		}
+	    }   		    
 	}
 
 	if { $name == "occupations_table" } {
@@ -74,18 +134,17 @@ namespace eval ::helpdoc::gui_help {
 	    puts "    module-ident $::guib::moduleObj::module_item(ident,$name)"
 	}
 
-	if { [info exists ::guib::moduleObj::module_item($name)] } {
-	    if { $::guib::moduleObj::module_item(ident,$name) != "" } {
-		switch -- $::guib::moduleObj::module_item($name) {
-		    var - dimension - table - text {
-			# important: we must pass from name to ident		    
+	if { ! [if_exists_addHelp_ $name $helpTxt] } {	     	
 
-			addHelp_ $::guib::moduleObj::module_item(ident,$name) $helpTxt
-		    }
-		}
-	    }
+	    # pehaps the variable name is a dimension-like name, i.e. dimen(i,j,k),
+	    # and there is the "(i,j,k)" mismatch between module and def name;
+	    # try to see if "dimen" only exists ...
+
+	    set name [lindex [split $name \(] 0]
+	    
+	    if_exists_addHelp_ $name $helpTxt
 	}
-    }        
+    }
 }
 
 
