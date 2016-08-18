@@ -19,7 +19,7 @@ a2fmod.o \
 add_bfield.o \
 add_efield.o \
 add_vuspsi.o \
-add_monopole.o \
+add_monofield.o \
 add_paw_to_deeq.o \
 add_vhub_to_deeq.o \
 addusdens.o \
