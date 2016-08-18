@@ -93,10 +93,18 @@ module ProjWfc\#auto -title "PWSCF GUI: module ProjWfc.x" -script {
 		-textvalue { Yes No }
 		-widget radiobox
 	    }	    
-	    
+
+	    separator -label "--- PAW option ---"
+
+	    var pawproj {
+		-label "use PAW projectors and all-electron PAW basis (pawproj):"
+		-value { .true. .false. }
+		-textvalue { Yes No }
+		-widget radiobox
+	    }
 	    separator -label "--- Local DOS options ---"
 	    
-	     var tdosinboxes {
+	    var tdosinboxes {
 		-label "Compute the local DOS computed in volumes (tdosinboxes):"
 		-value { .true. .false. }
 		-textvalue { Yes No }
