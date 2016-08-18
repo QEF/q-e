@@ -35,8 +35,8 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
 		info { 
 		    The nuclear charge (1 < zed < 100). 
 		    
-		    IMPORTANT:
-		    Specify either zed OR atom, not both!
+		    @b IMPORTANT:
+		    Specify either @ref zed OR @ref atom, not both!
 		}
 	    }
 
@@ -47,8 +47,8 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
 		info {
 		    Atomic symbol: atom='H', 'He', 'Be', etc.
 		    
-		    IMPORTANT:
-		    Specify either atom OR zed, not both!
+		    @b IMPORTANT:
+		    Specify either @ref atom OR @ref zed, not both!
 		}
 	    }
 	}
@@ -59,7 +59,7 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
 	    var xmin  -type REAL { 
 		see { dx }
 		default {
-		    -7.0 if iswitch>1 or rel=0,
+		    -7.0 if @ref iswitch>1 or @ref rel=0,
 		    -8.0 otherwise
 		}
 		info { Radial grid parameter. }
@@ -72,7 +72,7 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
 		    The radial grid is: r(i+1) = exp(xmin+i*dx)/zed  a.u.
 		}
 		default { 
-		    0.0125 if iswitch>1,
+		    0.0125 if @ref iswitch>1,
 		    0.008 otherwise
 		}
 	    }
@@ -180,7 +180,7 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
 		0 ... non spin polarized calculation
 		1 ... spin-polarized calculation   
 
-		BEWARE:
+		@b BEWARE:
 		not allowed if iswitch=3 (PP generation) or with full
 		relativistic calculation
 	    }
@@ -192,14 +192,14 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
 		Exchange-correlation functional. 
 
 		Examples:
-		'PZ'    Perdew and Zunger formula for LDA
-		'PW91'  Perdew and Wang GGA
-		'BP'    Becke and Perdew GGA
-		'PBE'   Perdew, Becke and Ernzerhof GGA
-		'BLYP'  ...
+		@b 'PZ'    Perdew and Zunger formula for LDA
+		@b 'PW91'  Perdew and Wang GGA
+		@b 'BP'    Becke and Perdew GGA
+		@b 'PBE'   Perdew, Becke and Ernzerhof GGA
+		@b 'BLYP'  ...
 
 		For the complete list, see module "functionals" in ../Modules/
-		The default is 'PZ' for all-electron calculations,
+		The default is @b 'PZ' for all-electron calculations,
 		it is read from the PP file in a PP calculation.
 	    }
 
@@ -266,9 +266,9 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
 	var verbosity  -type CHARACTER {
 	    default { 'low' }
 	    info {
-		'low' or 'high'
+		@b 'low' or @b 'high'
 
-		if 'high' with iswitch=2,3 prints separately core and
+		if @b 'high' with iswitch=2,3 prints separately core and
 		valence contributions to the energies. Print the
 		frozen-core energy.
 	    }
@@ -290,17 +290,17 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
 		Example:
                   '[Ar] 3d10 4s2 4p2.5'              
                
-		* If lsd=1, spin-up and spin-down state may appear twice
+		* If @ref lsd=1, spin-up and spin-down state may appear twice
 		  with the respective occupancy: 3p4 3p2 = 4 up, 
 		  2 down. Otherwise, the Hund's rule is assumed.
                
-		* If rel=2, states with jj=l-1/2 are filled first.		
+		* If @ref rel=2, states with jj=l-1/2 are filled first.		
 		  If a state appears twice, the first one has jj=l-1/2, 
 		  the second one jj=l+1/2 (except S states)                 
 		  (Use rel_dist if you want to average the electrons
 		  over all available states.)
 
-                * If config='default' the code uses zed to set the ground
+                * If config='default' the code uses @ref zed to set the ground
                   state electronic configuration for the atom.
 
 		Negative occupancies are used to flag unbound states;
@@ -312,7 +312,7 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
             default { .false. }
             info {
                   If .true. the relativistic corrections to the non-relativistic 
-                  Kohn-Sham energy levels (rel=0 .and. lsd=0) are computed using 
+                  Kohn-Sham energy levels (@ref rel=0 .and. @ref lsd=0) are computed using 
                   first-order perturbation theory in all-electron calculations.
                   The corrections consist of the following terms:
                      E_vel: velocity (p^4) correction
@@ -331,11 +331,11 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
 	var rel_dist  -type CHARACTER {
 	    default { 'energy' }
 	    info {
-		'energy' or 'average'
+		@b 'energy' or @b 'average'
 
-		* if 'energy' the relativistic l-1/2 states are filled first.
+		* if @b 'energy' the relativistic l-1/2 states are filled first.
 
-		* if 'average' the electrons are uniformly distributed 
+		* if @b 'average' the electrons are uniformly distributed 
 		  among all the states with the given l.  
 	    }
 	}
@@ -485,8 +485,8 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
 
 	var rcloc  -type REAL { 
 	    status {
-		Must be specified only if lloc=-1, otherwise the
-		corresponding value of rcut is used. 
+		Must be specified only if @ref lloc=-1, otherwise the
+		corresponding value of @ref rcut is used. 
 	    }
 	    info { 
 		Matching radius (a.u.) for local pseudo-potential (no default).
@@ -541,7 +541,7 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
 	var lpaw  -type LOGICAL { 
 	    info {
 		If .true. produce a PAW dataset, experimental feature
-		only for pseudotype=3
+		only for @ref pseudotype=3
 	    }
 	    default { .false. }
 	}
@@ -549,20 +549,20 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
 	group {
 	    var which_augfun  -type CHARACTER { 
 		default { 
-		    'AE' for Vanderbilt-Ultrasoft pseudo-potentials and 'BESSEL' for PAW datasets.
+		    @tt 'AE' for Vanderbilt-Ultrasoft pseudo-potentials and 'BESSEL' for PAW datasets.
 		}
 		info {                 
-		    If different from 'AE' the augmentation functions are pseudized
-		    before rmatch_augfun. The pseudization options are:
+		    If different from @b 'AE' the augmentation functions are pseudized
+		    before @ref rmatch_augfun. The pseudization options are:
 		    
-		    * 'PSQ'        Use Bessel functions to pseudize Q 
+		    * @b 'PSQ'        Use Bessel functions to pseudize Q 
                                    from the origin to rmatch_augfun.
 		    
 		    These features are available only for PAW: 
 		    
-		    * 'BESSEL'     Use Bessel functions to pseudize the Q.
-		    * 'GAUSS'      Use 2 Gaussian functions to pseudize the Q.
-		    * 'BG'         Use original Bloechl's recipe with a single gaussian.
+		    * @b 'BESSEL'     Use Bessel functions to pseudize the Q.
+		    * @b 'GAUSS'      Use 2 Gaussian functions to pseudize the Q.
+		    * @b 'BG'         Use original Bloechl's recipe with a single gaussian.
 
 		    Note: if lpaw is true and which_augfun is set to AE real all-
 		    electron charge will be used, which will produce extremely
@@ -606,7 +606,7 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
                 additional info required for reconstruction of all-electron 
                 orbitals, used by GIPAW. You will typically need to specify 
 		additional projectors beyond those used in the generation of 
-		pseudo-potentials. You should also specify 'file_recon'.
+		pseudo-potentials. You should also specify @ref file_recon.
 
 		All projectors used in the reconstruction must be listed BOTH 
 		in the test configuration after namelist &test AND in the 
@@ -632,7 +632,7 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
                are independent from the PAW ones and must be then specified as 
 	       explained above in lgipaw_reconstruction.
 
-               Setting this to .true. always implies lgipaw_reconstruction = .true.
+               Setting this to .true. always implies @ref lgipaw_reconstruction = .true.
             }
         }
 
@@ -718,10 +718,10 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
 		    }
 		}
 		message {
-		    * if lloc>-1 the state with lls=lloc must be the last
+		    * if @ref lloc>-1 the state with @ref lls=@ref lloc must be the last
 		    
-		    * if lloc>0 in the relativistic case, both states with jjs=lloc-1/2
-		      and jjs=lloc+1/2 must be the last two
+		    * if @ref lloc>0 in the relativistic case, both states with @ref jjs=@ref lloc-1/2
+		      and @ref jjs=@ref lloc+1/2 must be the last two
 		}
 	    }	
 	    otherwise {
@@ -781,7 +781,7 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
 		Parameters (Ry) used for test with a basis set of spherical		    
 		Bessel functions j_l(qr) . The hamiltonian at fixed scf
 		potential is diagonalized for various values of ecut:
-		ecutmin, ecutmin+decut, ecutmin+2*decut ... up to ecutmax.
+		@ref ecutmin, @ref ecutmin+@ref decut, @ref ecutmin+2*@ref decut ... up to @ref ecutmax.
 		This yields an indication of convergence with the
 		corresponding plane-wave cutoff in solids, and shows 
 		in an unambiguous way if there are "ghost" states
@@ -789,7 +789,7 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
 	    default { 
 		decut=5.0 Ry; ecutmin=ecutmax=0Ry
 	    }
-	    status { specify ecutmin and ecutmax if you want to perform this test }	    	    
+	    status { specify @ref ecutmin and @ref ecutmax if you want to perform this test }	    	    
 	}
 
 	var rm  -type REAL {
