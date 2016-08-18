@@ -11,7 +11,7 @@ help prefix -helpfmt helpdoc -helptext {
       <ul>
 <li> <em>Variable: </em><big><b>prefix</b></big>
 </li>
-<br><li> <em>Type: </em>CHARATER</li>
+<br><li> <em>Type: </em>CHARACTER</li>
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
@@ -29,14 +29,13 @@ help outdir -helpfmt helpdoc -helptext {
 </li>
 <br><li> <em>Type: </em>CHARACTER</li>
 <br><li> <em>Default: </em>
-value of the ESPRESSO_TMPDIR environment variable if set;
+value of the <tt>ESPRESSO_TMPDIR</tt> environment variable if set;
 current directory ('./') otherwise
          </li>
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-directory containing the input data,
-i.e. the same as in pw.x
+directory containing the input data, i.e. the same as in pw.x
          </pre></blockquote>
 </ul>      
       
@@ -84,7 +83,7 @@ selects what to save in filplot:
    4  = local density of electronic entropy
 
    5  = STM images
-        Tersoff and Hamann, PRB 31, 805 (1985)
+        Tersoff and Hamann, "PRB 31, 805 (1985)"
 
    6  = spin polarization (rho(up)-rho(down))
 
@@ -100,8 +99,8 @@ selects what to save in filplot:
    9  = charge density minus superposition of atomic densities
 
    10 = integrated local density of states (ILDOS)
-        from emin to emax (emin, emax in eV)
-        if emax is not specified, emax=E_fermi
+        from "emin" to "emax" (emin, emax in eV)
+        if "emax" is not specified, emax=E_fermi
 
    11 = the V_bare + V_H potential
 
@@ -124,6 +123,10 @@ selects what to save in filplot:
    20 = Product of the electron density (charge) and the second
         eigenvalue of the electron-density Hessian matrix;
         used to colorize the RDG plot (plot_num = 19)
+
+   21 = all-electron charge density (valence+core).
+        For PAW calculations only; requires a very dense
+        real-space grid.
          </pre></blockquote>
 </ul>      
       
@@ -326,8 +329,8 @@ help emax -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-upper energy boundary (in eV), i.e. compute
-ILDOS from emin to emax
+upper energy boundary (in eV),
+i.e. compute ILDOS from "emin" to "emax"
                </pre></blockquote>
 </ul>      
       
@@ -463,13 +466,25 @@ help interpolation -helpfmt helpdoc -helptext {
 <li> <em>Variable: </em><big><b>interpolation</b></big>
 </li>
 <br><li> <em>Type: </em>CHARACTER</li>
-<br><li> <em>Default: </em> "fourier"
+<br><li> <em>Default: </em> 'fourier'
          </li>
 <br><li> <em>Description:</em>
 </li>
-<blockquote><pre>
-type of interpolation: "fourier" or "bspline" (EXPERIMENTAL!)
-         </pre></blockquote>
+<blockquote>
+<pre>
+Type of interpolation:
+            </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'fourier'</b></tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'bspline'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;"> (EXPERIMENTAL)
+            </pre></dd>
+</dl>
+</blockquote>
 </ul>      
       
 }
@@ -485,6 +500,7 @@ help e1 -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 3D vector which determines the plotting line
+(in alat units)
                </pre></blockquote>
 </ul>      
       
@@ -501,6 +517,7 @@ help x0 -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 3D vector, origin of the line
+(in alat units)
                </pre></blockquote>
 </ul>      
       
@@ -513,6 +530,7 @@ help x0 -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 3D vector, origin of the plane
+(in alat units)
                </pre></blockquote>
 </ul>      
       
@@ -563,7 +581,9 @@ grouphelp {e1 e2} -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 3D vectors which determine the plotting plane
-(must be orthogonal)
+(in alat units)
+
+BEWARE: <b>e1</b> and <b>e2</b> must be orthogonal
                </pre></blockquote>
 </ul>
     
