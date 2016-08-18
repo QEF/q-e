@@ -17,7 +17,6 @@
   !!     In this routine the first processor sends the input to all
   !!     the other processors
   !!
-  !
 #ifdef __MPI
   USE phcom,         ONLY : zue, trans, tr2_ph, recover, nmix_ph, niter_ph, &
                             lnscf, ldisp, fildvscf, fildrho, epsil, alpha_mix 
@@ -42,8 +41,10 @@
                             nw_specfun, nw, nswi, nswfc, nswc, nstemp, nsmear, &
                             wsfc, wscut, write_wfn, wmin_specfun, wmin, &
                             wmax_specfun, wmax, wepexst, wannierize, &
-                            vme, longrange, shortrange, &
-                            tempsmin, tempsmax, temps, delta_approx, title
+                            vme, longrange, shortrange, system_2d, &
+                            tempsmin, tempsmax, temps, delta_approx, title, &
+                            scattering, scattering_serta, scattering_0rta, &
+                            int_mob, scissor, carrier, ncarrier, iterative_bte
 !  USE epwcom,        ONLY : fildvscf0, tphases
   USE elph2,         ONLY : elph 
   USE mp,            ONLY : mp_bcast
@@ -115,6 +116,13 @@
   CALL mp_bcast (delta_approx, ionode_id, world_comm)      !
   CALL mp_bcast (longrange, ionode_id, world_comm)      !
   CALL mp_bcast (shortrange, ionode_id, world_comm)      !  
+  CALL mp_bcast (system_2d, ionode_id, world_comm)
+  CALL mp_bcast (scattering, ionode_id, world_comm)
+  CALL mp_bcast (scattering_serta, ionode_id, world_comm)
+  CALL mp_bcast (scattering_0rta, ionode_id, world_comm)
+  CALL mp_bcast (int_mob, ionode_id, world_comm)
+  CALL mp_bcast (iterative_bte, ionode_id, world_comm)
+  CALL mp_bcast (carrier, ionode_id, world_comm)  
   !
   ! integers
   !
@@ -170,6 +178,8 @@
   CALL mp_bcast (max_memlt, ionode_id, world_comm)       !
   CALL mp_bcast (fermi_energy, ionode_id, world_comm)    !
   CALL mp_bcast (eptemp, ionode_id, world_comm)    !
+  CALL mp_bcast (scissor, ionode_id, world_comm)    !
+  CALL mp_bcast (ncarrier, ionode_id, world_comm)      
   !
   ! characters
   !
