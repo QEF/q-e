@@ -174,6 +174,8 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 		    -validate  fortranposreal
 		}
 
+		separator -label "--- Electric field options ---"
+		
 		var tefield {
 		    -label     "Add a sawlike potential to bare ionic potential (tefield):"
 		    -widget    radiobox
@@ -194,14 +196,30 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 		    -textvalue { Yes No }	      
 		    -value     { .true. .false. }
 		}
-
+		
 		var nberrycyc {
 		    -label "Num. of iterations for lelfield [see help] (nberrycyc):"
 		    -validate posint
 		}
 
+		separator -label "--- Miscellaneous options ---"
+		
 		var lorbm {
 		    -label     "Perform orbital magnetization calculation (lorbm):"
+		    -widget    radiobox
+		    -textvalue { Yes No }	      
+		    -value     { .true. .false. }
+		}
+
+		var lfcpopt {
+		    -label "Perform a constant bias potential calculation with ESM method (lfcpopt):"
+		    -widget    radiobox
+		    -textvalue { Yes No }	      
+		    -value     { .true. .false. }
+		}
+
+		var monopole {
+		    -label "Perform charged cell calculation using counter charged plate (monopole):"
 		    -widget    radiobox
 		    -textvalue { Yes No }	      
 		    -value     { .true. .false. }
@@ -342,48 +360,6 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 	    # ----------------------------------------------------
 
 	    optional {		
-		var nosym {
-		    -label     "Do not use the symmetry (nosym):"
-		    -widget    radiobox
-		    -textvalue { Yes No }	      
-		    -value     { .true. .false. }
-		}
-		
-		var nosym_evc {
-		    -label     "Do not use the symmetry except for the k-points (nosym_evc):"
-		    -widget    radiobox
-		    -textvalue { Yes No }	      
-		    -value     { .true. .false. }
-		}
-		
-		var noinv { 
-		    -label     "Disable time reversal symmetry in k-point generation (noinv):"
-		    -widget    radiobox
-		    -textvalue { Yes No }	      
-		    -value     { .true. .false. }
-		}
-
-		var no_t_rev { 
-		    -label     "Disable the symmetry operations that require time reversal (no_t_rev):"
-		    -widget    radiobox
-		    -textvalue { Yes No }	      
-		    -value     { .true. .false. }
-		}
-
-		var force_symmorphic { 
-		    -label     "Force the symmetry group to be symmorphic (force_symmorphic):"
-		    -widget    radiobox
-		    -textvalue { Yes No }	      
-		    -value     { .true. .false. }
-		}
-
-		var use_all_frac { 
-		    -label     "Use all symmetry operations with fractionary translations (use_all_frac):"
-		    -widget    radiobox
-		    -textvalue { Yes No }	      
-		    -value     { .true. .false. }
-		}
-
 		var nbnd {
 		    -label    "Number of electronic states (nbnd):"
 		    -widget   spinint
@@ -398,6 +374,52 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 		}
 
 		var input_dft -label    "Exchange-correlation functional (input_dft):"
+
+		separator -label "--- Symmetry ---"
+
+		group symmetry_group -decor normal {
+		    var nosym {
+			-label     "Do not use the symmetry (nosym):"
+			-widget    radiobox
+			-textvalue { Yes No }	      
+			-value     { .true. .false. }
+		    }
+		    
+		    var nosym_evc {
+			-label     "Do not use the symmetry except for the k-points (nosym_evc):"
+			-widget    radiobox
+			-textvalue { Yes No }	      
+			-value     { .true. .false. }
+		    }
+		    
+		    var noinv { 
+			-label     "Disable time reversal symmetry in k-point generation (noinv):"
+			-widget    radiobox
+			-textvalue { Yes No }	      
+			-value     { .true. .false. }
+		    }
+
+		    var no_t_rev { 
+			-label     "Disable the symmetry operations that require time reversal (no_t_rev):"
+			-widget    radiobox
+			-textvalue { Yes No }	      
+			-value     { .true. .false. }
+		    }
+
+		    var force_symmorphic { 
+			-label     "Force the symmetry group to be symmorphic (force_symmorphic):"
+			-widget    radiobox
+			-textvalue { Yes No }	      
+			-value     { .true. .false. }
+		    }
+
+		    var use_all_frac { 
+			-label     "Use all symmetry operations with fractionary translations (use_all_frac):"
+			-widget    radiobox
+			-textvalue { Yes No }	      
+			-value     { .true. .false. }
+		    }
+		}
 
 		separator -label "--- Occupations ---"
 
@@ -436,14 +458,14 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 		var smearing {
 		    -label    "Type of spreading/smearing (smearing):"
 		    -textvalue {
-			"first order interpolation in Methfessel-Paxton spreading  <methfessel-paxton>"
 			"ordinary Gaussian spreading  <gaussian>"
+			"first order interpolation in Methfessel-Paxton spreading  <methfessel-paxton>"
 			"Marzari-Vanderbilt cold smearing  <marzari-vanderbilt>"
 			"Fermi-Dirac smearing  <fermi-dirac>"
 		    }
 		    -value  {
-			'methfessel-paxton'
 			'gaussian'
+			'methfessel-paxton'
 			'marzari-vanderbilt'
 			'fermi-dirac'
 		    }
@@ -452,64 +474,69 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 
 		separator -label "--- Spin polarization ---"
 
-		var nspin {
-		    -label     "Perform spin-polarized calculation (nspin):"
-		    -textvalue {No Yes "Yes noncollinear"}
-		    -value     {1  2  4}
-		    -widget    radiobox
-		}
-		
-		group spin_polarization -decor none {
- 
-		    dimension starting_magnetization {
-			-label "Starting magnetization (starting_magnetization):"
-			-text  "Specify starting magnetization (between -1 and 1) for each \"magnetic\" species"
-			-validate  fortranreal
-			-start 1 -end 1
-		    }
-		    
-		    var tot_magnetization {
-			-label     "Total magnetization (N el. up-down) (tot_magnetization):"
-			-validate  posint
-			-widget    spinint
-		    }
-		}
-		
-		separator -label "--- Noncolinear calculation ---"
-
-		var noncolin {
-		    -label     "Perform noncolinear calculation (noncolin):"
-		    -textvalue {No Yes}
-		    -value     {.false. .true.}
-		    -widget    radiobox
-		}		
-
-		group noncolin_group {
-		    dimension angle1 {
-			-label "Starting magnetization direction (angle1) :"
-			-text  "Specify starting magnetization direction for each \"magnetic\" species"
-			-validate  fortranreal
-			-start 1 -end 1
-		    }
-
-		    dimension angle2 {
-			-label "Starting magnetization direction (angle2):"
-			-text  "Specify starting magnetization direction for each \"magnetic\" species"
-			-validate  fortranreal
-			-start 1 -end 1
-		    }
-
-		    var lspinorb {
-			-label     "Allow the use of a pseudopotential with spin-orbit (lspinorb):"
+		group spinpol_group -decor normal {
+		    var nspin {
+			-label     "Perform spin-polarized calculation (nspin):"
 			-textvalue {No Yes}
-			-value     {.false.  .true.}
+			-value     {1  2}
 			-widget    radiobox
 		    }
+		    
+		    group spin_polarization -decor none {
+		    
+			dimension starting_magnetization {
+			    -label "Starting magnetization (starting_magnetization):"
+			    -text  "Specify starting magnetization (between -1 and 1) for each \"magnetic\" species"
+			    -validate  fortranreal
+			    -start 1 -end 1
+			}
+			
+			var tot_magnetization {
+			    -label     "Total magnetization (N el. up-down) (tot_magnetization):"
+			    -validate  posint
+			    -widget    spinint
+			}
+		    }		
 		}
-		
+
+		separator -label "--- Noncolinear calculation ---"
+
+		group noncolin_topgroup -decor normal {
+		    
+		    var noncolin {
+			-label     "Perform noncolinear calculation (noncolin):"
+			-textvalue {No Yes}
+			-value     {.false. .true.}
+			-widget    radiobox
+		    }		
+
+		    group noncolin_group {
+			dimension angle1 {
+			    -label "Starting magnetization direction (angle1) :"
+			    -text  "Specify starting magnetization direction for each \"magnetic\" species"
+			    -validate  fortranreal
+			    -start 1 -end 1
+			}
+			
+			dimension angle2 {
+			    -label "Starting magnetization direction (angle2):"
+			    -text  "Specify starting magnetization direction for each \"magnetic\" species"
+			    -validate  fortranreal
+			    -start 1 -end 1
+			}
+			
+			var lspinorb {
+			    -label     "Allow the use of a pseudopotential with spin-orbit (lspinorb):"
+			    -textvalue {No Yes}
+			    -value     {.false.  .true.}
+			    -widget    radiobox
+			}
+		    }
+		}
+
 		separator -label "--- Constrained/Fixed magnetization ---"
 
-		group constrained_magnetization_group {
+		group constrained_magnetization_group -decor normal {
 		    
 		    var constrained_magnetization {
 			-label     "Constrained magnetic calculation (constrained_magnetization):"
@@ -530,11 +557,11 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 			-validate fortranreal
 		    }
 		    
-#		    dimension B_field {
-#			-label "Add a fixed magnetic field (B_field):"
-#			-start 1 -end 3
-#			-validate fortranreal
-#		    }
+		    #		    dimension B_field {
+		    #			-label "Add a fixed magnetic field (B_field):"
+		    #			-start 1 -end 3
+		    #			-validate fortranreal
+		    #		    }
 		    
 		    var lambda {
 			-label "Lamda parameter for constrained magnetization (lambda):"
@@ -549,123 +576,130 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 
 		separator -label "--- Hartree Fock & Hybrid Functionals ---"
 
-		var ecutfock {
-		    -label    "Kinetic energy cutoff for exact exchange operator \[in Ry\] (ecutfock):"
-		    -validate fortranposreal
-		}
-
-		var exx_fraction {
-		    -label "Fraction of EXX for hybrid functional calculations (exx_fraction):"
-		    -validate fortranreal
-		}
-
-		var exxdiv_treatment {
-		    -label "Approach for treating Coulomb potential divergencies at small q vectors (exxdiv_treatment):"
-		    -widget optionmenu
-		    -value {
-			'gygi-baldereschi'
-			'vcut_spherical'
-			'vcut_ws'
-			'none'
+		group HF_group -decor normal {
+		    var ecutfock {
+			-label    "Kinetic energy cutoff for exact exchange operator \[in Ry\] (ecutfock):"
+			-validate fortranposreal
 		    }
-		    -textvalue {
-			gygi-baldereschi
-			vcut_spherical
-			vcut_ws
-			none
-		    }
-		}
-
-		var x_gamma_extrapolation {
-		    -label "Extrapolate the G=0 term of the potential for EXX (x_gamma_extrapolation):"
-		    -textvalue {No Yes}
-		    -value     {.false.  .true.}
-		    -widget    radiobox
-		}
-		var ecutvcut {
-		    -label "Reciprocal space cutoff for exxdiv_treatment (ecutvcut):"
-		    -validate fortranreal
-		}
-
-		var screening_parameter {
-		    -label "Screening_parameter for HSE like hybrid functionals (screening_parameter):"
-		    -validate fortranreal
-		}
-
-		group nqx123 {		    
-		    packwidgets left
-		    var nqx1 -label "nqx1:" -validate fortranposreal
-		    var nqx2 -label "nqx2:" -validate fortranposreal
-		    var nqx3 -label "n1x3:" -validate fortranposreal		    
-		}
-
-		separator -label "--- LDA + U parameters ---"
-	       
-		var lda_plus_u {
-		    -label     "Perform LDA + U calculation (lda_plus_u):"
-		    -textvalue {No Yes}
-		    -value     {.false.  .true.}
-		    -widget    radiobox
-		}
 		    
-		group hubbard -name Hubbard {
-		    var lda_plus_u_kind {
-			-label     "type of LDA + U calculation (lda_plus_u_kind):"
-			-textvalue {
-			    "simplified version of Cococcioni and de Gironcoli" 
-			    "rotationally invariant scheme of Liechtenstein et al."
+		    var exx_fraction {
+			-label "Fraction of EXX for hybrid functional calculations (exx_fraction):"
+			-validate fortranreal
+		    }
+		    
+		    var exxdiv_treatment {
+			-label "Approach for treating Coulomb potential divergencies at small q vectors (exxdiv_treatment):"
+			-widget optionmenu
+			-value {
+			    'gygi-baldereschi'
+			    'vcut_spherical'
+			    'vcut_ws'
+			    'none'
 			}
-			-value     {0 1}
+			-textvalue {
+			    gygi-baldereschi
+			    vcut_spherical
+			    vcut_ws
+			    none
+			}
+		    }
+
+		    var x_gamma_extrapolation {
+			-label "Extrapolate the G=0 term of the potential for EXX (x_gamma_extrapolation):"
+			-textvalue {No Yes}
+			-value     {.false.  .true.}
 			-widget    radiobox
 		    }
-
-		    dimension Hubbard_U {
-			-label     "Hubbarb U (Hubbard_U):"
-			-validate  fortranreal
-			-start 1 -end 1
+		    var ecutvcut {
+			-label "Reciprocal space cutoff for exxdiv_treatment (ecutvcut):"
+			-validate fortranreal
 		    }
 		    
-		    dimension Hubbard_J0 {
-			-label     "Hubbarb J0 (Hubbard_J0):"
-			-validate  fortranreal
-			-start 1 -end 1
+		    var screening_parameter {
+			-label "Screening_parameter for HSE like hybrid functionals (screening_parameter):"
+			-validate fortranreal
+		    }
+
+		    group nqx123 {		    
+			packwidgets left
+			var nqx1 -label "nqx1:" -validate fortranposreal
+			var nqx2 -label "nqx2:" -validate fortranposreal
+			var nqx3 -label "n1x3:" -validate fortranposreal		    
+		    }
+		}
+		
+		separator -label "--- LDA + U parameters ---"
+
+		group lda_plus_u_group -decor normal {
+		
+		    var lda_plus_u {
+			-label     "Perform LDA + U calculation (lda_plus_u):"
+			-textvalue {No Yes}
+			-value     {.false.  .true.}
+			-widget    radiobox
 		    }
 		    
-		    dimension Hubbard_alpha {
-			-label     "Hubbard alpha (Hubbard_alpha):"
-			-validate  fortranreal
-			-start 1 -end 1
-		    }
-
-		    dimension Hubbard_beta {
-			-label     "Hubbard beta (Hubbard_beta):"
-			-validate  fortranreal
-			-start 1 -end 1
-		    }
-
-		    # can't input Hubbard_J and starting_ns_eigenvalue
-
-		    var U_projection_type {
-			-label  "Type of projector on localized orbital (U_projector_type):"
-			-widget optionmenu
-			-textvalue {
-			    "use atomic wfc's (as they are) to build the projector  <atomic>"
-			    "use Lowdin orthogonalized atomic wfc's  <ortho-atomic>"
-			    "use Lowdin normalization of atomic wfc  <norm-atomic>"
-			    "use the information from file \"prefix\".atwfc  <file>"
+		    group hubbard -decor none {
+			var lda_plus_u_kind {
+			    -label     "type of LDA + U calculation (lda_plus_u_kind):"
+			    -textvalue {
+				"simplified version of Cococcioni and de Gironcoli" 
+				"rotationally invariant scheme of Liechtenstein et al."
+			    }
+			    -value     {0 1}
+			    -widget    radiobox
 			}
-			-value {
-			    'atomic'
-			    'ortho-atomic'
-			    'norm-atomic'
-			    'file'
+			
+			dimension Hubbard_U {
+			    -label     "Hubbarb U (Hubbard_U):"
+			    -validate  fortranreal
+			    -start 1 -end 1
 			}
-		    }		
+			
+			dimension Hubbard_J0 {
+			    -label     "Hubbarb J0 (Hubbard_J0):"
+			    -validate  fortranreal
+			    -start 1 -end 1
+			}
+			
+			dimension Hubbard_alpha {
+			    -label     "Hubbard alpha (Hubbard_alpha):"
+			    -validate  fortranreal
+			    -start 1 -end 1
+			}
+			
+			dimension Hubbard_beta {
+			    -label     "Hubbard beta (Hubbard_beta):"
+			    -validate  fortranreal
+			    -start 1 -end 1
+			}
+			
+			# can't input Hubbard_J and starting_ns_eigenvalue
+			
+			var U_projection_type {
+			    -label  "Type of projector on localized orbital (U_projector_type):"
+			    -widget optionmenu
+			    -textvalue {
+				"use atomic wfc's (as they are) to build the projector  <atomic>"
+				"use Lowdin orthogonalized atomic wfc's  <ortho-atomic>"
+				"use Lowdin normalization of atomic wfc  <norm-atomic>"
+				"use the information from file \"prefix\".atwfc  <file>"
+				"use the pseudopotential projectors <pseudo>"
+			    }
+			    -value {
+				'atomic'
+				'ortho-atomic'
+				'norm-atomic'
+				'file'
+				'pseudo'
+			    }
+			}		
+		    }
 		}
 
 		separator -label "--- Variable cell parameters ---"
 
-		group vc_md -name VC-MD {		    
+		group vc_md -decor normal {		    
 		    var ecfixed {
 			-label     "ecfixed:"
 			-validate  fortranreal
@@ -682,7 +716,7 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 		
 		separator -label "--- Saw-like potential parameters ---"
 
-		group tefield_group -name TeField {
+		group tefield_group -decor normal {
 		    var edir {
 			-label    "Direction of electric field (edir)"
 			-widget   optionmenu
@@ -717,16 +751,15 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 		    -textvalue {
 			"Makov-Payne <makov-payne>"
 			"Martyna-Tuckerman <martyna-tuckerman>"
-			"Density Counter Charge <dcc>"
 			"Effective Screening Medium <esm>"
                         "No correction <none>"
 		    }
-		    -value {'makov-payne' 'martyna-tuckerman' 'dcc' 'esm' 'none'}
+		    -value {'makov-payne' 'martyna-tuckerman' 'esm' 'none'}
 		}	
 
 		separator -label "--- Effective screening medium ---"
-	    
-		group ESM {
+		
+		group ESM -decor normal {
 		    var esm_bc {
 			-label "Boundary conditions for ESM (esm_bc):"
 			-widget    radiobox
@@ -749,31 +782,51 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 		    var esm_nfit {
 			-label    "Number of z-grid points for the polynomial fit @ cell edge (esm_nfit):"
 			-validate posint
-		    }		    		    
+		    }
+
+		    var fcp_mu {
+			-label "Target Fermi energy \[in Ry\] for constant bias \"lfcpopt\" calculation (fcp_mu):"
+			-validate fortranreal
+		    }
 		}
 
 		separator -label "--- Semi-empirical van der Waals (aka DFT-D) ---"
 
-		group vdW {
+		group vdW -decor normal {
 
 		    var vdw_corr {
 			-label "Type of Van der Waals correction (vdw_corr):"
-			-textvalue {Grimme-D2   Tkatchenko-Scheffler XDM   None}
+			-textvalue {Grimme-D2   Tkatchenko-Scheffler  XDM  None}
 			-value     {'grimme-d2' 'ts-vdw' 'xdm' ''}
 			-widget    optionmenu
 		    }  
 
 		    group dftdG {
 			var london_s6 -label "Global scaling parameter for DFT-D (london_s6):" -validate fortranposreal
-			dimension london_c6 -label "Atomic C6 coefficient for DFT-D (london_c6):" -start 1 -end 1 -validate fortranposreal
 			var london_rcut -label "Cutoff radius for dispersion interactions \[in a.u.\] (london_rcut):" -validate fortranposreal
+			dimension london_c6 -label "Atomic C6 coefficient for DFT-D (london_c6):" -start 1 -end 1 -validate fortranposreal
+			dimension london_rvdw -label "Atomic vdW radius for DFT-D (london_rvdw):" -start 1 -end 1 -validate fortranposreal			
 		    }
 
+		    group tsG {
+			var ts_vdw_econv_thr {
+			    -label "Convergence threshold of the vdW energy (ts_vdw_econv_thr):"
+			    -validate fortranreal
+			}
+
+			var ts_vdw_isolated {
+			    -label "Compute the Tkatchenko-Scheffler vdW energy for an isolated system (ts_vdw_isolated):"
+			    -widget    radiobox
+			    -textvalue { Yes No }	      
+			    -value     { .true. .false. }
+			}
+		    }
+		    
 		    group xdmG {
 			var xdm_a1 -label "Damping function parameter a1 (xdm_a1):" -validate fortranreal
 			var xdm_a2 -label "Damping function parameter a1 (xdm_a2):" -validate fortranreal
 		    }
-		
+		    
 		    group vdw_obsolete -name "Obsolete vdW variables:" -decor normal {
 			
 			var london {
@@ -794,7 +847,7 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 
 		separator -label "--- Space group: crystal type structure specs ---"
 
-		group spaceGroup {
+		group spaceGroup -decor normal {
 		    var space_group {
 			-label "Crystal space group number (space_group):"
 			-validate nonnegint
@@ -826,17 +879,63 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 		    }
 		}		    
 
-		separator -label "--- FFT mesh (hard grid) for charge density ---"
+		separator -label "--- Charged plate (monopole) options ---"
+		
+		group monopole_group -decor normal {
+		    var zmon {
+			-label "Z position of the charged plate (zmon):"
+			-validate fortranposreal
+		    }
 
-		var nr1 -label "nr1:" -validate posint -widget spinint
-		var nr2 -label "nr2:" -validate posint -widget spinint
-		var nr3 -label "nr3:" -validate posint -widget spinint
+		    var realxz {
+			-label "Allow the system to relax towards the charged plate (realxz):"
+			-widget    radiobox
+			-textvalue { Yes No }	      
+			-value     { .true. .false. }
+		    }
 
-		separator -label "--- FFT mesh (soft grid) for wavefunction ---"
+		    var block {
+			-label "Add a potential barrier to the total potential (block):"
+			-widget    radiobox
+			-textvalue { Yes No }	      
+			-value     { .true. .false. }
+		    }
+		    
+		    var block_1 {
+			-label "Lower end of the potential barrier (block_1):"
+			-validate fortranposreal
+		    }
+		    
+		    var block_2 {
+			-label "Upper end of the potential barrier (block_2):"
+			-validate fortranposreal
+		    }
+		    
+		    var block_height {
+			-label "Height of the potential barrier \[in Ry\] (block_height):"
+			-validate fortranreal
+		    }		    
+		}
+		
+		separator -label "--- FFT meshes ---"
 
-		var nr1s -label "nr1s:" -validate posint -widget spinint
-		var nr2s -label "nr2s:" -validate posint -widget spinint
-		var nr3s -label "nr3s:" -validate posint -widget spinint
+		group fft_mesh_group -decor normal {
+		    group nrx {
+			separator -label "--- hard grid for charge density ---"
+			packwidgets left
+			var nr1 -label "nr1:" -validate posint -widget spinint
+			var nr2 -label "nr2:" -validate posint -widget spinint
+			var nr3 -label "nr3:" -validate posint -widget spinint
+		    }
+
+		    group nrxs {
+			separator -label "--- soft grid for wavefunction ---"
+			packwidgets left
+			var nr1s -label "nr1s:" -validate posint -widget spinint
+			var nr2s -label "nr2s:" -validate posint -widget spinint
+			var nr3s -label "nr3s:" -validate posint -widget spinint
+		    }
+		}
 	    }
 	}
     }
@@ -869,24 +968,6 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 		    -validate  fortranposreal
 		}
 
-		var adaptive_thr {
-		    -label     "Use adaptive convergence threshold for EXX (adaptive_thr):"
-		    -widget    radiobox
-		    -textvalue { Yes No }	      
-		    -value     { .true. .false. }
-		}
-	       
-		group adaptive_thr_group -name "Adaptive convergence threshold setup:" {
-		    var conv_thr_init  {
-			-label     "Convergence threshold used for the first scf cycle (conv_thr_init):"
-			-validate  fortranposreal
-		    }		    
-		    var conv_thr_multi {
-			-label     "Convergence threshold factor for the rest of scf cycles (conv_thr_multi):"
-			-validate  fortranposreal
-		    }
-		}
-
 		var startingpot {
 		    -label    "Type of starting potential (startingpot):"
 		    -widget   optionmenu
@@ -909,101 +990,136 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 		    -value {'atomic' 'atomic+random' 'random' 'file'}
 		}
 
-		separator -label "--- SCF Mixing ---"
-
-		var mixing_mode {
-		    -label     "Mixing mode (mixing_mode):"
-		    -textvalue {
-			"charge density Broyden mixing  <plain>"
-			"charge density Broyden mixing with simple Thomas-Fermi (TF) screening  <TF>"
-			"charge density Broyden mixing with local-density-dependent TF screening  <local-TF>"
+		separator -label "--- Adaptive convergence setup for EXX ---"
+		
+		group adaptive_thr_group -decor normal {
+		    var adaptive_thr {
+			-label     "Use adaptive convergence threshold for EXX (adaptive_thr):"
+			-widget    radiobox
+			-textvalue { Yes No }	      
+			-value     { .true. .false. }
 		    }
-		    -value {
-			'plain' 
-			'TF'    
-			'local-TF'
+		    
+		    group adaptive_thr_setup -decor none {
+			var conv_thr_init  {
+			    -label     "Convergence threshold used for the first scf cycle (conv_thr_init):"
+			    -validate  fortranposreal
+			}		    
+			var conv_thr_multi {
+			    -label     "Convergence threshold factor for the rest of scf cycles (conv_thr_multi):"
+			    -validate  fortranposreal
+			}
 		    }
-		    -widget optionmenu
 		}
 
-		var mixing_beta {
-		    -label    "Mixing factor for self-consistency (mixing_beta):"
-		    -validate  fortranposreal
-		}
+		separator -label "--- SCF mixing ---"
 
-		var mixing_ndim {
-		    -label    "Number of iterations used in mixing scheme (mixing_ndim):"
-		    -widget   spinint
-		    -validate posint
-		    -fmt      %d
-		}
+		group scf_mixing -decor normal {
 
-		var mixing_fixed_ns {
-		    -text     "For LDA+U only: ns = atomic density appearing in the Hubbard term"
-		    -label    "Number of iterations with fixed ns (mixing_fixed_ns):" 
-		    -widget   spinint
-		    -validate posint
-		    -fmt      %d
-		}
+		    var mixing_mode {
+			-label     "Mixing mode (mixing_mode):"
+			-textvalue {
+			    "charge density Broyden mixing  <plain>"
+			    "charge density Broyden mixing with simple Thomas-Fermi (TF) screening  <TF>"
+			    "charge density Broyden mixing with local-density-dependent TF screening  <local-TF>"
+			}
+			-value {
+			    'plain' 
+			    'TF'    
+			    'local-TF'
+			}
+			-widget optionmenu
+		    }
+		    
+		    var mixing_beta {
+			-label    "Mixing factor for self-consistency (mixing_beta):"
+			-validate  fortranposreal
+		    }
 
+		    var mixing_ndim {
+			-label    "Number of iterations used in mixing scheme (mixing_ndim):"
+			-widget   spinint
+			-validate posint
+			-fmt      %d
+		    }
+
+		    var mixing_fixed_ns {
+			-text     "For LDA+U only: ns = atomic density appearing in the Hubbard term"
+			-label    "Number of iterations with fixed ns (mixing_fixed_ns):" 
+			-widget   spinint
+			-validate posint
+			-fmt      %d
+		    }
+		}
 		separator -label "--- Diagonalization ---"
 
-		var diagonalization {
-		    -label    "Type of diagonalization (diagonalization):"
-		    -textvalue {
-			"Davidson iterative diagonalization with overlap matrix  <david>"
-			"Conjugate-gradient-like band-by-band diagonalization  <cg>"
+		group diag_group -decor normal {
+		    var diagonalization {
+			-label    "Type of diagonalization (diagonalization):"
+			-textvalue {
+			    "Davidson with overlap matrix  <david>"
+			    "Conjugate-gradient band-by-band <cg>"
+			}
+			-value {
+			    'david'
+			    'cg'
+			}
+			-widget optionmenu
 		    }
-		    -value {
-			'david'
-			'cg'
+		    
+		    var diago_thr_init {
+			-label "Convergence threshold for 1st iterative diagonalization (diago_thr_init):"
+			-validate fortranreal
 		    }
-		    -widget optionmenu
-		}
-		
-		var diago_thr_init {
-		    -label "Convergence threshold for 1st iterative diagonalization (diago_thr_init):"
-		    -validate fortranreal
-		}
+		    
+		    var diago_full_acc {
+			-label "Diagonalize empty states as precise as occupied states (diago_full_acc):"
+			-widget    radiobox
+			-textvalue { Yes No }	      
+			-value     { .true. .false. }
+		    }
 
-		var diago_full_acc {
-		    -label "Diagonalize empty states as precise as occupied states (diago_full_acc):"
-		    -widget    radiobox
-		    -textvalue { Yes No }	      
-		    -value     { .true. .false. }
-		}
-		
-		var diago_cg_maxiter {
-		    -text     "For CONJUGATE-GRADIENT DIAGONALIZATION only"
-		    -label    "Max. \# of iterations (diago_cg_maxiter):"
-		    -widget   spinint
-		    -validate posint
-		    -fmt      %d
-		}
-		
-		separator -label "--- DAVIDSON diagonalization ---"
-
-		var diago_david_ndim {
-		    -label    "Dimension of workspace (diago_david_ndim):"
-		    -widget   spinint
-		    -validate posint
-		    -fmt      %d
+		    separator -label "--- Conjugate-Gradient diagonalization ---"
+		    
+		    var diago_cg_maxiter {
+			-label    "Max. \# of iterations (diago_cg_maxiter):"
+			-widget   spinint
+			-validate posint
+			-fmt      %d
+		    }
+		    
+		    separator -label "--- Davidson diagonalization ---"
+		    
+		    var diago_david_ndim {
+			-label    "Dimension of workspace (diago_david_ndim):"
+			-widget   spinint
+			-validate posint
+			-fmt      %d
+		    }
 		}
 
 		separator -label "--- Finite electric field calculation ---"
+		
+		group elfield_group -decor normal {
+		    var efield {
+			-label    "The intensity of the electric field (efield):"
+			-validate fortranreal
+		    }
+		    
+		    dimension efield_cart {
+			-label    "Finite electric field in cartesian axis (efield_cart):"
+			-validate fortranreal
+			-start    1
+			-end      3
+		    }
 
-		var efield {
-		    -label    "The intensity of the electric field (efield):"
-		    -validate fortranreal
+		    var efield_phase {
+			-label "Efield_phase (efield_phase):"
+			-widget optionmenu
+			-value { 'read' 'write' 'none' }
+		    }
 		}
-
-		dimension efield_cart {
-		    -label    "Finite electric field in cartesian axis (efield_cart):"
-		    -validate fortranreal
-		    -start    1
-		    -end      3
-		}
-
+		
 		separator -label "--- Ultrasoft pseudopotentials ---"
 		
 		var tqr {
@@ -1042,6 +1158,7 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 			"damped dynamics (quick-min Verlet) for structural optimization  <damp>"
 			"Verlet algorithm for molecular dynamics  <verlet>"
 			"over-damped Langevin dynamics  <langevin>"
+			"over-damped Langevin with Smart Monte Carlo <langevin-smc>"
                         "Beeman algorithm for variable cell damped dynamics  <damp>"
 			"Beeman algorithm for variable cell MD  <beeman>"
 		    }
@@ -1050,7 +1167,8 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 			'damp' 
 			'verlet'
 			'langevin'
-                        'damp'
+                        'langevin-smc'
+			'damp'
 			'beeman'
 		    }
 		}
@@ -1103,7 +1221,7 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 
 		separator -label "--- Molecular Dynamics ---"
 
-		group md {
+		group md -decor normal {
 		    var ion_temperature {
 			-label    "Temperature of ions (ion_temperature):"
 			-widget   optionmenu
@@ -1159,15 +1277,14 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 
 		separator -label "--- BFGS Structural Optimization ---"
 
-		var upscale {
-		    -text    "Max. reduction factor for conv_thr during structural optimization"
-		    -label   "Max. reduction factor (upscale):"
-		    -validate  fortranposreal
-		}
+		group bfgs -decor normal {
+		    var upscale {
+			-label   "Maximum reduction factor for conv_thr during optimization (upscale):"
+			-validate  fortranposreal
+		    }
 
-		group bfgs {
 		    var bfgs_ndim {
-			-label "Workspace dimension used in the PULAY mixing of the residual vectors:"
+			-label "Number of old forces and displacements used in the Pulay mixing (bfgs_ndim):"
 			-widget   spinint
 			-validate posint
 		    }
@@ -1253,18 +1370,21 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 	    var cell_dofree {
 		-label "Which of the cell parameters should be moved (cell_dofree):"
 		-textvalue {
-		    "all     = all axis and angles are propagated"
-		    "x       = only the x axis is moved"
-		    "y       = only the y axis is moved"
-		    "z       = only the z axis is moved"
-		    "xy      = only the x and y axis are moved, angles are unchanged"
-		    "xz      = only the x and z axis are moved, angles are unchanged"
-		    "yz      = only the y and z axis are moved, angles are unchanged"
-		    "xyz     = x, y and z axis are moved, angles are unchanged"
-		    "shape   = all axis and angles, keeping the volume fixed"
+		    "all    = all axis and angles are propagated"
+		    "x      = only the x axis is moved"
+		    "y      = only the y axis is moved"
+		    "z      = only the z axis is moved"
+		    "xy     = only the x and y axis are moved, angles are unchanged"
+		    "xz     = only the x and z axis are moved, angles are unchanged"
+		    "yz     = only the y and z axis are moved, angles are unchanged"
+		    "xyz    = x, y and z axis are moved, angles are unchanged"
+		    "shape  = all axis and angles, keeping the volume fixed"
+		    "volume = the volume changes, keeping all angles fixed"
+		    "2Dxy   = only x and y components are allowed to change"
+		    "2Dshape = as above, keeping the area in xy plane fixed"
 		}	    
 		-value {
-		    'all' 'x' 'y' 'z' 'xy' 'xz' 'yz' 'xyz' 'shape'  
+		    'all' 'x' 'y' 'z' 'xy' 'xz' 'yz' 'xyz' 'shape'  'volume' '2Dxy' '2Dshape'
 		}
 		-widget optionmenu
 	    }
@@ -1339,7 +1459,7 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 		    -default "Cartesian in ALAT (i.e. in length units of celldm(1))  <alat>"
 		}
 	    }
-		
+	    
 	    table atomic_coordinates {
 		-caption   "Atomic coordinates:"
 		-head      {Atomic-label X-Coordinate Y-Coordinate Z-Coordinate if_pos(1) if_pos(2) if_pos(3)}

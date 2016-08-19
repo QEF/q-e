@@ -65,6 +65,7 @@ tracevar calculation w {
 	    widgetconfigure ion_dynamics -textvalues {
 		"Verlet algorithm for molecular dynamics  <verlet>"
 		"over-damped Langevin dynamics  <langevin>"
+		"over-damped Langevin with Smart Monte Carlo <langevin-smc>"
 	    }
 	    
 	    if { ! [regexp verlet|langevin $ion_dynamics] } {
@@ -118,6 +119,13 @@ tracevar calculation w {
     widgetconfigure atomic_coordinates -caption "Enter atomic coordinates:"    	
 }
 
+tracevar monopole w {
+    if { [vartextvalue monopole] == "Yes" } {
+	groupwidget monopole_group enable
+    } else {
+	groupwidget monopole_group disable
+    }
+}
 
 
 # ------------------------------------------------------------------------
@@ -223,6 +231,8 @@ tracevar ntyp w {
     varset lda_plus_u -value [varvalue lda_plus_u]
 
     widgetconfigure london_c6 -end $ntyp
+    widgetconfigure london_rvdw -end $ntyp
+    
     # hack
     varset london -value [varvalue london]
 }
@@ -288,15 +298,10 @@ tracevar tefield w {
     }
 }
 
-proc lelfield_widgets {status} {
-    foreach w {nberrycyc efield efield_cart} {
-	widget $w $status
-    }
-}
 tracevar lelfield w {
     switch -- [vartextvalue lelfield] {
-	Yes     { foreach w {nberrycyc efield efield_cart} {widget $w enable}  }
-	default { foreach w {nberrycyc efield efield_cart} {widget $w disable} }
+	Yes     { foreach w {nberrycyc efield efield_cart} {widget $w enable}; groupwidget elfield_group enable }
+	default { foreach w {nberrycyc efield efield_cart} {widget $w disable};groupwidget elfield_group disable  }
     }
 }
 
@@ -325,11 +330,14 @@ tracevar assume_isolated w {
 }
 
 tracevar london w {
-    groupwidget dftdG disable
-    groupwidget xdmG  disable 
-    if { [vartextvalue london] == "Yes" } { 
+    if { [vartextvalue london] == "Yes" } {
 	groupwidget dftdG enable
-	widgetconfigure london_c6 -end [varvalue ntyp]
+	widgetconfigure london_c6   -end [varvalue ntyp]
+	widgetconfigure london_rvdw -end [varvalue ntyp]
+	
+	varset xdm -value .false.
+	groupwidget xdmG  disable 
+	groupwidget tsG   disable	
     } else  {
 	groupwidget dftdG disable 
     }
@@ -337,7 +345,11 @@ tracevar london w {
 
 tracevar xdm w {
     if { [vartextvalue xdm] == "Yes" } { 
-	groupwidget xdmG enable 
+	groupwidget xdmG enable
+	
+	varset london -value .false.
+	groupwidget dftdG disable 
+	groupwidget tsG   disable
     } else  {
 	groupwidget xdmG disable 
     }
@@ -346,12 +358,20 @@ tracevar xdm w {
 tracevar vdw_corr w {
     groupwidget dftdG disable
     groupwidget xdmG  disable 
+    groupwidget tsG   disable
+    
     if { [varvalue vdw_corr] == "'grimme-d2'" } {
 	groupwidget dftdG enable 
 	groupwidget xdmG  disable 
+	groupwidget tsG   disable 
     } elseif { [varvalue vdw_corr] == "'xdm'" } {
 	groupwidget dftdG disable 
-	groupwidget xdmG  enable 
+	groupwidget xdmG  enable
+	groupwidget tsG   disable 
+    } elseif { [varvalue vdw_corr] == "'ts-vdw'" } {
+	groupwidget dftdG disable 
+	groupwidget xdmG  disable
+	groupwidget tsG   enable
     }
 }
 
@@ -361,9 +381,9 @@ tracevar vdw_corr w {
 
 tracevar adaptive_thr w {
     if { [vartextvalue adaptive_thr] == "Yes" } { 
-	groupwidget adaptive_thr_group enable 
+	groupwidget adaptive_thr_setup enable 
     } else  {
-	groupwidget adaptive_thr_group disable
+	groupwidget adaptive_thr_setup disable
     }
 }
 
@@ -408,7 +428,7 @@ tracevar ion_dynamics w {
 	'relax' - 'vc-relax' {	    
 	    # check !!!
 	    switch -exact -- $iond {
-		'damp' - 'verlet' - 'langevin' - 'beeman' {
+		'damp' - 'verlet' - 'langevin' - 'langevin-smc' - 'beeman' {
 		    groupwidget md enable
 		} 
 		default {
@@ -534,6 +554,7 @@ tracevar specify_atomic_forces w {
 # ------------------------------------------------------------------------
 postprocess {    
     varset calculation     -value 'scf'
+    varset monopole        -value {}
     varset ibrav           -value {}
     varset how_lattice     -value celldm
     varset nspin           -value {}

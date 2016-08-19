@@ -540,8 +540,8 @@ proc ::pwscf::pwReadFilter {moduleObj channel} {
 		}
 		vdw_corr {
 		    {'grimme-d2' 'Grimme-D2' 'DFT-D' 'dft-d'}
-		    {'ts-vdw' 'TS' 'ts' 'ts-vdW'}
-		    {'XDM' 'xdm'}
+		    {'ts-vdw' 'TS', 'ts', ''ts-vdW', 'tkatchenko-scheffler'}
+		    {'xdm''XDM'}
 		}
 	    } {		
 		set _line [readFilter::replaceVarFlag $_line $var $optList]

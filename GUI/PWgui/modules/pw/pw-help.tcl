@@ -16,18 +16,49 @@ help calculation -helpfmt helpdoc -helptext {
          </li>
 <br><li> <em>Description:</em>
 </li>
-<blockquote><pre>
-a string describing the task to be performed:
-   'scf',
-   'nscf',
-   'bands',
-   'relax',
-   'md',
-   'vc-relax',
-   'vc-md'
-
-   (vc = variable-cell).
-         </pre></blockquote>
+<blockquote>
+<pre>
+A string describing the task to be performed. Options are:
+            </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'scf'</b></tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'nscf'</b></tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'bands'</b></tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'relax'</b></tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'md'</b></tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'vc-relax'</b></tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'vc-md'</b></tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+            </pre></dd>
+</dl>
+<pre>
+(vc = variable-cell).
+            </pre>
+</blockquote>
 </ul>      
       
 }
@@ -61,11 +92,25 @@ help verbosity -helpfmt helpdoc -helptext {
          </li>
 <br><li> <em>Description:</em>
 </li>
-<blockquote><pre>
+<blockquote>
+<pre>
 Currently two verbosity levels are implemented:
-  'high' and 'low'. 'debug' and 'medium' have the same
-  effect as 'high'; 'default' and 'minimal', as 'low'
-         </pre></blockquote>
+            </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'high'</b></tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'low'</b></tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+            </pre></dd>
+</dl>
+<pre>
+<b>'debug'</b> and <b>'medium'</b> have the same effect as <b>'high';</b>
+<b>'default'</b> and <b>'minimal'</b> as <b>'low'</b>
+            </pre>
+</blockquote>
 </ul>      
       
 }
@@ -81,20 +126,28 @@ help restart_mode -helpfmt helpdoc -helptext {
          </li>
 <br><li> <em>Description:</em>
 </li>
-<blockquote><pre>
-'from_scratch'  : from scratch. This is the normal way
-                  to perform a PWscf calculation
-'restart'       : from previous interrupted run. Use this
-                  switch only if you want to continue an
-                  interrupted calculation, not to start a
-                  new one, or to perform non-scf calculations.
-                  Works only if the calculation was cleanly
-                  stopped using variable "max_seconds", or
-                  by user request with an "exit file" (i.e.:
-                  create a file "prefix".EXIT, in directory
-                  "outdir"; see variables "prefix", "outdir").
-                  Overrides "startingwfc" and "startingpot".
-         </pre></blockquote>
+<blockquote>
+<pre> Available options are:
+            </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'from_scratch'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+From scratch. This is the normal way to perform a PWscf calculation
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'restart'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+From previous interrupted run. Use this switch only if you want to
+continue an interrupted calculation, not to start a new one, or to
+perform non-scf calculations.  Works only if the calculation was
+cleanly stopped using variable "max_seconds", or by user request
+with an "exit file" (i.e.: create a file "prefix".EXIT, in directory
+"outdir"; see variables "prefix", "outdir").  Overrides "startingwfc"
+and "startingpot".
+            </pre></dd>
+</dl>
+</blockquote>
 </ul>      
       
 }
@@ -113,13 +166,13 @@ help wf_collect -helpfmt helpdoc -helptext {
 <blockquote><pre>
 This flag controls the way wavefunctions are stored to disk :
 
-.TRUE.  collect wavefunctions from all processors, store them
+<b>.TRUE.</b>  collect wavefunctions from all processors, store them
         into the output data directory "outdir"/"prefix".save,
         one wavefunction per k-point in subdirs K000001/,
         K000001/, etc.. Use this if you want wavefunctions
         to be readable on a different number of processors.
 
-.FALSE. do not collect wavefunctions, leave them in temporary
+<b>.FALSE.</b> do not collect wavefunctions, leave them in temporary
         local files (one per processor). The resulting format
         will be readable only by jobs running on the same
         number of processors and pools. Requires less I/O
@@ -139,13 +192,14 @@ help nstep -helpfmt helpdoc -helptext {
 </li>
 <br><li> <em>Type: </em>INTEGER</li>
 <br><li> <em>Default: </em>
-1  if calculation = 'scf', 'nscf', 'bands';
+1  if "calculation" == 'scf', 'nscf', 'bands';
 50 for the other cases
          </li>
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-number of ionic + electronic steps
+number of molecular-dynamics or structural optimization steps
+performed in this run
          </pre></blockquote>
 </ul>      
       
@@ -163,7 +217,7 @@ help iprint -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-band energies are written every "iprint" iterations
+band energies are written every <i>iprint</i> iterations
          </pre></blockquote>
 </ul>      
       
@@ -182,7 +236,7 @@ help tstress -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 calculate stress. It is set to .TRUE. automatically if
-calculation='vc-md' or 'vc-relax'
+"calculation" == 'vc-md' or 'vc-relax'
          </pre></blockquote>
 </ul>      
       
@@ -199,7 +253,7 @@ help tprnfor -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 calculate forces. It is set to .TRUE. automatically if
-calculation='relax','md','vc-md'
+"calculation" == 'relax','md','vc-md'
          </pre></blockquote>
 </ul>      
       
@@ -258,7 +312,7 @@ help wfcdir -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-this directory specifies where to store files generated by
+This directory specifies where to store files generated by
 each processor (*.wfc{N}, *.igk{N}, etc.). Useful for
 machines without a parallel file system: set "wfcdir" to
 a local file system, while "outdir" should be a parallel
@@ -323,7 +377,7 @@ help max_seconds -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-jobs stops after "max_seconds" CPU time. Use this option
+Jobs stops after "max_seconds" CPU time. Use this option
 in conjunction with option "restart_mode" if you need to
 split a job too long to complete into shorter jobs that
 fit into your batch queues.
@@ -344,7 +398,7 @@ help etot_conv_thr -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-convergence threshold on total energy (a.u) for ionic
+Convergence threshold on total energy (a.u) for ionic
 minimization: the convergence criterion is satisfied
 when the total energy changes less than "etot_conv_thr"
 between two consecutive scf steps. Note that "etot_conv_thr"
@@ -367,7 +421,7 @@ help forc_conv_thr -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-convergence threshold on forces (a.u) for ionic minimization:
+Convergence threshold on forces (a.u) for ionic minimization:
 the convergence criterion is satisfied when all components of
 all forces are smaller than "forc_conv_thr".
 See also "etot_conv_thr" - both criteria must be satisfied
@@ -387,26 +441,46 @@ help disk_io -helpfmt helpdoc -helptext {
          </li>
 <br><li> <em>Description:</em>
 </li>
-<blockquote><pre>
-Specifies the amount of disk I/O activity
-'high':   save all data to disk at each SCF step
-
-'medium': save wavefunctions at each SCF step unless
-          there is a single k-point per process (in which
-          case the behavior is the same as 'low')
-
-'low' :   store wfc in memory, save only at the end
-
-'none':   do not save anything, not even at the end
-          ('scf', 'nscf', 'bands' calculations; some data
-           may be written anyway for other calculations)
-
-Default is 'low' for the scf case, 'medium' otherwise.
+<blockquote>
+<pre>
+Specifies the amount of disk I/O activity:
+            </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'high'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+save all data to disk at each SCF step
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'medium'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+save wavefunctions at each SCF step unless
+there is a single k-point per process (in which
+case the behavior is the same as 'low')
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'low'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+store wfc in memory, save only at the end
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'none'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+do not save anything, not even at the end
+('scf', 'nscf', 'bands' calculations; some data
+may be written anyway for other calculations)
+            </pre></dd>
+</dl>
+<pre>
+<b>Default</b> is <b>'low'</b> for the scf case, <b>'medium'</b> otherwise.
 Note that the needed RAM increases as disk I/O decreases!
 It is no longer needed to specify 'high' in order to be able
 to restart from an interrupted calculation (see "restart_mode")
-but you cannot restart in disk_io='none'
-         </pre></blockquote>
+but you cannot restart in "disk_io"=='none'
+            </pre>
+</blockquote>
 </ul>      
       
 }
@@ -464,9 +538,9 @@ help dipfield -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-If .TRUE. and tefield=.TRUE. a dipole correction is also
+If .TRUE. and "tefield"==.TRUE. a dipole correction is also
 added to the bare ionic potential - implements the recipe
-of L. Bengtsson, PRB 59, 12301 (1999). See variables "edir",
+of L. Bengtsson, "PRB 59, 12301 (1999)". See variables "edir",
 "emaxpos", "eopreg" for the form of the correction. Must
 be used ONLY in a slab geometry, for surface calculations,
 with the discontinuity FALLING IN THE EMPTY SPACE.
@@ -489,7 +563,7 @@ help lelfield -helpfmt helpdoc -helptext {
 <blockquote><pre>
 If .TRUE. a homogeneous finite electric field described
 through the modern theory of the polarization is applied.
-This is different from "tefield=.true." !
+This is different from "tefield" == .true. !
          </pre></blockquote>
 </ul>      
       
@@ -507,7 +581,7 @@ help nberrycyc -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-In the case of a finite electric field  ( lelfield == .TRUE. )
+In the case of a finite electric field  ( "lelfield" == .TRUE. )
 it defines the number of iterations for converging the
 wavefunctions in the electric field Hamiltonian, for each
 external iteration on the charge density
@@ -529,7 +603,7 @@ help lorbm -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 If .TRUE. perform orbital magnetization calculation.
-If finite electric field is applied (lelfield=.true.)
+If finite electric field is applied ("lelfield"==.true.)
 only Kubo terms are computed
 [for details see New J. Phys. 12, 053032 (2010)].
 The type of calculation is 'nscf' and should be performed
@@ -552,8 +626,8 @@ help lberry -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-If .TRUE. perform a Berry phase calculation
-See the header of PW/src/bp_c_phase.f90 for documentation
+If .TRUE. perform a Berry phase calculation.
+See the header of PW/src/bp_c_phase.f90 for documentation.
          </pre></blockquote>
 </ul>      
       
@@ -573,7 +647,7 @@ For Berry phase calculation: direction of the k-point
 strings in reciprocal space. Allowed values: 1, 2, 3
 1=first, 2=second, 3=third reciprocal lattice vector
 For calculations with finite electric fields
-(lelfield==.true.) "gdir" is the direction of the field
+("lelfield"==.true.) "gdir" is the direction of the field.
          </pre></blockquote>
 </ul>      
       
@@ -590,9 +664,68 @@ help nppstr -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 For Berry phase calculation: number of k-points to be
-calculated along each symmetry-reduced string
+calculated along each symmetry-reduced string.
 The same for calculation with finite electric fields
-(lelfield=.true.)
+("lelfield"==.true.).
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help lfcpopt -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>lfcpopt</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .FALSE.
+         </li>
+<br><li> <em>See: </em> fcp_mu
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+If .TRUE. perform a constant bias potential (constant-mu) calculation
+for a static system with ESM method. See the header of PW/src/fcp.f90
+for documentation.
+
+NB:
+- The total energy displayed in 'prefix.out' includes the potentiostat
+  contribution (-mu*N).
+- "calculation" must be 'relax'.
+- "assume_isolated" = 'esm' and "esm_bc" = 'bc2' or 'bc3' must be set
+  in "SYSTEM" namelist.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help monopole -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>monopole</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .FALSE.
+         </li>
+<br><li> <em>See: </em> zmon, realxz, block, block_1, block_2, block_height
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+In the case of charged cells ("tot_charge" .ne. 0) setting monopole = .TRUE.
+represents the counter charge (i.e. -tot_charge) not by a homogenous
+background charge but with a charged plate, which is placed at "zmon"
+(see below). Details of the monopole potential can be found in
+T. Brumme, M. Calandra, F. Mauri; "PRB 89, 245406 (2014)".
+Note, that in systems which are not symmetric with respect to the plate,
+one needs to enable the dipole correction! ("dipfield"=.true.).
+Currently, symmetry can be used with monopole=.true. but carefully check
+that no symmetry is included which maps <i>z</i> to -<i>z</i> even if in principle one
+could still use them for symmetric systems (i.e. no dipole correction).
+For "nosym"=.false. verbosity is set to 'high'.
          </pre></blockquote>
 </ul>      
       
@@ -611,18 +744,18 @@ help ibrav -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
   Bravais-lattice index. If ibrav /= 0, specify EITHER
-  [ celldm(1)-celldm(6) ] OR [ A,B,C,cosAB,cosAC,cosBC ]
+  [ "celldm"(1)-"celldm"(6) ] OR [ "A", "B", "C", "cosAB", "cosAC", "cosBC" ]
   but NOT both. The lattice parameter "alat" is set to
   alat = celldm(1) (in a.u.) or alat = A (in Angstrom);
   see below for the other parameters.
-  For ibrav=0 specify the lattice vectors in CELL_PARAMETER,
+  For ibrav=0 specify the lattice vectors in "CELL_PARAMETERS",
   optionally the lattice parameter alat = celldm(1) (in a.u.)
-  or = A (in Angstrom), or else it is taken from CELL_PARAMETERS
+  or = A (in Angstrom), or else it is taken from "CELL_PARAMETERS"
 
 ibrav      structure                   celldm(2)-celldm(6)
                                      or: b,c,cosab,cosac,cosbc
   0          free
-      crystal axis provided in input: see card CELL_PARAMETERS
+      crystal axis provided in input: see card "CELL_PARAMETERS"
 
   1          cubic P (sc)
       v1 = a(1,0,0),  v2 = a(0,1,0),  v3 = a(0,0,1)
@@ -652,7 +785,7 @@ ibrav      structure                   celldm(2)-celldm(6)
       and tx, ty, tz as for case ibrav=5
       Note: if you prefer x,y,z as axis in the cubic limit,
             set  u = tz + 2*sqrt(2)*ty,  v = tz - sqrt(2)*ty
-            See also the note in flib/latgen.f90
+            See also the note in Modules/latgen.f90
 
   6          Tetragonal P (st)               celldm(3)=c/a
       v1 = a(1,0,0),  v2 = a(0,1,0),  v3 = a(0,0,c/a)
@@ -668,7 +801,7 @@ ibrav      structure                   celldm(2)-celldm(6)
                                              celldm(3)=c/a
       v1 = (a/2, b/2,0),  v2 = (-a/2,b/2,0),  v3 = (0,0,c)
  -9          as 9, alternate description
-      v1 = (a/2,-b/2,0),  v2 = (a/2,-b/2,0),  v3 = (0,0,c)
+      v1 = (a/2,-b/2,0),  v2 = (a/2, b/2,0),  v3 = (0,0,c)
 
  10          Orthorhombic face-centered      celldm(2)=b/a
                                              celldm(3)=c/a
@@ -707,9 +840,9 @@ ibrav      structure                   celldm(2)-celldm(6)
       v3 = (c*cos(beta),  c*(cos(alpha)-cos(beta)cos(gamma))/sin(gamma),
            c*sqrt( 1 + 2*cos(alpha)cos(beta)cos(gamma)
                      - cos(alpha)^2-cos(beta)^2-cos(gamma)^2 )/sin(gamma) )
-  where alpha is the angle between axis b and c
-         beta is the angle between axis a and c
-        gamma is the angle between axis a and b
+      where alpha is the angle between axis b and c
+             beta is the angle between axis a and c
+            gamma is the angle between axis a and b
          </pre></blockquote>
 </ul>      
       
@@ -728,11 +861,11 @@ help celldm -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 Crystallographic constants - see the "ibrav" variable.
-Specify either these OR A,B,C,cosAB,cosBC,cosAC NOT both.
+Specify either these OR "A","B","C","cosAB","cosBC","cosAC" NOT both.
 Only needed values (depending on "ibrav") must be specified
-alat = celldm(1) is the lattice parameter "a" (in BOHR)
-If ibrav=0, only celldm(1) is used if present;
-cell vectors are read from card CELL_PARAMETERS
+alat = "celldm"(1) is the lattice parameter "a" (in BOHR)
+If "ibrav"==0, only "celldm"(1) is used if present;
+cell vectors are read from card "CELL_PARAMETERS"
             </pre></blockquote>
 </ul>      
       
@@ -745,19 +878,26 @@ grouphelp {A B C cosAB cosAC cosBC} -helpfmt helpdoc -helptext {
 <li> <em>Variables: </em><big><b>A, B, C, cosAB, cosAC, cosBC</b></big>
 </li>
 <br><li> <em>Type: </em>REAL</li>
+<br><li> <em>See: </em> ibrav
+            </li>
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-Traditional crystallographic constants: a,b,c in ANGSTROM
+Traditional crystallographic constants:
+
+  a,b,c in ANGSTROM
   cosAB = cosine of the angle between axis a and b (gamma)
   cosAC = cosine of the angle between axis a and c (beta)
   cosBC = cosine of the angle between axis b and c (alpha)
+
 The axis are chosen according to the value of "ibrav".
 Specify either these OR "celldm" but NOT both.
-Only needed values (depending on "ibrav") must be specified
-The lattice parameter alat = A (in ANGSTROM )
-If ibrav = 0, only A is used if present;
-cell vectors are read from card CELL_PARAMETERS
+Only needed values (depending on "ibrav") must be specified.
+
+The lattice parameter alat = A (in ANGSTROM ).
+
+If "ibrav" == 0, only A is used if present, and
+cell vectors are read from card "CELL_PARAMETERS".
             </pre></blockquote>
 </ul>
     
@@ -775,7 +915,8 @@ help nat -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-number of atoms in the unit cell
+number of atoms in the unit cell (ALL atoms, except if
+space_group is set, in which case, INEQUIVALENT atoms)
          </pre></blockquote>
 </ul>      
       
@@ -807,14 +948,14 @@ help nbnd -helpfmt helpdoc -helptext {
 </li>
 <br><li> <em>Type: </em>INTEGER</li>
 <br><li> <em>Default: </em>
-for an insulator, nbnd = number of valence bands
-(nbnd = # of electrons /2);
-for a metal, 20% more (minimum 4 more)
+for an insulator, "nbnd" = number of valence bands
+("nbnd" = # of electrons /2);
+<br> for a metal, 20% more (minimum 4 more)
          </li>
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-number of electronic states (bands) to be calculated.
+Number of electronic states (bands) to be calculated.
 Note that in spin-polarized calculations the number of
 k-point, not the number of bands per k-point, is doubled
          </pre></blockquote>
@@ -834,7 +975,7 @@ help tot_charge -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-total charge of the system. Useful for simulations with charged cells.
+Total charge of the system. Useful for simulations with charged cells.
 By default the unit cell is assumed to be neutral (tot_charge=0).
 tot_charge=+1 means one electron missing from the system,
 tot_charge=-1 means one additional electron, and so on.
@@ -858,7 +999,7 @@ help tot_magnetization -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-total majority spin charge - minority spin charge.
+Total majority spin charge - minority spin charge.
 Used to impose a specific total electronic magnetization.
 If unspecified then tot_magnetization variable is ignored and
 the amount of electronic magnetization is determined during
@@ -878,7 +1019,7 @@ help starting_magnetization -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-starting spin polarization on atomic type 'i' in a spin
+Starting spin polarization on atomic type 'i' in a spin
 polarized calculation. Values range between -1 (all spins
 down for the valence electrons of atom type 'i') to 1
 (all spins up). Breaks the symmetry and provides a starting
@@ -930,18 +1071,18 @@ help ecutrho -helpfmt helpdoc -helptext {
 <li> <em>Variable: </em><big><b>ecutrho</b></big>
 </li>
 <br><li> <em>Type: </em>REAL</li>
-<br><li> <em>Default: </em> 4 * ecutwfc
+<br><li> <em>Default: </em> 4 * "ecutwfc"
          </li>
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-kinetic energy cutoff (Ry) for charge density and potential
+Kinetic energy cutoff (Ry) for charge density and potential
 For norm-conserving pseudopotential you should stick to the
 default value, you can reduce it by a little but it will
 introduce noise especially on forces and stress.
 If there are ultrasoft PP, a larger value than the default is
-often desirable (ecutrho = 8 to 12 times ecutwfc, typically).
-PAW datasets can often be used at 4*ecutwfc, but it depends
+often desirable (ecutrho = 8 to 12 times "ecutwfc", typically).
+PAW datasets can often be used at 4*"ecutwfc", but it depends
 on the shape of augmentation charge: testing is mandatory.
 The use of gradient-corrected functional, especially in cells
 with vacuum, or for pseudopotential without non-linear core
@@ -964,11 +1105,11 @@ help ecutfock -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-kinetic energy cutoff (Ry) for the exact exchange operator in
-EXX type calculations. By default this is the same as ecutrho
+Kinetic energy cutoff (Ry) for the exact exchange operator in
+EXX type calculations. By default this is the same as "ecutrho"
 but in some EXX calculations significant speed-up can be found
 by reducing ecutfock, at the expense of some loss in accuracy.
-Must be .gt. ecutwfc. Not implemented for stress calculation.
+Must be .gt. "ecutwfc". Not implemented for stress calculation.
 Use with care, especially in metals where it may give raise
 to instabilities.
          </pre></blockquote>
@@ -986,7 +1127,7 @@ grouphelp {nr1 nr2 nr3} -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-three-dimensional FFT mesh (hard grid) for charge
+Three-dimensional FFT mesh (hard grid) for charge
 density (and scf potential). If not specified
 the grid is calculated based on the cutoff for
 charge density (see also "ecutrho")
@@ -1007,9 +1148,9 @@ grouphelp {nr1s nr2s nr3s} -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-three-dimensional mesh for wavefunction FFT and for the smooth
+Three-dimensional mesh for wavefunction FFT and for the smooth
 part of charge density ( smooth grid ).
-Coincides with nr1, nr2, nr3 if ecutrho = 4 * ecutwfc ( default )
+Coincides with "nr1", "nr2", "nr3" if "ecutrho" = 4 * ecutwfc ( default )
 Note: you must specify all three dimensions for this setting to
 be used.
          </pre></blockquote>
@@ -1029,13 +1170,19 @@ help nosym -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-if (.TRUE.) symmetry is not used. Note that
-- if the k-point grid is provided in input, it is used "as is"
-  and symmetry-inequivalent k-points are not generated;
-- if the k-point grid is automatically generated, it will
-  contain only points in the irreducible BZ for the bravais
-  lattice, irrespective of the actual crystal symmetry.
-A careful usage of this option can be advantageous
+if (.TRUE.) symmetry is not used, which means that:
+
+- if a list of k points is provided in input, it is used
+  "as is": symmetry-inequivalent k-points are not generated,
+  and the charge density is not symmetrized;
+
+- if a uniform (Monkhorst-Pack) k-point grid is provided in
+  input, it is expanded to cover the entire Brillouin Zone,
+  irrespective of the crystal symmetry.
+  Time reversal symmetry is assumed so k and -k are considered
+  as equivalent unless "noinv"=.true. is specified.
+
+A careful usage of this option can be advantageous:
 - in low-symmetry large cells, if you cannot afford a k-point
   grid with the correct symmetry
 - in MD simulations
@@ -1057,15 +1204,18 @@ help nosym_evc -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-if(.TRUE.) symmetry is not used but the k-points are
+if (.TRUE.) symmetry is not used, and k points are
 forced to have the symmetry of the Bravais lattice;
-an automatically generated k-point grid will contain
-all the k-points of the grid and the points rotated by
-the symmetries of the Bravais lattice which are not in the
-original grid. If available, time reversal is
-used to reduce the k-points (and the q =&gt; -q symmetry
-is used in the phonon code). To disable also this symmetry set
-noinv=.TRUE..
+an automatically generated Monkhorst-Pack grid will contain
+all points of the grid over the entire Brillouin Zone,
+plus the points rotated by the symmetries of the Bravais
+lattice which were not in the original grid. The same
+applies if a k-point list is provided in input instead
+of a Monkhorst-Pack grid. Time reversal symmetry is assumed
+so k and -k are equivalent unless "noinv"=.true. is specified.
+This option differs from "nosym" because it forces k-points
+in all cases to have the full symmetry of the Bravais lattice
+(not all uniform grids have such property!)
          </pre></blockquote>
 </ul>      
       
@@ -1144,8 +1294,9 @@ if (.TRUE.) do not discard symmetry operations with an
 associated fractionary translation that does not send the
 real-space FFT grid into itself. These operations are
 incompatible with real-space symmetrization but not with the
-new G-space symmetrization. BEWARE: do not use for phonons!
-The phonon code still uses real-space symmetrization.
+new G-space symmetrization. BEWARE: do not use for phonons
+and for hybrid functionals! Both still use symmetrization
+in real space.
          </pre></blockquote>
 </ul>      
       
@@ -1160,25 +1311,44 @@ help occupations -helpfmt helpdoc -helptext {
 <br><li> <em>Type: </em>CHARACTER</li>
 <br><li> <em>Description:</em>
 </li>
-<blockquote><pre>
-'smearing':     gaussian smearing for metals
-                see variables 'smearing' and 'degauss'
-
-'tetrahedra' :  especially suited for calculation of DOS
-                (see P.E. Bloechl, PRB49, 16223 (1994))
-                Requires uniform grid of k-points,
-                automatically generated (see below)
-                Not suitable (because not variational) for
-                force/optimization/dynamics calculations
-
-'fixed' :       for insulators with a gap
-
-'from_input' :  The occupation are read from input file,
-                card OCCUPATIONS. Option valid only for a
-                single k-point, requires "nbnd" to be set
-                in input. Occupations should be consistent
-                with the value of "tot_charge".
-         </pre></blockquote>
+<blockquote>
+<pre> Available options are:
+            </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'smearing'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+gaussian smearing for metals;
+see variables "smearing" and "degauss"
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'tetrahedra'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+especially suited for calculation of DOS
+(see P.E. Bloechl, "PRB 49, 16223 (1994)").
+Requires uniform grid of k-points,
+automatically generated (see below).
+Not suitable (because not variational) for
+force/optimization/dynamics calculations.
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'fixed'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+for insulators with a gap
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'from_input'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+The occupation are read from input file,
+card "OCCUPATIONS". Option valid only for a
+single k-point, requires "nbnd" to be set
+in input. Occupations should be consistent
+with the value of "tot_charge".
+            </pre></dd>
+</dl>
+</blockquote>
 </ul>      
       
 }
@@ -1195,31 +1365,34 @@ help one_atom_occupations -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-This flag is used for isolated atoms (nat=1) together with
-occupations='from_input'. If it is .TRUE., the wavefunctions
+This flag is used for isolated atoms ("nat"=1) together with
+"occupations"='from_input'. If it is .TRUE., the wavefunctions
 are ordered as the atomic starting wavefunctions, independently
 from their eigenvalue. The occupations indicate which atomic
 states are filled.
-The order of the states is written inside the UPF
-pseudopotential file.
+
+The order of the states is written inside the UPF pseudopotential file.
 In the scalar relativistic case:
 S -&gt; l=0, m=0
 P -&gt; l=1, z, x, y
 D -&gt; l=2, r^2-3z^2, xz, yz, xy, x^2-y^2
+
 In the noncollinear magnetic case (with or without spin-orbit),
 each group of states is doubled. For instance:
 P -&gt; l=1, z, x, y for spin up, l=1, z, x, y for spin down.
 Up and down is relative to the direction of the starting
 magnetization.
+
 In the case with spin-orbit and time-reversal
-(starting_magnetization=0.0) the atomic wavefunctions are
+("starting_magnetization"=0.0) the atomic wavefunctions are
 radial functions multiplied by spin-angle functions.
 For instance:
 P -&gt; l=1, j=1/2, m_j=-1/2,1/2. l=1, j=3/2,
      m_j=-3/2, -1/2, 1/2, 3/2.
+
 In the magnetic case with spin-orbit the atomic wavefunctions
 can be forced to be spin-angle functions by setting
-starting_spin_angle to .TRUE..
+"starting_spin_angle" to .TRUE..
          </pre></blockquote>
 </ul>      
       
@@ -1240,13 +1413,16 @@ help starting_spin_angle -helpfmt helpdoc -helptext {
 In the spin-orbit case when domag=.TRUE., by default,
 the starting wavefunctions are initialized as in scalar
 relativistic noncollinear case without spin-orbit.
+
 By setting starting_spin_angle=.TRUE. this behaviour can
 be changed and the initial wavefunctions are radial
 functions multiplied by spin-angle functions.
+
 When domag=.FALSE. the initial wavefunctions are always
 radial functions multiplied by spin-angle functions
 independently from this flag.
-When lspinorb is .FALSE. this flag is not used.
+
+When "lspinorb" is .FALSE. this flag is not used.
          </pre></blockquote>
 </ul>      
       
@@ -1282,21 +1458,37 @@ help smearing -helpfmt helpdoc -helptext {
          </li>
 <br><li> <em>Description:</em>
 </li>
-<blockquote><pre>
-'gaussian', 'gauss':
-    ordinary Gaussian spreading (Default)
-
-'methfessel-paxton', 'm-p', 'mp':
-    Methfessel-Paxton first-order spreading
-    (see PRB 40, 3616 (1989)).
-
-'marzari-vanderbilt', 'cold', 'm-v', 'mv':
-    Marzari-Vanderbilt cold smearing
-    (see PRL 82, 3296 (1999))
-
-'fermi-dirac', 'f-d', 'fd':
-    smearing with Fermi-Dirac function
-         </pre></blockquote>
+<blockquote>
+<pre>
+Available options are:
+            </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'gaussian'</b>, <b>'gauss'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+ordinary Gaussian spreading (Default)
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'methfessel-paxton'</b>, <b>'m-p'</b>, <b>'mp'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Methfessel-Paxton first-order spreading
+(see "PRB 40, 3616 (1989)").
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'marzari-vanderbilt'</b>, <b>'cold'</b>, <b>'m-v'</b>, <b>'mv'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Marzari-Vanderbilt cold smearing
+(see "PRL 82, 3296 (1999)")
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'fermi-dirac'</b>, <b>'f-d'</b>, <b>'fd'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+smearing with Fermi-Dirac function
+            </pre></dd>
+</dl>
+</blockquote>
 </ul>      
       
 }
@@ -1320,8 +1512,8 @@ nspin = 2 :  spin-polarized calculation, LSDA
 
 nspin = 4 :  spin-polarized calculation, noncollinear
              (magnetization in generic direction)
-             DO NOT specify nspin in this case;
-             specify "noncolin=.TRUE." instead
+             DO NOT specify "nspin" in this case;
+             specify "noncolin"=.TRUE. instead
          </pre></blockquote>
 </ul>      
       
@@ -1415,7 +1607,7 @@ help input_dft -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 Exchange-correlation functional: eg 'PBE', 'BLYP' etc
-See Modules/functionals.f90 for allowed values.
+See Modules/funct.f90 for allowed values.
 Overrides the value read from pseudopotential files.
 Use with care and if you know what you are doing!
          </pre></blockquote>
@@ -1436,8 +1628,8 @@ help exx_fraction -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 Fraction of EXX for hybrid functional calculations. In the case of
-input_dft='PBE0', the default value is 0.25, while for input_dft='B3LYP'
-the exx_fraction default value is 0.20.
+"input_dft"='PBE0', the default value is 0.25, while for "input_dft"='B3LYP'
+the "exx_fraction" default value is 0.20.
          </pre></blockquote>
 </ul>      
       
@@ -1470,20 +1662,36 @@ help exxdiv_treatment -helpfmt helpdoc -helptext {
 <li> <em>Variable: </em><big><b>exxdiv_treatment</b></big>
 </li>
 <br><li> <em>Type: </em>CHARACTER</li>
-<br><li> <em>Default: </em> gygi-baldereschi
+<br><li> <em>Default: </em> 'gygi-baldereschi'
          </li>
 <br><li> <em>Description:</em>
 </li>
-<blockquote><pre>
+<blockquote>
+<pre>
 Specific for EXX. It selects the kind of approach to be used
 for treating the Coulomb potential divergencies at small q vectors.
-
-gygi-baldereschi : appropriate for cubic and quasi-cubic supercells
-vcut_spherical : appropriate for cubic and quasi-cubic supercells
-vcut_ws : appropriate for strongly anisotropic supercells, see also
-          ecutvcut.
-none : sets Coulomb potential at G,q=0 to 0.0 (required for GAU-PBE)
-         </pre></blockquote>
+            </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'gygi-baldereschi'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;"> appropriate for cubic and quasi-cubic supercells
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'vcut_spherical'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;"> appropriate for cubic and quasi-cubic supercells
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'vcut_ws'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;"> appropriate for strongly anisotropic supercells, see also "ecutvcut".
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'none'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;"> sets Coulomb potential at G,q=0 to 0.0 (required for GAU-PBE)
+            </pre></dd>
+</dl>
+</blockquote>
 </ul>      
       
 }
@@ -1500,7 +1708,7 @@ help x_gamma_extrapolation -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-Specific for EXX. If true, extrapolate the G=0 term of the
+Specific for EXX. If .true., extrapolate the G=0 term of the
 potential (see README in examples/EXX_example for more)
 Set this to .false. for GAU-PBE.
          </pre></blockquote>
@@ -1522,8 +1730,8 @@ help ecutvcut -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-Reciprocal space cutoff for correcting
-Coulomb potential divergencies at small q vectors.
+Reciprocal space cutoff for correcting Coulomb potential
+divergencies at small q vectors.
          </pre></blockquote>
 </ul>      
       
@@ -1539,12 +1747,12 @@ grouphelp {nqx1 nqx2 nqx3} -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-three-dimensional mesh for q (k1-k2) sampling of
+Three-dimensional mesh for q (k1-k2) sampling of
 the Fock operator (EXX). Can be smaller than
 the number of k-points.
 
 Currently this defaults to the size of the k-point mesh used.
- In QE =&lt; 5.0.2 it defaulted to nqx1=nqx2=nqx3=1.
+In QE =&lt; 5.0.2 it defaulted to nqx1=nqx2=nqx3=1.
          </pre></blockquote>
 </ul>
     
@@ -1561,20 +1769,20 @@ help lda_plus_u -helpfmt helpdoc -helptext {
          </li>
 <br><li> <em>Status: </em>
 DFT+U (formerly known as LDA+U) currently works only for
-a few selected elements. Modify flib/set_hubbard_l.f90 and
-PW/src/tabd.f90 if you plan to use DFT+U with an element that
+a few selected elements. Modify <tt>Modules/set_hubbard_l.f90</tt> and
+<tt>PW/src/tabd.f90</tt> if you plan to use DFT+U with an element that
 is not configured there.
          </li>
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-Specify lda_plus_u = .TRUE. to enable DFT+U calculations
-See: Anisimov, Zaanen, and Andersen, PRB 44, 943 (1991);
-     Anisimov et al., PRB 48, 16929 (1993);
-     Liechtenstein, Anisimov, and Zaanen, PRB 52, R5467 (1994).
+Specify "lda_plus_u" = .TRUE. to enable DFT+U calculations
+See: Anisimov, Zaanen, and Andersen, "PRB 44, 943 (1991)";
+     Anisimov et al., "PRB 48, 16929 (1993)";
+     Liechtenstein, Anisimov, and Zaanen, "PRB 52, R5467 (1994)".
 You must specify, for each species with a U term, the value of
 U and (optionally) alpha, J of the Hubbard model (all in eV):
-see lda_plus_u_kind, Hubbard_U, Hubbard_alpha, Hubbard_J
+see "lda_plus_u_kind", "Hubbard_U", "Hubbard_alpha", "Hubbard_J"
          </pre></blockquote>
 </ul>      
       
@@ -1593,10 +1801,12 @@ help lda_plus_u_kind -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 Specifies the type of DFT+U calculation:
-                  0   simplified version of Cococcioni and de Gironcoli,
-                      PRB 71, 035105 (2005), using Hubbard_U
-                  1   rotationally invariant scheme of Liechtenstein et al.,
-                      using Hubbard_U and Hubbard_J
+
+   0   simplified version of Cococcioni and de Gironcoli,
+       "PRB 71, 035105 (2005)", using "Hubbard_U"
+
+   1   rotationally invariant scheme of Liechtenstein et al.,
+       using "Hubbard_U" and "Hubbard_J"
          </pre></blockquote>
 </ul>      
       
@@ -1633,7 +1843,7 @@ help Hubbard_J0 -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 Hubbard_J0(i): J0 parameter (eV) for species i, DFT+U+J calculation,
-see PRB 84, 115108 (2011) for details.
+see "PRB 84, 115108 (2011)" for details.
          </pre></blockquote>
 </ul>      
       
@@ -1653,8 +1863,8 @@ help Hubbard_alpha -helpfmt helpdoc -helptext {
 <blockquote><pre>
 Hubbard_alpha(i) is the perturbation (on atom i, in eV)
 used to compute U with the linear-response method of
-Cococcioni and de Gironcoli, PRB 71, 35105 (2005)
-(only for lda_plus_u_kind=0)
+Cococcioni and de Gironcoli, "PRB 71, 35105 (2005)"
+(only for "lda_plus_u_kind"=0)
          </pre></blockquote>
 </ul>      
       
@@ -1674,9 +1884,9 @@ help Hubbard_beta -helpfmt helpdoc -helptext {
 <blockquote><pre>
 Hubbard_beta(i) is the perturbation (on atom i, in eV)
 used to compute J0 with the linear-response method of
-Cococcioni and de Gironcoli, PRB 71, 35105 (2005)
-(only for lda_plus_u_kind=0). See also
-PRB 84, 115108 (2011).
+Cococcioni and de Gironcoli, "PRB 71, 35105 (2005)"
+(only for "lda_plus_u_kind"=0). See also
+"PRB 84, 115108 (2011)".
          </pre></blockquote>
 </ul>      
       
@@ -1693,37 +1903,59 @@ help U_projection_type -helpfmt helpdoc -helptext {
          </li>
 <br><li> <em>Description:</em>
 </li>
-<blockquote><pre>
-Only active when lda_plus_U is .true., specifies the type
+<blockquote>
+<pre>
+Only active when "lda_plus_U" is .true., specifies the type
 of projector on localized orbital to be used in the DFT+U
 scheme.
 
 Currently available choices:
-'atomic': use atomic wfc's (as they are) to build the projector
-
-'ortho-atomic': use Lowdin orthogonalized atomic wfc's
-
-'norm-atomic':  Lowdin normalization of atomic wfc. Keep in mind:
-                atomic wfc are not orthogonalized in this case.
-                This is a "quick and dirty" trick to be used when
-                atomic wfc from the pseudopotential are not
-                normalized (and thus produce occupation whose
-                value exceeds unity). If orthogonalized wfc are
-                not needed always try 'atomic' first.
-
-'file':         use the information from file "prefix".atwfc that must
-                have been generated previously, for instance by pmw.x
-                (see PP/src/poormanwannier.f90 for details).
-
-'pseudo':       use the pseudopotential projectors. The charge density
-                outside the atomic core radii is excluded.
-                N.B.: for atoms with +U, a pseudopotential with the
-                all-electron atomic wavefunctions is required (i.e.,
-                as generated by ld1.x with lsave_wfc flag).
-
+            </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'atomic'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;"> use atomic wfc's (as they are) to build the projector
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'ortho-atomic'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;"> use Lowdin orthogonalized atomic wfc's
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'norm-atomic'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Lowdin normalization of atomic wfc. Keep in mind:
+atomic wfc are not orthogonalized in this case.
+This is a "quick and dirty" trick to be used when
+atomic wfc from the pseudopotential are not
+normalized (and thus produce occupation whose
+value exceeds unity). If orthogonalized wfc are
+not needed always try <b>'atomic'</b> first.
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'file'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+use the information from file "prefix".atwfc that must
+have been generated previously, for instance by pmw.x
+(see PP/src/poormanwannier.f90 for details).
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'pseudo'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+use the pseudopotential projectors. The charge density
+outside the atomic core radii is excluded.
+N.B.: for atoms with +U, a pseudopotential with the
+all-electron atomic wavefunctions is required (i.e.,
+as generated by ld1.x with lsave_wfc flag).
+            </pre></dd>
+</dl>
+<pre>
 NB: forces and stress currently implemented only for the
 'atomic' and 'pseudo' choice.
-         </pre></blockquote>
+            </pre>
+</blockquote>
 </ul>      
       
 }
@@ -1741,7 +1973,7 @@ help edir -helpfmt helpdoc -helptext {
 The direction of the electric field or dipole correction is
 parallel to the bg(:,edir) reciprocal lattice vector, so the
 potential is constant in planes defined by FFT grid points;
-edir = 1, 2 or 3. Used only if tefield is .TRUE.
+edir = 1, 2 or 3. Used only if "tefield" is .TRUE.
          </pre></blockquote>
 </ul>      
       
@@ -1761,7 +1993,7 @@ help emaxpos -helpfmt helpdoc -helptext {
 <blockquote><pre>
 Position of the maximum of the saw-like potential along crystal
 axis "edir", within the  unit cell (see below), 0 &lt; emaxpos &lt; 1
-Used only if tefield is .TRUE.
+Used only if "tefield" is .TRUE.
          </pre></blockquote>
 </ul>      
       
@@ -1780,7 +2012,7 @@ help eopreg -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 Zone in the unit cell where the saw-like potential decreases.
-( see below, 0 &lt; eopreg &lt; 1 ). Used only if tefield is .TRUE.
+( see below, 0 &lt; eopreg &lt; 1 ). Used only if "tefield" is .TRUE.
          </pre></blockquote>
 </ul>      
       
@@ -1799,7 +2031,7 @@ help eamp -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 Amplitude of the electric field, in ***Hartree*** a.u.;
-1 a.u. = 51.4220632*10^10 V/m). Used only if tefield=.TRUE.
+1 a.u. = 51.4220632*10^10 V/m. Used only if "tefield"==.TRUE.
 The saw-like potential increases with slope "eamp" in the
 region from (emaxpos+eopreg-1) to (emaxpos), then decreases
 to 0 until (emaxpos+eopreg), in units of the crystal
@@ -1860,55 +2092,73 @@ help constrained_magnetization -helpfmt helpdoc -helptext {
          </li>
 <br><li> <em>Description:</em>
 </li>
-<blockquote><pre>
+<blockquote>
+<pre>
 Used to perform constrained calculations in magnetic systems.
 Currently available choices:
+            </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'none'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+no constraint
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'total'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+total magnetization is constrained by
+adding a penalty functional to the total energy:
 
-'none':
-         no constraint
+LAMBDA * SUM_{i} ( magnetization(i) - fixed_magnetization(i) )**2
 
-'total':
-         total magnetization is constrained by
-         adding a penalty functional to the total energy:
+where the sum over i runs over the three components of
+the magnetization. Lambda is a real number (see below).
+Noncolinear case only. Use "tot_magnetization" for LSDA
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'atomic'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+atomic magnetization are constrained to the defined
+starting magnetization adding a penalty:
 
-         LAMBDA * SUM_{i} ( magnetization(i) - fixed_magnetization(i) )**2
+LAMBDA * SUM_{i,itype} ( magnetic_moment(i,itype) - mcons(i,itype) )**2
 
-         where the sum over i runs over the three components of
-         the magnetization. Lambda is a real number (see below).
-         Noncolinear case only. Use "tot_magnetization" for LSDA
+where i runs over the cartesian components (or just z
+in the collinear case) and itype over the types (1-ntype).
+mcons(:,:) array is defined from starting_magnetization,
+(and angle1, angle2 in the non-collinear case). lambda is
+a real number
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'total direction'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+the angle theta of the total magnetization
+with the z axis (theta = fixed_magnetization(3))
+is constrained:
 
-'atomic':
-         atomic magnetization are constrained to the defined
-         starting magnetization adding a penalty:
+LAMBDA * ( arccos(magnetization(3)/mag_tot) - theta )**2
 
-         LAMBDA * SUM_{i,itype} ( magnetic_moment(i,itype) - mcons(i,itype) )**2
+where mag_tot is the modulus of the total magnetization.
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'atomic direction'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+not all the components of the atomic
+magnetic moment are constrained but only the cosine
+of angle1, and the penalty functional is:
 
-         where i runs over the cartesian components (or just z
-         in the collinear case) and itype over the types (1-ntype).
-         mcons(:,:) array is defined from starting_magnetization,
-         (and angle1, angle2 in the non-collinear case). lambda is
-         a real number
-
-'total direction':
-          the angle theta of the total magnetization
-          with the z axis (theta = fixed_magnetization(3))
-          is constrained:
-
-          LAMBDA * ( arccos(magnetization(3)/mag_tot) - theta )**2
-
-          where mag_tot is the modulus of the total magnetization.
-
-'atomic direction':
-          not all the components of the atomic
-          magnetic moment are constrained but only the cosine
-          of angle1, and the penalty functional is:
-
-          LAMBDA * SUM_{itype} ( mag_mom(3,itype)/mag_mom_tot - cos(angle1(ityp)) )**2
-
+LAMBDA * SUM_{itype} ( mag_mom(3,itype)/mag_mom_tot - cos(angle1(ityp)) )**2
+            </pre></dd>
+</dl>
+<pre>
 N.B.: symmetrization may prevent to reach the desired orientation
-      of the magnetization. Try not to start with very highly symmetric
-      configurations or use the nosym flag (only as a last remedy)
-         </pre></blockquote>
+of the magnetization. Try not to start with very highly symmetric
+configurations or use the nosym flag (only as a last remedy)
+            </pre>
+</blockquote>
 </ul>      
       
 }
@@ -1928,7 +2178,7 @@ help fixed_magnetization -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 total magnetization vector (x,y,z components) to be kept
-fixed when constrained_magnetization='total'
+fixed when "constrained_magnetization"=='total'
          </pre></blockquote>
 </ul>      
       
@@ -1963,13 +2213,13 @@ help report -helpfmt helpdoc -helptext {
 <li> <em>Variable: </em><big><b>report</b></big>
 </li>
 <br><li> <em>Type: </em>INTEGER</li>
-<br><li> <em>Default: </em> 1
+<br><li> <em>Default: </em> 100
          </li>
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-It is the number of iterations after which the program
-write all the atomic magnetic moments.
+Number of iterations after which the program
+writes all the atomic magnetic moments.
          </pre></blockquote>
 </ul>      
       
@@ -2003,51 +2253,74 @@ help assume_isolated -helpfmt helpdoc -helptext {
          </li>
 <br><li> <em>Description:</em>
 </li>
-<blockquote><pre>
+<blockquote>
+<pre>
 Used to perform calculation assuming the system to be
 isolated (a molecule or a cluster in a 3D supercell).
 
 Currently available choices:
+            </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'none'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+(default): regular periodic calculation w/o any correction.
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'makov-payne'</b>, <b>'m-p'</b>, <b>'mp'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+the Makov-Payne correction to the
+total energy is computed. An estimate of the vacuum
+level is also calculated so that eigenvalues can be
+properly aligned. ONLY FOR CUBIC SYSTEMS ("ibrav"=1,2,3).
+Theory: G.Makov, and M.C.Payne,
+     "Periodic boundary conditions in ab initio
+     calculations" , "PRB 51, 4014 (1995)".
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'martyna-tuckerman'</b>, <b>'m-t'</b>, <b>'mt'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Martyna-Tuckerman correction
+to both total energy and scf potential. Adapted from:
+G.J. Martyna, and M.E. Tuckerman,
+"A reciprocal space based method for treating long
+range interactions in ab-initio and force-field-based
+calculation in clusters", J.Chem.Phys. 110, 2810 (1999).
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'esm'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Effective Screening Medium Method.
+For polarized or charged slab calculation, embeds
+the simulation cell within an effective semi-
+infinite medium in the perpendicular direction
+(along z). Embedding regions can be vacuum or
+semi-infinite metal electrodes (use 'esm_bc' to
+choose boundary conditions). If between two
+electrodes, an optional electric field
+('esm_efield') may be applied. Method described in
+M. Otani and O. Sugino, "First-principles calculations
+of charged surfaces and interfaces: A plane-wave
+nonrepeated slab approach", "PRB 73, 115407 (2006)".
 
-'none' (default): regular periodic calculation w/o any correction.
+NB:
+   - Two dimensional (xy plane) average charge density
+     and electrostatic potentials are printed out to
+     'prefix.esm1'.
 
-'makov-payne', 'm-p', 'mp' : the Makov-Payne correction to the
-         total energy is computed. An estimate of the vacuum
-         level is also calculated so that eigenvalues can be
-         properly aligned. ONLY FOR CUBIC SYSTEMS (ibrav=1,2,3)
-         Theory:
-         G.Makov, and M.C.Payne,
-         "Periodic boundary conditions in ab initio
-         calculations" , Phys.Rev.B 51, 4014 (1995)
+   - Requires cell with a_3 lattice vector along z,
+     normal to the xy plane, with the slab centered
+     around z=0. Also requires symmetry checking to be
+     disabled along z, either by setting "nosym" = .TRUE.
+     or by very slight displacement (i.e., 5e-4 a.u.)
+     of the slab along z.
 
-'martyna-tuckerman', 'm-t', 'mt' : Martyna-Tuckerman correction
-         to both total energy and scf potential. Adapted from:
-         G.J. Martyna, and M.E. Tuckerman,
-         "A reciprocal space based method for treating long
-         range interactions in ab-initio and force-field-based
-         calculation in clusters", J.Chem.Phys. 110, 2810 (1999)
-
-'esm' :  Effective Screening Medium Method.
-         For polarized or charged slab calculation, embeds
-         the simulation cell within an effective semi-
-         infinite medium in the perpendicular direction
-         (along z). Embedding regions can be vacuum or
-         semi-infinite metal electrodes (use 'esm_bc' to
-         choose boundary conditions). If between two
-         electrodes, an optional electric field
-         ('esm_efield') may be applied. Method described in
-         M. Otani and O. Sugino, "First-principles
-         calculations of charged surfaces and interfaces:
-         A plane-wave nonrepeated slab approach," PRB 73,
-         115407 (2006).
-         NB: Requires cell with a_3 lattice vector along z,
-         normal to the xy plane, with the slab centered
-         around z=0. Also requires symmetry checking to be
-         disabled along z, either by setting 'nosym' = .TRUE.
-         or by very slight displacement (i.e., 5e-4 a.u.)
-         of the slab along z.
-         See 'esm_bc', 'esm_efield', 'esm_w', 'esm_nfit'.
-         </pre></blockquote>
+See "esm_bc", "esm_efield", "esm_w", "esm_nfit".
+            </pre></dd>
+</dl>
+</blockquote>
 </ul>      
       
 }
@@ -2065,21 +2338,36 @@ help esm_bc -helpfmt helpdoc -helptext {
          </li>
 <br><li> <em>Description:</em>
 </li>
-<blockquote><pre>
-If assume_isolated = 'esm', determines the boundary
+<blockquote>
+<pre>
+If "assume_isolated" = 'esm', determines the boundary
 conditions used for either side of the slab.
 
 Currently available choices:
-
-'pbc' (default): regular periodic calculation (no ESM).
-
-'bc1' : Vacuum-slab-vacuum (open boundary conditions)
-
-'bc2' : Metal-slab-metal (dual electrode configuration).
-        See also 'esm_efield'.
-
-'bc3' : Vacuum-slab-metal
-         </pre></blockquote>
+            </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'pbc'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;"> (default): regular periodic calculation (no ESM).
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'bc1'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;"> Vacuum-slab-vacuum (open boundary conditions).
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'bc2'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Metal-slab-metal (dual electrode configuration).
+See also "esm_efield".
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'bc3'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;"> Vacuum-slab-metal
+            </pre></dd>
+</dl>
+</blockquote>
 </ul>      
       
 }
@@ -2098,7 +2386,7 @@ help esm_w -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-If assume_isolated = 'esm', determines the position offset
+If "assume_isolated" = 'esm', determines the position offset
 [in a.u.] of the start of the effective screening region,
 measured relative to the cell edge. (ESM region begins at
 z = +/- [L_z/2 + esm_w] ).
@@ -2116,12 +2404,12 @@ help esm_efield -helpfmt helpdoc -helptext {
 <br><li> <em>Type: </em>REAL</li>
 <br><li> <em>Default: </em> 0.d0
          </li>
-<br><li> <em>See: </em> assume_isolated, esm_bc
+<br><li> <em>See: </em> assume_isolated
          </li>
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-If assume_isolated = 'esm' and esm_bc = 'bc2', gives the
+If "assume_isolated" = 'esm' and esm_bc = 'bc2', gives the
 magnitude of the electric field [Ry/a.u.] to be applied
 between semi-infinite ESM electrodes.
          </pre></blockquote>
@@ -2143,8 +2431,29 @@ help esm_nfit -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-If assume_isolated = 'esm', gives the number of z-grid points
+If "assume_isolated" = 'esm', gives the number of z-grid points
 for the polynomial fit along the cell edge.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help fcp_mu -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>fcp_mu</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em> 0.d0
+         </li>
+<br><li> <em>See: </em> lfcpopt
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+If "lfcpopt" = .TRUE., gives the target Fermi energy [Ry]. One can start
+with appropriate total charge of the system by giving 'tot_charge'.
          </pre></blockquote>
 </ul>      
       
@@ -2159,27 +2468,44 @@ help vdw_corr -helpfmt helpdoc -helptext {
 <br><li> <em>Type: </em>CHARACTER</li>
 <br><li> <em>Default: </em> 'none'
          </li>
+<br><li> <em>See: </em>
+london_s6, london_rcut, london_c6, london_rvdw, ts_vdw_econv_thr, ts_vdw_isolated, xdm_a1, xdm_a2
+         </li>
 <br><li> <em>Description:</em>
 </li>
-<blockquote><pre>
+<blockquote>
+<pre>
 Type of Van der Waals correction. Allowed values:
-
-   'grimme-d2', 'Grimme-D2', 'DFT-D', 'dft-d': semiempirical Grimme's DFT-D2.
-    Optional variables: "london_s6", "london_rcut", "london_c6"
-    S. Grimme, J. Comp. Chem. 27, 1787 (2006),
-    V. Barone et al., J. Comp. Chem. 30, 934 (2009).
-
-    'TS', 'ts', 'ts-vdw', 'ts-vdW', 'tkatchenko-scheffler': Tkatchenko-Scheffler
-     dispersion corrections with first-principle derived C6 coefficients
-     (implemented in CP only). Optional variables: "ts_vdw_econv_thr", "ts_vdw_isolated"
-     See A. Tkatchenko and M. Scheffler, Phys. Rev. Lett. 102, 073005 (2009)
-
-    'XDM', 'xdm': Exchange-hole dipole-moment model. Optional variables: "xdm_a1", "xdm_a2"
-     A. D. Becke and E. R. Johnson, J. Chem. Phys. 127, 154108 (2007)
-         A. Otero de la Roza, E. R. Johnson, J. Chem. Phys. 136, 174109 (2012)
-
-Note that non-local functionals (eg vdw-DF) are NOT specified here but in "input_dft"
-         </pre></blockquote>
+            </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'grimme-d2'</b>, <b>'Grimme-D2'</b>, <b>'DFT-D'</b>, <b>'dft-d'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Semiempirical Grimme's DFT-D2.
+Optional variables: "london_s6", "london_rcut", "london_c6", "london_rvdw",
+S. Grimme, J. Comp. Chem. 27, 1787 (2006),
+V. Barone et al., J. Comp. Chem. 30, 934 (2009).
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'TS'</b>, <b>'ts'</b>, <b>'ts-vdw'</b>, <b>'ts-vdW'</b>, <b>'tkatchenko-scheffler'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Tkatchenko-Scheffler dispersion corrections with first-principle derived
+C6 coefficients (implemented in CP only).
+Optional variables: "ts_vdw_econv_thr", "ts_vdw_isolated"
+See A. Tkatchenko and M. Scheffler, "PRL 102, 073005 (2009)".
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'XDM'</b>, <b>'xdm'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Exchange-hole dipole-moment model. Optional variables: "xdm_a1", "xdm_a2"
+A. D. Becke and E. R. Johnson, J. Chem. Phys. 127, 154108 (2007)
+A. Otero de la Roza, E. R. Johnson, J. Chem. Phys. 136, 174109 (2012)
+            </pre></dd>
+</dl>
+<pre> Note that non-local functionals (eg vdw-DF) are NOT specified here but in "input_dft"
+            </pre>
+</blockquote>
 </ul>      
       
 }
@@ -2193,11 +2519,10 @@ help london -helpfmt helpdoc -helptext {
 <br><li> <em>Type: </em>LOGICAL</li>
 <br><li> <em>Default: </em> .FALSE.
          </li>
-<br><li> <em>Description:</em>
-</li>
-<blockquote><pre>
-OBSOLESCENT, same as vdw_corr='DFT-D'
-         </pre></blockquote>
+<br><li> <em>Status: </em>
+OBSOLESCENT, same as "vdw_corr"='DFT-D'
+         </li>
+<br>
 </ul>      
       
 }
@@ -2243,6 +2568,27 @@ atomic C6 coefficient of each atom type
 
 
 # ------------------------------------------------------------------------
+help london_rvdw -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variables: </em><big><b>london_rvdw(i), i=1,ntyp</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em> standard Grimme-D2 values
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+atomic vdw radii of each atom type
+
+( if not specified default values from S. Grimme, J. Comp. Chem. 27, 1787 (2006) are used;
+  see file Modules/mm_dispersion.f90 )
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
 help london_rcut -helpfmt helpdoc -helptext {
       <ul>
 <li> <em>Variable: </em><big><b>london_rcut</b></big>
@@ -2261,9 +2607,28 @@ cutoff radius (a.u.) for dispersion interactions
 
 
 # ------------------------------------------------------------------------
-help xdm -helpfmt helpdoc -helptext {
+help ts_vdw_econv_thr -helpfmt helpdoc -helptext {
       <ul>
-<li> <em>Variable: </em><big><b>xdm</b></big>
+<li> <em>Variable: </em><big><b>ts_vdw_econv_thr</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em> 1.D-6
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Optional: controls the convergence of the vdW energy (and forces). The default value
+is a safe choice, likely too safe, but you do not gain much in increasing it
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help ts_vdw_isolated -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>ts_vdw_isolated</b></big>
 </li>
 <br><li> <em>Type: </em>LOGICAL</li>
 <br><li> <em>Default: </em> .FALSE.
@@ -2271,8 +2636,26 @@ help xdm -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-OBSOLESCENT, same as vdw_corr='xdm'
+Optional: set it to .TRUE. when computing the Tkatchenko-Scheffler vdW energy
+for an isolated (non-periodic) system.
          </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help xdm -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>xdm</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .FALSE.
+         </li>
+<br><li> <em>Status: </em>
+OBSOLESCENT, same as "vdw_corr"='xdm'
+         </li>
+<br>
 </ul>      
       
 }
@@ -2293,7 +2676,7 @@ Damping function parameter a1 (adimensional). This value should change
 with the exchange-correlation functional. The default corresponds to
 PW86PBE.
 For other functionals, see:
-   http://gatsby.ucmerced.edu/wiki/XDM_damping_function_parameters
+   "http://schooner.chem.dal.ca/wiki/XDM"
    A. Otero de la Roza, E. R. Johnson, J. Chem. Phys. 138, 204109 (2013)
          </pre></blockquote>
 </ul>      
@@ -2316,7 +2699,7 @@ Damping function parameter a2 (angstrom). This value should change
 with the exchange-correlation functional. The default corresponds to
 PW86PBE.
 For other functionals, see:
-   http://gatsby.ucmerced.edu/wiki/XDM_damping_function_parameters
+   "http://schooner.chem.dal.ca/wiki/XDM"
    A. Otero de la Roza, E. R. Johnson, J. Chem. Phys. 138, 204109 (2013)
          </pre></blockquote>
 </ul>      
@@ -2336,11 +2719,11 @@ help space_group -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 The number of the space group of the crystal, as given
-                in the International Tables of Crystallography A (ITA).
-                This allows to give in input only the inequivalent atomic
-                positions. The positions of all the symmetry equivalent atoms
-                are calculated by the code. Used only when the atomic positions
-                are of type crystal_sg.
+in the International Tables of Crystallography A (ITA).
+This allows to give in input only the inequivalent atomic
+positions. The positions of all the symmetry equivalent atoms
+are calculated by the code. Used only when the atomic positions
+are of type crystal_sg.
          </pre></blockquote>
 </ul>      
       
@@ -2359,10 +2742,10 @@ help uniqueb -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 Used only for monoclinic lattices. If .TRUE. the b
-                 unique ibrav (-12 or -13) are used, and symmetry
-                 equivalent positions are chosen assuming that the
-                 two fold axis or the mirror normal is parallel to the
-                 b axis. If .FALSE. it is parallel to the c axis.
+unique ibrav (-12 or -13) are used, and symmetry
+equivalent positions are chosen assuming that the
+two fold axis or the mirror normal is parallel to the
+b axis. If .FALSE. it is parallel to the c axis.
          </pre></blockquote>
 </ul>      
       
@@ -2381,9 +2764,9 @@ help origin_choice -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 Used only for space groups that in the ITA allow
-                 the use of two different origins. origin_choice=1,
-                 means the first origin, while origin_choice=2 is the
-                 second origin.
+the use of two different origins. origin_choice=1,
+means the first origin, while origin_choice=2 is the
+second origin.
          </pre></blockquote>
 </ul>      
       
@@ -2402,12 +2785,142 @@ help rhombohedral -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 Used only for rhombohedral space groups.
-                 When .TRUE. the coordinates of the inequivalent atoms are
-                 given with respect to the rhombohedral axes, when .FALSE.
-                 the coordinates of the inequivalent atoms are given with
-                 respect to the hexagonal axes. They are converted internally
-                 to the rhombohedral axes and ibrav=5 is used in both cases.
+When .TRUE. the coordinates of the inequivalent atoms are
+given with respect to the rhombohedral axes, when .FALSE.
+the coordinates of the inequivalent atoms are given with
+respect to the hexagonal axes. They are converted internally
+to the rhombohedral axes and "ibrav"=5 is used in both cases.
          </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help zmon -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>zmon</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em> 0.5
+            </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+used only if "monopole" = .TRUE.
+Specifies the position of the charged plate which represents
+the counter charge in doped systems ("tot_charge" .ne. 0).
+In units of the unit cell length in <i>z</i> direction, "zmon" in ]0,1[
+Details of the monopole potential can be found in
+T. Brumme, M. Calandra, F. Mauri; "PRB 89, 245406 (2014)".
+            </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help realxz -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>realxz</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .FALSE.
+            </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+used only if "monopole" = .TRUE.
+Allows the relaxation of the system towards the charged plate.
+Use carefully and utilize either a layer of fixed atoms or a
+potential barrier ("block"=.TRUE.) to avoid the atoms moving to
+the position of the plate or the dipole of the dipole
+correction ("dipfield"=.TRUE.).
+            </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help block -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>block</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .FALSE.
+            </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+used only if "monopole" = .TRUE.
+Adds a potential barrier to the total potential seen by the
+electrons to mimic a dielectric in field effect configuration
+and/or to avoid electrons spilling into the vacuum region for
+electron doping. Potential barrier is from "block_1" to "block_2" and
+has a height of block_height.
+If "dipfield" = .TRUE. then "eopreg" is used for a smooth increase and
+decrease of the potential barrier.
+            </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help block_1 -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>block_1</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em> 0.45
+            </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+used only if "monopole" = .TRUE. and "block" = .TRUE.
+lower beginning of the potential barrier, in units of the
+unit cell size along <i>z,</i> "block_1" in ]0,1[
+            </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help block_2 -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>block_2</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em> 0.55
+            </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+used only if "monopole" = .TRUE. and "block" = .TRUE.
+upper beginning of the potential barrier, in units of the
+unit cell size along <i>z,</i> "block_2" in ]0,1[
+            </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help block_height -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>block_height</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em> 0.1
+            </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+used only if "monopole" = .TRUE. and "block" = .TRUE.
+Height of the potential barrier in Rydberg.
+            </pre></blockquote>
 </ul>      
       
 }
@@ -2464,9 +2977,10 @@ help conv_thr -helpfmt helpdoc -helptext {
 Convergence threshold for selfconsistency:
    estimated energy error &lt; conv_thr
 (note that conv_thr is extensive, like the total energy).
+
 For non-self-consistent calculations, conv_thr is used
 to set the default value of the threshold (ethr) for
-iterative diagonalizazion: see diago_thr_init
+iterative diagonalizazion: see "diago_thr_init"
          </pre></blockquote>
 </ul>      
       
@@ -2503,7 +3017,7 @@ help conv_thr_init -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-When adaptive_thr = .TRUE. this is the convergence threshold
+When "adaptive_thr" = .TRUE. this is the convergence threshold
 used for the first scf cycle.
          </pre></blockquote>
 </ul>      
@@ -2522,9 +3036,9 @@ help conv_thr_multi -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-When adaptive_thr = .TRUE. the convergence threshold for
+When "adaptive_thr" = .TRUE. the convergence threshold for
 each scf cycle is given by:
-max( conv_thr, conv_thr_multi * dexx )
+max( "conv_thr", "conv_thr_multi" * dexx )
          </pre></blockquote>
 </ul>      
       
@@ -2541,15 +3055,29 @@ help mixing_mode -helpfmt helpdoc -helptext {
          </li>
 <br><li> <em>Description:</em>
 </li>
-<blockquote><pre>
-'plain' :    charge density Broyden mixing
-
-'TF' :       as above, with simple Thomas-Fermi screening
-            (for highly homogeneous systems)
-
-'local-TF':  as above, with local-density-dependent TF screening
-             (for highly inhomogeneous systems)
-         </pre></blockquote>
+<blockquote>
+<pre> Available options are:
+            </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'plain'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;"> charge density Broyden mixing
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'TF'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+as above, with simple Thomas-Fermi screening
+(for highly homogeneous systems)
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'local-TF'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+as above, with local-density-dependent TF screening
+(for highly inhomogeneous systems)
+            </pre></dd>
+</dl>
+</blockquote>
 </ul>      
       
 }
@@ -2604,7 +3132,7 @@ help mixing_fixed_ns -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 For DFT+U : number of iterations with fixed ns ( ns is the
-  atomic density appearing in the Hubbard term ).
+atomic density appearing in the Hubbard term ).
          </pre></blockquote>
 </ul>      
       
@@ -2621,24 +3149,39 @@ help diagonalization -helpfmt helpdoc -helptext {
          </li>
 <br><li> <em>Description:</em>
 </li>
-<blockquote><pre>
-'david':  Davidson iterative diagonalization with overlap matrix
-          (default). Fast, may in some rare cases fail.
-
-'cg' :    conjugate-gradient-like band-by-band diagonalization
-          Typically slower than 'david' but it uses less memory
-          and is more robust (it seldom fails)
-
-'cg-serial', 'david-serial': obsolete, use "-ndiag 1 instead"
-          The subspace diagonalization in Davidson is performed
-          by a fully distributed-memory parallel algorithm on
-          4 or more processors, by default. The allocated memory
-          scales down with the number of procs. Procs involved
-          in diagonalization can be changed with command-line
-          option "-ndiag N". On multicore CPUs it is often
-          convenient to let just one core per CPU to work
-          on linear algebra.
-         </pre></blockquote>
+<blockquote>
+<pre> Available options are:
+            </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'david'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Davidson iterative diagonalization with overlap matrix
+(default). Fast, may in some rare cases fail.
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'cg'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Conjugate-gradient-like band-by-band diagonalization.
+Typically slower than 'david' but it uses less memory
+and is more robust (it seldom fails).
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'cg-serial'</b>, <b>'david-serial'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+OBSOLETE, use <b>-ndiag 1</b> instead.
+The subspace diagonalization in Davidson is performed
+by a fully distributed-memory parallel algorithm on
+4 or more processors, by default. The allocated memory
+scales down with the number of procs. Procs involved
+in diagonalization can be changed with command-line
+option <b>-ndiag</b> <i>N.</i> On multicore CPUs it is often
+convenient to let just one core per CPU to work
+on linear algebra.
+            </pre></dd>
+</dl>
+</blockquote>
 </ul>      
       
 }
@@ -2652,13 +3195,9 @@ help ortho_para -helpfmt helpdoc -helptext {
 <br><li> <em>Type: </em>INTEGER</li>
 <br><li> <em>Default: </em> 0
          </li>
-<br><li> <em>Status: </em> OBSOLETE: use command-line option " -ndiag XX" instead
+<br><li> <em>Status: </em> OBSOLETE: use command-line option <tt>"-ndiag XX"</tt> instead
          </li>
-<br><li> <em>Description:</em>
-</li>
-<blockquote><pre>
-
-         </pre></blockquote>
+<br>
 </ul>      
       
 }
@@ -2675,11 +3214,13 @@ help diago_thr_init -helpfmt helpdoc -helptext {
 <blockquote><pre>
 Convergence threshold (ethr) for iterative diagonalization
 (the check is on eigenvalue convergence).
+
 For scf calculations: default is 1.D-2 if starting from a
 superposition of atomic orbitals; 1.D-5 if starting from a
 charge density. During self consistency the threshold
 is automatically reduced (but never below 1.D-13) when
 approaching convergence.
+
 For non-scf calculations: default is (conv_thr/N elec)/10.
          </pre></blockquote>
 </ul>      
@@ -2696,8 +3237,7 @@ help diago_cg_maxiter -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-For conjugate gradient diagonalization:
-max number of iterations
+For conjugate gradient diagonalization:  max number of iterations
          </pre></blockquote>
 </ul>      
       
@@ -2719,7 +3259,7 @@ For Davidson diagonalization: dimension of workspace
 (number of wavefunction packets, at least 2 needed).
 A larger value may yield a somewhat faster algorithm
 but uses more memory. The opposite holds for smaller values.
-Try diago_david_ndim=2 if you are tight on memory or if
+Try "diago_david_ndim"=2 if you are tight on memory or if
 your job is large: the speed penalty is often negligible
          </pre></blockquote>
 </ul>      
@@ -2760,8 +3300,8 @@ help efield -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 Amplitude of the finite electric field (in Ry a.u.;
-1 a.u. = 36.3609*10^10 V/m). Used only if lelfield=.TRUE.
-and if k-points (K_POINTS card) are not automatic.
+1 a.u. = 36.3609*10^10 V/m). Used only if "lelfield"==.TRUE.
+and if k-points ("K_POINTS" card) are not automatic.
          </pre></blockquote>
 </ul>      
       
@@ -2780,9 +3320,48 @@ help efield_cart -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 Finite electric field (in Ry a.u.=36.3609*10^10 V/m) in
-cartesian axis. Used only if lelfield=.TRUE. and if
-k-points (K_POINTS card) are automatic.
+cartesian axis. Used only if "lelfield"==.TRUE. and if
+k-points ("K_POINTS" card) are automatic.
          </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help efield_phase -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>efield_phase</b></big>
+</li>
+<br><li> <em>Type: </em>CHARACTER</li>
+<br><li> <em>Default: </em> 'none'
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote>
+<pre> Available options are:
+            </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'read'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+set the zero of the electronic polarization (with "lelfield"==.true..)
+to the result of a previous calculation
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'write'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+write on disk data on electronic polarization to be read in another
+calculation
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'none'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+none of the above points
+            </pre></dd>
+</dl>
+</blockquote>
 </ul>      
       
 }
@@ -2796,15 +3375,26 @@ help startingpot -helpfmt helpdoc -helptext {
 <br><li> <em>Type: </em>CHARACTER</li>
 <br><li> <em>Description:</em>
 </li>
-<blockquote><pre>
-'atomic': starting potential from atomic charge superposition
-          ( default for scf, *relax, *md )
-
-'file'  : start from existing "charge-density.xml" file in the
-          directory specified by variables "prefix" and "outdir"
-          For nscf and bands calculation this is the default
-          and the only sensible possibility.
-         </pre></blockquote>
+<blockquote>
+<pre> Available options are:
+            </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'atomic'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+starting potential from atomic charge superposition
+(default for scf, *relax, *md)
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'file'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+start from existing "charge-density.xml" file in the
+directory specified by variables "prefix" and "outdir"
+For nscf and bands calculation this is the default
+and the only sensible possibility.
+            </pre></dd>
+</dl>
+</blockquote>
 </ul>      
       
 }
@@ -2820,25 +3410,44 @@ help startingwfc -helpfmt helpdoc -helptext {
          </li>
 <br><li> <em>Description:</em>
 </li>
-<blockquote><pre>
-'atomic': start from superposition of atomic orbitals
-          If not enough atomic orbitals are available,
-          fill with random numbers the remaining wfcs
-          The scf typically starts better with this option,
-          but in some high-symmetry cases one can "loose"
-          valence states, ending up in the wrong ground state.
-
-'atomic+random': as above, plus a superimposed "randomization"
-          of atomic orbitals. Prevents the "loss" of states
-          mentioned above.
-
-'random': start from random wfcs. Slower start of scf but safe.
-          It may also reduce memory usage in conjunction with
-          diagonalization='cg'
-
-'file':   start from an existing wavefunction file in the
-          directory specified by variables "prefix" and "outdir"
-         </pre></blockquote>
+<blockquote>
+<pre> Available options are:
+            </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'atomic'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Start from superposition of atomic orbitals.
+If not enough atomic orbitals are available,
+fill with random numbers the remaining wfcs
+The scf typically starts better with this option,
+but in some high-symmetry cases one can "loose"
+valence states, ending up in the wrong ground state.
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'atomic+random'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+As above, plus a superimposed "randomization"
+of atomic orbitals. Prevents the "loss" of states
+mentioned above.
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'random'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Start from random wfcs. Slower start of scf but safe.
+It may also reduce memory usage in conjunction with
+"diagonalization"='cg'.
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'file'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Start from an existing wavefunction file in the
+directory specified by variables "prefix" and "outdir".
+            </pre></dd>
+</dl>
+</blockquote>
 </ul>      
       
 }
@@ -2874,39 +3483,84 @@ help ion_dynamics -helpfmt helpdoc -helptext {
 <br><li> <em>Type: </em>CHARACTER</li>
 <br><li> <em>Description:</em>
 </li>
-<blockquote><pre>
+<blockquote>
+<pre>
 Specify the type of ionic dynamics.
 
 For different type of calculation different possibilities are
 allowed and different default values apply:
 
-CASE ( calculation = 'relax' )
-    'bfgs' :   (default)   use BFGS quasi-newton algorithm,
-                           based on the trust radius procedure,
-                           for structural relaxation
-    'damp' :               use damped (quick-min Verlet)
-                           dynamics for structural relaxation
-                           Can be used for constrained
-                           optimisation: see CONSTRAINTS card
-
-CASE ( calculation = 'md' )
-    'verlet' : (default)   use Verlet algorithm to integrate
-                           Newton's equation. For constrained
-                           dynamics, see CONSTRAINTS card
-    'langevin'             ion dynamics is over-damped Langevin
-    'langevin-smc'         over-damped Langevin with Smart Monte Carlo:
-                           see R.J.Rossky, JCP, 69, 4628(1978)
-
-
-CASE ( calculation = 'vc-relax' )
-    'bfgs' :   (default)   use BFGS quasi-newton algorithm;
-                           cell_dynamics must be 'bfgs' too
-    'damp' :               use damped (Beeman) dynamics for
-                           structural relaxation
-CASE ( calculation = 'vc-md' )
-    'beeman' : (default)   use Beeman algorithm to integrate
-                           Newton's equation
-         </pre></blockquote>
+<b>CASE</b> ( "calculation" == 'relax' )
+            </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'bfgs'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+<b>(default)</b>  use BFGS quasi-newton algorithm,
+based on the trust radius procedure,
+for structural relaxation
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'damp'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+use damped (quick-min Verlet)
+dynamics for structural relaxation
+Can be used for constrained
+optimisation: see "CONSTRAINTS" card
+            </pre></dd>
+</dl>
+<pre>
+<b>CASE</b> ( "calculation" == 'md' )
+            </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'verlet'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+<b>(default)</b>  use Verlet algorithm to integrate
+Newton's equation. For constrained
+dynamics, see "CONSTRAINTS" card
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'langevin'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+ion dynamics is over-damped Langevin
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'langevin-smc'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+over-damped Langevin with Smart Monte Carlo:
+see R.J. Rossky, JCP, 69, 4628(1978)
+            </pre></dd>
+</dl>
+<pre>
+<b>CASE</b> ( "calculation" == 'vc-relax' )
+            </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'bfgs'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+<b>(default)</b>  use BFGS quasi-newton algorithm;
+cell_dynamics must be 'bfgs' too
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'damp'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+use damped (Beeman) dynamics for
+structural relaxation
+            </pre></dd>
+</dl>
+<pre>
+<b>CASE</b> ( "calculation" == 'vc-md' )
+            </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'beeman'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+<b>(default)</b>  use Beeman algorithm to integrate
+Newton's equation
+            </pre></dd>
+</dl>
+</blockquote>
 </ul>      
       
 }
@@ -2922,14 +3576,25 @@ help ion_positions -helpfmt helpdoc -helptext {
          </li>
 <br><li> <em>Description:</em>
 </li>
-<blockquote><pre>
-'default '  : if restarting, use atomic positions read from the
-              restart file; in all other cases, use atomic
-              positions from standard input.
-
-'from_input' : restart the simulation with atomic positions read
-              from standard input, even if restarting.
-         </pre></blockquote>
+<blockquote>
+<pre> Available options are:
+            </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'default'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+if restarting, use atomic positions read from the
+restart file; in all other cases, use atomic
+positions from standard input.
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'from_input'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+restart the simulation with atomic positions read
+from standard input, even if restarting.
+            </pre></dd>
+</dl>
+</blockquote>
 </ul>      
       
 }
@@ -2945,22 +3610,40 @@ help pot_extrapolation -helpfmt helpdoc -helptext {
          </li>
 <br><li> <em>Description:</em>
 </li>
-<blockquote><pre>
-   Used to extrapolate the potential from preceding ionic steps.
-
-   'none'        :  no extrapolation
-
-   'atomic'      :  extrapolate the potential as if it was a sum of
-                    atomic-like orbitals
-
-   'first_order' :  extrapolate the potential with first-order
-                    formula
-
-   'second_order':  as above, with second order formula
-
+<blockquote>
+<pre>
+Used to extrapolate the potential from preceding ionic steps.
+            </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'none'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;"> no extrapolation
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'atomic'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+extrapolate the potential as if it was a sum of
+atomic-like orbitals
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'first_order'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+extrapolate the potential with first-order
+formula
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'second_order'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+as above, with second order formula
+            </pre></dd>
+</dl>
+<pre>
 Note: 'first_order' and 'second-order' extrapolation make sense
 only for molecular dynamics calculations
-         </pre></blockquote>
+            </pre>
+</blockquote>
 </ul>      
       
 }
@@ -2976,19 +3659,32 @@ help wfc_extrapolation -helpfmt helpdoc -helptext {
          </li>
 <br><li> <em>Description:</em>
 </li>
-<blockquote><pre>
-    Used to extrapolate the wavefunctions from preceding ionic steps.
-
-   'none'        :  no extrapolation
-
-   'first_order' :  extrapolate the wave-functions with first-order
-                    formula.
-
-   'second_order':  as above, with second order formula.
-
-Note: 'first_order' and 'second-order' extrapolation make sense
+<blockquote>
+<pre>
+Used to extrapolate the wavefunctions from preceding ionic steps.
+            </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'none'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;"> no extrapolation
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'first_order'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+extrapolate the wave-functions with first-order formula.
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'second_order'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+as above, with second order formula.
+            </pre></dd>
+</dl>
+<pre>
+Note: <b>'first_order'</b> and <b>'second-order'</b> extrapolation make sense
 only for molecular dynamics calculations
-         </pre></blockquote>
+            </pre>
+</blockquote>
 </ul>      
       
 }
@@ -3034,32 +3730,67 @@ help ion_temperature -helpfmt helpdoc -helptext {
             </li>
 <br><li> <em>Description:</em>
 </li>
-<blockquote><pre>
-'rescaling'   control ionic temperature via velocity rescaling
-              (first method) see parameters "tempw", "tolp", and
-              "nraise" (for VC-MD only). This rescaling method
-              is the only one currently implemented in VC-MD
-
-'rescale-v'   control ionic temperature via velocity rescaling
-              (second method) see parameters "tempw" and "nraise"
-
-'rescale-T'   control ionic temperature via velocity rescaling
-              (third method) see parameter "delta_t"
-
-'reduce-T'    reduce ionic temperature every "nraise" steps
-              by the (negative) value "delta_t"
-
-'berendsen'   control ionic temperature using "soft" velocity
-              rescaling - see parameters "tempw" and "nraise"
-
-'andersen'    control ionic temperature using Andersen thermostat
-              see parameters "tempw" and "nraise"
-
-'initial'     initialize ion velocities to temperature "tempw"
-              and leave uncontrolled further on
-
-'not_controlled' (default) ionic temperature is not controlled
-            </pre></blockquote>
+<blockquote>
+<pre> Available options are:
+               </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'rescaling'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+control ionic temperature via velocity rescaling
+(first method) see parameters "tempw", "tolp", and
+"nraise" (for VC-MD only). This rescaling method
+is the only one currently implemented in VC-MD
+               </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'rescale-v'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+control ionic temperature via velocity rescaling
+(second method) see parameters "tempw" and "nraise"
+               </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'rescale-T'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+control ionic temperature via velocity rescaling
+(third method) see parameter "delta_t"
+               </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'reduce-T'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+reduce ionic temperature every "nraise" steps
+by the (negative) value "delta_t"
+               </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'berendsen'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+control ionic temperature using "soft" velocity
+rescaling - see parameters "tempw" and "nraise"
+               </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'andersen'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+control ionic temperature using Andersen thermostat
+see parameters "tempw" and "nraise"
+               </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'initial'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+initialize ion velocities to temperature "tempw"
+and leave uncontrolled further on
+               </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'not_controlled'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+(default) ionic temperature is not controlled
+               </pre></dd>
+</dl>
+</blockquote>
 </ul>      
       
 }
@@ -3114,19 +3845,19 @@ help delta_t -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-if ion_temperature='rescale-T':
+if "ion_temperature" == 'rescale-T' :
        at each step the instantaneous temperature is multiplied
        by delta_t; this is done rescaling all the velocities.
 
-if ion_temperature='reduce-T':
+if "ion_temperature" == 'reduce-T' :
        every 'nraise' steps the instantaneous temperature is
-       reduced by -delta_T (i.e. delta_t &lt; 0 is added to T)
+       reduced by -"delta_t" (i.e. "delta_t" &lt; 0 is added to T)
 
 The instantaneous temperature is calculated at the end of
 every ionic move and BEFORE rescaling. This is the temperature
 reported in the main output.
 
-For delta_t &lt; 0, the actual average rate of heating or cooling
+For "delta_t" &lt; 0, the actual average rate of heating or cooling
 should be roughly C*delta_t/(nraise*dt) (C=1 for an
 ideal gas, C=0.5 for a harmonic solid, theorem of energy
 equipartition between all quadratic degrees of freedom).
@@ -3147,23 +3878,23 @@ help nraise -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-if ion_temperature='reduce-T':
-       every 'nraise' steps the instantaneous temperature is
-       reduced by -delta_T (.e. delta_t is added to the temperature)
+if "ion_temperature" == 'reduce-T' :
+       every "nraise" steps the instantaneous temperature is
+       reduced by -"delta_t" (i.e. "delta_t" is added to the temperature)
 
-if ion_temperature='rescale-v':
-       every 'nraise' steps the average temperature, computed from
-       the last nraise steps, is rescaled to tempw
+if "ion_temperature" == 'rescale-v' :
+       every "nraise" steps the average temperature, computed from
+       the last "nraise" steps, is rescaled to "tempw"
 
-if ion_temperature='rescaling' and calculation='vc-md':
-       every 'nraise' steps the instantaneous temperature
-       is rescaled to tempw
+if "ion_temperature" == 'rescaling' and "calculation" == 'vc-md' :
+       every "nraise" steps the instantaneous temperature
+       is rescaled to "tempw"
 
-if ion_temperature='berendsen':
+if "ion_temperature" == 'berendsen' :
        the "rise time" parameter is given in units of the time step:
        tau = nraise*dt, so dt/tau = 1/nraise
 
-if ion_temperature='andersen':
+if "ion_temperature" == 'andersen' :
        the "collision frequency" parameter is given as nu=1/tau
        defined above, so nu*dt = 1/nraise
             </pre></blockquote>
@@ -3203,11 +3934,10 @@ help upscale -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-Max reduction factor for conv_thr during structural optimization
-conv_thr is automatically reduced when the relaxation
+Max reduction factor for "conv_thr" during structural optimization
+"conv_thr" is automatically reduced when the relaxation
 approaches convergence so that forces are still accurate,
-but conv_thr will not be reduced to less that
-conv_thr / upscale.
+but "conv_thr" will not be reduced to less that "conv_thr" / "upscale".
             </pre></blockquote>
 </ul>      
       
@@ -3228,7 +3958,7 @@ help bfgs_ndim -helpfmt helpdoc -helptext {
 Number of old forces and displacements vectors used in the
 PULAY mixing of the residual vectors obtained on the basis
 of the inverse hessian matrix given by the BFGS algorithm.
-When bfgs_ndim = 1, the standard quasi-Newton BFGS method is
+When "bfgs_ndim" = 1, the standard quasi-Newton BFGS method is
 used.
 (bfgs only)
             </pre></blockquote>
@@ -3268,7 +3998,7 @@ help trust_radius_min -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 Minimum ionic displacement in the structural relaxation
-BFGS is reset when trust_radius &lt; trust_radius_min.
+BFGS is reset when "trust_radius" &lt; "trust_radius_min".
 (bfgs only)
             </pre></blockquote>
 </ul>      
@@ -3338,27 +4068,64 @@ help cell_dynamics -helpfmt helpdoc -helptext {
 <br><li> <em>Type: </em>CHARACTER</li>
 <br><li> <em>Description:</em>
 </li>
-<blockquote><pre>
+<blockquote>
+<pre>
 Specify the type of dynamics for the cell.
 For different type of calculation different possibilities
 are allowed and different default values apply:
 
-CASE ( calculation = 'vc-relax' )
-  'none':    no dynamics
-  'sd':      steepest descent ( not implemented )
-  'damp-pr': damped (Beeman) dynamics of the Parrinello-Rahman
-             extended lagrangian
-  'damp-w':  damped (Beeman) dynamics of the new Wentzcovitch
-             extended lagrangian
-  'bfgs':    BFGS quasi-newton algorithm (default)
-             ion_dynamics must be 'bfgs' too
-CASE ( calculation = 'vc-md' )
-  'none':    no dynamics
-  'pr':      (Beeman) molecular dynamics of the Parrinello-Rahman
-             extended lagrangian
-  'w':       (Beeman) molecular dynamics of the new Wentzcovitch
-             extended lagrangian
-         </pre></blockquote>
+<b>CASE</b> ( "calculation" == 'vc-relax' )
+            </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'none'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;"> no dynamics
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'sd'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;"> steepest descent ( not implemented )
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'damp-pr'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+damped (Beeman) dynamics of the Parrinello-Rahman extended lagrangian
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'damp-w'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+damped (Beeman) dynamics of the new Wentzcovitch extended lagrangian
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'bfgs'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+BFGS quasi-newton algorithm <b>(default)</b>
+"ion_dynamics" must be <b>'bfgs'</b> too
+            </pre></dd>
+</dl>
+<pre>
+<b>CASE</b> ( "calculation" == 'vc-md' )
+            </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'none'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;"> no dynamics
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'pr'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+(Beeman) molecular dynamics of the Parrinello-Rahman extended lagrangian
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'w'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+(Beeman) molecular dynamics of the new Wentzcovitch extended lagrangian
+            </pre></dd>
+</dl>
+</blockquote>
 </ul>      
       
 }
@@ -3436,7 +4203,7 @@ help press_conv_thr -helpfmt helpdoc -helptext {
 <blockquote><pre>
 Convergence threshold on the pressure for variable cell
 relaxation ('vc-relax' : note that the other convergence
-thresholds for ionic relaxation apply as well).
+            thresholds for ionic relaxation apply as well).
          </pre></blockquote>
 </ul>      
       
@@ -3453,26 +4220,76 @@ help cell_dofree -helpfmt helpdoc -helptext {
          </li>
 <br><li> <em>Description:</em>
 </li>
-<blockquote><pre>
+<blockquote>
+<pre>
 Select which of the cell parameters should be moved:
-
-all     = all axis and angles are moved
-x       = only the x component of axis 1 (v1_x) is moved
-y       = only the y component of axis 2 (v2_y) is moved
-z       = only the z component of axis 3 (v3_z) is moved
-xy      = only v1_x and v2_y are moved
-xz      = only v1_x and v3_z are moved
-yz      = only v2_y and v3_z are moved
-xyz     = only v1_x, v2_y, v3_z are moved
-shape   = all axis and angles, keeping the volume fixed
-volume  = the volume changes, keeping all angles fixed (i.e. only celldm(1) changes)
-2Dxy    = only x and y components are allowed to change
-2Dshape = as above, keeping the area in xy plane fixed
-
+            </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'all'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;"> all axis and angles are moved
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'x'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;"> only the x component of axis 1 (v1_x) is moved
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'y'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;"> only the y component of axis 2 (v2_y) is moved
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'z'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;"> only the z component of axis 3 (v3_z) is moved
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'xy'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;"> only v1_x and v2_y are moved
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'xz'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;"> only v1_x and v3_z are moved
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'yz'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;"> only v2_y and v3_z are moved
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'xyz'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;"> only v1_x, v2_y, v3_z are moved
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'shape'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;"> all axis and angles, keeping the volume fixed
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'volume'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;"> the volume changes, keeping all angles fixed (i.e. only celldm(1) changes)
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'2Dxy'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;"> only x and y components are allowed to change
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'2Dshape'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;"> as above, keeping the area in xy plane fixed
+            </pre></dd>
+</dl>
+<pre>
 BEWARE: if axis are not orthogonal, some of these options do not
- work (symmetry is broken). If you are not happy with them,
- edit subroutine init_dofree in file Modules/cell_base.f90
-         </pre></blockquote>
+        work (symmetry is broken). If you are not happy with them,
+        edit subroutine init_dofree in file Modules/cell_base.f90
+            </pre>
+</blockquote>
 </ul>      
       
 }
@@ -3531,34 +4348,7 @@ none of the above  old PWscf norm-conserving format
 
 # ------------------------------------------------------------------------
 help ATOMIC_POSITIONS_flags -helpfmt helpdoc -helptext {
-      <h2>Description of ATOMIC_POSITIONS card's flags</h2><pre>
-alat    : atomic positions are in cartesian coordinates, in
-          units of the lattice parameter (either celldm(1)
-          or A). If no option is specified, 'alat' is assumed;
-          not specifying units is DEPRECATED and will no
-          longer be allowed in the future
-
-bohr    : atomic positions are in cartesian coordinate,
-          in atomic units (i.e. Bohr radii)
-
-angstrom: atomic positions are in cartesian coordinates,
-          in Angstrom
-
-crystal : atomic positions are in crystal coordinates, i.e.
-          in relative coordinates of the primitive lattice
-          vectors as defined either in card CELL_PARAMETERS
-          or via the ibrav + celldm / a,b,c... variables
-
-crystal_sg : atomic positions are in crystal coordinates, i.e.
-          in relative coordinates of the primitive lattice.
-          This option differs from the previous one because
-          in this case only the symmetry inequivalent atoms
-          are given. The variable space_group must indicate
-          the space group number used to find the symmetry
-          equivalent atoms. The other variables that control
-          this option are uniqueb, origin_choice, and
-          rhombohedral.
-         </pre>
+      <h2>Description of ATOMIC_POSITIONS card's flags</h2><pre></pre>
       
 }
 
@@ -3571,7 +4361,7 @@ help atomic_coordinates -helpfmt helpdoc -helptext {
 <br><li> <em>Type: </em>CHARACTER</li>
 <br><li> <em>Description:</em>
 </li>
-<blockquote><pre> label of the atom as specified in ATOMIC_SPECIES
+<blockquote><pre> label of the atom as specified in "ATOMIC_SPECIES"
                         </pre></blockquote>
 </ul><ul>
 <li> <em>Variables: </em><big><b>x, y, z</b></big>
@@ -3588,35 +4378,38 @@ NOTE: each atomic coordinate can also be specified as a simple algebraic express
 
         + (plus), - (minus), / (division), * (multiplication), ^ (power)
 
-     All numerical constants included are considered as double-precision numbers;
-     i.e. 1/2 is 0.5, not zero. Other functions, such as sin, sqrt or exp are
-     not available, although sqrt can be replaced with ^(1/2).
+      All numerical constants included are considered as double-precision numbers;
+      i.e. 1/2 is 0.5, not zero. Other functions, such as sin, sqrt or exp are
+      not available, although sqrt can be replaced with ^(1/2).
 
-    Example:
-                 C  1/3   1/2*3^(-1/2)   0
+      Example:
+            C  1/3   1/2*3^(-1/2)   0
 
-    is equivalent to
+      is equivalent to
 
             C  0.333333  0.288675  0.000000
 
-    Please note that this feature is NOT supported by XCrysDen (which will
-    display a wrong structure, or nothing at all).
-    When atomic positions are of type crystal_sg coordinates can be given
-    in the following three forms (Wyckoff positions):
-    C  1a
-    C  8g   x
-    C  24m  x y
-    The first form must be used when the Wyckoff letter determines uniquely
-    all three coordinates, the second form when the Wyckoff letter
-    and one coordinate are needed, the third form when one letter and two
-    coordinates are needed.
-    The forms:
-    C 8g  x  x  x
-    C 24m x  x  y
-    are not allowed, but
-    C x x x
-    C x x y
-    are correct.
+      Please note that this feature is NOT supported by XCrysDen (which will
+      display a wrong structure, or nothing at all).
+
+      When atomic positions are of type crystal_sg coordinates can be given
+      in the following four forms (Wyckoff positions):
+         C  1a
+         C  8g   x
+         C  24m  x y
+         C  48n  x y z
+      The first form must be used when the Wyckoff letter determines uniquely
+      all three coordinates, forms 2,3,4 when the Wyckoff letter and 1,2,3
+      coordinates respectively are needed.
+
+      The forms:
+         C 8g  x  x  x
+         C 24m x  x  y
+      are not allowed, but
+         C x x x
+         C x x y
+         C x y z
+      are correct.
                         </pre></blockquote>
 </ul><ul>
 <li> <em>Variables: </em><big><b>if_pos(1), if_pos(2), if_pos(3)</b></big>
@@ -3642,50 +4435,7 @@ atoms.
 
 # ------------------------------------------------------------------------
 help K_POINTS_flags -helpfmt helpdoc -helptext {
-      <h2>Description of K_POINTS card's flags</h2><pre>
- tpiba    : read k-points in cartesian coordinates,
-            in units of 2 pi/a (default)
-
- automatic: automatically generated uniform grid of k-points, i.e,
-            generates ( nk1, nk2, nk3 ) grid with ( sk1, sk2, sk3 ) offset.
-            nk1, nk2, nk3 as in Monkhorst-Pack grids
-            k1, k2, k3 must be 0 ( no offset ) or 1 ( grid displaced
-            by half a grid step in the corresponding direction )
-            BEWARE: only grids having the full symmetry of the crystal
-            work with tetrahedra. Some grids with offset may not work.
-
- crystal  : read k-points in crystal coordinates, i.e. in relative
-            coordinates of the reciprocal lattice vectors
-
- gamma    : use k = 0 (no need to list k-point specifications after card)
-            In this case wavefunctions can be chosen as real,
-            and specialized subroutines optimized for calculations
-            at the gamma point are used (memory and cpu requirements
-            are reduced by approximately one half).
-
- tpiba_b  : Used for band-structure plots.
-            k-points are in units of  2 pi/a.
-            nks points specify nks-1 lines in reciprocal space.
-            Every couple of points identifies the initial and
-            final point of a line. pw.x generates N
-            intermediate points of the line where N is the
-            weight of the first point.
-
- crystal_b: as tpiba_b, but k-points are in crystal coordinates.
-
- tpiba_c  : Used for band-structure contour plots.
-            k-points are in units of  2 pi/a. nks must be 3.
-            3 k-points k_0, k_1, and k_2 specify a rectangle
-            in reciprocal space of vertices k_0, k_1, k_2,
-            k_1 + k_2 - k_0: k_0 + \alpha (k_1-k_0)+
-            \beta (k_2-k_0) with 0&lt;\alpha,\beta &lt; 1.
-            The code produces a uniform mesh n1 x n2
-            k points in this rectangle. n1 and n2 are
-            the weights of k_1 and k_2. The weight of k_0
-            is not used.
-
-crystal_c: as tpiba_c, but k-points are in crystal coordinates.
-         </pre>
+      <h2>Description of K_POINTS card's flags</h2><pre></pre>
       
 }
 
@@ -3772,12 +4522,18 @@ half a grid step in the corresponding direction ).
 # ------------------------------------------------------------------------
 help CELL_PARAMETERS_flags -helpfmt helpdoc -helptext {
       <h2>Description of CELL_PARAMETERS card's flags</h2><pre>
-'bohr'/'angstrom': lattice vectors in bohr radii / angstrom.
-   In this case the lattice parameter alat = sqrt(v1*v1).
-'alat' / nothing specified: lattice vectors in units of the
-lattice parameter (either celldm(1) or a). Not specifying
-units is DEPRECATED and will not be allowed in the future.
-If nothing specified and no lattice parameter specified,
+Unit for lattice vectors; options are:
+
+'bohr' / 'angstrom':
+                     lattice vectors in bohr-radii / angstrom.
+                     In this case the lattice parameter alat = sqrt(v1*v1).
+
+'alat' / nothing specified:
+                     lattice vectors in units of the lattice parameter (either
+                     celldm(1) or A). Not specifying units is DEPRECATED
+                     and will not be allowed in the future.
+
+If neither unit nor lattice parameter are specified,
 'bohr' is assumed - DEPRECATED, will no longer be allowed
          </pre>
       
@@ -3836,41 +4592,6 @@ help constr_tol -helpfmt helpdoc -helptext {
 # ------------------------------------------------------------------------
 help constraints_table -helpfmt helpdoc -helptext {
     <ul>
-<li> <em>Variable: </em><big><b>constr_type</b></big>
-</li>
-<br><li> <em>Type: </em>CHARACTER</li>
-<br><li> <em>Description:</em>
-</li>
-<blockquote><pre>
-Type of constrain :
-
-'type_coord'      : constraint on global coordination-number, i.e. the
-                    average number of atoms of type B surrounding the
-                    atoms of type A. The coordination is defined by
-                    using a Fermi-Dirac.
-                    (four indexes must be specified).
-
-'atom_coord'      : constraint on local coordination-number, i.e. the
-                    average number of atoms of type A surrounding a
-                    specific atom. The coordination is defined by
-                    using a Fermi-Dirac.
-                    (four indexes must be specified).
-
-'distance'        : constraint on interatomic distance
-                    (two atom indexes must be specified).
-
-'planar_angle'    : constraint on planar angle
-                    (three atom indexes must be specified).
-
-'torsional_angle' : constraint on torsional angle
-                    (four atom indexes must be specified).
-
-'bennett_proj'    : constraint on the projection onto a given direction
-                    of the vector defined by the position of one atom
-                    minus the center of mass of the others.
-                    G.Roma,J.P.Crocombette: J.Nucl.Mater.403,32(2010)
-                  </pre></blockquote>
-</ul><ul>
 <li> <em>Variables: </em><big><b>constr(1), constr(2), constr(3), constr(4)</b></big>
 </li>
 <br><li> <em>Type: </em>
@@ -3878,39 +4599,32 @@ Type of constrain :
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-                      These variables have different meanings
-                      for different constraint types:
+These variables have different meanings for different constraint types:
 
-                     'type_coord' : constr(1) is the first index of the
-                                    atomic type involved
-                                    constr(2) is the second index of the
-                                    atomic type involved
-                                    constr(3) is the cut-off radius for
-                                    estimating the coordination
-                                    constr(4) is a smoothing parameter
+<b>'type_coord'</b> :
+               <i>constr(1)</i> is the first index of the atomic type involved
+               <i>constr(2)</i> is the second index of the atomic type involved
+               <i>constr(3)</i> is the cut-off radius for estimating the coordination
+               <i>constr(4)</i> is a smoothing parameter
 
-                     'atom_coord' : constr(1) is the atom index of the
-                                    atom with constrained coordination
-                                    constr(2) is the index of the atomic
-                                    type involved in the coordination
-                                    constr(3) is the cut-off radius for
-                                    estimating the coordination
-                                    constr(4) is a smoothing parameter
+<b>'atom_coord'</b> :
+               <i>constr(1)</i> is the atom index of the atom with constrained coordination
+               <i>constr(2)</i> is the index of the atomic type involved in the coordination
+               <i>constr(3)</i> is the cut-off radius for estimating the coordination
+               <i>constr(4)</i> is a smoothing parameter
 
-                       'distance' : atoms indices object of the
-                                    constraint, as they appear in
-                                    the 'ATOMIC_POSITION' CARD
+<b>'distance'</b> :
+               atoms indices object of the constraint, as they appear in
+               the "ATOMIC_POSITIONS" card
 
-'planar_angle', 'torsional_angle' : atoms indices object of the
-                                    constraint, as they appear in the
-                                    'ATOMIC_POSITION' CARD (beware the
-                                    order)
+<b>'planar_angle',</b> <b>'torsional_angle'</b> :
+               atoms indices object of the constraint, as they appear in the
+               "ATOMIC_POSITIONS" card (beware the order)
 
-                   'bennett_proj' : constr(1) is the index of the atom
-                                    whose position is constrained.
-                                    constr(2:4) are the three coordinates
-                                    of the vector that specifies the
-                                    constraint direction.
+<b>'bennett_proj'</b> :
+               <i>constr(1)</i> is the index of the atom whose position is constrained.
+               <i>constr(2:4)</i> are the three coordinates of the vector that specifies
+               the constraint direction.
                   </pre></blockquote>
 </ul><ul>
 <li> <em>Variable: </em><big><b>constr_target</b></big>
@@ -3962,7 +4676,7 @@ help atomic_forces -helpfmt helpdoc -helptext {
 <br><li> <em>Type: </em>CHARACTER</li>
 <br><li> <em>Description:</em>
 </li>
-<blockquote><pre> label of the atom as specified in ATOMIC_SPECIES
+<blockquote><pre> label of the atom as specified in "ATOMIC_SPECIES"
                   </pre></blockquote>
 </ul><ul>
 <li> <em>Variables: </em><big><b>fx, fy, fz</b></big>
