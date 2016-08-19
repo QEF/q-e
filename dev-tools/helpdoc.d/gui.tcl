@@ -12,6 +12,7 @@ proc ::helpdoc::checkMsg {type msg} {
 proc ::helpdoc::checkGui_def_vs_module {} {
     variable def_item
     variable def_itemL
+    variable moduleNewCode
 
     puts {
     -------------------------------------
@@ -85,7 +86,43 @@ proc ::helpdoc::checkGui_def_vs_module {} {
 		    }
 		}
 		if { $error } {
-		    checkMsg ERROR "$def_type $name does not exists in MODULE file"
+		    checkMsg ERROR "$def_type $name does not exist in MODULE file"
+
+		    # let us attempt to privide default module's definition of variable
+
+		    variable arr
+		    attr2array_ arr $def_item($name,attrs)
+		    set type [arr type]
+		    
+		    set options "   -label \"($name):\""
+		    switch -glob -nocase -- $type {
+			CHARACTER - STRING {
+			    append options "
+   -validate string"
+			}
+			LOGICAL {
+			    append options "
+   -widget    radiobox
+   -textvalue { Yes No }	      
+   -value     { .true. .false. }"
+			}
+			INT* {
+			    append options "
+   -validate int"
+			}
+			REAL {
+			    append options "
+   -validate fortranreal"
+			}
+		    }
+		    
+		    switch -exact -- $def_type {
+			var - dimension {
+			    append moduleNewCode "$def_type $name \{
+$options
+\}\n\n"
+			}
+		    }
 		}
 	    }
 	}
@@ -218,7 +255,7 @@ proc ::helpdoc::def_checkExistance_ {tag name} {
     }
 }
 
-proc ::helpdoc::def_registerItem_ {tag name} {
+proc ::helpdoc::def_registerItem_ {tag name {attrs {}}} {
     variable def_item
     variable def_itemL
 
@@ -227,6 +264,8 @@ proc ::helpdoc::def_registerItem_ {tag name} {
     set lowercase_name [string tolower $name]
 
     set def_item($name) $tag
+    set def_item($name,attrs) $attrs
+    
     append def_itemL "[def_addToItemList__ $name] "
 }
 
@@ -266,14 +305,14 @@ proc ::helpdoc::def_registerItems {tree node action} {
 
     switch -- $tag {
 	var - keyword - dimension - namelist - table {
-	    def_registerItem_ $tag $name
+	    def_registerItem_ $tag $name $attr
 	}
 	list {
-	    def_registerItem_ $tag $name
+	    def_registerItem_ $tag $name $attr
 
 	    set names [getTextFromDescendant $tree $node format]
 	    foreach name $names {
-		def_registerItem_ listvar $name
+		def_registerItem_ listvar $name $attr
 	    }
 	}
 	card {	    
