@@ -1,5 +1,5 @@
-HELPDOC=../../dev-tools/helpdoc
-
+VERSION = svn
+HELPDOC = ../../dev-tools/helpdoc --version $(VERSION)
 
 HTMLS = INPUT_Lanczos.html \
 	INPUT_Davidson.html \
