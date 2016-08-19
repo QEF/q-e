@@ -40,10 +40,10 @@ namespace eval ::guib {
     #------------------------------------------------------------------------            
 
     # regular expresion for the for the endlist-string
-    set settings(NAMELIST.end_regexp) {^ &end|^/|^ /}
+    set settings(NAMELIST.end_regexp) {^ *&end|^ */}
 
     # string to write for the end-of-namelist
-    set settings(NAMELIST.end_string) { &end}
+    set settings(NAMELIST.end_string) { /}
 
     # case-sensitivity of namelists variable names (i.e., _nocase like
     # the "-nocase" tcl-option)    
