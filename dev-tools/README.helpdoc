@@ -69,10 +69,10 @@
 
    3.1  Differences between DEF and XML:
 
-   * some elements must have a name attribute (e.g. variable and
-     namelist must always have a name). For such elements the markup
-     is simplified from "element -name ident ..." to "element ident
-     ..." (i.e. -name is skipped).
+   * some elements must have a name attribute (e.g. variable and namelist
+     must always have a name). For such elements the markup is simplified
+     from   "element -name ident ..."   to   "element ident ..."
+     (i.e. -name is skipped).
 
 
    * attributes must be specified on a single line:
