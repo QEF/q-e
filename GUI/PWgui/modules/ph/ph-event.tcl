@@ -83,19 +83,33 @@ tracevar nqs w {
     widgetconfigure qPoints  -rows $nqs
 }
 
-
-# help postproccessing (hack for help of dvscf_star & drho_star structures)
-    
-foreach ident {dvscf_star drho_star} {
-    
-    set obj      [_getObjFromVarident $ident]
-    set id       [$obj getIdFromVarident $ident]
-    set helptext [$obj getOptionValue $id helptext]
-    
-    foreach elem {open dir ext basis pat} {
-	help ${ident}_$elem -helpfmt helpdoc -helptext $helptext
+tracevar dvscf_star_open w {
+    if { [varvalue dvscf_star_open] == ".true." } {
+	groupwidget dvscf_star_specs enable
+    } else {
+	groupwidget dvscf_star_specs disable
     }
 }
+tracevar drho_star_open w {
+    if { [varvalue drho_star_open] == ".true." } {
+	groupwidget drho_star_specs enable
+    } else {
+	groupwidget drho_star_specs disable
+    }
+}
+
+## help postproccessing (hack for help of dvscf_star & drho_star structures)
+#    
+#foreach ident {dvscf_star drho_star} {
+#    
+#    set obj      [_getObjFromVarident $ident]
+#    set id       [$obj getIdFromVarident $ident]
+#    set helptext [$obj getOptionValue $id helptext]
+#    
+#    foreach elem {open dir ext basis pat} {
+#	help ${ident}_$elem -helpfmt helpdoc -helptext $helptext
+#    }
+#}
 
 
 postprocess {
@@ -112,4 +126,6 @@ postprocess {
     varset reps_type -value  {}
     varset nat_todo  -value  {}
     varset qplot     -value  {}
+    varset dvscf_star_open -value {}
+    varset drho_star_open -value {}
 }
