@@ -111,6 +111,18 @@ if { [file exists [file join $moduledir $module $module-help.tcl.bak]] } {
     file rename -force [file join $moduledir $module $module-help.tcl.bak] [file join $moduledir $module $module-help.tcl]
 }
 
+if { [info exists ::helpdoc::moduleNewCode] } {
+    puts "
+###
+### Tentative new code for the missing DEF variables:
+###
+"
+    puts $::helpdoc::moduleNewCode
+
+    puts "### end-of-tentative-new-code
+"
+}
+	  
 # ok, we are done; since we loaded Tk, we need an explicit exit !!!
 
 exit 0
