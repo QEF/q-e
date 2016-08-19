@@ -285,7 +285,7 @@ CONTAINS
   nxx   = fc%nrxxt
   nxxs  = fc%nrxxt
 
-  fc%ngmt  = fc%dfftt%ngl ( )
+  fc%ngmt  = fc%dfftt%ngl ( 1 )
   IF( .not. tk ) THEN
      fc%ngmt = ( fc%ngmt + 1 ) / 2 
   ENDIF
