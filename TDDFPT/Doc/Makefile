@@ -18,11 +18,7 @@ clean:
 	- rm -f ../../Doc/INPUT_{Spectrum,Lanczos,Davidson,EELS}.*
 
 
-defs: link_input_xx INPUT_Lanczos.html INPUT_Lanczos.txt \
-                    INPUT_Davidson.html INPUT_Davidson.txt \
-                    INPUT_EELS.html INPUT_EELS.txt \
-                    INPUT_Spectrum.html INPUT_Spectrum.txt \
-                    link_on_main_doc
+defs: link_input_xx $(HTMLS) $(TXTS) link_on_main_doc
 
 link_input_xx:
 	@(if test ! -f input_xx.xsl; then \
