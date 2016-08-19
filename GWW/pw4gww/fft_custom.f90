@@ -734,21 +734,21 @@ SUBROUTINE cft3t( fc, f, n1, n2, n3, nx1, nx2, nx3, sign )
   !
   IF ( sign == 1 ) THEN
      !
-     CALL cfft3d( f, n1, n2, n3, nx1, nx2, nx3, 1 )
+     CALL cfft3d( f, n1, n2, n3, nx1, nx2, nx3, 1, 1 )
      !
   ELSE IF ( sign == -1 ) THEN
      !
-     CALL cfft3d( f, n1, n2, n3, nx1, nx2, nx3, -1 )
+     CALL cfft3d( f, n1, n2, n3, nx1, nx2, nx3, 1, -1 )
      !
      ! ... sign = +-2 : if available, call the "short" fft (for psi's)
      !
   ELSE IF ( sign == 2 ) THEN
      !
-     CALL cfft3ds( f, n1, n2, n3, nx1, nx2, nx3, 1, fc%dfftt%isind, fc%dfftt%iplw )
+     CALL cfft3ds( f, n1, n2, n3, nx1, nx2, nx3, 1, 1, fc%dfftt%isind, fc%dfftt%iplw )
      !
   ELSE IF ( sign == -2 ) THEN
      !
-     CALL cfft3ds( f, n1, n2, n3, nx1, nx2, nx3, -1, fc%dfftt%isind, fc%dfftt%iplw )
+     CALL cfft3ds( f, n1, n2, n3, nx1, nx2, nx3, 1, -1, fc%dfftt%isind, fc%dfftt%iplw )
      !
   ELSE
      !

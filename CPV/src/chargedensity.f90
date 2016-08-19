@@ -582,7 +582,7 @@
                CALL pack_group_sticks( aux, psis, dtgs )
                CALL maps_sticks_to_3d( dffts, dtgs, psis, SIZE(psis), aux, 2 )
                CALL cfft3ds( aux, dfft3d%nr1, dfft3d%nr2, dfft3d%nr3, &
-                             dfft3d%nr1x,dfft3d%nr2x,dfft3d%nr3x, 1, dfft3d%isind, dfft3d%iplw )
+                             dfft3d%nr1x,dfft3d%nr2x,dfft3d%nr3x, 1, 1, dfft3d%isind, dfft3d%iplw )
                psis = aux
             ELSE
                !

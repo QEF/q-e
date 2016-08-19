@@ -58,7 +58,6 @@ subroutine dv_drho_rvv10(rho, drho, nspin, q_point, dv_drho)
 
     USE gvect,               ONLY : nl, g, nlm, ngm
     USE cell_base,           ONLY : alat, tpiba, omega
-    USE fft_scalar,          ONLY : cfft3d
 
     integer, intent(IN)        :: nspin
     real(dp), intent(IN)       :: rho(:,:), q_point(3)
@@ -90,7 +89,6 @@ subroutine get_delta_v(rho, drho, nspin, q_point, delta_v)
 
     USE gvect,               ONLY : nl, g, nlm, ngm
     USE cell_base,           ONLY : alat, tpiba, omega
-    USE fft_scalar,          ONLY : cfft3d
 
     integer, intent(IN) :: nspin
     real(dp),    intent(IN) :: rho(:,:), q_point(3)       !

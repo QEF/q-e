@@ -163,7 +163,7 @@ CONTAINS
 
       ! perform the transformation
       CALL cfft3ds (psic,blipgrid(1),blipgrid(2),blipgrid(3),&
-       &ld_bg(1),ld_bg(2),ld_bg(3),+1,do_fft_z(:),do_fft_y(:))
+       &ld_bg(1),ld_bg(2),ld_bg(3),1,+1,do_fft_z(:),do_fft_y(:))
    END SUBROUTINE
 
    SUBROUTINE pw2blip_transform2(psi1,psi2)
@@ -183,7 +183,7 @@ CONTAINS
 
       ! perform the transformation
       CALL cfft3ds (psic,blipgrid(1),blipgrid(2),blipgrid(3),&
-       &ld_bg(1),ld_bg(2),ld_bg(3),+1,do_fft_z(:),do_fft_y(:))
+       &ld_bg(1),ld_bg(2),ld_bg(3),1,+1,do_fft_z(:),do_fft_y(:))
    END SUBROUTINE
 
    SUBROUTINE pw2blip_get(node)

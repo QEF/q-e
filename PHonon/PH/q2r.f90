@@ -289,7 +289,7 @@ PROGRAM q2r
            DO na1=1,nat
               DO na2=1,nat
                  CALL cfft3d ( phid (:,j1,j2,na1,na2), &
-                      nr1,nr2,nr3, nr1,nr2,nr3, 1 )
+                      nr1,nr2,nr3, nr1,nr2,nr3, 1, 1 )
                  phid(:,j1,j2,na1,na2) = &
                       phid(:,j1,j2,na1,na2) / DBLE(nr1*nr2*nr3)
               END DO
@@ -480,7 +480,7 @@ SUBROUTINE gammaq2r( nqtot, nat, nr1, nr2, nr3, at )
            do na1=1,nat
               do na2=1,nat
                  call cfft3d ( gamout(:,j1,j2,na1,na2), &
-                      nr1,nr2,nr3, nr1,nr2,nr3, 1 )
+                      nr1,nr2,nr3, nr1,nr2,nr3, 1, 1 )
               end do
            end do
         end do

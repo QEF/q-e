@@ -463,7 +463,7 @@
 !=----------------------------------------------------------------------=!
 !
 
-   SUBROUTINE cfft3d( f, nx, ny, nz, ldx, ldy, ldz, isign )
+   SUBROUTINE cfft3d( f, nx, ny, nz, ldx, ldy, ldz, howmany, isign )
 
   !     driver routine for 3d complex fft of lengths nx, ny, nz
   !     input  :  f(ldx*ldy*ldz)  complex, transform is in-place
@@ -478,7 +478,7 @@
 
      IMPLICIT NONE
 
-     INTEGER, INTENT(IN) :: nx, ny, nz, ldx, ldy, ldz, isign
+     INTEGER, INTENT(IN) :: nx, ny, nz, ldx, ldy, ldz, howmany, isign
      COMPLEX (DP) :: f(:)
      INTEGER :: i, k, j, err, idir, ip
      REAL(DP) :: tscale
@@ -570,7 +570,7 @@
 !=----------------------------------------------------------------------=!
 !
 
-SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
+SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, howmany, isign, &
      do_fft_z, do_fft_y)
   !
   !     driver routine for 3d complex "reduced" fft - see cfft3d
@@ -585,17 +585,17 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
   !
   implicit none
 
-  integer :: nx, ny, nz, ldx, ldy, ldz, isign
+  integer :: nx, ny, nz, ldx, ldy, ldz, howmany, isign
   !
   !   logical dimensions of the fft
   !   physical dimensions of the f array
   !   sign of the transformation
 
-  complex(DP) :: f ( ldx * ldy * ldz )
+  complex(DP) :: f ( ldx * ldy * ldz * howmany )
   integer :: do_fft_z(:), do_fft_y(:)
   !
   integer :: m, incx1, incx2
-  INTEGER :: i, k, j, err, idir, ip,  ii, jj
+  INTEGER :: i, k, j, err, idir, ip,  ii, jj, h, ldh
   REAL(DP) :: tscale
   INTEGER, SAVE :: icurrent = 1
   INTEGER, SAVE :: dims(3,ndims) = -1
@@ -604,9 +604,12 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
   C_POINTER, SAVE :: bw_plan ( 3, ndims ) = 0
 
   tscale = 1.0_DP
+  ldh = ldx * ldy * ldz
 
   IF( ny /= ldy ) &
     CALL fftx_error__(' cfft3ds ', ' wrong dimensions: ny /= ldy ', 1 )
+  IF( howmany < 1 ) &
+    CALL fftx_error__(' cfft3ds ', ' howmany less than one ', 1 )
 
      CALL lookup()
 
@@ -622,79 +625,84 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
 
      IF ( isign > 0 ) THEN
 
-        !
-        !  k-direction ...
-        !
+        DO h = 0, howmany - 1
+           !
+           !  k-direction ...
+           !
 
-        incx1 = ldx * ldy;  incx2 = 1;  m = 1
+           incx1 = ldx * ldy;  incx2 = 1;  m = 1
 
-        do i =1, nx
-           do j = 1, ny
-              ii = i + ldx * (j-1)
-              if ( do_fft_z(ii) > 0 ) then
-                 call FFTW_INPLACE_DRV_1D( bw_plan( 3, ip), m, f( ii ), incx1, incx2 )
-              end if
+           do i =1, nx
+              do j = 1, ny
+                 ii = i + ldx * (j-1)
+                 if ( do_fft_z(ii) > 0 ) then
+                    call FFTW_INPLACE_DRV_1D( bw_plan( 3, ip), m, f( ii + h*ldh ), incx1, incx2 )
+                 end if
+              end do
            end do
-        end do
 
-        !
-        !  ... j-direction ...
-        !
+           !
+           !  ... j-direction ...
+           !
 
-        incx1 = ldx;  incx2 = ldx*ldy;  m = nz
+           incx1 = ldx;  incx2 = ldx*ldy;  m = nz
+   
+           do i = 1, nx
+              if ( do_fft_y( i ) == 1 ) then
+                call FFTW_INPLACE_DRV_1D( bw_plan( 2, ip), m, f( i + h*ldh ), incx1, incx2 )
+              endif
+           enddo
 
-        do i = 1, nx
-           if ( do_fft_y( i ) == 1 ) then
-             call FFTW_INPLACE_DRV_1D( bw_plan( 2, ip), m, f( i ), incx1, incx2 )
-           endif
-        enddo
+           !
+           !  ... i - direction
+           !
 
-        !
-        !  ... i - direction
-        !
+           incx1 = 1;  incx2 = ldx;  m = ldy*nz
 
-        incx1 = 1;  incx2 = ldx;  m = ldy*nz
+           call FFTW_INPLACE_DRV_1D( bw_plan( 1, ip), m, f( 1 + h*ldh ), incx1, incx2 )
 
-        call FFTW_INPLACE_DRV_1D( bw_plan( 1, ip), m, f( 1 ), incx1, incx2 )
+        END DO
 
      ELSE
 
-        !
-        !  i - direction ...
-        !
+        DO h = 0, howmany - 1
+           !
+           !  i - direction ...
+           !
 
-        incx1 = 1;  incx2 = ldx;  m = ldy*nz
+           incx1 = 1;  incx2 = ldx;  m = ldy*nz
 
-        call FFTW_INPLACE_DRV_1D( fw_plan( 1, ip), m, f( 1 ), incx1, incx2 )
+           call FFTW_INPLACE_DRV_1D( fw_plan( 1, ip), m, f( 1 + h*howmany ), incx1, incx2 )
 
-        !
-        !  ... j-direction ...
-        !
+           !
+           !  ... j-direction ...
+           !
 
-        incx1 = ldx;  incx2 = ldx*ldy;  m = nz
+           incx1 = ldx;  incx2 = ldx*ldy;  m = nz
 
-        do i = 1, nx
-           if ( do_fft_y ( i ) == 1 ) then
-             call FFTW_INPLACE_DRV_1D( fw_plan( 2, ip), m, f( i ), incx1, incx2 )
-           endif
-        enddo
+           do i = 1, nx
+              if ( do_fft_y ( i ) == 1 ) then
+                call FFTW_INPLACE_DRV_1D( fw_plan( 2, ip), m, f( i + h*howmany ), incx1, incx2 )
+              endif
+           enddo
 
-        !
-        !  ... k-direction
-        !
+           !
+           !  ... k-direction
+           !
 
-        incx1 = ldx * ny;  incx2 = 1;  m = 1
+           incx1 = ldx * ny;  incx2 = 1;  m = 1
  
-        do i = 1, nx
-           do j = 1, ny
-              ii = i + ldx * (j -1)
-              if ( do_fft_z ( ii ) > 0 ) then
-                 call FFTW_INPLACE_DRV_1D( fw_plan( 3, ip), m, f( ii ), incx1, incx2 )
-              end if
+           do i = 1, nx
+              do j = 1, ny
+                 ii = i + ldx * (j -1)
+                 if ( do_fft_z ( ii ) > 0 ) then
+                    call FFTW_INPLACE_DRV_1D( fw_plan( 3, ip), m, f( ii + h*howmany ), incx1, incx2 )
+                 end if
+              end do
            end do
-        end do
 
-        call DSCAL (2 * ldx * ldy * nz, 1.0_DP/(nx * ny * nz), f(1), 1)
+           call DSCAL (2 * ldx * ldy * nz, 1.0_DP/(nx * ny * nz), f(1+ h*howmany ), 1)
+        END DO
 
      END IF
      RETURN

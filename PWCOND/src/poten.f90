@@ -125,7 +125,7 @@ DO ispin=1,nspin_eff
 !  To find FFT of the local potential
 !  (use serial FFT even in the parallel case)
 !
-  CALL cfft3d (aux,dfftp%nr1,dfftp%nr2,dfftp%nr3,dfftp%nr1x,dfftp%nr2x,dfftp%nr3x,-1)
+  CALL cfft3d (aux,dfftp%nr1,dfftp%nr2,dfftp%nr3,dfftp%nr1x,dfftp%nr2x,dfftp%nr3x,1,-1)
 
   DO i = 1, nrx
     IF(i.GT.nrx/2+1) THEN

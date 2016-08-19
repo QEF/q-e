@@ -21,7 +21,7 @@ MODULE fft_interfaces
      !! and to the "box-grid" version **invfft_b**, used only in CP 
      !! (the latter has an additional argument)
      
-     SUBROUTINE invfft_x( grid_type, f, dfft, dtgs )
+     SUBROUTINE invfft_x( grid_type, f, dfft, dtgs, howmany )
        USE fft_types,  ONLY: fft_type_descriptor
        USE task_groups,   ONLY: task_groups_descriptor
        IMPLICIT NONE
@@ -29,6 +29,7 @@ MODULE fft_interfaces
        CHARACTER(LEN=*),  INTENT(IN) :: grid_type
        TYPE(fft_type_descriptor), INTENT(IN) :: dfft
        TYPE(task_groups_descriptor), OPTIONAL, INTENT(IN) :: dtgs
+       INTEGER, OPTIONAL, INTENT(IN) :: howmany
        COMPLEX(DP) :: f(:)
      END SUBROUTINE invfft_x
      !
@@ -43,7 +44,7 @@ MODULE fft_interfaces
   END INTERFACE
 
   INTERFACE fwfft
-     SUBROUTINE fwfft_x( grid_type, f, dfft, dtgs )
+     SUBROUTINE fwfft_x( grid_type, f, dfft, dtgs, howmany )
        USE fft_types,  ONLY: fft_type_descriptor
        USE task_groups,   ONLY: task_groups_descriptor
        IMPLICIT NONE
@@ -51,6 +52,7 @@ MODULE fft_interfaces
        CHARACTER(LEN=*), INTENT(IN) :: grid_type
        TYPE(fft_type_descriptor), INTENT(IN) :: dfft
        TYPE(task_groups_descriptor), OPTIONAL, INTENT(IN) :: dtgs
+       INTEGER, OPTIONAL, INTENT(IN) :: howmany
        COMPLEX(DP) :: f(:)
      END SUBROUTINE fwfft_x
   END INTERFACE
@@ -59,7 +61,7 @@ END MODULE fft_interfaces
 !=---------------------------------------------------------------------------=!
 !
 !=---------------------------------------------------------------------------=!
-SUBROUTINE invfft_x( grid_type, f, dfft, dtgs )
+SUBROUTINE invfft_x( grid_type, f, dfft, dtgs, howmany )
   !! Compute G-space to R-space for a specific grid type
   !! 
   !! **grid_type = 'Dense'** : 
@@ -101,6 +103,12 @@ SUBROUTINE invfft_x( grid_type, f, dfft, dtgs )
   CHARACTER(LEN=*), INTENT(IN) :: grid_type
   COMPLEX(DP) :: f(:)
   TYPE(task_groups_descriptor), OPTIONAL, INTENT(IN) :: dtgs
+  INTEGER, OPTIONAL, INTENT(IN) :: howmany
+  INTEGER :: howmany_ = 1
+
+  IF(PRESENT(howmany) ) THEN
+     howmany_ = howmany
+  END IF
   !
   IF( grid_type == 'Dense' ) THEN
      CALL start_clock( 'fft' )
@@ -117,6 +125,10 @@ SUBROUTINE invfft_x( grid_type, f, dfft, dtgs )
   END IF
 
 #if defined(__MPI) && !defined __USE_3D_FFT
+
+  IF( howmany_ /= 1 ) THEN
+     CALL fftx_error__( ' invfft ', ' howmany not yet implemented for parallel driver ', 1 )
+  END IF
      
   IF( grid_type == 'Dense' .OR. grid_type == 'Smooth' .OR. &
        grid_type == 'Custom' ) THEN
@@ -134,16 +146,16 @@ SUBROUTINE invfft_x( grid_type, f, dfft, dtgs )
   IF( grid_type == 'Dense' .OR. grid_type == 'Smooth' .OR. &
       grid_type == 'Custom' ) THEN
      CALL cfft3d( f, dfft%nr1, dfft%nr2, dfft%nr3, &
-                     dfft%nr1x,dfft%nr2x,dfft%nr3x, 1)
+                     dfft%nr1x,dfft%nr2x,dfft%nr3x, howmany_ , 1)
 
   ELSE IF( grid_type == 'Wave' .OR. grid_type == 'CustomWave' ) THEN
 
 #if defined(__MPI) && defined __USE_3D_FFT
      CALL cfft3d( f, dfft%nr1, dfft%nr2, dfft%nr3, &
-                     dfft%nr1x,dfft%nr2x,dfft%nr3x, 1)
+                     dfft%nr1x,dfft%nr2x,dfft%nr3x, howmany_ , 1)
 #else
      CALL cfft3ds( f, dfft%nr1, dfft%nr2, dfft%nr3, &
-                      dfft%nr1x,dfft%nr2x,dfft%nr3x, 1, &
+                      dfft%nr1x,dfft%nr2x,dfft%nr3x, howmany_ 1, &
                       dfft%isind, dfft%iplw )
 #endif
 
@@ -169,7 +181,7 @@ END SUBROUTINE invfft_x
 !=---------------------------------------------------------------------------=!
 !
 !=---------------------------------------------------------------------------=!
-SUBROUTINE fwfft_x( grid_type, f, dfft, dtgs )
+SUBROUTINE fwfft_x( grid_type, f, dfft, dtgs, howmany )
   !! Compute R-space to G-space for a specific grid type
   !! 
   !! **grid_type = 'Dense'**
@@ -210,6 +222,12 @@ SUBROUTINE fwfft_x( grid_type, f, dfft, dtgs )
   CHARACTER(LEN=*), INTENT(IN) :: grid_type
   COMPLEX(DP) :: f(:)
   TYPE(task_groups_descriptor), OPTIONAL, INTENT(IN) :: dtgs
+  INTEGER, OPTIONAL, INTENT(IN) :: howmany
+  INTEGER :: howmany_ = 1
+
+  IF(PRESENT(howmany) ) THEN
+     howmany_ = howmany
+  END IF
 
   IF( grid_type == 'Dense' ) THEN
      CALL start_clock( 'fft' )
@@ -226,6 +244,10 @@ SUBROUTINE fwfft_x( grid_type, f, dfft, dtgs )
   END IF
 
 #if defined(__MPI) && !defined(__USE_3D_FFT)
+
+  IF( howmany_ /= 1 ) THEN
+     CALL fftx_error__( ' fwfft ', ' howmany not yet implemented for parallel driver ', 1 )
+  END IF
      
   IF( grid_type == 'Dense' .OR. grid_type == 'Smooth' .OR. &
       grid_type == 'Custom' ) THEN
@@ -243,16 +265,16 @@ SUBROUTINE fwfft_x( grid_type, f, dfft, dtgs )
   IF( grid_type == 'Dense' .OR. grid_type == 'Smooth' .OR. &
       grid_type == 'Custom' ) THEN
      CALL cfft3d( f, dfft%nr1, dfft%nr2, dfft%nr3, &
-                     dfft%nr1x,dfft%nr2x,dfft%nr3x, -1)
+                     dfft%nr1x,dfft%nr2x,dfft%nr3x, howmany_ , -1)
 
   ELSE IF( grid_type == 'Wave' .OR. grid_type == 'CustomWave' ) THEN
 
 #if defined(__MPI) && defined(__USE_3D_FFT)
      CALL cfft3d( f, dfft%nr1, dfft%nr2, dfft%nr3, &
-                     dfft%nr1x,dfft%nr2x,dfft%nr3x, -1)
+                     dfft%nr1x,dfft%nr2x,dfft%nr3x, howmany_ , -1)
 #else
      CALL cfft3ds( f, dfft%nr1, dfft%nr2, dfft%nr3, &
-                      dfft%nr1x,dfft%nr2x,dfft%nr3x, -1, &
+                      dfft%nr1x,dfft%nr2x,dfft%nr3x, howmany_ , -1, &
                       dfft%isind, dfft%iplw )
 #endif
 
@@ -349,7 +371,7 @@ SUBROUTINE invfft_b( f, dfft, ia )
                      dfft%imin3( ia ), dfft%imax3( ia ), 1 )
 #else
   CALL cfft3d( f, dfft%nr1, dfft%nr2, dfft%nr3, &
-                  dfft%nr1x,dfft%nr2x,dfft%nr3x, 1)
+                  dfft%nr1x,dfft%nr2x,dfft%nr3x, 1, 1)
 #endif
 
 #endif

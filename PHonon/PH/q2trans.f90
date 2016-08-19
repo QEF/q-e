@@ -311,7 +311,7 @@ INTEGER, PARAMETER         ::   &
            DO na1=1,nat
               DO na2=1,nat
                  CALL cfft3d ( phid (:,j1,j2,na1,na2), &
-                      nr1,nr2,nr3, nr1,nr2,nr3, 1 )
+                      nr1,nr2,nr3, nr1,nr2,nr3, 1, 1 )
                  phid(:,j1,j2,na1,na2) = &
                       phid(:,j1,j2,na1,na2) / dble(nr1*nr2*nr3)
               ENDDO
@@ -857,7 +857,7 @@ SUBROUTINE gammaq2r( nqtot, nat, nr1, nr2, nr3, at )
            DO na1=1,nat
               DO na2=1,nat
                  CALL cfft3d ( gamout(:,j1,j2,na1,na2), &
-                      nr1,nr2,nr3, nr1,nr2,nr3, 1 )
+                      nr1,nr2,nr3, nr1,nr2,nr3, 1, 1 )
               ENDDO
            ENDDO
         ENDDO
