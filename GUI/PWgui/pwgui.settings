@@ -11,7 +11,7 @@ set ::tclu::DEBUG_FILE 0
 # ------------------------------------------------------------------------
 
 # regular expresion for the for the endlist-string
-set ::guib::settings(NAMELIST.end_regexp) {^ &end|^/|^ /}
+set ::guib::settings(NAMELIST.end_regexp) {^ *&end|^ */}
 
 # string to write for the end-of-namelist
 set ::guib::settings(NAMELIST.end_string) { /}
