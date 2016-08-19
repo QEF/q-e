@@ -379,24 +379,6 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             }
         }
 
-        var efield_phase -type CHARACTER {
-            default { 'none' }
-            options {
-                info { Available options are: }
-                
-                opt -val 'read' {
-                    set the zero of the electronic polarization (with @ref lelfield==.true..) 
-                    to the result of a previous calculation
-                }                
-                opt -val 'write' {
-                    write on disk data on electronic polarization to be read in another 
-                    calculation
-                }                
-                opt -val 'none' {
-                    none of the above points
-                }
-             }  
-          }
        var lorbm -type LOGICAL { 
             default { .FALSE. }
             info {
@@ -456,18 +438,19 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 
         var monopole -type LOGICAL {
             default { .FALSE. }
+            see { zmon, realxz, block, block_1, block_2, block_height }
             info {
-               In the case of charged cells (tot_charge.ne.0) setting monopole = .TRUE.
-               represents the counter charge (i.e. -tot_charge) not by a homogenous
-               background charge but with a charged plate, which is placed at 'zmon'
-               (see below). Details of the monopole potential can be found in
-               T. Brumme, M. Calandra, F. Mauri; PRB 89, 245406 (2014).
-               Note, that in systems which are not symmetric with respect to the plate,
-               one needs to enable the dipole correction! (dipfield=.true.).
-               Currently, symmetry can be used with monopole=.true. but carefully check
-               that no symmetry is included which maps z to -z even if in principle one
-               could still use them for symmetric systems (i.e. no dipole correction).
-               For nosym=.false. verbosity is set to 'high'.
+                In the case of charged cells (@ref tot_charge .ne. 0) setting monopole = .TRUE.
+                represents the counter charge (i.e. -tot_charge) not by a homogenous
+                background charge but with a charged plate, which is placed at @ref zmon
+                (see below). Details of the monopole potential can be found in
+                T. Brumme, M. Calandra, F. Mauri; PRB 89, 245406 (2014).
+                Note, that in systems which are not symmetric with respect to the plate,
+                one needs to enable the dipole correction! (@ref dipfield=.true.).
+                Currently, symmetry can be used with monopole=.true. but carefully check
+                that no symmetry is included which maps @i z to -@i z even if in principle one
+                could still use them for symmetric systems (i.e. no dipole correction).
+                For @ref nosym=.false. verbosity is set to 'high'.
             }
         }
 
@@ -1073,7 +1056,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 divergencies at small q vectors.
             }
         }
-
+	
         vargroup -type INTEGER {
             var nqx1
             var nqx2
@@ -1088,7 +1071,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             }
         }
 
-        var lda_plus_u        -type LOGICAL { 
+        var lda_plus_u -type LOGICAL { 
             default { .FALSE. }
             status {
                 DFT+U (formerly known as LDA+U) currently works only for 
@@ -1251,7 +1234,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             default { 0.001 a.u. }
             info {
                 Amplitude of the electric field, in ***Hartree*** a.u.;
-                1 a.u. = 51.4220632*10^10 V/m). Used only if @ref tefield==.TRUE.
+                1 a.u. = 51.4220632*10^10 V/m. Used only if @ref tefield==.TRUE.
                 The saw-like potential increases with slope @ref eamp in the
                 region from (emaxpos+eopreg-1) to (emaxpos), then decreases
                 to 0 until (emaxpos+eopreg), in units of the crystal
@@ -1260,8 +1243,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 unphysical forces will result.
             }
         }
-
-        dimension angle1 -start 1 -end ntyp -type REAL {
+    
+	dimension angle1 -start 1 -end ntyp -type REAL {
             info {
                 The angle expressed in degrees between the initial
                 magnetization and the z-axis. For noncollinear calculations
@@ -1644,7 +1627,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                   second origin.
              }
          }
-
+    
          var rhombohedral -type LOGICAL {
              default { .TRUE. }
              info {
@@ -1656,69 +1639,74 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                   to the rhombohedral axes and @ref ibrav=5 is used in both cases.
              }
          }
-         var zmon -type REAL {
-             default { 0.5 }
-             info {
-                used only if monopole = .TRUE.
-                Specifies the position of the charged plate which represents
-                the counter charge in doped systems (tot_charge.ne.0).
-                In units of the unit cell length in z direction, zmon in ]0,1[
-                Details of the monopole potential can be found in
-                T. Brumme, M. Calandra, F. Mauri; PRB 89, 245406 (2014).
-             }
-         }
+    
+        group {
+	    label { below variables are used only if @ref monopole = .TRUE. }
 
-         var realxz -type LOGICAL {
-             default { .FALSE. }
-             info {
-                used only if monopole = .TRUE.
-                Allows the relaxation of the system towards the charged plate.
-                Use carefully and utilize either a layer of fixed atoms or a
-                potential barrier (block=.TRUE.) to avoid the atoms moving to
-                the position of the plate or the dipole of the dipole
-                correction (dipfield=.TRUE.).
-             }
-         }
+	    var zmon -type REAL {
+		default { 0.5 }
+		info {
+		    used only if @ref monopole = .TRUE.
+		    Specifies the position of the charged plate which represents
+		    the counter charge in doped systems (@ref tot_charge .ne. 0).
+		    In units of the unit cell length in @i z direction, @ref zmon in ]0,1[
+                    Details of the monopole potential can be found in
+                    T. Brumme, M. Calandra, F. Mauri; PRB 89, 245406 (2014).
+		}
+	    }
 
-         var block -type LOGICAL {
-             default { .FALSE. }
-             info {
-                used only if monopole = .TRUE.
-                Adds a potential barrier to the total potential seen by the
-                electrons to mimic a dielectric in field effect configuration
-                and/or to avoid electrons spilling into the vacuum region for
-                electron doping. Potential barrier is from block_1 to block_2 and
-                has a height of block_height.
-                If dipfield = .TRUE. eopreg is used for a smooth increase and
-                decrease of the potential barrier.
-             }
-         }
+	    var realxz -type LOGICAL {
+		default { .FALSE. }
+		info {
+		    used only if @ref monopole = .TRUE.
+		    Allows the relaxation of the system towards the charged plate.
+		    Use carefully and utilize either a layer of fixed atoms or a
+		    potential barrier (@ref block=.TRUE.) to avoid the atoms moving to
+		    the position of the plate or the dipole of the dipole
+		    correction (@ref dipfield=.TRUE.).
+		}
+	    }
 
-         var block_1 -type REAL {
-             default { 0.45 }
-             info {
-                used only if monopole = .TRUE. and block = .TRUE.
-                lower beginning of of the potential barrier, in units of the
-                unit cell size along z, block_1 in ]0,1[
-             }
-         }
+	    var block -type LOGICAL {
+		default { .FALSE. }
+		info {
+		    used only if @ref monopole = .TRUE.
+		    Adds a potential barrier to the total potential seen by the
+		    electrons to mimic a dielectric in field effect configuration
+		    and/or to avoid electrons spilling into the vacuum region for
+		    electron doping. Potential barrier is from @ref block_1 to @ref block_2 and
+		    has a height of block_height.
+		    If @ref dipfield = .TRUE. then @ref eopreg is used for a smooth increase and
+		    decrease of the potential barrier.
+		}
+	    }
 
-         var block_2 -type REAL {
-             default { 0.55 }
-             info {
-                used only if monopole = .TRUE. and block = .TRUE.
-                upper beginning of the potential barrier, in units of the
-                unit cell size along z, block_2 in ]0,1[
-             }
-         }
+	    var block_1 -type REAL {
+		default { 0.45 }
+		info {
+		    used only if @ref monopole = .TRUE. and @ref block = .TRUE.
+		    lower beginning of the potential barrier, in units of the
+		    unit cell size along @i z, @ref block_1 in ]0,1[
+		}
+	    }
 
-         var block_height -type REAL {
-             default { 0.1 }
-             info {
-                used only if monopole = .TRUE. and block = .TRUE.
-                Height of the potential barrier in Rydberg.
-             }
-         }
+	    var block_2 -type REAL {
+		default { 0.55 }
+		info {
+		    used only if @ref monopole = .TRUE. and @ref block = .TRUE.
+		    upper beginning of the potential barrier, in units of the
+		    unit cell size along @i z, @ref block_2 in ]0,1[
+                }
+	    }
+
+	    var block_height -type REAL {
+		default { 0.1 }
+		info {
+		    used only if @ref monopole = .TRUE. and @ref block = .TRUE.
+		    Height of the potential barrier in Rydberg.
+		}
+	    }
+	}
 
     }
 
@@ -1919,6 +1907,25 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             }
         }
 
+        var efield_phase -type CHARACTER {
+            default { 'none' }
+            options {
+                info { Available options are: }
+                
+                opt -val 'read' {
+                    set the zero of the electronic polarization (with @ref lelfield==.true..) 
+                    to the result of a previous calculation
+                }                
+                opt -val 'write' {
+                    write on disk data on electronic polarization to be read in another 
+                    calculation
+                }                
+                opt -val 'none' {
+                    none of the above points
+                }
+            }  
+        }
+        
         var startingpot -type CHARACTER {
             options {
                 info { Available options are: }
@@ -2133,7 +2140,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
          
         group {
             label {
-                keywords used for molecular dynamics
+                variables used for molecular dynamics
             }       
 
             var ion_temperature -type CHARACTER {
