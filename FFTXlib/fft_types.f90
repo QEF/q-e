@@ -71,7 +71,7 @@ MODULE fft_types
 
   REAL(DP) :: fft_dual = 4.0d0
 
-  PUBLIC :: fft_type_descriptor, fft_type_set, fft_type_scalar, fft_type_init
+  PUBLIC :: fft_type_descriptor, fft_type_init
   PUBLIC :: fft_type_allocate, fft_type_deallocate
 
 CONTAINS
@@ -181,11 +181,12 @@ CONTAINS
 
 !=----------------------------------------------------------------------------=!
 
-  SUBROUTINE fft_type_set( desc, tk, nst, ub, lb, idx, in1, in2, ncp, ncpw, ngp, ngpw, st, stw )
+  SUBROUTINE fft_type_set( desc, tk, lpara, nst, ub, lb, idx, in1, in2, ncp, ncpw, ngp, ngpw, st, stw )
 
     TYPE (fft_type_descriptor) :: desc
 
     LOGICAL, INTENT(in) :: tk               ! gamma/not-gamma logical
+    LOGICAL, INTENT(in) :: lpara            ! set array for parallel or serial FFT drivers
     INTEGER, INTENT(in) :: nst              ! total number of stiks 
     INTEGER, INTENT(in) :: ub(3), lb(3)     ! upper and lower bound of real space indices
     INTEGER, INTENT(in) :: idx(:)           ! sorting index of the sticks
@@ -204,8 +205,6 @@ CONTAINS
     INTEGER :: nr1, nr2, nr3    ! size of real space grid 
     INTEGER :: nr1x, nr2x, nr3x ! padded size of real space grid
     !
-    INTEGER :: sm
-
     IF (.NOT. desc%arrays_have_been_allocated ) &
         CALL fftx_error__(' fft_type_allocate ', ' fft arrays not yet allocated ', 1 )
 
@@ -237,7 +236,6 @@ CONTAINS
     !  Set the number of "xy" planes for each processor
     !  in other word do a slab partition along the z axis
 
-    sm  = 0
     npp = 0
     IF ( desc%nproc == 1 ) THEN      ! sigle processor: npp(1)=nr3
       npp(1) = nr3
@@ -421,76 +419,49 @@ CONTAINS
 
     desc%nsp( 1:desc%nproc ) = nsp( 1:desc%nproc ) ! -- number of rho sticks per processor
 
+    IF( .NOT. lpara ) THEN
+
+       desc%isind = 0
+       desc%iplw  = 0
+       desc%iplp  = 1
+
+       ! here we are setting parameter as if we were
+       ! in a serial code, sticks are along X dimension
+       ! and not along Z
+       desc%nsp(1) = 0
+       desc%nsw(1) = 0
+       DO i1 = lb( 1 ), ub( 1 )
+         DO i2 = lb( 2 ), ub( 2 )
+           m1 = i1 + 1; IF ( m1 < 1 ) m1 = m1 + nr1
+           m2 = i2 + 1; IF ( m2 < 1 ) m2 = m2 + nr2
+           IF( st( i1, i2 ) > 0 ) THEN
+             desc%nsp(1) = desc%nsp(1) + 1
+           END IF
+           IF( stw( i1, i2 ) > 0 ) THEN
+             desc%nsw(1) = desc%nsw(1) + 1
+             desc%isind( m1 + ( m2 - 1 ) * nr1x ) =  1  ! st( i1, i2 )
+             desc%iplw( m1 ) = 1
+           ENDIF
+         ENDDO
+       ENDDO
+       !
+       ! if we are in a parallel run, but would like to use serial FFT, all
+       ! tasks must have the same parameters as if serial run.
+       !
+       desc%nsw = desc%nsw(1)
+       desc%nsp = desc%nsp(1)
+       desc%nnr  = nr1x * nr2x * nr3x
+       desc%npl  = nr3
+       desc%nnp  = nr1x * nr2x
+       desc%npp  = nr3
+       desc%ipp  = 0
+       desc%ngl  = SUM(ngp)  
+       desc%nwl  = SUM(ngpw) 
+       !
+    END IF
+
     RETURN
   END SUBROUTINE fft_type_set
-
-!=----------------------------------------------------------------------------=!
-
-  SUBROUTINE fft_type_scalar( desc, ub, lb, ncp, ncpw, ngp, ngpw, st, stw )
-
-    IMPLICIT NONE
-
-    TYPE (fft_type_descriptor) :: desc
-    INTEGER, INTENT(in) :: lb(:), ub(:)
-    INTEGER, INTENT(in) :: st( lb(1) : ub(1), lb(2) : ub(2) )
-    INTEGER, INTENT(in) :: stw( lb(1) : ub(1), lb(2) : ub(2) )
-    INTEGER, INTENT(in) :: ncp(:)           ! number of rho  columns per processor
-    INTEGER, INTENT(in) :: ncpw(:)          ! number of wave columns per processor
-    INTEGER, INTENT(in) :: ngp(:)           ! number of rho  G-vectors per processor
-    INTEGER, INTENT(in) :: ngpw(:)          ! number of wave G-vectors per processor
-
-    INTEGER :: nr1, nr2, nr3, nr1x, nr2x, nr3x
-    INTEGER :: m1, m2, i1, i2
-
-    IF (.NOT. desc%dimensions_have_been_set ) &
-        CALL fftx_error__(' fft_type_scalar ', ' fft dimensions not yet set ', 1 )
-
-    nr1  = desc%nr1
-    nr2  = desc%nr2
-    nr3  = desc%nr3
-    nr1x = desc%nr1x
-    nr2x = desc%nr2x
-    nr3x = desc%nr3x
-
-    IF( size( desc%iplw ) < nr1x .or. size( desc%isind ) < nr1x * nr2x ) &
-      CALL fftx_error__(' fft_type_scalar ', ' wrong dimensions ', 1 )
-
-    desc%isind = 0
-    desc%iplw  = 0
-    desc%iplp  = 1
-
-    ! here we are setting parameter as if we were
-    ! in a serial code, sticks are along X dimension
-    ! and not along Z
-    desc%nsp(1) = 0
-    desc%nsw(1) = 0
-    DO i1 = lb( 1 ), ub( 1 )
-      DO i2 = lb( 2 ), ub( 2 )
-        m1 = i1 + 1; IF ( m1 < 1 ) m1 = m1 + nr1
-        m2 = i2 + 1; IF ( m2 < 1 ) m2 = m2 + nr2
-        IF( st( i1, i2 ) > 0 ) THEN
-          desc%nsp(1) = desc%nsp(1) + 1
-        END IF
-        IF( stw( i1, i2 ) > 0 ) THEN
-          desc%nsw(1) = desc%nsw(1) + 1
-          desc%isind( m1 + ( m2 - 1 ) * nr1x ) =  1  ! st( i1, i2 )
-          desc%iplw( m1 ) = 1
-        ENDIF
-      ENDDO
-    ENDDO
-
-    desc%nnr  = nr1x * nr2x * nr3x
-    desc%npl  = nr3
-    desc%nnp  = nr1x * nr2x
-    desc%npp  = nr3
-    desc%ipp  = 0
-    !
-    desc%ngl( 1 )  = ngp( 1 )  ! local number of g vectors (rho) per processor
-    desc%nwl( 1 )  = ngpw( 1 ) ! local number of g vectors (wave) per processor
-
-    RETURN
-  END SUBROUTINE fft_type_scalar
-
 !=----------------------------------------------------------------------------=!
 
   SUBROUTINE fft_type_init( dfft, smap, pers, lgamma, lpara, comm, at, bg, gcut_in, dual_in )
@@ -571,22 +542,8 @@ CONTAINS
      CALL get_sticks(  smap, gkcut, nstpw, sstpw, stw, nstw, ngw )
      CALL get_sticks(  smap, gcut,  nstp, sstp, st, nst, ngm )
 
-#if defined(__MPI)
-
-     ! ...   Allocate and Set fft data layout descriptors
-
-     IF( lpara  ) THEN
-        CALL fft_type_set( dfft, .not.smap%lgamma, nst, smap%ub, smap%lb, smap%idx, &
+     CALL fft_type_set( dfft, .not.smap%lgamma, lpara, nst, smap%ub, smap%lb, smap%idx, &
                              smap%ist(:,1), smap%ist(:,2), nstp, nstpw, sstp, sstpw, st, stw )
-     ELSE
-        CALL fft_type_scalar( dfft, smap%ub, smap%lb, nstp, nstpw, sstp, sstpw, st, stw )
-     END IF
-
-#else
-
-     CALL fft_type_scalar( dfft, smap%ub, smap%lb, nstp, nstpw, sstp, sstpw, st, stw )
-
-#endif
 
      DEALLOCATE( st )
      DEALLOCATE( stw )

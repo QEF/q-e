@@ -15,6 +15,7 @@ MODULE fft_custom_gwl
   USE parallel_include
   
   USE fft_types, ONLY: fft_type_descriptor
+  USE stick_base, ONLY: sticks_map
   
   IMPLICIT NONE
 
@@ -41,6 +42,7 @@ MODULE fft_custom_gwl
      INTEGER,  DIMENSION(:), POINTER :: ig1t,ig2t,ig3t
      INTEGER :: nlgt
      INTEGER :: npwt,npwxt
+     TYPE(sticks_map) :: smapt
 
 
 !we redifine the cell for arbitrary cell possibility
@@ -177,25 +179,19 @@ CONTAINS
   USE mp_world,   ONLY : world_comm, nproc
   USE stick_base
   USE fft_support, ONLY : good_fft_dimension
-  USE fft_types,  ONLY : fft_type_allocate, fft_type_set, fft_type_scalar
+  USE fft_types,  ONLY :  fft_type_init
   !
   !
   IMPLICIT NONE
 
   TYPE(fft_cus) :: fc
 
-  INTEGER :: n1, n2, n3, i1, i2, i3
+  INTEGER :: i
   ! counters on G space
   !
 
   REAL(DP) :: amod
   ! modulus of G vectors
-
-  INTEGER, ALLOCATABLE :: stw(:,:), index_map(:,:)
-  ! sticks maps
-
-  INTEGER :: ub(3), lb(3)
-  ! upper and lower bounds for maps
 
   REAL(DP) :: gkcut
   ! cut-off for the wavefunctions
@@ -203,244 +199,68 @@ CONTAINS
   INTEGER  :: ncplane, nxx
   INTEGER  :: ncplanes, nxxs
 
-  INTEGER, ALLOCATABLE :: st(:,:), sts(:,:), stown(:,:)
-  ! sticks maps
-
-  INTEGER, ALLOCATABLE :: ngc (:), ngcs (:), ngkc (:)
-  INTEGER  ::  ncp (nproc), nct, nkcp (nproc), ncts, ncps(nproc)
-  INTEGER  ::  ngp (nproc), ngps(nproc), ngkp (nproc), ncp_(nproc),&
-       i, j, jj, idum, ic, ngw, ngs, ngm
-#ifdef __MPI
-
   !      nxx              !  local fft data dim
   !      ncplane,        &!  number of columns in a plane
   !      nct,            &!  total number of non-zero columns
   !      ncp(nproc),     &!  number of (density) columns per proc
 
-
   LOGICAL :: tk = .true.
-  ! map type: true for full space sticks map, false for half space sticks map
-  INTEGER, ALLOCATABLE :: in1(:), in2(:), idx(:)
-  ! sticks coordinates
-
   !
   !  Subroutine body
   !
 
- 
-  
-  
   tk = .false.
 
-  !
-  ! set the values of fft arrays
-  !
-  fc%nrx1t  = good_fft_dimension (fc%nr1t)
-  fc%nrx2t  = fc%nr2t          ! nrx2 is there just for compatibility
-  fc%nrx3t  = good_fft_dimension (fc%nr3t)
-
-
-  ! compute number of points per plane
-  ncplane  = fc%nrx1t * fc%nrx2t
-  ncplanes = fc%nrx1t * fc%nrx2t
-  
-
-  !
-  ! check the number of plane per process
-  !
-  IF ( fc%nr3t < nproc_pool ) &
-    CALL infomsg ('data_structure', 'some processors have no planes ')
-
+#ifdef __MPI
 
   !
   ! compute gkcut calling an internal procedure
   !
   CALL calculate_gkcut()
+  
+  CALL fft_type_init( fc%dfftt, fc%smapt, "rho", .not. tk, .true., intra_pool_comm, fc%at_t, fc%bg_t, fc%gcutmt/gkcut )
   !
-  !     Now compute for each point of the big plane how many column have
-  !     non zero vectors on the smooth and thick mesh
+  ! set the values of fft arrays
   !
+  fc%nrx1t  = fc%dfftt%nr1x
+  fc%nrx2t  = fc%dfftt%nr2x
+  fc%nrx3t  = fc%dfftt%nr3x
 
-  n1 = fc%nr1t + 1
-  n2 = fc%nr2t + 1
-  n3 = fc%nr3t + 1
-
-  ub =  (/  n1,  n2,  n3 /)
-  lb =  (/ -n1, -n2, -n3 /)
-
-  ALLOCATE( stw ( lb(1) : ub(1), lb(2) : ub(2) ) )
-  ALLOCATE( st  ( lb(1) : ub(1), lb(2) : ub(2) ) )
-  ALLOCATE( sts ( lb(1) : ub(1), lb(2) : ub(2) ) )
-  ALLOCATE( index_map ( lb(1) : ub(1), lb(2) : ub(2) ) )
-  ALLOCATE( stown ( lb(1) : ub(1), lb(2) : ub(2) ) )
-
-  index_map = 0
-  stown = 0
- !
-! ...     Fill in the stick maps, for given g-space base (b1,b2,b3)
-! ...     and cut-offs
-! ...     The value of the element (i,j) of the map ( st ) is equal to the
-! ...     number of G-vector belonging to the (i,j) stick.
-!
-
-
-  CALL sticks_map_set( (.not.tk), ub, lb, fc%bg_t, fc%gcutmt, st, intra_pool_comm)
-  CALL sticks_map_set( (.not.tk), ub, lb, fc%bg_t, gkcut, stw, intra_pool_comm)
-  CALL sticks_map_set( (.not.tk), ub, lb, fc%bg_t, fc%gcutmt, sts , intra_pool_comm)
-    
-  nct  = count( st  > 0 )
-  ncts = count( sts > 0 )
-
-  IF ( nct > ncplane )    &
-     &    CALL errore('data_structure','too many sticks',1)
-
-  IF ( ncts > ncplanes )  &
-     &    CALL errore('data_structure','too many sticks',2)
-
-  IF ( nct  == 0 ) &
-     &    CALL errore('data_structure','number of sticks 0', 1)
-
-  IF ( ncts == 0 ) &
-     &    CALL errore('data_structure','number smooth sticks 0', 1)
-
-    
+  ! compute number of points per plane
+  ncplane  = fc%nrx1t * fc%nrx2t
+  ncplanes = fc%nrx1t * fc%nrx2t
   !
-  !   local pointers deallocated at the end
+  ! check the number of plane per process
   !
-  ALLOCATE( in1( nct ), in2( nct ) )
-  ALLOCATE( ngc( nct ), ngcs( nct ), ngkc( nct ) )
-  ALLOCATE( idx( nct ) )
-  idx = 0
-
-!
-! ...     initialize the sticks indexes array ist
-! ...     nct counts columns containing G-vectors for the dense grid
-! ...     ncts counts columns contaning G-vectors for the smooth grid
-!
-
-  CALL sticks_map_index( ub, lb, st, in1, in2, ngc, index_map )
-  CALL sticks_map_index( ub, lb, stw, in1, in2, ngkc, index_map )
-  CALL sticks_map_index( ub, lb, sts, in1, in2, ngcs, index_map )
-
-  idx = 0
-
-  CALL sticks_sort_new( nproc_pool>1, ngkc, nct, idx )
-  CALL sticks_sort_new( nproc_pool>1, ngcs, nct, idx )
-  CALL sticks_sort_new( nproc_pool>1, ngc, nct, idx )
-
-  CALL sticks_dist_new( (.not.tk), me_pool, nproc_pool, ub, lb, idx, &
-                         in1, in2, ngkc, SIZE(idx), nkcp, ngkp, stown, ngw )
-  stw = 0
-  DO ic = 1, SIZE( idx )
-     IF( idx( ic ) > 0 ) THEN
-        IF( ngkc( idx( ic ) ) > 0 ) THEN
-           stw( in1(idx( ic )), in2(idx( ic )) ) = stown( in1(idx( ic )),in2(idx( ic )))
-           if(.not.tk) stw(-in1(idx(ic)),-in2(idx( ic ))) = stown( in1(idx( ic )),in2(idx( ic )))
-        END IF
-     END IF
-  END DO
-  CALL sticks_dist_new( (.not.tk), me_pool, nproc_pool, ub, lb, idx, &
-                         in1, in2, ngcs, SIZE(idx), ncps, ngps, stown, ngs )
-  sts = 0
-  DO ic = 1, SIZE( idx )
-     IF( idx( ic ) > 0 ) THEN
-        IF( ngkc( idx( ic ) ) > 0 ) THEN
-           sts( in1(idx( ic )), in2(idx( ic )) ) = stown( in1(idx( ic )),in2(idx( ic )))
-           if(.not.tk) sts(-in1(idx(ic)),-in2(idx( ic ))) = stown( in1(idx( ic )),in2(idx( ic )))
-        END IF
-     END IF
-  END DO
-  CALL sticks_dist_new( (.not.tk), me_pool, nproc_pool, ub, lb, idx, &
-                         in1, in2, ngc, SIZE(idx), ncp, ngp, stown, ngm )
-  st = 0
-  DO ic = 1, SIZE( idx )
-     IF( idx( ic ) > 0 ) THEN
-        IF( ngkc( idx( ic ) ) > 0 ) THEN
-           st( in1(idx( ic )), in2(idx( ic )) ) = stown( in1(idx( ic )),in2(idx( ic )))
-           if(.not.tk) st(-in1(idx(ic)),-in2(idx( ic ))) = stown( in1(idx( ic )),in2(idx( ic )))
-        END IF
-     END IF
-  END DO
-
+  IF ( fc%nr3t < nproc_pool ) &
+    CALL infomsg ('data_structure', 'some processors have no planes ')
+  !
   !  set the total number of G vectors
 
-  IF( tk ) THEN
-    fc%ngmt  = ngp ( me_pool + 1 )
- ELSE
-    IF( st( 0, 0 ) == ( me_pool + 1 ) ) THEN
-       fc%ngmt  = ngp ( me_pool + 1 ) / 2 + 1
-    ELSE
-       fc%ngmt  = ngp ( me_pool + 1 ) / 2
-    ENDIF
-  ENDIF
-
-  CALL fft_type_allocate( fc%dfftt, fc%at_t, fc%bg_t, fc%gcutmt, intra_pool_comm )
- 
-  !  here set the fft data layout structures for dense and smooth mesh,
-  !  according to stick distribution
-
-  CALL fft_type_set( fc%dfftt, tk, nct, ub, lb, idx, in1(:), in2(:), ncp, nkcp, ngp, ngkp, st, stw)
-
-  !  if tk = .FALSE. only half reciprocal space is considered, then we
-  !  need to correct the number of sticks
-
+  fc%ngmt  = fc%dfftt%ngl ( me_pool + 1 )
   IF( .not. tk ) THEN
-    nct  = nct*2  - 1
-    ncts = ncts*2 - 1
+     fc%ngmt = ( fc%ngmt + 1 ) / 2 
   ENDIF
-
-  !
-  ! set the number of plane per process
-  !
-
-  ! npp ( 1 : nproc_pool ) = dfftp%npp ( 1 : nproc_pool )
-  ! npps( 1 : nproc_pool ) = dffts%npp ( 1 : nproc_pool )
 
   IF ( fc%dfftt%nnp /= ncplane )    &
      &    CALL errore('data_structure','inconsistent plane dimension on dense grid', abs(fc%dfftt%nnp-ncplane) )
-
   
   WRITE( stdout, '(/5x,"Planes per process (custom) : nr3t =", &
        &        i4," npp = ",i4," ncplane =",i6)') fc%nr3t, fc%dfftt%npp (me_pool + 1) , ncplane
-
-
 
   WRITE( stdout,*)
   WRITE( stdout,'(5X,                                                     &
     & "Proc/  planes cols     G    "/5X)')
   DO i=1,nproc_pool
-    WRITE( stdout,'(5x,i4,1x,i5,i7,i9)') i, fc%dfftt%npp(i), ncp(i), ngp(i)
+    WRITE( stdout,'(5x,i4,1x,i5,i7,i9)') i, fc%dfftt%npp(i), fc%dfftt%nsp(i), fc%dfftt%ngl(i)
   ENDDO
   IF ( nproc_pool > 1 ) THEN
       WRITE( stdout,'(5x,"tot",2x,i5,i7,i9)') &
-      sum(fc%dfftt%npp(1:nproc_pool)), sum(ncp(1:nproc_pool)), sum(ngp(1:nproc_pool))
+      sum(fc%dfftt%npp(1:nproc_pool)), sum(fc%dfftt%nsp(1:nproc_pool)), sum(fc%dfftt%ngl(1:nproc_pool))
   ENDIF
   WRITE( stdout,*)
 
-  DEALLOCATE( stw, st, sts, in1, in2, idx, ngc, ngcs, ngkc, index_map, stown )
-
-  !
-  !   ncp0 = starting column for each processor
-  !
-
-  ! ncp0( 1:nproc_pool )  = dfftp%iss( 1:nproc_pool )
-  ! ncp0s( 1:nproc_pool ) = dffts%iss( 1:nproc_pool )
-
-  !
-  !  array ipc and ipcl ( ipc contain the number of the
-  !                       column for that processor or zero if the
-  !                       column do not belong to the processor,
-  !                       ipcl contains the point in the plane for
-  !                       each column)
-  !
-  !  ipc ( 1:ncplane )    = >  dfftp%isind( 1:ncplane )
-  !  icpl( 1:nct )        = >  dfftp%ismap( 1:nct )
-
-  !  ipcs ( 1:ncplanes )  = >  dffts%isind( 1:ncplanes )
-  !  icpls( 1:ncts )      = >  dffts%ismap( 1:ncts )
-
   fc%nrxxt  = fc%dfftt%nnr
-
   !
   ! nxx is just a copy
   !
@@ -450,78 +270,26 @@ CONTAINS
 
 #else
 
-  fc%nrx1t = good_fft_dimension (fc%nr1t)
+  CALL calculate_gkcut()
 
-  !
-  !     nrx2 and nrx3 are there just for compatibility
-  !
-  fc%nrx2t = fc%nr2t
-  fc%nrx3t = fc%nr3t
+  CALL fft_type_init( fc%dfftt, fc%smapt, "rho", .not. tk, .false., intra_pool_comm, fc%at_t, fc%bg_t, fc%gcutmt/gkcut )
+
+  fc%nrx1t  = fc%dfftt%nr1x
+  fc%nrx2t  = fc%dfftt%nr2x
+  fc%nrx3t  = fc%dfftt%nr3x
 
   fc%nrxxt = fc%nrx1t * fc%nrx2t * fc%nrx3t
   
-
   ! nxx is just a copy
   !
   nxx   = fc%nrxxt
   nxxs  = fc%nrxxt
 
-  CALL fft_type_allocate( fc%dfftt, fc%at_t, fc%bg_t, fc%gcutmt, intra_pool_comm )
-
-  CALL calculate_gkcut()
-
-  !
-  !     compute the number of g necessary to the calculation
-  !
-  n1 = fc%nr1t + 1
-  n2 = fc%nr2t + 1
-  n3 = fc%nr3t + 1
-
-  fc%ngmt = 0
+  fc%ngmt  = fc%dfftt%ngl ( )
+  IF( .not. tk ) THEN
+     fc%ngmt = ( fc%ngmt + 1 ) / 2 
+  ENDIF
  
-
-  ub =  (/  n1,  n2,  n3 /)
-  lb =  (/ -n1, -n2, -n3 /)
-!
-  ALLOCATE( stw ( lb(2):ub(2), lb(3):ub(3) ) )
-  stw = 0
-
-  DO i1 = - n1, n1
-     !
-     ! Gamma-only: exclude space with x<0
-     !
-     IF (i1 < 0) GOTO 10
-     !
-     DO i2 = - n2, n2
-        !
-        ! Gamma-only: exclude plane with x=0, y<0
-        !
-        IF(i1 == 0.and. i2 < 0) GOTO 20
-        !
-        DO i3 = - n3, n3
-           !
-           ! Gamma-only: exclude line with x=0, y=0, z<0
-           !
-           IF(i1 == 0 .and. i2 == 0 .and. i3 < 0) GOTO 30
-           !
-           amod = (i1 * fc%bg_t (1, 1) + i2 * fc%bg_t (1, 2) + i3 * fc%bg_t (1, 3) ) **2 + &
-                  (i1 * fc%bg_t (2, 1) + i2 * fc%bg_t (2, 2) + i3 * fc%bg_t (2, 3) ) **2 + &
-                  (i1 * fc%bg_t (3, 1) + i2 * fc%bg_t (3, 2) + i3 * fc%bg_t (3, 3) ) **2
-           IF (amod <= fc%gcutmt)  fc%ngmt  = fc%ngmt  + 1
-           IF (amod <= fc%gcutmt ) THEN
-              stw( i2, i3 ) = 1
-              stw( -i2, -i3 ) = 1
-           ENDIF
-30         CONTINUE
-        ENDDO
-20      CONTINUE
-     ENDDO
-10   CONTINUE
-  ENDDO
-
-  CALL fft_type_scalar( fc%dfftt, ub, lb, ncp, nkcp, ngp, ngkp, stw, stw )
-
-  DEALLOCATE( stw )
 
 #endif
 

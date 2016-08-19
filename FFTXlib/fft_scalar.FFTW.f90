@@ -631,7 +631,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
         do i =1, nx
            do j = 1, ny
               ii = i + ldx * (j-1)
-              if ( do_fft_z(ii) == 1 ) then
+              if ( do_fft_z(ii) > 0 ) then
                  call FFTW_INPLACE_DRV_1D( bw_plan( 3, ip), m, f( ii ), incx1, incx2 )
               end if
            end do
@@ -688,7 +688,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
         do i = 1, nx
            do j = 1, ny
               ii = i + ldx * (j -1)
-              if ( do_fft_z ( ii ) == 1 ) then
+              if ( do_fft_z ( ii ) > 0 ) then
                  call FFTW_INPLACE_DRV_1D( fw_plan( 3, ip), m, f( ii ), incx1, incx2 )
               end if
            end do

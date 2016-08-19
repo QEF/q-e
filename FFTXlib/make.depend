@@ -16,6 +16,7 @@ task_groups.o : fft_types.o
 test.o : fft_parallel.o
 test.o : fft_support.o
 test.o : fft_types.o
+test.o : stick_base.o
 test.o : task_groups.o
 test0.o : fft_interfaces.o
 test0.o : fft_parallel.o

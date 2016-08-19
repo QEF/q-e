@@ -29,6 +29,17 @@ add_efield.o : ../../Modules/mp_images.o
 add_efield.o : ../../Modules/qes_libs.o
 add_efield.o : ../../Modules/qes_types.o
 add_efield.o : pwcom.o
+add_monofield.o : ../../Modules/cell_base.o
+add_monofield.o : ../../Modules/constants.o
+add_monofield.o : ../../Modules/control_flags.o
+add_monofield.o : ../../Modules/fft_base.o
+add_monofield.o : ../../Modules/io_global.o
+add_monofield.o : ../../Modules/ions_base.o
+add_monofield.o : ../../Modules/kind.o
+add_monofield.o : ../../Modules/mp.o
+add_monofield.o : ../../Modules/mp_bands.o
+add_monofield.o : ../../Modules/mp_images.o
+add_monofield.o : pwcom.o
 add_paw_to_deeq.o : ../../Modules/ions_base.o
 add_paw_to_deeq.o : ../../Modules/kind.o
 add_paw_to_deeq.o : ../../Modules/paw_variables.o
@@ -1494,6 +1505,8 @@ rdiaghg.o : ../../Modules/mp_diag.o
 read_conf_from_file.o : ../../Modules/io_files.o
 read_conf_from_file.o : ../../Modules/io_global.o
 read_conf_from_file.o : ../../Modules/kind.o
+read_conf_from_file.o : ../../Modules/qes_libs.o
+read_conf_from_file.o : ../../Modules/qes_types.o
 read_conf_from_file.o : pw_restart.o
 read_file.o : ../../FFTXlib/fft_interfaces.o
 read_file.o : ../../FFTXlib/fft_types.o

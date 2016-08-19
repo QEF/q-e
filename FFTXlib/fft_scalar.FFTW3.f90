@@ -552,9 +552,9 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
         do i =1, nx
            do j =1, ny
               ii = i + ldx * (j-1)
-!              if ( do_fft_z(ii) > 0) then
+              if ( do_fft_z(ii) > 0) then
                  call dfftw_execute_dft( bw_plan( 3, ip), f( ii:), f( ii:) )
-!              end if
+              end if
            end do
         end do
 

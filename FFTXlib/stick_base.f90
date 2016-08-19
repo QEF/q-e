@@ -83,6 +83,18 @@
         smap%ub = ub
         smap%lb = lb
         smap%bg = bg
+        IF( ALLOCATED( smap%indmap ) ) THEN
+           CALL fftx_error__(' sticks_map_allocate ',' indmap already allocated ', 1 )
+        END IF
+        IF( ALLOCATED( smap%stown ) ) THEN
+           CALL fftx_error__(' sticks_map_allocate ',' stown already allocated ', 1 )
+        END IF
+        IF( ALLOCATED( smap%idx ) ) THEN
+           CALL fftx_error__(' sticks_map_allocate ',' idx already allocated ', 1 )
+        END IF
+        IF( ALLOCATED( smap%ist ) ) THEN
+           CALL fftx_error__(' sticks_map_allocate ',' ist already allocated ', 1 )
+        END IF
         ALLOCATE( smap%indmap ( lb(1):ub(1), lb(2):ub(2) ) )
         ALLOCATE( smap%stown ( lb(1):ub(1), lb(2):ub(2) ) )
         ALLOCATE( smap%idx( nstx ) )
