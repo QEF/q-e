@@ -1083,10 +1083,8 @@ Sliwa, April 2011).
 
 The Intel compiler, ifort, is available for free for personal
 usage (\texttt{http://software.intel.com/}). It produces fast executables,
-at least on Intel CPUs, but not all versions work as expected.
-ifort versions $<9.1$ are not recommended, due to the presence of subtle
-and insidious bugs. In case of trouble, update your version with
-the most recent patches,
+at least on Intel CPUs, but not all versions work as expected (see below).
+In case of trouble, update your version with the most recent patches,
 available via Intel Premier support (registration free of charge for Linux):
 \texttt{http://software.intel.com/en-us/articles/intel-software-developer-support}.
 Since each major release of ifort
@@ -1105,12 +1103,23 @@ The warning: {\em feupdateenv is not implemented and will always fail},
 can be safely ignored. Warnings on "bad preprocessing option" when compiling
 iotk and complains about ``recommanded formats'' may also be ignored.
 
+The following compiler releases are known to give segmentation faults
+in at least some cases of compilation of \qe\ v.6.0:
+\begin{quote}
+12.0.0.084 Build 20101006\\
+12.0.1.107 Build 20101116\\
+12.0.2.137 Build 20110112\\
+12.0.4.191 Build 20110427\\
+12.0.5.220 Build 20110719\\
+16.0.1.150 Build 20151021
+\end{quote}
+(Filippo Spiga, Aug. 2016)
+
 {\bf ifort v.12}: release 12.0.0 miscompiles iotk, leading to
 mysterious errors when reading data files. Workaround: increase
 the parameter BLOCKSIZE to e.g. 131072*1024 when opening files in
 \texttt{iotk/src/iotk\_files.f90} (info by Lorenzo Paulatto,
-Nov. 2010). Release 12.0.2 seems to work and to produce faster executables
-than previous versions on 64-bit CPUs (info by P. Giannozzi, March 2011).
+Nov. 2010). 
 
 {\bf ifort v.11}: Segmentation faults were reported for the combination
 ifort 11.0.081, MKL 10.1.1.019, OpenMP 1.3.3. The problem disappeared
