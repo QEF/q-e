@@ -1,6 +1,12 @@
 HELPDOC=../../dev-tools/helpdoc
 
 
+HTMLS = INPUT_Lanczos.html \
+	INPUT_Davidson.html \
+	INPUT_EELS.html \
+	INPUT_Spectrum.html
+
+TXTS = $(HTMLS:.html=.txt)
 
 doc:  all
 all:  defs
@@ -28,26 +34,11 @@ link_input_xx:
 	echo ; \
 	fi) ; fi)
 
-INPUT_Lanczos.html: %.html: %.def
-	$(HELPDOC) $<
-INPUT_Lanczos.txt: %.txt: %.def
+$(HTMLS): %.html: %.def input_xx.xsl
 	$(HELPDOC) $<
 
-INPUT_Davidson.html: %.html: %.def
+$(TXTS): %.txt: %.def
 	$(HELPDOC) $<
-INPUT_Davidson.txt: %.txt: %.def
-	$(HELPDOC) $<
-
-INPUT_EELS.html: %.html: %.def
-	$(HELPDOC) $<
-INPUT_EELS.txt: %.txt: %.def
-	$(HELPDOC) $<
-
-INPUT_Spectrum.html: %.html: %.def
-	$(HELPDOC) $<
-INPUT_Spectrum.txt: %.txt: %.def
-	$(HELPDOC) $<
-
 
 link_on_main_doc:
 	-@( cd ../../Doc ; \
