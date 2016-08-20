@@ -1,5 +1,5 @@
-HELPDOC=../../dev-tools/helpdoc
-
+VERSION = svn
+HELPDOC = ../../dev-tools/helpdoc --version $(VERSION)
 LATEX   = pdflatex
 LATEX2HTML = latex2html
 
@@ -48,11 +48,11 @@ user_guide: user_guide.pdf
 
 
 defs: link_input_xx INPUT_CP.html INPUT_CP.txt INPUT_CPPP.html INPUT_CPPP.txt link_on_main_doc
-INPUT_CP.html: %.html: %.def
+INPUT_CP.html: %.html: %.def input_xx.xsl
 	$(HELPDOC) $<
 INPUT_CP.txt: %.txt: %.def
 	$(HELPDOC) $<
-INPUT_CPPP.html: %.html: %.def
+INPUT_CPPP.html: %.html: %.def input_xx.xsl
 	$(HELPDOC) $<
 INPUT_CPPP.txt: %.txt: %.def
 	$(HELPDOC) $<
