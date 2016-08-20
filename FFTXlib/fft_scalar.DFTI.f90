@@ -579,7 +579,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, howmany, isign, do_fft_z, do_f
   !
   implicit none
 
-  integer :: nx, ny, nz, ldx, ldy, ldz, isign
+  integer :: nx, ny, nz, ldx, ldy, ldz, isign, howmany
   !
   complex(DP) :: f ( ldx * ldy * ldz )
   integer :: do_fft_y(:), do_fft_z(:)

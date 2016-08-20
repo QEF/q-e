@@ -155,7 +155,7 @@ SUBROUTINE invfft_x( grid_type, f, dfft, dtgs, howmany )
                      dfft%nr1x,dfft%nr2x,dfft%nr3x, howmany_ , 1)
 #else
      CALL cfft3ds( f, dfft%nr1, dfft%nr2, dfft%nr3, &
-                      dfft%nr1x,dfft%nr2x,dfft%nr3x, howmany_ 1, &
+                      dfft%nr1x,dfft%nr2x,dfft%nr3x, howmany_ , 1, &
                       dfft%isind, dfft%iplw )
 #endif
 
