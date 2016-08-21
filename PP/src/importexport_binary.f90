@@ -72,7 +72,7 @@ SUBROUTINE impexp ()
   !-----------------------------------------------------------------------
 
   USE kinds,     ONLY : DP
-  USE io_files,  ONLY : tmp_dir, prefix, psfile, pseudo_dir, xmlpun_base
+  USE io_files,  ONLY : tmp_dir, prefix, psfile, pseudo_dir, xmlpun
   USE ions_base, ONLY : nsp
   USE io_global, ONLY : ionode, ionode_id
   USE mp,        ONLY : mp_bcast
@@ -193,11 +193,11 @@ SUBROUTINE impexp ()
   CALL write_rho(rho, nspin)
   
   ! I need to copy XML file
-  filename =  TRIM( xmlpun_base ) // '.xml'
+  filename =  TRIM( xmlpun )
   sourcef = TRIM( old_tmp_dir ) // TRIM( prefix ) // '.save' // "/" // TRIM( filename )
   destf   = TRIM( new_tmp_dir ) // TRIM( prefix ) // '.save' // "/" // TRIM( filename )
   ios = f_copy( TRIM( sourcef ), TRIM( destf ))
-  IF ( ios /= 0) CALL errore ('importexport', 'copying the data-file.xml file', abs(ios))
+  IF ( ios /= 0) CALL errore ('importexport', 'copying the '//TRIM(filename)//' file', abs(ios))
 
   ! I also need to copy the UPF files
   do l=1, nsp

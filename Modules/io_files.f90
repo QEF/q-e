@@ -43,15 +43,10 @@ MODULE io_files
   CHARACTER(LEN=5 ), PARAMETER :: crash_file  = 'CRASH'
   CHARACTER (LEN=261) :: exit_file = 'os.EXIT' ! file required for a soft exit  
   !
-  CHARACTER (LEN=9),  PARAMETER :: xmlpun_base = 'data-file'
-  CHARACTER (LEN=13), PARAMETER :: xmlpun      = xmlpun_base // '.xml'
+  CHARACTER (LEN=13), PARAMETER :: xmlpun      = 'data-file.xml'
   !
 #ifdef __XSD
-  CHARACTER (LEN=16),  PARAMETER :: xmlpun_schema_base = 'data-file-schema'
-  CHARACTER (LEN=20),  PARAMETER :: xmlpun_schema      = xmlpun_schema_base // '.xml'
-  !
-  CHARACTER (LEN=3),  PARAMETER :: xmlinp_schema_base = 'qes'
-  CHARACTER (LEN=7), PARAMETER :: xmlinp_schema      = xmlpun_schema_base // '.xml'
+  CHARACTER (LEN=20), PARAMETER :: xmlpun_schema = 'data-file-schema.xml'
 #endif
   !
   ! ... The units where various variables are saved

@@ -16,8 +16,7 @@ MODULE ph_restart
   USE iotk_module
   !
   USE kinds,     ONLY : DP
-  USE io_files,  ONLY : prefix, xmlpun, xmlpun_base, &
-                        qexml_version, qexml_version_init
+  USE io_files,  ONLY : prefix, xmlpun, qexml_version, qexml_version_init
   USE control_ph, ONLY : tmp_dir_ph
   USE io_global, ONLY : ionode, ionode_id
   USE mp_images, ONLY : intra_image_comm

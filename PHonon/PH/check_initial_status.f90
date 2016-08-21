@@ -485,7 +485,7 @@ SUBROUTINE check_initial_status(auxdyn)
    !  directories and created by the diffent images in the phsave directory
    !  of the image 0
    !
-   USE io_files,  ONLY : tmp_dir, xmlpun_base, prefix
+   USE io_files,  ONLY : tmp_dir, prefix
    USE control_ph, ONLY : tmp_dir_ph
    USE save_ph,   ONLY : tmp_dir_save
    USE disp,      ONLY : nqs
