@@ -59,10 +59,6 @@ MODULE io_files
   !
   INTEGER :: iunres      =  1 ! unit for the restart of the run
   INTEGER :: iunpun      =  4 ! unit for saving the final results (data-file.xml)
-#ifdef __XSD
-  INTEGER :: iunpun_xsd  = 41 ! unit for saving the final results (data-file-schema.xml)
-  INTEGER :: iuninp_xsd  = 42 ! unit for reading the xml input written according to the xsd schema
-#endif
   INTEGER :: iunwfc      = 10 ! unit with wavefunctions
   INTEGER :: iunoldwfc   = 11 ! unit with old wavefunctions
   INTEGER :: iunoldwfc2  = 12 ! as above at step -2

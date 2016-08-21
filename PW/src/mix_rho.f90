@@ -111,12 +111,8 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter,&
   REAL(DP) :: dr2_paw, norm
   INTEGER, PARAMETER :: read_ = -1, write_ = +1
   !
-  ! ... external functions
-  !
-  INTEGER, EXTERNAL :: find_free_unit
   !
   CALL start_clock( 'mix_rho' )
-  !
   !
   ngm0 = ngms
   !

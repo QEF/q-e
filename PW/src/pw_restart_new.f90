@@ -22,13 +22,12 @@ MODULE pw_restart_new
                           qexsd_init_outputElectricField
   USE iotk_module
   USE io_global, ONLY : ionode, ionode_id
-  USE io_files,  ONLY : iunpun_xsd, xmlpun_schema, prefix, tmp_dir, &
+  USE io_files,  ONLY : iunpun, xmlpun_schema, prefix, tmp_dir, &
        delete_if_present
   USE pw_restart,ONLY : gk_l2gmap, gk_l2gmap_kdip
 
   IMPLICIT NONE
   !
-  INTEGER :: iunout
   LOGICAL :: lcell_read   = .FALSE., &
              lpw_read     = .FALSE., &
              lions_read   = .FALSE., &
@@ -189,7 +188,7 @@ MODULE pw_restart_new
       ! 
       dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save'
       !
-      CALL qexsd_init_schema( iunpun_xsd )
+      CALL qexsd_init_schema( iunpun )
       !
       !
       IF ( ionode ) THEN  
@@ -405,7 +404,7 @@ MODULE pw_restart_new
 ! ... ACTUAL WRITING
 !-------------------------------------------------------------------------------
          !
-         CALL qes_write_output(iunpun_xsd,output)
+         CALL qes_write_output(iunpun,output)
          CALL qes_reset_output(output)
          !
 !-------------------------------------------------------------------------------
@@ -463,19 +462,6 @@ MODULE pw_restart_new
       CHARACTER(LEN=256)    :: dirname, filename
       CHARACTER(iotk_attlenx)  :: attr
       !
-      !
-      IF ( ionode ) THEN
-         !
-         ! ... look for an empty unit (only ionode needs it)
-         !
-         CALL iotk_free_unit( iunout, ierr )
-         !
-      END IF
-      !
-      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
-      !
-      CALL errore( 'pw_writefile ', &
-                   'no free units to write wavefunctions', ierr )
       !
       dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save'
       !
@@ -576,8 +562,9 @@ MODULE pw_restart_new
       !
       IF ( ionode ) THEN
          !
+         ierr = 0
          IF (.NOT.(lkpoint_dir)) &
-            CALL iotk_open_write( iunout, FILE = TRIM( dirname ) // '/' // &
+            CALL iotk_open_write( iunpun, FILE = TRIM( dirname ) // '/' // &
             & TRIM( xmlpun_schema )//'.eig', BINARY = .FALSE., IERR = ierr )
          !
       END IF
@@ -591,22 +578,22 @@ MODULE pw_restart_new
          !
          ! ... write the G-vectors - backwards compatibility
          !
-         CALL iotk_open_write( iunpun_xsd, FILE = TRIM( dirname ) // &
+         CALL iotk_open_write( iunpun, FILE = TRIM( dirname ) // &
               & '/gvectors.dat', BINARY = .true. )
          !
-         CALL iotk_write_begin( iunpun_xsd, "G-VECTORS" )
+         CALL iotk_write_begin( iunpun, "G-VECTORS" )
          CALL iotk_write_attr( attr, "nr1s", dfftp%nr1, FIRST = .true. )
          CALL iotk_write_attr( attr, "nr2s", dfftp%nr2 )
          CALL iotk_write_attr( attr, "nr3s", dfftp%nr3 )
          CALL iotk_write_attr( attr, "gvect_number", ngm_g )
          CALL iotk_write_attr( attr, "gamma_only", gamma_only )
          CALL iotk_write_attr( attr, "units", "crystal" )
-         CALL iotk_write_empty( iunpun_xsd, "INFO", ATTR = attr )
+         CALL iotk_write_empty( iunpun, "INFO", ATTR = attr )
          !
-         CALL iotk_write_dat  ( iunpun_xsd, "g", mill_g(1:3,1:ngm_g), COLUMNS=3)
-         CALL iotk_write_end  ( iunpun_xsd, "G-VECTORS" )
+         CALL iotk_write_dat  ( iunpun, "g", mill_g(1:3,1:ngm_g), COLUMNS=3)
+         CALL iotk_write_end  ( iunpun, "G-VECTORS" )
          !
-         CALL iotk_close_write( iunpun_xsd )
+         CALL iotk_close_write( iunpun )
          !
       END IF
       !
@@ -614,9 +601,9 @@ MODULE pw_restart_new
          !
          IF ( ionode ) filename = qexml_wfc_filename &
                                   ( dirname, 'gkvectors',ik , DIR=lkpoint_dir )
-         IF (.NOT.smallmem) CALL write_gk( iunout, ik, filename )
+         IF (.NOT.smallmem) CALL write_gk( iunpun, ik, filename )
          !
-         CALL write_this_wfc ( iunout, ik )
+         CALL write_this_wfc ( iunpun, ik )
          !
       END DO k_points_loop2
       !
@@ -856,15 +843,15 @@ MODULE pw_restart_new
       ierr = 0 
       ! 
       dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save'
-      CALL iotk_free_unit( iunpun_xsd, iotk_err )
+      CALL iotk_free_unit( iunpun, iotk_err )
       !
       CALL errore( 'pw_readschema_file', &
                    'no free units to read xsd output', iotk_err )
-      CALL qexsd_init_schema( iunpun_xsd )
-      CALL iotk_open_read( iunpun_xsd, TRIM(dirname)//'/'//TRIM(xmlpun_schema))
+      CALL qexsd_init_schema( iunpun )
+      CALL iotk_open_read( iunpun, TRIM(dirname)//'/'//TRIM(xmlpun_schema))
       !
       IF ( PRESENT ( restart_general_info ) ) THEN 
-         CALL qexsd_get_general_info ( iunpun_xsd, restart_general_info , found)
+         CALL qexsd_get_general_info ( iunpun, restart_general_info , found)
          IF (.NOT. found ) ierr = ierr + 1
          IF ( ierr /=0 ) THEN
             errmsg='error header of xml data file'
@@ -874,7 +861,7 @@ MODULE pw_restart_new
       END IF 
       ! 
       IF ( PRESENT ( restart_parallel_info ) ) THEN 
-         CALL qexsd_get_parallel_info ( iunpun_xsd, restart_parallel_info, found ) 
+         CALL qexsd_get_parallel_info ( iunpun, restart_parallel_info, found ) 
          IF ( .NOT. found ) THEN 
             ierr = ierr + 1  
             errmsg='error parallel_info  of xsd data file' 
@@ -885,7 +872,7 @@ MODULE pw_restart_new
       ! 
       !
       IF ( PRESENT ( restart_input ) ) THEN   
-         CALL qexsd_get_input ( iunpun_xsd, restart_input, found ) 
+         CALL qexsd_get_input ( iunpun, restart_input, found ) 
          IF ( .NOT. found ) THEN 
             ierr = ierr + 1  
             errmsg='error input of xsd data file' 
@@ -895,7 +882,7 @@ MODULE pw_restart_new
       END IF 
       ! 
       IF ( PRESENT ( restart_output ) ) THEN 
-         CALL qexsd_get_output ( iunpun_xsd, restart_output, found ) 
+         CALL qexsd_get_output ( iunpun, restart_output, found ) 
          IF ( .NOT. found ) THEN 
             ierr = ierr + 1 
             errmsg = 'error output of xsd data file' 
@@ -903,7 +890,7 @@ MODULE pw_restart_new
          END IF 
          ! CALL qes_write_output ( 82, restart_output ) 
       END IF 
-      CALL iotk_close_read (iunpun_xsd)
+      CALL iotk_close_read (iunpun)
       RETURN
  100  CALL errore('pw_readschemafile',TRIM(errmsg),ierr)
     END SUBROUTINE pw_readschema_file
@@ -2257,13 +2244,12 @@ MODULE pw_restart_new
                               igk_l2g(1,ik-iks+1), igk_l2g_kdip(1,ik-iks+1) )
       END DO
       !
-      !
-      !
       num_k_points = nkstot
       !
       IF ( nspin == 2 ) num_k_points = nkstot / 2
       !
       IF ( .NOT. twfcollect ) RETURN 
+      !
       k_points_loop: DO ik = 1, num_k_points
          !
          IF ( nspin == 2 ) THEN
@@ -2282,7 +2268,7 @@ MODULE pw_restart_new
                !
             END IF
             !
-            CALL read_wfc( iunout, ik, nkstot, kunit, ispin, nspin,      &
+            CALL read_wfc( iunpun, ik, nkstot, kunit, ispin, nspin,      &
                            evc, npw_g, nbnd, igk_l2g_kdip(:,ik-iks+1),   &
                            ngk(ik-iks+1), filename, scalef, &
                            ionode, root_pool, intra_pool_comm, inter_pool_comm, intra_image_comm )
@@ -2307,7 +2293,7 @@ MODULE pw_restart_new
                !
             END IF
             !
-            CALL read_wfc( iunout, ik_eff, nkstot, kunit, ispin, nspin,      &
+            CALL read_wfc( iunpun, ik_eff, nkstot, kunit, ispin, nspin,      &
                            evc, npw_g, nbnd, igk_l2g_kdip(:,ik_eff-iks+1),   &
                            ngk(ik_eff-iks+1), filename, scalef, &
                            ionode, root_pool, intra_pool_comm, inter_pool_comm, intra_image_comm )
@@ -2338,7 +2324,7 @@ MODULE pw_restart_new
                   !!! TEMP
                   nkl=(ipol-1)*npwx+1
                   nkr= ipol   *npwx
-                  CALL read_wfc( iunout, ik, nkstot, kunit, ispin,          &
+                  CALL read_wfc( iunpun, ik, nkstot, kunit, ispin,          &
                                  npol, evc(nkl:nkr,:), npw_g, nbnd,         &
                                  igk_l2g_kdip(:,ik-iks+1), ngk(ik-iks+1),   &
                                  filename, scalef, & 
@@ -2355,7 +2341,7 @@ MODULE pw_restart_new
                   !
                END IF
                !
-               CALL read_wfc( iunout, ik, nkstot, kunit, ispin, nspin,         &
+               CALL read_wfc( iunpun, ik, nkstot, kunit, ispin, nspin,         &
                               evc, npw_g, nbnd, igk_l2g_kdip(:,ik-iks+1),      &
                               ngk(ik-iks+1), filename, scalef, &
                               ionode, root_pool, intra_pool_comm, inter_pool_comm, intra_image_comm )
