@@ -81,12 +81,13 @@ SUBROUTINE setup()
   USE noncollin_module,   ONLY : noncolin, npol, m_loc, i_cons, &
                                  angle1, angle2, bfield, ux, nspin_lsda, &
                                  nspin_gga, nspin_mag
-  USE pw_restart,         ONLY : pw_readfile
 !
 #ifdef __XSD 
-  USE pw_restart,         ONLY : pw_readschema_file, init_vars_from_schema 
+  USE pw_restart_new,     ONLY : pw_readschema_file, init_vars_from_schema 
   USE qes_libs_module,    ONLY : qes_reset_output, qes_reset_input, qes_reset_parallel_info, qes_reset_general_info
   USE qes_types_module,   ONLY : output_type, input_type, parallel_info_type, general_info_type 
+#else
+  USE pw_restart,         ONLY : pw_readfile
 #endif
 !
   USE exx,                ONLY : ecutfock, exx_grid_init, exx_div_check
