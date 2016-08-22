@@ -24,7 +24,7 @@ MODULE pw_restart_new
   USE io_global, ONLY : ionode, ionode_id
   USE io_files,  ONLY : iunpun, xmlpun_schema, prefix, tmp_dir, &
        delete_if_present
-  USE pw_restart,ONLY : gk_l2gmap, gk_l2gmap_kdip
+  USE pw_restart,ONLY : gk_l2gmap_kdip
 
   IMPLICIT NONE
   !
@@ -41,6 +41,7 @@ MODULE pw_restart_new
              lwfc_read    = .FALSE., &
              lsymm_read   = .FALSE.
   !
+  CHARACTER(LEN=6), EXTERNAL :: int_to_char
   PRIVATE
   PUBLIC :: pw_write_schema, pw_write_binaries, &
        pw_readschema_file, init_vars_from_schema, read_collected_to_evc
@@ -139,7 +140,7 @@ MODULE pw_restart_new
       !
       CHARACTER(15)         :: subname="pw_write_schema"
       CHARACTER(LEN=20)     :: dft_name
-      CHARACTER(LEN=256)    :: dirname, filename
+      CHARACTER(LEN=256)    :: dirname
       CHARACTER(LEN=80)     :: vdw_corr_
       INTEGER               :: i, ig, ik, ngg, ierr, ipol, num_k_points
       INTEGER               :: npwx_g, npw_g, ispin, inlc
@@ -427,10 +428,7 @@ MODULE pw_restart_new
       USE iotk_module
       USE mp,                   ONLY : mp_bcast, mp_sum, mp_max
       USE io_global,            ONLY : ionode, ionode_id
-      USE qexml_module,         ONLY : qexml_kpoint_dirname, &
-                                       qexml_wfc_filename,   &
-                                       qexml_closefile
-      USE xml_io_base,          ONLY : create_directory, write_wfc
+      USE xml_io_base,          ONLY : write_wfc
       USE control_flags,        ONLY : gamma_only, smallmem
       USE gvect,                ONLY : ig_l2g
       USE noncollin_module,     ONLY : noncolin, npol
@@ -459,7 +457,8 @@ MODULE pw_restart_new
       INTEGER               :: ike, iks, npw_g, ispin, inlc
       INTEGER,  ALLOCATABLE :: ngk_g(:)
       INTEGER,  ALLOCATABLE :: igk_l2g(:,:), igk_l2g_kdip(:,:), mill_g(:,:)
-      CHARACTER(LEN=256)    :: dirname, filename
+      CHARACTER(LEN=256)    :: dirname
+      CHARACTER(LEN=320)    :: filename
       CHARACTER(iotk_attlenx)  :: attr
       !
       !
@@ -496,8 +495,8 @@ MODULE pw_restart_new
       CALL mp_sum( mill_g, intra_bgrp_comm )
       !
       ! ... build the igk_l2g array, yielding the correspondence between
-      ! ... the local k+G index and the global G index - see also ig_l2g
-      ! ... igk_l2g is build from arrays igk, previously stored in hinit0
+      ! ... the local k+G index and the global G index, from previously
+      ! ... computed arrays igk_k (k+G indices) and ig_l2g
       ! ... Beware: for variable-cell case, one has to use starting G and 
       ! ... k+G vectors
       !
@@ -505,8 +504,9 @@ MODULE pw_restart_new
       igk_l2g = 0
       !
       DO ik = 1, nks
-         npw = ngk (ik)
-         CALL gk_l2gmap( ngm, ig_l2g(1), npw, igk_k(1,ik), igk_l2g(1,ik) )
+         DO ig = 1, ngk (ik)
+            igk_l2g(ig,ik) = ig_l2g(igk_k(ig,ik))
+         END DO
       END DO
       !
       ! ... compute the global number of G+k vectors for each k point
@@ -555,8 +555,7 @@ MODULE pw_restart_new
       !
       k_points_loop2: DO ik = 1, num_k_points
          !
-         IF ( ionode ) filename = qexml_wfc_filename &
-                                  ( dirname, 'gkvectors',ik , DIR=.FALSE. )
+         IF ( ionode ) filename = TRIM(dirname)//'/gkvectors'//TRIM(int_to_char(ik))//'.dat'
          IF (.NOT.smallmem) CALL write_gk( iunpun, ik, filename )
          !
          CALL write_this_wfc ( iunpun, ik )
@@ -704,12 +703,7 @@ MODULE pw_restart_new
              !
              ispin = isk(ik)
              !
-             IF ( ionode ) THEN
-                !
-                filename = qexml_wfc_filename( dirname, 'evc', ik, ispin, & 
-                     DIR=.FALSE. )
-                !
-             END IF
+             IF ( ionode ) filename = TRIM(dirname)//'/wfc'//TRIM(int_to_char(ik))//'dat'
              !
              CALL write_wfc( iun, ik, nkstot, kunit, ispin, nspin, &
                   evc, npw_g, gamma_only, nbnd, igk_l2g_kdip(:,ik-iks+1),   &
@@ -731,8 +725,11 @@ MODULE pw_restart_new
              !
              IF ( ionode ) THEN
                 !
-                filename = qexml_wfc_filename( dirname, 'evc', ik, ispin, & 
-                     DIR=.FALSE. )
+                IF ( ispin == 1 ) THEN
+                   filename = TRIM(dirname)//'/wfcup'//TRIM(int_to_char(ik))//'.dat'
+                ELSE
+                   filename = TRIM(dirname)//'/wfcdw'//TRIM(int_to_char(ik))//'.dat'
+                END IF
                 !
              END IF
              !
@@ -747,11 +744,10 @@ MODULE pw_restart_new
                 !
                 DO ipol = 1, npol
                    !
-                   IF ( ionode ) THEN
-                      !
-                      filename = qexml_wfc_filename( dirname, 'evc', ik, ipol, &
-                           DIR=.FALSE.)
-                      !
+                   IF ( ipol == 1 ) THEN
+                      filename = TRIM(dirname)//'/wfcup'//TRIM(int_to_char(ik))//'.dat'
+                   ELSE
+                      filename = TRIM(dirname)//'/wfcdw'//TRIM(int_to_char(ik))//'.dat'
                    END IF
                    !
                    ! TEMP  spin-up and spin-down spinor components are written
@@ -771,14 +767,8 @@ MODULE pw_restart_new
                 !
                 ispin = 1
                 !
-                IF ( ionode ) THEN
-                   !
-                   filename =qexml_wfc_filename( dirname, 'evc', ik, &
-                        DIR=.FALSE. )
-!                   CALL iotk_open_write( iun, FILE = filename , &
-!                        BINARY = .true., IERR=ierr )
-                   !
-                END IF
+                IF ( ionode ) filename = TRIM(dirname)//'/wfc'//TRIM(int_to_char(ik))//'.dat'
+
                 !
                 CALL write_wfc( iun, ik, nkstot, kunit, ispin, nspin, &
                      evc, npw_g, gamma_only, nbnd,            &
@@ -2120,7 +2110,6 @@ MODULE pw_restart_new
       USE mp_bands,             ONLY : me_bgrp, nbgrp, root_bgrp, &
                                        intra_bgrp_comm
       USE mp,                   ONLY : mp_bcast, mp_sum, mp_max
-      USE qexml_module,         ONLY : qexml_wfc_filename
       USE xml_io_base,          ONLY : read_wfc
       !
       IMPLICIT NONE
@@ -2128,8 +2117,8 @@ MODULE pw_restart_new
       CHARACTER(LEN=*), INTENT(IN)  :: dirname
       INTEGER,          INTENT(OUT) :: ierr
       !
-      CHARACTER(LEN=256)   :: filename
-      INTEGER              :: ik, ipol, ik_eff, num_k_points
+      CHARACTER(LEN=320)    :: filename
+      INTEGER              :: ik, ig, ipol, ik_eff, num_k_points
       INTEGER, ALLOCATABLE :: kisort(:)
       INTEGER              :: nkl, nkr, npwx_g
       INTEGER              :: nupdwn(2), ike, iks, npw_g, ispin
@@ -2164,27 +2153,24 @@ MODULE pw_restart_new
       ! ... build the igk_l2g array, yielding the correspondence between
       ! ... the local k+G index and the global G index - see also ig_l2g
       !
-      ALLOCATE ( igk_l2g( npwx, nks ) ,gkin_aux(ngm))
+      ALLOCATE ( igk_l2g( npwx, nks ) )
       igk_l2g = 0
       !
-      ALLOCATE( kisort( npwx ) )
+      ! FIXME: is it really needed to re-generate and discard k+G indices here?
       !
+      ALLOCATE( gkin_aux(ngm), kisort( npwx ) )
       DO ik = 1, nks
-         !
          kisort = 0
          npw    = npwx
          !
          CALL gk_sort( xk(1,ik+iks-1), ngm, g, &
                        ecutwfc/tpiba2, npw, kisort(1), gkin_aux )
-         !
-         CALL gk_l2gmap( ngm, ig_l2g(1), npw, kisort(1), igk_l2g(1,ik) )
-         !
-         ngk(ik) = npw
+         DO ig = 1, npw
+            igk_l2g(ig,ik) = ig_l2g(kisort(ig))
+         END DO
          !
       END DO
-      DEALLOCATE (gkin_aux)
-      !
-      DEALLOCATE( kisort )
+      DEALLOCATE ( kisort, gkin_aux )
       !
       ! ... compute the global number of G+k vectors for each k point
       !
@@ -2238,12 +2224,7 @@ MODULE pw_restart_new
             ! ... and correctly distributed across pools in read_file
             !!! isk(ik) = 1
             !
-            IF ( ionode ) THEN
-               !
-               filename = TRIM( qexml_wfc_filename( dirname, 'evc', ik, ispin, &
-                                  DIR=lkpoint_dir ) )
-               !
-            END IF
+            IF ( ionode ) filename = TRIM(dirname)//'/wfcup'//TRIM(int_to_char(ik))//'.dat'
             !
             CALL read_wfc( iunpun, ik, nkstot, kunit, ispin, nspin,      &
                            evc, npw_g, nbnd, igk_l2g_kdip(:,ik-iks+1),   &
@@ -2263,12 +2244,7 @@ MODULE pw_restart_new
             ! ... no need to read isk here (see above why)
             !isk(ik_eff) = 2
             !
-            IF ( ionode ) THEN
-               !
-               filename = TRIM( qexml_wfc_filename( dirname, 'evc', ik, ispin, &
-                                DIR=lkpoint_dir ) )
-               !
-            END IF
+            IF ( ionode ) filename = TRIM(dirname)//'/wfcdw'//TRIM(int_to_char(ik))//'.dat'
             !
             CALL read_wfc( iunpun, ik_eff, nkstot, kunit, ispin, nspin,      &
                            evc, npw_g, nbnd, igk_l2g_kdip(:,ik_eff-iks+1),   &
@@ -2291,11 +2267,10 @@ MODULE pw_restart_new
                !
                DO ipol = 1, npol
                   !
-                  IF ( ionode ) THEN
-                     !
-                     filename = TRIM( qexml_wfc_filename( dirname, 'evc', ik, ipol, &
-                                         DIR=lkpoint_dir ) )
-                     !
+                  IF ( ipol == 1 ) THEN
+                     filename = TRIM(dirname)//'wfcup'//TRIM(int_to_char(ik))//'.dat'
+                  ELSE
+                     filename = TRIM(dirname)//'wfcdw'//TRIM(int_to_char(ik))//'.dat'
                   END IF
                   !
                   !!! TEMP
@@ -2311,12 +2286,7 @@ MODULE pw_restart_new
                !
             ELSE
                !
-               IF ( ionode ) THEN
-                  !
-                  filename = TRIM( qexml_wfc_filename( dirname, 'evc', ik, &
-                                         DIR=lkpoint_dir ) )
-                  !
-               END IF
+               IF ( ionode ) filename = TRIM(dirname)//'/wfc'//TRIM(int_to_char(ik))//'.dat'
                !
                CALL read_wfc( iunpun, ik, nkstot, kunit, ispin, nspin,         &
                               evc, npw_g, nbnd, igk_l2g_kdip(:,ik-iks+1),      &

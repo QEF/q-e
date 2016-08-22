@@ -1362,6 +1362,7 @@ punch.o : ../../Modules/io_files.o
 punch.o : ../../Modules/io_global.o
 punch.o : ../../Modules/wavefunctions.o
 punch.o : ../../Modules/wrappers.o
+punch.o : ../../Modules/xml_io_base.o
 punch.o : a2fmod.o
 punch.o : io_rho_xml.o
 punch.o : pw_restart.o
@@ -1492,7 +1493,6 @@ pw_restart_new.o : ../../Modules/paw_variables.o
 pw_restart_new.o : ../../Modules/qes_libs.o
 pw_restart_new.o : ../../Modules/qes_module.o
 pw_restart_new.o : ../../Modules/qes_types.o
-pw_restart_new.o : ../../Modules/qexml.o
 pw_restart_new.o : ../../Modules/qexsd.o
 pw_restart_new.o : ../../Modules/qexsd_reader_module.o
 pw_restart_new.o : ../../Modules/recvec.o
