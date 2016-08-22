@@ -124,44 +124,32 @@ SUBROUTINE invfft_x( grid_type, f, dfft, dtgs, howmany )
      CALL fftx_error__( ' invfft ', ' unknown grid: '//grid_type , 1 )
   END IF
 
-#if defined(__MPI) && !defined __USE_3D_FFT
+  IF( dfft%lpara ) THEN
 
-  IF( howmany_ /= 1 ) THEN
-     CALL fftx_error__( ' invfft ', ' howmany not yet implemented for parallel driver ', 1 )
-  END IF
-     
-  IF( grid_type == 'Dense' .OR. grid_type == 'Smooth' .OR. &
-       grid_type == 'Custom' ) THEN
-     CALL tg_cft3s( f, dfft, 1 )
-  ELSE IF( grid_type == 'Wave' .OR. grid_type == 'CustomWave' ) THEN
-     IF( PRESENT( dtgs ) ) THEN
-        CALL tg_cft3s( f, dfft, 2, dtgs )
-     ELSE
-        CALL tg_cft3s( f, dfft, 2 )
+     IF( howmany_ /= 1 ) THEN
+        CALL fftx_error__( ' invfft ', ' howmany not yet implemented for parallel driver ', 1 )
      END IF
+     
+     IF( grid_type == 'Dense' .OR. grid_type == 'Smooth' .OR. &
+          grid_type == 'Custom' ) THEN
+        CALL tg_cft3s( f, dfft, 1 )
+     ELSE IF( grid_type == 'Wave' .OR. grid_type == 'CustomWave' ) THEN
+        CALL tg_cft3s( f, dfft, 2, dtgs )
+     END IF
+
+  ELSE
+
+     IF( grid_type == 'Dense' .OR. grid_type == 'Smooth' .OR. &
+         grid_type == 'Custom' ) THEN
+        CALL cfft3d( f, dfft%nr1, dfft%nr2, dfft%nr3, &
+                        dfft%nr1x,dfft%nr2x,dfft%nr3x, howmany_ , 1)
+     ELSE IF( grid_type == 'Wave' .OR. grid_type == 'CustomWave' ) THEN
+        CALL cfft3ds( f, dfft%nr1, dfft%nr2, dfft%nr3, &
+                         dfft%nr1x,dfft%nr2x,dfft%nr3x, howmany_ , 1, &
+                         dfft%isind, dfft%iplw )
+     END IF
+
   END IF
-
-#else
-
-  IF( grid_type == 'Dense' .OR. grid_type == 'Smooth' .OR. &
-      grid_type == 'Custom' ) THEN
-     CALL cfft3d( f, dfft%nr1, dfft%nr2, dfft%nr3, &
-                     dfft%nr1x,dfft%nr2x,dfft%nr3x, howmany_ , 1)
-
-  ELSE IF( grid_type == 'Wave' .OR. grid_type == 'CustomWave' ) THEN
-
-#if defined(__MPI) && defined __USE_3D_FFT
-     CALL cfft3d( f, dfft%nr1, dfft%nr2, dfft%nr3, &
-                     dfft%nr1x,dfft%nr2x,dfft%nr3x, howmany_ , 1)
-#else
-     CALL cfft3ds( f, dfft%nr1, dfft%nr2, dfft%nr3, &
-                      dfft%nr1x,dfft%nr2x,dfft%nr3x, howmany_ , 1, &
-                      dfft%isind, dfft%iplw )
-#endif
-
-  END IF
-
-#endif
 
   IF( grid_type == 'Dense' ) THEN
      CALL stop_clock( 'fft' )
@@ -243,44 +231,32 @@ SUBROUTINE fwfft_x( grid_type, f, dfft, dtgs, howmany )
      CALL fftx_error__( ' fwfft ', ' unknown grid: '//grid_type , 1 )
   END IF
 
-#if defined(__MPI) && !defined(__USE_3D_FFT)
+  IF( dfft%lpara ) THEN
 
-  IF( howmany_ /= 1 ) THEN
-     CALL fftx_error__( ' fwfft ', ' howmany not yet implemented for parallel driver ', 1 )
-  END IF
-     
-  IF( grid_type == 'Dense' .OR. grid_type == 'Smooth' .OR. &
-      grid_type == 'Custom' ) THEN
-     CALL tg_cft3s(f,dfft,-1)
-  ELSE IF( grid_type == 'Wave' .OR. grid_type == 'CustomWave' ) THEN
-     IF( PRESENT( dtgs ) ) THEN
-        CALL tg_cft3s(f,dfft,-2, dtgs )
-     ELSE
-        CALL tg_cft3s(f,dfft,-2 )
+     IF( howmany_ /= 1 ) THEN
+        CALL fftx_error__( ' fwfft ', ' howmany not yet implemented for parallel driver ', 1 )
      END IF
+     
+     IF( grid_type == 'Dense' .OR. grid_type == 'Smooth' .OR. &
+         grid_type == 'Custom' ) THEN
+        CALL tg_cft3s(f,dfft,-1)
+     ELSE IF( grid_type == 'Wave' .OR. grid_type == 'CustomWave' ) THEN
+        CALL tg_cft3s(f,dfft,-2, dtgs )
+     END IF
+
+  ELSE
+
+     IF( grid_type == 'Dense' .OR. grid_type == 'Smooth' .OR. &
+         grid_type == 'Custom' ) THEN
+        CALL cfft3d( f, dfft%nr1, dfft%nr2, dfft%nr3, &
+                        dfft%nr1x,dfft%nr2x,dfft%nr3x, howmany_ , -1)
+     ELSE IF( grid_type == 'Wave' .OR. grid_type == 'CustomWave' ) THEN
+        CALL cfft3ds( f, dfft%nr1, dfft%nr2, dfft%nr3, &
+                         dfft%nr1x,dfft%nr2x,dfft%nr3x, howmany_ , -1, &
+                         dfft%isind, dfft%iplw )
+     END IF
+
   END IF
-
-#else 
-
-  IF( grid_type == 'Dense' .OR. grid_type == 'Smooth' .OR. &
-      grid_type == 'Custom' ) THEN
-     CALL cfft3d( f, dfft%nr1, dfft%nr2, dfft%nr3, &
-                     dfft%nr1x,dfft%nr2x,dfft%nr3x, howmany_ , -1)
-
-  ELSE IF( grid_type == 'Wave' .OR. grid_type == 'CustomWave' ) THEN
-
-#if defined(__MPI) && defined(__USE_3D_FFT)
-     CALL cfft3d( f, dfft%nr1, dfft%nr2, dfft%nr3, &
-                     dfft%nr1x,dfft%nr2x,dfft%nr3x, howmany_ , -1)
-#else
-     CALL cfft3ds( f, dfft%nr1, dfft%nr2, dfft%nr3, &
-                      dfft%nr1x,dfft%nr2x,dfft%nr3x, howmany_ , -1, &
-                      dfft%isind, dfft%iplw )
-#endif
-
-  END IF
-
-#endif
 
   IF( grid_type == 'Dense' ) THEN
      CALL stop_clock( 'fft' )

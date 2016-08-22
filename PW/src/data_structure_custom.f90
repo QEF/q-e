@@ -33,7 +33,7 @@ SUBROUTINE data_structure_custom(fc, gamma_only)
   INTEGER :: me, nproc, inter_comm, intra_comm, root
 
   INTEGER :: kpoint
-#if defined __MPI
+#if defined (__MPI) && !defined (__USE_3D_FFT)
   LOGICAL :: lpara = .true.
 #else
   LOGICAL :: lpara = .false.

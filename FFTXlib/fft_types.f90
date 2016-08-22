@@ -65,6 +65,7 @@ MODULE fft_types
 #endif
     INTEGER :: nproc    = 1          ! number of processor in the fft group
     INTEGER :: root     = 0          ! root processor
+    LOGICAL :: lpara    = .FALSE.
     !
   END TYPE
 
@@ -529,6 +530,9 @@ CONTAINS
            CALL fftx_error__(' fft_type_init ', ' FFT already allocated with a different communicator ', 1 )
         END IF
      END IF
+
+     dfft%lpara = lpara  !  this descriptor can be either a descriptor for a
+                         !  parallel FFT or a serial FFT even in parallel build
 
      CALL sticks_map_allocate( smap, lgamma, lpara, dfft%nr1, dfft%nr2, dfft%nr3, bg, dfft%comm )
 

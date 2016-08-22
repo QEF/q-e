@@ -32,7 +32,7 @@ SUBROUTINE data_structure( gamma_only )
   IMPLICIT NONE
   LOGICAL, INTENT(in) :: gamma_only
   INTEGER :: ik, ngm_, ngs_
-#if defined(__MPI)
+#if defined (__MPI) && !defined (__USE_3D_FFT)
   LOGICAL :: lpara = .true.
 #else
   LOGICAL :: lpara = .false.

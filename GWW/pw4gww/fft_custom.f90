@@ -211,8 +211,7 @@ CONTAINS
 
   tk = .false.
 
-#ifdef __MPI
-
+#if defined (__MPI) && !defined (__USE_3D_FFT)
   !
   ! compute gkcut calling an internal procedure
   !
