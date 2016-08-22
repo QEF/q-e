@@ -51,7 +51,7 @@ MODULE pw_restart_new
       !------------------------------------------------------------------------
       !
       USE control_flags,        ONLY : istep, twfcollect, conv_ions, &
-                                       lscf, lkpoint_dir, gamma_only, &
+                                       lscf, gamma_only, &
                                        tqr, tq_smoothing, tbeta_smoothing, &
                                        noinv, do_makov_payne, smallmem, &
                                        llondon, lxdm, ts_vdw, scf_error, n_scf_steps
@@ -431,7 +431,7 @@ MODULE pw_restart_new
                                        qexml_wfc_filename,   &
                                        qexml_closefile
       USE xml_io_base,          ONLY : create_directory, write_wfc
-      USE control_flags,        ONLY : lkpoint_dir, gamma_only, smallmem
+      USE control_flags,        ONLY : gamma_only, smallmem
       USE gvect,                ONLY : ig_l2g
       USE noncollin_module,     ONLY : noncolin, npol
 
@@ -465,26 +465,10 @@ MODULE pw_restart_new
       !
       dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save'
       !
-      ! ... create the main restart directory (if needed)
-      !
-      CALL create_directory( dirname )
-      !
-      ! ... create the k-points subdirectories
-      !
       IF ( nspin == 2 ) THEN
          num_k_points = nkstot / 2
       ELSE
          num_k_points = nkstot
-      END IF
-      !
-      IF (lkpoint_dir) THEN
-         !
-         DO i = 1, num_k_points
-            !
-            CALL create_directory( qexml_kpoint_dirname( dirname, i ) )
-            !
-         END DO
-         !
       END IF
       !
       CALL  kpoint_global_indices (nkstot, iks, ike)
@@ -560,58 +544,24 @@ MODULE pw_restart_new
                               igk_l2g(1,ik-iks+1), igk_l2g_kdip(1,ik-iks+1) )
       END DO
       !
-      IF ( ionode ) THEN
-         !
-         ierr = 0
-         IF (.NOT.(lkpoint_dir)) &
-            CALL iotk_open_write( iunpun, FILE = TRIM( dirname ) // '/' // &
-            & TRIM( xmlpun_schema )//'.eig', BINARY = .FALSE., IERR = ierr )
-         !
-      END IF
-      !
-      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
-      !
-      CALL errore( 'pw_writefile ', &
-                   'cannot open restart file for writing', ierr )
-      !
       IF ( ionode ) THEN  
          !
          ! ... write the G-vectors - backwards compatibility
          !
-         CALL iotk_open_write( iunpun, FILE = TRIM( dirname ) // &
-              & '/gvectors.dat', BINARY = .true. )
-         !
-         CALL iotk_write_begin( iunpun, "G-VECTORS" )
-         CALL iotk_write_attr( attr, "nr1s", dfftp%nr1, FIRST = .true. )
-         CALL iotk_write_attr( attr, "nr2s", dfftp%nr2 )
-         CALL iotk_write_attr( attr, "nr3s", dfftp%nr3 )
-         CALL iotk_write_attr( attr, "gvect_number", ngm_g )
-         CALL iotk_write_attr( attr, "gamma_only", gamma_only )
-         CALL iotk_write_attr( attr, "units", "crystal" )
-         CALL iotk_write_empty( iunpun, "INFO", ATTR = attr )
-         !
-         CALL iotk_write_dat  ( iunpun, "g", mill_g(1:3,1:ngm_g), COLUMNS=3)
-         CALL iotk_write_end  ( iunpun, "G-VECTORS" )
-         !
-         CALL iotk_close_write( iunpun )
+         filename = TRIM( dirname ) // '/gvectors.dat'
+         CALL write_gvecs(iunpun, filename)
          !
       END IF
       !
       k_points_loop2: DO ik = 1, num_k_points
          !
          IF ( ionode ) filename = qexml_wfc_filename &
-                                  ( dirname, 'gkvectors',ik , DIR=lkpoint_dir )
+                                  ( dirname, 'gkvectors',ik , DIR=.FALSE. )
          IF (.NOT.smallmem) CALL write_gk( iunpun, ik, filename )
          !
          CALL write_this_wfc ( iunpun, ik )
          !
       END DO k_points_loop2
-      !
-      IF ( ionode ) THEN
-         !
-         CALL delete_if_present( TRIM( dirname ) // '/' // TRIM( xmlpun_schema ) // '.bck' )
-         !
-      END IF
       !
       DEALLOCATE ( igk_l2g )
       DEALLOCATE ( igk_l2g_kdip )
@@ -628,13 +578,40 @@ MODULE pw_restart_new
       CONTAINS
         !
         !--------------------------------------------------------------------
+        SUBROUTINE write_gvecs( iun, filename )
+          !--------------------------------------------------------------------
+          IMPLICIT NONE
+          !
+          INTEGER,            INTENT(IN) :: iun
+          CHARACTER(LEN=*),   INTENT(IN) :: filename
+          !
+          CALL iotk_open_write( iun, FILE = TRIM( filename ), &
+               BINARY = .true. )
+          !
+          CALL iotk_write_begin( iun, "G-VECTORS" )
+          CALL iotk_write_attr( attr, "nr1s", dfftp%nr1, FIRST = .true. )
+          CALL iotk_write_attr( attr, "nr2s", dfftp%nr2 )
+          CALL iotk_write_attr( attr, "nr3s", dfftp%nr3 )
+          CALL iotk_write_attr( attr, "gvect_number", ngm_g )
+          CALL iotk_write_attr( attr, "gamma_only", gamma_only )
+          CALL iotk_write_attr( attr, "units", "crystal" )
+          CALL iotk_write_empty( iun, "INFO", ATTR = attr )
+          !
+          CALL iotk_write_dat  ( iun, "g", mill_g(1:3,1:ngm_g), COLUMNS=3)
+          CALL iotk_write_end  ( iun, "G-VECTORS" )
+          !
+          CALL iotk_close_write( iun )
+          !
+        END SUBROUTINE write_gvecs
+        !
+        !--------------------------------------------------------------------
         SUBROUTINE write_gk( iun, ik, filename )
           !--------------------------------------------------------------------
           !
           IMPLICIT NONE
           !
           INTEGER,            INTENT(IN) :: iun, ik
-          CHARACTER(LEN=256), INTENT(IN) :: filename
+          CHARACTER(LEN=*),   INTENT(IN) :: filename
           !
           INTEGER, ALLOCATABLE :: igwk(:,:)
           INTEGER, ALLOCATABLE :: itmp(:)
@@ -730,7 +707,7 @@ MODULE pw_restart_new
              IF ( ionode ) THEN
                 !
                 filename = qexml_wfc_filename( dirname, 'evc', ik, ispin, & 
-                     DIR=lkpoint_dir )
+                     DIR=.FALSE. )
                 !
              END IF
              !
@@ -755,7 +732,7 @@ MODULE pw_restart_new
              IF ( ionode ) THEN
                 !
                 filename = qexml_wfc_filename( dirname, 'evc', ik, ispin, & 
-                     DIR=lkpoint_dir )
+                     DIR=.FALSE. )
                 !
              END IF
              !
@@ -773,7 +750,7 @@ MODULE pw_restart_new
                    IF ( ionode ) THEN
                       !
                       filename = qexml_wfc_filename( dirname, 'evc', ik, ipol, &
-                           DIR=lkpoint_dir)
+                           DIR=.FALSE.)
                       !
                    END IF
                    !
@@ -797,7 +774,7 @@ MODULE pw_restart_new
                 IF ( ionode ) THEN
                    !
                    filename =qexml_wfc_filename( dirname, 'evc', ik, &
-                        DIR=lkpoint_dir )
+                        DIR=.FALSE. )
 !                   CALL iotk_open_write( iun, FILE = filename , &
 !                        BINARY = .true., IERR=ierr )
                    !
@@ -2062,7 +2039,7 @@ MODULE pw_restart_new
       TYPE ( band_structure_type)         :: band_struct_obj
       INTEGER                             :: ik, nbnd_, nbnd_up_, nbnd_dw_
       ! 
-      lkpoint_dir = .TRUE.  ! TO BE DISCUSSED 
+      lkpoint_dir = .FALSE.
       lsda = band_struct_obj%lsda
       nkstot = band_struct_obj%nks 
       IF ( lsda) THEN 

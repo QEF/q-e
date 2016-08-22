@@ -13,13 +13,15 @@ SUBROUTINE punch( what )
   ! ... the information needed for further processing (phonon etc.)
   !
   USE io_global,            ONLY : stdout, ionode
-  USE io_files,             ONLY : prefix, iunpun, iunwfc, nwordwfc, diropn, tmp_dir
+  USE io_files,             ONLY : iunpun, iunwfc, nwordwfc, diropn, &
+       tmp_dir, prefix
   USE control_flags,        ONLY : io_level, twfcollect, io_level, lscf
   USE klist,                ONLY : nks
 #ifdef __XSD
   USE pw_restart_new,       ONLY : pw_write_schema, pw_write_binaries
   USE io_files,             ONLY : xmlpun_schema
   USE wrappers,             ONLY : f_copy
+  USE xml_io_base,          ONLY : create_directory
   USE io_rho_xml,           ONLY : write_rho
   USE spin_orb,             ONLY : lforcet
   USE scf,                  ONLY : rho
@@ -56,6 +58,10 @@ SUBROUTINE punch( what )
 #ifdef __XSD
   !
   ! ...New-style I/O with xml schema and (optionally) hdf5 binaries
+  !
+  ! ... create the main restart directory (if needed)
+  !
+  CALL create_directory( TRIM( tmp_dir ) // TRIM( prefix ) // '.save' )
   !
   CALL pw_write_schema( )
   !
