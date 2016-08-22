@@ -222,7 +222,7 @@ SUBROUTINE rgd_blk_epw(nq1,nq2,nq3,q,uq,epmat,nmodes,epsil,zeu,bmat,signe)
   !! phonon eigenvec associated with q
   COMPLEX (kind=DP), INTENT (inout) :: epmat(nmodes)
   !! e-ph matrix elements 
-  COMPLEX (kind=DP), INTENT (in) :: bmat
+  COMPLEX (kind=DP), INTENT (in) :: bmat 
   !! Overlap matrix elements $$<U_{mk+q}|U_{nk}>$$
   !
   ! work variables
@@ -232,7 +232,7 @@ SUBROUTINE rgd_blk_epw(nq1,nq2,nq3,q,uq,epmat,nmodes,epsil,zeu,bmat,signe)
        arg, zaq,       &
        g1, g2, g3, gmax, alph, geg
   integer :: na, ipol, im, m1,m2,m3, nrx1,nrx2,nrx3
-  complex(dp) :: fac, facqd, facq, epmatl(nmodes), epmats(nmodes), matsq
+  complex(dp) :: fac, facqd, facq, epmatl(nmodes), matsq
   !
   IF (abs(signe) /= 1.0) &
        CALL errore ('rgd_blk',' wrong value for signe ',1)
@@ -262,7 +262,6 @@ SUBROUTINE rgd_blk_epw(nq1,nq2,nq3,q,uq,epmat,nmodes,epsil,zeu,bmat,signe)
   ENDIF
   !
   epmatl(:) = czero   
-  epmats(:) = czero   
   !
   DO m1 = -nrx1,nrx1
     DO m2 = -nrx2,nrx2
@@ -290,13 +289,6 @@ SUBROUTINE rgd_blk_epw(nq1,nq2,nq3,q,uq,epmat,nmodes,epsil,zeu,bmat,signe)
             epmat = epmat + facq * zaq * uq(3*(na-1)+ipol,:)*bmat
             epmatl = epmatl + facq * zaq * uq(3*(na-1)+ipol,:)*bmat
             !
-            !DO im=1,nmodes
-            !   epmat(im) = epmat(im) +   &
-            !         facq * zaq * uq(3*(na-1)+ipol,im)*bmat
-            !   epmatl(im) = epmatl(im)  +   &
-            !        facq * zaq * uq(3*(na-1)+ipol,im)*bmat
-            !ENDDO
-            !
           ENDDO !ipol
         ENDDO !nat
       ENDIF
@@ -313,12 +305,9 @@ SUBROUTINE rgd_blk_epw(nq1,nq2,nq3,q,uq,epmat,nmodes,epsil,zeu,bmat,signe)
   ! will get a pure real number.
   ! In any case, when g_s will be squared both will become real numbers. 
   IF (shortrange) THEN
-    epmat = ZSQRT(epmat*conjg(epmat) - epmatl*conjg(epmatl))
-    !DO im=1,nmodes      
-    !  epmat(im) = ZSQRT(epmat(im)*conjg(epmat(im)) - epmatl(im)*conjg(epmatl(im)))
-    !ENDDO
+    !epmat = ZSQRT(epmat*conjg(epmat) - epmatl*conjg(epmatl))
+    epmat = SQRT(epmat*conjg(epmat) - epmatl*conjg(epmatl))
   ENDIF        
-  !print*,'epmats(:) ',SUM(epmat(:)*conjg(epmat(:)))
   !
   !
 END SUBROUTINE rgd_blk_epw
