@@ -161,10 +161,7 @@ CONTAINS
       CALL iotk_open_write(ounit,FILE=filename , root="qes:espresso",attr=attr,binary=.false., &
                            skip_head=.true.,IERR=ierr)
       !
-      IF (ierr /= 0) call errore(subname, 'opening xml input file', ierr)
-      !
-      IF ( input_xml_schema_file == ' ' ) CALL get_environment_VARIABLE ( 'QEXSD', input_xml_schema_file )
-      ! 
+      IF (ierr /= 0) call errore(subname, 'opening xml output file', ierr)
       ! the input file is mandatory to have a validating schema 
       ! here an error should be issued, instead
       !
