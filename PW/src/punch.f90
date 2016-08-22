@@ -19,13 +19,14 @@ SUBROUTINE punch( what )
   USE klist,                ONLY : nks
 #ifdef __XSD
   USE pw_restart_new,       ONLY : pw_write_schema, pw_write_binaries
-  USE io_files,             ONLY : xmlpun_schema
+  USE io_files,             ONLY : xmlpun_schema, psfile, pseudo_dir
   USE wrappers,             ONLY : f_copy
   USE xml_io_base,          ONLY : create_directory
   USE io_rho_xml,           ONLY : write_rho
   USE spin_orb,             ONLY : lforcet
   USE scf,                  ONLY : rho
   USE lsda_mod,             ONLY : nspin
+  USE ions_base,            ONLY : nsp
 #else
   USE pw_restart,           ONLY : pw_writefile
 #endif
@@ -36,8 +37,8 @@ SUBROUTINE punch( what )
   !
   CHARACTER(LEN=*) :: what
   LOGICAL :: exst
-  CHARACTER(LEN=256) :: cp_source, cp_dest
-  INTEGER            :: cp_status
+  CHARACTER(LEN=320) :: cp_source, cp_dest
+  INTEGER            :: cp_status, nt
   !
   !
   IF (io_level < 0 ) RETURN
@@ -73,7 +74,9 @@ SUBROUTINE punch( what )
   IF ( lscf .OR. lforcet ) CALL write_rho( rho, nspin )
   !
   IF (TRIM(what) == 'all') THEN 
-     ! FIXME: why these lines?
+     !
+     ! ... make a copy of xml file one level up (FIXME: why?)
+     !
      IF (ionode) THEN
         cp_source = TRIM(tmp_dir)//'/'//TRIM(prefix)//'.save/'//xmlpun_schema
         cp_dest   = TRIM(tmp_dir)//'/'//TRIM(prefix)//'.xml'
@@ -83,6 +86,15 @@ SUBROUTINE punch( what )
      ! ... wavefunctions in "collected" format - also G- and k+G-vectors
      !
      IF ( twfcollect ) CALL pw_write_binaries( )
+     !
+     ! ... copy pseudopotential files into the .save directory
+     !
+     DO nt = 1, nsp
+        cp_source = TRIM(pseudo_dir)//psfile(nt)
+        cp_dest   = TRIM(tmp_dir)//'/'//TRIM(prefix)//'.save/'//psfile(nt)
+        IF ( TRIM(cp_source) /= TRIM(cp_dest) ) &
+             cp_status = f_copy(cp_source, cp_dest)
+     END DO
      !
   END IF
 #else
