@@ -23,7 +23,6 @@ PROGRAM do_dos
   USE kinds,      ONLY : DP
   USE klist,      ONLY : xk, wk, degauss, ngauss, lgauss, nks, nkstot,&
                          two_fermi_energies
-  USE ktetra,     ONLY : ntetra, tetra, ltetra
   USE wvfct,      ONLY : nbnd, et
   USE lsda_mod,   ONLY : nspin
   USE noncollin_module, ONLY: noncolin
@@ -31,6 +30,11 @@ PROGRAM do_dos
   USE mp_world,   ONLY : world_comm
   USE mp_global,     ONLY : mp_startup
   USE environment,   ONLY : environment_start, environment_end
+  USE ktetra,     ONLY : ntetra, tetra, ltetra
+  ! following modules needed for generation of tetrahedra
+  USE symm_base,  ONLY : nsym, s, time_reversal, t_rev
+  USE cell_base,  ONLY : at, bg
+  USE start_k,    ONLY : k1, k2, k3, nk1, nk2, nk3
   !
   IMPLICIT NONE
   !
@@ -41,6 +45,7 @@ PROGRAM do_dos
   REAL(DP) :: E, DOSofE (2), DOSint, DeltaE, Emin, Emax, &
               degauss1, E_unset=1000000.d0
   INTEGER :: ik, n, ndos, ngauss1, ios
+
   NAMELIST /dos/ outdir, prefix, fildos, degauss, ngauss, &
        Emin, Emax, DeltaE
   !
@@ -102,6 +107,13 @@ PROGRAM do_dos
         lgauss=.true.
      ELSEIF (ltetra) THEN
         WRITE( stdout,'(/5x,"Tetrahedra used"/)')
+#ifdef __XSD 
+        ! info on tetrahedra contained in variable "tetra" is no longer
+        ! written to file and must be rebuilt
+        ! write(*,*) nsym, nk1, nk2, nk3, ntetra 
+        CALL tetrahedra ( nsym, s, time_reversal, t_rev, at, bg, nks, &
+             k1,k2,k3, nk1,nk2,nk3, nks, xk, wk, ntetra, tetra )
+#endif
      ELSEIF (lgauss) THEN
         WRITE( stdout,'(/5x,"Gaussian broadening (read from file): ",&
              &        "ngauss,degauss=",i4,f12.6/)') ngauss,degauss
@@ -147,6 +159,7 @@ PROGRAM do_dos
         WRITE(4,'("#  E (eV)   dosup(E)     dosdw(E)   Int dos(E)",A)')&
         &          TRIM(fermi_str)
      ENDIF
+     !
      DO n= 1, ndos
         E = Emin + (n - 1) * DeltaE
         IF (ltetra) THEN
