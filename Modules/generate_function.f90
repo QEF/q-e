@@ -41,7 +41,7 @@ CONTAINS
       ! ... Local variables
       !
       INTEGER                   :: i, j, k, ir, ir_end
-      INTEGER                   :: index, index0, narea
+      INTEGER                   :: idx, idx0, narea
       !
       REAL( DP )                :: inv_nr1, inv_nr2, inv_nr3
       !
@@ -49,12 +49,12 @@ CONTAINS
       inv_nr2 = 1.D0 / DBLE( dfftp%nr2 )
       inv_nr3 = 1.D0 / DBLE( dfftp%nr3 )
       !
-      index0 = 0
+      idx0 = 0
       ir_end = nnr
       !
 #if defined (__MPI)
       DO i = 1, me_bgrp
-        index0 = index0 + dfftp%nr1x*dfftp%nr2x*dfftp%npp(i)
+        idx0 = idx0 + dfftp%nr1x*dfftp%nr2x*dfftp%npp(i)
       END DO
       ir_end = MIN(nnr,dfftp%nr1x*dfftp%nr2x*dfftp%npp(me_bgrp+1))
 #endif  
@@ -71,26 +71,26 @@ CONTAINS
          !
          ! ... find the index along the selected axis
          !
-         i = index0 + ir - 1
-         index = i / (dfftp%nr1x*dfftp%nr2x)
+         i = idx0 + ir - 1
+         idx = i / (dfftp%nr1x*dfftp%nr2x)
          IF ( axis .LT. 3 ) THEN 
-           i = i - (dfftp%nr1x*dfftp%nr2x)*index
-           index = i / dfftp%nr1x
+           i = i - (dfftp%nr1x*dfftp%nr2x)*idx
+           idx = i / dfftp%nr1x
          END IF 
-         IF ( axis .EQ. 1 ) index = i - dfftp%nr1x*index
+         IF ( axis .EQ. 1 ) idx = i - dfftp%nr1x*idx
          !
-         index = index + 1 + shift
+         idx = idx + 1 + shift
          !
-         IF ( index .GT. naxis ) THEN 
-           index = index - naxis
-         ELSE IF (index .LE. 0 ) THEN
-           index = index + naxis
+         IF ( idx .GT. naxis ) THEN 
+           idx = idx - naxis
+         ELSE IF (idx .LE. 0 ) THEN
+           idx = idx + naxis
          ENDIF           
          !
          IF ( reverse ) THEN
-           f(ir) = f1d(index)
+           f(ir) = f1d(idx)
          ELSE
-           f1d(index) = f1d(index) + f(ir)
+           f1d(idx) = f1d(idx) + f(ir)
          END IF 
          !      
       END DO
@@ -129,7 +129,7 @@ CONTAINS
       ! ... Local variables
       !
       INTEGER                   :: i, j, k, ir, ir_end, ip
-      INTEGER                   :: index0
+      INTEGER                   :: idx0
       !
       REAL( DP )                :: inv_nr1, inv_nr2, inv_nr3
       REAL( DP )                :: scale, spr2, dist, length
@@ -140,11 +140,11 @@ CONTAINS
       inv_nr2 = 1.D0 / DBLE( dfftp%nr2 )
       inv_nr3 = 1.D0 / DBLE( dfftp%nr3 )
       !
-      index0 = 0
+      idx0 = 0
       !
 #if defined (__MPI)
       DO i = 1, me_bgrp
-        index0 = index0 + dfftp%nr1x*dfftp%nr2x*dfftp%npp(i)
+        idx0 = idx0 + dfftp%nr1x*dfftp%nr2x*dfftp%npp(i)
       END DO
 #endif  
       !
@@ -175,7 +175,7 @@ CONTAINS
          !
          ! ... three dimensional indexes
          !
-         i = index0 + ir - 1
+         i = idx0 + ir - 1
          k = i / (dfftp%nr1x*dfftp%nr2x)
          i = i - (dfftp%nr1x*dfftp%nr2x)*k
          j = i / dfftp%nr1x
@@ -242,7 +242,7 @@ CONTAINS
       ! ... Local variables
       !
       INTEGER                   :: i, j, k, ir, ir_end, ip
-      INTEGER                   :: index0
+      INTEGER                   :: idx0
       !
       REAL( DP )                :: inv_nr1, inv_nr2, inv_nr3
       REAL( DP )                :: scale, spr2, dist, length
@@ -253,11 +253,11 @@ CONTAINS
       inv_nr2 = 1.D0 / DBLE( dfftp%nr2 )
       inv_nr3 = 1.D0 / DBLE( dfftp%nr3 )
       !
-      index0 = 0
+      idx0 = 0
       !
 #if defined (__MPI)
       DO i = 1, me_bgrp
-        index0 = index0 + dfftp%nr1x*dfftp%nr2x*dfftp%npp(i)
+        idx0 = idx0 + dfftp%nr1x*dfftp%nr2x*dfftp%npp(i)
       END DO
 #endif
       !
@@ -288,7 +288,7 @@ CONTAINS
          !
          ! ... three dimensional indexes
          !
-         i = index0 + ir - 1
+         i = idx0 + ir - 1
          k = i / (dfftp%nr1x*dfftp%nr2x)
          i = i - (dfftp%nr1x*dfftp%nr2x)*k
          j = i / dfftp%nr1x
@@ -353,7 +353,7 @@ CONTAINS
       ! ... Local variables
       !
       INTEGER                   :: i, j, k, ir, ir_end, ip
-      INTEGER                   :: index0
+      INTEGER                   :: idx0
       !
       REAL( DP )                :: inv_nr1, inv_nr2, inv_nr3
       REAL( DP )                :: dist, arg
@@ -365,11 +365,11 @@ CONTAINS
       inv_nr2 = 1.D0 / DBLE( dfftp%nr2 )
       inv_nr3 = 1.D0 / DBLE( dfftp%nr3 )
       !
-      index0 = 0
+      idx0 = 0
       !
 #if defined (__MPI)
       DO i = 1, me_bgrp
-        index0 = index0 + dfftp%nr1x*dfftp%nr2x*dfftp%npp(i)
+        idx0 = idx0 + dfftp%nr1x*dfftp%nr2x*dfftp%npp(i)
       END DO
 #endif
       !
@@ -386,7 +386,7 @@ CONTAINS
          !
          ! ... three dimensional indexes
          !
-         i = index0 + ir - 1
+         i = idx0 + ir - 1
          k = i / (dfftp%nr1x*dfftp%nr2x)
          i = i - (dfftp%nr1x*dfftp%nr2x)*k
          j = i / dfftp%nr1x
@@ -447,7 +447,7 @@ CONTAINS
       ! ... Local variables
       !
       INTEGER                   :: i, j, k, ir, ir_end, ip
-      INTEGER                   :: index0
+      INTEGER                   :: idx0
       !
       REAL( DP )                :: inv_nr1, inv_nr2, inv_nr3
       REAL( DP )                :: dist, arg
@@ -459,11 +459,11 @@ CONTAINS
       inv_nr2 = 1.D0 / DBLE( dfftp%nr2 )
       inv_nr3 = 1.D0 / DBLE( dfftp%nr3 )
       !
-      index0 = 0
+      idx0 = 0
       !
 #if defined (__MPI)
       DO i = 1, me_bgrp
-        index0 = index0 + dfftp%nr1x*dfftp%nr2x*dfftp%npp(i)
+        idx0 = idx0 + dfftp%nr1x*dfftp%nr2x*dfftp%npp(i)
       END DO
 #endif
       !
@@ -480,7 +480,7 @@ CONTAINS
          !
          ! ... three dimensional indexes
          !
-         i = index0 + ir - 1
+         i = idx0 + ir - 1
          k = i / (dfftp%nr1x*dfftp%nr2x)
          i = i - (dfftp%nr1x*dfftp%nr2x)*k
          j = i / dfftp%nr1x
@@ -541,7 +541,7 @@ CONTAINS
       ! ... Local variables
       !
       INTEGER                   :: i, j, k, ir, ir_end, ip
-      INTEGER                   :: index0, ntot
+      INTEGER                   :: idx0, ntot
       !
       REAL( DP )                :: inv_nr1, inv_nr2, inv_nr3
       REAL( DP )                :: scale, dist, arg, length, chargeanalytic, chargelocal
@@ -554,12 +554,12 @@ CONTAINS
       inv_nr2 = 1.D0 / DBLE( dfftp%nr2 )
       inv_nr3 = 1.D0 / DBLE( dfftp%nr3 )
       !
-      index0 = 0
+      idx0 = 0
       ir_end = nnr
       !
 #if defined (__MPI)
       DO i = 1, me_bgrp
-        index0 = index0 + dfftp%nr1x*dfftp%nr2x*dfftp%npp(i)
+        idx0 = idx0 + dfftp%nr1x*dfftp%nr2x*dfftp%npp(i)
       END DO
       ir_end = MIN(nnr,dfftp%nr1x*dfftp%nr2x*dfftp%npp(me_bgrp+1))
 #endif  
@@ -578,7 +578,7 @@ CONTAINS
          !
          ! ... three dimensional indexes
          !
-         i = index0 + ir - 1
+         i = idx0 + ir - 1
          k = i / (dfftp%nr1x*dfftp%nr2x)
          i = i - (dfftp%nr1x*dfftp%nr2x)*k
          j = i / dfftp%nr1x
@@ -659,7 +659,7 @@ CONTAINS
       ! ... Local variables
       !
       INTEGER                   :: i, j, k, ir, ir_end, ip
-      INTEGER                   :: index0, ntot
+      INTEGER                   :: idx0, ntot
       !
       REAL( DP )                :: inv_nr1, inv_nr2, inv_nr3
       REAL( DP )                :: scale, dist, arg, length, chargeanalytic, chargelocal
@@ -671,12 +671,12 @@ CONTAINS
       inv_nr2 = 1.D0 / DBLE( dfftp%nr2 )
       inv_nr3 = 1.D0 / DBLE( dfftp%nr3 )
       !
-      index0 = 0
+      idx0 = 0
       ir_end = nnr
       !
 #if defined (__MPI)
       DO i = 1, me_bgrp
-        index0 = index0 + dfftp%nr1x*dfftp%nr2x*dfftp%npp(i)
+        idx0 = idx0 + dfftp%nr1x*dfftp%nr2x*dfftp%npp(i)
       END DO
       ir_end = MIN(nnr,dfftp%nr1x*dfftp%nr2x*dfftp%npp(me_bgrp+1))
 #endif  
@@ -700,7 +700,7 @@ CONTAINS
          !
          ! ... three dimensional indexes
          !
-         i = index0 + ir - 1
+         i = idx0 + ir - 1
          k = i / (dfftp%nr1x*dfftp%nr2x)
          i = i - (dfftp%nr1x*dfftp%nr2x)*k
          j = i / dfftp%nr1x
@@ -769,7 +769,7 @@ CONTAINS
   REAL(DP), INTENT(IN) :: pos(3)
   REAL(DP), INTENT(OUT) :: axis( dfftp%nnr )
   !
-  INTEGER  :: i, j, k, ir, ir_end, ip, index0
+  INTEGER  :: i, j, k, ir, ir_end, ip, idx0
   REAL(DP) :: inv_nr1, inv_nr2, inv_nr3
   REAL(DP) :: r(3), s(3)
   !
@@ -777,11 +777,11 @@ CONTAINS
   inv_nr2 = 1.D0 / DBLE( dfftp%nr2 )
   inv_nr3 = 1.D0 / DBLE( dfftp%nr3 )
   !
-  index0 = 0
+  idx0 = 0
   !
 #if defined (__MPI)
   DO i = 1, me_bgrp
-    index0 = index0 + dfftp%nr1x*dfftp%nr2x*dfftp%npp(i)
+    idx0 = idx0 + dfftp%nr1x*dfftp%nr2x*dfftp%npp(i)
   END DO
 #endif
   !
@@ -795,7 +795,7 @@ CONTAINS
      !
      ! ... three dimensional indexes
      !
-     i = index0 + ir - 1
+     i = idx0 + ir - 1
      k = i / (dfftp%nr1x*dfftp%nr2x)
      i = i - (dfftp%nr1x*dfftp%nr2x)*k
      j = i / dfftp%nr1x
@@ -840,7 +840,7 @@ CONTAINS
   REAL(DP), INTENT(IN) :: pos(3)
   REAL(DP), INTENT(OUT) :: distance( 3, dfftp%nnr )
   !
-  INTEGER  :: i, j, k, ir, ir_end, ip, index0
+  INTEGER  :: i, j, k, ir, ir_end, ip, idx0
   REAL(DP) :: inv_nr1, inv_nr2, inv_nr3
   REAL(DP) :: r(3), s(3)
   !
@@ -848,11 +848,11 @@ CONTAINS
   inv_nr2 = 1.D0 / DBLE( dfftp%nr2 )
   inv_nr3 = 1.D0 / DBLE( dfftp%nr3 )
   !
-  index0 = 0
+  idx0 = 0
   !
 #if defined (__MPI)
   DO i = 1, me_bgrp
-    index0 = index0 + dfftp%nr1x*dfftp%nr2x*dfftp%npp(i)
+    idx0 = idx0 + dfftp%nr1x*dfftp%nr2x*dfftp%npp(i)
   END DO
 #endif
   !
@@ -866,7 +866,7 @@ CONTAINS
      !
      ! ... three dimensional indexes
      !
-     i = index0 + ir - 1
+     i = idx0 + ir - 1
      k = i / (dfftp%nr1x*dfftp%nr2x)
      i = i - (dfftp%nr1x*dfftp%nr2x)*k
      j = i / dfftp%nr1x
