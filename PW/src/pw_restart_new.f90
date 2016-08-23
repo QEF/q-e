@@ -612,13 +612,13 @@ MODULE pw_restart_new
           INTEGER,            INTENT(IN) :: iun, ik
           CHARACTER(LEN=*),   INTENT(IN) :: filename
           !
-          INTEGER, ALLOCATABLE :: igwk(:,:)
+          INTEGER, ALLOCATABLE :: igwk(:)
           INTEGER, ALLOCATABLE :: itmp(:)
           !
           !
-          ALLOCATE( igwk( npwx_g, nkstot ) )
+          ALLOCATE( igwk( npwx_g ) )
           !
-          igwk(:,ik) = 0
+          igwk(:) = 0
           !
           ALLOCATE( itmp( npw_g ) )
           !
@@ -645,7 +645,7 @@ MODULE pw_restart_new
                 !
                 ngg = ngg + 1
                 !
-                igwk(ngg,ik) = ig
+                igwk(ngg) = ig
                 !
              END IF
              !
@@ -665,8 +665,8 @@ MODULE pw_restart_new
              CALL iotk_write_attr ( attr, "UNITS", "2 pi / a", FIRST = .TRUE. )
              CALL iotk_write_dat( iun, "K-POINT_COORDS", xk(:,ik), ATTR = attr )
              !
-             CALL iotk_write_dat( iun, "INDEX", igwk(1:ngk_g(ik),ik) )
-             CALL iotk_write_dat( iun, "GRID", mill_g(1:3,igwk(1:ngk_g(ik),ik)), &
+             CALL iotk_write_dat( iun, "INDEX", igwk(1:ngk_g(ik)) )
+             CALL iotk_write_dat( iun, "GRID", mill_g(1:3,igwk(1:ngk_g(ik))), &
                                   COLUMNS = 3 )
              !
              CALL iotk_close_write( iun )
