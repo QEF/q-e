@@ -24,7 +24,7 @@ PROGRAM do_dos
   USE klist,      ONLY : xk, wk, degauss, ngauss, lgauss, nks, nkstot,&
                          two_fermi_energies
   USE wvfct,      ONLY : nbnd, et
-  USE lsda_mod,   ONLY : nspin
+  USE lsda_mod,   ONLY : lsda, nspin
   USE noncollin_module, ONLY: noncolin
   USE mp,         ONLY : mp_bcast
   USE mp_world,   ONLY : world_comm
@@ -44,7 +44,7 @@ PROGRAM do_dos
   CHARACTER(LEN=33) :: fermi_str
   REAL(DP) :: E, DOSofE (2), DOSint, DeltaE, Emin, Emax, &
               degauss1, E_unset=1000000.d0
-  INTEGER :: ik, n, ndos, ngauss1, ios
+  INTEGER :: nks2, n, ndos, ngauss1, ios
 
   NAMELIST /dos/ outdir, prefix, fildos, degauss, ngauss, &
        Emin, Emax, DeltaE
@@ -95,7 +95,7 @@ PROGRAM do_dos
   !
   IF ( ionode ) THEN
      !
-     IF (nks/=nkstot) &
+     IF (nks /= nkstot) &
         CALL errore ('dos', 'pools not implemented, or incorrect file read', 1)
      !
      IF (degauss1/=0.d0) THEN
@@ -110,9 +110,15 @@ PROGRAM do_dos
 #ifdef __XSD 
         ! info on tetrahedra contained in variable "tetra" is no longer
         ! written to file and must be rebuilt
-        ! write(*,*) nsym, nk1, nk2, nk3, ntetra 
+        IF ( lsda ) THEN
+           ! in the lsda case, only the first half of the k points
+           ! are needed in the input of "tetrahedra"
+           nks2 = nks/2
+        ELSE
+           nks2 = nks
+        END IF
         CALL tetrahedra ( nsym, s, time_reversal, t_rev, at, bg, nks, &
-             k1,k2,k3, nk1,nk2,nk3, nks, xk, wk, ntetra, tetra )
+             k1,k2,k3, nk1,nk2,nk3, nks2, xk, wk, ntetra, tetra )
 #endif
      ELSEIF (lgauss) THEN
         WRITE( stdout,'(/5x,"Gaussian broadening (read from file): ",&
@@ -154,9 +160,9 @@ PROGRAM do_dos
      ENDIF
 
      IF (nspin==1.or.nspin==4) THEN
-           WRITE(4,'("#  E (eV)   dos(E)     Int dos(E)",A)') TRIM(fermi_str)
+        WRITE(4,'("#  E (eV)   dos(E)     Int dos(E)",A)') TRIM(fermi_str)
      ELSE
-        WRITE(4,'("#  E (eV)   dosup(E)     dosdw(E)   Int dos(E)",A)')&
+        WRITE(4,'("#  E (eV)   dosup(E)     dosdw(E)   Int dos(E)",A)') &
         &          TRIM(fermi_str)
      ENDIF
      !
