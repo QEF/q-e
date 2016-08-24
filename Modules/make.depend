@@ -427,7 +427,6 @@ ws_base.o : invmat.o
 ws_base.o : kind.o
 wypos.o : kind.o
 xc_rVV10.o : ../FFTXlib/fft_interfaces.o
-xc_rVV10.o : ../FFTXlib/fft_scalar.o
 xc_rVV10.o : cell_base.o
 xc_rVV10.o : constants.o
 xc_rVV10.o : control_flags.o

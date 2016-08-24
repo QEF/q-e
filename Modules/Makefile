@@ -31,6 +31,7 @@ fcp_variables.o \
 fd_gradient.o \
 fft_base.o \
 fft_custom.o \
+fsockets.o \
 funct.o \
 generate_function.o \
 gth.o \

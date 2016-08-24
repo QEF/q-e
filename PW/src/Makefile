@@ -12,8 +12,6 @@ pwscf.o
 MANYPWOBJS = \
 manypw.o 
 
-# add_monofield.o \
-
 PWLIBS = \
 a2fmod.o \
 add_bfield.o \
@@ -69,6 +67,7 @@ divide.o \
 divide_et_impera.o \
 dqvan2.o \
 drhoc.o \
+run_driver.o \
 dvloc_of_g.o \
 dynamics_module.o \
 efermig.o \
