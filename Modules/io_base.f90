@@ -31,7 +31,7 @@ MODULE io_base
   CONTAINS
     !
     !------------------------------------------------------------------------
-    SUBROUTINE write_wfc( iuni, ik, nk, kunit, ispin, nspin, wf0, ngw,   &
+    SUBROUTINE write_wfc( iuni, ik, nk, ispin, nspin, wf0, ngw,   &
                           gamma_only, nbnd, igl, ngwl, filename, scalef, &
                           ionode, root_in_group, intra_group_comm)
       !------------------------------------------------------------------------
@@ -42,7 +42,7 @@ MODULE io_base
       IMPLICIT NONE
       !
       INTEGER,            INTENT(IN) :: iuni
-      INTEGER,            INTENT(IN) :: ik, nk, kunit, ispin, nspin
+      INTEGER,            INTENT(IN) :: ik, nk, ispin, nspin
       COMPLEX(DP),        INTENT(IN) :: wf0(:,:)
       INTEGER,            INTENT(IN) :: ngw
       LOGICAL,            INTENT(IN) :: gamma_only
@@ -106,7 +106,7 @@ MODULE io_base
     END SUBROUTINE write_wfc
     !
     !------------------------------------------------------------------------
-    SUBROUTINE read_wfc( iuni, ik, nk, kunit, ispin, &
+    SUBROUTINE read_wfc( iuni, ik, nk, ispin, &
                          nspin, wf, ngw, nbnd, igl, ngwl, filename, scalef, &
                          ionode, root_in_group, intra_group_comm)
       !------------------------------------------------------------------------
@@ -119,7 +119,6 @@ MODULE io_base
       INTEGER,            INTENT(IN)    :: iuni
       COMPLEX(DP),        INTENT(OUT)   :: wf(:,:)
       INTEGER,            INTENT(IN)    :: ik, nk
-      INTEGER,            INTENT(IN)    :: kunit
       INTEGER,            INTENT(INOUT) :: ngw, nbnd, ispin, nspin
       INTEGER,            INTENT(IN)    :: ngwl
       INTEGER,            INTENT(IN)    :: igl(:)

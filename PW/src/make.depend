@@ -1486,8 +1486,6 @@ pw_restart_new.o : ../../Modules/mm_dispersion.o
 pw_restart_new.o : ../../Modules/mp.o
 pw_restart_new.o : ../../Modules/mp_bands.o
 pw_restart_new.o : ../../Modules/mp_diag.o
-pw_restart_new.o : ../../Modules/mp_global.o
-pw_restart_new.o : ../../Modules/mp_images.o
 pw_restart_new.o : ../../Modules/mp_pools.o
 pw_restart_new.o : ../../Modules/mp_world.o
 pw_restart_new.o : ../../Modules/noncol.o

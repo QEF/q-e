@@ -107,8 +107,6 @@ MODULE pw_restart_new
                                        block_2, block_height ! TB
       USE io_rho_xml,           ONLY : write_rho
       USE mp,                   ONLY : mp_sum
-      USE mp_world,             ONLY : nproc
-      USE mp_images,            ONLY : nproc_image
       USE mp_bands,             ONLY : nproc_bgrp, me_bgrp, root_bgrp, &
                                        intra_bgrp_comm, nbgrp, ntask_groups
       USE mp_diag,              ONLY : nproc_ortho
@@ -143,7 +141,6 @@ MODULE pw_restart_new
       INTEGER               :: i, ig, ngg, ierr, ipol
       INTEGER               :: npwx_g, npw_g, ispin, inlc
       INTEGER,  ALLOCATABLE :: ngk_g(:)
-      INTEGER,  ALLOCATABLE :: igk_l2g(:,:), igk_l2g_kdip(:,:), mill_g(:,:)
       LOGICAL               :: lwfc, lrho, lxsd, occupations_are_fixed
       CHARACTER(iotk_attlenx)  :: attr
       INTEGER                  :: iclass, isym, ielem
@@ -167,10 +164,6 @@ MODULE pw_restart_new
       ! ... compute the maximum number of G vector among all k points
       !
       npwx_g = MAXVAL( ngk_g(1:nkstot) )
-      !
-      !DEALLOCATE( ngk_g )
-      ! do not deallocate ngk_g here, please, I need it for band_structure_init
-      ! P. Delugas 
       !
       ! ... find out the global number of G vectors: ngm_g
       !
@@ -440,9 +433,7 @@ MODULE pw_restart_new
       USE gvecs,                ONLY : ngms_g, dual
       USE wvfct,                ONLY : npw, npwx, et, wg, nbnd
       USE lsda_mod,             ONLY : nspin, isk, lsda
-      USE mp_world,             ONLY : nproc
-      USE mp_images,            ONLY : nproc_image
-      USE mp_pools,             ONLY : kunit, nproc_pool, me_pool, root_pool, &
+      USE mp_pools,             ONLY : nproc_pool, me_pool, root_pool, &
                                        intra_pool_comm, inter_pool_comm
       USE mp_bands,             ONLY : nproc_bgrp, me_bgrp, root_bgrp, &
                                        intra_bgrp_comm, nbgrp, ntask_groups
@@ -506,13 +497,9 @@ MODULE pw_restart_new
       !
       ALLOCATE( ngk_g( nkstot ) )
       !
-      ngk_g = 0
-      ngk_g(iks:ike) = ngk(1:nks)
-      !
-      CALL mp_sum( ngk_g, inter_pool_comm)
-      CALL mp_sum( ngk_g, intra_pool_comm)
-      !
-      ngk_g = ngk_g / nbgrp
+      ngk_g(1:nks) = ngk(:)
+      CALL mp_sum( ngk_g(1:nks), intra_bgrp_comm )
+      CALL ipoolrecover( ngk_g, 1, nkstot, nks )
       !
       ! ... compute the maximum G vector index among all G+k an processors
       !
@@ -693,7 +680,7 @@ MODULE pw_restart_new
              filename = TRIM(dirname) // '/wfcup' // TRIM(int_to_char(ik_g)) // '.dat'
              IF ( ispin /= 1 ) call infomsg('write_wfc','strange spin (1)')
              !
-             CALL write_wfc( iun, ik_g, nkstot, kunit, ispin, nspin, &
+             CALL write_wfc( iun, ik_g, nkstot, ispin, nspin, &
                   evc, npw_g, gamma_only, nbnd, igk_l2g_kdip(:,ik),   &
                   ngk(ik), filename, 1.D0, &
                   ionode_k, root_pool, intra_pool_comm )
@@ -709,7 +696,7 @@ MODULE pw_restart_new
              filename = TRIM(dirname)//'/wfcdw'//TRIM(int_to_char(ik_g))//'.dat'
              !
              ik_eff = ik_g + nkstot/2 ! FIXME: global index for spin down
-             CALL write_wfc( iun, ik_eff, nkstot, kunit, ispin, nspin, &
+             CALL write_wfc( iun, ik_eff, nkstot, ispin, nspin, &
                   evc, npw_g, gamma_only, nbnd, igk_l2g_kdip(:,ik_s), &
                   ngk(ik_s), filename, 1.D0, &
                   ionode_k, root_pool, intra_pool_comm )
@@ -731,7 +718,7 @@ MODULE pw_restart_new
                    !
                    nkl=(ipol-1)*npwx+1
                    nkr= ipol   *npwx
-                   CALL write_wfc( iun, ik_g, nkstot, kunit, ipol, npol,   &
+                   CALL write_wfc( iun, ik_g, nkstot, ipol, npol,   &
                         evc(nkl:nkr,:), npw_g, gamma_only, nbnd, &
                         igk_l2g_kdip(:,ik), ngk(ik), &
                         filename, 1.D0, &
@@ -746,7 +733,7 @@ MODULE pw_restart_new
                 IF ( ionode_k ) filename = TRIM(dirname)//'/wfc'//TRIM(int_to_char(ik_g))//'.dat'
 
                 !
-                CALL write_wfc( iun, ik_g, nkstot, kunit, ispin, nspin, &
+                CALL write_wfc( iun, ik_g, nkstot, ispin, nspin, &
                      evc, npw_g, gamma_only, nbnd,            &
                      igk_l2g_kdip(:,ik),                &
                      ngk(ik), filename, 1.D0, &
@@ -846,7 +833,6 @@ MODULE pw_restart_new
       USE io_rho_xml,           ONLY : read_rho
       USE scf,                  ONLY : rho
       USE lsda_mod,             ONLY : nspin
-      USE mp_world,             ONLY : mpime
       USE mp_bands,             ONLY : intra_bgrp_comm
       USE mp,                   ONLY : mp_sum, mp_barrier
       USE qes_types_module,     ONLY : input_type, output_type, general_info_type, parallel_info_type    
@@ -1127,7 +1113,6 @@ MODULE pw_restart_new
     USE wvfct,            ONLY : nbnd, npwx
     USE gvecw,            ONLY : ecutwfc
     USE control_flags,    ONLY : gamma_only
-    USE mp_pools,         ONLY : kunit
     USE mp_global,        ONLY : nproc_file, nproc_pool_file, &
                                  nproc_image_file, ntask_groups_file, &
                                  nproc_bgrp_file, nproc_ortho_file
@@ -2064,8 +2049,7 @@ MODULE pw_restart_new
       USE buffers,              ONLY : save_buffer
       USE gvect,                ONLY : ngm, ngm_g, g, ig_l2g
       USE noncollin_module,     ONLY : noncolin, npol
-      USE mp_images,            ONLY : nproc_image, intra_image_comm
-      USE mp_pools,             ONLY : kunit, nproc_pool, me_pool, root_pool, &
+      USE mp_pools,             ONLY : nproc_pool, me_pool, root_pool, &
                                        intra_pool_comm, inter_pool_comm
       USE mp_bands,             ONLY : me_bgrp, nbgrp, root_bgrp, &
                                        intra_bgrp_comm
@@ -2126,12 +2110,9 @@ MODULE pw_restart_new
       !
       ALLOCATE( ngk_g( nkstot ) )
       !
-      ngk_g = 0
-      ngk_g(iks:ike) = ngk(1:nks)
-      !
-      CALL mp_sum( ngk_g, inter_pool_comm )
-      CALL mp_sum( ngk_g, intra_pool_comm )
-      ngk_g = ngk_g / nbgrp
+      ngk_g(1:nks) = ngk(:)
+      CALL mp_sum( ngk_g(1:nks), intra_bgrp_comm )
+      CALL ipoolrecover( ngk_g, 1, nkstot, nks )
       !
       ! ... compute the Maximum G vector index among all G+k an processors
       !
@@ -2139,7 +2120,6 @@ MODULE pw_restart_new
       !
       CALL mp_max( npw_g, inter_pool_comm )
       CALL mp_max( npw_g, intra_pool_comm )
-
       !
       ! ... compute the Maximum number of G vector among all k points
       !
@@ -2177,7 +2157,7 @@ MODULE pw_restart_new
             !
             IF ( ionode_k ) filename = TRIM(dirname)//'/wfcup'//TRIM(int_to_char(ik_g))//'.dat'
             !
-            CALL read_wfc( iunpun, ik_g, nkstot, kunit, ispin, nspin,      &
+            CALL read_wfc( iunpun, ik_g, nkstot, ispin, nspin,      &
                            evc, npw_g, nbnd, igk_l2g_kdip(:,ik),   &
                            ngk(ik), filename, scalef, &
                            ionode_k, root_pool, intra_pool_comm )
@@ -2193,7 +2173,7 @@ MODULE pw_restart_new
             IF ( ionode_k ) filename = TRIM(dirname)//'/wfcdw'//TRIM(int_to_char(ik_g))//'.dat'
             !
             ik_eff = ik_g + nkstot/2 ! FIXME: global index for spin down
-            CALL read_wfc( iunpun, ik_eff, nkstot, kunit, ispin, nspin,      &
+            CALL read_wfc( iunpun, ik_eff, nkstot, ispin, nspin,      &
                            evc, npw_g, nbnd, igk_l2g_kdip(:,ik_s),   &
                            ngk(ik_s), filename, scalef, &
                            ionode_k, root_pool, intra_pool_comm )
@@ -2216,7 +2196,7 @@ MODULE pw_restart_new
                   !!! TEMP
                   nkl=(ipol-1)*npwx+1
                   nkr= ipol   *npwx
-                  CALL read_wfc( iunpun, ik_g, nkstot, kunit, ispin,          &
+                  CALL read_wfc( iunpun, ik_g, nkstot, ispin,          &
                                  npol, evc(nkl:nkr,:), npw_g, nbnd,         &
                                  igk_l2g_kdip(:,ik), ngk(ik),   &
                                  filename, scalef, & 
@@ -2228,7 +2208,7 @@ MODULE pw_restart_new
                !
                IF ( ionode ) filename = TRIM(dirname)//'/wfc'//TRIM(int_to_char(ik_g))//'.dat'
                !
-               CALL read_wfc( iunpun, ik, nkstot, kunit, ispin, nspin,         &
+               CALL read_wfc( iunpun, ik, nkstot, ispin, nspin,         &
                               evc, npw_g, nbnd, igk_l2g_kdip(:,ik),      &
                               ngk(ik), filename, scalef, &
                               ionode_k, root_pool, intra_pool_comm )
