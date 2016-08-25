@@ -43,11 +43,9 @@ MANIP_XS_OBJ=./gaunt_mod.o
 QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a
 PWOBJS = ../../PW/src/libpw.a 
 
-LIBOBJS = ../../iotk/src/libiotk.a ../../clib/clib.a 
-
 TLDEPS = bindir libs pw
 
-all : tldeps xspectra.x spectra_manipulation.x
+all : tldeps xspectra.x spectra_manipulation.x molecularnexafs.x
 
 xspectra.x :   xspectra.o $(XOBJS) $(GIPAWOBJS) $(QEMODS) $(PWOBJS)
 	$(MPIF90) -o $@  xspectra.o $(XOBJS) $(GIPAWOBJS) \
@@ -57,6 +55,10 @@ xspectra.x :   xspectra.o $(XOBJS) $(GIPAWOBJS) $(QEMODS) $(PWOBJS)
 spectra_manipulation.x : spectra_manipulation.o $(MANIP_XS_OBJ) $(QEMODS) $(PWOBJS)
 	$(MPIF90) -o $@  spectra_manipulation.o $(MANIP_XS_OBJ) $(PWOBJS) $(QEMODS) \
                 $(LDFLAGS) $(LIBOBJS) $(LIBS)
+	- ( cd ../../bin ; ln -fs ../XSpectra/src/$@ . )
+
+molecularnexafs.x : molecularnexafs.o 
+	$(MPIF90) -o $@  molecularnexafs.o
 	- ( cd ../../bin ; ln -fs ../XSpectra/src/$@ . )
 
 tldeps : 

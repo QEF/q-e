@@ -8,8 +8,6 @@ include ../../make.inc
 MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules $(MOD_FLAG)../../FFTXlib $(MOD_FLAG)../../LAXlib $(MOD_FLAG).
 IFLAGS=
 
-LIBOBJS = ../../iotk/src/libiotk.a ../../clib/clib.a 
-
 LD1OBJS = \
 add_exchange.o \
 all_electron.o \

@@ -49,8 +49,6 @@ transmit.o
 PWOBJS = ../../PW/src/libpw.a
 QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a
 
-LIBOBJS        = ../../clib/clib.a ../../iotk/src/libiotk.a
-
 TLDEPS= bindir mods libs pw pp
 
 all : tldeps pwcond.x

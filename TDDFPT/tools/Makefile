@@ -2,11 +2,10 @@
 
 include ../../make.inc
 IFLAGS         = -I../../include
-LIBOBJS        = ../../clib/clib.a ../../iotk/src/libiotk.a 
-
 
 # location of needed modules
-MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules $(MOD_FLAG)../../FFTXlib $(MOD_FLAG)../../LAXlib $(MOD_FLAG).
+MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules \
+          $(MOD_FLAG)../../FFTXlib $(MOD_FLAG)../../LAXlib $(MOD_FLAG).
 
 QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a
 PWOBJS = ../../PW/src/libpw.a

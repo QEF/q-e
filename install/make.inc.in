@@ -25,11 +25,12 @@
 
 @SET_MAKE@
 
-# Top QE directory, not used in QE but useful for linking QE libs with plugins
+# Top QE directory, useful for locating libraries,  linking QE with plugins
 # The following syntax should always point to TOPDIR:
-#   $(dir $(abspath $(filter %make.inc,$(MAKEFILE_LIST))))
+TOPDIR = $(dir $(abspath $(filter %make.inc,$(MAKEFILE_LIST))))
+# if it doesn't work, uncomment the following line (edit if needed):
 
-TOPDIR = @topdir@
+# TOPDIR = @topdir@
 
 # DFLAGS  = precompilation options (possible arguments to -D and -U)
 #           used by the C compiler and preprocessor
@@ -150,7 +151,7 @@ RANLIB         = @ranlib@
 
 FLIB_TARGETS   = all
 
-LIBOBJS        = ../clib/clib.a ../iotk/src/libiotk.a
+LIBOBJS        = $(TOPDIR)/clib/clib.a $(TOPDIR)/iotk/src/libiotk.a
 LIBS           = $(SCALAPACK_LIBS) $(LAPACK_LIBS) $(FFT_LIBS) $(BLAS_LIBS) $(MPI_LIBS) $(MASS_LIBS) $(LD_LIBS)
 
 # wget or curl - useful to download from network

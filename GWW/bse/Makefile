@@ -8,11 +8,9 @@ IFLAGS=-I../../include
 # location of needed modules
 MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules \
           $(MOD_FLAG)../../PHonon/Gamma/ $(MOD_FLAG)../../PHonon/PH/ \
-          $(MOD_FLAG)../../PW/src $(MOD_FLAG)../../FFTXlib $(MOD_FLAG)../../LAXlib $(MOD_FLAG)../pw4gww $(MOD_FLAG)../gww $(MOD_FLAG).
-
-#location of needed libraries
-LIBOBJS= ../../iotk/src/libiotk.a  \
-         ../../clib/clib.a 
+          $(MOD_FLAG)../../PW/src $(MOD_FLAG)../../FFTXlib \
+          $(MOD_FLAG)../../LAXlib $(MOD_FLAG)../pw4gww \
+          $(MOD_FLAG)../gww $(MOD_FLAG).
 
 BSEOBJS = \
 openfil_bse.o \
