@@ -26,7 +26,7 @@ MODULE io_base
   CHARACTER(iotk_attlenx)  :: attr
   !
   PRIVATE
-  PUBLIC :: write_wfc
+  PUBLIC :: write_wfc, read_wfc
   !
   CONTAINS
     !
@@ -64,9 +64,7 @@ MODULE io_base
       nproc_in_group  = mp_size( intra_group_comm )
       !
       igwx = MAXVAL( igl(1:ngwl) )
-      print *, "ngwl,igwx = ",ngwl, igwx
       CALL mp_max( igwx, intra_group_comm )
-      print *, "igwx max = ", igwx
       ALLOCATE( wtmp( MAX( igwx, 1 ) ) )
       !
       wtmp = 0.0_DP
@@ -107,6 +105,104 @@ MODULE io_base
       !
     END SUBROUTINE write_wfc
     !
-    
+    !------------------------------------------------------------------------
+    SUBROUTINE read_wfc( iuni, ik, nk, kunit, ispin, &
+                         nspin, wf, ngw, nbnd, igl, ngwl, filename, scalef, &
+                         ionode, root_in_group, intra_group_comm)
+      !------------------------------------------------------------------------
+      !
+      USE mp_wave,   ONLY : splitwf
+      USE mp,        ONLY : mp_put, mp_size, mp_rank, mp_sum, mp_max
+      !
+      IMPLICIT NONE
+      !
+      INTEGER,            INTENT(IN)    :: iuni
+      COMPLEX(DP),        INTENT(OUT)   :: wf(:,:)
+      INTEGER,            INTENT(IN)    :: ik, nk
+      INTEGER,            INTENT(IN)    :: kunit
+      INTEGER,            INTENT(INOUT) :: ngw, nbnd, ispin, nspin
+      INTEGER,            INTENT(IN)    :: ngwl
+      INTEGER,            INTENT(IN)    :: igl(:)
+      CHARACTER(LEN=256), INTENT(IN)    :: filename
+      REAL(DP),           INTENT(OUT)   :: scalef
+      LOGICAL,            INTENT(IN)    :: ionode
+      INTEGER,            INTENT(IN)    :: root_in_group, intra_group_comm
+      !
+      INTEGER                  :: j
+      COMPLEX(DP), ALLOCATABLE :: wtmp(:)
+      INTEGER                  :: ierr
+      INTEGER                  :: igwx, igwx_, ik_, nk_
+      INTEGER                  :: me_in_group, nproc_in_group
+      !
+      !
+      me_in_group     = mp_rank( intra_group_comm )
+      nproc_in_group  = mp_size( intra_group_comm )
+      !
+      igwx = MAXVAL( igl(1:ngwl) )
+      CALL mp_max( igwx, intra_group_comm )
+      ALLOCATE( wtmp( MAX( igwx, 1 ) ) )
+      !
+      ierr = 0
+      !
+      IF ( ionode ) CALL iotk_open_read( iuni, FILE = filename, &
+                              BINARY = .TRUE., IERR = ierr )
+      !
+      CALL mp_bcast( ierr, root_in_group, intra_group_comm )
+      CALL errore( 'read_wfc ', &
+                   'cannot open restart file for reading', ierr )
+      !
+      IF ( ionode ) THEN
+          !
+          CALL iotk_scan_empty( iuni, "INFO", attr )
+          !
+          CALL iotk_scan_attr( attr, "ngw",          ngw )
+          CALL iotk_scan_attr( attr, "nbnd",         nbnd )
+          CALL iotk_scan_attr( attr, "ik",           ik_ )
+          CALL iotk_scan_attr( attr, "nk",           nk_ )
+          CALL iotk_scan_attr( attr, "ispin",        ispin )
+          CALL iotk_scan_attr( attr, "nspin",        nspin )
+          CALL iotk_scan_attr( attr, "igwx",         igwx_ )
+          CALL iotk_scan_attr( attr, "scale_factor", scalef )
+          !
+      END IF
+      !
+      CALL mp_bcast( ngw,    root_in_group, intra_group_comm )
+      CALL mp_bcast( nbnd,   root_in_group, intra_group_comm )
+      CALL mp_bcast( ik_,    root_in_group, intra_group_comm )
+      CALL mp_bcast( nk_,    root_in_group, intra_group_comm )
+      CALL mp_bcast( ispin,  root_in_group, intra_group_comm )
+      CALL mp_bcast( nspin,  root_in_group, intra_group_comm )
+      CALL mp_bcast( igwx_,  root_in_group, intra_group_comm )
+      CALL mp_bcast( scalef, root_in_group, intra_group_comm )
+      !
+      ALLOCATE( wtmp( MAX( igwx_, igwx ) ) )
+      !
+      DO j = 1, nbnd
+         !
+         IF ( j <= SIZE( wf, 2 ) ) THEN
+            !
+            IF ( ionode ) THEN 
+               !
+               CALL iotk_scan_dat( iuni, &
+                    "evc" // iotk_index( j ), wtmp(1:igwx_) )
+               !
+               IF ( igwx > igwx_ ) wtmp((igwx_+1):igwx) = 0.0_DP
+               !
+            END IF
+            !
+            CALL splitwf( wf(:,j), wtmp, ngwl, igl, &
+                 me_in_group, nproc_in_group, root_in_group, intra_group_comm )
+            !
+         END IF
+         !
+      END DO
+      !
+      IF ( ionode ) CALL iotk_close_read( iuni )
+      !
+      DEALLOCATE( wtmp )
+      !
+      RETURN
+      !
+    END SUBROUTINE read_wfc
     !        
   END MODULE io_base

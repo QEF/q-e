@@ -1477,6 +1477,7 @@ pw_restart_new.o : ../../Modules/fft_base.o
 pw_restart_new.o : ../../Modules/funct.o
 pw_restart_new.o : ../../Modules/gvecw.o
 pw_restart_new.o : ../../Modules/input_parameters.o
+pw_restart_new.o : ../../Modules/io_base.o
 pw_restart_new.o : ../../Modules/io_files.o
 pw_restart_new.o : ../../Modules/io_global.o
 pw_restart_new.o : ../../Modules/ions_base.o
@@ -1502,7 +1503,6 @@ pw_restart_new.o : ../../Modules/tsvdw.o
 pw_restart_new.o : ../../Modules/uspp.o
 pw_restart_new.o : ../../Modules/version.o
 pw_restart_new.o : ../../Modules/wavefunctions.o
-pw_restart_new.o : ../../Modules/xml_io_base.o
 pw_restart_new.o : ../../iotk/src/iotk_module.o
 pw_restart_new.o : atomic_wfc_mod.o
 pw_restart_new.o : bp_mod.o

@@ -552,7 +552,7 @@ MODULE pw_restart_new
          num_k_points = nks
       END IF
       !
-      ionode_k = (me_pool == 0)
+      ionode_k = (me_pool == root_pool)
       k_points_loop2: DO ik = 1, num_k_points
          !
          ! index of k-point ik in the global list
@@ -2070,28 +2070,29 @@ MODULE pw_restart_new
       USE mp_bands,             ONLY : me_bgrp, nbgrp, root_bgrp, &
                                        intra_bgrp_comm
       USE mp,                   ONLY : mp_bcast, mp_sum, mp_max
-      USE xml_io_base,          ONLY : read_wfc
+      USE io_base,              ONLY : read_wfc
       !
       IMPLICIT NONE
       !
       CHARACTER(LEN=*), INTENT(IN)  :: dirname
       INTEGER,          INTENT(OUT) :: ierr
       !
-      CHARACTER(LEN=320)    :: filename
-      INTEGER              :: ik, ig, ipol, ik_eff, num_k_points
+      CHARACTER(LEN=320)   :: filename
+      INTEGER              :: ik, ik_g, ig, ipol, ik_eff, ik_s, num_k_points
       INTEGER              :: nkl, nkr, npwx_g
       INTEGER              :: nupdwn(2), ike, iks, npw_g, ispin
       INTEGER, ALLOCATABLE :: ngk_g(:)
       INTEGER, ALLOCATABLE :: igk_l2g(:,:), igk_l2g_kdip(:,:)
-      LOGICAL              :: opnd
+      LOGICAL              :: opnd, ionode_k
       REAL(DP)             :: scalef
 
+      !
+      IF ( .NOT. twfcollect ) RETURN 
       !
       ! The ierr output var is actually not given any value
       ! except this initialization
       !
       ierr = 0
-      !
       IF ( iunwfc > 0 ) THEN
          !
          INQUIRE( UNIT = iunwfc, OPENED = opnd )
@@ -2156,13 +2157,15 @@ MODULE pw_restart_new
                               igk_l2g(1,ik-iks+1), igk_l2g_kdip(1,ik-iks+1) )
       END DO
       !
-      num_k_points = nkstot
+      num_k_points = nks
+      IF ( nspin == 2 ) num_k_points = nks / 2
       !
-      IF ( nspin == 2 ) num_k_points = nkstot / 2
-      !
-      IF ( .NOT. twfcollect ) RETURN 
-      !
+      ionode_k = ( me_pool == root_pool ) 
       k_points_loop: DO ik = 1, num_k_points
+         !
+         ! index of k-point ik in the global list
+         !
+         ik_g = ik + iks - 1
          !
          IF ( nspin == 2 ) THEN
             !
@@ -2171,45 +2174,33 @@ MODULE pw_restart_new
             !
             ! ... no need to read isk here: they are read from band structure
             ! ... and correctly distributed across pools in read_file
-            !!! isk(ik) = 1
             !
-            IF ( ionode ) filename = TRIM(dirname)//'/wfcup'//TRIM(int_to_char(ik))//'.dat'
+            IF ( ionode_k ) filename = TRIM(dirname)//'/wfcup'//TRIM(int_to_char(ik_g))//'.dat'
             !
-            CALL read_wfc( iunpun, ik, nkstot, kunit, ispin, nspin,      &
-                           evc, npw_g, nbnd, igk_l2g_kdip(:,ik-iks+1),   &
-                           ngk(ik-iks+1), filename, scalef, &
-                           ionode, root_pool, intra_pool_comm, inter_pool_comm, intra_image_comm )
+            CALL read_wfc( iunpun, ik_g, nkstot, kunit, ispin, nspin,      &
+                           evc, npw_g, nbnd, igk_l2g_kdip(:,ik),   &
+                           ngk(ik), filename, scalef, &
+                           ionode_k, root_pool, intra_pool_comm )
             !
-            IF ( ( ik >= iks ) .AND. ( ik <= ike ) ) THEN
-               !
-               CALL save_buffer ( evc, nwordwfc, iunwfc, (ik-iks+1) )
-               !
-            END IF
+            CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
             !
+            ! ... spin down
+            !
+            ik_s = ik + num_k_points
             ispin = 2
-            ik_eff = ik + num_k_points
             evc=(0.0_DP, 0.0_DP)
             !
-            ! ... no need to read isk here (see above why)
-            !isk(ik_eff) = 2
+            IF ( ionode_k ) filename = TRIM(dirname)//'/wfcdw'//TRIM(int_to_char(ik_g))//'.dat'
             !
-            IF ( ionode ) filename = TRIM(dirname)//'/wfcdw'//TRIM(int_to_char(ik))//'.dat'
-            !
+            ik_eff = ik_g + nkstot/2 ! FIXME: global index for spin down
             CALL read_wfc( iunpun, ik_eff, nkstot, kunit, ispin, nspin,      &
-                           evc, npw_g, nbnd, igk_l2g_kdip(:,ik_eff-iks+1),   &
-                           ngk(ik_eff-iks+1), filename, scalef, &
-                           ionode, root_pool, intra_pool_comm, inter_pool_comm, intra_image_comm )
+                           evc, npw_g, nbnd, igk_l2g_kdip(:,ik_s),   &
+                           ngk(ik_s), filename, scalef, &
+                           ionode_k, root_pool, intra_pool_comm )
             !
-            IF ( ( ik_eff >= iks ) .AND. ( ik_eff <= ike ) ) THEN
-               !
-               CALL save_buffer ( evc, nwordwfc, iunwfc, (ik_eff-iks+1) )
-               !
-            END IF
+            CALL save_buffer ( evc, nwordwfc, iunwfc, ik_s )
             !
          ELSE
-            !
-            ! ... no need to read isk here (see above why)
-            !isk(ik) = 1
             !
             evc=(0.0_DP, 0.0_DP)
             IF ( noncolin ) THEN
@@ -2217,36 +2208,34 @@ MODULE pw_restart_new
                DO ipol = 1, npol
                   !
                   IF ( ipol == 1 ) THEN
-                     filename = TRIM(dirname)//'wfcup'//TRIM(int_to_char(ik))//'.dat'
+                     filename = TRIM(dirname)//'wfcup'//TRIM(int_to_char(ik_g))//'.dat'
                   ELSE
-                     filename = TRIM(dirname)//'wfcdw'//TRIM(int_to_char(ik))//'.dat'
+                     filename = TRIM(dirname)//'wfcdw'//TRIM(int_to_char(ik_g))//'.dat'
                   END IF
                   !
                   !!! TEMP
                   nkl=(ipol-1)*npwx+1
                   nkr= ipol   *npwx
-                  CALL read_wfc( iunpun, ik, nkstot, kunit, ispin,          &
+                  CALL read_wfc( iunpun, ik_g, nkstot, kunit, ispin,          &
                                  npol, evc(nkl:nkr,:), npw_g, nbnd,         &
-                                 igk_l2g_kdip(:,ik-iks+1), ngk(ik-iks+1),   &
+                                 igk_l2g_kdip(:,ik), ngk(ik),   &
                                  filename, scalef, & 
-                                 ionode, root_pool, intra_pool_comm, inter_pool_comm, intra_image_comm )
+                                 ionode_k, root_pool, intra_pool_comm )
                   !
                END DO
                !
             ELSE
                !
-               IF ( ionode ) filename = TRIM(dirname)//'/wfc'//TRIM(int_to_char(ik))//'.dat'
+               IF ( ionode ) filename = TRIM(dirname)//'/wfc'//TRIM(int_to_char(ik_g))//'.dat'
                !
                CALL read_wfc( iunpun, ik, nkstot, kunit, ispin, nspin,         &
-                              evc, npw_g, nbnd, igk_l2g_kdip(:,ik-iks+1),      &
-                              ngk(ik-iks+1), filename, scalef, &
-                              ionode, root_pool, intra_pool_comm, inter_pool_comm, intra_image_comm )
+                              evc, npw_g, nbnd, igk_l2g_kdip(:,ik),      &
+                              ngk(ik), filename, scalef, &
+                              ionode_k, root_pool, intra_pool_comm )
                !
             END IF
             !
-            IF ( ( ik >= iks ) .AND. ( ik <= ike ) ) THEN
-               CALL save_buffer ( evc, nwordwfc, iunwfc, (ik-iks+1) )
-            END IF
+            CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
             !
          END IF
          !
