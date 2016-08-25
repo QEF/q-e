@@ -50,6 +50,14 @@
   !! Current q-point index
   ! 
   ! Local variables 
+  CHARACTER (len=256) :: nameF
+  !! Name of the file
+  !
+  LOGICAL :: opnd
+  !! Check whether the file is open. 
+  ! 
+  INTEGER :: ios
+  !! integer variable for I/O control  
   INTEGER :: ik
   !! Counter on the k-point index 
   INTEGER :: ikk
@@ -132,7 +140,7 @@
   REAL(kind=DP), external :: efermig
   !! Return the fermi energy
   !  
-  COMPLEX(kind=DP) epf (ibndmax-ibndmin+1, ibndmax-ibndmin+1)
+  COMPLEX(kind=DP) epf (ibndmax-ibndmin+1, ibndmax-ibndmin+1, nmodes)
   !! Electron-phonon matrix element on the fine grid.
   !
   IF ( iq .eq. 1 ) THEN 
@@ -236,8 +244,20 @@
       IF ( ( minval ( abs(etf (:, ikk) - ef) ) .lt. fsthick ) .AND. &
           ( minval ( abs(etf (:, ikq) - ef) ) .lt. fsthick ) ) THEN
         !
+        IF (etf_mem) THEN
+           epf(:,:,:) = epf17 ( :, :, :, ik)
+        ELSE
+          ios = 0
+          nrec = ik
+          INQUIRE( UNIT = iunepmatf, OPENED = opnd, NAME = nameF )
+          IF ( .NOT. opnd ) CALL errore(  'selfen_elec', 'unit is not opened', iunepmatf )
+          !
+          READ( UNIT = iunepmatf, REC = nrec, IOSTAT = ios ) epf(:,:,:)
+          IF ( ios /= 0 ) CALL errore( 'selfen_elec', &
+               & 'error while reading from file "' // TRIM(nameF) // '"', iunepmatf )
+        ENDIF
+        !         
         fermicount = fermicount + 1
-        !
         DO imode = 1, nmodes
           !
           ! the phonon frequency
@@ -252,15 +272,6 @@
           ELSE
             g2_tmp = 0.0
           ENDIF   
-          !
-          !  we read the e-p matrix from disk / memory
-          !
-          IF (etf_mem) then
-             epf(:,:) = epf17 ( ik, :, :, imode)
-          ELSE
-             nrec = (imode-1) * nkf + ik
-             CALL dasmio ( epf, ibndmax-ibndmin+1, lrepmatf, iunepmatf, nrec, -1)
-          ENDIF
           !
           DO ibnd = 1, ibndmax-ibndmin+1
             !
@@ -284,9 +295,9 @@
               IF ( shortrange) THEN
                 ! SP: The abs has to be removed. Indeed the epf can be a pure imaginary 
                 !     number, in which case its square will be a negative number. 
-                g2 = (epf (jbnd, ibnd)**two)*inv_wq*g2_tmp
+                g2 = (epf (jbnd, ibnd, imode)**two)*inv_wq*g2_tmp
               ELSE
-                g2 = (abs(epf (jbnd, ibnd))**two)*inv_wq*g2_tmp
+                g2 = (abs(epf (jbnd, ibnd, imode))**two)*inv_wq*g2_tmp
               ENDIF
               !
               IF (delta_approx) THEN 
@@ -422,21 +433,116 @@ END SUBROUTINE selfen_phon_q
   !
   implicit none
   !
-  integer :: ik, ikk, ikq, ibnd, jbnd, imode, nrec, iq, fermicount, ismear
-  complex(kind=DP) epf (ibndmax-ibndmin+1, ibndmax-ibndmin+1)
-  real(kind=DP) :: g2, ekk, ekq, wq, ef0, wgkk, wgkq, weight, dosef, &
-                   degaussw0, eptemp0, lambda_tot, lambda_tr_tot,&
-                   inv_wq, inv_degaussw0, g2_tmp, inv_eptemp0, w0g1, w0g2
+  INTEGER, INTENT (in) :: ik
+  !! Current q-point index
+  ! 
+  ! Local variables 
+  CHARACTER (len=256) :: nameF
+  !! Name of the file
+  CHARACTER (len=30)  :: myfmt
+  !! Format
   !
-  real(kind=DP), external :: efermig_seq, dos_ef_seq, w0gauss, wgauss
-  real(kind=DP) :: coskkq(ibndmax-ibndmin+1, ibndmax-ibndmin+1)
-  real(kind=DP) :: DDOT, vkk(3,ibndmax-ibndmin+1), vkq(3,ibndmax-ibndmin+1)
-  character (len=30)  :: myfmt
+  LOGICAL :: opnd
+  !! Check whether the file is open. 
+  ! 
+  INTEGER :: ios
+  !! integer variable for I/O control  
+  INTEGER :: iq
+  !! Counter on the q-point index 
+  INTEGER :: ikk
+  !! k-point index
+  INTEGER :: ikq
+  !! q-point index 
+  INTEGER :: ibnd
+  !! Counter on bands
+  INTEGER :: jbnd
+  !! Counter on bands
+  INTEGER :: imode
+  !! Counter on mode
+  INTEGER :: nrec
+  !! Record index for reading the e-f matrix
+  INTEGER :: fermicount
+  !! Number of states on the Fermi surface
+  INTEGER :: ismear
+  !! Upper bounds index after k or q paral
+  !! Smearing for the Gaussian function 
+  INTEGER :: lower_bnd
+  !! Lower band across pools
+  INTEGER :: upper_bnd
+  !! Upper band across pools 
+  ! 
+  REAL(kind=DP) :: g2
+  !! Electron-phonon matrix elements squared in Ry^2
+  REAL(kind=DP) :: ekk
+  !! Eigen energy on the fine grid relative to the Fermi level
+  REAL(kind=DP) :: ekq
+  !! Eigen energy of k+q on the fine grid relative to the Fermi level
+  REAL(kind=DP) :: wq
+  !! Phonon frequency on the fine grid
+  REAL(kind=DP) :: ef0
+  !! Fermi energy level
+  REAL(kind=DP) :: wgkq
+  !! Fermi-Dirac occupation factor $f_{nk+q}(T)$
+  REAL(kind=DP) :: weight
+  !! Imaginary part of the phonhon self-energy factor 
+  !!$$ \pi N_q \Im(\frac{f_{nk}(T) - f_{mk+q(T)}}{\varepsilon_{nk}-\varepsilon_{mk+q}-\omega_{q\nu}+i\delta}) $$
+  !! In practice the imaginary is performed with a delta Dirac
+  REAL(kind=DP) :: dosef
+  !! Density of state N(Ef)
+  REAL(kind=DP) :: w0g1
+  !! Dirac delta for the imaginary part of $\Sigma$
+  REAL(kind=DP) :: w0g2
+  !! Dirac delta for the imaginary part of $\Sigma$
+  REAL(kind=DP) :: inv_wq
+  !! $frac{1}{2\omega_{q\nu}}$ defined for efficiency reasons
+  REAL(kind=DP) :: inv_eptemp0
+  !! Inverse of temperature define for efficiency reasons
+  REAL(kind=DP) :: g2_tmp
+  !! If the phonon frequency is too small discart g
+  REAL(kind=DP) :: gamma(nmodes)
+  !! Gamma is the imaginary part of the phonon self-energy 
+  REAL(kind=DP) :: gamma_v(nmodes)
+  !! Gamma is the imaginary part of the phonon self-energy multiplied by (1-coskkq)
+  REAL(kind=DP) :: coskkq(ibndmax-ibndmin+1, ibndmax-ibndmin+1)
+  !! $$(v_k \cdot v_{k+q}) / |v_k|^2$$
+  REAL(kind=DP) :: DDOT
+  !! Dot product function
+  REAL(kind=DP) :: degaussw0
+  !! degaussw0 = (ismear-1) * delta_smear + degaussw
+  REAL(kind=DP) :: inv_degaussw0
+  !! Inverse degaussw0 for efficiency reasons
+  REAL(kind=DP) :: lambda_tot
+  !! Integrated lambda function
+  REAL(kind=DP) :: lambda_tr_tot
+  !! Integrated transport lambda function
+  REAL(kind=DP) :: wgkk
+  !! Fermi-Dirac occupation factor $f_{nk}(T)$
+  REAL(kind=DP) :: eptemp0
+  !!eptemp0   = (ismear-1) * delta_smear + eptem
+  REAL(kind=DP) :: vkk(3,ibndmax-ibndmin+1)
+  !! Electronic velocity $v_{nk}$
+  REAL(kind=DP) :: vkq(3,ibndmax-ibndmin+1)
+  !! Electronic velocity $v_{nk+q}$
+  REAL(kind=DP), ALLOCATABLE :: xqf_all(:,:)
+  !! Coordinate of q-points across all pools
+  REAL(kind=DP), ALLOCATABLE :: wqf_all(:,:)
+  !! Weight of all q-points across all pools
+  REAL(kind=DP), ALLOCATABLE :: wf_all(:,:)
+  !! Phonon frequency across all pools
+  REAL(kind=DP), external :: dos_ef
+  !! Function to compute the Density of States at the Fermi level
+  REAL(kind=DP), external :: wgauss
+  !! Fermi-Dirac distribution function (when -99)
+  REAL(kind=DP), external :: w0gauss
+  !! This function computes the derivative of the Fermi-Dirac function
+  !! It is therefore an approximation for a delta function
+  REAL(kind=DP), external :: efermig_seq
+  !! Return the fermi energy
+  REAL(kind=DP), external :: dos_ef_seq
+  !! Return the DOS in seq
   !
-  ! variables for collecting data from all pools in parallel case 
-  !
-  integer :: lower_bnd, upper_bnd
-  REAL(kind=DP), ALLOCATABLE :: xqf_all(:,:), wqf_all(:,:), wf_all(:,:)
+  COMPLEX(kind=DP) epf (ibndmax-ibndmin+1, ibndmax-ibndmin+1, nmodes)
+  !! Electron-phonon matrix element on the fine grid.
   !
   IF ( ik .eq. 1 ) THEN 
     WRITE(stdout,'(/5x,a)') repeat('=',67)
@@ -542,8 +648,20 @@ END SUBROUTINE selfen_phon_q
       IF ( ( minval ( abs(etf (:, ikk) - ef) ) .lt. fsthick ) .AND. &
           ( minval ( abs(etf (:, ikq) - ef) ) .lt. fsthick ) ) THEN
         !
-        fermicount = fermicount + 1
+        IF (etf_mem) THEN
+           epf(:,:,:) = epf17 ( :, :, :, ik)
+        ELSE
+          ios = 0
+          nrec = ik
+          INQUIRE( UNIT = iunepmatf, OPENED = opnd, NAME = nameF )
+          IF ( .NOT. opnd ) CALL errore(  'selfen_elec', 'unit is not opened', iunepmatf )
+          !
+          READ( UNIT = iunepmatf, REC = nrec, IOSTAT = ios ) epf(:,:,:)
+          IF ( ios /= 0 ) CALL errore( 'selfen_elec', &
+               & 'error while reading from file "' // TRIM(nameF) // '"', iunepmatf )
+        ENDIF
         !
+        fermicount = fermicount + 1
         DO imode = 1, nmodes
           !
           ! the phonon frequency
@@ -558,15 +676,6 @@ END SUBROUTINE selfen_phon_q
           ELSE
             g2_tmp = 0.0
           ENDIF   
-          !
-          !  we read the e-p matrix from disk / memory
-          !
-          IF (etf_mem) then
-             epf(:,:) = epf17 ( iq, :, :, imode)
-          ELSE
-             nrec = (imode-1) * nqf + iq
-             CALL dasmio ( epf, ibndmax-ibndmin+1, lrepmatf, iunepmatf, nrec, -1)
-          ENDIF
           !
           DO ibnd = 1, ibndmax-ibndmin+1
             !
@@ -590,9 +699,9 @@ END SUBROUTINE selfen_phon_q
               IF ( shortrange) THEN
                 ! SP: The abs has to be removed. Indeed the epf can be a pure imaginary 
                 !     number, in which case its square will be a negative number. 
-                g2 = (epf (jbnd, ibnd)**two)*inv_wq*g2_tmp
+                g2 = (epf (jbnd, ibnd, imode)**two)*inv_wq*g2_tmp
               ELSE
-                g2 = (abs(epf (jbnd, ibnd))**two)*inv_wq*g2_tmp
+                g2 = (abs(epf (jbnd, ibnd, imode))**two)*inv_wq*g2_tmp
               ENDIF
               !
               IF (delta_approx) THEN 

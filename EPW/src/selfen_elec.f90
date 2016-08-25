@@ -51,6 +51,14 @@
   !! Current q-point index 
   !
   ! Local variables 
+  CHARACTER (len=256) :: nameF
+  !! Name of the file
+  !
+  LOGICAL :: opnd
+  !! Check whether the file is open. 
+  ! 
+  INTEGER :: ios
+  !! integer variable for I/O control
   INTEGER :: n
   !! Integer for the degenerate average over eigenstates
   INTEGER :: ik
@@ -136,7 +144,7 @@
   REAL(kind=DP), ALLOCATABLE :: etf_all(:,:)
   !! Collect eigenenergies from all pools in parallel case
   !  
-  COMPLEX(kind=DP) epf (ibndmax-ibndmin+1, ibndmax-ibndmin+1)
+  COMPLEX(kind=DP) epf (ibndmax-ibndmin+1, ibndmax-ibndmin+1, nmodes)
   !! Electron-phonon matrix element on the fine grid. 
   !
   ! SP: Define the inverse so that we can efficiently multiply instead of
@@ -218,6 +226,21 @@
      IF ( ( minval ( abs(etf (:, ikk) - ef) ) .lt. fsthick ) .and. &
           ( minval ( abs(etf (:, ikq) - ef) ) .lt. fsthick ) ) THEN
         !
+        !  we read the e-p matrix
+        !
+        IF (etf_mem) THEN
+           epf(:,:,:) = epf17 ( :, :, :, ik)
+        ELSE
+          ios = 0
+          nrec = ik
+          INQUIRE( UNIT = iunepmatf, OPENED = opnd, NAME = nameF )
+          IF ( .NOT. opnd ) CALL errore(  'selfen_elec', 'unit is not opened', iunepmatf )
+          !
+          READ( UNIT = iunepmatf, REC = nrec, IOSTAT = ios ) epf(:,:,:)
+          IF ( ios /= 0 ) CALL errore( 'selfen_elec', &
+               & 'error while reading from file "' // TRIM(nameF) // '"', iunepmatf )
+        ENDIF
+        ! 
         fermicount = fermicount + 1
         DO imode = 1, nmodes
            !
@@ -233,15 +256,6 @@
              g2_tmp = 1.0
            ELSE
              g2_tmp = 0.0
-           ENDIF
-           !
-           !  we read the e-p matrix
-           !
-           IF (etf_mem) THEN
-              epf(:,:) = epf17 ( ik, :, :, imode)
-           ELSE
-              nrec = (imode-1) * nkf + ik
-              CALL dasmio ( epf, ibndmax-ibndmin+1, lrepmatf, iunepmatf, nrec, -1)
            ENDIF
            !
            DO ibnd = 1, ibndmax-ibndmin+1
@@ -262,9 +276,9 @@
                  IF ( shortrange) THEN
                    ! SP: The abs has to be removed. Indeed the epf can be a pure imaginary 
                    !     number, in which case its square will be a negative number. 
-                   g2 = (epf (jbnd, ibnd)**two)*inv_wq*g2_tmp
+                   g2 = (epf (jbnd, ibnd, imode)**two)*inv_wq*g2_tmp
                  ELSE
-                   g2 = (abs(epf (jbnd, ibnd))**two)*inv_wq*g2_tmp
+                   g2 = (abs(epf (jbnd, ibnd, imode))**two)*inv_wq*g2_tmp
                  ENDIF        
                  !
                  ! There is a sign error for wq in Eq. 9 of Comp. Phys. Comm. 181, 2140 (2010). - RM
@@ -360,6 +374,7 @@
          tmp = 0.0_DP
          tmp2 = 0.0_DP
          tmp3 = 0.0_DP
+         !sigmar_tmp(:) = zero
          DO jbnd = 1, ibndmax-ibndmin+1
            ekk2 = etf_all (ibndmin-1+jbnd, ikk) 
            IF ( ABS(ekk2-ekk) < eps6 ) THEN
@@ -510,9 +525,37 @@
   !
   implicit none
   !
+  CHARACTER (len=256) :: nameF
+  !! Name of the file
+  !
+  LOGICAL :: opnd
+  !! Check whether the file is open. 
+  ! 
+  INTEGER :: ios
+  !! integer variable for I/O control
   INTEGER :: n
   !! Integer for the degenerate average over eigenstates
-  integer :: ik, ikk, ikq, ibnd, jbnd, imode, nrec, iq, fermicount
+  INTEGER :: ik
+  !! Counter on the k-point index 
+  INTEGER :: iq
+  !! Counter on the q-point index 
+  INTEGER :: ikk
+  !! k-point index
+  INTEGER :: ikq
+  !! q-point index 
+  INTEGER :: ibnd
+  !! Counter on bands
+  INTEGER :: jbnd
+  !! Counter on bands
+  INTEGER :: imode
+  !! Counter on mode
+  INTEGER :: nrec
+  !! Record index for reading the e-f matrix
+  INTEGER :: fermicount
+  !! Number of states on the Fermi surface
+  INTEGER :: nksqtotf
+  !! variables for collecting data from all pools in parallel case
+  ! 
   REAL(kind=DP) :: tmp
   !! Temporary variable to store real part of Sigma for the degenerate average
   REAL(kind=DP) :: tmp2
@@ -527,15 +570,52 @@
   !! Temporary array to store the imag-part of Sigma 
   REAL(kind=DP) :: zi_tmp(ibndmax-ibndmin+1)
   !! Temporary array to store the Z
-  complex(kind=DP) epf (ibndmax-ibndmin+1, ibndmax-ibndmin+1)
-  REAL(kind=DP) :: g2, ekk, ekq, wq, ef0, wgq, wgkq, weight, dosef, &
-                   w0g1, w0g2, inv_wq, inv_eptemp0, g2_tmp,&
-                   inv_degaussw
-  REAL(kind=DP), external :: efermig, dos_ef, wgauss, w0gauss, dos_ef_seq
+  REAL(kind=DP) :: g2
+  !! Electron-phonon matrix elements squared in Ry^2
+  REAL(kind=DP) :: ekk
+  !! Eigen energy on the fine grid relative to the Fermi level
+  REAL(kind=DP) :: ekq
+  !! Eigen energy of k+q on the fine grid relative to the Fermi level
+  REAL(kind=DP) :: wq
+  !! Phonon frequency on the fine grid
+  REAL(kind=DP) :: ef0
+  !! Fermi energy level
+  REAL(kind=DP) :: wgq
+  !! Bose occupation factor $n_{q\nu}(T)$
+  REAL(kind=DP) :: wgkq
+  !! Fermi-Dirac occupation factor $f_{nk+q}(T)$
+  REAL(kind=DP) :: weight
+  !! Self-energy factor 
+  !!$$ N_q \Re( \frac{f_{mk+q}(T) + n_{q\nu}(T)}{ \varepsilon_{nk} - \varepsilon_{mk+q} + \omega_{q\nu} - i\delta }) $$ 
+  !!$$ + N_q \Re( \frac{1- f_{mk+q}(T) + n_{q\nu}(T)}{ \varepsilon_{nk} - \varepsilon_{mk+q} - \omega_{q\nu} - i\delta }) $$ 
+  REAL(kind=DP) :: dosef
+  !! Density of state N(Ef)
+  REAL(kind=DP) :: w0g1
+  !! Dirac delta for the imaginary part of $\Sigma$
+  REAL(kind=DP) :: w0g2
+  !! Dirac delta for the imaginary part of $\Sigma$
+  REAL(kind=DP) :: inv_wq
+  !! $frac{1}{2\omega_{q\nu}}$ defined for efficiency reasons
+  REAL(kind=DP) :: inv_eptemp0
+  !! Inverse of temperature define for efficiency reasons
+  REAL(kind=DP) :: g2_tmp
+  !! If the phonon frequency is too small discart g
+  REAL(kind=DP) :: inv_degaussw
+  !! Inverse of the smearing for efficiency reasons
+  REAL(kind=DP), external :: efermig
+  !! Function to compute the Fermi energy 
+  REAL(kind=DP), external :: dos_ef
+  !! Function to compute the Density of States at the Fermi level
+  REAL(kind=DP), external :: wgauss
+  !! Fermi-Dirac distribution function (when -99)
+  REAL(kind=DP), external :: w0gauss
+  !! This function computes the derivative of the Fermi-Dirac function
+  !! It is therefore an approximation for a delta function
+  REAL(kind=DP), external :: dos_ef_seq
+  !! DOS in sequential
   !
-  ! variables for collecting data from all pools in parallel case 
-  !
-  integer :: nksqtotf
+  COMPLEX(kind=DP) epf (ibndmax-ibndmin+1, ibndmax-ibndmin+1, nmodes)
+  !! Electron-phonon matrix element on the fine grid.
   !
   ! SP: Define the inverse so that we can efficiently multiply instead of
   ! dividing
@@ -630,6 +710,19 @@
      IF ( ( minval ( abs(etf (:, ikk) - ef) ) .lt. fsthick ) .and. &
           ( minval ( abs(etf (:, ikq) - ef) ) .lt. fsthick ) ) THEN
         !
+        IF (etf_mem) THEN
+           epf(:,:,:) = epf17 ( :, :, :, iq)
+        ELSE
+          ios = 0
+          nrec = ik
+          INQUIRE( UNIT = iunepmatf, OPENED = opnd, NAME = nameF )
+          IF ( .NOT. opnd ) CALL errore(  'selfen_elec', 'unit is not opened', iunepmatf )
+          !
+          READ( UNIT = iunepmatf, REC = nrec, IOSTAT = ios ) epf(:,:,:)
+          IF ( ios /= 0 ) CALL errore( 'selfen_elec', &
+               & 'error while reading from file "' // TRIM(nameF) // '"', iunepmatf )
+        ENDIF
+        !
         fermicount = fermicount + 1
         DO imode = 1, nmodes
            !
@@ -645,15 +738,6 @@
              g2_tmp = 1.0
            ELSE
              g2_tmp = 0.0
-           ENDIF
-           !
-           !  we read the e-p matrix
-           !
-           IF (etf_mem) THEN
-              epf(:,:) = epf17 ( iq, :, :, imode)
-           ELSE
-              nrec = (imode-1) * nqf + iq
-              CALL dasmio ( epf, ibndmax-ibndmin+1, lrepmatf, iunepmatf, nrec, -1)
            ENDIF
            !
            DO ibnd = 1, ibndmax-ibndmin+1
@@ -674,9 +758,9 @@
                  IF ( shortrange) THEN
                    ! SP: The abs has to be removed. Indeed the epf can be a pure imaginary 
                    !     number, in which case its square will be a negative number. 
-                   g2 = (epf (jbnd, ibnd)**two)*inv_wq*g2_tmp
+                   g2 = (epf (jbnd, ibnd, imode)**two)*inv_wq*g2_tmp
                  ELSE
-                   g2 = (abs(epf (jbnd, ibnd))**two)*inv_wq*g2_tmp
+                   g2 = (abs(epf (jbnd, ibnd, imode))**two)*inv_wq*g2_tmp
                  ENDIF
                  !
                  ! There is a sign error for wq in Eq. 9 of Comp. Phys. Comm. 181, 2140 (2010). - RM

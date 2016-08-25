@@ -27,7 +27,6 @@ close_epw.o \
 constants_epw.o \
 create_mesh.o \
 createkmap.o \
-dasmio.o \
 deallocate_epw.o \
 deallocate_eliashberg.o \
 distribution.o \

@@ -16,7 +16,6 @@
   !!  Use matrix elements, electronic eigenvalues and phonon frequencies
   !!  from ep-wannier interpolation
   !!
-  !!
   !-----------------------------------------------------------------------
   USE kinds,      ONLY : DP
   USE io_global,  ONLY : stdout
@@ -35,10 +34,48 @@
   USE mp_global,  ONLY : inter_pool_comm, my_pool_id, npool
   !
   IMPLICIT NONE
-  INTEGER :: ik, ikk, ikq, ibnd, jbnd, imode, iq, nrec, fermicount, & 
-             nks, lower_bnd, upper_bnd, nkftot, imelt
+  ! 
+  INTEGER, INTENT (in) :: iq
+  !! Current q-points
+  !
+  ! Local variables
+  CHARACTER (len=256) :: nameF
+  !! Name of the file
+  !
+  LOGICAL :: opnd
+  !! Check whether the file is open. 
+  ! 
+  INTEGER :: ios
+  !! integer variable for I/O control
+  INTEGER :: ik
+  !! Counter on the k-point index 
+  INTEGER :: ikk
+  !! k-point index
+  INTEGER :: ikq
+  !! q-point index 
+  INTEGER :: ibnd
+  !! Counter on bands
+  INTEGER :: jbnd
+  !! Counter on bands
+  INTEGER :: imode
+  !! Counter on mode
+  INTEGER :: nrec
+  !! Record index for reading the e-f matrix
+  INTEGER :: fermicount
+  !! Number of states on the Fermi surface
+  INTEGER :: nkftot
+  !! Total number of k+q points 
+  INTEGER :: lower_bnd
+  !! Lower bounds index after k or q paral
+  INTEGER :: upper_bnd
+  !! Upper bounds index after k or q paral
+  INTEGER :: nks
+  !! Number of k-point on the current pool
+  INTEGER :: imelt
+  !! Memory allocated
+  !
   REAL(DP) :: wq, g2
-  COMPLEX(kind=DP) epf (ibndmax-ibndmin+1, ibndmax-ibndmin+1)
+  COMPLEX(kind=DP) :: epf (ibndmax-ibndmin+1, ibndmax-ibndmin+1, nmodes)
   REAL(DP), EXTERNAL :: efermig, dos_ef
   CHARACTER (len=256) :: filfreq, filegnv, filephmat
   CHARACTER (len=3) :: filelab
@@ -47,10 +84,6 @@
   IF ( my_pool_id == 0 ) THEN
     filfreq = trim(tmp_dir) // trim(prefix) // '.freq' 
     IF ( iq .eq. 1 ) THEN
-       !OPEN(iufilfreq, file = filfreq, form = 'formatted')
-       !WRITE(iufilfreq,'(2i7)') nqtotf, nmodes
-       !WRITE(iufilfreq,'(3f15.9)') xqf(1,iq), xqf(2,iq), xqf(3,iq)
-       !WRITE(iufilfreq,'(20ES20.10)') (wf(imode,iq), imode=1,nmodes)
        OPEN(iufilfreq, file = filfreq, form = 'unformatted')
        WRITE(iufilfreq) nqtotf, nmodes
        WRITE(iufilfreq) xqf(1,iq), xqf(2,iq), xqf(3,iq)
@@ -59,9 +92,6 @@
        ENDDO
        CLOSE(iufilfreq)
     ELSE
-       !OPEN(iufilfreq, file = filfreq, access = 'append', form = 'formatted')
-       !WRITE(iufilfreq,'(3f15.9)') xqf(1,iq), xqf(2,iq), xqf(3,iq)
-       !WRITE(iufilfreq,'(20ES20.10)') (wf(imode,iq), imode=1,nmodes)
        OPEN(iufilfreq, file = filfreq, position='append', form = 'unformatted')
        WRITE(iufilfreq) xqf(1,iq), xqf(2,iq), xqf(3,iq)
        DO imode = 1, nmodes
@@ -149,10 +179,8 @@
   filephmat = trim(tmp_dir) // trim(prefix) // '.ephmat'
 #endif
   IF ( iq .eq. 1 ) THEN 
-     !OPEN(iufileph, file = filephmat, form = 'formatted')
      OPEN(iufileph, file = filephmat, form = 'unformatted')
   ELSE
-     !OPEN(iufileph, file = filephmat, access = 'append', form = 'formatted')
      OPEN(iufileph, file = filephmat, position='append', form = 'unformatted')
   ENDIF
   !
@@ -163,54 +191,61 @@
   ! for mp_mesh_k = true nkf is nr of irreducible k-points in the pool 
   !
   DO ik = 1, nkf
-     !  
-     ikk = 2 * ik - 1
-     ikq = ikk + 1
-     !
-     ! go only over irreducible k-points
-     !
-     IF ( equivk(lower_bnd+ik-1) .eq. (lower_bnd+ik-1) ) THEN 
-        !
-        ! here we must have ef, not ef0, to be consistent with ephwann_shuffle
-        !
-        !   IF ( ixkf(lower_bnd+ik-1) .gt. 0 .AND. ixkqf(ixkf(lower_bnd+ik-1),iq) .gt. 0 ) THEN
-        ! FG: here it can happen that ixkf is 0 and this leads to ixqf(0,iq) after .and.
-        !     modified to prevent crash
-        IF ( ixkf(lower_bnd+ik-1) .gt. 0 ) THEN
-         IF ( ixkqf(ixkf(lower_bnd+ik-1),iq) .gt. 0 ) THEN
-
-           DO imode = 1, nmodes ! phonon modes
-              wq = wf(imode, iq)
-              !
-              !  we read the e-p matrix from memory / disk
-              IF (etf_mem) THEN
-                 epf(:,:) = epf17( ik, :, :, imode )
-              ELSE
-                 nrec = (imode-1) * nkf + ik
-                 CALL dasmio( epf, ibndmax-ibndmin+1, lrepmatf, iunepmatf, nrec, -1 )
+    !  
+    ikk = 2 * ik - 1
+    ikq = ikk + 1
+    !
+    ! go only over irreducible k-points
+    !
+    IF ( equivk(lower_bnd+ik-1) .eq. (lower_bnd+ik-1) ) THEN 
+      !
+      ! here we must have ef, not ef0, to be consistent with ephwann_shuffle
+      !
+      !   IF ( ixkf(lower_bnd+ik-1) .gt. 0 .AND. ixkqf(ixkf(lower_bnd+ik-1),iq) .gt. 0 ) THEN
+      ! FG: here it can happen that ixkf is 0 and this leads to ixqf(0,iq) after .and.
+      !     modified to prevent crash
+      IF ( ixkf(lower_bnd+ik-1) > 0 ) THEN
+        IF ( ixkqf(ixkf(lower_bnd+ik-1),iq) > 0 ) THEN
+          !
+          !  we read the e-p matrix
+          !
+          IF (etf_mem) THEN
+             epf(:,:,:) = epf17 ( :, :, :, ik)
+          ELSE
+            ios = 0
+            nrec = ik
+            INQUIRE( UNIT = iunepmatf, OPENED = opnd, NAME = nameF )
+            IF ( .NOT. opnd ) CALL errore(  'selfen_elec', 'unit is not opened', iunepmatf )
+            !
+            READ( UNIT = iunepmatf, REC = nrec, IOSTAT = ios ) epf(:,:,:)
+            IF ( ios /= 0 ) CALL errore( 'selfen_elec', &
+                 & 'error while reading from file "' // TRIM(nameF) // '"', iunepmatf )
+          ENDIF
+          ! 
+          DO imode = 1, nmodes ! phonon modes
+            wq = wf(imode, iq)
+            !
+            DO ibnd = 1, ibndmax-ibndmin+1
+              IF ( abs( ekfs(ibnd,ixkf(lower_bnd+ik-1)) - ef0 ) < fsthick ) THEN
+                DO jbnd = 1, ibndmax-ibndmin+1
+                  IF ( abs( ekfs(jbnd,ixkqf(ixkf(lower_bnd+ik-1),iq)) - ef0 ) < fsthick ) THEN
+                    !
+                    ! here we take into account the zero-point sqrt(hbar/2M\omega)
+                    ! with hbar = 1 and M already contained in the eigenmodes
+                    ! g2 is Ry^2, wkf must already account for the spin factor
+                    !
+                    g2 = abs( epf(jbnd, ibnd, imode) )**two / ( two * wq )
+                    WRITE(iufileph) g2
+                  ENDIF
+                ENDDO ! jbnd
               ENDIF
-              DO ibnd = 1, ibndmax-ibndmin+1
-                 IF ( abs( ekfs(ibnd,ixkf(lower_bnd+ik-1)) - ef0 ) .lt. fsthick ) THEN
-                    DO jbnd = 1, ibndmax-ibndmin+1
-                       IF ( abs( ekfs(jbnd,ixkqf(ixkf(lower_bnd+ik-1),iq)) - ef0 ) .lt. fsthick ) THEN
-                          !
-                          ! here we take into account the zero-point sqrt(hbar/2M\omega)
-                          ! with hbar = 1 and M already contained in the eigenmodes
-                          ! g2 is Ry^2, wkf must already account for the spin factor
-                          !
-                          g2 = abs( epf(jbnd, ibnd) )**two / ( two * wq )
-                          !WRITE(iufileph,'(ES20.10)') g2
-                          WRITE(iufileph) g2
-                       ENDIF
-                    ENDDO ! jbnd
-                 ENDIF
-              ENDDO ! ibnd
-           ENDDO ! imode
-
-         ENDIF
-        ENDIF ! fsthick
-
-     ENDIF ! irr k-points
+            ENDDO ! ibnd
+          ENDDO ! imode
+          !
+        ENDIF
+      ENDIF ! fsthick
+      !
+    ENDIF ! irr k-points
   ENDDO ! ik's
   CLOSE(iufileph)
   !

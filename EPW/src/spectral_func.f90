@@ -44,6 +44,14 @@
   !! Current q-point index  
   ! 
   ! Local variables
+  CHARACTER (len=256) :: nameF
+  !! Name of the file
+  !
+  LOGICAL :: opnd
+  !! Check whether the file is open. 
+  ! 
+  INTEGER :: ios
+  !! integer variable for I/O control
   INTEGER :: iw
   !! Counter on the frequency
   INTEGER :: ik
@@ -105,7 +113,7 @@
   real(kind=DP) :: fermi(nw_specfun)
   real(kind=DP), external :: efermig, dos_ef, wgauss
   !
-  COMPLEX(kind=DP) epf (ibndmax-ibndmin+1, ibndmax-ibndmin+1)
+  COMPLEX(kind=DP) epf (ibndmax-ibndmin+1, ibndmax-ibndmin+1, nmodes)
   !! Electron-phonon matrix element on the fine grid.   
   !
   ! variables for collecting data from all pools in parallel case 
@@ -195,6 +203,21 @@
     IF ( ( minval ( abs(etf (:, ikk) - ef) ) .lt. fsthick ) .AND. &
         ( minval ( abs(etf (:, ikq) - ef) ) .lt. fsthick ) ) THEN
       !
+      !  we read the e-p matrix
+      !
+      IF (etf_mem) THEN
+         epf(:,:,:) = epf17 ( :, :, :, ik)
+      ELSE
+        ios = 0
+        nrec = ik
+        INQUIRE( UNIT = iunepmatf, OPENED = opnd, NAME = nameF )
+        IF ( .NOT. opnd ) CALL errore(  'selfen_elec', 'unit is not opened', iunepmatf )
+        !
+        READ( UNIT = iunepmatf, REC = nrec, IOSTAT = ios ) epf(:,:,:)
+        IF ( ios /= 0 ) CALL errore( 'selfen_elec', &
+             & 'error while reading from file "' // TRIM(nameF) // '"', iunepmatf )
+      ENDIF
+      !
       fermicount = fermicount + 1
       DO imode = 1, nmodes
         !
@@ -211,15 +234,6 @@
         ELSE
           g2_tmp = 0.0
         ENDIF           
-        !
-        !  we read the e-p matrix
-        !
-        IF (etf_mem) THEN
-          epf(:,:) = epf17 ( ik, :, :, imode)
-        ELSE
-          nrec = (imode-1) * nkf + ik
-          CALL dasmio ( epf, ibndmax-ibndmin+1, lrepmatf, iunepmatf, nrec, -1)
-        ENDIF
         !
         DO ibnd = 1, ibndmax-ibndmin+1
           !
@@ -239,9 +253,9 @@
             IF ( shortrange ) THEN
               ! SP: The abs has to be removed. Indeed the epf can be a pure imaginary 
               !     number, in which case its square will be a negative number. 
-              g2 = (epf (jbnd, ibnd)**two)*inv_wq*g2_tmp
+              g2 = (epf (jbnd, ibnd, imode)**two)*inv_wq*g2_tmp
             ELSE
-              g2 = (abs(epf (jbnd, ibnd))**two)*inv_wq*g2_tmp
+              g2 = (abs(epf (jbnd, ibnd, imode))**two)*inv_wq*g2_tmp
             ENDIF
             !
             DO iw = 1, nw_specfun
@@ -475,6 +489,33 @@
   !! Current k-point
   !
   ! Local variables
+  CHARACTER (len=256) :: nameF
+  !! Name of the file
+  !
+  LOGICAL :: opnd
+  !! Check whether the file is open. 
+  ! 
+  INTEGER :: ios
+  !! integer variable for I/O control
+  INTEGER :: iw
+  !! Counter on the frequency
+  INTEGER :: iq
+  !! Counter on the q-point index 
+  INTEGER :: ikk
+  !! k-point index
+  INTEGER :: ikq
+  !! q-point index 
+  INTEGER :: ibnd
+  !! Counter on bands
+  INTEGER :: jbnd
+  !! Counter on bands
+  INTEGER :: imode
+  !! Counter on mode
+  INTEGER :: nrec
+  !! Record index for reading the e-f matrix
+  INTEGER :: fermicount
+  !! Number of states on the Fermi surface
+  ! 
   REAL(kind=DP) :: inv_wq
   !! $frac{1}{2\omega_{q\nu}}$ defined for efficiency reasons
   REAL(kind=DP) :: inv_eptemp0
@@ -484,8 +525,7 @@
   REAL(kind=DP) :: inv_degaussw
   !! Inverse of the smearing for efficiency reasons   
   real(kind=DP), external :: efermig, dos_ef, wgauss
-  integer :: iw, ikk, ikq, ibnd, jbnd, imode, nrec, iq, fermicount
-  complex(kind=DP) epf (ibndmax-ibndmin+1, ibndmax-ibndmin+1)
+  complex(kind=DP) epf (ibndmax-ibndmin+1, ibndmax-ibndmin+1, nmodes)
   real(kind=DP) :: g2, ekk, ekq, wq, ef0, wgq, wgkq, ww, dw, weight
   real(kind=DP) :: dosef, specfun_sum, esigmar0
   real(kind=DP) :: fermi(nw_specfun)
@@ -574,6 +614,21 @@
     IF ( ( minval ( abs(etf (:, ikk) - ef) ) .lt. fsthick ) .AND. &
         ( minval ( abs(etf (:, ikq) - ef) ) .lt. fsthick ) ) THEN
       !
+      !  we read the e-p matrix
+      !
+      IF (etf_mem) THEN
+         epf(:,:,:) = epf17 ( :, :, :, iq)
+      ELSE
+        ios = 0
+        nrec = ik
+        INQUIRE( UNIT = iunepmatf, OPENED = opnd, NAME = nameF )
+        IF ( .NOT. opnd ) CALL errore(  'selfen_elec', 'unit is not opened', iunepmatf )
+        !
+        READ( UNIT = iunepmatf, REC = nrec, IOSTAT = ios ) epf(:,:,:)
+        IF ( ios /= 0 ) CALL errore( 'selfen_elec', &
+             & 'error while reading from file "' // TRIM(nameF) // '"', iunepmatf )
+      ENDIF
+      !
       fermicount = fermicount + 1
       DO imode = 1, nmodes
         !
@@ -591,15 +646,6 @@
           g2_tmp = 0.0
         ENDIF
         ! 
-        !  we read the e-p matrix
-        !
-        IF (etf_mem) THEN
-          epf(:,:) = epf17 ( iq, :, :, imode)
-        ELSE
-          nrec = (imode-1) * nqf + iq
-          CALL dasmio ( epf, ibndmax-ibndmin+1, lrepmatf, iunepmatf, nrec, -1)
-        ENDIF
-        !
         DO ibnd = 1, ibndmax-ibndmin+1
           !
           !  the energy of the electron at k (relative to Ef)
@@ -618,9 +664,9 @@
             IF ( shortrange ) THEN
               ! SP: The abs has to be removed. Indeed the epf can be a pure imaginary 
               !     number, in which case its square will be a negative number. 
-              g2 = (epf (jbnd, ibnd)**two)*inv_wq*g2_tmp
+              g2 = (epf (jbnd, ibnd, imode)**two)*inv_wq*g2_tmp
             ELSE
-              g2 = (abs(epf (jbnd, ibnd))**two)*inv_wq*g2_tmp
+              g2 = (abs(epf (jbnd, ibnd, imode))**two)*inv_wq*g2_tmp
             ENDIF
             !
             DO iw = 1, nw_specfun

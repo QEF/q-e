@@ -70,12 +70,18 @@
   !! Skipping band during the Wannierization
   LOGICAL :: exst
   !! If the file exist
+  LOGICAL :: opnd
+  !! Check whether the file is open.
   !
   CHARACTER (len=256) :: filint
   !! Name of the file to write/read 
+  CHARACTER (len=256) :: nameF
+  !! Name of the file
   CHARACTER (len=30)  :: myfmt
   !! Variable used for formatting output
   ! 
+  INTEGER :: ios
+  !! integer variable for I/O control
   INTEGER :: iq 
   !! Counter on coarse q-point grid
   INTEGER :: ik
@@ -292,6 +298,10 @@
   IF ( ALLOCATED (cuq) )     DEALLOCATE (cuq)
   IF ( ALLOCATED (lwin) )    DEALLOCATE (lwin)
   IF ( ALLOCATED (lwinq) )   DEALLOCATE (lwinq)
+  ! DBSP
+  IF ((.NOT. etf_mem) .AND. (ionode)) THEN
+    CLOSE(iunepmatwp)
+  ENDIF
   !
   ! at this point, we will interpolate the Wannier rep to the Bloch rep 
   ! for electrons, phonons and the ep-matrix
@@ -453,13 +463,13 @@
     !
     IF (etf_mem) THEN
        ! Fine mesh set of g-matrices.  It is large for memory storage
-       ALLOCATE ( epf17 (nkf, ibndmax-ibndmin+1, ibndmax-ibndmin+1, nmodes) )
+       ALLOCATE ( epf17 (ibndmax-ibndmin+1, ibndmax-ibndmin+1, nmodes, nkf) )
        !
     ELSE
        !
        !  open epf and etf files with the correct record length
        !
-       lrepmatf  = 2 * (ibndmax-ibndmin+1) * (ibndmax-ibndmin+1)
+       lrepmatf  = 2 * (ibndmax-ibndmin+1) * (ibndmax-ibndmin+1) * nmodes
        CALL diropn (iunepmatf, 'epf', lrepmatf, exst)
        !
     ENDIF
@@ -619,32 +629,29 @@
                ENDIF
                !
              ENDIF
-             !
              ! 
              ! write epmatf to file / store in memory
              !
-             !
-             DO imode = 1, nmodes
-                !
-                IF (etf_mem) THEN
+             IF (etf_mem) THEN
+               DO jbnd = ibndmin, ibndmax
+                 DO ibnd = ibndmin, ibndmax
+                   ! 
+                   epf17(ibnd-ibndmin+1,jbnd-ibndmin+1,:,ik) = epmatf(ibnd,jbnd,:)        
                    !
-                   DO jbnd = ibndmin, ibndmax
-                      DO ibnd = ibndmin, ibndmax
-                         !
-                         epf17(ik,jbnd-ibndmin+1,ibnd-ibndmin+1,imode) = epmatf(jbnd,ibnd,imode)
-                         !
-                      ENDDO
-                   ENDDO
-                   !
-                ELSE
-                   !
-                   nrec = (imode-1) * nkf + ik
-                   CALL dasmio ( epmatf(ibndmin:ibndmax,ibndmin:ibndmax,imode), &
-                        ibndmax-ibndmin+1, lrepmatf, iunepmatf, nrec, +1)
-                   !
-                ENDIF
-                !
-             ENDDO
+                 ENDDO
+               ENDDO
+             ELSE
+               !      
+               ios = 0      
+               nrec = ik   
+               INQUIRE( UNIT = iunepmatf, OPENED = opnd, NAME = nameF )      
+               IF ( .NOT. opnd ) CALL errore(  'ephwann_shuffle', 'unit is not opened', iunepmatf )
+               !
+               WRITE (UNIT = iunepmatf, REC = nrec, IOSTAT = ios) epmatf(:,:,:)
+               IF ( ios /= 0 ) CALL errore( 'ephwann_shuffle', &
+                    & 'error while writing from file "' // TRIM(nameF) // '"', iunepmatf )      
+               !  
+             ENDIF
              ! 
              !DBSP
              !if (ik==2) then
@@ -710,13 +717,13 @@
     !
     IF (etf_mem) THEN
        ! Fine mesh set of g-matrices.  It is large for memory storage
-       ALLOCATE ( epf17 (nqf, ibndmax-ibndmin+1, ibndmax-ibndmin+1, nmodes) )
+       ALLOCATE ( epf17 (ibndmax-ibndmin+1, ibndmax-ibndmin+1, nmodes, nqf) )
        !
     ELSE
        !
        !  open epf file with the correct record length
        !
-       lrepmatf  = 2 * (ibndmax-ibndmin+1) * (ibndmax-ibndmin+1)
+       lrepmatf  = 2 * (ibndmax-ibndmin+1) * (ibndmax-ibndmin+1) * nmodes
        CALL diropn (iunepmatf, 'epf', lrepmatf, exst)
        !
     ENDIF
@@ -867,27 +874,26 @@
            ! write epmatf to file / store in memory
            !
            !
-           DO imode = 1, nmodes
-             !
-             IF (etf_mem) THEN
-               !
-               DO jbnd = ibndmin, ibndmax
-                 DO ibnd = ibndmin, ibndmax
-                   !
-                   epf17(iq,jbnd-ibndmin+1,ibnd-ibndmin+1,imode) = epmatf(jbnd,ibnd,imode)
-                   !
-                 ENDDO
+           IF (etf_mem) THEN
+             DO jbnd = ibndmin, ibndmax
+               DO ibnd = ibndmin, ibndmax
+                 ! 
+                 epf17(ibnd-ibndmin+1,jbnd-ibndmin+1,:,iq) = epmatf(ibnd,jbnd,:)
+                 !
                ENDDO
-               !
-             ELSE
-               !
-               nrec = (imode-1) * nqf + iq
-               CALL dasmio ( epmatf(ibndmin:ibndmax,ibndmin:ibndmax,imode), &
-                    ibndmax-ibndmin+1, lrepmatf, iunepmatf, nrec, +1)
-               !
-             ENDIF
+             ENDDO
+           ELSE
+             !      
+             ios = 0
+             nrec = iq
+             INQUIRE( UNIT = iunepmatf, OPENED = opnd, NAME = nameF )
+             IF ( .NOT. opnd ) CALL errore(  'ephwann_shuffle', 'unit is not opened', iunepmatf )
              !
-           ENDDO
+             WRITE (UNIT = iunepmatf, REC = nrec, IOSTAT = ios) epmatf(:,:,:)
+             IF ( ios /= 0 ) CALL errore( 'ephwann_shuffle', &
+                  & 'error while writing from file "' // TRIM(nameF) // '"', iunepmatf )
+             !  
+           ENDIF
            ! 
            !if (ik==2) then
            !  do imode = 1, nmodes
@@ -1032,7 +1038,8 @@ SUBROUTINE epw_write
           ENDDO
         ENDDO
       ENDDO
-      filint    = trim(prefix)//'.epmatwp'
+      !DBSP
+      !filint    = trim(prefix)//'.epmatwp'
       CALL diropn (iunepmatwp, 'epmatwp', lrepmatw, exst)
       CALL davcio ( aux, lrepmatw, iunepmatwp, 1, +1 )
       CLOSE(iunepmatwp)

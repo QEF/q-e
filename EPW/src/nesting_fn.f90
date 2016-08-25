@@ -37,11 +37,44 @@
   !
   implicit none
   !
-  integer :: ik, ikk, ikq, ibnd, jbnd, iq, fermicount, ismear
-  real(kind=DP) :: ekk, ekq, ef0, &
-     weight, w0g1, w0g2, w0gauss, dosef, dos_ef, gamma, &
-     degaussw0
-  !
+  INTEGER, INTENT (in) :: iq
+  !! Current q-point index
+  ! 
+  INTEGER :: ik
+  !! Counter on the k-point index 
+  INTEGER :: ikk
+  !! k-point index
+  INTEGER :: ikq
+  !! q-point index 
+  INTEGER :: ibnd
+  !! Counter on bands
+  INTEGER :: jbnd
+  !! Counter on bands
+  INTEGER :: imode
+  !! Counter on mode
+  INTEGER :: nrec
+  !! Record index for reading the e-f matrix
+  INTEGER :: fermicount
+  !! Number of states on the Fermi surface
+  INTEGER :: ismear
+  !! Upper bounds index after k or q paral
+  !! Smearing for the Gaussian function 
+  ! 
+  REAL(kind=DP) :: ekk
+  !! Eigen energy on the fine grid relative to the Fermi level
+  REAL(kind=DP) :: ekq
+  !! Eigen energy of k+q on the fine grid relative to the Fermi level
+  REAL(kind=DP) :: ef0
+  !! Fermi energy level
+  REAL(kind=DP) :: weight
+  !! Imaginary part of the phonhon self-energy factor 
+  REAL(kind=DP) :: dosef
+  !! Density of state N(Ef)
+  REAL(kind=DP) :: w0g1
+  !! Dirac delta for the imaginary part of $\Sigma$
+  REAL(kind=DP) :: w0g2
+  !! Dirac delta for the imaginary part of $\Sigma$
+  real(kind=DP) :: w0gauss, dos_ef, gamma, degaussw0
   real(kind=DP), external :: efermig
   !
   !
