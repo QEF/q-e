@@ -298,10 +298,6 @@
   IF ( ALLOCATED (cuq) )     DEALLOCATE (cuq)
   IF ( ALLOCATED (lwin) )    DEALLOCATE (lwin)
   IF ( ALLOCATED (lwinq) )   DEALLOCATE (lwinq)
-  ! DBSP
-  IF ((.NOT. etf_mem) .AND. (ionode)) THEN
-    CLOSE(iunepmatwp)
-  ENDIF
   !
   ! at this point, we will interpolate the Wannier rep to the Bloch rep 
   ! for electrons, phonons and the ep-matrix
@@ -457,6 +453,7 @@
   IF (parallel_k) THEN
     !
     ! get the size of the matrix elements stored in each pool
+           !
     ! for informational purposes.  Not necessary
     !
     CALL mem_size(ibndmin, ibndmax, nmodes, nkf)

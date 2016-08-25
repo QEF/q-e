@@ -139,6 +139,8 @@
   !! It is therefore an approximation for a delta function
   REAL(kind=DP), external :: efermig
   !! Return the fermi energy
+  REAL(kind=DP), PARAMETER :: eps2 = 0.01/ryd2mev
+  !! Tolerence  
   !  
   COMPLEX(kind=DP) epf (ibndmax-ibndmin+1, ibndmax-ibndmin+1, nmodes)
   !! Electron-phonon matrix element on the fine grid.
@@ -292,7 +294,8 @@
               ! with hbar = 1 and M already contained in the eigenmodes
               ! g2 is Ry^2, wkf must already account for the spin factor
               !
-              IF ( shortrange) THEN
+              IF ( shortrange .AND. ( abs(xqf (1, iq))> eps2 .OR. abs(xqf (2, iq))> eps2 &
+                 .OR. abs(xqf (3, iq))> eps2 )) THEN              
                 ! SP: The abs has to be removed. Indeed the epf can be a pure imaginary 
                 !     number, in which case its square will be a negative number. 
                 g2 = (epf (jbnd, ibnd, imode)**two)*inv_wq*g2_tmp
@@ -540,6 +543,8 @@ END SUBROUTINE selfen_phon_q
   !! Return the fermi energy
   REAL(kind=DP), external :: dos_ef_seq
   !! Return the DOS in seq
+  REAL(kind=DP), PARAMETER :: eps2 = 0.01/ryd2mev
+  !! Tolerence
   !
   COMPLEX(kind=DP) epf (ibndmax-ibndmin+1, ibndmax-ibndmin+1, nmodes)
   !! Electron-phonon matrix element on the fine grid.
@@ -696,7 +701,8 @@ END SUBROUTINE selfen_phon_q
               ! with hbar = 1 and M already contained in the eigenmodes
               ! g2 is Ry^2, wkf must already account for the spin factor
               !
-              IF ( shortrange) THEN
+              IF ( shortrange .AND. ( abs(xqf (1, iq))> eps2 .OR. abs(xqf (2, iq))> eps2 &
+                 .OR. abs(xqf (3, iq))> eps2 )) THEN        
                 ! SP: The abs has to be removed. Indeed the epf can be a pure imaginary 
                 !     number, in which case its square will be a negative number. 
                 g2 = (epf (jbnd, ibnd, imode)**two)*inv_wq*g2_tmp

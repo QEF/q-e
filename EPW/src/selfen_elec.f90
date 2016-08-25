@@ -37,7 +37,7 @@
                             fsthick, eptemp, ngaussw, degaussw, &
                             etf_mem, eps_acustic, efermi_read, fermi_energy
   USE pwcom,         ONLY : ef !, nelec, isk
-  USE elph2,         ONLY : etf, ibndmin, ibndmax, nkqf, &
+  USE elph2,         ONLY : etf, ibndmin, ibndmax, nkqf, xqf, &
                             nkf, epf17, wkf, nqtotf, wf, wqf, xkf, nkqtotf, &
                             sigmar_all, sigmai_all, sigmai_mode, zi_all, efnew
   USE control_flags, ONLY : iverbosity
@@ -139,6 +139,8 @@
   REAL(kind=DP), external :: w0gauss
   !! This function computes the derivative of the Fermi-Dirac function
   !! It is therefore an approximation for a delta function
+  REAL(kind=DP), PARAMETER :: eps2 = 0.01/ryd2mev
+  !! Tolerence  
   REAL(kind=DP), ALLOCATABLE :: xkf_all(:,:)
   !! Collect k-point coordinate from all pools in parallel case
   REAL(kind=DP), ALLOCATABLE :: etf_all(:,:)
@@ -273,7 +275,8 @@
                  ! with hbar = 1 and M already contained in the eigenmodes
                  ! g2 is Ry^2, wkf must already account for the spin factor
                  !
-                 IF ( shortrange) THEN
+                 IF ( shortrange .AND. ( abs(xqf (1, iq))> eps2 .OR. abs(xqf (2, iq))> eps2 &
+                    .OR. abs(xqf (3, iq))> eps2 )) THEN                         
                    ! SP: The abs has to be removed. Indeed the epf can be a pure imaginary 
                    !     number, in which case its square will be a negative number. 
                    g2 = (epf (jbnd, ibnd, imode)**two)*inv_wq*g2_tmp
@@ -513,7 +516,7 @@
                            fsthick, eptemp, ngaussw, degaussw, &
                            etf_mem, eps_acustic, efermi_read, fermi_energy
   USE pwcom,         ONLY : ef !, nelec, isk
-  USE elph2,         ONLY : etf, ibndmin, ibndmax, nkqf, etf_k, &
+  USE elph2,         ONLY : etf, ibndmin, ibndmax, nkqf, etf_k, xqf, &
                             epf17, wkf, nqtotf, wf, wqf, xkf, nkqtotf, &
                             sigmar_all, sigmai_all, sigmai_mode, zi_all, efnew, nqf
   USE constants_epw, ONLY : ryd2mev, one, ryd2ev, two, zero, pi, ci, eps6
@@ -570,51 +573,16 @@
   !! Temporary array to store the imag-part of Sigma 
   REAL(kind=DP) :: zi_tmp(ibndmax-ibndmin+1)
   !! Temporary array to store the Z
-  REAL(kind=DP) :: g2
-  !! Electron-phonon matrix elements squared in Ry^2
-  REAL(kind=DP) :: ekk
-  !! Eigen energy on the fine grid relative to the Fermi level
-  REAL(kind=DP) :: ekq
-  !! Eigen energy of k+q on the fine grid relative to the Fermi level
-  REAL(kind=DP) :: wq
-  !! Phonon frequency on the fine grid
-  REAL(kind=DP) :: ef0
-  !! Fermi energy level
-  REAL(kind=DP) :: wgq
-  !! Bose occupation factor $n_{q\nu}(T)$
-  REAL(kind=DP) :: wgkq
-  !! Fermi-Dirac occupation factor $f_{nk+q}(T)$
-  REAL(kind=DP) :: weight
-  !! Self-energy factor 
-  !!$$ N_q \Re( \frac{f_{mk+q}(T) + n_{q\nu}(T)}{ \varepsilon_{nk} - \varepsilon_{mk+q} + \omega_{q\nu} - i\delta }) $$ 
-  !!$$ + N_q \Re( \frac{1- f_{mk+q}(T) + n_{q\nu}(T)}{ \varepsilon_{nk} - \varepsilon_{mk+q} - \omega_{q\nu} - i\delta }) $$ 
-  REAL(kind=DP) :: dosef
-  !! Density of state N(Ef)
-  REAL(kind=DP) :: w0g1
-  !! Dirac delta for the imaginary part of $\Sigma$
-  REAL(kind=DP) :: w0g2
-  !! Dirac delta for the imaginary part of $\Sigma$
-  REAL(kind=DP) :: inv_wq
-  !! $frac{1}{2\omega_{q\nu}}$ defined for efficiency reasons
-  REAL(kind=DP) :: inv_eptemp0
-  !! Inverse of temperature define for efficiency reasons
-  REAL(kind=DP) :: g2_tmp
-  !! If the phonon frequency is too small discart g
-  REAL(kind=DP) :: inv_degaussw
-  !! Inverse of the smearing for efficiency reasons
-  REAL(kind=DP), external :: efermig
-  !! Function to compute the Fermi energy 
-  REAL(kind=DP), external :: dos_ef
-  !! Function to compute the Density of States at the Fermi level
-  REAL(kind=DP), external :: wgauss
-  !! Fermi-Dirac distribution function (when -99)
-  REAL(kind=DP), external :: w0gauss
-  !! This function computes the derivative of the Fermi-Dirac function
-  !! It is therefore an approximation for a delta function
-  REAL(kind=DP), external :: dos_ef_seq
-  !! DOS in sequential
+  REAL(kind=DP) :: g2, ekk, ekq, wq, ef0, wgq, wgkq, weight, dosef, &
+                   w0g1, w0g2, inv_wq, inv_eptemp0, g2_tmp,&
+                   inv_degaussw
+  REAL(kind=DP), external :: efermig, dos_ef, wgauss, w0gauss, dos_ef_seq
+  REAL(kind=DP), PARAMETER :: eps2 = 0.01/ryd2mev
+  !! Tolerence 
   !
-  COMPLEX(kind=DP) epf (ibndmax-ibndmin+1, ibndmax-ibndmin+1, nmodes)
+  ! variables for collecting data from all pools in parallel case 
+  !
+  COMPLEX(kind=DP) :: epf (ibndmax-ibndmin+1, ibndmax-ibndmin+1, nmodes)
   !! Electron-phonon matrix element on the fine grid.
   !
   ! SP: Define the inverse so that we can efficiently multiply instead of
@@ -755,7 +723,8 @@
                  ! with hbar = 1 and M already contained in the eigenmodes
                  ! g2 is Ry^2, wkf must already account for the spin factor
                  !
-                 IF ( shortrange) THEN
+                 IF ( shortrange .AND. ( abs(xqf (1, iq))> eps2 .OR. abs(xqf (2, iq))> eps2 &
+                    .OR. abs(xqf (3, iq))> eps2 )) THEN
                    ! SP: The abs has to be removed. Indeed the epf can be a pure imaginary 
                    !     number, in which case its square will be a negative number. 
                    g2 = (epf (jbnd, ibnd, imode)**two)*inv_wq*g2_tmp
