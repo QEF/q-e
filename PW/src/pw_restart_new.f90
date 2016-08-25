@@ -109,8 +109,6 @@ MODULE pw_restart_new
       USE mp,                   ONLY : mp_sum
       USE mp_world,             ONLY : nproc
       USE mp_images,            ONLY : nproc_image
-      USE mp_pools,             ONLY : kunit, nproc_pool, me_pool, root_pool, &
-                                       intra_pool_comm, inter_pool_comm
       USE mp_bands,             ONLY : nproc_bgrp, me_bgrp, root_bgrp, &
                                        intra_bgrp_comm, nbgrp, ntask_groups
       USE mp_diag,              ONLY : nproc_ortho
@@ -142,7 +140,7 @@ MODULE pw_restart_new
       CHARACTER(LEN=20)     :: dft_name
       CHARACTER(LEN=256)    :: dirname
       CHARACTER(LEN=80)     :: vdw_corr_
-      INTEGER               :: i, ig, ik, ngg, ierr, ipol, num_k_points
+      INTEGER               :: i, ig, ngg, ierr, ipol
       INTEGER               :: npwx_g, npw_g, ispin, inlc
       INTEGER,  ALLOCATABLE :: ngk_g(:)
       INTEGER,  ALLOCATABLE :: igk_l2g(:,:), igk_l2g_kdip(:,:), mill_g(:,:)
@@ -427,8 +425,8 @@ MODULE pw_restart_new
       !
       USE iotk_module
       USE mp,                   ONLY : mp_bcast, mp_sum, mp_max
-      USE io_global,            ONLY : ionode, ionode_id
-      USE xml_io_base,          ONLY : write_wfc
+      USE io_global,            ONLY : ionode
+      USE io_base,              ONLY : write_wfc
       USE control_flags,        ONLY : gamma_only, smallmem
       USE gvect,                ONLY : ig_l2g
       USE noncollin_module,     ONLY : noncolin, npol
@@ -443,7 +441,7 @@ MODULE pw_restart_new
       USE wvfct,                ONLY : npw, npwx, et, wg, nbnd
       USE lsda_mod,             ONLY : nspin, isk, lsda
       USE mp_world,             ONLY : nproc
-      USE mp_images,            ONLY : nproc_image, intra_image_comm
+      USE mp_images,            ONLY : nproc_image
       USE mp_pools,             ONLY : kunit, nproc_pool, me_pool, root_pool, &
                                        intra_pool_comm, inter_pool_comm
       USE mp_bands,             ONLY : nproc_bgrp, me_bgrp, root_bgrp, &
@@ -452,7 +450,7 @@ MODULE pw_restart_new
       !
       IMPLICIT NONE
       !
-      INTEGER               :: i, ig, ik, ngg, ierr, ipol, num_k_points
+      INTEGER               :: i, ig, ik, ik_g, ngg, ierr, ipol, num_k_points
       INTEGER               :: nkl, nkr, npwx_g
       INTEGER               :: ike, iks, npw_g, ispin, inlc
       INTEGER,  ALLOCATABLE :: ngk_g(:)
@@ -460,15 +458,10 @@ MODULE pw_restart_new
       CHARACTER(LEN=256)    :: dirname
       CHARACTER(LEN=320)    :: filename
       CHARACTER(iotk_attlenx)  :: attr
+      LOGICAL               :: ionode_k
       !
       !
       dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save'
-      !
-      IF ( nspin == 2 ) THEN
-         num_k_points = nkstot / 2
-      ELSE
-         num_k_points = nkstot
-      END IF
       !
       CALL  kpoint_global_indices (nkstot, iks, ike)
       !
@@ -553,12 +546,22 @@ MODULE pw_restart_new
          !
       END IF
       !
+      IF ( nspin == 2 ) THEN
+         num_k_points = nks / 2
+      ELSE
+         num_k_points = nks
+      END IF
+      !
+      ionode_k = (me_pool == 0)
       k_points_loop2: DO ik = 1, num_k_points
          !
-         IF ( ionode ) filename = TRIM(dirname)//'/gkvectors'//TRIM(int_to_char(ik))//'.dat'
-         IF (.NOT.smallmem) CALL write_gk( iunpun, ik, filename )
+         ! index of k-point ik in the global list
          !
-         CALL write_this_wfc ( iunpun, ik )
+         ik_g = ik + iks - 1
+
+         IF ( .NOT.smallmem ) CALL write_gk( iunpun, ionode_k, ik, ik_g )
+         !
+         CALL write_this_wfc ( iunpun, ionode_k, ik, ik_g )
          !
       END DO k_points_loop2
       !
@@ -604,47 +607,34 @@ MODULE pw_restart_new
         END SUBROUTINE write_gvecs
         !
         !--------------------------------------------------------------------
-        SUBROUTINE write_gk( iun, ik, filename )
+        SUBROUTINE write_gk( iun, ionode_k, ik, ik_g )
           !--------------------------------------------------------------------
           !
           IMPLICIT NONE
           !
-          INTEGER,            INTENT(IN) :: iun, ik
-          CHARACTER(LEN=*),   INTENT(IN) :: filename
+          INTEGER, INTENT(IN) :: iun, ik, ik_g
+          LOGICAL, INTENT(IN) :: ionode_k
           !
           INTEGER, ALLOCATABLE :: igwk(:)
           INTEGER, ALLOCATABLE :: itmp(:)
           !
           !
-          ALLOCATE( igwk( npwx_g ) )
-          !
-          igwk(:) = 0
-          !
           ALLOCATE( itmp( npw_g ) )
-          !
           itmp = 0
-          !
-          IF ( ik >= iks .AND. ik <= ike ) THEN
-             !
-             DO ig = 1, ngk(ik-iks+1)
-                !
-                itmp(igk_l2g(ig,ik-iks+1)) = igk_l2g(ig,ik-iks+1)
-                !
-             END DO
-             !
-          END IF
-          !
-          CALL mp_sum( itmp, inter_pool_comm )
+          DO ig = 1, ngk(ik)
+             itmp(igk_l2g(ig,ik)) = igk_l2g(ig,ik)
+          END DO
           CALL mp_sum( itmp, intra_pool_comm )
           !
-          ngg = 0
+          ALLOCATE( igwk( npwx_g ) )
+          igwk(:) = 0
           !
+          ngg = 0
           DO ig = 1, npw_g
              !
              if ( itmp(ig) == ig ) THEN
                 !
                 ngg = ngg + 1
-                !
                 igwk(ngg) = ig
                 !
              END IF
@@ -653,21 +643,22 @@ MODULE pw_restart_new
           !
           DEALLOCATE( itmp )
           !
-          IF ( ionode ) THEN
+          IF ( ionode_k ) THEN
              !
-             CALL iotk_open_write( iun, FILE = TRIM( filename ), &
-                                   BINARY = .TRUE. )
+             filename = TRIM(dirname) // '/gkvectors' // &
+                  & TRIM(int_to_char(ik_g)) // '.dat'
+             CALL iotk_open_write( iun, FILE = TRIM(filename), BINARY = .TRUE. )
              !
-             CALL iotk_write_dat( iun, "NUMBER_OF_GK-VECTORS", ngk_g(ik) )
+             CALL iotk_write_dat( iun, "NUMBER_OF_GK-VECTORS", ngk_g(ik_g) )
              CALL iotk_write_dat( iun, "MAX_NUMBER_OF_GK-VECTORS", npwx_g )
              CALL iotk_write_dat( iun, "GAMMA_ONLY", gamma_only )
              !
              CALL iotk_write_attr ( attr, "UNITS", "2 pi / a", FIRST = .TRUE. )
              CALL iotk_write_dat( iun, "K-POINT_COORDS", xk(:,ik), ATTR = attr )
              !
-             CALL iotk_write_dat( iun, "INDEX", igwk(1:ngk_g(ik)) )
-             CALL iotk_write_dat( iun, "GRID", mill_g(1:3,igwk(1:ngk_g(ik))), &
-                                  COLUMNS = 3 )
+             CALL iotk_write_dat( iun, "INDEX", igwk(1:ngk_g(ik_g)) )
+             CALL iotk_write_dat( iun, "GRID", mill_g(1:3,igwk(1:ngk_g(ik_g))), &
+                  COLUMNS = 3 )
              !
              CALL iotk_close_write( iun )
              !
@@ -679,64 +670,49 @@ MODULE pw_restart_new
         !
         !
         !--------------------------------------------------------------------
-        SUBROUTINE write_this_wfc ( iun, ik )
+        SUBROUTINE write_this_wfc ( iun, ionode_k, ik, ik_g )
           !--------------------------------------------------------------------
           !
           USE io_files, ONLY : iunwfc, nwordwfc
           IMPLICIT NONE
           !
-          INTEGER, INTENT(IN) :: iun, ik
-          CHARACTER(LEN=256)  :: filename
-          INTEGER :: ispin,ik_eff
+          INTEGER, INTENT(IN) :: iun, ik, ik_g
+          LOGICAL :: ionode_k
+          !
+          INTEGER :: ispin, ik_s, ik_eff
           !
           ! ... wavefunctions - do not read if already in memory (nsk==1)
-          ! ...                 read only if on this pool (iks <= ik <= ike )
           !
-          IF ( ( nks > 1 ) .AND. ( ik >= iks ) .AND. ( ik <= ike ) ) THEN
-             CALL get_buffer ( evc, nwordwfc, iunwfc, (ik-iks+1) )
-          END IF
+          IF ( nks > 1 ) CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
           !
           IF ( nspin == 2 ) THEN
              !
-             ! ... beware: with pools, isk(ik) has the correct value for 
-             ! ... all k-points only on first pool (ionode proc is ok)
+             ! ... spin up
              !
              ispin = isk(ik)
+             filename = TRIM(dirname) // '/wfcup' // TRIM(int_to_char(ik_g)) // '.dat'
+             IF ( ispin /= 1 ) call infomsg('write_wfc','strange spin (1)')
              !
-             IF ( ionode ) filename = TRIM(dirname)//'/wfc'//TRIM(int_to_char(ik))//'dat'
+             CALL write_wfc( iun, ik_g, nkstot, kunit, ispin, nspin, &
+                  evc, npw_g, gamma_only, nbnd, igk_l2g_kdip(:,ik),   &
+                  ngk(ik), filename, 1.D0, &
+                  ionode_k, root_pool, intra_pool_comm )
              !
-             CALL write_wfc( iun, ik, nkstot, kunit, ispin, nspin, &
-                  evc, npw_g, gamma_only, nbnd, igk_l2g_kdip(:,ik-iks+1),   &
-                  ngk(ik-iks+1), filename, 1.D0, &
-                  ionode, root_pool, intra_pool_comm, inter_pool_comm, intra_image_comm )
+             ! ... spin down
              !
-             ik_eff = ik + num_k_points
+             ik_s = ik + num_k_points
+             ispin = isk(ik_s)
+             IF ( ispin /= 2 ) call infomsg('write_wfc','strange spin (2)')
              !
-             ispin = isk(ik_eff)
+             IF ( nks > 1 ) CALL get_buffer ( evc, nwordwfc, iunwfc, ik_s )
              !
-             ! ... LSDA: now read minority wavefunctions (if not already
-             ! ... in memory and if they are on this pool)
+             filename = TRIM(dirname)//'/wfcdw'//TRIM(int_to_char(ik_g))//'.dat'
              !
-             IF ( ( nks > 1 ) .AND. ( ik_eff >= iks ) .AND. ( ik_eff <= ike ) ) THEN
-                !
-                CALL get_buffer ( evc, nwordwfc, iunwfc, (ik_eff-iks+1) )
-                !
-             END IF
-             !
-             IF ( ionode ) THEN
-                !
-                IF ( ispin == 1 ) THEN
-                   filename = TRIM(dirname)//'/wfcup'//TRIM(int_to_char(ik))//'.dat'
-                ELSE
-                   filename = TRIM(dirname)//'/wfcdw'//TRIM(int_to_char(ik))//'.dat'
-                END IF
-                !
-             END IF
-             !
+             ik_eff = ik_g + nkstot/2 ! FIXME: global index for spin down
              CALL write_wfc( iun, ik_eff, nkstot, kunit, ispin, nspin, &
-                  evc, npw_g, gamma_only, nbnd, igk_l2g_kdip(:,ik_eff-iks+1), &
-                  ngk(ik_eff-iks+1), filename, 1.D0, &
-                  ionode, root_pool, intra_pool_comm, inter_pool_comm, intra_image_comm )
+                  evc, npw_g, gamma_only, nbnd, igk_l2g_kdip(:,ik_s), &
+                  ngk(ik_s), filename, 1.D0, &
+                  ionode_k, root_pool, intra_pool_comm )
              !
           ELSE
              !
@@ -745,9 +721,9 @@ MODULE pw_restart_new
                 DO ipol = 1, npol
                    !
                    IF ( ipol == 1 ) THEN
-                      filename = TRIM(dirname)//'/wfcup'//TRIM(int_to_char(ik))//'.dat'
+                      filename = TRIM(dirname)//'/wfcup'//TRIM(int_to_char(ik_g))//'.dat'
                    ELSE
-                      filename = TRIM(dirname)//'/wfcdw'//TRIM(int_to_char(ik))//'.dat'
+                      filename = TRIM(dirname)//'/wfcdw'//TRIM(int_to_char(ik_g))//'.dat'
                    END IF
                    !
                    ! TEMP  spin-up and spin-down spinor components are written
@@ -755,11 +731,11 @@ MODULE pw_restart_new
                    !
                    nkl=(ipol-1)*npwx+1
                    nkr= ipol   *npwx
-                   CALL write_wfc( iun, ik, nkstot, kunit, ipol, npol,   &
+                   CALL write_wfc( iun, ik_g, nkstot, kunit, ipol, npol,   &
                         evc(nkl:nkr,:), npw_g, gamma_only, nbnd, &
-                        igk_l2g_kdip(:,ik-iks+1), ngk(ik-iks+1), &
+                        igk_l2g_kdip(:,ik), ngk(ik), &
                         filename, 1.D0, &
-                        ionode, root_pool, intra_pool_comm, inter_pool_comm, intra_image_comm )
+                        ionode_k, root_pool, intra_pool_comm )
                    !
                 END DO
                 !
@@ -767,14 +743,14 @@ MODULE pw_restart_new
                 !
                 ispin = 1
                 !
-                IF ( ionode ) filename = TRIM(dirname)//'/wfc'//TRIM(int_to_char(ik))//'.dat'
+                IF ( ionode_k ) filename = TRIM(dirname)//'/wfc'//TRIM(int_to_char(ik_g))//'.dat'
 
                 !
-                CALL write_wfc( iun, ik, nkstot, kunit, ispin, nspin, &
+                CALL write_wfc( iun, ik_g, nkstot, kunit, ispin, nspin, &
                      evc, npw_g, gamma_only, nbnd,            &
-                     igk_l2g_kdip(:,ik-iks+1),                &
-                     ngk(ik-iks+1), filename, 1.D0, &
-                     ionode, root_pool, intra_pool_comm, inter_pool_comm, intra_image_comm )
+                     igk_l2g_kdip(:,ik),                &
+                     ngk(ik), filename, 1.D0, &
+                     ionode_k, root_pool, intra_pool_comm )
                 !
              END IF
              !
