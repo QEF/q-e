@@ -70,13 +70,6 @@ SUBROUTINE read_file()
   !
   CALL init_igk ( npwx, ngm, g, gcutw ) 
   !
-  ! ... Allocate and compute k+G indices and number of plane waves
-  ! ... FIXME: should be read from file, not re-computed
-  !
-  CALL init_igk ( npwx, ngm, g, gcutw ) 
-  !
-  ! ... Read orbitals, write them in 'distributed' form to iunwfc
-  !
 #ifdef __XSD 
   dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save'
   IF ( twfcollect )  CALL read_collected_to_evc ( TRIM ( dirname ) , ierr ) 
@@ -289,11 +282,7 @@ SUBROUTINE read_xml_file_internal(withbs)
   ! ... here we read all the variables defining the system
   !
 #ifdef __XSD
-  IF (withbs .eqv. .true.) THEN
      CALL init_vars_from_schema ( 'nowave', ierr, output_obj, input_obj, parinfo_obj, geninfo_obj )
-  ELSE  
-     CALL init_vars_from_schema ( 'nowavenobs', ierr, output_obj, input_obj, parinfo_obj, geninfo_obj ) 
-  END IF
 #else
   IF  ( withbs .EQV. .TRUE. ) THEN  
      CALL pw_readfile( 'nowave', ierr )

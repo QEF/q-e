@@ -934,20 +934,6 @@ MODULE pw_restart_new
          lwfc  = .TRUE.
          need_qexml = .TRUE.
          !
-      CASE( 'nowavenobs' )
-         !
-         lcell   = .TRUE.
-         lpw     = .TRUE.
-         lions   = .TRUE.
-         lspin   = .TRUE.
-         linit_mag   = .TRUE.
-         lxc     = .TRUE.
-         locc    = .TRUE.
-         lbz     = .TRUE.
-         lsymm   = .TRUE.
-         lefield = .TRUE.
-         need_qexml = .TRUE.
-                                                                  
       CASE( 'nowave' )
          !
          lcell   = .TRUE.
@@ -2070,11 +2056,9 @@ MODULE pw_restart_new
       ! ... writes them into the old format
       !
       USE control_flags,        ONLY : twfcollect, lkpoint_dir
-      USE cell_base,            ONLY : tpiba2
       USE lsda_mod,             ONLY : nspin, isk
-      USE klist,                ONLY : nkstot, wk, nks, xk, ngk
+      USE klist,                ONLY : nkstot, wk, nks, xk, ngk, igk_k
       USE wvfct,                ONLY : npw, npwx, g2kin, et, wg, nbnd
-      USE gvecw,                ONLY : ecutwfc
       USE wavefunctions_module, ONLY : evc
       USE io_files,             ONLY : nwordwfc, iunwfc
       USE buffers,              ONLY : save_buffer
@@ -2095,14 +2079,12 @@ MODULE pw_restart_new
       !
       CHARACTER(LEN=320)    :: filename
       INTEGER              :: ik, ig, ipol, ik_eff, num_k_points
-      INTEGER, ALLOCATABLE :: kisort(:)
       INTEGER              :: nkl, nkr, npwx_g
       INTEGER              :: nupdwn(2), ike, iks, npw_g, ispin
       INTEGER, ALLOCATABLE :: ngk_g(:)
       INTEGER, ALLOCATABLE :: igk_l2g(:,:), igk_l2g_kdip(:,:)
       LOGICAL              :: opnd
       REAL(DP)             :: scalef
-      REAL(DP),ALLOCATABLE :: gkin_aux(:)
 
       !
       ! The ierr output var is actually not given any value
@@ -2132,21 +2114,12 @@ MODULE pw_restart_new
       ALLOCATE ( igk_l2g( npwx, nks ) )
       igk_l2g = 0
       !
-      ! FIXME: is it really needed to re-generate and discard k+G indices here?
-      !
-      ALLOCATE( gkin_aux(ngm), kisort( npwx ) )
       DO ik = 1, nks
-         kisort = 0
-         npw    = npwx
-         !
-         CALL gk_sort( xk(1,ik+iks-1), ngm, g, &
-                       ecutwfc/tpiba2, npw, kisort(1), gkin_aux )
          DO ig = 1, npw
-            igk_l2g(ig,ik) = ig_l2g(kisort(ig))
+            igk_l2g(ig,ik) = ig_l2g(igk_k(ig,ik))
          END DO
          !
       END DO
-      DEALLOCATE ( kisort, gkin_aux )
       !
       ! ... compute the global number of G+k vectors for each k point
       !
