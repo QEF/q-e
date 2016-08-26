@@ -447,7 +447,7 @@ MODULE pw_restart_new
       INTEGER               :: nkl, nkr, npwx_g
       INTEGER               :: ike, iks, npw_g, ispin, inlc
       INTEGER,  ALLOCATABLE :: ngk_g(:)
-      INTEGER,  ALLOCATABLE :: igk_l2g(:,:), igk_l2g_kdip(:,:), mill_g(:,:)
+      INTEGER,  ALLOCATABLE :: igk_l2g(:,:), igk_l2g_kdip(:), mill_g(:,:)
       CHARACTER(LEN=256)    :: dirname
       CHARACTER(LEN=320)    :: filename
       CHARACTER(iotk_attlenx)  :: attr
@@ -456,8 +456,7 @@ MODULE pw_restart_new
       !
       dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save'
       !
-      CALL  kpoint_global_indices (nkstot, iks, ike)
-      !
+      ! ... write the G-vectors
       ! ... find out the global number of G vectors: ngm_g
       !
       ngm_g = ngm
@@ -480,6 +479,18 @@ MODULE pw_restart_new
       !
       CALL mp_sum( mill_g, intra_bgrp_comm )
       !
+      IF ( ionode ) THEN  
+         !
+         filename = TRIM( dirname ) // '/gvectors.dat'
+         CALL write_gvecs( iunpun, filename, dfftp%nr1,dfftp%nr2, dfftp%nr3,&
+             ngm_g, gamma_only, mill_g(:,:) )
+         !
+      END IF
+      !
+      ! ... now write wavefunctions and k+G vectors
+      !
+      CALL  kpoint_global_indices (nkstot, iks, ike)
+      !
       ! ... build the igk_l2g array, yielding the correspondence between
       ! ... the local k+G index and the global G index, from previously
       ! ... computed arrays igk_k (k+G indices) and ig_l2g
@@ -495,7 +506,13 @@ MODULE pw_restart_new
          END DO
       END DO
       !
-      ! ... compute the global number of G+k vectors for each k point
+      ! ... npw_g: the maximum G vector index among all k and processors
+      !
+      npw_g = MAXVAL( igk_l2g(:,:) )
+      CALL mp_max( npw_g, inter_pool_comm )
+      CALL mp_max( npw_g, intra_pool_comm )
+      !
+      ! ... ngk_g: global number of k+G vectors for all k points
       !
       ALLOCATE( ngk_g( nkstot ) )
       ngk_g = 0
@@ -504,37 +521,11 @@ MODULE pw_restart_new
       CALL mp_sum( ngk_g, intra_pool_comm)
       ngk_g = ngk_g / nbgrp
       !
-      ! ... compute the maximum G vector index among all k and processors
-      !
-      npw_g = MAXVAL( igk_l2g(:,:) )
-      !
-      CALL mp_max( npw_g, inter_pool_comm )
-      CALL mp_max( npw_g, intra_pool_comm )
-      !
-      ! ... compute the maximum number of G vector among all k points
+      ! ... npwx_g: maximum number of G vector among all k points
       !
       npwx_g = MAXVAL( ngk_g(1:nkstot) )
       !
-      ! ... define a further l2g map to write gkvectors and wfc coherently
-      !
-      ALLOCATE ( igk_l2g_kdip( npwx_g, nks ) )
-      !
-      igk_l2g_kdip = 0
-      !
-      DO ik = iks, ike
-         !
-         CALL gk_l2gmap_kdip( npw_g, ngk_g(ik), ngk(ik-iks+1), &
-                              igk_l2g(1,ik-iks+1), igk_l2g_kdip(1,ik-iks+1) )
-      END DO
-      !
-      IF ( ionode ) THEN  
-         !
-         ! ... write the G-vectors - backwards compatibility
-         !
-         filename = TRIM( dirname ) // '/gvectors.dat'
-         CALL write_gvecs(iunpun, filename)
-         !
-      END IF
+      ! ... for LSDA case the do on k-points should not include replicated ones
       !
       IF ( nspin == 2 ) THEN
          num_k_points = nks / 2
@@ -542,12 +533,25 @@ MODULE pw_restart_new
          num_k_points = nks
       END IF
       !
+      ! ... the root processor of each pool writes
+      !
       ionode_k = (me_pool == root_pool)
+      !
+      ! ... the igk_l2g_kdip local-to-global map is needed to write
+      ! ... k+G vectors and wfc in a coherent way
+      !
+      ALLOCATE ( igk_l2g_kdip( npwx_g ) )
+      !
       k_points_loop2: DO ik = 1, num_k_points
          !
-         ! index of k-point ik in the global list
+         ! ik_G is the index of k-point ik in the global list
          !
          ik_g = ik + iks - 1
+         !
+         igk_l2g_kdip = 0
+         !
+         CALL gk_l2gmap_kdip( npw_g, ngk_g(ik_g), ngk(ik), &
+                              igk_l2g(1,ik), igk_l2g_kdip(1) )
 
          IF ( .NOT.smallmem ) CALL write_gk( iunpun, ionode_k, ik, ik_g )
          !
@@ -570,20 +574,23 @@ MODULE pw_restart_new
       CONTAINS
         !
         !--------------------------------------------------------------------
-        SUBROUTINE write_gvecs( iun, filename )
+        SUBROUTINE write_gvecs( iun, filename, nr1,nr2,nr3,&
+             ngm_g, gamma_only, mill_g )
           !--------------------------------------------------------------------
           IMPLICIT NONE
           !
-          INTEGER,            INTENT(IN) :: iun
+          INTEGER,            INTENT(IN) :: iun, nr1,nr2,nr3,ngm_g
+          INTEGER,            INTENT(IN) :: mill_g(:,:)
+          LOGICAL,            INTENT(IN) :: gamma_only
           CHARACTER(LEN=*),   INTENT(IN) :: filename
           !
           CALL iotk_open_write( iun, FILE = TRIM( filename ), &
                BINARY = .true. )
           !
           CALL iotk_write_begin( iun, "G-VECTORS" )
-          CALL iotk_write_attr( attr, "nr1s", dfftp%nr1, FIRST = .true. )
-          CALL iotk_write_attr( attr, "nr2s", dfftp%nr2 )
-          CALL iotk_write_attr( attr, "nr3s", dfftp%nr3 )
+          CALL iotk_write_attr( attr, "nr1s", nr1, FIRST = .true. )
+          CALL iotk_write_attr( attr, "nr2s", nr2 )
+          CALL iotk_write_attr( attr, "nr3s", nr3 )
           CALL iotk_write_attr( attr, "gvect_number", ngm_g )
           CALL iotk_write_attr( attr, "gamma_only", gamma_only )
           CALL iotk_write_attr( attr, "units", "crystal" )
@@ -684,7 +691,7 @@ MODULE pw_restart_new
              IF ( ispin /= 1 ) call infomsg('write_wfc','strange spin (1)')
              !
              CALL write_wfc( iun, ik_g, nkstot, ispin, nspin, &
-                  evc, npw_g, gamma_only, nbnd, igk_l2g_kdip(:,ik),   &
+                  evc, npw_g, gamma_only, nbnd, igk_l2g_kdip(:),   &
                   ngk(ik), filename, 1.D0, &
                   ionode_k, root_pool, intra_pool_comm )
              !
@@ -700,7 +707,7 @@ MODULE pw_restart_new
              !
              ik_eff = ik_g + nkstot/2 ! FIXME: global index for spin down
              CALL write_wfc( iun, ik_eff, nkstot, ispin, nspin, &
-                  evc, npw_g, gamma_only, nbnd, igk_l2g_kdip(:,ik_s), &
+                  evc, npw_g, gamma_only, nbnd, igk_l2g_kdip(:), &
                   ngk(ik_s), filename, 1.D0, &
                   ionode_k, root_pool, intra_pool_comm )
              !
@@ -723,8 +730,7 @@ MODULE pw_restart_new
                    nkr= ipol   *npwx
                    CALL write_wfc( iun, ik_g, nkstot, ipol, npol,   &
                         evc(nkl:nkr,:), npw_g, gamma_only, nbnd, &
-                        igk_l2g_kdip(:,ik), ngk(ik), &
-                        filename, 1.D0, &
+                        igk_l2g_kdip(:), ngk(ik), filename, 1.D0, &
                         ionode_k, root_pool, intra_pool_comm )
                    !
                 END DO
@@ -738,8 +744,7 @@ MODULE pw_restart_new
                 !
                 CALL write_wfc( iun, ik_g, nkstot, ispin, nspin, &
                      evc, npw_g, gamma_only, nbnd,            &
-                     igk_l2g_kdip(:,ik),                &
-                     ngk(ik), filename, 1.D0, &
+                     igk_l2g_kdip(:), ngk(ik), filename, 1.D0, &
                      ionode_k, root_pool, intra_pool_comm )
                 !
              END IF
@@ -2050,7 +2055,7 @@ MODULE pw_restart_new
       USE wavefunctions_module, ONLY : evc
       USE io_files,             ONLY : nwordwfc, iunwfc
       USE buffers,              ONLY : save_buffer
-      USE gvect,                ONLY : ngm, ngm_g, g, ig_l2g
+      USE gvect,                ONLY : ig_l2g
       USE noncollin_module,     ONLY : noncolin, npol
       USE mp_pools,             ONLY : nproc_pool, me_pool, root_pool, &
                                        intra_pool_comm, inter_pool_comm
@@ -2090,12 +2095,6 @@ MODULE pw_restart_new
       ! 
       CALL  kpoint_global_indices (nkstot, iks, ike)
       !
-      ! ... find out the global number of G vectors: ngm_g  
-      !
-      ngm_g = ngm
-      !
-      CALL mp_sum( ngm_g, intra_bgrp_comm )
-      !
       ! ... build the igk_l2g array, yielding the correspondence between
       ! ... the local k+G index and the global G index - see also ig_l2g
       !
@@ -2115,20 +2114,19 @@ MODULE pw_restart_new
       !
       ngk_g(1:nks) = ngk(:)
       CALL mp_sum( ngk_g(1:nks), intra_bgrp_comm )
+      ngk_g(nks+1:nkstot) = 0
       CALL ipoolrecover( ngk_g, 1, nkstot, nks )
-      !
-      ! ... compute the Maximum G vector index among all G+k an processors
-      !
-      npw_g = MAXVAL( igk_l2g(:,:) )
-      !
-      CALL mp_max( npw_g, inter_pool_comm )
-      CALL mp_max( npw_g, intra_pool_comm )
       !
       ! ... compute the Maximum number of G vector among all k points
       !
       npwx_g = MAXVAL( ngk_g(1:nkstot) )
       !
-      ! 
+      ! ... compute the Maximum G vector index among all G+k an processors
+      !
+      npw_g = MAXVAL( igk_l2g(:,:) )
+      CALL mp_max( npw_g, inter_pool_comm )
+      CALL mp_max( npw_g, intra_pool_comm )
+      !
       ! ... define a further l2g map to read gkvectors and wfc coherently 
       ! 
       ALLOCATE( igk_l2g_kdip( npwx_g, nks ) )
