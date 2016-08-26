@@ -3,6 +3,7 @@
 AC_DEFUN([X_AC_QE_MPI], [
 
 have_mpi=0
+parallel=0
 
 # some architectures require to link mpi libraries explicitly
 F77=$mpif90 # use parallel compiler
