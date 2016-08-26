@@ -527,11 +527,8 @@ MODULE pw_restart_new
       !
       ! ... for LSDA case the do on k-points should not include replicated ones
       !
-      IF ( nspin == 2 ) THEN
-         num_k_points = nks / 2
-      ELSE
-         num_k_points = nks
-      END IF
+      num_k_points = nks
+      IF ( nspin == 2 ) num_k_points = nks / 2
       !
       ! ... the root processor of each pool writes
       !
@@ -549,7 +546,6 @@ MODULE pw_restart_new
          ik_g = ik + iks - 1
          !
          igk_l2g_kdip = 0
-         !
          CALL gk_l2gmap_kdip( npw_g, ngk_g(ik_g), ngk(ik), &
                               igk_l2g(1,ik), igk_l2g_kdip(1) )
 
@@ -2074,7 +2070,7 @@ MODULE pw_restart_new
       INTEGER              :: nkl, nkr, npwx_g
       INTEGER              :: nupdwn(2), ike, iks, npw_g, ispin
       INTEGER, ALLOCATABLE :: ngk_g(:)
-      INTEGER, ALLOCATABLE :: igk_l2g(:,:), igk_l2g_kdip(:,:)
+      INTEGER, ALLOCATABLE :: igk_l2g(:,:), igk_l2g_kdip(:)
       LOGICAL              :: opnd, ionode_k
       REAL(DP)             :: scalef
 
@@ -2097,6 +2093,7 @@ MODULE pw_restart_new
       !
       ! ... build the igk_l2g array, yielding the correspondence between
       ! ... the local k+G index and the global G index - see also ig_l2g
+      ! ... and routine "write_binaries"
       !
       ALLOCATE ( igk_l2g( npwx, nks ) )
       igk_l2g = 0
@@ -2105,48 +2102,49 @@ MODULE pw_restart_new
          DO ig = 1, ngk(ik)
             igk_l2g(ig,ik) = ig_l2g(igk_k(ig,ik))
          END DO
-         !
       END DO
       !
-      ! ... compute the global number of G+k vectors for each k point
-      !
-      ALLOCATE( ngk_g( nkstot ) )
-      !
-      ngk_g(1:nks) = ngk(:)
-      CALL mp_sum( ngk_g(1:nks), intra_bgrp_comm )
-      ngk_g(nks+1:nkstot) = 0
-      CALL ipoolrecover( ngk_g, 1, nkstot, nks )
-      !
-      ! ... compute the Maximum number of G vector among all k points
-      !
-      npwx_g = MAXVAL( ngk_g(1:nkstot) )
-      !
-      ! ... compute the Maximum G vector index among all G+k an processors
+      ! ... npw_g: the maximum G vector index among all k and processors
       !
       npw_g = MAXVAL( igk_l2g(:,:) )
       CALL mp_max( npw_g, inter_pool_comm )
       CALL mp_max( npw_g, intra_pool_comm )
       !
-      ! ... define a further l2g map to read gkvectors and wfc coherently 
-      ! 
-      ALLOCATE( igk_l2g_kdip( npwx_g, nks ) )
-      igk_l2g_kdip = 0
+      ! ... ngk_g: global number of k+G vectors for all k points
       !
-      DO ik = iks, ike
-         !
-         CALL gk_l2gmap_kdip( npw_g, ngk_g(ik), ngk(ik-iks+1), &
-                              igk_l2g(1,ik-iks+1), igk_l2g_kdip(1,ik-iks+1) )
-      END DO
+      ALLOCATE( ngk_g( nkstot ) )
+      ngk_g = 0
+      ngk_g(iks:ike) = ngk(1:nks)
+      CALL mp_sum( ngk_g, inter_pool_comm)
+      CALL mp_sum( ngk_g, intra_pool_comm)
+      ngk_g = ngk_g / nbgrp
+      !
+      ! ... npwx_g: maximum number of G vector among all k points
+      !
+      npwx_g = MAXVAL( ngk_g(1:nkstot) )
+      !
+      ! ... for LSDA case the do on k-points should not include replicated ones
       !
       num_k_points = nks
       IF ( nspin == 2 ) num_k_points = nks / 2
       !
-      ionode_k = ( me_pool == root_pool ) 
+      ! ... the root processor of each pool reads
+      !
+      ionode_k = (me_pool == root_pool)
+      !
+      ! ... the igk_l2g_kdip local-to-global map is needed to read wfcs
+      !
+      ALLOCATE ( igk_l2g_kdip( npwx_g ) )
+      !
       k_points_loop: DO ik = 1, num_k_points
          !
          ! index of k-point ik in the global list
          !
          ik_g = ik + iks - 1
+         !
+         igk_l2g_kdip = 0
+         CALL gk_l2gmap_kdip( npw_g, ngk_g(ik_g), ngk(ik), &
+                              igk_l2g(1,ik), igk_l2g_kdip(1) )
          !
          IF ( nspin == 2 ) THEN
             !
@@ -2159,7 +2157,7 @@ MODULE pw_restart_new
             IF ( ionode_k ) filename = TRIM(dirname)//'/wfcup'//TRIM(int_to_char(ik_g))//'.dat'
             !
             CALL read_wfc( iunpun, ik_g, nkstot, ispin, nspin,      &
-                           evc, npw_g, nbnd, igk_l2g_kdip(:,ik),   &
+                           evc, npw_g, nbnd, igk_l2g_kdip(:),   &
                            ngk(ik), filename, scalef, &
                            ionode_k, root_pool, intra_pool_comm )
             !
@@ -2175,7 +2173,7 @@ MODULE pw_restart_new
             !
             ik_eff = ik_g + nkstot/2 ! FIXME: global index for spin down
             CALL read_wfc( iunpun, ik_eff, nkstot, ispin, nspin,      &
-                           evc, npw_g, nbnd, igk_l2g_kdip(:,ik_s),   &
+                           evc, npw_g, nbnd, igk_l2g_kdip(:),   &
                            ngk(ik_s), filename, scalef, &
                            ionode_k, root_pool, intra_pool_comm )
             !
@@ -2189,9 +2187,9 @@ MODULE pw_restart_new
                DO ipol = 1, npol
                   !
                   IF ( ipol == 1 ) THEN
-                     filename = TRIM(dirname)//'wfcup'//TRIM(int_to_char(ik_g))//'.dat'
+                     filename = TRIM(dirname)//'/wfcup'//TRIM(int_to_char(ik_g))//'.dat'
                   ELSE
-                     filename = TRIM(dirname)//'wfcdw'//TRIM(int_to_char(ik_g))//'.dat'
+                     filename = TRIM(dirname)//'/wfcdw'//TRIM(int_to_char(ik_g))//'.dat'
                   END IF
                   !
                   !!! TEMP
@@ -2199,7 +2197,7 @@ MODULE pw_restart_new
                   nkr= ipol   *npwx
                   CALL read_wfc( iunpun, ik_g, nkstot, ispin,          &
                                  npol, evc(nkl:nkr,:), npw_g, nbnd,         &
-                                 igk_l2g_kdip(:,ik), ngk(ik),   &
+                                 igk_l2g_kdip(:), ngk(ik),   &
                                  filename, scalef, & 
                                  ionode_k, root_pool, intra_pool_comm )
                   !
@@ -2209,9 +2207,9 @@ MODULE pw_restart_new
                !
                IF ( ionode ) filename = TRIM(dirname)//'/wfc'//TRIM(int_to_char(ik_g))//'.dat'
                !
-               CALL read_wfc( iunpun, ik, nkstot, ispin, nspin,         &
-                              evc, npw_g, nbnd, igk_l2g_kdip(:,ik),      &
-                              ngk(ik), filename, scalef, &
+               CALL read_wfc( iunpun, ik, nkstot, ispin, nspin,       &
+                              evc, npw_g, nbnd, igk_l2g_kdip(:),      &
+                              ngk(ik), filename, scalef,              &
                               ionode_k, root_pool, intra_pool_comm )
                !
             END IF
