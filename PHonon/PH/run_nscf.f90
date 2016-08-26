@@ -79,12 +79,11 @@ SUBROUTINE run_nscf(do_band, iq)
   restart = ext_restart
   conv_ions=.true.
   !
-  !!!
   CALL fft_type_allocate ( dfftp, at, bg, gcutm, intra_bgrp_comm )
   CALL fft_type_allocate ( dffts, at, bg, gcutms, intra_bgrp_comm)
-  !!!
   CALL setup_nscf ( newgrid, xq, elph_mat )
   CALL init_run()
+  !
 !!!!!!!!!!!!!!!!!!!!!!!! ACFDT TEST !!!!!!!!!!!!!!!!
   IF (acfdt_is_active) THEN
     ! ACFDT mumerical derivative test: modify the potential

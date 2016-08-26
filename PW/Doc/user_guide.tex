@@ -122,6 +122,8 @@ and many others. We quote in particular:
 \end{itemize}
 and the more recent contributors:
 \begin{itemize}
+  \item Michele Ceriotti and Riccardo Petraglia (EPFL Lausanne) for
+        interfacing with i-PI;
   \item Taylor Barnes (LBL) and Nicola Varini (CSCS) for improvements
         to hybrid functionals;
   \item Robert DiStasio (Cornell)), Biswajit Santra (Princeton),
@@ -156,6 +158,8 @@ and the more recent contributors:
 
 This guide was mostly written by Paolo Giannozzi.
 Mike Towler wrote the \PWscf\ to \texttt{CASINO} subsection.
+Michele Ceriotti and Riccardo Petraglia wrote the subsection on i-PI
+interface.
 
  \subsection{Terms of use}
 
@@ -337,7 +341,9 @@ example:
 If you need wavefunctions as well, you must to set the \pwx\ option 
 \texttt{wf\_collect} to \texttt{.true.}. In such case, wavefunction files 
 are found in directories \texttt{outdir/prefix.save/K*}, one per k-point.
-You should do the conversion for all of them.
+You should do the conversion for all of them.\\
+IMPORTANT NOTICE: starting with v.6, a new I/O system will replace the 
+current one. 
 
 The execution stops if you create a file \texttt{prefix.EXIT} either
 in the working directory (i.e. where the program is executed), or in
@@ -644,6 +650,53 @@ file formats used by the two codes.
 \texttt{CASINO} uses the `\texttt{CASINO} tabulated format', \texttt{PWSCF} officially supports 
 the UPFv2 format (though it will read other `deprecated' formats).
 This can be done through the `casino2upf' and `upf2casino' tools included in the upftools directory (see the upftools/README file for instructions). An alternative converter `casinogon' is included in the \texttt{CASINO} distribution which produces the deprecated GON format but which can be useful when using non-standard grids.
+
+\subsection{Socket interface with i-PI}
+
+The i-PI universal force engine performs advanced Molecular Dynamics
+(MD) (such as Path Integral Molecular Dynamics, Thermodynamic
+Integration, Suzuki-Chin path integral, Multiple Time Step molecular
+dynamics) and other force related computations (see \url{ipi-code.org}
+for more information about i-PI).  
+
+\PWscf\ users wishing to learn how to use i-PI should refer to the i-PI website.
+
+\paragraph{Practicalities}
+The communication between \PWscf\ and i-PI relies on a socket
+interface. This allows running i-PI and \PWscf\ on different computers
+provided that the two computers have an Internet
+connection. Basically, i-PI works as a server waiting for a connection
+of a suitable software (for example \PWscf). When this happens, i-PI
+injects atomic positions and cell parameters into the software, that
+will return forces and stress tensor to i-PI.  
+
+The file containing the interface is \verb#run_driver.f90#. The files
+\verb#socket.c# and \verb#fsocket.f90# provide the necessary
+infrastructure to the socket interface.  
+
+\paragraph{How to use the i-PI inteface}
+Since the communication goes through the Internet, the
+\PWscf\ instance needs to know the address of the i-PI server that can
+be specified with the command line option \verb#--ipi# (or
+\verb#-ipi#) followed by the address of the computer running i-PI and
+the port number where i-PI is listening, e.g. 
+\begin{verbatim}
+pw.x --ipi localhost:3142 -in pw.input > pw.out
+\end{verbatim}
+If i-PI and \PWscf\ are running on the same machine, a UNIX socket is
+preferable since allows faster communications, e.g.  
+\begin{verbatim}
+pw.x --ipi socketname:UNIX -in pw.input > pw.out
+\end{verbatim}
+In the last case, \verb#UNIX# is a keyword that tells to \PWscf\ to
+look for an UNIX socket connection instead of an INET one. More
+extensive examples and tutorials can be found at \url{ipi-code.org}. 
+
+\noindent The \PWscf\ input file must contain all the information to
+perform a single point calculation (\verb#calculation = "scf"#) which
+are also used to initialize the \PWscf\ run. Thus, it is important
+that the \PWscf\ input contains atomic positions and cell parameters
+which are as close as possible to those specified in the i-PI input. 
 
 \section{Performances}
 

@@ -10,24 +10,16 @@ SUBROUTINE run_driver ( srvaddress, exit_status )
   USE io_global,        ONLY : stdout, ionode, ionode_id
   USE parameters,       ONLY : ntypx, npk, lmaxx
   USE check_stop,       ONLY : check_stop_init
-  USE mp_images,        ONLY : intra_image_comm
-  USE io_files,         ONLY : iunupdate, seqopn
-  USE mp_global,        ONLY : mp_startup, mp_bcast, mp_global_end, intra_image_comm
-  USE control_flags,    ONLY : gamma_only, conv_elec, istep, ethr, &
-                               lscf, lmd
+  USE mp_global,        ONLY : mp_bcast, mp_global_end, intra_image_comm
+  USE control_flags,    ONLY : gamma_only, conv_elec, istep, ethr, lscf, lmd
   USE cellmd,           ONLY : lmovecell
   USE force_mod,        ONLY : lforce, lstres
-  USE ions_base,        ONLY : tau, ityp
+  USE ions_base,        ONLY : tau
   USE cell_base,        ONLY : alat, at, omega, bg
   USE cellmd,           ONLY : omega_old, at_old, calc
   USE force_mod,        ONLY : force
   USE ener,             ONLY : etot
   USE f90sockets,       ONLY : readbuffer, writebuffer
-  USE fft_base,         ONLY : dfftp
-  USE fft_base,         ONLY : dffts
-  USE gvect,            ONLY : gcutm
-  USE gvecs,            ONLY : gcutms
-  USE symm_base,        ONLY : checkallsym
   USE extrapolation,    ONLY : update_file, update_pot
   !
 #ifdef __XSD
@@ -198,17 +190,17 @@ CONTAINS
     IF ( ionode ) CALL readbuffer( socket, rid ) 
     CALL mp_bcast( rid, ionode_id, intra_image_comm )
     !
+    IF ( ionode ) WRITE(*,*) " @ DRIVER MODE: Receiving replica", rid, rid_old
     IF ( rid .NE. rid_old .AND. .NOT. firststep ) THEN
        !
        ! ... If a different replica reset the history
        ! ... the G-vectors will be reinitialized only if needed!
        ! ... see lgreset below
        !
-       CALL clean_pw(.FALSE.)
+       IF ( ionode ) write(*,*) " @ DRIVER MODE: Resetting scf history "
        CALL close_files(.TRUE.)
     END IF
     !
-    IF ( ionode ) WRITE(*,*) " @ DRIVER MODE: Receiving replica", rid, rid_old
     rid_old = rid
     !
     IF ( ionode ) THEN

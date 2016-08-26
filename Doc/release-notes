@@ -1,6 +1,6 @@
 New in 6.0 version:
 
-  * Socket interface with PALENQUE framework
+  * Socket interface with i-PI universal force engine (ipi-code.org)
   * New I/O: XML data file according to the XML Schema, initial implementation
     of HDF5 binary files (experimental, activate with -D__XSD and -D__HDF5)
   * Non-collinear magnetism implemented in epsilon.x, code restructuring

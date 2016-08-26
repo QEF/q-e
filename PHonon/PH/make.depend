@@ -1108,7 +1108,6 @@ q2trans.o : ../../Modules/mp_world.o
 q2trans.o : ../../iotk/src/iotk_module.o
 q2trans.o : io_dyn_mat.o
 q2trans.o : io_dyn_mat_old.o
-q2trans_fd.o : ../../FFTXlib/fft_scalar.o
 q2trans_fd.o : ../../Modules/constants.o
 q2trans_fd.o : ../../Modules/environment.o
 q2trans_fd.o : ../../Modules/io_global.o

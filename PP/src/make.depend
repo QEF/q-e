@@ -191,6 +191,7 @@ do_shift_ew.o : ../../Modules/constants.o
 do_shift_ew.o : ../../Modules/kind.o
 do_shift_ew.o : ../../Modules/mp.o
 do_shift_ew.o : ../../Modules/mp_global.o
+dos.o : ../../Modules/cell_base.o
 dos.o : ../../Modules/constants.o
 dos.o : ../../Modules/environment.o
 dos.o : ../../Modules/io_files.o
@@ -201,6 +202,8 @@ dos.o : ../../Modules/mp_global.o
 dos.o : ../../Modules/mp_world.o
 dos.o : ../../Modules/noncol.o
 dos.o : ../../PW/src/pwcom.o
+dos.o : ../../PW/src/start_k.o
+dos.o : ../../PW/src/symm_base.o
 dosg.o : ../../Modules/kind.o
 elf.o : ../../FFTXlib/fft_interfaces.o
 elf.o : ../../Modules/cell_base.o

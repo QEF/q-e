@@ -109,7 +109,6 @@ dv_of_drho.o : ../PW/src/martyna_tuckerman.o
 dv_of_drho.o : ../PW/src/scf_mod.o
 dv_of_drho.o : lrcom.o
 dv_rVV10.o : ../FFTXlib/fft_interfaces.o
-dv_rVV10.o : ../FFTXlib/fft_scalar.o
 dv_rVV10.o : ../Modules/cell_base.o
 dv_rVV10.o : ../Modules/constants.o
 dv_rVV10.o : ../Modules/control_flags.o
@@ -123,7 +122,6 @@ dv_rVV10.o : ../Modules/recvec.o
 dv_rVV10.o : ../Modules/xc_rVV10.o
 dv_rVV10.o : lrcom.o
 dv_vdW_DF.o : ../FFTXlib/fft_interfaces.o
-dv_vdW_DF.o : ../FFTXlib/fft_scalar.o
 dv_vdW_DF.o : ../Modules/cell_base.o
 dv_vdW_DF.o : ../Modules/constants.o
 dv_vdW_DF.o : ../Modules/control_flags.o
