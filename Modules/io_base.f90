@@ -139,7 +139,6 @@ MODULE io_base
       !
       igwx = MAXVAL( igl(1:ngwl) )
       CALL mp_max( igwx, intra_group_comm )
-      ALLOCATE( wtmp( MAX( igwx, 1 ) ) )
       !
       ierr = 0
       !

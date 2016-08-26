@@ -431,7 +431,7 @@ MODULE pw_restart_new
       USE fft_base,             ONLY : dfftp
       USE basis,                ONLY : natomwfc
       USE gvecs,                ONLY : ngms_g, dual
-      USE wvfct,                ONLY : npw, npwx, et, wg, nbnd
+      USE wvfct,                ONLY : npwx, et, wg, nbnd
       USE lsda_mod,             ONLY : nspin, isk, lsda
       USE mp_pools,             ONLY : nproc_pool, me_pool, root_pool, &
                                        intra_pool_comm, inter_pool_comm
@@ -2100,7 +2100,7 @@ MODULE pw_restart_new
       igk_l2g = 0
       !
       DO ik = 1, nks
-         DO ig = 1, npw
+         DO ig = 1, ngk(ik)
             igk_l2g(ig,ik) = ig_l2g(igk_k(ig,ik))
          END DO
          !
