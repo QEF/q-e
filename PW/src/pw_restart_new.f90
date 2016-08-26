@@ -764,9 +764,10 @@ MODULE pw_restart_new
       !
       ! ... Here the dummy variables
       !
-      INTEGER,           INTENT(IN)  :: npw_g, ngk_g, ngk
-      INTEGER,           INTENT(IN)  :: igk_l2g(ngk)
-      INTEGER, OPTIONAL, INTENT(OUT) :: igwk(ngk_g), igk_l2g_kdip(ngk)
+      INTEGER, INTENT(IN)  :: npw_g, ngk_g, ngk
+      INTEGER, INTENT(IN)  :: igk_l2g(ngk)
+      INTEGER, INTENT(OUT) :: igk_l2g_kdip(ngk)
+      INTEGER, OPTIONAL, INTENT(OUT) :: igwk(ngk_g)
       !
       INTEGER, ALLOCATABLE :: igwk_(:), itmp(:), igwk_lup(:)
       INTEGER              :: ig, ig_, ngg
@@ -779,9 +780,7 @@ MODULE pw_restart_new
       igwk_(:) = 0
       !
       DO ig = 1, ngk
-         !
          itmp(igk_l2g(ig)) = igk_l2g(ig)
-         !
       END DO
       !
       CALL mp_sum( itmp, intra_bgrp_comm )
@@ -807,29 +806,25 @@ MODULE pw_restart_new
          !
       END IF
       !
-      IF ( PRESENT( igk_l2g_kdip ) ) THEN
-         !
-         ALLOCATE( igwk_lup( npw_g ) )
-         !
+      ALLOCATE( igwk_lup( npw_g ) )
+      !
 !$omp parallel private(ig_, ig)
 !$omp workshare
-         igwk_lup = 0
+      igwk_lup = 0
 !$omp end workshare
 !$omp do
-         do ig_ = 1, ngk_g
-            igwk_lup(igwk_(ig_)) = ig_
-         end do
+      DO ig_ = 1, ngk_g
+         igwk_lup(igwk_(ig_)) = ig_
+      END DO
 !$omp end do
 !$omp do
-         do ig = 1, ngk
-            igk_l2g_kdip(ig) = igwk_lup(igk_l2g(ig))
-         end do
+      DO ig = 1, ngk
+         igk_l2g_kdip(ig) = igwk_lup(igk_l2g(ig))
+      END DO
 !$omp end do
 !$omp end parallel
-         !
-         DEALLOCATE( igwk_lup )
-
-      END IF
+      !
+      DEALLOCATE( igwk_lup )
       !
       DEALLOCATE( itmp, igwk_ )
       !
