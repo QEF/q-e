@@ -22,10 +22,8 @@ MODULE pw_restart_new
                           qexsd_init_outputElectricField
   USE iotk_module
   USE io_global, ONLY : ionode, ionode_id
-  USE io_files,  ONLY : iunpun, xmlpun_schema, prefix, tmp_dir, &
-       delete_if_present
-  USE pw_restart,ONLY : gk_l2gmap_kdip
-
+  USE io_files,  ONLY : iunpun, xmlpun_schema, prefix, tmp_dir
+  !
   IMPLICIT NONE
   !
   LOGICAL :: lcell_read   = .FALSE., &
@@ -418,7 +416,6 @@ MODULE pw_restart_new
     SUBROUTINE pw_write_binaries( )
       !------------------------------------------------------------------------
       !
-      USE iotk_module
       USE mp,                   ONLY : mp_bcast, mp_sum, mp_max
       USE io_global,            ONLY : ionode
       USE io_base,              ONLY : write_wfc
@@ -750,6 +747,95 @@ MODULE pw_restart_new
         END SUBROUTINE write_this_wfc
         !
     END SUBROUTINE pw_write_binaries
+    !
+    !-----------------------------------------------------------------------
+    SUBROUTINE gk_l2gmap_kdip( npw_g, ngk_g, ngk, igk_l2g, igk_l2g_kdip, igwk )
+      !-----------------------------------------------------------------------
+      !
+      ! ... This subroutine maps local G+k index to the global G vector index
+      ! ... the mapping is used to collect wavefunctions subsets distributed
+      ! ... across processors.
+      ! ... This map is used to obtained the G+k grids related to each kpt
+      !
+      USE mp_bands,             ONLY : intra_bgrp_comm
+      USE mp,                   ONLY : mp_sum
+      !
+      IMPLICIT NONE
+      !
+      ! ... Here the dummy variables
+      !
+      INTEGER,           INTENT(IN)  :: npw_g, ngk_g, ngk
+      INTEGER,           INTENT(IN)  :: igk_l2g(ngk)
+      INTEGER, OPTIONAL, INTENT(OUT) :: igwk(ngk_g), igk_l2g_kdip(ngk)
+      !
+      INTEGER, ALLOCATABLE :: igwk_(:), itmp(:), igwk_lup(:)
+      INTEGER              :: ig, ig_, ngg
+      !
+      !
+      ALLOCATE( itmp( npw_g ) )
+      ALLOCATE( igwk_( ngk_g ) )
+      !
+      itmp(:)  = 0
+      igwk_(:) = 0
+      !
+      DO ig = 1, ngk
+         !
+         itmp(igk_l2g(ig)) = igk_l2g(ig)
+         !
+      END DO
+      !
+      CALL mp_sum( itmp, intra_bgrp_comm )
+      !
+      ngg = 0
+      DO ig = 1, npw_g
+         !
+         IF ( itmp(ig) == ig ) THEN
+            !
+            ngg = ngg + 1
+            igwk_(ngg) = ig
+            !
+         END IF
+         !
+      END DO
+      !
+      IF ( ngg /= ngk_g ) &
+         CALL errore( 'gk_l2gmap_kdip', 'unexpected dimension in ngg', 1 )
+      !
+      IF ( PRESENT( igwk ) ) THEN
+         !
+         igwk(1:ngk_g) = igwk_(1:ngk_g)
+         !
+      END IF
+      !
+      IF ( PRESENT( igk_l2g_kdip ) ) THEN
+         !
+         ALLOCATE( igwk_lup( npw_g ) )
+         !
+!$omp parallel private(ig_, ig)
+!$omp workshare
+         igwk_lup = 0
+!$omp end workshare
+!$omp do
+         do ig_ = 1, ngk_g
+            igwk_lup(igwk_(ig_)) = ig_
+         end do
+!$omp end do
+!$omp do
+         do ig = 1, ngk
+            igk_l2g_kdip(ig) = igwk_lup(igk_l2g(ig))
+         end do
+!$omp end do
+!$omp end parallel
+         !
+         DEALLOCATE( igwk_lup )
+
+      END IF
+      !
+      DEALLOCATE( itmp, igwk_ )
+      !
+      RETURN
+      !
+    END SUBROUTINE gk_l2gmap_kdip
 
     !------------------------------------------------------------------------
     SUBROUTINE pw_readschema_file(ierr, restart_output, restart_input, &
@@ -837,9 +923,9 @@ MODULE pw_restart_new
       USE io_rho_xml,           ONLY : read_rho
       USE scf,                  ONLY : rho
       USE lsda_mod,             ONLY : nspin
-      USE mp_bands,             ONLY : intra_bgrp_comm
       USE mp,                   ONLY : mp_sum, mp_barrier
-      USE qes_types_module,     ONLY : input_type, output_type, general_info_type, parallel_info_type    
+      USE qes_types_module,     ONLY : input_type, output_type, &
+                                       general_info_type, parallel_info_type    
 !      !
       IMPLICIT NONE
 !      !
@@ -2225,7 +2311,6 @@ MODULE pw_restart_new
       !
       RETURN
       !
-
     END SUBROUTINE read_collected_to_evc
     !
     !----------------------------------------------------------------------------------------

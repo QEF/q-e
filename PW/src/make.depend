@@ -1510,7 +1510,6 @@ pw_restart_new.o : exx.o
 pw_restart_new.o : io_rho_xml.o
 pw_restart_new.o : ldaU.o
 pw_restart_new.o : martyna_tuckerman.o
-pw_restart_new.o : pw_restart.o
 pw_restart_new.o : pwcom.o
 pw_restart_new.o : realus.o
 pw_restart_new.o : scf_mod.o
