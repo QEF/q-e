@@ -159,7 +159,9 @@ MODULE pw_restart_new
       !
       ngk_g(1:nks) = ngk(:)
       CALL mp_sum( ngk_g(1:nks), intra_bgrp_comm )
+      ngk_g(nks+1:nkstot) = 0
       CALL ipoolrecover( ngk_g, 1, nkstot, nks )
+      ! BEWARE: only the first pool has ngk_g for all k-points
       !
       ! ... compute the maximum number of G vector among all k points
       !
@@ -496,12 +498,13 @@ MODULE pw_restart_new
       ! ... compute the global number of G+k vectors for each k point
       !
       ALLOCATE( ngk_g( nkstot ) )
+      ngk_g = 0
+      ngk_g(iks:ike) = ngk(1:nks)
+      CALL mp_sum( ngk_g, inter_pool_comm)
+      CALL mp_sum( ngk_g, intra_pool_comm)
+      ngk_g = ngk_g / nbgrp
       !
-      ngk_g(1:nks) = ngk(:)
-      CALL mp_sum( ngk_g(1:nks), intra_bgrp_comm )
-      CALL ipoolrecover( ngk_g, 1, nkstot, nks )
-      !
-      ! ... compute the maximum G vector index among all G+k an processors
+      ! ... compute the maximum G vector index among all k and processors
       !
       npw_g = MAXVAL( igk_l2g(:,:) )
       !
