@@ -10,6 +10,7 @@ The following libraries have been found:
   @scalapack_line@
   @fft_line@
   @mpi_line@
+  @hdf5_line@
   @mass_line@
 Please check if this is what you expect.
 
