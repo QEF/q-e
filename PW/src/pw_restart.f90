@@ -583,7 +583,6 @@ MODULE pw_restart
           USE hdf5_qe,   ONLY :  prepare_for_writing_final, write_gkhdf5, &
                                  gk_hdf5_write, h5fclose_f
           USE io_files,  ONLY : tmp_dir
-          USE mp_world,  ONLY : mpime
 #endif
 
           IMPLICIT NONE

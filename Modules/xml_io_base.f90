@@ -550,7 +550,6 @@ MODULE xml_io_base
       ! ... on a single proc.
       !
       USE mp,        ONLY : mp_get, mp_sum, mp_rank, mp_size
-      USE mp_world,  ONLY : mpime
 #if defined __HDF5
       USE hdf5_qe,  ONLY  : write_rho, h5fclose_f, prepare_for_writing_final, add_attributes_hdf5, &
                             rho_hdf5_write  
@@ -864,7 +863,6 @@ MODULE xml_io_base
       !                       setup_file_property_hdf5, &
       !                       write_final_data, prepare_for_writing_final, &
       USE hdf5_qe                
-      USE mp_world,   ONLY : mpime
       USE mp_global,    ONLY : inter_pool_comm, world_comm
       USE HDF5
 #endif
@@ -1033,7 +1031,6 @@ MODULE xml_io_base
       USE mp,        ONLY : mp_put, mp_size, mp_rank, mp_sum
 
 #if defined  __HDF5
-      USE mp_world,  ONLY : mpime
       USE hdf5_qe
 #endif
       !

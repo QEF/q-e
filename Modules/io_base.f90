@@ -41,7 +41,6 @@ MODULE io_base
       !
 #if defined  __HDF5
       USE hdf5_qe,    ONLY : prepare_for_writing_final, add_attributes_hdf5, write_evc, h5fclose_f, evc_hdf5_write              
-      USE mp_world,   ONLY : mpime
       USE mp_global,    ONLY : inter_pool_comm, world_comm
       USE HDF5
 #endif
@@ -152,7 +151,6 @@ MODULE io_base
       USE mp,        ONLY : mp_put, mp_size, mp_rank, mp_sum, mp_max
       !
 #if defined  __HDF5
-      USE mp_world,  ONLY : mpime
       USE hdf5_qe
 #endif
 

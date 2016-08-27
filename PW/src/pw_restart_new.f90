@@ -1,4 +1,4 @@
-!
+!initialize_hdf5
 ! Copyright (C) 2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
@@ -607,7 +607,6 @@ MODULE pw_restart_new
           USE hdf5_qe,   ONLY :  prepare_for_writing_final, write_gkhdf5, &
                                  gk_hdf5_write, h5fclose_f
           USE io_files,  ONLY : tmp_dir
-          USE mp_world,  ONLY : mpime
           IMPLICIT NONE
           !
           INTEGER,            INTENT(IN) :: iun, ik

@@ -33,9 +33,7 @@ SUBROUTINE init_run()
   USE tsvdw_module,       ONLY : tsvdw_initialize
   USE wavefunctions_module, ONLY : evc
 #ifdef __HDF5
-  USE hdf5_qe
-  USE mp_global,          ONLY : world_comm
-  USE mp_world,           ONLY : nproc, mpime
+  USE hdf5_qe, ONLY : initialize_hdf5
   USE wavefunctions_module,ONLY : evc
 #endif
 
@@ -113,6 +111,10 @@ SUBROUTINE init_run()
   CALL potinit()
   !
   CALL newd()
+#ifdef __HDF5
+  ! calls h5open_f mandatory in any application using hdf5
+  CALL initialize_hdf5()
+#endif 
   !
 #if defined __HDF5
   CALL initialize_hdf5()
