@@ -4,7 +4,6 @@ include ../../make.inc
 
 # location of needed modules and included files (if any)
 MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules $(MOD_FLAG)../../FFTXlib $(MOD_FLAG)../../LAXlib
-IFLAGS=
 
 PWOBJS = \
 pwscf.o 

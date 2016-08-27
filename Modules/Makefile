@@ -112,6 +112,7 @@ qes_libs.o  \
 qexsd.o   \
 qexsd_input.o \
 qexsd_reader_module.o \
+hdf5_qe.o\
 xsf.o \
 wypos.o \
 zdotc_wrapper.o  \

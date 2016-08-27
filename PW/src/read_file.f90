@@ -40,6 +40,9 @@ SUBROUTINE read_file()
   USE klist,                ONLY : init_igk
   USE gvect,                ONLY : ngm, g
   USE gvecw,                ONLY : gcutw
+#if defined __HDF5
+  USE hdf5_qe
+#endif
   !
   IMPLICIT NONE 
   INTEGER :: ierr
@@ -55,6 +58,9 @@ SUBROUTINE read_file()
      'Reading data from directory:', TRIM( tmp_dir ) // TRIM( prefix ) // '.save'
   !
   CALL read_xml_file ( )
+#if defined __HDF5
+  CALL initialize_hdf5()
+#endif
   !
   ! ... Open unit iunwfc, for Kohn-Sham orbitals - we assume that wfcs
   ! ... have been written to tmp_dir, not to a different directory!

@@ -67,7 +67,11 @@ SUBROUTINE potinit()
   !
   CALL start_clock('potinit')
   !
-  ! check for both .dat and .xml extensions (compatibility reasons) 
+#if defined __HDF5
+  filename = TRIM(tmp_dir) // TRIM (prefix) // '.save/charge-density.hdf5'
+  exst = check_file_exst( TRIM(filename))
+#else 
+  ! check for both .dat/ and .xml extensions (compatibility reasons) 
   !
   filename =  TRIM( tmp_dir ) // TRIM( prefix ) // '.save/charge-density.dat'
   exst     =  check_file_exst( TRIM(filename) )
@@ -78,6 +82,7 @@ SUBROUTINE potinit()
       exst     =  check_file_exst( TRIM(filename) )
       !
   ENDIF
+#endif
   !
   !
   IF ( starting_pot == 'file' .AND. exst ) THEN

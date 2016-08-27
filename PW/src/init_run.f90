@@ -32,6 +32,13 @@ SUBROUTINE init_run()
   USE mp,                 ONLY : mp_bcast
   USE tsvdw_module,       ONLY : tsvdw_initialize
   USE wavefunctions_module, ONLY : evc
+#ifdef __HDF5
+  USE hdf5_qe
+  USE mp_global,          ONLY : world_comm
+  USE mp_world,           ONLY : nproc, mpime
+  USE wavefunctions_module,ONLY : evc
+#endif
+
   !
   IMPLICIT NONE
   !
@@ -107,6 +114,9 @@ SUBROUTINE init_run()
   !
   CALL newd()
   !
+#if defined __HDF5
+  CALL initialize_hdf5()
+#endif
   CALL wfcinit()
   !
   IF(use_wannier) CALL wannier_init()

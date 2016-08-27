@@ -579,6 +579,13 @@ MODULE pw_restart
         SUBROUTINE write_gk( iun, ik, filename )
           !--------------------------------------------------------------------
           !
+#if defined __HDF5
+          USE hdf5_qe,   ONLY :  prepare_for_writing_final, write_gkhdf5, &
+                                 gk_hdf5_write, h5fclose_f
+          USE io_files,  ONLY : tmp_dir
+          USE mp_world,  ONLY : mpime
+#endif
+
           IMPLICIT NONE
           !
           INTEGER,            INTENT(IN) :: iun, ik
@@ -586,6 +593,8 @@ MODULE pw_restart
           !
           INTEGER, ALLOCATABLE :: igwk(:,:)
           INTEGER, ALLOCATABLE :: itmp(:)
+          CHARACTER(LEN = 256) :: filename_hdf5
+          INTEGER              :: ierr 
           !
           !
           ALLOCATE( igwk( npwx_g, nkstot ) )
@@ -627,6 +636,14 @@ MODULE pw_restart
           !
           IF ( ionode ) THEN
              !
+#if defined __HDF5
+             filename_hdf5=trim(tmp_dir) //"gk.hdf5"
+             CALL prepare_for_writing_final(gk_hdf5_write,inter_pool_comm,filename_hdf5,ik)
+             CALL write_gkhdf5(gk_hdf5_write,xk(:,ik),igwk(1:ngk_g(ik),ik), &
+                              mill_g(1:3,igwk(1:ngk_g(ik),ik)),ik)
+             CALL h5fclose_f(gk_hdf5_write%file_id, ierr)
+#else
+
              CALL iotk_open_write( iun, FILE = TRIM( filename ), &
                                    ROOT="GK-VECTORS", BINARY = .TRUE. )
              !
@@ -643,6 +660,7 @@ MODULE pw_restart
              !
              CALL iotk_close_write( iun )
              !
+#endif
           END IF
           !
           DEALLOCATE( igwk )
@@ -2286,6 +2304,12 @@ MODULE pw_restart
       USE mp_bands,             ONLY : me_bgrp, nbgrp, root_bgrp, &
                                        intra_bgrp_comm
       !
+#if defined __HDF5
+      USE hdf5_qe,              ONLY : evc_hdf5_write, read_attributes_hdf5, &
+                                       prepare_for_reading_final
+      USE mp_pools,             ONLY : inter_pool_comm
+#endif
+
       IMPLICIT NONE
       !
       CHARACTER(LEN=*), INTENT(IN)  :: dirname
