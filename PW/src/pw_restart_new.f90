@@ -417,7 +417,6 @@ MODULE pw_restart_new
       !------------------------------------------------------------------------
       !
       USE mp,                   ONLY : mp_bcast, mp_sum, mp_max
-      USE io_global,            ONLY : ionode
       USE io_base,              ONLY : write_wfc
       USE control_flags,        ONLY : gamma_only, smallmem
       USE gvect,                ONLY : ig_l2g

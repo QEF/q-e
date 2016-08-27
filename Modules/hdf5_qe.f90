@@ -70,7 +70,6 @@ module hdf5_qe
   
   subroutine setup_file_property_hdf5(hdf5desc ,filename, hyperslab, write, kpoint)
    use parallel_include
-   use mp_world,  only : mpime
    implicit none
    type(HDF5_type), intent(inout) :: hdf5desc 
    character(len=*), intent(inout) :: filename
@@ -116,7 +115,6 @@ module hdf5_qe
 
 
   subroutine define_dataset_hdf5_hyperslab(hdf5desc, kpoint)
-    USE mp_world,             ONLY : mpime
    implicit none
    type(HDF5_type), intent(inout) :: hdf5desc
    integer,intent(in)             :: kpoint
@@ -142,7 +140,6 @@ module hdf5_qe
   subroutine  write_data_hdf5(hdf5desc, data,  kpoint)
    USE kinds, ONLY : DP
    USE ISO_C_BINDING
-   USE mp_world, ONLY : mpime
 
    implicit none
    type(HDF5_type), intent(inout) :: hdf5desc
@@ -231,7 +228,6 @@ module hdf5_qe
 
 
   subroutine prepare_for_writing_final(hdf5desc,comm,filename_input,kpoint)
-    USE mp_world,             ONLY : mpime
     USE io_files, ONLY : wfc_dir, prefix, tmp_dir
     implicit none
     type(HDF5_type), intent(inout) :: hdf5desc
@@ -239,7 +235,6 @@ module hdf5_qe
     integer, intent(in) :: comm
     integer,  intent(in), optional :: kpoint
     character(len=256) filename
-    character*4 mpimestring
     integer :: ik, error
     character*12 kstring
     
@@ -265,7 +260,6 @@ module hdf5_qe
 
 
   subroutine prepare_for_reading_final(hdf5desc,comm,filename_input,kpoint)
-    USE mp_world,             ONLY : mpime
     USE io_files,             ONLY : wfc_dir, prefix, tmp_dir
     implicit none
     type(HDF5_type), intent(inout) :: hdf5desc
@@ -273,7 +267,6 @@ module hdf5_qe
     integer, intent(in) :: comm
     integer, intent(in), optional :: kpoint
     character(len=256) filename
-    character*4 mpimestring
     integer :: ik
  
     hdf5desc%comm=comm
@@ -290,7 +283,6 @@ module hdf5_qe
 
   subroutine read_rho(hdf5desc,dsetname,var)
     USE kinds, ONLY : DP
-    USE mp_world, ONLY : mpime
     implicit none
     type(HDF5_type), intent(inout) :: hdf5desc
     integer, intent(in) :: dsetname
@@ -312,7 +304,6 @@ module hdf5_qe
 
   subroutine write_rho(hdf5desc,dsetname,var)
     USE kinds, ONLY : DP
-    USE mp_world, ONLY : mpime
     implicit none
     type(HDF5_type), intent(inout) :: hdf5desc
     integer, intent(in) :: dsetname
@@ -336,7 +327,6 @@ module hdf5_qe
 
   subroutine write_eig(hdf5desc,var,kpoint)
     USE kinds, ONLY : DP
-    USE mp_world, ONLY : mpime
     implicit none
     type(HDF5_type), intent(inout) :: hdf5desc
     integer, intent(in) :: kpoint
@@ -363,7 +353,6 @@ module hdf5_qe
 
   subroutine read_eig(hdf5desc,var,kpoint)
     USE kinds, ONLY : DP
-    USE mp_world, ONLY : mpime
     implicit none
     type(HDF5_type), intent(inout) :: hdf5desc
     integer, intent(in) ::  kpoint
@@ -393,7 +382,6 @@ module hdf5_qe
 
   subroutine write_evc(hdf5desc,dsetname,var,kpoint)
     USE kinds, ONLY : DP
-    USE mp_world, ONLY : mpime
     implicit none
     type(HDF5_type), intent(inout) :: hdf5desc
     integer, intent(in) :: dsetname
@@ -428,7 +416,6 @@ module hdf5_qe
 
   subroutine read_evc(hdf5desc,dsetname,var,kpoint)
     USE kinds, ONLY : DP
-    USE mp_world, ONLY : mpime
     implicit none
     type(HDF5_type), intent(inout) :: hdf5desc
     integer, intent(in) :: dsetname, kpoint
@@ -463,7 +450,6 @@ module hdf5_qe
 
   subroutine write_g(hdf5desc,var,kpoint)
     USE kinds, ONLY : DP
-    USE mp_world, ONLY : mpime
     implicit none
     type(HDF5_type), intent(inout) :: hdf5desc
     integer, intent(in), optional :: kpoint
@@ -502,7 +488,6 @@ module hdf5_qe
 
   subroutine write_gkhdf5(hdf5desc,xk,igwk,mill_g,kpoint)
     USE kinds, ONLY : DP
-    USE mp_world, ONLY : mpime
     implicit none
     type(HDF5_type), intent(inout) :: hdf5desc
     integer, intent(in), optional :: kpoint
@@ -588,7 +573,6 @@ module hdf5_qe
 
   subroutine initialize_io_hdf5(hdf5desc,comm, data, write,kpoint)
     USE io_files, ONLY : wfc_dir, prefix, tmp_dir
-    USE mp_world, ONLY : mpime
     USE kinds,    ONLY : dp
     USE mp_world, ONLY : nproc
     implicit none
@@ -598,9 +582,7 @@ module hdf5_qe
     integer, intent(in) :: comm, kpoint
     logical, intent(in) :: write
     character(len=80) :: filename
-    character*4 mpimestring
     integer :: npwx, nbnd
-    !write(mpimestring,'(I0)') mpime
     npwx=size(data(:,1))
     nbnd=size(data(1,:))
     
@@ -617,7 +599,6 @@ module hdf5_qe
   end subroutine initialize_io_hdf5
 
   subroutine initialize_hdf5_array(hdf5desc,comm,n1,n2)
-    use mp_world, only : mpime 
     implicit none
     integer, intent(in) :: n1, n2, comm
     type(HDF5_type), intent(inout) ::  hdf5desc
@@ -751,7 +732,6 @@ module hdf5_qe
   END SUBROUTINE add_attributes_hdf5_r
 
   SUBROUTINE add_attributes_hdf5_c(hdf5desc, attr_data, attr_name, kpoint)
-    USE mp_world, ONLY : mpime
     implicit none
     TYPE(HDF5_type), intent(inout) :: hdf5desc
     integer, intent(in), optional :: kpoint
@@ -807,7 +787,6 @@ module hdf5_qe
 
 
   SUBROUTINE read_attributes_hdf5_i(hdf5desc, attr_data, attr_name, kpoint, debug)
-    USE mp_world,  ONLY : mpime
     implicit none
     TYPE(HDF5_type), intent(inout) :: hdf5desc
     integer, intent(in), optional  :: kpoint, debug
@@ -843,7 +822,6 @@ module hdf5_qe
   END SUBROUTINE read_attributes_hdf5_i
 
   SUBROUTINE read_attributes_hdf5_r(hdf5desc, attr_data, attr_name, kpoint)
-    USE mp_world,  ONLY : mpime
     implicit none
     TYPE(HDF5_type), intent(inout) :: hdf5desc
     integer, intent(in), optional  :: kpoint

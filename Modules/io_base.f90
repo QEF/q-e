@@ -15,11 +15,8 @@ MODULE io_base
   USE iotk_module
   !
   USE kinds,     ONLY : DP
-  USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, &
-                        current_fmt_version => qexml_version
-  USE io_global, ONLY : ionode, ionode_id, stdout
-  USE mp,        ONLY : mp_bcast
-  USE parser,    ONLY : version_compare
+  USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun
+  USE io_global, ONLY : stdout
   !
   IMPLICIT NONE
   !
@@ -31,17 +28,18 @@ MODULE io_base
   CONTAINS
     !
     !------------------------------------------------------------------------
-    SUBROUTINE write_wfc( iuni, ik, nk, ispin, nspin, wf0, ngw,   &
+    SUBROUTINE write_wfc( iuni, ik, nk, ispin, nspin, wfc, ngw,   &
                           gamma_only, nbnd, igl, ngwl, filename, scalef, &
-                          ionode, root_in_group, intra_group_comm)
+                          ionode_in_group, root_in_group, intra_group_comm)
       !------------------------------------------------------------------------
       !
       USE mp_wave,    ONLY : mergewf
-      USE mp,         ONLY : mp_get, mp_size, mp_rank, mp_sum, mp_max
+      USE mp,         ONLY : mp_size, mp_rank, mp_max
       !
 #if defined  __HDF5
-      USE hdf5_qe,    ONLY : prepare_for_writing_final, add_attributes_hdf5, write_evc, h5fclose_f, evc_hdf5_write              
-      USE mp_global,    ONLY : inter_pool_comm, world_comm
+      USE hdf5_qe,    ONLY : prepare_for_writing_final, add_attributes_hdf5, &
+           write_evc, h5fclose_f, evc_hdf5_write              
+      USE mp_pools    ONLY : inter_pool_comm ! FIXME: must disappear
       USE HDF5
 #endif
 
@@ -49,7 +47,7 @@ MODULE io_base
       !
       INTEGER,            INTENT(IN) :: iuni
       INTEGER,            INTENT(IN) :: ik, nk, ispin, nspin
-      COMPLEX(DP),        INTENT(IN) :: wf0(:,:)
+      COMPLEX(DP),        INTENT(IN) :: wfc(:,:)
       INTEGER,            INTENT(IN) :: ngw
       LOGICAL,            INTENT(IN) :: gamma_only
       INTEGER,            INTENT(IN) :: nbnd
@@ -58,7 +56,7 @@ MODULE io_base
       CHARACTER(LEN=256), INTENT(IN) :: filename
       REAL(DP),           INTENT(IN) :: scalef    
         ! scale factor, usually 1.0 for pw and 1/SQRT( omega ) for CP
-      LOGICAL,            INTENT(IN) :: ionode
+      LOGICAL,            INTENT(IN) :: ionode_in_group
       INTEGER,            INTENT(IN) :: root_in_group, intra_group_comm
       !
       INTEGER                  :: j, ierr
@@ -80,7 +78,7 @@ MODULE io_base
       !
       wtmp = 0.0_DP
       !
-      IF ( ionode ) THEN
+      IF ( ionode_in_group ) THEN
 #if defined  __HDF5
       filename_hdf5=trim(tmp_dir) //"evc.hdf5"
       CALL prepare_for_writing_final(evc_hdf5_write,inter_pool_comm,filename_hdf5,ik)
@@ -97,7 +95,6 @@ MODULE io_base
       CALL add_attributes_hdf5(evc_hdf5_write,scalef,"scale_factor",ik)
          !
 #else
-
          !
          CALL iotk_open_write( iuni, FILE = TRIM( filename ), ROOT="WFC", BINARY = .TRUE. )
          !
@@ -118,21 +115,22 @@ MODULE io_base
       !
       DO j = 1, nbnd
          !
-         CALL mergewf( wf0(:,j), wtmp, ngwl, igl, me_in_group, &
+         CALL mergewf( wfc(:,j), wtmp, ngwl, igl, me_in_group, &
               nproc_in_group, root_in_group, intra_group_comm )
          !
+         IF ( ionode_in_group ) &
 #ifdef __HDF5
-         IF (ionode ) CALL write_evc(evc_hdf5_write,j, wtmp(1:igwx), ik) 
+            CALL write_evc(evc_hdf5_write,j, wtmp(1:igwx), ik) 
 #else
-         IF ( ionode ) &
             CALL iotk_write_dat( iuni, "evc" // iotk_index( j ), wtmp(1:igwx) )
 #endif
          !
       END DO
+      IF ( ionode_in_group ) &
 #if defined __HDF5
-      IF (ionode ) CALL h5fclose_f(evc_hdf5_write%file_id, ierr) 
+         CALL h5fclose_f(evc_hdf5_write%file_id, ierr) 
 #else 
-      IF ( ionode ) CALL iotk_close_write( iuni )
+         CALL iotk_close_write( iuni )
 #endif
       !
       DEALLOCATE( wtmp )
@@ -142,13 +140,13 @@ MODULE io_base
     END SUBROUTINE write_wfc
     !
     !------------------------------------------------------------------------
-    SUBROUTINE read_wfc( iuni, ik, nk, ispin, &
-                         nspin, wf, ngw, nbnd, igl, ngwl, filename, scalef, &
-                         ionode, root_in_group, intra_group_comm)
+    SUBROUTINE read_wfc( iuni, ik, nk, ispin, nspin, wfc, ngw, nbnd, &
+                         igl, ngwl, filename, scalef, &
+                         ionode_in_group, root_in_group, intra_group_comm)
       !------------------------------------------------------------------------
       !
       USE mp_wave,   ONLY : splitwf
-      USE mp,        ONLY : mp_put, mp_size, mp_rank, mp_sum, mp_max
+      USE mp,        ONLY : mp_bcast, mp_size, mp_rank, mp_max
       !
 #if defined  __HDF5
       USE hdf5_qe
@@ -157,14 +155,14 @@ MODULE io_base
       IMPLICIT NONE
       !
       INTEGER,            INTENT(IN)    :: iuni
-      COMPLEX(DP),        INTENT(OUT)   :: wf(:,:)
+      COMPLEX(DP),        INTENT(OUT)   :: wfc(:,:)
       INTEGER,            INTENT(IN)    :: ik, nk
       INTEGER,            INTENT(INOUT) :: ngw, nbnd, ispin, nspin
       INTEGER,            INTENT(IN)    :: ngwl
       INTEGER,            INTENT(IN)    :: igl(:)
       CHARACTER(LEN=256), INTENT(IN)    :: filename
       REAL(DP),           INTENT(OUT)   :: scalef
-      LOGICAL,            INTENT(IN)    :: ionode
+      LOGICAL,            INTENT(IN)    :: ionode_in_group
       INTEGER,            INTENT(IN)    :: root_in_group, intra_group_comm
       !
       INTEGER                  :: j
@@ -184,19 +182,20 @@ MODULE io_base
       ierr = 0
       !
 #if !defined __HDF5
-      IF ( ionode ) CALL iotk_open_read( iuni, FILE = filename, &
+      IF ( ionode_in_group ) CALL iotk_open_read( iuni, FILE = filename, &
                               BINARY = .TRUE., IERR = ierr )
       !
       CALL mp_bcast( ierr, root_in_group, intra_group_comm )
       CALL errore( 'read_wfc ', &
                    'cannot open restart file for reading', ierr )
       !
+      IF ( ionode_in_group ) THEN
 #endif
-      IF ( ionode ) THEN
           !
 #if defined  __HDF5
           filename_hdf5=filename
-          CALL prepare_for_reading_final(evc_hdf5_write,evc_hdf5_write%comm,filename_hdf5,ik)
+          CALL prepare_for_reading_final(evc_hdf5_write,evc_hdf5_write%comm, &
+               filename_hdf5,ik)
           CALL read_attributes_hdf5(evc_hdf5_write,ngw,"ngw",ik)
           CALL read_attributes_hdf5(evc_hdf5_write,nbnd,"nbnd",ik)
           CALL read_attributes_hdf5(evc_hdf5_write,ik_,"ik",ik)
@@ -206,7 +205,6 @@ MODULE io_base
           CALL read_attributes_hdf5(evc_hdf5_write,igwx_,"igwx",ik)
           CALL read_attributes_hdf5(evc_hdf5_write,scalef,"scale_factor",ik)
 #else
-
           CALL iotk_scan_empty( iuni, "INFO", attr )
           !
           CALL iotk_scan_attr( attr, "ngw",          ngw )
@@ -234,25 +232,22 @@ MODULE io_base
       !
       DO j = 1, nbnd
          !
-         IF ( j <= SIZE( wf, 2 ) ) THEN
+         IF ( j <= SIZE( wfc, 2 ) ) THEN
             !
-            IF ( ionode ) THEN 
+            IF ( ionode_in_group ) THEN 
 #if defined __HDF5
-             CALL read_evc(evc_hdf5_write,j,wtmp(1:igwx_),ik)
-             !  CALL iotk_scan_dat( iuni, &
-             !                      "evc" // iotk_index( j ), wtmp(1:igwx_) )
+               CALL read_evc(evc_hdf5_write,j,wtmp(1:igwx_),ik)
 #else
                CALL iotk_scan_dat( iuni, &
                                    "evc" // iotk_index( j ), wtmp(1:igwx_) )
  
 #endif
-
                !
                IF ( igwx > igwx_ ) wtmp((igwx_+1):igwx) = 0.0_DP
                !
             END IF
             !
-            CALL splitwf( wf(:,j), wtmp, ngwl, igl, &
+            CALL splitwf( wfc(:,j), wtmp, ngwl, igl, &
                  me_in_group, nproc_in_group, root_in_group, intra_group_comm )
             !
          END IF
@@ -260,7 +255,7 @@ MODULE io_base
       END DO
       !
 #if !defined __HDF5
-      IF ( ionode ) CALL iotk_close_read( iuni )
+      IF ( ionode_in_group ) CALL iotk_close_read( iuni )
 #endif
       !
       DEALLOCATE( wtmp )
