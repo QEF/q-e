@@ -2310,10 +2310,10 @@ MODULE pw_restart_new
             ! ... and correctly distributed across pools in read_file
             !
 #ifdef __HDF5
-            CALL read_wfc( iunout, ik, nkstot, kunit, ispin, nspin,      &
-                           evc, npw_g, nbnd, igk_l2g_kdip(:,ik-iks+1),   &
-                           ngk(ik-iks+1), filename, scalef, &
-                           ionode, root_pool, intra_pool_comm, inter_pool_comm )
+            CALL read_wfc( iunpun, ik_g, nkstot, ispin, nspin,      &
+                           evc, npw_g, nbnd, igk_l2g_kdip(:),   &
+                           ngk(ik), filename, scalef, &
+                           ionode, root_pool, intra_pool_comm )
             !
  
 #else
@@ -2337,10 +2337,10 @@ MODULE pw_restart_new
             !
             ik_eff = ik_g + nkstot/2 ! FIXME: global index for spin down
 #ifdef __HDF5
-            CALL read_wfc( iunout, ik_eff, nkstot, kunit, ispin, nspin,      &
-                           evc, npw_g, nbnd, igk_l2g_kdip(:,ik_eff-iks+1),   &
-                           ngk(ik_eff-iks+1), filename, scalef, &
-                           ionode, root_pool, intra_pool_comm, inter_pool_comm, intra_image_comm )
+            CALL read_wfc( iunpun, ik_eff, nkstot, ispin, nspin,      &
+                           evc, npw_g, nbnd, igk_l2g_kdip(:),   &
+                           ngk(ik_s), filename, scalef, &
+                           ionode, root_pool, intra_pool_comm )
 #else
 
             IF ( ionode_k ) filename = TRIM(dirname)//'/wfcdw'//TRIM(int_to_char(ik_g))//'.dat'
