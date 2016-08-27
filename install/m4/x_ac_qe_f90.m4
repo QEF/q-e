@@ -303,18 +303,6 @@ else
         test_fflags="`echo $f90flags | sed 's/\$([[^)]]*)//g'`"
 fi
 
-AC_MSG_CHECKING([whether the Fortran compiler can perform preprocessing])
-acx_save_FCFLAGS="$FCFLAGS"
-FCFLAGS="$F90FLAGS"
-AC_LANG_PUSH(Fortran)
-AC_COMPILE_IFELSE( AC_LANG_PROGRAM( [], [
-#define SUBSTME integer
-SUBSTME :: ii
- ]),
- [have_cpp=1; AC_MSG_RESULT([yes])],[have_cpp=0; AC_MSG_RESULT([no])])
-AC_LANG_POP(Fortran)
-FCFLAGS="$acx_save_FCFLAGS"
-
 AC_SUBST(pre_fdflags)
 AC_SUBST(f90flags)
 AC_SUBST(fflags)
