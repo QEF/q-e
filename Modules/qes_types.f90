@@ -1,6 +1,17 @@
-
+! Copyright (C) 2003-2016 Quantum ESPRESSO group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
 MODULE qes_types_module
-
+  !----------------------------------------------------------------------------
+  !
+  ! This module contains the data_types  used for
+  ! reading and writing  XML files produced by Quantum ESPRESSO package.
+  !
+  ! Written by Giovanni Borghi, A. Ferretti, ... (2015).
+  !
 USE kinds, only: DP
 
 TYPE :: closed_type
