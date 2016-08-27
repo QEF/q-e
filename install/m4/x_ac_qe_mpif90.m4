@@ -146,12 +146,14 @@ case "$arch" in
         then
                 version=`$mpif90 -V 2>&1 | grep Version |
                          sed 's/.*Version//' | awk '{print $1}'`
-                ifort_version=`echo $version | sed 's/\..*//'`
-                echo "${ECHO_T}ifort $version"
+                f90_major_version=`echo $version | sed 's/\..*//'`
+                echo "${ECHO_T}ifort $f90_major_version"
                 f90_in_mpif90="ifort"
-                if test "$ifort_version" -gt 9; then
+                # Why so?
+                if test "$f90_major_version" -gt "9"; then
                    MKL_FLAGS="-static-intel"
                 fi
+
         elif test "$sunf95_version" != ""
         then
                 version=`echo $sunf95_version | awk '{print $5}'`
@@ -221,35 +223,35 @@ f90 | fc | ftn )
     echo $ECHO_N "checking version wrapped by $f90 command... $ECHO_C"
 
     if $f90 -V 2>&1 | grep -q "Intel(R)" ; then
-        f90_version=ifort
+        f90_flavor=ifort
     elif $f90 -V 2>&1 | grep -q "Sun Fortran" ; then
-        f90_version=sunf95
+        f90_flavor=sunf95
     elif $f90 -V 2>&1 | grep -q "^Open64" ; then
-        f90_version=openf95
+        f90_flavor=openf95
     elif $f90 -V 2>&1 | grep -q "^pgf" ; then
-        f90_version=pgf
+        f90_flavor=pgf
     elif $f90 -v 2>&1 | grep -q "PathScale ENZO" ; then
-        f90_version=pathf95
+        f90_flavor=pathf95
     elif $f90 -v 2>&1 | grep -q "PathScale EKOPath" ; then
-        f90_version=pathf95
+        f90_flavor=pathf95
     elif $f90 -version 2>&1 | grep -q "PathScale" ; then
-        f90_version=pathf95
+        f90_flavor=pathf95
     elif $f90 -v 2>&1 | grep -q "g95" ; then
-        f90_version=g95
+        f90_flavor=g95
     elif $f90 -v 2>&1 | grep -q "gcc version" ; then
-        f90_version=gfortran
+        f90_flavor=gfortran
     elif $f90 -V 2>&1 | grep -q "Cray Fortran" ; then
-        f90_version=crayftn
+        f90_flavor=crayftn
     elif $f90 -version 2>&1 | grep -q "NAG Fortran" ; then
-        f90_version=nagfor
+        f90_flavor=nagfor
     else
         echo $ECHO_N "unknown, leaving as... $ECHO_C"
-        f90_version=$f90
+        f90_flavor=$f90
     fi
-    echo $f90_version
+    echo $f90_flavor
     ;;
 * )
-    f90_version=$f90
+    f90_flavor=$f90
     ;;
 esac
 

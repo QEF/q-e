@@ -5,7 +5,7 @@ AC_DEFUN([X_AC_QE_F77], [
 # candidate f77 compilers good for all cases
 try_f77="$f90"
 
-case "$arch:$f90_version" in
+case "$arch:$f90_flavor" in
 *:pgf90 )
         try_f77="pgf77 $f90"
         ;;

@@ -62,8 +62,8 @@ if test "$with_hdf5" -ne 0 && test "$with_hdf5_path" != "yes"; then
 
 fi
 
-else
-    AC_MSG_WARN([HDF5 support is for parallel execution only])
+#else
+#    AC_MSG_WARN([HDF5 support is for parallel execution only])
 fi
 
   AC_SUBST(hdf5_libs)

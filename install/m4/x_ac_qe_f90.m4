@@ -32,19 +32,24 @@ xlf_flags=0
 
 echo using F90... $f90
 
-case "$arch:$f90_version" in
+case "$arch:$f90_flavor" in
 ia32:ifort* | ia64:ifort* | x86_64:ifort* | mac686:ifort* | crayxt*:ifort* )
         try_fflags="-O2 -assume byterecl -g -traceback"
         if test "$use_debug" -eq 1; then
             try_fflags="$try_fflags -fpe0 -CB"
         fi
   	    try_fflags_nomain="-nofor_main"
-        try_fflags_openmp="-openmp"
         try_f90flags="\$(FFLAGS) -nomodule"
         try_fflags_noopt="-O0 -assume byterecl -g -traceback"
         try_ldflags=""
         try_ldflags_static="-static"
-        try_ldflags_openmp="-openmp"
+        if test "$f90_major_version" -ge "15"; then
+            try_fflags_openmp="-qopenmp"
+            try_ldflags_openmp="-qopenmp"
+        else
+            try_fflags_openmp="-openmp"
+            try_ldflags_openmp="-openmp"
+        fi
         try_dflags="$try_dflags -D__INTEL"
         pre_fdflags="-fpp "
         ;;
@@ -275,6 +280,7 @@ esac
 if test "$use_shared" -eq 0 ; then
   try_ldflags="$try_ldflags $try_ldflags_static" ; fi
 
+# Flags are repeated, need better way to handle this ...
 if test "$use_openmp" -eq 1 ; then
   try_f90flags="$try_f90flags $try_fflags_openmp"
   try_fflags="$try_fflags $try_fflags_openmp"

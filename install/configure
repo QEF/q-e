@@ -1886,6 +1886,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
+# Do not use Autoconf 2.69
 
 
 
@@ -3377,12 +3378,14 @@ case "$arch" in
         then
                 version=`$mpif90 -V 2>&1 | grep Version |
                          sed 's/.*Version//' | awk '{print }'`
-                ifort_version=`echo $version | sed 's/\..*//'`
-                echo "${ECHO_T}ifort $version"
+                f90_major_version=`echo $version | sed 's/\..*//'`
+                echo "${ECHO_T}ifort $f90_major_version"
                 f90_in_mpif90="ifort"
-                if test "$ifort_version" -gt 9; then
+                # Why so?
+                if test "$f90_major_version" -gt "9"; then
                    MKL_FLAGS="-static-intel"
                 fi
+
         elif test "$sunf95_version" != ""
         then
                 version=`echo $sunf95_version | awk '{print }'`
@@ -3454,35 +3457,35 @@ f90 | fc | ftn )
     echo $ECHO_N "checking version wrapped by $f90 command... $ECHO_C"
 
     if $f90 -V 2>&1 | grep -q "Intel(R)" ; then
-        f90_version=ifort
+        f90_flavor=ifort
     elif $f90 -V 2>&1 | grep -q "Sun Fortran" ; then
-        f90_version=sunf95
+        f90_flavor=sunf95
     elif $f90 -V 2>&1 | grep -q "^Open64" ; then
-        f90_version=openf95
+        f90_flavor=openf95
     elif $f90 -V 2>&1 | grep -q "^pgf" ; then
-        f90_version=pgf
+        f90_flavor=pgf
     elif $f90 -v 2>&1 | grep -q "PathScale ENZO" ; then
-        f90_version=pathf95
+        f90_flavor=pathf95
     elif $f90 -v 2>&1 | grep -q "PathScale EKOPath" ; then
-        f90_version=pathf95
+        f90_flavor=pathf95
     elif $f90 -version 2>&1 | grep -q "PathScale" ; then
-        f90_version=pathf95
+        f90_flavor=pathf95
     elif $f90 -v 2>&1 | grep -q "g95" ; then
-        f90_version=g95
+        f90_flavor=g95
     elif $f90 -v 2>&1 | grep -q "gcc version" ; then
-        f90_version=gfortran
+        f90_flavor=gfortran
     elif $f90 -V 2>&1 | grep -q "Cray Fortran" ; then
-        f90_version=crayftn
+        f90_flavor=crayftn
     elif $f90 -version 2>&1 | grep -q "NAG Fortran" ; then
-        f90_version=nagfor
+        f90_flavor=nagfor
     else
         echo $ECHO_N "unknown, leaving as... $ECHO_C"
-        f90_version=$f90
+        f90_flavor=$f90
     fi
-    echo $f90_version
+    echo $f90_flavor
     ;;
 * )
-    f90_version=$f90
+    f90_flavor=$f90
     ;;
 esac
 
@@ -3520,7 +3523,7 @@ fi
 # candidate C and f77 compilers good for all cases
 try_cc="cc gcc"
 
-case "$arch:$f90_version" in
+case "$arch:$f90_flavor" in
 *:ifort* )
         try_cc="icc ecc $try_cc"
         ;;
@@ -5359,7 +5362,7 @@ fi
 # candidate f77 compilers good for all cases
 try_f77="$f90"
 
-case "$arch:$f90_version" in
+case "$arch:$f90_flavor" in
 *:pgf90 )
         try_f77="pgf77 $f90"
         ;;
@@ -5696,19 +5699,24 @@ xlf_flags=0
 
 echo using F90... $f90
 
-case "$arch:$f90_version" in
+case "$arch:$f90_flavor" in
 ia32:ifort* | ia64:ifort* | x86_64:ifort* | mac686:ifort* | crayxt*:ifort* )
         try_fflags="-O2 -assume byterecl -g -traceback"
         if test "$use_debug" -eq 1; then
             try_fflags="$try_fflags -fpe0 -CB"
         fi
   	    try_fflags_nomain="-nofor_main"
-        try_fflags_openmp="-openmp"
         try_f90flags="\$(FFLAGS) -nomodule"
         try_fflags_noopt="-O0 -assume byterecl -g -traceback"
         try_ldflags=""
         try_ldflags_static="-static"
-        try_ldflags_openmp="-openmp"
+        if test "$f90_major_version" -ge "15"; then
+            try_fflags_openmp="-qopenmp"
+            try_ldflags_openmp="-qopenmp"
+        else
+            try_fflags_openmp="-openmp"
+            try_ldflags_openmp="-openmp"
+        fi
         try_dflags="$try_dflags -D__INTEL"
         pre_fdflags="-fpp "
         ;;
@@ -5939,6 +5947,7 @@ esac
 if test "$use_shared" -eq 0 ; then
   try_ldflags="$try_ldflags $try_ldflags_static" ; fi
 
+# Flags are repeated, need better way to handle this ...
 if test "$use_openmp" -eq 1 ; then
   try_f90flags="$try_f90flags $try_fflags_openmp"
   try_fflags="$try_fflags $try_fflags_openmp"
@@ -5966,60 +5975,6 @@ then
 else
         test_fflags="`echo $f90flags | sed 's/\$([^)]*)//g'`"
 fi
-
-{ $as_echo "$as_me:$LINENO: checking whether the Fortran compiler can perform preprocessing" >&5
-$as_echo_n "checking whether the Fortran compiler can perform preprocessing... " >&6; }
-acx_save_FCFLAGS="$FCFLAGS"
-FCFLAGS="$F90FLAGS"
-ac_ext=${ac_fc_srcext-f}
-ac_compile='$FC -c $FCFLAGS $ac_fcflags_srcext conftest.$ac_ext >&5'
-ac_link='$FC -o conftest$ac_exeext $FCFLAGS $LDFLAGS $ac_fcflags_srcext conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_fc_compiler_gnu
-
-cat >conftest.$ac_ext <<_ACEOF
-      program main
-
-#define SUBSTME integer
-SUBSTME :: ii
-
-      end
-_ACEOF
-rm -f conftest.$ac_objext
-if { (ac_try="$ac_compile"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval ac_try_echo="\"\$as_me:$LINENO: $ac_try_echo\""
-$as_echo "$ac_try_echo") >&5
-  (eval "$ac_compile") 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  $as_echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } && {
-	 test -z "$ac_fc_werror_flag" ||
-	 test ! -s conftest.err
-       } && test -s conftest.$ac_objext; then
-  have_cpp=1; { $as_echo "$as_me:$LINENO: result: yes" >&5
-$as_echo "yes" >&6; }
-else
-  $as_echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-	have_cpp=0; { $as_echo "$as_me:$LINENO: result: no" >&5
-$as_echo "no" >&6; }
-fi
-
-rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-ac_ext=c
-ac_cpp='$CPP $CPPFLAGS'
-ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
-ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_c_compiler_gnu
-
-FCFLAGS="$acx_save_FCFLAGS"
 
 
 
@@ -9535,7 +9490,7 @@ fi
 
 # Internal BLAS/LAPACK sometimes have to be handled differently...
 if test "$extlib_flags" = "" ; then
-  case "$arch:$f90_version" in
+  case "$arch:$f90_flavor" in
   x86_64:nagfor* )
     extlib_flags="-O2 -kind=byte -dcfuns -mismatch"
     ;;
@@ -12432,9 +12387,8 @@ ac_compiler_gnu=$ac_cv_f77_compiler_gnu
 
 fi
 
-else
-    { $as_echo "$as_me:$LINENO: WARNING: HDF5 support is for parallel execution only" >&5
-$as_echo "$as_me: WARNING: HDF5 support is for parallel execution only" >&2;}
+#else
+#    AC_MSG_WARN([HDF5 support is for parallel execution only])
 fi
 
 

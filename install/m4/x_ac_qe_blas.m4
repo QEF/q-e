@@ -601,7 +601,7 @@ fi
 
 # Internal BLAS/LAPACK sometimes have to be handled differently...
 if test "$extlib_flags" = "" ; then
-  case "$arch:$f90_version" in
+  case "$arch:$f90_flavor" in
   x86_64:nagfor* )
     extlib_flags="-O2 -kind=byte -dcfuns -mismatch"
     ;;

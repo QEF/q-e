@@ -8,6 +8,7 @@
 
 AC_INIT(ESPRESSO, 6.0-beta, , espresso)
 
+# Do not use Autoconf 2.69 
 AC_PREREQ(2.60)
 AC_CONFIG_MACRO_DIR([m4/])
 
