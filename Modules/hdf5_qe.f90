@@ -247,7 +247,7 @@ module hdf5_qe
       kstring=trim('KPOINT')//kstring
       CALL setup_file_property_hdf5(hdf5desc,hdf5desc%filename ,.false.,.true.,kpoint)
     
-      if(kpoint>1) CALL h5fopen_f(hdf5desc%filename, H5F_ACC_RDWR_F, hdf5desc%file_id, error) ! create the file collectively
+      CALL h5fopen_f(hdf5desc%filename, H5F_ACC_RDWR_F, hdf5desc%file_id, error) ! create the file collectively
       
       CALL h5gcreate_f(hdf5desc%file_id, kstring, hdf5desc%group_id, error)
       CALL h5gclose_f(hdf5desc%group_id, error)

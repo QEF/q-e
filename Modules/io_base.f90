@@ -39,7 +39,7 @@ MODULE io_base
 #if defined  __HDF5
       USE hdf5_qe,    ONLY : prepare_for_writing_final, add_attributes_hdf5, &
            write_evc, h5fclose_f, evc_hdf5_write              
-      USE mp_pools    ONLY : inter_pool_comm ! FIXME: must disappear
+      USE mp_pools,    ONLY : inter_pool_comm ! FIXME: must disappear
       USE HDF5
 #endif
 
@@ -189,8 +189,8 @@ MODULE io_base
       CALL errore( 'read_wfc ', &
                    'cannot open restart file for reading', ierr )
       !
-      IF ( ionode_in_group ) THEN
 #endif
+      IF ( ionode_in_group ) THEN
           !
 #if defined  __HDF5
           filename_hdf5=filename
