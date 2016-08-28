@@ -756,6 +756,7 @@ with_internal_blas
 with_internal_lapack
 with_scalapack
 with_elpa
+enable_xml
 with_hdf5
 enable_signals
 '
@@ -1406,6 +1407,7 @@ Optional Features:
   --enable-shared         use shared libraries if available (default: yes)
   --disable-wrappers      disable C to fortran wrapper check (default:
                           enabled)
+  --enable-xml            enable XML output (default: no)
   --enable-signals        enable signal trapping (default: no)
 
 Optional Packages:
@@ -12204,6 +12206,26 @@ fi
 $as_echo "${elpa_libs}" >&6; }
 
 
+
+
+
+# Enable XML ...
+
+
+# Check whether --enable-xml was given.
+if test "${enable_xml+set}" = set; then
+  enableval=$enable_xml; if   test "$enableval" = "yes" ; then
+      use_xml=1
+   else
+      use_xml=0
+   fi
+else
+  use_xml=0
+fi
+
+
+# preprocessing flag for XML
+if test "$use_xml" -eq 1 ; then try_dflags="$try_dflags -D__XSD" ; fi
 
 
 
