@@ -6,8 +6,12 @@
 !
 #ifdef __HDF5
 module hdf5_qe
+  !
   USE HDF5
+  !USE, intrinsic :: ISO_C_binding
   USE Kinds, ONLY : DP
+  !
+  implicit none
   !
   ! This module contains some common subroutines used to read and write
   ! in HDF5 format the data produced by Quantum ESPRESSO package.
