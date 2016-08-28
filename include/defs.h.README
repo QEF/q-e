@@ -60,7 +60,6 @@ Parallel execution:
       __PARA      Parallel execution - OBSOLETE
       __MPI       Use MPI library
       __OPENMP    OpenMP parallelization
-      __CUDA      Trigger GPU-accelerated routines
 
 Libraries:
       __FFTW        FFT routines from internal FFTW library
@@ -81,6 +80,8 @@ Signals:
                       and save data if executable is signaled with USR1
 IO / Reporting:
       __XSD            Enable XML format
+      __HDF5           Enable I/O using parallel HDF5 (Fortran 2003 
+                       features needed to compile)
       __CLOCK_SECONDS  Translate clock from HH:mm:ss to only seconds
 
 All other preprocessing flags are for debugging purposes and should not be
