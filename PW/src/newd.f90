@@ -241,11 +241,7 @@ SUBROUTINE newd( )
   IF (tqr) THEN
      CALL newq_r(v%of_r,deeq,.false.)
   ELSE
-#if defined(__CUDA) && !defined(__DISABLE_CUDA_NEWD)
-     CALL newq_compute_gpu(v%of_r,deeq,.false.)
-#else
      CALL newq(v%of_r,deeq,.false.)
-#endif
   END IF
   !
   IF (noncolin) call add_paw_to_deeq(deeq)

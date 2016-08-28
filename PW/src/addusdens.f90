@@ -24,11 +24,7 @@ SUBROUTINE addusdens(rho)
   IF ( tqr ) THEN
      CALL addusdens_r(rho,.true.)
   ELSE
-#if defined(__CUDA) && !defined(__DISABLE_CUDA_ADDUSDENS)
-     CALL addusdens_g_gpu(rho)
-#else
      CALL addusdens_g(rho)
-#endif
   ENDIF
   !
   RETURN
