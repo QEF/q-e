@@ -34,10 +34,6 @@ MODULE fft_smallbox_type
     !
     INTEGER, ALLOCATABLE :: npp(:)   ! number of "Z" planes per processor
     INTEGER, ALLOCATABLE :: ipp(:)   ! offset of the first "Z" plane on each proc ( 0 on the first proc!!!)
-
-    LOGICAL :: dimensions_have_been_set = .FALSE.
-    LOGICAL :: arrays_have_been_allocated = .FALSE.
-    LOGICAL :: arrays_have_been_initialized = .FALSE.
     !
     !
     !  fft parallelization

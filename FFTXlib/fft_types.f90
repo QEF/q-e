@@ -35,9 +35,6 @@ MODULE fft_types
     INTEGER :: nr1x   = 0  ! FFT grids leading dimensions
     INTEGER :: nr2x   = 0  ! dimensions of the arrays for the 3D grid (global)
     INTEGER :: nr3x   = 0  ! may differ from nr1 ,nr2 ,nr3 in order to boost performances
-    LOGICAL :: dimensions_have_been_set = .FALSE.
-    LOGICAL :: arrays_have_been_allocated = .FALSE.
-    LOGICAL :: arrays_have_been_initialized = .FALSE.
 
     INTEGER :: npl    = 0  ! number of "Z" planes for this processor = npp( mpime + 1 )
     INTEGER :: nnp    = 0  ! number of 0 and non 0 sticks in a plane ( ~nr1*nr2/nproc )
@@ -79,6 +76,24 @@ CONTAINS
 
 !=----------------------------------------------------------------------------=!
 
+  SUBROUTINE fft_type_setdim( desc, nr1, nr2, nr3 )
+     TYPE (fft_type_descriptor) :: desc
+     INTEGER, INTENT(IN) :: nr1, nr2, nr3
+     IF (desc%nr1 /= 0 .OR. desc%nr1 /= 0 .OR. desc%nr1 /= 0 ) &
+        CALL fftx_error__(' fft_type_setdim ', ' fft dimensions already set ', 1 )
+     desc%nr1 = nr1
+     desc%nr2 = nr2
+     desc%nr3 = nr3
+     desc%nr1 = good_fft_order( desc%nr1 )
+     desc%nr2 = good_fft_order( desc%nr2 )
+     desc%nr3 = good_fft_order( desc%nr3 )
+     desc%nr1x  = good_fft_dimension( desc%nr1 )
+     desc%nr2x  = desc%nr2
+     desc%nr3x  = good_fft_dimension( desc%nr3 )
+  END SUBROUTINE
+
+!=----------------------------------------------------------------------------=!
+
   SUBROUTINE fft_type_allocate( desc, at, bg, gcutm, comm, fft_fact  )
   !
   ! routine that allocate arrays of fft_type_descriptor
@@ -92,11 +107,8 @@ CONTAINS
     INTEGER :: nx, ny, ierr
     INTEGER :: mype, root, nproc ! mype starting from 0
 
-    IF (desc%arrays_have_been_allocated ) &
+    IF ( ALLOCATED( nsp ) ) &
         CALL fftx_error__(' fft_type_allocate ', ' fft arrays already allocated ', 1 )
-
-    IF (desc%dimensions_have_been_set ) &
-        CALL fftx_error__(' fft_type_allocate ', ' fft dimensions already set ', 1 )
 
     desc%comm = comm 
 
@@ -113,7 +125,6 @@ CONTAINS
     CALL MPI_COMM_RANK( comm, mype, ierr )
     CALL MPI_COMM_SIZE( comm, nproc, ierr )
 #endif
-
 
     CALL realspace_grid_init( desc, at, bg, gcutm, fft_fact )
 
@@ -149,9 +160,6 @@ CONTAINS
     desc%nproc = nproc
     desc%root  = root
 
-    desc%arrays_have_been_allocated = .TRUE.
-    desc%dimensions_have_been_set = .true.
-
   END SUBROUTINE fft_type_allocate
 
   SUBROUTINE fft_type_deallocate( desc )
@@ -167,8 +175,6 @@ CONTAINS
     IF ( ALLOCATED( desc%ismap ) )  DEALLOCATE( desc%ismap )
     IF ( ALLOCATED( desc%iplp ) )   DEALLOCATE( desc%iplp )
     IF ( ALLOCATED( desc%iplw ) )   DEALLOCATE( desc%iplw )
-    desc%arrays_have_been_allocated = .FALSE.
-    desc%dimensions_have_been_set = .FALSE.
 #ifdef __MPI
     desc%comm = MPI_COMM_NULL 
 #endif
@@ -206,10 +212,10 @@ CONTAINS
     INTEGER :: nr1, nr2, nr3    ! size of real space grid 
     INTEGER :: nr1x, nr2x, nr3x ! padded size of real space grid
     !
-    IF (.NOT. desc%arrays_have_been_allocated ) &
+    IF (.NOT. ALLOCATED( nsp ) ) &
         CALL fftx_error__(' fft_type_allocate ', ' fft arrays not yet allocated ', 1 )
 
-    IF (.NOT. desc%dimensions_have_been_set ) &
+    IF ( desc%nr1 == 0 .OR. desc%nr2 == 0 .OR. desc%nr3 == 0 ) &
         CALL fftx_error__(' fft_type_set ', ' fft dimensions not yet set ', 1 )
 
     !  Set fft actual and leading dimensions to be used internally
@@ -523,7 +529,7 @@ CONTAINS
         CALL fftx_error__(' fft_type_init ', ' unknown FFT personality ', 1 )
      END IF
 
-     IF( .NOT. dfft%arrays_have_been_allocated ) THEN
+     IF( .NOT. ALLOCATED( nsp ) ) THEN
         CALL fft_type_allocate( dfft, at, bg, gcut, comm  )
      ELSE
         IF( dfft%comm /= comm ) THEN
