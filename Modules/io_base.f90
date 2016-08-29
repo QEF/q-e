@@ -60,7 +60,7 @@ MODULE io_base
       INTEGER,            INTENT(IN) :: root_in_group, intra_group_comm
       !
       INTEGER                  :: j, ierr
-      INTEGER                  :: igwx
+      INTEGER                  :: igwx, npwx, npol
       INTEGER                  :: me_in_group, nproc_in_group, my_group
       COMPLEX(DP), ALLOCATABLE :: wtmp(:)
       !
@@ -74,7 +74,10 @@ MODULE io_base
       !
       igwx = MAXVAL( igl(1:ngwl) )
       CALL mp_max( igwx, intra_group_comm )
-      ALLOCATE( wtmp( MAX( igwx, 1 ) ) )
+      npol = 1
+      IF ( nspin == 4 ) npol = 2
+      npwx = SIZE( wfc, 1 ) / npol
+      ALLOCATE( wtmp( MAX( npol*igwx, 1 ) ) )
       !
       wtmp = 0.0_DP
       !
@@ -115,14 +118,28 @@ MODULE io_base
       !
       DO j = 1, nbnd
          !
-         CALL mergewf( wfc(:,j), wtmp, ngwl, igl, me_in_group, &
-              nproc_in_group, root_in_group, intra_group_comm )
+         IF ( npol == 2 ) THEN
+            !
+            ! Quick-and-dirty noncolinear case - mergewf should be modified
+            !
+            CALL mergewf( wfc(1:npwx,       j), wtmp(1:igwx),       ngwl, igl,&
+                 me_in_group, nproc_in_group, root_in_group, intra_group_comm )
+            CALL mergewf( wfc(npwx+1:2*npwx,j), wtmp(igwx+1:2*igwx), ngwl, igl,&
+                 me_in_group, nproc_in_group, root_in_group, intra_group_comm )
+            !
+         ELSE
+            !
+            CALL mergewf( wfc(:,j), wtmp, ngwl, igl, me_in_group, &
+                 nproc_in_group, root_in_group, intra_group_comm )
+            !
+         END IF
          !
          IF ( ionode_in_group ) &
 #ifdef __HDF5
-            CALL write_evc(evc_hdf5_write,j, wtmp(1:igwx), ik) 
+            CALL write_evc(evc_hdf5_write,j, wtmp(1:npol*igwx), ik) 
 #else
-            CALL iotk_write_dat( iuni, "evc" // iotk_index( j ), wtmp(1:igwx) )
+            CALL iotk_write_dat &
+              ( iuni, "evc" // iotk_index( j ), wtmp(1:npol*igwx))
 #endif
          !
       END DO
@@ -168,7 +185,7 @@ MODULE io_base
       INTEGER                  :: j
       COMPLEX(DP), ALLOCATABLE :: wtmp(:)
       INTEGER                  :: ierr
-      INTEGER                  :: igwx, igwx_, ik_, nk_
+      INTEGER                  :: igwx, igwx_, npwx, npol, ik_, nk_
       INTEGER                  :: me_in_group, nproc_in_group
       CHARACTER(LEN=256)       :: filename_hdf5
       !
@@ -228,7 +245,10 @@ MODULE io_base
       CALL mp_bcast( igwx_,  root_in_group, intra_group_comm )
       CALL mp_bcast( scalef, root_in_group, intra_group_comm )
       !
-      ALLOCATE( wtmp( MAX( igwx_, igwx ) ) )
+      npol = 1
+      IF ( nspin == 4 ) npol = 2
+      ALLOCATE( wtmp( npol*MAX( igwx_, igwx ) ) )
+      npwx = SIZE( wfc, 1 ) / npol
       !
       DO j = 1, nbnd
          !
@@ -236,19 +256,28 @@ MODULE io_base
             !
             IF ( ionode_in_group ) THEN 
 #if defined __HDF5
-               CALL read_evc(evc_hdf5_write,j,wtmp(1:igwx_),ik)
+               CALL read_evc(evc_hdf5_write,j,wtmp(1:npol*igwx_),ik)
 #else
                CALL iotk_scan_dat( iuni, &
-                                   "evc" // iotk_index( j ), wtmp(1:igwx_) )
+                                   "evc" // iotk_index(j), wtmp(1:npol*igwx_) )
  
 #endif
                !
-               IF ( igwx > igwx_ ) wtmp((igwx_+1):igwx) = 0.0_DP
+               IF ( igwx > igwx_ ) wtmp((npol*igwx_+1):npol*igwx) = 0.0_DP
                !
             END IF
             !
-            CALL splitwf( wfc(:,j), wtmp, ngwl, igl, &
-                 me_in_group, nproc_in_group, root_in_group, intra_group_comm )
+            IF ( npol == 2 ) THEN
+               CALL splitwf( wfc(1:npwx,       j), wtmp(1:igwx_       ),   &
+                    ngwl, igl, me_in_group, nproc_in_group, root_in_group, &
+                    intra_group_comm )
+               CALL splitwf( wfc(npwx+1:2*npwx,j), wtmp(igwx_+1:2*igwx_),  &
+                    ngwl, igl, me_in_group, nproc_in_group, root_in_group, &
+                    intra_group_comm )
+            ELSE
+               CALL splitwf( wfc(:,j), wtmp, ngwl, igl, me_in_group, &
+                    nproc_in_group, root_in_group, intra_group_comm )
+            END IF
             !
          END IF
          !

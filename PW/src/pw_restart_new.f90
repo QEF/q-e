@@ -1,4 +1,4 @@
-!initialize_hdf5
+!
 ! Copyright (C) 2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
@@ -653,7 +653,7 @@ MODULE pw_restart_new
           !
           DEALLOCATE( itmp )
           !
-          IF ( ionode ) THEN
+          IF ( ionode_k ) THEN
              !
              filename_hdf5=trim(tmp_dir) //"gk.hdf5"
              CALL prepare_for_writing_final(gk_hdf5_write,inter_pool_comm,filename_hdf5,ik)
@@ -739,7 +739,7 @@ MODULE pw_restart_new
           IMPLICIT NONE
           !
           INTEGER, INTENT(IN) :: iun, ik, ik_g
-          LOGICAL :: ionode_k
+          LOGICAL, INTENT(IN) :: ionode_k
           !
           INTEGER :: ispin, ik_s, ik_eff
           !
@@ -778,34 +778,17 @@ MODULE pw_restart_new
              !
           ELSE
              !
+             filename = TRIM(dirname)//'/wfc'//TRIM(int_to_char(ik_g))//'.dat'
+             ispin = 1
+             !
              IF ( noncolin ) THEN
-                !
-                DO ipol = 1, npol
-                   !
-                   IF ( ipol == 1 ) THEN
-                      filename = TRIM(dirname)//'/wfcup'//TRIM(int_to_char(ik_g))//'.dat'
-                   ELSE
-                      filename = TRIM(dirname)//'/wfcdw'//TRIM(int_to_char(ik_g))//'.dat'
-                   END IF
-                   !
-                   ! TEMP  spin-up and spin-down spinor components are written
-                   ! TEMP  to different files, like in LSDA - not a smart way
-                   !
-                   nkl=(ipol-1)*npwx+1
-                   nkr= ipol   *npwx
-                   CALL write_wfc( iun, ik_g, nkstot, ipol, npol,   &
-                        evc(nkl:nkr,:), npw_g, gamma_only, nbnd, &
-                        igk_l2g_kdip(:), ngk(ik), filename, 1.D0, &
-                        ionode_k, root_pool, intra_pool_comm )
-                   !
-                END DO
-                !
+                ! 
+                CALL write_wfc( iun, ik_g, nkstot, ispin, 4,   &
+                     evc, npw_g, gamma_only, nbnd, &
+                     igk_l2g_kdip(:), ngk(ik), filename, 1.D0, &
+                     ionode_k, root_pool, intra_pool_comm )
+                
              ELSE
-                !
-                ispin = 1
-                !
-                IF ( ionode_k ) filename = TRIM(dirname)//'/wfc'//TRIM(int_to_char(ik_g))//'.dat'
-
                 !
                 CALL write_wfc( iun, ik_g, nkstot, ispin, nspin, &
                      evc, npw_g, gamma_only, nbnd,            &
@@ -2220,7 +2203,7 @@ MODULE pw_restart_new
       !
       CHARACTER(LEN=320)   :: filename
       INTEGER              :: ik, ik_g, ig, ipol, ik_eff, ik_s, num_k_points
-      INTEGER              :: nkl, nkr, npwx_g
+      INTEGER              :: npol_, npwx_g
       INTEGER              :: nupdwn(2), ike, iks, npw_g, ispin
       INTEGER, ALLOCATABLE :: ngk_g(:)
       INTEGER, ALLOCATABLE :: igk_l2g(:,:), igk_l2g_kdip(:)
@@ -2307,24 +2290,14 @@ MODULE pw_restart_new
             ! ... no need to read isk here: they are read from band structure
             ! ... and correctly distributed across pools in read_file
             !
-#ifdef __HDF5
-            CALL read_wfc( iunpun, ik_g, nkstot, ispin, nspin,      &
-                           evc, npw_g, nbnd, igk_l2g_kdip(:),   &
-                           ngk(ik), filename, scalef, &
-                           ionode, root_pool, intra_pool_comm )
-            !
- 
-#else
-            !
-            
-            IF ( ionode_k ) filename = TRIM(dirname)//'/wfcup'//TRIM(int_to_char(ik_g))//'.dat'
-            !
+#ifndef __HDF5
+            filename = TRIM(dirname)//'/wfcup'//TRIM(int_to_char(ik_g))//'.dat'
+#endif
             CALL read_wfc( iunpun, ik_g, nkstot, ispin, nspin,      &
                            evc, npw_g, nbnd, igk_l2g_kdip(:),   &
                            ngk(ik), filename, scalef, &
                            ionode_k, root_pool, intra_pool_comm )
             !
-#endif
             CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
             !
             ! ... spin down
@@ -2334,57 +2307,28 @@ MODULE pw_restart_new
             evc=(0.0_DP, 0.0_DP)
             !
             ik_eff = ik_g + nkstot/2 ! FIXME: global index for spin down
-#ifdef __HDF5
-            CALL read_wfc( iunpun, ik_eff, nkstot, ispin, nspin,      &
-                           evc, npw_g, nbnd, igk_l2g_kdip(:),   &
-                           ngk(ik_s), filename, scalef, &
-                           ionode, root_pool, intra_pool_comm )
-#else
-
-            IF ( ionode_k ) filename = TRIM(dirname)//'/wfcdw'//TRIM(int_to_char(ik_g))//'.dat'
-            !
+#ifndef __HDF5
+            filename = TRIM(dirname)//'/wfcdw'//TRIM(int_to_char(ik_g))//'.dat'
+#endif
             CALL read_wfc( iunpun, ik_eff, nkstot, ispin, nspin,      &
                            evc, npw_g, nbnd, igk_l2g_kdip(:),   &
                            ngk(ik_s), filename, scalef, &
                            ionode_k, root_pool, intra_pool_comm )
             !
-#endif
             CALL save_buffer ( evc, nwordwfc, iunwfc, ik_s )
             !
          ELSE
             !
             evc=(0.0_DP, 0.0_DP)
-            IF ( noncolin ) THEN
-               !
-               DO ipol = 1, npol
-                  !
-                  IF ( ipol == 1 ) THEN
-                     filename = TRIM(dirname)//'/wfcup'//TRIM(int_to_char(ik_g))//'.dat'
-                  ELSE
-                     filename = TRIM(dirname)//'/wfcdw'//TRIM(int_to_char(ik_g))//'.dat'
-                  END IF
-                  !
-                  !!! TEMP
-                  nkl=(ipol-1)*npwx+1
-                  nkr= ipol   *npwx
-                  CALL read_wfc( iunpun, ik_g, nkstot, ispin,          &
-                                 npol, evc(nkl:nkr,:), npw_g, nbnd,         &
-                                 igk_l2g_kdip(:), ngk(ik),   &
-                                 filename, scalef, & 
-                                 ionode_k, root_pool, intra_pool_comm )
-                  !
-               END DO
-               !
-            ELSE
-               !
-               IF ( ionode ) filename = TRIM(dirname)//'/wfc'//TRIM(int_to_char(ik_g))//'.dat'
-               !
-               CALL read_wfc( iunpun, ik, nkstot, ispin, nspin,       &
-                              evc, npw_g, nbnd, igk_l2g_kdip(:),      &
-                              ngk(ik), filename, scalef,              &
-                              ionode_k, root_pool, intra_pool_comm )
-               !
-            END IF
+#ifndef __HDF5
+            filename = TRIM(dirname)//'/wfc'//TRIM(int_to_char(ik_g))//'.dat'
+#endif
+            CALL read_wfc( iunpun, ik_g, nkstot, ispin, npol_,   &
+                           evc, npw_g, nbnd, &
+                           igk_l2g_kdip(:), ngk(ik), filename, scalef, &
+                           ionode_k, root_pool, intra_pool_comm )
+            !
+            IF ( .NOT. noncolin ) nspin = npol_
             !
             CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
             !
