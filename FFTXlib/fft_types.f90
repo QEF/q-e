@@ -11,6 +11,8 @@
 MODULE fft_types
 !=----------------------------------------------------------------------------=!
 
+  USE fft_support, ONLY : good_fft_order, good_fft_dimension
+
   IMPLICIT NONE
   PRIVATE
   SAVE
@@ -107,7 +109,7 @@ CONTAINS
     INTEGER :: nx, ny, ierr
     INTEGER :: mype, root, nproc ! mype starting from 0
 
-    IF ( ALLOCATED( nsp ) ) &
+    IF ( ALLOCATED( desc%nsp ) ) &
         CALL fftx_error__(' fft_type_allocate ', ' fft arrays already allocated ', 1 )
 
     desc%comm = comm 
@@ -212,7 +214,7 @@ CONTAINS
     INTEGER :: nr1, nr2, nr3    ! size of real space grid 
     INTEGER :: nr1x, nr2x, nr3x ! padded size of real space grid
     !
-    IF (.NOT. ALLOCATED( nsp ) ) &
+    IF (.NOT. ALLOCATED( desc%nsp ) ) &
         CALL fftx_error__(' fft_type_allocate ', ' fft arrays not yet allocated ', 1 )
 
     IF ( desc%nr1 == 0 .OR. desc%nr2 == 0 .OR. desc%nr3 == 0 ) &
@@ -529,7 +531,7 @@ CONTAINS
         CALL fftx_error__(' fft_type_init ', ' unknown FFT personality ', 1 )
      END IF
 
-     IF( .NOT. ALLOCATED( nsp ) ) THEN
+     IF( .NOT. ALLOCATED( dfft%nsp ) ) THEN
         CALL fft_type_allocate( dfft, at, bg, gcut, comm  )
      ELSE
         IF( dfft%comm /= comm ) THEN
