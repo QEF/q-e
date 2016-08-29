@@ -382,23 +382,6 @@ uncompress-gui: touch-dummy
 	touch uncompress-gui
 
 ###########################################################
-# GPU
-###########################################################
-
-gpu:  uncompress-gpu
-	touch make-gpu
-
-uncompress-gpu: touch-dummy
-	$(call download_and_unpack,$(GPU),$(GPU_URL),GPU,QE-GPU)
-	@ echo ""
-	@ echo " *****************************************************************************"
-	@ echo " * QE-GPU has been downloaded under ./archive Please follow the instructions *"
-	@ echo " *   reported here: http://qe-forge.org/gf/project/q-e-gpu/                  *" 
-	@ echo " *****************************************************************************"
-	@ echo ""
-	touch uncompress-gpu
-
-###########################################################
 # cleaning
 ###########################################################
 
@@ -628,33 +611,24 @@ test-suite_veryclean: test-suite_clean
 test-suite_distclean:
 	rm -f ../archive/$(TESTSUITE).tar.gz
 
-gpu_clean:
-	rm -f ./make-gpu 
-
-gpu_veryclean: gpu_clean
-# dir is not deleted for compatibility with the repository
-
-gpu_distclean: 
-	rm -f ../archive/$(GPU).tar.gz
-
 ##########################################################
 # general cleaning
 ##########################################################
 
 clean: w90_clean want_clean yambo_clean yambo-devel_clean plumed_clean \
 	epw_clean gui_clean phonon_clean tddfpt_clean xspectra_clean neb_clean \
-	pwcond_clean ld1_clean gipaw_clean gpu_clean west_clean test-suite_clean \
+	pwcond_clean ld1_clean gipaw_clean west_clean test-suite_clean \
 	sax_clean
 
 veryclean: w90_veryclean want_veryclean yambo_veryclean yambo-devel_veryclean \
 	plumed_veryclean epw_veryclean gui_veryclean phonon_veryclean \
 	tddfpt_veryclean xspectra_veryclean neb_veryclean pwcond_veryclean \
-	ld1_veryclean gipaw_veryclean gpu_veryclean west_veryclean \
+	ld1_veryclean gipaw_veryclean west_veryclean \
 	test-suite_veryclean sax_veryclean
 
 #distclean : veryclean
 distclean: w90_distclean want_distclean yambo_distclean yambo-devel_distclean \
   epw_distclean gui_distclean phonon_distclean test-suite_distclean \
   tddfpt_distclean xspectra_distclean neb_distclean pwcond_distclean \
-  ld1_distclean gipaw_distclean gpu_distclean west_distclean sax_distclean
+  ld1_distclean gipaw_distclean west_distclean sax_distclean
 
