@@ -230,6 +230,7 @@ qes_types.o : kind.o
 qexml.o : ../iotk/src/iotk_module.o
 qexml.o : kind.o
 qexml.o : wrappers.o
+qexml.o : hdf5_qe.o
 qexsd.o : ../iotk/src/iotk_base.o
 qexsd.o : ../iotk/src/iotk_module.o
 qexsd.o : cell_base.o

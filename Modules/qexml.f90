@@ -1061,6 +1061,13 @@ CONTAINS
                                        nr1, nr2, nr3,  ngm,  nr1s, nr2s, nr3s, ngms, &
                                        nr1b, nr2b, nr3b, igv, lgvec, cutoff_units )
       !------------------------------------------------------------------------
+#if defined __HDF5
+      USE hdf5_qe
+      USE mp_pools,  ONLY : inter_pool_comm
+      USE io_files,  ONLY : tmp_dir
+      USE mp_world,  ONLY : mpime
+#endif
+
       !
       INTEGER,       INTENT(in) :: npwx, nr1, nr2, nr3, ngm, &
                                    nr1s, nr2s, nr3s, ngms, nr1b, nr2b, nr3b
@@ -1068,8 +1075,37 @@ CONTAINS
       REAL(DP),     INTENT(in) :: ecutwfc, ecutrho
       LOGICAL,       INTENT(in) :: gamma_only, lgvec
       CHARACTER(*),  INTENT(in) :: cutoff_units
+#if defined __HDF5
+      CHARACTER(LEN=256) :: filename_hdf5
+      CHARACTER          :: gammaonly
+      !integer          :: gammaonly, ierr
+      integer           :: ierr
+#endif
+
       !
       !
+#if defined __HDF5
+      filename_hdf5=trim(tmp_dir) //"g.hdf5"
+      CALL prepare_for_writing_final(g_hdf5_write,inter_pool_comm,filename_hdf5)
+      CALL add_attributes_hdf5(g_hdf5_write,ecutwfc,"WFC_CUTOFF")
+      CALL add_attributes_hdf5(g_hdf5_write,ecutrho,"RHO_CUTOFF")
+      CALL add_attributes_hdf5(g_hdf5_write,npwx,"MAX_NUMBER_OF_GK-VECTORS")
+      write(gammaonly,'(I1)') gamma_only
+      CALL add_attributes_hdf5(g_hdf5_write,gammaonly,"GAMMA_ONLY")
+      CALL add_attributes_hdf5(g_hdf5_write,trim(cutoff_units),"UNITS_FOR_CUTOFF")
+      CALL add_attributes_hdf5(g_hdf5_write,nr1,"nr1")
+      CALL add_attributes_hdf5(g_hdf5_write,nr2,"nr2")
+      CALL add_attributes_hdf5(g_hdf5_write,nr3,"nr3")
+      CALL add_attributes_hdf5(g_hdf5_write,ngm,"GVECT_NUMBER")
+      CALL add_attributes_hdf5(g_hdf5_write,nr1s,"nr1s")
+      CALL add_attributes_hdf5(g_hdf5_write,nr2s,"nr2s")
+      CALL add_attributes_hdf5(g_hdf5_write,nr3s,"nr3s")
+      CALL add_attributes_hdf5(g_hdf5_write,ngms,"SMOOTH_GVECT_NUMBER")
+      CALL add_attributes_hdf5(g_hdf5_write,nr1s,"nr1b")
+      CALL add_attributes_hdf5(g_hdf5_write,nr2s,"nr2b")
+      CALL add_attributes_hdf5(g_hdf5_write,nr3s,"nr3b")
+#endif
+
       CALL iotk_write_begin( ounit, "PLANE_WAVES" )
       !
       CALL iotk_write_attr ( attr, "UNITS", trim(cutoff_units), FIRST = .true. )
@@ -1101,6 +1137,9 @@ CONTAINS
          !
          ! ... write the G-vectors
          !
+#if defined __HDF5
+         CALL write_g(g_hdf5_write,igv(1:3,1:ngm))
+#else
          CALL iotk_link( ounit, "G-VECTORS", "./gvectors.dat", &
                          CREATE = .true., BINARY = .true. )
          !
@@ -1114,9 +1153,10 @@ CONTAINS
          CALL iotk_write_attr( attr, "units", "crystal" )
          CALL iotk_write_empty( ounit, "INFO", ATTR = attr )
          !
+
          CALL iotk_write_dat  ( ounit, "g", igv(1:3,1:ngm), COLUMNS = 3 )
          CALL iotk_write_end  ( ounit, "G-VECTORS" )
-         !
+#endif
       ENDIF
       !
       CALL iotk_write_attr( attr, "nr1b", nr1b , FIRST = .true. )
@@ -1125,6 +1165,9 @@ CONTAINS
       CALL iotk_write_empty( ounit, "SMALLBOX_FFT_GRID", ATTR = attr )
       !
       CALL iotk_write_end( ounit, "PLANE_WAVES" )
+#if defined __HDF5
+      CALL h5fclose_f(g_hdf5_write%file_id,ierr)
+#endif
       !
     END SUBROUTINE qexml_write_planewaves
     !
@@ -4239,13 +4282,17 @@ CONTAINS
       REAL(DP)              :: wk_
       LOGICAL :: found
       !
+#if !defined __HDF5
       CALL iotk_scan_begin( iunit, "EIGENVALUES", IERR=ierr )
+#endif
       IF (ierr /= 0) RETURN
       !
       !
       k_points_loop1: DO ik = 1, num_k_points
          !
+#if !defined __HDF5
          CALL iotk_scan_begin( iunit, "K-POINT" // TRIM( iotk_index(ik) ) )
+#endif
          !
          CALL iotk_scan_dat( iunit, "WEIGHT", wk_ )
          !
@@ -4303,12 +4350,16 @@ CONTAINS
             !
          END DO
          !
+#if !defined __HDF5
          CALL iotk_scan_end( iunit, "K-POINT" // TRIM( iotk_index(ik) ), IERR = ierr )
+#endif
          IF (ierr /= 0) RETURN
          !
       END DO k_points_loop1
       !
+#if !defined __HDF5
       CALL iotk_scan_end  ( iunit, "EIGENVALUES", IERR = ierr )
+#endif
       IF (ierr /= 0) RETURN
       !
       !
