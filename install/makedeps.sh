@@ -85,10 +85,10 @@ for dir in $dirs; do
 	$TOPDIR/moduledep.sh $DEPENDS > make.depend
 	$TOPDIR/includedep.sh $DEPENDS >> make.depend
 
-        # handle special cases: hardware-specific monitoring tools
-        sed '/@\/cineca\/prod\/hpm\/include\/f_hpm.h@/d;/@ifcore@/d' make.depend > make.depend.tmp
         # handle special cases: modules for C-fortran binding, system utilities
-        sed '/@iso_c_binding@/d;/@f90_unix_env@/d;s/fft_scalar.*.o/fft_scalar.o/' make.depend.tmp > make.depend
+        sed '/@iso_c_binding@/d;/@f90_unix_env@/d;/@ifcore@/d' make.depend > make.depend.tmp
+        # handle special cases: hdf5
+        sed '/@hdf5@/d' make.depend.tmp > make.depend
 
         if test "$DIR" = "FFTXlib"
         then
