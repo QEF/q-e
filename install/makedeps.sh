@@ -11,7 +11,7 @@ TOPDIR=`pwd`
 
 if test $# = 0
 then
-    dirs=" LAXlib FFTXlib Modules clib LR_Modules iupftools \
+    dirs=" LAXlib FFTXlib Modules clib LR_Modules upftools \
            PW/src CPV/src PW/tools upftools PP/src PWCOND/src \
            PHonon/Gamma PHonon/PH PHonon/D3 PHonon/FD atomic/src \
            XSpectra/src ACFDT/src NEB/src TDDFPT/src \
