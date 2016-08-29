@@ -273,21 +273,21 @@ program test
   aux(2) = 0.7d0
   aux(3) = 0.1d0
 
-  write (*,*) (aux(i),i=1,5)
+  !!write (*,*) (aux(i),i=1,5)
   CALL MPI_BARRIER( MPI_COMM_WORLD, ierr)
   CALL pack_group_sticks( aux, psis(:,1), dtgs )
   CALL fw_tg_cft3_z( psis(:,1), dffts, aux, dtgs )
   CALL fw_tg_cft3_scatter( psis(:,1), dffts, aux, dtgs )
   CALL fw_tg_cft3_xy( psis(:,1), dffts, dtgs )
 
-  write (*,*) (psis(i,1),i=1,5)
+  !!write (*,*) (psis(i,1),i=1,5)
 
   CALL bw_tg_cft3_xy( psis(:,1), dffts, dtgs )
   CALL bw_tg_cft3_scatter( psis(:,1), dffts, aux, dtgs )
   CALL bw_tg_cft3_z( psis(:,1), dffts, aux, dtgs )
   CALL unpack_group_sticks( psis(:,1), aux, dtgs )
 
-  write (*,*) (aux(i),i=1,5)
+  !!write (*,*) (aux(i),i=1,5)
 
   !
   ! Execute FFT calls once more and Take time
@@ -300,14 +300,14 @@ program test
   ireq = 1
   ipsi = MOD( ireq + 1, 2 ) + 1 
   !
-  CALL pack_group_sticks_i( aux, psis(:, ipsi ), dffts, req_p( ireq ) )
+  CALL pack_group_sticks_i( aux, psis(:, ipsi ), dtgs, req_p( ireq ) )
   !
   nreq = 0
-  DO ib = 1, nbnd, 2*dffts%nogrp 
+  DO ib = 1, nbnd, 2*dtgs%nogrp 
     nreq = nreq + 1
   END DO
   ! 
-  DO ib = 1, nbnd, 2*dffts%nogrp 
+  DO ib = 1, nbnd, 2*dtgs%nogrp 
  
      ireq = ireq + 1
 
@@ -318,7 +318,7 @@ program test
 
      IF( ireq <= nreq ) THEN
         ipsi = MOD( ireq + 1, 2 ) + 1 
-        CALL pack_group_sticks_i( aux, psis(:,ipsi), dffts, req_p(ireq) )
+        CALL pack_group_sticks_i( aux, psis(:,ipsi), dtgs, req_p(ireq) )
      END IF
 
      ipsi = MOD(ipsi-1,2)+1 
@@ -327,11 +327,11 @@ program test
 
      time(2) = MPI_WTIME()
 
-     CALL fw_tg_cft3_z( psis( :, ipsi ), dffts, aux )
+     CALL fw_tg_cft3_z( psis( :, ipsi ), dffts, aux, dtgs )
      time(3) = MPI_WTIME()
-     CALL fw_tg_cft3_scatter( psis( :, ipsi ), dffts, aux )
+     CALL fw_tg_cft3_scatter( psis( :, ipsi ), dffts, aux, dtgs )
      time(4) = MPI_WTIME()
-     CALL fw_tg_cft3_xy( psis( :, ipsi ), dffts )
+     CALL fw_tg_cft3_xy( psis( :, ipsi ), dffts, dtgs )
      time(5) = MPI_WTIME()
      !
      tmp1=1.d0
@@ -342,14 +342,14 @@ program test
      end do 
      !
      time(6) = MPI_WTIME()
-     CALL bw_tg_cft3_xy( psis( :, ipsi ), dffts )
+     CALL bw_tg_cft3_xy( psis( :, ipsi ), dffts, dtgs )
      time(7) = MPI_WTIME()
-     CALL bw_tg_cft3_scatter( psis( :, ipsi ), dffts, aux )
+     CALL bw_tg_cft3_scatter( psis( :, ipsi ), dffts, aux, dtgs )
      time(8) = MPI_WTIME()
-     CALL bw_tg_cft3_z( psis( :, ipsi ), dffts, aux )
+     CALL bw_tg_cft3_z( psis( :, ipsi ), dffts, aux, dtgs )
      time(9) = MPI_WTIME()
      !
-     CALL unpack_group_sticks( psis( :, ipsi ), aux, dffts )
+     CALL unpack_group_sticks( psis( :, ipsi ), aux, dtgs )
      !
      time(10) = MPI_WTIME()
      !

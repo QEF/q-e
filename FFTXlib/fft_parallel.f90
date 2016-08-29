@@ -393,9 +393,9 @@ SUBROUTINE bw_tg_cft3_xy( f, dfft, dtgs )
 END SUBROUTINE bw_tg_cft3_xy
 
 #ifdef __DOUBLE_BUFFER
-  SUBROUTINE pack_group_sticks_i( f, yf, dfft, req)
+  SUBROUTINE pack_group_sticks_i( f, yf, dtgs, req)
 
-     USE fft_types,  ONLY : fft_type_descriptor
+     USE task_groups,  ONLY : task_groups_descriptor
 
      IMPLICIT NONE
 #if defined(__MPI)
@@ -404,16 +404,9 @@ END SUBROUTINE bw_tg_cft3_xy
 
      COMPLEX(DP), INTENT(in)    :: f( : )  ! array containing all bands, and gvecs distributed across processors
      COMPLEX(DP), INTENT(out)    :: yf( : )  ! array containing bands collected into task groups
-     TYPE (fft_type_descriptor), INTENT(in) :: dfft
+     TYPE (task_groups_descriptor), INTENT(in) :: dtgs
      INTEGER                     :: ierr,req
      !
-     IF( dfft%tg_rdsp(dfft%nogrp) + dfft%tg_rcv(dfft%nogrp) > size( yf ) ) THEN
-        CALL fftx_error__( 'pack_group_sticks' , ' inconsistent size ', 1 )
-     ENDIF
-     IF( dfft%tg_psdsp(dfft%nogrp) + dfft%tg_snd(dfft%nogrp) > size( f ) ) THEN
-        CALL fftx_error__( 'pack_group_sticks', ' inconsistent size ', 2 )
-     ENDIF
-
      CALL start_clock( 'IALLTOALL' )
      !
      !  Collect all the sticks of the different states,
@@ -421,8 +414,8 @@ END SUBROUTINE bw_tg_cft3_xy
 
 #if defined(__MPI)
 
-     CALL MPI_IALLTOALLV( f(1), dfft%tg_snd, dfft%tg_psdsp, MPI_DOUBLE_COMPLEX, yf(1), dfft%tg_rcv, &
-      &                     dfft%tg_rdsp, MPI_DOUBLE_COMPLEX, dfft%ogrp_comm, req, ierr)
+     CALL MPI_IALLTOALLV( f(1), dtgs%tg_snd, dtgs%tg_psdsp, MPI_DOUBLE_COMPLEX, yf(1), dtgs%tg_rcv, &
+      &                     dtgs%tg_rdsp, MPI_DOUBLE_COMPLEX, dtgs%ogrp_comm, req, IERR)
      IF( ierr /= 0 ) THEN
         CALL fftx_error__( 'pack_group_sticks_i', ' alltoall error 1 ', abs(ierr) )
      ENDIF
