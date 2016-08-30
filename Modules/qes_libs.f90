@@ -1,3 +1,4 @@
+!
 ! Copyright (C) 2003-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
@@ -5,13 +6,12 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 MODULE qes_libs_module
-  !----------------------------------------------------------------------------
-  !
-  ! This module contains some basic subroutines initialize data_type used for
-  ! reading and writing  XML files produced by Quantum ESPRESSO package.
-  !
-  ! Written by Giovanni Borghi, A. Ferretti, ... (2015).
-  !
+! This module contains some basic subroutines initialize data_type used for
+! reading and writing  XML files produced by Quantum ESPRESSO package.
+!
+! Written by Giovanni Borghi, A. Ferretti, ... (2015).
+!
+
    USE qes_types_module
    USE iotk_module
    !
@@ -20,9 +20,9 @@ MODULE qes_libs_module
    CHARACTER(32)           :: fmtstr
    !
    PRIVATE :: attr, fmtstr
-
+!
 CONTAINS
-
+!
 SUBROUTINE qes_write_closed(iun, obj)
    IMPLICIT NONE
 
@@ -2793,6 +2793,9 @@ SUBROUTINE qes_write_cell_control(iun, obj)
       CALL iotk_write_begin(iun, 'cell_dynamics',new_line=.FALSE.)
          WRITE(iun, '(A)',advance='no')  TRIM(obj%cell_dynamics)
       CALL iotk_write_end(iun, 'cell_dynamics',indentation=.FALSE.)
+      CALL iotk_write_begin(iun, 'pressure')
+         WRITE(iun, '(E20.7)') obj%pressure
+      CALL iotk_write_end(iun, 'pressure')
       IF(obj%wmass_ispresent) THEN
          CALL iotk_write_begin(iun, 'wmass')
             WRITE(iun, '(E20.7)') obj%wmass
@@ -2844,17 +2847,18 @@ SUBROUTINE qes_write_cell_control(iun, obj)
    !
 END SUBROUTINE qes_write_cell_control
 
-SUBROUTINE qes_init_cell_control(obj, tagname, cell_dynamics, wmass_ispresent, wmass, &
-                              cell_factor_ispresent, cell_factor, fix_volume_ispresent, &
-                              fix_volume, fix_area_ispresent, fix_area, &
-                              isotropic_ispresent, isotropic, free_cell_ispresent, &
-                              free_cell)
+SUBROUTINE qes_init_cell_control(obj, tagname, cell_dynamics, pressure, wmass_ispresent, &
+                              wmass, cell_factor_ispresent, cell_factor, &
+                              fix_volume_ispresent, fix_volume, fix_area_ispresent, &
+                              fix_area, isotropic_ispresent, isotropic, &
+                              free_cell_ispresent, free_cell)
    IMPLICIT NONE
 
    TYPE(cell_control_type) :: obj
    CHARACTER(len=*) :: tagname
    INTEGER  :: i
    CHARACTER(len=*) :: cell_dynamics
+   REAL(DP) :: pressure
    LOGICAL  :: wmass_ispresent
    REAL(DP) :: wmass
    LOGICAL  :: cell_factor_ispresent
@@ -2870,6 +2874,7 @@ SUBROUTINE qes_init_cell_control(obj, tagname, cell_dynamics, wmass_ispresent, w
 
    obj%tagname = TRIM(tagname)
    obj%cell_dynamics = cell_dynamics
+   obj%pressure = pressure
    obj%wmass_ispresent = wmass_ispresent
    IF(obj%wmass_ispresent) THEN
       obj%wmass = wmass

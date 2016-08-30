@@ -19,7 +19,7 @@
   !---------------------------------------------------------------------------
   USE input_parameters,  ONLY:  title, calculation, restart_mode, prefix, pseudo_dir, outdir, tstress, tprnfor,       &
                                 wf_collect, disk_io, max_seconds, conv_thr, etot_conv_thr, forc_conv_thr,             &
-                                press_conv_thr,verbosity, iprint, ntyp,                                               &
+                                press, press_conv_thr,verbosity, iprint, ntyp,                                        &
                                 atm => atom_label, psfile => atom_pfile, amass => atom_mass, starting_magnetization,  &
                                 angle1, angle2, ip_nat => nat, ip_nspin => nspin, ip_ityp => sp_pos, ip_tau => rd_pos,&
                                 ip_atomic_positions => atomic_positions, lspinorb, ip_nqx1 => nqx1, ip_nqx2 => nqx2,  &
@@ -265,7 +265,7 @@
   !--------------------------------------------------------------------------------------------------------------------------------
   !                                                        CELL CONTROL ELEMENT
   !-------------------------------------------------------------------------------------------------------------------------------
-  CALL qexsd_init_cell_control(obj%cell_control, cell_dynamics, wmass, cell_factor, cell_dofree, cb_iforceh)
+  CALL qexsd_init_cell_control(obj%cell_control, cell_dynamics, press, wmass, cell_factor, cell_dofree, cb_iforceh)
   !---------------------------------------------------------------------------------------------------------------------------------
   !                                SYMMETRY FLAGS
   !------------------------------------------------------------------------------------------------------------------------ 

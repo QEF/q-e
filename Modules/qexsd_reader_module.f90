@@ -1519,10 +1519,10 @@ LOGICAL,INTENT(OUT)                   :: ispresent
 !                                
 INTEGER                               :: ierr 
 CHARACTER ( LEN = 256 )               :: cell_dynamics_
-REAL(DP)                              :: wmass_, cell_factor_
+REAL(DP)                              :: wmass_, cell_factor_, pressure_
 LOGICAL                               :: cell_fac_ispresent, wmass_ispresent, fix_vol_ispresent, & 
                                          fix_area_ispresent, free_cell_ispresent, isotropic_ispresent
-LOGICAL                               :: fix_volume_, fix_area_, isotropic_
+LOGICAL                               :: fix_volume_, fix_area_, isotropic_, found_pressure
 INTEGER                               :: free_cell_mat_(3,3)
 TYPE (integerMatrix_type)             :: mat_obj
  
@@ -1538,6 +1538,10 @@ IF (ierr /= 0 ) RETURN
 CALL iotk_scan_dat( iunit, "wmass", wmass_, IERR = ierr , FOUND = wmass_ispresent)
 IF ( ierr /= 0 ) RETURN 
 ! 
+CALL iotk_scan_dat( iunit, "pressure", pressure_, IERR = ierr, FOUND = found_pressure) 
+IF ( ierr /= 0 ) RETURN 
+IF (.NOT. found_pressure) pressure_=0.d0
+!
 CALL iotk_scan_dat( iunit, "cell_factor", cell_factor_, IERR = ierr , FOUND = cell_fac_ispresent)
 IF ( ierr /= 0 ) RETURN
 !  
@@ -1557,7 +1561,7 @@ CALL qes_init_integerMatrix(mat_obj, "free_cell", 3, 3, free_cell_mat_)
 CALL iotk_scan_end ( iunit, "cell_control", IERR = ierr )
 IF ( ierr /= 0)  RETURN 
 ! 
-CALL qes_init_cell_control( obj, "cell_control", cell_dynamics_, wmass_ispresent, wmass_, & 
+CALL qes_init_cell_control( obj, "cell_control", cell_dynamics_, pressure_, wmass_ispresent, wmass_, & 
                             cell_fac_ispresent, cell_factor_, fix_vol_ispresent, fix_volume_, &
                             fix_area_ispresent, fix_area_, isotropic_ispresent, isotropic_, & 
                             free_cell_ispresent, mat_obj)

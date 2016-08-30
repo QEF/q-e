@@ -402,14 +402,14 @@ MODULE qexsd_input
    !
    !
    !------------------------------------------------------------------------------------------
-   SUBROUTINE qexsd_init_cell_control(obj,cell_dynamics,wmass,cell_factor,cell_dofree,iforceh)
+   SUBROUTINE qexsd_init_cell_control(obj,cell_dynamics, pressure, wmass,cell_factor,cell_dofree,iforceh)
    !------------------------------------------------------------------------------------------
    !
    IMPLICIT NONE
    ! 
    TYPE (cell_control_type)                     :: obj
-   CHARACTER(LEN=*),INTENT(IN)                  :: cell_dynamics,cell_dofree
-   REAL(DP),INTENT(IN)                          :: wmass,cell_factor
+   CHARACTER(LEN=*),INTENT(IN)                  :: cell_dynamics, cell_dofree
+   REAL(DP),INTENT(IN)                          :: pressure, wmass, cell_factor
    INTEGER,DIMENSION(3,3),INTENT(IN)            :: iforceh
    ! 
    CHARACTER(LEN=*),PARAMETER                   :: TAGNAME="cell_control"
@@ -443,12 +443,12 @@ MODULE qexsd_input
    END IF
    IF (free_cell_ispresent) CALL  qes_init_integerMatrix(free_cell_obj,"free_cell",3,3,my_forceh)
    !
-   CALL qes_init_cell_control(obj,TAGNAME,cell_dynamics=cell_dynamics,wmass_ispresent=.TRUE.,&
-                              wmass=wmass,cell_factor_ispresent=.TRUE.,cell_factor=cell_factor,&
-                              fix_volume_ispresent=fix_volume_ispresent,fix_volume=fix_volume,&
-                              fix_area_ispresent=fix_area_ispresent,fix_area=fix_area,& 
-                              isotropic_ispresent=isotropic_ispresent,isotropic=isotropic,&
-                              free_cell_ispresent=free_cell_ispresent,free_cell=free_cell_obj)
+   CALL qes_init_cell_control(obj,TAGNAME, PRESSURE = pressure, CELL_DYNAMICS=cell_dynamics, WMASS_ISPRESENT=.TRUE.,&
+                              WMASS=wmass, CELL_FACTOR_ISPRESENT=.TRUE., CELL_FACTOR=cell_factor,&
+                              FIX_VOLUME_ISPRESENT=fix_volume_ispresent,FIX_VOLUME=fix_volume,&
+                              FIX_AREA_ISPRESENT=fix_area_ispresent, FIX_AREA=fix_area,& 
+                              ISOTROPIC_ISPRESENT=isotropic_ispresent,ISOTROPIC=isotropic,&
+                              FREE_CELL_ISPRESENT=free_cell_ispresent, FREE_CELL=free_cell_obj)
    IF( free_cell_ispresent ) CALL qes_reset_integerMatrix(free_cell_obj)
    END SUBROUTINE  qexsd_init_cell_control
    !
