@@ -1,5 +1,5 @@
 VERSION = svn
-HELPDOC = ../../dev-tools/helpdoc --version $(VERSION)
+HELPDOC = ../../dev-tools/helpdoc -version $(VERSION)
 
 LATEX   = pdflatex
 LATEX2HTML = latex2html

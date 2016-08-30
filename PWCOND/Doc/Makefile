@@ -1,5 +1,5 @@
 VERSION = svn
-HELPDOC = ../../dev-tools/helpdoc --version $(VERSION)
+HELPDOC = ../../dev-tools/helpdoc -version $(VERSION)
 
 doc:  all
 all:  defs
