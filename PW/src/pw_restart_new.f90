@@ -441,10 +441,10 @@ MODULE pw_restart_new
       IMPLICIT NONE
       !
       INTEGER               :: i, ig, ngg, ierr, ipol, ispin
-      INTEGER               :: ik, ik_g, ik_s, num_k_points
-      INTEGER               :: ike, iks, npw_g, npwx_g
+      INTEGER               :: ik, ik_g, ike, iks, npw_g, npwx_g
       INTEGER,  ALLOCATABLE :: ngk_g(:)
       INTEGER,  ALLOCATABLE :: igk_l2g(:), igk_l2g_kdip(:), mill_g(:,:)
+      CHARACTER(LEN=2), DIMENSION(2) :: updw = (/ 'up', 'dw' /)
       CHARACTER(LEN=256)    :: dirname
       CHARACTER(LEN=320)    :: filename
       CHARACTER(iotk_attlenx)  :: attr
@@ -501,11 +501,6 @@ MODULE pw_restart_new
       !
       npwx_g = MAXVAL( ngk_g(1:nkstot) )
       !
-      ! ... for LSDA case the do on k-points should not include replicated ones
-      !
-      num_k_points = nks
-      IF ( nspin == 2 ) num_k_points = nks / 2
-      !
       ! ... the root processor of each pool writes
       !
       ionode_k = (me_pool == root_pool)
@@ -520,9 +515,9 @@ MODULE pw_restart_new
       !
       ALLOCATE ( igk_l2g_kdip( npwx_g ) )
       !
-      k_points_loop: DO ik = 1, num_k_points
+      k_points_loop: DO ik = 1, nks
          !
-         ! ik_G is the index of k-point ik in the global list
+         ! ik_g is the index of k-point ik in the global list
          !
          ik_g = ik + iks - 1
          !
@@ -534,7 +529,7 @@ MODULE pw_restart_new
             igk_l2g(ig) = ig_l2g(igk_k(ig,ik))
          END DO
          !
-         ! ... npw_g: the maximum G vector index among all processors
+         ! ... npw_g is the maximum G vector index among all processors
          !
          npw_g = MAXVAL( igk_l2g(1:ngk(ik)) )
          CALL mp_max( npw_g, intra_pool_comm )
@@ -542,6 +537,7 @@ MODULE pw_restart_new
          igk_l2g_kdip = 0
          CALL gk_l2gmap_kdip( npw_g, ngk_g(ik_g), ngk(ik), igk_l2g, &
                               igk_l2g_kdip )
+         !
          IF ( .NOT.smallmem ) CALL write_gk( iunpun, ionode_k, ik, ik_g )
          !
          ! ... read wavefunctions - do not read if already in memory (nsk==1)
@@ -550,49 +546,29 @@ MODULE pw_restart_new
          !
          IF ( nspin == 2 ) THEN
             !
-            ! ... spin up
+            ! ... LSDA: spin mapped to k-points, isk(ik) tracks up and down spin
             !
+            ik_g = MOD ( ik_g-1, nkstot/2 ) + 1 
             ispin = isk(ik)
-            filename = TRIM(dirname) // '/wfcup' // TRIM(int_to_char(ik_g))
-            IF ( ispin /= 1 ) call infomsg('write_wfc','strange spin (1)')
-            !
-            CALL write_wfc( iunpun, ik_g, nkstot, ispin, nspin, &
-                 evc, npw_g, gamma_only, nbnd, igk_l2g_kdip(:),   &
-                 ngk(ik), filename, 1.D0, &
-                 ionode_k, root_pool, intra_pool_comm )
-            !
-            ! ... spin down
-            !
-            ik_s = ik + num_k_points
-            ispin = isk(ik_s)
-            IF ( ispin /= 2 ) call infomsg('write_wfc','strange spin (2)')
-            !
-            IF ( nks > 1 ) CALL get_buffer ( evc, nwordwfc, iunwfc, ik_s )
-            !
-            filename = TRIM(dirname)//'/wfcdw'//TRIM(int_to_char(ik_g))
-            !
-            ik_g = ik_g + nkstot/2 ! global index for spin down
-            CALL write_wfc( iunpun, ik_g, nkstot, ispin, nspin, &
-                 evc, npw_g, gamma_only, nbnd, igk_l2g_kdip(:), &
-                 ngk(ik_s), filename, 1.D0, &
-                 ionode_k, root_pool, intra_pool_comm )
+            filename = TRIM(dirname) // '/wfc' // updw(ispin) // &
+                 & TRIM(int_to_char(ik_g))
             !
          ELSE
             !
-            filename = TRIM(dirname)//'/wfc'//TRIM(int_to_char(ik_g))
             ispin = 1
+            filename = TRIM(dirname) // '/wfc' // TRIM(int_to_char(ik_g))
             !
-            CALL write_wfc( iunpun, ik_g, nkstot, ispin, nspin,   &
-                 evc, npw_g, gamma_only, nbnd, &
-                 igk_l2g_kdip(:), ngk(ik), filename, 1.D0, &
-                 ionode_k, root_pool, intra_pool_comm )
-            !
-         END IF
+         ENDIF
+         !
+         CALL write_wfc( iunpun, ik_g, nkstot, ispin, nspin, &
+              evc, npw_g, gamma_only, nbnd, igk_l2g_kdip(:),   &
+              ngk(ik), filename, 1.D0, &
+              ionode_k, root_pool, intra_pool_comm )
          !
       END DO k_points_loop
       !
-      DEALLOCATE ( igk_l2g )
       DEALLOCATE ( igk_l2g_kdip )
+      DEALLOCATE ( igk_l2g )
       !
 !-------------------------------------------------------------------------------
 ! ... END RESTART SECTIONS
@@ -2110,9 +2086,10 @@ MODULE pw_restart_new
       CHARACTER(LEN=*), INTENT(IN)  :: dirname
       INTEGER,          INTENT(OUT) :: ierr
       !
+      CHARACTER(LEN=2), DIMENSION(2) :: updw = (/ 'up', 'dw' /)
       CHARACTER(LEN=320)   :: filename
-      INTEGER              :: i, ik, ik_g, ig, ipol, ik_s, num_k_points
-      INTEGER              :: npol_, npwx_g
+      INTEGER              :: i, ik, ik_g, ig, ipol, ik_s
+      INTEGER              :: nspin_, npwx_g
       INTEGER              :: nupdwn(2), ike, iks, npw_g, ispin
       INTEGER, ALLOCATABLE :: ngk_g(:)
       INTEGER, ALLOCATABLE :: igk_l2g(:), igk_l2g_kdip(:)
@@ -2149,11 +2126,6 @@ MODULE pw_restart_new
       !
       npwx_g = MAXVAL( ngk_g(1:nkstot) )
       !
-      ! ... for LSDA case the do on k-points should not include replicated ones
-      !
-      num_k_points = nks
-      IF ( nspin == 2 ) num_k_points = nks / 2
-      !
       ! ... the root processor of each pool reads
       !
       ionode_k = (me_pool == root_pool)
@@ -2167,7 +2139,7 @@ MODULE pw_restart_new
       !
       ALLOCATE ( igk_l2g_kdip( npwx_g ) )
       !
-      k_points_loop: DO ik = 1, num_k_points
+      k_points_loop: DO ik = 1, nks
          !
          ! index of k-point ik in the global list
          !
@@ -2190,49 +2162,32 @@ MODULE pw_restart_new
          CALL gk_l2gmap_kdip( npw_g, ngk_g(ik_g), ngk(ik), igk_l2g, &
                               igk_l2g_kdip )
          !
+         evc=(0.0_DP, 0.0_DP)
+         !
          IF ( nspin == 2 ) THEN
             !
-            evc=(0.0_DP, 0.0_DP)
+            ! ... LSDA: spin mapped to k-points, isk(ik) tracks up and down spin
             !
-            ! ... no need to read isk here: they are read from band structure
-            ! ... and correctly distributed across pools in read_file
-            !
-            filename = TRIM(dirname)//'/wfcup'//TRIM(int_to_char(ik_g))
-            CALL read_wfc( iunpun, ik_g, nkstot, ispin, nspin,      &
-                           evc, npw_g, nbnd, igk_l2g_kdip(:),   &
-                           ngk(ik), filename, scalef, &
-                           ionode_k, root_pool, intra_pool_comm )
-            !
-            CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
-            !
-            ! ... spin down
-            !
-            ik_s = ik + num_k_points
-            evc=(0.0_DP, 0.0_DP)
-            !
-            ik_g = ik_g + nkstot/2 ! global index for spin down
-            filename = TRIM(dirname)//'/wfcdw'//TRIM(int_to_char(ik_g))
-            CALL read_wfc( iunpun, ik_g, nkstot, ispin, nspin,      &
-                           evc, npw_g, nbnd, igk_l2g_kdip(:),   &
-                           ngk(ik_s), filename, scalef, &
-                           ionode_k, root_pool, intra_pool_comm )
-            !
-            CALL save_buffer ( evc, nwordwfc, iunwfc, ik_s )
+            ik_g = MOD ( ik_g-1, nkstot/2 ) + 1 
+            ispin = isk(ik)
+            filename = TRIM(dirname) // '/wfc' // updw(ispin) // &
+                 & TRIM(int_to_char(ik_g))
             !
          ELSE
             !
-            evc=(0.0_DP, 0.0_DP)
-            filename = TRIM(dirname)//'/wfc'//TRIM(int_to_char(ik_g))
-            CALL read_wfc( iunpun, ik_g, nkstot, ispin, npol_,   &
-                           evc, npw_g, nbnd, &
-                           igk_l2g_kdip(:), ngk(ik), filename, scalef, &
-                           ionode_k, root_pool, intra_pool_comm )
+            filename = TRIM(dirname) // '/wfc' // TRIM(int_to_char(ik_g))
             !
-            IF ( .NOT. noncolin ) nspin = npol_
-            !
-            CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
-            !
-         END IF
+         ENDIF
+         !
+         CALL read_wfc( iunpun, ik_g, nkstot, ispin, nspin_,      &
+                        evc, npw_g, nbnd, igk_l2g_kdip(:),   &
+                        ngk(ik), filename, scalef, &
+                        ionode_k, root_pool, intra_pool_comm )
+         !
+         ! ... here one should check for consistency between what is read
+         ! ... and what is expected for ik_g, ispin, nspin         !
+         !
+         CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
          !
       END DO k_points_loop
       !
