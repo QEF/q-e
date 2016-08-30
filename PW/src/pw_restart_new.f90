@@ -137,7 +137,7 @@ MODULE pw_restart_new
       CHARACTER(LEN=256)    :: dirname
       CHARACTER(LEN=80)     :: vdw_corr_
       INTEGER               :: i, ig, ngg, ierr, ipol
-      INTEGER               :: npwx_g, npw_g, ispin, inlc
+      INTEGER               :: npwx_g, ispin, inlc
       INTEGER,  ALLOCATABLE :: ngk_g(:)
       LOGICAL               :: lwfc, lrho, lxsd, occupations_are_fixed
       CHARACTER(iotk_attlenx)  :: attr
@@ -443,7 +443,7 @@ MODULE pw_restart_new
       INTEGER               :: nkl, nkr, npwx_g
       INTEGER               :: ike, iks, npw_g, ispin, inlc
       INTEGER,  ALLOCATABLE :: ngk_g(:)
-      INTEGER,  ALLOCATABLE :: igk_l2g(:,:), igk_l2g_kdip(:), mill_g(:,:)
+      INTEGER,  ALLOCATABLE :: igk_l2g(:), igk_l2g_kdip(:), mill_g(:,:)
       CHARACTER(LEN=256)    :: dirname
       CHARACTER(LEN=320)    :: filename
       CHARACTER(iotk_attlenx)  :: attr
@@ -487,27 +487,6 @@ MODULE pw_restart_new
       !
       CALL  kpoint_global_indices (nkstot, iks, ike)
       !
-      ! ... build the igk_l2g array, yielding the correspondence between
-      ! ... the local k+G index and the global G index, from previously
-      ! ... computed arrays igk_k (k+G indices) and ig_l2g
-      ! ... Beware: for variable-cell case, one has to use starting G and 
-      ! ... k+G vectors
-      !
-      ALLOCATE ( igk_l2g( npwx, nks ) )
-      igk_l2g = 0
-      !
-      DO ik = 1, nks
-         DO ig = 1, ngk (ik)
-            igk_l2g(ig,ik) = ig_l2g(igk_k(ig,ik))
-         END DO
-      END DO
-      !
-      ! ... npw_g: the maximum G vector index among all k and processors
-      !
-      npw_g = MAXVAL( igk_l2g(:,:) )
-      CALL mp_max( npw_g, inter_pool_comm )
-      CALL mp_max( npw_g, intra_pool_comm )
-      !
       ! ... ngk_g: global number of k+G vectors for all k points
       !
       ALLOCATE( ngk_g( nkstot ) )
@@ -530,20 +509,49 @@ MODULE pw_restart_new
       !
       ionode_k = (me_pool == root_pool)
       !
-      ! ... the igk_l2g_kdip local-to-global map is needed to write
-      ! ... k+G vectors and wfc in a coherent way
+      ! ... The igk_l2g array yields the correspondence between the
+      ! ... local k+G index and the global G index
+      !
+      ALLOCATE ( igk_l2g( npwx ) )
+      !
+      ! ... npw_g: the maximum G vector index among all k and processors
+      ! FIXME: why among all k? it shouldn' be needed
+      npw_g = 0
+      DO ik = 1, num_k_points
+         DO ig = 1, ngk (ik)
+            npw_g = MAX (npw_g, ig_l2g(igk_k(ig,ik)) )
+         END DO
+      END DO
+      CALL mp_max( npw_g, intra_pool_comm )
+      CALL mp_max( npw_g, inter_pool_comm )
+      !
+      ! ... the igk_l2g_kdip local-to-global map yields the correspondence
+      ! ... between the global order of k+G and the local index for k+G.
       !
       ALLOCATE ( igk_l2g_kdip( npwx_g ) )
       !
-      k_points_loop2: DO ik = 1, num_k_points
+      k_points_loop: DO ik = 1, num_k_points
          !
          ! ik_G is the index of k-point ik in the global list
          !
          ik_g = ik + iks - 1
          !
+         ! ... Compute the igk_l2g array from previously computed arrays
+         ! ... igk_k (k+G indices) and ig_l2g (local to global G index map)
+         !
+         igk_l2g = 0
+         DO ig = 1, ngk (ik)
+            igk_l2g(ig) = ig_l2g(igk_k(ig,ik))
+         END DO
+         !
+         ! ... npw_g: the maximum G vector index among all processors
+         !
+         !npw_g = MAXVAL( igk_l2g(:) )
+         !CALL mp_max( npw_g, intra_pool_comm )
+         !
          igk_l2g_kdip = 0
-         CALL gk_l2gmap_kdip( npw_g, ngk_g(ik_g), ngk(ik), &
-                              igk_l2g(1,ik), igk_l2g_kdip(1) )
+         CALL gk_l2gmap_kdip( npw_g, ngk_g(ik_g), ngk(ik), igk_l2g, &
+                              igk_l2g_kdip )
 #ifdef __HDF5
          IF ( .NOT.smallmem) CALL write_gk_hdf5(iunpun, ik)
 #else 
@@ -552,7 +560,7 @@ MODULE pw_restart_new
          !
          CALL write_this_wfc ( iunpun, ionode_k, ik, ik_g )
          !
-      END DO k_points_loop2
+      END DO k_points_loop
       !
       DEALLOCATE ( igk_l2g )
       DEALLOCATE ( igk_l2g_kdip )
@@ -684,7 +692,7 @@ MODULE pw_restart_new
           ALLOCATE( itmp( npw_g ) )
           itmp = 0
           DO ig = 1, ngk(ik)
-             itmp(igk_l2g(ig,ik)) = igk_l2g(ig,ik)
+             itmp(igk_l2g(ig)) = igk_l2g(ig)
           END DO
           CALL mp_sum( itmp, intra_pool_comm )
           !
@@ -781,21 +789,10 @@ MODULE pw_restart_new
              filename = TRIM(dirname)//'/wfc'//TRIM(int_to_char(ik_g))//'.dat'
              ispin = 1
              !
-             IF ( noncolin ) THEN
-                ! 
-                CALL write_wfc( iun, ik_g, nkstot, ispin, 4,   &
+             CALL write_wfc( iun, ik_g, nkstot, ispin, nspin,   &
                      evc, npw_g, gamma_only, nbnd, &
                      igk_l2g_kdip(:), ngk(ik), filename, 1.D0, &
                      ionode_k, root_pool, intra_pool_comm )
-                
-             ELSE
-                !
-                CALL write_wfc( iun, ik_g, nkstot, ispin, nspin, &
-                     evc, npw_g, gamma_only, nbnd,            &
-                     igk_l2g_kdip(:), ngk(ik), filename, 1.D0, &
-                     ionode_k, root_pool, intra_pool_comm )
-                !
-             END IF
              !
           END IF
           !
@@ -831,6 +828,7 @@ MODULE pw_restart_new
       ALLOCATE( itmp( npw_g ) )
       ALLOCATE( igwk_( ngk_g ) )
       !
+      print *, npw_g,ngk,ngk_g
       itmp(:)  = 0
       igwk_(:) = 0
       !
@@ -2206,7 +2204,7 @@ MODULE pw_restart_new
       INTEGER              :: npol_, npwx_g
       INTEGER              :: nupdwn(2), ike, iks, npw_g, ispin
       INTEGER, ALLOCATABLE :: ngk_g(:)
-      INTEGER, ALLOCATABLE :: igk_l2g(:,:), igk_l2g_kdip(:)
+      INTEGER, ALLOCATABLE :: igk_l2g(:), igk_l2g_kdip(:)
       LOGICAL              :: opnd, ionode_k
       REAL(DP)             :: scalef
 
@@ -2226,25 +2224,6 @@ MODULE pw_restart_new
       END IF
       ! 
       CALL  kpoint_global_indices (nkstot, iks, ike)
-      !
-      ! ... build the igk_l2g array, yielding the correspondence between
-      ! ... the local k+G index and the global G index - see also ig_l2g
-      ! ... and routine "write_binaries"
-      !
-      ALLOCATE ( igk_l2g( npwx, nks ) )
-      igk_l2g = 0
-      !
-      DO ik = 1, nks
-         DO ig = 1, ngk(ik)
-            igk_l2g(ig,ik) = ig_l2g(igk_k(ig,ik))
-         END DO
-      END DO
-      !
-      ! ... npw_g: the maximum G vector index among all k and processors
-      !
-      npw_g = MAXVAL( igk_l2g(:,:) )
-      CALL mp_max( npw_g, inter_pool_comm )
-      CALL mp_max( npw_g, intra_pool_comm )
       !
       ! ... ngk_g: global number of k+G vectors for all k points
       !
@@ -2268,6 +2247,22 @@ MODULE pw_restart_new
       !
       ionode_k = (me_pool == root_pool)
       !
+      ! ... The igk_l2g array yields the correspondence between the
+      ! ... local k+G index and the global G index
+      !
+      ALLOCATE ( igk_l2g( npwx ) )
+      !
+      ! ... npw_g: the maximum G vector index among all k and processors
+      ! FIXME: why among all k? it shouldn' be needed
+      npw_g = 0
+      DO ik = 1, num_k_points
+         DO ig = 1, ngk (ik)
+            npw_g = MAX (npw_g, ig_l2g(igk_k(ig,ik)) )
+         END DO
+      END DO
+      CALL mp_max( npw_g, intra_pool_comm )
+      CALL mp_max( npw_g, inter_pool_comm )
+      !
       ! ... the igk_l2g_kdip local-to-global map is needed to read wfcs
       !
       ALLOCATE ( igk_l2g_kdip( npwx_g ) )
@@ -2278,9 +2273,22 @@ MODULE pw_restart_new
          !
          ik_g = ik + iks - 1
          !
+         ! ... Compute the igk_l2g array from previously computed arrays
+         ! ... igk_k (k+G indices) and ig_l2g (local to global G index map)
+         !
+         igk_l2g = 0
+         DO ig = 1, ngk(ik)
+            igk_l2g(ig) = ig_l2g(igk_k(ig,ik))
+         END DO
+         !
+         ! ... npw_g: the maximum G vector index among all processors
+         !
+         !npw_g = MAXVAL( igk_l2g(:) )
+         !CALL mp_max( npw_g, inter_pool_comm )
+         !
          igk_l2g_kdip = 0
-         CALL gk_l2gmap_kdip( npw_g, ngk_g(ik_g), ngk(ik), &
-                              igk_l2g(1,ik), igk_l2g_kdip(1) )
+         CALL gk_l2gmap_kdip( npw_g, ngk_g(ik_g), ngk(ik), igk_l2g, &
+                              igk_l2g_kdip )
          !
          IF ( nspin == 2 ) THEN
             !
