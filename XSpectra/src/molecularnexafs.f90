@@ -281,7 +281,9 @@ CONTAINS
     ! Output multiplicities and energies
     WRITE (STDOUT,'(A)') "## CLSs follow"
     DO iat=1,nat
-       WRITE (STDOUT,'(A,i3,f10.3,f15.7,1x,A)') "#cls ", iat, REAL(atweight(iat),8)/MAXVAL(atweight(1:nat)), dcorebe(iat), TRIM(atlabel(iat))
+       WRITE (STDOUT,'(A,i3,f10.3,f15.7,1x,A)') "#cls ", iat, &
+          REAL(atweight(iat),8)/MAXVAL(atweight(1:nat)), dcorebe(iat), &
+          TRIM(atlabel(iat))
     END DO
     !
     IF (doxps) THEN
@@ -289,7 +291,9 @@ CONTAINS
        OPEN (UNIT=OUTUNIT, FILE=TRIM(xpsout))
        ! Output multiplicities and energies in the output file
        DO iat=1,nat
-          WRITE (OUTUNIT,'(A,i3,f10.3,f15.7,1x,A)') "#cls ", iat, REAL(atweight(iat),8)/MAXVAL(atweight(1:nat)), dcorebe(iat), TRIM(atlabel(iat))
+          WRITE (OUTUNIT,'(A,i3,f10.3,f15.7,1x,A)') "#cls ", iat, &
+             REAL(atweight(iat),8)/MAXVAL(atweight(1:nat)), dcorebe(iat), &
+             TRIM(atlabel(iat))
        END DO
        !
        ! output spectrum
