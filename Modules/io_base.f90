@@ -53,7 +53,7 @@ MODULE io_base
       INTEGER,            INTENT(IN) :: nbnd
       INTEGER,            INTENT(IN) :: ngwl
       INTEGER,            INTENT(IN) :: igl(:)
-      CHARACTER(LEN=256), INTENT(IN) :: filename
+      CHARACTER(LEN=*),   INTENT(IN) :: filename
       REAL(DP),           INTENT(IN) :: scalef    
         ! scale factor, usually 1.0 for pw and 1/SQRT( omega ) for CP
       LOGICAL,            INTENT(IN) :: ionode_in_group
@@ -64,10 +64,7 @@ MODULE io_base
       INTEGER                  :: me_in_group, nproc_in_group, my_group
       COMPLEX(DP), ALLOCATABLE :: wtmp(:)
       !
-#if defined __HDF5
-      CHARACTER(LEN=256) :: filename_hdf5
       INTEGER            :: gammaonly
-#endif
 
       me_in_group     = mp_rank( intra_group_comm )
       nproc_in_group  = mp_size( intra_group_comm )
@@ -83,23 +80,24 @@ MODULE io_base
       !
       IF ( ionode_in_group ) THEN
 #if defined  __HDF5
-      filename_hdf5=trim(tmp_dir) //"evc.hdf5"
-      CALL prepare_for_writing_final(evc_hdf5_write,inter_pool_comm,filename_hdf5,ik)
-      CALL add_attributes_hdf5(evc_hdf5_write,ngw,"ngw",ik)
-      gammaonly = 0 
-      IF (gamma_only) gammaonly = 1 
-      CALL add_attributes_hdf5(evc_hdf5_write,gammaonly,"gamma_only",ik)
-      CALL add_attributes_hdf5(evc_hdf5_write,igwx,"igwx",ik)
-      CALL add_attributes_hdf5(evc_hdf5_write,nbnd,"nbnd",ik)
-      CALL add_attributes_hdf5(evc_hdf5_write,ik,"ik",ik)
-      CALL add_attributes_hdf5(evc_hdf5_write,nk,"nk",ik)
-      CALL add_attributes_hdf5(evc_hdf5_write,ispin,"ispin",ik)
-      CALL add_attributes_hdf5(evc_hdf5_write,nspin,"nspin",ik)
-      CALL add_attributes_hdf5(evc_hdf5_write,scalef,"scale_factor",ik)
+         CALL prepare_for_writing_final ( evc_hdf5_write, inter_pool_comm, &
+              TRIM(filename)//'.hdf5',ik)
+         CALL add_attributes_hdf5(evc_hdf5_write,ngw,"ngw",ik)
+         gammaonly = 0 
+         IF (gamma_only) gammaonly = 1 
+         CALL add_attributes_hdf5(evc_hdf5_write,gammaonly,"gamma_only",ik)
+         CALL add_attributes_hdf5(evc_hdf5_write,igwx,"igwx",ik)
+         CALL add_attributes_hdf5(evc_hdf5_write,nbnd,"nbnd",ik)
+         CALL add_attributes_hdf5(evc_hdf5_write,ik,"ik",ik)
+         CALL add_attributes_hdf5(evc_hdf5_write,nk,"nk",ik)
+         CALL add_attributes_hdf5(evc_hdf5_write,ispin,"ispin",ik)
+         CALL add_attributes_hdf5(evc_hdf5_write,nspin,"nspin",ik)
+         CALL add_attributes_hdf5(evc_hdf5_write,scalef,"scale_factor",ik)
          !
 #else
          !
-         CALL iotk_open_write( iuni, FILE = TRIM( filename ), ROOT="WFC", BINARY = .TRUE. )
+         CALL iotk_open_write( iuni, FILE = TRIM(filename)//'.dat', &
+              ROOT="WFC", BINARY = .TRUE. )
          !
          CALL iotk_write_attr( attr, "ngw",          ngw, FIRST = .TRUE. )
          CALL iotk_write_attr( attr, "igwx",         igwx )
@@ -177,7 +175,7 @@ MODULE io_base
       INTEGER,            INTENT(INOUT) :: ngw, nbnd, ispin, nspin
       INTEGER,            INTENT(IN)    :: ngwl
       INTEGER,            INTENT(IN)    :: igl(:)
-      CHARACTER(LEN=256), INTENT(IN)    :: filename
+      CHARACTER(LEN=*),   INTENT(IN)    :: filename
       REAL(DP),           INTENT(OUT)   :: scalef
       LOGICAL,            INTENT(IN)    :: ionode_in_group
       INTEGER,            INTENT(IN)    :: root_in_group, intra_group_comm
@@ -187,7 +185,6 @@ MODULE io_base
       INTEGER                  :: ierr
       INTEGER                  :: igwx, igwx_, npwx, npol, ik_, nk_
       INTEGER                  :: me_in_group, nproc_in_group
-      CHARACTER(LEN=256)       :: filename_hdf5
       !
       !
       me_in_group     = mp_rank( intra_group_comm )
@@ -199,8 +196,8 @@ MODULE io_base
       ierr = 0
       !
 #if !defined __HDF5
-      IF ( ionode_in_group ) CALL iotk_open_read( iuni, FILE = filename, &
-                              BINARY = .TRUE., IERR = ierr )
+      IF ( ionode_in_group ) CALL iotk_open_read( iuni, &
+           FILE = TRIM(filename)//'.dat', BINARY = .TRUE., IERR = ierr )
       !
       CALL mp_bcast( ierr, root_in_group, intra_group_comm )
       CALL errore( 'read_wfc ', &
@@ -210,9 +207,8 @@ MODULE io_base
       IF ( ionode_in_group ) THEN
           !
 #if defined  __HDF5
-          filename_hdf5=filename
           CALL prepare_for_reading_final(evc_hdf5_write,evc_hdf5_write%comm, &
-               filename_hdf5,ik)
+               TRIM(filename)//'.hdf5',ik)
           CALL read_attributes_hdf5(evc_hdf5_write,ngw,"ngw",ik)
           CALL read_attributes_hdf5(evc_hdf5_write,nbnd,"nbnd",ik)
           CALL read_attributes_hdf5(evc_hdf5_write,ik_,"ik",ik)

@@ -418,6 +418,7 @@ MODULE pw_restart_new
       !
       USE mp,                   ONLY : mp_bcast, mp_sum, mp_max
       USE io_base,              ONLY : write_wfc
+      USE io_files,             ONLY : iunwfc, nwordwfc
       USE control_flags,        ONLY : gamma_only, smallmem
       USE gvect,                ONLY : ig_l2g
       USE noncollin_module,     ONLY : noncolin, npol
@@ -439,9 +440,9 @@ MODULE pw_restart_new
       !
       IMPLICIT NONE
       !
-      INTEGER               :: i, ig, ik, ik_g, ngg, ierr, ipol, num_k_points
-      INTEGER               :: nkl, nkr, npwx_g
-      INTEGER               :: ike, iks, npw_g, ispin, inlc
+      INTEGER               :: i, ig, ngg, ierr, ipol, ispin
+      INTEGER               :: ik, ik_g, ik_s, ik_eff, num_k_points
+      INTEGER               :: ike, iks, npw_g, npwx_g
       INTEGER,  ALLOCATABLE :: ngk_g(:)
       INTEGER,  ALLOCATABLE :: igk_l2g(:), igk_l2g_kdip(:), mill_g(:,:)
       CHARACTER(LEN=256)    :: dirname
@@ -552,13 +553,52 @@ MODULE pw_restart_new
          igk_l2g_kdip = 0
          CALL gk_l2gmap_kdip( npw_g, ngk_g(ik_g), ngk(ik), igk_l2g, &
                               igk_l2g_kdip )
-#ifdef __HDF5
-         IF ( .NOT.smallmem) CALL write_gk_hdf5(iunpun, ik)
-#else 
          IF ( .NOT.smallmem ) CALL write_gk( iunpun, ionode_k, ik, ik_g )
-#endif
          !
-         CALL write_this_wfc ( iunpun, ionode_k, ik, ik_g )
+         ! ... read wavefunctions - do not read if already in memory (nsk==1)
+         !
+         IF ( nks > 1 ) CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
+         !
+         IF ( nspin == 2 ) THEN
+            !
+            ! ... spin up
+            !
+            ispin = isk(ik)
+            filename = TRIM(dirname) // '/wfcup' // TRIM(int_to_char(ik_g))
+            IF ( ispin /= 1 ) call infomsg('write_wfc','strange spin (1)')
+            !
+            CALL write_wfc( iunpun, ik_g, nkstot, ispin, nspin, &
+                 evc, npw_g, gamma_only, nbnd, igk_l2g_kdip(:),   &
+                 ngk(ik), filename, 1.D0, &
+                 ionode_k, root_pool, intra_pool_comm )
+            !
+            ! ... spin down
+            !
+            ik_s = ik + num_k_points
+            ispin = isk(ik_s)
+            IF ( ispin /= 2 ) call infomsg('write_wfc','strange spin (2)')
+            !
+            IF ( nks > 1 ) CALL get_buffer ( evc, nwordwfc, iunwfc, ik_s )
+            !
+            filename = TRIM(dirname)//'/wfcdw'//TRIM(int_to_char(ik_g))
+            !
+            ik_eff = ik_g + nkstot/2 ! global index for spin down
+            CALL write_wfc( iunpun, ik_eff, nkstot, ispin, nspin, &
+                 evc, npw_g, gamma_only, nbnd, igk_l2g_kdip(:), &
+                 ngk(ik_s), filename, 1.D0, &
+                 ionode_k, root_pool, intra_pool_comm )
+            !
+         ELSE
+            !
+            filename = TRIM(dirname)//'/wfc'//TRIM(int_to_char(ik_g))
+            ispin = 1
+            !
+            CALL write_wfc( iunpun, ik_g, nkstot, ispin, nspin,   &
+                 evc, npw_g, gamma_only, nbnd, &
+                 igk_l2g_kdip(:), ngk(ik), filename, 1.D0, &
+                 ionode_k, root_pool, intra_pool_comm )
+            !
+         END IF
          !
       END DO k_points_loop
       !
@@ -606,80 +646,14 @@ MODULE pw_restart_new
           !
         END SUBROUTINE write_gvecs
         !
-#ifdef __HDF5
-        !--------------------------------------------------------------------
-        SUBROUTINE write_gk_hdf5( iun, ik )
-          !--------------------------------------------------------------------
-          !
-          USE hdf5_qe,   ONLY :  prepare_for_writing_final, write_gkhdf5, &
-                                 gk_hdf5_write, h5fclose_f
-          USE io_files,  ONLY : tmp_dir
-          IMPLICIT NONE
-          !
-          INTEGER,            INTENT(IN) :: iun, ik
-          CHARACTER(LEN=256)  :: filename_hdf5
-          !
-          INTEGER, ALLOCATABLE :: igwk(:,:)
-          INTEGER, ALLOCATABLE :: itmp(:)
-          INTEGER :: error
-          !
-          !
-          ALLOCATE( igwk( npwx_g, nkstot ) )
-          !
-          igwk(:,ik) = 0
-          !
-          ALLOCATE( itmp( npw_g ) )
-          !
-          itmp = 0
-          !
-          IF ( ik >= iks .AND. ik <= ike ) THEN
-             !
-             DO ig = 1, ngk(ik-iks+1)
-                !
-                itmp(igk_l2g(ig,ik-iks+1)) = igk_l2g(ig,ik-iks+1)
-                !
-             END DO
-             !
-          END IF
-          !
-          CALL mp_sum( itmp, inter_pool_comm )
-          CALL mp_sum( itmp, intra_pool_comm )
-          !
-          ngg = 0
-          !
-          DO ig = 1, npw_g
-             !
-             if ( itmp(ig) == ig ) THEN
-                !
-                ngg = ngg + 1
-                !
-                igwk(ngg,ik) = ig
-                !
-             END IF
-             !
-          END DO
-          !
-          DEALLOCATE( itmp )
-          !
-          IF ( ionode_k ) THEN
-             !
-             filename_hdf5=trim(tmp_dir) //"gk.hdf5"
-             CALL prepare_for_writing_final(gk_hdf5_write,inter_pool_comm,filename_hdf5,ik)
-             CALL write_gkhdf5(gk_hdf5_write,xk(:,ik),igwk(1:ngk_g(ik),ik), &
-                              mill_g(1:3,igwk(1:ngk_g(ik),ik)),ik)
-             CALL h5fclose_f(gk_hdf5_write%file_id,error)
-             !
-          END IF
-          !
-          DEALLOCATE( igwk )
-          !
-        END SUBROUTINE write_gk_hdf5
-        !
-#endif
         !--------------------------------------------------------------------
         SUBROUTINE write_gk( iun, ionode_k, ik, ik_g )
           !--------------------------------------------------------------------
           !
+#ifdef __HDF5
+          USE hdf5_qe,   ONLY :  prepare_for_writing_final, write_gkhdf5, &
+                                 gk_hdf5_write, h5fclose_f
+#endif
           IMPLICIT NONE
           !
           INTEGER, INTENT(IN) :: iun, ik, ik_g
@@ -713,11 +687,19 @@ MODULE pw_restart_new
           !
           DEALLOCATE( itmp )
           !
+          filename = TRIM(dirname) // '/gkvectors' // TRIM(int_to_char(ik_g))
           IF ( ionode_k ) THEN
              !
-             filename = TRIM(dirname) // '/gkvectors' // &
-                  & TRIM(int_to_char(ik_g)) // '.dat'
-             CALL iotk_open_write( iun, FILE = TRIM(filename), BINARY = .TRUE. )
+#ifdef __HDF5
+             CALL prepare_for_writing_final ( gk_hdf5_write, inter_pool_comm,&
+                  TRIM(filename)//'.hdf5',ik)
+             CALL write_gkhdf5(gk_hdf5_write,xk(:,ik),igwk(1:ngk_g(ik),ik), &
+                              mill_g(1:3,igwk(1:ngk_g(ik),ik)),ik)
+             CALL h5fclose_f(gk_hdf5_write%file_id,error)
+#else
+             !
+             CALL iotk_open_write( iun, FILE = TRIM(filename)//'.dat', &
+                  BINARY = .TRUE. )
              !
              CALL iotk_write_dat( iun, "NUMBER_OF_GK-VECTORS", ngk_g(ik_g) )
              CALL iotk_write_dat( iun, "MAX_NUMBER_OF_GK-VECTORS", npwx_g )
@@ -727,76 +709,17 @@ MODULE pw_restart_new
              CALL iotk_write_dat( iun, "K-POINT_COORDS", xk(:,ik), ATTR = attr )
              !
              CALL iotk_write_dat( iun, "INDEX", igwk(1:ngk_g(ik_g)) )
-             CALL iotk_write_dat( iun, "GRID", mill_g(1:3,igwk(1:ngk_g(ik_g))), &
+             CALL iotk_write_dat( iun, "GRID", mill_g(1:3,igwk(1:ngk_g(ik_g))),&
                   COLUMNS = 3 )
              !
              CALL iotk_close_write( iun )
+#endif
              !
           END IF
           !
           DEALLOCATE( igwk )
           !
         END SUBROUTINE write_gk
-        !
-        !
-        !--------------------------------------------------------------------
-        SUBROUTINE write_this_wfc ( iun, ionode_k, ik, ik_g )
-          !--------------------------------------------------------------------
-          !
-          USE io_files, ONLY : iunwfc, nwordwfc
-          IMPLICIT NONE
-          !
-          INTEGER, INTENT(IN) :: iun, ik, ik_g
-          LOGICAL, INTENT(IN) :: ionode_k
-          !
-          INTEGER :: ispin, ik_s, ik_eff
-          !
-          ! ... wavefunctions - do not read if already in memory (nsk==1)
-          !
-          IF ( nks > 1 ) CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
-          !
-          IF ( nspin == 2 ) THEN
-             !
-             ! ... spin up
-             !
-             ispin = isk(ik)
-             filename = TRIM(dirname) // '/wfcup' // TRIM(int_to_char(ik_g)) // '.dat'
-             IF ( ispin /= 1 ) call infomsg('write_wfc','strange spin (1)')
-             !
-             CALL write_wfc( iun, ik_g, nkstot, ispin, nspin, &
-                  evc, npw_g, gamma_only, nbnd, igk_l2g_kdip(:),   &
-                  ngk(ik), filename, 1.D0, &
-                  ionode_k, root_pool, intra_pool_comm )
-             !
-             ! ... spin down
-             !
-             ik_s = ik + num_k_points
-             ispin = isk(ik_s)
-             IF ( ispin /= 2 ) call infomsg('write_wfc','strange spin (2)')
-             !
-             IF ( nks > 1 ) CALL get_buffer ( evc, nwordwfc, iunwfc, ik_s )
-             !
-             filename = TRIM(dirname)//'/wfcdw'//TRIM(int_to_char(ik_g))//'.dat'
-             !
-             ik_eff = ik_g + nkstot/2 ! FIXME: global index for spin down
-             CALL write_wfc( iun, ik_eff, nkstot, ispin, nspin, &
-                  evc, npw_g, gamma_only, nbnd, igk_l2g_kdip(:), &
-                  ngk(ik_s), filename, 1.D0, &
-                  ionode_k, root_pool, intra_pool_comm )
-             !
-          ELSE
-             !
-             filename = TRIM(dirname)//'/wfc'//TRIM(int_to_char(ik_g))//'.dat'
-             ispin = 1
-             !
-             CALL write_wfc( iun, ik_g, nkstot, ispin, nspin,   &
-                     evc, npw_g, gamma_only, nbnd, &
-                     igk_l2g_kdip(:), ngk(ik), filename, 1.D0, &
-                     ionode_k, root_pool, intra_pool_comm )
-             !
-          END IF
-          !
-        END SUBROUTINE write_this_wfc
         !
     END SUBROUTINE pw_write_binaries
     !
@@ -828,7 +751,6 @@ MODULE pw_restart_new
       ALLOCATE( itmp( npw_g ) )
       ALLOCATE( igwk_( ngk_g ) )
       !
-      print *, npw_g,ngk,ngk_g
       itmp(:)  = 0
       igwk_(:) = 0
       !
@@ -2298,9 +2220,7 @@ MODULE pw_restart_new
             ! ... no need to read isk here: they are read from band structure
             ! ... and correctly distributed across pools in read_file
             !
-#ifndef __HDF5
-            filename = TRIM(dirname)//'/wfcup'//TRIM(int_to_char(ik_g))//'.dat'
-#endif
+            filename = TRIM(dirname)//'/wfcup'//TRIM(int_to_char(ik_g))
             CALL read_wfc( iunpun, ik_g, nkstot, ispin, nspin,      &
                            evc, npw_g, nbnd, igk_l2g_kdip(:),   &
                            ngk(ik), filename, scalef, &
@@ -2315,9 +2235,7 @@ MODULE pw_restart_new
             evc=(0.0_DP, 0.0_DP)
             !
             ik_eff = ik_g + nkstot/2 ! FIXME: global index for spin down
-#ifndef __HDF5
-            filename = TRIM(dirname)//'/wfcdw'//TRIM(int_to_char(ik_g))//'.dat'
-#endif
+            filename = TRIM(dirname)//'/wfcdw'//TRIM(int_to_char(ik_g))
             CALL read_wfc( iunpun, ik_eff, nkstot, ispin, nspin,      &
                            evc, npw_g, nbnd, igk_l2g_kdip(:),   &
                            ngk(ik_s), filename, scalef, &
@@ -2328,9 +2246,7 @@ MODULE pw_restart_new
          ELSE
             !
             evc=(0.0_DP, 0.0_DP)
-#ifndef __HDF5
-            filename = TRIM(dirname)//'/wfc'//TRIM(int_to_char(ik_g))//'.dat'
-#endif
+            filename = TRIM(dirname)//'/wfc'//TRIM(int_to_char(ik_g))
             CALL read_wfc( iunpun, ik_g, nkstot, ispin, npol_,   &
                            evc, npw_g, nbnd, &
                            igk_l2g_kdip(:), ngk(ik), filename, scalef, &
