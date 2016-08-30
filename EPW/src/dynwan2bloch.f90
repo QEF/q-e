@@ -7,7 +7,7 @@
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
   !
   !--------------------------------------------------------------------------
-  SUBROUTINE dynwan2bloch ( nbnd, nrr, irvec, ndegen, xq, cuf, eig)
+  SUBROUTINE dynwan2bloch ( nbnd, nrr, irvec, ndegen, xxq, cuf, eig)
   !--------------------------------------------------------------------------
   !!
   !!
@@ -40,37 +40,33 @@
   USE elph2,     ONLY : rdw, epsi, zstar
   USE epwcom,    ONLY : lpolar
   USE constants_epw, ONLY : twopi, ci, czero
+  !
   implicit none
   !
-  !  input variables
+  INTEGER, INTENT (in) :: nbnd
+  !! number of bands (possibly of the optimal subspace)
+  INTEGER, INTENT (in) :: nrr
+  !! kpoint number for the interpolation
+  INTEGER, INTENT (in) :: irvec (3, nrr)
+  !! record length and unit for direct write of rotation matrix
+  INTEGER, INTENT (in) :: ndegen (nrr)
+  !! number of WS points, crystal coordinates, degeneracy
   !
-  integer :: nbnd, nrr, irvec (3, nrr), ndegen (nrr)
-  ! number of bands (possibly of the optimal subspace)
-  ! kpoint number for the interpolation
-  ! record length and unit for direct write of rotation matrix
-  ! number of WS points, crystal coordinates, degeneracy
+  REAL(kind=DP), INTENT (in) :: xxq (3)
+  !! kpoint coordinates for the interpolation
+  REAL(kind=DP), INTENT (out) :: eig (nbnd)
+  !! interpolated hamiltonian eigenvalues for this kpoint
+  COMPLEX(kind=DP), INTENT (out) :: cuf(nbnd, nbnd)
+  !! Rotation matrix, fine mesh 
   !
-  ! Hamiltonian in wannier basis
-  !
-  real(kind=DP) :: xq (3)
-  ! kpoint coordinates for the interpolation
-  !
-  ! output variables
-  !
-  real(kind=DP) :: eig (nbnd)
-  ! interpolated hamiltonian eigenvalues for this kpoint
-  complex(kind=DP) :: cuf(nbnd, nbnd)
-  ! Rotation matrix, fine mesh
-  !
+  ! work variables
   ! variables for lapack ZHPEVX
-  !
   integer :: neig, info, ifail( nbnd ), iwork( 5*nbnd )
   real(kind=DP) :: w( nbnd ), rwork( 7*nbnd )
   complex(kind=DP) :: champ( nbnd*(nbnd+1)/2 ), &
     cwork( 2*nbnd ), cz( nbnd, nbnd)
   !
-  ! work variables
-  !
+  real(kind=DP) :: xq (3)
   complex(kind=DP) :: chf(nbnd, nbnd)
   ! Hamiltonian in Bloch basis, fine mesh
   integer :: ibnd, jbnd, ir, na, nb
@@ -88,6 +84,7 @@
   !  H~_k   is chf ( nbnd, nbnd, 2*ik-1 )
   !  H~_k+q is chf ( nbnd, nbnd, 2*ik   )
   !
+  xq = xxq
   chf (:,:) = czero
   !
   DO ir = 1, nrr

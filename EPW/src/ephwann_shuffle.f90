@@ -26,9 +26,10 @@
   !
   USE kinds,         ONLY : DP
   USE pwcom,         ONLY : nbnd, nks, nkstot, isk, &
-                            et, xk, at, bg, ef,  nelec
+                            et, xk, ef,  nelec
+  USE cell_base,     ONLY : at, bg                  
   USE start_k,       ONLY : nk1, nk2, nk3
-  USE ions_base,     ONLY : amass, ityp
+  USE ions_base,     ONLY : nat, amass, ityp
   USE phcom,         ONLY : nq1, nq2, nq3, nmodes, w2
   USE epwcom,        ONLY : nbndsub, lrepmatf, fsthick, epwread,          &
                             epwwrite, ngaussw, degaussw, lpolar,          &
@@ -42,7 +43,7 @@
   USE io_files,      ONLY : prefix, diropn
   USE io_global,     ONLY : stdout, ionode
   USE io_epw,        ONLY : lambda_phself, linewidth_phself, iunepmatf, &
-                            iunepmatwe, iunepmatwp
+                            iunepmatwe, iunepmatwp, crystal
   USE elph2,         ONLY : nrr_k, nrr_q, cu, cuq, lwin, lwinq, irvec, ndegen_k, ndegen_q, &
                             wslen, chw, chw_ks, cvmew, cdmew, rdw, epmatwp, epmatq, &
                             wf, etf, etf_k, etf_ks, xqf, xkf, wkf, &
@@ -54,7 +55,7 @@
 #endif
   USE mp,            ONLY : mp_barrier, mp_bcast, mp_sum
   USE io_global,     ONLY : ionode_id
-  USE mp_global,     ONLY : inter_pool_comm
+  USE mp_global,     ONLY : inter_pool_comm, intra_pool_comm, root_pool
   USE mp_world,      ONLY : mpime
   !
   implicit none
@@ -157,6 +158,45 @@
   !
   ! DBSP
   ! HERE loadkmesh
+  IF ( epwread ) THEN
+    ! 
+    ! We need some crystal info
+    IF (mpime.eq.ionode_id) THEN
+      !
+      OPEN(unit=crystal,file='crystal.fmt',status='old',iostat=ios)
+      READ (crystal,*) nat
+      READ (crystal,*) nmodes
+      READ (crystal,*) nelec
+      READ (crystal,*) at
+      READ (crystal,*) bg
+      READ (crystal,*) amass
+      ALLOCATE( ityp( nat ) )
+      READ (crystal,*) ityp
+      ! 
+    ENDIF
+    CALL mp_bcast (nat, ionode_id, inter_pool_comm)
+    CALL mp_bcast (nat, root_pool, intra_pool_comm)  
+    IF (mpime /= ionode_id) ALLOCATE( ityp( nat ) )
+    CALL mp_bcast (nmodes, ionode_id, inter_pool_comm)
+    CALL mp_bcast (nmodes, root_pool, intra_pool_comm)  
+    CALL mp_bcast (nelec, ionode_id, inter_pool_comm)
+    CALL mp_bcast (nelec, root_pool, intra_pool_comm)  
+    CALL mp_bcast (at, ionode_id, inter_pool_comm)
+    CALL mp_bcast (at, root_pool, intra_pool_comm)  
+    CALL mp_bcast (bg, ionode_id, inter_pool_comm)
+    CALL mp_bcast (bg, root_pool, intra_pool_comm)  
+    CALL mp_bcast (amass, ionode_id, inter_pool_comm)
+    CALL mp_bcast (amass, root_pool, intra_pool_comm)  
+    CALL mp_bcast (ityp, ionode_id, inter_pool_comm)
+    CALL mp_bcast (ityp, root_pool, intra_pool_comm)  
+    IF (mpime.eq.ionode_id) THEN
+      CLOSE(crystal)
+    ENDIF
+    CALL mp_barrier(inter_pool_comm)
+    ! 
+  ELSE
+    continue
+  ENDIF
   !
   ! determine Wigner-Seitz points
   !
@@ -182,6 +222,7 @@
      CALL epw_read
      !
   ELSE !if not epwread (i.e. need to calculate fmt file)
+     !
      !
      xxq = 0.d0 
      CALL loadumat &
@@ -970,11 +1011,14 @@ SUBROUTINE epw_write
   !
   USE kinds,     ONLY : DP
   USE epwcom,    ONLY : nbndsub, vme, eig_read, etf_mem
-  USE pwcom,     ONLY : ef
+  USE pwcom,     ONLY : ef, nelec
   USE elph2,     ONLY : nrr_k, nrr_q, chw, rdw, cdmew, cvmew, chw_ks, &
                         zstar, epsi, epmatwp
+  USE ions_base, ONLY : amass, ityp, nat
+  USE cell_base, ONLY : at, bg
   USE phcom,     ONLY : nmodes  
-  USE io_epw,    ONLY : epwdata, iundmedata, iunvmedata, iunksdata, iunepmatwp
+  USE io_epw,    ONLY : epwdata, iundmedata, iunvmedata, iunksdata, iunepmatwp, &
+                        crystal
   USE io_files,  ONLY : prefix, diropn
   USE mp,        ONLY : mp_barrier
   USE mp_global, ONLY : inter_pool_comm
@@ -992,9 +1036,17 @@ SUBROUTINE epw_write
   IF (mpime.eq.ionode_id) THEN
     !
     OPEN(unit=epwdata,file='epwdata.fmt')
+    OPEN(unit=crystal,file='crystal.fmt')
     OPEN(unit=iundmedata,file='dmedata.fmt')
     IF (vme) OPEN(unit=iunvmedata,file='vmedata.fmt')
     IF (eig_read) OPEN(unit=iunksdata,file='ksdata.fmt')
+    WRITE (crystal,*) nat
+    WRITE (crystal,*) nmodes
+    WRITE (crystal,*) nelec
+    WRITE (crystal,*) at
+    WRITE (crystal,*) bg
+    WRITE (crystal,*) amass
+    WRITE (crystal,*) ityp
     WRITE (epwdata,*) ef
     WRITE (epwdata,*) nbndsub, nrr_k, nmodes, nrr_q
     WRITE (epwdata,*) zstar, epsi
@@ -1036,7 +1088,7 @@ SUBROUTINE epw_write
         ENDDO
       ENDDO
       !DBSP
-      !filint    = trim(prefix)//'.epmatwp'
+      filint    = trim(prefix)//'.epmatwp'
       CALL diropn (iunepmatwp, 'epmatwp', lrepmatw, exst)
       CALL davcio ( aux, lrepmatw, iunepmatwp, 1, +1 )
       CLOSE(iunepmatwp)
@@ -1044,6 +1096,7 @@ SUBROUTINE epw_write
     ENDIF 
     !
     CLOSE(epwdata)
+    CLOSE(crystal)
     CLOSE(iundmedata)
     IF (vme) CLOSE(iunvmedata)
     IF (eig_read) CLOSE(iunksdata)
@@ -1061,6 +1114,7 @@ SUBROUTINE epw_read()
   USE pwcom,     ONLY : ef
   USE elph2,     ONLY : nrr_k, nrr_q, chw, rdw, epmatwp, &
                         cdmew, cvmew, chw_ks, zstar, epsi
+  USE ions_base, ONLY : nat
   USE phcom,     ONLY : nmodes  
   USE io_global, ONLY : stdout
   USE io_files,  ONLY : prefix, diropn
@@ -1081,9 +1135,14 @@ SUBROUTINE epw_read()
   INTEGER             :: ibnd, jbnd, jmode, imode, irk, irq, &
                          ipol, ios, i, lrepmatw
   complex(kind=DP)    :: aux ( nbndsub*nbndsub*nrr_k*nmodes*nrr_q )
-     !
+  !
   WRITE(stdout,'(/5x,"Reading Hamiltonian, Dynamical matrix and EP vertex in Wann rep from file"/)')
   call flush(6)
+  ! 
+  ! This is important in restart mode as zstar etc has not been allocated
+  IF (.NOT. ALLOCATED (zstar) ) ALLOCATE( zstar(3,3,nat) )
+  IF (.NOT. ALLOCATED (epsi) ) ALLOCATE( epsi(3,3) )
+
   IF (mpime.eq.ionode_id) THEN
     !
     OPEN(unit=epwdata,file='epwdata.fmt',status='old',iostat=ios)
@@ -1170,8 +1229,13 @@ SUBROUTINE epw_read()
       !
       lrepmatw   = 2 * nbndsub * nbndsub * nrr_k * nmodes * nrr_q
       filint    = trim(prefix)//'.epmatwp'
+      !CALL diropn (iunepmatwp, filint, lrepmatw, exst)
+
       CALL diropn (iunepmatwp, 'epmatwp', lrepmatw, exst)
       CALL davcio ( aux, lrepmatw, iunepmatwp, 1, -1 )
+      !READ( UNIT = iunepmatwp, REC = 1, IOSTAT = ios ) aux
+
+
       i = 0
       DO irq = 1, nrr_q
         DO imode = 1, nmodes

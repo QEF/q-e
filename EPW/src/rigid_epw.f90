@@ -227,8 +227,7 @@ SUBROUTINE rgd_blk_epw(nq1,nq2,nq3,q,uq,epmat,nmodes,epsil,zeu,bmat,signe)
   !
   ! work variables
   !
-  real(DP) :: &
-       qeq,            &! <q+G| epsil | q+G>
+  real(DP) :: qeq,     &! <q+G| epsil | q+G>
        arg, zaq,       &
        g1, g2, g3, gmax, alph, geg
   integer :: na, ipol, im, m1,m2,m3, nrx1,nrx2,nrx3

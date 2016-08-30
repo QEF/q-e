@@ -593,7 +593,11 @@
   modenum_aux = modenum
   !
   ! SP: This initialized nspin and nspin_mag
-  CALL read_file
+  IF ( epwread .and. .not. epbread ) then
+    continue
+  ELSE
+    CALL read_file
+  ENDIF
   !
   ! nbnd comes out of readfile
   IF (nbndsub.eq.0) nbndsub = nbnd

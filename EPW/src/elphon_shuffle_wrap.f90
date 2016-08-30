@@ -215,8 +215,14 @@
      IF (allocated(qrad)) deallocate(qrad)
      allocate (qrad (maxvalue, nbetam*(nbetam+1)/2,lmaxq, nsp))
   ENDIF
-  IF (nkstot .ne. nk1*nk2*nk3 ) &
+  ! 
+  ! DO not perform the check if restart
+  IF ( epwread .and. .not. epbread ) then
+    continue
+  ELSE
+    IF (nkstot .ne. nk1*nk2*nk3 ) &
        CALL errore('elphon_shuffle_wrap','nscf run inconsistent with epw input',1)  
+  ENDIF
   !
   ! READ in external electronic eigenvalues. e.g. GW 
   !
@@ -251,8 +257,14 @@
     et_mb(:,:)  = et(:,1:nks)
   ENDIF
   !
+  ! Do not recompute dipole matrix elements
+  IF ( epwread .and. .not. epbread ) then
+    continue
+  ELSE
   ! compute coarse grid dipole matrix elements.  Very fast 
-  CALL compute_pmn_para
+    CALL compute_pmn_para
+  ENDIF
+  !CALL compute_pmn_para
   !
   !  gather electronic eigenvalues for subsequent shuffle
   !  
@@ -278,38 +290,44 @@
   !
   CALL mp_barrier(inter_pool_comm)
   !
-  !  allocate dynamical matrix and ep matrix for all q's
-  !
-  allocate ( dynq (nmodes, nmodes, nq1*nq2*nq3), &
-       epmatq (nbnd, nbnd, nks, nmodes, nq1*nq2*nq3), &
-       epsi(3,3), zstar(3,3,nat), bmat(nbnd, nbnd, nks, nq1*nq2*nq3), &
-       cu ( nbnd, nbndsub, nks), cuq ( nbnd, nbndsub, nks), & 
-       lwin ( nbnd, nks ), lwinq ( nbnd, nks ) )
-  !
-  epsi=0.d0
-  zstar=0.d0
-  !
-  ! SP: The symmetries are now consistent with QE 5. This means that the order of the q in the star
-  !     should be the same as in the .dyn files produced by QE 5.
-  ! 
-  !     First we start by setting up the lattice & crystal symm. as done in PH/init_representations.f90
-  ! 
-  ! ~~~~~~~~ setup bravais lattice symmetry ~~~~~~~~
-  CALL set_sym_bl ( ) ! This should define the s matrix
-  WRITE(stdout, '(5x,a,i3)') "Symmetries of bravais lattice: ", nrot
-  !
-  ! ~~~~~~~~ setup crystal symmetry ~~~~~~~~ 
-  CALL find_sym ( nat, tau, ityp, dfftp%nr1,dfftp%nr2,dfftp%nr3, .false., m_loc )
-  WRITE(stdout, '(5x,a,i3)') "Symmetries of crystal:         ", nsym
-  !   
-  ! The following loop is required to propertly set up the symmetry matrix s. 
-  ! We here copy the calls made in PH/init_representations.f90 to have the same s as in QE 5.
-  DO iq_irr = 1, nqc_irr
-    xq = xqc_irr(:,iq_irr)
-    CALL set_small_group_of_q(nsymq,invsymq,minus_q)
-    CALL sgam_ph_new (at, bg, nsym, s, irt, tau, rtau, nat)
-    CALL set_giq (xq,s,nsymq,nsym,irotmq,minus_q,gi,gimq)
-  ENDDO
+  ! Do not do symmetry stuff 
+  IF ( epwread .and. .not. epbread ) then
+    CONTINUE
+  ELSE
+    !
+    !  allocate dynamical matrix and ep matrix for all q's
+    !
+    allocate ( dynq (nmodes, nmodes, nq1*nq2*nq3), &
+         epmatq (nbnd, nbnd, nks, nmodes, nq1*nq2*nq3), &
+         epsi(3,3), zstar(3,3,nat), bmat(nbnd, nbnd, nks, nq1*nq2*nq3), &
+         cu ( nbnd, nbndsub, nks), cuq ( nbnd, nbndsub, nks), & 
+         lwin ( nbnd, nks ), lwinq ( nbnd, nks ) )
+    !
+    epsi=0.d0
+    zstar=0.d0
+    !
+    ! SP: The symmetries are now consistent with QE 5. This means that the order of the q in the star
+    !     should be the same as in the .dyn files produced by QE 5.
+    ! 
+    !     First we start by setting up the lattice & crystal symm. as done in PH/init_representations.f90
+    ! 
+    ! ~~~~~~~~ setup bravais lattice symmetry ~~~~~~~~
+    CALL set_sym_bl ( ) ! This should define the s matrix
+    WRITE(stdout, '(5x,a,i3)') "Symmetries of bravais lattice: ", nrot
+    !
+    ! ~~~~~~~~ setup crystal symmetry ~~~~~~~~ 
+    CALL find_sym ( nat, tau, ityp, dfftp%nr1,dfftp%nr2,dfftp%nr3, .false., m_loc )
+    WRITE(stdout, '(5x,a,i3)') "Symmetries of crystal:         ", nsym
+    !   
+    ! The following loop is required to propertly set up the symmetry matrix s. 
+    ! We here copy the calls made in PH/init_representations.f90 to have the same s as in QE 5.
+    DO iq_irr = 1, nqc_irr
+      xq = xqc_irr(:,iq_irr)
+      CALL set_small_group_of_q(nsymq,invsymq,minus_q)
+      CALL sgam_ph_new (at, bg, nsym, s, irt, tau, rtau, nat)
+      CALL set_giq (xq,s,nsymq,nsym,irotmq,minus_q,gi,gimq)
+    ENDDO
+  ENDIF ! epwread .and. .not. epbread
   ! 
   ! CV: if we read the .fmt files we don't need to read the .epb anymore
   !

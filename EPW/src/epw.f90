@@ -27,7 +27,7 @@
   USE control_flags,   ONLY : gamma_only
   USE control_epw,     ONLY : wannierize
   USE global_version,  ONLY : version_number
-  USE epwcom,          ONLY : filukk, eliashberg, ep_coupling
+  USE epwcom,          ONLY : filukk, eliashberg, ep_coupling, epwread, epbread
   USE environment,     ONLY : environment_start
   USE elph2,           ONLY : elph 
   ! Flag to perform an electron-phonon calculation. If .true. 
@@ -90,7 +90,18 @@ write(stdout,'(a)') "                                                           
   CALL epw_readin
   !
   CALL allocate_epwq
-  CALL epw_setup
+
+  IF ( epwread .AND. .NOT. epbread ) THEN
+      write(stdout,'(a)') "                      "
+      write(stdout,'(a)') "     ------------------------------------------------------------------------ "
+      write(stdout,'(a)') "                   RESTART - RESTART - RESTART - RESTART                         "
+      write(stdout,'(a)') "     Restart is done without reading PWSCF save file.                  "
+      write(stdout,'(a)') "     Be aware that some consistency checks are therefore not done.                  "
+      write(stdout,'(a)') "     ------------------------------------------------------------------------ "
+      write(stdout,'(a)') "                      "
+  ELSE
+    CALL epw_setup
+  ENDIF
   !
   !  Print run info to stdout
   !
@@ -98,11 +109,20 @@ write(stdout,'(a)') "                                                           
   !
   IF ( ep_coupling ) THEN 
      !
-     CALL openfilepw
+     ! In case of restart with arbitrary number of cores.
+     IF ( epwread .and. .not. epbread ) THEN
+       continue
+     ELSE 
+       CALL openfilepw
+     ENDIF
      !
      CALL print_clock( 'EPW' )
      !
-     CALL epw_init(.true.)
+     IF ( epwread .and. .not. epbread ) THEN
+       continue      
+     ELSE
+       CALL epw_init(.true.)
+     ENDIF
      !
      CALL print_clock( 'EPW' )
      !

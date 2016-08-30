@@ -28,7 +28,7 @@
   !
   ! adapted from Numerical Recipes pg. 329 (new edition)
   !
-  use kinds
+  use kinds, ONLY : DP
   implicit none  
   !-input/output variables
   integer, intent(in)   :: n  

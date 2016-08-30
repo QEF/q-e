@@ -7,48 +7,55 @@
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
   !                                                                            
   !-----------------------------------------------------------------
-  subroutine wigner_seitz2 (nk1, nk2, nk3, nq1, nq2, nq3, &
+  subroutine wigner_seitz2 (nk1, nk2, nk3, nq1, nq2, nq3,&
        nrr_k, nrr_q, irvec, wslen, ndegen_k, ndegen_q)
   !-----------------------------------------------------------------
-  !
-  ! We have nk1*nk2*nk3 electron points and nq1*nq2*nq3 phonon points 
-  ! on the same grid. Assuming nq_i <= nk_i, i=1..3 we sort the corresponding
-  ! wigner-seitz points in such a way that a subset 1...nrr_q < nrr_k gives 
-  ! the WS points for the phonons, while the full set 1..nrr_k gives the 
-  ! WS points for the electrons
-  !
-  ! the unsorted electron and phonon grids are obtained by calling
-  ! wigner_seitz.f90
-  !
-  ! On exit, we have the same irvec for electrons and phonons, but
-  ! different ndegen
-  !
+  !!
+  !! We have nk1*nk2*nk3 electron points and nq1*nq2*nq3 phonon points 
+  !! on the same grid. Assuming nq_i <= nk_i, i=1..3 we sort the corresponding
+  !! wigner-seitz points in such a way that a subset 1...nrr_q < nrr_k gives 
+  !! the WS points for the phonons, while the full set 1..nrr_k gives the 
+  !! WS points for the electrons
+  !!
+  !! the unsorted electron and phonon grids are obtained by calling
+  !! wigner_seitz.f90
+  !!
+  !! On exit, we have the same irvec for electrons and phonons, but
+  !! different ndegen
+  !!
   !-----------------------------------------------------------------
-  USE kinds, only : DP
+  USE kinds, ONLY : DP
+  !
   implicit none
   !
-  integer :: nk1, nk2, nk3, nq1, nq2, nq3, &
-       irvec(3,20*nk1*nk2*nk3), nrr_k, nrr_q
-!@       irvec(3,2*nk1*nk2*nk3), nrr_k, nrr_q
-  real(kind=DP) :: wslen(2*nk1*nk2*nk3)
+  INTEGER, INTENT (in) :: nk1
+  !! size of the uniform k mesh
+  INTEGER, INTENT (in) :: nk2
+  !! size of the uniform k mesh
+  INTEGER, INTENT (in) :: nk3
+  !! size of the uniform k mesh
+  INTEGER, INTENT (in) :: nq1
+  !! size of the uniform q mesh
+  INTEGER, INTENT (in) :: nq2
+  !! size of the uniform q mesh
+  INTEGER, INTENT (in) :: nq3
+  !! size of the uniform q mesh
+  INTEGER, INTENT (out) :: irvec(3,20*nk1*nk2*nk3)
+  !! integer components of the ir-th Wigner-Seitz grid point in the basis of the lattice vectors
+  INTEGER, INTENT (out) :: nrr_k
+  !! number of Wigner-Seitz grid points for electrons
+  INTEGER, INTENT (out) :: nrr_q
+  !! number of Wigner-Seitz grid points for electrons
   !
-  ! size of the uniform k mesh (input)
-  ! size of the uniform q mesh (input)
-  ! integer components of the ir-th Wigner-Seitz grid point 
-  !      in the basis of the lattice vectors (output)
-  ! number of Wigner-Seitz grid points for electrons and for phonons (output) 
-  ! real-space length, in units of alat
+  REAL(kind=DP), INTENT (out) :: wslen(2*nk1*nk2*nk3)
+  !! real-space length, in units of alat
   !
   ! work variables
-  integer :: irvec_k (3,20*nk1*nk2*nk3), ndegen_k (20*nk1*nk2*nk3), &
+  INTEGER :: irvec_k (3,20*nk1*nk2*nk3), ndegen_k (20*nk1*nk2*nk3), &
              irvec_q (3,20*nk1*nk2*nk3), ndegen_q (20*nk1*nk2*nk3), &
              ind2(20*nk1*nk2*nk3), ire, ir, nind
-!@  integer :: irvec_k (3,2*nk1*nk2*nk3), ndegen_k (2*nk1*nk2*nk3), &
-!@             irvec_q (3,2*nk1*nk2*nk3), ndegen_q (2*nk1*nk2*nk3), &
-!@             ind2(2*nk1*nk2*nk3), ire, ir, nind
-!             ind(2*nk1*nk2*nk3), ind2(2*nk1*nk2*nk3), ire, ir
-  integer, allocatable :: ind(:)
-  real(kind=DP) :: wslen_k (20*nk1*nk2*nk3), wslen_q (20*nk1*nk2*nk3)
+  INTEGER, ALLOCATABLE :: ind(:)
+  REAL(kind=DP) :: wslen_k (20*nk1*nk2*nk3), wslen_q (20*nk1*nk2*nk3)
   !
   !  The allocation of the sorting arrays is not very clean.  However,
   !  for the moment it works.
@@ -56,8 +63,8 @@
   nind = 20*nk1*nk2*nk3
   IF (nind .lt. 125) then
       nind = 125
-   ENDIF
-  allocate (ind(nind))
+  ENDIF
+  ALLOCATE (ind(nind))
   !
   ! initialization for ihpsort (not to be removed!)
   !
@@ -86,17 +93,17 @@
     ind (ir) = nrr_q + ir
   ENDDO
   DO ire = 1, nrr_k
-     ir = 1
-     DO while ( ( irvec_k(1,ire).ne.irvec_q(1,ir)   .or.  &
-                  irvec_k(2,ire).ne.irvec_q(2,ir)   .or.  &
-                  irvec_k(3,ire).ne.irvec_q(3,ir) ) .and. &
-                  ir.le.nrr_q )
-       ir = ir + 1
-     ENDDO 
-     IF ( ir.le.nrr_q ) ind (ire) = ir - 1
+    ir = 1
+    DO while ( ( irvec_k(1,ire).ne.irvec_q(1,ir)   .or.  &
+                 irvec_k(2,ire).ne.irvec_q(2,ir)   .or.  &
+                 irvec_k(3,ire).ne.irvec_q(3,ir) ) .and. &
+                 ir.le.nrr_q )
+      ir = ir + 1
+    ENDDO 
+    IF ( ir.le.nrr_q ) ind (ire) = ir - 1
   ENDDO
   !
-  !  sort the electronic points accordingly
+  !  Sort the electronic points accordingly
   ! 
   CALL ihpsort ( nrr_k, ind, ind2 )
   ! 
