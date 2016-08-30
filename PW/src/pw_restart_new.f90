@@ -441,7 +441,7 @@ MODULE pw_restart_new
       IMPLICIT NONE
       !
       INTEGER               :: i, ig, ngg, ierr, ipol, ispin
-      INTEGER               :: ik, ik_g, ik_s, ik_eff, num_k_points
+      INTEGER               :: ik, ik_g, ik_s, num_k_points
       INTEGER               :: ike, iks, npw_g, npwx_g
       INTEGER,  ALLOCATABLE :: ngk_g(:)
       INTEGER,  ALLOCATABLE :: igk_l2g(:), igk_l2g_kdip(:), mill_g(:,:)
@@ -515,17 +515,6 @@ MODULE pw_restart_new
       !
       ALLOCATE ( igk_l2g( npwx ) )
       !
-      ! ... npw_g: the maximum G vector index among all k and processors
-      ! FIXME: why among all k? it shouldn' be needed
-      npw_g = 0
-      DO ik = 1, num_k_points
-         DO ig = 1, ngk (ik)
-            npw_g = MAX (npw_g, ig_l2g(igk_k(ig,ik)) )
-         END DO
-      END DO
-      CALL mp_max( npw_g, intra_pool_comm )
-      CALL mp_max( npw_g, inter_pool_comm )
-      !
       ! ... the igk_l2g_kdip local-to-global map yields the correspondence
       ! ... between the global order of k+G and the local index for k+G.
       !
@@ -547,8 +536,8 @@ MODULE pw_restart_new
          !
          ! ... npw_g: the maximum G vector index among all processors
          !
-         !npw_g = MAXVAL( igk_l2g(:) )
-         !CALL mp_max( npw_g, intra_pool_comm )
+         npw_g = MAXVAL( igk_l2g(1:ngk(ik)) )
+         CALL mp_max( npw_g, intra_pool_comm )
          !
          igk_l2g_kdip = 0
          CALL gk_l2gmap_kdip( npw_g, ngk_g(ik_g), ngk(ik), igk_l2g, &
@@ -582,8 +571,8 @@ MODULE pw_restart_new
             !
             filename = TRIM(dirname)//'/wfcdw'//TRIM(int_to_char(ik_g))
             !
-            ik_eff = ik_g + nkstot/2 ! global index for spin down
-            CALL write_wfc( iunpun, ik_eff, nkstot, ispin, nspin, &
+            ik_g = ik_g + nkstot/2 ! global index for spin down
+            CALL write_wfc( iunpun, ik_g, nkstot, ispin, nspin, &
                  evc, npw_g, gamma_only, nbnd, igk_l2g_kdip(:), &
                  ngk(ik_s), filename, 1.D0, &
                  ionode_k, root_pool, intra_pool_comm )
@@ -2122,7 +2111,7 @@ MODULE pw_restart_new
       INTEGER,          INTENT(OUT) :: ierr
       !
       CHARACTER(LEN=320)   :: filename
-      INTEGER              :: ik, ik_g, ig, ipol, ik_eff, ik_s, num_k_points
+      INTEGER              :: i, ik, ik_g, ig, ipol, ik_s, num_k_points
       INTEGER              :: npol_, npwx_g
       INTEGER              :: nupdwn(2), ike, iks, npw_g, ispin
       INTEGER, ALLOCATABLE :: ngk_g(:)
@@ -2174,17 +2163,6 @@ MODULE pw_restart_new
       !
       ALLOCATE ( igk_l2g( npwx ) )
       !
-      ! ... npw_g: the maximum G vector index among all k and processors
-      ! FIXME: why among all k? it shouldn' be needed
-      npw_g = 0
-      DO ik = 1, num_k_points
-         DO ig = 1, ngk (ik)
-            npw_g = MAX (npw_g, ig_l2g(igk_k(ig,ik)) )
-         END DO
-      END DO
-      CALL mp_max( npw_g, intra_pool_comm )
-      CALL mp_max( npw_g, inter_pool_comm )
-      !
       ! ... the igk_l2g_kdip local-to-global map is needed to read wfcs
       !
       ALLOCATE ( igk_l2g_kdip( npwx_g ) )
@@ -2205,8 +2183,8 @@ MODULE pw_restart_new
          !
          ! ... npw_g: the maximum G vector index among all processors
          !
-         !npw_g = MAXVAL( igk_l2g(:) )
-         !CALL mp_max( npw_g, inter_pool_comm )
+         npw_g = MAXVAL( igk_l2g(1:ngk(ik)) )
+         CALL mp_max( npw_g, intra_pool_comm )
          !
          igk_l2g_kdip = 0
          CALL gk_l2gmap_kdip( npw_g, ngk_g(ik_g), ngk(ik), igk_l2g, &
@@ -2214,7 +2192,6 @@ MODULE pw_restart_new
          !
          IF ( nspin == 2 ) THEN
             !
-            ispin = 1 
             evc=(0.0_DP, 0.0_DP)
             !
             ! ... no need to read isk here: they are read from band structure
@@ -2231,12 +2208,11 @@ MODULE pw_restart_new
             ! ... spin down
             !
             ik_s = ik + num_k_points
-            ispin = 2
             evc=(0.0_DP, 0.0_DP)
             !
-            ik_eff = ik_g + nkstot/2 ! FIXME: global index for spin down
+            ik_g = ik_g + nkstot/2 ! global index for spin down
             filename = TRIM(dirname)//'/wfcdw'//TRIM(int_to_char(ik_g))
-            CALL read_wfc( iunpun, ik_eff, nkstot, ispin, nspin,      &
+            CALL read_wfc( iunpun, ik_g, nkstot, ispin, nspin,      &
                            evc, npw_g, nbnd, igk_l2g_kdip(:),   &
                            ngk(ik_s), filename, scalef, &
                            ionode_k, root_pool, intra_pool_comm )
