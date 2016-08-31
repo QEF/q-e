@@ -44,7 +44,6 @@ sym_band.o \
 work_function.o \
 write_p_avg.o \
 write_proj.o \
-xk_et_collect.o \
 write_io_header.o \
 write_hamiltonians.o 
 

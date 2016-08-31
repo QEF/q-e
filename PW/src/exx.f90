@@ -243,9 +243,7 @@ MODULE exx
     !
     ! all processors on all pools need to have access to all k+q points
     !
-    ALLOCATE(xk_collect(3,nkstot))
-    xk_collect(:,1:nks) = xk(:,1:nks)
-    CALL poolcollect(xk_collect, 3, nkstot, nks)
+    CALL poolcollect(3, nks, xk, nkstot, xk_collect)
     !
     ! set a safe limit as the maximum number of auxiliary points we may need
     ! and allocate auxiliary arrays
@@ -609,6 +607,7 @@ MODULE exx
     INTEGER :: h_ibnd
     INTEGER :: ibnd_loop_start, ibnd_buff_start, ibnd_buff_end
     INTEGER :: ipol, jpol
+    REAL(dp), ALLOCATABLE   :: occ(:,:)
     COMPLEX(DP),ALLOCATABLE :: temppsic(:)
     COMPLEX(DP),ALLOCATABLE :: temppsic_nc(:,:), psic_nc(:,:)
     INTEGER :: nxxs, nrxxs
@@ -663,14 +662,16 @@ MODULE exx
 
     ! set occupations of wavefunctions used in the calculation of exchange term
 
+    ALLOCATE ( occ(nbnd,nks) )
     DO ik =1,nks
        IF(abs(wk(ik)) > eps_occ ) THEN
-          x_occupation(1:nbnd,ik) = wg (1:nbnd, ik) / wk(ik)
+          occ(1:nbnd,ik) = wg (1:nbnd, ik) / wk(ik)
        ELSE
-          x_occupation(1:nbnd,ik) = 0._dp
+          occ(1:nbnd,ik) = 0._dp
        ENDIF
     ENDDO
-    CALL poolcollect(x_occupation, nbnd, nkstot, nks)
+    CALL poolcollect(nbnd, nks, occ, nkstot, x_occupation)
+    DEALLOCATE ( occ )
 
     ! find an upper bound to the number of bands with non zero occupation.
     ! Useful to distribute bands among band groups

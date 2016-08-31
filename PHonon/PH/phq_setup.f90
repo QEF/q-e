@@ -191,8 +191,9 @@ subroutine phq_setup
 
   nmodes = 3 * nat
 
+  ! FIXME: xk_col is used only to write the output
   IF (npool > 1) THEN
-     CALL xk_collect( xk_col, xk, nkstot, nks )
+     CALL poolcollect( 3, nks, xk, nkstot, xk_col )
   ELSE
      xk_col(:,1:nks) = xk(:,1:nks)
   ENDIF

@@ -437,7 +437,7 @@ SUBROUTINE elphel_refolded (npe, imode0, dvscfins)
            CALL get_buffer (dvpsi, lrbar, iubar, nrec)
         ELSE
            mode = imode0 + ipert
-           ! TODO : .false. or .true. ???
+           ! FIXME : .false. or .true. ???
            CALL dvqpsi_us (ik, u (1, mode), .FALSE. )
         ENDIF
         !

@@ -363,7 +363,7 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
            CALL get_buffer (dvpsi, lrbar, iubar, nrec)
         ELSE
            mode = imode0 + ipert
-           ! TODO : .false. or .true. ???
+           ! FIXME: .false. or .true. ???
            CALL dvqpsi_us (ik, u (1, mode), .FALSE. )
         ENDIF
         !
@@ -575,9 +575,9 @@ SUBROUTINE elphsum ( )
      ELSE
         nksqtot=nkstot/2
      ENDIF
+     CALL poolcollect(3, nks, xk, nkstot, xk_collect)
      ALLOCATE(el_ph_mat_collect(nbnd,nbnd,nksqtot,3*nat))
-  ! FIXME: these two routines should be replaced by a generic routine
-     CALL xk_wk_collect(xk_collect,xk,nkstot,nks)
+     ! FIXME: this routine should be replaced by a generic routine
      CALL el_ph_collect(3*nat,el_ph_mat,el_ph_mat_collect,nksqtot,nksq)
   ENDIF
   !
@@ -902,7 +902,7 @@ SUBROUTINE elphsum ( )
   DEALLOCATE( deg )
   DEALLOCATE( effit )
   DEALLOCATE( dosfit )
-  DEALLOCATE(xk_collect)
+  DEALLOCATE( xk_collect )
   IF (npool /= 1) DEALLOCATE(el_ph_mat_collect)
 
   !

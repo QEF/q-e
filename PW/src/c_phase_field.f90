@@ -355,7 +355,7 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
       ENDIF
    endif
    !
-   ! TODO: not sure which is the proper communicator here
+   ! FIXME: not sure which is the proper communicator here
    !
    if(phase_control==2) &
       CALL mp_bcast(zetas,   ionode_id, intra_pool_comm )
