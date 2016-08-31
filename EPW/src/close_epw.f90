@@ -14,7 +14,6 @@
   SUBROUTINE close_epw
   !------------------------------------------------------------------
   !
-  USE io_epw,    ONLY : iunepmatf
   USE phcom,     ONLY : iuwfc, iudwf, iudrhous, iudvkb3, fildrho, iudrho
   USE uspp,      ONLY : okvan      
   USE mp_global, ONLY : me_pool,root_pool
@@ -25,10 +24,8 @@
   CLOSE (unit = iudwf, status = 'keep')
   IF(okvan) CLOSE(unit = iudrhous, status = 'delete')
   IF(okvan) CLOSE (unit = iudvkb3, status = 'delete')
-  IF (me_pool  /= root_pool ) go to 100  
-  IF (fildrho.ne.' ') CLOSE (unit = iudrho, status = 'keep')
-100 continue
-  ! the temporary storage for Wannier interpolation
-  CLOSE (unit = iunepmatf,  status = 'delete')
+  IF (me_pool == root_pool ) THEN
+    IF (fildrho.ne.' ') CLOSE (unit = iudrho, status = 'keep')
+  ENDIF
   !
   END SUBROUTINE close_epw

@@ -24,9 +24,9 @@
   !-----------------------------------------------------------------------
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
-  USE io_epw,        ONLY : iunepmatf, iospectral_sup ,iospectral
+  USE io_epw,        ONLY : iospectral_sup ,iospectral
   USE phcom,         ONLY : nmodes
-  USE epwcom,        ONLY : nbndsub, lrepmatf, etf_mem, eps_acustic, &
+  USE epwcom,        ONLY : nbndsub, lrepmatf, eps_acustic, &
                             fsthick, eptemp, ngaussw, degaussw, wmin_specfun,&
                             wmax_specfun, nw_specfun, shortrange, &
                             efermi_read, fermi_energy
@@ -115,9 +115,6 @@
   real(kind=DP) :: fermi(nw_specfun)
   real(kind=DP), external :: efermig, dos_ef, wgauss
   !
-  COMPLEX(kind=DP) epf (ibndmax-ibndmin+1, ibndmax-ibndmin+1, nmodes)
-  !! Electron-phonon matrix element on the fine grid.   
-  !
   ! variables for collecting data from all pools in parallel case 
   !
   real(kind=DP), allocatable :: xkf_all(:,:) , etf_all(:,:)
@@ -205,21 +202,6 @@
     IF ( ( minval ( abs(etf (:, ikk) - ef) ) .lt. fsthick ) .AND. &
         ( minval ( abs(etf (:, ikq) - ef) ) .lt. fsthick ) ) THEN
       !
-      !  we read the e-p matrix
-      !
-      IF (etf_mem) THEN
-         epf(:,:,:) = epf17 ( :, :, :, ik)
-      ELSE
-        ios = 0
-        nrec = ik
-        INQUIRE( UNIT = iunepmatf, OPENED = opnd, NAME = nameF )
-        IF ( .NOT. opnd ) CALL errore(  'selfen_elec', 'unit is not opened', iunepmatf )
-        !
-        READ( UNIT = iunepmatf, REC = nrec, IOSTAT = ios ) epf(:,:,:)
-        IF ( ios /= 0 ) CALL errore( 'selfen_elec', &
-             & 'error while reading from file "' // TRIM(nameF) // '"', iunepmatf )
-      ENDIF
-      !
       fermicount = fermicount + 1
       DO imode = 1, nmodes
         !
@@ -254,11 +236,11 @@
             !
             IF ( shortrange .AND. ( abs(xqf (1, iq))> eps2 .OR. abs(xqf (2, iq))> eps2 &
                .OR. abs(xqf (3, iq))> eps2 )) THEN
-              ! SP: The abs has to be removed. Indeed the epf can be a pure imaginary 
+              ! SP: The abs has to be removed. Indeed the epf17 can be a pure imaginary 
               !     number, in which case its square will be a negative number. 
-              g2 = (epf (jbnd, ibnd, imode)**two)*inv_wq*g2_tmp
+              g2 = (epf17 (jbnd, ibnd, imode, ik)**two)*inv_wq*g2_tmp
             ELSE
-              g2 = (abs(epf (jbnd, ibnd, imode))**two)*inv_wq*g2_tmp
+              g2 = (abs(epf17 (jbnd, ibnd, imode, ik))**two)*inv_wq*g2_tmp
             ENDIF
             !
             DO iw = 1, nw_specfun
@@ -470,9 +452,9 @@
   !!-----------------------------------------------------------------------
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
-  USE io_epw,        ONLY : iunepmatf, iospectral_sup, iospectral
+  USE io_epw,        ONLY : iospectral_sup, iospectral
   USE phcom,         ONLY : nmodes
-  USE epwcom,        ONLY : nbndsub, lrepmatf, etf_mem, eps_acustic, &
+  USE epwcom,        ONLY : nbndsub, lrepmatf, eps_acustic, &
                             fsthick, eptemp, ngaussw, degaussw, wmin_specfun,&
                             wmax_specfun, nw_specfun, shortrange, &
                             efermi_read, fermi_energy
@@ -530,7 +512,6 @@
   REAL(kind=DP), PARAMETER :: eps2 = 0.01/ryd2mev
   !! Tolerenc  
   real(kind=DP), external :: efermig, dos_ef, wgauss
-  complex(kind=DP) epf (ibndmax-ibndmin+1, ibndmax-ibndmin+1, nmodes)
   real(kind=DP) :: g2, ekk, ekq, wq, ef0, wgq, wgkq, ww, dw, weight
   real(kind=DP) :: dosef, specfun_sum, esigmar0
   real(kind=DP) :: fermi(nw_specfun)
@@ -619,21 +600,6 @@
     IF ( ( minval ( abs(etf (:, ikk) - ef) ) .lt. fsthick ) .AND. &
         ( minval ( abs(etf (:, ikq) - ef) ) .lt. fsthick ) ) THEN
       !
-      !  we read the e-p matrix
-      !
-      IF (etf_mem) THEN
-         epf(:,:,:) = epf17 ( :, :, :, iq)
-      ELSE
-        ios = 0
-        nrec = ik
-        INQUIRE( UNIT = iunepmatf, OPENED = opnd, NAME = nameF )
-        IF ( .NOT. opnd ) CALL errore(  'selfen_elec', 'unit is not opened', iunepmatf )
-        !
-        READ( UNIT = iunepmatf, REC = nrec, IOSTAT = ios ) epf(:,:,:)
-        IF ( ios /= 0 ) CALL errore( 'selfen_elec', &
-             & 'error while reading from file "' // TRIM(nameF) // '"', iunepmatf )
-      ENDIF
-      !
       fermicount = fermicount + 1
       DO imode = 1, nmodes
         !
@@ -668,11 +634,11 @@
             !
             IF ( shortrange .AND. ( abs(xqf (1, iq))> eps2 .OR. abs(xqf (2, iq))> eps2 &
                .OR. abs(xqf (3, iq))> eps2 )) THEN
-              ! SP: The abs has to be removed. Indeed the epf can be a pure imaginary 
+              ! SP: The abs has to be removed. Indeed the epf17 can be a pure imaginary 
               !     number, in which case its square will be a negative number. 
-              g2 = (epf (jbnd, ibnd, imode)**two)*inv_wq*g2_tmp
+              g2 = (epf17 (jbnd, ibnd, imode, iq)**two)*inv_wq*g2_tmp
             ELSE
-              g2 = (abs(epf (jbnd, ibnd, imode))**two)*inv_wq*g2_tmp
+              g2 = (abs(epf17 (jbnd, ibnd, imode, iq))**two)*inv_wq*g2_tmp
             ENDIF
             !
             DO iw = 1, nw_specfun

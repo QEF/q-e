@@ -264,7 +264,6 @@
   ! compute coarse grid dipole matrix elements.  Very fast 
     CALL compute_pmn_para
   ENDIF
-  !CALL compute_pmn_para
   !
   !  gather electronic eigenvalues for subsequent shuffle
   !  

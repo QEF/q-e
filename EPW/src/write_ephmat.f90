@@ -19,11 +19,11 @@
   !-----------------------------------------------------------------------
   USE kinds,      ONLY : DP
   USE io_global,  ONLY : stdout
-  USE io_epw,     ONLY : iunepmatf, iufilfreq, iufilegnv, iufileph
+  USE io_epw,     ONLY : iufilfreq, iufilegnv, iufileph
   USE io_files,   ONLY : prefix, tmp_dir
   USE phcom,      ONLY : nmodes
   USE epwcom,     ONLY : nbndsub, lrepmatf, fsthick, ngaussw, degaussw, & 
-                         etf_mem, nkf1, nkf2, nkf3, &
+                         nkf1, nkf2, nkf3, &
                          efermi_read, fermi_energy
   USE pwcom,      ONLY : nelec, ef, isk
   USE elph2,      ONLY : etf, ibndmin, ibndmax, nkqf, epf17, wkf, nkf, nqtotf, wf, xqf, nkqtotf
@@ -75,7 +75,6 @@
   !! Memory allocated
   !
   REAL(DP) :: wq, g2
-  COMPLEX(kind=DP) :: epf (ibndmax-ibndmin+1, ibndmax-ibndmin+1, nmodes)
   REAL(DP), EXTERNAL :: efermig, dos_ef
   CHARACTER (len=256) :: filfreq, filegnv, filephmat
   CHARACTER (len=3) :: filelab
@@ -207,20 +206,6 @@
       IF ( ixkf(lower_bnd+ik-1) > 0 ) THEN
         IF ( ixkqf(ixkf(lower_bnd+ik-1),iq) > 0 ) THEN
           !
-          !  we read the e-p matrix
-          !
-          IF (etf_mem) THEN
-             epf(:,:,:) = epf17 ( :, :, :, ik)
-          ELSE
-            ios = 0
-            nrec = ik
-            INQUIRE( UNIT = iunepmatf, OPENED = opnd, NAME = nameF )
-            IF ( .NOT. opnd ) CALL errore(  'selfen_elec', 'unit is not opened', iunepmatf )
-            !
-            READ( UNIT = iunepmatf, REC = nrec, IOSTAT = ios ) epf(:,:,:)
-            IF ( ios /= 0 ) CALL errore( 'selfen_elec', &
-                 & 'error while reading from file "' // TRIM(nameF) // '"', iunepmatf )
-          ENDIF
           ! 
           DO imode = 1, nmodes ! phonon modes
             wq = wf(imode, iq)
@@ -234,7 +219,7 @@
                     ! with hbar = 1 and M already contained in the eigenmodes
                     ! g2 is Ry^2, wkf must already account for the spin factor
                     !
-                    g2 = abs( epf(jbnd, ibnd, imode) )**two / ( two * wq )
+                    g2 = abs( epf17(jbnd, ibnd, imode, ik) )**two / ( two * wq )
                     WRITE(iufileph) g2
                   ENDIF
                 ENDDO ! jbnd

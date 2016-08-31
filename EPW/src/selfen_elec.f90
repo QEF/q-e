@@ -31,11 +31,11 @@
   !-----------------------------------------------------------------------
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
-  USE io_epw,        ONLY : iunepmatf, linewidth_elself
+  USE io_epw,        ONLY : linewidth_elself
   USE phcom,         ONLY : nmodes
   USE epwcom,        ONLY : nbndsub, lrepmatf, shortrange, &
                             fsthick, eptemp, ngaussw, degaussw, &
-                            etf_mem, eps_acustic, efermi_read, fermi_energy
+                            eps_acustic, efermi_read, fermi_energy
   USE pwcom,         ONLY : ef !, nelec, isk
   USE elph2,         ONLY : etf, ibndmin, ibndmax, nkqf, xqf, &
                             nkf, epf17, wkf, nqtotf, wf, wqf, xkf, nkqtotf, &
@@ -83,6 +83,8 @@
   !! Lower bounds index after k or q paral
   INTEGER :: upper_bnd
   !! Upper bounds index after k or q paral
+  INTEGER :: i
+  !! Index for reading files
   ! 
   REAL(kind=DP) :: tmp
   !! Temporary variable to store real part of Sigma for the degenerate average
@@ -146,9 +148,6 @@
   REAL(kind=DP), ALLOCATABLE :: etf_all(:,:)
   !! Collect eigenenergies from all pools in parallel case
   !  
-  COMPLEX(kind=DP) epf (ibndmax-ibndmin+1, ibndmax-ibndmin+1, nmodes)
-  !! Electron-phonon matrix element on the fine grid. 
-  !
   ! SP: Define the inverse so that we can efficiently multiply instead of
   ! dividing
   ! 
@@ -228,21 +227,6 @@
      IF ( ( minval ( abs(etf (:, ikk) - ef) ) .lt. fsthick ) .and. &
           ( minval ( abs(etf (:, ikq) - ef) ) .lt. fsthick ) ) THEN
         !
-        !  we read the e-p matrix
-        !
-        IF (etf_mem) THEN
-           epf(:,:,:) = epf17 ( :, :, :, ik)
-        ELSE
-          ios = 0
-          nrec = ik
-          INQUIRE( UNIT = iunepmatf, OPENED = opnd, NAME = nameF )
-          IF ( .NOT. opnd ) CALL errore(  'selfen_elec', 'unit is not opened', iunepmatf )
-          !
-          READ( UNIT = iunepmatf, REC = nrec, IOSTAT = ios ) epf(:,:,:)
-          IF ( ios /= 0 ) CALL errore( 'selfen_elec', &
-               & 'error while reading from file "' // TRIM(nameF) // '"', iunepmatf )
-        ENDIF
-        ! 
         fermicount = fermicount + 1
         DO imode = 1, nmodes
            !
@@ -277,11 +261,11 @@
                  !
                  IF ( shortrange .AND. ( abs(xqf (1, iq))> eps2 .OR. abs(xqf (2, iq))> eps2 &
                     .OR. abs(xqf (3, iq))> eps2 )) THEN                         
-                   ! SP: The abs has to be removed. Indeed the epf can be a pure imaginary 
+                   ! SP: The abs has to be removed. Indeed the epf17 can be a pure imaginary 
                    !     number, in which case its square will be a negative number. 
-                   g2 = (epf (jbnd, ibnd, imode)**two)*inv_wq*g2_tmp
+                   g2 = (epf17 (jbnd, ibnd, imode, ik)**two)*inv_wq*g2_tmp
                  ELSE
-                   g2 = (abs(epf (jbnd, ibnd, imode))**two)*inv_wq*g2_tmp
+                   g2 = (abs(epf17 (jbnd, ibnd, imode, ik))**two)*inv_wq*g2_tmp
                  ENDIF        
                  !
                  ! There is a sign error for wq in Eq. 9 of Comp. Phys. Comm. 181, 2140 (2010). - RM
@@ -510,11 +494,11 @@
   !-----------------------------------------------------------------------
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
-  USE io_epw,        ONLY : iunepmatf, linewidth_elself
+  USE io_epw,        ONLY : linewidth_elself
   USE phcom,         ONLY : nmodes
   USE epwcom,        ONLY : nbndsub, lrepmatf, shortrange, &
-                           fsthick, eptemp, ngaussw, degaussw, &
-                           etf_mem, eps_acustic, efermi_read, fermi_energy
+                            fsthick, eptemp, ngaussw, degaussw, &
+                            eps_acustic, efermi_read, fermi_energy
   USE pwcom,         ONLY : ef !, nelec, isk
   USE elph2,         ONLY : etf, ibndmin, ibndmax, nkqf, etf_k, xqf, &
                             epf17, wkf, nqtotf, wf, wqf, xkf, nkqtotf, &
@@ -579,11 +563,6 @@
   REAL(kind=DP), external :: efermig, dos_ef, wgauss, w0gauss, dos_ef_seq
   REAL(kind=DP), PARAMETER :: eps2 = 0.01/ryd2mev
   !! Tolerence 
-  !
-  ! variables for collecting data from all pools in parallel case 
-  !
-  COMPLEX(kind=DP) :: epf (ibndmax-ibndmin+1, ibndmax-ibndmin+1, nmodes)
-  !! Electron-phonon matrix element on the fine grid.
   !
   ! SP: Define the inverse so that we can efficiently multiply instead of
   ! dividing
@@ -678,19 +657,6 @@
      IF ( ( minval ( abs(etf (:, ikk) - ef) ) .lt. fsthick ) .and. &
           ( minval ( abs(etf (:, ikq) - ef) ) .lt. fsthick ) ) THEN
         !
-        IF (etf_mem) THEN
-           epf(:,:,:) = epf17 ( :, :, :, iq)
-        ELSE
-          ios = 0
-          nrec = ik
-          INQUIRE( UNIT = iunepmatf, OPENED = opnd, NAME = nameF )
-          IF ( .NOT. opnd ) CALL errore(  'selfen_elec', 'unit is not opened', iunepmatf )
-          !
-          READ( UNIT = iunepmatf, REC = nrec, IOSTAT = ios ) epf(:,:,:)
-          IF ( ios /= 0 ) CALL errore( 'selfen_elec', &
-               & 'error while reading from file "' // TRIM(nameF) // '"', iunepmatf )
-        ENDIF
-        !
         fermicount = fermicount + 1
         DO imode = 1, nmodes
            !
@@ -725,11 +691,11 @@
                  !
                  IF ( shortrange .AND. ( abs(xqf (1, iq))> eps2 .OR. abs(xqf (2, iq))> eps2 &
                     .OR. abs(xqf (3, iq))> eps2 )) THEN
-                   ! SP: The abs has to be removed. Indeed the epf can be a pure imaginary 
+                   ! SP: The abs has to be removed. Indeed the epf17 can be a pure imaginary 
                    !     number, in which case its square will be a negative number. 
-                   g2 = (epf (jbnd, ibnd, imode)**two)*inv_wq*g2_tmp
+                   g2 = (epf17 (jbnd, ibnd, imode, iq)**two)*inv_wq*g2_tmp
                  ELSE
-                   g2 = (abs(epf (jbnd, ibnd, imode))**two)*inv_wq*g2_tmp
+                   g2 = (abs(epf17 (jbnd, ibnd, imode, iq))**two)*inv_wq*g2_tmp
                  ENDIF
                  !
                  ! There is a sign error for wq in Eq. 9 of Comp. Phys. Comm. 181, 2140 (2010). - RM

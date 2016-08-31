@@ -31,25 +31,25 @@
   USE start_k,       ONLY : nk1, nk2, nk3
   USE ions_base,     ONLY : nat, amass, ityp
   USE phcom,         ONLY : nq1, nq2, nq3, nmodes, w2
-  USE epwcom,        ONLY : nbndsub, lrepmatf, fsthick, epwread,          &
-                            epwwrite, ngaussw, degaussw, lpolar,          &
-                            nbndskip, parallel_k, parallel_q, etf_mem,    &
-                            elecselfen, phonselfen, nest_fn, a2f,         &
-                            vme, eig_read, ephwrite,                      & 
-                            efermi_read, fermi_energy, specfun, band_plot,&
-                            longrange
+  USE epwcom,        ONLY : nbndsub, lrepmatf, fsthick, epwread, longrange,     &
+                            epwwrite, ngaussw, degaussw, lpolar,                &
+                            nbndskip, parallel_k, parallel_q, etf_mem,          &
+                            elecselfen, phonselfen, nest_fn, a2f,               &
+                            vme, eig_read, ephwrite,                            & 
+                            efermi_read, fermi_energy, specfun, band_plot       
   USE noncollin_module, ONLY : noncolin
   USE constants_epw, ONLY : ryd2ev, ryd2mev, one, two, czero
   USE io_files,      ONLY : prefix, diropn
   USE io_global,     ONLY : stdout, ionode
-  USE io_epw,        ONLY : lambda_phself, linewidth_phself, iunepmatf, &
-                            iunepmatwe, iunepmatwp, crystal
-  USE elph2,         ONLY : nrr_k, nrr_q, cu, cuq, lwin, lwinq, irvec, ndegen_k, ndegen_q, &
-                            wslen, chw, chw_ks, cvmew, cdmew, rdw, epmatwp, epmatq, &
-                            wf, etf, etf_k, etf_ks, xqf, xkf, wkf, &
-                            dynq, nqtotf, nkqf, epf17, nkf, nqf, et_ks, &
-                            ibndmin, ibndmax, lambda_all, dmec, dmef, vmef, &
-                            sigmai_all, sigmai_mode, gamma_all, epsi, zstar, efnew
+  USE io_epw,        ONLY : lambda_phself, linewidth_phself, iunepmatwe,        &
+                            iunepmatwp, crystal
+  USE elph2,         ONLY : nrr_k, nrr_q, cu, cuq, lwin, lwinq, irvec, ndegen_k,&
+                            ndegen_q,  wslen, chw, chw_ks, cvmew, cdmew, rdw,   &
+                            epmatwp, epmatq, wf, etf, etf_k, etf_ks, xqf, xkf,  &
+                            wkf, dynq, nqtotf, nkqf, epf17, nkf, nqf, et_ks,    &
+                            ibndmin, ibndmax, lambda_all, dmec, dmef, vmef,     &
+                            sigmai_all, sigmai_mode, gamma_all, epsi, zstar,    &
+                            efnew
 #ifdef __NAG
   USE f90_unix_io,   ONLY : flush
 #endif
@@ -109,6 +109,8 @@
   !! record index when reading file
   INTEGER :: lrepmatw
   !! record length while reading file
+  INTEGER :: i 
+  !! Index when writing to file
   !  
   REAL(kind=DP) :: xxq(3)
   !! Current q-point 
@@ -141,6 +143,7 @@
   !! Rotation matrix for phonons
   COMPLEX(kind=DP), ALLOCATABLE :: bmatf ( :, :)
   !! overlap U_k+q U_k^\dagger in smooth Bloch basis, fine mesh
+  COMPLEX(kind=DP), ALLOCATABLE :: aux ( : )
   ! 
   IF (nbndsub.ne.nbnd) &
        WRITE(stdout, '(/,14x,a,i4)' ) 'band disentanglement is used:  nbndsub = ', nbndsub
@@ -494,23 +497,13 @@
   IF (parallel_k) THEN
     !
     ! get the size of the matrix elements stored in each pool
-           !
     ! for informational purposes.  Not necessary
     !
     CALL mem_size(ibndmin, ibndmax, nmodes, nkf)
     !
-    IF (etf_mem) THEN
-       ! Fine mesh set of g-matrices.  It is large for memory storage
-       ALLOCATE ( epf17 (ibndmax-ibndmin+1, ibndmax-ibndmin+1, nmodes, nkf) )
-       !
-    ELSE
-       !
-       !  open epf and etf files with the correct record length
-       !
-       lrepmatf  = 2 * (ibndmax-ibndmin+1) * (ibndmax-ibndmin+1) * nmodes
-       CALL diropn (iunepmatf, 'epf', lrepmatf, exst)
-       !
-    ENDIF
+    ! Fine mesh set of g-matrices.  It is large for memory storage
+    ! SP: Should not be a memory problem. If so, can always the number of cores to reduce nkf. 
+    ALLOCATE ( epf17 (ibndmax-ibndmin+1, ibndmax-ibndmin+1, nmodes, nkf) )
     !      
     DO iq = 1, nqf
        !   
@@ -623,7 +616,8 @@
           ! interpolate ONLY when (k,k+q) both have at least one band 
           ! within a Fermi shell of size fsthick 
           !
-          IF ( (( minval ( abs(etf (:, ikk) - ef) ) < fsthick ) .and. ( minval ( abs(etf (:, ikq) - ef) ) < fsthick )) ) THEN
+          IF ( (( minval ( abs(etf (:, ikk) - ef) ) < fsthick ) .and. &
+                  ( minval ( abs(etf (:, ikq) - ef) ) < fsthick )) ) THEN
              !
              !  fermicount = fermicount + 1
              !
@@ -668,30 +662,18 @@
                !
              ENDIF
              ! 
-             ! write epmatf to file / store in memory
+             ! Store epmatf in memory
              !
-             IF (etf_mem) THEN
-               DO jbnd = ibndmin, ibndmax
-                 DO ibnd = ibndmin, ibndmax
-                   ! 
-                   epf17(ibnd-ibndmin+1,jbnd-ibndmin+1,:,ik) = epmatf(ibnd,jbnd,:)        
-                   !
-                 ENDDO
+             DO jbnd = ibndmin, ibndmax
+               DO ibnd = ibndmin, ibndmax
+                 ! 
+                 epf17(ibnd-ibndmin+1,jbnd-ibndmin+1,:,ik) = epmatf(ibnd,jbnd,:)        
+                 !
                ENDDO
-             ELSE
-               !      
-               ios = 0      
-               nrec = ik   
-               INQUIRE( UNIT = iunepmatf, OPENED = opnd, NAME = nameF )      
-               IF ( .NOT. opnd ) CALL errore(  'ephwann_shuffle', 'unit is not opened', iunepmatf )
-               !
-               WRITE (UNIT = iunepmatf, REC = nrec, IOSTAT = ios) epmatf(:,:,:)
-               IF ( ios /= 0 ) CALL errore( 'ephwann_shuffle', &
-                    & 'error while writing from file "' // TRIM(nameF) // '"', iunepmatf )      
-               !  
-             ENDIF
+             ENDDO
              ! 
              !DBSP
+             ! Debug on the long/short range. Usefull to keep commented for now.  
              !if (ik==2) then
              !  !print*,'iq ',iq
              !  !do imode = 1, nmodes
@@ -753,18 +735,8 @@
     !
     CALL mem_size(ibndmin, ibndmax, nmodes, nkf)
     !
-    IF (etf_mem) THEN
-       ! Fine mesh set of g-matrices.  It is large for memory storage
-       ALLOCATE ( epf17 (ibndmax-ibndmin+1, ibndmax-ibndmin+1, nmodes, nqf) )
-       !
-    ELSE
-       !
-       !  open epf file with the correct record length
-       !
-       lrepmatf  = 2 * (ibndmax-ibndmin+1) * (ibndmax-ibndmin+1) * nmodes
-       CALL diropn (iunepmatf, 'epf', lrepmatf, exst)
-       !
-    ENDIF
+    ! Fine mesh set of g-matrices.  It is large for memory storage
+    ALLOCATE ( epf17 (ibndmax-ibndmin+1, ibndmax-ibndmin+1, nmodes, nqf) )
     !
     DO ik = 1, nkf
       ! 
@@ -912,26 +884,13 @@
            ! write epmatf to file / store in memory
            !
            !
-           IF (etf_mem) THEN
-             DO jbnd = ibndmin, ibndmax
-               DO ibnd = ibndmin, ibndmax
-                 ! 
-                 epf17(ibnd-ibndmin+1,jbnd-ibndmin+1,:,iq) = epmatf(ibnd,jbnd,:)
-                 !
-               ENDDO
+           DO jbnd = ibndmin, ibndmax
+             DO ibnd = ibndmin, ibndmax
+               ! 
+               epf17(ibnd-ibndmin+1,jbnd-ibndmin+1,:,iq) = epmatf(ibnd,jbnd,:)
+               !
              ENDDO
-           ELSE
-             !      
-             ios = 0
-             nrec = iq
-             INQUIRE( UNIT = iunepmatf, OPENED = opnd, NAME = nameF )
-             IF ( .NOT. opnd ) CALL errore(  'ephwann_shuffle', 'unit is not opened', iunepmatf )
-             !
-             WRITE (UNIT = iunepmatf, REC = nrec, IOSTAT = ios) epmatf(:,:,:)
-             IF ( ios /= 0 ) CALL errore( 'ephwann_shuffle', &
-                  & 'error while writing from file "' // TRIM(nameF) // '"', iunepmatf )
-             !  
-           ENDIF
+           ENDDO
            ! 
            !if (ik==2) then
            !  do imode = 1, nmodes
@@ -996,18 +955,19 @@
   !
   IF (a2f) CALL eliashberg_a2f
   ! 
-  IF ( ALLOCATED(lambda_all) )   DEALLOCATE( lambda_all )
-  IF ( ALLOCATED(gamma_all) )   DEALLOCATE( gamma_all )
-  IF ( ALLOCATED(sigmai_all) )   DEALLOCATE( sigmai_all )
+  IF ( ALLOCATED(lambda_all) )    DEALLOCATE( lambda_all )
+  IF ( ALLOCATED(gamma_all) )     DEALLOCATE( gamma_all )
+  IF ( ALLOCATED(sigmai_all) )    DEALLOCATE( sigmai_all )
   IF ( ALLOCATED(sigmai_mode) )   DEALLOCATE( sigmai_mode )
+  IF ( ALLOCATED(aux))            DEALLOCATE ( aux )
   !
   CALL stop_clock ( 'ephwann' )
   !
   END SUBROUTINE ephwann_shuffle
   !
-!-------------------------------------------
-SUBROUTINE epw_write
-!-------------------------------------------
+  !-------------------------------------------
+  SUBROUTINE epw_write
+  !-------------------------------------------
   !
   USE kinds,     ONLY : DP
   USE epwcom,    ONLY : nbndsub, vme, eig_read, etf_mem
@@ -1103,12 +1063,12 @@ SUBROUTINE epw_write
     !
   ENDIF
   CALL mp_barrier(inter_pool_comm)
-!---------------------------------
-END SUBROUTINE epw_write
-!---------------------------------
-!---------------------------------
-SUBROUTINE epw_read()
-!---------------------------------
+  !---------------------------------
+  END SUBROUTINE epw_write
+  !---------------------------------
+  !---------------------------------
+  SUBROUTINE epw_read()
+  !---------------------------------
   USE kinds,     ONLY : DP
   USE epwcom,    ONLY : nbndsub, vme, eig_read, etf_mem
   USE pwcom,     ONLY : ef
@@ -1229,13 +1189,9 @@ SUBROUTINE epw_read()
       !
       lrepmatw   = 2 * nbndsub * nbndsub * nrr_k * nmodes * nrr_q
       filint    = trim(prefix)//'.epmatwp'
-      !CALL diropn (iunepmatwp, filint, lrepmatw, exst)
-
       CALL diropn (iunepmatwp, 'epmatwp', lrepmatw, exst)
       CALL davcio ( aux, lrepmatw, iunepmatwp, 1, -1 )
-      !READ( UNIT = iunepmatwp, REC = 1, IOSTAT = ios ) aux
-
-
+      !
       i = 0
       DO irq = 1, nrr_q
         DO imode = 1, nmodes
@@ -1265,12 +1221,12 @@ SUBROUTINE epw_read()
   !
   WRITE(stdout,'(/5x,"Finished reading Wann rep data from file"/)')
   !
-!---------------------------------
-END SUBROUTINE epw_read
-!---------------------------------
-!---------------------------------
-SUBROUTINE mem_size(ibndmin, ibndmax, nmodes, nkf) 
-!---------------------------------
+  !---------------------------------
+  END SUBROUTINE epw_read
+  !---------------------------------
+  !---------------------------------
+  SUBROUTINE mem_size(ibndmin, ibndmax, nmodes, nkf) 
+  !---------------------------------
   !!
   !!  SUBROUTINE estimates the amount of memory taken up by 
   !!  the $$<k+q| dV_q,nu |k>$$ on the fine meshes and prints 
@@ -1281,9 +1237,19 @@ SUBROUTINE mem_size(ibndmin, ibndmax, nmodes, nkf)
   !
   implicit none
   !
-  integer :: imelt, ibndmin, ibndmax, nmodes, nkf
-  real(kind=DP)    :: rmelt
-  character (len=256) :: chunit
+  INTEGER, INTENT (in) :: ibndmin
+  !! Min band
+  INTEGER, INTENT (in) :: ibndmax
+  !! Min band
+  INTEGER, INTENT (in) :: nmodes
+  !! Number of modes
+  INTEGER, INTENT (in) :: nkf
+  !! Number of k-points in pool 
+  !
+  ! Work variables
+  INTEGER             :: imelt
+  REAL(kind=DP)       :: rmelt
+  CHARACTER (len=256) :: chunit
   !
   imelt = (ibndmax-ibndmin+1)**2 * nmodes * nkf
   rmelt = imelt * 8 / 1048576.d0 ! 8 bytes per number, value in Mb
@@ -1300,13 +1266,12 @@ SUBROUTINE mem_size(ibndmin, ibndmax, nmodes, nkf)
   WRITE(stdout,'(/,5x,a, i13, a,f7.2,a,a)') "Number of ep-matrix elements per pool :", &
        imelt, " ~= ", rmelt, trim(chunit), " (@ 8 bytes/ DP)"
   !
-
-!---------------------------------
-END SUBROUTINE mem_size
-!---------------------------------
-
-!--------------------------------------------------------------------
-FUNCTION efermig_seq (et, nbnd, nks, nelec, wk, Degauss, Ngauss, is, isk)
+  !---------------------------------
+  END SUBROUTINE mem_size
+  !---------------------------------
+  ! 
+  !--------------------------------------------------------------------
+  FUNCTION efermig_seq (et, nbnd, nks, nelec, wk, Degauss, Ngauss, is, isk)
   !--------------------------------------------------------------------
   !!
   !!     Finds the Fermi energy - Gaussian Broadening
@@ -1384,10 +1349,11 @@ FUNCTION efermig_seq (et, nbnd, nks, nelec, wk, Degauss, Ngauss, is, isk)
   !
   efermig_seq = Ef
   RETURN
-end FUNCTION efermig_seq
-
-!-----------------------------------------------------------------------
-function sumkg_seq (et, nbnd, nks, wk, degauss, ngauss, e, is, isk)
+  !
+  end FUNCTION efermig_seq
+  !
+  !-----------------------------------------------------------------------
+  function sumkg_seq (et, nbnd, nks, wk, degauss, ngauss, e, is, isk)
   !-----------------------------------------------------------------------
   !!
   !!  This function computes the number of states under a given energy e
@@ -1441,8 +1407,9 @@ function sumkg_seq (et, nbnd, nks, wk, degauss, ngauss, e, is, isk)
     sumkg_seq = sumkg_seq + wk (ik) * sum1
   ENDDO
   RETURN
-end function sumkg_seq
-!
+  !
+  end function sumkg_seq
+  !
   !-----------------------------------------------------------------
   subroutine rwepmatw ( epmatw, nbnd, np, nmodes, nrec, iun, iop)
   !-----------------------------------------------------------------
@@ -1522,6 +1489,4 @@ end function sumkg_seq
   ENDIF
   !
   end subroutine rwepmatw
-
-
 
