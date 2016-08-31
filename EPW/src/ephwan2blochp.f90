@@ -48,14 +48,34 @@
   ! 
   ! Local variables 
   !
-  character (len=256) :: filint
-  integer :: ir, ir_start, ir_stop, iunepmatwp2, ierr
-  integer(kind=8) ::  lrepmatw,  lrepmatw2
-  real(kind=DP) :: rdotk
-  complex(kind=DP) :: eptmp( nbnd, nbnd, nrr_k, nmodes)
-  complex(kind=DP) :: cfac(nrr_q)
-  !complex(kind=DP):: aux( nbnd*nbnd*nrr_k*nmodes )
-  complex(kind=DP), allocatable :: epmatw ( :,:,:,:)
+  CHARACTER (len=256) :: filint
+  !! File name
+  !
+  INTEGER :: ir
+  !! Real space WS index
+  INTEGER :: ir_start
+  !! Starting ir for this cores
+  INTEGER :: ir_stop
+  !! Ending ir for this pool
+  INTEGER :: iunepmatwp2
+  !! Return the file unit
+  INTEGER :: ierr
+  !! Return if there is an error
+  !integer(kind=8) ::  lrepmatw,  lrepmatw2
+  INTEGER (kind=MPI_OFFSET_KIND) :: lrepmatw
+  !! Offset to tell where to start reading the file
+  INTEGER (kind=MPI_OFFSET_KIND) :: lrepmatw2
+  !! Offset to tell where to start reading the file
+  !
+  REAL(kind=DP) :: rdotk
+  !! Exponential for the FT
+  !
+  COMPLEX(kind=DP) :: eptmp( nbnd, nbnd, nrr_k, nmodes)
+  !! Temporary matrix to store el-ph
+  COMPLEX(kind=DP) :: cfac(nrr_q)
+  !! Factor for the FT
+  COMPLEX(kind=DP), ALLOCATABLE :: epmatw ( :,:,:,:)
+  !! El-ph matrix elements
   !
   CALL start_clock('ephW2Bp')
   !----------------------------------------------------------
@@ -100,10 +120,7 @@
   ENDDO
   ! 
   IF (etf_mem) then
-    !DO ir = ir_start, ir_stop
-    !  eptmp(:,:,:,:) = eptmp(:,:,:,:) +&
-    !    cfac(ir)*epmatwp( :, :, :, :, ir)
-    !ENDDO
+    !      
     ! SP: This is faster by 20 % 
     Call zgemv( 'n',  nbnd * nbnd * nrr_k * nmodes, ir_stop - ir_start + 1, ( 1.d0, 0.d0 ),&
              epmatwp(1,1,1,1,ir_start), nbnd * nbnd * nrr_k * nmodes, cfac(ir_start),1,( 0.d0, 0.d0),eptmp, 1 )    
@@ -112,14 +129,29 @@
     !
     ALLOCATE(epmatw ( nbnd, nbnd, nrr_k, nmodes))
     !
-    lrepmatw2   = 2 * nbnd * nbnd * nrr_k * nmodes
+    !lrepmatw2   = 2 * nbnd * nbnd * nrr_k * nmodes
+    ! Although this should almost never be problematic (see explaination below)
+    lrepmatw2 = 2_MPI_OFFSET_KIND * INT( nbnd  , kind = MPI_OFFSET_KIND ) * &
+                                    INT( nbnd  , kind = MPI_OFFSET_KIND ) * &
+                                    INT( nrr_k , kind = MPI_OFFSET_KIND ) * &
+                                    INT( nmodes, kind = MPI_OFFSET_KIND )
     ! 
     DO ir = ir_start, ir_stop
 #ifdef __MPI
       ! DEBUG: print*,'Process ',my_id,' do ',ir,'/ ',ir_stop
       !
       !  Direct read of epmatwp for this ir
-      lrepmatw   = 2 * nbnd * nbnd * nrr_k * nmodes * 8 * (ir-1)
+      !lrepmatw   = 2 * nbnd * nbnd * nrr_k * nmodes * 8 * (ir-1)
+      ! 
+      ! SP: The following needs a small explaination: although lrepmatw is correctly defined as kind 8 bits or 
+      !     kind=MPI_OFFSET_KIND, the number "2" and "8" are default kind 4. The other as well. Therefore
+      !     if the product is too large, this will crash. The solution (kind help recieved from Ian Bush) is below:
+      lrepmatw = 2_MPI_OFFSET_KIND * INT( nbnd  , kind = MPI_OFFSET_KIND ) * &
+                                     INT( nbnd  , kind = MPI_OFFSET_KIND ) * &
+                                     INT( nrr_k , kind = MPI_OFFSET_KIND ) * &
+                                     INT( nmodes, kind = MPI_OFFSET_KIND ) * &
+               8_MPI_OFFSET_KIND * ( INT( ir    , kind = MPI_OFFSET_KIND ) - 1_MPI_OFFSET_KIND )
+      !
       ! SP: mpi seek is used to set the position at which we should start
       ! reading the file. It is given in bits. 
       ! Note : The process can be collective (=blocking) if using MPI_FILE_SET_VIEW & MPI_FILE_READ_ALL
@@ -132,23 +164,10 @@
       CALL MPI_FILE_READ(iunepmatwp2, epmatw, lrepmatw2, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE,ierr)
       IF( ierr /= 0 ) CALL errore( 'ephwan2blochp', 'error in MPI_FILE_READ_ALL',1 )
       ! 
-     ! i = 0
-     ! DO imode = 1, nmodes
-     !  DO ip = 1, nrr_k
-     !   DO jbnd = 1, nbnd
-     !    DO ibnd = 1, nbnd
-     !      i = i + 1
-     !      epmatw ( ibnd, jbnd, ip, imode ) = aux (i)
-     !      ! 
-     !    ENDDO
-     !   ENDDO
-     !  ENDDO
-     ! ENDDO
 #else      
       call rwepmatw ( epmatw, nbnd, nrr_k, nmodes, ir, iunepmatwp, -1)
 #endif
       !
-      !eptmp = eptmp + cfac(ir)*epmatw
       CALL ZAXPY(nbnd * nbnd * nrr_k * nmodes, cfac(ir), epmatw, 1, eptmp, 1)
       ! 
     ENDDO
@@ -172,14 +191,6 @@
   Call zgemm( 'n', 'n', nbnd * nbnd * nrr_k, nmodes, nmodes, ( 1.d0, 0.d0 ),eptmp  , nbnd * nbnd * nrr_k, &
                                                                                     cuf, nmodes         , &
                                                              ( 0.d0, 0.d0 ),epmatf, nbnd * nbnd * nrr_k )
- ! DO ibnd = 1, nbnd
- !  DO jbnd = 1, nbnd
- !    !
- !    CALL zgemm ('n','n',nrr_k, nmodes, nmodes,(1.d0,0.d0),eptmp(ibnd,jbnd,:,:),nrr_k,&
- !        cuf,nmodes,(0.d0,0.d0), epmatf(ibnd,jbnd,:,:), nrr_k )
- !    !
- !  ENDDO
- ! ENDDO
   !
   CALL stop_clock('ephW2Bp')
   !
