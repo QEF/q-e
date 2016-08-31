@@ -161,29 +161,17 @@ SUBROUTINE setup_nscf ( newgrid, xq, elph_mat )
   !
   qnorm = sqrt(xq(1)**2 + xq(2)**2 + xq(3)**2)
   !
-#ifdef __MPI
-  !
   ! ... set the granularity for k-point distribution
   !
   IF ( lgamma  ) THEN
-     !
      kunit = 1
-     !
   ELSE
-     !
      kunit = 2
-     !
   ENDIF
   !
   ! ... distribute k-points (and their weights and spin indices)
   !
-  CALL divide_et_impera( xk, wk, isk, lsda, nkstot, nks )
-  !
-#else
-  !
-  nks = nkstot
-  !
-#endif
+  CALL divide_et_impera( nkstot, xk, wk, isk, nks )
   !
   RETURN
   !
