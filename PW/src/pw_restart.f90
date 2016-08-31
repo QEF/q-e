@@ -166,6 +166,7 @@ MODULE pw_restart
       INTEGER               :: i, ig, ik, ngg, ierr, ipol, num_k_points
       INTEGER               :: nkl, nkr, npwx_g
       INTEGER               :: ike, iks, npw_g, ispin, inlc
+      INTEGER, EXTERNAL     :: global_kpoint_index
       INTEGER,  ALLOCATABLE :: ngk_g(:)
       INTEGER,  ALLOCATABLE :: igk_l2g(:,:), igk_l2g_kdip(:,:), mill_g(:,:)
       LOGICAL               :: lwfc, lrho, lxsd
@@ -232,7 +233,8 @@ MODULE pw_restart
          !
       END IF
       !
-      CALL  kpoint_global_indices (nkstot, iks, ike)
+      iks =  global_kpoint_index (nkstot, 1  )
+      ike =  global_kpoint_index (nkstot, nks)
       !
       ! ... find out the global number of G vectors: ngm_g
       !

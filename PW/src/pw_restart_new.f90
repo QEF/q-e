@@ -442,6 +442,7 @@ MODULE pw_restart_new
       !
       INTEGER               :: i, ig, ngg, ierr, ipol, ispin
       INTEGER               :: ik, ik_g, ike, iks, npw_g, npwx_g
+      INTEGER, EXTERNAL     :: global_kpoint_index
       INTEGER,  ALLOCATABLE :: ngk_g(:)
       INTEGER,  ALLOCATABLE :: igk_l2g(:), igk_l2g_kdip(:), mill_g(:,:)
       CHARACTER(LEN=2), DIMENSION(2) :: updw = (/ 'up', 'dw' /)
@@ -486,7 +487,8 @@ MODULE pw_restart_new
       !
       ! ... now write wavefunctions and k+G vectors
       !
-      CALL  kpoint_global_indices (nkstot, iks, ike)
+      iks = global_kpoint_index (nkstot, 1)
+      ike = global_kpoint_index (nkstot, nks)
       !
       ! ... ngk_g: global number of k+G vectors for all k points
       !
@@ -2091,6 +2093,7 @@ MODULE pw_restart_new
       INTEGER              :: i, ik, ik_g, ig, ipol, ik_s
       INTEGER              :: nspin_, npwx_g
       INTEGER              :: nupdwn(2), ike, iks, npw_g, ispin
+      INTEGER, EXTERNAL    :: global_kpoint_index
       INTEGER, ALLOCATABLE :: ngk_g(:)
       INTEGER, ALLOCATABLE :: igk_l2g(:), igk_l2g_kdip(:)
       LOGICAL              :: opnd, ionode_k
@@ -2111,7 +2114,8 @@ MODULE pw_restart_new
                     & 'wavefunctions unit (iunwfc) is not opened', 1 )
       END IF
       ! 
-      CALL  kpoint_global_indices (nkstot, iks, ike)
+      iks = global_kpoint_index (nkstot, 1)
+      ike = global_kpoint_index (nkstot, nks)
       !
       ! ... ngk_g: global number of k+G vectors for all k points
       !

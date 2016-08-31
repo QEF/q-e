@@ -617,7 +617,7 @@ MODULE exx
 #endif
     COMPLEX(DP) :: d_spin(2,2,48)
     INTEGER :: npw, current_ik
-    INTEGER :: find_current_k
+    INTEGER, EXTERNAL :: global_kpoint_index
 
     CALL start_clock ('exxinit')
     !
@@ -711,7 +711,7 @@ MODULE exx
        ! ik         = index of k-point in this pool
        ! current_ik = index of k-point over all pools
        !
-       current_ik=find_current_k(ik, nkstot, nks)
+       current_ik = global_kpoint_index ( nkstot, ik )
        !
        IF_GAMMA_ONLY : &
        IF (gamma_only) THEN
@@ -1138,7 +1138,7 @@ MODULE exx
     REAL(DP) :: x1, x2, xkp(3)
     REAL(DP) :: xkq(3)
     ! <LMS> temp array for vcut_spheric
-    INTEGER  :: find_current_k
+    INTEGER, EXTERNAL  :: global_kpoint_index
     LOGICAL :: l_fft_doubleband
     LOGICAL :: l_fft_singleband
     !
@@ -1150,7 +1150,7 @@ MODULE exx
     ALLOCATE(rhoc(nrxxs), vc(nrxxs))
     IF(okvan) ALLOCATE(deexx(nkb))
     !
-    current_ik=find_current_k(current_k,nkstot,nks)
+    current_ik = global_kpoint_index(current_k,nkstot,nks)
     xkp = xk(:,current_k)
     !
     ! This is to stop numerical inconsistencies creeping in through the band parallelization.
@@ -1418,7 +1418,7 @@ MODULE exx
     REAL(DP) :: x1, x2, xkp(3)
     REAL(DP) :: xkq(3)
     ! <LMS> temp array for vcut_spheric
-    INTEGER  :: find_current_k
+    INTEGER, EXTERNAL :: global_kpoint_index
     !
     ALLOCATE( fac(exx_fft%ngmt) )
     nrxxs= exx_fft%dfftt%nnr
@@ -1434,7 +1434,7 @@ MODULE exx
     ALLOCATE(rhoc(nrxxs), vc(nrxxs))
     IF(okvan) ALLOCATE(deexx(nkb))
     !
-    current_ik=find_current_k(current_k,nkstot,nks)
+    current_ik = global_kpoint_index ( nkstot, current_k )
     xkp = xk(:,current_k)
     !
     ! This is to stop numerical inconsistencies creeping in through the band parallelization.
@@ -1932,7 +1932,7 @@ MODULE exx
     REAL(DP) :: x1, x2
     REAL(DP) :: xkq(3), xkp(3), vc
     ! temp array for vcut_spheric
-    INTEGER,        EXTERNAL :: find_current_k
+    INTEGER, EXTERNAL :: global_kpoint_index
     !
     TYPE(bec_type) :: becpsi
     COMPLEX(DP), ALLOCATABLE :: psi_t(:), prod_tot(:)
@@ -1954,7 +1954,7 @@ MODULE exx
     !
     IKK_LOOP : &
     DO ikk=1,nks
-       current_ik=find_current_k(ikk,nkstot,nks)
+       current_ik = global_kpoint_index ( nkstot, ikk )
        xkp = xk(:,ikk)
        !
        IF ( lsda ) current_spin = isk(ikk)
@@ -2182,7 +2182,7 @@ MODULE exx
     REAL(DP) :: x1, x2
     REAL(DP) :: xkq(3), xkp(3), vc
     ! temp array for vcut_spheric
-    INTEGER,        EXTERNAL :: find_current_k
+    INTEGER, EXTERNAL :: global_kpoint_index
     !
     TYPE(bec_type) :: becpsi
     COMPLEX(DP), ALLOCATABLE :: psi_t(:), prod_tot(:)
@@ -2203,7 +2203,7 @@ MODULE exx
     !
     IKK_LOOP : &
     DO ikk=1,nks
-       current_ik=find_current_k(ikk,nkstot,nks)
+       current_ik = global_kpoint_index ( nkstot, ikk )
        xkp = xk(:,ikk)
        !
        IF ( lsda ) current_spin = isk(ikk)

@@ -2231,7 +2231,3 @@ xdm_dispersion.o : ../../Modules/uspp.o
 xdm_dispersion.o : paw_onecenter.o
 xdm_dispersion.o : pwcom.o
 xdm_dispersion.o : scf_mod.o
-xk_wk_collect.o : ../../Modules/io_global.o
-xk_wk_collect.o : ../../Modules/kind.o
-xk_wk_collect.o : ../../Modules/mp.o
-xk_wk_collect.o : ../../Modules/mp_pools.o

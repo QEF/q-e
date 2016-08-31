@@ -7,7 +7,7 @@
 !
 !
 !----------------------------------------------------------------------------
-SUBROUTINE divide_et_impera( xk, wk, isk, lsda, nkstot, nks )
+SUBROUTINE divide_et_impera( nkstot, xk, wk, isk, nks )
   !----------------------------------------------------------------------------
   !
   ! ... This routine divides the k points across nodes, sets the variable
@@ -23,17 +23,15 @@ SUBROUTINE divide_et_impera( xk, wk, isk, lsda, nkstot, nks )
   !
   IMPLICIT NONE
   !
-  LOGICAL, INTENT(IN) :: lsda
-    ! logical for local spin density approx.
   INTEGER, INTENT(IN)  :: nkstot
-    ! total number of k-points
+  ! total number of k-points
   INTEGER, INTENT(INOUT) :: isk(nkstot)
-    ! spin index of each kpoint (when lsda=.t.)
+  ! spin index of each kpoint (used in LSDA claculations)
   REAL (DP), INTENT(INOUT) :: xk(3,nkstot), wk(nkstot)
-    ! k-points (on all processors)
-    ! k-point weights
+  ! k-points (on all processors)
+  ! k-point weights
   INTEGER, INTENT(OUT)  :: nks
-    ! number of k-points per pool
+  ! number of k-points per pool
   !
   INTEGER :: ik, nbase, rest
   !
@@ -45,32 +43,29 @@ SUBROUTINE divide_et_impera( xk, wk, isk, lsda, nkstot, nks )
   END IF
   !
   IF ( MOD( nkstot, kunit ) /= 0 ) &
-     CALL errore( 'divide_et_impera', ' nkstot/kunit is not an integer', nkstot )
+     CALL errore( 'divide_et_impera', 'nkstot/kunit is not an integer', nkstot )
   !
   nks    = kunit * ( nkstot / kunit / npool )
   !
-  IF ( nks == 0 ) CALL errore( 'divide_et_impera', ' some nodes have no k-points', 1 )
+  IF (nks == 0) CALL errore('divide_et_impera','some nodes have no k-points', 1)
   !
   rest = ( nkstot - nks * npool ) / kunit
   !
-  IF ( ( my_pool_id + 1 ) <= rest ) nks = nks + kunit
+  IF ( my_pool_id < rest ) nks = nks + kunit
   !
-  ! ... calculates nbase = the position in the list of the first point that
-  ! ...                    belong to this npool - 1
+  ! ... calculates nbase = the position in the list of the first point
+  ! ...                    that belongs to this pool, minus one
   !
   nbase = nks * my_pool_id
+  IF ( my_pool_id >= rest ) nbase = nbase + rest * kunit
   !
-  IF ( ( my_pool_id + 1 ) > rest ) nbase = nbase + rest * kunit
-  !
-  ! ... displaces these points in the first positions of the list
+  ! ... displace the nks points in the pool to the first positions of the list
   !
   IF ( nbase > 0 ) THEN
      !
-     xk(:,1:nks) =  xk(:,nbase+1:nbase+nks)
-     !
-     wk(1:nks) = wk(nbase+1:nbase+nks)
-     !
-     IF ( lsda ) isk(1:nks) = isk(nbase+1:nbase+nks)
+     xk(:,1:nks) = xk(:,nbase+1:nbase+nks)
+     wk (1:nks)  = wk(nbase+1:nbase+nks)
+     isk(1:nks)  =isk(nbase+1:nbase+nks)
      !
   END IF
   !
@@ -81,14 +76,14 @@ END SUBROUTINE divide_et_impera
 !----------------------------------------------------------------------------
 SUBROUTINE kpoint_global_indices (nkstot, iks, ike)
   !----------------------------------------------------------------------------
-  
+
   ! Returns the index of the first (iks) and last (ike) k-point on this pool
-  ! in the global list of k-points - see below of input, output, dependencies
+  ! in the global list of k-points - to be removed soon
 
   USE mp_pools, ONLY : npool, my_pool_id, kunit
 
   IMPLICIT NONE
-  
+   
   INTEGER, INTENT(IN)  :: nkstot
   INTEGER, INTENT(OUT) :: ike, iks
 
@@ -127,3 +122,47 @@ SUBROUTINE kpoint_global_indices (nkstot, iks, ike)
   END IF
 
 END SUBROUTINE kpoint_global_indices
+
+!----------------------------------------------------------------------------
+FUNCTION global_kpoint_index ( nkstot, ik ) RESULT (ik_g)
+  !----------------------------------------------------------------------------
+  
+  ! ... Returns the index in the global list of k-points
+  ! ... of k-point "ik" in this pool
+
+  USE mp_pools, ONLY : npool, my_pool_id, kunit
+
+  IMPLICIT NONE
+  
+  INTEGER, INTENT(IN) :: nkstot, ik
+  ! total number of k-points
+  ! index of k-point
+  INTEGER  :: ik_g
+  ! index in global list corresponding to ik in pool
+  INTEGER  :: nks
+  ! this is actually the number of k-points in this pool
+  !
+  INTEGER  :: nkbl, rest
+  !
+  ! ... nkbl = number of blocks of "kunit" k-points
+  !
+  nkbl = nkstot / kunit
+  !
+  ! ... nks = k-points per pool
+  !
+  nks = kunit * ( nkbl / npool )
+  !
+  ! ... if npool not a divisor of nkstot/kunit, find out the rest
+  !
+  rest = ( nkstot - nks * npool ) / kunit
+  !
+  ! ... Assign the remaining k-points to the first "rest" pools
+  !
+  IF ( my_pool_id < rest ) nks = nks + kunit
+  !
+  ! ... find out the global index of ik-th k-point in this pool
+  !
+  ik_g = nks*my_pool_id + ik
+  IF ( my_pool_id >= rest ) ik_g = ik_g + rest*kunit
+  !
+END FUNCTION global_kpoint_index
