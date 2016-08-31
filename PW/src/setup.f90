@@ -633,20 +633,11 @@ SUBROUTINE setup()
   !
   IF ( nkstot > npk ) CALL errore( 'setup', 'too many k points', nkstot )
   !
-#ifdef __MPI
-  !
-  !
   ! ... distribute k-points (and their weights and spin indices)
   !
   kunit = 1
-  CALL divide_et_impera( xk, wk, isk, lsda, nkstot, nks )
+  CALL divide_et_impera ( nkstot, xk, wk, isk, nks )
   !
-#else
-  !
-  nks = nkstot
-  !
-#endif
-
   IF ( dft_is_hybrid() ) THEN
      CALL exx_grid_init()
      CALL exx_div_check()

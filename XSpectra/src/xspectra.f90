@@ -228,7 +228,7 @@ PROGRAM X_Spectra
      !  wk(1:nkstot)=2.d0/nkstot
      ENDIF
      wk(1:nkstot)=2.d0/nkstot
-     CALL divide_et_impera( xk, wk, isk, lsda, nkstot, nks )
+     CALL divide_et_impera( nkstot, xk, wk, isk, nks )
 
   ENDIF   
 

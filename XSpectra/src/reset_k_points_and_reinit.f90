@@ -36,10 +36,9 @@ SUBROUTINE reset_k_points_and_reinit_nscf()
   
   nkstot=nks
   
+  CALL divide_et_impera( nkstot, xk, wk, isk, nks )
 
-  CALL divide_et_impera( xk, wk, isk, lsda, nkstot, nks )
-  
-     ! ... Setting the values for the nscf run
+  ! ... Setting the values for the nscf run
   !
   startingconfig    = 'input'
   starting_pot      = 'file'
