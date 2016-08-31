@@ -517,6 +517,8 @@
        &'Error: longrange or shortrange can only be true if lpolar is true as well.',1)
   IF ( longrange .AND. shortrange) CALL errore('epw_init',&
        &'Error: longrange and shortrange cannot be both true.',1)
+  IF ( epwread .AND. .not. kmaps .AND. .not. epbread) CALL errore('epw_init',&
+       &'Error: kmaps has to be true for a restart run. ',1)
   !
   ! thickness and smearing width of the Fermi surface  
   ! from eV to Ryd

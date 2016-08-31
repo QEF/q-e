@@ -9,6 +9,7 @@
   band_plot   = .true.
 
   elph        = .true.
+  kmaps       = .true.
   epbwrite    = .false.
   epbread     = .false.
 
