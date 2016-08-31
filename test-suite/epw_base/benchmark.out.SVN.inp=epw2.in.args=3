@@ -26,7 +26,7 @@
   S. Ponce, E. R. Margine, C. Verdi, and F. Giustino, http://arxiv.org/abs/1604.03525 
                                                                                       
 
-     Program EPW v.4.0.0 (svn rev. 12681) starts on  9Aug2016 at 11:59: 5 
+     Program EPW v.4.0.0 (svn rev. 12782) starts on 31Aug2016 at 17:22:39 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -48,108 +48,41 @@
       MASS LIBS :    
 
      Parallel version (MPI), running on     1 processors
-
-     Reading data from directory:
-     ./diam.save
-
-   Info: using nr1, nr2, nr3 values from input
-
-   Info: using nr1, nr2, nr3 values from input
-
-     IMPORTANT: XC functional enforced from input :
-     Exchange-correlation      =  SLA  PZ   NOGX NOGC ( 1  1  0  0 0 0)
-     Any further DFT definition will be discarded
-     Please, verify this is what you really want
-
-               file C_3.98148.UPF: wavefunction(s)  3d renormalized
-
-     G-vector sticks info
-     --------------------
-     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
-     Sum         367     367    121                 4645     4645     893
-
-
-Possibly too few bands at point    1   0.00000   0.00000   0.00000
-
-Possibly too few bands at point    2  -0.33333   0.33333  -0.33333
-
-Possibly too few bands at point    3  -0.66667   0.66667  -0.66667
-
-Possibly too few bands at point    4   0.33333   0.33333   0.33333
-
-Possibly too few bands at point    5   0.00000   0.66667   0.00000
-
-Possibly too few bands at point    6  -0.33333   1.00000  -0.33333
-
-Possibly too few bands at point    7   0.66667   0.66667   0.66667
-
-Possibly too few bands at point    8   0.33333   1.00000   0.33333
-
-Possibly too few bands at point    9   0.00000   1.33333   0.00000
-
-Possibly too few bands at point   10  -0.33333  -0.33333   0.33333
-
-Possibly too few bands at point   11  -0.66667   0.00000   0.00000
-
-Possibly too few bands at point   12  -1.00000   0.33333  -0.33333
-
-Possibly too few bands at point   13   0.00000   0.00000   0.66667
-
-Possibly too few bands at point   14  -0.33333   0.33333   0.33333
-
-Possibly too few bands at point   15  -0.66667   0.66667  -0.00000
-
-Possibly too few bands at point   16   0.33333   0.33333   1.00000
-
-Possibly too few bands at point   17   0.00000   0.66667   0.66667
-
-Possibly too few bands at point   18  -0.33333   1.00000   0.33333
-
-Possibly too few bands at point   19  -0.66667  -0.66667   0.66667
-
-Possibly too few bands at point   20  -1.00000  -0.33333   0.33333
-
-Possibly too few bands at point   21  -1.33333   0.00000   0.00000
-
-Possibly too few bands at point   22  -0.33333  -0.33333   1.00000
-
-Possibly too few bands at point   23  -0.66667  -0.00000   0.66667
-
-Possibly too few bands at point   24  -1.00000   0.33333   0.33333
-
-Possibly too few bands at point   25   0.00000   0.00000   1.33333
-
-Possibly too few bands at point   26  -0.33333   0.33333   1.00000
-
-Possibly too few bands at point   27  -0.66667   0.66667   0.66667
+                      
+     ------------------------------------------------------------------------ 
+                   RESTART - RESTART - RESTART - RESTART                         
+     Restart is done without reading PWSCF save file.                  
+     Be aware that some consistency checks are therefore not done.                  
+     ------------------------------------------------------------------------ 
+                      
 
      --                                                                         
 
-     bravais-lattice index     =            2
-     lattice parameter (a_0)   =       6.6425  a.u.
-     unit-cell volume          =      73.2698 (a.u.)^3
-     number of atoms/cell      =            2
-     number of atomic types    =            1
-     kinetic-energy cut-off    =      60.0000  Ry
-     charge density cut-off    =     240.0000  Ry
+     bravais-lattice index     =            0
+     lattice parameter (a_0)   =       0.0000  a.u.
+     unit-cell volume          =       0.0000 (a.u.)^3
+     number of atoms/cell      =            0
+     number of atomic types    =            0
+     kinetic-energy cut-off    =       0.0000  Ry
+     charge density cut-off    =       0.0000  Ry
      convergence threshold     =      0.0E+00
      beta                      =       0.0000
      number of iterations used =            0
-     Exchange-correlation      =  SLA  PZ   NOGX NOGC ( 1  1  0  0 0 0)
+     Exchange-correlation      = not set (-1 -1 -1 -1-1-1)
 
 
-     celldm(1)=    6.64245  celldm(2)=    0.00000  celldm(3)=    0.00000
+     celldm(1)=    0.00000  celldm(2)=    0.00000  celldm(3)=    0.00000
      celldm(4)=    0.00000  celldm(5)=    0.00000  celldm(6)=    0.00000
 
      crystal axes: (cart. coord. in units of a_0)
-               a(1) = ( -0.5000  0.0000  0.5000 )  
-               a(2) = (  0.0000  0.5000  0.5000 )  
-               a(3) = ( -0.5000  0.5000  0.0000 )  
+               a(1) = (  0.0000  0.0000  0.0000 )  
+               a(2) = (  0.0000  0.0000  0.0000 )  
+               a(3) = (  0.0000  0.0000  0.0000 )  
 
      reciprocal axes: (cart. coord. in units 2 pi/a_0)
-               b(1) = ( -1.0000 -1.0000  1.0000 )  
-               b(2) = (  1.0000  1.0000  1.0000 )  
-               b(3) = ( -1.0000  1.0000 -1.0000 )  
+               b(1) = (  0.0000  0.0000  0.0000 )  
+               b(2) = (  0.0000  0.0000  0.0000 )  
+               b(3) = (  0.0000  0.0000  0.0000 )  
 
 
      Atoms inside the unit cell: 
@@ -157,54 +90,16 @@ Possibly too few bands at point   27  -0.66667   0.66667   0.66667
    Cartesian axes
 
      site n.  atom      mass           positions (a_0 units)
-        1        C   12.0118   tau( 1) = (    0.00000    0.00000    0.00000  )
-        2        C   12.0118   tau( 2) = (    0.25000    0.25000    0.25000  )
-
-     49 Sym.Ops. (with q -> -q+G )
 
 
-     G cutoff =  268.2305  (   4645 G-vectors)     FFT grid: ( 24, 24, 24)
-     number of k points=   27  gaussian broad. (Ry)=  0.0200     ngauss =   1
+     No symmetry!
+
+     G cutoff =    0.0000  (      0 G-vectors)     FFT grid: (  0,  0,  0)
+     number of k points=    0
                        cart. coord. in units 2pi/a_0
-        k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   0.0740741
-        k(    2) = (  -0.3333333   0.3333333  -0.3333333), wk =   0.0740741
-        k(    3) = (  -0.6666667   0.6666667  -0.6666667), wk =   0.0740741
-        k(    4) = (   0.3333333   0.3333333   0.3333333), wk =   0.0740741
-        k(    5) = (   0.0000000   0.6666667   0.0000000), wk =   0.0740741
-        k(    6) = (  -0.3333333   1.0000000  -0.3333333), wk =   0.0740741
-        k(    7) = (   0.6666667   0.6666667   0.6666667), wk =   0.0740741
-        k(    8) = (   0.3333333   1.0000000   0.3333333), wk =   0.0740741
-        k(    9) = (   0.0000000   1.3333333   0.0000000), wk =   0.0740741
-        k(   10) = (  -0.3333333  -0.3333333   0.3333333), wk =   0.0740741
-        k(   11) = (  -0.6666667   0.0000000   0.0000000), wk =   0.0740741
-        k(   12) = (  -1.0000000   0.3333333  -0.3333333), wk =   0.0740741
-        k(   13) = (   0.0000000   0.0000000   0.6666667), wk =   0.0740741
-        k(   14) = (  -0.3333333   0.3333333   0.3333333), wk =   0.0740741
-        k(   15) = (  -0.6666667   0.6666667  -0.0000000), wk =   0.0740741
-        k(   16) = (   0.3333333   0.3333333   1.0000000), wk =   0.0740741
-        k(   17) = (   0.0000000   0.6666667   0.6666667), wk =   0.0740741
-        k(   18) = (  -0.3333333   1.0000000   0.3333333), wk =   0.0740741
-        k(   19) = (  -0.6666667  -0.6666667   0.6666667), wk =   0.0740741
-        k(   20) = (  -1.0000000  -0.3333333   0.3333333), wk =   0.0740741
-        k(   21) = (  -1.3333333   0.0000000   0.0000000), wk =   0.0740741
-        k(   22) = (  -0.3333333  -0.3333333   1.0000000), wk =   0.0740741
-        k(   23) = (  -0.6666667  -0.0000000   0.6666667), wk =   0.0740741
-        k(   24) = (  -1.0000000   0.3333333   0.3333333), wk =   0.0740741
-        k(   25) = (   0.0000000   0.0000000   1.3333333), wk =   0.0740741
-        k(   26) = (  -0.3333333   0.3333333   1.0000000), wk =   0.0740741
-        k(   27) = (  -0.6666667   0.6666667   0.6666667), wk =   0.0740741
+     EPW          :     0.00s CPU         0.00s WALL
 
-     PseudoPot. # 1 for C  read from file:
-     ./C_3.98148.UPF
-     MD5 check sum: 8b65adcd36341f53911399f4b6efa59f
-     Pseudo is Norm-conserving, Zval =  4.0
-     Generated by new atomic code, or converted to UPF format
-     Using radial grid of  461 points,  2 beta functions with: 
-                l(1) =   0
-                l(2) =   1
-     EPW          :     0.43s CPU         0.22s WALL
-
-     EPW          :     0.57s CPU         0.29s WALL
+     EPW          :     0.00s CPU         0.00s WALL
 
      No wavefunction gauge setting applied
 
@@ -213,18 +108,12 @@ Possibly too few bands at point   27  -0.66667   0.66667   0.66667
      -------------------------------------------------------------------
 
 
-     Dipole matrix elements calculated
-
-
-     Calculating kmap and kgmap
-     Progress  kmap: ###########################
-     Progress kgmap: ########################################
-     kmaps        :      2.85s CPU      1.43s WALL (       1 calls)
-     Symmetries of bravais lattice:  48
-     Symmetries of crystal:          48
+     Using kmap and kgmap from disk
 
      Do not need to read .epb files; read .fmt files
 
+
+              band disentanglement is used:  nbndsub =    4
 
      Reading Hamiltonian, Dynamical matrix and EP vertex in Wann rep from file
 
@@ -32478,23 +32367,21 @@ Possibly too few bands at point   27  -0.66667   0.66667   0.66667
   
 
      Unfolding on the coarse grid
-     elphon_wrap  :      2.88s CPU      1.44s WALL (       1 calls)
+     elphon_wrap  :      0.00s CPU      0.00s WALL (       1 calls)
 
      INITIALIZATION: 
 
-     init_vloc    :      0.00s CPU      0.00s WALL (       2 calls)
-     init_us_1    :      0.10s CPU      0.05s WALL (       2 calls)
 
 
      Electron-Phonon interpolation
-     ephwann      :     56.64s CPU     28.43s WALL (       1 calls)
-     ep-interp    :     56.43s CPU     28.32s WALL (     216 calls)
+     ephwann      :     44.18s CPU     22.14s WALL (       1 calls)
+     ep-interp    :     44.07s CPU     22.09s WALL (     216 calls)
 
-     DynW2B       :      3.20s CPU      1.58s WALL (   46656 calls)
-     HamW2B       :      3.46s CPU      1.77s WALL (   93744 calls)
-     ephW2Bp      :     24.64s CPU     12.28s WALL (   46656 calls)
+     DynW2B       :      2.49s CPU      1.25s WALL (   46656 calls)
+     HamW2B       :      3.06s CPU      1.48s WALL (   93744 calls)
+     ephW2Bp      :     24.36s CPU     12.25s WALL (   46656 calls)
 
 
      Total program execution
-     EPW          :  1m 0.08s CPU     0m30.16s WALL
+     EPW          :    44.18s CPU        22.14s WALL
 
