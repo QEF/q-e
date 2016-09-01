@@ -62,10 +62,17 @@
   INTEGER :: ierr
   !! Return if there is an error
   !integer(kind=8) ::  lrepmatw,  lrepmatw2
+#ifdef __MPI  
   INTEGER (kind=MPI_OFFSET_KIND) :: lrepmatw
   !! Offset to tell where to start reading the file
   INTEGER (kind=MPI_OFFSET_KIND) :: lrepmatw2
   !! Offset to tell where to start reading the file
+#else
+  INTEGER(kind=8) :: lrepmatw
+  !! Offset to tell where to start reading the file
+  INTEGER(kind=8) :: lrepmatw2
+  !! Offset to tell where to start reading the file
+#endif
   !
   REAL(kind=DP) :: rdotk
   !! Exponential for the FT
@@ -130,11 +137,15 @@
     ALLOCATE(epmatw ( nbnd, nbnd, nrr_k, nmodes))
     !
     !lrepmatw2   = 2 * nbnd * nbnd * nrr_k * nmodes
+#ifdef __MPI    
     ! Although this should almost never be problematic (see explaination below)
     lrepmatw2 = 2_MPI_OFFSET_KIND * INT( nbnd  , kind = MPI_OFFSET_KIND ) * &
                                     INT( nbnd  , kind = MPI_OFFSET_KIND ) * &
                                     INT( nrr_k , kind = MPI_OFFSET_KIND ) * &
                                     INT( nmodes, kind = MPI_OFFSET_KIND )
+#else
+    lrepmatw2 = INT( 2 * nbnd * nbnd * nrr_k * nmodes, kind = 8)
+#endif
     ! 
     DO ir = ir_start, ir_stop
 #ifdef __MPI

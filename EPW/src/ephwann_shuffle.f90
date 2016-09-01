@@ -143,7 +143,6 @@
   !! Rotation matrix for phonons
   COMPLEX(kind=DP), ALLOCATABLE :: bmatf ( :, :)
   !! overlap U_k+q U_k^\dagger in smooth Bloch basis, fine mesh
-  COMPLEX(kind=DP), ALLOCATABLE :: aux ( : )
   ! 
   IF (nbndsub.ne.nbnd) &
        WRITE(stdout, '(/,14x,a,i4)' ) 'band disentanglement is used:  nbndsub = ', nbndsub
@@ -959,7 +958,6 @@
   IF ( ALLOCATED(gamma_all) )     DEALLOCATE( gamma_all )
   IF ( ALLOCATED(sigmai_all) )    DEALLOCATE( sigmai_all )
   IF ( ALLOCATED(sigmai_mode) )   DEALLOCATE( sigmai_mode )
-  IF ( ALLOCATED(aux))            DEALLOCATE ( aux )
   !
   CALL stop_clock ( 'ephwann' )
   !
@@ -1488,5 +1486,8 @@
     !
   ENDIF
   !
+  ! ----------------------------------------------------------------------
   end subroutine rwepmatw
+  ! ----------------------------------------------------------------------
+        
 
