@@ -22,7 +22,7 @@ then
                         LDFLAGS="$test_ldflags"
                         LIBS="$mpi_libs"
                         AC_SEARCH_LIBS(mpi_init, mpi, 
-                                       have_mpi=1 parallel=1 mpi_libs="$LIBS" try_dflags="$try_dflags -D__MPI -D__PARA")
+                                       have_mpi=1 parallel=1 mpi_libs="$LIBS" try_dflags="$try_dflags -D__MPI")
                 fi
         fi
 fi

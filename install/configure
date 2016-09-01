@@ -11599,7 +11599,7 @@ $as_echo "$ac_cv_search_mpi_init" >&6; }
 ac_res=$ac_cv_search_mpi_init
 if test "$ac_res" != no; then
   test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
-  have_mpi=1 parallel=1 mpi_libs="$LIBS" try_dflags="$try_dflags -D__MPI -D__PARA"
+  have_mpi=1 parallel=1 mpi_libs="$LIBS" try_dflags="$try_dflags -D__MPI"
 fi
 
                 fi

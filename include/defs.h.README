@@ -57,7 +57,6 @@ Hardware / Compiler:
       __INTEL     Intel compiler workarounds for compiler bugs
 
 Parallel execution:
-      __PARA      Parallel execution - OBSOLETE
       __MPI       Use MPI library
       __OPENMP    OpenMP parallelization
 
