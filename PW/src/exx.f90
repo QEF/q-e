@@ -243,6 +243,7 @@ MODULE exx
     !
     ! all processors on all pools need to have access to all k+q points
     !
+    ALLOCATE(xk_collect(3,nkstot))
     CALL poolcollect(3, nks, xk, nkstot, xk_collect)
     !
     ! set a safe limit as the maximum number of auxiliary points we may need
@@ -628,7 +629,6 @@ MODULE exx
           CALL find_u(sr(:,:,isym), d_spin(:,:,isym))
        ENDDO
     ENDIF
-
     CALL exx_fft_create()
 
     ! Note that nxxs is not the same as nrxxs in parallel case
