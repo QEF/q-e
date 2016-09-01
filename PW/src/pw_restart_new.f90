@@ -478,11 +478,16 @@ MODULE pw_restart_new
       CALL mp_sum( mill_g, intra_bgrp_comm )
       !
       IF ( ionode ) THEN  
+#if defined __HDF5
+
+#else
+
          !
          filename = TRIM( dirname ) // '/gvectors.dat'
          CALL write_gvecs( iunpun, filename, dfftp%nr1,dfftp%nr2, dfftp%nr3,&
              ngm_g, gamma_only, mill_g(:,:) )
          !
+#endif 
       END IF
       !
       ! ... now write wavefunctions and k+G vectors
@@ -628,6 +633,7 @@ MODULE pw_restart_new
           !
           INTEGER, ALLOCATABLE :: igwk(:)
           INTEGER, ALLOCATABLE :: itmp(:)
+          INTEGER              :: ierr 
           !
           !
           ALLOCATE( itmp( npw_g ) )
@@ -660,9 +666,9 @@ MODULE pw_restart_new
 #ifdef __HDF5
              CALL prepare_for_writing_final ( gk_hdf5_write, inter_pool_comm,&
                   TRIM(filename)//'.hdf5',ik)
-             CALL write_gkhdf5(gk_hdf5_write,xk(:,ik),igwk(1:ngk_g(ik),ik), &
-                              mill_g(1:3,igwk(1:ngk_g(ik),ik)),ik)
-             CALL h5fclose_f(gk_hdf5_write%file_id,error)
+             CALL write_gkhdf5(gk_hdf5_write,xk(:,ik),igwk(1:ngk_g(ik)), &
+                              mill_g(1:3,igwk(1:ngk_g(ik))),ik)
+             CALL h5fclose_f(gk_hdf5_write%file_id, ierr )
 #else
              !
              CALL iotk_open_write( iun, FILE = TRIM(filename)//'.dat', &
