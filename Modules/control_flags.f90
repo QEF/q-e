@@ -44,12 +44,8 @@ MODULE control_flags
   PUBLIC :: tksw, trhor, thdyn, trhow
   PUBLIC :: twfcollect
   PUBLIC :: lkpoint_dir
-  PUBLIC :: program_name
   !
   ! ...   declare execution control variables
-  !
-  CHARACTER(LEN=4) :: program_name = ' '  !  used to control execution flow 
-                                          !  inside module: 'PW' or 'CP'
   !
   LOGICAL :: trhor     = .FALSE. ! read rho from unit 47 (only cp, seldom used)
   LOGICAL :: trhow     = .FALSE. ! CP code, write rho to restart dir

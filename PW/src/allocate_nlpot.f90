@@ -37,8 +37,6 @@ SUBROUTINE allocate_nlpot
                                becsum, qq_so,dvan_so, deeq_nc
   USE uspp_param,       ONLY : upf, lmaxq, lmaxkb, nh, nhm, nbetam
   USE spin_orb,         ONLY : lspinorb, fcoef
-  USE control_flags,    ONLY : program_name
-  USE io_global,        ONLY : stdout
   !
   IMPLICIT NONE
   !
@@ -77,11 +75,8 @@ SUBROUTINE allocate_nlpot
     ALLOCATE (dvan( nhm, nhm, nsp))
   ENDIF
   ! GIPAW needs a slighly larger q-space interpolation for quantities calculated
-  ! at k+q_gipaw
-  IF (trim(program_name) == 'GIPAW') THEN
-    IF (cell_factor == 1.d0) cell_factor = 1.1d0
-    WRITE(stdout,"(5X,'q-space interpolation up to ',F8.2,' Rydberg')") ecutwfc*cell_factor
-  ENDIF
+  ! at k+q_gipaw, and I'm using the spline_ps=.true. flag to signal that
+  IF (spline_ps .and. cell_factor <= 1.1d0) cell_factor = 1.1d0
   !
   ! This routine is called also by the phonon code, in which case it should
   ! allocate an array that includes q+G vectors up to |q+G|_max <= |Gmax|+|q|
