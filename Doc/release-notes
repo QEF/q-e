@@ -58,6 +58,7 @@ Incompatible changes in 6.0 version:
   * Due to frequent problems with mailers, "make.sys" is renamed "make.inc"
   * "allocate_fft" no longer calls "data_structure" to compute dimensions
     of the various grids: it just allocates FFT arrays
+  * QE-GPU plugin not compatible with 6.x (new version is WIP)
 
                                * * * * *
 
