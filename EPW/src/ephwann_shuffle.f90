@@ -27,9 +27,9 @@
   USE kinds,         ONLY : DP
   USE pwcom,         ONLY : nbnd, nks, nkstot, isk, &
                             et, xk, ef,  nelec
-  USE cell_base,     ONLY : at, bg                  
+  USE cell_base,     ONLY : at, bg, omega, alat
   USE start_k,       ONLY : nk1, nk2, nk3
-  USE ions_base,     ONLY : nat, amass, ityp
+  USE ions_base,     ONLY : nat, amass, ityp, tau
   USE phcom,         ONLY : nq1, nq2, nq3, nmodes
   USE epwcom,        ONLY : nbndsub, lrepmatf, fsthick, epwread, longrange,     &
                             epwwrite, ngaussw, degaussw, lpolar,                &
@@ -173,6 +173,9 @@
       READ (crystal,*) nelec
       READ (crystal,*) at
       READ (crystal,*) bg
+      READ (crystal,*) omega
+      READ (crystal,*) alat
+      READ (crystal,*) tau
       READ (crystal,*) amass
       ALLOCATE( ityp( nat ) )
       READ (crystal,*) ityp
@@ -189,6 +192,12 @@
     CALL mp_bcast (at, root_pool, intra_pool_comm)  
     CALL mp_bcast (bg, ionode_id, inter_pool_comm)
     CALL mp_bcast (bg, root_pool, intra_pool_comm)  
+    CALL mp_bcast (omega, ionode_id, inter_pool_comm)
+    CALL mp_bcast (omega, root_pool, intra_pool_comm)  
+    CALL mp_bcast (alat, ionode_id, inter_pool_comm)
+    CALL mp_bcast (alat, root_pool, intra_pool_comm)  
+    CALL mp_bcast (tau, ionode_id, inter_pool_comm)
+    CALL mp_bcast (tau, root_pool, intra_pool_comm)  
     CALL mp_bcast (amass, ionode_id, inter_pool_comm)
     CALL mp_bcast (amass, root_pool, intra_pool_comm)  
     CALL mp_bcast (ityp, ionode_id, inter_pool_comm)
@@ -977,8 +986,8 @@
   USE pwcom,     ONLY : ef, nelec
   USE elph2,     ONLY : nrr_k, nrr_q, chw, rdw, cdmew, cvmew, chw_ks, &
                         zstar, epsi, epmatwp
-  USE ions_base, ONLY : amass, ityp, nat
-  USE cell_base, ONLY : at, bg
+  USE ions_base, ONLY : amass, ityp, nat, tau
+  USE cell_base, ONLY : at, bg, omega, alat
   USE phcom,     ONLY : nmodes  
   USE io_epw,    ONLY : epwdata, iundmedata, iunvmedata, iunksdata, iunepmatwp, &
                         crystal
@@ -1008,6 +1017,9 @@
     WRITE (crystal,*) nelec
     WRITE (crystal,*) at
     WRITE (crystal,*) bg
+    WRITE (crystal,*) omega
+    WRITE (crystal,*) alat
+    WRITE (crystal,*) tau
     WRITE (crystal,*) amass
     WRITE (crystal,*) ityp
     WRITE (epwdata,*) ef
