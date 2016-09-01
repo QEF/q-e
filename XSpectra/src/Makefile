@@ -58,7 +58,7 @@ spectra_manipulation.x : spectra_manipulation.o $(MANIP_XS_OBJ) $(QEMODS) $(PWOB
 	- ( cd ../../bin ; ln -fs ../XSpectra/src/$@ . )
 
 molecularnexafs.x : molecularnexafs.o 
-	$(MPIF90) -o $@  molecularnexafs.o
+	$(MPIF90) -o $@  molecularnexafs.o $(LDFLAGS)
 	- ( cd ../../bin ; ln -fs ../XSpectra/src/$@ . )
 
 tldeps : 
