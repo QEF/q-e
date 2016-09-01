@@ -23,7 +23,7 @@
   !----------------------------------------------------------------------
   USE phcom,             ONLY : alphap, alphasum, alphasum_nc, &
                                 becsum_nc, dmuxc, dpsi,&
-                                drc, dpsi, dyn, evq, w2, dvpsi,&
+                                drc, dpsi, dyn, evq, dvpsi,&
                                 int5, vlocq, int2_so, int5_so
   USE lrus,              ONLY : becp1, int3, int3_nc
   USE phus,              ONLY : int1, int1_nc, int2, int4, int4_nc
@@ -82,7 +82,6 @@
     if(allocated(name_rap_mode)) deallocate (name_rap_mode)
     if(allocated(num_rap_mode)) deallocate (num_rap_mode)
     IF(ALLOCATED(dyn)) DEALLOCATE (dyn)
-    IF(ALLOCATED(w2)) DEALLOCATE (w2)
     !IF(ASSOCIATED(t)) DEALLOCATE (t)
     IF(ALLOCATED(epsi)) DEALLOCATE (epsi)
     IF(ALLOCATED(zstar)) DEALLOCATE (zstar)

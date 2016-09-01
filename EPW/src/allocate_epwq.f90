@@ -26,7 +26,7 @@
   USE spin_orb,     ONLY : lspinorb
   USE control_lr,   ONLY : lgamma, nbnd_occ
   USE phcom,        ONLY : evq, dvpsi, dpsi, vlocq,&
-                           dmuxc, w2, npertx 
+                           dmuxc, npertx 
   USE phus,         ONLY : int1, int1_nc, int2, int2_so, &
                            int4, int4_nc, int5, int5_so, becsum_nc, &
                            alphasum, alphasum_nc, alphap
@@ -79,7 +79,6 @@
   ALLOCATE (eigqts ( nat))    
   ALLOCATE (rtau ( 3, 48, nat))    
   ALLOCATE (u ( 3 * nat, 3 * nat))    
-  ALLOCATE (w2 ( 3 * nat))    
 !  ALLOCATE (t (npertx, npertx, 48,3 * nat))    
   allocate (name_rap_mode( 3 * nat))
   allocate (num_rap_mode( 3 * nat ))

@@ -30,7 +30,7 @@
   USE cell_base,     ONLY : at, bg                  
   USE start_k,       ONLY : nk1, nk2, nk3
   USE ions_base,     ONLY : nat, amass, ityp
-  USE phcom,         ONLY : nq1, nq2, nq3, nmodes, w2
+  USE phcom,         ONLY : nq1, nq2, nq3, nmodes
   USE epwcom,        ONLY : nbndsub, lrepmatf, fsthick, epwread, longrange,     &
                             epwwrite, ngaussw, degaussw, lpolar,                &
                             nbndskip, parallel_k, parallel_q, etf_mem,          &
@@ -126,6 +126,8 @@
   !! Same but in sequential
   REAL(kind=DP), PARAMETER :: eps = 0.01/ryd2mev
   !! Tolerence
+  REAL(kind=DP), ALLOCATABLE :: w2 (:)
+  !! Interpolated phonon frequency
   !
   COMPLEX(kind=DP), ALLOCATABLE :: epmatwe  (:,:,:,:,:)
   !! e-p matrix  in wannier basis - electrons
@@ -199,6 +201,8 @@
   ELSE
     continue
   ENDIF
+  !
+  ALLOCATE( w2( 3*nat) )
   !
   ! determine Wigner-Seitz points
   !
@@ -958,6 +962,7 @@
   IF ( ALLOCATED(gamma_all) )     DEALLOCATE( gamma_all )
   IF ( ALLOCATED(sigmai_all) )    DEALLOCATE( sigmai_all )
   IF ( ALLOCATED(sigmai_mode) )   DEALLOCATE( sigmai_mode )
+  IF ( ALLOCATED(w2) )   DEALLOCATE( w2 )
   !
   CALL stop_clock ( 'ephwann' )
   !

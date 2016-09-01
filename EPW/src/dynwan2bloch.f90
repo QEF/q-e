@@ -119,7 +119,7 @@
   ! after hermitian-ization
   !
   DO jmode = 1, nmodes
-   DO imode = 1, jbnd
+   DO imode = 1, jmode
       champ (imode + (jmode - 1) * jmode/2 ) = &
       ( chf ( imode, jmode) + conjg ( chf ( jmode, imode) ) ) / 2.d0
    ENDDO
