@@ -234,7 +234,7 @@ MODULE pw_restart
       END IF
       !
       iks =  global_kpoint_index (nkstot, 1  )
-      ike =  global_kpoint_index (nkstot, nks)
+      ike = iks + nks - 1
       !
       ! ... find out the global number of G vectors: ngm_g
       !
@@ -2321,6 +2321,7 @@ MODULE pw_restart
       INTEGER, ALLOCATABLE :: kisort(:)
       INTEGER              :: nkl, nkr, npwx_g
       INTEGER              :: nupdwn(2), ike, iks, npw_g, ispin
+      INTEGER, EXTERNAL    :: global_kpoint_index
       INTEGER, ALLOCATABLE :: ngk_g(:)
       INTEGER, ALLOCATABLE :: igk_l2g(:,:), igk_l2g_kdip(:,:)
       LOGICAL              :: opnd
@@ -2341,7 +2342,8 @@ MODULE pw_restart
                     & 'wavefunctions unit (iunwfc) is not opened', 1 )
       END IF
       !
-      CALL  kpoint_global_indices (nkstot, iks, ike)
+      iks = global_kpoint_index (nkstot, 1)
+      ike = iks + nks - 1
       !
       ! ... find out the global number of G vectors: ngm_g  
       !

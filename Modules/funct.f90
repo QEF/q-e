@@ -577,7 +577,7 @@ CONTAINS
     if (igcc ==  9) igcc = 4 ! PBE -> PBC
 
     if (igcx == 6) &
-         call errore('set_dft_from_name','OPTX untested! please test',-igcx)
+         call infomsg('set_dft_from_name','OPTX untested! please test')
 
     ! check for unrecognized labels
 

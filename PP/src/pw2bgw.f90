@@ -477,7 +477,7 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
   complex (DP), allocatable :: wfng_buf ( :, : )
   complex (DP), allocatable :: wfng_dist ( :, :, : )
 
-  INTEGER, EXTERNAL :: atomic_number
+  INTEGER, EXTERNAL :: atomic_number, global_kpoint_index
 
   IF ( real_or_complex .EQ. 1 .OR. nspin .GT. 1 ) THEN
     proc_wf = .TRUE.
@@ -517,7 +517,8 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
   ng_l = ngm
   ng_g = ngm_g
 
-  CALL kpoint_global_indices (nkstot, iks, ike)
+  iks = global_kpoint_index (nkstot, 1)
+  ike = iks + nks - 1 
 
   ALLOCATE ( kmap ( nk_g ) )
   ALLOCATE ( smap ( nk_g ) )
@@ -1438,10 +1439,11 @@ SUBROUTINE calc_rhog (rhog_nvmin, rhog_nvmax)
 
   integer, intent (in) :: rhog_nvmin
   integer, intent (in) :: rhog_nvmax
-
+  integer, external :: global_kpoint_index
   integer :: ik, is, ib, ig, ir, iks, ike
 
-  CALL kpoint_global_indices (nkstot, iks, ike)
+  iks = global_kpoint_index (nkstot, 1)
+  ike = iks + nks - 1 
 
   CALL weights ()
 
@@ -1818,6 +1820,7 @@ SUBROUTINE write_vxc_r (output_file_name, diag_nmin, diag_nmax, &
   logical, intent (in) :: vxc_zero_rho_core
 
   integer :: ik, is, ib, ig, ir, unit, iks, ike, ndiag, noffdiag, ib2
+  integer, external :: global_kpoint_index
   real (DP) :: dummyr
   complex (DP) :: dummyc
   real (DP), allocatable :: mtxeld (:, :)
@@ -1849,7 +1852,8 @@ SUBROUTINE write_vxc_r (output_file_name, diag_nmin, diag_nmax, &
 
   unit = 4
 
-  CALL kpoint_global_indices (nkstot, iks, ike)
+  iks = global_kpoint_index (nkstot, 1)
+  ike = iks + nks - 1 
 
   IF (ndiag .GT. 0) THEN
     ALLOCATE (mtxeld (ndiag, nkstot))
@@ -2001,6 +2005,7 @@ SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
   logical, intent (in) :: vxc_zero_rho_core
 
   integer :: ik, is, ib, ig, ir, unit, iks, ike, ndiag, noffdiag, ib2, ikk
+  integer, external :: global_kpoint_index
   complex (DP) :: dummy
   complex (DP), allocatable :: mtxeld (:, :)
   complex (DP), allocatable :: mtxelo (:, :, :)
@@ -2032,7 +2037,8 @@ SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
 
   unit = 4
 
-  CALL kpoint_global_indices (nkstot, iks, ike)
+  iks = global_kpoint_index (nkstot, 1)
+  ike = iks + nks - 1 
 
   IF (ndiag .GT. 0) THEN
     ALLOCATE (mtxeld (ndiag, nkstot))
@@ -2441,7 +2447,7 @@ SUBROUTINE write_vkbg (output_file_name, symm_type, wfng_kgrid, &
   integer, allocatable :: ipmask ( : )
   complex (DP), allocatable :: vkb_g ( : )
 
-  INTEGER, EXTERNAL :: atomic_number
+  INTEGER, EXTERNAL :: atomic_number, global_kpoint_index
 
   IF ( nkb == 0 ) RETURN
 
@@ -2456,7 +2462,8 @@ SUBROUTINE write_vkbg (output_file_name, symm_type, wfng_kgrid, &
   nrecord = 1
   nd = 3
 
-  CALL kpoint_global_indices (nkstot, iks, ike)
+  iks = global_kpoint_index (nkstot, 1)
+  ike = iks + nks - 1 
 
   ierr = 0
   IF ( ibrav .EQ. 0 ) THEN

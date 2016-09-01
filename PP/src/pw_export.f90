@@ -66,6 +66,7 @@
       INTEGER :: i, j, ierr, idum = 0
       INTEGER :: iks, ike, nkt, ikt, igwx
       INTEGER :: ipmask( nproc ), ipsour
+      INTEGER, EXTERNAL :: global_kpoint_index
       COMPLEX(DP), ALLOCATABLE :: wtmp(:)
       INTEGER, ALLOCATABLE :: igltot(:)
 
@@ -84,7 +85,8 @@
         ikt = ik
         nkt = nk
 
-        CALL kpoint_global_indices (nkt, iks, ike)
+        iks = global_kpoint_index (nkt, 1)
+        ike = iks + nk - 1
 
         ipmask = 0
         ipsour = ionode_id
@@ -386,6 +388,7 @@ SUBROUTINE write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   INTEGER :: i, j, k, ig, ik, ibnd, na, ngg,ig_, ierr
   real(DP) :: xyz(3), tmp(3)
   INTEGER :: ike, iks, npw_g, npwx_g, ispin, local_pw
+  INTEGER, EXTERNAL :: global_kpoint_index
   INTEGER, ALLOCATABLE :: ngk_g( : )
   INTEGER, ALLOCATABLE :: itmp_g( :, : )
   real(DP),ALLOCATABLE :: rtmp_g( :, : )
@@ -411,7 +414,8 @@ SUBROUTINE write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
      IF( ( nproc_pool > nproc ) .or. ( mod( nproc, nproc_pool ) /= 0 ) ) &
        CALL errore( ' write_export ',' nproc_pool ', 1 )
 
-     CALL kpoint_global_indices (nkstot, iks, ike)
+     iks = global_kpoint_index (nkstot, 1)
+     ike = iks + nks - 1
 
   ENDIF
 

@@ -864,6 +864,7 @@ SUBROUTINE write_gmaps ( kunit)
   INTEGER :: npw, i, j, k, ig, ik, ibnd, na, ngg, ikw
   INTEGER, ALLOCATABLE :: kisort(:)
   INTEGER :: ike, iks, npw_g, npwx_g, ispin
+  INTEGER, EXTERNAL :: global_kpoint_index
   INTEGER, ALLOCATABLE :: ngk_g( : )
   INTEGER, ALLOCATABLE :: ngk_gw( : )
   INTEGER, ALLOCATABLE :: itmp( :, : )
@@ -886,7 +887,8 @@ SUBROUTINE write_gmaps ( kunit)
      IF( ( nproc_pool > nproc ) .or. ( mod( nproc, nproc_pool ) /= 0 ) ) &
        CALL errore( ' write_wannier ',' nproc_pool ', 1 )
 
-     CALL kpoint_global_indices (nkstot, iks, ike)
+     iks = global_kpoint_index (nkstot, 1)
+     ike = iks + nks - 1
 
   ENDIF
 

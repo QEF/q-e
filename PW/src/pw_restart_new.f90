@@ -493,7 +493,7 @@ MODULE pw_restart_new
       ! ... now write wavefunctions and k+G vectors
       !
       iks = global_kpoint_index (nkstot, 1)
-      ike = global_kpoint_index (nkstot, nks)
+      ike = iks + nks - 1
       !
       ! ... ngk_g: global number of k+G vectors for all k points
       !
@@ -2121,7 +2121,7 @@ MODULE pw_restart_new
       END IF
       ! 
       iks = global_kpoint_index (nkstot, 1)
-      ike = global_kpoint_index (nkstot, nks)
+      ike = iks + nks - 1
       !
       ! ... ngk_g: global number of k+G vectors for all k points
       !

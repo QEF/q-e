@@ -212,6 +212,7 @@ SUBROUTINE write_evc ( input_file_name, real_or_complex, &
     na, nk, ns, nb, nbgw, ng, ngkmax, ntran, cell_symmetry, &
     iks, ike, npw, npw_g, ngkdist_l, ngkdist_g, &
     igk_l2g, irecord, nrecord, ng_irecord, nr ( 3 )
+  integer :: global_kpoint_index
   real ( DP ) :: ecutrho, ecutwfn, celvol, recvol, al, bl, xdel, &
     a ( 3, 3 ), b ( 3, 3 ), adot ( 3, 3 ), bdot ( 3, 3 )
   character :: sdate*32, stime*32, stitle*32
@@ -498,7 +499,8 @@ SUBROUTINE write_evc ( input_file_name, real_or_complex, &
 
   CALL mp_bcast ( ngk_g, ionode_id, world_comm )
 
-  CALL kpoint_global_indices (nkstot, iks, ike)
+  iks =  global_kpoint_index (nkstot, 1)
+  ike = iks + nks -1 
 
   npw_g = 0
   DO ik = 1, nks

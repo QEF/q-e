@@ -49,7 +49,7 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   integer, allocatable :: igwk( :, : )
   integer, allocatable :: l2g_new( : )
   integer, allocatable :: igk_l2g( :, : )
-
+  integer, external :: global_kpoint_index
 
   real(DP) :: wfc_scal 
   logical :: twf0, twfm
@@ -67,7 +67,8 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
      IF( ( nproc_pool > nproc ) .OR. ( MOD( nproc, nproc_pool ) /= 0 ) ) &
        CALL errore( ' write_export ',' nproc_pool ', 1 )
 
-     CALL kpoint_global_indices (nkstot, iks, ike)
+     iks = global_kpoint_index (nkstot, 1)
+     ike = iks + nks - 1
 
   END IF
 

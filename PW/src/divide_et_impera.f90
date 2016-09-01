@@ -72,57 +72,6 @@ SUBROUTINE divide_et_impera( nkstot, xk, wk, isk, nks )
   RETURN
   !
 END SUBROUTINE divide_et_impera
-
-!----------------------------------------------------------------------------
-SUBROUTINE kpoint_global_indices (nkstot, iks, ike)
-  !----------------------------------------------------------------------------
-
-  ! Returns the index of the first (iks) and last (ike) k-point on this pool
-  ! in the global list of k-points - to be removed soon
-
-  USE mp_pools, ONLY : npool, my_pool_id, kunit
-
-  IMPLICIT NONE
-   
-  INTEGER, INTENT(IN)  :: nkstot
-  INTEGER, INTENT(OUT) :: ike, iks
-
-  INTEGER  :: nkbl, nkl, nkr
-
-  IF ( nkstot > 0 ) THEN
-     !
-     ! ... find out number of k points blocks
-     !
-     nkbl = nkstot / kunit
-     !
-     ! ... k points per pool
-     !
-     nkl = kunit * ( nkbl / npool )
-     !
-     ! ... find out the reminder
-     !
-     nkr = ( nkstot - nkl * npool ) / kunit
-     !
-     ! ... Assign the reminder to the first nkr pools
-     !
-     IF ( my_pool_id < nkr ) nkl = nkl + kunit
-     !
-     ! ... find out the index of the first k point in this pool
-     !
-     iks = nkl*my_pool_id + 1
-     IF ( my_pool_id >= nkr ) iks = iks + nkr*kunit
-     !
-     ! ... find out the index of the last k point in this pool
-     !
-     ike = iks + nkl - 1
-     !
-  ELSE
-     ike = 0
-     iks = 0
-  END IF
-
-END SUBROUTINE kpoint_global_indices
-
 !----------------------------------------------------------------------------
 FUNCTION global_kpoint_index ( nkstot, ik ) RESULT (ik_g)
   !----------------------------------------------------------------------------
