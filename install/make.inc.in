@@ -129,7 +129,7 @@ SCALAPACK_LIBS = @scalapack_libs@
 FFT_LIBS       = @fft_libs@
 
 # HDF5 -- experimental
-HFD5_LIB = @hdf5_libs@
+HDF5_LIB = @hdf5_libs@
 
 # For parallel execution, the correct path to MPI libraries must
 # be specified in MPI_LIBS (except for IBM if you use mpxlf)
@@ -155,7 +155,7 @@ RANLIB         = @ranlib@
 FLIB_TARGETS   = all
 
 LIBOBJS        = $(TOPDIR)/clib/clib.a $(TOPDIR)/iotk/src/libiotk.a
-LIBS           = $(SCALAPACK_LIBS) $(LAPACK_LIBS) $(FFT_LIBS) $(BLAS_LIBS) $(MPI_LIBS) $(MASS_LIBS) ${HFD5_LIB} $(LD_LIBS)
+LIBS           = $(SCALAPACK_LIBS) $(LAPACK_LIBS) $(FFT_LIBS) $(BLAS_LIBS) $(MPI_LIBS) $(MASS_LIBS) ${HDF5_LIB} $(LD_LIBS)
 
 # wget or curl - useful to download from network
 WGET = @wget@
