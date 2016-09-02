@@ -175,6 +175,7 @@
       READ (crystal,*) bg
       READ (crystal,*) omega
       READ (crystal,*) alat
+      ALLOCATE( tau( 3, nat ) )
       READ (crystal,*) tau
       READ (crystal,*) amass
       ALLOCATE( ityp( nat ) )
