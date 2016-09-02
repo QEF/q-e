@@ -1150,7 +1150,7 @@ MODULE exx
     ALLOCATE(rhoc(nrxxs), vc(nrxxs))
     IF(okvan) ALLOCATE(deexx(nkb))
     !
-    current_ik = global_kpoint_index(current_k,nkstot,nks)
+    current_ik = global_kpoint_index ( nkstot, current_k )
     xkp = xk(:,current_k)
     !
     ! This is to stop numerical inconsistencies creeping in through the band parallelization.
