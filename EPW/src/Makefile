@@ -16,6 +16,7 @@ MODFLAGS = -I../../iotk/src -I../../Modules -I../../LAXlib -I../../iotk/src \
 #
 
 EPWOBJS = \
+transportcom.o \
 io_epw.o\
 elph2.o \
 epw.o \

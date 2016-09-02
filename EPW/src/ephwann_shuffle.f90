@@ -197,6 +197,7 @@
     CALL mp_bcast (omega, root_pool, intra_pool_comm)  
     CALL mp_bcast (alat, ionode_id, inter_pool_comm)
     CALL mp_bcast (alat, root_pool, intra_pool_comm)  
+    IF (mpime /= ionode_id) ALLOCATE( tau( 3, nat ) )
     CALL mp_bcast (tau, ionode_id, inter_pool_comm)
     CALL mp_bcast (tau, root_pool, intra_pool_comm)  
     CALL mp_bcast (amass, ionode_id, inter_pool_comm)

@@ -476,3 +476,53 @@
   RETURN
   !
   END SUBROUTINE epw_setup
+  !
+  !-----------------------------------------------------------------------
+  SUBROUTINE epw_setup_restart
+  !-----------------------------------------------------------------------
+  !!
+  !! Setup in the case of a restart
+  !! 
+  ! ----------------------------------------------------------------------
+  USE kinds,         ONLY : DP
+  USE constants_epw, ONLY : zero
+  USE io_global,     ONLY : ionode_id
+  USE mp_global,     ONLY : world_comm
+  USE mp,            ONLY : mp_bcast
+  USE epwcom,        ONLY : scattering, nstemp, tempsmin, tempsmax, &
+                            temps
+  USE transportcom,  ONLY : transp_temp
+  !
+  implicit none
+  !
+  INTEGER :: itemp
+  !! Counter on temperature
+  ! 
+  transp_temp(:) = zero
+  ! In case of scattering calculation
+  IF ( scattering ) THEN
+    ! 
+    IF ( maxval(temps(:)) > zero ) THEN
+      transp_temp(:) = temps(:)
+    ELSE
+      IF ( nstemp .eq. 1 ) THEN
+        transp_temp(1) = tempsmin
+      ELSE
+        DO itemp = 1, nstemp
+          transp_temp(itemp) = tempsmin + dble(itemp-1) * &
+                              ( tempsmax - tempsmin ) / dble(nstemp-1)
+        ENDDO
+      ENDIF
+    ENDIF
+  ENDIF
+  ! We have to bcast here because before it has not been allocated
+  CALL mp_bcast (transp_temp, ionode_id, world_comm)    !  
+  ! 
+  CALL stop_clock ('epw_setup')
+  RETURN
+  !-----------------------------------------------------------------------
+  END SUBROUTINE epw_setup_restart
+  !-----------------------------------------------------------------------
+
+
+
