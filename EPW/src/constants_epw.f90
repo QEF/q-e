@@ -45,7 +45,7 @@
   REAL(DP), PARAMETER :: mev2ps   = 0.6582119514  ! 1000/((1/hbar)*1e-12)
   REAL(DP), PARAMETER :: mev2invps = 1.0 / meV2ps  
   REAL(DP), PARAMETER :: kb       = 8.6173324d-05 ! eV/K
-  REAL(DP), PARAMETER :: electron_si = 1.602176487d-1
+  REAL(DP), PARAMETER :: electron_SI = 1.602176487d-19
   REAL(DP), PARAMETER :: hbar     = 6.582119514E-16 ! eV*s
   REAL(DP), PARAMETER :: hbarJ    = 1.054571800E-34 ! J*s  
   !

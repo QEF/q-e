@@ -498,6 +498,8 @@
   INTEGER :: itemp
   !! Counter on temperature
   ! 
+  ALLOCATE( transp_temp(nstemp) )
+  !
   transp_temp(:) = zero
   ! In case of scattering calculation
   IF ( scattering ) THEN
