@@ -498,6 +498,8 @@
   INTEGER :: itemp
   !! Counter on temperature
   ! 
+  CALL start_clock ('epw_setup')
+  !
   ALLOCATE( transp_temp(nstemp) )
   !
   transp_temp(:) = zero

@@ -180,6 +180,7 @@
       READ (crystal,*) amass
       ALLOCATE( ityp( nat ) )
       READ (crystal,*) ityp
+      READ (crystal,*) isk
       ! 
     ENDIF
     CALL mp_bcast (nat, ionode_id, inter_pool_comm)
@@ -204,6 +205,8 @@
     CALL mp_bcast (amass, root_pool, intra_pool_comm)  
     CALL mp_bcast (ityp, ionode_id, inter_pool_comm)
     CALL mp_bcast (ityp, root_pool, intra_pool_comm)  
+    CALL mp_bcast (isk, ionode_id, inter_pool_comm)
+    CALL mp_bcast (isk, root_pool, intra_pool_comm)    
     IF (mpime.eq.ionode_id) THEN
       CLOSE(crystal)
     ENDIF
@@ -985,7 +988,7 @@
   !
   USE kinds,     ONLY : DP
   USE epwcom,    ONLY : nbndsub, vme, eig_read, etf_mem
-  USE pwcom,     ONLY : ef, nelec
+  USE pwcom,     ONLY : ef, nelec, isk
   USE elph2,     ONLY : nrr_k, nrr_q, chw, rdw, cdmew, cvmew, chw_ks, &
                         zstar, epsi, epmatwp
   USE ions_base, ONLY : amass, ityp, nat, tau
@@ -1024,6 +1027,7 @@
     WRITE (crystal,*) tau
     WRITE (crystal,*) amass
     WRITE (crystal,*) ityp
+    WRITE (crystal,*) isk
     WRITE (epwdata,*) ef
     WRITE (epwdata,*) nbndsub, nrr_k, nmodes, nrr_q
     WRITE (epwdata,*) zstar, epsi
