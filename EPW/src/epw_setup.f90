@@ -500,7 +500,7 @@
   ! 
   CALL start_clock ('epw_setup')
   !
-  ALLOCATE( transp_temp(nstemp) )
+  IF (.NOT. ALLOCATED(transp_temp)) ALLOCATE( transp_temp(nstemp) )
   !
   transp_temp(:) = zero
   ! In case of scattering calculation
