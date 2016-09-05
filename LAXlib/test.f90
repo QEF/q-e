@@ -39,6 +39,8 @@ program lax_test
   REAL(DP) :: time1, time2 
   REAL*8  :: tempo(100)
   REAL*8, allocatable :: tempo_tutti(:)
+  REAL*8, allocatable :: perf_matrix(:,:)
+  integer, allocatable :: perf_count(:,:)
   REAL*8  :: tempo_mio(100)
   REAL*8  :: tempo_min(100)
   REAL*8  :: tempo_max(100)
@@ -47,10 +49,13 @@ program lax_test
   TYPE(la_descriptor) :: desc
   INTEGER :: i, ir, ic, nx, n, nr, nc  ! size of the matrix
   INTEGER :: n_in, nlen, dest, sour, tag, ii
+  INTEGER :: nnodes
   !
   integer :: nargs
   CHARACTER(LEN=80) :: arg
   CHARACTER(LEN=MPI_MAX_PROCESSOR_NAME), allocatable :: proc_name(:)
+  CHARACTER(LEN=MPI_MAX_PROCESSOR_NAME), allocatable :: node_name(:)
+  INTEGER, allocatable :: proc2node(:)
 #if defined(__OPENMP)
   INTEGER, EXTERNAL :: omp_get_max_threads
 #endif
@@ -135,6 +140,9 @@ program lax_test
   endif
 
   allocate( proc_name( npes ) )
+  allocate( node_name( npes ) )
+  allocate( proc2node( npes ) )
+  nnodes = 0
 
   do i = 1, npes
 #ifdef __MPI
@@ -150,8 +158,33 @@ program lax_test
 !        write(6,310)  i, proc_name(i)
      end if
 310 FORMAT('pe = ',I5,' name = ', A20) 
+    do ii = 1, nnodes
+       if( proc_name(i) == node_name(ii) ) then
+          exit
+       end if 
+    end do
+    if( ii > nnodes ) then
+       nnodes = nnodes + 1
+       node_name( nnodes ) = proc_name( i )
+    end if
+    proc2node( i ) = ii
   end do
+  !
+  if( mype == 0 ) then
+    write(6,*) '+-----------------------------------+'
+    write(6,*) '|  node list                        |'
+    write(6,*) '+-----------------------------------+'
+    write(6,*) 
+    do ii = 1, nnodes
+       write(6,310)  ii, node_name(ii)
+    end do
+  end if
   
+  allocate( perf_matrix( nnodes, nnodes ) )
+  allocate( perf_count( nnodes, nnodes ) )
+  perf_matrix = 0.0d0
+  perf_count = 0
+
   ! Check core speed
   !
 #ifdef __MPI
@@ -204,31 +237,34 @@ program lax_test
   ALLOCATE( s( nx, nx ) )
   tempo_tutti = 0.0d0
 
-  do i = 1, npes-1
-     sour = 0
+  do ii = 0, npes-1
+  do i = 0, ii-1
+     sour = ii
      dest = i
-     tag = i
+     tag = i + ii * npes
 #ifdef __MPI
      CALL MPI_BARRIER( MPI_COMM_WORLD, ierr)
      if( ( mype == sour ) .or. ( mype == dest ) ) THEN
         tempo(1) = MPI_WTIME()
         if( mype == dest ) then
            CALL MPI_SEND(s, nx*nx, MPI_DOUBLE_PRECISION, sour, TAG, MPI_COMM_WORLD, ierr)
-           CALL MPI_RECV(s, nx*nx, MPI_DOUBLE_PRECISION, sour, TAG+NPES, MPI_COMM_WORLD, status, ierr)
+           CALL MPI_RECV(s, nx*nx, MPI_DOUBLE_PRECISION, sour, TAG+NPES*NPES, MPI_COMM_WORLD, status, ierr)
         else if( mype == sour ) then
            CALL MPI_RECV(s, nx*nx, MPI_DOUBLE_PRECISION, dest, TAG, MPI_COMM_WORLD, status, ierr)
-           CALL MPI_SEND(s, nx*nx, MPI_DOUBLE_PRECISION, dest, TAG+NPES, MPI_COMM_WORLD, ierr)
+           CALL MPI_SEND(s, nx*nx, MPI_DOUBLE_PRECISION, dest, TAG+NPES*NPES, MPI_COMM_WORLD, ierr)
         endif
         tempo(2) = MPI_WTIME()
-        if( mype == dest ) then
-           tempo_tutti(mype+1) = tempo(2)-tempo(1)
-        end if
+        perf_matrix( proc2node( ii+1 ), proc2node( i+1 ) ) = perf_matrix( proc2node( ii+1 ), proc2node( i+1 ) ) + &
+           2.0d0*DBLE(nx*nx)*8.0d0/(tempo(2)-tempo(1))/1.0D+9
+        perf_count( proc2node( ii+1 ), proc2node( i+1 ) ) = perf_count( proc2node( ii+1 ), proc2node( i+1 ) ) + 1
      END IF
      CALL MPI_BARRIER( MPI_COMM_WORLD, ierr)
 #endif
   end do
+  end do
 #ifdef __MPI
-  CALL MPI_ALLREDUCE( MPI_IN_PLACE, tempo_tutti, npes, MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, ierr )
+  CALL MPI_ALLREDUCE( MPI_IN_PLACE, perf_matrix, SIZE(perf_matrix), MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, ierr )
+  CALL MPI_ALLREDUCE( MPI_IN_PLACE, perf_count, SIZE(perf_count), MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD, ierr )
 #endif
   if( mype == 0 ) then
      write(6,*)
@@ -238,13 +274,16 @@ program lax_test
      write(6,*) '|    ping-pong network bandwidth    |'
      write(6,*) '+-----------------------------------+'
      write(6,*) 
-     write(6,315)  0, proc_name(1)
-     do i = 2, npes
-        write(6,320)  i-1, 2.0d0*DBLE(nx*nx)*8.0d0/tempo_tutti(i)/1.0D+9, proc_name(i)
+     do ii = 1, nnodes
+        do i = 1, nnodes
+           if( perf_count(i,ii) > 0 ) then
+             perf_matrix(i,ii) = perf_matrix(i,ii) / perf_count(i,ii)
+             write( 6, 314 ) node_name(i), node_name(ii), perf_count(i,ii), perf_matrix(i,ii)
+           end if
+        end do
      end do
+314 FORMAT( A20, A20, I5, ':', F8.3, 'GBytes') 
   end if
-315 FORMAT('pe = ',I5,',  sender GBytes', ',  node: ', A20) 
-320 FORMAT('pe = ',I5,',', F8.3, ' GBytes', ',  node: ', A20) 
   DEALLOCATE( s )
   !
   ! Check network latency
@@ -399,6 +438,10 @@ program lax_test
   end if
 
   deallocate( proc_name )
+  deallocate( node_name )
+  deallocate( proc2node )
+  deallocate( perf_matrix )
+  deallocate( perf_count )
 
 
 #ifdef __MPI
