@@ -38,6 +38,8 @@ Fixed in 6.0 version:
   * turboTDDFPT: Problem if empty states were also computed. 
   * NEB did not recognize its own input if white spaces were present at the
     right of NEB cards (commit 12816)
+  * startingwfc='file' with wavefunctions in collected format could yield a 
+    bogus "unit not open" error (commit 12908)
   * EPW: Correct Wannier localization with spinors
   * EPW: Electronic velocities in the local approximation now works correctly
     with skipped bands and spin-orbit coupling

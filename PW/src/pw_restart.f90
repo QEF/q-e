@@ -2334,14 +2334,6 @@ MODULE pw_restart
       !
       ierr = 0
       !
-      IF ( iunwfc > 0 ) THEN
-         !
-         INQUIRE( UNIT = iunwfc, OPENED = opnd )
-         !
-         IF ( .NOT. opnd ) CALL errore( 'read_wavefunctions', &
-                    & 'wavefunctions unit (iunwfc) is not opened', 1 )
-      END IF
-      !
       iks = global_kpoint_index (nkstot, 1)
       ike = iks + nks - 1
       !

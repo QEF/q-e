@@ -77,7 +77,7 @@ SUBROUTINE wfcinit()
      IF ( ierr == 0 ) THEN 
         twfcollect_file = input_obj%control_variables%wf_collect   
         dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save' 
-        IF ( twfcollect_file ) CALL read_collected_to_evc(dirname, ierr )
+        IF ( twfcollect_file ) CALL read_collected_to_evc(dirname )
      END IF 
      CALL qes_reset_input ( input_obj ) 
      DEALLOCATE ( input_obj )    

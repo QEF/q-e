@@ -26,7 +26,7 @@ SUBROUTINE divide_et_impera( nkstot, xk, wk, isk, nks )
   INTEGER, INTENT(IN)  :: nkstot
   ! total number of k-points
   INTEGER, INTENT(INOUT) :: isk(nkstot)
-  ! spin index of each kpoint (used in LSDA claculations)
+  ! spin index of each kpoint (used in LSDA calculations only)
   REAL (DP), INTENT(INOUT) :: xk(3,nkstot), wk(nkstot)
   ! k-points (on all processors)
   ! k-point weights

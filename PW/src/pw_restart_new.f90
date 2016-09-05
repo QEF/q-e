@@ -136,7 +136,7 @@ MODULE pw_restart_new
       CHARACTER(LEN=20)     :: dft_name
       CHARACTER(LEN=256)    :: dirname
       CHARACTER(LEN=80)     :: vdw_corr_
-      INTEGER               :: i, ig, ngg, ierr, ipol
+      INTEGER               :: i, ig, ngg, ipol
       INTEGER               :: npwx_g, ispin, inlc
       INTEGER,  ALLOCATABLE :: ngk_g(:)
       LOGICAL               :: lwfc, lrho, lxsd, occupations_are_fixed
@@ -440,7 +440,7 @@ MODULE pw_restart_new
       !
       IMPLICIT NONE
       !
-      INTEGER               :: i, ig, ngg, ierr, ipol, ispin
+      INTEGER               :: i, ig, ngg, ipol, ispin
       INTEGER               :: ik, ik_g, ike, iks, npw_g, npwx_g
       INTEGER, EXTERNAL     :: global_kpoint_index
       INTEGER,  ALLOCATABLE :: ngk_g(:)
@@ -1067,7 +1067,7 @@ MODULE pw_restart_new
          !
          IF (input_obj%control_variables%wf_collect) THEN 
             twfcollect =  input_obj%control_variables%wf_collect 
-            CALL read_collected_to_evc(dirname, ierr ) 
+            CALL read_collected_to_evc(dirname ) 
          END IF
       END IF
       IF ( lsymm ) THEN
@@ -2067,13 +2067,13 @@ MODULE pw_restart_new
     END SUBROUTINE readschema_band_structure 
     ! 
     !------------------------------------------------------------------------
-    SUBROUTINE read_collected_to_evc( dirname, ierr )
+    SUBROUTINE read_collected_to_evc( dirname )
       !------------------------------------------------------------------------
       !
       ! ... This routines reads wavefunctions from the new file format and
       ! ... writes them into the old format
       !
-      USE control_flags,        ONLY : twfcollect, lkpoint_dir
+      USE control_flags,        ONLY : twfcollect
       USE lsda_mod,             ONLY : nspin, isk
       USE klist,                ONLY : nkstot, wk, nks, xk, ngk, igk_k
       USE wvfct,                ONLY : npw, npwx, g2kin, et, wg, nbnd
@@ -2092,7 +2092,6 @@ MODULE pw_restart_new
       IMPLICIT NONE
       !
       CHARACTER(LEN=*), INTENT(IN)  :: dirname
-      INTEGER,          INTENT(OUT) :: ierr
       !
       CHARACTER(LEN=2), DIMENSION(2) :: updw = (/ 'up', 'dw' /)
       CHARACTER(LEN=320)   :: filename
@@ -2108,18 +2107,6 @@ MODULE pw_restart_new
       !
       IF ( .NOT. twfcollect ) RETURN 
       !
-      ! The ierr output var is actually not given any value
-      ! except this initialization
-      !
-      ierr = 0
-      IF ( iunwfc > 0 ) THEN
-         !
-         INQUIRE( UNIT = iunwfc, OPENED = opnd )
-         !
-         IF ( .NOT. opnd ) CALL errore( 'read_wavefunctions', &
-                    & 'wavefunctions unit (iunwfc) is not opened', 1 )
-      END IF
-      ! 
       iks = global_kpoint_index (nkstot, 1)
       ike = iks + nks - 1
       !

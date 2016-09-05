@@ -78,9 +78,7 @@ SUBROUTINE read_file()
   !
 #ifdef __XSD 
   dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save'
-  IF ( twfcollect )  CALL read_collected_to_evc ( TRIM ( dirname ) , ierr ) 
-  IF ( ierr /= 0 ) CALL errore ( 'read_collected_to_evc', 'failed to read and redistribute '// &
-                                  'wave functions', ierr ) 
+  IF ( twfcollect )  CALL read_collected_to_evc ( TRIM ( dirname )) 
 #else
   CALL pw_readfile( 'wave', ierr )
 #endif
