@@ -15,7 +15,7 @@ source [file join $sourcedir helpdoc.tcl]
 #
 
 set usage "
-    Usage: $argv0 \[--version value\] file1.def ?file2.def? ...
+    Usage: $argv0 \[-version value\] file1.def ?file2.def? ...
 "
 
 if { $argc < 1 } {
@@ -24,7 +24,7 @@ if { $argc < 1 } {
 }
 
 set options {
-    {version.arg {} "Quantum espresso version number"}
+    {version.arg {} "Quantum ESPRESSO version number"}
 }
    
 set argv_orig $argv
