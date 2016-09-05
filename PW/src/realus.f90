@@ -642,7 +642,7 @@ MODULE realus
                !
                CALL spline( xsp, dqtot, second, 0.0_dp, wsp(:,2) )
                !
-               DO ir = 1, tabp(ia)%maxbox
+               DO ir = 1, mbia
                   !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! IF .not. do_not_use_spline_inside_rinner IT DIFFERS ! it changes the force on Oxygen by 0.004
                   IF ( tabp(ia)%dist(ir) < upf(nt)%rinner(l+1) .and. do_not_use_spline_inside_rinner ) THEN
@@ -1241,6 +1241,7 @@ MODULE realus
          IF ( .NOT. upf(nt)%tvanp ) CYCLE
          !
          mbia = tabp(na)%maxbox
+         IF ( mbia == 0 ) CYCLE
          nfuncs = nh(nt)*(nh(nt)+1)/2
          ALLOCATE ( dqr(mbia,nfuncs,3) )
          !
