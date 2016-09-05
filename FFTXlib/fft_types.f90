@@ -321,7 +321,7 @@ CONTAINS
     desc%nst = 0
     DO iss = 1, SIZE( idx )
       is = idx( iss )
-      IF( is < 0 ) CYCLE
+      IF( is < 1 ) CYCLE
       i1 = in1( is )
       i2 = in2( is )
       IF( st( i1, i2 ) > 0 ) THEN
