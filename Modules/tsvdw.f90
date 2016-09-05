@@ -176,8 +176,7 @@ PRIVATE :: GetVdWParam
   !
   ALLOCATE(VefftsvdW(nat)); VefftsvdW=0.0_DP
   !
-  Ndim=MAX(nr1*nr2,dffts%npp(me_bgrp+1)*nr1*nr2)
-  ALLOCATE(UtsvdW(Ndim)); UtsvdW=0.0_DP
+  ALLOCATE(UtsvdW(dffts%nnr)); UtsvdW=0.0_DP
   !
   ! Set ddamp damping function parameter (set to 20 and functional independent)...
   !

@@ -39,7 +39,10 @@ Fixed in 6.0 version:
   * NEB did not recognize its own input if white spaces were present at the
     right of NEB cards (commit 12816)
   * startingwfc='file' with wavefunctions in collected format could yield a 
-    bogus "unit not open" error (commit 12908)
+    bogus "unit not open" error (commit 12913)
+  * PW and CP: possible out-of-bound error in TS-vdW due to incorrect 
+    allocation of array UtsvdW (commit 12917)
+  * EPW: Correct Wannier localization with spinors
   * EPW: Correct Wannier localization with spinors
   * EPW: Electronic velocities in the local approximation now works correctly
     with skipped bands and spin-orbit coupling
