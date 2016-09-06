@@ -458,10 +458,15 @@ MODULE realus
                             mod( l + lllnbnt + lllmbnt, 2 ) == 0 ) ) CYCLE
                !
                IF( upf(nt)%tvanp ) THEN
-                  qtot(1:upf(nt)%kkbeta) = &
-                       upf(nt)%qfuncl(1:upf(nt)%kkbeta,ijv,l) &
-                       / rgrid(nt)%r(1:upf(nt)%kkbeta)**2
-                  if (rgrid(nt)%r(1)< eps16) qtot(1) = qtot(2)
+                  qtot(2:upf(nt)%kkbeta) = &
+                       upf(nt)%qfuncl(2:upf(nt)%kkbeta,ijv,l) &
+                       / rgrid(nt)%r(2:upf(nt)%kkbeta)**2
+                  ! prevents division by zero if r(1)=0
+                  IF (rgrid(nt)%r(1)< eps16) THEN
+                     qtot(1) = qtot(2)
+                  ELSE
+                     qtot(1) = upf(nt)%qfuncl(1,ijv,l)/rgrid(nt)%r(1)**2
+                  END IF
                ENDIF
                !
                ! ... compute the first derivative
