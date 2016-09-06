@@ -524,6 +524,8 @@
       !-local variables
       INTEGER :: i, ir, j, l, iind
       REAL(DP) :: rra
+      !
+      IF (n < 1 ) RETURN
       ! initialize index array
       IF (ind (1) ==0) THEN
          DO i = 1, n
@@ -531,7 +533,7 @@
          ENDDO
       ENDIF
       ! nothing to order
-      IF (n<2) RETURN
+      IF (n < 2) RETURN
       ! initialize indices for hiring and retirement-promotion phase
       l = n / 2 + 1
       ir = n
