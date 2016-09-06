@@ -397,30 +397,26 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       !
       IF (ts_vdw) THEN
         !
-        IF (dffts%npp(me_image+1).NE.0) THEN
-          !
-          IF (nspin.EQ.1) THEN
-            !
+        IF (nspin.EQ.1) THEN
+           !
 !$omp parallel do
-            DO ir=1,dffts%npp(me_image+1)*dfftp%nr1*dfftp%nr2
+           DO ir=1,dfftp%npp(me_image+1)*dfftp%nr1*dfftp%nr2
               !
               rhor(ir,1)=rhor(ir,1)+UtsvdW(ir)
               !
-            END DO
+           END DO
 !$omp end parallel do
-            !
-          ELSE IF (nspin.EQ.2) THEN
-            !
+           !
+        ELSE IF (nspin.EQ.2) THEN
+           !
 !$omp parallel do
-            DO ir=1,dffts%npp(me_image+1)*dfftp%nr1*dfftp%nr2
+           DO ir=1,dfftp%npp(me_image+1)*dfftp%nr1*dfftp%nr2
               !
               rhor(ir,1)=rhor(ir,1)+UtsvdW(ir)
               rhor(ir,2)=rhor(ir,2)+UtsvdW(ir)
               !
-            END DO
+           END DO
 !$omp end parallel do
-            !
-          END IF
           !
         END IF
         !
