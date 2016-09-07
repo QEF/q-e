@@ -31,6 +31,14 @@ program lax_test
   INTEGER :: world_cntx = -1  ! BLACS context of all processor
   INTEGER :: ortho_cntx = -1  ! BLACS context for ortho_comm
   !
+#if defined(__INTEL_COMPILER)
+#if __INTEL_COMPILER  >= 1300
+  ! the following is a workaround for Intel 12.1 bug
+#if __INTEL_COMPILER  < 9999
+!dir$ attributes align: 4096 :: a, s, c, d
+#endif
+#endif
+#endif
   REAL(DP), ALLOCATABLE :: a(:,:)
   REAL(DP), ALLOCATABLE :: s(:,:)
   REAL(DP), ALLOCATABLE :: c(:,:)
@@ -40,6 +48,7 @@ program lax_test
   REAL*8  :: tempo(100)
   REAL*8, allocatable :: tempo_tutti(:)
   REAL*8, allocatable :: perf_matrix(:,:)
+  REAL*8, allocatable :: latency_matrix(:,:)
   integer, allocatable :: perf_count(:,:)
   REAL*8  :: tempo_mio(100)
   REAL*8  :: tempo_min(100)
@@ -181,8 +190,10 @@ program lax_test
   end if
   
   allocate( perf_matrix( nnodes, nnodes ) )
+  allocate( latency_matrix( nnodes, nnodes ) )
   allocate( perf_count( nnodes, nnodes ) )
   perf_matrix = 0.0d0
+  latency_matrix = 0.0d0
   perf_count = 0
 
   ! Check core speed
@@ -259,11 +270,25 @@ program lax_test
         perf_count( proc2node( ii+1 ), proc2node( i+1 ) ) = perf_count( proc2node( ii+1 ), proc2node( i+1 ) ) + 1
      END IF
      CALL MPI_BARRIER( MPI_COMM_WORLD, ierr)
+     if( ( mype == sour ) .or. ( mype == dest ) ) THEN
+        tempo(1) = MPI_WTIME()
+        if( mype == dest ) then
+           CALL MPI_SEND(ii, 1, MPI_BYTE, sour, TAG, MPI_COMM_WORLD, ierr)
+           CALL MPI_RECV(ii, 1, MPI_BYTE, sour, TAG+NPES, MPI_COMM_WORLD, status, ierr)
+        else if( mype == sour ) then
+           CALL MPI_RECV(ii, 1, MPI_BYTE, dest, TAG, MPI_COMM_WORLD, status, ierr)
+           CALL MPI_SEND(ii, 1, MPI_BYTE, dest, TAG+NPES, MPI_COMM_WORLD, ierr)
+        endif
+        tempo(2) = MPI_WTIME()
+        latency_matrix( proc2node( ii+1 ), proc2node( i+1 ) ) = latency_matrix( proc2node( ii+1 ), proc2node( i+1 ) ) + &
+           (tempo(2)-tempo(1))
+     END IF
 #endif
   end do
   end do
 #ifdef __MPI
   CALL MPI_ALLREDUCE( MPI_IN_PLACE, perf_matrix, SIZE(perf_matrix), MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, ierr )
+  CALL MPI_ALLREDUCE( MPI_IN_PLACE, latency_matrix, SIZE(latency_matrix), MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, ierr )
   CALL MPI_ALLREDUCE( MPI_IN_PLACE, perf_count, SIZE(perf_count), MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD, ierr )
 #endif
   if( mype == 0 ) then
@@ -283,54 +308,22 @@ program lax_test
         end do
      end do
 314 FORMAT( A20, A20, I5, ':', F8.3, 'GBytes') 
-  end if
-  DEALLOCATE( s )
-  !
-  ! Check network latency
-  !
-  tempo_tutti = 0.0d0
-  do i = 1, npes-1
-     sour = 0
-     dest = i
-     tag = i
-#ifdef __MPI
-     CALL MPI_BARRIER( MPI_COMM_WORLD, ierr)
-     if( ( mype == sour ) .or. ( mype == dest ) ) THEN
-        tempo(1) = MPI_WTIME()
-        if( mype == dest ) then
-           CALL MPI_SEND(ii, 1, MPI_BYTE, sour, TAG, MPI_COMM_WORLD, ierr)
-           CALL MPI_RECV(ii, 1, MPI_BYTE, sour, TAG+NPES, MPI_COMM_WORLD, status, ierr)
-        else if( mype == sour ) then
-           CALL MPI_RECV(ii, 1, MPI_BYTE, dest, TAG, MPI_COMM_WORLD, status, ierr)
-           CALL MPI_SEND(ii, 1, MPI_BYTE, dest, TAG+NPES, MPI_COMM_WORLD, ierr)
-        endif
-        tempo(2) = MPI_WTIME()
-        if( mype == dest ) then
-           tempo_tutti(mype+1) = tempo(2)-tempo(1)
-        end if
-     END IF
-     CALL MPI_BARRIER( MPI_COMM_WORLD, ierr)
-#endif
-  end do
-#ifdef __MPI
-  CALL MPI_ALLREDUCE( MPI_IN_PLACE, tempo_tutti, npes, MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, ierr )
-#endif
-  if( mype == 0 ) then
-     write(6,*)
-     write(6,*)
      write(6,*)
      write(6,*) '+-----------------------------------+'
      write(6,*) '|    ping-pong network latency      |'
      write(6,*) '+-----------------------------------+'
      write(6,*) 
-     write(6,325)  0, proc_name(1)
-     do i = 2, npes
-        write(6,330)  i-1, tempo_tutti(i)*1000000.0d0, proc_name(i)
+     do ii = 1, nnodes
+        do i = 1, nnodes
+           if( perf_count(i,ii) > 0 ) then
+             latency_matrix(i,ii) = latency_matrix(i,ii) / perf_count(i,ii)
+             write( 6, 315 ) node_name(i), node_name(ii), perf_count(i,ii), latency_matrix(i,ii)*1000000.0d0
+           end if
+        end do
      end do
+315 FORMAT( A20, A20, I5, ':', F10.3, 'usec') 
   end if
-325 FORMAT('pe = ',I5,',  sender usec', ',  node: ', A20) 
-330 FORMAT('pe = ',I5,',', F8.3, ' usec', ',  node: ', A20) 
-
+  DEALLOCATE( s )
   DEALLOCATE( tempo_tutti )
 
   call mp_start_diag()
