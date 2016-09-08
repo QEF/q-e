@@ -14,7 +14,10 @@ AC_DEFUN([X_AC_QE_ARCH], [
 # (only on NEC SX8 actually)
 if test "$host" != "" ; then ranlib=echo; fi
 
-cross_compiling=yes
+
+# cross compiling? Why?
+#cross_compiling=yes
+
 if test "$host" = "" ; then host=$build; fi
 
 # identify host architecture
