@@ -1,9 +1,15 @@
-
-#===============================
-# espresso
-#===============================
+# Copyright (C) 2001-2016 Quantum ESPRESSO group
 #
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License. See the file `License' in the root directory
+# of the present distribution.
+#
+# Makefile for fundamental math libraries
+
 include ../make.inc
+include install_utils
 
 #.NOTPARALLEL: liblapack_internal libblas_internal
 
@@ -34,9 +40,7 @@ fake_blas_external :
 	-rm fake_libblas.a
 
 libblas_internal:
-	if test ! -d ../BLAS; then \
-	( gzip -dc ../archive/${BLAS_NETLIB} | \
-		(cd ../; tar -xvf -; ln -s ${BLAS_NETLIB_NAME} BLAS)); fi
+	$(call download_and_unpack,$(BLAS_NETLIB_NAME),$(BLAS_NETLIB_URL),BLAS,BLAS)
 	if test -e make_blas.inc; then \
 	(cp make_blas.inc ../BLAS/make.inc; \
 	cd ../BLAS; $(MAKE) ); else \
@@ -52,14 +56,13 @@ fake_lapack_external :
 	-rm fake_liblapack.a
 
 liblapack_internal:
-	if test ! -d ../LAPACK; then \
-	( gzip -dc ../archive/${LAPACK_NETLIB} | \
-		(cd ../; tar -xvf -; ln -s ${LAPACK_NETLIB_NAME} LAPACK)); fi
+	$(call download_and_unpack,$(LAPACK_NETLIB_NAME),$(LAPACK_NETLIB_URL),LAPACK,LAPACK)
 	if test -e make_lapack.inc; then \
 	(cp make_lapack.inc ../LAPACK/make.inc; \
 	cd ../LAPACK; $(MAKE) lapacklib); else \
         (echo "no configuration file found for lapack"; \
         echo "run configure from main QE dir"; exit); fi
+
 libiotk:
 	if test ! -d ../S3DE; then \
 	(gzip -dc ../archive/iotk-1.2.beta.tar.gz | (cd ../; tar -xvf -)) ; \
