@@ -1,31 +1,33 @@
-# @configure_input@
-# -*- Makefile -*-
 ####################################################################
 #  LAPACK make include file.                                       #
-#  LAPACK, Version 3.2                                             #
-#  November 2008                                                   #
+#  LAPACK, Version 3.6.1                                           #
+#  June 2016                                                       #
 ####################################################################
 #
-# See the INSTALL/ directory for more examples.
-#
 SHELL = /bin/sh
-#
-#  The machine (platform) identifier to append to the library names
-#
-PLAT =
 #  
 #  Modify the FORTRAN and OPTS definitions to refer to the
 #  compiler and desired compiler options for your machine.  NOOPT
 #  refers to the compiler options desired when NO OPTIMIZATION is
-#  selected.  Define LOADER and LOADOPTS to refer to the loader
-#  and desired load options for your machine.
+#  selected.  Define LOADER and LOADOPTS to refer to the loader and 
+#  desired load options for your machine.
+#
+#  Note: During a regular execution, LAPACK might create NaN and Inf
+#  and handle these quantities appropriately. As a consequence, one 
+#  should not compile LAPACK with flags such as -ffpe-trap=overflow.
 #
 FORTRAN  = @f77@
 OPTS     = @fflags@
-DRVOPTS  = @fflags@
+DRVOPTS  = $(OPTS)
 NOOPT    = @fflags_noopt@
 LOADER   = @ld@
 LOADOPTS = @ldflags@
+#
+#  Comment out the following line to include deprecated routines to the
+#  LAPACK library.
+#
+MAKEDEPRECATED = Yes
+BUILD_DEPRECATED = Yes
 #
 # Timer for the SECOND and DSECND routines
 #
@@ -36,23 +38,29 @@ LOADOPTS = @ldflags@
 # For gfortran compiler: SECOND and DSECND will use a call to the INTERNAL FUNCTION ETIME
 # TIMER    = INT_ETIME
 # If your Fortran compiler does not provide etime (like Nag Fortran Compiler, etc...)
-# SECOND and DSECND will use a call to the Fortran standard INTERNAL FUNCTION CPU_TIME 
+# SECOND and DSECND will use a call to the INTERNAL FUNCTION CPU_TIME
 TIMER    = INT_CPU_TIME
 # If neither of this works...you can use the NONE value... In that case, SECOND and DSECND will always return 0
 # TIMER     = NONE
+#
+#  Configuration LAPACKE: Native C interface to LAPACK
+#  To generate LAPACKE library: type 'make lapackelib'
+#  Configuration file: turned off (default)
+#  Complex types: C99 (default)
+#  Name pattern: mixed case (default)
+#  (64-bit) Data model: LP64 (default)
+#
+# CC is the C compiler, normally invoked with options CFLAGS.
+#
+CC = @cc@
+CFLAGS = @cflags@
 #
 #  The archiver and the flag(s) to use when building archive (library)
 #  If you system has no ranlib, set RANLIB = echo.
 #
 ARCH     = @ar@
 ARCHFLAGS= @arflags@
-RANLIB   = @ranlib@
-#
-#  The location of BLAS library for linking the testing programs.
-#  The target's machine-specific, optimized BLAS library should be
-#  used whenever possible.
-#
-BLASLIB      = @blas_libs@
+RANLIB   =  @ranlib@
 #
 #  Location of the extended-precision BLAS (XBLAS) Fortran library
 #  used for building and testing extended-precision routines.  The
@@ -63,9 +71,12 @@ BLASLIB      = @blas_libs@
 XBLASLIB     =
 # XBLASLIB    = -lxblas
 #
-#  Names of generated libraries.
+#  The location of the libraries to which you will link.  (The 
+#  machine-specific, optimized BLAS library should be used whenever
+#  possible.)
 #
-LAPACKLIB    = lapack$(PLAT).a
-TMGLIB       = tmglib$(PLAT).a
-EIGSRCLIB    = eigsrc$(PLAT).a
-LINSRCLIB    = linsrc$(PLAT).a
+BLASLIB      =  @blas_libs@
+CBLASLIB     = ../../libcblas.a
+LAPACKLIB    = liblapack.a
+TMGLIB       = libtmglib.a
+LAPACKELIB   = liblapacke.a

@@ -141,7 +141,7 @@ fi
 # or internal lapack esplicitly required
 
 if test "$have_lapack" -eq 0 -o "$use_internal_lapack" -eq 1 ; then
-    lapack_libs="$topdir/lapack-3.2/lapack.a"
+    lapack_libs="$topdir/LAPACK/liblapack.a"
     lapack_libs_switch="internal"
 else
     if test "$have_essl" -eq 1 -o "$have_atlas" -eq 1 ; then
@@ -149,7 +149,7 @@ else
     # atlas: add missing lapack routines so as to complete atlas
     # note that some compilers do not like to have multiple symbols
     # OBSOLETE
-      lapack_libs="$lapack_libs $topdir/lapack-3.2/lapack.a"
+      lapack_libs="$lapack_libs $topdir/LAPACK/liblapack.a"
       lapack_libs_switch="internal"
     else
       lapack_libs_switch="external"

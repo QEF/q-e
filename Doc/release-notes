@@ -17,6 +17,7 @@ New in 6.0 version:
          with etf_mem true or false.
   * EPW: The test-farm now checks 5 representative examples and the associated
          accuracy
+  * Netlib BLAS and LAPACK updated, easy to update going forward
 
 Fixed in 6.0 version:
 

@@ -5,6 +5,17 @@
 #
 include ../make.inc
 
+#.NOTPARALLEL: liblapack_internal libblas_internal
+
+# NETLIB targets
+BLAS_NETLIB=blas-3.6.0.tgz
+BLAS_NETLIB_NAME=BLAS-3.6.0
+BLAS_NETLIB_URL=http://www.netlib.org/blas/${BLAS_NETLIB}
+
+LAPACK_NETLIB=lapack-3.6.1.tgz
+LAPACK_NETLIB_NAME=lapack-3.6.1
+LAPACK_NETLIB_URL=http://www.netlib.org/lapack/${LAPACK_NETLIB}
+
 #
 # MAIN target
 #
@@ -14,7 +25,6 @@ all:
 	$(MAKE) libelpa_internal 
 	$(MAKE) libiotk 
 
-# BLAS
 libblas : libblas_$(BLAS_LIBS_SWITCH)
 
 libblas_external : fake_blas_external
@@ -25,14 +35,14 @@ fake_blas_external :
 
 libblas_internal:
 	if test ! -d ../BLAS; then \
-	( gzip -dc ../archive/blas-1.tar.gz |(cd ../; tar -xvf -)); fi
+	( gzip -dc ../archive/${BLAS_NETLIB} | \
+		(cd ../; tar -xvf -; ln -s ${BLAS_NETLIB_NAME} BLAS)); fi
 	if test -e make_blas.inc; then \
 	(cp make_blas.inc ../BLAS/make.inc; \
-	cd ../BLAS; $(MAKE) $(BLASLIB)); else \
+	cd ../BLAS; $(MAKE) ); else \
         (echo "no configuration file found for blas"; \
-	echo "run configure from main QE dir"); fi
+	echo "run configure from main QE dir"; exit); fi
 
-# LAPACK
 liblapack : liblapack_$(LAPACK_LIBS_SWITCH) 
 
 liblapack_external : fake_lapack_external
@@ -42,15 +52,14 @@ fake_lapack_external :
 	-rm fake_liblapack.a
 
 liblapack_internal:
-	if test ! -d ../lapack-3.2; then \
-	( gzip -dc ../archive/lapack-3.2.tar.gz | (cd ../; tar -xvf -)); fi
+	if test ! -d ../LAPACK; then \
+	( gzip -dc ../archive/${LAPACK_NETLIB} | \
+		(cd ../; tar -xvf -; ln -s ${LAPACK_NETLIB_NAME} LAPACK)); fi
 	if test -e make_lapack.inc; then \
-	(cp make_lapack.inc ../lapack-3.2/make.inc; \
-	cp Makefile_lapack ../lapack-3.2/SRC/Makefile; \
-        cp Makefile_lapack_testing_lin ../lapack-3.2/TESTING/LIN/Makefile; \
-	cd ../lapack-3.2; $(MAKE) lapacklib); else \
+	(cp make_lapack.inc ../LAPACK/make.inc; \
+	cd ../LAPACK; $(MAKE) lapacklib); else \
         (echo "no configuration file found for lapack"; \
-        echo "run configure from main QE dir"); fi
+        echo "run configure from main QE dir"; exit); fi
 libiotk:
 	if test ! -d ../S3DE; then \
 	(gzip -dc ../archive/iotk-1.2.beta.tar.gz | (cd ../; tar -xvf -)) ; \
@@ -86,11 +95,11 @@ libelpa_enabled:
 blas_clean:
 	if test -d ../BLAS; then (cd ../BLAS; $(MAKE) clean); fi
 blas_veryclean:
-	if test -d ../BLAS; then (rm -R -f ../BLAS); fi
+	if test -d ../BLAS; then (rm -R -f ../BLAS ../${BLAS_NETLIB_NAME}); fi
 lapack_clean:
-	if test -d ../lapack-3.2; then (cd ../lapack-3.2; $(MAKE) clean); fi
+	if test -d ../LAPACK; then (cd ../LAPACK; $(MAKE) clean); fi
 lapack_veryclean:
-	if test -d ../lapack-3.2; then (rm -R -f ../lapack-3.2); fi
+	if test -d ../LAPACK; then (rm -R -f ../LAPACK ../${LAPACK_NETLIB_NAME}); fi
 elpa_clean:
 	if test -d ../ELPA; then (cd ../ELPA; $(MAKE) clean); fi
 elpa_veryclean:
