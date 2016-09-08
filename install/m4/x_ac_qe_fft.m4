@@ -151,14 +151,24 @@ then
         ,$blas_libs -lm)
 
 
-        if test "$have_fft" == "1"
+        if test "$have_fft" == "1" 
         then
               try_dflags="$try_dflags -D__DFTI"
-              try_incdir="$MKL_INCLUDE $MKLROOT/include $CPATH $FPATH"
+              try_incdir="$MKLROOT/include $MKL_INCLUDE $CPATH $FPATH"
               for inc in $try_incdir
               do
-                 #we need to add the fft include path to IFLAGS
-                 AC_CHECK_HEADERS([$inc/mkl_dfti.f90],have_fft_include=1,)
+                 if test "$cross_compiling" == "no"
+                 then
+                    # when cross-compilation is disabled I can check file paths... 
+                    AC_CHECK_FILE( $inc/mkl_dfti.f90, 
+                                have_fft_include=1, have_fft_include=0) 
+                 else
+                    # when cross-compilation is enabled I need to rely on header 
+                    # checking (bit it complains...
+                    AC_CHECK_HEADER($inc/mkl_dfti.f90,
+                                have_fft_include=1,have_fft_include-0)
+                 fi
+                 
                  if test "$have_fft_include=1"
                  then
                    try_iflags="$try_iflags -I$inc"
