@@ -10,7 +10,7 @@
   !-----------------------------------------------------------------------
   PROGRAM epw
   !! author: Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
-  !! version: v4.0
+  !! version: v4.1
   !! license: GNU
   !! summary: EPW main driver 
   !!  
@@ -39,7 +39,7 @@
   CHARACTER (LEN=12)   :: code = 'EPW'
   !! Name of the program
   !
-  version_number = '4.0.0'
+  version_number = '4.1.0'
   !
   CALL init_clocks( .TRUE. )
   !
