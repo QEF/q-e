@@ -75,7 +75,7 @@ XBLASLIB     =
 #  machine-specific, optimized BLAS library should be used whenever
 #  possible.)
 #
-BLASLIB      =  @blas_libs@
+BLASLIB      = ../../libblas.a
 CBLASLIB     = ../../libcblas.a
 LAPACKLIB    = liblapack.a
 TMGLIB       = libtmglib.a
