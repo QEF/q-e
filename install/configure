@@ -2196,6 +2196,7 @@ mingw* )
         try_dflags="-D_WIN32"
         ;;
 necsx )
+        # most likely the following generates a bug
         sxopt=`echo $host|awk '{print substr(,1,3)}'`
         echo $sxopt $host
         try_mpif90="sxmpif90"
@@ -3382,8 +3383,8 @@ case "$arch" in
         if test "$ifort_version" != ""
         then
                 version=`$mpif90 -V 2>&1 | grep Version |
-                         sed 's/.*Version//' | awk '{print }'`
-                f90_major_version=`echo $version | sed 's/\..*//'`
+                         sed 's/.*Version//' | | cut -d ' ' -f1`
+                f90_major_version=`echo $version | cut -d. -f1`
                 echo "${ECHO_T}ifort $f90_major_version"
                 f90_in_mpif90="ifort"
                 # Why so?
@@ -3393,50 +3394,52 @@ case "$arch" in
 
         elif test "$sunf95_version" != ""
         then
-                version=`echo $sunf95_version | awk '{print }'`
+                version=`echo $sunf95_version | cut -d ' ' -f5`
                 echo "${ECHO_T}sunf95 $version"
                 f90_in_mpif90="sunf95"
         elif test "$openf95_version" != ""
         then
-                version=`echo $openf95_version | awk '{print }'`
+                version=`echo $openf95_version | cut -d ' ' -f5`
                 echo "${ECHO_T}openf95 $version"
                 f90_in_mpif90="openf95"
         elif test "$pgf_version" != ""
         then
-                version=`echo $pgf_version | awk '{print }'`
+                version=`echo $pgf_version | cut -d ' ' -f2`
                 echo "${ECHO_T}pgf90 $version"
                 f90_in_mpif90="pgf90"
                 # flag to test MKL with PGI
                 MKL_FLAGS="-pgf90libs"
         elif test "$enzo_version" != ""
         then
-                version=`echo $enzo_version | awk '{print }'`
+                version=`echo $enzo_version | cut -d ' ' -f6`
                 echo "${ECHO_T}pathf95 $version"
                 f90_in_mpif90="pathf95"
         elif test "$eko_version" != ""
         then
-                version=`echo $eko_version | awk '{print }'`
+                version=`echo $eko_version | cut -d ' ' -f6`
                 echo "${ECHO_T}pathf95 $version"
                 f90_in_mpif90="pathf95"
         elif test "$g95_version" != ""
         then
-                version=`echo $g95_version | awk '{print }'`
+                version=`echo $g95_version | cut -d ' ' -f3`
                 echo "${ECHO_T}g95 $version"
                 f90_in_mpif90="g95"
         elif test "$pathf95_version" != ""
         then
-                version=`echo $pathf95_version | awk '{print }'`
+                version=`echo $pathf95_version | cut -d ' ' -f5`
                 echo "${ECHO_T}pathf95 $version"
                 f90_in_mpif90="pathf95"
         elif test "$gfortran_version" != ""
         then
-                version=`echo $gfortran_version | awk '{print }'`
-                echo "${ECHO_T}gfortran $version"
+                version=`echo $gfortran_version | cut -d ' ' -f3`
+                f90_major_version=`echo $version | cut -d. -f1`
+                f90_minor_version=`echo $version | cut -d. -f2`
+                echo "${ECHO_T}gfortran $f90_major_version.$f90_minor_version"
                 f90_in_mpif90="gfortran"
         elif test "$nagfor_version" != ""
         then
                 # NAG 6.0 has the codename attached to version number... annoying
-                version=`echo $nagfor_version | awk '{print }'`
+                version=`echo $nagfor_version | cut -d ' ' -f5`
                 echo "${ECHO_T}nagfor $version"
                 f90_in_mpif90="nagfor"
         else
@@ -12265,9 +12268,6 @@ if test "$use_xml" -eq 1 ; then try_dflags="$try_dflags -D__XSD" ; fi
 # Setting HDF5...
 
 
-  { $as_echo "$as_me:$LINENO: checking hdf5" >&5
-$as_echo_n "checking hdf5... " >&6; }
-
 
 # Check whether --with-hdf5 was given.
 if test "${with_hdf5+set}" = set; then
@@ -12287,40 +12287,52 @@ have_hdf5=0
 
 if test "$use_parallel" -ne 0; then
 
-if test "$with_hdf5" -ne 0 && test "$with_hdf5_path" != "yes"; then
+  if test "$with_hdf5" -ne 0 && test "$with_hdf5_path" != "yes"; then
 
-    # Test if it is really installed where it has been specified
-    ac_ext=c
+    # Checking compiler compatibility: GCC >= 4.9
+    if test "x$f90_in_mpif90" = xgfortran &&
+       test "$f90_major_version" -le "4" &&
+       test "$f90_minor_version" -lt "9" ; then
+
+      { $as_echo "$as_me:$LINENO: result: no" >&5
+$as_echo "no" >&6; }
+      { $as_echo "$as_me:$LINENO: WARNING: *** HDF5 support requires GNU GFORTRAN >= 4.9 " >&5
+$as_echo "$as_me: WARNING: *** HDF5 support requires GNU GFORTRAN >= 4.9 " >&2;}
+
+    else
+
+      # Test if it is really installed where it has been specified
+      ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
 ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
-    ac_ext=c
+      ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
 ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
-    try_libdirs="$with_hdf5_path/lib"
-    for dir in $try_libdirs
-    do
-        unset ac_cv_search_H5Fcreate
+      try_libdirs="$with_hdf5_path/lib"
+      for dir in $try_libdirs
+      do
+          unset ac_cv_search_H5Fcreate
 
-        if test "$dir" = "none"
-        then
+          if test "$dir" = "none"
+          then
             try_loption=
-        else
-            echo $ECHO_N "in $dir: " $ECHO_C
+          else
             try_loption="-L$dir"
-        fi
+          fi
 
-        FFLAGS="$test_fflags"
-        LDFLAGS="$test_ldflags $try_loption"
-        LIBS="-lhdf5"
+          FFLAGS="$test_fflags"
+          LDFLAGS="$test_ldflags $try_loption"
+          #LIBS="-lhdf5"
+          LIBS=""
 
-        { $as_echo "$as_me:$LINENO: checking for library containing H5Fcreate" >&5
+          { $as_echo "$as_me:$LINENO: checking for library containing H5Fcreate" >&5
 $as_echo_n "checking for library containing H5Fcreate... " >&6; }
 if test "${ac_cv_search_H5Fcreate+set}" = set; then
   $as_echo_n "(cached) " >&6
@@ -12416,32 +12428,65 @@ if test "$ac_res" != no; then
 fi
 
 
-        if test "$ac_cv_search_H5Fcreate" != "no"
-        then break ; fi
-    done
+          if test "$ac_cv_search_H5Fcreate" != "no"
+          then break ; fi
+      done
 
-    ac_ext=c
+      ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
 ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
-    ac_ext=f
+      ac_ext=f
 ac_compile='$F77 -c $FFLAGS conftest.$ac_ext >&5'
 ac_link='$F77 -o conftest$ac_exeext $FFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_f77_compiler_gnu
 
 
-    if test "$have_hdf5" -eq 1 ; then
-        hdf5_libs="-L$with_hdf5_path/lib -lhdf5_fortran -lhdf5"
-        try_iflags="$try_iflags -I$with_hdf5_path/include"
-        try_dflags="$try_dflags -D__HDF5"
-    fi
+      if test "$have_hdf5" -eq 1 ; then
+          as_ac_File=`$as_echo "ac_cv_file_$with_hdf5_path/include/hdf5.mod" | $as_tr_sh`
+{ $as_echo "$as_me:$LINENO: checking for $with_hdf5_path/include/hdf5.mod" >&5
+$as_echo_n "checking for $with_hdf5_path/include/hdf5.mod... " >&6; }
+if { as_var=$as_ac_File; eval "test \"\${$as_var+set}\" = set"; }; then
+  $as_echo_n "(cached) " >&6
+else
+  test "$cross_compiling" = yes &&
+  { { $as_echo "$as_me:$LINENO: error: cannot check for file existence when cross compiling" >&5
+$as_echo "$as_me: error: cannot check for file existence when cross compiling" >&2;}
+   { (exit 1); exit 1; }; }
+if test -r "$with_hdf5_path/include/hdf5.mod"; then
+  eval "$as_ac_File=yes"
+else
+  eval "$as_ac_File=no"
+fi
+fi
+ac_res=`eval 'as_val=${'$as_ac_File'}
+		 $as_echo "$as_val"'`
+	       { $as_echo "$as_me:$LINENO: result: $ac_res" >&5
+$as_echo "$ac_res" >&6; }
+as_val=`eval 'as_val=${'$as_ac_File'}
+		 $as_echo "$as_val"'`
+   if test "x$as_val" = x""yes; then
+  :
+else
 
-    hdf5_line="HDF5_LIBS=$hdf5_libs"
-
+              { $as_echo "$as_me:$LINENO: WARNING: ***HDF5 Fortran extensions not found" >&5
+$as_echo "$as_me: WARNING: ***HDF5 Fortran extensions not found" >&2;}
+              have_hdf5=0
 fi
 
+      fi
+
+      if test "$have_hdf5" -eq 1 ; then
+          hdf5_libs="-L$with_hdf5_path/lib -lhdf5_fortran -lhdf5"
+          try_iflags="$try_iflags -I$with_hdf5_path/include"
+          try_dflags="$try_dflags -D__HDF5"
+      fi
+
+      hdf5_line="HDF5_LIBS=$hdf5_libs"
+    fi
+  fi
 #else
 #    AC_MSG_WARN([HDF5 support is for parallel execution only])
 fi
