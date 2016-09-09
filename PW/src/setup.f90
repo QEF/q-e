@@ -578,7 +578,6 @@ SUBROUTINE setup()
      ! ... if calculating bands, we read the Fermi energy
      !
 #if defined (__XSD)
-     CALL init_vars_from_schema( 'reset', ierr, output_obj, input_obj, parinfo_obj, geninfo_obj )
      CALL init_vars_from_schema( 'ef',   ierr , output_obj, input_obj,parinfo_obj, geninfo_obj)
 #else
      CALL pw_readfile( 'reset', ierr )

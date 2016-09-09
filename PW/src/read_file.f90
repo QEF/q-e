@@ -212,15 +212,6 @@ SUBROUTINE read_xml_file_internal(withbs)
                & // '.save not guaranteed to be safe for post-processing' )
 #endif
   !
-  ! ... a reset of the internal flags is necessary because some codes call
-  ! ... read_xml_file() more than once
-  !
-#ifdef __XSD
-  CALL init_vars_from_schema ( 'reset', ierr, output_obj, input_obj, parinfo_obj, geninfo_obj  )
-#else
-  CALL pw_readfile( 'reset', ierr )
-#endif
-  !
   ! ... here we read the variables that dimension the system
   ! ... in parallel execution, only root proc reads the file
   ! ... and then broadcasts the values to all other procs
@@ -228,6 +219,7 @@ SUBROUTINE read_xml_file_internal(withbs)
 #ifdef __XSD
   CALL init_vars_from_schema( 'dim',   ierr , output_obj, input_obj, parinfo_obj, geninfo_obj )
 #else
+  CALL pw_readfile( 'reset', ierr )
   CALL pw_readfile( 'dim',   ierr )
 #endif
   CALL errore( 'read_xml_file ', 'problem reading file ' // &

@@ -26,19 +26,6 @@ MODULE pw_restart_new
   !
   IMPLICIT NONE
   !
-  LOGICAL :: lcell_read   = .FALSE., &
-             lpw_read     = .FALSE., &
-             lions_read   = .FALSE., &
-             lspin_read   = .FALSE., &
-             lstarting_mag_read   = .FALSE., &
-             lxc_read     = .FALSE., &
-             locc_read    = .FALSE., &
-             lbz_read     = .FALSE., &
-             lbs_read     = .FALSE., &
-             lefield_read = .FALSE., &
-             lwfc_read    = .FALSE., &
-             lsymm_read   = .FALSE.
-  !
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
   PRIVATE
   PUBLIC :: pw_write_schema, pw_write_binaries, &
@@ -856,6 +843,7 @@ MODULE pw_restart_new
       CALL iotk_close_read (iunpun)
       RETURN
  100  CALL errore('pw_readschemafile',TRIM(errmsg),ierr)
+      !
     END SUBROUTINE pw_readschema_file
     !  
     !------------------------------------------------------------------------
@@ -985,21 +973,6 @@ MODULE pw_restart_new
          lrho    = .TRUE.
          need_qexml = .TRUE.
          !
-      CASE( 'reset' )
-         !
-         lcell_read   = .FALSE.
-         lpw_read     = .FALSE.
-         lions_read   = .FALSE.
-         lspin_read   = .FALSE.
-         lstarting_mag_read   = .FALSE.
-         lxc_read     = .FALSE.
-         locc_read    = .FALSE.
-         lbz_read     = .FALSE.
-         lbs_read     = .FALSE.
-         lwfc_read    = .FALSE.
-         lsymm_read   = .FALSE.
-         lefield_read = .FALSE.
-         !
       CASE( 'ef' )
          !
          lef        = .TRUE.
@@ -1032,7 +1005,7 @@ MODULE pw_restart_new
                                                                                                            
       ENDIF
       !
-      IF ( lcell .AND. ( .NOT. lcell_read) ) THEN
+      IF ( lcell ) THEN
          CALL readschema_cell( output_obj%atomic_structure,  input_obj )
       END IF
       !
@@ -1126,6 +1099,7 @@ MODULE pw_restart_new
     qexsd_fmt = TRIM (gen_info_obj%xml_format%NAME)
     qexsd_version = TRIM ( gen_info_obj%xml_format%VERSION)
     qexsd_init = .TRUE. 
+    !
     END SUBROUTINE readschema_header 
     ! 
     !--------------------------------------------------------------------------
@@ -1237,7 +1211,6 @@ MODULE pw_restart_new
     TYPE ( atomic_structure_type )            :: atomic_structure 
     TYPE ( input_type )                       :: input_obj
     !
-    IF ( lcell_read ) RETURN 
     alat = atomic_structure%alat 
     IF ( atomic_structure%bravais_index_ispresent ) THEN 
        ibrav = atomic_structure%bravais_index 
@@ -1361,7 +1334,6 @@ MODULE pw_restart_new
        CASE default  
            lmovecell = .FALSE. 
     END SELECT 
-    lcell_read = .TRUE.  
     !
     END SUBROUTINE readschema_cell
     ! 
@@ -1384,7 +1356,6 @@ MODULE pw_restart_new
     INTEGER                                   :: iat, isp, idx
     CHARACTER(LEN = 3 ),ALLOCATABLE           :: symbols(:) 
     ! 
-    IF ( lions_read ) RETURN 
     nat = atomic_structure%nat
     nsp = atomic_species%ntyp
     ALLOCATE ( symbols(nat) ) 
@@ -1415,12 +1386,11 @@ MODULE pw_restart_new
        if_pos = 1
     END IF 
     ! 
-    IF ( .NOT. lcell_read .AND. ( atomic_structure%alat_ispresent )) alat = atomic_structure%alat 
+    IF ( atomic_structure%alat_ispresent ) alat = atomic_structure%alat 
     ! 
     pseudo_dir = TRIM(input_obj%control_variables%pseudo_dir)//'/'
     pseudo_dir_cur = TRIM ( dirname)//'/'  
     ! 
-    lions_read = .TRUE.
     END SUBROUTINE readschema_ions
     !  
     !------------------------------------------------------------------------
@@ -1441,7 +1411,6 @@ MODULE pw_restart_new
       TYPE ( symmetry_flags_type )           :: symm_flags_obj
       INTEGER                                :: isym 
       ! 
-      IF (lsymm_read ) RETURN 
       nrot = symms_obj%nrot 
       nsym = symms_obj%nsym
       ! 
@@ -1471,7 +1440,7 @@ MODULE pw_restart_new
       END DO
       CALL inverse_s()
       CALL s_axis_to_cart() 
-      lsymm_read = .TRUE. 
+      !
     END SUBROUTINE readschema_symmetry 
     !
     !---------------------------------------------------------------------------
@@ -1536,7 +1505,6 @@ MODULE pw_restart_new
     ! 
     TYPE ( basis_set_type )              :: basis_set_obj  
     !
-    IF ( lpw_read ) RETURN 
     ecutwfc = basis_set_obj%ecutwfc*e2
     ecutrho = basis_set_obj%ecutrho*e2
     dual = ecutrho/ecutwfc
@@ -1551,7 +1519,6 @@ MODULE pw_restart_new
     ngm_g     = basis_set_obj%ngm
     ngms_g    = basis_set_obj%ngms
     !
-    lpw_read = .TRUE.
     END SUBROUTINE readschema_planewaves 
     !--------------------------------------------------------------------------
     SUBROUTINE readschema_spin( magnetization_obj) 
@@ -1567,7 +1534,6 @@ MODULE pw_restart_new
       ! 
       TYPE ( magnetization_type ),INTENT(IN)         :: magnetization_obj
       ! 
-      IF ( lspin_read ) RETURN
       lspinorb = magnetization_obj%spinorbit 
       domag =   magnetization_obj%do_magnetization 
       lsda  =   magnetization_obj%lsda
@@ -1584,7 +1550,6 @@ MODULE pw_restart_new
         npol = 1 
       END IF
       ! 
-      lspin_read = .TRUE.
     END SUBROUTINE readschema_spin 
     !
     !------------------------------------------------------------------------
@@ -1608,7 +1573,6 @@ MODULE pw_restart_new
       REAL(DP)                   :: tot_mag_, nelec_, theta, phi, fixed_magnetization(3) 
       INTEGER                    :: nsp_, isp
       !
-      IF ( lstarting_mag_read ) RETURN
       bfield = 0.d0
       nelec_ = band_structure_obj%nelec
       two_fermi_energies = band_structure_obj%two_fermi_energies_ispresent
@@ -1682,7 +1646,6 @@ MODULE pw_restart_new
          END IF                                                                                      
       END DO   
       !
-      lstarting_mag_read = .TRUE.
     END SUBROUTINE readschema_magnetization
     !-----------------------------------------------------------------------
     SUBROUTINE readschema_xc ( atomic_specs, dft_obj ) 
@@ -1709,7 +1672,6 @@ MODULE pw_restart_new
       CHARACTER(LEN = 20  )           :: dft_name
       CHARACTER(LEN =  3 )            :: symbol
       ! 
-      IF ( lxc_read ) RETURN
       dft_name = TRIM(dft_obj%functional) 
       CALL enforce_input_dft ( dft_name, .TRUE. ) 
       lda_plus_u = dft_obj%dftU_ispresent 
@@ -1852,7 +1814,6 @@ MODULE pw_restart_new
           END IF 
       END IF 
       !         
-      lxc_read = .TRUE.
     END SUBROUTINE readschema_xc
     !  
     !-----------------------------------------------------------------------------------------------------
@@ -1874,7 +1835,6 @@ MODULE pw_restart_new
        TYPE ( band_structure_type ),INTENT(IN)    :: band_struct_obj 
        INTEGER                                    :: ik, isym, nks_
        ! 
-       IF ( lbz_read ) RETURN 
        nks_ = band_struct_obj%nks
        nkstot = nks_
        IF ( band_struct_obj%lsda ) nkstot = nkstot * 2  
@@ -1909,14 +1869,12 @@ MODULE pw_restart_new
                         " no information found for initializing brillouin zone information", 1)
        END IF  
        ! 
-       IF ( .NOT. lsymm_read  ) THEN 
-          nrot = symmetries_obj%nrot
-          DO isym =1, symmetries_obj%ndim_symmetry
-             s(:,:,isym)     = symmetries_obj%symmetry(isym)%rotation%mat
-             sname(isym) = TRIM ( symmetries_obj%symmetry(isym)%info%name) 
-         END DO 
-       END IF    
-       lbz_read = .TRUE.
+       nrot = symmetries_obj%nrot
+       DO isym =1, symmetries_obj%ndim_symmetry
+          s(:,:,isym)     = symmetries_obj%symmetry(isym)%rotation%mat
+          sname(isym) = TRIM ( symmetries_obj%symmetry(isym)%info%name) 
+       END DO 
+       !
     END SUBROUTINE readschema_brillouin_zone     
     !--------------------------------------------------------------------------------------------------
     SUBROUTINE readschema_occupations( input_obj, band_struct_obj ) 
@@ -1937,7 +1895,6 @@ MODULE pw_restart_new
       TYPE ( band_structure_type ),INTENT(IN)     :: band_struct_obj 
       INTEGER                                     :: ispin, nk1, nk2, nk3, aux_dim1, aux_dim2 
       ! 
-      IF ( locc_read ) RETURN 
       lsda= band_struct_obj%lsda
       nbnd = band_struct_obj%nbnd
       IF ( band_struct_obj%nbnd_up_ispresent ) nupdwn(1) = band_struct_obj%nbnd_up
@@ -1989,7 +1946,6 @@ MODULE pw_restart_new
            END DO
       END IF       
      !
-     locc_read = .TRUE.
     END SUBROUTINE readschema_occupations
  !
     !------------------------------------------------------------------------
