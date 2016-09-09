@@ -63,19 +63,19 @@ default :
 # If "|| exit 1" is not present, the error code from make in subdirectories
 # is not returned and make goes on even if compilation has failed
 
-pw : bindir libfft libla mods liblapack libblas libs libiotk 
+pw : bindir libfft libla mods liblapack libs libiotk 
 	if test -d PW ; then \
 	( cd PW ; $(MAKE) TLDEPS= all || exit 1) ; fi
 
-pw-lib : bindir libfft libla mods liblapack libblas libs libiotk
+pw-lib : bindir libfft libla mods liblapack libs libiotk
 	if test -d PW ; then \
 	( cd PW ; $(MAKE) TLDEPS= pw-lib || exit 1) ; fi
 
-lr-lib : bindir libfft libla mods liblapack libblas libs libiotk
+lr-lib : bindir libfft libla mods liblapack libs libiotk
 	if test -d LR_Modules ; then \
 	( cd LR_Modules ; $(MAKE) TLDEPS= all || exit 1) ; fi
 
-cp : bindir libfft libla mods liblapack libblas libs libiotk
+cp : bindir libfft libla mods liblapack libs libiotk
 	if test -d CPV ; then \
 	( cd CPV ; $(MAKE) TLDEPS= all || exit 1) ; fi
 
@@ -110,10 +110,10 @@ gwl : ph
 gipaw : pw
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-ld1 : bindir liblapack libblas libfft libla mods libs
+ld1 : bindir liblapack libfft libla mods libs
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-upf : libfft libla mods libs liblapack libblas
+upf : libfft libla mods libs liblapack 
 	if test -d upftools ; then \
 	( cd upftools ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
 
@@ -182,7 +182,7 @@ libiotk: touch-dummy
 # plugins
 #########################################################
 
-w90: bindir libblas liblapack
+w90: bindir liblapack
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
 want : touch-dummy

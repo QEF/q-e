@@ -3382,8 +3382,7 @@ case "$arch" in
         #
         if test "$ifort_version" != ""
         then
-                version=`$mpif90 -V 2>&1 | grep Version |
-                         sed 's/.*Version//' | | cut -d ' ' -f1`
+                version=`$mpif90 --version 2>&1 | grep "IFORT" | cut -d ' ' -f3`
                 f90_major_version=`echo $version | cut -d. -f1`
                 echo "${ECHO_T}ifort $f90_major_version"
                 f90_in_mpif90="ifort"
@@ -9489,12 +9488,12 @@ fi
 # (blas_libs is used in the above lapack tests: do not move the following
 # settings above lapack tests, which would seem a more logical place)
 
-if test "$have_blas" -eq 0 -o "$use_internal_blas" -eq 1 ; then
-    blas_libs="$topdir/BLAS/blas.a"
-    blas_libs_switch="internal"
-else
+#if test "$have_blas" -eq 0 -o "$use_internal_blas" -eq 1 ; then
+#    blas_libs="$topdir/BLAS/blas.a"
+#    blas_libs_switch="internal"
+#else
     blas_libs_switch="external"
-fi
+#fi
 
 # Internal BLAS/LAPACK sometimes have to be handled differently...
 if test "$extlib_flags" = "" ; then
@@ -9516,9 +9515,6 @@ echo setting BLAS_LIBS... $blas_libs
 
 
 
-
-
-ac_config_files="$ac_config_files install/make_blas.inc"
 
 
 
@@ -10083,7 +10079,7 @@ fi
 # or internal lapack esplicitly required
 
 if test "$have_lapack" -eq 0 -o "$use_internal_lapack" -eq 1 ; then
-    lapack_libs="$topdir/LAPACK/liblapack.a"
+    lapack_libs="$topdir/LAPACK/liblapack.a $topdir/LAPACK/libblas.a"
     lapack_libs_switch="internal"
 else
     if test "$have_essl" -eq 1 -o "$have_atlas" -eq 1 ; then
@@ -10091,7 +10087,7 @@ else
     # atlas: add missing lapack routines so as to complete atlas
     # note that some compilers do not like to have multiple symbols
     # OBSOLETE
-      lapack_libs="$lapack_libs $topdir/LAPACK/liblapack.a"
+      lapack_libs="$lapack_libs $topdir/LAPACK/liblapack.a $topdir/LAPACK/libblas.a"
       lapack_libs_switch="internal"
     else
       lapack_libs_switch="external"
@@ -13299,7 +13295,6 @@ cat >>$CONFIG_STATUS <<\_ACEOF || ac_write_fail=1
 for ac_config_target in $ac_config_targets
 do
   case $ac_config_target in
-    "install/make_blas.inc") CONFIG_FILES="$CONFIG_FILES install/make_blas.inc" ;;
     "install/make_lapack.inc") CONFIG_FILES="$CONFIG_FILES install/make_lapack.inc" ;;
     "include/c_defs.h") CONFIG_HEADERS="$CONFIG_HEADERS include/c_defs.h:include/c_defs.h.in" ;;
     "include/fft_defs.h") CONFIG_FILES="$CONFIG_FILES include/fft_defs.h:include/fft_defs.h.in" ;;

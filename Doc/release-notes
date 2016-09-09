@@ -17,7 +17,7 @@ New in 6.0 version:
          with etf_mem true or false.
   * EPW: The test-farm now checks 5 representative examples and the associated
          accuracy
-  * Netlib BLAS and LAPACK updated, easy to update going forward
+  * Netlib LAPACK updated, easy to update going forward
 
 Fixed in 6.0 version:
 
@@ -65,6 +65,9 @@ Incompatible changes in 6.0 version:
   * "allocate_fft" no longer calls "data_structure" to compute dimensions
     of the various grids: it just allocates FFT arrays
   * QE-GPU plugin not compatible with 6.x (new version is WIP)
+  * Configure options "--with-internal-lapack" & "--with-internal-blas" have
+    been replaced by a single "--with-netlib". Netlib LAPACK is self-compiled 
+    (and also Netlib BLAS which is packaged with it).
 
                                * * * * *
 

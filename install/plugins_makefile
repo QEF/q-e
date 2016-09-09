@@ -13,7 +13,8 @@ include plugins_list
 include install_utils
 
 # MAIN target
-EXTLIBS=liblapack libblas libiotk
+#EXTLIBS=liblapack libblas libiotk
+EXTLIBS=liblapack libiotk
 
 ###########################################################
 # LD1

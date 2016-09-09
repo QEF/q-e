@@ -11,12 +11,12 @@
 include ../make.inc
 include install_utils
 
-#.NOTPARALLEL: liblapack_internal libblas_internal
+#.NOTPARALLEL: liblapack_internal
 
 # NETLIB targets
-BLAS_NETLIB=blas-3.6.0.tgz
-BLAS_NETLIB_NAME=BLAS-3.6.0
-BLAS_NETLIB_URL=http://www.netlib.org/blas/${BLAS_NETLIB}
+#BLAS_NETLIB=blas-3.6.0.tgz
+#BLAS_NETLIB_NAME=BLAS-3.6.0
+#BLAS_NETLIB_URL=http://www.netlib.org/blas/${BLAS_NETLIB}
 
 LAPACK_NETLIB=lapack-3.6.1.tgz
 LAPACK_NETLIB_NAME=lapack-3.6.1
@@ -39,13 +39,13 @@ fake_blas_external :
 	touch fake_libblas.a
 	-rm fake_libblas.a
 
-libblas_internal:
-	$(call download_and_unpack,$(BLAS_NETLIB_NAME),$(BLAS_NETLIB_URL),BLAS,BLAS)
-	if test -e make_blas.inc; then \
-	(cp make_blas.inc ../BLAS/make.inc; \
-	cd ../BLAS; $(MAKE) ); else \
-        (echo "no configuration file found for blas"; \
-	echo "run configure from main QE dir"; exit); fi
+#libblas_internal:
+#	$(call download_and_unpack,$(BLAS_NETLIB_NAME),$(BLAS_NETLIB_URL),BLAS,BLAS)
+#	if test -e make_blas.inc; then \
+#	(cp make_blas.inc ../BLAS/make.inc; \
+#	cd ../BLAS; $(MAKE) ); else \
+#        (echo "no configuration file found for blas"; \
+#	echo "run configure from main QE dir"; exit); fi
 
 liblapack : liblapack_$(LAPACK_LIBS_SWITCH) 
 
@@ -57,11 +57,11 @@ fake_lapack_external :
 
 liblapack_internal:
 	$(call download_and_unpack,$(LAPACK_NETLIB_NAME),$(LAPACK_NETLIB_URL),LAPACK,LAPACK)
-	if test -e make_lapack.inc; then \
-	(cp make_lapack.inc ../LAPACK/make.inc; \
-	cd ../LAPACK; $(MAKE) lapacklib); else \
+	if test ! -e ../LAPACK/liblapack.a && test -e make_lapack.inc; then \
+	  (cp make_lapack.inc ../LAPACK/make.inc; \
+	  cd ../LAPACK; $(MAKE) blaslib lapacklib); else \
         (echo "no configuration file found for lapack"; \
-        echo "run configure from main QE dir"; exit); fi
+         echo "run configure from main QE dir"; exit); fi 
 
 libiotk:
 	if test ! -d ../S3DE; then \
@@ -95,10 +95,10 @@ libelpa_enabled:
 # cleaning
 ###################################
 # each lib independently
-blas_clean:
-	if test -d ../BLAS; then (cd ../BLAS; $(MAKE) clean); fi
-blas_veryclean:
-	if test -d ../BLAS; then (rm -R -f ../BLAS ../${BLAS_NETLIB_NAME}); fi
+#blas_clean:
+#	if test -d ../BLAS; then (cd ../BLAS; $(MAKE) clean); fi
+#blas_veryclean:
+#	if test -d ../BLAS; then (rm -R -f ../BLAS ../${BLAS_NETLIB_NAME}); fi
 lapack_clean:
 	if test -d ../LAPACK; then (cd ../LAPACK; $(MAKE) clean); fi
 lapack_veryclean:
@@ -125,5 +125,7 @@ iotk_veryclean:
 	rm -f ../iotk
 
 # general cleaning
-clean: blas_clean lapack_clean elpa_clean iotk_clean
-veryclean: blas_veryclean lapack_veryclean elpa_veryclean iotk_veryclean
+#clean: blas_clean lapack_clean elpa_clean iotk_clean
+#veryclean: blas_veryclean lapack_veryclean elpa_veryclean iotk_veryclean
+clean: lapack_clean elpa_clean iotk_clean
+veryclean: lapack_veryclean elpa_veryclean iotk_veryclean

@@ -16,11 +16,11 @@ SHELL = /bin/sh
 #  and handle these quantities appropriately. As a consequence, one 
 #  should not compile LAPACK with flags such as -ffpe-trap=overflow.
 #
-FORTRAN  = @f77@
+FORTRAN  = @f90@
 OPTS     = @fflags@
 DRVOPTS  = $(OPTS)
 NOOPT    = @fflags_noopt@
-LOADER   = @ld@
+LOADER   = @f90@
 LOADOPTS = @ldflags@
 #
 #  Comment out the following line to include deprecated routines to the

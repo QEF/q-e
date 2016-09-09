@@ -592,12 +592,12 @@ fi
 # (blas_libs is used in the above lapack tests: do not move the following
 # settings above lapack tests, which would seem a more logical place)
 
-if test "$have_blas" -eq 0 -o "$use_internal_blas" -eq 1 ; then
-    blas_libs="$topdir/BLAS/blas.a"
-    blas_libs_switch="internal"
-else
+#if test "$have_blas" -eq 0 -o "$use_internal_blas" -eq 1 ; then
+#    blas_libs="$topdir/BLAS/blas.a"
+#    blas_libs_switch="internal"
+#else
     blas_libs_switch="external"
-fi
+#fi
 
 # Internal BLAS/LAPACK sometimes have to be handled differently...
 if test "$extlib_flags" = "" ; then
@@ -620,8 +620,6 @@ echo setting BLAS_LIBS... $blas_libs
 AC_SUBST(blas_libs)
 AC_SUBST(blas_libs_switch)
 AC_SUBST(blas_line)
-  
-AC_CONFIG_FILES(install/make_blas.inc)
   
 ]
 )
