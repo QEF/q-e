@@ -17,17 +17,16 @@
 ###########################################################
 
 define download_and_unpack
-  @extracted_namefile=`echo "$(2)" | sed 's/.*\///' | sed 's/.*=//'`
-  @(if test ! -s ../archive/$extracted_namefile && test ! -d ../$(3) ; then \
-  wget -O ../archive/$extracted_namefile $(2) > /dev/null 2>&1; \
+  @(if test ! -s ../archive/`echo "$(2)" | sed 's/.*\///;s/.*=//'` && test ! -e ../$(3) ; then \
+  wget -O ../archive/`echo "$(2)" | sed 's/.*\///;s/.*=//'` $(2) > /dev/null 2>&1; \
   if test "`echo $$?`" -ne "0" ; then \
-  curl -o ../archive/$extracted_namefile $(2) > /dev/null 2>&1; \
+  curl -o ../archive/`echo "$(2)" | sed 's/.*\///;s/.*=//'` $(2) > /dev/null 2>&1; \
   if test "`echo $$?`" -ne "0" ; then \
   echo "*** Unable to download $(4). Test whether curl or wget is installed and working," ; \
   echo "*** if you have direct access to internet. If not, copy into archive/ the file" ; \
-  echo "*** $extracted_namefile" ; \
+  echo "*** located here $(2)" ; \
   exit 1 ; fi ; fi ; fi)
-  if test ! -d ../$(3); then \
-  (gzip -dc ../archive/$extracted_namefile | \
+  if test ! -e ../$(3); then \
+  (gzip -dc ../archive/`echo "$(2)" | sed 's/.*\///;s/.*=//'` | \
     (cd ../ ; tar -xvf - ; ln -s $(1) $(3)) ) ; fi
 endef
