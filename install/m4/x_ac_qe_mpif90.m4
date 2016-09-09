@@ -145,8 +145,7 @@ case "$arch" in
         #
         if test "$ifort_version" != ""
         then
-                version=`$mpif90 -V 2>&1 | grep Version |
-                         sed 's/.*Version//' | | cut -d ' ' -f1`
+                version=`$mpif90 --version 2>&1 | grep "IFORT" | cut -d ' ' -f3`
                 f90_major_version=`echo $version | cut -d. -f1`
                 echo "${ECHO_T}ifort $f90_major_version"
                 f90_in_mpif90="ifort"
