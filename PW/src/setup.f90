@@ -444,6 +444,16 @@ SUBROUTINE setup()
   !
   ! ... calculate dimensions of the FFT grid
   !
+  ! ... if the smooth and dense grid must coincide, ensure that they do
+  ! ... also if dense grid is set from input and smooth grid is not
+  !
+  IF ( ( dfftp%nr1 /= 0 .AND. dfftp%nr2 /= 0 .AND. dfftp%nr3 /= 0 ) .AND. &
+       ( dffts%nr1 == 0 .AND. dffts%nr2 == 0 .AND. dffts%nr3 == 0 ) .AND. &
+       .NOT. doublegrid ) THEN
+     dffts%nr1 = dfftp%nr1
+     dffts%nr2 = dfftp%nr2
+     dffts%nr3 = dfftp%nr3
+  END IF
   CALL fft_type_allocate ( dfftp, at, bg, gcutm, intra_bgrp_comm )
   CALL fft_type_allocate ( dffts, at, bg, gcutms, intra_bgrp_comm)
   !
