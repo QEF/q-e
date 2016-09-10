@@ -656,11 +656,11 @@ mass_line
 mass_libs
 fft_line
 fft_libs
+blas_libs_switch
 lapack_line
 lapack_libs_switch
 lapack_libs
 blas_line
-blas_libs_switch
 blas_libs
 FLIBS
 f90rule
@@ -752,8 +752,7 @@ enable_environment
 enable_debug
 enable_shared
 enable_wrappers
-with_internal_blas
-with_internal_lapack
+with_netlib
 with_scalapack
 with_elpa
 enable_xml
@@ -1413,8 +1412,7 @@ Optional Features:
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
-  --with-internal-blas    compile with internal blas (default: no)
-  --with-internal-lapack  compile with internal lapack (default: no)
+  --with-netlib           compile with Netlib LAPACK and BLAS (default: no)
   --with-scalapack        (yes|no|intel) Use scalapack if available. Set to
                           "intel" to use Intel MPI and blacs (default: use
                           openMPI)
@@ -6987,19 +6985,6 @@ have_atlas=0
 have_essl=0
 have_mkl=0
 
-
-# Check whether --with-internal-blas was given.
-if test "${with_internal_blas+set}" = set; then
-  withval=$with_internal_blas; if   test "$withval" = "yes" ; then
-     use_internal_blas=1
-  else
-     use_internal_blas=0
-  fi
-else
-  use_internal_blas=0
-fi
-
-
 # check for blas
 # supported vendor replacements:
 #   mkl and acml on Intel/AMD architectures
@@ -9484,35 +9469,8 @@ fi
    fi
 fi
 
-# no blas library found, or internal blas required: use the built-in blas
-# (blas_libs is used in the above lapack tests: do not move the following
-# settings above lapack tests, which would seem a more logical place)
-
-#if test "$have_blas" -eq 0 -o "$use_internal_blas" -eq 1 ; then
-#    blas_libs="$topdir/BLAS/blas.a"
-#    blas_libs_switch="internal"
-#else
-    blas_libs_switch="external"
-#fi
-
-# Internal BLAS/LAPACK sometimes have to be handled differently...
-if test "$extlib_flags" = "" ; then
-  case "$arch:$f90_flavor" in
-  x86_64:nagfor* )
-    extlib_flags="-O2 -kind=byte -dcfuns -mismatch"
-    ;;
-  ppc64:* )
-    extlib_flags="-q64 -qthreaded"
-    ;;
-  * )
-    extlib_flags="-O2"
-  ;;
-  esac
-fi
-
 blas_line="BLAS_LIBS=$blas_libs"
 echo setting BLAS_LIBS... $blas_libs
-
 
 
 
@@ -9526,15 +9484,15 @@ echo setting BLAS_LIBS... $blas_libs
 have_lapack=0
 
 
-# Check whether --with-internal-lapack was given.
-if test "${with_internal_lapack+set}" = set; then
-  withval=$with_internal_lapack; if   test "$withval" = "yes" ; then
-      use_internal_lapack=1
+# Check whether --with-netlib was given.
+if test "${with_netlib+set}" = set; then
+  withval=$with_netlib; if test "$withval" = "yes" ; then
+      use_netlib=1
    else
-      use_internal_lapack=0
+      use_netlib=0
    fi
 else
-  use_internal_lapack=0
+  use_netlib=0
 fi
 
 
@@ -9542,7 +9500,7 @@ fi
 #
 # same supported vendor replacements as for blas
 # internal version is used if none is found
-if test "$use_internal_lapack" -eq 0
+if test "$use_netlib" -eq 0
    then
    if test "$lapack_libs" = ""
    then
@@ -10075,26 +10033,22 @@ fi
    fi
 fi
 
-# no lapack library found, or incomplete lapack found (atlas, essl),
-# or internal lapack esplicitly required
 
-if test "$have_lapack" -eq 0 -o "$use_internal_lapack" -eq 1 ; then
+# No lapack library found or internal lapack esplicitly required
+
+if test "$have_lapack" -eq 0 -o "$have_blas" -eq 0 -o "$use_netlib" -eq 1 ; then
     lapack_libs="$topdir/LAPACK/liblapack.a $topdir/LAPACK/libblas.a"
     lapack_libs_switch="internal"
+    blas_libs_switch="internal"
 else
-    if test "$have_essl" -eq 1 -o "$have_atlas" -eq 1 ; then
-    # IBM essl or atlas: add missing lapack routines - must be loaded after lib
-    # atlas: add missing lapack routines so as to complete atlas
-    # note that some compilers do not like to have multiple symbols
-    # OBSOLETE
-      lapack_libs="$lapack_libs $topdir/LAPACK/liblapack.a $topdir/LAPACK/libblas.a"
-      lapack_libs_switch="internal"
-    else
-      lapack_libs_switch="external"
-    fi
+    lapack_libs_switch="external"
+    blas_libs_switch="external"
 fi
 
   lapack_line="LAPACK_LIBS=$lapack_libs"
+
+
+
 
 
 

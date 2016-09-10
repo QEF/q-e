@@ -10,16 +10,6 @@ have_atlas=0
 have_essl=0
 have_mkl=0
   
-AC_ARG_WITH(internal-blas,
-  [AS_HELP_STRING([--with-internal-blas],
-      [compile with internal blas (default: no)])],
-   [if   test "$withval" = "yes" ; then
-     use_internal_blas=1
-  else
-     use_internal_blas=0
-  fi],
-  [use_internal_blas=0])
-   
 # check for blas
 # supported vendor replacements:
 #   mkl and acml on Intel/AMD architectures
@@ -588,37 +578,10 @@ then
    fi
 fi
 
-# no blas library found, or internal blas required: use the built-in blas
-# (blas_libs is used in the above lapack tests: do not move the following
-# settings above lapack tests, which would seem a more logical place)
-
-#if test "$have_blas" -eq 0 -o "$use_internal_blas" -eq 1 ; then
-#    blas_libs="$topdir/BLAS/blas.a"
-#    blas_libs_switch="internal"
-#else
-    blas_libs_switch="external"
-#fi
-
-# Internal BLAS/LAPACK sometimes have to be handled differently...
-if test "$extlib_flags" = "" ; then
-  case "$arch:$f90_flavor" in
-  x86_64:nagfor* )
-    extlib_flags="-O2 -kind=byte -dcfuns -mismatch"
-    ;;
-  ppc64:* )
-    extlib_flags="-q64 -qthreaded"
-    ;;
-  * )
-    extlib_flags="-O2"
-  ;;
-  esac
-fi
-
 blas_line="BLAS_LIBS=$blas_libs" 
 echo setting BLAS_LIBS... $blas_libs
   
 AC_SUBST(blas_libs)
-AC_SUBST(blas_libs_switch)
 AC_SUBST(blas_line)
   
 ]

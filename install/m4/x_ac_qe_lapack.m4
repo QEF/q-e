@@ -4,21 +4,21 @@ AC_DEFUN([X_AC_QE_LAPACK], [
 
 have_lapack=0
 
-AC_ARG_WITH(internal-lapack,
-   [AS_HELP_STRING([--with-internal-lapack],
-       [compile with internal lapack (default: no)])],
-    [if   test "$withval" = "yes" ; then
-      use_internal_lapack=1
+AC_ARG_WITH(netlib,
+   [AS_HELP_STRING([--with-netlib],
+       [compile with Netlib LAPACK and BLAS (default: no)])],
+    [if test "$withval" = "yes" ; then
+      use_netlib=1
    else
-      use_internal_lapack=0
+      use_netlib=0
    fi],
-   [use_internal_lapack=0])
+   [use_netlib=0])
    
 # check for lapack - almost all cases implemented here are OBSOLETE
 #
 # same supported vendor replacements as for blas
 # internal version is used if none is found
-if test "$use_internal_lapack" -eq 0
+if test "$use_netlib" -eq 0
    then
    if test "$lapack_libs" = ""
    then
@@ -137,23 +137,16 @@ if test "$use_internal_lapack" -eq 0
    fi
 fi
 
-# no lapack library found, or incomplete lapack found (atlas, essl),
-# or internal lapack esplicitly required
 
-if test "$have_lapack" -eq 0 -o "$use_internal_lapack" -eq 1 ; then
+# No lapack library found or internal lapack esplicitly required
+
+if test "$have_lapack" -eq 0 -o "$have_blas" -eq 0 -o "$use_netlib" -eq 1 ; then
     lapack_libs="$topdir/LAPACK/liblapack.a $topdir/LAPACK/libblas.a"
     lapack_libs_switch="internal"
+    blas_libs_switch="internal"
 else
-    if test "$have_essl" -eq 1 -o "$have_atlas" -eq 1 ; then
-    # IBM essl or atlas: add missing lapack routines - must be loaded after lib
-    # atlas: add missing lapack routines so as to complete atlas
-    # note that some compilers do not like to have multiple symbols
-    # OBSOLETE
-      lapack_libs="$lapack_libs $topdir/LAPACK/liblapack.a $topdir/LAPACK/libblas.a"
-      lapack_libs_switch="internal"
-    else
-      lapack_libs_switch="external"
-    fi
+    lapack_libs_switch="external"
+    blas_libs_switch="external"
 fi
 
   lapack_line="LAPACK_LIBS=$lapack_libs"
@@ -161,6 +154,9 @@ fi
   AC_SUBST(lapack_libs)
   AC_SUBST(lapack_libs_switch)  
   AC_SUBST(lapack_line)
+
+  AC_SUBST(blas_libs_switch)
+  AC_SUBST(lapack_libs_switch)
   
   AC_CONFIG_FILES(install/make_lapack.inc)
   
