@@ -501,7 +501,7 @@ CONTAINS
           ngloc = ngloc+1
        END DO
        IF ( ngloc < 1 ) CALL infomsg('sym_rho_init', &
-            'likely internal error: no G-vectors found')
+            'some processors have no G-vectors for symmetrization')
        sendcnt(np) = ngloc
        ngpos = ngpos + ngloc
        IF ( ngpos > ngm ) &
@@ -695,7 +695,7 @@ gloop:    DO jg=iig,ngm_
     ! we transpose the matrix of G-vectors and their coefficients
     !
     ngm_ = SUM(recvcnt)
-    ALLOCATE (rhog_(ngm_,nspin),g_(3,ngm_))
+    ALLOCATE (rhog_(MAX(ngm_,1),nspin),g_(3,ngm_))
     DO is=1,nspin
        CALL mpi_alltoallv (rhog (1,is) , sendcnt, sdispls, MPI_DOUBLE_COMPLEX,&
             rhog_(1,is), recvcnt, rdispls, MPI_DOUBLE_COMPLEX, &
