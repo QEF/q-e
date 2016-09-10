@@ -18,6 +18,7 @@ New in 6.0 version:
   * EPW: The test-farm now checks 5 representative examples and the associated
          accuracy
   * Netlib LAPACK updated, easy to update going forward
+  * Added support to modern ELPA (2016.05 and 2015.11)
 
 Fixed in 6.0 version:
 

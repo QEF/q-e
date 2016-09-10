@@ -712,7 +712,7 @@ LOGICAL FUNCTION check_para_diag( nbnd )
         ELSE
            CALL errore( 'setup','Unexpected sub-group communicator ', 1 )
         END IF
-#if defined(__ELPA)
+#if defined(__ELPA) || defined(__ELPA_2015) || defined(__ELPA_2016)
         WRITE( stdout, '(5X,"ELPA distributed-memory algorithm ", &
               & "(size of sub-group: ", I2, "*", I3, " procs)",/)') &
                np_ortho(1), np_ortho(2)
