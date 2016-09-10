@@ -10,15 +10,17 @@ have_atlas=0
 have_essl=0
 have_mkl=0
   
-# check for blas
-# supported vendor replacements:
-#   mkl and acml on Intel/AMD architectures
-#   essl on aix - OBSOLETE
-#   SUNperf on sparc - likely OBSOLETE
-# atlas is used over blas if available
-# internal version is used if none is found
+AC_ARG_WITH(netlib,
+   [AS_HELP_STRING([--with-netlib],
+       [compile with Netlib LAPACK and BLAS (default: no)])],
+    [if test "$withval" = "yes" ; then
+      use_netlib=1
+   else
+      use_netlib=0
+   fi],
+   [use_netlib=0])
 
-if test "$use_internal_blas" -eq 0
+if test "$use_netlib" -eq 0
 then
    if test "$blas_libs" = ""
    then

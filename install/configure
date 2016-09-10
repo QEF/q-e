@@ -6985,15 +6985,20 @@ have_atlas=0
 have_essl=0
 have_mkl=0
 
-# check for blas
-# supported vendor replacements:
-#   mkl and acml on Intel/AMD architectures
-#   essl on aix - OBSOLETE
-#   SUNperf on sparc - likely OBSOLETE
-# atlas is used over blas if available
-# internal version is used if none is found
 
-if test "$use_internal_blas" -eq 0
+# Check whether --with-netlib was given.
+if test "${with_netlib+set}" = set; then
+  withval=$with_netlib; if test "$withval" = "yes" ; then
+      use_netlib=1
+   else
+      use_netlib=0
+   fi
+else
+  use_netlib=0
+fi
+
+
+if test "$use_netlib" -eq 0
 then
    if test "$blas_libs" = ""
    then
@@ -9482,19 +9487,6 @@ echo setting BLAS_LIBS... $blas_libs
 
 
 have_lapack=0
-
-
-# Check whether --with-netlib was given.
-if test "${with_netlib+set}" = set; then
-  withval=$with_netlib; if test "$withval" = "yes" ; then
-      use_netlib=1
-   else
-      use_netlib=0
-   fi
-else
-  use_netlib=0
-fi
-
 
 # check for lapack - almost all cases implemented here are OBSOLETE
 #

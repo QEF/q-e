@@ -4,16 +4,6 @@ AC_DEFUN([X_AC_QE_LAPACK], [
 
 have_lapack=0
 
-AC_ARG_WITH(netlib,
-   [AS_HELP_STRING([--with-netlib],
-       [compile with Netlib LAPACK and BLAS (default: no)])],
-    [if test "$withval" = "yes" ; then
-      use_netlib=1
-   else
-      use_netlib=0
-   fi],
-   [use_netlib=0])
-   
 # check for lapack - almost all cases implemented here are OBSOLETE
 #
 # same supported vendor replacements as for blas
