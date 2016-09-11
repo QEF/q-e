@@ -10031,7 +10031,7 @@ fi
 if test "$have_lapack" -eq 0 -o "$have_blas" -eq 0 -o "$use_netlib" -eq 1 ; then
     lapack_libs="$topdir/LAPACK/liblapack.a $topdir/LAPACK/libblas.a"
     lapack_libs_switch="internal"
-    blas_libs_switch="internal"
+    blas_libs_switch="external"
 else
     lapack_libs_switch="external"
     blas_libs_switch="external"
