@@ -1,0 +1,156 @@
+
+ Copyright (C) 2013-2016 Guido Fratesi
+
+
+ MOLECULARNEXAFS
+
+ This code combines the output of different codes (pw.x, projwfc.x,
+ and mainly xspectra.x) to evaluate the NEXAFS spectrum of a molecule
+ containing inequivalent atoms belonging to the same species.
+
+ The theoretical framework adopted is explained in the following
+ publication, which should be cited in papers using this tool
+ (additionally to relevant papers for the NEXAFS calculation):
+
+ * Azimuthal Dichroism in Near-Edge X-ray Absorption Fine Structure
+   Spectra of Planar Molecules
+   Guido Fratesi, Valeria Lanzilotto, Luca Floreano, and Gian Paolo Brivio
+   J. Phys. Chem. C 2013, 117, 6632−6638
+   http://dx.doi.org/10.1021/jp312569q
+
+ Further examples are also described in:
+   Phys. Chem. Chem. Phys., 2014, 16, 14834
+   http://dx.doi.org/10.1039/c4cp01625d
+
+ The spectrum for each inequivalent atom of the same species sums up
+ into a total spectrum, where the contributions from each atom (as
+ evaluated by xspectra.x) have to be properly aligned before the
+ summation. For example, a molecule like pyridine contains C atoms in
+ three different sites, C1, C2, and C3. This example is adopted below.
+
+ For each inequivalent atom in the molecule, the code requires:
+
+ 1) A full-core-hole (FCH) calculation of the total energy by pw.x
+    (by a FCH pseudopotential at C_i). The code will return the
+    core-level shifts (CLS) as a by-product.
+
+ 2) Half-core-hole (HCH) calculations of the NEXAFS spectrum by
+    xspectra.x for the three directions X-Y-Z.  Those will be read as
+    prefix(iat)//suffix(idir)
+
+ 3) Since xspectra.x energy scales may not refer to the vacuum level
+    (more commonly the Fermi level or the middle of the HOMO-LUMO gap
+    may have been used), one also need to input the reference energy
+    level of the HCH xspectra.x calculation, and the corresponding
+    vacuum level.
+
+    The vacuum level might be estimated by the Makov-Payne correction
+    directly in the HCH pw.x SCF calculation if the unit cell is
+    cubic, or by running additional calculations accessing the vacuum
+    level, then by evaluating the vacuum-to-HOMO energy difference in
+    this case, summed to the HOMO of the original calculation.
+
+    For adsorbed molecules, one should refer to the Fermi level both
+    for NEXAFS and the XPS, as is generally done in the experiments.
+    So we should set both evacuum=0 and efermi=0, and the new zero
+    will be the average core level binding energy with respect to the
+    Fermi level.
+
+ 4) Eventually, energies from xspectra.x output files will be shifted
+    (E->E+eshift) so that the new zero of energy is the weighted
+    average of core-level binding energies:
+
+       eshift(iat)= -(evacuum(iat)-efermi(iat)) + dcorebe(iat)
+
+    where the first term sets the vacuum level at zero and the second
+    one adds to the transition energy the core level shift.
+
+    Recall that by the pseudopotential approach binding energies are
+    defined only up to a constant.
+
+ 5) Optionally, the PDOS of p symmetry can be taken as an approximation
+    to the spectrum for a K edge: the comparison is useful for checking
+    the results.
+
+=======================================================================
+ NAMELIST / CONTROL /	
+-----------------------------------------------------------------------
+
+    syslabel     character(len=80)     DEFAULT='MOLECULE'
+    System label for output files
+
+    doxps     logical     DEFAULT=.TRUE.
+    Plot XPS spectrum
+
+    donexafs     logical     DEFAULT=.TRUE.
+    Compute and plot NEXAFS spectrum
+
+    nat     integer     DEFAULT=0
+    The number of inequivalent atoms in the molecule
+
+    atweight(1:nat)     real(DP)     DEFAULT=1, 1, . . .
+    The multiplicities of the inequivalent atoms in the molecule
+
+-----------------------------------------------------------------------
+NAMELIST / XPS /	
+-----------------------------------------------------------------------
+
+    erangexps(1:2)     real(DP)     DEFAULT=(-5:5)
+    Energy range for plotting
+
+    nptxps     integer     DEFAULT=501
+    Number of points for plotting
+
+    delorentz, degauss, lorentzratio     real(DP)     DEFAULT=0.2, 0.2, 0.5
+    Pseudovoigt parameters.
+    The spectrum is plotted as:
+    lorentzratio * lorentzian + (1-lorentzratio)*gaussian
+    delorentz=HWHM of the Lorentzian
+    degauss=STDDEV of the Gaussian
+
+    etotfch(1:nat)     real(DP)     DEFAULT=0
+    Total energy (Ry) with a FCH in that given atom
+
+-----------------------------------------------------------------------
+NAMELIST / NEXAFS /	
+-----------------------------------------------------------------------
+
+    dosingleatoms     logical     DEFAULT=.TRUE.
+    Set to true to also output the results of each atom in a separate file
+
+    dopdosp     logical     DEFAULT=.FALSE.
+    Set to true to also read and sum the PDOS (p) of each atom, with
+    analogous procedure as for the NEXAFS spectrum.
+
+    erangenexafs(1:2)     real(DP)     DEFAULT=(-10:20)
+    Energy range for plotting
+
+    nptnexafs     integer     DEFAULT=3001
+    Number of points for plotting
+
+    efermi(1:nat)     real(DP)     DEFAULT=0
+    Reference energy level of the HCH xspectra.x calculation. Should
+    be left to zero in case of molecules adsorbed on metals (assuming
+    the Fermi level was taken as a reference for xspectra.x).
+
+    evacuum(1:nat)     real(DP)     DEFAULT=0
+    Vacuum level of the HCH calculation. Should be left to zero in
+    case of molecules adsorbed on metals.
+
+    prefix(1:nat)     character(len=80)     DEFAULT='xanes.dat.001', 'xanes.dat.002', . . .
+    The files containing the spectrum computed by xspectra.x should
+    follow this naming convention:
+    prefix(iat)//suffix(nu), where
+    Iat=1,nat identifies the inequivalent atom
+    nu=1,2,3 the three directions x,y,z
+
+    suffix(1:3)     character(len=80)     DEFAULT='.xspectraX.dat', '.xspectraY.dat', '.xspectraZ.dat'
+    Direction-dependent suffix of xspectra.x spectrum file
+
+    atlabel(0:nat)     character(len=80)     DEFAULT='SUM', '001', '002', . . .
+    Atomic labels (the 0-th element is for the summed spectrum).
+
+    pdospfile(1:nat)     character(len=80)     DEFAULT='pdosp.dat.001', 'pdosp.dat.002', . . .
+    The files containing the p-pdos from projwfc.x.
+
+=======================================================================
