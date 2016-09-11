@@ -131,7 +131,7 @@ fi
 # No lapack library found or internal lapack esplicitly required
 
 if test "$have_lapack" -eq 0 -o "$have_blas" -eq 0 -o "$use_netlib" -eq 1 ; then
-    lapack_libs="$topdir/LAPACK/liblapack.a $topdir/LAPACK/libblas.a"
+    lapack_libs="\$(TOPDIR)/LAPACK/liblapack.a \$(TOPDIR)/LAPACK/libblas.a"
     lapack_libs_switch="internal"
     blas_libs_switch="external"
 else
