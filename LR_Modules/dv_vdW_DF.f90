@@ -219,7 +219,8 @@ subroutine get_delta_v(rho, drho, nspin, q_point, delta_v)
           !! Terms needed later
           !!         
           b1(i_grid, P_i) = dtheta_dn 
-          b2(i_grid, P_i) = d2theta_dn2*(drho(i_grid,1)/total_rho(i_grid)) + dn_dtheta_dgradn*(gradn_graddeltan/total_rho(i_grid))          
+          b2(i_grid, P_i) = d2theta_dn2*(drho(i_grid,1)/total_rho(i_grid)) + &
+                          dn_dtheta_dgradn*(gradn_graddeltan/total_rho(i_grid))          
           
           !! I need complex variable
           u(i_grid, P_i) =  CMPLX(theta, 0.0D0)  
