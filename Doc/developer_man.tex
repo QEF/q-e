@@ -781,7 +781,7 @@ The following capabilities of the C preprocessor are used:
 \item expand macros (command \texttt{\#define})
 \item execute conditional expressions such as
 \begin{verbatim}
-  #ifdef __expression
+  #if defined (__expression)
     ...code A...
   #else
     ...code B...
@@ -797,7 +797,8 @@ In order to make  preprocessing options
 easy to see, preprocessing variables should start with
 two underscores, as \texttt{\_\_expression} in the above
 example. Traditionally ''preprocessed'' variables are also written in
-uppercase.
+uppercase. Please use \verb|#if defined (XXX)|, not
+\verb|#if defined XXX| or \verb|#ifdef XXX|.
 
 \subsubsection{How to edit the \configure\ script}
 
@@ -908,9 +909,8 @@ them in "try\_mpif90".
 be always fine, unless some special flag is required (e.g., -X64
 With sp4).
 
-- you should define "try\_dflags" if there is
-any
-"\#ifdef" specific to your machine: for instance, on IBM machines,
+- you should define "try\_dflags" if there is any preprocessing
+option specific to your machine: for instance, on IBM machines,
 "try\_dflags=-D\_\_AIX" . A list of such flags can be found in file
 \texttt{include/defs.h.README}.
 
@@ -1009,8 +1009,8 @@ of libraries: this is decided later).
 - "try\_ldflags\_static": additional flags to select static compilation
 (i.e., don't use shared libraries).
 
-- "try\_dflags": must be defined if there is in the code any \#ifdef
-specific to your compiler (for instance, -D\_\_INTEL for Intel
+- "try\_dflags": must be defined if there is in the code any preprocessing
+option specific to your compiler (for instance, -D\_\_INTEL for Intel
 compilers).  Define it as "\$try\_dflags -D..." so that pre-existing
 flags, if any, are preserved.
 
@@ -1362,7 +1362,7 @@ MUCH better code, both for serial and parallel speed:
    CALL mp_sum(ps,intra_bgrp_group)
 \end{verbatim}
 
-\subsubsection{Usage of \#ifdef \_\_MPI}
+\subsubsection{Preprocessing for parallel usage}
 
 Calls to MPI libraries require variables contained into a
 \texttt{mpif.h} file that is usually absent on serial machines.
@@ -1371,15 +1371,15 @@ the following rules {\em must} be followed:
 \begin{itemize}
 \item Direct calls to MPI library routines must be replaced by
 calls to wrapper routines like those in module \texttt{mp.f90}.
-If this is not possible or not convenient, use \#ifdef \_\_MPI
+If this is not possible or not convenient, use \verb|\#if defined (__MPI)}|
 to prevent compilation and usage in the serial case. Note that
 some compilers do not like empty files or modules containing nothing!
 \item Wrapper routines do not need to be conditionally called:
-there are \#ifdef's inside them. Keep the difference between serial
-and parallel code to a minimum: more \#ifdef \_\_MPI may be needed
+peprocessing is done inside them. Keep the difference between serial
+and parallel code to a minimum: \verb|\#if defined (__MPI)}| are needed
 only when the flux of parallel and serial execution differ.
-\item Unneeded \#ifdef \_\_MPI may be removed if already present;
-\#ifdef \_\_PARA is obsolete and must not be used in new developments.
+\item Unneeded preprocessing may be removed if already present;
+preprocessing option \verb|__PARA| is obsolete and must not be used.
 \end{itemize}
 
 \subsection{Parallelization levels and communicators}
@@ -1989,7 +1989,9 @@ There are currently no strict guidelines for developers. You
 should however follow at least the following loose ones:
 \begin{itemize}
 \item Preprocessing options should be capitalized and start with
-two underscores. Examples: \_\_AIX, \_\_LINUX, ...
+two underscores. Examples: \_\_MPI, \_\_LINUX, ... Use 
+preprocessing syntax \verb|#if defined (XXX)|, not \verb|#if defined XXX|
+or \verb|#ifdef XXX|
 \item Fortran commands should be capitalized:
 CALL something( )
 \item Variable names should be lowercase: \texttt{foo = bar/2}
