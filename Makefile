@@ -293,6 +293,7 @@ veryclean : clean
 	- rm -rf install/patch-plumed
 	- cd install ; rm -f config.log configure.msg config.status \
 		CPV/version.h ChangeLog* intel.pcl */intel.pcl
+	- rm -rf include/configure.h install/make_wannier90.inc
 	- cd install ; rm -fr autom4te.cache
 	- cd pseudo; ./clean_ps ; cd -
 	- cd install; ./clean.sh ; cd -
