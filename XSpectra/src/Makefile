@@ -45,15 +45,15 @@ PWOBJS = ../../PW/src/libpw.a
 
 TLDEPS = bindir libs pw
 
-all : tldeps xspectra.x spectra_manipulation.x molecularnexafs.x
+all : tldeps xspectra.x spectra_correction.x molecularnexafs.x
 
 xspectra.x :   xspectra.o $(XOBJS) $(GIPAWOBJS) $(QEMODS) $(PWOBJS)
 	$(MPIF90) -o $@  xspectra.o $(XOBJS) $(GIPAWOBJS) \
 		$(PWOBJS) $(QEMODS) $(LDFLAGS) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../XSpectra/src/$@ . )
 
-spectra_manipulation.x : spectra_manipulation.o $(MANIP_XS_OBJ) $(QEMODS) $(PWOBJS)
-	$(MPIF90) -o $@  spectra_manipulation.o $(MANIP_XS_OBJ) $(PWOBJS) $(QEMODS) \
+spectra_correction.x : spectra_correction.o $(MANIP_XS_OBJ) $(QEMODS) $(PWOBJS)
+	$(MPIF90) -o $@  spectra_correction.o $(MANIP_XS_OBJ) $(PWOBJS) $(QEMODS) \
                 $(LDFLAGS) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../XSpectra/src/$@ . )
 
