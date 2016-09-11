@@ -107,19 +107,21 @@ PROGRAM do_dos
         lgauss=.true.
      ELSEIF (ltetra) THEN
         WRITE( stdout,'(/5x,"Tetrahedra used"/)')
-#ifdef __XSD 
-        ! info on tetrahedra contained in variable "tetra" is no longer
-        ! written to file and must be rebuilt
-        IF ( lsda ) THEN
-           ! in the lsda case, only the first half of the k points
-           ! are needed in the input of "tetrahedra"
-           nks2 = nks/2
-        ELSE
-           nks2 = nks
+        IF ( .NOT. allocated(tetra) ) THEN
+           ALLOCATE ( tetra(ntetra,4) )
+           ! info on tetrahedra contained in variable "tetra" is no longer
+           ! written to file and must be rebuilt
+           IF ( lsda ) THEN
+              ! in the lsda case, only the first half of the k points
+              ! are needed in the input of "tetrahedra"
+              nks2 = nks/2
+           ELSE
+              nks2 = nks
+           END IF
+           CALL tetrahedra ( nsym, s, time_reversal, t_rev, at, bg, nks, &
+                k1,k2,k3, nk1,nk2,nk3, nks2, xk, wk, ntetra, tetra )
+           !
         END IF
-        CALL tetrahedra ( nsym, s, time_reversal, t_rev, at, bg, nks, &
-             k1,k2,k3, nk1,nk2,nk3, nks2, xk, wk, ntetra, tetra )
-#endif
      ELSEIF (lgauss) THEN
         WRITE( stdout,'(/5x,"Gaussian broadening (read from file): ",&
              &        "ngauss,degauss=",i4,f12.6/)') ngauss,degauss

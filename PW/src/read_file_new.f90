@@ -5,7 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#ifndef __XSD
+#if ! defined(__XSD)
 SUBROUTINE read_file_dummy()
 END SUBROUTINE read_file_dummy
 #else
@@ -13,8 +13,8 @@ END SUBROUTINE read_file_dummy
 SUBROUTINE read_file()
   !----------------------------------------------------------------------------
   !
-  ! Read data produced by pw.x or cp.x - new sml file and binary files
-  ! Wrapper routine for backwards compatibilty
+  ! Read data produced by pw.x or cp.x - new xml file and binary files
+  ! Wrapper routine for backwards compatibility
   !
   USE io_files,             ONLY : nwordwfc, iunwfc, prefix, tmp_dir, wfc_dir
   USE io_global,            ONLY : stdout, ionode
@@ -50,8 +50,9 @@ SUBROUTINE read_file()
   !
   ! ... Read the contents of the xml data file
   !
+  dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save'
   IF ( ionode ) WRITE( stdout, '(/,5x,A,/,5x,A)') &
-     'Reading data from directory:', TRIM( tmp_dir ) // TRIM( prefix ) // '.save'
+     'Reading data from directory:', TRIM( dirname )
   !
   CALL read_xml_file ( )
 #if defined __HDF5
@@ -72,7 +73,6 @@ SUBROUTINE read_file()
   !
   CALL init_igk ( npwx, ngm, g, gcutw ) 
   !
-  dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save'
   IF ( twfcollect )  CALL read_collected_to_evc ( TRIM ( dirname )) 
   !
   ! ... Assorted initialization: pseudopotentials, PAW
@@ -120,7 +120,6 @@ SUBROUTINE read_xml_file ( )
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE wvfct,                ONLY : nbnd, nbndx, et, wg
   USE symm_base,            ONLY : irt, d1, d2, d3, checkallsym, nsym
-  USE ktetra,               ONLY : tetra, ntetra 
   USE extfield,             ONLY : forcefield, tefield, monopole, forcemono
   USE cellmd,               ONLY : cell_factor, lmovecell
   USE fft_base,             ONLY : dfftp
@@ -182,7 +181,7 @@ SUBROUTINE read_xml_file ( )
   CALL errore( 'read_xml_file ', 'problem reading file ' // &
              & TRIM( tmp_dir ) // TRIM( prefix ) // '.save', ierr )
   !
-  ! ... allocate space for atomic positions, symmetries, forces, tetrahedra
+  ! ... allocate space for atomic positions, symmetries, forces
   !
   IF ( nat < 0 ) CALL errore( 'read_xml_file', 'wrong number of atoms', 1 )
   !
@@ -198,7 +197,6 @@ SUBROUTINE read_xml_file ( )
   IF ( monopole ) ALLOCATE( forcemono( 3, nat ) ) ! TB
   !
   ALLOCATE( irt( 48, nat ) )
-  ALLOCATE( tetra( 4, MAX( ntetra, 1 ) ) )
   !
   CALL set_dimensions()
   CALL fft_type_allocate ( dfftp, at, bg, gcutm, intra_bgrp_comm )

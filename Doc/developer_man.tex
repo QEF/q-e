@@ -1375,7 +1375,7 @@ If this is not possible or not convenient, use \verb|\#if defined (__MPI)}|
 to prevent compilation and usage in the serial case. Note that
 some compilers do not like empty files or modules containing nothing!
 \item Wrapper routines do not need to be conditionally called:
-peprocessing is done inside them. Keep the difference between serial
+preprocessing is done inside them. Keep the difference between serial
 and parallel code to a minimum: \verb|\#if defined (__MPI)}| are needed
 only when the flux of parallel and serial execution differ.
 \item Unneeded preprocessing may be removed if already present;
