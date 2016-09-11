@@ -97,7 +97,6 @@ phonon:  uncompress-phonon
 	ln -fs ../PHonon/PH/lambda.x . ; \
 	ln -fs ../PHonon/PH/fqha.x . ; \
 	ln -fs ../PHonon/Gamma/phcg.x . ; \
-	ln -fs ../PHonon/D3/d3.x . ; \
 	fi
 	touch make-phonon
 
@@ -436,7 +435,6 @@ phonon_clean:
 	rm -rf ../bin/lambda.x
 	rm -rf ../bin/fqha.x
 	rm -rf ../bin/phcg.x
-	rm -rf ../bin/d3.x
 	rm -rf ./make-phonon 
 
 phonon_veryclean: phonon_clean
