@@ -1,24 +1,20 @@
 !
-! Copyright (C) 2001-2012 Quantum ESPRESSO group
+! Copyright (C) 2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#ifdef __XSD
+#ifndef __XSD
 SUBROUTINE read_file_dummy()
 END SUBROUTINE read_file_dummy
 #else
 !----------------------------------------------------------------------------
-! TB
-! included allocation of the force field of the monopole, search for 'TB'
-!----------------------------------------------------------------------------
-!
-!----------------------------------------------------------------------------
 SUBROUTINE read_file()
   !----------------------------------------------------------------------------
   !
-  ! Wrapper routine, for compatibility
+  ! Read data produced by pw.x or cp.x - new sml file and binary files
+  ! Wrapper routine for backwards compatibilty
   !
   USE io_files,             ONLY : nwordwfc, iunwfc, prefix, tmp_dir, wfc_dir
   USE io_global,            ONLY : stdout, ionode
@@ -33,11 +29,16 @@ SUBROUTINE read_file()
                                    init_realspace_vars,real_space
   USE dfunct,               ONLY : newd
   USE ldaU,                 ONLY : lda_plus_u, U_projection
-  USE pw_restart,           ONLY : pw_readfile
+  USE pw_restart_new,       ONLY : read_collected_to_evc
+  USE control_flags,        ONLY : twfcollect
+  USE io_files,             ONLY : tmp_dir, prefix
   USE control_flags,        ONLY : io_level
   USE klist,                ONLY : init_igk
   USE gvect,                ONLY : ngm, g
   USE gvecw,                ONLY : gcutw
+#if defined __HDF5
+  USE hdf5_qe
+#endif
   !
   IMPLICIT NONE 
   INTEGER :: ierr
@@ -53,6 +54,9 @@ SUBROUTINE read_file()
      'Reading data from directory:', TRIM( tmp_dir ) // TRIM( prefix ) // '.save'
   !
   CALL read_xml_file ( )
+#if defined __HDF5
+  CALL initialize_hdf5()
+#endif
   !
   ! ... Open unit iunwfc, for Kohn-Sham orbitals - we assume that wfcs
   ! ... have been written to tmp_dir, not to a different directory!
@@ -68,7 +72,8 @@ SUBROUTINE read_file()
   !
   CALL init_igk ( npwx, ngm, g, gcutw ) 
   !
-  CALL pw_readfile( 'wave', ierr )
+  dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save'
+  IF ( twfcollect )  CALL read_collected_to_evc ( TRIM ( dirname )) 
   !
   ! ... Assorted initialization: pseudopotentials, PAW
   ! ... Not sure which ones (if any) should be done here
@@ -93,18 +98,13 @@ SUBROUTINE read_file()
   !
 END SUBROUTINE read_file
 !
-SUBROUTINE read_xml_file()
-  ! wrapper routine to call the default behavior
-  call read_xml_file_internal(.true.)
-END SUBROUTINE read_xml_file
-
-SUBROUTINE read_xml_file_nobs()
-  ! wrapper routine to load everything except for the band structure
-  call read_xml_file_internal(.false.)
-END SUBROUTINE read_xml_file_nobs
-
 !----------------------------------------------------------------------------
-SUBROUTINE read_xml_file_internal(withbs)
+SUBROUTINE read_xml_file_nobs ( )
+! wrapper, to be removed ASAP
+  CALL read_xml_file ( )
+END SUBROUTINE read_xml_file_nobs
+!----------------------------------------------------------------------------
+SUBROUTINE read_xml_file ( )
   !----------------------------------------------------------------------------
   !
   ! ... This routine allocates space for all quantities already computed
@@ -137,7 +137,9 @@ SUBROUTINE read_xml_file_internal(withbs)
   USE vlocal,               ONLY : strf
   USE io_files,             ONLY : tmp_dir, prefix, iunpun, nwordwfc, iunwfc
   USE noncollin_module,     ONLY : noncolin, npol, nspin_lsda, nspin_mag, nspin_gga
-  USE pw_restart,           ONLY : pw_readfile
+  USE pw_restart_new,       ONLY :  pw_readschema_file, init_vars_from_schema 
+  USE qes_types_module,     ONLY :  output_type, input_type, parallel_info_type, general_info_type
+  USE qes_libs_module,      ONLY :  qes_reset_output, qes_reset_input, qes_reset_general_info, qes_reset_parallel_info 
   USE io_rho_xml,           ONLY : read_rho
   USE read_pseudo_mod,      ONLY : readpp
   USE xml_io_base,          ONLY : pp_check_file
@@ -154,35 +156,29 @@ SUBROUTINE read_xml_file_internal(withbs)
   !
   IMPLICIT NONE
 
-  ! Used to specify whether to read the band structure (files 
-  ! K??????/eigenval.xml), so one can skip it if not needed by
-  ! the post-processing tool. 
-  ! Set to True for the 'default' behavior of reading these files.
-  LOGICAL :: withbs
-
   INTEGER  :: i, is, ik, ibnd, nb, nt, ios, isym, ierr, inlc
   REAL(DP) :: rdum(1,1), ehart, etxc, vtxc, etotefield, charge
   REAL(DP) :: sr(3,3,48)
   CHARACTER(LEN=20) dft_name
+  TYPE ( output_type), ALLOCATABLE   :: output_obj
+  TYPE ( input_type ), ALLOCATABLE   :: input_obj 
+  TYPE (parallel_info_type),ALLOCATABLE :: parinfo_obj
+  TYPE (general_info_type ),ALLOCATABLE :: geninfo_obj 
   !
   !
+  ALLOCATE ( output_obj, input_obj, parinfo_obj, geninfo_obj ) 
+  CALL pw_readschema_file ( ierr, output_obj, input_obj, parinfo_obj, geninfo_obj)
+  IF ( ierr /= 0 ) CALL errore ( 'read_schema', 'unable to read xml file', ierr ) 
   ! ... first we get the version of the qexml file
   !     if not already read
-  CALL pw_readfile( 'header', ierr )
-  CALL errore( 'read_xml_file ', 'unable to determine qexml version', ABS(ierr) )
-  !
-  ! ... then we check if the file can be used for post-processing
-  !
-  IF ( .NOT. pp_check_file() ) CALL infomsg( 'read_xml_file', &
-               & 'file ' // TRIM( tmp_dir ) // TRIM( prefix ) &
-               & // '.save not guaranteed to be safe for post-processing' )
+  CALL init_vars_from_schema ( 'header', ierr, output_obj, input_obj, parinfo_obj, geninfo_obj )
+  CALL errore( 'read_xml_file ', 'unable to determine schema version', ABS(ierr) )
   !
   ! ... here we read the variables that dimension the system
   ! ... in parallel execution, only root proc reads the file
   ! ... and then broadcasts the values to all other procs
   !
-  CALL pw_readfile( 'reset', ierr )
-  CALL pw_readfile( 'dim',   ierr )
+  CALL init_vars_from_schema( 'dim',   ierr , output_obj, input_obj, parinfo_obj, geninfo_obj )
   CALL errore( 'read_xml_file ', 'problem reading file ' // &
              & TRIM( tmp_dir ) // TRIM( prefix ) // '.save', ierr )
   !
@@ -238,11 +234,7 @@ SUBROUTINE read_xml_file_internal(withbs)
   !
   ! ... here we read all the variables defining the system
   !
-  IF  ( withbs .EQV. .TRUE. ) THEN  
-     CALL pw_readfile( 'nowave', ierr )
-  ELSE
-     CALL pw_readfile( 'nowavenobs', ierr )
-  END IF
+  CALL init_vars_from_schema ( 'nowave', ierr, output_obj, input_obj, parinfo_obj, geninfo_obj )
   !
   ! ... distribute across pools k-points and related variables.
   ! ... nks is defined by the following routine as the number 
@@ -274,8 +266,8 @@ SUBROUTINE read_xml_file_internal(withbs)
   !
   ! ... read pseudopotentials
   !
-  CALL pw_readfile( 'pseudo', ierr )
-
+  CALL init_vars_from_schema ( 'pseudo', ierr, output_obj, input_obj, parinfo_obj, geninfo_obj ) 
+  !
   dft_name = get_dft_name () ! already set, should not be set again
   CALL readpp ( dft_name )
   !
@@ -297,8 +289,8 @@ SUBROUTINE read_xml_file_internal(withbs)
   CALL allocate_fft()
   CALL ggen ( gamma_only, at, bg ) 
   IF (do_comp_esm) THEN
-    CALL pw_readfile( 'esm', ierr )
-    CALL esm_init()
+     CALL init_vars_from_schema ( 'esm', ierr, output_obj, input_obj, parinfo_obj, geninfo_obj ) 
+     CALL esm_init()
   END IF
   CALL gshells ( lmovecell ) 
   !
@@ -344,7 +336,7 @@ SUBROUTINE read_xml_file_internal(withbs)
   !
   ! ... read info needed for hybrid functionals
   !
-  CALL pw_readfile('exx', ierr)
+  CALL init_vars_from_schema( 'exx', ierr, output_obj, input_obj, parinfo_obj, geninfo_obj ) 
   !
   ! ... recalculate the potential
   !
@@ -352,6 +344,12 @@ SUBROUTINE read_xml_file_internal(withbs)
                  ehart, etxc, vtxc, eth, etotefield, charge, v )
   !
   !
+  CALL qes_reset_output ( output_obj ) 
+  CALL qes_reset_input ( input_obj ) 
+  CALL qes_reset_general_info ( geninfo_obj ) 
+  CALL qes_reset_parallel_info ( parinfo_obj ) 
+  DEALLOCATE ( output_obj, input_obj, geninfo_obj, parinfo_obj ) 
+  ! 
   RETURN
   !
   CONTAINS
@@ -387,5 +385,5 @@ SUBROUTINE read_xml_file_internal(withbs)
       !
     END SUBROUTINE set_dimensions
     !
-  END SUBROUTINE read_xml_file_internal
+  END SUBROUTINE read_xml_file
 #endif
