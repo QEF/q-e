@@ -171,7 +171,7 @@ SUBROUTINE electrons()
         ! then calculate exchange energy (will be useful at next step)
         !
         CALL exxinit()
-#ifdef __EXX_ACE 
+#if defined(__EXX_ACE) 
         fock2 = exxenergyace()
 #else  
         fock2 = exxenergy2()
@@ -195,7 +195,7 @@ SUBROUTINE electrons()
         ! fock1 is the exchange energy calculated for orbitals at step n,
         !       using orbitals at step n-1 in the expression of exchange
         !
-#ifdef __EXX_ACE
+#if defined(__EXX_ACE)
         fock1 = exxenergyace()
 #else  
         fock1 = exxenergy2()
@@ -210,7 +210,7 @@ SUBROUTINE electrons()
         ! fock0 is fock2 at previous step
         !
         fock0 = fock2
-#ifdef __EXX_ACE 
+#if defined(__EXX_ACE) 
         fock2 = exxenergyace()
 #else  
         fock2 = exxenergy2()
@@ -327,7 +327,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
                                    restart, io_level, do_makov_payne,  &
                                    gamma_only, iverbosity, textfor,     &
                                    llondon, scf_must_converge, lxdm, ts_vdw
-#ifdef __XSD 
+#if defined(__XSD) 
   USE control_flags,        ONLY : n_scf_steps, scf_error
 #endif
 
@@ -686,7 +686,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
      WRITE( stdout, 9000 ) get_clock( 'PWSCF' )
      !
      IF ( conv_elec ) WRITE( stdout, 9101 )
-#ifdef __XSD 
+#if defined(__XSD) 
      IF ( conv_elec ) THEN 
            scf_error = dr2
            n_scf_steps = iter

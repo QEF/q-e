@@ -25,7 +25,7 @@ SUBROUTINE ccgdiagg( npwx, npw, nbnd, npol, psi, e, btype, precondition, &
   USE kinds,            ONLY : DP
   USE mp_bands,         ONLY : intra_bgrp_comm
   USE mp,               ONLY : mp_sum
-#ifdef __VERBOSE
+#if defined(__VERBOSE)
   USE io_global, only : stdout
 #endif
   !
@@ -313,7 +313,7 @@ SUBROUTINE ccgdiagg( npwx, npw, nbnd, npol, psi, e, btype, precondition, &
         !
      END DO iterate
      !
-#ifdef __VERBOSE
+#if defined(__VERBOSE)
      IF ( iter >= maxter ) THEN
         WRITE(stdout,'("e(",i4,") = ",f12.6," eV  (not converged after ",i3,&
                      & " iterations)")') m, e(m)*13.6058, iter

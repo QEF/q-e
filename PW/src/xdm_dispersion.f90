@@ -369,7 +369,7 @@ CONTAINS
              END DO ! n
           END DO ! iat
        END DO ! ispin
-#ifdef __MPI
+#if defined(__MPI)
        CALL mp_sum(avol,intra_image_comm)
        CALL mp_sum(ml,intra_image_comm)
 #endif
@@ -519,7 +519,7 @@ CONTAINS
     sigma = -0.5_DP * sigma / omega
     ehadd = -0.5_DP * ehadd
 
-#ifdef __MPI
+#if defined(__MPI)
     CALL mp_sum(evdw,intra_image_comm)
     CALL mp_sum(for,intra_image_comm)
     CALL mp_sum(sigma,intra_image_comm)

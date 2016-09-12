@@ -5,7 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#ifdef __XSD
+#if defined(__XSD)
 SUBROUTINE read_file_dummy()
 END SUBROUTINE read_file_dummy
 #else

@@ -57,7 +57,7 @@ SUBROUTINE cdiagh( n, h, ldh, e, v )
      !
      ! ... allocate workspace
      !
-#ifdef __PGI
+#if defined(__PGI)
      !     workaround for PGI compiler bug
      !
      v(1:ldh,1:n) = h(1:ldh,1:n)
@@ -79,7 +79,7 @@ SUBROUTINE cdiagh( n, h, ldh, e, v )
      !
   END IF
   !
-#ifdef __PGI
+#if defined(__PGI)
   !      workaround for PGI compiler bug
   !
   CALL mp_bcast( e(1:n), root_bgrp, intra_bgrp_comm )

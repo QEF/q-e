@@ -82,7 +82,7 @@ SUBROUTINE setup()
                                  angle1, angle2, bfield, ux, nspin_lsda, &
                                  nspin_gga, nspin_mag
 !
-#ifdef __XSD 
+#if defined(__XSD) 
   USE pw_restart_new,     ONLY : pw_readschema_file, init_vars_from_schema 
   USE qes_libs_module,    ONLY : qes_reset_output, qes_reset_input, qes_reset_parallel_info, qes_reset_general_info
   USE qes_types_module,   ONLY : output_type, input_type, parallel_info_type, general_info_type 
@@ -102,7 +102,7 @@ SUBROUTINE setup()
   REAL(DP) :: iocc, ionic_charge, one
   !
   LOGICAL, EXTERNAL  :: check_para_diag
-#ifdef __XSD 
+#if defined(__XSD) 
   TYPE(output_type),ALLOCATABLE             :: output_obj 
   TYPE(input_type),ALLOCATABLE              :: input_obj
   TYPE(parallel_info_type),ALLOCATABLE      :: parinfo_obj
@@ -409,7 +409,7 @@ SUBROUTINE setup()
   nbndx = nbnd
   IF ( isolve == 0 ) nbndx = david * nbnd
   !
-#ifdef __MPI
+#if defined(__MPI)
   use_para_diag = check_para_diag( nbnd )
 #else
   use_para_diag = .FALSE.
@@ -599,7 +599,7 @@ SUBROUTINE setup()
           nk1, nk2, nk3, nkstot, xk, wk, ntetra, tetra )
      !
   END IF
-#ifdef __XSD 
+#if defined(__XSD) 
   IF ( lbands .OR. ( (lfcpopt .OR. lfcpdyn ) .AND. restart ) ) THEN 
      CALL qes_reset_output ( output_obj ) 
      CALL qes_reset_input ( input_obj ) 

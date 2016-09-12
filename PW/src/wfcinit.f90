@@ -29,7 +29,7 @@ SUBROUTINE wfcinit()
   USE wavefunctions_module, ONLY : evc
   USE wvfct,                ONLY : nbnd, npwx, current_k
   USE wannier_new,          ONLY : use_wannier
-#ifdef __XSD 
+#if defined(__XSD) 
   USE pw_restart_new,       ONLY : pw_readschema_file, read_collected_to_evc
   USE qes_types_module,     ONLY : input_type
   USE qes_libs_module,      ONLY : qes_reset_input 
@@ -44,7 +44,7 @@ SUBROUTINE wfcinit()
   INTEGER :: ik, ierr
   LOGICAL :: exst, exst_mem, exst_file, opnd_file, twfcollect_file = .FALSE.
   CHARACTER (256 )                        :: dirname 
-#ifdef __XSD
+#if defined(__XSD)
   TYPE ( input_type ), ALLOCATABLE      :: input_obj
 #endif
   !
@@ -71,7 +71,7 @@ SUBROUTINE wfcinit()
      ! ... rewrite them (in pw_readfile) using the internal format
      !
      ierr = 1
-#ifdef __XSD
+#if defined(__XSD)
      ALLOCATE (input_obj )  
      CALL pw_readschema_file(IERR = ierr, RESTART_INPUT = input_obj )
      IF ( ierr == 0 ) THEN 

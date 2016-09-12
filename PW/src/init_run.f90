@@ -18,7 +18,7 @@ SUBROUTINE init_run()
   USE dynamics_module,    ONLY : allocate_dyn_vars
   USE paw_variables,      ONLY : okpaw
   USE paw_init,           ONLY : paw_init_onecenter, allocate_paw_internals
-#ifdef __MPI
+#if defined(__MPI)
   USE paw_init,           ONLY : paw_post_init
 #endif
   USE bp,                 ONLY : allocate_bp_efield, bp_global_map
@@ -32,7 +32,7 @@ SUBROUTINE init_run()
   USE mp,                 ONLY : mp_bcast
   USE tsvdw_module,       ONLY : tsvdw_initialize
   USE wavefunctions_module, ONLY : evc
-#ifdef __HDF5
+#if defined(__HDF5)
   USE hdf5_qe, ONLY : initialize_hdf5
   USE wavefunctions_module,ONLY : evc
 #endif
@@ -111,7 +111,7 @@ SUBROUTINE init_run()
   CALL potinit()
   !
   CALL newd()
-#ifdef __HDF5
+#if defined(__HDF5)
   ! calls h5open_f mandatory in any application using hdf5
   CALL initialize_hdf5()
 #endif 
@@ -123,7 +123,7 @@ SUBROUTINE init_run()
   !
   IF(use_wannier) CALL wannier_init()
   !
-#ifdef __MPI
+#if defined(__MPI)
   ! Cleanup PAW arrays that are only used for init
   IF (okpaw) CALL paw_post_init() ! only parallel!
 #endif

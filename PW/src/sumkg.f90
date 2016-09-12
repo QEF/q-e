@@ -51,7 +51,7 @@ function sumkg (et, nbnd, nks, wk, degauss, ngauss, e, is, isk)
      enddo
      sumkg = sumkg + wk (ik) * sum1
   enddo
-#ifdef __MPI
+#if defined(__MPI)
   call mp_sum ( sumkg, inter_pool_comm )
 #endif
   return

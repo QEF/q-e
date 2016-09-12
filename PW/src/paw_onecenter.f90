@@ -244,7 +244,7 @@ SUBROUTINE PAW_potential(becsum, d, energy, e_cmp)
          !
       ENDIF ifpaw
    ENDDO atoms
-#ifdef __MPI
+#if defined(__MPI)
    ! recollect D coeffs and total one-center energy
    IF( mykey /= 0 ) energy_tot = 0.0d0
    CALL mp_sum(energy_tot, intra_image_comm)
@@ -388,7 +388,7 @@ FUNCTION PAW_ddot(bec1,bec2)
     ENDIF ifpaw
     ENDDO atoms
 
-#ifdef __MPI
+#if defined(__MPI)
     IF( mykey /= 0 ) PAW_ddot = 0.0_dp
     CALL mp_sum(PAW_ddot, intra_image_comm)
 #endif
@@ -432,7 +432,7 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
     INTEGER               :: kpol
     INTEGER               :: mytid, ntids
 
-#ifdef __OPENMP
+#if defined(__OPENMP)
     INTEGER, EXTERNAL     :: omp_get_thread_num, omp_get_num_threads
 #endif
 
@@ -448,7 +448,7 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
     !
 !$omp parallel default(private), &
 !$omp shared(i,rad,v_lm,rho_lm,rho_core,v_rad,ix_s,ix_e,energy,e_of_tid,nspin,g,lsd,nspin_mag,with_small_so,g_rad)
-#ifdef __OPENMP
+#if defined(__OPENMP)
     mytid = omp_get_thread_num()+1 ! take the thread ID
     ntids = omp_get_num_threads()  ! take the number of threads
 #else
@@ -624,7 +624,7 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
 
     
     INTEGER :: mytid, ntids
-#ifdef __OPENMP
+#if defined(__OPENMP)
     INTEGER, EXTERNAL :: omp_get_thread_num, omp_get_num_threads
 #endif
     REAL(DP),ALLOCATABLE :: egcxc_of_tid(:)
@@ -660,7 +660,7 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
 
     mytid = 1
     ntids = 1
-#ifdef __OPENMP
+#if defined(__OPENMP)
     mytid = omp_get_thread_num()+1 ! take the thread ID
     ntids = omp_get_num_threads()  ! take the number of threads
 #endif
@@ -1531,7 +1531,7 @@ SUBROUTINE PAW_dpotential(dbecsum, becsum, int3, npe)
       ENDIF ifpaw
    ENDDO atoms
 
-#ifdef __MPI
+#if defined(__MPI)
     IF( mykey /= 0 ) int3 = 0.0_dp
     CALL mp_sum(int3, intra_image_comm)
 #endif
@@ -1983,7 +1983,7 @@ DO ix = ix_s, ix_e
 ENDDO   
 CALL PAW_rad2lm(i, rhoout_rad, rhoout_lm, i%l, nspin_gga)
 
-#ifdef __MPI
+#if defined(__MPI)
 CALL mp_sum( segni_rad, paw_comm )
 #endif
 

@@ -311,7 +311,7 @@ subroutine init_us_1
   !   and finally we compute the qq coefficients by integrating the Q.
   !   q are the g=0 components of Q.
   !
-#ifdef __MPI
+#if defined(__MPI)
   if (gg (1) > 1.0d-8) goto 100
 #endif
   call ylmr2 (lmaxq * lmaxq, 1, g, gg, ylmk0)
@@ -356,7 +356,7 @@ subroutine init_us_1
       endif
     endif
   enddo
-#ifdef __MPI
+#if defined(__MPI)
 100 continue
   if (lspinorb) then
     call mp_sum(  qq_so , intra_bgrp_comm )

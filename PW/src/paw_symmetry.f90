@@ -243,12 +243,12 @@ SUBROUTINE PAW_symmetrize(becsum)
       END DO
    END IF
 
-#ifdef __MPI
+#if defined(__MPI)
     IF( mykey /= 0 ) becsym = 0.0_dp
     CALL mp_sum(becsym, intra_image_comm)
 #endif
 
-#ifdef __DEBUG_PAW_SYM
+#if defined(__DEBUG_PAW_SYM)
    write(stdout,*) "------------"
     if(ionode) then
         ia = 1
@@ -472,12 +472,12 @@ SUBROUTINE PAW_symmetrize_ddd(ddd)
       END DO
    END IF
 
-#ifdef __MPI
+#if defined(__MPI)
     IF( mykey /= 0 ) dddsym = 0.0_dp
     CALL mp_sum(dddsym, intra_image_comm)
 #endif
 
-#ifdef __DEBUG_PAW_SYM
+#if defined(__DEBUG_PAW_SYM)
    write(stdout,*) "------------"
     if(ionode) then
         ia = 1
@@ -737,12 +737,12 @@ SUBROUTINE PAW_desymmetrize(dbecsum)
       END DO
    ENDIF
 
-#ifdef __MPI
+#if defined(__MPI)
     IF( mykey /= 0 ) becsym = 0.0_dp
     CALL mp_sum(becsym, intra_image_comm)
 #endif
 
-#ifdef __DEBUG_PAW_SYM
+#if defined(__DEBUG_PAW_SYM)
    write(stdout,*) "------------"
     if(ionode) then
         ia = 1
@@ -1027,12 +1027,12 @@ SUBROUTINE PAW_dusymmetrize(dbecsum,npe,irr,npertx,nsymq,rtau,xq,t)
 
 
 
-#ifdef __MPI
+#if defined(__MPI)
     IF( mykey /= 0 ) becsym = 0.0_dp
     CALL mp_sum(becsym, intra_image_comm)
 #endif
 
-#ifdef __DEBUG_PAW_SYM
+#if defined(__DEBUG_PAW_SYM)
    write(stdout,*) "------------"
     if(ionode) then
         ia = 1
@@ -1200,12 +1200,12 @@ SUBROUTINE PAW_dumqsymmetrize(dbecsum,npe,irr,npertx,isymq,rtau,xq,tmq)
     ENDDO atoms ! nat
     ENDDO ! nspin
 
-#ifdef __MPI
+#if defined(__MPI)
     IF( mykey /= 0 ) becsym = 0.0_dp
     CALL mp_sum(becsym, intra_image_comm)
 #endif
 
-#ifdef __DEBUG_PAW_SYM
+#if defined(__DEBUG_PAW_SYM)
    write(stdout,*) "------------"
     if(ionode) then
         ia = 1

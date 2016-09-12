@@ -230,7 +230,7 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   ! ... (not in the real-space case: it is done together with V_loc)
   !
   IF ( exx_is_active() ) THEN
-#ifdef __EXX_ACE 
+#if defined(__EXX_ACE) 
      IF (gamma_only) THEN
         CALL vexxace_gamma(lda,m,psi,ee,hpsi)
      ELSE

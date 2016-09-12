@@ -612,7 +612,7 @@ MODULE exx
     COMPLEX(DP),ALLOCATABLE :: temppsic(:)
     COMPLEX(DP),ALLOCATABLE :: temppsic_nc(:,:), psic_nc(:,:)
     INTEGER :: nxxs, nrxxs
-#ifdef __MPI
+#if defined(__MPI)
     COMPLEX(DP),ALLOCATABLE  :: temppsic_all(:),      psic_all(:)
     COMPLEX(DP), ALLOCATABLE :: temppsic_all_nc(:,:), psic_all_nc(:,:)
 #endif
@@ -635,7 +635,7 @@ MODULE exx
     nxxs = exx_fft%dfftt%nr1x *exx_fft%dfftt%nr2x *exx_fft%dfftt%nr3x
     nrxxs= exx_fft%dfftt%nnr
 
-#ifdef __MPI
+#if defined(__MPI)
     IF (noncolin) THEN
        ALLOCATE(psic_all_nc(nxxs,npol), temppsic_all_nc(nxxs,npol) )
     ELSEIF ( .not. gamma_only ) THEN
@@ -774,7 +774,7 @@ MODULE exx
                 isym = abs(index_sym(ikq) )
                 !
                 IF (noncolin) THEN ! noncolinear
-#ifdef __MPI
+#if defined(__MPI)
                    DO ipol=1,npol
                       CALL gather_grid(exx_fft%dfftt, temppsic_nc(:,ipol), temppsic_all_nc(:,ipol))
                    ENDDO
@@ -804,7 +804,7 @@ MODULE exx
                    exxbuff(      1:  nrxxs,ibnd,ikq)=psic_nc(:,1)
                    exxbuff(nrxxs+1:2*nrxxs,ibnd,ikq)=psic_nc(:,2)
                 ELSE ! noncolinear
-#ifdef __MPI
+#if defined(__MPI)
                   CALL gather_grid(exx_fft%dfftt,temppsic,temppsic_all)
                   IF ( me_bgrp == 0 ) &
                     psic_all(1:nxxs) = temppsic_all(rir(1:nxxs,isym))
@@ -828,12 +828,12 @@ MODULE exx
     !
     IF (noncolin) THEN
        DEALLOCATE(temppsic_nc, psic_nc)
-#ifdef __MPI
+#if defined(__MPI)
        DEALLOCATE(temppsic_all_nc, psic_all_nc)
 #endif
     ELSEIF ( .not. gamma_only ) THEN
        DEALLOCATE(temppsic)
-#ifdef __MPI
+#if defined(__MPI)
        DEALLOCATE(temppsic_all, psic_all)
 #endif
     ENDIF
@@ -862,7 +862,7 @@ MODULE exx
     !
     IF(okpaw) CALL PAW_init_keeq()
     !
-#ifdef __EXX_ACE
+#if defined(__EXX_ACE)
     CALL aceinit ( )
 #endif
     !
@@ -2908,7 +2908,7 @@ IMPLICIT NONE
     ALLOCATE( rmexx(nbnd,nbnd) )
     CALL matcalc('ACE',.true.,.false.,nnpw,nbnd,nbnd,phi,vv,rmexx,exxe)
     DEALLOCATE( rmexx )
-#ifdef __DEBUG
+#if defined(__DEBUG)
     WRITE(*,'(4(A,I3),A,I9,A,f12.6)') 'vexxace: nbnd=', nbnd, ' nbndproj=',nbndproj, &
                                               ' k=',current_k,' spin=',current_spin,' npw=',nnpw, ' E=',exxe
   ELSE
@@ -3019,7 +3019,7 @@ TYPE(bec_type), INTENT(in) :: becpsi
   CALL vexx(npwx, nnpw, nbndproj, phi, xitmp, becpsi)
 ! mexx = <phi|Vx[phi]|phi>
   CALL matcalc_k('exact',.true.,.false.,current_k,npwx*npol,nbndproj,nbndproj,phi,xitmp,mexx,exxe)
-#ifdef __DEBUG
+#if defined(__DEBUG)
   WRITE(*,'(3(A,I3),A,I9,A,f12.6)') 'aceinit_k: nbnd=', nbnd, ' nbndproj=',nbndproj, &
                                     ' k=',current_k,' npw=',nnpw,' Ex(k)=',exxe
 #endif
@@ -3159,7 +3159,7 @@ IMPLICIT NONE
 
   IF(domat) THEN
      CALL matcalc_k('ACE',.true.,.false.,current_k,npwx*npol,nbnd,nbnd,phi,vv,cmexx,exxe)
-#ifdef __DEBUG
+#if defined(__DEBUG)
     WRITE(*,'(3(A,I3),A,I9,A,f12.6)') 'vexxace_k: nbnd=', nbnd, ' nbndproj=',nbndproj, &
                    ' k=',current_k,' npw=',nnpw, ' Ex(k)=',exxe
   ELSE

@@ -66,7 +66,7 @@ MODULE buiol
     IMPLICIT NONE
     ! avoid initializing twice, or we will loose the head of the list!
     IF (is_init_buiol) THEN 
-#ifdef __DEBUG
+#if defined(__DEBUG)
        CALL infomsg('buiol', 'already initialized')
 #endif
        RETURN
@@ -137,7 +137,7 @@ MODULE buiol
     !
     IF (.not.is_init_buiol) CALL errore('buiol_open_unit', 'You must init before open',1)
     IF(recl<0) THEN
-#ifdef __DEBUG
+#if defined(__DEBUG)
        CALL infomsg('buiol_open_unit', 'wrong recl')
 #endif
        ierr = 1
@@ -147,7 +147,7 @@ MODULE buiol
     ! check if the unit is already opened
     CURSOR => find_unit(unit)
     IF(associated(CURSOR)) THEN
-#ifdef __DEBUG
+#if defined(__DEBUG)
        CALL infomsg('buiol_open_unit', 'unit already opened')
 #endif
        ierr = -1
@@ -175,13 +175,13 @@ MODULE buiol
     ! find the unit to close
     CURSOR => find_prev_unit(unit)
     IF(.not.associated(CURSOR))  THEN
-#ifdef __DEBUG
+#if defined(__DEBUG)
        CALL infomsg('buiol_close_unit', 'cannot close this unit')
 #endif
        ierr = 1
     END IF
     IF(.not.associated(CURSOR%next)) THEN
-#ifdef __DEBUG
+#if defined(__DEBUG)
        CALL infomsg('buiol_close_unit', 'cannot find unit to close',1)
 #endif
        ierr = 2
@@ -293,14 +293,14 @@ MODULE buiol
     ! find the unit, if it exists
     CURSOR => find_unit(unit)
     IF(.not.associated(CURSOR)) THEN
-#ifdef __DEBUG
+#if defined(__DEBUG)
        CALL infomsg('buiol_write_record', 'cannot write: unit not opened')
 #endif
        ierr = 1
        RETURN
     END IF
     IF(CURSOR%recl/=recl) THEN
-#ifdef __DEBUG
+#if defined(__DEBUG)
        CALL infomsg('buiol_write_record', 'cannot write: wrong recl')
 #endif
        ierr = 2
@@ -334,28 +334,28 @@ MODULE buiol
     ! sanity checks
     CURSOR => find_unit(unit)
     IF(.not.associated(CURSOR)) THEN
-#ifdef __DEBUG
+#if defined(__DEBUG)
        CALL infomsg('buiol_read_record', 'cannot read: unit not opened')
 #endif
        ierr = 1
        RETURN
     END IF
     IF(CURSOR%recl/=recl) THEN
-#ifdef __DEBUG
+#if defined(__DEBUG)
         CALL infomsg('buiol_read_record', 'cannot read: wrong recl')
 #endif
        ierr = 1
        RETURN
     END IF
     IF(CURSOR%nrec<nrec) THEN
-#ifdef __DEBUG
+#if defined(__DEBUG)
        CALL infomsg('buiol_read_record', 'cannot read: wrong nrec')
 #endif
        ierr =-1
        RETURN
     END IF
     IF(.not.associated(CURSOR%index(nrec)%data)) THEN
-#ifdef __DEBUG
+#if defined(__DEBUG)
        CALL infomsg('buiol_read_record', 'cannot read: virgin nrec')
 #endif
        ierr =-1
@@ -375,7 +375,7 @@ MODULE buiol
     TYPE(index_of_list),POINTER :: CURSOR
     ! sanity checks
     CURSOR => find_unit(unit)
-#ifdef __DEBUG
+#if defined(__DEBUG)
     IF(.not.associated(CURSOR)) CALL errore('buiol_report_unit', 'cannot report: unit not opened',1)
 #endif
     CALL buiol_report_buffer(CURSOR)
@@ -577,7 +577,7 @@ contains
        ierr = buiol_write_record ( unit, nword, nrec, vect )
        if ( ierr > 0 ) &
            CALL errore ('save_buffer', 'cannot write record', unit)
-#ifdef __DEBUG
+#if defined(__DEBUG)
        print *, 'save_buffer: record', nrec, ' written to unit', unit
 #endif
     ELSE 
@@ -608,7 +608,7 @@ contains
     ierr = buiol_check_unit (unit)
     IF( ierr > 0 ) THEN
        ierr = buiol_read_record ( unit, nword, nrec, vect )
-#ifdef __DEBUG
+#if defined(__DEBUG)
        print *, 'get_buffer: record', nrec, ' read from unit', unit
 #endif
        if ( ierr < 0 ) then
@@ -624,11 +624,11 @@ contains
           ierr =  buiol_write_record ( unit, nword, nrec, vect )
           if ( ierr /= 0 ) CALL errore ('get_buffer', &
                                   'cannot store record in memory', unit)
-#ifdef __DEBUG
+#if defined(__DEBUG)
           print *, 'get_buffer: record', nrec, ' read from file', unit
 #endif
        end if
-#ifdef __DEBUG
+#if defined(__DEBUG)
        print *, 'get_buffer: record', nrec, ' read from unit', unit
 #endif
     ELSE
@@ -681,7 +681,7 @@ contains
        ierr = buiol_close_unit ( unit )
        if ( ierr < 0 ) &
             CALL errore ('close_buffer', 'error closing', ABS(unit))
-#ifdef __DEBUG
+#if defined(__DEBUG)
        print *, 'close_buffer: unit ',unit, 'closed'
 #endif
     END IF

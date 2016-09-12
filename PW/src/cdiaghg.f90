@@ -333,7 +333,7 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
      CALL test_drv_begin()
 #endif
 
-#ifdef __SCALAPACK
+#if defined(__SCALAPACK)
      !
      CALL pzheevd_drv( .true., n, desc%nrcx, hh, e, ortho_cntx, ortho_comm )
      !

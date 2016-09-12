@@ -143,7 +143,7 @@ SUBROUTINE force_hub(forceh)
    ! ...symmetrize...
    !
    CALL symvector ( nat, forceh )
-#ifdef __DEBUG
+#if defined(__DEBUG)
    write(66,'("Hubbard contribution Begin")')
    write(66,'(3f12.6)') forceh(:,:)
    write(66,'("Hubbard contribution End")')

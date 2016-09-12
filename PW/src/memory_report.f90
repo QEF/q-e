@@ -93,7 +93,7 @@ SUBROUTINE memory_report()
      nbnd_l = NINT( DBLE(nbnd) / nbgrp )
      ! Stored wavefunctions in real space 
      ram = ram + complex_size/g_fact * nexx_l * npol * nbnd_l * nkqs
-#ifdef __EXX_ACE
+#if defined(__EXX_ACE)
      ! Projectors
      ram = ram + complex_size * npwx_l * npol * nbnd * nks
 #endif

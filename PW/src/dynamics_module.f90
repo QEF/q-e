@@ -1556,7 +1556,7 @@ CONTAINS
      WRITE (stdout, '(5x,"The current acceptance is :",3x,F10.6)') dble(num_accept)/istep
 
      ! Print the trajectory
-#ifdef __MPI
+#if defined(__MPI)
      IF(ionode) THEN
 #endif
      OPEN(117,file="trajectory-"//trim(prefix)//".xyz",status="unknown",position='APPEND')
@@ -1566,7 +1566,7 @@ CONTAINS
        WRITE( 117, '(A3,3X,3F14.9)') atm(ityp(ia)),tau(:,ia)*alat*bohr_radius_angs
      ENDDO
      CLOSE(117)
-#ifdef __MPI
+#if defined(__MPI)
      ENDIF
 #endif
 

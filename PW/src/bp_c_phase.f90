@@ -174,7 +174,7 @@ SUBROUTINE c_phase
    USE spin_orb,             ONLY : lspinorb
    USE mp_bands,             ONLY : intra_bgrp_comm, nproc_bgrp
    USE mp,                   ONLY : mp_sum
-#ifdef __XSD
+#if defined(__XSD)
    USE qexsd_module,         ONLY : qexsd_init_berryPhaseOutput, qexsd_bp_obj
 #endif
 !  --- Avoid implicit definitions ---
@@ -961,7 +961,7 @@ SUBROUTINE c_phase
 ! Here we write all output information in a berry_phase_type variable to print
 ! them in the XML output  P.D. april 2016
 !------------------------------------------------------------------------------
-#ifdef __XSD
+#if defined(__XSD)
   CALL qexsd_init_berryPhaseOutput(qexsd_bp_obj, gpar, gvec, nppstr, nkort, xk, pdl_ion, mod_ion,  &
                                   pdl_ion_tot, mod_ion_tot, nstring, pdl_elec , mod_elec, wstring, &
                                   pdl_elec_up, mod_elec_up, pdl_elec_dw, mod_elec_dw, pdl_elec_tot,&

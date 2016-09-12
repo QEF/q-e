@@ -453,7 +453,7 @@ CONTAINS
     !
     no_rho_sym = gamma_only .OR. (nsym==1)
     IF (no_rho_sym) RETURN
-#ifdef __MPI
+#if defined(__MPI)
     CALL sym_rho_init_para ( )
 #else
     CALL sym_rho_init_shells( ngm, g )
@@ -461,7 +461,7 @@ CONTAINS
     !
   END SUBROUTINE sym_rho_init
    !
-#ifdef __MPI
+#if defined(__MPI)
   !
   SUBROUTINE sym_rho_init_para ( )
     !-----------------------------------------------------------------------

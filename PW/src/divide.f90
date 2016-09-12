@@ -12,7 +12,7 @@ SUBROUTINE divide (comm, ntodiv, startn, lastn)
   ! Divide ntodiv poins across processors belonging to communicator comm 
   ! Each processor gets points from startn to lastn
   !
-#ifdef __MPI
+#if defined(__MPI)
   !
   USE mp, ONLY : mp_size, mp_rank
   IMPLICIT NONE
@@ -74,7 +74,7 @@ SUBROUTINE divide2 (comm1, comm2, ntodiv, startn, lastn)
   ! comm1 and comm2. The final quantity must be collected among the two
   ! Each processor gets points from startn to lastn
   !
-#ifdef __MPI
+#if defined(__MPI)
   !
   USE mp, ONLY : mp_size, mp_rank
   IMPLICIT NONE

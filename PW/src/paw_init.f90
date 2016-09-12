@@ -14,7 +14,7 @@ MODULE paw_init
   PUBLIC :: PAW_atomic_becsum
   PUBLIC :: PAW_init_onecenter
   !PUBLIC :: PAW_increase_lm ! <-- unused
-#ifdef __MPI
+#if defined(__MPI)
   PUBLIC :: PAW_post_init
 #endif
 
@@ -73,7 +73,7 @@ MODULE paw_init
   END SUBROUTINE deallocate_paw_internals
 
 
-#ifdef __MPI
+#if defined(__MPI)
 ! Deallocate variables that are used only at init and then no more necessary.
 ! This is only useful in parallel, as each node only does a limited number of atoms
 SUBROUTINE PAW_post_init()
@@ -323,7 +323,7 @@ SUBROUTINE PAW_init_onecenter()
 
 END SUBROUTINE PAW_init_onecenter
 
-#ifdef __COMPILE_THIS_UNUSED_FUNCTION
+#if defined(__COMPILE_THIS_UNUSED_FUNCTION)
 !___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___
 !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!! 
 !!! Increase maximum angularm momentum component for integration

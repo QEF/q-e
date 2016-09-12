@@ -119,7 +119,7 @@ subroutine vhpsi_nc (ldap, np, mps, psip, hpsi)
       proj(na, ibnd) = zdotc (ldap*npol, wfcU(1, na), 1, psip(1, ibnd), 1)
     ENDDO
   ENDDO
-#ifdef __MPI
+#if defined(__MPI)
   CALL mp_sum ( proj, intra_bgrp_comm )
 #endif
 !--

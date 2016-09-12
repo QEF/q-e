@@ -8,7 +8,7 @@
 !----------------------------------------------------------------------------
 MODULE pw_restart_new
 !----------------------------------------------------------------------------
-#ifdef __XSD
+#if defined(__XSD)
   !
   ! ... New PWscf I/O using xml schema and hdf5 binaries
   !
@@ -609,7 +609,7 @@ MODULE pw_restart_new
         SUBROUTINE write_gk( iun, ionode_k, ik, ik_g )
           !--------------------------------------------------------------------
           !
-#ifdef __HDF5
+#if defined(__HDF5)
           USE hdf5_qe,   ONLY :  prepare_for_writing_final, write_gkhdf5, &
                                  gk_hdf5_write, h5fclose_f
 #endif
@@ -650,7 +650,7 @@ MODULE pw_restart_new
           filename = TRIM(dirname) // '/gkvectors' // TRIM(int_to_char(ik_g))
           IF ( ionode_k ) THEN
              !
-#ifdef __HDF5
+#if defined(__HDF5)
              CALL prepare_for_writing_final ( gk_hdf5_write, inter_pool_comm,&
                   TRIM(filename)//'.hdf5',ik)
              CALL write_gkhdf5(gk_hdf5_write,xk(:,ik),igwk(1:ngk_g(ik)), &

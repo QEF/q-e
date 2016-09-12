@@ -17,7 +17,7 @@ SUBROUTINE punch( what )
        tmp_dir, prefix
   USE control_flags,        ONLY : io_level, twfcollect, io_level, lscf
   USE klist,                ONLY : nks
-#ifdef __XSD
+#if defined(__XSD)
   USE pw_restart_new,       ONLY : pw_write_schema, pw_write_binaries
   USE io_files,             ONLY : xmlpun_schema, psfile, pseudo_dir
   USE wrappers,             ONLY : f_copy
@@ -56,7 +56,7 @@ SUBROUTINE punch( what )
   END IF
   iunpun = 4
   !
-#ifdef __XSD
+#if defined(__XSD)
   !
   ! ...New-style I/O with xml schema and (optionally) hdf5 binaries
   !

@@ -40,7 +40,7 @@ SUBROUTINE run_pwscf ( exit_status )
   USE fft_base,         ONLY : dfftp
   USE qmmm,             ONLY : qmmm_initialization, qmmm_shutdown, &
                                qmmm_update_positions, qmmm_update_forces
-#ifdef __XSD
+#if defined(__XSD)
   USE qexsd_module,     ONLY:   qexsd_set_status
 #endif
   !
@@ -85,7 +85,7 @@ SUBROUTINE run_pwscf ( exit_status )
   ! ... useful for a quick and automated way to check input data
   !
   IF ( check_stop_now() ) THEN
-#ifdef __XSD 
+#if defined(__XSD) 
      CALL qexsd_set_status(255)
 #endif
      CALL punch( 'config' )
@@ -160,7 +160,7 @@ SUBROUTINE run_pwscf ( exit_status )
         ! ... then we save restart information for the new configuration
         !
         IF ( idone <= nstep .AND. .NOT. conv_ions ) THEN 
-#ifdef __XSD 
+#if defined(__XSD) 
             CALL qexsd_set_status(255)
 #endif
             CALL punch( 'config' )
@@ -189,7 +189,7 @@ SUBROUTINE run_pwscf ( exit_status )
         ! ... update_pot initializes structure factor array as well
         !
         CALL update_pot()
-#ifdef __XSD
+#if defined(__XSD)
         CALL add_qexsd_step(idone)
 #endif         
         !
@@ -207,7 +207,7 @@ SUBROUTINE run_pwscf ( exit_status )
   !
   ! ... save final data file
   !
-#ifdef __XSD
+#if defined(__XSD)
   CALL qexsd_set_status(exit_status)
 #endif
   CALL punch('all')
