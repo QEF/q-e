@@ -44,8 +44,7 @@ MODULE xml_io_base
   !
   PUBLIC :: read_wfc, write_wfc, read_rho_xml, write_rho_xml, &
             save_print_counter, read_print_counter
-  PUBLIC :: create_directory, change_directory, &
-            check_file_exst, pp_check_file, restart_dir
+  PUBLIC :: create_directory, check_file_exst, pp_check_file, restart_dir
   !
   CONTAINS
     !
@@ -85,35 +84,6 @@ MODULE xml_io_base
       RETURN
       !
     END SUBROUTINE create_directory
-    !
-    !------------------------------------------------------------------------
-    SUBROUTINE change_directory( dirname )
-      !------------------------------------------------------------------------
-      !
-      USE wrappers,  ONLY : f_chdir
-      USE mp,        ONLY : mp_barrier
-      USE mp_images, ONLY : me_image, intra_image_comm
-      !
-      CHARACTER(LEN=*), INTENT(IN) :: dirname
-      !
-      INTEGER                    :: ierr
-
-      CHARACTER(LEN=6), EXTERNAL :: int_to_char
-      !
-      ierr = f_chdir( TRIM( dirname ) )
-      CALL mp_bcast ( ierr, ionode_id, intra_image_comm )
-      !
-      CALL errore( 'change_directory', &
-                   'unable to change to directory ' // TRIM( dirname ), ierr )
-      !
-      ! ... syncronize all jobs (not sure it is really useful)
-      !
-      CALL mp_barrier( intra_image_comm )
-      !
-      !
-      RETURN
-      !
-    END SUBROUTINE change_directory
     !
     !------------------------------------------------------------------------
     FUNCTION restart_dir( outdir, runit )
