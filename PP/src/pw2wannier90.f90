@@ -841,6 +841,7 @@ SUBROUTINE read_nnkp
            endif
         end if
      else
+        old_spinor_proj=.false.
         CALL scan_file_to('projections',found)
         if(.not.found) then
            CALL errore( 'pw2wannier90', 'Could not find projections block in '&
