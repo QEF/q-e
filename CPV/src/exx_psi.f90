@@ -170,7 +170,7 @@ SUBROUTINE exx_psi(c, psitot2,nnrtot,my_nbsp, my_nxyz, nbsp)
         !
         CALL invfft( 'Wave', psis, dffts, dtgs )
         !
-#ifdef __MPI
+#if defined(__MPI)
         !
         CALL mp_barrier( dtgs%ogrp_comm )
         CALL MPI_ALLTOALLV(psis, sendcount1, sdispls1, MPI_DOUBLE_COMPLEX, &
@@ -244,7 +244,7 @@ SUBROUTINE exx_psi(c, psitot2,nnrtot,my_nbsp, my_nxyz, nbsp)
         rdispls(proc) = rdispls(proc-1) + recvcount(proc-1)
       END DO
       !
-#ifdef __MPI
+#if defined(__MPI)
       !
       CALL mp_barrier( intra_image_comm )
       CALL MPI_ALLTOALLV(psis2, sendcount,sdispls,MPI_DOUBLE_PRECISION, &

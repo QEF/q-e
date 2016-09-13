@@ -46,7 +46,7 @@ SUBROUTINE exx_gs(nfi, c)
     !
     IMPLICIT NONE
     COMPLEX(DP)   c(ngw, nbspx)        ! wave functions at time t
-#ifdef __MPI
+#if defined(__MPI)
     !
     INTEGER  :: istatus(MPI_STATUS_SIZE)
 #endif
@@ -407,7 +407,7 @@ SUBROUTINE exx_gs(nfi, c)
                 ! (using the translation vector "tran" from middle of wfc to the center of box)
                 CALL getpsil( nnrtot, np_in_sp_me_p, psi(1, lindex_obtl_tbs), psil_pair_send(1,j,lindex_obtl_tbs), tran)
                 !
-#ifdef __MPI
+#if defined(__MPI)
                 CALL MPI_SEND( psil_pair_send(1, j, lindex_obtl_tbs), np_in_sp_me_p, MPI_DOUBLE_PRECISION, &
                     rk_of_obtl_trcv, j*irank, intra_image_comm,ierr )
 #endif
@@ -416,7 +416,7 @@ SUBROUTINE exx_gs(nfi, c)
                 !
                 !-- when the mpi task matchs with a cetain obtl_tbs (this task has to receive the obtl_tbs) --
                 !
-#ifdef __MPI
+#if defined(__MPI)
                 CALL MPI_IRECV( psil_pair_recv(1,j),                  np_in_sp_me_p, MPI_DOUBLE_PRECISION, &
                     rk_of_obtl_tbs,  j*irank, intra_image_comm, irecvreq(j,me_image),ierr)
 #endif
@@ -451,7 +451,7 @@ SUBROUTINE exx_gs(nfi, c)
               rk_of_obtl_tbs  = rk_of_obtl(obtl_tbs)
               !
               IF ((me_image .EQ. rk_of_obtl_trcv) .AND. (me_image .NE. rk_of_obtl_tbs)) THEN
-#ifdef __MPI
+#if defined(__MPI)
                 !
                 ! once the paired orbital (obtl_tbs) is received this task can move on to exx calculations
                 CALL MPI_WAIT(irecvreq(j,me_image), istatus, ierr)
@@ -776,7 +776,7 @@ SUBROUTINE exx_gs(nfi, c)
                 !
               ELSE IF ( me_image .EQ. rk_of_obtl_tbs ) THEN
                 ! 
-#ifdef __MPI
+#if defined(__MPI)
                 !
                 CALL MPI_SEND( psil_pair_recv(1,j), np_in_sp_me_p, MPI_DOUBLE_PRECISION, &
                     rk_of_obtl_trcv, j*irank, intra_image_comm,ierr)
@@ -785,7 +785,7 @@ SUBROUTINE exx_gs(nfi, c)
               ELSE IF ( me_image .EQ. rk_of_obtl_trcv) THEN
                 ! 
                 !jj = jj + 1
-#ifdef __MPI
+#if defined(__MPI)
                 !
                 CALL mpi_recv( psil_pair_send(1, j, lindex_obtl_trcv), np_in_sp_me_p, mpi_double_precision, &
                     rk_of_obtl_tbs,  j*irank, intra_image_comm, istatus,ierr) ! bs
@@ -840,7 +840,7 @@ SUBROUTINE exx_gs(nfi, c)
     totalenergyg=0.0_DP ! mpi reduction variable initialization
     exx=0.0_DP          ! exx energy (used to handle the open/closed shell energy)
     ! 
-#ifdef __MPI
+#if defined(__MPI)
     ! collect the totalenergy of each mpi task to totalenergyg
     CALL MPI_ALLREDUCE(totalenergy, totalenergyg, 1, MPI_DOUBLE_PRECISION, &
         &                        MPI_SUM, intra_image_comm, ierr)
@@ -857,7 +857,7 @@ SUBROUTINE exx_gs(nfi, c)
     !
     total_exx_derv_g(:,:) = 0.0_DP ! mpi reduction variable initialization
     !
-#ifdef __MPI
+#if defined(__MPI)
     IF (.NOT. (isotropic .AND. (ibrav.EQ.1))) THEN
       ! collect the total_exx_derv of each mpi task to total_exx_derv_g
       CALL MPI_ALLREDUCE(total_exx_derv(:,:), total_exx_derv_g(:,:), 9, &
@@ -922,7 +922,7 @@ SUBROUTINE exx_gs(nfi, c)
       ALLOCATE(exx_tmp (dffts%nnr,nproc_image/nogrp)); exx_tmp=0.0_DP
       ALLOCATE(exx_tmp3(dffts%nnr,nproc_image/nogrp)); exx_tmp3=0.0_DP
       !
-#ifdef __MPI
+#if defined(__MPI)
       !
       CALL mp_barrier( intra_image_comm )
       CALL MPI_ALLTOALLV(vpsil(1,1), recvcount,rdispls,MPI_DOUBLE_PRECISION, &
@@ -958,7 +958,7 @@ SUBROUTINE exx_gs(nfi, c)
         rdispls1(proc) = rdispls1(proc-1) + recvcount1(proc-1)
       END DO
       !
-#ifdef __MPI
+#if defined(__MPI)
       !
       DO ir=1,nproc_image/nogrp
         CALL mp_barrier( dtgs%ogrp_comm )

@@ -88,7 +88,7 @@
       !
       ci = ( 0.0d0, 1.0d0 )
       !
-#ifdef __MPI
+#if defined(__MPI)
 
 
 !$omp  parallel
@@ -264,7 +264,7 @@
          !
       END IF
       !
-#ifdef __MPI
+#if defined(__MPI)
       CALL bw_tg_cft3_xy( psi, dffts, dtgs )
       CALL bw_tg_cft3_scatter( psi, dffts, aux, dtgs )
       CALL bw_tg_cft3_z( psi, dffts, aux, dtgs )

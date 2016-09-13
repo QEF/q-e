@@ -100,7 +100,7 @@ subroutine dforceb(c0, i, betae, ipol, bec0, ctabin, gqq, gqqm, qmat, dq2, df)
         endif
      enddo
 
-#ifdef __MPI
+#if defined(__MPI)
 
      if(ipol/=3) then
 !allocate arrays

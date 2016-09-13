@@ -116,7 +116,7 @@
             END DO
       ENDIF
 
-#ifdef __MPI
+#if defined(__MPI)
       ! 
       ! for processor that do not call fft on the box
       ! artificially start the clock

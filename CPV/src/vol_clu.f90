@@ -65,7 +65,7 @@ SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
       integer ir, ir1, ir2, ir3, is, iss, ia, flag, ierr
       integer i, j, k, l, ig, cnt, nmin, nmax, n_at
 
-#ifdef __MPI
+#if defined(__MPI)
       real(kind=8) maxr_p(nproc), minr_p(nproc), maxr_pp, minr_pp
       integer shift(nproc), incr(nproc),  ppp(nproc) 
       integer displs(nproc), ip, me
@@ -81,7 +81,7 @@ SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
 
       ci = (0.d0,1.d0)
 
-#ifdef __MPI
+#if defined(__MPI)
       me = mpime + 1
       do ip=1,nproc
          ppp(ip) =  dfftp%nnp  * ( dfftp%npp(ip) )
@@ -275,7 +275,7 @@ SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
          v_vol(ir) = 0.d0
 
          if (jellium) then
-#ifdef __MPI
+#if defined(__MPI)
             do j = 1,3
                pos_aux(j) = posv(j,ir+shift(me))
             end do

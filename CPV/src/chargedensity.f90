@@ -525,7 +525,7 @@
             !  of local fourier coefficients.
             !
 
-#ifdef __MPI
+#if defined(__MPI)
 
             aux = (0.d0, 0.d0)
             !
@@ -873,13 +873,13 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
       COMPLEX(DP), ALLOCATABLE :: qv(:)
 !
       INTEGER  :: itid, mytid, ntids
-#ifdef __OPENMP
+#if defined(__OPENMP)
       INTEGER  :: omp_get_thread_num, omp_get_num_threads
       EXTERNAL :: omp_get_thread_num, omp_get_num_threads
 #endif
 !
 !$omp parallel default(none), private(i,j,iss,ir,ig,mytid,ntids,itid), shared(nspin,dfftp,drhor,drhog,rhor,rhog,ainv,ngm) 
-#ifdef __OPENMP
+#if defined(__OPENMP)
       mytid = omp_get_thread_num()  ! take the thread ID
       ntids = omp_get_num_threads() ! take the number of threads
 #else
@@ -928,7 +928,7 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
                ALLOCATE( qv( dfftb%nnr ) )
                ALLOCATE( dqgbt( ngb, 2 ) )
 
-#ifdef __OPENMP
+#if defined(__OPENMP)
                mytid = omp_get_thread_num()  ! take the thread ID
                ntids = omp_get_num_threads() ! take the number of threads
                itid  = 0
@@ -938,7 +938,7 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
                isa=1
 
                DO is=1,nvb
-#ifdef __MPI
+#if defined(__MPI)
                   DO ia=1,na(is)
                      nfft=1
                      IF ( ( dfftb%np3( isa ) <= 0 ) ) THEN
@@ -954,7 +954,7 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
                      IF (ia.EQ.na(is)) nfft=1
 #endif
 
-#ifdef __OPENMP
+#if defined(__OPENMP)
                      IF ( mytid /= itid ) THEN
                         isa = isa + nfft
                         itid = MOD( itid + 1, ntids )
@@ -1051,7 +1051,7 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
                isa=1
                DO is=1,nvb
                   DO ia=1,na(is)
-#ifdef __MPI
+#if defined(__MPI)
                      IF ( dfftb%np3( isa ) <= 0 ) go to 25
 #endif
                      DO iss=1,2
@@ -1175,7 +1175,7 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
       COMPLEX(DP), ALLOCATABLE :: v(:)
       COMPLEX(DP), ALLOCATABLE :: qv(:)
 
-#ifdef __OPENMP
+#if defined(__OPENMP)
       INTEGER  :: itid, mytid, ntids
       INTEGER  :: omp_get_thread_num, omp_get_num_threads
       EXTERNAL :: omp_get_thread_num, omp_get_num_threads
@@ -1194,7 +1194,7 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
       ! private variable need to be initialized, otherwise
       ! outside the parallel region they have an undetermined value
       !
-#ifdef __OPENMP
+#if defined(__OPENMP)
       mytid = 0
       ntids = 1
       itid  = 0
@@ -1220,7 +1220,7 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
          v (:) = (0.d0, 0.d0)
 !$omp end workshare
 
-#ifdef __OPENMP
+#if defined(__OPENMP)
          mytid = omp_get_thread_num()  ! take the thread ID
          ntids = omp_get_num_threads() ! take the number of threads
          itid  = 0
@@ -1232,7 +1232,7 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
 
          DO is = 1, nvb
 
-#ifdef __MPI
+#if defined(__MPI)
 
             DO ia = 1, na(is)
                nfft = 1
@@ -1251,7 +1251,7 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
                IF( ia .EQ. na(is) ) nfft = 1
 #endif
 
-#ifdef __OPENMP
+#if defined(__OPENMP)
                IF ( mytid /= itid ) THEN
                   isa = isa + nfft
                   itid = MOD( itid + 1, ntids )
@@ -1377,7 +1377,7 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
          isa=1
          DO is=1,nvb
             DO ia=1,na(is)
-#ifdef __MPI
+#if defined(__MPI)
                IF ( dfftb%np3( isa ) <= 0 ) go to 25
 #endif
                DO iss=1,2

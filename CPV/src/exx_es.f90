@@ -36,7 +36,7 @@
       
       INTEGER  :: sdispls(nproc_image), sendcount(nproc_image)
       INTEGER  :: rdispls(nproc_image), recvcount(nproc_image)
-#ifdef __MPI
+#if defined(__MPI)
       ! HK: sequential support
       INTEGER  :: istatus(MPI_STATUS_SIZE)
 #endif
@@ -181,7 +181,7 @@
          print *, 'iobtl =', iobtl
          psi_pair(:,:)=0.d0
 
-#ifdef __MPI
+#if defined(__MPI)
          ! HK: sequential support
          call mp_barrier( intra_image_comm )
 #endif
@@ -204,14 +204,14 @@
                      psi_pair(:,j) = psi_v(:, lindex_obtl_tbs)      ! local copy
 
                   elseif( me_image .eq. rk_of_obtl_tbs )then
-#ifdef __MPI
+#if defined(__MPI)
                     ! HK: sequential support
                      CALL MPI_SEND( psi_v(1, lindex_obtl_tbs), nnrtot, MPI_DOUBLE_PRECISION, & 
  &                                  rk_of_obtl_trcv, j*irank, intra_image_comm,ierr )
 #endif
                 
                   elseif( me_image .eq. rk_of_obtl_trcv )then
-#ifdef __MPI
+#if defined(__MPI)
                     ! HK: sequential support
 !                    CALL MPI_RECV( psi_pair(1,j),           nnrtot, MPI_DOUBLE_PRECISION, &
 !&                                  rk_of_obtl_tbs,  j*irank, intra_image_comm, istatus,ierr)
@@ -236,7 +236,7 @@
                   lindex_obtl_tbs = lindex_of_vobtl(obtl_tbs)
 
                   if( (me_image .eq. rk_of_obtl_trcv) .and. (me_image .ne. rk_of_obtl_tbs) )then
-#ifdef __MPI
+#if defined(__MPI)
                     ! HK: sequential support
                      CALL MPI_WAIT(irecvreq(j,me_image), istatus, ierr)
 #endif

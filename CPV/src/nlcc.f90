@@ -202,7 +202,7 @@
       real(dp), allocatable :: fcc(:,:)
       external  boxdotgrid
 
-#ifdef __OPENMP
+#if defined(__OPENMP)
       INTEGER :: itid, mytid, ntids, omp_get_thread_num, omp_get_num_threads
       EXTERNAL :: omp_get_thread_num, omp_get_num_threads
 #endif
@@ -225,7 +225,7 @@
 
       isa = 0
 
-#ifdef __OPENMP
+#if defined(__OPENMP)
       mytid = omp_get_thread_num()  ! take the thread ID
       ntids = omp_get_num_threads() ! take the number of threads
       itid  = 0
@@ -238,7 +238,7 @@
             cycle
          end if 
 
-#ifdef __MPI
+#if defined(__MPI)
 
          do ia = 1, na(is)
             nfft = 1
@@ -252,7 +252,7 @@
             if( ia .eq. na(is) ) nfft=1
 #endif
 
-#ifdef __OPENMP
+#if defined(__OPENMP)
             IF ( mytid /= itid ) THEN
                itid = MOD( itid + 1, ntids )
                CYCLE
@@ -345,7 +345,7 @@
       complex(dp), allocatable :: wrk1(:)
       complex(dp), allocatable :: qv(:)
 
-#ifdef __OPENMP
+#if defined(__OPENMP)
       INTEGER :: itid, mytid, ntids, omp_get_thread_num, omp_get_num_threads
       EXTERNAL :: omp_get_thread_num, omp_get_num_threads
 #endif
@@ -365,7 +365,7 @@
 !
       isa = 0
 
-#ifdef __OPENMP
+#if defined(__OPENMP)
       mytid = omp_get_thread_num()  ! take the thread ID
       ntids = omp_get_num_threads() ! take the number of threads
       itid  = 0
@@ -378,7 +378,7 @@
             cycle
          end if
          !
-#ifdef __MPI
+#if defined(__MPI)
          do ia=1,na(is)
             nfft=1
             if ( dfftb%np3( ia + isa ) <= 0 ) cycle
@@ -391,7 +391,7 @@
             if( ia.eq.na(is) ) nfft=1
 #endif
 
-#ifdef __OPENMP
+#if defined(__OPENMP)
             IF ( mytid /= itid ) THEN
                itid = MOD( itid + 1, ntids )
                CYCLE

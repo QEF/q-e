@@ -262,7 +262,7 @@
                   WRITE( 33, 29482 ) nfi,tps,ekinc,temphc,tempp,etot,enthal, &
                                     econs,econt,volume,out_press,(-exx*exxalfa)
                 ELSE    
-#ifdef __OLD_FORMAT
+#if defined(__OLD_FORMAT)
                   WRITE( 33, '(I6,1X,F8.5,1X,F6.1,1X,F6.1,4(1X,F14.5),F10.2, F8.2, F8.5)') &
                                     nfi,ekinc,temphc,tempp,etot,enthal, &
                                     econs,econt,volume,out_press,tps

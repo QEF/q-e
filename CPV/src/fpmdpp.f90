@@ -71,7 +71,7 @@ PROGRAM fpmd_postproc
   ! default values
 
   dunit = 14
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
   CALL remove_stack_limit ( )
 #endif
   !  initialize mpi
