@@ -163,7 +163,7 @@ SUBROUTINE d2ion (nat,ntyp,ityp,zv,tau,alat,omega,                &
   ENDDO
   !
 30 CONTINUE
-#ifdef __MPI
+#if defined(__MPI)
   CALL mp_sum( dyn, intra_pool_comm )
 #endif
   RETURN

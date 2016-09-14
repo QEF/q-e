@@ -170,7 +170,7 @@ subroutine gmressolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
 !print*,'r3',sum(dpsi),sum(d0psi)
            ! norm of pre. r : bet = |r|
            bet(ibnd) = zdotc (ndim, r(1,ibnd), 1, r(1,ibnd), 1)
-#ifdef __MPI
+#if defined(__MPI)
            call mp_sum ( bet(ibnd), intra_bgrp_comm  )
 #endif
            bet(ibnd) = sqrt( bet(ibnd) )
@@ -231,7 +231,7 @@ subroutine gmressolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
               ! compute hm(i,j)
 !              hm(i,j) = zdotc (ndim, w(1,ibnd), 1, v(1,ibnd,i), 1)
               hm4para(1) = zdotc (ndim, w(1,ibnd), 1, v(1,ibnd,i), 1)
-#ifdef __MPI
+#if defined(__MPI)
               call mp_sum ( hm4para, intra_bgrp_comm )
 #endif
               hm(i,j) = hm4para(1)
@@ -242,7 +242,7 @@ subroutine gmressolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
            !   compute hm(j+1,j)
 !           hm(j+1,j) = zdotc (ndim, w(1,ibnd), 1, w(1,ibnd), 1)
            hm4para(1) = zdotc (ndim, w(1,ibnd), 1, w(1,ibnd), 1)
-#ifdef __MPI
+#if defined(__MPI)
            call mp_sum ( hm4para, intra_bgrp_comm )
 #endif
            hm(j+1,j) = hm4para(1)

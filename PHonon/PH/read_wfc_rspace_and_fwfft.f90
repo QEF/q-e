@@ -39,7 +39,7 @@ subroutine read_wfc_rspace_and_fwfft( evc , ik , lrec ,  iunit , npw , igmap )
      !
      ! read wfc in real space
      !
-#ifdef __MPI
+#if defined(__MPI)
      !
      ! ... First task reads and broadcasts ddrho to all pools
      !

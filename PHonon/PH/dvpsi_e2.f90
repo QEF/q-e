@@ -164,7 +164,7 @@ subroutine dvpsi_e2
      call davcio_drho (aux3 (1, ipa), lrdrho, iudrho, ipa, -1)
   enddo
 
-#ifdef __MPI
+#if defined(__MPI)
   if (my_pool_id .ne. 0) goto 100
 #endif
   d2muxc (:) = 0.d0

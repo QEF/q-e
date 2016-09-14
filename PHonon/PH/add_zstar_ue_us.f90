@@ -70,7 +70,7 @@ subroutine add_zstar_ue_us(imode0,npe)
            !
            pdsp = (0.d0,0.d0)
            call psidspsi (ik, u (1, mode), pdsp )
-#ifdef __MPI
+#if defined(__MPI)
            call mp_sum(pdsp, intra_bgrp_comm )
 #endif
            !

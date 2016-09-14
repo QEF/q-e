@@ -162,7 +162,7 @@ subroutine set_irr (nat, at, bg, xq, s, sr, tau, ntyp, ityp, ftau, invs, nsym, &
   USE constants, ONLY: tpi
   USE random_numbers, ONLY : randy
   USE rap_point_group, ONLY : name_rap
-#ifdef __MPI
+#if defined(__MPI)
   use mp, only: mp_bcast
   use io_global, only : ionode_id
   use mp_global, only : intra_image_comm
@@ -436,7 +436,7 @@ subroutine set_irr (nat, at, bg, xq, s, sr, tau, ntyp, ityp, ftau, invs, nsym, &
 !      nsymq=1
 !      minus_q=.false.
 
-#ifdef __MPI
+#if defined(__MPI)
 !
 ! parallel stuff: first node broadcasts everything to all nodes
 !
@@ -912,7 +912,7 @@ subroutine set_irr_sym (nat, at, bg, xq, s, rtau, irt, &
 
   enddo
 
-#ifdef __MPI
+#if defined(__MPI)
 !
 ! parallel stuff: first node broadcasts everything to all nodes
 !

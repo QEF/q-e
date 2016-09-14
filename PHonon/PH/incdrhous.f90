@@ -109,7 +109,7 @@ subroutine incdrhous (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
         endif
      enddo
   enddo
-#ifdef __MPI
+#if defined(__MPI)
   call mp_sum (ps1,intra_bgrp_comm)
 #endif
   dpsi (:,:) = (0.d0, 0.d0)

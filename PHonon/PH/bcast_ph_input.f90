@@ -13,7 +13,7 @@ subroutine bcast_ph_input ( )
   !     the other processors
   !
   !
-#ifdef __MPI
+#if defined(__MPI)
 
   use mp, only: mp_bcast
   use mp_world, only: world_comm

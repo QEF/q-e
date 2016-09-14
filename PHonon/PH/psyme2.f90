@@ -22,7 +22,7 @@ subroutine psyme2 (dvtosym)
   ! the potential to symmetrize
   !-local variable
 
-#ifdef __MPI
+#if defined(__MPI)
   integer :: i, iper, npp0
 
   complex(DP), allocatable :: ddvtosym (:,:)

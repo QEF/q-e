@@ -202,7 +202,7 @@ subroutine zstar_eu_us
               !
               pdsp = (0.d0,0.d0)
               call psidspsi (ik, u (1, mode), pdsp )
-#ifdef __MPI
+#if defined(__MPI)
               call mp_sum( pdsp, intra_bgrp_comm )
 #endif
               !
@@ -256,7 +256,7 @@ subroutine zstar_eu_us
   deallocate (aux1)
 
   fact=1.0_DP
-#ifdef __MPI
+#if defined(__MPI)
   fact=1.0_DP/nproc_pool/npool
 #endif
   IF (okpaw) THEN

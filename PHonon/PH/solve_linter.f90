@@ -527,7 +527,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
      !     of the change of potential and Q
      !
      call newdq (dvscfin, npe)
-#ifdef __MPI
+#if defined(__MPI)
      aux_avg (1) = DBLE (ltaver)
      aux_avg (2) = DBLE (lintercall)
      call mp_sum ( aux_avg, inter_pool_comm )

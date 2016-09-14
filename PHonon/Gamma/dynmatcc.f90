@@ -112,7 +112,7 @@ SUBROUTINE dynmatcc(dyncc)
   !
   DEALLOCATE(rhocg)
   DEALLOCATE(gc)
-#ifdef __MPI
+#if defined(__MPI)
   CALL mp_sum( dyncc1, intra_pool_comm )
 #endif
   CALL dscal(3*nat*3*nat,-omega,dyncc1,1)

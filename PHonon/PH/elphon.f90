@@ -626,7 +626,7 @@ SUBROUTINE elphsum ( )
   kunit_save=kunit
   kunit=1
 
-#ifdef __MPI
+#if defined(__MPI)
   ALLOCATE(etfit_dist(nbnd,nksfit_dist))
   ALLOCATE(wkfit_dist(nksfit_dist))
   CALL poolscatter( 1, nksfit, wkfit, nksfit_dist, wkfit_dist )
@@ -649,7 +649,7 @@ SUBROUTINE elphsum ( )
      dosfit(isig) = dos_ef ( ngauss1, deg(isig), effit(isig), etfit_dist, &
           wkfit_dist, nksfit_dist, nbnd) / 2.0d0
   enddo
-#ifdef __MPI
+#if defined(__MPI)
   DEALLOCATE(etfit_dist)
   DEALLOCATE(wkfit_dist)
 #endif
