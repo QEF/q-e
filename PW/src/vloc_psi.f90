@@ -37,18 +37,21 @@ SUBROUTINE vloc_psi_gamma(lda, n, m, psi, v, hpsi)
   COMPLEX(DP), ALLOCATABLE :: tg_psic(:)
   INTEGER :: v_siz, idx, ioff
   !
+  CALL start_clock ('vloc_psi')
   incr = 2
   !
   use_tg = dtgs%have_task_groups 
   !
   IF( use_tg ) THEN
      !
+     CALL start_clock ('vloc_psi:tg_gather')
      v_siz =  dtgs%tg_nnr * dtgs%nogrp
      !
      ALLOCATE( tg_v   ( v_siz ) )
      ALLOCATE( tg_psic( v_siz ) )
      !
      CALL tg_gather( dffts, dtgs, v, tg_v )
+     CALL stop_clock ('vloc_psi:tg_gather')
      !
      incr = 2 * dtgs%nogrp
      !
@@ -182,6 +185,7 @@ SUBROUTINE vloc_psi_gamma(lda, n, m, psi, v, hpsi)
      DEALLOCATE( tg_v )
      !
   ENDIF
+  CALL stop_clock ('vloc_psi')
   !
   RETURN
 END SUBROUTINE vloc_psi_gamma
@@ -218,18 +222,22 @@ SUBROUTINE vloc_psi_k(lda, n, m, psi, v, hpsi)
   COMPLEX(DP), ALLOCATABLE :: tg_psic(:)
   INTEGER :: v_siz, idx, ioff
   !
+  CALL start_clock ('vloc_psi')
   use_tg = dtgs%have_task_groups 
   !
   incr = 1
   !
   IF( use_tg ) THEN
      !
+     CALL start_clock ('vloc_psi:tg_gather')
      v_siz =  dtgs%tg_nnr * dtgs%nogrp
      !
      ALLOCATE( tg_v   ( v_siz ) )
      ALLOCATE( tg_psic( v_siz ) )
      !
      CALL tg_gather( dffts, dtgs, v, tg_v )
+     CALL stop_clock ('vloc_psi:tg_gather')
+
      incr = dtgs%nogrp
      !
   ENDIF
@@ -331,6 +339,7 @@ SUBROUTINE vloc_psi_k(lda, n, m, psi, v, hpsi)
      DEALLOCATE( tg_v )
      !
   ENDIF
+  CALL stop_clock ('vloc_psi')
   !
   RETURN
 END SUBROUTINE vloc_psi_k
@@ -371,12 +380,14 @@ SUBROUTINE vloc_psi_nc (lda, n, m, psi, v, hpsi)
   COMPLEX(DP), ALLOCATABLE :: tg_psic(:,:)
   INTEGER :: v_siz, idx, ioff
   !
+  CALL start_clock ('vloc_psi')
   !
   incr = 1
   !
   use_tg = dtgs%have_task_groups 
   !
   IF( use_tg ) THEN
+     CALL start_clock ('vloc_psi:tg_gather')
      v_siz = dtgs%tg_nnr * dtgs%nogrp
      IF (domag) THEN
         ALLOCATE( tg_v( v_siz, 4 ) )
@@ -388,6 +399,8 @@ SUBROUTINE vloc_psi_nc (lda, n, m, psi, v, hpsi)
         CALL tg_gather( dffts, dtgs, v(:,1), tg_v(:,1) )
      ENDIF
      ALLOCATE( tg_psic( v_siz, npol ) )
+     CALL stop_clock ('vloc_psi:tg_gather')
+
      incr = dtgs%nogrp
   ENDIF
   !
@@ -514,6 +527,7 @@ SUBROUTINE vloc_psi_nc (lda, n, m, psi, v, hpsi)
      DEALLOCATE( tg_psic )
      !
   ENDIF
+  CALL stop_clock ('vloc_psi')
   !
   RETURN
 END SUBROUTINE vloc_psi_nc

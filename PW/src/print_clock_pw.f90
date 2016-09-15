@@ -137,6 +137,7 @@ SUBROUTINE print_clock_pw()
       CALL print_clock( 'h_psi:pot' )
       CALL print_clock( 'h_psi:calbec' )
 !  END IF
+   CALL print_clock( 'vloc_psi' )   ; CALL print_clock ( 'vloc_psi:tg_gather' ) ;  CALL print_clock ( 'v_loc_psir' )
    CALL print_clock( 'add_vuspsi' ) ; CALL print_clock ( 'add_vuspsir' )
    CALL print_clock( 'vhpsi' )
    CALL print_clock( 'h_psi_meta' )
