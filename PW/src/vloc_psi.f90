@@ -39,10 +39,7 @@ SUBROUTINE vloc_psi_gamma(lda, n, m, psi, v, hpsi)
   !
   incr = 2
   !
-  ! The following is dirty trick to prevent usage of task groups if
-  ! the number of bands is smaller than the number of task groups 
-  ! 
-  use_tg = dtgs%have_task_groups .and. ( m >= dtgs%nogrp )
+  use_tg = dtgs%have_task_groups 
   !
   IF( use_tg ) THEN
      !
@@ -221,10 +218,7 @@ SUBROUTINE vloc_psi_k(lda, n, m, psi, v, hpsi)
   COMPLEX(DP), ALLOCATABLE :: tg_psic(:)
   INTEGER :: v_siz, idx, ioff
   !
-  ! The following is dirty trick to prevent usage of task groups if
-  ! the number of bands is smaller than the number of task groups 
-  ! 
-  use_tg = dtgs%have_task_groups .and. ( m >= dtgs%nogrp )
+  use_tg = dtgs%have_task_groups 
   !
   incr = 1
   !
@@ -380,10 +374,7 @@ SUBROUTINE vloc_psi_nc (lda, n, m, psi, v, hpsi)
   !
   incr = 1
   !
-  ! The following is dirty trick to prevent usage of task groups if
-  ! the number of bands is smaller than the number of task groups 
-  ! 
-  use_tg = dtgs%have_task_groups .and. ( m >= dtgs%nogrp )
+  use_tg = dtgs%have_task_groups 
   !
   IF( use_tg ) THEN
      v_siz = dtgs%tg_nnr * dtgs%nogrp

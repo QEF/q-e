@@ -254,7 +254,7 @@ SUBROUTINE sum_band()
        !
        incr = 2
        !
-       IF( dtgs%have_task_groups .AND. ( this_bgrp_nbnd >= dtgs%nogrp ) ) THEN
+       IF( dtgs%have_task_groups ) THEN
           !
           IF( dft_is_meta() .OR. lxdm) &
              CALL errore( ' sum_band ', ' task groups with meta dft, not yet implemented ', 1 )
@@ -270,7 +270,7 @@ SUBROUTINE sum_band()
        !
        k_loop: DO ik = 1, nks
           !
-          IF( dtgs%have_task_groups .AND. ( this_bgrp_nbnd >= dtgs%nogrp ) ) tg_rho = 0.0_DP
+          IF( dtgs%have_task_groups ) tg_rho = 0.0_DP
           IF ( lsda ) current_spin = isk(ik)
           !
           npw = ngk(ik)
@@ -295,7 +295,7 @@ SUBROUTINE sum_band()
           !
           DO ibnd = ibnd_start, ibnd_end, incr
              !
-             IF( dtgs%have_task_groups .AND. ( this_bgrp_nbnd >= dtgs%nogrp ) ) THEN
+             IF( dtgs%have_task_groups ) THEN
                 !
                 tg_psi(:) = ( 0.D0, 0.D0 )
                 ioff   = 0
@@ -436,7 +436,7 @@ SUBROUTINE sum_band()
              !
           END DO
           !
-          IF( dtgs%have_task_groups .AND. ( this_bgrp_nbnd >= dtgs%nogrp ) ) THEN
+          IF( dtgs%have_task_groups ) THEN
              !
              ! reduce the group charge
              !
@@ -466,7 +466,7 @@ SUBROUTINE sum_band()
        !
        IF( okvan .AND. becp%comm /= mp_get_comm_null() ) CALL mp_sum( becsum, becp%comm )
        !
-       IF( dtgs%have_task_groups .AND. ( this_bgrp_nbnd >= dtgs%nogrp ) ) THEN
+       IF( dtgs%have_task_groups ) THEN
           DEALLOCATE( tg_psi )
           DEALLOCATE( tg_rho )
        END IF
@@ -502,7 +502,6 @@ SUBROUTINE sum_band()
        ! ... of the wavefunctions to the charge
        !
        use_tg = ( dtgs%have_task_groups ) .AND. &
-                                ( this_bgrp_nbnd >= dtgs%nogrp ) .AND. &
                                 ( .NOT. (dft_is_meta() .OR. lxdm) )
        !
        incr = 1

@@ -190,12 +190,13 @@ CONTAINS
 
 !=----------------------------------------------------------------------------=!
 
-  SUBROUTINE fft_type_set( desc, tk, lpara, nst, ub, lb, idx, in1, in2, ncp, ncpw, ngp, ngpw, st, stw )
+  SUBROUTINE fft_type_set( desc, tk, lpara, ntg, nst, ub, lb, idx, in1, in2, ncp, ncpw, ngp, ngpw, st, stw )
 
     TYPE (fft_type_descriptor) :: desc
 
     LOGICAL, INTENT(in) :: tk               ! gamma/not-gamma logical
     LOGICAL, INTENT(in) :: lpara            ! set array for parallel or serial FFT drivers
+    INTEGER, INTENT(in) :: ntg              ! number of task groups (optimal spacing for residual-plane distribution)
     INTEGER, INTENT(in) :: nst              ! total number of stiks 
     INTEGER, INTENT(in) :: ub(3), lb(3)     ! upper and lower bound of real space indices
     INTEGER, INTENT(in) :: idx(:)           ! sorting index of the sticks
@@ -209,7 +210,7 @@ CONTAINS
     INTEGER, INTENT(in) :: stw( lb(1) : ub(1), lb(2) : ub(2) )  ! stick owner of a given wave stick
 
     INTEGER :: npp( desc%nproc ), n3( desc%nproc ), nsp( desc%nproc )
-    INTEGER :: np, nq, i, is, iss, i1, i2, m1, m2, n1, n2, ip
+    INTEGER :: np, nq, i, is, iss, itg, i1, i2, m1, m2, n1, n2, ip
     INTEGER :: ncpx, nppx
     INTEGER :: nr1, nr2, nr3    ! size of real space grid 
     INTEGER :: nr1x, nr2x, nr3x ! padded size of real space grid
@@ -246,15 +247,20 @@ CONTAINS
     !  in other word do a slab partition along the z axis
 
     npp = 0
-    IF ( desc%nproc == 1 ) THEN      ! sigle processor: npp(1)=nr3
+    IF ( desc%nproc == 1 ) THEN   ! sigle processor: npp(1)=nr3
       npp(1) = nr3
     ELSE
       np = nr3 / desc%nproc
       nq = nr3 - np * desc%nproc
-      DO i = 1, desc%nproc
-        npp(i) = np
-        IF ( i <= nq ) npp(i) = np + 1
-      ENDDO
+      npp(1:desc%nproc) = np      ! assign a base value to all processors
+      reminder_loop : &           ! assign an extra plane to processors so that they are spaced by ntg
+      DO itg = 1, ntg  
+         DO i = itg, desc%nproc, ntg
+            IF (nq==0) EXIT reminder_loop
+            nq = nq - 1
+            npp(i) = np + 1
+         ENDDO
+      ENDDO reminder_loop
     END IF
 
     !-- npp(1:nproc) is the number of planes per processor
@@ -474,7 +480,7 @@ CONTAINS
   END SUBROUTINE fft_type_set
 !=----------------------------------------------------------------------------=!
 
-  SUBROUTINE fft_type_init( dfft, smap, pers, lgamma, lpara, comm, at, bg, gcut_in, dual_in )
+  SUBROUTINE fft_type_init( dfft, smap, pers, lgamma, lpara, comm, at, bg, gcut_in, dual_in, ntask_groups )
 
      USE stick_base
 
@@ -488,6 +494,7 @@ CONTAINS
      REAL(DP), INTENT(IN) :: bg(3,3)
      REAL(DP), INTENT(IN) :: at(3,3)
      REAL(DP), OPTIONAL, INTENT(IN) :: dual_in
+     INTEGER,  OPTIONAL, INTENT(IN) :: ntask_groups
 !
 !    Potential or dual
 !
@@ -514,11 +521,15 @@ CONTAINS
 ! ...   sticks length for processor ip = number of G-vectors owned by the processor ip
      INTEGER :: nstw
 ! ...   nstw     local number of sticks (wave functions)
+     INTEGER :: ntg
+! ...   ntg       number of task groups (assigned from input if any)
 
 
      REAL(DP) :: gcut, gkcut, dual
      INTEGER  :: ngm, ngw
 
+     ntg = 1
+     IF( PRESENT( ntask_groups ) ) ntg = ntask_groups
      dual = fft_dual
      IF( PRESENT( dual_in ) ) dual = dual_in
 
@@ -555,7 +566,7 @@ CONTAINS
      CALL get_sticks(  smap, gkcut, nstpw, sstpw, stw, nstw, ngw )
      CALL get_sticks(  smap, gcut,  nstp, sstp, st, nst, ngm )
 
-     CALL fft_type_set( dfft, .not.smap%lgamma, lpara, nst, smap%ub, smap%lb, smap%idx, &
+     CALL fft_type_set( dfft, .not.smap%lgamma, lpara, ntg, nst, smap%ub, smap%lb, smap%idx, &
                              smap%ist(:,1), smap%ist(:,2), nstp, nstpw, sstp, sstpw, st, stw )
 
      DEALLOCATE( st )

@@ -34,6 +34,10 @@ SUBROUTINE print_clock_pw()
    !
    WRITE( stdout, '(/5x,"Called by init_run:")' )
    CALL print_clock( 'wfcinit' )
+   IF ( iverbosity > 0 ) THEN
+      CALL print_clock( 'wfcinit:atomic' )
+      CALL print_clock( 'wfcinit:wfcrot' )
+   END IF
    CALL print_clock( 'potinit' )
    CALL print_clock( 'realus' )
    IF ( iverbosity > 0 ) THEN

@@ -146,6 +146,13 @@ SUBROUTINE task_groups_init( dffts, dtgs, nogrp )
    dtgs%tg_npp(1) = num_planes
 #endif
 
+#ifdef __TASK_PRINTOUT
+   write (6,*) 'TASK GROUP stick AND plane DISTRIBUTION '
+   do i=1,dtgs%nproc
+      write (6,*) i, dtgs%tg_nsw(i), dtgs%tg_npp(i)
+   end do
+#endif
+
    ALLOCATE( dtgs%tg_snd( dtgs%nogrp ) )
    ALLOCATE( dtgs%tg_rcv( dtgs%nogrp ) )
    ALLOCATE( dtgs%tg_psdsp( dtgs%nogrp ) )

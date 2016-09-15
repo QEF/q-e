@@ -94,7 +94,7 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, dtgs )
 
 #if defined(__MPI)
 
-  INTEGER :: dest, from, k, offset, proc, ierr, me, nprocp, gproc, gcomm, i, kdest, kfrom
+  INTEGER :: k, offset, proc, ierr, me, nprocp, gproc, gcomm, i, kdest, kfrom
   INTEGER :: me_p, nppx, mc, j, npp, nnp, ii, it, ip, ioff, sendsiz, ncpx, ipp, nblk, nsiz
   !
   LOGICAL :: use_tg_
@@ -144,7 +144,7 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, dtgs )
      !
      ! step one: store contiguously the slices
      !
-     offset = 1
+     offset = 0
 
      DO proc = 1, nprocp
         IF( use_tg_ ) THEN
@@ -153,11 +153,8 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, dtgs )
            gproc = proc
         ENDIF
         !
-        from = offset
-        dest = 1 + ( proc - 1 ) * sendsiz
-        !
-        kdest = dest - 1
-        kfrom = from - 1
+        kdest = ( proc - 1 ) * sendsiz
+        kfrom = offset
         !
         DO k = 1, ncp_ (me)
            DO i = 1, npp_ ( gproc )
@@ -340,19 +337,17 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, dtgs )
      !
      !! f_in = 0.0_DP
      !
-     offset = 1
+     offset = 0
 
      DO proc = 1, nprocp
-        from = offset
         IF( use_tg_ ) THEN
            gproc = dtgs%nplist(proc)+1
         ELSE
            gproc = proc
         ENDIF
-        dest = 1 + ( proc - 1 ) * sendsiz
         !
-        kdest = dest - 1
-        kfrom = from - 1
+        kdest = ( proc - 1 ) * sendsiz
+        kfrom = offset 
         !
         DO k = 1, ncp_ (me)
            DO i = 1, npp_ ( gproc )  
@@ -424,7 +419,7 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, dtgs )
 
 #if defined(__MPI)
 
-  INTEGER :: dest, from, k, offset, proc, ierr, me, nprocp, gproc, gcomm, i, kdest, kfrom
+  INTEGER :: k, offset, proc, ierr, me, nprocp, gproc, gcomm, i, kdest, kfrom
   INTEGER :: me_p, nppx, mc, j, npp, nnp, ii, it, ip, ioff, sendsiz, ncpx, ipp, nblk, nsiz, ijp
   INTEGER :: sh(dfft%nproc), rh(dfft%nproc)
   INTEGER :: istat( MPI_STATUS_SIZE )
@@ -473,13 +468,13 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, dtgs )
      !
      ! step one: store contiguously the slices
      !
-     offset = 1
+     offset = 0
 
      IF( use_tg_ ) THEN
         DO proc = 1, nprocp
            gproc = dtgs%nplist(proc)+1
            kdest = ( proc - 1 ) * sendsiz
-           kfrom = offset - 1
+           kfrom = offset 
            DO k = 1, ncp_ (me)
               DO i = 1, npp_ ( gproc )
                  f_aux ( kdest + i ) =  f_in ( kfrom + i )
@@ -495,7 +490,7 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, dtgs )
      ELSE
         DO proc = 1, nprocp
            kdest = ( proc - 1 ) * sendsiz
-           kfrom = offset - 1
+           kfrom = offset 
            DO k = 1, ncp_ (me)
               DO i = 1, npp_ ( proc )
                  f_aux ( kdest + i ) =  f_in ( kfrom + i )
@@ -703,13 +698,13 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, dtgs )
      call mpi_waitall( nblk, rh, MPI_STATUSES_IGNORE, ierr )
      call mpi_waitall( nblk, sh, MPI_STATUSES_IGNORE, ierr )
      !
-     offset = 1
+     offset = 0
 
      IF( use_tg_ ) THEN
         DO proc = 1, nprocp
            gproc = dtgs%nplist(proc) + 1
            kdest = ( proc - 1 ) * sendsiz
-           kfrom = offset - 1
+           kfrom = offset 
            DO k = 1, ncp_ (me)
               DO i = 1, npp_ ( gproc )  
                  f_in ( kfrom + i ) = f_aux ( kdest + i )
@@ -722,7 +717,7 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, dtgs )
      ELSE
         DO proc = 1, nprocp
            kdest = ( proc - 1 ) * sendsiz 
-           kfrom = offset - 1
+           kfrom = offset 
            DO k = 1, ncp_ (me)
               DO i = 1, npp_ ( proc )  
                  f_in ( kfrom + i ) = f_aux ( kdest + i )
