@@ -2823,7 +2823,7 @@ SUBROUTINE aceinit( )
      ENDIF
      eexx = eexx + ee
   ENDDO
-  CALL mp_sum( eexx, intra_bgrp_comm)
+  CALL mp_sum( eexx, inter_pool_comm)
   WRITE(*,*) 'EXACT--Energy', eexx
   IF ( okvan ) CALL deallocate_bec_type(becpsi)
   domat = .false.

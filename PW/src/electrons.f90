@@ -1232,7 +1232,6 @@ FUNCTION exxenergyace ( )
      END IF
      exxenergyace = exxenergyace + ex
   END DO
-  CALL mp_sum( exxenergyace, intra_bgrp_comm)
   CALL mp_sum( exxenergyace, inter_pool_comm )
   domat = .false.
   !
