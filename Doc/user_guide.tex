@@ -1143,6 +1143,11 @@ environment variable OMP\_NUM\_THREADS to 1 unless you know what you
 are doing. See Sec.\ref{Sec:para} for more info on this
 and on the difference between MPI and OpenMP parallelization.
 
+If you get a mysterious "too many communicators" error and a 
+subsequent crash: there is a bug in Intel MPI and MKL 2016 update 3.
+See this thread and the links quoted therein:
+\verb|http://www.mail-archive.com/pw_forum@pwscf.org/msg29684.html|.
+
 \paragraph{Linux PCs with ACML libraries}
 For AMD CPUs, especially recent ones, you may find convenient to
 link AMD acml libraries (can be freely downloaded from AMD web site).
