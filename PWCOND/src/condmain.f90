@@ -21,7 +21,7 @@ program pwcond
 
   call do_cond (alldone)
 
-#ifdef __MPI
+#if defined(__MPI)
   CALL mp_global_end()
 #endif
 

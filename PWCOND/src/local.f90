@@ -175,7 +175,7 @@ subroutine local_1 (edummy, nrz, vppot, n2d, psibase)
   INTEGER :: i, il, j, jl, ig, jg, ipol,      &
              idx, number, nprob, nteam, nteamnow,     &
              info, kin, kfin, is, js
-#ifdef __MPI
+#if defined(__MPI)
   INTEGER :: status(MPI_STATUS_SIZE)
 #endif
   INTEGER, ALLOCATABLE :: fftxy(:,:)
@@ -246,7 +246,7 @@ subroutine local_1 (edummy, nrz, vppot, n2d, psibase)
      CALL hev_ab(ngper*npol, amat, ngper*npol, el, psiprob,      &
                      -1.d1, edummy+ewind, nprob)
 
-#ifdef __MPI
+#if defined(__MPI)
     IF ( me_pool.ne.root_pool ) THEN
         CALL mpi_send(nprob,1,MPI_INTEGER,0,17,     &
                                     MPI_COMM_WORLD,info )
@@ -279,7 +279,7 @@ subroutine local_1 (edummy, nrz, vppot, n2d, psibase)
 
   ENDDO
 
-#ifdef __MPI
+#if defined(__MPI)
   CALL mp_barrier(world_comm)
   CALL mp_bcast(n2d,ionode_id, world_comm)
   CALL mp_bcast(psibase,ionode_id, world_comm)
@@ -390,7 +390,7 @@ subroutine local_2(nrz, nrzp, vppot, psiper, zkr)
 
   ENDDO
 
-#ifdef __MPI
+#if defined(__MPI)
   CALL mp_barrier(world_comm)
 #endif
 

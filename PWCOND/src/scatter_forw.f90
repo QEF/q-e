@@ -490,7 +490,7 @@ subroutine scatter_forw(nrz, nrzp, z, psiper, zk, norb, tblm, cros, &
 ! To construct the functions in the whole rigion zin<z<zfin in the
 ! case of multiparallel running
 !
-#ifdef __MPI
+#if defined(__MPI)
   CALL rotproc(fun0, fund0, fun1, fund1, funl0, fundl0, funl1, &
                fundl1, intw1, intw2, n2d, norbf, norb, nrzp)
 #endif

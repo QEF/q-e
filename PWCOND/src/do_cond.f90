@@ -70,7 +70,7 @@ SUBROUTINE do_cond(done)
   !
   ! initialise environment
   !
-#ifdef __MPI
+#if defined(__MPI)
   CALL mp_startup ( )
 #endif
   CALL environment_start ( 'PWCOND' )
@@ -187,7 +187,7 @@ SUBROUTINE do_cond(done)
      !
   END IF
 
-#ifdef __MPI
+#if defined(__MPI)
    IF (npool > 1) CALL errore('pwcond','pools not implemented',npool)
    ik = IAND ( nproc, nproc-1 )
    IF ( nproc /= 1 .AND. ik /= 0 ) &

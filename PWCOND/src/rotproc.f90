@@ -59,7 +59,7 @@ SUBROUTINE rotproc (fun0, fund0, fun1, fund1, funl0, fundl0, funl1,  &
   COMPLEX(DP), ALLOCATABLE :: x(:), y(:), amat(:,:), vec(:,:),  &
                                amat_aux(:,:), vec_aux(:,:)
 
-#ifdef __MPI
+#if defined(__MPI)
 
   IF(nproc.EQ.1) RETURN
 
