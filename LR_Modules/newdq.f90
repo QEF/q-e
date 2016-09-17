@@ -142,7 +142,7 @@ subroutine newdq (dvscf, npe)
      enddo
 
   enddo
-#ifdef __MPI
+#if defined(__MPI)
   call mp_sum ( int3, intra_bgrp_comm )
 #endif
   IF (noncolin) CALL set_int3_nc(npe)

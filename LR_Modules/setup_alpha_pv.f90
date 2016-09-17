@@ -42,7 +42,7 @@ SUBROUTINE setup_alpha_pv
      ENDDO
   ENDDO
   !
-#ifdef __MPI
+#if defined(__MPI)
   ! Find the minimum across pools
   CALL mp_min( emin, inter_pool_comm )
 #endif
@@ -83,7 +83,7 @@ SUBROUTINE setup_alpha_pv
         ENDDO
      ENDDO
      !
-#ifdef __MPI
+#if defined(__MPI)
      ! Find the maximum across pools
      CALL mp_max( emax, inter_pool_comm )
 #endif

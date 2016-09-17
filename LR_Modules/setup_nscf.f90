@@ -74,7 +74,7 @@ SUBROUTINE setup_nscf ( newgrid, xq, elph_mat )
   max_cg_iter=20
   natomwfc = n_atom_wfc( nat, ityp, noncolin )
   !
-#ifdef __MPI
+#if defined(__MPI)
   IF ( use_para_diag )  CALL check_para_diag( nbnd )
 #else
   use_para_diag = .FALSE.

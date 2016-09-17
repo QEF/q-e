@@ -293,7 +293,7 @@ CONTAINS
           CALL zgemm('C','N',nkb,nkb,ngk(ik1),(1.d0,0.d0),vkb, &
                  & lda,vkb,lda,(0.d0,0.d0),bbk(1,1,ik1),nkb)
           !
-#ifdef __MPI
+#if defined(__MPI)
           CALL mp_sum(bbk(:,:,ik1), intra_bgrp_comm)
 #endif
           !
@@ -545,7 +545,7 @@ CONTAINS
           CALL zgemm('C','N',nkb,nkb,npwq,(1.d0,0.d0),vkb, &
                 & lda,vkb,lda,(0.d0,0.d0),bbk(1,1,ik1),nkb)
           !
-#ifdef __MPI
+#if defined(__MPI)
           CALL mp_sum(bbk(:,:,ik1), intra_bgrp_comm)
 #endif
           ! 
@@ -757,7 +757,7 @@ SUBROUTINE sm1_psiq_nc()
              bbnc(:,:,4,ik1) = bbnc(:,:,1,ik1)
           ENDIF
           !
-#ifdef __MPI
+#if defined(__MPI)
           CALL mp_sum(bbnc(:,:,:,ik1), intra_bgrp_comm)
 #endif
           !
