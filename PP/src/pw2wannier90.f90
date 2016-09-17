@@ -112,7 +112,7 @@ PROGRAM pw2wannier90
   !
   ! initialise environment
   !
-#ifdef __MPI
+#if defined(__MPI)
   CALL mp_startup ( )
 #endif
   !! not sure if this should be called also in 'library' mode or not !!
@@ -499,7 +499,7 @@ SUBROUTINE setup_nnkp
 
   WRITE(stdout,'("  - Number of atoms is (",i3,")")') nat
 
-#ifdef __WANLIB
+#if defined(__WANLIB)
   IF (ionode) THEN
      CALL wannier_setup(seedname,mp_grid,iknum,rlatt, &               ! input
           glatt,kpt_latt,nbnd,nat,atsym,atcart,gamma_only,noncolin, & ! input
@@ -624,7 +624,7 @@ SUBROUTINE run_wannier
   ALLOCATE(wann_centers(3,n_wannier))
   ALLOCATE(wann_spreads(n_wannier))
 
-#ifdef __WANLIB
+#if defined(__WANLIB)
   IF (ionode) THEN
      CALL wannier_run(seedname,mp_grid,iknum,rlatt, &                ! input
           glatt,kpt_latt,num_bands,n_wannier,nnb,nat, &              ! input
@@ -2356,7 +2356,7 @@ SUBROUTINE write_plot
    COMPLEX(DP),ALLOCATABLE :: psic_small(:)
    !-------------------------------------------!
 
-#ifdef __MPI
+#if defined(__MPI)
    INTEGER nxxs
    COMPLEX(DP),ALLOCATABLE :: psic_all(:)
    nxxs = dffts%nr1x * dffts%nr2x * dffts%nr3x
@@ -2424,7 +2424,7 @@ SUBROUTINE write_plot
          IF (gamma_only)  psic(nlsm(igk_k(1:npw,ik))) = conjg(evc (1:npw, ibnd))
          CALL invfft ('Wave', psic, dffts)
          IF (reduce_unk) pos=0
-#ifdef __MPI
+#if defined(__MPI)
          CALL gather_grid(dffts,psic,psic_all)
          IF (reduce_unk) THEN
             DO k=1,dffts%nr3,2
@@ -2486,7 +2486,7 @@ SUBROUTINE write_plot
 
    IF (reduce_unk) DEALLOCATE(psic_small)
 
-#ifdef __MPI
+#if defined(__MPI)
    DEALLOCATE( psic_all )
 #endif
 

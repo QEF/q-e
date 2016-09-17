@@ -275,7 +275,7 @@ PROGRAM pw_export
   !
   ! initialise environment
   !
-#ifdef __MPI
+#if defined(__MPI)
   CALL mp_startup ( )
 #endif
   CALL environment_start ( 'PW_EXPORT' )
@@ -696,7 +696,7 @@ SUBROUTINE write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   DEALLOCATE( itmp_g )
 
 
-#ifdef __MPI
+#if defined(__MPI)
   CALL poolrecover (et, nbnd, nkstot, nks)
 #endif
 !

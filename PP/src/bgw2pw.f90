@@ -97,7 +97,7 @@ PROGRAM bgw2pw
 
   character (len=256), external :: trimcheck
 
-#ifdef __MPI
+#if defined(__MPI)
   CALL mp_startup ( )
 #endif
 
@@ -195,7 +195,7 @@ SUBROUTINE write_evc ( input_file_name, real_or_complex, &
   USE symm_base, ONLY : s, nsym
   USE xml_io_base, ONLY : create_directory
   USE qexml_module, ONLY : qexml_kpoint_dirname, qexml_wfc_filename
-#ifdef __MPI
+#if defined(__MPI)
   USE parallel_include, ONLY : MPI_INTEGER, MPI_DOUBLE_COMPLEX
 #endif
   USE wvfct, ONLY : npwx
@@ -402,7 +402,7 @@ SUBROUTINE write_evc ( input_file_name, real_or_complex, &
         ENDDO
       ENDDO
     ENDIF
-#ifdef __MPI
+#if defined(__MPI)
     CALL mp_barrier ( world_comm )
     CALL MPI_Scatter ( gk_buf, 3 * ngkdist_l, MPI_INTEGER, &
     gk_dist, 3 * ngkdist_l, MPI_INTEGER, &
@@ -454,7 +454,7 @@ SUBROUTINE write_evc ( input_file_name, real_or_complex, &
           ENDDO
         ENDDO
       ENDIF
-#ifdef __MPI
+#if defined(__MPI)
       DO is = 1, ns
         CALL mp_barrier ( world_comm )
         CALL MPI_Scatter ( wfng_buf ( :, is ), ngkdist_l, MPI_DOUBLE_COMPLEX, &
@@ -546,7 +546,7 @@ SUBROUTINE write_evc ( input_file_name, real_or_complex, &
       CALL iotk_write_attr ( attr, "UNITS", "2 pi / a", FIRST = .TRUE. )
       CALL iotk_write_dat ( iu, "K-POINT_COORDS", k ( :, ik ), ATTR = attr )
     ENDIF
-#ifdef __MPI
+#if defined(__MPI)
     CALL mp_barrier ( world_comm )
     CALL MPI_Gather ( igk_dist ( :, ik ) , ngkdist_l, MPI_INTEGER, &
     igk_buf, ngkdist_l, MPI_INTEGER, &
@@ -604,7 +604,7 @@ SUBROUTINE write_evc ( input_file_name, real_or_complex, &
         CALL iotk_write_empty ( iu, "INFO", attr )
       ENDIF
       DO ib = 1, nb
-#ifdef __MPI
+#if defined(__MPI)
         CALL mp_barrier ( world_comm )
         CALL MPI_Gather ( wfng_dist ( :, ib, is, ik ), ngkdist_l, MPI_DOUBLE_COMPLEX, &
         wfng_buf ( :, is ), ngkdist_l, MPI_DOUBLE_COMPLEX, &

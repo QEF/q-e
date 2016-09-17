@@ -15,7 +15,7 @@ SUBROUTINE stop_pp
   USE io_files, ONLY: iunwfc
   USE mp_global, ONLY: mp_global_end
   USE parallel_include
-#ifdef __MPI
+#if defined(__MPI)
 
   INTEGER :: info
   LOGICAL :: op

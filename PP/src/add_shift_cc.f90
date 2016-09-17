@@ -104,7 +104,7 @@ SUBROUTINE add_shift_cc (shift_cc)
         ENDDO
      ENDIF
   ENDDO
-#ifdef __MPI
+#if defined(__MPI)
   CALL mp_sum( shift_ , intra_pool_comm )
 #endif
   shift_cc(:) = shift_cc(:) + shift_(:)

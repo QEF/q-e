@@ -51,7 +51,7 @@ PROGRAM do_dos
   !
   ! initialise environment
   !
-#ifdef __MPI
+#if defined(__MPI)
   CALL mp_startup ( )
 #endif
   CALL environment_start ( 'DOS' )

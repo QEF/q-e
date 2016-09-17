@@ -133,7 +133,7 @@ SUBROUTINE sym_band(filband, spin_component, firstk, lastk)
 100  CONTINUE
   ENDDO
 
-#ifdef __MPI
+#if defined(__MPI)
   !
   !  Only the symmetry of a set of k points is calculated by this
   !  processor with pool. Here we collect the results into ionode
@@ -1081,7 +1081,7 @@ SUBROUTINE find_nks1nks2(firstk,lastk,nks1tot,nks1,nks2tot,nks2,spin_component)
   ENDIF
   IF (nks1tot>nks2tot) CALL errore('findnks1nks2','wrong nks1tot or nks2tot',1)
 
-#ifdef __MPI
+#if defined(__MPI)
   nks  = kunit * ( nkstot / kunit / npool )
   rest = ( nkstot - nks * npool ) / kunit
   IF ( ( my_pool_id + 1 ) <= rest ) nks = nks + kunit

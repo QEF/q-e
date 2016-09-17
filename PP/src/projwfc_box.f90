@@ -158,7 +158,7 @@ SUBROUTINE projwave_boxes( filpdos, filproj, n_proj_boxes, irmin, irmax, plotbox
         !
      ENDIF
      !
-#ifdef __MPI
+#if defined(__MPI)
      CALL scatter_grid ( dfftp, thetabox(:), thetathisproc(:,ibox) )
 #else
      thetathisproc(:,ibox) = thetabox(1:dfftp%nnr)      

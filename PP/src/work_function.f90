@@ -54,7 +54,7 @@ SUBROUTINE work_function (wf)
 
   DO current_spin=1,nspin0
 
-#ifdef __MPI
+#if defined(__MPI)
      ALLOCATE (aux  ( dfftp%nnr))
      aux(:) = rho%of_r(:,current_spin) + rho_core(:)/nspin0
      CALL gather_grid (dfftp, aux, raux1)
@@ -62,7 +62,7 @@ SUBROUTINE work_function (wf)
      raux1(1:dfftp%nnr) = rho%of_r(1:dfftp%nnr,current_spin) + rho_core(1:dfftp%nnr)/nspin0
 #endif
      !
-#ifdef __MPI
+#if defined(__MPI)
      aux(:) = vltot(:) + v%of_r(:,current_spin)
      CALL gather_grid (dfftp, aux, vaux1)
      aux(:) = aux(:) - vxc(:,current_spin)
@@ -72,7 +72,7 @@ SUBROUTINE work_function (wf)
      vaux2(1:dfftp%nnr) = vaux1(1:dfftp%nnr) -vxc(1:dfftp%nnr,current_spin)
 #endif
      !
-#ifdef __MPI
+#if defined(__MPI)
      DEALLOCATE(aux)
 #endif
      IF ( ionode ) THEN

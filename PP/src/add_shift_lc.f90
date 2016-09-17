@@ -87,7 +87,7 @@ SUBROUTINE add_shift_lc (nat, tau, ityp, alat, omega, ngm, ngl, &
      ENDDO
      shift_ (na) = fact * shift_ (na) * omega
   ENDDO
-#ifdef __MPI
+#if defined(__MPI)
   CALL mp_sum(  shift_, intra_pool_comm )
 #endif
 

@@ -122,7 +122,7 @@ SUBROUTINE add_shift_us( shift_nl )
           ENDDO
        ENDDO
        !
-#ifdef __MPI
+#if defined(__MPI)
        !
        ! ... collect contributions across pools
        !
@@ -214,7 +214,7 @@ SUBROUTINE add_shift_us( shift_nl )
           ENDDO
        ENDDO
        !
-#ifdef __MPI
+#if defined(__MPI)
        !
        ! ... collect contributions across pools
        !

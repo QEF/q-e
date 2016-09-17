@@ -40,7 +40,7 @@ PROGRAM do_bands
   !
   ! initialise environment
   !
-#ifdef __MPI
+#if defined(__MPI)
   CALL mp_startup ( )
 #endif
   CALL environment_start ( 'BANDS' )

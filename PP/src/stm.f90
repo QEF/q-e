@@ -88,7 +88,7 @@ SUBROUTINE stm (sample_bias, stmdos, istates)
      DO ik = 2, nks
         emin = min (emin, et (nbnd_ocp + 1, ik) )
      ENDDO
-#ifdef __MPI
+#if defined(__MPI)
      ! find the minimum across pools
      CALL mp_min( emin, inter_pool_comm )
 #endif
@@ -96,7 +96,7 @@ SUBROUTINE stm (sample_bias, stmdos, istates)
      DO ik = 2, nks
         emax = max (emax, et (nbnd_ocp, ik) )
      ENDDO
-#ifdef __MPI
+#if defined(__MPI)
      ! find the maximum across pools
      CALL mp_max( emax, inter_pool_comm )
 #endif
@@ -214,7 +214,7 @@ SUBROUTINE stm (sample_bias, stmdos, istates)
         ENDDO
      ENDIF
   ENDDO
-#ifdef __MPI
+#if defined(__MPI)
   CALL mp_sum( rho%of_r, inter_pool_comm )
 #endif
   !
@@ -233,7 +233,7 @@ SUBROUTINE stm (sample_bias, stmdos, istates)
      CALL invfft ('Dense', psic, dfftp)
      rho%of_r(:,1) = dble(psic(:))
   ENDIF
-#ifdef __MPI
+#if defined(__MPI)
   CALL gather_grid (dfftp, rho%of_r(:,1), stmdos)
 #else
   stmdos(:) = rho%of_r(:,1)
@@ -242,7 +242,7 @@ SUBROUTINE stm (sample_bias, stmdos, istates)
   DEALLOCATE(gs)
   WRITE( stdout, '(/5x,"STM:",f10.2,"s cpu time")') scnds ()-t0
   !
-#ifdef __MPI
+#if defined(__MPI)
   CALL mp_sum( istates, inter_pool_comm )
 #endif
 

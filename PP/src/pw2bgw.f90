@@ -165,7 +165,7 @@ PROGRAM pw2bgw
   character (len=256), external :: trimcheck
   character (len=1), external :: lowercase
 
-#ifdef __MPI
+#if defined(__MPI)
   CALL mp_startup ( )
 #endif
 
@@ -429,7 +429,7 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
   USE wvfct, ONLY : npwx, nbnd, npw, et, wg
   USE gvecw, ONLY : ecutwfc
   USE matrix_inversion
-#ifdef __MPI
+#if defined(__MPI)
   USE parallel_include, ONLY : MPI_DOUBLE_COMPLEX
 #endif
 
@@ -627,7 +627,7 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
       et_g ( ib, ik ) = et ( ib, ik )
     ENDDO
   ENDDO
-#ifdef __MPI
+#if defined(__MPI)
   CALL poolrecover ( et_g, nb, nk_g, nk_l )
   CALL mp_bcast ( et_g, ionode_id, world_comm )
 #endif
@@ -665,7 +665,7 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
         ENDIF
       ENDDO
     ENDDO
-#ifdef __MPI
+#if defined(__MPI)
     CALL poolrecover ( wg_g, nb, nk_g, nk_l )
 #endif
     DO ik = 1, nk_g
@@ -902,7 +902,7 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
         DO ig = igwx + 1, ngkdist_g
           wfng_buf ( ig, is ) = ( 0.0D0, 0.0D0 )
         ENDDO
-#ifdef __MPI
+#if defined(__MPI)
         CALL mp_barrier ( world_comm )
         CALL MPI_Scatter ( wfng_buf ( :, is ), ngkdist_l, MPI_DOUBLE_COMPLEX, &
         wfng_dist ( :, ib, is ), ngkdist_l, MPI_DOUBLE_COMPLEX, &
@@ -935,7 +935,7 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
       ENDIF
       DO ib = 1, nb
         DO is = 1, ns
-#ifdef __MPI
+#if defined(__MPI)
           CALL mp_barrier ( world_comm )
           CALL MPI_Gather ( wfng_dist ( :, ib, is ), ngkdist_l, &
           MPI_DOUBLE_COMPLEX, wfng_buf ( :, is ), ngkdist_l, &

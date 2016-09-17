@@ -52,7 +52,7 @@ PROGRAM do_projwfc
   !
   ! initialise environment
   !
-#ifdef __MPI
+#if defined(__MPI)
   CALL mp_startup ( )
 #endif
   CALL environment_start ( 'PROJWFC' )
