@@ -36,7 +36,7 @@ PROGRAM lr_dav_main
   use lr_dav_routines
   use lr_dav_variables
   use lr_dav_debug
-#ifdef __ENVIRON
+#if defined(__ENVIRON)
   USE plugin_flags,          ONLY : use_environ
   USE environ_info,          ONLY : environ_summary
 #endif
@@ -46,7 +46,7 @@ PROGRAM lr_dav_main
   LOGICAL            :: rflag, nomsg
   complex(dp)            :: temp
 
-#ifdef __MPI
+#if defined(__MPI)
   CALL mp_startup ( )
 #endif
   !
@@ -66,7 +66,7 @@ PROGRAM lr_dav_main
   CALL lr_readin ( )
 
   ! Writing a summary to the standard output about Environ variables
-#ifdef __ENVIRON
+#if defined(__ENVIRON)
   IF ( use_environ ) CALL environ_summary()
 #endif
  

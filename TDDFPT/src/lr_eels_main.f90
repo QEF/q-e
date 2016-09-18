@@ -51,7 +51,7 @@ PROGRAM lr_eels_main
   !
   pol_index = 1
   !
-#ifdef __MPI
+#if defined(__MPI)
   CALL mp_startup ( )
 #endif
   !

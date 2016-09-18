@@ -59,7 +59,7 @@ SUBROUTINE lr_readin
   USE mp_bands,            ONLY : ntask_groups
   USE constants,           ONLY : eps4
   USE control_lr,          ONLY : lrpa
-#ifdef __ENVIRON
+#if defined(__ENVIRON)
   USE environ_base,        ONLY : environ_base_init, ir_end
   USE environ_input,       ONLY : read_environ
   USE environ_base,        ONLY : ifdtype, nfdpoint
@@ -103,7 +103,7 @@ SUBROUTINE lr_readin
   !
   auto_rs = .TRUE.
   !
-#ifdef __MPI
+#if defined(__MPI)
   IF (ionode) THEN
 #endif
      !
@@ -333,7 +333,7 @@ SUBROUTINE lr_readin
         !
      ENDIF
      !
-#ifdef __MPI
+#if defined(__MPI)
   ENDIF
   !
   CALL bcast_lr_input
@@ -413,7 +413,7 @@ SUBROUTINE lr_readin
   !
   CALL input_sanity()
   !
-#ifdef __ENVIRON
+#if defined(__ENVIRON)
   !
   ! Self-consistent continuum solvation model
   !
@@ -421,7 +421,7 @@ SUBROUTINE lr_readin
      !
      ! Periodic boundary corrections, which were possibly activated in PW
      !
-#ifdef __MPI
+#if defined(__MPI)
   IF (ionode) THEN
 #endif
      if (do_makov_payne) then
@@ -433,7 +433,7 @@ SUBROUTINE lr_readin
      else
         assume_isolated = 'none'
      endif
-#ifdef __MPI
+#if defined(__MPI)
   ENDIF
   CALL mp_bcast(assume_isolated, ionode_id, world_comm)
 #endif
@@ -519,7 +519,7 @@ SUBROUTINE lr_readin
   !
   ! Scalapack related stuff.
   !
-#ifdef __MPI
+#if defined(__MPI)
   use_para_diag = .TRUE.
   CALL check_para_diag( nbnd )
 #else
@@ -660,7 +660,7 @@ CONTAINS
        !
        ! Note, all variables of the turboDavidson code cannot be used by turboEELS.
        !
-#ifdef __ENVIRON
+#if defined(__ENVIRON)
        !
        ! EELS + implicit solvent model is not supported.
        !

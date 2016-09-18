@@ -105,7 +105,7 @@ CONTAINS
        !
     ENDDO
     !
-#ifdef __MPI
+#if defined(__MPI)
     CALL mp_sum(temp_gamma, intra_bgrp_comm)
 #endif
     !
@@ -126,7 +126,7 @@ CONTAINS
        ENDDO
     ENDDO
     !
-#ifdef __MPI
+#if defined(__MPI)
     CALL mp_sum(temp_k, inter_pool_comm)
     CALL mp_sum(temp_k, intra_bgrp_comm)
 #endif
@@ -167,7 +167,7 @@ CONTAINS
        !
     ENDDO
     !
-#ifdef __MPI
+#if defined(__MPI)
     CALL mp_sum(lr_dot, inter_pool_comm)
     CALL mp_sum(lr_dot, intra_bgrp_comm)
 #endif
@@ -209,7 +209,7 @@ SUBROUTINE check_vector_gamma (x)
    !    
    IF (gstart==2) temp_gamma = temp_gamma - dble(x(1))*dble(x(1))
    ! 
-#ifdef __MPI
+#if defined(__MPI)
    CALL mp_sum(temp_gamma, intra_bgrp_comm)
 #endif
    !    
@@ -244,7 +244,7 @@ SUBROUTINE check_vector_f (x)
    !
    temp_f = ZDOTC(ngk(1),x(:),1,x(:),1)
    !
-#ifdef __MPI
+#if defined(__MPI)
    CALL mp_sum(temp_f, intra_bgrp_comm)
 #endif
    !
@@ -286,7 +286,7 @@ SUBROUTINE check_all_bands_gamma (x,sx,nbnd1,nbnd2)
         !
         IF (gstart==2) temp_gamma = temp_gamma - dble(x(1,ibnd))*dble(sx(1,jbnd))
         !
-#ifdef __MPI
+#if defined(__MPI)
         CALL mp_sum(temp_gamma, intra_bgrp_comm)
 #endif
         !
@@ -333,7 +333,7 @@ SUBROUTINE check_density_gamma (rx,nbnd)
      ENDIF
      temp_gamma = sum(w1*dble(rx(1:dfftp%nnr,ibnd))*dble(rx(1:dfftp%nnr,ibnd))&
                 + w2*aimag(rx(1:dfftp%nnr,ibnd))*aimag(rx(1:dfftp%nnr,ibnd)))
-#ifdef __MPI
+#if defined(__MPI)
      CALL mp_sum(temp_gamma, intra_bgrp_comm)
 #endif
      WRITE(stdout,'("Contribution of bands ",I02," and ",I02," to total density",E15.8)') ibnd,ibnd+1,temp_gamma

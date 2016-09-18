@@ -108,7 +108,7 @@ MODULE lr_variables
   !
   LOGICAL :: davidson = .false.           
   !
-#ifdef __ENVIRON
+#if defined(__ENVIRON)
   CHARACTER(len=80) :: assume_isolated = 'none'
 #endif
   !

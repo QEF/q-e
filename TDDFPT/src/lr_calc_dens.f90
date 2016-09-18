@@ -106,7 +106,7 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
      !
      IF ( doublegrid ) CALL interpolate(rho_1,rho_1,1)
      !
-#ifdef __MPI
+#if defined(__MPI)
      CALL mp_sum(rho_1, inter_bgrp_comm)
 #endif
      !
@@ -137,7 +137,7 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
   !
   DEALLOCATE ( psic )
   !
-#ifdef __MPI
+#if defined(__MPI)
   IF(gamma_only) THEN
      CALL mp_sum(rho_1, inter_pool_comm)
   ELSE
@@ -154,7 +154,7 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
         rho_sum = 0.0d0
         rho_sum = SUM(rho_1(:,ispin))
         !
-#ifdef __MPI
+#if defined(__MPI)
         CALL mp_sum(rho_sum, intra_bgrp_comm )
 #endif
         !
@@ -208,7 +208,7 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
         !
      ENDDO
      !
-#ifdef __MPI
+#if defined(__MPI)
      CALL mp_sum(rho_sum_resp_x, intra_bgrp_comm)
      CALL mp_sum(rho_sum_resp_y, intra_bgrp_comm)
      CALL mp_sum(rho_sum_resp_z, intra_bgrp_comm)
@@ -253,7 +253,7 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
         !
         CLOSE(158)
         !
-#ifdef __MPI
+#if defined(__MPI)
      ENDIF
 #endif
      !

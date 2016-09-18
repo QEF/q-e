@@ -95,7 +95,7 @@ SUBROUTINE lr_restart(iter_restart,rflag)
   ! Ionode only reads
   ! Note: ionode file I/O is done in tmp_dir
   !
-#ifdef __MPI
+#if defined(__MPI)
   IF (ionode) THEN
 #endif
   !
@@ -129,7 +129,7 @@ SUBROUTINE lr_restart(iter_restart,rflag)
   !
   CLOSE(158)
   !
-#ifdef __MPI
+#if defined(__MPI)
   ENDIF
   CALL mp_bcast (iter_restart, ionode_id, world_comm)
   CALL mp_bcast (norm0(pol_index), ionode_id, world_comm)
@@ -141,7 +141,7 @@ SUBROUTINE lr_restart(iter_restart,rflag)
   ! Optical case: read projection
   !
   IF (project .and. .not.eels) THEN
-#ifdef __MPI
+#if defined(__MPI)
   IF (ionode) THEN
 #endif
     !
@@ -169,7 +169,7 @@ SUBROUTINE lr_restart(iter_restart,rflag)
     ENDDO
     !
     CLOSE(158)
-#ifdef __MPI
+#if defined(__MPI)
   ENDIF
   CALL mp_bcast (F, ionode_id, world_comm)
 #endif

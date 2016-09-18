@@ -146,7 +146,7 @@ LOGICAL FUNCTION test_restart(test_this)
        !
     ENDIF ! for test_this = 2
     !
-#ifdef __MPI
+#if defined(__MPI)
     CALL mp_sum(temp_restart,world_comm)
 #endif
     !

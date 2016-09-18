@@ -48,7 +48,7 @@ PROGRAM lr_main
   USE fft_base,              ONLY : dffts
   USE uspp,                  ONLY : okvan
   USE mp_bands,              ONLY : ntask_groups
-#ifdef __ENVIRON
+#if defined(__ENVIRON)
   USE plugin_flags,          ONLY : use_environ
   USE environ_info,          ONLY : environ_summary
 #endif
@@ -65,7 +65,7 @@ PROGRAM lr_main
   !
   pol_index = 1
   !
-#ifdef __MPI
+#if defined(__MPI)
   CALL mp_startup ( )
 #endif
   !
@@ -93,7 +93,7 @@ PROGRAM lr_main
   ! Writing a summary to the standard output 
   ! about Environ variables
   !
-#ifdef __ENVIRON
+#if defined(__ENVIRON)
   IF ( use_environ ) CALL environ_summary()
 #endif
   !

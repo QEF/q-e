@@ -11,7 +11,7 @@ SUBROUTINE bcast_lr_input
   !
   !  ...The first processor sends the input to all the other processors.
   !
-#ifdef __MPI
+#if defined(__MPI)
 
   USE lr_variables
   USE lr_dav_variables

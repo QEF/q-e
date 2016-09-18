@@ -123,7 +123,7 @@ PROGRAM lr_calculate_spectrum
   f_sum = 0.0d0
   eign_file = 'pwscf.eigen' 
   !
-#ifdef __MPI
+#if defined(__MPI)
   CALL mp_startup ( )
   IF (ionode) THEN
      WRITE(*,*) "Warning: Only a single CPU will be used!"
@@ -816,7 +816,7 @@ PROGRAM lr_calculate_spectrum
 555 IF (trim(td)=="davidson" .or. trim(td)=='david') &
               & print *, "Calculation is finished."
   !
-#ifdef __MPI
+#if defined(__MPI)
   CALL mp_barrier (world_comm)
   CALL mp_global_end ()
 #endif

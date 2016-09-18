@@ -61,7 +61,7 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
   USE becmod,               ONLY : bec_type, becp, calbec
   USE lr_exx_kernel
   USE dv_of_drho_lr
-#ifdef __ENVIRON
+#if defined(__ENVIRON)
   USE plugin_flags,         ONLY : use_environ
   USE scf,                  ONLY : rho
   USE solvent_tddfpt,       ONLY : calc_vsolvent_tddfpt
@@ -168,7 +168,7 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
            !
            DEALLOCATE(dvrs_temp)
            !
-#ifdef __ENVIRON
+#if defined(__ENVIRON)
            !
            IF ( use_environ ) THEN
               !
@@ -537,7 +537,7 @@ CONTAINS
           !
        ENDDO
        !
-#ifdef __MPI
+#if defined(__MPI)
        CALL mp_sum( evc1_new(:,:,1), inter_bgrp_comm )
 #endif
        IF (dtgs%have_task_groups) DEALLOCATE (tg_dvrss)

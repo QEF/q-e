@@ -17,7 +17,7 @@ SUBROUTINE print_clock_lr()
    USE realus,           ONLY : real_space,real_space_debug
    USE lr_variables,     ONLY : davidson, eels
    USE funct,            ONLY : dft_is_hybrid
-#ifdef __ENVIRON
+#if defined(__ENVIRON)
    USE plugin_flags,     ONLY : use_environ
    USE environ_info,     ONLY : environ_clock
 #endif
@@ -123,7 +123,7 @@ SUBROUTINE print_clock_lr()
    WRITE( stdout, * )
 #endif
    !
-#ifdef __ENVIRON
+#if defined(__ENVIRON)
    IF ( use_environ ) CALL environ_clock( stdout )
 #endif
    !

@@ -257,7 +257,7 @@ contains
     !
     ! Ionode only operations
     !
-#ifdef __MPI
+#if defined(__MPI)
   IF (ionode) THEN
 #endif
     !
@@ -275,7 +275,7 @@ contains
     !
     CLOSE( unit = free_unit )
     !
-#ifdef __MPI
+#if defined(__MPI)
   ENDIF
 #endif
     !
@@ -347,7 +347,7 @@ contains
     !
     ! Ionode only operations
     !
-#ifdef __MPI
+#if defined(__MPI)
   IF (ionode) THEN
 #endif
     !
@@ -372,7 +372,7 @@ contains
     !
     CLOSE( unit = free_unit )
     !
-#ifdef __MPI
+#if defined(__MPI)
   ENDIF
   CALL mp_bcast (dav_iter, ionode_id, world_comm)
   CALL mp_bcast (num_basis, ionode_id, world_comm)
@@ -543,7 +543,7 @@ contains
 
     call start_clock('Solve M_DC')
 
-#ifdef __MPI
+#if defined(__MPI)
   ! This part is calculated in serial
   if(ionode) then
 #endif
@@ -584,7 +584,7 @@ contains
           & tr_energy(eign_value_order(ieign))
     enddo
 
-#ifdef __MPI
+#if defined(__MPI)
   endif
   call mp_barrier(world_comm)
   call mp_bcast(tr_energy,ionode_id,world_comm)
@@ -1087,7 +1087,7 @@ contains
 
     ! Analysis of each eigen-state
     do ieign = 1, num_eign
-#ifdef __MPI
+#if defined(__MPI)
   ! This part is calculated in serial
   if(ionode) then
 #endif
@@ -1119,7 +1119,7 @@ contains
       omegar(ieign)=sqrt(dble(omegar(ieign)))
       omegal(ieign)=sqrt(dble(omegal(ieign)))
 
-#ifdef __MPI
+#if defined(__MPI)
   endif
   call mp_barrier(world_comm)
   call mp_bcast(omegar,ionode_id,world_comm)
@@ -1199,12 +1199,12 @@ contains
       endif
     enddo
 
-#ifdef __MPI
+#if defined(__MPI)
     if(ionode) then
 #endif
       call write_eigenvalues(message)
       call write_spectrum(message)
-#ifdef __MPI
+#if defined(__MPI)
     endif
 #endif
     return
@@ -1373,7 +1373,7 @@ contains
 
     if(okvan) then
       write(stdout,'(10x,"At this moment single-pole is not available for USPP !!!",//)')
-#ifdef __MPI
+#if defined(__MPI)
       call mp_barrier( world_comm )
       call errore(" "," ", 100)
 #endif
@@ -1434,7 +1434,7 @@ contains
     wfc_dot=2.D0*ddot(2*ngk(1),x(:),1,y(:),1)
     if(gstart==2) wfc_dot=wfc_dot-dble(x(1))*dble(y(1))
 
-#ifdef __MPI
+#if defined(__MPI)
     call mp_barrier(world_comm)
     call mp_sum(wfc_dot,intra_bgrp_comm)
 #endif
@@ -1644,7 +1644,7 @@ contains
     allocate(MRZ_temp(num_basis,2*num_eign))
     allocate(MM(2*num_eign,2*num_eign))
 
-#ifdef __MPI
+#if defined(__MPI)
     if(ionode) then
 #endif
     write(stdout,'(/5x,"!!!! The basis set is close to its maximum size, now discharge it",/5x,&
@@ -1682,7 +1682,7 @@ contains
     call DGEMM('N', 'N', num_basis, num_basis_new, 2*num_eign, 1.0D0, LR_M, num_basis, &
                U, 2*num_eign, 0.0D0, MR, num_basis)
 
-#ifdef __MPI
+#if defined(__MPI)
     ENDIF
     CALL mp_bcast (MR, ionode_id, world_comm)
     CALL mp_bcast (num_basis_new, ionode_id, world_comm)
@@ -1716,7 +1716,7 @@ contains
       enddo
     endif
 
-#ifdef __MPI
+#if defined(__MPI)
     if(ionode) then
 #endif
     ! Re-build M_D and M_C 
@@ -1734,7 +1734,7 @@ contains
     call ZGEMM('C', 'N', num_basis_new, num_basis_new, num_basis, (1.0D0,0.0D0), MRZ, num_basis,&
               MRZ_temp, num_basis, (0.0D0,0.0D0), M_C, num_basis_max)    
 
-#ifdef __MPI
+#if defined(__MPI)
     ENDIF
     CALL mp_bcast (M_D, ionode_id, world_comm)
     CALL mp_bcast (M_C, ionode_id, world_comm)
@@ -1806,7 +1806,7 @@ contains
 
     call lr_calc_R()       ! Calculate R
 
-#ifdef __MPI
+#if defined(__MPI)
     if(ionode) then
 #endif
     ! Print out Oscilation strength
@@ -1837,7 +1837,7 @@ contains
       write(18,'(5E20.8)') energy,totF,F1,F2,F3
       write(stdout,'(2I5,5E15.5)') iv,ic,energy,totF,F1,F2,F3
     enddo
-#ifdef __MPI
+#if defined(__MPI)
     endif
 #endif
 
@@ -1931,7 +1931,7 @@ contains
              (tau (jpol, na), jpol = 1, 3), ityp (na), na = 1, nat)
       endif
     
-#ifdef __MPI
+#if defined(__MPI)
       ALLOCATE (raux1( dfftp%nr1x * dfftp%nr2x * dfftp%nr3x))
       CALL gather_grid (dfftp, raux, raux1)
       IF ( ionode ) WRITE (iunplot, '(5(1pe17.9))') &

@@ -211,7 +211,7 @@ contains
       wfck(:,1)=evc0(:,i,1)
       call invfft_orbital_gamma(wfck(:,:),1,1)  ! FFT: v  -> psic
       norm=DDOT(dffts%nnr,psic(:),2,banda,1)/tot_nnr
-#ifdef __MPI
+#if defined(__MPI)
       call mp_barrier( world_comm )
       call mp_sum(norm,intra_bgrp_comm)
 #endif
@@ -220,7 +220,7 @@ contains
       wfck(:,1)=evc0(:,i+1,1)
       call invfft_orbital_gamma(wfck(:,:),1,1)  ! FFT: v  -> psic
       norm=DDOT(dffts%nnr,psic(:),2,bandb,1)/tot_nnr
-#ifdef __MPI
+#if defined(__MPI)
       call mp_barrier( world_comm )
       call mp_sum(norm,intra_bgrp_comm)
 #endif

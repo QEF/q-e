@@ -56,7 +56,7 @@ SUBROUTINE lr_write_restart()
   !
   IF (eels) tmp_dir = tmp_dir_lr
   !
-#ifdef __MPI
+#if defined(__MPI)
   IF (ionode) THEN
 #endif
   !
@@ -154,7 +154,7 @@ SUBROUTINE lr_write_restart()
      !
   ENDIF
   !
-#ifdef __MPI
+#if defined(__MPI)
   ENDIF
 #endif
     !

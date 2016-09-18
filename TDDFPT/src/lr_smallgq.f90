@@ -28,7 +28,7 @@ SUBROUTINE lr_smallgq (xq)
 
   USE lr_symm_base, ONLY : nsymq, invsymq, gi, minus_q
   !
-#ifdef __MPI
+#if defined(__MPI)
   USE mp,                 ONLY : mp_bcast
   USE io_global,          ONLY : ionode_id
   USE mp_global,          ONLY : intra_image_comm
@@ -157,7 +157,7 @@ SUBROUTINE lr_smallgq (xq)
   ! Parallel stuff: the first node broadcasts everything to all nodes.
   ! Copied from PH/set_irr.f90
   !
-#ifdef __MPI
+#if defined(__MPI)
   CALL mp_bcast (nsymq, ionode_id, intra_image_comm)
   CALL mp_bcast (gi, ionode_id, intra_image_comm)
   CALL mp_bcast (minus_q, ionode_id, intra_image_comm)

@@ -27,7 +27,7 @@ SUBROUTINE stop_lr( full_run  )
   USE cell_base,            ONLY : celldm, at, bg, alat, omega
   USE klist,                ONLY : nelec
   USE buffers,              ONLY : close_buffer
-#ifdef __ENVIRON
+#if defined(__ENVIRON)
   USE plugin_flags,         ONLY : use_environ
   USE solvent_tddfpt,       ONLY : solvent_clean_tddfpt
 #endif  
@@ -48,7 +48,7 @@ SUBROUTINE stop_lr( full_run  )
   ! easier post processing. These can also be read from the output log file.
   !
   IF (full_run) THEN
-#ifdef __MPI
+#if defined(__MPI)
   IF (ionode) THEN
 #endif
   !
@@ -133,7 +133,7 @@ SUBROUTINE stop_lr( full_run  )
      !
   ENDDO
   !
-#ifdef __MPI
+#if defined(__MPI)
   ENDIF
 #endif
   !
@@ -143,7 +143,7 @@ SUBROUTINE stop_lr( full_run  )
   !
   CALL lr_dealloc()
   !
-#ifdef __ENVIRON
+#if defined(__ENVIRON)
   !
   ! Deallocate Environ related arrays
   !

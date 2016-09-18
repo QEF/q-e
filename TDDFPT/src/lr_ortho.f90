@@ -173,7 +173,7 @@ SUBROUTINE lr_ortho_k()
       !
   ENDIF
   !
-#ifdef __MPI
+#if defined(__MPI)
    CALL mp_sum(ps(:,1:nbnd_eff),intra_bgrp_comm)
 #endif
   !
@@ -286,7 +286,7 @@ SUBROUTINE lr_ortho_gamma()
       !
   ENDIF
   !
-#ifdef __MPI
+#if defined(__MPI)
    CALL mp_sum(ps(:,:),intra_bgrp_comm)
 #endif
   !
@@ -402,7 +402,7 @@ SUBROUTINE lr_ortho_noncolin()
       !
    ENDIF
    !
-#ifdef __MPI
+#if defined(__MPI)
    CALL mp_sum(ps(:,1:nbnd_eff),intra_bgrp_comm)
 #endif
    !

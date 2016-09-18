@@ -211,7 +211,7 @@ SUBROUTINE compute_d0psi_rs( n_ipol )
   IF (okvan) THEN
      !
      WRITE(stdout,'(10x,"Real space dipole + USPP is not supported",/)')
-#ifdef __MPI
+#if defined(__MPI)
      CALL mp_barrier(intra_bgrp_comm)
 #endif
      STOP

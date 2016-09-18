@@ -276,7 +276,7 @@ SUBROUTINE lr_exx_revc0_init(orbital, ik)
                    & k2q(ik) = ikq
            ENDIF
            !
-#ifdef __MPI
+#if defined(__MPI)
            CALL gather_grid (dffts, psic, psic_all)
            IF ( me_bgrp == 0 ) &
                 temppsic_all(1:nxxs) = psic_all(rir(1:nxxs, isym))
@@ -462,7 +462,7 @@ SUBROUTINE lr_exx_kernel_noint ( evc, int_vect )
            !
            CALL invfft_orbital_k (evc(:,:,ikk), ibnd, nbnd, ikk)
            !
-#ifdef __MPI
+#if defined(__MPI)
            psic_all=(0.d0,0.d0)
            CALL gather_grid(dffts, psic, psic_all)
 #endif
@@ -477,7 +477,7 @@ SUBROUTINE lr_exx_kernel_noint ( evc, int_vect )
               ! Now rotate k to q, scatter and put in temppsic
               !
               isym = ABS(index_sym(ikq))
-#ifdef __MPI
+#if defined(__MPI)
               IF ( me_bgrp == 0 ) &
                    temppsic_all(1:nxxs) = psic_all(rir(1:nxxs, isym))
               CALL scatter_grid(dffts, temppsic_all, temppsic)
@@ -663,7 +663,7 @@ SUBROUTINE lr_exx_kernel_int ( orbital, ibnd, nbnd, ikk )
      !
      CALL invfft_orbital_k (orbital(:,:), ibnd, nbnd, ikk)
      !
-#ifdef __MPI
+#if defined(__MPI)
      CALL gather_grid(dffts, psic, psic_all)
 #endif
      !
@@ -677,7 +677,7 @@ SUBROUTINE lr_exx_kernel_int ( orbital, ibnd, nbnd, ikk )
         ! Now rotate k to q, scatter and put in temppsic
         !
         isym = ABS(index_sym(ikq))
-#ifdef __MPI
+#if defined(__MPI)
         IF ( me_bgrp == 0 ) &
              temppsic_all(1:nxxs) = psic_all(rir(1:nxxs, isym))
         CALL scatter_grid(dffts, temppsic_all, temppsic)

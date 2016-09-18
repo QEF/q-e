@@ -105,7 +105,7 @@ SUBROUTINE lr_calc_dens_eels_nc (drhoscf, dpsi)
      ! The calculation of dbecsum is distributed across processors (see addusdbec_nc).
      ! Sum over processors the contributions coming from each slice of bands.
      !
-#ifdef __MPI
+#if defined(__MPI)
      CALL mp_sum (dbecsum_nc, intra_bgrp_comm)
 #endif
      !
@@ -122,14 +122,14 @@ SUBROUTINE lr_calc_dens_eels_nc (drhoscf, dpsi)
   !
   ! Reduce the charge density response across pools.
   !
-#ifdef __MPI
+#if defined(__MPI)
   CALL mp_sum (drhoscf, inter_pool_comm)
 #endif
   !
   ! Symmetrization of the charge density response
   ! wrt the small group of q.
   !
-#ifdef __MPI
+#if defined(__MPI)
   CALL lr_psym_eels(drhoscf)
 #else
   CALL lr_sym_eels(drhoscf)
