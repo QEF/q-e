@@ -57,7 +57,7 @@ MODULE fft_types
     !  fft parallelization
     !
     INTEGER :: mype     = 0          ! my processor id (starting from 0) in the fft group
-#ifdef __MPI
+#if defined(__MPI)
     INTEGER :: comm     = MPI_COMM_NULL
 #else
     INTEGER :: comm     = 0          ! communicator of the fft gruop 
@@ -114,7 +114,7 @@ CONTAINS
 
     desc%comm = comm 
 
-#ifdef __MPI
+#if defined(__MPI)
     IF( desc%comm == MPI_COMM_NULL ) THEN
        CALL fftx_error__( ' realspace_grid_init ', ' fft communicator is null ', 1 )
     END IF
@@ -123,7 +123,7 @@ CONTAINS
     mype = 0
     nproc = 1
     root = 0
-#ifdef __MPI
+#if defined(__MPI)
     CALL MPI_COMM_RANK( comm, mype, ierr )
     CALL MPI_COMM_SIZE( comm, nproc, ierr )
 #endif
@@ -177,7 +177,7 @@ CONTAINS
     IF ( ALLOCATED( desc%ismap ) )  DEALLOCATE( desc%ismap )
     IF ( ALLOCATED( desc%iplp ) )   DEALLOCATE( desc%iplp )
     IF ( ALLOCATED( desc%iplw ) )   DEALLOCATE( desc%iplw )
-#ifdef __MPI
+#if defined(__MPI)
     desc%comm = MPI_COMM_NULL 
 #endif
     desc%nr1    = 0 
@@ -695,7 +695,7 @@ CONTAINS
         END IF
       END DO
 
-#ifdef __MPI
+#if defined(__MPI)
       CALL MPI_ALLREDUCE( MPI_IN_PLACE, nb, 3, MPI_INTEGER, MPI_MAX, dfft%comm, i )
 #endif
 

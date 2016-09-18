@@ -22,7 +22,7 @@
            LOGICAL :: lpara=.false.  ! true = the map is set for parallel and serial, false = only serial 
            INTEGER :: mype=0   ! my task id (starting from 0)
            INTEGER :: nproc=1  ! number of task
-#ifdef __MPI
+#if defined(__MPI)
            INTEGER :: comm     = MPI_COMM_NULL
 #else
            INTEGER :: comm     = 0          ! communicator of the fft gruop 
@@ -72,7 +72,7 @@
         smap%mype = 0
         smap%nproc = 1
         smap%comm = comm
-#ifdef __MPI
+#if defined(__MPI)
         CALL MPI_COMM_RANK( smap%comm, smap%mype, ierr )
         CALL MPI_COMM_SIZE( smap%comm, smap%nproc, ierr )
 #endif
@@ -188,7 +188,7 @@
 
     mype = 0
     nproc = 1
-#ifdef __MPI
+#if defined(__MPI)
     IF( PRESENT( comm ) ) THEN
        CALL MPI_COMM_RANK( comm, mype, ierr )
        CALL MPI_COMM_SIZE( comm, nproc, ierr )

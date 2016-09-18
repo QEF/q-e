@@ -392,7 +392,7 @@ SUBROUTINE bw_tg_cft3_xy( f, dfft, dtgs )
   !
 END SUBROUTINE bw_tg_cft3_xy
 
-#ifdef __DOUBLE_BUFFER
+#if defined(__DOUBLE_BUFFER)
   SUBROUTINE pack_group_sticks_i( f, yf, dtgs, req)
 
      USE task_groups,  ONLY : task_groups_descriptor

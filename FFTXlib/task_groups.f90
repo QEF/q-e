@@ -205,7 +205,7 @@ SUBROUTINE task_groups_init_first( dffts, dtgs, nogrp )
     !
     INTEGER :: i, nlen, n1, ipos, color, key, ierr, itsk, ntsk
     INTEGER :: nppx, ncpx
-#ifdef __TASK_MAPPING
+#if defined(__TASK_MAPPING)
     CHARACTER(LEN=MPI_MAX_PROCESSOR_NAME), ALLOCATABLE :: proc_name(:)
     INTEGER, ALLOCATABLE :: proc_id(:)
 #endif
@@ -258,7 +258,7 @@ SUBROUTINE task_groups_init_first( dffts, dtgs, nogrp )
 #if defined(__MPI)
     ! processes with the same color are in the same new communicator
 
-#ifdef __TASK_GROUP_WAVE_ORDER
+#if defined(__TASK_GROUP_WAVE_ORDER)
     color = MOD( dtgs%mype , dtgs%npgrp )
     key   = dtgs%mype / dtgs%npgrp
 #else
@@ -297,13 +297,13 @@ SUBROUTINE task_groups_init_first( dffts, dtgs, nogrp )
     dtgs%me_pgrp = itsk
 #endif
 
-#ifdef __TASK_MAPPING
+#if defined(__TASK_MAPPING)
 
     allocate( proc_name( dtgs%nproc ) )
     allocate( proc_id( dtgs%nproc ) )
 
     do i = 1, dtgs%nproc
-#ifdef __MPI
+#if defined(__MPI)
        if( dtgs%mype == i-1 ) then
           call MPI_Get_processor_name( proc_name(i), nlen, ierr )
        end if

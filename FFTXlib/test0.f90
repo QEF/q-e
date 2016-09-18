@@ -16,7 +16,7 @@ program test
   USE fft_scalar
   USE fft_support
   IMPLICIT NONE
-#ifdef __MPI
+#if defined(__MPI)
   include 'mpif.h'
 #endif
   include 'fft_param.f90'
@@ -91,7 +91,7 @@ program test
   end do
   if (ecutrho == 0.d0) ecutrho = 4.0d0 * ecutwfc
   
-#ifdef __MPI
+#if defined(__MPI)
 
 #if defined(__OPENMP)
   CALL MPI_Init_thread(MPI_THREAD_FUNNELED, PROVIDED, ierr)
@@ -121,7 +121,7 @@ program test
   !
   !  Broadcast input parameter first
   !
-#ifdef __MPI
+#if defined(__MPI)
   CALL MPI_BCAST(ecutrho, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, ierr )
   CALL MPI_BCAST(ecutwfc, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, ierr )
   CALL MPI_BCAST(alat_in, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, ierr )
@@ -254,7 +254,7 @@ program test
      end do
   end do
 
-#ifdef __MPI
+#if defined(__MPI)
   CALL MPI_BARRIER( MPI_COMM_WORLD, ierr)
 #endif
 
@@ -290,7 +290,7 @@ program test
   !
   if( mype == 0 ) write (*,*) ' Execute FFT calls once more, this time as Wave !'
 
-#ifdef __MPI
+#if defined(__MPI)
   CALL MPI_BARRIER( MPI_COMM_WORLD, ierr)
   wall = MPI_WTIME() 
 #endif
@@ -327,7 +327,7 @@ program test
 
   ALLOCATE( aux (dffts%nr1x * dffts%nr2x * dffts%nr3x ) )
 
-#ifdef __MPI
+#if defined(__MPI)
   CALL MPI_BARRIER( MPI_COMM_WORLD, ierr)
   wall = MPI_WTIME() 
 #endif
@@ -367,7 +367,7 @@ program test
         if( mype == 0 ) write (*,'(5("(",2f10.6,")",3x))') (ff(i),i=1,5)
      end do
   end do
-#ifdef __MPI
+#if defined(__MPI)
   wall = MPI_WTIME() - wall
 #endif
 
@@ -383,7 +383,7 @@ program test
 
 !write(*,*)my_time(2), my_time(3), my_time(4)
 
-#ifdef __MPI
+#if defined(__MPI)
   CALL MPI_ALLREDUCE( my_time, time_min, 10, MPI_DOUBLE_PRECISION, MPI_MIN, MPI_COMM_WORLD, ierr )
   CALL MPI_ALLREDUCE( my_time, time_max, 10, MPI_DOUBLE_PRECISION, MPI_MAX, MPI_COMM_WORLD, ierr )
   CALL MPI_ALLREDUCE( my_time, time_avg, 10, MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, ierr )
@@ -439,7 +439,7 @@ program test
   end if
 
   
-#ifdef __MPI
+#if defined(__MPI)
   CALL mpi_finalize(ierr)
 #endif
 

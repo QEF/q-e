@@ -51,7 +51,7 @@ program test
   USE fft_parallel
   USE fft_support
   IMPLICIT NONE
-#ifdef __MPI
+#if defined(__MPI)
   include 'mpif.h'
   include 'fft_param.f90'
   INTEGER, ALLOCATABLE :: req_p(:),req_u(:)
@@ -147,7 +147,7 @@ program test
   end do
   if (ecutrho == 0.d0) ecutrho = 4.0d0 * ecutwfc
   
-#ifdef __MPI
+#if defined(__MPI)
 
 #if defined(__OPENMP)
   CALL MPI_Init_thread(MPI_THREAD_FUNNELED, PROVIDED, ierr)
@@ -296,7 +296,7 @@ program test
   !
   wall = MPI_WTIME() 
   !
-#ifdef __DOUBLE_BUFFER
+#if defined(__DOUBLE_BUFFER)
   ireq = 1
   ipsi = MOD( ireq + 1, 2 ) + 1 
   !
@@ -423,7 +423,7 @@ program test
 
 !write(*,*)my_time(2), my_time(3), my_time(4)
 
-#ifdef __MPI
+#if defined(__MPI)
   CALL MPI_ALLREDUCE( my_time, time_min, 10, MPI_DOUBLE_PRECISION, MPI_MIN, MPI_COMM_WORLD, ierr )
   CALL MPI_ALLREDUCE( my_time, time_max, 10, MPI_DOUBLE_PRECISION, MPI_MAX, MPI_COMM_WORLD, ierr )
   CALL MPI_ALLREDUCE( my_time, time_avg, 10, MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, ierr )
@@ -479,7 +479,7 @@ program test
   end if
 
   
-#ifdef __MPI
+#if defined(__MPI)
   CALL mpi_finalize(ierr)
 #endif
 
