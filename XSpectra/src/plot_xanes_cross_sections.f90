@@ -450,7 +450,7 @@ SUBROUTINE plot_xanes_dipole(a,b,xnorm,ncalcv,terminator,e1s_ry,ispectra)
   !  CALL poolreduce( nspin*xnepoint, Intensity_coord )
 
   !<CG>  replaces poolreduce
-#ifdef __MPI
+#if defined(__MPI)
   CALL mp_sum ( Intensity_coord, inter_pool_comm )
 #endif
   !</CG>
@@ -766,7 +766,7 @@ SUBROUTINE plot_xanes_quadrupole(a,b,xnorm,ncalcv,terminator,e1s_ry)
   !  CALL poolreduce( nspin*xnepoint, Intensity_tot )
 
   !<CG>  replaces poolreduce
-#ifdef __MPI
+#if defined(__MPI)
   CALL mp_sum ( Intensity_tot, inter_pool_comm )
 #endif
   !</CG>

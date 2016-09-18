@@ -104,7 +104,7 @@ PROGRAM X_Spectra
   ! $   Initialize MPI environment, clocks and a few other things
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-#ifdef __MPI
+#if defined(__MPI)
   CALL mp_startup ( )
 #endif
   CALL environment_start ( 'XSpectra' )
@@ -439,7 +439,7 @@ SUBROUTINE stop_xspectra
   USE mp_global, ONLY: mp_global_end
   USE parallel_include
   !
-#ifdef __MPI
+#if defined(__MPI)
 
   INTEGER :: info
   LOGICAL :: op

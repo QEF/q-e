@@ -166,7 +166,7 @@ CONTAINS
   ! Broadcast input data to all processors
   !-----------------------------------------------------------------------
   SUBROUTINE gipaw_bcast_input
-#ifdef __MPI
+#if defined(__MPI)
     USE mp,            ONLY : mp_bcast
     USE mp_world,      ONLY : world_comm
     USE io_files,      ONLY : prefix, tmp_dir
@@ -294,7 +294,7 @@ CONTAINS
     call print_clock ('davcio')
     call print_clock ('write_rec')
     WRITE( stdout, * )
-#ifdef __MPI
+#if defined(__MPI)
     WRITE( stdout,  * ) '     Parallel routines'
     call print_clock ('reduce')
 #endif
@@ -760,7 +760,7 @@ CONTAINS
         emin = min (emin, et (ibnd, ik) )
       enddo
     enddo
-#ifdef __MPI
+#if defined(__MPI)
     ! find the minimum across pools
     call mp_min( emin, inter_pool_comm )
 #endif
@@ -773,7 +773,7 @@ CONTAINS
           emax = max (emax, et (ibnd, ik) )
         enddo
       enddo
-#ifdef __MPI
+#if defined(__MPI)
       ! find the maximum across pools
       call mp_max( emax, inter_pool_comm )
 #endif

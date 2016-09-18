@@ -199,7 +199,7 @@ SUBROUTINE read_save_file(a,b,xnorm,ncalcv,x_save_file,core_energy)
      READ(10,*) (ncalcv_all(i,j),j=1,nkstot)
      READ(10,*) ((a_all(j,k),j=1,ncalcv_max),k=1,nkstot)
      READ(10,*) ((b_all(j,k),j=1,ncalcv_max),k=1,nkstot)
-#ifdef __MPI
+#if defined(__MPI)
      CALL poolscatter(xnitermax,nkstot,a_all,nks,aux)
      a(1:xnitermax,i,1:nks)=aux(1:xnitermax,1:nks)
      CALL poolscatter(xnitermax,nkstot,b_all,nks,aux)
@@ -212,7 +212,7 @@ SUBROUTINE read_save_file(a,b,xnorm,ncalcv,x_save_file,core_energy)
   ENDDO
   CLOSE(10)
 
-#ifdef __MPI 
+#if defined(__MPI) 
   CALL poolscatter(n_lanczos,nkstot,xnorm_all,nks,xnorm)
   CALL ipoolscatter(n_lanczos,nkstot,ncalcv_all,nks,ncalcv)
   CALL ipoolscatter(n_lanczos,nkstot,calculated_all,nks,calculated)
@@ -326,7 +326,7 @@ SUBROUTINE write_save_file(a,b,xnorm,ncalcv,x_save_file)
   xnorm_all(1:n_lanczos,1:nks)  = xnorm(1:n_lanczos,1:nks)
   calculated_all(1:n_lanczos,1:nks) = calculated(1:n_lanczos,1:nks)
 
-#ifdef __MPI
+#if defined(__MPI)
   CALL poolrecover(xnorm_all,n_lanczos,nkstot,nks)
   CALL ipoolrecover(ncalcv_all,n_lanczos,nkstot,nks)
   CALL ipoolrecover(calculated_all,n_lanczos,nkstot,nks)
@@ -362,7 +362,7 @@ SUBROUTINE write_save_file(a,b,xnorm,ncalcv,x_save_file)
      b_all(:,:) = 0.d0
      a_all(1:xnitermax,1:nks) =  a(1:xnitermax,i,1:nks)
      b_all(1:xnitermax,1:nks) =  b(1:xnitermax,i,1:nks)
-#ifdef __MPI
+#if defined(__MPI)
      CALL poolrecover(a_all,xnitermax,nkstot,nks)
      CALL poolrecover(b_all,xnitermax,nkstot,nks)
 #endif

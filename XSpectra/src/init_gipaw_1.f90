@@ -300,7 +300,7 @@ subroutine init_gipaw_1
         end do
      end do
 
-#ifdef __MPI
+#if defined(__MPI)
      call mp_sum ( paw_recon(nt)%paw_tab(:,:), intra_pool_comm )
 #endif
 
