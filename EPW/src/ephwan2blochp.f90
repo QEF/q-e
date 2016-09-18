@@ -62,7 +62,7 @@
   INTEGER :: ierr
   !! Return if there is an error
   !integer(kind=8) ::  lrepmatw,  lrepmatw2
-#ifdef __MPI  
+#if defined(__MPI)
   INTEGER (kind=MPI_OFFSET_KIND) :: lrepmatw
   !! Offset to tell where to start reading the file
   INTEGER (kind=MPI_OFFSET_KIND) :: lrepmatw2
@@ -103,7 +103,7 @@
      CALL errore ('ephwan2blochp', 'Problem with parallel_k/q scheme', nrr_q)
   ENDIF
   !
-#ifdef __MPI
+#if defined(__MPI)
   IF (.NOT. etf_mem) then
     ! Check for directory given by "outdir"
     !      
@@ -137,7 +137,7 @@
     ALLOCATE(epmatw ( nbnd, nbnd, nrr_k, nmodes))
     !
     !lrepmatw2   = 2 * nbnd * nbnd * nrr_k * nmodes
-#ifdef __MPI    
+#if defined(__MPI)
     ! Although this should almost never be problematic (see explaination below)
     lrepmatw2 = 2_MPI_OFFSET_KIND * INT( nbnd  , kind = MPI_OFFSET_KIND ) * &
                                     INT( nbnd  , kind = MPI_OFFSET_KIND ) * &
@@ -148,7 +148,7 @@
 #endif
     ! 
     DO ir = ir_start, ir_stop
-#ifdef __MPI
+#if defined(__MPI)
       ! DEBUG: print*,'Process ',my_id,' do ',ir,'/ ',ir_stop
       !
       !  Direct read of epmatwp for this ir
@@ -185,7 +185,7 @@
     DEALLOCATE(epmatw)
   ENDIF
   !
-#ifdef __MPI
+#if defined(__MPI)
   IF (parallel_k) CALL mp_sum(eptmp, world_comm)
   IF (.NOT. etf_mem) then
     CALL MPI_FILE_CLOSE(iunepmatwp2,ierr)

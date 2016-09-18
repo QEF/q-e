@@ -176,7 +176,7 @@ SUBROUTINE loadkmesh_para
     ENDIF
  ENDIF
  !
-#ifdef __MPI
+#if defined(__MPI)
  CALL mp_bcast (nkqtotf, ionode_id, inter_pool_comm)
  !
  !  scatter the k points of the fine mesh across the pools

@@ -68,7 +68,7 @@
   USE constants,     ONLY : AMU_RY
   USE control_lr,    ONLY : lgamma
   USE mp_global,     ONLY : my_pool_id, me_pool
-#ifdef __NAG
+#if defined(__NAG)
   USE F90_UNIX_ENV,  ONLY : iargc, getarg
 #endif
   !
@@ -425,7 +425,7 @@
   !
   !     reading the namelist inputepw
   !
-#ifdef CRAYY
+#if defined(__CRAYY) 
   !   The Cray does not accept "err" and "iostat" together with a namelist
   READ (5, inputepw)
   ios = 0
@@ -604,7 +604,7 @@
   ! nbnd comes out of readfile
   IF (nbndsub.eq.0) nbndsub = nbnd
   !
-#ifdef __MPI
+#if defined(__MPI)
   IF (.not.(me_pool /=0 .or. my_pool_id /=0)) THEN
      nk1 = nk1tmp
      nk2 = nk2tmp

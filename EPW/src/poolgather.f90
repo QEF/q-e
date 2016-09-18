@@ -35,7 +35,7 @@
   REAL (KIND=DP), INTENT (out) :: f_out(nsize,nkstot)
   !! output  ( contains values for all k-point )
   !
-#ifdef __MPI
+#if defined(__MPI)
   INTEGER :: rest, nbase
   ! the rest of the integer division nkstot / npo
   ! the position in the original list
@@ -86,7 +86,7 @@
   REAL (KIND=DP), INTENT (out) :: f_out(nsize,nkstot)
   ! output  ( contains values for all k-point )
   !
-#ifdef __MPI
+#if defined(__MPI)
   INTEGER :: rest, nbase, nkst
   ! the rest of the integer division nkstot / npo
   ! the position in the original list
@@ -138,7 +138,7 @@
   INTEGER, INTENT (out) :: f_out(nkstot)
   !! output  ( contains values for all k-point )
   !
-#ifdef __MPI
+#if defined(__MPI)
   INTEGER :: rest, nbase
   ! the rest of the integer division nkstot / npo
   ! the position in the original list
@@ -189,7 +189,7 @@
   INTEGER, INTENT (out) :: f_out(nsize,nkstot)
   !! output  ( contains values for all k-point )
   !
-#ifdef __MPI
+#if defined(__MPI)
   INTEGER :: rest, nbase
   ! the rest of the integer division nkstot / npo
   ! the position in the original list

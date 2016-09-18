@@ -17,7 +17,7 @@
   !!     In this routine the first processor sends the input to all
   !!     the other processors
   !!
-#ifdef __MPI
+#if defined(__MPI)
   USE phcom,         ONLY : zue, trans, tr2_ph, recover, nmix_ph, niter_ph, &
                             lnscf, ldisp, fildvscf, fildrho, epsil, alpha_mix 
   USE epwcom,        ONLY : epexst, epbwrite, ep_coupling, &
@@ -205,7 +205,7 @@ END SUBROUTINE bcast_ph_input
 SUBROUTINE bcast_ph_input1
 !-----------------------------------------------------------------------
 !
-#ifdef __MPI
+#if defined(__MPI)
   USE pwcom
   USE phcom
   USE mp,         ONLY: mp_bcast

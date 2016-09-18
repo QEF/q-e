@@ -29,7 +29,7 @@
                         wkf, xqf, wqf, nkqf, &
                         nkf, nkqtotf, xqf
   USE constants_epw, ONLY : ryd2ev, two, pi
-#ifdef __NAG
+#if defined(__NAG)
   USE f90_unix_io,  ONLY : flush
 #endif
   USE mp,        ONLY : mp_barrier,mp_sum
@@ -210,7 +210,7 @@
                         wkf, xqf, wqf, nkqf, nqf, nqtotf, &
                         nkqtotf, xqf, gamma_nest
   USE constants_epw, ONLY : ryd2ev, two, pi, zero
-#ifdef __NAG
+#if defined(__NAG)
   USE f90_unix_io,  ONLY : flush
 #endif
   USE mp,        ONLY : mp_barrier,mp_sum, mp_bcast
@@ -368,7 +368,7 @@
     xqf_all(:,:) = zero
     wqf_all(:,:) = zero
     ! 
-#ifdef __MPI
+#if defined(__MPI)
     !
     ! note that poolgather2 works with the doubled grid (k and k+q)
     !

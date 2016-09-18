@@ -568,7 +568,7 @@
   !
   DO ipool = 1, npool ! nr of pools 
      CALL set_ndnmbr(0,ipool,1,npool,filelab)
-#ifdef __MPI
+#if defined(__MPI)
      filephmat = trim(tmp_dir) // trim(prefix) // '.ephmat' // filelab
 #else
      filephmat = trim(tmp_dir) // trim(prefix) // '.ephmat'
@@ -602,7 +602,7 @@
   nnq(:) = 0
   DO ipool = 1, npool ! nr of pools 
      CALL set_ndnmbr(0,ipool,1,npool,filelab)
-#ifdef __MPI
+#if defined(__MPI)
      filephmat = trim(tmp_dir) // trim(prefix) // '.ephmat' // filelab
 #else
      filephmat = trim(tmp_dir) // trim(prefix) // '.ephmat'

@@ -428,7 +428,7 @@
   USE constants,     ONLY : eps8
   USE fft_base,      ONLY : dfftp
   USE kfold
-#ifdef __NAG
+#if defined(__NAG) 
   USE f90_unix_io,   ONLY : flush
 #endif
   USE mp_global,     ONLY : inter_pool_comm
@@ -709,7 +709,7 @@ ngms = 0
     j = mill_g(2, ng)
     k = mill_g(3, ng)
 
-#ifdef __MPI
+#if defined(__MPI)
     m1 = MOD (i, dfftp%nr1) + 1
     IF (m1.LT.1) m1 = m1 + dfftp%nr1
     m2 = MOD (j, dfftp%nr2) + 1

@@ -597,7 +597,7 @@ SUBROUTINE compute_amn_para
   USE noncollin_module,ONLY : noncolin, npol
   USE constants_epw,   ONLY : czero, eps6
   USE mp_global,       ONLY : my_pool_id
-#ifdef __NAG
+#if defined(__NAG)
   USE f90_unix_io,    ONLY : flush
 #endif
   USE mp_global,       ONLY : npool, intra_pool_comm, inter_pool_comm
@@ -636,7 +636,7 @@ SUBROUTINE compute_amn_para
      CALL init_us_1
   ENDIF
   !
-#ifdef __MPI
+#if defined(__MPI)
   WRITE(stdout,'(6x,a,i5,a,i4,a)') 'k points = ',iknum, ' in ', npool, ' pools'
 #endif
   ! 
@@ -789,7 +789,7 @@ SUBROUTINE compute_mmn_para
    USE wannier,         ONLY : m_mat, num_bands, nnb, iknum, g_kpb, kpb, ig_, &
                                excluded_band
    USE constants_epw,   ONLY : czero, twopi
-#ifdef __NAG
+#if defined(__NAG)
    USE f90_unix_io,     ONLY : flush
 #endif
    USE mp,              ONLY : mp_sum
@@ -911,7 +911,7 @@ SUBROUTINE compute_mmn_para
   !
   ALLOCATE( Mkb(nbnd,nbnd) )
   !
-#ifdef __MPI
+#if defined(__MPI)
   WRITE(stdout,'(6x,a,i5,a,i4,a)') 'k points = ',iknum, ' in ', npool, ' pools'
 #endif
   ! get the first k-point in this pool 
@@ -1580,7 +1580,7 @@ SUBROUTINE write_plot
    COMPLEX(DP),allocatable :: psic_small(:)   
    real(kind=DP)      :: zero_vect(3)
    !-------------------------------------------!
-#ifdef __MPI
+#if defined(__MPI)
    integer nxxs
    COMPLEX(DP),allocatable :: psic_all(:)
    nxxs = dffts%nr1x * dffts%nr2x * dffts%nr3x
@@ -1636,7 +1636,7 @@ SUBROUTINE write_plot
          IF (gamma_only)  psic(nlsm(igk_k (1:npw,ik) ) ) = conjg(evc (1:npw, ibnd))
          CALL invfft ('Wave', psic, dffts)
          IF (reduce_unk) pos=0
-#ifdef __MPI
+#if defined(__MPI)
          CALL gather_grid(dffts,psic,psic_all)
          !
          IF (reduce_unk) THEN
@@ -1698,7 +1698,7 @@ SUBROUTINE write_plot
    !
    IF (reduce_unk) DEALLOCATE(psic_small)   
    !
-#ifdef __MPI
+#if defined(__MPI)
    DEALLOCATE( psic_all )
 #endif
    !

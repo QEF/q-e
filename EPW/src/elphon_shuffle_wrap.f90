@@ -57,7 +57,7 @@
   USE noncollin_module, ONLY : m_loc
   USE iotk_module,   ONLY : iotk_open_read, iotk_scan_dat, iotk_free_unit,&
                             iotk_close_read
-#ifdef __NAG
+#if defined(__NAG)
   USE f90_unix_io,    ONLY : flush
 #endif
   ! --------------------------------------------------------------

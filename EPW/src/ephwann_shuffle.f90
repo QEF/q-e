@@ -50,7 +50,7 @@
                             ibndmin, ibndmax, lambda_all, dmec, dmef, vmef,     &
                             sigmai_all, sigmai_mode, gamma_all, epsi, zstar,    &
                             efnew
-#ifdef __NAG
+#if defined(__NAG)
   USE f90_unix_io,   ONLY : flush
 #endif
   USE mp,            ONLY : mp_barrier, mp_bcast, mp_sum
@@ -1101,7 +1101,7 @@
   USE io_files,  ONLY : prefix, diropn
   USE io_epw,    ONLY : epwdata, iundmedata, iunvmedata, iunksdata, iunepmatwp
   USE constants_epw, ONLY :  czero
-#ifdef __NAG
+#if defined(__NAG)
   USE f90_unix_io,ONLY : flush
 #endif
   USE io_global, ONLY : ionode_id

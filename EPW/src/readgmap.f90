@@ -72,7 +72,7 @@
     !
   ENDDO
   !
-#ifdef __MPI
+#if defined(__MPI)
   tmp = dble (ngxx)
   CALL mp_max(tmp,inter_pool_comm)  
   ngxx = nint (tmp)

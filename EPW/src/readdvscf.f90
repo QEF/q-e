@@ -30,12 +30,12 @@
   USE epwcom,    ONLY : dvscf_dir
   USE noncollin_module, ONLY : nspin_mag
   USE io_epw,    ONLY : iudvscf
-#ifdef __NAG
+#if defined(__NAG)
   USE,INTRINSIC :: f90_unix_file, ONLY:fstat, stat_t
 #endif
   !
   implicit none
-#ifdef __NAG
+#if defined(__NAG)
   TYPE(stat_t) :: statb
 #endif
 #ifndef __NAG
@@ -81,7 +81,7 @@ integer :: fstat,statb(13)
   !
   ! check that the binary file is long enough
   ! this is tricky to track through error dumps
-#ifdef __NAG
+#if defined(__NAG)
   CALL fstat( iudvscf, statb, errno=ios)
   IF (recn * unf_recl .gt. statb%st_size) call errore('readdvscf', &
        trim(tempfile)//' too short, check ecut', iudvscf)

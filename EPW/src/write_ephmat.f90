@@ -171,7 +171,7 @@
   ! write the e-ph matrix elements in the Bloch representation on the fine mesh
   ! in .ephmat files (one for each pool)
   !
-#ifdef __MPI
+#if defined(__MPI)
   CALL set_ndnmbr(0,my_pool_id+1,1,npool,filelab)
   filephmat = trim(tmp_dir) // trim(prefix) // '.ephmat' // filelab
 #else

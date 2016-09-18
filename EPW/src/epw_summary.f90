@@ -28,7 +28,7 @@
   USE lr_symm_base,  ONLY : irotmq, minus_q, nsymq, irgq
   USE control_flags, ONLY : iverbosity
   USE fft_base,      ONLY : dfftp, dffts
-#ifdef __NAG
+#if defined(__NAG)
   USE f90_unix_io,    ONLY : flush
 #endif
   implicit none

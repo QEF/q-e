@@ -328,7 +328,7 @@
      xkf_all(:,:) = zero
      etf_all(:,:) = zero
      !
-#ifdef __MPI
+#if defined(__MPI)
      !
      ! note that poolgather2 works with the doubled grid (k and k+q)
      !

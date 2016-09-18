@@ -170,7 +170,7 @@
   IF(.not. ALLOCATED(igk_k_all) ) ALLOCATE(igk_k_all( npwx, nkstot))
   IF(.not. ALLOCATED(ngk_all) ) ALLOCATE(ngk_all(nkstot))
   !
-#ifdef __MPI
+#if defined(__MPI)
   !
   CALL poolgather_int (npwx, nkstot, nks, igk_k(:,1:nks), igk_k_all ) 
   CALL poolgather_int1 (nkstot, nks, ngk(1:nks), ngk_all ) 

@@ -39,7 +39,7 @@
   nkf_mesh = nkqtotf / 2 
   nbndfs = ibndmax - ibndmin + 1
   !
-#ifdef __MPI
+#if defined(__MPI)
   IF ( .not. ALLOCATED(memlt_pool) ) ALLOCATE(memlt_pool(npool))
   memlt_pool(:) = 0.d0
 #else

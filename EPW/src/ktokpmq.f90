@@ -127,7 +127,7 @@
   !  In the parallel case we have to find the corresponding pool 
   !  and index in the pool
   !
-#ifdef __MPI
+#if defined(__MPI)
   !
   npool = nproc_image/nproc_pool
   !
@@ -177,7 +177,7 @@ subroutine ckbounds(lower, upper)
   implicit none
   integer, intent(out):: lower, upper
   !
-#ifdef __MPI
+#if defined(__MPI)
   !
   integer :: nkst, nkstott, rest
   !
@@ -215,7 +215,7 @@ subroutine para_bounds(lower, upper, total)
   integer, intent(out):: lower, upper
   integer, intent(in):: total
   !
-#ifdef __MPI
+#if defined(__MPI)
   !  
   integer :: rest, nrst
   !

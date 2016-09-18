@@ -47,7 +47,7 @@
 #  define DIRECT_IO_FACTOR 8
 #endif
 
-#ifdef __MPI
+#if defined(__MPI)
   tempfile = trim(tmp_dir) // trim(prefix) // '.wfc' // nd_nmbr0
 # else
   tempfile = trim(tmp_dir) // trim(prefix) // '.wfc'

@@ -21,7 +21,7 @@
   integer :: ik0
   integer :: nkl, nkr, iks
   !
-#ifdef __MPI
+#if defined(__MPI)
   !
   !   number of kpoint blocks, kpoints per pool and reminder
   !
@@ -65,7 +65,7 @@
   ! input: nktot k-points splited over pools
   ! output : lower_bnd, upper_bnd lower and upper bound for each pool 
   !
-#ifdef __MPI
+#if defined(__MPI)
   !
   INTEGER :: nkl, nkr
   !

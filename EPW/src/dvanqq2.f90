@@ -127,7 +127,7 @@
   fact1 = CMPLX (0.d0, - tpiba * omega, kind=DP)
   !
   tempfile = trim(tmp_dir) // trim(prefix) // '.recover' 
-#ifdef __MPI
+#if defined(__MPI)
   CALL set_ndnmbr (0,my_pool_id+1,1,npool,filelab)
   tempfile = trim(tmp_dir) // trim(prefix) // '.recover' // filelab
 #endif
