@@ -355,7 +355,7 @@ subroutine matrix_wannier_gamma_big( matsincos, ispin, n_set, itask )
 
      expgsave(:,:,:,mdir)=expgsave(:,:,:,mdir)*omega/dble(dfftp%nr1*dfftp%nr2*dfftp%nr3)
 
-#ifdef __MPI
+#if defined(__MPI)
  !    call reduce (2  *maxval(nh) *maxval(nh)* nat, expgsave(:,:,:,mdir))
      call mp_sum( expgsave(:,:,:,mdir),world_comm)
 #endif

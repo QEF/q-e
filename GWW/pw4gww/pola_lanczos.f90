@@ -1598,7 +1598,7 @@ end subroutine global_pola_lanczos
 subroutine orthonormalize_two_manifolds_scalapack( state1, n1,state2, n2, threshold, state_out, n_out)
 !this subroutine form am orthormal basis set from 2 manifold (with orthonormal basis sets)
 !ONLY FOR NORM_CONSERVING CASE
-#ifdef __SCALAPACK
+#if defined(__SCALAPACK)
 
    USE io_global,            ONLY : stdout, ionode, ionode_id
    USE kinds,    ONLY : DP

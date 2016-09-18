@@ -12,7 +12,7 @@ MODULE start_end
     !this module contains routines to initialize the MPI environment
     IMPLICIT NONE
     CHARACTER (len=10), PARAMETER :: code = 'GWW'
-#ifdef __OPENMP
+#if defined(__OPENMP)
     INTEGER, SAVE :: ntids
 #endif
 
@@ -28,13 +28,13 @@ CONTAINS
   
   IMPLICIT NONE
 
-#ifdef __MPI
+#if defined(__MPI)
   CALL mp_startup()
 #endif
   
   CALL environment_start ( code )
   
-#ifdef __MPI
+#if defined(__MPI)
   if(ionode) then
      write(stdout,*) 'MPI PARALLEL VERSION'
      write(stdout,*) 'Number of procs: ', nproc
@@ -55,7 +55,7 @@ CONTAINS
 
     IMPLICIT NONE
 
-#ifdef __MPI
+#if defined(__MPI)
 
     if(ionode) write(stdout,*) 'Stopping MPI environment'
     call mp_global_end( )

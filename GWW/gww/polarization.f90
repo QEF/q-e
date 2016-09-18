@@ -985,7 +985,7 @@
 
      allocate(op%on_mat(op%numpw,l_blk*nproc))
 
-#ifdef __MPI
+#if defined(__MPI)
       call MPI_ALLGATHER(opd%on_mat,l_blk*op%numpw,MPI_DOUBLE_PRECISION, op%on_mat, &
            &    l_blk*op%numpw, MPI_DOUBLE_PRECISION,world_comm, ierr)
 #else
@@ -1566,7 +1566,7 @@
 
      allocate(vp%vmat(vp%numpw,l_blk*nproc))
 
-#ifdef __MPI
+#if defined(__MPI)
       call MPI_ALLGATHER(vpd%vmat,l_blk*vp%numpw,MPI_DOUBLE_PRECISION, vp%vmat, &
            &    l_blk*vp%numpw, MPI_DOUBLE_PRECISION,world_comm, ierr)
 #else
@@ -1978,7 +1978,7 @@
    REAL(kind=DP) :: loptwork
    INTEGER :: iw,jw,kw
 
-#ifdef __OPENMP
+#if defined(__OPENMP)
    INTEGER :: ntids
    INTEGER :: omp_get_num_threads, omp_get_max_threads
    EXTERNAL omp_set_num_threads, omp_get_num_threads, omp_get_max_threads
@@ -1990,7 +1990,7 @@
 
    tmp_pw(:,:)=pw(:,:)
 
-#ifdef __OPENMP
+#if defined(__OPENMP)
      ! go single-thread
      ntids = omp_get_max_threads()
      call omp_set_num_threads(1)
@@ -2011,7 +2011,7 @@
       stop
    endif
 
-#ifdef __OPENMP
+#if defined(__OPENMP)
      ! go multi-thread
      call omp_set_num_threads(ntids)
 #endif

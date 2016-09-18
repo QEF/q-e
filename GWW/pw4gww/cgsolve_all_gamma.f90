@@ -172,7 +172,7 @@ subroutine cgsolve_all_gamma (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
         endif
      enddo
      kter_eff = kter_eff + DBLE (lbnd) / DBLE (nbnd)
-#ifdef __MPI
+#if defined(__MPI)
      call mp_sum(  rho(1:lbnd) , intra_pool_comm )
 #endif
      do ibnd = nbnd, 1, -1
@@ -238,7 +238,7 @@ subroutine cgsolve_all_gamma (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
            ENDIF
         end if
      end do
-#ifdef __MPI
+#if defined(__MPI)
      call mp_sum(  a(1:lbnd), intra_pool_comm )
      call mp_sum(  c(1:lbnd), intra_pool_comm )
 #endif

@@ -281,7 +281,7 @@
         if(ggwin%l_full) write(stdout,*) 'FULL RELATIVISTIC CALCULATION with:', ggwin%n_full
         if(ggwin%l_scissor) write(stdout,*) 'USE SCISSOR:', ggwin%scissor
      endif
-#ifdef __MPI
+#if defined(__MPI)
     CALL mp_bcast( tmp_dir,ionode_id, world_comm )
     CALL mp_bcast( prefix,ionode_id, world_comm )
     call mp_bcast(ggwin%n,ionode_id,world_comm)

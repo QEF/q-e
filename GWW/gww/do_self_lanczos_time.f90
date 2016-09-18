@@ -340,7 +340,7 @@ subroutine do_self_lanczos_time(ss, tf ,options,l_real_axis,energy)
            factor=2.d0*dble(tf%weights_freq(iw)*exp((0.d0,1.d0)*tf%times(it)*tf%freqs_eff(iw)))/(2.d0*pi)
            pw_tmp(:,:)=pw_tmp(:,:)+pw_mat(:,:,iw-nbegin+1)*factor
         enddo
-#ifdef __MPI
+#if defined(__MPI)
 !the distribution of times on procs is the same of that for frequecies
         iproc_time=it/l_blk
 !all processors sums to iproc_time
@@ -437,7 +437,7 @@ subroutine do_self_lanczos_time(ss, tf ,options,l_real_axis,energy)
                  factor=2.d0*dble(tf%weights_freq_g(iw)*exp_table(it+1,iw-nbegin_g+1))/(2.d0*pi)
                  g_tmp(1:numt,1:numt)=g_tmp(1:numt,1:numt)+re_e_mat(1:numt,1:numt,iw-nbegin_g+1)*factor
               enddo
-#ifdef __MPI
+#if defined(__MPI)
 !the distribution of times on procs is the same of that for frequecies
               iproc_time=it/l_blk
 !all processors sums to iproc_time
@@ -464,7 +464,7 @@ subroutine do_self_lanczos_time(ss, tf ,options,l_real_axis,energy)
                  factor=-2.d0*dimag(tf%weights_freq_g(iw)*exp_table(it+1,iw-nbegin_g+1))/(2.d0*pi)
                  g_tmp(1:numt,1:numt)=g_tmp(1:numt,1:numt)+im_e_mat(1:numt,1:numt,iw-nbegin_g+1)*factor
               enddo
-#ifdef __MPI
+#if defined(__MPI)
 !the distribution of times on procs is the same of that for frequecies
               iproc_time=it/l_blk
 !all processors sums to iproc_time
@@ -691,7 +691,7 @@ subroutine do_self_lanczos_time(ss, tf ,options,l_real_axis,energy)
                     factor=2.d0*dble(tf%weights_freq_g(iw)*exp_table(it+1,iw-nbegin_g+1))/(2.d0*pi)
                     g_tmp(:,:)=g_tmp(:,:)+re_g_mat(:,:,iw-nbegin_g+1)*factor
                  enddo
-#ifdef __MPI
+#if defined(__MPI)
 !the distribution of times on procs is the same of that for frequecies
                  iproc_time=it/l_blk
 !all processors sums to iproc_time
@@ -713,7 +713,7 @@ subroutine do_self_lanczos_time(ss, tf ,options,l_real_axis,energy)
                     factor=-2.d0*dimag(tf%weights_freq_g(iw)*exp_table(it+1,iw-nbegin_g+1))/(2.d0*pi)
                     g_tmp(:,:)=g_tmp(:,:)+im_g_mat(:,:,iw-nbegin_g+1)*factor
                  enddo
-#ifdef __MPI
+#if defined(__MPI)
 !the distribution of times on procs is the same of that for frequecies
                  iproc_time=it/l_blk
 !all processors sums to iproc_time

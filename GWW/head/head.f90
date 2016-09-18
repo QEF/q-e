@@ -66,7 +66,7 @@ PROGRAM head
   !
   ! Initialize MPI, clocks, print initial messages
   !
-#ifdef __MPI
+#if defined(__MPI)
   CALL mp_startup ( )
   !IF (nimage>1) CALL io_path_start()
 #endif

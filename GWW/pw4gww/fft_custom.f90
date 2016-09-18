@@ -464,7 +464,7 @@ SUBROUTINE ggent(fc)
    INTEGER, ALLOCATABLE :: igsrt(:)
    !
 
-#ifdef __MPI
+#if defined(__MPI)
    INTEGER :: m1, m2, mc
    !
 #endif
@@ -533,7 +533,7 @@ SUBROUTINE ggent(fc)
       j = mill_g(2, ng)
       k = mill_g(3, ng)
 
-#ifdef __MPI
+#if defined(__MPI)
       m1 = mod (i, fc%nr1t) + 1
       IF (m1 < 1) m1 = m1 + fc%nr1t
       m2 = mod (j, fc%nr2t) + 1

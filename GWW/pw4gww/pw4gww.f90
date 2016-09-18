@@ -690,7 +690,7 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   
   write(stdout,*)"after wfc waves"
 
-#ifdef __MPI
+#if defined(__MPI)
   call poolrecover (et, nbnd, nkstot, nks)
 #endif
  

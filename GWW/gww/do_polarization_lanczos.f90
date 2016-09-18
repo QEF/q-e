@@ -294,7 +294,7 @@ subroutine do_polarization_lanczos(tf,options,ispin)
    LOGICAL :: l_do_restart
    REAL(kind=DP), ALLOCATABLE :: occ(:)
 
-#ifdef __OPENMP
+#if defined(__OPENMP)
    INTEGER :: omp_get_num_threads, omp_get_max_threads 
    EXTERNAL omp_set_num_threads, omp_get_num_threads, omp_get_max_threads 
 #endif
@@ -522,7 +522,7 @@ subroutine do_polarization_lanczos(tf,options,ispin)
              if(options%l_verbose) FLUSH(stdout)
          
    
-#ifdef __OPENMP
+#if defined(__OPENMP)
    !               write(stdout,*) 'Call dgemms, ntids=', omp_get_max_threads() 
 #else
    !               write(stdout,*) 'Call dgemms'
@@ -883,7 +883,7 @@ subroutine solve_lanczos_2(numpw,numt,numl,nbuf,mbuf, alpha,lc, iv0,nbndv,&
 !           call mpi_gatherv(e_mat_ip, lc%numt*nsize,MPI_DOUBLE_PRECISION,e_mat(1,1,iv),recvcounts,displ, MPI_DOUBLE_PRECISION,iproc,world_comm)
         enddo
 
-#ifdef __MPI
+#if defined(__MPI)
         if(iproc==mpime) then
            pw_ip(:,:)=pw_ip(:,:)+pw%pw(:,:)
            CALL MPI_REDUCE(pw_ip, pw%pw, pw%numpw*pw%numpw,MPI_DOUBLE_PRECISION,MPI_SUM, iproc,world_comm,ierr)
