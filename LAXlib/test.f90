@@ -2,7 +2,7 @@ program lax_test
   use descriptors
   use dspev_module
   IMPLICIT NONE
-#ifdef __MPI
+#if defined(__MPI)
   include 'mpif.h'
   INTEGER    STATUS(MPI_STATUS_SIZE)
 #endif
@@ -88,7 +88,7 @@ program lax_test
      END IF
   end do
 
-#ifdef __MPI
+#if defined(__MPI)
 
 #if defined(__OPENMP)
   CALL MPI_Init_thread(MPI_THREAD_FUNNELED, PROVIDED, ierr)
@@ -127,7 +127,7 @@ program lax_test
   !
   !  Broadcast input parameter first
   !
-#ifdef __MPI
+#if defined(__MPI)
   CALL MPI_BCAST(n_in, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, ierr )
 #endif
 
@@ -154,7 +154,7 @@ program lax_test
   nnodes = 0
 
   do i = 1, npes
-#ifdef __MPI
+#if defined(__MPI)
      if( mype == i-1 ) then
          call MPI_Get_processor_name( proc_name(i), nlen, ierr )
      end if
@@ -198,7 +198,7 @@ program lax_test
 
   ! Check core speed
   !
-#ifdef __MPI
+#if defined(__MPI)
   CALL MPI_BARRIER( MPI_COMM_WORLD, ierr)
 #endif
   nx = 1024
@@ -211,7 +211,7 @@ program lax_test
   s = 1.0d0
   c = 1.0d0
   CALL dgemm('n', 'n', nx, nx, nx, 1.0d0, A, nx, s, nx, 1.0d0, C, nx)
-#ifdef __MPI
+#if defined(__MPI)
   tempo(1) = MPI_WTIME()
 #endif
   CALL dgemm('n', 'n', nx, nx, nx, 1.0d0, A, nx, s, nx, 1.0d0, C, nx)
@@ -219,14 +219,14 @@ program lax_test
   CALL dgemm('n', 'n', nx, nx, nx, 1.0d0, A, nx, s, nx, 1.0d0, C, nx)
   CALL dgemm('n', 'n', nx, nx, nx, 1.0d0, A, nx, s, nx, 1.0d0, C, nx)
   CALL dgemm('n', 'n', nx, nx, nx, 1.0d0, A, nx, s, nx, 1.0d0, C, nx)
-#ifdef __MPI
+#if defined(__MPI)
   tempo(2) = MPI_WTIME()
 #endif
   DEALLOCATE( s )
   DEALLOCATE( a )
   DEALLOCATE( c )
   tempo_tutti(mype+1) = tempo(2)-tempo(1)
-#ifdef __MPI
+#if defined(__MPI)
   CALL MPI_ALLREDUCE( MPI_IN_PLACE, tempo_tutti, npes, MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, ierr )
 #endif
   if( mype == 0 ) then
@@ -253,7 +253,7 @@ program lax_test
      sour = ii
      dest = i
      tag = i + ii * npes
-#ifdef __MPI
+#if defined(__MPI)
      CALL MPI_BARRIER( MPI_COMM_WORLD, ierr)
      if( ( mype == sour ) .or. ( mype == dest ) ) THEN
         tempo(1) = MPI_WTIME()
@@ -286,7 +286,7 @@ program lax_test
 #endif
   end do
   end do
-#ifdef __MPI
+#if defined(__MPI)
   CALL MPI_ALLREDUCE( MPI_IN_PLACE, perf_matrix, SIZE(perf_matrix), MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, ierr )
   CALL MPI_ALLREDUCE( MPI_IN_PLACE, latency_matrix, SIZE(latency_matrix), MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, ierr )
   CALL MPI_ALLREDUCE( MPI_IN_PLACE, perf_count, SIZE(perf_count), MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD, ierr )
@@ -375,7 +375,7 @@ program lax_test
      tempo_mio(i) = tempo(i)-tempo(i-1)
   end do
   !
-#ifdef __MPI
+#if defined(__MPI)
   CALL MPI_ALLREDUCE( tempo_mio, tempo_min, 100, MPI_DOUBLE_PRECISION, MPI_MIN, MPI_COMM_WORLD, ierr )
   CALL MPI_ALLREDUCE( tempo_mio, tempo_max, 100, MPI_DOUBLE_PRECISION, MPI_MAX, MPI_COMM_WORLD, ierr )
   CALL MPI_ALLREDUCE( tempo_mio, tempo_avg, 100, MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, ierr )
@@ -437,7 +437,7 @@ program lax_test
   deallocate( perf_count )
 
 
-#ifdef __MPI
+#if defined(__MPI)
   CALL mpi_finalize(ierr)
 #endif
 

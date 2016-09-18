@@ -968,7 +968,7 @@ CONTAINS
       dvar(5) = SSFMAX
       dvar(6) = SSFMIN
       !
-#ifdef __MPI
+#if defined(__MPI)
       CALL MPI_BCAST( dvar, 6, MPI_DOUBLE_PRECISION, 0, comm, ierr )
       IF( ierr /= 0 ) CALL lax_error__( ' ptredv ', 'error in mpi_bcast 4', ierr )
 #endif
@@ -1026,7 +1026,7 @@ CONTAINS
 
       END IF
 
-#ifdef __MPI
+#if defined(__MPI)
       CALL MPI_BCAST( e(l1), nm1-l1+1, MPI_DOUBLE_PRECISION, 0, comm, ierr )
       IF( ierr /= 0 ) CALL lax_error__( ' ptredv ', 'error in mpi_bcast 5', ierr )
       CALL MPI_BCAST( m, 1, MPI_INTEGER, 0, comm, ierr )
@@ -1086,7 +1086,7 @@ CONTAINS
 
          END IF
 
-#ifdef __MPI
+#if defined(__MPI)
          CALL MPI_BCAST( m, 1, MPI_INTEGER, 0, comm, ierr )
          IF( ierr /= 0 ) CALL lax_error__( ' ptredv ', 'error in mpi_bcast 7', ierr )
 #endif

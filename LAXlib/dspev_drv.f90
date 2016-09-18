@@ -797,7 +797,7 @@ SUBROUTINE diagonalize_parallel( n, rhos, rhod, s, desc )
          !
          s = rhos
          !
-#ifdef __SCALAPACK
+#if defined(__SCALAPACK)
          CALL pdsyevd_drv( .true. , n, desc%nrcx, s, SIZE(s,1), rhod, desc%cntx, desc%comm )
 #else
          CALL qe_pdsyevd( .true., n, desc, s, SIZE(s,1), rhod )
