@@ -1854,7 +1854,16 @@ CONTAINS
                   wan_data(iwan,ispin)%ing(j)%c = c
                ENDDO
             ENDDO
+         ELSE
+         ! oups - that is not our data - lets's move one line up in input file
+         ! not sure that a direct access to the parce_unit is safe enougth
+         BACKSPACE(parse_unit)
          ENDIF
+      ELSE
+         ! ok, that's the end of file. But I will move one line up
+         ! for a correct handling of EOF in the parent read_cards subroutine
+         ! otherwise (at least with gfortran on Mac) there will be the read error
+         BACKSPACE(parse_unit)
       ENDIF
       !
       RETURN

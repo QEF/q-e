@@ -206,6 +206,8 @@ SUBROUTINE new_hamiltonian(form, plot_bands)
       nelec = nelec + SUM(wannier_occ(i,i,:))
     END DO
 
+    IF (nspin == 1) nelec = nelec*2.d0
+
     CALL write_systemdata_amulet(seconds,nelec,118)
 
   ELSE
@@ -341,7 +343,7 @@ SUBROUTINE plot_wannier_bands(ek)
   ENDIF
 
   WRITE(115,*)'reset'
-  WRITE(115,*)'set term post eps'
+  WRITE(115,*)'set terminal postscript eps enhanced color'
   WRITE(115,*)'set output "wannier_bands.eps"'
   WRITE(115,*)'unset xtics'
   WRITE(115,'(a12,f7.3,a,f7.3,a)')'set yrange [',emin-1.5,':',emax+1.5,']'
@@ -349,9 +351,9 @@ SUBROUTINE plot_wannier_bands(ek)
   WRITE(115,*)'set style line 2 lt 2 lc rgb "red" lw 2'
   WRITE(115,*)'set style line 3 lt 1 lc rgb "green" lw 1'
   WRITE(115,*)'set ylabel "Energy (eV)"'
-  WRITE(115,*)'plot \\'
-  WRITE(115,*)'"original_bands.dat" title "LDA bands" with lines linestyle 1,\\'
-  WRITE(115,*)'"wannier_bands.dat" title "Wannier bands" with lines linestyle 2,\\'
+  WRITE(115,*)'plot \'
+  WRITE(115,*)'"original_bands.dat" title "LDA bands" with lines linestyle 1,\'
+  WRITE(115,*)'"wannier_bands.dat" title "Wannier bands" with lines linestyle 2,\'
   WRITE(115,'(f7.3,a44)') ef*rytoev,'title "Fermi energy" with lines linestyle 3'
 
   CLOSE(113)

@@ -73,6 +73,7 @@ SUBROUTINE write_hamiltonian_amulet(nwan,hamk,hash,iunhamilt)
   USE klist, ONLY: nks, wk, xk
   USE lsda_mod, ONLY : nspin
   USE input_parameters, ONLY : title
+  USE global_version, ONLY : version_number
   
   IMPLICIT NONE
   INTEGER, INTENT(in) :: nwan, hash, iunhamilt
@@ -94,6 +95,10 @@ SUBROUTINE write_hamiltonian_amulet(nwan,hamk,hash,iunhamilt)
   write(iunhamilt,'(a30,2a10/)') '# This file was generated on: ', cdate, ctime
   IF( trim(title) .NE. '' ) write(iunhamilt,'(a2,a80/)') '# ', title
   
+  WRITE(iunhamilt,'(a10)') '&codestamp'
+  WRITE(iunhamilt,'(a3,a6)') 'QE_', version_number
+  WRITE(iunhamilt,*) 
+
   WRITE(iunhamilt,'(a5)') '&hash'
   WRITE(iunhamilt,*) hash
   WRITE(iunhamilt,*) 
@@ -161,6 +166,7 @@ SUBROUTINE write_systemdata_amulet(hash,nelec,iunsystem)
   USE cell_base, ONLY : alat, at
   USE ener, ONLY : ef
   USE wannier_new, ONLY : nwan, wan_in
+  USE global_version, ONLY : version_number
 
   IMPLICIT NONE
   INTEGER, INTENT(in) :: hash,iunsystem
@@ -197,11 +203,16 @@ SUBROUTINE write_systemdata_amulet(hash,nelec,iunsystem)
   WRITE(iunsystem,*) hash
   WRITE(iunsystem,*) 
 
+  WRITE(iunsystem,'(a10)') '&codestamp'
+  WRITE(iunsystem,'(a3,a6)') 'QE_',version_number
+  WRITE(iunsystem,*) 
+
   WRITE(iunsystem,'(a5)') '&cell'
   WRITE(iunsystem,'(f12.9)') alat
   DO i=1,3
     WRITE(iunsystem,'(3f9.5)') at(:,i)
   END DO
+  WRITE(iunsystem,*) 
 
   WRITE(iunsystem,'(a6)') '&atoms'
   WRITE(iunsystem,'(i5)') nat
