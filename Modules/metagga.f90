@@ -36,14 +36,14 @@ subroutine tpsscxc( rho, grho, tau, sx, sc, v1x, v2x, v3x, v1c, v2c, v3c )
   !                       v3x= D(E_x)/D(tau)
   !
   USE kinds,            ONLY : DP
-#ifdef __LIBXC
+#if defined(__LIBXC)
   use xc_f90_types_m
   use xc_f90_lib_m
 #endif
   implicit none  
   real(DP), intent(in) :: rho, grho, tau
   real(dp), intent(out):: sx, sc, v1x, v2x, v3x, v1c, v2c, v3c
-#ifdef __LIBXC
+#if defined(__LIBXC)
   TYPE(xc_f90_pointer_t) :: xc_func
   TYPE(xc_f90_pointer_t) :: xc_info
   integer :: size = 1
@@ -1392,14 +1392,14 @@ end subroutine gvt4
 subroutine tb09cxc(rho, grho, tau, sx, sc, v1x, v2x,v3x,v1c, v2c,v3c)
 
   USE kinds,            ONLY : DP
-#ifdef __LIBXC
+#if defined(__LIBXC)
   use xc_f90_types_m
   use xc_f90_lib_m
 #endif
   implicit none  
   real(DP), intent(in) :: rho, grho, tau
   real(dp), intent(out):: sx, sc, v1x, v2x, v3x, v1c, v2c, v3c
-#ifdef __LIBXC
+#if defined(__LIBXC)
   TYPE(xc_f90_pointer_t) :: xc_func
   TYPE(xc_f90_pointer_t) :: xc_info
   integer :: size = 1

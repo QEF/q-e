@@ -11,7 +11,7 @@
 ! This module should be, in the future, replaced by a script generated library. 
 ! 
 ! Written by Pietro Delugas -- May-June 2016. 
-#ifdef __XSD 
+#if defined(__XSD) 
 !--------------------------------------------------------------------------------------
 MODULE qexsd_reader_module
 !--------------------------------------------------------------------------------------

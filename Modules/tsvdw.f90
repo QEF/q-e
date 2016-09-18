@@ -988,7 +988,7 @@ PRIVATE :: GetVdWParam
   ALLOCATE(rhotot(nr1*nr2*nr3)); rhotot=0.0_DP
   nspin = SIZE(rhor,2)
   IF ( nspin < 1 .OR.  nspin > 2 ) CALL errore ('tsvdw','invalid nspin',1)
-#ifdef __MPI
+#if defined(__MPI)
   !
   ! Initialization of rhor_tmp temporary buffers...
   !

@@ -133,7 +133,7 @@ MODULE io_base
          END IF
          !
          IF ( ionode_in_group ) &
-#ifdef __HDF5
+#if defined(__HDF5)
             CALL write_evc(evc_hdf5_write,j, wtmp(1:npol*igwx), ik) 
 #else
             CALL iotk_write_dat &

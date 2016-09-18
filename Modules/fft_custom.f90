@@ -204,7 +204,7 @@ CONTAINS
     INTEGER, ALLOCATABLE :: igsrt(:)
     !
 
-#ifdef __MPI
+#if defined(__MPI)
     INTEGER :: m1, m2, mc
     !
 #endif
@@ -280,7 +280,7 @@ CONTAINS
        j = mill_g(2, ng)
        k = mill_g(3, ng)
        
-#ifdef __MPI
+#if defined(__MPI)
        m1 = MOD (i, fc%dfftt%nr1) + 1
        IF (m1 < 1) m1 = m1 + fc%dfftt%nr1
        m2 = MOD (j, fc%dfftt%nr2) + 1
@@ -490,7 +490,7 @@ CONTAINS
     COMPLEX(kind=DP), ALLOCATABLE :: pw1_tmp(:),pw2_tmp(:), pw_global(:)
 
 
-#ifdef __MPI
+#if defined(__MPI)
 
     gid=comm
 

@@ -12,14 +12,14 @@ subroutine slater (rs, ex, vx)
   !        Slater exchange with alpha=2/3
   !
   USE kinds, ONLY : DP
-#ifdef __LIBXC
+#if defined(__LIBXC)
   use xc_f90_types_m
   use xc_f90_lib_m
 #endif
   implicit none
   real(dp), intent(in) :: rs
   real(dp), intent(out):: ex, vx
-#ifdef __LIBXC  
+#if defined(__LIBXC)  
   real(dp):: rho 
   real(dp), parameter :: pi34 = 0.6203504908994d0 ! pi34=(3/4pi)^(1/3)
   integer :: func_id = 1  ! Slater Exchange
@@ -146,7 +146,7 @@ subroutine pz (rs, iflag, ec, vc)
   !     iflag=2: G. Ortiz and P. Ballone, PRB 50, 1391 (1994)
   !
   USE kinds, ONLY : DP
-#ifdef __LIBXC
+#if defined(__LIBXC)
   use xc_f90_types_m
   use xc_f90_lib_m
 #endif
@@ -154,7 +154,7 @@ subroutine pz (rs, iflag, ec, vc)
   real(dp), intent(in) :: rs
   real(dp), intent(out):: ec, vc
   integer, intent(in)  :: iflag
-#ifdef __LIBXC
+#if defined(__LIBXC)
   real(dp):: rho 
   real(dp), parameter :: pi34 = 0.6203504908994d0 ! pi34=(3/4pi)^(1/3)
   integer :: func_id = 9   ! Perdew & Zunger
@@ -382,7 +382,7 @@ subroutine pw (rs, iflag, ec, vc)
   !     iflag=2: G. Ortiz and P. Ballone, PRB 50, 1391 (1994)
   !
   USE kinds, ONLY : DP
-#ifdef __LIBXC
+#if defined(__LIBXC)
   use xc_f90_types_m
   use xc_f90_lib_m
 #endif
@@ -390,7 +390,7 @@ subroutine pw (rs, iflag, ec, vc)
   real(dp), intent(in) :: rs
   real(dp), intent(out):: ec, vc
   integer, intent(in) :: iflag 
-#ifdef __LIBXC
+#if defined(__LIBXC)
   real(dp):: rho 
   real(dp), parameter :: pi34 = 0.6203504908994d0 ! pi34=(3/4pi)^(1/3)
   integer :: func_id = 12   ! Perdew & Zunger
@@ -1015,7 +1015,7 @@ subroutine pbex (rho, grho, iflag, sx, v1x, v2x)
   !
   USE kinds, ONLY : DP
   USE constants, ONLY : pi
-#ifdef __LIBXC
+#if defined(__LIBXC)
   use xc_f90_types_m
   use xc_f90_lib_m
 #endif
@@ -1025,7 +1025,7 @@ subroutine pbex (rho, grho, iflag, sx, v1x, v2x)
   real(dp), intent(out):: sx, v1x, v2x
   ! output: energy, potential
   integer, intent(in) :: iflag
-#ifdef __LIBXC
+#if defined(__LIBXC)
   ! local variables
   integer :: func_id = -1 ! not set
   integer :: size = 1
@@ -1230,7 +1230,7 @@ subroutine pbec (rho, grho, iflag, sc, v1c, v2c)
   ! iflag=3: L. Chiodo et al, PRL 108, 126402 (2012)  (PBEQ2D)
   !
   USE kinds, ONLY : DP
-#ifdef __LIBXC
+#if defined(__LIBXC)
   use xc_f90_types_m
   use xc_f90_lib_m
 #endif
@@ -1238,7 +1238,7 @@ subroutine pbec (rho, grho, iflag, sc, v1c, v2c)
   integer, intent(in) :: iflag
   real(DP), intent(in) :: rho, grho
   real(DP), intent(out):: sc, v1c, v2c
-#ifdef __LIBXC
+#if defined(__LIBXC)
   ! local variables
   integer :: func_id = -1 ! not set
   integer :: size = 1

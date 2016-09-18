@@ -518,7 +518,7 @@ SUBROUTINE redistwf( c_dist_pw, c_dist_st, npw_p, nst_p, comm, idir )
    INTEGER, ALLOCATABLE :: sendcount(:),  sdispls(:)
    COMPLEX(DP), ALLOCATABLE :: ctmp( : )
 
-#ifdef __MPI
+#if defined(__MPI)
    CALL mpi_comm_rank( comm, mpime, ierr )
    IF( ierr /= 0 ) CALL errore( ' wf_redist ', ' mpi_comm_rank ', ierr )
    CALL mpi_comm_size( comm, nproc, ierr )
@@ -632,7 +632,7 @@ SUBROUTINE redistwfr( c_dist_pw, c_dist_st, npw_p, nst_p, comm, idir )
    INTEGER, ALLOCATABLE :: sendcount(:),  sdispls(:)
    REAL(DP), ALLOCATABLE :: ctmp( : )
 
-#ifdef __MPI
+#if defined(__MPI)
    CALL mpi_comm_rank( comm, mpime, ierr )
    IF( ierr /= 0 ) CALL errore( ' wf_redist ', ' mpi_comm_rank ', ierr )
    CALL mpi_comm_size( comm, nproc, ierr )

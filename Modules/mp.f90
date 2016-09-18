@@ -163,7 +163,7 @@
         IMPLICIT NONE
         INTEGER :: ierr
         INTEGER, INTENT(IN):: errorcode, gid
-#ifdef __MPI
+#if defined(__MPI)
         CALL mpi_abort(gid, errorcode, ierr)
 #endif
       END SUBROUTINE mp_abort

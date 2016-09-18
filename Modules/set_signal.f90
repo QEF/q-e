@@ -40,7 +40,7 @@ END INTERFACE
 
 CONTAINS
 
-#ifdef __TRAP_SIGUSR1
+#if defined(__TRAP_SIGUSR1)
 SUBROUTINE set_signal_USR1(routine)
   USE iso_c_binding
   TYPE(C_FUNPTR),TARGET::ptr
@@ -61,7 +61,7 @@ SUBROUTINE set_signal_USR1(routine)
 END SUBROUTINE set_signal_USR1
 #endif
 
-#ifdef __TERMINATE_GRACEFULLY
+#if defined(__TERMINATE_GRACEFULLY)
 SUBROUTINE set_TERMINATE_GRACEFULLY(routine)
   USE iso_c_binding
   TYPE(C_FUNPTR),TARGET::ptr
@@ -106,7 +106,7 @@ END SUBROUTINE set_signal_action
 ! Only the master will use the signal, though
 SUBROUTINE custom_handler(signum) BIND(c)
   USE iso_c_binding
-#ifdef __MPI
+#if defined(__MPI)
   USE mp_world,      ONLY : world_comm
   USE mp,            ONLY : mp_abort
 #endif
@@ -116,7 +116,7 @@ SUBROUTINE custom_handler(signum) BIND(c)
   ! send SIGTERM to every process when SIGINT (aka CTRL-C) is received
   IF(signal_trapped.and.signum==SIGINT) THEN
     WRITE(stdout, '(/,5x,a)') "**** SIGNAL ALREADY TRAPPED: terminating immediately!!", signum
-#ifdef __MPI
+#if defined(__MPI)
     CALL mp_abort(signum, world_comm)
 #else
     STOP 1
@@ -137,11 +137,11 @@ END SUBROUTINE custom_handler
 ! use the result (required since the default action for SIGUSR1 is exit)
 SUBROUTINE signal_trap_init
   USE iso_c_binding
-#ifdef __TRAP_SIGUSR1
+#if defined(__TRAP_SIGUSR1)
   WRITE(stdout, FMT='(5x,a)') "signal trapping enabled: kill the code with -SIGUSR1 to stop cleanly the simulation "
   CALL set_signal_USR1(custom_handler)
 #endif
-#ifdef __TERMINATE_GRACEFULLY
+#if defined(__TERMINATE_GRACEFULLY)
   WRITE(stdout, FMT='(/,5x,a)') "Signal trapping enabled: code will terminate cleanly with SIGINT, SIGTERM, SIGUSR1, SIGUSR2, SIGXCPU"
   WRITE(stdout, FMT='(5x,a)') "Type CTRL-C twice to terminate immediately (no restart possible!)"
   CALL set_TERMINATE_GRACEFULLY(custom_handler)

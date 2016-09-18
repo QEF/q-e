@@ -31,7 +31,7 @@ SUBROUTINE pw_dot(sum_over_nodes,n,m,a,lda,b,ldb,c)
      c(i) = 2.d0*ddot(2*n,a(1,i),1,b(1,i),1)
      IF (gstart==2) c(i) = c(i) - dble(a(1,i))*dble(b(1,i))
   ENDDO
-#ifdef __MPI
+#if defined(__MPI)
   IF (sum_over_nodes=='y'.or.sum_over_nodes=='Y') CALL mp_sum( c, intra_pool_comm )
 #endif
   RETURN

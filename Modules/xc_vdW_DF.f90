@@ -1750,7 +1750,7 @@ CONTAINS
 
   end do
 
-#ifdef __MPI
+#if defined(__MPI)
   call mp_sum(  sigma, intra_bgrp_comm )
 #endif
 
@@ -1835,7 +1835,7 @@ CONTAINS
 
   enddo
 
-#ifdef __MPI
+#if defined(__MPI)
   call mp_sum(  sigma, intra_bgrp_comm )
 #endif
 
