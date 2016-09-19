@@ -76,7 +76,8 @@ write(stdout,'(a)') "   -yh-        ````````````````    `````````              `
 write(stdout,'(a)') "   -+h/------------------------::::::::://////++++++++++++++++++++++///////::::/yd:   "
 write(stdout,'(a)') "   shdddddddddddddddddddddddddddddhhhhhhhhyyyyyssssssssssssssssyyyyyyyhhhhhhhddddh`   "
 write(stdout,'(a)') "                                                                                      "
-write(stdout,'(a)') "  S. Ponce, E. R. Margine, C. Verdi, and F. Giustino, http://arxiv.org/abs/1604.03525 "
+write(stdout,'(a)') "  S. Ponce, E. R. Margine, C. Verdi, and F. Giustino,                                 "
+write(stdout,'(a)') "                                          http://dx.doi.org/10.1016/j.cpc.2016.07.028 "
 write(stdout,'(a)') "                                                                                      "
   ENDIF
   !

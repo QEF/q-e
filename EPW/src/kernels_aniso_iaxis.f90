@@ -80,7 +80,7 @@
   REAL(DP) :: rmelt
   !
   ! This is only a quick fix since the subroutine was written for parallel execution - FG June 2014
-#ifndef __MPI
+#if ! defined(__MPI)
   my_pool_id = 0
 #endif  
   !
@@ -475,7 +475,7 @@
   REAL(DP) :: rmelt
   !
   ! This is only a quick fix since the subroutine was written for parallel execution - FG June 2014
-#ifndef __MPI
+#if ! defined(__MPI)
   my_pool_id = 0
 #endif  
   !

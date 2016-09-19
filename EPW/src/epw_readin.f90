@@ -74,7 +74,7 @@
   !
   implicit none
   !
-#ifndef __NAG
+#if ! defined(__NAG)
   integer :: iargc
 #endif
   INTEGER :: ios

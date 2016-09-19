@@ -38,7 +38,7 @@
 #if defined(__NAG)
   TYPE(stat_t) :: statb
 #endif
-#ifndef __NAG
+#if ! defined(__NAG)
 integer :: fstat,statb(13)
 #endif
   ! 
@@ -86,7 +86,7 @@ integer :: fstat,statb(13)
   IF (recn * unf_recl .gt. statb%st_size) call errore('readdvscf', &
        trim(tempfile)//' too short, check ecut', iudvscf)
 #endif
-#ifndef __NAG
+#if ! defined(__NAG)
   ios = fstat ( iudvscf, statb)
   IF (recn * unf_recl .gt. statb(8)) call errore('readdvscf', &
        trim(tempfile)//' too short, check ecut', iudvscf)
