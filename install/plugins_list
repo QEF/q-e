@@ -57,6 +57,10 @@ PWCOND_URL=$(URL)$(PWCOND).tar.gz
 NEB=neb-6.0
 NEB_URL=$(URL)$(NEB).tar.gz
 #
+# Package maintainer: Lorenzo Paulatto
+D3Q=d3q+thermal2_1.0.3_qe6.0.tgz
+D3Q_URL=http://qe-forge.org/gf/download/frsrelease/222/1023/d3q%2Bthermal2_1.0.3_qe6.0.tgz
+#
 # Package maintainer: Marco Buongiorno Nardelli (FD)
 PHONON=PHonon-6.0
 PHONON_URL=$(URL)$(PHONON).tar.gz

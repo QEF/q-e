@@ -10,11 +10,35 @@
 
 sinclude ../make.inc
 include plugins_list
-include install_utils
 
 # MAIN target
-#EXTLIBS=liblapack libblas libiotk
-EXTLIBS=liblapack libiotk
+EXTLIBS=liblapack libblas libiotk
+
+
+###########################################################
+# Template function
+# $(1) = package name
+# $(2) = package URL
+# $(3) = directory name
+# $(4) = plugin/code name
+###########################################################
+
+define download_and_unpack
+	@(if test ! -s ../archive/$(1).tar.gz && test ! -d ../$(3) ; then \
+	wget -O ../archive/$(1).tar.gz $(2) > /dev/null 2>&1; \
+	if test "`echo $$?`" -ne "0" ; then \
+	curl -o ../archive/$(1).tar.gz $(2) > /dev/null 2>&1; \
+	if test "`echo $$?`" -ne "0" ; then \
+	echo "*** Unable to download $(4). Test whether curl or wget is installed and working," ; \
+	echo "*** if you have direct access to internet. If not, copy into archive/ the file" ; \
+	      echo "*** $(1).tar.gz from $(2)." ; \
+	exit 1 ; fi ; fi ; fi)
+	if test ! -d ../$(3); then \
+	(gzip -dc ../archive/$(1).tar.gz | (cd ../ ; tar -xvf -)) ; fi
+	if test ! -d ../$(3); then \
+	(cd ../ ; ln -s $(1) $(3)) ; fi
+endef
+
 
 ###########################################################
 # LD1
@@ -81,6 +105,31 @@ tddfpt:  uncompress-tddfpt
 uncompress-tddfpt: touch-dummy
 	$(call download_and_unpack,$(TDDFPT),$(TDDFPT_URL),TDDFPT,tddfpt)
 	touch uncompress-tddfpt
+
+###########################################################
+# D3Q
+###########################################################
+
+d3q:  uncompress-d3q
+	if test -d ../D3Q; then \
+	cd ../D3Q; $(MAKE) || exit 1; \
+	fi
+	touch make-d3q
+
+uncompress-d3q: touch-dummy
+	$(call download_and_unpack,$(D3Q),$(D3Q_URL),D3Q,d3q)
+	touch uncompress-d3q
+
+d3q_clean:
+	if test -d ../D3Q; then (cd ../D3Q; $(MAKE) clean); fi
+	rm -f ../bin/d3q.x
+	rm -f ../bin/d3_*.x
+
+d3q_veryclean: d3q_clean
+	rm -f ../D3Q
+
+d3q_distclean: d3q_clean
+	rm -f ../archive/$(D3Q)
 
 ###########################################################
 # PHonon
@@ -592,17 +641,17 @@ test-suite_distclean:
 clean: w90_clean want_clean yambo_clean yambo-devel_clean plumed_clean \
 	epw_clean gui_clean phonon_clean tddfpt_clean xspectra_clean neb_clean \
 	pwcond_clean ld1_clean gipaw_clean west_clean test-suite_clean \
-	sax_clean
+	sax_clean d3q_clean
 
 veryclean: w90_veryclean want_veryclean yambo_veryclean yambo-devel_veryclean \
 	plumed_veryclean epw_veryclean gui_veryclean phonon_veryclean \
 	tddfpt_veryclean xspectra_veryclean neb_veryclean pwcond_veryclean \
 	ld1_veryclean gipaw_veryclean west_veryclean \
-	test-suite_veryclean sax_veryclean
+	test-suite_veryclean sax_veryclean d3q_veryclean
 
 #distclean : veryclean
 distclean: w90_distclean want_distclean yambo_distclean yambo-devel_distclean \
   epw_distclean gui_distclean phonon_distclean test-suite_distclean \
   tddfpt_distclean xspectra_distclean neb_distclean pwcond_distclean \
-  ld1_distclean gipaw_distclean west_distclean sax_distclean
+  ld1_distclean gipaw_distclean west_distclean sax_distclean d3q_distclean
 

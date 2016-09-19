@@ -42,6 +42,7 @@ default :
 	@echo '  yambo-devel  yambo devel version'
 	@echo '  plumed       Metadynamics plugin for pw or cp'
 	@echo '  epw          Electron-Phonon Coupling with wannier functions'
+	@echo '  d3q          general third-order code and thermal transport codes'
 	@echo ' '
 	@echo 'where target is one of the following suite operation:'
 	@echo '  doc          build documentation'
@@ -108,6 +109,9 @@ gwl : ph
 	( cd GWW ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
 
 gipaw : pw
+	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
+
+d3q : pw ph
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
 ld1 : bindir liblapack libfft libla mods libs
