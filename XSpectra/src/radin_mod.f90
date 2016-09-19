@@ -16,7 +16,7 @@ Contains
 
   Function para_radin(y,x,n)
 
-    Real(dp), Intent(in) :: y(:),x(:)
+    Real(dp), Intent(in) :: y(n),x(n)
     Integer,  Intent(in) :: n
     Real(dp)             :: para_radin
 
