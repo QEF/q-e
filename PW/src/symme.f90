@@ -686,7 +686,7 @@ gloop:    DO jg=iig,ngm_
     INTEGER :: is, ig, igl, np, ierr, ngm_
     !
     IF ( no_rho_sym) RETURN
-#ifndef __MPI
+#if !defined(__MPI)
     !
     CALL sym_rho_serial ( ngm, g, nspin, rhog )
     !

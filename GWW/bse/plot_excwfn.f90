@@ -65,7 +65,7 @@ v_rh(:)=0.d0
 
 
 !get the valence wavefunctions at the nxh,nyh,nzh (only one processor has it!) 
-#ifndef __MPI
+#if !defined(__MPI)
 nh=(nzh-1)*fc%nrx1t*fc%nrx2t+(nyh-1)*fc%nrx1t+nxh
 v_rh(:)=vstate_r%wfnrt(nh,:,1)
 #else

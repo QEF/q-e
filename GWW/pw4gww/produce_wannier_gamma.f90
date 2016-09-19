@@ -104,10 +104,10 @@
        endif
 
 !setup parallel environment
-#ifndef __MPI
+#if !defined(__MPI)
          l_pmatrix=.false.
 #endif
-#ifndef __SCALAPACK
+#if !defined(__SCALAPACK)
          l_pmatrix=.false.
 #endif
 

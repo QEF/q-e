@@ -103,7 +103,7 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter,&
   !
   INTEGER, SAVE :: &
     mixrho_iter = 0    ! history of mixing
-#ifndef __GFORTRAN_HACK
+#if !defined(__GFORTRAN_HACK)
   TYPE(mix_type), ALLOCATABLE, SAVE :: &
     df(:),        &! information from preceding iterations
     dv(:)          !     "  "       "     "        "  "

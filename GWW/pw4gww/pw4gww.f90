@@ -308,7 +308,7 @@ program gwl_punch
 !      ENDIF
       !
   ENDIF
-#ifndef __MPI
+#if !defined(__MPI)
   dual_pb=4.d0
   dual_vs=4.d0
   dual_vt=4.d0
