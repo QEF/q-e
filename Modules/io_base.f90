@@ -36,10 +36,9 @@ MODULE io_base
       USE mp_wave,    ONLY : mergewf
       USE mp,         ONLY : mp_size, mp_rank, mp_max
       !
-#if defined  __HDF5
+#if defined(__HDF5)
       USE hdf5_qe,    ONLY : prepare_for_writing_final, add_attributes_hdf5, &
-           write_evc, h5fclose_f, evc_hdf5_write              
-      USE mp_pools,    ONLY : inter_pool_comm ! FIXME: must disappear
+           write_evc, h5fclose_f, hdf5_type              
       USE HDF5
 #endif
 
@@ -65,7 +64,11 @@ MODULE io_base
       COMPLEX(DP), ALLOCATABLE :: wtmp(:)
       !
       INTEGER            :: gammaonly
-
+#if defined(__HDF5) 
+      TYPE (hdf5_type),ALLOCATABLE    :: h5_write_desc
+      ! 
+      IF ( ionode_in_group ) ALLOCATE (h5_write_desc) 
+#endif 
       me_in_group     = mp_rank( intra_group_comm )
       nproc_in_group  = mp_size( intra_group_comm )
       !
@@ -80,19 +83,19 @@ MODULE io_base
       !
       IF ( ionode_in_group ) THEN
 #if defined  __HDF5
-         CALL prepare_for_writing_final ( evc_hdf5_write, inter_pool_comm, &
-              TRIM(filename)//'.hdf5',ik)
-         CALL add_attributes_hdf5(evc_hdf5_write,ngw,"ngw",ik)
+         CALL prepare_for_writing_final ( h5_write_desc, 0, &
+              TRIM(filename)//'.hdf5',ik, ADD_GROUP = .false.)
+         CALL add_attributes_hdf5(h5_write_desc, ngw,"ngw",ik)
          gammaonly = 0 
          IF (gamma_only) gammaonly = 1 
-         CALL add_attributes_hdf5(evc_hdf5_write,gammaonly,"gamma_only",ik)
-         CALL add_attributes_hdf5(evc_hdf5_write,igwx,"igwx",ik)
-         CALL add_attributes_hdf5(evc_hdf5_write,nbnd,"nbnd",ik)
-         CALL add_attributes_hdf5(evc_hdf5_write,ik,"ik",ik)
-         CALL add_attributes_hdf5(evc_hdf5_write,nk,"nk",ik)
-         CALL add_attributes_hdf5(evc_hdf5_write,ispin,"ispin",ik)
-         CALL add_attributes_hdf5(evc_hdf5_write,nspin,"nspin",ik)
-         CALL add_attributes_hdf5(evc_hdf5_write,scalef,"scale_factor",ik)
+         CALL add_attributes_hdf5(h5_write_desc, gammaonly,"gamma_only",ik)
+         CALL add_attributes_hdf5(h5_write_desc, igwx,"igwx",ik)
+         CALL add_attributes_hdf5(h5_write_desc, nbnd,"nbnd",ik)
+         CALL add_attributes_hdf5(h5_write_desc, ik,"ik",ik)
+         CALL add_attributes_hdf5(h5_write_desc, nk,"nk",ik)
+         CALL add_attributes_hdf5(h5_write_desc, ispin,"ispin",ik)
+         CALL add_attributes_hdf5(h5_write_desc, nspin,"nspin",ik)
+         CALL add_attributes_hdf5(h5_write_desc, scalef,"scale_factor",ik)
          !
 #else
          !
@@ -134,19 +137,21 @@ MODULE io_base
          !
          IF ( ionode_in_group ) &
 #if defined(__HDF5)
-            CALL write_evc(evc_hdf5_write,j, wtmp(1:npol*igwx), ik) 
+            CALL write_evc(h5_write_desc, j, wtmp(1:npol*igwx), ik) 
 #else
             CALL iotk_write_dat &
               ( iuni, "evc" // iotk_index( j ), wtmp(1:npol*igwx))
 #endif
          !
       END DO
-      IF ( ionode_in_group ) &
+      IF ( ionode_in_group ) THEN
 #if defined __HDF5
-         CALL h5fclose_f(evc_hdf5_write%file_id, ierr) 
+         CALL h5fclose_f(h5_write_desc%file_id, ierr)
+         DEALLOCATE ( h5_write_desc)  
 #else 
          CALL iotk_close_write( iuni )
 #endif
+     END IF
       !
       DEALLOCATE( wtmp )
       !
