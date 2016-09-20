@@ -3,7 +3,7 @@
   outdir='./out',
   td = "davidson"
   epsil=0.005
-  start=0.4d0
+  start=0.0d0
   increment=0.0002d0
   end=1.5d0
   eign_file = "CH4.eigen" 

@@ -1,6 +1,6 @@
  Warning: Only a single CPU will be used!
 
-     Program TDDFPT_PP v.5.3.0 (svn rev. 12334M) starts on 22Apr2016 at 19:23:25 
+     Program TDDFPT_PP v.6.beta (svn rev. 12987) starts on 20Sep2016 at 17:41:48 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -8,9 +8,20 @@
           URL http://www.quantum-espresso.org", 
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
+ 
+           HOST :    @host@
+           ARCH :    x86_64
+             CC :    icc
+            CPP :    cpp
+            F90 :    mpiifort
+            F77 :    ifort
+         DFLAGS :    -D__INTEL -D__FFTW3 -D__MPI -D__SCALAPACK
+      BLAS LIBS :    -lmkl_intel_lp64  -lmkl_sequential -lmkl_core
+    LAPACK LIBS :    
+       FFT LIBS :    -lfftw3
+      MASS LIBS :    
 
-     Parallel version (MPI), running on     8 processors
-     R & G space division:  proc/nbgrp/npool/nimage =       8
+     Parallel version (MPI), running on     1 processors
     The spectrum is in file: 
  CH4.plot                                                                       
                                                                                 
