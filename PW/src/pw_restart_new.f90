@@ -639,24 +639,25 @@ MODULE pw_restart_new
         END SUBROUTINE h5_write_gvecs 
 #endif 
         !--------------------------------------------------------------------
-        SUBROUTINE write_gk( iun, ionode_k, ik, ik_g )
+        SUBROUTINE write_gk( iun, ionode_k_, ik, ik_g )
           !--------------------------------------------------------------------
           !
 #if defined(__HDF5)
           USE hdf5_qe,   ONLY :  prepare_for_writing_final, write_gkhdf5, &
-                                 gk_hdf5_write, h5fclose_f
+                                 h5fclose_f, hdf5_type, add_attributes_hdf5
 #endif
           IMPLICIT NONE
           !
           INTEGER, INTENT(IN) :: iun, ik, ik_g
-          LOGICAL, INTENT(IN) :: ionode_k
+          LOGICAL, INTENT(IN) :: ionode_k_
           !
           INTEGER, ALLOCATABLE :: igwk(:)
           INTEGER, ALLOCATABLE :: itmp(:)
-          INTEGER              :: ierr 
+          INTEGER              :: ierr, gammaonly_ = 0 
+          TYPE (hdf5_type),ALLOCATABLE  :: h5_desc
           !
           !
-          ALLOCATE( itmp( npw_g ) )
+          ALLOCATE( itmp( npw_g ) ,h5_desc )
           itmp = 0
           DO ig = 1, ngk(ik)
              itmp(igk_l2g(ig)) = igk_l2g(ig)
@@ -681,14 +682,19 @@ MODULE pw_restart_new
           DEALLOCATE( itmp )
           !
           filename = TRIM(dirname) // '/gkvectors' // TRIM(int_to_char(ik_g))
-          IF ( ionode_k ) THEN
+          IF ( ionode_k_ ) THEN
              !
 #if defined(__HDF5)
-             CALL prepare_for_writing_final ( gk_hdf5_write, inter_pool_comm,&
-                  TRIM(filename)//'.hdf5',ik)
-             CALL write_gkhdf5(gk_hdf5_write,xk(:,ik),igwk(1:ngk_g(ik)), &
-                              mill_g(1:3,igwk(1:ngk_g(ik))),ik)
-             CALL h5fclose_f(gk_hdf5_write%file_id, ierr )
+             CALL prepare_for_writing_final ( h5_desc, 0,&
+                  TRIM(filename)//'.hdf5',ik_g, ADD_GROUP = .false.)
+             CALL add_attributes_hdf5(h5_desc, ngk_g(ik_g), "number_of_gk_vectors")
+             CALL add_attributes_hdf5(h5_desc, npwx_g, "max_number_of_gk_vectors")
+             IF (gamma_only) gammaonly_ = 1 
+             CALL add_attributes_hdf5(h5_desc, gammaonly_, "gamma_only")
+             CALL add_attributes_hdf5(h5_desc, "2pi/a", "units") 
+             CALL write_gkhdf5(h5_desc,xk(:,ik),igwk(1:ngk_g(ik)), &
+                              mill_g(1:3,igwk(1:ngk_g(ik_g))),ik_g)
+             CALL h5fclose_f(h5_desc%file_id, ierr )
 #else
              !
              CALL iotk_open_write( iun, FILE = TRIM(filename)//'.dat', &
@@ -710,7 +716,7 @@ MODULE pw_restart_new
              !
           END IF
           !
-          DEALLOCATE( igwk )
+          DEALLOCATE( igwk , h5_desc )
           !
         END SUBROUTINE write_gk
         !

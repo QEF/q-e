@@ -240,25 +240,31 @@ module hdf5_qe
 
 
 
-  subroutine prepare_for_writing_final(hdf5desc,comm,filename_input,kpoint)
+  subroutine prepare_for_writing_final(hdf5desc,comm,filename_input,kpoint,add_group)
     USE io_files, ONLY : wfc_dir, prefix, tmp_dir
     implicit none
     type(HDF5_type), intent(inout) :: hdf5desc
     character(len=*), intent(in):: filename_input
     integer, intent(in) :: comm
     integer,  intent(in), optional :: kpoint
+    logical, intent(in), optional  :: add_group
     character(len=256) filename
     integer :: ik, error
+    logical ::   add_group_internal = .true.
     character*12 kstring
     
  
     hdf5desc%comm=comm
     hdf5desc%filename=filename_input
-    
+    if ( present (add_group) ) add_group_internal = add_group
     if(present(kpoint)) then
       write(kstring,'(I0)') kpoint
       kstring=trim('KPOINT')//kstring
-      CALL setup_file_property_hdf5(hdf5desc,hdf5desc%filename ,.false.,.true.,kpoint)
+      IF ( add_group_internal) THEN 
+         CALL setup_file_property_hdf5(hdf5desc,hdf5desc%filename ,.false.,.true.,kpoint)
+      ELSE 
+         CALL setup_file_property_hdf5(hdf5desc,hdf5desc%filename ,.false.,.true.,1)
+      END IF 
     
       CALL h5fopen_f(hdf5desc%filename, H5F_ACC_RDWR_F, hdf5desc%file_id, error) ! create the file collectively
       
@@ -762,7 +768,7 @@ module hdf5_qe
     INTEGER(HSIZE_T), DIMENSION(1) :: data_dims
   
     !data_dims(1) = 1 
-    data_dims(1) = len(attr_name)
+    data_dims(1) = len(attr_data)
     
     if(present(kpoint)) then
       write(kstring,'(I0)') kpoint
