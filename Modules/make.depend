@@ -221,7 +221,6 @@ pw_dot.o : kind.o
 pw_dot.o : mp.o
 pw_dot.o : mp_global.o
 pw_dot.o : recvec.o
-pw_init_qexsd_input.o : @fixed_occ@
 pw_init_qexsd_input.o : cell_base.o
 pw_init_qexsd_input.o : constants.o
 pw_init_qexsd_input.o : control_flags.o
