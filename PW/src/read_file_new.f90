@@ -36,7 +36,7 @@ SUBROUTINE read_file()
   USE klist,                ONLY : init_igk
   USE gvect,                ONLY : ngm, g
   USE gvecw,                ONLY : gcutw
-#if defined __HDF5
+#if defined (__HDF5)
   USE hdf5_qe
 #endif
   !
@@ -174,8 +174,6 @@ SUBROUTINE read_xml_file ( )
   CALL errore( 'read_xml_file ', 'unable to determine schema version', ABS(ierr) )
   !
   ! ... here we read the variables that dimension the system
-  ! ... in parallel execution, only root proc reads the file
-  ! ... and then broadcasts the values to all other procs
   !
   CALL init_vars_from_schema( 'dim',   ierr , output_obj, input_obj, parinfo_obj, geninfo_obj )
   CALL errore( 'read_xml_file ', 'problem reading file ' // &
@@ -331,10 +329,6 @@ SUBROUTINE read_xml_file ( )
      rho%of_g(:,is) = psic(nl(:))
      !
   END DO
-  !
-  ! ... read info needed for hybrid functionals
-  !
-  CALL init_vars_from_schema( 'exx', ierr, output_obj, input_obj, parinfo_obj, geninfo_obj ) 
   !
   ! ... recalculate the potential
   !

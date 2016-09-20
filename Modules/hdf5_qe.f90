@@ -71,7 +71,16 @@ module hdf5_qe
     call h5close_f(error)
   end subroutine finalize_hdf5
 
-  
+  subroutine h5_write_gvecs(hdf5desc, filename, nr1, nr2, nr3, ngm, gamma_only, mill) 
+   implicit none 
+   type (hdf5_type), intent(inout) :: hdf5desc
+   character(len=*), intent (in)   :: filename
+   integer, intent(in)             :: nr1, nr2, nr3, ngm
+   logical, intent(in)             :: gamma_only
+   integer,intent(in)              :: mill (3,ngm)
+   continue 
+  end subroutine h5_write_gvecs
+ 
   subroutine setup_file_property_hdf5(hdf5desc ,filename, hyperslab, write, kpoint)
    use parallel_include
    implicit none
@@ -110,7 +119,7 @@ module hdf5_qe
         CALL h5fcreate_f(filename, H5F_ACC_TRUNC_F, hdf5desc%file_id, error) 
       endif
     else
-        CALL h5fopen_f(filename, H5F_ACC_RDONLY_F, hdf5desc%file_id, error) ! create the file collectively
+        CALL h5fopen_f(filename, H5F_ACC_RDWR_F, hdf5desc%file_id, error) ! create the file collectively
         !CALL h5dopen_f(hdf5desc%file_id, hdf5desc%dsetname, hdf5desc%dset_id, error)
     endif
    endif

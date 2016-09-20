@@ -949,6 +949,7 @@ MODULE pw_restart_new
          lspin   = .TRUE.
          linit_mag   = .TRUE.
          lxc     = .TRUE.
+         lexx    = .TRUE.
          locc    = .TRUE.
          lbz     = .TRUE.
          lbs     = .TRUE.
@@ -964,6 +965,7 @@ MODULE pw_restart_new
          lspin   = .TRUE.
          linit_mag  = .TRUE.
          lxc     = .TRUE.
+         lexx    =.TRUE.
          locc    = .TRUE.
          lbz     = .TRUE.
          lbs     = .TRUE.
