@@ -473,10 +473,10 @@ module hdf5_qe
     TYPE(C_PTR) :: f_ptr
     character*12 kstring
 
+    counts=size(var,1)*size(var,2)
     if(present(kpoint))then
       write(kstring,'(I0)') kpoint
       kstring='KPOINT'//kstring
-      counts=size(var)
       CALL h5screate_simple_f(1, counts, dspace_id, error) !create the dataspace
       CALL h5gopen_f(hdf5desc%file_id,kstring,hdf5desc%group_id,error)
       CALL h5dcreate_f(hdf5desc%group_id, kstring, H5T_NATIVE_INTEGER, dspace_id, &
@@ -488,7 +488,7 @@ module hdf5_qe
       CALL h5gclose_f(hdf5desc%group_id, error)
     else
       CALL h5screate_simple_f(1, counts, dspace_id, error) !create the dataspace
-      CALL h5dcreate_f(hdf5desc%file_id, 'gvec', H5T_NATIVE_INTEGER, dspace_id, &
+      CALL h5dcreate_f(hdf5desc%file_id, 'Miller indexes', H5T_NATIVE_INTEGER, dspace_id, &
                       dset_id, error)
       f_ptr = C_LOC(var(1,1))
       CALL h5dwrite_f(dset_id, H5T_NATIVE_INTEGER, f_ptr, error)

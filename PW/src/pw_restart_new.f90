@@ -424,6 +424,9 @@ MODULE pw_restart_new
       USE mp_bands,             ONLY : nproc_bgrp, me_bgrp, root_bgrp, &
                                        intra_bgrp_comm, nbgrp, ntask_groups
       USE mp_diag,              ONLY : nproc_ortho
+#if defined(__HDF5) 
+      USE hdf5_qe,              ONLY : hdf5_type
+#endif
       !
       IMPLICIT NONE
       !
@@ -437,6 +440,9 @@ MODULE pw_restart_new
       CHARACTER(LEN=320)    :: filename
       CHARACTER(iotk_attlenx)  :: attr
       LOGICAL               :: ionode_k
+#if defined(__HDF5)	
+      TYPE(hdf5_type)       :: gvecs_h5desc
+#endif
       !
       !
       dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save'
@@ -465,8 +471,10 @@ MODULE pw_restart_new
       CALL mp_sum( mill_g, intra_bgrp_comm )
       !
       IF ( ionode ) THEN  
-#if defined __HDF5
-
+#if defined (__HDF5)
+      filename =trim(dirname) //"/gvectors.hdf5"
+      CALL h5_write_gvecs(gvecs_h5desc, filename, dfftp%nr1,dfftp%nr2, dfftp%nr3,&
+             ngm_g, gamma_only, mill_g(:,:) )
 #else
 
          !
@@ -605,6 +613,31 @@ MODULE pw_restart_new
           !
         END SUBROUTINE write_gvecs
         !
+#if defined(__HDF5) 
+        !---------------------------------------------------------------------------------
+        SUBROUTINE h5_write_gvecs(h5_desc, filename, nr1, nr2, nr3, ngm, gamma_only, mill) 
+           !------------------------------------------------------------------------------
+           USE hdf5_qe,             ONLY: write_g, prepare_for_writing_final, add_attributes_hdf5
+           IMPLICIT NONE
+           ! 
+           TYPE (hdf5_type),INTENT(INOUT)         :: h5_desc
+           CHARACTER(LEN=*),INTENT(IN)            :: filename
+           INTEGER,INTENT(IN)                     :: nr1, nr2, nr3, ngm, mill(:,:)
+           LOGICAL,INTENT(IN)                     :: gamma_only
+           !
+           INTEGER                                :: gammaonly_ = 0  
+           CALL prepare_for_writing_final(h5_desc,0,filename)
+           IF ( gamma_only) gammaonly_ =1      
+           CALL add_attributes_hdf5(h5_desc, gammaonly_, "gamma_only")
+           CALL add_attributes_hdf5(h5_desc, nr1, "nr1s")
+           CALL add_attributes_hdf5(h5_desc, nr2, "nr2s")
+           CALL add_attributes_hdf5(h5_desc, nr3, "nr3s")
+           CALL add_attributes_hdf5(h5_desc, ngm, "gvect_number")
+           CALL add_attributes_hdf5(h5_desc, "crystal", "units" )
+           ! 
+           CALL write_g(h5_desc, mill)            
+        END SUBROUTINE h5_write_gvecs 
+#endif 
         !--------------------------------------------------------------------
         SUBROUTINE write_gk( iun, ionode_k, ik, ik_g )
           !--------------------------------------------------------------------
