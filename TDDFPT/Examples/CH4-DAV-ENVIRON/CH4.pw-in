@@ -1,17 +1,16 @@
 &control
     calculation = 'scf'
-    title = 'TDDFPT CH4 Test (Symmetry Enabled)'
+    title = 'TDDFPT CH4 Test'
     restart_mode='from_scratch',
     pseudo_dir = '../pseudo',
     outdir='./out',
     prefix='CH4'
-    etot_conv_thr=1d-6
  /
  &system
     ibrav = 1,
     celldm(1) = 20,
     nat = 5,
-    nbnd = 20
+    nbnd = 20,
     ntyp = 2,
     ecutwfc = 25,
 /
