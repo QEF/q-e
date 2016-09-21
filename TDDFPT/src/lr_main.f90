@@ -308,18 +308,28 @@ SUBROUTINE lr_print_preamble()
     USE funct,               ONLY : dft_is_hybrid
     USE martyna_tuckerman,   ONLY : do_comp_mt
     USE control_flags,       ONLY : do_makov_payne
+#if defined(__ENVIRON)
+    USE plugin_flags,        ONLY : use_environ
+#endif    
 
     IMPLICIT NONE
-
-!    WRITE( stdout, '(/5x,"----------------------------------------")' )
-!    WRITE( stdout, '(/5x,"")' )
-!    WRITE( stdout, '(/5x,"Please cite this project as:  ")' )
-!    WRITE( stdout, '(/5x,"O.B. Malcioglu, R. Gebauer, D. Rocca, S. Baroni,")' )
-!    WRITE( stdout, '(/5x,"""turboTDDFT – a code for the simulation of molecular")' )
-!    WRITE( stdout, '(/5x,"spectra using the Liouville-Lanczos approach to")' )
-!    WRITE( stdout, '(/5x,"time-dependent density-functional perturbation theory""")' )
-!    WRITE( stdout, '(/5x,"CPC, 182, 1744 (2011)")' )
-!    WRITE( stdout, '(/5x,"----------------------------------------")' )
+    !
+    WRITE( stdout, '(/5x,"=-----------------------------------------------------------------=")')
+    WRITE( stdout, '(/5x,"Please cite the TDDFPT project as:")')
+    WRITE( stdout, '(7x,"O. B. Malcioglu, R. Gebauer, D. Rocca, and S. Baroni,")')
+    WRITE( stdout, '(7x,"Comput. Phys. Commun. 182, 1744 (2011)")')
+    WRITE( stdout, '(5x,"and")' )
+    WRITE( stdout, '(7x,"X. Ge, S. J. Binnie, D. Rocca, R. Gebauer, and S. Baroni,")')
+    WRITE( stdout, '(7x,"Comput. Phys. Commun. 185, 2080 (2014)")')
+#if defined(__ENVIRON)
+    IF ( use_environ ) THEN
+      WRITE( stdout, '(5x,"and the TDDFPT+Environ project as:")' )
+      WRITE( stdout, '(7x,"I. Timrov, O. Andreussi, A. Biancardi, N. Marzari, and S. Baroni,")' )
+      WRITE( stdout, '(7x,"J. Chem. Phys. 142, 034111 (2015)")' )
+    ENDIF
+#endif
+    WRITE( stdout, '(5x,"in publications and presentations arising from this work.")' )
+    WRITE( stdout, '(/5x,"=-----------------------------------------------------------------=")')
     !
     IF (okvan) WRITE( stdout, '(/5x,"Ultrasoft (Vanderbilt) Pseudopotentials")' )
     !

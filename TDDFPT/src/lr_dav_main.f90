@@ -141,34 +141,30 @@ PROGRAM lr_dav_main
 CONTAINS
   SUBROUTINE lr_print_preamble()
 
-    USE lr_variables, ONLY : no_hxc, d0psi_rs
-    USE uspp,         ONLY : okvan
-    USE funct,        only : dft_is_hybrid
+    USE lr_variables,        ONLY : no_hxc, d0psi_rs
+    USE uspp,                ONLY : okvan
+    USE funct,               ONLY : dft_is_hybrid
     USE martyna_tuckerman,   ONLY : do_comp_mt
+#if defined(__ENVIRON)
+    USE plugin_flags,        ONLY : use_environ
+#endif
 
     IMPLICIT NONE
-
-!    WRITE( stdout, '(/5x,"----------------------------------------")' )
-!    WRITE( stdout, '(/5x,"")' )
-!    WRITE( stdout, '(/5x,"Please cite this project as:  ")' )
-!    WRITE( stdout, '(/5x,"O.B. Malcioglu, R. Gebauer, D. Rocca, S. Baroni,")' )
-!    WRITE( stdout, '(/5x,"""turboTDDFT – a code for the simulation of molecular")' )
-!    WRITE( stdout, '(/5x,"spectra using the Liouville-Lanczos approach to")' )
-!    WRITE( stdout, '(/5x,"time-dependent density-functional perturbation theory""")' )
-!    WRITE( stdout, '(/5x,"CPC, 182, 1744 (2011)")' )
-!    WRITE( stdout, '(/5x,"----------------------------------------")' )
     !
-    WRITE( stdout, '(/5x,"----------------------------------------")' )
-    WRITE( stdout, '(/5x,"Welcome using turbo-davidson. For this moment you can report bugs to",/5x, &
-                    & "Xiaochuan Ge: xge@bnl.gov",/5x, &
-                    & "We appreciate a lot your help to make us improve.",/)' )
-
-    WRITE( stdout, '(/5x,"For the publication using this code, we appreciate if you could cite this article:")')
-    WRITE( stdout, '(/15x,"*****************************************")')
-    WRITE( stdout, '(/15x,"*  Comput. Phys. Commun. 185(2014)2080  *")')
-    WRITE( stdout, '(/15x,"*****************************************")')
-    WRITE( stdout, '(/5x,"----------------------------------------",/)' )   
- 
+    WRITE( stdout, '(/5x,"=-----------------------------------------------------------------=")')
+    WRITE( stdout, '(/5x,"Please cite the TDDFPT project as:")')
+    WRITE( stdout, '(7x,"X. Ge, S. J. Binnie, D. Rocca, R. Gebauer, and S. Baroni,")')
+    WRITE( stdout, '(7x,"Comput. Phys. Commun. 185, 2080 (2014)")')
+#if defined(__ENVIRON)
+    IF ( use_environ ) THEN
+      WRITE( stdout, '(5x,"and the TDDFPT+Environ project as:")' )
+      WRITE( stdout, '(7x,"I. Timrov, O. Andreussi, A. Biancardi, N. Marzari, and S. Baroni,")' )
+      WRITE( stdout, '(7x,"J. Chem. Phys. 142, 034111 (2015)")' )
+    ENDIF
+#endif
+    WRITE( stdout, '(5x,"in publications and presentations arising from this work.")' )
+    WRITE( stdout, '(/5x,"=-----------------------------------------------------------------=")')
+    ! 
     IF(okvan) WRITE( stdout, '(/5x,"Ultrasoft (Vanderbilt) Pseudopotentials")' )
     
     IF (do_comp_mt) THEN
@@ -187,6 +183,7 @@ CONTAINS
                      & /5x,"commutator is NOT included hence the f-sum rule will be violated.",   &
                      & /5x,"You can try to use the variable d0psi_rs=.true. (see the documentation).")' )
     ENDIF
+
   END SUBROUTINE lr_print_preamble
 
 END PROGRAM lr_dav_main
