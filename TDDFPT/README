@@ -1,52 +1,75 @@
 ###Time Dependent Density Functional Perturbation Theory (TDDFPT)
 
--------------------------------------------------------------------------------
-TD-DFPT developers would be grateful if any scientific work done with TD-DFPT
+TDDFPT developers would be grateful if any scientific work done with TDDFPT
 contained a reference to one of the following reference papers:
 
-turboTDDFT – A code for the simulation of molecular spectra using the Liouville–Lanczos approach to time-dependent density-functional perturbation theory  Original Research Article
-Author(s): Osman Baris Malcioglu, Ralph Gebauer, Dario Rocca, Stefano Baroni
-Computer Physics Communications, In Press, Accepted Manuscript, Available online 29 April 2011
+----------------------------------------------------------------------------------------------------------
+
+Absorption spectroscopy:
+
+turboTDDFT – A code for the simulation of molecular spectra using the Liouville–Lanczos approach 
+to time-dependent density-functional perturbation theory  Original Research Article
+Authors: Osman Baris Malcioglu, Ralph Gebauer, Dario Rocca, Stefano Baroni
+Source: Computer Physics Communications   Volume: 182  Article Number: 1744  Published: APR 2011 
+
+turboTDDFT 2.0 - Hybrid functionals and new algorithms within time-dependent 
+density-functional perturbation theory
+Authors: X. Ge, S. J. Binnie, D. Rocca, R. Gebauer, and S. Baroni
+Source: Computer Physics Communications  Volume: 185  Article Number: 2080  Published: MAR 2014
 
 Turbo charging time-dependent density-functional theory with Lanczos chains
-Author(s): Rocca D, Gebauer R, Saad Y, et al.
-Source: JOURNAL OF CHEMICAL PHYSICS   Volume: 128   Issue: 15 Article Number: 154105   Published: APR 21 2008
+Authors: D. Rocca, R. Gebauer, Y. Saad, and S. Baroni
+Source: JOURNAL OF CHEMICAL PHYSICS   Volume: 128   Article Number: 154105   Published: APR 2008
 
 Ultrasoft pseudopotentials in time-dependent density-functional theory
-Author(s): Walker B, Gebauer R
-Source: JOURNAL OF CHEMICAL PHYSICS   Volume: 127   Issue: 16 Article Number: 164106   Published: OCT 28 2007
+Authors: B. Walker, and R. Gebauer
+Source: JOURNAL OF CHEMICAL PHYSICS   Volume: 127   Article Number: 164106   Published: OCT 2007
 
 Efficient approach to time-dependent density-functional perturbation theory for optical spectroscopy
-Author(s): Walker B, Saitta AM, Gebauer R, et al.
-Source: PHYSICAL REVIEW LETTERS   Volume: 96   Issue: 11 Article Number: 113001   Published: MAR 24 2006
+Authors: B. Walker, A. M. Saitta, R. Gebauer, and S. Baroni
+Source: PHYSICAL REVIEW LETTERS   Volume: 96   Article Number: 113001   Published: MAR 2006
 
-Electron energy loss and inelastic x-ray scattering cross sections from time-dependent density-functional perturbation theory
-Author(s): I. Timrov, N. Vast, R. Gebauer, and S. Baroni
+Book: Fundamentals of Time-Dependent Density Functional Theory,
+M.A.L. Marques, N.T. Maitra, F.M.S. Nogueira, E.K.U. Gross, and A. Rubio,
+Lecture Notes in Physics, Springer-Verlag, Berlin Heidelbnerg, volume 837, 2012.
+Chapter 19: The Liouville-Lanczos Approach to Time-Dependent Density-Functional (Perturbation) Theory,
+Authors: S. Baroni and R. Gebauer
+
+Self-consistent continuum solvation for optical absorption of complex molecular systems in solution
+Authors: I. Timrov, O. Andreussi, A. Biancardi, N. Marzari, and S. Baroni
+Source: JOURNAL OF CHEMICAL PHYSICS   Volume: 142  Article Number: 034111 Published: JAN 2015
+
+------------------------------------------------------------------------------------------------------------
+
+Electron energy loss spectroscopy (EELS):
+
+Electron energy loss and inelastic x-ray scattering cross sections from 
+time-dependent density-functional perturbation theory
+Authors: I. Timrov, N. Vast, R. Gebauer, and S. Baroni
 Source: PHYSICAL REVIEW B   Volume: 88   Article Number: 064301   Published: AUG 2 2013
+See also: PHYSICAL REVIEW B 91, 139901(E) (2015)
 
-turboEELS - A code for the simulation of the electron energy loss and inelastic X-ray scattering spectra using the Liouville-Lanczos approach to time-dependent density-functional perturbation theory
-Author(s): I. Timrov, N. Vast, R. Gebauer, and S. Baroni
-Source: Computer Physics Communications, Volume: 196, Article Number: 460 Published: 4 JUNE 2015
+turboEELS - A code for the simulation of the electron energy loss and inelastic X-ray scattering spectra 
+using the Liouville-Lanczos approach to time-dependent density-functional perturbation theory
+Authors: I. Timrov, N. Vast, R. Gebauer, and S. Baroni
+Source: Computer Physics Communications  Volume: 196  Article Number: 460 Published: 4 JUNE 2015
 
--------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------
 
-This module uses subroutines from PW and PH along with the general infrasturcture provided by
-Quantum Espresso. 
+This module uses subroutines from PW, Modules and LR_Modules along with 
+the general infrasturcture provided by Quantum ESPRESSO. 
 
 The directory TDDFPT must reside immediately under the espresso directory for Makefiles to work. 
 
 Standart compilation: Run "make tddfpt" in espresso directory where TDDFPT is a subdirectory
  
 Directory Structure: 
-bin      : The tddfpt related binaries
+bin      : The TDDFPT related binaries
 src      : The source files
 Doc      : The manual
-Examples : Examples and tests. If you run make under this subdirectory
-           a full test is initiated (requires tddfpt to be compiled first).
-           You can also perform a shorter test by "make small_test". Each example has its
-           own seperate Makefile. Please refer to the README under this subdirectory for
-           further information. 
+Examples : Examples and tests. Each example has its own seperate Makefile. 
+           Refer to the README under this subdirectory for further information. 
 tools    : Various tools:
-           1) The postprocessing code for calculating absorption spectrum and polarizabilities.
+           1) The postprocessing code for calculating absorption spectrum and EELS.
            2) A script to recover reduced liouvillian in a format comprehensible to postprocessing
               code from the stdout. 
