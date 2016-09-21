@@ -379,12 +379,12 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, no_overlap)
            ENDDO
         ENDIF
         WRITE (iunpun, '(10x,3f10.6)') xk(1,ik),xk(2,ik),xk(3,ik)
-        WRITE (iunpun, '(10f8.3)') (et_(ibnd, ik), ibnd = 1, nbnd)
+        WRITE (iunpun, '(10f9.3)') (et_(ibnd, ik), ibnd = 1, nbnd)
         DO ipol=1,4
            IF (lsigma(ipol)) THEN
               WRITE (iunpun_sigma(ipol), '(10x,3f10.6)')            &
                                           xk(1,ik),xk(2,ik),xk(3,ik)
-              WRITE (iunpun_sigma(ipol), '(10f8.3)')                &
+              WRITE (iunpun_sigma(ipol), '(10f9.3)')                &
                             (sigma_avg(ipol, ibnd, ik), ibnd = 1, nbnd)
            ENDIF
         ENDDO
