@@ -177,10 +177,10 @@ PROGRAM do_dos
         ENDIF
         IF (nspin==1.or.nspin==4) THEN
            DOSint = DOSint + DOSofE (1) * DeltaE
-           WRITE (4, '(f7.3,2e12.4)') E * rytoev, DOSofE(1)/rytoev, DOSint
+           WRITE (4, '(f8.3,2e12.4)') E * rytoev, DOSofE(1)/rytoev, DOSint
         ELSE
            DOSint = DOSint + (DOSofE (1) + DOSofE (2) ) * DeltaE
-           WRITE (4, '(f7.3,3e12.4)') E * rytoev, DOSofE/rytoev, DOSint
+           WRITE (4, '(f8.3,3e12.4)') E * rytoev, DOSofE/rytoev, DOSint
         ENDIF
      ENDDO
 
