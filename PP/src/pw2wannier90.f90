@@ -872,6 +872,8 @@ SUBROUTINE read_nnkp
 !  CALL errore("pw2wannier90","Spinorbit without spinor=T",1)
   ENDIF 
 
+  ! It is not clear if the next instruction is required or not, it probably depend
+  ! on the version of wannier90 that was used to generate the nnkp file: 
   IF(old_spinor_proj) THEN
      n_wannier=n_proj*2
   ELSE
