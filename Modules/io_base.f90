@@ -145,7 +145,7 @@ MODULE io_base
          !
       END DO
       IF ( ionode_in_group ) THEN
-#if defined __HDF5
+#if defined(__HDF5)
          CALL h5fclose_f(h5_write_desc%file_id, ierr)
          DEALLOCATE ( h5_write_desc)  
 #else 

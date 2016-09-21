@@ -654,10 +654,14 @@ MODULE pw_restart_new
           INTEGER, ALLOCATABLE :: igwk(:)
           INTEGER, ALLOCATABLE :: itmp(:)
           INTEGER              :: ierr, gammaonly_ = 0 
+#if defined (__HDF5)
           TYPE (hdf5_type),ALLOCATABLE  :: h5_desc
           !
+          ALLOCATE (h5_desc)
+#endif
           !
-          ALLOCATE( itmp( npw_g ) ,h5_desc )
+          !
+          ALLOCATE( itmp( npw_g ))
           itmp = 0
           DO ig = 1, ngk(ik)
              itmp(igk_l2g(ig)) = igk_l2g(ig)
@@ -695,6 +699,7 @@ MODULE pw_restart_new
              CALL write_gkhdf5(h5_desc,xk(:,ik),igwk(1:ngk_g(ik)), &
                               mill_g(1:3,igwk(1:ngk_g(ik_g))),ik_g)
              CALL h5fclose_f(h5_desc%file_id, ierr )
+             DEALLOCATE (h5_desc) 
 #else
              !
              CALL iotk_open_write( iun, FILE = TRIM(filename)//'.dat', &
@@ -716,7 +721,7 @@ MODULE pw_restart_new
              !
           END IF
           !
-          DEALLOCATE( igwk , h5_desc )
+          DEALLOCATE( igwk )
           !
         END SUBROUTINE write_gk
         !
