@@ -29,6 +29,7 @@ tools:    Tools to compare data.
 turbo_davidson.x :
 
 CH4-DAV:         Tests NC PP implementation of the Davidson algorithm
+Benzene-DAV:     Tests US PP implementation of the Davidson algorithm
 CH4-DAV-ENVIRON: Tests NC PP implementation of the Davidson algorithm
                  and the Environ module (implicit solvent)
 H2O-PLOTRHO:     Tests charge response Davidson algorithm 
@@ -38,7 +39,7 @@ turbo_eels.x :
 EELS-Si-NCPP-LDA:         Bulk silicon,  NC PP, LDA XC-functional
 EELS-Al-NCPP-LDA:         Bulk aluminum, NC PP, LDA XC-functional
 EELS-Ag-USPP-GGA:         Bulk silver,   US PP, GGA XC-functional
-EELS-Bi-NCPP-LDA-withSOC: Bulk bismuth, NC PP, LDA XC-functional, 
+EELS-Bi-NCPP-LDA-withSOC: Bulk bismuth,  NC PP, LDA XC-functional, 
                           with spin-orbit coupling
 
 

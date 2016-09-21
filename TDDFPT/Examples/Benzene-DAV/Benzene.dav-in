@@ -1,0 +1,20 @@
+&lr_input
+    prefix="Benzene",
+    outdir='./out',
+    restart=.false.
+/
+&lr_dav
+    num_eign=5
+    num_init=10
+    num_basis_max=120
+    residue_conv_thr=1.0E-4
+    start=0.4
+    finish=0.7
+    step=0.0002
+    broadening=0.005
+    reference=0.5
+    p_nbnd_occ=5
+    p_nbnd_virt=15
+    poor_of_ram=.false.
+    poor_of_ram2=.false.
+/
