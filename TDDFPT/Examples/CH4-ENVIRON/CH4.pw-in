@@ -4,7 +4,7 @@
     restart_mode='from_scratch',
     pseudo_dir = '../pseudo',
     outdir='./out',
-    prefix='ch4'
+    prefix='CH4'
 /
 &system
     ibrav = 1,
@@ -12,7 +12,6 @@
     nat = 5,
     ntyp = 2,
     ecutwfc = 25,
-    nosym=.true.
 /
 &electrons
     diagonalization = 'davidson'

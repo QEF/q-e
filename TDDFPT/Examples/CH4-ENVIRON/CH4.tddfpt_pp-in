@@ -1,5 +1,5 @@
 &lr_input
-  prefix='ch4',
+  prefix='CH4',
   outdir='./out',
   itermax0=500
   itermax=10000
