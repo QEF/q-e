@@ -346,7 +346,7 @@ EOF
  &system
     ibrav = 2, celldm(1) =6.73, nat= 1, ntyp= 1,
     ecutwfc = 25.0, ecutrho = 300.0
-    occupations='smearing', smearing='gaussian', degauss=0.02
+    occupations='smearing', smearing='marzari-vanderbilt', degauss=0.02
  /
  &electrons
     diagonalization='$diago'
@@ -440,7 +440,7 @@ EOF
     ibrav=2, celldm(1) =6.48, nat=1, ntyp=1,
     nspin = 2,  starting_magnetization(1)=0.7,
     ecutwfc = 24.0, ecutrho = 288.0,
-    occupations='smearing', smearing='methfessel-paxton', degauss=0.02
+    occupations='smearing', smearing='marzari-vanderbilt', degauss=0.02
  /
  &electrons
     diagonalization='$diago'

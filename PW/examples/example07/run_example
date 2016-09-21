@@ -95,8 +95,8 @@ Pt
     noncolin=.true.,
     starting_magnetization=0.0,
     occupations='smearing',
+    smearing = 'marzari-vanderbilt'
     degauss=0.02,
-    smearing='mp',
     ecutwfc =30.0,
     ecutrho =250.0,
  /
@@ -134,8 +134,8 @@ Pt
     noncolin=.true.,
     starting_magnetization=0.0,
     occupations='smearing',
+    smearing = 'marzari-vanderbilt'
     degauss=0.02,
-    smearing='mp',
     ecutwfc =30.0,
     ecutrho =250.0,
  /

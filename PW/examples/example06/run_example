@@ -350,7 +350,7 @@ cat > cu.scf.in << EOF
  &system
     ibrav = 2, celldm(1) =6.73, nat= 1, ntyp= 1,
     ecutwfc = 25.0, ecutrho = 300.0
-    occupations='smearing', smearing='methfessel-paxton', degauss=0.02
+    occupations='smearing', smearing='marzari-vanderbilt', degauss=0.02
     noncolin = .true.
     starting_magnetization(1) = 0.5
     angle1(1) = 90.0
@@ -447,7 +447,7 @@ cat > cu.cg.in << EOF
  &system
     ibrav = 2, celldm(1) =6.73, nat= 1, ntyp= 1,
     ecutwfc = 25.0, ecutrho = 300.0
-    occupations='smearing', smearing='methfessel-paxton', degauss=0.02
+    occupations='smearing', smearing='marzari-vanderbilt', degauss=0.02
     noncolin = .true.
     starting_magnetization(1) = 0.5
     angle1(1) = 90.0
@@ -476,35 +476,35 @@ rm -rf $TMP_DIR/cu*
 $ECHO " done"
 
 # self-consistent calculation with diis diagonalization
-cat > cu.diis.in << EOF
- &control
-    calculation='scf'
-    restart_mode='from_scratch',
-    pseudo_dir = '$PSEUDO_DIR/',
-    outdir='$TMP_DIR/'
-    prefix='cu'
- /
- &system
-    ibrav = 2, celldm(1) =6.73, nat= 1, ntyp= 1,
-    ecutwfc = 25.0, ecutrho = 300.0
-    occupations='smearing', smearing='methfessel-paxton', degauss=0.02
-    noncolin = .true.
-    starting_magnetization(1) = 0.5
-    angle1(1) = 90.0
-    angle2(1) =  0.0
- /
- &electrons
-    conv_thr = 1.0e-8
-    mixing_beta = 0.7
-    diagonalization = 'diis'
- /
-ATOMIC_SPECIES
- Cu 63.55 Cu.pz-d-rrkjus.UPF
-ATOMIC_POSITIONS
- Cu 0.0 0.0 0.0
-K_POINTS (automatic)
- 8 8 8 0 0 0
-EOF
+#cat > cu.diis.in << EOF
+# &control
+#    calculation='scf'
+#    restart_mode='from_scratch',
+#    pseudo_dir = '$PSEUDO_DIR/',
+#    outdir='$TMP_DIR/'
+#    prefix='cu'
+# /
+# &system
+#    ibrav = 2, celldm(1) =6.73, nat= 1, ntyp= 1,
+#    ecutwfc = 25.0, ecutrho = 300.0
+#    occupations='smearing', smearing='marzari-vanderbilt', degauss=0.02
+#    noncolin = .true.
+#    starting_magnetization(1) = 0.5
+#    angle1(1) = 90.0
+#    angle2(1) =  0.0
+# /
+# &electrons
+#    conv_thr = 1.0e-8
+#    mixing_beta = 0.7
+#    diagonalization = 'diis'
+# /
+#ATOMIC_SPECIES
+# Cu 63.55 Cu.pz-d-rrkjus.UPF
+#ATOMIC_POSITIONS
+# Cu 0.0 0.0 0.0
+#K_POINTS (automatic)
+# 8 8 8 0 0 0
+#EOF
 # $ECHO "  running the scf calculation for Cu with diis diagonalization...\c"
 # $PW_COMMAND < cu.diis.in > cu.diis.out
 # check_failure $?
@@ -527,7 +527,7 @@ cat > ni.scf.in << EOF
  &system
     ibrav=2, celldm(1) =6.48, nat=1, ntyp=1,
     ecutwfc = 24.0, ecutrho = 288.0,
-    occupations='smearing', smearing='methfessel-paxton', degauss=0.02
+    occupations='smearing', smearing='marzari-vanderbilt', degauss=0.02
     noncolin = .true.
     starting_magnetization(1) = 0.1
     angle1(1) = 90.0
@@ -687,7 +687,7 @@ cat > o2.relax.in << EOF
     ibrav = 1, celldm(1) =7.50, nat= 2, ntyp= 2,
     ecutwfc = 25.0,ecutrho = 200.0,
     report=1,
-    occupations='smearing', smearing='gaussian', degauss=0.05
+    occupations='smearing', smearing='marzari-vanderbilt', degauss=0.05
     noncolin = .true.
     starting_magnetization(1) = 0.5
     angle1(1) = 90.0

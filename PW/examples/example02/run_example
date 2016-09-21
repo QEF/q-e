@@ -137,7 +137,7 @@ cat > al001.rx.in << EOF
   ntyp        = 1,
   ecutwfc     = 12.D0,
   occupations = "smearing",
-  smearing    = "methfessel-paxton",
+  smearing    = "marzari-vanderbilt",
   degauss     = 0.05D0,
 /
 &ELECTRONS
@@ -191,7 +191,7 @@ cat > al001.mm.in << EOF
   ntyp        = 1,
   ecutwfc     = 12.D0,
   occupations = "smearing",
-  smearing    = "methfessel-paxton",
+  smearing    = "marzari-vanderbilt",
   degauss     = 0.05D0,
 /
 &ELECTRONS

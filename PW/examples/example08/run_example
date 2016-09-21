@@ -97,7 +97,7 @@ FeO Wustite in LDA
     starting_magnetization(1)= 0.0,
     starting_magnetization(2)= 0.5,
     starting_magnetization(3)=-0.5,
-    occupations='smearing', smearing='gauss', degauss=0.01,
+    occupations='smearing', smearing='mv', degauss=0.01,
     nspin=2,
     lda_plus_u=.true.  Hubbard_U(2)=1.d-8, Hubbard_U(3)=1.d-8,
  /
@@ -152,7 +152,7 @@ FeO Wustite whithin LDA+U using standard initial ns matrices
     starting_magnetization(1)= 0.0,
     starting_magnetization(2)= 0.5,
     starting_magnetization(3)=-0.5,
-    occupations='smearing', smearing='gauss', degauss=0.01,
+    occupations='smearing', smearing='mv', degauss=0.01,
     nspin=2,
     lda_plus_u=.true.  Hubbard_U(2)=4.3, Hubbard_U(3)=4.3,
  /
@@ -206,7 +206,7 @@ FeO Wustite whithin LDA+U with user-defined ns initial matrices
     starting_magnetization(1)= 0.0,
     starting_magnetization(2)= 0.5,
     starting_magnetization(3)=-0.5,
-    occupations='smearing', smearing='gauss', degauss=0.01,
+    occupations='smearing', smearing='mv', degauss=0.01,
     nspin=2,
     lda_plus_u=.true., Hubbard_U(2)=4.3, Hubbard_U(3)=4.3,
     starting_ns_eigenvalue(3,2,2) = 1.d0

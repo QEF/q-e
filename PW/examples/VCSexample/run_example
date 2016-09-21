@@ -108,7 +108,7 @@ cat > As.vcs00.in << EOF
                      ecutrho  =  100.0 , 
                         nbnd  =  9 , 
                  occupations  =  'smearing' ,
-                    smearing  =  'mp' ,
+                    smearing  =  'mv' ,
                      degauss  =  0.005 ,
                        nspin  =  1 , 
                   lda_plus_u  =  .false. , 
@@ -175,7 +175,7 @@ cat > As.vcs500.in << EOF
                      ecutrho  =  100.0 , 
                         nbnd  =  9 , 
                  occupations  =  'smearing' ,
-                    smearing  =  'mp' ,
+                    smearing  =  'mv' ,
                      degauss  =  0.005 ,
                        nspin  =  1 , 
                   lda_plus_u  =  .false. , 
@@ -234,7 +234,7 @@ cat > As.bfgs00.in << EOF
                      ecutrho  =  100.0 , 
                         nbnd  =  9 , 
                  occupations  =  'smearing' ,
-                    smearing  =  'mp' ,
+                    smearing  =  'mv' ,
                      degauss  =  0.005 ,
  /
  &ELECTRONS
@@ -287,7 +287,7 @@ cat > As.bfgs500.in << EOF
                      ecutrho  =  100.0 , 
                         nbnd  =  9 , 
                  occupations  =  'smearing' ,
-                    smearing  =  'mp' ,
+                    smearing  =  'mv' ,
                      degauss  =  0.005 ,
  /
  &ELECTRONS

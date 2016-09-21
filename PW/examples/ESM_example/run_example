@@ -95,7 +95,7 @@ cat > H2O_pbc.in << EOF
     ibrav = 6, celldm(1) =20.0, celldm(3) = 1.200 
     nat= 3, ntyp= 2,
     ecutwfc = 25.0, ecutrho = 200.0,
-    occupations='smearing', smearing='gaussian', degauss=0.03,
+    occupations='smearing', smearing='mv', degauss=0.03,
     assume_isolated = 'esm', esm_bc='pbc'
  /
  &electrons
@@ -130,7 +130,7 @@ cat > H2O_bc1.in << EOF
     ibrav = 6, celldm(1) =20.0, celldm(3) = 1.200 
     nat= 3, ntyp= 2,
     ecutwfc = 25.0, ecutrho = 200.0,
-    occupations='smearing', smearing='gaussian', degauss=0.03,
+    occupations='smearing', smearing='mv', degauss=0.03,
     assume_isolated = 'esm', esm_bc='bc1'
  /
  &electrons
@@ -171,7 +171,7 @@ cat > Al001_pbc.in << EOF
     nat= 4, ntyp= 1,
     ecutwfc = 20.0,
     nosym=.TRUE.
-    occupations='smearing', smearing='mp', degauss=0.03
+    occupations='smearing', smearing='mv', degauss=0.03
     assume_isolated='esm', esm_bc='pbc'
  /
  &electrons
@@ -258,7 +258,7 @@ cat > Al001_bc2_efield.in << EOF
     nat= 4, ntyp= 1,
     ecutwfc = 20.0,
     nosym=.TRUE.
-    occupations='smearing', smearing='mp', degauss=0.03
+    occupations='smearing', smearing='mv', degauss=0.03
     assume_isolated='esm', esm_bc='bc2', esm_efield=0.00192148511256006
  /
  &electrons
@@ -302,7 +302,7 @@ cat > Al001_bc3.in << EOF
     nat= 4, ntyp= 1,
     ecutwfc = 20.0,
     nosym=.TRUE.
-    occupations='smearing', smearing='mp', degauss=0.03
+    occupations='smearing', smearing='mv', degauss=0.03
     assume_isolated='esm', esm_bc='bc3'
  /
  &electrons
@@ -346,7 +346,7 @@ cat > Al001_bc3_m002.in << EOF
     nat= 4, ntyp= 1,
     ecutwfc = 20.0,
     nosym=.TRUE.
-    occupations='smearing', smearing='mp', degauss=0.03
+    occupations='smearing', smearing='mv', degauss=0.03
     assume_isolated='esm', esm_bc='bc3'
     tot_charge = -0.02,
  /
@@ -391,7 +391,7 @@ cat > Al001_bc3_p002.in << EOF
     nat= 4, ntyp= 1,
     ecutwfc = 20.0,
     nosym=.TRUE.
-    occupations='smearing', smearing='mp', degauss=0.03
+    occupations='smearing', smearing='mv', degauss=0.03
     assume_isolated='esm', esm_bc='bc3'
     tot_charge = 0.02,
  /
@@ -438,7 +438,7 @@ cat > Al001_bc3_v00.in << EOF
     nat= 4, ntyp= 1,
     ecutwfc = 20.0,
     nosym=.TRUE.
-    occupations='smearing', smearing='mp', degauss=0.03
+    occupations='smearing', smearing='mv', degauss=0.03
     assume_isolated='esm', esm_bc='bc3'
     fcp_mu = -0.312573,
  /
@@ -485,7 +485,7 @@ cat > Al001_bc3_vp05.in << EOF
     nat= 4, ntyp= 1,
     ecutwfc = 20.0,
     nosym=.TRUE.
-    occupations='smearing', smearing='mp', degauss=0.03
+    occupations='smearing', smearing='mv', degauss=0.03
     assume_isolated='esm', esm_bc='bc3'
     fcp_mu = -0.275809,
  /
@@ -532,7 +532,7 @@ cat > Al001_bc3_vm05.in << EOF
     nat= 4, ntyp= 1,
     ecutwfc = 20.0,
     nosym=.TRUE.
-    occupations='smearing', smearing='mp', degauss=0.03
+    occupations='smearing', smearing='mv', degauss=0.03
     assume_isolated='esm', esm_bc='bc3'
     fcp_mu = -0.349338,
  /
