@@ -1563,8 +1563,7 @@ SUBROUTINE compute_spin
       WRITE (stdout,'(i8)') ik
       ikevc = ik + ikstart - 1
       CALL davcio (evc, 2*nwordwfc, iunwfc, ikevc, -1 )
-      !CALL gk_sort (xk(1,ik), ngm, g, gcutw, npw, igk, g2kin)
-      !igk = igk_k(1,ik)
+      npw = ngk(ik)
       !
       !  USPP
       !
