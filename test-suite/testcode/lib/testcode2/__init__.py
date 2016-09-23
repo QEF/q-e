@@ -302,6 +302,7 @@ class Test:
                         raise exceptions.RunError(err[0])
                     else:
                         self.verify_job(test_input, test_arg, verbose, rundir)
+                sys.stdout.flush()
         except exceptions.RunError:
             err = sys.exc_info()[1]
             if verbose > 2:
