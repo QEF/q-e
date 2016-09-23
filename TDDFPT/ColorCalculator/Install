@@ -1,10 +1,21 @@
+if ! ( [ -e lib/jcommon-1.0.23.jar -a -e lib/jfreechart-1.0.19.jar ] )
+then
+    # Download jfreechart and jcommon jars
+    wget "http://downloads.sourceforge.net/project/jfreechart/3.%20JCommon/1.0.23/jcommon-1.0.23.zip?r=https%3A%2F%2Fsourceforge.net%2Fprojects%2Fjfreechart%2Ffiles%2F3.%2520JCommon%2F1.0.23%2F&ts=1474625637&use_mirror=freefr"
+    wget "http://downloads.sourceforge.net/project/jfreechart/1.%20JFreeChart/1.0.19/jfreechart-1.0.19.zip?r=https%3A%2F%2Fsourceforge.net%2Fprojects%2Fjfreechart%2F%3Fsource%3Dtyp_redirect&ts=1474625662&use_mirror=vorboss"
+    unzip -x "jcommon-1.0.23*" jcommon-1.0.23/jcommon-1.0.23.jar
+    unzip -x "jfreechart-1.0.19.*" jfreechart-1.0.19/lib/jfreechart-1.0.19.jar
+    # Move them into the lib directory
+    mkdir -p lib
+    mv jcommon-1.0.23/jcommon-1.0.23.jar lib
+    mv jfreechart-1.0.19/lib/jfreechart-1.0.19.jar lib
+    rm -rf jcommon-1.0.23 jcommon-1.0.23.zip* jfreechart-1.0.19 jfreechart-1.0.19.zip*
+fi
 # Compile for CoclorCalculator
 cd src 
-javac *.java
-jar cfm ColorCalculator5.jar Manifest.txt *.class org com
+rm -f *.class ColorCalculator5.jar
+javac -cp ../lib/jfreechart-1.0.19.jar:../lib/jcommon-1.0.23.jar *.java
+jar cfm ColorCalculator5.jar Manifest.txt *.class ../lib/jfreechart-1.0.19.jar ../lib/jcommon-1.0.23.jar
 #jar cfm ColorCalculator5.jar Manifest.txt *.class jfreechart-1.0.19.jar com org
 mv ColorCalculator5.jar ..
 cd .. 
-
-
-

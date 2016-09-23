@@ -1,1 +1,2 @@
 Main-Class: ColorWindow
+Class-Path: lib/jcommon-1.0.23.jar lib/jfreechart-1.0.19.jar 
