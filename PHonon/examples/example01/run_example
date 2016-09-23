@@ -149,7 +149,7 @@ phonons of si at X
   prefix='silicon',
   amass(1)=28.08,
   outdir='$TMP_DIR/',
-  fildyn='si.dynX',
+  fildyn='siX.dyn',
  /
 1.0 0.0 0.0
 EOF
@@ -293,7 +293,7 @@ cat > ni.scf.in << EOF
     nspin=2,
     starting_magnetization(1)=0.5,
     degauss=0.02,
-    smearing='mp',
+    smearing='mv',
     occupations='smearing',
     ecutwfc =27.0
     ecutrho =300.0
@@ -321,7 +321,7 @@ phonons of Ni at X
   tr2_ph=1.0d-14,
   prefix='nickel',
   amass(1)=58.6934,
-  fildyn='nix.dyn',
+  fildyn='niX.dyn',
   outdir='$TMP_DIR/',
  /
 0.0 0.0 1.0

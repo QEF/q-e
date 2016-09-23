@@ -230,7 +230,7 @@ cat > zno.scf.in << EOF
 /
 &SYSTEM
   ibrav=0, celldm(1) =6.330582528, nat=4, ntyp= 2,
-  occupations='smearing', smearing='gauss', degauss=0.02,
+  occupations='smearing', smearing='marzari-vanderbilt', degauss=0.02,
   ecutwfc =80.0, !better 140
 /
 &ELECTRONS

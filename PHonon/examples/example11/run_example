@@ -104,7 +104,7 @@ cat > Au.scf_pz.in << EOF
     noncolin=.true.,
     lspinorb=.true.,
     occupations='smearing',
-    smearing='mp',
+    smearing='mv',
     degauss=0.04,
     ecutwfc = 35.0
     ecutrho = 300.0

@@ -108,7 +108,7 @@ Pt
     starting_magnetization=0.0,
     occupations='smearing',
     degauss=0.02,
-    smearing='mp',
+    smearing='mv',
     ecutwfc =30.0,
     ecutrho =300.0,
  /
@@ -191,7 +191,7 @@ cat > ni.scf.in << EOF
     noncolin=.true.,
     starting_magnetization(1)=0.5,
     degauss=0.02,
-    smearing='mp',
+    smearing='mv',
     angle1(1)=90
     angle2(1)=90
     occupations='smearing',
@@ -207,7 +207,7 @@ Ni  0.0  Ni.pbe-nd-rrkjus.UPF
 ATOMIC_POSITIONS
 Ni 0.00 0.00 0.00
 K_POINTS AUTOMATIC
-4 4 4 1 1 1
+6 6 6 1 1 1
 EOF
 $ECHO "  running scf pw.x for noncollinear Ni with gga-pbe...\c"
 $PW_COMMAND < ni.scf.in > ni.scf.out
@@ -277,7 +277,7 @@ cat > ni_so.scf.in << EOF
     starting_magnetization(1)=0.5,
     degauss=0.02,
     angle1(1)=90,
-    smearing='mp',
+    smearing='mv',
     occupations='smearing',
     ecutwfc =27.0
     ecutrho =300.0
@@ -291,7 +291,7 @@ Ni  0.0  Ni.rel-pbe-nd-rrkjus.UPF
 ATOMIC_POSITIONS
 Ni 0.00 0.00 0.00
 K_POINTS AUTOMATIC
-4 4 4 1 1 1
+6 6 6 1 1 1
 EOF
 $ECHO "  running scf pw.x for Ni with gga-pbe and spin-orbit...\c"
 $PW_COMMAND < ni_so.scf.in > ni_so.scf.out

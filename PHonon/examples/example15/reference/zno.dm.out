@@ -1,12 +1,24 @@
 
-     Program DYNMAT v.5.0.2 (svn rev. 9392) starts on 18Dec2013 at 16:18:42 
+     Program DYNMAT v.6.beta (svn rev. 13009) starts on 23Sep2016 at 14:54: 2 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
          "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
           URL http://www.quantum-espresso.org", 
      in publications or presentations arising from this work. More details at
-     http://www.quantum-espresso.org/quote.php
+     http://www.quantum-espresso.org/quote
+
+           HOST :    @host@
+           ARCH :    x86_64
+             CC :    cc
+            CPP :    cpp
+            F90 :    mpif90
+            F77 :    gfortran
+         DFLAGS :    -D__GFORTRAN -D__STD_F95 -D__FFTW -D__MPI
+      BLAS LIBS :    
+    LAPACK LIBS :    $(TOPDIR)/LAPACK/liblapack.a $(TOPDIR)/LAPACK/libblas.a
+       FFT LIBS :    
+      MASS LIBS :    
 
      Parallel version (MPI), running on     1 processors
 
@@ -14,7 +26,7 @@
      ...Force constants read
      ...epsilon and Z* not read (not found on file)
      Acoustic Sum Rule: || Z*(ASR) - Z*(orig)|| =    0.000000E+00
-     Acoustic Sum Rule: ||dyn(ASR) - dyn(orig)||=    0.271443E+00
+     Acoustic Sum Rule: ||dyn(ASR) - dyn(orig)||=    2.660151E-01
      A direction for q was not specified:TO-LO splitting will be absent
 
      Polarizability (A^3 units)
@@ -26,23 +38,23 @@
      IR activities are in (D/A)^2/amu units
 
 # mode   [cm-1]    [THz]      IR
-    1      0.00    0.0000    0.0000
-    2      0.00    0.0000    0.0000
-    3      0.00    0.0000    0.0000
-    4      0.00    0.0000    0.0000
+    1    -80.48   -2.4126    0.0000
+    2     -0.00   -0.0000    0.0000
+    3     -0.00   -0.0000    0.0000
+    4     -0.00   -0.0000    0.0000
     5      0.00    0.0000    0.0000
     6      0.00    0.0000    0.0000
-    7     47.34    1.4193    0.0000
-    8    105.62    3.1664    0.0000
-    9    157.77    4.7300    0.0000
-   10    214.72    6.4370    0.0000
-   11    276.27    8.2825    0.0000
-   12    337.53   10.1189    0.0000
- 
-     DYNMAT       :     0.01s CPU         0.53s WALL
+    7      0.00    0.0000    0.0000
+    8     40.37    1.2102    0.0000
+    9    155.06    4.6484    0.0000
+   10    181.07    5.4284    0.0000
+   11    273.21    8.1905    0.0000
+   12    338.99   10.1628    0.0000
 
- 
-   This run was terminated on:  16:18:43  18Dec2013            
+     DYNMAT       :     0.00s CPU         0.01s WALL
+
+
+   This run was terminated on:  14:54: 2  23Sep2016            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

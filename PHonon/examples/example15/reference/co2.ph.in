@@ -4,10 +4,11 @@ Normal modes for CO2
   prefix='CO2',
   amass(1)=12.010,
   amass(2)=15.999,
-  outdir='/home/larrucea/tmp'
+  outdir='/home/pietro/trunk/espresso/tempdir'
   epsil=.true.,
   trans=.true.,
   asr=.true.
+  ! lraman=.true.
   fildyn='dmat.co2'
  /
  0.0 0.0 0.0

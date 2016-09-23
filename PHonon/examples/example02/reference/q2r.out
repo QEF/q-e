@@ -1,5 +1,5 @@
 
-     Program Q2R v.5.0.99 (svn rev. 10851) starts on  8Apr2014 at 16:23:43 
+     Program Q2R v.6.beta (svn rev. 13007) starts on 23Sep2016 at 10:38:37 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -8,24 +8,35 @@
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
-     Parallel version (MPI), running on     4 processors
-     K-points division:     npool     =       2
+           HOST :    @host@
+           ARCH :    x86_64
+             CC :    cc
+            CPP :    cpp
+            F90 :    mpif90
+            F77 :    gfortran
+         DFLAGS :    -D__GFORTRAN -D__STD_F95 -D__FFTW -D__MPI
+      BLAS LIBS :    
+    LAPACK LIBS :    $(TOPDIR)/LAPACK/liblapack.a $(TOPDIR)/LAPACK/libblas.a
+       FFT LIBS :    
+      MASS LIBS :    
+
+     Parallel version (MPI), running on     2 processors
      R & G space division:  proc/nbgrp/npool/nimage =       2
 
-     reading grid info from file alas.dyn0
+     reading grid info from file alas.dyn0    
   reading force constants from file alas.dyn1
  macroscopic fields = T
-  13.74327   0.00000   0.00000
-   0.00000  13.74327   0.00000
-   0.00000  -0.00000  13.74327
+  13.74422  -0.00000  -0.00000
+  -0.00000  13.74422  -0.00000
+   0.00000   0.00000  13.74422
   na=            1
-   1.88278   0.00000   0.00000
-  -0.00000   1.88278  -0.00000
-   0.00000  -0.00000   1.88278
+   1.88265   0.00000   0.00000
+   0.00000   1.88265   0.00000
+   0.00000   0.00000   1.88265
   na=            2
-  -3.23366  -0.00000  -0.00000
-   0.00000  -3.23366  -0.00000
-  -0.00000  -0.00000  -3.23366
+  -3.23374  -0.00000   0.00000
+  -0.00000  -3.23374   0.00000
+   0.00000  -0.00000  -3.23374
   nqs=            1
  q=   0.00000000  0.00000000  0.00000000
   reading force constants from file alas.dyn2
@@ -110,10 +121,10 @@
 
       fft-check success (sum of imaginary terms < 10^-12)
 
-     Q2R          :     0.01s CPU         0.01s WALL
+     Q2R          :     0.00s CPU         0.01s WALL
 
 
-   This run was terminated on:  16:23:43   8Apr2014            
+   This run was terminated on:  10:38:37  23Sep2016            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

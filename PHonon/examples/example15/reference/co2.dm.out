@@ -1,47 +1,59 @@
 
-     Program DYNMAT v.5.0.2 (svn rev. 9392) starts on 18Dec2013 at 16: 5:14 
+     Program DYNMAT v.6.beta (svn rev. 13009) starts on 23Sep2016 at 14:38:27 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
          "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
           URL http://www.quantum-espresso.org", 
      in publications or presentations arising from this work. More details at
-     http://www.quantum-espresso.org/quote.php
+     http://www.quantum-espresso.org/quote
+
+           HOST :    @host@
+           ARCH :    x86_64
+             CC :    cc
+            CPP :    cpp
+            F90 :    mpif90
+            F77 :    gfortran
+         DFLAGS :    -D__GFORTRAN -D__STD_F95 -D__FFTW -D__MPI
+      BLAS LIBS :    
+    LAPACK LIBS :    $(TOPDIR)/LAPACK/liblapack.a $(TOPDIR)/LAPACK/libblas.a
+       FFT LIBS :    
+      MASS LIBS :    
 
      Parallel version (MPI), running on     1 processors
 
      Reading Dynamical Matrix from file dmat.co2
      ...Force constants read
      ...epsilon and Z* read
-     Acoustic Sum Rule: || Z*(ASR) - Z*(orig)|| =    0.484612E+00
-     Acoustic Sum Rule: ||dyn(ASR) - dyn(orig)||=    0.133996E+01
+     Acoustic Sum Rule: || Z*(ASR) - Z*(orig)|| =    4.846100E-01
+     Acoustic Sum Rule: ||dyn(ASR) - dyn(orig)||=    2.150695E+00
      A direction for q was not specified:TO-LO splitting will be absent
-     Max |d(i,j)-d*(j,i)| =  0.000271
-     Max |d(i,j)-d*(j,i)|/|d(i,j)|:   0.1766%
+     Max |d(i,j)-d*(j,i)| =  0.000795
+     Max |d(i,j)-d*(j,i)|/|d(i,j)|:   0.8432%
 
      Polarizability (A^3 units)
      multiply by 0.971500 for Clausius-Mossotti correction
-         3.208297    1.105293   -0.000269
-         1.105293    3.208297   -0.000269
-         0.000036    0.000036    2.126501
+         3.208339    1.105333   -0.000272
+         1.105333    3.208339   -0.000272
+         0.000036    0.000036    2.126503
 
      IR activities are in (D/A)^2/amu units
 
 # mode   [cm-1]    [THz]      IR
-    1   -847.61  -25.4106    0.0282
-    2    -27.62   -0.8281    0.0000
-    3      0.09    0.0027    0.0000
-    4     19.49    0.5843    0.0000
-    5     80.13    2.4022    0.0000
-    6    589.58   17.6751    0.0441
-    7    621.85   18.6425    0.4203
-    8   1323.09   39.6652    0.0030
-    9   2354.31   70.5805   13.0965
- 
-     DYNMAT       :     0.01s CPU         0.29s WALL
+    1  -1245.21  -37.3304    0.0723
+    2   -182.03   -5.4572    0.0000
+    3    -32.91   -0.9867    0.0000
+    4     -0.60   -0.0181    0.0000
+    5     22.80    0.6835    0.0000
+    6    552.06   16.5504    0.0465
+    7    622.17   18.6523    0.4205
+    8   1324.22   39.6992    0.0057
+    9   2360.34   70.7611   13.0478
 
- 
-   This run was terminated on:  16: 5:14  18Dec2013            
+     DYNMAT       :     0.00s CPU         0.00s WALL
+
+
+   This run was terminated on:  14:38:27  23Sep2016            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

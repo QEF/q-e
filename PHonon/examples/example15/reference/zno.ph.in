@@ -4,8 +4,9 @@ Normal modes for Wurtzite
   prefix='ZNO',
   amass(1)=65.409,
   amass(2)=15.999,
-  outdir='/home/larrucea/tmp'
+  outdir='/home/pietro/trunk/espresso/tempdir'
   epsil=.false.,
+  ! lraman=.true.
   trans=.true.,
   asr=.true.
   fildyn='dmat.zno'

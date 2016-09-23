@@ -1,12 +1,12 @@
 &CONTROL
   calculation  = "scf",
   prefix       = "ZNO",
-  pseudo_dir   = "/home/larrucea/Software/MM/espresso-5.0.2/pseudo",
-  outdir       = "/home/larrucea/tmp",
+  pseudo_dir   = "/home/pietro/trunk/espresso/pseudo",
+  outdir       = "/home/pietro/trunk/espresso/tempdir",
 /
 &SYSTEM
   ibrav=0, celldm(1) =6.330582528, nat=4, ntyp= 2,
-  occupations='smearing', smearing='gauss', degauss=0.02,
+  occupations='smearing', smearing='marzari-vanderbilt', degauss=0.02,
   ecutwfc =80.0, !better 140
 /
 &ELECTRONS
@@ -22,7 +22,7 @@ CELL_PARAMETERS alat
 ATOMIC_SPECIES
   Zn 65.409  Zn.pbe-d-hgh.UPF
   O  15.999  O.pbe-hgh.UPF
-ATOMIC_POSITIONS
+ATOMIC_POSITIONS (alat)
 Zn       2.010975287   0.487933254  -0.051360548
 Zn       1.234717421   0.199473387   0.448322227
 O        1.051679030   0.488287222  -0.051814333

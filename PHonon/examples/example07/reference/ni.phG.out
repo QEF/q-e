@@ -1,34 +1,49 @@
 
-     Program PHONON v.5.0.2 (svn rev. 9400) starts on  6Dec2012 at 16:12:30 
+     Program PHONON v.6.beta (svn rev. 13009) starts on 23Sep2016 at 11:58:53 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
          "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
           URL http://www.quantum-espresso.org", 
      in publications or presentations arising from this work. More details at
-     http://www.quantum-espresso.org/quote.php
+     http://www.quantum-espresso.org/quote
 
-     Serial version
+           HOST :    @host@
+           ARCH :    x86_64
+             CC :    cc
+            CPP :    cpp
+            F90 :    mpif90
+            F77 :    gfortran
+         DFLAGS :    -D__GFORTRAN -D__STD_F95 -D__FFTW -D__MPI
+      BLAS LIBS :    
+    LAPACK LIBS :    $(TOPDIR)/LAPACK/liblapack.a $(TOPDIR)/LAPACK/libblas.a
+       FFT LIBS :    
+      MASS LIBS :    
 
-     Ultrasoft (Vanderbilt) Pseudopotentials
+     Parallel version (MPI), running on     2 processors
+     R & G space division:  proc/nbgrp/npool/nimage =       2
+
+     Reading data from directory:
+     /home/pietro/trunk/espresso/tempdir/nickel.save
 
    Info: using nr1, nr2, nr3 values from input
 
-   Info: using nr1s, nr2s, nr3s values from input
+   Info: using nr1, nr2, nr3 values from input
 
      IMPORTANT: XC functional enforced from input :
-     Exchange-correlation      =  SLA  PW   PBE  PBE ( 1 4 3 4 0)
-     EXX-fraction              =        0.00
+     Exchange-correlation      =  SLA  PW   PBE  PBE ( 1  4  3  4 0 0)
      Any further DFT definition will be discarded
      Please, verify this is what you really want
 
                file Ni.pbe-nd-rrkjus.UPF: wavefunction(s)  4S renormalized
- 
-     G-vector sticks info
+
+     Parallelization info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Min         225      81     30                 3210      705     165
+     Max         226      82     31                 3213      706     166
      Sum         451     163     61                 6423     1411     331
- 
+
 
      Check: negative/imaginary core charge=   -0.000020    0.000000
 
@@ -48,8 +63,7 @@
      convergence threshold     =      1.0E-16
      beta                      =       0.7000
      number of iterations used =            4
-     Exchange-correlation      =  SLA  PW   PBE  PBE ( 1 4 3 4 0)
-     EXX-fraction              =        0.00
+     Exchange-correlation      =  SLA  PW   PBE  PBE ( 1  4  3  4 0 0)
      Noncollinear calculation without spin-orbit
 
      celldm(1)=    6.65000  celldm(2)=    0.00000  celldm(3)=    0.00000
@@ -68,45 +82,88 @@
 
      Atoms inside the unit cell: 
 
-   Cartesian axes
+     Cartesian axes
 
      site n.  atom      mass           positions (alat units)
-        1        Ni  58.6934   tau( 1) = (    0.00000    0.00000    0.00000  )
+        1     Ni  58.6934   tau(    1) = (    0.00000    0.00000    0.00000  )
 
      Computing dynamical matrix for 
                     q = (   0.0000000   0.0000000   0.0000000 )
- 
+
      16 Sym.Ops. (no q -> -q+G )
 
 
-     G cutoff =  336.0507  (   6423 G-vectors)     FFT grid: ( 27, 27, 27)
-     G cutoff =  120.9783  (   1411 G-vectors)  smooth grid: ( 15, 15, 15)
+     G cutoff =  336.0507  (   3213 G-vectors)     FFT grid: ( 27, 27, 27)
+     G cutoff =  120.9783  (    705 G-vectors)  smooth grid: ( 15, 15, 15)
 
-     number of k points=    20  Methfessel-Paxton smearing, width (Ry)=  0.0200
+     number of k points=    63  Marzari-Vanderbilt smearing, width (Ry)=  0.0200
                        cart. coord. in units 2pi/alat
-        k(    1) = (  -0.1250000   0.1250000   0.1250000), wk =   0.0312500
-        k(    2) = (  -0.3750000   0.3750000  -0.1250000), wk =   0.0625000
-        k(    3) = (   0.3750000  -0.3750000   0.6250000), wk =   0.0625000
-        k(    4) = (   0.1250000  -0.1250000   0.3750000), wk =   0.0625000
-        k(    5) = (  -0.1250000   0.6250000   0.1250000), wk =   0.0312500
-        k(    6) = (   0.6250000  -0.1250000   0.8750000), wk =   0.0625000
-        k(    7) = (   0.3750000   0.1250000   0.6250000), wk =   0.0625000
-        k(    8) = (  -0.1250000  -0.8750000   0.1250000), wk =   0.0312500
-        k(    9) = (  -0.3750000   0.3750000   0.3750000), wk =   0.0312500
-        k(   10) = (   0.3750000  -0.3750000   1.1250000), wk =   0.0625000
-        k(   11) = (   0.3750000  -0.1250000  -0.3750000), wk =   0.0312500
-        k(   12) = (  -0.3750000   0.6250000   0.3750000), wk =   0.0312500
-        k(   13) = (  -0.1250000   0.3750000   0.1250000), wk =   0.0312500
-        k(   14) = (   0.6250000   0.1250000  -0.1250000), wk =   0.0625000
-        k(   15) = (  -0.1250000   0.8750000   0.6250000), wk =   0.0625000
-        k(   16) = (   0.8750000   0.6250000  -0.1250000), wk =   0.0625000
-        k(   17) = (   0.1250000   0.6250000   0.3750000), wk =   0.0625000
-        k(   18) = (   0.6250000   0.3750000   0.1250000), wk =   0.0625000
-        k(   19) = (  -0.8750000   0.1250000  -0.1250000), wk =   0.0625000
-        k(   20) = (  -0.3750000   1.1250000   0.3750000), wk =   0.0312500
+        k(    1) = (  -0.0833333   0.0833333   0.0833333), wk =   0.0092593
+        k(    2) = (  -0.2500000   0.2500000  -0.0833333), wk =   0.0185185
+        k(    3) = (  -0.4166667   0.4166667  -0.2500000), wk =   0.0185185
+        k(    4) = (   0.4166667  -0.4166667   0.5833333), wk =   0.0185185
+        k(    5) = (   0.2500000  -0.2500000   0.4166667), wk =   0.0185185
+        k(    6) = (   0.0833333  -0.0833333   0.2500000), wk =   0.0185185
+        k(    7) = (  -0.0833333   0.4166667   0.0833333), wk =   0.0092593
+        k(    8) = (  -0.2500000   0.5833333  -0.0833333), wk =   0.0185185
+        k(    9) = (   0.5833333  -0.2500000   0.7500000), wk =   0.0185185
+        k(   10) = (   0.4166667  -0.0833333   0.5833333), wk =   0.0185185
+        k(   11) = (   0.2500000   0.0833333   0.4166667), wk =   0.0185185
+        k(   12) = (  -0.0833333   0.7500000   0.0833333), wk =   0.0092593
+        k(   13) = (   0.7500000  -0.0833333   0.9166667), wk =   0.0185185
+        k(   14) = (   0.5833333   0.0833333   0.7500000), wk =   0.0185185
+        k(   15) = (   0.4166667   0.2500000   0.5833333), wk =   0.0185185
+        k(   16) = (  -0.0833333  -0.9166667   0.0833333), wk =   0.0092593
+        k(   17) = (  -0.2500000  -0.7500000  -0.0833333), wk =   0.0185185
+        k(   18) = (  -0.0833333  -0.5833333   0.0833333), wk =   0.0092593
+        k(   19) = (  -0.2500000   0.2500000   0.2500000), wk =   0.0092593
+        k(   20) = (  -0.4166667   0.4166667   0.0833333), wk =   0.0185185
+        k(   21) = (   0.4166667  -0.4166667   0.9166667), wk =   0.0185185
+        k(   22) = (   0.2500000  -0.2500000   0.7500000), wk =   0.0185185
+        k(   23) = (  -0.2500000   0.5833333   0.2500000), wk =   0.0092593
+        k(   24) = (   0.5833333  -0.2500000   1.0833333), wk =   0.0185185
+        k(   25) = (   0.4166667  -0.0833333   0.9166667), wk =   0.0185185
+        k(   26) = (  -0.2500000  -1.0833333   0.2500000), wk =   0.0092593
+        k(   27) = (  -0.4166667   0.4166667   0.4166667), wk =   0.0092593
+        k(   28) = (   0.4166667  -0.4166667   1.2500000), wk =   0.0185185
+        k(   29) = (   0.2500000  -0.0833333  -0.2500000), wk =   0.0092593
+        k(   30) = (   0.4166667  -0.2500000  -0.4166667), wk =   0.0092593
+        k(   31) = (  -0.4166667   0.5833333   0.4166667), wk =   0.0092593
+        k(   32) = (  -0.2500000   0.4166667   0.2500000), wk =   0.0092593
+        k(   33) = (  -0.0833333   0.2500000   0.0833333), wk =   0.0092593
+        k(   34) = (   0.4166667   0.0833333  -0.0833333), wk =   0.0185185
+        k(   35) = (   0.5833333  -0.0833333  -0.2500000), wk =   0.0185185
+        k(   36) = (  -0.0833333  -0.2500000   0.5833333), wk =   0.0185185
+        k(   37) = (  -0.2500000   0.7500000   0.5833333), wk =   0.0185185
+        k(   38) = (   0.7500000   0.5833333  -0.2500000), wk =   0.0185185
+        k(   39) = (  -0.0833333   0.5833333   0.4166667), wk =   0.0185185
+        k(   40) = (   0.5833333   0.4166667  -0.0833333), wk =   0.0185185
+        k(   41) = (   0.0833333   0.4166667   0.2500000), wk =   0.0185185
+        k(   42) = (   0.4166667   0.2500000   0.0833333), wk =   0.0185185
+        k(   43) = (   0.7500000   0.0833333  -0.0833333), wk =   0.0185185
+        k(   44) = (  -0.0833333   0.9166667   0.7500000), wk =   0.0185185
+        k(   45) = (   0.9166667   0.7500000  -0.0833333), wk =   0.0185185
+        k(   46) = (   0.0833333   0.7500000   0.5833333), wk =   0.0185185
+        k(   47) = (   0.7500000   0.5833333   0.0833333), wk =   0.0185185
+        k(   48) = (   0.2500000   0.5833333   0.4166667), wk =   0.0185185
+        k(   49) = (   0.5833333   0.4166667   0.2500000), wk =   0.0185185
+        k(   50) = (  -0.9166667   0.0833333  -0.0833333), wk =   0.0185185
+        k(   51) = (  -0.7500000  -0.0833333  -0.2500000), wk =   0.0185185
+        k(   52) = (  -0.0833333  -0.2500000  -0.7500000), wk =   0.0185185
+        k(   53) = (  -0.5833333   0.0833333  -0.0833333), wk =   0.0185185
+        k(   54) = (   0.4166667   0.0833333  -0.4166667), wk =   0.0092593
+        k(   55) = (  -0.4166667   0.9166667   0.4166667), wk =   0.0092593
+        k(   56) = (  -0.2500000   0.7500000   0.2500000), wk =   0.0092593
+        k(   57) = (   0.5833333   0.2500000  -0.2500000), wk =   0.0185185
+        k(   58) = (  -0.2500000   1.0833333   0.5833333), wk =   0.0185185
+        k(   59) = (   1.0833333   0.5833333  -0.2500000), wk =   0.0185185
+        k(   60) = (  -0.0833333   0.9166667   0.4166667), wk =   0.0185185
+        k(   61) = (   0.9166667   0.4166667  -0.0833333), wk =   0.0185185
+        k(   62) = (  -1.0833333   0.2500000  -0.2500000), wk =   0.0185185
+        k(   63) = (  -0.4166667   1.2500000   0.4166667), wk =   0.0092593
 
      PseudoPot. # 1 for Ni read from file:
-     /home/giannozz/trunk/espresso/pseudo/Ni.pbe-nd-rrkjus.UPF
+     /home/pietro/trunk/espresso/pseudo/Ni.pbe-nd-rrkjus.UPF
      MD5 check sum: 8081f0a005c9a5470caab1a58e82ecb2
      Pseudo is Ultrasoft + core correction, Zval = 10.0
      Generated by new atomic code, or converted to UPF format
@@ -120,6 +177,8 @@
      Q(r) pseudized with 0 coefficients 
 
 
+     Mode symmetry, D_4h(4/mmm) point group:
+
 
      Atomic displacements:
      There are   2 irreducible representations
@@ -131,48 +190,48 @@
 
 
      Alpha used in Ewald sum =   2.8000
-     PHONON       :     3.68s CPU         3.84s WALL
+     PHONON       :     2.42s CPU         2.44s WALL
 
 
 
      Representation #  1 mode #   1
 
      Self-consistent Calculation
- 
+
      Pert. #  1: Fermi energy shift (Ry) =     0.0000E+00     0.0000E+00
 
-      iter #   1 total cpu time :     4.6 secs   av.it.:   3.8
-      thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.286E-05
- 
+      iter #   1 total cpu time :     3.3 secs   av.it.:   3.7
+      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  2.663E-06
+
      Pert. #  1: Fermi energy shift (Ry) =     0.0000E+00     0.0000E+00
 
-      iter #   2 total cpu time :     5.4 secs   av.it.:   7.3
-      thresh= 0.169E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.127E-07
- 
+      iter #   2 total cpu time :     4.3 secs   av.it.:   7.4
+      thresh= 1.632E-04 alpha_mix =  0.700 |ddv_scf|^2 =  1.194E-08
+
      Pert. #  1: Fermi energy shift (Ry) =     0.0000E+00     0.0000E+00
 
-      iter #   3 total cpu time :     6.1 secs   av.it.:   6.7
-      thresh= 0.113E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.118E-08
- 
+      iter #   3 total cpu time :     5.3 secs   av.it.:   6.7
+      thresh= 1.093E-05 alpha_mix =  0.700 |ddv_scf|^2 =  1.099E-09
+
      Pert. #  1: Fermi energy shift (Ry) =     0.0000E+00     0.0000E+00
 
-      iter #   4 total cpu time :     6.8 secs   av.it.:   6.5
-      thresh= 0.344E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.184E-11
- 
+      iter #   4 total cpu time :     6.2 secs   av.it.:   6.6
+      thresh= 3.316E-06 alpha_mix =  0.700 |ddv_scf|^2 =  1.583E-12
+
      Pert. #  1: Fermi energy shift (Ry) =     0.0000E+00     0.0000E+00
 
-      iter #   5 total cpu time :     7.6 secs   av.it.:   7.1
-      thresh= 0.136E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.239E-13
- 
+      iter #   5 total cpu time :     7.2 secs   av.it.:   7.2
+      thresh= 1.258E-07 alpha_mix =  0.700 |ddv_scf|^2 =  1.828E-14
+
      Pert. #  1: Fermi energy shift (Ry) =     0.0000E+00     0.0000E+00
 
-      iter #   6 total cpu time :     8.9 secs   av.it.:   7.2
-      thresh= 0.155E-07 alpha_mix =  0.700 |ddv_scf|^2 =  0.142E-14
- 
+      iter #   6 total cpu time :     8.2 secs   av.it.:   7.4
+      thresh= 1.352E-08 alpha_mix =  0.700 |ddv_scf|^2 =  1.282E-15
+
      Pert. #  1: Fermi energy shift (Ry) =     0.0000E+00     0.0000E+00
 
-      iter #   7 total cpu time :     9.7 secs   av.it.:   7.5
-      thresh= 0.377E-08 alpha_mix =  0.700 |ddv_scf|^2 =  0.139E-16
+      iter #   7 total cpu time :     9.2 secs   av.it.:   7.6
+      thresh= 3.581E-09 alpha_mix =  0.700 |ddv_scf|^2 =  1.249E-17
 
      End of self-consistent calculation
 
@@ -182,53 +241,53 @@
      Representation #  2 modes #   2  3
 
      Self-consistent Calculation
- 
-     Pert. #  1: Fermi energy shift (Ry) =     0.4039E-27    -0.8470E-21
-     Pert. #  2: Fermi energy shift (Ry) =    -0.2732E-27     0.2873E-21
 
-      iter #   1 total cpu time :    11.2 secs   av.it.:   3.8
-      thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.714E-06
- 
-     Pert. #  1: Fermi energy shift (Ry) =     0.2903E-27     0.0000E+00
-     Pert. #  2: Fermi energy shift (Ry) =    -0.4618E-29    -0.3921E-24
+     Pert. #  1: Fermi energy shift (Ry) =     1.0097E-28     2.1176E-22
+     Pert. #  2: Fermi energy shift (Ry) =     0.0000E+00     0.0000E+00
 
-      iter #   2 total cpu time :    12.8 secs   av.it.:   8.4
-      thresh= 0.845E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.319E-08
- 
-     Pert. #  1: Fermi energy shift (Ry) =    -0.1010E-27     0.0000E+00
-     Pert. #  2: Fermi energy shift (Ry) =    -0.1800E-27     0.2742E-23
+      iter #   1 total cpu time :    10.9 secs   av.it.:   3.8
+      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  6.657E-07
 
-      iter #   3 total cpu time :    14.7 secs   av.it.:   7.5
-      thresh= 0.565E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.295E-09
- 
-     Pert. #  1: Fermi energy shift (Ry) =    -0.1010E-27     0.0000E+00
-     Pert. #  2: Fermi energy shift (Ry) =     0.2157E-28    -0.3326E-24
+     Pert. #  1: Fermi energy shift (Ry) =    -2.0195E-28     0.0000E+00
+     Pert. #  2: Fermi energy shift (Ry) =     0.0000E+00     0.0000E+00
 
-      iter #   4 total cpu time :    16.2 secs   av.it.:   7.5
-      thresh= 0.172E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.458E-12
- 
-     Pert. #  1: Fermi energy shift (Ry) =    -0.2019E-27    -0.8272E-24
-     Pert. #  2: Fermi energy shift (Ry) =     0.2897E-28    -0.2760E-24
+      iter #   2 total cpu time :    13.1 secs   av.it.:   8.1
+      thresh= 8.159E-05 alpha_mix =  0.700 |ddv_scf|^2 =  2.985E-09
 
-      iter #   5 total cpu time :    18.3 secs   av.it.:   8.0
-      thresh= 0.677E-07 alpha_mix =  0.700 |ddv_scf|^2 =  0.596E-14
- 
-     Pert. #  1: Fermi energy shift (Ry) =     0.1010E-27     0.2482E-23
-     Pert. #  2: Fermi energy shift (Ry) =     0.2915E-28    -0.2720E-24
+     Pert. #  1: Fermi energy shift (Ry) =     2.0195E-28     2.0680E-24
+     Pert. #  2: Fermi energy shift (Ry) =     0.0000E+00     0.0000E+00
 
-      iter #   6 total cpu time :    19.9 secs   av.it.:   8.4
-      thresh= 0.772E-08 alpha_mix =  0.700 |ddv_scf|^2 =  0.355E-15
- 
-     Pert. #  1: Fermi energy shift (Ry) =     0.1010E-27    -0.1654E-23
-     Pert. #  2: Fermi energy shift (Ry) =    -0.7184E-28    -0.2718E-24
+      iter #   3 total cpu time :    15.0 secs   av.it.:   7.4
+      thresh= 5.464E-06 alpha_mix =  0.700 |ddv_scf|^2 =  2.749E-10
 
-      iter #   7 total cpu time :    21.5 secs   av.it.:   8.4
-      thresh= 0.188E-08 alpha_mix =  0.700 |ddv_scf|^2 =  0.347E-17
+     Pert. #  1: Fermi energy shift (Ry) =     2.0195E-28     4.1359E-25
+     Pert. #  2: Fermi energy shift (Ry) =     0.0000E+00     0.0000E+00
+
+      iter #   4 total cpu time :    17.0 secs   av.it.:   7.3
+      thresh= 1.658E-06 alpha_mix =  0.700 |ddv_scf|^2 =  3.957E-13
+
+     Pert. #  1: Fermi energy shift (Ry) =     0.0000E+00     0.0000E+00
+     Pert. #  2: Fermi energy shift (Ry) =     0.0000E+00     0.0000E+00
+
+      iter #   5 total cpu time :    19.0 secs   av.it.:   7.9
+      thresh= 6.290E-08 alpha_mix =  0.700 |ddv_scf|^2 =  4.573E-15
+
+     Pert. #  1: Fermi energy shift (Ry) =     0.0000E+00     0.0000E+00
+     Pert. #  2: Fermi energy shift (Ry) =     0.0000E+00     0.0000E+00
+
+      iter #   6 total cpu time :    21.1 secs   av.it.:   8.1
+      thresh= 6.762E-09 alpha_mix =  0.700 |ddv_scf|^2 =  3.203E-16
+
+     Pert. #  1: Fermi energy shift (Ry) =     0.0000E+00    -2.0680E-24
+     Pert. #  2: Fermi energy shift (Ry) =     0.0000E+00     0.0000E+00
+
+      iter #   7 total cpu time :    23.2 secs   av.it.:   8.2
+      thresh= 1.790E-09 alpha_mix =  0.700 |ddv_scf|^2 =  3.103E-18
 
      End of self-consistent calculation
 
      Convergence has been achieved 
- 
+
      Number of q in the star =    1
      List of q in the star:
           1   0.000000000   0.000000000   0.000000000
@@ -238,99 +297,94 @@
      q = (    0.000000000   0.000000000   0.000000000 ) 
 
  **************************************************************************
-     omega( 1) =      -0.493879 [THz] =     -16.474041 [cm-1]
-     omega( 2) =      -0.493879 [THz] =     -16.474041 [cm-1]
-     omega( 3) =      -0.493874 [THz] =     -16.473878 [cm-1]
+     freq (    1) =      -0.452623 [THz] =     -15.097878 [cm-1]
+     freq (    2) =      -0.452623 [THz] =     -15.097878 [cm-1]
+     freq (    3) =      -0.452615 [THz] =     -15.097613 [cm-1]
  **************************************************************************
 
      Mode symmetry, D_4h(4/mmm) [C_4h (4/m) ] magnetic point group:
 
-     omega(  1 -  1) =        -16.5  [cm-1]   --> A_2u X_4' M_4'  I  
-     omega(  2 -  3) =        -16.5  [cm-1]   --> E_u  X_5' M_5'  I  
- 
-     PHONON       :    18.87s CPU        21.70s WALL
+     freq (  1 -  1) =        -15.1  [cm-1]   --> A_2u X_4' M_4'  I  
+     freq (  2 -  3) =        -15.1  [cm-1]   --> E_u  X_5' M_5'  I  
+
+     PHONON       :    22.58s CPU        23.38s WALL
 
      INITIALIZATION: 
-     phq_setup    :      0.24s CPU      0.26s WALL (       1 calls)
-     phq_init     :      2.19s CPU      2.27s WALL (       1 calls)
- 
-     phq_init     :      2.19s CPU      2.27s WALL (       1 calls)
-     set_drhoc    :      0.64s CPU      0.66s WALL (       3 calls)
-     init_vloc    :      0.00s CPU      0.00s WALL (       1 calls)
-     init_us_1    :      0.69s CPU      0.71s WALL (       1 calls)
-     newd         :      0.03s CPU      0.03s WALL (       1 calls)
-     dvanqq       :      0.23s CPU      0.24s WALL (       1 calls)
-     drho         :      1.09s CPU      1.13s WALL (       1 calls)
- 
-     DYNAMICAL MATRIX:
-     dynmat0      :      0.56s CPU      0.58s WALL (       1 calls)
-     phqscf       :     15.18s CPU     17.85s WALL (       1 calls)
-     dynmatrix    :      0.01s CPU      0.01s WALL (       1 calls)
- 
-     phqscf       :     15.18s CPU     17.85s WALL (       1 calls)
-     solve_linter :     15.08s CPU     17.73s WALL (       2 calls)
-     drhodv       :      0.09s CPU      0.10s WALL (       2 calls)
- 
-     dynmat0      :      0.56s CPU      0.58s WALL (       1 calls)
-     dynmat_us    :      0.10s CPU      0.10s WALL (       1 calls)
-     d2ionq       :      0.00s CPU      0.00s WALL (       1 calls)
-     dynmatcc     :      0.46s CPU      0.48s WALL (       1 calls)
- 
-     dynmat_us    :      0.10s CPU      0.10s WALL (       1 calls)
-     addusdynmat  :      0.00s CPU      0.00s WALL (       1 calls)
- 
-     phqscf       :     15.18s CPU     17.85s WALL (       1 calls)
-     solve_linter :     15.08s CPU     17.73s WALL (       2 calls)
- 
-     solve_linter :     15.08s CPU     17.73s WALL (       2 calls)
-     dvqpsi_us    :      0.31s CPU      0.36s WALL (      60 calls)
-     ortho        :      0.20s CPU      0.22s WALL (     420 calls)
-     cgsolve      :      8.70s CPU      9.31s WALL (     420 calls)
-     incdrhoscf   :      0.98s CPU      1.05s WALL (     420 calls)
-     addusddens   :      0.61s CPU      0.65s WALL (      16 calls)
-     vpsifft      :      0.62s CPU      0.70s WALL (     360 calls)
-     dv_of_drho   :      0.94s CPU      1.02s WALL (      21 calls)
-     mix_pot      :      0.20s CPU      0.88s WALL (      14 calls)
-     ef_shift     :      0.02s CPU      0.03s WALL (      16 calls)
-     localdos     :      0.20s CPU      0.21s WALL (       2 calls)
-     symdvscf     :      0.37s CPU      0.39s WALL (      14 calls)
-     newdq        :      0.53s CPU      0.56s WALL (      14 calls)
-     adddvscf     :      0.13s CPU      0.12s WALL (     360 calls)
-     drhodvus     :      0.01s CPU      0.01s WALL (       2 calls)
- 
-     dvqpsi_us    :      0.31s CPU      0.36s WALL (      60 calls)
-     dvqpsi_us_on :      0.14s CPU      0.17s WALL (      60 calls)
- 
-     cgsolve      :      8.70s CPU      9.31s WALL (     420 calls)
-     ch_psi       :      8.51s CPU      9.10s WALL (    3646 calls)
- 
-     ch_psi       :      8.51s CPU      9.10s WALL (    3646 calls)
-     h_psiq       :      7.50s CPU      7.97s WALL (    3646 calls)
-     last         :      0.96s CPU      1.08s WALL (    3646 calls)
- 
-     h_psiq       :      7.50s CPU      7.97s WALL (    3646 calls)
-     firstfft     :      3.31s CPU      3.61s WALL (   34249 calls)
-     secondfft    :      2.34s CPU      2.51s WALL (   34249 calls)
-     add_vuspsi   :      0.38s CPU      0.35s WALL (    3646 calls)
- 
-     incdrhoscf   :      0.98s CPU      1.05s WALL (     420 calls)
- 
-     drhodvus     :      0.01s CPU      0.01s WALL (       2 calls)
- 
-      General routines
-     calbec       :      0.62s CPU      0.70s WALL (    8672 calls)
-     fft          :      0.42s CPU      0.44s WALL (    1159 calls)
-     ffts         :      0.06s CPU      0.07s WALL (    1125 calls)
-     fftw         :      5.40s CPU      5.86s WALL (  177028 calls)
-     cinterpolate :      0.09s CPU      0.10s WALL (     188 calls)
-     davcio       :      0.15s CPU      1.67s WALL (    1930 calls)
-     write_rec    :      0.04s CPU      0.13s WALL (      16 calls)
- 
- 
-     PHONON       :    18.87s CPU        21.70s WALL
+     phq_setup    :      0.14s CPU      0.14s WALL (       1 calls)
+     phq_init     :      1.58s CPU      1.58s WALL (       1 calls)
 
- 
-   This run was terminated on:  16:12:51   6Dec2012            
+     phq_init     :      1.58s CPU      1.58s WALL (       1 calls)
+     set_drhoc    :      0.17s CPU      0.17s WALL (       3 calls)
+     init_vloc    :      0.00s CPU      0.00s WALL (       1 calls)
+     init_us_1    :      0.40s CPU      0.41s WALL (       1 calls)
+     newd         :      0.01s CPU      0.02s WALL (       1 calls)
+     dvanqq       :      0.10s CPU      0.10s WALL (       1 calls)
+     drho         :      1.05s CPU      1.05s WALL (       1 calls)
+
+     DYNAMICAL MATRIX:
+     dynmat0      :      0.28s CPU      0.28s WALL (       1 calls)
+     phqscf       :     20.16s CPU     20.93s WALL (       1 calls)
+     dynmatrix    :      0.00s CPU      0.00s WALL (       1 calls)
+
+     phqscf       :     20.16s CPU     20.93s WALL (       1 calls)
+     solve_linter :     20.01s CPU     20.78s WALL (       2 calls)
+     drhodv       :      0.14s CPU      0.15s WALL (       2 calls)
+
+     dynmat0      :      0.28s CPU      0.28s WALL (       1 calls)
+     dynmat_us    :      0.14s CPU      0.14s WALL (       1 calls)
+     d2ionq       :      0.00s CPU      0.00s WALL (       1 calls)
+     dynmatcc     :      0.14s CPU      0.14s WALL (       1 calls)
+
+     dynmat_us    :      0.14s CPU      0.14s WALL (       1 calls)
+     addusdynmat  :      0.00s CPU      0.00s WALL (       1 calls)
+
+     phqscf       :     20.16s CPU     20.93s WALL (       1 calls)
+     solve_linter :     20.01s CPU     20.78s WALL (       2 calls)
+
+     solve_linter :     20.01s CPU     20.78s WALL (       2 calls)
+     dvqpsi_us    :      0.60s CPU      0.61s WALL (     189 calls)
+     ortho        :      0.36s CPU      0.49s WALL (    1323 calls)
+     cgsolve      :     13.94s CPU     14.55s WALL (    1323 calls)
+     incdrhoscf   :      1.68s CPU      1.65s WALL (    1323 calls)
+     addusddens   :      0.29s CPU      0.29s WALL (      16 calls)
+     vpsifft      :      1.05s CPU      1.09s WALL (    1134 calls)
+     dv_of_drho   :      0.29s CPU      0.30s WALL (      21 calls)
+     mix_pot      :      0.05s CPU      0.07s WALL (      14 calls)
+     ef_shift     :      0.02s CPU      0.02s WALL (      16 calls)
+     localdos     :      0.16s CPU      0.16s WALL (       2 calls)
+     psymdvscf    :      0.23s CPU      0.22s WALL (      14 calls)
+     newdq        :      0.27s CPU      0.28s WALL (      14 calls)
+     adddvscf     :      0.19s CPU      0.20s WALL (    1134 calls)
+     drhodvus     :      0.00s CPU      0.00s WALL (       2 calls)
+
+     dvqpsi_us    :      0.60s CPU      0.61s WALL (     189 calls)
+     dvqpsi_us_on :      0.37s CPU      0.33s WALL (     189 calls)
+
+     cgsolve      :     13.94s CPU     14.55s WALL (    1323 calls)
+     ch_psi       :     13.68s CPU     14.24s WALL (   11518 calls)
+
+     ch_psi       :     13.68s CPU     14.24s WALL (   11518 calls)
+     last         :      2.18s CPU      2.22s WALL (   11518 calls)
+
+     add_vuspsi   :      0.73s CPU      0.67s WALL (   11518 calls)
+
+     incdrhoscf   :      1.68s CPU      1.65s WALL (    1323 calls)
+
+     drhodvus     :      0.00s CPU      0.00s WALL (       2 calls)
+
+      General routines
+     calbec       :      1.90s CPU      1.86s WALL (   27383 calls)
+     fft          :      0.24s CPU      0.28s WALL (    1159 calls)
+     ffts         :      0.08s CPU      0.09s WALL (    3126 calls)
+     fftw         :      9.31s CPU      9.76s WALL (  557076 calls)
+     davcio       :      0.14s CPU      0.14s WALL (    5800 calls)
+     write_rec    :      0.02s CPU      0.03s WALL (      16 calls)
+
+
+     PHONON       :    22.58s CPU        23.38s WALL
+
+
+   This run was terminated on:  11:59:17  23Sep2016            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
