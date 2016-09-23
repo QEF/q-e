@@ -68,7 +68,7 @@ SUBROUTINE clean_pw( lflag )
   !
   LOGICAL, INTENT(IN) :: lflag
   !
-  INTEGER :: nt
+  INTEGER :: nt, nr1,nr2,nr3
   !
   IF ( lflag ) THEN
      !
@@ -172,8 +172,19 @@ SUBROUTINE clean_pw( lflag )
   !
   ! ... fft structures allocated in data_structure.f90  
   !
+  ! UGLY HACK WARNING: unlike previous versions, fft_type_deallocate
+  ! removes all information about FFT grids, including FFT dimensions.
+  ! If however FFT dimensions were set from input data, one may end
+  ! up with a different grid if FFT grids are re-initialized later.
+  ! The following workaround restores the previous functionality.
+  ! TODO: replace clean_pw with more fine-grained cleaning routines.
+  nr1 = dfftp%nr1; nr2 = dfftp%nr2; nr3 = dfftp%nr3
   CALL fft_type_deallocate( dfftp )
+  dfftp%nr1 = nr1; dfftp%nr2 = nr2; dfftp%nr3 = nr3
+  !
+  nr1 = dffts%nr1; nr2 = dffts%nr2; nr3 = dffts%nr3
   CALL fft_type_deallocate( dffts )
+  dffts%nr1 = nr1; dffts%nr2 = nr2; dffts%nr3 = nr3
   !
   ! ... stick-owner matrix allocated in sticks_base
   !
