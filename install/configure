@@ -12310,7 +12310,7 @@ return H5Fcreate ();
   return 0;
 }
 _ACEOF
-for ac_lib in '' hdf5_fortran; do
+for ac_lib in '' hdf5 hdf5_fortran; do
   if test -z "$ac_lib"; then
     ac_res="none required"
   else
