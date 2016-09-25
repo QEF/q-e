@@ -2288,35 +2288,49 @@ following links contain an introduction to \texttt{git}:
 https://git-scm.com/book/en/v2/Getting-Started-Git-Basics
 https://git-scm.com/course/svn.html
 \end{verbatim}
-Very quick guide for the impatient:
+Very quick guide to \texttt{git} commands for the impatient:
 \begin{itemize}
-\item Initial download, equivalent to \texttt{svn co}:\\
-  \texttt{git clone ssh://username@qeforge.qe-forge.org/gitroot/q-e-private}
-\item In order to align the local repository to the svn mirror
-  (equivalent to \texttt{svn update}):\\
-  If no changes are present in the local repository, use
-  \begin{quote}
-  \texttt{git pull}
-  \end{quote}
-  If the local repository was modified, use the following sequence:
-  \begin{quote}
-  \texttt{git add}     (add to the list of modified files)\\
-  \texttt{git commit}  (save locally modified files)\\
-  \texttt{git merge}   (merge local changes with repository changes)
-  \end{quote}
-  Alternatively, use the stash to make merge by hand:
-  \begin{quote}
+\item
+  \texttt{clone}: Initial download, makes a local copy of a (typically
+  remote repository)
+\item  \texttt{fetch}:
+  looks at the remote repository, signals if new files or conflicts are present
+  in case the local copy is updated
+\item  \texttt{pull}:
+  downloads updates from the remote repository, applies them to the local one.
+  If there are conflicts that cannot be easily solved, conflicts are flagged
+  and one has to proceed with a manual merge
+\item \texttt{add}: adds files or directories to the "stage area", a pool
+  of files to be commited
+\item \texttt{commit} commits files in the "stage area". Unlike
+  \texttt{svn commit}, files are committed only in the local repository
+\item \texttt{push} publishes the new commits of the local repository
+  to one or more remote repositories
+\item \texttt{merge} merges two branches (typically the local one and
+  the remote one). A merge may be easy or complex, depending upon the type of
+  conflicts. See:
+  \texttt{https://help.github.com/articles/resolving-a-merge-conflict-from-the-command-line/}
+\end{itemize}
+In order to align the local repository to the svn mirror (equivalent to
+\texttt{svn update}), it is a good idea to use \texttt{fetch} before
+\texttt{pull}. Then:
+\begin{quote}
+  \texttt{git add}
+  \texttt{git commit}
+  \texttt{git merge}
+\end{quote}
+In order to save incomplete work and avoid local conflicts, one can use
+\texttt{stash}:
+\begin{quote}
   \texttt{git stash save}     (save and remove modified files)\\
   \texttt{git pull}           (update files)\\
   \texttt{git stash apply}    (overwrite with locally modified files)
-  \end{quote}
-  In order to clear the stash:   \texttt{git clear}
-\item A few useful commands:
-  \begin{quote}
+\end{quote}
+The stash can be cleared using \texttt{git clear}. A few useful commands:
+\begin{quote}
   \texttt{git status}\\
   \texttt{git diff}
-  \end{quote}
-\end{itemize}
+\end{quote}
 
 \section{Bibliography}
 
