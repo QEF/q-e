@@ -169,7 +169,8 @@ MODULE io_base
       USE mp,        ONLY : mp_bcast, mp_size, mp_rank, mp_max
       !
 #if defined  __HDF5
-      USE hdf5_qe
+      USE hdf5_qe,  ONLY  : prepare_for_reading_final, read_attributes_hdf5, read_evc, &
+                            h5fclose_f, hdf5_type
 #endif
 
       IMPLICIT NONE
@@ -185,11 +186,16 @@ MODULE io_base
       LOGICAL,            INTENT(IN)    :: ionode_in_group
       INTEGER,            INTENT(IN)    :: root_in_group, intra_group_comm
       !
-      INTEGER                  :: j
-      COMPLEX(DP), ALLOCATABLE :: wtmp(:)
-      INTEGER                  :: ierr
-      INTEGER                  :: igwx, igwx_, npwx, npol, ik_, nk_
-      INTEGER                  :: me_in_group, nproc_in_group
+      INTEGER                           :: j
+      COMPLEX(DP), ALLOCATABLE          :: wtmp(:)
+      INTEGER                           :: ierr
+      INTEGER                           :: igwx, igwx_, npwx, npol, ik_, nk_
+      INTEGER                           :: me_in_group, nproc_in_group
+#if defined(__HDF5)
+      TYPE (hdf5_type),ALLOCATABLE      :: h5_read_desc
+      ! 
+      if (ionode_in_group ) ALLOCATE ( h5_read_desc) 
+#endif  
       !
       !
       me_in_group     = mp_rank( intra_group_comm )
@@ -203,7 +209,6 @@ MODULE io_base
 #if !defined __HDF5
       IF ( ionode_in_group ) CALL iotk_open_read( iuni, &
            FILE = TRIM(filename)//'.dat', BINARY = .TRUE., IERR = ierr )
-      !
       CALL mp_bcast( ierr, root_in_group, intra_group_comm )
       CALL errore( 'read_wfc ', &
                    'cannot open restart file for reading', ierr )
@@ -212,16 +217,16 @@ MODULE io_base
       IF ( ionode_in_group ) THEN
           !
 #if defined  __HDF5
-          CALL prepare_for_reading_final(evc_hdf5_write,evc_hdf5_write%comm, &
+          CALL prepare_for_reading_final(h5_read_desc, 0, &
                TRIM(filename)//'.hdf5',ik)
-          CALL read_attributes_hdf5(evc_hdf5_write,ngw,"ngw",ik)
-          CALL read_attributes_hdf5(evc_hdf5_write,nbnd,"nbnd",ik)
-          CALL read_attributes_hdf5(evc_hdf5_write,ik_,"ik",ik)
-          CALL read_attributes_hdf5(evc_hdf5_write,nk_,"ik",ik)
-          CALL read_attributes_hdf5(evc_hdf5_write,ispin,"ispin",ik)
-          CALL read_attributes_hdf5(evc_hdf5_write,nspin,"nspin",ik)
-          CALL read_attributes_hdf5(evc_hdf5_write,igwx_,"igwx",ik)
-          CALL read_attributes_hdf5(evc_hdf5_write,scalef,"scale_factor",ik)
+          CALL read_attributes_hdf5(h5_read_desc, ngw,"ngw",ik)
+          CALL read_attributes_hdf5(h5_read_desc, nbnd,"nbnd",ik)
+          CALL read_attributes_hdf5(h5_read_desc, ik_,"ik",ik)
+          CALL read_attributes_hdf5(h5_read_desc, nk_,"ik",ik)
+          CALL read_attributes_hdf5(h5_read_desc, ispin,"ispin",ik)
+          CALL read_attributes_hdf5(h5_read_desc, nspin,"nspin",ik)
+          CALL read_attributes_hdf5(h5_read_desc, igwx_,"igwx",ik)
+          CALL read_attributes_hdf5(h5_read_desc, scalef,"scale_factor",ik)
 #else
           CALL iotk_scan_empty( iuni, "INFO", attr )
           !
@@ -257,7 +262,7 @@ MODULE io_base
             !
             IF ( ionode_in_group ) THEN 
 #if defined __HDF5
-               CALL read_evc(evc_hdf5_write,j,wtmp(1:npol*igwx_),ik)
+               CALL read_evc(h5_read_desc, j, wtmp(1:npol*igwx_),ik)
 #else
                CALL iotk_scan_dat( iuni, &
                                    "evc" // iotk_index(j), wtmp(1:npol*igwx_) )
@@ -284,8 +289,13 @@ MODULE io_base
          !
       END DO
       !
-#if !defined __HDF5
+#if !defined (__HDF5)
       IF ( ionode_in_group ) CALL iotk_close_read( iuni )
+#else
+      IF ( ionode_in_group ) THEN 
+         CALL h5fclose_f(h5_read_desc%file_id, ierr)
+         DEALLOCATE (h5_read_desc)
+      END IF
 #endif
       !
       DEALLOCATE( wtmp )

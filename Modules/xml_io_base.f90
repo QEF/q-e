@@ -524,7 +524,6 @@ MODULE xml_io_base
       USE hdf5_qe,  ONLY  : write_rho, h5fclose_f, prepare_for_writing_final, add_attributes_hdf5, &
                             rho_hdf5_write  
 #endif
-      USE mp_pools,  ONLY : inter_pool_comm
       !
       IMPLICIT NONE
       !
@@ -559,7 +558,7 @@ MODULE xml_io_base
       IF ( ionode ) THEN 
 #if defined  __HDF5
       rho_file_hdf5 = TRIM( rho_file_base ) // '.hdf5'
-      CALL prepare_for_writing_final(rho_hdf5_write,inter_pool_comm,rho_file_hdf5)
+      CALL prepare_for_writing_final(rho_hdf5_write, 0 ,rho_file_hdf5)
       CALL add_attributes_hdf5(rho_hdf5_write,nr1,"nr1")
       CALL add_attributes_hdf5(rho_hdf5_write,nr2,"nr2")
       CALL add_attributes_hdf5(rho_hdf5_write,nr3,"nr3")
@@ -679,8 +678,7 @@ MODULE xml_io_base
       USE mp,        ONLY : mp_put, mp_sum, mp_rank, mp_size
 #if defined __HDF5
       USE hdf5_qe,   ONLY : read_rho, read_attributes_hdf5, prepare_for_reading_final, &
-                            h5fclose_f, rho_hdf5_write
-      USE mp_pools, ONLY : inter_pool_comm
+                            h5fclose_f, rho_hdf5_write, hdf5_type
 #endif
       !
       IMPLICIT NONE
@@ -693,7 +691,7 @@ MODULE xml_io_base
       INTEGER,           INTENT(IN)  :: npp(:)
       !
       INTEGER               :: rhounit, ierr, i, j, k, kk, ldr, ip
-      INTEGER               :: nr( 3 )
+      INTEGER               :: nr( 3 ), nr1_, nr2_, nr3_
       INTEGER               :: me_group, nproc_group
       CHARACTER(LEN=256)    :: rho_file
       CHARACTER(LEN=256)    :: rho_file_hdf5
@@ -701,11 +699,18 @@ MODULE xml_io_base
       INTEGER,  ALLOCATABLE :: kowner(:)
       LOGICAL               :: exst
       INTEGER,  EXTERNAL    :: find_free_unit
+#if defined(__HDF5)
+      TYPE(hdf5_type),ALLOCATABLE   :: h5desc
+#endif
       !
       me_group     = mp_rank ( intra_bgrp_comm )
       nproc_group  = mp_size ( intra_bgrp_comm )
       !
-#if !defined __HDF5
+#if defined(__HDF5)
+      rho_file_hdf5 = TRIM( rho_file_base ) // '.hdf5'
+      exst = check_file_exst(TRIM(rho_file_hdf5))
+      IF ( .NOT. exst ) CALL errore ('read_rho_xml', 'searching for '// TRIM(rho_file_hdf5),10)
+#else 
       rhounit = find_free_unit ( )
       rho_file = TRIM( rho_file_base ) // ".dat"
       exst = check_file_exst( TRIM(rho_file) ) 
@@ -721,21 +726,16 @@ MODULE xml_io_base
 #endif
       !
       IF ( ionode ) THEN
-#if defined  __HDF5
-          rho_file_hdf5 = TRIM( rho_file_base ) // '.hdf5'
-          CALL prepare_for_reading_final(rho_hdf5_write,inter_pool_comm,rho_file_hdf5)
-          CALL read_attributes_hdf5(rho_hdf5_write,nr(1),"nr1")
-          CALL read_attributes_hdf5(rho_hdf5_write,nr(2),"nr2")
-          CALL read_attributes_hdf5(rho_hdf5_write,nr(3),"nr3")
+#if defined (__HDF5)
+         ALLOCATE ( h5desc)
+         CALL prepare_for_reading_final(h5desc, 0 ,rho_file_hdf5)
+         CALL read_attributes_hdf5(h5desc, nr1_,"nr1")
+         CALL read_attributes_hdf5(h5desc, nr2_,"nr2")
+         CALL read_attributes_hdf5(h5desc, nr3_,"nr3")
+         nr = [nr1_,nr2_,nr3_]
 #else
-          CALL iotk_open_read( rhounit, FILE = rho_file, IERR = ierr )
-          CALL errore( 'read_rho_xml', 'cannot open ' // TRIM( rho_file ) // ' file for reading', ierr )
-#endif
-      END IF
-      !
-      IF ( ionode ) THEN
-         !
-#if !defined __HDF5
+         CALL iotk_open_read( rhounit, FILE = rho_file, IERR = ierr )
+         CALL errore( 'read_rho_xml', 'cannot open ' // TRIM( rho_file ) // ' file for reading', ierr )
          CALL iotk_scan_begin( rhounit, "CHARGE-DENSITY" )
          !
          CALL iotk_scan_empty( rhounit, "INFO", attr )
@@ -772,7 +772,7 @@ MODULE xml_io_base
          !
          IF ( ionode ) THEN
 #if defined __HDF5
-            CALL  read_rho(rho_hdf5_write,k,rho_plane)
+            CALL  read_rho(h5desc , k,rho_plane)
 #else
             CALL iotk_scan_dat( rhounit, "z" // iotk_index( k ), rho_plane )
 #endif
@@ -801,7 +801,8 @@ MODULE xml_io_base
       IF ( ionode ) THEN
          !
 #if defined __HDF5
-         CALL h5fclose_f(rho_hdf5_write%file_id,ierr)
+         CALL h5fclose_f(h5desc%file_id,ierr)
+         DEALLOCATE ( h5desc)
 #else
    !
          CALL iotk_scan_end( rhounit, "CHARGE-DENSITY" )

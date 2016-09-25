@@ -119,8 +119,8 @@ module hdf5_qe
         CALL h5fcreate_f(filename, H5F_ACC_TRUNC_F, hdf5desc%file_id, error) 
       endif
     else
-        CALL h5fopen_f(filename, H5F_ACC_RDWR_F, hdf5desc%file_id, error) ! create the file collectively
-        !CALL h5dopen_f(hdf5desc%file_id, hdf5desc%dsetname, hdf5desc%dset_id, error)
+        CALL h5fopen_f(filename, H5F_ACC_RDWR_F, hdf5desc%file_id, error) 
+        IF (error /= 0) CALL errore ('setup_file_property_hdf5','error opening '//filename,error)
     endif
    endif
    
