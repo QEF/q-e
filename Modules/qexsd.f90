@@ -612,13 +612,12 @@ CONTAINS
     !
     !
     !------------------------------------------------------------------------
-    SUBROUTINE qexsd_init_dft(obj, functional, root_is_output, &
-                   dft_is_hybrid, nqx1, nqx2, nqx3, ecutfock, exx_fraction, screening_parameter, &
-                                  exxdiv_treatment, x_gamma_extrapolation, ecutvcut, &
-                   dft_is_lda_plus_U, lda_plus_U_kind, llmax, nspin, nsp, ldim, nat, species, ityp, Hubbard_U, Hubbard_J0, &
-                                  Hubbard_alpha, Hubbard_beta, Hubbard_J, starting_ns, Hubbard_ns, Hubbard_ns_nc, &
-                                  U_projection_type, dft_is_vdW, vdw_corr, nonlocal_term, london_s6, london_c6, london_rcut, &
-                                  xdm_a1, xdm_a2 ,ts_vdw_econv_thr, ts_vdw_isolated,   is_hubbard, psd)
+    SUBROUTINE qexsd_init_dft(obj, functional, root_is_output, dft_is_hybrid, nqx1, nqx2, nqx3, ecutfock,       &
+                   exx_fraction, screening_parameter, exxdiv_treatment, x_gamma_extrapolation, ecutvcut,        &
+                   dft_is_lda_plus_U, lda_plus_U_kind, llmax, noncolin, nspin, nsp, ldim, nat, species, ityp,   &
+                   Hubbard_U, Hubbard_J0, Hubbard_alpha, Hubbard_beta, Hubbard_J, starting_ns, Hubbard_ns,      &
+                   Hubbard_ns_nc, U_projection_type, dft_is_vdW, vdw_corr, nonlocal_term, london_s6, london_c6, &
+                   london_rcut, xdm_a1, xdm_a2 ,ts_vdw_econv_thr, ts_vdw_isolated, is_hubbard, psd)
       !------------------------------------------------------------------------
       USE  parameters,           ONLY:  lqmax
       USE  input_parameters,     ONLY:  nspinx
@@ -636,7 +635,7 @@ CONTAINS
       LOGICAL,          INTENT(IN) :: x_gamma_extrapolation
       REAL(DP),         INTENT(IN) :: ecutvcut
       !
-      LOGICAL,          INTENT(IN) :: dft_is_lda_plus_U
+      LOGICAL,          INTENT(IN) :: dft_is_lda_plus_U, noncolin 
       INTEGER,          INTENT(IN) :: lda_plus_U_kind
       INTEGER,          INTENT(IN) :: llmax, nspin, nsp, ldim, nat
       CHARACTER(len=*), INTENT(IN) :: species(nsp)
@@ -674,6 +673,8 @@ CONTAINS
       TYPE(starting_ns_type),   ALLOCATABLE :: starting_ns_(:)
       TYPE(Hubbard_ns_type),    ALLOCATABLE :: Hubbard_ns_(:)
       TYPE(HubbardCommon_type), ALLOCATABLE :: london_c6_obj(:)
+      REAL(DP),                 ALLOCATABLE :: Hubb_occ_aux(:,:) 
+      INTEGER                               :: m1, m2
       LOGICAL  :: Hubbard_U_ispresent
       LOGICAL  :: Hubbard_J0_ispresent
       LOGICAL  :: Hubbard_alpha_ispresent
@@ -738,8 +739,13 @@ CONTAINS
           ALLOCATE( Hubbard_beta_(nsp) )
           ALLOCATE( Hubbard_J_(nsp) )
           !
-          ALLOCATE( starting_ns_(min(nspin,nspinx)*nsp) )
-          ALLOCATE( Hubbard_ns_(nspin*nat) )
+          IF (noncolin ) THEN 
+             ALLOCATE (starting_ns_(nsp))
+             ALLOCATE (Hubbard_ns_(nat))
+          ELSE 
+            ALLOCATE( starting_ns_(min(nspin,nspinx)*nsp) )
+            ALLOCATE( Hubbard_ns_(nspin*nat) )
+          END IF
           !
           DO i = 1, nsp
               CALL qes_init_HubbardCommon(Hubbard_U_(i),"Hubbard_U",TRIM(species(i)),TRIM(label(i)),Hubbard_U(i))
@@ -752,22 +758,50 @@ CONTAINS
           ENDDO
           !
           ind = 0
-          DO is = 1, MIN(nspin,nspinx) 
-              DO i  = 1, nsp
-                  ind = ind+1
-                  CALL qes_init_starting_ns(starting_ns_(ind),"starting_ns",TRIM(species(i)),TRIM(label(i)), &
-                                            is, llmax, starting_ns(1:llmax,is,i) )
-              ENDDO
-          ENDDO
+          IF (starting_ns_ispresent) THEN 
+             IF (noncolin) THEN 
+                DO i = 1, nsp 
+                   ind = ind + 1 
+                   CALL qes_init_starting_ns(starting_ns_(ind), "starting_ns", TRIM (species(i)),TRIM (label(i)),&
+                                             1,2*llmax, starting_ns(1:2*llmax, 1, i))
+                END DO
+             ELSE 
+                DO is = 1, MIN(nspin,nspinx) 
+                   DO i  = 1, nsp
+                      ind = ind+1
+                      CALL qes_init_starting_ns(starting_ns_(ind),"starting_ns",TRIM(species(i)),TRIM(label(i)), &
+                                                is, llmax, starting_ns(1:llmax,is,i) )
+                  ENDDO
+                ENDDO
+             END IF
+          END IF
           !
           ind = 0
-          DO i = 1, nat
-             DO is = 1, nspin
-                ind = ind+1
-                CALL qes_init_Hubbard_ns(Hubbard_ns_(ind),"Hubbard_ns", TRIM(species(ityp(i))),TRIM(label(ityp(i))), &
+          IF (noncolin) THEN 
+             ALLOCATE (Hubb_occ_aux(2*ldim,2*ldim))
+             DO i = 1, nat 
+                Hubb_occ_aux = 0.d0
+                DO m1 =1, ldim 
+                   DO m2 = 1, ldim 
+                      Hubb_occ_aux(     m1,     m2) = SQRT(DCONJG(Hubbard_ns_nc(m1,m2,1,i))*Hubbard_ns_nc(m1,m2,1,i))
+                      Hubb_occ_aux(     m1,ldim+m2) = SQRT(DCONJG(Hubbard_ns_nc(m1,m2,2,i))*Hubbard_ns_nc(m1,m2,2,i)) 
+                      Hubb_occ_aux(ldim+m1,     m2) = SQRT(DCONJG(Hubbard_ns_nc(m1,m2,3,i))*Hubbard_ns_nc(m1,m2,3,i))
+                      Hubb_occ_aux(ldim+m1,ldim+m2) = SQRT(DCONJG(Hubbard_ns_nc(m1,m2,4,i))*Hubbard_ns_nc(m1,m2,4,i))
+                   END DO
+                END DO
+                CALL qes_init_Hubbard_ns(Hubbard_ns_(i),"Hubbard_ns_mod", TRIM(species(ityp(i))),TRIM(label(ityp(i))), &
+                                         1, i, 2*ldim, 2*ldim, Hubb_occ_aux(:,:))
+             END DO 
+             DEALLOCATE ( Hubb_occ_aux) 
+          ELSE 
+             DO i = 1, nat
+                DO is = 1, nspin
+                   ind = ind+1
+                   CALL qes_init_Hubbard_ns(Hubbard_ns_(ind),"Hubbard_ns", TRIM(species(ityp(i))),TRIM(label(ityp(i))), &
                                        is, i, ldim, ldim, Hubbard_ns(:,:,is,i) )
+                ENDDO
              ENDDO
-          ENDDO
+          END IF
           !
           ! main init
           CALL qes_init_dftU(dftU, "dftU", .TRUE., lda_plus_u_kind, &

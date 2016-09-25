@@ -286,17 +286,15 @@ MODULE pw_restart_new
          dft_name = get_dft_name()
          inlc = get_inlc()
          !
-         IF ( lda_plus_u .AND. noncolin) CALL errore(subname,"LDA+U and non-collinear case not implemented in qexsd",10)
          !
          vdw_corr_ = vdw_corr
          IF ( london ) vdw_corr_ = 'grimme-d2'
-         CALL qexsd_init_dft(output%dft, dft_name, .TRUE., &
-              dft_is_hybrid(), nq1, nq2, nq3, ecutfock, &
-              get_exx_fraction(), get_screening_parameter(), exxdiv_treatment, &
-              x_gamma_extrapolation, ecutvcut, lda_plus_u, lda_plus_u_kind, 2*Hubbard_lmax+1, &
-              nspin, nsp, 2*Hubbard_lmax+1, nat, atm, ityp, Hubbard_U, Hubbard_J0, Hubbard_alpha, &
-              Hubbard_beta, Hubbard_J, starting_ns_eigenvalue, rho%ns, rho%ns_nc, U_projection, &
-              dft_is_nonlocc(), TRIM(vdw_corr_), TRIM ( get_nonlocc_name()), scal6, in_c6, lon_rcut, xdm_a1, xdm_a2,&
+         CALL qexsd_init_dft(output%dft, dft_name, .TRUE., dft_is_hybrid(), nq1, nq2, nq3, ecutfock, &
+              get_exx_fraction(), get_screening_parameter(), exxdiv_treatment, x_gamma_extrapolation,&
+              ecutvcut, lda_plus_u, lda_plus_u_kind, 2*Hubbard_lmax+1, noncolin, nspin, nsp,         &
+              2*Hubbard_lmax+1, nat, atm, ityp, Hubbard_U, Hubbard_J0, Hubbard_alpha, Hubbard_beta,  &
+              Hubbard_J, starting_ns_eigenvalue, rho%ns, rho%ns_nc, U_projection, dft_is_nonlocc(),  &
+              TRIM(vdw_corr_), TRIM ( get_nonlocc_name()), scal6, in_c6, lon_rcut, xdm_a1, xdm_a2,   &
               vdw_econv_thr, vdw_isolated, is_hubbard, upf(1:nsp)%psd)
          !
 !-------------------------------------------------------------------------------
