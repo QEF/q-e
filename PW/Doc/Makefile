@@ -48,21 +48,21 @@ user_guide: user_guide.pdf
 	@echo ""
 
 
-defs: link_input_xx INPUT_PW.html INPUT_PW.txt link_on_main_doc
+defs: input_xx.xsl INPUT_PW.html INPUT_PW.txt link_on_main_doc
 
-link_input_xx:
+input_xx.xsl:
 	@(if test ! -f input_xx.xsl; then \
 	(if test -f ../../dev-tools/input_xx.xsl; then \
 	(ln -sf ../../dev-tools/input_xx.xsl input_xx.xsl) ; \
 	else \
 	echo ; \
 	echo "  Sorry, can not find input_xx.xsl html style file !!!" ; \
-	echo ; \
+	echo ; exit 1; \
 	fi) ; fi)
 
 INPUT_PW.html: %.html: %.def input_xx.xsl
 	$(HELPDOC) $<
-INPUT_PW.txt: %.txt: %.def
+INPUT_PW.txt: %.txt: %.def input_xx.xsl
 	$(HELPDOC) $<
 
 link_on_main_doc:
