@@ -400,6 +400,13 @@
   ALLOCATE ( dmef(3, nbndsub, nbndsub, 2 * nkf) )
   IF (vme) ALLOCATE ( vmef(3, nbndsub, nbndsub, 2 * nkf) )
   !
+  ALLOCATE(cfac(nrr_k))
+  ALLOCATE(cfacq(nrr_k))
+  ALLOCATE(rdotk(nrr_k))
+  ! This is simply because dgemv take only real number (not integer)
+  ALLOCATE(irvec_r(3,nrr_k))
+  irvec_r = REAL(irvec,KIND=dp)
+  ! 
   ! ------------------------------------------------------
   ! Hamiltonian : Wannier -> Bloch (preliminary)
   ! ------------------------------------------------------
@@ -428,8 +435,13 @@
         !
      ENDIF
      !
+     ! SP: Compute the cfac only once here since the same are use in both hamwan2bloch and dmewan2bloch
+     ! + optimize the 2\pi r\cdot k with Blas
+     CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xxk, 1, 0.0_DP, rdotk, 1 )
+     cfac(:) = exp( ci*rdotk ) / ndegen_k(:)
+     ! 
      CALL hamwan2bloch &
-          ( nbndsub, nrr_k, irvec, ndegen_k, xxk, cufkk, etf (:, ik), chw)
+          ( nbndsub, nrr_k, cufkk, etf (:, ik), chw, cfac)
      !
      !
   ENDDO
@@ -529,13 +541,6 @@
     ! Fine mesh set of g-matrices.  It is large for memory storage
     ! SP: Should not be a memory problem. If so, can always the number of cores to reduce nkf. 
     ALLOCATE ( epf17 (ibndmax-ibndmin+1, ibndmax-ibndmin+1, nmodes, nkf) )
-    ALLOCATE(cfac(nrr_k))
-    ALLOCATE(cfacq(nrr_k))
-    ALLOCATE(rdotk(nrr_k))
-    ! This is simply because dgemv take only real number (not integer)
-    ALLOCATE(irvec_r(3,nrr_k))
-    irvec_r = REAL(irvec,KIND=dp)
-
     !      
     DO iq = 1, nqf
        !   
@@ -615,15 +620,15 @@
           ! Kohn-Sham first, then get the rotation matricies for following interp.
           IF (eig_read) THEN
              CALL hamwan2bloch &
-               ( nbndsub, nrr_k, irvec, ndegen_k, xkk, cufkk, etf_ks (:, ikk), chw_ks)
+               ( nbndsub, nrr_k, cufkk, etf_ks (:, ikk), chw_ks, cfac)
              CALL hamwan2bloch &
-               ( nbndsub, nrr_k, irvec, ndegen_k, xkq, cufkq, etf_ks (:, ikq), chw_ks)
+               ( nbndsub, nrr_k, cufkq, etf_ks (:, ikq), chw_ks, cfacq)
           ENDIF
           !
           CALL hamwan2bloch &
-               ( nbndsub, nrr_k, irvec, ndegen_k, xkk, cufkk, etf (:, ikk), chw)
+               ( nbndsub, nrr_k, cufkk, etf (:, ikk), chw, cfac)
           CALL hamwan2bloch &
-               ( nbndsub, nrr_k, irvec, ndegen_k, xkq, cufkq, etf (:, ikq), chw)
+               ( nbndsub, nrr_k, cufkq, etf (:, ikq), chw, cfacq)
           !
           ! ------------------------------------------------------        
           !  dipole: Wannier -> Bloch
@@ -830,6 +835,14 @@
         ! this is a loop over k blocks in the pool
         ! (size of the local k-set)
         !
+        ! 
+        ! SP: Compute the cfac only once here since the same are use in both hamwan2bloch and dmewan2bloch
+        ! + optimize the 2\pi r\cdot k with Blas
+        CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkk, 1, 0.0_DP, rdotk, 1 )
+        cfac(:) = exp( ci*rdotk ) / ndegen_k(:)
+        CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkq, 1, 0.0_DP, rdotk, 1 )
+        cfacq(:) = exp( ci*rdotk ) / ndegen_k(:)
+        ! 
         ! ------------------------------------------------------        
         ! hamiltonian : Wannier -> Bloch
         ! ------------------------------------------------------
@@ -837,24 +850,24 @@
         ! Kohn-Sham first, then get the rotation matricies for following interp.
         IF (eig_read) THEN
            CALL hamwan2bloch &
-             ( nbndsub, nrr_k, irvec, ndegen_k, xkk, cufkk, etf_ks (:, ikk), chw_ks)     
+             ( nbndsub, nrr_k, cufkk, etf_ks (:, ikk), chw_ks, cfac)     
            CALL hamwan2bloch &
-             ( nbndsub, nrr_k, irvec, ndegen_k, xkq, cufkq, etf_ks (:, ikq), chw_ks)
+             ( nbndsub, nrr_k, cufkq, etf_ks (:, ikq), chw_ks, cfacq)
         ENDIF
         !
         CALL hamwan2bloch &
-             ( nbndsub, nrr_k, irvec, ndegen_k, xkk, cufkk, etf (:, ikk), chw)        
+             ( nbndsub, nrr_k, cufkk, etf (:, ikk), chw, cfac)        
         CALL hamwan2bloch &
-             ( nbndsub, nrr_k, irvec, ndegen_k, xkq, cufkq, etf (:, ikq), chw)
+             ( nbndsub, nrr_k, cufkq, etf (:, ikq), chw, cfacq)
         !
         ! ------------------------------------------------------        
         !  dipole: Wannier -> Bloch
         ! ------------------------------------------------------        
         !
         CALL dmewan2bloch &
-             ( nbndsub, nrr_k, irvec, ndegen_k, xkk, cufkk, dmef (:,:,:, ikk), etf(:,ikk), etf_ks(:,ikk))
+             ( nbndsub, nrr_k, irvec, ndegen_k, xkk, cufkk, dmef (:,:,:, ikk), etf(:,ikk), etf_ks(:,ikk), cfac)
         CALL dmewan2bloch &
-             ( nbndsub, nrr_k, irvec, ndegen_k, xkq, cufkq, dmef (:,:,:, ikq), etf(:,ikq), etf_ks(:,ikq))
+             ( nbndsub, nrr_k, irvec, ndegen_k, xkq, cufkq, dmef (:,:,:, ikq), etf(:,ikq), etf_ks(:,ikq), cfac)
         !
         ! ------------------------------------------------------        
         !  velocity: Wannier -> Bloch

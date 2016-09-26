@@ -7,7 +7,7 @@
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .
   !   
   !--------------------------------------------------------------------------
-  subroutine hamwan2bloch ( nbnd, nrr, irvec, ndegen, xk, cuf, eig, chw)
+  subroutine hamwan2bloch ( nbnd, nrr, cuf, eig, chw, cfac)
   !--------------------------------------------------------------------------
   !
   !  From the Hamiltonian in Wannier representation, find the corresponding
@@ -28,45 +28,40 @@
   !--------------------------------------------------------------------------
   !
   USE kinds,         ONLY : DP
-  USE constants_epw, ONLY : twopi, ci, czero
+  USE constants_epw, ONLY : twopi, ci, czero, cone
   !
   implicit none
   !
   !  input variables
   !
-  integer :: nbnd, nrr, irvec (3, nrr), ndegen (nrr)
-  ! number of bands (possibly of the optimal subspace)
-  ! kpoint number for the interpolation
-  ! record length and unit for direct write of rotation matrix
-  ! number of WS points, crystal coordinates, degeneracy
-  !
-  ! Hamiltonian in wannier basis
-  !
-  real(kind=DP) :: xk (3)
-  ! kpoint coordinates for the interpolation
-  !
-  ! output variables
-  !  
-  real(kind=DP) :: eig (nbnd)
-  ! interpolated hamiltonian eigenvalues for this kpoint 
-  complex(kind=DP) :: cuf(nbnd, nbnd)
-  ! Rotation matrix, fine mesh 
+  INTEGER, INTENT (in) :: nbnd
+  !! number of bands (possibly of the optimal subspace)
+  INTEGER, INTENT (in) :: nrr
+  !! number of WS points
+  ! 
+  REAL(kind=DP), INTENT (out) :: eig (nbnd)
+  !! interpolated hamiltonian eigenvalues for this kpoint 
+  ! 
+  COMPLEX(kind=DP), INTENT (in) :: cfac(nrr)
+  !! Exponential factor
+  COMPLEX(kind=DP), INTENT (in) :: chw ( nbnd, nbnd, nrr)
+  !! Hamiltonian in Bloch basis, fine mesh
+  COMPLEX(kind=DP), INTENT (out) :: cuf(nbnd, nbnd)
+  !! Rotation matrix, fine mesh
   !
   ! variables for lapack ZHPEVX 
   !
-  integer :: neig, info, ifail( nbnd ), iwork( 5*nbnd )
-  real(kind=DP) :: w( nbnd ), rwork( 7*nbnd )
-  complex(kind=DP) :: champ( nbnd*(nbnd+1)/2 ), &
-    cwork( 2*nbnd ), cz( nbnd, nbnd)
+  INTEGER :: neig, info, ifail( nbnd ), iwork( 5*nbnd )
+  REAL(kind=DP) :: w( nbnd )
+  REAL(kind=DP) :: rwork( 7*nbnd )
+  COMPLEX(kind=DP) :: champ( nbnd*(nbnd+1)/2 )
+  COMPLEX(kind=DP) :: cwork( 2*nbnd )
+  COMPLEX(kind=DP) :: cz( nbnd, nbnd)
   !
   ! work variables 
   !
-  complex(kind=DP) :: chf(nbnd, nbnd) 
-  complex(kind=DP), INTENT(IN) :: chw ( nbnd, nbnd, nrr)
-  ! Hamiltonian in Bloch basis, fine mesh
-  integer :: ibnd, jbnd, ir
-  real(kind=DP) :: rdotk
-  complex(kind=DP) :: cfac
+  INTEGER :: ibnd, jbnd
+  COMPLEX(kind=DP) :: chf(nbnd, nbnd) 
   !
   CALL start_clock('HamW2B')
   !----------------------------------------------------------
@@ -81,16 +76,19 @@
   !
   chf (:,:) = czero
   !
-  DO ir = 1, nrr
-     !
-     rdotk = twopi * ( xk(1)*irvec(1,ir) + xk(2)*irvec(2,ir) + xk(3)*irvec(3,ir))
-     cfac = exp( ci*rdotk ) / ndegen(ir)
-     !
-     ! SP : Significantly faster !
-     !chf (:,:) = chf (:,:) + cfac * chw (:,:, ir )
-     CALL zaxpy(nbnd**2,cfac, chw (1,1, ir ),1, chf (1,1),1)
-     !
-  ENDDO
+  ! Previous implementation
+  !DO ir = 1, nrr
+  !   !
+  !   rdotk = twopi * ( xk(1)*irvec(1,ir) + xk(2)*irvec(2,ir) + xk(3)*irvec(3,ir))
+  !   cfac = exp( ci*rdotk ) / ndegen(ir)
+  !   !
+  !   ! SP : Significantly faster !
+  !   !chf (:,:) = chf (:,:) + cfac * chw (:,:, ir )
+  !   CALL zaxpy(nbnd**2,cfac, chw (1,1, ir ),1, chf (1,1),1)
+  !   !
+  !ENDDO
+  ! New one
+  CALL zgemv('n', nbnd**2, nrr, cone, chw, nbnd**2, cfac, 1, cone, chf, 1 )
   !
   !---------------------------------------------------------------------
   !  STEP 4: diagonalize smooth Hamiltonian on k points of the fine grid
