@@ -55,7 +55,7 @@ SUBROUTINE read_file()
      'Reading data from directory:', TRIM( dirname )
   !
   CALL read_xml_file ( )
-#if defined __HDF5
+#if defined(__HDF5)
   CALL initialize_hdf5()
 #endif
   !

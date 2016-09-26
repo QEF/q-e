@@ -1658,8 +1658,10 @@ LOGICAL,INTENT(OUT)                         :: ispresent
 ! 
 INTEGER                                     :: ierr 
 CHARACTER( LEN = 256 )                      :: assume_isolated_
+LOGICAL                                     :: fcp_opt_ = .FALSE. 
+REAL(DP)                                    :: fcp_mu_ 
 TYPE ( esm_type )                           :: esm_obj
-LOGICAL                                     :: esm_ispresent
+LOGICAL                                     :: esm_ispresent, fcp_opt_ispresent, fcp_mu_ispresent
 ! 
 ispresent = .FALSE. 
 CALL iotk_scan_begin( iunit, "boundary_conditions", IERR = ierr, FOUND = ispresent) 
@@ -1671,10 +1673,18 @@ IF ( ierr /= 0 ) RETURN
 ! 
 CALL qexsd_get_esm( iunit, esm_obj, esm_ispresent )  
 ! 
+CALL iotk_scan_dat(iunit, "fcp_opt", fcp_opt_, FOUND = fcp_opt_ispresent, IERR = ierr ) 
+IF ( ierr /= 0 ) RETURN 
+!
+CALL iotk_scan_dat(iunit, "fcp_mu", fcp_mu_, FOUND = fcp_mu_ispresent, IERR = ierr ) 
+IF ( ierr /= 0 ) RETURN 
+IF (  fcp_opt_ .AND. ( .NOT. fcp_mu_ispresent ) ) &
+   CALL errore( "qexsd_get_boundary_conditions","found fcp_opt true but no value for fcp_mu has been found", 10) 
 CALL iotk_scan_end(iunit, "boundary_conditions", IERR = ierr)
 IF ( ierr /= 0 ) RETURN
 !
-CALL qes_init_boundary_conditions(obj, "boundary_conditions", assume_isolated_, esm_ispresent, esm_obj ) 
+CALL qes_init_boundary_conditions(obj, "boundary_conditions", assume_isolated_, esm_ispresent, esm_obj, &
+                                  fcp_opt_ispresent, fcp_opt_, fcp_mu_ispresent, fcp_mu_ ) 
 !
 END SUBROUTINE qexsd_get_boundary_conditions
 !

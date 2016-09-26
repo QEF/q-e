@@ -2593,11 +2593,28 @@ SUBROUTINE qes_write_boundary_conditions(iun, obj)
          !
       ENDIF
       !
+      IF(obj%fcp_opt_ispresent) THEN
+         CALL iotk_write_begin(iun, 'fcp_opt',new_line=.FALSE.)
+            IF (obj%fcp_opt) THEN
+               WRITE(iun, '(A)',advance='no')  'true'
+            ELSE
+               WRITE(iun, '(A)',advance='no')  'false'
+            ENDIF
+         CALL iotk_write_end(iun, 'fcp_opt',indentation=.FALSE.)
+      ENDIF
+      !
+      IF(obj%fcp_mu_ispresent) THEN
+         CALL iotk_write_begin(iun, 'fcp_mu')
+            WRITE(iun, '(E20.7)') obj%fcp_mu
+         CALL iotk_write_end(iun, 'fcp_mu')
+      ENDIF
+      !
    CALL iotk_write_end(iun, TRIM(obj%tagname))
    !
 END SUBROUTINE qes_write_boundary_conditions
 
-SUBROUTINE qes_init_boundary_conditions(obj, tagname, assume_isolated, esm_ispresent, esm)
+SUBROUTINE qes_init_boundary_conditions(obj, tagname, assume_isolated, esm_ispresent, esm, &
+                              fcp_opt_ispresent, fcp_opt, fcp_mu_ispresent, fcp_mu)
    IMPLICIT NONE
 
    TYPE(boundary_conditions_type) :: obj
@@ -2606,12 +2623,24 @@ SUBROUTINE qes_init_boundary_conditions(obj, tagname, assume_isolated, esm_ispre
    CHARACTER(len=*) :: assume_isolated
    LOGICAL  :: esm_ispresent
    TYPE(esm_type) :: esm
+   LOGICAL  :: fcp_opt_ispresent
+   LOGICAL  :: fcp_opt
+   LOGICAL  :: fcp_mu_ispresent
+   REAL(DP) :: fcp_mu
 
    obj%tagname = TRIM(tagname)
    obj%assume_isolated = assume_isolated
    obj%esm_ispresent = esm_ispresent
    IF(obj%esm_ispresent) THEN
       obj%esm = esm
+   ENDIF
+   obj%fcp_opt_ispresent = fcp_opt_ispresent
+   IF(obj%fcp_opt_ispresent) THEN
+      obj%fcp_opt = fcp_opt
+   ENDIF
+   obj%fcp_mu_ispresent = fcp_mu_ispresent
+   IF(obj%fcp_mu_ispresent) THEN
+      obj%fcp_mu = fcp_mu
    ENDIF
 
 END SUBROUTINE qes_init_boundary_conditions
@@ -2626,6 +2655,12 @@ SUBROUTINE qes_reset_boundary_conditions(obj)
    IF(obj%esm_ispresent) THEN
       CALL qes_reset_esm(obj%esm)
       obj%esm_ispresent = .FALSE.
+   ENDIF
+   IF(obj%fcp_opt_ispresent) THEN
+      obj%fcp_opt_ispresent = .FALSE.
+   ENDIF
+   IF(obj%fcp_mu_ispresent) THEN
+      obj%fcp_mu_ispresent = .FALSE.
    ENDIF
 
 END SUBROUTINE qes_reset_boundary_conditions

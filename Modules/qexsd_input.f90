@@ -473,27 +473,37 @@ MODULE qexsd_input
    !
    ! 
    !--------------------------------------------------------------------------------------------
-   SUBROUTINE qexsd_init_boundary_conditions(obj,assume_isolated,esm_bc,esm_nfit,esm_w,&
-                                             esm_efield)
+   SUBROUTINE qexsd_init_boundary_conditions(obj,assume_isolated,esm_bc, fcp_opt, fcp_mu, esm_nfit,esm_w, esm_efield)
    !--------------------------------------------------------------------------------------------
    ! 
    IMPLICIT NONE
    ! 
-   TYPE (boundary_conditions_type)              ::  obj
+   TYPE (boundary_conditions_type)              :: obj
    CHARACTER(LEN=*),INTENT(IN)                  :: assume_isolated
    CHARACTER(LEN=*),OPTIONAL,INTENT(IN)         :: esm_bc
+   LOGICAL,OPTIONAL,INTENT(IN)                  :: fcp_opt
+   REAL(DP),OPTIONAL,INTENT(IN)                 :: fcp_mu
    INTEGER,OPTIONAL,INTENT(IN)                  :: esm_nfit
    REAL(DP),OPTIONAL,INTENT(IN)                 :: esm_w,esm_efield
    ! 
    TYPE (esm_type)                              :: esm_obj
-   LOGICAL                                      :: esm_ispresent = .FALSE.
+   LOGICAL                                      :: esm_ispresent = .FALSE., fcp_opt_ispresent = .TRUE., &
+                                                   fcp_mu_ispresent = .FALSE. , fcp_opt_ = .FALSE.
+   REAL(DP)                                     :: fcp_mu_ = 0.d0  
    CHARACTER(LEN=*),PARAMETER                   :: TAGNAME="boundary_conditions"
    !
    IF ( TRIM(assume_isolated) .EQ. "esm" ) THEN 
       esm_ispresent = .TRUE. 
       CALL qes_init_esm(esm_obj,"esm",bc=TRIM(esm_bc),nfit=esm_nfit,w=esm_w,efield=esm_efield)
+      IF ( PRESENT(fcp_opt) ) THEN 
+          fcp_opt_ = fcp_opt
+          fcp_mu_ispresent = .TRUE. 
+          IF ( fcp_opt_ .AND. PRESENT ( fcp_mu)) fcp_mu_ = fcp_mu
+      END IF 
    END IF 
-   CALL qes_init_boundary_conditions(obj,TAGNAME,ASSUME_ISOLATED =assume_isolated,&
+   CALL qes_init_boundary_conditions(obj,TAGNAME,ASSUME_ISOLATED =assume_isolated, &
+                                     FCP_OPT_ISPRESENT = fcp_opt_ispresent, FCP_OPT= fcp_opt_, &
+                                     FCP_MU_ISPRESENT = fcp_mu_ispresent, FCP_MU = fcp_mu_, &  
                                      ESM_ISPRESENT = esm_ispresent, ESM = esm_obj)
    IF ( esm_ispresent ) CALL qes_reset_esm(esm_obj)
    END SUBROUTINE qexsd_init_boundary_conditions

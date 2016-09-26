@@ -12,6 +12,7 @@
  
 !----------------------------------------------------------------
 SUBROUTINE add_qexsd_step(i_step)
+#if defined (__XSD)
 !-----------------------------------------------------------------
 !
 !------------------------------------------------------------------------
@@ -30,9 +31,7 @@ USE control_flags,ONLY: nstep, n_scf_steps, scf_error
 !-------------------------------------------------------------------------------
 !   SUBROUTINES FROM MODULES
 !-------------------------------------------------------------------------------
-#if defined(__XSD)
 USE qexsd_module, ONLY: qexsd_step_addstep
-#endif
 !-------------------------------------------------------------------------------
 !------------------------------------------------------------------------------
 IMPLICIT NONE
@@ -45,10 +44,12 @@ INTEGER,INTENT(IN)        ::   i_step
 !                    END_INPUT_VARIABLES
 !-------------------------------------------------------------------------------- 
 !            
-#if defined(__XSD) 
+
 CALL qexsd_step_addstep ( i_step, nstep, nsp, atm, ityp, nat, tau, alat, at(:,1),   &
                           at(:,2), at(:,3), etot, eband, ehart, vtxc, etxc, &
                           ewld, degauss, demet, force, sigma, n_scf_steps, &
-                          scf_error) 
+                          scf_error)
+#else
+CONTINUE 
 #endif    
 END SUBROUTINE  add_qexsd_step

@@ -547,6 +547,10 @@ TYPE :: boundary_conditions_type
    CHARACTER(len=256) :: assume_isolated
    LOGICAL  :: esm_ispresent
    TYPE(esm_type) :: esm
+   LOGICAL  :: fcp_opt_ispresent
+   LOGICAL  :: fcp_opt
+   LOGICAL  :: fcp_mu_ispresent
+   REAL(DP) :: fcp_mu
    !
 END TYPE boundary_conditions_type
 
