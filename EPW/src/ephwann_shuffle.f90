@@ -38,7 +38,7 @@
                             vme, eig_read, ephwrite,                            & 
                             efermi_read, fermi_energy, specfun, band_plot       
   USE noncollin_module, ONLY : noncolin
-  USE constants_epw, ONLY : ryd2ev, ryd2mev, one, two, czero
+  USE constants_epw, ONLY : ryd2ev, ryd2mev, one, two, czero, twopi, ci
   USE io_files,      ONLY : prefix, diropn
   USE io_global,     ONLY : stdout, ionode
   USE io_epw,        ONLY : lambda_phself, linewidth_phself, iunepmatwe,        &
@@ -128,6 +128,10 @@
   !! Tolerence
   REAL(kind=DP), ALLOCATABLE :: w2 (:)
   !! Interpolated phonon frequency
+  REAL(kind=DP), ALLOCATABLE :: irvec_r (:,:)
+  !! Wigner-Size supercell vectors, store in real instead of integer
+  REAL(kind=DP), ALLOCATABLE :: rdotk(:)
+  !! $r\cdot k$
   !
   COMPLEX(kind=DP), ALLOCATABLE :: epmatwe  (:,:,:,:,:)
   !! e-p matrix  in wannier basis - electrons
@@ -145,6 +149,10 @@
   !! Rotation matrix for phonons
   COMPLEX(kind=DP), ALLOCATABLE :: bmatf ( :, :)
   !! overlap U_k+q U_k^\dagger in smooth Bloch basis, fine mesh
+  COMPLEX(kind=DP), ALLOCATABLE :: cfac(:)
+  !! Used to store $e^{2\pi r \cdot k}$ exponential 
+  COMPLEX(kind=DP), ALLOCATABLE :: cfacq(:)
+  !! Used to store $e^{2\pi r \cdot k+q}$ exponential 
   ! 
   IF (nbndsub.ne.nbnd) &
        WRITE(stdout, '(/,14x,a,i4)' ) 'band disentanglement is used:  nbndsub = ', nbndsub
@@ -521,6 +529,13 @@
     ! Fine mesh set of g-matrices.  It is large for memory storage
     ! SP: Should not be a memory problem. If so, can always the number of cores to reduce nkf. 
     ALLOCATE ( epf17 (ibndmax-ibndmin+1, ibndmax-ibndmin+1, nmodes, nkf) )
+    ALLOCATE(cfac(nrr_k))
+    ALLOCATE(cfacq(nrr_k))
+    ALLOCATE(rdotk(nrr_k))
+    ! This is simply because dgemv take only real number (not integer)
+    ALLOCATE(irvec_r(3,nrr_k))
+    irvec_r = REAL(irvec,KIND=dp)
+
     !      
     DO iq = 1, nqf
        !   
@@ -586,6 +601,13 @@
           xkk = xkf(:, ikk)
           xkq = xkk + xxq
           !
+          ! SP: Compute the cfac only once here since the same are use in both hamwan2bloch and dmewan2bloch
+          ! + optimize the 2\pi r\cdot k with Blas
+          CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkk, 1, 0.0_DP, rdotk, 1 )
+          cfac(:) = exp( ci*rdotk ) / ndegen_k(:)
+          CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkq, 1, 0.0_DP, rdotk, 1 )
+          cfacq(:) = exp( ci*rdotk ) / ndegen_k(:)
+          !
           ! ------------------------------------------------------        
           ! hamiltonian : Wannier -> Bloch 
           ! ------------------------------------------------------
@@ -608,9 +630,9 @@
           ! ------------------------------------------------------        
           !
           CALL dmewan2bloch &
-               ( nbndsub, nrr_k, irvec, ndegen_k, xkk, cufkk, dmef (:,:,:, ikk), etf(:,ikk), etf_ks(:,ikk))
+               ( nbndsub, nrr_k, irvec, ndegen_k, xkk, cufkk, dmef (:,:,:, ikk), etf(:,ikk), etf_ks(:,ikk), cfac)
           CALL dmewan2bloch &
-               ( nbndsub, nrr_k, irvec, ndegen_k, xkq, cufkq, dmef (:,:,:, ikq), etf(:,ikq), etf_ks(:,ikq))
+               ( nbndsub, nrr_k, irvec, ndegen_k, xkq, cufkq, dmef (:,:,:, ikq), etf(:,ikq), etf_ks(:,ikq), cfacq)
           !
           ! ------------------------------------------------------        
           !  velocity: Wannier -> Bloch
