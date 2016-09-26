@@ -69,26 +69,26 @@ developer_man: developer_man.pdf
 	@echo ""
 
 
-defs: link_input_xx INPUT_PH.txt INPUT_PH.html INPUT_DYNMAT.txt INPUT_DYNMAT.html link_on_main_doc
+defs: input_xx.xsl INPUT_PH.txt INPUT_PH.html INPUT_DYNMAT.txt INPUT_DYNMAT.html link_on_main_doc
 
-link_input_xx:
+input_xx.xsl:
 	@(if test ! -f input_xx.xsl; then \
 	(if test -f ../../dev-tools/input_xx.xsl; then \
 	(ln -sf ../../dev-tools/input_xx.xsl input_xx.xsl) ; \
 	else \
 	echo ; \
 	echo "  Sorry, can not find input_xx.xsl html style file !!!" ; \
-	echo ; \
+	echo ; exit 1 ; \
 	fi) ; fi)
 
 INPUT_PH.html: %.html: %.def input_xx.xsl
 	$(HELPDOC) $<
-INPUT_PH.txt: %.txt: %.def
+INPUT_PH.txt: %.txt: %.def input_xx.xsl
 	$(HELPDOC) $<
 
 INPUT_DYNMAT.html: %.html: %.def input_xx.xsl
 	$(HELPDOC) $<
-INPUT_DYNMAT.txt: %.txt: %.def
+INPUT_DYNMAT.txt: %.txt: %.def input_xx.xsl
 	$(HELPDOC) $<
 
 link_on_main_doc:
