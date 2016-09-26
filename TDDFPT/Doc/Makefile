@@ -18,22 +18,22 @@ clean:
 	- rm -f ../../Doc/INPUT_{Spectrum,Lanczos,Davidson,EELS}.*
 
 
-defs: link_input_xx $(HTMLS) $(TXTS) link_on_main_doc
+defs: input_xx.xsl $(HTMLS) $(TXTS) link_on_main_doc
 
-link_input_xx:
+input_xx.xsl:
 	@(if test ! -f input_xx.xsl; then \
 	(if test -f ../../dev-tools/input_xx.xsl; then \
 	(ln -sf ../../dev-tools/input_xx.xsl input_xx.xsl) ; \
 	else \
 	echo ; \
 	echo "  Sorry, can not find input_xx.xsl html style file !!!" ; \
-	echo ; \
+	echo ; exit 1 ; \
 	fi) ; fi)
 
 $(HTMLS): %.html: %.def input_xx.xsl
 	$(HELPDOC) $<
 
-$(TXTS): %.txt: %.def
+$(TXTS): %.txt: %.def input_xx.xsl
 	$(HELPDOC) $<
 
 link_on_main_doc:
