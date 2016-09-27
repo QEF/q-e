@@ -311,10 +311,10 @@ MODULE pw_restart_new
          !
          IF (TRIM(input_parameters_occupations) == 'fixed') THEN 
             occupations_are_fixed = .TRUE. 
-            IF ( nspin == 1 ) THEN 
-               h_band = NINT ( nelec/2.d0) 
-            ELSE 
+            IF ( noncolin ) THEN 
                h_band = NINT ( nelec ) 
+            ELSE 
+               h_band = NINT ( nelec/2.d0 ) 
             END IF  
             h_energy =MAXVAL (et(h_band, 1:nkstot))
          ELSE 
