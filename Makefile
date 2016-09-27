@@ -27,8 +27,7 @@ default :
 	@echo '  upf          utilities for pseudopotential conversion'
 	@echo '  xspectra     X-ray core-hole spectroscopy calculations'
 	@echo '  couple       Library interface for coupling to external codes'
-	@if test -d GUI/; then \
-		echo '  gui          Graphical User Interface'; fi
+	@echo '  gui          Graphical User Interface'
 	@echo '  test-suite   Run semi-automated test-suite for regression testing'
 	@echo '  all          same as "make pwall cp ld1 upf tddfpt"'
 	@echo ' '
