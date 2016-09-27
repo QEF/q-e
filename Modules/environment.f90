@@ -252,8 +252,6 @@ CONTAINS
      WRITE( stdout, * ) 
      ! note: if any preprocessed variables __CONF_* exceeds 128 characters,
      ! the compilation may give error because the line exceeds 132 characters
-     WRITE( stdout, "(2x,'         HOST :',4x,a)" ) TRIM( ADJUSTL( &
-__CONF_HOST))
      WRITE( stdout, "(2x,'         ARCH :',4x,a)" ) TRIM( ADJUSTL( &
 __CONF_ARCH))
      WRITE( stdout, "(2x,'           CC :',4x,a)" ) TRIM( ADJUSTL( &
