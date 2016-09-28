@@ -680,6 +680,9 @@ SUBROUTINE phq_readin()
   IF(elph.and.nimage>1) call errore('phq_readin',&
        'el-ph with images not implemented',1)
   
+  IF( fildvscf /= ' ' .and. nimage > 1 ) call errore('phq_readin',&
+       'saving dvscf to file images not implemented',1)
+
   IF (elph.OR.fildvscf /= ' ') lqdir=.TRUE.
 
   IF(dvscf_star%open.and.nimage>1) CALL errore('phq_readin',&
