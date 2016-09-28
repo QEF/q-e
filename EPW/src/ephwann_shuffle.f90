@@ -35,8 +35,9 @@
                             epwwrite, ngaussw, degaussw, lpolar,                &
                             nbndskip, parallel_k, parallel_q, etf_mem,          &
                             elecselfen, phonselfen, nest_fn, a2f,               &
-                            vme, eig_read, ephwrite,                            & 
-                            efermi_read, fermi_energy, specfun, band_plot       
+                            vme, eig_read, ephwrite, nkf1, nkf2, nkf3,          & 
+                            efermi_read, fermi_energy, specfun, band_plot,      &
+                            nqf1, nqf2, nqf3       
   USE noncollin_module, ONLY : noncolin
   USE constants_epw, ONLY : ryd2ev, ryd2mev, one, two, czero, twopi, ci
   USE io_files,      ONLY : prefix, diropn
@@ -111,7 +112,21 @@
   !! record length while reading file
   INTEGER :: i 
   !! Index when writing to file
+  INTEGER :: ikx
+  !! Counter on the coase k-grid
+  INTEGER :: ikfx 
+  !! Counter on the fine k-grid. 
+  INTEGER :: xkk1, xkq1
+  !! Integer of xkk when multiplied by nkf/nk
+  INTEGER :: xkk2, xkq2
+  !! Integer of xkk when multiplied by nkf/nk
+  INTEGER :: xkk3, xkq3
+  !! Integer of xkk when multiplied by nkf/nk
+  INTEGER :: ir
+  !! Counter for WS loop
   !  
+  REAL(kind=DP) :: rdotk_scal
+  !! Real (instead of array) for $r\cdot k$
   REAL(kind=DP) :: xxq(3)
   !! Current q-point 
   REAL(kind=DP) :: xxk(3)
@@ -133,6 +148,24 @@
   REAL(kind=DP), ALLOCATABLE :: rdotk(:)
   !! $r\cdot k$
   !
+  COMPLEX(kind=DP) :: tablex (4*nk1+1,nkf1)
+  !! Look-up table for the exponential (speed optimization) in the case of
+  !! homogeneous grids.
+  COMPLEX(kind=DP) :: tabley (4*nk2+1,nkf2)
+  !! Look-up table for the exponential (speed optimization) in the case of
+  !! homogeneous grids.
+  COMPLEX(kind=DP) :: tablez (4*nk3+1,nkf3)
+  !! Look-up table for the exponential (speed optimization) in the case of
+  !! homogeneous grids.
+  COMPLEX(kind=DP) :: tableqx (4*nk1+1,2*nkf1+1)
+  !! Look-up table for the exponential (speed optimization) in the case of
+  !! homogeneous grids.
+  COMPLEX(kind=DP) :: tableqy (4*nk2+1,2*nkf2+1)
+  !! Look-up table for the exponential (speed optimization) in the case of
+  !! homogeneous grids.
+  COMPLEX(kind=DP) :: tableqz (4*nk3+1,2*nkf3+1)
+  !! Look-up table for the exponential (speed optimization) in the case of
+  !! homogeneous grids.
   COMPLEX(kind=DP), ALLOCATABLE :: epmatwe  (:,:,:,:,:)
   !! e-p matrix  in wannier basis - electrons
   COMPLEX(kind=DP), ALLOCATABLE :: epmatwe_mem  (:,:,:,:)
@@ -149,6 +182,8 @@
   !! Rotation matrix for phonons
   COMPLEX(kind=DP), ALLOCATABLE :: bmatf ( :, :)
   !! overlap U_k+q U_k^\dagger in smooth Bloch basis, fine mesh
+  !COMPLEX(kind=DP), ALLOCATABLE :: cfac1(:)
+  !COMPLEX(kind=DP), ALLOCATABLE :: cfacq1(:)
   COMPLEX(kind=DP), ALLOCATABLE :: cfac(:)
   !! Used to store $e^{2\pi r \cdot k}$ exponential 
   COMPLEX(kind=DP), ALLOCATABLE :: cfacq(:)
@@ -401,11 +436,67 @@
   IF (vme) ALLOCATE ( vmef(3, nbndsub, nbndsub, 2 * nkf) )
   !
   ALLOCATE(cfac(nrr_k))
+  !DBSP
+  !ALLOCATE(cfac1(nrr_k))
+  !ALLOCATE(cfacq1(nrr_k))
   ALLOCATE(cfacq(nrr_k))
   ALLOCATE(rdotk(nrr_k))
   ! This is simply because dgemv take only real number (not integer)
   ALLOCATE(irvec_r(3,nrr_k))
   irvec_r = REAL(irvec,KIND=dp)
+  ! 
+  ! SP: Create a look-up table for the exponential of the factor. 
+  !     This can only work with homogeneous fine grids.
+  IF ( (nkf1 >0) .AND. (nkf2 > 0) .AND. (nkf3 > 0) .AND. &
+       (nqf1 >0) .AND. (nqf2 > 0) .AND. (nqf3 > 0) ) THEN
+    ! Make a check   
+    IF ((nqf1>nkf1) .or. (nqf2>nkf2) .or. (nqf3>nkf3)) &
+            CALL errore('The fine q-grid cannot be larger than the fine k-grid',1)   
+    ! Along x
+    DO ikx = -2*nk1, 2*nk1
+      DO ikfx = 0, nkf1-1
+        !rdotk = twopi * ( xk(1)*irvec(1,ir))
+        rdotk_scal = twopi * ( (REAL(ikfx,kind=DP)/nkf1) * ikx )
+        tablex(ikx+2*nk1+1,ikfx+1) = exp( ci*rdotk_scal )  
+      ENDDO
+    ENDDO
+    ! For k+q
+    DO ikx = -2*nk1, 2*nk1
+      DO ikfx = 0, 2*nkf1
+        rdotk_scal = twopi * ( (REAL(ikfx,kind=DP)/nkf1) * ikx )
+        tableqx(ikx+2*nk1+1,ikfx+1) = exp( ci*rdotk_scal )
+      ENDDO
+    ENDDO
+    ! Along y
+    DO ikx = -2*nk2, 2*nk2
+      DO ikfx = 0, nkf2-1
+        rdotk_scal = twopi * ( (REAL(ikfx,kind=DP)/nkf2) * ikx )
+        tabley(ikx+2*nk2+1,ikfx+1) = exp( ci*rdotk_scal )
+      ENDDO
+    ENDDO  
+    ! For k+q
+    DO ikx = -2*nk2, 2*nk2
+      DO ikfx = 0, 2*nkf2
+        rdotk_scal = twopi * ( (REAL(ikfx,kind=DP)/nkf2) * ikx )
+        tableqy(ikx+2*nk2+1,ikfx+1) = exp( ci*rdotk_scal )
+      ENDDO
+    ENDDO
+    ! Along z
+    DO ikx = -2*nk3, 2*nk3
+      DO ikfx = 0, nkf3-1
+        rdotk_scal = twopi * ( (REAL(ikfx,kind=DP)/nkf3) * ikx )
+        tablez(ikx+2*nk3+1,ikfx+1) = exp( ci*rdotk_scal )
+      ENDDO
+    ENDDO
+    ! For k+q
+    DO ikx = -2*nk3, 2*nk3
+      DO ikfx = 0, 2*nkf3
+        rdotk_scal = twopi * ( (REAL(ikfx,kind=DP)/nkf3) * ikx )
+        tableqz(ikx+2*nk3+1,ikfx+1) = exp( ci*rdotk_scal )
+      ENDDO
+    ENDDO
+  ENDIF
+  !
   ! 
   ! ------------------------------------------------------
   ! Hamiltonian : Wannier -> Bloch (preliminary)
@@ -598,6 +689,9 @@
        ! (size of the local k-set)
        DO ik = 1, nkf
           !
+          ! DBSP
+          !write(900,*),'iq ik ',iq, ' ',ik
+          !write(901,*),'iq ik ',iq, ' ',ik
           ! xkf is assumed to be in crys coord
           !
           ikk = 2 * ik - 1
@@ -608,10 +702,40 @@
           !
           ! SP: Compute the cfac only once here since the same are use in both hamwan2bloch and dmewan2bloch
           ! + optimize the 2\pi r\cdot k with Blas
-          CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkk, 1, 0.0_DP, rdotk, 1 )
-          cfac(:) = exp( ci*rdotk ) / ndegen_k(:)
-          CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkq, 1, 0.0_DP, rdotk, 1 )
-          cfacq(:) = exp( ci*rdotk ) / ndegen_k(:)
+          IF ( (nkf1 >0) .AND. (nkf2 > 0) .AND. (nkf3 > 0) .AND. &
+             (nqf1 > 0) .AND. (nqf2 > 0) .AND. (nqf3 > 0) ) THEN          
+            ! We need to use NINT (nearest integer to x) rather than INT
+            xkk1 = NINT(xkk(1)*(nkf1)) + 1
+            xkk2 = NINT(xkk(2)*(nkf2)) + 1
+            xkk3 = NINT(xkk(3)*(nkf3)) + 1 
+            xkq1 = NINT(xkq(1)*(nkf1)) + 1
+            xkq2 = NINT(xkq(2)*(nkf2)) + 1
+            xkq3 = NINT(xkq(3)*(nkf3)) + 1 
+            ! 
+            ! SP: Look-up table is more effecient than calling the exp function.
+            DO ir = 1, nrr_k
+              cfac(ir) = ( tablex(irvec(1,ir)+2*nk1+1,xkk1) *&
+                      tabley(irvec(2,ir)+2*nk2+1,xkk2) * tablez(irvec(3,ir)+2*nk3+1,xkk3) ) / ndegen_k(ir)
+              cfacq(ir) = ( tableqx(irvec(1,ir)+2*nk1+1,xkq1) *&
+                      tableqy(irvec(2,ir)+2*nk2+1,xkq2) * tableqz(irvec(3,ir)+2*nk3+1,xkq3) ) /  ndegen_k(ir)
+            ENDDO
+            !DBSP
+            !IF ( (iq == 1) .and. (ik ==12)) THEN
+            !  CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkk, 1, 0.0_DP, rdotk, 1 )
+            !  cfac1(:) = exp( ci*rdotk(:) ) / ndegen_k(:)
+            !  CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkq, 1, 0.0_DP, rdotk, 1 )
+            !  cfacq1(:) = exp( ci*rdotk(:) ) / ndegen_k(:)
+            !ENDIF
+          ELSE
+            CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkk, 1, 0.0_DP, rdotk, 1 )
+            cfac(:) = exp( ci*rdotk(:) ) / ndegen_k(:)
+            CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkq, 1, 0.0_DP, rdotk, 1 )
+            cfacq(:) = exp( ci*rdotk(:) ) / ndegen_k(:)
+          ENDIF
+          !DO ir = 1, nrr_k
+          !  write(900,*)ir, ' ', cfacq(ir)
+          !  write(901,*)ir, ' ', cfacq1(ir)
+          !ENDDO
           !
           ! ------------------------------------------------------        
           ! hamiltonian : Wannier -> Bloch 
@@ -1012,6 +1136,11 @@
   IF ( ALLOCATED(sigmai_all) )    DEALLOCATE( sigmai_all )
   IF ( ALLOCATED(sigmai_mode) )   DEALLOCATE( sigmai_mode )
   IF ( ALLOCATED(w2) )   DEALLOCATE( w2 )
+  DEALLOCATE(cfac)
+  DEALLOCATE(cfacq)
+  DEALLOCATE(rdotk)
+  DEALLOCATE(irvec_r)
+
   !
   CALL stop_clock ( 'ephwann' )
   !
