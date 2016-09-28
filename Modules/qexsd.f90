@@ -1046,7 +1046,8 @@ CONTAINS
     !
     ! 
     !---------------------------------------------------------------------------------------
-    SUBROUTINE qexsd_init_total_energy(obj,etot,eband,ehart,vtxc,etxc,ewald,degauss,demet,electric_field_corr)
+    SUBROUTINE qexsd_init_total_energy(obj,etot,eband,ehart,vtxc,etxc,ewald,degauss,demet,electric_field_corr,&
+                                       potentiostat_contr)
     !----------------------------------------------------------------------------------------
     !
     ! 
@@ -1056,6 +1057,7 @@ CONTAINS
     REAL(DP),INTENT(IN)             :: etot,eband,ehart,vtxc,etxc,ewald,demet
     REAL(DP),INTENT(IN)             :: degauss
     REAL(DP),OPTIONAL,INTENT(IN)    :: electric_field_corr
+    REAL(DP),OPTIONAL,INTENT(IN)    :: potentiostat_contr
     !
     LOGICAL                         :: demet_ispresent
     CHARACTER(LEN=*),PARAMETER      :: TAGNAME="total_energy"
@@ -1086,7 +1088,9 @@ CONTAINS
                                ehart_ispresent=.TRUE., ehart=ehart_har,vtxc_ispresent=.TRUE.,& 
                                vtxc=vtxc_har,etxc_ispresent=.TRUE., etxc=etxc_har,ewald_ispresent=.TRUE.,&
                                ewald=ewald_har, demet_ispresent=demet_ispresent,demet=demet_har, &
-                               efieldcorr_ispresent=PRESENT(electric_field_corr), efieldcorr=efield_corr) 
+                               efieldcorr_ispresent=PRESENT(electric_field_corr), efieldcorr=efield_corr,&
+                               POTENTIOSTAT_CONTR_ISPRESENT = PRESENT(potentiostat_contr), & 
+                               POTENTIOSTAT_CONTR = potentiostat_contr)
 
     END SUBROUTINE qexsd_init_total_energy
     ! 
@@ -1194,13 +1198,15 @@ CONTAINS
     !----------------------------------------------------------------------------------------
     SUBROUTINE   qexsd_step_addstep( i_step, max_steps, ntyp, atm, ityp, nat,& 
                                    tau, alat, a1, a2, a3, etot, eband, ehart, vtxc, etxc,&
-                                   ewald, degauss, demet, forces, stress, n_scf_steps, scf_error)
+                                   ewald, degauss, demet, forces, stress, n_scf_steps, scf_error, potstat_contr, &
+                                   fcp_force, fcp_tot_charge )
     !-----------------------------------------------------------------------------------------
     IMPLICIT NONE 
     ! 
     INTEGER ,INTENT(IN)             :: i_step, max_steps, ntyp, nat, n_scf_steps, ityp(:)
     REAL(DP),INTENT(IN)             :: tau(3,nat), alat, a1(3), a2(3), a3(3), etot, eband, ehart, vtxc, &
                                        etxc, ewald, degauss, demet, scf_error, forces(3,nat), stress(3,3) 
+    REAL(DP),OPTIONAL,INTENT (IN)   :: potstat_contr, fcp_force, fcp_tot_charge         
     CHARACTER(LEN=*),INTENT(IN)     :: atm(:)
     TYPE (step_type)                :: step_obj
     TYPE ( scf_conv_type )          :: scf_conv_obj
@@ -1228,7 +1234,12 @@ CONTAINS
     step_obj%atomic_structure=atomic_struct_obj
     CALL qes_reset_atomic_structure( atomic_struct_obj )
     ! 
-    CALL qexsd_init_total_energy ( tot_en_obj, etot, eband, ehart, vtxc, etxc, ewald, degauss, demet )   
+    CALL qexsd_init_total_energy ( tot_en_obj, etot/e2, eband/e2, ehart/e2, vtxc/e2, etxc/e2, ewald/e2, degauss/e2, &
+                                   demet/e2 )
+    IF ( PRESENT ( potstat_contr )) THEN  
+       tot_en_obj%potentiostat_contr_ispresent = .TRUE. 
+       tot_en_obj%potentiostat_contr = potstat_contr/e2 
+    END IF  
     step_obj%total_energy=tot_en_obj
     CALL qes_reset_total_energy( tot_en_obj )
     ! 
@@ -1239,6 +1250,12 @@ CONTAINS
     CALL qes_init_matrix( mat_stress, "stress", 3, 3, stress ) 
     step_obj%stress = mat_stress
     CALL qes_reset_matrix ( mat_stress ) 
+    IF ( PRESENT ( fcp_force ) ) THEN 
+       step_obj%FCP_force = fcp_force
+       step_obj%FCP_force_ispresent = .TRUE.
+       step_obj%FCP_tot_charge = fcp_tot_charge
+       step_obj%FCP_tot_charge_ispresent = .TRUE. 
+    END IF 
     !  
     ! 
     steps(step_counter) = step_obj

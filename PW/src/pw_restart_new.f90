@@ -57,7 +57,7 @@ MODULE pw_restart_new
       USE wavefunctions_module, ONLY : evc
       USE klist,                ONLY : nks, nkstot, xk, ngk, wk, qnorm, &
                                        lgauss, ngauss, degauss, nelec, &
-                                       two_fermi_energies, nelup, neldw
+                                       two_fermi_energies, nelup, neldw, tot_charge
       USE start_k,              ONLY : nk1, nk2, nk3, k1, k2, k3, &
                                        nks_start, xk_start, wk_start
       USE ktetra,               ONLY : ntetra, tetra, ltetra
@@ -115,7 +115,7 @@ MODULE pw_restart_new
       USE rap_point_group_so,   ONLY : elem_so, nelem_so, name_class_so
       USE bfgs_module,          ONLY : bfgs_get_n_iter
       USE qexsd_module,         ONLY : qexsd_dipol_obj, qexsd_bp_obj
-     
+      USE fcp_variables,        ONLY : lfcpopt, lfcpdyn, fcp_mu  
       !
       IMPLICIT NONE
       !
@@ -330,12 +330,18 @@ MODULE pw_restart_new
 !-------------------------------------------------------------------------------------------
          !
          IF (tefield) THEN
-            CALL  qexsd_init_total_energy(output%total_energy,etot,eband,ehart,vtxc,etxc, &
-                 ewld,degauss,demet, etotefield)
+            CALL  qexsd_init_total_energy(output%total_energy,etot/e2,eband/e2,ehart/e2,vtxc/e2,etxc/e2, &
+                 ewld/e2,degauss/e2,demet/e2, etotefield/e2)
          ELSE 
-            CALL  qexsd_init_total_energy(output%total_energy,etot,eband,ehart,vtxc,etxc, &
-                 ewld,degauss,demet)
+            CALL  qexsd_init_total_energy(output%total_energy,etot/e2,eband/e2,ehart/e2,vtxc/e2,etxc/e2, &
+                 ewld/e2,degauss/e2,demet/e2)
          END IF
+         IF (lfcpopt .OR. lfcpdyn ) THEN 
+            output%total_energy%potentiostat_contr_ispresent = .TRUE.
+            output%total_energy%potentiostat_contr = ef * tot_charge/e2
+            output%FCP_tot_charge = tot_charge
+            output%FCP_force = fcp_mu - ef 
+         END IF 
          !
 !---------------------------------------------------------------------------------------------
 ! ... FORCES

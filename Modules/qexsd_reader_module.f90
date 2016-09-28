@@ -1899,10 +1899,10 @@ LOGICAL,INTENT(OUT)                       :: ispresent
 ! 
 INTEGER                                   :: ierr
 REAL(DP)                                  :: etot_, eband_, ehart_, vtxc_, etxc_, ewald_, demet_, & 
-                                             efield_corr_ 
+                                             efield_corr_, potstat_contr_ 
 LOGICAL                                   :: efield_corr_ispresent, eband_ispresent, ehart_ispresent, & 
                                              vtxc_ispresent, etxc_ispresent, ewald_ispresent, & 
-                                             demet_ispresent
+                                             demet_ispresent, potstat_ispresent
 ! 
 
 ! 
@@ -1938,12 +1938,16 @@ IF ( ierr /= 0 ) RETURN
 CALL iotk_scan_dat ( iunit, "efield_corr", efield_corr_, IERR = ierr, FOUND = efield_corr_ispresent) 
 IF ( ierr /= 0 ) RETURN
 ! 
+CALL iotk_scan_dat ( iunit, "potentiostat_contr", potstat_contr_, IERR = ierr, FOUND = potstat_ispresent ) 
+IF ( ierr /= 0 ) RETURN 
+! 
 CALL iotk_scan_end( iunit, "total_energy", IERR = ierr ) 
 IF ( ierr /= 0 ) RETURN 
 ! 
 CALL qes_init_total_energy ( obj, "total_energy", etot_, eband_ispresent, eband_, ehart_ispresent, & 
                              ehart_, vtxc_ispresent, vtxc_, etxc_ispresent, etxc_, ewald_ispresent, & 
-                            ewald_, demet_ispresent, demet_, efield_corr_ispresent, efield_corr_)  
+                            ewald_, demet_ispresent, demet_, efield_corr_ispresent, efield_corr_, potstat_ispresent,& 
+                            potstat_contr_)  
 END SUBROUTINE qexsd_get_total_energy
 !
 !------------------------------------------------------------------------------------------------------
@@ -1986,13 +1990,13 @@ TYPE (step_type ),INTENT(OUT)        :: obj
 LOGICAL,INTENT(OUT)                  :: ispresent
 ! 
 INTEGER                              :: ierr, n_step_, nat_ 
-LOGICAL                              :: found, stress_ispresent
+LOGICAL                              :: found, stress_ispresent, fcp_force_ispresent, fcp_charge_ispresent
 TYPE( scf_conv_type )                :: scf_conv_obj
 TYPE( atomic_structure_type )        :: at_struct_obj
 TYPE( total_energy_type )            :: tot_en_obj
 TYPE ( matrix_type )                 :: for_mat_obj, stress_mat_obj
 REAL(DP),ALLOCATABLE                 :: forces_mat(:,:)
-REAL(DP)                             :: stress_mat(3,3)
+REAL(DP)                             :: stress_mat(3,3), fcp_force_, fcp_tot_charge_
 ! 
 
 ! 
@@ -2023,12 +2027,18 @@ CALL iotk_scan_dat( iunit, "stress", stress_mat, FOUND = stress_ispresent, IERR 
 IF ( ierr /= 0 ) RETURN 
 IF ( stress_ispresent ) CALL qes_init_matrix( stress_mat_obj, "stress", 3, 3, stress_mat )
 ! 
+CALL iotk_scan_dat( iunit, "FCP_force", fcp_force_, FOUND = fcp_force_ispresent, IERR = ierr ) 
+IF (ierr /= 0 ) RETURN
+! 
+CALL iotk_scan_dat ( iunit, "FCP_tot_charge", fcp_tot_charge_, FOUND = fcp_charge_ispresent, IERR = ierr ) 
+IF ( ierr /= 0 ) RETURN
+!
 CALL iotk_scan_end( iunit, "step", IERR = ierr ) 
 IF ( ierr /= 0 ) RETURN 
 !
-CALL qes_init_step( obj, "step", n_step_, scf_conv_obj, at_struct_obj, tot_en_obj, for_mat_obj, &
-                    stress_ispresent, stress_mat_obj ) 
-DEALLOCATE ( forces_mat)  
+CALL qes_init_step( obj, "step", n_step_, scf_conv_obj, at_struct_obj, tot_en_obj, for_mat_obj, stress_ispresent,&
+                    stress_mat_obj, fcp_force_ispresent, fcp_force_, fcp_charge_ispresent, fcp_tot_charge_ ) 
+DEALLOCATE ( forces_mat )  
 !
 END SUBROUTINE qexsd_get_step
 !
