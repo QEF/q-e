@@ -5,7 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#define __HAVE_CONFIG_INFO
+!#define __HAVE_CONFIG_INFO
 !
 !==-----------------------------------------------------------------------==!
 MODULE environment
