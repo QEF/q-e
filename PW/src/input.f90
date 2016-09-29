@@ -304,7 +304,6 @@ SUBROUTINE iosys()
   !
   USE input_parameters,      ONLY : deallocate_input_parameters
   USE wyckoff,               ONLY : nattot, sup_spacegroup
-#if defined(__XSD)
   USE qexsd_module,          ONLY : qexsd_input_obj
   USE qes_types_module,      ONLY: input_type
   ! 
@@ -317,11 +316,7 @@ SUBROUTINE iosys()
      CHARACTER(LEN=*),INTENT(IN)  :: obj_tagname
      END SUBROUTINE
   END INTERFACE
-#else
-  !
-  IMPLICIT NONE
-  !
-#endif
+!!!!  
   CHARACTER(LEN=256), EXTERNAL :: trimcheck
   INTEGER, EXTERNAL :: read_config_from_file
   !
@@ -1591,9 +1586,7 @@ SUBROUTINE iosys()
   !
   ! ... End of reading input parameters
   !
-#if defined(__XSD)
   CALL pw_init_qexsd_input(qexsd_input_obj, obj_tagname="input")
-#endif 
   CALL deallocate_input_parameters ()  
   !
   ! ... Initialize temporary directory(-ies)

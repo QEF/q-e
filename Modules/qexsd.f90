@@ -4,7 +4,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#if defined(__XSD)
 !----------------------------------------------------------------------------
 MODULE qexsd_module
   !----------------------------------------------------------------------------
@@ -1285,6 +1284,7 @@ CONTAINS
     !  
     REAL(DP),INTENT(IN)                               :: wstring(nstring)      
     ! 
+#if defined (__XSD)
     CHARACTER(LEN=*),PARAMETER                        :: TAGNAME = "BerryPhase"
     TYPE ( polarization_type)                         :: tot_pol_obj
     ! 
@@ -1348,7 +1348,8 @@ CONTAINS
     DEALLOCATE (ion_pol_obj)
     CALL qes_reset_polarization(tot_pol_obj)
     CALL qes_reset_scalarQuantity(pol_val)
-    CALL qes_reset_phase(tot_phase)  
+    CALL qes_reset_phase(tot_phase) 
+#endif 
     !
     END SUBROUTINE qexsd_init_berryPhaseOutput
     !
@@ -1357,8 +1358,10 @@ CONTAINS
     !-------------------------------------------------------------------------------------------------
     IMPLICIT NONE 
     !
-    INTEGER      :: status_int 
+    INTEGER      :: status_int
+#if defined(__XSD)  
     CALL qes_init_status( exit_status, "status", status_int)
+#endif
     END SUBROUTINE qexsd_set_status 
     !
     !--------------------------------------------------------------------------------------------------
@@ -1394,12 +1397,6 @@ END MODULE qexsd_module
 !----------------
 !
 
-#else
 ! 
-MODULE qexsd_module
-  IMPLICIT NONE
-  INTEGER :: dummy__
-END MODULE qexsd_module
 ! 
-#endif
 

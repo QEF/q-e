@@ -17,7 +17,6 @@ SUBROUTINE punch( what )
        tmp_dir, prefix
   USE control_flags,        ONLY : io_level, twfcollect, io_level, lscf
   USE klist,                ONLY : nks
-#if defined(__XSD)
   USE pw_restart_new,       ONLY : pw_write_schema, pw_write_binaries
   USE io_files,             ONLY : xmlpun_schema, psfile, pseudo_dir
   USE wrappers,             ONLY : f_copy
@@ -27,9 +26,9 @@ SUBROUTINE punch( what )
   USE scf,                  ONLY : rho
   USE lsda_mod,             ONLY : nspin
   USE ions_base,            ONLY : nsp
-#else
+!
   USE pw_restart,           ONLY : pw_writefile
-#endif
+!
   USE a2F,                  ONLY : la2F, a2Fsave
   USE wavefunctions_module, ONLY : evc
   !

@@ -33,10 +33,10 @@ MODULE io_files
   CHARACTER(len=256) :: qexml_version = ' '       ! the format of the current qexml datafile 
   LOGICAL            :: qexml_version_init = .FALSE.  ! whether the fmt has been read or not
   !
-#if defined(__XSD) 
+!
   CHARACTER(LEN=256) :: qexsd_fmt = ' ', qexsd_version = ' '
   LOGICAL            :: qexsd_init = .FALSE. 
-#endif  
+!
   CHARACTER(LEN=256) :: input_drho = ' '          ! name of the file with the input drho
   CHARACTER(LEN=256) :: output_drho = ' '         ! name of the file with the output drho
   !
@@ -45,9 +45,9 @@ MODULE io_files
   !
   CHARACTER (LEN=13), PARAMETER :: xmlpun      = 'data-file.xml'
   !
-#if defined(__XSD)
+!
   CHARACTER (LEN=20), PARAMETER :: xmlpun_schema = 'data-file-schema.xml'
-#endif
+!
   !
   ! ... The units where various variables are saved
   ! ... Only units that are kept open during the run should be listed here

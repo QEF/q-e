@@ -11,7 +11,6 @@
 ! This module should be, in the future, replaced by a script generated library. 
 ! 
 ! Written by Pietro Delugas -- May-June 2016. 
-#if defined(__XSD) 
 !--------------------------------------------------------------------------------------
 MODULE qexsd_reader_module
 !--------------------------------------------------------------------------------------
@@ -3324,10 +3323,3 @@ IF ( spin_constr_ispresent )   CALL qes_reset_spin_constraints ( spin_constr_obj
 END SUBROUTINE qexsd_get_input  
 !---------------------------------------------------------------------------------------------------
 END MODULE
-#else 
-MODULE qexsd_reader_module
-  IMPLICIT NONE
-  INTEGER :: dummy__
-END MODULE qexsd_reader_module
-! 
-#endif

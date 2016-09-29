@@ -5,7 +5,6 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
-#if defined(__XSD)
   !--------------------------------------------------------------------------------------------------------------------
   SUBROUTINE pw_init_qexsd_input(obj,obj_tagname)
   !--------------------------------------------------------------------------------------------------------------------
@@ -96,6 +95,7 @@
   CHARACTER(LEN=80)                        ::  vdw_corr_  
   !
   ! 
+#if defined(__XSD)
   obj%tagname=TRIM(obj_tagname)
   IF ( ABS(ip_ibrav)  .GT. 0 ) THEN  
      ibrav_lattice = .TRUE. 
@@ -372,12 +372,7 @@
   obj%lread=.TRUE.
   obj%lwrite=.TRUE.
   ! 
-  ! 
+  !
+#endif 
   END SUBROUTINE pw_init_qexsd_input
   !
-#else
-!   
-  SUBROUTINE pw_init_qexsd_input()
-    print *,"This is just a stub"
-  END SUBROUTINE
-#endif

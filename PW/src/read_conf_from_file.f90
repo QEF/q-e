@@ -14,13 +14,13 @@ FUNCTION read_config_from_file(nat, at_old, omega_old, lmovecell, at, bg, &
   USE kinds,          ONLY : DP
   USE io_global,      ONLY : stdout
   USE io_files,       ONLY : tmp_dir, prefix
-#if defined(__XSD) 
+!
   USE pw_restart_new,    ONLY  : pw_readschema_file, init_vars_from_schema
   USE qes_types_module,     ONLY :  output_type, input_type, parallel_info_type, general_info_type
   USE qes_libs_module,      ONLY :  qes_reset_output, qes_reset_input, qes_reset_general_info, qes_reset_parallel_info 
-#else
+!
   USE pw_restart,     ONLY : pw_readfile
-#endif
+!
   !
   IMPLICIT NONE
   !
@@ -30,12 +30,12 @@ FUNCTION read_config_from_file(nat, at_old, omega_old, lmovecell, at, bg, &
   REAL(DP),INTENT(inout) :: at(3,3), bg(3,3), omega
   REAL(DP),INTENT(inout) :: tau(3,nat)
   INTEGER :: ierr
-#if defined(__XSD) 
+!
   TYPE ( output_type), ALLOCATABLE   :: output_obj
   TYPE ( input_type ), ALLOCATABLE   :: input_obj 
   TYPE (parallel_info_type),ALLOCATABLE :: parinfo_obj
   TYPE (general_info_type ),ALLOCATABLE :: geninfo_obj 
-#endif
+!
 
   !
   !

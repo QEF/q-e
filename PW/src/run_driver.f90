@@ -22,9 +22,6 @@ SUBROUTINE run_driver ( srvaddress, exit_status )
   USE f90sockets,       ONLY : readbuffer, writebuffer
   USE extrapolation,    ONLY : update_file, update_pot
   !
-#if defined(__XSD)
-  USE qexsd_module,     ONLY:   qexsd_set_status
-#endif
   IMPLICIT NONE
   INTEGER, INTENT(OUT) :: exit_status
   CHARACTER(*), INTENT(IN) :: srvaddress

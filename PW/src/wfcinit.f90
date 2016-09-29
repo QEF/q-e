@@ -29,13 +29,13 @@ SUBROUTINE wfcinit()
   USE wavefunctions_module, ONLY : evc
   USE wvfct,                ONLY : nbnd, npwx, current_k
   USE wannier_new,          ONLY : use_wannier
-#if defined(__XSD) 
+!
   USE pw_restart_new,       ONLY : pw_readschema_file, read_collected_to_evc
   USE qes_types_module,     ONLY : input_type
   USE qes_libs_module,      ONLY : qes_reset_input 
-#else
+!
   USE pw_restart,           ONLY : pw_readfile
-#endif
+!
   USE mp_bands,             ONLY : nbgrp, root_bgrp,inter_bgrp_comm
   USE mp,                   ONLY : mp_bcast
   !
@@ -44,9 +44,9 @@ SUBROUTINE wfcinit()
   INTEGER :: ik, ierr
   LOGICAL :: exst, exst_mem, exst_file, opnd_file, twfcollect_file = .FALSE.
   CHARACTER (256 )                        :: dirname 
-#if defined(__XSD)
+!
   TYPE ( input_type ), ALLOCATABLE      :: input_obj
-#endif
+!
   !
   !
   CALL start_clock( 'wfcinit' )
