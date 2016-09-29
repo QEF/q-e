@@ -8,6 +8,7 @@ The following libraries have been found:
   @blas_line@
   @lapack_line@
   @scalapack_line@
+  @elpa_line@
   @fft_line@
   @mpi_line@
   @hdf5_line@

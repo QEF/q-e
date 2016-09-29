@@ -646,7 +646,8 @@ wget
 ranlib
 hdf5_line
 hdf5_libs
-elpa_libs_switch
+elpa_line
+elpa_libs
 scalapack_line
 scalapack_libs
 parallel_report
@@ -754,7 +755,8 @@ enable_shared
 enable_wrappers
 with_netlib
 with_scalapack
-with_elpa
+with_elpa_include
+with_elpa_lib
 enable_xml
 with_hdf5
 enable_signals
@@ -1416,8 +1418,10 @@ Optional Packages:
   --with-scalapack        (yes|no|intel) Use scalapack if available. Set to
                           "intel" to use Intel MPI and blacs (default: use
                           openMPI)
-  --with-elpa             (yes|no|<path>) Use ELPA. Self-compile or a <path>
-                          can be specified (default: no)
+  --with-elpa-include     Specify full path ELPA include and modules headers
+                          (default: no)
+  --with-elpa-lib         Specify full path ELPA static or dynamic library
+                          (default: no)
   --with-hdf5             (no|<path>) Use HDF5, a valid <path> must be
                           specified (default: no)
 
@@ -12141,47 +12145,52 @@ fi
 $as_echo_n "checking ELPA... " >&6; }
 
 
-# Check whether --with-elpa was given.
-if test "${with_elpa+set}" = set; then
-  withval=$with_elpa; if  test "$withval" = "yes" ; then
-      with_elpa=1
-   elif  test "$withval" = "no" ; then
-      with_elpa=0
+# Check whether --with-elpa-include was given.
+if test "${with_elpa_include+set}" = set; then
+  withval=$with_elpa_include; if  test "$withval" = "no" ; then
+      with_elpa_include=0
    else
-      with_elpa=2
-      with_elpa_path="$withval"
+      with_elpa_include=1
+      elpa_include="$withval"
    fi
 else
-  with_elpa=0
+  with_elpa_include=0
 fi
 
 
-elpa_libs=""
 
-# ELPA iff SCALAPACK (statically linked)
-elpa_libs_switch="disabled"
-if test "$with_elpa" -eq 2 && test "$have_scalapack" -eq 1; then
-    if test "$use_openmp" -eq 1 ; then
-        elpa_libs="$with_elpa_path/lib/libelpa_mt.a"
-        try_iflags="$try_iflags -I$with_elpa_path/include/elpa/modules "
-        try_dflags="$try_dflags -D__ELPA"
-    else
-        elpa_libs="$with_elpa_path/lib/libelpa.a"
-        try_iflags="$try_iflags -I$with_elpa_path/include/elpa/modules "
-        try_dflags="$try_dflags -D__ELPA"
-    fi
-  scalapack_libs="$elpa_libs $scalapack_libs"
+# Check whether --with-elpa-lib was given.
+if test "${with_elpa_lib+set}" = set; then
+  withval=$with_elpa_lib; if  test "$withval" = "no" ; then
+      with_elpa_libs=0
+   else
+      with_elpa_libs=1
+      elpa_libs="$withval"
+   fi
+else
+  with_elpa_libs=0
 fi
 
-if test "$with_elpa" -eq 1 && test "$have_scalapack" -eq 1; then
-    elpa_libs="\$(TOPDIR)/ELPA/libelpa.a"
+
+
+elpa_line="@delete@"
+
+# ELPA iff SCALAPACK
+if test "$have_scalapack" -eq 1; then
+  if test "$with_elpa_include" -eq 1 && test "$with_elpa_libs" -eq 1; then
     scalapack_libs="$elpa_libs $scalapack_libs"
-    try_dflags="$try_dflags -D__ELPA"
-    elpa_libs_switch="enabled"
+    try_iflags="$try_iflags $elpa_include"
+    try_dflags="$try_dflags -D__ELPA_2016"
+    elpa_line="ELPA_LIBS=$elpa_libs"
+  fi
+else
+  { $as_echo "$as_me:$LINENO: WARNING: *** ScaLAPACK is needed to use ELPA" >&5
+$as_echo "$as_me: WARNING: *** ScaLAPACK is needed to use ELPA" >&2;}
 fi
 
   { $as_echo "$as_me:$LINENO: result: ${elpa_libs}" >&5
 $as_echo "${elpa_libs}" >&6; }
+
 
 
 
@@ -12310,7 +12319,7 @@ return H5Fcreate ();
   return 0;
 }
 _ACEOF
-for ac_lib in '' hdf5 hdf5_fortran; do
+for ac_lib in '' hdf5_fortran; do
   if test -z "$ac_lib"; then
     ac_res="none required"
   else
