@@ -37,7 +37,7 @@
                             elecselfen, phonselfen, nest_fn, a2f,               &
                             vme, eig_read, ephwrite, nkf1, nkf2, nkf3,          & 
                             efermi_read, fermi_energy, specfun, band_plot,      &
-                            nqf1, nqf2, nqf3       
+                            nqf1, nqf2, nqf3, mp_mesh_k
   USE noncollin_module, ONLY : noncolin
   USE constants_epw, ONLY : ryd2ev, ryd2mev, one, two, czero, twopi, ci
   USE io_files,      ONLY : prefix, diropn
@@ -448,7 +448,7 @@
   ! SP: Create a look-up table for the exponential of the factor. 
   !     This can only work with homogeneous fine grids.
   IF ( (nkf1 >0) .AND. (nkf2 > 0) .AND. (nkf3 > 0) .AND. &
-       (nqf1 >0) .AND. (nqf2 > 0) .AND. (nqf3 > 0) ) THEN
+       (nqf1 >0) .AND. (nqf2 > 0) .AND. (nqf3 > 0) .AND. .NOT. mp_mesh_k ) THEN
     ! Make a check   
     IF ((nqf1>nkf1) .or. (nqf2>nkf2) .or. (nqf3>nkf3)) &
             CALL errore('The fine q-grid cannot be larger than the fine k-grid',1)   
@@ -594,6 +594,10 @@
      CALL mp_bcast (efnew, ionode_id, inter_pool_comm)
      CALL mp_bcast (etf_k, ionode_id, inter_pool_comm)
      ENDIF
+      
+     ALLOCATE(etf_k ( nbndsub, nkqf))
+     etf_k = etf
+
      !
      WRITE(6, '(/5x,a,f10.6,a)') &
          'Fermi energy is calculated from the fine k-mesh: Ef = ', efnew * ryd2ev, ' eV'
@@ -692,6 +696,7 @@
           ! DBSP
           !write(900,*),'iq ik ',iq, ' ',ik
           !write(901,*),'iq ik ',iq, ' ',ik
+          !
           ! xkf is assumed to be in crys coord
           !
           ikk = 2 * ik - 1
@@ -703,7 +708,7 @@
           ! SP: Compute the cfac only once here since the same are use in both hamwan2bloch and dmewan2bloch
           ! + optimize the 2\pi r\cdot k with Blas
           IF ( (nkf1 >0) .AND. (nkf2 > 0) .AND. (nkf3 > 0) .AND. &
-             (nqf1 > 0) .AND. (nqf2 > 0) .AND. (nqf3 > 0) ) THEN          
+             (nqf1 > 0) .AND. (nqf2 > 0) .AND. (nqf3 > 0) .AND. .NOT. mp_mesh_k) THEN          
             ! We need to use NINT (nearest integer to x) rather than INT
             xkk1 = NINT(xkk(1)*(nkf1)) + 1
             xkk2 = NINT(xkk(2)*(nkf2)) + 1
@@ -720,7 +725,7 @@
                       tableqy(irvec(2,ir)+2*nk2+1,xkq2) * tableqz(irvec(3,ir)+2*nk3+1,xkq3) ) /  ndegen_k(ir)
             ENDDO
             !DBSP
-            !IF ( (iq == 1) .and. (ik ==12)) THEN
+            !IF ( (iq == 1) .and. (ik ==4)) THEN
             !  CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkk, 1, 0.0_DP, rdotk, 1 )
             !  cfac1(:) = exp( ci*rdotk(:) ) / ndegen_k(:)
             !  CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkq, 1, 0.0_DP, rdotk, 1 )
@@ -753,6 +758,9 @@
                ( nbndsub, nrr_k, cufkk, etf (:, ikk), chw, cfac)
           CALL hamwan2bloch &
                ( nbndsub, nrr_k, cufkq, etf (:, ikq), chw, cfacq)
+          !DBSP
+          !write(900,*)'ikk ',etf(:,ikk)
+          !write(900,*)'ikq ',etf(:,ikq)
           !
           ! ------------------------------------------------------        
           !  dipole: Wannier -> Bloch

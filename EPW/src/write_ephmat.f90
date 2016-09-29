@@ -26,8 +26,9 @@
                          nkf1, nkf2, nkf3, &
                          efermi_read, fermi_energy
   USE pwcom,      ONLY : nelec, ef, isk
-  USE elph2,      ONLY : etf, ibndmin, ibndmax, nkqf, epf17, wkf, nkf, nqtotf, wf, xqf, nkqtotf
-  USE eliashbergcom, ONLY : equivk, nkfs, ekfs, wkfs, xkfs, ef0, dosef, ixkf, ixkqf, nbndfs
+  USE elph2,      ONLY : etf, ibndmin, ibndmax, nkqf, epf17, wkf, nkf, &
+                         nqtotf, wf, xqf, nkqtotf, efnew, etf_k
+  USE eliashbergcom, ONLY : equivk, nkfs, ekfs, wkfs, xkfs, dosef, ixkf, ixkqf, nbndfs
   USE constants_epw, ONLY : ryd2ev, two
   USE mp_global,  ONLY :  my_pool_id
   USE mp,         ONLY : mp_barrier, mp_sum
@@ -74,8 +75,13 @@
   INTEGER :: imelt
   !! Memory allocated
   !
-  REAL(DP) :: wq, g2
-  REAL(DP), EXTERNAL :: efermig, dos_ef
+  REAL(kind=DP) :: ef0
+  !! Fermi energy level
+  REAL(kind=DP) :: wq
+  !! phonon freq
+  REAL(kind=DP):: g2
+  !! Electron-phonon matrix element square
+  REAL(kind=DP), EXTERNAL :: efermig, dos_ef
   CHARACTER (len=256) :: filfreq, filegnv, filephmat
   CHARACTER (len=3) :: filelab
   !
@@ -83,20 +89,20 @@
   IF ( my_pool_id == 0 ) THEN
     filfreq = trim(tmp_dir) // trim(prefix) // '.freq' 
     IF ( iq .eq. 1 ) THEN
-       OPEN(iufilfreq, file = filfreq, form = 'unformatted')
-       WRITE(iufilfreq) nqtotf, nmodes
-       WRITE(iufilfreq) xqf(1,iq), xqf(2,iq), xqf(3,iq)
-       DO imode = 1, nmodes
-          WRITE(iufilfreq) wf(imode,iq)
-       ENDDO
-       CLOSE(iufilfreq)
+      OPEN(iufilfreq, file = filfreq, form = 'unformatted')
+      WRITE(iufilfreq) nqtotf, nmodes
+      WRITE(iufilfreq) xqf(1,iq), xqf(2,iq), xqf(3,iq)
+      DO imode = 1, nmodes
+         WRITE(iufilfreq) wf(imode,iq)
+      ENDDO
+      CLOSE(iufilfreq)
     ELSE
-       OPEN(iufilfreq, file = filfreq, position='append', form = 'unformatted')
-       WRITE(iufilfreq) xqf(1,iq), xqf(2,iq), xqf(3,iq)
-       DO imode = 1, nmodes
-          WRITE(iufilfreq) wf(imode,iq)
-       ENDDO
-       CLOSE(iufilfreq)
+      OPEN(iufilfreq, file = filfreq, position='append', form = 'unformatted')
+      WRITE(iufilfreq) xqf(1,iq), xqf(2,iq), xqf(3,iq)
+      DO imode = 1, nmodes
+         WRITE(iufilfreq) wf(imode,iq)
+      ENDDO
+      CLOSE(iufilfreq)
     ENDIF
   ENDIF
   ! 
@@ -105,9 +111,12 @@
   ! since wkf(:,ikq) = 0 these bands do not bring any contribution to ef0 or dosef
   ! 
   IF ( efermi_read ) THEN
-     ef0 = fermi_energy 
+    ef0 = fermi_energy 
   ELSE
-     ef0 = efermig(etf, nbndsub, nkqf, nelec, wkf, degaussw, ngaussw, 0, isk)
+    ef0 = efnew 
+    !ef0 = efermig(etf, nbndsub, nkqf, nelec, wkf, degaussw, ngaussw, 0, isk)
+    ! if some bands are skipped (nbndskip.neq.0), nelec has already been recalculated 
+    ! in ephwann_shuffle
   ENDIF
   !     
   dosef = dos_ef(ngaussw, degaussw, ef0, etf, wkf, nkqf, nbndsub)
@@ -125,14 +134,14 @@
     ! 
     fermicount = 0
     DO ik = 1, nkf
-       !
-       ikk = 2 * ik - 1
-       ikq = ikk + 1
-       !
-       IF ( equivk(lower_bnd+ik-1) .eq. lower_bnd+ik-1 ) THEN
-          IF ( minval( abs( etf(:,ikk) - ef  ) ) .lt. fsthick ) THEN
-             fermicount = fermicount + 1 
-          ENDIF
+      !
+      ikk = 2 * ik - 1
+      ikq = ikk + 1
+      !
+      IF ( equivk(lower_bnd+ik-1) .eq. lower_bnd+ik-1 ) THEN
+        IF ( minval( abs( etf(:,ikk) - ef  ) ) .lt. fsthick ) THEN
+           fermicount = fermicount + 1 
+        ENDIF
       ENDIF
       !
     ENDDO
