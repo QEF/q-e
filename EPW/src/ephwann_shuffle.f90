@@ -594,10 +594,6 @@
      CALL mp_bcast (efnew, ionode_id, inter_pool_comm)
      CALL mp_bcast (etf_k, ionode_id, inter_pool_comm)
      ENDIF
-      
-     ALLOCATE(etf_k ( nbndsub, nkqf))
-     etf_k = etf
-
      !
      WRITE(6, '(/5x,a,f10.6,a)') &
          'Fermi energy is calculated from the fine k-mesh: Ef = ', efnew * ryd2ev, ' eV'
