@@ -18,7 +18,7 @@ mv espresso/ qe-$version/
 cd qe-$version
 
 # generate version.f90 (requires svn files)
-touch make.unc
+touch make.inc
 cd Modules
 make version.f90
 # save version.f90 (make veryclean removes it)
