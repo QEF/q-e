@@ -52,7 +52,7 @@ tldeps :
 	( cd ../.. ; $(MAKE) $(TLDEPS) || exit 1 ) ; fi
 
 clean :
-	- /bin/rm -f *.x *.o *.d *.i *~ *_tmp.f90 *.mod *.L
+	- /bin/rm -f *.x *.o *.d *.i *~ *_tmp.f90 *.mod *.L *.a
 	- /bin/rm -f ../../bin/phcg.x
 
 libcg.a : $(CGOBJS)
