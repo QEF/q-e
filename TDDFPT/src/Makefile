@@ -1,6 +1,7 @@
 # Makefile for TDDFPT
 
 include ../../make.inc
+
 IFLAGS         = -I../../include
 
 # location of needed modules
@@ -55,27 +56,27 @@ lr_us.o\
 lr_test_restart.o\
 lr_dav_debug.o
 
-TLDEPS=bindir libs pw lr-lib
+TLDEPS=bindir libs pw-lib libfft libla lrmods
 
-all :  tldeps libtddfpt.a turbo_lanczos.x turbo_davidson.x turbo_eels.x
+all : tldeps libtddfpt.a turbo_lanczos.x turbo_davidson.x turbo_eels.x
 
 libtddfpt.a : $(LROBJS) 
 	$(AR) $(ARFLAGS) $@ $?
 	$(RANLIB) $@
 
-turbo_lanczos.x : lr_main.o libtddfpt.a $(LRMODS) $(PWOBJS) $(QEMODS) $(LIBOBJS)
+turbo_lanczos.x : lr_main.o libtddfpt.a $(PWOBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
 		lr_main.o libtddfpt.a $(LRMODS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../TDDFPT/src/$@ . )
 	- if [ -d ../bin ] ; then  ( cd ../bin ; ln -fs ../src/$@ . ); fi
 
-turbo_davidson.x : lr_dav_main.o libtddfpt.a $(LRMODS) $(PWOBJS) $(QEMODS) $(LIBOBJS)
+turbo_davidson.x : lr_dav_main.o libtddfpt.a $(PWOBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
 		lr_dav_main.o libtddfpt.a $(LRMODS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../TDDFPT/src/$@ . )
 	- if [ -d ../bin ] ; then  ( cd ../bin ; ln -fs ../src/$@ . ); fi
 
-turbo_eels.x : lr_eels_main.o libtddfpt.a $(LRMODS) $(PWOBJS) $(QEMODS) $(LIBOBJS)
+turbo_eels.x : lr_eels_main.o libtddfpt.a $(PWOBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
                 lr_eels_main.o libtddfpt.a $(LRMODS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../TDDFPT/src/$@ . )

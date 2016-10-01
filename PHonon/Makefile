@@ -3,7 +3,7 @@ sinclude ../make.inc
 
 default: all
 
-all: phonon phgamma_only finite_diffs #third_order_q
+all: phonon phgamma_only finite_diffs
 
 phonon:
 	( cd PH ; $(MAKE) all || exit 1 )
@@ -14,10 +14,7 @@ phgamma_only:
 finite_diffs:
 	( cd FD ; $(MAKE) all || exit 1 )
 
-#third_order_q:
-#	( cd D3q ; $(MAKE) all || exit 1 )
-
-clean: phonon_clean phgamma_only_clean examples_clean finite_diffs_clean #third_order_q_clean
+clean: phonon_clean phgamma_only_clean examples_clean finite_diffs_clean
 
 phonon_clean:
 	( cd PH ; $(MAKE) clean )

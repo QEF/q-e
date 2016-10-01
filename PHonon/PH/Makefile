@@ -184,7 +184,7 @@ LRMODS = ../../LR_Modules/liblrmod.a
 PWOBJS = ../../PW/src/libpw.a
 QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a
 
-TLDEPS= bindir mods libs pw-lib lr-lib
+TLDEPS= bindir mods libs pw-lib lrmods
 
 all : tldeps libs-ph ph.x dynmat.x matdyn.x q2r.x q2trans.x q2trans_fd.x lambda.x fqha.x q2qstar.x 
 
