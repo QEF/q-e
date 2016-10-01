@@ -209,7 +209,7 @@ then
                                fft_libs="$try_loption $LIBS", , -lm)
                   fi
 
-                  if test "$have_fft" == "1"
+                  if test "$have_fft" -eq 1
                   then
                         try_dflags="$try_dflags -D__FFTW3"
                         try_incdir="$FFTW_INCLUDE $FFTW_INC $INCLUDE_PATH $CPATH $FPATH"
@@ -217,16 +217,13 @@ then
                         do
                            #AC_LANG_POP([Fortran 77])
                            #AC_LANG_PUSH([C])
-                           #AC_CHECK_HEADERS([$inc/fftw3.f03],have_fft_include=1,)
-                           AC_MSG_CHECKING([for fftw3.f03])
-                           AC_COMPILE_IFELSE(
-                           [include "fftw3.f03"],
-                           [AC_MSG_RESULT([yes])],
-                           [AC_MSG_RESULT([no])]
-                           )
+
+                           AC_COMPILE_IFELSE([include "fftw3.f03"],have_fft_include=1,)
+                           
                            #AC_LANG_POP([C])
                            #AC_LANG_PUSH([Fortran 77])
-                           if test "$have_fft_include=1"
+
+                           if test "$have_fft_include" -eq 1
                            then
                              try_iflags="$try_iflags -I$inc"
                              break
