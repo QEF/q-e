@@ -101,14 +101,14 @@ tar -czvf qe-$version.tar.gz qe-$version/archive \
                                    qe-$version/TDDFPT \
                                    qe-$version/atomic \
                                    qe-$version/gwl \
-                                   qe-$version/atomic
+                                   qe-$version/atomic \
+                                   qe-$version/EPW \
+                                   qe-$version/GWW \
 
 # Packages, ready for automatic unpacking
 
 cd qe-$version
 tar -cvzf ../PWgui-$version.tar.gz    PWgui-$version
-tar -czvf ../EPW-$version.tar.gz      EPW
-tar -czvf ../GWW-$version.tar.gz      GWW
 #tar -czvf ../GIPAW-$version.tar.gz    GIPAW
 tar -czvf ../test-suite-$version.tar.gz test-suite
 

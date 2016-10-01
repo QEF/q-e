@@ -27,6 +27,7 @@ default :
 	@echo '  upf          utilities for pseudopotential conversion'
 	@echo '  xspectra     X-ray core-hole spectroscopy calculations'
 	@echo '  couple       Library interface for coupling to external codes'
+	@echo '  epw          Electron-Phonon Coupling with wannier functions'
 	@echo '  gui          Graphical User Interface'
 	@echo '  test-suite   Run semi-automated test-suite for regression testing'
 	@echo '  all          same as "make pwall cp ld1 upf tddfpt"'
@@ -40,7 +41,6 @@ default :
 	@echo '  yambo        electronic excitations with plane waves'
 	@echo '  yambo-devel  yambo devel version'
 	@echo '  plumed       Metadynamics plugin for pw or cp'
-	@echo '  epw          Electron-Phonon Coupling with wannier functions'
 	@echo '  d3q          general third-order code and thermal transport codes'
 	@echo ' '
 	@echo 'where target is one of the following suite operation:'
@@ -71,29 +71,29 @@ pw-lib : bindir libfft libla mods liblapack libs libiotk
 	if test -d PW ; then \
 	( cd PW ; $(MAKE) TLDEPS= pw-lib || exit 1) ; fi
 
-lr-lib : bindir libfft libla mods liblapack libs libiotk
-	if test -d LR_Modules ; then \
-	( cd LR_Modules ; $(MAKE) TLDEPS= all || exit 1) ; fi
-
 cp : bindir libfft libla mods liblapack libs libiotk
 	if test -d CPV ; then \
 	( cd CPV ; $(MAKE) TLDEPS= all || exit 1) ; fi
 
-ph : bindir libfft libla mods libs pw lr-lib
-	( cd install ; $(MAKE) -f plugins_makefile phonon || exit 1 )
+ph : bindir libfft libla mods libs pw lrmods
+	if test -d PHonon; then \
+	(cd PHonon; $(MAKE) all || exit 1) ; fi
 
 neb : bindir libfft libla mods libs pw
-	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
+	if test -d NEB; then \
+  (cd NEB; $(MAKE) all || exit 1) ; fi
 
 tddfpt : bindir libfft libla mods libs pw
-	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
+	if test -d TDDFPT; then \
+	(cd TDDFPT; $(MAKE) all || exit 1) ; fi
 
 pp : bindir libfft libla mods libs pw
 	if test -d PP ; then \
 	( cd PP ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
 
 pwcond : bindir libfft libla mods libs pw pp
-	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
+	if test -d PWCOND ; then \
+	( cd PWCOND ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
 
 acfdt : bindir libfft libla mods libs pw ph
 	if test -d ACFDT ; then \
@@ -114,7 +114,8 @@ d3q : pw ph
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
 ld1 : bindir liblapack libfft libla mods libs
-	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
+	if test -d atomic ; then \
+	( cd atomic ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
 
 upf : libfft libla mods libs liblapack 
 	if test -d upftools ; then \
@@ -125,11 +126,16 @@ pw_export : libiotk bindir libfft mods libs pw
 	( cd PP ; $(MAKE) TLDEPS= pw_export.x || exit 1 ) ; fi
 
 xspectra : bindir libfft mods libs pw
-	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
+	if test -d XSpectra ; then \
+	( cd XSpectra ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
 
 couple : pw cp
 	if test -d COUPLE ; then \
 	( cd COUPLE ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
+
+epw: pw ph ld1
+	if test -d EPW ; then \
+	( cd EPW ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
 
 gui : touch-dummy
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
@@ -143,7 +149,7 @@ all   : pwall cp ld1 upf tddfpt gwl xspectra
 # compile modules, libraries, directory for binaries, etc
 ###########################################################
 
-libla : touch-dummy libelpa
+libla : touch-dummy liblapack
 	( cd LAXlib ; $(MAKE) TLDEPS= all || exit 1 )
 
 libfft : touch-dummy
@@ -155,8 +161,8 @@ mods : libiotk libla libfft
 libs : mods
 	( cd clib ; $(MAKE) TLDEPS= all || exit 1 )
 
-lrmods :
-	( cd LR_Modules ; $(MAKE) TLDEPS=lr-lib || exit 1 )
+lrmods : libs libla libfft 
+	( cd LR_Modules ; $(MAKE) TLDEPS= all || exit 1 )
 
 bindir :
 	test -d bin || mkdir bin
@@ -169,9 +175,6 @@ libblas : touch-dummy
 	cd install ; $(MAKE) -f extlibs_makefile $@
 
 liblapack: touch-dummy
-	cd install ; $(MAKE) -f extlibs_makefile $@
-
-libelpa: touch-dummy
 	cd install ; $(MAKE) -f extlibs_makefile $@
 
 libiotk: touch-dummy
@@ -204,9 +207,6 @@ plumed: touch-dummy
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
 west: pw touch-dummy
-	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
-
-epw: pw ph ld1 touch-dummy
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
 touch-dummy :
@@ -275,10 +275,10 @@ test-suite: pw cp touch-dummy
 clean : doc_clean
 	touch make.inc 
 	for dir in \
-		CPV LAXlib FFTXlib Modules PP PW \
-		NEB ACFDT COUPLE GWW XSpectra \
+		CPV LAXlib FFTXlib Modules PP PW EPW \
+		NEB ACFDT COUPLE GWW XSpectra PWCOND \
 		atomic clib LR_Modules pwtools upftools \
-		dev-tools extlibs Environ TDDFPT \
+		dev-tools extlibs Environ TDDFPT PHonon \
 	; do \
 	    if test -d $$dir ; then \
 		( cd $$dir ; \
@@ -366,5 +366,4 @@ depend: libiotk version
 # update file containing version number before looking for dependencies
 version:
 	- ( cd Modules; make version )
-
 
