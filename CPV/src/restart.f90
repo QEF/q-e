@@ -26,7 +26,6 @@
       USE ensemble_dft,     ONLY: tens
       USE mp,               ONLY: mp_bcast
       USE control_flags,    ONLY: tksw, ndw, io_level, twfcollect
-      USE xml_io_base,      ONLY: restart_dir
       USE electrons_module, ONLY: collect_c
       USE descriptors,      ONLY: la_descriptor
       USE gvecw,            ONLY: ngw
