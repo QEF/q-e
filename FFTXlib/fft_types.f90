@@ -253,15 +253,21 @@ CONTAINS
       np = nr3 / desc%nproc
       nq = nr3 - np * desc%nproc
       npp(1:desc%nproc) = np      ! assign a base value to all processors
-      reminder_loop : &           ! assign an extra plane to processors so that they are spaced by ntg
-      DO itg = 1, ntg  
-         DO i = itg, desc%nproc, ntg
-            IF (nq==0) EXIT reminder_loop
-            nq = nq - 1
-            npp(i) = np + 1
-         ENDDO
-      ENDDO reminder_loop
-    END IF
+      IF( np == 0 ) THEN
+        DO i = 1, desc%nproc
+         IF ( i <= nq ) npp(i) = 1
+        ENDDO
+      ELSE
+        reminder_loop : &           ! assign an extra plane to processors so that they are spaced by ntg
+        DO itg = 1, ntg  
+          DO i = itg, desc%nproc, ntg
+             IF (nq==0) EXIT reminder_loop
+             nq = nq - 1
+             npp(i) = np + 1
+          ENDDO
+        ENDDO reminder_loop
+      END IF
+    ENDIF
 
     !-- npp(1:nproc) is the number of planes per processor
     !-- npl is the number of planes per processor of this processor
