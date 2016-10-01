@@ -78,7 +78,7 @@ GUI=PWgui-6.0
 GUI_URL=$(URL)$(GUI).tar.gz
 #
 # Package maintainer: Marco Govoni
-WEST=West-X.Y
+WEST=West-2.0.0
 WEST_URL=http://www.west-code.org/downloads/$(WEST).tar.gz
 #
 # Package maintainer: Samuel Poncé
