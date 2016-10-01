@@ -45,7 +45,9 @@ SUBROUTINE wfcinit()
   LOGICAL :: exst, exst_mem, exst_file, opnd_file, twfcollect_file = .FALSE.
   CHARACTER (256 )                        :: dirname 
 !
+#if defined(__XSD)
   TYPE ( input_type ), ALLOCATABLE      :: input_obj
+#endif
 !
   !
   !

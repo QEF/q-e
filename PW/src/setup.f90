@@ -102,10 +102,12 @@ SUBROUTINE setup()
   !
   LOGICAL, EXTERNAL  :: check_para_diag
 !
+#if defined(__XSD)
   TYPE(output_type),ALLOCATABLE             :: output_obj 
   TYPE(input_type),ALLOCATABLE              :: input_obj
   TYPE(parallel_info_type),ALLOCATABLE      :: parinfo_obj
   TYPE(general_info_type),ALLOCATABLE       :: geninfo_obj
+#endif
 !  
 #if defined(__MPI)
   LOGICAL :: lpara = .true.
