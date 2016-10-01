@@ -30,15 +30,17 @@ AC_ARG_WITH(elpa-lib,
 elpa_line="@delete@"
 
 # ELPA iff SCALAPACK
-if test "$have_scalapack" -eq 1; then
-  if test "$with_elpa_include" -eq 1 && test "$with_elpa_libs" -eq 1; then
-    scalapack_libs="$elpa_libs $scalapack_libs"
-    try_iflags="$try_iflags $elpa_include"
-    try_dflags="$try_dflags -D__ELPA_2016"
-    elpa_line="ELPA_LIBS=$elpa_libs"
+if test "$with_elpa_libs" -eq 1; then 
+  if test "$have_scalapack" -eq 1; then
+    if test "$with_elpa_include" -eq 1 && test "$with_elpa_libs" -eq 1; then
+      scalapack_libs="$elpa_libs $scalapack_libs"
+      try_iflags="$try_iflags $elpa_include"
+      try_dflags="$try_dflags -D__ELPA_2016"
+      elpa_line="ELPA_LIBS=$elpa_libs"
+    fi
+  else
+    AC_MSG_WARN([*** ScaLAPACK is needed to use ELPA])
   fi
-else
-  AC_MSG_WARN([*** ScaLAPACK is needed to use ELPA])
 fi
 
   AC_MSG_RESULT(${elpa_libs})
