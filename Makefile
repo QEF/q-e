@@ -282,7 +282,7 @@ clean : doc_clean
 		CPV LAXlib FFTXlib Modules PP PW EPW \
 		NEB ACFDT COUPLE GWW XSpectra PWCOND \
 		atomic clib LR_Modules pwtools upftools \
-		dev-tools extlibs Environ TDDFPT PHonon \
+		dev-tools extlibs Environ TDDFPT PHonon GWW \
 	; do \
 	    if test -d $$dir ; then \
 		( cd $$dir ; \
