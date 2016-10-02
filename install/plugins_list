@@ -42,17 +42,17 @@ PLUMED=plumed-1.3-qe
 PLUMED_URL=$(URL)$(PLUMED).tar.gz
 #
 # Package maintainer: Lorenzo Paulatto
-D3Q=d3q-thermal2_1.0.5_qe6.0.tgz
-D3Q_URL=$(URL)$(D3Q).tar.gz
+D3Q=d3q-thermal2_1.0.5_qe6.0
+D3Q_URL=$(URL)$(D3Q).tgz
 #
 # Package maintainer: Filippo Spiga
-TESTSUITE=test-suite-6.0
+TESTSUITE=qe-6.0-test-suite
 TESTSUITE_URL=$(URL)$(TESTSUITE).tar.gz
-#
-# Package maintainer: Anton Kokalj
-GUI=PWgui-6.0
-GUI_URL=$(URL)$(GUI).tar.gz
 #
 # Package maintainer: Marco Govoni
 WEST=West-2.0.0
 WEST_URL=http://www.west-code.org/downloads/$(WEST).tar.gz
+#
+# Package maintainer:
+EXAMPLES=qe-6.0-examples
+EXAMPLES_URL=$(URL)$(EXAMPLES).tar.gz
