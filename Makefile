@@ -138,8 +138,8 @@ epw: pw ph ld1
 	if test -d EPW ; then \
 	( cd EPW ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
 
-gui : touch-dummy
-	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
+gui :
+	@echo 'Check "GUI/README" how to access the Graphical User Interface'
 
 #examples : touch-dummy
 #	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
@@ -368,6 +368,7 @@ depend: libiotk version
 	@echo 'Checking dependencies...'
 	- ( if test -x install/makedeps.sh ; then install/makedeps.sh ; fi)
 # update file containing version number before looking for dependencies
+
 version:
 	- ( cd Modules; make version )
 

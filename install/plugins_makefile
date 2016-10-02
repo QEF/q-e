@@ -280,17 +280,6 @@ extlibs:
 	test -n "$(EXTLIBS)" && ( cd .. ; $(MAKE) $(EXTLIBS) || exit 1) || :
 
 ###########################################################
-# GUI
-###########################################################
-
-gui:  uncompress-gui
-	touch make-gui
-
-uncompress-gui: touch-dummy
-	$(call download_and_unpack,$(GUI),$(GUI_URL),GUI,PWgui)
-	touch uncompress-gui
-
-###########################################################
 # cleaning
 ###########################################################
 
@@ -405,14 +394,6 @@ west_veryclean: west_clean
 west_distclean: 
 	   rm -f ../archive/$(WEST).tar.gz
 
-gui_clean:
-	rm -rf ./make-gui 
-
-gui_veryclean: gui_clean
-# dir is not deleted for compatibility with the repository
-
-gui_distclean: 
-
 test-suite_clean:
 	if test -d ../test-suite; then (cd ../test-suite; \
 	$(MAKE) clean); fi
@@ -436,15 +417,15 @@ test-suite_distclean:
 ##########################################################
 
 clean: w90_clean want_clean yambo_clean yambo-devel_clean plumed_clean \
-	gui_clean gipaw_clean west_clean test-suite_clean \
+	gipaw_clean west_clean test-suite_clean \
 	sax_clean d3q_clean #examples_clean
 
 veryclean: w90_veryclean want_veryclean yambo_veryclean yambo-devel_veryclean \
-	plumed_veryclean gui_veryclean gipaw_veryclean west_veryclean \
+	plumed_veryclean gipaw_veryclean west_veryclean \
 	test-suite_veryclean sax_veryclean d3q_veryclean #examples_veryclean
 
 #distclean : veryclean
 distclean: w90_distclean want_distclean yambo_distclean yambo-devel_distclean \
-  gui_distclean test-suite_distclean gipaw_distclean west_distclean \
+  test-suite_distclean gipaw_distclean west_distclean \
 	sax_distclean d3q_distclean #examples_distclean
 
