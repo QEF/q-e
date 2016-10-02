@@ -68,11 +68,17 @@ run-custom-test-parallel : prolog pseudo
 	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=$(testdir) ; fi
 
 
-compare : compare-cp compare-pw compare-epw
+create-reference-cp : pseudo prolog
+	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --category=cp_all make-benchmarks
 
-# All comparison outputs are, so far, generated only in SERIAL
-create-reference : pseudo prolog
-	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --category=_default_ make-benchmarks
+create-reference-pw : pseudo prolog
+	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --category=pw_all make-benchmarks
+
+create-reference-epw : pseudo prolog
+	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --category=epw_all make-benchmarks
+
+
+compare : compare-cp compare-pw compare-epw
 
 compare-cp : prolog
 	${TESTCODE_DIR}/bin/testcode.py --category=cp_all  --verbose compare 2>&1 | tee out.CP.`date +%Y%m%d_%H%M%S`
@@ -86,6 +92,7 @@ compare-epw : prolog
 clean:
 	@for x in `find pw_* -name "test*"`; do rm -rf $$x; done
 	@for x in `find cp_* -name "test*"`; do rm -rf $$x; done
+	@for x in `find epw_* -name "test*"`; do rm -rf $$x; done
 # Special case for 'pw_vc-relax' test-case
 	@rm -f pw_vc-relax/ave pw_vc-relax/e pw_vc-relax/tv pw_vc-relax/p pw_vc-relax/eal pw_vc-relax/avec
 # Special case for 'pw_langevin' test-case

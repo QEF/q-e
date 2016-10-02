@@ -1,61 +1,34 @@
 # Copyright (C) 2001-2020 Quantum ESPRESSO Foundation
 # Maintainer: Filippo Spiga (filippo.spiga@quantum-espresso.org)
 
-TEST-SUITE  v1.0.0
+TEST-SUITE  v6.0
 ------------------
 
-Type 'make' for the list of possible 
+Type 'make' for the list of possible options. Currently only PW, CP and EPW
+are supported.
 
-You can run make with several options:
+'make compare' compare the latest run of tests (SERIAL or PARALLEl) and 
+redirect the output to a file called "out.XXX.`date +%Y%m%d_%H%M%S`" 
+'XXX' is replaced by the name of the package ('PW', 'CP', 'EPW')
 
-A) Run all PW and CP tests in serial and show a final report
-
-$ make run-tests
-
-If 'run-tests-parallel', it runs the custom test in parallel (4 MPI)
-
-
-B) Run the test that is in a single directory and show a final report
-
-$ make run-custom-test testdir=name_of_directory
-
-For example, the following runs only the tests in the pw_spinorbit directory
-$ make run-custom-test testdir=pw_spinorbit
-
-If 'run-custom-test-parallel', it runs the specified test in parallel (4 MPI)
-
-$ make run-custom-test-parallel testdir=epw_base
-
-C) Compare the latest run of tests (SERIAL or PARALLEl) and redirect
-   the output to various files called "out.XXX.`date +%Y%m%d_%H%M%S`" (python 
-   buffers both stdout and stderr). 'XXX' is replaced by the name of the
-   package (e.g. 'PW')
-
-$ make compare
-
-
-D) Regenerate all benchmark reference files -- WORKS ONLY IN THE SERIAL MODE
-
-$ make create_reference
-
-
-E) Clean all test files create so far and leave only benchmark reference
-
-$ make clean
+Clean all test files and leave only benchmark reference via 'make clean'
+command
 
 
 
 REFERENCE OUTPUTS
 -----------------
 
-All reference outputs have been computed using GCC 4.9.2. The following 
-configure options have been used:
+All reference outputs have been computed using GCC 4.8.5
 
-./configure --disable-openmp --disable-parallel \
-    --with-internal-blas --with-internal-lapack
+The following configure options have been used:
 
+./configure --disable-openmp --disable-parallel --with-netlib
 
-KNOWN ISSUES
-------------
-pw_vdw/vdw-ts.in fails with ifort v.12.0.2.137 unless Modules/tsvdw.f90 is compiled with -O0
-
+DFLAGS         = -D__OPENMP -D__GFORTRAN -D__STD_F95 -D__FFTW
+CFLAGS         = -O3 $(DFLAGS) $(IFLAGS)
+F90FLAGS       = $(FFLAGS) -x f95-cpp-input -fopenmp
+FFLAGS         = -O3 -g -fopenmp
+FFLAGS_NOOPT   = -O0 -g
+LD             = gfortran
+LDFLAGS        = -g -pthread -fopenmp
