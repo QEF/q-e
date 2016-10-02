@@ -3,31 +3,43 @@
  ==============================================================================
 
 
-This directory contains the (1) PWgui: a Graphical-User-Interface for
-PWscf and (2) QE-modes package: a collection of Emacs major-modes for
-Quantum ESPRESSO input files.
+This directory contains:
+
+  (1) PWgui: a Graphical-User-Interface for PWscf
+
+  (2) QE-modes package: a collection of Emacs major-modes for
+      Quantum ESPRESSO input files.
 
 
-Info about the PWgui and its directory structure:
+This directory contains the following three subdirectories:
 
-  1. PWgui/ -- the GUI itself
-  2. Guib/  -- the engine that the PWgui uses
+ PWgui/ -- the PWgui itself
+ Guib/  -- the engine that the PWgui uses
+ QE-modes/ -- the QE-modes package: a collection of Emacs major-modes for QE
+
+
+
+Info about the QE-modes package:
+--------------------------------
+
+See the QE-modes/README and QE-modes/README.svn files.
+
+
+Info about the PWgui package:
+-----------------------------
 
 The PWgui GUI is based on Guib engine (see
-http://www-k3.ijs.si/kokalj/guib/guib.html). Currently, the Guib
-engine is also included in QE repository (espresso/GUI/Guib
-directory).
+http://www-k3.ijs.si/kokalj/guib/guib.html), which is provided in the
+Guib/ subdirectory.
+
+See the following files in PWgui/ directory:
+	INSTALL.svn      
+	INSTALL          
+	README           
+	README.developer 
+
+About Guib/ directory: it can be treated as "technicalities", and
+except you want to develop Guib, you do not need to enter ever in that
+directory
 
 
-IMPORTANT: 
-**********
-
-	1. Enter the PWgui/ directory and read the following files:
-			INSTALL.svn      (REQUIRED)
-			INSTALL          (optional)
-			README           (optional)
-			README.developer (optional)
-
-	2. The Guib/ directory can be treated as "technicalities", and
-	   except you want to develop Guib, you do not need to enter ever
-	   in that directory 
