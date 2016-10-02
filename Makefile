@@ -140,6 +140,7 @@ epw: pw ph ld1
 
 gui :
 	@echo 'Check "GUI/README" how to access the Graphical User Interface'
+	#@echo 'Check "PWgui-X.Y/README" how to access the Graphical User Interface'
 
 #examples : touch-dummy
 #	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )

@@ -46,13 +46,15 @@ touch make.inc
 make doc VERSION=$version
 
 # generate PWGUI
+
 make tar-gui PWGUI_VERSION=$version 
 tar -xzvf PWgui-$version.tgz
 /bin/rm PWgui-$version.tgz
 
-# generate QE-modes
+# generate QE-modes -- not working for me (NdFilippo
 
-make tar-qe-modes VERSION=$version; # this creates a ready to use QE-modes-$version.tar.gz
+# this creates a ready to use QE-modes-$version.tar.gz
+make tar-qe-modes VERSION=$version
 # move the package one directory down from espresso-$version/
 mv QE-modes-$version.tar.gz ..
 
@@ -104,13 +106,13 @@ tar -czvf qe-$version.tar.gz qe-$version/archive \
                                    qe-$version/atomic \
                                    qe-$version/EPW \
                                    qe-$version/GWW \
+                                   qe-$version/PWgui-$version
 
 # Packages, ready for automatic unpacking
 
 cd qe-$version
-tar -cvzf ../PWgui-$version.tar.gz    PWgui-$version
-#tar -czvf ../GIPAW-$version.tar.gz    GIPAW
-tar -czvf ../test-suite-$version.tar.gz test-suite
+tar -czvf ../qe-$version-test-suite.tar.gz test-suite
+tar -czvf ../qe-$version-examples.tar.gz Examples
 
 # Generating and uploading documentation
 
