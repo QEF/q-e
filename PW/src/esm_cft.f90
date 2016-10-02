@@ -41,7 +41,7 @@ MODULE esm_cft
   C_POINTER :: fw_planz = 0
   C_POINTER :: bw_planz = 0
 
-#elif defined __LINUX_ESSL
+#elif defined(__LINUX_ESSL)
 
   !   ESSL IBM library: see the ESSL manual for DCFT
 
@@ -58,7 +58,7 @@ MODULE esm_cft
   REAL (DP) :: fw_tablez( ltabl )
   REAL (DP) :: bw_tablez( ltabl )
 
-#elif defined __SCSL
+#elif defined(__SCSL)
 
   !   SGI scientific library scsl
 
@@ -69,7 +69,7 @@ MODULE esm_cft
   REAL (DP) :: tablez (ltabl)
   INTEGER :: isys(0:1) = (/ 1, 1 /)
 
-#elif defined __SX6
+#elif defined(__SX6)
 
   !   NEC MathKeisan
 
@@ -80,7 +80,7 @@ MODULE esm_cft
   REAL (DP) :: tablez (ltabl)
   INTEGER :: isys = 1
 
-#elif defined __SUNPERF
+#elif defined(__SUNPERF)
   
   !   SUN sunperf library
 
@@ -118,7 +118,7 @@ SUBROUTINE esm_cft_1z_init(nsl, nz, ldz)
   
   REAL (DP)       :: DUMMY
   
-#elif defined __SX6
+#elif defined(__SX6)
   
   !   NEC MathKeisan
   
@@ -145,7 +145,7 @@ SUBROUTINE esm_cft_1z_init(nsl, nz, ldz)
   idir = -1; CALL CREATE_PLAN_1D( fw_planz, nz, idir)
   idir =  1; CALL CREATE_PLAN_1D( bw_planz, nz, idir)
 
-#elif defined __FFTW3
+#elif defined(__FFTW3)
 
   IF( fw_planz /= 0 ) CALL dfftw_destroy_plan( fw_planz )
   IF( bw_planz /= 0 ) CALL dfftw_destroy_plan( bw_planz )
@@ -158,7 +158,7 @@ SUBROUTINE esm_cft_1z_init(nsl, nz, ldz)
   DEALLOCATE ( c )
   DEALLOCATE ( cout )
 
-#elif defined __LINUX_ESSL
+#elif defined(__LINUX_ESSL)
 
   IF( ALLOCATED( work ) ) DEALLOCATE( work )
   ALLOCATE( work( lwork, 0:nth-1 ) )
@@ -168,14 +168,14 @@ SUBROUTINE esm_cft_1z_init(nsl, nz, ldz)
   CALL DCFT ( 1, c(1), 1, ldz, cout(1), 1, ldz, nz, nsl, -1, &
     1.0_DP, bw_tablez, ltabl, work(1,1), lwork)
 
-#elif defined __SCSL
+#elif defined(__SCSL)
 
   IF( ALLOCATED( work ) ) DEALLOCATE( work )
   ALLOCATE( work( lwork, 0:nth-1 ) )
   CALL ZZFFTM (0, nz, 0, 0.0_DP, DUMMY, 1, DUMMY, 1, &
     tablez, DUMMY, isys)
 
-#elif defined __SX6
+#elif defined(__SX6)
   
   lwork = 4 * nz * nsl
   IF( ALLOCATED( work ) ) DEALLOCATE( work )
@@ -183,7 +183,7 @@ SUBROUTINE esm_cft_1z_init(nsl, nz, ldz)
   CALL ZZFFTM (0, nz, 1, 1.0_DP, DUMMY, ldz, DUMMY, ldz, &
     tablez, work(1,1), isys)
 
-#elif defined __SUNPERF
+#elif defined(__SUNPERF)
 
   CALL zffti (nz, tablez )
   
@@ -262,7 +262,7 @@ SUBROUTINE esm_cft_1z(c, nsl, nz, ldz, isign, cout)
     cout( 1 : ldz * nsl ) = c( 1 : ldz * nsl )
   END IF
   
-#elif defined __FFTW3
+#elif defined(__FFTW3)
 
   IF (isign < 0) THEN
     CALL dfftw_execute_dft( fw_planz, c, cout)
@@ -272,7 +272,7 @@ SUBROUTINE esm_cft_1z(c, nsl, nz, ldz, isign, cout)
     CALL dfftw_execute_dft( bw_planz, c, cout)
   END IF
   
-#elif defined __SCSL
+#elif defined(__SCSL)
   
   IF ( isign < 0 ) THEN
     idir   = -1
@@ -284,7 +284,7 @@ SUBROUTINE esm_cft_1z(c, nsl, nz, ldz, isign, cout)
   IF (isign /= 0) CALL ZZFFTM (idir, nz, nsl, tscale, c(1), ldz, &
     cout(1), ldz, tablez, work(1,ith), isys)
   
-#elif defined __SX6
+#elif defined(__SX6)
   IF ( isign < 0 ) THEN
     idir   = -1
     tscale = 1.0_DP / nz
@@ -295,7 +295,7 @@ SUBROUTINE esm_cft_1z(c, nsl, nz, ldz, isign, cout)
   IF (isign /= 0) CALL ZZFFTM (idir, nz, nsl, tscale, c(1), ldz, &
     cout(1), ldz, tablez, work(1,ith), isys)
   
-#elif defined __LINUX_ESSL
+#elif defined(__LINUX_ESSL)
   
   ! essl uses a different convention for forward/backward transforms
   ! wrt most other implementations: notice the sign of "idir"
@@ -312,7 +312,7 @@ SUBROUTINE esm_cft_1z(c, nsl, nz, ldz, isign, cout)
       tscale, bw_tablez, ltabl, work(1,ith), lwork)
   END IF
   
-#elif defined __SUNPERF
+#elif defined(__SUNPERF)
   
   IF ( isign < 0) THEN
     DO i = 1, nsl
