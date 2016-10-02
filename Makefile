@@ -29,7 +29,8 @@ default :
 	@echo '  couple       Library interface for coupling to external codes'
 	@echo '  epw          Electron-Phonon Coupling with wannier functions'
 	@echo '  gui          Graphical User Interface'
-	@echo '  test-suite   Run semi-automated test-suite for regression testing'
+	@echo '  examples     fetch from web examples for all core packages'
+	@echo '  test-suite   run semi-automated test-suite for regression testing'
 	@echo '  all          same as "make pwall cp ld1 upf tddfpt"'
 	@echo ' '
 	@echo 'where target identifies one or multiple THIRD-PARTIES PACKAGES:'
@@ -139,6 +140,9 @@ epw: pw ph ld1
 
 gui : touch-dummy
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
+
+#examples : touch-dummy
+#	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
 pwall : pw neb ph pp pwcond acfdt
 
