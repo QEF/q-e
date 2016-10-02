@@ -6,7 +6,7 @@ New in 6.0 version:
   * Non-collinear magnetism implemented in epsilon.x, code restructuring
     (Tae-Yun Kim, Andrea Ferretti, Cheol-Hwan Park)
   * Lin Lin's ACE (Adaptively Compressed Exchange) for hybrid functionals
-    (Ivan Carnimeo)
+    (experimental, activate with -D__EXX_ACE) (Ivan Carnimeo)
   * Improved real-space treatment of Q and beta functions with Fourier
     filtering (Stefano de Gironcoli)
   * Support for new, improved Goedecker-Hutter-Teter pseudopotentials
@@ -19,6 +19,7 @@ New in 6.0 version:
          accuracy
   * Netlib LAPACK updated, easy to update going forward
   * Added support to modern ELPA (2016.05 and 2015.11)
+  * Added emacs modes for editing QE input, in PWGui/QE-modes (Tone Kokalj)
 
 Fixed in 6.0 version:
 
@@ -941,7 +942,7 @@ Fixed in version 4.0.1:
   * GIPAW: 10^3 factor missing in conversion
   * GIPAW: paw_recon[]%paw_betar[] was not initialised and caused NaN's
     with IBM compilers. Courtesy of Christos Gougoussis (IMPMC, Paris).
-  * Minor glitches in PWgui
+  * Minor glitches in PWGui
   * cppp.x was not working in v.4.0
   * Workaround for bluegene weirdness extended to complex hamiltonians
   * PP/projwfc.f90: Problems with file names in systems > 1000 atoms
