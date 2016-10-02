@@ -12,7 +12,7 @@ mkdir $tempdir
 cd $tempdir
 /bin/rm -rf espresso/ qe-$version
 # get the svn copy
-svn checkout http://qeforge.qe-forge.org/svn/q-e/tags/QE-5.3.0/espresso
+svn checkout http://qeforge.qe-forge.org/svn/q-e/tags/QE-$version/espresso
 mv espresso/ qe-$version/
 
 cd qe-$version
