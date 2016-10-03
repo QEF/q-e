@@ -19,7 +19,7 @@ New in 6.0 version:
          accuracy
   * Netlib LAPACK updated, easy to update going forward
   * Added support to modern ELPA (2016.05 and 2015.11)
-  * Added emacs modes for editing QE input, in PWGui/QE-modes (Tone Kokalj)
+  * Added emacs modes for editing QE input, in GUI/QE-modes (Tone Kokalj)
 
 Fixed in 6.0 version:
 
