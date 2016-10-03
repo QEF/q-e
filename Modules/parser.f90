@@ -50,7 +50,7 @@ MODULE parser
   !
   !
   !--------------------------------------------------------------------------
-  PURE SUBROUTINE field_count( num, line, car )
+  SUBROUTINE field_count( num, line, car )
     !--------------------------------------------------------------------------
     !
     IMPLICIT NONE
@@ -58,16 +58,8 @@ MODULE parser
     INTEGER,                    INTENT(OUT) :: num
     CHARACTER(LEN=*),           INTENT(IN)  :: line
     CHARACTER(LEN=1), OPTIONAL, INTENT(IN)  :: car
-#if defined (__XLF)
-    ! ... with the IBM xlf compiler some combination of flags lead to
-    ! ... variables being defined as static, hence giving a conflict
-    ! ... with PURE function. We then force the variable to be AUTOMATIC
-    CHARACTER(LEN=1), AUTOMATIC             :: sep1, sep2    
-    INTEGER, AUTOMATIC                      :: j
-#else
     CHARACTER(LEN=1)                        :: sep1, sep2    
     INTEGER                                 :: j
-#endif
     !
     !
     num = 0
