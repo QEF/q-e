@@ -56,6 +56,11 @@ run-tests-pw-serial : prolog pseudo
 run-tests-pw-parallel : prolog pseudo
 	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=pw_all
 
+run-tests-epw-serial : prolog pseudo
+	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=epw_all
+
+run-tests-epw-parallel : prolog pseudo
+	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=epw_all
 
 run-custom-test : run-custom-test-serial
 
