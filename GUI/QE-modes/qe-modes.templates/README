@@ -3,7 +3,7 @@ This directory contains "template" files for creating the Emacs major
 mode(s) for editing Quantum ESPRESSO (QE) input files.
 
 
-In this directory are two types of files:
+This directory contains two types of files:
 
 1. *.el.tcl 
 

@@ -1,3 +1,6 @@
+ ========================================================================
+ * * * How to build the QE-modes from the QE SVN repository sources * * *
+ ========================================================================
 
 The QE-modes *.el and *.elc source files are automatically generated
 with the "$TOPDIR/dev-tools/gen-emacs-mode" script using the (1)
