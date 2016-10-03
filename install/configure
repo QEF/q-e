@@ -10885,7 +10885,7 @@ as_val=`eval 'as_val=${'$as_ac_Header'}
    if test "x$as_val" = x""yes; then
   have_fft_include=1
 else
-  have_fft_include-0
+  have_fft_include=0
 fi
 
 
