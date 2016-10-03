@@ -166,7 +166,7 @@ then
                     # when cross-compilation is enabled I need to rely on header 
                     # checking (bit it complains...
                     AC_CHECK_HEADER($inc/mkl_dfti.f90,
-                                have_fft_include=1,have_fft_include-0)
+                                have_fft_include=1,have_fft_include=0)
                  fi
                  
                  if test "$have_fft_include=1"
