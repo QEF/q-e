@@ -821,13 +821,8 @@
                IF ( (abs(xxq(1)) > eps) .or. (abs(xxq(2)) > eps) .or. (abs(xxq(3)) > eps) ) THEN
                  !      
                  CALL cryst_to_cart (1, xxq, bg, 1)
-                 DO jbnd = 1, nbndsub
-                   DO ibnd = 1, nbndsub
-                     !    
-                     CALL rgd_blk_epw(nq1, nq2, nq3, xxq, uf, epmatf(ibnd,jbnd,:), &
-                           nmodes, epsi, zstar, bmatf(ibnd,jbnd), +1.d0)
-                   ENDDO
-                 ENDDO
+                 CALL rgd_blk_epw_fine(nq1, nq2, nq3, xxq, uf, epmatf, &
+                                       nmodes, epsi, zstar, bmatf, +1.d0)
                  CALL cryst_to_cart (1, xxq, at, -1)
                  !
                ENDIF
