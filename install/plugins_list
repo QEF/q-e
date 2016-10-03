@@ -14,8 +14,8 @@ URL=http://files.qe-forge.org/index.php?file=
 #
 #
 # Package maintainer: Andrea Ferretti
-WANT=want-2.5.1
-WANT_URL=http://qe-forge.org/gf/download/frsrelease/153/618/$(WANT)-base.tar.gz
+WANT=want
+WANT_URL=http://www.wannier-transport.org/files/want-latest.tar.gz
 #
 # Package maintainer: Andrea Ferretti
 YAMBO_DEVEL=yambo-devel
