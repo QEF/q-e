@@ -5,8 +5,9 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+! Uncomment next line to print compilation info. BEWARE: may occasionally
+! give compilation errors due to lines too long if paths are very long
 !#define __HAVE_CONFIG_INFO
-!
 !==-----------------------------------------------------------------------==!
 MODULE environment
   !==-----------------------------------------------------------------------==!
@@ -110,9 +111,7 @@ CONTAINS
     END IF
     !
     CALL opening_message( code_version )
-#if defined(__HAVE_CONFIG_INFO)
     CALL compilation_info ( )
-#endif
 #if defined(__MPI)
     CALL parallel_info ( )
 #else
@@ -244,6 +243,7 @@ CONTAINS
   !
   ! code borrowed by WanT - prints architecture / compilation details
   !
+#if defined(__HAVE_CONFIG_INFO)
 #include "configure.h"
 ! #include "build_date.h"
 !
@@ -273,6 +273,7 @@ __CONF_FFT_LIBS))
      WRITE( stdout, "(2x,'    MASS LIBS :',4x,a)" ) TRIM( ADJUSTL( &
 __CONF_MASS_LIBS))
      !
+#endif
    END SUBROUTINE compilation_info
 
   !==-----------------------------------------------------------------------==!
