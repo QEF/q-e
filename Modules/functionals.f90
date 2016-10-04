@@ -218,13 +218,13 @@ subroutine pzKZK (rs, ec, vc, vol)
   real(DP) :: f3, f2, f1, f0, pi
   real(DP) :: D1, D2, D3, P1, P2, ry2h
   !
-  data a / 0.0311d0, 0.031091d0 /, b / -0.048d0, -0.046644d0 /, &
-       c / 0.0020d0, 0.00419d0 /, d / -0.0116d0, -0.00983d0 /
-  data gc / -0.1423d0, -0.103756d0 /, b1 / 1.0529d0, 0.56371d0 /, &
-       b2 / 0.3334d0, 0.27358d0 /
-  data a1 / -2.2037 /, g1 / 0.1182 /, g2 / 1.1656 /, g3 / -5.2884 /, &
-       g4 / -1.1233 /
-  data ry2h / 0.5d0 /
+  data a / 0.0311_dp, 0.031091_dp /, b / -0.048_dp, -0.046644_dp /, &
+       c / 0.0020_dp, 0.00419_dp /, d / -0.0116_dp, -0.00983_dp /
+  data gc / -0.1423_dp, -0.103756_dp /, b1 / 1.0529_dp, 0.56371_dp /, &
+       b2 / 0.3334_dp, 0.27358_dp /
+  data a1 / -2.2037_dp/, g1 / 0.1182_dp/, g2 / 1.1656_dp/, g3 / -5.2884_dp/, &
+       g4 / -1.1233_dp /
+  data ry2h / 0.5_dp /
   !
   iflag = 1
   pi = 4.d0 * atan(1.d0)
@@ -1073,9 +1073,9 @@ subroutine pbex (rho, grho, iflag, sx, v1x, v2x)
   ! parameters of the functional
   real(DP) :: k (6), mu(6), ev(6)
   !           pbe        rpbe        pbesol   pbeq2d      optB88  optB86b
-  data k / 0.804_DP,   1.2450D0,   0.804_DP , 0.804_DP ,    0.0 ,  0.0 /, &
-       mu/ 0.21951_DP, 0.21951_DP, 0.12345679012345679012_DP,             &
-                                   0.12345679012345679,     0.22 , 0.1234/, &
+  data k / 0.804_DP,   1.2450_DP,   0.804_DP , 0.804_DP,  0.0_dp,  0.0_dp/, &
+       mu/ 0.21951_DP, 0.21951_DP, 0.12345679012345679_DP,             &
+                                   0.12345679012345679_DP,  0.22_dp, 0.1234_dp/, &
        ev / 1.647127_DP, 0.980118_DP, 0.017399_DP, 1.523671_DP, 0.367229_DP, &
                                    0.011282_DP /  ! a and b parameters of Engel and Vosko
   agrho = sqrt (grho)
