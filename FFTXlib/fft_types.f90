@@ -705,10 +705,8 @@ CONTAINS
       CALL MPI_ALLREDUCE( MPI_IN_PLACE, nb, 3, MPI_INTEGER, MPI_MAX, dfft%comm, i )
 #endif
 
-! ... the size of the required (3-dimensional) matrix depends on the
-! ... maximum indices. Note that the following choice is slightly
-! ... "small": 2*nb+2 would be needed in order to guarantee that the
-! ...  sphere in G-space never overlaps its periodic image
+! ... the size of the 3d FFT matrix depends upon the maximum indices. With
+! ... the following choice, the sphere in G-space "touches" its periodic image
 
       nr1 = 2 * nb(1) + 1
       nr2 = 2 * nb(2) + 1
