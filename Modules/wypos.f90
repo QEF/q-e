@@ -796,15 +796,15 @@ CONTAINS
             ELSEIF (TRIM(wp)=='8h') THEN
                tau(1)=0.25_DP
                tau(2)=0.25_DP
-               tau(3)=0.5_DP
-            ELSEIF (TRIM(wp)=='4i') THEN
-               tau(1)=0.0_DP
-               tau(2)=0.0_DP
                tau(3)=inp(1)
-            ELSEIF (TRIM(wp)=='4j') THEN
-               tau(1)=0.0_DP
-               tau(2)=0.5_DP
-               tau(3)=inp(1)
+            ELSEIF (TRIM(wp)=='8i') THEN
+               tau(1)=0.25_DP
+               tau(2)=inp(1)
+               tau(3)=0.25_DP
+            ELSEIF (TRIM(wp)=='8j') THEN
+               tau(1)=inp(1)
+               tau(2)=0.25_DP
+               tau(3)=0.25_DP
             ENDIF
            
 
@@ -1001,7 +1001,7 @@ CONTAINS
                tau(3)=inp(1)
             ELSEIF (TRIM(wp)=='4d') THEN
                tau(1)=inp(1)
-               tau(2)=0.25_DP
+               tau(2)=0.0_DP
                tau(3)=inp(2)
             ELSEIF (TRIM(wp)=='4e') THEN
                tau(1)=0.0_DP
@@ -2040,8 +2040,8 @@ CONTAINS
                tau(3)=inp(1)
             ELSEIF (TRIM(wp)=='8j') THEN
                tau(1)=0.0_DP
-               tau(2)=inp(1)
-               tau(3)=0.5_DP
+               tau(2)=0.5_DP
+               tau(3)=inp(1)
             ELSEIF (TRIM(wp)=='8k') THEN
                tau(1)=0.25_DP
                tau(2)=0.25_DP
@@ -2242,7 +2242,7 @@ CONTAINS
                tau(3)=inp(2)
             ELSEIF (TRIM(wp)=='16o') THEN
                tau(1)=inp(1)
-               tau(2)=inp(1)
+               tau(2)=inp(2)
                tau(3)=0.0_DP
             ENDIF
            
@@ -2615,15 +2615,15 @@ CONTAINS
                tau(1)=0.5_DP
                tau(2)=0.5_DP
                tau(3)=inp(1)
-            ELSEIF (TRIM(wp)=='2i') THEN
+            ELSEIF (TRIM(wp)=='4i') THEN
                tau(1)=0.0_DP
                tau(2)=0.5_DP
                tau(3)=inp(1)
-            ELSEIF (TRIM(wp)=='8j') THEN
+            ELSEIF (TRIM(wp)=='4j') THEN
                tau(1)=inp(1)
                tau(2)=inp(2)
                tau(3)=0.0_DP
-            ELSEIF (TRIM(wp)=='8k') THEN
+            ELSEIF (TRIM(wp)=='4k') THEN
                tau(1)=inp(1)
                tau(2)=inp(2)
                tau(3)=0.5_DP
@@ -2644,8 +2644,8 @@ CONTAINS
                tau(3)=0.0_DP
             ELSEIF (TRIM(wp)=='2d') THEN
                tau(1)=0.0_DP
-               tau(2)=0.0_DP
-               tau(3)=0.25_DP
+               tau(2)=0.5_DP
+               tau(3)=0.5_DP
             ELSEIF (TRIM(wp)=='2e') THEN
                tau(1)=0.0_DP
                tau(2)=0.0_DP
@@ -2682,6 +2682,10 @@ CONTAINS
                   tau(1)=0.0_DP
                   tau(2)=0.0_DP
                   tau(3)=0.5_DP
+               ELSEIF (TRIM(wp)=='2c') THEN
+                  tau(1)=0.0_DP
+                  tau(2)=0.5_DP
+                  tau(3)=inp(1)
                ELSEIF (TRIM(wp)=='4d') THEN
                   tau(1)=0.25_DP
                   tau(2)=0.25_DP
@@ -2705,6 +2709,10 @@ CONTAINS
                   tau(1)=0.25_DP
                   tau(2)=0.75_DP
                   tau(3)=0.5_DP
+               ELSEIF (TRIM(wp)=='2c') THEN
+                  tau(1)=0.25_DP
+                  tau(2)=0.25_DP
+                  tau(3)=inp(1)
                ELSEIF (TRIM(wp)=='4d') THEN
                   tau(1)=0.0_DP
                   tau(2)=0.0_DP
@@ -2793,6 +2801,10 @@ CONTAINS
                tau(1)=0.0_DP
                tau(2)=0.5_DP
                tau(3)=0.25_DP
+            ELSEIF (TRIM(wp)=='4e') THEN
+               tau(1)=0.0_DP
+               tau(2)=0.0_DP
+               tau(3)=inp(1)
             ELSEIF (TRIM(wp)=='8f') THEN
                tau(1)=0.25_DP
                tau(2)=0.25_DP
@@ -2874,13 +2886,13 @@ CONTAINS
                tau(2)=0.5_DP
                tau(3)=0.5_DP
             ELSEIF (TRIM(wp)=='2e') THEN
-               tau(1)=0.0_DP
-               tau(2)=0.0_DP
-               tau(3)=0.25_DP
-            ELSEIF (TRIM(wp)=='2f') THEN
                tau(1)=0.5_DP
                tau(2)=0.5_DP
-               tau(3)=0.25_DP
+               tau(3)=0.0_DP
+            ELSEIF (TRIM(wp)=='2f') THEN
+               tau(1)=0.5_DP
+               tau(2)=0.0_DP
+               tau(3)=0.5_DP
             ELSEIF (TRIM(wp)=='2g') THEN
                tau(1)=0.0_DP
                tau(2)=0.0_DP
@@ -3063,7 +3075,7 @@ CONTAINS
                tau(1)=0.0_DP
                tau(2)=inp(1)
                tau(3)=0.0_DP
-            ELSEIF (TRIM(wp)=='2b') THEN
+            ELSEIF (TRIM(wp)=='4b') THEN
                tau(1)=0.5_DP
                tau(2)=inp(1)
                tau(3)=0.0_DP
@@ -3216,7 +3228,7 @@ CONTAINS
                tau(1)=0.0_DP
                tau(2)=0.0_DP
                tau(3)=inp(1)
-            ELSEIF (TRIM(wp)=='2b') THEN
+            ELSEIF (TRIM(wp)=='4b') THEN
                tau(1)=0.0_DP
                tau(2)=0.5_DP
                tau(3)=inp(1)
@@ -3339,30 +3351,30 @@ CONTAINS
             ENDIF
 
          CASE (111) !P-42m
-            IF (TRIM(wp)=='2a') THEN
+            IF (TRIM(wp)=='1a') THEN
                tau(1)=0.0_DP
                tau(2)=0.0_DP
                tau(3)=0.0_DP
-            ELSEIF (TRIM(wp)=='2b') THEN
+            ELSEIF (TRIM(wp)=='1b') THEN
                tau(1)=0.5_DP
-               tau(2)=0.5_DP
-               tau(3)=0.0_DP
-            ELSEIF (TRIM(wp)=='2c') THEN
-               tau(1)=0.0_DP
-               tau(2)=0.5_DP
-               tau(3)=0.0_DP
-            ELSEIF (TRIM(wp)=='2d') THEN
-               tau(1)=0.0_DP
                tau(2)=0.5_DP
                tau(3)=0.5_DP
-            ELSEIF (TRIM(wp)=='2e') THEN
+            ELSEIF (TRIM(wp)=='1c') THEN
                tau(1)=0.0_DP
                tau(2)=0.0_DP
-               tau(3)=0.25_DP
-            ELSEIF (TRIM(wp)=='2f') THEN
+               tau(3)=0.5_DP
+            ELSEIF (TRIM(wp)=='1d') THEN
                tau(1)=0.5_DP
                tau(2)=0.5_DP
-               tau(3)=0.25_DP
+               tau(3)=0.0_DP
+            ELSEIF (TRIM(wp)=='2e') THEN
+               tau(1)=0.5_DP
+               tau(2)=0.0_DP
+               tau(3)=0.0_DP
+            ELSEIF (TRIM(wp)=='2f') THEN
+               tau(1)=0.5_DP
+               tau(2)=0.0_DP
+               tau(3)=0.5_DP
             ELSEIF (TRIM(wp)=='2g') THEN
                tau(1)=0.0_DP
                tau(2)=0.0_DP
@@ -3466,7 +3478,7 @@ CONTAINS
                tau(1)=0.0_DP
                tau(2)=0.5_DP
                tau(3)=inp(1)
-            ELSEIF (TRIM(wp)=='2d') THEN
+            ELSEIF (TRIM(wp)=='4d') THEN
                tau(1)=0.0_DP
                tau(2)=0.0_DP
                tau(3)=inp(1)
@@ -3489,7 +3501,7 @@ CONTAINS
                tau(1)=0.0_DP
                tau(2)=0.0_DP
                tau(3)=inp(1)
-            ELSEIF (TRIM(wp)=='2d') THEN
+            ELSEIF (TRIM(wp)=='4d') THEN
                tau(1)=0.0_DP
                tau(2)=0.5_DP
                tau(3)=inp(1)
@@ -3680,15 +3692,15 @@ CONTAINS
                tau(1)=0.0_DP
                tau(2)=0.5_DP
                tau(3)=inp(1)
-            ELSEIF (TRIM(wp)=='4g') THEN
+            ELSEIF (TRIM(wp)=='8g') THEN
                tau(1)=inp(1)
                tau(2)=inp(1)
                tau(3)=0.0_DP
-            ELSEIF (TRIM(wp)=='4h') THEN
+            ELSEIF (TRIM(wp)=='8h') THEN
                tau(1)=inp(1)
                tau(2)=inp(1)+0.5_DP
                tau(3)=0.25_DP
-            ELSEIF (TRIM(wp)=='4i') THEN
+            ELSEIF (TRIM(wp)=='8i') THEN
                tau(1)=inp(1)
                tau(2)=0.0_DP
                tau(3)=inp(2)
@@ -3746,7 +3758,7 @@ CONTAINS
             ELSEIF (TRIM(wp)=='4d') THEN
                tau(1)=0.0_DP
                tau(2)=0.5_DP
-               tau(3)=0.75_DP
+               tau(3)=0.25_DP
             ELSEIF (TRIM(wp)=='4e') THEN
                tau(1)=0.0_DP
                tau(2)=0.0_DP
@@ -3754,7 +3766,7 @@ CONTAINS
             ELSEIF (TRIM(wp)=='8f') THEN
                tau(1)=inp(1)
                tau(2)=0.0_DP
-               tau(3)=0.5_DP
+               tau(3)=0.0_DP
             ELSEIF (TRIM(wp)=='8g') THEN
                tau(1)=inp(1)
                tau(2)=0.0_DP
@@ -3763,7 +3775,7 @@ CONTAINS
                tau(1)=0.0_DP
                tau(2)=0.5_DP
                tau(3)=inp(1)
-            ELSEIF (TRIM(wp)=='4i') THEN
+            ELSEIF (TRIM(wp)=='8i') THEN
                tau(1)=inp(1)
                tau(2)=inp(1)
                tau(3)=inp(2)
@@ -4168,11 +4180,11 @@ CONTAINS
                tau(3)=0.5_DP
             ELSEIF (TRIM(wp)=='8i') THEN
                tau(1)=inp(1)
-               tau(2)=inp(1)
+               tau(2)=inp(2)
                tau(3)=0.0_DP
             ELSEIF (TRIM(wp)=='8j') THEN
                tau(1)=inp(1)
-               tau(2)=inp(1)
+               tau(2)=inp(2)
                tau(3)=0.5_DP
             ELSEIF (TRIM(wp)=='8k') THEN
                tau(1)=inp(1)
@@ -4938,6 +4950,10 @@ CONTAINS
                tau(1)=0.0_DP
                tau(2)=0.5_DP
                tau(3)=0.25_DP
+            ELSEIF (TRIM(wp)=='4e') THEN
+               tau(1)=0.0_DP
+               tau(2)=0.0_DP
+               tau(3)=inp(1)
             ELSEIF (TRIM(wp)=='8f') THEN
                tau(1)=0.25_DP
                tau(2)=0.25_DP
@@ -5221,7 +5237,7 @@ CONTAINS
                   tau(1)=0.5_DP
                   tau(2)=0.5_DP
                   tau(3)=0.5_DP
-               ELSEIF (TRIM(wp)=='1b') THEN
+               ELSEIF (TRIM(wp)=='2c') THEN
                   tau(1)=inp(1)
                   tau(2)=inp(1)
                   tau(3)=inp(1)
@@ -5345,7 +5361,7 @@ CONTAINS
             ENDIF
 
          CASE (152) !P3(1)21
-            IF (TRIM(wp)=='31') THEN
+            IF (TRIM(wp)=='3a') THEN
                tau(1)=inp(1)
                tau(2)=0.0_DP
                tau(3)=1.0_DP/3.0_DP
@@ -5356,7 +5372,7 @@ CONTAINS
             ENDIF
 
          CASE (153) !P3(2)12
-            IF (TRIM(wp)=='31') THEN
+            IF (TRIM(wp)=='3a') THEN
                tau(1)=inp(1)
                tau(2)=-inp(1)
                tau(3)=2.0_DP/3.0_DP
@@ -5374,7 +5390,7 @@ CONTAINS
             ELSEIF (TRIM(wp)=='3b') THEN
                tau(1)=inp(1)
                tau(2)=0.0_DP
-               tau(3)=1.0_DP/3.0_DP
+               tau(3)=1.0_DP/6.0_DP
             ENDIF
 
          CASE (155) !R32
@@ -5542,6 +5558,10 @@ CONTAINS
                tau(1)=1.0_DP/3.0_DP
                tau(2)=2.0_DP/3.0_DP
                tau(3)=0.5_DP
+            ELSEIF (TRIM(wp)=='2e') THEN
+               tau(1)=0.0_DP
+               tau(2)=0.0_DP
+               tau(3)=inp(1)
             ELSEIF (TRIM(wp)=='3f') THEN
                tau(1)=0.5_DP
                tau(2)=0.0_DP
@@ -5592,7 +5612,7 @@ CONTAINS
             ELSEIF (TRIM(wp)=='4f') THEN
                tau(1)=1.0_DP/3.0_DP
                tau(2)=2.0_DP/3.0_DP
-               tau(3)=0.25_DP
+               tau(3)=inp(1)
             ELSEIF (TRIM(wp)=='6g') THEN
                tau(1)=0.5_DP
                tau(2)=0.0_DP
@@ -6030,18 +6050,18 @@ CONTAINS
                tau(3)=0.0_DP
             ELSEIF (TRIM(wp)=='6b') THEN
                tau(1)=inp(1)
-               tau(2)=2*inp(1)
+               tau(2)=2.0_DP*inp(1)
                tau(3)=0.25_DP
             ENDIF
 
          CASE (179) !P6(5)22
-            IF (TRIM(wp)=='1a') THEN
+            IF (TRIM(wp)=='6a') THEN
                tau(1)=inp(1)
                tau(2)=0.0_DP
                tau(3)=0.0_DP
-            ELSEIF (TRIM(wp)=='1b') THEN
+            ELSEIF (TRIM(wp)=='6b') THEN
                tau(1)=inp(1)
-               tau(2)=2*inp(1)
+               tau(2)=2.0_DP*inp(1)
                tau(3)=0.75_DP
             ENDIF
 
@@ -6080,11 +6100,11 @@ CONTAINS
                tau(3)=0.5_DP
             ELSEIF (TRIM(wp)=='6i') THEN
                tau(1)=inp(1)
-               tau(2)=2*inp(1)
+               tau(2)=2.0_DP*inp(1)
                tau(3)=0.0_DP
             ELSEIF (TRIM(wp)=='6j') THEN
                tau(1)=inp(1)
-               tau(2)=2*inp(1)
+               tau(2)=2.0_DP*inp(1)
                tau(3)=0.5_DP
             ENDIF
 
@@ -6123,11 +6143,11 @@ CONTAINS
                tau(3)=0.5_DP
             ELSEIF (TRIM(wp)=='6i') THEN
                tau(1)=inp(1)
-               tau(2)=2*inp(1)
+               tau(2)=2.0_DP*inp(1)
                tau(3)=0.0_DP
             ELSEIF (TRIM(wp)=='6j') THEN
                tau(1)=inp(1)
-               tau(2)=2*inp(1)
+               tau(2)=2.0_DP*inp(1)
                tau(3)=0.5_DP
             ENDIF
 
@@ -6162,7 +6182,7 @@ CONTAINS
                tau(3)=0.0_DP
             ELSEIF (TRIM(wp)=='6h') THEN
                tau(1)=inp(1)
-               tau(2)=2*inp(1)
+               tau(2)=2.0_DP*inp(1)
                tau(3)=0.25_DP
             ENDIF
 
@@ -6341,11 +6361,11 @@ CONTAINS
             ENDIF
 
          CASE (189) !P-62m
-            IF (TRIM(wp)=='2a') THEN
+            IF (TRIM(wp)=='1a') THEN
                tau(1)=0.0_DP
                tau(2)=0.0_DP
                tau(3)=0.0_DP
-            ELSEIF (TRIM(wp)=='2b') THEN
+            ELSEIF (TRIM(wp)=='1b') THEN
                tau(1)=0.0_DP
                tau(2)=0.0_DP
                tau(3)=0.5_DP
@@ -6411,7 +6431,7 @@ CONTAINS
             ELSEIF (TRIM(wp)=='4f') THEN
                tau(1)=1.0_DP/3.0_DP
                tau(2)=2.0_DP/3.0_DP
-               tau(3)=inp(2)
+               tau(3)=inp(1)
             ELSEIF (TRIM(wp)=='6g') THEN
                tau(1)=inp(1)
                tau(2)=0.0_DP
@@ -6440,6 +6460,10 @@ CONTAINS
                tau(1)=1.0_DP/3.0_DP
                tau(2)=2.0_DP/3.0_DP
                tau(3)=0.5_DP
+            ELSEIF (TRIM(wp)=='2e') THEN
+               tau(1)=0.0_DP
+               tau(2)=0.0_DP
+               tau(3)=inp(1)
             ELSEIF (TRIM(wp)=='3f') THEN
                tau(1)=0.5_DP
                tau(2)=0.0_DP
@@ -6466,11 +6490,11 @@ CONTAINS
                tau(3)=0.5_DP
             ELSEIF (TRIM(wp)=='6l') THEN
                tau(1)=inp(1)
-               tau(2)=2*inp(1)
+               tau(2)=2.0_DP*inp(1)
                tau(3)=0.0_DP
             ELSEIF (TRIM(wp)=='6m') THEN
                tau(1)=inp(1)
-               tau(2)=2*inp(1)
+               tau(2)=2.0_DP*inp(1)
                tau(3)=0.5_DP
             ELSEIF (TRIM(wp)=='12n') THEN
                tau(1)=inp(1)
@@ -6478,7 +6502,7 @@ CONTAINS
                tau(3)=inp(2)
             ELSEIF (TRIM(wp)=='12o') THEN
                tau(1)=inp(1)
-               tau(2)=2*inp(1)
+               tau(2)=2.0_DP*inp(1)
                tau(3)=inp(2)
             ELSEIF (TRIM(wp)=='12p') THEN
                tau(1)=inp(1)
@@ -6503,7 +6527,7 @@ CONTAINS
                tau(1)=1.0_DP/3.0_DP
                tau(2)=2.0_DP/3.0_DP
                tau(3)=0.25_DP
-            ELSEIF (TRIM(wp)=='2d') THEN
+            ELSEIF (TRIM(wp)=='4d') THEN
                tau(1)=1.0_DP/3.0_DP
                tau(2)=2.0_DP/3.0_DP
                tau(3)=0.0_DP
@@ -6518,7 +6542,7 @@ CONTAINS
             ELSEIF (TRIM(wp)=='6g') THEN
                tau(1)=0.5_DP
                tau(2)=0.0_DP
-               tau(3)=0.25_DP
+               tau(3)=0.0_DP
             ELSEIF (TRIM(wp)=='8h') THEN
                tau(1)=1.0_DP/3.0_DP
                tau(2)=2.0_DP/3.0_DP
@@ -6533,7 +6557,7 @@ CONTAINS
                tau(3)=0.25_DP
             ELSEIF (TRIM(wp)=='12k') THEN
                tau(1)=inp(1)
-               tau(2)=2*inp(1)
+               tau(2)=2.0_DP*inp(1)
                tau(3)=0.25_DP
             ELSEIF (TRIM(wp)=='12l') THEN
                tau(1)=inp(1)
@@ -6576,7 +6600,7 @@ CONTAINS
                tau(3)=inp(1)
             ELSEIF (TRIM(wp)=='12i') THEN
                tau(1)=inp(1)
-               tau(2)=2*inp(1)
+               tau(2)=2.0_DP*inp(1)
                tau(3)=0.0_DP
             ELSEIF (TRIM(wp)=='12j') THEN
                tau(1)=inp(1)
@@ -6620,7 +6644,7 @@ CONTAINS
                tau(3)=0.0_DP
             ELSEIF (TRIM(wp)=='6h') THEN
                tau(1)=inp(1)
-               tau(2)=2*inp(1)
+               tau(2)=2.0_DP*inp(1)
                tau(3)=0.25_DP
             ELSEIF (TRIM(wp)=='12i') THEN
                tau(1)=inp(1)
@@ -6632,7 +6656,7 @@ CONTAINS
                tau(3)=0.25_DP
             ELSEIF (TRIM(wp)=='12k') THEN
                tau(1)=inp(1)
-               tau(2)=2*inp(1)
+               tau(2)=2.0_DP*inp(1)
                tau(3)=inp(2)
             ENDIF
 
@@ -7583,11 +7607,11 @@ CONTAINS
                   tau(1)=0.75_DP
                   tau(2)=0.25_DP
                   tau(3)=0.25_DP
-               ELSEIF (TRIM(wp)=='16c') THEN
+               ELSEIF (TRIM(wp)=='8c') THEN
                   tau(1)=0.0_DP
                   tau(2)=0.0_DP
                   tau(3)=0.0_DP
-               ELSEIF (TRIM(wp)=='16d') THEN
+               ELSEIF (TRIM(wp)=='12d') THEN
                   tau(1)=0.0_DP
                   tau(2)=0.75_DP
                   tau(3)=0.25_DP
@@ -7745,7 +7769,7 @@ CONTAINS
                ELSEIF (TRIM(wp)=='24j') THEN
                   tau(1)=0.5_DP
                   tau(2)=inp(1)
-                  tau(3)=-inp(1)+0.5_DP
+                  tau(3)=-inp(1)
                ELSEIF (TRIM(wp)=='24k') THEN
                   tau(1)=inp(1)
                   tau(2)=inp(1)
@@ -7774,6 +7798,10 @@ CONTAINS
                tau(1)=inp(1)
                tau(2)=0.0_DP
                tau(3)=0.0_DP
+            ELSEIF (TRIM(wp)=='32f') THEN
+               tau(1)=inp(1)
+               tau(2)=inp(1)
+               tau(3)=inp(1)
             ELSEIF (TRIM(wp)=='48g') THEN
                tau(1)=inp(1)
                tau(2)=0.25_DP
@@ -8058,7 +8086,7 @@ CONTAINS
                CALL errore('wypos','wyckoff position not found',1)
             ELSE
                CALL infomsg('wypos','wyckoff position not found, assuming x y z')
-	       tau(:)=inp(:)
+               tau(:)=inp(:)
             END IF
          END IF
 
