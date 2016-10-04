@@ -1,5 +1,5 @@
 # Copyright (C) 2001-2016 Quantum ESPRESSO group
-# 
+#
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
 # as published by the Free Software Foundation; either version 2
@@ -64,7 +64,7 @@ default :
 # If "|| exit 1" is not present, the error code from make in subdirectories
 # is not returned and make goes on even if compilation has failed
 
-pw : bindir libfft libla mods liblapack libs libiotk 
+pw : bindir libfft libla mods liblapack libs libiotk
 	if test -d PW ; then \
 	( cd PW ; $(MAKE) TLDEPS= all || exit 1) ; fi
 
@@ -118,7 +118,7 @@ ld1 : bindir liblapack libfft libla mods libs
 	if test -d atomic ; then \
 	( cd atomic ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
 
-upf : libfft libla mods libs liblapack 
+upf : libfft libla mods libs liblapack
 	if test -d upftools ; then \
 	( cd upftools ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
 
@@ -166,7 +166,7 @@ mods : libiotk libla libfft
 libs : mods
 	( cd clib ; $(MAKE) TLDEPS= all || exit 1 )
 
-lrmods : libs libla libfft 
+lrmods : libs libla libfft
 	( cd LR_Modules ; $(MAKE) TLDEPS= all || exit 1 )
 
 bindir :
@@ -226,7 +226,7 @@ touch-dummy :
 # into system directories with no danger of name conflicts
 #########################################################
 
-inst : 
+inst :
 	( for exe in */*/*.x */bin/* ; do \
 	   file=`basename $$exe`; if test "$(INSTALLDIR)" != ""; then \
 		if test ! -L $(PWD)/$$exe; then \
@@ -265,7 +265,7 @@ install : touch-dummy
 
 #########################################################
 # Run test-suite for numerical regression testing
-# NB: it is assumed that reference outputs have been 
+# NB: it is assumed that reference outputs have been
 #     already computed once (usualy during release)
 #########################################################
 
@@ -278,7 +278,7 @@ test-suite: pw cp touch-dummy
 
 # remove object files and executables
 clean : doc_clean
-	touch make.inc 
+	touch make.inc
 	for dir in \
 		CPV LAXlib FFTXlib Modules PP PW EPW \
 		NEB ACFDT COUPLE GWW XSpectra PWCOND \
@@ -309,13 +309,13 @@ veryclean : clean
 	- rm -f espresso.tar.gz
 	- rm -rf make.inc
 
-# remove everything not in the original distribution 
+# remove everything not in the original distribution
 distclean : veryclean
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
 tar :
 	@if test -f espresso.tar.gz ; then /bin/rm espresso.tar.gz ; fi
-	# do not include unneeded stuff 
+	# do not include unneeded stuff
 	find ./ -type f | grep -v -e /.svn/ -e'/\.' -e'\.o$$' -e'\.mod$$'\
 		-e /.git/ -e'\.a$$' -e'\.d$$' -e'\.i$$' -e'_tmp\.f90$$' -e'\.x$$' \
 		-e'~$$' -e'\./GUI' -e '\./tempdir' | xargs tar rvf espresso.tar
@@ -372,4 +372,3 @@ depend: libiotk version
 
 version:
 	- ( cd Modules; make version )
-

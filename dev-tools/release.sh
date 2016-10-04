@@ -6,26 +6,35 @@ version=6.0
 revision=13079
 
 # make sure there is no locale setting creating unneeded differences.
-LC_ALL=C
-export LC_ALL
-
-mkdir $tempdir
-cd $tempdir
-/bin/rm -rf espresso/ qe-$version
+#LC_ALL=C
+#export LC_ALL
 
 # get the svn copy via tag
 svn checkout http://qeforge.qe-forge.org/svn/q-e/tags/QE-$version/espresso qe-$version
 
 # -OR- get the svn copy via revision checkout
-svn checkout -r$revision svn+ssh://spigafi@qeforge.qe-forge.org/svnroot/q-e/trunk/espresso qe-$version
+svn checkout -r$revision svn+ssh://<...>@qeforge.qe-forge.org/svnroot/q-e/trunk/espresso qe-$version
 
 cd qe-$version
 
+# *** manual edit Makefile  ***
+# - Update PWgui
+# - disable Doc distclean target
+
+# *** manual edit install/plugins_makefile  ***
+# - uncomment 'examples' target
+# - uncomment 'uncompress-examples' target
+# - uncomment 'examples_distclean' target
+
+# Manual edit "userconfig.tmp" and "ENVIRONMENT"
+# - change 'SVN' to $revision
+# - change 'REFERENCE_VERSION' to $revision
+
 # generate version.f90 (requires svn files)
+# save version.f90 (make veryclean removes it)
 touch make.inc
 cd Modules
 make version.f90
-# save version.f90 (make veryclean removes it)
 mv version.f90 ..
 cd ..
 
@@ -57,10 +66,6 @@ tar -xzvf PWgui-$version.tgz
 make tar-qe-modes VERSION=$version
 mv QE-modes-$version.tar.gz ../qe-$version-emacs_modes.tar.gz
 
-# *** manual edit Makefile  ***
-# - Update PWgui
-# - disable Doc distclean target
-
 # Updating reference outputs on test-suite
 cd test-suite
 find . -name benchmark.out* > list-SVN.txt
@@ -74,14 +79,14 @@ file_dst=`echo $x | awk '{ print $2}'`
 mv ${file_src} ${file_dst}
 done
 rm ./STUFF-TO-RENAME.txt ./list-SVN.txt ./list-$version.txt
-
-# Manual edit "userconfig.tmp"
+cp License test-suite/
 
 cd ..
 
 make distclean
 
 # packacking test-suite
+mv test-suite test-suite
 tar -czvf ../qe-$version-test-suite.tar.gz test-suite
 
 # Grouping Examples in the same directory and packacking them
@@ -105,9 +110,9 @@ mv ../PWCOND/examples/* PWCOND/
 mv ../PHonon/examples/* PHonon/
 rm -rf ../TDDFPT/Examples ../CPV/examples ../PHonon/examples ../NEB/examples ../COUPLE/examples ../PP/examples ../PP/simple_transport/examples ../PW/examples ../PWgui-6.0/examples ../XSpectra/examples ../GWW/examples ../EPW/examples ../atomic/examples ../PWCOND/examples
 cd ..
+cp License Examples/
 
-# Manual edit "Makefile"  and "install/plugins_makefile" to enable target
-
+# Grouping Examples in the same directory and packacking them
 tar -czvf ../qe-$version-examples.tar.gz Examples
 
 cd ../
@@ -168,9 +173,7 @@ cp -R ../PHonon/Doc/user_guide ./ph_user_guide
 cp -R ../NEB/Doc/user_guide ./neb_user_guide
 cp -R ../atomic/Doc/pseudo-gen ./pseudo-gen
 
-#
 # Copy "Docs" to QE website
-
 scp -R Doc <...>@<...>/wp-content/uploads/Doc-$version
 
 # Connect to the website and create/update symbolic link to "Doc-$version"
