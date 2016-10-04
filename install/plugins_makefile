@@ -57,8 +57,6 @@ uncompress-test-suite: touch-dummy
 ###########################################################
 
 #examples: uncompress-examples
-#	if test -d ../Examples ; then \
-#	( cd ../Examples ; $(MAKE) TLDEPS= run-tests || exit 1) ; fi
 
 #uncompress-examples: touch-dummy
 #	$(call download_and_unpack,$(EXAMPLES),$(EXAMPLES_URL),Examples,Examples)
@@ -404,13 +402,8 @@ test-suite_distclean:
 	rm -f ../archive/$(TESTSUITE).tar.gz
 
 #examples_clean:
-#	if test -d ../Examples; then (cd ../Examples; \
-#	$(MAKE) clean); fi
 
 #examples_veryclean: examples_clean
-
-#examples_distclean:
-#	rm -f ../archive/$(EXAMPLES).tar.gz
 
 ##########################################################
 # general cleaning
@@ -427,5 +420,5 @@ veryclean: w90_veryclean want_veryclean yambo_veryclean yambo-devel_veryclean \
 #distclean : veryclean
 distclean: w90_distclean want_distclean yambo_distclean yambo-devel_distclean \
   test-suite_distclean gipaw_distclean west_distclean \
-	sax_distclean d3q_distclean #examples_distclean
+	sax_distclean d3q_distclean
 
