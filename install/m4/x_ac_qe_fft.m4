@@ -145,16 +145,20 @@ then
         LDFLAGS=" $test_ldflags $try_loption"
         LIBS="$fft_libs"
 
-         #here we check if dfti explicit calls work
-         #it should work with blas flags
+        #here we check if dfti explicit calls work
+        #it should work with blas flags
         AC_CHECK_LIB([mkl_intel_lp64],DftiComputeForward,have_fft=1,
         ,$blas_libs -lm)
 
-
         if test "$have_fft" == "1" 
         then
-              try_dflags="$try_dflags -D__DFTI"
-              try_incdir="$MKLROOT/include $MKL_INCLUDE $CPATH $FPATH"
+              try_incdir=""
+              try_incdir="$try_incdir /opt/intel/Compiler/*/*/mkl/include
+                          /opt/intel/mkl/*/include
+                          /opt/intel/mkl*/include"
+              try_incdir="$try_incdir $MKLROOT/include $MKL_INCLUDE $CPATH $FPATH"
+              try_incdir="`echo $try_incdir | sed 's/:/ /g'`"
+              # 
               for inc in $try_incdir
               do
                  if test "$cross_compiling" == "no"
@@ -168,17 +172,19 @@ then
                     AC_CHECK_HEADER($inc/mkl_dfti.f90,
                                 have_fft_include=1,have_fft_include=0)
                  fi
-                 
-                 if test "$have_fft_include=1"
+                 if test "$have_fft_include" == "1"
                  then
                    try_iflags="$try_iflags -I$inc"
+                   try_dflags="$try_dflags -D__DFTI"
+                   have_fft=1
                    break
+                 else
+                   # continue the search
+                   have_fft=0
                  fi
               done
-              break
         fi
 
-        #done
         AC_LANG_POP(C)
         AC_LANG_PUSH(Fortran 77)
 
