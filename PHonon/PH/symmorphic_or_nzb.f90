@@ -7,16 +7,21 @@
 !
 LOGICAL FUNCTION symmorphic_or_nzb()
 !
-! This function returns true if the small group of the current q is symmorphic
-! or if the q point is not at zone border. Presently the routine that
+! This function returns .true. if the small group of the current q is symmorphic
+! or if the q point is not at zone border or if all the phase factors
+! e^{i G f} are equal to one. Presently the routine that
 ! finds the mode symmetry works only when this function is .true..
 !
+  USE kinds,        ONLY : DP
+  USE cell_base,    ONLY : at
+  USE fft_base,     ONLY : dfftp
   USE symm_base,    ONLY : ftau
   USE lr_symm_base, ONLY : gi, nsymq
 
   IMPLICIT NONE
   LOGICAL :: is_symmorphic, result_sym
-  INTEGER :: isym
+  INTEGER :: isym, jsym
+  REAL(DP) :: ft(3,nsymq)
 
   is_symmorphic=.NOT.(ANY(ftau(:,1:nsymq) /= 0))
   IF (is_symmorphic) THEN
@@ -24,10 +29,19 @@ LOGICAL FUNCTION symmorphic_or_nzb()
      RETURN
   ELSE
      result_sym=.TRUE.
+     DO isym = 1, nsymq
+        ft(1,isym) = DBLE(ftau(1,isym)) / DBLE(dfftp%nr1)
+        ft(2,isym) = DBLE(ftau(2,isym)) / DBLE(dfftp%nr2)
+        ft(3,isym) = DBLE(ftau(3,isym)) / DBLE(dfftp%nr3)
+     END DO
+     CALL cryst_to_cart(nsymq, ft, at, 1)
+
      DO isym=1,nsymq
-        result_sym=( result_sym .AND. (abs(gi(1,isym))<1.d-8).and.  &
-                                      (abs(gi(2,isym))<1.d-8).and.  &
-                                      (abs(gi(3,isym))<1.d-8) )
+        DO jsym=1,nsymq
+           result_sym=( result_sym.AND.(ABS( gi(1,isym)*ft(1,jsym) +  &
+                                             gi(2,isym)*ft(2,jsym) +  &
+                                             gi(3,isym)*ft(3,jsym) ) < 1.D-8) )
+        END DO
      END DO
      symmorphic_or_nzb=result_sym
   END IF

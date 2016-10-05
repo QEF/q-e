@@ -1114,6 +1114,7 @@ SUBROUTINE find_info_group(nsym,s,t_rev,ftau,d_spink,gk,sname,  &
   !
   USE kinds,                ONLY : DP
   USE cell_base,            ONLY : at, bg
+  USE fft_base,             ONLY : dfftp
   USE noncollin_module,     ONLY : noncolin
   USE spin_orb,             ONLY : domag
   USE rap_point_group,      ONLY : code_group, nclass, nelem, elem, which_irr, &
@@ -1143,8 +1144,8 @@ SUBROUTINE find_info_group(nsym,s,t_rev,ftau,d_spink,gk,sname,  &
 
   CHARACTER(len=45), INTENT(in) :: sname(48)
 
-  REAL(DP) :: sr(3,3,48)
-  INTEGER :: isym
+  REAL(DP) :: sr(3,3,48), ft(3,48)
+  INTEGER :: isym, jsym
 
   is_symmorphic=.true.
   search_sym=.true.
@@ -1156,10 +1157,18 @@ SUBROUTINE find_info_group(nsym,s,t_rev,ftau,d_spink,gk,sname,  &
   ENDDO
 
   IF (.not.is_symmorphic) THEN
+     DO isym = 1, nsym
+        ft(1,isym) = DBLE(ftau(1,isym)) / DBLE(dfftp%nr1)
+        ft(2,isym) = DBLE(ftau(2,isym)) / DBLE(dfftp%nr2)
+        ft(3,isym) = DBLE(ftau(3,isym)) / DBLE(dfftp%nr3)
+     END DO
+
      DO isym=1,nsym
-        search_sym=( search_sym.and.(gk(1,isym)==0).and.  &
-             (gk(2,isym)==0).and.  &
-             (gk(3,isym)==0) )
+        DO jsym=1,nsym
+           search_sym=search_sym.AND.(ABS(gk(1,isym)*ft(1,jsym)+ &
+                                          gk(2,isym)*ft(2,jsym)+ &
+                                          gk(3,isym)*ft(3,jsym))==0) 
+        ENDDO
      ENDDO
   ENDIF
   !
