@@ -11,7 +11,7 @@
 ! This macro force the normalization of betamix matrix, usually not necessary
 !#define __NORMALIZE_BETAMIX
 !
-#if defined(__GFORTRAN)
+#if defined(__GFORTRAN__)
 #if (__GNUC__<4) || ((__GNUC__==4) && (__GNUC_MINOR__<8))
 #define __GFORTRAN_HACK
 #endif

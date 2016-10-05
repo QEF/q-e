@@ -150,30 +150,32 @@ MODULE basic_algebra_routines
      FUNCTION matrix( vec1, vec2 )
        !-----------------------------------------------------------------------
        !
+#if defined(__GFORTRAN__)
+#if ((__GNUC__==4) && (__GNUC_MINOR__<9))
+#define __GFORTRAN_HACK
+! gfortran hack - explicit preprocessing is used because this hack
+! costs an additional matrix allocation, which may not be a good idea
+#endif 
+#endif 
        IMPLICIT NONE
        !
        REAL(DP), INTENT(IN) :: vec1(:), vec2(:)
        REAL(DP)             :: matrix(SIZE( vec1 ),SIZE( vec2 ))
-#if defined(__GFORTRAN)
-! gfortran hack - explicit preprocessing is used because this hack
-! costs an additional matrix allocation, which may not be a good idea
+       INTEGER              :: dim1, dim2
+#if defined(__GFORTRAN_HACK)
        REAL(DP)             :: aux(SIZE( vec1 ),SIZE( vec2 ))
 #endif
-       INTEGER              :: dim1, dim2
        !
        dim1 = SIZE( vec1 )
        dim2 = SIZE( vec2 )
        !
-#if defined(__GFORTRAN)
-       !
+#if defined(__GFORTRAN_HACK)
        aux = 0.0_DP
        CALL DGER( dim1, dim2, 1.0_DP, vec1, 1, vec2, 1, aux, dim1 )
        matrix = aux
 #else
-       !
        matrix = 0.0_DP
        CALL DGER( dim1, dim2, 1.0_DP, vec1, 1, vec2, 1, matrix, dim1 )
-       !
 #endif
        !
      END FUNCTION matrix

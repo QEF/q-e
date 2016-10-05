@@ -50,7 +50,6 @@ ia32:ifort* | ia64:ifort* | x86_64:ifort* | mac686:ifort* | crayxt*:ifort* )
             try_fflags_openmp="-openmp"
             try_ldflags_openmp="-openmp"
         fi
-        try_dflags="$try_dflags -D__INTEL"
         pre_fdflags="-fpp "
         ;;
 x86_64:nagfor* )
@@ -65,8 +64,7 @@ x86_64:nagfor* )
         try_ldflags=""
         try_ldflags_static="-unsharedrts"
         try_ldflags_openmp="-openmp"
-        # -D__GFORTRAN needed
-        try_dflags="$try_dflags -D__NAG -D__GFORTRAN"
+        try_dflags="$try_dflags -D__NAG"
         have_cpp=0
         ;;
 ia32:pgf* | ia64:pgf* | x86_64:pgf* )
@@ -111,7 +109,6 @@ ia32:path* | ia64:path* | x86_64:path* )
         try_fflags_noopt="-O0 -g"
         try_ldflags="-g -pthread"
         try_ldflags_openmp="-fopenmp"
-        try_dflags="$try_dflags -D__GFORTRAN -D__STD_F95"
         try_ldflags_static="-static"
         ;;
 *:sunf95 )
