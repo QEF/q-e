@@ -352,9 +352,9 @@ ELSEIF (code_group==15) THEN
          CALL mirror_axis(smat(1,1,elem(1,iclass)), ax)
          CALL which_c2(ax, iax)
          IF (iax==2 .OR. iax==12 .OR. iax==13) THEN
-            which_irr(iclass)=5
-         ELSEIF (iax==1 .OR. iax==10 .OR. iax==11) THEN
             which_irr(iclass)=6
+         ELSEIF (iax==1 .OR. iax==10 .OR. iax==11) THEN
+            which_irr(iclass)=5
          ELSE
             CALL errore('divide_class','C_6v mirror not recognized',1)
          ENDIF
@@ -942,8 +942,8 @@ SUBROUTINE versor(smat,ax)
 !
 !  This subroutine receives a rotation matrix and determines the rotation
 !  axis. The orientation of the axis is with the tip in the hemisphere
-!  z>=0. In the xy plane the axis is in the y>0 region and the positive
-!  x axis is taken for z=0 and y=0.
+!  z>=0. In the xy plane the axis is in the x>0 region and the positive
+!  y axis is taken for z=0 and x=0.
 !
 USE kinds, ONLY : DP
 IMPLICIT NONE
@@ -972,33 +972,35 @@ IF (ts==4) THEN
 !   then the general case
 !
    DO ipol=1,3
-      ax(ipol)=sqrt(ABS(smat(ipol,ipol)+1.d0)/2.d0)
+      a1(ipol)=sqrt(ABS(smat(ipol,ipol)+1.d0)/2.d0)
    END DO
    
    DO ipol=1,3
       DO jpol=ipol+1,3
-         IF (ABS(ax(ipol)*ax(jpol))>eps) THEN
-            ax(ipol)=0.5d0*smat(ipol,jpol)/ax(jpol)
+         IF (ABS(a1(ipol)*a1(jpol))>eps) THEN
+            a1(ipol)=0.5d0*smat(ipol,jpol)/a1(jpol)
          END IF
       END DO
    END DO
-   RETURN
-END IF
+
+ELSE
 !
 !  It is not a 180 rotation: compute the rotation axis
 !
-a1(1) =-smat(2,3)+smat(3,2)
-a1(2) =-smat(3,1)+smat(1,3)
-a1(3) =-smat(1,2)+smat(2,1)
+   a1(1) =-smat(2,3)+smat(3,2)
+   a1(2) =-smat(3,1)+smat(1,3)
+   a1(3) =-smat(1,2)+smat(2,1)
+
+END IF
 !
 !  The direction of the axis is arbitrarily chosen, with positive z. In the
-!  xy plane with positive y, and along x with positive x.
+!  xy plane with positive x, and along y with positive y.
 !
 IF (a1(3) < -eps ) THEN
    a1=-a1
-ELSEIF (abs(a1(3))<eps .and. a1(2) < -eps ) THEN
+ELSEIF (abs(a1(3))<eps .and. a1(1) < -eps ) THEN
    a1=-a1
-ELSEIF (abs(a1(3))<eps .and. abs(a1(2))<eps.and.a1(1) < -eps ) THEN
+ELSEIF (abs(a1(3))<eps .and. abs(a1(1))<eps.and.a1(2) < -eps ) THEN
    a1=-a1
 ENDIF
 
@@ -2772,9 +2774,9 @@ END SUBROUTINE set_class_el_name
 SUBROUTINE which_c2( a, ia)
 !
 !   This routine gives a code to identify the direction of a C_2 axis
-!   x    1    y=z,  x=0  4    x=-z,  y=0  7    y= m x,  z=0  10    y=-x/m, z=0 13
-!   y    2    y=-z, x=0  5    y=x,   z=0  8    y= -m x, z=0  11
-!   z    3    x=z,  y=0  6    y=-x,  z=0  9    y= x/m,  z=0  12
+!   x    1   y=z,  x=0  4   x=-z,  y=0  7   y= m x,  z=0  10   y=-x/m, z=0 13
+!   y    2   y=-z, x=0  5   y=x,   z=0  8   y= -m x, z=0  11
+!   z    3   x=z,  y=0  6   y=-x,  z=0  9   y= x/m,  z=0  12
 !
 !   m=sqrt(3.)
 !
@@ -2839,10 +2841,11 @@ SUBROUTINE is_c2v(iax,ibx,icx,isok)
 !  corresponds to a known possibility for C_2v. Usually isok .FALSE. means
 !  that the two mirrors are not in the correct order.
 !
-!   Note: the order of the two mirrors in C_2v is arbitrary, but  
-!         this routine gives a deterministic choice of the two mirrors, 
-!         independent from the order of the matrices that define the group 
-!         operators
+!   Note: the order of the two mirrors in C_2v is defined by the   
+!         condition to have the same double group multiplication table of the 
+!         isomorphous group D_2. Only the order of one D_2 is arbitrary,
+!         all the C_2v and D_2 are ordered for isomorphism of the double
+!         groups
 !
 IMPLICIT NONE
 INTEGER, INTENT(IN) :: iax, ibx, icx
@@ -2852,21 +2855,21 @@ isok=.FALSE.
 isok = isok .OR. ( iax==1 .AND. ibx==2 .AND. icx==3  )
 isok = isok .OR. ( iax==1 .AND. ibx==4 .AND. icx==5  )
 isok = isok .OR. ( iax==2 .AND. ibx==3 .AND. icx==1  )
-isok = isok .OR. ( iax==2 .AND. ibx==6 .AND. icx==7  ) 
-isok = isok .OR. ( iax==3 .AND. ibx==2 .AND. icx==1  ) 
+isok = isok .OR. ( iax==2 .AND. ibx==7 .AND. icx==6  ) 
+isok = isok .OR. ( iax==3 .AND. ibx==1 .AND. icx==2  ) 
 isok = isok .OR. ( iax==3 .AND. ibx==8 .AND. icx==9  )
-isok = isok .OR. ( iax==4 .AND. ibx==1 .AND. icx==5  )
+isok = isok .OR. ( iax==4 .AND. ibx==5 .AND. icx==1  )
 isok = isok .OR. ( iax==5 .AND. ibx==1 .AND. icx==4  )
 isok = isok .OR. ( iax==6 .AND. ibx==2 .AND. icx==7  )
-isok = isok .OR. ( iax==7 .AND. ibx==2 .AND. icx==6  )
+isok = isok .OR. ( iax==7 .AND. ibx==6 .AND. icx==2  )
 isok = isok .OR. ( iax==8 .AND. ibx==3 .AND. icx==9  )
-isok = isok .OR. ( iax==9 .AND. ibx==3 .AND. icx==8  )
-isok = isok .OR. ( iax==3 .AND. ibx==12.AND. icx==11 )
+isok = isok .OR. ( iax==9 .AND. ibx==8 .AND. icx==3  )
+isok = isok .OR. ( iax==3 .AND. ibx==11.AND. icx==12 )
 isok = isok .OR. ( iax==3 .AND. ibx==13.AND. icx==10 )
 isok = isok .OR. ( iax==12.AND. ibx==3 .AND. icx==11 )
-isok = isok .OR. ( iax==13.AND. ibx==3 .AND. icx==10 )
+isok = isok .OR. ( iax==13.AND. ibx==10.AND. icx==3  )
 isok = isok .OR. ( iax==10.AND. ibx==3 .AND. icx==13 )
-isok = isok .OR. ( iax==11.AND. ibx==3 .AND. icx==12 )
+isok = isok .OR. ( iax==11.AND. ibx==12 .AND. icx==3 )
 
 RETURN
 END SUBROUTINE is_c2v
@@ -2881,9 +2884,8 @@ SUBROUTINE is_d2(iax, ibx, icx, ind2)
 !   C_2. If on output ind2 = 0, 0, 0 means that iax, ibx, and icx does not belong
 !   to a possible D_2
 !
-!   Note: this order is arbitrary, but it is used to have a deterministic choice 
-!         of the three axes, independent from the order of the matrices that 
-!         define the group operators. 
+!   Note: this order is arbitrary for one D_2, all the others should be
+!         isomorphous with the same double group multiplication table.
 !
 
 IMPLICIT NONE
@@ -2893,13 +2895,13 @@ INTEGER, INTENT(OUT) :: ind2(3)
    ind2=0
    IF (iax==1) THEN
       IF (ibx==2) THEN
-         ind2(1)=3
-         ind2(2)=2
+         ind2(1)=2
+         ind2(2)=3
          ind2(3)=1
       ELSEIF (ibx==3) THEN
-         ind2(1)=3
+         ind2(1)=2
          ind2(2)=1
-         ind2(3)=2
+         ind2(3)=3
       ELSEIF (ibx==4) THEN
          ind2(1)=1
          ind2(2)=2
@@ -2909,12 +2911,12 @@ INTEGER, INTENT(OUT) :: ind2(3)
          ind2(2)=3
          ind2(3)=2
       ELSE
-         CALL errore('is_d2divide_class','D_2h problem with C_2 axis',1)
+         CALL errore('is_d2','D_2 problem with C_2 axis',1)
       ENDIF
    ELSEIF (iax==2) THEN
       IF (ibx==1) THEN
-         ind2(1)=2
-         ind2(2)=3
+         ind2(1)=3
+         ind2(2)=2
          ind2(3)=1
       ELSEIF (ibx==3) THEN
          ind2(1)=2
@@ -2922,26 +2924,26 @@ INTEGER, INTENT(OUT) :: ind2(3)
          ind2(3)=3
       ELSEIF (ibx==6) THEN
          ind2(1)=1
-         ind2(2)=2
-         ind2(3)=3
+         ind2(2)=3
+         ind2(3)=2
       ELSEIF (ibx==7) THEN
          ind2(1)=1
-         ind2(2)=3
-         ind2(3)=2
-      ELSE
-         CALL errore('is_d2divide_class','D_2h problem with C_2 axis',2)
-      ENDIF
-   ELSEIF (iax==3) THEN
-      IF (ibx==1 .OR. ibx==9 .OR. ibx==12 .OR. ibx==13) THEN
-         ind2(1)=1
-         ind2(2)=3
-         ind2(3)=2
-      ELSEIF (ibx==2 .OR. ibx==8 .OR. ibx==10 .OR. ibx==11) THEN
-         ind2(1)=1
          ind2(2)=2
          ind2(3)=3
       ELSE
-         CALL errore('is_d2divide_class','D_2h problem with C_2 axis',3)
+         CALL errore('is_d2','D_2 problem with C_2 axis',2)
+      ENDIF
+   ELSEIF (iax==3) THEN
+      IF (ibx==1 .OR. ibx==9 .OR. ibx==11 .OR. ibx==13) THEN
+         ind2(1)=1
+         ind2(2)=2
+         ind2(3)=3
+      ELSEIF (ibx==2 .OR. ibx==8 .OR. ibx==10 .OR. ibx==12) THEN
+         ind2(1)=1
+         ind2(2)=3
+         ind2(3)=2
+      ELSE
+         CALL errore('is_d2','D_2 problem with C_2 axis',3)
       ENDIF
    ELSEIF (iax==4) THEN
       IF (ibx==1) THEN
@@ -2953,7 +2955,7 @@ INTEGER, INTENT(OUT) :: ind2(3)
          ind2(2)=3
          ind2(3)=1
       ELSE
-         CALL errore('is_d2divide_class','D_2h problem with C_2 axis',4)
+         CALL errore('is_d2','D_2 problem with C_2 axis',4)
       ENDIF
    ELSEIF (iax==5) THEN
       IF (ibx==1) THEN
@@ -2965,67 +2967,67 @@ INTEGER, INTENT(OUT) :: ind2(3)
          ind2(2)=2
          ind2(3)=1
       ELSE
-         CALL errore('is_d2divide_class','D_2h problem with C_2 axis',4)
+         CALL errore('is_d2','D_2 problem with C_2 axis',4)
       ENDIF
    ELSEIF (iax==6) THEN
       IF (ibx==2) THEN
-         ind2(1)=2
+         ind2(1)=3
          ind2(2)=1
-         ind2(3)=3
+         ind2(3)=2
       ELSEIF (ibx==7) THEN
-         ind2(1)=2
-         ind2(2)=3
+         ind2(1)=3
+         ind2(2)=2
          ind2(3)=1
       ELSE
-         CALL errore('is_d2divide_class','D_2h problem with C_2 axis',5)
+         CALL errore('is_d2','D_2 problem with C_2 axis',5)
       ENDIF
    ELSEIF (iax==7) THEN
       IF (ibx==2) THEN
-         ind2(1)=3
+         ind2(1)=2
          ind2(2)=1
-         ind2(3)=2
+         ind2(3)=3
       ELSEIF (ibx==6) THEN
-         ind2(1)=3
-         ind2(2)=2
+         ind2(1)=2
+         ind2(2)=3
          ind2(3)=1
       ELSE
-         CALL errore('is_d2divide_class','D_2h problem with C_2 axis',6)
+         CALL errore('is_d2','D_2 problem with C_2 axis',6)
       ENDIF
    ELSEIF (iax==8) THEN
       IF (ibx==3) THEN
-         ind2(1)=2
-         ind2(2)=1
-         ind2(3)=3
-      ELSEIF (ibx==9) THEN
-         ind2(1)=2
-         ind2(2)=3
-         ind2(3)=1
-      ELSE
-         CALL errore('is_d2divide_class','D_2h problem with C_2 axis',7)
-      ENDIF
-   ELSEIF (iax==9) THEN
-      IF (ibx==3) THEN
          ind2(1)=3
          ind2(2)=1
          ind2(3)=2
-      ELSEIF (ibx==8) THEN
+      ELSEIF (ibx==9) THEN
          ind2(1)=3
          ind2(2)=2
          ind2(3)=1
       ELSE
-         CALL errore('is_d2divide_class','D_2h problem with C_2 axis',8)
+         CALL errore('is_d2','D_2 problem with C_2 axis',7)
       ENDIF
-   ELSEIF (iax==10) THEN
+   ELSEIF (iax==9) THEN
       IF (ibx==3) THEN
          ind2(1)=2
          ind2(2)=1
          ind2(3)=3
-      ELSEIF (ibx==13) THEN
+      ELSEIF (ibx==8) THEN
          ind2(1)=2
          ind2(2)=3
          ind2(3)=1
       ELSE
-         CALL errore('is_d2divide_class','D_2h problem with C_2 axis',9)
+         CALL errore('is_d2','D_2 problem with C_2 axis',8)
+      ENDIF
+   ELSEIF (iax==10) THEN
+      IF (ibx==3) THEN
+         ind2(1)=3
+         ind2(2)=1
+         ind2(3)=2
+      ELSEIF (ibx==13) THEN
+         ind2(1)=3
+         ind2(2)=2
+         ind2(3)=1
+      ELSE
+         CALL errore('is_d2','D_2 problem with C_2 axis',9)
       ENDIF
    ELSEIF (iax==11) THEN
       IF (ibx==3) THEN
@@ -3037,7 +3039,7 @@ INTEGER, INTENT(OUT) :: ind2(3)
          ind2(2)=3
          ind2(3)=1
       ELSE
-         CALL errore('is_d2divide_class','D_2h problem with C_2 axis',10)
+         CALL errore('is_d2','D_2 problem with C_2 axis',10)
       ENDIF
    ELSEIF (iax==12) THEN
       IF (ibx==3) THEN
@@ -3049,22 +3051,22 @@ INTEGER, INTENT(OUT) :: ind2(3)
          ind2(2)=2
          ind2(3)=1
       ELSE
-         CALL errore('is_d2','D_2h problem with C_2 axis',11)
+         CALL errore('is_d2','D_2 problem with C_2 axis',11)
       ENDIF
    ELSEIF (iax==13) THEN
       IF (ibx==3) THEN
-         ind2(1)=3
+         ind2(1)=2
          ind2(2)=1
-         ind2(3)=2
+         ind2(3)=3
       ELSEIF (ibx==10) THEN
-         ind2(1)=3
-         ind2(2)=2
+         ind2(1)=2
+         ind2(2)=3
          ind2(3)=1
       ELSE
-         CALL errore('is_d2','D_2h problem with C_2 axis',12)
+         CALL errore('is_d2','D_2 problem with C_2 axis',12)
       ENDIF
    ELSE
-      CALL errore('is_d2','D_2h problem with C_2 axis',9)
+      CALL errore('is_d2','D_2 problem with C_2 axis',9)
    END IF
 
 RETURN

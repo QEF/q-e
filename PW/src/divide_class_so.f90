@@ -279,7 +279,7 @@ ELSEIF (code_group==10) THEN
             which_irr(iclass)=7
          END IF
       ELSEIF (ts.ne.3) THEN
-         CALL errore('divide_class_so','wrong sym_type',1)
+         CALL errore('divide_class_so','wrong sym_type for D_4',1)
       END IF
    END DO
 ELSEIF (code_group==11) THEN
@@ -377,6 +377,7 @@ ELSEIF (code_group==14) THEN
 !  C_4v 
 !
    IF (nclass /= 7) CALL errore('divide_class_so','Wrong classes for C_4v',1)
+
    DO iclass=2,nclass
       ts=tipo_sym(smat(1,1,elem(1,iclass)))
       IF (ts==1) THEN
@@ -418,9 +419,9 @@ ELSEIF (code_group==15) THEN
          CALL mirror_axis(smat(1,1,elem(1,iclass)), ax)
          CALL which_c2(ax,iax)
          IF (iax==2 .OR. iax==12 .OR. iax==13) THEN
-            which_irr(iclass)=8
-         ELSEIF (iax==1 .OR. iax==10 .OR. iax==11) THEN
             which_irr(iclass)=9
+         ELSEIF (iax==1 .OR. iax==10 .OR. iax==11) THEN
+            which_irr(iclass)=8
          ELSE
             CALL errore('divide_class_so','C_6v mirror symmetry not recognized',1)
          ENDIF
@@ -3542,7 +3543,7 @@ ENDIF
 !
 CALL versor(saux,ax)
 angle=angle_rot(saux)
-!write(6,'(3f12.5,5x,f12.5)') ax(1), ax(2), ax(3), angle
+!write(6,'(5x,"find u",3f12.5,5x,f12.5)') ax(1), ax(2), ax(3), angle
 angle=0.5d0*angle*pi/180.d0
 cosa=COS(angle)
 sina=SIN(angle)
@@ -3560,12 +3561,12 @@ u(2,2)=CONJG(u(1,1))
 !
 IF (cosa < -eps ) u=-u
 
-IF (ABS(cosa) < eps) THEN
+!IF (ABS(cosa) < eps) THEN
 !
 !  Special case when cosa=0. For this rotation we must take the negative sign.
 !
-   IF (ax(1)*ax(3) < -eps) u=-u
-ENDIF
+!   IF (ax(1)*ax(3) < -eps) u=-u
+!ENDIF
 !
 !   Here compute the 3x3 rotation matrix starting form the axis, angle
 !   or from the rotation in spin space for consistency check.
