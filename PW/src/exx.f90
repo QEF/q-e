@@ -16,7 +16,7 @@ MODULE exx
   USE io_global,            ONLY : ionode
   USE fft_custom,           ONLY : fft_cus
   !
-  USE control_flags, ONLY : tqr
+  USE control_flags,        ONLY : gamma_only, tqr
 
   IMPLICIT NONE
   SAVE
@@ -120,7 +120,6 @@ MODULE exx
   SUBROUTINE exx_fft_create ()
     USE gvecw,        ONLY : ecutwfc
     USE gvect,        ONLY : ecutrho, ig_l2g
-    USE control_flags,ONLY : gamma_only
     USE klist,        ONLY : qnorm
     USE cell_base,    ONLY : at, bg, tpiba2
     USE fft_custom,   ONLY : set_custom_grid, ggent
@@ -206,6 +205,7 @@ MODULE exx
     USE io_global,  ONLY : stdout
     USE start_k,    ONLY : nk1,nk2,nk3
     USE mp_pools,   ONLY : npool
+    USE control_flags, ONLY : iverbosity
     !
     IMPLICIT NONE
     !
@@ -375,11 +375,15 @@ MODULE exx
     IF( nkqs > 1) THEN
       WRITE(stdout, '(5x,3a)') "EXX: setup a grid of "//trim(int_to_char(nkqs))&
                            //" q-points centered on each k-point"
-      WRITE( stdout, '(5x,a)' ) '(k+q)-points:'
-      DO ik = 1, nkqs
-          WRITE( stdout, '(3f12.7,5x,2i5)') (xkq_collect (ikq, ik) , ikq = 1, 3) , &
+      IF ( nkqs < 100 .OR. iverbosity > 0 ) THEN
+          WRITE( stdout, '(5x,a)' ) '(k+q)-points:'
+          DO ik = 1, nkqs
+            WRITE( stdout, '(3f12.7,5x,2i5)') (xkq_collect(ikq,ik), ikq=1,3), &
                  index_xk(ik), index_sym(ik)
-      ENDDO
+          ENDDO
+      ELSE
+          WRITE( stdout, '(5x,a)' ) "(set verbosity='high' to see the list)"
+      END IF
     ELSE
       WRITE(stdout, '("EXX: grid of k+q points same as grid of k-points")')
     ENDIF
@@ -586,7 +590,6 @@ MODULE exx
     USE io_files,             ONLY : nwordwfc, iunwfc
     USE buffers,              ONLY : get_buffer
     USE wvfct,                ONLY : nbnd, npwx, wg, current_k
-    USE control_flags,        ONLY : gamma_only
     USE klist,                ONLY : ngk, nks, nkstot, xk, wk, igk_k
     USE symm_base,            ONLY : nsym, s, sr, ftau
     USE mp_pools,             ONLY : npool, nproc_pool, me_pool, inter_pool_comm
@@ -945,7 +948,6 @@ MODULE exx
     USE becmod,               ONLY : calbec
     USE fft_base,             ONLY : dffts
     USE fft_interfaces,       ONLY : fwfft
-    USE control_flags,        ONLY : gamma_only
     USE us_exx,               ONLY : becxx
 
     IMPLICIT NONE
@@ -1066,7 +1068,6 @@ MODULE exx
     ! ...    hpsi  V_x*psi
     !
     USE becmod,         ONLY : bec_type
-    USE control_flags,  ONLY : gamma_only
     USE uspp,           ONLY : okvan
     USE paw_variables,  ONLY : okpaw
     !
@@ -1790,7 +1791,6 @@ MODULE exx
     USE io_files,               ONLY : iunwfc, nwordwfc
     USE buffers,                ONLY : get_buffer
     USE wvfct,                  ONLY : nbnd, npwx, wg, current_k
-    USE control_flags,          ONLY : gamma_only
     USE gvect,                  ONLY : gstart
     USE wavefunctions_module,   ONLY : evc
     USE lsda_mod,               ONLY : lsda, current_spin, isk
@@ -1870,7 +1870,6 @@ MODULE exx
   FUNCTION exxenergy2()
     !-----------------------------------------------------------------------
     !
-    USE control_flags,           ONLY : gamma_only
     !
     IMPLICIT NONE
     !
@@ -1901,7 +1900,6 @@ MODULE exx
     USE symm_base,               ONLY : nsym, s
     USE gvect,                   ONLY : ngm, gstart, g, nl
     USE wvfct,                   ONLY : nbnd, npwx, wg
-    USE control_flags,           ONLY : gamma_only
     USE wavefunctions_module,    ONLY : evc
     USE klist,                   ONLY : xk, ngk, nks, nkstot, igk_k
     USE lsda_mod,                ONLY : lsda, current_spin, isk
@@ -2351,7 +2349,6 @@ MODULE exx
      USE gvect,          ONLY : ngm, g
      USE gvecw,          ONLY : gcutw
      USE io_global,      ONLY : stdout
-     USE control_flags,  ONLY : gamma_only
      USE mp_bands,       ONLY : intra_bgrp_comm
      USE mp,             ONLY : mp_sum
 
@@ -2477,7 +2474,6 @@ MODULE exx
     USE cell_base,            ONLY : alat, omega, bg, at, tpiba
     USE symm_base,            ONLY : nsym, s
     USE wvfct,                ONLY : nbnd, npwx, wg, current_k
-    USE control_flags,        ONLY : gamma_only
     USE wavefunctions_module, ONLY : evc
     USE klist,                ONLY : xk, ngk, nks, igk_k
     USE lsda_mod,             ONLY : lsda, current_spin, isk
@@ -2793,7 +2789,6 @@ SUBROUTINE aceinit( )
   USE mp_pools,   ONLY : inter_pool_comm
   USE mp_bands,   ONLY : intra_bgrp_comm
   USE mp,         ONLY : mp_sum
-  USE control_flags,        ONLY : gamma_only
   USE wavefunctions_module, ONLY : evc
   !
   IMPLICIT NONE
