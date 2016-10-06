@@ -140,7 +140,7 @@ subroutine set_irr_new (xq, u, npert, nirr, eigen)
      end if
 
      IF (search_sym) THEN
-        CALL find_mode_sym_new (u, eigen, tau, nat, nsymq, sr, irt, xq,    &
+        CALL find_mode_sym_new (u, eigen, tau, nat, nsymq, s, sr, irt, xq,    &
              rtau, amass, ntyp, ityp, 0, .FALSE., .TRUE., num_rap_mode, ierr)
 
 !

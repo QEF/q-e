@@ -2549,7 +2549,7 @@ SUBROUTINE find_representations_mode_q ( nat, ntyp, xq, w2, u, tau, ityp, &
      CALL prepare_sym_analysis(nsymq,sr,t_rev,magnetic_sym)
      sym (1:nsym) = .TRUE.
      CALL sgam_ph_new (at, bg, nsym, s, irt, tau, rtau, nat)
-     CALL find_mode_sym_new (u, w2, tau, nat, nsymq, sr, irt, xq,    &
+     CALL find_mode_sym_new (u, w2, tau, nat, nsymq, s, sr, irt, xq,    &
              rtau, amass, ntyp, ityp, 1, .FALSE., .FALSE., num_rap_mode, ierr)
 
   ENDIF

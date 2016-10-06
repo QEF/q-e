@@ -218,7 +218,7 @@ subroutine dynmatrix_new(iq_)
   IF (ldiag_loc) THEN
      call dyndia (xq, nmodes, nat, ntyp, ityp, amass, iudyn, dyn, w2)
      IF (search_sym) THEN
-         CALL find_mode_sym_new (dyn, w2, tau, nat, nsymq, sr, irt, xq, &
+         CALL find_mode_sym_new (dyn, w2, tau, nat, nsymq, s, sr, irt, xq, &
               rtau, amass, ntyp, ityp, 1, lgamma_gamma, .FALSE., &
               num_rap_mode, ierr)
          CALL print_mode_sym(w2, num_rap_mode, lgamma)

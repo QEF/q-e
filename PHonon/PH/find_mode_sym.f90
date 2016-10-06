@@ -5,7 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-SUBROUTINE find_mode_sym_new (u, w2, tau, nat, nsym, sr, irt, xq,    &
+SUBROUTINE find_mode_sym_new (u, w2, tau, nat, nsym, s, sr, irt, xq,    &
      rtau, amass, ntyp, ityp, flag, lmolecule, lstop, num_rap_mode, ierr)
   !
   !   This subroutine finds the irreducible representations which give
@@ -61,6 +61,7 @@ SUBROUTINE find_mode_sym_new (u, w2, tau, nat, nsym, sr, irt, xq,    &
 
   INTEGER ::      &
        ngroup,    &   ! number of different frequencies groups
+       s(3,3,48), &   ! rotation matrices
        nmodes,    &   ! number of modes
        imode,     &   ! counter on modes
        igroup,    &   ! counter on groups
@@ -77,9 +78,11 @@ SUBROUTINE find_mode_sym_new (u, w2, tau, nat, nsym, sr, irt, xq,    &
   ! in case of accidental degeneracy
   COMPLEX(DP), EXTERNAL :: zdotc
   REAL(DP), ALLOCATABLE :: w1(:)
-  COMPLEX(DP), ALLOCATABLE ::  rmode(:), trace(:,:), z(:,:)
+  COMPLEX(DP), ALLOCATABLE ::  rmode(:,:), trace(:,:), z(:,:)
   LOGICAL :: is_linear
   INTEGER :: counter, counter_s
+  LOGICAL :: found
+  INTEGER :: invs(48), ss(3,3), isym, jsym
   !
   !    Divide the modes on the basis of the mode degeneracy.
   !
@@ -91,7 +94,7 @@ SUBROUTINE find_mode_sym_new (u, w2, tau, nat, nsym, sr, irt, xq,    &
   ALLOCATE(dim_rap(nmodes))
   ALLOCATE(z(nmodes,nmodes))
   ALLOCATE(w1(nmodes))
-  ALLOCATE(rmode(nmodes))
+  ALLOCATE(rmode(nmodes,nmodes))
   ALLOCATE(trace(48,nmodes))
 
   IF (flag==1) THEN
@@ -108,6 +111,21 @@ SUBROUTINE find_mode_sym_new (u, w2, tau, nat, nsym, sr, irt, xq,    &
   ELSE
      z=u
   ENDIF
+
+  DO isym = 1, nsym
+     found = .false.
+     DO jsym = 1, nsym
+        !
+        ss = matmul (s(:,:,jsym),s(:,:,isym))
+        ! s(:,:,1) is the identity
+        IF ( all ( s(:,:,1) == ss(:,:) ) ) THEN
+           invs (isym) = jsym
+           found = .true.
+        ENDIF
+     ENDDO
+     IF ( .NOT.found) CALL errore ('inverse_s', ' Not a group', 1)
+  ENDDO
+
 !
 !  Compute the mode frequency in cm-1. Two modes are considered degenerate
 !  if their frequency is lower 0.05 cm-1
@@ -140,12 +158,15 @@ SUBROUTINE find_mode_sym_new (u, w2, tau, nat, nsym, sr, irt, xq,    &
      dim_rap(igroup)=istart(igroup+1)-istart(igroup)
      DO iclass=1,nclass
         irot=elem(1,iclass)
+!
+!   rotate all modes together
+!
+        CALL rotate_mod(z,rmode,sr(1,1,irot),irt,rtau,xq,nat,invs(irot))
         trace(iclass,igroup)=(0.d0,0.d0)
         DO i=1,dim_rap(igroup)
            nu_i=istart(igroup)+i-1
-           CALL rotate_mod(z(1,nu_i),rmode,sr(1,1,irot),irt,rtau,xq,nat,irot)
            trace(iclass,igroup)=trace(iclass,igroup) + &
-                zdotc(3*nat,z(1,nu_i),1,rmode,1)
+                zdotc(3*nat,z(1,nu_i),1,rmode(1,nu_i),1)
         END DO
 !              write(6,*) 'group,class',igroup, iclass, trace(iclass,igroup)
      END DO
@@ -164,8 +185,8 @@ SUBROUTINE find_mode_sym_new (u, w2, tau, nat, nsym, sr, irt, xq,    &
      DO irap=1,nclass
         times=(0.d0,0.d0)
         DO iclass=1,nclass
-           times=times+CONJG(trace(iclass,igroup))*char_mat(irap, &
-                which_irr(iclass))*nelem(iclass)
+           times=times+trace(iclass,igroup)*CONJG(char_mat(irap, &
+                which_irr(iclass)))*nelem(iclass)
            !         write(6,*) igroup, irap, iclass, which_irr(iclass)
         ENDDO
         times=times/nsym
@@ -213,26 +234,44 @@ SUBROUTINE find_mode_sym_new (u, w2, tau, nat, nsym, sr, irt, xq,    &
 END SUBROUTINE find_mode_sym_new
 
 SUBROUTINE rotate_mod(mode,rmode,sr,irt,rtau,xq,nat,irot)
+
   USE kinds, ONLY : DP
   USE constants, ONLY: tpi
+  USE cell_base, ONLY : bg
+  !
+  !  irot must be the number of the rotation S^-1
+  !
   IMPLICIT NONE
 
-  INTEGER :: nat, irot, irt(48,nat)
-  COMPLEX(DP) :: mode(3*nat), rmode(3*nat), phase
-  REAL(DP)  :: sr(3,3), rtau(3,48,nat), xq(3), arg
-  INTEGER :: na, nb, ipol, kpol, mu_i, mu_k
+  INTEGER :: nat,        & !  number of atoms
+             irot,       & !  the index of the inverse of the rotation sr
+             irt(48,nat)   !  the rotated of each atom for all rotations
+
+  COMPLEX(DP) :: mode(3*nat,3*nat), & ! the mode to rotate
+                 rmode(3*nat,3*nat)  ! the rotated mode
+
+  REAL(DP)  :: sr(3,3),  &  ! the symmetry matrices in cartesian coordinates
+               rtau(3,48,nat), & ! the vector R = S tau - tau for all rotations
+               xq(3)       ! the q vector
+
+  COMPLEX(DP) :: phase   ! auxiliary phase
+  REAL(DP)    :: arg     ! an auxiliary argument
+
+  INTEGER :: na, nb,     & ! counters on atoms
+             ipol, jpol, & ! counters on coordinates
+             mu_i, mu_j    ! counters on modes coordinates
 
   rmode=(0.d0,0.d0)
   DO na=1,nat
      nb=irt(irot,na)
-     arg = ( xq(1)*rtau(1,irot,na) + xq(2)*rtau(2,irot,na)+  &
-          xq(3)*rtau(3,irot,na) ) * tpi
+     arg = ( xq(1)*rtau(1,irot,na) + xq(2)*rtau(2,irot,na) +  &
+             xq(3)*rtau(3,irot,na) ) * tpi
      phase = CMPLX(cos(arg), sin(arg), kind=DP)
      DO ipol=1,3
         mu_i=3*(na-1)+ipol
-        DO kpol=1,3
-           mu_k=3*(nb-1)+kpol
-           rmode(mu_i)=rmode(mu_i) + sr(kpol,ipol)*mode(mu_k)*phase
+        DO jpol=1,3
+           mu_j=3*(nb-1)+jpol
+           rmode(mu_i,:)=rmode(mu_i,:) + sr(ipol,jpol)*mode(mu_j,:)*phase
         END DO
      END DO
   END DO
