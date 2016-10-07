@@ -1,3 +1,9 @@
+Fixed in svn version:
+
+  * PW: ACE energy slightly off for metals, could lead to crash (commit 13095)
+  * Some Wyckoff site labels were incorrect (commit 13083)
+    Also: symmetry analysis improved (commit 13094)
+
 New in 6.0 version:
 
   * Socket interface with i-PI universal force engine (ipi-code.org)

@@ -24,8 +24,6 @@ MODULE fcp_opt_routines
                               fcp_tot_charge_last
    USE path_variables, ONLY : num_of_images
    !
-   USE basic_algebra_routines
-   !
    IMPLICIT NONE
    !
    PRIVATE

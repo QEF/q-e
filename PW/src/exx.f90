@@ -2348,7 +2348,6 @@ MODULE exx
      USE cell_base,      ONLY : bg, at, alat, omega
      USE gvect,          ONLY : ngm, g
      USE gvecw,          ONLY : gcutw
-     USE io_global,      ONLY : stdout
      USE mp_bands,       ONLY : intra_bgrp_comm
      USE mp,             ONLY : mp_sum
 
@@ -2785,6 +2784,7 @@ SUBROUTINE aceinit( )
                          bec_type, calbec
   USE lsda_mod,   ONLY : current_spin, lsda, isk
   USE io_files,   ONLY : nwordwfc, iunwfc
+  USE io_global,  ONLY : stdout
   USE buffers,    ONLY : get_buffer
   USE mp_pools,   ONLY : inter_pool_comm
   USE mp_bands,   ONLY : intra_bgrp_comm
@@ -2819,7 +2819,7 @@ SUBROUTINE aceinit( )
      eexx = eexx + ee
   ENDDO
   CALL mp_sum( eexx, inter_pool_comm)
-  WRITE(*,*) 'EXACT--Energy', eexx
+  WRITE(stdout,'(/,5X,"ACE energy",f15.8)') eexx
   IF ( okvan ) CALL deallocate_bec_type(becpsi)
   domat = .false.
 END SUBROUTINE aceinit
@@ -2854,7 +2854,6 @@ IMPLICIT NONE
   CALL matcalc('exact',.true.,.false.,nnpw,nbndproj,nbndproj,phi,xitmp,mexx,exxe)
 ! |xi> = -One * Vx[phi]|phi> * rmexx^T
   CALL aceupdate(nbndproj,nnpw,xitmp,mexx)
-  WRITE(*,'(A)') 'xi overwritten by aceupdate.'
   DEALLOCATE( mexx )
 
   CALL stop_clock( 'aceinit' )
@@ -3061,7 +3060,7 @@ IMPLICIT NONE
     string = 'E-'
     ee = Zero
     DO i = 1,n
-      ee = ee + wg(i,ik)*x_occupation(i,ik)*dreal(mat(i,i))
+      ee = ee + wg(i,ik)*DBLE(mat(i,i))
     ENDDO
 !   write(*,'(A,f16.8,A)') string//label, ee, ' Ry'
   ENDIF
