@@ -7,8 +7,6 @@
 # of the present distribution.
 #
 # Maintainer: Filippo Spiga (filippo.spiga@quantum-espresso.org)
-#
-# Makefile to run regression numerical tests. Simple is good
 
 include ./ENVIRONMENT
 
@@ -28,8 +26,6 @@ default :
 	@echo 'ENVIRONMENT and Makefile files'
 
 prolog :
-#	@if [ ! -f userconfig ]; then \
-	sed "s|XXXXXX|$(ESPRESSO_ROOT)|g" < userconfig.tmp > userconfig; fi
 	@sed "s|XXXXXX|$(ESPRESSO_ROOT)|g" < userconfig.tmp > userconfig
 
 pseudo :
@@ -61,6 +57,7 @@ run-tests-epw-serial : prolog pseudo
 
 run-tests-epw-parallel : prolog pseudo
 	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=epw_all
+
 
 run-custom-test : run-custom-test-serial
 
