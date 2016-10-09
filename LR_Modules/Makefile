@@ -18,7 +18,6 @@ cg_psi.o \
 ch_psi_all.o \
 commutator_Hx_psi.o \
 dynmat_sub.o \
-h_psiq.o \
 h_prec.o \
 incdrhoscf.o \
 incdrhoscf_nc.o \

@@ -1,5 +1,10 @@
-Fixed in svn version:
+Incompatible changes in svn version:
 
+  * Routine h_psiq deleted
+
+Fixed in svn versions
+
+  * GWW wasn't working at all (rev. 13099, 13100, and XXX)
   * PW: ACE energy slightly off for metals, could lead to crash (commit 13095)
   * Some Wyckoff site labels were incorrect (commit 13083)
     Also: symmetry analysis improved (commit 13094)

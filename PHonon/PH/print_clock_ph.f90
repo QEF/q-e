@@ -124,11 +124,11 @@ subroutine print_clock_ph
   WRITE( stdout, * )
   call print_clock ('ch_psi')
   call print_clock ('first')
-  call print_clock ('h_psiq')
+  call print_clock ('h_psi')
 
   call print_clock ('last')
   WRITE( stdout, * )
-  call print_clock ('h_psiq')
+  call print_clock ('h_psi')
   call print_clock ('firstfft')
   call print_clock ('product')
   call print_clock ('secondfft')

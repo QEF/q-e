@@ -28,7 +28,6 @@ subroutine lanczos_state_k(ik,nstates, nsteps,in_states,d,f,omat,dpsi_ipol, t_ou
   USE uspp,                 ONLY : vkb, nkb, okvan
   USE klist,                ONLY : xk,igk_k, ngk
   USE noncollin_module,     ONLY : noncolin, npol
-  USE qpoint,       ONLY : igkq
 
   implicit none
 
@@ -62,9 +61,6 @@ subroutine lanczos_state_k(ik,nstates, nsteps,in_states,d,f,omat,dpsi_ipol, t_ou
   allocate(spsi(npwx,nstates))
  
   npw = ngk(ik)
-  allocate(igkq(1:npw))
-  igkq(1:npw) = igk_k(1:npw,ik)
-
   t_out(:,:,:)=(0.d0,0.d0)
 
   !first step
@@ -100,8 +96,8 @@ subroutine lanczos_state_k(ik,nstates, nsteps,in_states,d,f,omat,dpsi_ipol, t_ou
 
 
 !calculate H|\phi_i>
-  !call h_psi( npw, npw, nstates,psi_1(:,:), u_0 )
-   call h_psiq (npwx, npw, nstates, psi_1, u_0, spsi)
+   call h_psi( npwx, npw, nstates, psi_1, u_0 )
+   call s_psi( npwx, npw, nstates, psi_1, spsi ) ! is this needed?
    if(l_scissor) then
        call h_psi_scissor( ik,npwx, npw, nstates, psi_1, u_0 )
    endif
@@ -196,8 +192,8 @@ subroutine lanczos_state_k(ik,nstates, nsteps,in_states,d,f,omat,dpsi_ipol, t_ou
      FLUSH(stdout)
 
 !calculate H|\phi_i+1>
-     !call h_psi( npw, npw, nstates,psi_2(:,:), u_1 )
-     call h_psiq (npwx, npw, nstates, psi_2, u_1, spsi)
+     call h_psi( npwx, npw, nstates, psi_2, u_1 )
+     call s_psi (npwx, npw, nstates, psi_2, spsi) ! is this needed?
      if(l_scissor) then
         call h_psi_scissor( ik,npwx, npw, nstates, psi_2, u_1 )
      endif
@@ -297,7 +293,6 @@ subroutine lanczos_state_k(ik,nstates, nsteps,in_states,d,f,omat,dpsi_ipol, t_ou
 
   enddo
   
-  deallocate(igkq)
   deallocate(psi_1,psi_2,psi_3)
   deallocate(u_0,u_1)
   deallocate(alpha,beta,gamma,n_1)
