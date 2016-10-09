@@ -237,7 +237,7 @@ SUBROUTINE forces()
   !
   ! ... write on output the forces
   !
-  WRITE( stdout, '(/,5x,"Forces acting on atoms (Ry/au):", / )')
+  WRITE( stdout, '(/,5x,"Forces acting on atoms (Cartesian axes, Ry/au):", / )')
   DO na = 1, nat
      WRITE( stdout, 9035) na, ityp(na), force(:,na)
   END DO
