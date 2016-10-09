@@ -43,7 +43,7 @@ subroutine stress ( sigma )
        sigmalon ( 3 , 3 ), sigmaxdm(3, 3), sigma_nonloc_dft (3 ,3), sigmaexx(3,3), sigma_ts(3,3)
   integer :: l, m
   !
-  WRITE( stdout, '(//5x,"entering subroutine stress ..."/)')
+  WRITE( stdout, '(//5x,"Computing stress (cartesian axis) and pressure"/)')
 
   IF ( dft_is_meta() ) THEN
      CALL infomsg ('stress','Meta-GGA and stress not implemented')
