@@ -19,14 +19,14 @@ subroutine lanczos_state_k(ik,nstates, nsteps,in_states,d,f,omat,dpsi_ipol, t_ou
   USE gvect
   USE constants, ONLY : e2, pi, tpi, fpi
   USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2
-  USE wvfct,    ONLY : g2kin, npwx, npw, nbnd
+  USE wvfct,    ONLY : g2kin, npwx, nbnd
   USE wavefunctions_module, ONLY : evc, psic
   USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
   USE mp_world, ONLY : mpime, world_comm
   USE gvecs,                ONLY : nls, nlsm, doublegrid
   USE g_psi_mod,            ONLY : h_diag, s_diag
   USE uspp,                 ONLY : vkb, nkb, okvan
-  USE klist,                ONLY : xk,igk_k
+  USE klist,                ONLY : xk,igk_k, ngk
   USE noncollin_module,     ONLY : noncolin, npol
   USE qpoint,       ONLY : igkq
 
@@ -51,7 +51,7 @@ subroutine lanczos_state_k(ik,nstates, nsteps,in_states,d,f,omat,dpsi_ipol, t_ou
   REAL(kind=DP), ALLOCATABLE :: c(:)
   
 
-  INTEGER :: is,ig,ii,jj,it,ipol
+  INTEGER :: npw, is,ig,ii,jj,it,ipol
   INTEGER :: iunlan
   COMPLEX(kind=DP) :: csca
 
@@ -61,6 +61,8 @@ subroutine lanczos_state_k(ik,nstates, nsteps,in_states,d,f,omat,dpsi_ipol, t_ou
   allocate(c(nstates))
   allocate(spsi(npwx,nstates))
  
+  npw = ngk(ik)
+  allocate(igkq(1:npw))
   igkq(1:npw) = igk_k(1:npw,ik)
 
   t_out(:,:,:)=(0.d0,0.d0)
@@ -295,6 +297,7 @@ subroutine lanczos_state_k(ik,nstates, nsteps,in_states,d,f,omat,dpsi_ipol, t_ou
 
   enddo
   
+  deallocate(igkq)
   deallocate(psi_1,psi_2,psi_3)
   deallocate(u_0,u_1)
   deallocate(alpha,beta,gamma,n_1)
