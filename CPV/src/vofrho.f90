@@ -384,8 +384,6 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
                if (nspin>2) call errore('stress_rVV10', 'rVV10 non implemented with nspin>2',1)
                CALL stress_rVV10(rhosave, rhocsave, nspin, denlc )
              end if
-
-             CALL mp_sum( denlc, intra_bgrp_comm )
              dxc(:,:) = dxc(:,:) - omega/e2 * MATMUL(denlc,TRANSPOSE(ainv))
          END IF
          DEALLOCATE ( rhocsave, rhosave )

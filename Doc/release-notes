@@ -4,6 +4,8 @@ Incompatible changes in svn version:
 
 Fixed in svn versions
 
+  * CPV: stress with nonlocal DFT incorrect in parallel (rev.13102)
+  * PWGui: double-hyphen glitch with old tcllib for NEB (rev. 13101)
   * GWW wasn't working at all (rev. 13099, 13100, and XXX)
   * PW: ACE energy slightly off for metals, could lead to crash (commit 13095)
   * Some Wyckoff site labels were incorrect (commit 13083)
