@@ -134,7 +134,7 @@ module NEB -title "PWSCF GUI: module NEB.x" -script {
 	}
 
 	group fcp -decor normal {
-	    separator --label "--- Fictitious Charge Particle (FCP) options ---"
+	    separator -label "--- Fictitious Charge Particle (FCP) options ---"
 
 	    var lfcpopt {
 		-label "Perform a constant bias potential calculation using ESM (lfcpopt):"
