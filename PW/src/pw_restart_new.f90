@@ -833,20 +833,28 @@ MODULE pw_restart_new
       TYPE(parallel_info_type),OPTIONAL, INTENT(OUT)   :: restart_parallel_info
       TYPE(general_info_type ),OPTIONAL, INTENT(OUT)   :: restart_general_info
       ! 
-      LOGICAL                                   :: found
-      CHARACTER(LEN=80)                         :: errmsg = "" 
-      CHARACTER(LEN=256)                        :: dirname
+      LOGICAL               :: found
+      CHARACTER(LEN=80)     :: errmsg = "" 
+      CHARACTER(LEN=320)    :: filename
       !  
       ! 
       ierr = 0 
       ! 
-      dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save'
       CALL iotk_free_unit( iunpun, iotk_err )
-      !
       CALL errore( 'pw_readschema_file', &
                    'no free units to read xsd output', iotk_err )
       CALL qexsd_init_schema( iunpun )
-      CALL iotk_open_read( iunpun, TRIM(dirname)//'/'//TRIM(xmlpun_schema))
+      !
+      filename = TRIM( tmp_dir ) // TRIM( prefix ) // '.save' &
+               & // '/' // TRIM( xmlpun_schema )
+      INQUIRE ( file=filename, exist=found )
+      IF (.NOT. found ) ierr = ierr + 1
+      IF ( ierr /=0 ) THEN
+         errmsg='xml data file not found'
+         GOTO 100
+      END IF
+      !
+      CALL iotk_open_read( iunpun, TRIM(filename) )
       !
       IF ( PRESENT ( restart_general_info ) ) THEN 
          CALL qexsd_get_general_info ( iunpun, restart_general_info , found)
