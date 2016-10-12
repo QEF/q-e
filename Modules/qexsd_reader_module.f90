@@ -21,7 +21,6 @@ USE   qes_module
 !
 IMPLICIT NONE
 !
-CHARACTER(iotk_attlenx)         :: attr
 CONTAINS 
 !-------------------------------------------------------------------
 SUBROUTINE qexsd_get_general_info(iunit, obj, general_info_ispresent)
@@ -42,6 +41,7 @@ CHARACTER(256)                           :: dummy, name_, version_, creator_, xm
 LOGICAL                                  :: found, xml_format_ispresent, &
                                             creator_ispresent, created_ispresent, job_ispresent 
 
+CHARACTER(iotk_attlenx)                  :: attr
 
 
 CALL iotk_scan_begin(iunit, "general_info" ,IERR = ierr , FOUND = general_info_ispresent )
@@ -98,6 +98,7 @@ LOGICAL,INTENT(OUT)                 :: parallel_info_ispresent
 
 INTEGER                             :: nprocs_, nthreads_, ntasks_, nbgrp_, npool_, ndiag_
 INTEGER                             :: ierr, sum_err
+CHARACTER(iotk_attlenx)             :: attr
 !
 parallel_info_ispresent = .FALSE.
 CALL iotk_scan_begin(iunit, "parallel_info", IERR = ierr, FOUND = parallel_info_ispresent ) 
@@ -138,6 +139,7 @@ CHARACTER(256)   :: buffer, title_, calculation_, prefix_, pseudo_dir_, &
 LOGICAL          :: found, stress_, forces_, wf_collect_, nstep_ispresent
 INTEGER          :: max_seconds_, print_every_, nstep
 REAL(DP)         :: etot_conv_thr_, forc_conv_thr_, press_conv_thr_   
+CHARACTER(iotk_attlenx)         :: attr
 ! 
 control_variables_ispresent = .FALSE.
 CALL iotk_scan_begin(iunit, "control_variables", IERR = ierr, FOUND = control_variables_ispresent )
@@ -245,10 +247,11 @@ LOGICAL                                   :: pippo, mass_ispresent, spin_theta_i
 INTEGER                                   :: ierr, ctyp, t_typ, ntyp_
 REAL(DP)                                  :: mass_, start_mag_, spin_phi_, spin_theta_
 CHARACTER(LEN=256)                        :: buffer, pseudo_file_, name_spec_
+CHARACTER(iotk_attlenx)                   :: attr
 !
 atomic_species_ispresent =.FALSE.
 CALL iotk_scan_begin(iunit, "atomic_species", ATTR = attr,  FOUND = atomic_species_ispresent, &
-                     IERR = ierr ) 
+                                                                                     IERR = ierr ) 
 IF (ierr /= 0 ) RETURN 
 ! 
 CALL iotk_scan_attr(attr, "ntyp", ntyp_, IERR = ierr ) 
@@ -305,25 +308,27 @@ TYPE ( wyckoff_positions_type)             :: wyck_pos_obj
 TYPE (cell_type)                           :: cell_obj
 TYPE ( atom_type),ALLOCATABLE              :: atoms_obj(:)
 REAL(DP)                                   :: alat_, the_coordinates(3), a1_(3), a2_(3), a3_(3)
-INTEGER                                    :: iat, nat_,spc_grp_, index_, ibrav_
+INTEGER                                    :: iat, nat_,spc_grp_, index_, ibrav_, direction_
 CHARACTER(LEN=256)                         :: label_, wyck_label_
+CHARACTER(iotk_attlenx)                    :: attr
 
 !  
 atomic_structure_ispresent = .FALSE. 
-CALL  iotk_scan_begin(iunit, "atomic_structure", ATTR = attr, FOUND = atomic_structure_ispresent, &
-                      IERR = ierr ) 
-CALL iotk_scan_attr(attr, "nat", nat_, FOUND = nat_ispresent, IERR = ierr ) 
-IF (ierr /= 0) RETURN
+CALL  iotk_scan_begin(iunit, "atomic_structure", ATTR = attr, IERR = ierr, &
+                               FOUND = atomic_structure_ispresent ) 
+IF ( ierr /= 0 ) CALL errore (  "qexsd_get_atomic_structure", "problem opening atomic_structure",ierr) 
+CALL iotk_scan_attr(attr, "nat", nat_, IERR = ierr ) 
+IF (ierr /= 0) CALL errore ( "qexsd_get_atomic_structure", "mandatory nat attribure is missing",ierr) 
 CALL iotk_scan_attr(attr, "alat", alat_, FOUND = alat_ispresent, IERR = ierr ) 
 ! 
 CALL iotk_scan_attr ( attr,"bravais_index", ibrav_, FOUND = ibrav_ispresent, IERR = ierr )
-IF ( ierr /= 0 ) RETURN 
+IF ( ierr /= 0 ) CALL errore ( "qexsd_get_atomic_structure", "weird error reading atomic_structure attributes", ierr) 
 ! 
 ALLOCATE (atoms_obj(nat_))
 CALL iotk_scan_begin(iunit, "atomic_positions", ATTR=attr, IERR = ierr , FOUND = atomic_positions_ispresent ) 
 IF (atomic_positions_ispresent ) THEN 
   DO iat = 1, nat_ 
-     CALL iotk_scan_dat(iunit, "atom", ATTR = attr, dat = the_coordinates, IERR = ierr ) 
+     CALL iotk_scan_dat(iunit, "atom", ATTR = attr, dat = the_coordinates, IERR = ierr )
      IF (ierr /= 0) RETURN
      CALL iotk_scan_attr(attr, "name", label_, IERR = ierr ) 
      IF (ierr /= 0) RETURN 
@@ -377,15 +382,15 @@ sum_err = sum_err + ierr
 CALL iotk_scan_dat( iunit, "a3", dat = a3_, IERR = ierr )
 sum_err = sum_err + ierr
 !
-IF (sum_err /= 0 ) RETURN
+IF (sum_err /= 0 ) CALL errore ( "qexsd_get_atomic_structure", "some cell vector is missing",1) 
 ! 
 CALL iotk_scan_end(iunit, "cell", IERR = ierr )
-IF (ierr /= 0 ) RETURN
+IF (ierr /= 0 ) CALL errore ( "qexsd_get_atomic_structure", "problems closing cell element",ierr)
 !
 CALL qes_init_cell ( cell_obj, "cell", a1_, a2_, a3_)
 
 CALL iotk_scan_end (iunit, "atomic_structure", IERR = ierr ) 
-IF ( ierr /=0) RETURN 
+IF ( ierr /=0) CALL errore ( "qexsd_get_atomic_structure", "problems closing atomic_structure",ierr)
 ! 
 CALL qes_init_atomic_structure( obj, "atomic_structure", nat_, alat_, alat_ispresent, ibrav_, ibrav_ispresent,&
                                  atomic_positions_ispresent, at_pos_obj, wyckoff_positions_ispresent, &
@@ -413,6 +418,7 @@ REAL(DP)                       :: ecutfock_, exx_fraction_, screening_parameter_
                                   ecutvcut_
 LOGICAL                        :: x_gamma_extrapolation_
 CHARACTER(LEN=256)             :: exxdiv_treatment_
+CHARACTER(iotk_attlenx)         :: attr
 !
 !
 !
@@ -471,6 +477,7 @@ LOGICAL,INTENT(OUT)                           :: ispresent
 REAL(DP)                                      :: my_hubbard_val 
 INTEGER                                       :: ierr
 CHARACTER(LEN=256)                            :: tag_, specie_, label_ 
+CHARACTER(iotk_attlenx)         :: attr
 ! 
 ispresent = .FALSE. 
 !
@@ -506,6 +513,7 @@ LOGICAL,INTENT(OUT)                   :: ispresent
 REAL(DP)                              :: my_hubbard_J(3) 
 INTEGER                               :: ierr
 CHARACTER(LEN=256)                    :: tag_, specie_, label_
+CHARACTER(iotk_attlenx)               :: attr
 !
 IF (len (TRIM(tag)) .GT. 256 )   CALL errore ( 'qexsd_get_hubbard_J','tag too long' , 1)   
 ispresent = .FALSE.
@@ -541,6 +549,7 @@ CHARACTER(256)                      :: label_, specie_
 REAL(DP),ALLOCATABLE                :: the_vec(:) 
 INTEGER                             :: spin_  
 INTEGER                             :: ierr, ndim_vec
+CHARACTER(iotk_attlenx)             :: attr
 !
 
 ndim_vec = 2*lmax+1
@@ -582,6 +591,7 @@ INTEGER                                   :: ndim_matrix_ns
 REAL(DP),ALLOCATABLE                      :: the_matrix(:,:)
 CHARACTER(256)                            :: specie_, label_
 INTEGER                                   :: spin_, index_
+CHARACTER(iotk_attlenx)                   :: attr
 !
 ndim_matrix_ns = 2*lmax+1 
 ALLOCATE (the_matrix(ndim_matrix_ns, ndim_matrix_ns))
@@ -644,6 +654,7 @@ TYPE ( hubbard_ns_type )                :: hub_ns_aux0
 TYPE ( hubbard_ns_type ),ALLOCATABLE    :: hub_ns_obj(:) 
 TYPE ( hubbard_ns_list ),TARGET         :: hub_ns_list
 TYPE ( hubbard_ns_list ),POINTER        :: hub_ns_last, hub_ns_first, hub_ns_ptr
+CHARACTER(iotk_attlenx)                 :: attr
 ! 
 ispresent = .FALSE. 
 CALL iotk_scan_begin(iunit, "dftU", IERR = ierr, FOUND = ispresent) 
@@ -869,6 +880,7 @@ LOGICAL                        :: non_locterm_ispresent, lond_s6_ispresent, ts_v
                                   london_rcut_ispresent, xdm_a1_ispresent, xdm_a2_ispresent, london_c6_ispresent
 INTEGER                        :: ndim_london_c6, iobj
 TYPE ( hubbardCommon_type )   :: hub_aux0, london_c6_obj(ntypx)
+CHARACTER(iotk_attlenx)         :: attr
 
 ! 
 ispresent = .FALSE. 
@@ -970,6 +982,7 @@ LOGICAL                                  :: hybrid_ispresent, dftU_ispresent, vd
 TYPE ( hybrid_type )                     :: hybrid_obj
 TYPE ( dftU_type )                       :: dftU_obj
 TYPE ( vdw_type )                         :: vdw_obj
+CHARACTER(iotk_attlenx)                   :: attr
 !  
 dft_ispresent = .FALSE.
 CALL iotk_scan_begin(iunit, "dft", ATTR = attr, IERR = ierr, FOUND = dft_ispresent)
@@ -1008,6 +1021,7 @@ LOGICAL, INTENT(OUT)                  :: ispresent
 ! 
 LOGICAL                               :: lsda_, noncolin_, spinorbit_
 INTEGER                               :: ierr 
+CHARACTER(iotk_attlenx)               :: attr
 !
 ispresent = .FALSE. 
 CALL iotk_scan_begin(iunit, "spin", ATTR = attr, IERR = ierr , FOUND = ispresent)
@@ -1042,6 +1056,7 @@ LOGICAL,INTENT(OUT)                  :: ispresent
 INTEGER                              :: ierr  
 REAL(DP)                             :: degauss_
 CHARACTER(256)                       :: smearing_choice_
+CHARACTER(iotk_attlenx)              :: attr
 ! 
 ispresent = .FALSE. 
 CALL iotk_scan_dat( iunit, "smearing", smearing_choice_, ATTR = attr, IERR = ierr , FOUND = ispresent )
@@ -1074,6 +1089,7 @@ REAL(DP)                                  :: tot_chg_, tot_mag_
 REAL(DP), ALLOCATABLE                     :: input_occ_vec(:)
 CHARACTER(LEN=256)                        :: occ_string_
 INTEGER                                   :: iobj 
+CHARACTER(iotk_attlenx)                   :: attr
  
 ispresent = .FALSE. 
 CALL iotk_scan_begin( iunit, "bands", ATTR = attr, IERR = ierr , FOUND = ispresent ) 
@@ -1167,6 +1183,7 @@ INTEGER                                   :: fft_nr1_,    fft_nr2_,    fft_nr3_,
                                              box_nr1_,    box_nr2_,    box_nr3_,&
                                              ngm_, ngms_, npwx_
 TYPE ( basisSetItem_type)                :: grid_obj, smooth_obj, box_obj
+CHARACTER(iotk_attlenx)                  :: attr
 ! 
 ispresent = .FALSE. 
 CALL iotk_scan_begin ( iunit, "basis", ATTR = attr, IERR = ierr, FOUND = ispresent ) 
@@ -1239,8 +1256,9 @@ INTEGER                                     :: ierr
 CHARACTER(LEN=256)                          :: diago_str_, mixing_str_ 
 REAL(DP)                                    :: mixing_beta_, conv_thr_, diago_thr_init_
 INTEGER                                     :: mixing_ndim_, max_nstep_, diago_cg_maxiter_
-LOGICAL                                     :: real_space_q_, diago_full_acc_, tq_smoothing_, &
-                                               tbeta_smoothing_
+LOGICAL                                     :: real_space_q_, diago_full_acc_, found_, &
+                                               tq_smoothing_ = .FALSE., tbeta_smoothing_ =.FALSE.
+CHARACTER(iotk_attlenx)                     :: attr
 ! 
 ispresent = .FALSE.
 CALL iotk_scan_begin( iunit, "electron_control", FOUND = ispresent, IERR = ierr )
@@ -1267,10 +1285,10 @@ IF ( ierr /= 0 ) RETURN
 CALL  iotk_scan_dat( iunit, "real_space_q" , real_space_q_, IERR = ierr )
 IF ( ierr /= 0 ) RETURN
 ! 
-CALL iotk_scan_dat ( iunit, "tq_smoothing", tq_smoothing_, IERR = ierr ) 
+CALL iotk_scan_dat ( iunit, "tq_smoothing", tq_smoothing_, IERR = ierr , FOUND = found_) 
 IF ( ierr /= 0 ) RETURN 
 !
-CALL iotk_scan_dat ( iunit, "tbeta_smoothing", tbeta_smoothing_, IERR = ierr )
+CALL iotk_scan_dat ( iunit, "tbeta_smoothing", tbeta_smoothing_, IERR = ierr , FOUND = found_)
 IF ( ierr /= 0 ) RETURN
 ! 
 CALL  iotk_scan_dat( iunit, "diago_thr_init" , diago_thr_init_, IERR = ierr )
@@ -1312,14 +1330,19 @@ CHARACTER(LEN=256)                     :: label, empty_str
 TYPE (k_point_type),ALLOCATABLE        :: kp_obj(:)
 TYPE ( monkhorst_pack_type )           :: mp_obj
 REAL (DP)                              :: wk_, xk_(3)
+CHARACTER(iotk_attlenx)                :: attr
 ! 
 ispresent = .FALSE.
 CALL iotk_scan_begin( iunit, "k_points_IBZ", FOUND = ispresent, IERR = ierr ) 
-IF ( ierr /= 0 ) RETURN 
-IF (.NOT. ispresent ) RETURN 
+IF ( ierr /= 0 ) CALL errore ( "qexsd_get_k_points_IBZ", "error reading element from xml file", ierr) 
+IF (.NOT. ispresent ) then 
+  print *, 'ciao'
+  RETURN 
+end if 
 ! 
 CALL iotk_scan_dat( iunit, "monkhorst_pack", empty_str, ATTR = attr, FOUND = monkh_pack_ispresent, IERR = ierr)
 IF ( monkh_pack_ispresent ) THEN 
+   print *, attr, empty_str
    CALL iotk_scan_attr( attr, "nk1", nk1_, IERR = ierr ) 
    IF (ierr /= 0 ) RETURN    
    CALL iotk_scan_attr( attr, "nk2", nk2_, IERR = ierr )
@@ -1359,10 +1382,7 @@ IF ( nks_ispresent) THEN
 END IF    
 !  
 CALL iotk_scan_end(iunit, "k_points_IBZ", IERR = ierr ) 
-IF (ierr /= 0 ) THEN 
-   ispresent = .FALSE.
-   RETURN 
-END IF 
+IF (ierr /= 0 ) CALL errore ( "qexsd_get_k_points_IBZ", "k_points_IBZ element is not correctly closed",1) 
 CALL qes_init_k_points_IBZ( obj, "k_points_IBZ" , monkh_pack_ispresent, mp_obj, nks_ispresent, & 
                             nks_, nks_ispresent, nks_, kp_obj )
 !
@@ -1386,6 +1406,7 @@ LOGICAL,INTENT(OUT)                   :: ispresent
 INTEGER                               :: ierr, ndim_ 
 REAL(DP)                              :: trust_radius_min_, trust_radius_max_, trust_radius_init_, &
                                          w1_, w2_
+CHARACTER(iotk_attlenx)               :: attr
 ! 
 ispresent = .FALSE. 
 CALL iotk_scan_begin( iunit, "bfgs", IERR = ierr , FOUND = ispresent ) 
@@ -1430,6 +1451,7 @@ LOGICAL,INTENT(OUT)                   :: ispresent
 INTEGER                               :: ierr, nraise_
 CHARACTER(LEN =256)                   :: pot_extrapolation_, wfc_extrapolation_, ion_temperature_
 REAL(DP)                              :: timestep_, tempw_, tolp_, deltaT_ 
+CHARACTER(iotk_attlenx)               :: attr
 ! 
 ispresent = .FALSE.
 CALL iotk_scan_begin(iunit, "md", IERR = ierr, FOUND = ispresent)
@@ -1481,6 +1503,7 @@ LOGICAL                               :: upscale_ispresent, refold_pos_ispresent
                                          bfgs_ispresent, md_ispresent, remove_rig_rot_is, remove_rig_rot_ 
 TYPE ( bfgs_type )                    :: bfgs_obj
 TYPE ( md_type )                      :: md_obj 
+CHARACTER(iotk_attlenx)               :: attr
 ! 
 ispresent = .FALSE. 
 CALL iotk_scan_begin(iunit, "ion_control", IERR= ierr, FOUND = ispresent)
@@ -1524,6 +1547,7 @@ LOGICAL                               :: cell_fac_ispresent, wmass_ispresent, fi
 LOGICAL                               :: fix_volume_, fix_area_, isotropic_, found_pressure
 INTEGER                               :: free_cell_mat_(3,3)
 TYPE (integerMatrix_type)             :: mat_obj
+CHARACTER(iotk_attlenx)               :: attr
  
 !
 ispresent = .FALSE. 
@@ -1576,30 +1600,35 @@ TYPE (symmetry_flags_type),INTENT(OUT) :: obj
 LOGICAL,INTENT(OUT)                    :: ispresent
 ! 
 INTEGER                                :: ierr 
-LOGICAL                                :: nosym_, nosym_evc_, noinv_, no_t_rev_, force_symmorphic_, &
-                                          use_all_frac_ 
+LOGICAL                                :: nosym_= .FALSE.,&
+                                          nosym_evc_ = .FALSE., &
+                                          noinv_ = .FALSE.,&
+                                          no_t_rev_ = .FALSE.,&
+                                          force_symmorphic_ = .FALSE., &
+                                          use_all_frac_ = .FALSE. , found_
+CHARACTER(iotk_attlenx)                :: attr
 ! 
 ispresent = .FALSE.
 CALL iotk_scan_begin( iunit, "symmetry_flags", IERR = ierr, FOUND = ispresent ) 
 IF ( ierr /= 0) RETURN 
 IF ( .NOT. ispresent ) RETURN 
 ! 
-CALL iotk_scan_dat( iunit, "nosym", nosym_, IERR = ierr ) 
+CALL iotk_scan_dat( iunit, "nosym", nosym_, IERR = ierr , FOUND = found_) 
 IF (ierr /= 0 ) RETURN
 ! 
-CALL iotk_scan_dat( iunit, "nosym_evc", nosym_evc_, IERR = ierr )
+CALL iotk_scan_dat( iunit, "nosym_evc", nosym_evc_, IERR = ierr , FOUND = found_)
 IF ( ierr /= 0 ) RETURN 
 ! 
-CALL iotk_scan_dat( iunit, "noinv", noinv_, IERR = ierr )
+CALL iotk_scan_dat( iunit, "noinv", noinv_, IERR = ierr , FOUND = found_)
 IF ( ierr /= 0 ) RETURN 
 ! 
-CALL iotk_scan_dat( iunit, "no_t_rev", no_t_rev_, IERR = ierr )
+CALL iotk_scan_dat( iunit, "no_t_rev", no_t_rev_, IERR = ierr , FOUND = found_)
 IF ( ierr /= 0 ) RETURN 
 ! 
-CALL iotk_scan_dat( iunit, "force_symmorphic", force_symmorphic_, IERR = ierr )
+CALL iotk_scan_dat( iunit, "force_symmorphic", force_symmorphic_, IERR = ierr , FOUND = found_)
 IF ( ierr /= 0 ) RETURN 
 ! 
-CALL iotk_scan_dat( iunit, "use_all_frac", use_all_frac_, IERR = ierr )
+CALL iotk_scan_dat( iunit, "use_all_frac", use_all_frac_, IERR = ierr , FOUND = found_)
 IF ( ierr /= 0 ) RETURN 
 ! 
 CALL iotk_scan_end( iunit, "symmetry_flags", IERR = ierr)
@@ -1621,6 +1650,7 @@ LOGICAL,INTENT(OUT)               :: ispresent
 INTEGER                           :: ierr, nfit_
 CHARACTER ( LEN =256 )            :: bc_
 REAL(DP)                          :: efield_, w_
+CHARACTER(iotk_attlenx)           :: attr
 !
 ispresent = .FALSE. 
 CALL iotk_scan_begin(iunit, "esm", IERR = ierr, FOUND = ispresent)
@@ -1661,6 +1691,7 @@ LOGICAL                                     :: fcp_opt_ = .FALSE.
 REAL(DP)                                    :: fcp_mu_ 
 TYPE ( esm_type )                           :: esm_obj
 LOGICAL                                     :: esm_ispresent, fcp_opt_ispresent, fcp_mu_ispresent
+CHARACTER(iotk_attlenx)                     :: attr
 ! 
 ispresent = .FALSE. 
 CALL iotk_scan_begin( iunit, "boundary_conditions", IERR = ierr, FOUND = ispresent) 
@@ -1698,6 +1729,7 @@ LOGICAL,INTENT(OUT)                         :: ispresent
 ! 
 INTEGER                                     :: ierr
 REAL(DP)                                    :: ecfixed_, qcutz_, q2sigma_
+CHARACTER(iotk_attlenx)                     :: attr
 
 !
 ispresent = .FALSE. 
@@ -1737,6 +1769,7 @@ LOGICAL                                  :: dipole_correction_, edir_ispresent, 
 INTEGER                                  :: efield_direction_
 REAL(DP)                                 :: pot_max_pos_, down_width_, eamp_, efield_vec_(3)
 INTEGER                                  :: nppstr_, nberry_cyc_
+CHARACTER(iotk_attlenx)                  :: attr
 ! 
 ispresent = .FALSE. 
 CALL iotk_scan_begin( iunit, "electric_field", FOUND = ispresent, IERR = ierr ) 
@@ -1790,6 +1823,7 @@ LOGICAL,INTENT(OUT)                          :: ispresent
 INTEGER                                      :: ierr, num_of_constraints_, iconstr
 REAL(DP)                                     :: tolerance_
 TYPE ( atomic_constraint_type),ALLOCATABLE   :: at_constr_obj(:)
+CHARACTER(iotk_attlenx)                      :: attr
 !
 ispresent = .FALSE.
 CALL iotk_scan_begin(iunit, "atomic_constraints", IERR = ierr, FOUND = ispresent)
@@ -1828,6 +1862,7 @@ LOGICAL,INTENT(OUT)                          :: ispresent
 INTEGER                                      :: ierr, iconstr
 REAL(DP)                                     :: constr_target_, constr_parms_(4)
 CHARACTER ( LEN = 256 )                      :: constr_type_
+CHARACTER(iotk_attlenx)                      :: attr
 ispresent = .FALSE.
 CALL iotk_scan_begin(iunit, "atomic_constraint", IERR = ierr ) 
 IF ( ierr /= 0 ) RETURN 
@@ -1861,6 +1896,7 @@ INTEGER                                      :: ierr
 CHARACTER(LEN=256)                           :: spin_constraints_
 REAL(DP)                                     :: lambda_, targ_mag_(3)
 LOGICAL                                      :: targ_mag_ispresent
+CHARACTER(iotk_attlenx)                      :: attr
 ! 
  
 !
@@ -1902,6 +1938,7 @@ REAL(DP)                                  :: etot_, eband_, ehart_, vtxc_, etxc_
 LOGICAL                                   :: efield_corr_ispresent, eband_ispresent, ehart_ispresent, & 
                                              vtxc_ispresent, etxc_ispresent, ewald_ispresent, & 
                                              demet_ispresent, potstat_ispresent
+CHARACTER(iotk_attlenx)                   :: attr
 ! 
 
 ! 
@@ -1961,6 +1998,7 @@ LOGICAL,INTENT(OUT)                  :: ispresent
 ! 
 INTEGER                              :: ierr, nscf_steps_
 REAL(DP)                             :: scf_error_
+CHARACTER(iotk_attlenx)              :: attr
 !
 ispresent = .FALSE. 
 CALL iotk_scan_begin ( iunit, "scf_conv", IERR = ierr, FOUND = ispresent ) 
@@ -1996,6 +2034,7 @@ TYPE( total_energy_type )            :: tot_en_obj
 TYPE ( matrix_type )                 :: for_mat_obj, stress_mat_obj
 REAL(DP),ALLOCATABLE                 :: forces_mat(:,:)
 REAL(DP)                             :: stress_mat(3,3), fcp_force_, fcp_tot_charge_
+CHARACTER(iotk_attlenx)              :: attr
 ! 
 
 ! 
@@ -2052,6 +2091,7 @@ LOGICAL, INTENT ( OUT )                      :: ispresent
 !
 INTEGER                                      :: ierr, nopt_steps_
 REAL(DP)                                     :: grad_norm_
+CHARACTER(iotk_attlenx)                      :: attr
 !
 ispresent = .FALSE. 
 CALL iotk_scan_begin ( iunit, "opt_conv", IERR = ierr, FOUND = ispresent ) 
@@ -2083,6 +2123,7 @@ INTEGER                                      :: ierr
 LOGICAL                                      :: found, opt_conv_ispresent  
 TYPE ( scf_conv_type )                       :: scf_conv_obj
 TYPE ( opt_conv_type )                       :: opt_conv_obj
+CHARACTER(iotk_attlenx)                      :: attr
 
 !
 ispresent = .FALSE. 
@@ -2114,6 +2155,7 @@ LOGICAL, INTENT ( OUT )                      :: ispresent
 !
 INTEGER                                      :: ierr
 LOGICAL                                      :: real_space_q_, uspp_, paw_
+CHARACTER(iotk_attlenx)                      :: attr
 ! 
 ispresent = .FALSE. 
 CALL iotk_scan_begin( iunit, "algorithmic_info", IERR = ierr , FOUND = ispresent ) 
@@ -2156,6 +2198,7 @@ SUBROUTINE qexsd_get_symmetry( iunit, obj, ispresent)
    TYPE ( info_type )                           :: info_obj
    TYPE ( matrix_type )                         :: mat_rot_obj
    TYPE (equivalent_atoms_type )                :: eqv_at_obj
+ CHARACTER(iotk_attlenx)                       :: attr
    !
    
    ispresent = .FALSE.
@@ -2221,6 +2264,7 @@ LOGICAL, INTENT ( OUT )                      :: ispresent
 INTEGER                                      :: ierr, nsym_, nrot_, space_group_, isym
 LOGICAL                                      :: found 
 TYPE ( symmetry_type ),ALLOCATABLE           :: symm_objs(:)
+CHARACTER(iotk_attlenx)                      :: attr
 ! 
 ispresent = .FALSE. 
 CALL iotk_scan_begin ( iunit, "symmetries", IERR = ierr , FOUND = ispresent) 
@@ -2276,6 +2320,7 @@ INTEGER                                      ::    fft_nr1_,    fft_nr2_,    fft
                                                    ngm_, ngms_, npwx_ 
 TYPE ( basisSetItem_type)                    :: grid_obj, smooth_obj, box_obj
 TYPE ( reciprocal_lattice_type )             :: recip_obj 
+CHARACTER(iotk_attlenx)                      :: attr
 ! 
 ispresent = .FALSE. 
 CALL iotk_scan_begin ( iunit, "basis_set", ATTR = attr, IERR = ierr, FOUND = ispresent ) 
@@ -2371,7 +2416,7 @@ LOGICAL, INTENT ( OUT )                      :: ispresent
 !
 INTEGER                                      :: ierr
 REAL(DP)                                     :: b1_(3), b2_(3), b3_(3)
-
+CHARACTER(iotk_attlenx)                      :: attr
 !
 ispresent = .FALSE.
 CALL iotk_scan_begin ( iunit, "reciprocal_lattice", IERR = ierr , FOUND = ispresent)
@@ -2408,6 +2453,7 @@ LOGICAL, INTENT ( OUT )                      :: ispresent
 INTEGER                                      :: ierr
 LOGICAL                                      :: lsda_, noncolin_, spinorbit_, do_magnetization_
 REAL(DP)                                     :: total_, absolute_ 
+CHARACTER(iotk_attlenx)                      :: attr
 !
 ispresent = .FALSE.
 CALL iotk_scan_begin( iunit, "magnetization", IERR = ierr, FOUND = ispresent) 
@@ -2457,6 +2503,7 @@ REAL(DP),ALLOCATABLE                        :: eiv_(:), occ_(:)
 REAL(DP)                                    :: xk_(3), wk_
 TYPE ( k_point_type )                       :: kp_obj
 LOGICAL                                     :: wk_ispresent
+CHARACTER(iotk_attlenx)                     :: attr
 !
 ispresent = .FALSE.
 CALL iotk_scan_begin( iunit, "ks_energies", IERR = ierr, FOUND = ispresent )
@@ -2523,6 +2570,7 @@ LOGICAL                                      :: lsda_, noncolin_, spinorbit_, nb
                                                 two_fermi_energies_ispresent, HOL_ispresent, n_wfc_at_ispresent
 REAL(DP)                                     :: nelec_, fermi_energy_,ef_updw_(2), HOL_energy_ 
 TYPE ( ks_energies_type ),ALLOCATABLE        :: ks_energies_obj(:)                    
+CHARACTER(iotk_attlenx)                      :: attr
 !
 ispresent = .FALSE.
 CALL iotk_scan_begin ( iunit , "band_structure", IERR = ierr, FOUND = ispresent ) 
@@ -2613,6 +2661,7 @@ INTEGER                                 :: ierr
 REAL(DP)                                :: polarization_, modulus_, direction_(3)
 CHARACTER(LEN=256)                      :: units_
 TYPE ( scalarQuantity_type)             :: polarization_obj
+CHARACTER(iotk_attlenx)                 :: attr
 !
 ispresent = .FALSE.
 CALL iotk_scan_begin(iunit, "polarization", IERR = ierr, FOUND = ispresent ) 
@@ -2655,6 +2704,7 @@ REAL(DP)                                         :: phase_, ionic_, electronic_
 CHARACTER(LEN=256)                               :: modulus_
 LOGICAL                                          :: ionic_ispresent, electronic_ispresent, &
                                                     modulus_ispresent
+CHARACTER(iotk_attlenx)                          :: attr
 !
 ispresent =.FALSE.
 CALL iotk_scan_dat(iunit, TRIM(tag), phase_, ATTR = attr, IERR = ierr , FOUND = ispresent)
@@ -2687,6 +2737,7 @@ LOGICAL                                     :: found
 REAL(DP)                                    :: charge_
 TYPE ( atom_type )                          :: ion_obj
 TYPE ( phase_type )                         :: phase_obj
+CHARACTER(iotk_attlenx)                     :: attr
 ! 
 ispresent = .FALSE.
 CALL iotk_scan_begin(iunit, "ionicPolarization", IERR = ierr, FOUND = ispresent ) 
@@ -2722,6 +2773,7 @@ INTEGER                                         :: ierr, index_
 REAL(DP)                                        :: the_coordinates(3)
 CHARACTER(LEN=256)                              :: label_
 LOGICAL                                         :: index_ispresent
+CHARACTER(iotk_attlenx)                         :: attr
 ! 
 ispresent = .FALSE.
 CALL iotk_scan_dat(iunit, TRIM(tag), ATTR = attr, dat = the_coordinates, IERR = ierr, FOUND = ispresent ) 
@@ -2769,6 +2821,7 @@ END TYPE electronicPolarization_list
 ! 
 TYPE ( electronicPolarization_list ),TARGET     :: el_pol_list
 TYPE ( electronicPolarization_list ),POINTER    :: el_pol_first, el_pol_last, el_pol_ptr
+CHARACTER(iotk_attlenx)                      :: attr
 !
 ispresent = .FALSE.
 CALL iotk_scan_begin(iunit, "BerryPhase", IERR = ierr, FOUND = ispresent ) 
@@ -2887,6 +2940,7 @@ REAL(DP)                                          :: xk_(3), wk_
 TYPE ( k_point_type)                              :: kp_obj
 TYPE ( phase_type )                               :: phase_obj
 LOGICAL                                           :: found, weight_ispresent, spin_ispresent
+CHARACTER(iotk_attlenx)                           :: attr
 ! 
 ispresent = .FALSE.
 CALL iotk_scan_begin ( iunit, "electronicPolarization", IERR = ierr , FOUND = ispresent ) 
@@ -2923,6 +2977,7 @@ LOGICAL, INTENT(OUT)                         :: ispresent
 ! 
 INTEGER                                      :: ierr 
 REAL(DP)                                     :: el_dip_(3), ion_dip_(3)
+CHARACTER(iotk_attlenx)                      :: attr
 !
 ispresent = .FALSE.
 CALL iotk_scan_begin( iunit, "finiteElectricFieldInfo", IERR = ierr,  FOUND = ispresent ) 
@@ -2955,6 +3010,7 @@ LOGICAL, INTENT(OUT)                      :: ispresent
 INTEGER                                   :: ierr 
 REAL(DP)                                  :: quantity_
 CHARACTER(LEN=256)                        :: units_
+CHARACTER(iotk_attlenx)                   :: attr
 ! 
 ispresent = .FALSE.
 CALL iotk_scan_dat ( iunit, TRIM(tag), quantity_, ATTR = attr, IERR = ierr, FOUND = ispresent )
@@ -2979,6 +3035,7 @@ TYPE (scalarQuantity_type)                :: dipole_obj, ion_dipole_obj, elec_di
                                              dipoleField_obj, potentialAmp_obj, totalLength_obj
 INTEGER                                   :: idir_
 LOGICAL                                   :: found
+CHARACTER(iotk_attlenx)                   :: attr
 ! 
 ispresent = .FALSE.
 CALL iotk_scan_begin( iunit, "dipoleInfo", IERR = ierr, FOUND = ispresent ) 
@@ -3036,6 +3093,7 @@ LOGICAL                                      :: bp_out_ispresent, finite_field_i
 TYPE ( BerryPhaseOutput_type)                :: bp_out_obj
 TYPE ( finiteFieldOut_type )                 :: finite_field_obj
 TYPE ( dipoleOutput_type )                   :: dipole_out_obj
+CHARACTER(iotk_attlenx)                      :: attr
 ! 
 ispresent = .FALSE. 
 CALL iotk_scan_begin ( iunit, "electric_field", IERR = ierr, FOUND = ispresent ) 
@@ -3071,6 +3129,7 @@ LOGICAL,INTENT (OUT)                  :: ispresent
 ! 
 INTEGER                               :: ierr 
 REAL(DP), ALLOCATABLE                 :: force_mat_(:,:) 
+CHARACTER(iotk_attlenx)               :: attr
 ! 
 ispresent = .FALSE.
 ALLOCATE (force_mat_(3,natoms)) 
@@ -3099,6 +3158,7 @@ LOGICAL,INTENT ( OUT)                   :: ispresent
 ! 
 INTEGER                                 :: ierr 
 REAL(DP)                                :: stress_mat_(3,3)
+CHARACTER(iotk_attlenx)                 :: attr
 !
 ispresent = .FALSE.
 CALL iotk_scan_dat( iunit, "stress", stress_mat_, IERR = ierr, FOUND = ispresent ) 
@@ -3120,6 +3180,7 @@ LOGICAL,INTENT(OUT)                           :: ispresent
 ! 
 INTEGER                                       :: ierr 
 LOGICAL                                       :: found 
+CHARACTER(iotk_attlenx)                      :: attr
 ! 
 IF ( PRESENT ( obj_tagname ) ) THEN
    obj%tagname = TRIM( obj_tagname )
@@ -3215,6 +3276,7 @@ TYPE ( integerMatrix_type )               :: free_pos_obj
 TYPE ( electric_field_type)                :: elecfield_obj
 TYPE ( atomic_constraints_type )           :: atomic_constr_obj
 TYPE ( spin_constraints_type )            :: spin_constr_obj 
+CHARACTER(iotk_attlenx)                      :: attr
 ! 
 ispresent = .FALSE. 
 CALL iotk_scan_begin( iunit, "input", IERR = ierr , FOUND = ispresent ) 
