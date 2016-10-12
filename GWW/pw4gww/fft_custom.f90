@@ -216,15 +216,16 @@ CONTAINS
   ! compute gkcut calling an internal procedure
   !
   CALL calculate_gkcut()
-  
-  CALL fft_type_init( fc%dfftt, fc%smapt, "rho", .not. tk, .true., intra_pool_comm, fc%at_t, fc%bg_t, fc%gcutmt/gkcut )
+  CALL fft_type_init( fc%dfftt, fc%smapt, "rho", .not. tk, .true., intra_pool_comm, fc%at_t, fc%bg_t, fc%gcutmt,fc%dual_t)
+  !CALL fft_type_init( fc%dfftt, fc%smapt, "rho", .not. tk, .true., intra_pool_comm, fc%at_t, fc%bg_t, fc%gcutmt/gkcut )
   !
   ! set the values of fft arrays
   !
   fc%nrx1t  = fc%dfftt%nr1x
   fc%nrx2t  = fc%dfftt%nr2x
   fc%nrx3t  = fc%dfftt%nr3x
-
+  write(stdout,*) fc%dfftt%nr1x,fc%dfftt%nr2x,fc%dfftt%nr3x
+  write(stdout,*) fc%dfftt%nr1,fc%dfftt%nr2,fc%dfftt%nr3
   ! compute number of points per plane
   ncplane  = fc%nrx1t * fc%nrx2t
   ncplanes = fc%nrx1t * fc%nrx2t
@@ -284,7 +285,7 @@ CONTAINS
   nxx   = fc%nrxxt
   nxxs  = fc%nrxxt
 
-  fc%ngmt  = fc%dfftt%ngl ( 1 )
+  fc%ngmt  = fc%dfftt%ngl (dffts%mype + 1 )
   IF( .not. tk ) THEN
      fc%ngmt = ( fc%ngmt + 1 ) / 2 
   ENDIF
@@ -328,6 +329,7 @@ CONTAINS
        ! if k-points are automatically generated (which happens later)
        ! use max(bg)/2 as an estimate of the largest k-point
        !
+      
        gkcut = 0.5d0 * max ( &
           sqrt (sum(fc%bg_t (1:3, 1)**2) ), &
           sqrt (sum(fc%bg_t (1:3, 2)**2) ), &
@@ -390,7 +392,7 @@ SUBROUTINE initialize_fft_custom(fc)
 
   
   call ggent(fc)
-  
+
   return
 END SUBROUTINE initialize_fft_custom
 
@@ -721,6 +723,7 @@ SUBROUTINE cft3t( fc, f, n1, n2, n3, nx1, nx2, nx3, sign )
   call stop_clock('cft3t')
   !
 #else
+   
   !
   ! ... serial case
   !
