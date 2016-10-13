@@ -170,8 +170,6 @@ SUBROUTINE read_xml_file ( )
   IF ( ierr /= 0 ) CALL errore ( 'read_schema', 'unable to read xml file', ierr ) 
   ! ... first we get the version of the qexml file
   !     if not already read
-  CALL init_vars_from_schema ( 'header', ierr, output_obj, input_obj, parinfo_obj, geninfo_obj )
-  CALL errore( 'read_xml_file ', 'unable to determine schema version', ABS(ierr) )
   !
   ! ... here we read the variables that dimension the system
   !

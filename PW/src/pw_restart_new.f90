@@ -973,7 +973,6 @@ MODULE pw_restart_new
       CASE( 'dim' )
          !
          ldim =       .TRUE.
-         lbz  =       .TRUE.
          need_qexml = .TRUE.
          !
       CASE( 'pseudo' )
@@ -1060,6 +1059,8 @@ MODULE pw_restart_new
          ! 
          CALL readschema_dim(par_info, input_obj%atomic_species, output_obj%atomic_structure, output_obj%symmetries, &
                              output_obj%basis_set, output_obj%band_structure, input_obj) 
+         CALL readschema_kdim(output_obj%symmetries,  output_obj%band_structure )
+
                                                                                                            
       ENDIF
       !
@@ -1874,6 +1875,29 @@ MODULE pw_restart_new
       !         
     END SUBROUTINE readschema_xc
     !  
+    !-----------------------------------------------------------------------------------------------------
+    SUBROUTINE readschema_kdim( symmetries_obj, band_struct_obj )
+    !-----------------------------------------------------------------------------------------------------
+       !
+       USE lsda_mod,         ONLY : lsda
+       USE klist,            ONLY : nkstot
+       USE symm_base,        ONLY : nrot 
+       USE qes_types_module, ONLY : symmetries_type, band_structure_type
+       !
+       IMPLICIT NONE
+       !
+       TYPE ( symmetries_type )    ,INTENT(IN)    :: symmetries_obj 
+       TYPE ( band_structure_type ),INTENT(IN)    :: band_struct_obj 
+       INTEGER                                    :: nks_
+       ! 
+       nks_ = band_struct_obj%nks
+       nkstot = nks_
+       IF ( band_struct_obj%lsda ) nkstot = nkstot * 2  
+       !
+       nrot = symmetries_obj%nrot
+       !
+    END SUBROUTINE readschema_kdim    
+
     !-----------------------------------------------------------------------------------------------------
     SUBROUTINE readschema_brillouin_zone( k_pointIBZ_obj , occupations_obj, symmetries_obj, band_struct_obj )
     !-----------------------------------------------------------------------------------------------------
