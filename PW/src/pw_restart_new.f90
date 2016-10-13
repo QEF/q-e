@@ -834,7 +834,7 @@ MODULE pw_restart_new
       TYPE(general_info_type ),OPTIONAL, INTENT(OUT)   :: restart_general_info
       ! 
       LOGICAL               :: found
-      CHARACTER(LEN=80)     :: errmsg = "" 
+      CHARACTER(LEN=80)     :: errmsg = ' '
       CHARACTER(LEN=320)    :: filename
       !  
       ! 

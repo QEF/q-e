@@ -500,8 +500,8 @@ CONTAINS
       LOGICAL :: dir_true
       !
       !
-      filename = ''
-      tag_     = ''
+      filename = ' '
+      tag_     = ' '
       ext_     = '.dat'
       dir_true = .true.
       !

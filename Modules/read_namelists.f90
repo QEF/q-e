@@ -1254,8 +1254,8 @@ MODULE read_namelists_module
           IF( TRIM(calculation) == calculation_allowed(i) ) allowed = .TRUE.
        END DO
        IF( .NOT. allowed ) &
-          CALL errore( sub_name, ' calculation '''// &
-                       & TRIM(calculation)//''' not allowed ',1)
+          CALL errore( sub_name, ' calculation "'// &
+                       & TRIM(calculation)//'" not allowed ',1)
        IF( ndr < 50 ) &
           CALL errore( sub_name,' ndr out of range ', 1 )
        IF( ndw > 0 .AND. ndw < 50 ) &
@@ -1317,8 +1317,7 @@ MODULE read_namelists_module
           IF( TRIM(memory) == memory_allowed(i) ) allowed = .TRUE.
        END DO
        IF( .NOT. allowed ) &
-          CALL errore( sub_name, ' memory '''// &
-                       & TRIM(memory)//''' not allowed ',1)
+          CALL errore(sub_name, ' memory "' // TRIM(memory)//'" not allowed',1)
        ! TB
        IF ( monopole .and. tefield .and. (.not. dipfield) ) &
           CALL errore(sub_name, ' monopole cannot be used with tefield if dipole correction is not active', 1)
@@ -1473,8 +1472,8 @@ MODULE read_namelists_module
               electron_dynamics_allowed(i) ) allowed = .TRUE.
        END DO
        IF( .NOT. allowed ) &
-          CALL errore( sub_name, ' electron_dynamics '''//&
-                       & TRIM(electron_dynamics)//''' not allowed ',1)
+          CALL errore( sub_name, ' electron_dynamics "'//&
+                       & TRIM(electron_dynamics)//'" not allowed ',1)
        IF( emass <= 0.0_DP ) &
           CALL errore( sub_name, ' emass less or equal 0 ',1)
        IF( emass_cutoff <= 0.0_DP ) &
@@ -1517,8 +1516,8 @@ MODULE read_namelists_module
           IF( TRIM(ion_dynamics) == ion_dynamics_allowed(i) ) allowed = .TRUE.
        END DO
        IF( .NOT. allowed ) &
-          CALL errore( sub_name, ' ion_dynamics '''// &
-                       & TRIM(ion_dynamics)//''' not allowed ',1)
+          CALL errore( sub_name, ' ion_dynamics "'// &
+                       & TRIM(ion_dynamics)//'" not allowed ',1)
        IF( tempw <= 0.0_DP ) &
           CALL errore( sub_name,' tempw out of range ',1)
        IF( fnosep( 1 ) <= 0.0_DP ) &
@@ -1561,8 +1560,8 @@ MODULE read_namelists_module
               cell_dynamics_allowed(i) ) allowed = .TRUE.
        END DO
        IF( .NOT. allowed ) &
-          CALL errore( sub_name, ' cell_dynamics '''// &
-                       TRIM(cell_dynamics)//''' not allowed ',1)
+          CALL errore( sub_name, ' cell_dynamics "'// &
+                       TRIM(cell_dynamics)//'" not allowed ',1)
        IF( wmass < 0.0_DP ) &
           CALL errore( sub_name,' wmass out of range ',1)
        IF( prog == 'CP' ) THEN

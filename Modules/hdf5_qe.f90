@@ -454,13 +454,13 @@ module hdf5_qe
 
     counts=size(var)*2  
     CALL h5gopen_f(hdf5desc%file_id, kstring, hdf5desc%group_id, error)
-    !if(error.ne.0) call errore('error in h5gopen_f','',error)
+    !if(error.ne.0) call errore('error in h5gopen_f',' ',error)
     CALL h5dopen_f(hdf5desc%group_id, dset_name, dset_id, error)
-    !if(error.ne.0) call errore('error in h5dopen_f','',error)
+    !if(error.ne.0) call errore('error in h5dopen_f',' ',error)
     !CALL h5dget_type_f(dset_id, dtype_id, error)
     f_ptr = C_LOC(var(1))
     CALL h5dread_f(dset_id, H5T_NATIVE_DOUBLE, f_ptr, error)
-    if(error.ne.0) call errore('error in h5dread_f','',error)
+    if(error.ne.0) call errore('error in h5dread_f',' ',error)
     !CALL h5dread_f(dset_id, dtype_id, f_ptr, error)
     CALL h5dclose_f(dset_id, error)
     CALL h5gclose_f(hdf5desc%group_id, error)

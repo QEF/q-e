@@ -120,7 +120,7 @@ subroutine write_ns
            enddo
         enddo
 
-        if (nspin.ne.1) write(stdout,'(''atomic mag. moment = '',f12.6)') &
+        if (nspin.ne.1) write(stdout,'("atomic mag. moment = ",f12.6)') &
                       nsuma(1) - nsuma(2) 
      endif
   enddo
@@ -235,7 +235,7 @@ subroutine write_ns_nc
           my = my + 2.d0 * AIMAG( rho%ns_nc(m1, m1, 2, na) )
           mz = mz + DBLE( rho%ns_nc(m1, m1, 1, na) - rho%ns_nc(m1, m1, 4, na) )
         enddo
-        write(stdout,'(''atomic mx, my, mz = '',3f12.6)') mx, my, mz
+        write(stdout,'("atomic mx, my, mz = ",3f12.6)') mx, my, mz
 !--
 
      endif

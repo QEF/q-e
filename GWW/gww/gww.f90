@@ -48,7 +48,7 @@
    EXTERNAL omp_set_num_threads, omp_get_num_threads, omp_get_max_threads
 #endif
 
-   tmp_dir=''
+   tmp_dir=' '
 
 !setup MPI environment
 

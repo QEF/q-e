@@ -2007,7 +2007,8 @@ Standard f90
 requires that a \& is needed both at end of line AND at the beginning of
 continuation line if there is a character variable (inside ' ' or " ")
 spanning two lines. Some compilers do not complain if the latter \& is
-missing, others do.
+missing, others do. Another example: empty strings are nonstandard, use
+\texttt{empty='~'}, not \texttt{empty=''}.
 \item use "dp" (defined in module ''kinds'') to define the type of real and complex variables
 \item all constants should be defined to be of kind "dp".  Preferred syntax: 0.0\_dp.
 \item use "generic" intrinsic functions: SIN, COS, etc.

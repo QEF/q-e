@@ -185,7 +185,7 @@ CONTAINS
     paw%core_energy = 0.0
     paw%iraug = 0
     paw%lmax_aug = 0
-    paw%augshape = ''
+    paw%augshape = ' '
   END SUBROUTINE nullify_paw_in_upf
 
   SUBROUTINE deallocate_paw_in_upf( paw )
@@ -233,12 +233,12 @@ CONTAINS
     upf%tvanp = .false.
     upf%tcoulombp = .false.
     upf%nlcc = .false.
-    upf%dft = ''
+    upf%dft = ' '
     upf%zp = 0.0
     upf%etotps = 0.0
     upf%ecutwfc = 0.0
     upf%ecutrho = 0.0
-    upf%nv = ''
+    upf%nv = ' '
     upf%lmax = 0
     upf%lmax_rho = 0
     upf%nwfc = 0

@@ -7,7 +7,7 @@
 !
 ! Uncomment next line to print compilation info. BEWARE: may occasionally
 ! give compilation errors due to lines too long if paths are very long
-#define __HAVE_CONFIG_INFO
+!#define __HAVE_CONFIG_INFO
 !==-----------------------------------------------------------------------==!
 MODULE environment
   !==-----------------------------------------------------------------------==!

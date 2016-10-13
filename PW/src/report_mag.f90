@@ -32,7 +32,7 @@
      
       if (nspin == 2) then
          write(stdout,*)
-         write(stdout,'(5X,''Magnetic moment per site:'')')
+         write(stdout,'(5X,"Magnetic moment per site:")')
       endif
 
       do iat = 1,nat

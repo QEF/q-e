@@ -72,7 +72,7 @@ MODULE exx
   REAL(DP)         :: eps_qdiv = 1.d-8 ! |q| > eps_qdiv
   REAL(DP), PARAMETER :: eps_occ  = 1.d-8 ! skip band with occupation < eps_occ
   REAL(DP)         :: exxdiv = 0._dp
-  CHARACTER(32)    :: exxdiv_treatment  = ''
+  CHARACTER(32)    :: exxdiv_treatment  = ' '
   !
   ! x_gamma_extrapolation
   LOGICAL           :: x_gamma_extrapolation =.true.

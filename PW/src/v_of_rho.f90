@@ -772,7 +772,7 @@ SUBROUTINE v_hubbard(ns, v_hub, eth)
 !-- output of hubbard energies:
     IF ( iverbosity > 0 ) THEN
       write(stdout,*) '--- in v_hubbard ---'
-      write(stdout,'(''Hubbard energy '',f9.4)') eth
+      write(stdout,'("Hubbard energy ",f9.4)') eth
       write(stdout,*) '-------'
     ENDIF
 !--
@@ -868,7 +868,7 @@ SUBROUTINE v_hubbard(ns, v_hub, eth)
 !-- output of hubbard energies:
     IF ( iverbosity > 0 ) THEN
       write(stdout,*) '--- in v_hubbard ---'
-      write(stdout,'(''Hubbard energies (dc, U, total) '',3f9.4)') eth_dc, eth_u, eth
+      write(stdout,'("Hubbard energies (dc, U, total) ",3f9.4)') eth_dc, eth_u, eth
       write(stdout,*) '-------'
     ENDIF
 !--
@@ -1044,7 +1044,7 @@ SUBROUTINE v_hubbard_nc(ns, v_hub, eth)
 !-- output of hubbard energies:
   IF ( iverbosity > 0 ) THEN
     write(stdout,*) '--- in v_hubbard ---'
-    write(stdout,'(''Hub. E (dc, noflip, flip, total) '',4f9.4)') &
+    write(stdout,'("Hub. E (dc, noflip, flip, total) ",4f9.4)') &
                                  eth_dc, eth_noflip, eth_flip, eth 
     write(stdout,*) '-------'
   ENDIF
