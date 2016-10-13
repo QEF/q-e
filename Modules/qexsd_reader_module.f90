@@ -1335,14 +1335,10 @@ CHARACTER(iotk_attlenx)                :: attr
 ispresent = .FALSE.
 CALL iotk_scan_begin( iunit, "k_points_IBZ", FOUND = ispresent, IERR = ierr ) 
 IF ( ierr /= 0 ) CALL errore ( "qexsd_get_k_points_IBZ", "error reading element from xml file", ierr) 
-IF (.NOT. ispresent ) then 
-  print *, 'ciao'
-  RETURN 
-end if 
+IF (.NOT. ispresent ) CALL errore ( "qexsd_get_k_points_IBZ", "k_points_IBZ not found" , ierr ) 
 ! 
 CALL iotk_scan_dat( iunit, "monkhorst_pack", empty_str, ATTR = attr, FOUND = monkh_pack_ispresent, IERR = ierr)
 IF ( monkh_pack_ispresent ) THEN 
-   print *, attr, empty_str
    CALL iotk_scan_attr( attr, "nk1", nk1_, IERR = ierr ) 
    IF (ierr /= 0 ) RETURN    
    CALL iotk_scan_attr( attr, "nk2", nk2_, IERR = ierr )
