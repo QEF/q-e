@@ -2809,7 +2809,7 @@ SUBROUTINE aceinit( )
      IF ( nks > 1 ) CALL get_buffer(evc, nwordwfc, iunwfc, ik)
      IF ( okvan ) THEN
         CALL init_us_2(npw, igk_k(1,ik), xk(:,ik), vkb)
-        CALL calbec ( nkb, vkb, evc, becpsi, nbnd )
+        CALL calbec ( npw, vkb, evc, becpsi, nbnd )
      ENDIF
      IF (gamma_only) THEN
         CALL aceinit_gamma(npw,nbnd,evc,xi(1,1,ik),becpsi,ee)
@@ -3062,7 +3062,7 @@ IMPLICIT NONE
     DO i = 1,n
       ee = ee + wg(i,ik)*DBLE(mat(i,i))
     ENDDO
-!   write(*,'(A,f16.8,A)') string//label, ee, ' Ry'
+    !write(*,'(A,f16.8,A)') string//label, ee, ' Ry'
   ENDIF
 
   CALL stop_clock('matcalc')

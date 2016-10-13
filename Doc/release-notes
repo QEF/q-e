@@ -6,8 +6,9 @@ Fixed in svn versions
 
   * CPV: stress with nonlocal DFT incorrect in parallel (rev.13102)
   * PWGui: double-hyphen glitch with old tcllib for NEB (rev. 13101)
-  * GWW wasn't working at all (rev. 13099, 13100, and XXX)
-  * PW: ACE energy slightly off for metals, could lead to crash (commit 13095)
+  * GWW wasn't working at all (rev. 13099, 13100, and 13106)
+  * PW: ACE energy slightly off, leading to crash, for metals (commit 13095)
+    and for USPP (commit 13111)
   * Some Wyckoff site labels were incorrect (commit 13083)
     Also: symmetry analysis improved (commit 13094)
 
