@@ -533,8 +533,8 @@ PROGRAM matdyn
 
         IF(na_ifc) THEN
 
-           qq=sqrt(q(1,n)**2+q(2,n)**2+q(3,n)**3)
-           if(qq == 0.0) qq=1.0
+           qq=sqrt(q(1,n)**2+q(2,n)**2+q(3,n)**2)
+           if(abs(qq) < 1d-8) qq=1.0
            qhat(1)=q(1,n)/qq
            qhat(2)=q(2,n)/qq
            qhat(3)=q(3,n)/qq
