@@ -31,7 +31,7 @@
 
  Please also consider citing the EPW papers:
  1) F. Giustino, M. L. Cohen, and S. G. Louie, Phys. Rev. B 76, 165108 (2007)
- 2) S. Ponc\'e, E. R. Margine, C. Verdi, and F. Giustino, Comput. Phys. Comm. (2016) [to be submitted]
+ 2) S. Ponc\'e, E. R. Margine, C. Verdi and F. Giustino, Comput. Phys. Commun. 209, 116 (2016)
 
  The software tree of EPW v4 is composed of
  /bin ==> Contains the epw.x soft link to the EPW executable.

@@ -19,10 +19,15 @@
   !!
   use mp,            ONLY : mp_end, mp_barrier
   USE mp_global,     ONLY : inter_pool_comm, mp_global_end
+  USE io_global,     ONLY : stdout
   ! 
   implicit none
   !
   CALL print_clock_epw
+write(stdout,'(a)') "                                                                                          "
+write(stdout,'(a)') " Please consider citing:                                                                  "
+write(stdout,'(a)') " S. Ponce, E. R. Margine, C. Verdi and F. Giustino, Comput. Phys. Commun. 209, 116 (2016) " 
+write(stdout,'(a)') "                                                                                          "
   CALL mp_barrier(inter_pool_comm)
   CALL mp_end(inter_pool_comm)
   !
