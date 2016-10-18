@@ -333,8 +333,8 @@ MODULE pw_restart_new
             CALL  qexsd_init_total_energy(output%total_energy,etot/e2,eband/e2,ehart/e2,vtxc/e2,etxc/e2, &
                  ewld/e2,degauss/e2,demet/e2, etotefield/e2)
          ELSE 
-            CALL  qexsd_init_total_energy(output%total_energy,etot/e2,eband/e2,ehart/e2,vtxc/e2,etxc/e2, &
-                 ewld/e2,degauss/e2,demet/e2)
+            CALL  qexsd_init_total_energy(output%total_energy,etot,eband,ehart,vtxc,etxc, &
+                 ewld,degauss,demet)
          END IF
          IF (lfcpopt .OR. lfcpdyn ) THEN 
             output%total_energy%potentiostat_contr_ispresent = .TRUE.
