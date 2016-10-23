@@ -291,8 +291,8 @@ SUBROUTINE set_sym_bl ( )
   nrot = nrot-1
   IF ( nrot /= 1 .AND. nrot /= 2 .AND. nrot /= 4 .AND. nrot /= 6 .AND. &
        nrot /= 8 .AND. nrot /=12 .AND. nrot /=24 ) THEN
-       WRITE (stdout, '(80("-"),/"NOTICE: Bravais lattice has wrong number (",&
-      & i2,") of symmetries - symmetries are disabled",/80("-"))' ) nrot
+       WRITE (stdout, '(80("-"),/,"NOTICE: Bravais lattice has wrong number (",&
+      & i2,") of symmetries - symmetries are disabled",/,80("-"))' ) nrot
       nrot = 1
   END IF
   !
@@ -315,8 +315,8 @@ SUBROUTINE set_sym_bl ( )
   IF ( .not. is_group ( nrot ) ) THEN
   !    This happens for instance for an hexagonal lattice with one axis 
   !    oriented at 15 degrees from the x axis, the other along (-1,1,0)
-      WRITE (stdout, '(80("-"),/"NOTICE: Symmetry group for Bravais lattice &
-     & is not a group - symmetries are disabled",/80("-"))' ) nrot
+      WRITE (stdout, '(80("-"),/,"NOTICE: Symmetry group for Bravais lattice &
+     & is not a group - symmetries are disabled",/,80("-"))' ) nrot
       nrot = 1
   ENDIF
   !
@@ -687,7 +687,7 @@ SUBROUTINE sgam_at_mag ( nat, m_loc, sym )
   RETURN
 END SUBROUTINE sgam_at_mag
 !
-SUBROUTINE set_sym(nat, tau, ityp, nspin_mag, m_loc, nr1, nr2, nr3, no_z_inv)
+SUBROUTINE set_sym(nat, tau, ityp, nspin_mag, m_loc, nr1, nr2, nr3)
   !
   ! This routine receives as input atomic types and positions, if there
   ! is noncollinear magnetism and the initial magnetic moments, the fft
@@ -698,21 +698,15 @@ SUBROUTINE set_sym(nat, tau, ityp, nspin_mag, m_loc, nr1, nr2, nr3, no_z_inv)
   !-----------------------------------------------------------------------
   !
   IMPLICIT NONE
-  ! input
+  !
   INTEGER, INTENT(in)  :: nat, ityp(nat), nspin_mag, nr1, nr2, nr3
   REAL(DP), INTENT(in) :: tau(3,nat)
   REAL(DP), INTENT(in) :: m_loc(3,nat)
-  LOGICAL, INTENT(IN), OPTIONAL  :: no_z_inv
   !
   time_reversal = (nspin_mag /= 4)
   t_rev(:) = 0
   CALL set_sym_bl ( )
-  IF ( PRESENT(no_z_inv) ) THEN
-     CALL find_sym ( nat, tau, ityp, nr1, nr2, nr3, .not.time_reversal, m_loc,&
-                  no_z_inv )
-  ELSE
-     CALL find_sym ( nat, tau, ityp, nr1, nr2, nr3, .not.time_reversal, m_loc)
-  ENDIF
+  CALL find_sym ( nat, tau, ityp, nr1, nr2, nr3, .not.time_reversal, m_loc)
   !
   RETURN
   END SUBROUTINE set_sym

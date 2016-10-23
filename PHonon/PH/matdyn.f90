@@ -188,7 +188,6 @@ PROGRAM matdyn
   INTEGER, ALLOCATABLE :: nqb(:)
   INTEGER :: n, i, j, it, nq, nqx, na, nb, ndos, iout, nqtot, iout_dyn, iout_eig
   LOGICAL, EXTERNAL :: has_xml
-  CHARACTER(LEN=15), ALLOCATABLE :: name_rap_mode(:)
   INTEGER, ALLOCATABLE :: num_rap_mode(:,:)
   LOGICAL, ALLOCATABLE :: high_sym(:)
   LOGICAL :: q_in_band_form
@@ -604,14 +603,11 @@ PROGRAM matdyn
         ! of the mode if there is an electric field.
         !
         IF (xmlifc.AND..NOT.lo_to_split) THEN
-             ALLOCATE(name_rap_mode(3*nat))
              WRITE(stdout,'(10x,"xq=",3F8.4)') q(:,n)
              CALL find_representations_mode_q(nat,ntyp,q(:,n), &
-                       w2(:,n),z,tau,ityp,amass,name_rap_mode, &
-                       num_rap_mode(:,n), nspin_mag)
+                       w2(:,n),z,tau,ityp,amass, num_rap_mode(:,n), nspin_mag)
             IF (code_group==code_group_old.OR.high_sym(n-1)) high_sym(n)=.FALSE.
             code_group_old=code_group
-            DEALLOCATE(name_rap_mode)
         ENDIF
 
         IF (eigen_similarity) THEN
@@ -2498,7 +2494,7 @@ end subroutine readfg
 !
 !
 SUBROUTINE find_representations_mode_q ( nat, ntyp, xq, w2, u, tau, ityp, &
-                  amass, name_rap_mode, num_rap_mode, nspin_mag )
+                  amass, num_rap_mode, nspin_mag )
 
   USE kinds,      ONLY : DP
   USE cell_base,  ONLY : at, bg
@@ -2511,7 +2507,6 @@ SUBROUTINE find_representations_mode_q ( nat, ntyp, xq, w2, u, tau, ityp, &
   REAL(DP), INTENT(IN) :: w2(3*nat)
   INTEGER, INTENT(IN) :: ityp(nat)
   COMPLEX(DP), INTENT(IN) :: u(3*nat,3*nat)
-  CHARACTER(15), INTENT(OUT) :: name_rap_mode(3*nat)
   INTEGER, INTENT(OUT) :: num_rap_mode(3*nat)
   REAL(DP) :: gi (3, 48), gimq (3), sr_is(3,3,48), rtau(3,48,nat)
   INTEGER :: irotmq, nsymq, nsym_is, isym, i, ierr

@@ -713,6 +713,7 @@ write_hamiltonians.o : ../../Modules/input_parameters.o
 write_hamiltonians.o : ../../Modules/io_global.o
 write_hamiltonians.o : ../../Modules/ions_base.o
 write_hamiltonians.o : ../../Modules/kind.o
+write_hamiltonians.o : ../../Modules/version.o
 write_hamiltonians.o : ../../Modules/wannier_new.o
 write_hamiltonians.o : ../../PW/src/pwcom.o
 write_io_header.o : ../../Modules/ions_base.o
