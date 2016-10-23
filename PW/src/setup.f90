@@ -81,7 +81,6 @@ SUBROUTINE setup()
   USE noncollin_module,   ONLY : noncolin, npol, m_loc, i_cons, &
                                  angle1, angle2, bfield, ux, nspin_lsda, &
                                  nspin_gga, nspin_mag
-!
 ! 
   USE pw_restart_new,     ONLY : pw_readschema_file, init_vars_from_schema 
   USE qes_libs_module,    ONLY : qes_reset_output, qes_reset_input, qes_reset_parallel_info, qes_reset_general_info
@@ -93,6 +92,7 @@ SUBROUTINE setup()
   USE funct,              ONLY : dft_is_meta, dft_is_hybrid, dft_is_gradient
   USE paw_variables,      ONLY : okpaw
   USE fcp_variables,      ONLY : lfcpopt, lfcpdyn
+  USE extfield,           ONLY : monopole
   !
   IMPLICIT NONE
   !
@@ -552,7 +552,7 @@ SUBROUTINE setup()
      ! ... eliminate rotations that are not symmetry operations
      !
      CALL find_sym ( nat, tau, ityp, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
-                  magnetic_sym, m_loc )
+                  magnetic_sym, m_loc, monopole )
      !
   END IF
   !

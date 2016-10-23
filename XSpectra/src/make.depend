@@ -149,6 +149,9 @@ select_nl_init.o : ../../Modules/io_global.o
 select_nl_init.o : ../../Modules/kind.o
 set_xspectra_namelists_defaults.o : ../../Modules/io_files.o
 set_xspectra_namelists_defaults.o : xspectra_mod.o
+spectra_correction.o : ../../Modules/constants.o
+spectra_correction.o : ../../Modules/kind.o
+spectra_correction.o : gaunt_mod.o
 spectra_manipulation.o : ../../Modules/constants.o
 spectra_manipulation.o : ../../Modules/kind.o
 spectra_manipulation.o : gaunt_mod.o

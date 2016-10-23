@@ -674,6 +674,7 @@ find_irrep.o : ../../Modules/ions_base.o
 find_irrep.o : ../../Modules/kind.o
 find_irrep.o : ../../PW/src/symm_base.o
 find_irrep.o : phcom.o
+find_mode_sym.o : ../../Modules/cell_base.o
 find_mode_sym.o : ../../Modules/constants.o
 find_mode_sym.o : ../../Modules/io_global.o
 find_mode_sym.o : ../../Modules/ions_base.o
@@ -1429,6 +1430,9 @@ syme2.o : ramanm.o
 symm.o : ../../Modules/constants.o
 symm.o : ../../Modules/kind.o
 symmorphic_or_nzb.o : ../../LR_Modules/lrcom.o
+symmorphic_or_nzb.o : ../../Modules/cell_base.o
+symmorphic_or_nzb.o : ../../Modules/fft_base.o
+symmorphic_or_nzb.o : ../../Modules/kind.o
 symmorphic_or_nzb.o : ../../PW/src/symm_base.o
 tra_write_matrix.o : ../../LR_Modules/lrcom.o
 tra_write_matrix.o : ../../Modules/cell_base.o

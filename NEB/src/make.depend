@@ -34,7 +34,6 @@ engine_to_path_pos.o : ../../Modules/ions_base.o
 engine_to_path_pos.o : ../../Modules/kind.o
 engine_to_path_pos.o : path_input_parameters_module.o
 engine_to_path_pos.o : path_io_units_module.o
-fcp_opt_routines.o : ../../Modules/basic_algebra_routines.o
 fcp_opt_routines.o : ../../Modules/cell_base.o
 fcp_opt_routines.o : ../../Modules/constants.o
 fcp_opt_routines.o : ../../Modules/fcp_variables.o

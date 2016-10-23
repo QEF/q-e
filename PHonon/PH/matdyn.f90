@@ -2502,9 +2502,8 @@ SUBROUTINE find_representations_mode_q ( nat, ntyp, xq, w2, u, tau, ityp, &
 
   USE kinds,      ONLY : DP
   USE cell_base,  ONLY : at, bg
-  USE symm_base,  ONLY : find_sym, s, sr, ftau, irt, nsym, &
-                         nrot, t_rev, time_reversal, sname, copy_sym, &
-                         s_axis_to_cart
+  USE symm_base,  ONLY : s, sr, ftau, irt, nsym, nrot, t_rev, time_reversal,&
+                         sname, copy_sym, s_axis_to_cart
 
   IMPLICIT NONE
   INTEGER, INTENT(IN) :: nat, ntyp, nspin_mag
