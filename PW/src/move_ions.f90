@@ -330,9 +330,12 @@ SUBROUTINE move_ions ( idone )
      if (trim(starting_wfc) == 'file') starting_wfc = 'atomic+random'
      ! ... conv_ions is set to .FALSE. to perform a final scf cycle
      conv_ions = .FALSE.
-     ! ... allow re-calculation of FFT grid
      !
+     ! ... re-set and re-calculate FFT grid 
+     !
+     dfftp%nr1=0; dfftp%nr2=0; dfftp%nr3=0
      CALL fft_type_allocate (dfftp, at, bg, gcutm, intra_bgrp_comm )
+     dffts%nr1=0; dffts%nr2=0; dffts%nr3=0
      CALL fft_type_allocate (dffts, at, bg, gcutms, intra_bgrp_comm)
      !
      CALL init_run()

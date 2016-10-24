@@ -4,6 +4,8 @@ Incompatible changes in svn version:
 
 Fixed in svn versions
 
+  * PW: final scf step in variable-cell calculation could crash
+        due to missing reset of FFT dimensions (rev.13116)
   * CPV: stress with nonlocal DFT incorrect in parallel (rev.13102)
   * PWGui: double-hyphen glitch with old tcllib for NEB (rev. 13101)
   * GWW wasn't working at all (rev. 13099, 13100, and 13106)
