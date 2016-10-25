@@ -224,11 +224,9 @@ SUBROUTINE electrons()
         !
         dexx = fock1 - 0.5D0*(fock0+fock2)
         IF ( dexx < 0d0 ) THEN
-          WRITE(stdout,'(5x,a,1e12.3)') "BEWARE: negative dexx:", dexx
-          dexx = ABS(dexx)
-!           CALL errore( 'electrons', 'dexx is negative! &
-!            & Check that exxdiv_treatment is appropriate for the system,&
-!            & or ecutfock may be too low', 1 )
+           CALL errore( 'electrons', 'dexx is negative! &
+            & Check that exxdiv_treatment is appropriate for the system,&
+            & or ecutfock may be too low', 1 )
         ENDIF
         !
         !   remove the estimate exchange energy exxen used in the inner SCF
