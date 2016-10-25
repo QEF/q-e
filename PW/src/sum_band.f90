@@ -897,7 +897,7 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   ! Routine used in sum_band (if okvan) and in compute_becsum, called by hinit1 (if okpaw)
   !
   USE kinds,         ONLY : DP
-  USE becmod,        ONLY : becp, calbec
+  USE becmod,        ONLY : becp, calbec, allocate_bec_type
   USE control_flags, ONLY : gamma_only
   USE ions_base,     ONLY : nat, ntyp => nsp, ityp
   USE uspp,          ONLY : nkb, vkb, becsum, indv_ijkb0
@@ -911,7 +911,9 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
                             invfft_orbital_k, calbec_rs_k
   USE mp_bands,      ONLY : nbgrp,inter_bgrp_comm
   USE mp,            ONLY : mp_sum
-  USE funct,         ONLY : exx_is_active
+  USE us_exx,        ONLY : store_becxx0
+  USE mp_world,      ONLY : mpime
+  USE mp_pools,      ONLY : me_pool, my_pool_id
   !
   IMPLICIT NONE
   INTEGER, INTENT(IN) :: ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd
@@ -941,9 +943,13 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
            call invfft_orbital_k(evc,ibnd,ibnd_end) 
            call calbec_rs_k(ibnd,ibnd_end)
         enddo
-	call mp_sum(becp%k,inter_bgrp_comm)
+        call mp_sum(becp%k,inter_bgrp_comm)
      endif
   ENDIF
+  !
+  ! In the EXX case with ultrasoft or PAW, a copy of becp will be
+  ! saved in a global variable to be rotated later
+  CALL store_becxx0(ik, becp)
   !
   CALL start_clock( 'sum_band:becsum' )
 

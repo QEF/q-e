@@ -15,7 +15,7 @@ MODULE paw_symmetry
 
     ! entry points:
     PUBLIC :: PAW_symmetrize ! symmetrize becsums
-    PUBLIC :: PAW_symmetrize_ddd ! symmetrize the D coeffiecients
+    PUBLIC :: PAW_symmetrize_ddd ! symmetrize the D coefficients
     PUBLIC :: PAW_desymmetrize! symmetrize dbecsums for electric field
     PUBLIC :: PAW_dusymmetrize! symmetrize dbecsums for phonon modes
     PUBLIC :: PAW_dumqsymmetrize! symmetrize dbecsums for phonon modes

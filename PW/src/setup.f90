@@ -88,7 +88,7 @@ SUBROUTINE setup()
 !
   USE pw_restart,         ONLY : pw_readfile
 !
-  USE exx,                ONLY : ecutfock, exx_grid_init, exx_div_check
+  USE exx,                ONLY : ecutfock, exx_grid_init, exx_mp_init, exx_div_check
   USE funct,              ONLY : dft_is_meta, dft_is_hybrid, dft_is_gradient
   USE paw_variables,      ONLY : okpaw
   USE fcp_variables,      ONLY : lfcpopt, lfcpdyn
@@ -141,7 +141,7 @@ SUBROUTINE setup()
                          'hybrid XC not allowed in non-scf calculations', 1 )
      IF ( ANY (upf(1:ntyp)%nlcc) ) CALL infomsg( 'setup ', 'BEWARE:' // &
                & ' nonlinear core correction is not consistent with hybrid XC')
-     IF (okpaw) CALL errore('setup','PAW and hybrid XC not tested',1)
+     !IF (okpaw) CALL errore('setup','PAW and hybrid XC not tested',1)
      IF (okvan) THEN
         IF (ecutfock /= 4*ecutwfc) CALL infomsg &
            ('setup','Warning: US/PAW use ecutfock=4*ecutwfc, ecutfock ignored')
@@ -654,6 +654,7 @@ SUBROUTINE setup()
   !
   IF ( dft_is_hybrid() ) THEN
      CALL exx_grid_init()
+     CALL exx_mp_init()
      CALL exx_div_check()
   ENDIF
 

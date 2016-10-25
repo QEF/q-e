@@ -169,7 +169,7 @@ MODULE paw_exx
                     DO uh = 1, nh(np)
                       ukb = ijkb0 + uh
                       ! Eq. 32 and 42 Ref. 1 :
-                      PAW_xx_energy = PAW_xx_energy + 0.5_dp * ke(np)%k(ih,jh,oh,uh) &
+                      PAW_xx_energy = PAW_xx_energy - 0.5_dp * ke(np)%k(ih,jh,oh,uh) &
                                     * CONJG(becpsi(ikb)) * becpsi(okb) & ! \rho_ik eq. 31 ref. 1
                                     * becphi(jkb) * CONJG(becphi(ukb))   ! \rho_lj eq. 31 ref. 1
                       !
@@ -374,7 +374,7 @@ MODULE paw_exx
             DO k = 1, i%m
                 aux(k) = v_lm(k,lm) * rho_lm_ou(k,lm)
             ENDDO
-            CALL simpson (upf(i%t)%kkbeta, aux, g(i%t)%rab, e)
+            CALL simpson(upf(i%t)%kkbeta, aux, g(i%t)%rab, e)
             kexx = kexx + e
             !
         ENDDO

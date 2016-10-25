@@ -79,7 +79,7 @@ SUBROUTINE PAW_potential(becsum, d, energy, e_cmp)
    REAL(DP), INTENT(OUT), OPTIONAL :: e_cmp(nat, 2, 2) ! components of the energy
    !                                          {AE!PS}
    INTEGER, PARAMETER      :: AE = 1, PS = 2,&      ! All-Electron and Pseudo
-                              XC = 1, H  = 2        ! XC and Hartree
+                              H = 1,  XC = 2        ! Hartree and XC
    REAL(DP), POINTER       :: rho_core(:)           ! pointer to AE/PS core charge density 
    TYPE(paw_info)          :: i                     ! minimal info on atoms
    INTEGER                 :: i_what                ! counter on AE and PS
@@ -176,10 +176,10 @@ SUBROUTINE PAW_potential(becsum, d, energy, e_cmp)
             CALL PAW_h_potential(i, rho_lm, v_lm(:,:,1), energy)
             !
       ! NOTE: optional variables works recursively: e.g. if energy is not present here
-            ! it will not be present in PAW_h_potential too!
+            ! it will not be present in PAW_h_potential either!
             !IF (present(energy)) write(*,*) 'H',i%a,i_what,sgn*energy
             IF (present(energy) .AND. mykey == 0 ) energy_tot = energy_tot + sgn*energy
-            IF (present(e_cmp) .AND. mykey == 0 ) e_cmp(ia, H, i_what) = energy
+            IF (present(e_cmp) .AND. mykey == 0 ) e_cmp(ia, H, i_what) = sgn*energy
             DO is = 1,nspin_lsda ! ... v_H has to be copied to all spin components
                savedv_lm(:,:,is) = v_lm(:,:,1)
             ENDDO
@@ -189,7 +189,7 @@ SUBROUTINE PAW_potential(becsum, d, energy, e_cmp)
             CALL PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
             !IF (present(energy)) write(*,*) 'X',i%a,i_what,sgn*energy
             IF (present(energy) .AND. mykey == 0 ) energy_tot = energy_tot + sgn*energy
-            IF (present(e_cmp) .AND. mykey == 0 )  e_cmp(ia, XC, i_what) = energy
+            IF (present(e_cmp) .AND. mykey == 0 )  e_cmp(ia, XC, i_what) = sgn*energy
             savedv_lm(:,:,:) = savedv_lm(:,:,:) + v_lm(:,:,:)
             !
             spins: DO is = 1, nspin_mag

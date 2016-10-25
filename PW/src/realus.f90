@@ -61,11 +61,13 @@ MODULE realus
   ! Augmentation functions on the RHO (HARD) grid for all atoms
   TYPE(realsp_augmentation),POINTER :: tabp(:) => null()
   ! Augmentation functions on the SMOOTH grid for all atoms
-  TYPE(realsp_augmentation),POINTER :: tabs(:) => null()
+  !TYPE(realsp_augmentation),POINTER :: tabs(:) => null()
+  ! Augmentation functions on the EXX grid for all atoms
+  TYPE(realsp_augmentation),POINTER :: tabxx(:) => null()
   !
   PRIVATE
   ! variables for real-space Q, followed by routines
-  PUBLIC :: tabp, tabs, boxrad, realsp_augmentation
+  PUBLIC :: tabp, tabxx, boxrad, realsp_augmentation
   PUBLIC :: generate_qpointlist, qpointlist, addusdens_r, newq_r, &
        addusforce_r, real_space_dq, deallocate_realsp
   ! variables for real-space beta, followed by routines
@@ -85,23 +87,27 @@ MODULE realus
       USE funct,        ONLY : dft_is_hybrid
       USE gvecs,        ONLY : doublegrid
       USE io_global,    ONLY : stdout
+      !USE exx,  ONLY : exx_fft
       IMPLICIT NONE
       !
       ! 1. initialize hard grid
       WRITE(stdout, '(/,5x,a)') "Initializing real-space augmentation for DENSE grid"
       CALL qpointlist(dfftp, tabp) 
       !
-      ! 2. initialize smooth grid (only for EXX at this moment)
-      IF ( dft_is_hybrid() ) THEN
-        IF(doublegrid)THEN
-          WRITE(stdout, '(5x,a)') "Initializing real-space augmentation for SMOOTH grid"
-          CALL qpointlist(dffts, tabs)
-        ELSE
-          ! smooth and rho grid are the same if not double grid
-          WRITE(stdout, '(7x,a)') " SMOOTH grid -> DENSE grid"
-          tabs => tabp
-        ENDIF
-      ENDIF
+      ! NOTE: nothing is using the real space smooth grid at the moment, as EXX
+      !       now uses its own custom grid. In case this is re-introduced, please
+      !       also modify exx_fft_create to recycle this grid when ecutfock = ecutwfc
+!       ! 2. initialize smooth grid (only for EXX at this moment)
+!       IF ( dft_is_hybrid() ) THEN
+!         IF(doublegrid)THEN
+!           WRITE(stdout, '(5x,a)') "Initializing real-space augmentation for SMOOTH grid"
+!           CALL qpointlist(dffts, tabs)
+!         ELSE
+!           ! smooth and rho grid are the same if not double grid
+!           WRITE(stdout, '(7x,a)') " SMOOTH grid -> DENSE grid"
+!           tabs => tabp
+!         ENDIF
+!       ENDIF
       !
       RETURN
       !------------------------------------------------------------------------
@@ -113,7 +119,7 @@ MODULE realus
     !This subroutine should be called to allocate/reset real space related variables.
     !---------------------------------------------------------------------------
      USE control_flags,        ONLY : tqr
-     USE fft_base,             ONLY : dffts, dtgs
+     USE fft_base,             ONLY : dtgs
      USE io_global,            ONLY : stdout
 
 
@@ -157,11 +163,11 @@ MODULE realus
       IF ( allocated( boxrad ) )  DEALLOCATE( boxrad )
       !      
       CALL deallocate_realsp_aug ( tabp )
-      IF ( doublegrid ) THEN
-         CALL deallocate_realsp_aug ( tabs )
-      ELSE
-         NULLIFY(tabs)
-      END IF
+!       IF ( doublegrid ) THEN
+!          CALL deallocate_realsp_aug ( tabs )
+!       ELSE
+!          NULLIFY(tabs)
+!       END IF
       !
     END SUBROUTINE deallocate_realsp
 

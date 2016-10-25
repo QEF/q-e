@@ -30,12 +30,14 @@ MODULE us_exx
   IMPLICIT NONE
   SAVE
   !
-  TYPE(bec_type),ALLOCATABLE :: becxx(:) ! <beta_I|phi_j,k>, with the wavefunctions from exxbuff
+  TYPE(bec_type),ALLOCATABLE :: becxx(:)  ! <beta_I|phi_j,k>, with the wfcs from exxbuff
+  TYPE(bec_type),ALLOCATABLE :: becxx0(:) ! <beta_I|phi_j,k>, on the reduced k-points, local to pools
   ! the visible index is k; while I and J are inside bec_type
 
-  COMPLEX(DP),ALLOCATABLE :: becxx_gamma(:,:)  ! gamma only version of becxx%r
+  !COMPLEX(DP),ALLOCATABLE :: becxx_gamma(:,:)  ! gamma only version of becxx%r
                                                ! two bands stored per stripe 
   COMPLEX(DP),ALLOCATABLE :: qgm(:,:)          ! used in addusxx_g and newdxx_g
+                                               ! pre-computed projectors
 
  CONTAINS ! ~~+~~---//--~~~-+
   !
@@ -86,7 +88,7 @@ MODULE us_exx
     !
     nij = 0
     DO nt = 1, ntyp
-       IF ( upf(nt)%tvanp ) nij = nij + nh(nt)*(nh(nt)+1)/2
+       IF ( upf(nt)%tvanp ) nij = nij + (nh(nt)*(nh(nt)+1))/2
     END DO
     ALLOCATE ( qgm(ngms,nij) )
     !
@@ -141,7 +143,6 @@ MODULE us_exx
     USE ions_base,           ONLY : nat, ntyp => nsp, ityp, tau
     USE uspp,                ONLY : nkb, vkb,  okvan, indv_ijkb0, ijtoh
     USE uspp_param,          ONLY : upf, nh, nhm, lmaxq
-    USE fft_base,            ONLY : dffts
     USE gvect,               ONLY : g, eigts1, eigts2, eigts3, mill, gstart
     USE cell_base,           ONLY : tpiba
     USE control_flags,       ONLY : gamma_only
@@ -151,7 +152,7 @@ MODULE us_exx
     TYPE(fft_cus), INTENT(inout):: exx_fft
     ! In input I get a slice of <beta|left> and <beta|right>
     ! only for this kpoint and this band
-    COMPLEX(DP),INTENT(inout) :: rhoc(dffts%nnr)
+    COMPLEX(DP),INTENT(inout) :: rhoc(exx_fft%dfftt%nnr)
     COMPLEX(DP),INTENT(in), OPTIONAL  :: becphi_c(nkb), becpsi_c(nkb)
     REAL(DP),   INTENT(in), OPTIONAL  :: becphi_r(nkb), becpsi_r(nkb)
     REAL(DP),   INTENT(in)    :: xkq(3), xk(3)
@@ -273,7 +274,7 @@ MODULE us_exx
              ENDIF
           ENDDO   ! nat
           !
-          nij = nij + nh(nt)*(nh(nt)+1)/2
+          nij = nij + (nh(nt)*(nh(nt)+1))/2
           !
        END IF
        !
@@ -307,16 +308,15 @@ MODULE us_exx
     USE ions_base,      ONLY : nat, ntyp => nsp, ityp, tau
     USE uspp,           ONLY : nkb, vkb,  okvan, indv_ijkb0, ijtoh
     USE uspp_param,     ONLY : upf, nh, nhm, lmaxq
-    USE fft_base,       ONLY : dffts
     USE gvect,          ONLY : gg, g, gstart, eigts1, eigts2, eigts3, mill
     USE cell_base,      ONLY : tpiba, omega
     USE control_flags,  ONLY : gamma_only
-    USE fft_custom,          ONLY : fft_cus
+    USE fft_custom,     ONLY : fft_cus
     !
     IMPLICIT NONE
     !
     TYPE(fft_cus), INTENT(inout):: exx_fft
-    COMPLEX(DP),INTENT(in)    :: vc(dffts%nnr)
+    COMPLEX(DP),INTENT(in)    :: vc(exx_fft%dfftt%nnr)
     ! In input I get a slice of <beta|left> and <beta|right> 
     ! only for this kpoint and this band
     COMPLEX(DP),INTENT(in), OPTIONAL :: becphi_c(nkb)
@@ -439,7 +439,7 @@ MODULE us_exx
              !
           ENDDO  ! nat
           !
-          nij = nij + nh(nt)*(nh(nt)+1)/2
+          nij = nij + (nh(nt)*(nh(nt)+1))/2
           !
        END IF
     ENDDO
@@ -532,7 +532,7 @@ MODULE us_exx
   !-----------------------------------------------------------------------
   !
   !------------------------------------------------------------------------
-  SUBROUTINE addusxx_r(rho,becphi,becpsi)
+  SUBROUTINE addusxx_r(exx_fft, rho,becphi,becpsi)
     !------------------------------------------------------------------------
     ! This routine adds to the two wavefunctions density (in real space) 
     ! the part which is due to the US augmentation.
@@ -544,41 +544,41 @@ MODULE us_exx
     !
     USE ions_base,        ONLY : nat, ityp
     USE cell_base,        ONLY : omega
-    USE fft_base,         ONLY : dffts
     USE uspp,             ONLY : okvan, nkb, ijtoh, indv_ijkb0
     USE uspp_param,       ONLY : upf, nh
     USE spin_orb,         ONLY : domag
     !
-    USE realus, ONLY : tabs
+    USE realus,           ONLY : tabxx
+    USE fft_custom,       ONLY : fft_cus
     !
     IMPLICIT NONE
     !
-    COMPLEX(DP),INTENT(inout) :: rho(dffts%nnr)
+    TYPE(fft_cus), INTENT(in):: exx_fft    !
+    COMPLEX(DP),INTENT(inout) :: rho(exx_fft%dfftt%nnr)
     COMPLEX(DP),INTENT(in)    :: becphi(nkb)
     COMPLEX(DP),INTENT(in)    :: becpsi(nkb)
     !
     INTEGER :: ia, nt, ir, irb, ih, jh, mbia
-    INTEGER :: ikb, jkb, ijkb0
+    INTEGER :: ikb, jkb
     !
     IF ( .not. okvan ) RETURN
     CALL start_clock( 'addusxx' )
     !
     DO ia = 1, nat
       !
-      mbia = tabs(ia)%maxbox
+      mbia = tabxx(ia)%maxbox
       IF ( mbia == 0 ) CYCLE
       !
       nt = ityp(ia)
       IF ( .not. upf(nt)%tvanp ) CYCLE
         DO ih = 1, nh(nt)
         DO jh = 1, nh(nt)
-            ijkb0 = indv_ijkb0(ia)
-            ikb = ijkb0 + ih
-            jkb = ijkb0 + jh
+            ikb = indv_ijkb0(ia) + ih
+            jkb = indv_ijkb0(ia) + jh
             !
             DO ir = 1, mbia
-                irb = tabs(ia)%box(ir)
-                rho(irb) = rho(irb) + tabs(ia)%qr(ir,ijtoh(ih,jh,nt)) &
+                irb = tabxx(ia)%box(ir)
+                rho(irb) = rho(irb) + tabxx(ia)%qr(ir,ijtoh(ih,jh,nt)) &
                                          *CONJG(becphi(ikb))*becpsi(jkb)
             ENDDO
         ENDDO
@@ -593,23 +593,23 @@ MODULE us_exx
   !-----------------------------------------------------------------------
   !
   !------------------------------------------------------------------------
-  SUBROUTINE newdxx_r(vr,becphi,deexx)
+  SUBROUTINE newdxx_r(exx_fft,vr,becphi,deexx)
     !------------------------------------------------------------------------
     !   This routine computes the integral of the perturbed potential with
     !   the Q function in real space
     USE cell_base,        ONLY : omega
-    USE fft_base,         ONLY : dffts
     USE ions_base,        ONLY : nat, ityp
     USE uspp_param,       ONLY : upf, nh, nhm
     USE uspp,             ONLY : nkb, ijtoh, indv_ijkb0
     USE noncollin_module, ONLY : nspin_mag
-    USE mp,               ONLY : mp_sum
+    USE fft_custom,       ONLY : fft_cus
 
-    USE realus, ONLY : tabs
+    USE realus, ONLY : tabxx
 
     IMPLICIT NONE
     ! Input: potential , output: contribution to integral
-    COMPLEX(DP),INTENT(in)    :: vr(dffts%nnr)
+    TYPE(fft_cus),INTENT(in)  :: exx_fft
+    COMPLEX(DP),INTENT(in)    :: vr(exx_fft%dfftt%nnr)
     COMPLEX(DP),INTENT(in)    :: becphi(nkb)
     COMPLEX(DP),INTENT(inout) :: deexx(nkb)
     !Internal
@@ -620,11 +620,11 @@ MODULE us_exx
     COMPLEX(DP) :: aux
     !
     CALL start_clock( 'newdxx' )
-    domega = omega/(dffts%nr1*dffts%nr2*dffts%nr3)
+    domega = omega/(exx_fft%dfftt%nr1 *exx_fft%dfftt%nr2 *exx_fft%dfftt%nr3)
     !
     DO ia = 1, nat
       !
-      mbia = tabs(ia)%maxbox
+      mbia = tabxx(ia)%maxbox
       IF ( mbia == 0 ) CYCLE
       !
       nt = ityp(ia)
@@ -638,7 +638,7 @@ MODULE us_exx
           !
           aux = 0._dp
           DO ir = 1, mbia
-              aux = aux + tabs(ia)%qr(ir,ijtoh(ih,jh,nt))*vr(tabs(ia)%box(ir))
+              aux = aux + tabxx(ia)%qr(ir,ijtoh(ih,jh,nt))*vr(tabxx(ia)%box(ir))
           ENDDO
           deexx(ikb) = deexx(ikb) + becphi(jkb)*domega*aux
           !
@@ -648,10 +648,131 @@ MODULE us_exx
     ENDDO
     !
     CALL stop_clock( 'newdxx' )
-  !------------------------------------------------------------------------
+    !------------------------------------------------------------------------
   END SUBROUTINE newdxx_r
   !------------------------------------------------------------------------
   !
-!-----------------------------------------------------------------------
+  !------------------------------------------------------------------------
+  SUBROUTINE store_becxx0(ik, becp)
+    !------------------------------------------------------------------------
+    USE klist,    ONLY : nks
+    USE uspp,     ONLY : nkb
+    USE becmod,   ONLY : bec_type, allocate_bec_type, beccopy
+    USE wvfct,    ONLY : nbnd
+    IMPLICIT NONE
+    INTEGER,INTENT(in) :: ik
+    TYPE(bec_type),INTENT(in) :: becp
+    INTEGER :: jk
+    !
+    IF(.not.allocated(becxx0)) THEN
+      ALLOCATE(becxx0(nks))
+      DO jk = 1,nks
+        CALL allocate_bec_type(nkb, nbnd, becxx0(jk))
+      ENDDO
+    ENDIF
+    CALL beccopy(becp, becxx0(ik), nkb, nbnd)
+    !------------------------------------------------------------------------
+  END SUBROUTINE
+  !------------------------------------------------------------------------
+  !
+  ! Rotate <beta|psi_k> for every bands with symmetry operation isym
+  ! If sgn_sym is < 0, the initial matrix was computed for -xk
+  ! This subroutine derives from PAW_symmetrize.
+  !------------------------------------------------------------------------
+  SUBROUTINE becp_rotate_k(becp0, becp, isym, sgn_sym, xk0, xk)
+    !------------------------------------------------------------------------
+    USE kinds,        ONLY : DP
+    USE constants,    ONLY : tpi
+    USE io_global,    ONLY : stdout
+    USE ions_base,    ONLY : tau, nat, ityp
+    USE symm_base,    ONLY : irt, d1, d2, d3, s, nsym, sr
+    USE uspp,         ONLY : nkb, indv_ijkb0, nhtolm, nhtol
+    USE uspp_param,   ONLY : nh, upf
+    USE wvfct,        ONLY : nbnd
+    USE becmod,       ONLY : allocate_bec_type, is_allocated_bec_type
+    IMPLICIT NONE
+    !
+    COMPLEX(DP), INTENT(IN)  :: becp0(nkb,nbnd)
+    COMPLEX(DP), INTENT(OUT) :: becp (nkb,nbnd)
+    INTEGER,INTENT(in)       :: isym, sgn_sym
+    REAL(DP),INTENT(in)      :: xk0(3), xk(3)
+    
+
+    INTEGER :: ia,mykey,ia_s,ia_e
+                            ! atoms counters and indexes
+    INTEGER :: ibnd, nt       ! counters on spin, atom-type
+    INTEGER :: ma           ! atom symmetric to na
+    INTEGER :: ih, ikb, oh, okb   ! counters for augmentation channels
+    INTEGER :: lm_i, l_i,m_i, m_o
+    REAL(DP) :: tau_phase !dtau(3), rtau(3), 
+    COMPLEX(DP) :: tau_fact
+    LOGICAL :: do_r, do_k
+    !
+    REAL(DP), TARGET :: d0(1,1,48)
+    TYPE symmetrization_tensor
+        REAL(DP),POINTER :: d(:,:,:)
+    END TYPE symmetrization_tensor
+    TYPE(symmetrization_tensor) :: D(0:3)
+
+    IF( isym==1 ) THEN
+      becp = becp0
+      RETURN
+    ENDIF
+    
+    d0(1,1,:) = 1._dp
+    D(0)%d => d0 ! d0(1,1,48)
+    D(1)%d => d1 ! d1(3,3,48)
+    D(2)%d => d2 ! d2(5,5,48)
+    D(3)%d => d3 ! d3(7,7,48)
+
+    IF(ABS(sgn_sym)/=1) CALL errore("becp_rotate", "sign must be +1 or -1",1)
+    
+    CALL start_clock('becp_rotate')
+
+    becp = 0._dp
+    DO ibnd = 1, nbnd
+      DO ia = 1,nat !ia_s, ia_e
+        nt = ityp(ia)
+        ma = irt(isym,ia)
+        ! We have two phases to keep in account, one comes from translating 
+        !  <beta_I| -> <beta_sI+R| (I is the atom position)
+        ! the other from the wavefunction 
+        !  |psi_k> -> |psi_sk+G> .
+        tau_phase = -tpi*( sgn_sym*SUM(tau(:,ia)*xk0) - SUM(tau(:,ma)*xk) )
+        tau_fact = CMPLX(COS(tau_phase), SIN(tau_phase), kind=DP)
+        !WRITE(stdout,'(2(3f10.4,2x),5x,1f12.6,2x,2f12.6)') &
+        !  tau(:,ia), tau(:,ma), tau_phase, tau_fact
+        !
+        !IF ( .not. upf(nt)%tvanp ) CYCLE
+        !
+        DO ih = 1, nh(nt)
+            !
+            lm_i  = nhtolm(ih,nt)
+            l_i   = nhtol(ih,nt)
+            m_i   = lm_i - l_i**2
+            ikb = indv_ijkb0(ia) + ih
+            !
+            DO m_o = 1, 2*l_i +1
+                oh = ih - m_i + m_o
+                okb = indv_ijkb0(ma) + oh
+                IF(sgn_sym>0)THEN
+                  becp(okb, ibnd) = becp(okb, ibnd) &
+                      + D(l_i)%d(m_i,m_o, isym) * tau_fact*becp0(ikb, ibnd)
+                ELSE
+                  becp(okb, ibnd) = becp(okb, ibnd) &
+                      + D(l_i)%d(m_i,m_o, isym) * tau_fact*CONJG(becp0(ikb, ibnd))
+                ENDIF
+            ENDDO ! m_o
+            !ENDDO ! isym
+            !
+        ENDDO ! ih
+      ENDDO ! nat
+      !
+    ENDDO ! ibnd
+    !
+    CALL stop_clock('becp_rotate')
+    !------------------------------------------------------------------------
+  END SUBROUTINE becp_rotate_k
+  !-----------------------------------------------------------------------
 END MODULE us_exx
 !-----------------------------------------------------------------------

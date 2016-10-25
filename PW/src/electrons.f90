@@ -40,7 +40,7 @@ SUBROUTINE electrons()
   USE noncollin_module,     ONLY : noncolin, magtot_nc, i_cons,  bfield, &
                                    lambda, report
   USE uspp,                 ONLY : okvan
-  USE exx,                  ONLY : exxinit, exxenergy2, exxbuff, &
+  USE exx,                  ONLY : exxinit, exxenergy2, exxenergy, exxbuff, &
                                    fock0, fock1, fock2, dexx
   USE funct,                ONLY : dft_is_hybrid, exx_is_active
   USE control_flags,        ONLY : adapt_thr, tr2_init, tr2_multi, gamma_only
@@ -48,6 +48,7 @@ SUBROUTINE electrons()
   USE paw_variables,        ONLY : okpaw, ddd_paw, total_core_energy, only_paw
   USE paw_onecenter,        ONLY : PAW_potential
   USE paw_symmetry,         ONLY : PAW_symmetrize_ddd
+  USE ions_base,            ONLY : nat
   !
   !
   IMPLICIT NONE
@@ -68,6 +69,7 @@ SUBROUTINE electrons()
       tr2_final     ! final threshold for exx minimization 
                     ! when using adaptive thresholds.
   LOGICAL :: first, exst
+  REAL(DP) :: etot_cmp_paw(nat,2,2)
   !
   !
   exxen = 0.0d0
@@ -75,8 +77,8 @@ SUBROUTINE electrons()
   first = .true.
   tr2_final = tr2
   IF ( dft_is_hybrid() ) THEN
-     ! printout = 0  : do not print etot and energy components at each scf step
-     printout = 1  ! print etot, not energy components at each scf step
+     printout = 0  ! do not print etot and energy components at each scf step
+     ! printout = 1  ! print etot, not energy components at each scf step
   ELSE IF ( lmd ) THEN
      printout = 1  ! print etot, not energy components at each scf step
   ELSE
@@ -117,7 +119,7 @@ SUBROUTINE electrons()
            !
            CALL v_of_rho( rho, rho_core, rhog_core, &
                ehart, etxc, vtxc, eth, etotefield, charge, v)
-           IF (okpaw) CALL PAW_potential(rho%bec, ddd_PAW, epaw)
+           IF (okpaw) CALL PAW_potential(rho%bec, ddd_PAW, epaw,etot_cmp_paw)
            CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, &
                          nspin, doublegrid )
            !
@@ -186,7 +188,7 @@ SUBROUTINE electrons()
              ehart, etxc, vtxc, eth, etotefield, charge, v)
         etot = etot + etxc + exxen
         !
-        IF (okpaw) CALL PAW_potential(rho%bec, ddd_PAW, epaw)
+        IF (okpaw) CALL PAW_potential(rho%bec, ddd_PAW, epaw,etot_cmp_paw)
         CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, &
              nspin, doublegrid )
         !
@@ -221,8 +223,13 @@ SUBROUTINE electrons()
         ! the treatment of the divergence in exact exchange has failed. 
         !
         dexx = fock1 - 0.5D0*(fock0+fock2)
-        IF ( dexx < 0d0 ) CALL errore( 'electrons', 'dexx is negative! &
-           &  Check that exxdiv_treatment is appropriate for the system', 1 )
+        IF ( dexx < 0d0 ) THEN
+          WRITE(stdout,'(5x,a,1e12.3)') "BEWARE: negative dexx:", dexx
+          dexx = ABS(dexx)
+!           CALL errore( 'electrons', 'dexx is negative! &
+!            & Check that exxdiv_treatment is appropriate for the system,&
+!            & or ecutfock may be too low', 1 )
+        ENDIF
         !
         !   remove the estimate exchange energy exxen used in the inner SCF
         !
@@ -279,7 +286,7 @@ SUBROUTINE electrons()
 9064 FORMAT( '     + Fock energy             =',0PF17.8,' Ry' )
 9066 FORMAT(/,A1,'    total energy              =',0PF17.8,' Ry' &
             /'     Harris-Foulkes estimate   =',0PF17.8,' Ry' &
-            /'     est. exchange err (dexx)  =',0PF17.8,' Ry' )
+            /'     est. exchange err (dexx)  =',1PE17.1,' Ry' )
 9101 FORMAT(/'     EXX self-consistency reached' )
 9120 FORMAT(/'     EXX convergence NOT achieved after ',i3,' iterations: stopping' )
 9121 FORMAT(/'     scf convergence threshold =',1PE17.1,' Ry' )
@@ -391,6 +398,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
   ! ... external functions
   !
   REAL(DP), EXTERNAL :: ewald, get_clock
+  REAL(DP) :: etot_cmp_paw(nat,2,2)
   !
   iter = 0
   dr2  = 0.0_dp
@@ -607,7 +615,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
            CALL v_of_rho( rhoin, rho_core, rhog_core, &
                           ehart, etxc, vtxc, eth, etotefield, charge, v)
            IF (okpaw) THEN
-              CALL PAW_potential(rhoin%bec, ddd_paw, epaw)
+              CALL PAW_potential(rhoin%bec, ddd_paw, epaw,etot_cmp_paw)
               CALL PAW_symmetrize_ddd(ddd_paw)
            ENDIF
            !
@@ -636,7 +644,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
            vnew%of_r(:,:) = v%of_r(:,:) - vnew%of_r(:,:)
            !
            IF (okpaw) THEN
-              CALL PAW_potential(rho%bec, ddd_paw, epaw)
+              CALL PAW_potential(rho%bec, ddd_paw, epaw,etot_cmp_paw)
               CALL PAW_symmetrize_ddd(ddd_paw)
            ENDIF
            !
@@ -1104,7 +1112,18 @@ SUBROUTINE electrons_scf ( printout, exxen )
           IF ( monopole )           WRITE( stdout, 9062 ) etotmonofield ! TB
           IF ( lda_plus_u )         WRITE( stdout, 9065 ) eth
           IF ( ABS (descf) > eps8 ) WRITE( stdout, 9069 ) descf
-          IF ( okpaw )              WRITE( stdout, 9067 ) epaw
+          IF ( okpaw ) THEN
+            WRITE( stdout, 9067 ) epaw
+            ! Detailed printout of PAW energy components, if verbosity is high
+            IF(iverbosity>0)THEN
+            WRITE( stdout, 9068) SUM(etot_cmp_paw(:,1,1)), &
+                                 SUM(etot_cmp_paw(:,1,2)), &
+                                 SUM(etot_cmp_paw(:,2,1)), &
+                                 SUM(etot_cmp_paw(:,2,2)), &
+            SUM(etot_cmp_paw(:,1,1))+SUM(etot_cmp_paw(:,1,2))+ehart, &
+            SUM(etot_cmp_paw(:,2,1))+SUM(etot_cmp_paw(:,2,2))+etxc-etxcc
+            ENDIF
+          ENDIF
           !
           ! ... With Fermi-Dirac population factor, etot is the electronic
           ! ... free energy F = E - TS , demet is the -TS contribution
@@ -1163,6 +1182,12 @@ SUBROUTINE electrons_scf ( printout, exxen )
 9062 FORMAT( '     monopole field correction =',F17.8,' Ry' ) ! TB
 9065 FORMAT( '     Hubbard energy            =',F17.8,' Ry' )
 9067 FORMAT( '     one-center paw contrib.   =',F17.8,' Ry' )
+9068 FORMAT( '      -> PAW hartree energy AE =',F17.8,' Ry' &
+            /'      -> PAW hartree energy PS =',F17.8,' Ry' &
+            /'      -> PAW xc energy AE      =',F17.8,' Ry' &
+            /'      -> PAW xc energy PS      =',F17.8,' Ry' &
+            /'      -> total E_H with PAW    =',F17.8,' Ry'& 
+            /'      -> total E_XC with PAW   =',F17.8,' Ry' )
 9069 FORMAT( '     scf correction            =',F17.8,' Ry' )
 9070 FORMAT( '     smearing contrib. (-TS)   =',F17.8,' Ry' )
 9071 FORMAT( '     Magnetic field            =',3F12.7,' Ry' )
