@@ -4,15 +4,19 @@ Incompatible changes in svn version:
 
 Fixed in svn versions
 
+  * PP: incorrect results in "projwfc.x" with PAW projection due to a 
+        missing line (r13120)
   * PW: final scf step in variable-cell calculation could crash
-        due to missing reset of FFT dimensions (rev.13116)
-  * CPV: stress with nonlocal DFT incorrect in parallel (rev.13102)
-  * PWGui: double-hyphen glitch with old tcllib for NEB (rev. 13101)
-  * GWW wasn't working at all (rev. 13099, 13100, and 13106)
-  * PW: ACE energy slightly off, leading to crash, for metals (commit 13095)
-    and for USPP (commit 13111)
-  * Some Wyckoff site labels were incorrect (commit 13083)
-    Also: symmetry analysis improved (commit 13094)
+        due to missing reset of FFT dimensions (r13116)
+  * FD: dangerous "q==0" check in matdyn.f90 (r13109)
+  * Misc errors in new schema-based xml I/O (r13110, r13113)
+  * CPV: stress with nonlocal DFT incorrect in parallel (r13102)
+  * PWGui: double-hyphen glitch with old tcllib for NEB (r13101)
+  * GWW wasn't working at all (r13099, r13100, r13106)
+  * PW: ACE energy slightly off, leading to crash, for metals (r13095)
+    and for USPP (r13111)
+  * Some Wyckoff site labels were incorrect (r13083)
+    Also: symmetry analysis improved (r13094)
 
 New in 6.0 version:
 
