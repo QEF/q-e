@@ -115,3 +115,40 @@ FUNCTION global_kpoint_index ( nkstot, ik ) RESULT (ik_g)
   IF ( my_pool_id >= rest ) ik_g = ik_g + rest*kunit
   !
 END FUNCTION global_kpoint_index
+!----------------------------------------------------------------------------
+FUNCTION local_kpoint_index ( nkstot, ik_g ) RESULT (ik)
+  !----------------------------------------------------------------------------
+  
+  ! ... Returns the local index index of a k-point, if it belongs to
+  ! ... current pool, or -1 if it does not
+
+  USE mp_pools, ONLY : npool, my_pool_id, kunit
+
+  IMPLICIT NONE
+  
+  INTEGER, INTENT(IN) :: nkstot, ik_g
+  ! total number of k-points
+  ! global index of k-point
+  INTEGER  :: ik ! return the index if we have it, -1 if we don't
+  INTEGER  :: nks
+  ! this is actually the number of k-points in this pool
+  !
+  INTEGER  :: nkbl, rest, nks_before, ik_g0
+  !
+  ! ... nkbl = number of blocks of "kunit" k-points
+  nkbl = nkstot / kunit
+  ! ... nks = k-points per pool
+  nks = kunit * ( nkbl / npool )
+  ! ... if npool not a divisor of nkstot/kunit, find out the rest
+  rest = ( nkstot - nks * npool ) / kunit
+  ! ... Assign the remaining k-points to the first "rest" pools
+  IF ( my_pool_id < rest ) nks = nks + kunit  
+  ! find the global index of the first k-point in my pool
+  ik_g0 = nks*my_pool_id
+  IF ( my_pool_id >= rest ) ik_g0 = ik_g0 + rest*kunit
+  ik = ik_g - ik_g0
+  IF(ik<=0 .or. ik>nks)  ik = -1
+  !
+END FUNCTION
+!----------------------------------------------------------------------------
+ 
