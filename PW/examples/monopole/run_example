@@ -86,6 +86,7 @@ cat > single_-0.10.in  << EOF
 &control
  calculation   = 'relax',
  restart_mode  = 'from_scratch',
+ pseudo_dir    = '$PSEUDO_DIR',
  prefix        = 'single_-0.10',
  outdir        = '$TMP_DIR/',
  nstep         = 300,
@@ -141,6 +142,7 @@ cat > single_+0.10.in  << EOF
 &control
  calculation   = 'relax',
  restart_mode  = 'from_scratch',
+ pseudo_dir    = '$PSEUDO_DIR',
  prefix        = 'single_+0.10',
  outdir        = '$TMP_DIR/',
  nstep         = 300,
@@ -196,6 +198,7 @@ cat > single_+0.10.bands.in  << EOF
 &control
  calculation   = 'bands',
  restart_mode  = 'from_scratch',
+ pseudo_dir    = '$PSEUDO_DIR',
  prefix        = 'single_+0.10',
  outdir        = '$TMP_DIR/',
  nstep         = 300,
@@ -252,6 +255,7 @@ cat > single_+0.10_nobarrier.in  << EOF
 &control
  calculation   = 'relax',
  restart_mode  = 'from_scratch',
+ pseudo_dir    = '$PSEUDO_DIR',
  prefix        = 'single_+0.10_nob',
  outdir        = '$TMP_DIR/',
  nstep         = 300,
@@ -303,6 +307,7 @@ cat > single_+0.10_nobarrier.bands.in  << EOF
 &control
  calculation   = 'bands',
  restart_mode  = 'from_scratch',
+ pseudo_dir    = '$PSEUDO_DIR',
  prefix        = 'single_+0.10_nob',
  outdir        = '$TMP_DIR/',
  nstep         = 300,
