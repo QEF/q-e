@@ -914,6 +914,7 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   USE us_exx,        ONLY : store_becxx0
   USE mp_world,      ONLY : mpime
   USE mp_pools,      ONLY : me_pool, my_pool_id
+  USE funct,         ONLY : dft_is_hybrid 
   !
   IMPLICIT NONE
   INTEGER, INTENT(IN) :: ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd

@@ -406,7 +406,7 @@ CONTAINS
     INTEGER, INTENT(in) :: nkb, nbnd
 
     IF (gamma_only) THEN
-       CALL dcopy(nkb*nbnd, bec1%r, 1, bec%r, 1)
+       CALL dcopy(nkb*nbnd, bec%r, 1, bec1%r, 1)
     ELSEIF (noncolin) THEN
        CALL zcopy(nkb*npol*nbnd, bec%nc, 1, bec1%nc,  1)
     ELSE

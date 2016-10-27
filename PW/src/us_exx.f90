@@ -659,18 +659,24 @@ MODULE us_exx
     USE uspp,     ONLY : nkb
     USE becmod,   ONLY : bec_type, allocate_bec_type, beccopy
     USE wvfct,    ONLY : nbnd
+    USE funct,    ONLY : dft_is_hybrid
+    USE uspp,     ONLY : okvan
     IMPLICIT NONE
     INTEGER,INTENT(in) :: ik
     TYPE(bec_type),INTENT(in) :: becp
     INTEGER :: jk
     !
+!     IF(.not.okvan) RETURN
+!     IF(.not.dft_is_hybrid()) RETURN
+    
     IF(.not.allocated(becxx0)) THEN
       ALLOCATE(becxx0(nks))
       DO jk = 1,nks
         CALL allocate_bec_type(nkb, nbnd, becxx0(jk))
       ENDDO
     ENDIF
-    CALL beccopy(becp, becxx0(ik), nkb, nbnd)
+    IF(ik<1 .or. ik>nks) CALL errore("store_becxx0","unexpected ik", 1)
+    CALL beccopy(becp, becxx0(ik),nkb, nbnd)
     !------------------------------------------------------------------------
   END SUBROUTINE
   !------------------------------------------------------------------------
