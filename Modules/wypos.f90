@@ -1013,7 +1013,7 @@ CONTAINS
             IF (TRIM(wp)=='4a') THEN
                tau(1)=0.0_DP
                tau(2)=inp(1)
-               tau(3)=inp(1)
+               tau(3)=inp(2)
             ENDIF
 
          CASE (37) !Ccc2
