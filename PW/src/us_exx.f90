@@ -666,8 +666,8 @@ MODULE us_exx
     TYPE(bec_type),INTENT(in) :: becp
     INTEGER :: jk
     !
-!     IF(.not.okvan) RETURN
-!     IF(.not.dft_is_hybrid()) RETURN
+    IF(.not.okvan) RETURN
+    IF(.not.dft_is_hybrid()) RETURN
     
     IF(.not.allocated(becxx0)) THEN
       ALLOCATE(becxx0(nks))
