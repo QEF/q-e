@@ -36,12 +36,6 @@
 
   iverbosity  = 0
 
-  elinterp    = .true.
-  phinterp    = .true.
-
-  tshuffle2   = .true.
-  tphases     = .false.
-
   elecselfen  = .true.
   phonselfen  = .true.
 

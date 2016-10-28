@@ -29,12 +29,6 @@
 
   iverbosity  = 2
 
-  elinterp    = .true.
-  phinterp    = .true.
-
-  tshuffle2   = .true.
-  tphases     = .false.
-
   parallel_k  = .true.
   parallel_q  = .false.
 

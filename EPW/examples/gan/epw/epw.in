@@ -26,12 +26,6 @@
   proj(1)     = 'N:sp3'
   proj(2)     = 'Ga:d'
 
-  elinterp    = .true.
-  phinterp    = .true.
-
-  tshuffle2   = .true.
-  tphases     = .false.
-
   elecselfen  = .false.
   phonselfen  = .false.
   a2f         = .false.
