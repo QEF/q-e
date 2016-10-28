@@ -78,7 +78,7 @@ SUBROUTINE electrons()
   tr2_final = tr2
   IF ( dft_is_hybrid() ) THEN
      printout = 0  ! do not print etot and energy components at each scf step
-     ! printout = 1  ! print etot, not energy components at each scf step
+     !printout = 1  ! print etot, not energy components at each scf step
   ELSE IF ( lmd ) THEN
      printout = 1  ! print etot, not energy components at each scf step
   ELSE
@@ -224,9 +224,11 @@ SUBROUTINE electrons()
         !
         dexx = fock1 - 0.5D0*(fock0+fock2)
         IF ( dexx < 0d0 ) THEN
-           CALL errore( 'electrons', 'dexx is negative! &
-            & Check that exxdiv_treatment is appropriate for the system,&
-            & or ecutfock may be too low', 1 )
+!           WRITE(stdout,'(5x,a,1e12.3)') "BEWARE: negative dexx:", dexx
+!           dexx = ABS(dexx)
+          CALL errore( 'electrons', 'dexx is negative! &
+           & Check that exxdiv_treatment is appropriate for the system,&
+           & or ecutfock may be too low', 1 )
         ENDIF
         !
         !   remove the estimate exchange energy exxen used in the inner SCF
@@ -236,10 +238,16 @@ SUBROUTINE electrons()
         ! write(*,*) '@chken', etot
         hwf_energy = hwf_energy + 0.5D0*fock2 - fock1
         IF ( dexx < tr2_final ) THEN
-           WRITE( stdout, 9066 ) '!', etot, hwf_energy, dexx
+           WRITE( stdout, 9066 ) '!', etot, hwf_energy
         ELSE
-           WRITE( stdout, 9066 ) ' ', etot, hwf_energy, dexx
+           WRITE( stdout, 9066 ) ' ', etot, hwf_energy
         END IF
+        IF(dexx>1.d-8)THEN
+          WRITE( stdout, 9067 ) dexx
+        ELSE
+          WRITE( stdout, 9068 ) dexx
+        ENDIF
+        
         WRITE( stdout, 9062 ) - fock1
         WRITE( stdout, 9064 ) 0.5D0*fock2
         !
@@ -283,8 +291,9 @@ SUBROUTINE electrons()
 9062 FORMAT( '     - averaged Fock potential =',0PF17.8,' Ry' )
 9064 FORMAT( '     + Fock energy             =',0PF17.8,' Ry' )
 9066 FORMAT(/,A1,'    total energy              =',0PF17.8,' Ry' &
-            /'     Harris-Foulkes estimate   =',0PF17.8,' Ry' &
-            /'     est. exchange err (dexx)  =',1PE17.1,' Ry' )
+            /'     Harris-Foulkes estimate   =',0PF17.8,' Ry' )
+9067 FORMAT('     est. exchange err (dexx)  =',0PF17.8,' Ry' )
+9068 FORMAT('     est. exchange err (dexx)  =',1PE17.1,' Ry' )
 9101 FORMAT(/'     EXX self-consistency reached' )
 9120 FORMAT(/'     EXX convergence NOT achieved after ',i3,' iterations: stopping' )
 9121 FORMAT(/'     scf convergence threshold =',1PE17.1,' Ry' )
@@ -365,7 +374,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
   IMPLICIT NONE
   !
   INTEGER, INTENT (IN) :: printout
-  REAL(DP),INTENT (IN) :: exxen    ! current estimate of the echange energy
+  REAL(DP),INTENT (IN) :: exxen    ! current estimate of the exchange energy
   !
   ! ... a few local variables
   !
@@ -724,7 +733,8 @@ SUBROUTINE electrons_scf ( printout, exxen )
      !
      etot = eband + ( etxc - etxcc ) + ewld + ehart + deband + demet + descf
      ! for hybrid calculations, add the current estimate of exchange energy
-     etot = etot - exxen  
+     etot = etot - exxen
+     hwf_energy = hwf_energy - exxen
      ! write(*,*) '@chk', etot 
      !
      IF (okpaw) etot = etot + epaw
