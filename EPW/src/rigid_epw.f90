@@ -230,7 +230,7 @@ SUBROUTINE rgd_blk_epw(nq1,nq2,nq3,q,uq,epmat,nmodes,epsil,zeu,bmat,signe)
   real(DP) :: qeq,     &! <q+G| epsil | q+G>
        arg, zaq,       &
        g1, g2, g3, gmax, alph, geg
-  integer :: na, ipol, im, m1,m2,m3, nrx1,nrx2,nrx3
+  integer :: na, ipol, im, m1,m2,m3!, nrx1,nrx2,nrx3
   complex(dp) :: fac, facqd, facq, epmatl(nmodes), matsq
   !
   IF (abs(signe) /= 1.0) &
@@ -241,32 +241,32 @@ SUBROUTINE rgd_blk_epw(nq1,nq2,nq3,q,uq,epmat,nmodes,epsil,zeu,bmat,signe)
   geg = gmax*alph*4.0d0
   fac = signe*e2*fpi/omega * ci
   !
-  IF (nq1 == 1) THEN 
-     nrx1=0
-  ELSE
-     nrx1 = int ( sqrt (geg) / &
-                  sqrt (bg (1, 1) **2 + bg (2, 1) **2 + bg (3, 1) **2) ) + 1
-  ENDIF
-  IF (nq2 == 1) THEN 
-     nrx2=0
-  ELSE
-     nrx2 = int ( sqrt (geg) / &
-                  sqrt (bg (1, 2) **2 + bg (2, 2) **2 + bg (3, 2) **2) ) + 1
-  ENDIF
-  IF (nq3 == 1) THEN 
-     nrx3=0
-  ELSE
-     nrx3 = int ( sqrt (geg) / &
-                  sqrt (bg (1, 3) **2 + bg (2, 3) **2 + bg (3, 3) **2) ) + 1
-  ENDIF
+ ! IF (nq1 == 1) THEN 
+ !    nrx1=0
+ ! ELSE
+ !    nrx1 = int ( sqrt (geg) / &
+ !                 sqrt (bg (1, 1) **2 + bg (2, 1) **2 + bg (3, 1) **2) ) + 1
+ ! ENDIF
+ ! IF (nq2 == 1) THEN 
+ !    nrx2=0
+ ! ELSE
+ !    nrx2 = int ( sqrt (geg) / &
+ !                 sqrt (bg (1, 2) **2 + bg (2, 2) **2 + bg (3, 2) **2) ) + 1
+ ! ENDIF
+ ! IF (nq3 == 1) THEN 
+ !    nrx3=0
+ ! ELSE
+ !    nrx3 = int ( sqrt (geg) / &
+ !                 sqrt (bg (1, 3) **2 + bg (2, 3) **2 + bg (3, 3) **2) ) + 1
+ ! ENDIF
   !
   epmatl(:) = czero   
   !
-  DO m1 = -nrx1,nrx1
+  !DO m1 = -nrx1,nrx1
   ! TO be test
-  !DO m1 = -nq1,nq1
-    DO m2 = -nrx2,nrx2
-      DO m3 = -nrx3,nrx3
+  DO m1 = -nq1,nq1
+    DO m2 = -nq2,nq2
+      DO m3 = -nq3,nq3
       !
       g1 = m1*bg(1,1) + m2*bg(1,2) + m3*bg(1,3) + q(1)
       g2 = m1*bg(2,1) + m2*bg(2,2) + m3*bg(2,3) + q(2)

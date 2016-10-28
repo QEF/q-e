@@ -1217,9 +1217,29 @@
     ENDDO
     !
     IF (etf_mem) THEN
-      lrepmatw   = 2 * nbndsub * nbndsub * nrr_k * nmodes * nrr_q
-      i = 0
+   !   lrepmatw   = 2 * nbndsub * nbndsub * nrr_k * nmodes * nrr_q
+   !   i = 0
+   !   DO irq = 1, nrr_q
+   !     DO imode = 1, nmodes
+   !       DO irk = 1, nrr_k
+   !         DO jbnd = 1, nbndsub
+   !           DO ibnd = 1, nbndsub
+   !             i = i + 1
+   !             aux (i) = epmatwp(ibnd,jbnd,irk,imode,irq)
+   !           ENDDO
+   !         ENDDO
+   !       ENDDO
+   !     ENDDO
+   !   ENDDO
+     ! inquire(iunepmatwp,opened=exst)
+     ! print*,'exst ',exst
+     ! FLUSH(6)
+
+      lrepmatw   = 2 * nbndsub * nbndsub * nrr_k * nmodes
+      filint    = trim(prefix)//'.epmatwp'
+      CALL diropn (iunepmatwp, 'epmatwp', lrepmatw, exst)
       DO irq = 1, nrr_q
+        i = 0      
         DO imode = 1, nmodes
           DO irk = 1, nrr_k
             DO jbnd = 1, nbndsub
@@ -1230,11 +1250,15 @@
             ENDDO
           ENDDO
         ENDDO
+        CALL davcio ( aux, lrepmatw, iunepmatwp, irq, +1 )
       ENDDO
       !DBSP
-      filint    = trim(prefix)//'.epmatwp'
-      CALL diropn (iunepmatwp, 'epmatwp', lrepmatw, exst)
-      CALL davcio ( aux, lrepmatw, iunepmatwp, 1, +1 )
+      !filint    = trim(prefix)//'.epmatwp'
+      !!DBSP
+      !print*,'lrepmatw ',lrepmatw
+      !FLUSH(6)
+      !CALL diropn (iunepmatwp, 'epmatwp', lrepmatw, exst)
+      !CALL davcio ( aux, lrepmatw, iunepmatwp, 1, +1 )
       CLOSE(iunepmatwp)
       IF (ALLOCATED(epmatwp)) DEALLOCATE ( epmatwp )
     ENDIF 
@@ -1371,13 +1395,31 @@
     epmatwp = czero
     IF (mpime.eq.ionode_id) THEN
       !
-      lrepmatw   = 2 * nbndsub * nbndsub * nrr_k * nmodes * nrr_q
+     ! lrepmatw   = 2 * nbndsub * nbndsub * nrr_k * nmodes * nrr_q
+     ! filint    = trim(prefix)//'.epmatwp'
+     ! CALL diropn (iunepmatwp, 'epmatwp', lrepmatw, exst)
+     ! CALL davcio ( aux, lrepmatw, iunepmatwp, 1, -1 )
+     ! !
+     ! i = 0
+     ! DO irq = 1, nrr_q
+     !   DO imode = 1, nmodes
+     !     DO irk = 1, nrr_k
+     !       DO jbnd = 1, nbndsub
+     !         DO ibnd = 1, nbndsub
+     !           i = i + 1
+     !           epmatwp(ibnd,jbnd,irk,imode,irq) = aux(i)
+     !         ENDDO
+     !       ENDDO
+     !     ENDDO
+     !   ENDDO
+     ! ENDDO
+
+      lrepmatw   = 2 * nbndsub * nbndsub * nrr_k * nmodes
       filint    = trim(prefix)//'.epmatwp'
       CALL diropn (iunepmatwp, 'epmatwp', lrepmatw, exst)
-      CALL davcio ( aux, lrepmatw, iunepmatwp, 1, -1 )
-      !
-      i = 0
       DO irq = 1, nrr_q
+        i = 0     
+        CALL davcio ( aux, lrepmatw, iunepmatwp, irq, -1 )
         DO imode = 1, nmodes
           DO irk = 1, nrr_k
             DO jbnd = 1, nbndsub
@@ -1398,6 +1440,7 @@
   !
   CALL mp_barrier(inter_pool_comm)
   IF (mpime.eq.ionode_id) THEN
+    CLOSE(iunepmatwp)
     CLOSE(epwdata)
     CLOSE(iundmedata)
     IF (vme) CLOSE(iunvmedata)

@@ -95,7 +95,7 @@
   USE io_global,   ONLY : ionode
   USE epwcom,      ONLY : nbndsub, nwanxx, proj, iprint, dis_win_min, &
                           dis_win_max, dis_froz_min, dis_froz_max, num_iter, &
-                          spinors, wdata 
+                          wdata 
   !
   implicit none
   !
@@ -132,8 +132,6 @@
     WRITE (iuwinfil, '("dis_froz_min ", f9.3)') dis_froz_min
     WRITE (iuwinfil, '("dis_froz_max ", f9.3)') dis_froz_max
     WRITE (iuwinfil, '("num_iter ", i7)')       num_iter
-    !
-    IF (spinors) WRITE (iuwinfil,'(a)') "spinors=.true."
     !
     ! write any extra parameters to the prefix.win file
     DO i = 1, nwanxx

@@ -30,7 +30,7 @@
   USE output,        ONLY : fildvscf, fildrho
   USE epwcom,        ONLY : delta_smear, &
                             nsmear, dis_win_min, dis_win_max, wannierize, &
-                            ngaussw, dvscf_dir, eptemp, wdata, spinors, &
+                            ngaussw, dvscf_dir, eptemp, wdata, &
                             num_iter, dis_froz_max, fsthick, dis_froz_min, &
                             vme, degaussw, epexst, eig_read, kmaps, &
                             epwwrite, epbread, phonselfen, elecselfen, &
@@ -102,7 +102,7 @@
        degaussw, fsthick, eptemp,  nsmear, delta_smear,                        &
        dvscf_dir, ngaussw,                                                     &
        wannierize, dis_win_max, dis_win_min, dis_froz_min, dis_froz_max,       &
-       num_iter, proj, spinors, wdata, iprint, write_wfn, wmin, wmax, nw,      &
+       num_iter, proj,  wdata, iprint, write_wfn, wmin, wmax, nw,              &
        eps_acustic, a2f, nest_fn,                                              & 
        elecselfen, phonselfen, parallel_k, parallel_q,                         &
        rand_q, rand_nq, rand_k, rand_nk,                                       &
@@ -165,7 +165,6 @@
   ! dis_froz_max : upper bound on frozen wannier90 disentanglement window
   ! num_iter     : number of iterations used in the wannier90 minimisation
   ! proj         : initial projections (states) of the wannier functions before minimization
-  ! spinors      : twice as many wannier functions are expected as initial projections 
   ! wdata        : Empty array that can be used to pass extra info to prefix.win file, for things not explicitly declared here 
   ! iprint       : verbosity of the wannier90 code
   ! write_wfn    : writes out UNK files from pwscf run for plotting of XSF files
@@ -313,7 +312,6 @@
   dis_froz_min = -1d3
   num_iter     = 200
   proj(:)      = ''
-  spinors      = .false.
   wdata(:)     = ''
   iprint       = 2
   wmin         = 0.d0

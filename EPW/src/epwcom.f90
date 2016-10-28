@@ -157,8 +157,6 @@
   !! if .TRUE. calculate spectral electron function due to e-p interaction
   LOGICAL :: wannierize
   !! if .TRUE. run the wannier90 code
-  LOGICAL :: spinors
-  !! if .TRUE. run the wannier90 with spinors
   LOGICAL :: parallel_k
   !! if .TRUE. scatter the electron k-points on the fine mesh among pools (not q)
   LOGICAL :: parallel_q
