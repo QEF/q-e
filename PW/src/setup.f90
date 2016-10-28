@@ -673,7 +673,7 @@ SUBROUTINE setup()
   !
   ! ... initialize d1 and d2 to rotate the spherical harmonics
   !
-  IF (lda_plus_u .or. okpaw ) CALL d_matrix( d1, d2, d3 )
+  IF (lda_plus_u .or. okpaw .or. (okvan.and.dft_is_hybrid()) ) CALL d_matrix( d1, d2, d3 )
   !
   RETURN
   !

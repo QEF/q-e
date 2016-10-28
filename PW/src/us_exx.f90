@@ -681,8 +681,148 @@ MODULE us_exx
   END SUBROUTINE
   !------------------------------------------------------------------------
   !
+  !-----------------------------------------------------------------------
+  SUBROUTINE rotate_becxx ( nkqs, index_xk, index_sym, xkq_collect )
+    !-----------------------------------------------------------------------
+    !
+    ! Collect becxx0 (the product <beta|psi> on the irreducible wedge)
+    ! among pools, then rotate them to reconstruct the k+q grid.
+    ! In order to have the necessary  data in becxx0, you must 
+    ! call store_becxx0 in sum_bands
+    !
+    USE kinds,                ONLY : DP
+    USE wvfct,                ONLY : nbnd
+    USE uspp,                 ONLY : nkb, okvan
+    USE becmod,               ONLY : calbec, allocate_bec_type, &
+                                     deallocate_bec_type, bec_type
+!     USE us_exx,               ONLY : becp_rotate_k, becxx0, becxx
+    USE klist,                ONLY : xk, nkstot, nks
+    USE io_global,            ONLY : stdout
+    USE mp,                   ONLY : mp_bcast, mp_sum
+    USE mp_pools,             ONLY : me_pool, my_pool_id, root_pool, &
+                                     inter_pool_comm, intra_pool_comm
+    USE control_flags,        ONLY : gamma_only
+    USE noncollin_module,     ONLY : nspin_lsda, noncolin
+    !
+!     USE cell_base,            ONLY : at, bg
+!     USE symm_base,            ONLY : s
+    IMPLICIT NONE
+    INTEGER,INTENT(in) :: nkqs ! number of points in the k+q grid
+    INTEGER,INTENT(in) :: index_xk(nspin_lsda*nkqs) ! idx of k-point that can be rotated to k+q
+    INTEGER,INTENT(in) :: index_sym(nspin_lsda*nkqs)! sym.op taking k to k+q
+    REAL(DP),INTENT(in):: xkq_collect(3,nspin_lsda*nkqs) ! the list of k+q points
+    !
+    INTEGER  :: ikq, ik, ik_global  
+    INTEGER :: isym, sgn_sym, ibnd
+    TYPE(bec_type),ALLOCATABLE :: becxx0_global(:)
+    REAL(dp), ALLOCATABLE   :: xk_collect(:,:)
+    INTEGER :: bec_working_pool !, current_root
+    !
+    INTEGER, EXTERNAL :: local_kpoint_index
+!     REAL(DP) :: xk_cryst(3), sxk(3)
+    !
+    IF(.not. okvan) RETURN
+    IF(noncolin) &
+      CALL errore("rotate_becxx","Ultrasoft/PAW+EXX+noncolin not yet implemented",1)
+    !
+    !
+    CALL start_clock('becxx')
+    !
+    ! becxx will contain the products <beta|psi> for all the wfcs in the k+q grid
+    IF(.not. ALLOCATED(becxx)) THEN
+      ALLOCATE(becxx(nkqs))
+      DO ikq = 1,nkqs
+        CALL allocate_bec_type( nkb, nbnd, becxx(ikq))
+      ENDDO
+    ENDIF
+    !
+    IF(gamma_only)THEN
+      ! In the Gamma-only case, only one k-point, no need to rotate anything
+      ! I copy over instead of using pointer of stuff, because it makes the 
+      ! rest much simpler (we may have spin)
+      DO ik = 1, nks
+        becxx(ik)%r = becxx0(ik)%r
+      ENDDO
+      CALL stop_clock('becxx')
+      RETURN
+    ENDIF
+    !
+    ALLOCATE(xk_collect(3,nkstot))
+    CALL poolcollect(3, nks, xk, nkstot, xk_collect)
+    !
+    ! becxx0_global is a temporary array that will collect the <beta|psi> products from 
+    ! all the pools
+    ALLOCATE(becxx0_global(nkstot))
+    DO ik_global = 1,nkstot
+      CALL allocate_bec_type( nkb, nbnd, becxx0_global(ik_global))
+    ENDDO
+    !
+    ! Collect in a smart way (i.e. without doing all-to-all sum and bcast)
+!     WRITE(100001, *) "---------------------------------"
+    DO ik_global = 1, nkstot
+      ik = local_kpoint_index(nkstot, ik_global)
+      IF( ik>0 ) THEN
+        becxx0_global(ik_global)%k = becxx0(ik)%k
+        ! my_pool_id is also the index of the possible roots when doing an mp_bcast with 
+        ! inter_pool_comm, this is confusing but logical
+        bec_working_pool = my_pool_id
+      ELSE
+        bec_working_pool = 0
+      ENDIF
+      !CALL mp_sum(current_root, inter_pool_comm)
+      CALL mp_sum(bec_working_pool, inter_pool_comm)
+      IF ( me_pool == root_pool ) &
+        CALL mp_bcast(becxx0_global(ik_global)%k, bec_working_pool, inter_pool_comm)
+      ! No need to broadcast inside the pool which had the data already 
+      IF(my_pool_id /= bec_working_pool ) &
+        CALL mp_bcast(becxx0_global(ik_global)%k, root_pool, intra_pool_comm)
+    ENDDO
+    !
+    ! Use symmetry rotation to generate the missing <beta|psi>
+    DO ikq = 1,nkqs
+      !
+      isym    = ABS(index_sym(ikq))
+      sgn_sym = SIGN(1, index_sym(ikq))
+!       WRITE(100001, '(a,i6)') "ikq", ikq
+!       WRITE(100001, '(a,6i6)') "sym", isym, sgn_sym
+      CALL becp_rotate_k(becxx0_global(index_xk(ikq))%k, becxx(ikq)%k, isym, sgn_sym,&
+                         xk_collect(:,index_xk(ikq)), xkq_collect(:,ikq))
+
+!         xk_cryst(:) = sgn_sym * xk_collect(:,index_xk(ikq))
+!         CALL cryst_to_cart(1, xk_cryst, at, -1)
+!         ! rotate with this sym.op.
+!         sxk(:) = s(:,1,isym)*xk_cryst(1) + &
+!                  s(:,2,isym)*xk_cryst(2) + &
+!                  s(:,3,isym)*xk_cryst(3)
+!         CALL cryst_to_cart(1, sxk, bg, +1)
+        
+!       WRITE(100001, '(a,3f12.6)') "xk_0", xk_collect(:,index_xk(ikq))
+!       WRITE(100001, '(a,3f12.6)') "xk_r", sxk
+!       WRITE(100001, '(a,3f12.6,5x,1f12.6)') "xk_f", xkq_collect(:,ikq),&
+!         SUM(xkq_collect(:,ikq)-sxk)
+!       DO ibnd = 1, 1
+!       !DO ik = 1, nkb
+!       WRITE(100001, '(a,i6)') "bnd", ibnd
+!       WRITE(100001, '(a,99(2f12.5,3x))') "before", becxx0_global(index_xk(ikq))%k(:,ibnd)
+!       WRITE(100001, '(a,99(2f12.5,3x))') "after ", becxx(ikq)%k(:, ibnd)
+!       !ENDDO
+!       ENDDO
+    ENDDO
+    !
+    ! Cleanup
+    DEALLOCATE(xk_collect)
+    DO ik = 1,nkstot
+        CALL deallocate_bec_type( becxx0_global(ik))
+    ENDDO
+    DEALLOCATE(becxx0_global)
+    !
+    CALL stop_clock('becxx')
+    !-----------------------------------------------------------------------
+  END SUBROUTINE rotate_becxx
+  !-----------------------------------------------------------------------
+  !
   ! Rotate <beta|psi_k> for every bands with symmetry operation isym
-  ! If sgn_sym is < 0, the initial matrix was computed for -xk
+  ! If sgn_sym is < 0, the initial matrix was computed for -xk0
   ! This subroutine derives from PAW_symmetrize.
   !------------------------------------------------------------------------
   SUBROUTINE becp_rotate_k(becp0, becp, isym, sgn_sym, xk0, xk)
@@ -691,11 +831,13 @@ MODULE us_exx
     USE constants,    ONLY : tpi
     USE io_global,    ONLY : stdout
     USE ions_base,    ONLY : tau, nat, ityp
-    USE symm_base,    ONLY : irt, d1, d2, d3, s, nsym, sr
+    USE symm_base,    ONLY : irt, d1, d2, d3, s, nsym
     USE uspp,         ONLY : nkb, indv_ijkb0, nhtolm, nhtol
     USE uspp_param,   ONLY : nh, upf
     USE wvfct,        ONLY : nbnd
     USE becmod,       ONLY : allocate_bec_type, is_allocated_bec_type
+
+    USE cell_base,            ONLY : at, bg
     IMPLICIT NONE
     !
     COMPLEX(DP), INTENT(IN)  :: becp0(nkb,nbnd)
@@ -720,11 +862,19 @@ MODULE us_exx
     END TYPE symmetrization_tensor
     TYPE(symmetrization_tensor) :: D(0:3)
 
+    REAL(DP) :: xau(3,nat), rau(3,nat)
+    
     IF( isym==1 ) THEN
-      becp = becp0
+      IF(sgn_sym>0)THEN
+        becp = becp0
+      ELSE
+        becp = CONJG(becp0)
+      ENDIF
       RETURN
     ENDIF
-    
+    !
+    ! d_matrix are now done in setup.f90
+    !CALL d_matrix(d1,d2,d3)
     d0(1,1,:) = 1._dp
     D(0)%d => d0 ! d0(1,1,48)
     D(1)%d => d1 ! d1(3,3,48)
@@ -735,50 +885,205 @@ MODULE us_exx
     
     CALL start_clock('becp_rotate')
 
+    xau = tau
+    CALL cryst_to_cart(nat, xau, bg, -1)
+    DO ia = 1,nat
+        ! rau = rotated atom coordinates
+        rau (:, ia) = s (1,:, isym) * xau (1, ia) + &
+                      s (2,:, isym) * xau (2, ia) + &
+                      s (3,:, isym) * xau (3, ia)
+    ENDDO
+    CALL cryst_to_cart(nat, rau, at, +1)
+!     DO ia = 1,nat
+!       WRITE(100001, '(a,3f12.6)') "tau_0", tau(:,ia)
+!       WRITE(100001, '(a,3f12.6)') "tau_r", rau(:,ia)
+!       ma = irt(isym,ia)
+!       WRITE(100001, '(a,3f12.6,5x,1f12.6)') "tau_f", tau(:,ma), SUM(rau(:,ia)-tau(:,ma))
+!     ENDDO
+    
     becp = 0._dp
-    DO ibnd = 1, nbnd
-      DO ia = 1,nat !ia_s, ia_e
-        nt = ityp(ia)
-        ma = irt(isym,ia)
-        ! We have two phases to keep in account, one comes from translating 
-        !  <beta_I| -> <beta_sI+R| (I is the atom position)
-        ! the other from the wavefunction 
-        !  |psi_k> -> |psi_sk+G> .
-        tau_phase = -tpi*( sgn_sym*SUM(tau(:,ia)*xk0) - SUM(tau(:,ma)*xk) )
-        tau_fact = CMPLX(COS(tau_phase), SIN(tau_phase), kind=DP)
-        !WRITE(stdout,'(2(3f10.4,2x),5x,1f12.6,2x,2f12.6)') &
-        !  tau(:,ia), tau(:,ma), tau_phase, tau_fact
-        !
-        !IF ( .not. upf(nt)%tvanp ) CYCLE
-        !
-        DO ih = 1, nh(nt)
-            !
-            lm_i  = nhtolm(ih,nt)
-            l_i   = nhtol(ih,nt)
-            m_i   = lm_i - l_i**2
-            ikb = indv_ijkb0(ia) + ih
-            !
-            DO m_o = 1, 2*l_i +1
-                oh = ih - m_i + m_o
-                okb = indv_ijkb0(ma) + oh
-                IF(sgn_sym>0)THEN
-                  becp(okb, ibnd) = becp(okb, ibnd) &
-                      + D(l_i)%d(m_i,m_o, isym) * tau_fact*becp0(ikb, ibnd)
-                ELSE
-                  becp(okb, ibnd) = becp(okb, ibnd) &
-                      + D(l_i)%d(m_i,m_o, isym) * tau_fact*CONJG(becp0(ikb, ibnd))
-                ENDIF
-            ENDDO ! m_o
-            !ENDDO ! isym
-            !
-        ENDDO ! ih
-      ENDDO ! nat
+    !DO ibnd = 1, nbnd
+    DO ia = 1,nat !ia_s, ia_e
+      nt = ityp(ia)
+      ma = irt(isym,ia)
+      ! We have two phases to keep in account, one comes from translating 
+      !  <beta_I| -> <beta_sI+R| (I is the atom position)
+      ! the other from the wavefunction 
+      !  |psi_k> -> |psi_sk+G> .
+      tau_phase = -tpi*( sgn_sym*SUM(tau(:,ia)*xk0) - SUM(tau(:,ma)*xk) )
+      !tau_phase = -tpi*( sgn_sym*SUM(tau(:,ia)*xk0) - SUM(rau(:,ia)*xk) )
+      tau_fact = CMPLX(COS(tau_phase), SIN(tau_phase), kind=DP)
+!       tau_fact = 1._dp
+      !WRITE(stdout,'(2(3f10.4,2x),5x,1f12.6,2x,2f12.6)') &
+      !  tau(:,ia), tau(:,ma), tau_phase, tau_fact
       !
-    ENDDO ! ibnd
+      !IF ( .not. upf(nt)%tvanp ) CYCLE
+      !
+      DO ih = 1, nh(nt)
+          !
+          lm_i  = nhtolm(ih,nt)
+          l_i   = nhtol(ih,nt)
+          m_i   = lm_i - l_i**2
+          ikb = indv_ijkb0(ma) + ih
+!           print*, "doing", ikb, ma, l_i, lm_i
+          !
+          DO m_o = 1, 2*l_i +1
+              oh = ih - m_i + m_o
+              okb = indv_ijkb0(ia) + oh
+!               WRITE(*,'(a,5i4,2f10.3)') "okb", okb, oh, ih, m_i, m_o, &
+!                                               D(l_i)%d(m_o,m_i, isym), &
+!                                               D(l_i)%d(m_i,m_o, isym)
+              IF(sgn_sym>0)THEN
+                becp(ikb, :) = becp(ikb, :) &
+                    + D(l_i)%d(m_o,m_i, isym) * tau_fact*becp0(okb, :)
+              ELSE
+                becp(ikb, :) = becp(ikb, :) &
+                    + D(l_i)%d(m_o,m_i, isym) * tau_fact*CONJG(becp0(okb, :))
+              ENDIF
+          ENDDO ! m_o
+          !ENDDO ! isym
+          !
+      ENDDO ! ih
+    ENDDO ! nat
+!     print*, "STOP", nkb
+!     stop 1
+    !
+    !ENDDO ! ibnd
     !
     CALL stop_clock('becp_rotate')
     !------------------------------------------------------------------------
   END SUBROUTINE becp_rotate_k
+#if defined (__UNUSED_SUBROUTINE_LEAVE_FOR_TESTING)
+! Note: in order to work, this subroutine must be place in exx.f90, 
+! as it uses a load of global variables from there and we cannot have a cross
+! dependency between this file an that
   !-----------------------------------------------------------------------
+  SUBROUTINE compute_becxx ( )
+    !-----------------------------------------------------------------------
+    !
+    ! prepare the necessary quantities, then call calbec to compute
+    ! <beta_I|phi_j,k+q> and store it becxx(ikq). This must be called
+    ! AFTER exxbuff and xkq_collected are done (i.e. at the end of exxinit)
+    !
+    USE kinds,                ONLY : DP
+    USE wvfct,                ONLY : npwx, nbnd
+    USE gvect,                ONLY : g, ngm
+    USE gvecw,                ONLY : gcutw
+    USE uspp,                 ONLY : nkb, okvan
+    USE becmod,               ONLY : calbec
+    USE fft_interfaces,       ONLY : fwfft
+    USE control_flags,        ONLY : gamma_only
+    USE fft_custom,           ONLY : fft_cus
+    USE fft_interfaces, ONLY : fwfft, invfft
+    USE us_exx,               ONLY : becxx
+    IMPLICIT NONE
+    !
+    INTEGER, EXTERNAL  :: n_plane_waves
+    INTEGER  :: npwq, npwx_, ibnd, ikq, j, h_ibnd, ibnd_loop_start
+    INTEGER,ALLOCATABLE     :: igkq(:)   !  order of wavefunctions at k+q[+G]
+    INTEGER,ALLOCATABLE     :: ngkq(:)   !  number of plane waves at k+q[+G]
+    COMPLEX(DP),ALLOCATABLE :: vkbq(:,:) ! |beta_I>
+    COMPLEX(DP),ALLOCATABLE :: evcq(:,:) ! |psi_j,k> in g-space
+    COMPLEX(DP),ALLOCATABLE :: phi(:)    ! aux space for fwfft
+    REAL(dp), ALLOCATABLE   :: gk(:)     ! work space
+    COMPLEX(DP) :: fp, fm
+    !
+    IF(.not. okvan) RETURN
+    !
+    CALL start_clock('becxx')
+    !
+    ! Find maximum number of plane waves npwq among the entire grid of k and
+    ! of k+q points - needed if plane waves are distributed (if not, the number
+    ! of plane waves for each k+q point is the same as for the k-point that is
+    ! equivalent by symmetry)
+    !
+    ALLOCATE(ngkq(nkqs))
+    npwq = n_plane_waves (gcutw, nkqs, xkq_collect, g, ngm)
+    npwq = max (npwx, npwq)
+    !
+    ! Dirty trick to prevent gk_sort from stopping with an error message:
+    ! set npwx to max value now, reset it to original value later
+    ! (better solution: gk_sort should check actual array dimension, not npwx)
+    !
+    npwx_= npwx
+    npwx = npwq
+    !
+    ALLOCATE(gk(npwq), igkq(npwq))
+    ALLOCATE(vkbq(npwq,nkb))
+    ALLOCATE(evcq(npwq,nbnd))
+    ALLOCATE(phi(exx_fft%dfftt%nnr))
+    !
+!     WRITE(100002, *) "---------------------------------"
+    DO ikq = 1,nkqs
+      !
+      ! prepare the g-vectors mapping
+      CALL gk_sort(xkq_collect(:, ikq), ngm, g, gcutw, ngkq(ikq), igkq, gk )
+      ! prepare the |beta> function at k+q
+      CALL init_us_2(ngkq(ikq), igkq, xkq_collect(:, ikq), vkbq)
+      !
+      ! take rotated phi to G space
+      IF (gamma_only) THEN
+         !
+         h_ibnd=ibnd_start/2
+         !
+         IF(mod(ibnd_start,2)==0) THEN
+            h_ibnd=h_ibnd-1
+            ibnd_loop_start=ibnd_start-1
+         ELSE
+            ibnd_loop_start=ibnd_start
+         ENDIF
+
+         DO ibnd = ibnd_loop_start,ibnd_end,2
+            h_ibnd = h_ibnd + 1
+            phi(:) = exxbuff(:,h_ibnd,ikq)
+            CALL fwfft ('CustomWave', phi, exx_fft%dfftt)
+            IF (ibnd < ibnd_end) THEN
+               ! two ffts at the same time
+               DO j = 1, ngkq(ikq)
+                  fp = (phi (exx_fft%nlt(j)) + phi (exx_fft%nltm(j)))*0.5d0
+                  fm = (phi (exx_fft%nlt(j)) - phi (exx_fft%nltm(j)))*0.5d0
+                  evcq( j, ibnd)   = cmplx( dble(fp), aimag(fm),kind=DP)
+                  evcq( j, ibnd+1) = cmplx(aimag(fp),- dble(fm),kind=DP)
+               ENDDO
+            ELSE
+               DO j = 1, ngkq(ikq)
+                  evcq(j, ibnd)   =  phi(exx_fft%nlt(j))
+               ENDDO
+            ENDIF
+         ENDDO
+      ELSE
+         DO ibnd = ibnd_start,ibnd_end
+            phi(:) = exxbuff(:,ibnd,ikq)
+            CALL fwfft ('CustomWave', phi, exx_fft%dfftt)
+            DO j = 1, ngkq(ikq)
+               evcq(j, ibnd)   =  phi(exx_fft%nlt(igkq(j)))
+            ENDDO
+         ENDDO
+      ENDIF
+      !
+      ! compute <beta_I|psi_j> at this k+q point, for all bands
+      ! and all projectors
+      !
+      CALL calbec(ngkq(ikq), vkbq, evcq, becxx(ikq), nbnd)
+      !
+!       WRITE(100002, '(a,i6)') "ikq", ikq
+!       DO ibnd = 1, 1
+!       !DO ik = 1, nkb
+!       WRITE(100002, '(a,i6)') "bnd", ibnd
+!       WRITE(100002, '(a,99(2f12.5,3x))') "after ", becxx(ikq)%k(:, ibnd)
+!       !ENDDO
+!       ENDDO
+    ENDDO
+    !
+    DEALLOCATE(phi, evcq, vkbq, igkq, gk, ngkq)
+    ! suite of the dirty trick: reset npwx to its original value
+    npwx = npwx_
+    !
+    CALL stop_clock('becxx')
+    !-----------------------------------------------------------------------
+  END SUBROUTINE compute_becxx
+  !-----------------------------------------------------------------------
+#endif
+!-----------------------------------------------------------------------
 END MODULE us_exx
 !-----------------------------------------------------------------------

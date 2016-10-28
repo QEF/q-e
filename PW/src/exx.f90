@@ -8,7 +8,7 @@
 !--------------------------------------
 MODULE exx
   !--------------------------------------
-  !
+!   !
   USE kinds,                ONLY : DP
   USE coulomb_vcut_module,  ONLY : vcut_init, vcut_type, vcut_info, &
                                    vcut_get,  vcut_spheric_get
@@ -672,7 +672,7 @@ MODULE exx
     USE scatter_mod,          ONLY : gather_grid, scatter_grid
     USE fft_interfaces,       ONLY : invfft
     USE uspp,                 ONLY : nkb, vkb, okvan
-    USE us_exx,               ONLY : becxx
+    USE us_exx,               ONLY : rotate_becxx
     USE paw_variables,        ONLY : okpaw
     USE paw_exx,              ONLY : PAW_init_keeq
     USE mp_pools,             ONLY : me_pool, my_pool_id, root_pool, nproc_pool, &
@@ -922,14 +922,12 @@ MODULE exx
       CALL mp_bcast(exxbuff(:,:,ikq), working_pool(ikq), intra_orthopool_comm)
     ENDDO
     !
-    ! For US/PAW only: prepare space for <beta_I|phi_j> scalar products
-    ! compute <beta_I|psi_j,k+q> for the entire de-symmetrized k+q grid
-    !
-    CALL compute_becxx()
+    ! For US/PAW only: compute <beta_I|psi_j,k+q> for the entire 
+    ! de-symmetrized k+q grid by rotating the ones fro mthe irreducible wedge
+    IF(okvan) CALL rotate_becxx(nkqs, index_xk, index_sym, xkq_collect)
     !
     ! Initialize 4-wavefunctions one-center Fock integrals
     !    \int \psi_a(r)\phi_a(r)\phi_b(r')\psi_b(r')/|r-r'|
-    !
     IF(okpaw) CALL PAW_init_keeq()
     !
 #if defined(__EXX_ACE)
@@ -997,121 +995,6 @@ MODULE exx
        ENDIF
     ENDDO
   END SUBROUTINE exx_set_symm
-  !
-  !-----------------------------------------------------------------------
-  SUBROUTINE compute_becxx ( )
-    !-----------------------------------------------------------------------
-    !
-    ! prepare the necessary quantities, then call calbec to compute
-    ! <beta_I|phi_j,k+q> and store it becxx(ikq). This must be called
-    ! AFTER exxbuff and xkq_collected are done (i.e. at the end of exxinit)
-    !
-    USE kinds,                ONLY : DP
-    USE wvfct,                ONLY : npwx, nbnd
-    USE gvect,                ONLY : g, ngm
-!     USE gvecs,                ONLY : nls, nlsm
-    USE gvecw,                ONLY : gcutw
-    USE uspp,                 ONLY : nkb, okvan
-    USE becmod,               ONLY : calbec, allocate_bec_type, deallocate_bec_type, bec_type
-    USE fft_base,             ONLY : dffts
-    USE fft_interfaces,       ONLY : fwfft
-    USE us_exx,               ONLY : becp_rotate_k, becxx0, becxx
-    USE klist,                ONLY : xk, nkstot, nks
-    USE cell_base,            ONLY : at, bg
-    USE symm_base,            ONLY : s
-    USE io_global,            ONLY : stdout
-    USE mp,                   ONLY : mp_bcast, mp_sum
-    USE mp_pools,             ONLY : me_pool, my_pool_id, root_pool, &
-                                     inter_pool_comm, my_pool_id, intra_pool_comm
-    
-    IMPLICIT NONE
-    !
-    INTEGER  :: ikq, ik, ik_global  
-    INTEGER :: isym, sgn_sym
-    TYPE(bec_type),ALLOCATABLE :: becxx0_global(:)
-    REAL(dp), ALLOCATABLE   :: xk_collect(:,:)
-    INTEGER :: working_pool !, current_root
-    !
-    INTEGER, EXTERNAL :: local_kpoint_index
-    !
-    IF(.not. okvan) RETURN
-    !
-    !
-    CALL start_clock('becxx')
-    !
-    ! becxx will contain the products <beta|psi> for all the wfcs in the k+q grid
-    IF(.not. ALLOCATED(becxx)) THEN
-      ALLOCATE(becxx(nkqs))
-      DO ikq = 1,nkqs
-          CALL allocate_bec_type( nkb, nbnd, becxx(ikq))
-      ENDDO
-    ENDIF
-    !
-    IF(gamma_only)THEN
-      ! In the Gamma-only case, only one k-point, no need to rotate anything
-      ! I copy over instead of using pointer of stuff, because it makes the 
-      ! rest much simpler (we may have spin)
-      DO ik = 1, nks
-        becxx(ik)%r = becxx0(ik)%r
-      ENDDO
-      CALL stop_clock('becxx')
-      RETURN
-    ENDIF
-    !
-    ALLOCATE(xk_collect(3,nkstot))
-    CALL poolcollect(3, nks, xk, nkstot, xk_collect)
-    !
-    ! becxx0_global is a temporary array that will collect the <beta|psi> products from 
-    ! all the pools
-    ALLOCATE(becxx0_global(nkstot))
-    DO ik_global = 1,nkstot
-      CALL allocate_bec_type( nkb, nbnd, becxx0_global(ik_global))
-    ENDDO
-    !
-    ! Collect in a smart way (i.e. without doing all-to-all sum and bcast)
-    DO ik_global = 1, nkstot
-      ik = local_kpoint_index(nkstot, ik_global)
-      IF( ik>0 ) THEN
-        becxx0_global(ik_global)%k = becxx0(ik)%k
-        ! my_pool_id is also the index of the possible roots when doing an mp_bcast with 
-        ! inter_pool_comm, this is confusing but logical
-        !current_root = my_pool_id
-        working_pool = my_pool_id
-      ELSE
-        !becxx0_global(ik_global)%k = -666._dp
-        !current_root = 0
-        working_pool = 0
-      ENDIF
-      !CALL mp_sum(current_root, inter_pool_comm)
-      CALL mp_sum(working_pool, inter_pool_comm)
-      IF ( me_pool == root_pool ) &
-        CALL mp_bcast(becxx0_global(ik_global)%k, working_pool, inter_pool_comm)
-      ! No need to broadcast inside the pool which had the data already 
-      IF(my_pool_id /= working_pool ) &
-        CALL mp_bcast(becxx0_global(ik_global)%k, root_pool, intra_pool_comm)
-      !WRITE(30000+mpime,'(2i6,99(2f12.6))') working_pool,ik_global, becxx0_global(ik_global)%k
-    ENDDO
-    !
-    ! Use symmetry rotation to generate the missing <beta|psi>
-    DO ikq = 1,nkqs
-      !
-      isym    = ABS(index_sym(ikq))
-      sgn_sym = SIGN(1, index_sym(ikq))
-      CALL becp_rotate_k(becxx0_global(index_xk(ikq))%k, becxx(ikq)%k, isym, sgn_sym,&
-                         xk_collect(:,index_xk(ikq)), xkq_collect(:,ikq))
-    ENDDO
-    !
-    ! Cleanup
-    DEALLOCATE(xk_collect)
-    DO ik = 1,nkstot
-        CALL deallocate_bec_type( becxx0_global(ik))
-    ENDDO
-    DEALLOCATE(becxx0_global)
-    !
-    CALL stop_clock('becxx')
-    !-----------------------------------------------------------------------
-  END SUBROUTINE compute_becxx
-  !-----------------------------------------------------------------------
   !
   !-----------------------------------------------------------------------
   SUBROUTINE vexx(lda, n, m, psi, hpsi, becpsi)
