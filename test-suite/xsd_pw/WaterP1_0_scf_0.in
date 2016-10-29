@@ -1,0 +1,80 @@
+&CONTROL
+ calculation='scf'
+ dipfield=.false.
+ disk_io='low'
+ dt=20.0
+ etot_conv_thr=1e-05
+ forc_conv_thr=0.001
+ input_xml_schema_file='WaterP1_0_scf_0.xml'
+ iprint=1
+ max_seconds=1000000
+ nstep=50
+ outdir='./'
+ prefix='WaterP1_0_scf_0'
+ restart_mode='from_scratch'
+ title='Default Title'
+ tprnfor=.false.
+ tstress=.false.
+ verbosity='high'
+ wf_collect=.false.
+/
+&SYSTEM
+ degauss=0.01
+ ecutrho=200.0
+ ecutwfc=40.0
+ force_symmorphic=.false.
+ ibrav=0
+ input_dft='PBE'
+ lspinorb=.false.
+ nat=3
+ nbnd=14
+ no_t_rev=.false.
+ noinv=.false.
+ noncolin=.false.
+ nosym=.true.
+ nosym_evc=.false.
+ nspin=1
+ ntyp=2
+ occupations='smearing'
+ smearing='gaussian'
+ starting_magnetization(1)=0.0
+ starting_magnetization(2)=0.0
+ tot_charge=0.0
+ use_all_frac=.false.
+/
+&ELECTRONS
+ conv_thr=1e-06
+ diago_cg_maxiter=20
+ diago_full_acc=.false.
+ diago_thr_init=0.0
+ diagonalization='davidson'
+ electron_maxstep=100
+ mixing_beta=0.7
+ mixing_mode='plain'
+ mixing_ndim=8
+ tbeta_smoothing=.false.
+ tq_smoothing=.false.
+ tqr=.false.
+/
+&IONS
+ ion_dynamics='bfgs'
+/
+&CELL
+ cell_dynamics='bfgs'
+ press=0.0
+ press_conv_thr=0.5
+/
+ATOMIC_SPECIES
+ H 1.00794 H.blyp-vbc.UPF
+ O 15.9994 O.blyp-mt.UPF
+ATOMIC_POSITIONS bohr
+ O 0.0 0.0 0.0
+ H 1.593778 1.01535 0.0
+ H 5.373232 1.01535 0.0
+K_POINTS automatic
+ 2 2 4 1 1 1
+CELL_PARAMETERS bohr
+ 6.96701 0.0 0.0
+ 0.0 4.794801 0.0
+ 0.0 0.0 3.779452
+ 
