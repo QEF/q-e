@@ -1994,6 +1994,7 @@ sum_band.o : pwcom.o
 sum_band.o : realus.o
 sum_band.o : scf_mod.o
 sum_band.o : symme.o
+sum_band.o : us_exx.o
 sumkg.o : ../../Modules/kind.o
 sumkg.o : ../../Modules/mp.o
 sumkg.o : ../../Modules/mp_pools.o
