@@ -16,14 +16,14 @@ default :
 	@echo '  make target'
 	@echo ' '
 	@echo 'where <target> identifies an action'
-	@echo ' run-tests          : run-tests-serial (default)'
-	@echo ' run-tests-serial   : run all tests in SERIAL' 
-	@echo ' run-tests-XX-serial: run tests for XX={pw,cp} only, as above' 
-	@echo ' run-tests-parallel : run all tests in PARALLEL (4 MPI)'
-	@echo ' run-tests-XX-parallel: run tests for XX={pw,cp} only, as above' 
-	@echo ' run-custom-test testdir=DIR: run test in DIR only (serial)'
-	@echo ' compare            : compare last output generated with reference'
-	@echo ' clean              : clean output (our/err files) of all tests'
+	@echo ' run-tests                   : run-tests-serial (default)'
+	@echo ' run-tests-serial            : run all tests in SERIAL' 
+	@echo ' run-tests-XX-serial         : run tests for XX={pw,cp} only, as above' 
+	@echo ' run-tests-parallel          : run all tests in PARALLEL (4 MPI)'
+	@echo ' run-tests-XX-parallel       : run tests for XX={pw,cp} only, as above' 
+	@echo ' run-custom-test testdir=DIR : run test in DIR only (serial)'
+	@echo ' compare                     : compare last output with reference'
+	@echo ' clean                       : clean stdout/sderr of all tests'
 	@echo ' '
 	@echo 'For additional advanced commands and settings please manually inspect'
 	@echo 'ENVIRONMENT and Makefile files'
@@ -73,6 +73,13 @@ run-custom-test-parallel : prolog pseudo
 	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=$(testdir) ; fi
 
 
+run-tests-xsd-pw-serial : prolog pseudo
+	cd xsd_pw ; for file in ./*.in ; do \
+  	echo "Running using $$file" ; \
+		env QE_USE_MPI=0 ../run-pw.sh -in $$file &> $$file.out ; \
+		python ../validate_xsd_pw.py $$file; \
+    done ; cd ..
+
 create-reference-cp : pseudo prolog
 	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --category=cp_all make-benchmarks
 
@@ -102,7 +109,7 @@ clean:
 	@rm -f pw_vc-relax/ave pw_vc-relax/e pw_vc-relax/tv pw_vc-relax/p pw_vc-relax/eal pw_vc-relax/avec
 # Special case for 'pw_langevin' test-case
 	@rm -f pw_langevin/trajectory-pwscf.xyz
-# Soecial cases for CP	
+# Special cases for CP	
 	@rm -f cp_si/qe_input.xml cp_sio2/qe_input.xml cp_o2/qe_input.xml cp_h2o/qe_input.xml
 	@rm -f userconfig
 
