@@ -1,3 +1,7 @@
+New in svn version:
+
+  * Hybrid functionals with PAW seem to work
+
 Incompatible changes in svn version:
 
   * Routine h_psiq deleted
@@ -5,7 +9,7 @@ Incompatible changes in svn version:
 Fixed in svn versions
 
   * PP: incorrect results in "projwfc.x" with PAW projection due to a 
-        missing line (r13120)
+        missing line (r13121)
   * PW: final scf step in variable-cell calculation could crash
         due to missing reset of FFT dimensions (r13116)
   * FD: dangerous "q==0" check in matdyn.f90 (r13109)
@@ -15,7 +19,7 @@ Fixed in svn versions
   * GWW wasn't working at all (r13099, r13100, r13106)
   * PW: ACE energy slightly off, leading to crash, for metals (r13095)
     and for USPP (r13111)
-  * Some Wyckoff site labels were incorrect (r13083)
+  * Some Wyckoff site labels were incorrect (r13083, r13124)
     Also: symmetry analysis improved (r13094)
 
 New in 6.0 version:

@@ -987,7 +987,6 @@ restart.o : ../../Modules/io_files.o
 restart.o : ../../Modules/ions_base.o
 restart.o : ../../Modules/kind.o
 restart.o : ../../Modules/mp.o
-restart.o : ../../Modules/xml_io_base.o
 restart.o : cp_autopilot.o
 restart.o : cp_interfaces.o
 restart.o : cp_restart.o
