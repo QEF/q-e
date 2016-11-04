@@ -1267,9 +1267,11 @@ MODULE exx
              !
              IF(okpaw) THEN
                 IF(ibnd>=ibnd_start) &
-                CALL PAW_newdxx(x1/nqs, _CX(becxx(ikq)%r(:,ibnd)),   _CX(becpsi%r(:,im)), deexx)
+                CALL PAW_newdxx(x1/nqs, _CX(becxx(ikq)%r(:,ibnd)),&
+                                        _CX(becpsi%r(:,im)), deexx)
                 IF(ibnd<ibnd_end) &
-                CALL PAW_newdxx(x2/nqs, _CX(becxx(ikq)%r(:,ibnd+1)), _CX(becpsi%r(:,im)), deexx)
+                CALL PAW_newdxx(x2/nqs, _CX(becxx(ikq)%r(:,ibnd+1)), &
+                                        _CX(becpsi%r(:,im)), deexx)
              ENDIF
              !
              ! accumulates over bands and k points
@@ -1398,12 +1400,12 @@ MODULE exx
     !
     LOOP_ON_PSI_BANDS : &
     DO im = 1,m !for each band of psi (the k cycle is outside band)
-       IF(okvan) deexx = 0.0_DP
+       IF(okvan) deexx = 0._DP
        !
        IF (noncolin) THEN
           temppsic_nc = 0._DP
        ELSE
-          temppsic    = 0.0_DP
+          temppsic    = 0._DP
        ENDIF
        !
        IF (noncolin) THEN
@@ -1507,7 +1509,7 @@ MODULE exx
              CALL invfft ('Custom', vc, exx_fft%dfftt)
              !
              ! Add ultrasoft contribution (REAL SPACE)
-             IF(okvan .and. tqr) CALL newdxx_r(exx_fft,vc, becxx(ikq)%k(:,ibnd),deexx)
+             IF(okvan .and. tqr) CALL newdxx_r(exx_fft,vc, becxx(ikq)%k(:,ibnd), deexx)
              !
              ! Add PAW one-center contribution
              IF(okpaw) THEN
@@ -1591,7 +1593,7 @@ MODULE exx
        ENDIF
        !
        ! add non-local \sum_I |beta_I> \alpha_Ii (the sum on i is outside)
-       IF(okvan) CALL add_nlxx_pot(lda, hpsi(:,im), xkp, n, igk_k(1,current_k),&
+       IF(okvan) CALL add_nlxx_pot(lda, hpsi(:,im), xkp, n, igk_k(:,current_k),&
                                        deexx, eps_occ, exxalfa)
        !
     ENDDO &

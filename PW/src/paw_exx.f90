@@ -29,8 +29,10 @@ MODULE paw_exx
     USE uspp_param,     ONLY : upf, nh
     USE uspp,           ONLY : nkb
     USE paw_variables,  ONLY : okpaw
-    USE mp_images,      ONLY : me_image
     USE uspp,           ONLY : indv_ijkb0
+    USE io_global,      ONLY : ionode, ionode_id
+    USE mp,             ONLY : mp_bcast
+    USE mp_global,      ONLY : intra_image_comm
     IMPLICIT NONE
     !
     ! In input I get a slice of <beta|left> and <beta|right> only for this kpoint and this band
@@ -40,41 +42,49 @@ MODULE paw_exx
     REAL(DP)                  :: weight
     !
     ! ... local variables
-    INTEGER :: ijkb0, ih, jh, na, np, ikb
+    INTEGER :: ijkb0, ih, jh, na, np, ikb, jkb, oh,uh,okb,ukb
+    !
+    !RETURN
     !
     IF(.not.paw_has_init_keeq) &
-      CALL errore("PAW_deexx", "you have to initialize paw keeq before", 1)
+      CALL errore("PAW_newdxx", "you have to initialize paw keeq before", 1)
     !
     CALL start_clock( 'PAW_newdxx' )
     !
-    IF(okpaw) RETURN
     ! Worst possible parallelisation:
-    IF(me_image/=0) RETURN
-    !
-    DO np = 1, ntyp
+    IF(ionode) THEN
+      !
+      DO np = 1, ntyp
       ONLY_FOR_PAW : &
       IF ( upf(np)%tpawp ) THEN
-        !
-        DO ih = 1, nh(np)
-        DO jh = 1, nh(np)
-            !
-            ATOMS_LOOP : &
-            DO na = 1, nat
-            IF (ityp(na)==np) THEN
-                !
-                ! NOTE: see addusxx_g for the next line:
-                ijkb0 = indv_ijkb0(na)
+      !
+      ATOMS_LOOP : &
+      DO na = 1, nat
+      IF (ityp(na)==np) THEN
+        ijkb0 = indv_ijkb0(na)
+        DO uh = 1, nh(np)
+          ukb = ijkb0 + uh
+          DO oh = 1, nh(np)
+            okb = ijkb0 + oh
+            DO jh = 1, nh(np)
+              jkb = ijkb0 + jh
+              DO ih = 1, nh(np)
                 ikb = ijkb0 + ih
-                deexx(ikb) = deexx(ikb) &
-                        - weight*PAW_deexx(na, ih, jh, ijkb0, becphi, becpsi)
-                !
-            END IF
-            ENDDO ATOMS_LOOP ! nat
-        ENDDO ! jh
-        ENDDO ! ih
-      END IF &
-      ONLY_FOR_PAW
-    ENDDO
+          ! Eq. 35 + 32 Ref. 1, the factor 1/2 comes from eq. 32.
+                deexx(ikb) = deexx(ikb)+weight*0.5_DP*ke(np)%k(ih,jh,oh,uh) * becphi(jkb) &
+                                * CONJG(becphi(ukb)) * becpsi(okb)
+                ENDDO !uh, ukb
+              ENDDO !oh, okb
+            ENDDO ! jh
+          ENDDO ! ih
+        END IF
+        ENDDO ATOMS_LOOP ! nat
+        END IF &
+        ONLY_FOR_PAW
+      ENDDO
+      !  the 1/2 factor comes from eq. 32 Ref 1
+    ENDIF
+!     CALL mp_bcast(deexx, ionode_id, intra_image_comm )
     !
     CALL stop_clock( 'PAW_newdxx' )
     !
@@ -85,58 +95,15 @@ MODULE paw_exx
   !-----------------------------------------------------------------------
   !
   !=----------------------------------------------------------------------------=!
-  FUNCTION PAW_deexx(na, ih, jh, ijkb0, becphi, becpsi)
-    !=----------------------------------------------------------------------------=!
-    ! Compute the 2-electron 4-wavefunctions integral 
-    ! Integral over bands and kpoints is done outside (doing it here does not fit properly with exx.f90)
-    USE ions_base,          ONLY : nat, ityp
-    USE uspp_param,         ONLY : nh, upf
-    USE uspp,               ONLY : nkb
-    IMPLICIT NONE
-    INTEGER,INTENT(in) :: na, ih, jh, ijkb0
-    COMPLEX(DP),INTENT(in) :: becphi(nkb), becpsi(nkb)
-    !
-    COMPLEX(DP) :: PAW_deexx
-    !
-    INTEGER :: np
-    INTEGER :: oh, uh
-    INTEGER :: ikb, jkb, okb, ukb 
-    !
-    PAW_deexx = 0._dp
-    np = ityp(na)
-    IF(.not.upf(np)%tpawp) RETURN
-    !
-    ! CALL start_clock("PAW_deexx")
-    ikb = ijkb0 + ih
-    jkb = ijkb0 + jh
-
-    DO oh = 1, nh(np)
-      okb = ijkb0 + oh
-      DO uh = 1, nh(np)
-        ukb = ijkb0 + uh
-        ! Eq. 35 + 32 Ref. 1, the 1/2 factor comes from 32
-        PAW_deexx = PAW_deexx  &
-                  +  0.5_DP *ke(np)%k(ih,jh,oh,uh) * becphi(jkb) &
-                            * CONJG(becphi(ukb)) * becpsi(okb)
-        !
-      ENDDO !uh, ukb
-    ENDDO !oh, okb
-    !
-    ! CALL stop_clock("PAW_deexx")
-    RETURN
-    !=----------------------------------------------------------------------------=!
-  END FUNCTION PAW_deexx
-  !=----------------------------------------------------------------------------=!
-  !
-  !=----------------------------------------------------------------------------=!
   FUNCTION PAW_xx_energy(becphi, becpsi)
     !=----------------------------------------------------------------------------=!
     ! Compute the energy: 2-electron 4-wavefunctions integral and sum with weights and <beta|psi>
     ! Integral over bands and kpoints is done outside (doing it here would not fit properly with exx.f90)
     USE ions_base,          ONLY : nat, ityp, ntyp => nsp
     USE uspp_param,         ONLY : nh, upf
-    USE uspp,               ONLY : nkb
+    USE uspp,               ONLY : nkb, indv_ijkb0
     USE mp_images,          ONLY : me_image
+    USE io_global,          ONLY : ionode
     IMPLICIT NONE
     COMPLEX(DP),INTENT(in) :: becphi(nkb), becpsi(nkb)
     !
@@ -148,46 +115,43 @@ MODULE paw_exx
     IF(.not.paw_has_init_keeq) &
         CALL errore("PAW_xx_energy", "you have to initialize paw keeq before", 1)
     !
-    PAW_xx_energy = 0._dp
-    IF(me_image/=0) RETURN
-    !
     CALL start_clock("PAW_xx_nrg")
+    PAW_xx_energy = 0._dp
+    IF(ionode) THEN
     !
-    ijkb0 = 0
     DO np = 1, ntyp
       ONLY_FOR_PAW : &
       IF ( upf(np)%tpawp ) THEN
-          DO na = 1, nat
-          IF (ityp(na)==np) THEN
-              !
-              DO ih = 1, nh(np)
-                ikb = ijkb0 + ih
-                DO jh = 1, nh(np)
-                  jkb = ijkb0 + jh
-                  DO oh = 1, nh(np)
-                    okb = ijkb0 + oh
-                    DO uh = 1, nh(np)
-                      ukb = ijkb0 + uh
-                      ! Eq. 32 and 42 Ref. 1 :
-                      PAW_xx_energy = PAW_xx_energy - 0.5_dp * ke(np)%k(ih,jh,oh,uh) &
-                                    * CONJG(becpsi(ikb)) * becpsi(okb) & ! \rho_ik eq. 31 ref. 1
-                                    * becphi(jkb) * CONJG(becphi(ukb))   ! \rho_lj eq. 31 ref. 1
-                      !
-                    ENDDO !uh, ukb
-                  ENDDO !oh, okb
-                ENDDO !jh, jkb
-              ENDDO !ih, ikb
-              !
-              ijkb0 = ijkb0 + nh(np)
-          END IF
-          ENDDO ! nat
-      ELSE ONLY_FOR_PAW 
-          DO na = 1, nat
-            IF ( ityp(na) == np ) ijkb0 = ijkb0 + nh(np)
-          ENDDO
+        DO na = 1, nat
+        IF (ityp(na)==np) THEN
+          ijkb0 = indv_ijkb0(na)
+          !
+          DO uh = 1, nh(np)
+            ukb = ijkb0 + uh
+            DO oh = 1, nh(np)
+              okb = ijkb0 + oh
+              DO jh = 1, nh(np)
+                jkb = ijkb0 + jh
+                DO ih = 1, nh(np)
+                  ikb = ijkb0 + ih
+                  ! Eq. 32 and 42 Ref. 1 :
+                  PAW_xx_energy = PAW_xx_energy - 0.5_dp * ke(np)%k(ih,jh,oh,uh) &
+                                * CONJG(becpsi(ikb)) * becpsi(okb) & ! \rho_ik eq. 31 ref. 1
+                                * becphi(jkb) * CONJG(becphi(ukb))   ! \rho_lj eq. 31 ref. 1
+                  !
+                ENDDO !ih, ukb
+              ENDDO !jh, okb
+            ENDDO !oh, jkb
+          ENDDO !uh, ikb
+          !
+        END IF
+        ENDDO ! nat
       END IF &
       ONLY_FOR_PAW 
     ENDDO
+
+    ENDIF !ionode
+    !CALL mp_sum(PAW_xx_energy)
     !
     CALL stop_clock("PAW_xx_nrg")
     RETURN
@@ -324,7 +288,8 @@ MODULE paw_exx
     INTEGER  :: ih,jh,oh,uh,k,lm
     REAL(DP) :: kexx, e
 
-    IF(what/="AE" .and. what /="PS") CALL errore("PAW_keeq", "can only do all-electron or pseudo", 1)
+    IF(what/="AE" .and. what /="PS") &
+      CALL errore("PAW_keeq", "can only do all-electron or pseudo", 1)
 
     ! Only wavefunctions on the same atom exchange, and the result only depends on the atom type
     IF (.not.upf(np)%tpawp) THEN
