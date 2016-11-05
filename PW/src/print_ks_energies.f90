@@ -14,7 +14,7 @@ SUBROUTINE print_ks_energies()
   !
   USE kinds,                ONLY : DP
   USE constants,            ONLY : rytoev
-  USE io_global,            ONLY : stdout, ionode
+  USE io_global,            ONLY : stdout
   USE klist,                ONLY : xk, ngk, nks, nkstot, wk, lgauss, &
                                    two_fermi_energies
   USE ktetra,               ONLY : ltetra
@@ -116,8 +116,6 @@ SUBROUTINE print_ks_energies()
   !
   IF ( .NOT. lbands ) THEN
      !
-     CALL get_homo_lumo (ehomo, elumo)
-     !
      IF ( lgauss .OR. ltetra ) THEN
         !
         ! ... presumably a metal: print Fermi energy
@@ -131,6 +129,8 @@ SUBROUTINE print_ks_energies()
      ELSE IF ( .NOT. one_atom_occupations ) THEN
         !
         ! ... presumably not a metal: print HOMO (and LUMO if available)
+        !
+        CALL get_homo_lumo (ehomo, elumo)
         !
         IF ( elumo < 1d+6) THEN
            WRITE( stdout, 9042 ) ehomo*rytoev, elumo*rytoev
@@ -165,80 +165,49 @@ END SUBROUTINE print_ks_energies
 SUBROUTINE get_homo_lumo ( ehomo, elumo )
   !----------------------------------------------------------------------------
   !
-  ! ... Compute estimated HOMO and LUMO from electron counting
-  ! ... This is done also for metals, in order to check if there is a gap
+  ! ... Compute estimated HOMO and LUMO from occupations
+  ! ... HOMO = largest  E_k with occupation > eps (set to 0.001, see below)
+  ! ... LUMO = smallest E_k with occupation < eps
+  ! ... Can be done also for metals, in order to check if there is a gap
   ! ... If LUMO is not available, a large 1.0D+6 value is returned
+  ! ... In parallel execution, only "ionode" returns the correct values
   !
-  USE kinds,                ONLY : DP
-  USE klist,                ONLY : nelec, nkstot, nelup, neldw
-  USE lsda_mod,             ONLY : nspin
-  USE wvfct,                ONLY : nbnd, et
-  USE fixed_occ,            ONLY : f_inp, tfixed_occ
+  USE kinds,                ONLY : dp
+  USE klist,                ONLY : nkstot, wk
+  USE wvfct,                ONLY : nbnd, et, wg
+  USE io_global,            ONLY : ionode
   !
   IMPLICIT NONE
   !
+  REAL(dp), PARAMETER :: eps = 0.001_dp ! threshold for zero occupancy
   REAL(DP), INTENT(OUT) :: &
       ehomo, elumo   ! highest occupied and lowest unoccupied levels
 
   INTEGER :: &
-      kbnd,         &! counter on bands
-      ibnd_up,      &! position of HOMO (spin-up bands)
-      ibnd_dw,      &! position of HOMO (spin-down bands)
-      ibnd           ! position of HOMO (non-LSDA case)
+      kbnd,         &! possible position of HOMO
+      ibnd, ik       ! counters on bands and k-points
   !
   ehomo=-1D+6
   elumo=+1D+6
   !
-  ibnd    = 0
-  ibnd_up = 0
-  ibnd_dw = 0
+  IF ( .NOT. ionode ) RETURN
   !
-  ! ... store in ibnd the position of the presumed HOMO
-  ! ... (or in ibnd_up, ibnd_dw for LSDA calculations)
-  !
-  IF ( tfixed_occ ) THEN
-     DO kbnd = 1, nbnd
-        IF ( nspin == 1 .OR. nspin == 4 ) THEN
-           IF ( f_inp(kbnd,1) > 0.D0 ) ibnd = kbnd
-        ELSE
-           IF ( f_inp(kbnd,1) > 0.D0 ) ibnd_up = kbnd
-           IF ( f_inp(kbnd,2) > 0.D0 ) ibnd_dw = kbnd
+  k_loop: DO ik = 1, nkstot
+     ! exclude states with zero weight (present in phonon calculation)
+     IF ( ABS(wk(ik)) > 1.d-10) THEN
+        kbnd = nbnd
+        band_loop: DO ibnd = 1, nbnd
+           ! Allow for negative occupancies (arising in Methfessel-Paxton)
+           IF ( ABS(wg(ibnd,ik)) / wk(ik) < eps ) THEN
+              kbnd = ibnd - 1
+              EXIT band_loop
+           END IF
+        END DO band_loop
+        ehomo = MAX ( ehomo, et(kbnd,ik) )
+        IF ( kbnd < nbnd ) THEN
+           elumo = MIN ( elumo, et(kbnd+1,ik) )
         END IF
-     END DO
-  ELSE
-     IF ( nspin == 1 ) THEN
-        ibnd = NINT( nelec ) / 2
-     ELSE IF ( nspin == 4 ) THEN
-        ibnd = NINT( nelec )
-     ELSE
-        ibnd_up = NINT( nelup )
-        ibnd_dw = NINT( neldw )
      END IF
-  END IF
-  !
-  ! ... estimate HOMO and LUMO (or just the HOMO if LUMO is not there)
-  !
-  IF ( nspin == 1 .OR. nspin == 4 ) THEN
-     IF ( ibnd > 0 .AND. ibnd <= nbnd ) THEN
-        ehomo = MAXVAL( et(ibnd,  1:nkstot) )
-     END IF
-     IF ( ibnd > 0 .AND. ibnd < nbnd ) THEN
-        elumo = MINVAL( et(ibnd+1,1:nkstot) )
-     END IF
-  ELSE
-     IF ( ibnd_up == 0 .AND. ibnd_dw > 0 .AND. ibnd_dw <= nbnd) THEN
-        ehomo = MAXVAL( et(ibnd_dw,1:nkstot/2) )
-     ELSE IF ( ibnd_dw == 0 .AND. ibnd_up > 0 .AND. ibnd_up <= nbnd) THEN
-        ehomo = MAXVAL( et(ibnd_up,1:nkstot/2) )
-     ELSE IF ( ibnd_dw > 0 .AND. ibnd_up > 0 .AND. &
-               ibnd_dw <= nbnd .AND. ibnd_up <= nbnd) THEN
-        ehomo = MAX( MAXVAL( et(ibnd_up,1:nkstot/2) ), &
-                     MAXVAL( et(ibnd_dw,nkstot/2+1:nkstot) ) )
-     END IF
-     IF ( ibnd_up < nbnd .AND. ibnd_dw < nbnd ) THEN
-        elumo = MIN( MINVAL( et(ibnd_up+1,1:nkstot/2) ), &
-                     MINVAL( et(ibnd_dw+1,nkstot/2+1:nkstot) ) )
-     ENDIF
-  END IF
+  END DO k_loop
   !
 END SUBROUTINE get_homo_lumo
