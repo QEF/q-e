@@ -1142,7 +1142,7 @@ SUBROUTINE PAW_rho_lm(i, becsum, pfunc, rho_lm, aug)
     REAL(DP), INTENT(IN)  :: pfunc(i%m,i%b,i%b)             ! psi_i * psi_j
     REAL(DP), INTENT(OUT) :: rho_lm(i%m,i%l**2,nspin_mag)       ! AE charge density on rad. grid
     REAL(DP), OPTIONAL,INTENT(IN) :: &
-                             aug(i%m,i%b*(i%b+1)/2,0:2*upf(i%t)%lmax) ! augmentation functions (only for PS part)
+                             aug(i%m,(i%b*(i%b+1))/2,0:2*upf(i%t)%lmax) ! augmentation functions (only for PS part)
 
     REAL(DP)                :: pref ! workspace (ap*becsum)
 
@@ -1177,7 +1177,7 @@ SUBROUTINE PAW_rho_lm(i, becsum, pfunc, rho_lm, aug)
             ijh = ijh+1
             nb = indv(ih,i%t)
             mb = indv(jh,i%t)
-            nmb = mb * (mb-1)/2 + nb  ! mb has to be .ge. nb
+            nmb = (mb*(mb-1))/2 + nb  ! mb has to be .ge. nb
             !write(*,'(99i4)') nb,mb,nmb
             IF (ABS(becsum(ijh,i%a,ispin)) < eps12) CYCLE
             !

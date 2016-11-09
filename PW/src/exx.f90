@@ -674,7 +674,7 @@ MODULE exx
     USE uspp,                 ONLY : nkb, vkb, okvan
     USE us_exx,               ONLY : rotate_becxx
     USE paw_variables,        ONLY : okpaw
-    USE paw_exx,              ONLY : PAW_init_keeq
+    USE paw_exx,              ONLY : PAW_init_fock_kernel
     USE mp_pools,             ONLY : me_pool, my_pool_id, root_pool, nproc_pool, &
                                      inter_pool_comm, my_pool_id, intra_pool_comm
     USE mp_orthopools,        ONLY : intra_orthopool_comm
@@ -928,7 +928,7 @@ MODULE exx
     !
     ! Initialize 4-wavefunctions one-center Fock integrals
     !    \int \psi_a(r)\phi_a(r)\phi_b(r')\psi_b(r')/|r-r'|
-    IF(okpaw) CALL PAW_init_keeq()
+    IF(okpaw) CALL PAW_init_fock_kernel()
     !
 #if defined(__EXX_ACE)
     CALL aceinit ( )
