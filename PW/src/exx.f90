@@ -17,6 +17,7 @@ MODULE exx
   USE fft_custom,           ONLY : fft_cus
   !
   USE control_flags,        ONLY : gamma_only, tqr
+  USE io_global,            ONLY : stdout
 
   IMPLICIT NONE
   SAVE
@@ -127,7 +128,6 @@ MODULE exx
     USE mp_bands,     ONLY : intra_bgrp_comm
     USE control_flags,ONLY : tqr
     USE realus,       ONLY : qpointlist, tabxx, tabp!, tabs
-    USE io_global,    ONLY : stdout
 
     IMPLICIT NONE
 
@@ -274,7 +274,6 @@ MODULE exx
     USE noncollin_module, ONLY : nspin_lsda
     USE klist,      ONLY : xk, wk, nkstot, nks, qnorm
     USE wvfct,      ONLY : nbnd
-    USE io_global,  ONLY : stdout
     USE start_k,    ONLY : nk1,nk2,nk3
     USE mp_pools,   ONLY : npool
     USE control_flags, ONLY : iverbosity
@@ -503,7 +502,6 @@ MODULE exx
     !------------------------------------------------------------------------
     !
     USE cell_base,  ONLY : at, alat
-    USE io_global,  ONLY : stdout
     USE funct,      ONLY : get_screening_parameter
     !
     IMPLICIT NONE
@@ -2704,11 +2702,11 @@ IMPLICIT NONE
   CHARACTER(len=50) :: frmt
   CHARACTER(len=*) :: label
 
-  WRITE(*,'(A)') label
+  WRITE(stdout,'(A)') label
   frmt = ' '
   WRITE(frmt,'(A,I4,A)') '(',m,'f16.10)'
   DO i = 1,n
-    WRITE(*,frmt) A(i,:)
+    WRITE(stdout,frmt) A(i,:)
   ENDDO
 END SUBROUTINE
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -2733,7 +2731,6 @@ SUBROUTINE aceinit( )
                          bec_type, calbec
   USE lsda_mod,   ONLY : current_spin, lsda, isk
   USE io_files,   ONLY : nwordwfc, iunwfc
-  USE io_global,  ONLY : stdout
   USE buffers,    ONLY : get_buffer
   USE mp_pools,   ONLY : inter_pool_comm
   USE mp_bands,   ONLY : intra_bgrp_comm
@@ -2851,10 +2848,10 @@ IMPLICIT NONE
     CALL matcalc('ACE',.true.,.false.,nnpw,nbnd,nbnd,phi,vv,rmexx,exxe)
     DEALLOCATE( rmexx )
 #if defined(__DEBUG)
-    WRITE(*,'(4(A,I3),A,I9,A,f12.6)') 'vexxace: nbnd=', nbnd, ' nbndproj=',nbndproj, &
+    WRITE(stdout,'(4(A,I3),A,I9,A,f12.6)') 'vexxace: nbnd=', nbnd, ' nbndproj=',nbndproj, &
                                               ' k=',current_k,' spin=',current_spin,' npw=',nnpw, ' E=',exxe
   ELSE
-    WRITE(*,'(4(A,I3),A,I9)')         'vexxace: nbnd=', nbnd, ' nbndproj=',nbndproj, &
+    WRITE(stdout,'(4(A,I3),A,I9)')         'vexxace: nbnd=', nbnd, ' nbndproj=',nbndproj, &
                                               ' k=',current_k,' spin=',current_spin,' npw=',nnpw
 #endif
   ENDIF
@@ -2897,7 +2894,7 @@ IMPLICIT NONE
     DO i = 1,n
      ee = ee + wg(i,current_k)*mat(i,i)
     ENDDO
-    WRITE(*,'(A,f16.8,A)') string//label, ee, ' Ry'
+    !WRITE(stdout,'(A,f16.8,A)') string//label, ee, ' Ry'
   ENDIF
 
   CALL stop_clock('matcalc')
@@ -2962,7 +2959,7 @@ TYPE(bec_type), INTENT(in) :: becpsi
 ! mexx = <phi|Vx[phi]|phi>
   CALL matcalc_k('exact',.true.,.false.,current_k,npwx*npol,nbndproj,nbndproj,phi,xitmp,mexx,exxe)
 #if defined(__DEBUG)
-  WRITE(*,'(3(A,I3),A,I9,A,f12.6)') 'aceinit_k: nbnd=', nbnd, ' nbndproj=',nbndproj, &
+  WRITE(stdout,'(3(A,I3),A,I9,A,f12.6)') 'aceinit_k: nbnd=', nbnd, ' nbndproj=',nbndproj, &
                                     ' k=',current_k,' npw=',nnpw,' Ex(k)=',exxe
 #endif
 ! |xi> = -One * Vx[phi]|phi> * rmexx^T
@@ -3011,7 +3008,7 @@ IMPLICIT NONE
     DO i = 1,n
       ee = ee + wg(i,ik)*DBLE(mat(i,i))
     ENDDO
-    !write(*,'(A,f16.8,A)') string//label, ee, ' Ry'
+    !write(stdout,'(A,f16.8,A)') string//label, ee, ' Ry'
   ENDIF
 
   CALL stop_clock('matcalc')
@@ -3025,18 +3022,18 @@ IMPLICIT NONE
   CHARACTER(len=50) :: frmt
   CHARACTER(len=*) :: label
 
-  WRITE(*,'(A)') label//'(real)'
+  WRITE(stdout,'(A)') label//'(real)'
   frmt = ' '
   WRITE(frmt,'(A,I4,A)') '(',m,'f12.6)'
   DO i = 1,n
-    WRITE(*,frmt) dreal(A(i,:))
+    WRITE(stdout,frmt) dreal(A(i,:))
   ENDDO
 
-  WRITE(*,'(A)') label//'(imag)'
+  WRITE(stdout,'(A)') label//'(imag)'
   frmt = ' '
   WRITE(frmt,'(A,I4,A)') '(',m,'f12.6)'
   DO i = 1,n
-    WRITE(*,frmt) aimag(A(i,:))
+    WRITE(stdout,frmt) aimag(A(i,:))
   ENDDO
 END SUBROUTINE
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -3102,10 +3099,10 @@ IMPLICIT NONE
   IF(domat) THEN
      CALL matcalc_k('ACE',.true.,.false.,current_k,npwx*npol,nbnd,nbnd,phi,vv,cmexx,exxe)
 #if defined(__DEBUG)
-    WRITE(*,'(3(A,I3),A,I9,A,f12.6)') 'vexxace_k: nbnd=', nbnd, ' nbndproj=',nbndproj, &
+    WRITE(stdout,'(3(A,I3),A,I9,A,f12.6)') 'vexxace_k: nbnd=', nbnd, ' nbndproj=',nbndproj, &
                    ' k=',current_k,' npw=',nnpw, ' Ex(k)=',exxe
   ELSE
-    WRITE(*,'(3(A,I3),A,I9)') 'vexxace_k: nbnd=', nbnd, ' nbndproj=',nbndproj, &
+    WRITE(stdout,'(3(A,I3),A,I9)') 'vexxace_k: nbnd=', nbnd, ' nbndproj=',nbndproj, &
                    ' k=',current_k,' npw=',nnpw
 #endif
   ENDIF
