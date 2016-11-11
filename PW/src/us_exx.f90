@@ -433,7 +433,7 @@ MODULE us_exx
                    !
                    deexx(ikb) = deexx(ikb) + fact*zdotc(ngms, aux2, 1, aux1, 1)
                    IF( gamma_only .AND. gstart == 2 ) &
-                        deexx(ikb) =  deexx(ikb) - fact*CONJG (aux2(1))*aux1(1)
+                        deexx(ikb) =  deexx(ikb) - omega*CONJG (aux2(1))*aux1(1)
                 ENDDO
              ENDIF
              !
