@@ -46,7 +46,7 @@
                             eliashberg, imag_read, kerread, kerwrite, lunif, specfun, &
                             fermi_energy, efermi_read, max_memlt, fila2f, &
                             ep_coupling, nw_specfun, wmax_specfun, &
-                            wmin_specfun, laniso, lpolar, &
+                            wmin_specfun, laniso, lpolar, lifc, asr_typ, &
                             proj, write_wfn, iswitch, ntempxx, &
                             liso, lacon, lpade, etf_mem, epbwrite, &
                             nsiter, conv_thr_racon, &
@@ -113,7 +113,7 @@
        broyden_beta, broyden_ndim, nstemp, tempsmin, tempsmax, temps,          &
        conv_thr_raxis, conv_thr_iaxis, conv_thr_racon,                         &
        gap_edge, nsiter, muc, lreal, limag, lpade, lacon, liso, laniso, lpolar,& 
-       lunif, kerwrite, kerread, imag_read, eliashberg,                        & 
+       lifc, asr_typ, lunif, kerwrite, kerread, imag_read, eliashberg,         & 
        ep_coupling, fila2f, max_memlt, efermi_read, fermi_energy,              &
        specfun, wmin_specfun, wmax_specfun, nw_specfun, system_2d,             & 
        delta_approx, scattering, int_mob, scissor, ncarrier, carrier,          &
@@ -231,6 +231,8 @@
   !
   ! added by CV & SP
   ! lpolar : if .true. enable the correct Wannier interpolation in the case of polar material.  
+  ! lifc : if .true. reads interatomic force constants produced by q2r.x for phonon interpolation
+  ! asr_typ : select type of ASR if lifc=.true. (as in matdyn); otherwise it is the usual simple sum rule
   ! 
   ! Added by SP
   !
@@ -379,6 +381,8 @@
   liso    = .false.
   laniso  = .false.
   lpolar  = .false.
+  lifc    = .false.
+  asr_typ = 'simple'
   kerwrite= .false.
   kerread = .false.
   imag_read = .false.

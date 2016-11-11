@@ -32,7 +32,7 @@
   USE ions_base,     ONLY : nat, amass, ityp, tau
   USE phcom,         ONLY : nq1, nq2, nq3, nmodes
   USE epwcom,        ONLY : nbndsub, lrepmatf, fsthick, epwread, longrange,     &
-                            epwwrite, ngaussw, degaussw, lpolar,                &
+                            epwwrite, ngaussw, degaussw, lpolar, lifc,          &
                             nbndskip, parallel_k, parallel_q, etf_mem,          &
                             elecselfen, phonselfen, nest_fn, a2f,               &
                             vme, eig_read, ephwrite, nkf1, nkf2, nkf3,          & 
@@ -50,7 +50,7 @@
                             wkf, dynq, nqtotf, nkqf, epf17, nkf, nqf, et_ks,    &
                             ibndmin, ibndmax, lambda_all, dmec, dmef, vmef,     &
                             sigmai_all, sigmai_mode, gamma_all, epsi, zstar,    &
-                            efnew
+                            efnew, ifc
 #if defined(__NAG)
   USE f90_unix_io,   ONLY : flush
 #endif
@@ -124,6 +124,10 @@
   !! Integer of xkk when multiplied by nkf/nk
   INTEGER :: ir
   !! Counter for WS loop
+  INTEGER :: nrws
+  !! Number of real-space Wigner-Seitz
+  INTEGER, PARAMETER :: nrwsx=200
+  !! Maximum number of real-space Wigner-Seitz
   !  
   REAL(kind=DP) :: rdotk_scal
   !! Real (instead of array) for $r\cdot k$
@@ -135,6 +139,10 @@
   !! Current k-point on the fine grid
   REAL(kind=DP) :: xkq(3)
   !! Current k+q point on the fine grid
+  REAL(kind=DP) :: rws(0:3,nrwsx)
+  !! Real-space wigner-Seitz vectors
+  REAL(kind=DP) :: atws(3,3)
+  !! Maximum vector: at*nq
   REAL(kind=DP), EXTERNAL :: efermig
   !! External function to calculate the fermi energy
   REAL(kind=DP), EXTERNAL :: efermig_seq
@@ -331,8 +339,8 @@
      !
      ! Dynamical Matrix 
      !
-     CALL dynbloch2wan &
-          ( nmodes, nqc, xqc, dynq, nrr_q, irvec, wslen )
+     IF (.not. lifc) CALL dynbloch2wan &
+                          ( nmodes, nqc, xqc, dynq, nrr_q, irvec, wslen )
      !
      ! Transform of position matrix elements
      ! PRB 74 195118  (2006)
@@ -622,6 +630,17 @@
   !
   ! ---------------------------------------------------------------------------------------
   ! ---------------------------------------------------------------------------------------
+  IF (lifc) THEN
+    !
+    ! build the WS cell corresponding to the force constant grid
+    !
+    atws(:,1) = at(:,1)*DBLE(nq1)
+    atws(:,2) = at(:,2)*DBLE(nq2)
+    atws(:,3) = at(:,3)*DBLE(nq3)
+    ! initialize WS r-vectors
+    CALL wsinit(rws,nrwsx,nrws,atws)
+  ENDIF
+  !
   IF (parallel_k) THEN
     !
     ! get the size of the matrix elements stored in each pool
@@ -652,8 +671,12 @@
        ! dynamical matrix : Wannier -> Bloch
        ! ------------------------------------------------------
        !
-       CALL dynwan2bloch &
-            ( nmodes, nrr_q, irvec, ndegen_q, xxq, uf, w2 )
+       IF (.not. lifc) THEN
+          CALL dynwan2bloch &
+               ( nmodes, nrr_q, irvec, ndegen_q, xxq, uf, w2 )
+       ELSE
+          CALL dynifc2blochf ( nmodes, rws, nrws, xxq, uf, w2 ) 
+       ENDIF
        !
        ! ...then take into account the mass factors and square-root the frequencies...
        !
@@ -1217,24 +1240,11 @@
     ENDDO
     !
     IF (etf_mem) THEN
-   !   lrepmatw   = 2 * nbndsub * nbndsub * nrr_k * nmodes * nrr_q
-   !   i = 0
-   !   DO irq = 1, nrr_q
-   !     DO imode = 1, nmodes
-   !       DO irk = 1, nrr_k
-   !         DO jbnd = 1, nbndsub
-   !           DO ibnd = 1, nbndsub
-   !             i = i + 1
-   !             aux (i) = epmatwp(ibnd,jbnd,irk,imode,irq)
-   !           ENDDO
-   !         ENDDO
-   !       ENDDO
-   !     ENDDO
-   !   ENDDO
-     ! inquire(iunepmatwp,opened=exst)
-     ! print*,'exst ',exst
-     ! FLUSH(6)
-
+      ! SP: The call to aux is now inside the loop
+      !     This is important as otherwise the lrepmatw integer 
+      !     could become too large for integer(kind=4).
+      !     Note that in Fortran the record length has to be a integer
+      !     of kind 4. 
       lrepmatw   = 2 * nbndsub * nbndsub * nrr_k * nmodes
       filint    = trim(prefix)//'.epmatwp'
       CALL diropn (iunepmatwp, 'epmatwp', lrepmatw, exst)
@@ -1252,13 +1262,7 @@
         ENDDO
         CALL davcio ( aux, lrepmatw, iunepmatwp, irq, +1 )
       ENDDO
-      !DBSP
-      !filint    = trim(prefix)//'.epmatwp'
-      !!DBSP
-      !print*,'lrepmatw ',lrepmatw
-      !FLUSH(6)
-      !CALL diropn (iunepmatwp, 'epmatwp', lrepmatw, exst)
-      !CALL davcio ( aux, lrepmatw, iunepmatwp, 1, +1 )
+      ! 
       CLOSE(iunepmatwp)
       IF (ALLOCATED(epmatwp)) DEALLOCATE ( epmatwp )
     ENDIF 
@@ -1278,9 +1282,9 @@
   SUBROUTINE epw_read()
   !---------------------------------
   USE kinds,     ONLY : DP
-  USE epwcom,    ONLY : nbndsub, vme, eig_read, etf_mem
+  USE epwcom,    ONLY : nbndsub, vme, eig_read, etf_mem, lifc
   USE pwcom,     ONLY : ef
-  USE elph2,     ONLY : nrr_k, nrr_q, chw, rdw, epmatwp, &
+  USE elph2,     ONLY : nrr_k, nrr_q, chw, rdw, ifc, epmatwp, &
                         cdmew, cvmew, chw_ks, zstar, epsi
   USE ions_base, ONLY : nat
   USE phcom,     ONLY : nmodes  
@@ -1366,13 +1370,15 @@
        ENDDO
     ENDDO
     !
-    DO imode = 1, nmodes
-       DO jmode = 1, nmodes
-          DO irq = 1, nrr_q
-             READ (epwdata,*) rdw(imode,jmode,irq)
+    IF (.not. lifc) THEN
+       DO imode = 1, nmodes
+          DO jmode = 1, nmodes
+             DO irq = 1, nrr_q
+                READ (epwdata,*) rdw(imode,jmode,irq)
+             ENDDO
           ENDDO
        ENDDO
-    ENDDO
+    ENDIF
     !
   ENDIF
   !
@@ -1382,38 +1388,25 @@
   IF (eig_read) CALL mp_bcast (chw_ks, ionode_id, inter_pool_comm)
   IF (eig_read) CALL mp_bcast (chw_ks, root_pool, intra_pool_comm)
   !
-  CALL mp_bcast (rdw, ionode_id, inter_pool_comm)
-  CALL mp_bcast (rdw, root_pool, intra_pool_comm)
+  IF (.not. lifc) CALL mp_bcast (rdw, ionode_id, inter_pool_comm)
+  IF (.not. lifc) CALL mp_bcast (rdw, root_pool, intra_pool_comm)
   !
   CALL mp_bcast (cdmew, ionode_id, inter_pool_comm)
   CALL mp_bcast (cdmew, root_pool, intra_pool_comm)
   !
   IF (vme) CALL mp_bcast (cvmew, ionode_id, inter_pool_comm)
   IF (vme) CALL mp_bcast (cvmew, root_pool, intra_pool_comm)
+  
+  IF (lifc) CALL read_ifc
   !
   IF (etf_mem) then
     epmatwp = czero
     IF (mpime.eq.ionode_id) THEN
-      !
-     ! lrepmatw   = 2 * nbndsub * nbndsub * nrr_k * nmodes * nrr_q
-     ! filint    = trim(prefix)//'.epmatwp'
-     ! CALL diropn (iunepmatwp, 'epmatwp', lrepmatw, exst)
-     ! CALL davcio ( aux, lrepmatw, iunepmatwp, 1, -1 )
-     ! !
-     ! i = 0
-     ! DO irq = 1, nrr_q
-     !   DO imode = 1, nmodes
-     !     DO irk = 1, nrr_k
-     !       DO jbnd = 1, nbndsub
-     !         DO ibnd = 1, nbndsub
-     !           i = i + 1
-     !           epmatwp(ibnd,jbnd,irk,imode,irq) = aux(i)
-     !         ENDDO
-     !       ENDDO
-     !     ENDDO
-     !   ENDDO
-     ! ENDDO
-
+      ! SP: The call to aux is now inside the loop
+      !     This is important as otherwise the lrepmatw integer 
+      !     could become too large for integer(kind=4).
+      !     Note that in Fortran the record length has to be a integer
+      !     of kind 4.      
       lrepmatw   = 2 * nbndsub * nbndsub * nrr_k * nmodes
       filint    = trim(prefix)//'.epmatwp'
       CALL diropn (iunepmatwp, 'epmatwp', lrepmatw, exst)

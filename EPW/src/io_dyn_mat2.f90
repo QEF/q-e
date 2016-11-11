@@ -16,6 +16,8 @@
   USE iotk_module
   !
   USE kinds,     ONLY : DP
+  !USE mp,        ONLY : mp_bcast
+  USE mp_images, ONLY : intra_image_comm
   USE io_global, ONLY : ionode, ionode_id
   !
   IMPLICIT NONE
@@ -24,7 +26,8 @@
   !
   PRIVATE
   !
-  PUBLIC :: read_dyn_mat_param, read_dyn_mat_header, read_dyn_mat
+  PUBLIC :: read_dyn_mat_param, read_dyn_mat_header, read_dyn_mat, &
+            read_ifc_xml, read_ifc_param
   !
   INTEGER, PRIVATE :: iunout
   !
@@ -206,5 +209,76 @@
 
     RETURN
     END SUBROUTINE read_dyn_mat
+
+    SUBROUTINE read_ifc_param( nr1, nr2, nr3 )
+!
+!   To read the interatomic force constant the following sequence should
+!   be used:
+!   read_dyn_mat_param
+!   read_dyn_mat_header
+!   read_ifc_param
+!   read_ifc
+!
+    INTEGER, INTENT(OUT) :: nr1, nr2, nr3
+    INTEGER :: meshfft(3)
+
+    IF (ionode) THEN
+       CALL iotk_scan_begin( iunout, "INTERATOMIC_FORCE_CONSTANTS" )
+       CALL iotk_scan_dat( iunout, "MESH_NQ1_NQ2_NQ3", meshfft )
+       nr1 = meshfft(1)
+       nr2 = meshfft(2)
+       nr3 = meshfft(3)
+
+       CALL iotk_scan_end( iunout, "INTERATOMIC_FORCE_CONSTANTS" )
+    ENDIF
+    !CALL mp_bcast(nr1, ionode_id, intra_image_comm)
+    !CALL mp_bcast(nr2, ionode_id, intra_image_comm)
+    !CALL mp_bcast(nr3, ionode_id, intra_image_comm)
+    RETURN
+    END SUBROUTINE read_ifc_param
+
+
+    SUBROUTINE read_ifc_xml( nr1, nr2, nr3, nat, phid)
+
+    INTEGER, INTENT(IN) :: nr1, nr2, nr3, nat
+    REAL(DP), INTENT(OUT) :: phid(nr1*nr2*nr3,3,3,nat,nat)
+    INTEGER :: na, nb, nn, m1, m2, m3
+    REAL(DP) :: aux(3,3)
+
+    IF (ionode) THEN
+       CALL iotk_scan_begin( iunout, "INTERATOMIC_FORCE_CONSTANTS" )
+
+       DO na=1,nat
+          DO nb=1,nat
+             nn=0
+             DO m3=1,nr3
+                DO m2=1,nr2
+                   DO m1=1,nr1
+                      nn=nn+1
+                      CALL iotk_scan_begin( iunout, "s_s1_m1_m2_m3" //     &
+                          TRIM(iotk_index(na)) // TRIM(iotk_index(nb)) //  &
+                          TRIM(iotk_index(m1)) // TRIM(iotk_index(m2)) //  &
+                          TRIM(iotk_index(m3)) )
+                      CALL iotk_scan_dat( iunout, 'IFC', aux )
+                      phid(nn,:,:,na,nb) = aux(:,:)
+                      CALL iotk_scan_end( iunout, "s_s1_m1_m2_m3" //     &
+                           TRIM(iotk_index(na)) // TRIM(iotk_index(nb)) //  &
+                           TRIM(iotk_index(m1)) // TRIM(iotk_index(m2)) //  &
+                           TRIM(iotk_index(m3)) )
+                   ENDDO
+                ENDDO
+             ENDDO
+          ENDDO
+       ENDDO
+
+       CALL iotk_scan_end( iunout, "INTERATOMIC_FORCE_CONSTANTS" )
+       CALL iotk_close_read( iunout )
+    ENDIF
+    !CALL mp_bcast(phid,ionode_id, intra_image_comm)
+
+    RETURN
+    END SUBROUTINE read_ifc_xml
+
+
 
 END MODULE io_dyn_mat2

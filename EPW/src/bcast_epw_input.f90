@@ -35,7 +35,7 @@
                             ngaussw, nest_fn,  nbndsub, nbndskip, &
                             muc, mp_mesh_q, mp_mesh_k, max_memlt, lunif, &
                             lreal, lpolar, lpade, liso, limag, laniso, &
-                            specfun, &
+                            specfun, lifc, asr_typ, &
                             rand_q, rand_nq, rand_nk, rand_k, pwc, phonselfen, &
                             parallel_q, parallel_k, &
                             nw_specfun, nw, nswi, nswfc, nswc, nstemp, nsmear, &
@@ -104,6 +104,7 @@
   CALL mp_bcast (liso, ionode_id, world_comm)     !
   CALL mp_bcast (laniso, ionode_id, world_comm)     !
   CALL mp_bcast (lpolar, ionode_id, world_comm)     !
+  CALL mp_bcast (lifc, ionode_id, world_comm) 
   CALL mp_bcast (lunif, ionode_id, world_comm)     !
   CALL mp_bcast (kerwrite, ionode_id, world_comm)     !
   CALL mp_bcast (kerread, ionode_id, world_comm)     !
@@ -197,6 +198,7 @@
 !  CALL mp_bcast (fildvscf0, ionode_id, world_comm) !
   CALL mp_bcast (dvscf_dir, ionode_id, world_comm)
   CALL mp_bcast (fila2f, ionode_id, world_comm)     ! RM
+  CALL mp_bcast (asr_typ, ionode_id, world_comm)
 #endif
   !
 END SUBROUTINE bcast_ph_input
