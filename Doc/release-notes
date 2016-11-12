@@ -6,7 +6,7 @@ Incompatible changes in svn version:
 
   * Routine h_psiq deleted
 
-Fixed in svn versions
+Fixed in svn version
 
   * PP: incorrect results in "projwfc.x" with PAW projection due to a 
         missing line (r13121)
@@ -14,11 +14,13 @@ Fixed in svn versions
         due to missing reset of FFT dimensions (r13116)
   * FD: dangerous "q==0" check in matdyn.f90 (r13109)
   * Misc errors in new schema-based xml I/O (r13110, r13113)
-  * CPV: stress with nonlocal DFT incorrect in parallel (r13102)
+  * CPV: stress and potential in nonlocal vdw-DF case were not correctly
+         computed (r13102, r13143)
   * PWGui: double-hyphen glitch with old tcllib for NEB (r13101)
   * GWW wasn't working at all (r13099, r13100, r13106)
   * PW: ACE energy slightly off, leading to crash, for metals (r13095)
-    and for USPP (r13111)
+    and for USPP (r13111). Also: small error in gamma-only USPP hybrid 
+    calculations using G space could lead to crashes (r13142)
   * Some Wyckoff site labels were incorrect (r13083, r13124)
     Also: symmetry analysis improved (r13094)
 

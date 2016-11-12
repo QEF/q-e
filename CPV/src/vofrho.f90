@@ -363,10 +363,14 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       !
       IF ( dft_is_nonlocc() ) THEN
          !
-         ! ... UGLY HACK WARNING: nlc adds nonlocal term (Ry) to input energy
+         ! ... UGLY HACK WARNING: nlc adds nonlocal term IN RYDBERG A.U.
+         ! ... to input energy and potential (potential is stored in rhor)
          !
          enlc = 0.0_dp
+         vtxc = 0.0_dp
+         rhor = rhor*e2
          CALL nlc( rhosave, rhocsave, nspin, enlc, vtxc, rhor )
+         rhor = rhor/e2
          CALL mp_sum( enlc, intra_bgrp_comm )
          exc = exc + enlc / e2
          !
@@ -374,6 +378,12 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
          ! ... transformed into energy derivative (Ha), added to dxc
          !
          IF ( tpre ) THEN
+             CALL mp_sum( vtxc, intra_bgrp_comm )
+             DO i=1,3
+                DO j=1,3
+                   dxc( i, j ) = dxc( i, j ) + (enlc - vtxc)/e2*ainv( j, i )
+                END DO
+             END DO
              denlc(:,:) = 0.0_dp
              inlc = get_inlc()
 
