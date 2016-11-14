@@ -1987,7 +1987,6 @@ sum_band.o : ../../Modules/kind.o
 sum_band.o : ../../Modules/mp.o
 sum_band.o : ../../Modules/mp_bands.o
 sum_band.o : ../../Modules/mp_pools.o
-sum_band.o : ../../Modules/mp_world.o
 sum_band.o : ../../Modules/noncol.o
 sum_band.o : ../../Modules/paw_variables.o
 sum_band.o : ../../Modules/recvec.o

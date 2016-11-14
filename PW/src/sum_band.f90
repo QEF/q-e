@@ -909,10 +909,9 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   USE realus,        ONLY : real_space, &
                             invfft_orbital_gamma, calbec_rs_gamma, &
                             invfft_orbital_k, calbec_rs_k
+  USE us_exx,        ONLY : store_becxx0
   USE mp_bands,      ONLY : nbgrp,inter_bgrp_comm
   USE mp,            ONLY : mp_sum
-  USE us_exx,        ONLY : store_becxx0
-  USE mp_world,      ONLY : mpime
   USE mp_pools,      ONLY : me_pool, my_pool_id
   !
   IMPLICIT NONE
