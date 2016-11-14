@@ -221,20 +221,7 @@ touch-dummy :
 
 #########################################################
 # "make links" produces links to all executables in bin/
-# while "make inst" INSTALLDIR=/some/place" links all
-# available executables to /some/place/ (must exist and
-# be writable), prepending "qe_" to all executables (e.g.:
-# /some/place/qe_pw.x). This allows installation of QE
-# into system directories with no danger of name conflicts
 #########################################################
-
-inst : 
-	( for exe in */*/*.x */bin/* ; do \
-	   file=`basename $$exe`; if test "$(INSTALLDIR)" != ""; then \
-		if test ! -L $(PWD)/$$exe; then \
-			ln -fs $(PWD)/$$exe $(INSTALLDIR)/qe_$$file ; fi ; \
-		fi ; \
-	done )
 
 # Contains workaround for name conflicts (dos.x and bands.x) with WANT
 links : bindir
@@ -260,7 +247,7 @@ links : bindir
 
 install : touch-dummy
 	@if test -d bin ; then mkdir -p $(PREFIX)/bin ; \
-	for x in `find . -path ./test-suite -prune -o -name *.x -type f` ; do \
+	for x in `find * ! -path "test-suite/*" -name *.x -type f` ; do \
 		cp $$x $(PREFIX)/bin/ ; done ; \
 	fi
 	@echo 'Quantum ESPRESSO binaries installed in $(PREFIX)/bin'
