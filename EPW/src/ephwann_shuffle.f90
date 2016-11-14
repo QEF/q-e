@@ -232,6 +232,7 @@
       ALLOCATE( ityp( nat ) )
       READ (crystal,*) ityp
       READ (crystal,*) isk
+      READ (crystal,*) noncolin
       ! 
     ENDIF
     CALL mp_bcast (nat, ionode_id, inter_pool_comm)
@@ -1182,6 +1183,7 @@
   USE phcom,     ONLY : nmodes  
   USE io_epw,    ONLY : epwdata, iundmedata, iunvmedata, iunksdata, iunepmatwp, &
                         crystal
+  USE noncollin_module, ONLY : noncolin              
   USE io_files,  ONLY : prefix, diropn
   USE mp,        ONLY : mp_barrier
   USE mp_global, ONLY : inter_pool_comm
@@ -1214,6 +1216,7 @@
     WRITE (crystal,*) amass
     WRITE (crystal,*) ityp
     WRITE (crystal,*) isk
+    WRITE (crystal,*) noncolin
     WRITE (epwdata,*) ef
     WRITE (epwdata,*) nbndsub, nrr_k, nmodes, nrr_q
     WRITE (epwdata,*) zstar, epsi
