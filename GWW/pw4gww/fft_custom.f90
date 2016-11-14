@@ -285,7 +285,10 @@ CONTAINS
   nxx   = fc%nrxxt
   nxxs  = fc%nrxxt
 
-  fc%ngmt  = fc%dfftt%ngl (dffts%mype + 1 )
+  call errore ('data_structure_custom','serial version not working',1)
+  !!! The following line is obsolete and breaks compilation
+  !!! fc%ngmt  = fc%dfftt%ngl (dffts%mype + 1 )
+  !!!
   IF( .not. tk ) THEN
      fc%ngmt = ( fc%ngmt + 1 ) / 2 
   ENDIF
