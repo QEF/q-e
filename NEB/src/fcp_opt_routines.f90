@@ -46,7 +46,10 @@ CONTAINS
       !
       USE ions_base,      ONLY : nat, ityp, zv
       USE klist,          ONLY : tot_charge, nelec
+#if ! defined (__XSD)
       USE pw_restart,     ONLY : pw_readfile
+#else
+#endif
       USE io_files,       ONLY : prefix, tmp_dir
       USE path_variables, ONLY : restart
       USE ener,           ONLY : ef
@@ -75,7 +78,11 @@ CONTAINS
             tmp_dir = TRIM( tmp_dir_saved ) // TRIM( prefix ) // "_" // &
                  TRIM( int_to_char( i ) ) // "/"
             !
+#if ! defined (__XSD)
             CALL pw_readfile('fcpopt', ierr)
+#else
+            CALL errore('fcp_opt_routines','XSD implementation pending',1)
+#endif
             !
             fcp_neb_nelec(i) = nelec
             fcp_neb_ef   (i) = ef * e2 ! factor e2: hartree -> Ry.

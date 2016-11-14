@@ -16,7 +16,6 @@ MODULE cond_restart
   USE iotk_module
   !
   USE kinds,     ONLY : DP
-  USE qexml_module, ONLY : qexml_write_header
   USE xml_io_base, ONLY : create_directory, attr
   USE io_files,  ONLY : tmp_dir, xmlpun, iunpun, qexml_version, &
        qexml_version_init
@@ -104,7 +103,17 @@ MODULE cond_restart
          ! here we start writing the cond-punch-file
          IF ( what=='init' ) THEN
             !
-            CALL qexml_write_header("PWCOND", TRIM(version_number))
+            CALL iotk_write_begin( iunpun, "HEADER" )
+            !
+            CALL iotk_write_attr(attr, "NAME","QEXML", FIRST=.true.)
+            CALL iotk_write_attr(attr, "VERSION","1.4.0" )
+            CALL iotk_write_empty( iunpun, "FORMAT", ATTR=attr )
+            !
+            CALL iotk_write_attr(attr, "NAME","PWCOND", FIRST=.true.)
+            CALL iotk_write_attr(attr, "VERSION",TRIM(version_number) )
+            CALL iotk_write_empty( iunpun, "CREATOR", ATTR=attr )
+            !
+            CALL iotk_write_end( iunpun, "HEADER" )
             !
             CALL write_elist(nenergy, earr)
             !
