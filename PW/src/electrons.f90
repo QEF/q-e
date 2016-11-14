@@ -41,7 +41,7 @@ SUBROUTINE electrons()
                                    lambda, report
   USE uspp,                 ONLY : okvan
   USE exx,                  ONLY : exxinit, exxenergy2, exxenergy, exxbuff, &
-                                   fock0, fock1, fock2, dexx
+                                   fock0, fock1, fock2, dexx, use_ace
   USE funct,                ONLY : dft_is_hybrid, exx_is_active
   USE control_flags,        ONLY : adapt_thr, tr2_init, tr2_multi, gamma_only
   !
@@ -173,11 +173,11 @@ SUBROUTINE electrons()
         ! then calculate exchange energy (will be useful at next step)
         !
         CALL exxinit()
-#if defined(__EXX_ACE) 
-        fock2 = exxenergyace()
-#else  
-        fock2 = exxenergy2()
-#endif
+        IF ( use_ace) THEN
+           fock2 = exxenergyace()
+        ELSE
+           fock2 = exxenergy2()
+        ENDIF
         exxen = 0.50d0*fock2 
         etot = etot - etxc 
         !
@@ -197,11 +197,11 @@ SUBROUTINE electrons()
         ! fock1 is the exchange energy calculated for orbitals at step n,
         !       using orbitals at step n-1 in the expression of exchange
         !
-#if defined(__EXX_ACE)
-        fock1 = exxenergyace()
-#else  
-        fock1 = exxenergy2()
-#endif
+        IF ( use_ace) THEN
+           fock1 = exxenergyace()
+        ELSE
+           fock1 = exxenergy2()
+        ENDIF
         !
         ! Set new orbitals for the calculation of the exchange term
         !
@@ -212,11 +212,11 @@ SUBROUTINE electrons()
         ! fock0 is fock2 at previous step
         !
         fock0 = fock2
-#if defined(__EXX_ACE) 
-        fock2 = exxenergyace()
-#else  
-        fock2 = exxenergy2()
-#endif
+        IF ( use_ace) THEN
+           fock2 = exxenergyace()
+        ELSE
+           fock2 = exxenergy2()
+        ENDIF
         !
         ! check for convergence. dexx is positive definite: if it isn't,
         ! there is some numerical problem. One such cause could be that

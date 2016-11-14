@@ -20,7 +20,7 @@ SUBROUTINE memory_report()
   USE wvfct,     ONLY : nbnd, nbndx
   USE basis,     ONLY : natomwfc
   USE cell_base, ONLY : omega
-  USE exx,       ONLY : ecutfock, nkqs
+  USE exx,       ONLY : ecutfock, nkqs, use_ace
   USE fft_base,  ONLY : dffts, dfftp
   USE gvect,     ONLY : ngm, ngm_g
   USE gvecs,     ONLY : ngms, doublegrid
@@ -93,10 +93,8 @@ SUBROUTINE memory_report()
      nbnd_l = NINT( DBLE(nbnd) / nbgrp )
      ! Stored wavefunctions in real space 
      ram = ram + complex_size/g_fact * nexx_l * npol * nbnd_l * nkqs
-#if defined(__EXX_ACE)
-     ! Projectors
-     ram = ram + complex_size * npwx_l * npol * nbnd * nks
-#endif
+     ! ACE Projectors
+     IF (use_ace) ram = ram + complex_size * npwx_l * npol * nbnd * nks
   END IF
   ! Nonlocal pseudopotentials V_NL (beta functions), reciprocal space
   ram =  ram + complex_size * nkb * npwx_l

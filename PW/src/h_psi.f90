@@ -98,7 +98,7 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
                        invfft_orbital_k, fwfft_orbital_k, calbec_rs_k, add_vuspsir_k, & 
                        v_loc_psir_inplace
   USE fft_base, ONLY : dffts, dtgs
-  USE exx,      ONLY : vexx, vexxace_gamma, vexxace_k
+  USE exx,      ONLY : use_ace, vexx, vexxace_gamma, vexxace_k
   USE funct,    ONLY : exx_is_active
   !
   IMPLICIT NONE
@@ -230,15 +230,15 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   ! ... (not in the real-space case: it is done together with V_loc)
   !
   IF ( exx_is_active() ) THEN
-#if defined(__EXX_ACE) 
-     IF (gamma_only) THEN
-        CALL vexxace_gamma(lda,m,psi,ee,hpsi)
+     IF ( use_ace) THEN
+        IF (gamma_only) THEN
+           CALL vexxace_gamma(lda,m,psi,ee,hpsi)
+        ELSE
+           CALL vexxace_k(lda,m,psi,ee,hpsi) 
+        END IF
      ELSE
-        CALL vexxace_k(lda,m,psi,ee,hpsi) 
+        CALL vexx( lda, n, m, psi, hpsi, becp )
      END IF
-#else  
-     CALL vexx( lda, n, m, psi, hpsi, becp )
-#endif
   END IF
   !
   ! ... electric enthalpy if required

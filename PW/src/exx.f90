@@ -8,7 +8,7 @@
 !--------------------------------------
 MODULE exx
   !--------------------------------------
-!   !
+  !
   USE kinds,                ONLY : DP
   USE coulomb_vcut_module,  ONLY : vcut_init, vcut_type, vcut_info, &
                                    vcut_get,  vcut_spheric_get
@@ -46,8 +46,13 @@ MODULE exx
 
   COMPLEX(DP), ALLOCATABLE :: exxbuff(:,:,:)
                                          ! temporary buffer for wfc storage
-!civn
-  COMPLEX(DP), ALLOCATABLE :: xi(:,:,:)
+  !
+#if defined(__EXX_ACE)
+  LOGICAL :: use_ace=.true.              ! Use Lin Lin's ACE method
+#else
+  LOGICAL :: use_ace=.false. 
+#endif
+  COMPLEX(DP), ALLOCATABLE :: xi(:,:,:)  ! ACE projectors
   INTEGER :: nbndproj
   LOGICAL :: domat
   !
@@ -928,9 +933,7 @@ MODULE exx
     !    \int \psi_a(r)\phi_a(r)\phi_b(r')\psi_b(r')/|r-r'|
     IF(okpaw) CALL PAW_init_fock_kernel()
     !
-#if defined(__EXX_ACE)
-    CALL aceinit ( )
-#endif
+    IF ( use_ace) CALL aceinit ( )
     !
     CALL stop_clock ('exxinit')
     !
