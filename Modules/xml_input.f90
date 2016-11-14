@@ -10,6 +10,7 @@
 !
 MODULE xml_input
 
+#if ! defined (__XSD)
    USE xml_io_base, ONLY : attr
    USE qexml_module, ONLY: qexml_init, qexml_write_header, qexml_openfile, &
                            qexml_closefile
@@ -171,6 +172,14 @@ MODULE xml_input
          CALL iotk_write_end( iunpun, "KEYWORD" )
       RETURN
    END SUBROUTINE
+#else
 
+   PUBLIC :: xml_input_dump
+   CONTAINS
+   SUBROUTINE xml_input_dump
+      CALL infomsg('xml_input_dump','no longer available')
+   END SUBROUTINE xml_input_dump
+
+#endif
 
 END MODULE

@@ -18,6 +18,7 @@ MODULE pw_restart
   !
   ! ... originally written by Carlo Sbraccia  (2005)
   !
+#if ! defined(__XSD)
   !
   USE iotk_module
   !
@@ -2876,6 +2877,7 @@ MODULE pw_restart
       RETURN
       !
     END SUBROUTINE gk_l2gmap_kdip
+#endif
     !
 END MODULE pw_restart
 

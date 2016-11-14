@@ -14,6 +14,7 @@ MODULE cp_restart
   !
   !
   USE iotk_module
+#if !defined (__XSD)
   USE qexml_module,     ONLY : qexml_init,qexml_openfile, qexml_closefile, &
                           qexml_write_header,qexml_write_control, qexml_write_cell, &
                           qexml_write_ions, qexml_write_planewaves, qexml_write_spin, &
@@ -23,6 +24,7 @@ MODULE cp_restart
                           qexml_read_ions, qexml_read_spin, qexml_read_occ, &
                           qexml_read_bands_info, qexml_read_bands_cp, &
                           fmt_version => qexml_default_version, qexml_wfc_filename, qexml_restart_dirname
+#endif
   USE xml_io_base,     ONLY  : write_wfc, read_wfc, write_rho_xml,read_print_counter, create_directory
   !
   USE kinds,     ONLY : DP
@@ -36,10 +38,11 @@ MODULE cp_restart
   !
   SAVE
   !
+#if !defined (__XSD)
   PRIVATE :: read_cell
+#endif
   !
   INTEGER, PRIVATE :: iunout
-  !
   !
   ! variables to describe qexml current version
   ! and back compatibility
@@ -177,6 +180,9 @@ MODULE cp_restart
       CHARACTER(iotk_attlenx)  :: attr
       REAL(DP), ALLOCATABLE :: temp_vec(:), wfc_temp(:,:) ! BS 
       !
+#if defined (__XSD)
+      CALL errore('cp_writefile','XSD under development',1)
+#else
       ! ... subroutine body
       !
       write_charge_density = trhow
@@ -912,6 +918,7 @@ MODULE cp_restart
                 '(3X,"restart file written in ",F8.3," sec.",/)' ) ( s1 - s0 )
          !
       END IF
+#endif 
       !
       RETURN
       !
@@ -1034,6 +1041,9 @@ MODULE cp_restart
       CHARACTER(LEN=256)    :: tmp_dir_save
       INTEGER               :: io_bgrp_id
       CHARACTER(iotk_attlenx)  :: attr
+#if defined (__XSD)
+      CALL errore('cp_readfile','XSD under development',1)
+#else
       !
       ! ... look for an empty unit
       !
@@ -1782,6 +1792,7 @@ MODULE cp_restart
          CALL read_print_counter( nprint_nfi, tmp_dir, ndr )
          IF( iverbosity > 1 ) write( stdout,*) 'nprint_nfi= ',nprint_nfi
       endif
+#endif
       !
       RETURN
       !
@@ -1811,6 +1822,9 @@ MODULE cp_restart
       INTEGER            :: io_bgrp_id
       REAL(DP)           :: scalef
       !
+#if defined (__XSD)
+      CALL errore('cp_read_wfc','XSD under development',1)
+#else
       kunit = 1
       !
       ik_eff = ik + ( iss - 1 ) * nk
@@ -1859,6 +1873,7 @@ MODULE cp_restart
       CALL mp_sum( io_bgrp_id, inter_bgrp_comm )
       CALL mp_sum( io_bgrp_id, intra_bgrp_comm )
       CALL mp_bcast( c2, io_bgrp_id, inter_bgrp_comm )
+#endif
       !
       RETURN
       !
@@ -1889,6 +1904,9 @@ MODULE cp_restart
       INTEGER            :: ik_eff, ib, nb, kunit, iss_, nspin_, ngwt_, nbnd_
       REAL(DP)           :: scalef
       !
+#if defined (__XSD)
+      CALL errore('cp_read_wfc_Kong','XSD under development',1)
+#else
       kunit = 1
       !
       ik_eff = ik + ( iss - 1 ) * nk
@@ -1932,6 +1950,7 @@ MODULE cp_restart
                      inter_bgrp_comm, intra_pool_comm )
 
       !
+#endif
       RETURN
       !
     END SUBROUTINE cp_read_wfc_Kong
@@ -1972,6 +1991,9 @@ MODULE cp_restart
       REAL(DP)         :: b1_(3), b2_(3), b3_(3)
       CHARACTER(iotk_attlenx)  :: attr
       !
+#if defined (__XSD)
+      CALL errore('cp_read_cell','XSD under development',1)
+#else
       !
       dirname = qexml_restart_dirname( tmp_dir, prefix, ndr ) 
       !
@@ -2079,11 +2101,13 @@ MODULE cp_restart
       CALL mp_bcast( vnhh,  ionode_id, intra_image_comm )
       !
       IF ( ionode ) CALL iotk_close_read( iunpun )
+#endif
       !
       RETURN
       !
     END SUBROUTINE cp_read_cell
     !
+#if !defined (__XSD)
     !------------------------------------------------------------------------    !------------------------------------------------------------------------
     !SUBROUTINE read_ions( nsp, nat, atm, ityp, psfile, &
     !                      amass, tau, if_pos, pos_unit, ierr )
@@ -2430,6 +2454,6 @@ MODULE cp_restart
        RETURN
 
     END SUBROUTINE write_gk
-    !
+#endif
     !
 END MODULE cp_restart

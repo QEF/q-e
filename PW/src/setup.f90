@@ -81,13 +81,13 @@ SUBROUTINE setup()
   USE noncollin_module,   ONLY : noncolin, npol, m_loc, i_cons, &
                                  angle1, angle2, bfield, ux, nspin_lsda, &
                                  nspin_gga, nspin_mag
-! 
+#if defined(__XSD) 
   USE pw_restart_new,     ONLY : pw_readschema_file, init_vars_from_schema 
   USE qes_libs_module,    ONLY : qes_reset_output, qes_reset_input, qes_reset_parallel_info, qes_reset_general_info
   USE qes_types_module,   ONLY : output_type, input_type, parallel_info_type, general_info_type 
-!
+#else
   USE pw_restart,         ONLY : pw_readfile
-!
+#endif
   USE exx,                ONLY : ecutfock, exx_grid_init, exx_mp_init, exx_div_check
   USE funct,              ONLY : dft_is_meta, dft_is_hybrid, dft_is_gradient
   USE paw_variables,      ONLY : okpaw
