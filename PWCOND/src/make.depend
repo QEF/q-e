@@ -21,7 +21,6 @@ cond_restart.o : ../../Modules/kind.o
 cond_restart.o : ../../Modules/mp.o
 cond_restart.o : ../../Modules/mp_global.o
 cond_restart.o : ../../Modules/parser.o
-cond_restart.o : ../../Modules/qexml.o
 cond_restart.o : ../../Modules/version.o
 cond_restart.o : ../../Modules/xml_io_base.o
 cond_restart.o : ../../iotk/src/iotk_module.o
