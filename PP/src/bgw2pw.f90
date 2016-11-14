@@ -194,7 +194,9 @@ SUBROUTINE write_evc ( input_file_name, real_or_complex, &
   USE mp_pools, ONLY : kunit, npool, my_pool_id, intra_pool_comm
   USE symm_base, ONLY : s, nsym
   USE xml_io_base, ONLY : create_directory
+#if ! defined (__XSD)
   USE qexml_module, ONLY : qexml_kpoint_dirname, qexml_wfc_filename
+#endif
 #if defined(__MPI)
   USE parallel_include, ONLY : MPI_INTEGER, MPI_DOUBLE_COMPLEX
 #endif
@@ -465,7 +467,7 @@ SUBROUTINE write_evc ( input_file_name, real_or_complex, &
 #else
       DO is = 1, ns
         DO ig = 1, ngkdist_g
-          wfng_dist ( ig, ib, is, ik ) = wfng_buf ( ig, is )
+         wfng_dist ( ig, ib, is, ik ) = wfng_buf ( ig, is )
         ENDDO
       ENDDO
 #endif
@@ -513,9 +515,13 @@ SUBROUTINE write_evc ( input_file_name, real_or_complex, &
   CALL mp_max ( npw_g, world_comm )
 
   CALL create_directory ( output_dir_name )
+#if ! defined (__XSD)
   DO ik = 1, nk
     CALL create_directory (qexml_kpoint_dirname( output_dir_name, ik ) )
   ENDDO
+#else
+  CALL errore('bgw2pw','XSD implementation pending',1)
+#endif
 
   filename = TRIM ( output_dir_name ) // '/gvectors.dat'
 
@@ -536,8 +542,9 @@ SUBROUTINE write_evc ( input_file_name, real_or_complex, &
 
   DO ik = 1, nk
 
+#if ! defined (__XSD)
     filename = TRIM ( qexml_wfc_filename ( output_dir_name, 'gkvectors', ik ) )
-
+#endif
     IF ( ionode ) THEN
       CALL iotk_open_write ( iu, FILE = TRIM ( filename ), ROOT="GK-VECTORS", BINARY = .TRUE. )
       CALL iotk_write_dat ( iu, "NUMBER_OF_GK-VECTORS", ngk_g ( ik ) )
@@ -564,13 +571,13 @@ SUBROUTINE write_evc ( input_file_name, real_or_complex, &
     ENDIF
 
     DO is = 1, ns
-
+#if ! defined (__XSD)
       IF ( ns .GT. 1 ) THEN
         filename = TRIM ( qexml_wfc_filename ( output_dir_name, 'eigenval', ik, is, EXTENSION = 'xml' ) )
       ELSE
         filename = TRIM ( qexml_wfc_filename ( output_dir_name, 'eigenval', ik, EXTENSION = 'xml' ) )
       ENDIF
-
+#endif
       IF ( ionode ) THEN
         CALL iotk_open_write ( iu, FILE = TRIM ( filename ), BINARY = .FALSE. )
         CALL iotk_write_attr ( attr, "nbnd", nb, FIRST = .TRUE. )
@@ -583,13 +590,13 @@ SUBROUTINE write_evc ( input_file_name, real_or_complex, &
         CALL iotk_write_dat ( iu, "OCCUPATIONS", oc ( :, ik, is ) )
         CALL iotk_close_write ( iu )
       ENDIF
-
+#if ! defined (__XSD)
       IF ( ns .GT. 1 ) THEN
         filename = TRIM ( qexml_wfc_filename ( output_dir_name, 'evc', ik, is ) )
       ELSE
         filename = TRIM ( qexml_wfc_filename ( output_dir_name, 'evc', ik ) )
       ENDIF
-
+#endif
       IF ( ionode ) THEN
         CALL iotk_open_write ( iu, FILE = TRIM ( filename ), ROOT = "WFC", BINARY = .TRUE. )
         CALL iotk_write_attr ( attr, "ngw", npw_g, FIRST = .TRUE. )
