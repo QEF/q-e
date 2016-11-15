@@ -137,7 +137,7 @@ SUBROUTINE read_xml_file ( )
   USE io_files,             ONLY : tmp_dir, prefix, iunpun, nwordwfc, iunwfc
   USE noncollin_module,     ONLY : noncolin, npol, nspin_lsda, nspin_mag, nspin_gga
   USE pw_restart_new,       ONLY :  pw_readschema_file, init_vars_from_schema 
-  USE qes_types_module,     ONLY :  output_type, input_type, parallel_info_type, general_info_type
+  USE qes_types_module,     ONLY :  output_type, parallel_info_type, general_info_type
   USE qes_libs_module,      ONLY :  qes_reset_output, qes_reset_input, qes_reset_general_info, qes_reset_parallel_info 
   USE io_rho_xml,           ONLY : read_rho
   USE read_pseudo_mod,      ONLY : readpp
@@ -159,21 +159,20 @@ SUBROUTINE read_xml_file ( )
   REAL(DP) :: rdum(1,1), ehart, etxc, vtxc, etotefield, charge
   REAL(DP) :: sr(3,3,48)
   CHARACTER(LEN=20) dft_name
-  TYPE ( output_type), ALLOCATABLE   :: output_obj
-  TYPE ( input_type ), ALLOCATABLE   :: input_obj 
+  TYPE ( output_type), ALLOCATABLE   :: output_obj 
   TYPE (parallel_info_type),ALLOCATABLE :: parinfo_obj
   TYPE (general_info_type ),ALLOCATABLE :: geninfo_obj 
   !
   !
-  ALLOCATE ( output_obj, input_obj, parinfo_obj, geninfo_obj ) 
-  CALL pw_readschema_file ( ierr, output_obj, input_obj, parinfo_obj, geninfo_obj)
+  ALLOCATE ( output_obj, parinfo_obj, geninfo_obj ) 
+  CALL pw_readschema_file ( ierr, output_obj, parinfo_obj, geninfo_obj)
   IF ( ierr /= 0 ) CALL errore ( 'read_schema', 'unable to read xml file', ierr ) 
   ! ... first we get the version of the qexml file
   !     if not already read
   !
   ! ... here we read the variables that dimension the system
   !
-  CALL init_vars_from_schema( 'dim',   ierr , output_obj, input_obj, parinfo_obj, geninfo_obj )
+  CALL init_vars_from_schema( 'dim',   ierr , output_obj, parinfo_obj, geninfo_obj )
   CALL errore( 'read_xml_file ', 'problem reading file ' // &
              & TRIM( tmp_dir ) // TRIM( prefix ) // '.save', ierr )
   !
@@ -228,7 +227,7 @@ SUBROUTINE read_xml_file ( )
   !
   ! ... here we read all the variables defining the system
   !
-  CALL init_vars_from_schema ( 'nowave', ierr, output_obj, input_obj, parinfo_obj, geninfo_obj )
+  CALL init_vars_from_schema ( 'nowave', ierr, output_obj, parinfo_obj, geninfo_obj )
   !
   ! ... distribute across pools k-points and related variables.
   ! ... nks is defined by the following routine as the number 
@@ -260,7 +259,7 @@ SUBROUTINE read_xml_file ( )
   !
   ! ... read pseudopotentials
   !
-  CALL init_vars_from_schema ( 'pseudo', ierr, output_obj, input_obj, parinfo_obj, geninfo_obj ) 
+  CALL init_vars_from_schema ( 'pseudo', ierr, output_obj, parinfo_obj, geninfo_obj ) 
   !
   dft_name = get_dft_name () ! already set, should not be set again
   CALL readpp ( dft_name )
@@ -283,7 +282,7 @@ SUBROUTINE read_xml_file ( )
   CALL allocate_fft()
   CALL ggen ( gamma_only, at, bg ) 
   IF (do_comp_esm) THEN
-     CALL init_vars_from_schema ( 'esm', ierr, output_obj, input_obj, parinfo_obj, geninfo_obj ) 
+     CALL init_vars_from_schema ( 'esm', ierr, output_obj, parinfo_obj, geninfo_obj ) 
      CALL esm_init()
   END IF
   CALL gshells ( lmovecell ) 
@@ -334,11 +333,10 @@ SUBROUTINE read_xml_file ( )
                  ehart, etxc, vtxc, eth, etotefield, charge, v )
   !
   !
-  CALL qes_reset_output ( output_obj ) 
-  CALL qes_reset_input ( input_obj ) 
+  CALL qes_reset_output ( output_obj )  
   CALL qes_reset_general_info ( geninfo_obj ) 
   CALL qes_reset_parallel_info ( parinfo_obj ) 
-  DEALLOCATE ( output_obj, input_obj, geninfo_obj, parinfo_obj ) 
+  DEALLOCATE ( output_obj, geninfo_obj, parinfo_obj ) 
   ! 
   RETURN
   !
