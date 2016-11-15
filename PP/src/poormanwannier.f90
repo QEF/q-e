@@ -41,6 +41,7 @@ PROGRAM pmw
   NAMELIST / inputpp / outdir, prefix, first_band, last_band, writepp, &
                       min_energy, max_energy, sigma
   !
+
   ! initialise environment
   !
 #if defined(__MPI)
@@ -129,15 +130,13 @@ SUBROUTINE projection (first_band, last_band, min_energy, max_energy, sigma, iop
   USE uspp_param, ONLY : upf
   USE ions_base,  ONLY : nat, ityp
   USE basis,      ONLY : natomwfc, swfcatom
-  USE cell_base
   USE constants,  ONLY: rytoev
   USE gvect
-  USE klist
+  USE klist,      ONLY:  nks, nkstot, ngk, igk_k, xk 
   USE wvfct,      ONLY : nbnd, npwx, et
   USE ldaU,       ONLY : is_Hubbard, Hubbard_lmax, Hubbard_l, &
                          oatwfc, offsetU, nwfcU, wfcU, copy_U_wfc
-  USE lsda_mod
-  USE symm_base
+  USE symm_base,  ONLY : nrot, nsym, nsym_ns, nsym_na, ftau, irt, s, sname, d1, d2, d3, ft, sr  
   USE mp_pools,   ONLY : me_pool, root_pool, my_pool_id, kunit, npool
   USE control_flags, ONLY: gamma_only
   USE uspp,       ONLY: nkb, vkb
@@ -184,6 +183,7 @@ SUBROUTINE projection (first_band, last_band, min_energy, max_energy, sigma, iop
   INTEGER, ALLOCATABLE :: kstatus(:)
   !!
   !
+  
   WRITE( stdout, '(/5x,"Calling projection to compute Wannier projectors ... ")')
   !
   IF ( gamma_only ) WRITE( stdout, '(5x,"gamma-point specific algorithms are used")')
@@ -367,7 +367,6 @@ SUBROUTINE projection (first_band, last_band, min_energy, max_energy, sigma, iop
         iun_pp = find_free_unit()
         OPEN (unit=iun_pp, file=trim(prefix)//'.pp'//trim(adjustl(kptstr)), &
            form='formatted')
-
         DO i = 1,ldim1
            WRITE(iun_pp,'(2f22.15)') ( pp(i,j), j=1,ldim2 )
            WRITE(iun_pp,'(/)')

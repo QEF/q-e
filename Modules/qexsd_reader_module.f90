@@ -1060,10 +1060,12 @@ CHARACTER(iotk_attlenx)              :: attr
 ! 
 ispresent = .FALSE. 
 CALL iotk_scan_dat( iunit, "smearing", smearing_choice_, ATTR = attr, IERR = ierr , FOUND = ispresent )
-IF ( ierr /= 0 ) RETURN  
-CALL iotk_scan_attr ( attr, "degauss", degauss_, IERR = ierr ) 
-IF (ierr /= 0 ) RETURN 
-IF (ispresent ) CALL qes_init_smearing( obj, "smearing", degauss_, TRIM( smearing_choice_ ) )
+IF ( ierr /= 0 ) CALL errore ( "qexsd_get_smearing", "error reading smearing element", 1)
+IF ( ispresent ) THEN   
+   CALL iotk_scan_attr ( attr, "degauss", degauss_, IERR = ierr ) 
+   IF (ierr /= 0 ) CALL errore ( "qexsd_get_smearing", "error reading degauss value in smearing element", 1) 
+   CALL qes_init_smearing( obj, "smearing", degauss_, TRIM( smearing_choice_ ) )
+END IF 
 END SUBROUTINE qexsd_get_smearing
 !-------------------------------------------------------------------------------------------------
 SUBROUTINE qexsd_get_bands( iunit, obj, ispresent  ) 
@@ -1313,7 +1315,7 @@ CALL qes_init_electron_control ( obj, "electron_control", diago_str_, mixing_str
 END SUBROUTINE qexsd_get_electron_control
 ! 
 !-----------------------------------------------------------------------------------------
-SUBROUTINE qexsd_get_k_points_IBZ( iunit, obj, ispresent ) 
+SUBROUTINE qexsd_get_k_points_IBZ( iunit, obj, ispresent , tagname ) 
 !-----------------------------------------------------------------------------------------
 ! 
 IMPLICIT NONE 
@@ -1321,21 +1323,27 @@ IMPLICIT NONE
 INTEGER, INTENT (IN)                   :: iunit
 TYPE (k_points_IBZ_type),INTENT(OUT)   :: obj
 LOGICAL, INTENT (OUT)                  :: ispresent
+CHARACTER(LEN=*),OPTIONAL,INTENT(IN)   :: tagname
 ! 
 INTEGER                                :: ierr, nks_, ik, & 
                                           nk1_, nk2_, nk3_, k1_, k2_, k3_  
 LOGICAL                                :: monkh_pack_ispresent, nks_ispresent, weight_ispresent, &
                                           label_ispresent 
-CHARACTER(LEN=256)                     :: label, empty_str
+CHARACTER(LEN=256)                     :: label, empty_str, tagname_
 TYPE (k_point_type),ALLOCATABLE        :: kp_obj(:)
 TYPE ( monkhorst_pack_type )           :: mp_obj
 REAL (DP)                              :: wk_, xk_(3)
 CHARACTER(iotk_attlenx)                :: attr
 ! 
 ispresent = .FALSE.
-CALL iotk_scan_begin( iunit, "k_points_IBZ", FOUND = ispresent, IERR = ierr ) 
+IF (PRESENT(tagname)) THEN   
+   tagname_ = TRIM(tagname(1:MIN(LEN(tagname),256)))
+ELSE 
+   tagname_ = "k_points_IBS"
+END IF
+CALL iotk_scan_begin( iunit, TRIM(tagname_) , FOUND = ispresent, IERR = ierr ) 
 IF ( ierr /= 0 ) CALL errore ( "qexsd_get_k_points_IBZ", "error reading element from xml file", ierr) 
-IF (.NOT. ispresent ) CALL errore ( "qexsd_get_k_points_IBZ", "k_points_IBZ not found" , ierr ) 
+IF (.NOT. ispresent ) CALL errore ( "qexsd_get_k_points_IBZ", TRIM(tagname_)//" not found" , ierr ) 
 ! 
 CALL iotk_scan_dat( iunit, "monkhorst_pack", empty_str, ATTR = attr, FOUND = monkh_pack_ispresent, IERR = ierr)
 IF ( monkh_pack_ispresent ) THEN 
@@ -1377,7 +1385,7 @@ IF ( nks_ispresent) THEN
    END DO
 END IF    
 !  
-CALL iotk_scan_end(iunit, "k_points_IBZ", IERR = ierr ) 
+CALL iotk_scan_end(iunit, TRIM(tagname_) , IERR = ierr ) 
 IF (ierr /= 0 ) CALL errore ( "qexsd_get_k_points_IBZ", "k_points_IBZ element is not correctly closed",1) 
 CALL qes_init_k_points_IBZ( obj, "k_points_IBZ" , monkh_pack_ispresent, mp_obj, nks_ispresent, & 
                             nks_, nks_ispresent, nks_, kp_obj )
@@ -2560,12 +2568,17 @@ INTEGER, INTENT(IN)                          :: iunit
 TYPE( band_structure_type ),INTENT(OUT)      :: obj
 LOGICAL, INTENT ( OUT )                      :: ispresent
 !
-INTEGER                                      :: ierr, ik, nbnd_, nbnd_up_, nbnd_dw_, nks_, n_wfc_at_
-LOGICAL                                      :: lsda_, noncolin_, spinorbit_, nbdup_ispresent, &
+INTEGER                                      :: ierr, ik, nbnd_, nbnd_up_, nbnd_dw_, nks_, n_wfc_at_, occ_spin_
+LOGICAL                                      :: found, lsda_, noncolin_, spinorbit_, nbdup_ispresent, &
                                                 nbddw_ispresent, fermi_energy_ispresent, ks_eng_found,&
-                                                two_fermi_energies_ispresent, HOL_ispresent, n_wfc_at_ispresent
-REAL(DP)                                     :: nelec_, fermi_energy_,ef_updw_(2), HOL_energy_ 
+                                                two_fermi_energies_ispresent, HOL_ispresent, n_wfc_at_ispresent,&
+                                                spin_occ_is, smearing_ispresent, wf_collected_
+REAL(DP)                                     :: nelec_, fermi_energy_,ef_updw_(2), HOL_energy_
 TYPE ( ks_energies_type ),ALLOCATABLE        :: ks_energies_obj(:)                    
+TYPE ( k_points_IBZ_type)                    :: starting_k_points_ 
+TYPE ( occupations_type )                    :: occupations_obj
+TYPE ( smearing_type )                       :: smearing_obj 
+CHARACTER(LEN = 256)                         :: occupations_string_
 CHARACTER(iotk_attlenx)                      :: attr
 !
 ispresent = .FALSE.
@@ -2597,6 +2610,9 @@ IF ( ierr /= 0 ) RETURN
 CALL iotk_scan_dat ( iunit, "num_of_atomic_wfc", n_wfc_at_, IERR = ierr, FOUND = n_wfc_at_ispresent ) 
 IF ( ierr /= 0 ) RETURN 
 ! 
+CALL iotk_scan_dat ( iunit, "wf_collected", wf_collected_, IERR = ierr ) 
+IF ( ierr/=0) CALL errore ( "qexsd_get_band_structure", "wf_collected not found", 1) 
+!
 CALL iotk_scan_dat ( iunit, "fermi_energy", fermi_energy_, IERR = ierr, FOUND = fermi_energy_ispresent ) 
 IF ( ierr /= 0 ) RETURN
 !
@@ -2606,10 +2622,22 @@ IF ( ierr /= 0 ) RETURN
 CALL iotk_scan_dat( iunit, "two_fermi_energies", ef_updw_, IERR = ierr, FOUND = two_fermi_energies_ispresent )
 IF ( ierr /= 0 ) RETURN 
 !
+CALL qexsd_get_k_points_IBZ(iunit, starting_k_points_, ISPRESENT = found, TAGNAME = "starting_k_points")
+IF ( .NOT. found ) CALL errore ( "qexsd_get_band_structure", "starting_k_points element not found", 1)    
+!   
 CALL iotk_scan_dat ( iunit, "nks", nks_, IERR = ierr ) 
 IF ( ierr /= 0 ) RETURN 
-! 
-ALLOCATE ( ks_energies_obj(nks_))
+!
+CALL iotk_scan_dat ( iunit, "occupations_kind",  occupations_string_, ATTR = attr, IERR = ierr )
+IF ( ierr /= 0 ) CALL errore ( "qexsd_get_band_structure", "error reading occupations_kind element", 1) 
+!
+CALL iotk_scan_attr (attr, "spin", occ_spin_, IERR = ierr , FOUND = spin_occ_is) 
+IF  ( ierr /= 0 ) CALL errore ( "qexsd_get_band_structure", "error reading occupations_kind spin element", 1 )
+!
+CALL qes_init_occupations( occupations_obj, "occupations_kind", occ_spin_, spin_occ_is, occupations_string_) 
+!
+CALL qexsd_get_smearing ( iunit, smearing_obj, ISPRESENT = smearing_ispresent ) 
+ALLOCATE ( ks_energies_obj(nks_) )
 DO ik = 1, nks_
    IF ((.NOT. nbdup_ispresent) .AND. (.NOT. nbddw_ispresent )) THEN  
      CALL qexsd_get_ks_energies ( iunit, ks_energies_obj(ik), ks_eng_found , lsda_, noncolin_, nbnd_)
@@ -2629,12 +2657,14 @@ END DO
 CALL iotk_scan_end( iunit, "band_structure", IERR = ierr ) 
 IF ( ierr /= 0 ) RETURN 
 !
-CALL qes_init_band_structure ( obj, "band_structure", lsda_, noncolin_, spinorbit_, nbnd_, nbdup_ispresent, &
-       nbnd_up_, nbddw_ispresent, nbnd_dw_, nelec_, n_wfc_at_ispresent, n_wfc_at_, fermi_energy_ispresent,   &
-       fermi_energy_,  HOL_ispresent, HOL_energy_, two_fermi_energies_ispresent, 2, ef_updw_ , nks_, nks_, & 
-       ks_energies_obj)
+CALL qes_init_band_structure ( obj, "band_structure", lsda_, noncolin_, spinorbit_, nbnd_, nbdup_ispresent,          &
+       nbnd_up_, nbddw_ispresent, nbnd_dw_, nelec_, n_wfc_at_ispresent, n_wfc_at_, wf_collected_,                    &
+       fermi_energy_ispresent, fermi_energy_,  HOL_ispresent, HOL_energy_, two_fermi_energies_ispresent, 2, ef_updw_,& 
+       starting_k_points_, SMEARING_ISPRESENT = smearing_ispresent, SMEARING = smearing_obj, NKS = nks_,             &
+       OCCUPATIONS_KIND = occupations_obj, NDIM_KS_ENERGIES = nks_,   KS_ENERGIES = ks_energies_obj)
 !  
-
+CALL qes_reset_k_points_IBZ(starting_k_points_) 
+CALL qes_reset_occupations(occupations_obj) 
 DO ik = 1, nks_
    CALL qes_reset_ks_energies(ks_energies_obj(ik))
 END DO
@@ -3237,6 +3267,8 @@ obj%electric_field_ispresent = found
 CALL iotk_scan_end( iunit, "output",IERR = ierr ) 
 END SUBROUTINE qexsd_get_output
 !
+!
+
 !---------------------------------------------------------------------------------------------------------
 SUBROUTINE qexsd_get_input ( iunit, obj, ispresent ) 
 ! 
@@ -3269,10 +3301,10 @@ REAL(DP),ALLOCATABLE                      :: ext_forc_(:,:), starting_vel_(:,:)
 TYPE ( matrix_type )                      :: ext_forc_obj, starting_vel_obj
 INTEGER, ALLOCATABLE                      :: free_pos_(:,:)
 TYPE ( integerMatrix_type )               :: free_pos_obj
-TYPE ( electric_field_type)                :: elecfield_obj
-TYPE ( atomic_constraints_type )           :: atomic_constr_obj
+TYPE ( electric_field_type)               :: elecfield_obj
+TYPE ( atomic_constraints_type )          :: atomic_constr_obj
 TYPE ( spin_constraints_type )            :: spin_constr_obj 
-CHARACTER(iotk_attlenx)                      :: attr
+CHARACTER(iotk_attlenx)                   :: attr
 ! 
 ispresent = .FALSE. 
 CALL iotk_scan_begin( iunit, "input", IERR = ierr , FOUND = ispresent ) 

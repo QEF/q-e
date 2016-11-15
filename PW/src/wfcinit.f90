@@ -30,25 +30,24 @@ SUBROUTINE wfcinit()
   USE wvfct,                ONLY : nbnd, npwx, current_k
   USE wannier_new,          ONLY : use_wannier
 #if defined (__XSD)
-  USE pw_restart_new,       ONLY : pw_readschema_file, read_collected_to_evc
-  USE qes_types_module,     ONLY : input_type
-  USE qes_libs_module,      ONLY : qes_reset_input 
+  USE pw_restart_new,       ONLY : pw_readschema_file, read_collected_to_evc 
 #else
   USE pw_restart,           ONLY : pw_readfile
 #endif
   USE mp_bands,             ONLY : nbgrp, root_bgrp,inter_bgrp_comm
   USE mp,                   ONLY : mp_bcast
+  USE qes_types_module,            ONLY : output_type
+  USE qes_libs_module,             ONLY : qes_reset_output
   !
   IMPLICIT NONE
   !
   INTEGER :: ik, ierr
   LOGICAL :: exst, exst_mem, exst_file, opnd_file, twfcollect_file = .FALSE.
-  CHARACTER (256 )                        :: dirname 
-!
-#if defined(__XSD)
-  TYPE ( input_type ), ALLOCATABLE      :: input_obj
-#endif
-!
+  CHARACTER (256 )                        :: dirname
+#if defined (__XSD) 
+  TYPE ( output_type ), ALLOCATABLE       :: output_obj
+#endif 
+  !
   !
   !
   CALL start_clock( 'wfcinit' )
@@ -74,15 +73,15 @@ SUBROUTINE wfcinit()
      !
      ierr = 1
 #if defined(__XSD)
-     ALLOCATE (input_obj )  
-     CALL pw_readschema_file(IERR = ierr, RESTART_INPUT = input_obj )
+     ALLOCATE ( output_obj) 
+     CALL pw_readschema_file(IERR = ierr, RESTART_OUTPUT = output_obj )
      IF ( ierr == 0 ) THEN 
-        twfcollect_file = input_obj%control_variables%wf_collect   
+        twfcollect_file = output_obj%band_structure%wf_collected   
         dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save' 
         IF ( twfcollect_file ) CALL read_collected_to_evc(dirname )
      END IF 
-     CALL qes_reset_input ( input_obj ) 
-     DEALLOCATE ( input_obj )    
+     CALL qes_reset_output ( output_obj ) 
+     DEALLOCATE ( output_obj )    
 #else
      CALL pw_readfile( 'wave', ierr )
 #endif

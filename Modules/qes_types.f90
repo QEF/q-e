@@ -659,39 +659,6 @@ TYPE :: ion_control_type
    !
 END TYPE ion_control_type
 
-TYPE :: band_structure_type
-   !
-   CHARACTER(len=100) :: tagname
-   LOGICAL  :: lread = .true.
-   LOGICAL  :: lwrite = .true.
-   !
-   LOGICAL  :: lsda
-   LOGICAL  :: noncolin
-   LOGICAL  :: spinorbit
-   INTEGER  :: nbnd
-   LOGICAL  :: nbnd_up_ispresent
-   INTEGER  :: nbnd_up
-   LOGICAL  :: nbnd_dw_ispresent
-   INTEGER  :: nbnd_dw
-   REAL(DP) :: nelec
-   LOGICAL  :: num_of_atomic_wfc_ispresent
-   INTEGER  :: num_of_atomic_wfc
-   LOGICAL  :: fermi_energy_ispresent
-   REAL(DP) :: fermi_energy
-   LOGICAL  :: highestOccupiedLevel_ispresent
-   REAL(DP) :: highestOccupiedLevel
-   LOGICAL  :: two_fermi_energies_ispresent
-   !
-   INTEGER  :: ndim_two_fermi_energies
-   REAL(DP), DIMENSION(:), ALLOCATABLE :: two_fermi_energies
-   INTEGER  :: nks
-   TYPE(ks_energies_type), DIMENSION(:), ALLOCATABLE :: ks_energies
-   !
-   INTEGER  :: ndim_ks_energies
-
-   !
-END TYPE band_structure_type
-
 TYPE :: monkhorst_pack_type
    !
    CHARACTER(len=100) :: tagname
@@ -725,6 +692,18 @@ TYPE :: k_points_IBZ_type
 
    !
 END TYPE k_points_IBZ_type
+
+TYPE :: occupations_type
+   !
+   CHARACTER(len=100) :: tagname
+   LOGICAL  :: lread = .true.
+   LOGICAL  :: lwrite = .true.
+   !
+   LOGICAL  :: spin_ispresent
+   INTEGER  :: spin
+   CHARACTER(len=256) :: occupations
+   !
+END TYPE occupations_type
 
 TYPE :: mixingMode_type
    !
@@ -823,18 +802,6 @@ TYPE :: inputOccupations_type
    !
 END TYPE inputOccupations_type
 
-TYPE :: occupations_type
-   !
-   CHARACTER(len=100) :: tagname
-   LOGICAL  :: lread = .true.
-   LOGICAL  :: lwrite = .true.
-   !
-   LOGICAL  :: spin_ispresent
-   INTEGER  :: spin
-   CHARACTER(len=256) :: occupations
-   !
-END TYPE occupations_type
-
 TYPE :: smearing_type
    !
    CHARACTER(len=100) :: tagname
@@ -845,6 +812,44 @@ TYPE :: smearing_type
    CHARACTER(len=256) :: smearing
    !
 END TYPE smearing_type
+
+TYPE :: band_structure_type
+   !
+   CHARACTER(len=100) :: tagname
+   LOGICAL  :: lread = .true.
+   LOGICAL  :: lwrite = .true.
+   !
+   LOGICAL  :: lsda
+   LOGICAL  :: noncolin
+   LOGICAL  :: spinorbit
+   INTEGER  :: nbnd
+   LOGICAL  :: nbnd_up_ispresent
+   INTEGER  :: nbnd_up
+   LOGICAL  :: nbnd_dw_ispresent
+   INTEGER  :: nbnd_dw
+   REAL(DP) :: nelec
+   LOGICAL  :: num_of_atomic_wfc_ispresent
+   INTEGER  :: num_of_atomic_wfc
+   LOGICAL  :: wf_collected
+   LOGICAL  :: fermi_energy_ispresent
+   REAL(DP) :: fermi_energy
+   LOGICAL  :: highestOccupiedLevel_ispresent
+   REAL(DP) :: highestOccupiedLevel
+   LOGICAL  :: two_fermi_energies_ispresent
+   !
+   INTEGER  :: ndim_two_fermi_energies
+   REAL(DP), DIMENSION(:), ALLOCATABLE :: two_fermi_energies
+   TYPE(k_points_IBZ_type) :: starting_k_points
+   INTEGER  :: nks
+   TYPE(occupations_type) :: occupations_kind
+   LOGICAL  :: smearing_ispresent
+   TYPE(smearing_type) :: smearing
+   TYPE(ks_energies_type), DIMENSION(:), ALLOCATABLE :: ks_energies
+   !
+   INTEGER  :: ndim_ks_energies
+
+   !
+END TYPE band_structure_type
 
 TYPE :: bands_type
    !

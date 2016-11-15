@@ -75,7 +75,7 @@ MODULE qexsd_module
   PUBLIC :: qexsd_current_version, qexsd_default_version
   PUBLIC :: qexsd_current_version_init
   !
-  PUBLIC :: qexsd_input_obj 
+  PUBLIC :: qexsd_input_obj
   ! 
   PUBLIC :: qexsd_init_schema,  qexsd_openschema, qexsd_closeschema
   !
@@ -176,6 +176,8 @@ CONTAINS
       ELSE IF ( TRIM(qexsd_input_obj%tagname) == "input") THEN 
          CALL qes_write_input(ounit,qexsd_input_obj)
       END IF
+      ! 
+      !CALL qes_reset_input(qexsd_input_obj)     
       IF (ALLOCATED(steps) ) THEN 
          len_steps= step_counter 
          DO i_step = 1, len_steps
@@ -939,30 +941,37 @@ CONTAINS
     ! 
     !---------------------------------------------------------------------------------------
     SUBROUTINE qexsd_init_band_structure(obj, lsda, noncolin, lspinorb, nbnd, nelec, n_wfc_at, occupations_are_fixed, & 
-                                         fermi_energy, two_fermi_energies, ef_updw, et, wg, nks, xk, ngk, wk)
+                                         fermi_energy, two_fermi_energies, ef_updw, et, wg, nks, xk, ngk, wk, & 
+                                         starting_kpoints, occupation_kind, smearing, wf_collected)
     !----------------------------------------------------------------------------------------
     IMPLICIT NONE
     !
-    TYPE(band_structure_type)             :: obj
-    CHARACTER(LEN=*), PARAMETER           :: TAGNAME="band_structure"
-    LOGICAL,INTENT(IN)                    :: lsda, noncolin, lspinorb, occupations_are_fixed
-    INTEGER,INTENT(IN)                    :: nbnd, nks, n_wfc_at
-    REAL(DP),INTENT(IN)                   :: nelec, fermi_energy
-    REAL(DP),DIMENSION(:,:),INTENT(IN)    :: et, wg, xk
-    REAL(DP),DIMENSION(:),INTENT(IN)      :: wk
-    INTEGER,DIMENSION(:),INTENT(IN)       :: ngk      
-    REAL(DP),DIMENSION(2),INTENT(IN)      :: ef_updw 
-    LOGICAL,INTENT(IN)                    :: two_fermi_energies
+    TYPE(band_structure_type)               :: obj
+    CHARACTER(LEN=*), PARAMETER             :: TAGNAME="band_structure"
+    LOGICAL,INTENT(IN)                      :: lsda, noncolin, lspinorb, occupations_are_fixed
+    INTEGER,INTENT(IN)                      :: nbnd, nks, n_wfc_at
+    REAL(DP),INTENT(IN)                     :: nelec, fermi_energy
+    REAL(DP),DIMENSION(:,:),INTENT(IN)      :: et, wg, xk
+    REAL(DP),DIMENSION(:),INTENT(IN)        :: wk
+    INTEGER,DIMENSION(:),INTENT(IN)         :: ngk      
+    REAL(DP),DIMENSION(2),INTENT(IN)        :: ef_updw 
+    LOGICAL,INTENT(IN)                      :: two_fermi_energies
+    TYPE(k_points_IBZ_type),INTENT(IN)      :: starting_kpoints
+    TYPE(occupations_type), INTENT(IN)      :: occupation_kind
+    TYPE(smearing_type),OPTIONAL,INTENT(IN) :: smearing
+    LOGICAL,INTENT(IN)                      :: wf_collected                    
     ! 
-    LOGICAL                               :: nbnd_up_ispresent, nbnd_dw_ispresent, &
-                                             fermi_energy_ispresent, HOL_ispresent, & 
-                                             n_wfc_at_ispresent = .TRUE.  
-    INTEGER                               :: nbnd_up,nbnd_dw
-    INTEGER                               :: ndim_ks_energies,nbnd_tot,ik
-    TYPE(k_point_type)                    :: kp_obj
-    TYPE(ks_energies_type),ALLOCATABLE    :: ks_objs(:)
-    REAL(DP),DIMENSION(:),ALLOCATABLE     :: eigenvalues, occupations
-
+    LOGICAL                                 :: nbnd_up_ispresent, nbnd_dw_ispresent, &
+                                               fermi_energy_ispresent, HOL_ispresent, & 
+                                               n_wfc_at_ispresent = .TRUE.  
+    INTEGER                                 :: nbnd_up,nbnd_dw
+    INTEGER                                 :: ndim_ks_energies, nbnd_tot, ik
+    TYPE(k_point_type)                      :: kp_obj
+    TYPE(ks_energies_type),ALLOCATABLE      :: ks_objs(:)
+    TYPE (k_points_IBZ_type)                :: starting_k_points_
+    TYPE ( occupations_type)                :: occupations_kind_ 
+    REAL(DP),DIMENSION(:),ALLOCATABLE       :: eigenvalues, occupations
+    TYPE (smearing_type)                    :: smearing_ 
     !
     !
     ndim_ks_energies=nks   
@@ -1033,13 +1042,23 @@ CONTAINS
        CALL qes_reset_k_point(kp_obj)  
     END DO 
     !
+    IF ( PRESENT(smearing) ) smearing_ = smearing
+!
+    starting_k_points_ = starting_kpoints
+    starting_k_points_%tagname = "starting_k_points"
+!
+    occupations_kind_  = occupation_kind
+    occupations_kind_%tagname = "occupations_kind"
+! 
     CALL qes_init_band_structure( obj,TAGNAME,lsda,noncolin,lspinorb, nbnd , nbnd_up_ispresent,&
-                  nbnd_up,nbnd_dw_ispresent,nbnd_dw,nelec, n_wfc_at_ispresent, n_wfc_at,       & 
-                  fermi_energy_ispresent, fermi_energy/e2, HOL_ispresent, fermi_energy/e2, &  
-                  two_fermi_energies, 2, ef_updw/e2, ndim_ks_energies,ndim_ks_energies,ks_objs )
+                  nbnd_up,nbnd_dw_ispresent,nbnd_dw,nelec, n_wfc_at_ispresent, n_wfc_at, wf_collected, & 
+                  fermi_energy_ispresent, fermi_energy/e2, HOL_ispresent, fermi_energy/e2,     &
+                  two_fermi_energies, 2, ef_updw/e2, starting_k_points_, ndim_ks_energies,      &
+                  occupations_kind_, PRESENT(smearing), smearing_, ndim_ks_energies, ks_objs )
     DO ik=1,ndim_ks_energies
        CALL qes_reset_ks_energies(ks_objs(ik))
     END DO
+    CALL qes_reset_k_points_IBZ ( starting_k_points_ ) 
     DEALLOCATE (ks_objs,eigenvalues,occupations)
     END SUBROUTINE qexsd_init_band_structure 
     !

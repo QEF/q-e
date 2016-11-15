@@ -83,8 +83,8 @@ SUBROUTINE setup()
                                  nspin_gga, nspin_mag
 #if defined(__XSD) 
   USE pw_restart_new,     ONLY : pw_readschema_file, init_vars_from_schema 
-  USE qes_libs_module,    ONLY : qes_reset_output, qes_reset_input, qes_reset_parallel_info, qes_reset_general_info
-  USE qes_types_module,   ONLY : output_type, input_type, parallel_info_type, general_info_type 
+  USE qes_libs_module,    ONLY : qes_reset_output, qes_reset_parallel_info, qes_reset_general_info
+  USE qes_types_module,   ONLY : output_type, parallel_info_type, general_info_type 
 #else
   USE pw_restart,         ONLY : pw_readfile
 #endif
@@ -104,7 +104,6 @@ SUBROUTINE setup()
 !
 #if defined(__XSD)
   TYPE(output_type),ALLOCATABLE             :: output_obj 
-  TYPE(input_type),ALLOCATABLE              :: input_obj
   TYPE(parallel_info_type),ALLOCATABLE      :: parinfo_obj
   TYPE(general_info_type),ALLOCATABLE       :: geninfo_obj
 #endif
@@ -170,17 +169,17 @@ SUBROUTINE setup()
   !
 #if defined (__XSD)
   IF ( lbands .OR. ( (lfcpopt .OR. lfcpdyn ) .AND. restart )) THEN 
-     ALLOCATE ( output_obj, input_obj, parinfo_obj, geninfo_obj )
-     CALL pw_readschema_file( ierr , output_obj, input_obj, parinfo_obj, geninfo_obj )
+     ALLOCATE ( output_obj, parinfo_obj, geninfo_obj )
+     CALL pw_readschema_file( ierr , output_obj, parinfo_obj, geninfo_obj )
   END IF
   !
   ! 
   IF (lfcpopt .AND. restart ) THEN  
-     CALL init_vars_from_schema( 'fcpopt', ierr,  output_obj, input_obj, parinfo_obj, geninfo_obj)
+     CALL init_vars_from_schema( 'fcpopt', ierr,  output_obj, parinfo_obj, geninfo_obj)
      tot_charge = ionic_charge - nelec
   END IF 
   IF (lfcpdyn .AND. restart ) THEN    
-     CALL init_vars_from_schema( 'fcpdyn', ierr,  output_obj, input_obj, parinfo_obj, geninfo_obj ) 
+     CALL init_vars_from_schema( 'fcpdyn', ierr,  output_obj, parinfo_obj, geninfo_obj ) 
      tot_charge = ionic_charge - nelec 
   END IF
 #else 
@@ -583,7 +582,7 @@ SUBROUTINE setup()
      ! ... if calculating bands, we read the Fermi energy
      !
 #if defined (__XSD)
-     CALL init_vars_from_schema( 'ef',   ierr , output_obj, input_obj,parinfo_obj, geninfo_obj)
+     CALL init_vars_from_schema( 'ef',   ierr , output_obj, parinfo_obj, geninfo_obj)
 #else
      CALL pw_readfile( 'reset', ierr )
      CALL pw_readfile( 'ef',   ierr )
@@ -607,10 +606,9 @@ SUBROUTINE setup()
 #if defined(__XSD) 
   IF ( lbands .OR. ( (lfcpopt .OR. lfcpdyn ) .AND. restart ) ) THEN 
      CALL qes_reset_output ( output_obj ) 
-     CALL qes_reset_input ( input_obj ) 
      CALL qes_reset_parallel_info ( parinfo_obj ) 
      CALL qes_reset_general_info ( geninfo_obj ) 
-     DEALLOCATE ( output_obj, input_obj, parinfo_obj, geninfo_obj ) 
+     DEALLOCATE ( output_obj, parinfo_obj, geninfo_obj ) 
   END IF 
 #endif
   !

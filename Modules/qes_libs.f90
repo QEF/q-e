@@ -3629,6 +3629,59 @@ SUBROUTINE qes_reset_k_points_IBZ(obj)
 END SUBROUTINE qes_reset_k_points_IBZ
 
 
+SUBROUTINE qes_write_occupations(iun, obj)
+   IMPLICIT NONE
+
+   INTEGER  :: iun
+   TYPE(occupations_type) :: obj
+   !
+   INTEGER  :: i
+
+   IF (.NOT. obj%lwrite) RETURN
+   attr = " "
+   IF(obj%spin_ispresent) THEN
+      CALL iotk_write_attr(attr, 'spin', obj%spin)
+   END IF
+
+   CALL iotk_write_begin(iun, TRIM(obj%tagname), attr=TRIM(attr),new_line=.FALSE.)
+      !
+      WRITE(iun, '(A)',advance='no')  TRIM(obj%occupations)
+   CALL iotk_write_end(iun, TRIM(obj%tagname),indentation=.FALSE.)
+   !
+END SUBROUTINE qes_write_occupations
+
+SUBROUTINE qes_init_occupations(obj, tagname, spin, spin_ispresent, occupations)
+   IMPLICIT NONE
+
+   TYPE(occupations_type) :: obj
+   CHARACTER(len=*) :: tagname
+   INTEGER  :: i
+   LOGICAL  :: spin_ispresent
+   INTEGER , OPTIONAL :: spin
+   CHARACTER(len=*) :: occupations
+
+   obj%tagname = TRIM(tagname)
+
+   obj%spin_ispresent = spin_ispresent
+   IF (obj%spin_ispresent) THEN
+      obj%spin = spin
+   ENDIF
+
+   obj%occupations = occupations
+
+END SUBROUTINE qes_init_occupations
+
+SUBROUTINE qes_reset_occupations(obj)
+   IMPLICIT NONE
+   TYPE(occupations_type) :: obj
+   INTEGER  :: i
+
+   obj%tagname = ""
+
+
+END SUBROUTINE qes_reset_occupations
+
+
 SUBROUTINE qes_write_mixingMode(iun, obj)
    IMPLICIT NONE
 
@@ -4153,59 +4206,6 @@ SUBROUTINE qes_reset_inputOccupations(obj)
 END SUBROUTINE qes_reset_inputOccupations
 
 
-SUBROUTINE qes_write_occupations(iun, obj)
-   IMPLICIT NONE
-
-   INTEGER  :: iun
-   TYPE(occupations_type) :: obj
-   !
-   INTEGER  :: i
-
-   IF (.NOT. obj%lwrite) RETURN
-   attr = " "
-   IF(obj%spin_ispresent) THEN
-      CALL iotk_write_attr(attr, 'spin', obj%spin)
-   END IF
-
-   CALL iotk_write_begin(iun, TRIM(obj%tagname), attr=TRIM(attr),new_line=.FALSE.)
-      !
-      WRITE(iun, '(A)',advance='no')  TRIM(obj%occupations)
-   CALL iotk_write_end(iun, TRIM(obj%tagname),indentation=.FALSE.)
-   !
-END SUBROUTINE qes_write_occupations
-
-SUBROUTINE qes_init_occupations(obj, tagname, spin, spin_ispresent, occupations)
-   IMPLICIT NONE
-
-   TYPE(occupations_type) :: obj
-   CHARACTER(len=*) :: tagname
-   INTEGER  :: i
-   LOGICAL  :: spin_ispresent
-   INTEGER , OPTIONAL :: spin
-   CHARACTER(len=*) :: occupations
-
-   obj%tagname = TRIM(tagname)
-
-   obj%spin_ispresent = spin_ispresent
-   IF (obj%spin_ispresent) THEN
-      obj%spin = spin
-   ENDIF
-
-   obj%occupations = occupations
-
-END SUBROUTINE qes_init_occupations
-
-SUBROUTINE qes_reset_occupations(obj)
-   IMPLICIT NONE
-   TYPE(occupations_type) :: obj
-   INTEGER  :: i
-
-   obj%tagname = ""
-
-
-END SUBROUTINE qes_reset_occupations
-
-
 SUBROUTINE qes_write_smearing(iun, obj)
    IMPLICIT NONE
 
@@ -4251,6 +4251,240 @@ SUBROUTINE qes_reset_smearing(obj)
 
 
 END SUBROUTINE qes_reset_smearing
+
+
+SUBROUTINE qes_write_band_structure(iun, obj)
+   IMPLICIT NONE
+
+   INTEGER  :: iun
+   TYPE(band_structure_type) :: obj
+   !
+   INTEGER  :: i
+
+   IF (.NOT. obj%lwrite) RETURN
+   attr = " "
+
+   CALL iotk_write_begin(iun, TRIM(obj%tagname), attr=TRIM(attr))
+      !
+      CALL iotk_write_begin(iun, 'lsda',new_line=.FALSE.)
+         IF (obj%lsda) THEN
+            WRITE(iun, '(A)',advance='no')  'true'
+         ELSE
+            WRITE(iun, '(A)',advance='no')  'false'
+         ENDIF
+      CALL iotk_write_end(iun, 'lsda',indentation=.FALSE.)
+      CALL iotk_write_begin(iun, 'noncolin',new_line=.FALSE.)
+         IF (obj%noncolin) THEN
+            WRITE(iun, '(A)',advance='no')  'true'
+         ELSE
+            WRITE(iun, '(A)',advance='no')  'false'
+         ENDIF
+      CALL iotk_write_end(iun, 'noncolin',indentation=.FALSE.)
+      CALL iotk_write_begin(iun, 'spinorbit',new_line=.FALSE.)
+         IF (obj%spinorbit) THEN
+            WRITE(iun, '(A)',advance='no')  'true'
+         ELSE
+            WRITE(iun, '(A)',advance='no')  'false'
+         ENDIF
+      CALL iotk_write_end(iun, 'spinorbit',indentation=.FALSE.)
+      CALL iotk_write_begin(iun, 'nbnd')
+         WRITE(iun, '(I12)') obj%nbnd
+      CALL iotk_write_end(iun, 'nbnd')
+      IF(obj%nbnd_up_ispresent) THEN
+         CALL iotk_write_begin(iun, 'nbnd_up')
+            WRITE(iun, '(I12)') obj%nbnd_up
+         CALL iotk_write_end(iun, 'nbnd_up')
+      ENDIF
+      !
+      IF(obj%nbnd_dw_ispresent) THEN
+         CALL iotk_write_begin(iun, 'nbnd_dw')
+            WRITE(iun, '(I12)') obj%nbnd_dw
+         CALL iotk_write_end(iun, 'nbnd_dw')
+      ENDIF
+      !
+      CALL iotk_write_begin(iun, 'nelec')
+         WRITE(iun, '(E24.16)') obj%nelec
+      CALL iotk_write_end(iun, 'nelec')
+      IF(obj%num_of_atomic_wfc_ispresent) THEN
+         CALL iotk_write_begin(iun, 'num_of_atomic_wfc')
+            WRITE(iun, '(I12)') obj%num_of_atomic_wfc
+         CALL iotk_write_end(iun, 'num_of_atomic_wfc')
+      ENDIF
+      !
+      CALL iotk_write_begin(iun, 'wf_collected',new_line=.FALSE.)
+         IF (obj%wf_collected) THEN
+            WRITE(iun, '(A)',advance='no')  'true'
+         ELSE
+            WRITE(iun, '(A)',advance='no')  'false'
+         ENDIF
+      CALL iotk_write_end(iun, 'wf_collected',indentation=.FALSE.)
+      IF(obj%fermi_energy_ispresent) THEN
+         CALL iotk_write_begin(iun, 'fermi_energy')
+            WRITE(iun, '(E24.16)') obj%fermi_energy
+         CALL iotk_write_end(iun, 'fermi_energy')
+      ENDIF
+      !
+      IF(obj%highestOccupiedLevel_ispresent) THEN
+         CALL iotk_write_begin(iun, 'highestOccupiedLevel')
+            WRITE(iun, '(E24.16)') obj%highestOccupiedLevel
+         CALL iotk_write_end(iun, 'highestOccupiedLevel')
+      ENDIF
+      !
+      IF(obj%two_fermi_energies_ispresent) THEN
+         CALL iotk_write_begin(iun,'two_fermi_energies')
+            WRITE(fmtstr,'(a)') '(5E24.16)'
+            WRITE(iun, fmtstr) obj%two_fermi_energies
+         CALL iotk_write_end(iun,'two_fermi_energies')
+         !
+      ENDIF
+      !
+      CALL qes_write_k_points_IBZ(iun, obj%starting_k_points)
+      !
+      CALL iotk_write_begin(iun, 'nks')
+         WRITE(iun, '(I12)') obj%nks
+      CALL iotk_write_end(iun, 'nks')
+      CALL qes_write_occupations(iun, obj%occupations_kind)
+      !
+      IF(obj%smearing_ispresent) THEN
+         CALL qes_write_smearing(iun, obj%smearing)
+         !
+      ENDIF
+      !
+      DO i = 1, obj%ndim_ks_energies
+         CALL qes_write_ks_energies(iun, obj%ks_energies(i))
+         !
+      END DO
+   CALL iotk_write_end(iun, TRIM(obj%tagname))
+   !
+END SUBROUTINE qes_write_band_structure
+
+SUBROUTINE qes_init_band_structure(obj, tagname, lsda, noncolin, spinorbit, nbnd, &
+                              nbnd_up_ispresent, nbnd_up, nbnd_dw_ispresent, nbnd_dw, &
+                              nelec, num_of_atomic_wfc_ispresent, num_of_atomic_wfc, &
+                              wf_collected, fermi_energy_ispresent, fermi_energy, &
+                              highestOccupiedLevel_ispresent, highestOccupiedLevel, &
+                              two_fermi_energies_ispresent, &
+                              ndim_two_fermi_energies, two_fermi_energies, &
+                              starting_k_points, nks, occupations_kind, smearing_ispresent, &
+                              smearing, ndim_ks_energies, ks_energies)
+   IMPLICIT NONE
+
+   TYPE(band_structure_type) :: obj
+   CHARACTER(len=*) :: tagname
+   INTEGER  :: i
+   LOGICAL  :: lsda
+   LOGICAL  :: noncolin
+   LOGICAL  :: spinorbit
+   INTEGER  :: nbnd
+   LOGICAL  :: nbnd_up_ispresent
+   INTEGER  :: nbnd_up
+   LOGICAL  :: nbnd_dw_ispresent
+   INTEGER  :: nbnd_dw
+   REAL(DP) :: nelec
+   LOGICAL  :: num_of_atomic_wfc_ispresent
+   INTEGER  :: num_of_atomic_wfc
+   LOGICAL  :: wf_collected
+   LOGICAL  :: fermi_energy_ispresent
+   REAL(DP) :: fermi_energy
+   LOGICAL  :: highestOccupiedLevel_ispresent
+   REAL(DP) :: highestOccupiedLevel
+   LOGICAL  :: two_fermi_energies_ispresent
+   INTEGER  :: ndim_two_fermi_energies
+   REAL(DP), DIMENSION(ndim_two_fermi_energies) :: two_fermi_energies
+   TYPE(k_points_IBZ_type) :: starting_k_points
+   INTEGER  :: nks
+   TYPE(occupations_type) :: occupations_kind
+   LOGICAL  :: smearing_ispresent
+   TYPE(smearing_type) :: smearing
+   INTEGER  :: ndim_ks_energies
+   TYPE(ks_energies_type ), DIMENSION( ndim_ks_energies )  :: ks_energies
+
+   obj%tagname = TRIM(tagname)
+   obj%lsda = lsda
+   obj%noncolin = noncolin
+   obj%spinorbit = spinorbit
+   obj%nbnd = nbnd
+   obj%nbnd_up_ispresent = nbnd_up_ispresent
+   IF(obj%nbnd_up_ispresent) THEN
+      obj%nbnd_up = nbnd_up
+   ENDIF
+   obj%nbnd_dw_ispresent = nbnd_dw_ispresent
+   IF(obj%nbnd_dw_ispresent) THEN
+      obj%nbnd_dw = nbnd_dw
+   ENDIF
+   obj%nelec = nelec
+   obj%num_of_atomic_wfc_ispresent = num_of_atomic_wfc_ispresent
+   IF(obj%num_of_atomic_wfc_ispresent) THEN
+      obj%num_of_atomic_wfc = num_of_atomic_wfc
+   ENDIF
+   obj%wf_collected = wf_collected
+   obj%fermi_energy_ispresent = fermi_energy_ispresent
+   IF(obj%fermi_energy_ispresent) THEN
+      obj%fermi_energy = fermi_energy
+   ENDIF
+   obj%highestOccupiedLevel_ispresent = highestOccupiedLevel_ispresent
+   IF(obj%highestOccupiedLevel_ispresent) THEN
+      obj%highestOccupiedLevel = highestOccupiedLevel
+   ENDIF
+   obj%two_fermi_energies_ispresent = two_fermi_energies_ispresent
+   IF(obj%two_fermi_energies_ispresent) THEN
+   ALLOCATE(obj%two_fermi_energies(ndim_two_fermi_energies))
+   obj%two_fermi_energies(:) = two_fermi_energies(:)
+   obj%ndim_two_fermi_energies = ndim_two_fermi_energies
+   ENDIF
+   obj%starting_k_points = starting_k_points
+   obj%nks = nks
+   obj%occupations_kind = occupations_kind
+   obj%smearing_ispresent = smearing_ispresent
+   IF(obj%smearing_ispresent) THEN
+      obj%smearing = smearing
+   ENDIF
+   ALLOCATE(obj%ks_energies(SIZE(ks_energies)))
+   DO i = 1, SIZE(ks_energies)
+      obj%ks_energies(i) = ks_energies(i)
+   ENDDO
+   obj%ndim_ks_energies = ndim_ks_energies
+
+END SUBROUTINE qes_init_band_structure
+
+SUBROUTINE qes_reset_band_structure(obj)
+   IMPLICIT NONE
+   TYPE(band_structure_type) :: obj
+   INTEGER  :: i
+
+   obj%tagname = ""
+
+   IF(obj%nbnd_up_ispresent) THEN
+      obj%nbnd_up_ispresent = .FALSE.
+   ENDIF
+   IF(obj%nbnd_dw_ispresent) THEN
+      obj%nbnd_dw_ispresent = .FALSE.
+   ENDIF
+   IF(obj%num_of_atomic_wfc_ispresent) THEN
+      obj%num_of_atomic_wfc_ispresent = .FALSE.
+   ENDIF
+   IF(obj%fermi_energy_ispresent) THEN
+      obj%fermi_energy_ispresent = .FALSE.
+   ENDIF
+   IF(obj%highestOccupiedLevel_ispresent) THEN
+      obj%highestOccupiedLevel_ispresent = .FALSE.
+   ENDIF
+   IF(obj%two_fermi_energies_ispresent) THEN
+   IF (ALLOCATED(obj%two_fermi_energies))  DEALLOCATE(obj%two_fermi_energies)
+      obj%two_fermi_energies_ispresent = .FALSE.
+   ENDIF
+   CALL qes_reset_k_points_IBZ(obj%starting_k_points)
+   CALL qes_reset_occupations(obj%occupations_kind)
+   IF(obj%smearing_ispresent) THEN
+      CALL qes_reset_smearing(obj%smearing)
+      obj%smearing_ispresent = .FALSE.
+   ENDIF
+   DO i = 1, SIZE(obj%ks_energies)
+      CALL qes_reset_ks_energies(obj%ks_energies(i))
+   ENDDO
+   IF (ALLOCATED(obj%ks_energies)) DEALLOCATE(obj%ks_energies)
+
+END SUBROUTINE qes_reset_band_structure
 
 
 SUBROUTINE qes_write_bands(iun, obj)
