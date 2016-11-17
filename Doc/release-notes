@@ -1,10 +1,10 @@
 New in svn version:
 
-  * Hybrid functionals with PAW seem to work
+  * Hybrid functionals with PAW now work
 
 Incompatible changes in svn version:
 
-  * Routine h_psiq deleted
+  * Routine h_psiq deleted, replaced by h_psi
 
 Fixed in svn version
 
@@ -18,9 +18,12 @@ Fixed in svn version
          computed (r13102, r13143)
   * PWGui: double-hyphen glitch with old tcllib for NEB (r13101)
   * GWW wasn't working at all (r13099, r13100, r13106)
-  * PW: ACE energy slightly off, leading to crash, for metals (r13095)
-    and for USPP (r13111). Also: small error in gamma-only USPP hybrid 
-    calculations using G space could lead to crashes (r13142)
+  * PW with hybrid functionals: 
+    - LSDA with Gamma tricks and 2 pools did not work (r13158)
+    - ACE energy slightly off, leading to crash, for metals (r13095)
+      and for USPP (r13111)
+    - small error in gamma-only USPP hybrid calculations using G space
+      could lead to crashes (r13142)
   * Some Wyckoff site labels were incorrect (r13083, r13124)
     Also: symmetry analysis improved (r13094)
 

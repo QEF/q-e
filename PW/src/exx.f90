@@ -280,7 +280,6 @@ MODULE exx
     USE klist,      ONLY : xk, wk, nkstot, nks, qnorm
     USE wvfct,      ONLY : nbnd
     USE start_k,    ONLY : nk1,nk2,nk3
-    USE mp_pools,   ONLY : npool
     USE control_flags, ONLY : iverbosity
     !
     IMPLICIT NONE
@@ -573,7 +572,6 @@ MODULE exx
     USE symm_base,  ONLY : s
     USE cell_base,  ONLY : at
     USE klist,      ONLY : nkstot, xk
-    USE mp_pools,   ONLY : npool
     IMPLICIT NONE
     REAL(dp), INTENT(in) :: xk_collect(:,:)
     !
@@ -667,7 +665,6 @@ MODULE exx
     USE wvfct,                ONLY : nbnd, npwx, wg, current_k
     USE klist,                ONLY : ngk, nks, nkstot, xk, wk, igk_k
     USE symm_base,            ONLY : nsym, s, sr, ftau
-    USE mp_pools,             ONLY : npool, nproc_pool, me_pool, inter_pool_comm
     USE mp_bands,             ONLY : me_bgrp, set_bgrp_indices, nbgrp
     USE mp,                   ONLY : mp_sum, mp_bcast
     USE funct,                ONLY : get_exx_fraction, start_exx,exx_is_active,&
@@ -678,8 +675,6 @@ MODULE exx
     USE us_exx,               ONLY : rotate_becxx
     USE paw_variables,        ONLY : okpaw
     USE paw_exx,              ONLY : PAW_init_fock_kernel
-    USE mp_pools,             ONLY : me_pool, my_pool_id, root_pool, nproc_pool, &
-                                     inter_pool_comm, my_pool_id, intra_pool_comm
     USE mp_orthopools,        ONLY : intra_orthopool_comm
 
     IMPLICIT NONE
@@ -775,8 +770,13 @@ MODULE exx
         ibnd_buff_end   = ibnd_end
     ENDIF
     !
-    IF (.not. allocated(exxbuff)) &
-        ALLOCATE( exxbuff(nrxxs*npol, ibnd_buff_start:ibnd_buff_end, nkqs))
+    IF (.not. allocated(exxbuff)) THEN
+       IF (gamma_only) THEN
+          ALLOCATE( exxbuff(nrxxs*npol, ibnd_buff_start:ibnd_buff_end, nks))
+       ELSE
+          ALLOCATE( exxbuff(nrxxs*npol, ibnd_buff_start:ibnd_buff_end, nkqs))
+       END IF
+    END IF
     exxbuff=(0.0_DP,0.0_DP)
     !
     !   This is parallelized over pools. Each pool computes only its k-points
@@ -920,17 +920,23 @@ MODULE exx
     ! Each wavefunction in exxbuff is computed by a single pool, collect among 
     ! pools in a smart way (i.e. without doing all-to-all sum and bcast)
     ! See also the initialization of working_pool in exx_mp_init
-!      IF (npool>1 ) CALL mp_sum(exxbuff, inter_pool_comm)
-    DO ikq = 1, nkqs
-      CALL mp_bcast(exxbuff(:,:,ikq), working_pool(ikq), intra_orthopool_comm)
-    ENDDO
+    ! Note that in Gamma-only LSDA can be parallelized over two pools, and there
+    ! is no need to communicate anything: each pools deals with its own spin
+    !
+    IF ( .NOT.gamma_only ) THEN
+       DO ikq = 1, nkqs
+         CALL mp_bcast(exxbuff(:,:,ikq), working_pool(ikq), intra_orthopool_comm)
+       ENDDO
+    END IF
     !
     ! For US/PAW only: compute <beta_I|psi_j,k+q> for the entire 
-    ! de-symmetrized k+q grid by rotating the ones fro mthe irreducible wedge
+    ! de-symmetrized k+q grid by rotating the ones from the irreducible wedge
+    !
     IF(okvan) CALL rotate_becxx(nkqs, index_xk, index_sym, xkq_collect)
     !
     ! Initialize 4-wavefunctions one-center Fock integrals
     !    \int \psi_a(r)\phi_a(r)\phi_b(r')\psi_b(r')/|r-r'|
+    !
     IF(okpaw) CALL PAW_init_fock_kernel()
     !
     IF ( use_ace) CALL aceinit ( )
@@ -1199,13 +1205,13 @@ MODULE exx
              IF( mod(im,2) == 0 ) THEN
 !$omp parallel do default(shared), private(ir)
                 DO ir = 1, nrxxs
-                   rhoc(ir) = exxbuff(ir,h_ibnd,ikq) * temppsic_aimag(ir) / omega
+                   rhoc(ir) = exxbuff(ir,h_ibnd,current_k) * temppsic_aimag(ir) / omega
                 ENDDO
 !$omp end parallel do
              ELSE
 !$omp parallel do default(shared), private(ir)
                 DO ir = 1, nrxxs
-                   rhoc(ir) = exxbuff(ir,h_ibnd,ikq) * temppsic_dble(ir) / omega
+                   rhoc(ir) = exxbuff(ir,h_ibnd,current_k) * temppsic_dble(ir) / omega
                 ENDDO
 !$omp end parallel do
              ENDIF
@@ -1279,8 +1285,8 @@ MODULE exx
              !
 !$omp parallel do default(shared), private(ir)
              DO ir = 1, nrxxs
-                RESULT(ir) = RESULT(ir)+x1* dble(vc(ir))* dble(exxbuff(ir,h_ibnd,ikq))&
-                                       +x2*aimag(vc(ir))*aimag(exxbuff(ir,h_ibnd,ikq))
+                RESULT(ir) = RESULT(ir)+x1* dble(vc(ir))* dble(exxbuff(ir,h_ibnd,current_k))&
+                                       +x2*aimag(vc(ir))*aimag(exxbuff(ir,h_ibnd,current_k))
              ENDDO
 !$omp end parallel do
              !
@@ -2006,13 +2012,13 @@ MODULE exx
                 IF( mod(jbnd,2) == 0 ) THEN
 !$omp parallel do default(shared), private(ir)
                    DO ir = 1, nrxxs
-                      rhoc(ir) = exxbuff(ir,h_ibnd,ikq) * temppsic_aimag(ir) / omega
+                      rhoc(ir) = exxbuff(ir,h_ibnd,ikk) * temppsic_aimag(ir) / omega
                    ENDDO
 !$omp end parallel do
                 ELSE
 !$omp parallel do default(shared), private(ir)
                    DO ir = 1, nrxxs
-                      rhoc(ir) = exxbuff(ir,h_ibnd,ikq) * temppsic_dble(ir) / omega
+                      rhoc(ir) = exxbuff(ir,h_ibnd,ikk) * temppsic_dble(ir) / omega
                    ENDDO
 !$omp end parallel do
                 ENDIF
