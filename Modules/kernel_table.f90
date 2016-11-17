@@ -32,7 +32,7 @@ MODULE kernel_table
 ! kernel_table rather than passing variables around all over the place.
 
 USE kinds,                  ONLY : dp
-USE io_files,               ONLY : pseudo_dir
+USE io_files,               ONLY : pseudo_dir, pseudo_dir_cur
 USE constants,              ONLY : pi
 use wrappers,               ONLY : md5_from_file
 implicit none
@@ -48,7 +48,7 @@ save
 public  :: Nqs, Nr_points, r_max, q_mesh, q_cut, q_min, dk
 public  :: kernel, d2phi_dk2
 public  :: initialize_kernel_table
-public  :: vdw_table_name
+public  :: vdw_table_name, kernel_file_name
 public  :: vdw_kernel_md5_cksum
 integer :: Nqs, Nr_points                       ! The number of q points and radial points
                                                 ! used in generating the kernel phi(q1*r, q2*r)
@@ -70,11 +70,17 @@ real(dp), allocatable ::  d2phi_dk2(:,:,:)      ! A matrix holding the second de
                                                 ! above kernel matrix at each of the q points.
                                                 ! Stored as d2phi_dk2(k_point, q1_value, q2_value).
 
-character(len=256) :: vdw_table_name = ' '      ! If present from input use this name.
-character(LEN=30)  :: double_format = "(1p4e23.14)"
-character(len=32)  :: vdw_kernel_md5_cksum = 'NOT SET'
+character(len=256)  :: vdw_table_name = ' '      ! If present from input use this name.
+character(len=1000) :: kernel_file_name         ! The path to the kernel file.
+                                                ! Although this name must be
+                                                ! "vdW_kernel_table", this variable
+                                                ! is used to hold the entire path
+                                                ! since we check 3 places for it.
 
-integer, external  :: find_free_unit
+character(LEN=30)   :: double_format = "(1p4e23.14)"
+character(len=32)   :: vdw_kernel_md5_cksum = 'NOT SET'
+
+integer, external   :: find_free_unit
 
 
 CONTAINS
@@ -106,11 +112,6 @@ CONTAINS
     logical :: file_exists                    ! A variable to say whether
                                               ! needed file exists.
 
-    character(len=1000) :: kernel_file_name   ! The path to the kernel file.
-                                              ! Although this name must be
-                                              ! "vdW_kernel_table", this variable
-                                              ! is used to hold the entire path
-                                              ! since we check 3 places for it.
 
 
 
@@ -153,8 +154,13 @@ CONTAINS
        kernel_file_name = trim(pseudo_dir)//'/'//vdw_table_name
        inquire(file=kernel_file_name, exist=file_exists)
 
-       if (.not. file_exists) call errore('read_kernel_table', & 
+       IF (.NOT. file_exists) THEN 
+          kernel_file_name = trim(pseudo_dir_cur)//'/'//vdw_table_name
+          INQUIRE(FILE=kernel_file_name, EXIST = file_exists) 
+
+          IF ( .NOT. file_exists) CALL errore('read_kernel_table', & 
           TRIM(vdw_table_name)//' file not found',1)
+       END IF
 
     end if
 
