@@ -104,6 +104,7 @@ SUBROUTINE PAW_potential(becsum, d, energy, e_cmp)
    becfake(:,:,:) = 0._dp
    d(:,:,:) = 0._dp
    energy_tot = 0._dp
+   IF(present(e_cmp)) e_cmp = 0._dp
    !
    !
    ! Parallel: divide tasks among all the processor for this image
