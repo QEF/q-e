@@ -435,6 +435,7 @@ MODULE exx
     ENDDO
     !
     ! allocate and fill the arrays xkq(3,nkqs), index_xk(nkqs) and index_sym(nkqs)
+    ! NOTE: nkqs will be redefined as nspin_lsda*nkqs later 
     !
     ALLOCATE( xkq_collect(3,nspin_lsda*nkqs), index_xk(nspin_lsda*nkqs),  &
               index_sym(nspin_lsda*nkqs) )
@@ -521,15 +522,16 @@ MODULE exx
       !
       use_regularization = .true.
       !
-      !
     CASE ( "vcut_ws" )
       !
+      use_regularization = .true.
       use_coulomb_vcut_ws = .true.
       IF ( x_gamma_extrapolation ) &
             CALL errore(sub_name,'cannot USE x_gamm_extrap and vcut_ws', 1)
       !
     CASE ( "vcut_spherical" )
       !
+      use_regularization = .true.
       use_coulomb_vcut_spheric = .true.
       IF ( x_gamma_extrapolation ) &
             CALL errore(sub_name,'cannot USE x_gamm_extrap and vcut_spherical', 1)
@@ -1292,7 +1294,6 @@ MODULE exx
              !
           ENDDO &
           IBND_LOOP_GAM
-          !
           !
           IF(okvan) THEN
              CALL mp_sum(deexx,intra_bgrp_comm)
