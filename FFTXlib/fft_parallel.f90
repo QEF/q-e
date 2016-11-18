@@ -532,6 +532,46 @@ END SUBROUTINE bw_tg_cft3_xy
   END SUBROUTINE unpack_group_sticks
 
 
+  SUBROUTINE unpack_group_sticks_i( yf, f, dtgs, req )
+
+     USE task_groups,  ONLY : task_groups_descriptor
+
+     IMPLICIT NONE
+#if defined(__MPI)
+  INCLUDE 'mpif.h'
+#endif
+
+     COMPLEX(DP), INTENT(out)    :: f( : )  ! array containing all bands, and gvecs distributed across processors
+     COMPLEX(DP), INTENT(in)    :: yf( : )  ! array containing bands collected into task groups
+     TYPE (task_groups_descriptor), INTENT(in) :: dtgs
+     !
+     !  Bring pencils back to their original distribution
+     !
+     INTEGER                     :: ierr, req
+     !
+     IF( dtgs%tg_usdsp(dtgs%nogrp) + dtgs%tg_snd(dtgs%nogrp) > size( f ) ) THEN
+        CALL fftx_error__( 'unpack_group_sticks', ' inconsistent size ', 3 )
+     ENDIF
+     IF( dtgs%tg_rdsp(dtgs%nogrp) + dtgs%tg_rcv(dtgs%nogrp) > size( yf ) ) THEN
+        CALL fftx_error__( 'unpack_group_sticks', ' inconsistent size ', 4 )
+     ENDIF
+
+     CALL start_clock( 'ALLTOALL' )
+
+#if defined(__MPI)
+     CALL MPI_IAlltoallv( yf(1), &
+          dtgs%tg_rcv, dtgs%tg_rdsp, MPI_DOUBLE_COMPLEX, f(1), &
+          dtgs%tg_snd, dtgs%tg_usdsp, MPI_DOUBLE_COMPLEX, dtgs%ogrp_comm, req, IERR)
+     IF( ierr /= 0 ) THEN
+        CALL fftx_error__( 'unpack_group_sticks', ' alltoall error 2 ', abs(ierr) )
+     ENDIF
+#endif
+
+     CALL stop_clock( 'ALLTOALL' )
+
+     RETURN
+  END SUBROUTINE unpack_group_sticks_i
+
 SUBROUTINE tg_gather( dffts, dtgs, v, tg_v )
    !
    USE fft_types,      ONLY : fft_type_descriptor

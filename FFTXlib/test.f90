@@ -400,11 +400,17 @@ program test
      CALL bw_tg_cft3_z( psis( :, ipsi ), dffts, aux, dtgs )
      time(9) = MPI_WTIME()
      !
-     CALL unpack_group_sticks( psis( :, ipsi ), aux, dtgs )
-     !
+     IF(ireq == 2)THEN
+       CALL unpack_group_sticks_i( psis( :, ipsi ), aux, dtgs , req_u(ireq) )
+     ELSE
+       CALL MPI_WAIT(req_u(ireq-1), MPI_STATUS_IGNORE, ierr )
+       ipsi = MOD( ireq + 1, 2 ) + 1 ! ireq = 2, ipsi = 2; ireq = 3, ipsi = 1
+       CALL unpack_group_sticks_i( psis( :, ipsi ), aux, dtgs, req_u(ireq) )
+     ENDIF
+
+     call accumulate_hpsi( ib, nbnd, ngms, hpsi, aux, nls, nlsm, dtgs, dffts)
+
      time(10) = MPI_WTIME()
-     !
-     call accumulate_hpsi( ib, nbnd, ngms, hpsi, aux, nls, nlsm, dgts, dffts)
      !
      do i = 2, 10
         my_time(i) = my_time(i) + (time(i) - time(i-1))
@@ -413,6 +419,7 @@ program test
      ncount = ncount + 1
      !
   enddo
+  CALL MPI_WAIT(req_u(ireq),MPI_STATUS_IGNORE,ierr)
 
 #else
 
@@ -453,15 +460,13 @@ program test
      CALL unpack_group_sticks( psis( :, ipsi ), aux, dtgs )
 
      time(10) = MPI_WTIME()
-
-     call accumulate_hpsi( ib, nbnd, ngms, hpsi, aux, nls, nlsm, dtgs, dffts)
-
+     !
      do i = 2, 10
         my_time(i) = my_time(i) + (time(i) - time(i-1))
      end do
-
+     !
      ncount = ncount + 1
-
+     !
   enddo
 #endif
 
