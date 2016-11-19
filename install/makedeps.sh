@@ -13,7 +13,7 @@ if test $# = 0
 then
     dirs=" LAXlib FFTXlib Modules clib LR_Modules upftools \
            PW/src CPV/src PW/tools upftools PP/src PWCOND/src \
-           PHonon/Gamma PHonon/PH PHonon/D3 PHonon/FD atomic/src \
+           PHonon/Gamma PHonon/PH PHonon/FD atomic/src \
            XSpectra/src ACFDT/src NEB/src TDDFPT/src \
            GWW/pw4gww GWW/gww GWW/head GWW/bse" 
           
@@ -69,10 +69,10 @@ for dir in $dirs; do
 	     DEPENDS="$DEPEND2 $LEVEL2/PW/src" ;;
 	PHonon/FD | PHonon/PH | PHonon/Gamma | XSpectra/src  | GIPAW/src )
 	     DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/LR_Modules" ;;
-	PHonon/D3 | GWW/head | TDDFPT/src )
+	GWW/head | TDDFPT/src )
 	     DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/PHonon/PH $LEVEL2/LR_Modules" ;;	
 	GWW/bse )
-	 DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/PHonon/PH $LEVEL2/LR_Modulesi $LEVEL2/GWW/pw4gww $LEVEL2/GWW/gww" ;;	
+	 DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/PHonon/PH $LEVEL2/LR_Modules $LEVEL2/GWW/pw4gww $LEVEL2/GWW/gww" ;;	
     *)
 # if addson needs a make.depend file
 	DEPENDS="$DEPENDS $add_deps"

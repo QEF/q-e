@@ -395,7 +395,6 @@ plot_whole_cell.o : ../../Modules/kind.o
 plotband.o : ../../Modules/kind.o
 plotband.o : ../../Modules/parser.o
 poormanwannier.o : ../../Modules/becmod.o
-poormanwannier.o : ../../Modules/cell_base.o
 poormanwannier.o : ../../Modules/constants.o
 poormanwannier.o : ../../Modules/control_flags.o
 poormanwannier.o : ../../Modules/environment.o

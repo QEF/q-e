@@ -232,7 +232,7 @@ MODULE exx
     USE mp_orthopools,  ONLY : mp_start_orthopools, intra_orthopool_comm
     USE mp,             ONLY : mp_sum
     USE klist,          ONLY : nkstot
-    !USE exx,            ONLY : nkqs, working_pool
+    !
     IMPLICIT NONE
     INTEGER :: ikq, current_ik, ik
     INTEGER, EXTERNAL :: local_kpoint_index
