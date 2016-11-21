@@ -23,13 +23,13 @@ calculation but the parameters are chosen in order to keep the example
 fast and instructive.
 
 In the slab geometry it's natural to take the atom in the central layer,
-that mimics the bulk environment, as refernce and calculate all CLS from
+that mimics the bulk environment, as reference and calculate all CLS from
 the difference w.rt. this one. In this example the other interesting
 atoms are the atoms in the surface layer and  the one in the first
 subsurface layer.  Once the desired atoms are identified the procedure
 is straightforward and can be defined in few steps:
 
- 1) Make a regular SCF calculation of the slab where the core-exited
+ 1) Make a regular SCF calculation of the slab where the core-excited
  pseudo-potential is used for the reference atom.
 
  2) Make several other SCF calculations, one for each selected atom in
@@ -42,14 +42,14 @@ is straightforward and can be defined in few steps:
 ----------------
 
 1) For this simulation, and all the following ones, it's necessary to
-define a normal pseudo-potential and a core-exited one for Rhodium. The
+define a normal pseudo-potential and a core-excited one for Rhodium. The
 two potentials have to be consistent with each other (functional,
-parameters, ecc..), being the core-exited one a PP for the same atomic
-type with a different, core-exited, electronic configuration. (The
-instructions to generate of a core-exited PP can be found in the ld1.x
+parameters, ecc..), being the core-excited one a PP for the same atomic
+type with a different, core-excited, electronic configuration. (The
+instructions to generate of a core-excited PP can be found in the ld1.x
 manual.)
 
-Once the PP and the core-exited PP are defined the calculation is
+Once the PP and the core-excited PP are defined the calculation is
 a regular SCF run with the only difference that the bulk atom, the
 reference, is defined by the core-excited PP. ONLY the reference atom
 is defined in this way and ntyp variable in the &system namelist has to
@@ -61,7 +61,7 @@ the configuration and all the precautions of possible interaction have
 to be considered. In the example a slab 1x1 is used only to let the
 example run on an average single CPU, again this is just a reference
 structure. It's possible, and in fact true, that a bigger supercell is
-needed, for example a 2x2 or a 3x3, to keep all the core-exited atoms
+needed, for example a 2x2 or a 3x3, to keep all the core-excited atoms
 enough separated, avoid an interaction between them.
 
     (input=rh011bulk.scf.in, output=rh011bulk.scf.out)
@@ -80,7 +80,7 @@ be identical to the reference SCF calculation.
     (input=rh011surf.scf.in, output=rh011surf.scf.in)
 
 3) Once obtained the energy for all the atoms identified the CLS are
-defined as the difference between the GS energy of the particualar SCF
+defined as the difference between the GS energy of the particular SCF
 calculation and the GS energy of the reference SCF one:
 
     SCLS = energy_gs(surface core-excited) - energy_gs(bulk core-excited)
