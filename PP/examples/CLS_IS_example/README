@@ -1,6 +1,6 @@
 This example shows how to calculate the initial state core level shift
-using the core-exited pseudo-potential technique. Defining the normal
-PP as V and the core-exited PP as V*, initial_state.x will calculate for
+using the core-excited pseudo-potential technique. Defining the normal
+PP as V and the core-excited PP as V*, initial_state.x will calculate for
 each atom the expectation value defined by <Psi| (V-V*) |Psi> with Psi
 the ground state wave function (in DFT this is implemented with several
 integrals concerning both the pseudo and the GS charge distribution).
@@ -9,19 +9,19 @@ The example calculates the IS contribution in a rhodium [011] slab
 composed of 5 layer. What is necessary are
 
        - a normal PP for rhodium
-       - a core-exited PP for rhodium
+       - a core-excited PP for rhodium
 
 The two potentials have to be consistent with each other (functional,
-parameters, ecc..), being the core-exited one a PP for the same atomic
-type with a different, core-exited, electronic configuration.
+parameters, ecc..), being the core-excited one a PP for the same atomic
+type with a different, core-excited, electronic configuration.
 
 The calculation proceeds as follows:
 
 1) make a self-consistent calculation for Rh [011] slab adding the
-core-exited PP in the ATOMIC_SPECIES. All the atomic positions will
-be defined by the normal PP, the addition of the exited PP in the list
+core-excited PP in the ATOMIC_SPECIES. All the atomic positions will
+be defined by the normal PP, the addition of the excited PP in the list
 is needed for the next step. Notice that in &system the ntyp variable
-counts also the core-exited PP.
+counts also the core-excited PP.
 
    (input=rh011slab.scf.in, output=rh011slab.scf.out)
 
@@ -32,9 +32,9 @@ for other atoms in the calculation can appear and the PPs are defined
 in initial_state.x with numbers, starting from 1 up to the last pseudo.
 
 In the example are used only two PPs. The first one is the regular PP used
-to define the atoms in ATOMIC_POSITIONS. The second is the core-exited
+to define the atoms in ATOMIC_POSITIONS. The second is the core-excited
 PP, which appear only in the ATOMIC_SPECIES card. Then the way to specify
-that atomic type 1 is exited to atomic type 2 is "exited(1)=2".
+that atomic type 1 is excited to atomic type 2 is "excite(1)=2".
 
    (input=rh011slab.istate.in, output=rh011slab.istate.out).
 
@@ -51,7 +51,7 @@ NOTE: Case with several PP
 In bigger calculations with several atomic species the strategy will be identical.
 
 - First make a SCF calculation with the regular PP and adding all the
-different core-exited versions one wants to check.
+different core-excited versions one wants to check.
        
 ATOMIC_SPECIES
 Rh      1.0     Rh.pbe-rrkjus_lb.UPF        (used)
