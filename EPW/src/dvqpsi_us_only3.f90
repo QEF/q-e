@@ -35,7 +35,7 @@
   USE phus,       ONLY : int1, int1_nc, int2, int2_so, alphap
   USE lrus,       ONLY : becp1
   USE eqv,        ONLY : dvpsi
-  USE elph2,      ONLY : igkq
+  USE elph2,      ONLY : igkq, lower_band, upper_band
 
   implicit none
   !
@@ -94,12 +94,12 @@
 
   call start_clock ('dvqpsi_us_on')
   if (noncolin) then
-     allocate (ps1_nc(nkb , npol, nbnd))
-     allocate (ps2_nc(nkb , npol, nbnd , 3))
+     allocate (ps1_nc(nkb , npol, lower_band: upper_band))
+     allocate (ps2_nc(nkb , npol, lower_band: upper_band , 3))
      allocate (deff_nc(nhm, nhm, nat, nspin))
   else
-     allocate (ps1 ( nkb , nbnd))
-     allocate (ps2 ( nkb , nbnd , 3))
+     allocate (ps1 ( nkb , lower_band: upper_band))
+     allocate (ps2 ( nkb , lower_band: upper_band , 3))
      allocate (deff(nhm, nhm, nat))
   end if
   allocate (aux ( npwx))
@@ -114,7 +114,7 @@
      ps1(:,:)   = (0.d0, 0.d0)
      ps2(:,:,:) = (0.d0, 0.d0)
   end if
-  do ibnd = 1, nbnd
+  do ibnd = lower_band, upper_band
      IF (noncolin) THEN
         CALL compute_deff_nc(deff_nc,et(ibnd,ik))
      ELSE
@@ -217,10 +217,10 @@
   !
   if (nkb.gt.0) then
      if (noncolin) then
-        call zgemm ('N', 'N', npwq, nbnd*npol, nkb, &
+        call zgemm ('N', 'N', npwq, (upper_band-lower_band+1)*npol, nkb, &
          (1.d0, 0.d0), vkb, npwx, ps1_nc, nkb, (1.d0, 0.d0) , dvpsi, npwx)
      else
-        call zgemm ('N', 'N', npwq, nbnd, nkb, &
+        call zgemm ('N', 'N', npwq, (upper_band-lower_band+1), nkb, &
          (1.d0, 0.d0) , vkb, npwx, ps1, nkb, (1.d0, 0.d0) , dvpsi, npwx)
      end if
   end if
@@ -231,12 +231,12 @@
      do ipol = 1, 3
         ok = .false.
         IF (noncolin) THEN
-           do ibnd = 1, nbnd
+           do ibnd = lower_band, upper_band
               ok = ok.or.(abs (ps2_nc (ikb, 1, ibnd, ipol) ).gt.eps).or. &
                          (abs (ps2_nc (ikb, 2, ibnd, ipol) ).gt.eps)
            end do
         ELSE
-           do ibnd = 1, nbnd
+           do ibnd = lower_band, upper_band
               ok = ok.or. (abs (ps2 (ikb, ibnd, ipol) ) .gt.eps)
            enddo
         ENDIF
@@ -246,7 +246,7 @@
               !aux (ig) =  vkb(ig, ikb) * (xk(ipol,ikq) + g(ipol, igg) )
               aux (ig) =  vkb(ig, ikb) * (xxk(ipol) + g(ipol, igg) )
            enddo
-           do ibnd = 1, nbnd
+           do ibnd = lower_band, upper_band
               IF (noncolin) THEN
                  call zaxpy(npwq,ps2_nc(ikb,1,ibnd,ipol),aux,1,dvpsi(1,ibnd),1)
                  call zaxpy(npwq,ps2_nc(ikb,2,ibnd,ipol),aux,1, &

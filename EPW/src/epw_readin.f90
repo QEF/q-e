@@ -16,8 +16,10 @@
   !!    A second routine readfile reads the variables saved on a file
   !!    by the self-consistent program.
   !!
+  !!   @Note:
+  !!     SP: Image parallelization added
+  !!
   USE ions_base,     ONLY : nat, ntyp => nsp
-  USE io_global,     ONLY : ionode_id
   USE mp,            ONLY : mp_bcast 
   USE pwcom,         ONLY : xqq
   USE wvfct,         ONLY : nbnd
@@ -28,8 +30,7 @@
   USE qpoint,        ONLY : xq
   USE disp,          ONLY : nq1, nq2, nq3
   USE output,        ONLY : fildvscf, fildrho
-  USE epwcom,        ONLY : delta_smear, &
-                            nsmear, dis_win_min, dis_win_max, wannierize, &
+  USE epwcom,        ONLY : delta_smear, nsmear, dis_win_min, dis_win_max, wannierize, &
                             ngaussw, dvscf_dir, eptemp, wdata, &
                             num_iter, dis_froz_max, fsthick, dis_froz_min, &
                             vme, degaussw, epexst, eig_read, kmaps, &
@@ -55,8 +56,6 @@
                             title, int_mob, scissor, iterative_bte, scattering, &
                             ncarrier, carrier, scattering_serta, &
                             scattering_0rta, longrange, shortrange
-
-!  USE epwcom,        ONLY : tphases, fildvscf0                  
   USE elph2,         ONLY : elph
   USE start_k,       ONLY : nk1, nk2, nk3
   USE constants_epw, ONLY : ryd2mev, ryd2ev, ev2cmm1, kelvin2eV
@@ -68,6 +67,7 @@
   USE constants,     ONLY : AMU_RY
   USE control_lr,    ONLY : lgamma
   USE mp_global,     ONLY : my_pool_id, me_pool
+  USE io_global,     ONLY : meta_ionode, meta_ionode_id, ionode, ionode_id, stdout
 #if defined(__NAG)
   USE F90_UNIX_ENV,  ONLY : iargc, getarg
 #endif
@@ -93,6 +93,7 @@
   !! temp vars for saving kgrid info
   INTEGER :: nk3tmp  
   !! temp vars for saving kgrid info
+  LOGICAL, EXTERNAL  :: imatches
   character(len=256) :: outdir
   namelist / inputepw / &
        amass, outdir, prefix, iverbosity, time_max, fildvscf,                  &
@@ -259,35 +260,33 @@
   nk1tmp = 0
   nk2tmp = 0
   nk3tmp = 0
-  IF (me_pool /=0 .or. my_pool_id /=0) goto 400 
   !
+  IF (meta_ionode) THEN
   !
   ! ... Input from file ?
+     CALL input_from_file ( )
   !
-  nargs = iargc() 
+  ! ... Read the first line of the input file
   !
-  DO iiarg = 1, ( nargs - 1 )
-     !
-     CALL getarg( iiarg, input_file )  
-     IF ( TRIM( input_file ) == '-input' .OR. &
-          TRIM( input_file ) == '-inp'   .OR. &
-          TRIM( input_file ) == '-in' ) THEN
-        !
-        CALL getarg( ( iiarg + 1 ) , input_file )  
-        OPEN ( UNIT = 5, FILE = input_file, FORM = 'FORMATTED', &
-               STATUS = 'OLD', IOSTAT = ierr )
-        CALL errore( 'iosys', 'input file ' // TRIM( input_file ) // &
-                   & ' not found' , ierr )
-        !
-     END IF
-     !
-  END DO
+     READ( 5, '(A)', IOSTAT = ios ) title
   !
+  ENDIF
+  ! 
+  CALL mp_bcast(ios, meta_ionode_id, world_comm )
+  CALL errore( 'epw_readin', 'reading title ', ABS( ios ) )
+  CALL mp_bcast(title, meta_ionode_id, world_comm  )
   !
-  !    Read the first line of the input file
+  ! Rewind the input if the title is actually the beginning of inputph namelist
   !
-  READ (5, '(a)', err = 100, iostat = ios) title
-100 CALL errore ('epw_readin', 'reading title ', abs (ios) )
+  IF( imatches("&inputepw", title) ) THEN
+    WRITE(*, '(6x,a)') "Title line not specified: using 'default'."
+    title='default'
+    IF (meta_ionode) REWIND(5, iostat=ios)
+    CALL mp_bcast(ios, meta_ionode_id, world_comm  )
+    CALL errore('epw_readin', 'Title line missing from input.', abs(ios))
+  ENDIF
+  !
+  IF (.NOT. meta_ionode) goto 400
   !
   !   set default values for variables in namelist
   !
@@ -433,7 +432,7 @@
   ios = 0
 #else
   !
-  READ (5, inputepw, err = 200, iostat = ios)
+  IF (meta_ionode) READ (5, inputepw, err = 200, iostat = ios)
 #endif
 200 CALL errore ('epw_readin', 'reading input_epw namelist', abs (ios) )
   !
@@ -630,8 +629,8 @@
      iswitch = -4
   END IF
   !
-  CALL mp_bcast ( iswitch, ionode_id, world_comm )
-  CALL mp_bcast ( modenum, ionode_id, world_comm)
+  CALL mp_bcast ( iswitch, meta_ionode_id, world_comm )
+  CALL mp_bcast ( modenum, meta_ionode_id, world_comm)
   !
   IF (tfixed_occ) &
      CALL errore('epw_readin','phonon with arbitrary occupations not tested',1)
@@ -646,9 +645,10 @@
   IF (nat_todo < 0 .OR. nat_todo > nat) CALL errore ('epw_readin', &
        'nat_todo is wrong', 1)
   IF (nat_todo.NE.0) THEN
-     read (5, *, err = 700, iostat = ios) (atomo (na), na = 1, nat_todo)
+     IF (meta_ionode)read (5, *, iostat = ios) (atomo (na), na = 1, nat_todo)
+     CALL mp_bcast(ios, meta_ionode_id, world_comm  )
 700  CALL errore ('epw_readin', 'reading atomo', abs (ios) )
-     CALL mp_bcast(atomo, ionode_id, world_comm )
+     CALL mp_bcast(atomo, meta_ionode_id, world_comm )
   ENDIF
 800 continue
   CALL bcast_ph_input1
@@ -663,12 +663,12 @@
   !
   !  broadcast the values of nq1, nq2, nq3
   !
-  CALL mp_bcast( nq1, ionode_id, world_comm )
-  CALL mp_bcast( nq2, ionode_id, world_comm )
-  CALL mp_bcast( nq3, ionode_id, world_comm )
-  CALL mp_bcast( nk1, ionode_id, world_comm )
-  CALL mp_bcast( nk2, ionode_id, world_comm )
-  CALL mp_bcast( nk3, ionode_id, world_comm )
+  CALL mp_bcast( nq1, meta_ionode_id, world_comm )
+  CALL mp_bcast( nq2, meta_ionode_id, world_comm )
+  CALL mp_bcast( nq3, meta_ionode_id, world_comm )
+  CALL mp_bcast( nk1, meta_ionode_id, world_comm )
+  CALL mp_bcast( nk2, meta_ionode_id, world_comm )
+  CALL mp_bcast( nk3, meta_ionode_id, world_comm )
   !
   amass = AMU_RY * amass
   !

@@ -47,7 +47,7 @@
   !
   gamma_only = .FALSE.
   !
-  CALL mp_startup()
+  CALL mp_startup(start_images=.true.)
   !
   ! Display the logo
   IF (mpime.eq.ionode_id) then

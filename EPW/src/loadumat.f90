@@ -24,7 +24,7 @@
   USE epwcom,        ONLY : filukk
   USE constants_epw, ONLY : czero
   USE io_epw,        ONLY : iunukk
-  USE io_global, ONLY : ionode_id
+  USE io_global, ONLY : ionode_id, meta_ionode
   USE mp_global, ONLY : inter_pool_comm
   USE mp,        ONLY : mp_sum, mp_barrier, mp_bcast
   USE mp_world,  ONLY : mpime
@@ -60,7 +60,7 @@
   !
   cu_big = czero
   cuq_big = czero
-  IF (mpime.eq.ionode_id) then
+  IF (meta_ionode) then
     !
     ! first proc read rotation matrix (coarse mesh) from file
     !

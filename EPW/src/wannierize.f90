@@ -92,7 +92,7 @@
   !
   USE io_files,    ONLY : prefix
   USE io_epw,      ONLY : iuwinfil
-  USE io_global,   ONLY : ionode
+  USE io_global,   ONLY : meta_ionode
   USE epwcom,      ONLY : nbndsub, nwanxx, proj, iprint, dis_win_min, &
                           dis_win_max, dis_froz_min, dis_froz_max, num_iter, &
                           wdata 
@@ -103,7 +103,7 @@
   !
   logical :: random
   !
-  IF (ionode) THEN
+  IF (meta_ionode) THEN
     !
     IF (nbndsub .gt. nwanxx) call errore('write_winfil',"Too many wannier bands",nbndsub)
     !
@@ -159,7 +159,7 @@
   USE io_global,   ONLY : stdout
   USE io_epw,      ONLY : iuprojfil
   USE mp_global,   ONLY : inter_pool_comm
-  USE io_global,   ONLY : stdout, ionode
+  USE io_global,   ONLY : stdout, meta_ionode
   USE mp,          ONLY : mp_sum
   USE epwcom,      ONLY : DP, dis_win_max, dis_win_min
   USE constants_epw, ONLY : ryd2ev 
@@ -220,7 +220,7 @@
   ! sum the contributions from all k-points
   CALL mp_sum(proj_wf, inter_pool_comm)
   !
-  IF (ionode) THEN
+  IF (meta_ionode) THEN
     !
     OPEN (unit = iuprojfil, file = trim(prefix)//".projw90", form = 'formatted')
     !

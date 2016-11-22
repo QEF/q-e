@@ -24,8 +24,8 @@
   USE kinds,                 ONLY : DP
   USE ions_base,             ONLY : nat, ityp
   USE cell_base,             ONLY : tpiba
-  USE fft_base,              ONLY: dfftp, dffts
-  USE fft_interfaces,        ONLY: fwfft, invfft
+  USE fft_base,              ONLY : dfftp, dffts
+  USE fft_interfaces,        ONLY : fwfft, invfft
   USE gvect,                 ONLY : eigts1, eigts2, eigts3, mill, g, nl, &
                                     ngm
   USE gvecs,                 ONLY : ngms, doublegrid, nls
@@ -39,7 +39,7 @@
   USE eqv,                   ONLY : dvpsi, dmuxc, vlocq
   USE qpoint,                ONLY : eigqts, npwq !, ikks
   USE klist,                 ONLY : ngk
-  USE elph2,                 ONLY : igkq, igk
+  USE elph2,                 ONLY : igkq, igk, lower_band, upper_band
 
   implicit none
   !
@@ -171,7 +171,7 @@
   ! Now we compute dV_loc/dtau in real space
   !
   CALL invfft ('Smooth', aux1, dffts)
-  DO ibnd = 1, nbnd
+  DO ibnd = lower_band, upper_band
      DO ip = 1, npol
         aux2(:) = (0.d0, 0.d0)
         IF ( ip == 1 ) THEN

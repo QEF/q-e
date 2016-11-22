@@ -56,7 +56,7 @@
   !
   USE mp_global,     ONLY : my_pool_id, nproc_pool,    & 
                             intra_pool_comm, &
-                            inter_pool_comm
+                            inter_pool_comm, inter_image_comm, world_comm
   USE mp,            ONLY : mp_barrier, mp_bcast, mp_put,mp_sum
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
@@ -78,7 +78,7 @@
   USE becmod,        ONLY : calbec 
   USE elph2,         ONLY : shift, gmap, el_ph_mat, umat, umatq, igk_k_all, &
                             umat_all, xk_all, et_all, xkq, etq, igkq, igk, &
-                            ngk_all
+                            ngk_all, lower_band, upper_band
   USE fft_base,      ONLY : dffts
   USE constants_epw, ONLY : czero, cone, ci 
   USE control_flags, ONLY : iverbosity
@@ -120,7 +120,7 @@
   !! Variables for folding of k+q grid
   REAL(kind=DP) :: zero_vect(3)
   !!  
-  COMPLEX(kind=DP), ALLOCATABLE :: aux1 (:,:), elphmat (:,:,:), eptmp (:,:), aux2(:,:)
+  COMPLEX(kind=DP), ALLOCATABLE :: aux1 (:,:), elphmat (:,:,:), eptmp (:,:), aux2(:,:), aux3(:,:)
 !DBSP - NAG complains ...
   COMPLEX(DP),EXTERNAL :: ZDOTC
 !DBSP
@@ -146,6 +146,11 @@
   ! find the bounds of k-dependent arrays in the parallel case in each pool
   CALL fkbounds( nkstot, lower_bnd, upper_bnd )
   !
+  ! SP: Bound for band parallelism
+  CALL fkbounds_bnd( nbnd, lower_band, upper_band )
+  !
+  IF ( .not. ALLOCATED (aux3) )    ALLOCATE ( aux3( npwx*npol, lower_band:upper_band) )
+  IF ( .not. ALLOCATED (dvpsi) )    ALLOCATE ( dvpsi( npwx*npol, lower_band:upper_band) )
   ! setup for k+q folding
   !
   CALL kpointdivision ( ik0 )
@@ -164,7 +169,8 @@
   !
   DO ik = 1, nks
      !
-!DBSP 
+     elphmat(:,:,:) = (0.d0,0.d0)
+!DBSP
 !     c = 0
 !     b = 0
 !END
@@ -351,24 +357,27 @@
         !
         !  calculate dvscf_q*psi_k
         !
-        aux2=(0.0_DP,0.0_DP)
-        DO ibnd = 1, nbnd !, incr
+        CALL start_clock ('dvscf_q*psi_k')
+        ! 
+        aux3=(0.0_DP,0.0_DP)
+        DO ibnd = lower_band, upper_band
            CALL invfft_wave (npw, igk, evc(:, ibnd), aux1)
          IF (timerev) THEN
            CALL apply_dpot(dffts%nnr, aux1, CONJG(dvscfins(:,:,ipert)),current_spin)
          ELSE
             CALL apply_dpot(dffts%nnr, aux1, dvscfins(:,:,ipert),current_spin)
          ENDIF
-           CALL fwfft_wave (npwq, igkq, aux2(:, ibnd), aux1)
+           CALL fwfft_wave (npwq, igkq, aux3(:, ibnd), aux1)
         ENDDO
-        dvpsi=dvpsi+aux2
-!DBSP
-!        c = c+SUM((REAL(REAL(dvpsi(:,:))))**2)+SUM((REAL(AIMAG(dvpsi(:,:))))**2)
+        dvpsi=dvpsi+aux3
+!BSP
+        !c = c+SUM((REAL(REAL(dvpsi(:,:))))**2)+SUM((REAL(AIMAG(dvpsi(:,:))))**2)
 !END
         !
         ! calculate elphmat(j,i)=<psi_{k+q,j}|dvscf_q*psi_{k,i}> for this pertur
         !
-        DO ibnd =1, nbnd
+        ! 
+        DO ibnd =lower_band, upper_band
            DO jbnd = 1, nbnd
               elphmat (jbnd, ibnd, ipert) = &
                  ZDOTC (npwq, evq(1, jbnd), 1, dvpsi(1, ibnd), 1)
@@ -378,6 +387,10 @@
            ENDDO
         ENDDO
      ENDDO
+     !
+     CALL mp_sum(elphmat, intra_pool_comm)
+     CALL mp_sum(elphmat, inter_image_comm)
+
 !DBSP
 !     if (ik==2)then
 !       write(*,*)'SUM dvpsi b ', b
@@ -421,7 +434,7 @@
   !
   CALL diropn (iuwfc, 'wfc', lrwfc, exst) 
   ! never remove this barrier - > insures that wfcs are restored to each pool before moving on
-  CALL mp_barrier(inter_pool_comm)
+  CALL mp_barrier(world_comm)
   !
   DEALLOCATE (elphmat, eptmp, aux1, aux2)
   DEALLOCATE (gmap, shift)

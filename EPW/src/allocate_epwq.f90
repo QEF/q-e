@@ -25,7 +25,7 @@
   USE wavefunctions_module,  ONLY: evc
   USE spin_orb,     ONLY : lspinorb
   USE control_lr,   ONLY : lgamma, nbnd_occ
-  USE phcom,        ONLY : evq, dvpsi, dpsi, vlocq,&
+  USE phcom,        ONLY : evq, dpsi, vlocq,&
                            dmuxc, npertx 
   USE phus,         ONLY : int1, int1_nc, int2, int2_so, &
                            int4, int4_nc, int5, int5_so, becsum_nc, &
@@ -65,9 +65,7 @@
      ALLOCATE (evq ( npwx*npol, nbnd))    
   ENDIF
   !
-  ALLOCATE (dvpsi ( npwx*npol, nbnd))    
   ALLOCATE ( dpsi ( npwx*npol, nbnd))    
-  !
   ALLOCATE (vlocq ( ngm, ntyp))    
 ! SP: nrxx is not used in QE 5 ==> tg_nnr is the maximum among nnr
 !     This SHOULD have the same dim as nrxx had.

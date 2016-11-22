@@ -15,10 +15,10 @@
   !!    
   !!
   !--------------------------------------------------------------
-  USE mp_global,ONLY : inter_pool_comm
+  USE mp_global,ONLY : inter_pool_comm, world_comm
   USE mp,       ONLY : mp_bcast,mp_max,mp_min
   USE mp_world, ONLY : mpime
-  use io_global,ONLY : ionode_id
+  use io_global,ONLY : ionode_id, meta_ionode, meta_ionode_id
   USE kinds,    ONLY : DP
   use io_epw,   ONLY : iukgmap, iukmap
   use pwcom,    ONLY : nks
@@ -78,7 +78,8 @@
   ngxx = nint (tmp)
 #endif
   !
-  IF (mpime.eq.ionode_id) then
+  !IF (mpime.eq.ionode_id) then
+  IF (meta_ionode) then
     !
     open ( unit = iukgmap, file = trim(prefix)//'.kgmap', form = 'formatted',status='old',iostat=ios)
     IF (ios /=0) call errore ('readgmap', 'error opening kgmap file',iukgmap)
@@ -111,11 +112,11 @@
   !
   ! first node broadcasts ng0vec to all nodes for allocation of gmap
   !
-  CALL mp_bcast( ng0vec, ionode_id, inter_pool_comm )
+  CALL mp_bcast( ng0vec, meta_ionode_id, world_comm )
   !
   allocate ( gmap (ngxx * ng0vec) )
   !
-  IF (mpime.eq.ionode_id) then
+  IF (meta_ionode) then
      !
     DO ig0 = 1, ng0vec
       read (iukgmap,*) g0vec_all_r (:,ig0)
@@ -133,9 +134,9 @@
   !
   ! first node broadcasts everything to all nodes
   !
-  CALL mp_bcast( g0vec_all_r, ionode_id, inter_pool_comm )
-  CALL mp_bcast( shift, ionode_id, inter_pool_comm )
-  CALL mp_bcast( gmap, ionode_id, inter_pool_comm )
+  CALL mp_bcast( g0vec_all_r, meta_ionode_id, world_comm )
+  CALL mp_bcast( shift, meta_ionode_id, world_comm )
+  CALL mp_bcast( gmap, meta_ionode_id, world_comm )
   !
   end subroutine readgmap
 

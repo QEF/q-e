@@ -126,8 +126,8 @@ SUBROUTINE setup_nnkp (  )
   !! calculate the M_mn(k,b) matrix elements 
   !! 
   ! ---------------------------------------------------------------------- 
-  USE io_global, ONLY : ionode
-  USE io_global, ONLY : stdout, ionode_id
+  USE io_global, ONLY : meta_ionode
+  USE io_global, ONLY : stdout, meta_ionode_id
   USE mp_world,  ONLY : world_comm
   USE kinds,     ONLY : DP
   USE constants, ONLY : eps6, tpi
@@ -248,7 +248,7 @@ SUBROUTINE setup_nnkp (  )
      atsym(ia)=atm(type)
   ENDDO
 
-  IF (ionode) THEN
+  IF (meta_ionode) THEN
 !   postproc_setup = .true.
     CALL wannier_setup(seedname2, mp_grid, iknum,      &  ! input
            rlatt, glatt, kpt_latt, nbnd,                 &  ! input
@@ -259,20 +259,20 @@ SUBROUTINE setup_nnkp (  )
    ! SP: In wannier_setup, the .nnkp file is produced.
   ENDIF
    
-  CALL mp_bcast(nnb,          ionode_id, world_comm )
-  CALL mp_bcast(kpb,          ionode_id, world_comm )
-  CALL mp_bcast(g_kpb,        ionode_id, world_comm )
-  CALL mp_bcast(num_bands,    ionode_id, world_comm )
-  CALL mp_bcast(n_wannier,    ionode_id, world_comm )
-  CALL mp_bcast(center_w,     ionode_id, world_comm )
-  CALL mp_bcast(l_w,          ionode_id, world_comm )
-  CALL mp_bcast(mr_w,         ionode_id, world_comm )
-  CALL mp_bcast(r_w,          ionode_id, world_comm )
-  CALL mp_bcast(zaxis,        ionode_id, world_comm )
-  CALL mp_bcast(xaxis,        ionode_id, world_comm )
-  CALL mp_bcast(alpha_w,      ionode_id, world_comm )
-  CALL mp_bcast(exclude_bands,ionode_id, world_comm )
-  CALL mp_bcast(noncolin,     ionode_id, world_comm )
+  CALL mp_bcast(nnb,          meta_ionode_id, world_comm )
+  CALL mp_bcast(kpb,          meta_ionode_id, world_comm )
+  CALL mp_bcast(g_kpb,        meta_ionode_id, world_comm )
+  CALL mp_bcast(num_bands,    meta_ionode_id, world_comm )
+  CALL mp_bcast(n_wannier,    meta_ionode_id, world_comm )
+  CALL mp_bcast(center_w,     meta_ionode_id, world_comm )
+  CALL mp_bcast(l_w,          meta_ionode_id, world_comm )
+  CALL mp_bcast(mr_w,         meta_ionode_id, world_comm )
+  CALL mp_bcast(r_w,          meta_ionode_id, world_comm )
+  CALL mp_bcast(zaxis,        meta_ionode_id, world_comm )
+  CALL mp_bcast(xaxis,        meta_ionode_id, world_comm )
+  CALL mp_bcast(alpha_w,      meta_ionode_id, world_comm )
+  CALL mp_bcast(exclude_bands,meta_ionode_id, world_comm )
+  CALL mp_bcast(noncolin,     meta_ionode_id, world_comm )
   !
   ! SP: Commented because we now write on file the .nnkp file and read from it.
   ! 
@@ -313,8 +313,8 @@ SUBROUTINE setup_nnkp (  )
   ! 
   ! Now we read the .nnkp file 
   ! 
-  IF (ionode) CLOSE (iun_nnkp)
-  IF (ionode) THEN  ! Read nnkp file on ionode only
+  IF (meta_ionode) CLOSE (iun_nnkp)
+  IF (meta_ionode) THEN  ! Read nnkp file on ionode only
     INQUIRE(file=trim(seedname2)//".nnkp",exist=have_nnkp)
     IF(.not. have_nnkp) THEN
        CALL errore( 'pw2wannier90', 'Could not find the file '&
@@ -324,7 +324,7 @@ SUBROUTINE setup_nnkp (  )
     iun_nnkp = find_free_unit()
     OPEN (unit=iun_nnkp, file=trim(seedname2)//".nnkp",form='formatted')
   ENDIF
-  IF (ionode) THEN   ! read from ionode only
+  IF (meta_ionode) THEN   ! read from ionode only
     IF(noncolin) THEN
        CALL scan_file_to(iun_nnkp,'spinor_projections',found)
        IF(.not.found) THEN
@@ -340,12 +340,12 @@ SUBROUTINE setup_nnkp (  )
     ENDIF
     READ(iun_nnkp,*) n_proj
   ENDIF
-  CALL mp_bcast(n_proj,ionode_id, world_comm)
+  CALL mp_bcast(n_proj,meta_ionode_id, world_comm)
   ! 
   ALLOCATE( gf(npwx,n_proj), csph(16,n_proj) )
   IF(noncolin) ALLOCATE( spin_eig(n_proj),spin_qaxis(3,n_proj) )
   ! 
-  IF (ionode) THEN   ! read from ionode only
+  IF (meta_ionode) THEN   ! read from ionode only
     DO iw=1,n_proj
       READ(iun_nnkp,*) (center_w(i,iw), i=1,3), l_w(iw), mr_w(iw), r_w(iw)
       READ(iun_nnkp,*) (zaxis(i,iw),i=1,3),(xaxis(i,iw),i=1,3),alpha_w(iw)
@@ -376,19 +376,19 @@ SUBROUTINE setup_nnkp (  )
   WRITE(stdout,*) '     - All guiding functions are given '
   ! 
   ! Broadcast
-  CALL mp_bcast(center_w,ionode_id, world_comm)
-  CALL mp_bcast(l_w,ionode_id, world_comm)
-  CALL mp_bcast(mr_w,ionode_id, world_comm)
-  CALL mp_bcast(r_w,ionode_id, world_comm)
-  CALL mp_bcast(zaxis,ionode_id, world_comm)
-  CALL mp_bcast(xaxis,ionode_id, world_comm)
-  CALL mp_bcast(alpha_w,ionode_id, world_comm)
+  CALL mp_bcast(center_w,meta_ionode_id, world_comm)
+  CALL mp_bcast(l_w,meta_ionode_id, world_comm)
+  CALL mp_bcast(mr_w,meta_ionode_id, world_comm)
+  CALL mp_bcast(r_w,meta_ionode_id, world_comm)
+  CALL mp_bcast(zaxis,meta_ionode_id, world_comm)
+  CALL mp_bcast(xaxis,meta_ionode_id, world_comm)
+  CALL mp_bcast(alpha_w,meta_ionode_id, world_comm)
   IF(noncolin) THEN
-     CALL mp_bcast(spin_eig,ionode_id, world_comm)
-     CALL mp_bcast(spin_qaxis,ionode_id, world_comm)
+     CALL mp_bcast(spin_eig,meta_ionode_id, world_comm)
+     CALL mp_bcast(spin_qaxis,meta_ionode_id, world_comm)
   ENDIF
   !
-  IF (ionode) THEN   ! read from ionode only
+  IF (meta_ionode) THEN   ! read from ionode only
     CALL scan_file_to(iun_nnkp,'nnkpts',found)
     IF(.not.found) THEN
        CALL errore( 'pw2wannier90epw', 'Could not find nnkpts block in '&
@@ -397,7 +397,7 @@ SUBROUTINE setup_nnkp (  )
     READ (iun_nnkp,*) nnb
   ENDIF
   ! Broadcast
-  CALL mp_bcast(nnb,ionode_id, world_comm)
+  CALL mp_bcast(nnb,meta_ionode_id, world_comm)
   !
   !
   nnbx = 0
@@ -408,7 +408,7 @@ SUBROUTINE setup_nnkp (  )
   WRITE(stdout,*)
   WRITE(stdout,*) ' Reading data about k-point neighbours '
   WRITE(stdout,*)
-  IF (ionode) THEN
+  IF (meta_ionode) THEN
     DO ik=1, iknum
       DO ib = 1, nnb
         READ(iun_nnkp,*) idum, kpb(ik,ib), (g_kpb(ipol,ik,ib), ipol =1,3)
@@ -416,8 +416,8 @@ SUBROUTINE setup_nnkp (  )
     ENDDO
   ENDIF
   ! Broadcast
-  CALL mp_bcast(kpb,ionode_id, world_comm)
-  CALL mp_bcast(g_kpb,ionode_id, world_comm)
+  CALL mp_bcast(kpb,meta_ionode_id, world_comm)
+  CALL mp_bcast(g_kpb,meta_ionode_id, world_comm)
   ! 
   DO ik=1, iknum
     DO ib = 1, nnb
@@ -448,7 +448,7 @@ SUBROUTINE setup_nnkp (  )
   WRITE(stdout,*) '     - All neighbours are found '
   WRITE(stdout,*)
   !
-  IF (ionode)THEN
+  IF (meta_ionode)THEN
     CLOSE (iun_nnkp)
   ENDIF
   RETURN
@@ -485,7 +485,7 @@ END SUBROUTINE scan_file_to
 SUBROUTINE run_wannier
   !-----------------------------------------------------------------------
   !
-  USE io_global, ONLY : stdout, ionode_id, ionode
+  USE io_global, ONLY : stdout, meta_ionode_id, meta_ionode
   USE ions_base, ONLY : nat
   USE mp,        ONLY : mp_bcast
   USE mp_world,  ONLY : world_comm
@@ -509,7 +509,7 @@ SUBROUTINE run_wannier
   !
   u_mat_opt = czero
   !
-  IF (ionode) THEN
+  IF (meta_ionode) THEN
      ! read in external eigenvalues, e.g.  GW
      IF (eig_read) then
         WRITE (stdout,'(5x,a,i5,a,i5,a)') "Reading electronic eigenvalues (", &
@@ -545,12 +545,12 @@ SUBROUTINE run_wannier
 
   ENDIF
   !
-  CALL mp_bcast(u_mat,       ionode_id, world_comm )
-  CALL mp_bcast(u_mat_opt,   ionode_id, world_comm )
-  CALL mp_bcast(lwindow,     ionode_id, world_comm )
-  CALL mp_bcast(wann_centers,ionode_id, world_comm )
-  CALL mp_bcast(wann_spreads,ionode_id, world_comm )
-  CALL mp_bcast(spreads,     ionode_id, world_comm )
+  CALL mp_bcast(u_mat,       meta_ionode_id, world_comm )
+  CALL mp_bcast(u_mat_opt,   meta_ionode_id, world_comm )
+  CALL mp_bcast(lwindow,     meta_ionode_id, world_comm )
+  CALL mp_bcast(wann_centers,meta_ionode_id, world_comm )
+  CALL mp_bcast(wann_spreads,meta_ionode_id, world_comm )
+  CALL mp_bcast(spreads,     meta_ionode_id, world_comm )
   !
   !
   ! output the results of the wannierization
@@ -765,7 +765,7 @@ SUBROUTINE compute_mmn_para
 !  parallelization on k-points has been added
 !  10/2008 Jesse Noffsinger UC Berkeley
 !
-   USE io_global,       ONLY : stdout, ionode
+   USE io_global,       ONLY : stdout, meta_ionode
    USE io_files,        ONLY : diropn
    USE mp_global,       ONLY : my_pool_id
    USE mp_global,       ONLY : npool, intra_pool_comm
@@ -841,7 +841,7 @@ SUBROUTINE compute_mmn_para
    !
    ! Get all the k-vector coords to each pool via xktot
    xktot = 0.d0
-   IF (ionode) then
+   IF (meta_ionode) then
       DO i = 1,nkstot
          xktot(:,i) = xk(:,i)
       ENDDO
@@ -1293,7 +1293,7 @@ SUBROUTINE write_filukk
    USE wannier,      ONLY : n_wannier, iknum, u_mat, u_mat_opt, lwindow
    USE epwcom,       ONLY : filukk
    USE constants_epw,ONLY : czero
-   USE io_global,    ONLY : ionode
+   USE io_global,    ONLY : meta_ionode
    !
    implicit none
    !
@@ -1302,7 +1302,7 @@ SUBROUTINE write_filukk
    !
    !
    !
-   IF (ionode) THEN
+   IF (meta_ionode) THEN
      !
      ndimwin(:) = 0
      DO ik = 1, iknum
@@ -1356,7 +1356,7 @@ SUBROUTINE phases_a_m
    USE mp_global,       ONLY : inter_pool_comm
    USE mp,              ONLY : mp_sum
    USE kinds,           ONLY : DP
-   USE io_global,       ONLY : ionode
+   USE io_global,       ONLY : meta_ionode
    USE klist,           ONLY : nkstot, xk, nks
    USE wvfct,           ONLY : nbnd
    USE wannier,         ONLY : a_mat, m_mat, n_wannier, nnb, kpb, iknum
@@ -1373,7 +1373,7 @@ SUBROUTINE phases_a_m
    real(DP), dimension(3)   :: zero_vect
 
    xktot = 0.d0
-   IF (ionode) then
+   IF (meta_ionode) then
       DO i = 1,nkstot
          xktot(:,i) = xk(:,i)
       ENDDO

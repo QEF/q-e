@@ -20,10 +20,12 @@
   !-----------------------------------------------------------------------
   !
   USE mp_global,     ONLY : my_pool_id, inter_pool_comm, root_pool, &
-                            intra_pool_comm,npool
+                            intra_pool_comm,npool, inter_image_comm,&
+                            world_comm
+  USE mp_images,     ONLY : my_image_id, nimage
   USE mp_world,      ONLY : mpime
   USE mp,            ONLY : mp_barrier, mp_bcast
-  USE io_global,     ONLY : ionode_id
+  USE io_global,     ONLY : meta_ionode, meta_ionode_id
   USE us,            ONLY : nqxq, dq, qrad
   USE gvect,         ONLY : gcutm
   USE cellmd,        ONLY : cell_factor
@@ -32,7 +34,7 @@
   USE wavefunctions_module, ONLY: evc
   USE ions_base,     ONLY : nat, nsp, tau, ityp
   USE control_flags, ONLY : iverbosity
-  USE io_global,     ONLY : stdout, ionode
+  USE io_global,     ONLY : stdout
   USE io_epw,        ONLY : iuepb 
   USE kinds,         ONLY : DP
   USE pwcom,         ONLY : et, xk, nks, nbnd, nkstot, ngm
@@ -189,19 +191,17 @@
   !
   ! READ qpoint list from stdin
   !
-  IF (mpime.eq.ionode_id) READ(5,*) nqc_irr
-  CALL mp_bcast (nqc_irr, ionode_id, inter_pool_comm)
-  CALL mp_bcast (nqc_irr, root_pool, intra_pool_comm)
+  IF (meta_ionode) READ(5,*) nqc_irr
+  CALL mp_bcast (nqc_irr, meta_ionode_id, world_comm)
   allocate ( xqc_irr(3,nqc_irr), wqlist_irr(nqc_irr) )
   allocate ( xqc(3,nq1*nq2*nq3), wqlist(nq1*nq2*nq3) )
   !  
-  IF (mpime.eq.ionode_id) then
+  IF (meta_ionode) then
     DO iq = 1, nqc_irr
       READ (5,*) xqc_irr (:,iq), wqlist_irr (iq)
     ENDDO
   ENDIF
-  CALL mp_bcast (xqc_irr, ionode_id, inter_pool_comm)
-  CALL mp_bcast (xqc_irr, root_pool, intra_pool_comm)
+  CALL mp_bcast (xqc_irr, meta_ionode_id, world_comm)
   !
   ! fix for uspp
   maxvalue = nqxq
@@ -231,7 +231,7 @@
   et_ks(:,:) = 0.d0
   et_mb(:,:) = 0.d0
   IF (eig_read) then
-  IF (mpime.eq.ionode_id) THEN
+  IF (meta_ionode) THEN
     WRITE (stdout,'(5x,a,i5,a,i5,a)') "Reading external electronic eigenvalues (", &
          nbnd, ",", nkstot,")"
     tempfile=trim(prefix)//'.eig'
@@ -248,8 +248,7 @@
     ! from eV to Ryd
     et_tmp = et_tmp / ryd2ev
     ENDIF
-    CALL mp_bcast (et_tmp, ionode_id, inter_pool_comm)
-    CALL mp_bcast (et_tmp, root_pool, intra_pool_comm)
+    CALL mp_bcast (et_tmp, meta_ionode_id, world_comm)
     !
     CALL ckbounds(ik_start, ik_stop)
     et_ks(:,:)  = et(:,1:nks)
@@ -288,6 +287,7 @@
   ENDIF
   !
   CALL mp_barrier(inter_pool_comm)
+  CALL mp_barrier(inter_image_comm)
   !
   ! Do not do symmetry stuff 
   IF ( epwread .and. .not. epbread ) then
@@ -348,7 +348,7 @@
       !
       IF (u_from_file) THEN
          ierr=0
-         IF ( ionode ) THEN
+         IF ( meta_ionode ) THEN
          !
          ! ... look for an empty unit (only ionode needs it)
          !
@@ -365,7 +365,7 @@
                                           BINARY = .FALSE., IERR = ierr )
          CALL read_modes(iunpun,iq_irr, ierr )
          IF (ierr /= 0) CALL errore('epw_setup', 'problem with modes file',1)
-         IF (ionode) CALL iotk_close_read( iunpun )
+         IF (meta_ionode) CALL iotk_close_read( iunpun )
       ENDIF
       !  
       WRITE(stdout,'(//5x,a)') repeat('=',67) 
@@ -426,20 +426,14 @@
       CALL sgam_ph_new (at, bg, nsym, s, irt, tau, rtau, nat)
       !
       IF ( .not. allocated(sumr) ) allocate ( sumr(2,3,nat,3) )
-      IF (mpime.eq.ionode_id) THEN
+      IF (meta_ionode) THEN
          CALL readmat_shuffle2 ( iq_irr, nqc_irr, nq, iq_first, sxq, imq,isq,&
                                invs, s, irt, rtau)
       ENDIF
-      CALL mp_barrier(inter_pool_comm)
-      CALL mp_barrier(intra_pool_comm)
-      CALL mp_bcast (zstar, ionode_id, inter_pool_comm)
-      CALL mp_bcast (zstar, root_pool, intra_pool_comm)
-      CALL mp_bcast (epsi, ionode_id, inter_pool_comm)
-      CALL mp_bcast (epsi, root_pool, intra_pool_comm)
-      CALL mp_bcast (dynq, ionode_id, inter_pool_comm)
-      CALL mp_bcast (dynq, root_pool, intra_pool_comm)
-      CALL mp_bcast (sumr, ionode_id, inter_pool_comm)
-      CALL mp_bcast (sumr, root_pool, intra_pool_comm)
+      CALL mp_bcast (zstar, meta_ionode_id, world_comm)
+      CALL mp_bcast (epsi, meta_ionode_id, world_comm)
+      CALL mp_bcast (dynq, meta_ionode_id, world_comm)
+      CALL mp_bcast (sumr, meta_ionode_id, world_comm)
       !
       ! now dynq is the cartesian dyn mat (NOT divided by the masses)
       !
@@ -622,6 +616,8 @@
   !      write(*,*)'epmatq(:,:,2,:,nqc)',SUM(epmatq(:,:,2,:,nqc))
   !      write(*,*)'epmatq(:,:,2,:,nqc)**2',SUM((REAL(REAL(epmatq(:,:,2,:,nqc))))**2)+&
   !        SUM((REAL(AIMAG(epmatq(:,:,2,:,nqc))))**2)
+  !      print*,'dynq ', SUM(dynq(:,:,nqc))
+  !      print*,'et ',et(:,2)
   !END
         ! SP: Now we treat separately the case imq == 0
         IF (imq .eq. 0) then
@@ -684,33 +680,44 @@
     !
   ENDIF
   !
-  IF ( epbread .or. epbwrite ) THEN
-    !
-    ! write the e-ph matrix elements and other info in the Bloch representation
-    ! (coarse mesh)
-    ! in .epb files (one for each pool)
-    !
-    tempfile = trim(tmp_dir) // trim(prefix) // '.epb' 
-    CALL set_ndnmbr (0,my_pool_id+1,1,npool,filelab)
-    tempfile = trim(tmp_dir) // trim(prefix) // '.epb' // filelab
-    !
-    IF (epbread)  THEN
-       inquire(file = tempfile, exist=exst)
-       IF (.not. exst ) CALL errore( 'elphon_shuffle_wrap', 'epb files not found ', 1)
-       OPEN  (iuepb, file = tempfile, form = 'unformatted')
-       WRITE(stdout,'(/5x,"Reading epmatq from .epb files"/)') 
-       READ  (iuepb) nqc, xqc, et, dynq, epmatq, zstar, epsi
-       CLOSE (iuepb)
-       WRITE(stdout,'(/5x,"The .epb files have been correctly read"/)')
+  !DBSP
+  IF (my_image_id == 0 ) THEN
+    IF ( epbread .or. epbwrite ) THEN
+      !
+      ! write the e-ph matrix elements and other info in the Bloch representation
+      ! (coarse mesh)
+      ! in .epb files (one for each pool)
+      !
+      tempfile = trim(tmp_dir) // trim(prefix) // '.epb' 
+      CALL set_ndnmbr (0,my_pool_id+1,1,npool,filelab)
+      tempfile = trim(tmp_dir) // trim(prefix) // '.epb' // filelab
+      !
+      IF (epbread)  THEN
+         inquire(file = tempfile, exist=exst)
+         IF (.not. exst ) CALL errore( 'elphon_shuffle_wrap', 'epb files not found ', 1)
+         OPEN  (iuepb, file = tempfile, form = 'unformatted')
+         WRITE(stdout,'(/5x,"Reading epmatq from .epb files"/)') 
+         READ  (iuepb) nqc, xqc, et, dynq, epmatq, zstar, epsi
+         CLOSE (iuepb)
+         WRITE(stdout,'(/5x,"The .epb files have been correctly read"/)')
+      ENDIF
+      !
+      IF (epbwrite) THEN
+         OPEN  (iuepb, file = tempfile, form = 'unformatted')
+         WRITE(stdout,'(/5x,"Writing epmatq on .epb files"/)') 
+         WRITE (iuepb) nqc, xqc, et, dynq, epmatq, zstar, epsi
+         CLOSE (iuepb)
+         WRITE(stdout,'(/5x,"The .epb files have been correctly written"/)')
+      ENDIF
     ENDIF
-    !
-    IF (epbwrite) THEN
-       OPEN  (iuepb, file = tempfile, form = 'unformatted')
-       WRITE(stdout,'(/5x,"Writing epmatq on .epb files"/)') 
-       WRITE (iuepb) nqc, xqc, et, dynq, epmatq, zstar, epsi
-       CLOSE (iuepb)
-       WRITE(stdout,'(/5x,"The .epb files have been correctly written"/)')
-    ENDIF
+  ENDIF
+  !
+  ! In case of image parallelization we want to stop after writing the .epb file
+  IF (nimage > 1 ) THEN
+    WRITE(stdout,'(/5x,"Image parallelization. The code will stop now. "/)')
+    WRITE(stdout,'(/5x,"You need to restart a calculation by reading the .epb "/)')
+    WRITE(stdout,'(/5x,"                       with pool parallelization only. "/)')
+    CALL stop_epw
   ENDIF
   !
   IF ( .not.epbread .and. epwread ) THEN
@@ -721,7 +728,8 @@
   !
   ENDIF
   !
-  CALL mp_barrier(inter_pool_comm)
+  !CALL mp_barrier(inter_pool_comm)
+  CALL mp_barrier(world_comm)
   !
   !   now dynq is the cartesian dyn mat ( NOT divided by the masses)
   !   and epmatq is the epmat in cartesian representation (rotation in elphon_shuffle)
@@ -810,9 +818,9 @@
   USE lr_symm_base, ONLY : minus_q, nsymq  
   USE iotk_module,  ONLY : iotk_index, iotk_scan_dat, iotk_scan_begin, &
                            iotk_scan_end
-  USE io_global,    ONLY : ionode, ionode_id
-  USE mp_images,    ONLY : intra_image_comm
+  USE io_global,    ONLY : meta_ionode, meta_ionode_id
   USE mp,           ONLY : mp_bcast
+  USE mp_global,    ONLY : world_comm
 
   IMPLICIT NONE
 
@@ -821,16 +829,16 @@
   INTEGER :: imode0, imode, irr, ipert, iq 
   !
   ierr=0
-  IF (ionode) THEN
+  IF (meta_ionode) THEN
      CALL iotk_scan_begin( iunpun, "IRREPS_INFO" )
      !
      CALL iotk_scan_dat(iunpun,"QPOINT_NUMBER",iq)
   ENDIF
-  CALL mp_bcast( iq,  ionode_id, intra_image_comm )
+  CALL mp_bcast( iq,  meta_ionode_id, world_comm )
   IF (iq /= current_iq) CALL errore('read_modes', &
             'problems with current_iq', 1 )
 
-  IF (ionode) THEN
+  IF (meta_ionode) THEN
 
      CALL iotk_scan_dat(iunpun, "QPOINT_GROUP_RANK", nsymq)
      CALL iotk_scan_dat(iunpun, "MINUS_Q_SYM", minus_q)
@@ -860,13 +868,13 @@
      !
   ENDIF
 
-  CALL mp_bcast( nirr,  ionode_id, intra_image_comm )
-  CALL mp_bcast( npert,  ionode_id, intra_image_comm )
-  CALL mp_bcast( nsymq,  ionode_id, intra_image_comm )
-  CALL mp_bcast( minus_q,  ionode_id, intra_image_comm )
-  CALL mp_bcast( u,  ionode_id, intra_image_comm )
-  CALL mp_bcast( name_rap_mode,  ionode_id, intra_image_comm )
-  CALL mp_bcast( num_rap_mode,  ionode_id, intra_image_comm )
+  CALL mp_bcast( nirr,  meta_ionode_id, world_comm )
+  CALL mp_bcast( npert,  meta_ionode_id, world_comm )
+  CALL mp_bcast( nsymq,  meta_ionode_id, world_comm )
+  CALL mp_bcast( minus_q,  meta_ionode_id, world_comm )
+  CALL mp_bcast( u,  meta_ionode_id, world_comm )
+  CALL mp_bcast( name_rap_mode,  meta_ionode_id, world_comm )
+  CALL mp_bcast( num_rap_mode,  meta_ionode_id, world_comm )
 
   RETURN
   END SUBROUTINE read_modes

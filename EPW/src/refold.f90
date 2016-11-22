@@ -28,7 +28,7 @@
   !   the large sphere (density set).
   !
   !-----------------------------------------------------------------
-  USE io_global,     ONLY : stdout
+  USE io_global,     ONLY : stdout, meta_ionode
   USE io_epw,        ONLY : iukgmap
 ! SP: Sucidal. Produce too much data. Only use for debugging. 
 !  USE control_flags, ONLY : iverbosity
@@ -127,7 +127,7 @@
   ! 
   !  output on file for electron-phonon matrix elements
   !
-  IF (me_pool.ne.0.or.my_pool_id.ne.0) iukgmap = stdout
+  IF (.NOT. meta_ionode) iukgmap = stdout
   !
   DO ig1 = 1, ngm_g
     WRITE (iukgmap, '(9i10)') (gmap ( ig1, ig0), ig0 = 1, ng0vec)
