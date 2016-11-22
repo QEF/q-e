@@ -1237,7 +1237,6 @@ CONTAINS
        step_counter = 0
     END IF 
     step_counter = step_counter+1
-    PRINT *,"step counter value is ",step_counter 
     !
     step_obj%tagname="step"
     step_obj%n_step = step_counter
