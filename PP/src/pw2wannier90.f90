@@ -1109,8 +1109,8 @@ SUBROUTINE pw2wan_set_symm (sr, tvec)
    !
    !  sr -> s
    ALLOCATE(s_in(3,3,nsym), ftau_in(3,nsym))
-   IF(read_sym == .true.) THEN
-      IF(allfrac == .true.) THEN
+   IF(read_sym ) THEN
+      IF(allfrac) THEN
          call errore("pw2wan_set_symm", "use_all_frac = .true. + read_sym = .true. not supported", 1)
       END IF
       DO isym = 1, nsym
@@ -1534,7 +1534,8 @@ SUBROUTINE compute_dmn
       do iw=1,n_wannier
          err=abs((sum(wws(:,iw,isym)**2)+sum(wws(iw,:,isym)**2))*.5d0-1d0)
          if(err.gt.1d-3) then
-            write(stdout,"(a,i5,a,i5,a)") "compute_dmn: Symmetry operator (", isym, ") could not transform Wannier function (", iw, ")."
+            write(stdout,"(a,i5,a,i5,a)") "compute_dmn: Symmetry operator (", isym, &
+                    ") could not transform Wannier function (", iw, ")."
             write(stdout,"(a,f15.7,a  )") "compute_dmn: The error is ", err, "."
             call errore("compute_dmn", "Error: missing Wannier functions, see the output.", 1)
          end if
