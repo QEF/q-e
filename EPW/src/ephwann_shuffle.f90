@@ -702,8 +702,10 @@
        ! epmat : Wannier el and Wannier ph -> Wannier el and Bloch ph
        ! --------------------------------------------------------------
        !
-       CALL ephwan2blochp &
+       IF (.NOT. longrange) THEN
+         CALL ephwan2blochp &
             ( nmodes, xxq, irvec, ndegen_q, nrr_q, uf, epmatwef, nbndsub, nrr_k )
+       ENDIF
        !
        !
        !  number of k points with a band on the Fermi surface
