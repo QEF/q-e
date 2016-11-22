@@ -21,3 +21,12 @@ mpirun -np 4 ../../../src/epw.x -npool 4 < epw1.in > epw1.out
 mpirun -np 4 ../../../src/epw.x -npool 4 < epw3.in > epw3.out
 mpirun -np 4 ../../../src/epw.x -npool 4 < epw4.in > epw4.out
 mpirun -np 4 ../../../src/epw.x -npool 4 < epw2.in > epw2.out
+
+# Parallel using band parallelization via nimage
+mpirun -np 4 ../../../../bin/pw.x < scf.in > scf.out
+mpirun -np 4 ../../../../bin/ph.x < ph.in > ph.out
+python pp.py < pp.in
+mpirun -np 4 ../../../../bin/pw.x < scf_epw.in > scf_epw.out
+mpirun -np 2 ../../../../bin/pw.x -npool 2 < nscf_epw.in > nscf_epw.out
+mpirun -np 4 ../../../src/epw.x -npool 2 -nimage 2 < epw5.in > epw5.out
+mpirun -np 2 ../../../src/epw.x -npool 2 -nimage 1  < epw6.in > epw6.out

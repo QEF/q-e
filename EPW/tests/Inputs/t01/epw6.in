@@ -1,0 +1,65 @@
+--
+&inputepw
+  prefix      = 'diam'
+  amass(1)    = 12.01078
+  outdir      = './'
+
+  iverbosity  = 3
+
+  elph        = .true.
+  kmaps       = .true.
+  epbwrite    = .false.
+  epbread     = .true.
+
+  etf_mem     = .true.
+
+  epwwrite    = .true.
+  epwread     = .false.
+
+  nbndsub     =  4
+  nbndskip    =  0
+
+  wannierize  = .false.
+  num_iter    = 300
+  iprint      = 2
+  dis_win_max = 12
+  dis_froz_max= 7
+  proj(1)     = 'f=0,0,0:l=-3'   
+
+  elecselfen  = .true.
+  nest_fn     = .false.  
+  phonselfen  = .false.
+  a2f         = .false.
+
+  parallel_k  = .true.
+  parallel_q  = .false.
+
+  fsthick     = 15 ! eV 
+  eptemp      = 300 ! K (same as PRB 76, 165108)
+  degaussw    = 1.0 ! eV
+
+  dvscf_dir   = './save/'
+  filukk      = './diam.ukk'
+
+  nkf1        = 6
+  nkf2        = 6
+  nkf3        = 6 
+
+  nqf1        = 6
+  nqf2        = 6
+  nqf3        = 6
+  
+  nk1         = 3
+  nk2         = 3
+  nk3         = 3
+
+  nq1         = 3
+  nq2         = 3
+  nq3         = 3
+ /
+      4 cartesian
+  0.000000000000   0.000000000000   0.000000000000   0.0740741
+ -0.333333333333   0.333333333333  -0.333333333333   0.5925926
+  0.000000000000   0.666666666667   0.000000000000   0.4444444
+  0.666666666667   0.000000000000   0.666666666667   0.8888889
+
