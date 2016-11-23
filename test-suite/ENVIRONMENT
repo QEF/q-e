@@ -18,7 +18,7 @@ export REFERENCE_VERSION=SVN
 export ESPRESSO_ROOT=${PWD}/../
 
 export ESPRESSO_PSEUDO=${ESPRESSO_ROOT}/pseudo
-export ESPRESSO_TMPDIR=/tmp/save/
+export ESPRESSO_TMPDIR=${ESPRESSO_ROOT}/tempdir
 export NETWORK_PSEUDO=http://www.quantum-espresso.org/wp-content/uploads/upf_files/
 export TESTCODE_DIR=${ESPRESSO_ROOT}/test-suite/testcode
 
