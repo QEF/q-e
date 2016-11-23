@@ -907,7 +907,7 @@ SUBROUTINE frc_blk(dyn,q,tau,nat,nr1,nr2,nr3,frc,at,bg,rws,nrws,f_of_q,fd)
   USE io_global,  ONLY : stdout
   !
   IMPLICIT NONE
-  INTEGER nr1, nr2, nr3, nat, n1, n2, n3, &
+  INTEGER nr1, nr2, nr3, nat, n1, n2, n3, nr1_, nr2_, nr3_, &
           ipol, jpol, na, nb, m1, m2, m3, nint, i,j, nrws, nax
   COMPLEX(DP) dyn(3,3,nat,nat), f_of_q(3,3,nat,nat)
   REAL(DP) frc(nr1,nr2,nr3,3,3,nat,nat), tau(3,nat), q(3), arg, &
@@ -919,16 +919,19 @@ SUBROUTINE frc_blk(dyn,q,tau,nat,nr1,nr2,nr3,frc,at,bg,rws,nrws,f_of_q,fd)
   LOGICAL,SAVE :: first=.true.
   LOGICAL :: fd
   !
+  nr1_=2*nr1
+  nr2_=2*nr2
+  nr3_=2*nr3
   FIRST_TIME : IF (first) THEN
     first=.false.
-    ALLOCATE( wscache(-2*nr3:2*nr3, -2*nr2:2*nr2, -2*nr1:2*nr1, nat,nat) )
+    ALLOCATE( wscache(-nr3_:nr3_, -nr2_:nr2_, -nr1_:nr1_, nat,nat) )
     DO na=1, nat
        DO nb=1, nat
           total_weight=0.0d0
           !
-          DO n1=-2*nr1,2*nr1
-             DO n2=-2*nr2,2*nr2
-                DO n3=-2*nr3,2*nr3
+          DO n1=-nr1_,nr1_
+             DO n2=-nr2_,nr2_
+                DO n3=-nr3_,nr3_
                    DO i=1, 3
                       r(i) = n1*at(i,1)+n2*at(i,2)+n3*at(i,3)
                       r_ws(i) = r(i) + tau(i,na)-tau(i,nb)
@@ -949,9 +952,9 @@ SUBROUTINE frc_blk(dyn,q,tau,nat,nr1,nr2,nr3,frc,at,bg,rws,nrws,f_of_q,fd)
   DO na=1, nat
      DO nb=1, nat
         total_weight=0.0d0
-        DO n1=-2*nr1,2*nr1
-           DO n2=-2*nr2,2*nr2
-              DO n3=-2*nr3,2*nr3
+        DO n1=-nr1_,nr1_
+           DO n2=-nr2_,nr2_
+              DO n3=-nr3_,nr3_
                  !
                  ! SUM OVER R VECTORS IN THE SUPERCELL - VERY VERY SAFE RANGE!
                  !
@@ -1000,29 +1003,6 @@ SUBROUTINE frc_blk(dyn,q,tau,nat,nr1,nr2,nr3,frc,at,bg,rws,nrws,f_of_q,fd)
      END DO
   END DO
   !
-!  alat=10.2
-!  nax=0
-!  DO n1=1,nr1
-!     DO n2=1,nr2
-!        DO n3=1,nr3
-!           do na=1,nat
-!              nax=nax+1
-!              do i=1,3
-!                 tttx(i,nax)=ttt(i,na,n1,n2,n3)*alat*0.529177
-!              end do
-!           end do
-!        end do
-!     end do
-!  end do
-!
-!  do nb=1,nat
-!     write(6,'(3(f15.9,1x))') tau(1,nb),tau(2,nb),tau(3,nb)
-!  enddo
-!  print*, '========='
-!  do nb=1,nat*nr1*nr2*nr3
-!     write(6,'(3(f15.9,1x))') tttx(1,nb),tttx(2,nb),tttx(3,nb)
-!  enddo
-! 
   RETURN
 END SUBROUTINE frc_blk
 !
@@ -1204,7 +1184,6 @@ SUBROUTINE set_asr (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
       return
       !
    end if
-
   if(asr.eq.'crystal') n=3
   if(asr.eq.'one-dim') then
      ! the direction of periodicity is the rotation axis
