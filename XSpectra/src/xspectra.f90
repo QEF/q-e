@@ -437,7 +437,6 @@ SUBROUTINE stop_xspectra
   USE control_flags, ONLY: twfcollect
   USE io_files, ONLY: iunwfc
   USE mp_global, ONLY: mp_global_end
-  USE parallel_include
   !
 #if defined(__MPI)
 
