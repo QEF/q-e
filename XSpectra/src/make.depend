@@ -250,7 +250,6 @@ xspectra.o : ../../Modules/mp_global.o
 xspectra.o : ../../Modules/mp_pools.o
 xspectra.o : ../../Modules/mp_world.o
 xspectra.o : ../../Modules/noncol.o
-xspectra.o : ../../Modules/parallel_include.o
 xspectra.o : ../../Modules/parameters.o
 xspectra.o : ../../Modules/radial_grids.o
 xspectra.o : ../../Modules/uspp.o
