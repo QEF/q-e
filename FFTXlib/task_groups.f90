@@ -75,16 +75,11 @@ SUBROUTINE task_groups_init( dffts, dtgs, nogrp )
    ! NOGRP:      Number of processors per orbital task group
 
    IMPLICIT NONE
-#if defined(__MPI)
-   INCLUDE 'mpif.h'
-#endif
-
+#include "fft_param.f90"
 
    TYPE(fft_type_descriptor), INTENT(inout) :: dffts
    TYPE(task_groups_descriptor), INTENT(inout) :: dtgs
    INTEGER, INTENT(in) :: nogrp   ! number of task groups
-
-   INTEGER :: stdout = 6
 
    !----------------------------------
    !Local Variables declaration
@@ -194,9 +189,7 @@ SUBROUTINE task_groups_init_first( dffts, dtgs, nogrp )
    USE fft_types,      ONLY : fft_type_descriptor
    !
    IMPLICIT NONE
-#if defined(__MPI)
-   INCLUDE 'mpif.h'
-#endif
+#include "fft_param.f90"
    !
    TYPE(fft_type_descriptor), INTENT(inout) :: dffts
    TYPE(task_groups_descriptor), INTENT(inout) :: dtgs

@@ -52,10 +52,8 @@ program test
   USE fft_support
   IMPLICIT NONE
 #if defined(__MPI)
-  include 'mpif.h'
   INTEGER, ALLOCATABLE :: req_p(:),req_u(:)
 #endif
-  include 'fft_param.f90'
   TYPE(fft_type_descriptor) :: dfftp, dffts, dfft3d
   TYPE(task_groups_descriptor) :: dtgs
   TYPE(sticks_map) :: smap
@@ -655,10 +653,7 @@ end subroutine
    !
    IMPLICIT NONE
    !
-#if defined(__MPI)
-   include 'mpif.h'
-#endif
-   include 'fft_param.f90'
+#include "fft_param.f90"
    REAL(DP), PARAMETER :: eps8  = 1.0E-8_DP
    !
    LOGICAL,  INTENT(IN) :: gamma_only
@@ -990,7 +985,7 @@ subroutine hpsort_eps (n, ra, ind, eps)
   ! adapted from Numerical Recipes pg. 329 (new edition)
   !
   implicit none  
-   include 'fft_param.f90'
+#include "fft_param.f90"
   !-input/output variables
   integer, intent(in) :: n  
   integer, intent(inout) :: ind (*)  
@@ -1091,7 +1086,7 @@ end subroutine hpsort_eps
 subroutine prepare_psi( ib, nbnd, ngms, psi, tg_psic, nls, nlsm, dtgs)
    USE task_groups
    implicit none
-   include 'fft_param.f90'
+#include "fft_param.f90"
    integer, intent(in) :: ib, nbnd, ngms
    TYPE(task_groups_descriptor), intent(in) :: dtgs
    complex(DP) :: tg_psic( dtgs%tg_nnr * dtgs%nogrp )
@@ -1129,7 +1124,7 @@ subroutine accumulate_hpsi( ib, nbnd, ngms, hpsi, tg_psic, nls, nlsm, dtgs, dfft
    USE task_groups
    USE fft_types
    implicit none
-   include 'fft_param.f90'
+#include "fft_param.f90"
    integer, intent(in) :: ib, nbnd, ngms
    integer, intent(in) :: nls(ngms), nlsm(ngms)
    TYPE(task_groups_descriptor), intent(in) :: dtgs

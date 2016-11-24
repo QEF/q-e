@@ -21,10 +21,7 @@ MODULE fft_parallel
 !
    IMPLICIT NONE
    SAVE
-
-   INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
-
-   PRIVATE :: DP
+#include "fft_param.f90"
 !
 CONTAINS
 !
@@ -69,9 +66,6 @@ SUBROUTINE tg_cft3s( f, dfft, isgn, dtgs )
 
   !
   IMPLICIT NONE
-#if defined(__MPI)
-  INCLUDE 'mpif.h'
-#endif
   !
   COMPLEX(DP), INTENT(inout)    :: f( : )  ! array containing data to be transformed
   TYPE (fft_type_descriptor), INTENT(in) :: dfft
@@ -281,9 +275,6 @@ SUBROUTINE fw_tg_cft3_z( f_in, dfft, f_out, dtgs )
   USE task_groups,  ONLY : task_groups_descriptor
   !
   IMPLICIT NONE
-#if defined(__MPI)
-  INCLUDE 'mpif.h'
-#endif
   !
   COMPLEX(DP), INTENT(inout)    :: f_in( : )  ! INPUT array containing data to be transformed
   COMPLEX(DP), INTENT(inout)   :: f_out (:)  ! OUTPUT
@@ -303,9 +294,6 @@ SUBROUTINE bw_tg_cft3_z( f_out, dfft, f_in, dtgs )
   USE task_groups,  ONLY : task_groups_descriptor
   !
   IMPLICIT NONE
-#if defined(__MPI)
-  INCLUDE 'mpif.h'
-#endif
   !
   COMPLEX(DP), INTENT(inout)    :: f_out( : ) ! OUTPUT
   COMPLEX(DP), INTENT(inout)   :: f_in (:) ! INPUT array containing data to be transformed
@@ -398,9 +386,6 @@ END SUBROUTINE bw_tg_cft3_xy
      USE task_groups,  ONLY : task_groups_descriptor
 
      IMPLICIT NONE
-#if defined(__MPI)
-  INCLUDE 'mpif.h'
-#endif
 
      COMPLEX(DP), INTENT(in)    :: f( : )  ! array containing all bands, and gvecs distributed across processors
      COMPLEX(DP), INTENT(out)    :: yf( : )  ! array containing bands collected into task groups
@@ -444,9 +429,6 @@ END SUBROUTINE bw_tg_cft3_xy
      USE task_groups,  ONLY : task_groups_descriptor
 
      IMPLICIT NONE
-#if defined(__MPI)
-  INCLUDE 'mpif.h'
-#endif
 
      COMPLEX(DP), INTENT(in)    :: f( : )  ! array containing all bands, and gvecs distributed across processors
      COMPLEX(DP), INTENT(out)    :: yf( : )  ! array containing bands collected into task groups
@@ -496,9 +478,6 @@ END SUBROUTINE bw_tg_cft3_xy
      USE task_groups,  ONLY : task_groups_descriptor
 
      IMPLICIT NONE
-#if defined(__MPI)
-  INCLUDE 'mpif.h'
-#endif
 
      COMPLEX(DP), INTENT(out)    :: f( : )  ! array containing all bands, and gvecs distributed across processors
      COMPLEX(DP), INTENT(in)    :: yf( : )  ! array containing bands collected into task groups
@@ -581,9 +560,6 @@ SUBROUTINE tg_gather( dffts, dtgs, v, tg_v )
    ! NOGRP:      Number of processors per orbital task group
 
    IMPLICIT NONE
-#if defined(__MPI)
-  INCLUDE 'mpif.h'
-#endif
 
    TYPE(fft_type_descriptor), INTENT(in) :: dffts
    TYPE(task_groups_descriptor), INTENT(in) :: dtgs
@@ -645,9 +621,6 @@ SUBROUTINE tg_cgather( dffts, dtgs, v, tg_v )
    ! NOGRP:      Number of processors per orbital task group
 
    IMPLICIT NONE
-#if defined(__MPI)
-   INCLUDE 'mpif.h'
-#endif
 
    TYPE(fft_type_descriptor), INTENT(in) :: dffts
    TYPE(task_groups_descriptor), INTENT(in) :: dtgs
@@ -714,9 +687,6 @@ COMPLEX (DP) FUNCTION get_f_of_R (i,j,k,f,dfft)
 !
   USE fft_types,  ONLY : fft_type_descriptor
   IMPLICIT NONE
-#if defined(__MPI)
-  INCLUDE 'mpif.h'
-#endif
   TYPE (fft_type_descriptor), INTENT(IN) :: dfft
   INTEGER, INTENT (IN) :: i,j,k
   COMPLEX(DP), INTENT (IN) :: f(:)
@@ -746,9 +716,6 @@ SUBROUTINE put_f_of_R (f_in,i,j,k,f,dfft)
 !
   USE fft_types,  ONLY : fft_type_descriptor
   IMPLICIT NONE
-#if defined(__MPI)
-  INCLUDE 'mpif.h'
-#endif
   TYPE (fft_type_descriptor), INTENT(IN) :: dfft
   INTEGER, INTENT (IN) :: i,j,k
   COMPLEX(DP), INTENT (IN) :: f_in
@@ -777,9 +744,6 @@ COMPLEX (DP) FUNCTION get_f_of_G (i,j,k,f,dfft)
 !
   USE fft_types,  ONLY : fft_type_descriptor
   IMPLICIT NONE
-#if defined(__MPI)
-  INCLUDE 'mpif.h'
-#endif
   INTEGER, INTENT (IN) :: i,j,k
   COMPLEX(DP), INTENT (IN) :: f(:)
   TYPE (fft_type_descriptor), INTENT(IN) :: dfft
@@ -807,9 +771,6 @@ SUBROUTINE put_f_of_G (f_in,i,j,k,f,dfft)
 !
   USE fft_types,  ONLY : fft_type_descriptor
   IMPLICIT NONE
-#if defined(__MPI)
-  INCLUDE 'mpif.h'
-#endif
   COMPLEX(DP), INTENT (IN) :: f_in
   INTEGER, INTENT (IN) :: i,j,k
   COMPLEX(DP), INTENT (INOUT) :: f(:)

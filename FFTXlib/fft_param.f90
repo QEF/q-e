@@ -6,7 +6,9 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-  
+#if defined(__MPI)
+  include 'mpif.h'
+#endif  
   INTEGER, PARAMETER :: nfftx = 2049
   !! Number of different FFT tables that the module
   !!could keep into memory without reinitialization
@@ -17,3 +19,4 @@
   INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
 
   INTEGER, PARAMETER :: stdout = 6    ! unit connected to standard output
+

@@ -6,11 +6,7 @@
         PRIVATE
         SAVE
 
-#if defined(__MPI)
-        INCLUDE 'mpif.h'
-#endif
-
-        INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
+#include "fft_param.f90"
 
         PUBLIC :: sticks_map_set
         PUBLIC :: sticks_map_index, sticks_sort_new, sticks_dist_new
@@ -165,10 +161,6 @@
     REAL(DP) , INTENT(in) :: bg(:,:) ! reciprocal space base vectors
     REAL(DP) , INTENT(in) :: gcut  ! cut-off for potentials
     INTEGER, OPTIONAL, INTENT(in) :: comm ! communicator of the g-vec group
-    !
-#if defined(__MPI)
-    INCLUDE 'mpif.h'
-#endif
     !
     !     stick map for wave functions, note that map is taken in YZ plane
     !

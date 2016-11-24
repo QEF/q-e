@@ -19,6 +19,7 @@
         USE task_groups, ONLY: task_groups_descriptor
 
         IMPLICIT NONE
+#include "fft_param.f90"
 
         INTERFACE gather_grid
            MODULE PROCEDURE gather_real_grid, gather_complex_grid
@@ -27,8 +28,6 @@
         INTERFACE scatter_grid
            MODULE PROCEDURE scatter_real_grid, scatter_complex_grid
         END INTERFACE
-
-        INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
 
         SAVE
 
@@ -83,9 +82,6 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, dtgs )
   !  the trasposition using the Task Groups distribution
   !
   IMPLICIT NONE
-#if defined(__MPI)
-  INCLUDE 'mpif.h'
-#endif
 
   TYPE (fft_type_descriptor), INTENT(in) :: dfft
   INTEGER, INTENT(in)           :: nr3x, nxx_, isgn, ncp_ (:), npp_ (:)
@@ -408,9 +404,6 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, dtgs )
   !  the trasposition using the Task Groups distribution
   !
   IMPLICIT NONE
-#if defined(__MPI)
-  INCLUDE 'mpif.h'
-#endif
 
   TYPE (fft_type_descriptor), INTENT(in) :: dfft
   INTEGER, INTENT(in)           :: nr3x, nxx_, isgn, ncp_ (:), npp_ (:)
@@ -750,9 +743,6 @@ SUBROUTINE maps_sticks_to_3d( dffts, dtgs, f_in, nxx_, f_aux, isgn )
   ! once the data have been "rotated" to have a single band in a single task 
   !
   IMPLICIT NONE
-#if defined(__MPI)
-  INCLUDE 'mpif.h'
-#endif
 
   TYPE (fft_type_descriptor), INTENT(in) :: dffts
   TYPE (task_groups_descriptor), INTENT(in) :: dtgs
@@ -800,9 +790,6 @@ SUBROUTINE gather_real_grid ( dfft, f_in, f_out )
   ! ... REAL*8  f_out = gathered variable (dfft%nr1x*dfft%nr2x*dfft%nr3x)
   !
   IMPLICIT NONE
-#if defined(__MPI)
-  INCLUDE 'mpif.h'
-#endif
   !
   REAL(DP), INTENT(in) :: f_in (:)
   REAL(DP), INTENT(inout):: f_out(:)
@@ -866,9 +853,6 @@ SUBROUTINE gather_complex_grid ( dfft, f_in, f_out )
   ! ... COMPLEX*16  f_out = gathered variable (dfft%nr1x*dfft%nr2x*dfft%nr3x)
   !
   IMPLICIT NONE
-#if defined(__MPI)
-  INCLUDE 'mpif.h'
-#endif
   !
   COMPLEX(DP), INTENT(in) :: f_in (:)
   COMPLEX(DP), INTENT(inout):: f_out(:)
@@ -932,9 +916,6 @@ SUBROUTINE scatter_real_grid ( dfft, f_in, f_out )
   ! ... REAL*8  f_out = distributed variable (dfft%nnr)
   !
   IMPLICIT NONE
-#if defined(__MPI)
-  INCLUDE 'mpif.h'
-#endif
   !
   REAL(DP), INTENT(in) :: f_in (:)
   REAL(DP), INTENT(inout):: f_out(:)
@@ -1000,9 +981,6 @@ SUBROUTINE scatter_complex_grid ( dfft, f_in, f_out )
   ! ... COMPLEX*16  f_out = distributed variable (dfft%nnr)
   !
   IMPLICIT NONE
-#if defined(__MPI) 
-  INCLUDE 'mpif.h'
-#endif
   !
   COMPLEX(DP), INTENT(in) :: f_in (:)
   COMPLEX(DP), INTENT(inout):: f_out(:)
@@ -1071,9 +1049,6 @@ SUBROUTINE cgather_sym( dfftp, f_in, f_out )
   ! ... COMPLEX*16  f_out = gathered variable (nr1x*nr2x*nr3x)
   !
   IMPLICIT NONE
-#if defined(__MPI) 
-  INCLUDE 'mpif.h'
-#endif
   !
   TYPE (fft_type_descriptor), INTENT(in) :: dfftp
   COMPLEX(DP) :: f_in( : ), f_out(:)
@@ -1132,9 +1107,6 @@ SUBROUTINE cgather_sym_many( dfftp, f_in, f_out, nbnd, nbnd_proc, start_nbnd_pro
   !                                             nbnd_proc(dfftp%mype+1))
   !
   IMPLICIT NONE
-#if defined(__MPI) 
-  INCLUDE 'mpif.h'
-#endif
   !
   TYPE (fft_type_descriptor), INTENT(in) :: dfftp
   INTEGER :: nbnd, nbnd_proc(dfftp%nproc), start_nbnd_proc(dfftp%nproc)
@@ -1210,9 +1182,6 @@ SUBROUTINE cscatter_sym_many( dfftp, f_in, f_out, target_ibnd, nbnd, nbnd_proc, 
   ! ... COMPLEX*16  f_out = distributed variable (nrxx)
   !
   IMPLICIT NONE
-#if defined(__MPI) 
-  INCLUDE 'mpif.h'
-#endif
   !
   TYPE (fft_type_descriptor), INTENT(in) :: dfftp
   INTEGER :: nbnd, nbnd_proc(dfftp%nproc), start_nbnd_proc(dfftp%nproc)

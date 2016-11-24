@@ -17,10 +17,6 @@ MODULE fft_types
   PRIVATE
   SAVE
 
-#if defined(__MPI)
-      INCLUDE 'mpif.h'
-#endif
-
 #include "fft_param.f90"
 
   TYPE fft_type_descriptor
@@ -651,10 +647,6 @@ CONTAINS
 !  ----------------------------------------------
 
       IMPLICIT NONE
-
-#if defined(__MPI)
-      INCLUDE 'mpif.h'
-#endif
 
 ! ... declare arguments
       TYPE(fft_type_descriptor), INTENT(IN) :: dfft
