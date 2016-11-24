@@ -516,9 +516,6 @@ END SUBROUTINE bw_tg_cft3_xy
      USE task_groups,  ONLY : task_groups_descriptor
 
      IMPLICIT NONE
-#if defined(__MPI)
-  INCLUDE 'mpif.h'
-#endif
 
      COMPLEX(DP), INTENT(out)    :: f( : )  ! array containing all bands, and gvecs distributed across processors
      COMPLEX(DP), INTENT(in)    :: yf( : )  ! array containing bands collected into task groups
