@@ -97,12 +97,6 @@ CONTAINS
 
       IMPLICIT NONE
 
-#if defined (__MPI)
-   !
-   include 'mpif.h'
-   !
-#endif
-
       LOGICAL, INTENT(IN) :: tv
       INTEGER, intent(in) :: N, NRL, LDA, LDV
       INTEGER, intent(in) :: NPROC, ME, comm
@@ -426,12 +420,6 @@ CONTAINS
 !
 
       IMPLICIT NONE
-
-#if defined (__MPI)
-   !
-   include 'mpif.h'
-   !
-#endif
 
       LOGICAL, INTENT(IN)  :: tv
       INTEGER, INTENT(IN)  :: n, nrl, ldz, mpime, comm

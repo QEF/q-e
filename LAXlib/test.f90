@@ -2,11 +2,10 @@ program lax_test
   use descriptors
   use dspev_module
   IMPLICIT NONE
+#include "la_param.f90"
 #if defined(__MPI)
-  include 'mpif.h'
   INTEGER    STATUS(MPI_STATUS_SIZE)
 #endif
-#include "la_param.f90"
   INTEGER :: mype, npes, comm, ntgs, root
   LOGICAL :: iope
   INTEGER :: ierr

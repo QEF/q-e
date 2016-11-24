@@ -6,9 +6,11 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-  
 
   INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
+#if defined(__MPI)
+  INCLUDE 'mpif.h'
+#endif
 
 #if defined __AIX
 #  define  __BSIZ_VALUE  55

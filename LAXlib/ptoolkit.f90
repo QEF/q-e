@@ -157,12 +157,6 @@ SUBROUTINE dsqmcll( n, a, lda, ar, ldar, desc, comm )
   !
   INTEGER :: i, j
 
-#if defined (__MPI)
-   !
-   include 'mpif.h'
-   !
-#endif
-
 #if defined __MPI
   !
   INTEGER :: np, nx, ipc, ipr, npr, npc, noff
@@ -243,9 +237,6 @@ SUBROUTINE zsqmcll( n, a, lda, ar, ldar, desc, comm )
   USE descriptors
   !
   implicit none
-#if defined(__MPI)
-  INCLUDE 'mpif.h'
-#endif
   !
   INTEGER, INTENT(IN) :: n
   INTEGER, INTENT(IN) :: ldar
@@ -367,9 +358,6 @@ SUBROUTINE dsqmsym( n, a, lda, desc )
    USE descriptors
    !
    IMPLICIT NONE
-#if defined(__MPI)
-  INCLUDE 'mpif.h'
-#endif
    !
    INTEGER, INTENT(IN) :: n
    INTEGER, INTENT(IN) :: lda
@@ -475,9 +463,6 @@ SUBROUTINE zsqmher( n, a, lda, desc )
    USE descriptors
    !
    IMPLICIT NONE
-#if defined(__MPI)
-  INCLUDE 'mpif.h'
-#endif
    !
    INTEGER, INTENT(IN) :: n
    INTEGER, INTENT(IN) :: lda
@@ -635,9 +620,6 @@ SUBROUTINE dsqmred( na, a, lda, desca, nb, b, ldb, descb )
    USE descriptors
    !
    IMPLICIT NONE
-#if defined(__MPI)
-  INCLUDE 'mpif.h'
-#endif
    !
    INTEGER, INTENT(IN) :: na
    INTEGER, INTENT(IN) :: lda
@@ -1027,9 +1009,6 @@ SUBROUTINE zsqmred( na, a, lda, desca, nb, b, ldb, descb )
    USE descriptors
    !
    IMPLICIT NONE
-#if defined(__MPI)
-  INCLUDE 'mpif.h'
-#endif
    !
    INTEGER, INTENT(IN) :: na
    INTEGER, INTENT(IN) :: lda
@@ -1393,9 +1372,6 @@ SUBROUTINE rep_matmul_drv( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA,
   !  written by Carlo Cavazzoni
   !
   implicit none
-#if defined(__MPI)
-  INCLUDE 'mpif.h'
-#endif
   !
   CHARACTER(LEN=1), INTENT(IN) :: transa, transb
   INTEGER, INTENT(IN) :: m, n, k
@@ -1560,9 +1536,6 @@ SUBROUTINE zrep_matmul_drv( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA
   !  written by Carlo Cavazzoni
   !
   implicit none
-#if defined(__MPI)
-  INCLUDE 'mpif.h'
-#endif
   !
   CHARACTER(LEN=1), INTENT(IN) :: transa, transb
   INTEGER, INTENT(IN) :: m, n, k
@@ -1762,12 +1735,6 @@ SUBROUTINE sqr_mm_cannon( transa, transb, n, alpha, a, lda, b, ldb, beta, c, ldc
    !     OP( X ) = X   OR   OP( X ) = X',
    !
    !  alpha and beta are scalars, and a, b and c are square matrices
-   !
-#if defined (__MPI)
-   !
-   include 'mpif.h'
-   !
-#endif
    !
    integer :: ierr
    integer :: np
@@ -2068,12 +2035,6 @@ SUBROUTINE sqr_zmm_cannon( transa, transb, n, alpha, a, lda, b, ldb, beta, c, ld
    !
    !  alpha and beta are scalars, and a, b and c are square matrices
    !
-#if defined (__MPI)
-   !
-   include 'mpif.h'
-   !
-#endif
-   !
    INTEGER :: ierr
    INTEGER :: np
    INTEGER :: i, j, nr, nc, nb, iter, rowid, colid
@@ -2365,12 +2326,6 @@ SUBROUTINE sqr_tr_cannon( n, a, lda, b, ldb, desc )
    REAL(DP)            :: a(lda,*), b(ldb,*)
    TYPE(la_descriptor), INTENT(IN) :: desc
    !
-#if defined (__MPI)
-   !
-   INCLUDE 'mpif.h'
-   !
-#endif
-   !
    INTEGER :: ierr
    INTEGER :: np, rowid, colid
    INTEGER :: i, j, nr, nc, nb
@@ -2505,12 +2460,6 @@ SUBROUTINE redist_row2col( n, a, b, ldx, nx, desc )
    REAL(DP)            :: a(ldx,nx), b(ldx,nx)
    TYPE(la_descriptor), INTENT(IN) :: desc
    !
-#if defined (__MPI)
-   !
-   INCLUDE 'mpif.h'
-   !
-#endif
-   !
    INTEGER :: ierr
    INTEGER :: np, rowid, colid
    INTEGER :: comm
@@ -2595,12 +2544,6 @@ SUBROUTINE cyc2blk_redist( n, a, lda, nca, b, ldb, ncb, desc )
    INTEGER, INTENT(IN) :: lda, nca, ldb, ncb
    REAL(DP) :: a( lda, nca ), b( ldb, ncb )
    TYPE(la_descriptor), INTENT(IN) :: desc
-   !
-#if defined (__MPI)
-   !
-   include 'mpif.h'
-   !
-#endif
    !
    integer :: ierr, itag
    integer :: np, ip, me, nproc, comm_a
@@ -2762,12 +2705,6 @@ SUBROUTINE cyc2blk_zredist( n, a, lda, nca, b, ldb, ncb, desc )
    COMPLEX(DP) :: a( lda, nca ), b( ldb, ncb )
    TYPE(la_descriptor), INTENT(IN) :: desc
    !
-#if defined (__MPI)
-   !
-   include 'mpif.h'
-   !
-#endif
-   !
    integer :: ierr, itag
    integer :: np, ip, me, nproc, comm_a
    integer :: ip_ir, ip_ic, ip_nr, ip_nc, il, nbuf, ip_irl
@@ -2922,12 +2859,6 @@ SUBROUTINE blk2cyc_redist( n, a, lda, nca, b, ldb, ncb, desc )
    REAL(DP) :: a( lda, nca ), b( ldb, ncb )
    TYPE(la_descriptor), INTENT(IN) :: desc
    !
-#if defined (__MPI)
-   !
-   include 'mpif.h'
-   !
-#endif
-   !
    integer :: ierr, itag
    integer :: np, ip, me, comm_a, nproc
    integer :: ip_ir, ip_ic, ip_nr, ip_nc, il, nbuf, ip_irl
@@ -3053,12 +2984,6 @@ SUBROUTINE blk2cyc_zredist( n, a, lda, nca, b, ldb, ncb, desc )
    COMPLEX(DP) :: a( lda, nca ), b( ldb, ncb )
    TYPE(la_descriptor), INTENT(IN) :: desc
    !
-#if defined (__MPI)
-   !
-   include 'mpif.h'
-   !
-#endif
-   !
    integer :: ierr, itag
    integer :: np, ip, me, comm_a, nproc
    integer :: ip_ir, ip_ic, ip_nr, ip_nc, il, nbuf, ip_irl
@@ -3179,12 +3104,6 @@ SUBROUTINE qe_pzpotrf( sll, ldx, n, desc )
    use descriptors
    !
    implicit none
-   !
-#if defined (__MPI)
-   !
-   include 'mpif.h'
-   !
-#endif
    !
 #include "la_param.f90"
    !
@@ -3415,12 +3334,6 @@ SUBROUTINE qe_pdpotrf( sll, ldx, n, desc )
    use descriptors
    !
    implicit none
-   !
-#if defined (__MPI)
-   !
-   include 'mpif.h'
-   !
-#endif
    !
 #include "la_param.f90"
    !
@@ -3676,12 +3589,6 @@ SUBROUTINE qe_pztrtri ( sll, ldx, n, desc )
     USE descriptors
 
     IMPLICIT NONE
-
-#if defined (__MPI)
-   !
-   include 'mpif.h'
-   !
-#endif
    
 #include "la_param.f90"
 
@@ -4043,13 +3950,7 @@ SUBROUTINE qe_pdtrtri ( sll, ldx, n, desc )
     USE descriptors
 
     IMPLICIT NONE
-
-#if defined (__MPI)
-   !
-   include 'mpif.h'
-   !
-#endif
-   
+ 
 #include "la_param.f90"
 
     INTEGER, INTENT( IN ) :: n, ldx

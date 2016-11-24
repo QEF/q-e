@@ -10,10 +10,6 @@ MODULE zhpev_module
    IMPLICIT NONE
    SAVE
 
-#if defined(__MPI)
-  INCLUDE 'mpif.h'
-#endif
-
 #include "la_param.f90"
 
    PRIVATE
