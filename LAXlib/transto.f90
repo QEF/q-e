@@ -11,16 +11,19 @@
 !   
 !     written by Carlo Cavazzoni 
 !
+#if defined __AIX
+#  define  __BSIZ_VALUE  55
+#else 
+#  define  __BSIZ_VALUE  35
+#endif
 
       SUBROUTINE mytranspose(x, ldx, y, ldy, n, m)
 !
 !     x  input matrix (n by m) to be trasposed
 !     y  output matrix (m by n), the transpose of x
 !
-
+        USE la_param
         IMPLICIT NONE
-
-#include "la_param.f90"
 
         INTEGER :: ldx, ldy, n, m, what
         REAL(DP) :: x(ldx, m), y(ldy, n)
@@ -147,9 +150,9 @@
 !     y  output matrix (m by n), the transpose of x
 !
 
+        USE la_param
         IMPLICIT NONE
 
-#include "la_param.f90"
 
         INTEGER :: ldx, ldy, n, m, what
         COMPLEX(DP) :: x(ldx, m), y(ldy, n)

@@ -22,6 +22,7 @@
 !=----------------------------------------------------------------------=!
 
        USE, intrinsic ::  iso_c_binding
+       USE fft_param
        
        IMPLICIT NONE
         SAVE
@@ -31,7 +32,6 @@
 
 ! ...   Local Parameter
 
-#include "fft_param.f90"
 
         !   Workspace that is statically allocated is defined here
         !   in order to avoid multiple copies of the same workspace

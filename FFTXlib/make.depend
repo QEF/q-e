@@ -1,40 +1,40 @@
+fft_error.o : fft_param.o
 fft_interfaces.o : fft_parallel.o
 fft_interfaces.o : fft_scalar.o
 fft_interfaces.o : fft_smallbox.o
 fft_interfaces.o : fft_smallbox_type.o
 fft_interfaces.o : fft_types.o
 fft_interfaces.o : task_groups.o
+fft_parallel.o : fft_param.o
 fft_parallel.o : fft_scalar.o
 fft_parallel.o : fft_types.o
 fft_parallel.o : scatter_mod.o
 fft_parallel.o : task_groups.o
+fft_scalar.o :fft_param.o
+fft_support.o : fft_param.o
+fft_types.o : fft_param.o
 fft_types.o : fft_support.o
 fft_types.o : stick_base.o
+scatter_mod.o : fft_param.o
 scatter_mod.o : fft_types.o
 scatter_mod.o : task_groups.o
+stick_base.o : fft_param.o
+task_groups.o : fft_param.o
 task_groups.o : fft_types.o
 test.o : fft_parallel.o
+test.o : fft_param.o
 test.o : fft_support.o
 test.o : fft_types.o
 test.o : stick_base.o
 test.o : task_groups.o
 test0.o : fft_interfaces.o
 test0.o : fft_parallel.o
+test0.o : fft_param.o
 test0.o : fft_scalar.o
 test0.o : fft_support.o
 test0.o : fft_types.o
-fft_scalar.o : fft_param.f90
-fft_scalar.o : fft_param.f90
-fft_scalar.o : fft_param.f90
-fft_scalar.o : fft_param.f90
-fft_scalar.o : fft_param.f90
-fft_scalar.o : fft_param.f90
-fft_scalar.o : ../include/fft_defs.h
+fft_scalar.o :../include/fft_defs.h
 fft_smallbox.o : ../include/fft_defs.h
 fft_stick.o : ../include/c_defs.h
 fft_stick.o : fftw.c
 fft_support.o : ../include/fft_defs.h
-fft_support.o : fft_param.f90
-fft_types.o : fft_param.f90
-fftw.o : 
-fftw.o : 

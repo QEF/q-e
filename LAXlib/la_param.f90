@@ -6,15 +6,16 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+MODULE la_param
 
-  INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
 #if defined(__MPI)
+#if defined(__MPI_MODULE)
+  USE mpi
+#else
   INCLUDE 'mpif.h'
 #endif
-
-#if defined __AIX
-#  define  __BSIZ_VALUE  55
-#else 
-#  define  __BSIZ_VALUE  35
 #endif
+  
+  INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
 
+END MODULE la_param

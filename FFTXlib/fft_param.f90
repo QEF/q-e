@@ -6,9 +6,16 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+MODULE fft_param
+
 #if defined(__MPI)
-  include 'mpif.h'
-#endif  
+#if defined(__MPI_MODULE)
+  USE mpi
+#else
+  INCLUDE 'mpif.h'
+#endif
+#endif
+  
   INTEGER, PARAMETER :: nfftx = 2049
   !! Number of different FFT tables that the module
   !!could keep into memory without reinitialization
@@ -17,6 +24,6 @@
   !!Max allowed fft dimension
 
   INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
-
   INTEGER, PARAMETER :: stdout = 6    ! unit connected to standard output
 
+END MODULE fft_param

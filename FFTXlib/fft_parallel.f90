@@ -19,9 +19,9 @@
 !
 MODULE fft_parallel
 !
+   USE fft_param
    IMPLICIT NONE
    SAVE
-#include "fft_param.f90"
 !
 CONTAINS
 !

@@ -23,16 +23,13 @@
 
        USE, intrinsic ::  iso_c_binding
        USE MKL_DFTI ! -- this can be found in the MKL include directory
+       USE fft_param
 
        IMPLICIT NONE
         SAVE
 
         PRIVATE
         PUBLIC :: cft_1z, cft_2xy, cfft3d, cfft3ds
-
-! ...   Local Parameter
-
-#include "fft_param.f90"
 
         TYPE dfti_descriptor_array
            TYPE(DFTI_DESCRIPTOR), POINTER :: desc

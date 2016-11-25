@@ -650,10 +650,10 @@ end subroutine
    !     between the fft mesh points and the array of g vectors.
    !
    USE fft_types
+   USE fft_param
    !
    IMPLICIT NONE
    !
-#include "fft_param.f90"
    REAL(DP), PARAMETER :: eps8  = 1.0E-8_DP
    !
    LOGICAL,  INTENT(IN) :: gamma_only
@@ -984,8 +984,8 @@ subroutine hpsort_eps (n, ra, ind, eps)
   !
   ! adapted from Numerical Recipes pg. 329 (new edition)
   !
+  USE fft_param
   implicit none  
-#include "fft_param.f90"
   !-input/output variables
   integer, intent(in) :: n  
   integer, intent(inout) :: ind (*)  
@@ -1085,8 +1085,8 @@ end subroutine hpsort_eps
 
 subroutine prepare_psi( ib, nbnd, ngms, psi, tg_psic, nls, nlsm, dtgs)
    USE task_groups
+   USE fft_param
    implicit none
-#include "fft_param.f90"
    integer, intent(in) :: ib, nbnd, ngms
    TYPE(task_groups_descriptor), intent(in) :: dtgs
    complex(DP) :: tg_psic( dtgs%tg_nnr * dtgs%nogrp )
@@ -1123,8 +1123,8 @@ end subroutine prepare_psi
 subroutine accumulate_hpsi( ib, nbnd, ngms, hpsi, tg_psic, nls, nlsm, dtgs, dffts)
    USE task_groups
    USE fft_types
+   USE fft_param
    implicit none
-#include "fft_param.f90"
    integer, intent(in) :: ib, nbnd, ngms
    integer, intent(in) :: nls(ngms), nlsm(ngms)
    TYPE(task_groups_descriptor), intent(in) :: dtgs

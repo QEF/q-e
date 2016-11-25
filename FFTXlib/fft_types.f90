@@ -12,12 +12,11 @@ MODULE fft_types
 !=----------------------------------------------------------------------------=!
 
   USE fft_support, ONLY : good_fft_order, good_fft_dimension
+  USE fft_param
 
   IMPLICIT NONE
   PRIVATE
   SAVE
-
-#include "fft_param.f90"
 
   TYPE fft_type_descriptor
 

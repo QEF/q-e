@@ -7,10 +7,9 @@
 !
 MODULE zhpev_module
 
+   USE la_param
    IMPLICIT NONE
    SAVE
-
-#include "la_param.f90"
 
    PRIVATE
 

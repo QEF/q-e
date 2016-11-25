@@ -2,11 +2,10 @@
    MODULE stick_base
 !=----------------------------------------------------------------------=
 
+        USE fft_param
         IMPLICIT NONE
         PRIVATE
         SAVE
-
-#include "fft_param.f90"
 
         PUBLIC :: sticks_map_set
         PUBLIC :: sticks_map_index, sticks_sort_new, sticks_dist_new

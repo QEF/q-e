@@ -9,10 +9,9 @@
 
 MODULE dspev_module
 
+    USE la_param
 
     IMPLICIT NONE
-
-#include "la_param.f90"
 
     SAVE
 

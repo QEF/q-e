@@ -88,7 +88,7 @@ for dir in $dirs; do
 	$TOPDIR/includedep.sh $DEPENDS >> make.depend
 
         # handle special cases: FFTs
-        sed 's/fft_scalar.*.o/fft_scalar.o/' make.depend > make.depend.tmp
+        sed 's/fft_scalar.*.o : /fft_scalar.o :/' make.depend > make.depend.tmp
 
         # handle special cases: modules for C-fortran binding, hdf5
         sed '/@iso_c_binding@/d;/@hdf5@/d' make.depend.tmp > make.depend
@@ -96,13 +96,13 @@ for dir in $dirs; do
         if test "$DIR" = "FFTXlib"
         then
             sed '/@mpi@/d;/@fft_scalar.*.f90@/d' make.depend > make.depend.tmp
-            sed '/@mkl_dfti/d;/@fftw3.f/d;s/@fftw.c@/fftw.c/;s/@fft_param.f90@/fft_param.f90/' make.depend.tmp > make.depend
+            sed '/@mkl_dfti/d;/@fftw3.f/d;s/@fftw.c@/fftw.c/' make.depend.tmp > make.depend
         fi
 
         if test "$DIR" = "LAXlib"
         then
-            sed '/@mpi@/d;/@elpa1@/d' make.depend > make.depend.tmp
-            sed 's/@la_param.f90@/la_param.f90/' make.depend.tmp > make.depend
+            sed '/@mpi@/d' make.depend > make.depend.tmp
+            sed '/@elpa1@/d' make.depend.tmp > make.depend
         fi
 
         if test "$DIR" = "Modules"

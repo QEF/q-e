@@ -17,9 +17,9 @@
 
         USE fft_types, ONLY: fft_type_descriptor
         USE task_groups, ONLY: task_groups_descriptor
+        USE fft_param
 
         IMPLICIT NONE
-#include "fft_param.f90"
 
         INTERFACE gather_grid
            MODULE PROCEDURE gather_real_grid, gather_complex_grid

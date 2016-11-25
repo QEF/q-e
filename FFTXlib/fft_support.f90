@@ -1,4 +1,4 @@
-!
+
 ! Copyright (C) Quantum ESPRESSO group
 !
 ! This file is distributed under the terms of the
@@ -144,10 +144,8 @@ end function allowed
 !         an fft order is not good if not implemented (as on IBM with ESSL)
 !         or implemented but with awful performances (most other cases)
 !
-
-
+     USE fft_param
      IMPLICIT NONE
-#include "fft_param.f90"
      INTEGER, INTENT(IN) :: nr
      INTEGER, OPTIONAL, INTENT(IN) :: np
      INTEGER :: new

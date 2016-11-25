@@ -1,11 +1,12 @@
+dspev_drv.o : la_param.o
 dspev_drv.o : la_types.o
+la_error.o : la_param.o
 ptoolkit.o : dspev_drv.o
+ptoolkit.o : la_param.o
 ptoolkit.o : la_types.o
 ptoolkit.o : zhpev_drv.o
 test.o : dspev_drv.o
+test.o : la_param.o
 test.o : la_types.o
-dspev_drv.o : la_param.f90
-ptoolkit.o : la_param.f90
-test.o : la_param.f90
-transto.o : la_param.f90
-zhpev_drv.o : la_param.f90
+transto.o : la_param.o
+zhpev_drv.o : la_param.o

@@ -69,13 +69,13 @@ SUBROUTINE task_groups_init( dffts, dtgs, nogrp )
 
    !
    USE fft_types,      ONLY : fft_type_descriptor
+   USE fft_param
 
    ! T.G.
    ! NPGRP:      Number of processors per group
    ! NOGRP:      Number of processors per orbital task group
 
    IMPLICIT NONE
-#include "fft_param.f90"
 
    TYPE(fft_type_descriptor), INTENT(inout) :: dffts
    TYPE(task_groups_descriptor), INTENT(inout) :: dtgs
@@ -187,9 +187,9 @@ END SUBROUTINE task_groups_init
 SUBROUTINE task_groups_init_first( dffts, dtgs, nogrp )
    !
    USE fft_types,      ONLY : fft_type_descriptor
+   USE fft_param
    !
    IMPLICIT NONE
-#include "fft_param.f90"
    !
    TYPE(fft_type_descriptor), INTENT(inout) :: dffts
    TYPE(task_groups_descriptor), INTENT(inout) :: dtgs

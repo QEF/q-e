@@ -1,8 +1,8 @@
 program lax_test
   use descriptors
+  USE la_param
   use dspev_module
   IMPLICIT NONE
-#include "la_param.f90"
 #if defined(__MPI)
   INTEGER    STATUS(MPI_STATUS_SIZE)
 #endif

@@ -12,8 +12,8 @@ SUBROUTINE lax_error__( calling_routine, message, ierr )
   !
   ! ... This is a simple routine which writes an error message to output: 
   !
+  USE la_param
   IMPLICIT NONE
-#include "la_param.f90"
   !
   CHARACTER(LEN=*), INTENT(IN) :: calling_routine, message
     ! the name of the calling calling_routine
