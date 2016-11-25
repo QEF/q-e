@@ -510,7 +510,7 @@ END SUBROUTINE bw_tg_cft3_xy
      RETURN
   END SUBROUTINE unpack_group_sticks
 
-
+#if defined (__DOUBLE_BUFFER)
   SUBROUTINE unpack_group_sticks_i( yf, f, dtgs, req )
 
      USE task_groups,  ONLY : task_groups_descriptor
@@ -547,6 +547,7 @@ END SUBROUTINE bw_tg_cft3_xy
 
      RETURN
   END SUBROUTINE unpack_group_sticks_i
+#endif
 
 SUBROUTINE tg_gather( dffts, dtgs, v, tg_v )
    !
