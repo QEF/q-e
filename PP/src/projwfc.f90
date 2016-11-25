@@ -192,7 +192,7 @@ ELSE
   IF ( ionode ) THEN
      IF ( tdosinboxes ) THEN
         CALL partialdos_boxes (Emin, Emax, DeltaE, kresolveddos, filpdos, n_proj_boxes)
-     ELSE IF ( lsym ) THEN
+     ELSE IF ( lsym .OR. kresolveddos ) THEN
         IF (noncolin) THEN
            CALL partialdos_nc (Emin, Emax, DeltaE, kresolveddos, filpdos)
         ELSE

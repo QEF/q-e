@@ -66,8 +66,10 @@ input_description -distribution {Quantum Espresso} -package PWscf -program projw
         var lsym -type LOGICAL {
             default { .true. }
             info {
-                if .true. the projections are symmetrized
-                if .false. partial density of state cannot be computed
+                if .true.  the projections are symmetrized,
+                           the partial density of states are computed
+                if .false. the projections are not symmetrized, the partial 
+                           DOS can be computed only in the k-resolved case
             }
         }
 
