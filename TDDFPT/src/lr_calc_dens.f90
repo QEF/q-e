@@ -331,7 +331,6 @@ CONTAINS
     USE mp,                  ONLY : mp_sum
     USE realus,              ONLY : tg_psic
     USE fft_base,            ONLY : dffts, dtgs
-    USE fft_parallel,        ONLY : tg_gather
 
     IMPLICIT NONE
     !

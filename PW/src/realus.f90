@@ -1357,7 +1357,6 @@ MODULE realus
     USE ions_base,             ONLY : nat, ntyp => nsp, ityp
     USE uspp_param,            ONLY : nh, nhm
     USE fft_base,              ONLY : dffts, dtgs
-    USE fft_parallel,          ONLY : tg_gather
     USE mp_bands,              ONLY : intra_bgrp_comm
     USE mp,        ONLY : mp_sum
     !
@@ -1465,7 +1464,6 @@ MODULE realus
     USE uspp_param,            ONLY : nh, nhm
     USE becmod,                ONLY : bec_type, becp
     USE fft_base,              ONLY : dffts, dtgs
-    USE fft_parallel,          ONLY : tg_gather
     USE mp_bands,              ONLY : intra_bgrp_comm
     USE mp,                    ONLY : mp_sum
     !
@@ -1548,7 +1546,6 @@ MODULE realus
       USE uspp,                   ONLY : qq
       USE becmod,                 ONLY : bec_type, becp
       USE fft_base,               ONLY : dffts, dtgs
-      USE fft_parallel,           ONLY : tg_gather
       !
       IMPLICIT NONE
       !
@@ -1632,7 +1629,6 @@ MODULE realus
       USE uspp,                   ONLY : qq
       USE becmod,                 ONLY : bec_type, becp
       USE fft_base,               ONLY : dffts, dtgs
-      USE fft_parallel,           ONLY : tg_gather
       !
       IMPLICIT NONE
       !
@@ -1721,7 +1717,6 @@ MODULE realus
   USE uspp,                   ONLY : deeq
   USE becmod,                 ONLY : bec_type, becp
   USE fft_base,               ONLY : dffts, dtgs
-  USE fft_parallel,           ONLY : tg_gather
   !
   IMPLICIT NONE
   !
@@ -1824,7 +1819,6 @@ MODULE realus
   USE uspp,                   ONLY : deeq
   USE becmod,                 ONLY : bec_type, becp
   USE fft_base,               ONLY : dffts, dtgs
-  USE fft_parallel,           ONLY : tg_gather
   !
   IMPLICIT NONE
   !
@@ -1915,7 +1909,6 @@ MODULE realus
     USE klist,         ONLY : ngk, igk_k
     USE kinds,         ONLY : DP
     USE fft_base,      ONLY : dffts, dtgs
-    USE fft_parallel,  ONLY : tg_gather
     USE fft_interfaces,ONLY : invfft
 
     IMPLICIT NONE
@@ -2028,7 +2021,6 @@ MODULE realus
     USE gvecs,         ONLY : nls,nlsm,doublegrid
     USE kinds,         ONLY : DP
     USE fft_base,      ONLY : dffts, dtgs
-    USE fft_parallel,  ONLY : tg_gather
     USE fft_interfaces,ONLY : fwfft
     USE mp_bands,      ONLY : me_bgrp
 
