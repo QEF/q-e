@@ -7,19 +7,13 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 
-#include "fft_defs.h"
-
-
 !=----------------------------------------------------------------------=!
    MODULE fft_support
 !=----------------------------------------------------------------------=!
 
-       USE, intrinsic ::  iso_c_binding
-       
+       USE fft_param
        IMPLICIT NONE
        SAVE
-
-       INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
 
        PRIVATE
        PUBLIC :: good_fft_dimension, allowed, good_fft_order
@@ -144,7 +138,6 @@ end function allowed
 !         an fft order is not good if not implemented (as on IBM with ESSL)
 !         or implemented but with awful performances (most other cases)
 !
-     USE fft_param
      IMPLICIT NONE
      INTEGER, INTENT(IN) :: nr
      INTEGER, OPTIONAL, INTENT(IN) :: np

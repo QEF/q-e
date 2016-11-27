@@ -78,7 +78,6 @@ lr_apply_liouvillian_eels.o : ../../PW/src/buffers.o
 lr_apply_liouvillian_eels.o : ../../PW/src/pwcom.o
 lr_apply_liouvillian_eels.o : lr_variables.o
 lr_calc_dens.o : ../../FFTXlib/fft_interfaces.o
-lr_calc_dens.o : ../../FFTXlib/fft_parallel.o
 lr_calc_dens.o : ../../Modules/becmod.o
 lr_calc_dens.o : ../../Modules/cell_base.o
 lr_calc_dens.o : ../../Modules/constants.o

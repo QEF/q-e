@@ -8,7 +8,14 @@ include ../make.inc
 FFTX = \
 task_groups.o \
 scatter_mod.o  \
+fft_fwinv.o  \
 fft_scalar.o  \
+fft_scalar.ARM_LIB.o  \
+fft_scalar.DFTI.o  \
+fft_scalar.ESSL.o  \
+fft_scalar.FFTW.o  \
+fft_scalar.FFTW3.o  \
+fft_scalar.SX6.o  \
 fft_parallel.o  \
 fft_interfaces.o  \
 stick_base.o  \
@@ -36,13 +43,6 @@ TEST : test.o libqefft.a
 
 TEST0:  test0.o libqefft.a
 	$(LD) $(LDFLAGS) -o fft_test0.x test0.o libqefft.a $(LIBS)
-
-TEST2 : test2.o libqefft.a
-	$(LD) $(LDFLAGS) -o fft_test2.x test2.o libqefft.a $(LIBS)
-
-TEST3 : test3.o libqefft.a
-	$(LD) $(LDFLAGS) -o fft_test3.x test3.o libqefft.a $(LIBS)
-
 
 clean :
 	- /bin/rm -f *.o *.a *.d *.i *~ *_tmp.f90 *.mod *.L 

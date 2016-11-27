@@ -6,26 +6,16 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!--------------------------------------------------------------------------!
-! FFT scalar drivers Module - contains machine-dependent routines for      !
-! FFTW, FFTW3, ESSL (both 3d for serial execution and 1d+2d FFTs for       !
-! parallel execution; NEC ASL libraries (3d only, no parallel execution)   !
-! Written by Carlo Cavazzoni, modified by P. Giannozzi, contributions      !
-! by Martin Hilgemans, Guido Roma, Pascal Thibaudeau, Stephane Lefranc,    !
-! Nicolas Lacorne, Filippo Spiga, Nicola Varini - Last update Jul 2015     !
-!--------------------------------------------------------------------------!
-
-#if defined(__LINUX_ESSL)
 
 !=----------------------------------------------------------------------=!
-   MODULE fft_scalar
+   MODULE fft_scalar_essl
 !=----------------------------------------------------------------------=!
 
-       USE, intrinsic ::  iso_c_binding
        USE fft_param
        
        IMPLICIT NONE
-        SAVE
+       SAVE
+#if defined(__LINUX_ESSL)
 
         PRIVATE
         PUBLIC :: cft_1z, cft_2xy, cfft3d, cfft3ds
@@ -649,9 +639,8 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, howmany, isign, &
      END IF
      RETURN
    END SUBROUTINE cfft3ds
-
-!=----------------------------------------------------------------------=!
-   END MODULE fft_scalar
-!=----------------------------------------------------------------------=!
-
 #endif
+!=----------------------------------------------------------------------=!
+ END MODULE fft_scalar_essl
+!=----------------------------------------------------------------------=!
+

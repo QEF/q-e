@@ -5,26 +5,16 @@
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
-!
-!--------------------------------------------------------------------------!
-! FFT scalar drivers Module - contains machine-dependent routines for      !
-! FFTW, FFTW3, ESSL (both 3d for serial execution and 1d+2d FFTs for       !
-! parallel execution; NEC ASL libraries (3d only, no parallel execution)   !
-! Written by Carlo Cavazzoni, modified by P. Giannozzi, contributions      !
-! by Martin Hilgemans, Guido Roma, Pascal Thibaudeau, Stephane Lefranc,    !
-! Nicolas Lacorne, Filippo Spiga, Nicola Varini - Last update Jul 2015     !
-!--------------------------------------------------------------------------!
 
 !=----------------------------------------------------------------------=!
-   MODULE fft_scalar
+   MODULE fft_scalar_sx6
 !=----------------------------------------------------------------------=!
 
-       USE, intrinsic ::  iso_c_binding
-       USE fft_param
+     USE fft_param
        
-       IMPLICIT NONE
-        SAVE
-
+     IMPLICIT NONE
+     SAVE
+#if defined(__SX6)
         PRIVATE
         PUBLIC :: cft_1z, cft_2xy, cfft3d, cfft3ds
 
@@ -515,7 +505,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, howmany, isign, &
   CALL cfft3d (f, nx, ny, nz, ldx, ldy, ldz, howmany, isign)
   RETURN
 END SUBROUTINE cfft3ds
-
+#endif
 !=----------------------------------------------------------------------=!
-   END MODULE fft_scalar
+END MODULE fft_scalar_sx6
 !=----------------------------------------------------------------------=!

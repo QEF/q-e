@@ -6,22 +6,12 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!--------------------------------------------------------------------------!
-! FFT scalar drivers Module - contains machine-dependent routines for      !
-! FFTW, FFTW3, ESSL (both 3d for serial execution and 1d+2d FFTs for       !
-! parallel execution; NEC ASL libraries (3d only, no parallel execution)   !
-! Written by Carlo Cavazzoni, modified by P. Giannozzi, contributions      !
-! by Martin Hilgemans, Guido Roma, Pascal Thibaudeau, Stephane Lefranc,    !
-! Nicolas Lacorne, Filippo Spiga, Nicola Varini - Last update Jul 2015     !
-!--------------------------------------------------------------------------!
-
+#if defined(__DFTI)
 #include "mkl_dfti.f90"
-
 !=----------------------------------------------------------------------=!
-   MODULE fft_scalar
+   MODULE fft_scalar_dfti
 !=----------------------------------------------------------------------=!
 
-       USE, intrinsic ::  iso_c_binding
        USE MKL_DFTI ! -- this can be found in the MKL include directory
        USE fft_param
 
@@ -582,7 +572,9 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, howmany, isign, do_fft_z, do_f
   CALL cfft3d (f, nx, ny, nz, ldx, ldy, ldz, howmany, isign)
 
 END SUBROUTINE cfft3ds
-
+#else
+   MODULE fft_scalar_dfti
+#endif
 !=----------------------------------------------------------------------=!
-   END MODULE fft_scalar
+END MODULE fft_scalar_dfti
 !=----------------------------------------------------------------------=!

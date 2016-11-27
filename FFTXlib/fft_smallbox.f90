@@ -6,25 +6,14 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!--------------------------------------------------------------------------!
-! FFT scalar drivers Module - contains machine-dependent routines for      !
-! FFTW, FFTW3, ESSL (both 3d for serial execution and 1d+2d FFTs for       !
-! parallel execution; NEC ASL libraries (3d only, no parallel execution)   !
-! Written by Carlo Cavazzoni, modified by P. Giannozzi, contributions      !
-! by Martin Hilgemans, Guido Roma, Pascal Thibaudeau, Stephane Lefranc,    !
-! Nicolas Lacorne, Filippo Spiga, Nicola Varini - Last update Jul 2015     !
-!--------------------------------------------------------------------------!
-
 #include "fft_defs.h"
 
 !=----------------------------------------------------------------------=!
    MODULE fft_smallbox
 !=----------------------------------------------------------------------=!
 
-       USE, intrinsic ::  iso_c_binding
-       
        IMPLICIT NONE
-        SAVE
+       SAVE
 
         PRIVATE
         PUBLIC :: cft_b, cft_b_omp_init, cft_b_omp
@@ -72,7 +61,7 @@
 !     driver routine for 3d complex fft's on box grid, parallel case
 !     fft along xy is done only on planes that correspond to dense grid
 !     planes on the current processor, i.e. planes with imin3 <= nz <= imax3
-!     implemented for essl, fftw, scsl, complib, only for sgn=1 (f(R) => f(G))
+!     implemented for FFTW, only for sgn=1 (f(R) => f(G))
 !     (beware: here the "essl" convention for the sign of the fft is used!)
 !
       implicit none
