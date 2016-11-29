@@ -16,9 +16,8 @@
   USE iotk_module
   !
   USE kinds,     ONLY : DP
-  !USE mp,        ONLY : mp_bcast
   USE mp_images, ONLY : intra_image_comm
-  USE io_global, ONLY : ionode, ionode_id
+  USE io_global, ONLY : meta_ionode
   !
   IMPLICIT NONE
   !
@@ -49,14 +48,14 @@
     ! Local variables
     INTEGER :: ierr
 
-    IF ( ionode ) THEN
+    IF ( meta_ionode ) THEN
        !
        CALL iotk_free_unit( iunout, ierr )
        !
     END IF
     !
     CALL errore( 'read_dyn_mat_param', 'no free units to write ', ierr )
-    IF ( ionode ) THEN
+    IF ( meta_ionode ) THEN
        !
        ! ... open XML descriptor
        !
@@ -67,7 +66,7 @@
     !
     CALL errore( 'read_dyn_mat_param', 'error opening the dyn mat file ', ierr )
     !
-    IF (ionode) THEN
+    IF (meta_ionode) THEN
        CALL iotk_scan_begin(iunout, "GEOMETRY_INFO" )
        !
        CALL iotk_scan_dat(iunout,"NUMBER_OF_TYPES",ntyp)
@@ -111,7 +110,7 @@
     INTEGER :: nt, na, kc
     LOGICAL :: found_z, lrigid_
     !
-    IF (ionode) THEN
+    IF (meta_ionode) THEN
        CALL iotk_scan_begin( iunout, "GEOMETRY_INFO" )
        !
        CALL iotk_scan_dat( iunout, "BRAVAIS_LATTICE_INDEX", ibrav )
@@ -192,7 +191,7 @@
 
     INTEGER :: na, nb
 
-    IF (ionode) THEN
+    IF (meta_ionode) THEN
        CALL iotk_scan_begin(iunout, "DYNAMICAL_MAT_"//TRIM(iotk_index(iq)) )
 
        CALL iotk_scan_dat(iunout,"Q_POINT",xq)
@@ -222,7 +221,7 @@
     INTEGER, INTENT(OUT) :: nr1, nr2, nr3
     INTEGER :: meshfft(3)
 
-    IF (ionode) THEN
+    IF (meta_ionode) THEN
        CALL iotk_scan_begin( iunout, "INTERATOMIC_FORCE_CONSTANTS" )
        CALL iotk_scan_dat( iunout, "MESH_NQ1_NQ2_NQ3", meshfft )
        nr1 = meshfft(1)
@@ -245,7 +244,7 @@
     INTEGER :: na, nb, nn, m1, m2, m3
     REAL(DP) :: aux(3,3)
 
-    IF (ionode) THEN
+    IF (meta_ionode) THEN
        CALL iotk_scan_begin( iunout, "INTERATOMIC_FORCE_CONSTANTS" )
 
        DO na=1,nat
