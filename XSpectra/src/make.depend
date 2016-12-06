@@ -152,9 +152,6 @@ set_xspectra_namelists_defaults.o : xspectra_mod.o
 spectra_correction.o : ../../Modules/constants.o
 spectra_correction.o : ../../Modules/kind.o
 spectra_correction.o : gaunt_mod.o
-spectra_manipulation.o : ../../Modules/constants.o
-spectra_manipulation.o : ../../Modules/kind.o
-spectra_manipulation.o : gaunt_mod.o
 stdout_routines.o : ../../Modules/constants.o
 stdout_routines.o : ../../Modules/io_files.o
 stdout_routines.o : ../../Modules/io_global.o
