@@ -1,11 +1,4 @@
-!
-! Copyright (C) 2001-2002 PWSCF group
-! This file is distributed under the terms of the
-! GNU General Public License. See the file `License'
-! in the root directory of the present distribution,
-! or http://www.gnu.org/copyleft/gpl.txt .
-!
-MODULE pseudo
+MODULE pseudo_mod
   !
   ! All variables to be read from the UPF file
   ! (UPF = unified pseudopotential format)
@@ -58,29 +51,11 @@ MODULE pseudo
   !
   ! pp_rhoatom
   real(8) :: rho_at(ndm,npsx)
-END MODULE pseudo
-!
-!---------------------------------------------------------------------
-PROGRAM read_ps
-  !---------------------------------------------------------------------
   !
-  !  Read pseudopotentials in the Unified Pseudopotential Format (UPF)
+  PRIVATE
+  PUBLIC :: read_pseudo
   !
-  IMPLICIT NONE
-  INTEGER :: is, ios, iunps = 4
-  CHARACTER (len=256) :: filein
-  !
-  is = 0
-10 WRITE(*,'("  Input PP file # ",i2," in UPF format > ")',advance="NO") is+1
-  READ (5, '(a)', end = 20, err = 20) filein
-  OPEN(unit=iunps,file=filein,status='old',form='formatted',iostat=ios)
-  IF (ios/=0) STOP
-  is = is + 1
-  CALL read_pseudo(is, iunps)
-  CLOSE (unit=iunps)
-  GOTO 10
-20 STOP
-END PROGRAM read_ps
+CONTAINS
 !
 !---------------------------------------------------------------------
 SUBROUTINE read_pseudo (is, iunps)
@@ -88,7 +63,6 @@ SUBROUTINE read_pseudo (is, iunps)
   !
   !  Read pseudopotential in the Unified Pseudopotential Format (UPF)
   !
-  USE pseudo
   IMPLICIT NONE
   !
   INTEGER :: is, iunps
@@ -183,7 +157,6 @@ END SUBROUTINE scan_end
 SUBROUTINE read_pseudo_header (is, iunps)
   !---------------------------------------------------------------------
   !
-  USE pseudo
   IMPLICIT NONE
   !
   INTEGER :: is, iunps
@@ -216,7 +189,6 @@ END SUBROUTINE read_pseudo_header
 SUBROUTINE read_pseudo_local (is, iunps)
   !---------------------------------------------------------------------
   !
-  USE pseudo
   IMPLICIT NONE
   !
   INTEGER :: is, iunps
@@ -235,7 +207,6 @@ END SUBROUTINE read_pseudo_local
 SUBROUTINE read_pseudo_mesh (is, iunps)
   !---------------------------------------------------------------------
   !
-  USE pseudo
   IMPLICIT NONE
   !
   INTEGER :: is, iunps
@@ -259,7 +230,6 @@ END SUBROUTINE read_pseudo_mesh
 SUBROUTINE read_pseudo_nl (is, iunps)
   !---------------------------------------------------------------------
   !
-  USE pseudo
   IMPLICIT NONE
   !
   INTEGER :: is, iunps
@@ -342,7 +312,6 @@ END SUBROUTINE read_pseudo_nl
 SUBROUTINE read_pseudo_nlcc (is, iunps)
   !---------------------------------------------------------------------
   !
-  USE pseudo
   IMPLICIT NONE
   !
   INTEGER :: is, iunps
@@ -359,7 +328,6 @@ END SUBROUTINE read_pseudo_nlcc
 SUBROUTINE read_pseudo_pswfc (is, iunps)
   !---------------------------------------------------------------------
   !
-  USE pseudo
   IMPLICIT NONE
   !
   INTEGER :: is, iunps
@@ -380,7 +348,6 @@ END SUBROUTINE read_pseudo_pswfc
 SUBROUTINE read_pseudo_rhoatom (is, iunps)
   !---------------------------------------------------------------------
   !
-  USE pseudo
   IMPLICIT NONE
   !
   INTEGER :: is, iunps
@@ -394,3 +361,4 @@ SUBROUTINE read_pseudo_rhoatom (is, iunps)
 
 END SUBROUTINE read_pseudo_rhoatom
 
+END MODULE pseudo_mod

@@ -5,7 +5,7 @@ include ../make.inc
 # location of needed modules
 MODFLAGS= $(MOD_FLAG)../iotk/src $(MOD_FLAG)../Modules $(MOD_FLAG)../FFTXlib $(MOD_FLAG)../LAXlib $(MOD_FLAG).
 
-OBJS = write_upf.o
+OBJS = write_upf.o read_upf.o
 QEMODS = ../Modules/libqemod.a ../FFTXlib/libqefft.a
 
 TLDEPS = mods libs libiotk
@@ -35,8 +35,8 @@ ncpp2upf.x : ncpp2upf.o $(OBJS) $(QEMODS) $(LIBOBJS)
 oldcp2upf.x : oldcp2upf.o $(OBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ oldcp2upf.o $(OBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 
-read_upf.x : read_upf.o
-	$(LD) $(LDFLAGS) -o $@ read_upf.o $(LIBS)
+read_upf.x : read_ps.o
+	$(LD) $(LDFLAGS) -o $@ read_ps.o $(OBJS)
 
 read_upf_tofile.x : read_upf_tofile.o $(OBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ read_upf_tofile.o $(OBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
