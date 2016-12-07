@@ -498,6 +498,10 @@
       &'plot band structure and phonon dispersion requires k- and q-points read from filkf and filqf files',1)
   IF (band_plot .and. parallel_q ) CALL errore('epw_readin', &
       &'band_plot can only be used with parallel_k',1)    
+  IF (band_plot .and. filkf .ne. ' ' .and. (nkf1 > 0 .or. nkf2 > 0 .or. nkf3 > 0) ) CALL errore('epw_readin', &
+                &'You should define either filkf or nkf when band_plot = .true.',1)
+  IF (band_plot .and. filqf .ne. ' ' .and. (nqf1 > 0 .or. nqf2 > 0 .or. nqf3 > 0) ) CALL errore('epw_readin', &
+                &'You should define either filqf or nqf when band_plot = .true.',1)
   IF ( filkf .ne. ' ' .and. .not.efermi_read ) CALL errore('epw_readin', &
       &'WARNING: if k-points are along a line, then efermi_read=.true. and fermi_energy must be given in the input file',-1)
   IF ( scattering .AND. nstemp < 1 ) CALL errore('epw_init', &
