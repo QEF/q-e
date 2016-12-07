@@ -322,12 +322,21 @@ MODULE pw_restart_new
             h_energy  = ef 
          END IF 
          IF (TRIM(input_parameters_occupations) == 'smearing' ) THEN
+              IF (TRIM(qexsd_input%tagname) .ne. 'input') THEN 
+                 qexsd_input%k_points_IBZ%lwrite=.FALSE.
+                 qexsd_input%bands%occupations%lwrite = .FALSE. 
+                 qexsd_input%bands%smearing%lwrite = .FALSE.
+              END IF             
               CALL  qexsd_init_band_structure(output%band_structure,lsda,noncolin,lspinorb, &
                    nbnd,nelec, natomwfc, occupations_are_fixed, & 
                    h_energy,two_fermi_energies, [ef_up,ef_dw], et,wg,nkstot,xk,ngk_g,wk,    & 
                    STARTING_KPOINTS = qexsd_input%k_points_IBZ, OCCUPATION_KIND = qexsd_input%bands%occupations, &
                    WF_COLLECTED = twfcollect, SMEARING = qexsd_input%bands%smearing)
          ELSE     
+              IF ( TRIM(qexsd_input%tagname) .ne. 'input') THEN
+                 qexsd_input%k_points_IBZ%lwrite = .FALSE.
+                 qexsd_input%bands%occupations%lwrite = .FALSE.
+              END IF 
               CALL  qexsd_init_band_structure(output%band_structure,lsda,noncolin,lspinorb, &
                    nbnd,nelec, natomwfc, occupations_are_fixed, & 
                    h_energy,two_fermi_energies, [ef_up,ef_dw], et,wg,nkstot,xk,ngk_g,wk,    & 
