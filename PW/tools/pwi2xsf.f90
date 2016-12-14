@@ -39,11 +39,11 @@
      &     maxtyp  = 100,                                               &
      &     maxatom = 10000,                                             &
      &     maximage = 50,                                               &
-     &     bohr    = 0.5291772108d0,                                    &
+     &     bohr    = 0.52917720859d0,                                   & ! bohr-to-angs conversion
      &     ALAT_UNIT     = 1,                                           &
      &     BOHR_UNIT     = 2,                                           &
      &     ANGSTROM_UNIT = 3,                                           &
-     &     CRYSTAL_UNIT  = 4 )          
+     &     CRYSTAL_UNIT  = 4 )
 !
       integer                                                           &
      &     ibrav,              &! label for Bravais lattice
@@ -51,12 +51,14 @@
      &     ntyp,               &! number of pseudopotentials
      &     num_of_images,      &! number of NEB images
      &     inp_num_of_images,  &! number of NEB images in the input
-     &     atomic_posunit       ! length-unit of atomic positions
+     &     atomic_posunit       ! length-unit of ATOMIC_POSITIONS
+
 !
       real*8                                                            &
      &     celldm(6),          &! cell parameters
      &     omega,              &! cell volume (not used)
-     &     alat,               &! lattice parameter
+     &     alat,               &! lattice parameter (in Angstroms)
+     &     cell_f,             &! to tranform lattice-vectors to celldm(1) units
      &     a, b, c, cosab, cosac, cosbc ! lattice parameters
 !
       character                                                         &
@@ -114,8 +116,7 @@
 !
 !     was lattice specified in terms of A,B,C,...
       if ( celldm(1) .eq. 0.0D0 .AND. a .ne. 0.0D0 ) THEN
-         if ( ibrav .eq. 0 ) ibrav = 14 
-         celldm(1) = a / bohr
+         celldm(1) = a / bohr ! celldm(1) in bohr units
          celldm(2) = b / a
          celldm(3) = c / a
          celldm(4) = cosab
@@ -124,6 +125,8 @@
       else if ( celldm(1) .ne. 0.0D0 .AND. a .ne. 0.0D0 ) THEN
          print *, 'ERROR: do not specify both celldm and a,b,c !!!'
       endif
+
+      alat = bohr*celldm(1) ! alat in angstroms
 !
 !     read the rest of the input
 !
@@ -134,10 +137,27 @@
 !     
 !     CELL_PARAMETERS
 !     
-      if (     line(1:15) .eq. 'CELL_PARAMETERS' ) then
+      if ( line(1:15) .eq. 'CELL_PARAMETERS' ) then
+         line = line(16:len)
+         len  = string_length(line)
+         cell_f = 1d0 ! default unit for CELL_PARAMETERS is asumed in units of celldm(1)
+         !
+         if (len.gt.0 ) then
+            if ( matches('ALAT',line) ) then
+               cell_f = 1d0 ! in units of celldm(1)
+            elseif ( matches('BOHR',line) ) then
+               cell_f = 1d0/celldm(1)
+            elseif ( matches('ANGSTROM',line) ) then
+               cell_f = 1d0/alat
+            endif
+         endif
+         
          read (5,*) ((pv(i,j),i=1,3),j=1,3)
+         
          do j=1,3
             do i=1,3
+               ! transform pv to celldm(1) units
+               pv(i,j) = cell_f*pv(i,j)
                cv(i,j) = pv(i,j)
             end do
          end do
@@ -253,7 +273,7 @@
      &        cv(1,1), cv(1,2), cv(1,3))
       endif
 !
-      alat = bohr*celldm(1)
+!
       call write_XSF_header (num_of_images,alat, pv, cv, nat, ounit)
 !
 !     coordinates to ANGSTROMs
@@ -271,7 +291,8 @@
                tau(3,inat,iim) = alat * tau(3,inat,iim)
 !
             elseif ( atomic_posunit .eq. CRYSTAL_UNIT ) then
-               call cryst_to_cart(1, tau(1,inat,iim), pv, 1)
+               call cryst_to_cart(1, tau(1,inat,iim), alat*pv, 1)
+!
             endif
          enddo
       enddo
@@ -499,12 +520,16 @@
      &     write(ounit,'('' ANIMSTEPS '',i5)') num_of_images
 !
       write(ounit,'('' CRYSTAL'')')
-      write(ounit,'(/,'' PRIMVEC'')')
-      write(ounit,'(3(f15.10,2x,f15.10,2x,f15.10,/))')                  &
-     &     ((p1(i,j),i=1,3),j=1,3)
+      write(ounit,'('' PRIMVEC'')')
+      do j=1,3
+        write(ounit,'(3(f15.10,2x,f15.10,2x,f15.10))')                  &
+     &       (p1(i,j),i=1,3)
+      enddo
       write(ounit,'('' CONVVEC'')')
-      write(ounit,'(3(f15.10,2x,f15.10,2x,f15.10,/))')                  &
-     &     ((c1(i,j),i=1,3),j=1,3)
+      do j=1,3
+        write(ounit,'(3(f15.10,2x,f15.10,2x,f15.10))')                  &
+     &       (c1(i,j),i=1,3)
+      enddo
       if (num_of_images .eq. 1) then
          write(ounit,'('' PRIMCOORD'')')
          write(ounit,*) nat, 1
