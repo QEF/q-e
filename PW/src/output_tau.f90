@@ -11,9 +11,9 @@ SUBROUTINE output_tau( print_lattice, print_final  )
   !
   USE io_global, ONLY : stdout
   USE kinds,     ONLY : DP
-  USE constants, ONLY : bohr_radius_angs
+  USE constants, ONLY : bohr_radius_angs, AVOGADRO
   USE cell_base, ONLY : alat, at, bg, omega, cell_units
-  USE ions_base, ONLY : nat, tau, ityp, atm, if_pos, tau_format
+  USE ions_base, ONLY : nat, na_typ => na, tau, ityp, atm, if_pos, tau_format, amass
   !
   IMPLICIT NONE
   !
@@ -35,6 +35,9 @@ SUBROUTINE output_tau( print_lattice, print_final  )
      !
      WRITE( stdout, '(5x,a,1F12.5," a.u.^3 ( ",1F11.5," Ang^3 )")') &
                     "new unit-cell volume = ",omega, omega*bohr_radius_angs**3 
+     WRITE( stdout, '(5x,a,1F12.5," g/cm^3")') &
+                    "density = ", SUM( amass(ityp(1:nat))*na_typ(ityp(1:nat))  )&
+                                  /(omega*bohr_radius_angs**3 * 1.d-24)/AVOGADRO
 
      SELECT CASE (cell_units)
      !
