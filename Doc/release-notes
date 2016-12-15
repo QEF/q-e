@@ -8,6 +8,7 @@ Incompatible changes in svn version:
 
 Fixed in svn version
 
+  * pwi2xsf utility, also used in XCrysDen: various fixes (r13197)
   * PP: incorrect results in "projwfc.x" with PAW projection due to a 
         missing line (r13121); crash in pw_export.x" due to dumb error (r13189)
   * PW: final scf step in variable-cell calculation could crash
