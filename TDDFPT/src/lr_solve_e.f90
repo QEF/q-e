@@ -250,8 +250,6 @@ SUBROUTINE compute_d0psi_rs( n_ipol )
      !
   ENDDO
   !
-  ! Shift the dipole to the center of cell
-  !
   IF (lshift_d0psi) CALL shift_d0psi(r,n_ipol)
   !
   ! Calculate the product r * psi(r)
@@ -377,7 +375,7 @@ SUBROUTINE shift_d0psi( r, n_ipol )
   !
   ! XG: I am not sure that this type of super cell is supported now.
   !
-  if (check_cell .gt. 1.d-5) call errore('lr_read_wfc', &
+  if (check_cell .gt. 1.d-5) call errore('shift_d0psi', &
         & "This type of the supercell is not supported",1)
   !
   mmin(:) = 2000.d0
