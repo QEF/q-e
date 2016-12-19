@@ -30,16 +30,15 @@ PROGRAM phonon
   ! [1] LDA, 
   ! [2] [1] + GGA, 
   ! [3] [2] + LSDA/sGGA, 
-  ! [4] [3] + Spin-orbit/nonmagnetic,
+  ! [4] [3] + Spin-orbit/nonmagnetic, non-local vdW functionals, DFT-D2
   ! [5] [4] + Spin-orbit/magnetic (experimental when available)
   !
   ! Not implemented in ph.x:
   ! [6] [5] + constraints on the magnetization
   ! [7] Hubbard U
   ! [8] Hybrid functionals
-  ! [9] non-local/semiempirical vdW functionals
-  ! [10] External Electric field
-  ! [11] nonperiodic boundary conditions.
+  ! [9] External Electric field
+  ! [10] nonperiodic boundary conditions.
 
   USE control_ph,      ONLY : bands_computed, qplot
   USE check_stop,      ONLY : check_stop_init
