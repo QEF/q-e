@@ -338,6 +338,8 @@ input_description -distribution {Quantum Espresso} -package turboTDDFPT -program
                 Note, currently the commutator does not contain
                 a contribution for hybrids [V_EXX,r]. See also
                 the variable lshift_d0psi.
+                Important: Treatment of the dipole in the real space
+                is allowed only if the system is finite.
                 }
         }
 
