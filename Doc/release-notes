@@ -1,10 +1,12 @@
 New in svn version:
 
   * Hybrid functionals with PAW now work
+  * Optimized tetrahedron method, contributed by Mitsuaki Kawamura, U. Tokyo
 
 Incompatible changes in svn version:
 
   * Routine h_psiq deleted, replaced by h_psi
+  * Variables related to tetrahedron method moved around
 
 Fixed in svn version
 

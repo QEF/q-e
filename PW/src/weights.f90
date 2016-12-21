@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2011 PWSCF group
+! Copyright (C) 2001-2016 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -19,7 +19,7 @@ SUBROUTINE weights()
   USE klist,                ONLY : ltetra, lgauss, degauss, ngauss, nks, &
                                    nkstot, wk, xk, nelec, nelup, neldw, &
                                    two_fermi_energies
-  USE ktetra,               ONLY : ntetra, tetra
+  USE ktetra,               ONLY : ntetra, tetra, tetra_type, opt_tetra_weights
   USE lsda_mod,             ONLY : nspin, current_spin, isk
   USE wvfct,                ONLY : nbnd, wg, et
   USE mp_images,            ONLY : intra_image_comm
@@ -64,19 +64,43 @@ SUBROUTINE weights()
            !
            ! ... calculate weights for the metallic case using tetrahedra
            !
-           IF (two_fermi_energies) THEN
+           IF (tetra_type == 0) then
               !
-              CALL tweights( nkstot, nspin, nbnd, nelup, &
-                             ntetra, tetra, et, ef_up, wg, 1, isk )
-              CALL tweights( nkstot, nspin, nbnd, neldw, &
-                             ntetra, tetra, et, ef_dw, wg, 2, isk )
+              ! Bloechl's tetrahedra
+              !
+              IF (two_fermi_energies) THEN
+                 !
+                 CALL tweights( nkstot, nspin, nbnd, nelup, &
+                                ntetra, tetra, et, ef_up, wg, 1, isk )
+                 CALL tweights( nkstot, nspin, nbnd, neldw, &
+                                ntetra, tetra, et, ef_dw, wg, 2, isk )
+                 !
+              ELSE
+                 !
+                 CALL tweights( nkstot, nspin, nbnd, nelec, &
+                                ntetra, tetra, et, ef, wg, 0, isk )
+                 !
+              END IF
               !
            ELSE
               !
-              CALL tweights( nkstot, nspin, nbnd, nelec, &
-                             ntetra, tetra, et, ef, wg, 0, isk )
+              ! Linear or Optimized tetrahedra
               !
-           END IF
+              IF (two_fermi_energies) THEN
+                 !
+                 CALL opt_tetra_weights( nkstot, nspin, nbnd, nelup, ntetra,&
+                      tetra, et, ef_up, wg, 1, isk )
+                 CALL opt_tetra_weights( nkstot, nspin, nbnd, neldw, ntetra,&
+                      tetra, et, ef_dw, wg, 2, isk )
+                 !
+              ELSE
+                 !             
+                 CALL opt_tetra_weights ( nkstot, nspin, nbnd, nelec, ntetra,&
+                      tetra, et, ef, wg, 0, isk )
+                 !
+              END IF
+              !
+           END IF ! tetra_type
            !
         END IF
         !
@@ -153,7 +177,8 @@ SUBROUTINE weights_only ()
   USE klist,                ONLY : ltetra, lgauss, degauss, ngauss, nks, &
                                    nkstot, wk, xk, nelec, nelup, neldw, &
                                    two_fermi_energies
-  USE ktetra,               ONLY : ntetra, tetra
+  USE ktetra,               ONLY : ntetra, tetra, tetra_type, &
+       opt_tetra_weights_only
   USE lsda_mod,             ONLY : nspin, current_spin, isk
   USE wvfct,                ONLY : nbnd, wg, et
   USE mp_images,            ONLY : intra_image_comm
@@ -191,19 +216,43 @@ SUBROUTINE weights_only ()
            !
            ! ... calculate weights for the metallic case using tetrahedra
            !
-           IF (two_fermi_energies) THEN
+           IF(tetra_type == 0) then
               !
-              CALL tweights_only( nkstot, nspin, 1, isk, nbnd, nelup, &
-                             ntetra, tetra, et, ef_up, wg )
-              CALL tweights_only( nkstot, nspin, 2, isk, nbnd, neldw, &
-                             ntetra, tetra, et, ef_dw, wg )
+              ! Bloechl's tetrahedra
               !
-           ELSE
+              IF (two_fermi_energies) THEN
+                 !
+                 CALL tweights_only( nkstot, nspin, 1, isk, nbnd, nelup, &
+                                     ntetra, tetra, et, ef_up, wg )
+                 CALL tweights_only( nkstot, nspin, 2, isk, nbnd, neldw, &
+                                     ntetra, tetra, et, ef_dw, wg )
+                 !
+              ELSE
+                 !
+                 CALL tweights_only ( nkstot, nspin, 0, isk, nbnd, nelec, &
+                                      ntetra, tetra, et, ef, wg )
+                 !
+              END IF
               !
-              CALL tweights_only ( nkstot, nspin, 0, isk, nbnd, nelec, &
-                             ntetra, tetra, et, ef, wg )
+           ELSE ! tetra_type == 1 .or. 2
               !
-           END IF
+              ! Linear or Optimized tetrahedra
+              !
+              IF (two_fermi_energies) THEN
+                 !
+                 CALL opt_tetra_weights_only ( nkstot, nspin, nbnd, ntetra, &
+                      tetra, et, ef_up, wg, 1, isk )
+                 CALL opt_tetra_weights_only ( nkstot, nspin, nbnd, ntetra, &
+                      tetra, et, ef_dw, wg, 2, isk )
+                 !
+              ELSE
+                 !
+                 CALL opt_tetra_weights_only ( nkstot, nspin, nbnd, ntetra, &
+                      tetra, et, ef, wg, 0, isk )
+                 !
+              END IF
+              !
+           END IF ! tetra_type
            !
         END IF
         !

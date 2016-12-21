@@ -105,7 +105,7 @@ SUBROUTINE iosys()
                             degauss_           => degauss, &
                             tot_charge_        => tot_charge, &
                             tot_magnetization_ => tot_magnetization
-  !
+  USE ktetra,        ONLY : tetra_type
   USE start_k,       ONLY : init_start_k
   !
   USE ldaU,          ONLY : Hubbard_U_     => hubbard_u, &
@@ -545,11 +545,11 @@ SUBROUTINE iosys()
   tfixed_occ = .false.
   ltetra     = .false.
   lgauss     = .false.
+  ngauss     = 0
   !
   SELECT CASE( trim( occupations ) )
   CASE( 'fixed' )
      !
-     ngauss = 0
      IF ( degauss /= 0.D0 ) THEN
         CALL errore( ' iosys ', &
                    & ' fixed occupations, gauss. broadening ignored', -1 )
@@ -582,18 +582,18 @@ SUBROUTINE iosys()
      !
   CASE( 'tetrahedra' )
      !
-     ! replace "errore" with "infomsg" in the next line if you really want
-     ! to perform a calculation with forces using tetrahedra 
-     !
-     IF( lforce ) CALL errore( 'iosys', &
-        'force calculation with tetrahedra not recommanded: use smearing',1)
-     !
-     ! as above, for stress
-     !
-     IF( lstres ) CALL errore( 'iosys', &
-        'stress calculation with tetrahedra not recommanded: use smearing',1)
-     ngauss = 0
      ltetra = .true.
+     tetra_type = 0
+     !
+  CASE( 'tetrahedra_lin')
+     !
+     ltetra = .true.
+     tetra_type = 1
+     !
+  CASE('tetrahedra_opt')
+     !
+     ltetra = .true.
+     tetra_type = 2
      !
   CASE( 'from_input' )
      !
@@ -607,6 +607,10 @@ SUBROUTINE iosys()
      !
   END SELECT
   !
+  IF( lforce ) CALL infomsg( 'iosys', &
+       'BEWARE:  force calculation with tetrahedra (not recommanded)')
+  IF( lstres ) CALL infomsg( 'iosys', &
+       'BEWARE: stress calculation with tetrahedra (not recommanded)')
   IF( nbnd < 1 ) &
      CALL errore( 'iosys', 'nbnd less than 1', nbnd )
   !

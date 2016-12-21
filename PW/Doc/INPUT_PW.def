@@ -845,12 +845,23 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                     see variables @ref smearing and @ref degauss
                 }
                 opt -val 'tetrahedra' {
-                    especially suited for calculation of DOS
-                    (see P.E. Bloechl, PRB 49, 16223 (1994)).
-                    Requires uniform grid of k-points,
-                    automatically generated (see below).
-                    Not suitable (because not variational) for
+                    Tetrahedron method, Bloechl's version:
+                    P.E. Bloechl, PRB 49, 16223 (1994)
+                    Requires uniform grid of k-points, to be
+                    automatically generated (see card K_POINTS).
+                    Well suited for calculation of DOS, 
+                    less so (because not variational) for
                     force/optimization/dynamics calculations.
+		}
+		opt -val 'tetrahedra_lin' {
+                    Original linear tetrahedron method.
+                    To be used only as a reference;
+                    the optimized tetrahedron method is more efficient.
+                }
+		opt -val 'tetrahedra_opt' {
+                    Optimized tetrahedron method:
+                    see M. Kawamura, PRB, 89 094515 (2014).
+                    Can be used for phonon calculations as well.
                 }
                 opt -val 'fixed' {
                     for insulators with a gap
