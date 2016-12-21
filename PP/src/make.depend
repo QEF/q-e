@@ -204,6 +204,7 @@ dos.o : ../../Modules/noncol.o
 dos.o : ../../PW/src/pwcom.o
 dos.o : ../../PW/src/start_k.o
 dos.o : ../../PW/src/symm_base.o
+dos.o : ../../PW/src/tetra.o
 dosg.o : ../../Modules/kind.o
 elf.o : ../../FFTXlib/fft_interfaces.o
 elf.o : ../../Modules/cell_base.o

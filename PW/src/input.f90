@@ -100,13 +100,12 @@ SUBROUTINE iosys()
   USE fft_base, ONLY : dfftp
   USE fft_base, ONLY : dffts
   !
-  USE klist,         ONLY : lgauss, ngauss, two_fermi_energies, &
+  USE klist,         ONLY : ltetra, lgauss, ngauss, two_fermi_energies, &
                             smearing_          => smearing, &
                             degauss_           => degauss, &
                             tot_charge_        => tot_charge, &
                             tot_magnetization_ => tot_magnetization
   !
-  USE ktetra,        ONLY : ltetra
   USE start_k,       ONLY : init_start_k
   !
   USE ldaU,          ONLY : Hubbard_U_     => hubbard_u, &

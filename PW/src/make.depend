@@ -279,6 +279,7 @@ clean_pw.o : realus.o
 clean_pw.o : scf_mod.o
 clean_pw.o : symm_base.o
 clean_pw.o : symme.o
+clean_pw.o : tetra.o
 clean_pw.o : xdm_dispersion.o
 close_files.o : ../../Modules/control_flags.o
 close_files.o : ../../Modules/io_files.o
@@ -1476,6 +1477,7 @@ pw_restart.o : realus.o
 pw_restart.o : scf_mod.o
 pw_restart.o : start_k.o
 pw_restart.o : symm_base.o
+pw_restart.o : tetra.o
 pw_restart_new.o : ../../Modules/bfgs_module.o
 pw_restart_new.o : ../../Modules/cell_base.o
 pw_restart_new.o : ../../Modules/constants.o
@@ -1525,6 +1527,7 @@ pw_restart_new.o : realus.o
 pw_restart_new.o : scf_mod.o
 pw_restart_new.o : start_k.o
 pw_restart_new.o : symm_base.o
+pw_restart_new.o : tetra.o
 pw_restart_new.o : xdm_dispersion.o
 pwcom.o : ../../Modules/cell_base.o
 pwcom.o : ../../Modules/constants.o
@@ -1595,6 +1598,7 @@ read_file.o : pwcom.o
 read_file.o : realus.o
 read_file.o : scf_mod.o
 read_file.o : symm_base.o
+read_file.o : tetra.o
 read_file_new.o : ../../FFTXlib/fft_interfaces.o
 read_file_new.o : ../../FFTXlib/fft_types.o
 read_file_new.o : ../../Modules/cell_base.o
@@ -1844,6 +1848,7 @@ setup.o : pw_restart_new.o
 setup.o : pwcom.o
 setup.o : start_k.o
 setup.o : symm_base.o
+setup.o : tetra.o
 sph_ind.o : ../../Modules/kind.o
 spinor.o : ../../Modules/kind.o
 start_k.o : ../../Modules/cell_base.o
@@ -2223,6 +2228,7 @@ weights.o : ../../Modules/mp.o
 weights.o : ../../Modules/mp_images.o
 weights.o : ../../Modules/mp_pools.o
 weights.o : pwcom.o
+weights.o : tetra.o
 wfcinit.o : ../../Modules/becmod.o
 wfcinit.o : ../../Modules/cell_base.o
 wfcinit.o : ../../Modules/constants.o

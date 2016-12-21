@@ -49,7 +49,7 @@ SUBROUTINE setup()
   USE fft_base,           ONLY : smap
   USE gvecs,              ONLY : doublegrid, gcutms, dual
   USE klist,              ONLY : xk, wk, nks, nelec, degauss, lgauss, &
-                                 lxkcry, nkstot, &
+                                 ltetra, lxkcry, nkstot, &
                                  nelup, neldw, two_fermi_energies, &
                                  tot_charge, tot_magnetization
   USE lsda_mod,           ONLY : lsda, nspin, current_spin, isk, &
@@ -58,7 +58,7 @@ SUBROUTINE setup()
   USE electrons_base,     ONLY : set_nelup_neldw
   USE start_k,            ONLY : nks_start, xk_start, wk_start, &
                                  nk1, nk2, nk3, k1, k2, k3
-  USE ktetra,             ONLY : tetra, ntetra, ltetra
+  USE ktetra,             ONLY : tetra, ntetra
   USE symm_base,          ONLY : s, t_rev, irt, nrot, nsym, invsym, nosym, &
                                  d1,d2,d3, time_reversal, sname, set_sym_bl, &
                                  find_sym, inverse_s, no_t_rev, allfrac

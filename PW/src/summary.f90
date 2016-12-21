@@ -32,9 +32,8 @@ SUBROUTINE summary()
   USE ldaU,            ONLY : lda_plus_U, Hubbard_u, Hubbard_j, Hubbard_alpha, &
                               Hubbard_l, lda_plus_u_kind, Hubbard_lmax,&
                               Hubbard_J0, Hubbard_beta
-  USE klist,           ONLY : degauss, smearing, lgauss, nkstot, xk, wk, &
-                              nelec, nelup, neldw, two_fermi_energies
-  USE ktetra,          ONLY : ltetra
+  USE klist,           ONLY : degauss, smearing, lgauss, ltetra, nkstot, xk, &
+                              wk, nelec, nelup, neldw, two_fermi_energies
   USE control_flags,   ONLY : imix, nmix, mixing_beta, nstep, lscf, &
                               tr2, isolve, lmd, lbfgs, iverbosity, tqr, tq_smoothing, tbeta_smoothing
   USE noncollin_module,ONLY : noncolin

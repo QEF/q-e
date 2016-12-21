@@ -16,10 +16,10 @@ SUBROUTINE weights()
   USE kinds,                ONLY : DP
   USE ener,                 ONLY : demet, ef, ef_up, ef_dw
   USE fixed_occ,            ONLY : f_inp, tfixed_occ
-  USE klist,                ONLY : lgauss, degauss, ngauss, nks, &
+  USE klist,                ONLY : ltetra, lgauss, degauss, ngauss, nks, &
                                    nkstot, wk, xk, nelec, nelup, neldw, &
                                    two_fermi_energies
-  USE ktetra,               ONLY : ltetra, ntetra, tetra
+  USE ktetra,               ONLY : ntetra, tetra
   USE lsda_mod,             ONLY : nspin, current_spin, isk
   USE wvfct,                ONLY : nbnd, wg, et
   USE mp_images,            ONLY : intra_image_comm
@@ -150,10 +150,10 @@ SUBROUTINE weights_only ()
   USE kinds,                ONLY : DP
   USE ener,                 ONLY : demet, ef, ef_up, ef_dw
   USE fixed_occ,            ONLY : f_inp, tfixed_occ
-  USE klist,                ONLY : lgauss, degauss, ngauss, nks, &
+  USE klist,                ONLY : ltetra, lgauss, degauss, ngauss, nks, &
                                    nkstot, wk, xk, nelec, nelup, neldw, &
                                    two_fermi_energies
-  USE ktetra,               ONLY : ltetra, ntetra, tetra
+  USE ktetra,               ONLY : ntetra, tetra
   USE lsda_mod,             ONLY : nspin, current_spin, isk
   USE wvfct,                ONLY : nbnd, wg, et
   USE mp_images,            ONLY : intra_image_comm

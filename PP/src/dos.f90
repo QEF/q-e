@@ -21,7 +21,7 @@ PROGRAM do_dos
   USE constants,  ONLY : rytoev
   USE ener,       ONLY : ef, ef_up, ef_dw 
   USE kinds,      ONLY : DP
-  USE klist,      ONLY : xk, wk, degauss, ngauss, lgauss, nks, nkstot,&
+  USE klist,      ONLY : xk, wk, degauss, ngauss, lgauss, ltetra, nks, nkstot,&
                          two_fermi_energies
   USE wvfct,      ONLY : nbnd, et
   USE lsda_mod,   ONLY : lsda, nspin
@@ -30,7 +30,7 @@ PROGRAM do_dos
   USE mp_world,   ONLY : world_comm
   USE mp_global,     ONLY : mp_startup
   USE environment,   ONLY : environment_start, environment_end
-  USE ktetra,     ONLY : ntetra, tetra, ltetra
+  USE ktetra,     ONLY : ntetra, tetra
   ! following modules needed for generation of tetrahedra
   USE symm_base,  ONLY : nsym, s, time_reversal, t_rev
   USE cell_base,  ONLY : at, bg

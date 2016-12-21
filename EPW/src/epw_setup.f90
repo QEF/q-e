@@ -21,8 +21,7 @@
   USE io_global,     ONLY : stdout, ionode, ionode_id
   USE io_files,      ONLY : tmp_dir
   USE ener,          ONLY : Ef
-  USE klist,         ONLY : xk, lgauss, degauss, ngauss, nks, nelec, nkstot
-  USE ktetra,        ONLY : ltetra
+  USE klist,         ONLY : xk, ltetra, lgauss, degauss, ngauss, nks, nelec, nkstot
   USE lsda_mod,      ONLY : nspin, lsda, starting_magnetization
   USE scf,           ONLY : v, vrs, vltot, rho, rho_core, kedtau
   USE gvect,         ONLY : ngm

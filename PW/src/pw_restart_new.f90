@@ -60,7 +60,6 @@ MODULE pw_restart_new
                                        two_fermi_energies, nelup, neldw, tot_charge
       USE start_k,              ONLY : nk1, nk2, nk3, k1, k2, k3, &
                                        nks_start, xk_start, wk_start
-      USE ktetra,               ONLY : ntetra, tetra, ltetra
       USE gvect,                ONLY : ngm, ngm_g, g, mill
       USE fft_base,             ONLY : dfftp
       USE basis,                ONLY : natomwfc
@@ -1168,7 +1167,6 @@ MODULE pw_restart_new
     USE fft_base,         ONLY : dffts
     USE lsda_mod,         ONLY : lsda
     USE noncollin_module, ONLY : noncolin
-    USE ktetra,           ONLY : ntetra
     USE klist,            ONLY : nkstot, nelec
     USE wvfct,            ONLY : nbnd, npwx
     USE gvecw,            ONLY : ecutwfc
@@ -1879,8 +1877,8 @@ MODULE pw_restart_new
       ! 
       USE lsda_mod,         ONLY : lsda, nspin
       USE fixed_occ,        ONLY : tfixed_occ, f_inp
-      USE ktetra,           ONLY : ntetra, ltetra
-      USE klist,            ONLY : lgauss, ngauss, degauss, smearing
+      USE ktetra,           ONLY : ntetra
+      USE klist,            ONLY : ltetra, lgauss, ngauss, degauss, smearing
       USE electrons_base,   ONLY : nupdwn 
       USE wvfct,            ONLY : nbnd
       USE input_parameters, ONLY : input_parameters_occupations => occupations

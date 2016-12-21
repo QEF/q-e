@@ -13,9 +13,8 @@ SUBROUTINE setup_nbnd_occ
   !
   USE kinds,            ONLY : DP
   USE constants,        ONLY : degspin, pi
-  USE klist,            ONLY : xk, lgauss, degauss, ngauss, nks, &
+  USE klist,            ONLY : xk, ltetra, lgauss, degauss, ngauss, nks, &
                                nelec, nelup, neldw, two_fermi_energies, wk
-  USE ktetra,           ONLY : ltetra
   USE ener,             ONLY : ef, ef_up, ef_dw
   USE wvfct,            ONLY : nbnd, et
   USE control_lr,       ONLY : nbnd_occ

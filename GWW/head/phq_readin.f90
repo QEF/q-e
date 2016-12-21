@@ -27,8 +27,7 @@ SUBROUTINE phq_readin()
   USE ions_base,     ONLY : amass, atm
   USE input_parameters, ONLY : max_seconds, nk1, nk2, nk3, k1, k2, k3
   USE start_k,       ONLY : reset_grid
-  USE klist,         ONLY : xk, nks, nkstot, lgauss, two_fermi_energies, lgauss
-  USE ktetra,        ONLY : ltetra
+  USE klist,         ONLY : xk, nks, nkstot, lgauss, two_fermi_energies, ltetra
   USE control_flags, ONLY : gamma_only, tqr, restart, lkpoint_dir
   USE uspp,          ONLY : okvan
   USE fixed_occ,     ONLY : tfixed_occ

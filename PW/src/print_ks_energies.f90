@@ -15,9 +15,8 @@ SUBROUTINE print_ks_energies()
   USE kinds,                ONLY : DP
   USE constants,            ONLY : rytoev
   USE io_global,            ONLY : stdout
-  USE klist,                ONLY : xk, ngk, nks, nkstot, wk, lgauss, &
+  USE klist,                ONLY : xk, ngk, nks, nkstot, wk, lgauss, ltetra, &
                                    two_fermi_energies
-  USE ktetra,               ONLY : ltetra
   USE fixed_occ,            ONLY : one_atom_occupations
   USE ener,                 ONLY : ef, ef_up, ef_dw 
   USE lsda_mod,             ONLY : lsda, nspin

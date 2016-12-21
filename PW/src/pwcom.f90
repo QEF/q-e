@@ -42,6 +42,7 @@ MODULE klist
        ngauss              ! type of smearing technique
   LOGICAL :: &
        lgauss,         &! if .TRUE.: use gaussian broadening
+       ltetra,         &! if .TRUE.: use tetrahedra
        lxkcry=.false., &! if .TRUE.:k-pnts in cryst. basis accepted in input
        two_fermi_energies ! if .TRUE.: nelup and neldw set ef_up and ef_dw
                           ! separately
@@ -105,23 +106,6 @@ MODULE lsda_mod
        isk(npk)          ! for each k-point: 1=spin up, 2=spin down
   !
 END MODULE lsda_mod
-!
-!
-MODULE ktetra
-  !
-  ! ... The variables for the tetrahedron method
-  !
-  SAVE
-  !
-  INTEGER :: &
-       ntetra            ! number of tetrahedra
-  INTEGER, ALLOCATABLE :: &
-       tetra(:,:)        ! index of k-points in a given tetrahedron
-                         ! shape (4,ntetra)
-  LOGICAL :: &
-       ltetra            ! if .TRUE.: use tetrahedron method
-  !
-END MODULE ktetra
 !
 !
 MODULE rap_point_group
