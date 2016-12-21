@@ -1260,7 +1260,7 @@ SUBROUTINE compute_dmn
    INTEGER                  :: istart,iend
    INTEGER                  :: ibnd_n, ibnd_m,nsym, nxxs
    COMPLEX(DP), ALLOCATABLE :: psic_all(:), temppsic_all(:)
-
+   LOGICAL                  :: have_sym
 
    CALL start_clock( 'compute_dmn' )
 
@@ -1272,7 +1272,14 @@ SUBROUTINE compute_dmn
    dmat(2,2)=1d0
    dmat(3,3)=1d0
    if(read_sym)then
+      write(stdout,*) ' Reading symmetry from file '//trim(seedname)//'.sym'
+      write(stdout,*) ' '
       if(ionode) then
+         inquire(file=trim(seedname)//".sym",exist=have_sym)
+         if(.not. have_sym) then
+            call errore( 'pw2wannier90', 'Could not find the file '&
+               &//trim(seedname)//'.sym', 1 )
+         endif
          open(unit=iun_dmn, file=trim(seedname)//".sym",form='formatted')
          read(iun_dmn,*) nsym
       end if
