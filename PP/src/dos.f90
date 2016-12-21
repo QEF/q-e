@@ -119,7 +119,7 @@ PROGRAM do_dos
               nks2 = nks
            END IF
            CALL tetrahedra ( nsym, s, time_reversal, t_rev, at, bg, nks, &
-                k1,k2,k3, nk1,nk2,nk3, nks2, xk, wk, ntetra, tetra )
+                k1,k2,k3, nk1,nk2,nk3, nks2, xk, ntetra, tetra )
            !
         END IF
      ELSEIF (lgauss) THEN

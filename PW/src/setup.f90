@@ -600,7 +600,7 @@ SUBROUTINE setup()
      ALLOCATE( tetra( 4, ntetra ) )
      !
      CALL tetrahedra( nsym, s, time_reversal, t_rev, at, bg, npk, k1, k2, k3, &
-          nk1, nk2, nk3, nkstot, xk, wk, ntetra, tetra )
+          nk1, nk2, nk3, nkstot, xk, ntetra, tetra )
      !
   END IF
 #if defined(__XSD) 

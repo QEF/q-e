@@ -149,7 +149,7 @@ END SUBROUTINE kpoint_grid
 !
 !-----------------------------------------------------------------------
 SUBROUTINE tetrahedra ( nsym, s, time_reversal, t_rev, at, bg, npk, &
-     k1,k2,k3, nk1,nk2,nk3, nks, xk, wk, ntetra, tetra )
+     k1,k2,k3, nk1,nk2,nk3, nks, xk, ntetra, tetra )
   !-----------------------------------------------------------------------
   !
   ! Tetrahedron method according to P. E. Bloechl et al, PRB49, 16223 (1994)
@@ -160,7 +160,7 @@ SUBROUTINE tetrahedra ( nsym, s, time_reversal, t_rev, at, bg, npk, &
   INTEGER, INTENT(IN):: nks, nsym, t_rev(48), s(3,3,48), npk, &
                         k1, k2, k3, nk1, nk2, nk3, ntetra
   LOGICAL, INTENT (IN) :: time_reversal
-  real(DP), INTENT(IN) :: at(3,3), bg(3,3), xk(3,npk), wk(npk)
+  real(DP), INTENT(IN) :: at(3,3), bg(3,3), xk(3,npk)
   !
   INTEGER, INTENT(OUT) :: tetra(4,ntetra)
   ! 
