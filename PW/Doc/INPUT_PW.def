@@ -848,7 +848,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                     Tetrahedron method, Bloechl's version:
                     P.E. Bloechl, PRB 49, 16223 (1994)
                     Requires uniform grid of k-points, to be
-                    automatically generated (see card K_POINTS).
+                    automatically generated (see card @ref K_POINTS).
                     Well suited for calculation of DOS, 
                     less so (because not variational) for
                     force/optimization/dynamics calculations.
@@ -860,7 +860,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 }
 		opt -val 'tetrahedra_opt' {
                     Optimized tetrahedron method:
-                    see M. Kawamura, PRB, 89 094515 (2014).
+                    see M. Kawamura, PRB 89, 094515 (2014).
                     Can be used for phonon calculations as well.
                 }
                 opt -val 'fixed' {
@@ -913,15 +913,15 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
         var starting_spin_angle -type LOGICAL { 
             default { .FALSE. }
             info {
-               In the spin-orbit case when domag=.TRUE., by default,
+               In the spin-orbit case when @ref domag=.TRUE., by default,
                the starting wavefunctions are initialized as in scalar 
                relativistic noncollinear case without spin-orbit.
 
-               By setting starting_spin_angle=.TRUE. this behaviour can
+               By setting @ref starting_spin_angle=.TRUE. this behaviour can
                be changed and the initial wavefunctions are radial 
                functions multiplied by spin-angle functions. 
 
-               When domag=.FALSE. the initial wavefunctions are always
+               When @ref domag=.FALSE. the initial wavefunctions are always
                radial functions multiplied by spin-angle functions 
                independently from this flag.
 
@@ -1220,7 +1220,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 The direction of the electric field or dipole correction is
                 parallel to the bg(:,edir) reciprocal lattice vector, so the
                 potential is constant in planes defined by FFT grid points;
-                edir = 1, 2 or 3. Used only if @ref tefield is .TRUE.
+                @ref edir = 1, 2 or 3. Used only if @ref tefield is .TRUE.
             }
         }
         
@@ -1247,8 +1247,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 Amplitude of the electric field, in ***Hartree*** a.u.;
                 1 a.u. = 51.4220632*10^10 V/m. Used only if @ref tefield==.TRUE.
                 The saw-like potential increases with slope @ref eamp in the
-                region from (emaxpos+eopreg-1) to (emaxpos), then decreases
-                to 0 until (emaxpos+eopreg), in units of the crystal
+                region from (@ref emaxpos+@ref eopreg-1) to (@ref emaxpos), then decreases
+                to 0 until (@ref emaxpos+@ref eopreg), in units of the crystal
                 vector @ref edir. Important: the change of slope of this
                 potential must be located in the empty region, or else
                 unphysical forces will result.
@@ -1403,7 +1403,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                     the simulation cell within an effective semi-
                     infinite medium in the perpendicular direction
                     (along z). Embedding regions can be vacuum or
-                    semi-infinite metal electrodes (use 'esm_bc' to
+                    semi-infinite metal electrodes (use @ref esm_bc to
                     choose boundary conditions). If between two
                     electrodes, an optional electric field
                     ('esm_efield') may be applied. Method described in
@@ -1466,7 +1466,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             see { assume_isolated }
             default { 0.d0 }
             info {
-                If @ref assume_isolated = 'esm' and esm_bc = 'bc2', gives the
+                If @ref assume_isolated = 'esm' and @ref esm_bc = 'bc2', gives the
                 magnitude of the electric field [Ry/a.u.] to be applied
                 between semi-infinite ESM electrodes.
             }
@@ -1759,7 +1759,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
         var adaptive_thr -type LOGICAL { 
             default { .FALSE }
             info {
-                If .TRUE. this turns on the use of an adaptive conv_thr for 
+                If .TRUE. this turns on the use of an adaptive @ref conv_thr for 
                 the inner scf loops when using EXX.
             }
         }
@@ -1868,7 +1868,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 is automatically reduced (but never below 1.D-13) when 
                 approaching convergence.
 
-                For non-scf calculations: default is (conv_thr/N elec)/10.
+                For non-scf calculations: default is (@ref conv_thr/N elec)/10.
             }
         }
 
