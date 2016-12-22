@@ -16,10 +16,11 @@ PROGRAM do_projwfc
   ! See files INPUT_PROJWFC.* in Doc/ directory for usage
   ! IMPORTANT: since v.5 namelist name is &projwfc and no longer &inputpp
   !
+  USE parameters, ONLY : npk
   USE io_global,  ONLY : stdout, ionode, ionode_id
   USE constants,  ONLY : rytoev
   USE kinds,      ONLY : DP
-  USE klist,      ONLY : degauss, ngauss, lgauss
+  USE klist,      ONLY : nks, nkstot, xk, degauss, ngauss, lgauss, ltetra
   USE io_files,   ONLY : nd_nmbr, prefix, tmp_dir
   USE noncollin_module, ONLY : noncolin
   USE mp,         ONLY : mp_bcast
@@ -31,14 +32,21 @@ PROGRAM do_projwfc
   USE basis,      ONLY : natomwfc
   USE control_flags, ONLY: twfcollect
   USE paw_variables, ONLY : okpaw
+  ! following modules needed for generation of tetrahedra
+  USE ktetra,     ONLY : ntetra, tetra, tetra_type, opt_tetra_init
+  USE symm_base,  ONLY : nsym, s, time_reversal, t_rev
+  USE cell_base,  ONLY : at, bg
+  USE start_k,    ONLY : k1, k2, k3, nk1, nk2, nk3
+  USE lsda_mod,   ONLY : lsda
   !
   IMPLICIT NONE
   !
   CHARACTER(LEN=256), EXTERNAL :: trimcheck
   !
   CHARACTER (len=256) :: filpdos, filproj, outdir
-  REAL (DP)      :: Emin, Emax, DeltaE, degauss1, ef_0
-  INTEGER :: ngauss1, ios
+  REAL (DP), allocatable :: xk_collect(:,:)
+  REAL (DP) :: Emin, Emax, DeltaE, degauss1, ef_0
+  INTEGER :: nks2, ngauss1, ios
   LOGICAL :: lwrite_overlaps, lbinary_data
   LOGICAL :: lsym, kresolveddos, tdosinboxes, plotboxes, pawproj
   INTEGER, PARAMETER :: N_MAX_BOXES = 999
@@ -145,15 +153,47 @@ PROGRAM do_projwfc
   !
   CALL openfil_pp ( )
   !
-  !   decide Gaussian broadening
+  !   Tetrahedron method
   !
-  IF (degauss1/=0.d0) THEN
+  IF ( ltetra .AND. tetra_type == 1 .OR. tetra_type == 2 ) THEN
+     !
+     ! info on tetrahedra is no longer saved to file and must be rebuilt
+     !
+     ! workaround for old xml file, to be removed
+     IF(ALLOCATED(tetra)) DEALLOCATE(tetra)
+     ALLOCATE(tetra(20,ntetra))
+     !
+     ! in the lsda case, only the first half of the k points
+     ! are needed in the input of "tetrahedra"
+     !
+     IF ( lsda ) THEN
+        nks2 = nkstot / 2
+     ELSE
+        nks2 = nkstot
+     END IF
+     IF(tetra_type == 1) THEN
+        WRITE( stdout,'(/5x,"Linear tetrahedron method (read from file) ")')
+     ELSE
+        WRITE( stdout,'(/5x,"Optimized tetrahedron method (read from file) ")')
+     END IF
+     !
+     ! not sure this is needed
+     !
+     ALLOCATE(xk_collect(3,nkstot))
+     CALL poolcollect(3, nks, xk, nkstot, xk_collect)
+     !
+     CALL opt_tetra_init(nsym, s, time_reversal, t_rev, at, bg, npk, k1,k2,k3, &
+          &              nk1, nk2, nk3, nks2, xk_collect, tetra, 1)
+     !
+     DEALLOCATE(xk_collect)
+     !
+  ELSE IF (degauss1/=0.d0) THEN
      degauss=degauss1
      ngauss =ngauss1
      WRITE( stdout,'(/5x,"Gaussian broadening (read from input): ",&
           &        "ngauss,degauss=",i4,f12.6/)') ngauss,degauss
      lgauss=.true.
-  ELSEIF (lgauss) THEN
+  ELSE IF (lgauss) THEN
      WRITE( stdout,'(/5x,"Gaussian broadening (read from file): ",&
           &        "ngauss,degauss=",i4,f12.6/)') ngauss,degauss
   ELSE

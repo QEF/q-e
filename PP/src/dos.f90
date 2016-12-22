@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2009 Quantum ESPRESSO group
+! Copyright (C) 2001-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -30,8 +30,9 @@ PROGRAM do_dos
   USE mp_world,   ONLY : world_comm
   USE mp_global,     ONLY : mp_startup
   USE environment,   ONLY : environment_start, environment_end
-  USE ktetra,     ONLY : ntetra, tetra
   ! following modules needed for generation of tetrahedra
+  USE ktetra,     ONLY : ntetra, tetra, tetra_type, opt_tetra_init, &
+       opt_tetra_dos_t
   USE symm_base,  ONLY : nsym, s, time_reversal, t_rev
   USE cell_base,  ONLY : at, bg
   USE start_k,    ONLY : k1, k2, k3, nk1, nk2, nk3
@@ -106,22 +107,37 @@ PROGRAM do_dos
         ltetra=.false.
         lgauss=.true.
      ELSEIF (ltetra) THEN
-        WRITE( stdout,'(/5x,"Tetrahedra used"/)')
-        IF ( .NOT. allocated(tetra) ) THEN
-           ALLOCATE ( tetra(ntetra,4) )
-           ! info on tetrahedra contained in variable "tetra" is no longer
-           ! written to file and must be rebuilt
-           IF ( lsda ) THEN
-              ! in the lsda case, only the first half of the k points
-              ! are needed in the input of "tetrahedra"
-              nks2 = nks/2
-           ELSE
-              nks2 = nks
-           END IF
+        !
+        ! info on tetrahedra is no longer saved to file and must be rebuilt
+        !
+        ! workaround for old xml file, to be removed
+        IF ( ALLOCATED ( tetra ) ) DEALLOCATE (tetra)
+        ! in the lsda case, only the first half of the k points
+        ! are needed in the input of "tetrahedra"
+        !
+        IF ( lsda ) THEN
+           nks2 = nks/2
+        ELSE
+           nks2 = nks
+        END IF
+        !
+        IF(tetra_type == 0) THEN
+           WRITE( stdout,'(/5x,"Tetrahedra used"/)')
+           ALLOCATE ( tetra(4,ntetra) )
            CALL tetrahedra ( nsym, s, time_reversal, t_rev, at, bg, nks, &
                 k1,k2,k3, nk1,nk2,nk3, nks2, xk, ntetra, tetra )
+        ELSE
+           IF(tetra_type == 1) THEN 
+              WRITE( stdout,'(/5x,"Linear tetrahedron method is used"/)')
+           ELSE
+              WRITE( stdout,'(/5x,"Optimized tetrahedron method used"/)')
+           END IF
+           ALLOCATE(tetra(20,ntetra))
+           CALL opt_tetra_init(nsym, s, time_reversal, t_rev, at, bg, nks, &
+                &                k1, k2, k3, nk1, nk2, nk3, nks2, xk, tetra, 1)
            !
         END IF
+        !
      ELSEIF (lgauss) THEN
         WRITE( stdout,'(/5x,"Gaussian broadening (read from file): ",&
              &        "ngauss,degauss=",i4,f12.6/)') ngauss,degauss
@@ -171,7 +187,11 @@ PROGRAM do_dos
      DO n= 1, ndos
         E = Emin + (n - 1) * DeltaE
         IF (ltetra) THEN
-           CALL dos_t(et,nspin,nbnd, nks,ntetra,tetra, E, DOSofE)
+           IF (tetra_type == 0) THEN
+              CALL dos_t(et,nspin,nbnd, nks,ntetra,tetra, E, DOSofE)
+           ELSE
+              CALL opt_tetra_dos_t(et,nspin,nbnd, nks,ntetra,tetra, E, DOSofE)
+           END IF
         ELSE
            CALL dos_g(et,nspin,nbnd, nks,wk,degauss,ngauss, E, DOSofE)
         ENDIF

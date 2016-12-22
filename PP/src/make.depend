@@ -338,6 +338,7 @@ partialdos.o : ../../Modules/io_global.o
 partialdos.o : ../../Modules/ions_base.o
 partialdos.o : ../../PW/src/atomic_wfc_mod.o
 partialdos.o : ../../PW/src/pwcom.o
+partialdos.o : ../../PW/src/tetra.o
 partialdos.o : projections_mod.o
 paw_postproc.o : ../../Modules/atom.o
 paw_postproc.o : ../../Modules/cell_base.o
@@ -456,6 +457,7 @@ projwfc.o : ../../Modules/mp_global.o
 projwfc.o : ../../Modules/mp_pools.o
 projwfc.o : ../../Modules/mp_world.o
 projwfc.o : ../../Modules/noncol.o
+projwfc.o : ../../Modules/parameters.o
 projwfc.o : ../../Modules/paw_variables.o
 projwfc.o : ../../Modules/recvec.o
 projwfc.o : ../../Modules/run_info.o
@@ -463,7 +465,9 @@ projwfc.o : ../../Modules/uspp.o
 projwfc.o : ../../Modules/wavefunctions.o
 projwfc.o : ../../PW/src/atomic_wfc_mod.o
 projwfc.o : ../../PW/src/pwcom.o
+projwfc.o : ../../PW/src/start_k.o
 projwfc.o : ../../PW/src/symm_base.o
+projwfc.o : ../../PW/src/tetra.o
 projwfc.o : ../../iotk/src/iotk_module.o
 projwfc.o : projections_mod.o
 projwfc_box.o : ../../FFTXlib/fft_interfaces.o

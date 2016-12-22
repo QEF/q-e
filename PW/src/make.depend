@@ -933,6 +933,7 @@ input.o : pwcom.o
 input.o : realus.o
 input.o : start_k.o
 input.o : symm_base.o
+input.o : tetra.o
 input.o : update_pot.o
 input.o : wyckoff.o
 input.o : xdm_dispersion.o
@@ -2054,6 +2055,11 @@ symmetrize_at.o : ../../Modules/io_global.o
 symmetrize_at.o : ../../Modules/kind.o
 symmetrize_at.o : pwcom.o
 tabd.o : ../../Modules/kind.o
+tetra.o : ../../Modules/constants.o
+tetra.o : ../../Modules/io_global.o
+tetra.o : ../../Modules/kind.o
+tetra.o : ../../Modules/noncol.o
+tetra.o : pwcom.o
 transform_becsum_nc.o : ../../Modules/ions_base.o
 transform_becsum_nc.o : ../../Modules/kind.o
 transform_becsum_nc.o : ../../Modules/noncol.o
