@@ -17,6 +17,7 @@ cgsolve_all.o \
 cg_psi.o \
 ch_psi_all.o \
 commutator_Hx_psi.o \
+dfpt_tetra_mod.o \
 dynmat_sub.o \
 h_prec.o \
 incdrhoscf.o \

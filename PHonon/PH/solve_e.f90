@@ -24,7 +24,7 @@ subroutine solve_e
   USE io_global,             ONLY : stdout, ionode
   USE io_files,              ONLY : prefix, diropn
   USE cell_base,             ONLY : tpiba2
-  USE klist,                 ONLY : lgauss, xk, wk, ngk, igk_k
+  USE klist,                 ONLY : ltetra, lgauss, xk, wk, ngk, igk_k
   USE gvect,                 ONLY : g
   USE gvecs,                 ONLY : doublegrid
   USE fft_base,              ONLY : dfftp, dffts, dtgs
@@ -159,7 +159,7 @@ subroutine solve_e
   !
   ! if q=0 for a metal: allocate and compute local DOS at Ef
   !
-  if (lgauss.or..not.lgamma) call errore ('solve_e', &
+  if ( (lgauss .or. ltetra) .or..not.lgamma) call errore ('solve_e', &
        'called in the wrong case', 1)
 
   !

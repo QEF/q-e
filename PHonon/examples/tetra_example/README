@@ -1,0 +1,25 @@
+
+This example illustrates how to calculate electron-phonon interaction
+coefficients, for a (444) Monkhorst-Pack (MP) grid of q-points, in fcc Al
+by using the optimized tetrahedron method.
+
+IMPORTANT NOTICE: the calculation of electron-phonon coefficients is tricky.
+Do not attempt it unless you have a clear idea of the technical problems
+(e.g. very slow convergence with k-point grid,, divergence at q=>0 for optical
+modes). Carefully read the relevant literature first.
+
+The calculation proceeds as follows (for the meaning of the cited input
+variables see the appropriate INPUT_* file)
+
+1) make a self-consistent calculation for Al by using the optimized tetrahedron method
+   (occupation = "tetrahedra_opt").
+
+2) make the phonon calculation for the shifted grid of q-points.
+   ldisp = .true. and lshift_q = .true.
+
+3) make the electron-phonon calculation for the shifted grid of q-points.
+   ldisp = .true. and lshift_q = .true. and  electron_phonon = "lambda"
+
+4) Eliashberg function with alpha2f.x .
+
+

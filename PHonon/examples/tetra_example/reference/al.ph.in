@@ -1,0 +1,13 @@
+Al phonon
+&INPUTPH
+   prefix = 'aluminum',
+   outdir = '/home/kawamura/programs/QE/dfpttetra/tempdir/',
+   fildyn = 'al.dyn'
+ fildvscf = 'dv',
+  fildrho = 'drho',
+    ldisp = .true.,
+ lshift_q = .true.,
+      nq1 = 4, 
+      nq2 = 4,
+      nq3 = 4,
+/

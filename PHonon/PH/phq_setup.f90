@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-
 !-----------------------------------------------------------------------
 subroutine phq_setup
   !-----------------------------------------------------------------------
@@ -73,7 +72,7 @@ subroutine phq_setup
                             trans, epsil, recover, where_rec, &
                             flmixdpot, reduce_io, rec_code_read, &
                             done_epsil, zeu, done_zeu, current_iq, u_from_file
-  USE el_phon,       ONLY : elph, comp_elph, done_elph
+  USE el_phon,       ONLY : elph, comp_elph, done_elph, elph_nbnd_min, elph_nbnd_max
   USE output,        ONLY : fildrho
   USE modes,         ONLY : u, npertx, npert, nirr, t, tmq, nmodes, num_rap_mode
   USE dynmat,        ONLY : dyn, dyn_rec, dyn00
@@ -89,9 +88,14 @@ subroutine phq_setup
   USE ramanm,        ONLY : lraman, elop, ramtns, eloptns, done_lraman, &
                             done_elop
 
-  USE mp_pools,      ONLY : npool
+  USE mp_pools,      ONLY : inter_pool_comm, npool
   !
   USE acfdtest,      ONLY : acfdt_is_active, acfdt_num_der
+  USE elph_tetra_mod, ONLY : elph_tetra
+  USE wvfct,         ONLY : nbnd, et
+  USE ener,          ONLY : ef
+  USE mp,            ONLY : mp_max, mp_min
+
   USE lr_symm_base,  ONLY : gi, gimq, irotmq, minus_q, invsymq, nsymq, rtau
   USE qpoint,        ONLY : xq, xk_col
   USE control_lr,    ONLY : lgamma
@@ -387,7 +391,24 @@ subroutine phq_setup
   where_rec='phq_setup.'
   rec_code=-40
   CALL ph_writefile('status_ph',current_iq,0,ierr)
-
+  !
+  ! Bands for the electron-phonon calculation
+  !
+  IF(elph_tetra == 1 .OR. elph_tetra == 2) THEN
+     !
+     elph_nbnd_min = nbnd
+     elph_nbnd_max = 1
+     !     
+     DO ibnd = 1, nbnd
+        IF(MAXVAL(et(ibnd, 1:nks)) > ef .AND. ibnd < elph_nbnd_min) elph_nbnd_min = ibnd
+        IF(MINVAL(et(ibnd, 1:nks)) < ef .AND. ibnd > elph_nbnd_max) elph_nbnd_max = ibnd
+     END DO
+     !
+     call mp_min(elph_nbnd_min, inter_pool_comm)
+     call mp_max(elph_nbnd_max, inter_pool_comm)
+     !
+  END IF
+  !
   CALL stop_clock ('phq_setup')
   RETURN
 END SUBROUTINE phq_setup

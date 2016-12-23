@@ -24,7 +24,8 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
   !
   USE control_flags,   ONLY : modenum
   USE io_global,       ONLY : stdout, ionode
-  USE klist,           ONLY : lgauss
+  USE klist,           ONLY : lgauss, ltetra
+  USE qpoint,          ONLY : xq
   USE disp,            ONLY : x_q, done_iq, comp_iq, lgamma_iq
   USE grid_irr_iq,     ONLY : irr_iq, done_irr_iq, done_bands
   USE control_ph,      ONLY : ldisp, epsil, trans, zue, zeu, &
@@ -37,6 +38,7 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
   USE freq_ph,         ONLY : fpol
   USE output,          ONLY : fildyn, fildvscf
   USE el_phon,         ONLY : elph_mat, wan_index_dyn, auxdvscf
+  USE dfpt_tetra_mod,  ONLY : dfpt_tetra_linit
 
   USE qpoint,          ONLY : xq
   USE control_lr,      ONLY : lgamma
@@ -133,7 +135,7 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
      !
      IF ( lgamma ) THEN
         !
-        IF ( .NOT. lgauss ) THEN
+        IF ( .NOT. (lgauss .OR. ltetra)) THEN
            !
            ! ... in the case of an insulator at q=0 one has to calculate
            ! ... the dielectric constant and the Born eff. charges
@@ -210,6 +212,8 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
   !  matrix
   !
   IF ( done_iq(iq) ) do_band=.FALSE.
+  !
+  IF(.NOT. setup_pw .AND. ltetra) dfpt_tetra_linit = .TRUE. 
   !
   RETURN
   !

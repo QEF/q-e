@@ -18,11 +18,12 @@ SUBROUTINE setup_alpha_pv
   USE kinds,      ONLY : DP
   USE constants,  ONLY : pi
   USE wvfct,      ONLY : nbnd, et
-  USE klist,      ONLY : nks, lgauss, ngauss, degauss
+  USE klist,      ONLY : nks, lgauss, ngauss, degauss, ltetra
   USE ener,       ONLY : ef
   USE mp,         ONLY : mp_max, mp_min
   USE mp_pools,   ONLY : inter_pool_comm
   USE control_lr, ONLY : alpha_pv, nbnd_occ
+  USE dfpt_tetra_mod, ONLY : dfpt_tetra_main
   !
   IMPLICIT NONE
   !
@@ -72,6 +73,10 @@ SUBROUTINE setup_alpha_pv
      emax = ef + xmax * degauss
      !
      alpha_pv = emax - emin
+     !
+  ELSE IF(ltetra) then
+     !
+     CALL dfpt_tetra_main()
      !
   ELSE
      !

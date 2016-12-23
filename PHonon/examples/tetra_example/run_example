@@ -1,0 +1,194 @@
+#!/bin/sh
+
+###############################################################################
+##
+##  HIGH VERBOSITY EXAMPLE
+##
+###############################################################################
+
+# run from directory where this script is
+cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+EXAMPLE_DIR=`pwd`
+
+# check whether echo has the -e option
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : starting"
+$ECHO
+$ECHO "This example shows how to calculate electron-phonon interaction"
+$ECHO "coefficients for fcc Al by using the tetrahedron method."
+
+# set the needed environment variables
+. ../../../environment_variables
+
+# required executables and pseudopotentials
+#BIN_LIST="pw.x ph.x alpha2f.x"
+BIN_LIST="pw.x ph.x"
+PSEUDO_LIST="Al.pbe-n-rrkjus_psl.0.1.UPF"
+
+$ECHO
+$ECHO "  executables directory: $BIN_DIR"
+$ECHO "  pseudo directory:      $PSEUDO_DIR"
+$ECHO "  temporary directory:   $TMP_DIR"
+$ECHO "  checking that needed directories and files exist...\c"
+
+# check for directories
+for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
+    if test ! -d $DIR ; then
+        $ECHO
+        $ECHO "ERROR: $DIR not existent or not a directory"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results" ; do
+    if test ! -d $DIR ; then
+        mkdir $DIR
+    fi
+done
+cd $EXAMPLE_DIR/results
+
+# check for executables
+for FILE in $BIN_LIST ; do
+    if test ! -x $BIN_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $BIN_DIR/$FILE not existent or not executable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+
+# check for pseudopotentials
+for FILE in $PSEUDO_LIST ; do
+    if test ! -r $PSEUDO_DIR/$FILE ; then
+       $ECHO
+       $ECHO "Downloading $FILE to $PSEUDO_DIR...\c"
+            $WGET $PSEUDO_DIR/$FILE $NETWORK_PSEUDO/$FILE 2> /dev/null
+    fi
+    if test $? != 0; then
+        $ECHO
+        $ECHO "ERROR: $PSEUDO_DIR/$FILE not existent or not readable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+# how to run executables
+PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
+PH_COMMAND="$PARA_PREFIX $BIN_DIR/ph.x $PARA_POSTFIX"
+ALPHA2F_COMMAND="$BIN_DIR/alpha2f.x "
+$ECHO
+$ECHO "  running pw.x as: $PW_COMMAND"
+$ECHO "  running ph.x as: $PH_COMMAND"
+$ECHO "  running alpha2f.x as: $ALPHA2F_COMMAND"
+$ECHO
+
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/aluminum*
+rm -rf $TMP_DIR/_ph0/aluminum*
+$ECHO "  done"
+
+#
+#  SCF at k-mesh good enough for phonons
+#
+cat > al.scf.in << EOF
+&CONTROL
+ calculation = 'scf' ,
+    prefix='aluminum',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/'
+/
+&SYSTEM
+       ibrav = 2,
+   celldm(1) = 7.628216862d0,
+         nat = 1,
+        ntyp = 1,
+     ecutwfc = 40.0 ,
+     ecutrho = 150 ,
+ occupations = 'tetrahedra_opt' ,
+/
+ &ELECTRONS
+/
+ATOMIC_SPECIES
+ Al   26.98000  Al.pbe-n-rrkjus_psl.0.1.UPF
+ATOMIC_POSITIONS alat 
+ Al      0.000000000    0.000000000    0.000000000    
+K_POINTS automatic 
+ 8 8 8 0 0 0
+EOF
+$ECHO "  running the scf calculation...\c"
+$PW_COMMAND -in al.scf.in > al.scf.out
+check_failure $?
+$ECHO "  done"
+#
+# Phonon calculation
+#
+cat > al.ph.in << EOF
+Al phonon
+&INPUTPH
+   prefix = 'aluminum',
+   outdir = '$TMP_DIR/',
+   fildyn = 'al.dyn'
+ fildvscf = 'dv',
+  fildrho = 'drho',
+    ldisp = .true.,
+ lshift_q = .true.,
+      nq1 = 4, 
+      nq2 = 4,
+      nq3 = 4,
+/
+EOF
+$ECHO "  running the phonon calculation...\c"
+$PH_COMMAND -in al.ph.in > al.ph.out
+check_failure $?
+$ECHO "  done"
+#
+# Electron-phonon calculation
+#
+cat > al.elph.in << EOF
+Al electron-phonon
+&INPUTPH
+          prefix = 'aluminum',
+          outdir = '$TMP_DIR/',
+          fildyn = 'al.dyn'
+        fildvscf = 'dv',
+         fildrho = 'drho',
+           ldisp = .true.,
+        lshift_q = .true.,
+             nq1 = 4, 
+             nq2 = 4,
+             nq3 = 4,
+ electron_phonon = "lambda_tetra"
+             nk1 = 16,
+             nk2 = 16,
+             nk3 = 16,
+/
+EOF
+$ECHO "  running the el-ph calculation...\c"
+$PH_COMMAND -in al.elph.in > al.elph.out
+check_failure $?
+$ECHO "  done"
+#
+# Eliashberg function
+#
+cat > lambda.in << EOF
+&input
+      ne = 500, 
+  ltetra = 2, 
+  fildyn = "al.dyn", 
+  mustar = 0.1, 
+  prefix = "${TMP_DIR}/aluminum",
+/
+EOF
+# $ECHO "  running alpha2f.x for lambda and a2F calculation...\c"
+# $ALPHA2F_COMMAND < lambda.in > lambda.out
+# check_failure $?
+
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/al.* $TMP_DIR/_ph*
+
+$ECHO "  done"
+

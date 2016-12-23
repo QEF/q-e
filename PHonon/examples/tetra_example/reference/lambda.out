@@ -1,0 +1,33 @@
+    # of frequency grid :          500
+                 ltetra :            2
+   Dynamical mtrix file : al.dyn
+                    mu* :   0.100000000000000     
+                 prefix : /home/kawamura/programs/QE/dfpttetra/tempdir/aluminum
+   open data-file.xml
+   Lattice parameter[a.u.] :    7.62821686200000     
+   Direct lattice vector[a] : 
+  -0.50000   0.00000   0.50000
+   0.00000   0.50000   0.50000
+  -0.50000   0.50000   0.00000
+   Reciprocal lattice vector[2pi/a] : 
+  -1.00000  -1.00000   1.00000
+   1.00000   1.00000   1.00000
+  -1.00000   1.00000  -1.00000
+   # of atoms :            1
+   # of species :            1
+   # of modes :            3
+ Atomic masses [AMU]
+Atom.  1 :     0.26980E+02
+   # of BZ symmetry :           48
+          q grid :            4           4           4
+          Total # of q :           64
+          # of irreducible q :           10
+          lambda :   0.397787500000000     
+   omegalog[Ryd] :   1.936523140606222E-003
+   omegalog[THz] :    6.37085128889197     
+     omegalog[K] :    305.752545614457     
+    Tc(McMillan) :    1.24356278757688     
+ Optimized tetrahedron method is used.
+   Energy distance :   4.576514605123168E-006
+   lambda :   0.394844162068448     
+   omglog :   1.962537910808473E-003

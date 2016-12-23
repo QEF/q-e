@@ -16,12 +16,14 @@ subroutine compute_weight (wgg)
   !
 
   USE kinds, ONLY : DP
-  USE klist, ONLY : wk, lgauss, degauss, ngauss
+  USE klist, ONLY : wk, lgauss, degauss, ngauss, ltetra
   USE ener,  ONLY : ef
   USE wvfct, ONLY : nbnd, wg, et
   USE paw_variables, ONLY : okpaw
   USE qpoint, ONLY : nksq, ikks, ikqs
   USE control_ph, ONLY : rec_code_read
+  USE dfpt_tetra_mod, ONLY : dfpt_tetra_ttheta
+  !
   implicit none
 
   real(DP) :: wgg (nbnd, nbnd, nksq)
@@ -38,6 +40,21 @@ subroutine compute_weight (wgg)
   !
   if (rec_code_read >= -20.AND..NOT.okpaw) return
 
+  !
+  IF(ltetra) THEN
+     !
+     DO ik = 1, nksq
+        DO ibnd = 1,nbnd
+           DO jbnd = 1, nbnd
+              wgg(ibnd, jbnd, ik) = dfpt_tetra_ttheta(jbnd, ibnd, ikks(ik))
+           END DO
+        END DO
+     END DO
+     !
+     return
+     !
+  END IF
+  !
   do ik = 1, nksq
      ikk = ikks(ik)
      ikq = ikqs(ik)

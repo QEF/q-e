@@ -71,6 +71,8 @@ ep_matrix_element_wannier.o \
 elph.o \
 el_ph_collect.o \
 elphon.o \
+elph_scdft_mod.o \
+elph_tetra_mod.o \
 find_equiv_sites.o \
 find_mode_sym.o \
 find_irrep.o \

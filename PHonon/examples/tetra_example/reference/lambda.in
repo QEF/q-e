@@ -1,0 +1,7 @@
+&input
+      ne = 500, 
+  ltetra = 2, 
+  fildyn = "al.dyn", 
+  mustar = 0.1, 
+  prefix = "/home/kawamura/programs/QE/dfpttetra/tempdir/aluminum",
+/

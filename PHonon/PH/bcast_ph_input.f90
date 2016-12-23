@@ -41,6 +41,7 @@ subroutine bcast_ph_input ( )
   ! YAMBO >
   USE YAMBO,      ONLY : elph_yambo,dvscf_yambo
   ! YAMBO <
+  USE elph_tetra_mod, ONLY : lshift_q
 
   implicit none
   !
@@ -70,6 +71,7 @@ subroutine bcast_ph_input ( )
   call mp_bcast (elph_yambo, meta_ionode_id, world_comm)
   call mp_bcast (dvscf_yambo, meta_ionode_id, world_comm)
   ! YAMBO <
+  call mp_bcast (lshift_q, meta_ionode_id, world_comm)
   !
   ! integers
   !

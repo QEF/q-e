@@ -21,6 +21,7 @@ SUBROUTINE setup_nbnd_occ
   USE io_global,        ONLY : stdout
   USE noncollin_module, ONLY : noncolin
   USE lsda_mod,         ONLY : lsda, isk
+  USE ktetra,           ONLY : tetra_type
   !
   IMPLICIT NONE
   !
@@ -68,7 +69,8 @@ SUBROUTINE setup_nbnd_occ
      ENDDO
      !
   ELSE IF (ltetra) THEN
-     CALL errore('setup_nbnd_occ','Tetrahedra not implemented', 1)
+     IF (tetra_type /= 1 .and. tetra_type /= 2) CALL errore &
+          ('setup_nbnd_occ','Optimized or linear tetrahedra only', 1)
   ELSE
      !
      IF (noncolin) THEN

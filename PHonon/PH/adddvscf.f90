@@ -30,6 +30,8 @@ subroutine adddvscf (ipert, ik)
   USE lrus,       ONLY : int3, int3_nc
   USE qpoint,     ONLY : npwq, ikks
   USE eqv,        ONLY : dvpsi
+  USE el_phon,    ONLY : elph_nbnd_min, elph_nbnd_max
+  USE elph_tetra_mod, ONLY : elph_tetra
 
   implicit none
   !
@@ -42,6 +44,7 @@ subroutine adddvscf (ipert, ik)
   !   And the local variables
   !
   integer :: na, nt, ibnd, ih, jh, ijkb0, ikk, ikb, jkb, is, js, ijs
+  integer :: ibnd_fst, ibnd_lst
   ! counter on atoms
   ! counter on atomic types
   ! counter on bands
@@ -54,6 +57,14 @@ subroutine adddvscf (ipert, ik)
   complex(DP) :: sum, sum_nc(npol)
   ! auxiliary variable
 
+  if(elph_tetra == 0) then
+     ibnd_fst = 1
+     ibnd_lst = nbnd
+  else
+     ibnd_fst = elph_nbnd_min
+     ibnd_lst = elph_nbnd_max
+  end if
+  
   if (.not.okvan) return
   call start_clock ('adddvscf')
   ikk = ikks(ik)
@@ -66,7 +77,7 @@ subroutine adddvscf (ipert, ik)
               !
               !   we multiply the integral for the becp term and the beta_n
               !
-              do ibnd = 1, nbnd
+              do ibnd = ibnd_fst, ibnd_lst
                  do ih = 1, nh (nt)
                     ikb = ijkb0 + ih
                     IF (noncolin) THEN

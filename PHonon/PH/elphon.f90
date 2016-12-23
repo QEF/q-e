@@ -282,7 +282,7 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   USE buffers, ONLY : get_buffer
   USE uspp, ONLY : vkb
   USE el_phon, ONLY : el_ph_mat, el_ph_mat_rec, el_ph_mat_rec_col, &
-                      comp_elph, done_elph
+                      comp_elph, done_elph, elph_nbnd_min, elph_nbnd_max
   USE modes, ONLY : u
   USE units_ph, ONLY : iubar, lrbar, lrwfc, iuwfc
   USE control_ph, ONLY : trans, current_iq
@@ -291,6 +291,7 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   USE mp_bands,   ONLY: intra_bgrp_comm, ntask_groups
   USE mp_pools,   ONLY: npool
   USE mp,        ONLY: mp_sum
+  USE elph_tetra_mod, ONLY : elph_tetra
 
   USE eqv,        ONLY : dvpsi, evq
   USE qpoint,     ONLY : nksq, ikks, ikqs, nksqtot
@@ -308,6 +309,15 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
        tg_psic(:,:), aux2(:,:)
   INTEGER :: v_siz, incr
   COMPLEX(DP), EXTERNAL :: zdotc
+  integer :: ibnd_fst, ibnd_lst
+  !
+  if(elph_tetra == 0) then
+     ibnd_fst = 1
+     ibnd_lst = nbnd
+  else
+     ibnd_fst = elph_nbnd_min
+     ibnd_lst = elph_nbnd_max
+  end if
   !
   IF (.NOT. comp_elph(irr) .OR. done_elph(irr)) RETURN
 
@@ -384,7 +394,7 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
            ENDIF
         ENDIF
         aux2=(0.0_DP,0.0_DP)
-        DO ibnd = 1, nbnd, incr
+        DO ibnd = ibnd_fst, ibnd_lst, incr
            IF ( dtgs%have_task_groups ) THEN
               CALL cft_wave_tg (ik, evc, tg_psic, 1, v_siz, ibnd, nbnd )
               CALL apply_dpot(v_siz, tg_psic, tg_dv, 1)
@@ -401,8 +411,8 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
         !
         ! calculate elphmat(j,i)=<psi_{k+q,j}|dvscf_q*psi_{k,i}> for this pertur
         !
-        DO ibnd =1, nbnd
-           DO jbnd = 1, nbnd
+        DO ibnd = ibnd_fst, ibnd_lst
+           DO jbnd = ibnd_fst, ibnd_lst
               elphmat (jbnd, ibnd, ipert) = zdotc (npwq, evq (1, jbnd), 1, &
                    dvpsi (1, ibnd), 1)
               IF (noncolin) &
@@ -417,8 +427,8 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
      !  save all e-ph matrix elements into el_ph_mat
      !
      DO ipert = 1, npe
-        DO jbnd = 1, nbnd
-           DO ibnd = 1, nbnd
+        DO jbnd = ibnd_fst, ibnd_lst
+           DO ibnd = ibnd_fst, ibnd_lst
               el_ph_mat (ibnd, jbnd, ik, ipert + imode0) = elphmat (ibnd, jbnd, ipert)
               el_ph_mat_rec (ibnd, jbnd, ik, ipert ) = elphmat (ibnd, jbnd, ipert)
            ENDDO
@@ -427,14 +437,16 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   ENDDO
   !
   done_elph(irr)=.TRUE.
-  IF (npool>1) THEN
-     ALLOCATE(el_ph_mat_rec_col(nbnd,nbnd,nksqtot,npe))
-     CALL el_ph_collect(npe,el_ph_mat_rec,el_ph_mat_rec_col,nksqtot,nksq)
-   ELSE
-     el_ph_mat_rec_col => el_ph_mat_rec
-  ENDIF
-  CALL ph_writefile('el_phon',current_iq,irr,ierr)
-  IF (npool > 1) DEALLOCATE(el_ph_mat_rec_col)
+  if(elph_tetra == 0) then
+     IF (npool>1) THEN
+        ALLOCATE(el_ph_mat_rec_col(nbnd,nbnd,nksqtot,npe))
+        CALL el_ph_collect(npe,el_ph_mat_rec,el_ph_mat_rec_col,nksqtot,nksq)
+     ELSE
+        el_ph_mat_rec_col => el_ph_mat_rec
+     ENDIF
+     CALL ph_writefile('el_phon',current_iq,irr,ierr)
+     IF (npool > 1) DEALLOCATE(el_ph_mat_rec_col)
+  end if
   DEALLOCATE(el_ph_mat_rec)
   !
   DEALLOCATE (elphmat)

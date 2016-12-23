@@ -27,7 +27,7 @@ subroutine solve_e_fpol ( iw )
   USE check_stop,            ONLY : check_stop_now
   USE wavefunctions_module,  ONLY : evc
   USE cell_base,             ONLY : tpiba2
-  USE klist,                 ONLY : lgauss, nkstot, wk, xk, ngk, igk_k
+  USE klist,                 ONLY : ltetra, lgauss, nkstot, wk, xk, ngk, igk_k
   USE lsda_mod,              ONLY : lsda, nspin, current_spin, isk
   USE fft_base,              ONLY : dffts, dfftp
   USE fft_interfaces,        ONLY : fwfft, invfft
@@ -142,7 +142,7 @@ subroutine solve_e_fpol ( iw )
   !
   ! if q=0 for a metal: allocate and compute local DOS at Ef
   !
-  if (lgauss.or..not.lgamma) call errore ('solve_e_fpol', &
+  if ( (lgauss .or. ltetra) .or. .not.lgamma) call errore ('solve_e_fpol', &
        'called in the wrong case', 1)
   !
   !   The outside loop is over the iterations

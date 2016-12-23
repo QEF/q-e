@@ -80,6 +80,17 @@ compute_vsgga.o : ../Modules/kind.o
 compute_vsgga.o : ../Modules/noncol.o
 compute_vsgga.o : ../Modules/recvec.o
 compute_vsgga.o : ../PW/src/pwcom.o
+dfpt_tetra_mod.o : ../Modules/cell_base.o
+dfpt_tetra_mod.o : ../Modules/io_global.o
+dfpt_tetra_mod.o : ../Modules/kind.o
+dfpt_tetra_mod.o : ../Modules/mp.o
+dfpt_tetra_mod.o : ../Modules/mp_images.o
+dfpt_tetra_mod.o : ../Modules/parameters.o
+dfpt_tetra_mod.o : ../PW/src/pwcom.o
+dfpt_tetra_mod.o : ../PW/src/start_k.o
+dfpt_tetra_mod.o : ../PW/src/symm_base.o
+dfpt_tetra_mod.o : ../PW/src/tetra.o
+dfpt_tetra_mod.o : lrcom.o
 dgradcorr.o : ../FFTXlib/fft_interfaces.o
 dgradcorr.o : ../Modules/constants.o
 dgradcorr.o : ../Modules/control_flags.o
@@ -204,6 +215,7 @@ orthogonalize.o : ../Modules/noncol.o
 orthogonalize.o : ../Modules/recvec.o
 orthogonalize.o : ../Modules/uspp.o
 orthogonalize.o : ../PW/src/pwcom.o
+orthogonalize.o : dfpt_tetra_mod.o
 orthogonalize.o : lrcom.o
 qdipol_cryst.o : ../Modules/cell_base.o
 qdipol_cryst.o : ../Modules/ions_base.o
@@ -228,6 +240,7 @@ setup_alpha_pv.o : ../Modules/kind.o
 setup_alpha_pv.o : ../Modules/mp.o
 setup_alpha_pv.o : ../Modules/mp_pools.o
 setup_alpha_pv.o : ../PW/src/pwcom.o
+setup_alpha_pv.o : dfpt_tetra_mod.o
 setup_alpha_pv.o : lrcom.o
 setup_dgc.o : ../FFTXlib/fft_interfaces.o
 setup_dgc.o : ../Modules/constants.o
@@ -253,6 +266,7 @@ setup_nbnd_occ.o : ../Modules/io_global.o
 setup_nbnd_occ.o : ../Modules/kind.o
 setup_nbnd_occ.o : ../Modules/noncol.o
 setup_nbnd_occ.o : ../PW/src/pwcom.o
+setup_nbnd_occ.o : ../PW/src/tetra.o
 setup_nbnd_occ.o : lrcom.o
 setup_nscf.o : ../Modules/cell_base.o
 setup_nscf.o : ../Modules/constants.o
@@ -269,6 +283,7 @@ setup_nscf.o : ../PW/src/atomic_wfc_mod.o
 setup_nscf.o : ../PW/src/pwcom.o
 setup_nscf.o : ../PW/src/start_k.o
 setup_nscf.o : ../PW/src/symm_base.o
+setup_nscf.o : ../PW/src/tetra.o
 setup_nscf.o : lrcom.o
 smallgq.o : ../Modules/cell_base.o
 smallgq.o : ../Modules/kind.o

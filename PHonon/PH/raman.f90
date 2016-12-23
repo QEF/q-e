@@ -10,7 +10,7 @@ subroutine raman
   !-----------------------------------------------------------------------
   !
   USE kinds,    ONLY : DP
-  USE klist,    ONLY : lgauss
+  USE klist,    ONLY : ltetra, lgauss
   USE lsda_mod, ONLY : lsda
   USE control_flags, ONLY : gamma_only
   USE uspp, ONLY: okvan
@@ -27,7 +27,7 @@ subroutine raman
   if (okvan) &
       call errore ('raman','Ultrasoft pseudopotentials not implemented',1)
   if (lsda) call errore ('raman',' spin-polarized case not implemented',1)
-  if (lgauss .or..not.lgamma) &
+  if ( (lgauss .or. ltetra) .or. .not.lgamma) &
       call errore ('raman','called in the wrong case',1)
   if (epsil.and..not.convt) &
       call errore ('raman','epsil calcul. not converged',1)

@@ -77,6 +77,8 @@ SUBROUTINE phq_readin()
   ! YAMBO >
   USE YAMBO,         ONLY : elph_yambo,dvscf_yambo
   ! YAMBO <
+  USE elph_tetra_mod,ONLY : elph_tetra, lshift_q
+  USE ktetra,        ONLY : tetra_type
   !
   IMPLICIT NONE
   !
@@ -117,9 +119,10 @@ SUBROUTINE phq_readin()
                        start_q, last_q, nogg, ldiag, search_sym, lqdir, &
                        nk1, nk2, nk3, k1, k2, k3, &
                        drho_star, dvscf_star, only_init, only_wfc, &
-                       elph_nbnd_min, elph_nbnd_max, el_ph_ngauss,el_ph_nsigma, el_ph_sigma,  &
-                       electron_phonon, &
-                       q_in_band_form, q2d, qplot, low_directory_check
+                       elph_nbnd_min, elph_nbnd_max, el_ph_ngauss, &
+                       el_ph_nsigma, el_ph_sigma,  electron_phonon, &
+                       q_in_band_form, q2d, qplot, low_directory_check, &
+                       lshift_q
 
   ! tr2_ph       : convergence threshold
   ! amass        : atomic masses
@@ -296,6 +299,8 @@ SUBROUTINE phq_readin()
   IF ( TRIM( dvscf_star%dir ) == ' ' ) &
       dvscf_star%dir = TRIM(outdir)//"/Rotated_DVSCF/"
   !
+  lshift_q = .false.
+  !
   ! ...  reading the namelist inputph
   !
   IF (meta_ionode) THEN
@@ -364,6 +369,8 @@ SUBROUTINE phq_readin()
   IF (modenum < 0) CALL errore ('phq_readin', ' Wrong modenum ', 1)
   IF (dek <= 0.d0) CALL errore ( 'phq_readin', ' Wrong dek ', 1)
   !
+  !
+  elph_tetra = 0
   SELECT CASE( trim( electron_phonon ) )
   CASE( 'simple'  )
      elph=.true.
@@ -395,6 +402,24 @@ SUBROUTINE phq_readin()
      nogg=.true.
      auxdvscf=trim(fildvscf)
   ! YAMBO <
+  CASE( 'lambda_tetra'  )
+     elph=.true.
+     elph_mat=.false.
+     elph_simple=.false.
+     trans = .false.
+     elph_tetra = 1
+  CASE( 'gamma_tetra'  )
+     elph=.true.
+     elph_mat=.false.
+     elph_simple=.false.
+     trans = .false.
+     elph_tetra = 2
+  CASE( 'scdft_input'  )
+     elph=.true.
+     elph_mat=.false.
+     elph_simple=.false.
+     trans = .false.
+     elph_tetra = 3
   CASE DEFAULT
      elph=.false.
      elph_mat=.false.
@@ -753,7 +778,7 @@ SUBROUTINE phq_readin()
      CALL errore('phq_readin','phonon with arbitrary occupations not tested',1)
   !
   !YAMBO >
-  IF (elph.AND..NOT.lgauss.and..NOT.elph_yambo) CALL errore ('phq_readin', 'Electron-&
+  IF (elph.AND..NOT.(lgauss .or. ltetra).and..NOT.elph_yambo) CALL errore ('phq_readin', 'Electron-&
        &phonon only for metals', 1)
   !YAMBO <
   IF (elph.AND.fildvscf.EQ.' ') CALL errore ('phq_readin', 'El-ph needs &
@@ -773,7 +798,7 @@ SUBROUTINE phq_readin()
   ENDIF
   nat_todo_input=nat_todo
 
-  IF (epsil.AND.lgauss) &
+  IF (epsil.AND.(lgauss .OR. ltetra)) &
         CALL errore ('phq_readin', 'no elec. field with metals', 1)
   IF (modenum > 0) THEN
      IF ( ldisp ) &
@@ -781,7 +806,15 @@ SUBROUTINE phq_readin()
           & single mode calculation not possibile !',1)
      nat_todo = 0
   ENDIF
-
+  !
+  ! Tetrahedron method for DFPT and El-Ph
+  !
+  IF(ltetra .AND. tetra_type == 0) &
+  &  CALL errore ('phq_readin', 'DFPT with the Blochl correction is not implemented', 1)
+  !
+  IF(.NOT. ltetra .AND. elph_tetra /= 0) &
+  &  CALL errore ('phq_readin', '"electron_phonon" and "occupation" are inconsistent.', 1)
+  !
   IF (modenum > 0 .OR. lraman ) lgamma_gamma=.FALSE.
   IF (.NOT.lgamma_gamma) asr=.FALSE.
   !

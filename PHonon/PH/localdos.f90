@@ -23,22 +23,22 @@ subroutine localdos_paw (ldos, ldoss, becsum1, dos_ef)
   USE ener,      ONLY : ef
   USE fft_base,  ONLY : dffts, dfftp
   USE fft_interfaces, ONLY: invfft
-  USE buffers, ONLY : get_buffer
-  USE gvecs,   ONLY : doublegrid, nls
-  USE klist,     ONLY : xk, wk, ngk, igk_k, degauss, ngauss
+  USE buffers,   ONLY : get_buffer
+  USE gvecs,     ONLY : doublegrid, nls
+  USE klist,     ONLY : xk, wk, ngk, igk_k, degauss, ngauss, ltetra
   USE lsda_mod,  ONLY : nspin, lsda, current_spin, isk
   USE noncollin_module, ONLY : noncolin, npol, nspin_mag
   USE wvfct,     ONLY : nbnd, npwx, et
-  USE becmod, ONLY: calbec, bec_type, allocate_bec_type, deallocate_bec_type
+  USE becmod,    ONLY: calbec, bec_type, allocate_bec_type, deallocate_bec_type
   USE wavefunctions_module,  ONLY: evc, psic, psic_nc
-  USE uspp, ONLY: okvan, nkb, vkb
-  USE uspp_param, ONLY: upf, nh, nhm
-  USE qpoint,   ONLY : nksq
-  USE control_lr, ONLY : nbnd_occ
-  USE units_ph,   ONLY : iuwfc, lrwfc
-
-  USE mp_pools,        ONLY : inter_pool_comm
-  USE mp,               ONLY : mp_sum
+  USE uspp,      ONLY: okvan, nkb, vkb
+  USE uspp_param,ONLY: upf, nh, nhm
+  USE qpoint,    ONLY : nksq
+  USE control_lr,ONLY : nbnd_occ
+  USE units_ph,  ONLY : iuwfc, lrwfc
+  USE mp_pools,  ONLY : inter_pool_comm
+  USE mp,        ONLY : mp_sum
+  USE dfpt_tetra_mod, ONLY : dfpt_tetra_delta
 
   implicit none
 
@@ -97,7 +97,13 @@ subroutine localdos_paw (ldos, ldoss, becsum1, dos_ef)
      !
      call calbec ( npw, vkb, evc, becp)
      do ibnd = 1, nbnd_occ (ik)
-        wdelta = w0gauss ( (ef-et(ibnd,ik)) / degauss, ngauss) / degauss
+        !
+        if(ltetra) then
+           wdelta = dfpt_tetra_delta(ibnd,ik)
+        else
+           wdelta = w0gauss ( (ef-et(ibnd,ik)) / degauss, ngauss) / degauss
+        end if
+        !
         w1 = weight * wdelta / omega
         !
         ! unperturbed wf from reciprocal to real space

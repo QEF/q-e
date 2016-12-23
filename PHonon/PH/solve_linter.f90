@@ -29,7 +29,8 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   USE wavefunctions_module, ONLY : evc
   USE constants,            ONLY : degspin
   USE cell_base,            ONLY : at, tpiba2
-  USE klist,                ONLY : lgauss, degauss, ngauss, xk, wk, ngk, igk_k
+  USE klist,                ONLY : ltetra, lgauss, degauss, ngauss, &
+                                   xk, wk, ngk, igk_k
   USE gvect,                ONLY : g
   USE gvecs,                ONLY : doublegrid
   USE fft_base,             ONLY : dfftp, dffts, dtgs
@@ -210,7 +211,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   ! if q=0 for a metal: allocate and compute local DOS at Ef
   !
 
-  lmetq0 = lgauss.and.lgamma
+  lmetq0 = (lgauss .OR. ltetra) .AND. lgamma
   if (lmetq0) then
      allocate ( ldos ( dfftp%nnr  , nspin_mag) )
      allocate ( ldoss( dffts%nnr , nspin_mag) )

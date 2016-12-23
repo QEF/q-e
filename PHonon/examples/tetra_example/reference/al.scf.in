@@ -1,0 +1,23 @@
+&CONTROL
+ calculation = 'scf' ,
+    prefix='aluminum',
+    pseudo_dir = '/home/kawamura/programs/QE/dfpttetra/pseudo/',
+    outdir='/home/kawamura/programs/QE/dfpttetra/tempdir/'
+/
+&SYSTEM
+       ibrav = 2,
+   celldm(1) = 7.628216862d0,
+         nat = 1,
+        ntyp = 1,
+     ecutwfc = 40.0 ,
+     ecutrho = 150 ,
+ occupations = 'tetrahedra_opt' ,
+/
+ &ELECTRONS
+/
+ATOMIC_SPECIES
+ Al   26.98000  Al.pbe-n-rrkjus_psl.0.1.UPF
+ATOMIC_POSITIONS alat 
+ Al      0.000000000    0.000000000    0.000000000    
+K_POINTS automatic 
+ 8 8 8 0 0 0

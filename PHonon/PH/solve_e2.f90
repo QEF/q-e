@@ -16,7 +16,7 @@ subroutine solve_e2
   USe kinds,                 ONLY : DP
   USE io_global,             ONLY : stdout
   USE cell_base,             ONLY : tpiba2
-  USE klist,                 ONLY : lgauss, wk, xk, ngk, igk_k
+  USE klist,                 ONLY : ltetra, lgauss, wk, xk, ngk, igk_k
   USE lsda_mod,              ONLY : lsda, nspin
   USE gvect,                 ONLY : g
   USE gvecs,                 ONLY : doublegrid
@@ -100,7 +100,7 @@ subroutine solve_e2
   end if
   if (convt) goto 155
   !
-  if (lgauss.or..not.lgamma) &
+  if ( (lgauss .or. ltetra) .or..not.lgamma) &
         call errore ('solve_e2', 'called in the wrong case', 1)
   !
   !   The outside loop is over the iterations

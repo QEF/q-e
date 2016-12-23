@@ -39,6 +39,9 @@ SUBROUTINE do_phonon(auxdyn)
   USE YAMBO,           ONLY : elph_yambo
   ! YAMBO <
   !
+  USE elph_tetra_mod, ONLY : elph_tetra, elph_tetra_lambda, elph_tetra_gamma
+  USE elph_scdft_mod, ONLY : elph_scdft
+
   IMPLICIT NONE
   !
   CHARACTER (LEN=256), INTENT(IN) :: auxdyn
@@ -115,6 +118,12 @@ SUBROUTINE do_phonon(auxdyn)
            CALL elphsum_simple()
         ELSEIF( elph_yambo ) THEN
            CALL elph_yambo_eval_and_IO()
+        ELSEIF(elph_tetra == 1) THEN
+           CALL elph_tetra_lambda()
+        ELSEIF(elph_tetra == 2) THEN
+           CALL elph_tetra_gamma()
+        ELSEIF(elph_tetra == 3) THEN
+           CALL elph_scdft()
         ELSE 
            CALL elphsum()
         END IF
