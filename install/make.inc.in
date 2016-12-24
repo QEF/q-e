@@ -104,15 +104,15 @@ LD_LIBS        = @ld_libs@
 
 # External Libraries (if any) : blas, lapack, fft, MPI
 
-# If you have nothing better, use the local copy :
-# BLAS_LIBS = /your/path/to/espresso/BLAS/blas.a
+# If you have nothing better, use the local copy via "--with-netlib" :
+# BLAS_LIBS = /your/path/to/espresso/LAPACK/blas.a
 # BLAS_LIBS_SWITCH = internal
 
 BLAS_LIBS      = @blas_libs@
 BLAS_LIBS_SWITCH = @blas_libs_switch@
 
-# If you have nothing better, use the local copy :
-# LAPACK_LIBS = /your/path/to/espresso/lapack-3.2/lapack.a
+# If you have nothing better, use the local copy via "--with-netlib" :
+# LAPACK_LIBS = /your/path/to/espresso/LAPACK/lapack.a
 # LAPACK_LIBS_SWITCH = internal
 # For IBM machines with essl (-D__ESSL): load essl BEFORE lapack !
 # remember that LAPACK_LIBS precedes BLAS_LIBS in loading order
@@ -127,7 +127,7 @@ SCALAPACK_LIBS = @scalapack_libs@
 
 FFT_LIBS       = @fft_libs@
 
-# HDF5 -- experimental
+# HDF5
 HDF5_LIB = @hdf5_libs@
 
 # For parallel execution, the correct path to MPI libraries must
