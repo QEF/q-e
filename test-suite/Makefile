@@ -111,6 +111,10 @@ clean:
 	@rm -f pw_langevin/trajectory-pwscf.xyz
 # Special cases for CP	
 	@rm -f cp_si/qe_input.xml cp_sio2/qe_input.xml cp_o2/qe_input.xml cp_h2o/qe_input.xml
+# Cleaning EPW final files
+	@rm -rf epw_*/_ph0 epw_*/*.save epw_*/*.wfc* epw_*/*.dyn*
+# Special case EPW
+	@rm -rf epw_trev/save	
 	@rm -f userconfig
 
 # Calling 'purge' means remove all reference outputs... be careful!
