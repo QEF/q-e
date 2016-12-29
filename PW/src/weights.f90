@@ -19,7 +19,8 @@ SUBROUTINE weights()
   USE klist,                ONLY : ltetra, lgauss, degauss, ngauss, nks, &
                                    nkstot, wk, xk, nelec, nelup, neldw, &
                                    two_fermi_energies
-  USE ktetra,               ONLY : ntetra, tetra, tetra_type, opt_tetra_weights
+  USE ktetra,               ONLY : ntetra, tetra, tetra_type, tetra_weights, &
+                                   opt_tetra_weights
   USE lsda_mod,             ONLY : nspin, current_spin, isk
   USE wvfct,                ONLY : nbnd, wg, et
   USE mp_images,            ONLY : intra_image_comm
@@ -70,14 +71,14 @@ SUBROUTINE weights()
               !
               IF (two_fermi_energies) THEN
                  !
-                 CALL tweights( nkstot, nspin, nbnd, nelup, &
+                 CALL tetra_weights( nkstot, nspin, nbnd, nelup, &
                                 ntetra, tetra, et, ef_up, wg, 1, isk )
-                 CALL tweights( nkstot, nspin, nbnd, neldw, &
+                 CALL tetra_weights( nkstot, nspin, nbnd, neldw, &
                                 ntetra, tetra, et, ef_dw, wg, 2, isk )
                  !
               ELSE
                  !
-                 CALL tweights( nkstot, nspin, nbnd, nelec, &
+                 CALL tetra_weights( nkstot, nspin, nbnd, nelec, &
                                 ntetra, tetra, et, ef, wg, 0, isk )
                  !
               END IF
@@ -178,7 +179,7 @@ SUBROUTINE weights_only ()
                                    nkstot, wk, xk, nelec, nelup, neldw, &
                                    two_fermi_energies
   USE ktetra,               ONLY : ntetra, tetra, tetra_type, &
-       opt_tetra_weights_only
+                                   tetra_weights_only, opt_tetra_weights_only
   USE lsda_mod,             ONLY : nspin, current_spin, isk
   USE wvfct,                ONLY : nbnd, wg, et
   USE mp_images,            ONLY : intra_image_comm
@@ -222,14 +223,14 @@ SUBROUTINE weights_only ()
               !
               IF (two_fermi_energies) THEN
                  !
-                 CALL tweights_only( nkstot, nspin, 1, isk, nbnd, nelup, &
+                 CALL tetra_weights_only( nkstot, nspin, 1, isk, nbnd, nelup, &
                                      ntetra, tetra, et, ef_up, wg )
-                 CALL tweights_only( nkstot, nspin, 2, isk, nbnd, neldw, &
+                 CALL tetra_weights_only( nkstot, nspin, 2, isk, nbnd, neldw, &
                                      ntetra, tetra, et, ef_dw, wg )
                  !
               ELSE
                  !
-                 CALL tweights_only ( nkstot, nspin, 0, isk, nbnd, nelec, &
+                 CALL tetra_weights_only ( nkstot, nspin, 0, isk, nbnd, nelec, &
                                       ntetra, tetra, et, ef, wg )
                  !
               END IF

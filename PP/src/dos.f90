@@ -31,8 +31,8 @@ PROGRAM do_dos
   USE mp_global,     ONLY : mp_startup
   USE environment,   ONLY : environment_start, environment_end
   ! following modules needed for generation of tetrahedra
-  USE ktetra,     ONLY : ntetra, tetra, tetra_type, opt_tetra_init, &
-       opt_tetra_dos_t
+  USE ktetra,     ONLY : ntetra, tetra, tetra_type, tetra_init, &
+       opt_tetra_init, opt_tetra_dos_t
   USE symm_base,  ONLY : nsym, s, time_reversal, t_rev
   USE cell_base,  ONLY : at, bg
   USE start_k,    ONLY : k1, k2, k3, nk1, nk2, nk3
@@ -124,7 +124,7 @@ PROGRAM do_dos
         IF(tetra_type == 0) THEN
            WRITE( stdout,'(/5x,"Tetrahedra used"/)')
            ALLOCATE ( tetra(4,ntetra) )
-           CALL tetrahedra ( nsym, s, time_reversal, t_rev, at, bg, nks, &
+           CALL tetra_init ( nsym, s, time_reversal, t_rev, at, bg, nks, &
                 k1,k2,k3, nk1,nk2,nk3, nks2, xk, ntetra, tetra )
         ELSE
            IF(tetra_type == 1) THEN 
