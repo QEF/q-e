@@ -62,6 +62,20 @@ tolerance = ( (1.0e-6, 5.0e-3, 'e1'),
               (2.0e-2, 5.0e-4, 'allDyn'),
               (1.0e-4, 5.0e-4, 'bcsgap'))
 
+[TDDFPT]
+exe = XXXXXX/test-suite/run-tddfpt.sh
+extract_program = XXXXXX/test-suite/extract-tddfpt.x
+inputs_args = ('*.in', '')
+run_cmd_template = tc.program tc.args tc.input tc.output tc.error
+tolerance = ( (1.0e-6, 5.0e-3, 'e1'),
+              (3.0e+0, 5.0e-1, 'n1'),
+              (1.0e-3, 1.0e-5, 'f1'),
+              (1.0e-1, 1.0e-3, 'p1'),
+              (1.0e-1, 1.0e-3, 'alpha'),
+              (1.0e-1, 1.0e-3, 'beta'),
+              (1.0e-1, 1.0e-3, 'gamma'),
+              (1.0e-1, 1.0e-3, 'average'),
+              (1.0e-4, 5.0e-4, 'averageosc'))
 
 skip_program = grep
 skip_args = 'not present in this version'
