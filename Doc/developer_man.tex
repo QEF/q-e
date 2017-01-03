@@ -8,6 +8,7 @@
 \oddsidemargin = 0 cm
 
 \usepackage{html}
+\usepackage[colorlinks=true,urlcolor=blue,unicode]{hyperref}
 
 % BEWARE: don't revert from graphicx for epsfig, because latex2html
 % doesn't handle epsfig commands !!!
@@ -2332,6 +2333,68 @@ The stash can be cleared using \texttt{git clear}. A few useful commands:
   \texttt{git status}\\
   \texttt{git diff}
 \end{quote}
+
+
+\section{The \qe \, test-suite}
+\label{Sec:testfarm}
+
+The \qe\, test-suite is used to ensure continuous integration and long-term numerical stability of the code.
+The test-suite is also used by different Buildbot test-farm to automatically test the code nightly after a commit to the SVN qe-forge repository has been detected. 
+
+Two currently (2017) active test-farm can be accessed:
+\begin{itemize}
+\item \href{http://qe-forge.org:8010/waterfall}{Qe-forge test-farm}
+\item \href{http://129.67.86.21:8010/}{Oxford test-farm}
+\end{itemize}
+
+
+\subsection{How to add tests for a new executable}
+
+Let us take the example of adding a new test for the TDDFPT module. 
+
+\begin{description}
+\item [extract-PROG\_NAME.x] This script extracts the physical quantities from the output and parse it in a format for the testcode.py script. The script need to contain all the different output you want to parse (for chain calculations). For example, in this case we want to parse the output of \texttt{pw.x}, \texttt{turbo\_lanczos.x} and    \texttt{turbo\_spectrum.x}. It is crucial to add as many parameter to be tested as possible to increase the code coverability. 
+\item [run-PROG\_NAME.sh] This bash script contains the paths of the different programs and source the \texttt{ENVIRONMENT} file 
+\item [jobconfig] You need to edit this file to add all the new tests as well as the new program. You can chain different programs with different output in one test. In this case we added
+\begin{verbatim}
+[tddfpt_*/]
+program = TDDFPT
+\end{verbatim}
+This means that all the new tests related to TDDFPT must be placed in a folder with a name that starts with \texttt{tddfpt\_}. You can also add it to a new category. 
+\item[userconfig.tmp] This file contains the accepted accuracies for the different physical quantities defined in \texttt{extract-PROG\_NAME.x}. You need to add a new section for your program. For the tolerance variable, the first column is the absolute accepted value, the second one is the relative accepted value and the third column contains the name of the physical quantity as defined earlier. Note that you need to add the values for all the code that you intend to test. In our case we need to add variable from \texttt{pw.x} as well (although already defined for other program). 
+To estimate the acceptable tolerance, it is advised to start with very strict tolerance (very low value, e.g. 1d-6 or so) and then make some local tests (for example comparing the results in sequential or in parallel). One can then raise slightly the accepted tolerance. 
+\item[PROG\_NAME\_TEST\_NAME] Create one folder for each new test you want to add following the convention prog\_name and test\_name. In our case we create a folder name \texttt{tddfpt\_CH4}. The folder must contain all the input files, the pseudopotentials that are needed for that test and the reference files. The reference files must have a name that starts with \texttt{benchmark.out.SVN.inp=}. However, the easiest is to run the test suite for that test and the code will tell you what is the name he expects to have. You can then rename your reference output with that name. In our case we will therefore do
+\begin{verbatim}
+make run-custom-test testdir=tddfpt_CH4
+\end{verbatim}
+We can then rename the output by doing 
+\begin{verbatim}
+cp test.out.030117.inp=CH4.pw-in.args=1 benchmark.out.SVN.inp=CH4.pw-in.args=1
+\end{verbatim}
+We now have a reference file for the first step of the calculation. We can do the same for the two other steps. 
+
+Once this is done. We can clean all the unwanted files and we should be left with a clean folder that can be committed to the svn repo. In our case the test folder contains the following files:
+\begin{verbatim}
+benchmark.out.SVN.inp=CH4.pw-in.args=1      
+benchmark.out.SVN.inp=CH4.tddfpt_pp-in.args=3 
+benchmark.out.SVN.inp=CH4.tddfpt-in.args=2 
+CH4.tddfpt-in    
+C.pz-vbc.UPF 
+CH4.pw-in                                      
+CH4.tddfpt_pp-in  
+H.pz-vbc.UPF
+\end{verbatim}
+
+It is very important to then re-run the tests in parallel (4 cores) to be sure that the results are within the accepted tolerance. 
+
+\end{description}
+
+
+\subsection{How to add tests for an existing executable}
+
+You have to create a new folder following the convention prog\_name and test\_name and then follow the structure outline above. 
+If you want to test new physical quantities, you need to parse them using the script \texttt{extract-PROG\_NAME.x}. Finally, the new test should 
+be added in \texttt{jobconfig}.
 
 \section{Bibliography}
 
