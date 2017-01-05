@@ -24,6 +24,7 @@ SUBROUTINE write_cubefile ( alat, at, bg, nat, tau, atm, ityp, rho, &
      nr1, nr2, nr3, nr1x, nr2x, nr3x, ounit )
 
   USE kinds,  ONLY : DP
+  USE run_info, ONLY: title
 
   IMPLICIT NONE
   INTEGER, INTENT(IN):: nat, ityp(nat), ounit, nr1,nr2,nr3, nr1x,nr2x,nr3x
@@ -50,9 +51,13 @@ SUBROUTINE write_cubefile ( alat, at, bg, nat, tau, atm, ityp, rho, &
 !C
 !C     ALL COORDINATES ARE GIVEN IN ATOMIC UNITS.
 
-  WRITE(ounit,*) 'Cubfile created from PWScf calculation'
-  WRITE(ounit,*) ' Total SCF Density'
-!                        origin is forced to (0.0,0.0,0.0)
+  WRITE(ounit,*) 'Cubefile created from PWScf calculation'
+  IF ( LEN_TRIM(title) > 1 ) THEN
+     WRITE(ounit,*) TRIM(title) ! perhaps there is a better option...
+  ELSE
+     WRITE(ounit,'("Contains the selected quantity on a FFT grid")')
+  END IF
+  !                        origin is forced to (0.0,0.0,0.0)
   WRITE(ounit,'(I5,3F12.6)') nat, 0.0d0, 0.0d0, 0.0d0
   WRITE(ounit,'(I5,3F12.6)') nr1, (alat*at(i,1)/dble(nr1),i=1,3)
   WRITE(ounit,'(I5,3F12.6)') nr2, (alat*at(i,2)/dble(nr2),i=1,3)
