@@ -1151,7 +1151,7 @@ SUBROUTINE pw2wan_set_symm (sr, tvec)
          DO k = 1, nr3
             DO j = 1, nr2
                DO i = 1, nr1
-                  CALL ruotaijk (s_in(:,:,isym), ftau_in(:,isym), i,j,k, nr1,nr2,nr3, ri,rj,rk)
+                  CALL ruotaijk (s_in(:,:,isym), (/0,0,0/), i,j,k, nr1,nr2,nr3, ri,rj,rk)
                   !
                   ir =   i + ( j-1)*nr1x + ( k-1)*nr1x*nr2x
                   rir(ir,isym) = ri + (rj-1)*nr1x + (rk-1)*nr1x*nr2x
@@ -1246,7 +1246,7 @@ SUBROUTINE compute_dmn
    real(DP), ALLOCATABLE    :: rbecp2(:,:),sr(:,:,:)
    COMPLEX(DP), ALLOCATABLE :: qb(:,:,:,:), qgm(:), phs(:,:)
    real(DP), ALLOCATABLE    :: qg(:), workg(:)
-   real(DP), ALLOCATABLE    :: ylm(:,:), dxk(:,:), tvec(:,:), dylm(:,:), wws(:,:,:), vps2t(:,:,:), vaxis(:,:,:), ww(:,:)
+   real(DP), ALLOCATABLE    :: ylm(:,:), dxk(:,:), tvec(:,:), dylm(:,:), wws(:,:,:), vps2t(:,:,:), vaxis(:,:,:)
    INTEGER, ALLOCATABLE     :: iks2k(:,:),iks2g(:,:),ik2ir(:),ir2ik(:)
    INTEGER, ALLOCATABLE     :: iw2ip(:),ip2iw(:),ips2p(:,:),invs(:)
    logical, ALLOCATABLE     :: lfound(:)
@@ -1502,39 +1502,25 @@ SUBROUTINE compute_dmn
    !do ip=1,5
    !   write(stdout,"(5f25.15)") (sum(dylm(:,ip)*dylm(:,jp)*dwgt)*2d0*tpi,jp=1,5)
    !end do !Checking spherical integral.
-   allocate(wws(n_wannier,n_wannier,nsym),ww(n_wannier,n_wannier))
+   allocate(wws(n_wannier,n_wannier,nsym))
    wws=0d0
-   ww=0d0
    do iw=1,n_wannier
       call set_u_matrix (xaxis(:,iw),zaxis(:,iw),vaxis(:,:,iw))
-   end do
-   do iw=1,n_wannier
-      ip=iw2ip(iw)
-      CALL ylm_wannier(dylm(1,1),l_w(iw),mr_w(iw),dvec,32)
-      do jw=1,n_wannier
-         if(iw2ip(jw).ne.ip) cycle
-         do ir=1,32
-            dvec2(:,ir)=matmul(dvec(:,ir),vaxis(:,:,jw))
-         end do
-         CALL ylm_wannier(dylm(1,2),l_w(jw),mr_w(jw),dvec2,32)
-         ww(jw,iw)=sum(dylm(:,1)*dylm(:,2)*dwgt)*2d0*tpi !
-      end do
    end do
    do isym=1,nsym
       do iw=1,n_wannier
          ip=iw2ip(iw)
          jp=ips2p(ip,isym)
-         CALL ylm_wannier(dylm(1,1),l_w(iw),mr_w(iw),dvec,32)
+         CALL ylm_wannier(dylm(1,1),l_w(iw),mr_w(iw),matmul(vaxis(:,:,iw),dvec),32)
          do jw=1,n_wannier
             if(iw2ip(jw).ne.jp) cycle
             do ir=1,32
                dvec2(:,ir)=matmul(sr(:,:,isym),dvec(:,ir))
             end do
-            CALL ylm_wannier(dylm(1,2),l_w(jw),mr_w(jw),dvec2,32)
+            CALL ylm_wannier(dylm(1,2),l_w(jw),mr_w(jw),matmul(vaxis(:,:,jw),dvec2),32)
             wws(jw,iw,isym)=sum(dylm(:,1)*dylm(:,2)*dwgt)*2d0*tpi !<Rotated Y(jw)|Not rotated Y(iw)> for sym.op.(isym).
          end do
       end do
-      wws(:,:,isym)=matmul(matmul(transpose(ww),wws(:,:,isym)),ww)
    end do
    deallocate(dylm,vaxis)
    do isym=1,nsym
@@ -1701,7 +1687,7 @@ SUBROUTINE compute_dmn
          npwq = ngk(ikp)
          do n=1,nbnd
             do ip=1,npwq        !applying translation vector t.
-               evcq(ip,n)=evcq(ip,n)*exp(dcmplx(0d0,+sum((xk(:,ik))*tvec(:,isym))*tpi))
+               evcq(ip,n)=evcq(ip,n)*exp(dcmplx(0d0,+sum((matmul(g(:,igk_k(ip,ikp)),sr(:,:,isym))+xk(:,ik))*tvec(:,isym))*tpi))
             end do
          end do
          ! compute the phase
