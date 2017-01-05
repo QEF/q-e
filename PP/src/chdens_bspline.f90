@@ -255,6 +255,7 @@ SUBROUTINE plot_3d_bspline (alat, at, nat, tau, atm, ityp, rhor, &
   USE kinds,     ONLY : dp
   USE io_global, ONLY : stdout, ionode
   USE fft_base,  ONLY : dfftp
+  USE chdens_module, ONLY : write_openmol_file
   !---------------------------------------------------------------------
   implicit none
   integer, intent(in) :: nx, ny, nz, nat, ityp(nat), output_format, ounit

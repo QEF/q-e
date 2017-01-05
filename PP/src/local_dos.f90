@@ -35,7 +35,7 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
                                    nkstot, ngk, igk_k
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE scf,                  ONLY : rho
-  USE symme,                ONLY : sym_rho, sym_rho_init
+  USE symme,                ONLY : sym_rho, sym_rho_init, sym_rho_deallocate
   USE uspp,                 ONLY : nkb, vkb, becsum, nhtol, nhtoj, indv
   USE uspp_param,           ONLY : upf, nh, nhm
   USE wavefunctions_module, ONLY : evc, psic, psic_nc
@@ -56,23 +56,24 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
   !
   INTEGER, INTENT(in) :: iflag, kpoint, kband, spin_component
   LOGICAL, INTENT(in) :: lsign
-  real(DP), INTENT(in) :: emin, emax
+  REAL(DP), INTENT(in) :: emin, emax
   !
-  real(DP), INTENT(out) :: dos (dfftp%nnr)
+  REAL(DP), INTENT(out) :: dos (dfftp%nnr)
   !
   !    local variables
   !
-  INTEGER :: npw, ikb, jkb, ijkb0, ih, jh, kh, na, ijh, np
   ! counters for US PPs
-  INTEGER :: ir, is, ig, ibnd, ik, irm, isup, isdw, ipol, kkb, is1, is2
+  INTEGER :: npw, ikb, jkb, ijkb0, ih, jh, kh, na, ijh, np
   ! counters
-  real(DP) :: w, w1, modulus
-  real(DP), ALLOCATABLE :: rbecp(:,:), segno(:), maxmod(:)
+  INTEGER :: ir, is, ig, ibnd, ik, irm, isup, isdw, ipol, kkb, is1, is2
+
+  REAL(DP) :: w, w1, modulus, wg_max
+  REAL(DP), ALLOCATABLE :: rbecp(:,:), segno(:), maxmod(:)
   COMPLEX(DP), ALLOCATABLE :: becp(:,:),  &
                                    becp_nc(:,:,:), be1(:,:), be2(:,:)
   INTEGER :: who_calculate, iproc
   COMPLEX(DP) :: phase
-  real(DP), EXTERNAL :: w0gauss, w1gauss
+  REAL(DP), EXTERNAL :: w0gauss, w1gauss
   LOGICAL :: i_am_the_pool
   INTEGER :: which_pool, kpoint_pool
   !
@@ -112,16 +113,16 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
   !   calculate the correct weights
   !
   IF (iflag /= 0.and. iflag /=3 .and. .not.lgauss) CALL errore ('local_dos', &
-       'gaussian broadening needed', 1)
+      'gaussian broadening needed', 1)
   IF (iflag == 2 .and. ngauss /= -99) CALL errore ('local_dos', &
-       ' beware: not using Fermi-Dirac function ',  - ngauss)
+      ' beware: not using Fermi-Dirac function ',  - ngauss)
   DO ik = 1, nks
      DO ibnd = 1, nbnd
         IF (iflag == 0) THEN
            wg (ibnd, ik) = 0.d0
         ELSEIF (iflag == 1) THEN
-           wg (ibnd, ik) = wk (ik) * w0gauss ( (ef - et (ibnd, ik) ) &
-                / degauss, ngauss) / degauss
+           !    Local density of states at energy emin with broadening emax
+           wg(ibnd,ik) = wk(ik) * w0gauss((emin - et(ibnd, ik))/emax, ngauss) / emax
         ELSEIF (iflag == 2) THEN
            wg (ibnd, ik) = - wk (ik) * w1gauss ( (ef - et (ibnd, ik) ) &
                 / degauss, ngauss)
@@ -136,6 +137,7 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
         ENDIF
      ENDDO
   ENDDO
+  wg_max = MAXVAL(wg(:,:))
 
   IF ( iflag == 0 .and. npool > 1 ) THEN
      CALL xk_pool( kpoint, nkstot, kpoint_pool,  which_pool )
@@ -170,7 +172,9 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
      !     here we compute the density of states
      !
         DO ibnd = 1, nbnd
-           IF (ibnd == kband .or. iflag /= 0) THEN
+         ! Neglect summands with relative weights below machine epsilon
+         IF ( wg(ibnd, ik) > epsilon(0.0_DP) * wg_max .and. &
+             (ibnd == kband .or. iflag /= 0)) THEN
               IF (noncolin) THEN
                  psic_nc = (0.d0,0.d0)
                  DO ig = 1, npw
@@ -352,9 +356,10 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
                 ENDIF
               ENDDO
            ENDIF
-        ENDDO
-     ENDIF
-  ENDDO
+        ENDDO ! loop over bands
+    ENDIF 
+  ENDDO ! loop over k-points
+
   IF (gamma_only) THEN
      DEALLOCATE(rbecp)
   ELSE
@@ -412,7 +417,7 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
   !
   !    symmetrization of the local dos
   !
-  CALL sym_rho_init ( gamma_only )
+  CALL sym_rho_init (gamma_only )
   !
   psic(:) = cmplx ( dos(:), 0.0_dp, kind=dp)
   CALL fwfft ('Dense', psic, dfftp)
@@ -424,6 +429,8 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
   psic(nl(:)) = rho%of_g(:,1)
   CALL invfft ('Dense', psic, dfftp)
   dos(:) = dble(psic(:))
+  !
+  CALL sym_rho_deallocate()
   !
   RETURN
 

@@ -40,11 +40,12 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   USE paw_postproc,     ONLY : PAW_make_ae_charge
 
   IMPLICIT NONE
-  CHARACTER(len=*) :: filplot
-  INTEGER :: kpoint, kband, spin_component, plot_num
-  LOGICAL :: lsign
-  REAL(DP) :: sample_bias, dummy
-  REAL(DP) :: emin, emax, z, dz, charge, epsilon
+  CHARACTER(len=*), INTENT(IN) :: filplot
+  INTEGER, INTENT(IN) :: plot_num, kpoint, kband, spin_component
+  LOGICAL, INTENT(IN) :: lsign
+  REAL(DP), INTENT(IN) :: sample_bias, z, dz, &
+      emin, emax, epsilon
+  REAL(DP) :: dummy, charge
   INTEGER :: is, ipol, istates
 #if defined(__MPI)
   ! auxiliary vector (parallel case)
@@ -60,10 +61,13 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
 #endif
 
   WRITE( stdout, '(/5x,"Calling punch_plot, plot_num = ",i3)') plot_num
-  IF (plot_num == 7 ) &
-     WRITE( stdout, '(/5x,"Plotting k_point = ",i3,"  band =", i3  )') &
+  IF (plot_num == 3 ) &
+     WRITE(stdout, '(/5x,"Energy =", f10.5, " eV, broadening =", f10.5, "eV" )') &
+                       emin * rytoev, emax * rytoev
+  IF (plot_num == 7) &
+      WRITE( stdout, '(/5x,"Plotting k_point = ",i3,"  band =", i3  )') &
                                                    kpoint, kband
-  IF (plot_num == 7 .and. noncolin .and. spin_component /= 0 ) &
+  IF ((plot_num == 7) .and. noncolin .and. spin_component /= 0 ) &
      WRITE( stdout, '(/5x,"Plotting spin magnetization ipol = ",i3)') &
                                                           spin_component
   !
@@ -118,10 +122,12 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
 
   ELSEIF (plot_num == 3) THEN
      !
-     !       The local density of states at e_fermi on output
+     !       The local density of states at emin, with broadening emax
      !
+     WRITE (title, '(" Energy = ",f8.4," eV, ", "broadening = ",f8.4," eV")') &
+                   emin * rytoev, emax * rytoev
      IF (noncolin) CALL errore('punch_plot','not implemented yet',1)
-     CALL local_dos (1, lsign, kpoint, kband, spin_component, emin, emax, raux)
+     CALL local_dos(1, lsign, kpoint, kband, spin_component, emin, emax, raux)
 
   ELSEIF (plot_num == 4) THEN
      !
@@ -153,6 +159,7 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
      ENDIF
 
   ELSEIF (plot_num == 7) THEN
+     WRITE (title, '("k_point ",i4,", band ",i4)') kpoint ,kband
 
      IF (noncolin) THEN
         IF (spin_component==0) THEN

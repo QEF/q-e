@@ -7,7 +7,10 @@
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE chdens (filplot,plot_num)
+MODULE chdens_module
+CONTAINS
+!-----------------------------------------------------------------------
+SUBROUTINE chdens (plot_files,plot_num)
   !-----------------------------------------------------------------------
   !      Writes the charge density (or potential, or polarisation)
   !      into a file format suitable for plotting
@@ -40,7 +43,8 @@ SUBROUTINE chdens (filplot,plot_num)
   USE wavefunctions_module,  ONLY: psic
 
   IMPLICIT NONE
-  CHARACTER (len=256), INTENT(in) :: filplot
+  !CHARACTER (len=256), INTENT(in) :: filplot
+  CHARACTER (len=256), DIMENSION(:), ALLOCATABLE, INTENT(in) :: plot_files
   !
   ! If plot_num=-1 the dimensions and structural data are read from the charge
   ! or potential file, otherwise it uses the data already read from
@@ -52,14 +56,14 @@ SUBROUTINE chdens (filplot,plot_num)
   ! maximum number of files with charge
 
   INTEGER :: ounit, iflag, ios, ipol, nfile, ifile, nx, ny, nz, &
-       na, i, output_format, idum, direction
+       na, i, output_format, idum, direction, iplot
 
   real(DP) :: e1(3), e2(3), e3(3), x0 (3), radius, m1, m2, m3, &
        weight (nfilemax), isovalue,heightmin,heightmax
 
   real(DP), ALLOCATABLE :: aux(:)
 
-  CHARACTER (len=256) :: fileout
+  CHARACTER (len=256) :: fileout, fileout_tmp
   CHARACTER (len=13), DIMENSION(0:7) :: formatname = &
        (/ 'gnuplot      ', &
           'contour.x    ', &
@@ -98,7 +102,7 @@ SUBROUTINE chdens (filplot,plot_num)
   !   set the DEFAULT values
   !
   nfile         = 1
-  filepp(1)     = filplot
+  filepp(1)     = plot_files(1)
   weight(1)     = 1.0d0
   iflag         = 0
   radius        = 1.0d0
@@ -138,6 +142,7 @@ SUBROUTINE chdens (filplot,plot_num)
      RETURN
   ENDIF
 
+
   CALL mp_bcast( filepp, ionode_id, world_comm )
   CALL mp_bcast( weight, ionode_id, world_comm )
   CALL mp_bcast( iflag, ionode_id, world_comm )
@@ -166,7 +171,12 @@ SUBROUTINE chdens (filplot,plot_num)
   ! check for number of files
   !
   IF (nfile < 1 .or. nfile > nfilemax) &
-       CALL errore ('chdens ', 'nfile is wrong ', 1)
+     CALL errore ('chdens ', 'nfile < 1 or too large', 1)
+
+  IF (nfile > 1 .AND. SIZE(plot_files) > 1) THEN
+     CALL errore ('chdens ', &
+       "can't mix nfile > 1 with specifying multiple plots", 1)
+  ENDIF
 
   ! check for iflag
 
@@ -279,270 +289,282 @@ SUBROUTINE chdens (filplot,plot_num)
      CALL fft_type_allocate ( dffts, at, bg, gcutms, intra_bgrp_comm)
   ENDIF
 
-  ALLOCATE  (rhor(dfftp%nr1x*dfftp%nr2x*dfftp%nr3x))
-  ALLOCATE  (rhos(dfftp%nr1x*dfftp%nr2x*dfftp%nr3x))
-  ALLOCATE  (taus( 3 , nat))
-  ALLOCATE  (ityps( nat))
-  !
-  rhor (:) = 0.0_DP
-  !
-  ! Read files, verify consistency
-  ! Note that only rho is read; all other quantities are discarded
-  !
-  DO ifile = 1, nfile
-     !
-     CALL plot_io (filepp (ifile), title, nr1sxa, nr2sxa, nr3sxa, &
-          nr1sa, nr2sa, nr3sa, nats, ntyps, ibravs, celldms, ats, gcutmsa, &
-          duals, ecuts, idum, atms, ityps, zvs, taus, rhos, - 1)
+  fileout_tmp = fileout
+  ! Plotting all files in plot_files
+  DO iplot=1, SIZE(plot_files) 
 
-     IF (ifile==1.and.plot_num==-1) THEN
-        atm=atms
-        ityp=ityps
-        zv=zvs
-        tau=taus
-     ENDIF
-     !
-     IF (nats>nat) CALL errore ('chdens', 'wrong file order? ', 1)
-     IF (dfftp%nr1x/=nr1sxa.or.dfftp%nr2x/=nr2sxa) CALL &
-          errore ('chdens', 'incompatible nr1x or nr2x', 1)
-     IF (dfftp%nr1/=nr1sa.or.dfftp%nr2/=nr2sa.or.dfftp%nr3/=nr3sa) CALL &
-          errore ('chdens', 'incompatible nr1 or nr2 or nr3', 1)
-     IF (ibravs/=ibrav) CALL errore ('chdens', 'incompatible ibrav', 1)
-     IF (abs(gcutmsa-gcutm)>1.d-8.or.abs(duals-dual)>1.d-8.or.&
-         abs(ecuts-ecutwfc)>1.d-8) &
-          CALL errore ('chdens', 'incompatible gcutm or dual or ecut', 1)
-     IF (ibravs /= 0 ) THEN
-        DO i = 1, 6
-           IF (abs( celldm (i)-celldms (i) ) > 1.0d-7 ) &
-              CALL errore ('chdens', 'incompatible celldm', 1)
-        ENDDO
-     ENDIF
-     !
-     rhor (:) = rhor (:) + weight (ifile) * rhos (:)
-  ENDDO
-  DEALLOCATE (ityps)
-  DEALLOCATE (taus)
-  DEALLOCATE (rhos)
-  !
-  ! open output file, i.e., "fileout"
-  !
-  IF (ionode) THEN
-     IF (fileout /= ' ') THEN
-        ounit = 1
-        OPEN (unit=ounit, file=fileout, form='formatted', status='unknown')
-        WRITE( stdout, '(/5x,"Writing data to be plotted to file ",a)') &
-             trim(fileout)
-     ELSE
-        ounit = 6
-     ENDIF
-  ENDIF
+    IF (SIZE(plot_files) > 1) THEN
+      filepp(1) = plot_files(iplot)
+      WRITE(fileout,"(A,A)") TRIM(plot_files(iplot)), TRIM(fileout_tmp)
+    ENDIF
 
-  ! the isostm subroutine is called only when isostm_flag is true and the
-  ! charge density is related to an STM image (5) or is read from a file 
-  IF ( (isostm_flag) .AND. ( (plot_num == -1) .OR. (plot_num == 5) ) ) THEN
-     IF ( .NOT. (iflag == 2))&
-        CALL errore ('chdens', 'isostm should have iflag = 2', 1)
-     CALL isostm_plot(rhor, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, &
-           isovalue, heightmin, heightmax, direction)     
-  END IF
-
+    ALLOCATE  (rhor(dfftp%nr1x*dfftp%nr2x*dfftp%nr3x))
+    ALLOCATE  (rhos(dfftp%nr1x*dfftp%nr2x*dfftp%nr3x))
+    ALLOCATE  (taus( 3 , nat))
+    ALLOCATE  (ityps( nat))
+    !
+    rhor (:) = 0.0_DP
+    !
+    ! Read files, verify consistency
+    ! Note that only rho is read; all other quantities are discarded
+    !
+    DO ifile = 1, nfile
+       !
+       CALL plot_io (filepp (ifile), title, nr1sxa, nr2sxa, nr3sxa, &
+            nr1sa, nr2sa, nr3sa, nats, ntyps, ibravs, celldms, ats, gcutmsa, &
+            duals, ecuts, idum, atms, ityps, zvs, taus, rhos, - 1)
   
-  !
-  !    At this point we start the calculations, first we normalize the
-  !    vectors defining the plotting region.
-  !    If these vectors have 0 length, replace them with crystal axis
-  !
-
-  m1 = sqrt (e1 (1)**2 + e1 (2)**2 + e1 (3)**2)
-  IF (abs(m1) < 1.d-6) THEN
-     e1 (:) = at(:,1)
-     m1 = sqrt (e1 (1)**2 + e1 (2)**2 + e1 (3)**2)
-  ENDIF
-  e1 (:) = e1 (:) / m1
-  !
-  m2 = sqrt (e2 (1)**2 + e2 (2)**2 + e2 (3)**2)
-  IF (abs(m2) < 1.d-6) THEN
-     e2 (:) = at(:,2)
-     m2 = sqrt (e2 (1)**2 + e2 (2)**2 + e2 (3)**2)
-  ENDIF
-  e2 (:) = e2 (:) / m2
-  !
-  m3 = sqrt (e3 (1)**2 + e3 (2)**2 + e3 (3)**2)
-  IF (abs(m3) < 1.d-6) THEN
-     e3 (:) = at(:,3)
-     m3 = sqrt (e3 (1)**2 + e3 (2)**2 + e3 (3)**2)
-  ENDIF
-  e3 (:) = e3 (:) / m3
-  !
-  ! are vectors defining the plotting region aligned along xyz ?
-  !
-  fast3d = ( e1(2) == 0.d0  .and.  e1(3) == 0.d0) .and. &
-           ( e2(1) == 0.d0  .and.  e2(3) == 0.d0) .and. &
-           ( e3(1) == 0.d0  .and.  e3(2) == 0.d0)
-  !
-  ! are crystal axis aligned along xyz ?
-  !
-  fast3d = fast3d .and. &
-       ( at(2,1) == 0.d0  .and.  at(3,1) == 0.d0) .and. &
-       ( at(1,2) == 0.d0  .and.  at(3,2) == 0.d0) .and. &
-       ( at(1,3) == 0.d0  .and.  at(2,3) == 0.d0)
-
-  fast3d = fast3d .and. (trim(interpolation) == 'fourier')
-  !
-  !    Initialise FFT for rho(r) => rho(G) conversion if needed
-  !
-  IF (.not. ( iflag == 3 .and. ( output_format == 5 .or. &
-                                 output_format == 6 .or. &
-                                 fast3d ) ) ) THEN
-     IF (plot_num==-1) THEN
-        !
-        gamma_only=.false.
-!       nproc_pool=1
-        !
-        CALL data_structure ( gamma_only )
-        CALL allocate_fft()
-        !
-        !    and rebuild G-vectors in reciprocal space
-        !
-        CALL ggen ( gamma_only, at, bg )
-        !
-        !    here we compute the fourier components of the quantity to plot
-        !
-     ELSE
-        !
-        IF (gamma_only .and. (trim(interpolation) == 'fourier')) THEN
-             WRITE(stdout,'(/"BEWARE: plot requiring G-space interpolation",&
-                            &" not implemented for Gamma only!",/, &
-                            &"SOLUTION: restart this calculation with", &
-                            &" emtpy namelist &inputpp")')
-             CALL errore ('chdens','Not implemented, please read above',1)
-        ENDIF
-        !
-     ENDIF
+       IF (ifile==1.and.plot_num==-1) THEN
+          atm=atms
+          ityp=ityps
+          zv=zvs
+          tau=taus
+       ENDIF
+       !
+       IF (nats>nat) CALL errore ('chdens', 'wrong file order? ', 1)
+       IF (dfftp%nr1x/=nr1sxa.or.dfftp%nr2x/=nr2sxa) CALL &
+            errore ('chdens', 'incompatible nr1x or nr2x', 1)
+       IF (dfftp%nr1/=nr1sa.or.dfftp%nr2/=nr2sa.or.dfftp%nr3/=nr3sa) CALL &
+            errore ('chdens', 'incompatible nr1 or nr2 or nr3', 1)
+       IF (ibravs/=ibrav) CALL errore ('chdens', 'incompatible ibrav', 1)
+       IF (abs(gcutmsa-gcutm)>1.d-8.or.abs(duals-dual)>1.d-8.or.&
+           abs(ecuts-ecutwfc)>1.d-8) &
+            CALL errore ('chdens', 'incompatible gcutm or dual or ecut', 1)
+       IF (ibravs /= 0 ) THEN
+          DO i = 1, 6
+             IF (abs( celldm (i)-celldms (i) ) > 1.0d-7 ) &
+                CALL errore ('chdens', 'incompatible celldm', 1)
+          ENDDO
+       ENDIF
+       !
+       rhor (:) = rhor (:) + weight (ifile) * rhos (:)
+    ENDDO
+    DEALLOCATE (ityps)
+    DEALLOCATE (taus)
+    DEALLOCATE (rhos)
+    !
+    ! open output file, i.e., "fileout"
+    !
+    IF (ionode) THEN
+       IF (fileout /= ' ') THEN
+          ounit = 1
+          OPEN (unit=ounit, file=fileout, form='formatted', status='unknown')
+          WRITE( stdout, '(/5x,"Writing data to be plotted to file ",a)') &
+               trim(fileout)
+       ELSE
+          ounit = 6
+       ENDIF
+    ENDIF
+  
+    ! the isostm subroutine is called only when isostm_flag is true and the
+    ! charge density is related to an STM image (5) or is read from a file 
+    IF ( (isostm_flag) .AND. ( (plot_num == -1) .OR. (plot_num == 5) ) ) THEN
+       IF ( .NOT. (iflag == 2))&
+          CALL errore ('chdens', 'isostm should have iflag = 2', 1)
+       CALL isostm_plot(rhor, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, &
+             isovalue, heightmin, heightmax, direction)     
+    END IF
+  
+    
+    !
+    !    At this point we start the calculations, first we normalize the
+    !    vectors defining the plotting region.
+    !    If these vectors have 0 length, replace them with crystal axis
+    !
+  
+    m1 = sqrt (e1 (1)**2 + e1 (2)**2 + e1 (3)**2)
+    IF (abs(m1) < 1.d-6) THEN
+       e1 (:) = at(:,1)
+       m1 = sqrt (e1 (1)**2 + e1 (2)**2 + e1 (3)**2)
+    ENDIF
+    e1 (:) = e1 (:) / m1
+    !
+    m2 = sqrt (e2 (1)**2 + e2 (2)**2 + e2 (3)**2)
+    IF (abs(m2) < 1.d-6) THEN
+       e2 (:) = at(:,2)
+       m2 = sqrt (e2 (1)**2 + e2 (2)**2 + e2 (3)**2)
+    ENDIF
+    e2 (:) = e2 (:) / m2
+    !
+    m3 = sqrt (e3 (1)**2 + e3 (2)**2 + e3 (3)**2)
+    IF (abs(m3) < 1.d-6) THEN
+       e3 (:) = at(:,3)
+       m3 = sqrt (e3 (1)**2 + e3 (2)**2 + e3 (3)**2)
+    ENDIF
+    e3 (:) = e3 (:) / m3
+    !
+    ! are vectors defining the plotting region aligned along xyz ?
+    !
+    fast3d = ( e1(2) == 0.d0  .and.  e1(3) == 0.d0) .and. &
+             ( e2(1) == 0.d0  .and.  e2(3) == 0.d0) .and. &
+             ( e3(1) == 0.d0  .and.  e3(2) == 0.d0)
+    !
+    ! are crystal axis aligned along xyz ?
+    !
+    fast3d = fast3d .and. &
+         ( at(2,1) == 0.d0  .and.  at(3,1) == 0.d0) .and. &
+         ( at(1,2) == 0.d0  .and.  at(3,2) == 0.d0) .and. &
+         ( at(1,3) == 0.d0  .and.  at(2,3) == 0.d0)
+  
+    fast3d = fast3d .and. (trim(interpolation) == 'fourier')
+    !
+    !    Initialise FFT for rho(r) => rho(G) conversion if needed
+    !
+    IF (.not. ( iflag == 3 .and. ( output_format == 5 .or. &
+                                   output_format == 6 .or. &
+                                   fast3d ) ) ) THEN
+       IF (plot_num==-1) THEN
+          !
+          gamma_only=.false.
+  !       nproc_pool=1
+          !
+          CALL data_structure ( gamma_only )
+          CALL allocate_fft()
+          !
+          !    and rebuild G-vectors in reciprocal space
+          !
+          CALL ggen ( gamma_only, at, bg )
+          !
+          !    here we compute the fourier components of the quantity to plot
+          !
+       ELSE
+          !
+          IF (gamma_only .and. (trim(interpolation) == 'fourier')) THEN
+               WRITE(stdout,'(/"BEWARE: plot requiring G-space interpolation",&
+                              &" not implemented for Gamma only!",/, &
+                              &"SOLUTION: restart this calculation with", &
+                              &" emtpy namelist &inputpp")')
+               CALL errore ('chdens','Not implemented, please read above',1)
+          ENDIF
+          !
+       ENDIF
 #if defined(__MPI)
-     ALLOCATE(aux(dfftp%nnr))
-     CALL scatter_grid(dfftp, rhor, aux)
-     psic(:) = cmplx(aux(:), 0.d0,kind=DP)
-     DEALLOCATE(aux)
+       ALLOCATE(aux(dfftp%nnr))
+       CALL scatter_grid(dfftp, rhor, aux)
+       psic(:) = cmplx(aux(:), 0.d0,kind=DP)
+       DEALLOCATE(aux)
 #else
-     psic(:) = cmplx(rhor(:), 0.d0,kind=DP)
+       psic(:) = cmplx(rhor(:), 0.d0,kind=DP)
 #endif
-     CALL fwfft ('Dense', psic, dfftp)
-     !
-     !    we store the fourier components in the array rhog
-     !
-     ALLOCATE (rhog( ngm))
-     rhog (:) = psic (nl (:) )
-     !
-  ENDIF
-  !
-  !     And now the plot (rhog in G-space, rhor in real space)
-  !
-  IF (iflag <= 1) THEN
+       CALL fwfft ('Dense', psic, dfftp)
+       !
+       !    we store the fourier components in the array rhog
+       !
+       ALLOCATE (rhog( ngm))
+       rhog (:) = psic (nl (:) )
+       !
+    ENDIF
+    !
+    !     And now the plot (rhog in G-space, rhor in real space)
+    !
+    IF (iflag <= 1) THEN
+  
+       IF (TRIM(interpolation) == 'fourier') THEN
+          CALL plot_1d (nx, m1, x0, e1, ngm, g, rhog, alat, iflag, ounit)
+       ELSE
+          CALL plot_1d_bspline (nx, m1, x0, e1, rhor, alat, iflag, ounit)
+       ENDIF
+  
+    ELSEIF (iflag == 2) THEN
+  
+       IF (TRIM(interpolation) == 'fourier') THEN
+         CALL plot_2d (nx, ny, m1, m2, x0, e1, e2, ngm, g, rhog, alat, &
+              at, nat, tau, atm, ityp, output_format, ounit)
+       ELSE
+         CALL plot_2d_bspline (nx, ny, m1, m2, x0, e1, e2, rhor, alat, &
+              at, nat, tau, atm, ityp, output_format, ounit)
+       ENDIF
+       IF (output_format == 2.and.ionode) THEN
+          WRITE (ounit, '(i4)') nat
+          WRITE (ounit, '(3f8.4,i3)') ( (tau(ipol,na), ipol=1,3), 1, na=1,nat)
+          WRITE (ounit, '(f10.6)') celldm (1)
+          WRITE (ounit, '(3(3f12.6/))') at
+       ENDIF
+  
+    ELSEIF (iflag == 3) THEN
+  
+       IF (output_format == 4.and.ionode) THEN
+  
+          ! gopenmol wants the coordinates in a separate file
+  
+          IF (fileout /= ' ') THEN
+             OPEN (unit = ounit+1, file = trim(fileout)//'.xyz', &
+                  form = 'formatted', status = 'unknown')
+             WRITE( stdout, '(5x,"Writing coordinates to file ",a)') &
+                  trim(fileout)//'.xyz'
+          ELSE
+             OPEN (unit = ounit+1, file = 'coord.xyz', &
+                  form = 'formatted', status = 'unknown')
+             WRITE( stdout, '("Writing coordinates to file coord.xyz")')
+          ENDIF
+       ENDIF
+  
+  
+       IF (output_format == 5.and.ionode) THEN
+          !
+          ! XCRYSDEN FORMAT
+          !
+          CALL xsf_struct (alat, at, nat, tau, atm, ityp, ounit)
+          CALL xsf_fast_datagrid_3d &
+               (rhor, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, at, alat, ounit)
+  
+       ELSEIF (output_format == 6.and.ionode ) THEN
+          !
+          ! GAUSSIAN CUBE FORMAT
+          !
+          IF (TRIM(interpolation) == 'fourier') THEN
+             CALL write_cubefile (alat, at, bg, nat, tau, atm, ityp, rhor, &
+               dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, ounit)
+          ELSE
+             CALL plot_3d_bspline(celldm(1), at, nat, tau, atm, ityp, rhor,&
+                  nx, ny, nz, m1, m2, m3, x0, e1, e2, e3, output_format, &
+                  ounit, rhotot)
+          END IF
+  
+       ELSEIF (ionode) THEN
+          !
+          ! GOPENMOL OR XCRYSDEN FORMAT
+          !
+          IF (fast3d) THEN
+  
+             CALL plot_fast (celldm (1), at, nat, tau, atm, ityp, &
+                 dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, dfftp%nr1, dfftp%nr2, dfftp%nr3, rhor, &
+                 bg, m1, m2, m3, x0, e1, e2, e3, output_format, ounit, &
+                 rhotot)
+          ELSE
+             IF (nx<=0 .or. ny <=0 .or. nz <=0) &
+                 CALL errore("chdens","nx,ny,nz, required",1)
+  
+             IF (TRIM(interpolation) == 'fourier') THEN
+                CALL plot_3d (celldm (1), at, nat, tau, atm, ityp, ngm, g, rhog,&
+                     nx, ny, nz, m1, m2, m3, x0, e1, e2, e3, output_format, &
+                     ounit, rhotot)
+             ELSE
+                CALL plot_3d_bspline(celldm(1), at, nat, tau, atm, ityp, rhor,&
+                     nx, ny, nz, m1, m2, m3, x0, e1, e2, e3, output_format, &
+                     ounit, rhotot)
+             ENDIF
+             !
+          ENDIF
+       ENDIF
+  
+    ELSEIF (iflag == 4) THEN
+       radius = radius / alat
+       CALL plot_2ds (nx, ny, radius, ngm, g, rhog, output_format, ounit)
+    ELSE
+  
+       CALL errore ('chdens', 'wrong iflag', 1)
+  
+    ENDIF
+    !
+    WRITE(stdout, '(5x,"Plot Type: ",a,"   Output format: ",a)') &
+         plotname(iflag), formatname(output_format)
+    !
+    IF (allocated(rhog)) DEALLOCATE(rhog)
+    DEALLOCATE(rhor)
+  
+  ENDDO
 
-     IF (TRIM(interpolation) == 'fourier') THEN
-        CALL plot_1d (nx, m1, x0, e1, ngm, g, rhog, alat, iflag, ounit)
-     ELSE
-        CALL plot_1d_bspline (nx, m1, x0, e1, rhor, alat, iflag, ounit)
-     ENDIF
-
-  ELSEIF (iflag == 2) THEN
-
-     IF (TRIM(interpolation) == 'fourier') THEN
-       CALL plot_2d (nx, ny, m1, m2, x0, e1, e2, ngm, g, rhog, alat, &
-            at, nat, tau, atm, ityp, output_format, ounit)
-     ELSE
-       CALL plot_2d_bspline (nx, ny, m1, m2, x0, e1, e2, rhor, alat, &
-            at, nat, tau, atm, ityp, output_format, ounit)
-     ENDIF
-     IF (output_format == 2.and.ionode) THEN
-        WRITE (ounit, '(i4)') nat
-        WRITE (ounit, '(3f8.4,i3)') ( (tau(ipol,na), ipol=1,3), 1, na=1,nat)
-        WRITE (ounit, '(f10.6)') celldm (1)
-        WRITE (ounit, '(3(3f12.6/))') at
-     ENDIF
-
-  ELSEIF (iflag == 3) THEN
-
-     IF (output_format == 4.and.ionode) THEN
-
-        ! gopenmol wants the coordinates in a separate file
-
-        IF (fileout /= ' ') THEN
-           OPEN (unit = ounit+1, file = trim(fileout)//'.xyz', &
-                form = 'formatted', status = 'unknown')
-           WRITE( stdout, '(5x,"Writing coordinates to file ",a)') &
-                trim(fileout)//'.xyz'
-        ELSE
-           OPEN (unit = ounit+1, file = 'coord.xyz', &
-                form = 'formatted', status = 'unknown')
-           WRITE( stdout, '("Writing coordinates to file coord.xyz")')
-        ENDIF
-     ENDIF
-
-
-     IF (output_format == 5.and.ionode) THEN
-        !
-        ! XCRYSDEN FORMAT
-        !
-        CALL xsf_struct (alat, at, nat, tau, atm, ityp, ounit)
-        CALL xsf_fast_datagrid_3d &
-             (rhor, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, at, alat, ounit)
-
-     ELSEIF (output_format == 6.and.ionode ) THEN
-        !
-        ! GAUSSIAN CUBE FORMAT
-        !
-        IF (TRIM(interpolation) == 'fourier') THEN
-           CALL write_cubefile (alat, at, bg, nat, tau, atm, ityp, rhor, &
-             dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, ounit)
-        ELSE
-           CALL plot_3d_bspline(celldm(1), at, nat, tau, atm, ityp, rhor,&
-                nx, ny, nz, m1, m2, m3, x0, e1, e2, e3, output_format, &
-                ounit, rhotot)
-        END IF
-
-     ELSEIF (ionode) THEN
-        !
-        ! GOPENMOL OR XCRYSDEN FORMAT
-        !
-        IF (fast3d) THEN
-
-           CALL plot_fast (celldm (1), at, nat, tau, atm, ityp, &
-               dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, dfftp%nr1, dfftp%nr2, dfftp%nr3, rhor, &
-               bg, m1, m2, m3, x0, e1, e2, e3, output_format, ounit, &
-               rhotot)
-        ELSE
-           IF (nx<=0 .or. ny <=0 .or. nz <=0) &
-               CALL errore("chdens","nx,ny,nz, required",1)
-
-           IF (TRIM(interpolation) == 'fourier') THEN
-              CALL plot_3d (celldm (1), at, nat, tau, atm, ityp, ngm, g, rhog,&
-                   nx, ny, nz, m1, m2, m3, x0, e1, e2, e3, output_format, &
-                   ounit, rhotot)
-           ELSE
-              CALL plot_3d_bspline(celldm(1), at, nat, tau, atm, ityp, rhor,&
-                   nx, ny, nz, m1, m2, m3, x0, e1, e2, e3, output_format, &
-                   ounit, rhotot)
-           ENDIF
-           !
-        ENDIF
-     ENDIF
-
-  ELSEIF (iflag == 4) THEN
-     radius = radius / alat
-     CALL plot_2ds (nx, ny, radius, ngm, g, rhog, output_format, ounit)
-  ELSE
-
-     CALL errore ('chdens', 'wrong iflag', 1)
-
-  ENDIF
-  !
-  WRITE(stdout, '(5x,"Plot Type: ",a,"   Output format: ",a)') &
-       plotname(iflag), formatname(output_format)
-  !
-  IF (allocated(rhog)) DEALLOCATE(rhog)
-  DEALLOCATE(rhor)
   DEALLOCATE(tau)
   DEALLOCATE(ityp)
 
@@ -1449,3 +1471,5 @@ SUBROUTINE isostm_plot(rhor, nr1x, nr2x, nr3x, &
   DEALLOCATE(image)
 
 END SUBROUTINE isostm_plot
+
+END MODULE chdens_module

@@ -7,50 +7,10 @@
 !
 !
 !-----------------------------------------------------------------------
-PROGRAM pp
-  !-----------------------------------------------------------------------
-  !
-  !    Program for data analysis and plotting. The two basic steps are:
-  !    1) read the output file produced by pw.x, extract and calculate
-  !       the desired quantity (rho, V, ...)
-  !    2) write the desired quantity to file in a suitable format for
-  !       various types of plotting and various plotting programs
-  !    The two steps can be performed independently. Intermediate data
-  !    can be saved to file in step 1 and read from file in step 2.
-  !
-  !    DESCRIPTION of the INPUT : see file Doc/INPUT_PP.*
-  !
-  USE io_global,  ONLY : ionode
-  USE mp_global,  ONLY : mp_startup
-  USE environment,ONLY : environment_start, environment_end
-
-  !
-  IMPLICIT NONE
-  !
-  CHARACTER(len=256) :: filplot
-  INTEGER :: plot_num
-  !
-  ! initialise environment
-  !
-#if defined(__MPI)
-  CALL mp_startup ( )
-#endif
-  CALL environment_start ( 'POST-PROC' )
-  !
-  IF ( ionode )  CALL input_from_file ( )
-  !
-  CALL extract (filplot, plot_num)
-  !
-  CALL chdens (filplot, plot_num)
-  !
-  CALL environment_end ( 'POST-PROC' )
-  !
-  CALL stop_pp()
-  !
-END PROGRAM pp
-!
+MODULE pp_module
+CONTAINS
 !-----------------------------------------------------------------------
-SUBROUTINE extract (filplot,plot_num)
+SUBROUTINE extract (plot_files,plot_num)
   !-----------------------------------------------------------------------
   !
   !    This subroutine reads the data for the output file produced by pw.x
@@ -65,7 +25,7 @@ SUBROUTINE extract (filplot,plot_num)
   USE ions_base, ONLY : nat, ntyp=>nsp, ityp, tau
   USE gvect
   USE fft_base,  ONLY : dfftp
-  USE klist,     ONLY : two_fermi_energies
+  USE klist,     ONLY : two_fermi_energies, degauss
   USE vlocal,    ONLY : strf
   USE io_files,  ONLY : tmp_dir, prefix
   USE io_global, ONLY : ionode, ionode_id
@@ -76,25 +36,35 @@ SUBROUTINE extract (filplot,plot_num)
   USE mp,        ONLY : mp_bcast
   USE mp_world,  ONLY : world_comm
   USE constants, ONLY : rytoev
+  USE parameters, ONLY : npk
+  USE io_global, ONLY : stdout
 
   IMPLICIT NONE
   !
   CHARACTER(LEN=256), EXTERNAL :: trimcheck
   !
-  CHARACTER(len=256), INTENT(out) :: filplot
+  CHARACTER(len=256), DIMENSION(:), ALLOCATABLE, INTENT(out) :: plot_files
   INTEGER, INTENT(out) :: plot_num
 
-  INTEGER :: kpoint, kband, spin_component, ios
+  CHARACTER (len=2), DIMENSION(0:3) :: spin_desc = &
+       (/ '  ', '_X', '_Y', '_Z' /)
+
+  INTEGER :: kpoint(2), kband(2), spin_component(3), ios
   LOGICAL :: lsign, needwf
 
   REAL(DP) :: emin, emax, sample_bias, z, dz, epsilon
+  
+  REAL(DP) :: degauss_ldos, delta_e
+  CHARACTER(len=256) :: filplot
+  INTEGER :: plot_nkpt, plot_nbnd, plot_nspin, nplots
+  INTEGER :: iplot, ikpt, ibnd, ispin
+
   ! directory for temporary files
   CHARACTER(len=256) :: outdir
 
   NAMELIST / inputpp / outdir, prefix, plot_num, sample_bias, &
-       spin_component, z, dz, emin, emax, kpoint, kband, &
-       filplot, lsign, epsilon
-
+      spin_component, z, dz, emin, emax, delta_e, degauss_ldos, kpoint, kband, &
+      filplot, lsign, epsilon
   !
   !   set default values for variables in namelist
   !
@@ -103,6 +73,8 @@ SUBROUTINE extract (filplot,plot_num)
   IF ( trim( outdir ) == ' ' ) outdir = './'
   filplot = 'tmp.pp'
   plot_num = -1
+  kpoint(2) = 0
+  kband(2) = 0
   spin_component = 0
   sample_bias = 0.01d0
   z = 1.d0
@@ -110,7 +82,9 @@ SUBROUTINE extract (filplot,plot_num)
   lsign=.false.
   emin = -999.0d0
   emax = +999.0d0
+  delta_e=0.1d0
   epsilon=1.d0
+  degauss_ldos=-999.0d0
   !
   ios = 0
   !
@@ -139,6 +113,8 @@ SUBROUTINE extract (filplot,plot_num)
   CALL mp_bcast( dz, ionode_id, world_comm )
   CALL mp_bcast( emin, ionode_id, world_comm )
   CALL mp_bcast( emax, ionode_id, world_comm )
+  CALL mp_bcast( degauss_ldos, ionode_id, world_comm )
+  CALL mp_bcast( delta_e, ionode_id, world_comm )
   CALL mp_bcast( kband, ionode_id, world_comm )
   CALL mp_bcast( kpoint, ionode_id, world_comm )
   CALL mp_bcast( filplot, ionode_id, world_comm )
@@ -153,13 +129,13 @@ SUBROUTINE extract (filplot,plot_num)
           'Wrong plot_num', abs (plot_num) )
 
   IF (plot_num == 7 .or. plot_num == 13 .or. plot_num==18) THEN
-     IF  (spin_component < 0 .or. spin_component > 3) CALL errore &
+     IF  (spin_component(1) < 0 .or. spin_component(1) > 3) CALL errore &
           ('postproc', 'wrong spin_component', 1)
   ELSEIF (plot_num == 10) THEN
-     IF  (spin_component < 0 .or. spin_component > 2) CALL errore &
+     IF  (spin_component(1) < 0 .or. spin_component(1) > 2) CALL errore &
           ('postproc', 'wrong spin_component', 2)
   ELSE
-     IF (spin_component < 0 ) CALL errore &
+     IF (spin_component(1) < 0 ) CALL errore &
          ('postproc', 'wrong spin_component', 3)
   ENDIF
   !
@@ -182,18 +158,128 @@ SUBROUTINE extract (filplot,plot_num)
      CALL errore('postproc',&
      'Post-processing with constrained magnetization is not available yet',1)
   !
-  ! The following line sets emax to its default value if not set
-  ! It is done here because Ef must be read from file
-  !
-  IF (emax == +999.0d0) emax = ef
+  ! Set default values for emin, emax, degauss_ldos
+  ! Done here because ef, degauss must be read from file
+  IF (emin > emax) CALL errore('postproc','emin > emax',0)
   IF (plot_num == 10) THEN
-     emin = emin / rytoev
-     emax = emax / rytoev
+      IF (emax == +999.0d0) emax = ef * rytoev
+  ELSEIF (plot_num == 3) THEN
+      IF (emin == -999.0d0) emin = ef * rytoev
+      IF (emax == +999.0d0) emax = ef * rytoev
+      IF (degauss_ldos == -999.0d0) THEN
+          WRITE(stdout, &
+              '(/5x,"degauss_ldos not set, defaults to degauss = ",f6.4, " eV")') &
+             degauss * rytoev
+          degauss_ldos = degauss * rytoev
+      ENDIF
+  ENDIF
+  ! transforming all back to Ry units
+  emin = emin / rytoev
+  emax = emax / rytoev
+  delta_e = delta_e / rytoev
+  degauss_ldos = degauss_ldos / rytoev
+
+  ! Number of output files depends on input
+  nplots = 1
+  IF (plot_num == 3) THEN
+     nplots=(emax-emin)/delta_e + 1
+  ELSEIF (plot_num == 7) THEN
+      IF (kpoint(2) == 0)  kpoint(2) = kpoint(1)
+      plot_nkpt = kpoint(2) - kpoint(1) + 1
+      IF (kband(2) == 0)  kband(2) = kband(1)
+      plot_nbnd = kband(2) - kband(1) + 1
+      IF (spin_component(2) == 0)  spin_component(2) = spin_component(1)
+      plot_nspin = spin_component(2) - spin_component(1) + 1
+
+      nplots = plot_nbnd * plot_nkpt * plot_nspin
+  ENDIF
+  ALLOCATE( plot_files(nplots) )
+  plot_files(1) = filplot
+
+  ! 
+  ! First handle plot_nums with multiple calls to punch_plot
+  !
+  IF (nplots > 1 .AND. plot_num == 3) THEN
+  ! Local density of states on energy grid of spacing delta_e within [emin, emax]
+    DO iplot=1,nplots
+      WRITE(plot_files(iplot),'(A, I0.3)') TRIM(filplot), iplot
+      CALL punch_plot (TRIM(plot_files(iplot)), plot_num, sample_bias, z, dz, &
+        emin, degauss_ldos, kpoint, kband, spin_component, lsign, epsilon)
+      emin=emin+delta_e
+    ENDDO
+  ELSEIF (nplots > 1 .AND. plot_num == 7) THEN
+  ! Plot multiple KS orbitals in one go
+    iplot = 1
+    DO ikpt=kpoint(1), kpoint(2)
+      DO ibnd=kband(1), kband(2)
+        DO ispin=spin_component(1), spin_component(2)
+          WRITE(plot_files(iplot),"(A,A,I0.3,A,I0.3,A)") &
+            TRIM(filplot), "_K", ikpt, "_B", ibnd, TRIM(spin_desc(ispin))
+          CALL punch_plot (TRIM(plot_files(iplot)), plot_num, sample_bias, z, dz, &
+            emin, emax, ikpt, ibnd, ispin, lsign, epsilon)
+          iplot = iplot + 1
+        ENDDO
+      ENDDO
+    ENDDO
+
+  ELSE
+  ! Single call to punch_plot
+    IF (plot_num == 3) THEN
+      CALL punch_plot (filplot, plot_num, sample_bias, z, dz, &
+           emin, degauss_ldos, kpoint, kband, spin_component, lsign, epsilon)
+     ELSE
+      CALL punch_plot (filplot, plot_num, sample_bias, z, dz, &
+         emin, emax, kpoint, kband, spin_component, lsign, epsilon)
+     ENDIF
+
   ENDIF
   !
-  !   Now do whatever you want
-  !
-  CALL punch_plot (filplot, plot_num, sample_bias, z, dz, &
-       emin, emax, kpoint, kband, spin_component, lsign, epsilon)
-  !
 END SUBROUTINE extract
+
+END MODULE pp_module
+!
+!-----------------------------------------------------------------------
+PROGRAM pp
+  !-----------------------------------------------------------------------
+  !
+  !    Program for data analysis and plotting. The two basic steps are:
+  !    1) read the output file produced by pw.x, extract and calculate
+  !       the desired quantity (rho, V, ...)
+  !    2) write the desired quantity to file in a suitable format for
+  !       various types of plotting and various plotting programs
+  !    The two steps can be performed independently. Intermediate data
+  !    can be saved to file in step 1 and read from file in step 2.
+  !
+  !    DESCRIPTION of the INPUT : see file Doc/INPUT_PP.*
+  !
+  USE io_global,  ONLY : ionode
+  USE mp_global,  ONLY : mp_startup
+  USE environment,ONLY : environment_start, environment_end
+  USE chdens_module, ONLY : chdens
+  USE pp_module, ONLY : extract
+
+  !
+  IMPLICIT NONE
+  !
+  !CHARACTER(len=256) :: filplot
+  CHARACTER(len=256), DIMENSION(:), ALLOCATABLE :: plot_files
+  INTEGER :: plot_num
+  !
+  ! initialise environment
+  !
+#if defined(__MPI)
+  CALL mp_startup ( )
+#endif
+  CALL environment_start ( 'POST-PROC' )
+  !
+  IF ( ionode )  CALL input_from_file ( )
+  !
+  CALL extract (plot_files, plot_num)
+  !
+  CALL chdens (plot_files, plot_num)
+  !
+  CALL environment_end ( 'POST-PROC' )
+  !
+  CALL stop_pp()
+  !
+END PROGRAM pp

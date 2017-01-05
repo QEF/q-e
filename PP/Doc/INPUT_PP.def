@@ -6,8 +6,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pp.x 
       @b {Purpose of pp.x:} data analysis and plotting.
     
       The code performs two steps:
-      (1) reads the output file produced by pw.x, extract and calculate
-          the desired quantity (rho, V, ...)
+      (1) reads the output produced by pw.x, extracts and calculates
+          the desired quantity/quantities (rho, V, ...)
       (2) writes the desired quantity to file in a suitable format for
           various types of plotting and various plotting programs
 
@@ -71,7 +71,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pp.x 
 
 		   2  = local ionic potential V_bare
 
-		   3  = local density of states at e_fermi
+		   3  = local density of states at specific energy or grid of energies
                         (number of states per volume, in bohr^3,
                          per energy unit, in Ry) 
 
@@ -91,7 +91,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pp.x 
 
 		   8  = electron localization function (ELF)
 
-                   9  = charge density minus superposition of atomic densities
+           9  = charge density minus superposition of atomic densities
 
 		   10 = integrated local density of states (ILDOS)
                         from @ref emin to @ref emax (emin, emax in eV)
@@ -107,15 +107,15 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pp.x 
                         can be performed for PAW calculations only 
                         requires a very dense real-space grid!
 
-                   18 = The exchange and correlation magnetic field in
+           18 = The exchange and correlation magnetic field in
                         the noncollinear case
 
-                   19 = Reduced density gradient 
+           19 = Reduced density gradient 
                         (J. Chem. Theory Comput. 7, 625 (2011))
                         Set the isosurface between 0.3 and 0.6 to plot the 
                         non-covalent interactions (see also plot_num = 20)
 
-                   20 = Product of the electron density (charge) and the second 
+           20 = Product of the electron density (charge) and the second 
                         eigenvalue of the electron-density Hessian matrix;
                         used to colorize the RDG plot (plot_num = 19)
 
@@ -156,6 +156,51 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pp.x 
 		    }
 		}
 	    }
+
+	    elsewhen -test "plot_num=3" {
+		label { 
+		    Options for LDOS (plot_num=3): 
+            LDOS is plotted on grid [emin, emax] with spacing delta_e.
+		}
+		
+		var emin -type REAL {
+		    default e_fermi
+		    info {
+			lower boundary of energy grid (in eV).
+
+            Defaults to Fermi energy.
+		    }
+		}
+		
+		var emax -type REAL {
+	        status OPTIONAL 
+		    info {
+			upper boundary of energy grid (in eV).
+
+            If not specified, LDOS is computed just for energy @ref emin
+		    }
+		}
+
+		var delta_e -type REAL {
+		    default 0.1
+	        status OPTIONAL 
+		    info {
+			spacing of energy grid (in eV).
+			i.e. compute ILDOS from @ref emin to @ref emax
+		    }
+		}
+
+		var degauss_ldos -type REAL {
+		    default {degauss (converted to eV)}
+	        status OPTIONAL 
+		    info {
+			broadening of energy levels for LDOS (in eV).
+
+            Defaults to broadening specified for electronic smearing
+            of the calculation.
+		    }
+		}
+        }
 	
 	    elsewhen -test "plot_num=5" {
 		label {
@@ -174,18 +219,23 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pp.x 
 		label { 
 		    Options for |psi|^2 (plot_num=7): 
 		}
-	    
-		var kpoint -type INTEGER {
+
+        dimension kpoint -start 1 -end 2 -type INTEGER {
 		    info {
 			Unpolarized and noncollinear case:   k-point to be plotted
 			LSDA:  k-point and spin polarization to be plotted
 			(spin-up and spin-down correspond to different k-points!)
+
+            When both kpoint(1) and kpoint(2) are specified, all
+            kpoints in the range [kpoint(1),kpoint(2)] are plotted.
 		    }
 		}
 		
-		var kband -type INTEGER {
+        dimension kband -start 1 -end 2 -type INTEGER {
 		    info { 
-			band to be plotted 
+			band to be plotted .
+            When both kband(1) and kband(2) are specified, all
+            bands in the range [kband(1),kband(2)] are plotted.
 		    }
 		}
 		
@@ -195,7 +245,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pp.x 
 		    }
 		}
 		
-		var spin_component -type INTEGER {
+        dimension spin_component -start 1 -end 2 -type INTEGER {
+            default 0
+            status OPTIONAL
 		    info {
 			Noncollinear case only: 
 			plot the contribution of the given state to the charge 
@@ -207,6 +259,10 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pp.x 
                            3 = z.
 
 			Ignored in unpolarized or LSDA case
+
+            When both spin_component(1) and spin_component(2) are specified, all
+            components in the range [spin_component(1),spin_component(2)] are 
+            plotted.
 		    }
 		}
 	    }
