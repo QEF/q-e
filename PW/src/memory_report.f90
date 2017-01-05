@@ -42,7 +42,7 @@ SUBROUTINE memory_report()
   !
   IMPLICIT NONE
   !
-  INTEGER, PARAMETER :: Mb=1024*1024
+  INTEGER, PARAMETER :: MB=1024*1024
   INTEGER :: g_fact, mix_type_size, scf_type_size
   INTEGER :: nk, nbnd_l, npwx_g, npwx_l, ngxx_g, nexx_l
   !
@@ -152,8 +152,8 @@ SUBROUTINE memory_report()
   totram = maxram * nproc_image
   
   WRITE( stdout, '(/5x,"Estimated max dynamical RAM per process > ", &
-       & F10.2,"Mb")' ) maxram/Mb
+       & F10.2,"MB")' ) maxram/MB
   IF ( nproc_image > 1) WRITE( stdout, '(/5x, &
-     & "Estimated total allocated dynamical RAM > ",F10.2,"Mb")' ) totram/Mb
+     & "Estimated total allocated dynamical RAM > ",F10.2,"MB")' ) totram/MB
   !
 END subroutine memory_report
