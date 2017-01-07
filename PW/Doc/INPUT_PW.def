@@ -1883,10 +1883,12 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             info {
                 For Davidson diagonalization: dimension of workspace
                 (number of wavefunction packets, at least 2 needed).
-                A larger value may yield a somewhat faster algorithm
-                but uses more memory. The opposite holds for smaller values.
+                A larger value may yield a smaller number of iterations in
+                the algorithm but uses more memory and more CPU time in 
+                subspace diagonalization.
                 Try @ref diago_david_ndim=2 if you are tight on memory or if
-                your job is large: the speed penalty is often negligible
+                the time spent in subspace diagonalization (cdiaghg/rdiaghg)
+                is significant compared to the time spent in h_psi
             }
         }
 
