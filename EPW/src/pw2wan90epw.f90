@@ -146,6 +146,8 @@ SUBROUTINE setup_nnkp (  )
   USE constants_epw,    ONLY : bohr
 !  USE w90_parameters,   ONLY : postproc_setup
   USE mp_global,        ONLY : intra_pool_comm, mp_sum
+  USE w90_parameters,   ONLY : postproc_setup
+  USE w90_io,           ONLY : post_proc_flag
   ! 
   implicit none
   real(DP) :: g_(3), gg_
@@ -249,7 +251,9 @@ SUBROUTINE setup_nnkp (  )
   ENDDO
 
   IF (meta_ionode) THEN
-!   postproc_setup = .true.
+    !postproc_setup = .true.
+    post_proc_flag = .true.
+    !print*,'postproc_setup ',postproc_setup
     CALL wannier_setup(seedname2, mp_grid, iknum,      &  ! input
            rlatt, glatt, kpt_latt, nbnd,                 &  ! input
            nat, atsym, atcart, .false., noncolin,        &  ! input

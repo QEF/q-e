@@ -9,7 +9,7 @@ include make.libs
 
 IFLAGS   = -I../../include  
 MODFLAGS = -I../../iotk/src -I../../Modules -I../../LAXlib -I../../iotk/src \
-	   -I../../FFTXlib -I../../PW/src -I../../LR_Modules -I../../PHonon/PH -I../../PP/src/ -I.
+	   -I../../FFTXlib -I../../PW/src -I../../LR_Modules -I../../PHonon/PH -I../../PP/src/ -I. -I../../wannier90-2.1.0/src/obj/
 
 #
 # The above is in alphabetical order except when order matter during compilation
@@ -148,7 +148,7 @@ ph :
 	cd ../../ ; make ph
 
 wannier :
-	cd ../../ ; make w90
+	cd ../../ ; make w90 ; cd wannier90-2.1.0/ ; make lib
 
 pp : 
 	cd ../../ ; make pp
