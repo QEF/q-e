@@ -26,7 +26,7 @@ YAMBO=yambo-stable
 YAMBO_URL=http://www.yambo-code.org/files/yambo-stable-latest.tar.gz
 #
 # Package maintainer: 
-W90=wannier90-2.0.1
+W90=wannier90-2.1.0
 W90_URL=http://www.wannier.org/code/$(W90).tar.gz
 #
 # Package maintainer: Layla Martin-Samos

@@ -86,7 +86,7 @@ configure-gipaw: touch-dummy
 
 w90: uncompress-w90 configure-w90
 	if test -d ../W90; then \
-	cd ../W90; $(MAKE) all || exit 1; cd ../bin; ln -fs ../W90/wannier90.x . ; fi
+	cd ../W90; $(MAKE) || exit 1; cd ../bin; ln -fs ../W90/wannier90.x . ; fi
 	-(cd ../bin; ln -fs ../W90/wannier90.x .)
 	touch make-w90
 
@@ -97,7 +97,7 @@ uncompress-w90: touch-dummy
 configure-w90: touch-dummy
 	cd ../W90 ; \
 	if (test -e ../install/make_wannier90.sys) || (test -d ../W90); then \
-	(cp ../install/make_wannier90.inc ../W90/make.sys); fi 
+	(cp ../install/make_wannier90.inc ../W90/make.inc); fi 
 	touch ./configure-w90
 
 ###########################################################
