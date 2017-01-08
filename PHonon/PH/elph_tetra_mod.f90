@@ -136,7 +136,7 @@ SUBROUTINE elph_tetra_lambda()
   CALL symdyn_munu_new (el_ph_sum, u, xq, s, invs, rtau, irt,  at, bg, nsymq, nat, irotmq, minus_q)
   !
   dosef(1:2) = 0.0_dp
-  CALL opt_tetra_dos_t (et_col, nspin, nbnd, nkstot, ntetra, tetra, ef, dosef)
+  CALL opt_tetra_dos_t (et_col, nspin, nbnd, nkstot, ef, dosef)
   !
   dosef(1:2) = 0.5_dp * dosef(1:2)
   !
@@ -227,7 +227,7 @@ SUBROUTINE elph_tetra_delta1(nbnd_fs,iq,tfst,tlst,et_col,wght)
   USE wvfct, ONLY: nbnd
   USE klist,  ONLY: nkstot
   USE lsda_mod,   ONLY : nspin
-  USE ktetra, ONLY : tetra, ntetra, wlsm
+  USE ktetra, ONLY : tetra, ntetra, nntetra, wlsm
   !
   INTEGER,INTENT(IN) :: nbnd_fs, iq, tfst, tlst
   REAL(dp),INTENT(IN) :: et_col(nbnd, nkstot)
@@ -259,7 +259,7 @@ SUBROUTINE elph_tetra_delta1(nbnd_fs,iq,tfst,tlst,et_col,wght)
         !
         ei0(1:4, 1:nbnd_fs) = 0.0_dp
         ej0(1:4, 1:nbnd_fs) = 0.0_dp
-        DO ii = 1, 20
+        DO ii = 1, nntetra
            !
            ik = tetra(ii, nt) + nk
            DO ibnd = 1, nbnd_fs
@@ -357,7 +357,7 @@ SUBROUTINE elph_tetra_delta1(nbnd_fs,iq,tfst,tlst,et_col,wght)
            !
         END DO
         !
-        DO ii = 1, 20
+        DO ii = 1, nntetra
            !
            ik = tetra(ii, nt) + nk
            DO jj = 1, 4
@@ -371,8 +371,10 @@ SUBROUTINE elph_tetra_delta1(nbnd_fs,iq,tfst,tlst,et_col,wght)
      !
   END DO ! ns
   !
-  wght(1:nbnd_fs,1:nbnd_fs,1:nkstot) = wght(1:nbnd_fs,1:nbnd_fs,1:nkstot) / REAL(ntetra, dp)
-  IF(nspin == 1) wght(1:nbnd_fs,1:nbnd_fs,1:nkstot) = wght(1:nbnd_fs,1:nbnd_fs,1:nkstot) * 2.0_dp
+  wght(1:nbnd_fs,1:nbnd_fs,1:nkstot) = wght(1:nbnd_fs,1:nbnd_fs,1:nkstot) &
+       / REAL(ntetra, dp)
+  IF(nspin == 1) wght(1:nbnd_fs,1:nbnd_fs,1:nkstot) = 2.0_dp * &
+                     wght(1:nbnd_fs,1:nbnd_fs,1:nkstot)
   !
   CALL mp_sum(wght, intra_image_comm)
   !
@@ -542,7 +544,7 @@ SUBROUTINE elph_tetra_gamma()
   END DO
   !
   dosef(1:2) = 0.0_dp
-  CALL opt_tetra_dos_t (et_col, nspin, nbnd, nkstot, ntetra, tetra, ef, dosef)
+  CALL opt_tetra_dos_t (et_col, nspin, nbnd, nkstot, ef, dosef)
   !
   dosef(1:2) = 0.5_dp * dosef(1:2)
   !
@@ -635,7 +637,7 @@ SUBROUTINE elph_tetra_step1(nbnd_fs,iq,tfst,tlst,et_col,wght)
   USE wvfct, ONLY: nbnd
   USE klist,  ONLY: nkstot
   USE lsda_mod,   ONLY : nspin
-  USE ktetra, ONLY : ntetra, tetra, wlsm
+  USE ktetra, ONLY : ntetra, tetra, nntetra, wlsm
   !
   INTEGER,INTENT(IN) :: nbnd_fs, iq, tfst, tlst
   REAL(dp),INTENT(IN) :: et_col(nbnd, nkstot)
@@ -667,7 +669,7 @@ SUBROUTINE elph_tetra_step1(nbnd_fs,iq,tfst,tlst,et_col,wght)
         !
         ei0(1:4, 1:nbnd_fs) = 0.0_dp
         ej0(1:4, 1:nbnd_fs) = 0.0_dp
-        DO ii = 1, 20
+        DO ii = 1, nntetra
            !
            ik = tetra(ii, nt) + nk
            DO ibnd = 1, nbnd_fs
@@ -874,7 +876,7 @@ SUBROUTINE elph_tetra_step1(nbnd_fs,iq,tfst,tlst,et_col,wght)
            !
         END DO ! ibnd
         !
-        DO ii = 1, 20
+        DO ii = 1, nntetra
            !
            ik = tetra(ii, nt) + nk
            !
