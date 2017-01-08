@@ -17,12 +17,10 @@ SUBROUTINE poolscatter( length, nkstot, f_in, nks, f_out )
   ! ... f_in(length,nkstot) contains data for all "nkstot" k-points
   ! ... On output: f_out(length,nks) contains the data for the "nks" k-point
   ! ... belonging to the current pool. f_in and f_out may coincide.
-  !
-  ! FIXME: Quick-and-dirty implementation; does not behave in the same way
-  ! FIXME: for parallel and non-parallel cases if f_in and f_out differ;
-  ! FIXME: It shouldn't broadcast the first proc, just distribute each proc
-  ! FIXME: of the first pool to each corresponding proc of other pools
-  ! ... 
+  ! FIXME: The copy from f_in to f_out should be made safer if f_in=f_out
+  ! FIXME: Quick-and-dirty implementation: shouldn't broadcast the contents of
+  ! FIXME: the first processor, just distribute the content of each processor
+  ! FIXME: of the first pool to each corresponding processors of other pools
   !
   USE kinds,     ONLY : DP
   USE mp_pools,  ONLY : intra_pool_comm, inter_pool_comm, &
@@ -40,17 +38,17 @@ SUBROUTINE poolscatter( length, nkstot, f_in, nks, f_out )
   REAL(DP), INTENT(OUT) :: f_out(length,nks)
   ! output ( only for k-points of mypool )
   !
-#if defined (__MPI)
-  !
   INTEGER :: rest, nbase
-  ! the rest of the integer division nkstot / npo
+  ! the rest of the integer division nkstot / npool
   ! the position in the original list
   !
   ! ... copy from the first node of the first pool
   ! ... to the first node of all the other pools
   !
+#if defined (__MPI)
   IF ( me_pool == root_pool ) &
      CALL mp_bcast( f_in, root_pool, inter_pool_comm )
+#endif
   !
   ! ... distribute the vector on the first node of each pool
   !
@@ -64,8 +62,8 @@ SUBROUTINE poolscatter( length, nkstot, f_in, nks, f_out )
   !
   ! ... copy from the first proc of a pool to the other procs of the same pool
   !
+#if defined (__MPI)
   CALL mp_bcast( f_out, root_pool, intra_pool_comm )
-  !
 #endif
   !
   RETURN
