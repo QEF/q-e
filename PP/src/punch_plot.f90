@@ -8,7 +8,7 @@
 !
 !-----------------------------------------------------------------------
 SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
-     emin, emax, kpoint, kband, spin_component, lsign, epsilon)
+     emin, emax, kpoint, kband, spin_component, lsign)
   !-----------------------------------------------------------------------
   !
   !     This subroutine writes on output several quantities
@@ -44,7 +44,7 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   INTEGER, INTENT(IN) :: plot_num, kpoint, kband, spin_component
   LOGICAL, INTENT(IN) :: lsign
   REAL(DP), INTENT(IN) :: sample_bias, z, dz, &
-      emin, emax, epsilon
+      emin, emax
   REAL(DP) :: dummy, charge
   INTEGER :: is, ipol, istates
 #if defined(__MPI)
@@ -242,8 +242,9 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
 
   ELSEIF (plot_num == 14 .or. plot_num == 15 .or. plot_num == 16 ) THEN
 
-     ipol = plot_num - 13
-     CALL polarization ( spin_component, ipol, epsilon, raux )
+     CALL errore('punch_plot','polarization no longer implemented',1)
+     ! ipol = plot_num - 13
+     ! CALL polarization ( spin_component, ipol, epsilon, raux )
 
   ELSEIF (plot_num == 17 .or. plot_num == 21) THEN
      WRITE(stdout, '(7x,a)') "Reconstructing all-electron valence charge."
@@ -313,53 +314,3 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   DEALLOCATE (raux)
   RETURN
 END SUBROUTINE punch_plot
-
-SUBROUTINE polarization ( spin_component, ipol, epsilon, raux )
-  !
-  USE kinds,     ONLY : DP
-  USE constants, ONLY : fpi
-  USE fft_base,  ONLY: dfftp
-  USE fft_interfaces, ONLY : fwfft, invfft
-  USE lsda_mod,  ONLY : nspin
-  USE gvect,     ONLY : gstart, ngm, nl, nlm, g, gg
-  USE scf, ONLY: rho
-  USE control_flags,    ONLY : gamma_only
-  USE wavefunctions_module,  ONLY: psic
-  !
-  IMPLICIT NONE
-  INTEGER :: spin_component, ipol, ig
-  REAL(DP) :: epsilon, raux ( dfftp%nnr)
-  !
-  IF (ipol < 1 .or. ipol > 3) CALL errore('polarization', &
-       'wrong component',1)
-  !
-  IF (spin_component == 0) THEN
-     IF (nspin == 1 .or. nspin == 4 ) THEN
-        psic(:) = cmplx(rho%of_r(:,1), 0.d0,kind=DP)
-     ELSEIF (nspin == 2) THEN
-        psic(:) = cmplx(rho%of_r(:,1) + rho%of_r(:,2), 0.d0,kind=DP)
-     ENDIF
-  ELSE
-     IF (spin_component > nspin .or. spin_component < 1) &
-          CALL errore('polarization', 'wrong spin component',1)
-     psic(:) = cmplx(rho%of_r(:,spin_component), 0.d0,kind=DP)
-  ENDIF
-  !
-  !   transform to G space
-  !
-  CALL fwfft ('Dense', psic, dfftp)
-  !
-  IF (gstart == 2) psic (1) = (epsilon - 1.d0) / fpi
-  DO ig = gstart, ngm
-     psic (nl (ig) ) = psic (nl (ig) ) * g (ipol, ig) / gg (ig) &
-       / (0.d0, 1.d0)
-     IF (gamma_only) psic (nlm(ig) ) = conjg ( psic (nl (ig) ) )
-  ENDDO
-  !
-  CALL invfft ('Dense', psic, dfftp)
-  !
-  raux (:) =  dble (psic (:) )
-  !
-  RETURN
-  !
-END SUBROUTINE polarization

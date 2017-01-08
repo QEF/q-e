@@ -54,7 +54,7 @@ SUBROUTINE extract (plot_files,plot_num)
   INTEGER :: kpoint(2), kband(2), spin_component(3), ios
   LOGICAL :: lsign, needwf
 
-  REAL(DP) :: emin, emax, sample_bias, z, dz, epsilon
+  REAL(DP) :: emin, emax, sample_bias, z, dz
   
   REAL(DP) :: degauss_ldos, delta_e
   CHARACTER(len=256) :: filplot
@@ -66,7 +66,7 @@ SUBROUTINE extract (plot_files,plot_num)
 
   NAMELIST / inputpp / outdir, prefix, plot_num, sample_bias, &
       spin_component, z, dz, emin, emax, delta_e, degauss_ldos, kpoint, kband, &
-      filplot, lsign, epsilon
+      filplot, lsign
   !
   !   set default values for variables in namelist
   !
@@ -85,7 +85,6 @@ SUBROUTINE extract (plot_files,plot_num)
   emin = -999.0d0
   emax = +999.0d0
   delta_e=0.1d0
-  epsilon=1.d0
   degauss_ldos=-999.0d0
   !
   ios = 0
@@ -121,7 +120,6 @@ SUBROUTINE extract (plot_files,plot_num)
   CALL mp_bcast( kpoint, ionode_id, world_comm )
   CALL mp_bcast( filplot, ionode_id, world_comm )
   CALL mp_bcast( lsign, ionode_id, world_comm )
-  CALL mp_bcast( epsilon, ionode_id, world_comm )
   !
   ! no task specified: do nothing and return
   !
@@ -209,7 +207,7 @@ SUBROUTINE extract (plot_files,plot_num)
     DO iplot=1,nplots
       WRITE(plot_files(iplot),'(A, I0.3)') TRIM(filplot), iplot
       CALL punch_plot (TRIM(plot_files(iplot)), plot_num, sample_bias, z, dz, &
-        emin, degauss_ldos, kpoint, kband, spin_component, lsign, epsilon)
+        emin, degauss_ldos, kpoint, kband, spin_component, lsign)
       emin=emin+delta_e
     ENDDO
   ELSEIF (nplots > 1 .AND. plot_num == 7) THEN
@@ -221,7 +219,7 @@ SUBROUTINE extract (plot_files,plot_num)
           WRITE(plot_files(iplot),"(A,A,I0.3,A,I0.3,A)") &
             TRIM(filplot), "_K", ikpt, "_B", ibnd, TRIM(spin_desc(ispin))
           CALL punch_plot (TRIM(plot_files(iplot)), plot_num, sample_bias, z, dz, &
-            emin, emax, ikpt, ibnd, ispin, lsign, epsilon)
+            emin, emax, ikpt, ibnd, ispin, lsign)
           iplot = iplot + 1
         ENDDO
       ENDDO
@@ -230,11 +228,11 @@ SUBROUTINE extract (plot_files,plot_num)
   ELSE
   ! Single call to punch_plot
     IF (plot_num == 3) THEN
-      CALL punch_plot (filplot, plot_num, sample_bias, z, dz, &
-           emin, degauss_ldos, kpoint, kband, spin_component, lsign, epsilon)
+       CALL punch_plot (filplot, plot_num, sample_bias, z, dz, &
+           emin, degauss_ldos, kpoint, kband, spin_component, lsign)
      ELSE
-      CALL punch_plot (filplot, plot_num, sample_bias, z, dz, &
-         emin, emax, kpoint, kband, spin_component, lsign, epsilon)
+       CALL punch_plot (filplot, plot_num, sample_bias, z, dz, &
+          emin, emax, kpoint, kband, spin_component, lsign)
      ENDIF
 
   ENDIF
