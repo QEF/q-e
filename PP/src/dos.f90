@@ -31,7 +31,7 @@ PROGRAM do_dos
   USE mp_global,     ONLY : mp_startup
   USE environment,   ONLY : environment_start, environment_end
   ! following modules needed for generation of tetrahedra
-  USE ktetra,     ONLY : ntetra, tetra, tetra_type, tetra_init, &
+  USE ktetra,     ONLY : tetra, tetra_type, tetra_init, tetra_dos_t, &
        opt_tetra_init, opt_tetra_dos_t
   USE symm_base,  ONLY : nsym, s, time_reversal, t_rev
   USE cell_base,  ONLY : at, bg
@@ -123,18 +123,16 @@ PROGRAM do_dos
         !
         IF(tetra_type == 0) THEN
            WRITE( stdout,'(/5x,"Tetrahedra used"/)')
-           ALLOCATE ( tetra(4,ntetra) )
            CALL tetra_init ( nsym, s, time_reversal, t_rev, at, bg, nks, &
-                k1,k2,k3, nk1,nk2,nk3, nks2, xk, ntetra, tetra )
+                k1,k2,k3, nk1,nk2,nk3, nks2, xk )
         ELSE
            IF(tetra_type == 1) THEN 
               WRITE( stdout,'(/5x,"Linear tetrahedron method is used"/)')
            ELSE
               WRITE( stdout,'(/5x,"Optimized tetrahedron method used"/)')
            END IF
-           ALLOCATE(tetra(20,ntetra))
            CALL opt_tetra_init(nsym, s, time_reversal, t_rev, at, bg, nks, &
-                &                k1, k2, k3, nk1, nk2, nk3, nks2, xk, tetra, 1)
+                &                k1, k2, k3, nk1, nk2, nk3, nks2, xk, 1)
            !
         END IF
         !
@@ -188,9 +186,9 @@ PROGRAM do_dos
         E = Emin + (n - 1) * DeltaE
         IF (ltetra) THEN
            IF (tetra_type == 0) THEN
-              CALL dos_t(et,nspin,nbnd, nks,ntetra,tetra, E, DOSofE)
+              CALL tetra_dos_t( et, nspin, nbnd, nks, E, DOSofE)
            ELSE
-              CALL opt_tetra_dos_t(et,nspin,nbnd, nks,ntetra,tetra, E, DOSofE)
+              CALL opt_tetra_dos_t( et, nspin, nbnd, nks, E, DOSofE)
            END IF
         ELSE
            CALL dos_g(et,nspin,nbnd, nks,wk,degauss,ngauss, E, DOSofE)

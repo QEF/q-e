@@ -191,7 +191,7 @@ SUBROUTINE dfpt_tetra_setup(et_col)
   USE kinds,      ONLY : dp
   USE lsda_mod,   ONLY : nspin
   USE wvfct,      ONLY : nbnd, et
-  USE ktetra,     ONLY : ntetra, tetra, opt_tetra_init
+  USE ktetra,     ONLY : tetra, opt_tetra_init
   USE klist,      ONLY : xk, nks, nkstot
   USE start_k,    ONLY : nk1, nk2, nk3, k1, k2, k3
   USE symm_base,  ONLY : s, t_rev, time_reversal
@@ -219,11 +219,9 @@ SUBROUTINE dfpt_tetra_setup(et_col)
         nktot = nkstot
      END IF
      !
-     ntetra = 6 * nk1 * nk2 * nk3
      IF(ALLOCATED(tetra)) DEALLOCATE(tetra)
-     ALLOCATE( tetra( 20, ntetra ) )
-     CALL opt_tetra_init(nsymq, s, time_reversal, t_rev, at, bg, npk, k1, k2, k3, &
-     &                   nk1, nk2, nk3, nktot, xk_col, tetra, 1)
+     CALL opt_tetra_init(nsymq, s, time_reversal, t_rev, at, bg, npk, &
+                         k1, k2, k3, nk1, nk2, nk3, nktot, xk_col, 1)
      !
      DEALLOCATE(xk_col)
      !

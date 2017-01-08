@@ -26,23 +26,27 @@ MODULE ktetra
                        ! 1 for Linear tetrahedron method
   !                    ! 2 for Optimized tetrahedron method
   INTEGER :: &
-       ntetra            ! number of tetrahedra
+       ntetra, &         ! number of tetrahedra
+       nntetra           ! k-points per tetrahedron used to compute weights
+                         ! 4 for linear / 20 for optimized tetrahedron method
   INTEGER, ALLOCATABLE :: &
        tetra(:,:)        ! index of k-points in a given tetrahedron
-                         ! shape (4,ntetra)
+                         ! shape (nntetra,ntetra)
   !
-  REAL(dp) :: &
-       wlsm(4,20) ! Weights for the optimized tetrahedron method
+  REAL(dp), ALLOCATABLE :: &
+       wlsm(:,:)         ! Weights for the optimized tetrahedron method
   !
-  PUBLIC :: tetra, ntetra, tetra_init, tetra_weights, tetra_weights_only
+  PUBLIC :: tetra, ntetra, nntetra
+  PUBLIC :: tetra_init, tetra_weights, tetra_weights_only, tetra_dos_t
   PUBLIC :: opt_tetra_init, opt_tetra_weights, opt_tetra_weights_only, &
   &         opt_tetra_dos_t, opt_tetra_partialdos, tetra_type, wlsm
+  PUBLIC :: deallocate_tetra
   !
 CONTAINS
   !
   !-----------------------------------------------------------------------------
   SUBROUTINE tetra_init ( nsym, s, time_reversal, t_rev, at, bg, npk, &
-     k1,k2,k3, nk1,nk2,nk3, nks, xk, ntetra, tetra )
+     k1,k2,k3, nk1,nk2,nk3, nks, xk )
   !-----------------------------------------------------------------------
   !
   ! Tetrahedron method according to P. E. Bloechl et al, PRB49, 16223 (1994)
@@ -51,12 +55,10 @@ CONTAINS
   IMPLICIT NONE
   ! 
   INTEGER, INTENT(IN):: nks, nsym, t_rev(48), s(3,3,48), npk, &
-                        k1, k2, k3, nk1, nk2, nk3, ntetra
+                        k1, k2, k3, nk1, nk2, nk3
   LOGICAL, INTENT (IN) :: time_reversal
   real(DP), INTENT(IN) :: at(3,3), bg(3,3), xk(3,npk)
   !
-  INTEGER, INTENT(OUT) :: tetra(4,ntetra)
-  ! 
   real(DP) :: xkr(3), deltap(3), deltam(3)
   real(DP), PARAMETER:: eps=1.0d-5
   real(DP), ALLOCATABLE :: xkg(:,:)
@@ -64,10 +66,13 @@ CONTAINS
        n1,n2,n3,n4,n5,n6,n7,n8
   INTEGER, ALLOCATABLE:: equiv(:)
   !
+  ntetra =6*nk1*nk2*nk3
+  nntetra=4
+  ALLOCATE ( tetra (nntetra, ntetra) )
+  !
   ! Re-generate a uniform grid of k-points xkg
   !
   nkr=nk1*nk2*nk3
-  !      ntetra=6*nkr
   ALLOCATE (xkg( 3,nkr))
   ALLOCATE (equiv( nkr))
 !
@@ -192,7 +197,7 @@ CONTAINS
   !  check
 
   DO n=1,ntetra
-     DO i=1,4
+     DO i=1,nntetra
         IF ( tetra(i,n)<1 .or. tetra(i,n)>nks ) &
              CALL errore ('tetra_init','something wrong',n)
      ENDDO
@@ -206,7 +211,7 @@ CONTAINS
   !
   !-----------------------------------------------------------------------
   SUBROUTINE opt_tetra_init(nsym, s, time_reversal, t_rev, at, bg, npk, &
-       k1, k2, k3, nk1, nk2, nk3, nks, xk, tetra, kstep)
+       k1, k2, k3, nk1, nk2, nk3, nks, xk, kstep)
   !-----------------------------------------------------------------------------
   !
   ! This routine set the corners and additional points for each tetrahedron
@@ -232,9 +237,6 @@ CONTAINS
        & at(3,3), & ! Direct lattice vectors [Bohr]
        & bg(3,3), & ! Reciplocal lattice vectors [2 pi / a]
        & xk(3,npk)  ! k points [2 pi / a]
-  !
-  INTEGER,INTENT(OUT) :: &
-       & tetra(20, 6 * nk1 * nk2 * nk3) ! k-point index of corners of tetrahedra
   !
   REAL(dp),PARAMETER :: eps = 1e-5_dp
   !
@@ -316,11 +318,15 @@ CONTAINS
   !
   ! Set the weight for the each tetrahedron method
   !
+  ntetra  = 6*nk1*nk2*nk3
+  !
   IF(tetra_type == 1) THEN
      !
      WRITE(stdout,*) "    [opt_tetra]  Linear tetrahedron method is used."
      !
-     wlsm(1:4,1:20) = 0.0_dp
+     nntetra = 4
+     ALLOCATE ( tetra(nntetra,ntetra), wlsm(4,nntetra) )
+     wlsm(:,:) = 0.0_dp
      !
      wlsm(1,1) = 1.0_dp
      wlsm(2,2) = 1.0_dp
@@ -330,6 +336,9 @@ CONTAINS
   ELSE IF(tetra_type == 2) THEN
      !
      WRITE(stdout,*) "    [opt_tetra]  Optimized tetrahedron method is used."
+     !
+     nntetra = 20
+     ALLOCATE ( tetra(nntetra,ntetra), wlsm(4,nntetra) )
      !
      wlsm(1, 1: 4) = REAL((/1440,    0,   30,    0/), dp)
      wlsm(2, 1: 4) = REAL((/   0, 1440,    0,   30/), dp)
@@ -437,7 +446,7 @@ CONTAINS
               !
               itettot = itettot + 1
               !
-              DO ii = 1, 20
+              DO ii = 1, nntetra
                  !
                  ikv(1:3) = (/i1, i2, i3/) - 1
                  ikv(1:3) = ikv(1:3) + ivvec(1:3,ii,itet)
@@ -653,7 +662,7 @@ SUBROUTINE opt_tetra_weights(nks,nspin,nbnd,nelec,ntetra,tetra,et,ef,wg, is, isk
   & isk(nks)  ! which k is up/down
   !
   INTEGER,INTENT(IN) :: &
-  & tetra(20, ntetra) ! index of k in each tetrahedra
+  & tetra(nntetra, ntetra) ! index of k in each tetrahedra
   !
   REAL(dp),INTENT(IN) :: &
   & et(nbnd, nks), & ! Kohn Sham energy [Ry]
@@ -711,7 +720,7 @@ SUBROUTINE opt_tetra_weights_only(nks, nspin, nbnd, ntetra, tetra, et, ef, wg, i
   ! Calculate Occupation with given Fermi energy
   !
   INTEGER,INTENT(IN) :: nbnd, nks, ntetra, nspin, is, isk(nks)
-  INTEGER,INTENT(IN) :: tetra(20, ntetra)
+  INTEGER,INTENT(IN) :: tetra(nntetra, ntetra)
   REAL(dp),INTENT(IN) :: ef, et(nbnd,nks)
   REAL(dp),INTENT(INOUT) :: wg(nbnd,nks)
   !
@@ -754,7 +763,7 @@ SUBROUTINE opt_tetra_weights_only(nks, nspin, nbnd, ntetra, tetra, et, ef, wg, i
         DO ibnd = 1, nbnd
            !
            e(1:4) = 0.0_dp
-           DO ii = 1, 20
+           DO ii = 1, nntetra
               !
               ik = tetra(ii, nt) + nk
               e(1:4) = e(1:4) + wlsm(1:4,ii) * et(ibnd,ik)
@@ -810,7 +819,7 @@ SUBROUTINE opt_tetra_weights_only(nks, nspin, nbnd, ntetra, tetra, et, ef, wg, i
            !
            wg0(1:4) = wg0(1:4) / REAL(ntetra, dp)
            !
-           DO ii = 1, 20
+           DO ii = 1, nntetra
               !
               ik = tetra(ii, nt) + nk
               wg(ibnd, ik) = wg(ibnd, ik) &
@@ -854,14 +863,80 @@ SUBROUTINE opt_tetra_weights_only(nks, nspin, nbnd, ntetra, tetra, et, ef, wg, i
   !
 END SUBROUTINE opt_tetra_weights_only
 !
+!--------------------------------------------------------------------
+subroutine tetra_dos_t (et, nspin, nbnd, nks, e, dost)
+  !------------------------------------------------------------------
+  !
+  USE kinds, only : DP
+  implicit none
+  integer, intent(in) :: nspin, nbnd, nks
+
+  real(DP), intent(in) :: et (nbnd, nks), e
+  REAL(dp), INTENT(OUT):: dost (2)
+  !
+  integer :: itetra (4), nk, ns, nt, ibnd, i
+  real(DP) :: etetra (4), e1, e2, e3, e4
+  integer :: nspin0
+
+  if (nspin==4) then
+     nspin0=1
+  else 
+     nspin0=nspin
+  endif
+  do ns = 1, nspin0
+     dost (ns) = 0.d0
+     !
+     ! nk is used to select k-points with up (ns=1) or down (ns=2) spin
+     !
+     if (ns.eq.1) then
+        nk = 0
+     else
+        nk = nks / 2
+     endif
+     do nt = 1, ntetra
+        do ibnd = 1, nbnd
+           ! these are the energies at the vertexes of the nt-th tetrahedron
+           do i = 1, 4
+              etetra (i) = et (ibnd, tetra (i, nt) + nk)
+           enddo
+           itetra (1) = 0
+           call hpsort (4, etetra, itetra)
+           e1 = etetra (1)
+           e2 = etetra (2)
+           e3 = etetra (3)
+           e4 = etetra (4)
+           if (e.lt.e4.and.e.ge.e3) then
+              dost (ns) = dost (ns) + 1.d0 / ntetra * (3.0d0 * (e4 - e) **2 / &
+                   (e4 - e1) / (e4 - e2) / (e4 - e3) )
+           elseif (e.lt.e3.and.e.ge.e2) then
+              dost (ns) = dost (ns) + 1.d0 / ntetra / (e3 - e1) / (e4 - e1) &
+                   * (3.0d0 * (e2 - e1) + 6.0d0 * (e-e2) - 3.0d0 * (e3 - e1 + e4 - e2) &
+                   / (e3 - e2) / (e4 - e2) * (e-e2) **2)
+           elseif (e.lt.e2.and.e.gt.e1) then
+              dost (ns) = dost (ns) + 1.d0 / ntetra * 3.0d0 * (e-e1) **2 / &
+                   (e2 - e1) / (e3 - e1) / (e4 - e1)
+           endif
+        enddo
+
+     enddo
+
+     ! add correct spin normalization : 2 for LDA, 1 for LSDA or
+     ! noncollinear calculations 
+
+     if ( nspin == 1 ) dost (ns) = dost (ns) * 2.d0
+
+  enddo
+  return
+end subroutine tetra_dos_t
+
 ! Optimized tetrahedron method
 !
 !--------------------------------------------------------------------
-SUBROUTINE opt_tetra_dos_t (et, nspin, nbnd, nks, ntetra, tetra, e, dost)
+SUBROUTINE opt_tetra_dos_t (et, nspin, nbnd, nks, e, dost)
   !------------------------------------------------------------------
   !
   implicit none
-  integer :: nspin, nbnd, nks, ntetra, tetra (20, ntetra)
+  integer :: nspin, nbnd, nks
 
   real(DP) :: et (nbnd, nks), e, dost (2)
   integer :: itetra (4), nk, ns, nt, ibnd, i
@@ -888,7 +963,7 @@ SUBROUTINE opt_tetra_dos_t (et, nspin, nbnd, nks, ntetra, tetra, e, dost)
         do ibnd = 1, nbnd
            ! these are the energies at the vertexes of the nt-th tetrahedron
            etetra(1:4) = 0.0_dp
-           do i = 1, 20
+           do i = 1, nntetra
               etetra(1:4) = etetra(1:4) + wlsm(1:4,i) * et(ibnd,tetra(i, nt) + nk)
            end do
            itetra (1) = 0
@@ -968,7 +1043,7 @@ SUBROUTINE opt_tetra_partialdos(nspin0, kresolveddos,ne,natomwfc,nkseff,&
         DO ibnd = 1, nbnd
            ! these are the energies at the vertexes of the nt-th tetrahedron
            etetra(1:4) = 0.0_dp
-           DO ii = 1, 20
+           DO ii = 1, nntetra
               etetra(1:4) = etetra(1:4) + wlsm(1:4,ii) * et(ibnd,tetra(ii, nt) + nk)
            ENDDO
            !
@@ -1037,7 +1112,7 @@ SUBROUTINE opt_tetra_partialdos(nspin0, kresolveddos,ne,natomwfc,nkseff,&
               !
               IF (kresolveddos) THEN
                  !
-                 DO ii = 1, 20
+                 DO ii = 1, nntetra
                     !
                     ik = tetra(ii, nt) + nk
                     DO nwfc = 1, natomwfc
@@ -1058,7 +1133,7 @@ SUBROUTINE opt_tetra_partialdos(nspin0, kresolveddos,ne,natomwfc,nkseff,&
                  !
               ELSE
                  !
-                 DO ii = 1, 20
+                 DO ii = 1, nntetra
                     !
                     ik = tetra(ii, nt) + nk
                     DO nwfc = 1, natomwfc
@@ -1089,5 +1164,10 @@ SUBROUTINE opt_tetra_partialdos(nspin0, kresolveddos,ne,natomwfc,nkseff,&
   dostot(0:ne,1:nspindos,1:nkseff) = dostot(0:ne,1:nspindos,1:nkseff) / (rytoev * REAL(ntetra,dp))
   !
 END SUBROUTINE opt_tetra_partialdos
+!
+SUBROUTINE deallocate_tetra ( )
+   IF ( ALLOCATED(tetra) ) DEALLOCATE (tetra)
+   IF ( ALLOCATED(wlsm ) ) DEALLOCATE (wlsm )
+END SUBROUTINE deallocate_tetra
 !
 END MODULE ktetra

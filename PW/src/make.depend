@@ -1599,7 +1599,6 @@ read_file.o : pwcom.o
 read_file.o : realus.o
 read_file.o : scf_mod.o
 read_file.o : symm_base.o
-read_file.o : tetra.o
 read_file_new.o : ../../FFTXlib/fft_interfaces.o
 read_file_new.o : ../../FFTXlib/fft_types.o
 read_file_new.o : ../../Modules/cell_base.o
@@ -2075,7 +2074,6 @@ transform_qq_so.o : ../../Modules/kind.o
 transform_qq_so.o : ../../Modules/uspp.o
 transform_qq_so.o : pwcom.o
 trnvecc.o : ../../Modules/kind.o
-tweights.o : ../../Modules/kind.o
 update_pot.o : ../../FFTXlib/fft_interfaces.o
 update_pot.o : ../../Modules/becmod.o
 update_pot.o : ../../Modules/cell_base.o

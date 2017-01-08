@@ -124,7 +124,6 @@ OBJS = \
 atomic_number.o \
 capital.o \
 cryst_to_car.o \
-dost.o \
 erf.o \
 expint.o \
 find_free_unit.o \

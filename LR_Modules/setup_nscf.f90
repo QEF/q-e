@@ -45,7 +45,7 @@ SUBROUTINE setup_nscf ( newgrid, xq, elph_mat )
                                  nk1, nk2, nk3, k1, k2, k3
   USE paw_variables,      ONLY : okpaw
   USE uspp_param,         ONLY : n_atom_wfc
-  USE ktetra,             ONLY : tetra, ntetra, tetra_type, opt_tetra_init
+  USE ktetra,             ONLY : tetra, tetra_type, opt_tetra_init
   USE lr_symm_base, ONLY : nsymq, invsymq, minus_q
   USE control_lr,   ONLY : lgamma
   !
@@ -136,11 +136,9 @@ SUBROUTINE setup_nscf ( newgrid, xq, elph_mat )
   ! ... Map each k point in the irr.-BZ into tetrahedra
   !
   IF ( ltetra .AND. (tetra_type /= 0) ) THEN
-     ntetra = 6 * nk1 * nk2 * nk3
      IF (ALLOCATED(tetra)) DEALLOCATE(tetra)
-     ALLOCATE( tetra( 20, ntetra ) )
      CALL opt_tetra_init(nsymq, s, time_reversal .AND. minus_q, t_rev, at, bg,&
-          npk, k1, k2, k3, nk1, nk2, nk3, nkstot, xk, tetra, kunit)
+          npk, k1, k2, k3, nk1, nk2, nk3, nkstot, xk, kunit)
   END IF
   !
   IF ( lsda ) THEN

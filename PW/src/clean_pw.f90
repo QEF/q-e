@@ -28,7 +28,7 @@ SUBROUTINE clean_pw( lflag )
                                    eigts1, eigts2, eigts3
   USE gvecs,                ONLY : nls, nlsm
   USE fixed_occ,            ONLY : f_inp
-  USE ktetra,               ONLY : tetra
+  USE ktetra,               ONLY : deallocate_tetra
   USE klist,                ONLY : deallocate_igk
   USE gvect,                ONLY : ig_l2g
   USE vlocal,               ONLY : strf, vloc
@@ -100,8 +100,9 @@ SUBROUTINE clean_pw( lflag )
   !
   CALL deallocate_ldaU ( lflag )
   !
+  CALL deallocate_tetra ( )
+  !
   IF ( ALLOCATED( f_inp ) .and. lflag )      DEALLOCATE( f_inp )
-  IF ( ALLOCATED( tetra ) )      DEALLOCATE( tetra )
   !
   ! ... arrays allocated in ggen.f90
   !

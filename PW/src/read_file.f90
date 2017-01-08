@@ -120,7 +120,6 @@ SUBROUTINE read_xml_file_internal(withbs)
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE wvfct,                ONLY : nbnd, nbndx, et, wg
   USE symm_base,            ONLY : irt, d1, d2, d3, checkallsym, nsym
-  USE ktetra,               ONLY : tetra, ntetra 
   USE extfield,             ONLY : forcefield, tefield, monopole, forcemono
   USE cellmd,               ONLY : cell_factor, lmovecell
   USE fft_base,             ONLY : dfftp
@@ -186,7 +185,7 @@ SUBROUTINE read_xml_file_internal(withbs)
   CALL errore( 'read_xml_file ', 'problem reading file ' // &
              & TRIM( tmp_dir ) // TRIM( prefix ) // '.save', ierr )
   !
-  ! ... allocate space for atomic positions, symmetries, forces, tetrahedra
+  ! ... allocate space for atomic positions, symmetries, forces
   !
   IF ( nat < 0 ) CALL errore( 'read_xml_file', 'wrong number of atoms', 1 )
   !
@@ -202,7 +201,6 @@ SUBROUTINE read_xml_file_internal(withbs)
   IF ( monopole ) ALLOCATE( forcemono( 3, nat ) ) ! TB
   !
   ALLOCATE( irt( 48, nat ) )
-  ALLOCATE( tetra( 4, MAX( ntetra, 1 ) ) )
   !
   CALL set_dimensions()
   CALL fft_type_allocate ( dfftp, at, bg, gcutm, intra_bgrp_comm )

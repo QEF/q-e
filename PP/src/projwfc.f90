@@ -33,7 +33,7 @@ PROGRAM do_projwfc
   USE control_flags, ONLY: twfcollect
   USE paw_variables, ONLY : okpaw
   ! following modules needed for generation of tetrahedra
-  USE ktetra,     ONLY : ntetra, tetra, tetra_type, opt_tetra_init
+  USE ktetra,     ONLY : tetra, tetra_type, opt_tetra_init
   USE symm_base,  ONLY : nsym, s, time_reversal, t_rev
   USE cell_base,  ONLY : at, bg
   USE start_k,    ONLY : k1, k2, k3, nk1, nk2, nk3
@@ -161,7 +161,6 @@ PROGRAM do_projwfc
      !
      ! workaround for old xml file, to be removed
      IF(ALLOCATED(tetra)) DEALLOCATE(tetra)
-     ALLOCATE(tetra(20,ntetra))
      !
      ! in the lsda case, only the first half of the k points
      ! are needed in the input of "tetrahedra"
@@ -183,7 +182,7 @@ PROGRAM do_projwfc
      CALL poolcollect(3, nks, xk, nkstot, xk_collect)
      !
      CALL opt_tetra_init(nsym, s, time_reversal, t_rev, at, bg, npk, k1,k2,k3, &
-          &              nk1, nk2, nk3, nks2, xk_collect, tetra, 1)
+          &              nk1, nk2, nk3, nks2, xk_collect, 1)
      !
      DEALLOCATE(xk_collect)
      !

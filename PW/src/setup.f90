@@ -58,7 +58,7 @@ SUBROUTINE setup()
   USE electrons_base,     ONLY : set_nelup_neldw
   USE start_k,            ONLY : nks_start, xk_start, wk_start, &
                                  nk1, nk2, nk3, k1, k2, k3
-  USE ktetra,             ONLY : tetra, ntetra, tetra_type, opt_tetra_init, tetra_init
+  USE ktetra,             ONLY : tetra_type, opt_tetra_init, tetra_init
   USE symm_base,          ONLY : s, t_rev, irt, nrot, nsym, invsym, nosym, &
                                  d1,d2,d3, time_reversal, sname, set_sym_bl, &
                                  find_sym, inverse_s, no_t_rev, allfrac
@@ -575,8 +575,6 @@ SUBROUTINE setup()
            .AND. .NOT. ( calc == 'mm' .OR. calc == 'nm' ) ) &
        CALL infomsg( 'setup', 'Dynamics, you should have no symmetries' )
   !
-  ntetra = 0
-  !
   IF ( lbands ) THEN
      !
      ! ... if calculating bands, we read the Fermi energy
@@ -595,15 +593,12 @@ SUBROUTINE setup()
      !
      ! ... Calculate quantities used in tetrahedra method
      !
-     ntetra = 6 * nk1 * nk2 * nk3
      IF (tetra_type == 0) then
-        ALLOCATE( tetra( 4, ntetra ) )
         CALL tetra_init( nsym, s, time_reversal, t_rev, at, bg, npk, k1,k2,k3, &
-             nk1, nk2, nk3, nkstot, xk, ntetra, tetra )
+             nk1, nk2, nk3, nkstot, xk )
      ELSE 
-        ALLOCATE( tetra( 20, ntetra ) )
         CALL opt_tetra_init(nsym, s, time_reversal, t_rev, at, bg, npk, &
-             k1, k2, k3, nk1, nk2, nk3, nkstot, xk, tetra, 1)
+             k1, k2, k3, nk1, nk2, nk3, nkstot, xk, 1)
      END IF
      !
   END IF
