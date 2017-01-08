@@ -16,6 +16,12 @@ SUBROUTINE chdens (plot_files,plot_num)
   !      into a file format suitable for plotting
   !-----------------------------------------------------------------------
   !
+  !      If plot_files (the list of intermediate quantities) isn't empty, one
+  !      output file is written per entry.
+  !   
+  !      If plot_files is empty, files are read from the filepp input variable
+  !      and one output file is written.
+  !
   !      DESCRIPTION of the INPUT: see file INPUT_PP in Doc/
   !
   USE kinds,      ONLY : dp
@@ -43,7 +49,6 @@ SUBROUTINE chdens (plot_files,plot_num)
   USE wavefunctions_module,  ONLY: psic
 
   IMPLICIT NONE
-  !CHARACTER (len=256), INTENT(in) :: filplot
   CHARACTER (len=256), DIMENSION(:), ALLOCATABLE, INTENT(in) :: plot_files
   !
   ! If plot_num=-1 the dimensions and structural data are read from the charge
@@ -63,7 +68,9 @@ SUBROUTINE chdens (plot_files,plot_num)
 
   real(DP), ALLOCATABLE :: aux(:)
 
-  CHARACTER (len=256) :: fileout, fileout_tmp
+  CHARACTER (len=256) :: fileout
+  CHARACTER (len=256), ALLOCATABLE :: output_files(:)
+  LOGICAL :: luse_filepp
   CHARACTER (len=13), DIMENSION(0:7) :: formatname = &
        (/ 'gnuplot      ', &
           'contour.x    ', &
@@ -93,6 +100,7 @@ SUBROUTINE chdens (plot_files,plot_num)
   ! rho or polarization in G space
   LOGICAL :: fast3d, isostm_flag
 
+
   NAMELIST /plot/  &
        nfile, filepp, weight, iflag, e1, e2, e3, nx, ny, nz, x0, &
        radius, output_format, fileout, interpolation, &
@@ -102,7 +110,7 @@ SUBROUTINE chdens (plot_files,plot_num)
   !   set the DEFAULT values
   !
   nfile         = 1
-  filepp(1)     = plot_files(1)
+  filepp(1)     = ' '
   weight(1)     = 1.0d0
   iflag         = 0
   radius        = 1.0d0
@@ -167,6 +175,8 @@ SUBROUTINE chdens (plot_files,plot_num)
      CALL infomsg ('chdens', 'output format not set, exiting' )
      RETURN
   ENDIF
+
+
   !
   ! check for number of files
   !
@@ -175,8 +185,39 @@ SUBROUTINE chdens (plot_files,plot_num)
 
   IF (nfile > 1 .AND. SIZE(plot_files) > 1) THEN
      CALL errore ('chdens ', &
-       "can't mix nfile > 1 with specifying multiple plots", 1)
+       "can't mix nfile > 1 with multiple output files", 1)
   ENDIF
+
+
+  !
+  ! prepare input and output files to read
+  !
+  IF (SIZE(plot_files) == 0) THEN
+    ! if no intermediate quantities have been produced by pp.x,
+    ! we use filepp
+    luse_filepp = .TRUE.
+
+    ALLOCATE(output_files(1))
+    output_files(1) = fileout
+  ELSEIF (SIZE(plot_Files) == 1) THEN
+    ! if one intermediate quantity was produced by pp.x,
+    ! we use it as input
+    filepp(1) = plot_files(1)
+    luse_filepp = .TRUE.
+
+    ALLOCATE(output_files(1))
+    output_files(1) = fileout
+  ELSE
+    ! if several intermediate quantities were produced by pp.x,
+    ! we use them as input and adapt the output filenames accordingly
+    luse_filepp = .FALSE.
+
+    ALLOCATE(output_files(SIZE(plot_files)))
+    DO iplot=1,SIZE(plot_files)
+        WRITE(output_files(iplot),"(A,A)") TRIM(plot_files(iplot)), TRIM(fileout)
+    ENDDO
+  ENDIF
+
 
   ! check for iflag
 
@@ -289,14 +330,12 @@ SUBROUTINE chdens (plot_files,plot_num)
      CALL fft_type_allocate ( dffts, at, bg, gcutms, intra_bgrp_comm)
   ENDIF
 
-  fileout_tmp = fileout
-  ! Plotting all files in plot_files
-  DO iplot=1, SIZE(plot_files) 
 
-    IF (SIZE(plot_files) > 1) THEN
-      filepp(1) = plot_files(iplot)
-      WRITE(fileout,"(A,A)") TRIM(plot_files(iplot)), TRIM(fileout_tmp)
-    ENDIF
+  ! Looping over output files to be written
+  DO iplot=1, SIZE(output_files) 
+
+    fileout = output_files(iplot)
+    IF (.NOT. luse_filepp) filepp(1) = plot_files(iplot)
 
     ALLOCATE  (rhor(dfftp%nr1x*dfftp%nr2x*dfftp%nr3x))
     ALLOCATE  (rhos(dfftp%nr1x*dfftp%nr2x*dfftp%nr3x))
@@ -567,6 +606,7 @@ SUBROUTINE chdens (plot_files,plot_num)
 
   DEALLOCATE(tau)
   DEALLOCATE(ityp)
+  IF (ALLOCATED(output_files)) DEALLOCATE(output_files)
 
 END SUBROUTINE chdens
 !

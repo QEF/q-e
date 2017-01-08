@@ -13,9 +13,11 @@ CONTAINS
 SUBROUTINE extract (plot_files,plot_num)
   !-----------------------------------------------------------------------
   !
-  !    This subroutine reads the data for the output file produced by pw.x
-  !    extracts and calculates the desired quantity (rho, V, ...)
-  !    writes it to a file for further processing or plotting
+  !    Reads data produced by pw.x, computes the desired quantity (rho, V, ...)
+  !    and writes it to a file (or multiple files) for further processing or
+  !    plotting
+  !
+  !    On return, plot_files contains a list of all written files.
   !
   !    DESCRIPTION of the INPUT: see file Doc/INPUT_PP
   !
@@ -123,7 +125,10 @@ SUBROUTINE extract (plot_files,plot_num)
   !
   ! no task specified: do nothing and return
   !
-  IF (plot_num == -1) RETURN
+  IF (plot_num == -1) THEN
+     ALLOCATE( plot_files(0) )
+     RETURN
+  ENDIF
   !
   IF (plot_num < 0 .or. plot_num > 21) CALL errore ('postproc', &
           'Wrong plot_num', abs (plot_num) )
