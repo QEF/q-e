@@ -187,7 +187,6 @@ EOF
 # copy restart directory from SCF run
 test -d $TMP_DIR/feo_af-bands.save && rm -r $TMP_DIR/feo_af-bands.save
 cp -r $TMP_DIR/feo_af.save $TMP_DIR/feo_af-bands.save
-cp -f $TMP_DIR/feo_af.occup $TMP_DIR/feo_af-bands.occup
 #
 $ECHO "  2) running nscf for FeO band structure ...\c"
 $PW_COMMAND < feo_nscf.in > feo_nscf.out
