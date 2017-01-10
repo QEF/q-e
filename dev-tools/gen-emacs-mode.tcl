@@ -247,6 +247,8 @@ writing Emacs major-mode file : $file
 
     puts "list-of-modules = $module_list\n"
 
+    # create $module-insert-template functions for all modules for which the $module.in file exists
+
     foreach module $module_list {
 
 	set in [file join $qe_modes_template_dir $module.in]

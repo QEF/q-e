@@ -11,7 +11,6 @@ exec tclsh "$0" "$@"
 
 set basedir [file normalize [file dirname [info script]]]
 set topdir  [file normalize [file join $basedir ..]]
-#set qe_modes_template_dir [file join $basedir qe-modes.templates]
 set qe_modes_template_dir [file join $topdir GUI QE-modes qe-modes.templates]
 			   
 set helpdocdir [file join $basedir helpdoc.d]
@@ -31,10 +30,10 @@ Usage:
 
   OPTIONS are:
 
-  -mode  value
+  -mode value
 
         The \"mode\" stands for the short name of the mode, i.e., the
-        generate name of major mode file will be \${mode}-mode.el
+        generated name of the major mode file will be \${mode}-mode.el
         (default value is the same as the name of the command-line
         specified either module or the lowercase spelled PROG part of the
         INPUT_PROG.def file).
