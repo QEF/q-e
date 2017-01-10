@@ -18,12 +18,14 @@
 #
 ### keywords describing the content/data of leaf elements:
 #
-#   empty       -- tells that elemnt is empty, i.e., it is w/o content
+#   empty       -- tells that the element is empty, i.e., it is w/o content
 #   word        -- tells that the content of an element is a single word (i.e. without spaces, \t, \n, \r)
+#   varname     -- tells that the content of an element is a variable name; varname is a word with more a
+#                     restrictive set of allowed characters; current regexp == (\w+([%]\w+)*)
 #   string      -- tells that the content of an element or attribute is a string (it can contain spaces,
 #                     i.e., string can be seen as a plain simple text)
 #   text        -- tells that the content of an element is a text
-#                     (text can contain special @ref and @link elements (which are
+#                     (text can contain special @ref and @link elements, which are
 #                      expanded to <ref></ref> and <link></link> XML elements by helpdoc)
 #   clist       -- tells that the content of an element or attribute is a comma-separated list
 #                     (i.e. "word1, word2, word3, ...")
@@ -81,6 +83,7 @@ rootelement input_description {
 	    optional {	    
 		ref group
 		ref namelist
+		ref supercard
 		ref card
 		ref linecard		
 		ref table
@@ -142,7 +145,7 @@ element options {
 	}
 	+ {
 	    element opt {
-		attribute val { string }
+		attribute val { clist }
 		text
 	    }
 	}
@@ -532,11 +535,11 @@ element text { text }
 @ hr { empty }
 @ p  { empty }
 
-# lists
-@ ol { text }
-@ ul { text }
-@ li { text }
-
-@ dl { text }
-@ dt { text }
-@ dd { text }
+## lists (currently disabled : nested @tag commands do not work properly)
+#@ ol { text }
+#@ ul { text }
+#@ li { text }
+#
+#@ dl { text }
+#@ dt { text }
+#@ dd { text }
