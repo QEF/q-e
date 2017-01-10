@@ -38,7 +38,12 @@ gamma=`grep "gamma" $fname | awk '{print $2}'`
 # turbo_spectrum.x
 average=`grep "Average =" $fname | awk '{print $3}'`
 averageosc=`grep "Average oscillation amplitude" $fname | awk '{print $5}'`
+plotchi=`grep "chi_1_1=" *.plot_chi.dat | awk '{print $4}'`
 
+if test "$plotchi" != ""; then
+        echo plotchi
+        for x in $plotchi; do echo $x; done
+fi
 
 if test "$average" != ""; then
         echo average

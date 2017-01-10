@@ -5,6 +5,6 @@
     restart=.false.
 /
 &lr_control
-    itermax=500,
-    ipol=4
+    itermax=200,
+    ipol=1
 /

@@ -14,7 +14,7 @@ bash ../ENVIRONMENT
 
 if [[ $QE_USE_MPI == 1 ]]; then
   export PARA_PREFIX="mpirun -np ${TESTCODE_NPROCS}"
-  export PARA_SUFFIX="-npool ${TESTCODE_NPROCS}"
+  export PARA_SUFFIX=" "
 else
   unset PARA_PREFIX
   unset PARA_SUFFIX

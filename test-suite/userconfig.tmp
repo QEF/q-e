@@ -71,11 +71,12 @@ tolerance = ( (1.0e-6, 5.0e-3, 'e1'),
               (3.0e+0, 5.0e-1, 'n1'),
               (1.0e-3, 1.0e-5, 'f1'),
               (1.0e-1, 1.0e-3, 'p1'),
-              (1.0e-1, 1.0e-3, 'alpha'),
-              (1.0e-1, 1.0e-3, 'beta'),
-              (1.0e-1, 1.0e-3, 'gamma'),
-              (1.0e-1, 1.0e-3, 'average'),
-              (1.0e-4, 5.0e-4, 'averageosc'))
+              (1.0e-5, 1.0e-4, 'alpha'),
+              (1.0e-5, 1.0e-4, 'beta'),
+              (1.0e-5, 1.0e-4, 'gamma'),
+              (1.0e-5, 1.0e-4, 'average'),
+              (1.0e-5, 1.0e-4, 'plotchi'),
+              (1.0e-5, 5.0e-4, 'averageosc'))
 
 skip_program = grep
 skip_args = 'not present in this version'

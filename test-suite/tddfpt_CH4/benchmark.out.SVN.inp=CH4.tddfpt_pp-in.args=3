@@ -1,6 +1,6 @@
  Warning: Only a single CPU will be used!
 
-     Program TDDFPT_PP v.6.0 (svn rev. 13217) starts on  3Jan2017 at 15:42:23 
+     Program TDDFPT_PP v.6.0 (svn rev. 13233) starts on 10Jan2017 at 14: 5:32 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -11,32 +11,14 @@
 
      Parallel version (MPI), running on     1 processors
 
-     Reading    500 Lanczos steps for direction 1
-        500 steps will be considered
-
-
-     Reading    500 Lanczos steps for direction 2
-        500 steps will be considered
-
-
-     Reading    500 Lanczos steps for direction 3
-        500 steps will be considered
+     Reading    200 Lanczos steps for direction 1
+        200 steps will be considered
 
 
      Polarization direction:1
      Lanczos coefficients:
-     Average =    13.08055113
-     Average oscillation amplitude =     0.33575665
-
-     Polarization direction:2
-     Lanczos coefficients:
-     Average =    13.08055113
-     Average oscillation amplitude =     0.33575667
-
-     Polarization direction:3
-     Lanczos coefficients:
-     Average =    13.08055113
-     Average oscillation amplitude =     0.33575667
+     Average =    13.08716923
+     Average oscillation amplitude =     0.31252782
 
      Data ready, starting to calculate observables...
 
@@ -46,18 +28,14 @@
 
      chi_i_j: dipole polarizability tensor  in units of e^2*a_0^2/energy
 
-     S: oscillator strength in units of 1/energy
-
-     S(\hbar \omega) = 2m/( 3 \pi e^2 \hbar)  \omega sum_j chi_j_j
-
-     S(\hbar \omega) satisfies the f-sum rule:  \int_0^\infty dE S(E) = N_el 
+     Insufficent info for S
 
      Functions are reported in \hbar.\omega  Energy unit is (Ry)
 
-     TDDFPT_PP    :    21.62s CPU        10.83s WALL
+     TDDFPT_PP    :     3.33s CPU         1.73s WALL
 
 
-   This run was terminated on:  15:42:34   3Jan2017            
+   This run was terminated on:  14: 5:34  10Jan2017            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
