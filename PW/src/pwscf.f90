@@ -7,18 +7,38 @@
 !
 !----------------------------------------------------------------------------
 PROGRAM pwscf
-  !----------------------------------------------------------------------------
-  !
-  ! ... Main program calling one instance of Plane Wave Self-Consistent Field code
-  !
+  !! author: Paolo Giannozzi
+  !! version: v6.0
+  !! license: GNU 
+  !! summary: Main program calling one instance of Plane Wave Self-Consistent Field code
+  !!
+  !! This is the main program that calls [[run_driver]].
+  !!
+  !! @Note
+  !! 10/01/17 Samuel Ponce: Add Ford documentation
+  !! @endnote
+  !!
+  !! @warning
+  !! Example of Warning
+  !!
+  !! @todo
+  !! Have automatic parallelisation. 
+  !!
+  !! @bug
+  !! No bug.
+  !!
   USE environment,       ONLY : environment_start
   USE mp_global,         ONLY : mp_startup
   USE read_input,        ONLY : read_input_file
   USE command_line_options, ONLY: input_file_, command_line
   !
   IMPLICIT NONE
-  CHARACTER(len=256) :: srvaddress, get_server_address
+  CHARACTER(len=256) :: srvaddress
+  !! Get the address of the server 
+  CHARACTER(len=256) :: get_server_address
+  !! Get the address of the server 
   INTEGER :: exit_status
+  !! Status at exit
   !
   !
   CALL mp_startup ( diag_in_band_group = .true. )
