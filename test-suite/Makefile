@@ -22,6 +22,7 @@ default :
 	@echo ' run-tests-parallel          : run all tests in PARALLEL (4 MPI)'
 	@echo ' run-tests-XX-parallel       : run tests for XX={pw,cp} only, as above' 
 	@echo ' run-custom-test testdir=DIR : run test in DIR only (serial)'
+	@echo ' run-custom-test-parallel testdir=DIR : run test in DIR only (parallel 4 MPI)'
 	@echo ' compare                     : compare last output with reference'
 	@echo ' clean                       : clean stdout/sderr of all tests'
 	@echo ' '
