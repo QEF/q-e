@@ -5,6 +5,7 @@ all: epw
 
 epw: 
 	(cd src ; make all )
+	- (mkdir -p bin)
 	(cd bin ; ln -fs ../src/epw.x . )
 
 clean:

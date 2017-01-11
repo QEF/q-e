@@ -1,0 +1,18 @@
+language: python
+python:
+    - "2.7"
+addons:
+  apt:
+    packages:
+        - gfortran
+        - libblas-dev
+        - liblapack-dev
+env:
+install:
+     - ./configure
+     - make pwall epw  
+script:
+    - make travis
+git:
+  depth: 3
+

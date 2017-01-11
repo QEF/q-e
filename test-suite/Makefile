@@ -62,6 +62,8 @@ run-tests-epw-serial : prolog pseudo
 run-tests-epw-parallel : prolog pseudo
 	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=epw_all
 
+run-travis : prolog pseudo
+	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=epw_base
 
 run-custom-test : run-custom-test-serial
 
