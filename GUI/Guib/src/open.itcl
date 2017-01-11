@@ -186,7 +186,7 @@ itcl::body ::guib::moduleObj::_openSyntaxError {errMsg {addSkipMsg 1}} {
     set readError 1
     
     if { $addSkipMsg == 1 } {
-	::tclu::errorDialog "syntax error in the input file: ${errMsg}\n\nSkipping the rest of the input file !!!"
+	::tclu::errorDialog "Syntax error in the input file:\n\n${errMsg}\n\nSkipping the rest of the input file !!!"
     } else {
 	::tclu::errorDialog $errMsg
     }
@@ -293,7 +293,7 @@ itcl::body ::guib::moduleObj::_open {obj fileChannel} {
 			    # ignore the rest of line. 
 			    break
 			}
-			set varIdent  [_openReadNamelistVar $childObj $fileChannel]
+			set varIdent  [_openReadNamelistVar $childObj $fileChannel $name]
 			set varValue  [_openReadNamelistValue]
 			varset $varIdent -value $varValue
 
@@ -559,12 +559,12 @@ itcl::body ::guib::moduleObj::_openGets {fileChannel} {
 #}
 
 
-itcl::body ::guib::moduleObj::_openReadNamelistVar {obj fileChannel} {
+itcl::body ::guib::moduleObj::_openReadNamelistVar {obj fileChannel nmlName} {
 
     set ind [string first = $readline]
 
     if { $ind <= 0 } {
-	_openSyntaxError "syntax error in the namelist"
+	_openSyntaxError "syntax error in the namelist $nmlName"
 	return -code return
     }
     scan [lindex [split $readline =] 0] %s result    
@@ -599,7 +599,7 @@ itcl::body ::guib::moduleObj::_openReadNamelistVar {obj fileChannel} {
 	if { ! [info exists objWidgetArray(UNDEFINED_VAR,$obj)] } {
 	    # make the "Undefined variables" label
 	    set objWidgetArray(UNDEFINED_VAR,$obj) 1
-	    _separator $obj {-label "--- The following undefined variables were found ---"}
+	    _separator $obj {-label "--- The following undefined variables were found in the namelist $nmlName:"}
 	    _buildGUI_constructItem [$obj getID] $obj $objWidgetArray(CHILDSITEWIDGET,$obj) separator
 	}
 	_manageKeyword $obj var [_makeIdent $result] \
@@ -609,7 +609,7 @@ itcl::body ::guib::moduleObj::_openReadNamelistVar {obj fileChannel} {
     }
     
     # If we came here, then the variable could not be allocated
-    _openSyntaxError "namelist's variable \"$result\" not allowed."
+    _openSyntaxError "variable \"$result\" not allowed in namelist $nmlName"
     return -code return
 }
 

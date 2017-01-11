@@ -468,7 +468,7 @@ itcl::class ::guib::moduleObj {
     #
     private method _open                  {obj fileChannel} 
     private method _openCompareStr        {args}
-    private method _openReadNamelistVar   {obj fileChannel}
+    private method _openReadNamelistVar   {obj fileChannel nmlName}
     private method _openReadNamelistValue {} 
     private method _openReadKeyword       {keyword}
     private method _openSyntaxError       {text {addSkipMsg 1}}
