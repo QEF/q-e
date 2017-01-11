@@ -115,7 +115,7 @@ PROGRAM pw2wannier90
        write_dmn, read_sym, & !YN:
        write_uIu, spn_formatted, uHu_formatted, uIu_formatted,& !ivo
    ! end change Lopez, Thonhauser, Souza
-       regular_mesh ! change D. Gresch
+       regular_mesh !gresch
   !
   ! initialise environment
   !
