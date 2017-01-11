@@ -14,7 +14,7 @@
     celldm(1)       = 6.64245
     nat             = 2
     ntyp            = 1
-    ecutwfc         = 40
+    ecutwfc         = 60
     occupations     = 'smearing'
     smearing        = 'mp'
     degauss         = 0.02
@@ -31,4 +31,4 @@ ATOMIC_POSITIONS alat
   C   0.00  0.00  0.00
   C   0.25  0.25  0.25
 K_POINTS automatic
-4 4 4 0 0 0
+3 3 3 0 0 0
