@@ -1,0 +1,10 @@
+phonons of C at Gamma
+ &inputph
+  tr2_ph=1.0d-14,
+  epsil=.true.,
+  prefix='carbon',
+  fildyn='Cg.dyn',
+  amass(1)=12.0107,
+  outdir='/home/sponce/program/espresso/tempdir/'
+ /
+0.0 0.0 0.0

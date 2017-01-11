@@ -1,0 +1,25 @@
+ &control
+    calculation='scf',
+    restart_mode='from_scratch',
+    prefix='carbon',
+    pseudo_dir = '../../pseudo/',
+ /
+ &system
+    ibrav = 2, celldm(1) =6.74, nat=  2, ntyp= 1,
+    nr1=32,
+    nr2=32,
+    nr3=32,
+    ecutwfc = 27.0
+    ecutrho = 300.0
+ /
+ &electrons
+    mixing_beta = 0.7
+    conv_thr =  1.0d-9
+ /
+ATOMIC_SPECIES
+ C   12.0107  C.pz-rrkjus.UPF
+ATOMIC_POSITIONS (alat)
+ C  0.00 0.00 0.00
+ C  0.25 0.25 0.25
+K_POINTS AUTOMATIC
+4 4 4 1 1 1

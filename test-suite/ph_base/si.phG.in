@@ -1,0 +1,9 @@
+phonons of Si at Gamma
+ &inputph
+  tr2_ph=1.0d-14,
+  prefix='silicon',
+  epsil=.true.,
+  amass(1)=28.08,
+  fildyn='si.dynG',
+ /
+0.0 0.0 0.0

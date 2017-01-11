@@ -50,8 +50,11 @@ SUBROUTINE run_driver ( srvaddress, exit_status )
   !
   IMPLICIT NONE
   INTEGER, INTENT(OUT) :: exit_status
-  !! At output 
+  !! Gives the exit status at the end
   CHARACTER(*), INTENT(IN) :: srvaddress
+  !! Gives the socket address 
+  !
+  ! Local variables
   INTEGER, PARAMETER :: MSGLEN=12
   REAL*8, PARAMETER :: gvec_omega_tol= 1.0D-1
   LOGICAL :: isinit=.false., hasdata=.false., firststep=.true., exst, lgreset

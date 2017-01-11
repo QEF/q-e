@@ -27,6 +27,21 @@ tolerance = ( (1.0e-5, None, 'e1'),
 skip_program = grep
 skip_args = 'not present in this version'
 
+[PH]
+exe = XXXXXX/test-suite/run-ph.sh
+extract_program = XXXXXX/test-suite/extract-ph.x
+inputs_args = ('*.in', '')
+run_cmd_template = tc.program tc.args tc.input tc.output tc.error
+tolerance = ( (1.0e-6, 5.0e-3, 'e1'),
+              (3.0e+0, 5.0e-1, 'n1'),
+              (1.0e-3, 1.0e-5, 'f1'),
+              (1.0e-1, 1.0e-3, 'p1'),
+              (1.0e-3, 1.0e-4, 'diel'),
+              (1.0e-3, 1.0e-4, 'born'),
+              (1.0e-3, 1.0e-4, 'phfreq'))
+skip_program = grep
+skip_args = 'not present in this version'
+
 [EPW]
 exe = XXXXXX/test-suite/run-epw.sh
 extract_program = XXXXXX/test-suite/extract-epw.x
@@ -61,6 +76,8 @@ tolerance = ( (1.0e-6, 5.0e-3, 'e1'),
               (5.0e-4, 5.0e-4, 'elph'),
               (2.0e-2, 5.0e-4, 'allDyn'),
               (1.0e-4, 5.0e-4, 'bcsgap'))
+skip_program = grep
+skip_args = 'not present in this version'
 
 [TDDFPT]
 exe = XXXXXX/test-suite/run-tddfpt.sh

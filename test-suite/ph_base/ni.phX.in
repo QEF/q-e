@@ -1,0 +1,8 @@
+phonons of Ni at X
+ &inputph
+  tr2_ph=1.0d-14,
+  prefix='nickel',
+  amass(1)=58.6934,
+  fildyn='niX.dyn',
+ /
+0.0 0.0 1.0
