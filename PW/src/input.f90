@@ -607,10 +607,12 @@ SUBROUTINE iosys()
      !
   END SELECT
   !
-  IF( lforce ) CALL infomsg( 'iosys', &
+  IF( ltetra ) THEN
+     IF( lforce ) CALL infomsg( 'iosys', &
        'BEWARE:  force calculation with tetrahedra (not recommanded)')
-  IF( lstres ) CALL infomsg( 'iosys', &
+     IF( lstres ) CALL infomsg( 'iosys', &
        'BEWARE: stress calculation with tetrahedra (not recommanded)')
+  END IF
   IF( nbnd < 1 ) &
      CALL errore( 'iosys', 'nbnd less than 1', nbnd )
   !
