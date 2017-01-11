@@ -4,13 +4,20 @@ python:
 addons:
   apt:
     packages:
-        - gfortran
-        - libblas-dev
-        - liblapack-dev
+      - gfortran
+      - libblas-dev
+      - liblapack-dev
+      - libopenmpi-dev
+      - openmpi-bin
 env:
+     - PARA=yes
+     - PARA=no
 install:
-     - ./configure
-     - make pwall epw  
+     - ./configure --enable-parallel=$PARA
+     - make pw
+     - make cp
+     - make ph
+     - make epw  
 script:
     - make travis
 git:
