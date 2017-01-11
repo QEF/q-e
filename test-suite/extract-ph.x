@@ -18,6 +18,13 @@ n1=`grep 'convergence has' $fname | tail -1 | awk '{print $6}'`
 f1=`grep "Total force" $fname | head -1 | awk '{printf "%8.4f\n", $4}'`
 p1=`grep "P= " $fname | tail -1 | awk '{print $6}'`
 
+# PH
+diel=`grep -A 4 '  Dielectric constant in cartesian' $fname | grep -v '  Dielectric constant' | awk '{print $2; print $3; print $4 }'`
+born=`grep "     E[x-z]  ( " $fname | awk '{print $3; print $4; print $5}'`
+phfreq=`grep "     freq (.*THz" $fname | awk '{print $5; print $8}'`
+
+
+
 if test "$e1" != ""; then
         echo e1
         echo $e1
@@ -37,12 +44,6 @@ if test "$p1" != ""; then
         echo p1
         echo $p1
 fi
-
-# PH
-diel=`grep -A 4 '  Dielectric constant in cartesian' $fname | grep -v '  Dielectric constant' | awk '{print $2; print $3; print $4 }'`
-born=`grep "     E[x-z]  ( " $fname | awk '{print $3; print $4; print $5}'`
-phfreq=`grep "     freq (.*THz" $fname | awk '{print $5; print $8}'`
-
 
 if test "$diel" != ""; then
         echo diel

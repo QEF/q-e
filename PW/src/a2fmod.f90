@@ -6,10 +6,11 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 MODULE a2F
-  !
-  ! This module contains a routine saving variables needed for the
-  ! electron-phonon calculation (new algorithm implemeted by MW) 
-  !
+  !! author: Malgorzata Wierzbowska
+  !!
+  !! This module contains a routine saving variables needed for the
+  !! electron-phonon calculation (new algorithm implemeted by MW) 
+  !!
   USE kinds,      ONLY : DP
   !
   LOGICAL :: la2F = .FALSE.
@@ -19,7 +20,8 @@ MODULE a2F
   CONTAINS
     !
     SUBROUTINE a2Fsave
-  
+      !!      
+      !!  
       USE kinds,        ONLY : DP
       USE klist,        ONLY : nks, nkstot, xk, wk
       USE ions_base,    ONLY : nat

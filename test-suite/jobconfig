@@ -31,7 +31,7 @@ program = PW
 inputs_args = ('lsda.in', ''), ('lsda-2.in', ''), ('lsda-cg.in', ''), ('lsda-mixing_localTF.in', ''), ('lsda-mixing_ndim.in', ''), ('lsda-mixing_TF.in', ''), ('lsda-nelup+neldw.in', ''), ('lsda-tot_magnetization.in', '')
 
 [ph_base/]
-program = PW
+program = PH
 inputs_args = ('c.scf.in', '1'), ('c.phG.in', '2'), ('ni.scf.in', '1'), ('ni.phX.in', '2'), ('si.scf.in', '1'), ('si.phG.in', '2'), ('si.phX.in', '2')
 
 [epw_base/]

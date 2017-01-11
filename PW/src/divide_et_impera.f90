@@ -8,30 +8,31 @@
 !
 !----------------------------------------------------------------------------
 SUBROUTINE divide_et_impera( nkstot, xk, wk, isk, nks )
-  !----------------------------------------------------------------------------
-  !
-  ! ... This routine divides the k points across nodes, sets the variable
-  ! ... nks equal to the local (on this processors) number of k-points
-  ! ... (nkstot on input is the total number of k-points)
-  ! ... The distributed has "granularity kunit", that is, kunit consecutive 
-  ! ... points stay on the same processor. Usually kunit=1; kunit=2 is used 
-  ! ... in phonon calculations, when one has interspersed k_i and k_i+q and
-  ! ... it is needed that they stay on the same processor
-  !
+  !! author: Paolo Giannozzi
+  !!
+  !! This routine divides the k points across nodes, sets the variable
+  !! nks equal to the local (on this processors) number of k-points
+  !! (nkstot on input is the total number of k-points)
+  !! The distributed has "granularity kunit", that is, kunit consecutive 
+  !! points stay on the same processor. Usually kunit=1; kunit=2 is used 
+  !! in phonon calculations, when one has interspersed k_i and k_i+q and
+  !! it is needed that they stay on the same processor
+  !!
   USE kinds,     ONLY : DP
   USE mp_pools,  ONLY : my_pool_id, npool, kunit
   !
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN)  :: nkstot
-  ! total number of k-points
+  !! total number of k-points
   INTEGER, INTENT(INOUT) :: isk(nkstot)
-  ! spin index of each kpoint (used in LSDA calculations only)
-  REAL (DP), INTENT(INOUT) :: xk(3,nkstot), wk(nkstot)
-  ! k-points (on all processors)
-  ! k-point weights
+  !! spin index of each kpoint (used in LSDA calculations only)
+  REAL (DP), INTENT(INOUT) :: xk(3,nkstot)
+  !! k-points (on all processors)
+  REAL (DP), INTENT(INOUT) :: wk(nkstot)
+  !! k-point weights
   INTEGER, INTENT(OUT)  :: nks
-  ! number of k-points per pool
+  !! number of k-points per pool
   !
   INTEGER :: ik, nbase, rest
   !
@@ -74,22 +75,21 @@ SUBROUTINE divide_et_impera( nkstot, xk, wk, isk, nks )
 END SUBROUTINE divide_et_impera
 !----------------------------------------------------------------------------
 FUNCTION global_kpoint_index ( nkstot, ik ) RESULT (ik_g)
-  !----------------------------------------------------------------------------
-  
-  ! ... Returns the index in the global list of k-points
-  ! ... of k-point "ik" in this pool
+  !! Returns the index in the global list of k-points
+  !! of k-point "ik" in this pool
 
   USE mp_pools, ONLY : npool, my_pool_id, kunit
 
   IMPLICIT NONE
   
-  INTEGER, INTENT(IN) :: nkstot, ik
-  ! total number of k-points
-  ! index of k-point
+  INTEGER, INTENT(IN) :: nkstot
+  !! total number of k-points
+  INTEGER, INTENT(IN) :: ik
+  !! index of k-point
   INTEGER  :: ik_g
-  ! index in global list corresponding to ik in pool
+  !! index in global list corresponding to ik in pool
   INTEGER  :: nks
-  ! this is actually the number of k-points in this pool
+  !! this is actually the number of k-points in this pool
   !
   INTEGER  :: nkbl, rest
   !
