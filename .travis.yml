@@ -13,7 +13,7 @@ env:
      - PARA=yes
      - PARA=no
 install:
-     - ./configure --enable-parallel=$PARA
+     - ./configure --enable-parallel=$PARA --with-netlib
      - make pw
      - make cp
      - make ph
