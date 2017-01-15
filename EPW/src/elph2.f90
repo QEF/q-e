@@ -67,7 +67,7 @@
        sumr(:,:,:,:),          &!  to apply the ASR correction to every xq
        zstar(:,:,:),           &!  Born effective charges
        epsi(:,:),              &!  dielectric tensor
-       inv_tau(:,:,:),         &!  scattering rate
+       inv_tau_all(:,:,:),     &!  scattering rate
        ifc(:,:,:,:,:,:,:)       !  Interatomic force constant in real space
   REAL(KIND=DP) ::             &!
        efnew                    !  SP: Fermi level on the fine grid. Added globaly for efficiency reason 

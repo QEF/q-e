@@ -107,7 +107,9 @@ wannierize.o \
 pw2wan90epw.o \
 wigner_seitz2.o \
 wigner_seitz.o \
-write_ephmat.o 
+write_ephmat.o \
+io_scattering.o
+
 # setphases.o \ : SP: We keep it in case its usefull in the future but now depreciated.
 
 #default : epw

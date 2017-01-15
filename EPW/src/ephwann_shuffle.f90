@@ -37,9 +37,9 @@
                             elecselfen, phonselfen, nest_fn, a2f,               &
                             vme, eig_read, ephwrite, nkf1, nkf2, nkf3,          & 
                             efermi_read, fermi_energy, specfun, band_plot,      &
-                            nqf1, nqf2, nqf3, mp_mesh_k
+                            nqf1, nqf2, nqf3, mp_mesh_k, restart
   USE noncollin_module, ONLY : noncolin
-  USE constants_epw, ONLY : ryd2ev, ryd2mev, one, two, czero, twopi, ci
+  USE constants_epw, ONLY : ryd2ev, ryd2mev, one, two, czero, twopi, ci, zero
   USE io_files,      ONLY : prefix, diropn
   USE io_global,     ONLY : stdout, ionode
   USE io_epw,        ONLY : lambda_phself, linewidth_phself, iunepmatwe,        &
@@ -50,7 +50,7 @@
                             wkf, dynq, nqtotf, nkqf, epf17, nkf, nqf, et_ks,    &
                             ibndmin, ibndmax, lambda_all, dmec, dmef, vmef,     &
                             sigmai_all, sigmai_mode, gamma_all, epsi, zstar,    &
-                            efnew, ifc
+                            efnew, ifc, sigmar_all, zi_all, nkqtotf
 #if defined(__NAG)
   USE f90_unix_io,   ONLY : flush
 #endif
@@ -85,6 +85,8 @@
   INTEGER :: ios
   !! integer variable for I/O control
   INTEGER :: iq 
+  !! Counter on coarse q-point grid
+  INTEGER :: iq_restart
   !! Counter on coarse q-point grid
   INTEGER :: ik
   !! Counter on coarse k-point grid
@@ -652,6 +654,23 @@
     ! Fine mesh set of g-matrices.  It is large for memory storage
     ! SP: Should not be a memory problem. If so, can always the number of cores to reduce nkf. 
     ALLOCATE ( epf17 (ibndmax-ibndmin+1, ibndmax-ibndmin+1, nmodes, nkf) )
+    ! 
+    ! Restart calculation
+    iq_restart = 1
+    IF (restart) THEN
+      ! 
+      IF ( elecselfen ) THEN
+        IF ( .not. ALLOCATED (sigmar_all) ) ALLOCATE( sigmar_all(ibndmax-ibndmin+1, nkqtotf/2) )
+        IF ( .not. ALLOCATED (sigmai_all) ) ALLOCATE( sigmai_all(ibndmax-ibndmin+1, nkqtotf/2) )
+        IF ( .not. ALLOCATED (zi_all) )     ALLOCATE( zi_all(ibndmax-ibndmin+1, nkqtotf/2) )
+        sigmar_all(:,:) = zero
+        sigmai_all(:,:) = zero
+        zi_all(:,:) = zero
+        !
+        CALL electron_read(iq_restart,nqf,nkqtotf/2,sigmar_all,sigmai_all,zi_all)
+      ENDIF
+      ! 
+    ENDIF
     !      
     DO iq = 1, nqf
        !   

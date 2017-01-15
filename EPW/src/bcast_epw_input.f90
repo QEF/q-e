@@ -44,7 +44,8 @@
                             vme, longrange, shortrange, system_2d, &
                             tempsmin, tempsmax, temps, delta_approx, title, &
                             scattering, scattering_serta, scattering_0rta, &
-                            int_mob, scissor, carrier, ncarrier, iterative_bte
+                            int_mob, scissor, carrier, ncarrier, iterative_bte, &
+                            restart, restart_freq
 !  USE epwcom,        ONLY : fildvscf0, tphases
   USE elph2,         ONLY : elph 
   USE mp,            ONLY : mp_bcast
@@ -124,6 +125,7 @@
   CALL mp_bcast (int_mob, meta_ionode_id, world_comm)
   CALL mp_bcast (iterative_bte, meta_ionode_id, world_comm)
   CALL mp_bcast (carrier, meta_ionode_id, world_comm)  
+  CALL mp_bcast (restart, meta_ionode_id, world_comm)
   !
   ! integers
   !
@@ -152,6 +154,7 @@
   CALL mp_bcast (nstemp, meta_ionode_id, world_comm )     !
   CALL mp_bcast (nsiter, meta_ionode_id, world_comm )     !
   CALL mp_bcast (nw_specfun, meta_ionode_id, world_comm)  !
+  CALL mp_bcast (restart_freq, meta_ionode_id, world_comm)
   !
   ! real*8
   !

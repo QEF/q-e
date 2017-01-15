@@ -30,6 +30,8 @@
             iufilikmap, iueig, iunepmatwp, iunepmatwe, iunkf, iunqf, &
             iufileig, iukmap, crystal, iunifc
   PUBLIC :: iuwinfil, iun_plot, iuukk, iuprojfil !, iummn
+  PUBLIC :: iufilsigma, iufilseebeck, iufilkappael, iufilkappa, iufilscatt_rate,&
+            iufilFi_all, iufilsigma_all, iufiltau_all
   !
   ! Output of physically relevant quantities (60-100)
   !    
@@ -106,5 +108,17 @@
                                     ! real space Wannier functions)
   INTEGER :: iuukk           = 204  ! Final ukk rotation matrix (the big U!)
   INTEGER :: iuprojfil       = 205  ! Unit for projector [.projw90]
-  ! 
+  
+  !
+  ! Output quantites related to transport (251-300)
+  
+  INTEGER :: iufilsigma      = 251 ! Electrical conductivity
+  INTEGER :: iufilseebeck    = 252 ! Seebeck coefficient
+  INTEGER :: iufilkappael    = 253 ! Electronic contribution to thermal conductivity
+  INTEGER :: iufilkappa      = 254 ! Electronic contribution to thermal conductivity
+  INTEGER :: iufilscatt_rate = 255 ! scattering rate
+  INTEGER :: iufilFi_all     = 256 ! Fi_all file to retart at X iteration
+  INTEGER :: iufilsigma_all  = 257 ! Sigmar_all and Sigmai_all file to retart an interpolation
+  INTEGER :: iufiltau_all    = 258 ! inv_tau_all file to retart an interpolation
+  !
 END MODULE io_epw

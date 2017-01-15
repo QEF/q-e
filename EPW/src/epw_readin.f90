@@ -55,7 +55,8 @@
                             nbndsub, nbndskip, system_2d, delta_approx, &
                             title, int_mob, scissor, iterative_bte, scattering, &
                             ncarrier, carrier, scattering_serta, &
-                            scattering_0rta, longrange, shortrange
+                            scattering_0rta, longrange, shortrange,restart, &
+                            restart_freq
   USE elph2,         ONLY : elph
   USE start_k,       ONLY : nk1, nk2, nk3
   USE constants_epw, ONLY : ryd2mev, ryd2ev, ev2cmm1, kelvin2eV
@@ -118,7 +119,8 @@
        ep_coupling, fila2f, max_memlt, efermi_read, fermi_energy,              &
        specfun, wmin_specfun, wmax_specfun, nw_specfun, system_2d,             & 
        delta_approx, scattering, int_mob, scissor, ncarrier, carrier,          &
-       iterative_bte, scattering_serta, scattering_0rta, longrange, shortrange
+       iterative_bte, scattering_serta, scattering_0rta, longrange, shortrange,&
+       restart, restart_freq
 
   ! tphases, fildvscf0
   !
@@ -237,6 +239,8 @@
   ! 
   ! Added by SP
   !
+  ! restart         : if .true. a run can be restarted from the interpolation level
+  ! restart_freq    : Create a restart point every restart_freq q/k-points
   ! scattering      : if .true. scattering rates are calculated
   ! scattering_serta: if .true. scattering rates are calculated using self-energy relaxation-time-approx
   ! scattering_0rta : if .true. scattering rates are calculated using 0th order relaxation-time-approx
@@ -300,6 +304,8 @@
   epbwrite     = .false.
   epwread      = .false.
   epwwrite     = .false.
+  restart      = .false.
+  restart_freq = 100
   wannierize   = .false.
   write_wfn    = .false.
   kmaps        = .false.

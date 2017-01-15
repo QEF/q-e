@@ -35,7 +35,8 @@
   USE phcom,         ONLY : nmodes
   USE epwcom,        ONLY : nbndsub, lrepmatf, shortrange, &
                             fsthick, eptemp, ngaussw, degaussw, &
-                            eps_acustic, efermi_read, fermi_energy
+                            eps_acustic, efermi_read, fermi_energy,&
+                            restart, restart_freq
   USE pwcom,         ONLY : ef !, nelec, isk
   USE elph2,         ONLY : etf, ibndmin, ibndmax, nkqf, xqf, &
                             nkf, epf17, wkf, nqtotf, wf, wqf, xkf, nkqtotf, &
@@ -199,6 +200,16 @@
   !
   ! find the bounds of k-dependent arrays in the parallel case in each pool
   CALL fkbounds( nksqtotf, lower_bnd, upper_bnd )
+  ! 
+  IF (restart) THEN
+    ! Make everythin 0 except the range of k-points we are working on
+    sigmar_all(:,1:lower_bnd-1) = zero
+    sigmar_all(:,lower_bnd+nkf:nkqtotf/2) = zero
+    sigmai_all(:,1:lower_bnd-1) = zero
+    sigmai_all(:,lower_bnd+nkf:nkqtotf/2) = zero
+    zi_all(:,1:lower_bnd-1) = zero
+    zi_all(:,lower_bnd+nkf:nkqtotf/2) = zero
+  ENDIF
   !
   IF ( iq .eq. 1 ) THEN 
      IF ( .not. ALLOCATED (sigmar_all) ) ALLOCATE( sigmar_all(ibndmax-ibndmin+1, nksqtotf) )
@@ -318,6 +329,22 @@
      ENDIF ! endif  fsthick
      !
   ENDDO ! end loop on k
+  !
+  ! Creation of a restart point
+  IF (restart) THEN
+    IF (MOD(iq,restart_freq) == 0) THEN
+      WRITE(stdout, '(a)' ) '     Creation of a restart point'
+      ! 
+      CALL mp_sum( sigmar_all, inter_pool_comm )
+      CALL mp_sum( sigmai_all, inter_pool_comm )
+      CALL mp_sum( zi_all, inter_pool_comm )
+      CALL mp_sum(fermicount, inter_pool_comm)
+      CALL mp_barrier(inter_pool_comm)
+      !
+      CALL electron_write(iq,nqtotf,nksqtotf,sigmar_all,sigmai_all,zi_all)
+      ! 
+    ENDIF
+  ENDIF 
   !
   ! The k points are distributed among pools: here we collect them
   !
