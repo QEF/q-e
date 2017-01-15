@@ -707,8 +707,12 @@ CONTAINS
      CALL BLACS_Gridinfo(ortho_cntx,nprow, npcol, my_prow,my_pcol)
 
 #if defined(__ELPA_2016)
-     ierr = get_elpa_row_col_comms(ortho_comm, my_prow, my_pcol,mpi_comm_rows, mpi_comm_cols)
-     success = solve_evp_real_1stage(n,  n,   s, lds,    w,  vv, lds,SIZE(s,2),nb  ,mpi_comm_rows, mpi_comm_cols)
+     ! -> ELPA 2016.11.001_pre
+     ierr = elpa_get_communicators(ortho_comm, my_prow, my_pcol,mpi_comm_rows, mpi_comm_cols)
+     success = solve_evp_real_1stage(n,  n,   s, lds,    w,  vv, lds,SIZE(s,2),nb  ,mpi_comm_rows, mpi_comm_cols, ortho_comm)
+     ! -> ELPA 2016.05.003
+     !ierr = get_elpa_row_col_comms(ortho_comm, my_prow, my_pcol,mpi_comm_rows, mpi_comm_cols)
+     !success = solve_evp_real_1stage(n,  n,   s, lds,    w,  vv, lds,SIZE(s,2),nb  ,mpi_comm_rows, mpi_comm_cols)
 #elif defined(__ELPA_2015)
      ierr = get_elpa_row_col_comms(ortho_comm, my_prow, my_pcol,mpi_comm_rows, mpi_comm_cols)
      ierr = solve_evp_real(n,  n,   s, lds,    w,  vv, lds,SIZE(s,2),nb  ,mpi_comm_rows, mpi_comm_cols)

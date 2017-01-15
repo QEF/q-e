@@ -5726,7 +5726,6 @@ ia32:ifort* | ia64:ifort* | x86_64:ifort* | mac686:ifort* | crayxt*:ifort* )
             try_fflags_openmp="-openmp"
             try_ldflags_openmp="-openmp"
         fi
-        try_dflags="$try_dflags -D__INTEL"
         pre_fdflags="-fpp "
         ;;
 x86_64:nagfor* )
@@ -5741,8 +5740,7 @@ x86_64:nagfor* )
         try_ldflags=""
         try_ldflags_static="-unsharedrts"
         try_ldflags_openmp="-openmp"
-        # -D__GFORTRAN needed
-        try_dflags="$try_dflags -D__NAG -D__GFORTRAN"
+        try_dflags="$try_dflags -D__NAG"
         have_cpp=0
         ;;
 ia32:pgf* | ia64:pgf* | x86_64:pgf* )
@@ -5787,7 +5785,6 @@ ia32:path* | ia64:path* | x86_64:path* )
         try_fflags_noopt="-O0 -g"
         try_ldflags="-g -pthread"
         try_ldflags_openmp="-fopenmp"
-        try_dflags="$try_dflags -D__GFORTRAN -D__STD_F95"
         try_ldflags_static="-static"
         ;;
 *:sunf95 )
@@ -10627,8 +10624,8 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
         LDFLAGS=" $test_ldflags $try_loption"
         LIBS="$fft_libs"
 
-         #here we check if dfti explicit calls work
-         #it should work with blas flags
+        #here we check if dfti explicit calls work
+        #it should work with blas flags
         { $as_echo "$as_me:$LINENO: checking for DftiComputeForward in -lmkl_intel_lp64" >&5
 $as_echo_n "checking for DftiComputeForward in -lmkl_intel_lp64... " >&6; }
 if test "${ac_cv_lib_mkl_intel_lp64_DftiComputeForward+set}" = set; then
@@ -10707,11 +10704,15 @@ if test "x$ac_cv_lib_mkl_intel_lp64_DftiComputeForward" = x""yes; then
 fi
 
 
-
         if test "$have_fft" == "1"
         then
-              try_dflags="$try_dflags -D__DFTI"
-              try_incdir="$MKLROOT/include $MKL_INCLUDE $CPATH $FPATH"
+              try_incdir=""
+              try_incdir="$try_incdir /opt/intel/Compiler/*/*/mkl/include
+                          /opt/intel/mkl/*/include
+                          /opt/intel/mkl*/include"
+              try_incdir="$try_incdir $MKLROOT/include $MKL_INCLUDE $CPATH $FPATH"
+              try_incdir="`echo $try_incdir | sed 's/:/ /g'`"
+              #
               for inc in $try_incdir
               do
                  if test "$cross_compiling" == "no"
@@ -10890,17 +10891,19 @@ fi
 
 
                  fi
-
-                 if test "$have_fft_include=1"
+                 if test "$have_fft_include" == "1"
                  then
                    try_iflags="$try_iflags -I$inc"
+                   try_dflags="$try_dflags -D__DFTI"
+                   have_fft=1
                    break
+                 else
+                   # continue the search
+                   have_fft=0
                  fi
               done
-              break
         fi
 
-        #done
         ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
 ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
@@ -12177,7 +12180,7 @@ if test "$with_elpa_libs" -eq 1; then
   if test "$have_scalapack" -eq 1; then
     if test "$with_elpa_include" -eq 1 && test "$with_elpa_libs" -eq 1; then
       scalapack_libs="$elpa_libs $scalapack_libs"
-      try_iflags="$try_iflags $elpa_include"
+      try_iflags="$try_iflags -I$elpa_include"
       try_dflags="$try_dflags -D__ELPA_2016"
       elpa_line="ELPA_LIBS=$elpa_libs"
     fi
