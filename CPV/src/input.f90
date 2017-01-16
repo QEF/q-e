@@ -527,7 +527,7 @@ MODULE input
           tfor_  = .TRUE.
           fricp_ = 0.d0
         CASE ('cg')       ! Conjugate Gradient minimization for ions
-          CALL errore( "iosys ", " ion_dynamics = '//TRIM(ion_dynamics)//' not yet implemented ", 1 )
+          CALL errore( 'iosys ', ' ion_dynamics = '//TRIM(ion_dynamics)//' not yet implemented ', 1 )
         CASE ('damp')
           tsdp_      = .FALSE.
           tfor_      = .TRUE.
