@@ -235,13 +235,13 @@
 
 6         FORMAT(/,3X,'Electronic states',/  &
                   ,3X,'-----------------',/  &
-                  ,3X,'Number of Electron = ',I5,', of States = ',I5,/ &
+                  ,3X,'Number of Electrons= ',I5,', of States = ',I5,/ &
                   ,3X,'Occupation numbers :')
 7         FORMAT(2X,10F5.2)
 8         FORMAT(/,3X,'Electronic states',/  &
                   ,3X,'-----------------',/  &
                   ,3X,'Local Spin Density calculation',/ &
-                  ,3X,'Number of Electron = ',I5)
+                  ,3X,'Number of Electrons= ',I5)
 9         FORMAT(  3X,'Spins up   = ', I5, ', occupations: ')
 10        FORMAT(  3X,'Spins down = ', I5, ', occupations: ')
 11        FORMAT(/,3X,'WARNING: system charge = ',F12.6)
