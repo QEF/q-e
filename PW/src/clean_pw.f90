@@ -64,6 +64,9 @@ SUBROUTINE clean_pw( lflag )
   USE bp,                   ONLY : deallocate_bp_efield
   USE exx,                  ONLY : deallocate_exx
   !
+  USE control_flags,        ONLY : ts_vdw
+  USE tsvdw_module,         ONLY : tsvdw_finalize
+  !
   IMPLICIT NONE
   !
   LOGICAL, INTENT(IN) :: lflag
@@ -207,6 +210,8 @@ SUBROUTINE clean_pw( lflag )
   if (use_wannier) CALL wannier_clean()
   !
   CALL deallocate_exx ( ) 
+  !
+  IF (ts_vdw) CALL tsvdw_finalize()
   !
   CALL plugin_clean( lflag )
   !
