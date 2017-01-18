@@ -72,10 +72,13 @@ CONTAINS
 
   ! automatically finds whether the cell is orthorombic or not
   vcut%orthorombic=.false.
-  mod2a=sum(vcut%a**2,1)
-  if(sum(vcut%a(:,1)*vcut%a(:,2))/(mod2a(1)*mod2a(2))<eps6 .and. &
-     sum(vcut%a(:,2)*vcut%a(:,3))/(mod2a(2)*mod2a(3))<eps6 .and. &
-     sum(vcut%a(:,3)*vcut%a(:,1))/(mod2a(3)*mod2a(1))<eps6) vcut%orthorombic=.true.
+  !
+  mod2a=sqrt(sum(vcut%a**2,1))
+  if(abs(sum(vcut%a(:,1)*vcut%a(:,2)))/(mod2a(1)*mod2a(2))<eps6 .and. &
+     abs(sum(vcut%a(:,2)*vcut%a(:,3)))/(mod2a(2)*mod2a(3))<eps6 .and. &
+     abs(sum(vcut%a(:,3)*vcut%a(:,1)))/(mod2a(3)*mod2a(1))<eps6) vcut%orthorombic=.true.
+  !
+  if (.not.vcut%orthorombic) call errore(subname,"non-orthorombic case untested",1)
 
   n1=ceiling(vcut%cutoff*sqrt(sum(vcut%a(1,:)**2))/(2.0*pi))
   n2=ceiling(vcut%cutoff*sqrt(sum(vcut%a(2,:)**2))/(2.0*pi))
@@ -255,7 +258,7 @@ END FUNCTION vcut_formula
   real(dp) :: d1,d2,d3,weight,factor
   real(dp) :: r(3),r2,modr
   logical :: n1_is_even,n1_is_odd
-  real(dp) :: tmp
+  real(dp) :: tmp, rtmp(3)
   logical, parameter :: shifted=.false.
   integer :: n1max
   real(dp) :: i1_real,i2_real,i3_real
@@ -304,7 +307,8 @@ END FUNCTION vcut_formula
       do i3=0,n3-1
         i3_real=i3
         if(shifted) i3_real=i3_real+0.5
-        r=vcut_minimal_image(a,b,matmul(a,(/i1_real*d1,i2_real*d2,i3_real*d3/)),orthorombic)
+        rtmp=matmul(a,(/i1_real*d1,i2_real*d2,i3_real*d3/))
+        r=vcut_minimal_image(a,b,rtmp,orthorombic)
         r2=sum(r**2)
         modr=sqrt(r2)
         if(modr*sigma<eps6) then
