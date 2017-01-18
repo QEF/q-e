@@ -185,12 +185,12 @@ CONTAINS
         IF ( gstart == 2 ) &
            CALL DGER( nkb, m, -1.0_DP, beta, 2*npwx, psi, 2*npwx, betapsi, nkb )
         !
-     ENDIF
-     !
-     CALL mp_sum( betapsi( :, 1:m ), comm )
-     !
-     CALL stop_clock( 'calbec' )
-     !
+    ENDIF
+    !
+    CALL mp_sum( betapsi( :, 1:m ), comm )
+    !
+    CALL stop_clock( 'calbec' )
+    !
     RETURN
     !
   END SUBROUTINE calbec_gamma
