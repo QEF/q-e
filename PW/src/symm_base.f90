@@ -869,16 +869,16 @@ LOGICAL FUNCTION checksym ( irot, nat, ityp, xau, rau, ft_ )
 END FUNCTION checksym
 !
 !-----------------------------------------------------------------------
-SUBROUTINE checkallsym ( nat, tau, ityp, nr1, nr2, nr3 )
+SUBROUTINE checkallsym ( nat, tau, ityp )
   !-----------------------------------------------------------------------
-  !     given a crystal group this routine checks that the actual
-  !     atomic positions and bravais lattice vectors are compatible with
-  !     it. Used in relaxation/MD runs to check that atomic motion is
+  !     given a crystal group this routine checks that the actual atomic
+  !     positions and bravais lattice vectors are compatible with it.
+  !     Used in relaxation/MD runs to check that atomic motion is
   !     consistent with assumed symmetry.
   !
   IMPLICIT NONE
   !
-  INTEGER, INTENT(in) :: nat, ityp (nat), nr1, nr2, nr3
+  INTEGER, INTENT(in) :: nat, ityp (nat)
   REAL(DP), INTENT(in) :: tau (3, nat)
   !
   INTEGER :: na, kpol, isym, i, j, k, l

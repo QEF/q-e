@@ -253,7 +253,7 @@ SUBROUTINE read_xml_file_internal(withbs)
   !
   ! ... check on symmetry
   !
-  IF (nat > 0) CALL checkallsym( nat, tau, ityp, dfftp%nr1, dfftp%nr2, dfftp%nr3 )
+  IF (nat > 0) CALL checkallsym( nat, tau, ityp )
   !
   !  Set the different spin indices
   !
