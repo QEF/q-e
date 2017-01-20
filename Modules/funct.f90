@@ -285,7 +285,7 @@ module funct
   !    igcx:  type of gradient correction on exchange
   !    igcc:  type of gradient correction on correlation
   !    inlc:  type of non local correction on correlation
-  !    inlc:  type of meta-GGA
+  !    imeta: type of meta-GGA
   integer :: iexch = notset
   integer :: icorr = notset
   integer :: igcx  = notset

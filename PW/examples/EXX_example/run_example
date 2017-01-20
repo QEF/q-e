@@ -288,7 +288,6 @@ cat > o.inp << EOF
                      ecutwfc = $ecut ,
                    input_dft = '$xc'
                        nspin = 2
-   starting_magnetization(1) = 0.2,
                         nbnd = 4
            tot_magnetization = 2.0
             exxdiv_treatment = '$exxdiv_treatment'
@@ -334,7 +333,6 @@ cat > c.inp << EOF
                      ecutwfc = $ecut ,
                         input_dft='$xc'
                        nspin = 2
-   starting_magnetization(1) = 0.2,
                         nbnd = 4
            tot_magnetization = 2.0
             exxdiv_treatment = '$exxdiv_treatment'
@@ -380,7 +378,6 @@ cat > n.inp << EOF
                      ecutwfc = $ecut ,
                         input_dft='$xc'
                        nspin = 2
-   starting_magnetization(1) = 0.2,
                         nbnd = 4
            tot_magnetization = 3.0
             exxdiv_treatment = '$exxdiv_treatment'
@@ -522,7 +519,6 @@ cat > o2.inp << EOF
                      ecutwfc = $ecut ,
                         input_dft='$xc'
                        nspin = 2
-   starting_magnetization(1) = 0.2,
                         nbnd = 8
            tot_magnetization = 2.0
             exxdiv_treatment = '$exxdiv_treatment'
