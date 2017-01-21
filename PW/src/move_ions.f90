@@ -297,7 +297,7 @@ SUBROUTINE move_ions ( idone )
      ! ... before leaving check that the new positions still transform
      ! ... according to the symmetry of the system.
      !
-     CALL checkallsym( nat, tau, ityp, dfftp%nr1, dfftp%nr2, dfftp%nr3 )
+     CALL checkallsym( nat, tau, ityp)
      !
   END IF
 
