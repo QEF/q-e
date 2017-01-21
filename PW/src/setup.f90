@@ -61,7 +61,8 @@ SUBROUTINE setup()
   USE ktetra,             ONLY : tetra_type, opt_tetra_init, tetra_init
   USE symm_base,          ONLY : s, t_rev, irt, nrot, nsym, invsym, nosym, &
                                  d1,d2,d3, time_reversal, sname, set_sym_bl, &
-                                 find_sym, inverse_s, no_t_rev, allfrac
+                                 find_sym, inverse_s, no_t_rev &
+                                 , allfrac, remove_sym
   USE wvfct,              ONLY : nbnd, nbndx
   USE control_flags,      ONLY : tr2, ethr, lscf, lmd, david, lecrpa,  &
                                  isolve, niter, noinv, ts_vdw, &
@@ -550,8 +551,9 @@ SUBROUTINE setup()
      !
      ! ... eliminate rotations that are not symmetry operations
      !
-     CALL find_sym ( nat, tau, ityp, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
-                  magnetic_sym, m_loc, monopole )
+     CALL find_sym ( nat, tau, ityp, magnetic_sym, m_loc, monopole )
+     !
+     IF ( .NOT. allfrac ) CALL remove_sym ( dfftp%nr1, dfftp%nr1, dfftp%nr3 )
      !
   END IF
   !

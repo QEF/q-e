@@ -144,7 +144,7 @@ PROGRAM Q2QSTAR
   WRITE(stdout, '(5x,a,i3)') "Symmetries of bravais lattice: ", nrot
   !
   ! ~~~~~~~~ setup crystal symmetry ~~~~~~~~ 
-  CALL find_sym ( nat, tau, ityp, 6,6,6, .false., m_loc )
+  CALL find_sym ( nat, tau, ityp, .false., m_loc )
   WRITE(stdout, '(5x,a,i3)') "Symmetries of crystal:         ", nsym
   !
   ! ~~~~~~~~ setup small group of q symmetry ~~~~~~~~ 
