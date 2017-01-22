@@ -318,7 +318,7 @@
     WRITE(stdout, '(5x,a,i3)') "Symmetries of bravais lattice: ", nrot
     !
     ! ~~~~~~~~ setup crystal symmetry ~~~~~~~~ 
-    CALL find_sym ( nat, tau, ityp, dfftp%nr1,dfftp%nr2,dfftp%nr3, .false., m_loc )
+    CALL find_sym ( nat, tau, ityp, .false., m_loc )
     WRITE(stdout, '(5x,a,i3)') "Symmetries of crystal:         ", nsym
     !   
     ! The following loop is required to propertly set up the symmetry matrix s. 
