@@ -18,7 +18,7 @@ SUBROUTINE summary()
   !
   USE io_global,       ONLY : stdout
   USE kinds,           ONLY : DP
-  USE run_info,        ONLY: title
+  USE run_info,        ONLY : title
   USE constants,       ONLY : amu_ry, rytoev
   USE cell_base,       ONLY : alat, ibrav, omega, at, bg, celldm
   USE ions_base,       ONLY : nat, atm, zv, tau, ntyp => nsp, ityp
@@ -488,9 +488,10 @@ SUBROUTINE print_symmetries ( iverbosity, noncolin, domag )
   !-----------------------------------------------------------------------
   !
   USE kinds,           ONLY : dp
+  USE constants,       ONLY : eps6
   USE io_global,       ONLY : stdout 
   USE symm_base,       ONLY : nsym, nsym_ns, nsym_na, invsym, s, sr, &
-                              t_rev, ftau, sname
+                              t_rev, ft, sname
   USE rap_point_group, ONLY : code_group, nclass, nelem, elem, &
        which_irr, char_mat, name_rap, name_class, gname, ir_ram, elem_name
   USE rap_point_group_so, ONLY : nrap, nelem_so, elem_so, has_e, &
@@ -508,7 +509,7 @@ SUBROUTINE print_symmetries ( iverbosity, noncolin, domag )
   !
   INTEGER :: nclass_ref   ! The number of classes of the point group
   INTEGER :: isym, ipol
-  REAL (dp) :: ft1, ft2, ft3
+  REAL (dp) :: ftcart(3)
   !
   !
   IF (nsym <= 1) THEN
@@ -550,35 +551,33 @@ SUBROUTINE print_symmetries ( iverbosity, noncolin, domag )
                  nsym_is=nsym_is+1
                  sr_is(:,:,nsym_is) = sr(:,:,isym)
                  CALL find_u(sr_is(1,1,nsym_is), d_spin_is(1,1,nsym_is))
-                 ftau_is(:,nsym_is)=ftau(:,isym)
+                 ! ftau_is are fractional translations in FFT grid coordinates
+                 ftau_is(1,nsym_is)=NINT(ft(1,isym)*dfftp%nr1)
+                 ftau_is(2,nsym_is)=NINT(ft(2,isym)*dfftp%nr2)
+                 ftau_is(3,nsym_is)=NINT(ft(3,isym)*dfftp%nr3)
                  sname_is(nsym_is)=sname(isym)
               ENDIF
            ELSE
               CALL find_u(sr(1,1,isym),d_spin(1,1,isym))
            END IF
         END IF
-        IF ( ftau(1,isym).NE.0 .OR. ftau(2,isym).NE.0 .OR. &
-             ftau(3,isym).NE.0) THEN
-           ft1 = at(1,1)*ftau(1,isym)/dfftp%nr1 + at(1,2)*ftau(2,isym)/dfftp%nr2 + &
-                at(1,3)*ftau(3,isym)/dfftp%nr3
-           ft2 = at(2,1)*ftau(1,isym)/dfftp%nr1 + at(2,2)*ftau(2,isym)/dfftp%nr2 + &
-                at(2,3)*ftau(3,isym)/dfftp%nr3
-           ft3 = at(3,1)*ftau(1,isym)/dfftp%nr1 + at(3,2)*ftau(2,isym)/dfftp%nr2 + &
-                at(3,3)*ftau(3,isym)/dfftp%nr3
+        IF ( ANY ( ABS(ft(:,isym)) > eps6 ) ) THEN
+           ftcart(:) = at(:,1)*ft(1,isym) + at(:,2)*ft(2,isym) + &
+                       at(:,3)*ft(3,isym)
            WRITE( stdout, '(1x,"cryst.",3x,"s(",i2,") = (",3(i6,5x), &
                 &        " )    f =( ",f10.7," )")') &
-                isym, (s(1,ipol,isym),ipol=1,3), DBLE(ftau(1,isym))/DBLE(dfftp%nr1)
+                isym, (s(1,ipol,isym),ipol=1,3), ft(1,isym)
            WRITE( stdout, '(17x," (",3(i6,5x), " )       ( ",f10.7," )")') &
-                (s(2,ipol,isym),ipol=1,3), DBLE(ftau(2,isym))/DBLE(dfftp%nr2)
+                (s(2,ipol,isym),ipol=1,3), ft(2,isym)
            WRITE( stdout, '(17x," (",3(i6,5x), " )       ( ",f10.7," )"/)') &
-                (s(3,ipol,isym),ipol=1,3), DBLE(ftau(3,isym))/DBLE(dfftp%nr3)
+                (s(3,ipol,isym),ipol=1,3), ft(3,isym)
            WRITE( stdout, '(1x,"cart. ",3x,"s(",i2,") = (",3f11.7, &
                 &        " )    f =( ",f10.7," )")') &
-                isym, (sr(1,ipol,isym),ipol=1,3), ft1
+                isym, (sr(1,ipol,isym),ipol=1,3), ftcart(1)
            WRITE( stdout, '(17x," (",3f11.7, " )       ( ",f10.7," )")') &
-                (sr(2,ipol,isym),ipol=1,3), ft2
+                (sr(2,ipol,isym),ipol=1,3), ftcart(2)
            WRITE( stdout, '(17x," (",3f11.7, " )       ( ",f10.7," )"/)') &
-                (sr(3,ipol,isym),ipol=1,3), ft3
+                (sr(3,ipol,isym),ipol=1,3), ftcart(3)
         ELSE
            WRITE( stdout, '(1x,"cryst.",3x,"s(",i2,") = (",3(i6,5x), " )")') &
                 isym,  (s (1, ipol, isym) , ipol = 1,3)

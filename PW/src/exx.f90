@@ -666,7 +666,7 @@ MODULE exx
     USE buffers,              ONLY : get_buffer
     USE wvfct,                ONLY : nbnd, npwx, wg, current_k
     USE klist,                ONLY : ngk, nks, nkstot, xk, wk, igk_k
-    USE symm_base,            ONLY : nsym, s, sr, ftau
+    USE symm_base,            ONLY : nsym, s, sr
     USE mp_bands,             ONLY : me_bgrp, set_bgrp_indices, nbgrp
     USE mp,                   ONLY : mp_sum, mp_bcast
     USE funct,                ONLY : get_exx_fraction, start_exx,exx_is_active,&
@@ -956,13 +956,14 @@ MODULE exx
     ! Uses nkqs and index_sym from module exx, computes rir
     !
     USE fft_custom,           ONLY : fft_cus
-    USE symm_base,            ONLY : nsym, s, sr, ftau
+    USE symm_base,            ONLY : nsym, s, sr, ft
     !
     IMPLICIT NONE
     !
     INTEGER :: nxxs, nr1,nr2,nr3, nr1x,nr2x,nr3x
-    INTEGER :: ikq, isym, i,j,k, ri,rj,rk, ir
+    INTEGER :: ftau(3), ikq, isym, i,j,k, ri,rj,rk, ir
     LOGICAL :: ispresent(nsym)
+    REAL (dp) :: ft_(3), eps2 = 1.0d-5
     !
     nr1 = exx_fft%dfftt%nr1
     nr2 = exx_fft%dfftt%nr2
@@ -985,16 +986,27 @@ MODULE exx
                mod(s(3, 2, isym) * nr2, nr3) /= 0 .or. &
                mod(s(1, 3, isym) * nr3, nr1) /= 0 .or. &
                mod(s(2, 3, isym) * nr3, nr2) /= 0 ) THEN
-             CALL errore ('exxinit',' EXX smooth grid is not compatible with &
-                                    & symmetry: change ecutfock',isym)
+             CALL errore ('exx_set_symm',' EXX smooth grid is not compatible &
+                          & with symmetry: change ecutfock',isym)
           ENDIF
           DO ir=1, nxxs
              rir(ir,isym) = ir
           ENDDO
+          ! fractional translation in FFT grid coordinates
+          ft_(1) = ft(1,isym)*nr1
+          ft_(2) = ft(2,isym)*nr2
+          ft_(3) = ft(3,isym)*nr3
+          ftau(:) = NINT(ft_(:))
+          IF ( abs (ft_(1) - ftau(1) ) / nr1 > eps2 .or. &
+               abs (ft_(2) - ftau(2) ) / nr2 > eps2 .or. &
+               abs (ft_(3) - ftau(3) ) / nr3 > eps2 ) THEN
+             CALL infomsg ('exx_set_symm',' EXX smooth grid is not compatible &
+                  & with fractional translation: change ecutfock',isym)
+          ENDIF
           DO k = 1, nr3
              DO j = 1, nr2
                 DO i = 1, nr1
-                   CALL ruotaijk (s(1,1,isym), ftau(1,isym), i,j,k, nr1,nr2,nr3, ri,rj,rk)
+                   CALL ruotaijk (s(1,1,isym), ftau, i,j,k, nr1,nr2,nr3, ri,rj,rk)
                    ir =   i + ( j-1)*nr1x + ( k-1)*nr1x*nr2x
                    rir(ir,isym) = ri + (rj-1)*nr1x + (rk-1)*nr1x*nr2x
                 ENDDO
