@@ -24,7 +24,8 @@ fft_smallbox_type.o  \
 fft_support.o  \
 fft_error.o  \
 fft_stick.o  \
-fft_types.o 
+fft_types.o \
+fft_param.o
 
 
 all : libqefft.a

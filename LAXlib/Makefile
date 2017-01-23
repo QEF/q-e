@@ -10,7 +10,8 @@ dspev_drv.o \
 ptoolkit.o \
 transto.o \
 distools.o \
-zhpev_drv.o
+zhpev_drv.o \
+la_param.o
 
 
 all : libqela.a
