@@ -15,7 +15,7 @@ SUBROUTINE setup_nscf ( newgrid, xq, elph_mat )
   ! ... the phonon q-vector (xq) or the single atomic displacement (modenum)
   ! ... unchanged; determines the k- and k+q points in the irreducible BZ
   ! ... Needed on input (read from data file):
-  ! ... "nsym" crystal symmetries s, ftau, t_rev, "nrot" lattice symetries "s"
+  ! ... "nsym" crystal symmetries s, t_rev, "nrot" lattice symetries "s"
   ! ... "nkstot" k-points in the irreducible BZ wrt lattice symmetry
   ! ... Produced on output:
   ! ... symmetries ordered with the "nsymq" phonon symmetries first
@@ -33,8 +33,7 @@ SUBROUTINE setup_nscf ( newgrid, xq, elph_mat )
   USE klist,              ONLY : xk, wk, nks, nelec, degauss, lgauss, &
                                  ltetra, nkstot, qnorm
   USE lsda_mod,           ONLY : lsda, nspin, current_spin, isk
-  USE symm_base,          ONLY : s, t_rev, irt, ftau, nrot, nsym, &
-                                 time_reversal
+  USE symm_base,          ONLY : s, t_rev, nrot, nsym, time_reversal
   USE wvfct,              ONLY : nbnd, nbndx
   USE control_flags,      ONLY : ethr, isolve, david, max_cg_iter, &
                                  noinv, use_para_diag
