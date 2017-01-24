@@ -240,7 +240,7 @@ module funct
   !              revPBE  Zhang and Yang, PRL 80, 890 (1998)
   !              pbesol  J.P. Perdew et al., PRL 100, 136406 (2008)
   !              q2d     L. Chiodo et al., PRL 108, 126402 (2012)
-  !              rw86    E. Amonn D. Murray et al, J. Chem. Theory comp. 5, 2754 (2009) 
+  !              rw86    Eamonn D. Murray et al, J. Chem. Theory Comput. 5, 2754 (2009) 
   !              wc      Z. Wu and R. E. Cohen, PRB 73, 235116 (2006)
   !              kzk     H.Kwee, S. Zhang, H. Krakauer, PRL 100, 126404 (2008)
   !              pbe0    J.P.Perdew, M. Ernzerhof, K.Burke, JCP 105, 9982 (1996)
