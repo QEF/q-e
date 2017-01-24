@@ -28,11 +28,12 @@ MODULE symm_base
   !
   PUBLIC :: s, sr, sname, ft, ftau, nrot, nsym, nsym_ns, nsym_na, t_rev, &
             no_t_rev, time_reversal, irt, invs, invsym, d1, d2, d3, &
-            allfrac, nofrac, nosym, nosym_evc, remove_sym
+            allfrac, nofrac, nosym, nosym_evc, fft_fact, remove_sym
   INTEGER :: &
        s(3,3,48),            &! symmetry matrices, in crystal axis
        invs(48),             &! index of inverse operation: S^{-1}_i=S(invs(i))
        ftau(3,48),           &! fractional translations, in FFT coordinates
+       fft_fact(3),          &! FFT dimensions must be multiple of fft_fact
        nrot,                 &! number of bravais lattice symmetries
        nsym = 1,             &! total number of crystal symmetries
        nsym_ns = 0,          &! nonsymmorphic (fractional translation) symms
@@ -476,6 +477,7 @@ SUBROUTINE sgam_at ( nat, tau, ityp, sym, no_z_inv)
   !
 10 CONTINUE
   nsym_ns = 0
+  fft_fact(:)= 1
   DO irot = 1, nrot
      !
      DO na = 1, nat
@@ -520,6 +522,14 @@ SUBROUTINE sgam_at ( nat, tau, ityp, sym, no_z_inv)
               IF (sym (irot) ) THEN
                  nsym_ns = nsym_ns + 1
                  ft (:,irot) = ft_(:)
+                 !
+                 ! Find factors that must be present in FFT grid dimensions
+                 ! in order to ensure that fractional translations are
+                 ! commensurate with FFT grids 
+                 DO i = 1, 3
+                    fft_fact(i) = mcm ( fft_fact(i), NINT(1.0_dp/ft_(i)) )
+                 END DO
+                 !
                  GOTO 20
               ENDIF
            ENDIF
@@ -1152,5 +1162,28 @@ SUBROUTINE remove_sym ( nr1, nr2, nr3 )
   CALL s_axis_to_cart ( )
   !
 END SUBROUTINE remove_sym
+!
+
+INTEGER FUNCTION mcm(i,j)
+  ! returns minimum common multiple of two integers
+  ! if i=0, returns j, and vice versa; if i<0 or j<0, returns -1
+  INTEGER, INTENT(IN) :: i,j
+  INTEGER :: n1,n2,k
+  
+  IF ( i < 0 .OR. j < 0 ) THEN
+     mcm = -1
+  ELSE IF ( i == 0 .AND. j == 0 ) THEN
+     mcm = 0
+  ELSE
+     n1 = MIN (i,j)
+     n2 = MAX (i,j)
+     DO k=1,n1
+        mcm = k*n2 
+        IF ( MOD( mcm, n1 ) == 0 ) RETURN
+     END DO
+     mcm = n2
+  END IF
+  
+END FUNCTION mcm
 
 END MODULE symm_base

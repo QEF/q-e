@@ -6,7 +6,9 @@ New in svn version:
 Incompatible changes in svn version:
 
   * Routine h_psiq deleted, replaced by h_psi
-  * Variables related to tetrahedron method moved around
+  * Many variables related to tetrahedron method moved around
+  * Functions set_sym and find_sym no longer require FFT grid dimensions as 
+    input arguments, no longer force consistency of symmetries with FFT grids
 
 Fixed in svn version
 
