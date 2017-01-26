@@ -188,7 +188,7 @@ itcl::body ::guib::moduleObj::_openSyntaxError {errMsg {addSkipMsg 1}} {
     if { $addSkipMsg == 1 } {
 	::tclu::errorDialog "Syntax error in the input file:\n\n${errMsg}\n\nSkipping the rest of the input file !!!"
     } else {
-	::tclu::errorDialog $errMsg
+	::tclu::errorDialog "Syntax error in the input file:\n\n$errMsg"
     }
 }
 
@@ -262,45 +262,27 @@ itcl::body ::guib::moduleObj::_open {obj fileChannel} {
 		# of the namelist, therefore read until end-of-namelist is 
 		# encountered
 
-		set name     [$obj getOptionValue $id name]				    
-		set readline [_openGets $fileChannel]
+		set name [$obj getOptionValue $id name]
 
-		::tclu::DEBUG open: --namelist--  readline: $readline
-		
-		# t.k.
-		#_openCompareStr \
-		#    [string range $readline 1 [string length &$name]] "&$name"
-		_openCompareStr -nocase $readline "&$name"
-		
-		while {1} {
-		    set readline [_openGets $fileChannel]
-			
-		    # check if we need to close the namelist
-		    
-		    if { [regexp -nocase -- $::guib::settings(NAMELIST.end_regexp) $readline] } {
-			#set readline [_openGets $fileChannel]
-			break
+		if { [catch {set nmlContent [::fnml::getContent $name $fileChannel]} errMsg] } {
+		    if { $::errorCode eq "PARSE_ERROR" } {
+			_openSyntaxError $errMsg
+			return
+		    } else {
+			error $::errorInfo
 		    }
-			
-		    # There can be sevaral vars on one line. Scan trough
-		    # varname = varvalue pairs until the end of line ...
-			
-		    while { $readline != {} } {
-
-			# check for comment-character "!" 
-
-			if { [string match ! [string range [lindex $readline 0] 0 0]] } {
-			    # ignore the rest of line. 
-			    break
-			}
-			set varIdent  [_openReadNamelistVar $childObj $fileChannel $name]
-			set varValue  [_openReadNamelistValue]
-			varset $varIdent -value $varValue
-
-			::tclu::DEBUG open: --namelist--       var: $varIdent
-			::tclu::DEBUG open: --namelist--     value: $varValue
+		}
+		if { [catch {array set nml [::fnml::parseContent $name $nmlContent]} errMsg] }  {
+		    if { $::errorCode eq "PARSE_ERROR" } {
+			_openSyntaxError $errMsg
+			return
+		    } else {
+			error $::errorInfo
 		    }
-		}    
+		}
+		
+		_openNamelistAssignVars $obj $name nml
+		
 	    } else {
 		set _line 0
 		if { $key == "line" } {
@@ -523,133 +505,92 @@ itcl::body ::guib::moduleObj::_openCompareStr {args} {
     }
     if { $result != 0 } {
 	#-->READ ERROR
-	_openSyntaxError "NOT-MATCH ERROR"
+	_openSyntaxError "expected to read \"$str\", but got \"$readStr\""
 	return -code return
     }
 }
 
 itcl::body ::guib::moduleObj::_openGets {fileChannel} {
-    # check for empty line: read as long as to skip all the empty lines
+
     set readNewLine 1
-    set i [gets $fileChannel _line]
-    #
-    # We might have a string such as: "string what ever"
-    # Replace double-quotes with single quotes
-    #	
-    regsub -all -- \" $_line ' line
 
-    # the regular expresion for empty line is: {^[[:space:]]+$|^$}
-    #while { $i > -1 && [regexp {^[[:space:]]+$|^$} $line] } {}
-
-    while { $i > -1 && [llength $line] == 0 } {
+    # check for empty line: read as long as to skip all the empty lines
+    while {1} {
 	set i [gets $fileChannel _line]
+	
+	# we might have a string such as: "string what ever";
+	# replace double-quotes with single-quotes
+		
 	regsub -all -- \" $_line ' line
+
+	# the regular expresion for empty line is: {^[[:space:]]+$|^$}
+	
+	if { [llength $line] != 0 || $i == -1 } { break }
     }
     ::tclu::DEBUG --readline-- $line
     return $line
 }
 
-#body ::guib::moduleObj::_openGets_llength {line} {
-#    #
-#    # We might have a string such as: "string what ever"
-#    # Replace double-quotes with single quotes
-#    #	
-#    regsub -all -- \" $line ' _line
-#    return [llength $_line]
-#}
 
 
-itcl::body ::guib::moduleObj::_openReadNamelistVar {obj fileChannel nmlName} {
-
-    set ind [string first = $readline]
-
-    if { $ind <= 0 } {
-	_openSyntaxError "syntax error in the namelist $nmlName"
-	return -code return
-    }
-    scan [lindex [split $readline =] 0] %s result    
-
-    # do we have dimension/table, i.e., var(1) , var(1,2) ???    
-    set varName [lindex [split $result ()] 0]
-    set elem    [lindex [split $result ()] 1]
-    if { $elem != "" } {
-	set elem (${elem})
-    }
-
-    #
-    # map from varName (or varName(elem)) to varIdent
-    #
-
-    # assume read variable is a scalar
-    set ident [varnameToVarident $obj $result $::guib::settings(NAMELIST.varname_nocase)]
-    if { $ident != "" } {
-	return $ident
-    } else {
-	# maybe read variable is a dimension/table
-	set ident [varnameToVarident $obj $varName $::guib::settings(NAMELIST.varname_nocase)]
-	if { $ident != "" } {
-	    return ${ident}${elem}
-	}
-    }
-
-    #
-    # if we came here, we have an undefined variable
-    #
-    if { $::guib::settings(NAMELIST.variable_support_undefined) } {
-	if { ! [info exists objWidgetArray(UNDEFINED_VAR,$obj)] } {
-	    # make the "Undefined variables" label
-	    set objWidgetArray(UNDEFINED_VAR,$obj) 1
-	    _separator $obj {-label "--- The following undefined variables were found in the namelist $nmlName:"}
-	    _buildGUI_constructItem [$obj getID] $obj $objWidgetArray(CHILDSITEWIDGET,$obj) separator
-	}
-	_manageKeyword $obj var [_makeIdent $result] \
-	    [list -label "Undefined variable ($result):" -variable $result]	
-	_buildGUI_constructItem [$obj getID] $obj $objWidgetArray(CHILDSITEWIDGET,$obj) var
-	return $result
-    }
+itcl::body ::guib::moduleObj::_openNamelistAssignVars {obj nmlName varValueArray} {
+    # varValueArray is the array that holds the var value pairs as returned by ::fnml::parseContent
+    upvar $varValueArray nml
     
-    # If we came here, then the variable could not be allocated
-    _openSyntaxError "variable \"$result\" not allowed in namelist $nmlName"
-    return -code return
-}
-
-
-itcl::body ::guib::moduleObj::_openReadNamelistValue {} {    
-
-    # trim white-space and tabs characters
-    set readline [string trim $readline "\t "]
-
-    set index [expr [string first = $readline 0] + 1]
-    set readline [string trim [string range $readline $index end] "\t "]
-    
-    ::tclu::DEBUG --_openReadNamelistValue-- readline: $readline
-
-    if { [string first ' $readline] == 0 } {
-	::tclu::DEBUG --_openReadNamelistValue-- YES
-	#
-	# we have a string such as: 'string what ever' or "string what ever"
-	#	
-	scan $readline {'%[^']} value
+    foreach {var value} [array get nml] {
+		    
+	# is variable is of scalar-type ?
 	
-	# now shrink the readline
-	set index [expr [string first ' $readline 1] + 1]
-	set readline [string trim [string range $readline $index end] "\t ,"]
-	return '${value}'
-    } else {
-	::tclu::DEBUG --_openReadNamelistValue-- NO
+	set ident [varnameToVarident $obj $var $::guib::settings(NAMELIST.varname_nocase)]
+		    
+	if { $ident == "" } {
 
-	#
-	# not a string
-	#
-	set value [string trim [lindex $readline 0] "\t ,"]
+	    # is var of type varName(elem) ?
+	    
+	    set varName [lindex [split $var ()] 0]
+	    set elem    [string trim [lindex [split $var ()] 1] " "]
+	    
+	    set ident [varnameToVarident $obj $varName $::guib::settings(NAMELIST.varname_nocase)]
+	    
+	    if { $ident != "" } {
+		
+		set ident ${ident}($elem)
+		
+	    } else {
+		
+		# if we came here, we have undefined variable
+		
+		if { $::guib::settings(NAMELIST.variable_support_undefined) } {
+		    
+		    # undefined variables are supported
+		    
+		    if { ! [info exists objWidgetArray(UNDEFINED_VAR,$obj)] } {
+			# make the container for the "Undefined variables" in the GUI
+			set objWidgetArray(UNDEFINED_VAR,$obj) 1
+			_separator $obj {-label "--- The following undefined variables were found in the namelist $nmlName:"}
+			_buildGUI_constructItem [$obj getID] $obj $objWidgetArray(CHILDSITEWIDGET,$obj) separator
+		    }
+		    # make the entry for this undefined variable
+		    set ident [_makeIdent $var]
+		    _manageKeyword $obj var $ident [list -label "Undefined variable ($var):" -variable $var]	
+		    _buildGUI_constructItem [$obj getID] $obj $objWidgetArray(CHILDSITEWIDGET,$obj) var
+		} else {
+		    # undefined variables are not supported: add $var to undef_vars list
+		    lappend undef_vars $var
+		}
+	    }
+	}
+	if { $ident != "" } {
+	    varset $ident -value $value
+	}
+    }
 
-	# now shrink the readline
-
-	set index [expr [string first $value $readline 0] + [string length $value] + 1]
-	set readline [string trim [string range $readline $index end] "\t ,"]
-	return $value
+    if { [info exists undef_vars] } {
+	_openSyntaxError "undefined variables not allowed: the following undefined variables were found in the namelist $nmlName: $undef_vars"
     }
 }
+		    
+
 
 itcl::body ::guib::moduleObj::_openReadKeyword {keyword} {
     set keyword [string trim $keyword \n]
