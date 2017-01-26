@@ -6,8 +6,8 @@ package require Itcl
 namespace import -force itcl::* 
 
 puts "\n Creating the tclIndex file ..."
-if { [glob -nocomplain -- *.itcl] != {} } {
-	auto_mkindex [pwd] *.itcl
+if { [glob -nocomplain -- *.itcl *.tcl] != {} } {
+	auto_mkindex [pwd] *.itcl *.tcl
 	puts "   tclIndex file created !!!"
 	puts "   Size of tclIndex file:  [exec wc tclIndex]"
 } else {
