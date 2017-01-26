@@ -875,7 +875,8 @@ proc ::tclu::scan {string formatString args} {
 
     set startIndex 0
     set nvar       [llength $args]
-
+    set count 0
+    
     for {set i 0} {$i < $nvar} {incr i} {
 	set varname  [lindex $args $i]
 	upvar $varname var
@@ -889,28 +890,38 @@ proc ::tclu::scan {string formatString args} {
 	    if { [regexp {^%[0-9]+S} $_fmt] } {
 		# scan only requested number of characters, and assing them to var
 		set var [string range $string 0 [expr {[string trim $_fmt %S] - 1}]]
+		incr count
 	    } else {
 		# scan the whole string, i.e. assign $string to var
 		set var $string
-		return [expr {$i + 1}]
+		return [incr count]
 	    }
-	} elseif { [::scan "$string" $_fmt var] < 0 } {
-	    return -1
+	} else {
+	    set c [::scan "$string" $_fmt var]
+	    if { $c < 0 } {
+		if { $i == 0 } {
+		    return -1
+		} else {
+		    return $count
+		}
+	    } else {
+		incr count $c
+	    }
 	}	
 	set formatString [string range $formatString [string length $_fmt] end]
 	set pos          [string first $var $string]
 	set string       [string range $string [expr {[string length $var] + 1 + $pos}] end]
     }
-    return $i
+    return $count
 }
 
 proc ::tclu::_nextFmtSpec {string} {
     set ind [string first % $string 0]
-    set ind [string first % $string [incr ind]]
+    set ind [string first % $string $ind+1]
     if { $ind == -1 } {
 	return [string range $string 0 end]
     } else {
-	return [string range $string 0 [expr {$ind - 1}]]
+	return [string range $string 0 $ind-1]
     }
 }
 
