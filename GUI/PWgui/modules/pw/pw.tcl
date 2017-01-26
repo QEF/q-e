@@ -19,7 +19,7 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 	namelist control -name "CONTROL" {
 	    optional {
 		#-default  "'PWSCF sample input'"
-		var title -label "Job Title (title):"
+		var title -label "Job Title (title):" -validate string
 
 		var calculation {
 		    -label     "Type of calculation (calculation):"
