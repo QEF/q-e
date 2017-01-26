@@ -105,8 +105,6 @@ proc ::guib::arrayName {arrayInstance} {
 #  RETURN VALUE
 #    The name of array element, if $arrayInstance is a normal
 #    variable-name an empty string is returned.
-#  EXAMPLE
-#    set a3 [comafy a(3)]
 #********
 # ------------------------------------------------------------------------
 

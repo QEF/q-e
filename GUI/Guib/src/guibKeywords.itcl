@@ -380,11 +380,12 @@ itcl::body ::guib::moduleObj::text {ident args} {
 # -- GUIB keyword !!!
 #    Keyword "var" is meant for processing a variable. For the
 # description of all var options see in the guib-keywords-def.tcl file
-# the definition of options(var) variable. The "var" keyword is not standalone, and 
-# should appear inside namelist or line.
+# the definition of options(var) variable. The "var" keyword is not
+# standalone, and should appear inside namelist or line.
 #
 #  RETURN VALUE
 #    None.
+#
 #  EXAMPLE
 #    var var1 {
 #           -variable varName1 
