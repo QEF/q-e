@@ -51,7 +51,7 @@ if test "$use_parallel" -ne 0; then
           #LIBS="-lhdf5"
           LIBS=""
 
-          AC_SEARCH_LIBS(H5Fcreate, hdf5_fortran, [have_hdf5=1])
+          AC_SEARCH_LIBS(H5Fcreate, hdf5 hdf5_fortran, [have_hdf5=1])
 
           if test "$ac_cv_search_H5Fcreate" != "no"
           then break ; fi
