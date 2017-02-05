@@ -1,5 +1,5 @@
 
-     Program PWSCF v.6.0 starts on  2Oct2016 at 19:20:39 
+     Program PWSCF v.6.0 starts on  5Feb2017 at 20:22:22 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -8,7 +8,7 @@
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
-     Serial multi-threaded version, running on    4 processor cores
+     Serial multi-threaded version, running on    1 processor cores
      Reading input from gau-pbe-si444.in
 
      Current dimensions of program PWSCF are:
@@ -164,7 +164,7 @@
 
      Dense  grid:     1459 G-vectors     FFT dimensions: (  15,  15,  15)
 
-     Estimated max dynamical RAM per process >     187.46Mb
+     Estimated max dynamical RAM per process >     187.46MB
 
      Initial potential from superposition of free atoms
 
@@ -271,7 +271,7 @@
 
      EXX: now go back to refine exchange calculation
 
-     total cpu time spent up to now is        1.0 secs
+     total cpu time spent up to now is        1.4 secs
 
      per-process dynamical memory:    15.2 Mb
 
@@ -281,27 +281,27 @@
      Davidson diagonalization with overlap
      ethr =  6.26E-07,  avg # of iterations =  3.5
 
-     total cpu time spent up to now is       13.5 secs
+     total cpu time spent up to now is       16.0 secs
 
      total energy              =     -15.85191313 Ry
-     Harris-Foulkes estimate   =     -16.72805586 Ry
+     Harris-Foulkes estimate   =     -15.85196833 Ry
      estimated scf accuracy    <       0.00024419 Ry
 
      iteration #  2     ecut=    12.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  3.05E-06,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is       19.6 secs
+     total cpu time spent up to now is       23.3 secs
 
      total energy              =     -15.85190406 Ry
-     Harris-Foulkes estimate   =     -16.72801418 Ry
+     Harris-Foulkes estimate   =     -15.85192666 Ry
      estimated scf accuracy    <       0.00000882 Ry
 
      iteration #  3     ecut=    12.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  1.10E-07,  avg # of iterations =  1.5
 
-     total cpu time spent up to now is       25.9 secs
+     total cpu time spent up to now is       30.9 secs
 
      End of self-consistent calculation
 
@@ -348,7 +348,7 @@
      highest occupied, lowest unoccupied level (ev):     5.4873    7.4530
 
 !    total energy              =     -15.85189343 Ry
-     Harris-Foulkes estimate   =     -16.72799220 Ry
+     Harris-Foulkes estimate   =     -15.85190467 Ry
      estimated scf accuracy    <       0.00000017 Ry
 
      convergence has been achieved in   3 iterations
@@ -361,7 +361,7 @@
 
      EXX: now go back to refine exchange calculation
 
-     total cpu time spent up to now is       27.6 secs
+     total cpu time spent up to now is       33.2 secs
 
      per-process dynamical memory:    15.2 Mb
 
@@ -371,17 +371,17 @@
      Davidson diagonalization with overlap
      ethr =  1.10E-07,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is       36.2 secs
+     total cpu time spent up to now is       43.6 secs
 
      total energy              =     -15.85219020 Ry
-     Harris-Foulkes estimate   =     -16.73440179 Ry
+     Harris-Foulkes estimate   =     -15.85217602 Ry
      estimated scf accuracy    <       0.00001072 Ry
 
      iteration #  2     ecut=    12.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  1.34E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is       42.4 secs
+     total cpu time spent up to now is       50.9 secs
 
      End of self-consistent calculation
 
@@ -428,7 +428,7 @@
      highest occupied, lowest unoccupied level (ev):     5.4605    7.4775
 
 !    total energy              =     -15.85219219 Ry
-     Harris-Foulkes estimate   =     -16.73441670 Ry
+     Harris-Foulkes estimate   =     -15.85219094 Ry
      estimated scf accuracy    <       0.00000023 Ry
 
      convergence has been achieved in   2 iterations
@@ -441,7 +441,7 @@
 
      EXX: now go back to refine exchange calculation
 
-     total cpu time spent up to now is       44.0 secs
+     total cpu time spent up to now is       53.3 secs
 
      per-process dynamical memory:    15.2 Mb
 
@@ -457,7 +457,7 @@
      Davidson diagonalization with overlap
      ethr =  2.81E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is       57.2 secs
+     total cpu time spent up to now is       69.1 secs
 
      End of self-consistent calculation
 
@@ -504,12 +504,12 @@
      highest occupied, lowest unoccupied level (ev):     5.4567    7.4808
 
 !    total energy              =     -15.85220246 Ry
-     Harris-Foulkes estimate   =     -16.73538331 Ry
+     Harris-Foulkes estimate   =     -15.85219824 Ry
      estimated scf accuracy    <       0.00000023 Ry
 
      convergence has been achieved in   1 iterations
 
-!    total energy              =     -15.85220259 Ry
+!!   total energy              =     -15.85220259 Ry
      Harris-Foulkes estimate   =     -15.85219837 Ry
      est. exchange err (dexx)  =       0.00000013 Ry
      - averaged Fock potential =       1.76652215 Ry
@@ -518,66 +518,66 @@
      EXX self-consistency reached
 
 
-     entering subroutine stress ...
+     Computing stress (Cartesian axis) and pressure
 
           total   stress  (Ry/bohr**3)                   (kbar)     P=  -75.21
-  -0.00051129   0.00000000   0.00000000        -75.21      0.00      0.00
-   0.00000000  -0.00051129  -0.00000000          0.00    -75.21     -0.00
-   0.00000000   0.00000000  -0.00051129          0.00      0.00    -75.21
+  -0.00051129  -0.00000000   0.00000000        -75.21     -0.00      0.00
+  -0.00000000  -0.00051129  -0.00000000         -0.00    -75.21     -0.00
+   0.00000000  -0.00000000  -0.00051129          0.00     -0.00    -75.21
 
 
      Writing output data file pwscf.save
 
-     init_run     :      0.09s CPU      0.04s WALL (       1 calls)
-     electrons    :    210.37s CPU     52.97s WALL (       4 calls)
-     stress       :      8.14s CPU      2.05s WALL (       1 calls)
+     init_run     :      0.03s CPU      0.04s WALL (       1 calls)
+     electrons    :     62.21s CPU     63.14s WALL (       4 calls)
+     stress       :      3.55s CPU      3.58s WALL (       1 calls)
 
      Called by init_run:
-     wfcinit      :      0.04s CPU      0.01s WALL (       1 calls)
-     potinit      :      0.01s CPU      0.00s WALL (       1 calls)
+     wfcinit      :      0.01s CPU      0.01s WALL (       1 calls)
+     potinit      :      0.00s CPU      0.00s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :    210.07s CPU     52.88s WALL (      12 calls)
-     sum_band     :      0.19s CPU      0.05s WALL (      12 calls)
-     v_of_rho     :      0.10s CPU      0.03s WALL (      12 calls)
-     mix_rho      :      0.01s CPU      0.00s WALL (      12 calls)
+     c_bands      :     62.12s CPU     63.03s WALL (      12 calls)
+     sum_band     :      0.05s CPU      0.05s WALL (      12 calls)
+     v_of_rho     :      0.04s CPU      0.04s WALL (      12 calls)
+     mix_rho      :      0.00s CPU      0.00s WALL (      12 calls)
 
      Called by c_bands:
-     init_us_2    :      0.06s CPU      0.01s WALL (     330 calls)
-     cegterg      :    209.95s CPU     52.85s WALL (     120 calls)
+     init_us_2    :      0.02s CPU      0.02s WALL (     330 calls)
+     cegterg      :     62.10s CPU     62.98s WALL (     120 calls)
 
      Called by sum_band:
 
      Called by *egterg:
-     h_psi        :    209.61s CPU     52.76s WALL (     366 calls)
-     g_psi        :      0.01s CPU      0.00s WALL (     236 calls)
-     cdiaghg      :      0.16s CPU      0.04s WALL (     306 calls)
+     h_psi        :     62.01s CPU     62.89s WALL (     366 calls)
+     g_psi        :      0.00s CPU      0.00s WALL (     236 calls)
+     cdiaghg      :      0.04s CPU      0.04s WALL (     306 calls)
 
      Called by h_psi:
-     h_psi:pot    :      0.84s CPU      0.21s WALL (     366 calls)
-     h_psi:calbec :      0.04s CPU      0.01s WALL (     366 calls)
-     vloc_psi     :      0.76s CPU      0.19s WALL (     366 calls)
-     add_vuspsi   :      0.04s CPU      0.01s WALL (     366 calls)
+     h_psi:pot    :      0.18s CPU      0.20s WALL (     366 calls)
+     h_psi:calbec :      0.01s CPU      0.01s WALL (     366 calls)
+     vloc_psi     :      0.16s CPU      0.18s WALL (     366 calls)
+     add_vuspsi   :      0.01s CPU      0.01s WALL (     366 calls)
 
      General routines
-     calbec       :      0.04s CPU      0.01s WALL (     446 calls)
-     fft          :      0.02s CPU      0.01s WALL (     135 calls)
-     fftw         :      0.75s CPU      0.18s WALL (    5816 calls)
-     fftc         :    158.41s CPU     39.87s WALL (  799232 calls)
-     fftcw        :      0.42s CPU      0.11s WALL (    3282 calls)
+     calbec       :      0.01s CPU      0.01s WALL (     446 calls)
+     fft          :      0.01s CPU      0.01s WALL (     135 calls)
+     fftw         :      0.18s CPU      0.18s WALL (    5816 calls)
+     fftc         :     39.02s CPU     38.73s WALL (  799232 calls)
+     fftcw        :      0.11s CPU      0.11s WALL (    3282 calls)
      davcio       :      0.00s CPU      0.00s WALL (      10 calls)
 
 
      EXX routines
      exx_grid     :      0.00s CPU      0.00s WALL (       1 calls)
-     exxinit      :      0.04s CPU      0.03s WALL (       4 calls)
-     vexx         :    208.76s CPU     52.54s WALL (     207 calls)
-     exxenergy    :     23.23s CPU      5.85s WALL (       7 calls)
+     exxinit      :      0.02s CPU      0.03s WALL (       4 calls)
+     vexx         :     61.83s CPU     62.69s WALL (     207 calls)
+     exxenergy    :      8.10s CPU      8.17s WALL (       7 calls)
 
-     PWSCF        :  4m 1.92s CPU     1m 0.97s WALL
+     PWSCF        :  1m13.95s CPU     1m15.03s WALL
 
 
-   This run was terminated on:  19:21:40   2Oct2016            
+   This run was terminated on:  20:23:37   5Feb2017            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

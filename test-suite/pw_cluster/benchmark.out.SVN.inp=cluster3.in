@@ -1,5 +1,5 @@
 
-     Program PWSCF v.6.0 starts on  2Oct2016 at 19:17:52 
+     Program PWSCF v.6.0 starts on  5Feb2017 at 20:19:21 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -8,7 +8,7 @@
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
-     Serial multi-threaded version, running on    4 processor cores
+     Serial multi-threaded version, running on    1 processor cores
      Reading input from cluster3.in
 
      Current dimensions of program PWSCF are:
@@ -104,7 +104,7 @@
 
      Dense  grid:    19201 G-vectors     FFT dimensions: (  45,  45,  45)
 
-     Estimated max dynamical RAM per process >      17.33Mb
+     Estimated max dynamical RAM per process >      17.33MB
 
      Initial potential from superposition of free atoms
      Check: negative starting charge=   -0.000894
@@ -114,9 +114,9 @@
      negative rho (up, down):  8.935E-04 0.000E+00
      Starting wfc are    6 randomized atomic wfcs +    2 random wfc
 
-     total cpu time spent up to now is        0.8 secs
+     total cpu time spent up to now is        0.9 secs
 
-     per-process dynamical memory:    16.5 Mb
+     per-process dynamical memory:    16.1 Mb
 
      Self-consistent Calculation
 
@@ -126,7 +126,7 @@
 
      negative rho (up, down):  3.331E-03 0.000E+00
 
-     total cpu time spent up to now is        1.1 secs
+     total cpu time spent up to now is        1.2 secs
 
      total energy              =     -43.77713393 Ry
      Harris-Foulkes estimate   =     -44.16053204 Ry
@@ -138,7 +138,7 @@
 
      negative rho (up, down):  4.076E-03 0.000E+00
 
-     total cpu time spent up to now is        1.3 secs
+     total cpu time spent up to now is        1.5 secs
 
      total energy              =     -43.88833879 Ry
      Harris-Foulkes estimate   =     -44.11204889 Ry
@@ -150,7 +150,7 @@
 
      negative rho (up, down):  5.860E-03 0.000E+00
 
-     total cpu time spent up to now is        1.5 secs
+     total cpu time spent up to now is        1.7 secs
 
      total energy              =     -43.98510399 Ry
      Harris-Foulkes estimate   =     -43.98699980 Ry
@@ -162,7 +162,7 @@
 
      negative rho (up, down):  5.669E-03 0.000E+00
 
-     total cpu time spent up to now is        1.7 secs
+     total cpu time spent up to now is        2.0 secs
 
      total energy              =     -43.98709781 Ry
      Harris-Foulkes estimate   =     -43.98719732 Ry
@@ -174,7 +174,7 @@
 
      negative rho (up, down):  5.740E-03 0.000E+00
 
-     total cpu time spent up to now is        1.9 secs
+     total cpu time spent up to now is        2.3 secs
 
      total energy              =     -43.98710344 Ry
      Harris-Foulkes estimate   =     -43.98711869 Ry
@@ -186,7 +186,7 @@
 
      negative rho (up, down):  5.760E-03 0.000E+00
 
-     total cpu time spent up to now is        2.1 secs
+     total cpu time spent up to now is        2.5 secs
 
      total energy              =     -43.98710722 Ry
      Harris-Foulkes estimate   =     -43.98710778 Ry
@@ -198,7 +198,7 @@
 
      negative rho (up, down):  5.769E-03 0.000E+00
 
-     total cpu time spent up to now is        2.4 secs
+     total cpu time spent up to now is        2.8 secs
 
      End of self-consistent calculation
 
@@ -226,7 +226,7 @@
 
      negative rho (up, down):  5.769E-03 0.000E+00
 
-     Forces acting on atoms (Ry/au):
+     Forces acting on atoms (cartesian axes, Ry/au):
 
      atom    1 type  1   force =     0.00000000    0.00000000   -0.15869126
      atom    2 type  2   force =     0.07176222    0.07176222    0.07934563
@@ -259,9 +259,9 @@ H       -1.071762221  -1.071762221   1.079345630
 
      negative rho (up, down):  4.620E-03 0.000E+00
 
-     total cpu time spent up to now is        2.7 secs
+     total cpu time spent up to now is        3.3 secs
 
-     per-process dynamical memory:    34.0 Mb
+     per-process dynamical memory:    33.6 Mb
 
      Self-consistent Calculation
 
@@ -271,7 +271,7 @@ H       -1.071762221  -1.071762221   1.079345630
 
      negative rho (up, down):  4.536E-03 0.000E+00
 
-     total cpu time spent up to now is        3.1 secs
+     total cpu time spent up to now is        3.7 secs
 
      total energy              =     -43.99389410 Ry
      Harris-Foulkes estimate   =     -44.00232073 Ry
@@ -283,7 +283,7 @@ H       -1.071762221  -1.071762221   1.079345630
 
      negative rho (up, down):  4.620E-03 0.000E+00
 
-     total cpu time spent up to now is        3.3 secs
+     total cpu time spent up to now is        4.0 secs
 
      total energy              =     -43.99644034 Ry
      Harris-Foulkes estimate   =     -44.00283905 Ry
@@ -295,7 +295,7 @@ H       -1.071762221  -1.071762221   1.079345630
 
      negative rho (up, down):  4.825E-03 0.000E+00
 
-     total cpu time spent up to now is        3.5 secs
+     total cpu time spent up to now is        4.2 secs
 
      total energy              =     -43.99909264 Ry
      Harris-Foulkes estimate   =     -43.99909367 Ry
@@ -307,7 +307,7 @@ H       -1.071762221  -1.071762221   1.079345630
 
      negative rho (up, down):  4.817E-03 0.000E+00
 
-     total cpu time spent up to now is        3.8 secs
+     total cpu time spent up to now is        4.5 secs
 
      total energy              =     -43.99912712 Ry
      Harris-Foulkes estimate   =     -43.99912779 Ry
@@ -319,7 +319,7 @@ H       -1.071762221  -1.071762221   1.079345630
 
      negative rho (up, down):  4.819E-03 0.000E+00
 
-     total cpu time spent up to now is        4.0 secs
+     total cpu time spent up to now is        4.7 secs
 
      total energy              =     -43.99912744 Ry
      Harris-Foulkes estimate   =     -43.99912746 Ry
@@ -331,7 +331,7 @@ H       -1.071762221  -1.071762221   1.079345630
 
      negative rho (up, down):  4.819E-03 0.000E+00
 
-     total cpu time spent up to now is        4.2 secs
+     total cpu time spent up to now is        5.0 secs
 
      End of self-consistent calculation
 
@@ -359,7 +359,7 @@ H       -1.071762221  -1.071762221   1.079345630
 
      negative rho (up, down):  4.819E-03 0.000E+00
 
-     Forces acting on atoms (Ry/au):
+     Forces acting on atoms (cartesian axes, Ry/au):
 
      atom    1 type  1   force =     0.00000000    0.00000000    0.00526856
      atom    2 type  2   force =    -0.01923100   -0.01923100   -0.00263428
@@ -393,9 +393,9 @@ H       -1.056119871  -1.056119871   1.077852072
 
      negative rho (up, down):  4.971E-03 0.000E+00
 
-     total cpu time spent up to now is        4.6 secs
+     total cpu time spent up to now is        5.5 secs
 
-     per-process dynamical memory:    34.0 Mb
+     per-process dynamical memory:    33.6 Mb
 
      Self-consistent Calculation
 
@@ -405,7 +405,7 @@ H       -1.056119871  -1.056119871   1.077852072
 
      negative rho (up, down):  4.981E-03 0.000E+00
 
-     total cpu time spent up to now is        4.8 secs
+     total cpu time spent up to now is        5.8 secs
 
      total energy              =     -43.99988461 Ry
      Harris-Foulkes estimate   =     -43.99999514 Ry
@@ -417,7 +417,7 @@ H       -1.056119871  -1.056119871   1.077852072
 
      negative rho (up, down):  4.977E-03 0.000E+00
 
-     total cpu time spent up to now is        5.1 secs
+     total cpu time spent up to now is        6.0 secs
 
      total energy              =     -43.99991740 Ry
      Harris-Foulkes estimate   =     -43.99999911 Ry
@@ -429,7 +429,7 @@ H       -1.056119871  -1.056119871   1.077852072
 
      negative rho (up, down):  4.969E-03 0.000E+00
 
-     total cpu time spent up to now is        5.3 secs
+     total cpu time spent up to now is        6.3 secs
 
      total energy              =     -43.99995326 Ry
      Harris-Foulkes estimate   =     -43.99995343 Ry
@@ -441,7 +441,7 @@ H       -1.056119871  -1.056119871   1.077852072
 
      negative rho (up, down):  4.971E-03 0.000E+00
 
-     total cpu time spent up to now is        5.5 secs
+     total cpu time spent up to now is        6.5 secs
 
      total energy              =     -43.99995390 Ry
      Harris-Foulkes estimate   =     -43.99995390 Ry
@@ -453,7 +453,7 @@ H       -1.056119871  -1.056119871   1.077852072
 
      negative rho (up, down):  4.972E-03 0.000E+00
 
-     total cpu time spent up to now is        5.7 secs
+     total cpu time spent up to now is        6.8 secs
 
      End of self-consistent calculation
 
@@ -481,7 +481,7 @@ H       -1.056119871  -1.056119871   1.077852072
 
      negative rho (up, down):  4.972E-03 0.000E+00
 
-     Forces acting on atoms (Ry/au):
+     Forces acting on atoms (cartesian axes, Ry/au):
 
      atom    1 type  1   force =     0.00000000    0.00000000   -0.01141129
      atom    2 type  2   force =    -0.00724613   -0.00724613    0.00570565
@@ -515,9 +515,9 @@ H       -1.043633625  -1.043633625   1.087578883
 
      negative rho (up, down):  5.045E-03 0.000E+00
 
-     total cpu time spent up to now is        6.1 secs
+     total cpu time spent up to now is        7.3 secs
 
-     per-process dynamical memory:    34.0 Mb
+     per-process dynamical memory:    33.6 Mb
 
      Self-consistent Calculation
 
@@ -527,7 +527,7 @@ H       -1.043633625  -1.043633625   1.087578883
 
      negative rho (up, down):  5.032E-03 0.000E+00
 
-     total cpu time spent up to now is        6.4 secs
+     total cpu time spent up to now is        7.6 secs
 
      total energy              =     -44.00026817 Ry
      Harris-Foulkes estimate   =     -44.00027972 Ry
@@ -539,7 +539,7 @@ H       -1.043633625  -1.043633625   1.087578883
 
      negative rho (up, down):  5.027E-03 0.000E+00
 
-     total cpu time spent up to now is        6.6 secs
+     total cpu time spent up to now is        7.8 secs
 
      total energy              =     -44.00027304 Ry
      Harris-Foulkes estimate   =     -44.00028315 Ry
@@ -551,7 +551,7 @@ H       -1.043633625  -1.043633625   1.087578883
 
      negative rho (up, down):  5.023E-03 0.000E+00
 
-     total cpu time spent up to now is        6.8 secs
+     total cpu time spent up to now is        8.1 secs
 
      total energy              =     -44.00027833 Ry
      Harris-Foulkes estimate   =     -44.00027879 Ry
@@ -563,7 +563,7 @@ H       -1.043633625  -1.043633625   1.087578883
 
      negative rho (up, down):  5.024E-03 0.000E+00
 
-     total cpu time spent up to now is        7.0 secs
+     total cpu time spent up to now is        8.3 secs
 
      total energy              =     -44.00027869 Ry
      Harris-Foulkes estimate   =     -44.00027868 Ry
@@ -575,7 +575,7 @@ H       -1.043633625  -1.043633625   1.087578883
 
      negative rho (up, down):  5.024E-03 0.000E+00
 
-     total cpu time spent up to now is        7.2 secs
+     total cpu time spent up to now is        8.6 secs
 
      End of self-consistent calculation
 
@@ -603,7 +603,7 @@ H       -1.043633625  -1.043633625   1.087578883
 
      negative rho (up, down):  5.024E-03 0.000E+00
 
-     Forces acting on atoms (Ry/au):
+     Forces acting on atoms (cartesian axes, Ry/au):
 
      atom    1 type  1   force =     0.00000000    0.00000000   -0.01699167
      atom    2 type  2   force =    -0.00019893   -0.00019893    0.00849583
@@ -637,9 +637,9 @@ H       -1.033898819  -1.033898819   1.105355877
 
      negative rho (up, down):  5.036E-03 0.000E+00
 
-     total cpu time spent up to now is        7.5 secs
+     total cpu time spent up to now is        9.1 secs
 
-     per-process dynamical memory:    34.0 Mb
+     per-process dynamical memory:    33.6 Mb
 
      Self-consistent Calculation
 
@@ -649,7 +649,7 @@ H       -1.033898819  -1.033898819   1.105355877
 
      negative rho (up, down):  5.009E-03 0.000E+00
 
-     total cpu time spent up to now is        7.8 secs
+     total cpu time spent up to now is        9.4 secs
 
      total energy              =     -44.00050023 Ry
      Harris-Foulkes estimate   =     -44.00049421 Ry
@@ -661,7 +661,7 @@ H       -1.033898819  -1.033898819   1.105355877
 
      negative rho (up, down):  5.004E-03 0.000E+00
 
-     total cpu time spent up to now is        8.0 secs
+     total cpu time spent up to now is        9.6 secs
 
      total energy              =     -44.00050198 Ry
      Harris-Foulkes estimate   =     -44.00050229 Ry
@@ -673,7 +673,7 @@ H       -1.033898819  -1.033898819   1.105355877
 
      negative rho (up, down):  5.002E-03 0.000E+00
 
-     total cpu time spent up to now is        8.2 secs
+     total cpu time spent up to now is        9.9 secs
 
      total energy              =     -44.00050253 Ry
      Harris-Foulkes estimate   =     -44.00050310 Ry
@@ -685,7 +685,7 @@ H       -1.033898819  -1.033898819   1.105355877
 
      negative rho (up, down):  5.002E-03 0.000E+00
 
-     total cpu time spent up to now is        8.4 secs
+     total cpu time spent up to now is       10.1 secs
 
      total energy              =     -44.00050283 Ry
      Harris-Foulkes estimate   =     -44.00050283 Ry
@@ -697,7 +697,7 @@ H       -1.033898819  -1.033898819   1.105355877
 
      negative rho (up, down):  5.002E-03 0.000E+00
 
-     total cpu time spent up to now is        8.6 secs
+     total cpu time spent up to now is       10.4 secs
 
      End of self-consistent calculation
 
@@ -725,7 +725,7 @@ H       -1.033898819  -1.033898819   1.105355877
 
      negative rho (up, down):  5.002E-03 0.000E+00
 
-     Forces acting on atoms (Ry/au):
+     Forces acting on atoms (cartesian axes, Ry/au):
 
      atom    1 type  1   force =     0.00000000    0.00000000   -0.01305894
      atom    2 type  2   force =     0.00250104    0.00250104    0.00652947
@@ -759,9 +759,9 @@ H       -1.028292886  -1.028292886   1.124227428
 
      negative rho (up, down):  4.975E-03 0.000E+00
 
-     total cpu time spent up to now is        9.0 secs
+     total cpu time spent up to now is       10.9 secs
 
-     per-process dynamical memory:    34.0 Mb
+     per-process dynamical memory:    33.6 Mb
 
      Self-consistent Calculation
 
@@ -771,7 +771,7 @@ H       -1.028292886  -1.028292886   1.124227428
 
      negative rho (up, down):  4.948E-03 0.000E+00
 
-     total cpu time spent up to now is        9.3 secs
+     total cpu time spent up to now is       11.2 secs
 
      total energy              =     -44.00060028 Ry
      Harris-Foulkes estimate   =     -44.00061431 Ry
@@ -783,7 +783,7 @@ H       -1.028292886  -1.028292886   1.124227428
 
      negative rho (up, down):  4.948E-03 0.000E+00
 
-     total cpu time spent up to now is        9.5 secs
+     total cpu time spent up to now is       11.4 secs
 
      total energy              =     -44.00060614 Ry
      Harris-Foulkes estimate   =     -44.00062013 Ry
@@ -795,7 +795,7 @@ H       -1.028292886  -1.028292886   1.124227428
 
      negative rho (up, down):  4.947E-03 0.000E+00
 
-     total cpu time spent up to now is        9.7 secs
+     total cpu time spent up to now is       11.7 secs
 
      total energy              =     -44.00061296 Ry
      Harris-Foulkes estimate   =     -44.00061282 Ry
@@ -807,7 +807,7 @@ H       -1.028292886  -1.028292886   1.124227428
 
      negative rho (up, down):  4.947E-03 0.000E+00
 
-     total cpu time spent up to now is        9.9 secs
+     total cpu time spent up to now is       11.9 secs
 
      total energy              =     -44.00061313 Ry
      Harris-Foulkes estimate   =     -44.00061313 Ry
@@ -819,7 +819,7 @@ H       -1.028292886  -1.028292886   1.124227428
 
      negative rho (up, down):  4.946E-03 0.000E+00
 
-     total cpu time spent up to now is       10.1 secs
+     total cpu time spent up to now is       12.2 secs
 
      End of self-consistent calculation
 
@@ -847,7 +847,7 @@ H       -1.028292886  -1.028292886   1.124227428
 
      negative rho (up, down):  4.946E-03 0.000E+00
 
-     Forces acting on atoms (Ry/au):
+     Forces acting on atoms (cartesian axes, Ry/au):
 
      atom    1 type  1   force =     0.00000000    0.00000000   -0.00335274
      atom    2 type  2   force =     0.00166614    0.00166614    0.00167637
@@ -859,7 +859,7 @@ H       -1.028292886  -1.028292886   1.124227428
      number of bfgs steps    =   5
 
      energy   old            =     -44.0005028356 Ry
-     energy   new            =     -44.0006131289 Ry
+     energy   new            =     -44.0006131288 Ry
 
      CASE: energy  _new < energy  _old
 
@@ -881,9 +881,9 @@ H       -1.029112628  -1.029112628   1.126614826
 
      negative rho (up, down):  4.932E-03 0.000E+00
 
-     total cpu time spent up to now is       10.4 secs
+     total cpu time spent up to now is       12.6 secs
 
-     per-process dynamical memory:    34.0 Mb
+     per-process dynamical memory:    33.6 Mb
 
      Self-consistent Calculation
 
@@ -899,7 +899,7 @@ H       -1.029112628  -1.029112628   1.126614826
 
      negative rho (up, down):  4.928E-03 0.000E+00
 
-     total cpu time spent up to now is       10.7 secs
+     total cpu time spent up to now is       13.0 secs
 
      total energy              =     -44.00061989 Ry
      Harris-Foulkes estimate   =     -44.00062235 Ry
@@ -911,7 +911,7 @@ H       -1.029112628  -1.029112628   1.126614826
 
      negative rho (up, down):  4.929E-03 0.000E+00
 
-     total cpu time spent up to now is       10.9 secs
+     total cpu time spent up to now is       13.3 secs
 
      total energy              =     -44.00062055 Ry
      Harris-Foulkes estimate   =     -44.00062210 Ry
@@ -923,7 +923,7 @@ H       -1.029112628  -1.029112628   1.126614826
 
      negative rho (up, down):  4.930E-03 0.000E+00
 
-     total cpu time spent up to now is       11.2 secs
+     total cpu time spent up to now is       13.5 secs
 
      total energy              =     -44.00062122 Ry
      Harris-Foulkes estimate   =     -44.00062122 Ry
@@ -935,7 +935,7 @@ H       -1.029112628  -1.029112628   1.126614826
 
      negative rho (up, down):  4.929E-03 0.000E+00
 
-     total cpu time spent up to now is       11.4 secs
+     total cpu time spent up to now is       13.7 secs
 
      End of self-consistent calculation
 
@@ -963,7 +963,7 @@ H       -1.029112628  -1.029112628   1.126614826
 
      negative rho (up, down):  4.929E-03 0.000E+00
 
-     Forces acting on atoms (Ry/au):
+     Forces acting on atoms (cartesian axes, Ry/au):
 
      atom    1 type  1   force =     0.00000000    0.00000000   -0.00046536
      atom    2 type  2   force =     0.00039591    0.00039591    0.00023268
@@ -989,54 +989,54 @@ End final coordinates
 
      Writing output data file pwscf.save
 
-     init_run     :      0.83s CPU      0.61s WALL (       1 calls)
-     electrons    :     17.52s CPU      8.33s WALL (       7 calls)
-     update_pot   :      1.68s CPU      1.00s WALL (       6 calls)
-     forces       :      1.44s CPU      0.94s WALL (       7 calls)
+     init_run     :      0.67s CPU      0.69s WALL (       1 calls)
+     electrons    :      9.82s CPU      9.91s WALL (       7 calls)
+     update_pot   :      1.18s CPU      1.23s WALL (       6 calls)
+     forces       :      1.12s CPU      1.12s WALL (       7 calls)
 
      Called by init_run:
-     wfcinit      :      0.03s CPU      0.02s WALL (       1 calls)
-     potinit      :      0.26s CPU      0.13s WALL (       1 calls)
+     wfcinit      :      0.02s CPU      0.02s WALL (       1 calls)
+     potinit      :      0.16s CPU      0.16s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :      2.30s CPU      2.05s WALL (      38 calls)
-     sum_band     :      4.33s CPU      1.35s WALL (      38 calls)
-     v_of_rho     :      4.35s CPU      2.97s WALL (      44 calls)
-     newd         :      2.43s CPU      0.63s WALL (      44 calls)
-     PAW_pot      :      6.00s CPU      1.83s WALL (      50 calls)
-     mix_rho      :      0.16s CPU      0.16s WALL (      38 calls)
+     c_bands      :      1.83s CPU      1.84s WALL (      38 calls)
+     sum_band     :      1.52s CPU      1.53s WALL (      38 calls)
+     v_of_rho     :      3.33s CPU      3.34s WALL (      44 calls)
+     newd         :      1.10s CPU      1.12s WALL (      44 calls)
+     PAW_pot      :      2.99s CPU      2.99s WALL (      50 calls)
+     mix_rho      :      0.14s CPU      0.14s WALL (      38 calls)
 
      Called by c_bands:
-     init_us_2    :      0.22s CPU      0.06s WALL (      83 calls)
-     regterg      :      2.12s CPU      1.99s WALL (      38 calls)
+     init_us_2    :      0.06s CPU      0.06s WALL (      83 calls)
+     regterg      :      1.78s CPU      1.78s WALL (      38 calls)
 
      Called by sum_band:
      sum_band:bec :      0.00s CPU      0.00s WALL (      44 calls)
-     addusdens    :      2.72s CPU      0.73s WALL (      38 calls)
+     addusdens    :      1.03s CPU      1.04s WALL (      38 calls)
 
      Called by *egterg:
-     h_psi        :      1.82s CPU      1.73s WALL (     155 calls)
+     h_psi        :      1.50s CPU      1.50s WALL (     155 calls)
      s_psi        :      0.03s CPU      0.03s WALL (     155 calls)
      g_psi        :      0.01s CPU      0.01s WALL (     116 calls)
      rdiaghg      :      0.02s CPU      0.02s WALL (     147 calls)
 
      Called by h_psi:
-     h_psi:pot    :      1.81s CPU      1.72s WALL (     155 calls)
+     h_psi:pot    :      1.49s CPU      1.50s WALL (     155 calls)
      h_psi:calbec :      0.05s CPU      0.05s WALL (     155 calls)
-     vloc_psi     :      1.73s CPU      1.64s WALL (     155 calls)
+     vloc_psi     :      1.41s CPU      1.41s WALL (     155 calls)
      add_vuspsi   :      0.03s CPU      0.03s WALL (     155 calls)
 
      General routines
-     calbec       :      0.18s CPU      0.08s WALL (     227 calls)
-     fft          :      2.18s CPU      1.50s WALL (     658 calls)
-     fftw         :      2.26s CPU      1.62s WALL (    1072 calls)
+     calbec       :      0.09s CPU      0.09s WALL (     227 calls)
+     fft          :      1.58s CPU      1.58s WALL (     658 calls)
+     fftw         :      1.48s CPU      1.48s WALL (    1072 calls)
      davcio       :      0.00s CPU      0.00s WALL (       7 calls)
 
 
-     PWSCF        :    22.85s CPU        11.51s WALL
+     PWSCF        :    13.65s CPU        13.96s WALL
 
 
-   This run was terminated on:  19:18: 4   2Oct2016            
+   This run was terminated on:  20:19:34   5Feb2017            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

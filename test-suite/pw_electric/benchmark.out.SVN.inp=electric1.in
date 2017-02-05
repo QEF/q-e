@@ -1,5 +1,5 @@
 
-     Program PWSCF v.6.0 starts on  2Oct2016 at 19:19: 6 
+     Program PWSCF v.6.0 starts on  5Feb2017 at 20:20:43 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -8,7 +8,7 @@
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
-     Serial multi-threaded version, running on    4 processor cores
+     Serial multi-threaded version, running on    1 processor cores
      Reading input from electric1.in
 
      Current dimensions of program PWSCF are:
@@ -157,10 +157,10 @@
 
      Dense  grid:    12893 G-vectors     FFT dimensions: (  30,  30,  30)
 
-     Estimated max dynamical RAM per process >      34.57Mb
+     Estimated max dynamical RAM per process >      34.57MB
 
      The initial density is read from file :
-     /tmp/save/pwscf.save/charge-density.dat
+     /scratch/fs395/QE/espresso/test-suite/..//tempdir/pwscf.save/charge-density.dat
 
      Starting wfc from file
 
@@ -184,7 +184,7 @@
      Electronic Dipole per cell (Ry a.u.)  -3.5976848947238649E-007
      Ionic Dipole per cell (Ry a.u.)   115.17355251966487     
 
-     total cpu time spent up to now is       10.4 secs
+     total cpu time spent up to now is       11.0 secs
 
      End of self-consistent calculation
 
@@ -520,50 +520,50 @@
 
      Writing output data file pwscf.save
 
-     init_run     :      0.14s CPU      0.11s WALL (       1 calls)
-     electrons    :     30.17s CPU     10.26s WALL (       1 calls)
+     init_run     :      0.11s CPU      0.11s WALL (       1 calls)
+     electrons    :     10.62s CPU     10.83s WALL (       1 calls)
 
      Called by init_run:
      wfcinit      :      0.00s CPU      0.00s WALL (       1 calls)
-     potinit      :      0.04s CPU      0.03s WALL (       1 calls)
+     potinit      :      0.03s CPU      0.03s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :     25.84s CPU      8.87s WALL (       2 calls)
-     sum_band     :      3.91s CPU      0.98s WALL (       2 calls)
-     v_of_rho     :      0.07s CPU      0.04s WALL (       2 calls)
+     c_bands      :      9.17s CPU      9.36s WALL (       2 calls)
+     sum_band     :      1.02s CPU      1.03s WALL (       2 calls)
+     v_of_rho     :      0.05s CPU      0.05s WALL (       2 calls)
      mix_rho      :      0.00s CPU      0.00s WALL (       2 calls)
 
      Called by c_bands:
-     init_us_2    :      0.45s CPU      0.12s WALL (     252 calls)
-     cegterg      :     25.06s CPU      8.65s WALL (     126 calls)
+     init_us_2    :      0.12s CPU      0.15s WALL (     252 calls)
+     cegterg      :      8.98s CPU      9.09s WALL (     126 calls)
 
      Called by sum_band:
 
      Called by *egterg:
-     h_psi        :     22.66s CPU      6.37s WALL (     416 calls)
+     h_psi        :      6.56s CPU      6.59s WALL (     416 calls)
      g_psi        :      0.05s CPU      0.05s WALL (     290 calls)
-     cdiaghg      :      0.34s CPU      0.26s WALL (     290 calls)
+     cdiaghg      :      0.28s CPU      0.28s WALL (     290 calls)
 
      Called by h_psi:
-     h_psi:pot    :     22.64s CPU      6.34s WALL (     416 calls)
-     h_psi:calbec :      2.30s CPU      0.60s WALL (     416 calls)
-     vloc_psi     :     19.49s CPU      5.02s WALL (     416 calls)
-     add_vuspsi   :      0.85s CPU      0.72s WALL (     416 calls)
+     h_psi:pot    :      6.53s CPU      6.56s WALL (     416 calls)
+     h_psi:calbec :      0.64s CPU      0.63s WALL (     416 calls)
+     vloc_psi     :      5.13s CPU      5.16s WALL (     416 calls)
+     add_vuspsi   :      0.76s CPU      0.76s WALL (     416 calls)
 
      General routines
-     calbec       :      2.30s CPU      0.60s WALL (     416 calls)
-     fft          :      0.03s CPU      0.01s WALL (      22 calls)
-     fftw         :     20.91s CPU      5.36s WALL (   13344 calls)
-     davcio       :      0.02s CPU      0.01s WALL (     126 calls)
+     calbec       :      0.64s CPU      0.63s WALL (     416 calls)
+     fft          :      0.01s CPU      0.01s WALL (      22 calls)
+     fftw         :      5.47s CPU      5.49s WALL (   13344 calls)
+     davcio       :      0.01s CPU      0.71s WALL (     126 calls)
 
 
      Electric-field routines
-     c_phase_fiel :      0.38s CPU      0.38s WALL (       1 calls)
+     c_phase_fiel :      0.40s CPU      0.40s WALL (       1 calls)
 
-     PWSCF        :    30.38s CPU        10.45s WALL
+     PWSCF        :    10.81s CPU        11.94s WALL
 
 
-   This run was terminated on:  19:19:16   2Oct2016            
+   This run was terminated on:  20:20:55   5Feb2017            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

@@ -1,5 +1,5 @@
 
-     Program PWSCF v.6.0 starts on  2Oct2016 at 19:16:46 
+     Program PWSCF v.6.0 starts on  5Feb2017 at 20:18: 3 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -8,7 +8,7 @@
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
-     Serial multi-threaded version, running on    4 processor cores
+     Serial multi-threaded version, running on    1 processor cores
      Reading input from b3lyp-O.in
 
      Current dimensions of program PWSCF are:
@@ -93,7 +93,7 @@ EXX: grid of k+q points same as grid of k-points
 
      Dense  grid:    83519 G-vectors     FFT dimensions: (  72,  72,  72)
 
-     Estimated max dynamical RAM per process >     161.10Mb
+     Estimated max dynamical RAM per process >     161.10MB
      Generating pointlists ...
      new r_m :   0.4125 (alat units)  4.9500 (a.u.) for type    1
 
@@ -106,7 +106,7 @@ EXX: grid of k+q points same as grid of k-points
      negative rho (up, down):  5.131E-03 3.420E-03
      Starting wfc are    4 randomized atomic wfcs
 
-     total cpu time spent up to now is        0.7 secs
+     total cpu time spent up to now is        1.2 secs
 
      per-process dynamical memory:    77.3 Mb
 
@@ -118,7 +118,7 @@ EXX: grid of k+q points same as grid of k-points
 
      negative rho (up, down):  9.185E-04 7.308E-04
 
-     total cpu time spent up to now is        1.5 secs
+     total cpu time spent up to now is        2.3 secs
 
      total energy              =     -31.68238455 Ry
      Harris-Foulkes estimate   =     -31.64479550 Ry
@@ -133,7 +133,7 @@ EXX: grid of k+q points same as grid of k-points
 
      negative rho (up, down):  4.902E-06 7.198E-06
 
-     total cpu time spent up to now is        2.2 secs
+     total cpu time spent up to now is        3.4 secs
 
      total energy              =     -31.69789490 Ry
      Harris-Foulkes estimate   =     -31.68756154 Ry
@@ -149,7 +149,7 @@ EXX: grid of k+q points same as grid of k-points
      Magnetic moment per site:
      atom:    1    charge:    5.9980    magn:    1.9998    constr:    0.0000
 
-     total cpu time spent up to now is        3.0 secs
+     total cpu time spent up to now is        4.5 secs
 
      End of self-consistent calculation
 
@@ -167,7 +167,7 @@ EXX: grid of k+q points same as grid of k-points
 
    -20.9007  -7.1869  -5.8151  -5.8138
 
-     highest occupied level (ev):    -7.1869
+     highest occupied, lowest unoccupied level (ev):    -7.1869   -5.8151
 
 !    total energy              =     -31.69939396 Ry
      Harris-Foulkes estimate   =     -31.69943431 Ry
@@ -180,7 +180,7 @@ EXX: grid of k+q points same as grid of k-points
 
      EXX: now go back to refine exchange calculation
 
-     total cpu time spent up to now is        3.6 secs
+     total cpu time spent up to now is        5.6 secs
 
      per-process dynamical memory:    75.9 Mb
 
@@ -196,10 +196,10 @@ EXX: grid of k+q points same as grid of k-points
      Davidson diagonalization with overlap
      ethr =  9.72E-06,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        5.3 secs
+     total cpu time spent up to now is        7.6 secs
 
      total energy              =     -31.66512733 Ry
-     Harris-Foulkes estimate   =     -32.93425005 Ry
+     Harris-Foulkes estimate   =     -31.66555998 Ry
      estimated scf accuracy    <       0.00059446 Ry
 
      total magnetization       =     2.00 Bohr mag/cell
@@ -212,7 +212,7 @@ EXX: grid of k+q points same as grid of k-points
      Magnetic moment per site:
      atom:    1    charge:    5.9983    magn:    1.9999    constr:    0.0000
 
-     total cpu time spent up to now is        6.5 secs
+     total cpu time spent up to now is        9.1 secs
 
      End of self-consistent calculation
 
@@ -230,10 +230,10 @@ EXX: grid of k+q points same as grid of k-points
 
    -22.8437  -8.6935  -4.2690  -4.2670
 
-     highest occupied level (ev):    -8.6935
+     highest occupied, lowest unoccupied level (ev):    -8.6935   -4.2690
 
 !    total energy              =     -31.66527391 Ry
-     Harris-Foulkes estimate   =     -32.93404013 Ry
+     Harris-Foulkes estimate   =     -31.66535007 Ry
      estimated scf accuracy    <       0.00009599 Ry
 
      total magnetization       =     2.00 Bohr mag/cell
@@ -241,7 +241,7 @@ EXX: grid of k+q points same as grid of k-points
 
      convergence has been achieved in   2 iterations
 
-!    total energy              =     -31.66533004 Ry
+!!   total energy              =     -31.66533004 Ry
      Harris-Foulkes estimate   =     -31.66540620 Ry
      est. exchange err (dexx)  =       0.00005613 Ry
      - averaged Fock potential =       2.54178093 Ry
@@ -249,7 +249,7 @@ EXX: grid of k+q points same as grid of k-points
 
      EXX self-consistency reached
 
-     Forces acting on atoms (Ry/au):
+     Forces acting on atoms (cartesian axes, Ry/au):
 
      atom    1 type  1   force =     0.00000000    0.00000000    0.00000000
 
@@ -257,56 +257,56 @@ EXX: grid of k+q points same as grid of k-points
 
      Writing output data file pwscf.save
 
-     init_run     :      1.22s CPU      0.71s WALL (       1 calls)
-     electrons    :     10.89s CPU      5.20s WALL (       2 calls)
-     forces       :      0.06s CPU      0.05s WALL (       1 calls)
+     init_run     :      1.15s CPU      1.18s WALL (       1 calls)
+     electrons    :      6.80s CPU      6.99s WALL (       2 calls)
+     forces       :      0.05s CPU      0.06s WALL (       1 calls)
 
      Called by init_run:
-     wfcinit      :      0.09s CPU      0.07s WALL (       1 calls)
-     potinit      :      0.94s CPU      0.44s WALL (       1 calls)
+     wfcinit      :      0.06s CPU      0.07s WALL (       1 calls)
+     potinit      :      0.88s CPU      0.90s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :      4.45s CPU      1.90s WALL (       6 calls)
-     sum_band     :      0.66s CPU      0.45s WALL (       6 calls)
-     v_of_rho     :      7.46s CPU      3.41s WALL (       7 calls)
-     mix_rho      :      0.13s CPU      0.16s WALL (       6 calls)
+     c_bands      :      1.88s CPU      1.89s WALL (       6 calls)
+     sum_band     :      0.42s CPU      0.42s WALL (       6 calls)
+     v_of_rho     :      5.97s CPU      6.01s WALL (       7 calls)
+     mix_rho      :      0.11s CPU      0.13s WALL (       6 calls)
 
      Called by c_bands:
-     init_us_2    :      0.03s CPU      0.01s WALL (      34 calls)
-     regterg      :      4.44s CPU      1.90s WALL (      12 calls)
+     init_us_2    :      0.01s CPU      0.02s WALL (      34 calls)
+     regterg      :      1.87s CPU      1.88s WALL (      12 calls)
 
      Called by sum_band:
 
      Called by *egterg:
-     h_psi        :      4.33s CPU      1.87s WALL (      32 calls)
+     h_psi        :      1.84s CPU      1.85s WALL (      32 calls)
      g_psi        :      0.01s CPU      0.01s WALL (      18 calls)
      rdiaghg      :      0.00s CPU      0.00s WALL (      26 calls)
 
      Called by h_psi:
-     h_psi:pot    :      0.82s CPU      0.81s WALL (      32 calls)
+     h_psi:pot    :      0.78s CPU      0.78s WALL (      32 calls)
      h_psi:calbec :      0.00s CPU      0.00s WALL (      32 calls)
-     vloc_psi     :      0.81s CPU      0.81s WALL (      32 calls)
+     vloc_psi     :      0.77s CPU      0.78s WALL (      32 calls)
      add_vuspsi   :      0.00s CPU      0.00s WALL (      32 calls)
 
      General routines
-     calbec       :      0.01s CPU      0.00s WALL (      46 calls)
-     fft          :      1.62s CPU      1.59s WALL (     142 calls)
-     fftw         :      0.88s CPU      0.83s WALL (     150 calls)
-     fftc         :      2.27s CPU      0.70s WALL (     222 calls)
-     fftcw        :      0.96s CPU      0.29s WALL (     113 calls)
+     calbec       :      0.00s CPU      0.00s WALL (      46 calls)
+     fft          :      1.38s CPU      1.38s WALL (     142 calls)
+     fftw         :      0.82s CPU      0.82s WALL (     150 calls)
+     fftc         :      0.73s CPU      0.73s WALL (     222 calls)
+     fftcw        :      0.27s CPU      0.28s WALL (     113 calls)
      davcio       :      0.00s CPU      0.00s WALL (       2 calls)
 
 
      EXX routines
      exx_grid     :      0.00s CPU      0.00s WALL (       1 calls)
-     exxinit      :      0.06s CPU      0.06s WALL (       2 calls)
-     vexx         :      3.50s CPU      1.06s WALL (      16 calls)
-     exxenergy    :      0.65s CPU      0.19s WALL (       3 calls)
+     exxinit      :      0.05s CPU      0.05s WALL (       2 calls)
+     vexx         :      1.05s CPU      1.06s WALL (      16 calls)
+     exxenergy    :      0.20s CPU      0.21s WALL (       3 calls)
 
-     PWSCF        :    13.96s CPU         6.73s WALL
+     PWSCF        :     9.17s CPU         9.49s WALL
 
 
-   This run was terminated on:  19:16:53   2Oct2016            
+   This run was terminated on:  20:18:13   5Feb2017            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

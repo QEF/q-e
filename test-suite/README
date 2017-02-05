@@ -23,7 +23,7 @@ All reference outputs have been computed using GCC 4.8.5
 
 The following configure options have been used:
 
-./configure --disable-openmp --disable-parallel --with-netlib
+./configure --enable-openmp --disable-parallel --with-netlib
 
 DFLAGS         = -D__OPENMP -D__GFORTRAN -D__STD_F95 -D__FFTW
 CFLAGS         = -O3 $(DFLAGS) $(IFLAGS)
@@ -32,3 +32,8 @@ FFLAGS         = -O3 -g -fopenmp
 FFLAGS_NOOPT   = -O0 -g
 LD             = gfortran
 LDFLAGS        = -g -pthread -fopenmp
+
+
+During execution:
+
+OMP_NUM_THREADS = 4

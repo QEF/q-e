@@ -1,5 +1,5 @@
 
-     Program PWSCF v.6.0 starts on  2Oct2016 at 19:27:17 
+     Program PWSCF v.6.0 starts on  5Feb2017 at 20:30:26 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -8,7 +8,7 @@
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
-     Serial multi-threaded version, running on    4 processor cores
+     Serial multi-threaded version, running on    1 processor cores
      Reading input from paw-vcbfgs.in
 
      Current dimensions of program PWSCF are:
@@ -96,7 +96,7 @@
 
      Dense  grid:     3839 G-vectors     FFT dimensions: (  24,  24,  24)
 
-     Estimated max dynamical RAM per process >       3.79Mb
+     Estimated max dynamical RAM per process >       3.79MB
 
      Check: negative/imaginary core charge=   -0.000010    0.000000
 
@@ -108,9 +108,9 @@
      negative rho (up, down):  2.125E-02 0.000E+00
      Starting wfc are    8 randomized atomic wfcs
 
-     total cpu time spent up to now is        0.7 secs
+     total cpu time spent up to now is        0.8 secs
 
-     per-process dynamical memory:     4.4 Mb
+     per-process dynamical memory:     3.9 Mb
 
      Self-consistent Calculation
 
@@ -126,7 +126,7 @@
 
      negative rho (up, down):  3.951E-02 0.000E+00
 
-     total cpu time spent up to now is        1.0 secs
+     total cpu time spent up to now is        1.2 secs
 
      total energy              =    -328.23132086 Ry
      Harris-Foulkes estimate   =    -328.23718998 Ry
@@ -138,7 +138,7 @@
 
      negative rho (up, down):  4.622E-02 0.000E+00
 
-     total cpu time spent up to now is        1.2 secs
+     total cpu time spent up to now is        1.5 secs
 
      total energy              =    -328.23183496 Ry
      Harris-Foulkes estimate   =    -328.23201008 Ry
@@ -150,7 +150,7 @@
 
      negative rho (up, down):  4.583E-02 0.000E+00
 
-     total cpu time spent up to now is        1.4 secs
+     total cpu time spent up to now is        1.8 secs
 
      total energy              =    -328.23190201 Ry
      Harris-Foulkes estimate   =    -328.23189879 Ry
@@ -162,7 +162,7 @@
 
      negative rho (up, down):  4.519E-02 0.000E+00
 
-     total cpu time spent up to now is        1.6 secs
+     total cpu time spent up to now is        2.1 secs
 
      End of self-consistent calculation
 
@@ -227,7 +227,7 @@
 
      negative rho (up, down):  4.519E-02 0.000E+00
 
-     Forces acting on atoms (Ry/au):
+     Forces acting on atoms (cartesian axes, Ry/au):
 
      atom    1 type  1   force =    -0.00000000   -0.00000000    0.00000000
      atom    2 type  1   force =     0.00000000    0.00000000   -0.00000000
@@ -235,14 +235,14 @@
      Total force =     0.000000     Total SCF correction =     0.000000
 
 
-     entering subroutine stress ...
+     Computing stress (Cartesian axis) and pressure
 
 
      negative rho (up, down):  4.519E-02 0.000E+00
           total   stress  (Ry/bohr**3)                   (kbar)     P=   -0.77
-  -0.00000524  -0.00000000  -0.00000000         -0.77     -0.00     -0.00
+  -0.00000524  -0.00000000   0.00000000         -0.77     -0.00      0.00
   -0.00000000  -0.00000524  -0.00000000         -0.00     -0.77     -0.00
-  -0.00000000  -0.00000000  -0.00000524         -0.00     -0.00     -0.77
+   0.00000000  -0.00000000  -0.00000524          0.00     -0.00     -0.77
 
 
      BFGS Geometry Optimization
@@ -256,6 +256,7 @@
      new conv_thr            =       0.0000010000 Ry
 
      new unit-cell volume =    326.77762 a.u.^3 (    48.42345 Ang^3 )
+     density =      4.97989 g/cm^3
 
 CELL_PARAMETERS (alat=  1.88972599)
   -0.000000000   2.892956709   2.892956709
@@ -278,9 +279,9 @@ Ge       0.250000000   0.250000000   0.250000000
      negative rho (up, down):  4.518E-02 0.000E+00
      extrapolated charge    7.99685, renormalised to    8.00000
 
-     total cpu time spent up to now is        2.8 secs
+     total cpu time spent up to now is        3.7 secs
 
-     per-process dynamical memory:     6.8 Mb
+     per-process dynamical memory:     6.4 Mb
 
      Self-consistent Calculation
 
@@ -292,11 +293,11 @@ Ge       0.250000000   0.250000000   0.250000000
      Diagonalizing with lowered threshold
 
      Davidson diagonalization with overlap
-     ethr =  5.90E-11,  avg # of iterations =  2.0
+     ethr =  6.07E-11,  avg # of iterations =  2.0
 
-     negative rho (up, down):  4.521E-02 0.000E+00
+     negative rho (up, down):  4.520E-02 0.000E+00
 
-     total cpu time spent up to now is        3.2 secs
+     total cpu time spent up to now is        4.1 secs
 
      End of self-consistent calculation
 
@@ -318,15 +319,15 @@ Ge       0.250000000   0.250000000   0.250000000
 
           k = 0.1080 0.0216 0.0216 (   490 PWs)   bands (ev):
 
-    -5.4999  -0.7950   2.5832   3.0229   6.5629   7.8653  10.8713  11.5419
+    -5.5000  -0.7950   2.5832   3.0229   6.5629   7.8653  10.8713  11.5419
 
           k =-0.0216-0.1080 0.1512 (   494 PWs)   bands (ev):
 
-    -4.1036  -2.6311   1.4003   2.3808   7.5156   9.3359  10.2891  12.1007
+    -4.1036  -2.6312   1.4003   2.3808   7.5156   9.3359  10.2891  12.1007
 
           k = 0.0216-0.0648 0.1080 (   494 PWs)   bands (ev):
 
-    -5.1605  -1.4630   1.9299   3.2925   7.5456   8.6238  10.1228  11.2573
+    -5.1606  -1.4630   1.9299   3.2925   7.5456   8.6238  10.1228  11.2573
 
           k =-0.1512 0.0216 0.0216 (   486 PWs)   bands (ev):
 
@@ -334,49 +335,49 @@ Ge       0.250000000   0.250000000   0.250000000
 
           k = 0.0648 0.0648 0.0648 (   492 PWs)   bands (ev):
 
-    -5.6214  -1.2452   4.0572   4.0572   5.3679   9.0146   9.0146  12.4766
+    -5.6215  -1.2452   4.0572   4.0572   5.3679   9.0146   9.0146  12.4766
 
           k =-0.0648-0.0648 0.1944 (   495 PWs)   bands (ev):
 
-    -4.5971  -2.1873   1.3747   3.3045   6.8310  10.1001  10.8104  11.8156
+    -4.5971  -2.1873   1.3747   3.3045   6.8309  10.1001  10.8104  11.8156
 
      the Fermi energy is     5.0414 ev
 
-!    total energy              =    -328.23191047 Ry
+!    total energy              =    -328.23191046 Ry
      Harris-Foulkes estimate   =    -328.23000637 Ry
-     estimated scf accuracy    <          4.8E-09 Ry
+     estimated scf accuracy    <          4.9E-09 Ry
 
      total all-electron energy =     -8395.996669 Ry
 
      The total energy is the sum of the following terms:
 
-     one-electron contribution =       4.98875964 Ry
-     hartree contribution      =       1.21013498 Ry
-     xc contribution           =     -32.27049958 Ry
+     one-electron contribution =       4.98876435 Ry
+     hartree contribution      =       1.21013745 Ry
+     xc contribution           =     -32.27050620 Ry
      ewald contribution        =     -15.76557831 Ry
-     one-center paw contrib.   =    -286.39476730 Ry
-     smearing contrib. (-TS)   =       0.00004011 Ry
+     one-center paw contrib.   =    -286.39476787 Ry
+     smearing contrib. (-TS)   =       0.00004012 Ry
 
      convergence has been achieved in   1 iterations
 
-     negative rho (up, down):  4.521E-02 0.000E+00
+     negative rho (up, down):  4.520E-02 0.000E+00
 
-     Forces acting on atoms (Ry/au):
+     Forces acting on atoms (cartesian axes, Ry/au):
 
-     atom    1 type  1   force =     0.00000000   -0.00000000    0.00000000
-     atom    2 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom    1 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom    2 type  1   force =    -0.00000000   -0.00000000   -0.00000000
 
      Total force =     0.000000     Total SCF correction =     0.000000
 
 
-     entering subroutine stress ...
+     Computing stress (Cartesian axis) and pressure
 
 
-     negative rho (up, down):  4.521E-02 0.000E+00
+     negative rho (up, down):  4.520E-02 0.000E+00
           total   stress  (Ry/bohr**3)                   (kbar)     P=   -0.49
-  -0.00000333  -0.00000000   0.00000000         -0.49     -0.00      0.00
-  -0.00000000  -0.00000333  -0.00000000         -0.00     -0.49     -0.00
-  -0.00000000   0.00000000  -0.00000333         -0.00      0.00     -0.49
+  -0.00000330   0.00000000  -0.00000000         -0.49      0.00     -0.00
+   0.00000000  -0.00000330  -0.00000000          0.00     -0.49     -0.00
+  -0.00000000   0.00000000  -0.00000330         -0.00      0.00     -0.49
 
 
      bfgs converged in   2 scf cycles and   1 bfgs steps
@@ -384,9 +385,10 @@ Ge       0.250000000   0.250000000   0.250000000
 
      End of BFGS Geometry Optimization
 
-     Final enthalpy =    -328.2319104654 Ry
+     Final enthalpy =    -328.2319104638 Ry
 Begin final coordinates
      new unit-cell volume =    326.77762 a.u.^3 (    48.42345 Ang^3 )
+     density =      4.97989 g/cm^3
 
 CELL_PARAMETERS (alat=  1.88972599)
   -0.000000000   2.892956709   2.892956709
@@ -403,10 +405,6 @@ End final coordinates
      A final scf calculation at the relaxed structure.
      The G-vectors are recalculated for the final unit cell
      Results may differ from those at the preceding step.
-
-   Info: using nr1, nr2, nr3 values from input
-
-   Info: using nr1, nr2, nr3 values from input
 
      G-vector sticks info
      --------------------
@@ -485,7 +483,7 @@ End final coordinates
 
      Dense  grid:     3839 G-vectors     FFT dimensions: (  24,  24,  24)
 
-     Estimated max dynamical RAM per process >       3.79Mb
+     Estimated max dynamical RAM per process >       3.79MB
 
      Check: negative/imaginary core charge=   -0.000010    0.000000
 
@@ -499,9 +497,9 @@ End final coordinates
 
      Writing output data file pwscf.save
 
-     total cpu time spent up to now is        4.3 secs
+     total cpu time spent up to now is        5.4 secs
 
-     per-process dynamical memory:     7.9 Mb
+     per-process dynamical memory:     7.5 Mb
 
      Self-consistent Calculation
 
@@ -511,7 +509,7 @@ End final coordinates
 
      negative rho (up, down):  3.927E-02 0.000E+00
 
-     total cpu time spent up to now is        4.7 secs
+     total cpu time spent up to now is        5.9 secs
 
      total energy              =    -328.23131368 Ry
      Harris-Foulkes estimate   =    -328.23770277 Ry
@@ -523,7 +521,7 @@ End final coordinates
 
      negative rho (up, down):  4.600E-02 0.000E+00
 
-     total cpu time spent up to now is        4.9 secs
+     total cpu time spent up to now is        6.2 secs
 
      total energy              =    -328.23184524 Ry
      Harris-Foulkes estimate   =    -328.23203742 Ry
@@ -535,7 +533,7 @@ End final coordinates
 
      negative rho (up, down):  4.583E-02 0.000E+00
 
-     total cpu time spent up to now is        5.0 secs
+     total cpu time spent up to now is        6.4 secs
 
      total energy              =    -328.23190412 Ry
      Harris-Foulkes estimate   =    -328.23189917 Ry
@@ -547,7 +545,7 @@ End final coordinates
 
      negative rho (up, down):  4.522E-02 0.000E+00
 
-     total cpu time spent up to now is        5.2 secs
+     total cpu time spent up to now is        6.7 secs
 
      End of self-consistent calculation
 
@@ -612,75 +610,75 @@ End final coordinates
 
      negative rho (up, down):  4.522E-02 0.000E+00
 
-     Forces acting on atoms (Ry/au):
+     Forces acting on atoms (cartesian axes, Ry/au):
 
      atom    1 type  1   force =     0.00000000    0.00000000    0.00000000
-     atom    2 type  1   force =    -0.00000000   -0.00000000   -0.00000000
+     atom    2 type  1   force =     0.00000000    0.00000000    0.00000000
 
      Total force =     0.000000     Total SCF correction =     0.000000
 
 
-     entering subroutine stress ...
+     Computing stress (Cartesian axis) and pressure
 
 
      negative rho (up, down):  4.522E-02 0.000E+00
           total   stress  (Ry/bohr**3)                   (kbar)     P=   -0.52
-  -0.00000356  -0.00000000   0.00000000         -0.52     -0.00      0.00
-  -0.00000000  -0.00000356  -0.00000000         -0.00     -0.52     -0.00
-   0.00000000   0.00000000  -0.00000356          0.00      0.00     -0.52
+  -0.00000356   0.00000000  -0.00000000         -0.52      0.00     -0.00
+   0.00000000  -0.00000356   0.00000000          0.00     -0.52      0.00
+  -0.00000000   0.00000000  -0.00000356         -0.00      0.00     -0.52
 
 
      Writing output data file pwscf.save
 
-     init_run     :      1.57s CPU      0.81s WALL (       2 calls)
-     electrons    :      8.09s CPU      2.17s WALL (       3 calls)
-     update_pot   :      0.61s CPU      0.41s WALL (       1 calls)
-     forces       :      0.60s CPU      0.48s WALL (       3 calls)
-     stress       :      1.60s CPU      1.19s WALL (       3 calls)
+     init_run     :      0.99s CPU      1.00s WALL (       2 calls)
+     electrons    :      3.01s CPU      3.06s WALL (       3 calls)
+     update_pot   :      0.50s CPU      0.51s WALL (       1 calls)
+     forces       :      0.53s CPU      0.53s WALL (       3 calls)
+     stress       :      1.32s CPU      1.33s WALL (       3 calls)
 
      Called by init_run:
-     wfcinit      :      0.34s CPU      0.09s WALL (       2 calls)
-     potinit      :      0.65s CPU      0.25s WALL (       2 calls)
+     wfcinit      :      0.09s CPU      0.09s WALL (       2 calls)
+     potinit      :      0.38s CPU      0.39s WALL (       2 calls)
 
      Called by electrons:
-     c_bands      :      5.22s CPU      1.32s WALL (      11 calls)
-     sum_band     :      0.99s CPU      0.27s WALL (      11 calls)
-     v_of_rho     :      0.22s CPU      0.11s WALL (      12 calls)
-     newd         :      0.12s CPU      0.03s WALL (      12 calls)
-     PAW_pot      :      2.62s CPU      0.76s WALL (      13 calls)
+     c_bands      :      1.30s CPU      1.33s WALL (      11 calls)
+     sum_band     :      0.30s CPU      0.31s WALL (      11 calls)
+     v_of_rho     :      0.13s CPU      0.13s WALL (      12 calls)
+     newd         :      0.06s CPU      0.07s WALL (      12 calls)
+     PAW_pot      :      1.80s CPU      1.81s WALL (      13 calls)
      mix_rho      :      0.00s CPU      0.00s WALL (      11 calls)
 
      Called by c_bands:
-     init_us_2    :      0.15s CPU      0.04s WALL (     310 calls)
-     cegterg      :      5.00s CPU      1.26s WALL (     110 calls)
+     init_us_2    :      0.04s CPU      0.05s WALL (     310 calls)
+     cegterg      :      1.26s CPU      1.27s WALL (     110 calls)
 
      Called by sum_band:
-     sum_band:bec :      0.01s CPU      0.00s WALL (     120 calls)
-     addusdens    :      0.11s CPU      0.03s WALL (      11 calls)
+     sum_band:bec :      0.00s CPU      0.00s WALL (     120 calls)
+     addusdens    :      0.06s CPU      0.06s WALL (      11 calls)
 
      Called by *egterg:
-     h_psi        :      4.32s CPU      1.08s WALL (     409 calls)
-     s_psi        :      0.17s CPU      0.04s WALL (     409 calls)
-     g_psi        :      0.03s CPU      0.01s WALL (     279 calls)
-     cdiaghg      :      0.19s CPU      0.05s WALL (     359 calls)
+     h_psi        :      1.08s CPU      1.09s WALL (     409 calls)
+     s_psi        :      0.05s CPU      0.05s WALL (     409 calls)
+     g_psi        :      0.01s CPU      0.01s WALL (     279 calls)
+     cdiaghg      :      0.05s CPU      0.05s WALL (     359 calls)
 
      Called by h_psi:
-     h_psi:pot    :      4.30s CPU      1.08s WALL (     409 calls)
-     h_psi:calbec :      0.15s CPU      0.04s WALL (     409 calls)
-     vloc_psi     :      3.97s CPU      0.99s WALL (     409 calls)
-     add_vuspsi   :      0.18s CPU      0.04s WALL (     409 calls)
+     h_psi:pot    :      1.07s CPU      1.08s WALL (     409 calls)
+     h_psi:calbec :      0.04s CPU      0.04s WALL (     409 calls)
+     vloc_psi     :      0.99s CPU      1.00s WALL (     409 calls)
+     add_vuspsi   :      0.05s CPU      0.04s WALL (     409 calls)
 
      General routines
-     calbec       :      0.27s CPU      0.07s WALL (     679 calls)
-     fft          :      0.14s CPU      0.06s WALL (     235 calls)
-     fftw         :      4.13s CPU      1.04s WALL (    6098 calls)
+     calbec       :      0.07s CPU      0.07s WALL (     679 calls)
+     fft          :      0.06s CPU      0.06s WALL (     235 calls)
+     fftw         :      1.03s CPU      1.04s WALL (    6098 calls)
      davcio       :      0.00s CPU      0.00s WALL (      20 calls)
 
 
-     PWSCF        :    12.97s CPU         5.37s WALL
+     PWSCF        :     6.75s CPU         6.93s WALL
 
 
-   This run was terminated on:  19:27:23   2Oct2016            
+   This run was terminated on:  20:30:33   5Feb2017            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

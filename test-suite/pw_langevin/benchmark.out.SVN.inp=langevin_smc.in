@@ -1,5 +1,5 @@
 
-     Program PWSCF v.6.0 starts on  2Oct2016 at 19:22:51 
+     Program PWSCF v.6.0 starts on  5Feb2017 at 20:24:58 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -8,7 +8,7 @@
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
-     Serial multi-threaded version, running on    4 processor cores
+     Serial multi-threaded version, running on    1 processor cores
      Reading input from langevin_smc.in
 
      Current dimensions of program PWSCF are:
@@ -88,7 +88,7 @@
 
      Smooth grid:     2761 G-vectors     FFT dimensions: (  20,  20,  30)
 
-     Estimated max dynamical RAM per process >       6.39Mb
+     Estimated max dynamical RAM per process >       6.39MB
 
      Initial potential from superposition of free atoms
 
@@ -97,7 +97,7 @@
 
      total cpu time spent up to now is        0.1 secs
 
-     per-process dynamical memory:     4.6 Mb
+     per-process dynamical memory:     4.7 Mb
 
      Self-consistent Calculation
 
@@ -115,7 +115,7 @@
      Davidson diagonalization with overlap
      ethr =  1.00E-02,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        0.2 secs
+     total cpu time spent up to now is        0.3 secs
 
      total energy              =      -2.39240911 Ry
      Harris-Foulkes estimate   =      -2.48324473 Ry
@@ -135,7 +135,7 @@
      Davidson diagonalization with overlap
      ethr =  1.40E-04,  avg # of iterations =  5.0
 
-     total cpu time spent up to now is        0.3 secs
+     total cpu time spent up to now is        0.4 secs
 
      total energy              =      -2.41287140 Ry
      Harris-Foulkes estimate   =      -2.42245879 Ry
@@ -155,7 +155,7 @@
      Davidson diagonalization with overlap
      ethr =  4.07E-06,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        0.4 secs
+     total cpu time spent up to now is        0.5 secs
 
      total energy              =      -2.41482111 Ry
      Harris-Foulkes estimate   =      -2.41488335 Ry
@@ -175,7 +175,7 @@
      Davidson diagonalization with overlap
      ethr =  7.70E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        0.5 secs
+     total cpu time spent up to now is        0.6 secs
 
      total energy              =      -2.41483317 Ry
      Harris-Foulkes estimate   =      -2.41483356 Ry
@@ -203,7 +203,7 @@
 
      convergence has been achieved in   9 iterations
 
-     Forces acting on atoms (Ry/au):
+     Forces acting on atoms (cartesian axes, Ry/au):
 
      atom    1 type  1   force =    -0.00000006   -0.00000008    0.00001913
      atom    2 type  1   force =     0.00000006    0.00000008   -0.00001913
@@ -227,7 +227,7 @@ H        1.500000000   1.500000000   2.088213619    0   0   1
      Writing output data file pwscf.save
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is        0.6 secs
+     total cpu time spent up to now is        0.8 secs
 
      per-process dynamical memory:     4.7 Mb
 
@@ -237,7 +237,7 @@ H        1.500000000   1.500000000   2.088213619    0   0   1
      Davidson diagonalization with overlap
      ethr =  1.00E-06,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        0.7 secs
+     total cpu time spent up to now is        0.8 secs
 
      total energy              =      -2.41425391 Ry
      Harris-Foulkes estimate   =      -2.41436340 Ry
@@ -247,7 +247,7 @@ H        1.500000000   1.500000000   2.088213619    0   0   1
      Davidson diagonalization with overlap
      ethr =  1.99E-05,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        0.7 secs
+     total cpu time spent up to now is        0.9 secs
 
      total energy              =      -2.41419994 Ry
      Harris-Foulkes estimate   =      -2.41426255 Ry
@@ -257,7 +257,7 @@ H        1.500000000   1.500000000   2.088213619    0   0   1
      Davidson diagonalization with overlap
      ethr =  6.66E-06,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        0.8 secs
+     total cpu time spent up to now is        0.9 secs
 
      total energy              =      -2.41421594 Ry
      Harris-Foulkes estimate   =      -2.41421540 Ry
@@ -267,7 +267,7 @@ H        1.500000000   1.500000000   2.088213619    0   0   1
      Davidson diagonalization with overlap
      ethr =  4.71E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        0.8 secs
+     total cpu time spent up to now is        1.0 secs
 
      End of self-consistent calculation
 
@@ -285,7 +285,7 @@ H        1.500000000   1.500000000   2.088213619    0   0   1
 
      convergence has been achieved in   4 iterations
 
-     Forces acting on atoms (Ry/au):
+     Forces acting on atoms (cartesian axes, Ry/au):
 
      atom    1 type  1   force =    -0.00000000   -0.00000000   -0.02430100
      atom    2 type  1   force =     0.00000000    0.00000000    0.02430100
@@ -315,7 +315,7 @@ H        1.500000000   1.500000000   2.071329858    0   0   1
      Writing output data file pwscf.save
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is        0.9 secs
+     total cpu time spent up to now is        1.1 secs
 
      per-process dynamical memory:     4.7 Mb
 
@@ -325,7 +325,7 @@ H        1.500000000   1.500000000   2.071329858    0   0   1
      Davidson diagonalization with overlap
      ethr =  1.00E-06,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is        1.0 secs
+     total cpu time spent up to now is        1.1 secs
 
      total energy              =      -2.41187636 Ry
      Harris-Foulkes estimate   =      -2.41204471 Ry
@@ -335,7 +335,7 @@ H        1.500000000   1.500000000   2.071329858    0   0   1
      Davidson diagonalization with overlap
      ethr =  3.08E-05,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        1.0 secs
+     total cpu time spent up to now is        1.2 secs
 
      total energy              =      -2.41179278 Ry
      Harris-Foulkes estimate   =      -2.41188950 Ry
@@ -345,7 +345,7 @@ H        1.500000000   1.500000000   2.071329858    0   0   1
      Davidson diagonalization with overlap
      ethr =  1.04E-05,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        1.1 secs
+     total cpu time spent up to now is        1.2 secs
 
      total energy              =      -2.41181728 Ry
      Harris-Foulkes estimate   =      -2.41181645 Ry
@@ -355,7 +355,7 @@ H        1.500000000   1.500000000   2.071329858    0   0   1
      Davidson diagonalization with overlap
      ethr =  7.27E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        1.1 secs
+     total cpu time spent up to now is        1.3 secs
 
      total energy              =      -2.41181745 Ry
      Harris-Foulkes estimate   =      -2.41181729 Ry
@@ -365,7 +365,7 @@ H        1.500000000   1.500000000   2.071329858    0   0   1
      Davidson diagonalization with overlap
      ethr =  7.69E-10,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        1.1 secs
+     total cpu time spent up to now is        1.3 secs
 
      End of self-consistent calculation
 
@@ -383,7 +383,7 @@ H        1.500000000   1.500000000   2.071329858    0   0   1
 
      convergence has been achieved in   5 iterations
 
-     Forces acting on atoms (Ry/au):
+     Forces acting on atoms (cartesian axes, Ry/au):
 
      atom    1 type  1   force =     0.00000000    0.00000000   -0.04999548
      atom    2 type  1   force =    -0.00000000   -0.00000000    0.04999548
@@ -413,7 +413,7 @@ H        1.500000000   1.500000000   2.111242310    0   0   1
      Writing output data file pwscf.save
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is        1.2 secs
+     total cpu time spent up to now is        1.5 secs
 
      per-process dynamical memory:     4.7 Mb
 
@@ -423,7 +423,7 @@ H        1.500000000   1.500000000   2.111242310    0   0   1
      Davidson diagonalization with overlap
      ethr =  1.00E-06,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is        1.3 secs
+     total cpu time spent up to now is        1.5 secs
 
      total energy              =      -2.41480996 Ry
      Harris-Foulkes estimate   =      -2.41579159 Ry
@@ -433,7 +433,7 @@ H        1.500000000   1.500000000   2.111242310    0   0   1
      Davidson diagonalization with overlap
      ethr =  1.81E-04,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        1.3 secs
+     total cpu time spent up to now is        1.6 secs
 
      total energy              =      -2.41428853 Ry
      Harris-Foulkes estimate   =      -2.41488307 Ry
@@ -443,7 +443,7 @@ H        1.500000000   1.500000000   2.111242310    0   0   1
      Davidson diagonalization with overlap
      ethr =  6.17E-05,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        1.4 secs
+     total cpu time spent up to now is        1.6 secs
 
      total energy              =      -2.41443939 Ry
      Harris-Foulkes estimate   =      -2.41443557 Ry
@@ -453,7 +453,7 @@ H        1.500000000   1.500000000   2.111242310    0   0   1
      Davidson diagonalization with overlap
      ethr =  3.36E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        1.4 secs
+     total cpu time spent up to now is        1.7 secs
 
      total energy              =      -2.41444015 Ry
      Harris-Foulkes estimate   =      -2.41443975 Ry
@@ -463,7 +463,7 @@ H        1.500000000   1.500000000   2.111242310    0   0   1
      Davidson diagonalization with overlap
      ethr =  4.26E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        1.5 secs
+     total cpu time spent up to now is        1.7 secs
 
      End of self-consistent calculation
 
@@ -481,7 +481,7 @@ H        1.500000000   1.500000000   2.111242310    0   0   1
 
      convergence has been achieved in   5 iterations
 
-     Forces acting on atoms (Ry/au):
+     Forces acting on atoms (cartesian axes, Ry/au):
 
      atom    1 type  1   force =     0.00000010    0.00000010    0.02143227
      atom    2 type  1   force =    -0.00000010   -0.00000010   -0.02143227
@@ -511,7 +511,7 @@ H        1.500000000   1.500000000   2.059119516    0   0   1
      Writing output data file pwscf.save
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is        1.6 secs
+     total cpu time spent up to now is        1.8 secs
 
      per-process dynamical memory:     4.7 Mb
 
@@ -521,7 +521,7 @@ H        1.500000000   1.500000000   2.059119516    0   0   1
      Davidson diagonalization with overlap
      ethr =  1.00E-06,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is        1.6 secs
+     total cpu time spent up to now is        1.9 secs
 
      total energy              =      -2.40969858 Ry
      Harris-Foulkes estimate   =      -2.41138115 Ry
@@ -531,7 +531,7 @@ H        1.500000000   1.500000000   2.059119516    0   0   1
      Davidson diagonalization with overlap
      ethr =  3.01E-04,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        1.7 secs
+     total cpu time spent up to now is        2.0 secs
 
      total energy              =      -2.40891055 Ry
      Harris-Foulkes estimate   =      -2.40983441 Ry
@@ -541,7 +541,7 @@ H        1.500000000   1.500000000   2.059119516    0   0   1
      Davidson diagonalization with overlap
      ethr =  1.00E-04,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        1.7 secs
+     total cpu time spent up to now is        2.0 secs
 
      total energy              =      -2.40914514 Ry
      Harris-Foulkes estimate   =      -2.40913598 Ry
@@ -551,7 +551,7 @@ H        1.500000000   1.500000000   2.059119516    0   0   1
      Davidson diagonalization with overlap
      ethr =  8.55E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        1.7 secs
+     total cpu time spent up to now is        2.1 secs
 
      total energy              =      -2.40914624 Ry
      Harris-Foulkes estimate   =      -2.40914542 Ry
@@ -561,7 +561,7 @@ H        1.500000000   1.500000000   2.059119516    0   0   1
      Davidson diagonalization with overlap
      ethr =  6.20E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        1.8 secs
+     total cpu time spent up to now is        2.1 secs
 
      total energy              =      -2.40914706 Ry
      Harris-Foulkes estimate   =      -2.40914637 Ry
@@ -571,7 +571,7 @@ H        1.500000000   1.500000000   2.059119516    0   0   1
      Davidson diagonalization with overlap
      ethr =  6.12E-10,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        1.8 secs
+     total cpu time spent up to now is        2.2 secs
 
      End of self-consistent calculation
 
@@ -589,7 +589,7 @@ H        1.500000000   1.500000000   2.059119516    0   0   1
 
      convergence has been achieved in   6 iterations
 
-     Forces acting on atoms (Ry/au):
+     Forces acting on atoms (cartesian axes, Ry/au):
 
      atom    1 type  1   force =    -0.00000001   -0.00000001   -0.06535342
      atom    2 type  1   force =     0.00000001    0.00000001    0.06535342
@@ -619,7 +619,7 @@ H        1.500000000   1.500000000   2.069115020    0   0   1
      Writing output data file pwscf.save
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is        1.9 secs
+     total cpu time spent up to now is        2.3 secs
 
      per-process dynamical memory:     4.7 Mb
 
@@ -629,7 +629,7 @@ H        1.500000000   1.500000000   2.069115020    0   0   1
      Davidson diagonalization with overlap
      ethr =  1.00E-06,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        2.0 secs
+     total cpu time spent up to now is        2.3 secs
 
      total energy              =      -2.41140649 Ry
      Harris-Foulkes estimate   =      -2.41145999 Ry
@@ -639,7 +639,7 @@ H        1.500000000   1.500000000   2.069115020    0   0   1
      Davidson diagonalization with overlap
      ethr =  9.94E-06,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        2.0 secs
+     total cpu time spent up to now is        2.4 secs
 
      total energy              =      -2.41137867 Ry
      Harris-Foulkes estimate   =      -2.41141051 Ry
@@ -649,7 +649,7 @@ H        1.500000000   1.500000000   2.069115020    0   0   1
      Davidson diagonalization with overlap
      ethr =  3.39E-06,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        2.1 secs
+     total cpu time spent up to now is        2.4 secs
 
      total energy              =      -2.41138667 Ry
      Harris-Foulkes estimate   =      -2.41138642 Ry
@@ -659,7 +659,7 @@ H        1.500000000   1.500000000   2.069115020    0   0   1
      Davidson diagonalization with overlap
      ethr =  2.04E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        2.1 secs
+     total cpu time spent up to now is        2.5 secs
 
      End of self-consistent calculation
 
@@ -677,7 +677,7 @@ H        1.500000000   1.500000000   2.069115020    0   0   1
 
      convergence has been achieved in   4 iterations
 
-     Forces acting on atoms (Ry/au):
+     Forces acting on atoms (cartesian axes, Ry/au):
 
      atom    1 type  1   force =    -0.00000007   -0.00000007   -0.05293866
      atom    2 type  1   force =     0.00000007    0.00000007    0.05293866
@@ -707,7 +707,7 @@ H        1.500000000   1.500000000   2.101570160    0   0   1
      Writing output data file pwscf.save
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is        2.2 secs
+     total cpu time spent up to now is        2.6 secs
 
      per-process dynamical memory:     4.7 Mb
 
@@ -717,7 +717,7 @@ H        1.500000000   1.500000000   2.101570160    0   0   1
      Davidson diagonalization with overlap
      ethr =  1.00E-06,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is        2.2 secs
+     total cpu time spent up to now is        2.7 secs
 
      total energy              =      -2.41506806 Ry
      Harris-Foulkes estimate   =      -2.41569750 Ry
@@ -727,7 +727,7 @@ H        1.500000000   1.500000000   2.101570160    0   0   1
      Davidson diagonalization with overlap
      ethr =  1.16E-04,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        2.3 secs
+     total cpu time spent up to now is        2.7 secs
 
      total energy              =      -2.41473601 Ry
      Harris-Foulkes estimate   =      -2.41511513 Ry
@@ -737,7 +737,7 @@ H        1.500000000   1.500000000   2.101570160    0   0   1
      Davidson diagonalization with overlap
      ethr =  3.96E-05,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        2.3 secs
+     total cpu time spent up to now is        2.8 secs
 
      total energy              =      -2.41483205 Ry
      Harris-Foulkes estimate   =      -2.41482945 Ry
@@ -747,7 +747,7 @@ H        1.500000000   1.500000000   2.101570160    0   0   1
      Davidson diagonalization with overlap
      ethr =  2.21E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        2.4 secs
+     total cpu time spent up to now is        2.8 secs
 
      total energy              =      -2.41483263 Ry
      Harris-Foulkes estimate   =      -2.41483221 Ry
@@ -757,7 +757,7 @@ H        1.500000000   1.500000000   2.101570160    0   0   1
      Davidson diagonalization with overlap
      ethr =  1.65E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        2.4 secs
+     total cpu time spent up to now is        2.9 secs
 
      End of self-consistent calculation
 
@@ -775,7 +775,7 @@ H        1.500000000   1.500000000   2.101570160    0   0   1
 
      convergence has been achieved in   5 iterations
 
-     Forces acting on atoms (Ry/au):
+     Forces acting on atoms (cartesian axes, Ry/au):
 
      atom    1 type  1   force =    -0.00000001   -0.00000001    0.00057778
      atom    2 type  1   force =     0.00000001    0.00000001   -0.00057778
@@ -805,7 +805,7 @@ H        1.500000000   1.500000000   2.124608548    0   0   1
      Writing output data file pwscf.save
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is        2.5 secs
+     total cpu time spent up to now is        3.0 secs
 
      per-process dynamical memory:     4.7 Mb
 
@@ -815,7 +815,7 @@ H        1.500000000   1.500000000   2.124608548    0   0   1
      Davidson diagonalization with overlap
      ethr =  1.00E-06,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is        2.6 secs
+     total cpu time spent up to now is        3.0 secs
 
      total energy              =      -2.41267316 Ry
      Harris-Foulkes estimate   =      -2.41304400 Ry
@@ -825,7 +825,7 @@ H        1.500000000   1.500000000   2.124608548    0   0   1
      Davidson diagonalization with overlap
      ethr =  6.74E-05,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        2.6 secs
+     total cpu time spent up to now is        3.1 secs
 
      total energy              =      -2.41248327 Ry
      Harris-Foulkes estimate   =      -2.41270176 Ry
@@ -835,7 +835,7 @@ H        1.500000000   1.500000000   2.124608548    0   0   1
      Davidson diagonalization with overlap
      ethr =  2.27E-05,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        2.7 secs
+     total cpu time spent up to now is        3.1 secs
 
      total energy              =      -2.41253942 Ry
      Harris-Foulkes estimate   =      -2.41253787 Ry
@@ -845,7 +845,7 @@ H        1.500000000   1.500000000   2.124608548    0   0   1
      Davidson diagonalization with overlap
      ethr =  1.37E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        2.7 secs
+     total cpu time spent up to now is        3.2 secs
 
      total energy              =      -2.41253975 Ry
      Harris-Foulkes estimate   =      -2.41253949 Ry
@@ -855,7 +855,7 @@ H        1.500000000   1.500000000   2.124608548    0   0   1
      Davidson diagonalization with overlap
      ethr =  5.33E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        2.7 secs
+     total cpu time spent up to now is        3.2 secs
 
      End of self-consistent calculation
 
@@ -873,7 +873,7 @@ H        1.500000000   1.500000000   2.124608548    0   0   1
 
      convergence has been achieved in   5 iterations
 
-     Forces acting on atoms (Ry/au):
+     Forces acting on atoms (cartesian axes, Ry/au):
 
      atom    1 type  1   force =     0.00000008    0.00000008    0.05491406
      atom    2 type  1   force =    -0.00000008   -0.00000008   -0.05491406
@@ -903,7 +903,7 @@ H        1.500000000   1.500000000   2.095862870    0   0   1
      Writing output data file pwscf.save
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is        2.8 secs
+     total cpu time spent up to now is        3.3 secs
 
      per-process dynamical memory:     4.7 Mb
 
@@ -913,7 +913,7 @@ H        1.500000000   1.500000000   2.095862870    0   0   1
      Davidson diagonalization with overlap
      ethr =  1.00E-06,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is        2.9 secs
+     total cpu time spent up to now is        3.4 secs
 
      total energy              =      -2.41491477 Ry
      Harris-Foulkes estimate   =      -2.41549547 Ry
@@ -923,7 +923,7 @@ H        1.500000000   1.500000000   2.095862870    0   0   1
      Davidson diagonalization with overlap
      ethr =  1.04E-04,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        2.9 secs
+     total cpu time spent up to now is        3.5 secs
 
      total energy              =      -2.41463911 Ry
      Harris-Foulkes estimate   =      -2.41496190 Ry
@@ -933,7 +933,7 @@ H        1.500000000   1.500000000   2.095862870    0   0   1
      Davidson diagonalization with overlap
      ethr =  3.44E-05,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        3.0 secs
+     total cpu time spent up to now is        3.5 secs
 
      total energy              =      -2.41472224 Ry
      Harris-Foulkes estimate   =      -2.41471930 Ry
@@ -943,7 +943,7 @@ H        1.500000000   1.500000000   2.095862870    0   0   1
      Davidson diagonalization with overlap
      ethr =  2.71E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        3.0 secs
+     total cpu time spent up to now is        3.6 secs
 
      total energy              =      -2.41472269 Ry
      Harris-Foulkes estimate   =      -2.41472229 Ry
@@ -953,7 +953,7 @@ H        1.500000000   1.500000000   2.095862870    0   0   1
      Davidson diagonalization with overlap
      ethr =  8.17E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        3.1 secs
+     total cpu time spent up to now is        3.6 secs
 
      End of self-consistent calculation
 
@@ -971,7 +971,7 @@ H        1.500000000   1.500000000   2.095862870    0   0   1
 
      convergence has been achieved in   5 iterations
 
-     Forces acting on atoms (Ry/au):
+     Forces acting on atoms (cartesian axes, Ry/au):
 
      atom    1 type  1   force =    -0.00000003   -0.00000003   -0.01063881
      atom    2 type  1   force =     0.00000003    0.00000003    0.01063881
@@ -1001,7 +1001,7 @@ H        1.500000000   1.500000000   2.099065985    0   0   1
      Writing output data file pwscf.save
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is        3.1 secs
+     total cpu time spent up to now is        3.7 secs
 
      per-process dynamical memory:     4.7 Mb
 
@@ -1011,7 +1011,7 @@ H        1.500000000   1.500000000   2.099065985    0   0   1
      Davidson diagonalization with overlap
      ethr =  1.00E-06,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        3.2 secs
+     total cpu time spent up to now is        3.8 secs
 
      total energy              =      -2.41481686 Ry
      Harris-Foulkes estimate   =      -2.41482344 Ry
@@ -1021,7 +1021,7 @@ H        1.500000000   1.500000000   2.099065985    0   0   1
      Davidson diagonalization with overlap
      ethr =  1.20E-06,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        3.2 secs
+     total cpu time spent up to now is        3.8 secs
 
      total energy              =      -2.41481356 Ry
      Harris-Foulkes estimate   =      -2.41481738 Ry
@@ -1031,7 +1031,7 @@ H        1.500000000   1.500000000   2.099065985    0   0   1
      Davidson diagonalization with overlap
      ethr =  4.03E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        3.3 secs
+     total cpu time spent up to now is        3.9 secs
 
      total energy              =      -2.41481453 Ry
      Harris-Foulkes estimate   =      -2.41481450 Ry
@@ -1041,7 +1041,7 @@ H        1.500000000   1.500000000   2.099065985    0   0   1
      Davidson diagonalization with overlap
      ethr =  2.64E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        3.3 secs
+     total cpu time spent up to now is        3.9 secs
 
      End of self-consistent calculation
 
@@ -1059,7 +1059,7 @@ H        1.500000000   1.500000000   2.099065985    0   0   1
 
      convergence has been achieved in   4 iterations
 
-     Forces acting on atoms (Ry/au):
+     Forces acting on atoms (cartesian axes, Ry/au):
 
      atom    1 type  1   force =    -0.00000002   -0.00000002   -0.00445257
      atom    2 type  1   force =     0.00000002    0.00000002    0.00445257
@@ -1092,55 +1092,55 @@ H        1.500000000   1.500000000   2.098766495    0   0   1
 
      Writing output data file pwscf.save
 
-     init_run     :      0.16s CPU      0.11s WALL (       1 calls)
-     electrons    :      4.84s CPU      2.43s WALL (      10 calls)
-     update_pot   :      0.67s CPU      0.48s WALL (       9 calls)
-     forces       :      0.29s CPU      0.19s WALL (      10 calls)
+     init_run     :      0.12s CPU      0.12s WALL (       1 calls)
+     electrons    :      2.71s CPU      2.86s WALL (      10 calls)
+     update_pot   :      0.53s CPU      0.57s WALL (       9 calls)
+     forces       :      0.21s CPU      0.21s WALL (      10 calls)
 
      Called by init_run:
      wfcinit      :      0.01s CPU      0.01s WALL (       1 calls)
-     potinit      :      0.06s CPU      0.04s WALL (       1 calls)
+     potinit      :      0.04s CPU      0.04s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :      0.89s CPU      0.65s WALL (      52 calls)
-     sum_band     :      1.20s CPU      0.34s WALL (      52 calls)
-     v_of_rho     :      2.46s CPU      1.41s WALL (      62 calls)
-     newd         :      0.31s CPU      0.08s WALL (      62 calls)
-     mix_rho      :      0.10s CPU      0.08s WALL (      52 calls)
+     c_bands      :      0.67s CPU      0.70s WALL (      52 calls)
+     sum_band     :      0.33s CPU      0.34s WALL (      52 calls)
+     v_of_rho     :      1.70s CPU      1.72s WALL (      62 calls)
+     newd         :      0.09s CPU      0.09s WALL (      62 calls)
+     mix_rho      :      0.09s CPU      0.09s WALL (      52 calls)
 
      Called by c_bands:
-     init_us_2    :      0.01s CPU      0.00s WALL (     105 calls)
-     regterg      :      0.87s CPU      0.63s WALL (      52 calls)
+     init_us_2    :      0.00s CPU      0.00s WALL (     105 calls)
+     regterg      :      0.66s CPU      0.67s WALL (      52 calls)
 
      Called by sum_band:
      sum_band:bec :      0.00s CPU      0.00s WALL (      52 calls)
-     addusdens    :      0.27s CPU      0.07s WALL (      52 calls)
+     addusdens    :      0.08s CPU      0.08s WALL (      52 calls)
 
      Called by *egterg:
-     h_psi        :      0.63s CPU      0.41s WALL (     129 calls)
+     h_psi        :      0.43s CPU      0.44s WALL (     129 calls)
      s_psi        :      0.00s CPU      0.00s WALL (     129 calls)
      g_psi        :      0.00s CPU      0.00s WALL (      76 calls)
-     rdiaghg      :      0.06s CPU      0.06s WALL (     119 calls)
+     rdiaghg      :      0.07s CPU      0.07s WALL (     119 calls)
 
      Called by h_psi:
-     h_psi:pot    :      0.63s CPU      0.41s WALL (     129 calls)
+     h_psi:pot    :      0.42s CPU      0.43s WALL (     129 calls)
      h_psi:calbec :      0.01s CPU      0.01s WALL (     129 calls)
-     vloc_psi     :      0.62s CPU      0.40s WALL (     129 calls)
+     vloc_psi     :      0.41s CPU      0.42s WALL (     129 calls)
      add_vuspsi   :      0.00s CPU      0.00s WALL (     129 calls)
 
      General routines
-     calbec       :      0.03s CPU      0.01s WALL (     221 calls)
-     fft          :      2.00s CPU      0.77s WALL (     981 calls)
-     ffts         :      0.09s CPU      0.03s WALL (     114 calls)
-     fftw         :      0.81s CPU      0.41s WALL (    2884 calls)
-     interpolate  :      0.48s CPU      0.13s WALL (     114 calls)
+     calbec       :      0.01s CPU      0.01s WALL (     221 calls)
+     fft          :      0.82s CPU      0.82s WALL (     981 calls)
+     ffts         :      0.03s CPU      0.03s WALL (     114 calls)
+     fftw         :      0.45s CPU      0.44s WALL (    2884 calls)
+     interpolate  :      0.13s CPU      0.14s WALL (     114 calls)
      davcio       :      0.00s CPU      0.00s WALL (      10 calls)
 
 
-     PWSCF        :     6.20s CPU         3.35s WALL
+     PWSCF        :     3.68s CPU         4.00s WALL
 
 
-   This run was terminated on:  19:22:54   2Oct2016            
+   This run was terminated on:  20:25: 2   5Feb2017            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

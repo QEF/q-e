@@ -1,5 +1,5 @@
 
-     Program PWSCF v.6.0 starts on  2Oct2016 at 19:34:51 
+     Program PWSCF v.6.0 starts on  5Feb2017 at 20:38:20 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -8,7 +8,7 @@
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
-     Serial multi-threaded version, running on    4 processor cores
+     Serial multi-threaded version, running on    1 processor cores
      Reading input from vdw-d.in
 
      Current dimensions of program PWSCF are:
@@ -98,7 +98,7 @@
 
      Smooth grid:     1175 G-vectors     FFT dimensions: (  15,  15,  36)
 
-     Estimated max dynamical RAM per process >       6.88Mb
+     Estimated max dynamical RAM per process >       6.88MB
 
      Initial potential from superposition of free atoms
 
@@ -115,7 +115,7 @@
      Davidson diagonalization with overlap
      ethr =  1.00E-02,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is        0.4 secs
+     total cpu time spent up to now is        0.5 secs
 
      total energy              =     -44.19114704 Ry
      Harris-Foulkes estimate   =     -44.45936134 Ry
@@ -135,7 +135,7 @@
      Davidson diagonalization with overlap
      ethr =  6.02E-04,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        0.5 secs
+     total cpu time spent up to now is        0.6 secs
 
      total energy              =     -44.19767142 Ry
      Harris-Foulkes estimate   =     -44.19757279 Ry
@@ -155,7 +155,7 @@
      Davidson diagonalization with overlap
      ethr =  9.77E-08,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is        0.6 secs
+     total cpu time spent up to now is        0.7 secs
 
      End of self-consistent calculation
 
@@ -181,7 +181,7 @@
 
      convergence has been achieved in   5 iterations
 
-     Forces acting on atoms (Ry/au):
+     Forces acting on atoms (cartesian axes, Ry/au):
 
      atom    1 type  1   force =     0.00011222   -0.00006479    0.00000000
      atom    2 type  1   force =    -0.00010251    0.00005918   -0.00000000
@@ -192,7 +192,7 @@
      SCF correction compared to forces is large: reduce conv_thr to get better values
 
 
-     entering subroutine stress ...
+     Computing stress (Cartesian axis) and pressure
 
           total   stress  (Ry/bohr**3)                   (kbar)     P= -382.73
   -0.00277805  -0.00000055   0.00000000       -408.66     -0.08      0.00
@@ -202,55 +202,55 @@
 
      Writing output data file pwscf.save
 
-     init_run     :      0.25s CPU      0.18s WALL (       1 calls)
-     electrons    :      0.75s CPU      0.41s WALL (       1 calls)
-     forces       :      0.22s CPU      0.21s WALL (       1 calls)
-     stress       :      0.41s CPU      0.33s WALL (       1 calls)
+     init_run     :      0.19s CPU      0.20s WALL (       1 calls)
+     electrons    :      0.48s CPU      0.48s WALL (       1 calls)
+     forces       :      0.23s CPU      0.23s WALL (       1 calls)
+     stress       :      0.37s CPU      0.37s WALL (       1 calls)
 
      Called by init_run:
-     wfcinit      :      0.01s CPU      0.00s WALL (       1 calls)
-     potinit      :      0.06s CPU      0.04s WALL (       1 calls)
+     wfcinit      :      0.00s CPU      0.00s WALL (       1 calls)
+     potinit      :      0.04s CPU      0.04s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :      0.06s CPU      0.02s WALL (       5 calls)
-     sum_band     :      0.17s CPU      0.05s WALL (       5 calls)
-     v_of_rho     :      0.24s CPU      0.14s WALL (       6 calls)
-     newd         :      0.12s CPU      0.03s WALL (       6 calls)
+     c_bands      :      0.02s CPU      0.02s WALL (       5 calls)
+     sum_band     :      0.06s CPU      0.06s WALL (       5 calls)
+     v_of_rho     :      0.17s CPU      0.17s WALL (       6 calls)
+     newd         :      0.05s CPU      0.05s WALL (       6 calls)
      mix_rho      :      0.01s CPU      0.01s WALL (       5 calls)
 
      Called by c_bands:
      init_us_2    :      0.00s CPU      0.00s WALL (      11 calls)
-     regterg      :      0.06s CPU      0.02s WALL (       5 calls)
+     regterg      :      0.02s CPU      0.02s WALL (       5 calls)
 
      Called by sum_band:
      sum_band:bec :      0.00s CPU      0.00s WALL (       5 calls)
-     addusdens    :      0.11s CPU      0.03s WALL (       5 calls)
+     addusdens    :      0.04s CPU      0.04s WALL (       5 calls)
 
      Called by *egterg:
-     h_psi        :      0.05s CPU      0.02s WALL (      17 calls)
+     h_psi        :      0.02s CPU      0.02s WALL (      17 calls)
      s_psi        :      0.00s CPU      0.00s WALL (      17 calls)
      g_psi        :      0.00s CPU      0.00s WALL (      11 calls)
      rdiaghg      :      0.00s CPU      0.00s WALL (      16 calls)
 
      Called by h_psi:
-     h_psi:pot    :      0.05s CPU      0.02s WALL (      17 calls)
+     h_psi:pot    :      0.02s CPU      0.02s WALL (      17 calls)
      h_psi:calbec :      0.00s CPU      0.00s WALL (      17 calls)
-     vloc_psi     :      0.04s CPU      0.01s WALL (      17 calls)
+     vloc_psi     :      0.01s CPU      0.02s WALL (      17 calls)
      add_vuspsi   :      0.00s CPU      0.00s WALL (      17 calls)
 
      General routines
-     calbec       :      0.01s CPU      0.00s WALL (      27 calls)
-     fft          :      0.19s CPU      0.08s WALL (     100 calls)
+     calbec       :      0.00s CPU      0.00s WALL (      27 calls)
+     fft          :      0.08s CPU      0.08s WALL (     100 calls)
      ffts         :      0.00s CPU      0.00s WALL (      11 calls)
-     fftw         :      0.04s CPU      0.01s WALL (     196 calls)
-     interpolate  :      0.04s CPU      0.01s WALL (      11 calls)
+     fftw         :      0.01s CPU      0.01s WALL (     196 calls)
+     interpolate  :      0.01s CPU      0.01s WALL (      11 calls)
      davcio       :      0.00s CPU      0.00s WALL (       1 calls)
 
 
-     PWSCF        :     1.68s CPU         1.17s WALL
+     PWSCF        :     1.30s CPU         1.34s WALL
 
 
-   This run was terminated on:  19:34:52   2Oct2016            
+   This run was terminated on:  20:38:21   5Feb2017            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

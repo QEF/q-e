@@ -1,5 +1,5 @@
 
-     Program PWSCF v.6.0 starts on  2Oct2016 at 19:22:58 
+     Program PWSCF v.6.0 starts on  5Feb2017 at 20:25: 5 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -8,7 +8,7 @@
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
-     Serial multi-threaded version, running on    4 processor cores
+     Serial multi-threaded version, running on    1 processor cores
      Reading input from lattice-ibrav10-kauto.in
 
      Current dimensions of program PWSCF are:
@@ -117,7 +117,7 @@
 
      Dense  grid:    12719 G-vectors     FFT dimensions: (  36,  30,  40)
 
-     Estimated max dynamical RAM per process >       8.57Mb
+     Estimated max dynamical RAM per process >       8.57MB
 
      Initial potential from superposition of free atoms
 
@@ -253,43 +253,43 @@
 
      Writing output data file pwscf.save
 
-     init_run     :      0.24s CPU      0.08s WALL (       1 calls)
-     electrons    :      1.24s CPU      0.32s WALL (       1 calls)
+     init_run     :      0.08s CPU      0.08s WALL (       1 calls)
+     electrons    :      0.33s CPU      0.34s WALL (       1 calls)
 
      Called by init_run:
-     wfcinit      :      0.20s CPU      0.05s WALL (       1 calls)
-     potinit      :      0.02s CPU      0.01s WALL (       1 calls)
+     wfcinit      :      0.05s CPU      0.05s WALL (       1 calls)
+     potinit      :      0.01s CPU      0.01s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :      0.97s CPU      0.24s WALL (       4 calls)
-     sum_band     :      0.21s CPU      0.06s WALL (       4 calls)
-     v_of_rho     :      0.06s CPU      0.02s WALL (       5 calls)
-     mix_rho      :      0.00s CPU      0.01s WALL (       4 calls)
+     c_bands      :      0.24s CPU      0.24s WALL (       4 calls)
+     sum_band     :      0.06s CPU      0.06s WALL (       4 calls)
+     v_of_rho     :      0.03s CPU      0.03s WALL (       5 calls)
+     mix_rho      :      0.01s CPU      0.01s WALL (       4 calls)
 
      Called by c_bands:
-     cegterg      :      0.96s CPU      0.24s WALL (      64 calls)
+     cegterg      :      0.24s CPU      0.24s WALL (      64 calls)
 
      Called by sum_band:
 
      Called by *egterg:
-     h_psi        :      1.09s CPU      0.28s WALL (     184 calls)
-     g_psi        :      0.01s CPU      0.00s WALL (     104 calls)
-     cdiaghg      :      0.01s CPU      0.00s WALL (     168 calls)
+     h_psi        :      0.27s CPU      0.27s WALL (     184 calls)
+     g_psi        :      0.00s CPU      0.00s WALL (     104 calls)
+     cdiaghg      :      0.00s CPU      0.00s WALL (     168 calls)
 
      Called by h_psi:
-     h_psi:pot    :      1.08s CPU      0.27s WALL (     184 calls)
-     vloc_psi     :      1.08s CPU      0.27s WALL (     184 calls)
+     h_psi:pot    :      0.27s CPU      0.27s WALL (     184 calls)
+     vloc_psi     :      0.27s CPU      0.27s WALL (     184 calls)
 
      General routines
-     fft          :      0.04s CPU      0.02s WALL (      19 calls)
-     fftw         :      1.14s CPU      0.29s WALL (     464 calls)
+     fft          :      0.02s CPU      0.02s WALL (      19 calls)
+     fftw         :      0.28s CPU      0.28s WALL (     464 calls)
      davcio       :      0.00s CPU      0.00s WALL (      16 calls)
 
 
-     PWSCF        :     1.51s CPU         0.43s WALL
+     PWSCF        :     0.43s CPU         0.53s WALL
 
 
-   This run was terminated on:  19:22:58   2Oct2016            
+   This run was terminated on:  20:25: 6   5Feb2017            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

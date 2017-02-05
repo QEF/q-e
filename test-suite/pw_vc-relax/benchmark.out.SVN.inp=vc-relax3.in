@@ -1,5 +1,5 @@
 
-     Program PWSCF v.6.0 starts on  2Oct2016 at 19:34: 0 
+     Program PWSCF v.6.0 starts on  5Feb2017 at 20:37:26 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -8,7 +8,7 @@
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
-     Serial multi-threaded version, running on    4 processor cores
+     Serial multi-threaded version, running on    1 processor cores
      Reading input from vc-relax3.in
 
      Current dimensions of program PWSCF are:
@@ -112,7 +112,7 @@
 
      Dense  grid:     4159 G-vectors     FFT dimensions: (  24,  24,  24)
 
-     Estimated max dynamical RAM per process >       5.35Mb
+     Estimated max dynamical RAM per process >       5.35MB
 
      Initial potential from superposition of free atoms
 
@@ -121,7 +121,7 @@
 
      total cpu time spent up to now is        0.3 secs
 
-     per-process dynamical memory:     5.0 Mb
+     per-process dynamical memory:     4.8 Mb
 
      Self-consistent Calculation
 
@@ -145,7 +145,7 @@
      Davidson diagonalization with overlap
      ethr =  1.56E-04,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        1.5 secs
+     total cpu time spent up to now is        1.6 secs
 
      total energy              =     -25.44008188 Ry
      Harris-Foulkes estimate   =     -25.44026393 Ry
@@ -155,7 +155,7 @@
      Davidson diagonalization with overlap
      ethr =  8.86E-06,  avg # of iterations =  1.8
 
-     total cpu time spent up to now is        1.9 secs
+     total cpu time spent up to now is        2.0 secs
 
      total energy              =     -25.44011454 Ry
      Harris-Foulkes estimate   =     -25.44011592 Ry
@@ -165,7 +165,7 @@
      Davidson diagonalization with overlap
      ethr =  5.22E-08,  avg # of iterations =  3.1
 
-     total cpu time spent up to now is        2.4 secs
+     total cpu time spent up to now is        2.5 secs
 
      total energy              =     -25.44012210 Ry
      Harris-Foulkes estimate   =     -25.44012241 Ry
@@ -175,7 +175,7 @@
      Davidson diagonalization with overlap
      ethr =  6.69E-09,  avg # of iterations =  1.4
 
-     total cpu time spent up to now is        2.7 secs
+     total cpu time spent up to now is        2.9 secs
 
      End of self-consistent calculation
 
@@ -355,7 +355,7 @@
 
      convergence has been achieved in   5 iterations
 
-     Forces acting on atoms (Ry/au):
+     Forces acting on atoms (cartesian axes, Ry/au):
 
      atom    1 type  1   force =    -0.10311786   -0.05991789   -0.04247081
      atom    2 type  1   force =     0.10311786    0.05991789    0.04247081
@@ -363,7 +363,7 @@
      Total force =     0.179038     Total SCF correction =     0.000023
 
 
-     entering subroutine stress ...
+     Computing stress (Cartesian axis) and pressure
 
           total   stress  (Ry/bohr**3)                   (kbar)     P=  217.52
    0.00123597  -0.00028343  -0.00020091        181.82    -41.69    -29.55
@@ -382,6 +382,7 @@
      new conv_thr            =       0.0000001000 Ry
 
      new unit-cell volume =    273.57162 a.u.^3 (    40.53913 Ang^3 )
+     density =      6.13602 g/cm^3
 
 CELL_PARAMETERS (alat=  7.01033623)
    1.030899271  -0.007085701  -0.005022645
@@ -398,7 +399,7 @@ As      -0.282619597  -0.282619664  -0.282619694
      NEW-OLD atomic charge density approx. for the potential
      extrapolated charge   11.03081, renormalised to   10.00000
 
-     total cpu time spent up to now is        3.1 secs
+     total cpu time spent up to now is        3.3 secs
 
      per-process dynamical memory:     5.2 Mb
 
@@ -408,7 +409,7 @@ As      -0.282619597  -0.282619664  -0.282619694
      Davidson diagonalization with overlap
      ethr =  1.00E-06,  avg # of iterations =  5.9
 
-     total cpu time spent up to now is        4.0 secs
+     total cpu time spent up to now is        4.3 secs
 
      total energy              =     -25.47727525 Ry
      Harris-Foulkes estimate   =     -26.08205941 Ry
@@ -418,7 +419,7 @@ As      -0.282619597  -0.282619664  -0.282619694
      Davidson diagonalization with overlap
      ethr =  5.08E-05,  avg # of iterations =  3.1
 
-     total cpu time spent up to now is        4.6 secs
+     total cpu time spent up to now is        4.9 secs
 
      total energy              =     -25.48675494 Ry
      Harris-Foulkes estimate   =     -25.48847059 Ry
@@ -428,7 +429,7 @@ As      -0.282619597  -0.282619664  -0.282619694
      Davidson diagonalization with overlap
      ethr =  4.33E-05,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        5.0 secs
+     total cpu time spent up to now is        5.2 secs
 
      total energy              =     -25.48659023 Ry
      Harris-Foulkes estimate   =     -25.48693967 Ry
@@ -438,7 +439,7 @@ As      -0.282619597  -0.282619664  -0.282619694
      Davidson diagonalization with overlap
      ethr =  9.73E-06,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        5.3 secs
+     total cpu time spent up to now is        5.6 secs
 
      total energy              =     -25.48649345 Ry
      Harris-Foulkes estimate   =     -25.48663390 Ry
@@ -448,7 +449,7 @@ As      -0.282619597  -0.282619664  -0.282619694
      Davidson diagonalization with overlap
      ethr =  2.64E-06,  avg # of iterations =  2.6
 
-     total cpu time spent up to now is        5.8 secs
+     total cpu time spent up to now is        6.0 secs
 
      total energy              =     -25.48654700 Ry
      Harris-Foulkes estimate   =     -25.48654775 Ry
@@ -458,7 +459,7 @@ As      -0.282619597  -0.282619664  -0.282619694
      Davidson diagonalization with overlap
      ethr =  2.53E-08,  avg # of iterations =  2.1
 
-     total cpu time spent up to now is        6.2 secs
+     total cpu time spent up to now is        6.5 secs
 
      total energy              =     -25.48654747 Ry
      Harris-Foulkes estimate   =     -25.48654789 Ry
@@ -468,7 +469,7 @@ As      -0.282619597  -0.282619664  -0.282619694
      Davidson diagonalization with overlap
      ethr =  1.08E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        6.6 secs
+     total cpu time spent up to now is        6.9 secs
 
      total energy              =     -25.48654755 Ry
      Harris-Foulkes estimate   =     -25.48654760 Ry
@@ -478,7 +479,7 @@ As      -0.282619597  -0.282619664  -0.282619694
      Davidson diagonalization with overlap
      ethr =  1.13E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        7.0 secs
+     total cpu time spent up to now is        7.2 secs
 
      End of self-consistent calculation
 
@@ -658,7 +659,7 @@ As      -0.282619597  -0.282619664  -0.282619694
 
      convergence has been achieved in   8 iterations
 
-     Forces acting on atoms (Ry/au):
+     Forces acting on atoms (cartesian axes, Ry/au):
 
      atom    1 type  1   force =    -0.04624038   -0.02686857   -0.01904509
      atom    2 type  1   force =     0.04624038    0.02686857    0.01904509
@@ -666,7 +667,7 @@ As      -0.282619597  -0.282619664  -0.282619694
      Total force =     0.080285     Total SCF correction =     0.000004
 
 
-     entering subroutine stress ...
+     Computing stress (Cartesian axis) and pressure
 
           total   stress  (Ry/bohr**3)                   (kbar)     P=   35.32
    0.00033049   0.00010557   0.00007483         48.62     15.53     11.01
@@ -686,6 +687,7 @@ As      -0.282619597  -0.282619664  -0.282619694
      new conv_thr            =       0.0000000462 Ry
 
      new unit-cell volume =    282.73636 a.u.^3 (    41.89720 Ang^3 )
+     density =      5.93712 g/cm^3
 
 CELL_PARAMETERS (alat=  7.01033623)
    1.045376594  -0.003520943  -0.002495805
@@ -702,7 +704,7 @@ As      -0.277418037  -0.277418141  -0.277418125
      NEW-OLD atomic charge density approx. for the potential
      extrapolated charge   10.32413, renormalised to   10.00000
 
-     total cpu time spent up to now is        7.4 secs
+     total cpu time spent up to now is        7.7 secs
 
      per-process dynamical memory:     5.2 Mb
 
@@ -712,7 +714,7 @@ As      -0.277418037  -0.277418141  -0.277418125
      Davidson diagonalization with overlap
      ethr =  1.00E-06,  avg # of iterations =  4.9
 
-     total cpu time spent up to now is        8.3 secs
+     total cpu time spent up to now is        8.6 secs
 
      total energy              =     -25.49422734 Ry
      Harris-Foulkes estimate   =     -25.67905797 Ry
@@ -722,7 +724,7 @@ As      -0.277418037  -0.277418141  -0.277418125
      Davidson diagonalization with overlap
      ethr =  6.32E-06,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is        8.9 secs
+     total cpu time spent up to now is        9.2 secs
 
      total energy              =     -25.49507507 Ry
      Harris-Foulkes estimate   =     -25.49521539 Ry
@@ -732,7 +734,7 @@ As      -0.277418037  -0.277418141  -0.277418125
      Davidson diagonalization with overlap
      ethr =  3.34E-06,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        9.2 secs
+     total cpu time spent up to now is        9.5 secs
 
      total energy              =     -25.49506648 Ry
      Harris-Foulkes estimate   =     -25.49509270 Ry
@@ -742,7 +744,7 @@ As      -0.277418037  -0.277418141  -0.277418125
      Davidson diagonalization with overlap
      ethr =  5.70E-07,  avg # of iterations =  1.1
 
-     total cpu time spent up to now is        9.6 secs
+     total cpu time spent up to now is        9.9 secs
 
      total energy              =     -25.49506926 Ry
      Harris-Foulkes estimate   =     -25.49507156 Ry
@@ -752,7 +754,7 @@ As      -0.277418037  -0.277418141  -0.277418125
      Davidson diagonalization with overlap
      ethr =  4.26E-08,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is       10.1 secs
+     total cpu time spent up to now is       10.4 secs
 
      total energy              =     -25.49507173 Ry
      Harris-Foulkes estimate   =     -25.49507174 Ry
@@ -762,7 +764,7 @@ As      -0.277418037  -0.277418141  -0.277418125
      Davidson diagonalization with overlap
      ethr =  2.02E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is       10.5 secs
+     total cpu time spent up to now is       10.8 secs
 
      total energy              =     -25.49507166 Ry
      Harris-Foulkes estimate   =     -25.49507173 Ry
@@ -772,7 +774,7 @@ As      -0.277418037  -0.277418141  -0.277418125
      Davidson diagonalization with overlap
      ethr =  1.54E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is       10.8 secs
+     total cpu time spent up to now is       11.1 secs
 
      End of self-consistent calculation
 
@@ -952,7 +954,7 @@ As      -0.277418037  -0.277418141  -0.277418125
 
      convergence has been achieved in   7 iterations
 
-     Forces acting on atoms (Ry/au):
+     Forces acting on atoms (cartesian axes, Ry/au):
 
      atom    1 type  1   force =    -0.01838108   -0.01068067   -0.00757067
      atom    2 type  1   force =     0.01838108    0.01068067    0.00757067
@@ -960,7 +962,7 @@ As      -0.277418037  -0.277418141  -0.277418125
      Total force =     0.031914     Total SCF correction =     0.000037
 
 
-     entering subroutine stress ...
+     Computing stress (Cartesian axis) and pressure
 
           total   stress  (Ry/bohr**3)                   (kbar)     P=  -12.12
    0.00004415   0.00014779   0.00010476          6.49     21.74     15.41
@@ -980,6 +982,7 @@ As      -0.277418037  -0.277418141  -0.277418125
      new conv_thr            =       0.0000000184 Ry
 
      new unit-cell volume =    283.67505 a.u.^3 (    42.03631 Ang^3 )
+     density =      5.91747 g/cm^3
 
 CELL_PARAMETERS (alat=  7.01033623)
    1.051831532   0.002668113   0.001891141
@@ -996,7 +999,7 @@ As      -0.273968016  -0.273968105  -0.273968080
      NEW-OLD atomic charge density approx. for the potential
      extrapolated charge   10.03309, renormalised to   10.00000
 
-     total cpu time spent up to now is       11.2 secs
+     total cpu time spent up to now is       11.6 secs
 
      per-process dynamical memory:     5.2 Mb
 
@@ -1006,7 +1009,7 @@ As      -0.273968016  -0.273968105  -0.273968080
      Davidson diagonalization with overlap
      ethr =  1.00E-06,  avg # of iterations =  4.7
 
-     total cpu time spent up to now is       12.0 secs
+     total cpu time spent up to now is       12.4 secs
 
      total energy              =     -25.49754330 Ry
      Harris-Foulkes estimate   =     -25.51648988 Ry
@@ -1016,7 +1019,7 @@ As      -0.273968016  -0.273968105  -0.273968080
      Davidson diagonalization with overlap
      ethr =  1.69E-06,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is       12.4 secs
+     total cpu time spent up to now is       12.8 secs
 
      total energy              =     -25.49757789 Ry
      Harris-Foulkes estimate   =     -25.49757893 Ry
@@ -1026,7 +1029,7 @@ As      -0.273968016  -0.273968105  -0.273968080
      Davidson diagonalization with overlap
      ethr =  4.06E-08,  avg # of iterations =  2.3
 
-     total cpu time spent up to now is       12.8 secs
+     total cpu time spent up to now is       13.2 secs
 
      total energy              =     -25.49757886 Ry
      Harris-Foulkes estimate   =     -25.49757879 Ry
@@ -1036,7 +1039,7 @@ As      -0.273968016  -0.273968105  -0.273968080
      Davidson diagonalization with overlap
      ethr =  2.24E-09,  avg # of iterations =  1.1
 
-     total cpu time spent up to now is       13.2 secs
+     total cpu time spent up to now is       13.6 secs
 
      End of self-consistent calculation
 
@@ -1216,7 +1219,7 @@ As      -0.273968016  -0.273968105  -0.273968080
 
      convergence has been achieved in   4 iterations
 
-     Forces acting on atoms (Ry/au):
+     Forces acting on atoms (cartesian axes, Ry/au):
 
      atom    1 type  1   force =    -0.00301101   -0.00174968   -0.00124018
      atom    2 type  1   force =     0.00301101    0.00174968    0.00124018
@@ -1224,7 +1227,7 @@ As      -0.273968016  -0.273968105  -0.273968080
      Total force =     0.005228     Total SCF correction =     0.000049
 
 
-     entering subroutine stress ...
+     Computing stress (Cartesian axis) and pressure
 
           total   stress  (Ry/bohr**3)                   (kbar)     P=  -24.62
   -0.00006848   0.00011545   0.00008183        -10.07     16.98     12.04
@@ -1244,6 +1247,7 @@ As      -0.273968016  -0.273968105  -0.273968080
      new conv_thr            =       0.0000000030 Ry
 
      new unit-cell volume =    280.14009 a.u.^3 (    41.51248 Ang^3 )
+     density =      5.99214 g/cm^3
 
 CELL_PARAMETERS (alat=  7.01033623)
    1.052821713   0.008877209   0.006292278
@@ -1260,7 +1264,7 @@ As      -0.272134189  -0.272134247  -0.272134227
      NEW-OLD atomic charge density approx. for the potential
      extrapolated charge    9.87382, renormalised to   10.00000
 
-     total cpu time spent up to now is       13.6 secs
+     total cpu time spent up to now is       14.1 secs
 
      per-process dynamical memory:     5.2 Mb
 
@@ -1270,7 +1274,7 @@ As      -0.272134189  -0.272134247  -0.272134227
      Davidson diagonalization with overlap
      ethr =  1.00E-06,  avg # of iterations =  4.2
 
-     total cpu time spent up to now is       14.3 secs
+     total cpu time spent up to now is       14.9 secs
 
      total energy              =     -25.49862565 Ry
      Harris-Foulkes estimate   =     -25.42597387 Ry
@@ -1280,7 +1284,7 @@ As      -0.272134189  -0.272134247  -0.272134227
      Davidson diagonalization with overlap
      ethr =  1.59E-06,  avg # of iterations =  2.6
 
-     total cpu time spent up to now is       14.9 secs
+     total cpu time spent up to now is       15.4 secs
 
      total energy              =     -25.49878641 Ry
      Harris-Foulkes estimate   =     -25.49882596 Ry
@@ -1290,7 +1294,7 @@ As      -0.272134189  -0.272134247  -0.272134227
      Davidson diagonalization with overlap
      ethr =  8.86E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is       15.2 secs
+     total cpu time spent up to now is       15.8 secs
 
      total energy              =     -25.49878772 Ry
      Harris-Foulkes estimate   =     -25.49879331 Ry
@@ -1300,7 +1304,7 @@ As      -0.272134189  -0.272134247  -0.272134227
      Davidson diagonalization with overlap
      ethr =  1.12E-07,  avg # of iterations =  1.5
 
-     total cpu time spent up to now is       15.6 secs
+     total cpu time spent up to now is       16.1 secs
 
      total energy              =     -25.49878892 Ry
      Harris-Foulkes estimate   =     -25.49878909 Ry
@@ -1310,7 +1314,7 @@ As      -0.272134189  -0.272134247  -0.272134227
      Davidson diagonalization with overlap
      ethr =  3.20E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is       16.1 secs
+     total cpu time spent up to now is       16.6 secs
 
      total energy              =     -25.49878930 Ry
      Harris-Foulkes estimate   =     -25.49878932 Ry
@@ -1320,7 +1324,7 @@ As      -0.272134189  -0.272134247  -0.272134227
      Davidson diagonalization with overlap
      ethr =  7.38E-10,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is       16.5 secs
+     total cpu time spent up to now is       17.0 secs
 
      total energy              =     -25.49878928 Ry
      Harris-Foulkes estimate   =     -25.49878930 Ry
@@ -1330,7 +1334,7 @@ As      -0.272134189  -0.272134247  -0.272134227
      Davidson diagonalization with overlap
      ethr =  3.38E-10,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is       16.9 secs
+     total cpu time spent up to now is       17.4 secs
 
      End of self-consistent calculation
 
@@ -1510,7 +1514,7 @@ As      -0.272134189  -0.272134247  -0.272134227
 
      convergence has been achieved in   7 iterations
 
-     Forces acting on atoms (Ry/au):
+     Forces acting on atoms (cartesian axes, Ry/au):
 
      atom    1 type  1   force =     0.00313406    0.00182112    0.00129082
      atom    2 type  1   force =    -0.00313406   -0.00182112   -0.00129082
@@ -1518,7 +1522,7 @@ As      -0.272134189  -0.272134247  -0.272134227
      Total force =     0.005442     Total SCF correction =     0.000012
 
 
-     entering subroutine stress ...
+     Computing stress (Cartesian axis) and pressure
 
           total   stress  (Ry/bohr**3)                   (kbar)     P=  -19.40
   -0.00007443   0.00006712   0.00004758        -10.95      9.87      7.00
@@ -1538,6 +1542,7 @@ As      -0.272134189  -0.272134247  -0.272134227
      new conv_thr            =       0.0000000031 Ry
 
      new unit-cell volume =    274.74877 a.u.^3 (    40.71357 Ang^3 )
+     density =      6.10973 g/cm^3
 
 CELL_PARAMETERS (alat=  7.01033623)
    1.050970095   0.014485947   0.010267843
@@ -1554,7 +1559,7 @@ As      -0.271450006  -0.271450067  -0.271450040
      NEW-OLD atomic charge density approx. for the potential
      extrapolated charge    9.80378, renormalised to   10.00000
 
-     total cpu time spent up to now is       17.2 secs
+     total cpu time spent up to now is       17.9 secs
 
      per-process dynamical memory:     5.2 Mb
 
@@ -1564,7 +1569,7 @@ As      -0.271450006  -0.271450067  -0.271450040
      Davidson diagonalization with overlap
      ethr =  1.00E-06,  avg # of iterations =  4.1
 
-     total cpu time spent up to now is       18.0 secs
+     total cpu time spent up to now is       18.6 secs
 
      total energy              =     -25.49910937 Ry
      Harris-Foulkes estimate   =     -25.38442347 Ry
@@ -1574,7 +1579,7 @@ As      -0.271450006  -0.271450067  -0.271450040
      Davidson diagonalization with overlap
      ethr =  2.12E-06,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is       18.5 secs
+     total cpu time spent up to now is       19.2 secs
 
      total energy              =     -25.49942017 Ry
      Harris-Foulkes estimate   =     -25.49949037 Ry
@@ -1584,7 +1589,7 @@ As      -0.271450006  -0.271450067  -0.271450040
      Davidson diagonalization with overlap
      ethr =  1.67E-06,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is       18.9 secs
+     total cpu time spent up to now is       19.6 secs
 
      total energy              =     -25.49942393 Ry
      Harris-Foulkes estimate   =     -25.49943205 Ry
@@ -1594,7 +1599,7 @@ As      -0.271450006  -0.271450067  -0.271450040
      Davidson diagonalization with overlap
      ethr =  2.55E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is       19.2 secs
+     total cpu time spent up to now is       19.9 secs
 
      total energy              =     -25.49942040 Ry
      Harris-Foulkes estimate   =     -25.49942498 Ry
@@ -1604,7 +1609,7 @@ As      -0.271450006  -0.271450067  -0.271450040
      Davidson diagonalization with overlap
      ethr =  8.30E-08,  avg # of iterations =  2.3
 
-     total cpu time spent up to now is       19.7 secs
+     total cpu time spent up to now is       20.4 secs
 
      total energy              =     -25.49942231 Ry
      Harris-Foulkes estimate   =     -25.49942231 Ry
@@ -1614,7 +1619,7 @@ As      -0.271450006  -0.271450067  -0.271450040
      Davidson diagonalization with overlap
      ethr =  5.90E-10,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is       20.1 secs
+     total cpu time spent up to now is       20.8 secs
 
      total energy              =     -25.49942230 Ry
      Harris-Foulkes estimate   =     -25.49942232 Ry
@@ -1624,7 +1629,7 @@ As      -0.271450006  -0.271450067  -0.271450040
      Davidson diagonalization with overlap
      ethr =  4.24E-10,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is       20.5 secs
+     total cpu time spent up to now is       21.2 secs
 
      total energy              =     -25.49942230 Ry
      Harris-Foulkes estimate   =     -25.49942231 Ry
@@ -1634,7 +1639,7 @@ As      -0.271450006  -0.271450067  -0.271450040
      Davidson diagonalization with overlap
      ethr =  9.76E-11,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is       20.9 secs
+     total cpu time spent up to now is       21.6 secs
 
      End of self-consistent calculation
 
@@ -1814,7 +1819,7 @@ As      -0.271450006  -0.271450067  -0.271450040
 
      convergence has been achieved in   8 iterations
 
-     Forces acting on atoms (Ry/au):
+     Forces acting on atoms (cartesian axes, Ry/au):
 
      atom    1 type  1   force =     0.00325410    0.00189087    0.00134027
      atom    2 type  1   force =    -0.00325410   -0.00189087   -0.00134027
@@ -1822,7 +1827,7 @@ As      -0.271450006  -0.271450067  -0.271450040
      Total force =     0.005650     Total SCF correction =     0.000001
 
 
-     entering subroutine stress ...
+     Computing stress (Cartesian axis) and pressure
 
           total   stress  (Ry/bohr**3)                   (kbar)     P=   -4.38
   -0.00001357   0.00001892   0.00001341         -2.00      2.78      1.97
@@ -1842,6 +1847,7 @@ As      -0.271450006  -0.271450067  -0.271450040
      new conv_thr            =       0.0000000033 Ry
 
      new unit-cell volume =    273.46953 a.u.^3 (    40.52400 Ang^3 )
+     density =      6.13831 g/cm^3
 
 CELL_PARAMETERS (alat=  7.01033623)
    1.050204634   0.015452708   0.010953083
@@ -1858,7 +1864,7 @@ As      -0.271766520  -0.271766590  -0.271766559
      NEW-OLD atomic charge density approx. for the potential
      extrapolated charge    9.95322, renormalised to   10.00000
 
-     total cpu time spent up to now is       21.3 secs
+     total cpu time spent up to now is       22.1 secs
 
      per-process dynamical memory:     5.2 Mb
 
@@ -1868,7 +1874,7 @@ As      -0.271766520  -0.271766590  -0.271766559
      Davidson diagonalization with overlap
      ethr =  1.00E-06,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is       21.9 secs
+     total cpu time spent up to now is       22.7 secs
 
      total energy              =     -25.49946757 Ry
      Harris-Foulkes estimate   =     -25.47197713 Ry
@@ -1878,7 +1884,7 @@ As      -0.271766520  -0.271766590  -0.271766559
      Davidson diagonalization with overlap
      ethr =  1.27E-07,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is       22.4 secs
+     total cpu time spent up to now is       23.2 secs
 
      total energy              =     -25.49948426 Ry
      Harris-Foulkes estimate   =     -25.49948744 Ry
@@ -1888,7 +1894,7 @@ As      -0.271766520  -0.271766590  -0.271766559
      Davidson diagonalization with overlap
      ethr =  7.29E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is       22.7 secs
+     total cpu time spent up to now is       23.5 secs
 
      total energy              =     -25.49948443 Ry
      Harris-Foulkes estimate   =     -25.49948481 Ry
@@ -1898,7 +1904,7 @@ As      -0.271766520  -0.271766590  -0.271766559
      Davidson diagonalization with overlap
      ethr =  1.01E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is       23.1 secs
+     total cpu time spent up to now is       23.9 secs
 
      total energy              =     -25.49948437 Ry
      Harris-Foulkes estimate   =     -25.49948448 Ry
@@ -1908,7 +1914,7 @@ As      -0.271766520  -0.271766590  -0.271766559
      Davidson diagonalization with overlap
      ethr =  2.19E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is       23.5 secs
+     total cpu time spent up to now is       24.4 secs
 
      End of self-consistent calculation
 
@@ -2088,7 +2094,7 @@ As      -0.271766520  -0.271766590  -0.271766559
 
      convergence has been achieved in   5 iterations
 
-     Forces acting on atoms (Ry/au):
+     Forces acting on atoms (cartesian axes, Ry/au):
 
      atom    1 type  1   force =     0.00114591    0.00066588    0.00047196
      atom    2 type  1   force =    -0.00114591   -0.00066588   -0.00047196
@@ -2096,7 +2102,7 @@ As      -0.271766520  -0.271766590  -0.271766559
      Total force =     0.001990     Total SCF correction =     0.000001
 
 
-     entering subroutine stress ...
+     Computing stress (Cartesian axis) and pressure
 
           total   stress  (Ry/bohr**3)                   (kbar)     P=    1.28
    0.00001796   0.00001081   0.00000766          2.64      1.59      1.13
@@ -2116,6 +2122,7 @@ As      -0.271766520  -0.271766590  -0.271766559
      new conv_thr            =       0.0000000010 Ry
 
      new unit-cell volume =    273.55719 a.u.^3 (    40.53699 Ang^3 )
+     density =      6.13634 g/cm^3
 
 CELL_PARAMETERS (alat=  7.01033623)
    1.050595244   0.015771263   0.011178864
@@ -2132,7 +2139,7 @@ As      -0.271957199  -0.271957279  -0.271957240
      NEW-OLD atomic charge density approx. for the potential
      extrapolated charge   10.00320, renormalised to   10.00000
 
-     total cpu time spent up to now is       23.9 secs
+     total cpu time spent up to now is       24.8 secs
 
      per-process dynamical memory:     5.2 Mb
 
@@ -2148,7 +2155,7 @@ As      -0.271957199  -0.271957279  -0.271957240
      Davidson diagonalization with overlap
      ethr =  3.97E-09,  avg # of iterations =  2.3
 
-     total cpu time spent up to now is       24.8 secs
+     total cpu time spent up to now is       25.7 secs
 
      total energy              =     -25.49949550 Ry
      Harris-Foulkes estimate   =     -25.50137870 Ry
@@ -2158,7 +2165,7 @@ As      -0.271957199  -0.271957279  -0.271957240
      Davidson diagonalization with overlap
      ethr =  3.53E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is       25.2 secs
+     total cpu time spent up to now is       26.2 secs
 
      total energy              =     -25.49949561 Ry
      Harris-Foulkes estimate   =     -25.49949567 Ry
@@ -2168,7 +2175,7 @@ As      -0.271957199  -0.271957279  -0.271957240
      Davidson diagonalization with overlap
      ethr =  1.15E-09,  avg # of iterations =  1.4
 
-     total cpu time spent up to now is       25.6 secs
+     total cpu time spent up to now is       26.5 secs
 
      total energy              =     -25.49949563 Ry
      Harris-Foulkes estimate   =     -25.49949563 Ry
@@ -2178,7 +2185,7 @@ As      -0.271957199  -0.271957279  -0.271957240
      Davidson diagonalization with overlap
      ethr =  5.75E-11,  avg # of iterations =  2.4
 
-     total cpu time spent up to now is       26.0 secs
+     total cpu time spent up to now is       27.0 secs
 
      End of self-consistent calculation
 
@@ -2358,7 +2365,7 @@ As      -0.271957199  -0.271957279  -0.271957240
 
      convergence has been achieved in   4 iterations
 
-     Forces acting on atoms (Ry/au):
+     Forces acting on atoms (cartesian axes, Ry/au):
 
      atom    1 type  1   force =     0.00038212    0.00022196    0.00015737
      atom    2 type  1   force =    -0.00038212   -0.00022196   -0.00015737
@@ -2366,7 +2373,7 @@ As      -0.271957199  -0.271957279  -0.271957240
      Total force =     0.000663     Total SCF correction =     0.000029
 
 
-     entering subroutine stress ...
+     Computing stress (Cartesian axis) and pressure
 
           total   stress  (Ry/bohr**3)                   (kbar)     P=    1.91
    0.00002094   0.00000930   0.00000660          3.08      1.37      0.97
@@ -2386,6 +2393,7 @@ As      -0.271957199  -0.271957279  -0.271957240
      new conv_thr            =       0.0000000010 Ry
 
      new unit-cell volume =    273.91448 a.u.^3 (    40.58994 Ang^3 )
+     density =      6.12833 g/cm^3
 
 CELL_PARAMETERS (alat=  7.01033623)
    1.051577746   0.016375644   0.011607286
@@ -2402,7 +2410,7 @@ As      -0.272134401  -0.272134458  -0.272134428
      NEW-OLD atomic charge density approx. for the potential
      extrapolated charge   10.01304, renormalised to   10.00000
 
-     total cpu time spent up to now is       26.4 secs
+     total cpu time spent up to now is       27.5 secs
 
      per-process dynamical memory:     5.2 Mb
 
@@ -2418,7 +2426,7 @@ As      -0.272134401  -0.272134458  -0.272134428
      Davidson diagonalization with overlap
      ethr =  7.11E-09,  avg # of iterations =  1.7
 
-     total cpu time spent up to now is       27.3 secs
+     total cpu time spent up to now is       28.4 secs
 
      total energy              =     -25.49950541 Ry
      Harris-Foulkes estimate   =     -25.50715594 Ry
@@ -2428,7 +2436,7 @@ As      -0.272134401  -0.272134458  -0.272134428
      Davidson diagonalization with overlap
      ethr =  7.04E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is       27.8 secs
+     total cpu time spent up to now is       28.9 secs
 
      total energy              =     -25.49950664 Ry
      Harris-Foulkes estimate   =     -25.49950697 Ry
@@ -2438,7 +2446,7 @@ As      -0.272134401  -0.272134458  -0.272134428
      Davidson diagonalization with overlap
      ethr =  7.04E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is       28.1 secs
+     total cpu time spent up to now is       29.2 secs
 
      total energy              =     -25.49950659 Ry
      Harris-Foulkes estimate   =     -25.49950668 Ry
@@ -2448,7 +2456,7 @@ As      -0.272134401  -0.272134458  -0.272134428
      Davidson diagonalization with overlap
      ethr =  1.86E-09,  avg # of iterations =  1.9
 
-     total cpu time spent up to now is       28.5 secs
+     total cpu time spent up to now is       29.6 secs
 
      total energy              =     -25.49950661 Ry
      Harris-Foulkes estimate   =     -25.49950661 Ry
@@ -2458,7 +2466,7 @@ As      -0.272134401  -0.272134458  -0.272134428
      Davidson diagonalization with overlap
      ethr =  1.28E-11,  avg # of iterations =  3.1
 
-     total cpu time spent up to now is       29.0 secs
+     total cpu time spent up to now is       30.1 secs
 
      End of self-consistent calculation
 
@@ -2638,7 +2646,7 @@ As      -0.272134401  -0.272134458  -0.272134428
 
      convergence has been achieved in   5 iterations
 
-     Forces acting on atoms (Ry/au):
+     Forces acting on atoms (cartesian axes, Ry/au):
 
      atom    1 type  1   force =    -0.00013686   -0.00007958   -0.00005638
      atom    2 type  1   force =     0.00013686    0.00007958    0.00005638
@@ -2646,7 +2654,7 @@ As      -0.272134401  -0.272134458  -0.272134428
      Total force =     0.000238     Total SCF correction =     0.000020
 
 
-     entering subroutine stress ...
+     Computing stress (Cartesian axis) and pressure
 
           total   stress  (Ry/bohr**3)                   (kbar)     P=    1.75
    0.00001744   0.00000650   0.00000461          2.57      0.96      0.68
@@ -2666,6 +2674,7 @@ As      -0.272134401  -0.272134458  -0.272134428
      new conv_thr            =       0.0000000010 Ry
 
      new unit-cell volume =    274.47890 a.u.^3 (    40.67358 Ang^3 )
+     density =      6.11573 g/cm^3
 
 CELL_PARAMETERS (alat=  7.01033623)
    1.053069860   0.017262071   0.012235633
@@ -2682,7 +2691,7 @@ As      -0.272270891  -0.272270920  -0.272270901
      NEW-OLD atomic charge density approx. for the potential
      extrapolated charge   10.02056, renormalised to   10.00000
 
-     total cpu time spent up to now is       29.4 secs
+     total cpu time spent up to now is       30.6 secs
 
      per-process dynamical memory:     5.2 Mb
 
@@ -2698,7 +2707,7 @@ As      -0.272270891  -0.272270920  -0.272270901
      Davidson diagonalization with overlap
      ethr =  1.41E-08,  avg # of iterations =  1.7
 
-     total cpu time spent up to now is       30.3 secs
+     total cpu time spent up to now is       31.5 secs
 
      total energy              =     -25.49951178 Ry
      Harris-Foulkes estimate   =     -25.51154211 Ry
@@ -2708,7 +2717,7 @@ As      -0.272270891  -0.272270920  -0.272270901
      Davidson diagonalization with overlap
      ethr =  1.39E-08,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is       30.8 secs
+     total cpu time spent up to now is       32.0 secs
 
      total energy              =     -25.49951481 Ry
      Harris-Foulkes estimate   =     -25.49951553 Ry
@@ -2718,7 +2727,7 @@ As      -0.272270891  -0.272270920  -0.272270901
      Davidson diagonalization with overlap
      ethr =  1.39E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is       31.1 secs
+     total cpu time spent up to now is       32.3 secs
 
      total energy              =     -25.49951474 Ry
      Harris-Foulkes estimate   =     -25.49951491 Ry
@@ -2728,7 +2737,7 @@ As      -0.272270891  -0.272270920  -0.272270901
      Davidson diagonalization with overlap
      ethr =  4.51E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is       31.5 secs
+     total cpu time spent up to now is       32.7 secs
 
      total energy              =     -25.49951471 Ry
      Harris-Foulkes estimate   =     -25.49951476 Ry
@@ -2738,7 +2747,7 @@ As      -0.272270891  -0.272270920  -0.272270901
      Davidson diagonalization with overlap
      ethr =  9.73E-10,  avg # of iterations =  2.4
 
-     total cpu time spent up to now is       31.9 secs
+     total cpu time spent up to now is       33.1 secs
 
      total energy              =     -25.49951473 Ry
      Harris-Foulkes estimate   =     -25.49951473 Ry
@@ -2748,7 +2757,7 @@ As      -0.272270891  -0.272270920  -0.272270901
      Davidson diagonalization with overlap
      ethr =  2.83E-11,  avg # of iterations =  1.8
 
-     total cpu time spent up to now is       32.3 secs
+     total cpu time spent up to now is       33.5 secs
 
      End of self-consistent calculation
 
@@ -2928,7 +2937,7 @@ As      -0.272270891  -0.272270920  -0.272270901
 
      convergence has been achieved in   6 iterations
 
-     Forces acting on atoms (Ry/au):
+     Forces acting on atoms (cartesian axes, Ry/au):
 
      atom    1 type  1   force =    -0.00032703   -0.00019006   -0.00013470
      atom    2 type  1   force =     0.00032703    0.00019006    0.00013470
@@ -2936,7 +2945,7 @@ As      -0.272270891  -0.272270920  -0.272270901
      Total force =     0.000568     Total SCF correction =     0.000022
 
 
-     entering subroutine stress ...
+     Computing stress (Cartesian axis) and pressure
 
           total   stress  (Ry/bohr**3)                   (kbar)     P=    0.86
    0.00000776   0.00000221   0.00000157          1.14      0.33      0.23
@@ -2956,6 +2965,7 @@ As      -0.272270891  -0.272270920  -0.272270901
      new conv_thr            =       0.0000000010 Ry
 
      new unit-cell volume =    274.74297 a.u.^3 (    40.71271 Ang^3 )
+     density =      6.10985 g/cm^3
 
 CELL_PARAMETERS (alat=  7.01033623)
    1.053751829   0.017658448   0.012516607
@@ -2972,7 +2982,7 @@ As      -0.272273145  -0.272273159  -0.272273146
      NEW-OLD atomic charge density approx. for the potential
      extrapolated charge   10.00961, renormalised to   10.00000
 
-     total cpu time spent up to now is       32.6 secs
+     total cpu time spent up to now is       34.0 secs
 
      per-process dynamical memory:     5.2 Mb
 
@@ -2988,7 +2998,7 @@ As      -0.272273145  -0.272273159  -0.272273146
      Davidson diagonalization with overlap
      ethr =  4.58E-09,  avg # of iterations =  3.1
 
-     total cpu time spent up to now is       33.5 secs
+     total cpu time spent up to now is       34.9 secs
 
      total energy              =     -25.49951561 Ry
      Harris-Foulkes estimate   =     -25.50513184 Ry
@@ -2998,7 +3008,7 @@ As      -0.272273145  -0.272273159  -0.272273146
      Davidson diagonalization with overlap
      ethr =  2.84E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is       34.1 secs
+     total cpu time spent up to now is       35.4 secs
 
      total energy              =     -25.49951626 Ry
      Harris-Foulkes estimate   =     -25.49951639 Ry
@@ -3008,7 +3018,7 @@ As      -0.272273145  -0.272273159  -0.272273146
      Davidson diagonalization with overlap
      ethr =  2.84E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is       34.4 secs
+     total cpu time spent up to now is       35.7 secs
 
      total energy              =     -25.49951625 Ry
      Harris-Foulkes estimate   =     -25.49951627 Ry
@@ -3018,7 +3028,7 @@ As      -0.272273145  -0.272273159  -0.272273146
      Davidson diagonalization with overlap
      ethr =  8.45E-10,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is       34.8 secs
+     total cpu time spent up to now is       36.1 secs
 
      total energy              =     -25.49951624 Ry
      Harris-Foulkes estimate   =     -25.49951625 Ry
@@ -3028,7 +3038,7 @@ As      -0.272273145  -0.272273159  -0.272273146
      Davidson diagonalization with overlap
      ethr =  2.18E-10,  avg # of iterations =  2.5
 
-     total cpu time spent up to now is       35.2 secs
+     total cpu time spent up to now is       36.5 secs
 
      End of self-consistent calculation
 
@@ -3208,7 +3218,7 @@ As      -0.272273145  -0.272273159  -0.272273146
 
      convergence has been achieved in   5 iterations
 
-     Forces acting on atoms (Ry/au):
+     Forces acting on atoms (cartesian axes, Ry/au):
 
      atom    1 type  1   force =    -0.00014073   -0.00008180   -0.00005796
      atom    2 type  1   force =     0.00014073    0.00008180    0.00005796
@@ -3216,7 +3226,7 @@ As      -0.272273145  -0.272273159  -0.272273146
      Total force =     0.000244     Total SCF correction =     0.000022
 
 
-     entering subroutine stress ...
+     Computing stress (Cartesian axis) and pressure
 
           total   stress  (Ry/bohr**3)                   (kbar)     P=    0.18
    0.00000139   0.00000020   0.00000014          0.20      0.03      0.02
@@ -3232,6 +3242,7 @@ As      -0.272273145  -0.272273159  -0.272273146
      Final enthalpy =     -25.4995162411 Ry
 Begin final coordinates
      new unit-cell volume =    274.74297 a.u.^3 (    40.71271 Ang^3 )
+     density =      6.10985 g/cm^3
 
 CELL_PARAMETERS (alat=  7.01033623)
    1.053751829   0.017658448   0.012516607
@@ -3248,10 +3259,6 @@ End final coordinates
      A final scf calculation at the relaxed structure.
      The G-vectors are recalculated for the final unit cell
      Results may differ from those at the preceding step.
-
-   Info: using nr1, nr2, nr3 values from input
-
-   Info: using nr1, nr2, nr3 values from input
 
      G-vector sticks info
      --------------------
@@ -3347,7 +3354,7 @@ End final coordinates
 
      Dense  grid:     4675 G-vectors     FFT dimensions: (  24,  24,  24)
 
-     Estimated max dynamical RAM per process >       5.88Mb
+     Estimated max dynamical RAM per process >       5.88MB
 
      Initial potential from superposition of free atoms
 
@@ -3356,9 +3363,9 @@ End final coordinates
 
      Writing output data file pwscf.save
 
-     total cpu time spent up to now is       35.7 secs
+     total cpu time spent up to now is       37.1 secs
 
-     per-process dynamical memory:     5.4 Mb
+     per-process dynamical memory:     5.5 Mb
 
      Self-consistent Calculation
 
@@ -3366,7 +3373,7 @@ End final coordinates
      Davidson diagonalization with overlap
      ethr =  1.00E-06,  avg # of iterations = 10.4
 
-     total cpu time spent up to now is       36.9 secs
+     total cpu time spent up to now is       38.4 secs
 
      total energy              =     -25.50073134 Ry
      Harris-Foulkes estimate   =     -25.50285694 Ry
@@ -3376,7 +3383,7 @@ End final coordinates
      Davidson diagonalization with overlap
      ethr =  1.04E-04,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is       37.3 secs
+     total cpu time spent up to now is       38.7 secs
 
      total energy              =     -25.50085477 Ry
      Harris-Foulkes estimate   =     -25.50104027 Ry
@@ -3386,7 +3393,7 @@ End final coordinates
      Davidson diagonalization with overlap
      ethr =  8.21E-06,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is       37.6 secs
+     total cpu time spent up to now is       39.1 secs
 
      total energy              =     -25.50089014 Ry
      Harris-Foulkes estimate   =     -25.50090923 Ry
@@ -3396,7 +3403,7 @@ End final coordinates
      Davidson diagonalization with overlap
      ethr =  3.62E-07,  avg # of iterations =  2.1
 
-     total cpu time spent up to now is       38.0 secs
+     total cpu time spent up to now is       39.5 secs
 
      total energy              =     -25.50089922 Ry
      Harris-Foulkes estimate   =     -25.50089926 Ry
@@ -3406,7 +3413,7 @@ End final coordinates
      Davidson diagonalization with overlap
      ethr =  2.87E-09,  avg # of iterations =  2.1
 
-     total cpu time spent up to now is       38.5 secs
+     total cpu time spent up to now is       40.0 secs
 
      total energy              =     -25.50089935 Ry
      Harris-Foulkes estimate   =     -25.50089935 Ry
@@ -3416,7 +3423,7 @@ End final coordinates
      Davidson diagonalization with overlap
      ethr =  1.24E-10,  avg # of iterations =  2.2
 
-     total cpu time spent up to now is       38.9 secs
+     total cpu time spent up to now is       40.4 secs
 
      End of self-consistent calculation
 
@@ -3596,7 +3603,7 @@ End final coordinates
 
      convergence has been achieved in   6 iterations
 
-     Forces acting on atoms (Ry/au):
+     Forces acting on atoms (cartesian axes, Ry/au):
 
      atom    1 type  1   force =    -0.00013563   -0.00007885   -0.00005580
      atom    2 type  1   force =     0.00013563    0.00007885    0.00005580
@@ -3604,7 +3611,7 @@ End final coordinates
      Total force =     0.000235     Total SCF correction =     0.000012
 
 
-     entering subroutine stress ...
+     Computing stress (Cartesian axis) and pressure
 
           total   stress  (Ry/bohr**3)                   (kbar)     P=    0.08
    0.00000234   0.00000210   0.00000149          0.34      0.31      0.22
@@ -3614,50 +3621,50 @@ End final coordinates
 
      Writing output data file pwscf.save
 
-     init_run     :      1.34s CPU      0.49s WALL (       2 calls)
-     electrons    :    135.73s CPU     34.36s WALL (      12 calls)
-     update_pot   :      1.30s CPU      1.26s WALL (      10 calls)
-     forces       :      1.27s CPU      0.69s WALL (      12 calls)
-     stress       :      4.72s CPU      1.96s WALL (      12 calls)
+     init_run     :      0.51s CPU      0.51s WALL (       2 calls)
+     electrons    :     33.35s CPU     34.59s WALL (      12 calls)
+     update_pot   :      1.38s CPU      1.43s WALL (      10 calls)
+     forces       :      0.73s CPU      0.73s WALL (      12 calls)
+     stress       :      2.19s CPU      2.21s WALL (      12 calls)
 
      Called by init_run:
-     wfcinit      :      1.10s CPU      0.28s WALL (       2 calls)
-     potinit      :      0.08s CPU      0.07s WALL (       2 calls)
+     wfcinit      :      0.28s CPU      0.28s WALL (       2 calls)
+     potinit      :      0.07s CPU      0.07s WALL (       2 calls)
 
      Called by electrons:
-     c_bands      :    116.79s CPU     29.60s WALL (      75 calls)
-     sum_band     :     18.37s CPU      4.60s WALL (      75 calls)
-     v_of_rho     :      0.28s CPU      0.07s WALL (      82 calls)
-     mix_rho      :      0.15s CPU      0.05s WALL (      75 calls)
+     c_bands      :     28.47s CPU     29.58s WALL (      75 calls)
+     sum_band     :      4.67s CPU      4.71s WALL (      75 calls)
+     v_of_rho     :      0.16s CPU      0.17s WALL (      82 calls)
+     mix_rho      :      0.04s CPU      0.05s WALL (      75 calls)
 
      Called by c_bands:
-     init_us_2    :      1.99s CPU      0.50s WALL (    5632 calls)
-     cegterg      :    112.86s CPU     28.42s WALL (    2400 calls)
+     init_us_2    :      0.65s CPU      0.69s WALL (    5632 calls)
+     cegterg      :     27.76s CPU     28.29s WALL (    2400 calls)
 
      Called by sum_band:
 
      Called by *egterg:
-     h_psi        :     94.06s CPU     23.62s WALL (    7912 calls)
-     g_psi        :      0.65s CPU      0.16s WALL (    5448 calls)
-     cdiaghg      :      4.67s CPU      1.16s WALL (    7368 calls)
+     h_psi        :     22.88s CPU     23.36s WALL (    7912 calls)
+     g_psi        :      0.15s CPU      0.17s WALL (    5448 calls)
+     cdiaghg      :      1.18s CPU      1.19s WALL (    7368 calls)
 
      Called by h_psi:
-     h_psi:pot    :     93.61s CPU     23.51s WALL (    7912 calls)
-     h_psi:calbec :      1.77s CPU      0.44s WALL (    7912 calls)
-     vloc_psi     :     89.58s CPU     22.49s WALL (    7912 calls)
-     add_vuspsi   :      2.22s CPU      0.55s WALL (    7912 calls)
+     h_psi:pot    :     22.84s CPU     23.25s WALL (    7912 calls)
+     h_psi:calbec :      0.45s CPU      0.45s WALL (    7912 calls)
+     vloc_psi     :     21.85s CPU     22.26s WALL (    7912 calls)
+     add_vuspsi   :      0.54s CPU      0.53s WALL (    7912 calls)
 
      General routines
-     calbec       :      2.25s CPU      0.55s WALL (    9832 calls)
-     fft          :      0.33s CPU      0.10s WALL (     396 calls)
-     fftw         :     94.38s CPU     23.70s WALL (  136104 calls)
+     calbec       :      0.58s CPU      0.57s WALL (    9832 calls)
+     fft          :      0.11s CPU      0.11s WALL (     396 calls)
+     fftw         :     24.10s CPU     23.58s WALL (  136104 calls)
      davcio       :      0.00s CPU      0.00s WALL (      64 calls)
 
 
-     PWSCF        :  2m24.79s CPU     0m39.09s WALL
+     PWSCF        :    38.47s CPU        40.70s WALL
 
 
-   This run was terminated on:  19:34:39   2Oct2016            
+   This run was terminated on:  20:38: 7   5Feb2017            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

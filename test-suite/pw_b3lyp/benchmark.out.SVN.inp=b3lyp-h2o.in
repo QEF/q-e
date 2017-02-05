@@ -1,5 +1,5 @@
 
-     Program PWSCF v.6.0 starts on  2Oct2016 at 19:16:53 
+     Program PWSCF v.6.0 starts on  5Feb2017 at 20:18:13 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -8,7 +8,7 @@
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
-     Serial multi-threaded version, running on    4 processor cores
+     Serial multi-threaded version, running on    1 processor cores
      Reading input from b3lyp-h2o.in
 
      Current dimensions of program PWSCF are:
@@ -101,7 +101,7 @@ EXX: grid of k+q points same as grid of k-points
 
      Dense  grid:    83519 G-vectors     FFT dimensions: (  72,  72,  72)
 
-     Estimated max dynamical RAM per process >      92.54Mb
+     Estimated max dynamical RAM per process >      92.54MB
 
      Initial potential from superposition of free atoms
      Check: negative starting charge=   -0.004488
@@ -111,7 +111,7 @@ EXX: grid of k+q points same as grid of k-points
      negative rho (up, down):  4.488E-03 0.000E+00
      Starting wfc are    6 randomized atomic wfcs
 
-     total cpu time spent up to now is        0.5 secs
+     total cpu time spent up to now is        0.6 secs
 
      per-process dynamical memory:    45.5 Mb
 
@@ -123,7 +123,7 @@ EXX: grid of k+q points same as grid of k-points
 
      negative rho (up, down):  1.186E-03 0.000E+00
 
-     total cpu time spent up to now is        0.9 secs
+     total cpu time spent up to now is        1.0 secs
 
      total energy              =     -34.19076569 Ry
      Harris-Foulkes estimate   =     -34.58277298 Ry
@@ -135,7 +135,7 @@ EXX: grid of k+q points same as grid of k-points
 
      negative rho (up, down):  5.391E-04 0.000E+00
 
-     total cpu time spent up to now is        1.4 secs
+     total cpu time spent up to now is        1.5 secs
 
      total energy              =     -34.29541003 Ry
      Harris-Foulkes estimate   =     -34.57027431 Ry
@@ -147,7 +147,7 @@ EXX: grid of k+q points same as grid of k-points
 
      negative rho (up, down):  6.818E-05 0.000E+00
 
-     total cpu time spent up to now is        1.8 secs
+     total cpu time spent up to now is        1.9 secs
 
      total energy              =     -34.41794056 Ry
      Harris-Foulkes estimate   =     -34.41932455 Ry
@@ -159,7 +159,7 @@ EXX: grid of k+q points same as grid of k-points
 
      negative rho (up, down):  1.310E-08 0.000E+00
 
-     total cpu time spent up to now is        2.2 secs
+     total cpu time spent up to now is        2.4 secs
 
      total energy              =     -34.41932246 Ry
      Harris-Foulkes estimate   =     -34.41952092 Ry
@@ -171,7 +171,7 @@ EXX: grid of k+q points same as grid of k-points
 
      negative rho (up, down):  1.383E-07 0.000E+00
 
-     total cpu time spent up to now is        2.6 secs
+     total cpu time spent up to now is        2.8 secs
 
      total energy              =     -34.41936481 Ry
      Harris-Foulkes estimate   =     -34.41938943 Ry
@@ -181,7 +181,7 @@ EXX: grid of k+q points same as grid of k-points
      Davidson diagonalization with overlap
      ethr =  6.39E-07,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        2.9 secs
+     total cpu time spent up to now is        3.2 secs
 
      End of self-consistent calculation
 
@@ -199,7 +199,7 @@ EXX: grid of k+q points same as grid of k-points
 
      EXX: now go back to refine exchange calculation
 
-     total cpu time spent up to now is        3.2 secs
+     total cpu time spent up to now is        3.6 secs
 
      per-process dynamical memory:    52.1 Mb
 
@@ -209,37 +209,37 @@ EXX: grid of k+q points same as grid of k-points
      Davidson diagonalization with overlap
      ethr =  6.39E-07,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is        4.0 secs
+     total cpu time spent up to now is        4.4 secs
 
      total energy              =     -34.37295307 Ry
-     Harris-Foulkes estimate   =     -35.93705718 Ry
+     Harris-Foulkes estimate   =     -34.37307117 Ry
      estimated scf accuracy    <       0.00020384 Ry
 
      iteration #  2     ecut=    80.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  2.55E-06,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        4.7 secs
+     total cpu time spent up to now is        5.1 secs
 
      total energy              =     -34.37295983 Ry
-     Harris-Foulkes estimate   =     -35.93697190 Ry
+     Harris-Foulkes estimate   =     -34.37298589 Ry
      estimated scf accuracy    <       0.00003797 Ry
 
      iteration #  3     ecut=    80.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  4.75E-07,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        5.3 secs
+     total cpu time spent up to now is        5.7 secs
 
      total energy              =     -34.37296795 Ry
-     Harris-Foulkes estimate   =     -35.93696210 Ry
+     Harris-Foulkes estimate   =     -34.37297609 Ry
      estimated scf accuracy    <       0.00001320 Ry
 
      iteration #  4     ecut=    80.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  1.65E-07,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        5.9 secs
+     total cpu time spent up to now is        6.4 secs
 
      End of self-consistent calculation
 
@@ -250,7 +250,7 @@ EXX: grid of k+q points same as grid of k-points
      highest occupied level (ev):    -8.1789
 
 !    total energy              =     -34.37297030 Ry
-     Harris-Foulkes estimate   =     -35.93695658 Ry
+     Harris-Foulkes estimate   =     -34.37297057 Ry
      estimated scf accuracy    <       0.00000001 Ry
 
      convergence has been achieved in   4 iterations
@@ -263,7 +263,7 @@ EXX: grid of k+q points same as grid of k-points
 
      EXX: now go back to refine exchange calculation
 
-     total cpu time spent up to now is        6.1 secs
+     total cpu time spent up to now is        6.6 secs
 
      per-process dynamical memory:    50.8 Mb
 
@@ -273,17 +273,17 @@ EXX: grid of k+q points same as grid of k-points
      Davidson diagonalization with overlap
      ethr =  1.65E-07,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        6.7 secs
+     total cpu time spent up to now is        7.2 secs
 
      total energy              =     -34.37303110 Ry
-     Harris-Foulkes estimate   =     -35.93977358 Ry
+     Harris-Foulkes estimate   =     -34.37303303 Ry
      estimated scf accuracy    <       0.00000160 Ry
 
      iteration #  2     ecut=    80.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  1.99E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        7.3 secs
+     total cpu time spent up to now is        7.9 secs
 
      End of self-consistent calculation
 
@@ -294,12 +294,12 @@ EXX: grid of k+q points same as grid of k-points
      highest occupied level (ev):    -8.1722
 
 !    total energy              =     -34.37303096 Ry
-     Harris-Foulkes estimate   =     -35.93977231 Ry
+     Harris-Foulkes estimate   =     -34.37303176 Ry
      estimated scf accuracy    <       0.00000074 Ry
 
      convergence has been achieved in   2 iterations
 
-!    total energy              =     -34.37303125 Ry
+!!   total energy              =     -34.37303125 Ry
      Harris-Foulkes estimate   =     -34.37303205 Ry
      est. exchange err (dexx)  =       0.00000029 Ry
      - averaged Fock potential =       3.13359001 Ry
@@ -307,7 +307,7 @@ EXX: grid of k+q points same as grid of k-points
 
      EXX self-consistency reached
 
-     Forces acting on atoms (Ry/au):
+     Forces acting on atoms (cartesian axes, Ry/au):
 
      atom    1 type  1   force =     0.01829204    0.01829204    0.00000000
      atom    2 type  2   force =    -0.02126965    0.00297761    0.00000176
@@ -340,7 +340,7 @@ H       -0.221322385   1.811230348   0.000198242
 
      negative rho (up, down):  1.876E-03 0.000E+00
 
-     total cpu time spent up to now is        7.9 secs
+     total cpu time spent up to now is        8.7 secs
 
      per-process dynamical memory:    52.1 Mb
 
@@ -352,7 +352,7 @@ H       -0.221322385   1.811230348   0.000198242
 
      negative rho (up, down):  2.780E-04 0.000E+00
 
-     total cpu time spent up to now is        8.8 secs
+     total cpu time spent up to now is        9.6 secs
 
      total energy              =     -35.93788193 Ry
      Harris-Foulkes estimate   =     -35.93673468 Ry
@@ -364,7 +364,7 @@ H       -0.221322385   1.811230348   0.000198242
 
      negative rho (up, down):  1.277E-04 0.000E+00
 
-     total cpu time spent up to now is        9.4 secs
+     total cpu time spent up to now is       10.3 secs
 
      total energy              =     -35.93833759 Ry
      Harris-Foulkes estimate   =     -35.93845560 Ry
@@ -376,7 +376,7 @@ H       -0.221322385   1.811230348   0.000198242
 
      negative rho (up, down):  3.561E-06 0.000E+00
 
-     total cpu time spent up to now is       10.1 secs
+     total cpu time spent up to now is       10.9 secs
 
      total energy              =     -35.93856592 Ry
      Harris-Foulkes estimate   =     -35.93846744 Ry
@@ -386,7 +386,7 @@ H       -0.221322385   1.811230348   0.000198242
      Davidson diagonalization with overlap
      ethr =  2.01E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is       10.7 secs
+     total cpu time spent up to now is       11.6 secs
 
      End of self-consistent calculation
 
@@ -410,7 +410,7 @@ H       -0.221322385   1.811230348   0.000198242
 
      EXX: now go back to refine exchange calculation
 
-     total cpu time spent up to now is       10.8 secs
+     total cpu time spent up to now is       11.8 secs
 
      per-process dynamical memory:    50.8 Mb
 
@@ -420,37 +420,37 @@ H       -0.221322385   1.811230348   0.000198242
      Davidson diagonalization with overlap
      ethr =  2.01E-08,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is       11.6 secs
+     total cpu time spent up to now is       12.6 secs
 
      total energy              =     -34.37324162 Ry
-     Harris-Foulkes estimate   =     -35.94802148 Ry
+     Harris-Foulkes estimate   =     -34.37328429 Ry
      estimated scf accuracy    <       0.00005664 Ry
 
      iteration #  2     ecut=    80.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  7.08E-07,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is       12.2 secs
+     total cpu time spent up to now is       13.3 secs
 
      total energy              =     -34.37325356 Ry
-     Harris-Foulkes estimate   =     -35.94799377 Ry
+     Harris-Foulkes estimate   =     -34.37325658 Ry
      estimated scf accuracy    <       0.00000465 Ry
 
      iteration #  3     ecut=    80.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  5.81E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is       12.8 secs
+     total cpu time spent up to now is       13.9 secs
 
      total energy              =     -34.37325490 Ry
-     Harris-Foulkes estimate   =     -35.94799284 Ry
+     Harris-Foulkes estimate   =     -34.37325566 Ry
      estimated scf accuracy    <       0.00000136 Ry
 
      iteration #  4     ecut=    80.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  1.70E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is       13.4 secs
+     total cpu time spent up to now is       14.6 secs
 
      End of self-consistent calculation
 
@@ -461,7 +461,7 @@ H       -0.221322385   1.811230348   0.000198242
      highest occupied level (ev):    -8.2143
 
 !    total energy              =     -34.37325521 Ry
-     Harris-Foulkes estimate   =     -35.94799237 Ry
+     Harris-Foulkes estimate   =     -34.37325519 Ry
      estimated scf accuracy    <          7.2E-09 Ry
 
      convergence has been achieved in   4 iterations
@@ -474,7 +474,7 @@ H       -0.221322385   1.811230348   0.000198242
 
      EXX: now go back to refine exchange calculation
 
-     total cpu time spent up to now is       13.5 secs
+     total cpu time spent up to now is       14.7 secs
 
      per-process dynamical memory:    50.8 Mb
 
@@ -484,7 +484,7 @@ H       -0.221322385   1.811230348   0.000198242
      Davidson diagonalization with overlap
      ethr =  1.70E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is       14.1 secs
+     total cpu time spent up to now is       15.4 secs
 
      End of self-consistent calculation
 
@@ -495,12 +495,12 @@ H       -0.221322385   1.811230348   0.000198242
      highest occupied level (ev):    -8.2146
 
 !    total energy              =     -34.37325984 Ry
-     Harris-Foulkes estimate   =     -35.94858530 Ry
+     Harris-Foulkes estimate   =     -34.37326009 Ry
      estimated scf accuracy    <       0.00000026 Ry
 
      convergence has been achieved in   1 iterations
 
-!    total energy              =     -34.37325989 Ry
+!!   total energy              =     -34.37325989 Ry
      Harris-Foulkes estimate   =     -34.37326013 Ry
      est. exchange err (dexx)  =       0.00000005 Ry
      - averaged Fock potential =       3.15075158 Ry
@@ -508,7 +508,7 @@ H       -0.221322385   1.811230348   0.000198242
 
      EXX self-consistency reached
 
-     Forces acting on atoms (Ry/au):
+     Forces acting on atoms (cartesian axes, Ry/au):
 
      atom    1 type  1   force =    -0.01506619   -0.01506619    0.00000000
      atom    2 type  2   force =     0.01535665   -0.00029046   -0.00000066
@@ -542,7 +542,7 @@ H       -0.221480490   1.819915756   0.000198613
 
      negative rho (up, down):  4.995E-04 0.000E+00
 
-     total cpu time spent up to now is       14.7 secs
+     total cpu time spent up to now is       16.1 secs
 
      per-process dynamical memory:    52.1 Mb
 
@@ -554,7 +554,7 @@ H       -0.221480490   1.819915756   0.000198613
 
      negative rho (up, down):  6.902E-05 0.000E+00
 
-     total cpu time spent up to now is       15.5 secs
+     total cpu time spent up to now is       17.0 secs
 
      total energy              =     -35.94851345 Ry
      Harris-Foulkes estimate   =     -35.94805675 Ry
@@ -566,7 +566,7 @@ H       -0.221480490   1.819915756   0.000198613
 
      negative rho (up, down):  3.101E-05 0.000E+00
 
-     total cpu time spent up to now is       16.2 secs
+     total cpu time spent up to now is       17.7 secs
 
      total energy              =     -35.94857767 Ry
      Harris-Foulkes estimate   =     -35.94860303 Ry
@@ -578,7 +578,7 @@ H       -0.221480490   1.819915756   0.000198613
 
      negative rho (up, down):  1.027E-06 0.000E+00
 
-     total cpu time spent up to now is       16.8 secs
+     total cpu time spent up to now is       18.4 secs
 
      total energy              =     -35.94860868 Ry
      Harris-Foulkes estimate   =     -35.94859876 Ry
@@ -588,7 +588,7 @@ H       -0.221480490   1.819915756   0.000198613
      Davidson diagonalization with overlap
      ethr =  7.56E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is       17.4 secs
+     total cpu time spent up to now is       19.0 secs
 
      End of self-consistent calculation
 
@@ -612,7 +612,7 @@ H       -0.221480490   1.819915756   0.000198613
 
      EXX: now go back to refine exchange calculation
 
-     total cpu time spent up to now is       17.5 secs
+     total cpu time spent up to now is       19.2 secs
 
      per-process dynamical memory:    50.8 Mb
 
@@ -622,37 +622,37 @@ H       -0.221480490   1.819915756   0.000198613
      Davidson diagonalization with overlap
      ethr =  7.56E-09,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is       18.3 secs
+     total cpu time spent up to now is       20.0 secs
 
      total energy              =     -34.37350771 Ry
-     Harris-Foulkes estimate   =     -35.94552996 Ry
+     Harris-Foulkes estimate   =     -34.37351595 Ry
      estimated scf accuracy    <       0.00001127 Ry
 
      iteration #  2     ecut=    80.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  1.41E-07,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is       18.9 secs
+     total cpu time spent up to now is       20.7 secs
 
      total energy              =     -34.37351000 Ry
-     Harris-Foulkes estimate   =     -35.94552435 Ry
+     Harris-Foulkes estimate   =     -34.37351034 Ry
      estimated scf accuracy    <       0.00000040 Ry
 
      iteration #  3     ecut=    80.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  4.96E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is       19.5 secs
+     total cpu time spent up to now is       21.3 secs
 
      total energy              =     -34.37351012 Ry
-     Harris-Foulkes estimate   =     -35.94552421 Ry
+     Harris-Foulkes estimate   =     -34.37351020 Ry
      estimated scf accuracy    <       0.00000017 Ry
 
      iteration #  4     ecut=    80.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  2.11E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is       20.2 secs
+     total cpu time spent up to now is       22.0 secs
 
      End of self-consistent calculation
 
@@ -663,7 +663,7 @@ H       -0.221480490   1.819915756   0.000198613
      highest occupied level (ev):    -8.1960
 
 !    total energy              =     -34.37351013 Ry
-     Harris-Foulkes estimate   =     -35.94552417 Ry
+     Harris-Foulkes estimate   =     -34.37351015 Ry
      estimated scf accuracy    <          1.4E-09 Ry
 
      convergence has been achieved in   4 iterations
@@ -676,7 +676,7 @@ H       -0.221480490   1.819915756   0.000198613
 
      EXX: now go back to refine exchange calculation
 
-     total cpu time spent up to now is       20.3 secs
+     total cpu time spent up to now is       22.1 secs
 
      per-process dynamical memory:    50.8 Mb
 
@@ -686,17 +686,17 @@ H       -0.221480490   1.819915756   0.000198613
      Davidson diagonalization with overlap
      ethr =  2.11E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is       20.9 secs
+     total cpu time spent up to now is       22.8 secs
 
      total energy              =     -34.37351111 Ry
-     Harris-Foulkes estimate   =     -35.94530098 Ry
+     Harris-Foulkes estimate   =     -34.37351113 Ry
      estimated scf accuracy    <       0.00000005 Ry
 
      iteration #  2     ecut=    80.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  5.76E-10,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is       21.5 secs
+     total cpu time spent up to now is       23.5 secs
 
      End of self-consistent calculation
 
@@ -707,20 +707,20 @@ H       -0.221480490   1.819915756   0.000198613
      highest occupied level (ev):    -8.1969
 
 !    total energy              =     -34.37351111 Ry
-     Harris-Foulkes estimate   =     -35.94530097 Ry
+     Harris-Foulkes estimate   =     -34.37351112 Ry
      estimated scf accuracy    <          2.7E-09 Ry
 
      convergence has been achieved in   2 iterations
 
-!    total energy              =     -34.37351112 Ry
+!!   total energy              =     -34.37351112 Ry
      Harris-Foulkes estimate   =     -34.37351113 Ry
-     est. exchange err (dexx)  =       0.00000001 Ry
+     est. exchange err (dexx)  =          5.1E-09 Ry
      - averaged Fock potential =       3.14357306 Ry
      + Fock energy             =      -1.57178322 Ry
 
      EXX self-consistency reached
 
-     Forces acting on atoms (Ry/au):
+     Forces acting on atoms (cartesian axes, Ry/au):
 
      atom    1 type  1   force =     0.00018308    0.00018308    0.00000000
      atom    2 type  2   force =    -0.00103386    0.00085078    0.00000028
@@ -754,7 +754,7 @@ H       -0.220664363   1.819214452   0.000198359
 
      negative rho (up, down):  3.286E-06 0.000E+00
 
-     total cpu time spent up to now is       22.1 secs
+     total cpu time spent up to now is       24.3 secs
 
      per-process dynamical memory:    52.1 Mb
 
@@ -772,7 +772,7 @@ H       -0.220664363   1.819214452   0.000198359
 
      negative rho (up, down):  2.777E-07 0.000E+00
 
-     total cpu time spent up to now is       23.1 secs
+     total cpu time spent up to now is       25.2 secs
 
      total energy              =     -35.94529481 Ry
      Harris-Foulkes estimate   =     -35.94529047 Ry
@@ -784,7 +784,7 @@ H       -0.220664363   1.819214452   0.000198359
 
      negative rho (up, down):  8.069E-08 0.000E+00
 
-     total cpu time spent up to now is       23.7 secs
+     total cpu time spent up to now is       25.9 secs
 
      total energy              =     -35.94529561 Ry
      Harris-Foulkes estimate   =     -35.94529491 Ry
@@ -794,7 +794,7 @@ H       -0.220664363   1.819214452   0.000198359
      Davidson diagonalization with overlap
      ethr =  8.24E-10,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is       24.3 secs
+     total cpu time spent up to now is       26.6 secs
 
      End of self-consistent calculation
 
@@ -818,7 +818,7 @@ H       -0.220664363   1.819214452   0.000198359
 
      EXX: now go back to refine exchange calculation
 
-     total cpu time spent up to now is       24.4 secs
+     total cpu time spent up to now is       26.8 secs
 
      per-process dynamical memory:    50.8 Mb
 
@@ -834,7 +834,7 @@ H       -0.220664363   1.819214452   0.000198359
      Davidson diagonalization with overlap
      ethr =  2.49E-11,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is       25.4 secs
+     total cpu time spent up to now is       27.7 secs
 
      End of self-consistent calculation
 
@@ -845,20 +845,20 @@ H       -0.220664363   1.819214452   0.000198359
      highest occupied level (ev):    -8.1979
 
 !    total energy              =     -34.37351309 Ry
-     Harris-Foulkes estimate   =     -35.94544685 Ry
+     Harris-Foulkes estimate   =     -34.37351308 Ry
      estimated scf accuracy    <          2.1E-09 Ry
 
      convergence has been achieved in   1 iterations
 
-!    total energy              =     -34.37351309 Ry
+!!   total energy              =     -34.37351309 Ry
      Harris-Foulkes estimate   =     -34.37351308 Ry
-     est. exchange err (dexx)  =       0.00000000 Ry
+     est. exchange err (dexx)  =          1.2E-09 Ry
      - averaged Fock potential =       3.14386843 Ry
      + Fock energy             =      -1.57193467 Ry
 
      EXX self-consistency reached
 
-     Forces acting on atoms (Ry/au):
+     Forces acting on atoms (cartesian axes, Ry/au):
 
      atom    1 type  1   force =    -0.00033152   -0.00033152    0.00000000
      atom    2 type  2   force =    -0.00020304    0.00053455    0.00000007
@@ -884,57 +884,57 @@ End final coordinates
 
      Writing output data file pwscf.save
 
-     init_run     :      0.59s CPU      0.48s WALL (       1 calls)
-     electrons    :     45.92s CPU     22.22s WALL (      11 calls)
-     update_pot   :      1.42s CPU      1.08s WALL (       3 calls)
-     forces       :      0.38s CPU      0.35s WALL (       4 calls)
+     init_run     :      0.51s CPU      0.53s WALL (       1 calls)
+     electrons    :     23.42s CPU     24.15s WALL (      11 calls)
+     update_pot   :      1.18s CPU      1.33s WALL (       3 calls)
+     forces       :      0.38s CPU      0.38s WALL (       4 calls)
 
      Called by init_run:
-     wfcinit      :      0.06s CPU      0.05s WALL (       1 calls)
-     potinit      :      0.44s CPU      0.33s WALL (       1 calls)
+     wfcinit      :      0.05s CPU      0.05s WALL (       1 calls)
+     potinit      :      0.36s CPU      0.38s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :     30.57s CPU     11.61s WALL (      37 calls)
-     sum_band     :      1.95s CPU      1.38s WALL (      37 calls)
-     v_of_rho     :     14.41s CPU      9.58s WALL (      40 calls)
-     mix_rho      :      0.55s CPU      0.61s WALL (      37 calls)
+     c_bands      :     11.58s CPU     11.64s WALL (      37 calls)
+     sum_band     :      1.31s CPU      1.31s WALL (      37 calls)
+     v_of_rho     :     11.24s CPU     11.35s WALL (      40 calls)
+     mix_rho      :      0.48s CPU      0.53s WALL (      37 calls)
 
      Called by c_bands:
-     init_us_2    :      0.05s CPU      0.05s WALL (      96 calls)
-     regterg      :     30.53s CPU     11.56s WALL (      37 calls)
+     init_us_2    :      0.05s CPU      0.06s WALL (      96 calls)
+     regterg      :     11.55s CPU     11.60s WALL (      37 calls)
 
      Called by sum_band:
 
      Called by *egterg:
-     h_psi        :     29.63s CPU     11.24s WALL (     127 calls)
-     g_psi        :      0.06s CPU      0.03s WALL (      89 calls)
-     rdiaghg      :      0.02s CPU      0.01s WALL (     114 calls)
+     h_psi        :     11.22s CPU     11.25s WALL (     127 calls)
+     g_psi        :      0.03s CPU      0.03s WALL (      89 calls)
+     rdiaghg      :      0.01s CPU      0.01s WALL (     114 calls)
 
      Called by h_psi:
-     h_psi:pot    :      3.20s CPU      3.18s WALL (     127 calls)
+     h_psi:pot    :      3.03s CPU      3.03s WALL (     127 calls)
      h_psi:calbec :      0.01s CPU      0.01s WALL (     127 calls)
-     vloc_psi     :      3.18s CPU      3.16s WALL (     127 calls)
+     vloc_psi     :      3.01s CPU      3.01s WALL (     127 calls)
      add_vuspsi   :      0.01s CPU      0.01s WALL (     127 calls)
 
      General routines
-     calbec       :      0.02s CPU      0.01s WALL (     164 calls)
-     fft          :      4.66s CPU      4.38s WALL (     441 calls)
-     fftw         :      3.21s CPU      3.12s WALL (     560 calls)
-     fftc         :     17.69s CPU      5.53s WALL (    1760 calls)
-     fftcw        :      5.72s CPU      1.66s WALL (     665 calls)
+     calbec       :      0.02s CPU      0.02s WALL (     164 calls)
+     fft          :      4.30s CPU      4.30s WALL (     441 calls)
+     fftw         :      3.07s CPU      3.07s WALL (     560 calls)
+     fftc         :      5.78s CPU      5.78s WALL (    1760 calls)
+     fftcw        :      1.62s CPU      1.62s WALL (     665 calls)
      davcio       :      0.00s CPU      0.00s WALL (       4 calls)
 
 
      EXX routines
      exx_grid     :      0.00s CPU      0.00s WALL (       1 calls)
-     exxinit      :      0.20s CPU      0.12s WALL (      11 calls)
-     vexx         :     26.41s CPU      8.05s WALL (     107 calls)
-     exxenergy    :      3.37s CPU      0.98s WALL (      21 calls)
+     exxinit      :      0.09s CPU      0.09s WALL (      11 calls)
+     vexx         :      8.18s CPU      8.21s WALL (     107 calls)
+     exxenergy    :      1.07s CPU      1.08s WALL (      21 calls)
 
-     PWSCF        :    52.35s CPU        25.58s WALL
+     PWSCF        :    27.03s CPU        28.07s WALL
 
 
-   This run was terminated on:  19:17:18   2Oct2016            
+   This run was terminated on:  20:18:41   5Feb2017            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

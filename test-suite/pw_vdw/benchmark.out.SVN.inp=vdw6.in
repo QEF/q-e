@@ -1,6 +1,5 @@
-Generating kernel table - May take several minutes...kernel table generated in /scratch/fs395/QE/espresso/test-suite/..//pseudo/rVV10_kernel_table
 
-     Program PWSCF v.6.0 starts on  2Oct2016 at 19:40:45 
+     Program PWSCF v.6.0 starts on  5Feb2017 at 20:39:47 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -9,7 +8,7 @@ Generating kernel table - May take several minutes...kernel table generated in /
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
-     Serial multi-threaded version, running on    4 processor cores
+     Serial multi-threaded version, running on    1 processor cores
      Reading input from vdw6.in
 
      Current dimensions of program PWSCF are:
@@ -99,7 +98,7 @@ Generating kernel table - May take several minutes...kernel table generated in /
 
      Smooth grid:     1175 G-vectors     FFT dimensions: (  15,  15,  36)
 
-     Estimated max dynamical RAM per process >       6.88Mb
+     Estimated max dynamical RAM per process >       6.88MB
 
      Initial potential from superposition of free atoms
 
@@ -125,7 +124,7 @@ Gradients computed in Reciprocal space
 
      total cpu time spent up to now is        0.7 secs
 
-     per-process dynamical memory:    14.3 Mb
+     per-process dynamical memory:    14.6 Mb
 
      Self-consistent Calculation
 
@@ -163,7 +162,7 @@ Gradients computed in Reciprocal space
      Davidson diagonalization with overlap
      ethr =  2.18E-05,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        1.7 secs
+     total cpu time spent up to now is        1.8 secs
 
      total energy              =     -44.24253031 Ry
      Harris-Foulkes estimate   =     -44.24254584 Ry
@@ -183,7 +182,7 @@ Gradients computed in Reciprocal space
      Davidson diagonalization with overlap
      ethr =  3.98E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        2.2 secs
+     total cpu time spent up to now is        2.3 secs
 
      End of self-consistent calculation
 
@@ -208,7 +207,7 @@ Gradients computed in Reciprocal space
 
      convergence has been achieved in   6 iterations
 
-     Forces acting on atoms (Ry/au):
+     Forces acting on atoms (cartesian axes, Ry/au):
 
      atom    1 type  1   force =     0.00006438   -0.00003717    0.00000000
      atom    2 type  1   force =    -0.00004112    0.00002374    0.00000000
@@ -219,7 +218,7 @@ Gradients computed in Reciprocal space
      SCF correction compared to forces is large: reduce conv_thr to get better values
 
 
-     entering subroutine stress ...
+     Computing stress (Cartesian axis) and pressure
 
           total   stress  (Ry/bohr**3)                   (kbar)     P= -358.65
   -0.00267705  -0.00000014   0.00000000       -393.81     -0.02      0.00
@@ -229,55 +228,55 @@ Gradients computed in Reciprocal space
 
      Writing output data file pwscf.save
 
-     init_run     :      0.46s CPU      0.39s WALL (       1 calls)
-     electrons    :      2.06s CPU      1.57s WALL (       1 calls)
-     forces       :      0.06s CPU      0.04s WALL (       1 calls)
-     stress       :      0.37s CPU      0.28s WALL (       1 calls)
+     init_run     :      0.40s CPU      0.41s WALL (       1 calls)
+     electrons    :      1.61s CPU      1.65s WALL (       1 calls)
+     forces       :      0.04s CPU      0.04s WALL (       1 calls)
+     stress       :      0.31s CPU      0.32s WALL (       1 calls)
 
      Called by init_run:
-     wfcinit      :      0.01s CPU      0.00s WALL (       1 calls)
-     potinit      :      0.26s CPU      0.25s WALL (       1 calls)
+     wfcinit      :      0.00s CPU      0.00s WALL (       1 calls)
+     potinit      :      0.25s CPU      0.26s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :      0.09s CPU      0.04s WALL (       6 calls)
-     sum_band     :      0.24s CPU      0.06s WALL (       6 calls)
-     v_of_rho     :      1.75s CPU      1.64s WALL (       7 calls)
-     newd         :      0.19s CPU      0.05s WALL (       7 calls)
-     mix_rho      :      0.02s CPU      0.01s WALL (       6 calls)
+     c_bands      :      0.03s CPU      0.03s WALL (       6 calls)
+     sum_band     :      0.07s CPU      0.07s WALL (       6 calls)
+     v_of_rho     :      1.67s CPU      1.71s WALL (       7 calls)
+     newd         :      0.06s CPU      0.06s WALL (       7 calls)
+     mix_rho      :      0.01s CPU      0.01s WALL (       6 calls)
 
      Called by c_bands:
-     init_us_2    :      0.01s CPU      0.00s WALL (      13 calls)
-     regterg      :      0.08s CPU      0.03s WALL (       6 calls)
+     init_us_2    :      0.00s CPU      0.00s WALL (      13 calls)
+     regterg      :      0.03s CPU      0.03s WALL (       6 calls)
 
      Called by sum_band:
      sum_band:bec :      0.00s CPU      0.00s WALL (       6 calls)
-     addusdens    :      0.15s CPU      0.04s WALL (       6 calls)
+     addusdens    :      0.05s CPU      0.05s WALL (       6 calls)
 
      Called by *egterg:
-     h_psi        :      0.07s CPU      0.02s WALL (      21 calls)
+     h_psi        :      0.02s CPU      0.02s WALL (      21 calls)
      s_psi        :      0.00s CPU      0.00s WALL (      21 calls)
      g_psi        :      0.00s CPU      0.00s WALL (      14 calls)
-     rdiaghg      :      0.01s CPU      0.00s WALL (      20 calls)
+     rdiaghg      :      0.00s CPU      0.00s WALL (      20 calls)
 
      Called by h_psi:
-     h_psi:pot    :      0.07s CPU      0.02s WALL (      21 calls)
-     h_psi:calbec :      0.01s CPU      0.00s WALL (      21 calls)
-     vloc_psi     :      0.06s CPU      0.02s WALL (      21 calls)
+     h_psi:pot    :      0.02s CPU      0.02s WALL (      21 calls)
+     h_psi:calbec :      0.00s CPU      0.00s WALL (      21 calls)
+     vloc_psi     :      0.02s CPU      0.02s WALL (      21 calls)
      add_vuspsi   :      0.00s CPU      0.00s WALL (      21 calls)
 
      General routines
-     calbec       :      0.01s CPU      0.00s WALL (      32 calls)
-     fft          :      0.57s CPU      0.41s WALL (     510 calls)
-     ffts         :      0.01s CPU      0.00s WALL (      13 calls)
-     fftw         :      0.06s CPU      0.02s WALL (     228 calls)
-     interpolate  :      0.05s CPU      0.01s WALL (      13 calls)
+     calbec       :      0.00s CPU      0.00s WALL (      32 calls)
+     fft          :      0.42s CPU      0.42s WALL (     510 calls)
+     ffts         :      0.00s CPU      0.00s WALL (      13 calls)
+     fftw         :      0.02s CPU      0.02s WALL (     228 calls)
+     interpolate  :      0.01s CPU      0.01s WALL (      13 calls)
      davcio       :      0.00s CPU      0.00s WALL (       1 calls)
 
 
-     PWSCF        :     3.36s CPU         2.73s WALL
+     PWSCF        :     2.72s CPU         2.90s WALL
 
 
-   This run was terminated on:  19:40:48   2Oct2016            
+   This run was terminated on:  20:39:50   5Feb2017            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
