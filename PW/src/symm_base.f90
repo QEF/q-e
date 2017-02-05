@@ -111,6 +111,8 @@ SUBROUTINE set_sym_bl ( )
   USE matrix_inversion
   IMPLICIT NONE
   !
+  CHARACTER(LEN=6), EXTERNAL :: int_to_char
+  !
   ! sin3 = sin(pi/3), cos3 = cos(pi/3), msin3 = -sin(pi/3), mcos3 = -cos(pi/3)
   !
   REAL(DP), PARAMETER :: sin3 = 0.866025403784438597d0, cos3 = 0.5d0, &
@@ -313,8 +315,9 @@ SUBROUTINE set_sym_bl ( )
   IF ( .not. is_group ( nrot ) ) THEN
   !    This happens for instance for an hexagonal lattice with one axis 
   !    oriented at 15 degrees from the x axis, the other along (-1,1,0)
-      WRITE (stdout, '(80("-"),/,"NOTICE: Symmetry group for Bravais lattice &
-     & is not a group - symmetries are disabled",/,80("-"))' )
+      CALL infomsg('set_sym_bl', 'NOTICE: Symmetry group for Bravais lattice &
+      &is not a group (' // TRIM(int_to_char(nrot)) // &
+      &') - symmetries are disabled')
       nrot = 1
   ENDIF
   !
