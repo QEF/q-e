@@ -4077,7 +4077,8 @@ try_cpp="cpp"
 
 case "$arch:$cc" in
 *:pgcc )
-        try_cflags="-fast"
+        # Do I need preprocessing here?
+        try_cflags="-fast -Mpreprocess"
         ;;
 # pathcc -E seems to give problems when preprocessing iotk
 #*:pathcc )
@@ -5372,7 +5373,7 @@ fi
 try_f77="$f90"
 
 case "$arch:$f90_flavor" in
-*:pgf90 )
+*:pgf* )
         try_f77="pgf77 $f90"
         ;;
 aix:*xlf*_r )
@@ -5747,13 +5748,13 @@ ia32:pgf* | ia64:pgf* | x86_64:pgf* )
 	    try_fflags_nomain="-Mnomain"
         try_fflags="-fast -r8"
         try_fflags_openmp="-mp"
-        try_f90flags="-fast -r8 -Mcache_align"
+        try_f90flags="-fast -r8 -Mcache_align -Mpreprocess"
         try_fflags_noopt="-O0"
         try_ldflags=""
         try_ldflags_openmp="-mp"
         try_ldflags_static="-Bstatic"
         try_dflags="$try_dflags -D__PGI"
-        have_cpp=0
+        have_cpp=1
         ;;
 ia32:path* | ia64:path* | x86_64:path* )
         try_fflags="-march=auto -O2"
@@ -12321,7 +12322,7 @@ return H5Fcreate ();
   return 0;
 }
 _ACEOF
-for ac_lib in '' hdf5_fortran; do
+for ac_lib in '' hdf5 hdf5_fortran; do
   if test -z "$ac_lib"; then
     ac_res="none required"
   else
