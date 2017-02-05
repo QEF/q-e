@@ -71,13 +71,13 @@ ia32:pgf* | ia64:pgf* | x86_64:pgf* )
 	    try_fflags_nomain="-Mnomain"
         try_fflags="-fast -r8"
         try_fflags_openmp="-mp"
-        try_f90flags="-fast -r8 -Mcache_align"
+        try_f90flags="-fast -r8 -Mcache_align -Mpreprocess"
         try_fflags_noopt="-O0"
         try_ldflags=""
         try_ldflags_openmp="-mp"
         try_ldflags_static="-Bstatic"
         try_dflags="$try_dflags -D__PGI"
-        have_cpp=0
+        have_cpp=1
         ;;
 ia32:path* | ia64:path* | x86_64:path* )
         try_fflags="-march=auto -O2"

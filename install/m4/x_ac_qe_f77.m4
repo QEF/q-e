@@ -6,7 +6,7 @@ AC_DEFUN([X_AC_QE_F77], [
 try_f77="$f90"
 
 case "$arch:$f90_flavor" in
-*:pgf90 )
+*:pgf* )
         try_f77="pgf77 $f90"
         ;;
 aix:*xlf*_r )
