@@ -60,6 +60,7 @@ MODULE io_files
   INTEGER :: iunhub      = 13 ! unit for saving Hubbard-U atomic wfcs 
   INTEGER :: iunsat      = 14 ! unit for saving (orthogonal) atomic wfcs * S
   INTEGER :: iunmix      = 15 ! unit for saving mixing information
+  INTEGER :: iunwfc_exx  = 16 ! unit with exx wavefunctions
   !
   INTEGER :: iunexit     = 26 ! unit for a soft exit  
   INTEGER :: iunupdate   = 27 ! unit for saving old positions (extrapolation)

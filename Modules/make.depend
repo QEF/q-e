@@ -176,9 +176,13 @@ mp_base.o : parallel_include.o
 mp_diag.o : mp.o
 mp_diag.o : mp_world.o
 mp_diag.o : parallel_include.o
+mp_exx.o : mp.o
+mp_exx.o : mp_bands.o
+mp_exx.o : parallel_include.o
 mp_global.o : command_line_options.o
 mp_global.o : mp.o
 mp_global.o : mp_bands.o
+mp_global.o : mp_exx.o
 mp_global.o : mp_diag.o
 mp_global.o : mp_images.o
 mp_global.o : mp_pools.o

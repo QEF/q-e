@@ -130,6 +130,15 @@
        IF( ALLOCATED( nlm ) ) DEALLOCATE( nlm )
      END SUBROUTINE deallocate_gvect
 
+     SUBROUTINE deallocate_gvect_exx()
+       IF( ALLOCATED( gg ) ) DEALLOCATE( gg )
+       IF( ALLOCATED( g ) )  DEALLOCATE( g )
+       IF( ALLOCATED( mill ) ) DEALLOCATE( mill )
+       IF( ALLOCATED( igtongl ) ) DEALLOCATE( igtongl )
+       IF( ALLOCATED( ig_l2g ) ) DEALLOCATE( ig_l2g )
+       IF( ALLOCATED( nl ) ) DEALLOCATE( nl )
+       IF( ALLOCATED( nlm ) ) DEALLOCATE( nlm )
+     END SUBROUTINE deallocate_gvect_exx
 !=----------------------------------------------------------------------------=!
    END MODULE gvect
 !=----------------------------------------------------------------------------=!

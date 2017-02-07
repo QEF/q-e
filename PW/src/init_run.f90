@@ -51,9 +51,6 @@ SUBROUTINE init_run()
   !
   CALL data_structure( gamma_only )
   !
-  IF ( dft_is_hybrid() .AND. dtgs%have_task_groups ) &
-     CALL errore ('init_run', '-ntg option incompatible with EXX',1)
-  !
   ! ... print a summary and a memory estimate before starting allocating
   !
   CALL summary()

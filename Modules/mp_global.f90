@@ -22,6 +22,7 @@ MODULE mp_global
   USE mp_pools
   USE mp_bands
   USE mp_bands_TDDFPT
+  USE mp_exx
   USE mp_diag
   USE mp_orthopools
   !
@@ -79,11 +80,17 @@ CONTAINS
     ! Init orthopools is done during EXX bootstrap but, if they become more used, do it here:
     ! CALL mp_start_orthopools ( intra_image_comm )
     CALL mp_start_bands ( nband_, ntg_, intra_pool_comm )
+    CALL mp_start_exx ( nband_, ntg_, intra_pool_comm )
     !
     do_diag_in_band = .FALSE.
     IF ( PRESENT(diag_in_band_group) ) do_diag_in_band = diag_in_band_group
     !
-    IF( do_diag_in_band ) THEN
+    IF( negrp.gt.1 ) THEN
+       ! if using exx groups from mp_exx, revert to the old diag method
+       num_groups = npool_*nimage_
+       group_id = my_pool_id + my_image_id * npool_
+       my_comm = intra_bgrp_comm
+    ELSE IF( do_diag_in_band ) THEN
        ! used to be one diag group per bgrp
        ! with strict hierarchy: POOL > BAND > DIAG
        num_groups = npool_* nimage_ * nband_

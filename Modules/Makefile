@@ -50,6 +50,7 @@ mp.o \
 mp_bands.o \
 mp_base.o \
 mp_diag.o \
+mp_exx.o \
 mp_global.o \
 mp_images.o \
 mp_pools.o \
