@@ -1,5 +1,5 @@
 
-     Program DYNMAT v.6.beta (svn rev. 13009) starts on 23Sep2016 at 14:38:27 
+     Program DYNMAT v.6.0 (svn rev. 13188M) starts on  7Dec2016 at 16:55:32 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -8,52 +8,40 @@
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
-           HOST :    @host@
-           ARCH :    x86_64
-             CC :    cc
-            CPP :    cpp
-            F90 :    mpif90
-            F77 :    gfortran
-         DFLAGS :    -D__GFORTRAN -D__STD_F95 -D__FFTW -D__MPI
-      BLAS LIBS :    
-    LAPACK LIBS :    $(TOPDIR)/LAPACK/liblapack.a $(TOPDIR)/LAPACK/libblas.a
-       FFT LIBS :    
-      MASS LIBS :    
-
      Parallel version (MPI), running on     1 processors
 
      Reading Dynamical Matrix from file dmat.co2
      ...Force constants read
      ...epsilon and Z* read
-     Acoustic Sum Rule: || Z*(ASR) - Z*(orig)|| =    4.846100E-01
-     Acoustic Sum Rule: ||dyn(ASR) - dyn(orig)||=    2.150695E+00
+     Acoustic Sum Rule: || Z*(ASR) - Z*(orig)|| =    4.846117E-01
+     Acoustic Sum Rule: ||dyn(ASR) - dyn(orig)||=    2.150182E+00
      A direction for q was not specified:TO-LO splitting will be absent
      Max |d(i,j)-d*(j,i)| =  0.000795
-     Max |d(i,j)-d*(j,i)|/|d(i,j)|:   0.8432%
+     Max |d(i,j)-d*(j,i)|/|d(i,j)|:   0.8418%
 
      Polarizability (A^3 units)
      multiply by 0.971500 for Clausius-Mossotti correction
-         3.208339    1.105333   -0.000272
-         1.105333    3.208339   -0.000272
-         0.000036    0.000036    2.126503
+         3.208344    1.105348   -0.000271
+         1.105348    3.208344   -0.000271
+         0.000036    0.000036    2.126492
 
      IR activities are in (D/A)^2/amu units
 
 # mode   [cm-1]    [THz]      IR
-    1  -1245.21  -37.3304    0.0723
-    2   -182.03   -5.4572    0.0000
-    3    -32.91   -0.9867    0.0000
+    1  -1245.04  -37.3253    0.0723
+    2   -182.01   -5.4566    0.0000
+    3    -32.91   -0.9866    0.0000
     4     -0.60   -0.0181    0.0000
-    5     22.80    0.6835    0.0000
-    6    552.06   16.5504    0.0465
-    7    622.17   18.6523    0.4205
-    8   1324.22   39.6992    0.0057
-    9   2360.34   70.7611   13.0478
+    5     22.80    0.6834    0.0000
+    6    552.02   16.5490    0.0464
+    7    622.73   18.6690    0.4205
+    8   1324.46   39.7064    0.0059
+    9   2360.51   70.7662   13.0487
 
      DYNMAT       :     0.00s CPU         0.00s WALL
 
 
-   This run was terminated on:  14:38:27  23Sep2016            
+   This run was terminated on:  16:55:32   7Dec2016            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

@@ -1,8 +1,8 @@
 &CONTROL
   calculation  = "scf",
   prefix       = "ZNO",
-  pseudo_dir   = "/home/pietro/trunk/espresso/pseudo",
-  outdir       = "/home/pietro/trunk/espresso/tempdir",
+  pseudo_dir   = "/home/pietro/espresso-svn/pseudo",
+  outdir       = "/home/pietro/espresso-svn/tempdir",
 /
 &SYSTEM
   ibrav=0, celldm(1) =6.330582528, nat=4, ntyp= 2,

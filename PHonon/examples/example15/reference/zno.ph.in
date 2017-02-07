@@ -4,7 +4,7 @@ Normal modes for Wurtzite
   prefix='ZNO',
   amass(1)=65.409,
   amass(2)=15.999,
-  outdir='/home/pietro/trunk/espresso/tempdir'
+  outdir='/home/pietro/espresso-svn/tempdir'
   epsil=.false.,
   ! lraman=.true.
   trans=.true.,

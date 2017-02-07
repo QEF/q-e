@@ -1,5 +1,5 @@
 
-     Program PHCG v.6.beta (svn rev. 13009) starts on 23Sep2016 at 14:13:29 
+     Program PHCG v.6.0 (svn rev. 13188M) starts on  7Dec2016 at 16:43:28 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -8,23 +8,11 @@
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
-           HOST :    @host@
-           ARCH :    x86_64
-             CC :    cc
-            CPP :    cpp
-            F90 :    mpif90
-            F77 :    gfortran
-         DFLAGS :    -D__GFORTRAN -D__STD_F95 -D__FFTW -D__MPI
-      BLAS LIBS :    
-    LAPACK LIBS :    $(TOPDIR)/LAPACK/liblapack.a $(TOPDIR)/LAPACK/libblas.a
-       FFT LIBS :    
-      MASS LIBS :    
-
-     Parallel version (MPI), running on     2 processors
-     R & G space division:  proc/nbgrp/npool/nimage =       2
+     Parallel version (MPI), running on     4 processors
+     R & G space division:  proc/nbgrp/npool/nimage =       4
 
      Reading data from directory:
-     /home/pietro/trunk/espresso/tempdir/sih4.save
+     /home/pietro/espresso-svn/tempdir/sih4.save
 
    Info: using nr1, nr2, nr3 values from input
 
@@ -40,8 +28,8 @@
      Parallelization info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
-     Min         156     156     42                 1859     1859     229
-     Max         157     157     43                 1860     1860     230
+     Min          78      78     20                  927      927     113
+     Max          79      79     22                  932      932     116
      Sum         313     313     85                 3719     3719     459
 
 
@@ -51,7 +39,7 @@
  ***  pol. #   3 :  15 iterations
 
 ATOMIC_POSITIONS
-Si       0.000000000   0.000000000   0.000000000
+Si       0.000000000   0.000000000   0.000000000 ****   0****
 H        0.128530744   0.128530744   0.128530744
 H       -0.128530744  -0.128530744   0.128530744
 H       -0.128530744   0.128530744  -0.128530744
@@ -60,13 +48,13 @@ H        0.128530744  -0.128530744  -0.128530744
 
 
      dielectric constant                    polarizability (A^3)
-  4.871073  0.000001 -0.000000       0.861004E+01  0.338112E-05 -0.431428E-06
-  0.000001  4.871073  0.000001       0.338112E-05  0.861004E+01  0.372134E-05
- -0.000000  0.000001  4.871068      -0.431428E-06  0.372134E-05  0.861004E+01
+  4.871083 -0.000000 -0.000001       0.861005E+01 -0.442805E-06 -0.438798E-05
+ -0.000000  4.871083 -0.000001      -0.442805E-06  0.861005E+01 -0.513857E-05
+ -0.000001 -0.000001  4.871078      -0.438798E-05 -0.513857E-05  0.861005E+01
 
      z*( 1)   -0.4487   -0.0000    0.0000
-              -0.0000   -0.4487   -0.0000
-               0.0000   -0.0000   -0.4487
+              -0.0000   -0.4487    0.0000
+               0.0000    0.0000   -0.4487
 
      z*( 2)   -1.1346   -0.5787   -0.5787
               -0.5787   -1.1346   -0.5787
@@ -101,35 +89,35 @@ H        0.128530744  -0.128530744  -0.128530744
  ***  mode #  13 : using symmetry
  ***  mode #  14 : using symmetry
  ***  mode #  15 : using symmetry
-  Symmetry violation  sum_ij |D_ij-D_ji| :       0.000058
-  ASR violation  sum_i |D_ij| :       0.000045
+  Symmetry violation  sum_ij |D_ij-D_ji| :       0.000066
+  ASR violation  sum_i |D_ij| :       0.000049
      diagonalizing the dynamical matrix ...
 
 
  **************************************************************************
-     omega(  1) =-15.335257 [THz] =-511.529112 [cm-1]
-     omega(  2) =-15.335250 [THz] =-511.528886 [cm-1]
-     omega(  3) =-15.335245 [THz] =-511.528722 [cm-1]
-     omega(  4) = -0.000001 [THz] =  -0.000030 [cm-1]
-     omega(  5) = -0.000000 [THz] =  -0.000015 [cm-1]
-     omega(  6) =  0.000000 [THz] =   0.000013 [cm-1]
-     omega(  7) = 22.212304 [THz] = 740.922696 [cm-1]
-     omega(  8) = 22.212314 [THz] = 740.923026 [cm-1]
-     omega(  9) = 27.099349 [THz] = 903.936970 [cm-1]
-     omega( 10) = 27.099353 [THz] = 903.937103 [cm-1]
-     omega( 11) = 27.099355 [THz] = 903.937195 [cm-1]
-     omega( 12) = 75.527697 [THz] =2519.332786 [cm-1]
-     omega( 13) = 75.527697 [THz] =2519.332804 [cm-1]
-     omega( 14) = 75.527699 [THz] =2519.332842 [cm-1]
-     omega( 15) = 82.471662 [THz] =2750.958530 [cm-1]
+     omega(  1) =-15.335420 [THz] =-511.534551 [cm-1]
+     omega(  2) =-15.335414 [THz] =-511.534365 [cm-1]
+     omega(  3) =-15.335408 [THz] =-511.534150 [cm-1]
+     omega(  4) =  0.000001 [THz] =   0.000022 [cm-1]
+     omega(  5) =  0.000001 [THz] =   0.000027 [cm-1]
+     omega(  6) =  0.000001 [THz] =   0.000030 [cm-1]
+     omega(  7) = 22.212276 [THz] = 740.921776 [cm-1]
+     omega(  8) = 22.212296 [THz] = 740.922434 [cm-1]
+     omega(  9) = 27.099308 [THz] = 903.935602 [cm-1]
+     omega( 10) = 27.099311 [THz] = 903.935726 [cm-1]
+     omega( 11) = 27.099319 [THz] = 903.935975 [cm-1]
+     omega( 12) = 75.527734 [THz] =2519.334032 [cm-1]
+     omega( 13) = 75.527735 [THz] =2519.334052 [cm-1]
+     omega( 14) = 75.527740 [THz] =2519.334216 [cm-1]
+     omega( 15) = 82.471709 [THz] =2750.960112 [cm-1]
  **************************************************************************
 
-     PHCG         :     0.24s CPU         0.26s WALL
+     PHCG         :     0.20s CPU         0.24s WALL
 
-     cg_readin    :      0.08s CPU      0.10s WALL (       1 calls)
+     cg_readin    :      0.09s CPU      0.10s WALL (       1 calls)
      init_vloc    :      0.00s CPU      0.00s WALL (       2 calls)
-     fft          :      0.04s CPU      0.03s WALL (     232 calls)
-     fft_scatter  :      0.01s CPU      0.02s WALL (    1498 calls)
+     fft          :      0.05s CPU      0.03s WALL (     232 calls)
+     fft_scatter  :      0.02s CPU      0.03s WALL (    1498 calls)
      v_of_rho     :      0.00s CPU      0.00s WALL (       1 calls)
      v_xc         :      0.00s CPU      0.00s WALL (       1 calls)
      v_h          :      0.00s CPU      0.00s WALL (       1 calls)
@@ -137,23 +125,23 @@ H        0.128530744  -0.128530744  -0.128530744
      cg_setup     :      0.00s CPU      0.01s WALL (       1 calls)
      davcio       :      0.00s CPU      0.00s WALL (       1 calls)
      init_us_2    :      0.00s CPU      0.00s WALL (       1 calls)
-     dvpsi_e      :      0.02s CPU      0.02s WALL (       3 calls)
+     dvpsi_e      :      0.01s CPU      0.02s WALL (       3 calls)
      stres_us31   :      0.00s CPU      0.00s WALL (       3 calls)
      stres_us32   :      0.00s CPU      0.00s WALL (       3 calls)
      stres_us33   :      0.00s CPU      0.00s WALL (       3 calls)
      stres_us34   :      0.00s CPU      0.00s WALL (       3 calls)
      calbec       :      0.00s CPU      0.00s WALL (     318 calls)
-     cgsolve      :      0.12s CPU      0.12s WALL (       9 calls)
-     h_h          :      0.02s CPU      0.02s WALL (      45 calls)
+     cgsolve      :      0.08s CPU      0.11s WALL (       9 calls)
+     h_h          :      0.01s CPU      0.02s WALL (      45 calls)
      vloc_psi     :      0.05s CPU      0.06s WALL (     186 calls)
-     fftw         :      0.09s CPU      0.10s WALL (    1266 calls)
+     fftw         :      0.06s CPU      0.09s WALL (    1266 calls)
      add_vuspsi   :      0.00s CPU      0.00s WALL (     132 calls)
-     solve_e      :      0.05s CPU      0.05s WALL (       1 calls)
-     a_h          :      0.10s CPU      0.10s WALL (      87 calls)
+     solve_e      :      0.04s CPU      0.04s WALL (       1 calls)
+     a_h          :      0.08s CPU      0.08s WALL (      87 calls)
      dgradcorr    :      0.00s CPU      0.00s WALL (      87 calls)
      dielec       :      0.00s CPU      0.00s WALL (       1 calls)
-     dvpsi_kb     :      0.03s CPU      0.03s WALL (      54 calls)
-     solve_ph     :      0.08s CPU      0.08s WALL (       1 calls)
+     dvpsi_kb     :      0.02s CPU      0.02s WALL (      54 calls)
+     solve_ph     :      0.06s CPU      0.07s WALL (       1 calls)
      dynmat_init  :      0.00s CPU      0.00s WALL (       1 calls)
      rhod2vkb     :      0.00s CPU      0.00s WALL (       1 calls)
      drhodv       :      0.02s CPU      0.02s WALL (       3 calls)

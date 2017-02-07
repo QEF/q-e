@@ -112,7 +112,7 @@ cat > al.scf.fit.in << EOF
  &system
     ibrav=  2, celldm(1) =7.5, nat= 1, ntyp= 1,
     ecutwfc =15.0,
-    occupations='smearing', smearing='methfessel-paxton', degauss=0.05,
+    occupations='smearing', smearing='mv', degauss=0.05,
     la2F = .true.,
  /
  &electrons
@@ -144,7 +144,7 @@ cat > al.scf.in << EOF
  &system
     ibrav=  2, celldm(1) =7.5, nat= 1, ntyp= 1,
     ecutwfc =15.0,
-    occupations='smearing', smearing='methfessel-paxton', degauss=0.05
+    occupations='smearing', smearing='mv', degauss=0.05
  /
  &electrons
     conv_thr =  1.0d-8

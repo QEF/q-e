@@ -1,5 +1,5 @@
 
-     Program Q2R v.6.beta (svn rev. 13009) starts on 23Sep2016 at 14:17:15 
+     Program Q2R v.6.0 (svn rev. 13188M) starts on  7Dec2016 at 16:44:46 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -8,20 +8,8 @@
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
-           HOST :    @host@
-           ARCH :    x86_64
-             CC :    cc
-            CPP :    cpp
-            F90 :    mpif90
-            F77 :    gfortran
-         DFLAGS :    -D__GFORTRAN -D__STD_F95 -D__FFTW -D__MPI
-      BLAS LIBS :    
-    LAPACK LIBS :    $(TOPDIR)/LAPACK/liblapack.a $(TOPDIR)/LAPACK/libblas.a
-       FFT LIBS :    
-      MASS LIBS :    
-
-     Parallel version (MPI), running on     2 processors
-     R & G space division:  proc/nbgrp/npool/nimage =       2
+     Parallel version (MPI), running on     4 processors
+     R & G space division:  proc/nbgrp/npool/nimage =       4
 
      reading grid info from file al.disp.dyn0    
   reading force constants from file al.disp.dyn1
@@ -110,10 +98,10 @@
 
       fft-check success (sum of imaginary terms < 10^-12)
 
-     Q2R          :     0.00s CPU         0.00s WALL
+     Q2R          :     0.01s CPU         0.01s WALL
 
 
-   This run was terminated on:  14:17:15  23Sep2016            
+   This run was terminated on:  16:44:46   7Dec2016            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

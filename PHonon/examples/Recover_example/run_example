@@ -182,7 +182,7 @@ cat > ni.scf.in << EOF
     nspin=2,
     starting_magnetization(1)=0.5,
     degauss=0.02,
-    smearing='mp',
+    smearing='mv',
     occupations='smearing',
     nr1=27,
     nr2=27,
@@ -261,7 +261,7 @@ cat > Cu.scf_pbe.in << EOF
  &system
     ibrav = 2, celldm(1) =6.90, nat=  1, ntyp= 1,
     occupations='smearing',
-    smearing='mp',
+    smearing='mv',
     degauss=0.01,
     ecutwfc = 30.0
     ecutrho = 700.0
@@ -336,7 +336,7 @@ cat > Au.scf_rel.in << EOF
     noncolin=.true.,
     lspinorb=.true.,
     occupations='smearing',
-    smearing='mp',
+    smearing='mv',
     degauss=0.04,
     ecutwfc = 35.0
     ecutrho = 400.0
@@ -407,7 +407,7 @@ cat > Cu.scf_pbe.in << EOF
  &system
     ibrav = 2, celldm(1) =6.90, nat=  1, ntyp= 1,
     occupations='smearing',
-    smearing='mp',
+    smearing='mv',
     degauss=0.01,
     ecutwfc = 30.0
     ecutrho = 700.0

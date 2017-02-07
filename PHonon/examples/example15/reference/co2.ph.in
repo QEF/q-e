@@ -4,7 +4,7 @@ Normal modes for CO2
   prefix='CO2',
   amass(1)=12.010,
   amass(2)=15.999,
-  outdir='/home/pietro/trunk/espresso/tempdir'
+  outdir='/home/pietro/espresso-svn/tempdir'
   epsil=.true.,
   trans=.true.,
   asr=.true.

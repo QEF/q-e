@@ -1,23 +1,25 @@
 
-     Program PHONON v.5.0.2 starts on 25Jan2013 at 10:46:39 
+     Program PHONON v.6.0 (svn rev. 13286) starts on  7Feb2017 at 14:28:29 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
          "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
           URL http://www.quantum-espresso.org", 
      in publications or presentations arising from this work. More details at
-     http://www.quantum-espresso.org/quote.php
+     http://www.quantum-espresso.org/quote
 
-     Parallel version (MPI), running on     4 processors
-     R & G space division:  proc/nbgrp/npool/nimage =       4
+     Parallel version (MPI), running on     2 processors
+     R & G space division:  proc/nbgrp/npool/nimage =       2
+
+     Reading data from directory:
+     /home/pietro/espresso-svn/tempdir/1.4/alas.save
 
    Info: using nr1, nr2, nr3 values from input
 
-   Info: using nr1s, nr2s, nr3s values from input
+   Info: using nr1, nr2, nr3 values from input
 
      IMPORTANT: XC functional enforced from input :
-     Exchange-correlation      =  SLA  PZ   NOGX NOGC ( 1 1 0 0 0)
-     EXX-fraction              =        0.00
+     Exchange-correlation      =  SLA  PZ   NOGX NOGC ( 1  1  0  0 0 0)
      Any further DFT definition will be discarded
      Please, verify this is what you really want
 
@@ -25,50 +27,17 @@
      Parallelization info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
-     Min          60      60     20                  610      610     114
-     Max          61      61     22                  613      613     115
+     Min         120     120     42                 1221     1221     229
+     Max         121     121     43                 1224     1224     230
      Sum         241     241     85                 2445     2445     459
 
-        1 /   8 q-points for this run, from  1 to  1:
-       N       xq(1)         xq(2)         xq(3) 
-       1   0.000000000   0.000000000   0.000000000
-       2  -0.250000000   0.250000000  -0.250000000
-       3   0.500000000  -0.500000000   0.500000000
-       4   0.000000000   0.500000000   0.000000000
-       5   0.750000000  -0.250000000   0.750000000
-       6   0.500000000   0.000000000   0.500000000
-       7   0.000000000  -1.000000000   0.000000000
-       8  -0.500000000  -1.000000000   0.000000000
+
+     The code stops because there is nothing to do
+
+     PHONON       :     0.10s CPU         0.11s WALL
 
 
-     PHONON       :     0.15s CPU         0.17s WALL
-
-     INITIALIZATION: 
-
-     init_vloc    :      0.00s CPU      0.00s WALL (       1 calls)
-     init_us_1    :      0.01s CPU      0.01s WALL (       1 calls)
-
-     DYNAMICAL MATRIX:
-
-
-
-
-
-
-
-
-
-
-
-
-      General routines
-     fft          :      0.00s CPU      0.00s WALL (       3 calls)
-
-
-     PHONON       :     0.15s CPU         0.17s WALL
-
-
-   This run was terminated on:  10:46:39  25Jan2013            
+   This run was terminated on:  14:28:29   7Feb2017            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

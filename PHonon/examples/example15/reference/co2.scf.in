@@ -1,8 +1,8 @@
 &CONTROL
   calculation  = "scf",
   prefix       = "CO2",
-  pseudo_dir   = "/home/pietro/trunk/espresso/pseudo",
-  outdir       = "/home/pietro/trunk/espresso/tempdir",
+  pseudo_dir   = "/home/pietro/espresso-svn/pseudo",
+  outdir       = "/home/pietro/espresso-svn/tempdir",
 /
 &SYSTEM
   ibrav     = 1,

@@ -5,7 +5,8 @@ phonons of AlAs
   ldisp=.true.,
   nq1=4, nq2=4, nq3=4
   only_init=.true.,
+  recover=.true.
   lqdir=.true.,
-  outdir='/u/cm/dalcorso/tmp/',
+  outdir='/home/pietro/espresso-svn/tempdir/',
   fildyn='alas.dyn.xml',
  /

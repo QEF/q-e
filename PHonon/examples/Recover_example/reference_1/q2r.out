@@ -1,17 +1,17 @@
 
-     Program Q2R v.5.0.2 starts on 25Jan2013 at 11: 9:41 
+     Program Q2R v.6.0 (svn rev. 13286) starts on  7Feb2017 at 15: 0:23 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
          "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
           URL http://www.quantum-espresso.org", 
      in publications or presentations arising from this work. More details at
-     http://www.quantum-espresso.org/quote.php
+     http://www.quantum-espresso.org/quote
 
-     Parallel version (MPI), running on     4 processors
-     R & G space division:  proc/nbgrp/npool/nimage =       4
+     Parallel version (MPI), running on     2 processors
+     R & G space division:  proc/nbgrp/npool/nimage =       2
 
-     reading grid info from file al.dyn0
+     reading grid info from file al.dyn0    
   reading force constants from file al.dyn1
   Dielectric Tensor not found
   nqs=            1
@@ -151,10 +151,10 @@
 
       fft-check success (sum of imaginary terms < 10^-12)
 
-     Q2R          :     0.04s CPU         0.04s WALL
+     Q2R          :     0.01s CPU         0.02s WALL
 
 
-   This run was terminated on:  11: 9:41  25Jan2013            
+   This run was terminated on:  15: 0:23   7Feb2017            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
