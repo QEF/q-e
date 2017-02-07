@@ -12,6 +12,8 @@ Incompatible changes in svn version:
 
 Fixed in svn version
 
+  * PW: real instead of complex constants in two ZGEMM calls could lead
+        to NaN's in DFT_U forces with some compilers (e.g. PGI) (r13289)
   * pwi2xsf utility, also used in XCrysDen: various fixes (r13197)
   * PP: incorrect results in "projwfc.x" with PAW projection due to a 
         missing line (r13121); crash in pw_export.x" due to dumb error (r13189)
