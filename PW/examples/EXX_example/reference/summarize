@@ -1,10 +1,10 @@
-grep -e ! n.pbe0.1nlcc.out-80  | tail -1 | awk '{print $5}' > N
-grep -e ! n2.pbe0.1nlcc.out-80 | tail -1 | awk '{print $5}' > N2
+grep -e ! n.gaupbe.1nlcc.out-80  | tail -1 | awk '{print $5}' > N
+grep -e ! n2.gaupbe.1nlcc.out-80 | tail -1 | awk '{print $5}' > N2
 paste N2 N  | awk '{be= ($1-$2*2.0) * 13.6058 * 23.06; print "N2 : ",be}'
-grep -e ! o.pbe0.1nlcc.out-80  | tail -1 | awk '{print $5}' > O
-grep -e ! o2.pbe0.1nlcc.out-80 | tail -1 | awk '{print $5}' > O2
+grep -e ! o.gaupbe.1nlcc.out-80  | tail -1 | awk '{print $5}' > O
+grep -e ! o2.gaupbe.1nlcc.out-80 | tail -1 | awk '{print $5}' > O2
 paste O2 O  | awk '{be= ($1-$2*2.0) * 13.6058 * 23.06 ; print "O2 : ",be}'
-grep -e ! c.pbe0.1nlcc.out-80  | tail -1 | awk '{print $5}' > C
-grep -e ! co.pbe0.1nlcc.out-80 | tail -1 | awk '{print $5}' > CO
+grep -e ! c.gaupbe.1nlcc.out-80  | tail -1 | awk '{print $5}' > C
+grep -e ! co.gaupbe.1nlcc.out-80 | tail -1 | awk '{print $5}' > CO
 paste CO O C | awk '{be= ($1-$2-$3) * 13.6058 * 23.06; print "CO : ",be}'
 rm C N O CO O2 N2

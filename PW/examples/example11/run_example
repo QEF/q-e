@@ -101,8 +101,8 @@ cat > Fe.scf_pbe.in << EOF
     lspinorb=.true.
     starting_magnetization(1)=0.5,
     occupations='smearing',
-    smearing='mp',
-    degauss=0.04,
+    smearing='mv',
+    degauss=0.025,
     ecutwfc =45.0, 
     ecutrho =300.0
  /
@@ -141,8 +141,8 @@ cat > Fe.band_pbe.in << EOF
     lspinorb=.true.
     starting_magnetization(1)=0.5,
     occupations='smearing',
-    smearing='mp',
-    degauss=0.04,
+    smearing='mv',
+    degauss=0.025,
     ecutwfc =45.0, 
     ecutrho =300.0
  /
