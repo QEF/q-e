@@ -33,6 +33,9 @@ MODULE environment
 
   PUBLIC :: environment_start
   PUBLIC :: environment_end
+  PUBLIC :: opening_message
+  PUBLIC :: compilation_info
+  PUBLIC :: parallel_info
 
   !==-----------------------------------------------------------------------==!
 CONTAINS
