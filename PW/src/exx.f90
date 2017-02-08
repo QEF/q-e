@@ -1484,9 +1484,11 @@ MODULE exx
                 !   >>>> add augmentation in REAL SPACE here
                 IF(okvan .and. tqr) THEN
                    IF(jbnd>=jstart) &
-                        CALL addusxx_r(exx_fft,rhoc(:,ii),_CX(becxx(ikq)%r(:,jbnd)), _CX(becpsi%r(:,ibnd)))
+                        CALL addusxx_r(exx_fft,rhoc(:,ii), &
+                       _CX(becxx(ikq)%r(:,jbnd)), _CX(becpsi%r(:,ibnd)))
                    IF(jbnd<jend) &
-                        CALL addusxx_r(exx_fft,rhoc(:,ii),_CY(becxx(ikq)%r(:,jbnd+1)),_CX(becpsi%r(:,ibnd)))
+                        CALL addusxx_r(exx_fft,rhoc(:,ii), &
+                       _CY(becxx(ikq)%r(:,jbnd+1)),_CX(becpsi%r(:,ibnd)))
                 ENDIF
                 !
                 CALL fwfft ('Custom', rhoc(:,ii), exx_fft%dfftt)
