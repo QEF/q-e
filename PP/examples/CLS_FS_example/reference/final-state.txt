@@ -1,8 +1,8 @@
 
-GS energy in the bulk configuration: -233.51395412 (Ry)
-GS energy in the surface configuration: -233.56515587 (Ry)
-GS energy in the layer(-1) configuration: -233.53749320 (Ry)
+GS energy in the bulk configuration: -233.50320695 (Ry)
+GS energy in the surface configuration: -233.55762890 (Ry)
+GS energy in the layer(-1) configuration: -233.52789398 (Ry)
 
 ------------------------------------------
-FS shift for the surface atom: .69634380 (eV)
-FS shift for the layer(-1) atom: .32013148 (eV)
+FS shift for the surface atom: .74013852 (eV)
+FS shift for the layer(-1) atom: .33574360 (eV)

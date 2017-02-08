@@ -1,6 +1,6 @@
 &inputpp
     prefix='ni+co',
-    outdir='/home/degironc/tmp',
+    outdir='/home/pietro/espresso-svn/tempdir',
     filplot = 'ni+co.vpot'
     plot_num= 11
 /

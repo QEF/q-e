@@ -98,7 +98,7 @@ Pt
     starting_magnetization=0.0,
     occupations='smearing',
     degauss=0.02,
-    smearing='mp',
+    smearing='mv',
     ecutwfc =30.0,
     ecutrho =250.0,
  /
@@ -137,7 +137,7 @@ Pt
     starting_magnetization=0.0,
     occupations='smearing',
     degauss=0.02,
-    smearing='mp',
+    smearing='mv',
     ecutwfc =30.0,
     ecutrho =250.0,
  /

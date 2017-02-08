@@ -90,7 +90,7 @@ cat > rh011bulk.scf.in << EOF
 &system
     nat=5, ntyp=2,
     ibrav=0, celldm(1)=10.31510000,
-    ecutwfc = 25, occupations='smearing', degauss = 0.03, smearing='mp',
+    ecutwfc = 25, occupations='smearing', degauss = 0.03, smearing='mv',
 /
 &electrons
     mixing_beta = 0.3
@@ -136,7 +136,7 @@ cat > rh011surf.scf.in << EOF
 &system
     nat=5, ntyp=2,
     ibrav=0, celldm(1)=10.31510000,
-    ecutwfc = 25, occupations='smearing', degauss = 0.03, smearing='mp',
+    ecutwfc = 25, occupations='smearing', degauss = 0.03, smearing='mv',
 /
 &electrons
     mixing_beta = 0.3
@@ -181,7 +181,7 @@ cat > rh011layer1.scf.in << EOF
 &system
     nat=5, ntyp=2,
     ibrav=0, celldm(1)=10.31510000,
-    ecutwfc = 25, occupations='smearing', degauss = 0.03, smearing='mp',
+    ecutwfc = 25, occupations='smearing', degauss = 0.03, smearing='mv',
 /
 &electrons
     mixing_beta = 0.3

@@ -2,8 +2,8 @@
     calculation='scf',
     restart_mode='from_scratch',
     prefix='water',
-    pseudo_dir = '/home/degironc/QE/espresso/pseudo',
-    outdir='/home/degironc/tmp'
+    pseudo_dir = '/home/pietro/espresso-svn/pseudo',
+    outdir='/home/pietro/espresso-svn/tempdir'
     
    tefield=.true., 
     dipfield=.true.

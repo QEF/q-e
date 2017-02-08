@@ -183,7 +183,6 @@ WANNIER_AC
  Wannier# 8 2 9
  atom 2
  p 3 1.0
-/
 EOF
 $ECHO "  running the hamiltonian generation...\c"
 $HAM_COMMAND < wannier_hamilt.in > wannier_hamilt.out

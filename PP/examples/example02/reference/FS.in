@@ -1,0 +1,4 @@
+&fermi
+    outdir='/home/pietro/espresso-svn/tempdir/'
+    prefix='ni'
+/

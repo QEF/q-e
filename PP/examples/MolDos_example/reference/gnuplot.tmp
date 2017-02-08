@@ -4,7 +4,7 @@ set term post color solid enh
 set out 'project_chainH2_onto_H2.ps'
 set xlabel "Energy (eV)"
 set ylabel "DOS (states/eV)"
-ef=1.6649
+ef=1.1303
 set xra [-15:5]
 set yzeroaxis
 set style data lines

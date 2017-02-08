@@ -1,21 +1,54 @@
 
-     Program POST-PROC v.4.0 starts ...
-     Today is 28Apr2008 at 16: 2:49 
+     Program POST-PROC v.6.0 (svn rev. 13286) starts on  7Feb2017 at 15:35:50 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     2 processors
+     R & G space division:  proc/nbgrp/npool/nimage =       2
+
+     Reading data from directory:
+     /home/pietro/espresso-svn/tempdir/AlAs110.save
+
+   Info: using nr1, nr2, nr3 values from input
+
+   Info: using nr1, nr2, nr3 values from input
+
+     IMPORTANT: XC functional enforced from input :
+     Exchange-correlation      =  SLA  PZ   NOGX NOGC ( 1  1  0  0 0 0)
+     Any further DFT definition will be discarded
+     Please, verify this is what you really want
+
+
+     Parallelization info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Min         174     174     54                12296    12296    2232
+     Max         175     175     55                12311    12311    2237
+     Sum         349     349    109                24607    24607    4469
+
 
      Calling punch_plot, plot_num =   5
-
-     workfunction     =   -12.9661 +-    13.9602 eV
-     without exchcorr =    -4.4391 +-    12.7455 eV
-
-     Work function written on file workf
-     Planar mean charge written on file charge
      Use the true wfcs
      Sample bias          = -1.0000 eV
 
-     STM:      0.20s cpu time
+     STM:      0.08s cpu time
      Writing data to file  AlAsresm-1.0
      Reading data from file  AlAsresm-1.0
 
      Writing data to be plotted to file AlAs110-1.0
-     Min, Max, imaginary charge:     0.000099    0.025796    0.000000
+     Min, Max, imaginary charge:     0.000099    0.025764    0.000000
      Plot Type: 2D contour             Output format: plotrho.x    
+
+     POST-PROC    :     0.55s CPU         0.56s WALL
+
+
+   This run was terminated on:  15:35:51   7Feb2017            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=

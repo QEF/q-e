@@ -104,7 +104,7 @@ FeO Wustite in LDA
     starting_magnetization(1)= 0.0,
     starting_magnetization(2)= 0.5,
     starting_magnetization(3)=-0.5,
-    occupations='smearing', smearing='gauss', degauss=0.01,
+    occupations='smearing', smearing='mv', degauss=0.01,
     nspin=2,
     lda_plus_u=.true.  Hubbard_U(2)=1.d-8, Hubbard_U(3)=1.d-8,
  /
@@ -152,7 +152,7 @@ FeO Wustite in LDA
     starting_magnetization(1)= 0.0,
     starting_magnetization(2)= 0.5,
     starting_magnetization(3)=-0.5,
-    occupations='smearing', smearing='gauss', degauss=0.01,
+    occupations='smearing', smearing='mv', degauss=0.01,
     nspin=2,
     lda_plus_u=.true.  Hubbard_U(2)=1.d-8, Hubbard_U(3)=1.d-8,
  /
@@ -187,6 +187,7 @@ EOF
 # copy restart directory from SCF run
 test -d $TMP_DIR/feo_af-bands.save && rm -r $TMP_DIR/feo_af-bands.save
 cp -r $TMP_DIR/feo_af.save $TMP_DIR/feo_af-bands.save
+cp -f $TMP_DIR/feo_af.occup $TMP_DIR/feo_af-bands.occup
 #
 $ECHO "  2) running nscf for FeO band structure ...\c"
 $PW_COMMAND < feo_nscf.in > feo_nscf.out
@@ -226,7 +227,8 @@ $ECHO " done"
 # automatically extract Fermi energy from SCF calculation
 eFermi=`grep Fermi feo_LDA.out | awk '{print $5}'`
 # make a link to the projection file using the name expected by plotband.x
-ln -s feo_af-proj.dat.up feo_af-bands.dat.proj
+if test -L feo_af-bands.dat.proj; then rm feo_af-bands.dat.proj; fi
+ln -s feo_af-proj.dat.*up feo_af-bands.dat.proj
 # if feo_af-bands.dat.proj is found, one must supply an additional line with
 # the list of atomic wavefunctions (here, the 3d of both Fe ions)
 cat > feo_plot.in << EOF
@@ -309,7 +311,7 @@ FeO Wustite whithin LDA+U with user defined ns + Wannier
     starting_magnetization(1)= 0.0,
     starting_magnetization(2)= 0.5,
     starting_magnetization(3)=-0.5,
-    occupations='smearing', smearing='gauss', degauss=0.01,
+    occupations='smearing', smearing='mv', degauss=0.01,
     nspin=2,
     lda_plus_u=.true., Hubbard_U(2)=4.3, Hubbard_U(3)=4.3,
     U_projection_type='file'

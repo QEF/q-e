@@ -1,6 +1,6 @@
 &inputpp
     prefix='water',
-    outdir='/home/degironc/tmp',
+    outdir='/home/pietro/espresso-svn/tempdir',
     filplot = 'water.vpot'
     plot_num= 11
 /

@@ -1,32 +1,48 @@
 
-     Program POST-PROC v.4.1CVS starts ...
-     Today is 26Jun2009 at 12:57:26 
-     file O.pbe-rrkjus.UPF: wavefunction(s)  2S renormalized
-     file HUSPBE.RRKJ3: wavefunction(s)  nX renormalized
+     Program POST-PROC v.6.0 (svn rev. 13286) starts on  8Feb2017 at  9:46: 4 
 
-     negative rho (up, down):  0.409E-01 0.000E+00
- 
-     Adding external electric field
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
 
-     Computed dipole along edir(3) : 
-        Dipole                0.7172 au,           1.8230 Debye
-        Dipole field          0.0027 au
- 
-        Potential amp.       -0.0721 Ry
-        Total length         13.5000 bhor
- 
+     Parallel version (MPI), running on     2 processors
+     R & G space division:  proc/nbgrp/npool/nimage =       2
+
+   Info: using nr1, nr2, nr3 values from input
+
+   Info: using nr1, nr2, nr3 values from input
+
+     IMPORTANT: XC functional enforced from input :
+     Exchange-correlation      = SLA -PW  -PBX -PBC - ( 1  4  3  4 0 0)
+     Any further DFT definition will be discarded
+     Please, verify this is what you really want
+
+               file O.pbe-rrkjus.UPF: wavefunction(s)  2S renormalized
+               file HUSPBE.RRKJ3: wavefunction(s)  nX renormalized
+
+     Parallelization info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Min        1072    1072    271                37384    37384    4657
+     Max        1073    1073    274                37389    37389    4658
+     Sum        2145    2145    545                74773    74773    9315
+
+
+     negative rho (up, down):  4.092E-02 0.000E+00
 
      Calling punch_plot, plot_num =  11
- 
-     Adding external electric field
-
-     Computed dipole along edir(3) : 
-        Dipole                0.7172 au,           1.8230 Debye
-        Dipole field          0.0027 au
- 
-        Potential amp.       -0.0721 Ry
-        Total length         13.5000 bhor
- 
      Writing data to file  water.vpot
      Message from routine chdens:
      namelist plot not found or invalid, exiting
+
+     POST-PROC    :     0.36s CPU         0.37s WALL
+
+
+   This run was terminated on:   9:46: 5   8Feb2017            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=

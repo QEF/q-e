@@ -1,8 +1,8 @@
-Input file > Reading    8 bands at   36 k-points
-Range: -5.8100 16.4070eV  Emin, Emax > high-symmetry point:  0.5000 0.5000 0.5000
-high-symmetry point:  0.0000 0.0000 0.0000
-high-symmetry point:  0.0000 0.0000 1.0000
-high-symmetry point:  0.0000 1.0000 1.0000
-high-symmetry point:  0.0000 0.0000 0.0000
-output file (xmgr) > bands in xmgr format written to file sibands.xmgr                                                                                                                                                                                                                                                    
+     Input file > Reading    8 bands at     72 k-points
+Range:   -5.8100   16.4070eV  Emin, Emax > high-symmetry point:  0.5000 0.5000 0.5000   x coordinate   0.0000
+high-symmetry point:  0.0000 0.0000 0.0000   x coordinate   0.8660
+high-symmetry point:  0.0000 1.0000 0.0000   x coordinate   1.8660
+high-symmetry point:  1.0000 1.0000 0.0000   x coordinate   1.8660
+high-symmetry point:  0.0000 0.0000 0.0000   x coordinate   3.2802
+output file (gnuplot/xmgr) > bands in gnuplot/xmgr format written to file sibands.xmgr                                                                                                                                                                                                                                                    
 output file (ps) > Efermi > deltaE, reference E (for tics) bands in PostScript format written to file sibands.ps                                                                                                                                                                                                                                                      

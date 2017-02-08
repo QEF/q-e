@@ -113,7 +113,7 @@ cat <<EOF > chainH2.scf.in
   nbnd      = 20
   nspin     = $nspin
   occupations = 'smearing'
-  smearing = 'mp'
+  smearing = 'mv'
   degauss = 0.01d0
 /
 &ELECTRONS
@@ -164,7 +164,7 @@ cat <<EOF > H2.scf.in
   ecutwfc   = 20.0,
   nspin     = $nspin
   occupations = 'smearing'
-  smearing = 'mp'
+  smearing = 'mv'
   degauss = 0.01d0
 /
 &ELECTRONS
@@ -252,7 +252,7 @@ cat <<EOF > chainH2.bands.in
   nbnd      = 20
   nspin     = $nspin
   occupations = 'smearing'
-  smearing = 'mp'
+  smearing = 'mv'
   degauss = 0.01d0
 /
 &ELECTRONS
@@ -302,7 +302,7 @@ cat <<EOF > H2.bands.in
   ecutwfc   = 20.0,
   nspin     = $nspin
   occupations = 'smearing'
-  smearing = 'mp'
+  smearing = 'mv'
   degauss = 0.01d0
 /
 &ELECTRONS

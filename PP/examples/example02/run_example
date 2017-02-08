@@ -101,7 +101,7 @@ cat > ni.scf.in << EOF
     ibrav=2, celldm(1) =6.48, nat=1, ntyp=1,
     nspin = 2,  starting_magnetization(1)=0.7,
     ecutwfc = 24.0, ecutrho = 288.0,
-    occupations='smearing', smearing='methfessel-paxton', degauss=0.02
+    occupations='smearing', smearing='mv', degauss=0.02
  /
  &electrons
     conv_thr = 1.0e-10
@@ -192,7 +192,7 @@ cat > ni.band.in << EOF
     ibrav=2, celldm(1) =6.48, nat=1, ntyp=1,
     nspin = 2,  starting_magnetization(1)=0.7,
     ecutwfc = 24.0, ecutrho = 288.0,
-    occupations='smearing', smearing='methfessel-paxton', degauss=0.02
+    occupations='smearing', smearing='mv', degauss=0.02
  /
  &electrons
     conv_thr = 1.0e-10
@@ -465,7 +465,7 @@ cat > ni.scf_SP.in << EOF
     ibrav=2, celldm(1) =6.48, nat=1, ntyp=1,
     ecutwfc = 24.0, ecutrho = 288.0,
     occupations='smearing', 
-    smearing='methfessel-paxton', 
+    smearing='mv', 
     degauss=0.02
     nspin=2, 
     starting_magnetization(1)=0.8
@@ -554,7 +554,7 @@ cat > ni.scf_NSP.in << EOF
     ibrav=2, celldm(1) =6.48, nat=1, ntyp=1,
     ecutwfc = 24.0, ecutrho = 288.0,
     occupations='smearing', 
-    smearing='methfessel-paxton', 
+    smearing='mv', 
     degauss=0.02
  /
  &electrons

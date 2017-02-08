@@ -1,9 +1,9 @@
 
-IS contribution for the bulk atom: -12.579390 (Ry)
-IS contribution for the surface atom: -12.608858 (Ry)
-IS contribution for the layer(-1) atom: -12.596998 (Ry)
+IS contribution for the bulk atom: -12.580698 (Ry)
+IS contribution for the surface atom: -12.607893 (Ry)
+IS contribution for the layer(-1) atom: -12.598917 (Ry)
 
 ------------------------------------------
 
-IS shift surface: .400764 (eV)
-IS shift layer(-1): .239468 (eV)
+IS shift surface: .369852 (eV)
+IS shift layer(-1): .247778 (eV)

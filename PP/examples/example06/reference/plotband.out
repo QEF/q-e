@@ -1,8 +1,6 @@
-Input file > Reading   16 bands at   81 k-points
-Range:    4.2700   37.1710eV  Emin, Emax > high-symmetry point:  1.0000 0.0000 0.0000
-high-symmetry point:  0.0000 0.0000 0.0000
-high-symmetry point:  0.0000 0.0000 1.0000
-output file (xmgr) >       line #     1 nrap     2
-      line #     2 nrap     4
-bands in xmgr format written to file ciao                                                                                                                                                                                                                                                            
+     Input file > Reading   16 bands at     81 k-points
+Range:    4.2650   37.1650eV  Emin, Emax > high-symmetry point:  1.0000 0.0000 0.0000   x coordinate   0.0000
+high-symmetry point:  0.0000 0.0000 0.0000   x coordinate   1.0000
+high-symmetry point:  0.0000 0.0000 1.0000   x coordinate   2.0000
+output file (gnuplot/xmgr) > bands in gnuplot/xmgr format written to file ciao                                                                                                                                                                                                                                                            
 output file (ps) > 
