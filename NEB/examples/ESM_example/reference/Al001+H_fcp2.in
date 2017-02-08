@@ -15,8 +15,8 @@ END_PATH_INPUT
 BEGIN_ENGINE_INPUT
 &CONTROL
   prefix        = 'Al001+H_fcp2'
-  outdir        = '/Users/otani/espresso-5.2.0_20150714/tempdir/',
-  pseudo_dir    = '/Users/otani/espresso-5.2.0_20150714/pseudo/',
+  outdir        = '/home/pietro/espresso-svn/tempdir/',
+  pseudo_dir    = '/home/pietro/espresso-svn/pseudo/',
 /
 &SYSTEM
   ibrav         = 0,
@@ -25,8 +25,8 @@ BEGIN_ENGINE_INPUT
   ecutwfc       = 20.0,
   occupations   = 'smearing',
   nosym         = .TRUE.
-  smearing      = 'mp',
-  degauss       = 0.03,
+  smearing      = 'mv',
+  degauss       = 0.02,
   assume_isolated='esm',
   esm_bc='bc3',
 /

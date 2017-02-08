@@ -115,8 +115,8 @@ BEGIN_ENGINE_INPUT
   ecutwfc       = 20.0,
   occupations   = 'smearing',
   nosym         = .TRUE.
-  smearing      = 'mp',
-  degauss       = 0.03,
+  smearing      = 'mv',
+  degauss       = 0.02,
 /
 &ELECTRONS
   mixing_beta = 0.3,
@@ -186,8 +186,8 @@ BEGIN_ENGINE_INPUT
   ecutwfc       = 20.0,
   occupations   = 'smearing',
   nosym         = .TRUE.
-  smearing      = 'mp',
-  degauss       = 0.03,
+  smearing      = 'mv',
+  degauss       = 0.02,
   assume_isolated='esm',
   esm_bc='bc3',
 /
@@ -262,8 +262,8 @@ BEGIN_ENGINE_INPUT
   ecutwfc       = 20.0,
   occupations   = 'smearing',
   nosym         = .TRUE.
-  smearing      = 'mp',
-  degauss       = 0.03,
+  smearing      = 'mv',
+  degauss       = 0.02,
   assume_isolated='esm',
   esm_bc='bc3',
 /
@@ -341,8 +341,8 @@ BEGIN_ENGINE_INPUT
   ecutwfc       = 20.0,
   occupations   = 'smearing',
   nosym         = .TRUE.
-  smearing      = 'mp',
-  degauss       = 0.03,
+  smearing      = 'mv',
+  degauss       = 0.02,
   assume_isolated='esm',
   esm_bc='bc3',
 /
@@ -420,8 +420,8 @@ BEGIN_ENGINE_INPUT
   ecutwfc       = 20.0,
   occupations   = 'smearing',
   nosym         = .TRUE.
-  smearing      = 'mp',
-  degauss       = 0.03,
+  smearing      = 'mv',
+  degauss       = 0.02,
   assume_isolated='esm',
   esm_bc='bc3',
 /
