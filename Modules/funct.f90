@@ -1035,9 +1035,9 @@ CONTAINS
         shortname = 'VDW-DF2-C09'
      else if (iexch==1.and.icorr==4.and.igcx==26.and.igcc==0) then
         shortname = 'VDW-DF2-B86R'
-     else if ( inlc==3) then
-        shortname = 'RVV10'
      end if
+  else if ( inlc==3) then
+     shortname = 'RVV10'
   end if
   !
   get_dft_short = shortname
