@@ -998,7 +998,9 @@ MODULE exx
                          !DIR$ UNROLL_AND_JAM (4)
                          DO ipol=1,npol
                             DO jpol=1,npol
-                               psic_all_nc(ir,ipol)=psic_all_nc(ir,ipol)+conjg(d_spin(jpol,ipol,isym))* temppsic_all_nc(rir(ir,isym),jpol)
+                               psic_all_nc(ir,ipol) = psic_all_nc(ir,ipol) + &
+                                  conjg(d_spin(jpol,ipol,isym)) * &
+                                  temppsic_all_nc(rir(ir,isym),jpol)
                             ENDDO
                          ENDDO
                       ENDDO
@@ -1354,7 +1356,7 @@ MODULE exx
        xkq  = xkq_collect(:,ikq)
        !
        ! calculate the 1/|r-r'| (actually, k+q+g) factor and place it in fac
-       CALL g2_convolution(exx_fft%ngmt, exx_fft%gt, xkp, xkq, iq, current_k)
+       CALL g2_convolution_all(exx_fft%ngmt, exx_fft%gt, xkp, xkq, iq, current_k)
        IF ( okvan .and..not.tqr ) CALL qvan_init (exx_fft%ngmt, xkq, xkp)
        !
        njt = nbnd / (2*jblock)
@@ -1795,7 +1797,7 @@ MODULE exx
        xkq  = xkq_collect(:,ikq)
        !
        ! calculate the 1/|r-r'| (actually, k+q+g) factor and place it in fac
-       CALL g2_convolution(exx_fft%ngmt, exx_fft%gt, xkp, xkq, iq, current_k)
+       CALL g2_convolution_all(exx_fft%ngmt, exx_fft%gt, xkp, xkq, iq, current_k)
        !
 ! JRD - below not threaded
        facb = 0D0
@@ -1853,7 +1855,8 @@ MODULE exx
 !$omp parallel do collapse(2) default(shared) firstprivate(jstart,jend) private(jbnd,ir)
                 DO jbnd=jstart, jend
                    DO ir = 1, nrxxs
-                      rhoc(ir,jbnd-jstart+1) = ( conjg(exxtemp(ir,jbnd-jblock_start+1))*temppsic_nc(ir,1,ii) + conjg(exxtemp(nrxxs+ir,jbnd-jblock_start+1))*temppsic_nc(ir,2,ii) )/omega
+                      rhoc(ir,jbnd-jstart+1) = ( conjg(exxtemp(ir,jbnd-jblock_start+1))*temppsic_nc(ir,1,ii) +&
+                      conjg(exxtemp(nrxxs+ir,jbnd-jblock_start+1))*temppsic_nc(ir,2,ii) )/omega
                    END DO
                 END DO
 !$omp end parallel do
@@ -1894,7 +1897,8 @@ MODULE exx
              !   >>>> add augmentation in G space HERE
              IF(okvan .and. .not. tqr) THEN
                 DO jbnd=jstart, jend
-                   CALL addusxx_g(exx_fft, rhoc(:,jbnd-jstart+1), xkq, xkp, 'c', becphi_c=becxx(ikq)%k(:,jbnd),becpsi_c=becpsi%k(:,ibnd))
+                   CALL addusxx_g(exx_fft, rhoc(:,jbnd-jstart+1), xkq, xkp, &
+                   'c', becphi_c=becxx(ikq)%k(:,jbnd),becpsi_c=becpsi%k(:,ibnd))
                 ENDDO
              ENDIF
              !   >>>> charge done
@@ -1910,7 +1914,8 @@ MODULE exx
                    ir_end = min(ir_start+nblock-1,nrxxs)
 !DIR$ vector nontemporal (vc)
                    DO ir = ir_start, ir_end
-                      vc(ir,jbnd-jstart+1) = facb(ir) * rhoc(ir,jbnd-jstart+1) * x_occupation(jbnd,ik) * nqs_inv
+                      vc(ir,jbnd-jstart+1) = facb(ir) * rhoc(ir,jbnd-jstart+1)*&
+                                             x_occupation(jbnd,ik) * nqs_inv
                    ENDDO
                 ENDDO
              ENDDO
@@ -1921,7 +1926,8 @@ MODULE exx
              ! compute alpha_I,j,k+q = \sum_J \int <beta_J|phi_j,k+q> V_i,j,k,q Q_I,J(r) d3r
              IF(okvan .and. .not. tqr) THEN
                 DO jbnd=jstart, jend
-                   CALL newdxx_g(exx_fft, vc(:,jbnd-jstart+1), xkq, xkp, 'c', deexx(:,ii), becphi_c=becxx(ikq)%k(:,jbnd))
+                   CALL newdxx_g(exx_fft, vc(:,jbnd-jstart+1), xkq, xkp, 'c',&
+                                 deexx(:,ii), becphi_c=becxx(ikq)%k(:,jbnd))
                 ENDDO
              ENDIF
              !
@@ -2076,9 +2082,43 @@ MODULE exx
   END SUBROUTINE vexx_k
   !-----------------------------------------------------------------------
   !
+  !-----------------------------------------------------------------------
+  SUBROUTINE g2_convolution_all(ngm, g, xk, xkq, iq, current_k)
+    !-----------------------------------------------------------------------
+    ! Wrapper for g2_convolution
+    USE kinds,     ONLY : DP
+    USE klist,     ONLY : nks
+    !
+    IMPLICIT NONE
+    !
+    INTEGER,  INTENT(in)    :: ngm    ! Number of G vectors
+    REAL(DP), INTENT(in)    :: g(3,ngm) ! Cartesian components of G vectors
+    REAL(DP), INTENT(in)    :: xk(3)  ! current k vector
+    REAL(DP), INTENT(in)    :: xkq(3) ! current q vector
+    INTEGER, INTENT(in) :: current_k, iq
+    !
+    ! Check if coulomb_fac has been allocated
+    !
+    IF( .NOT.ALLOCATED( coulomb_fac ) ) ALLOCATE( coulomb_fac(ngm,nqs,nks) )
+    !
+    ! Check if coulomb_done has been allocated
+    !
+    IF( .NOT.ALLOCATED( coulomb_done) ) THEN
+       ALLOCATE( coulomb_done(nqs,nks) )
+       coulomb_done = .FALSE.
+    END IF
+    !
+    ! return if this k and k' already computed, otherwise compute it
+    !
+    IF ( coulomb_done(iq,current_k) ) RETURN
+    !
+    CALL g2_convolution(ngm, g, xk, xkq, coulomb_fac(:,iq,current_k))
+    coulomb_done(iq,current_k) = .TRUE.
+    !
+  END SUBROUTINE g2_convolution_all
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE g2_convolution(ngm, g, xk, xkq, iq, current_k)
+  SUBROUTINE g2_convolution(ngm, g, xk, xkq, fac)
   !-----------------------------------------------------------------------
     ! This routine calculates the 1/|r-r'| part of the exact exchange
     ! expression in reciprocal space (the G^-2 factor).
@@ -2086,7 +2126,6 @@ MODULE exx
     USE kinds,     ONLY : DP
     USE cell_base, ONLY : tpiba, at, tpiba2
     USE constants, ONLY : fpi, e2, pi
-    USE klist,     ONLY : nks
     !
     IMPLICIT NONE
     !
@@ -2095,7 +2134,7 @@ MODULE exx
     REAL(DP), INTENT(in)    :: xk(3) ! current k vector
     REAL(DP), INTENT(in)    :: xkq(3) ! current q vector
     !
-    INTEGER, INTENT(in) :: current_k, iq
+    REAL(DP), INTENT(inout) :: fac(ngm) ! Calculated convolution
     !
     !Local variables
     INTEGER :: ig !Counters
@@ -2103,20 +2142,13 @@ MODULE exx
     REAL(DP) :: grid_factor_track(ngm), qq_track(ngm)
     REAL(DP) :: nqhalf_dble(3)
     LOGICAL :: odg(3)
-    ! Check if coulomb_fac has been allocated
-    IF( .NOT.ALLOCATED( coulomb_fac ) ) ALLOCATE( coulomb_fac(ngm,nqs,nks) )
-    IF( .NOT.ALLOCATED( coulomb_done) ) THEN
-       ALLOCATE( coulomb_done(nqs,nks) )
-       coulomb_done = .FALSE.
-    END IF
-    IF ( coulomb_done(iq,current_k) ) RETURN
     !
     ! First the types of Coulomb potential that need q(3) and an external call
     !
     IF( use_coulomb_vcut_ws ) THEN
        DO ig = 1, ngm
           q(:)= ( xk(:) - xkq(:) + g(:,ig) ) * tpiba
-          coulomb_fac(ig,iq,current_k) = vcut_get(vcut,q)
+          fac(ig) = vcut_get(vcut,q)
        ENDDO
        RETURN
     ENDIF
@@ -2124,7 +2156,7 @@ MODULE exx
     IF ( use_coulomb_vcut_spheric ) THEN
        DO ig = 1, ngm
           q(:)= ( xk(:) - xkq(:) + g(:,ig) ) * tpiba
-          coulomb_fac(ig,iq,current_k) = vcut_spheric_get(vcut,q)
+          fac(ig) = vcut_spheric_get(vcut,q)
        ENDDO
        RETURN
     ENDIF
@@ -2171,32 +2203,29 @@ MODULE exx
       qq = qq_track(ig)
       !
       IF(gau_scrlen > 0) THEN
-         coulomb_fac(ig,iq,current_k)=e2*((pi/gau_scrlen)**(1.5_DP))*exp(-qq/4._DP/gau_scrlen) * grid_factor_track(ig)
+         fac(ig)=e2*((pi/gau_scrlen)**(1.5_DP))*exp(-qq/4._DP/gau_scrlen) * grid_factor_track(ig)
          !
       ELSEIF (qq > eps_qdiv) THEN
          !
          IF ( erfc_scrlen > 0  ) THEN
-            coulomb_fac(ig,iq,current_k)=e2*fpi/qq*(1._DP-exp(-qq/4._DP/erfc_scrlen**2)) * grid_factor_track(ig)
+            fac(ig)=e2*fpi/qq*(1._DP-exp(-qq/4._DP/erfc_scrlen**2)) * grid_factor_track(ig)
          ELSEIF( erf_scrlen > 0 ) THEN
-            coulomb_fac(ig,iq,current_k)=e2*fpi/qq*(exp(-qq/4._DP/erf_scrlen**2)) * grid_factor_track(ig)
+            fac(ig)=e2*fpi/qq*(exp(-qq/4._DP/erf_scrlen**2)) * grid_factor_track(ig)
          ELSE
-            coulomb_fac(ig,iq,current_k)=e2*fpi/( qq + yukawa ) * grid_factor_track(ig) ! as HARTREE
+            fac(ig)=e2*fpi/( qq + yukawa ) * grid_factor_track(ig) ! as HARTREE
          ENDIF
          !
       ELSE
          !
-         coulomb_fac(ig,iq,current_k)= - exxdiv ! or rather something ELSE (see F.Gygi)
+         fac(ig)= - exxdiv ! or rather something ELSE (see F.Gygi)
          !
-         IF ( yukawa > 0._DP.and. .not. x_gamma_extrapolation ) &
-              coulomb_fac(ig,iq,current_k) = coulomb_fac(ig,iq,current_k) + e2*fpi/( qq + yukawa )
-         IF( erfc_scrlen > 0._DP.and. .not. x_gamma_extrapolation ) &
-              coulomb_fac(ig,iq,current_k) = coulomb_fac(ig,iq,current_k) + e2*pi/(erfc_scrlen**2)
+         IF ( yukawa > 0._DP.and. .not. x_gamma_extrapolation ) fac(ig) = fac(ig) + e2*fpi/( qq + yukawa )
+         IF( erfc_scrlen > 0._DP.and. .not. x_gamma_extrapolation ) fac(ig) = fac(ig) + e2*pi/(erfc_scrlen**2)
          !
       ENDIF
       !
     ENDDO
 !$omp end parallel do
-    coulomb_done(iq,current_k) = .TRUE.
   END SUBROUTINE g2_convolution
   !-----------------------------------------------------------------------
   !
@@ -2422,7 +2451,7 @@ MODULE exx
           !
           xkq = xkq_collect(:,ikq)
           !
-          CALL g2_convolution(exx_fft%ngmt, exx_fft%gt, xkp, xkq, iq, &
+          CALL g2_convolution_all(exx_fft%ngmt, exx_fft%gt, xkp, xkq, iq, &
                current_ik)
           fac = coulomb_fac(:,iq,current_ik)
           fac(exx_fft%gstart_t:) = 2 * coulomb_fac(exx_fft%gstart_t:,iq,current_ik)
@@ -2560,9 +2589,11 @@ MODULE exx
                    !
                    IF(okvan .and.tqr) THEN
                       IF(ibnd>=istart) &
-                           CALL addusxx_r(exx_fft,rhoc,_CX(becxx(ikq)%r(:,ibnd)), _CX(becpsi%r(:,jbnd)))
+                           CALL addusxx_r(exx_fft,rhoc,_CX(becxx(ikq)%r(:,ibnd)),&
+                                          _CX(becpsi%r(:,jbnd)))
                       IF(ibnd<iend) &
-                           CALL addusxx_r(exx_fft,rhoc,_CY(becxx(ikq)%r(:,ibnd+1)),_CX(becpsi%r(:,jbnd)))
+                           CALL addusxx_r(exx_fft,rhoc,_CY(becxx(ikq)%r(:,ibnd+1)),&
+                                          _CX(becpsi%r(:,jbnd)))
                    ENDIF
                    !
                    ! bring rhoc to G-space
@@ -2786,7 +2817,7 @@ MODULE exx
           !
           xkq = xkq_collect(:,ikq)
           !
-          CALL g2_convolution(exx_fft%ngmt, exx_fft%gt, xkp, xkq, iq, ikk)
+          CALL g2_convolution_all(exx_fft%ngmt, exx_fft%gt, xkp, xkq, iq, ikk)
           IF ( okvan .and..not.tqr ) CALL qvan_init (exx_fft%ngmt, xkq, xkp)
           !
           njt = nbnd / jblock
@@ -2857,7 +2888,9 @@ MODULE exx
                          ir_end = min(ir_start+nblock-1,nrxxs)
 !DIR$ vector nontemporal (rhoc)
                          DO ir = ir_start, ir_end
-                            rhoc(ir,ibnd-ibnd_inner_start+1)=conjg(exxtemp(ir,ibnd-jblock_start+1))*temppsic(ir,ii) * omega_inv
+                            rhoc(ir,ibnd-ibnd_inner_start+1) = omega_inv * &
+                              conjg(exxtemp(ir,ibnd-jblock_start+1)) * &
+                              temppsic(ir,ii)
                          ENDDO
                       ENDDO
                    ENDDO
@@ -2869,7 +2902,8 @@ MODULE exx
                 IF(okvan .and. tqr) THEN
 !$omp parallel do default(shared) private(ibnd) firstprivate(ibnd_inner_start,ibnd_inner_end)
                    DO ibnd = ibnd_inner_start, ibnd_inner_end
-                      CALL addusxx_r(exx_fft, rhoc(:,ibnd-ibnd_inner_start+1), becxx(ikq)%k(:,ibnd), becpsi%k(:,jbnd))
+                      CALL addusxx_r(exx_fft, rhoc(:,ibnd-ibnd_inner_start+1), &
+                                     becxx(ikq)%k(:,ibnd), becpsi%k(:,jbnd))
                    ENDDO
 !$omp end parallel do
                 ENDIF
@@ -2886,7 +2920,9 @@ MODULE exx
                 ! augment the "charge" in G space
                 IF(okvan .and. .not. tqr) THEN
                    DO ibnd = ibnd_inner_start, ibnd_inner_end
-                      CALL addusxx_g(exx_fft, rhoc(:,ibnd-ibnd_inner_start+1), xkq, xkp, 'c', becphi_c=becxx(ikq)%k(:,ibnd),becpsi_c=becpsi%k(:,jbnd))
+                      CALL addusxx_g(exx_fft, rhoc(:,ibnd-ibnd_inner_start+1), &
+                           xkq, xkp, 'c', becphi_c=becxx(ikq)%k(:,ibnd), &
+                           becpsi_c=becpsi%k(:,jbnd))
                    ENDDO
                 ENDIF
                 !
@@ -2895,7 +2931,9 @@ MODULE exx
                 DO ibnd = ibnd_inner_start, ibnd_inner_end
                    vc=0.0_DP
                    DO ig=1,exx_fft%ngmt
-                      vc = vc + coulomb_fac(ig,iq,ikk) * dble(rhoc(exx_fft%nlt(ig),ibnd-ibnd_inner_start+1) * conjg(rhoc(exx_fft%nlt(ig),ibnd-ibnd_inner_start+1)))
+                      vc = vc + coulomb_fac(ig,iq,ikk) * &
+                          dble(rhoc(exx_fft%nlt(ig),ibnd-ibnd_inner_start+1) *&
+                          conjg(rhoc(exx_fft%nlt(ig),ibnd-ibnd_inner_start+1)))
                    ENDDO
                    vc = vc * omega * x_occupation(ibnd,ik) / nqs
                    energy = energy - exxalfa * vc * wg(jbnd,ikk)
