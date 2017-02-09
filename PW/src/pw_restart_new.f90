@@ -12,12 +12,13 @@ MODULE pw_restart_new
   ! ... New PWscf I/O using xml schema and hdf5 binaries
   !
   USE qes_module
-  USE qexsd_module, ONLY: qexsd_init_schema, qexsd_openschema, qexsd_closeschema, &
-                          qexsd_init_convergence_info, qexsd_init_algorithmic_info, & 
-                          qexsd_init_atomic_species, qexsd_init_atomic_structure, &
+  USE qexsd_module, ONLY: qexsd_init_schema, qexsd_openschema, qexsd_closeschema,      &
+                          qexsd_init_convergence_info, qexsd_init_algorithmic_info,    & 
+                          qexsd_init_atomic_species, qexsd_init_atomic_structure,      &
                           qexsd_init_symmetries, qexsd_init_basis_set, qexsd_init_dft, &
-                          qexsd_init_magnetization,qexsd_init_band_structure,  &
-                          qexsd_init_total_energy,qexsd_init_forces,qexsd_init_stress, &
+                          qexsd_init_magnetization,qexsd_init_band_structure,          &
+                          qexsd_init_dipole_info, qexsd_init_total_energy,             &
+                          qexsd_init_forces,qexsd_init_stress,                         &
                           qexsd_init_outputElectricField, qexsd_input => qexsd_input_obj
   USE iotk_module
   USE io_global, ONLY : ionode, ionode_id
@@ -86,7 +87,7 @@ MODULE pw_restart_new
       USE scf,                  ONLY : rho
       USE force_mod,            ONLY : lforce, sumfor, force, sigma, lstres
       USE extfield,             ONLY : tefield, dipfield, edir, etotefield, &
-                                       emaxpos, eopreg, eamp, &
+                                       emaxpos, eopreg, eamp, el_dipole, ion_dipole,&
                                        monopole, zmon, relaxz, block, block_1,&
                                        block_2, block_height ! TB
       USE io_rho_xml,           ONLY : write_rho
@@ -156,10 +157,6 @@ MODULE pw_restart_new
       ngm_g = ngm
       CALL mp_sum( ngm_g, intra_bgrp_comm )
       ! 
-      IF (tefield .AND. dipfield ) THEN 
-          CALL init_dipole_info(qexsd_dipol_obj, rho%of_r)   
-          qexsd_dipol_obj%tagname = "dipoleInfo"
-      END IF
       ! 
       !
       ! XML descriptor
@@ -396,6 +393,10 @@ MODULE pw_restart_new
                  lberry, bp_obj=qexsd_bp_obj) 
          ELSE IF ( tefield .AND. dipfield  ) THEN 
             output%electric_field_ispresent = .TRUE.
+            CALL qexsd_init_dipole_info(qexsd_dipol_obj, el_dipole, ion_dipole, edir, eamp, &
+                                  emaxpos, eopreg )  
+           qexsd_dipol_obj%tagname = "dipoleInfo"
+
             CALL  qexsd_init_outputElectricField(output%electric_field, lelfield, tefield, dipfield, &
                  lberry, dipole_obj = qexsd_dipol_obj )                     
          ELSE 

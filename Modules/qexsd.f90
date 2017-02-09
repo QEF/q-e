@@ -84,7 +84,7 @@ MODULE qexsd_module
             qexsd_init_symmetries, qexsd_init_basis_set, qexsd_init_dft, &
             qexsd_init_magnetization, qexsd_init_band_structure, & 
             qexsd_init_total_energy, qexsd_init_forces, qexsd_init_stress, &
-            qexsd_init_outputElectricField
+            qexsd_init_dipole_info, qexsd_init_outputElectricField
   !
   PUBLIC :: qexsd_step_addstep, qexsd_set_status    
   ! 
@@ -1168,6 +1168,47 @@ CONTAINS
     END SUBROUTINE qexsd_init_stress
     !
     !
+    !------------------------------------------------------------------------------------------------
+    SUBROUTINE qexsd_init_dipole_info (dipole_info, el_dipole, ion_dipole, edir, eamp, emaxpos, eopreg) 
+       !------------------------------------------------------------------------------------------------
+       ! 
+       USE kinds,           ONLY : DP
+       USE constants,       ONLY : e2, fpi 
+       USE qes_types_module,ONLY : dipoleOutput_type, scalarQuantity_type
+       USE qes_libs_module, ONLY : qes_init_scalarQuantity, qes_reset_scalarQuantity
+       USE cell_base,       ONLY : alat, at, omega
+       ! 
+       IMPLICIT NONE  
+       ! 
+       TYPE ( dipoleOutput_type ), INTENT(OUT)  :: dipole_info
+       REAL(DP),INTENT(IN)                      :: el_dipole, ion_dipole, eamp, emaxpos, eopreg
+       INTEGER , INTENT(IN)                     :: edir
+       ! 
+       REAL(DP)                                 :: tot_dipole, length, vamp, fac
+       TYPE ( scalarQuantity_type)              :: temp_qobj
+       ! 
+       tot_dipole = -el_dipole+ion_dipole
+       ! 
+       dipole_info%idir = edir  
+       fac=omega/fpi
+       CALL qes_init_scalarQuantity(dipole_info%ion_dipole,"ion_dipole" , units="Atomic Units", &
+                                    scalarQuantity= ion_dipole*fac)
+       CALL qes_init_scalarQuantity(dipole_info%elec_dipole,"elec_dipole" , units="Atomic Units",&
+                                     scalarQuantity= el_dipole*fac)
+       CALL qes_init_scalarQuantity(dipole_info%dipole,"dipole" , units="Atomic Units", &
+                                    scalarQuantity= tot_dipole*fac)
+       CALL qes_init_scalarQuantity(dipole_info%dipoleField,"dipoleField" , units="Atomic Units", &
+                                    scalarQuantity= tot_dipole)
+       ! 
+       length=(1._DP-eopreg)*(alat*SQRT(at(1,edir)**2+at(2,edir)**2+at(3,edir)**2))
+       vamp=e2*(eamp-tot_dipole)*length
+       !
+       CALL qes_init_scalarQuantity(dipole_info%potentialAmp,"potentialAmp" , units="Atomic Units",&
+                                     scalarQuantity= vamp)
+       CALL qes_init_scalarQuantity(dipole_info%totalLength, "totalLength", units = "Bohr",&
+                                     scalarQuantity = length ) 
+  
+    END SUBROUTINE qexsd_init_dipole_info
     !---------------------------------------------------------------------------------------------
     SUBROUTINE  qexsd_init_outputElectricField(obj, lelfield, tefield, ldipole, lberry, bp_obj, el_pol, &
                                                ion_pol, dipole_obj )

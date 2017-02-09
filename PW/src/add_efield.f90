@@ -49,7 +49,8 @@ SUBROUTINE add_efield(vpoten,etotefield,rho,iflag)
   USE ions_base,     ONLY : nat, ityp, zv
   USE cell_base,     ONLY : alat, at, omega, bg, saw
   USE extfield,      ONLY : tefield, dipfield, edir, eamp, emaxpos, &
-                            eopreg, forcefield
+                            eopreg, forcefield, global_e_dipole => el_dipole,&
+                            global_i_dipole => ion_dipole, global_t_dipole => tot_dipole
   USE force_mod,     ONLY : lforce
   USE io_global,     ONLY : stdout,ionode
   USE control_flags, ONLY : mixing_beta
@@ -116,6 +117,9 @@ SUBROUTINE add_efield(vpoten,etotefield,rho,iflag)
      CALL compute_ion_dip(emaxpos, eopreg, edir, ion_dipole)
     
      tot_dipole  = -e_dipole + ion_dipole
+     global_e_dipole = e_dipole
+     global_i_dipole = ion_dipole
+     global_t_dipole = tot_dipole
      CALL mp_bcast(tot_dipole, 0, intra_image_comm)
   !  
   !  E_{TOT} = -e^{2} \left( eamp - dip \right) dip \frac{\Omega}{4\pi} 
@@ -258,42 +262,4 @@ SUBROUTINE add_efield(vpoten,etotefield,rho,iflag)
 
 END SUBROUTINE add_efield
 ! 
-!------------------------------------------------------------------------------------------------
-SUBROUTINE init_dipole_info (dipole_info, rho) 
-!------------------------------------------------------------------------------------------------
-! 
-  USE kinds,           ONLY : DP
-  USE constants,       ONLY : e2, fpi 
-  USE qes_types_module,ONLY : dipoleOutput_type, scalarQuantity_type
-  USE qes_libs_module, ONLY : qes_init_scalarQuantity, qes_reset_scalarQuantity
-  USE extfield,        ONLY : edir, eamp, emaxpos, eopreg   
-  USE fft_base,        ONLY : dfftp
-  USE lsda_mod,        ONLY : nspin
-  USE cell_base,       ONLY : alat, at, omega
-  ! 
-  IMPLICIT NONE  
-  ! 
-  TYPE ( dipoleOutput_type ), INTENT(OUT)  :: dipole_info
-  REAL(DP),INTENT(IN)                      :: rho(dfftp%nnr,nspin)
-  ! 
-  REAL(DP)                                 :: ion_dipole, el_dipole, tot_dipole, length, vamp, fac
-  TYPE ( scalarQuantity_type)              :: temp_qobj
-  ! 
-  CALL compute_ion_dip (emaxpos, eopreg, edir, ion_dipole)
-  CALL compute_el_dip ( emaxpos, eopreg, edir, rho, el_dipole ) 
-  tot_dipole = -el_dipole+ion_dipole
-  ! 
-  dipole_info%idir = edir  
-  fac=omega/fpi
-  CALL qes_init_scalarQuantity(dipole_info%ion_dipole,"ion_dipole" , units="Atomic Units", scalarQuantity= ion_dipole*fac)
-  CALL qes_init_scalarQuantity(dipole_info%elec_dipole,"elec_dipole" , units="Atomic Units", scalarQuantity= el_dipole*fac)
-  CALL qes_init_scalarQuantity(dipole_info%dipole,"dipole" , units="Atomic Units", scalarQuantity= tot_dipole*fac)
-  CALL qes_init_scalarQuantity(dipole_info%dipoleField,"dipoleField" , units="Atomic Units", scalarQuantity= tot_dipole)
-  ! 
-  length=(1._DP-eopreg)*(alat*SQRT(at(1,edir)**2+at(2,edir)**2+at(3,edir)**2))
-  vamp=e2*(eamp-tot_dipole)*length
-  !
-  CALL qes_init_scalarQuantity(dipole_info%potentialAmp,"potentialAmp" , units="Atomic Units", scalarQuantity= vamp)
-  CALL qes_init_scalarQuantity(dipole_info%totalLength, "totalLength", units = "Bohr", scalarQuantity = length ) 
-  
-  END SUBROUTINE init_dipole_info
+
