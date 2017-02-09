@@ -355,6 +355,9 @@ MODULE extfield
       eopreg,        &! amplitude of the inverse region (0<eopreg<1)
       eamp,          &! field amplitude (in a.u.) (1 a.u. = 51.44 10^11 V/m)
       etotefield,    &! energy correction due to the field
+      el_dipole,     &! electronic_dipole used when dipole correction is on
+      ion_dipole,    &! ionic_dipole      used when dipole correction is on
+      tot_dipole,    &! total dipole      used when dipole correction is on
       ! TB
       zmon,          &! position of monopole plane
       block_1,       &! blocking potential
