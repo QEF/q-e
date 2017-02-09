@@ -49,8 +49,7 @@ SUBROUTINE add_efield(vpoten,etotefield,rho,iflag)
   USE ions_base,     ONLY : nat, ityp, zv
   USE cell_base,     ONLY : alat, at, omega, bg, saw
   USE extfield,      ONLY : tefield, dipfield, edir, eamp, emaxpos, &
-                            eopreg, forcefield, global_e_dipole => el_dipole,&
-                            global_i_dipole => ion_dipole, global_t_dipole => tot_dipole
+                            eopreg, forcefield, el_dipole, ion_dipole, tot_dipole
   USE force_mod,     ONLY : lforce
   USE io_global,     ONLY : stdout,ionode
   USE control_flags, ONLY : mixing_beta
@@ -74,8 +73,7 @@ SUBROUTINE add_efield(vpoten,etotefield,rho,iflag)
   !
   INTEGER :: idx0, idx,  i, j, k
   INTEGER :: ir, na, ipol
-  REAL(DP) :: length, vamp, value, sawarg, e_dipole, ion_dipole
-  REAL(DP) :: tot_dipole, bmod
+  REAL(DP) :: length, vamp, value, sawarg, bmod
 
   LOGICAL :: first=.TRUE.
   SAVE first
@@ -101,9 +99,9 @@ SUBROUTINE add_efield(vpoten,etotefield,rho,iflag)
 
   bmod=SQRT(bg(1,edir)**2+bg(2,edir)**2+bg(3,edir)**2)
 
-  tot_dipole=0._dp
-  e_dipole  =0._dp
-  ion_dipole=0._dp
+  tot_dipole = 0._dp
+  el_dipole  = 0._dp
+  ion_dipole = 0._dp
   
   !---------------------
   !  Calculate dipole
@@ -113,13 +111,10 @@ SUBROUTINE add_efield(vpoten,etotefield,rho,iflag)
   !
   ! dipole correction is active 
   !
-     CALL compute_el_dip(emaxpos, eopreg, edir, rho, e_dipole)
+     CALL compute_el_dip(emaxpos, eopreg, edir, rho, el_dipole)
      CALL compute_ion_dip(emaxpos, eopreg, edir, ion_dipole)
     
-     tot_dipole  = -e_dipole + ion_dipole
-     global_e_dipole = e_dipole
-     global_i_dipole = ion_dipole
-     global_t_dipole = tot_dipole
+     tot_dipole  = -el_dipole + ion_dipole
      CALL mp_bcast(tot_dipole, 0, intra_image_comm)
   !  
   !  E_{TOT} = -e^{2} \left( eamp - dip \right) dip \frac{\Omega}{4\pi} 
@@ -193,7 +188,7 @@ SUBROUTINE add_efield(vpoten,etotefield,rho,iflag)
           !
           IF ( iverbosity > 0 ) THEN
               WRITE( stdout, '(8X,"Elec. dipole ",1F15.4," Ry au, ", 1F15.4," Debye")' ) &
-                                            e_dipole, (e_dipole*au_debye)
+                                            el_dipole, (el_dipole*au_debye)
               WRITE( stdout, '(8X,"Ion. dipole  ",1F15.4," Ry au, ", 1F15.4," Debye")' ) &
                                           ion_dipole, (ion_dipole*au_debye)
           ENDIF
