@@ -1955,7 +1955,7 @@ MODULE pw_restart
       !
       IF (acfdt_in_pw) dft_name = 'NOX-NOC'
 
-      IF ( inlc == 1 .OR. inlc == 2 ) THEN
+      IF ( inlc > 0 ) THEN
          CALL mp_bcast( vdw_table_name,  ionode_id, intra_image_comm )
       END IF
       !

@@ -1562,7 +1562,7 @@ SUBROUTINE iosys()
      ! The next two lines have been moved before the call to read_config_from_file:
      !      at_old    = at
      !      omega_old = omega
-     IF ( cell_factor_ <= 0.D0 ) cell_factor_ = 1.2D0
+     IF ( cell_factor_ <= 0.0_dp ) cell_factor_ = 2.0_dp
      !
      IF ( cmass <= 0.D0 ) &
         CALL errore( 'iosys', &

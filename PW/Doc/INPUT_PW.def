@@ -2396,7 +2396,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
         }
 
         var cell_factor -type REAL { 
-            default { 1.2D0 }
+            default { 2.0 for variable-cell calculations, 1.0 otherwise }
             info {
                 Used in the construction of the pseudopotential tables.
                 It should exceed the maximum linear contraction of the
