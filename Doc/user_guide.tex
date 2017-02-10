@@ -410,7 +410,7 @@ may break them. Use \texttt{export LC\_ALL=C} (sh/bash) or
 \texttt{setenv LC\_ALL C} (csh/tcsh) to prevent any problem
 when running scripts (including installation scripts).
 
-Second, you need C and Fortran-90/95/2003 compilers. For parallel
+Second, you need C and Fortran-90 (or later) compilers. For parallel
 execution, you will also need MPI libraries and a parallel
 (i.e. MPI-aware) compiler. For massively parallel machines, or
 for simple multicore parallelization, an OpenMP-aware compiler
@@ -427,10 +427,10 @@ specialized hardware (e.g. IBM SP, CRAY, etc) typically have a
 Fortran compiler with MPI and OpenMP libraries bundled with
 the software. Workstations or ``commodity'' machines, using PC
 hardware, may or may not have the needed software. If not, you need
-either to buy a commercial product (e.g Intel, NAG, Portland) or to
+either to buy a commercial product (e.g Intel, NAG, PGI) or to
 use an open-source compiler like gfortran from the gcc distribution.
-Note that several commercial compilers (e.g. Intel, Sun) are available
-free of charge under some license for academic or personal usage.
+Some commercial compilers (e.g. PGI) may be available free of charge 
+under some conditions (e.g. academic or personal usage).
 
 \subsection{\configure}
 
@@ -664,12 +664,16 @@ interface (v.10 and later), or directly link FFTW3 from MKL (v.12
 and later) or use DFTI (recent versions).
 
 \paragraph{MPI libraries}
-MPI libraries are usually needed for parallel execution
-(unless you are happy with OpenMP multicore parallelization).
+MPI libraries are usually needed for parallel execution, unless you are 
+happy with OpenMP-only multicore parallelization.
 In well-configured machines, \configure\ should find the appropriate
 parallel compiler for you, and this should find the appropriate
 libraries. Since often this doesn't
 happen, especially on PC clusters, see Sec.\ref{SubSec:LinuxPCMPI}.
+
+{\em Note:} since v.6.1, MPI libraries implementing v.3 of the standard
+(notably, non-blocking broadcast and gather operations) are required.
+
 
 \paragraph{Other libraries}
 \qe\ can use the MASS vector math
@@ -993,10 +997,10 @@ Beware: the default integer type for 64-bit machine is typically
 but it is not guaranteed to work and will not give
 any advantage anyway.
 
-Currently, \configure\ supports Intel (ifort), NAG (nagfor), and gfortran
-compilers. Support for other compilers: g95, Portland (pgf90), Pathscale
+Currently, \configure\ supports Intel (ifort), NAG (nagfor), PGI (pgf90)
+and gfortran compilers. Support for other compilers: Pathscale
 (pathf95), Sun Studio (sunf95), AMD Open64 (openf95), added in the past,
-is still there, but it might have become obsolete.
+is still there, but it is likely obsolete.
 Both Intel MKL and AMD acml mathematical libraries are supported, the
 former much better than the latter.
 
@@ -1007,11 +1011,7 @@ that runs on different machines, compile it on the oldest machine you have
 
 \paragraph{Linux PCs with gfortran}
 
-Only recent versions (at least v.4.4) of gfortran properly compile \qe.
-Older versions often produce nonfunctional phonon executables
-(segmentation faults and the like); other versions miscompile iotk
-(the executables work but crash with a mysterious iotk
-error when reading from data files).
+You need at least gfortran v.4.4 or later to properly compile \qe.
 
 "There is a known incompatibility problem between the calling
 convention for Fortran functions that return complex values: there is the
@@ -1045,10 +1045,7 @@ add preprocessing option \texttt{-Dzdotc=zdotc\_wrapper} to \texttt{DFLAGS}.
 
 \paragraph{Linux PCs with g95}
 
-g95 v.0.91 and later versions (\texttt{http://www.g95.org}) should
-work, but the executables it produces are noticeably slower than
-those of other compilers. Also notice that the development of g95
-seems to have stopped.
+Since v.6.1, g95 is no longer supported.
 
 \paragraph{Linux PCs with Pathscale compiler}
 
