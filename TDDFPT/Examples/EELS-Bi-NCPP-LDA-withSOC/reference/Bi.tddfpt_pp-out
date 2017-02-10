@@ -1,6 +1,6 @@
  Warning: Only a single CPU will be used!
 
-     Program TDDFPT_PP v.5.2.1 (svn rev. 11876) starts on 30Nov2015 at 16:16:44 
+     Program TDDFPT_PP v.6.0 (svn rev. 13298) starts on 10Feb2017 at 10:21:20 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -9,15 +9,15 @@
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
-     Parallel version (MPI), running on    10 processors
-     R & G space division:  proc/nbgrp/npool/nimage =      10
+     Parallel version (MPI), running on     8 processors
+     R & G space division:  proc/nbgrp/npool/nimage =       8
 
      Reading    500 Lanczos steps
         500 steps will be considered
 
      Lanczos coefficients:
-     Average =    10.39787146
-     Average oscillation amplitude =     0.04856755
+     Average =    10.39799686
+     Average oscillation amplitude =     0.04921548
 
      Data ready, starting to calculate observables...
 
@@ -29,16 +29,16 @@
 
      Functions are reported in \hbar.\omega  Energy unit is (eV)
 
-     The f-sum rule is given by Eq.(60) in PRB 88, 064301 (2013).
+     The f-sum rule is given by Eq.(6) in Comput. Phys. Commun. 196, 460 (2015).
      Integration in the range from   0.00 to  50.00 eV.
-     The number of valence (and semicore) electrons in the unit cell:  16.74
+     The number of valence (and semicore) electrons in the unit cell:  16.75
      The exact number of electrons:  30.00
-     The violation of the f-sum rule:  44.21 %
+     The violation of the f-sum rule:  44.17 %
  
-     TDDFPT_PP    :     0.55s CPU         0.57s WALL
+     TDDFPT_PP    :     0.32s CPU         0.33s WALL
 
  
-   This run was terminated on:  16:16:44  30Nov2015            
+   This run was terminated on:  10:21:20  10Feb2017            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

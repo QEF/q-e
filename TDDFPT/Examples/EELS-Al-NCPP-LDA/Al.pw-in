@@ -13,7 +13,7 @@
     ntyp= 1,
     ecutwfc= 16.0,
     occupations = 'smearing',
-    smearing = 'methfessel-paxton',
+    smearing = 'marzari-vanderbilt',
     degauss = 0.02
     nosym=.false.,
     noinv=.false.

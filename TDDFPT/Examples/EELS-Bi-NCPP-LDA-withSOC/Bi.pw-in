@@ -14,7 +14,7 @@
     ntyp = 1,
     ecutwfc= 20,
     occupations = 'smearing',
-    smearing = 'methfessel-paxton',
+    smearing = 'marzari-vanderbilt',
     degauss = 0.02,
     lspinorb = .true.
     noncolin = .true.

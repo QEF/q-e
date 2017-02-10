@@ -14,7 +14,7 @@
     ecutwfc = 40.0,
     ecutrho = 320.0,
     occupations = 'smearing',
-    smearing = 'methfessel-paxton',
+    smearing = 'marzari-vanderbilt',
     degauss = 0.02
  /
  &electrons
