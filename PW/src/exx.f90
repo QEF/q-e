@@ -1662,7 +1662,9 @@ MODULE exx
     !
 	COMPLEX(DP),ALLOCATABLE :: deexx(:,:)
     COMPLEX(DP),ALLOCATABLE,TARGET :: rhoc(:,:), vc(:,:)
-	COMPLEX(DP),POINTER :: prhoc(:), pvc(:)
+#if defined(__USE_3D_FFT) & defined(__USE_MANY_FFT)
+    COMPLEX(DP),POINTER :: prhoc(:), pvc(:)
+#endif
 #if defined(__USE_INTEL_HBM_DIRECTIVES)
 !DIR$ ATTRIBUTES FASTMEM :: rhoc, vc
 #elif defined(__USE_CRAY_HBM_DIRECTIVES)
@@ -1711,13 +1713,10 @@ MODULE exx
     !
     !allocate arrays for rhoc and vc
     ALLOCATE(rhoc(nrxxs,jblock), vc(nrxxs,jblock))
+#if defined(__USE_3D_FFT) & defined(__USE_MANY_FFT)
     prhoc(1:nrxxs*jblock) => rhoc(:,:)
     pvc(1:nrxxs*jblock) => vc(:,:)
-    !
-    !
-    !
-    !
-    !
+#endif
     !
     DO ii=1, nibands(my_egrp_id+1)
        !
@@ -2709,7 +2708,9 @@ MODULE exx
     COMPLEX(DP), ALLOCATABLE :: temppsic(:,:)
     COMPLEX(DP), ALLOCATABLE :: temppsic_nc(:,:,:)
     COMPLEX(DP), ALLOCATABLE,TARGET :: rhoc(:,:)
-	COMPLEX(DP), POINTER :: prhoc(:)
+#if defined(__USE_3D_FFT) & defined(__USE_MANY_FFT)
+    COMPLEX(DP), POINTER :: prhoc(:)
+#endif
     REAL(DP),    ALLOCATABLE :: fac(:)
     INTEGER  :: npw, jbnd, ibnd, ibnd_inner_start, ibnd_inner_end, ibnd_inner_count, ik, ikk, ig, ikq, iq, ir
     INTEGER  :: h_ibnd, nrxxs, current_ik, ibnd_loop_start, nblock, nrt, irt, ir_start, ir_end
@@ -2861,9 +2862,10 @@ MODULE exx
                 ibnd_inner_count=jend-jstart+1
                 !
                 !allocate arrays
-                ALLOCATE( rhoc(nrxxs,ibnd_inner_count) )!, vcarr(ibnd_inner_count) )
+                ALLOCATE( rhoc(nrxxs,ibnd_inner_count) )
+#if defined(__USE_3D_FFT) & defined(__USE_MANY_FFT)
                 prhoc(1:nrxxs*ibnd_inner_count) => rhoc
-                
+#endif 
                 !
                 ! load the phi at this k+q and band
                 IF (noncolin) THEN
