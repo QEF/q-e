@@ -5117,7 +5117,7 @@ END SUBROUTINE compute_becpsi
 #if defined(__MPI)
        CALL MPI_IBCAST(work(:,jbnd-jstart+1), &
             lda*npol, &
-            MPI_DOUBLE, &
+            MPI_DOUBLE_PRECISION, &
             iegrp-1, &
             inter_egrp_comm, &
             request_exxbuff(jbnd-jstart+1), ierr)
