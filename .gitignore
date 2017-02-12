@@ -1,0 +1,15 @@
+*~
+*.o
+*.mod
+*.x
+*.a
+bin/*
+*.inc
+iotk
+S3DE
+include/fft_defs.h
+include/configure.h
+include/c_defs.h
+install/config.log
+install/config.status
+install/configure.msg
