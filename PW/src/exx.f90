@@ -4197,7 +4197,7 @@ END SUBROUTINE compute_becpsi
          nproc_egrp, me_egrp, negrp, my_egrp_id, nibands, ibands, &
          max_ibands, all_start, all_end
 #if defined(__MPI)
-    USE parallel_include, ONLY : MPI_STATUS_SIZE, MPI_DOUBLE_COMPLEX
+    USE parallel_include
 #endif
     USE klist,        ONLY : xk, wk, nkstot, nks, qnorm
     !
@@ -4737,7 +4737,7 @@ END SUBROUTINE compute_becpsi
                                intra_egrp_comm, my_egrp_id, negrp, &
                                max_pairs, egrp_pairs
 #if defined(__MPI)
-    USE parallel_include, ONLY : MPI_STATUS_SIZE, MPI_DOUBLE_COMPLEX
+    USE parallel_include
 #endif
     USE io_global,      ONLY : stdout
     INTEGER, intent(in)      :: ipair
@@ -4793,7 +4793,7 @@ END SUBROUTINE compute_becpsi
                                contributed_bands, all_end, &
                                iexx_istart, iexx_iend, band_roots
 #if defined(__MPI)
-    USE parallel_include, ONLY : MPI_STATUS_SIZE, MPI_DOUBLE_COMPLEX
+    USE parallel_include
 #endif
     USE io_global,      ONLY : stdout
     USE mp,                   ONLY : mp_sum, mp_bcast
@@ -4891,7 +4891,7 @@ END SUBROUTINE compute_becpsi
     USE mp_exx,       ONLY : intra_egrp_comm, inter_egrp_comm, &
          nproc_egrp, me_egrp, negrp, my_egrp_id, iexx_istart, iexx_iend
 #if defined(__MPI)
-    USE parallel_include, ONLY : MPI_STATUS_SIZE, MPI_DOUBLE_COMPLEX
+    USE parallel_include
 #endif
     USE klist,        ONLY : xk, wk, nkstot, nks, qnorm
     USE wvfct,        ONLY : current_k
@@ -5037,7 +5037,7 @@ END SUBROUTINE compute_becpsi
                                      all_end, negrp
     USE mp,             ONLY : mp_bcast
 #if defined(__MPI)
-    USE parallel_include, ONLY : MPI_STATUS_SIZE, MPI_DOUBLE_COMPLEX
+    USE parallel_include
 #endif
     COMPLEX(DP), intent(inout) :: exxtemp(lda,jend-jstart+1)
     INTEGER, intent(in) :: ikq, lda, jstart, jend
@@ -5085,7 +5085,7 @@ END SUBROUTINE compute_becpsi
                                      all_end, negrp
     USE mp,             ONLY : mp_bcast
 #if defined(__MPI)
-    USE parallel_include, ONLY : MPI_STATUS_SIZE, MPI_DOUBLE
+    USE parallel_include
 #endif
     COMPLEX(DP), intent(inout) :: exxtemp(lda*npol,jlength)
     INTEGER, intent(in) :: ikq, lda, jstart, jend, jlength
