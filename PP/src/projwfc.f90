@@ -1260,7 +1260,7 @@ ENDIF
              nlmchi(nwfc)%n, nlmchi(nwfc)%jj, nlmchi(nwfc)%l,   &
              compute_mj(nlmchi(nwfc)%jj,nlmchi(nwfc)%l,nlmchi(nwfc)%m)
         ENDDO
-1000    FORMAT (5x,"state #",i3,": atom ",i3," (",a3,"), wfc ",i2, &
+1000    FORMAT (5x,"state #",i4,": atom ",i3," (",a3,"), wfc ",i2, &
                    " (j=",f3.1," l=",i1," m_j=",f4.1,")")
      ELSE
         DO nwfc = 1, natomwfc
@@ -1269,7 +1269,7 @@ ENDIF
              nlmchi(nwfc)%n, nlmchi(nwfc)%l, nlmchi(nwfc)%m, &
              0.5d0-int(nlmchi(nwfc)%ind/(2*nlmchi(nwfc)%l+2))
         ENDDO
-1500    FORMAT (5x,"state #",i3,": atom ",i3," (",a3,"), wfc ",i2, &
+1500    FORMAT (5x,"state #",i4,": atom ",i3," (",a3,"), wfc ",i2, &
                    " (l=",i1," m=",i2," s_z=",f4.1,")")
      ENDIF
      !
@@ -1299,10 +1299,10 @@ ENDIF
            !
            ! fancy (?!?) formatting
            !
-           WRITE( stdout, '(5x,"psi = ",5(f5.3,"*[#",i3,"]+"))') &
+           WRITE( stdout, '(5x,"psi = ",5(f5.3,"*[#",i4,"]+"))') &
                 (proj1 (i), idx(i), i = 1, min(5,nwfc))
            DO j = 1, (nwfc-1)/5
-              WRITE( stdout, '(10x,"+",5(f5.3,"*[#",i3,"]+"))') &
+              WRITE( stdout, '(10x,"+",5(f5.3,"*[#",i4,"]+"))') &
                    (proj1 (i), idx(i), i = 5*j+1, min(5*(j+1),nwfc))
            ENDDO
            psum = SUM ( proj(1:natomwfc, ibnd, ik) )
