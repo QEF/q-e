@@ -425,10 +425,12 @@ CONTAINS
     ! special case : HCTH
     else if ('HCTH'.EQ. TRIM(dftout)) then
        dft_defined = set_dft_values(0,0,5,5,0,0)
+       call errore('set_dft_from_name','HCTH yields suspicious results',1)
               
     ! special case : OLYP = OPTX + LYP
     else if ('OLYP'.EQ. TRIM(dftout)) then
        dft_defined = set_dft_values(0,3,6,3,0,0)
+       call errore('set_dft_from_name','OLYP yields suspicious results',1)
        
     else if ('WC' .EQ. TRIM(dftout) ) then
     ! special case : Wu-Cohen
