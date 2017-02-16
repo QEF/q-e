@@ -112,6 +112,7 @@ CONTAINS
     logical :: file_exists                    ! A variable to say whether
                                               ! needed file exists.
 
+    CHARACTER(len=256) :: root_dir = ' '
 
 
 
@@ -134,8 +135,7 @@ CONTAINS
     ! ------------------------------------------------------------------
     ! First we check the current directory for the vdW_kernel_table
     ! file. If it is not found there, it is looked for in the
-    ! pseudopotential directory. If it's not therei, the default kernel
-    ! file installed in the PW directory of the PWSCF source is tried.
+    ! pseudopotential directory. If it's not therein, ESPRESSO_ROOT is tried.
     ! If none of those exist the code crashes.
 
     kernel_file_name=vdw_table_name
@@ -153,16 +153,25 @@ CONTAINS
 
        kernel_file_name = trim(pseudo_dir)//'/'//vdw_table_name
        inquire(file=kernel_file_name, exist=file_exists)
-
-       IF (.NOT. file_exists) THEN 
-          kernel_file_name = trim(pseudo_dir_cur)//'/'//vdw_table_name
-          INQUIRE(FILE=kernel_file_name, EXIST = file_exists) 
-
-          IF ( .NOT. file_exists) CALL errore('read_kernel_table', & 
-          TRIM(vdw_table_name)//' file not found',1)
-       END IF
-
     end if
+
+    IF (.NOT. file_exists) THEN
+      ! Try the pseudopotential current directory.
+      kernel_file_name = trim(pseudo_dir_cur)//'/'//vdw_table_name
+      INQUIRE(FILE=kernel_file_name, EXIST = file_exists)
+    END IF
+
+    IF (.NOT. file_exists) THEN
+      ! Try ESPRESSO_ROOT directory
+      CALL get_environment_variable('ESPRESSO_ROOT', root_dir)
+      IF ( trim(root_dir) /= ' ' ) THEN
+        kernel_file_name = trim(root_dir)//'/'//vdw_table_name
+        INQUIRE(FILE=kernel_file_name, EXIST = file_exists)
+      END IF
+    END IF
+
+    IF ( .NOT. file_exists) CALL errore('read_kernel_table', & 
+      TRIM(vdw_table_name)//' file not found',1)
 
 
     ! ------------------------------------------------------------------
