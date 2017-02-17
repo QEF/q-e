@@ -281,7 +281,7 @@ SUBROUTINE gradv_h_of_rho_r( rho, gradv )
       ! ... Bring rho to G space
       !
       ALLOCATE( rhoaux( dfftp%nnr ) )
-      rhoaux( : ) = CMPLX( rho( : ), 0.D0 ) 
+      rhoaux( : ) = CMPLX( rho( : ), 0.D0, KIND=dp ) 
       !
       CALL fwfft('Dense', rhoaux, dfftp)
       !
@@ -291,7 +291,7 @@ SUBROUTINE gradv_h_of_rho_r( rho, gradv )
       !
       DO ipol = 1, 3
          !
-         gaux(:) = CMPLX(0.d0,0.d0,kind=dp)
+         gaux(:) = (0.d0,0.d0)
          !
          DO ig = gstart, ngm 
            fac = fpi * g(ipol,ig) / ( gg(ig) * tpiba )

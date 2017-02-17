@@ -293,7 +293,7 @@ SUBROUTINE getqlm(np_in_sp, hcub, rho, qlm)
         !
         IF (xy .GT. zero) THEN
           !
-          cxy(1) = CMPLX(xx,yy)
+          cxy(1) = CMPLX(xx,yy,KIND=dp)
           cxy(1) = cxy(1)/xy
           DO m = 2, lpole
             cxy(m) = cxy(m-1)*cxy(1)  !cxy(m) = exp(i*m*phi_j) = (cos(phi_j) + i*sin(phi_j))^m
@@ -386,7 +386,7 @@ SUBROUTINE exx_boundaryv(np_in_sp_me, np_in_sp,v_in_sp,qlm)
       END DO
       !
       IF (xy .GT. zero) THEN
-        cxy(1) = CMPLX(xh,-yh)
+        cxy(1) = CMPLX(xh,-yh,KIND=dp)
         cxy(1) = cxy(1)/xy
         DO m=2, lpole, 1
           cxy(m) = cxy(m-1)*cxy(1)

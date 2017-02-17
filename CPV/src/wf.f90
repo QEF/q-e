@@ -3116,8 +3116,8 @@ END SUBROUTINE jacobi_rotation
           call distribute_lambda(X2, tmpr, descla(iss))
           call distribute_lambda(X3, tmpi, descla(iss))
       
-          Oc(:,:,inw) = DCMPLX(X2,X3)
-          Ol(:,:,inw) = DCMPLX(tmpr,tmpi)
+          Oc(:,:,inw) = CMPLX(X2,X3, KIND=dp)
+          Ol(:,:,inw) = CMPLX(tmpr,tmpi, KIND=dp)
        enddo
       
        Ocold = Oc
@@ -3177,7 +3177,7 @@ END SUBROUTINE jacobi_rotation
              call collect_lambda(X2, tmpr, descla(iss) )
              call collect_lambda(X3, tmpi, descla(iss))
    
-             Oc(:,:,inw)=CMPLX(X2,X3)
+             Oc(:,:,inw)=CMPLX(X2,X3,KIND=dp)
           ENDDO
    
 !======================================================================
