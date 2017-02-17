@@ -27,7 +27,7 @@ subroutine dnonloccorr(rho, drho, xq, dvaux )
   integer :: inlc
 
   allocate(dvnonloc(dfftp%nnr,nspin_mag))
-  dvnonloc(:,:)=CMPLX(0.d0,0.d0)
+  dvnonloc(:,:)= (0.d0,0.d0)
   if (get_inlc()==1 .or. get_inlc()==2) CALL dv_drho_vdwdf(rho, drho, nspin_mag, xq, dvnonloc)
   if (get_inlc()==3) CALL dv_drho_rvv10(rho, drho, nspin_mag, xq, dvnonloc)
   dvaux = dvaux + dvnonloc

@@ -168,12 +168,12 @@ subroutine get_delta_v(rho, drho, nspin, q_point, delta_v)
     
     b1(:,:) = 0.0D0
     b2(:,:) = 0.0D0
-    u(:,:) = CMPLX(0.0D0, 0.0D0)
-    delta_u(:,:) = CMPLX(0.0D0, 0.0D0)
+    u(:,:) = (0.0D0, 0.0D0)
+    delta_u(:,:) = (0.0D0, 0.0D0)
 
     ! Empty the output vector    
-    delta_v(:) = CMPLX(0.0D0, 0.0_DP)
-    gradient_drho(:,:) = CMPLX(0.0D0, 0.0D0)
+    delta_v(:) = (0.0D0, 0.0_DP)
+    gradient_drho(:,:) = (0.0D0, 0.0D0)
     
     !! -------------------------------------------------------------------------
     !! Gradients
@@ -222,7 +222,7 @@ subroutine get_delta_v(rho, drho, nspin, q_point, delta_v)
                           dn_dtheta_dgradn*(gradn_graddeltan/total_rho(i_grid))          
           
           !! I need complex variable
-          u(i_grid, P_i) =  CMPLX(theta, 0.0D0)  
+          u(i_grid, P_i) =  CMPLX(theta, 0.0D0, KIND=dp)  
 
           !! Here gradn_graddeltan IS complex, the cast is automatic
           delta_u(i_grid, P_i) =  dtheta_dn*drho(i_grid,1) +  dtheta_dgradn*gradn_graddeltan
@@ -266,8 +266,8 @@ subroutine get_delta_v(rho, drho, nspin, q_point, delta_v)
     delta_h1(:) = 0.0_DP
     delta_h2(:) = 0.0_DP
 
-    h1t(:) = CMPLX(0.0D0, 0.0D0)
-    h2t(:) = CMPLX(0.0D0, 0.0D0)
+    h1t(:) = (0.0D0, 0.0D0)
+    h2t(:) = (0.0D0, 0.0D0)
  
     do i_grid = 1,dfftp%nnr
 
@@ -303,7 +303,7 @@ subroutine get_delta_v(rho, drho, nspin, q_point, delta_v)
 
        CALL fwfft ('Dense', delta_h, dfftp) 
 
-       delta_h_aux(:) = CMPLX(0.0_DP, 0.0_DP)
+       delta_h_aux(:) = (0.0_DP, 0.0_DP)
        delta_h_aux(nl(:)) = CMPLX(0.0_DP,(g(icar,:)+q_point(icar)),kind=DP ) * delta_h(nl(:))
        
        if (gamma_only) delta_h_aux(nlm(:)) = CONJG(delta_h_aux(nl(:)))
@@ -630,8 +630,8 @@ subroutine get_u_delta_u(u, delta_u, q_point)
   allocate( kernel_of_g(Nqs, Nqs), kernel_of_gq(Nqs, Nqs) )
   allocate( temp_u(dfftp%nnr, Nqs), temp_delta_u(dfftp%nnr, Nqs) )
 
-  temp_u(:,:) = CMPLX(0.0D0, 0.0D0)
-  temp_delta_u(:,:) = CMPLX(0.0D0, 0.0D0)
+  temp_u(:,:) = (0.0D0, 0.0D0)
+  temp_delta_u(:,:) = (0.0D0, 0.0D0)
   !!
   !! Get argument in reciprocal space
   !!
