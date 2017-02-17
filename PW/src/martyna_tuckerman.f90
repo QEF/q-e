@@ -114,7 +114,7 @@ CONTAINS
   do na=1,nat
      do ig=1,ngm
         arg = tpi * SUM ( g(:,ig)*tau(:, na) ) 
-        force(:,na) = force(:,na) + g(:,ig) * CMPLX(SIN(arg),-COS(ARG)) * v(ig)
+        force(:,na) = force(:,na) + g(:,ig) * CMPLX(SIN(arg),-COS(ARG), KIND=dp) * v(ig)
      end do
      force(:,na) = - force(:,na) * zv(ityp(na))  * tpiba
   end do
@@ -171,7 +171,7 @@ CONTAINS
   idx0 = dfftp%nr1x*dfftp%nr2x * dfftp%ipp(me_bgrp+1)
   !
   ALLOCATE (aux(dfftp%nnr))
-  aux = CMPLX(0._dp,0._dp)
+  aux = (0._dp,0._dp)
   DO ir = 1, dfftp%nr1x*dfftp%nr2x * dfftp%npl
      !
      ! ... three dimensional indices
@@ -220,7 +220,7 @@ CONTAINS
      call  write_wg_on_file(filplot, plot)
 
      filplot = 'wg_corr_g'
-     aux(:) = CMPLX(0._dp,0._dp)
+     aux(:) = (0._dp,0._dp)
      do ig =1, ngm
         aux(nl(ig))  = smooth_coulomb_g( tpiba2*gg(ig))/omega
      end do
@@ -231,7 +231,7 @@ CONTAINS
      call  write_wg_on_file(filplot, plot)
 
      filplot = 'wg_corr_diff'
-     aux(:) = CMPLX(0._dp,0._dp)
+     aux(:) = (0._dp,0._dp)
      aux(nl(1:ngm)) = wg_corr(1:ngm) / omega
      if (gamma_only) then
         aux(:) = 0.5_dp * aux(:) 

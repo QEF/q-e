@@ -1322,7 +1322,7 @@ MODULE realus
           arg = ( xk(1,ik) * xyz_beta(1,ir,ia) + &
                   xk(2,ik) * xyz_beta(2,ir,ia) + &
                   xk(3,ik) * xyz_beta(3,ir,ia) ) * tpiba
-          xkphase( ir, ia ) = CMPLX(COS(arg),-SIN(arg))
+          xkphase( ir, ia ) = CMPLX(COS(arg),-SIN(arg),KIND=dp)
        end do
     end do
     !

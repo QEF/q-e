@@ -1494,10 +1494,10 @@ contains
           !apply precondition
           temp = g2kin(ipw)-et(ibnd,1)-reference
           if( abs(temp) .lt. 0.001d0 ) temp = sign(0.001d0,temp)
-          vec_b(ipw,ibnd,1,ib)=cmplx(R,R2)/temp
+          vec_b(ipw,ibnd,1,ib)=cmplx(R,R2,KIND=dp)/temp
         enddo
         if(gstart==2) vec_b(1,ibnd,1,ib)=&
-          &cmplx(dble(vec_b(1,ibnd,1,ib)),0.0d0) ! Gamma point wfc must be real at g=0
+          &cmplx(dble(vec_b(1,ibnd,1,ib)),0.0d0,KIND=dp) ! Gamma point wfc must be real at g=0
       enddo
       call lr_norm(vec_b(1,1,1,ib)) ! For increase numerical stability
     enddo
@@ -1694,13 +1694,13 @@ contains
 
     ! Set the new vec_b and s_vec_b
     ! Rotation: vec_b_new = vec_b * U
-    MRZ(:,:)=cmplx(MR(:,:),0.0d0)
+    MRZ(:,:)=cmplx(MR(:,:),0.0d0, KIND=dp)
     ! set vec_b
     call ZGEMM('N', 'N', nwords, num_basis_new, &
                num_basis, (1.0D0,0.0d0), vec_b, nwords, &
                MRZ, num_basis, (0.0D0,0.0D0), vec_b_temp, nwords)
     
-    vec_b=cmplx(0.0d0,0.0d0)
+    vec_b=(0.0d0,0.0d0)
     vec_b(:,:,:,1:num_basis_new)=vec_b_temp(:,:,:,1:num_basis_new)
 
     ! Set s_vec_b if needed
@@ -1709,7 +1709,7 @@ contains
                num_basis, (1.0D0,0.0d0), svec_b, nwords, &
                MRZ, num_basis, (0.0D0,0.0D0), vec_b_temp, nwords)
 
-      svec_b=cmplx(0.0d0,0.0d0)
+      svec_b=(0.0d0,0.0d0)
       svec_b(:,:,:,1:num_basis_new)=vec_b_temp(:,:,:,1:num_basis_new)
       do ib = 1, num_basis_new
         call lr_apply_s(vec_b(:,:,:,ib),svec_b(:,:,:,ib))
@@ -1747,7 +1747,7 @@ contains
                num_basis, (1.0D0,0.0d0),D_vec_b, nwords, &
                MRZ, num_basis, (0.0D0,0.0D0), vec_b_temp, nwords)
 
-      D_vec_b=cmplx(0.0d0,0.0d0)
+      D_vec_b=(0.0d0,0.0d0)
       D_vec_b(:,:,:,1:num_basis_new)=vec_b_temp(:,:,:,1:num_basis_new)
 
       ! Then C_vec_b
@@ -1755,7 +1755,7 @@ contains
                num_basis, (1.0D0,0.0d0),C_vec_b, nwords, &
                MRZ, num_basis, (0.0D0,0.0D0), vec_b_temp, nwords)
 
-      C_vec_b=cmplx(0.0d0,0.0d0)
+      C_vec_b=(0.0d0,0.0d0)
       C_vec_b(:,:,:,1:num_basis_new)=vec_b_temp(:,:,:,1:num_basis_new)
     endif
 

@@ -527,7 +527,7 @@ PROGRAM matdyn
         dyn(:,:,:,:) = (0.d0, 0.d0)
 
         lo_to_split=.FALSE.
-        f_of_q(:,:,:,:)=CMPLX(0.d0,0.d0)
+        f_of_q(:,:,:,:) = (0.d0,0.d0)
 
         IF(na_ifc) THEN
 

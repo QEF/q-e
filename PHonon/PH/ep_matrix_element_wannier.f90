@@ -54,9 +54,9 @@ SUBROUTINE ep_matrix_element_wannier()
      write(stdout,*) 'Reading dvscf in cartesian coordinates !'
      write(stdout,*)
      
-     u=CMPLX(0.d0,0.d0)
+     u=(0.d0,0.d0)
      do irr=1,3*nat
-        u(irr,irr)=CMPLX(1.d0,0.d0)
+        u(irr,irr)=(1.d0,0.d0)
      enddo
      
 
@@ -64,7 +64,7 @@ SUBROUTINE ep_matrix_element_wannier()
 !        ALLOCATE (dvrot ( nrxx , nspin , 3*nat) )
 !        fildvscf_asc=trim(tmp_dir)//trim(prefix)//"."//trim(fildvscf)//'1'
 !        open(unit=7899,file=fildvscf_asc,status='unknown')
-!        dvrot=CMPLX(0.0,0.0)
+!        dvrot=(0.0,0.0)
 !        do na=1,nat
 !           do ipol=1,3
 !              irr=(na-1)*3+ipol
@@ -72,7 +72,7 @@ SUBROUTINE ep_matrix_element_wannier()
 !                 do j = 1, dfftp%nr2
 !                    do i = 1, dfftp%nr1
 !                       read(7899,*)   n, rep,imp
-!                       dvrot(n,1,irr)=CMPLX(rep,imp)
+!                       dvrot(n,1,irr)=CMPLX(rep,imp,kind=dp)
 !                    enddo
 !                 enddo
 !              enddo
@@ -401,7 +401,7 @@ SUBROUTINE elphel_refolded (npe, imode0, dvscfins)
      !
      ! read unperturbed wavefuctions psi(k) and psi(k+q)
      !
-     evc=cmplx(0.d0,0.d0)
+     evc=(0.d0,0.d0)
 
 !    Warning error in reading wfc, this could explain.
 !    We read here the wfc at the Gamma point, that is
@@ -669,7 +669,7 @@ subroutine calculate_and_apply_phase(ik, ikqg, igqg, npwq_refolded, g_kpq, xk_ga
 
   call gk_sort (xkqg, ngm, g_scra, gcutw, npwq_refolded, igkq_, gk)
 
-  phase(:) = CMPLX(0.d0,0.d0)
+  phase(:) = (0.d0,0.d0)
 
   if ( igqg(ik)>0) then
      phase( nls(igqg(ik)) ) = (1.d0,0.d0)

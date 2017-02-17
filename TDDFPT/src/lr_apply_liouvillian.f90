@@ -513,7 +513,7 @@ CONTAINS
                            psic( box_beta(ir,ia) ) = &
                                 &psic(  box_beta(ir,ia) ) + &
                                 &betasave(ir,ih,ia)*&
-                                &CMPLX( w1(ih), w2(ih) )
+                                &CMPLX( w1(ih), w2(ih), KIND=dp )
                           !
                           ENDDO
                         !

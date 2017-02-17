@@ -117,7 +117,7 @@ PROGRAM wfck2r
         !
         ! perform the fourier transform
         !
-        evc_r = cmplx(0.d0, 0.d0)     
+        evc_r = (0.d0, 0.d0)     
         do ig = 1, npw
            evc_r (nls (igk_k(ig,ik) ),1 ) = evc (ig,ibnd)
         enddo
@@ -129,7 +129,7 @@ PROGRAM wfck2r
            CALL invfft ('Wave', evc_r(:,2), dffts)
         ENDIF
 
-        dist_evc_r=CMPLX(0.d0,0.d0)
+        dist_evc_r=(0.d0,0.d0)
 
 #if defined (__MPI)
         DO is = 1, nspin_mag

@@ -437,8 +437,8 @@ ALLOCATE( ovp(dimwan,dimwan,nrtot) )
 
 ! extract submatrices for leads
 
-rham(:,:,1)=cmplx(K00(:,:),0.0)
-rham(:,:,2)=(0.0,0.0)
+rham(:,:,1)=cmplx(K00(:,:),0.0_dp, KIND=dp)
+rham(:,:,2)=(0.0_dp,0.0_dp)
 
 ! 00
 DO i=1,36
@@ -472,8 +472,8 @@ ENDDO
 
 ! end extracting matrices
 
-rham(:,:,1)=cmplx(K00(:,:),0.0)
-rham(:,:,2)=cmplx(K01(:,:),0.0)
+rham(:,:,1)=cmplx(K00(:,:),0.0_dp, KIND=dp)
+rham(:,:,2)=cmplx(K01(:,:),0.0_dp, KIND=dp)
 
 vectors: SELECT CASE (idir)
 

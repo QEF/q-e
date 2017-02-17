@@ -100,9 +100,9 @@ subroutine set_irr_sym_new ( t, tmq, npertx )
               enddo
               arg = arg * tpi
               if (isymq.eq.nsymtot.and.minus_q) then
-                 fase = CMPLX (cos (arg), sin (arg) )
+                 fase = CMPLX (cos (arg), sin (arg), KIND=dp )
               else
-                 fase = CMPLX (cos (arg), - sin (arg) )
+                 fase = CMPLX (cos (arg),-sin (arg), KIND=dp )
               endif
               do ipol = 1, 3
                  do jpol = 1, 3
@@ -149,7 +149,7 @@ subroutine set_irr_sym_new ( t, tmq, npertx )
         do ipert = 1, npert (irr)
            IF (modenum /= 0 .AND. modenum /= irr) CYCLE
            do jpert = 1, npert (irr)
-              wrk = cmplx(0.d0,0.d0)
+              wrk = (0.d0,0.d0)
               do kpert = 1, npert (irr)
                  wrk = wrk + t (ipert,kpert,irot,irr) * conjg( t(jpert,kpert,irot,irr))
               enddo

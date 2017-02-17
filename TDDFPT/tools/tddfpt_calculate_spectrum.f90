@@ -1269,8 +1269,8 @@ SUBROUTINE calc_chi(freq,broad,chi)
         !
      ENDDO
      !
-     r(ip,:) = cmplx(0.0d0,0.0d0,dp)
-     r(ip,1) = cmplx(1.0d0,0.0d0,dp)
+     r(ip,:) = (0.0d0,0.0d0)
+     r(ip,1) = (1.0d0,0.0d0)
      !
      ! |w_t|=(w-L) |1,0,0,...,0|
      ! 

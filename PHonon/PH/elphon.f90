@@ -57,9 +57,9 @@ SUBROUTINE elphon()
 
   if(dvscf_star%basis.eq.'cartesian') then
      write(stdout,*) 'Setting patterns to identity'
-     u=CMPLX(0.d0,0.d0)
+     u=(0.d0,0.d0)
      do irr=1,3*nat
-        u(irr,irr)=CMPLX(1.d0,0.d0)
+        u(irr,irr)=(1.d0,0.d0)
      enddo
   endif
   !

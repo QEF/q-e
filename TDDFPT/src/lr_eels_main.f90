@@ -168,8 +168,8 @@ PROGRAM lr_eels_main
         !
         evc1(:,:,:,2) = evc1(:,:,:,1)
         !
-        evc1_old(:,:,:,1) = cmplx(0.0d0,0.0d0)
-        evc1_old(:,:,:,2) = cmplx(0.0d0,0.0d0)
+        evc1_old(:,:,:,1) = (0.0d0,0.0d0)
+        evc1_old(:,:,:,2) = (0.0d0,0.0d0)
         !
         iter_restart = 1
         !

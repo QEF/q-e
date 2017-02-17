@@ -444,7 +444,7 @@ SUBROUTINE write_evc ( input_file_name, real_or_complex, &
         DO is = 1, ns
           IF ( real_or_complex .EQ. 1 ) THEN
             DO ig = 1, ngk_g ( ik )
-              wfng_buf ( ig, is ) = CMPLX ( wfngr ( ig, is ), 0.0D0 )
+              wfng_buf ( ig, is ) = CMPLX ( wfngr ( ig, is ), 0.0D0, KIND=dp )
             ENDDO
           ELSE
             DO ig = 1, ngk_g ( ik )
@@ -791,7 +791,7 @@ SUBROUTINE write_cd ( input_file_name, real_or_complex, output_dir_name )
     DO is = 1, ns
       IF ( real_or_complex .EQ. 1 ) THEN
         DO ig = 1, ng
-          rhog ( ig, is ) = CMPLX ( rhogr ( ig, is ), 0.0D0 )
+          rhog ( ig, is ) = CMPLX ( rhogr ( ig, is ), 0.0D0, KIND=dp )
         ENDDO
       ELSE
         DO ig = 1, ng
@@ -811,7 +811,7 @@ SUBROUTINE write_cd ( input_file_name, real_or_complex, output_dir_name )
   IF ( ionode ) THEN
     DO is = 1, ns
       DO ig = 1, ng
-        rhog ( ig, is ) = rhog ( ig, is ) / CMPLX ( omega, 0.0D0 )
+        rhog ( ig, is ) = rhog ( ig, is ) / CMPLX ( omega, 0.0D0, KIND=dp )
       ENDDO
     ENDDO
   ENDIF

@@ -246,7 +246,7 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, &
   DO i = 1,nat
     !
     xq_tau=tpi*SUM(xq*tau(:,i))
-    phase_xq= CMPLX (cos(xq_tau),sin(xq_tau))
+    phase_xq= CMPLX (cos(xq_tau),sin(xq_tau), KIND=dp)
     !
     DO ipol=1,3
        imode0 = (i-1)*3 + ipol

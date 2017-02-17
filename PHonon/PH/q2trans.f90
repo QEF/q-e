@@ -663,8 +663,8 @@ ALLOCATE( ivr(3,nrtot) )
 ALLOCATE( rham(dimwan,dimwan,nrtot) )
 ALLOCATE( ovp(dimwan,dimwan,nrtot) )
 
-rham(:,:,1)=cmplx(K00(:,:),0.0)
-rham(:,:,2)=cmplx(K01(:,:),0.0)
+rham(:,:,1)=cmplx(K00(:,:),0.0_dp, KIND=dp)
+rham(:,:,2)=cmplx(K01(:,:),0.0_dp, KIND=dp)
 
 vectors: SELECT CASE (idir)
 
