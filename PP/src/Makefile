@@ -58,8 +58,8 @@ all : tldeps average.x bands.x dos.x epsilon.x initial_state.x fs.x \
       plan_avg.x plotband.x plotproj.x plotrho.x pmw.x pp.x projwfc.x \
       pawplot.x sumpdos.x pw2wannier90.x pw_export.x pw2gw.x \
       wannier_ham.x wannier_plot.x molecularpdos.x \
-      pw2bgw.x bgw2pw.x wfck2r.x importexport_binary.x \
-      fermi_velocity.x pfermi.x
+      pw2bgw.x bgw2pw.x wfck2r.x importexport_binary.x
+
 
 libpp.a : $(PPOBJS) 
 	$(AR) $(ARFLAGS) $@ $?
@@ -199,16 +199,6 @@ bgw2pw.x : bgw2pw.o libpp.a $(MODULES) $(LIBOBJS)
 fs.x : fermisurface.o libpp.a $(MODULES) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
 		fermisurface.o libpp.a $(MODULES) $(LIBOBJS) $(LIBS)
-	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
-
-fermi_velocity.x : fermi_velocity.o $(MODULES) $(LIBOBJS)
-	$(LD) $(LDFLAGS) -o $@ \
-		fermi_velocity.o $(MODULES) $(LIBOBJS) $(LIBS)
-	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
-
-pfermi.x : pfermi.o $(MODULES) $(LIBOBJS)
-	$(LD) $(LDFLAGS) -o $@ \
-		pfermi.o $(MODULES) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
 tldeps :
