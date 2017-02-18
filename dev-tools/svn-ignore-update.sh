@@ -24,7 +24,6 @@ PP/src
 PP/simple_transport/src
 TDDFPT/src
 TDDFPT/tools
-Modules
 FFTXlib
 atomic/src
 QHA/SRC
@@ -52,4 +51,18 @@ do
 svn propset svn:ignore -F ./ignorelist ${ESPRESSO_ROOT}/${x}
 done
 
+# Special case for "Modules"
+cat > ignorelist << END
+version.f90
+version.f90.tmp
+*_tmp.f90
+*.mod
+*.o
+*.a
+*.x
+END
+
+svn propset svn:ignore -F ./ignorelist ${ESPRESSO_ROOT}/Modules
+
+# Cleanup
 rm ignorelist dirlist
