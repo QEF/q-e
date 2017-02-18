@@ -1,6 +1,33 @@
 
-     Program POST-PROC v.4.1CVS starts ...
-     Today is 26Feb2009 at 16:21:34 
+     Program PWCOND v.6.0 (svn rev. 13317) starts on 18Feb2017 at 20:36:36 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     1 processors
+
+     Reading data from directory:
+     /scratch/scitas/nvarini/espresso_trunk_svn/tempdir/ptt.save
+
+   Info: using nr1, nr2, nr3 values from input
+
+   Info: using nr1, nr2, nr3 values from input
+
+     IMPORTANT: XC functional enforced from input :
+     Exchange-correlation      =  SLA  PZ   NOGX NOGC ( 1  1  0  0 0 0)
+     Any further DFT definition will be discarded
+     Please, verify this is what you really want
+
+ 
+     G-vector sticks info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Sum         553     261     89                13517     4501     855
+ 
 
      Check: negative/imaginary core charge=   -0.000004    0.000000
  
@@ -8,14 +35,14 @@
 
      GEOMETRY:
 
-     lattice parameter (a_0)   =       5.2300  a.u.
+     lattice parameter (alat)  =       5.2300  a.u.
      the volume                =     202.3093 (a.u.)^3
      the cross section         =      27.3529 (a.u.)^2
-     l of the unit cell        =       1.4142 (a_0)
+     l of the unit cell        =       1.4142 (alat)
      number of atoms/cell      =            2
      number of atomic types    =            1
 
-     crystal axes: (cart. coord. in units of a_0)
+     crystal axes: (cart. coord. in units of alat)
                a(1) = (  1.0000  0.0000  0.0000 )  
                a(2) = (  0.0000  1.0000  0.0000 )  
                a(3) = (  0.0000  0.0000  1.4142 )  
@@ -23,27 +50,27 @@
 
    Cartesian axes
 
-     site n.     atom                  positions (a_0 units)
+     site n.     atom                  positions (alat units)
           1           Pt  tau(  1)=(  0.0000  0.0000  1.4142  )
           2           Pt  tau(  2)=(  0.5000  0.5000  0.7071  )
 
      nr1s                      =           20
      nr2s                      =           20
      nr3s                      =           25
-     nrx1s                     =           20
-     nrx2s                     =           20
-     nrx3s                     =           25
+     nr1sx                     =           20
+     nr2sx                     =           20
+     nr3sx                     =           25
      nr1                       =           27
      nr2                       =           27
      nr3                       =           40
-     nrx1                      =           27
-     nrx2                      =           27
-     nrx3                      =           40
+     nr1x                      =           27
+     nr2x                      =           27
+     nr3x                      =           40
 
  _______________________________
   Radii of nonlocal spheres: 
 
-     type       ibeta     ang. mom.          radius (a_0 units)
+     type       ibeta     ang. mom.          radius (alat units)
           Pt      1         2                    0.6547
           Pt      2         2                    0.6547
           Pt      3         2                    0.6547
@@ -53,10 +80,8 @@
 ----- General information -----
  
 ----- Complex band structure calculation -----
+     Non magnetic calculation with spin-orbit
 
-         Noncollinear calculations
-
-         Noncollinear calculations with spin-orbit
 
      nrx                       =           20
      nry                       =           20
@@ -72,7 +97,7 @@
 
 
      number of k_|| points=    1
-                       cart. coord. in units 2pi/a_0
+                       cryst. coord. 
         k(    1) = (   0.0000000   0.0000000), wk =   1.0000000
 ----- Information about left lead ----- 
 
@@ -82,7 +107,7 @@
      norbf                    =           78
      nrz                      =           25
 
-      iorb      type   ibeta   ang. mom.   m       position (a_0)
+      iorb      type   ibeta   ang. mom.   m       position (alat)
         1        1       1        2        1   taunew(   1)=(  0.0000  0.0000  0.0000)
         2        1       1        2        2   taunew(   2)=(  0.0000  0.0000  0.0000)
         3        1       1        2        3   taunew(   3)=(  0.0000  0.0000  0.0000)
@@ -187,38 +212,37 @@
    23   1.2445 1.3011 0.0566   000000000000000000000000001111111111111111111111111111111111111111111111111111
    24   1.3011 1.3576 0.0566   000000000000000000000000001111111111111111111111111111111111111111111111111111
    25   1.3576 1.4142 0.0566   000000000000000000000000001111111111111111111111111111111111111111111111111111
-
-        k(    1) = (   0.0000000   0.0000000), wk =   1.0000000
-
  ngper, shell number =           69          13
  ngper, ngper*npol, n2d =           69         138         128
+---  E-Ef =    0.0000000  k =    0.0000000   0.0000000
+---  ie =          1  ik =          1
  Nchannels of the left tip =            6
  Right moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.0642000   0.0000000   0.0000000
-  -0.0642000   0.0000000   0.0000000
-  -0.1970564   0.0000000   0.0000000
-  -0.1970564   0.0000000   0.0000000
-  -0.3204214   0.0000000   0.0000000
-  -0.3204214   0.0000000   0.0000000
+  -0.0641663   0.0000000   0.0000000
+  -0.0641663   0.0000000   0.0000000
+  -0.1970131   0.0000000   0.0000000
+  -0.1970131   0.0000000   0.0000000
+  -0.3210247   0.0000000   0.0000000
+  -0.3210247   0.0000000   0.0000000
  Left moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.0642000   0.0000000   0.0000000
-   0.0642000   0.0000000   0.0000000
-   0.1970564   0.0000000   0.0000000
-   0.1970564   0.0000000   0.0000000
-   0.3204214   0.0000000   0.0000000
-   0.3204214   0.0000000   0.0000000
+   0.0641663   0.0000000   0.0000000
+   0.0641663   0.0000000   0.0000000
+   0.1970131   0.0000000   0.0000000
+   0.1970131   0.0000000   0.0000000
+   0.3210247   0.0000000   0.0000000
+   0.3210247   0.0000000   0.0000000
  
  
-     PWCOND       :    50.71s CPU time,   54.11s wall time
+     PWCOND       :     7.82s CPU         7.89s WALL
 
-     init         :     3.05s CPU
-     poten        :     0.02s CPU
-     local        :     2.65s CPU
+     init         :      0.71s CPU      0.75s WALL (       1 calls)
+     poten        :      0.00s CPU      0.00s WALL (       1 calls)
+     local        :      0.21s CPU      0.22s WALL (       1 calls)
  
-     scatter_forw :    38.54s CPU
+     scatter_forw :      6.44s CPU      6.45s WALL (       1 calls)
  
-     compbs       :     6.47s CPU
-     compbs_2     :     5.42s CPU
+     compbs       :      0.46s CPU      0.46s WALL (       1 calls)
+     compbs_2     :      0.37s CPU      0.38s WALL (       1 calls)
  

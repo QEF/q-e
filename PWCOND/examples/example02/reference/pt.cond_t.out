@@ -1,6 +1,33 @@
 
-     Program POST-PROC v.4.1CVS starts ...
-     Today is 26Feb2009 at 16:23: 6 
+     Program PWCOND v.6.0 (svn rev. 13317) starts on 18Feb2017 at 20:36:52 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     1 processors
+
+     Reading data from directory:
+     /scratch/scitas/nvarini/espresso_trunk_svn/tempdir/pt4.save
+
+   Info: using nr1, nr2, nr3 values from input
+
+   Info: using nr1, nr2, nr3 values from input
+
+     IMPORTANT: XC functional enforced from input :
+     Exchange-correlation      =  SLA  PZ   NOGX NOGC ( 1  1  0  0 0 0)
+     Any further DFT definition will be discarded
+     Please, verify this is what you really want
+
+ 
+     G-vector sticks info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Sum         325     221     69                12501     6843    1149
+ 
 
      Check: negative/imaginary core charge=   -0.000009    0.000000
  
@@ -8,14 +35,14 @@
 
      GEOMETRY:
 
-     lattice parameter (a_0)   =       5.2300  a.u.
+     lattice parameter (alat)  =       5.2300  a.u.
      the volume                =     404.6186 (a.u.)^3
      the cross section         =      27.3529 (a.u.)^2
-     l of the unit cell        =       2.8284 (a_0)
+     l of the unit cell        =       2.8284 (alat)
      number of atoms/cell      =            4
      number of atomic types    =            1
 
-     crystal axes: (cart. coord. in units of a_0)
+     crystal axes: (cart. coord. in units of alat)
                a(1) = (  1.0000  0.0000  0.0000 )  
                a(2) = (  0.0000  1.0000  0.0000 )  
                a(3) = (  0.0000  0.0000  2.8284 )  
@@ -23,7 +50,7 @@
 
    Cartesian axes
 
-     site n.     atom                  positions (a_0 units)
+     site n.     atom                  positions (alat units)
           1           Pt  tau(  1)=(  0.0000  0.0000  2.8284  )
           2           Pt  tau(  2)=(  0.5000  0.5000  0.7071  )
           3           Pt  tau(  3)=(  0.0000  0.0000  1.4142  )
@@ -32,20 +59,20 @@
      nr1s                      =           18
      nr2s                      =           18
      nr3s                      =           48
-     nrx1s                     =           18
-     nrx2s                     =           18
-     nrx3s                     =           48
+     nr1sx                     =           18
+     nr2sx                     =           18
+     nr3sx                     =           48
      nr1                       =           24
      nr2                       =           24
      nr3                       =           60
-     nrx1                      =           24
-     nrx2                      =           24
-     nrx3                      =           60
+     nr1x                      =           24
+     nr2x                      =           24
+     nr3x                      =           60
 
  _______________________________
   Radii of nonlocal spheres: 
 
-     type       ibeta     ang. mom.          radius (a_0 units)
+     type       ibeta     ang. mom.          radius (alat units)
           Pt      1         2                    0.6547
           Pt      2         2                    0.6547
           Pt      3         2                    0.6547
@@ -55,10 +82,8 @@
 ----- General information -----
  
 --- T calc. with identical leads (ikind=1) --- 
+     Non magnetic calculation with spin-orbit
 
-         Noncollinear calculations
-
-         Noncollinear calculations with spin-orbit
 
      nrx                       =           18
      nry                       =           18
@@ -74,7 +99,7 @@
 
 
      number of k_|| points=    1
-                       cart. coord. in units 2pi/a_0
+                       cryst. coord. 
         k(    1) = (   0.0000000   0.0000000), wk =   1.0000000
 ----- Information about left/right lead -----
 
@@ -84,7 +109,7 @@
      norbf                    =           78
      nrz                      =           24
 
-      iorb      type   ibeta   ang. mom.   m       position (a_0)
+      iorb      type   ibeta   ang. mom.   m       position (alat)
         1        1       1        2        1   taunew(   1)=(  0.0000  0.0000  0.0000)
         2        1       1        2        2   taunew(   2)=(  0.0000  0.0000  0.0000)
         3        1       1        2        3   taunew(   3)=(  0.0000  0.0000  0.0000)
@@ -195,7 +220,7 @@
      norbf                    =           78
      nrz                      =           24
 
-      iorb      type   ibeta   ang. mom.   m       position (a_0)
+      iorb      type   ibeta   ang. mom.   m       position (alat)
         1        1       1        2        1   taunew(   1)=(  0.0000  0.0000  0.0000)
         2        1       1        2        2   taunew(   2)=(  0.0000  0.0000  0.0000)
         3        1       1        2        3   taunew(   3)=(  0.0000  0.0000  0.0000)
@@ -299,32 +324,31 @@
    22   1.2374 1.2963 0.0589   000000000000000000000000001111111111111111111111111111111111111111111111111111
    23   1.2963 1.3553 0.0589   000000000000000000000000001111111111111111111111111111111111111111111111111111
    24   1.3553 1.4142 0.0589   000000000000000000000000001111111111111111111111111111111111111111111111111111
-
-        k(    1) = (   0.0000000   0.0000000), wk =   1.0000000
-
  ngper, shell number =           57          11
  ngper, ngper*npol, n2d =           57         114         108
+---  E-Ef =    0.0000000  k =    0.0000000   0.0000000
+---  ie =          1  ik =          1
  Nchannels of the left tip =            8
  Right moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.0461333   0.0000000   0.0000000
-  -0.0461333   0.0000000   0.0000000
-  -0.0896674   0.0000000   0.0000000
-  -0.0896674   0.0000000   0.0000000
-  -0.2074417   0.0000000   0.0000000
-  -0.2074417   0.0000000   0.0000000
-  -0.3626881   0.0000000   0.0000000
-  -0.3626881   0.0000000   0.0000000
+  -0.0861024   0.0000006   0.0000000
+  -0.0861024   0.0000006   0.0000000
+  -0.0960538   0.0000009   0.0000000
+  -0.0960538   0.0000009   0.0000000
+  -0.2110361   0.0000002   0.0000000
+  -0.2110361   0.0000002   0.0000000
+  -0.3729527   0.0000004   0.0000000
+  -0.3729527   0.0000004   0.0000000
  Left moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.0461333   0.0000000   0.0000000
-   0.0461333   0.0000000   0.0000000
-   0.0896674   0.0000000   0.0000000
-   0.0896674   0.0000000   0.0000000
-   0.2074417   0.0000000   0.0000000
-   0.2074417   0.0000000   0.0000000
-   0.3626880   0.0000000   0.0000000
-   0.3626880   0.0000000   0.0000000
+   0.0861023   0.0000006   0.0000000
+   0.0861023   0.0000006   0.0000000
+   0.0960538   0.0000009   0.0000000
+   0.0960538   0.0000009   0.0000000
+   0.2110361   0.0000002   0.0000000
+   0.2110361   0.0000002   0.0000000
+   0.3729527   0.0000004   0.0000000
+   0.3729527   0.0000004   0.0000000
  
  to transmit
  Band j to band i transmissions and reflections:
@@ -410,16 +434,17 @@
     8 -->     8     1.00000     0.00000
    Total T_j, R_j =    1.00000  0.00000
  
-          E-Ef(ev), T =    0.0000000   8.0000000
+          E-Ef(ev), T =    0.0000000   7.9999966
+   T_tot     0.00000      0.80000E+01
  
-     PWCOND       :  1m 6.93s CPU time,     1m11.34s wall time
+     PWCOND       :    11.60s CPU        11.67s WALL
 
-     init         :     3.00s CPU
-     poten        :     0.04s CPU
-     local        :     3.05s CPU
+     init         :      0.61s CPU      0.66s WALL (       1 calls)
+     poten        :      0.00s CPU      0.01s WALL (       1 calls)
+     local        :      0.26s CPU      0.27s WALL (       1 calls)
  
-     scatter_forw :    54.90s CPU (       2 calls,  27.452 s avg)
+     scatter_forw :     10.20s CPU     10.20s WALL (       2 calls)
  
-     compbs       :     5.08s CPU
-     compbs_2     :     3.76s CPU
+     compbs       :      0.47s CPU      0.48s WALL (       1 calls)
+     compbs_2     :      0.34s CPU      0.34s WALL (       1 calls)
  

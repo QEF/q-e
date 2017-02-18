@@ -107,7 +107,7 @@ cat > pt.tet.in << EOF
     ecutwfc = 30.0,
     ecutrho = 250.0,
     occupations='smearing',
-    smearing='methfessel-paxton',
+    smearing='mv',
     degauss=0.02
  /
  &electrons
@@ -167,7 +167,7 @@ cat > pt4.in << EOF
     ecutwfc = 25.0,
     ecutrho = 150.0,
     occupations='smearing',
-    smearing='methfessel-paxton',
+    smearing='mv',
     degauss=0.02
  /
  &electrons
