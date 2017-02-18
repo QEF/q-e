@@ -129,7 +129,7 @@ cat > graphite.scf.in << EOF
     ntyp            = 1
 
     occupations     = 'fixed'
-    smearing        = 'methfessel-paxton'
+    smearing        = 'mv'
     degauss         = 0.02
 
     ecutwfc         = 30.0
