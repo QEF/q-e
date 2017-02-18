@@ -108,7 +108,7 @@ cat > Auwire.scf.in << EOF
     ecutwfc = 25.0,
     ecutrho = 150.0,
     occupations='smearing',
-    smearing='methfessel-paxton',
+    smearing='mv',
     degauss=0.01
  /
  &electrons
@@ -170,7 +170,7 @@ cat > AuwireU.scf.in << EOF
     ecutwfc = 25.0,
     ecutrho = 150.0,
     occupations = 'smearing',
-    smearing = 'methfessel-paxton',
+    smearing = 'mv',
     degauss = 0.01,
     lda_plus_U = .true.,
     U_projection_type = 'pseudo',
@@ -235,7 +235,7 @@ cat > Auwire1.scf.in << EOF
     ecutwfc = 25.0,
     ecutrho = 150.0,
     occupations = 'smearing',
-    smearing = 'methfessel-paxton',
+    smearing = 'mv',
     degauss = 0.01
  /
  &electrons
@@ -273,7 +273,7 @@ cat > COatAuwire.scf.in << EOF
     ecutwfc = 25.0,
     ecutrho = 150.0
     occupations = 'smearing',
-    smearing = 'methfessel-paxton',
+    smearing = 'mv',
     degauss = 0.01
  /
  &electrons
@@ -360,7 +360,7 @@ cat > Auwire1U.scf.in << EOF
     ecutwfc = 25.0,
     ecutrho = 150.0,
     occupations = 'smearing',
-    smearing = 'methfessel-paxton',
+    smearing = 'mv',
     degauss = 0.01,
     lda_plus_U = .true.,
     U_projection_type = 'pseudo',
@@ -401,7 +401,7 @@ cat > COatAuwireU.scf.in << EOF
     ecutwfc = 25.0,
     ecutrho = 150.0
     occupations = 'smearing',
-    smearing = 'methfessel-paxton',
+    smearing = 'mv',
     degauss = 0.01,
     lda_plus_U = .true.,
     U_projection_type = 'pseudo',
