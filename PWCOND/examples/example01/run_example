@@ -105,7 +105,7 @@ cat > al.scf.in << EOF
     ntyp= 1,
     ecutwfc = 15.0,
     occupations='smearing',
-    smearing='methfessel-paxton',
+    smearing='mv',
     degauss=0.01
  /
  &electrons
@@ -166,7 +166,7 @@ cat > alwire.scf.in << EOF
     nspin = 1,
     ecutwfc = 15.0,
     occupations='smearing',
-    smearing='methfessel-paxton',
+    smearing='mv',
     degauss=0.01
  /
  &electrons
@@ -228,7 +228,7 @@ cat > ni.scf.in << EOF
     ecutwfc = 25.0,
     ecutrho = 250.0
     occupations='smearing',
-    smearing='methfessel-paxton',
+    smearing='mv',
     degauss=0.01
  /
  &electrons
@@ -290,7 +290,7 @@ cat > alwire1.scf.in << EOF
     ecutwfc = 25.0,
     ecutrho = 150.0
     occupations='smearing',
-    smearing='methfessel-paxton',
+    smearing='mv',
     degauss=0.01
  /
  &electrons
@@ -327,7 +327,7 @@ cat > AlwireH.scf.in << EOF
     ecutwfc = 25.0,
     ecutrho = 150.0
     occupations='smearing',
-    smearing='methfessel-paxton',
+    smearing='mv',
     degauss=0.01
  /
  &electrons

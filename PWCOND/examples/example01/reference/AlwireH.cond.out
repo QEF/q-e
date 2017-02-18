@@ -1,19 +1,46 @@
 
-     Program POST-PROC v.4.1CVS starts ...
-     Today is 26Feb2009 at 17: 9: 7 
+     Program PWCOND v.6.0 (svn rev. 13317) starts on 18Feb2017 at 20:16:12 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     1 processors
+
+     Reading data from directory:
+     /scratch/scitas/nvarini/espresso_trunk_svn/tempdir/alw.save
+
+   Info: using nr1, nr2, nr3 values from input
+
+   Info: using nr1, nr2, nr3 values from input
+
+     IMPORTANT: XC functional enforced from input :
+     Exchange-correlation      =  SLA  PZ   NOGX NOGC ( 1  1  0  0 0 0)
+     Any further DFT definition will be discarded
+     Please, verify this is what you really want
+
+ 
+     G-vector sticks info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Sum        1725    1137    373                20077    10919    2021
+ 
  
 ===== INPUT FILE containing the left lead =====
 
      GEOMETRY:
 
-     lattice parameter (a_0)   =      12.0000  a.u.
+     lattice parameter (alat)  =      12.0000  a.u.
      the volume                =     648.0000 (a.u.)^3
      the cross section         =     144.0000 (a.u.)^2
-     l of the unit cell        =       0.3750 (a_0)
+     l of the unit cell        =       0.3750 (alat)
      number of atoms/cell      =            1
      number of atomic types    =            1
 
-     crystal axes: (cart. coord. in units of a_0)
+     crystal axes: (cart. coord. in units of alat)
                a(1) = (  1.0000  0.0000  0.0000 )  
                a(2) = (  0.0000  1.0000  0.0000 )  
                a(3) = (  0.0000  0.0000  0.3750 )  
@@ -21,42 +48,61 @@
 
    Cartesian axes
 
-     site n.     atom                  positions (a_0 units)
+     site n.     atom                  positions (alat units)
           1           Al  tau(  1)=(  0.0000  0.0000  0.3750  )
 
      nr1s                      =           40
      nr2s                      =           40
      nr3s                      =           15
-     nrx1s                     =           40
-     nrx2s                     =           40
-     nrx3s                     =           15
+     nr1sx                     =           40
+     nr2sx                     =           40
+     nr3sx                     =           15
      nr1                       =           48
      nr2                       =           48
      nr3                       =           18
-     nrx1                      =           48
-     nrx2                      =           48
-     nrx3                      =           18
+     nr1x                      =           48
+     nr2x                      =           48
+     nr3x                      =           18
 
  _______________________________
   Radii of nonlocal spheres: 
 
-     type       ibeta     ang. mom.          radius (a_0 units)
+     type       ibeta     ang. mom.          radius (alat units)
           Al      1         0                    0.2260
           Al      2         1                    0.2561
-     file H.pz-vbc.UPF: wavefunction(s)  1S renormalized
+
+     Reading data from directory:
+     /scratch/scitas/nvarini/espresso_trunk_svn/tempdir/alh.save
+
+   Info: using nr1, nr2, nr3 values from input
+
+   Info: using nr1, nr2, nr3 values from input
+
+     IMPORTANT: XC functional enforced from input :
+     Exchange-correlation      =  SLA  PZ   NOGX NOGC ( 1  1  0  0 0 0)
+     Any further DFT definition will be discarded
+     Please, verify this is what you really want
+
+               file H.pz-vbc.UPF: wavefunction(s)  1S renormalized
+ 
+     G-vector sticks info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Sum        1725    1137    305               100451    54695    7637
+ 
  
 ===== INPUT FILE containing the scat. region =====
 
      GEOMETRY:
 
-     lattice parameter (a_0)   =      12.0000  a.u.
+     lattice parameter (alat)  =      12.0000  a.u.
      the volume                =    3240.0000 (a.u.)^3
      the cross section         =     144.0000 (a.u.)^2
-     l of the unit cell        =       1.8750 (a_0)
+     l of the unit cell        =       1.8750 (alat)
      number of atoms/cell      =            6
      number of atomic types    =            2
 
-     crystal axes: (cart. coord. in units of a_0)
+     crystal axes: (cart. coord. in units of alat)
                a(1) = (  1.0000  0.0000  0.0000 )  
                a(2) = (  0.0000  1.0000  0.0000 )  
                a(3) = (  0.0000  0.0000  1.8750 )  
@@ -64,7 +110,7 @@
 
    Cartesian axes
 
-     site n.     atom                  positions (a_0 units)
+     site n.     atom                  positions (alat units)
           1           Al  tau(  1)=(  0.0000  0.0000  1.8750  )
           2           Al  tau(  2)=(  0.0000  0.0000  0.3750  )
           3           Al  tau(  3)=( -0.0278  0.0000  0.7554  )
@@ -75,20 +121,20 @@
      nr1s                      =           40
      nr2s                      =           40
      nr3s                      =           72
-     nrx1s                     =           40
-     nrx2s                     =           40
-     nrx3s                     =           72
+     nr1sx                     =           40
+     nr2sx                     =           40
+     nr3sx                     =           72
      nr1                       =           48
      nr2                       =           48
      nr3                       =           90
-     nrx1                      =           48
-     nrx2                      =           48
-     nrx3                      =           90
+     nr1x                      =           48
+     nr2x                      =           48
+     nr3x                      =           90
 
  _______________________________
   Radii of nonlocal spheres: 
 
-     type       ibeta     ang. mom.          radius (a_0 units)
+     type       ibeta     ang. mom.          radius (alat units)
           Al      1         0                    0.2260
           Al      2         1                    0.2561
 ----- General information -----
@@ -109,7 +155,7 @@
 
 
      number of k_|| points=    1
-                       cart. coord. in units 2pi/a_0
+                       cryst. coord. 
         k(    1) = (   0.0000000   0.0000000), wk =   1.0000000
 ----- Information about left/right lead -----
 
@@ -119,7 +165,7 @@
      norbf                    =           24
      nrz                      =           15
 
-      iorb      type   ibeta   ang. mom.   m       position (a_0)
+      iorb      type   ibeta   ang. mom.   m       position (alat)
         1        1       1        0        1   taunew(   1)=(  0.0000  0.0000  0.0000)
         2        1       2        1        1   taunew(   2)=(  0.0000  0.0000  0.0000)
         3        1       2        1        2   taunew(   3)=(  0.0000  0.0000  0.0000)
@@ -151,7 +197,7 @@
      norbf                    =           24
      nrz                      =           72
 
-      iorb      type   ibeta   ang. mom.   m       position (a_0)
+      iorb      type   ibeta   ang. mom.   m       position (alat)
         1        1       1        0        1   taunew(   1)=(  0.0000  0.0000  0.0000)
         2        1       2        1        1   taunew(   2)=(  0.0000  0.0000  0.0000)
         3        1       2        1        2   taunew(   3)=(  0.0000  0.0000  0.0000)
@@ -249,364 +295,379 @@
    70   1.7969 1.8229 0.0260   000000000000000000001111
    71   1.8229 1.8490 0.0260   000000000000000000001111
    72   1.8490 1.8750 0.0260   000000000000000000001111
-
-        k(    1) = (   0.0000000   0.0000000), wk =   1.0000000
-
  ngper, shell number =          293          41
  ngper, n2d =          293          40
+---  E-Ef =    3.0000000  k =    0.0000000   0.0000000
+---  ie =          1  ik =          1
  Nchannels of the left tip =            4
  Right moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.1235577   0.0000000   3.0000000
-   0.3630283   0.0000000   3.0000000
-   0.3631596   0.0000000   3.0000000
-  -0.3805238   0.0000000   3.0000000
+   0.1203350  -0.0000000   3.0000000
+   0.3619106   0.0000000   3.0000000
+   0.3620427   0.0000000   3.0000000
+  -0.3813770  -0.0000000   3.0000000
  Left moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.1235577   0.0000000   3.0000000
-  -0.3630283   0.0000000   3.0000000
-  -0.3631596   0.0000000   3.0000000
-   0.3805238   0.0000000   3.0000000
+  -0.1203350   0.0000000   3.0000000
+  -0.3619106   0.0000000   3.0000000
+  -0.3620427   0.0000000   3.0000000
+   0.3813770  -0.0000000   3.0000000
  
  to transmit
  Band j to band i transmissions and reflections:
     j         i     |T_ij|^2    |R_ij|^2
  
-    1 -->     1     0.93198     0.02050
-    1 -->     2     0.00851     0.03855
+    1 -->     1     0.94099     0.01014
+    1 -->     2     0.00795     0.04023
     1 -->     3     0.00000     0.00000
-    1 -->     4     0.00033     0.00012
-   Total T_j, R_j =    0.94082  0.05918
+    1 -->     4     0.00046     0.00024
+   Total T_j, R_j =    0.94940  0.05060
  
-    2 -->     1     0.00851     0.03856
-    2 -->     2     0.54492     0.39603
-    2 -->     3     0.00000     0.00000
-    2 -->     4     0.00734     0.00462
-   Total T_j, R_j =    0.56078  0.43922
- 
-    3 -->     1     0.00000     0.00000
-    3 -->     2     0.00000     0.00000
-    3 -->     3     0.98563     0.01436
-    3 -->     4     0.00000     0.00000
-   Total T_j, R_j =    0.98564  0.01436
- 
-    4 -->     1     0.00033     0.00012
-    4 -->     2     0.00735     0.00462
-    4 -->     3     0.00000     0.00000
-    4 -->     4     0.98346     0.00411
-   Total T_j, R_j =    0.99114  0.00886
- 
-E-Ef(ev), T(x2 spins) =    3.0000000   6.9567574
- Eigenchannel decomposition:
-@    1  3.00000  0.50215
-                      0.10853
-                      0.88114
-                      0.00001
-                      0.01033
-@    2  3.00000  0.98564
-                      0.00000
-                      0.00001
-                      0.99999
-                      0.00000
-@    3  3.00000  0.99326
-                      0.67989
-                      0.05668
-                      0.00000
-                      0.26343
-@    4  3.00000  0.99733
-                      0.21158
-                      0.06218
-                      0.00000
-                      0.72624
- Nchannels of the left tip =            4
- Right moving states:
-   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.0567293   0.0000000   2.7000000
-   0.3455089   0.0000000   2.7000000
-   0.3456462   0.0000000   2.7000000
-  -0.3935962   0.0000000   2.7000000
- Left moving states:
-   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.0567293   0.0000000   2.7000000
-  -0.3455089   0.0000000   2.7000000
-  -0.3456462   0.0000000   2.7000000
-   0.3935962   0.0000000   2.7000000
- 
- to transmit
- Band j to band i transmissions and reflections:
-    j         i     |T_ij|^2    |R_ij|^2
- 
-    1 -->     1     0.77586     0.18658
-    1 -->     2     0.01201     0.02508
-    1 -->     3     0.00000     0.00000
-    1 -->     4     0.00017     0.00030
-   Total T_j, R_j =    0.78804  0.21196
- 
-    2 -->     1     0.01201     0.02508
-    2 -->     2     0.55561     0.39786
+    2 -->     1     0.00795     0.04024
+    2 -->     2     0.54483     0.39500
     2 -->     3     0.00001     0.00000
-    2 -->     4     0.00602     0.00341
-   Total T_j, R_j =    0.57365  0.42635
+    2 -->     4     0.00735     0.00462
+   Total T_j, R_j =    0.56014  0.43986
  
     3 -->     1     0.00000     0.00000
     3 -->     2     0.00001     0.00001
-    3 -->     3     0.98019     0.01979
+    3 -->     3     0.98618     0.01379
     3 -->     4     0.00000     0.00000
-   Total T_j, R_j =    0.98020  0.01980
+   Total T_j, R_j =    0.98619  0.01381
  
-    4 -->     1     0.00017     0.00030
-    4 -->     2     0.00602     0.00341
+    4 -->     1     0.00046     0.00024
+    4 -->     2     0.00735     0.00462
     4 -->     3     0.00000     0.00000
-    4 -->     4     0.98812     0.00199
-   Total T_j, R_j =    0.99430  0.00570
+    4 -->     4     0.98250     0.00483
+   Total T_j, R_j =    0.99031  0.00969
  
-E-Ef(ev), T(x2 spins) =    2.7000000   6.6723963
+E-Ef(ev), T(x2 spins) =    3.0000000   6.9720769
  Eigenchannel decomposition:
-@    1  2.70000  0.47813
-                      0.22800
-                      0.76465
-                      0.00002
-                      0.00733
-@    2  2.70000  0.87955
-                      0.77191
-                      0.22655
-                      0.00001
-                      0.00153
-@    3  2.70000  0.98021
+#    1  3.00000  0.50522
+                      0.10008
+                      0.88877
+                      0.00003
+                      0.01112
+#    2  3.00000  0.98620
                       0.00000
                       0.00003
                       0.99997
                       0.00000
-@    4  2.70000  0.99830
-                      0.00009
-                      0.00877
+#    3  3.00000  0.99562
+                      0.05227
+                      0.00233
+                      0.00000
+                      0.94540
+#    4  3.00000  0.99899
+                      0.84765
+                      0.10888
+                      0.00000
+                      0.04347
+---  E-Ef =    2.7000000  k =    0.0000000   0.0000000
+---  ie =          2  ik =          1
+ Nchannels of the left tip =            4
+ Right moving states:
+   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
+   0.0494603  -0.0000000   2.7000000
+   0.3443352   0.0000000   2.7000000
+   0.3444734   0.0000000   2.7000000
+  -0.3944490  -0.0000000   2.7000000
+ Left moving states:
+   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
+  -0.0494603  -0.0000000   2.7000000
+  -0.3443352   0.0000000   2.7000000
+  -0.3444734   0.0000000   2.7000000
+   0.3944490  -0.0000000   2.7000000
+ 
+ to transmit
+ Band j to band i transmissions and reflections:
+    j         i     |T_ij|^2    |R_ij|^2
+ 
+    1 -->     1     0.72603     0.23846
+    1 -->     2     0.01175     0.02293
+    1 -->     3     0.00000     0.00000
+    1 -->     4     0.00030     0.00052
+   Total T_j, R_j =    0.73809  0.26191
+ 
+    2 -->     1     0.01175     0.02293
+    2 -->     2     0.56193     0.39378
+    2 -->     3     0.00002     0.00001
+    2 -->     4     0.00620     0.00338
+   Total T_j, R_j =    0.57990  0.42010
+ 
+    3 -->     1     0.00000     0.00000
+    3 -->     2     0.00002     0.00003
+    3 -->     3     0.98114     0.01880
+    3 -->     4     0.00000     0.00000
+   Total T_j, R_j =    0.98117  0.01883
+ 
+    4 -->     1     0.00030     0.00052
+    4 -->     2     0.00620     0.00338
+    4 -->     3     0.00000     0.00000
+    4 -->     4     0.98721     0.00238
+   Total T_j, R_j =    0.99371  0.00629
+ 
+E-Ef(ev), T(x2 spins) =    2.7000000   6.5857338
+ Eigenchannel decomposition:
+#    1  2.70000  0.46823
+                      0.28493
+                      0.70736
+                      0.00005
+                      0.00765
+#    2  2.70000  0.84548
+                      0.71446
+                      0.28432
+                      0.00002
+                      0.00120
+#    3  2.70000  0.98120
+                      0.00000
+                      0.00007
+                      0.99993
+                      0.00000
+#    4  2.70000  0.99795
+                      0.00061
+                      0.00825
                       0.00000
                       0.99114
+---  E-Ef =    2.5000000  k =    0.0000000   0.0000000
+---  ie =          3  ik =          1
  Nchannels of the left tip =            3
  Right moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.3333253   0.0000000   2.5000000
-   0.3334672   0.0000000   2.5000000
-  -0.4023524   0.0000000   2.5000000
+   0.3322518   0.0000000   2.5000000
+   0.3322518   0.0000000   2.5000000
+  -0.4032130  -0.0000000   2.5000000
  Left moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.3333253   0.0000000   2.5000000
-  -0.3334672   0.0000000   2.5000000
-   0.4023524   0.0000000   2.5000000
+  -0.3321090   0.0000000   2.5000000
+  -0.3322518   0.0000000   2.5000000
+   0.4032130  -0.0000000   2.5000000
  
  to transmit
  Band j to band i transmissions and reflections:
     j         i     |T_ij|^2    |R_ij|^2
  
-    1 -->     1     0.52224     0.46801
-    1 -->     2     0.00003     0.00000
-    1 -->     3     0.00592     0.00380
-   Total T_j, R_j =    0.52818  0.47182
+    1 -->     1     0.52525     0.46467
+    1 -->     2     0.00007     0.00002
+    1 -->     3     0.00609     0.00390
+   Total T_j, R_j =    0.53141  0.46859
  
-    2 -->     1     0.00003     0.00004
-    2 -->     2     0.97652     0.02341
+    2 -->     1     0.00007     0.00010
+    2 -->     2     0.97755     0.02227
     2 -->     3     0.00000     0.00000
-   Total T_j, R_j =    0.97655  0.02345
+   Total T_j, R_j =    0.97763  0.02237
  
-    3 -->     1     0.00592     0.00381
+    3 -->     1     0.00609     0.00390
     3 -->     2     0.00000     0.00000
-    3 -->     3     0.98927     0.00100
-   Total T_j, R_j =    0.99519  0.00481
+    3 -->     3     0.98880     0.00121
+   Total T_j, R_j =    0.99489  0.00511
  
-E-Ef(ev), T(x2 spins) =    2.5000000   4.9998453
+E-Ef(ev), T(x2 spins) =    2.5000000   5.0078621
  Eigenchannel decomposition:
-@    1  2.50000  0.52414
-                      0.99148
-                      0.00008
-                      0.00844
-@    2  2.50000  0.97658
-                      0.00008
-                      0.99992
+#    1  2.50000  0.52719
+                      0.99103
+                      0.00021
+                      0.00876
+#    2  2.50000  0.97772
+                      0.00021
+                      0.99979
                       0.00000
-@    3  2.50000  0.99920
-                      0.00844
+#    3  2.50000  0.99903
+                      0.00876
                       0.00000
-                      0.99156
+                      0.99124
+---  E-Ef =    1.6000000  k =    0.0000000   0.0000000
+---  ie =          4  ik =          1
  Nchannels of the left tip =            3
  Right moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.2718674   0.0000000   1.6000000
-   0.2720401   0.0000000   1.6000000
-  -0.4444317   0.0000000   1.6000000
+   0.2703759   0.0000000   1.6000000
+   0.2705500   0.0000000   1.6000000
+  -0.4454518  -0.0000000   1.6000000
  Left moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.2718674   0.0000000   1.6000000
-  -0.2720401   0.0000000   1.6000000
-   0.4444317   0.0000000   1.6000000
+  -0.2703759   0.0000000   1.6000000
+  -0.2705500   0.0000000   1.6000000
+   0.4454518  -0.0000000   1.6000000
  
  to transmit
  Band j to band i transmissions and reflections:
     j         i     |T_ij|^2    |R_ij|^2
  
-    1 -->     1     0.45363     0.53834
+    1 -->     1     0.45359     0.53836
     1 -->     2     0.00000     0.00000
-    1 -->     3     0.00311     0.00491
-   Total T_j, R_j =    0.45675  0.54325
+    1 -->     3     0.00313     0.00491
+   Total T_j, R_j =    0.45673  0.54327
  
-    2 -->     1     0.00000     0.00001
-    2 -->     2     0.97242     0.02757
+    2 -->     1     0.00000     0.00000
+    2 -->     2     0.97084     0.02915
     2 -->     3     0.00000     0.00000
-   Total T_j, R_j =    0.97242  0.02758
+   Total T_j, R_j =    0.97085  0.02915
  
-    3 -->     1     0.00311     0.00491
+    3 -->     1     0.00313     0.00491
     3 -->     2     0.00000     0.00000
-    3 -->     3     0.98862     0.00336
-   Total T_j, R_j =    0.99173  0.00827
+    3 -->     3     0.98668     0.00528
+   Total T_j, R_j =    0.98981  0.01019
  
-E-Ef(ev), T(x2 spins) =    1.6000000   4.8418012
+E-Ef(ev), T(x2 spins) =    1.6000000   4.8347794
  Eigenchannel decomposition:
-@    1  1.60000  0.45243
-                      0.99206
+#    1  1.60000  0.45255
+                      0.99228
                       0.00001
-                      0.00793
-@    2  1.60000  0.97243
+                      0.00771
+#    2  1.60000  0.97085
                       0.00001
                       0.99999
                       0.00000
-@    3  1.60000  0.99604
-                      0.00793
+#    3  1.60000  0.99399
+                      0.00771
                       0.00000
-                      0.99207
+                      0.99229
+---  E-Ef =    1.0000000  k =    0.0000000   0.0000000
+---  ie =          5  ik =          1
  Nchannels of the left tip =            3
  Right moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.2216377   0.0000000   1.0000000
-   0.2218490   0.0000000   1.0000000
-  -0.4868280   0.0000000   1.0000000
+   0.2198056   0.0000000   1.0000000
+   0.2200193   0.0000000   1.0000000
+  -0.4901348  -0.0000000   1.0000000
  Left moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.2216377   0.0000000   1.0000000
-  -0.2218490   0.0000000   1.0000000
-   0.4868280   0.0000000   1.0000000
+  -0.2198056   0.0000000   1.0000000
+  -0.2200193   0.0000000   1.0000000
+   0.4901348   0.0000000   1.0000000
  
  to transmit
  Band j to band i transmissions and reflections:
     j         i     |T_ij|^2    |R_ij|^2
  
-    1 -->     1     0.41760     0.57258
+    1 -->     1     0.40506     0.58627
     1 -->     2     0.00000     0.00000
-    1 -->     3     0.00066     0.00916
-   Total T_j, R_j =    0.41826  0.58174
+    1 -->     3     0.00046     0.00820
+   Total T_j, R_j =    0.40552  0.59448
  
     2 -->     1     0.00000     0.00000
-    2 -->     2     0.98982     0.01018
+    2 -->     2     0.98770     0.01230
     2 -->     3     0.00000     0.00000
-   Total T_j, R_j =    0.98982  0.01018
+   Total T_j, R_j =    0.98770  0.01230
  
-    3 -->     1     0.00066     0.00916
+    3 -->     1     0.00046     0.00820
     3 -->     2     0.00000     0.00000
-    3 -->     3     0.80872     0.18146
-   Total T_j, R_j =    0.80938  0.19062
+    3 -->     3     0.61494     0.37640
+   Total T_j, R_j =    0.61540  0.38460
  
-E-Ef(ev), T(x2 spins) =    1.0000000   4.4349286
+E-Ef(ev), T(x2 spins) =    1.0000000   4.0172484
  Eigenchannel decomposition:
-@    1  1.00000  0.41568
-                      0.99348
+#    1  1.00000  0.40458
+                      0.99556
                       0.00000
-                      0.00651
-@    2  1.00000  0.81196
-                      0.00651
+                      0.00444
+#    2  1.00000  0.61634
+                      0.00444
                       0.00000
-                      0.99349
-@    3  1.00000  0.98983
+                      0.99556
+#    3  1.00000  0.98770
                       0.00000
                       1.00000
                       0.00000
+---  E-Ef =    0.9000000  k =    0.0000000   0.0000000
+---  ie =          6  ik =          1
  Nchannels of the left tip =            2
  Right moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.2121126   0.0000000   0.9000000
-   0.2123333   0.0000000   0.9000000
+   0.2101974   0.0000000   0.9000000
+   0.2104208   0.0000000   0.9000000
  Left moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.2121126   0.0000000   0.9000000
-  -0.2123333   0.0000000   0.9000000
+  -0.2101974   0.0000000   0.9000000
+  -0.2104208   0.0000000   0.9000000
  
  to transmit
  Band j to band i transmissions and reflections:
     j         i     |T_ij|^2    |R_ij|^2
  
-    1 -->     1     0.42804     0.57196
+    1 -->     1     0.41356     0.58644
     1 -->     2     0.00000     0.00000
-   Total T_j, R_j =    0.42804  0.57196
+   Total T_j, R_j =    0.41356  0.58644
  
     2 -->     1     0.00000     0.00000
-    2 -->     2     0.99311     0.00689
-   Total T_j, R_j =    0.99311  0.00689
+    2 -->     2     0.99161     0.00839
+   Total T_j, R_j =    0.99161  0.00839
  
-E-Ef(ev), T(x2 spins) =    0.9000000   2.8422995
+E-Ef(ev), T(x2 spins) =    0.9000000   2.8103457
  Eigenchannel decomposition:
-@    1  0.90000  0.42804
+#    1  0.90000  0.41356
                       1.00000
                       0.00000
-@    2  0.90000  0.99311
+#    2  0.90000  0.99161
                       0.00000
                       1.00000
+---  E-Ef =    0.1000000  k =    0.0000000   0.0000000
+---  ie =          7  ik =          1
  Nchannels of the left tip =            2
  Right moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.1092478   0.0000000   0.1000000
-   0.1096750   0.0000000   0.1000000
+   0.1054799   0.0000000   0.1000000
+   0.1059237   0.0000000   0.1000000
  Left moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.1092478   0.0000000   0.1000000
-  -0.1096750   0.0000000   0.1000000
+  -0.1054799   0.0000000   0.1000000
+  -0.1059237   0.0000000   0.1000000
  
  to transmit
  Band j to band i transmissions and reflections:
     j         i     |T_ij|^2    |R_ij|^2
  
-    1 -->     1     0.20208     0.79792
+    1 -->     1     0.23537     0.76463
     1 -->     2     0.00000     0.00000
-   Total T_j, R_j =    0.20208  0.79792
+   Total T_j, R_j =    0.23537  0.76463
  
     2 -->     1     0.00000     0.00000
-    2 -->     2     0.99914     0.00086
-   Total T_j, R_j =    0.99914  0.00086
+    2 -->     2     0.99981     0.00019
+   Total T_j, R_j =    0.99981  0.00019
  
-E-Ef(ev), T(x2 spins) =    0.1000000   2.4024352
+E-Ef(ev), T(x2 spins) =    0.1000000   2.4703616
  Eigenchannel decomposition:
-@    1  0.10000  0.20208
+#    1  0.10000  0.23537
                       1.00000
                       0.00000
-@    2  0.10000  0.99914
+#    2  0.10000  0.99981
                       0.00000
                       1.00000
+---  E-Ef =   -0.1000000  k =    0.0000000   0.0000000
+---  ie =          8  ik =          1
  Nchannels of the left tip =            2
  Right moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.0605740   0.0000000  -0.1000000
-   0.0613409   0.0000000  -0.1000000
+   0.0534797   0.0000000  -0.1000000
+   0.0543494   0.0000000  -0.1000000
  Left moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.0605740   0.0000000  -0.1000000
-  -0.0613409   0.0000000  -0.1000000
+  -0.0534797   0.0000000  -0.1000000
+  -0.0543494   0.0000000  -0.1000000
  
  to transmit
  Band j to band i transmissions and reflections:
     j         i     |T_ij|^2    |R_ij|^2
  
-    1 -->     1     0.05940     0.94060
+    1 -->     1     0.07339     0.92660
     1 -->     2     0.00000     0.00000
-   Total T_j, R_j =    0.05940  0.94060
+   Total T_j, R_j =    0.07340  0.92660
  
     2 -->     1     0.00000     0.00000
-    2 -->     2     0.89637     0.10362
-   Total T_j, R_j =    0.89637  0.10363
+    2 -->     2     0.87505     0.12495
+   Total T_j, R_j =    0.87505  0.12495
  
-E-Ef(ev), T(x2 spins) =   -0.1000000   1.9115520
+E-Ef(ev), T(x2 spins) =   -0.1000000   1.8968976
  Eigenchannel decomposition:
-@    1 -0.10000  0.05940
+#    1 -0.10000  0.07339
                       1.00000
                       0.00000
-@    2 -0.10000  0.89638
+#    2 -0.10000  0.87505
                       0.00000
                       1.00000
+---  E-Ef =   -0.2500000  k =    0.0000000   0.0000000
+---  ie =          9  ik =          1
  Nchannels of the left tip =            0
  Right moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
@@ -614,7 +675,9 @@ E-Ef(ev), T(x2 spins) =   -0.1000000   1.9115520
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
  
  to transmit
-          E-Ef(ev), T =    0.0000000   0.0000000
+          E-Ef(ev), T =   -0.2500000   0.0000000
+---  E-Ef =   -1.1500000  k =    0.0000000   0.0000000
+---  ie =         10  ik =          1
  Nchannels of the left tip =            0
  Right moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
@@ -622,140 +685,156 @@ E-Ef(ev), T(x2 spins) =   -0.1000000   1.9115520
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
  
  to transmit
-          E-Ef(ev), T =    0.0000000   0.0000000
+          E-Ef(ev), T =   -1.1500000   0.0000000
+---  E-Ef =   -1.4500000  k =    0.0000000   0.0000000
+---  ie =         11  ik =          1
  Nchannels of the left tip =            1
  Right moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.4662814   0.0000000  -1.4500000
+   0.4647354   0.0000000  -1.4500000
  Left moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.4662814   0.0000000  -1.4500000
+  -0.4647354   0.0000000  -1.4500000
  
  to transmit
  Band j to band i transmissions and reflections:
     j         i     |T_ij|^2    |R_ij|^2
  
-    1 -->     1     0.14486     0.85514
-   Total T_j, R_j =    0.14486  0.85514
+    1 -->     1     0.15808     0.84192
+   Total T_j, R_j =    0.15808  0.84192
  
-E-Ef(ev), T(x2 spins) =   -1.4500000   0.2897285
+E-Ef(ev), T(x2 spins) =   -1.4500000   0.3161512
  Eigenchannel decomposition:
-@    1 -1.45000  0.14486
+#    1 -1.45000  0.15808
                       1.00000
+---  E-Ef =   -1.9000000  k =    0.0000000   0.0000000
+---  ie =         12  ik =          1
  Nchannels of the left tip =            1
  Right moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.4360938   0.0000000  -1.9000000
+   0.4349126   0.0000000  -1.9000000
  Left moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.4360938   0.0000000  -1.9000000
+  -0.4349126   0.0000000  -1.9000000
  
  to transmit
  Band j to band i transmissions and reflections:
     j         i     |T_ij|^2    |R_ij|^2
  
-    1 -->     1     0.00003     0.99997
-   Total T_j, R_j =    0.00003  0.99997
+    1 -->     1     0.00016     0.99984
+   Total T_j, R_j =    0.00016  0.99984
  
-E-Ef(ev), T(x2 spins) =   -1.9000000   0.0000657
+E-Ef(ev), T(x2 spins) =   -1.9000000   0.0003204
  Eigenchannel decomposition:
-@    1 -1.90000  0.00003
+#    1 -1.90000  0.00016
                       1.00000
+---  E-Ef =   -3.0000000  k =    0.0000000   0.0000000
+---  ie =         13  ik =          1
  Nchannels of the left tip =            1
  Right moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.3720466   0.0000000  -3.0000000
+   0.3708942   0.0000000  -3.0000000
  Left moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.3720466   0.0000000  -3.0000000
+  -0.3708942   0.0000000  -3.0000000
  
  to transmit
  Band j to band i transmissions and reflections:
     j         i     |T_ij|^2    |R_ij|^2
  
-    1 -->     1     0.42379     0.57621
-   Total T_j, R_j =    0.42379  0.57621
+    1 -->     1     0.42193     0.57807
+   Total T_j, R_j =    0.42193  0.57807
  
-E-Ef(ev), T(x2 spins) =   -3.0000000   0.8475807
+E-Ef(ev), T(x2 spins) =   -3.0000000   0.8438522
  Eigenchannel decomposition:
-@    1 -3.00000  0.42379
+#    1 -3.00000  0.42193
                       1.00000
+---  E-Ef =   -4.0000000  k =    0.0000000   0.0000000
+---  ie =         14  ik =          1
  Nchannels of the left tip =            1
  Right moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.3097400   0.0000000  -4.0000000
+   0.3084308   0.0000000  -4.0000000
  Left moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.3097400   0.0000000  -4.0000000
+  -0.3084308   0.0000000  -4.0000000
  
  to transmit
  Band j to band i transmissions and reflections:
     j         i     |T_ij|^2    |R_ij|^2
  
-    1 -->     1     0.51819     0.48181
-   Total T_j, R_j =    0.51819  0.48181
+    1 -->     1     0.52427     0.47573
+   Total T_j, R_j =    0.52427  0.47573
  
-E-Ef(ev), T(x2 spins) =   -4.0000000   1.0363803
+E-Ef(ev), T(x2 spins) =   -4.0000000   1.0485360
  Eigenchannel decomposition:
-@    1 -4.00000  0.51819
+#    1 -4.00000  0.52427
                       1.00000
+---  E-Ef =   -5.0000000  k =    0.0000000   0.0000000
+---  ie =         15  ik =          1
  Nchannels of the left tip =            1
  Right moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.2351017   0.0000000  -5.0000000
+   0.2334330   0.0000000  -5.0000000
  Left moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.2351017   0.0000000  -5.0000000
+  -0.2334330   0.0000000  -5.0000000
  
  to transmit
  Band j to band i transmissions and reflections:
     j         i     |T_ij|^2    |R_ij|^2
  
-    1 -->     1     0.50586     0.49414
-   Total T_j, R_j =    0.50586  0.49414
+    1 -->     1     0.49550     0.50450
+   Total T_j, R_j =    0.49550  0.50450
  
-E-Ef(ev), T(x2 spins) =   -5.0000000   1.0117135
+E-Ef(ev), T(x2 spins) =   -5.0000000   0.9910099
  Eigenchannel decomposition:
-@    1 -5.00000  0.50586
+#    1 -5.00000  0.49550
                       1.00000
+---  E-Ef =   -6.0000000  k =    0.0000000   0.0000000
+---  ie =         16  ik =          1
  Nchannels of the left tip =            1
  Right moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.1257484   0.0000000  -6.0000000
+   0.1226841   0.0000000  -6.0000000
  Left moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.1257484   0.0000000  -6.0000000
+  -0.1226841   0.0000000  -6.0000000
  
  to transmit
  Band j to band i transmissions and reflections:
     j         i     |T_ij|^2    |R_ij|^2
  
-    1 -->     1     0.36744     0.63256
-   Total T_j, R_j =    0.36744  0.63256
+    1 -->     1     0.39223     0.60777
+   Total T_j, R_j =    0.39223  0.60777
  
-E-Ef(ev), T(x2 spins) =   -6.0000000   0.7348897
+E-Ef(ev), T(x2 spins) =   -6.0000000   0.7844537
  Eigenchannel decomposition:
-@    1 -6.00000  0.36744
+#    1 -6.00000  0.39223
                       1.00000
+---  E-Ef =   -6.2000000  k =    0.0000000   0.0000000
+---  ie =         17  ik =          1
  Nchannels of the left tip =            1
  Right moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.0896745   0.0000000  -6.2000000
+   0.0853460   0.0000000  -6.2000000
  Left moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.0896745   0.0000000  -6.2000000
+  -0.0853460   0.0000000  -6.2000000
  
  to transmit
  Band j to band i transmissions and reflections:
     j         i     |T_ij|^2    |R_ij|^2
  
-    1 -->     1     0.23675     0.76325
-   Total T_j, R_j =    0.23675  0.76325
+    1 -->     1     0.27456     0.72544
+   Total T_j, R_j =    0.27456  0.72544
  
-E-Ef(ev), T(x2 spins) =   -6.2000000   0.4735088
+E-Ef(ev), T(x2 spins) =   -6.2000000   0.5491256
  Eigenchannel decomposition:
-@    1 -6.20000  0.23675
+#    1 -6.20000  0.27456
                       1.00000
+---  E-Ef =   -6.4500000  k =    0.0000000   0.0000000
+---  ie =         18  ik =          1
  Nchannels of the left tip =            0
  Right moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
@@ -763,16 +842,34 @@ E-Ef(ev), T(x2 spins) =   -6.2000000   0.4735088
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
  
  to transmit
-          E-Ef(ev), T =    0.0000000   0.0000000
+          E-Ef(ev), T =   -6.4500000   0.0000000
+   T_tot     3.00000      0.69721E+01
+   T_tot     2.70000      0.65857E+01
+   T_tot     2.50000      0.50079E+01
+   T_tot     1.60000      0.48348E+01
+   T_tot     1.00000      0.40172E+01
+   T_tot     0.90000      0.28103E+01
+   T_tot     0.10000      0.24704E+01
+   T_tot    -0.10000      0.18969E+01
+   T_tot    -0.25000      0.00000E+00
+   T_tot    -1.15000      0.00000E+00
+   T_tot    -1.45000      0.31615E+00
+   T_tot    -1.90000      0.32040E-03
+   T_tot    -3.00000      0.84385E+00
+   T_tot    -4.00000      0.10485E+01
+   T_tot    -5.00000      0.99101E+00
+   T_tot    -6.00000      0.78445E+00
+   T_tot    -6.20000      0.54913E+00
+   T_tot    -6.45000      0.00000E+00
  
-     PWCOND       :    49.94s CPU time,   50.18s wall time
+     PWCOND       :     4.39s CPU         4.45s WALL
 
-     init         :     1.51s CPU
-     poten        :     0.14s CPU (       2 calls,   0.069 s avg)
-     local        :    17.74s CPU
+     init         :      0.47s CPU      0.51s WALL (       1 calls)
+     poten        :      0.01s CPU      0.01s WALL (       2 calls)
+     local        :      1.44s CPU      1.45s WALL (       1 calls)
  
-     scatter_forw :    28.93s CPU (      36 calls,   0.804 s avg)
+     scatter_forw :      2.28s CPU      2.30s WALL (      36 calls)
  
-     compbs       :     1.49s CPU (      18 calls,   0.083 s avg)
-     compbs_2     :     1.23s CPU (      18 calls,   0.068 s avg)
+     compbs       :      0.15s CPU      0.15s WALL (      18 calls)
+     compbs_2     :      0.12s CPU      0.12s WALL (      18 calls)
  

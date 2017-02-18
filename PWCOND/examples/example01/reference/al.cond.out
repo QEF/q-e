@@ -1,19 +1,46 @@
 
-     Program POST-PROC v.4.1CVS starts ...
-     Today is 26Feb2009 at 17: 6:47 
+     Program PWCOND v.6.0 (svn rev. 13317) starts on 18Feb2017 at 20:15:39 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     1 processors
+
+     Reading data from directory:
+     /scratch/scitas/nvarini/espresso_trunk_svn/tempdir/al.save
+
+   Info: using nr1, nr2, nr3 values from input
+
+   Info: using nr1, nr2, nr3 values from input
+
+     IMPORTANT: XC functional enforced from input :
+     Exchange-correlation      =  SLA  PZ   NOGX NOGC ( 1  1  0  0 0 0)
+     Any further DFT definition will be discarded
+     Please, verify this is what you really want
+
+ 
+     G-vector sticks info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Sum         137     137     45                 1675     1675     343
+ 
  
 ===== INPUT FILE containing the left lead =====
 
      GEOMETRY:
 
-     lattice parameter (a_0)   =       5.3000  a.u.
+     lattice parameter (alat)  =       5.3000  a.u.
      the volume                =     210.5121 (a.u.)^3
      the cross section         =      28.0900 (a.u.)^2
-     l of the unit cell        =       1.4140 (a_0)
+     l of the unit cell        =       1.4140 (alat)
      number of atoms/cell      =            2
      number of atomic types    =            1
 
-     crystal axes: (cart. coord. in units of a_0)
+     crystal axes: (cart. coord. in units of alat)
                a(1) = (  1.0000  0.0000  0.0000 )  
                a(2) = (  0.0000  1.0000  0.0000 )  
                a(3) = (  0.0000  0.0000  1.4140 )  
@@ -21,27 +48,27 @@
 
    Cartesian axes
 
-     site n.     atom                  positions (a_0 units)
+     site n.     atom                  positions (alat units)
           1           Al  tau(  1)=(  0.0000  0.0000  1.4140  )
           2           Al  tau(  2)=(  0.5000  0.5000  0.7070  )
 
      nr1s                      =           15
      nr2s                      =           15
      nr3s                      =           20
-     nrx1s                     =           15
-     nrx2s                     =           15
-     nrx3s                     =           20
+     nr1sx                     =           15
+     nr2sx                     =           15
+     nr3sx                     =           20
      nr1                       =           15
      nr2                       =           15
      nr3                       =           20
-     nrx1                      =           15
-     nrx2                      =           15
-     nrx3                      =           20
+     nr1x                      =           15
+     nr2x                      =           15
+     nr3x                      =           20
 
  _______________________________
   Radii of nonlocal spheres: 
 
-     type       ibeta     ang. mom.          radius (a_0 units)
+     type       ibeta     ang. mom.          radius (alat units)
           Al      1         0                    0.5116
           Al      2         1                    0.5798
 ----- General information -----
@@ -62,7 +89,7 @@
 
 
      number of k_|| points=    1
-                       cart. coord. in units 2pi/a_0
+                       cryst. coord. 
         k(    1) = (   0.0000000   0.0000000), wk =   1.0000000
 ----- Information about left lead ----- 
 
@@ -72,7 +99,7 @@
      norbf                    =           12
      nrz                      =           20
 
-      iorb      type   ibeta   ang. mom.   m       position (a_0)
+      iorb      type   ibeta   ang. mom.   m       position (alat)
         1        1       1        0        1   taunew(   1)=(  0.0000  0.0000  0.0000)
         2        1       2        1        1   taunew(   2)=(  0.0000  0.0000  0.0000)
         3        1       2        1        2   taunew(   3)=(  0.0000  0.0000  0.0000)
@@ -106,547 +133,644 @@
    18   1.2019 1.2726 0.0707   000011111111
    19   1.2726 1.3433 0.0707   000001111111
    20   1.3433 1.4140 0.0707   000000001111
-
-        k(    1) = (   0.0000000   0.0000000), wk =   1.0000000
-
  ngper, shell number =           37           8
  ngper, n2d =           37          26
+---  E-Ef =   10.0000000  k =    0.0000000   0.0000000
+---  ie =          1  ik =          1
  Nchannels of the left tip =            5
  Right moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.2433737   0.0000000  10.0000000
-  -0.2433737   0.0000000  10.0000000
-  -0.2590289   0.0000000  10.0000000
-   0.3023699   0.0000000  10.0000000
-  -0.4303696   0.0000000  10.0000000
+   0.0958261   0.0000000  10.0000000
+  -0.3028567  -0.0000000  10.0000000
+  -0.3028567  -0.0000000  10.0000000
+  -0.3122757  -0.0000000  10.0000000
+  -0.4563903   0.0000000  10.0000000
  Left moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.2433737   0.0000000  10.0000000
-   0.2433737   0.0000000  10.0000000
-   0.2590289   0.0000000  10.0000000
-  -0.3023699   0.0000000  10.0000000
-   0.4303696   0.0000000  10.0000000
+  -0.0958261   0.0000000  10.0000000
+   0.3028567  -0.0000000  10.0000000
+   0.3028567  -0.0000000  10.0000000
+   0.3122757  -0.0000000  10.0000000
+   0.4563903  -0.0000000  10.0000000
  
- Nchannels of the left tip =            5
- Right moving states:
-   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.2036789   0.0000000   9.6000000
-  -0.2785692   0.0000000   9.6000000
-  -0.2785692   0.0000000   9.6000000
-  -0.2907037   0.0000000   9.6000000
-  -0.4459693   0.0000000   9.6000000
- Left moving states:
-   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.2036789   0.0000000   9.6000000
-   0.2785692   0.0000000   9.6000000
-   0.2785692   0.0000000   9.6000000
-   0.2907037   0.0000000   9.6000000
-   0.4459693   0.0000000   9.6000000
- 
+---  E-Ef =    9.6000000  k =    0.0000000   0.0000000
+---  ie =          2  ik =          1
  Nchannels of the left tip =            4
  Right moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.3154687   0.0000000   9.2000000
-  -0.3154687   0.0000000   9.2000000
-  -0.3233886   0.0000000   9.2000000
-  -0.4616869   0.0000000   9.2000000
+  -0.3410713  -0.0000000   9.6000000
+  -0.3410713  -0.0000000   9.6000000
+  -0.3457791  -0.0000000   9.6000000
+  -0.4721899   0.0000000   9.6000000
  Left moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.3154687   0.0000000   9.2000000
-   0.3154687   0.0000000   9.2000000
-   0.3233886   0.0000000   9.2000000
-   0.4616869   0.0000000   9.2000000
+   0.3410713  -0.0000000   9.6000000
+   0.3410713  -0.0000000   9.6000000
+   0.3457791  -0.0000000   9.6000000
+   0.4721899  -0.0000000   9.6000000
  
+---  E-Ef =    9.2000000  k =    0.0000000   0.0000000
+---  ie =          3  ik =          1
  Nchannels of the left tip =            4
  Right moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.3544136   0.0000000   8.8000000
-  -0.3544136   0.0000000   8.8000000
-  -0.3573538   0.0000000   8.8000000
-  -0.4775290   0.0000000   8.8000000
+  -0.3807575  -0.0000000   9.2000000
+  -0.3816061  -0.0000000   9.2000000
+  -0.3816061  -0.0000000   9.2000000
+  -0.4881185   0.0000000   9.2000000
  Left moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.3544136   0.0000000   8.8000000
-   0.3544136   0.0000000   8.8000000
-   0.3573538   0.0000000   8.8000000
-   0.4775290   0.0000000   8.8000000
+   0.3807575  -0.0000000   9.2000000
+   0.3816061  -0.0000000   9.2000000
+   0.3816061  -0.0000000   9.2000000
+   0.4881185  -0.0000000   9.2000000
  
+---  E-Ef =    8.8000000  k =    0.0000000   0.0000000
+---  ie =          4  ik =          1
  Nchannels of the left tip =            4
  Right moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.3929004   0.0000000   8.4000000
-  -0.3958380   0.0000000   8.4000000
-  -0.3958380   0.0000000   8.4000000
-  -0.4935034   0.0000000   8.4000000
+  -0.4175493  -0.0000000   8.8000000
+  -0.4249860  -0.0000000   8.8000000
+  -0.4249860  -0.0000000   8.8000000
+   0.4958271   0.0000000   8.8000000
  Left moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.3929004   0.0000000   8.4000000
-   0.3958380   0.0000000   8.4000000
-   0.3958380   0.0000000   8.4000000
-   0.4935034   0.0000000   8.4000000
+   0.4175493  -0.0000000   8.8000000
+   0.4249860  -0.0000000   8.8000000
+   0.4249860  -0.0000000   8.8000000
+  -0.4958271  -0.0000000   8.8000000
  
+---  E-Ef =    8.4000000  k =    0.0000000   0.0000000
+---  ie =          5  ik =          1
  Nchannels of the left tip =            4
  Right moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.4303914   0.0000000   8.0000000
-  -0.4403247   0.0000000   8.0000000
-  -0.4403247   0.0000000   8.0000000
-   0.4903943   0.0000000   8.0000000
+  -0.4565803  -0.0000000   8.4000000
+  -0.4719432   0.0000000   8.4000000
+  -0.4719432   0.0000000   8.4000000
+   0.4796214   0.0000000   8.4000000
  Left moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.4303914   0.0000000   8.0000000
-   0.4403247   0.0000000   8.0000000
-   0.4403247   0.0000000   8.0000000
-  -0.4903943   0.0000000   8.0000000
+   0.4565803  -0.0000000   8.4000000
+   0.4719432  -0.0000000   8.4000000
+   0.4719432  -0.0000000   8.4000000
+  -0.4796214  -0.0000000   8.4000000
  
+---  E-Ef =    8.0000000  k =    0.0000000   0.0000000
+---  ie =          6  ik =          1
  Nchannels of the left tip =            4
  Right moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.4702933   0.0000000   7.6000000
-   0.4741431   0.0000000   7.6000000
-  -0.4887116   0.0000000   7.6000000
-  -0.4887116   0.0000000   7.6000000
+   0.4632737   0.0000000   8.0000000
+   0.4764620   0.0000000   8.0000000
+   0.4764620   0.0000000   8.0000000
+  -0.4984204  -0.0000000   8.0000000
  Left moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.4702933   0.0000000   7.6000000
-  -0.4741431   0.0000000   7.6000000
-   0.4887116   0.0000000   7.6000000
-   0.4887116   0.0000000   7.6000000
+  -0.4632737  -0.0000000   8.0000000
+  -0.4764620  -0.0000000   8.0000000
+  -0.4764620  -0.0000000   8.0000000
+   0.4984204  -0.0000000   8.0000000
  
+---  E-Ef =    7.6000000  k =    0.0000000   0.0000000
+---  ie =          7  ik =          1
  Nchannels of the left tip =            4
  Right moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.4577452   0.0000000   7.2000000
-   0.4577910   0.0000000   7.2000000
-   0.4577910   0.0000000   7.2000000
-   0.4867570   0.0000000   7.2000000
+   0.4184446   0.0000000   7.6000000
+   0.4184446   0.0000000   7.6000000
+   0.4467745   0.0000000   7.6000000
+   0.4561190   0.0000000   7.6000000
  Left moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.4577452   0.0000000   7.2000000
-  -0.4577910   0.0000000   7.2000000
-  -0.4577910   0.0000000   7.2000000
-  -0.4867570   0.0000000   7.2000000
+  -0.4184446   0.0000000   7.6000000
+  -0.4184446   0.0000000   7.6000000
+  -0.4467745  -0.0000000   7.6000000
+  -0.4561190  -0.0000000   7.6000000
  
+---  E-Ef =    7.2000000  k =    0.0000000   0.0000000
+---  ie =          8  ik =          1
  Nchannels of the left tip =            4
  Right moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.3970225   0.0000000   6.8000000
-   0.3970225   0.0000000   6.8000000
-   0.4398291   0.0000000   6.8000000
-   0.4411936   0.0000000   6.8000000
+   0.3508403   0.0000000   7.2000000
+   0.3508403   0.0000000   7.2000000
+   0.4057860   0.0000000   7.2000000
+   0.4301174   0.0000000   7.2000000
  Left moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.3970225   0.0000000   6.8000000
-  -0.3970225   0.0000000   6.8000000
-  -0.4398291   0.0000000   6.8000000
-  -0.4411936   0.0000000   6.8000000
+  -0.3508403   0.0000000   7.2000000
+  -0.3508403   0.0000000   7.2000000
+  -0.4057860  -0.0000000   7.2000000
+  -0.4301174   0.0000000   7.2000000
  
+---  E-Ef =    6.8000000  k =    0.0000000   0.0000000
+---  ie =          9  ik =          1
  Nchannels of the left tip =            4
  Right moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.3249391   0.0000000   6.4000000
-   0.3249391   0.0000000   6.4000000
-   0.3874458   0.0000000   6.4000000
-   0.4244821   0.0000000   6.4000000
+   0.2664081   0.0000000   6.8000000
+   0.2664081   0.0000000   6.8000000
+   0.3484434   0.0000000   6.8000000
+   0.4132960   0.0000000   6.8000000
  Left moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.3249391   0.0000000   6.4000000
-  -0.3249391   0.0000000   6.4000000
-  -0.3874458   0.0000000   6.4000000
-  -0.4244821   0.0000000   6.4000000
+  -0.2664081   0.0000000   6.8000000
+  -0.2664081   0.0000000   6.8000000
+  -0.3484434   0.0000000   6.8000000
+  -0.4132961   0.0000000   6.8000000
  
+---  E-Ef =    6.4000000  k =    0.0000000   0.0000000
+---  ie =         10  ik =          1
  Nchannels of the left tip =            4
  Right moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.2311478   0.0000000   6.0000000
-   0.2311478   0.0000000   6.0000000
-   0.3269633   0.0000000   6.0000000
-   0.4076039   0.0000000   6.0000000
+   0.1368640   0.0000000   6.4000000
+   0.1368640   0.0000000   6.4000000
+   0.2797810   0.0000000   6.4000000
+   0.3963035   0.0000000   6.4000000
  Left moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.2311478   0.0000000   6.0000000
-  -0.2311478   0.0000000   6.0000000
-  -0.3269633   0.0000000   6.0000000
-  -0.4076040   0.0000000   6.0000000
+  -0.1368640   0.0000000   6.4000000
+  -0.1368640   0.0000000   6.4000000
+  -0.2797810   0.0000000   6.4000000
+  -0.3963035   0.0000000   6.4000000
  
- Nchannels of the left tip =            4
- Right moving states:
-   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.0337900   0.0000000   5.6000000
-   0.0337900   0.0000000   5.6000000
-   0.2525954   0.0000000   5.6000000
-   0.3905523   0.0000000   5.6000000
- Left moving states:
-   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.0337900   0.0000000   5.6000000
-  -0.0337900   0.0000000   5.6000000
-  -0.2525954   0.0000000   5.6000000
-  -0.3905523   0.0000000   5.6000000
- 
+---  E-Ef =    6.0000000  k =    0.0000000   0.0000000
+---  ie =         11  ik =          1
  Nchannels of the left tip =            2
  Right moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.1442163   0.0000000   5.2000000
-   0.3733198   0.0000000   5.2000000
+   0.1877258   0.0000000   6.0000000
+   0.3791326   0.0000000   6.0000000
  Left moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.1442163   0.0000000   5.2000000
-  -0.3733198   0.0000000   5.2000000
+  -0.1877258   0.0000000   6.0000000
+  -0.3791327   0.0000000   6.0000000
  
+---  E-Ef =    5.6000000  k =    0.0000000   0.0000000
+---  ie =         12  ik =          1
  Nchannels of the left tip =            1
  Right moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.3558987   0.0000000   4.8000000
+   0.3617758   0.0000000   5.6000000
  Left moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.3558987   0.0000000   4.8000000
+  -0.3617758   0.0000000   5.6000000
  
+---  E-Ef =    5.2000000  k =    0.0000000   0.0000000
+---  ie =         13  ik =          1
  Nchannels of the left tip =            1
  Right moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.3382805   0.0000000   4.4000000
+   0.3442248   0.0000000   5.2000000
  Left moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.3382805   0.0000000   4.4000000
+  -0.3442249   0.0000000   5.2000000
  
+---  E-Ef =    4.8000000  k =    0.0000000   0.0000000
+---  ie =         14  ik =          1
  Nchannels of the left tip =            1
  Right moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.3204560   0.0000000   4.0000000
+   0.3264708   0.0000000   4.8000000
  Left moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.3204560   0.0000000   4.0000000
+  -0.3264708   0.0000000   4.8000000
  
+---  E-Ef =    4.4000000  k =    0.0000000   0.0000000
+---  ie =         15  ik =          1
  Nchannels of the left tip =            1
  Right moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.3024152   0.0000000   3.6000000
+   0.3085039   0.0000000   4.4000000
  Left moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.3024152   0.0000000   3.6000000
+  -0.3085039   0.0000000   4.4000000
  
+---  E-Ef =    4.0000000  k =    0.0000000   0.0000000
+---  ie =         16  ik =          1
  Nchannels of the left tip =            1
  Right moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.2841467   0.0000000   3.2000000
+   0.2903133   0.0000000   4.0000000
  Left moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.2841467   0.0000000   3.2000000
+  -0.2903133   0.0000000   4.0000000
  
+---  E-Ef =    3.6000000  k =    0.0000000   0.0000000
+---  ie =         17  ik =          1
  Nchannels of the left tip =            1
  Right moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.2656378   0.0000000   2.8000000
+   0.2718867   0.0000000   3.6000000
  Left moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.2656378   0.0000000   2.8000000
+  -0.2718867   0.0000000   3.6000000
  
+---  E-Ef =    3.2000000  k =    0.0000000   0.0000000
+---  ie =         18  ik =          1
  Nchannels of the left tip =            1
  Right moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.2468738   0.0000000   2.4000000
+   0.2532102   0.0000000   3.2000000
  Left moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.2468738   0.0000000   2.4000000
+  -0.2532102   0.0000000   3.2000000
  
+---  E-Ef =    2.8000000  k =    0.0000000   0.0000000
+---  ie =         19  ik =          1
  Nchannels of the left tip =            1
  Right moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.2278371   0.0000000   2.0000000
+   0.2342673   0.0000000   2.8000000
  Left moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.2278371   0.0000000   2.0000000
+  -0.2342673   0.0000000   2.8000000
  
+---  E-Ef =    2.4000000  k =    0.0000000   0.0000000
+---  ie =         20  ik =          1
  Nchannels of the left tip =            1
  Right moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.2085064   0.0000000   1.6000000
+   0.2150381   0.0000000   2.4000000
  Left moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.2085064   0.0000000   1.6000000
+  -0.2150381   0.0000000   2.4000000
  
+---  E-Ef =    2.0000000  k =    0.0000000   0.0000000
+---  ie =         21  ik =          1
  Nchannels of the left tip =            1
  Right moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.1888549   0.0000000   1.2000000
+   0.1954980   0.0000000   2.0000000
  Left moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.1888549   0.0000000   1.2000000
+  -0.1954980   0.0000000   2.0000000
  
+---  E-Ef =    1.6000000  k =    0.0000000   0.0000000
+---  ie =         22  ik =          1
  Nchannels of the left tip =            1
  Right moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.1688466   0.0000000   0.8000000
+   0.1756143   0.0000000   1.6000000
  Left moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.1688466   0.0000000   0.8000000
+  -0.1756143   0.0000000   1.6000000
  
+---  E-Ef =    1.2000000  k =    0.0000000   0.0000000
+---  ie =         23  ik =          1
  Nchannels of the left tip =            1
  Right moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.1484306   0.0000000   0.4000000
+   0.1553424   0.0000000   1.2000000
  Left moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.1484306   0.0000000   0.4000000
+  -0.1553424   0.0000000   1.2000000
  
+---  E-Ef =    0.8000000  k =    0.0000000   0.0000000
+---  ie =         24  ik =          1
  Nchannels of the left tip =            1
  Right moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.1275285   0.0000000   0.0000000
+   0.1346150   0.0000000   0.8000000
  Left moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.1275285   0.0000000   0.0000000
+  -0.1346150   0.0000000   0.8000000
  
+---  E-Ef =    0.4000000  k =    0.0000000   0.0000000
+---  ie =         25  ik =          1
  Nchannels of the left tip =            1
  Right moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.1060060   0.0000000  -0.4000000
+   0.1133217   0.0000000   0.4000000
  Left moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.1060060   0.0000000  -0.4000000
+  -0.1133217   0.0000000   0.4000000
  
+---  E-Ef =    0.0000000  k =    0.0000000   0.0000000
+---  ie =         26  ik =          1
  Nchannels of the left tip =            1
  Right moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.0835954   0.0000000  -0.8000000
+   0.0912544   0.0000000   0.0000000
  Left moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.0835953   0.0000000  -0.8000000
+  -0.0912544   0.0000000   0.0000000
  
+---  E-Ef =   -0.4000000  k =    0.0000000   0.0000000
+---  ie =         27  ik =          1
  Nchannels of the left tip =            1
  Right moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.0596212   0.0000000  -1.2000000
+   0.0679354   0.0000000  -0.4000000
  Left moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.0596212   0.0000000  -1.2000000
+  -0.0679354   0.0000000  -0.4000000
  
+---  E-Ef =   -0.8000000  k =    0.0000000   0.0000000
+---  ie =         28  ik =          1
  Nchannels of the left tip =            1
  Right moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.0312867   0.0000000  -1.6000000
+   0.0417873   0.0000000  -0.8000000
  Left moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.0312867   0.0000000  -1.6000000
+  -0.0417873   0.0000000  -0.8000000
  
+---  E-Ef =   -1.2000000  k =    0.0000000   0.0000000
+---  ie =         29  ik =          1
  Nchannels of the left tip =            0
  Right moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
  Left moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
  
+---  E-Ef =   -1.6000000  k =    0.0000000   0.0000000
+---  ie =         30  ik =          1
  Nchannels of the left tip =            0
  Right moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
  Left moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
  
+---  E-Ef =   -2.0000000  k =    0.0000000   0.0000000
+---  ie =         31  ik =          1
  Nchannels of the left tip =            0
  Right moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
  Left moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
  
- Nchannels of the left tip =            1
- Right moving states:
-   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.0158525   0.0000000  -3.2000000
- Left moving states:
-   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.0158525   0.0000000  -3.2000000
- 
- Nchannels of the left tip =            1
- Right moving states:
-   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.0525639   0.0000000  -3.6000000
- Left moving states:
-   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.0525639   0.0000000  -3.6000000
- 
- Nchannels of the left tip =            1
- Right moving states:
-   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.0806063   0.0000000  -4.0000000
- Left moving states:
-   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.0806063   0.0000000  -4.0000000
- 
- Nchannels of the left tip =            1
- Right moving states:
-   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.1074416   0.0000000  -4.4000000
- Left moving states:
-   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.1074416   0.0000000  -4.4000000
- 
- Nchannels of the left tip =            1
- Right moving states:
-   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.1341770   0.0000000  -4.8000000
- Left moving states:
-   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.1341770   0.0000000  -4.8000000
- 
- Nchannels of the left tip =            1
- Right moving states:
-   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.1612241   0.0000000  -5.2000000
- Left moving states:
-   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.1612241   0.0000000  -5.2000000
- 
- Nchannels of the left tip =            1
- Right moving states:
-   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.1888059   0.0000000  -5.6000000
- Left moving states:
-   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.1888059   0.0000000  -5.6000000
- 
- Nchannels of the left tip =            1
- Right moving states:
-   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.2170814   0.0000000  -6.0000000
- Left moving states:
-   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.2170814   0.0000000  -6.0000000
- 
- Nchannels of the left tip =            1
- Right moving states:
-   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.2461888   0.0000000  -6.4000000
- Left moving states:
-   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.2461888   0.0000000  -6.4000000
- 
- Nchannels of the left tip =            1
- Right moving states:
-   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.2762668   0.0000000  -6.8000000
- Left moving states:
-   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.2762668   0.0000000  -6.8000000
- 
- Nchannels of the left tip =            1
- Right moving states:
-   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.3074673   0.0000000  -7.2000000
- Left moving states:
-   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.3074673   0.0000000  -7.2000000
- 
- Nchannels of the left tip =            1
- Right moving states:
-   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.3399677   0.0000000  -7.6000000
- Left moving states:
-   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.3399677   0.0000000  -7.6000000
- 
- Nchannels of the left tip =            1
- Right moving states:
-   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.3739835   0.0000000  -8.0000000
- Left moving states:
-   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.3739835   0.0000000  -8.0000000
- 
- Nchannels of the left tip =            1
- Right moving states:
-   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.4097865   0.0000000  -8.4000000
- Left moving states:
-   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.4097865   0.0000000  -8.4000000
- 
- Nchannels of the left tip =            1
- Right moving states:
-   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.4477330   0.0000000  -8.8000000
- Left moving states:
-   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.4477330   0.0000000  -8.8000000
- 
- Nchannels of the left tip =            1
- Right moving states:
-   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.4883271   0.0000000  -9.2000000
- Left moving states:
-   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.4883272   0.0000000  -9.2000000
- 
- Nchannels of the left tip =            1
- Right moving states:
-   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.4678442   0.0000000  -9.6000000
- Left moving states:
-   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.4678442   0.0000000  -9.6000000
- 
- Nchannels of the left tip =            1
- Right moving states:
-   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.4196084   0.0000000 -10.0000000
- Left moving states:
-   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.4196084   0.0000000 -10.0000000
- 
- Nchannels of the left tip =            1
- Right moving states:
-   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.3653045   0.0000000 -10.4000000
- Left moving states:
-   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.3653045   0.0000000 -10.4000000
- 
- Nchannels of the left tip =            1
- Right moving states:
-   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.3016623   0.0000000 -10.8000000
- Left moving states:
-   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.3016623   0.0000000 -10.8000000
- 
- Nchannels of the left tip =            1
- Right moving states:
-   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.2207432   0.0000000 -11.2000000
- Left moving states:
-   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.2207432   0.0000000 -11.2000000
- 
- Nchannels of the left tip =            1
- Right moving states:
-   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-   0.0814147   0.0000000 -11.6000000
- Left moving states:
-   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
-  -0.0814147   0.0000000 -11.6000000
- 
+---  E-Ef =   -2.4000000  k =    0.0000000   0.0000000
+---  ie =         32  ik =          1
  Nchannels of the left tip =            0
  Right moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
  Left moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
  
+---  E-Ef =   -2.8000000  k =    0.0000000   0.0000000
+---  ie =         33  ik =          1
+ Nchannels of the left tip =            1
+ Right moving states:
+   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
+  -0.0422663   0.0000000  -2.8000000
+ Left moving states:
+   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
+   0.0422663  -0.0000000  -2.8000000
+ 
+---  E-Ef =   -3.2000000  k =    0.0000000   0.0000000
+---  ie =         34  ik =          1
+ Nchannels of the left tip =            1
+ Right moving states:
+   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
+  -0.0714176  -0.0000000  -3.2000000
+ Left moving states:
+   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
+   0.0714176  -0.0000000  -3.2000000
+ 
+---  E-Ef =   -3.6000000  k =    0.0000000   0.0000000
+---  ie =         35  ik =          1
+ Nchannels of the left tip =            1
+ Right moving states:
+   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
+  -0.0984641  -0.0000000  -3.6000000
+ Left moving states:
+   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
+   0.0984641  -0.0000000  -3.6000000
+ 
+---  E-Ef =   -4.0000000  k =    0.0000000   0.0000000
+---  ie =         36  ik =          1
+ Nchannels of the left tip =            1
+ Right moving states:
+   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
+  -0.1251705  -0.0000000  -4.0000000
+ Left moving states:
+   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
+   0.1251705  -0.0000000  -4.0000000
+ 
+---  E-Ef =   -4.4000000  k =    0.0000000   0.0000000
+---  ie =         37  ik =          1
+ Nchannels of the left tip =            1
+ Right moving states:
+   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
+  -0.1520825  -0.0000000  -4.4000000
+ Left moving states:
+   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
+   0.1520825  -0.0000000  -4.4000000
+ 
+---  E-Ef =   -4.8000000  k =    0.0000000   0.0000000
+---  ie =         38  ik =          1
+ Nchannels of the left tip =            1
+ Right moving states:
+   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
+  -0.1794650  -0.0000000  -4.8000000
+ Left moving states:
+   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
+   0.1794650  -0.0000000  -4.8000000
+ 
+---  E-Ef =   -5.2000000  k =    0.0000000   0.0000000
+---  ie =         39  ik =          1
+ Nchannels of the left tip =            1
+ Right moving states:
+   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
+  -0.2074915  -0.0000000  -5.2000000
+ Left moving states:
+   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
+   0.2074915  -0.0000000  -5.2000000
+ 
+---  E-Ef =   -5.6000000  k =    0.0000000   0.0000000
+---  ie =         40  ik =          1
+ Nchannels of the left tip =            1
+ Right moving states:
+   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
+  -0.2363041  -0.0000000  -5.6000000
+ Left moving states:
+   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
+   0.2363041  -0.0000000  -5.6000000
+ 
+---  E-Ef =   -6.0000000  k =    0.0000000   0.0000000
+---  ie =         41  ik =          1
+ Nchannels of the left tip =            1
+ Right moving states:
+   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
+  -0.2660398  -0.0000000  -6.0000000
+ Left moving states:
+   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
+   0.2660398  -0.0000000  -6.0000000
+ 
+---  E-Ef =   -6.4000000  k =    0.0000000   0.0000000
+---  ie =         42  ik =          1
+ Nchannels of the left tip =            1
+ Right moving states:
+   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
+  -0.2968448  -0.0000000  -6.4000000
+ Left moving states:
+   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
+   0.2968448  -0.0000000  -6.4000000
+ 
+---  E-Ef =   -6.8000000  k =    0.0000000   0.0000000
+---  ie =         43  ik =          1
+ Nchannels of the left tip =            1
+ Right moving states:
+   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
+  -0.3288864  -0.0000000  -6.8000000
+ Left moving states:
+   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
+   0.3288865  -0.0000000  -6.8000000
+ 
+---  E-Ef =   -7.2000000  k =    0.0000000   0.0000000
+---  ie =         44  ik =          1
+ Nchannels of the left tip =            1
+ Right moving states:
+   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
+  -0.3623658   0.0000000  -7.2000000
+ Left moving states:
+   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
+   0.3623658  -0.0000000  -7.2000000
+ 
+---  E-Ef =   -7.6000000  k =    0.0000000   0.0000000
+---  ie =         45  ik =          1
+ Nchannels of the left tip =            1
+ Right moving states:
+   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
+  -0.3975332   0.0000000  -7.6000000
+ Left moving states:
+   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
+   0.3975332  -0.0000000  -7.6000000
+ 
+---  E-Ef =   -8.0000000  k =    0.0000000   0.0000000
+---  ie =         46  ik =          1
+ Nchannels of the left tip =            1
+ Right moving states:
+   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
+  -0.4347126   0.0000000  -8.0000000
+ Left moving states:
+   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
+   0.4347126  -0.0000000  -8.0000000
+ 
+---  E-Ef =   -8.4000000  k =    0.0000000   0.0000000
+---  ie =         47  ik =          1
+ Nchannels of the left tip =            1
+ Right moving states:
+   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
+  -0.4743430   0.0000000  -8.4000000
+ Left moving states:
+   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
+   0.4743430  -0.0000000  -8.4000000
+ 
+---  E-Ef =   -8.8000000  k =    0.0000000   0.0000000
+---  ie =         48  ik =          1
+ Nchannels of the left tip =            1
+ Right moving states:
+   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
+   0.4830273   0.0000000  -8.8000000
+ Left moving states:
+   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
+  -0.4830273  -0.0000000  -8.8000000
+ 
+---  E-Ef =   -9.2000000  k =    0.0000000   0.0000000
+---  ie =         49  ik =          1
+ Nchannels of the left tip =            1
+ Right moving states:
+   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
+   0.4363922   0.0000000  -9.2000000
+ Left moving states:
+   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
+  -0.4363922  -0.0000000  -9.2000000
+ 
+---  E-Ef =   -9.6000000  k =    0.0000000   0.0000000
+---  ie =         50  ik =          1
+ Nchannels of the left tip =            1
+ Right moving states:
+   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
+   0.3843879   0.0000000  -9.6000000
+ Left moving states:
+   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
+  -0.3843879  -0.0000000  -9.6000000
+ 
+---  E-Ef =  -10.0000000  k =    0.0000000   0.0000000
+---  ie =         51  ik =          1
+ Nchannels of the left tip =            1
+ Right moving states:
+   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
+   0.3244191   0.0000000 -10.0000000
+ Left moving states:
+   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
+  -0.3244191   0.0000000 -10.0000000
+ 
+---  E-Ef =  -10.4000000  k =    0.0000000   0.0000000
+---  ie =         52  ik =          1
+ Nchannels of the left tip =            1
+ Right moving states:
+   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
+   0.2508319   0.0000000 -10.4000000
+ Left moving states:
+   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
+  -0.2508319   0.0000000 -10.4000000
+ 
+---  E-Ef =  -10.8000000  k =    0.0000000   0.0000000
+---  ie =         53  ik =          1
+ Nchannels of the left tip =            1
+ Right moving states:
+   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
+   0.1440808   0.0000000 -10.8000000
+ Left moving states:
+   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
+  -0.1440808   0.0000000 -10.8000000
+ 
+---  E-Ef =  -11.2000000  k =    0.0000000   0.0000000
+---  ie =         54  ik =          1
  Nchannels of the left tip =            0
  Right moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
  Left moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
  
+---  E-Ef =  -11.6000000  k =    0.0000000   0.0000000
+---  ie =         55  ik =          1
  Nchannels of the left tip =            0
  Right moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
  Left moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
  
+---  E-Ef =  -12.0000000  k =    0.0000000   0.0000000
+---  ie =         56  ik =          1
  Nchannels of the left tip =            0
  Right moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
  Left moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
  
+---  E-Ef =  -12.4000000  k =    0.0000000   0.0000000
+---  ie =         57  ik =          1
+ Nchannels of the left tip =            0
+ Right moving states:
+   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
+ Left moving states:
+   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
+ 
+---  E-Ef =  -12.8000000  k =    0.0000000   0.0000000
+---  ie =         58  ik =          1
+ Nchannels of the left tip =            0
+ Right moving states:
+   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
+ Left moving states:
+   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
+ 
+---  E-Ef =  -13.2000000  k =    0.0000000   0.0000000
+---  ie =         59  ik =          1
+ Nchannels of the left tip =            0
+ Right moving states:
+   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
+ Left moving states:
+   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
+ 
+---  E-Ef =  -13.6000000  k =    0.0000000   0.0000000
+---  ie =         60  ik =          1
  Nchannels of the left tip =            0
  Right moving states:
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
@@ -654,14 +778,14 @@
    k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
  
  
-     PWCOND       :     9.35s CPU time,    9.61s wall time
+     PWCOND       :     1.41s CPU         1.46s WALL
 
-     init         :     0.33s CPU
-     poten        :     0.00s CPU
-     local        :     0.06s CPU
+     init         :      0.20s CPU      0.21s WALL (       1 calls)
+     poten        :      0.00s CPU      0.00s WALL (       1 calls)
+     local        :      0.01s CPU      0.01s WALL (       1 calls)
  
-     scatter_forw :     7.45s CPU (      60 calls,   0.124 s avg)
+     scatter_forw :      1.02s CPU      1.05s WALL (      60 calls)
  
-     compbs       :     1.49s CPU (      60 calls,   0.025 s avg)
-     compbs_2     :     1.26s CPU (      60 calls,   0.021 s avg)
+     compbs       :      0.15s CPU      0.16s WALL (      60 calls)
+     compbs_2     :      0.14s CPU      0.14s WALL (      60 calls)
  
