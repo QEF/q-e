@@ -1,5 +1,5 @@
 
-     Program PWSCF v.5.4.0 (svn rev. 12762M) starts on 17Aug2016 at 10:24:20 
+     Program PWSCF v.6.0 (svn rev. 13317) starts on 18Feb2017 at 21:18:28 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -7,18 +7,6 @@
           URL http://www.quantum-espresso.org", 
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
- 
-           HOST :    @host@
-           ARCH :    x86_64
-             CC :    cc
-            CPP :    cpp
-            F90 :    mpif90
-            F77 :    ifort
-         DFLAGS :    -D__INTEL -D__FFTW3 -D__MPI -D__PARA
-      BLAS LIBS :    -lmkl_intel_lp64  -lmkl_sequential -lmkl_core
-    LAPACK LIBS :    
-       FFT LIBS :    -lfftw3
-      MASS LIBS :    
 
      Parallel version (MPI), running on     1 processors
      Waiting for input...
@@ -26,7 +14,7 @@
 
      Current dimensions of program PWSCF are:
      Max number of different atomic species (ntypx) = 10
-     Max number of k-points (npk) = 200000
+     Max number of k-points (npk) =  40000
      Max angular momentum in pseudopotentials (lmaxx) =  3
 
      Presently symmetry can be used with monopole field
@@ -78,7 +66,7 @@
 
 
      PseudoPot. # 1 for Mo read from file:
-     /home/paulatto/espresso/pseudo/Mo.pz-spn-rrkjus_psl.0.2.UPF
+     /scratch/scitas/nvarini/espresso_trunk_svn/pseudo/Mo.pz-spn-rrkjus_psl.0.2.UPF
      MD5 check sum: eb5f43d7a06f715026d610376b4afbda
      Pseudo is Ultrasoft + core correction, Zval = 14.0
      Generated using "atomic" code by A. Dal Corso  v.5.0.2 svn rev. 9415
@@ -93,7 +81,7 @@
 
 
      PseudoPot. # 2 for  S read from file:
-     /home/paulatto/espresso/pseudo/S.pz-n-rrkjus_psl.0.1.UPF
+     /scratch/scitas/nvarini/espresso_trunk_svn/pseudo/S.pz-n-rrkjus_psl.0.1.UPF
      MD5 check sum: 1eb24ea67d91081aec053955589b9402
      Pseudo is Ultrasoft + core correction, Zval =  6.0
      Generated using "atomic" code by A. Dal Corso  v.5.0.2 svn rev. 9415
@@ -212,7 +200,7 @@ E      2.00 -1.00  0.00
          2           Mo  tau(   2) = (  0.3333333  0.6666667  0.1958671  )
          3           S   tau(   3) = ( -0.3333333 -0.6666667  0.2365170  )
 
-     number of k points=    30  gaussian smearing, width (Ry)=  0.0020
+     number of k points=    30  Marzari-Vanderbilt smearing, width (Ry)=  0.0020
                        cart. coord. in units 2pi/alat
         k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   0.0078125
         k(    2) = (   0.0000000   0.0721688   0.0000000), wk =   0.0468750
@@ -281,7 +269,7 @@ E      2.00 -1.00  0.00
 
      Smooth grid:   105989 G-vectors     FFT dimensions: (  27,  27, 324)
 
-     Estimated max dynamical RAM per process >     320.95Mb
+     Estimated max dynamical RAM per process >     320.95MB
  
      Adding monopole plane to compensate the charge of the system - add_monofield
      see PRB 89, 245406 (2014), works only for 2D systems perpendicular to z
@@ -320,9 +308,9 @@ E      2.00 -1.00  0.00
  
      Starting wfc are   21 randomized atomic wfcs
 
-     total cpu time spent up to now is        8.0 secs
+     total cpu time spent up to now is        8.5 secs
 
-     per-process dynamical memory:   260.9 Mb
+     per-process dynamical memory:   286.3 Mb
 
      Self-consistent Calculation
 
@@ -337,22 +325,22 @@ E      2.00 -1.00  0.00
      Computed dipole along edir(3) : 
         Elec. dipole         -3.2424 Ry au,         -8.2413 Debye
         Ion. dipole          -3.2503 Ry au,         -8.2614 Debye
-        Dipole               -1.3953 Ry au,         -3.5466 Debye
+        Dipole               -1.3953 Ry au,         -3.5465 Debye
         Dipole field         -0.0079 Ry au, 
  
         Potential amp.        1.1242 Ry
         Total length         70.9426 bohr
  
 
-     total cpu time spent up to now is       25.9 secs
+     total cpu time spent up to now is       22.7 secs
 
-     total energy              =    -180.34937962 Ry
-     Harris-Foulkes estimate   =    -181.15861473 Ry
-     estimated scf accuracy    <       0.95183573 Ry
+     total energy              =    -180.34938996 Ry
+     Harris-Foulkes estimate   =    -181.15860169 Ry
+     estimated scf accuracy    <       0.95181123 Ry
 
      iteration #  2     ecut=    50.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  3.68E-03,  avg # of iterations =  5.1
+     ethr =  3.67E-03,  avg # of iterations =  5.1
 
      negative rho (up, down):  1.620E-03 0.000E+00
  
@@ -368,15 +356,15 @@ E      2.00 -1.00  0.00
         Total length         70.9426 bohr
  
 
-     total cpu time spent up to now is       50.7 secs
+     total cpu time spent up to now is       41.7 secs
 
-     total energy              =    -177.05165383 Ry
-     Harris-Foulkes estimate   =    -184.84137277 Ry
-     estimated scf accuracy    <      53.02750511 Ry
+     total energy              =    -177.05194596 Ry
+     Harris-Foulkes estimate   =    -184.84110058 Ry
+     estimated scf accuracy    <      53.02226704 Ry
 
      iteration #  3     ecut=    50.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  3.68E-03,  avg # of iterations =  4.8
+     ethr =  3.67E-03,  avg # of iterations =  4.8
 
      negative rho (up, down):  1.600E-03 0.000E+00
  
@@ -385,18 +373,18 @@ E      2.00 -1.00  0.00
      Computed dipole along edir(3) : 
         Elec. dipole         -3.2559 Ry au,         -8.2757 Debye
         Ion. dipole          -3.2503 Ry au,         -8.2614 Debye
-        Dipole                0.9899 Ry au,          2.5160 Debye
+        Dipole                0.9898 Ry au,          2.5157 Debye
         Dipole field          0.0056 Ry au, 
  
-        Potential amp.       -0.7975 Ry
+        Potential amp.       -0.7974 Ry
         Total length         70.9426 bohr
  
 
-     total cpu time spent up to now is       75.2 secs
+     total cpu time spent up to now is       60.3 secs
 
-     total energy              =    -180.94513804 Ry
-     Harris-Foulkes estimate   =    -181.08918780 Ry
-     estimated scf accuracy    <       0.67295222 Ry
+     total energy              =    -180.94520735 Ry
+     Harris-Foulkes estimate   =    -181.08915001 Ry
+     estimated scf accuracy    <       0.67236683 Ry
 
      iteration #  4     ecut=    50.00 Ry     beta=0.70
      Davidson diagonalization with overlap
@@ -409,22 +397,22 @@ E      2.00 -1.00  0.00
      Computed dipole along edir(3) : 
         Elec. dipole         -3.2555 Ry au,         -8.2747 Debye
         Ion. dipole          -3.2503 Ry au,         -8.2614 Debye
-        Dipole                0.9252 Ry au,          2.3516 Debye
+        Dipole                0.9251 Ry au,          2.3513 Debye
         Dipole field          0.0053 Ry au, 
  
-        Potential amp.       -0.7454 Ry
+        Potential amp.       -0.7453 Ry
         Total length         70.9426 bohr
  
 
-     total cpu time spent up to now is       89.4 secs
+     total cpu time spent up to now is       71.4 secs
 
-     total energy              =    -181.00680839 Ry
-     Harris-Foulkes estimate   =    -181.05339178 Ry
-     estimated scf accuracy    <       0.19870078 Ry
+     total energy              =    -181.00682420 Ry
+     Harris-Foulkes estimate   =    -181.05335860 Ry
+     estimated scf accuracy    <       0.19849117 Ry
 
      iteration #  5     ecut=    50.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  7.67E-04,  avg # of iterations =  1.2
+     ethr =  7.66E-04,  avg # of iterations =  1.2
 
      negative rho (up, down):  1.748E-03 0.000E+00
  
@@ -433,22 +421,22 @@ E      2.00 -1.00  0.00
      Computed dipole along edir(3) : 
         Elec. dipole         -3.2552 Ry au,         -8.2738 Debye
         Ion. dipole          -3.2503 Ry au,         -8.2614 Debye
-        Dipole                0.8627 Ry au,          2.1927 Debye
+        Dipole                0.8626 Ry au,          2.1924 Debye
         Dipole field          0.0049 Ry au, 
  
-        Potential amp.       -0.6951 Ry
+        Potential amp.       -0.6950 Ry
         Total length         70.9426 bohr
  
 
-     total cpu time spent up to now is      103.9 secs
+     total cpu time spent up to now is       82.2 secs
 
-     total energy              =    -181.02310538 Ry
-     Harris-Foulkes estimate   =    -181.02759496 Ry
-     estimated scf accuracy    <       0.02303737 Ry
+     total energy              =    -181.02308642 Ry
+     Harris-Foulkes estimate   =    -181.02757350 Ry
+     estimated scf accuracy    <       0.02300567 Ry
 
      iteration #  6     ecut=    50.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  8.89E-05,  avg # of iterations =  3.0
+     ethr =  8.88E-05,  avg # of iterations =  3.0
 
      negative rho (up, down):  1.841E-03 0.000E+00
  
@@ -457,42 +445,42 @@ E      2.00 -1.00  0.00
      Computed dipole along edir(3) : 
         Elec. dipole         -3.2551 Ry au,         -8.2738 Debye
         Ion. dipole          -3.2503 Ry au,         -8.2614 Debye
-        Dipole                0.8569 Ry au,          2.1780 Debye
+        Dipole                0.8569 Ry au,          2.1781 Debye
         Dipole field          0.0049 Ry au, 
  
         Potential amp.       -0.6904 Ry
         Total length         70.9426 bohr
  
 
-     total cpu time spent up to now is      120.0 secs
+     total cpu time spent up to now is       94.7 secs
 
-     total energy              =    -181.02510811 Ry
-     Harris-Foulkes estimate   =    -181.02591935 Ry
-     estimated scf accuracy    <       0.00230235 Ry
+     total energy              =    -181.02509624 Ry
+     Harris-Foulkes estimate   =    -181.02590182 Ry
+     estimated scf accuracy    <       0.00228448 Ry
 
      iteration #  7     ecut=    50.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  8.89E-06,  avg # of iterations =  3.1
+     ethr =  8.82E-06,  avg # of iterations =  3.1
 
-     negative rho (up, down):  1.866E-03 0.000E+00
+     negative rho (up, down):  1.865E-03 0.000E+00
  
      Adding external electric field
 
      Computed dipole along edir(3) : 
         Elec. dipole         -3.2551 Ry au,         -8.2736 Debye
         Ion. dipole          -3.2503 Ry au,         -8.2614 Debye
-        Dipole                0.8473 Ry au,          2.1535 Debye
+        Dipole                0.8476 Ry au,          2.1545 Debye
         Dipole field          0.0048 Ry au, 
  
-        Potential amp.       -0.6826 Ry
+        Potential amp.       -0.6829 Ry
         Total length         70.9426 bohr
  
 
-     total cpu time spent up to now is      138.3 secs
+     total cpu time spent up to now is      108.8 secs
 
-     total energy              =    -181.02558489 Ry
-     Harris-Foulkes estimate   =    -181.02576603 Ry
-     estimated scf accuracy    <       0.00051120 Ry
+     total energy              =    -181.02557385 Ry
+     Harris-Foulkes estimate   =    -181.02574730 Ry
+     estimated scf accuracy    <       0.00051111 Ry
 
      iteration #  8     ecut=    50.00 Ry     beta=0.70
      Davidson diagonalization with overlap
@@ -505,46 +493,46 @@ E      2.00 -1.00  0.00
      Computed dipole along edir(3) : 
         Elec. dipole         -3.2551 Ry au,         -8.2736 Debye
         Ion. dipole          -3.2503 Ry au,         -8.2614 Debye
-        Dipole                0.8429 Ry au,          2.1423 Debye
+        Dipole                0.8428 Ry au,          2.1422 Debye
         Dipole field          0.0048 Ry au, 
  
-        Potential amp.       -0.6791 Ry
+        Potential amp.       -0.6790 Ry
         Total length         70.9426 bohr
  
 
-     total cpu time spent up to now is      152.9 secs
+     total cpu time spent up to now is      120.1 secs
 
-     total energy              =    -181.02560027 Ry
-     Harris-Foulkes estimate   =    -181.02566799 Ry
-     estimated scf accuracy    <       0.00010691 Ry
+     total energy              =    -181.02558385 Ry
+     Harris-Foulkes estimate   =    -181.02565837 Ry
+     estimated scf accuracy    <       0.00012581 Ry
 
      iteration #  9     ecut=    50.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  4.13E-07,  avg # of iterations =  2.6
+     ethr =  4.86E-07,  avg # of iterations =  2.3
 
-     negative rho (up, down):  1.879E-03 0.000E+00
+     negative rho (up, down):  1.880E-03 0.000E+00
  
      Adding external electric field
 
      Computed dipole along edir(3) : 
         Elec. dipole         -3.2551 Ry au,         -8.2735 Debye
         Ion. dipole          -3.2503 Ry au,         -8.2614 Debye
-        Dipole                0.8420 Ry au,          2.1403 Debye
+        Dipole                0.8418 Ry au,          2.1396 Debye
         Dipole field          0.0048 Ry au, 
  
-        Potential amp.       -0.6784 Ry
+        Potential amp.       -0.6782 Ry
         Total length         70.9426 bohr
  
 
-     total cpu time spent up to now is      168.5 secs
+     total cpu time spent up to now is      131.9 secs
 
-     total energy              =    -181.02561879 Ry
-     Harris-Foulkes estimate   =    -181.02562718 Ry
-     estimated scf accuracy    <       0.00000158 Ry
+     total energy              =    -181.02560252 Ry
+     Harris-Foulkes estimate   =    -181.02561280 Ry
+     estimated scf accuracy    <       0.00000171 Ry
 
      iteration # 10     ecut=    50.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  6.11E-09,  avg # of iterations =  4.0
+     ethr =  6.59E-09,  avg # of iterations =  4.0
 
      negative rho (up, down):  1.876E-03 0.000E+00
  
@@ -553,22 +541,22 @@ E      2.00 -1.00  0.00
      Computed dipole along edir(3) : 
         Elec. dipole         -3.2551 Ry au,         -8.2735 Debye
         Ion. dipole          -3.2503 Ry au,         -8.2614 Debye
-        Dipole                0.8424 Ry au,          2.1410 Debye
+        Dipole                0.8421 Ry au,          2.1405 Debye
         Dipole field          0.0048 Ry au, 
  
-        Potential amp.       -0.6787 Ry
+        Potential amp.       -0.6785 Ry
         Total length         70.9426 bohr
  
 
-     total cpu time spent up to now is      190.8 secs
+     total cpu time spent up to now is      149.3 secs
 
-     total energy              =    -181.02562083 Ry
-     Harris-Foulkes estimate   =    -181.02561816 Ry
-     estimated scf accuracy    <       0.00000115 Ry
+     total energy              =    -181.02560515 Ry
+     Harris-Foulkes estimate   =    -181.02560216 Ry
+     estimated scf accuracy    <       0.00000139 Ry
 
      iteration # 11     ecut=    50.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  4.45E-09,  avg # of iterations =  1.3
+     ethr =  5.37E-09,  avg # of iterations =  1.6
 
      negative rho (up, down):  1.877E-03 0.000E+00
  
@@ -577,22 +565,22 @@ E      2.00 -1.00  0.00
      Computed dipole along edir(3) : 
         Elec. dipole         -3.2551 Ry au,         -8.2735 Debye
         Ion. dipole          -3.2503 Ry au,         -8.2614 Debye
-        Dipole                0.8424 Ry au,          2.1411 Debye
+        Dipole                0.8422 Ry au,          2.1406 Debye
         Dipole field          0.0048 Ry au, 
  
-        Potential amp.       -0.6787 Ry
+        Potential amp.       -0.6785 Ry
         Total length         70.9426 bohr
  
 
-     total cpu time spent up to now is      204.8 secs
+     total cpu time spent up to now is      160.2 secs
 
-     total energy              =    -181.02562089 Ry
-     Harris-Foulkes estimate   =    -181.02562079 Ry
-     estimated scf accuracy    <       0.00000010 Ry
+     total energy              =    -181.02560523 Ry
+     Harris-Foulkes estimate   =    -181.02560496 Ry
+     estimated scf accuracy    <       0.00000011 Ry
 
      iteration # 12     ecut=    50.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  4.04E-10,  avg # of iterations =  2.9
+     ethr =  4.18E-10,  avg # of iterations =  2.8
 
      negative rho (up, down):  1.877E-03 0.000E+00
  
@@ -601,22 +589,22 @@ E      2.00 -1.00  0.00
      Computed dipole along edir(3) : 
         Elec. dipole         -3.2551 Ry au,         -8.2735 Debye
         Ion. dipole          -3.2503 Ry au,         -8.2614 Debye
-        Dipole                0.8423 Ry au,          2.1410 Debye
+        Dipole                0.8421 Ry au,          2.1405 Debye
         Dipole field          0.0048 Ry au, 
  
-        Potential amp.       -0.6787 Ry
+        Potential amp.       -0.6785 Ry
         Total length         70.9426 bohr
  
 
-     total cpu time spent up to now is      221.2 secs
+     total cpu time spent up to now is      173.0 secs
 
-     total energy              =    -181.02562091 Ry
-     Harris-Foulkes estimate   =    -181.02562114 Ry
-     estimated scf accuracy    <          6.2E-09 Ry
+     total energy              =    -181.02560525 Ry
+     Harris-Foulkes estimate   =    -181.02560553 Ry
+     estimated scf accuracy    <          8.6E-09 Ry
 
      iteration # 13     ecut=    50.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  2.41E-11,  avg # of iterations =  3.0
+     ethr =  3.31E-11,  avg # of iterations =  2.6
 
      negative rho (up, down):  1.877E-03 0.000E+00
  
@@ -625,22 +613,22 @@ E      2.00 -1.00  0.00
      Computed dipole along edir(3) : 
         Elec. dipole         -3.2551 Ry au,         -8.2735 Debye
         Ion. dipole          -3.2503 Ry au,         -8.2614 Debye
-        Dipole                0.8423 Ry au,          2.1409 Debye
+        Dipole                0.8421 Ry au,          2.1405 Debye
         Dipole field          0.0048 Ry au, 
  
-        Potential amp.       -0.6786 Ry
+        Potential amp.       -0.6785 Ry
         Total length         70.9426 bohr
  
 
-     total cpu time spent up to now is      240.0 secs
+     total cpu time spent up to now is      186.3 secs
 
      End of self-consistent calculation
 
           k = 0.0000 0.0000 0.0000 ( 13265 PWs)   bands (ev):
 
-   -64.7819 -39.0266 -38.7512 -38.7512 -18.2121 -16.7750  -9.7541  -6.7889
-    -6.7889  -5.6493  -5.6162  -5.6162  -3.9450  -1.1886  -1.1886  -0.8565
-    -0.8565
+   -64.7797 -39.0262 -38.7480 -38.7480 -18.2104 -16.7738  -9.7523  -6.7859
+    -6.7859  -5.6482  -5.6147  -5.6147  -3.9446  -1.1870  -1.1870  -0.8547
+    -0.8547
 
      occupation numbers 
      1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
@@ -649,9 +637,9 @@ E      2.00 -1.00  0.00
 
           k = 0.0000 0.0722 0.0000 ( 13263 PWs)   bands (ev):
 
-   -64.7803 -39.0234 -38.7674 -38.7549 -18.1513 -16.7516  -9.6857  -6.9211
-    -6.7238  -6.1206  -5.7135  -5.2287  -3.9775  -1.2874  -1.0905  -1.0196
-    -0.9175
+   -64.7781 -39.0230 -38.7642 -38.7516 -18.1495 -16.7504  -9.6839  -6.9181
+    -6.7208  -6.1193  -5.7120  -5.2274  -3.9771  -1.2857  -1.0887  -1.0179
+    -0.9159
 
      occupation numbers 
      1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
@@ -660,20 +648,20 @@ E      2.00 -1.00  0.00
 
           k = 0.0000 0.1443 0.0000 ( 13247 PWs)   bands (ev):
 
-   -64.7757 -39.0143 -38.8132 -38.7652 -17.9742 -16.6836  -9.4985  -7.2584
-    -6.6363  -6.5360  -5.9654  -5.0047  -4.1066  -1.4709  -1.3135  -1.1331
-    -0.7828
+   -64.7735 -39.0139 -38.8100 -38.7620 -17.9725 -16.6824  -9.4967  -7.2556
+    -6.6349  -6.5331  -5.9638  -5.0035  -4.1060  -1.4689  -1.3121  -1.1310
+    -0.7814
 
      occupation numbers 
      1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
-     1.0000   1.0000   1.0000   1.0000   0.9140   0.0000   0.0000   0.0000
+     1.0000   1.0000   1.0000   1.0000   0.9316   0.0000   0.0000   0.0000
      0.0000
 
           k = 0.0000 0.2165 0.0000 ( 13236 PWs)   bands (ev):
 
-   -64.7689 -39.0006 -38.8812 -38.7807 -17.6972 -16.5772  -9.2642  -7.6572
-    -7.1560  -6.3067  -6.2323  -5.0293  -4.3849  -1.6819  -1.3629  -1.3052
-    -0.4403
+   -64.7666 -39.0003 -38.8779 -38.7775 -17.6954 -16.5760  -9.2623  -7.6546
+    -7.1546  -6.3047  -6.2299  -5.0282  -4.3841  -1.6800  -1.3607  -1.3038
+    -0.4389
 
      occupation numbers 
      1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
@@ -682,9 +670,9 @@ E      2.00 -1.00  0.00
 
           k = 0.0000 0.2887 0.0000 ( 13194 PWs)   bands (ev):
 
-   -64.7607 -38.9845 -38.9604 -38.7989 -17.3478 -16.4438  -9.1605  -7.9227
-    -7.6606  -6.6269  -5.8928  -5.2319  -4.7556  -1.7462  -1.5785  -1.0185
-    -0.1127
+   -64.7585 -38.9841 -38.9572 -38.7956 -17.3460 -16.4425  -9.1585  -7.9205
+    -7.6593  -6.6253  -5.8902  -5.2307  -4.7543  -1.7445  -1.5761  -1.0171
+    -0.1113
 
      occupation numbers 
      1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
@@ -693,9 +681,9 @@ E      2.00 -1.00  0.00
 
           k = 0.0000 0.3608 0.0000 ( 13186 PWs)   bands (ev):
 
-   -64.7526 -39.0387 -38.9682 -38.8170 -16.9671 -16.2998  -9.3376  -8.1597
-    -7.9370  -6.9177  -5.5360  -5.4680  -5.0104  -1.7257  -1.6552  -0.6327
-     0.1453
+   -64.7503 -39.0355 -38.9679 -38.8137 -16.9653 -16.2985  -9.3355  -8.1581
+    -7.9354  -6.9161  -5.5336  -5.4669  -5.0088  -1.7230  -1.6537  -0.6313
+     0.1467
 
      occupation numbers 
      1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
@@ -704,9 +692,9 @@ E      2.00 -1.00  0.00
 
           k = 0.0000 0.4330 0.0000 ( 13192 PWs)   bands (ev):
 
-   -64.7457 -39.1044 -38.9545 -38.8323 -16.6124 -16.1668  -9.6302  -8.5457
-    -7.9945  -7.1407  -5.6512  -5.2362  -4.9800  -1.7842  -1.4859  -0.2942
-     0.3184
+   -64.7434 -39.1011 -38.9541 -38.8290 -16.6106 -16.1656  -9.6282  -8.5443
+    -7.9930  -7.1391  -5.6502  -5.2341  -4.9782  -1.7812  -1.4842  -0.2928
+     0.3197
 
      occupation numbers 
      1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
@@ -715,9 +703,9 @@ E      2.00 -1.00  0.00
 
           k = 0.0000 0.5052 0.0000 ( 13210 PWs)   bands (ev):
 
-   -64.7410 -39.1479 -38.9452 -38.8425 -16.3557 -16.0691  -9.8643  -8.8083
-    -8.1089  -7.2799  -5.7602  -5.0433  -4.7713  -1.7785  -1.3124  -0.0893
-     0.4139
+   -64.7388 -39.1446 -38.9449 -38.8392 -16.3538 -16.0678  -9.8624  -8.8070
+    -8.1072  -7.2783  -5.7592  -5.0415  -4.7695  -1.7751  -1.3106  -0.0878
+     0.4152
 
      occupation numbers 
      1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
@@ -726,9 +714,9 @@ E      2.00 -1.00  0.00
 
           k = 0.0000-0.5774 0.0000 ( 13238 PWs)   bands (ev):
 
-   -64.7394 -39.1631 -38.9420 -38.8460 -16.2623 -16.0314  -9.9527  -8.9011
-    -8.1659  -7.3272  -5.7957  -4.9781  -4.6570  -1.7658  -1.2315  -0.0262
-     0.4439
+   -64.7372 -39.1599 -38.9416 -38.8428 -16.2602 -16.0302  -9.9509  -8.8998
+    -8.1642  -7.3255  -5.7947  -4.9764  -4.6553  -1.7624  -1.2296  -0.0247
+     0.4452
 
      occupation numbers 
      1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
@@ -737,20 +725,20 @@ E      2.00 -1.00  0.00
 
           k = 0.0625 0.1083 0.0000 ( 13287 PWs)   bands (ev):
 
-   -64.7772 -39.0173 -38.7979 -38.7624 -18.0323 -16.7059  -9.5572  -7.1540
-    -6.5995  -6.4799  -5.9266  -5.0141  -4.0580  -1.4370  -1.2500  -1.0883
-    -0.8448
+   -64.7750 -39.0169 -38.7947 -38.7591 -18.0306 -16.7047  -9.5554  -7.1510
+    -6.5966  -6.4786  -5.9250  -5.0129  -4.0574  -1.4351  -1.2484  -1.0861
+    -0.8435
 
      occupation numbers 
      1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
-     1.0000   1.0000   1.0000   1.0000   0.1226   0.0000   0.0000   0.0000
+     1.0000   1.0000   1.0000   1.0000   0.0277   0.0000   0.0000   0.0000
      0.0000
 
           k = 0.0625 0.1804 0.0000 ( 13235 PWs)   bands (ev):
 
-   -64.7715 -39.0059 -38.8536 -38.7765 -17.8051 -16.6185  -9.3399  -7.5168
-    -6.9239  -6.3757  -6.2811  -4.9045  -4.2625  -1.6326  -1.4252  -1.2898
-    -0.5098
+   -64.7692 -39.0055 -38.8503 -38.7733 -17.8033 -16.6172  -9.3381  -7.5140
+    -6.9226  -6.3729  -6.2796  -4.9033  -4.2618  -1.6306  -1.4238  -1.2876
+    -0.5084
 
      occupation numbers 
      1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
@@ -759,9 +747,9 @@ E      2.00 -1.00  0.00
 
           k = 0.0625 0.2526 0.0000 ( 13212 PWs)   bands (ev):
 
-   -64.7640 -38.9909 -38.9254 -38.7950 -17.4912 -16.4979  -9.1527  -7.8399
-    -7.4072  -6.6554  -6.0749  -5.0075  -4.5926  -1.8009  -1.4784  -1.2876
-    -0.1519
+   -64.7617 -38.9906 -38.9222 -38.7918 -17.4895 -16.4967  -9.1508  -7.8374
+    -7.4059  -6.6538  -6.0723  -5.0063  -4.5915  -1.7990  -1.4762  -1.2862
+    -0.1505
 
      occupation numbers 
      1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
@@ -770,9 +758,9 @@ E      2.00 -1.00  0.00
 
           k = 0.0625 0.3248 0.0000 ( 13172 PWs)   bands (ev):
 
-   -64.7558 -39.0023 -38.9747 -38.8150 -17.1246 -16.3578  -9.1997  -7.9744
-    -7.8771  -6.9413  -5.8011  -5.2374  -4.8920  -1.8549  -1.5575  -0.9568
-     0.1410
+   -64.7536 -38.9991 -38.9744 -38.8118 -17.1228 -16.3565  -9.1976  -7.9724
+    -7.8758  -6.9397  -5.7988  -5.2362  -4.8904  -1.8528  -1.5554  -0.9553
+     0.1424
 
      occupation numbers 
      1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
@@ -781,9 +769,9 @@ E      2.00 -1.00  0.00
 
           k = 0.0625 0.3969 0.0000 ( 13199 PWs)   bands (ev):
 
-   -64.7483 -39.0726 -38.9597 -38.8334 -16.7537 -16.2170  -9.4539  -8.3875
-    -7.9288  -7.1368  -5.6279  -5.4632  -4.9262  -1.8232  -1.5169  -0.5728
-     0.3201
+   -64.7461 -39.0694 -38.9594 -38.8302 -16.7519 -16.2158  -9.4518  -8.3860
+    -7.9272  -7.1353  -5.6258  -5.4623  -4.9242  -1.8206  -1.5151  -0.5714
+     0.3215
 
      occupation numbers 
      1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
@@ -792,9 +780,9 @@ E      2.00 -1.00  0.00
 
           k = 0.0625 0.4691 0.0000 ( 13212 PWs)   bands (ev):
 
-   -64.7425 -39.1259 -38.9482 -38.8475 -16.4436 -16.0988  -9.7156  -8.7418
-    -8.0257  -7.2555  -5.6822  -5.4296  -4.7436  -1.7666  -1.3824  -0.2368
-     0.3636
+   -64.7403 -39.1227 -38.9479 -38.8442 -16.4417 -16.0976  -9.7137  -8.7404
+    -8.0241  -7.2540  -5.6810  -5.4281  -4.7415  -1.7637  -1.3804  -0.2354
+     0.3650
 
      occupation numbers 
      1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
@@ -803,9 +791,9 @@ E      2.00 -1.00  0.00
 
           k = 0.0625 0.5413 0.0000 ( 13235 PWs)   bands (ev):
 
-   -64.7394 -39.1546 -38.9420 -38.8551 -16.2659 -16.0279  -9.8730  -8.9345
-    -8.1307  -7.3111  -5.7775  -5.3158  -4.5656  -1.7480  -1.2303  -0.0012
-     0.3004
+   -64.7372 -39.1513 -38.9416 -38.8518 -16.2638 -16.0267  -9.8712  -8.9332
+    -8.1290  -7.3095  -5.7764  -5.3143  -4.5635  -1.7450  -1.2282   0.0002
+     0.3017
 
      occupation numbers 
      1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
@@ -814,9 +802,9 @@ E      2.00 -1.00  0.00
 
           k = 0.1250 0.2165 0.0000 ( 13207 PWs)   bands (ev):
 
-   -64.7651 -38.9932 -38.9109 -38.7960 -17.5406 -16.5164  -9.1533  -7.7970
-    -7.2362  -6.7930  -6.1555  -4.8545  -4.5216  -1.8330  -1.4821  -1.4158
-    -0.1290
+   -64.7629 -38.9928 -38.9076 -38.7927 -17.5388 -16.5151  -9.1514  -7.7944
+    -7.2348  -6.7915  -6.1530  -4.8532  -4.5206  -1.8310  -1.4803  -1.4140
+    -0.1277
 
      occupation numbers 
      1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
@@ -825,9 +813,9 @@ E      2.00 -1.00  0.00
 
           k = 0.1250 0.2887 0.0000 ( 13208 PWs)   bands (ev):
 
-   -64.7576 -38.9783 -38.9767 -38.8200 -17.2077 -16.3875  -9.1041  -7.9157
-    -7.6843  -7.1454  -6.0117  -4.9766  -4.7871  -1.9696  -1.4907  -1.2815
-     0.2069
+   -64.7554 -38.9779 -38.9734 -38.8168 -17.2060 -16.3862  -9.1020  -7.9135
+    -7.6829  -7.1440  -6.0095  -4.9752  -4.7858  -1.9675  -1.4887  -1.2801
+     0.2083
 
      occupation numbers 
      1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
@@ -836,9 +824,9 @@ E      2.00 -1.00  0.00
 
           k = 0.1250 0.3608 0.0000 ( 13202 PWs)   bands (ev):
 
-   -64.7501 -39.0414 -38.9633 -38.8445 -16.8468 -16.2473  -9.2694  -8.2360
-    -7.8518  -7.2775  -6.0289  -5.2000  -4.8808  -1.9325  -1.4690  -0.9686
-     0.4210
+   -64.7478 -39.0381 -38.9629 -38.8413 -16.8450 -16.2460  -9.2673  -8.2345
+    -7.8500  -7.2761  -6.0271  -5.1990  -4.8787  -1.9302  -1.4669  -0.9672
+     0.4223
 
      occupation numbers 
      1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
@@ -847,9 +835,9 @@ E      2.00 -1.00  0.00
 
           k = 0.1250 0.4330 0.0000 ( 13219 PWs)   bands (ev):
 
-   -64.7437 -39.0955 -38.9505 -38.8654 -16.5132 -16.1165  -9.4942  -8.7019
-    -7.8813  -7.3061  -6.0391  -5.4725  -4.7507  -1.7705  -1.4143  -0.6173
-     0.4815
+   -64.7414 -39.0923 -38.9502 -38.8621 -16.5113 -16.1153  -9.4922  -8.7004
+    -7.8797  -7.3048  -6.0374  -5.4716  -4.7484  -1.7681  -1.4120  -0.6159
+     0.4829
 
      occupation numbers 
      1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
@@ -858,9 +846,9 @@ E      2.00 -1.00  0.00
 
           k = 0.1250 0.5052 0.0000 ( 13220 PWs)   bands (ev):
 
-   -64.7394 -39.1314 -38.9420 -38.8793 -16.2746 -16.0191  -9.6622  -9.0101
-    -8.0209  -7.2878  -5.9748  -5.6821  -4.5459  -1.7468  -1.2070  -0.3157
-     0.4095
+   -64.7372 -39.1282 -38.9417 -38.8761 -16.2726 -16.0179  -9.6603  -9.0086
+    -8.0192  -7.2865  -5.9731  -5.6813  -4.5435  -1.7445  -1.2043  -0.3144
+     0.4109
 
      occupation numbers 
      1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
@@ -869,9 +857,9 @@ E      2.00 -1.00  0.00
 
           k = 0.1250 0.5774 0.0000 ( 13242 PWs)   bands (ev):
 
-   -64.7379 -39.1440 -38.9390 -38.8842 -16.1887 -15.9812  -9.7235  -9.1176
-    -8.0940  -7.2728  -5.9482  -5.7545  -4.4386  -1.7866  -1.0658  -0.1714
-     0.3327
+   -64.7357 -39.1407 -38.9387 -38.8810 -16.1866 -15.9800  -9.7217  -9.1161
+    -8.0922  -7.2715  -5.9466  -5.7537  -4.4362  -1.7843  -1.0630  -0.1701
+     0.3342
 
      occupation numbers 
      1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
@@ -880,9 +868,9 @@ E      2.00 -1.00  0.00
 
           k = 0.1875 0.3248 0.0000 ( 13185 PWs)   bands (ev):
 
-   -64.7507 -39.0273 -38.9645 -38.8515 -16.8791 -16.2573  -9.1875  -8.1556
-    -7.8145  -7.3704  -6.2045  -5.0654  -4.8682  -1.9824  -1.4473  -1.1503
-     0.4732
+   -64.7485 -39.0240 -38.9642 -38.8483 -16.8773 -16.2560  -9.1854  -8.1540
+    -7.8125  -7.3691  -6.2027  -5.0643  -4.8661  -1.9801  -1.4451  -1.1489
+     0.4746
 
      occupation numbers 
      1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
@@ -891,9 +879,9 @@ E      2.00 -1.00  0.00
 
           k = 0.1875 0.3969 0.0000 ( 13193 PWs)   bands (ev):
 
-   -64.7443 -39.0709 -38.9518 -38.8834 -16.5515 -16.1244  -9.3214  -8.6769
-    -7.7134  -7.3724  -6.5024  -5.3078  -4.7836  -1.7973  -1.4109  -0.9188
-     0.6118
+   -64.7421 -39.0677 -38.9514 -38.8802 -16.5496 -16.1231  -9.3194  -8.6754
+    -7.7117  -7.3712  -6.5008  -5.3069  -4.7811  -1.7954  -1.4083  -0.9174
+     0.6132
 
      occupation numbers 
      1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
@@ -902,9 +890,9 @@ E      2.00 -1.00  0.00
 
           k = 0.1875 0.4691 0.0000 ( 13195 PWs)   bands (ev):
 
-   -64.7394 -39.1026 -38.9420 -38.9092 -16.2834 -16.0102  -9.4178  -9.0785
-    -7.8221  -7.2846  -6.6299  -5.5964  -4.5836  -1.7815  -1.1695  -0.6909
-     0.6470
+   -64.7372 -39.0994 -38.9417 -38.9059 -16.2814 -16.0089  -9.4160  -9.0770
+    -7.8204  -7.2834  -6.6283  -5.5955  -4.5810  -1.7797  -1.1665  -0.6896
+     0.6484
 
      occupation numbers 
      1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
@@ -913,9 +901,9 @@ E      2.00 -1.00  0.00
 
           k = 0.1875 0.5413 0.0000 ( 13223 PWs)   bands (ev):
 
-   -64.7368 -39.1193 -38.9368 -38.9236 -16.1338 -15.9399  -9.4610  -9.2876
-    -7.9988  -7.1899  -6.6327  -5.7990  -4.3820  -1.9310  -0.8599  -0.5541
-     0.6343
+   -64.7345 -39.1160 -38.9364 -38.9203 -16.1317 -15.9387  -9.4591  -9.2862
+    -7.9969  -7.1887  -6.6311  -5.7981  -4.3793  -1.9291  -0.8570  -0.5528
+     0.6358
 
      occupation numbers 
      1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
@@ -924,9 +912,9 @@ E      2.00 -1.00  0.00
 
           k = 0.2500 0.4330 0.0000 ( 13191 PWs)   bands (ev):
 
-   -64.7394 -39.0877 -38.9420 -38.9246 -16.2870 -16.0064  -9.3053  -9.1035
-    -7.6257  -7.2980  -7.0076  -5.5503  -4.6059  -1.8015  -1.1550  -0.8369
-     0.7506
+   -64.7372 -39.0844 -38.9417 -38.9213 -16.2850 -16.0052  -9.3033  -9.1020
+    -7.6241  -7.2968  -7.0061  -5.5494  -4.6032  -1.7999  -1.1520  -0.8356
+     0.7521
 
      occupation numbers 
      1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
@@ -935,9 +923,9 @@ E      2.00 -1.00  0.00
 
           k = 0.2500 0.5052 0.0000 ( 13228 PWs)   bands (ev):
 
-   -64.7361 -39.0928 -38.9581 -38.9355 -16.1056 -15.9156  -9.4221  -9.1799
-    -7.8186  -7.2622  -7.1142  -5.8188  -4.3560  -2.0511  -0.8219  -0.7019
-     0.8539
+   -64.7339 -39.0896 -38.9549 -38.9352 -16.1035 -15.9144  -9.4203  -9.1784
+    -7.8169  -7.2605  -7.1132  -5.8179  -4.3531  -2.0495  -0.8203  -0.6994
+     0.8555
 
      occupation numbers 
      1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
@@ -946,9 +934,9 @@ E      2.00 -1.00  0.00
 
           k = 0.2500 0.5774 0.0000 ( 13218 PWs)   bands (ev):
 
-   -64.7350 -39.0928 -38.9717 -38.9332 -16.0426 -15.8795  -9.5251  -9.1006
-    -8.0056  -7.2664  -7.0360  -5.9486  -4.2161  -2.2026  -0.7898  -0.5207
-     0.8938
+   -64.7327 -39.0896 -38.9685 -38.9329 -16.0404 -15.8783  -9.5233  -9.0992
+    -8.0038  -7.2647  -7.0350  -5.9478  -4.2132  -2.2009  -0.7885  -0.5178
+     0.8954
 
      occupation numbers 
      1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
@@ -957,72 +945,72 @@ E      2.00 -1.00  0.00
 
           k = 0.3125 0.5413 0.0000 ( 13187 PWs)   bands (ev):
 
-   -64.7344 -39.0718 -39.0004 -38.9320 -16.0113 -15.8566  -9.6018  -8.8632
-    -8.0724  -7.5466  -6.9547  -6.0271  -4.1327  -2.3367  -0.8745  -0.3918
-     1.0046
+   -64.7321 -39.0685 -38.9972 -38.9317 -16.0091 -15.8555  -9.6000  -8.8619
+    -8.0706  -7.5448  -6.9537  -6.0263  -4.1296  -2.3351  -0.8732  -0.3889
+     1.0062
 
      occupation numbers 
      1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
-     1.0000   1.0000   1.0000   1.0000   0.9968   0.0000   0.0000   0.0000
+     1.0000   1.0000   1.0000   1.0000   1.0741   0.0000   0.0000   0.0000
      0.0000
 
-     the Fermi energy is    -4.0803 ev
+     the Fermi energy is    -4.0851 ev
 
-!    total energy              =    -181.02562091 Ry
-     Harris-Foulkes estimate   =    -181.02562127 Ry
-     estimated scf accuracy    <          7.9E-10 Ry
+!    total energy              =    -181.02560526 Ry
+     Harris-Foulkes estimate   =    -181.02560538 Ry
+     estimated scf accuracy    <          6.3E-10 Ry
 
      The total energy is the sum of the following terms:
 
-     one-electron contribution =   -2649.72276696 Ry
-     hartree contribution      =    1320.02439170 Ry
-     xc contribution           =     -42.50453059 Ry
+     one-electron contribution =   -2649.72761727 Ry
+     hartree contribution      =    1320.02921659 Ry
+     xc contribution           =     -42.50452607 Ry
      ewald contribution        =    1179.75742402 Ry
-     electric field correction =       0.00402871 Ry
+     electric field correction =       0.00402709 Ry
      monopole field correction =      11.41585672 Ry
-     smearing contrib. (-TS)   =      -0.00002451 Ry
+     smearing contrib. (-TS)   =       0.00001366 Ry
 
      convergence has been achieved in  13 iterations
 
      negative rho (up, down):  1.877E-03 0.000E+00
 Total force in z direction = 0 disabled
 
-     Forces acting on atoms (Ry/au):
+     Forces acting on atoms (cartesian axes, Ry/au):
 
-     atom    1 type  2   force =     0.00000000    0.00000000   -0.00001743
-     atom    2 type  1   force =     0.00000000   -0.00000000    0.00001616
-     atom    3 type  2   force =     0.00000000    0.00000000   -0.00000092
+     atom    1 type  2   force =     0.00000000   -0.00000000    0.00040525
+     atom    2 type  1   force =     0.00000000   -0.00000000   -0.00018992
+     atom    3 type  2   force =     0.00000000   -0.00000000   -0.00023776
      The non-local contrib.  to forces
-     atom    1 type  2   force =     0.00000000    0.00000000    0.21440989
-     atom    2 type  1   force =     0.00000000    0.00000000    0.01175203
-     atom    3 type  2   force =     0.00000000    0.00000000   -0.17916438
+     atom    1 type  2   force =     0.00000000    0.00000000    0.21377254
+     atom    2 type  1   force =     0.00000000    0.00000000    0.01153215
+     atom    3 type  2   force =     0.00000000    0.00000000   -0.17883232
      The ionic contribution  to forces
      atom    1 type  2   force =    -0.00000000    0.00000005  -41.10661448
-     atom    2 type  1   force =    -0.00000000   -0.00000006   -0.00839692
-     atom    3 type  2   force =    -0.00000000    0.00000002   41.11501140
+     atom    2 type  1   force =     0.00000000   -0.00000006   -0.00839692
+     atom    3 type  2   force =     0.00000000    0.00000002   41.11501140
      The local contribution  to forces
-     atom    1 type  2   force =     0.00000000    0.00000012   41.12506640
-     atom    2 type  1   force =    -0.00000000   -0.00000022    0.48886120
-     atom    3 type  2   force =    -0.00000000    0.00000002  -40.74509020
+     atom    1 type  2   force =     0.00000000    0.00000012   41.12608384
+     atom    2 type  1   force =    -0.00000000   -0.00000022    0.48881213
+     atom    3 type  2   force =    -0.00000000    0.00000002  -40.74567265
      The core correction contribution to forces
-     atom    1 type  2   force =    -0.00000000   -0.00000001   -0.00183536
-     atom    2 type  1   force =    -0.00000000    0.00000000    0.00084910
-     atom    3 type  2   force =    -0.00000000   -0.00000000    0.00073688
+     atom    1 type  2   force =     0.00000000   -0.00000001   -0.00180442
+     atom    2 type  1   force =    -0.00000000    0.00000000    0.00083044
+     atom    3 type  2   force =    -0.00000000   -0.00000000    0.00072092
      The Hubbard contrib.    to forces
      atom    1 type  2   force =     0.00000000    0.00000000    0.00000000
      atom    2 type  1   force =     0.00000000    0.00000000    0.00000000
      atom    3 type  2   force =     0.00000000    0.00000000    0.00000000
      The SCF correction term to forces
-     atom    1 type  2   force =    -0.00000000   -0.00000000    0.00004830
-     atom    2 type  1   force =    -0.00000000    0.00000000   -0.00008099
-     atom    3 type  2   force =     0.00000000   -0.00000000   -0.00007151
+     atom    1 type  2   force =    -0.00000000   -0.00000000    0.00004838
+     atom    2 type  1   force =    -0.00000000    0.00000000   -0.00002647
+     atom    3 type  2   force =     0.00000000   -0.00000000   -0.00005357
 
      Monopole contribution to forces:
      atom    1 type  2   force =     0.00000000    0.00000000   -0.17369676
      atom    2 type  1   force =     0.00000000    0.00000000   -0.35904561
      atom    3 type  2   force =     0.00000000    0.00000000   -0.13402769
 
-     Total force =     0.000024     Total SCF correction =     0.000118
+     Total force =     0.000507     Total SCF correction =     0.000077
      SCF correction compared to forces is large: reduce conv_thr to get better values
 
      BFGS Geometry Optimization
@@ -1032,7 +1020,7 @@ Total force in z direction = 0 disabled
 
      End of BFGS Geometry Optimization
 
-     Final energy   =    -181.0256209144 Ry
+     Final energy   =    -181.0256052556 Ry
 Begin final coordinates
 
 ATOMIC_POSITIONS (alat)
@@ -1045,60 +1033,63 @@ End final coordinates
 
      Writing output data file single_+0.10.save
  
-     init_run     :      7.48s CPU      7.63s WALL (       1 calls)
-     electrons    :    229.95s CPU    232.02s WALL (       1 calls)
-     forces       :      1.65s CPU      1.70s WALL (       1 calls)
+     init_run     :      7.62s CPU      8.01s WALL (       1 calls)
+     electrons    :    171.11s CPU    177.92s WALL (       1 calls)
+     forces       :      1.85s CPU      2.12s WALL (       1 calls)
 
      Called by init_run:
-     wfcinit      :      5.92s CPU      5.94s WALL (       1 calls)
-     potinit      :      0.22s CPU      0.23s WALL (       1 calls)
+     wfcinit      :      5.44s CPU      5.49s WALL (       1 calls)
+     wfcinit:atom :      0.11s CPU      0.12s WALL (      30 calls)
+     wfcinit:wfcr :      4.78s CPU      4.82s WALL (      30 calls)
+     potinit      :      0.28s CPU      0.30s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :    178.38s CPU    178.58s WALL (      13 calls)
-     sum_band     :     43.75s CPU     44.67s WALL (      13 calls)
-     v_of_rho     :      1.13s CPU      1.15s WALL (      14 calls)
-     v_h          :      0.31s CPU      0.32s WALL (      14 calls)
-     v_xc         :      0.46s CPU      0.46s WALL (      15 calls)
-     newd         :      5.64s CPU      6.65s WALL (      14 calls)
-     mix_rho      :      1.12s CPU      1.11s WALL (      13 calls)
+     c_bands      :    131.79s CPU    132.34s WALL (      13 calls)
+     sum_band     :     31.39s CPU     34.55s WALL (      13 calls)
+     v_of_rho     :      1.21s CPU      1.22s WALL (      14 calls)
+     v_h          :      0.24s CPU      0.24s WALL (      14 calls)
+     v_xc         :      0.51s CPU      0.52s WALL (      15 calls)
+     newd         :      6.02s CPU      9.38s WALL (      14 calls)
+     mix_rho      :      1.01s CPU      1.01s WALL (      13 calls)
 
      Called by c_bands:
-     init_us_2    :      3.36s CPU      3.39s WALL (     840 calls)
-     cegterg      :    171.18s CPU    171.39s WALL (     390 calls)
+     init_us_2    :      3.92s CPU      3.93s WALL (     840 calls)
+     cegterg      :    120.76s CPU    121.26s WALL (     390 calls)
 
      Called by sum_band:
-     sum_band:bec :      0.00s CPU      0.01s WALL (     390 calls)
-     addusdens    :      9.53s CPU     10.44s WALL (      13 calls)
+     sum_band:bec :      0.01s CPU      0.01s WALL (     390 calls)
+     addusdens    :      8.08s CPU     11.20s WALL (      13 calls)
 
      Called by *egterg:
-     h_psi        :    153.61s CPU    153.72s WALL (    1554 calls)
-     s_psi        :      3.86s CPU      3.89s WALL (    1554 calls)
-     g_psi        :      0.86s CPU      0.85s WALL (    1134 calls)
-     cdiaghg      :      0.70s CPU      0.75s WALL (    1524 calls)
-     cegterg:over :      6.05s CPU      6.00s WALL (    1134 calls)
-     cegterg:upda :      4.63s CPU      4.67s WALL (    1134 calls)
-     cegterg:last :      2.30s CPU      2.33s WALL (     419 calls)
+     h_psi        :    100.10s CPU    100.36s WALL (    1544 calls)
+     s_psi        :      4.20s CPU      4.21s WALL (    1544 calls)
+     g_psi        :      0.95s CPU      0.96s WALL (    1124 calls)
+     cdiaghg      :      0.87s CPU      0.88s WALL (    1514 calls)
+     cegterg:over :      6.46s CPU      6.47s WALL (    1124 calls)
+     cegterg:upda :      5.31s CPU      5.31s WALL (    1124 calls)
+     cegterg:last :      2.63s CPU      2.62s WALL (     419 calls)
 
      Called by h_psi:
-     h_psi:pot    :    152.85s CPU    152.91s WALL (    1554 calls)
-     h_psi:calbec :      3.99s CPU      4.01s WALL (    1554 calls)
-     add_vuspsi   :      3.86s CPU      3.81s WALL (    1554 calls)
+     h_psi:pot    :     99.28s CPU     99.52s WALL (    1544 calls)
+     h_psi:calbec :      4.46s CPU      4.45s WALL (    1544 calls)
+     vloc_psi     :     90.63s CPU     90.82s WALL (    1544 calls)
+     add_vuspsi   :      4.19s CPU      4.23s WALL (    1544 calls)
 
      General routines
-     calbec       :      5.72s CPU      5.73s WALL (    2064 calls)
-     fft          :      2.10s CPU      2.10s WALL (     126 calls)
-     ffts         :      0.12s CPU      0.12s WALL (      27 calls)
-     fftw         :    144.99s CPU    145.11s WALL (   44376 calls)
-     interpolate  :      0.62s CPU      0.63s WALL (      27 calls)
-     davcio       :      0.00s CPU      0.04s WALL (      30 calls)
+     calbec       :      6.35s CPU      6.35s WALL (    2054 calls)
+     fft          :      1.13s CPU      1.15s WALL (     126 calls)
+     ffts         :      0.08s CPU      0.08s WALL (      27 calls)
+     fftw         :     86.38s CPU     86.51s WALL (   44154 calls)
+     interpolate  :      0.40s CPU      0.41s WALL (      27 calls)
+     davcio       :      0.01s CPU      1.03s WALL (      30 calls)
  
      Parallel routines
-     fft_scatter  :     11.54s CPU     11.71s WALL (   44529 calls)
+     fft_scatter  :     10.28s CPU     10.35s WALL (   44307 calls)
  
-     PWSCF        :  3m59.59s CPU     4m 1.92s WALL
+     PWSCF        :  3m 1.19s CPU     3m 9.79s WALL
 
  
-   This run was terminated on:  10:28:22  17Aug2016            
+   This run was terminated on:  21:21:37  18Feb2017            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
