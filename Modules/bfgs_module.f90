@@ -916,12 +916,12 @@ CONTAINS
               &         I3," bfgs steps")' ) scf_iter, bfgs_iter
          IF ( lmovecell ) THEN
             WRITE( UNIT = stdout, &
-              & FMT = '(5X,"(criteria: energy < ",ES8.1,", force < ",ES8.1, &
-              &       ", cell < ",ES8.1,")")') energy_thr, grad_thr, cell_thr
+              & FMT = '(5X,"(criteria: energy < ",ES8.1," Ry, force < ",ES8.1,&
+              &       "Ry/Bohr, cell < ",ES8.1,"kbar)")') energy_thr, grad_thr, cell_thr
          ELSE
             WRITE( UNIT = stdout, &
-              & FMT = '(5X,"(criteria: energy < ",ES8.1,", force < ",ES8.1, &
-              &                        ")")') energy_thr, grad_thr
+              & FMT = '(5X,"(criteria: energy < ",ES8.1," Ry, force < ",ES8.1,&
+              &            " Ry/Bohr)")') energy_thr, grad_thr
          END IF
          WRITE( UNIT = stdout, &
               & FMT = '(/,5X,"End of BFGS Geometry Optimization")' )
