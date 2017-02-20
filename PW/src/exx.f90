@@ -5070,19 +5070,20 @@ END SUBROUTINE compute_becpsi
           exxtemp(:,jbnd-jstart+1) = exxbuff(:,jbnd,ikq)
        END IF
 
-!       CALL mp_bcast(exxtemp(:,jbnd-jstart+1),iegrp-1,inter_egrp_comm)
-#if defined(__MPI)
+#if defined(__MPI_NONBLOCKING)
        CALL MPI_IBCAST(exxtemp(:,jbnd-jstart+1), &
             lda, &
             MPI_DOUBLE_COMPLEX, &
             iegrp-1, &
             inter_egrp_comm, &
             request_exxbuff(jbnd-jstart+1), ierr)
+#elif defined(__MPI)
+       CALL mp_bcast(exxtemp(:,jbnd-jstart+1),iegrp-1,inter_egrp_comm)
 #endif
     END DO
 
     DO jbnd=jstart, jend
-#if defined(__MPI)
+#if defined(__MPI_NONBLOCKING)
        CALL MPI_WAIT(request_exxbuff(jbnd-jstart+1), istatus, ierr)
 #endif
     END DO
@@ -5127,19 +5128,20 @@ END SUBROUTINE compute_becpsi
           END IF
        END IF
 
-!       CALL mp_bcast(exxtemp(:,jbnd-jstart+1),iegrp-1,inter_egrp_comm)
-#if defined(__MPI)
+#if defined(__MPI_NONBLOCKING)
        CALL MPI_IBCAST(work(:,jbnd-jstart+1), &
             lda*npol, &
             MPI_DOUBLE_PRECISION, &
             iegrp-1, &
             inter_egrp_comm, &
             request_exxbuff(jbnd-jstart+1), ierr)
+#elif defined(__MPI)
+!       CALL mp_bcast(exxtemp(:,jbnd-jstart+1),iegrp-1,inter_egrp_comm)
 #endif
     END DO
 
     DO jbnd=jstart, jend
-#if defined(__MPI)
+#if defined(__MPI_NONBLOCKING)
        CALL MPI_WAIT(request_exxbuff(jbnd-jstart+1), istatus, ierr)
 #endif
     END DO
