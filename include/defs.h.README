@@ -58,6 +58,11 @@ Hardware / Compiler:
       __PGI       Portland Group compiler workarounds for compiler bugs
        _WIN32     Windows 32-bits
 
+New algorithms:
+      __EXX_ACE   Use Adaptively Compressed Exchange for hybrid functionals
+      __NON_BLOCKING_SCATTER   Use  non-blocking algorithm for parallel FFTs
+      __DOUBLE_BUFFER          Use double buffer algorithm for parallel FFTs
+
 Parallel execution:
       __MPI       MPI parallelization
       __OPENMP    OpenMP parallelization

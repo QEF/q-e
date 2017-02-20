@@ -58,8 +58,11 @@ MODULE exx
   COMPLEX(DP), ALLOCATABLE :: exxbuff(:,:,:)
                                          ! temporary buffer for wfc storage
   !
+#if defined(__EXX_ACE)
   LOGICAL :: use_ace=.true.              !  true: Use Lin Lin's ACE method
-                                         ! false: Use complete Vx
+#else
+  LOGICAL :: use_ace=.false.             ! false: Use complete Vx
+#endif
   COMPLEX(DP), ALLOCATABLE :: xi(:,:,:)  ! ACE projectors
   INTEGER :: nbndproj
   LOGICAL :: domat
