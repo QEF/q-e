@@ -1,4 +1,4 @@
-! Copyright (C) 2005-2017 Quantum ESPRESSO group
+! Copyright (C) 2005-2015 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -5136,7 +5136,7 @@ END SUBROUTINE compute_becpsi
             inter_egrp_comm, &
             request_exxbuff(jbnd-jstart+1), ierr)
 #elif defined(__MPI)
-!       CALL mp_bcast(exxtemp(:,jbnd-jstart+1),iegrp-1,inter_egrp_comm)
+       CALL mp_bcast(work(:,jbnd-jstart+1),iegrp-1,inter_egrp_comm)
 #endif
     END DO
 
