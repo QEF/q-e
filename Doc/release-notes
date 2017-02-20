@@ -1,16 +1,19 @@
-New in svn version:
+New in 6.1 version:
 
+  * Hybrid functionals: Band parallelization over pair of bands, contributed
+    by Taylor Barnes et al, http://dx.doi.org/10.1016/j.cpc.2017.01.008
+  * Hybrid functionals: ACE is now the default
   * Hybrid functionals with PAW now work
   * Optimized tetrahedron method, contributed by Mitsuaki Kawamura, U. Tokyo
 
-Incompatible changes in svn version:
+Incompatible changes in 6.1 version:
 
   * Routine h_psiq deleted, replaced by h_psi
   * Many variables related to tetrahedron method moved around
   * Functions set_sym and find_sym no longer require FFT grid dimensions as 
     input arguments, no longer force consistency of symmetries with FFT grids
 
-Fixed in svn version
+Fixed in 6.1 version
 
   * PW: real instead of complex constants in two ZGEMM calls could lead
         to NaN's in DFT_U forces with some compilers (e.g. PGI) (r13289)

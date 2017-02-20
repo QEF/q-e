@@ -12,7 +12,7 @@ MODULE exx
   ! Implements ACE: Lin Lin, J. Chem. Theory Comput. 2016, 12, 2242
   ! Contains code for band parallelization over pairs of bands: see T. Barnes,
   ! T. Kurth, P. Carrier, N. Wichmann, D. Prendergast, P.R.C. Kent, J. Deslippe
-  ! Computer Physics Communications, 2017
+  ! Computer Physics Communications 2017, dx.doi.org/10.1016/j.cpc.2017.01.008
   !
   USE kinds,                ONLY : DP
   USE coulomb_vcut_module,  ONLY : vcut_init, vcut_type, vcut_info, &
@@ -58,11 +58,8 @@ MODULE exx
   COMPLEX(DP), ALLOCATABLE :: exxbuff(:,:,:)
                                          ! temporary buffer for wfc storage
   !
-#if defined(__EXX_ACE)
-  LOGICAL :: use_ace=.true.              ! Use Lin Lin's ACE method
-#else
-  LOGICAL :: use_ace=.false. 
-#endif
+  LOGICAL :: use_ace=.true.              !  true: Use Lin Lin's ACE method
+                                         ! false: Use complete Vx
   COMPLEX(DP), ALLOCATABLE :: xi(:,:,:)  ! ACE projectors
   INTEGER :: nbndproj
   LOGICAL :: domat
@@ -3966,7 +3963,7 @@ END SUBROUTINE compute_becpsi
        END DO
        CALL mp_sum(psi_source,intra_egrp_comm)
        !
-       ! allocate communication packets to recieve psi and hpsi
+       ! allocate communication packets to receive psi and hpsi
        !
        DO iproc=0, nproc_egrp-1
           !
@@ -4107,7 +4104,7 @@ END SUBROUTINE compute_becpsi
        CALL mp_sum(psi_source_exx(:,my_egrp_id+1),intra_egrp_comm)
        CALL mp_sum(psi_source_exx,inter_egrp_comm)
        !
-       ! allocate communication packets to recieve psi and hpsi (reverse)
+       ! allocate communication packets to receive psi and hpsi (reverse)
        !
        DO iegrp=my_egrp_id+1, my_egrp_id+1
           DO iproc=0, nproc_egrp-1
@@ -4210,9 +4207,7 @@ END SUBROUTINE compute_becpsi
     USE mp_exx,       ONLY : intra_egrp_comm, inter_egrp_comm, &
          nproc_egrp, me_egrp, negrp, my_egrp_id, nibands, ibands, &
          max_ibands, all_start, all_end
-#if defined(__MPI)
     USE parallel_include
-#endif
     USE klist,        ONLY : xk, wk, nkstot, nks, qnorm
     !
     !
@@ -4260,8 +4255,8 @@ END SUBROUTINE compute_becpsi
     END DO
     recvcount = lda_max_local*npol
     count = lda_max_local*npol
+#if defined (__MPI_NONBLOCKING)
     IF ( type.eq.0 ) THEN
-
        DO iegrp=1, negrp
           displs(iegrp) = (iegrp-1)*(count*m)
        END DO
@@ -4284,8 +4279,7 @@ END SUBROUTINE compute_becpsi
        END DO
 
     ELSE IF(type.eq.1) THEN
-       
-#if defined(__MPI)
+#elif defined(__MPI)
        CALL MPI_ALLGATHER( psi_gather, &
             count*m, MPI_DOUBLE_COMPLEX, &
             psi_work, &
@@ -4293,6 +4287,7 @@ END SUBROUTINE compute_becpsi
             inter_egrp_comm, ierr )
 #endif
 
+#if defined (__MPI_NONBLOCKING)
     ELSE IF(type.eq.2) THEN !evc2
 
        DO iegrp=1, negrp
@@ -4324,21 +4319,18 @@ END SUBROUTINE compute_becpsi
     IF(type.eq.0)THEN
        DO iegrp=1, negrp
           DO im=1, nibands(iegrp)
-#if defined(__MPI)
              CALL MPI_WAIT(requests(im,iegrp), istatus, ierr)
-#endif
           END DO
        END DO
     ELSEIF(type.eq.2)THEN
        DO iegrp=1, negrp
           DO im=1, all_end(iegrp) - all_start(iegrp) + 1
              IF(all_start(iegrp).eq.0) CYCLE
-#if defined(__MPI)
              CALL MPI_WAIT(requests(im,iegrp), istatus, ierr)
-#endif
           END DO
        END DO
     END IF
+#endif
     !
     !-------------------------------------------------------!
     !Communication Part 2
@@ -4413,12 +4405,12 @@ END SUBROUTINE compute_becpsi
        END IF
     END DO
     !
-    ! begin recieving the messages
+    ! begin receiving the messages
     !
     DO iproc=0, nproc_egrp-1
        IF ( comm_recv(iproc+1,current_ik)%size.gt.0) THEN
           !
-          ! recieve the message
+          ! receive the message
           !
 #if defined(__MPI)
           IF (type.eq.0) THEN !psi or hpsi
@@ -4750,9 +4742,7 @@ END SUBROUTINE compute_becpsi
     USE mp_exx,       ONLY : iexx_start, iexx_end, inter_egrp_comm, &
                                intra_egrp_comm, my_egrp_id, negrp, &
                                max_pairs, egrp_pairs
-#if defined(__MPI)
     USE parallel_include
-#endif
     USE io_global,      ONLY : stdout
     INTEGER, intent(in)      :: ipair
     INTEGER                  :: nrxxs
@@ -4801,22 +4791,18 @@ END SUBROUTINE compute_becpsi
   !-----------------------------------------------------------------------
   SUBROUTINE result_sum (n, m, data)
   !-----------------------------------------------------------------------
+    USE parallel_include
     USE mp_exx,       ONLY : iexx_start, iexx_end, inter_egrp_comm, &
                                intra_egrp_comm, my_egrp_id, negrp, &
                                max_pairs, egrp_pairs, max_contributors, &
                                contributed_bands, all_end, &
                                iexx_istart, iexx_iend, band_roots
-#if defined(__MPI)
-    USE parallel_include
-#endif
-    USE io_global,      ONLY : stdout
-    USE mp,                   ONLY : mp_sum, mp_bcast
+    USE mp,           ONLY : mp_sum, mp_bcast
 
     INTEGER, INTENT(in) :: n, m
     COMPLEX(DP), INTENT(inout) :: data(n,m)
 #if defined(__MPI)
     INTEGER :: istatus(MPI_STATUS_SIZE)
-#endif
     COMPLEX(DP), ALLOCATABLE :: recvbuf(:,:)
     COMPLEX(DP) :: data_sum(n,m), test(negrp)
     INTEGER :: im, iegrp, ibuf, i, j, nsending(m)
@@ -4825,9 +4811,11 @@ END SUBROUTINE compute_becpsi
 
     INTEGER sendcount, sendtype, ierr, root, request(m)
     INTEGER sendc(negrp), sendd(negrp)
+#endif
     !
     IF (negrp.eq.1) RETURN
     !
+#if defined(__MPI)
     ! gather data onto the correct nodes
     !
     ALLOCATE( recvbuf( n*max_contributors, max(1,iexx_end-iexx_start+1) ) )
@@ -4865,16 +4853,21 @@ END SUBROUTINE compute_becpsi
           END DO
        END IF
        !
-#if defined(__MPI)
+#if defined(__MPI_NONBLOCKING)
        CALL MPI_IGATHERV(data(:,im), sendcount, MPI_DOUBLE_COMPLEX, &
             recvbuf(:,max(1,ibuf)), contrib_this(:,im), &
             displs(:,im), MPI_DOUBLE_COMPLEX, &
             root, inter_egrp_comm, request(im), ierr)
+#else
+       CALL MPI_GATHERV(data(:,im), sendcount, MPI_DOUBLE_COMPLEX, &
+            recvbuf(:,max(1,ibuf)), contrib_this(:,im), &
+            displs(:,im), MPI_DOUBLE_COMPLEX, &
+            root, inter_egrp_comm, ierr)
 #endif
        !
     END DO
     !
-#if defined(__MPI)
+#if defined(__MPI_NONBLOCKING)
     DO im=1, m
        CALL MPI_WAIT(request(im), istatus, ierr)
     END DO
@@ -4892,6 +4885,7 @@ END SUBROUTINE compute_becpsi
           END DO
        END DO
     END DO
+#endif
     !
     !-----------------------------------------------------------------------
   END SUBROUTINE result_sum
@@ -4904,9 +4898,7 @@ END SUBROUTINE compute_becpsi
     USE mp_pools,     ONLY : nproc_pool, me_pool, intra_pool_comm
     USE mp_exx,       ONLY : intra_egrp_comm, inter_egrp_comm, &
          nproc_egrp, me_egrp, negrp, my_egrp_id, iexx_istart, iexx_iend
-#if defined(__MPI)
     USE parallel_include
-#endif
     USE klist,        ONLY : xk, wk, nkstot, nks, qnorm
     USE wvfct,        ONLY : current_k
     !
@@ -4970,7 +4962,7 @@ END SUBROUTINE compute_becpsi
        END DO
     END IF
     !
-    ! begin recieving the communication packets
+    ! begin receiving the communication packets
     !
     DO iegrp=1, negrp
        !
@@ -4981,7 +4973,7 @@ END SUBROUTINE compute_becpsi
        DO iproc=0, nproc_egrp-1
           IF ( comm_recv_reverse(iproc+1,current_ik)%size.gt.0) THEN
              !
-             !recieve the message
+             !receive the message
              !
              tag = 0
 #if defined(__MPI)
@@ -5050,9 +5042,7 @@ END SUBROUTINE compute_becpsi
     USE mp_exx,               ONLY : my_egrp_id, inter_egrp_comm, jblock, &
                                      all_end, negrp
     USE mp,             ONLY : mp_bcast
-#if defined(__MPI)
     USE parallel_include
-#endif
     COMPLEX(DP), intent(inout) :: exxtemp(lda,jend-jstart+1)
     INTEGER, intent(in) :: ikq, lda, jstart, jend
     INTEGER :: jbnd, iegrp, ierr, request_exxbuff(jend-jstart+1)
@@ -5099,9 +5089,7 @@ END SUBROUTINE compute_becpsi
     USE mp_exx,               ONLY : my_egrp_id, inter_egrp_comm, jblock, &
                                      all_end, negrp
     USE mp,             ONLY : mp_bcast
-#if defined(__MPI)
     USE parallel_include
-#endif
     COMPLEX(DP), intent(inout) :: exxtemp(lda*npol,jlength)
     INTEGER, intent(in) :: ikq, lda, jstart, jend, jlength
     INTEGER :: jbnd, iegrp, ierr, request_exxbuff(jend-jstart+1), ir
