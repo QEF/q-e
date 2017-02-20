@@ -42,8 +42,8 @@ PLUMED=plumed-1.3-qe
 PLUMED_URL=$(URL)$(PLUMED).tar.gz
 #
 # Package maintainer: Lorenzo Paulatto
-D3Q=d3q-thermal2_1.0.6_qe6.0
-D3Q_URL=$(URL)$(D3Q).tgz
+D3Q=d3q-latest
+D3Q_URL="https://d3q.sourceforge.io/d3q-qe6.1-latest.php?outname=d3q-qe6.1-latest.tgz"
 #
 # Package maintainer: Filippo Spiga
 TESTSUITE=qe-6.0-test-suite
