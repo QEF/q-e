@@ -895,6 +895,7 @@ SUBROUTINE projwave_nc(filproj, lsym, lwrite_ovp, lbinary, ef_0 )
       CALL weights()
 !   write(6,*) 'ef_0 = ', ef_0
 !   write(6,*) wg
+      ef_0 = ef_0 / rytoev
       eband_tot = 0.d0
       ALLOCATE (eband_proj(natomwfc))
       eband_proj = 0.d0
@@ -1114,7 +1115,6 @@ SUBROUTINE projwave_nc(filproj, lsym, lwrite_ovp, lbinary, ef_0 )
 
 !-- AlexS
    IF ( lforcet ) THEN
-     ef_0 = ef_0 / rytoev     
      DO i = 1, nbnd
          psum = wg(i,ik) * (et(i,ik)-ef_0)
          eband_tot = eband_tot + psum
