@@ -1646,14 +1646,18 @@ subroutine gcx_spin (rhoup, rhodw, grhoup2, grhodw2, &
      sx = 0.5_DP * (sxup + sxdw)
      v2xup = 2.0_DP * v2xup
      v2xdw = 2.0_DP * v2xdw
-  elseif (igcx == 3 .or. igcx == 4 .or. igcx == 8 .or. &
-          igcx == 10 .or. igcx == 12 .or. igcx == 20 .or. igcx == 25) then
+  elseif (igcx == 3 .or. igcx == 4 .or. igcx == 8 .or. igcx ==10 .or. &
+          igcx ==12 .or. igcx ==20 .or. igcx ==23 .or. igcx ==24 .or. igcx == 25) then
      ! igcx=3: PBE, igcx=4: revised PBE, igcx=8: PBE0, igcx=10: PBEsol
-     ! igcx=12: HSE,  igcx=20: gau-pbe, igcx=25: ev93
+     ! igcx=12: HSE,  igcx=20: gau-pbe, igcx=23: obk8, igcx=24: ob86, igcx=25: ev93
      if (igcx == 4) then
         iflag = 2
      elseif (igcx == 10) then
         iflag = 3
+     elseif (igcx == 23) then
+        iflag = 5
+     elseif (igcx == 24) then
+        iflag = 6
      elseif (igcx == 25) then
         iflag = 7
      else
