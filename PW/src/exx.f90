@@ -2897,7 +2897,9 @@ MODULE exx
                    nblock=2048
                    nrt = nrxxs / nblock
                    if (mod(nrxxs, nblock) .ne. 0) nrt = nrt + 1
-!$omp parallel do collapse(2) default(shared) firstprivate(ibnd_inner_start,ibnd_inner_end,nblock,nrxxs,omega_inv) private(ir,irt,ir_start,ir_end,ibnd)
+!$omp parallel do collapse(2) default(shared) &
+!$omp& firstprivate(ibnd_inner_start,ibnd_inner_end,nblock,nrxxs,omega_inv) &
+!$omp& private(ir,irt,ir_start,ir_end,ibnd)
                    DO irt = 1, nrt
                       DO ibnd=ibnd_inner_start, ibnd_inner_end
                          ir_start = (irt - 1) * nblock + 1
