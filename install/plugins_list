@@ -50,7 +50,7 @@ TESTSUITE=qe-6.0-test-suite
 TESTSUITE_URL=$(URL)$(TESTSUITE).tar.gz
 #
 # Package maintainer: Marco Govoni
-WEST=West-2.0.0
+WEST=West-2.0.1
 WEST_URL=http://www.west-code.org/downloads/$(WEST).tar.gz
 #
 # Package maintainer:
