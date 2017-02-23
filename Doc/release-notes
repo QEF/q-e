@@ -15,6 +15,7 @@ Incompatible changes in 6.1 version:
 
 Fixed in 6.1 version
 
+  * TDDFPT: the keyword ltammd was missing in the namelist lr_dav
   * PW: real instead of complex constants in two ZGEMM calls could lead
         to NaN's in DFT_U forces with some compilers (e.g. PGI) (r13289)
   * pwi2xsf utility, also used in XCrysDen: various fixes (r13197)

@@ -125,7 +125,7 @@ MODULE lr_variables
   INTEGER :: charge_response    ! variable for calculating response charge density
   INTEGER :: itermax            ! number of Lanczos vectors to be calculated
   INTEGER :: itermax_int        ! interpolated number of lanczos steps for Ritz vectors
-  LOGICAL :: ltammd             ! Tarn-Darnkhoff approximation
+  LOGICAL :: ltammd             ! Tamm-Dancoff approximation
   LOGICAL :: d0psi_rs           ! Calculate d0psi in the real space
   LOGICAL :: lshift_d0psi       ! When calculate d0psi in real space, automatically
                                 ! shift the position operator r to the center of the molecule

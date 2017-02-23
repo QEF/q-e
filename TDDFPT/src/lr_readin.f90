@@ -98,7 +98,7 @@ SUBROUTINE lr_readin
                         & broadening,print_spectrum,start,finish,step,if_check_orth, if_random_init, &
                         & if_check_her,p_nbnd_occ,p_nbnd_virt,poor_of_ram,poor_of_ram2,max_iter,     &
                         & ecutfock, conv_assistant,if_dft_spectrum,no_hxc,d0psi_rs,lshift_d0psi,     &
-                        & lplot_drho, vccouple_shift
+                        & lplot_drho, vccouple_shift, ltammd
   !
   auto_rs = .TRUE.
   !

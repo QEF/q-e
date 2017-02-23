@@ -11,7 +11,7 @@ FUNCTION sumkt (et, nbnd, nks, nspin, ntetra, tetra, e, is, isk)
   !
   ! ... Sum over all states with tetrahedron method
   ! ... At Fermi energy e=E_F, sumkt(e) == number of electrons
-  ! ... Generalization to noncollinear case courtesy of Yurii Timrov
+  ! ... Generalization to noncollinear case courtesy of Iurii Timrov
   !
   USE kinds
   implicit none

@@ -519,8 +519,7 @@ contains
     ! Calculate matrix M_DC and solve the problem in subspace
         use io_global,            only : ionode, stdout,ionode_id
     use kinds,                only : dp
-    use lr_variables,         only : ltammd,&
-                                     evc0, sevc0, d0psi
+    use lr_variables,         only : evc0, sevc0, d0psi
     use wvfct,                only : nbnd, npwx
     use mp,                   only : mp_bcast,mp_barrier
     use mp_world,             only : world_comm
