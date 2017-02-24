@@ -166,17 +166,13 @@ help wf_collect -helpfmt helpdoc -helptext {
 <blockquote><pre>
 This flag controls the way wavefunctions are stored to disk :
 
-<b>.TRUE.</b>  collect wavefunctions from all processors, store them
+.TRUE.  collect wavefunctions from all processors, store them
         into the output data directory "outdir"/"prefix".save,
-        one wavefunction per k-point in subdirs K000001/,
-        K000001/, etc.. Use this if you want wavefunctions
-        to be readable on a different number of processors.
+        ...
 
-<b>.FALSE.</b> do not collect wavefunctions, leave them in temporary
-        local files (one per processor). The resulting format
-        will be readable only by jobs running on the same
-        number of processors and pools. Requires less I/O
-        than the previous case.
+        .FALSE. do not collect wavefunctions, leave them in temporary
+                local files (one per processor). The resulting format
+                ...
 
 Note that this flag has no effect on reading, only on writing.
          </pre></blockquote>
@@ -602,12 +598,13 @@ help lorbm -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-If .TRUE. perform orbital magnetization calculation.
-If finite electric field is applied ("lelfield"==.true.)
-only Kubo terms are computed
-[for details see New J. Phys. 12, 053032 (2010)].
-The type of calculation is 'nscf' and should be performed
-on an automatically generated uniform grid of k points.
+If <b>.TRUE.</b> perform orbital magnetization calculation.
+If finite electric field is applied ("lelfield"==.true.) only Kubo terms are computed
+[for details see New J. Phys. 12, 053032 (2010), "doi:10.1088/1367-2630/12/5/053032"].
+
+The type of calculation is <b>'nscf'</b> and should be performed on an automatically
+generated uniform grid of k points.
+
 Works ONLY with norm-conserving pseudopotentials.
          </pre></blockquote>
 </ul>      
@@ -1324,12 +1321,29 @@ see variables "smearing" and "degauss"
 <dl style="margin-left: 1.5em;">
 <dt><tt><b>'tetrahedra'</b> :</tt></dt>
 <dd><pre style="margin-top: 0em; margin-bottom: -1em;">
-especially suited for calculation of DOS
-(see P.E. Bloechl, "PRB 49, 16223 (1994)").
-Requires uniform grid of k-points,
-automatically generated (see below).
-Not suitable (because not variational) for
+Tetrahedron method, Bloechl's version:
+P.E. Bloechl, "PRB 49, 16223 (1994)"
+Requires uniform grid of k-points, to be
+automatically generated (see card "K_POINTS").
+Well suited for calculation of DOS,
+less so (because not variational) for
 force/optimization/dynamics calculations.
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'tetrahedra_lin'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Original linear tetrahedron method.
+To be used only as a reference;
+the optimized tetrahedron method is more efficient.
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'tetrahedra_opt'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Optimized tetrahedron method:
+see M. Kawamura, "PRB 89, 094515 (2014)".
+Can be used for phonon calculations as well.
             </pre></dd>
 </dl>
 <dl style="margin-left: 1.5em;">
@@ -1410,15 +1424,15 @@ help starting_spin_angle -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-In the spin-orbit case when domag=.TRUE., by default,
+In the spin-orbit case when "domag"=.TRUE., by default,
 the starting wavefunctions are initialized as in scalar
 relativistic noncollinear case without spin-orbit.
 
-By setting starting_spin_angle=.TRUE. this behaviour can
+By setting "starting_spin_angle"=.TRUE. this behaviour can
 be changed and the initial wavefunctions are radial
 functions multiplied by spin-angle functions.
 
-When domag=.FALSE. the initial wavefunctions are always
+When "domag"=.FALSE. the initial wavefunctions are always
 radial functions multiplied by spin-angle functions
 independently from this flag.
 
@@ -1588,7 +1602,8 @@ used in variable-cell molecular dynamics (or in stress calculation).
 of the energy step for reciprocal vectors whose square modulus
 is greater than "ecfixed". In the kinetic energy, G^2 is
 replaced by G^2 + qcutz * (1 + erf ( (G^2 - ecfixed)/q2sigma) )
-See: M. Bernasconi et al, J. Phys. Chem. Solids 56, 501 (1995)
+See: M. Bernasconi et al, J. Phys. Chem. Solids 56, 501 (1995),
+"doi:10.1016/0022-3697(94)00228-2"
          </pre></blockquote>
 </ul>      
       
@@ -1648,8 +1663,9 @@ help screening_parameter -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 screening_parameter for HSE like hybrid functionals.
-See J. Chem. Phys. 118, 8207 (2003)
-and J. Chem. Phys. 124, 219906 (2006) for more informations.
+For more information, see:
+J. Chem. Phys. 118, 8207 (2003), "doi:10.1063/1.1564060"
+J. Chem. Phys. 124, 219906 (2006), "doi:10.1063/1.2204597"
          </pre></blockquote>
 </ul>      
       
@@ -1973,7 +1989,7 @@ help edir -helpfmt helpdoc -helptext {
 The direction of the electric field or dipole correction is
 parallel to the bg(:,edir) reciprocal lattice vector, so the
 potential is constant in planes defined by FFT grid points;
-edir = 1, 2 or 3. Used only if "tefield" is .TRUE.
+"edir" = 1, 2 or 3. Used only if "tefield" is .TRUE.
          </pre></blockquote>
 </ul>      
       
@@ -2033,8 +2049,8 @@ help eamp -helpfmt helpdoc -helptext {
 Amplitude of the electric field, in ***Hartree*** a.u.;
 1 a.u. = 51.4220632*10^10 V/m. Used only if "tefield"==.TRUE.
 The saw-like potential increases with slope "eamp" in the
-region from (emaxpos+eopreg-1) to (emaxpos), then decreases
-to 0 until (emaxpos+eopreg), in units of the crystal
+region from ("emaxpos"+"eopreg"-1) to ("emaxpos"), then decreases
+to 0 until ("emaxpos"+"eopreg"), in units of the crystal
 vector "edir". Important: the change of slope of this
 potential must be located in the empty region, or else
 unphysical forces will result.
@@ -2286,7 +2302,8 @@ to both total energy and scf potential. Adapted from:
 G.J. Martyna, and M.E. Tuckerman,
 "A reciprocal space based method for treating long
 range interactions in ab-initio and force-field-based
-calculation in clusters", J.Chem.Phys. 110, 2810 (1999).
+calculation in clusters", J. Chem. Phys. 110, 2810 (1999),
+"doi:10.1063/1.477923".
             </pre></dd>
 </dl>
 <dl style="margin-left: 1.5em;">
@@ -2297,7 +2314,7 @@ For polarized or charged slab calculation, embeds
 the simulation cell within an effective semi-
 infinite medium in the perpendicular direction
 (along z). Embedding regions can be vacuum or
-semi-infinite metal electrodes (use 'esm_bc' to
+semi-infinite metal electrodes (use "esm_bc" to
 choose boundary conditions). If between two
 electrodes, an optional electric field
 ('esm_efield') may be applied. Method described in
@@ -2409,7 +2426,7 @@ help esm_efield -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-If "assume_isolated" = 'esm' and esm_bc = 'bc2', gives the
+If "assume_isolated" = 'esm' and "esm_bc" = 'bc2', gives the
 magnitude of the electric field [Ry/a.u.] to be applied
 between semi-infinite ESM electrodes.
          </pre></blockquote>
@@ -2482,8 +2499,8 @@ Type of Van der Waals correction. Allowed values:
 <dd><pre style="margin-top: 0em; margin-bottom: -1em;">
 Semiempirical Grimme's DFT-D2.
 Optional variables: "london_s6", "london_rcut", "london_c6", "london_rvdw",
-S. Grimme, J. Comp. Chem. 27, 1787 (2006),
-V. Barone et al., J. Comp. Chem. 30, 934 (2009).
+S. Grimme, J. Comp. Chem. 27, 1787 (2006), "doi:10.1002/jcc.20495"
+V. Barone et al., J. Comp. Chem. 30, 934 (2009), "doi:10.1002/jcc.21112"
             </pre></dd>
 </dl>
 <dl style="margin-left: 1.5em;">
@@ -2499,8 +2516,9 @@ See A. Tkatchenko and M. Scheffler, "PRL 102, 073005 (2009)".
 <dt><tt><b>'XDM'</b>, <b>'xdm'</b> :</tt></dt>
 <dd><pre style="margin-top: 0em; margin-bottom: -1em;">
 Exchange-hole dipole-moment model. Optional variables: "xdm_a1", "xdm_a2"
-A. D. Becke and E. R. Johnson, J. Chem. Phys. 127, 154108 (2007)
-A. Otero de la Roza, E. R. Johnson, J. Chem. Phys. 136, 174109 (2012)
+A. D. Becke et al., J. Chem. Phys. 127, 154108 (2007), "doi:10.1063/1.2795701"
+A. Otero de la Roza et al., J. Chem. Phys. 136, 174109 (2012),
+"doi:10.1063/1.4705760"
             </pre></dd>
 </dl>
 <pre> Note that non-local functionals (eg vdw-DF) are NOT specified here but in "input_dft"
@@ -2559,8 +2577,8 @@ help london_c6 -helpfmt helpdoc -helptext {
 <blockquote><pre>
 atomic C6 coefficient of each atom type
 
-( if not specified default values from S. Grimme, J. Comp. Chem. 27, 1787 (2006) are used;
-  see file Modules/mm_dispersion.f90 )
+( if not specified default values from S. Grimme, J. Comp. Chem. 27, 1787 (2006),
+  "doi:10.1002/jcc.20495" are used; see file Modules/mm_dispersion.f90 )
          </pre></blockquote>
 </ul>      
       
@@ -2580,8 +2598,8 @@ help london_rvdw -helpfmt helpdoc -helptext {
 <blockquote><pre>
 atomic vdw radii of each atom type
 
-( if not specified default values from S. Grimme, J. Comp. Chem. 27, 1787 (2006) are used;
-  see file Modules/mm_dispersion.f90 )
+( if not specified default values from S. Grimme, J. Comp. Chem. 27, 1787 (2006),
+  "doi:10.1002/jcc.20495" are used; see file Modules/mm_dispersion.f90 )
          </pre></blockquote>
 </ul>      
       
@@ -2677,7 +2695,8 @@ with the exchange-correlation functional. The default corresponds to
 PW86PBE.
 For other functionals, see:
    "http://schooner.chem.dal.ca/wiki/XDM"
-   A. Otero de la Roza, E. R. Johnson, J. Chem. Phys. 138, 204109 (2013)
+   A. Otero de la Roza, E. R. Johnson, J. Chem. Phys. 138, 204109 (2013),
+   "doi:10.1063/1.4705760"
          </pre></blockquote>
 </ul>      
       
@@ -2700,7 +2719,8 @@ with the exchange-correlation functional. The default corresponds to
 PW86PBE.
 For other functionals, see:
    "http://schooner.chem.dal.ca/wiki/XDM"
-   A. Otero de la Roza, E. R. Johnson, J. Chem. Phys. 138, 204109 (2013)
+   A. Otero de la Roza, E. R. Johnson, J. Chem. Phys. 138, 204109 (2013),
+   "doi:10.1063/1.4705760"
          </pre></blockquote>
 </ul>      
       
@@ -2998,7 +3018,7 @@ help adaptive_thr -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-If .TRUE. this turns on the use of an adaptive conv_thr for
+If .TRUE. this turns on the use of an adaptive "conv_thr" for
 the inner scf loops when using EXX.
          </pre></blockquote>
 </ul>      
@@ -3221,7 +3241,7 @@ charge density. During self consistency the threshold
 is automatically reduced (but never below 1.D-13) when
 approaching convergence.
 
-For non-scf calculations: default is (conv_thr/N elec)/10.
+For non-scf calculations: default is ("conv_thr"/N elec)/10.
          </pre></blockquote>
 </ul>      
       
@@ -3257,10 +3277,12 @@ help diago_david_ndim -helpfmt helpdoc -helptext {
 <blockquote><pre>
 For Davidson diagonalization: dimension of workspace
 (number of wavefunction packets, at least 2 needed).
-A larger value may yield a somewhat faster algorithm
-but uses more memory. The opposite holds for smaller values.
+A larger value may yield a smaller number of iterations in
+the algorithm but uses more memory and more CPU time in
+subspace diagonalization.
 Try "diago_david_ndim"=2 if you are tight on memory or if
-your job is large: the speed penalty is often negligible
+the time spent in subspace diagonalization (cdiaghg/rdiaghg)
+is significant compared to the time spent in h_psi
          </pre></blockquote>
 </ul>      
       
@@ -3530,7 +3552,7 @@ ion dynamics is over-damped Langevin
 <dt><tt><b>'langevin-smc'</b> :</tt></dt>
 <dd><pre style="margin-top: 0em; margin-bottom: -1em;">
 over-damped Langevin with Smart Monte Carlo:
-see R.J. Rossky, JCP, 69, 4628(1978)
+see R.J. Rossky, JCP, 69, 4628 (1978), "doi:10.1063/1.436415"
             </pre></dd>
 </dl>
 <pre>
@@ -4176,7 +4198,7 @@ help cell_factor -helpfmt helpdoc -helptext {
 <li> <em>Variable: </em><big><b>cell_factor</b></big>
 </li>
 <br><li> <em>Type: </em>REAL</li>
-<br><li> <em>Default: </em> 1.2D0
+<br><li> <em>Default: </em> 2.0 for variable-cell calculations, 1.0 otherwise
          </li>
 <br><li> <em>Description:</em>
 </li>

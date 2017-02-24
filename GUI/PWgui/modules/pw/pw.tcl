@@ -427,10 +427,10 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 		    -label    "Occupation of states (occupations):"
 		    -widget   optionmenu
 		    -textvalue {
-			smearing tetrahedra fixed "read from input"
+			smearing tetrahedra tetrahedra_lin tetrahedra_opt fixed "read from input"
 		    }
 		    -value {
-			'smearing' 'tetrahedra' 'fixed' 'from_input'
+			'smearing' 'tetrahedra' 'tetrahedra_lin' 'tetrahedra_opt' 'fixed' 'from_input'
 		    }
 		}
 
