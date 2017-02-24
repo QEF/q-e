@@ -17,7 +17,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
         Do not start any line in @i cards with a "/" character.
 
         
-        @b {Structure of the input data:} 
+        @b {Structure of the input data:}
         ===============================================================================
         
         @b &CONTROL
@@ -155,17 +155,13 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             info {
                 This flag controls the way wavefunctions are stored to disk :
 
-                @b .TRUE.  collect wavefunctions from all processors, store them
+                .TRUE.  collect wavefunctions from all processors, store them
                         into the output data directory "outdir"/"prefix".save,
-                        one wavefunction per k-point in subdirs K000001/,
-                        K000001/, etc.. Use this if you want wavefunctions
-                        to be readable on a different number of processors.
+                        ...
 
-                @b .FALSE. do not collect wavefunctions, leave them in temporary
-                        local files (one per processor). The resulting format
-                        will be readable only by jobs running on the same
-                        number of processors and pools. Requires less I/O
-                        than the previous case.
+                        .FALSE. do not collect wavefunctions, leave them in temporary
+                                local files (one per processor). The resulting format
+                                ...
 
                 Note that this flag has no effect on reading, only on writing.
             }
@@ -385,7 +381,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 If .TRUE. perform orbital magnetization calculation.
                 If finite electric field is applied (@ref lelfield==.true.)
                 only Kubo terms are computed 
-                [for details see New J. Phys. 12, 053032 (2010)].
+                [ for details see New J. Phys. 12, 053032 (2010), doi:10.1088/1367-2630/12/5/053032 ].
                 The type of calculation is 'nscf' and should be performed 
                 on an automatically generated uniform grid of k points.
                 Works ONLY with norm-conserving pseudopotentials.
@@ -999,7 +995,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 of the energy step for reciprocal vectors whose square modulus
                 is greater than "ecfixed". In the kinetic energy, G^2 is
                 replaced by G^2 + qcutz * (1 + erf ( (G^2 - ecfixed)/q2sigma) )
-                See: M. Bernasconi et al, J. Phys. Chem. Solids 56, 501 (1995)
+                See: M. Bernasconi et al, J. Phys. Chem. Solids 56, 501 (1995),
+		doi:10.1016/0022-3697(94)00228-2
             }
         }
         
@@ -1026,8 +1023,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             default {0.106}
             info {
                 screening_parameter for HSE like hybrid functionals. 
-                See J. Chem. Phys. 118, 8207 (2003)
-                and J. Chem. Phys. 124, 219906 (2006) for more informations.
+                For more information, see:
+		J. Chem. Phys. 118, 8207 (2003), doi:10.1063/1.1564060
+                J. Chem. Phys. 124, 219906 (2006), doi:10.1063/1.2204597
             }
         }
 
@@ -1394,7 +1392,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                     G.J. Martyna, and M.E. Tuckerman,
                     "A reciprocal space based method for treating long
                     range interactions in ab-initio and force-field-based
-                    calculation in clusters", J.Chem.Phys. 110, 2810 (1999).
+                    calculation in clusters", J. Chem. Phys. 110, 2810 (1999),
+		    doi:10.1063/1.477923.
                 }
 
                 opt -val 'esm' {
@@ -1503,8 +1502,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                  opt -val {'grimme-d2', 'Grimme-D2', 'DFT-D', 'dft-d' } {
                      Semiempirical Grimme's DFT-D2.
                      Optional variables: @ref london_s6, @ref london_rcut, @ref london_c6, @ref london_rvdw,
-                     S. Grimme, J. Comp. Chem. 27, 1787 (2006),
-                     V. Barone et al., J. Comp. Chem. 30, 934 (2009).
+                     S. Grimme, J. Comp. Chem. 27, 1787 (2006), doi:10.1002/jcc.20495
+                     V. Barone et al., J. Comp. Chem. 30, 934 (2009), doi:10.1002/jcc.21112
                  }
 
                  opt -val {'TS', 'ts', 'ts-vdw', 'ts-vdW', 'tkatchenko-scheffler'} {
@@ -1516,8 +1515,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 
                  opt -val {'XDM', 'xdm'} {
                      Exchange-hole dipole-moment model. Optional variables: @ref xdm_a1, @ref xdm_a2
-                     A. D. Becke and E. R. Johnson, J. Chem. Phys. 127, 154108 (2007)
-                     A. Otero de la Roza, E. R. Johnson, J. Chem. Phys. 136, 174109 (2012)
+                     A. D. Becke et al., J. Chem. Phys. 127, 154108 (2007), doi:10.1063/1.2795701
+                     A. Otero de la Roza et al., J. Chem. Phys. 136, 174109 (2012),
+		     doi:10.1063/1.4705760
                  }
                  info { Note that non-local functionals (eg vdw-DF) are NOT specified here but in @ref input_dft }
              }
@@ -1541,8 +1541,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
            info {
                atomic C6 coefficient of each atom type
 
-               ( if not specified default values from S. Grimme, J. Comp. Chem. 27, 1787 (2006) are used;
-                 see file Modules/mm_dispersion.f90 )
+               ( if not specified default values from S. Grimme, J. Comp. Chem. 27, 1787 (2006),
+		 doi:10.1002/jcc.20495 are used; see file Modules/mm_dispersion.f90 )
            }
          }
          dimension london_rvdw -type REAL -start 1 -end ntyp {
@@ -1550,8 +1550,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
            info {
                atomic vdw radii of each atom type
 
-               ( if not specified default values from S. Grimme, J. Comp. Chem. 27, 1787 (2006) are used;
-                 see file Modules/mm_dispersion.f90 )
+               ( if not specified default values from S. Grimme, J. Comp. Chem. 27, 1787 (2006),
+		 doi:10.1002/jcc.20495 are used; see file Modules/mm_dispersion.f90 )
            }
          }
          var london_rcut -type REAL {
@@ -1591,7 +1591,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                PW86PBE. 
                For other functionals, see:
                   http://schooner.chem.dal.ca/wiki/XDM
-                  A. Otero de la Roza, E. R. Johnson, J. Chem. Phys. 138, 204109 (2013) 
+	          A. Otero de la Roza, E. R. Johnson, J. Chem. Phys. 138, 204109 (2013),
+	          doi:10.1063/1.4705760
            }
          }
          var xdm_a2 -type REAL {
@@ -1602,7 +1603,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                PW86PBE. 
                For other functionals, see:
                   http://schooner.chem.dal.ca/wiki/XDM
-                  A. Otero de la Roza, E. R. Johnson, J. Chem. Phys. 138, 204109 (2013) 
+	          A. Otero de la Roza, E. R. Johnson, J. Chem. Phys. 138, 204109 (2013),
+	          doi:10.1063/1.4705760
            }
          }
 
@@ -2040,10 +2042,10 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 		}
 		opt -val 'langevin' {
 		    ion dynamics is over-damped Langevin
-		}
-		opt -val 'langevin-smc' {
-		    over-damped Langevin with Smart Monte Carlo:
-		    see R.J. Rossky, JCP, 69, 4628(1978)
+                }
+                opt -val 'langevin-smc' {
+                    over-damped Langevin with Smart Monte Carlo:
+                    see R.J. Rossky, JCP, 69, 4628 (1978), doi:10.1063/1.436415
 		}
 		info {
 		    @b CASE ( @ref calculation == 'vc-relax' )
@@ -2876,7 +2878,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 				constraint on the projection onto a given direction
 				of the vector defined by the position of one atom
 				minus the center of mass of the others.
-				G. Roma, J.P. Crocombette: J. Nucl. Mater. 403, 32 (2010)
+				G. Roma, J.P. Crocombette: J. Nucl. Mater. 403, 32 (2010),
+				doi:10.1016/j.jnucmat.2010.06.001
 			    }
                         }                       
                     }
