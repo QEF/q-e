@@ -17,8 +17,7 @@ help prefix -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-Prefix of input file produced by pw.x
-(wavefunctions are needed).
+prefix of input file produced by <b>pw.x</b> (wavefunctions are needed)
          </pre></blockquote>
 </ul>      
       
@@ -38,7 +37,7 @@ current directory ('./') otherwise
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-directory containing the input data, i.e. the same as in pw.x
+directory containing the input data, i.e. the same as in <b>pw.x</b>
          </pre></blockquote>
 </ul>      
       
@@ -127,8 +126,10 @@ help lsym -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-if .true. the projections are symmetrized
-if .false. partial density of state cannot be computed
+if <b>.true.</b>  the projections are symmetrized,
+           the partial density of states are computed
+if <b>.false.</b> the projections are not symmetrized, the partial
+           DOS can be computed only in the k-resolved case
          </pre></blockquote>
 </ul>      
       
@@ -146,7 +147,7 @@ help pawproj -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-if .true. use PAW projectors and all-electron PAW basis
+if <b>.true.</b> use PAW projectors and all-electron PAW basis
 functions to calculate weight factors for the partial
 densities of states. Following Bloechl, "PRB 50, 17953 (1994)",
 Eq. (4 &amp; 6), the weight factors thus approximate the real
@@ -204,7 +205,7 @@ help lwrite_overlaps -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-if .true., the overlap matrix of the atomic orbitals
+if <b>.true.,</b> the overlap matrix of the atomic orbitals
 prior to orthogonalization is written to the atomic_proj datafile.
          </pre></blockquote>
 </ul>      
@@ -223,7 +224,7 @@ help lbinary_data -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-if .true., the atomic_proj datafile is written in binary fmt.
+if <b>.true.,</b> the atomic_proj datafile is written in binary fmt.
          </pre></blockquote>
 </ul>      
       
@@ -241,7 +242,7 @@ help kresolveddos -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-if .true. the k-resolved DOS is computed: not summed over
+if <b>.true.</b> the k-resolved DOS is computed: not summed over
 all k-points but written as a function of the k-point index.
 In this case all k-point weights are set to unity
          </pre></blockquote>
@@ -261,13 +262,13 @@ help tdosinboxes -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-if .true. compute the local DOS integrated in volumes
-volumes are defined as boxes with edges parallel
-to the unit cell, containing the points of the
-(charge density) FFT grid included within
+if <b>.true.</b> compute the local DOS integrated in volumes
+
+Volumes are defined as boxes with edges parallel to the unit cell,
+containing the points of the (charge density) FFT grid included within
 "irmin" and "irmax", in the three dimensions:
-from "irmin"(j,n) to "irmax"(j,n) for j=1,2,3
-(n=1,"n_proj_boxes")
+
+from "irmin"(j,n) to "irmax"(j,n) for j=1,2,3 (n=1,"n_proj_boxes").
          </pre></blockquote>
 </ul>      
       
@@ -305,7 +306,7 @@ help irmin -helpfmt helpdoc -helptext {
 <blockquote><pre>
 first point of the given box
 
-BEWARE: irmin is a 2D array of the form: irmin(3,"n_proj_boxes")
+BEWARE: "irmin" is a 2D array of the form: "irmin"(3,"n_proj_boxes")
          </pre></blockquote>
 </ul>      
       
@@ -326,7 +327,7 @@ help irmax -helpfmt helpdoc -helptext {
 last point of the given box;
 ( 0 stands for the last point in the FFT grid )
 
-BEWARE: irmax is a 2D array of the form: irmax(3,"n_proj_boxes")
+BEWARE: "irmax" is a 2D array of the form: "irmax"(3,"n_proj_boxes")
          </pre></blockquote>
 </ul>      
       
@@ -344,9 +345,8 @@ help plotboxes -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-if .true., the boxes are written in output as
-as xsf files with 3D datagrids, valued 1.0
-inside the box volume and 0 outside
+if <b>.true.,</b> the boxes are written in output as <b>xsf</b> files with
+3D datagrids, valued 1.0 inside the box volume and 0 outside
 (visualize them as isosurfaces with isovalue 0.5)
          </pre></blockquote>
 </ul>      
