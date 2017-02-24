@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2015 Quantum ESPRESSO group
+! Copyright (C) 2002-2017 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -25,7 +25,8 @@ SUBROUTINE move_ions ( idone )
   USE io_global,              ONLY : stdout
   USE io_files,               ONLY : tmp_dir
   USE kinds,                  ONLY : DP
-  USE cell_base,              ONLY : alat, at, bg, omega, cell_force, fix_volume, fix_area
+  USE cell_base,              ONLY : alat, at, bg, omega, cell_force, &
+                                     fix_volume, fix_area
   USE cellmd,                 ONLY : omega_old, at_old, press, lmovecell, calc
   USE ions_base,              ONLY : nat, ityp, zv, tau, if_pos
   USE fft_base,               ONLY : dfftp
@@ -68,7 +69,6 @@ SUBROUTINE move_ions ( idone )
   REAL(DP), ALLOCATABLE :: pos(:), grad(:)
   REAL(DP)              :: h(3,3), fcell(3,3)=0.d0, epsp1
   INTEGER,  ALLOCATABLE :: fixion(:)
-  real(dp) :: tr
   LOGICAL               :: conv_fcp
   !
   ! ... only one node does the calculation in the parallel case
@@ -318,6 +318,10 @@ SUBROUTINE move_ions ( idone )
      ! ... prepare for a new run, restarted from scratch, not from previous
      ! ... data (dimensions and file lengths will be different in general)
      !
+     ! ... get magnetic moments from previous run before charge is deleted
+     !
+     CALL reset_starting_magnetization ( )
+     !
      CALL clean_pw( .FALSE. )
      CALL close_files(.TRUE.)
      lmovecell=.FALSE.
@@ -395,4 +399,70 @@ SUBROUTINE move_ions ( idone )
               5X,'Results may differ from those at the preceding step.' )
   !
 END SUBROUTINE move_ions
+!
+SUBROUTINE reset_starting_magnetization ( ) 
   !
+  ! On input,  the scf charge density is needed
+  ! On output, new values for starting_magnetization, angle1, angle2
+  ! estimated from atomic magnetic moments - to be used in last step
+  !
+  USE kinds,     ONLY : dp
+  USE constants, ONLY : pi
+  USE ions_base, ONLY : nsp, ityp, nat
+  USE lsda_mod,  ONLY : nspin, starting_magnetization
+  USE scf,       ONLY : rho
+  USE spin_orb,  ONLY : domag
+  USE noncollin_module, ONLY : noncolin, angle1, angle2
+  !
+  IMPLICIT NONE
+  INTEGER :: i, nt, iat
+  REAL(dp):: norm_tot, norm_xy, theta, phi
+  REAL (DP), ALLOCATABLE :: r_loc(:), m_loc(:,:)
+  !
+  IF ( (noncolin .AND. domag) .OR. nspin==2) THEN
+     ALLOCATE ( r_loc(nat), m_loc(nspin-1,nat) )
+     CALL get_locals(r_loc,m_loc,rho%of_r)
+  ELSE
+     RETURN
+  END IF
+  DO i = 1, nsp
+     !
+     starting_magnetization(i) = 0.0_DP
+     angle1(i) = 0.0_DP
+     angle2(i) = 0.0_DP
+     nt = 0
+     DO iat = 1, nat
+        IF (ityp(iat) == i) THEN
+           nt = nt + 1
+           IF (noncolin) THEN
+              norm_tot= sqrt(m_loc(1,iat)**2+m_loc(2,iat)**2+m_loc(3,iat)**2)
+              norm_xy = sqrt(m_loc(1,iat)**2+m_loc(2,iat)**2)
+              IF (norm_tot > 1.d-10) THEN
+                 theta = acos(m_loc(3,iat)/norm_tot)
+                 IF (norm_xy > 1.d-10) THEN
+                    phi = acos(m_loc(1,iat)/norm_xy)
+                    IF (m_loc(2,iat).lt.0.d0) phi = - phi
+                 ELSE
+                    phi = 2.d0*pi
+                 END IF
+              ELSE
+                 theta = 2.d0*pi
+                 phi = 2.d0*pi
+              END IF
+              angle1(i) = angle1(i) + theta
+              angle2(i) = angle2(i) + phi
+              starting_magnetization(i) = starting_magnetization(i) + &
+                   norm_tot/r_loc(iat)
+           ELSE
+              starting_magnetization(i) = starting_magnetization(i) + &
+                   m_loc(1,iat)/r_loc(iat)
+           END IF
+        END IF
+     END DO
+     starting_magnetization(i) = starting_magnetization(i) / REAL(nt)
+     angle1(i) = angle1(i) / REAL(nt)
+     angle2(i) = angle2(i) / REAL(nt)
+  END DO
+  DEALLOCATE ( r_loc, m_loc )
+
+END SUBROUTINE reset_starting_magnetization
