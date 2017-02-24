@@ -378,13 +378,14 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
        var lorbm -type LOGICAL { 
             default { .FALSE. }
             info {
-                If .TRUE. perform orbital magnetization calculation.
-                If finite electric field is applied (@ref lelfield==.true.)
-                only Kubo terms are computed 
-                [ for details see New J. Phys. 12, 053032 (2010), doi:10.1088/1367-2630/12/5/053032 ].
-                The type of calculation is 'nscf' and should be performed 
-                on an automatically generated uniform grid of k points.
-                Works ONLY with norm-conserving pseudopotentials.
+                If @b .TRUE. perform orbital magnetization calculation.
+                If finite electric field is applied (@ref lelfield==.true.) only Kubo terms are computed 
+                [for details see New J. Phys. 12, 053032 (2010), doi:10.1088/1367-2630/12/5/053032].
+
+		The type of calculation is @b 'nscf' and should be performed on an automatically
+		generated uniform grid of k points.
+
+		Works ONLY with norm-conserving pseudopotentials.
             }
         }
 
