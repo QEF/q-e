@@ -1791,7 +1791,6 @@ MODULE read_namelists_module
                                   !     prog = 'CP'  cpr
        !
        !
-       CHARACTER(len=512) :: line
        INTEGER, INTENT(IN), optional :: unit
        !
        ! ... declare other variables
