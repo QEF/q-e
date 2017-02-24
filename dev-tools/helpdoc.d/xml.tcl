@@ -38,7 +38,7 @@ proc ::helpdoc::xml_http {content} {
 
 proc ::helpdoc::xml_doi {content} {
     # PURPOSE: transform all instances of doi:10.**** into links
-    set re {([dD][oO][iI]:?\s*)(10.[0-9]{4})(\.[0-9]+)?(/[-#%/=&@!,:\.\?\w]+[^\s\.,;:])}    
+    set re {([dD][oO][iI]:?\s*)(10.[0-9]{4})(\.[0-9]+)?(/[-#%/=&@!,:\.\?\w\(\)]+[^\s\.,;:\)\]])}    
     #       1                  2            3          4
 
     return [regsub -all $re $content  {<a href="http://dx.doi.org/\2\3\4">\0</a>}]
