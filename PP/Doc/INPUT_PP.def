@@ -111,7 +111,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pp.x 
                         the noncollinear case
 
 		   19 = Reduced density gradient 
-                        (J. Chem. Theory Comput. 7, 625 (2011))
+                        ( J. Chem. Theory Comput. 7, 625 (2011), doi:10.1021/ct100641a )
                         Set the isosurface between 0.3 and 0.6 to plot the 
                         non-covalent interactions (see also plot_num = 20)
 
