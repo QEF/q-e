@@ -32,6 +32,7 @@
 \def\make{\texttt{make}}
 %\def\QEmodes{\texttt{QE-emacs-modes}}
 \def\QEmodes{\texttt{QE-modes}}
+\def\QEemodes{\texttt{QE-emacs-modes}}
 \def\qemodes{\texttt{qe-modes}}
 
 \def\efn#1{\textcolor{BlueViolet}{\texttt{#1}}}
@@ -56,7 +57,7 @@
 \title{
   \includegraphics[width=5cm]{\qeImage} \\
   % title
-  \Huge \QEmodes\ User's Guide (v.\version) 
+  \Huge \QEemodes\ User's Guide (v.\version) 
 }
 
 \maketitle
@@ -65,25 +66,25 @@
 
 \section{Introduction}
 
-This guide covers the usage of \QEmodes\ package (version \version):
-an open-source collection of Emacs major-modes for making the editing
-of \qe\ (QE) input files somewhat easier and more comfortable with Emacs
+This guide covers the usage of \QEemodes\ package (aka \QEmodes): an
+open-source collection of Emacs major-modes for making the editing of
+\qe\ (QE) input files somewhat easier and more comfortable with Emacs
 editor. The package provides syntax highlighting (see
 Figure~\ref{fig:example}), basic auto-indentation, and several utility
-  commands.
+commands.
 
 \section{Terms of use}
 
 \QEmodes\ is free software, released under the
-GNU General Public License. See:\\
+GNU General Public License. See:
 \texttt{http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt}, or the
 file \texttt{License} in the \qe\ distribution.
 
-The \QEmodes\ package was originally written by Anton Kokalj. The
-implementation of \QEmodes\ was made possible by several useful and
-helpful resources that are gratefully acknowledged, in particular:
-{\it Mode Tutorial} of Scott Andrew Borton
-(\texttt{https://www.emacswiki.org/emacs/ModeTutorial} (for
+The \QEmodes\ package was written by Anton Kokalj. The implementation
+of \QEmodes\ was made possible by several useful and helpful resources
+that are gratefully acknowledged, in particular: {\it Mode Tutorial}
+of Scott Andrew Borton
+(\texttt{https://www.emacswiki.org/emacs/ModeTutorial} for
 indentation code), {\it Derived Mode} and {\it Sample Mode} pages
 (\texttt{https://www.emacswiki.org/emacs/DerivedMode},
 \texttt{https://www.emacswiki.org/emacs/SampleMode}) as well as the
