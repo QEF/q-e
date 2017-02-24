@@ -129,9 +129,11 @@ module PH\#auto -title "PWSCF GUI: module PH.x" -script {
 		    -textvalue {
 			"electron-phonon lambda coefficients <simple>"
 			"electron-phonon by interpolation <interpolated>"
+			"el.-phon. lambda coeff. via opt.tetrahedron <lambda_tetra>"
+			"phonon linewidth via opt.tetrahedron <gamma_tetra>"
 		    }
-		    -value     {'simple' 'interpolated'}
-		    -widget    radiobox
+		    -value     {'simple' 'interpolated' 'lambda_tetra' 'gamma_tetra'}
+		    -widget    optionmenu
 		}
 		
 		var lrpa {
@@ -153,6 +155,13 @@ module PH\#auto -title "PWSCF GUI: module PH.x" -script {
 		    -textvalue {Yes No}
 		    -value     {.true. .false.}
 		    -widget    radiobox
+		}
+
+		var lshift_q {
+		    -label "Use a wave-vector half-step grid displaced (lshift_q):"
+		    -widget    radiobox
+		    -textvalue { Yes No }	      
+		    -value     { .true. .false. }
 		}
 
 		var zeu {

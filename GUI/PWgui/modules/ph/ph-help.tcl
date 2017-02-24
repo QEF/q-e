@@ -569,6 +569,21 @@ over the Brillouin Zone as in M. Wierzbowska, et
 al. "arXiv:cond-mat/0504077"
             </pre></dd>
 </dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'lambda_tetra'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+The electron-phonon coefficient \lambda_{q \nu}
+is calculated with the optimized tetrahedron method.
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'gamma_tetra'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+The phonon linewidth \gamma_{q \nu} is calculated
+from the electron-phonon interactions
+using the optimized tetrahedron method.
+            </pre></dd>
+</dl>
 <pre>
 For metals only, requires gaussian smearing.
 
@@ -580,6 +595,26 @@ dynamical matrix, and the present punch file. This allows
 the use of a different (larger) k-point grid.
             </pre>
 </blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help lshift_q -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>lshift_q</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .false.
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Use a wave-vector grid displaced by half a grid step
+in each direction - meaningful only when ldisp is .true.
+When this option is set, the q2r.x code cannot be used.
+         </pre></blockquote>
 </ul>      
       
 }
