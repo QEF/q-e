@@ -91,28 +91,30 @@ proc ::helpdoc::checkGui_def_vs_module {} {
 		    # let us attempt to privide default module's definition of variable
 
 		    variable arr
-		    attr2array_ arr $def_item($name,attrs)
-		    set type [arr type]
-		    
-		    set options "   -label \"($name):\""
-		    switch -glob -nocase -- $type {
-			CHARACTER - STRING {
-			    append options "
+		    if { [info exists def_item($name,attrs)] } {
+			attr2array_ arr $def_item($name,attrs)
+			set type [arr type]
+			
+			set options "   -label \"($name):\""
+			switch -glob -nocase -- $type {
+			    CHARACTER - STRING {
+				append options "
    -validate string"
-			}
-			LOGICAL {
-			    append options "
+			    }
+			    LOGICAL {
+				append options "
    -widget    radiobox
    -textvalue { Yes No }	      
    -value     { .true. .false. }"
-			}
-			INT* {
-			    append options "
+			    }
+			    INT* {
+				append options "
    -validate int"
-			}
-			REAL {
-			    append options "
+			    }
+			    REAL {
+				append options "
    -validate fortranreal"
+			    }
 			}
 		    }
 		    
