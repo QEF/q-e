@@ -1,6 +1,6 @@
 tracevar plot_num w {
 
-    set spin_component_text [vartextvalue spin_component]
+    set spin_component_text [vartextvalue spin_component(1)]
 
     ::tclu::DEBUG "Plot_Num ..."
 
@@ -8,9 +8,11 @@ tracevar plot_num w {
 	"charge density" -
 	"total potential (= V_bare + V_H + V_xc)" -
 	"electrostatic potential (= V_bare + V_H)" -
-	"all-electron valence charge density (for PAW)" {
+	"all-electron valence charge density (for PAW)" -
+	"all-electron charge density (valence+core, for PAW)" {
 	    widget spin_component enable
-	    widgetconfigure spin_component -textvalues {
+	    widget spin_component(2) disable
+	    widgetconfigure spin_component(1) -textvalues {
 		"total charge/potential"
 		"spin up charge/potential"
 		"spin down charge/potential"		
@@ -18,53 +20,75 @@ tracevar plot_num w {
 	    groupwidget stm   disable 
 	    groupwidget psi2  disable 
 	    groupwidget ildos disable
+	    groupwidget ldos  disable
 
 	    if { ! [regexp {charge/potential} $spin_component_text] } {
-		varset spin_component -value {}
+		varset spin_component(1) -value {}
 	    }		
 	}
 
+	"local density of states at specific energies (LDOS)" {
+	    widget spin_component enable
+	    widget spin_component(2) disable
+	    groupwidget stm   disable 
+	    groupwidget psi2  disable  
+	    groupwidget ildos enable
+	    groupwidget ldos  enable
+	}
+	
 	"STM images" {
 	    widget spin_component disable
 	    groupwidget stm   enable  
 	    groupwidget psi2  disable 
 	    groupwidget ildos disable
+	    groupwidget ldos  disable
 	}
 
 	"|psi|^2" {
-	    widget spin_component disable 
+	    widget spin_component disable
 	    groupwidget stm   disable 
 	    groupwidget psi2  enable  
 	    groupwidget ildos disable
+	    groupwidget ldos  disable
 	}
 
 	"|psi|^2 (noncollinear case)" {
 	    widget spin_component enable
-	    widgetconfigure spin_component -textvalues {
-		"charge"
-		"x component of the magnetization"
-		"y component of the magnetization"
-		"z component of the magnetization"
-	    }	
+	    widget spin_component(2) enable
+	    foreach i {1 2} {
+		widgetconfigure spin_component($i) -textvalues {
+		    "charge"
+		    "x component of the magnetization"
+		    "y component of the magnetization"
+		    "z component of the magnetization"
+		}
+	    }
 	    groupwidget stm   disable 
 	    groupwidget psi2  enable  
 	    groupwidget ildos disable
+	    groupwidget ldos  disable
 
 	    if { [regexp {charge/potential} $spin_component_text] } {
-		varset spin_component -value {}
+		varset spin_component(1) -textvalue "charge"
+	    }
+	    if { [regexp {charge/potential} [vartextvalue spin_component(2)]] } {
+		varset spin_component(2) -textvalue "charge"
 	    }
 	}
 	
 	"integrated local density of states (ILDOS)" {
-	    widget spin_component disable 
+	    widget spin_component enable
+	    widget spin_component(2) disable
 	    groupwidget stm   disable 
 	    groupwidget psi2  disable  
 	    groupwidget ildos enable
+	    groupwidget ldos  disable
 	}
 
 	"noncolinear magnetization" {
 	    widget spin_component enable
-	    widgetconfigure spin_component -textvalues {
+	    widget spin_component(2) disable
+	    widgetconfigure spin_component(1) -textvalues {
 		"absolute value"
 		"x component of the magnetization"
 		"y component of the magnetization"
@@ -73,9 +97,10 @@ tracevar plot_num w {
 	    groupwidget stm   disable 
 	    groupwidget psi2  disable  
 	    groupwidget ildos disable
-	    
-	    if { [regexp {charge/potential} $spin_component_text] } {
-		varset spin_component -value {}
+	    groupwidget ldos  disable
+
+	    if { [regexp {charge} $spin_component_text] } {
+		varset spin_component(1) -textvalue "absolute value"
 	    }
 	}
 
@@ -83,7 +108,8 @@ tracevar plot_num w {
 	    widget spin_component disable 
 	    groupwidget stm   disable 
 	    groupwidget ildos disable
-	    groupwidget psi2  disable 
+	    groupwidget psi2  disable
+	    groupwidget ldos  disable
 	}	    
     }
 }

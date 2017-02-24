@@ -35,7 +35,7 @@ module PP\#auto -title "PWSCF GUI: module PP.x" -script {
 		    "charge density"
 		    "total potential (= V_bare + V_H + V_xc)"
 		    "local ionic potential (= V_bare)"
-		    "local density of states at E_fermi" 
+		    "local density of states at specific energies (LDOS)" 
 		    "local density of electronic entropy"
 		    "STM images"
 		    "spin polarization (= rho(up) - rho(down))"
@@ -56,7 +56,7 @@ module PP\#auto -title "PWSCF GUI: module PP.x" -script {
 		-value { 0 1 2 3 4 5 6 7 7 8 9 10 11 12 13 17 18 19 20 21 }
 		-fmt %d
 	    }
-	    var spin_component {
+	    dimension spin_component {
 		-label    "Spin component (spin_component):"
 		-widget   optionmenu
 		-textvalue {
@@ -70,6 +70,7 @@ module PP\#auto -title "PWSCF GUI: module PP.x" -script {
 		    "z component of the magnetization"
 		}
 		-value { 0 1 2  0  0 1 2 3 }
+		-start 1 -end 2 
 	    }	
 	    
 	    separator -label "--- Options for STM images ---"
@@ -84,17 +85,19 @@ module PP\#auto -title "PWSCF GUI: module PP.x" -script {
 	    separator -label "--- Options for |psi|^2 ---"
 
 	    group psi2 -name "Psi2" {
-		var kpoint {
+		dimension kpoint {
 		    -label    "For |psi^2|: which k-point (kpoint):"
 		    -widget    spinint
 		    -validate  posint
 		    -fmt       %d
+		    -start 1 -end 2 		    
 		}	
-		var kband {
+		dimension kband {
 		    -label    "For |psi^2|: which band (kband):"
 		    -widget    spinint
 		    -validate  posint
 		    -fmt       %d
+		    -start 1 -end 2 
 		}
 		var lsign {
 		    -label    "For |psi^2| & Gamma: save the sign(psi) (lsign):"
@@ -104,17 +107,28 @@ module PP\#auto -title "PWSCF GUI: module PP.x" -script {
 		}
 	    }
 	    
-	    separator -label "--- Options for ILDOS ---"
+	    separator -label "--- Options for LDOS & ILDOS ---"
 
 	    group ildos -name "ILDOS" {
 		var emin {
-		    -label    "For ILDOS: miminum energy [in eV] (emin):"
+		    -label    "For (I)LDOS: miminum energy [in eV] (emin):"
 		    -validate  fortranreal
 		}	
 		var emax {
-		    -label    "FOR ILDOS: maximum energy [in eV] (emax):"
+		    -label    "FOR (I)LDOS: maximum energy [in eV] (emax):"
 		    -validate  fortranreal
 		}	
+	    }
+
+	    group ldos {
+		var delta_e {
+		    -label "Spacing of energy grid for LDOS (delta_e):"
+		    -validate fortranposreal
+		}
+		var degauss_ldos {
+		    -label "Broadening of energy levels for LDOS in eV (degauss_ldos):"
+		    -validate fortrannonnegreal
+		}
 	    }
 	}
     }
