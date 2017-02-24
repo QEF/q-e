@@ -22,19 +22,19 @@ input_description -distribution {Quantum Espresso} -package PWscf -program projw
          
         var prefix -type CHARACTER { 
             info { 
-                Prefix of input file produced by pw.x
-                (wavefunctions are needed).
+                prefix of input file produced by @b pw.x (wavefunctions are needed)
             }
             default { 'pwscf' }
         }
 
         var outdir -type CHARACTER {
             info {
-                directory containing the input data, i.e. the same as in pw.x
+                directory containing the input data, i.e. the same as in @b pw.x
             }
             default {
-                      value of the ESPRESSO_TMPDIR environment variable if set;
-                      current directory ('./') otherwise }
+		value of the ESPRESSO_TMPDIR environment variable if set;
+		current directory ('./') otherwise
+	    }
         }
 
         var ngauss -type INTEGER {
@@ -66,9 +66,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program projw
         var lsym -type LOGICAL {
             default { .true. }
             info {
-                if .true.  the projections are symmetrized,
+                if @b .true.  the projections are symmetrized,
                            the partial density of states are computed
-                if .false. the projections are not symmetrized, the partial 
+                if @b .false. the projections are not symmetrized, the partial 
                            DOS can be computed only in the k-resolved case
             }
         }
@@ -76,7 +76,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program projw
         var pawproj -type LOGICAL {
             default { .false. }
             info {
-                if .true. use PAW projectors and all-electron PAW basis
+                if @b .true. use PAW projectors and all-electron PAW basis
                 functions to calculate weight factors for the partial 
                 densities of states. Following Bloechl, PRB 50, 17953 (1994), 
                 Eq. (4 & 6), the weight factors thus approximate the real
@@ -100,7 +100,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program projw
         var lwrite_overlaps -type LOGICAL {
             default { .false. }
             info {
-                if .true., the overlap matrix of the atomic orbitals
+                if @b .true., the overlap matrix of the atomic orbitals
                 prior to orthogonalization is written to the atomic_proj datafile.
             }
         }
@@ -108,14 +108,14 @@ input_description -distribution {Quantum Espresso} -package PWscf -program projw
         var lbinary_data -type LOGICAL {
             default { .false. }
             info {
-                if .true., the atomic_proj datafile is written in binary fmt.
+                if @b .true., the atomic_proj datafile is written in binary fmt.
             }
         }
 
         var kresolveddos -type LOGICAL {
             default { .false. }
             info {
-                if .true. the k-resolved DOS is computed: not summed over
+                if @b .true. the k-resolved DOS is computed: not summed over
                 all k-points but written as a function of the k-point index.
                 In this case all k-point weights are set to unity
             }
@@ -124,15 +124,15 @@ input_description -distribution {Quantum Espresso} -package PWscf -program projw
         var tdosinboxes -type LOGICAL {
             default { .false. }
             info {
-                if .true. compute the local DOS integrated in volumes
-                volumes are defined as boxes with edges parallel
-                to the unit cell, containing the points of the
-                (charge density) FFT grid included within
-                @ref irmin and @ref irmax, in the three dimensions:
-                from @ref irmin(j,n) to @ref irmax(j,n) for j=1,2,3
-                (n=1,@ref n_proj_boxes)
-            }
-        }       
+                if @b .true. compute the local DOS integrated in volumes
+		
+                Volumes are defined as boxes with edges parallel to the unit cell,
+		containing the points of the (charge density) FFT grid included within
+		@ref irmin and @ref irmax, in the three dimensions:
+
+		from @ref irmin(j,n) to @ref irmax(j,n) for j=1,2,3 (n=1,@ref n_proj_boxes).
+	    }
+	}
 
         var n_proj_boxes -type INTEGER {
             default { 1 }
@@ -147,7 +147,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program projw
                 
                 first point of the given box
 
-                BEWARE: irmin is a 2D array of the form: irmin(3,@ref n_proj_boxes)
+                BEWARE: @ref irmin is a 2D array of the form: @ref irmin(3,@ref n_proj_boxes)
             }
         }       
 
@@ -158,16 +158,15 @@ input_description -distribution {Quantum Espresso} -package PWscf -program projw
                 last point of the given box;
                 ( 0 stands for the last point in the FFT grid )
 
-                BEWARE: irmax is a 2D array of the form: irmax(3,@ref n_proj_boxes)
+                BEWARE: @ref irmax is a 2D array of the form: @ref irmax(3,@ref n_proj_boxes)
             }
         }       
 
         var plotboxes -type LOGICAL {
             default { .false. }
             info {
-                if .true., the boxes are written in output as
-                as xsf files with 3D datagrids, valued 1.0
-                inside the box volume and 0 outside
+                if @b .true., the boxes are written in output as as xsf files with 
+                3D datagrids, valued 1.0 inside the box volume and 0 outside
                 (visualize them as isosurfaces with isovalue 0.5)
             }
         }       
@@ -178,34 +177,33 @@ input_description -distribution {Quantum Espresso} -package PWscf -program projw
             text {
                 Projections are written to standard output, and also to file
                 @ref filproj if given as input.
-	        
-	        The total DOS and the sum of projected DOS are written to file 
-	        "filpdos".pdos_tot.
-	        
-	        * The format for the collinear, spin-unpolarized case and the
-	          non-collinear, spin-orbit case is:
-	              E DOS(E) PDOS(E)
-	              ...
-	        
-	        * The format for the collinear, spin-polarized case is:
-	              E DOSup(E) DOSdw(E)  PDOSup(E) PDOSdw(E) 
-	              ...
-	        
-	        * The format for the non-collinear, non spin-orbit case is:
-	              E DOS(E) PDOSup(E) PDOSdw(E) 
-	              ...
-     	        
-	        In the collinear case and the non-collinear, non spin-orbit case
-	        projected DOS are written to file "filpdos".pdos_atm#N(X)_wfc#M(l),
-	        where N = atom number , X = atom symbol, M = wfc number, l=s,p,d,f
-	        (one file per atomic wavefunction found in the pseudopotential file) 
-	        
-	        * The format for the collinear, spin-unpolarized case is:
-	              E LDOS(E) PDOS_1(E) ... PDOS_2l+1(E)
-	              ...
-	        
-	        where LDOS = \sum m=1,2l+1 PDOS_m(E)
-	        and PDOS_m(E) = projected DOS on atomic wfc with component m
+                
+                The total DOS and the sum of projected DOS are written to file 
+                "filpdos".pdos_tot.
+                
+                * The format for the collinear, spin-unpolarized case and the
+                  non-collinear, spin-orbit case is:
+                      E DOS(E) PDOS(E)
+                      ...
+                
+                * The format for the collinear, spin-polarized case is:
+                      E DOSup(E) DOSdw(E)  PDOSup(E) PDOSdw(E) 
+                      ...
+                
+                * The format for the non-collinear, non spin-orbit case is:
+                      E DOS(E) PDOSup(E) PDOSdw(E) 
+                      ...
+                
+                In the collinear case and the non-collinear, non spin-orbit case
+                projected DOS are written to file "filpdos".pdos_atm#N(X)_wfc#M(l),
+                where N = atom number , X = atom symbol, M = wfc number, l=s,p,d,f
+                (one file per atomic wavefunction found in the pseudopotential file) 
+                
+                * The format for the collinear, spin-unpolarized case is:
+                      E LDOS(E) PDOS_1(E) ... PDOS_2l+1(E)
+                      ...	        
+	          where LDOS = \sum m=1,2l+1 PDOS_m(E)
+	          and PDOS_m(E) = projected DOS on atomic wfc with component m
 	        
 	        * The format for the collinear, spin-polarized case and the 
 	          non-collinear, non spin-orbit case is as above with
@@ -221,7 +219,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program projw
 		    E LDOS(E) PDOS_1(E) ... PDOS_2j+1(E)
 		    ...
 
-                If kresolveddos=.true., the k-point index is prepended
+                If @ref kresolveddos=.true., the k-point index is prepended
                 to the formats above, e.g. (collinear, spin-unpolarized case)
                     ik E DOS(E) PDOS(E)
 
