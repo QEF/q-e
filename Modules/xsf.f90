@@ -95,7 +95,7 @@ SUBROUTINE xsf_fast_datagrid_3d &
               count = count + 1
               !ind(count) = ii
            ELSE
-              WRITE(ounit,'(6e13.5)') &
+              WRITE(ounit,'(6e14.6)') &
                    (rho(ind_x(i),ind_y(i),ind_z(i)),i=1,6)
               count=1
               !ind(count) = ii
@@ -106,7 +106,7 @@ SUBROUTINE xsf_fast_datagrid_3d &
         ENDDO
      ENDDO
   ENDDO
-  WRITE(ounit,'(6e13.5:)') (rho(ind_x(i),ind_y(i),ind_z(i)),i=1,count)
+  WRITE(ounit,'(6e14.6:)') (rho(ind_x(i),ind_y(i),ind_z(i)),i=1,count)
   WRITE(ounit,'(a)') 'END_DATAGRID_3D'
   WRITE(ounit,'(a)') 'END_BLOCK_DATAGRID_3D'
   RETURN
@@ -144,7 +144,7 @@ SUBROUTINE xsf_datagrid_2d (rho, nx, ny, m1, m2, x0, e1, e2, alat, ounit)
         IF (count < 6) THEN
            count = count + 1
         ELSE
-           WRITE(ounit,'(6e13.5)') (rho(1,ind_x(i),ind_y(i)),i=1,6)
+           WRITE(ounit,'(6e14.6)') (rho(1,ind_x(i),ind_y(i)),i=1,6)
            count=1
         ENDIF
         ind_x(count) = ix
@@ -152,7 +152,7 @@ SUBROUTINE xsf_datagrid_2d (rho, nx, ny, m1, m2, x0, e1, e2, alat, ounit)
      ENDDO
   ENDDO
 
-  WRITE(ounit,'(6e13.5:)') (rho(1,ind_x(i),ind_y(i)),i=1,count)
+  WRITE(ounit,'(6e14.6:)') (rho(1,ind_x(i),ind_y(i)),i=1,count)
   WRITE(ounit,'(a)') 'END_DATAGRID_2D'
   WRITE(ounit,'(a)') 'END_BLOCK_DATAGRID_2D'
   RETURN
@@ -193,7 +193,7 @@ SUBROUTINE xsf_datagrid_3d &
            IF (count<6) THEN
               count = count + 1
            ELSE
-              WRITE(ounit,'(6e13.5)') (rho(ind_x(i),ind_y(i),ind_z(i)),i=1,6)
+              WRITE(ounit,'(6e14.6)') (rho(ind_x(i),ind_y(i),ind_z(i)),i=1,6)
               count=1
            ENDIF
            ind_x(count) = ix
@@ -203,7 +203,7 @@ SUBROUTINE xsf_datagrid_3d &
      ENDDO
   ENDDO
 
-  WRITE(ounit,'(6e13.5:)') (rho(ind_x(i),ind_y(i),ind_z(i)),i=1,count)
+  WRITE(ounit,'(6e14.6:)') (rho(ind_x(i),ind_y(i),ind_z(i)),i=1,count)
   WRITE(ounit,'(a)') 'END_DATAGRID_3D'
   WRITE(ounit,'(a)') 'END_BLOCK_DATAGRID_3D'
   RETURN
