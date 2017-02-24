@@ -165,7 +165,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program projw
         var plotboxes -type LOGICAL {
             default { .false. }
             info {
-                if @b .true., the boxes are written in output as as xsf files with 
+                if @b .true., the boxes are written in output as @b xsf files with 
                 3D datagrids, valued 1.0 inside the box volume and 0 outside
                 (visualize them as isosurfaces with isovalue 0.5)
             }
