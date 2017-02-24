@@ -6,7 +6,7 @@
 # of the License. See the file `License' in the root directory
 # of the present distribution.
 
-AC_INIT(ESPRESSO, 6.0-beta, , espresso)
+AC_INIT(ESPRESSO, 6.1, , espresso)
 
 # Do not use Autoconf 2.69 
 AC_PREREQ(2.60)
