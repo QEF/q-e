@@ -1791,6 +1791,7 @@ MODULE read_namelists_module
                                   !     prog = 'CP'  cpr
        !
        !
+       CHARACTER(len=512) :: line
        INTEGER, INTENT(IN), optional :: unit
        !
        ! ... declare other variables
@@ -1828,11 +1829,7 @@ MODULE read_namelists_module
        IF( ionode ) THEN
           READ( unit_loc, control, iostat = ios )
        END IF
-       CALL mp_bcast( ios, ionode_id, intra_image_comm )
-       IF( ios /= 0 ) THEN
-          CALL errore( ' read_namelists ', &
-                     & ' reading namelist control ', ABS(ios) )
-       END IF
+       CALL check_namelist_read(ios, unit_loc, "control")
        !
        CALL control_bcast( )
        CALL control_checkin( prog )
@@ -1848,11 +1845,7 @@ MODULE read_namelists_module
        IF( ionode ) THEN
           READ( unit_loc, system, iostat = ios )
        END IF
-       CALL mp_bcast( ios, ionode_id, intra_image_comm )
-       IF( ios /= 0 ) THEN
-          CALL errore( ' read_namelists ', &
-                     & ' reading namelist system ', ABS(ios) )
-       END IF
+       CALL check_namelist_read(ios, unit_loc, "system")
        !
        CALL system_bcast( )
        !
@@ -1864,11 +1857,7 @@ MODULE read_namelists_module
        IF( ionode ) THEN
           READ( unit_loc, electrons, iostat = ios )
        END IF
-       CALL mp_bcast( ios, ionode_id, intra_image_comm )
-       IF( ios /= 0 ) THEN
-          CALL errore( ' read_namelists ', &
-                     & ' reading namelist electrons ', ABS(ios) )
-       END IF
+       CALL check_namelist_read(ios, unit_loc, "electrons")
        !
        CALL electrons_bcast( )
        CALL electrons_checkin( prog )
@@ -1890,11 +1879,7 @@ MODULE read_namelists_module
                TRIM( calculation ) == 'cp-wf' ) READ( unit_loc, ions, iostat = ios )
   
        END IF
-       CALL mp_bcast( ios, ionode_id, intra_image_comm )
-       IF( ios /= 0 ) THEN
-          CALL errore( ' read_namelists ', &
-                     & ' reading namelist ions ', ABS(ios) )
-       END IF
+       CALL check_namelist_read(ios, unit_loc, "ions")
        !
        CALL ions_bcast( )
        CALL ions_checkin( prog )
@@ -1911,11 +1896,7 @@ MODULE read_namelists_module
              READ( unit_loc, cell, iostat = ios )
           END IF
        END IF
-       CALL mp_bcast( ios, ionode_id, intra_image_comm )
-       IF( ios /= 0 ) THEN
-          CALL errore( ' read_namelists ', &
-                     & ' reading namelist cell ', ABS(ios) )
-       END IF
+       CALL check_namelist_read(ios, unit_loc, "cell")
        !
        CALL cell_bcast()
        CALL cell_checkin( prog )
@@ -1926,11 +1907,7 @@ MODULE read_namelists_module
              READ( unit_loc, press_ai, iostat = ios )
           end if
        END IF
-       CALL mp_bcast( ios, ionode_id, intra_image_comm )
-       IF( ios /= 0 ) THEN
-          CALL errore( ' read_namelists ', &
-                     & ' reading namelist press_ai ', ABS(ios) )
-       END IF
+       CALL check_namelist_read(ios, unit_loc, "press_ai")
        !
        CALL press_ai_bcast()
        !
@@ -1945,11 +1922,7 @@ MODULE read_namelists_module
              READ( unit_loc, wannier, iostat = ios )
           END IF
        END IF
-       CALL mp_bcast( ios, ionode_id, intra_image_comm )
-       IF( ios /= 0 ) THEN
-          CALL errore( ' read_namelists ', &
-                     & ' reading namelist wannier ', ABS(ios) )
-       END IF
+       CALL check_namelist_read(ios, unit_loc, "wannier")
        !
        CALL wannier_bcast()
        CALL wannier_checkin( prog )
@@ -1963,11 +1936,7 @@ MODULE read_namelists_module
              READ( unit_loc, wannier_ac, iostat = ios )
           END IF
        END IF
-       CALL mp_bcast( ios, ionode_id, intra_image_comm )
-       IF( ios /= 0 ) THEN
-          CALL errore( ' read_namelists ', &
-                     & ' reading namelist wannier_new ', ABS(ios) )
-       END IF
+       CALL check_namelist_read(ios, unit_loc, "wannier_ac")
        !
        CALL wannier_ac_bcast()
        CALL wannier_ac_checkin( prog )
@@ -1978,5 +1947,32 @@ MODULE read_namelists_module
        !
      END SUBROUTINE read_namelists
      !
+     SUBROUTINE check_namelist_read(ios, unit_loc, nl_name)
+       USE io_global, ONLY : ionode, ionode_id
+       USE mp,        ONLY : mp_bcast
+       USE mp_images, ONLY : intra_image_comm
+       !
+       IMPLICIT NONE
+       INTEGER,INTENT(in) :: ios, unit_loc
+       CHARACTER(LEN=*) :: nl_name
+       CHARACTER(len=512) :: line
+       !
+       IF( ionode ) THEN
+         !READ( unit_loc, control, iostat = ios )
+         IF (ios /=0) THEN
+           BACKSPACE(unit_loc)
+           READ(unit_loc,'(A512)') line
+          END IF
+       END IF
+       CALL mp_bcast( ios, ionode_id, intra_image_comm )
+       CALL mp_bcast( line, ionode_id, intra_image_comm )
+       IF( ios /= 0 ) THEN
+          CALL errore( ' read_namelists ', &
+                       ' bad line in namelist &'//TRIM(nl_name)//&
+                       ': "'//TRIM(line)//'" (error could be in the previous line)',&
+                       ABS(ios) )
+       END IF
+       !
+     END SUBROUTINE check_namelist_read
      !
 END MODULE read_namelists_module
