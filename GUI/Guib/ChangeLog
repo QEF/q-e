@@ -1,3 +1,10 @@
+Thu Jan 26 2017  Anton Kokalj (tone.kokalj@ijs.si)
+	* much improved parser of Fortran namelists.  Implicit assigments
+	of one-dimensional arrays is supported, whereas implicit
+	assignment for multi-dimensional arrays is not supported and
+	results in parsing error. Files affected: fnml.tcl, open.itcl,
+	etc.
+
 Tue Apr 22 2014  Anton Kokalj (tone.kokalj@ijs.si)
 	* open.itcl: improving the parsing of Fortran namelist (the
 	parsing was incorrect if the comment character was present in the
