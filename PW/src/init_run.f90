@@ -34,9 +34,7 @@ SUBROUTINE init_run()
   USE wavefunctions_module, ONLY : evc
 #if defined(__HDF5)
   USE hdf5_qe, ONLY : initialize_hdf5
-  USE wavefunctions_module,ONLY : evc
 #endif
-
   !
   IMPLICIT NONE
   !
@@ -113,9 +111,6 @@ SUBROUTINE init_run()
   CALL initialize_hdf5()
 #endif 
   !
-#if defined __HDF5
-  CALL initialize_hdf5()
-#endif
   CALL wfcinit()
   !
   IF(use_wannier) CALL wannier_init()
