@@ -120,7 +120,7 @@ QEMODS=../../Modules/libqemod.a
 QEFFT=../../FFTXlib/libqefft.a
 QELA=../../LAXlib/libqela.a
 
-TLDEPS= bindir fftlib mods libs libiotk
+TLDEPS= bindir mods libs libiotk
 
 all : tldeps libcp.a manycp.x cp.x cppp.x wfdd.x
 
