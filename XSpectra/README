@@ -56,3 +56,14 @@ doc      : The documentation
 examples :
 tools    : small programms and scripts
            1) Plot core density for UPF pseudopotential format
+
+-----------------------------------------------------------------------
+Important information for developers:
+
+1) before starting a new development,  please contact Matteo Calandra, main 
+developer of XSpectra to know if someone else is not already doing what 
+you plan to do and to know what is the better way to do it (in a global 
+view of the code).
+
+2) If you plan to touch the code molecular_nexafs.f90, please contact
+Guido Fratesi before.
