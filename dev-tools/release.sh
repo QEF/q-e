@@ -2,8 +2,8 @@
 
 #tempdir=$HOME/Downloads
 tempdir=/tmp
-version=6.0
-revision=13079
+version=6.1
+revision=13369
 
 # make sure there is no locale setting creating unneeded differences.
 #LC_ALL=C
@@ -24,7 +24,7 @@ cd qe-$version
 # *** manual edit install/plugins_makefile  ***
 # - uncomment 'examples' target
 # - uncomment 'uncompress-examples' target
-# - uncomment 'examples_distclean' target
+# - uncomment 'examples_veryclean' target
 
 # Manual edit "userconfig.tmp" and "ENVIRONMENT"
 # - change 'SVN' to $revision
@@ -37,6 +37,7 @@ cd Modules
 make version.f90
 mv version.f90 ..
 cd ..
+cat version.f90
 
 # remove all .svn directories, clean
 find . -type d -name .svn -exec /bin/rm -rf {} \;
@@ -62,7 +63,7 @@ make tar-gui PWGUI_VERSION=$version
 tar -xzvf PWgui-$version.tgz
 /bin/rm PWgui-$version.tgz
 
-# generate QE-modes (requires tcllib and emacs)
+# generate QE-modes (requires tcllib, emacs, texlive-upquote)
 make tar-qe-modes VERSION=$version
 mv QE-modes-$version.tar.gz ../qe-$version-emacs_modes.tar.gz
 
@@ -79,9 +80,8 @@ file_dst=`echo $x | awk '{ print $2}'`
 mv ${file_src} ${file_dst}
 done
 rm ./STUFF-TO-RENAME.txt ./list-SVN.txt ./list-$version.txt
-cp License test-suite/
-
 cd ..
+cp License test-suite/
 
 make distclean
 
