@@ -59,9 +59,10 @@ SUBROUTINE setup()
   USE start_k,            ONLY : nks_start, xk_start, wk_start, &
                                  nk1, nk2, nk3, k1, k2, k3
   USE ktetra,             ONLY : tetra_type, opt_tetra_init, tetra_init
-  USE symm_base,          ONLY : s, t_rev, nrot, nsym, invsym, nosym, &
-                                 d1,d2,d3, time_reversal, set_sym_bl, &
-                                 find_sym, inverse_s, no_t_rev, allfrac, fft_fact
+  USE symm_base,          ONLY : s, t_rev, irt, nrot, nsym, invsym, nosym, &
+                                 d1,d2,d3, time_reversal, sname, set_sym_bl, &
+                                 find_sym, inverse_s, no_t_rev &
+                                 , allfrac, remove_sym
   USE wvfct,              ONLY : nbnd, nbndx
   USE control_flags,      ONLY : tr2, ethr, lscf, lmd, david, lecrpa,  &
                                  isolve, niter, noinv, ts_vdw, &
@@ -446,6 +447,21 @@ SUBROUTINE setup()
   !
   call check_atoms ( nat, tau, bg )
   !
+  ! ... calculate dimensions of the FFT grid
+  !
+  ! ... if the smooth and dense grid must coincide, ensure that they do
+  ! ... also if dense grid is set from input and smooth grid is not
+  !
+  IF ( ( dfftp%nr1 /= 0 .AND. dfftp%nr2 /= 0 .AND. dfftp%nr3 /= 0 ) .AND. &
+       ( dffts%nr1 == 0 .AND. dffts%nr2 == 0 .AND. dffts%nr3 == 0 ) .AND. &
+       .NOT. doublegrid ) THEN
+     dffts%nr1 = dfftp%nr1
+     dffts%nr2 = dfftp%nr2
+     dffts%nr3 = dfftp%nr3
+  END IF
+  CALL fft_type_allocate ( dfftp, at, bg, gcutm, intra_bgrp_comm )
+  CALL fft_type_allocate ( dffts, at, bg, gcutms, intra_bgrp_comm)
+  !
   !  ... generate transformation matrices for the crystal point group
   !  ... First we generate all the symmetry matrices of the Bravais lattice
   !
@@ -537,7 +553,7 @@ SUBROUTINE setup()
      !
      CALL find_sym ( nat, tau, ityp, magnetic_sym, m_loc, monopole )
      !
-     ! IF ( .NOT. allfrac ) CALL remove_sym ( dfftp%nr1, dfftp%nr2, dfftp%nr3 )
+     IF ( .NOT. allfrac ) CALL remove_sym ( dfftp%nr1, dfftp%nr2, dfftp%nr3 )
      !
   END IF
   !
@@ -634,37 +650,6 @@ SUBROUTINE setup()
   !
   kunit = 1
   CALL divide_et_impera ( nkstot, xk, wk, isk, nks )
-  !
-  ! ... calculate dimensions of the FFT grid
-  !
-  ! ... if the smooth and dense grid must coincide, ensure that they do
-  ! ... also if dense grid is set from input and smooth grid is not
-  !
-  IF ( ( dfftp%nr1 /= 0 .AND. dfftp%nr2 /= 0 .AND. dfftp%nr3 /= 0 ) .AND. &
-       ( dffts%nr1 == 0 .AND. dffts%nr2 == 0 .AND. dffts%nr3 == 0 ) .AND. &
-       .NOT. doublegrid ) THEN
-     dffts%nr1 = dfftp%nr1
-     dffts%nr2 = dfftp%nr2
-     dffts%nr3 = dfftp%nr3
-  END IF
-  !
-  IF ( allfrac ) THEN
-     ! ... do not force FFT grid to be commensurate with fractional translations
-     CALL fft_type_allocate ( dfftp, at, bg, gcutm, intra_bgrp_comm )
-     CALL fft_type_allocate ( dffts, at, bg, gcutms,intra_bgrp_comm)
-  ELSE
-     ! ... force FFT grid to be commensurate with fractional translations
-     CALL fft_type_allocate ( dfftp, at, bg, gcutm, intra_bgrp_comm, fft_fact )
-     IF (.NOT. doublegrid ) THEN
-        ! ... if smooth and hard grid coincide, FFT grids must be the same ...
-        CALL fft_type_allocate &
-                            ( dffts, at, bg, gcutms,intra_bgrp_comm, fft_fact )
-     ELSE
-        ! ... otherwise, no constraints needed on smooth grid 
-        CALL fft_type_allocate &
-                            ( dffts, at, bg, gcutms,intra_bgrp_comm )
-     END IF
-  END IF
   !
   IF ( dft_is_hybrid() ) THEN
      CALL exx_grid_init()
