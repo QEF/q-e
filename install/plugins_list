@@ -34,7 +34,7 @@ SAX=sax-2.0.3
 SAX_URL=$(URL)$(SAX).tar.gz
 #
 # Package maintainer: Davide Ceresoli
-GIPAW=qe-gipaw-6.0
+GIPAW=qe-gipaw-6.1
 GIPAW_URL=$(URL)$(GIPAW).tar.gz
 #
 # Package maintainer: Layla Martin-Samos
@@ -46,7 +46,7 @@ D3Q=d3q-latest
 D3Q_URL="https://d3q.sourceforge.io/d3q-qe6.1-latest.php?outname=d3q-qe6.1-latest.tgz"
 #
 # Package maintainer: Filippo Spiga
-TESTSUITE=qe-6.0-test-suite
+TESTSUITE=qe-6.1-test-suite
 TESTSUITE_URL=$(URL)$(TESTSUITE).tar.gz
 #
 # Package maintainer: Marco Govoni
@@ -54,5 +54,5 @@ WEST=West-2.0.1
 WEST_URL=http://www.west-code.org/downloads/$(WEST).tar.gz
 #
 # Package maintainer:
-EXAMPLES=qe-6.0-examples
+EXAMPLES=qe-6.1-examples
 EXAMPLES_URL=$(URL)$(EXAMPLES).tar.gz
