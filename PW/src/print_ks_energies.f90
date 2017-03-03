@@ -18,7 +18,7 @@ SUBROUTINE print_ks_energies()
   USE klist,                ONLY : xk, ngk, nks, nkstot, wk, lgauss, ltetra, &
                                    two_fermi_energies
   USE fixed_occ,            ONLY : one_atom_occupations
-  USE ener,                 ONLY : ef, ef_up, ef_dw 
+  USE ener,                 ONLY : ef, ef_up, ef_dw, eband 
   USE lsda_mod,             ONLY : lsda, nspin
   USE spin_orb,             ONLY : lforcet
   USE wvfct,                ONLY : nbnd, et, wg
@@ -35,7 +35,6 @@ SUBROUTINE print_ks_energies()
   INTEGER, ALLOCATABLE :: &
       ngk_g(:)       ! number of plane waves summed on all nodes
   REAL(DP) :: &
-      band_energy, & ! band energy
       ehomo, elumo   ! highest occupied and lowest unoccupied levels
   INTEGER :: &
       i,            &! counter on polarization
@@ -54,28 +53,21 @@ SUBROUTINE print_ks_energies()
      CALL ipoolrecover( ngk_g, 1, nkstot, nks )
      CALL mp_bcast( ngk_g, root_bgrp, intra_bgrp_comm )
      CALL mp_bcast( ngk_g, root_bgrp, inter_bgrp_comm )
-
-
-!----------
-! To calculate the Band Energy (AlexS)
 !
-     if(lforcet) then
-      call weights()
-      band_energy = 0.d0
-      do ik = 1, nks
-       do i = 1, nbnd
-        band_energy = band_energy + et(i,ik) * wg(i,ik)
-       enddo
-      enddo
-      CALL mp_sum( band_energy, inter_pool_comm )
-      write(6,*) 
-      write(6,*) '------'
-      write(6,*)  'eband, Ef (eV) = ',band_energy*rytoev,ef*rytoev
-      write(6,*) '------'
-      write(6,*)
-     endif
-!----------
-
+! band energy is not available in non-scf calculations (AlexS)
+!
+     IF (lforcet) THEN
+        eband = 0.0_dp
+        DO ik = 1, nks
+           DO i = 1, nbnd
+              eband = eband + et(i,ik) * wg(i,ik)
+           END DO
+        END DO
+        CALL mp_sum( eband, inter_pool_comm )
+        WRITE (stdout,'(/,"------")')
+        WRITE (stdout,*)  'eband, Ef (eV) = ',eband*rytoev,ef*rytoev
+        WRITE (stdout,'("------",/)')
+     ENDIF
      !
      DO ik = 1, nkstot
         !
