@@ -41,7 +41,7 @@ MODULE mp_global
 CONTAINS
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE mp_startup ( my_world_comm, start_images, diag_in_band_group )
+  SUBROUTINE mp_startup ( my_world_comm, start_images, diag_in_band_group, what_band_group )
     !-----------------------------------------------------------------------
     ! ... This wrapper subroutine initializes all parallelization levels.
     ! ... If option with_images=.true., processes are organized into images,
@@ -58,12 +58,19 @@ CONTAINS
     INTEGER, INTENT(IN), OPTIONAL :: my_world_comm
     LOGICAL, INTENT(IN), OPTIONAL :: start_images
     LOGICAL, INTENT(IN), OPTIONAL :: diag_in_band_group
+    INTEGER, INTENT(IN), OPTIONAL :: what_band_group
     LOGICAL :: do_images
     LOGICAL :: do_diag_in_band
     INTEGER :: my_comm, num_groups, group_id
+    INTEGER :: what_band_group_
     !
     my_comm = MPI_COMM_WORLD
     IF ( PRESENT(my_world_comm) ) my_comm = my_world_comm
+    !
+    what_band_group_ = 1
+    IF( PRESENT( what_band_group ) ) THEN
+       what_band_group_ = what_band_group
+    END IF
     !
     CALL mp_world_start( my_comm )
     CALL get_command_line ( )
@@ -79,8 +86,12 @@ CONTAINS
     CALL mp_start_pools ( npool_, intra_image_comm )
     ! Init orthopools is done during EXX bootstrap but, if they become more used, do it here:
     ! CALL mp_start_orthopools ( intra_image_comm )
-    CALL mp_start_bands ( nband_, ntg_, intra_pool_comm )
-    CALL mp_start_exx ( nband_, ntg_, intra_pool_comm )
+    IF( what_band_group_ == 0 ) THEN
+       CALL mp_start_bands ( nband_, ntg_, intra_pool_comm )
+    ELSE
+       CALL mp_start_bands ( 1, ntg_, intra_pool_comm )
+       CALL mp_start_exx ( nband_, ntg_, intra_pool_comm )
+    END IF
     !
     do_diag_in_band = .FALSE.
     IF ( PRESENT(diag_in_band_group) ) do_diag_in_band = diag_in_band_group

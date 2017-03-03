@@ -62,10 +62,6 @@ CONTAINS
     ! ... by a call to routine get_command_line
     !
     nbgrp = nband_
-    
-    !stop the band group parallelization, so that module mp_exx is used instead
-    nbgrp = 1
-
     !
     IF ( nbgrp < 1 .OR. nbgrp > parent_nproc ) CALL errore( 'mp_start_bands',&
                           'invalid number of band groups, out of range', 1 )
