@@ -80,14 +80,6 @@ CONTAINS
     !
     INTEGER :: parent_nproc = 1, parent_mype = 0
     !
-    !IF(nband_.le.1) THEN
-    IF(.FALSE.) THEN
-       !
-       ! revert to the old embedding method
-       !
-       use_old_exx = .TRUE.
-    END IF
-    !
 #if defined (__MPI)
     !
     parent_nproc = mp_size( parent_comm )
