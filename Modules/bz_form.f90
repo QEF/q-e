@@ -237,14 +237,54 @@ END SUBROUTINE
 SUBROUTINE init_bz(bz_struc)
 IMPLICIT NONE
 TYPE(bz), INTENT(INOUT) :: bz_struc
-INTEGER :: n1(6), n2(6), i
-INTEGER :: ibz, idir, idir1
+INTEGER :: ibz
 
 bz_struc%letter_list(1)='gG '
 bz_struc%letter_coord(:,1)=0.0_DP
 ibz=bz_struc%ind
 
 IF ( ibz ==1) THEN
+   CALL init_bz_1(bz_struc)
+ELSEIF (ibz==2) THEN
+   CALL init_bz_2(bz_struc)
+ELSEIF (ibz==3) THEN
+   CALL init_bz_3(bz_struc)
+ELSEIF (ibz==4) THEN
+   CALL init_bz_4(bz_struc)
+ELSEIF (ibz==5) THEN
+   CALL init_bz_5(bz_struc)
+ELSEIF (ibz==6) THEN
+   CALL init_bz_6(bz_struc)
+ELSEIF (ibz==7) THEN
+   CALL init_bz_7(bz_struc)
+ELSEIF (ibz==8) THEN
+   CALL init_bz_8(bz_struc)
+ELSEIF (ibz==9) THEN
+   CALL init_bz_9(bz_struc)
+ELSEIF (ibz==10) THEN
+   CALL init_bz_10(bz_struc)
+ELSEIF (ibz==11) THEN
+   CALL init_bz_11(bz_struc)
+ELSEIF (ibz==12) THEN
+   CALL init_bz_12(bz_struc)
+ELSEIF (ibz==13) THEN
+   CALL init_bz_13(bz_struc)
+ELSEIF (ibz==14) THEN
+   CALL init_bz_14(bz_struc)
+ELSEIF (ibz==15) THEN
+   CALL init_bz_15(bz_struc)
+ELSEIF (ibz==16) THEN
+   CALL init_bz_16(bz_struc)
+ELSE
+   CALL errore('init_bz','Brillouin zone type not available',1)
+ENDIF
+
+RETURN
+END SUBROUTINE init_bz
+
+SUBROUTINE init_bz_1(bz_struc)
+  IMPLICIT NONE
+  TYPE(bz), INTENT(INOUT) :: bz_struc
 !
 !  simple cubic bz
 !
@@ -286,7 +326,11 @@ IF ( ibz ==1) THEN
 
    CALL find_axis_coordinates(bz_struc)
 
-ELSEIF (ibz==2) THEN
+END SUBROUTINE init_bz_1
+
+SUBROUTINE init_bz_2(bz_struc)
+  IMPLICIT NONE
+  TYPE(bz), INTENT(INOUT) :: bz_struc
 !
 !  fcc bz
 !
@@ -384,7 +428,12 @@ ELSEIF (ibz==2) THEN
 
    CALL find_axis_coordinates(bz_struc)
 
-ELSEIF (ibz==3) THEN
+END SUBROUTINE init_bz_2
+
+SUBROUTINE init_bz_3(bz_struc)
+  IMPLICIT NONE
+  TYPE(bz), INTENT(INOUT) :: bz_struc
+
 !
 !  bcc bz
 !
@@ -452,8 +501,12 @@ ELSEIF (ibz==3) THEN
 
    CALL find_axis_coordinates(bz_struc)
 
+END SUBROUTINE init_bz_3
 
-ELSEIF (ibz==4) THEN
+SUBROUTINE init_bz_4(bz_struc)
+  IMPLICIT NONE
+  TYPE(bz), INTENT(INOUT) :: bz_struc
+
 !
 !  simple tetragonal bz
 !
@@ -489,7 +542,12 @@ ELSEIF (ibz==4) THEN
 
    CALL find_axis_coordinates(bz_struc)
 
-ELSEIF (ibz==5) THEN
+END SUBROUTINE init_bz_4
+
+SUBROUTINE init_bz_5(bz_struc)
+  IMPLICIT NONE
+  TYPE(bz), INTENT(INOUT) :: bz_struc
+
 !
 !  centered tetragonal (c<a) bz
 !
@@ -540,7 +598,11 @@ ELSEIF (ibz==5) THEN
 
    CALL find_axis_coordinates(bz_struc)
 
-ELSEIF (ibz==6) THEN
+END SUBROUTINE init_bz_5
+
+SUBROUTINE init_bz_6(bz_struc)
+  IMPLICIT NONE
+  TYPE(bz), INTENT(INOUT) :: bz_struc
 !
 !  centered tetragonal (c>a) bz
 !
@@ -627,7 +689,11 @@ ELSEIF (ibz==6) THEN
 
    CALL find_axis_coordinates(bz_struc)
 
-ELSEIF (ibz==7) THEN
+END SUBROUTINE init_bz_6
+
+SUBROUTINE init_bz_7(bz_struc)
+  IMPLICIT NONE
+  TYPE(bz), INTENT(INOUT) :: bz_struc
 !
 !  simple orthorombic bz
 !
@@ -667,7 +733,11 @@ ELSEIF (ibz==7) THEN
 
    CALL find_axis_coordinates(bz_struc)
 
-ELSEIF (ibz==8) THEN
+END SUBROUTINE init_bz_7
+
+SUBROUTINE init_bz_8(bz_struc)
+  IMPLICIT NONE
+  TYPE(bz), INTENT(INOUT) :: bz_struc
 !
 !  face centered orthorombic (1/a^2 > 1/b^2 + 1/c^2) bz
 !
@@ -764,7 +834,11 @@ ELSEIF (ibz==8) THEN
 
    CALL adjust_orthorombic(bz_struc)
 
-ELSEIF (ibz==9) THEN
+END SUBROUTINE init_bz_8
+
+SUBROUTINE init_bz_9(bz_struc)
+  IMPLICIT NONE
+  TYPE(bz), INTENT(INOUT) :: bz_struc
 !
 !  face centered orthorombic (1/a^2 < 1/b^2 + 1/c^2) bz case 2
 !
@@ -886,7 +960,12 @@ ELSEIF (ibz==9) THEN
 
    CALL adjust_orthorombic(bz_struc)
 
-ELSEIF (ibz==10) THEN
+END SUBROUTINE init_bz_9
+
+SUBROUTINE init_bz_10(bz_struc)
+  IMPLICIT NONE
+  TYPE(bz), INTENT(INOUT) :: bz_struc
+
 !
 !  face centered orthorombic (1/a^2 = 1/b^2 + 1/c^2) bz
 !
@@ -980,7 +1059,11 @@ ELSEIF (ibz==10) THEN
    CALL find_axis_coordinates(bz_struc)
    CALL adjust_orthorombic(bz_struc)
 
-ELSEIF (ibz==11) THEN
+END SUBROUTINE init_bz_10
+
+SUBROUTINE init_bz_11(bz_struc)
+  IMPLICIT NONE
+  TYPE(bz), INTENT(INOUT) :: bz_struc
 !
 !  body centered orthorombic bz
 !
@@ -1174,7 +1257,12 @@ ELSEIF (ibz==11) THEN
    CALL find_axis_coordinates(bz_struc)
    CALL adjust_orthorombic(bz_struc)
 
-ELSEIF (ibz==12) THEN
+END SUBROUTINE init_bz_11
+
+SUBROUTINE init_bz_12(bz_struc)
+  IMPLICIT NONE
+  TYPE(bz), INTENT(INOUT) :: bz_struc
+
 !
 !  one face centered orthorombic bz
 !
@@ -1260,7 +1348,11 @@ ELSEIF (ibz==12) THEN
 
    CALL adjust_one_face_centered_orthorombic(bz_struc)
 
-ELSEIF (ibz==13) THEN
+END SUBROUTINE init_bz_12
+
+SUBROUTINE init_bz_13(bz_struc)
+  IMPLICIT NONE
+  TYPE(bz), INTENT(INOUT) :: bz_struc
 !
 !  hexagonal
 !
@@ -1299,8 +1391,12 @@ ELSEIF (ibz==13) THEN
    bz_struc%letter_coord(:,6) = bz_struc%vertex_coord(:,1) 
 
    CALL find_axis_coordinates(bz_struc)
-!
-ELSEIF (ibz==14) THEN
+
+END SUBROUTINE init_bz_13
+
+SUBROUTINE init_bz_14(bz_struc)
+  IMPLICIT NONE
+  TYPE(bz), INTENT(INOUT) :: bz_struc
 !
 !  trigonal alpha < 90 bz
 !
@@ -1369,7 +1465,12 @@ ELSEIF (ibz==14) THEN
                                          bz_struc%vertex_coord(:,14))
    CALL find_axis_coordinates(bz_struc)
 
-ELSEIF (ibz==15) THEN
+END SUBROUTINE init_bz_14
+
+SUBROUTINE init_bz_15(bz_struc)
+  IMPLICIT NONE
+  TYPE(bz), INTENT(INOUT) :: bz_struc
+
 !
 !  trigonal alpha > 90 bz
 !
@@ -1429,8 +1530,13 @@ ELSEIF (ibz==15) THEN
    bz_struc%letter_coord(:,8) = bz_struc%vertex_coord(:,7)
 
    CALL find_axis_coordinates(bz_struc)
-!
-ELSEIF (ibz==16) THEN
+
+END SUBROUTINE init_bz_15
+
+SUBROUTINE init_bz_16(bz_struc)
+  IMPLICIT NONE
+  TYPE(bz), INTENT(INOUT) :: bz_struc
+  INTEGER :: n1(6), n2(6), i, idir, idir1
 !
 !  Simple monoclinic lattice
 !
@@ -1489,12 +1595,7 @@ ELSEIF (ibz==16) THEN
 
    CALL find_axis_coordinates(bz_struc)
 
-ELSE
-   CALL errore('init_bz','Brillouin zone type not available',1)
-ENDIF
-
-RETURN
-END SUBROUTINE init_bz
+END SUBROUTINE init_bz_16
 
 SUBROUTINE compute_vertices(bz_struc)
 !
