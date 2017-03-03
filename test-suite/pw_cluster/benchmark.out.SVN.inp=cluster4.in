@@ -1,5 +1,5 @@
 
-     Program PWSCF v.6.0 starts on  5Feb2017 at 20:19:35 
+     Program PWSCF v.6.1 (svn rev. 13369) starts on  2Mar2017 at 23:42:59 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -8,7 +8,7 @@
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
-     Serial multi-threaded version, running on    1 processor cores
+     Serial multi-threaded version, running on    4 processor cores
      Reading input from cluster4.in
 Warning: card &IONS ignored
 Warning: card / ignored
@@ -57,7 +57,7 @@ Warning: card / ignored
 
 
      PseudoPot. # 1 for  N read from file:
-     /scratch/fs395/QE/espresso/test-suite/..//pseudo/N.pbe-kjpaw.UPF
+     /home/fs395/scratch/QE/espresso/test-suite/..//pseudo/N.pbe-kjpaw.UPF
      MD5 check sum: 784def1e20c8513c628b118ec611e520
      Pseudo is Projector augmented-wave + core cor, Zval =  5.0
      Generated using "atomic" code by A. Dal Corso  (Quantum ESPRESSO distribution)
@@ -71,7 +71,7 @@ Warning: card / ignored
 
 
      PseudoPot. # 2 for  H read from file:
-     /scratch/fs395/QE/espresso/test-suite/..//pseudo/H.pbe-kjpaw.UPF
+     /home/fs395/scratch/QE/espresso/test-suite/..//pseudo/H.pbe-kjpaw.UPF
      MD5 check sum: b6732a8c2b51919c45a22ac3ed50cb01
      Pseudo is Projector augmented-wave, Zval =  1.0
      Generated using "atomic" code by A. Dal Corso (espresso distribution)
@@ -117,9 +117,9 @@ Warning: card / ignored
      negative rho (up, down):  4.822E-04 0.000E+00
      Starting wfc are    8 randomized atomic wfcs
 
-     total cpu time spent up to now is        0.9 secs
+     total cpu time spent up to now is        0.7 secs
 
-     per-process dynamical memory:    16.4 Mb
+     per-process dynamical memory:    17.6 Mb
 
      Self-consistent Calculation
 
@@ -129,7 +129,7 @@ Warning: card / ignored
 
      negative rho (up, down):  3.120E-03 0.000E+00
 
-     total cpu time spent up to now is        1.2 secs
+     total cpu time spent up to now is        0.9 secs
 
      total energy              =     -31.86813420 Ry
      Harris-Foulkes estimate   =     -33.54242447 Ry
@@ -141,7 +141,7 @@ Warning: card / ignored
 
      negative rho (up, down):  5.692E-03 0.000E+00
 
-     total cpu time spent up to now is        1.4 secs
+     total cpu time spent up to now is        1.0 secs
 
      total energy              =     -32.47175832 Ry
      Harris-Foulkes estimate   =     -32.84533000 Ry
@@ -153,7 +153,7 @@ Warning: card / ignored
 
      negative rho (up, down):  1.206E-02 0.000E+00
 
-     total cpu time spent up to now is        1.7 secs
+     total cpu time spent up to now is        1.2 secs
 
      total energy              =     -32.60338806 Ry
      Harris-Foulkes estimate   =     -32.60993386 Ry
@@ -165,7 +165,7 @@ Warning: card / ignored
 
      negative rho (up, down):  1.018E-02 0.000E+00
 
-     total cpu time spent up to now is        1.9 secs
+     total cpu time spent up to now is        1.4 secs
 
      total energy              =     -32.60522575 Ry
      Harris-Foulkes estimate   =     -32.60594073 Ry
@@ -177,7 +177,7 @@ Warning: card / ignored
 
      negative rho (up, down):  1.072E-02 0.000E+00
 
-     total cpu time spent up to now is        2.2 secs
+     total cpu time spent up to now is        1.5 secs
 
      total energy              =     -32.60537749 Ry
      Harris-Foulkes estimate   =     -32.60539844 Ry
@@ -189,7 +189,7 @@ Warning: card / ignored
 
      negative rho (up, down):  1.074E-02 0.000E+00
 
-     total cpu time spent up to now is        2.5 secs
+     total cpu time spent up to now is        1.7 secs
 
      total energy              =     -32.60538246 Ry
      Harris-Foulkes estimate   =     -32.60538349 Ry
@@ -201,7 +201,7 @@ Warning: card / ignored
 
      negative rho (up, down):  1.074E-02 0.000E+00
 
-     total cpu time spent up to now is        2.7 secs
+     total cpu time spent up to now is        1.9 secs
 
      End of self-consistent calculation
 
@@ -253,52 +253,52 @@ Warning: card / ignored
 
      Writing output data file pwscf.save
 
-     init_run     :      0.64s CPU      0.65s WALL (       1 calls)
-     electrons    :      1.81s CPU      1.82s WALL (       1 calls)
+     init_run     :      0.66s CPU      0.52s WALL (       1 calls)
+     electrons    :      2.32s CPU      1.19s WALL (       1 calls)
 
      Called by init_run:
-     wfcinit      :      0.02s CPU      0.02s WALL (       1 calls)
-     potinit      :      0.16s CPU      0.16s WALL (       1 calls)
+     wfcinit      :      0.03s CPU      0.02s WALL (       1 calls)
+     potinit      :      0.18s CPU      0.11s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :      0.33s CPU      0.34s WALL (       7 calls)
-     sum_band     :      0.28s CPU      0.29s WALL (       7 calls)
-     v_of_rho     :      0.62s CPU      0.62s WALL (       8 calls)
-     newd         :      0.21s CPU      0.21s WALL (       8 calls)
-     PAW_pot      :      0.48s CPU      0.48s WALL (       8 calls)
+     c_bands      :      0.36s CPU      0.32s WALL (       7 calls)
+     sum_band     :      0.53s CPU      0.18s WALL (       7 calls)
+     v_of_rho     :      0.63s CPU      0.47s WALL (       8 calls)
+     newd         :      0.31s CPU      0.09s WALL (       8 calls)
+     PAW_pot      :      0.65s CPU      0.18s WALL (       8 calls)
      mix_rho      :      0.03s CPU      0.03s WALL (       7 calls)
 
      Called by c_bands:
-     init_us_2    :      0.01s CPU      0.01s WALL (      15 calls)
-     regterg      :      0.32s CPU      0.32s WALL (       7 calls)
+     init_us_2    :      0.04s CPU      0.01s WALL (      15 calls)
+     regterg      :      0.33s CPU      0.32s WALL (       7 calls)
 
      Called by sum_band:
      sum_band:bec :      0.00s CPU      0.00s WALL (       7 calls)
-     addusdens    :      0.19s CPU      0.20s WALL (       7 calls)
+     addusdens    :      0.29s CPU      0.08s WALL (       7 calls)
 
      Called by *egterg:
-     h_psi        :      0.28s CPU      0.29s WALL (      25 calls)
+     h_psi        :      0.29s CPU      0.28s WALL (      25 calls)
      s_psi        :      0.01s CPU      0.01s WALL (      25 calls)
      g_psi        :      0.00s CPU      0.00s WALL (      17 calls)
      rdiaghg      :      0.00s CPU      0.00s WALL (      24 calls)
 
      Called by h_psi:
-     h_psi:pot    :      0.28s CPU      0.28s WALL (      25 calls)
+     h_psi:pot    :      0.29s CPU      0.28s WALL (      25 calls)
      h_psi:calbec :      0.01s CPU      0.01s WALL (      25 calls)
-     vloc_psi     :      0.26s CPU      0.26s WALL (      25 calls)
+     vloc_psi     :      0.27s CPU      0.26s WALL (      25 calls)
      add_vuspsi   :      0.01s CPU      0.01s WALL (      25 calls)
 
      General routines
-     calbec       :      0.02s CPU      0.02s WALL (      32 calls)
-     fft          :      0.25s CPU      0.25s WALL (     103 calls)
-     fftw         :      0.28s CPU      0.28s WALL (     200 calls)
+     calbec       :      0.03s CPU      0.02s WALL (      32 calls)
+     fft          :      0.30s CPU      0.22s WALL (     103 calls)
+     fftw         :      0.37s CPU      0.28s WALL (     200 calls)
      davcio       :      0.00s CPU      0.00s WALL (       1 calls)
 
 
-     PWSCF        :     2.70s CPU         2.75s WALL
+     PWSCF        :     3.15s CPU         1.91s WALL
 
 
-   This run was terminated on:  20:19:37   5Feb2017            
+   This run was terminated on:  23:43: 1   2Mar2017            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

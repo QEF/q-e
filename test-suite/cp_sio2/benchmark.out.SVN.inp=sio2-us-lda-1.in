@@ -1,5 +1,5 @@
 
-     Program CP v.6.0 starts on  5Feb2017 at 19:58:16 
+     Program CP v.6.1 (svn rev. 13369) starts on  2Mar2017 at 23:38:42 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -8,7 +8,7 @@
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
-     Serial multi-threaded version, running on    1 processor cores
+     Serial multi-threaded version, running on    4 processor cores
 
    Dumping input parameters
 
@@ -25,12 +25,12 @@
    ----------------------------------
 
    Reading pseudopotential for specie #  1 from file :
-   /scratch/fs395/QE/espresso/test-suite/..//pseudo/O.pz-rrkjus.UPF
+   /home/fs395/scratch/QE/espresso/test-suite/..//pseudo/O.pz-rrkjus.UPF
    file type is UPF v.1
                file O.pz-rrkjus.UPF: wavefunction(s)  2S renormalized
 
    Reading pseudopotential for specie #  2 from file :
-   /scratch/fs395/QE/espresso/test-suite/..//pseudo/Si.pz-vbc.UPF
+   /home/fs395/scratch/QE/espresso/test-suite/..//pseudo/Si.pz-vbc.UPF
    file type is UPF v.1
 
 
@@ -279,25 +279,25 @@
    in g-space =     96.000000   in r-space =    96.000000
 
   nfi     ekinc              temph  tempp     etot                 enthal               econs                econt              vnhh    xnhh0   vnhp    xnhp0
-      1    8.193012436558234    0.0    0.00     -20.900041955294     -20.900041955294     -20.900041955294     -12.707029518736   0.0000   0.0000   0.0000   0.0000
-      2   19.473752507313126    0.0    0.00     -43.993294672154     -43.993294672154     -43.993294672154     -24.519542164841   0.0000   0.0000   0.0000   0.0000
-      3   28.541511850153032    0.0    0.00     -73.118034541738     -73.118034541738     -73.118034541738     -44.576522691585   0.0000   0.0000   0.0000   0.0000
-      4   32.531686946068916    0.0    0.00    -102.215355817244    -102.215355817244    -102.215355817244     -69.683668871175   0.0000   0.0000   0.0000   0.0000
-      5   31.489033605436475    0.0    0.00    -127.114776653473    -127.114776653473    -127.114776653473     -95.625743048037   0.0000   0.0000   0.0000   0.0000
+      1    8.193012436558234    0.0    0.00     -20.900041955293     -20.900041955293     -20.900041955293     -12.707029518735   0.0000   0.0000   0.0000   0.0000
+      2   19.473752507313129    0.0    0.00     -43.993294672154     -43.993294672154     -43.993294672154     -24.519542164840   0.0000   0.0000   0.0000   0.0000
+      3   28.541511850153036    0.0    0.00     -73.118034541738     -73.118034541738     -73.118034541738     -44.576522691585   0.0000   0.0000   0.0000   0.0000
+      4   32.531686946068909    0.0    0.00    -102.215355817244    -102.215355817244    -102.215355817244     -69.683668871175   0.0000   0.0000   0.0000   0.0000
+      5   31.489033605436472    0.0    0.00    -127.114776653473    -127.114776653473    -127.114776653473     -95.625743048037   0.0000   0.0000   0.0000   0.0000
       6   27.130853515129502    0.0    0.00    -146.218135012818    -146.218135012818    -146.218135012818    -119.087281497689   0.0000   0.0000   0.0000   0.0000
       7   21.542744785881069    0.0    0.00    -159.931227697718    -159.931227697718    -159.931227697718    -138.388482911837   0.0000   0.0000   0.0000   0.0000
-      8   16.255471480079969    0.0    0.00    -169.546099270533    -169.546099270533    -169.546099270533    -153.290627790453   0.0000   0.0000   0.0000   0.0000
+      8   16.255471480079965    0.0    0.00    -169.546099270533    -169.546099270533    -169.546099270533    -153.290627790453   0.0000   0.0000   0.0000   0.0000
       9   11.995945636556087    0.0    0.00    -176.397091147817    -176.397091147817    -176.397091147817    -164.401145511261   0.0000   0.0000   0.0000   0.0000
-     10    8.882580159767441    0.0    0.00    -181.496771151164    -181.496771151164    -181.496771151164    -172.614190991396   0.0000   0.0000   0.0000   0.0000
+     10    8.882580159767443    0.0    0.00    -181.496771151164    -181.496771151164    -181.496771151164    -172.614190991396   0.0000   0.0000   0.0000   0.0000
      11    6.726961381592686    0.0    0.00    -185.494784451864    -185.494784451864    -185.494784451864    -178.767823070272   0.0000   0.0000   0.0000   0.0000
      12    5.258574141907735    0.0    0.00    -188.765526294890    -188.765526294890    -188.765526294890    -183.506952152983   0.0000   0.0000   0.0000   0.0000
-     13    4.239192225461254    0.0    0.00    -191.512164804806    -191.512164804806    -191.512164804806    -187.272972579345   0.0000   0.0000   0.0000   0.0000
-     14    3.498757127345368    0.0    0.00    -193.846081274242    -193.846081274242    -193.846081274242    -190.347324146897   0.0000   0.0000   0.0000   0.0000
-     15    2.931416371299499    0.0    0.00    -195.836207179758    -195.836207179758    -195.836207179758    -192.904790808459   0.0000   0.0000   0.0000   0.0000
-     16    2.477745837915712    0.0    0.00    -197.534682283578    -197.534682283578    -197.534682283578    -195.056936445662   0.0000   0.0000   0.0000   0.0000
-     17    2.106433474669168    0.0    0.00    -198.987288460643    -198.987288460643    -198.987288460643    -196.880854985974   0.0000   0.0000   0.0000   0.0000
-     18    1.800545599648065    0.0    0.00    -200.235820553559    -200.235820553559    -200.235820553559    -198.435274953911   0.0000   0.0000   0.0000   0.0000
-     19    1.549188114352228    0.0    0.00    -201.317318889740    -201.317318889740    -201.317318889740    -199.768130775387   0.0000   0.0000   0.0000   0.0000
+     13    4.239192225461252    0.0    0.00    -191.512164804806    -191.512164804806    -191.512164804806    -187.272972579345   0.0000   0.0000   0.0000   0.0000
+     14    3.498757127345367    0.0    0.00    -193.846081274240    -193.846081274240    -193.846081274240    -190.347324146895   0.0000   0.0000   0.0000   0.0000
+     15    2.931416371299498    0.0    0.00    -195.836207179759    -195.836207179759    -195.836207179759    -192.904790808459   0.0000   0.0000   0.0000   0.0000
+     16    2.477745837915712    0.0    0.00    -197.534682283579    -197.534682283579    -197.534682283579    -195.056936445663   0.0000   0.0000   0.0000   0.0000
+     17    2.106433474669167    0.0    0.00    -198.987288460643    -198.987288460643    -198.987288460643    -196.880854985974   0.0000   0.0000   0.0000   0.0000
+     18    1.800545599648065    0.0    0.00    -200.235820553558    -200.235820553558    -200.235820553558    -198.435274953910   0.0000   0.0000   0.0000   0.0000
+     19    1.549188114352228    0.0    0.00    -201.317318889739    -201.317318889739    -201.317318889739    -199.768130775387   0.0000   0.0000   0.0000   0.0000
 
  * Physical Quantities at step:    20
 
@@ -322,7 +322,7 @@
    -5.73   -5.49   -5.33   -5.13   -5.04   -4.59   -4.28   -3.96   -3.81   -2.42
    -2.20   -1.14    0.96    3.91    6.90    7.50    7.94    9.29
 
-   Allocated memory (kb) =     21180
+   Allocated memory (kb) =     22144
 
    CELL_PARAMETERS
     9.28990000    0.00000000    0.00000000
@@ -383,10 +383,10 @@
    Species  Temp (K)   Mean Square Displacement (a.u.)
         1   0.00E+00     0.0000E+00
         2   0.00E+00     0.0000E+00
-     20    1.343468244404253    0.0    0.00    -202.262930473844    -202.262930473844    -202.262930473844    -200.919462229440   0.0000   0.0000   0.0000   0.0000
+     20    1.343468244404254    0.0    0.00    -202.262930473845    -202.262930473845    -202.262930473845    -200.919462229441   0.0000   0.0000   0.0000   0.0000
 
-   writing restart file: /scratch/fs395/QE/espresso/test-suite/..//tempdir/sio2_91.save
-   restart file written in    0.113 sec.
+   writing restart file: /home/fs395/scratch/QE/espresso/test-suite/..//tempdir/sio2_91.save
+   restart file written in    0.079 sec.
 
 
 
@@ -405,58 +405,58 @@
 
 
      Called by MAIN_LOOP:
-     initialize   :      2.50s CPU      2.52s WALL (       1 calls)
-     main_loop    :      4.71s CPU      4.73s WALL (      20 calls)
-     cpr_total    :      4.73s CPU      4.87s WALL (       1 calls)
+     initialize   :      2.63s CPU      0.73s WALL (       1 calls)
+     main_loop    :      9.85s CPU      3.25s WALL (      20 calls)
+     cpr_total    :      9.89s CPU      3.40s WALL (       1 calls)
 
      Called by INIT_RUN:
 
      Called by CPR:
-     cpr_md       :      4.73s CPU      4.87s WALL (      20 calls)
-     move_electro :      3.69s CPU      3.70s WALL (      20 calls)
+     cpr_md       :      9.89s CPU      3.40s WALL (      20 calls)
+     move_electro :      7.15s CPU      2.28s WALL (      20 calls)
 
      Called by move_electrons:
-     rhoofr       :      0.65s CPU      0.66s WALL (      21 calls)
-     vofrho       :      0.42s CPU      0.42s WALL (      21 calls)
-     dforce       :      0.80s CPU      0.80s WALL (     504 calls)
-     calphi       :      0.13s CPU      0.13s WALL (      21 calls)
-     newd         :      1.85s CPU      1.85s WALL (      21 calls)
+     rhoofr       :      2.01s CPU      0.78s WALL (      21 calls)
+     vofrho       :      0.68s CPU      0.21s WALL (      21 calls)
+     dforce       :      2.83s CPU      0.71s WALL (     504 calls)
+     calphi       :      0.19s CPU      0.11s WALL (      21 calls)
+     newd         :      1.76s CPU      0.57s WALL (      21 calls)
 
      Called by ortho:
-     ortho_iter   :      0.08s CPU      0.08s WALL (      21 calls)
+     ortho_iter   :      0.30s CPU      0.08s WALL (      21 calls)
      rsg          :      0.01s CPU      0.01s WALL (      21 calls)
-     rhoset       :      0.12s CPU      0.12s WALL (      21 calls)
-     sigset       :      0.12s CPU      0.12s WALL (      21 calls)
-     tauset       :      0.12s CPU      0.12s WALL (      21 calls)
-     ortho        :      0.94s CPU      0.94s WALL (      21 calls)
-     updatc       :      0.07s CPU      0.07s WALL (      21 calls)
+     rhoset       :      0.12s CPU      0.11s WALL (      21 calls)
+     sigset       :      0.11s CPU      0.11s WALL (      21 calls)
+     tauset       :      0.11s CPU      0.11s WALL (      21 calls)
+     ortho        :      2.41s CPU      0.86s WALL (      21 calls)
+     updatc       :      0.14s CPU      0.06s WALL (      21 calls)
 
      Small boxes:
-     rhov         :      0.24s CPU      0.24s WALL (      21 calls)
-     fftb         :      1.22s CPU      1.22s WALL (    4662 calls)
+     rhov         :      1.36s CPU      0.40s WALL (      21 calls)
+     fftb         :      1.14s CPU      0.37s WALL (    1554 calls)
 
      Low-level routines:
-     prefor       :      0.01s CPU      0.01s WALL (      21 calls)
-     nlsm1        :      0.55s CPU      0.55s WALL (      64 calls)
-     fft          :      0.22s CPU      0.22s WALL (      84 calls)
-     ffts         :      0.04s CPU      0.04s WALL (      42 calls)
-     fftw         :      0.82s CPU      0.83s WALL (    1512 calls)
-     betagx       :      1.32s CPU      1.32s WALL (       1 calls)
-     qradx        :      0.54s CPU      0.54s WALL (       1 calls)
-     gram         :      0.02s CPU      0.02s WALL (       1 calls)
-     nlinit       :      2.21s CPU      2.22s WALL (       1 calls)
-     init_dim     :      0.01s CPU      0.01s WALL (       1 calls)
-     newnlinit    :      0.00s CPU      0.00s WALL (       1 calls)
-     from_scratch :      0.27s CPU      0.28s WALL (       1 calls)
+     prefor       :      0.03s CPU      0.01s WALL (      21 calls)
+     nlsm1        :      2.03s CPU      0.51s WALL (      64 calls)
+     fft          :      0.56s CPU      0.22s WALL (      84 calls)
+     ffts         :      0.14s CPU      0.03s WALL (      42 calls)
+     fftw         :      2.32s CPU      0.74s WALL (    1512 calls)
+     betagx       :      1.21s CPU      0.31s WALL (       1 calls)
+     qradx        :      0.50s CPU      0.13s WALL (       1 calls)
+     gram         :      0.02s CPU      0.01s WALL (       1 calls)
+     nlinit       :      2.03s CPU      0.52s WALL (       1 calls)
+     init_dim     :      0.02s CPU      0.01s WALL (       1 calls)
+     newnlinit    :      0.01s CPU      0.00s WALL (       1 calls)
+     from_scratch :      0.58s CPU      0.19s WALL (       1 calls)
      strucf       :      0.00s CPU      0.00s WALL (       1 calls)
-     calbec       :      0.07s CPU      0.07s WALL (      22 calls)
+     calbec       :      0.27s CPU      0.07s WALL (      22 calls)
 
 
 
-     CP           :     7.28s CPU         7.46s WALL
+     CP           :    12.56s CPU         4.18s WALL
 
 
-   This run was terminated on:  19:58:23   5Feb2017            
+   This run was terminated on:  23:38:46   2Mar2017            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

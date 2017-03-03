@@ -1,5 +1,5 @@
 
-     Program CP v.6.0 starts on  5Feb2017 at 19:49:38 
+     Program CP v.6.1 (svn rev. 13369) starts on  2Mar2017 at 23:31:54 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -8,7 +8,7 @@
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
-     Serial multi-threaded version, running on    1 processor cores
+     Serial multi-threaded version, running on    4 processor cores
 
    Dumping input parameters
 
@@ -21,11 +21,11 @@
    ----------------------------------
 
    Reading pseudopotential for specie #  1 from file :
-   /scratch/fs395/QE/espresso/test-suite/..//pseudo/O.blyp-mt.UPF
+   /home/fs395/scratch/QE/espresso/test-suite/..//pseudo/O.blyp-mt.UPF
    file type is UPF v.1
 
    Reading pseudopotential for specie #  2 from file :
-   /scratch/fs395/QE/espresso/test-suite/..//pseudo/H.blyp-vbc.UPF
+   /home/fs395/scratch/QE/espresso/test-suite/..//pseudo/H.blyp-vbc.UPF
    file type is UPF v.1
 
 
@@ -202,8 +202,8 @@
    ECONT  [HARTREE A.U.] - Constant of motion for the CP lagrangian
 
 
-   reading restart file: /scratch/fs395/QE/espresso/test-suite/..//tempdir/h2o_51.save
-   restart file read in    0.024 sec.
+   reading restart file: /home/fs395/scratch/QE/espresso/test-suite/..//tempdir/h2o_51.save
+   restart file read in    0.022 sec.
 
 
 
@@ -228,14 +228,14 @@
     105    0.003522702959911    0.0    0.00     -17.175035959643     -17.175035959643     -17.175035959643     -17.171513256683   0.0000   0.0000   0.0000   0.0000
     106    0.002500690977760    0.0    0.00     -17.176385793736     -17.176385793736     -17.176385793736     -17.173885102758   0.0000   0.0000   0.0000   0.0000
     107    0.001514276135447    0.0    0.00     -17.176948038809     -17.176948038809     -17.176948038809     -17.175433762673   0.0000   0.0000   0.0000   0.0000
-    108    0.000788879964314    0.0    0.00     -17.177094850171     -17.177094850171     -17.177094850171     -17.176305970206   0.0000   0.0000   0.0000   0.0000
+    108    0.000788879964314    0.0    0.00     -17.177094850171     -17.177094850171     -17.177094850171     -17.176305970207   0.0000   0.0000   0.0000   0.0000
     109    0.000359028524672    0.0    0.00     -17.177093321149     -17.177093321149     -17.177093321149     -17.176734292624   0.0000   0.0000   0.0000   0.0000
     110    0.000156127661486    0.0    0.00     -17.177082177335     -17.177082177335     -17.177082177335     -17.176926049674   0.0000   0.0000   0.0000   0.0000
     111    0.000086298874324    0.0    0.00     -17.177105545853     -17.177105545853     -17.177105545853     -17.177019246978   0.0000   0.0000   0.0000   0.0000
     112    0.000074071477838    0.0    0.00     -17.177158424548     -17.177158424548     -17.177158424548     -17.177084353070   0.0000   0.0000   0.0000   0.0000
     113    0.000075161171042    0.0    0.00     -17.177221124142     -17.177221124142     -17.177221124142     -17.177145962971   0.0000   0.0000   0.0000   0.0000
     114    0.000071474464245    0.0    0.00     -17.177277340679     -17.177277340679     -17.177277340679     -17.177205866215   0.0000   0.0000   0.0000   0.0000
-    115    0.000060427151979    0.0    0.00     -17.177319303542     -17.177319303542     -17.177319303542     -17.177258876390   0.0000   0.0000   0.0000   0.0000
+    115    0.000060427151979    0.0    0.00     -17.177319303541     -17.177319303541     -17.177319303541     -17.177258876389   0.0000   0.0000   0.0000   0.0000
     116    0.000045621253262    0.0    0.00     -17.177346532547     -17.177346532547     -17.177346532547     -17.177300911294   0.0000   0.0000   0.0000   0.0000
     117    0.000031244723087    0.0    0.00     -17.177362256517     -17.177362256517     -17.177362256517     -17.177331011794   0.0000   0.0000   0.0000   0.0000
     118    0.000019830118149    0.0    0.00     -17.177370690056     -17.177370690056     -17.177370690056     -17.177350859938   0.0000   0.0000   0.0000   0.0000
@@ -244,15 +244,15 @@
     121    0.000004974452890    0.0    0.00     -17.177380606231     -17.177380606231     -17.177380606231     -17.177375631778   0.0000   0.0000   0.0000   0.0000
     122    0.000003743771587    0.0    0.00     -17.177382864854     -17.177382864854     -17.177382864854     -17.177379121083   0.0000   0.0000   0.0000   0.0000
     123    0.000003078073865    0.0    0.00     -17.177384951036     -17.177384951036     -17.177384951036     -17.177381872962   0.0000   0.0000   0.0000   0.0000
-    124    0.000002604100587    0.0    0.00     -17.177386776356     -17.177386776356     -17.177386776356     -17.177384172256   0.0000   0.0000   0.0000   0.0000
+    124    0.000002604100587    0.0    0.00     -17.177386776357     -17.177386776357     -17.177386776357     -17.177384172256   0.0000   0.0000   0.0000   0.0000
     125    0.000002169582497    0.0    0.00     -17.177388259180     -17.177388259180     -17.177388259180     -17.177386089597   0.0000   0.0000   0.0000   0.0000
     126    0.000001747950199    0.0    0.00     -17.177389416669     -17.177389416669     -17.177389416669     -17.177387668719   0.0000   0.0000   0.0000   0.0000
     127    0.000001361492145    0.0    0.00     -17.177390278687     -17.177390278687     -17.177390278687     -17.177388917195   0.0000   0.0000   0.0000   0.0000
-    128    0.000001035934233    0.0    0.00     -17.177390920783     -17.177390920783     -17.177390920783     -17.177389884848   0.0000   0.0000   0.0000   0.0000
+    128    0.000001035934233    0.0    0.00     -17.177390920782     -17.177390920782     -17.177390920782     -17.177389884848   0.0000   0.0000   0.0000   0.0000
     129    0.000000782397114    0.0    0.00     -17.177391390723     -17.177391390723     -17.177391390723     -17.177390608326   0.0000   0.0000   0.0000   0.0000
 
    MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
-   MAIN:   0.782397D-06  0.1D-05  0.469940D-06  0.1D-03  0.000000D+00  0.1D+11
+   MAIN:   0.782397D-06  0.1D-05  0.469941D-06  0.1D-03  0.000000D+00  0.1D+11
    MAIN: convergence achieved for system relaxation
 
  * Physical Quantities at step:   130
@@ -276,7 +276,7 @@
 
   -24.96  -13.03   -8.87   -6.95
 
-   Allocated memory (kb) =     79580
+   Allocated memory (kb) =     79992
 
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -322,8 +322,8 @@
    MAIN:   0.596452D-06  0.1D-05  0.369715D-06  0.1D-03  0.000000D+00  0.1D+11
    MAIN: convergence achieved for system relaxation
 
-   writing restart file: /scratch/fs395/QE/espresso/test-suite/..//tempdir/h2o_51.save
-   restart file written in    0.065 sec.
+   writing restart file: /home/fs395/scratch/QE/espresso/test-suite/..//tempdir/h2o_51.save
+   restart file written in    0.055 sec.
 
 
 
@@ -342,58 +342,58 @@
 
 
      Called by MAIN_LOOP:
-     initialize   :      0.51s CPU      0.53s WALL (       1 calls)
-     main_loop    :     10.10s CPU     10.33s WALL (      30 calls)
-     cpr_total    :     10.14s CPU     10.42s WALL (       1 calls)
+     initialize   :      0.47s CPU      0.20s WALL (       1 calls)
+     main_loop    :     12.77s CPU      7.21s WALL (      30 calls)
+     cpr_total    :     12.79s CPU      7.30s WALL (       1 calls)
 
      Called by INIT_RUN:
-     init_readfil :      0.05s CPU      0.06s WALL (       1 calls)
+     init_readfil :      0.05s CPU      0.05s WALL (       1 calls)
 
      Called by CPR:
-     cpr_md       :     10.14s CPU     10.42s WALL (      30 calls)
-     move_electro :     10.02s CPU     10.20s WALL (      30 calls)
+     cpr_md       :     12.79s CPU      7.30s WALL (      30 calls)
+     move_electro :     12.44s CPU      7.08s WALL (      30 calls)
 
      Called by move_electrons:
-     rhoofr       :      1.30s CPU      1.34s WALL (      30 calls)
-     vofrho       :      7.91s CPU      7.98s WALL (      30 calls)
-     dforce       :      0.77s CPU      0.83s WALL (      60 calls)
-     calphi       :      0.01s CPU      0.01s WALL (      30 calls)
+     rhoofr       :      1.91s CPU      1.20s WALL (      30 calls)
+     vofrho       :      9.12s CPU      5.00s WALL (      30 calls)
+     dforce       :      1.26s CPU      0.85s WALL (      60 calls)
+     calphi       :      0.02s CPU      0.00s WALL (      30 calls)
      nlfl         :      0.00s CPU      0.00s WALL (      30 calls)
 
      Called by ortho:
      ortho_iter   :      0.00s CPU      0.00s WALL (      30 calls)
      rsg          :      0.00s CPU      0.00s WALL (      30 calls)
-     rhoset       :      0.01s CPU      0.01s WALL (      30 calls)
-     sigset       :      0.01s CPU      0.01s WALL (      30 calls)
-     tauset       :      0.01s CPU      0.01s WALL (      30 calls)
-     ortho        :      0.03s CPU      0.03s WALL (      30 calls)
-     updatc       :      0.01s CPU      0.01s WALL (      30 calls)
+     rhoset       :      0.04s CPU      0.01s WALL (      30 calls)
+     sigset       :      0.04s CPU      0.01s WALL (      30 calls)
+     tauset       :      0.04s CPU      0.01s WALL (      30 calls)
+     ortho        :      0.13s CPU      0.03s WALL (      30 calls)
+     updatc       :      0.03s CPU      0.01s WALL (      30 calls)
 
      Small boxes:
 
      Low-level routines:
-     prefor       :      0.00s CPU      0.00s WALL (      31 calls)
-     nlfq         :      0.01s CPU      0.01s WALL (      30 calls)
-     nlsm1        :      0.00s CPU      0.00s WALL (      31 calls)
-     nlsm2        :      0.01s CPU      0.01s WALL (      30 calls)
-     fft          :      2.33s CPU      2.33s WALL (     240 calls)
-     ffts         :      0.59s CPU      0.59s WALL (      60 calls)
-     fftw         :      0.97s CPU      0.98s WALL (     180 calls)
-     betagx       :      0.17s CPU      0.17s WALL (       1 calls)
+     prefor       :      0.01s CPU      0.00s WALL (      31 calls)
+     nlfq         :      0.05s CPU      0.01s WALL (      30 calls)
+     nlsm1        :      0.01s CPU      0.00s WALL (      31 calls)
+     nlsm2        :      0.05s CPU      0.01s WALL (      30 calls)
+     fft          :      2.78s CPU      2.14s WALL (     240 calls)
+     ffts         :      0.80s CPU      0.54s WALL (      60 calls)
+     fftw         :      1.32s CPU      1.02s WALL (     180 calls)
+     betagx       :      0.15s CPU      0.04s WALL (       1 calls)
      qradx        :      0.00s CPU      0.00s WALL (       1 calls)
-     nlinit       :      0.41s CPU      0.41s WALL (       1 calls)
-     init_dim     :      0.04s CPU      0.05s WALL (       1 calls)
-     newnlinit    :      0.00s CPU      0.00s WALL (       1 calls)
+     nlinit       :      0.38s CPU      0.10s WALL (       1 calls)
+     init_dim     :      0.04s CPU      0.04s WALL (       1 calls)
+     newnlinit    :      0.01s CPU      0.00s WALL (       1 calls)
      from_restart :      0.03s CPU      0.03s WALL (       1 calls)
      strucf       :      0.00s CPU      0.00s WALL (       1 calls)
-     calbec       :      0.00s CPU      0.00s WALL (      31 calls)
+     calbec       :      0.01s CPU      0.00s WALL (      31 calls)
 
 
 
-     CP           :    10.66s CPU        10.97s WALL
+     CP           :    13.27s CPU         7.52s WALL
 
 
-   This run was terminated on:  19:49:49   5Feb2017            
+   This run was terminated on:  23:32: 2   2Mar2017            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
