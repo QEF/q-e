@@ -15,10 +15,11 @@ subroutine ylmr2 (lmax2, ng, g, gg, ylm)
   !     Recipes but avoiding the calculation of factorials that generate 
   !     overflow for lmax > 11
   !
-  USE kinds, ONLY : DP
-  USE constants, ONLY : pi, fpi
   implicit none
   !
+  INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
+  REAL(DP), PARAMETER :: pi     = 3.14159265358979323846_DP
+  REAL(DP), PARAMETER :: fpi    = 4.0_DP * pi
   integer, intent(in) :: lmax2, ng
   real(DP), intent(in) :: g (3, ng), gg (ng)
   !
@@ -30,7 +31,8 @@ subroutine ylmr2 (lmax2, ng, g, gg, ylm)
   ! local variables
   !
   real(DP), parameter :: eps = 1.0d-9
-  real(DP), allocatable :: cost (:), sent(:), phi (:), Q(:,:,:)
+  real(DP), allocatable ::  Q(:,:,:)
+  real(DP) :: cost , sent, phi 
   real(DP) :: c, gmod
   integer :: lmax, ig, l, m, lm
   !
@@ -49,101 +51,87 @@ subroutine ylmr2 (lmax2, ng, g, gg, ylm)
   !
   !  theta and phi are polar angles, cost = cos(theta)
   !
-  allocate(cost(ng), sent(ng), phi(ng), Q(ng,0:lmax,0:lmax) )
+  allocate( Q(ng,0:lmax,0:lmax) )
   !
-!$omp parallel default(shared), private(ig,gmod,lm,l,c,m)
-
-!$omp do
-  do ig = 1, ng
+  
+!$omp parallel do  default(shared), private(ig,gmod,lm,cost,sent,phi,l,c,m)
+   do ig=1,ng
      gmod = sqrt (gg (ig) )
      if (gmod < eps) then
-        cost(ig) = 0.d0
+        cost = 0.d0
      else
-        cost(ig) = g(3,ig)/gmod
+        cost = g(3,ig)/gmod
      endif
      !
      !  beware the arc tan, it is defined modulo pi
      !
      if (g(1,ig) > eps) then
-        phi (ig) = atan( g(2,ig)/g(1,ig) )
+        phi  = atan( g(2,ig)/g(1,ig) )
      else if (g(1,ig) < -eps) then
-        phi (ig) = atan( g(2,ig)/g(1,ig) ) + pi
+        phi  = atan( g(2,ig)/g(1,ig) ) + pi
      else
-        phi (ig) = sign( pi/2.d0,g(2,ig) )
+        phi  = sign( pi/2.d0,g(2,ig) )
      end if
-     sent(ig) = sqrt(max(0d0,1.d0-cost(ig)**2))
-  enddo
+     sent = sqrt(max(0d0,1.d0-cost*cost))
   !
   !  Q(:,l,m) are defined as sqrt ((l-m)!/(l+m)!) * P(:,l,m) where
   !  P(:,l,m) are the Legendre Polynomials (0 <= m <= l)
   !
-  lm = 0
-  do l = 0, lmax
+   
+  Q (ig,0,0) = 1.d0
+  Q (ig,1,0) = cost
+  Q (ig,1,1) =-sent/sqrt(2.d0)
+  c = sqrt (3.d0 / fpi)
+  ylm(ig, 1) = sqrt (1.d0 / fpi)* Q(ig,0,0)
+  ylm(ig, 2) = c* Q(ig,1,0)
+  ylm(ig, 3) = c*sqrt (2.d0)* Q(ig,1,1) * cos (phi)
+  ylm(ig, 4) = c*sqrt (2.d0)* Q(ig,1,1) * sin (phi)
+  lm = 4
+  do l = 2, lmax
      c = sqrt (DBLE(2*l+1) / fpi)
-     if ( l == 0 ) then
-!$omp do
-        do ig = 1, ng
-           Q (ig,0,0) = 1.d0
-        end do
-     else if ( l == 1 ) then
-!$omp do
-        do ig = 1, ng
-           Q (ig,1,0) = cost(ig)
-           Q (ig,1,1) =-sent(ig)/sqrt(2.d0)
-        end do
-     else
+     !if ( l == 0 ) then
+     !      Q (0,0) = 1.d0
+     !else if ( l == 1 ) then
+     !      Q (1,0) = cost
+     !      Q (1,1) =-sent/sqrt(2.d0)
+     !else
         !
         !  recursion on l for Q(:,l,m)
         !
         do m = 0, l - 2
-!$omp do
-           do ig = 1, ng
-              Q(ig,l,m) = cost(ig)*(2*l-1)/sqrt(DBLE(l*l-m*m))*Q(ig,l-1,m) &
+           Q(ig,l,m) = cost*(2*l-1)/sqrt(DBLE(l*l-m*m))*Q(ig,l-1,m) &
                        - sqrt(DBLE((l-1)*(l-1)-m*m))/sqrt(DBLE(l*l-m*m))*Q(ig,l-2,m)
-           end do
         end do
-!$omp do
-        do ig = 1, ng
-           Q(ig,l,l-1) = cost(ig) * sqrt(DBLE(2*l-1)) * Q(ig,l-1,l-1)
-        end do
-!$omp do
-        do ig = 1, ng
-           Q(ig,l,l)   = - sqrt(DBLE(2*l-1))/sqrt(DBLE(2*l))*sent(ig)*Q(ig,l-1,l-1) 
-        end do
-     end if
+           Q(ig,l,l-1) = cost * sqrt(DBLE(2*l-1)) * Q(ig,l-1,l-1)
+           Q(ig,l,l)   = - sqrt(DBLE(2*l-1))/sqrt(DBLE(2*l))*sent*Q(ig,l-1,l-1) 
+     !end if
      !
      ! Y_lm, m = 0
      !
      lm = lm + 1
-!$omp do
-     do ig = 1, ng
         ylm(ig, lm) = c * Q(ig,l,0)
-     end do
      !
      do m = 1, l
         !
         ! Y_lm, m > 0
         !
-        lm = lm + 1
-!$omp do
-        do ig = 1, ng
-           ylm(ig, lm) = c * sqrt(2.d0) * Q(ig,l,m) * cos (m*phi(ig))
-        end do
+        !lm = lm + 1
+        ! ylm(ig, lm) = c * sqrt(2.d0) * Q(ig,l,m) * cos (m*phi)
+         ylm(ig, lm+2*m-1) = c * sqrt(2.d0) * Q(ig,l,m) * cos (m*phi)
         !
         ! Y_lm, m < 0
         !
-        lm = lm + 1
-!$omp do
-        do ig = 1, ng
-           ylm(ig, lm) = c * sqrt(2.d0) * Q(ig,l,m) * sin (m*phi(ig))
-        end do
+        !lm = lm + 1
+        !ylm(ig, lm) = c * sqrt(2.d0) * Q(ig,l,m) * sin (m*phi)
+        ylm(ig, lm+2*m) = c * sqrt(2.d0) * Q(ig,l,m) * sin (m*phi)
      end do
+     lm=lm+2*l
+     !if (ig==1) print *,lm,l
   end do
+  enddo
+!$omp end parallel do
   !
-!$omp end parallel
-  !
-  deallocate(cost, sent, phi, Q)
+  deallocate( Q)
   !
   return
 end subroutine ylmr2
-
