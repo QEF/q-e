@@ -77,7 +77,8 @@ MODULE pw_restart_new
                                        is_hubbard
       USE spin_orb,             ONLY : lspinorb, domag
       USE symm_base,            ONLY : nrot, nsym, invsym, s, ft, irt, &
-                                       t_rev, sname, time_reversal, no_t_rev
+                                       t_rev, sname, time_reversal, no_t_rev,&
+                                       spacegroup
       USE lsda_mod,             ONLY : nspin, isk, lsda, starting_magnetization, magtot, absmag
       USE noncollin_module,     ONLY : angle1, angle2, i_cons, mcons, bfield, magtot_nc, &
                                        lambda
@@ -107,7 +108,7 @@ MODULE pw_restart_new
       USE london_module,        ONLY : scal6, lon_rcut, in_c6
       USE xdm_module,           ONLY : xdm_a1=>a1i, xdm_a2=>a2i
       USE tsvdw_module,         ONLY : vdw_isolated, vdw_econv_thr
-      USE input_parameters,     ONLY : space_group, verbosity, calculation, ion_dynamics, starting_ns_eigenvalue, &
+      USE input_parameters,     ONLY : verbosity, calculation, ion_dynamics, starting_ns_eigenvalue, &
                                        vdw_corr, london, input_parameters_occupations => occupations
       USE bp,                   ONLY : lelfield, lberry, bp_mod_el_pol => el_pol, bp_mod_ion_pol => ion_pol
       !
@@ -262,7 +263,7 @@ MODULE pw_restart_new
                END DO symmetries_loop
             END IF
          END IF
-         CALL qexsd_init_symmetries(output%symmetries, nsym, nrot, space_group, &
+         CALL qexsd_init_symmetries(output%symmetries, nsym, nrot, spacegroup,&
               s, ft, sname, t_rev, nat, irt,symop_2_class(1:nrot), verbosity, &
               noncolin)
          !
