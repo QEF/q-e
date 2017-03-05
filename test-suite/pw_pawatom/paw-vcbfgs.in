@@ -3,7 +3,6 @@
  /
  &system
     ibrav=  0,
-        celldm(1) = 1.889725989 !Ang to a.u. conv.
     nat=  2,
     ntyp= 1,
     ecutwfc=20
@@ -22,7 +21,7 @@
  &cell
     cell_dynamics='bfgs'
  /
-CELL_PARAMETERS {alat}
+CELL_PARAMETERS {angstrom}
    0.000000000   2.893335939   2.893335939
    2.893335939   0.000000000   2.893335939
    2.893335939   2.893335939   0.000000000
