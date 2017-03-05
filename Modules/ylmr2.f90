@@ -15,11 +15,11 @@ subroutine ylmr2 (lmax2, ng, g, gg, ylm)
   !     Recipes but avoiding the calculation of factorials that generate 
   !     overflow for lmax > 11
   !
-  implicit none
+  USE kinds, ONLY : DP
+  USE constants, ONLY : pi, fpi
   !
-  INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
-  REAL(DP), PARAMETER :: pi     = 3.14159265358979323846_DP
-  REAL(DP), PARAMETER :: fpi    = 4.0_DP * pi
+  IMPLICIT NONE
+  !
   integer, intent(in) :: lmax2, ng
   real(DP), intent(in) :: g (3, ng), gg (ng)
   !
