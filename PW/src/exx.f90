@@ -1178,7 +1178,7 @@ MODULE exx
                abs (ft_(2) - ftau(2) ) / nr2 > eps2 .or. &
                abs (ft_(3) - ftau(3) ) / nr3 > eps2 ) THEN
              CALL infomsg ('exx_set_symm',' EXX smooth grid is not compatible &
-                  & with fractional translation: change ecutfock',isym)
+                  & with fractional translation: change ecutfock')
           ENDIF
           DO k = 1, nr3
              DO j = 1, nr2
