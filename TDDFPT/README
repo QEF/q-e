@@ -54,6 +54,10 @@ using the Liouville-Lanczos approach to time-dependent density-functional pertur
 Authors: I. Timrov, N. Vast, R. Gebauer, and S. Baroni
 Source: Computer Physics Communications  Volume: 196  Article Number: 460 Published: 4 JUNE 2015
 
+Ab initio study of electron energy loss spectra of bulk bismuth up to 100 eV
+Authors: I. Timrov, M. Markov, T. Gorni, M. Raynaud, O. Motornyi, R. Gebauer, S. Baroni, and N. Vast
+Source: PHYSICAL REVIEW B 95, 094301 (2017)
+
 -------------------------------------------------------------------------------------------------------------
 
 This module uses subroutines from PW, Modules and LR_Modules along with 
