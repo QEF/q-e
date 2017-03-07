@@ -2921,7 +2921,7 @@ Possibly too few bands at point   27  -0.66667   0.66667   0.66667
      lambda(   3 )=       0.004056   gamma=       0.003554 meV   omega=     77.1674 meV
      lambda_tr(   3 )=      -0.005687   gamma_tr=      -0.004984 meV   omega=     77.1674 meV
      lambda(   4 )=       0.000198   gamma=       0.000238 meV   omega=     90.2559 meV
-     lambda_tr(   4 )=       0.000000   gamma_tr=       0.000001 meV   omega=     90.2559 meV
+     lambda_tr(   4 )=       0.000001   gamma_tr=       0.000001 meV   omega=     90.2559 meV
      lambda(   5 )=       0.000174   gamma=       0.000214 meV   omega=     91.3516 meV
      lambda_tr(   5 )=      -0.000108   gamma_tr=      -0.000133 meV   omega=     91.3516 meV
      lambda(   6 )=       0.000807   gamma=       0.001295 meV   omega=    104.4254 meV
