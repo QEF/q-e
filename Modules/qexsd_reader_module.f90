@@ -3219,35 +3219,35 @@ IF ( ierr /= 0) RETURN
 IF (.NOT. ispresent ) RETURN
 !
 CALL qexsd_get_convergence_info(iunit, obj%convergence_info, found )
-IF ( .NOT. found ) CALL  errore ("reading xml-output: convergence_info not found", 1)
+IF ( .NOT. found ) CALL  errore ("qexsd_get_output", "reading xml-output: convergence_info not found", 1)
 ! 
 CALL qexsd_get_algorithmic_info ( iunit, obj%algorithmic_info, found ) 
-IF ( .NOT. found ) CALL errore ("reading xml-output: algorithmic_info not found", 1)
+IF ( .NOT. found ) CALL errore ("qexsd_get_output", "reading xml-output: algorithmic_info not found", 1)
 ! 
 CALL qexsd_get_atomic_species( iunit, obj%atomic_species, found ) 
-IF ( .NOT. found ) CALL errore ( "reading xml-output: atomic_species not found", 1) 
+IF ( .NOT. found ) CALL errore ("qexsd_get_output", "reading xml-output: atomic_species not found", 1) 
 ! 
 CALL qexsd_get_atomic_structure ( iunit, obj%atomic_structure, found ) 
 IF (.NOT. found ) CALL errore ( "qexsd_get_output", "reading xml-output: atomic_species not found",&
                                  1 ) 
 CALL qexsd_get_symmetries( iunit, obj%symmetries, found ) 
-IF ( .NOT. found ) CALL errore ( "reading xml-output: symmetries not found",1 )
+IF ( .NOT. found ) CALL errore ("qexsd_get_output", "reading xml-output: symmetries not found",1 )
 ! 
 
 CALL qexsd_get_basis_set (iunit, obj%basis_set, found ) 
-IF ( .NOT. found ) CALL errore ( "reading xml-output: basis_set not found", 1) 
+IF ( .NOT. found ) CALL errore ( "qexsd_get_output", "reading xml-output: basis_set not found", 1) 
 ! 
 
 CALL qexsd_get_dft ( iunit, obj%dft, found ) 
-IF ( .NOT. found ) CALL errore ( "reading xml-output: dft not found", 1)
+IF ( .NOT. found ) CALL errore ( "qexsd_get_output", "reading xml-output: dft not found", 1)
 ! 
 
 CALL qexsd_get_magnetization ( iunit, obj%magnetization, found) 
-IF ( .NOT. found ) CALL errore ( "reading xml-output: magnetization not found", 1) 
+IF ( .NOT. found ) CALL errore ( "qexsd_get_output", "reading xml-output: magnetization not found", 1) 
 ! 
 
 CALL qexsd_get_total_energy ( iunit, obj%total_energy, found ) 
-IF ( .NOT. found ) CALL errore ( "reading xml-output: total_energy not found", 1)
+IF ( .NOT. found ) CALL errore ( "qexsd_get_output", "reading xml-output: total_energy not found", 1)
 ! 
 
 CALL qexsd_get_band_structure ( iunit, obj%band_structure, found ) 
