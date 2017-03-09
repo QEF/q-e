@@ -427,7 +427,7 @@ CONTAINS
     !
     !
     !------------------------------------------------------------------------
-    SUBROUTINE qexsd_init_atomic_structure(obj, nsp, atm, ityp, nat, tau, tau_units, &
+    SUBROUTINE qexsd_init_atomic_structure(obj, nsp, atm, ityp, nat, tau, &
                                            alat, a1, a2, a3, ibrav)
       !------------------------------------------------------------------------
       IMPLICIT NONE
@@ -436,8 +436,7 @@ CONTAINS
       INTEGER,          INTENT(IN) :: nsp, nat
       INTEGER,          INTENT(in) :: ityp(:)
       CHARACTER(LEN=*), INTENT(in) :: atm(:)
-      REAL(DP),         INTENT(IN) :: tau(3,*)
-      CHARACTER(LEN=*), INTENT(IN) :: tau_units
+      REAL(DP),         INTENT(IN) :: tau(3,*) ! cartesian atomic positions in alat units 
       REAL(DP),         INTENT(IN) :: alat
       REAL(DP),         INTENT(IN) :: a1(:), a2(:), a3(:)
       INTEGER,          INTENT(IN) :: ibrav
@@ -461,7 +460,7 @@ CONTAINS
       ALLOCATE(atom(nat))
       DO ia = 1, nat
           CALL qes_init_atom( atom(ia), "atom", name=trim(atm(ityp(ia))), &
-                             position="", position_ispresent=.FALSE., atom=tau(1:3,ia), index_ispresent = .TRUE.,&
+                             position="", position_ispresent=.FALSE., atom=tau(1:3,ia)*alat, index_ispresent = .TRUE.,&
                              index = ia )
       ENDDO
       !
@@ -1287,7 +1286,7 @@ CONTAINS
     step_obj%scf_conv = scf_conv_obj 
     CALL qes_reset_scf_conv(scf_conv_obj)
     ! 
-    CALL qexsd_init_atomic_structure(atomic_struct_obj, ntyp, atm, ityp, nat, tau, "bohr", &
+    CALL qexsd_init_atomic_structure(atomic_struct_obj, ntyp, atm, ityp, nat, tau, &
                                      alat, a1, a2, a3, 0)
     step_obj%atomic_structure=atomic_struct_obj
     CALL qes_reset_atomic_structure( atomic_struct_obj )

@@ -77,7 +77,7 @@
   TYPE (input_type),INTENT(OUT)            ::   obj
   CHARACTER(len=*),INTENT(IN)              ::   obj_tagname
   !
-  CHARACTER(80)                            ::   tau_units,dft_name, diagonalization
+  CHARACTER(80)                            ::   dft_name, diagonalization
   CHARACTER(256)                           ::   tagname
   REAL(DP),ALLOCATABLE                     ::   tau(:,:)
   REAL(DP)                                 ::   alat, a1(3), a2(3), a3(3), gamma_xk(3,1), gamma_wk(1)
@@ -129,15 +129,13 @@
   a1 = cb_at(:,1)*alat
   a2 = cb_at(:,2)*alat
   a3 = cb_at(:,3)*alat
-  tau(1:3,1:ip_nat) = iob_tau(1:3,1:ip_nat)*alat
-  tau_units="Bohr"
-  !tau=tau*bohr_radius_angs
+  tau(1:3,1:ip_nat) = iob_tau(1:3,1:ip_nat)
   !
   IF ( ibrav_lattice ) THEN 
-     CALL qexsd_init_atomic_structure (obj%atomic_structure, ntyp, atm, ip_ityp, ip_nat, tau, tau_units = tau_units,     &
+     CALL qexsd_init_atomic_structure (obj%atomic_structure, ntyp, atm, ip_ityp, ip_nat, tau, &
                                        ALAT = alat, a1 = a1, a2 = a2, a3 = a3 , ibrav = ip_ibrav )
   ELSE 
-     CALL qexsd_init_atomic_structure (obj%atomic_structure, ntyp, atm, ip_ityp, ip_nat, tau, TAU_UNITS = tau_units,     &
+     CALL qexsd_init_atomic_structure (obj%atomic_structure, ntyp, atm, ip_ityp, ip_nat, tau,     &
                                     alat = sqrt(sum(a1(1:3)*a1(1:3))), A1 = a1, A2 = a2, A3 = a3 , IBRAV = 0 )
   END IF 
   DEALLOCATE ( tau ) 

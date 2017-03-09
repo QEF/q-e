@@ -230,7 +230,7 @@ MODULE pw_restart_new
 !-------------------------------------------------------------------------------
          !         
          CALL qexsd_init_atomic_structure(output%atomic_structure, nsp, atm, ityp, &
-              nat, tau, 'Bohr', alat, alat*at(:,1), alat*at(:,2), alat*at(:,3), ibrav)
+              nat, tau, alat, alat*at(:,1), alat*at(:,2), alat*at(:,3), ibrav)
          !
 !-------------------------------------------------------------------------------
 ! ... SYMMETRIES
@@ -1385,6 +1385,7 @@ MODULE pw_restart_new
     END DO loop_on_atoms
     
     IF ( atomic_structure%alat_ispresent ) alat = atomic_structure%alat 
+    tau(:,1:nat) = tau(:,1:nat)/alat  
     ! 
     !pseudo_dir = TRIM(restart_obj%control_variables%pseudo_dir)//'/'
     pseudo_dir_cur = TRIM ( dirname)//'/'  
