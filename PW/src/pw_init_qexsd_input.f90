@@ -129,7 +129,7 @@
   a1 = cb_at(:,1)*alat
   a2 = cb_at(:,2)*alat
   a3 = cb_at(:,3)*alat
-  tau(1:3,1:ip_nat) = iob_tau(1:3,1:ip_nat)
+  tau(1:3,1:ip_nat) = iob_tau(1:3,1:ip_nat)*alat
   !
   IF ( ibrav_lattice ) THEN 
      CALL qexsd_init_atomic_structure (obj%atomic_structure, ntyp, atm, ip_ityp, ip_nat, tau, &
