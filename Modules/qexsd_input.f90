@@ -21,7 +21,6 @@ MODULE qexsd_input
   USE constants,        ONLY : e2,bohr_radius_angs
   USE iotk_module
   USE qes_module
-  USE qexsd_module,     ONLY : qexsd_init_atomic_species,qexsd_init_atomic_structure,qexsd_init_dft      
   !
   IMPLICIT NONE
   !
