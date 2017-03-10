@@ -1183,6 +1183,7 @@ TYPE :: output_type
    TYPE(algorithmic_info_type) :: algorithmic_info
    TYPE(atomic_species_type) :: atomic_species
    TYPE(atomic_structure_type) :: atomic_structure
+   LOGICAL  :: symmetries_ispresent
    TYPE(symmetries_type) :: symmetries
    TYPE(basis_set_type) :: basis_set
    TYPE(dft_type) :: dft

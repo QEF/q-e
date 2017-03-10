@@ -3231,8 +3231,10 @@ CALL qexsd_get_atomic_structure ( iunit, obj%atomic_structure, found )
 IF (.NOT. found ) CALL errore ( "qexsd_get_output", "reading xml-output: atomic_species not found", 1 ) 
 ! 
 CALL qexsd_get_symmetries( iunit, obj%symmetries, found ) 
-IF (.NOT. found ) CALL infomsg ( "qexsd_get_output", "reading xml-output: symmetries not found") 
-
+IF (.NOT. found ) THEN 
+   obj%symmetries_ispresent = .FALSE. 
+   CALL infomsg ( "qexsd_get_output", "reading xml-output: symmetries not found") 
+END IF 
 CALL qexsd_get_basis_set (iunit, obj%basis_set, found ) 
 IF ( .NOT. found ) CALL errore ( "qexsd_get_output", "reading xml-output: basis_set not found", 1) 
 ! 

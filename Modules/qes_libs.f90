@@ -4355,6 +4355,7 @@ SUBROUTINE qes_init_bands(obj, tagname, nbnd_ispresent, nbnd, smearing_ispresent
    REAL(DP) :: tot_charge
    LOGICAL  :: tot_magnetization_ispresent
    REAL(DP) :: tot_magnetization
+   LOGICAL  :: occupations_ispresent
    TYPE(occupations_type) :: occupations
    LOGICAL  :: inputOccupations_ispresent
    INTEGER  :: ndim_inputOccupations
@@ -5979,7 +5980,10 @@ SUBROUTINE qes_write_output(iun, obj)
       !
       CALL qes_write_atomic_structure(iun, obj%atomic_structure)
       !
-      CALL qes_write_symmetries(iun, obj%symmetries)
+      IF(obj%symmetries_ispresent) THEN
+         CALL qes_write_symmetries(iun, obj%symmetries)
+         !
+      ENDIF
       !
       CALL qes_write_basis_set(iun, obj%basis_set)
       !
@@ -6023,10 +6027,10 @@ SUBROUTINE qes_write_output(iun, obj)
 END SUBROUTINE qes_write_output
 
 SUBROUTINE qes_init_output(obj, tagname, convergence_info, algorithmic_info, &
-                              atomic_species, atomic_structure, symmetries, basis_set, dft, &
-                              magnetization, total_energy, band_structure, &
-                              forces_ispresent, forces, stress_ispresent, stress, &
-                              electric_field_ispresent, electric_field, &
+                              atomic_species, atomic_structure, symmetries_ispresent, &
+                              symmetries, basis_set, dft, magnetization, total_energy, &
+                              band_structure, forces_ispresent, forces, stress_ispresent, &
+                              stress, electric_field_ispresent, electric_field, &
                               FCP_force_ispresent, FCP_force, FCP_tot_charge_ispresent, &
                               FCP_tot_charge)
    IMPLICIT NONE
@@ -6038,6 +6042,7 @@ SUBROUTINE qes_init_output(obj, tagname, convergence_info, algorithmic_info, &
    TYPE(algorithmic_info_type) :: algorithmic_info
    TYPE(atomic_species_type) :: atomic_species
    TYPE(atomic_structure_type) :: atomic_structure
+   LOGICAL  :: symmetries_ispresent
    TYPE(symmetries_type) :: symmetries
    TYPE(basis_set_type) :: basis_set
    TYPE(dft_type) :: dft
@@ -6060,7 +6065,10 @@ SUBROUTINE qes_init_output(obj, tagname, convergence_info, algorithmic_info, &
    obj%algorithmic_info = algorithmic_info
    obj%atomic_species = atomic_species
    obj%atomic_structure = atomic_structure
-   obj%symmetries = symmetries
+   obj%symmetries_ispresent = symmetries_ispresent
+   IF(obj%symmetries_ispresent) THEN
+      obj%symmetries = symmetries
+   ENDIF
    obj%basis_set = basis_set
    obj%dft = dft
    obj%magnetization = magnetization
@@ -6100,7 +6108,10 @@ SUBROUTINE qes_reset_output(obj)
    CALL qes_reset_algorithmic_info(obj%algorithmic_info)
    CALL qes_reset_atomic_species(obj%atomic_species)
    CALL qes_reset_atomic_structure(obj%atomic_structure)
-   CALL qes_reset_symmetries(obj%symmetries)
+   IF(obj%symmetries_ispresent) THEN
+      CALL qes_reset_symmetries(obj%symmetries)
+      obj%symmetries_ispresent = .FALSE.
+   ENDIF
    CALL qes_reset_basis_set(obj%basis_set)
    CALL qes_reset_dft(obj%dft)
    CALL qes_reset_magnetization(obj%magnetization)
