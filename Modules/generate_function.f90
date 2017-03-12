@@ -24,7 +24,6 @@ CONTAINS
 !----------------------------------------------------------------------
       !
       USE kinds,            ONLY : DP
-      USE io_global,        ONLY : stdout
       USE fft_base,         ONLY : dfftp
       USE mp,               ONLY : mp_sum
       USE mp_bands,         ONLY : me_bgrp, intra_bgrp_comm
@@ -40,14 +39,8 @@ CONTAINS
       !
       ! ... Local variables
       !
-      INTEGER                   :: i, j, k, ir, ir_end
+      INTEGER                   :: i, ir, ir_end
       INTEGER                   :: idx, idx0, narea
-      !
-      REAL( DP )                :: inv_nr1, inv_nr2, inv_nr3
-      !
-      inv_nr1 = 1.D0 / DBLE( dfftp%nr1 )
-      inv_nr2 = 1.D0 / DBLE( dfftp%nr2 )
-      inv_nr3 = 1.D0 / DBLE( dfftp%nr3 )
       !
       idx0 = 0
       ir_end = nnr
@@ -544,8 +537,7 @@ CONTAINS
       INTEGER                   :: idx0, ntot
       !
       REAL( DP )                :: inv_nr1, inv_nr2, inv_nr3
-      REAL( DP )                :: scale, dist, arg, length, chargeanalytic, chargelocal
-      REAL( DP )                :: f1, f2 
+      REAL( DP )                :: scale, dist, arg, chargeanalytic, chargelocal
       REAL( DP )                :: r( 3 ), s( 3 )
       REAL( DP ), ALLOCATABLE   :: rholocal ( : )
       REAL( DP ), EXTERNAL      :: qe_erfc
@@ -640,7 +632,7 @@ CONTAINS
 !----------------------------------------------------------------------
       !
       USE kinds,            ONLY : DP
-      USE constants,        ONLY : sqrtpi, fpi, pi
+      USE constants,        ONLY : sqrtpi
       USE io_global,        ONLY : stdout
       USE cell_base,        ONLY : at, bg, alat, omega
       USE fft_base,         ONLY : dfftp
@@ -662,7 +654,7 @@ CONTAINS
       INTEGER                   :: idx0, ntot
       !
       REAL( DP )                :: inv_nr1, inv_nr2, inv_nr3
-      REAL( DP )                :: scale, dist, arg, length, chargeanalytic, chargelocal
+      REAL( DP )                :: scale, dist, arg, chargeanalytic, chargelocal
       REAL( DP )                :: r( 3 ), s( 3 )
       REAL( DP ), ALLOCATABLE   :: gradrholocal ( :, : )
       REAL( DP ), EXTERNAL      :: qe_erfc
@@ -771,7 +763,7 @@ CONTAINS
   !
   INTEGER  :: i, j, k, ir, ir_end, ip, idx0
   REAL(DP) :: inv_nr1, inv_nr2, inv_nr3
-  REAL(DP) :: r(3), s(3)
+  REAL(DP) :: r(3)
   !
   inv_nr1 = 1.D0 / DBLE( dfftp%nr1 )
   inv_nr2 = 1.D0 / DBLE( dfftp%nr2 )
