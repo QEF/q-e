@@ -80,8 +80,8 @@ SUBROUTINE punch( what )
      ! ... make a copy of xml file one level up (FIXME: why?)
      !
      IF (ionode) THEN
-        cp_source = TRIM(tmp_dir)//'/'//TRIM(prefix)//'.save/'//xmlpun_schema
-        cp_dest   = TRIM(tmp_dir)//'/'//TRIM(prefix)//'.xml'
+        cp_source = TRIM(tmp_dir)//TRIM(prefix)//'.save/'//xmlpun_schema
+        cp_dest   = TRIM(tmp_dir)//TRIM(prefix)//'.xml'
         cp_status = f_copy(cp_source, cp_dest)
      END IF
      !
@@ -93,14 +93,14 @@ SUBROUTINE punch( what )
      !
      DO nt = 1, nsp
         cp_source = TRIM(pseudo_dir)//psfile(nt)
-        cp_dest   = TRIM(tmp_dir)//'/'//TRIM(prefix)//'.save/'//psfile(nt)
+        cp_dest   = TRIM(tmp_dir)//TRIM(prefix)//'.save/'//psfile(nt)
         IF ( TRIM(cp_source) /= TRIM(cp_dest) ) &
              cp_status = f_copy(cp_source, cp_dest)
      END DO
      inlc = get_inlc()
      IF ( inlc > 0 ) THEN 
         cp_source = TRIM(kernel_file_name)
-        cp_dest = TRIM(tmp_dir)//'/'//TRIM(prefix)//'.save/'//TRIM(vdw_table_name)
+        cp_dest = TRIM(tmp_dir)//TRIM(prefix)//'.save/'//TRIM(vdw_table_name)
         IF ( TRIM(cp_source) /= TRIM(cp_dest) ) & 
            cp_status = f_copy(cp_source, cp_dest)
      END IF  

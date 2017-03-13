@@ -10,86 +10,80 @@
 MODULE kernel_table
 
 
-! This module is used to read in the kernel table file
-! "vdW_kernel_table" and store some of the important parameters. The top
-! of the vdW_kernel_table file holds the number of q points, the number
-! of radial points (r) used in the kernel generation, the maximum value
-! of r used (r is the parameter in the kernel function d=q*r where q is
-! defined in DION equation 11), and the values of the q points used.
-! These parameters are stored as public parameters for use in various
-! routines. This routine also reads the tabulated values of the Fourier
-! transformed kernel function for each pair of q values (see SOLER
-! equations 3 and 8). Since these kernel functions need to be
-! interpolated using splines, the second derivatives of the Fourier
-! transformed kernel functions (phi_alpha_beta) are also tabulated in
-! the vdW_kernel_table and are read in here.
+  ! This module is used to read in the kernel table file
+  ! "vdW_kernel_table" and store some of the important parameters. The top
+  ! of the vdW_kernel_table file holds the number of q points, the number
+  ! of radial points (r) used in the kernel generation, the maximum value
+  ! of r used (r is the parameter in the kernel function d=q*r where q is
+  ! defined in DION equation 11), and the values of the q points used.
+  ! These parameters are stored as public parameters for use in various
+  ! routines. This routine also reads the tabulated values of the Fourier
+  ! transformed kernel function for each pair of q values (see SOLER
+  ! equations 3 and 8). Since these kernel functions need to be
+  ! interpolated using splines, the second derivatives of the Fourier
+  ! transformed kernel functions (phi_alpha_beta) are also tabulated in
+  ! the vdW_kernel_table and are read in here.
 
-! This is done in a module because there are quite a few subroutines in
-! xc_vdW_DF.f90 that require knowledge of the number (identity) of q
-! points, the maximum value of the radius, and, of course, the tabulated
-! kernel function and its second derivatives (for spline interpolation).
-! Putting this routine in a module meas that those routines can just use
-! kernel_table rather than passing variables around all over the place.
+  ! This is done in a module because there are quite a few subroutines in
+  ! xc_vdW_DF.f90 that require knowledge of the number (identity) of q
+  ! points, the maximum value of the radius, and, of course, the tabulated
+  ! kernel function and its second derivatives (for spline interpolation).
+  ! Putting this routine in a module meas that those routines can just use
+  ! kernel_table rather than passing variables around all over the place.
 
-USE kinds,                  ONLY : dp
-USE io_files,               ONLY : pseudo_dir, pseudo_dir_cur
-USE constants,              ONLY : pi
-use wrappers,               ONLY : md5_from_file
-implicit none
+  USE kinds,                  ONLY : dp
+  USE io_files,               ONLY : pseudo_dir, pseudo_dir_cur
+  USE constants,              ONLY : pi
+  use wrappers,               ONLY : md5_from_file
+  implicit none
 
-private
-save
+  private
+  save
 
 
-! ----------------------------------------------------------------------
-! Variables to be used by various routines in xc_vdW_DF.f90, declared
-! public so they can be seen from outside
+  ! ----------------------------------------------------------------------
+  ! Variables to be used by various routines in xc_vdW_DF.f90, declared
+  ! public so they can be seen from outside
 
-public  :: Nqs, Nr_points, r_max, q_mesh, q_cut, q_min, dk
-public  :: kernel, d2phi_dk2
-public  :: initialize_kernel_table
-public  :: vdw_table_name, kernel_file_name
-public  :: vdw_kernel_md5_cksum
-integer :: Nqs, Nr_points                       ! The number of q points and radial points
-                                                ! used in generating the kernel phi(q1*r, q2*r)
-                                                ! (see DION 14-16 and SOLER 3-5).
+  public  :: Nqs, Nr_points, r_max, q_mesh, q_cut, q_min, dk
+  public  :: kernel, d2phi_dk2
+  public  :: initialize_kernel_table
+  public  :: vdw_table_name, kernel_file_name
+  public  :: vdw_kernel_md5_cksum
+  integer :: Nqs, Nr_points          ! The number of q points and radial points
+  ! used in generating the kernel phi(q1*r, q2*r)
+  ! (see DION 14-16 and SOLER 3-5).
 
-real(dp) :: r_max, q_cut, q_min, dk             ! The maximum value of r, the maximum and minimum
-                                                ! values of q and the k-space spacing of grid points.
-                                                ! Note that, during a vdW run, values of q0 found
-                                                ! larger than q_cut will be saturated (SOLER 5) to
-                                                ! q_cut.
+  real(dp) :: r_max, q_cut, q_min, dk             ! The maximum value of r, the maximum and minimum
+  ! values of q and the k-space spacing of grid points.
+  ! Note that, during a vdW run, values of q0 found
+  ! larger than q_cut will be saturated (SOLER 5) to
+  ! q_cut.
 
-real(dp), allocatable :: q_mesh(:)              ! The values of all the q points used.
+  real(dp), allocatable :: q_mesh(:)              ! The values of all the q points used.
 
-real(dp), allocatable :: kernel(:,:,:)          ! A matrix holding the Fourier transformed kernel
-                                                ! function for each pair of q values. The ordering
-                                                ! is kernel(k_point, q1_value, q2_value).
+  real(dp), allocatable :: kernel(:,:,:)          ! A matrix holding the Fourier transformed kernel
+  ! function for each pair of q values. The ordering
+  ! is kernel(k_point, q1_value, q2_value).
 
-real(dp), allocatable ::  d2phi_dk2(:,:,:)      ! A matrix holding the second derivatives of the
-                                                ! above kernel matrix at each of the q points.
-                                                ! Stored as d2phi_dk2(k_point, q1_value, q2_value).
+  real(dp), allocatable ::  d2phi_dk2(:,:,:)      ! A matrix holding the second derivatives of the
+  ! above kernel matrix at each of the q points.
+  ! Stored as d2phi_dk2(k_point, q1_value, q2_value).
 
-character(len=256)  :: vdw_table_name = ' '      ! If present from input use this name.
-character(len=1000) :: kernel_file_name         ! The path to the kernel file.
-                                                ! Although this name must be
-                                                ! "vdW_kernel_table", this variable
-                                                ! is used to hold the entire path
-                                                ! since we check 3 places for it.
+  character(len=256)  :: vdw_table_name = ' '      ! If present from input use this name.
+  character(len=1000) :: kernel_file_name         ! The path to the kernel file.
+  ! Although this name must be
+  ! "vdW_kernel_table", this variable
+  ! is used to hold the entire path
+  ! since we check 3 places for it.
 
-character(LEN=30)   :: double_format = "(1p4e23.14)"
-character(len=32)   :: vdw_kernel_md5_cksum = 'NOT SET'
+  character(LEN=30)   :: double_format = "(1p4e23.14)"
+  character(len=32)   :: vdw_kernel_md5_cksum = 'NOT SET'
 
-integer, external   :: find_free_unit
+  integer, external   :: find_free_unit
 
 
 CONTAINS
-
-
-
-
-
-
 
 
   ! ####################################################################
@@ -110,22 +104,21 @@ CONTAINS
     integer :: kernel_file                    ! The unit number for the kernel file.
 
     logical :: file_exists                    ! A variable to say whether
-                                              ! needed file exists.
+    ! needed file exists.
 
     CHARACTER(len=256) :: root_dir = ' '
-
-
+    CHARACTER(len=256), EXTERNAL :: trimcheck
 
 
     kernel_file = find_free_unit()
 
     if (TRIM(vdw_table_name)==' ') then
 
-      if (inlc==3) then
-        vdw_table_name='rVV10_kernel_table'
-      else
-        vdw_table_name='vdW_kernel_table'
-      endif
+       if (inlc==3) then
+          vdw_table_name='rVV10_kernel_table'
+       else
+          vdw_table_name='vdW_kernel_table'
+       endif
 
     endif
 
@@ -151,27 +144,28 @@ CONTAINS
        ! No "vdW_kernel_table" file in the current directory. Try the
        ! pseudopotential directory.
 
-       kernel_file_name = trim(pseudo_dir)//'/'//vdw_table_name
+       kernel_file_name = trim(pseudo_dir)//vdw_table_name
        inquire(file=kernel_file_name, exist=file_exists)
     end if
 
     IF (.NOT. file_exists) THEN
-      ! Try the pseudopotential current directory.
-      kernel_file_name = trim(pseudo_dir_cur)//'/'//vdw_table_name
-      INQUIRE(FILE=kernel_file_name, EXIST = file_exists)
+       ! Try the pseudopotential current directory.
+       kernel_file_name = trim(pseudo_dir_cur)//vdw_table_name
+       INQUIRE(FILE=kernel_file_name, EXIST = file_exists)
     END IF
 
     IF (.NOT. file_exists) THEN
-      ! Try ESPRESSO_ROOT directory
-      CALL get_environment_variable('ESPRESSO_ROOT', root_dir)
-      IF ( trim(root_dir) /= ' ' ) THEN
-        kernel_file_name = trim(root_dir)//'/'//vdw_table_name
-        INQUIRE(FILE=kernel_file_name, EXIST = file_exists)
-      END IF
+       ! Try ESPRESSO_ROOT directory
+       CALL get_environment_variable('ESPRESSO_ROOT', root_dir)
+       IF ( trim(root_dir) /= ' ' ) THEN
+          root_dir = trimcheck(root_dir)
+          kernel_file_name = trim(root_dir)//vdw_table_name
+          INQUIRE(FILE=kernel_file_name, EXIST = file_exists)
+       END IF
     END IF
 
     IF ( .NOT. file_exists) CALL errore('read_kernel_table', & 
-      TRIM(vdw_table_name)//' file not found',1)
+         TRIM(vdw_table_name)//' file not found',1)
 
 
     ! ------------------------------------------------------------------
