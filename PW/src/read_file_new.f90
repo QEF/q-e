@@ -141,7 +141,6 @@ SUBROUTINE read_xml_file ( )
   USE qes_libs_module,      ONLY :  qes_reset_output, qes_reset_input, qes_reset_general_info, qes_reset_parallel_info 
   USE io_rho_xml,           ONLY : read_rho
   USE read_pseudo_mod,      ONLY : readpp
-  USE xml_io_base,          ONLY : pp_check_file
   USE uspp,                 ONLY : becsum
   USE uspp_param,           ONLY : upf
   USE paw_variables,        ONLY : okpaw, ddd_PAW
