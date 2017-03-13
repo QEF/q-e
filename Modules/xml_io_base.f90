@@ -521,8 +521,8 @@ MODULE xml_io_base
       !
       USE mp,        ONLY : mp_get, mp_sum, mp_rank, mp_size
 #if defined __HDF5
-      USE hdf5_qe,  ONLY  : write_rho, h5fclose_f, prepare_for_writing_final, add_attributes_hdf5, &
-                            rho_hdf5_write  
+      USE hdf5_qe,  ONLY  : write_rho_hdf5, h5fclose_f, &
+           prepare_for_writing_final, add_attributes_hdf5, rho_hdf5_write  
 #endif
       !
       IMPLICIT NONE
@@ -637,7 +637,7 @@ MODULE xml_io_base
          !
          IF ( ionode ) THEN
 #if defined __HDF5
-            CALL write_rho(rho_hdf5_write,k,rho_plane)
+            CALL write_rho_hdf5(rho_hdf5_write,k,rho_plane)
 #else
             CALL iotk_write_dat( rhounit, "z" // iotk_index( k ), rho_plane )
 #endif
@@ -677,8 +677,8 @@ MODULE xml_io_base
       USE mp_images, ONLY : intra_image_comm
       USE mp,        ONLY : mp_put, mp_sum, mp_rank, mp_size
 #if defined __HDF5
-      USE hdf5_qe,   ONLY : read_rho, read_attributes_hdf5, prepare_for_reading_final, &
-                            h5fclose_f, rho_hdf5_write, hdf5_type
+      USE hdf5_qe,   ONLY : read_rho_hdf5, read_attributes_hdf5, &
+           prepare_for_reading_final, h5fclose_f, rho_hdf5_write, hdf5_type
 #endif
       !
       IMPLICIT NONE
@@ -772,7 +772,7 @@ MODULE xml_io_base
          !
          IF ( ionode ) THEN
 #if defined __HDF5
-            CALL  read_rho(h5desc , k,rho_plane)
+            CALL  read_rho_hdf5(h5desc , k,rho_plane)
 #else
             CALL iotk_scan_dat( rhounit, "z" // iotk_index( k ), rho_plane )
 #endif

@@ -300,7 +300,7 @@ module hdf5_qe
 
   end subroutine prepare_for_reading_final
 
-  subroutine read_rho(hdf5desc,dsetname,var)
+  subroutine read_rho_hdf5(hdf5desc,dsetname,var)
     USE kinds, ONLY : DP
     implicit none
     type(HDF5_type), intent(inout) :: hdf5desc
@@ -319,9 +319,9 @@ module hdf5_qe
     f_ptr = C_LOC(var(1))
     CALL h5dread_f(dset_id, dtype_id, f_ptr, error)
     CALL h5dclose_f(dset_id, error)
-  end subroutine read_rho
+  end subroutine read_rho_hdf5
 
-  subroutine write_rho(hdf5desc,dsetname,var)
+  subroutine write_rho_hdf5(hdf5desc,dsetname,var)
     USE kinds, ONLY : DP
     implicit none
     type(HDF5_type), intent(inout) :: hdf5desc
@@ -342,7 +342,7 @@ module hdf5_qe
     CALL h5dwrite_f(dset_id, H5T_NATIVE_DOUBLE, f_ptr, error)
     CALL h5dclose_f(dset_id, error)
     CALL h5sclose_f(dspace_id, error)
-  end subroutine write_rho
+  end subroutine write_rho_hdf5
 
   subroutine write_eig(hdf5desc,var,kpoint)
     USE kinds, ONLY : DP
