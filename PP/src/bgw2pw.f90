@@ -137,8 +137,8 @@ PROGRAM bgw2pw
   CALL openfil_pp ( )
 
   IF ( wfng_flag ) THEN
-    input_file_name = TRIM ( tmp_dir ) // '/' // TRIM ( wfng_file )
-    output_dir_name = TRIM ( tmp_dir ) // '/' // TRIM ( prefix ) // '.save'
+    input_file_name = TRIM ( tmp_dir ) // TRIM ( wfng_file )
+    output_dir_name = TRIM ( tmp_dir ) // TRIM ( prefix ) // '.save'
     IF ( ionode ) WRITE ( 6, '(5x,"call write_evc")' )
     CALL start_clock ( 'write_evc' )
     CALL write_evc ( input_file_name, real_or_complex, wfng_nband, &
@@ -148,8 +148,8 @@ PROGRAM bgw2pw
   ENDIF
 
   IF ( rhog_flag ) THEN
-    input_file_name = TRIM ( tmp_dir ) // '/' // TRIM ( rhog_file )
-    output_dir_name = TRIM ( tmp_dir ) // '/' // TRIM ( prefix ) // '.save'
+    input_file_name = TRIM ( tmp_dir ) // TRIM ( rhog_file )
+    output_dir_name = TRIM ( tmp_dir ) // TRIM ( prefix ) // '.save'
     IF ( ionode ) WRITE ( 6, '(5x,"call write_cd")' )
     CALL start_clock ( 'write_cd' )
     CALL write_cd ( input_file_name, real_or_complex, output_dir_name )

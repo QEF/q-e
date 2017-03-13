@@ -124,17 +124,17 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
       IF(blip)THEN
          IF(binwrite)THEN
             WRITE (6,'(a)')'Writing file '//trim(prefix)//'.bwfn.data.b1'//trim(postfix)//' for program CASINO.'
-            OPEN( iob, file=trim(tmp_dir)//'/'//trim(prefix)//'.bwfn.data.b1'//trim(postfix), &
+            OPEN( iob, file=trim(tmp_dir)//trim(prefix)//'.bwfn.data.b1'//trim(postfix), &
                   form='unformatted', action='write', access='sequential')
          ELSE
             WRITE (6,'(a)')'Writing file '//trim(prefix)//'.bwfn.data'//trim(postfix)//' for program CASINO.'
-            OPEN( io, file=trim(tmp_dir)//'/'//trim(prefix)//'.bwfn.data'//trim(postfix), &
+            OPEN( io, file=trim(tmp_dir)//trim(prefix)//'.bwfn.data'//trim(postfix), &
                   form='formatted', action='write', access='sequential')
          ENDIF
       ELSE
          IF(gather)THEN
             WRITE (6,'(a)')'Writing file '//trim(prefix)//'.pwfn.data'//trim(postfix)//' for program CASINO.'
-            OPEN( io, file=trim(tmp_dir)//'/'//trim(prefix)//'.pwfn.data'//trim(postfix), & 
+            OPEN( io, file=trim(tmp_dir)//trim(prefix)//'.pwfn.data'//trim(postfix), & 
                   form='formatted', action='write', access='sequential')
          ELSE
             WRITE (6,'(a)')'Writing one file per node '//trim(prefix)//'.pwfn.data'//trim(postfix)//'.XX for program CASINO'

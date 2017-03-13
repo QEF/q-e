@@ -291,7 +291,7 @@ PROGRAM pw2bgw
   if ( ionode ) WRITE ( 6, '("")' )
 
   IF ( wfng_flag ) THEN
-    output_file_name = TRIM ( tmp_dir ) // '/' // TRIM ( wfng_file )
+    output_file_name = TRIM ( tmp_dir ) // TRIM ( wfng_file )
     IF ( ionode ) WRITE ( 6, '(5x,"call write_wfng")' )
     CALL start_clock ( 'write_wfng' )
     CALL write_wfng ( output_file_name, real_or_complex, symm_type, &
@@ -302,7 +302,7 @@ PROGRAM pw2bgw
   ENDIF
 
   IF ( vxcg_flag ) THEN
-    output_file_name = TRIM ( tmp_dir ) // '/' // TRIM ( vxcg_file )
+    output_file_name = TRIM ( tmp_dir ) // TRIM ( vxcg_file )
     IF ( ionode ) WRITE ( 6, '(5x,"call write_vxcg")' )
     CALL start_clock ( 'write_vxcg' )
     CALL write_vxcg ( output_file_name, real_or_complex, symm_type, &
@@ -312,7 +312,7 @@ PROGRAM pw2bgw
   ENDIF
 
   IF ( vxc0_flag ) THEN
-    output_file_name = TRIM ( tmp_dir ) // '/' // TRIM ( vxc0_file )
+    output_file_name = TRIM ( tmp_dir ) // TRIM ( vxc0_file )
     IF ( ionode ) WRITE ( 6, '(5x,"call write_vxc0")' )
     CALL start_clock ( 'write_vxc0' )
     CALL write_vxc0 ( output_file_name, vxc_zero_rho_core )
@@ -321,7 +321,7 @@ PROGRAM pw2bgw
   ENDIF
 
   IF ( vxc_flag ) THEN
-    output_file_name = TRIM ( tmp_dir ) // '/' // TRIM ( vxc_file )
+    output_file_name = TRIM ( tmp_dir ) // TRIM ( vxc_file )
     IF ( vxc_integral .EQ. 'r' ) THEN
       IF ( ionode ) WRITE ( 6, '(5x,"call write_vxc_r")' )
       CALL start_clock ( 'write_vxc_r' )
@@ -345,7 +345,7 @@ PROGRAM pw2bgw
   ENDIF
 
   IF ( vscg_flag ) THEN
-    output_file_name = TRIM ( tmp_dir ) // '/' // TRIM ( vscg_file )
+    output_file_name = TRIM ( tmp_dir ) // TRIM ( vscg_file )
     IF ( ionode ) WRITE ( 6, '(5x,"call write_vscg")' )
     CALL start_clock ( 'write_vscg' )
     CALL write_vscg ( output_file_name, real_or_complex, symm_type )
@@ -354,7 +354,7 @@ PROGRAM pw2bgw
   ENDIF
 
   IF ( vkbg_flag ) THEN
-    output_file_name = TRIM ( tmp_dir ) // '/' // TRIM ( vkbg_file )
+    output_file_name = TRIM ( tmp_dir ) // TRIM ( vkbg_file )
     IF ( ionode ) WRITE ( 6, '(5x,"call write_vkbg")' )
     CALL start_clock ( 'write_vkbg' )
     CALL write_vkbg ( output_file_name, symm_type, wfng_kgrid, wfng_nk1, &
@@ -367,7 +367,7 @@ PROGRAM pw2bgw
   ! it must be called after v_xc (called from write_vxcg, write_vxc0,
   ! write_vxc_r, write_vxc_g)
   IF ( rhog_flag ) THEN
-    output_file_name = TRIM ( tmp_dir ) // '/' // TRIM ( rhog_file )
+    output_file_name = TRIM ( tmp_dir ) // TRIM ( rhog_file )
     IF ( ionode ) WRITE ( 6, '(5x,"call write_rhog")' )
     CALL start_clock ( 'write_rhog' )
     CALL write_rhog ( output_file_name, real_or_complex, symm_type, &

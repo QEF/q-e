@@ -56,7 +56,7 @@ SUBROUTINE pw2casino( istep )
       CALL errore('pw2casino', 'noncollinear/spinorbit magnetism not (yet) implemented',2)
     !
     tmp_unit = find_free_unit()
-    OPEN(unit=tmp_unit,file = trim(tmp_dir)//'/'//'pw2casino.dat',status='old',err=20)
+    OPEN(unit=tmp_unit,file = trim(tmp_dir)//'pw2casino.dat',status='old',err=20)
     READ(tmp_unit,inputpp,iostat=ios)
     CLOSE(tmp_unit)
 

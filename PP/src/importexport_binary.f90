@@ -194,15 +194,15 @@ SUBROUTINE impexp ()
   
   ! I need to copy XML file
   filename =  TRIM( xmlpun )
-  sourcef = TRIM( old_tmp_dir ) // TRIM( prefix ) // '.save' // "/" // TRIM( filename )
-  destf   = TRIM( new_tmp_dir ) // TRIM( prefix ) // '.save' // "/" // TRIM( filename )
+  sourcef = TRIM( old_tmp_dir ) // TRIM( prefix ) // '.save/' // TRIM( filename )
+  destf   = TRIM( new_tmp_dir ) // TRIM( prefix ) // '.save/' // TRIM( filename )
   ios = f_copy( TRIM( sourcef ), TRIM( destf ))
   IF ( ios /= 0) CALL errore ('importexport', 'copying the '//TRIM(filename)//' file', abs(ios))
 
   ! I also need to copy the UPF files
   do l=1, nsp
-     sourcef = TRIM( old_tmp_dir ) // TRIM( prefix ) // '.save' // "/" // TRIM(psfile(l))
-     destf = TRIM( new_tmp_dir ) // TRIM( prefix ) // '.save' // "/" // TRIM(psfile(l))
+     sourcef = TRIM( old_tmp_dir ) // TRIM( prefix ) // '.save/' // TRIM(psfile(l))
+     destf = TRIM( new_tmp_dir ) // TRIM( prefix ) // '.save/' // TRIM(psfile(l))
      ios = f_copy( TRIM( sourcef ), TRIM( destf ))
      IF ( ios /= 0) CALL errore ('importexport', 'copying the ' // TRIM(psfile(l)) // ' pseudo', abs(ios))
   end do

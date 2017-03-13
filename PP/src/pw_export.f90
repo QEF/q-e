@@ -428,7 +428,7 @@ SUBROUTINE write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
 
   IF( ionode ) THEN
     WRITE(0,*) "Opening file "//trim(pp_file)
-    CALL iotk_open_write(50,file=trim(tmp_dir)//'/'//trim(pp_file))
+    CALL iotk_open_write(50,file=trim(tmp_dir) // trim(pp_file))
     WRITE(0,*) "Reconstructing the main grid"
   ENDIF
 
