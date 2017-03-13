@@ -1091,7 +1091,11 @@ CONTAINS
       CALL add_attributes_hdf5(g_hdf5_write,ecutwfc,"WFC_CUTOFF")
       CALL add_attributes_hdf5(g_hdf5_write,ecutrho,"RHO_CUTOFF")
       CALL add_attributes_hdf5(g_hdf5_write,npwx,"MAX_NUMBER_OF_GK-VECTORS")
-      write(gammaonly,'(I1)') gamma_only
+      IF ( gamma_only) THEN  
+        write(gammaonly,'(I1)') 1
+      ELSE 
+        write(gammaonly,'(I1)') 0
+      END IF
       CALL add_attributes_hdf5(g_hdf5_write,gammaonly,"GAMMA_ONLY")
       CALL add_attributes_hdf5(g_hdf5_write,trim(cutoff_units),"UNITS_FOR_CUTOFF")
       CALL add_attributes_hdf5(g_hdf5_write,nr1,"nr1")
