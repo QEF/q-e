@@ -32,7 +32,7 @@ SUBROUTINE lr_readin
   USE klist,               ONLY : nks, wk, nelec, lgauss, ltetra
   USE fixed_occ,           ONLY : tfixed_occ
   USE input_parameters,    ONLY : degauss, nosym, wfcdir, outdir,&
-                                  & max_seconds
+                                  & max_seconds, assume_isolated
   USE realus,              ONLY : real_space, real_space_debug,&
                                   & init_realspace_vars, qpointlist,&
                                   & betapointlist
