@@ -176,14 +176,15 @@ mp_base.o : parallel_include.o
 mp_diag.o : mp.o
 mp_diag.o : mp_world.o
 mp_diag.o : parallel_include.o
+mp_exx.o : io_global.o
 mp_exx.o : mp.o
 mp_exx.o : mp_bands.o
 mp_exx.o : parallel_include.o
 mp_global.o : command_line_options.o
 mp_global.o : mp.o
 mp_global.o : mp_bands.o
-mp_global.o : mp_exx.o
 mp_global.o : mp_diag.o
+mp_global.o : mp_exx.o
 mp_global.o : mp_images.o
 mp_global.o : mp_pools.o
 mp_global.o : mp_world.o
@@ -250,7 +251,9 @@ qexsd.o : mp_pools.o
 qexsd.o : mp_world.o
 qexsd.o : noncol.o
 qexsd.o : parameters.o
+qexsd.o : qes_libs.o
 qexsd.o : qes_module.o
+qexsd.o : qes_types.o
 qexsd.o : version.o
 qexsd_input.o : ../iotk/src/iotk_base.o
 qexsd_input.o : ../iotk/src/iotk_module.o
@@ -258,7 +261,6 @@ qexsd_input.o : constants.o
 qexsd_input.o : input_parameters.o
 qexsd_input.o : kind.o
 qexsd_input.o : qes_module.o
-qexsd_input.o : qexsd.o
 qexsd_reader_module.o : ../iotk/src/iotk_module.o
 qexsd_reader_module.o : io_global.o
 qexsd_reader_module.o : kind.o
