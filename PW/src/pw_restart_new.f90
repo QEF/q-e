@@ -266,6 +266,7 @@ MODULE pw_restart_new
          CALL qexsd_init_symmetries(output%symmetries, nsym, nrot, spacegroup,&
               s, ft, sname, t_rev, nat, irt,symop_2_class(1:nrot), verbosity, &
               noncolin)
+         output%symmetries_ispresent=.TRUE. 
          !
 !-------------------------------------------------------------------------------
 ! ... BASIS SET
@@ -649,10 +650,8 @@ MODULE pw_restart_new
            INTEGER,INTENT(IN)                     :: nr1, nr2, nr3, ngm, mill(:,:)
            LOGICAL,INTENT(IN)                     :: gamma_only
            !
-           INTEGER                                :: gammaonly_ = 0  
-           CALL prepare_for_writing_final(h5_desc,0,filename)
-           IF ( gamma_only) gammaonly_ =1      
-           CALL add_attributes_hdf5(h5_desc, gammaonly_, "gamma_only")
+           CALL prepare_for_writing_final(h5_desc,0,filename) 
+           CALL add_attributes_hdf5(h5_desc, gamma_only, "gamma_only")
            CALL add_attributes_hdf5(h5_desc, nr1, "nr1s")
            CALL add_attributes_hdf5(h5_desc, nr2, "nr2s")
            CALL add_attributes_hdf5(h5_desc, nr3, "nr3s")
@@ -677,7 +676,7 @@ MODULE pw_restart_new
           !
           INTEGER, ALLOCATABLE :: igwk(:)
           INTEGER, ALLOCATABLE :: itmp(:)
-          INTEGER              :: ierr, gammaonly_ = 0 
+          INTEGER              :: ierr  
 #if defined (__HDF5)
           TYPE (hdf5_type),ALLOCATABLE  :: h5_desc
           !
@@ -716,9 +715,8 @@ MODULE pw_restart_new
              CALL prepare_for_writing_final ( h5_desc, 0,&
                   TRIM(filename)//'.hdf5',ik_g, ADD_GROUP = .false.)
              CALL add_attributes_hdf5(h5_desc, ngk_g(ik_g), "number_of_gk_vectors")
-             CALL add_attributes_hdf5(h5_desc, npwx_g, "max_number_of_gk_vectors")
-             IF (gamma_only) gammaonly_ = 1 
-             CALL add_attributes_hdf5(h5_desc, gammaonly_, "gamma_only")
+             CALL add_attributes_hdf5(h5_desc, npwx_g, "max_number_of_gk_vectors") 
+             CALL add_attributes_hdf5(h5_desc, gamma_only, "gamma_only")
              CALL add_attributes_hdf5(h5_desc, "2pi/a", "units") 
              CALL write_gkhdf5(h5_desc,xk(:,ik),igwk(1:ngk_g(ik)), &
                               mill_g(1:3,igwk(1:ngk_g(ik_g))),ik_g)

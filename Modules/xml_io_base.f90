@@ -763,7 +763,6 @@ MODULE xml_io_base
       INTEGER                  :: me_in_group, nproc_in_group, io_in_parent, nproc_in_parent, me_in_parent, my_group, io_group
 #if defined __HDF5
       CHARACTER(LEN=256) :: filename_hdf5
-      INTEGER            :: gammaonly = 0
 #endif
       COMPLEX(DP), ALLOCATABLE :: wtmp(:)
       !
@@ -795,8 +794,7 @@ MODULE xml_io_base
       filename_hdf5=trim(tmp_dir) //"evc.hdf5"
       CALL prepare_for_writing_final(evc_hdf5_write,inter_pool_comm,filename_hdf5,ik)
       CALL add_attributes_hdf5(evc_hdf5_write,ngw,"ngw",ik)
-      IF ( gamma_only ) gammaonly = 1 
-      CALL add_attributes_hdf5(evc_hdf5_write,gammaonly,"gamma_only",ik)
+      CALL add_attributes_hdf5(evc_hdf5_write,gamma_only,"gamma_only",ik)
       CALL add_attributes_hdf5(evc_hdf5_write,igwx,"igwx",ik)
       CALL add_attributes_hdf5(evc_hdf5_write,nbnd,"nbnd",ik)
       CALL add_attributes_hdf5(evc_hdf5_write,ik,"ik",ik)

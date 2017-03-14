@@ -8,7 +8,7 @@
 module hdf5_qe
   !
   USE HDF5
-  !USE, intrinsic :: ISO_C_binding
+  USE, intrinsic :: ISO_C_binding
   USE Kinds, ONLY : DP
   !
   implicit none
@@ -46,11 +46,12 @@ module hdf5_qe
 
   INTERFACE add_attributes_hdf5
     MODULE PROCEDURE add_attributes_hdf5_i, add_attributes_hdf5_r, &
-                     add_attributes_hdf5_c
+                     add_attributes_hdf5_c, add_attributes_hdf5_boolean
   END INTERFACE
 
   INTERFACE read_attributes_hdf5
-    MODULE PROCEDURE read_attributes_hdf5_i, read_attributes_hdf5_r
+    MODULE PROCEDURE read_attributes_hdf5_i, read_attributes_hdf5_r, read_attributes_hdf5_c, &
+                     read_attributes_hdf5_boolean 
   END INTERFACE
 
 
@@ -751,58 +752,105 @@ module hdf5_qe
   END SUBROUTINE add_attributes_hdf5_r
 
   SUBROUTINE add_attributes_hdf5_c(hdf5desc, attr_data, attr_name, kpoint)
-    implicit none
+    IMPLICIT NONE
     TYPE(HDF5_type), intent(inout) :: hdf5desc
-    integer, intent(in), optional :: kpoint
-    !LOGICAL, intent(in) :: attr_data 
-    CHARACTER(LEN=*), intent(in) :: attr_data
+    INTEGER, INTENT(IN), OPTIONAL :: kpoint
+    CHARACTER(LEN=*),TARGET, INTENT(IN) :: attr_data
     CHARACTER(LEN=*), intent(in) :: attr_name
-    character*100 kstring
-    integer :: error
+    CHARACTER*100 kstring
+    INTEGER :: error
     INTEGER     ::   arank = 1                      ! Attribure rank
     INTEGER(HID_T) :: aspace_id     ! Attribute Dataspace identifier
-    INTEGER(HSIZE_T), DIMENSION(1) :: adims = (/1/) ! Attribute dimension
-    INTEGER(SIZE_T) :: attrlen    ! Length of the attribute string
+    INTEGER(HSIZE_T) :: attrlen    ! Length of the attribute string
     INTEGER(HID_T) :: atype_id      ! Attribute Dataspace identifier
     INTEGER(HID_T) :: attr_id      ! Attribute Dataspace identifier
-    INTEGER(HSIZE_T), DIMENSION(1) :: data_dims
-  
-    !data_dims(1) = 1 
-    data_dims(1) = len(attr_data)
-    
-    if(present(kpoint)) then
-      write(kstring,'(I0)') kpoint
+    TYPE(C_PTR)    :: buf 
+    ! 
+    buf = C_LOC(attr_data) 
+    attrlen = LEN(TRIM(attr_data) )
+    CALL H5Screate_f( H5S_SCALAR_F, aspace_id, error) 
+    CALL H5Tcopy_f  ( H5T_FORTRAN_S1, atype_id, error ) 
+    CALL H5Tset_size_f( atype_id, attrlen, error) 
+       
+    IF(PRESENT(kpoint)) THEN
+      WRITE(kstring,'(I0)') kpoint
       kstring='KPOINT'//kstring
       !write(attrdata,'(I0)') attr_data
     
-      CALL h5tcopy_f(H5T_NATIVE_CHARACTER, atype_id, error)
       CALL h5gopen_f(hdf5desc%file_id,kstring,hdf5desc%group_id,error)
-      CALL h5screate_simple_f(arank, adims, aspace_id, error)
-      CALL h5acreate_f(hdf5desc%group_id, attr_name, H5T_NATIVE_CHARACTER, aspace_id, attr_id, error)
-      CALL h5awrite_f(attr_id, H5T_NATIVE_CHARACTER, attr_data, data_dims, error)
+      CALL h5acreate_f(hdf5desc%group_id, attr_name, atype_id, aspace_id, attr_id, error)
+      CALL h5awrite_f(attr_id, atype_id, buf, error)
       CALL h5aclose_f(attr_id, error)
-      !
-      ! Terminate access to the data space.
-      !
-      CALL h5sclose_f(aspace_id, error)
       !
       ! End access to the dataset and release resources used by it.
       !
       CALL h5gclose_f(hdf5desc%group_id, error)
-    else
+    ELSE
       !write(attrdata,'(I0)') attr_data
-      CALL h5tcopy_f(H5T_NATIVE_CHARACTER, atype_id, error)
-      CALL h5screate_simple_f(arank, adims, aspace_id, error)
-      CALL h5acreate_f(hdf5desc%file_id, attr_name, H5T_NATIVE_CHARACTER, aspace_id, attr_id, error)
-      CALL h5awrite_f(attr_id, H5T_NATIVE_CHARACTER, attr_data, data_dims, error)
+      CALL h5acreate_f(hdf5desc%file_id, attr_name, atype_id, aspace_id, attr_id, error)
+      CALL h5awrite_f(attr_id, atype_id, buf, error)
       CALL h5aclose_f(attr_id, error)
       !
       ! Terminate access to the data space.
       !
-      CALL h5sclose_f(aspace_id, error)
-    endif
-    
+    ENDIF
+    CALL H5Sclose_f(aspace_id, error) 
+    CALL H5Tclose_f(atype_id, error )  
   END SUBROUTINE add_attributes_hdf5_c
+!
+  SUBROUTINE add_attributes_hdf5_boolean(hdf5desc, attr_data, attr_name, kpoint)
+    IMPLICIT NONE
+    TYPE(HDF5_type), intent(inout) :: hdf5desc
+    INTEGER, INTENT(IN), OPTIONAL  :: kpoint
+    LOGICAL,INTENT(IN)             :: attr_data
+    CHARACTER(LEN=*), intent(in)   :: attr_name
+    CHARACTER*100 kstring
+    INTEGER :: error
+    INTEGER     ::   arank = 1                      ! Attribure rank
+    INTEGER(HID_T) :: aspace_id     ! Attribute Dataspace identifier
+    INTEGER(HSIZE_T) :: attrlen    ! Length of the attribute string
+    INTEGER(HID_T) :: atype_id      ! Attribute Dataspace identifier
+    INTEGER(HID_T) :: attr_id      ! Attribute Dataspace identifier
+    CHARACTER(LEN=7),TARGET  ::    string_data        
+    TYPE(C_PTR)    :: buf 
+    ! 
+    IF (attr_data) THEN 
+       string_data = '.TRUE.' 
+    ELSE 
+       string_data ='.FALSE.'
+    END IF 
+    buf = C_LOC(string_data) 
+    attrlen = LEN(TRIM(string_data) )
+    CALL H5Screate_f( H5S_SCALAR_F, aspace_id, error) 
+    CALL H5Tcopy_f  ( H5T_FORTRAN_S1, atype_id, error ) 
+    CALL H5Tset_size_f( atype_id, attrlen, error) 
+       
+    IF(PRESENT(kpoint)) THEN
+      WRITE(kstring,'(I0)') kpoint
+      kstring='KPOINT'//kstring
+      !write(attrdata,'(I0)') attr_data
+    
+      CALL h5gopen_f(hdf5desc%file_id,kstring,hdf5desc%group_id,error)
+      CALL h5acreate_f(hdf5desc%group_id, attr_name, atype_id, aspace_id, attr_id, error)
+      CALL h5awrite_f(attr_id, atype_id, buf, error)
+      CALL h5aclose_f(attr_id, error)
+      !
+      ! End access to the dataset and release resources used by it.
+      !
+      CALL h5gclose_f(hdf5desc%group_id, error)
+    ELSE
+      !write(attrdata,'(I0)') attr_data
+      CALL h5acreate_f(hdf5desc%file_id, attr_name, atype_id, aspace_id, attr_id, error)
+      CALL h5awrite_f(attr_id, atype_id, buf, error)
+      CALL h5aclose_f(attr_id, error)
+      !
+      ! Terminate access to the data space.
+      !
+    ENDIF
+    CALL H5Sclose_f(aspace_id, error) 
+    CALL H5Tclose_f(atype_id, error )  
+  END SUBROUTINE add_attributes_hdf5_boolean
+
 
 
   SUBROUTINE read_attributes_hdf5_i(hdf5desc, attr_data, attr_name, kpoint, debug)
@@ -839,6 +887,77 @@ module hdf5_qe
    endif
     
   END SUBROUTINE read_attributes_hdf5_i
+
+  SUBROUTINE read_attributes_hdf5_c(hdf5desc, attr_data, attr_name, kpoint, debug)
+    implicit none
+    TYPE(HDF5_type), intent(inout) :: hdf5desc
+    integer, intent(in), optional  :: kpoint, debug
+    CHARACTER(LEN=*),INTENT(OUT)   ::  attr_data 
+    CHARACTER(LEN=*), intent(in)   :: attr_name
+    character*12 kstring
+    integer :: error
+    INTEGER(HID_T) :: aspace_id     ! Attribute Dataspace identifier
+    INTEGER(HSIZE_T) :: attrlen    ! Length of the attribute string
+    INTEGER(HID_T) :: atype_id      ! Attribute Dataspace identifier
+    INTEGER(HID_T) :: attr_id      ! Attribute Dataspace identifier
+    CHARACTER,TARGET,ALLOCATABLE  :: chars(:)
+    TYPE(C_PTR)    :: buf  
+   
+    IF(PRESENT( kpoint )) THEN
+      WRITE(kstring,'(I0)') kpoint
+      kstring='KPOINT'//kstring
+      CALL H5Gopen_f(hdf5desc%file_id,kstring,hdf5desc%group_id,error)
+      CALL H5Aopen_by_name_f(hdf5desc%group_id,'.', TRIM(attr_name) , attr_id, error)
+      CALL extract_string 
+      CALL H5Aclose_f(attr_id, error)
+      CALL H5Gclose_f(hdf5desc%group_id, error)
+    ELSE
+      CALL h5aopen_by_name_f(hdf5desc%file_id,'.',TRIM(attr_name), attr_id, error)
+      CALL extract_string  
+      CALL h5aclose_f(attr_id, error)
+    ENDIF
+    CALL H5Tclose_f( atype_id, error )
+    CONTAINS 
+    SUBROUTINE extract_string
+      IMPLICIT NONE 
+      INTEGER   :: i 
+      CALL H5Aget_type_f (attr_id , atype_id, error ) 
+      CALL H5Tget_size_f (atype_id, attrlen, error ) 
+      IF ( attrlen .GT. LEN(attr_data) ) CALL infomsg ('read_attributes_hdf5',& 
+                                           'string attribute on file too long, it will be truncated on reading')
+      ALLOCATE ( chars(attrlen) )
+      buf = C_LOC (chars)  
+      CALL H5Aread_f( attr_id, atype_id, buf, error )
+      DO i =1, attrlen
+         IF ( i .GT. LEN( attr_data) ) EXIT
+         attr_data(i:i) = chars(i)  
+      END DO   
+      DEALLOCATE(chars) 
+      buf = C_NULL_PTR 
+    END SUBROUTINE extract_string
+  END SUBROUTINE read_attributes_hdf5_c
+
+  SUBROUTINE read_attributes_hdf5_boolean( hdf5desc, attr_data, attr_name, kpoint, debug) 
+    IMPLICIT NONE 
+    TYPE(HDF5_type), intent(inout) :: hdf5desc
+    INTEGER, INTENT(IN), OPTIONAL  :: kpoint, debug
+    LOGICAL,INTENT(OUT)            ::  attr_data 
+    CHARACTER(LEN=*), intent(in)   :: attr_name
+    !
+    CHARACTER(LEN=10)              :: attr_string 
+    CALL read_attributes_hdf5_c( hdf5desc, attr_string, attr_name, kpoint, debug)
+    SELECT CASE (TRIM( attr_string) ) 
+      CASE ('.TRUE.' ) 
+         attr_data = .TRUE. 
+      CASE ('.FALSE.') 
+        attr_data = .FALSE.
+      CASE DEFAULT 
+        attr_data = .FALSE. 
+        CALL infomsg ( 'read_attributes_hdf5' , 'error reading attribute '//TRIM(attr_name)//' value set to .FALSE.')
+    END SELECT 
+ END SUBROUTINE read_attributes_hdf5_boolean
+
+
 
   SUBROUTINE read_attributes_hdf5_r(hdf5desc, attr_data, attr_name, kpoint)
     implicit none
@@ -889,10 +1008,8 @@ module hdf5_qe
     LOGICAL,            INTENT(IN) :: gamma_only
     INTEGER,            INTENT(IN) :: nbnd, ngw, igwx
     TYPE(HDF5_type), intent(inout) :: hdf5desc
-    integer                        :: gammaonly = 0
     CALL add_attributes_hdf5(hdf5desc,ngw,"ngw",ik)
-    IF ( gamma_only) gammaonly = 1 
-    CALL add_attributes_hdf5(evc_hdf5_write,gammaonly,"gamma_only",ik)
+    CALL add_attributes_hdf5(evc_hdf5_write,gamma_only,"gamma_only",ik)
     CALL add_attributes_hdf5(evc_hdf5_write,igwx,"igwx",ik)
     CALL add_attributes_hdf5(evc_hdf5_write,nbnd,"nbnd",ik)
     CALL add_attributes_hdf5(evc_hdf5_write,ik,"ik",ik)

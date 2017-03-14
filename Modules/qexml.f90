@@ -1078,8 +1078,6 @@ CONTAINS
       CHARACTER(*),  INTENT(in) :: cutoff_units
 #if defined __HDF5
       CHARACTER(LEN=256) :: filename_hdf5
-      CHARACTER          :: gammaonly
-      !integer          :: gammaonly, ierr
       integer           :: ierr
 #endif
 
@@ -1091,12 +1089,7 @@ CONTAINS
       CALL add_attributes_hdf5(g_hdf5_write,ecutwfc,"WFC_CUTOFF")
       CALL add_attributes_hdf5(g_hdf5_write,ecutrho,"RHO_CUTOFF")
       CALL add_attributes_hdf5(g_hdf5_write,npwx,"MAX_NUMBER_OF_GK-VECTORS")
-      IF ( gamma_only) THEN  
-        write(gammaonly,'(I1)') 1
-      ELSE 
-        write(gammaonly,'(I1)') 0
-      END IF
-      CALL add_attributes_hdf5(g_hdf5_write,gammaonly,"GAMMA_ONLY")
+      CALL add_attributes_hdf5(g_hdf5_write,gamma_only,"GAMMA_ONLY")
       CALL add_attributes_hdf5(g_hdf5_write,trim(cutoff_units),"UNITS_FOR_CUTOFF")
       CALL add_attributes_hdf5(g_hdf5_write,nr1,"nr1")
       CALL add_attributes_hdf5(g_hdf5_write,nr2,"nr2")

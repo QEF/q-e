@@ -63,7 +63,6 @@ MODULE io_base
       INTEGER                  :: me_in_group, nproc_in_group, my_group
       COMPLEX(DP), ALLOCATABLE :: wtmp(:)
       !
-      INTEGER            :: gammaonly
 #if defined(__HDF5) 
       TYPE (hdf5_type),ALLOCATABLE    :: h5_write_desc
       ! 
@@ -86,9 +85,7 @@ MODULE io_base
          CALL prepare_for_writing_final ( h5_write_desc, 0, &
               TRIM(filename)//'.hdf5',ik, ADD_GROUP = .false.)
          CALL add_attributes_hdf5(h5_write_desc, ngw,"ngw",ik)
-         gammaonly = 0 
-         IF (gamma_only) gammaonly = 1 
-         CALL add_attributes_hdf5(h5_write_desc, gammaonly,"gamma_only",ik)
+         CALL add_attributes_hdf5(h5_write_desc, gamma_only,"gamma_only",ik)
          CALL add_attributes_hdf5(h5_write_desc, igwx,"igwx",ik)
          CALL add_attributes_hdf5(h5_write_desc, nbnd,"nbnd",ik)
          CALL add_attributes_hdf5(h5_write_desc, ik,"ik",ik)
