@@ -26,19 +26,11 @@ MODULE xml_io_base
   IMPLICIT NONE
   PRIVATE
   !
-  CHARACTER(5),  PARAMETER :: fmt_name = "QEXML"
-  CHARACTER(5),  PARAMETER :: fmt_version = "1.4.0"
-  !
-  LOGICAL,       SAVE      :: rho_binary = .TRUE.
-  !
   CHARACTER(iotk_attlenx)  :: attr
-  !
-  !
-  PUBLIC :: fmt_name, fmt_version
+  LOGICAL,       SAVE      :: rho_binary = .TRUE.
   !
   PUBLIC :: rho_binary
   PUBLIC :: attr
-  !
   !
   PUBLIC :: read_wfc, write_wfc, read_rho_xml, write_rho_xml, &
             save_print_counter, read_print_counter
