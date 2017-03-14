@@ -18,8 +18,7 @@ MODULE xml_io_base
   USE iotk_module
   !
   USE kinds,     ONLY : DP
-  USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, &
-                        current_fmt_version => qexml_version
+  USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun
   USE io_global, ONLY : ionode, ionode_id, stdout
   USE mp,        ONLY : mp_bcast
   USE parser,    ONLY : version_compare
@@ -36,7 +35,6 @@ MODULE xml_io_base
   !
   !
   PUBLIC :: fmt_name, fmt_version
-  PUBLIC :: current_fmt_version
   !
   PUBLIC :: rho_binary
   PUBLIC :: attr

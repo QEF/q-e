@@ -136,7 +136,7 @@ SUBROUTINE read_xml_file_internal(withbs)
   USE vlocal,               ONLY : strf
   USE io_files,             ONLY : tmp_dir, prefix, iunpun, nwordwfc, iunwfc
   USE noncollin_module,     ONLY : noncolin, npol, nspin_lsda, nspin_mag, nspin_gga
-  USE pw_restart,           ONLY : pw_readfile
+  USE pw_restart,           ONLY : pw_readfile, pp_check_file
   USE io_rho_xml,           ONLY : read_rho
   USE read_pseudo_mod,      ONLY : readpp
   USE uspp,                 ONLY : becsum
@@ -383,95 +383,6 @@ SUBROUTINE read_xml_file_internal(withbs)
       END IF
       !
     END SUBROUTINE set_dimensions
-    !
-    !------------------------------------------------------------------------
-    FUNCTION pp_check_file()
-      !------------------------------------------------------------------------
-      !
-      USE io_global,         ONLY : ionode, ionode_id
-      USE mp_images,         ONLY : intra_image_comm
-      USE control_flags,     ONLY : lkpoint_dir, tqr, tq_smoothing, tbeta_smoothing
-      !
-      IMPLICIT NONE
-      !
-      LOGICAL            :: pp_check_file
-      CHARACTER(LEN=256) :: dirname, filename
-      INTEGER            :: ierr
-      LOGICAL            :: lval, found, back_compat
-      !
-      !
-      dirname  = TRIM( tmp_dir ) // TRIM( prefix ) // '.save'
-      filename = TRIM( dirname ) // '/' // TRIM( xmlpun )
-      !
-      IF ( ionode ) &
-         CALL iotk_open_read( iunpun, FILE = filename, IERR = ierr )
-      !
-      CALL mp_bcast ( ierr, ionode_id, intra_image_comm )
-      !
-      CALL errore( 'pp_check_file', 'file ' // &
-                 & TRIM( dirname ) // ' not found', ierr )
-
-      !
-      ! set a flag for back compatibility (before fmt v1.4.0)
-      !
-      back_compat = .FALSE.
-      !
-      IF ( TRIM( version_compare( current_fmt_version, "1.4.0" )) == "older") &
-         back_compat = .TRUE.
-      !
-      IF ( ionode ) THEN
-         !
-         IF ( .NOT. back_compat ) THEN
-             !
-             CALL iotk_scan_begin( iunpun, "CONTROL" ) 
-             !
-         ENDIF
-         !
-         CALL iotk_scan_dat( iunpun, "PP_CHECK_FLAG", lval, FOUND = found)
-         !
-         IF ( .NOT. found ) lval = .FALSE. 
-         !
-         CALL iotk_scan_dat( iunpun, "LKPOINT_DIR", lkpoint_dir, FOUND = found)
-         !
-         IF ( .NOT. found ) lkpoint_dir = .TRUE. 
-         !
-         CALL iotk_scan_dat( iunpun, "Q_REAL_SPACE", tqr, FOUND = found)
-         !
-         IF ( .NOT. found ) tqr = .FALSE. 
-         !
-         CALL iotk_scan_dat( iunpun, "TQ_SMOOTHING", tq_smoothing, FOUND = found)
-         !
-         IF ( .NOT. found ) tq_smoothing = .FALSE. 
-         !
-         CALL iotk_scan_dat( iunpun, "TBETA_SMOOTHING", tbeta_smoothing, FOUND = found)
-         !
-         IF ( .NOT. found ) tbeta_smoothing = .FALSE. 
-         !
-         IF ( .NOT. back_compat ) THEN
-             !
-             CALL iotk_scan_end( iunpun, "CONTROL" ) 
-             !
-         ENDIF
-         !
-         CALL iotk_close_read( iunpun )
-         !
-      END IF
-      !
-      CALL mp_bcast( lval, ionode_id, intra_image_comm )
-      !
-      CALL mp_bcast( lkpoint_dir, ionode_id, intra_image_comm )
-      !
-      CALL mp_bcast( tqr, ionode_id, intra_image_comm )
-      !
-      CALL mp_bcast( tq_smoothing, ionode_id, intra_image_comm )
-      !
-      CALL mp_bcast( tbeta_smoothing, ionode_id, intra_image_comm )
-      !
-      pp_check_file = lval
-      !
-      RETURN
-      !
-    END FUNCTION pp_check_file
     !
   END SUBROUTINE read_xml_file_internal
 #endif
