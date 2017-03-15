@@ -45,7 +45,7 @@ SUBROUTINE wfcinit()
   LOGICAL :: exst, exst_mem, exst_file, opnd_file, twfcollect_file = .FALSE.
   CHARACTER (256 )                        :: dirname
 #if defined (__XSD) 
-  TYPE ( output_type ), ALLOCATABLE       :: output_obj
+  TYPE ( output_type )                    :: output_obj
 #endif 
   !
   !
@@ -73,7 +73,7 @@ SUBROUTINE wfcinit()
      !
      ierr = 1
 #if defined(__XSD)
-     ALLOCATE ( output_obj) 
+     !ALLOCATE ( output_obj) 
      CALL pw_readschema_file(IERR = ierr, RESTART_OUTPUT = output_obj )
      IF ( ierr == 0 ) THEN 
         twfcollect_file = output_obj%band_structure%wf_collected   
@@ -81,7 +81,7 @@ SUBROUTINE wfcinit()
         IF ( twfcollect_file ) CALL read_collected_to_evc(dirname )
      END IF 
      CALL qes_reset_output ( output_obj ) 
-     DEALLOCATE ( output_obj )    
+     !DEALLOCATE ( output_obj )    
 #else
      CALL pw_readfile( 'wave', ierr )
 #endif

@@ -158,12 +158,11 @@ SUBROUTINE read_xml_file ( )
   REAL(DP) :: rdum(1,1), ehart, etxc, vtxc, etotefield, charge
   REAL(DP) :: sr(3,3,48)
   CHARACTER(LEN=20) dft_name
-  TYPE ( output_type), ALLOCATABLE   :: output_obj 
-  TYPE (parallel_info_type),ALLOCATABLE :: parinfo_obj
-  TYPE (general_info_type ),ALLOCATABLE :: geninfo_obj 
+  TYPE ( output_type)                   :: output_obj 
+  TYPE (parallel_info_type)             :: parinfo_obj
+  TYPE (general_info_type )             :: geninfo_obj 
   !
   !
-  ALLOCATE ( output_obj, parinfo_obj, geninfo_obj ) 
   CALL pw_readschema_file ( ierr, output_obj, parinfo_obj, geninfo_obj)
   IF ( ierr /= 0 ) CALL errore ( 'read_schema', 'unable to read xml file', ierr ) 
   ! ... first we get the version of the qexml file
@@ -335,7 +334,6 @@ SUBROUTINE read_xml_file ( )
   CALL qes_reset_output ( output_obj )  
   CALL qes_reset_general_info ( geninfo_obj ) 
   CALL qes_reset_parallel_info ( parinfo_obj ) 
-  DEALLOCATE ( output_obj, geninfo_obj, parinfo_obj ) 
   ! 
   RETURN
   !

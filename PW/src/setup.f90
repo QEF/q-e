@@ -104,9 +104,9 @@ SUBROUTINE setup()
   LOGICAL, EXTERNAL  :: check_para_diag
 !
 #if defined(__XSD)
-  TYPE(output_type),ALLOCATABLE             :: output_obj 
-  TYPE(parallel_info_type),ALLOCATABLE      :: parinfo_obj
-  TYPE(general_info_type),ALLOCATABLE       :: geninfo_obj
+  TYPE(output_type)                         :: output_obj 
+  TYPE(parallel_info_type)                  :: parinfo_obj
+  TYPE(general_info_type)                   :: geninfo_obj
 #endif
 !  
 #if defined(__MPI)
@@ -170,7 +170,6 @@ SUBROUTINE setup()
   !
 #if defined (__XSD)
   IF ( lbands .OR. ( (lfcpopt .OR. lfcpdyn ) .AND. restart )) THEN 
-     ALLOCATE ( output_obj, parinfo_obj, geninfo_obj )
      CALL pw_readschema_file( ierr , output_obj, parinfo_obj, geninfo_obj )
   END IF
   !
@@ -609,7 +608,6 @@ SUBROUTINE setup()
      CALL qes_reset_output ( output_obj ) 
      CALL qes_reset_parallel_info ( parinfo_obj ) 
      CALL qes_reset_general_info ( geninfo_obj ) 
-     DEALLOCATE ( output_obj, parinfo_obj, geninfo_obj ) 
   END IF 
 #endif
   !
