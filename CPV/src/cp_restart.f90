@@ -1271,7 +1271,7 @@ MODULE cp_restart
       LOGICAL               :: exst, exist_wfc 
       CHARACTER(LEN=256)    :: tmp_dir_save
       INTEGER               :: io_bgrp_id
-#if !defined(__OLDXLM)
+#if !defined(__OLDXML)
       TYPE ( output_type)   :: output_obj 
       TYPE (parallel_info_type) :: parinfo_obj
       TYPE (general_info_type ) :: geninfo_obj 
