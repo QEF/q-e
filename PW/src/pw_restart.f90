@@ -18,7 +18,7 @@ MODULE pw_restart
   !
   ! ... originally written by Carlo Sbraccia  (2005)
   !
-#if ! defined(__XSD)
+#if defined(__OLDXML)
   !
   USE iotk_module
   !

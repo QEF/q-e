@@ -95,7 +95,7 @@
   CHARACTER(LEN=80)                        ::  vdw_corr_  
   !
   ! 
-#if defined(__XSD)
+#if !defined(__OLDXML)
   obj%tagname=TRIM(obj_tagname)
   IF ( ABS(ip_ibrav)  .GT. 0 ) THEN  
      ibrav_lattice = .TRUE. 

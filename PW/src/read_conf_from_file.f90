@@ -14,12 +14,12 @@ FUNCTION read_config_from_file(nat, at_old, omega_old, lmovecell, at, bg, &
   USE kinds,          ONLY : DP
   USE io_global,      ONLY : stdout
   USE io_files,       ONLY : tmp_dir, prefix
-#if defined (__XSD)
+#if defined (__OLDXML)
+  USE pw_restart,     ONLY : pw_readfile
+#else
   USE pw_restart_new,    ONLY  : pw_readschema_file, init_vars_from_schema
   USE qes_types_module,     ONLY :  output_type, parallel_info_type, general_info_type
   USE qes_libs_module,      ONLY :  qes_reset_output, qes_reset_general_info, qes_reset_parallel_info 
-#else
-  USE pw_restart,     ONLY : pw_readfile
 #endif
   !
   IMPLICIT NONE
@@ -31,7 +31,7 @@ FUNCTION read_config_from_file(nat, at_old, omega_old, lmovecell, at, bg, &
   REAL(DP),INTENT(inout) :: tau(3,nat)
   INTEGER :: ierr
 !
-#if defined(__XSD)
+#if !defined(__OLDXML)
   TYPE ( output_type)                   :: output_obj
   TYPE (parallel_info_type)             ::  parinfo_obj
   TYPE (general_info_type )             :: geninfo_obj 
@@ -44,7 +44,9 @@ FUNCTION read_config_from_file(nat, at_old, omega_old, lmovecell, at, bg, &
   !
   ! ... check if restart file is present, if yes read config parameters
   !
-#if defined(__XSD) 
+#if defined(__OLDXML) 
+  CALL pw_readfile( 'config', ierr )
+#else
   CALL pw_readschema_file ( ierr, output_obj, parinfo_obj, geninfo_obj)
   IF (ierr == 0 ) THEN 
      CALL init_vars_from_schema ( 'config', ierr, output_obj, parinfo_obj, geninfo_obj ) 
@@ -52,8 +54,6 @@ FUNCTION read_config_from_file(nat, at_old, omega_old, lmovecell, at, bg, &
      CALL qes_reset_parallel_info (parinfo_obj) 
      CALL qes_reset_general_info  (geninfo_obj) 
   END IF 
-#else
-  CALL pw_readfile( 'config', ierr )
 #endif
   !
   IF ( ierr > 0 ) THEN

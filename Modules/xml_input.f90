@@ -10,7 +10,7 @@
 !
 MODULE xml_input
 
-#if ! defined (__XSD)
+#if defined (__OLDXML)
    USE xml_io_base, ONLY : attr
    USE qexml_module, ONLY: qexml_init, qexml_write_header, qexml_openfile, &
                            qexml_closefile

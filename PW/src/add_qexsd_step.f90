@@ -12,7 +12,9 @@
  
 !----------------------------------------------------------------
 SUBROUTINE add_qexsd_step(i_step)
-#if defined (__XSD)
+#if defined (__OLDXML)
+CONTINUE 
+#else
 !-----------------------------------------------------------------
 !
 !------------------------------------------------------------------------
@@ -54,7 +56,5 @@ ELSE
    CALL qexsd_step_addstep ( i_step, nstep, nsp, atm, ityp, nat, tau, alat, at(:,1), at(:,2), at(:,3), etot, eband, &
                              ehart, vtxc, etxc, ewld, degauss, demet, force, sigma, n_scf_steps, scf_error)
 END IF 
-#else
-CONTINUE 
 #endif    
 END SUBROUTINE  add_qexsd_step

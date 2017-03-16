@@ -194,7 +194,7 @@ SUBROUTINE write_evc ( input_file_name, real_or_complex, &
   USE mp_pools, ONLY : kunit, npool, my_pool_id, intra_pool_comm
   USE symm_base, ONLY : s, nsym
   USE xml_io_base, ONLY : create_directory
-#if ! defined (__XSD)
+#if defined (__OLDXML)
   USE qexml_module, ONLY : qexml_kpoint_dirname, qexml_wfc_filename
 #endif
 #if defined(__MPI)
@@ -515,7 +515,7 @@ SUBROUTINE write_evc ( input_file_name, real_or_complex, &
   CALL mp_max ( npw_g, world_comm )
 
   CALL create_directory ( output_dir_name )
-#if ! defined (__XSD)
+#if defined (__OLDXML)
   DO ik = 1, nk
     CALL create_directory (qexml_kpoint_dirname( output_dir_name, ik ) )
   ENDDO
@@ -542,7 +542,7 @@ SUBROUTINE write_evc ( input_file_name, real_or_complex, &
 
   DO ik = 1, nk
 
-#if ! defined (__XSD)
+#if defined (__OLDXML)
     filename = TRIM ( qexml_wfc_filename ( output_dir_name, 'gkvectors', ik ) )
 #endif
     IF ( ionode ) THEN
@@ -571,7 +571,7 @@ SUBROUTINE write_evc ( input_file_name, real_or_complex, &
     ENDIF
 
     DO is = 1, ns
-#if ! defined (__XSD)
+#if defined (__OLDXML)
       IF ( ns .GT. 1 ) THEN
         filename = TRIM ( qexml_wfc_filename ( output_dir_name, 'eigenval', ik, is, EXTENSION = 'xml' ) )
       ELSE
@@ -590,7 +590,7 @@ SUBROUTINE write_evc ( input_file_name, real_or_complex, &
         CALL iotk_write_dat ( iu, "OCCUPATIONS", oc ( :, ik, is ) )
         CALL iotk_close_write ( iu )
       ENDIF
-#if ! defined (__XSD)
+#if defined (__OLDXML)
       IF ( ns .GT. 1 ) THEN
         filename = TRIM ( qexml_wfc_filename ( output_dir_name, 'evc', ik, is ) )
       ELSE

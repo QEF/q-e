@@ -32,7 +32,7 @@ MODULE pw_restart_new
        pw_readschema_file, init_vars_from_schema, read_collected_to_evc
   !
   CONTAINS
-#if defined(__XSD)
+#if !defined(__OLDXML)
     !------------------------------------------------------------------------
     SUBROUTINE pw_write_schema( )
       !------------------------------------------------------------------------
@@ -91,7 +91,6 @@ MODULE pw_restart_new
                                        emaxpos, eopreg, eamp, el_dipole, ion_dipole,&
                                        monopole, zmon, relaxz, block, block_1,&
                                        block_2, block_height ! TB
-      USE io_rho_xml,           ONLY : write_rho
       USE mp,                   ONLY : mp_sum
       USE mp_bands,             ONLY : nproc_bgrp, me_bgrp, root_bgrp, &
                                        intra_bgrp_comm, nbgrp, ntask_groups

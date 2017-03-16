@@ -1343,7 +1343,7 @@ CONTAINS
     !  
     REAL(DP),INTENT(IN)                               :: wstring(nstring)      
     ! 
-#if defined (__XSD)
+#if !defined (__OLDXLM)
     CHARACTER(LEN=*),PARAMETER                        :: TAGNAME = "BerryPhase"
     TYPE ( polarization_type)                         :: tot_pol_obj
     ! 
@@ -1418,7 +1418,7 @@ CONTAINS
     IMPLICIT NONE 
     !
     INTEGER      :: status_int
-#if defined(__XSD)  
+#if !defined(__OLDXML)  
     CALL qes_init_status( exit_status, "status", status_int)
 #endif
     END SUBROUTINE qexsd_set_status 

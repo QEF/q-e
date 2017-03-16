@@ -82,12 +82,12 @@ SUBROUTINE setup()
   USE noncollin_module,   ONLY : noncolin, npol, m_loc, i_cons, &
                                  angle1, angle2, bfield, ux, nspin_lsda, &
                                  nspin_gga, nspin_mag
-#if defined(__XSD) 
+#if defined(__OLDXML) 
+  USE pw_restart,         ONLY : pw_readfile
+#else
   USE pw_restart_new,     ONLY : pw_readschema_file, init_vars_from_schema 
   USE qes_libs_module,    ONLY : qes_reset_output, qes_reset_parallel_info, qes_reset_general_info
   USE qes_types_module,   ONLY : output_type, parallel_info_type, general_info_type 
-#else
-  USE pw_restart,         ONLY : pw_readfile
 #endif
   USE exx,                ONLY : ecutfock, exx_grid_init, exx_mp_init, exx_div_check
   USE funct,              ONLY : dft_is_meta, dft_is_hybrid, dft_is_gradient
@@ -103,7 +103,7 @@ SUBROUTINE setup()
   !
   LOGICAL, EXTERNAL  :: check_para_diag
 !
-#if defined(__XSD)
+#if !defined(__OLDXML)
   TYPE(output_type)                         :: output_obj 
   TYPE(parallel_info_type)                  :: parinfo_obj
   TYPE(general_info_type)                   :: geninfo_obj
@@ -168,7 +168,18 @@ SUBROUTINE setup()
   !
   nelec = ionic_charge - tot_charge
   !
-#if defined (__XSD)
+#if defined (__OLDXML)
+  IF ( lfcpopt .AND. restart ) THEN
+     CALL pw_readfile( 'fcpopt', ierr )
+     tot_charge = ionic_charge - nelec
+  END IF
+  !
+  IF ( lfcpdyn .AND. restart ) THEN
+
+     CALL pw_readfile( 'fcpdyn', ierr )
+     tot_charge = ionic_charge - nelec
+  END IF
+#else 
   IF ( lbands .OR. ( (lfcpopt .OR. lfcpdyn ) .AND. restart )) THEN 
      CALL pw_readschema_file( ierr , output_obj, parinfo_obj, geninfo_obj )
   END IF
@@ -181,17 +192,6 @@ SUBROUTINE setup()
   IF (lfcpdyn .AND. restart ) THEN    
      CALL init_vars_from_schema( 'fcpdyn', ierr,  output_obj, parinfo_obj, geninfo_obj ) 
      tot_charge = ionic_charge - nelec 
-  END IF
-#else 
-  IF ( lfcpopt .AND. restart ) THEN
-     CALL pw_readfile( 'fcpopt', ierr )
-     tot_charge = ionic_charge - nelec
-  END IF
-  !
-  IF ( lfcpdyn .AND. restart ) THEN
-
-     CALL pw_readfile( 'fcpdyn', ierr )
-     tot_charge = ionic_charge - nelec
   END IF
 #endif
   !
@@ -580,11 +580,11 @@ SUBROUTINE setup()
      !
      ! ... if calculating bands, we read the Fermi energy
      !
-#if defined (__XSD)
-     CALL init_vars_from_schema( 'ef',   ierr , output_obj, parinfo_obj, geninfo_obj)
-#else
+#if defined (__OLDXML)
      CALL pw_readfile( 'reset', ierr )
      CALL pw_readfile( 'ef',   ierr )
+#else
+     CALL init_vars_from_schema( 'ef',   ierr , output_obj, parinfo_obj, geninfo_obj)
 #endif 
      CALL errore( 'setup ', 'problem reading ef from file ' // &
              & TRIM( tmp_dir ) // TRIM( prefix ) // '.save', ierr )
@@ -603,7 +603,7 @@ SUBROUTINE setup()
      END IF
      !
   END IF
-#if defined(__XSD) 
+#if !defined(__OLDXML) 
   IF ( lbands .OR. ( (lfcpopt .OR. lfcpdyn ) .AND. restart ) ) THEN 
      CALL qes_reset_output ( output_obj ) 
      CALL qes_reset_parallel_info ( parinfo_obj ) 

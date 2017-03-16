@@ -500,7 +500,6 @@ punch_plot.o : ../../FFTXlib/fft_interfaces.o
 punch_plot.o : ../../FFTXlib/scatter_mod.o
 punch_plot.o : ../../Modules/cell_base.o
 punch_plot.o : ../../Modules/constants.o
-punch_plot.o : ../../Modules/control_flags.o
 punch_plot.o : ../../Modules/fft_base.o
 punch_plot.o : ../../Modules/gvecw.o
 punch_plot.o : ../../Modules/io_global.o
@@ -509,7 +508,6 @@ punch_plot.o : ../../Modules/kind.o
 punch_plot.o : ../../Modules/noncol.o
 punch_plot.o : ../../Modules/recvec.o
 punch_plot.o : ../../Modules/run_info.o
-punch_plot.o : ../../Modules/wavefunctions.o
 punch_plot.o : ../../PW/src/pwcom.o
 punch_plot.o : ../../PW/src/scf_mod.o
 punch_plot.o : paw_postproc.o

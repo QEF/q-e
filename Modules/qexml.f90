@@ -28,7 +28,7 @@ MODULE qexml_module
   ! in the root directory of the present distribution,
   ! or http://www.gnu.org/copyleft/gpl.txt .
   !
-#if ! defined(__XSD)
+#if defined(__OLDXML)
   !
   USE iotk_module
   USE kinds, ONLY : DP

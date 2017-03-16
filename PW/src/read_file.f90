@@ -5,10 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#if defined(__XSD)
-SUBROUTINE read_file_dummy()
-END SUBROUTINE read_file_dummy
-#else
+#if defined(__OLDXML)
 !----------------------------------------------------------------------------
 ! TB
 ! included allocation of the force field of the monopole, search for 'TB'
@@ -385,4 +382,7 @@ SUBROUTINE read_xml_file_internal(withbs)
     END SUBROUTINE set_dimensions
     !
   END SUBROUTINE read_xml_file_internal
+#else
+SUBROUTINE read_file_dummy()
+END SUBROUTINE read_file_dummy
 #endif

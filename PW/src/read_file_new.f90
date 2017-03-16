@@ -5,9 +5,9 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#if ! defined(__XSD)
-SUBROUTINE read_file_dummy()
-END SUBROUTINE read_file_dummy
+#if defined(__OLDXML)
+   SUBROUTINE read_file_dummy()
+   END SUBROUTINE read_file_dummy
 #else
 !----------------------------------------------------------------------------
 SUBROUTINE read_file()
