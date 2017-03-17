@@ -616,7 +616,7 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj 
             ! dproj(iwf,ibnd) = \sum_ih wfatdbeta(iwf,ih)*betapsi(ih,ibnd) +
             !                           wfatbeta(iwf,ih)*dbetapsi(ih,ibnd) 
             !
-            IF ( mykey == 0 ) THEN
+            IF ( mykey == 0 .AND. nh(nt) > 0 ) THEN
                CALL DGEMM('N','N',nwfcU, nb_e-nb_s+1, nh(nt), 1.0_dp,  &
                     wfatdbeta, nwfcU, betapsi(1,nb_s), nh(nt), 1.0_dp,&
                     dproj(1,nb_s), nwfcU)
