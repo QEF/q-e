@@ -28,7 +28,8 @@ subroutine solve_head
                                    l_scissor,scissor,len_head_block_freq, &
                                    len_head_block_wfc
   USE control_ph,           ONLY : tr2_ph
-  USE gvect,                ONLY : ig_l2g
+  USE gvect,                ONLY : ngm, ngm_g, nl, ig_l2g, gstart, g
+  USE gvecs,                ONLY : nls, doublegrid
   USE mp,                   ONLY : mp_sum, mp_barrier, mp_bcast
   USE mp_world,             ONLY : world_comm, mpime, nproc
   USE uspp,                 ONLY : nkb, vkb

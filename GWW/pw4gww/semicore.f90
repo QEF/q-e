@@ -17,7 +17,8 @@
      use pwcom
      USE wavefunctions_module,  ONLY : evc
      USE kinds,                 ONLY : DP
-     USE gvect,                 ONLY : ig_l2g
+     USE gvect,        ONLY : ngm_g, ig_l2g, nl, nlm, gstart
+     USE gvecs,        ONLY : nls, nlsm
      USE mp,           ONLY : mp_sum, mp_barrier, mp_bcast
      USE mp_wave,      ONLY : mergewf,splitwf
      USE mp_pools,     ONLY : intra_pool_comm, inter_pool_comm, intra_pool_comm

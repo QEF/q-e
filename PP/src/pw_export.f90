@@ -357,6 +357,8 @@ SUBROUTINE write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
 
   USE kinds,          ONLY : DP
   USE pwcom
+  USE gvecs,          ONLY : dual
+  USE gvect,          ONLY : ngm, ngm_g, mill, ig_l2g
   USE gvecw,          ONLY : ecutwfc, gcutw
   USE start_k,        ONLY : nk1, nk2, nk3, k1, k2, k3
   USE control_flags,  ONLY : gamma_only

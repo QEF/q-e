@@ -28,6 +28,7 @@ bse_main.o : ../../Modules/io_global.o
 bse_main.o : ../../Modules/mp.o
 bse_main.o : ../../Modules/mp_pools.o
 bse_main.o : ../../Modules/mp_world.o
+bse_main.o : ../../Modules/recvec.o
 bse_main.o : ../../Modules/wavefunctions.o
 bse_main.o : ../../PW/src/pwcom.o
 bse_main.o : ../../PW/src/scf_mod.o
@@ -252,6 +253,7 @@ read_export.o : ../../Modules/kind.o
 read_export.o : ../../Modules/mp.o
 read_export.o : ../../Modules/mp_pools.o
 read_export.o : ../../Modules/mp_world.o
+read_export.o : ../../Modules/recvec.o
 read_export.o : ../../Modules/uspp.o
 read_export.o : ../../Modules/wavefunctions.o
 read_export.o : ../../PW/src/ldaU.o

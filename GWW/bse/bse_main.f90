@@ -7,6 +7,7 @@ use mp_world, ONLY : mpime
 use mp_pools, ONLY : kunit
 USE wvfct,     ONLY : nbnd, et, npwx
 USE gvecw,              ONLY : ecutwfc
+USE gvecs,              ONLY : doublegrid
 use pwcom
 USE wavefunctions_module, ONLY : evc
 use mp, ONLY: mp_bcast

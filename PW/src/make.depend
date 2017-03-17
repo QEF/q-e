@@ -1547,8 +1547,6 @@ pwcom.o : ../../Modules/cell_base.o
 pwcom.o : ../../Modules/constants.o
 pwcom.o : ../../Modules/kind.o
 pwcom.o : ../../Modules/parameters.o
-pwcom.o : ../../Modules/recvec.o
-pwcom.o : ldaU.o
 pwscf.o : ../../Modules/command_line_options.o
 pwscf.o : ../../Modules/environment.o
 pwscf.o : ../../Modules/mp_global.o
@@ -1592,7 +1590,6 @@ read_file.o : ../../Modules/ions_base.o
 read_file.o : ../../Modules/kernel_table.o
 read_file.o : ../../Modules/kind.o
 read_file.o : ../../Modules/mp_bands.o
-read_file.o : ../../Modules/mp_images.o
 read_file.o : ../../Modules/noncol.o
 read_file.o : ../../Modules/paw_variables.o
 read_file.o : ../../Modules/read_pseudo.o

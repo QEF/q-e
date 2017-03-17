@@ -54,9 +54,10 @@ program gwl_punch
   !    
 
   USE kinds,     ONLY : i4b
-  USE gvect,  ONLY : mill
+  USE gvecs,     ONLY : doublegrid
+  USE gvect,     ONLY : mill
   use pwcom
-  USE constants,            ONLY : rytoev
+  USE constants, ONLY : rytoev
   use io_global, ONLY : stdout, ionode, ionode_id
   use io_files,  ONLY : psfile, pseudo_dir
   use io_files,  ONLY : prefix, tmp_dir
@@ -516,6 +517,7 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
 
   use kinds,          ONLY : DP 
   use pwcom  
+  USE gvect,          ONLY : ngm, ngm_g, mill, ig_l2g, g
   use gvecw,          ONLY : gcutw
   use control_flags,  ONLY : gamma_only  
   use becmod,         ONLY : bec_type, becp, calbec, &

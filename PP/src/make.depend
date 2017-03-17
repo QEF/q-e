@@ -606,6 +606,7 @@ pw_export.o : ../../Modules/mp_pools.o
 pw_export.o : ../../Modules/mp_wave.o
 pw_export.o : ../../Modules/mp_world.o
 pw_export.o : ../../Modules/parameters.o
+pw_export.o : ../../Modules/recvec.o
 pw_export.o : ../../Modules/uspp.o
 pw_export.o : ../../Modules/version.o
 pw_export.o : ../../Modules/wavefunctions.o
