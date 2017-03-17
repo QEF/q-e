@@ -239,8 +239,8 @@ SUBROUTINE vcsmd( conv_ions )
   tempo = ( istep - 1 ) * dt * time_au
   !
   IF ( istep == 1 .AND. ( calc(2:2) == 'm' ) ) THEN
-        WRITE( stdout,'(/5X,A,/,5x,"convergence thresholds EPSE = ",ES8.2, &
-             &  "  EPSF = ",ES8.2)' ) TRIM(calc_long), epse, epsf
+        WRITE( stdout,'(/5X,A,/,5x,"convergence thresholds EPSE =",ES9.2, &
+             &  "  EPSF =",ES9.2)' ) TRIM(calc_long), epse, epsf
   END IF
   !
   WRITE( stdout, '(/5X,"Entering Dynamics;  it = ",I5,"   time = ", &
