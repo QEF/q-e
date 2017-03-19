@@ -1381,10 +1381,10 @@ MODULE pw_restart_new
        END  DO loop_on_species
     END DO loop_on_atoms
     
+    DEALLOCATE ( symbols ) 
     IF ( atomic_structure%alat_ispresent ) alat = atomic_structure%alat 
     tau(:,1:nat) = tau(:,1:nat)/alat  
     ! 
-    !pseudo_dir = TRIM(restart_obj%control_variables%pseudo_dir)//'/'
     pseudo_dir_cur = TRIM ( dirname)//'/'  
     ! 
     END SUBROUTINE readschema_ions
@@ -2193,6 +2193,7 @@ MODULE pw_restart_new
       CALL set_screening_parameter ( hybrid_obj%screening_parameter) 
       ecutvcut = hybrid_obj%ecutvcut
       ecutfock = hybrid_obj%ecutfock
+      exxdiv_treatment = hybrid_obj%exxdiv_treatment
       CALL start_exx() 
     END SUBROUTINE  readschema_exx 
     !-----------------------------------------------------------------------------------  
