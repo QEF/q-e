@@ -26,19 +26,6 @@ MODULE cp_restart
                           qexml_wfc_filename, qexml_restart_dirname
   USE io_files,  ONLY : xmlpun, qexml_version, qexml_version_init
   USE xml_io_base, ONLY  : write_wfc
-#else
-  USE qes_module
-  USE qexsd_input, ONLY: qexsd_init_k_points_ibz
-  USE qexsd_module, ONLY: qexsd_init_schema, qexsd_openschema, qexsd_closeschema,      &
-                          qexsd_init_convergence_info, qexsd_init_algorithmic_info,    & 
-                          qexsd_init_atomic_species, qexsd_init_atomic_structure,      &
-                          qexsd_init_symmetries, qexsd_init_basis_set, qexsd_init_dft, &
-                          qexsd_init_magnetization,qexsd_init_band_structure,          &
-                          qexsd_init_dipole_info, qexsd_init_total_energy,             &
-                          qexsd_init_forces,qexsd_init_stress,                         &
-                          qexsd_init_outputElectricField, input_obj => qexsd_input_obj
-  USE io_files,  ONLY : xmlpun_schema
-  USE io_base,   ONLY : write_wfc
 #endif
   USE xml_io_base,     ONLY  : read_wfc, write_rho_xml,read_print_counter, create_directory
   !
@@ -120,11 +107,6 @@ MODULE cp_restart
       USE kernel_table,             ONLY : vdw_table_name, kernel_file_name
       USE london_module,            ONLY : scal6, lon_rcut, in_c6
       USE tsvdw_module,             ONLY : vdw_isolated, vdw_econv_thr
-#if !defined(__OLDXML)
-      USE wrappers,                 ONLY : f_copy
-      USE uspp,                     ONLY : okvan
-      USE input_parameters,         ONLY : vdw_corr, london, starting_ns_eigenvalue
-#endif
       !
       IMPLICIT NONE
       !
@@ -204,13 +186,7 @@ MODULE cp_restart
       INTEGER               :: inlc
       CHARACTER(iotk_attlenx)  :: attr
       REAL(DP), ALLOCATABLE :: temp_vec(:), wfc_temp(:,:) ! BS 
-#if !defined(__OLDXML)
-      TYPE(output_type) :: output
-      LOGICAL :: is_hubbard(nsp)
-      REAL(dp):: hubbard_dum(3,nsp)
-      COMPLEX(dp), ALLOCATABLE :: ns_dum(:,:,:,:)
-      CHARACTER(LEN=6), EXTERNAL :: int_to_char
-#endif
+      !
       k1  = 0
       k2  = 0
       k3  = 0
@@ -287,210 +263,8 @@ MODULE cp_restart
       !
 #if !defined (__OLDXML)
       !
-      ! XML descriptor
-      ! 
-      WRITE(dirname,'(A,A,"_",I2,".save/")') TRIM(tmp_dir), TRIM(prefix), ndw
-      CALL create_directory( TRIM(dirname) )
+      CALL errore('cp_restart','called in wrong case',1)
       !
-      CALL qexsd_init_schema( iunpun )
-      !
-      IF ( ionode ) THEN
-         !
-         ! ... here we init the variables and finally write them to file
-         !
-!-------------------------------------------------------------------------------
-! ... HEADER
-!-------------------------------------------------------------------------------
-         !
-         CALL qexsd_openschema(TRIM( dirname ) // TRIM( xmlpun_schema ))
-         output%tagname="output"
-!-------------------------------------------------------------------------------
-! ... CONVERGENCE_INFO - TO BE VERIFIED
-!-------------------------------------------------------------------------------
-!
-         CALL qexsd_init_convergence_info(output%convergence_info, &
-              n_scf_steps=0, scf_error=0.0_dp, &
-              opt_conv_ispresent=.FALSE., &
-              n_opt_steps=0, grad_norm=0.0_dp )
-         !
-!-------------------------------------------------------------------------------
-! ... ALGORITHMIC_INFO
-!-------------------------------------------------------------------------------
-         !
-         CALL qexsd_init_algorithmic_info(output%algorithmic_info, &
-              real_space_q=.FALSE., uspp=okvan, paw=.FALSE.)
-         !
-!-------------------------------------------------------------------------------
-! ... ATOMIC_SPECIES - why starting_magnetization in output?
-!-------------------------------------------------------------------------------
-         !
-         CALL qexsd_init_atomic_species(output%atomic_species, nsp, atm,&
-                 psfile, amass)
-!-------------------------------------------------------------------------------
-! ... ATOMIC_STRUCTURE
-!-------------------------------------------------------------------------------
-         !
-         CALL qexsd_init_atomic_structure(output%atomic_structure, nsp, atm, ityp, &
-              nat, tau(:,ind_bck(:)), alat, alat*a1(:), alat*a2(:), alat*a3(:), ibrav)
-         !
-!-------------------------------------------------------------------------------
-! ... SYMMETRIES
-!-------------------------------------------------------------------------------
-         output%symmetries%lwrite=.false.
-!-------------------------------------------------------------------------------
-! ... BASIS SET
-!-------------------------------------------------------------------------------
-         CALL qexsd_init_basis_set(output%basis_set,gamma_only, ecutwfc/e2, ecutwfc*dual/e2, &
-              dfftp%nr1, dfftp%nr2, dfftp%nr3, dffts%nr1, dffts%nr2, dffts%nr3, &
-              .FALSE., dfftp%nr1, dfftp%nr2, dfftp%nr3, ngm_g, ngms_g, ngw_g, &
-              b1(:), b2(:), b3(:) )
-         !
-         !
-         dft_name = get_dft_name()
-         IF ( london ) vdw_corr = 'grimme-d2' ! why this?
-         is_hubbard(:) = (Hubbard_U(:) > 0.0_dp)
-         hubbard_dum(:,:)= 0.0_dp
-         ALLOCATE (ns_dum(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat))
-         ns_dum= (0.0_dp, 0.0_dp)
-         CALL qexsd_init_dft(output%dft, dft_name, .true., dft_is_hybrid(), &
-              0, 0, 0, ecutwfc, get_exx_fraction(), get_screening_parameter(),&
-              'none', .false., 0.0_dp, lda_plus_u, 0, 2*Hubbard_lmax+1,.false.,&
-              nspin, nsp, 2*Hubbard_lmax+1, nat, atm, ityp, Hubbard_U,&
-              Hubbard_dum(1,:), Hubbard_dum(2,:), Hubbard_dum(3,:),Hubbard_dum,&
-              starting_ns_eigenvalue, ns, ns_dum, 'atomic', dft_is_nonlocc(), &
-              TRIM(vdw_corr), TRIM ( get_nonlocc_name()), scal6, in_c6, &
-              lon_rcut, 0.0_dp, 0.0_dp, vdw_econv_thr, vdw_isolated, &
-              is_hubbard, upf(1:nsp)%psd)
-         DEALLOCATE(ns_dum)
-!-------------------------------------------------------------------------------
-! ... MAGNETIZATION
-!-------------------------------------------------------------------------------
-         !
-         CALL qexsd_init_magnetization(output%magnetization, lsda, .false.,&
-              .false., 0.0_dp, [0.0_dp,0.0_dp, 0.0_dp], 0.0_dp, .false.)
-         !
-!-------------------------------------------------------------------------------
-! ... BAND STRUCTURE
-!-------------------------------------------------------------------------------
-         CALL  qexsd_init_total_energy(output%total_energy,enthal, 0.0_dp, eht,&
-              vave, exc, 0.0_dp, 0.0_dp, 0.0_dp)
-!-------------------------------------------------------------------------------
-! ... BAND STRUCTURE
-!-------------------------------------------------------------------------------
-         ! TEMP
-         CALL qexsd_init_k_points_ibz( input_obj%k_points_ibz, 'Gamma', &
-              'CP',nk1,nk2,nk3,k1,k2,k3,1,xk,wk,alat,a1,.false.) 
-         input_obj%bands%occupations%tagname="occupations"
-         input_obj%bands%occupations%lread=.false.
-         input_obj%bands%occupations%lwrite=.true.
-         input_obj%bands%occupations%spin_ispresent=.false.
-         input_obj%bands%occupations%occupations="fixed"
-         ! TEMP
-         CALL  qexsd_init_band_structure(output%band_structure,lsda, .false., &
-              .false., nbnd_, nelec, natomwfc, .true., 0.0_dp , .false., & 
-              [0.0_dp,0.0_dp], et,  DBLE( ftmp ), nspin, xk, [ngw_g], wk,  &
-              STARTING_KPOINTS = input_obj%k_points_IBZ, &
-              OCCUPATION_KIND = input_obj%bands%occupations, &
-              WF_COLLECTED = twfcollect)
-!-------------------------------------------------------------------------------
-! ... FORCES
-!-------------------------------------------------------------------------------
-         !
-         output%forces_ispresent=tfor
-         CALL qexsd_init_forces(output%forces,nat,force,tfor)
-         !
-!-------------------------------------------------------------------------------
-! ... STRESS 
-!-------------------------------------------------------------------------------
-         output%stress_ispresent=tpre
-         ! may be wrong or incomplete
-         IF ( tpre) h = -MATMUL( detot, ht ) / omega
-         CALL qexsd_init_stress(output%stress, h, tpre ) 
-!-------------------------------------------------------------------------------
-! ... ACTUAL WRITING
-!-------------------------------------------------------------------------------
-         !
-         CALL qes_write_output(iunpun,output)
-         CALL qes_reset_output(output)
-         !
-!-------------------------------------------------------------------------------
-! ... CLOSING
-!-------------------------------------------------------------------------------
-         !
-         CALL qexsd_closeschema()
-         !
-      END IF
-      !
-!-------------------------------------------------------------------------------
-! ... WRITE WFC
-!-------------------------------------------------------------------------------
-      DO iss = 1, nspin
-         !
-         ik_eff = iss
-         filename = TRIM(dirname) // 'wfc' // TRIM(int_to_char(ik_eff))
-         CALL write_wfc( iunpun, ik_eff, nk, iss, nspin, &
-              c02, ngw_g, gamma_only, nbnd_tot, ig_l2g, ngw,  &
-              filename, scalef, ionode, root_pool, intra_pool_comm )
-         !
-      END DO
-!-------------------------------------------------------------------------------
-! ... WRITE PSEUDOPOTENTIALS
-!-------------------------------------------------------------------------------
-     !
-     ! ... copy pseudopotential files into the .save directory
-     !
-     DO is = 1, nsp
-        sourcefile= TRIM(pseudo_dir)//psfile(is)
-        filename  = TRIM(dirname)//psfile(is)
-        IF ( TRIM(sourcefile) /= TRIM(filename) ) &
-             ierr = f_copy(sourcefile, filename)
-     END DO
-     inlc = get_inlc()
-     IF ( inlc > 0 ) THEN 
-        sourcefile= TRIM(kernel_file_name)
-        filename = TRIM(dirname)//TRIM(vdw_table_name)
-        IF ( TRIM(sourcefile) /= TRIM(filename) ) & 
-           ierr = f_copy(sourcefile, filename)
-     END IF  
-     !
-!-------------------------------------------------------------------------------
-! ... CHARGE DENSITY
-!-------------------------------------------------------------------------------
-      !
-      IF (write_charge_density) then
-         !
-         filename = TRIM( dirname ) // 'charge-density'
-         !
-         IF ( nspin == 1 ) THEN
-            !
-            CALL write_rho_xml( filename, rho(:,1), &
-                                dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, &
-                                dfftp%ipp, dfftp%npp, ionode, intra_bgrp_comm, inter_bgrp_comm )
-            !
-         ELSE IF ( nspin == 2 ) THEN
-            !
-            ALLOCATE( rhoaux( SIZE( rho, 1 ) ) )
-            !
-            rhoaux = rho(:,1) + rho(:,2) 
-            !
-            CALL write_rho_xml( filename, rhoaux, &
-                                dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, &
-                                dfftp%ipp, dfftp%npp, ionode, intra_bgrp_comm, inter_bgrp_comm )
-            !
-            filename = TRIM( dirname ) // 'spin-polarization'
-            !
-            rhoaux = rho(:,1) - rho(:,2) 
-            !
-            CALL write_rho_xml( filename, rhoaux, &
-                                dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, &
-                                dfftp%ipp, dfftp%npp, ionode, intra_bgrp_comm, inter_bgrp_comm )
-            !
-            DEALLOCATE( rhoaux )
-            !
-         END IF
-         !
-      END IF ! write_charge_density
-
 #else
       !
       ! ... Some ( CP/FPMD ) default values
@@ -1177,12 +951,6 @@ MODULE cp_restart
       USE mp_global,                ONLY : root_bgrp, intra_bgrp_comm, inter_bgrp_comm, intra_pool_comm
       USE parameters,               ONLY : ntypx
       USE constants,                ONLY : eps8, angstrom_au, pi
-#if !defined(__OLDXML)
-      USE qes_types_module,         ONLY : output_type, parallel_info_type, &
-           general_info_type
-      USE qexsd_reader_module,      ONLY : qexsd_get_general_info, &
-           qexsd_get_parallel_info, qexsd_get_output
-#endif
       !
       IMPLICIT NONE
       !
@@ -1271,11 +1039,6 @@ MODULE cp_restart
       LOGICAL               :: exst, exist_wfc 
       CHARACTER(LEN=256)    :: tmp_dir_save
       INTEGER               :: io_bgrp_id
-#if !defined(__OLDXML)
-      TYPE ( output_type)   :: output_obj 
-      TYPE (parallel_info_type) :: parinfo_obj
-      TYPE (general_info_type ) :: geninfo_obj 
-#endif
       CHARACTER(iotk_attlenx)  :: attr
       !
       ! ... look for an empty unit
@@ -1285,26 +1048,8 @@ MODULE cp_restart
                    'no free units to read wavefunctions', ierr )
       !
 #if !defined (__OLDXML)
-      !
-      CALL qexsd_init_schema( iunpun )
-      !
-      WRITE(dirname,'(A,A,"_",I2,".save/")') TRIM(tmp_dir), TRIM(prefix), ndr
-      filename = TRIM( dirname ) // TRIM( xmlpun_schema )
-      INQUIRE ( file=filename, exist=found )
-      IF (.NOT. found ) &
-         CALL errore ('cp_readfile', 'xml data file not found', 1)
-      !
-      CALL iotk_open_read( iunpun, TRIM(filename) )
-      !
-      CALL qexsd_get_general_info ( iunpun, geninfo_obj, found)
-      IF ( .NOT. found ) ierr = ierr + 1
-      CALL qexsd_get_parallel_info ( iunpun, parinfo_obj, found ) 
-      IF ( .NOT. found ) ierr = ierr + 10
-      CALL qexsd_get_output ( iunpun, output_obj, found ) 
-      IF ( .NOT. found ) ierr = ierr + 100
-      IF ( ierr > 0) CALL errore ('cp_readfile', 'missing data in file', ierr)
-      
-      CALL errore('cp_readfile','XSD under development',1)
+      !     
+      CALL errore('cp_readfile','called in wrong case',1)
 #else
       kunit = 1
       found = .FALSE.

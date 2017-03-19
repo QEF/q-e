@@ -18,6 +18,7 @@ cp_autopilot.o \
 cp_emass.o \
 cp_interfaces.o \
 cp_restart.o \
+cp_restart_new.o \
 cplib.o \
 cpr_mod.o \
 cpr.o \
