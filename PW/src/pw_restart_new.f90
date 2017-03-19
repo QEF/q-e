@@ -176,6 +176,8 @@ MODULE pw_restart_new
          !
          CALL qexsd_openschema(TRIM( dirname ) // '/' // TRIM( xmlpun_schema ))
          output%tagname="output"
+         output%lwrite = .TRUE.
+         output%lread  = .TRUE.
          !
 !-------------------------------------------------------------------------------
 ! ... CONVERGENCE_INFO
@@ -2190,7 +2192,8 @@ MODULE pw_restart_new
       nq2 = hybrid_obj%qpoint_grid%nqx2
       nq3 = hybrid_obj%qpoint_grid%nqx3
       CALL set_exx_fraction( hybrid_obj%exx_fraction) 
-      CALL set_screening_parameter ( hybrid_obj%screening_parameter) 
+      CALL set_screening_parameter ( hybrid_obj%screening_parameter)
+      exxdiv_treatment = hybrid_obj%exxdiv_treatment 
       ecutvcut = hybrid_obj%ecutvcut
       ecutfock = hybrid_obj%ecutfock
       exxdiv_treatment = hybrid_obj%exxdiv_treatment
