@@ -2196,7 +2196,6 @@ MODULE pw_restart_new
       exxdiv_treatment = hybrid_obj%exxdiv_treatment 
       ecutvcut = hybrid_obj%ecutvcut
       ecutfock = hybrid_obj%ecutfock
-      exxdiv_treatment = hybrid_obj%exxdiv_treatment
       CALL start_exx() 
     END SUBROUTINE  readschema_exx 
     !-----------------------------------------------------------------------------------  
