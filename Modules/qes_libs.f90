@@ -54,6 +54,8 @@ SUBROUTINE qes_init_closed(obj, tagname, DATE, TIME, closed)
    CHARACTER(len=*) :: closed
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
 
    obj%DATE = TRIM(DATE)
 
@@ -103,6 +105,8 @@ SUBROUTINE qes_init_status(obj, tagname, status)
    INTEGER  :: status
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
    obj%status = status
 
 END SUBROUTINE qes_init_status
@@ -147,6 +151,8 @@ SUBROUTINE qes_init_scalarQuantity(obj, tagname, Units, scalarQuantity)
    REAL(DP) :: scalarQuantity
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
 
    obj%Units = TRIM(Units)
 
@@ -198,6 +204,8 @@ SUBROUTINE qes_init_finiteFieldOut(obj, tagname, electronicDipole, ionicDipole)
    REAL(DP), DIMENSION(3) :: ionicDipole
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
    obj%electronicDipole = electronicDipole
    obj%ionicDipole = ionicDipole
 
@@ -252,6 +260,8 @@ SUBROUTINE qes_init_k_point(obj, tagname, weight, weight_ispresent, label, label
    REAL(DP), DIMENSION(3) :: k_point
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
 
    obj%weight_ispresent = weight_ispresent
    IF (obj%weight_ispresent) THEN
@@ -319,6 +329,8 @@ SUBROUTINE qes_init_atom(obj, tagname, name, position, position_ispresent, index
    REAL(DP), DIMENSION(3) :: atom
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
 
    obj%name = TRIM(name)
 
@@ -392,6 +404,8 @@ SUBROUTINE qes_init_phase(obj, tagname, ionic, ionic_ispresent, electronic, elec
    REAL(DP) :: phase
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
 
    obj%ionic_ispresent = ionic_ispresent
    IF (obj%ionic_ispresent) THEN
@@ -473,6 +487,8 @@ SUBROUTINE qes_init_dipoleOutput(obj, tagname, idir, dipole, ion_dipole, elec_di
    TYPE(scalarQuantity_type) :: totalLength
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
    obj%idir = idir
    obj%dipole = dipole
    obj%ion_dipole = ion_dipole
@@ -536,6 +552,8 @@ SUBROUTINE qes_init_polarization(obj, tagname, polarization, modulus, direction)
    REAL(DP), DIMENSION(3) :: direction
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
    obj%polarization = polarization
    obj%modulus = modulus
    obj%direction = direction
@@ -589,6 +607,8 @@ SUBROUTINE qes_init_ionicPolarization(obj, tagname, ion, charge, phase)
    TYPE(phase_type) :: phase
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
    obj%ion = ion
    obj%charge = charge
    obj%phase = phase
@@ -648,6 +668,8 @@ SUBROUTINE qes_init_electronicPolarization(obj, tagname, firstKeyPoint, spin_isp
    TYPE(phase_type) :: phase
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
    obj%firstKeyPoint = firstKeyPoint
    obj%spin_ispresent = spin_ispresent
    IF(obj%spin_ispresent) THEN
@@ -718,6 +740,8 @@ SUBROUTINE qes_init_BerryPhaseOutput(obj, tagname, polarization, totalPhase, &
    TYPE(electronicPolarization_type ), DIMENSION( ndim_electronicPolarization )  :: electronicPolarization
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
    obj%polarization = polarization
    obj%totalPhase = totalPhase
    ALLOCATE(obj%ionicPolarization(SIZE(ionicPolarization)))
@@ -786,6 +810,8 @@ SUBROUTINE qes_init_vector(obj, tagname, ndim_vec, vec)
    REAL(DP), DIMENSION(ndim_vec) :: vec
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
    ALLOCATE(obj%vec(ndim_vec))
    obj%vec(:) = vec(:)
    obj%ndim_vec = ndim_vec
@@ -851,6 +877,8 @@ SUBROUTINE qes_init_ks_energies(obj, tagname, k_point, npw, ndim_eigenvalues, ei
    REAL(DP), DIMENSION(ndim_occupations) :: occupations
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
    obj%k_point = k_point
    obj%npw = npw
    ALLOCATE(obj%eigenvalues(ndim_eigenvalues))
@@ -942,6 +970,8 @@ SUBROUTINE qes_init_magnetization(obj, tagname, lsda, noncolin, spinorbit, total
    LOGICAL  :: do_magnetization
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
    obj%lsda = lsda
    obj%noncolin = noncolin
    obj%spinorbit = spinorbit
@@ -999,6 +1029,8 @@ SUBROUTINE qes_init_reciprocal_lattice(obj, tagname, b1, b2, b3)
    REAL(DP), DIMENSION(3) :: b3
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
    obj%b1 = b1
    obj%b2 = b2
    obj%b3 = b3
@@ -1049,6 +1081,8 @@ SUBROUTINE qes_init_basisSetItem(obj, tagname, nr1, nr2, nr3, basisSetItem)
    CHARACTER(len=*) :: basisSetItem
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
 
    obj%nr1 = nr1
 
@@ -1104,6 +1138,8 @@ SUBROUTINE qes_init_equivalent_atoms(obj, tagname, nat, ndim_index_list, index_l
    INTEGER, DIMENSION(ndim_index_list) :: index_list
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
 
    obj%nat = nat
 
@@ -1173,6 +1209,8 @@ SUBROUTINE qes_init_info(obj, tagname, name, name_ispresent, class, class_ispres
    CHARACTER(len=*) :: info
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
 
    obj%name_ispresent = name_ispresent
    IF (obj%name_ispresent) THEN
@@ -1239,6 +1277,8 @@ SUBROUTINE qes_init_matrix(obj, tagname, ndim1_mat, ndim2_mat, mat)
    REAL(DP), DIMENSION(ndim1_mat,ndim2_mat) :: mat
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
    ALLOCATE(obj%mat(ndim1_mat,ndim2_mat))
    obj%mat(:,:) = mat(:,:)
    obj%ndim1_mat = ndim1_mat
@@ -1306,6 +1346,8 @@ SUBROUTINE qes_init_symmetry(obj, tagname, info, rotation, &
    TYPE(equivalent_atoms_type) :: equivalent_atoms
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
    obj%info = info
    obj%rotation = rotation
    obj%fractional_translation_ispresent = fractional_translation_ispresent
@@ -1388,6 +1430,8 @@ SUBROUTINE qes_init_algorithmic_info(obj, tagname, real_space_q, uspp, paw)
    LOGICAL  :: paw
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
    obj%real_space_q = real_space_q
    obj%uspp = uspp
    obj%paw = paw
@@ -1438,6 +1482,8 @@ SUBROUTINE qes_init_opt_conv(obj, tagname, n_opt_steps, grad_norm)
    REAL(DP) :: grad_norm
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
    obj%n_opt_steps = n_opt_steps
    obj%grad_norm = grad_norm
 
@@ -1487,6 +1533,8 @@ SUBROUTINE qes_init_scf_conv(obj, tagname, n_scf_steps, scf_error)
    REAL(DP) :: scf_error
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
    obj%n_scf_steps = n_scf_steps
    obj%scf_error = scf_error
 
@@ -1568,6 +1616,8 @@ SUBROUTINE qes_init_species(obj, tagname, name, mass_ispresent, mass, pseudo_fil
    REAL(DP) :: spin_phi
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
 
    obj%name = TRIM(name)
 
@@ -1711,6 +1761,8 @@ SUBROUTINE qes_init_total_energy(obj, tagname, etot, eband_ispresent, eband, &
    REAL(DP) :: potentiostat_contr
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
    obj%etot = etot
    obj%eband_ispresent = eband_ispresent
    IF(obj%eband_ispresent) THEN
@@ -1817,6 +1869,8 @@ SUBROUTINE qes_init_convergence_info(obj, tagname, scf_conv, opt_conv_ispresent,
    TYPE(opt_conv_type) :: opt_conv
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
    obj%scf_conv = scf_conv
    obj%opt_conv_ispresent = opt_conv_ispresent
    IF(obj%opt_conv_ispresent) THEN
@@ -1889,6 +1943,8 @@ SUBROUTINE qes_init_outputElectricField(obj, tagname, BerryPhase_ispresent, Berr
    TYPE(dipoleOutput_type) :: dipoleInfo
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
    obj%BerryPhase_ispresent = BerryPhase_ispresent
    IF(obj%BerryPhase_ispresent) THEN
       obj%BerryPhase = BerryPhase
@@ -1969,6 +2025,8 @@ SUBROUTINE qes_init_spin_constraints(obj, tagname, spin_constraints, lagrange_mu
    REAL(DP), DIMENSION(3) :: target_magnetization
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
    obj%spin_constraints = spin_constraints
    obj%lagrange_multiplier = lagrange_multiplier
    obj%target_magnetization_ispresent = target_magnetization_ispresent
@@ -2017,6 +2075,8 @@ SUBROUTINE qes_init_constr_type(obj, tagname)
    INTEGER  :: i
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
 
 END SUBROUTINE qes_init_constr_type
 
@@ -2056,6 +2116,8 @@ SUBROUTINE qes_init_constr_parms_list(obj, tagname)
    INTEGER  :: i
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
 
 END SUBROUTINE qes_init_constr_parms_list
 
@@ -2108,6 +2170,8 @@ SUBROUTINE qes_init_atomic_constraint(obj, tagname, constr_parms, constr_type, &
    REAL(DP) :: constr_target
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
    obj%constr_parms = constr_parms
    obj%constr_type = constr_type
    obj%constr_target = constr_target
@@ -2165,6 +2229,8 @@ SUBROUTINE qes_init_atomic_constraints(obj, tagname, num_of_constraints, toleran
    TYPE(atomic_constraint_type ), DIMENSION( ndim_atomic_constraint )  :: atomic_constraint
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
    obj%num_of_constraints = num_of_constraints
    obj%tolerance = tolerance
    ALLOCATE(obj%atomic_constraint(SIZE(atomic_constraint)))
@@ -2215,6 +2281,8 @@ SUBROUTINE qes_init_electric_potential(obj, tagname)
    INTEGER  :: i
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
 
 END SUBROUTINE qes_init_electric_potential
 
@@ -2334,6 +2402,8 @@ SUBROUTINE qes_init_electric_field(obj, tagname, electric_potential, &
    INTEGER  :: n_berry_cycles
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
    obj%electric_potential = electric_potential
    obj%dipole_correction_ispresent = dipole_correction_ispresent
    IF(obj%dipole_correction_ispresent) THEN
@@ -2449,6 +2519,8 @@ SUBROUTINE qes_init_symmetries(obj, tagname, nsym, nrot, space_group, ndim_symme
    TYPE(symmetry_type ), DIMENSION( ndim_symmetry )  :: symmetry
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
    obj%nsym = nsym
    obj%nrot = nrot
    obj%space_group = space_group
@@ -2512,6 +2584,8 @@ SUBROUTINE qes_init_ekin_functional(obj, tagname, ecfixed, qcutz, q2sigma)
    REAL(DP) :: q2sigma
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
    obj%ecfixed = ecfixed
    obj%qcutz = qcutz
    obj%q2sigma = q2sigma
@@ -2570,6 +2644,8 @@ SUBROUTINE qes_init_esm(obj, tagname, bc, nfit, w, efield)
    REAL(DP) :: efield
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
    obj%bc = bc
    obj%nfit = nfit
    obj%w = w
@@ -2645,6 +2721,8 @@ SUBROUTINE qes_init_boundary_conditions(obj, tagname, assume_isolated, esm_ispre
    REAL(DP) :: fcp_mu
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
    obj%assume_isolated = assume_isolated
    obj%esm_ispresent = esm_ispresent
    IF(obj%esm_ispresent) THEN
@@ -2756,6 +2834,8 @@ SUBROUTINE qes_init_symmetry_flags(obj, tagname, nosym, nosym_evc, noinv, no_t_r
    LOGICAL  :: use_all_frac
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
    obj%nosym = nosym
    obj%nosym_evc = nosym_evc
    obj%noinv = noinv
@@ -2809,6 +2889,8 @@ SUBROUTINE qes_init_integerMatrix(obj, tagname, ndim1_int_mat, ndim2_int_mat, in
    INTEGER, DIMENSION(ndim1_int_mat,ndim2_int_mat) :: int_mat
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
    ALLOCATE(obj%int_mat(ndim1_int_mat,ndim2_int_mat))
    obj%int_mat(:,:) = int_mat(:,:)
    obj%ndim1_int_mat = ndim1_int_mat
@@ -2924,6 +3006,8 @@ SUBROUTINE qes_init_cell_control(obj, tagname, cell_dynamics, pressure, wmass_is
    TYPE(integerMatrix_type) :: free_cell
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
    obj%cell_dynamics = cell_dynamics
    obj%pressure = pressure
    obj%wmass_ispresent = wmass_ispresent
@@ -3041,6 +3125,8 @@ SUBROUTINE qes_init_md(obj, tagname, pot_extrapolation, wfc_extrapolation, ion_t
    INTEGER  :: nraise
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
    obj%pot_extrapolation = pot_extrapolation
    obj%wfc_extrapolation = wfc_extrapolation
    obj%ion_temperature = ion_temperature
@@ -3113,6 +3199,8 @@ SUBROUTINE qes_init_bfgs(obj, tagname, ndim, trust_radius_min, trust_radius_max,
    REAL(DP) :: w2
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
    obj%ndim = ndim
    obj%trust_radius_min = trust_radius_min
    obj%trust_radius_max = trust_radius_max
@@ -3211,6 +3299,8 @@ SUBROUTINE qes_init_ion_control(obj, tagname, ion_dynamics, upscale_ispresent, u
    TYPE(md_type) :: md
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
    obj%ion_dynamics = ion_dynamics
    obj%upscale_ispresent = upscale_ispresent
    IF(obj%upscale_ispresent) THEN
@@ -3302,6 +3392,8 @@ SUBROUTINE qes_init_monkhorst_pack(obj, tagname, nk1, nk2, nk3, k1, k2, k3, monk
    CHARACTER(len=*) :: monkhorst_pack
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
 
    obj%nk1 = nk1
 
@@ -3386,6 +3478,8 @@ SUBROUTINE qes_init_k_points_IBZ(obj, tagname, monkhorst_pack_ispresent, monkhor
    TYPE(k_point_type ), DIMENSION( ndim_k_point )  :: k_point
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
    obj%monkhorst_pack_ispresent = monkhorst_pack_ispresent
    IF(obj%monkhorst_pack_ispresent) THEN
       obj%monkhorst_pack = monkhorst_pack
@@ -3462,6 +3556,8 @@ SUBROUTINE qes_init_occupations(obj, tagname, spin, spin_ispresent, occupations)
    CHARACTER(len=*) :: occupations
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
 
    obj%spin_ispresent = spin_ispresent
    IF (obj%spin_ispresent) THEN
@@ -3508,6 +3604,8 @@ SUBROUTINE qes_init_mixingMode(obj, tagname)
    INTEGER  :: i
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
 
 END SUBROUTINE qes_init_mixingMode
 
@@ -3547,6 +3645,8 @@ SUBROUTINE qes_init_diago(obj, tagname)
    INTEGER  :: i
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
 
 END SUBROUTINE qes_init_diago
 
@@ -3653,6 +3753,8 @@ SUBROUTINE qes_init_electron_control(obj, tagname, diagonalization, mixing_mode,
    INTEGER  :: diago_cg_maxiter
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
    obj%diagonalization = diagonalization
    obj%mixing_mode = mixing_mode
    obj%mixing_beta = mixing_beta
@@ -3767,6 +3869,8 @@ SUBROUTINE qes_init_basis_set(obj, tagname, gamma_only_ispresent, gamma_only, ec
    TYPE(reciprocal_lattice_type) :: reciprocal_lattice
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
    obj%gamma_only_ispresent = gamma_only_ispresent
    IF(obj%gamma_only_ispresent) THEN
       obj%gamma_only = gamma_only
@@ -3897,6 +4001,8 @@ SUBROUTINE qes_init_basis(obj, tagname, gamma_only_ispresent, gamma_only, ecutwf
    TYPE(basisSetItem_type) :: fft_box
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
    obj%gamma_only_ispresent = gamma_only_ispresent
    IF(obj%gamma_only_ispresent) THEN
       obj%gamma_only = gamma_only
@@ -3983,6 +4089,8 @@ SUBROUTINE qes_init_inputOccupations(obj, tagname, ispin, spin_factor, ndim_vec,
    REAL(DP), DIMENSION(ndim_vec) :: vec
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
 
    obj%ispin = ispin
 
@@ -4036,6 +4144,8 @@ SUBROUTINE qes_init_smearing(obj, tagname, degauss, smearing)
    CHARACTER(len=*) :: smearing
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
 
    obj%degauss = degauss
 
@@ -4201,6 +4311,8 @@ SUBROUTINE qes_init_band_structure(obj, tagname, lsda, noncolin, spinorbit, nbnd
    TYPE(ks_energies_type ), DIMENSION( ndim_ks_energies )  :: ks_energies
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
    obj%lsda = lsda
    obj%noncolin = noncolin
    obj%spinorbit = spinorbit
@@ -4355,13 +4467,14 @@ SUBROUTINE qes_init_bands(obj, tagname, nbnd_ispresent, nbnd, smearing_ispresent
    REAL(DP) :: tot_charge
    LOGICAL  :: tot_magnetization_ispresent
    REAL(DP) :: tot_magnetization
-   LOGICAL  :: occupations_ispresent
    TYPE(occupations_type) :: occupations
    LOGICAL  :: inputOccupations_ispresent
    INTEGER  :: ndim_inputOccupations
    TYPE(inputOccupations_type ), DIMENSION( ndim_inputOccupations )  :: inputOccupations
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
    obj%nbnd_ispresent = nbnd_ispresent
    IF(obj%nbnd_ispresent) THEN
       obj%nbnd = nbnd
@@ -4471,6 +4584,8 @@ SUBROUTINE qes_init_spin(obj, tagname, lsda, noncolin, spinorbit)
    LOGICAL  :: spinorbit
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
    obj%lsda = lsda
    obj%noncolin = noncolin
    obj%spinorbit = spinorbit
@@ -4519,6 +4634,8 @@ SUBROUTINE qes_init_HubbardCommon(obj, tagname, specie, label, HubbardCommon)
    REAL(DP) :: HubbardCommon
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
 
    obj%specie = TRIM(specie)
 
@@ -4565,6 +4682,8 @@ SUBROUTINE qes_init_HubbardProj(obj, tagname)
    INTEGER  :: i
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
 
 END SUBROUTINE qes_init_HubbardProj
 
@@ -4621,6 +4740,8 @@ SUBROUTINE qes_init_Hubbard_ns(obj, tagname, specie, label, spin, index, &
    REAL(DP), DIMENSION(ndim1_mat,ndim2_mat) :: mat
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
 
    obj%specie = TRIM(specie)
 
@@ -4687,6 +4808,8 @@ SUBROUTINE qes_init_starting_ns(obj, tagname, specie, label, spin, ndim_vec, vec
    REAL(DP), DIMENSION(ndim_vec) :: vec
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
 
    obj%specie = TRIM(specie)
 
@@ -4745,6 +4868,8 @@ SUBROUTINE qes_init_HubbardJ(obj, tagname, specie, label, HubbardJ)
    REAL(DP), DIMENSION(3) :: HubbardJ
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
 
    obj%specie = TRIM(specie)
 
@@ -4870,6 +4995,8 @@ SUBROUTINE qes_init_vdW(obj, tagname, vdw_corr, non_local_term_ispresent, non_lo
    TYPE(HubbardCommon_type ), DIMENSION( ndim_london_c6 )  :: london_c6
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
    obj%vdw_corr = vdw_corr
    obj%non_local_term_ispresent = non_local_term_ispresent
    IF(obj%non_local_term_ispresent) THEN
@@ -5068,6 +5195,8 @@ SUBROUTINE qes_init_dftU(obj, tagname, lda_plus_u_kind_ispresent, lda_plus_u_kin
    CHARACTER(len=*) :: U_projection_type
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
    obj%lda_plus_u_kind_ispresent = lda_plus_u_kind_ispresent
    IF(obj%lda_plus_u_kind_ispresent) THEN
       obj%lda_plus_u_kind = lda_plus_u_kind
@@ -5234,6 +5363,8 @@ SUBROUTINE qes_init_qpoint_grid(obj, tagname, nqx1, nqx2, nqx3, qpoint_grid)
    CHARACTER(len=*) :: qpoint_grid
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
 
    obj%nqx1 = nqx1
 
@@ -5316,6 +5447,8 @@ SUBROUTINE qes_init_hybrid(obj, tagname, qpoint_grid, ecutfock, exx_fraction, &
    REAL(DP) :: ecutvcut
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
    obj%qpoint_grid = qpoint_grid
    obj%ecutfock = ecutfock
    obj%exx_fraction = exx_fraction
@@ -5363,6 +5496,8 @@ SUBROUTINE qes_init_functional(obj, tagname)
    INTEGER  :: i
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
 
 END SUBROUTINE qes_init_functional
 
@@ -5428,6 +5563,8 @@ SUBROUTINE qes_init_dft(obj, tagname, functional, hybrid_ispresent, hybrid, dftU
    TYPE(vdW_type) :: vdW
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
    obj%functional = functional
    obj%hybrid_ispresent = hybrid_ispresent
    IF(obj%hybrid_ispresent) THEN
@@ -5492,6 +5629,8 @@ SUBROUTINE qes_init_d3vector(obj, tagname)
    INTEGER  :: i
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
 
 END SUBROUTINE qes_init_d3vector
 
@@ -5543,6 +5682,8 @@ SUBROUTINE qes_init_cell(obj, tagname, a1, a2, a3)
    REAL(DP), DIMENSION(3) :: a3
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
    obj%a1 = a1
    obj%a2 = a2
    obj%a3 = a3
@@ -5599,6 +5740,8 @@ SUBROUTINE qes_init_wyckoff_positions(obj, tagname, space_group, more_options, m
    TYPE(atom_type ), DIMENSION( ndim_atom )  :: atom
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
 
    obj%space_group = space_group
 
@@ -5662,6 +5805,8 @@ SUBROUTINE qes_init_atomic_positions(obj, tagname, ndim_atom, atom)
    TYPE(atom_type ), DIMENSION( ndim_atom )  :: atom
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
    ALLOCATE(obj%atom(SIZE(atom)))
    DO i = 1, SIZE(atom)
       obj%atom(i) = atom(i)
@@ -5742,6 +5887,8 @@ SUBROUTINE qes_init_atomic_structure(obj, tagname, nat, alat, alat_ispresent, &
    TYPE(cell_type) :: cell
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
 
    obj%nat = nat
 
@@ -5853,6 +6000,8 @@ SUBROUTINE qes_init_step(obj, tagname, n_step, scf_conv, atomic_structure, total
    REAL(DP) :: FCP_tot_charge
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
 
    obj%n_step = n_step
 
@@ -5933,6 +6082,8 @@ SUBROUTINE qes_init_atomic_species(obj, tagname, ntyp, ndim_species, species)
    TYPE(species_type ), DIMENSION( ndim_species )  :: species
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
 
    obj%ntyp = ntyp
 
@@ -6061,6 +6212,8 @@ SUBROUTINE qes_init_output(obj, tagname, convergence_info, algorithmic_info, &
    REAL(DP) :: FCP_tot_charge
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
    obj%convergence_info = convergence_info
    obj%algorithmic_info = algorithmic_info
    obj%atomic_species = atomic_species
@@ -6113,10 +6266,13 @@ SUBROUTINE qes_reset_output(obj)
       obj%symmetries_ispresent = .FALSE.
    ENDIF
    CALL qes_reset_basis_set(obj%basis_set)
+
    CALL qes_reset_dft(obj%dft)
+
    CALL qes_reset_magnetization(obj%magnetization)
    CALL qes_reset_total_energy(obj%total_energy)
    CALL qes_reset_band_structure(obj%band_structure)
+
    IF(obj%forces_ispresent) THEN
       CALL qes_reset_matrix(obj%forces)
       obj%forces_ispresent = .FALSE.
@@ -6164,6 +6320,8 @@ SUBROUTINE qes_init_lowhigh(obj, tagname)
    INTEGER  :: i
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
 
 END SUBROUTINE qes_init_lowhigh
 
@@ -6203,6 +6361,8 @@ SUBROUTINE qes_init_controlRestartMode(obj, tagname)
    INTEGER  :: i
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
 
 END SUBROUTINE qes_init_controlRestartMode
 
@@ -6242,6 +6402,8 @@ SUBROUTINE qes_init_calculation(obj, tagname)
    INTEGER  :: i
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
 
 END SUBROUTINE qes_init_calculation
 
@@ -6368,6 +6530,8 @@ SUBROUTINE qes_init_control_variables(obj, tagname, title, calculation, restart_
    INTEGER  :: print_every
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
    obj%title = title
    obj%calculation = calculation
    obj%restart_mode = restart_mode
@@ -6538,6 +6702,8 @@ SUBROUTINE qes_init_input(obj, tagname, control_variables, atomic_species, &
    TYPE(spin_constraints_type) :: spin_constraints
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
    obj%control_variables = control_variables
    obj%atomic_species = atomic_species
    obj%atomic_structure = atomic_structure
@@ -6696,6 +6862,8 @@ SUBROUTINE qes_init_parallel_info(obj, tagname, nprocs, nthreads, ntasks, nbgrp,
    INTEGER  :: ndiag
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
    obj%nprocs = nprocs
    obj%nthreads = nthreads
    obj%ntasks = ntasks
@@ -6747,6 +6915,8 @@ SUBROUTINE qes_init_created(obj, tagname, DATE, TIME, created)
    CHARACTER(len=*) :: created
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
 
    obj%DATE = TRIM(DATE)
 
@@ -6799,6 +6969,8 @@ SUBROUTINE qes_init_creator(obj, tagname, NAME, VERSION, creator)
    CHARACTER(len=*) :: creator
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
 
    obj%NAME = TRIM(NAME)
 
@@ -6851,6 +7023,8 @@ SUBROUTINE qes_init_xml_format(obj, tagname, NAME, VERSION, xml_format)
    CHARACTER(len=*) :: xml_format
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
 
    obj%NAME = TRIM(NAME)
 
@@ -6910,6 +7084,8 @@ SUBROUTINE qes_init_general_info(obj, tagname, xml_format, creator, created, job
    CHARACTER(len=*) :: job
 
    obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
    obj%xml_format = xml_format
    obj%creator = creator
    obj%created = created
