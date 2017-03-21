@@ -1,0 +1,36 @@
+A collection of simple tools for specific tasks:
+
+ev.x : 
+ Run interatively. It reads a file containing 2 columns: lattice parameter and
+ corresponding total energy, it gives in output optimized lattice parameter,
+ bulk modulus and more.
+ Contributions by Eyvaz Isaev
+
+dist.x : 
+ Same input as pw.x, find distances, nearest neighbors, angles 
+ taking into account periodicity
+
+ibrav2cell.x :
+  read a &system namelist containing only ibrav and celldm(1..6) (same meaning as in pw.x and cp.x)
+  prints on standard output the unit cell in Bohr
+
+cell2ibrav.py :
+  python script that takes a unit cell in Bohr or Angstrom units and find the value
+  of ibrav and celldm(1..6) that generate it. Run 'cell2ibrav.py -h' for help.
+  (it works in the stupidest way possible, by checking all of them, it uses ibrav2cell.x)
+
+pwi2xsf.sh, pwo2xsf.sh :
+  convert a pw.x input or output to the xcrysden format
+
+qeout2axsf.sh :
+  convert pw.x output to aniimated xcrysden file
+
+cif2qe.sh :
+  generate a pw.x format from the crystal structure in a cif file 
+
+castep2qe.sh :
+  convert a CASTEP input to pw.x
+
+md_analyzer.sh :
+  it reads the pw.x output of an md run and prints, for each step, total, kinetic and potential energies, and temperature
+
