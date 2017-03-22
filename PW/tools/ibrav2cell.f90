@@ -1,8 +1,8 @@
 !
-! Copyright (C) 2014 Quantum ESPRESSO group
-! This file is ibrav2cellributed under the terms of the
+! Copyright (C) 2017 Quantum ESPRESSO group
+! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
-! in the root directory of the present ibrav2cellribution,
+! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------

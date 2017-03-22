@@ -24,6 +24,7 @@ ibrav2cell.x : ibrav2cell.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
 		ibrav2cell.o $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../PW/tools/$@ . )
+	- ( cd ../../bin ; ln -fs ../PW/tools/cell2ibrav.py cell2ibrav.x )
 
 ev.x : ev.o ev_xml.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \

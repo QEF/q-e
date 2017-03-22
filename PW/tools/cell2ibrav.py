@@ -1,29 +1,23 @@
 #!/usr/bin/python
-from os.path import realpath
+#
+# Copyright (C) 2017 Quantum ESPRESSO group
+# This file is distributed under the terms of the
+# GNU General Public License. See the file `License'
+# in the root directory of the present distribution,
+# or http://www.gnu.org/copyleft/gpl.txt .
+#
+# Written by Lorenzo Paulatto 2017
+#
+from os.path import realpath, basename
 from sys import argv
-binary=realpath(__file__)
-#myself=argv[0].replace("./","")
-binary = binary.replace("cell2ibrav.py","ibrav2cell.x")
-#print binary
-
-binary = "/home/paulatto/espresso/bin/ibrav2cell.x"
+ibrav2cell_x = realpath(__file__)
+myname = basename(argv[0])
+ibrav2cell_x = ibrav2cell_x.replace(myname,"ibrav2cell.x")
 
 def main() :
   from numpy import array
   from argparse import ArgumentParser
   parser = ArgumentParser()
-  #parser.add_argument('-t', type=str, default="pbtex",    dest="type_cal")
-  #parser.add_argument('-n', type=int, default=1,          dest="n_random")
-  #parser.add_argument('-d', type=str, default="./",       dest="data_dir")
-  #parser.add_argument('-p', type=int, default=1,          dest="population")
-  #parser.add_argument('-f', type=str, default="2x2_dynq", dest="fildyn_prefix_harmonic")
-  ##parser.add_argument('--e0', type=float, default=0.,     dest="e0")
-  #parser.add_argument('--nq', type=int, default=[3, 2, 2, 2], nargs=4, dest="nq",
-                      #metavar=("NQ_irr","NQ_x","NQ_y","NQ_z"))
-  #parser.add_argument('--const', action='append', type=str, metavar="par=value", default=[])
-  #parser.add_argument(metavar='par', type=str, nargs='*', default=["p3", "p4"], dest="parameters", 
-                      #help="name of the parameters to minimize." )
-  
   parser.add_argument('-i', action='append', type=int, metavar="ibrav", dest="ibrav_list", default=[], 
                        help="ibrav value to explore, can be repeated (default: all)")
   parser.add_argument('-c', type=float, default=[0, 0, 0, 0, 0, 0, 0, 0, 0], nargs=9, dest="at",
@@ -31,10 +25,11 @@ def main() :
                       help="cell parameters (default: read from standard input)")
   parser.add_argument('-A', default=False, action="store_true", dest="angst", help="cell is entered in Agstrom units (default: bohr")
   parser.add_argument('--celldm', type=float, default=[1, 1, 1, 0.5, 0.5, 0.5], nargs=6, dest="celldm",
-                      metavar=("1","2","3","4","5","6"), help="initial values of celldm(1..6), you have to specify all 6 (default: '1 0 0 0 0 0')")
+                      metavar=("1","2","3","4","5","6"), help="initial values of celldm(1..6), you have to specify all 6 or none (default: 1 1 1 .5 .5 .5)")
   parser.add_argument('-t', type=float, default=1.e-3,  dest="mthr", help="match threshold", metavar="THR")
   parser.add_argument('-k', type=float, default=1.e-15, dest="kthr", help="convergence threshold", metavar="THR")
-  parser.add_argument('-x', type=str, dest="binary", help="full path to the ibrav2cell.x tool from PW/tools/ (default: look in the same directory as this program)", metavar="/path/to/ibrav2cell.x")
+  parser.add_argument('-x', type=str, dest="ibrav2cell_x", help="full path to the ibrav2cell.x tool from PW/tools/ \
+                      (default: look in the same directory as this program)", metavar="/path/to/ibrav2cell.x")
 
   args = parser.parse_args()
   ibrav_list = [1,2,3,4,5,-5,6,7,8,9,-9,10,11,12,-12,13,14]
@@ -42,14 +37,21 @@ def main() :
     args.ibrav_list = ibrav_list
   #print args
 
-  if args.binary:
-    global binary
-    binary = args.binary
+  global ibrav2cell_x
+  if args.ibrav2cell_x:
+    ibrav2cell_x = args.ibrav2cell_x
     
+  if not is_exe(ibrav2cell_x):
+    print " File '"+ibrav2cell_x+"' not found or not executable."
+    print " Specify the position of ibrav2cell.x with the '-x' command line option." 
+    print " Use '-h' for more help."
+    return
 
+# test for ibrav = 5
 #  cell = [    3.900896593574796,   -2.252183691403927,   18.043044401344225,
 #              0.000000000000000,    4.504367382807855,   18.043044401344225,
 #             -3.900896593574796,   -2.252183691403927,   18.043044401344225]
+# test for ibrav = 14
 #  cell = [ 1.200000000000000E+01,   0.000000000000000E+00,   0.000000000000000E+00,
 #           1.224000000000000E+01,   7.585670702053973E+00,   0.000000000000000E+00,
 #           7.979999999999999E+00,   1.474991525399383E+00,   2.168870673876157E+00]
@@ -62,6 +64,7 @@ def main() :
 
   bnds = ((0,None), (0,None), (0,None), (-1,1), (-1,1), (-1,1))
   
+  print "Scanning..."
   for ibrav in args.ibrav_list:
       p=args.celldm #[1,1,1,0.5,0.5,0.5]
       options = { "ibrav" : ibrav,
@@ -78,7 +81,10 @@ def main() :
         check_zero(r["x"], ibrav)
 
       #print make_namelist(ibrav,r["x"])
-  
+
+def is_exe(fpath):
+    import os
+    return os.path.isfile(fpath) and os.access(fpath, os.X_OK)  
 
 def run_command(executable_file, input_data):
     import subprocess
@@ -131,12 +137,12 @@ def cell_stdin():
     for w in map(float, line.split()):
       at.append(w)
       if(len(at)>=9) :
-         print " ------------------------ok"
+         print " ------------------------ ok"
          return at
 
 def compute_cell(namelist):
   from numpy import isnan
-  output,error = run_command(binary,namelist)
+  output,error = run_command(ibrav2cell_x,namelist)
   try:
     at = map(float, output.split())
   except ValueError:
