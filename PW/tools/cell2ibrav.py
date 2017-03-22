@@ -99,7 +99,7 @@ def check_ibrav2cell():
     exit(100)
   namelist = make_namelist(1,[1,0,0,0,0,0])
   at = compute_cell(namelist)
-  if not at or len(at!=9) or any(at != array([1,0,0,0,1,0,0,0,1])):
+  if not at or len(at)!=9 or any(at != array([1,0,0,0,1,0,0,0,1])):
     print " File '"+ibrav2cell_x+"' not working as expected."
     print " Please verify that it comes from the same distribution as '"+argv[0]+"'"
     print " and that it is running correctly."
