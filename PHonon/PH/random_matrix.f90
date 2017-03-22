@@ -37,7 +37,6 @@ subroutine random_matrix_new (irt, nsymq, minus_q, irotmq, nat, &
   !
   USE kinds, only : DP
   USE random_numbers, ONLY : randy
-  USE random_gaussian, ONLY : random_gaussian_dble, random_gaussian_cmplx
   implicit none
   !
   !    The dummy variables
