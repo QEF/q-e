@@ -9,21 +9,29 @@
 SUBROUTINE run_pwscf ( exit_status ) 
   !----------------------------------------------------------------------------
   !
-  ! ... Run an instance of the Plane Wave Self-Consistent Field code 
-  ! ... MPI initialization and input data reading is performed in the 
-  ! ... calling code - returns in exit_status the exit code for pw.x, 
-  ! ... returned in the shell. Values are:
-  ! ... * 0: completed successfully
-  ! ... * 1: an error has occurred (value returned by the errore() routine)
-  ! ... * 2-127: convergence error
-  ! ...   * 2: scf convergence error
-  ! ...   * 3: ion convergence error
-  ! ... * 128-255: code exited due to specific trigger
-  !       * 255: exit due to user request, or signal trapped,
-  !              or time > max_seconds
-  ! ...     (note: in the future, check_stop_now could also return a value
-  ! ...     to specify the reason of exiting, and the value could be used
-  ! ..      to return a different value for different reasons)
+  !! author: Paolo Giannozzi
+  !! license: GNU 
+  !! summary: Run an instance of the Plane Wave Self-Consistent Field code
+  !!
+  !! Run an instance of the Plane Wave Self-Consistent Field code 
+  !! MPI initialization and input data reading is performed in the 
+  !! calling code - returns in exit_status the exit code for pw.x, 
+  !! returned in the shell. Values are:
+  !! * 0: completed successfully
+  !! * 1: an error has occurred (value returned by the errore() routine)
+  !! * 2-127: convergence error
+  !!   * 2: scf convergence error
+  !!   * 3: ion convergence error
+  !! * 128-255: code exited due to specific trigger
+  !!   * 255: exit due to user request, or signal trapped,
+  !!          or time > max_seconds
+  !!     (note: in the future, check_stop_now could also return a value
+  !!     to specify the reason of exiting, and the value could be used
+  !!     to return a different value for different reasons)
+  !! @Note
+  !! 10/01/17 Samuel Ponce: Add Ford documentation
+  !! @endnote
+  !!
   !
   USE io_global,        ONLY : stdout, ionode, ionode_id
   USE parameters,       ONLY : ntypx, npk, lmaxx
@@ -44,7 +52,7 @@ SUBROUTINE run_pwscf ( exit_status )
   !
   IMPLICIT NONE
   INTEGER, INTENT(OUT) :: exit_status
-  !
+  !! Gives the exit status at the end
   LOGICAL, external :: matches
   !! checks if first string is contained in the second
   INTEGER :: idone 

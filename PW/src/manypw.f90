@@ -6,11 +6,11 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-PROGRAM manypw
+SUBROUTINE run_manypw ( )
   !----------------------------------------------------------------------------
   !
   ! ... Poor-man pw.x parallel launcher. Usage (for mpirun):
-  ! ...    mpirun -np Np many.x -ni Ni [other options]
+  ! ...    mpirun -np Np manypw.x -ni Ni [other options]
   ! ... or whatever is appropriate for your parallel environment
   ! ... Starts Ni pw.x instances each running on Np/Ni processors
   ! ... Each pw.x instances
@@ -26,7 +26,6 @@ PROGRAM manypw
   USE input_parameters,  ONLY : outdir
   USE environment,       ONLY : environment_start, environment_end
   USE io_global,         ONLY : ionode, ionode_id, stdout
-  USE mp_global,         ONLY : mp_startup
   USE mp_images,         ONLY : my_image_id
   USE mp,                ONLY : mp_bcast
   USE mp_world,          ONLY : root, world_comm
@@ -35,15 +34,12 @@ PROGRAM manypw
   !
   IMPLICIT NONE
   !
-  INTEGER :: i, exit_status, first_image, ios
+  INTEGER :: i, first_image, ios
   LOGICAL :: opnd
   CHARACTER(LEN=256) :: filin, filout
   CHARACTER(LEN=7) :: image_label, var_first_index
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
   !
-  !
-  CALL mp_startup ( start_images=.true. )
-  CALL environment_start ( 'MANYPW' )
   !
   CALL get_environment_variable( 'FIRST_IMAGE_INDEX', var_first_index )
   READ(var_first_index, *, iostat=ios) first_image
@@ -92,13 +88,4 @@ PROGRAM manypw
      outdir = outdir(1:i) // trim(image_label) // '/'
   END IF
   !
-  ! ... Perform actual calculation
-  !
-  CALL run_pwscf ( exit_status )
-  !
-  CALL stop_run( exit_status )
-  CALL do_stop( exit_status )
-  !
-  STOP
-  !
-END PROGRAM manypw
+END SUBROUTINE run_manypw

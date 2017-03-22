@@ -7,32 +7,9 @@
 !
 !----------------------------------------------------------------------------
 SUBROUTINE run_driver ( srvaddress, exit_status ) 
-  !! author: Paolo Giannozzi
-  !! license: GNU 
-  !! summary: Run an instance of the Plane Wave Self-Consistent Field code
   !!
-  !! Run an instance of the Plane Wave Self-Consistent Field code 
-  !! MPI initialization and input data reading is performed in the 
-  !! calling code - returns in exit_status the exit code for pw.x, 
-  !! returned in the shell. Values are:
-  !! * 0: completed successfully
-  !! * 1: an error has occurred (value returned by the errore() routine)
-  !! * 2-127: convergence error
-  !!   * 2: scf convergence error
-  !!   * 3: ion convergence error
-  !! * 128-255: code exited due to specific trigger
-  !!   * 255: exit due to user request, or signal trapped,
-  !!          or time > max_seconds
-  !!     (note: in the future, check_stop_now could also return a value
-  !!     to specify the reason of exiting, and the value could be used
-  !!     to return a different value for different reasons)
-  !! Will be eventually merged with NEB
+  !! Driver for IPI
   !!
-  !! @Note
-  !! 10/01/17 Samuel Ponce: Add Ford documentation
-  !! @endnote
-  !!
-  !!        
   USE io_global,        ONLY : stdout, ionode, ionode_id
   USE parameters,       ONLY : ntypx, npk, lmaxx
   USE check_stop,       ONLY : check_stop_init
@@ -379,3 +356,46 @@ CONTAINS
   END SUBROUTINE initialize_g_vectors
   !
 END SUBROUTINE run_driver
+
+FUNCTION get_server_address ( command_line ) RESULT ( srvaddress )
+  ! 
+  ! checks for the presence of a command-line option of the form
+  ! -server_ip "srvaddress" or --server_ip "srvaddress";
+  ! returns "srvaddress", used to run pw.x in driver mode.
+  ! On input, "command_line" must contain the unprocessed part of the command
+  ! line, on all processors, as returned after a call to "get_cammand_line"
+  !
+  USE command_line_options, ONLY : my_iargc, my_getarg
+  IMPLICIT NONE
+  CHARACTER(LEN=*), INTENT(IN) :: command_line
+  CHARACTER(LEN=256) :: srvaddress
+  !
+  INTEGER  :: nargs, narg
+  CHARACTER (len=320) :: arg
+  !
+  srvaddress = ' '
+  IF ( command_line == ' ' ) RETURN
+  !
+  nargs = my_iargc ( command_line )
+  !
+  narg = 0
+10 CONTINUE
+  CALL my_getarg ( command_line, narg, arg )
+  IF ( TRIM (arg) == '-ipi' .OR. TRIM (arg) == '--ipi' ) THEN
+     IF ( srvaddress == ' ' ) THEN
+        narg = narg + 1
+        IF ( narg > nargs ) THEN
+           CALL infomsg('get_server_address','missing server IP in command line')
+           RETURN
+        ELSE
+           CALL my_getarg ( command_line, narg, srvaddress )
+        END IF
+     ELSE
+        CALL infomsg('get_server_address','duplicated server IP in command line')
+     END IF
+  END IF
+  narg = narg + 1
+  IF ( narg > nargs ) RETURN
+  GO TO 10
+  !
+END FUNCTION get_server_address
