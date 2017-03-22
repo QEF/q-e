@@ -698,17 +698,16 @@ MODULE exx
   !------------------------------------------------------------------------
   !
   !------------------------------------------------------------------------
-  SUBROUTINE exx_restart(l_exx_was_active)
+  SUBROUTINE exx_restart( set_ace )
      !------------------------------------------------------------------------
      !This SUBROUTINE is called when restarting an exx calculation
      USE funct,                ONLY : get_exx_fraction, start_exx, &
                                       exx_is_active, get_screening_parameter
 
      IMPLICIT NONE
-     LOGICAL, INTENT(in) :: l_exx_was_active
+     LOGICAL, INTENT(in) :: set_ace
      !
-     IF (.not. l_exx_was_active ) RETURN ! nothing had happened yet
-     !
+     use_ace = set_ace
      erfc_scrlen = get_screening_parameter()
      exxdiv = exx_divergence()
      exxalfa = get_exx_fraction()

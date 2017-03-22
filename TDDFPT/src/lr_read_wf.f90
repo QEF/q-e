@@ -38,8 +38,7 @@ SUBROUTINE lr_read_wf()
                                  & fwfft_orbital_gamma, calbec_rs_gamma,&
                                  & add_vuspsir_gamma, v_loc_psir,&
                                  & s_psir_gamma, real_space_debug
-  USE exx,                  ONLY : exx_grid_init, exx_div_check, exx_restart,&
-                                   use_ace
+  USE exx,                  ONLY : exx_grid_init, exx_div_check, exx_restart
   USE funct,                ONLY : dft_is_hybrid
   USE lr_exx_kernel,        ONLY : lr_exx_revc0_init, lr_exx_alloc
   USE wavefunctions_module, ONLY : evc
@@ -73,12 +72,12 @@ SUBROUTINE lr_read_wf()
      !
      CALL open_buffer ( iunwfc, 'wfc', nwordwfc, io_level, exst ) 
      !
-     ! The following line disables Lin Lin's ACE for TD-DFPT 
-     !
-     use_ace = .false.
      CALL exx_grid_init()
      CALL exx_div_check()
-     CALL exx_restart(.true.)
+     !
+     ! set_ace=.false. disables Lin Lin's ACE for TD-DFPT 
+     !
+     CALL exx_restart( set_ace=.false.)
      !
      IF (.NOT. no_hxc) THEN
         !
