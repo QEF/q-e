@@ -127,18 +127,18 @@ def constraint(p):
     return 1
 
 def cell_stdin():
-  import fileinput
-  from sys import argv
+  #import fileinput
+  from sys import argv, stdin
   print "Type '{} -h' for help".format(argv[0])
   print
   print "Please enter cell parameters: "
   at = []
-  for line in fileinput.input():
-    for w in map(float, line.split()):
-      at.append(w)
-      if(len(at)>=9) :
-         print " ------------------------ ok"
-         return at
+  while len(at)<9:
+    line = stdin.readline()
+    for w in line.split():
+      at.append(float(w))
+  print " ------------------------ ok"
+  return at
 
 def compute_cell(namelist):
   from numpy import isnan
