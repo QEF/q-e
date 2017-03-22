@@ -10,9 +10,10 @@
 #
 from os.path import realpath, basename
 from sys import argv
-ibrav2cell_x = realpath(__file__)
 myname = basename(argv[0])
-ibrav2cell_x = ibrav2cell_x.replace(myname,"ibrav2cell.x")
+#ibrav2cell_x = realpath(__file__)
+#ibrav2cell_x = ibrav2cell_x.replace(myname,"ibrav2cell.x")
+ibrav2cell_x = argv[0].replace(myname,"ibrav2cell.x")
 
 def main() :
   from numpy import array
@@ -20,10 +21,14 @@ def main() :
   parser = ArgumentParser()
   parser.add_argument('-i', action='append', type=int, metavar="ibrav", dest="ibrav_list", default=[], 
                        help="ibrav value to explore, can be repeated (default: all)")
-  parser.add_argument('-c', type=float, default=[0, 0, 0, 0, 0, 0, 0, 0, 0], nargs=9, dest="at",
+  parser.add_argument('-c', type=float, nargs=9, dest="at",
                       metavar=("a1x","a1y","a1z","a2x","a2y","a2z", "a3x", "a3y", "a3z"), 
                       help="cell parameters (default: read from standard input)")
-  parser.add_argument('-A', default=False, action="store_true", dest="angst", help="cell is entered in Agstrom units (default: bohr")
+  units = parser.add_mutually_exclusive_group()
+  units.add_argument('-A', default=False, action="store_true", dest="angst", help="cell is entered in Agstrom units")
+  units.add_argument('-B', default=True, action="store_false", dest="angst", help="cell is entered in Bohr units (default)")
+  units.add_argument('--alat', type=float, dest="alat", help="cell is entered in units of alat (in bohr)", metavar="ALAT")
+
   parser.add_argument('--celldm', type=float, default=[1, 1, 1, 0.5, 0.5, 0.5], nargs=6, dest="celldm",
                       metavar=("1","2","3","4","5","6"), help="initial values of celldm(1..6), you have to specify all 6 or none (default: 1 1 1 .5 .5 .5)")
   parser.add_argument('-t', type=float, default=1.e-3,  dest="mthr", help="match threshold", metavar="THR")
@@ -32,20 +37,16 @@ def main() :
                       (default: look in the same directory as this program)", metavar="/path/to/ibrav2cell.x")
 
   args = parser.parse_args()
+
   ibrav_list = [1,2,3,4,5,-5,6,7,8,9,-9,10,11,12,-12,13,14]
   if args.ibrav_list == []:
     args.ibrav_list = ibrav_list
-  #print args
 
   global ibrav2cell_x
   if args.ibrav2cell_x:
     ibrav2cell_x = args.ibrav2cell_x
     
-  if not is_exe(ibrav2cell_x):
-    print " File '"+ibrav2cell_x+"' not found or not executable."
-    print " Specify the position of ibrav2cell.x with the '-x' command line option." 
-    print " Use '-h' for more help."
-    return
+  check_ibrav2cell()
 
 # test for ibrav = 5
 #  cell = [    3.900896593574796,   -2.252183691403927,   18.043044401344225,
@@ -56,31 +57,53 @@ def main() :
 #           1.224000000000000E+01,   7.585670702053973E+00,   0.000000000000000E+00,
 #           7.979999999999999E+00,   1.474991525399383E+00,   2.168870673876157E+00]
 
+  if args.alat and args.angst:
+    print "You cannot specifiy both '-A' and '--alat'"
+    exit(254)
+
   cell = args.at
-  if all(array(cell) == 0) :
+  if not cell:
     cell = cell_stdin()
+
   if args.angst:
     cell = array(cell)*1.889725989
+  elif args.alat:
+    cell = array(cell)*args.alat
 
   bnds = ((0,None), (0,None), (0,None), (-1,1), (-1,1), (-1,1))
   
   print "Scanning..."
   for ibrav in args.ibrav_list:
-      p=args.celldm #[1,1,1,0.5,0.5,0.5]
+      p=args.celldm 
       options = { "ibrav" : ibrav,
                   "cell"  : cell
                 }
-      
+      #from scipy.optimize import basinhopping
+      #r = basinhopping(recompute, p, minimizer_kwargs={"method":"L-BFGS-B", "bounds":bnds, "args":tuple([options])}, niter=10)
       from scipy.optimize import minimize
-      from scipy.optimize import basinhopping
-
-      #r = basinhopping(recompute, p, minimizer_kwargs={"args":tuple([options])}, niter=10, bounds=bnds)
       r = minimize(recompute, p, args=tuple([options]), method="L-BFGS-B", tol=args.kthr, bounds=bnds)
       if r["fun"] < args.mthr:
         print "match found: ibrav =", ibrav 
         check_zero(r["x"], ibrav)
+      elif r["fun"] < 100*args.mthr:
+        print "possible noisy match found: ibrav =", ibrav 
+        check_zero(r["x"], ibrav)
 
-      #print make_namelist(ibrav,r["x"])
+def check_ibrav2cell():
+  from numpy import array
+  from sys import argv
+  if not is_exe(ibrav2cell_x):
+    print " File '"+ibrav2cell_x+"' not found or not executable."
+    print " Specify the position of ibrav2cell.x with the '-x' command line option." 
+    print " Use '-h' for more help."
+    exit(100)
+  namelist = make_namelist(1,[1,0,0,0,0,0])
+  at = compute_cell(namelist)
+  if not at or len(at!=9) or any(at != array([1,0,0,0,1,0,0,0,1])):
+    print " File '"+ibrav2cell_x+"' not working as expected."
+    print " Please verify that it comes from the same distribution as '"+argv[0]+"'"
+    print " and that it is running correctly."
+    exit(101)
 
 def is_exe(fpath):
     import os
