@@ -1269,14 +1269,17 @@ SUBROUTINE iosys()
   END SELECT
   IF ( london ) THEN
      CALL infomsg("iosys","london is obsolete, use ""vdw_corr='grimme-d2'"" instead")
+     vdw_corr='grimme-d2'
      llondon = .TRUE.
   END IF
   IF ( xdm ) THEN
      CALL infomsg("iosys","xdm is obsolete, use ""vdw_corr='xdm'"" instead")
+     vdw_corr='xdm'
      lxdm = .TRUE.
   END IF
   IF ( ts_vdw ) THEN
      CALL infomsg("iosys","ts_vdw is obsolete, use ""vdw_corr='TS'"" instead")
+     vdw_corr='TS'
      ts_vdw_ = .TRUE.
   END IF
   IF ( llondon.AND.lxdm .OR. llondon.AND.ts_vdw_ .OR. lxdm.AND.ts_vdw_ ) &

@@ -122,7 +122,6 @@ MODULE pw_restart_new
       CHARACTER(15)         :: subname="pw_write_schema"
       CHARACTER(LEN=20)     :: dft_name
       CHARACTER(LEN=256)    :: dirname
-      CHARACTER(LEN=80)     :: vdw_corr_
       INTEGER               :: i, ig, ngg, ipol
       INTEGER               :: npwx_g, ispin, inlc
       INTEGER,  ALLOCATABLE :: ngk_g(:)
@@ -285,15 +284,12 @@ MODULE pw_restart_new
          dft_name = get_dft_name()
          inlc = get_inlc()
          !
-         !
-         vdw_corr_ = vdw_corr
-         IF ( london ) vdw_corr_ = 'grimme-d2'
          CALL qexsd_init_dft(output%dft, dft_name, .TRUE., dft_is_hybrid(), nq1, nq2, nq3, ecutfock, &
               get_exx_fraction(), get_screening_parameter(), exxdiv_treatment, x_gamma_extrapolation,&
               ecutvcut, lda_plus_u, lda_plus_u_kind, 2*Hubbard_lmax+1, noncolin, nspin, nsp,         &
               2*Hubbard_lmax+1, nat, atm, ityp, Hubbard_U, Hubbard_J0, Hubbard_alpha, Hubbard_beta,  &
               Hubbard_J, starting_ns_eigenvalue, rho%ns, rho%ns_nc, U_projection, dft_is_nonlocc(),  &
-              TRIM(vdw_corr_), TRIM ( get_nonlocc_name()), scal6, in_c6, lon_rcut, xdm_a1, xdm_a2,   &
+              TRIM(vdw_corr), TRIM ( get_nonlocc_name()), scal6, in_c6, lon_rcut, xdm_a1, xdm_a2,   &
               vdw_econv_thr, vdw_isolated, is_hubbard, upf(1:nsp)%psd)
          !
 !-------------------------------------------------------------------------------
