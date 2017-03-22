@@ -14,11 +14,13 @@ MODULE elph_tetra_mod
   !
   PRIVATE
   !
-  LOGICAL,SAVE :: lshift_q = .false.
+  LOGICAL,SAVE :: &
+  &  lshift_q = .false., &
+  &  in_alpha2f = .FALSE.
   !
   INTEGER,SAVE :: elph_tetra = 0 ! switch to output electron-phonon matrix
   !
-  PUBLIC elph_tetra, lshift_q, &
+  PUBLIC elph_tetra, lshift_q, in_alpha2f, &
   &      elph_tetra_lambda, elph_tetra_gamma
   !
   CONTAINS

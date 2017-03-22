@@ -1,8 +1,8 @@
 &CONTROL
  calculation = 'scf' ,
     prefix='aluminum',
-    pseudo_dir = '/home/kawamura/programs/QE/dfpttetra/pseudo/',
-    outdir='/home/kawamura/programs/QE/dfpttetra/tempdir/'
+    pseudo_dir = '/mnt/c/Users/kawamuura/program/QE/qe_priv/pseudo/',
+    outdir='/mnt/c/Users/kawamuura/program/QE/qe_priv/tempdir/'
 /
 &SYSTEM
        ibrav = 2,

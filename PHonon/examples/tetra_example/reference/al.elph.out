@@ -1,5 +1,5 @@
 
-     Program PHONON v.5.4.0 starts on  7Aug2016 at 17: 8:42 
+     Program PHONON v.6.1 starts on 16Mar2017 at 21: 4:50 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -7,24 +7,12 @@
           URL http://www.quantum-espresso.org", 
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
- 
-           HOST :    @host@
-           ARCH :    x86_64
-             CC :    icc
-            CPP :    cpp
-            F90 :    mpif90
-            F77 :    ifort
-         DFLAGS :    -D__INTEL -D__DFTI -D__MPI -D__PARA -D__SCALAPACK
-      BLAS LIBS :    -lmkl_intel_lp64  -lmkl_sequential -lmkl_core
-    LAPACK LIBS :    
-       FFT LIBS :    -lfftw3xf_intel
-      MASS LIBS :    
 
-     Parallel version (MPI), running on     2 processors
-     K-points division:     npool     =       2
+     Parallel version (MPI), running on     4 processors
+     K-points division:     npool     =       4
 
      Reading data from directory:
-     /home/kawamura/programs/QE/dfpttetra/tempdir/aluminum.save
+     /mnt/c/Users/kawamuura/program/QE/qe_priv/tempdir/aluminum.save
 
    Info: using nr1, nr2, nr3 values from input
 
@@ -35,12 +23,12 @@
      Any further DFT definition will be discarded
      Please, verify this is what you really want
 
- 
+
      G-vector sticks info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
      Sum         301     301    109                 3479     3479     749
- 
+
 
      Check: negative/imaginary core charge=   -0.000013    0.000000
 
@@ -62,13 +50,17 @@
      Because shifted q grid is used, q2r will not work !
 
      Calculation of q =   -0.1250000   0.1250000   0.1250000
+
+   Info: using nr1, nr2, nr3 values from input
+
+   Info: using nr1, nr2, nr3 values from input
      [opt_tetra]  Optimized tetrahedron method is used.
- 
+
      G-vector sticks info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
      Sum         301     301    121                 3479     3479     869
- 
+
 
 
      bravais-lattice index     =            2
@@ -97,7 +89,7 @@
 
 
      PseudoPot. # 1 for Al read from file:
-     /home/kawamura/programs/QE/dfpttetra/pseudo/Al.pbe-n-rrkjus_psl.0.1.UPF
+     /mnt/c/Users/kawamuura/program/QE/qe_priv/pseudo/Al.pbe-n-rrkjus_psl.0.1.UPF
      MD5 check sum: 6479f6627750700cef6db36d98bbe09a
      Pseudo is Ultrasoft + core correction, Zval =  3.0
      Generated using "atomic" code by A. Dal Corso  v.5.0.99 svn rev. 10869
@@ -127,30 +119,23 @@
 
      Dense  grid:     3479 G-vectors     FFT dimensions: (  24,  24,  24)
 
-     Largest allocated arrays     est. size (Mb)     dimensions
-        Kohn-Sham Wavefunctions         0.05 Mb     (     495,    6)
-        NL pseudopotentials             0.06 Mb     (     495,    8)
-        Each V/rho on FFT grid          0.21 Mb     (   13824)
-        Each G-vector array             0.03 Mb     (    3479)
-        G-vector shells                 0.00 Mb     (      76)
-     Largest temporary arrays     est. size (Mb)     dimensions
-        Auxiliary wavefunctions         0.18 Mb     (     495,   24)
-        Each subspace H/S matrix        0.01 Mb     (      24,   24)
-        Each <psi_i|beta_j> matrix      0.00 Mb     (       8,    6)
+     Estimated max dynamical RAM per process >       1.80MB
+
+     Estimated total allocated dynamical RAM >       7.21MB
 
      Check: negative/imaginary core charge=   -0.000013    0.000000
 
      The potential is recalculated from file :
-     /home/kawamura/programs/QE/dfpttetra/tempdir/_ph0/aluminum.q_1/aluminum.save/charge-density.dat
+     /mnt/c/Users/kawamuura/program/QE/qe_priv/tempdir/_ph0/aluminum.q_1/aluminum.save/charge-density.dat
 
      Starting wfc are    4 atomic +    2 random wfc
 
      Band Structure Calculation
      Davidson diagonalization with overlap
 
-     ethr =  3.33E-10,  avg # of iterations = 18.3
+     ethr =  3.33E-10,  avg # of iterations = 18.4
 
-     total cpu time spent up to now is       36.6 secs
+     total cpu time spent up to now is       75.8 secs
 
      End of band structure calculation
 
@@ -160,7 +145,7 @@
 
      Writing output data file aluminum.save
  
-     [dfpt_tetra]  Dos(E_F)[/Ry] :   0.5441188E+01
+     [dfpt_tetra]  Dos(E_F)[/Ry] :   0.5441187E+01
 
                                                                                 
 
@@ -200,7 +185,7 @@
 
      Computing dynamical matrix for 
                     q = (  -0.1250000   0.1250000   0.1250000 )
- 
+
       6 Sym.Ops. (no q -> -q+G )
 
 
@@ -208,7 +193,7 @@
      number of k points=  1632
 
      PseudoPot. # 1 for Al read from file:
-     /home/kawamura/programs/QE/dfpttetra/pseudo/Al.pbe-n-rrkjus_psl.0.1.UPF
+     /mnt/c/Users/kawamuura/program/QE/qe_priv/pseudo/Al.pbe-n-rrkjus_psl.0.1.UPF
      MD5 check sum: 6479f6627750700cef6db36d98bbe09a
      Pseudo is Ultrasoft + core correction, Zval =  3.0
      Generated using "atomic" code by A. Dal Corso  v.5.0.99 svn rev. 10869
@@ -231,7 +216,7 @@
      Representation     2      2 modes -E    L_3  To be done
 
 
-     PHONON       :    41.41s CPU        42.32s WALL
+     PHONON       :  1m10.19s CPU     1m28.44s WALL
 
      Reading dVscf from file dv
      Reading dynamics matrix from file al.dyn1
@@ -239,22 +224,26 @@
      [elph_tetra]   Lowest band which contains FS :          2
      [elph_tetra]  Highest band which contains FS :          3
      [elph_tetra]    # of bands which contains FS :          2
- 
+
      Tetrahedron method
-     DOS =  2.720594 states/spin/Ry/Unit Cell at Ef=  7.970587 eV
-     double delta at Ef = 11.768724
+     DOS =  2.720593 states/spin/Ry/Unit Cell at Ef=  7.970584 eV
+     double delta at Ef = 11.768747
      lambda(    1)=  0.2178   gamma=    2.25 GHz
      lambda(    2)=  0.2178   gamma=    2.25 GHz
      lambda(    3)=  0.1554   gamma=    5.56 GHz
 
      Calculation of q =   -0.3750000   0.3750000  -0.1250000
+
+   Info: using nr1, nr2, nr3 values from input
+
+   Info: using nr1, nr2, nr3 values from input
      [opt_tetra]  Optimized tetrahedron method is used.
- 
+
      G-vector sticks info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
      Sum         301     301    121                 3479     3479     941
- 
+
 
 
      bravais-lattice index     =            2
@@ -283,7 +272,7 @@
 
 
      PseudoPot. # 1 for Al read from file:
-     /home/kawamura/programs/QE/dfpttetra/pseudo/Al.pbe-n-rrkjus_psl.0.1.UPF
+     /mnt/c/Users/kawamuura/program/QE/qe_priv/pseudo/Al.pbe-n-rrkjus_psl.0.1.UPF
      MD5 check sum: 6479f6627750700cef6db36d98bbe09a
      Pseudo is Ultrasoft + core correction, Zval =  3.0
      Generated using "atomic" code by A. Dal Corso  v.5.0.99 svn rev. 10869
@@ -313,21 +302,14 @@
 
      Dense  grid:     3479 G-vectors     FFT dimensions: (  24,  24,  24)
 
-     Largest allocated arrays     est. size (Mb)     dimensions
-        Kohn-Sham Wavefunctions         0.05 Mb     (     495,    6)
-        NL pseudopotentials             0.06 Mb     (     495,    8)
-        Each V/rho on FFT grid          0.21 Mb     (   13824)
-        Each G-vector array             0.03 Mb     (    3479)
-        G-vector shells                 0.00 Mb     (      76)
-     Largest temporary arrays     est. size (Mb)     dimensions
-        Auxiliary wavefunctions         0.18 Mb     (     495,   24)
-        Each subspace H/S matrix        0.01 Mb     (      24,   24)
-        Each <psi_i|beta_j> matrix      0.00 Mb     (       8,    6)
+     Estimated max dynamical RAM per process >       1.80MB
+
+     Estimated total allocated dynamical RAM >       7.21MB
 
      Check: negative/imaginary core charge=   -0.000013    0.000000
 
      The potential is recalculated from file :
-     /home/kawamura/programs/QE/dfpttetra/tempdir/_ph0/aluminum.q_2/aluminum.save/charge-density.dat
+     /mnt/c/Users/kawamuura/program/QE/qe_priv/tempdir/_ph0/aluminum.q_2/aluminum.save/charge-density.dat
 
      Starting wfc are    4 atomic +    2 random wfc
 
@@ -336,7 +318,7 @@
 
      ethr =  3.33E-10,  avg # of iterations = 18.1
 
-     total cpu time spent up to now is      131.3 secs
+     total cpu time spent up to now is      273.2 secs
 
      End of band structure calculation
 
@@ -346,7 +328,7 @@
 
      Writing output data file aluminum.save
  
-     [dfpt_tetra]  Dos(E_F)[/Ry] :   0.5441188E+01
+     [dfpt_tetra]  Dos(E_F)[/Ry] :   0.5441187E+01
 
                                                                                 
 
@@ -386,7 +368,7 @@
 
      Computing dynamical matrix for 
                     q = (  -0.3750000   0.3750000  -0.1250000 )
- 
+
       2 Sym.Ops. (no q -> -q+G )
 
 
@@ -394,7 +376,7 @@
      number of k points=  4352
 
      PseudoPot. # 1 for Al read from file:
-     /home/kawamura/programs/QE/dfpttetra/pseudo/Al.pbe-n-rrkjus_psl.0.1.UPF
+     /mnt/c/Users/kawamuura/program/QE/qe_priv/pseudo/Al.pbe-n-rrkjus_psl.0.1.UPF
      MD5 check sum: 6479f6627750700cef6db36d98bbe09a
      Pseudo is Ultrasoft + core correction, Zval =  3.0
      Generated using "atomic" code by A. Dal Corso  v.5.0.99 svn rev. 10869
@@ -419,7 +401,7 @@
      Representation     3      1 modes -A''  To be done
 
 
-     PHONON       :  2m27.69s CPU     2m31.88s WALL
+     PHONON       :  4m 8.58s CPU     5m13.46s WALL
 
      Reading dVscf from file dv
      Reading dynamics matrix from file al.dyn2
@@ -427,22 +409,26 @@
      [elph_tetra]   Lowest band which contains FS :          2
      [elph_tetra]  Highest band which contains FS :          3
      [elph_tetra]    # of bands which contains FS :          2
- 
+
      Tetrahedron method
-     DOS =  2.720594 states/spin/Ry/Unit Cell at Ef=  7.970587 eV
-     double delta at Ef = 15.327448
+     DOS =  2.720593 states/spin/Ry/Unit Cell at Ef=  7.970584 eV
+     double delta at Ef = 15.327453
      lambda(    1)=  0.0224   gamma=    0.94 GHz
      lambda(    2)=  0.1269   gamma=    7.46 GHz
      lambda(    3)=  0.2291   gamma=   35.83 GHz
 
      Calculation of q =    0.3750000  -0.3750000   0.6250000
+
+   Info: using nr1, nr2, nr3 values from input
+
+   Info: using nr1, nr2, nr3 values from input
      [opt_tetra]  Optimized tetrahedron method is used.
- 
+
      G-vector sticks info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
      Sum         301     301    121                 3479     3479     941
- 
+
 
 
      bravais-lattice index     =            2
@@ -471,7 +457,7 @@
 
 
      PseudoPot. # 1 for Al read from file:
-     /home/kawamura/programs/QE/dfpttetra/pseudo/Al.pbe-n-rrkjus_psl.0.1.UPF
+     /mnt/c/Users/kawamuura/program/QE/qe_priv/pseudo/Al.pbe-n-rrkjus_psl.0.1.UPF
      MD5 check sum: 6479f6627750700cef6db36d98bbe09a
      Pseudo is Ultrasoft + core correction, Zval =  3.0
      Generated using "atomic" code by A. Dal Corso  v.5.0.99 svn rev. 10869
@@ -501,30 +487,23 @@
 
      Dense  grid:     3479 G-vectors     FFT dimensions: (  24,  24,  24)
 
-     Largest allocated arrays     est. size (Mb)     dimensions
-        Kohn-Sham Wavefunctions         0.05 Mb     (     495,    6)
-        NL pseudopotentials             0.06 Mb     (     495,    8)
-        Each V/rho on FFT grid          0.21 Mb     (   13824)
-        Each G-vector array             0.03 Mb     (    3479)
-        G-vector shells                 0.00 Mb     (      76)
-     Largest temporary arrays     est. size (Mb)     dimensions
-        Auxiliary wavefunctions         0.18 Mb     (     495,   24)
-        Each subspace H/S matrix        0.01 Mb     (      24,   24)
-        Each <psi_i|beta_j> matrix      0.00 Mb     (       8,    6)
+     Estimated max dynamical RAM per process >       1.80MB
+
+     Estimated total allocated dynamical RAM >       7.21MB
 
      Check: negative/imaginary core charge=   -0.000013    0.000000
 
      The potential is recalculated from file :
-     /home/kawamura/programs/QE/dfpttetra/tempdir/_ph0/aluminum.q_3/aluminum.save/charge-density.dat
+     /mnt/c/Users/kawamuura/program/QE/qe_priv/tempdir/_ph0/aluminum.q_3/aluminum.save/charge-density.dat
 
      Starting wfc are    4 atomic +    2 random wfc
 
      Band Structure Calculation
      Davidson diagonalization with overlap
 
-     ethr =  3.33E-10,  avg # of iterations = 18.2
+     ethr =  3.33E-10,  avg # of iterations = 18.1
 
-     total cpu time spent up to now is      228.8 secs
+     total cpu time spent up to now is      477.6 secs
 
      End of band structure calculation
 
@@ -534,7 +513,7 @@
 
      Writing output data file aluminum.save
  
-     [dfpt_tetra]  Dos(E_F)[/Ry] :   0.5441188E+01
+     [dfpt_tetra]  Dos(E_F)[/Ry] :   0.5441187E+01
 
                                                                                 
 
@@ -574,7 +553,7 @@
 
      Computing dynamical matrix for 
                     q = (   0.3750000  -0.3750000   0.6250000 )
- 
+
       2 Sym.Ops. (no q -> -q+G )
 
 
@@ -582,7 +561,7 @@
      number of k points=  4352
 
      PseudoPot. # 1 for Al read from file:
-     /home/kawamura/programs/QE/dfpttetra/pseudo/Al.pbe-n-rrkjus_psl.0.1.UPF
+     /mnt/c/Users/kawamuura/program/QE/qe_priv/pseudo/Al.pbe-n-rrkjus_psl.0.1.UPF
      MD5 check sum: 6479f6627750700cef6db36d98bbe09a
      Pseudo is Ultrasoft + core correction, Zval =  3.0
      Generated using "atomic" code by A. Dal Corso  v.5.0.99 svn rev. 10869
@@ -607,7 +586,7 @@
      Representation     3      1 modes -A''  To be done
 
 
-     PHONON       :  4m20.16s CPU     4m27.56s WALL
+     PHONON       :  7m16.28s CPU     9m15.08s WALL
 
      Reading dVscf from file dv
      Reading dynamics matrix from file al.dyn3
@@ -615,22 +594,26 @@
      [elph_tetra]   Lowest band which contains FS :          2
      [elph_tetra]  Highest band which contains FS :          3
      [elph_tetra]    # of bands which contains FS :          2
- 
+
      Tetrahedron method
-     DOS =  2.720594 states/spin/Ry/Unit Cell at Ef=  7.970587 eV
-     double delta at Ef = 16.261604
-     lambda(    1)=  0.0897   gamma=    5.03 GHz
+     DOS =  2.720593 states/spin/Ry/Unit Cell at Ef=  7.970584 eV
+     double delta at Ef = 16.261583
+     lambda(    1)=  0.0898   gamma=    5.03 GHz
      lambda(    2)=  0.0866   gamma=    6.79 GHz
      lambda(    3)=  0.1819   gamma=   42.57 GHz
 
      Calculation of q =    0.1250000  -0.1250000   0.3750000
+
+   Info: using nr1, nr2, nr3 values from input
+
+   Info: using nr1, nr2, nr3 values from input
      [opt_tetra]  Optimized tetrahedron method is used.
- 
+
      G-vector sticks info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
      Sum         301     301    121                 3479     3479     893
- 
+
 
 
      bravais-lattice index     =            2
@@ -659,7 +642,7 @@
 
 
      PseudoPot. # 1 for Al read from file:
-     /home/kawamura/programs/QE/dfpttetra/pseudo/Al.pbe-n-rrkjus_psl.0.1.UPF
+     /mnt/c/Users/kawamuura/program/QE/qe_priv/pseudo/Al.pbe-n-rrkjus_psl.0.1.UPF
      MD5 check sum: 6479f6627750700cef6db36d98bbe09a
      Pseudo is Ultrasoft + core correction, Zval =  3.0
      Generated using "atomic" code by A. Dal Corso  v.5.0.99 svn rev. 10869
@@ -689,30 +672,23 @@
 
      Dense  grid:     3479 G-vectors     FFT dimensions: (  24,  24,  24)
 
-     Largest allocated arrays     est. size (Mb)     dimensions
-        Kohn-Sham Wavefunctions         0.05 Mb     (     495,    6)
-        NL pseudopotentials             0.06 Mb     (     495,    8)
-        Each V/rho on FFT grid          0.21 Mb     (   13824)
-        Each G-vector array             0.03 Mb     (    3479)
-        G-vector shells                 0.00 Mb     (      76)
-     Largest temporary arrays     est. size (Mb)     dimensions
-        Auxiliary wavefunctions         0.18 Mb     (     495,   24)
-        Each subspace H/S matrix        0.01 Mb     (      24,   24)
-        Each <psi_i|beta_j> matrix      0.00 Mb     (       8,    6)
+     Estimated max dynamical RAM per process >       1.80MB
+
+     Estimated total allocated dynamical RAM >       7.21MB
 
      Check: negative/imaginary core charge=   -0.000013    0.000000
 
      The potential is recalculated from file :
-     /home/kawamura/programs/QE/dfpttetra/tempdir/_ph0/aluminum.q_4/aluminum.save/charge-density.dat
+     /mnt/c/Users/kawamuura/program/QE/qe_priv/tempdir/_ph0/aluminum.q_4/aluminum.save/charge-density.dat
 
      Starting wfc are    4 atomic +    2 random wfc
 
      Band Structure Calculation
      Davidson diagonalization with overlap
 
-     ethr =  3.33E-10,  avg # of iterations = 18.2
+     ethr =  3.33E-10,  avg # of iterations = 18.1
 
-     total cpu time spent up to now is      322.8 secs
+     total cpu time spent up to now is      627.5 secs
 
      End of band structure calculation
 
@@ -722,7 +698,7 @@
 
      Writing output data file aluminum.save
  
-     [dfpt_tetra]  Dos(E_F)[/Ry] :   0.5441188E+01
+     [dfpt_tetra]  Dos(E_F)[/Ry] :   0.5441187E+01
 
                                                                                 
 
@@ -762,7 +738,7 @@
 
      Computing dynamical matrix for 
                     q = (   0.1250000  -0.1250000   0.3750000 )
- 
+
       2 Sym.Ops. (no q -> -q+G )
 
 
@@ -770,7 +746,7 @@
      number of k points=  4352
 
      PseudoPot. # 1 for Al read from file:
-     /home/kawamura/programs/QE/dfpttetra/pseudo/Al.pbe-n-rrkjus_psl.0.1.UPF
+     /mnt/c/Users/kawamuura/program/QE/qe_priv/pseudo/Al.pbe-n-rrkjus_psl.0.1.UPF
      MD5 check sum: 6479f6627750700cef6db36d98bbe09a
      Pseudo is Ultrasoft + core correction, Zval =  3.0
      Generated using "atomic" code by A. Dal Corso  v.5.0.99 svn rev. 10869
@@ -795,7 +771,7 @@
      Representation     3      1 modes -A''  To be done
 
 
-     PHONON       :  6m 9.27s CPU     6m19.65s WALL
+     PHONON       :  9m53.73s CPU    12m14.32s WALL
 
      Reading dVscf from file dv
      Reading dynamics matrix from file al.dyn4
@@ -803,22 +779,26 @@
      [elph_tetra]   Lowest band which contains FS :          2
      [elph_tetra]  Highest band which contains FS :          3
      [elph_tetra]    # of bands which contains FS :          2
- 
+
      Tetrahedron method
-     DOS =  2.720594 states/spin/Ry/Unit Cell at Ef=  7.970587 eV
-     double delta at Ef = 21.576809
+     DOS =  2.720593 states/spin/Ry/Unit Cell at Ef=  7.970584 eV
+     double delta at Ef = 21.576766
      lambda(    1)=  0.2132   gamma=    6.84 GHz
      lambda(    2)=  0.1629   gamma=    5.61 GHz
      lambda(    3)=  0.3227   gamma=   33.92 GHz
 
      Calculation of q =   -0.1250000   0.6250000   0.1250000
+
+   Info: using nr1, nr2, nr3 values from input
+
+   Info: using nr1, nr2, nr3 values from input
      [opt_tetra]  Optimized tetrahedron method is used.
- 
+
      G-vector sticks info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
      Sum         301     301    121                 3479     3479     941
- 
+
 
 
      bravais-lattice index     =            2
@@ -847,7 +827,7 @@
 
 
      PseudoPot. # 1 for Al read from file:
-     /home/kawamura/programs/QE/dfpttetra/pseudo/Al.pbe-n-rrkjus_psl.0.1.UPF
+     /mnt/c/Users/kawamuura/program/QE/qe_priv/pseudo/Al.pbe-n-rrkjus_psl.0.1.UPF
      MD5 check sum: 6479f6627750700cef6db36d98bbe09a
      Pseudo is Ultrasoft + core correction, Zval =  3.0
      Generated using "atomic" code by A. Dal Corso  v.5.0.99 svn rev. 10869
@@ -877,21 +857,14 @@
 
      Dense  grid:     3479 G-vectors     FFT dimensions: (  24,  24,  24)
 
-     Largest allocated arrays     est. size (Mb)     dimensions
-        Kohn-Sham Wavefunctions         0.05 Mb     (     495,    6)
-        NL pseudopotentials             0.06 Mb     (     495,    8)
-        Each V/rho on FFT grid          0.21 Mb     (   13824)
-        Each G-vector array             0.03 Mb     (    3479)
-        G-vector shells                 0.00 Mb     (      76)
-     Largest temporary arrays     est. size (Mb)     dimensions
-        Auxiliary wavefunctions         0.18 Mb     (     495,   24)
-        Each subspace H/S matrix        0.01 Mb     (      24,   24)
-        Each <psi_i|beta_j> matrix      0.00 Mb     (       8,    6)
+     Estimated max dynamical RAM per process >       1.80MB
+
+     Estimated total allocated dynamical RAM >       7.21MB
 
      Check: negative/imaginary core charge=   -0.000013    0.000000
 
      The potential is recalculated from file :
-     /home/kawamura/programs/QE/dfpttetra/tempdir/_ph0/aluminum.q_5/aluminum.save/charge-density.dat
+     /mnt/c/Users/kawamuura/program/QE/qe_priv/tempdir/_ph0/aluminum.q_5/aluminum.save/charge-density.dat
 
      Starting wfc are    4 atomic +    2 random wfc
 
@@ -900,7 +873,7 @@
 
      ethr =  3.33E-10,  avg # of iterations = 18.1
 
-     total cpu time spent up to now is      416.7 secs
+     total cpu time spent up to now is      767.4 secs
 
      End of band structure calculation
 
@@ -910,7 +883,7 @@
 
      Writing output data file aluminum.save
  
-     [dfpt_tetra]  Dos(E_F)[/Ry] :   0.5441188E+01
+     [dfpt_tetra]  Dos(E_F)[/Ry] :   0.5441187E+01
 
                                                                                 
 
@@ -950,7 +923,7 @@
 
      Computing dynamical matrix for 
                     q = (  -0.1250000   0.6250000   0.1250000 )
- 
+
       2 Sym.Ops. (no q -> -q+G )
 
 
@@ -958,7 +931,7 @@
      number of k points=  4352
 
      PseudoPot. # 1 for Al read from file:
-     /home/kawamura/programs/QE/dfpttetra/pseudo/Al.pbe-n-rrkjus_psl.0.1.UPF
+     /mnt/c/Users/kawamuura/program/QE/qe_priv/pseudo/Al.pbe-n-rrkjus_psl.0.1.UPF
      MD5 check sum: 6479f6627750700cef6db36d98bbe09a
      Pseudo is Ultrasoft + core correction, Zval =  3.0
      Generated using "atomic" code by A. Dal Corso  v.5.0.99 svn rev. 10869
@@ -983,7 +956,7 @@
      Representation     3      1 modes -A''  To be done
 
 
-     PHONON       :  7m58.37s CPU     8m11.63s WALL
+     PHONON       : 12m23.95s CPU    14m59.14s WALL
 
      Reading dVscf from file dv
      Reading dynamics matrix from file al.dyn5
@@ -991,22 +964,26 @@
      [elph_tetra]   Lowest band which contains FS :          2
      [elph_tetra]  Highest band which contains FS :          3
      [elph_tetra]    # of bands which contains FS :          2
- 
+
      Tetrahedron method
-     DOS =  2.720594 states/spin/Ry/Unit Cell at Ef=  7.970587 eV
-     double delta at Ef = 13.351869
+     DOS =  2.720593 states/spin/Ry/Unit Cell at Ef=  7.970584 eV
+     double delta at Ef = 13.351862
      lambda(    1)=  0.1040   gamma=    6.41 GHz
      lambda(    2)=  0.0721   gamma=    5.56 GHz
      lambda(    3)=  0.1982   gamma=   36.07 GHz
 
      Calculation of q =    0.6250000  -0.1250000   0.8750000
+
+   Info: using nr1, nr2, nr3 values from input
+
+   Info: using nr1, nr2, nr3 values from input
      [opt_tetra]  Optimized tetrahedron method is used.
- 
+
      G-vector sticks info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
      Sum         301     301    139                 3479     3479    1067
- 
+
 
 
      bravais-lattice index     =            2
@@ -1035,7 +1012,7 @@
 
 
      PseudoPot. # 1 for Al read from file:
-     /home/kawamura/programs/QE/dfpttetra/pseudo/Al.pbe-n-rrkjus_psl.0.1.UPF
+     /mnt/c/Users/kawamuura/program/QE/qe_priv/pseudo/Al.pbe-n-rrkjus_psl.0.1.UPF
      MD5 check sum: 6479f6627750700cef6db36d98bbe09a
      Pseudo is Ultrasoft + core correction, Zval =  3.0
      Generated using "atomic" code by A. Dal Corso  v.5.0.99 svn rev. 10869
@@ -1065,21 +1042,14 @@
 
      Dense  grid:     3479 G-vectors     FFT dimensions: (  24,  24,  24)
 
-     Largest allocated arrays     est. size (Mb)     dimensions
-        Kohn-Sham Wavefunctions         0.05 Mb     (     495,    6)
-        NL pseudopotentials             0.06 Mb     (     495,    8)
-        Each V/rho on FFT grid          0.21 Mb     (   13824)
-        Each G-vector array             0.03 Mb     (    3479)
-        G-vector shells                 0.00 Mb     (      76)
-     Largest temporary arrays     est. size (Mb)     dimensions
-        Auxiliary wavefunctions         0.18 Mb     (     495,   24)
-        Each subspace H/S matrix        0.01 Mb     (      24,   24)
-        Each <psi_i|beta_j> matrix      0.00 Mb     (       8,    6)
+     Estimated max dynamical RAM per process >       1.80MB
+
+     Estimated total allocated dynamical RAM >       7.21MB
 
      Check: negative/imaginary core charge=   -0.000013    0.000000
 
      The potential is recalculated from file :
-     /home/kawamura/programs/QE/dfpttetra/tempdir/_ph0/aluminum.q_6/aluminum.save/charge-density.dat
+     /mnt/c/Users/kawamuura/program/QE/qe_priv/tempdir/_ph0/aluminum.q_6/aluminum.save/charge-density.dat
 
      Starting wfc are    4 atomic +    2 random wfc
 
@@ -1088,7 +1058,7 @@
 
      ethr =  3.33E-10,  avg # of iterations = 18.0
 
-     total cpu time spent up to now is      594.9 secs
+     total cpu time spent up to now is     1024.4 secs
 
      End of band structure calculation
 
@@ -1098,7 +1068,7 @@
 
      Writing output data file aluminum.save
  
-     [dfpt_tetra]  Dos(E_F)[/Ry] :   0.5441188E+01
+     [dfpt_tetra]  Dos(E_F)[/Ry] :   0.5441187E+01
 
                                                                                 
 
@@ -1138,14 +1108,14 @@
 
      Computing dynamical matrix for 
                     q = (   0.6250000  -0.1250000   0.8750000 )
- 
+
      No symmetry!
 
      G cutoff =  221.0943  (   3479 G-vectors)     FFT grid: ( 24, 24, 24)
      number of k points=  8192
 
      PseudoPot. # 1 for Al read from file:
-     /home/kawamura/programs/QE/dfpttetra/pseudo/Al.pbe-n-rrkjus_psl.0.1.UPF
+     /mnt/c/Users/kawamuura/program/QE/qe_priv/pseudo/Al.pbe-n-rrkjus_psl.0.1.UPF
      MD5 check sum: 6479f6627750700cef6db36d98bbe09a
      Pseudo is Ultrasoft + core correction, Zval =  3.0
      Generated using "atomic" code by A. Dal Corso  v.5.0.99 svn rev. 10869
@@ -1170,7 +1140,7 @@
      Representation     3      1 modes -A  To be done
 
 
-     PHONON       : 11m17.91s CPU    11m37.62s WALL
+     PHONON       : 16m51.61s CPU    19m55.90s WALL
 
      Reading dVscf from file dv
      Reading dynamics matrix from file al.dyn6
@@ -1178,22 +1148,26 @@
      [elph_tetra]   Lowest band which contains FS :          2
      [elph_tetra]  Highest band which contains FS :          3
      [elph_tetra]    # of bands which contains FS :          2
- 
+
      Tetrahedron method
-     DOS =  2.720594 states/spin/Ry/Unit Cell at Ef=  7.970587 eV
-     double delta at Ef = 15.162461
+     DOS =  2.720593 states/spin/Ry/Unit Cell at Ef=  7.970584 eV
+     double delta at Ef = 15.162478
      lambda(    1)=  0.1291   gamma=   11.81 GHz
      lambda(    2)=  0.1171   gamma=   17.83 GHz
      lambda(    3)=  0.1580   gamma=   32.43 GHz
 
      Calculation of q =    0.3750000   0.1250000   0.6250000
+
+   Info: using nr1, nr2, nr3 values from input
+
+   Info: using nr1, nr2, nr3 values from input
      [opt_tetra]  Optimized tetrahedron method is used.
- 
+
      G-vector sticks info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
      Sum         301     301    121                 3479     3479     941
- 
+
 
 
      bravais-lattice index     =            2
@@ -1222,7 +1196,7 @@
 
 
      PseudoPot. # 1 for Al read from file:
-     /home/kawamura/programs/QE/dfpttetra/pseudo/Al.pbe-n-rrkjus_psl.0.1.UPF
+     /mnt/c/Users/kawamuura/program/QE/qe_priv/pseudo/Al.pbe-n-rrkjus_psl.0.1.UPF
      MD5 check sum: 6479f6627750700cef6db36d98bbe09a
      Pseudo is Ultrasoft + core correction, Zval =  3.0
      Generated using "atomic" code by A. Dal Corso  v.5.0.99 svn rev. 10869
@@ -1252,21 +1226,14 @@
 
      Dense  grid:     3479 G-vectors     FFT dimensions: (  24,  24,  24)
 
-     Largest allocated arrays     est. size (Mb)     dimensions
-        Kohn-Sham Wavefunctions         0.05 Mb     (     495,    6)
-        NL pseudopotentials             0.06 Mb     (     495,    8)
-        Each V/rho on FFT grid          0.21 Mb     (   13824)
-        Each G-vector array             0.03 Mb     (    3479)
-        G-vector shells                 0.00 Mb     (      76)
-     Largest temporary arrays     est. size (Mb)     dimensions
-        Auxiliary wavefunctions         0.18 Mb     (     495,   24)
-        Each subspace H/S matrix        0.01 Mb     (      24,   24)
-        Each <psi_i|beta_j> matrix      0.00 Mb     (       8,    6)
+     Estimated max dynamical RAM per process >       1.80MB
+
+     Estimated total allocated dynamical RAM >       7.21MB
 
      Check: negative/imaginary core charge=   -0.000013    0.000000
 
      The potential is recalculated from file :
-     /home/kawamura/programs/QE/dfpttetra/tempdir/_ph0/aluminum.q_7/aluminum.save/charge-density.dat
+     /mnt/c/Users/kawamuura/program/QE/qe_priv/tempdir/_ph0/aluminum.q_7/aluminum.save/charge-density.dat
 
      Starting wfc are    4 atomic +    2 random wfc
 
@@ -1275,7 +1242,7 @@
 
      ethr =  3.33E-10,  avg # of iterations = 18.0
 
-     total cpu time spent up to now is      759.1 secs
+     total cpu time spent up to now is     1300.2 secs
 
      End of band structure calculation
 
@@ -1285,7 +1252,7 @@
 
      Writing output data file aluminum.save
  
-     [dfpt_tetra]  Dos(E_F)[/Ry] :   0.5441188E+01
+     [dfpt_tetra]  Dos(E_F)[/Ry] :   0.5441187E+01
 
                                                                                 
 
@@ -1325,14 +1292,14 @@
 
      Computing dynamical matrix for 
                     q = (   0.3750000   0.1250000   0.6250000 )
- 
+
      No symmetry!
 
      G cutoff =  221.0943  (   3479 G-vectors)     FFT grid: ( 24, 24, 24)
      number of k points=  8192
 
      PseudoPot. # 1 for Al read from file:
-     /home/kawamura/programs/QE/dfpttetra/pseudo/Al.pbe-n-rrkjus_psl.0.1.UPF
+     /mnt/c/Users/kawamuura/program/QE/qe_priv/pseudo/Al.pbe-n-rrkjus_psl.0.1.UPF
      MD5 check sum: 6479f6627750700cef6db36d98bbe09a
      Pseudo is Ultrasoft + core correction, Zval =  3.0
      Generated using "atomic" code by A. Dal Corso  v.5.0.99 svn rev. 10869
@@ -1357,7 +1324,7 @@
      Representation     3      1 modes -A  To be done
 
 
-     PHONON       : 14m36.23s CPU    14m54.63s WALL
+     PHONON       : 21m47.66s CPU    25m21.71s WALL
 
      Reading dVscf from file dv
      Reading dynamics matrix from file al.dyn7
@@ -1365,22 +1332,26 @@
      [elph_tetra]   Lowest band which contains FS :          2
      [elph_tetra]  Highest band which contains FS :          3
      [elph_tetra]    # of bands which contains FS :          2
- 
+
      Tetrahedron method
-     DOS =  2.720594 states/spin/Ry/Unit Cell at Ef=  7.970587 eV
-     double delta at Ef = 14.097340
+     DOS =  2.720593 states/spin/Ry/Unit Cell at Ef=  7.970584 eV
+     double delta at Ef = 14.097346
      lambda(    1)=  0.0571   gamma=    3.75 GHz
      lambda(    2)=  0.0765   gamma=    7.98 GHz
      lambda(    3)=  0.1933   gamma=   39.58 GHz
 
      Calculation of q =   -0.1250000  -0.8750000   0.1250000
+
+   Info: using nr1, nr2, nr3 values from input
+
+   Info: using nr1, nr2, nr3 values from input
      [opt_tetra]  Optimized tetrahedron method is used.
- 
+
      G-vector sticks info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
      Sum         301     301    127                 3479     3479     965
- 
+
 
 
      bravais-lattice index     =            2
@@ -1409,7 +1380,7 @@
 
 
      PseudoPot. # 1 for Al read from file:
-     /home/kawamura/programs/QE/dfpttetra/pseudo/Al.pbe-n-rrkjus_psl.0.1.UPF
+     /mnt/c/Users/kawamuura/program/QE/qe_priv/pseudo/Al.pbe-n-rrkjus_psl.0.1.UPF
      MD5 check sum: 6479f6627750700cef6db36d98bbe09a
      Pseudo is Ultrasoft + core correction, Zval =  3.0
      Generated using "atomic" code by A. Dal Corso  v.5.0.99 svn rev. 10869
@@ -1439,21 +1410,14 @@
 
      Dense  grid:     3479 G-vectors     FFT dimensions: (  24,  24,  24)
 
-     Largest allocated arrays     est. size (Mb)     dimensions
-        Kohn-Sham Wavefunctions         0.05 Mb     (     495,    6)
-        NL pseudopotentials             0.06 Mb     (     495,    8)
-        Each V/rho on FFT grid          0.21 Mb     (   13824)
-        Each G-vector array             0.03 Mb     (    3479)
-        G-vector shells                 0.00 Mb     (      76)
-     Largest temporary arrays     est. size (Mb)     dimensions
-        Auxiliary wavefunctions         0.18 Mb     (     495,   24)
-        Each subspace H/S matrix        0.01 Mb     (      24,   24)
-        Each <psi_i|beta_j> matrix      0.00 Mb     (       8,    6)
+     Estimated max dynamical RAM per process >       1.80MB
+
+     Estimated total allocated dynamical RAM >       7.21MB
 
      Check: negative/imaginary core charge=   -0.000013    0.000000
 
      The potential is recalculated from file :
-     /home/kawamura/programs/QE/dfpttetra/tempdir/_ph0/aluminum.q_8/aluminum.save/charge-density.dat
+     /mnt/c/Users/kawamuura/program/QE/qe_priv/tempdir/_ph0/aluminum.q_8/aluminum.save/charge-density.dat
 
      Starting wfc are    4 atomic +    2 random wfc
 
@@ -1462,7 +1426,7 @@
 
      ethr =  3.33E-10,  avg # of iterations = 18.1
 
-     total cpu time spent up to now is      856.3 secs
+     total cpu time spent up to now is     1458.5 secs
 
      End of band structure calculation
 
@@ -1472,7 +1436,7 @@
 
      Writing output data file aluminum.save
  
-     [dfpt_tetra]  Dos(E_F)[/Ry] :   0.5441188E+01
+     [dfpt_tetra]  Dos(E_F)[/Ry] :   0.5441187E+01
 
                                                                                 
 
@@ -1512,7 +1476,7 @@
 
      Computing dynamical matrix for 
                     q = (  -0.1250000  -0.8750000   0.1250000 )
- 
+
       2 Sym.Ops. (no q -> -q+G )
 
 
@@ -1520,7 +1484,7 @@
      number of k points=  4352
 
      PseudoPot. # 1 for Al read from file:
-     /home/kawamura/programs/QE/dfpttetra/pseudo/Al.pbe-n-rrkjus_psl.0.1.UPF
+     /mnt/c/Users/kawamuura/program/QE/qe_priv/pseudo/Al.pbe-n-rrkjus_psl.0.1.UPF
      MD5 check sum: 6479f6627750700cef6db36d98bbe09a
      Pseudo is Ultrasoft + core correction, Zval =  3.0
      Generated using "atomic" code by A. Dal Corso  v.5.0.99 svn rev. 10869
@@ -1545,7 +1509,7 @@
      Representation     3      1 modes -A''  To be done
 
 
-     PHONON       : 16m32.29s CPU    16m53.99s WALL
+     PHONON       : 24m44.12s CPU    28m36.04s WALL
 
      Reading dVscf from file dv
      Reading dynamics matrix from file al.dyn8
@@ -1553,22 +1517,26 @@
      [elph_tetra]   Lowest band which contains FS :          2
      [elph_tetra]  Highest band which contains FS :          3
      [elph_tetra]    # of bands which contains FS :          2
- 
+
      Tetrahedron method
-     DOS =  2.720594 states/spin/Ry/Unit Cell at Ef=  7.970587 eV
-     double delta at Ef = 12.099945
+     DOS =  2.720593 states/spin/Ry/Unit Cell at Ef=  7.970584 eV
+     double delta at Ef = 12.099956
      lambda(    1)=  0.0884   gamma=    7.70 GHz
      lambda(    2)=  0.0961   gamma=   10.22 GHz
      lambda(    3)=  0.1584   gamma=   36.81 GHz
 
      Calculation of q =   -0.3750000   0.3750000   0.3750000
+
+   Info: using nr1, nr2, nr3 values from input
+
+   Info: using nr1, nr2, nr3 values from input
      [opt_tetra]  Optimized tetrahedron method is used.
- 
+
      G-vector sticks info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
      Sum         301     301    121                 3479     3479     941
- 
+
 
 
      bravais-lattice index     =            2
@@ -1597,7 +1565,7 @@
 
 
      PseudoPot. # 1 for Al read from file:
-     /home/kawamura/programs/QE/dfpttetra/pseudo/Al.pbe-n-rrkjus_psl.0.1.UPF
+     /mnt/c/Users/kawamuura/program/QE/qe_priv/pseudo/Al.pbe-n-rrkjus_psl.0.1.UPF
      MD5 check sum: 6479f6627750700cef6db36d98bbe09a
      Pseudo is Ultrasoft + core correction, Zval =  3.0
      Generated using "atomic" code by A. Dal Corso  v.5.0.99 svn rev. 10869
@@ -1627,30 +1595,23 @@
 
      Dense  grid:     3479 G-vectors     FFT dimensions: (  24,  24,  24)
 
-     Largest allocated arrays     est. size (Mb)     dimensions
-        Kohn-Sham Wavefunctions         0.05 Mb     (     495,    6)
-        NL pseudopotentials             0.06 Mb     (     495,    8)
-        Each V/rho on FFT grid          0.21 Mb     (   13824)
-        Each G-vector array             0.03 Mb     (    3479)
-        G-vector shells                 0.00 Mb     (      76)
-     Largest temporary arrays     est. size (Mb)     dimensions
-        Auxiliary wavefunctions         0.18 Mb     (     495,   24)
-        Each subspace H/S matrix        0.01 Mb     (      24,   24)
-        Each <psi_i|beta_j> matrix      0.00 Mb     (       8,    6)
+     Estimated max dynamical RAM per process >       1.80MB
+
+     Estimated total allocated dynamical RAM >       7.21MB
 
      Check: negative/imaginary core charge=   -0.000013    0.000000
 
      The potential is recalculated from file :
-     /home/kawamura/programs/QE/dfpttetra/tempdir/_ph0/aluminum.q_9/aluminum.save/charge-density.dat
+     /mnt/c/Users/kawamuura/program/QE/qe_priv/tempdir/_ph0/aluminum.q_9/aluminum.save/charge-density.dat
 
      Starting wfc are    4 atomic +    2 random wfc
 
      Band Structure Calculation
      Davidson diagonalization with overlap
 
-     ethr =  3.33E-10,  avg # of iterations = 18.3
+     ethr =  3.33E-10,  avg # of iterations = 18.4
 
-     total cpu time spent up to now is      895.2 secs
+     total cpu time spent up to now is     1526.0 secs
 
      End of band structure calculation
 
@@ -1660,7 +1621,7 @@
 
      Writing output data file aluminum.save
  
-     [dfpt_tetra]  Dos(E_F)[/Ry] :   0.5441188E+01
+     [dfpt_tetra]  Dos(E_F)[/Ry] :   0.5441187E+01
 
                                                                                 
 
@@ -1700,7 +1661,7 @@
 
      Computing dynamical matrix for 
                     q = (  -0.3750000   0.3750000   0.3750000 )
- 
+
       6 Sym.Ops. (no q -> -q+G )
 
 
@@ -1708,7 +1669,7 @@
      number of k points=  1632
 
      PseudoPot. # 1 for Al read from file:
-     /home/kawamura/programs/QE/dfpttetra/pseudo/Al.pbe-n-rrkjus_psl.0.1.UPF
+     /mnt/c/Users/kawamuura/program/QE/qe_priv/pseudo/Al.pbe-n-rrkjus_psl.0.1.UPF
      MD5 check sum: 6479f6627750700cef6db36d98bbe09a
      Pseudo is Ultrasoft + core correction, Zval =  3.0
      Generated using "atomic" code by A. Dal Corso  v.5.0.99 svn rev. 10869
@@ -1731,7 +1692,7 @@
      Representation     2      2 modes -E    L_3  To be done
 
 
-     PHONON       : 17m20.10s CPU    17m43.17s WALL
+     PHONON       : 25m59.64s CPU    30m 0.65s WALL
 
      Reading dVscf from file dv
      Reading dynamics matrix from file al.dyn9
@@ -1739,22 +1700,26 @@
      [elph_tetra]   Lowest band which contains FS :          2
      [elph_tetra]  Highest band which contains FS :          3
      [elph_tetra]    # of bands which contains FS :          2
- 
+
      Tetrahedron method
-     DOS =  2.720594 states/spin/Ry/Unit Cell at Ef=  7.970587 eV
-     double delta at Ef = 13.741589
+     DOS =  2.720593 states/spin/Ry/Unit Cell at Ef=  7.970584 eV
+     double delta at Ef = 13.741609
      lambda(    1)=  0.0402   gamma=    1.88 GHz
      lambda(    2)=  0.0402   gamma=    1.88 GHz
-     lambda(    3)=  0.2123   gamma=   44.40 GHz
+     lambda(    3)=  0.2124   gamma=   44.40 GHz
 
      Calculation of q =    0.3750000  -0.3750000   1.1250000
+
+   Info: using nr1, nr2, nr3 values from input
+
+   Info: using nr1, nr2, nr3 values from input
      [opt_tetra]  Optimized tetrahedron method is used.
- 
+
      G-vector sticks info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
      Sum         301     301    139                 3479     3479    1067
- 
+
 
 
      bravais-lattice index     =            2
@@ -1783,7 +1748,7 @@
 
 
      PseudoPot. # 1 for Al read from file:
-     /home/kawamura/programs/QE/dfpttetra/pseudo/Al.pbe-n-rrkjus_psl.0.1.UPF
+     /mnt/c/Users/kawamuura/program/QE/qe_priv/pseudo/Al.pbe-n-rrkjus_psl.0.1.UPF
      MD5 check sum: 6479f6627750700cef6db36d98bbe09a
      Pseudo is Ultrasoft + core correction, Zval =  3.0
      Generated using "atomic" code by A. Dal Corso  v.5.0.99 svn rev. 10869
@@ -1813,21 +1778,14 @@
 
      Dense  grid:     3479 G-vectors     FFT dimensions: (  24,  24,  24)
 
-     Largest allocated arrays     est. size (Mb)     dimensions
-        Kohn-Sham Wavefunctions         0.05 Mb     (     495,    6)
-        NL pseudopotentials             0.06 Mb     (     495,    8)
-        Each V/rho on FFT grid          0.21 Mb     (   13824)
-        Each G-vector array             0.03 Mb     (    3479)
-        G-vector shells                 0.00 Mb     (      76)
-     Largest temporary arrays     est. size (Mb)     dimensions
-        Auxiliary wavefunctions         0.18 Mb     (     495,   24)
-        Each subspace H/S matrix        0.01 Mb     (      24,   24)
-        Each <psi_i|beta_j> matrix      0.00 Mb     (       8,    6)
+     Estimated max dynamical RAM per process >       1.80MB
+
+     Estimated total allocated dynamical RAM >       7.21MB
 
      Check: negative/imaginary core charge=   -0.000013    0.000000
 
      The potential is recalculated from file :
-     /home/kawamura/programs/QE/dfpttetra/tempdir/_ph0/aluminum.q_10/aluminum.save/charge-density.dat
+     /mnt/c/Users/kawamuura/program/QE/qe_priv/tempdir/_ph0/aluminum.q_10/aluminum.save/charge-density.dat
 
      Starting wfc are    4 atomic +    2 random wfc
 
@@ -1836,7 +1794,7 @@
 
      ethr =  3.33E-10,  avg # of iterations = 18.1
 
-     total cpu time spent up to now is      985.9 secs
+     total cpu time spent up to now is     1679.1 secs
 
      End of band structure calculation
 
@@ -1846,7 +1804,7 @@
 
      Writing output data file aluminum.save
  
-     [dfpt_tetra]  Dos(E_F)[/Ry] :   0.5441188E+01
+     [dfpt_tetra]  Dos(E_F)[/Ry] :   0.5441187E+01
 
                                                                                 
 
@@ -1886,7 +1844,7 @@
 
      Computing dynamical matrix for 
                     q = (   0.3750000  -0.3750000   1.1250000 )
- 
+
       2 Sym.Ops. (no q -> -q+G )
 
 
@@ -1894,7 +1852,7 @@
      number of k points=  4352
 
      PseudoPot. # 1 for Al read from file:
-     /home/kawamura/programs/QE/dfpttetra/pseudo/Al.pbe-n-rrkjus_psl.0.1.UPF
+     /mnt/c/Users/kawamuura/program/QE/qe_priv/pseudo/Al.pbe-n-rrkjus_psl.0.1.UPF
      MD5 check sum: 6479f6627750700cef6db36d98bbe09a
      Pseudo is Ultrasoft + core correction, Zval =  3.0
      Generated using "atomic" code by A. Dal Corso  v.5.0.99 svn rev. 10869
@@ -1919,7 +1877,7 @@
      Representation     3      1 modes -A''  To be done
 
 
-     PHONON       : 19m 1.29s CPU    19m27.83s WALL
+     PHONON       : 28m37.78s CPU    32m55.83s WALL
 
      Reading dVscf from file dv
      Reading dynamics matrix from file al.dyn10
@@ -1927,97 +1885,100 @@
      [elph_tetra]   Lowest band which contains FS :          2
      [elph_tetra]  Highest band which contains FS :          3
      [elph_tetra]    # of bands which contains FS :          2
- 
+
      Tetrahedron method
-     DOS =  2.720594 states/spin/Ry/Unit Cell at Ef=  7.970587 eV
-     double delta at Ef = 13.069289
+     DOS =  2.720593 states/spin/Ry/Unit Cell at Ef=  7.970584 eV
+     double delta at Ef = 13.069322
      lambda(    1)=  0.0426   gamma=    3.18 GHz
      lambda(    2)=  0.1310   gamma=   19.77 GHz
      lambda(    3)=  0.1601   gamma=   34.31 GHz
- 
-     init_run     :      3.64s CPU      3.66s WALL (      10 calls)
-     electrons    :    914.66s CPU    933.02s WALL (      10 calls)
+
+     init_run     :      7.28s CPU      9.55s WALL (      10 calls)
+     electrons    :   1353.91s CPU   1571.89s WALL (      10 calls)
 
      Called by init_run:
-     wfcinit      :      0.00s CPU      0.00s WALL (      10 calls)
-     potinit      :      0.15s CPU      0.15s WALL (      10 calls)
+     wfcinit      :      0.00s CPU      0.09s WALL (      10 calls)
+     potinit      :      0.22s CPU      0.65s WALL (      10 calls)
 
      Called by electrons:
-     c_bands      :    901.08s CPU    919.40s WALL (      10 calls)
-     v_of_rho     :      0.08s CPU      0.08s WALL (      11 calls)
-     newd         :      0.02s CPU      0.02s WALL (      11 calls)
+     c_bands      :   1334.50s CPU   1552.34s WALL (      10 calls)
+     v_of_rho     :      0.19s CPU      0.24s WALL (      11 calls)
+     newd         :      0.06s CPU      0.05s WALL (      11 calls)
 
      Called by c_bands:
-     init_us_2    :      9.89s CPU      8.71s WALL (   90704 calls)
-     cegterg      :    776.21s CPU    790.22s WALL (   29492 calls)
+     init_us_2    :     11.28s CPU     12.54s WALL (   45352 calls)
+     cegterg      :   1182.03s CPU   1283.89s WALL (   15050 calls)
 
      Called by sum_band:
 
      Called by *egterg:
-     h_psi        :    637.23s CPU    648.32s WALL (  483767 calls)
-     s_psi        :     10.92s CPU     11.05s WALL (  483767 calls)
-     g_psi        :      6.28s CPU      8.45s WALL (  431395 calls)
-     cdiaghg      :     79.28s CPU     74.00s WALL (  454275 calls)
+     h_psi        :    989.28s CPU   1071.20s WALL (  248965 calls)
+     s_psi        :     20.83s CPU     23.47s WALL (  248965 calls)
+     g_psi        :      7.06s CPU      7.97s WALL (  222475 calls)
+     cdiaghg      :     52.80s CPU     57.16s WALL (  233915 calls)
 
      Called by h_psi:
-     h_psi:pot    :    634.00s CPU    644.55s WALL (  483767 calls)
-     h_psi:calbec :      9.37s CPU     14.00s WALL (  483767 calls)
-     add_vuspsi   :     10.84s CPU     11.52s WALL (  483767 calls)
+     h_psi:pot    :    985.09s CPU   1066.09s WALL (  248965 calls)
+     h_psi:calbec :     23.08s CPU     25.44s WALL (  248965 calls)
+     vloc_psi     :    939.47s CPU   1014.80s WALL (  248965 calls)
+     add_vuspsi   :     21.20s CPU     23.28s WALL (  248965 calls)
 
      General routines
-     calbec       :     13.06s CPU     17.10s WALL (  609607 calls)
-     fft          :      0.04s CPU      0.04s WALL (     242 calls)
-     ffts         :      6.43s CPU      6.06s WALL (   34350 calls)
-     fftw         :    706.42s CPU    658.11s WALL ( 4763048 calls)
-     davcio       :      3.01s CPU      4.84s WALL (  147148 calls)
- 
+     calbec       :     29.95s CPU     32.30s WALL (  311885 calls)
+     fft          :      0.08s CPU      0.11s WALL (     242 calls)
+     ffts         :      8.20s CPU      8.70s WALL (   17190 calls)
+     fftw         :   1031.47s CPU   1113.42s WALL ( 2430012 calls)
+     davcio       :      0.42s CPU      6.67s WALL (   73604 calls)
+
      Parallel routines
-     fft_scatter  :     54.50s CPU     60.03s WALL ( 4797640 calls)
- 
-     PHONON       : 19m11.54s CPU    19m38.32s WALL
+     fft_scatter  :     54.89s CPU     63.41s WALL ( 2447444 calls)
+
+     PHONON       : 28m54.03s CPU    33m13.30s WALL
 
      INITIALIZATION: 
-     phq_setup    :      4.54s CPU      4.56s WALL (      10 calls)
-     phq_init     :     67.65s CPU     70.28s WALL (      10 calls)
- 
-     phq_init     :     67.65s CPU     70.28s WALL (      10 calls)
-     set_drhoc    :      0.64s CPU      0.65s WALL (      10 calls)
-     init_vloc    :      0.01s CPU      0.01s WALL (      11 calls)
-     init_us_1    :      2.04s CPU      2.05s WALL (      11 calls)
-     newd         :      0.02s CPU      0.02s WALL (      11 calls)
-     dvanqq       :      0.25s CPU      0.25s WALL (      20 calls)
-     drho         :     63.68s CPU     65.93s WALL (      10 calls)
- 
- 
- 
- 
-     dvqpsi_us    :     80.49s CPU     81.74s WALL (   34320 calls)
-     addusddens   :      0.10s CPU      0.10s WALL (      28 calls)
-     newdq        :      0.09s CPU      0.09s WALL (      28 calls)
-     adddvscf     :      0.76s CPU      1.05s WALL (   34320 calls)
- 
-     dvqpsi_us    :     80.49s CPU     81.74s WALL (   34320 calls)
-     dvqpsi_us_on :      8.19s CPU      7.66s WALL (   34320 calls)
- 
- 
- 
-     add_vuspsi   :     10.84s CPU     11.52s WALL (  483767 calls)
- 
-     addusdbec    :      1.80s CPU      1.73s WALL (   34320 calls)
- 
- 
-      General routines
-     calbec       :     13.06s CPU     17.10s WALL (  609607 calls)
-     fft          :      0.04s CPU      0.04s WALL (     242 calls)
-     ffts         :      6.43s CPU      6.06s WALL (   34350 calls)
-     fftw         :    706.42s CPU    658.11s WALL ( 4763048 calls)
-     davcio       :      3.01s CPU      4.84s WALL (  147148 calls)
- 
- 
-     PHONON       : 19m11.54s CPU    19m38.32s WALL
+     phq_setup    :      4.78s CPU      5.90s WALL (      10 calls)
+     phq_init     :     98.33s CPU    111.81s WALL (      10 calls)
 
- 
-   This run was terminated on:  17:28:20   7Aug2016            
+     phq_init     :     98.33s CPU    111.81s WALL (      10 calls)
+     set_drhoc    :      2.14s CPU      2.29s WALL (      10 calls)
+     init_vloc    :      0.03s CPU      0.03s WALL (      11 calls)
+     init_us_1    :      5.52s CPU      6.53s WALL (      11 calls)
+     newd         :      0.06s CPU      0.05s WALL (      11 calls)
+     dvanqq       :      0.80s CPU      0.90s WALL (      20 calls)
+     drho         :     89.75s CPU    101.94s WALL (      10 calls)
+
+
+
+
+     dvqpsi_us    :    124.23s CPU    135.10s WALL (   17160 calls)
+     addusddens   :      0.34s CPU      0.32s WALL (      28 calls)
+     newdq        :      0.31s CPU      0.33s WALL (      28 calls)
+     adddvscf     :      1.97s CPU      2.24s WALL (   17160 calls)
+
+     dvqpsi_us    :    124.23s CPU    135.10s WALL (   17160 calls)
+     dvqpsi_us_on :     12.05s CPU     13.11s WALL (   17160 calls)
+
+
+     h_psi        :    989.28s CPU   1071.20s WALL (  248965 calls)
+
+     h_psi        :    989.28s CPU   1071.20s WALL (  248965 calls)
+     add_vuspsi   :     21.20s CPU     23.28s WALL (  248965 calls)
+
+     addusdbec    :      2.53s CPU      2.81s WALL (   17160 calls)
+
+
+      General routines
+     calbec       :     29.95s CPU     32.30s WALL (  311885 calls)
+     fft          :      0.08s CPU      0.11s WALL (     242 calls)
+     ffts         :      8.20s CPU      8.70s WALL (   17190 calls)
+     fftw         :   1031.47s CPU   1113.42s WALL ( 2430012 calls)
+     davcio       :      0.42s CPU      6.67s WALL (   73604 calls)
+
+
+     PHONON       : 28m54.03s CPU    33m13.30s WALL
+
+
+   This run was terminated on:  21:38: 4  16Mar2017            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

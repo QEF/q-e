@@ -163,6 +163,10 @@ from the \PHonon\ directory, produces the following codes:
     the electron-phonon coefficient $\lambda$, the function $\alpha^2F(\omega)$
 \item \texttt{PH/lambda.x}: also calculates $\lambda$ and $\alpha^2F(\omega)$,
    plus $T_c$ for  superconductivity using the McMillan formula
+\item \texttt{PH/alpha2f.x}: also calculates $\lambda$ and $\alpha^2F(\omega)$.
+  It is used together with the optimized tetrahedron method
+  (\verb|occupations="tetrahedra_opt"| in \pwx) and shifted {\it q}-grid
+  (\verb|lshiftq=.true.| in \phx).
 \item \texttt{PH/fqha.x}: a simple code to calculate vibrational entropy with
    the quasi-harmonic approximation
 \item \texttt{Gamma/phcg.x}: 
@@ -315,10 +319,10 @@ be very careful, consult the relevant literature. .
 
 \subsection{DFPT with the tetrahedron method}
 
-Inn order to use the tetrahedron method for phonon calculations,
+In order to use the tetrahedron method for phonon calculations,
 you should run \pwx\ and \phx\ as follows:
 \begin{enumerate}
-  \item Run \pwx\ with \verb|occupation = "tetraaehdra_opt"| and \verb|K_POINT automatic|.
+  \item Run \pwx\ with \verb|occupation = "tetrahedra_opt"| and \verb|K_POINT automatic|.
   \item Run \phx.
 \end{enumerate}
 
@@ -332,7 +336,7 @@ you have to use an offset $q$-point grid in order to avoid a singularity
 at $q=\Gamma$; you can perform this calculation as follows:
 
 \begin{enumerate}
-  \item Run \pwx\ with \verb|occupation = "tetraehdra_opt"| and \verb|K_POINT automatic|.
+  \item Run \pwx\ with \verb|occupation = "tetrahedra_opt"| and \verb|K_POINT automatic|.
   \item Run \phx\ with \verb|lshift_q = .true.| and \verb|electron_phonon = ""| (or unset it)
     to generate the dynamical matrix and
     the deformation potential (in \verb|_ph*/{prefix}_q*/|) of each $q$.
@@ -341,22 +345,17 @@ at $q=\Gamma$; you can perform this calculation as follows:
     Then \verb|lambda*.dat| are generated; they contain $\lambda_{q \nu}$.
   \item Run \verb|alpha2f.x| with an input file as follows:
 \begin{verbatim}
-&input
-      ne = (a), 
-  ltetra = (b), 
-  fildyn = (b), 
-  mustar = (d), 
-  prefix = (e),
+&INPUTPH
+! The same as that for the electron-phonon calculation with ph.x
+ :
+/
+&INPUTA2F
+  nfreq = Number of frequency-points for a2F(omega), 
 /
 \end{verbatim}
-\begin{enumerate}
-\item The number of frequencies for $\alpha^2F(\omega)$
-\item $=1$ for the linear tetrahedron method, $=2$ for the optimized tetrahedron method.
-\item It must be the same as that in \phx\ input.
-\item Coulomb pseudo potential $\mu^*$
-\item It must be the same as that in \phx\ input.
-\end{enumerate}
-Then $\alpha^2F(\omega)$, $\lambda$, and $\omega_{\ln}$ are calculated.
+Then $\lambda$, and $\omega_{\ln}$ are computed and they are printed to the standard output.
+$\alpha^2F(\omega)$ and (partial) phonon-DOS are also computed;
+they are printed to a file \textit{prefix}\verb|.a2F.dat|.
 \end{enumerate}
 
 There is an example in \verb|PHonon/example/tetra_example/|.

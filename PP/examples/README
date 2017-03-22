@@ -128,3 +128,8 @@ ForceTheorem_example:
     This example shows how to compute the magnetic anisotropy energy (MAE) 
     with the "Force Theorem" method (Phys. Rev. B 90, 205409 (2014), and to
     get its local decomposition over atomic orbitals using projwfc.x.
+
+fermisurf_example:
+    This example generate input files for FermiSurfer 
+    (http://osdn.jp/projects/fermisurfer/) to display Fermi surfaces with 
+    color plots of the magnitude of the Fermi velocity and orbital characters.

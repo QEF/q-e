@@ -1493,12 +1493,14 @@ CONTAINS
     !
     !
     !------------------------------------------------------------------------
-    SUBROUTINE qexml_write_occ( lgauss, ngauss, degauss, degauss_units, ltetra, ntetra, tetra, &
-                                tfixed_occ, lsda, nstates_up, nstates_dw, input_occ )
+    SUBROUTINE qexml_write_occ( lgauss, ngauss, degauss, degauss_units, &
+         ltetra, tetra_type, ntetra, tetra, tfixed_occ, &
+         lsda, nstates_up, nstates_dw, input_occ )
       !------------------------------------------------------------------------
       !
       LOGICAL,                INTENT(in) :: lgauss, ltetra, tfixed_occ, lsda
-      INTEGER,      OPTIONAL, INTENT(in) :: ngauss, ntetra, nstates_up, nstates_dw
+      INTEGER,      OPTIONAL, INTENT(in) :: ngauss, ntetra, tetra_type, &
+           nstates_up, nstates_dw
       INTEGER,      OPTIONAL, INTENT(in) :: tetra(:,:)
       REAL(DP),    OPTIONAL, INTENT(in) :: degauss, input_occ(:,:)
       CHARACTER(*), OPTIONAL, INTENT(in) :: degauss_units
@@ -1526,12 +1528,18 @@ CONTAINS
          !
          CALL iotk_write_dat( ounit, "NUMBER_OF_TETRAHEDRA", ntetra )
          !
-         DO i = 1, ntetra
+         CALL iotk_write_dat( ounit, "TETRAHEDRON_TYPE", tetra_type)
+         !
+         IF(tetra_type == 0) then
             !
-            CALL iotk_write_dat( ounit, "TETRAHEDRON" // &
-                               & iotk_index( i ), tetra(1:4,i) )
+            DO i = 1, ntetra
+               !
+               CALL iotk_write_dat( ounit, "TETRAHEDRON" // &
+                                  & iotk_index( i ), tetra(1:4,i) )
+               !
+            ENDDO
             !
-         ENDDO
+         END IF
          !
       ENDIF
       !
@@ -3608,12 +3616,12 @@ CONTAINS
     !
     !------------------------------------------------------------------------
     SUBROUTINE qexml_read_occ( lgauss, ngauss, degauss, degauss_units, &
-                               ltetra, ntetra, tetra, tfixed_occ,      &
+                               ltetra, tetra_type, ntetra, tetra, tfixed_occ, &
                                nstates_up, nstates_dw, input_occ, ierr )
       !------------------------------------------------------------------------
       !
       LOGICAL,      OPTIONAL, INTENT(out) :: lgauss, ltetra, tfixed_occ
-      INTEGER,      OPTIONAL, INTENT(out) :: ngauss, ntetra
+      INTEGER,      OPTIONAL, INTENT(out) :: ngauss, ntetra, tetra_type
       INTEGER,      OPTIONAL, INTENT(out) :: tetra(:,:)
       INTEGER,      OPTIONAL, INTENT(out) :: nstates_up, nstates_dw
       REAL(DP),     OPTIONAL, INTENT(out) :: degauss, input_occ(:,:)
@@ -3621,7 +3629,7 @@ CONTAINS
       INTEGER,                INTENT(out) :: ierr
       !
       LOGICAL        :: lgauss_, ltetra_, tfixed_occ_
-      INTEGER        :: ngauss_, ntetra_, nstates_up_, nstates_dw_
+      INTEGER        :: ngauss_, ntetra_, nstates_up_, nstates_dw_, tetra_type_
       LOGICAL        :: lsda_
       REAL(DP)      :: degauss_
       CHARACTER(256) :: degauss_units_
@@ -3668,15 +3676,21 @@ CONTAINS
          CALL iotk_scan_dat( iunit, "NUMBER_OF_TETRAHEDRA", ntetra_, IERR=ierr )
          IF (ierr/=0) RETURN
          !
-         ALLOCATE( tetra_(4, ntetra_) )
+         CALL iotk_scan_dat( iunit, "TETRAHEDRON_TYPE", tetra_type_, IERR=ierr )
          !
-         DO i = 1, ntetra_
+         IF(tetra_type_ == 0) then
             !
-            CALL iotk_scan_dat( iunit, "TETRAHEDRON"//iotk_index(i), &
-                                        tetra_(1:4,i), IERR=ierr )
-            IF (ierr/=0) RETURN
+            ALLOCATE( tetra_(4, ntetra_) )
             !
-         ENDDO
+            DO i = 1, ntetra_
+               !
+               CALL iotk_scan_dat( iunit, "TETRAHEDRON"//iotk_index(i), &
+                                               tetra_(1:4,i), IERR=ierr )
+               IF (ierr/=0) RETURN
+               !
+            ENDDO
+            !
+         END IF
          !
       ENDIF
       !
@@ -3740,12 +3754,13 @@ CONTAINS
       IF ( present( tfixed_occ ))       tfixed_occ  = tfixed_occ_
       IF ( present( ngauss ))           ngauss      = ngauss_
       IF ( present( ntetra ))           ntetra      = ntetra_
+      IF ( present( tetra_type ))       tetra_type  = tetra_type_
       IF ( present( degauss ))          degauss     = degauss_
       IF ( present( degauss_units ))    degauss_units  = trim(degauss_units_)
       IF ( present( nstates_up ))       nstates_up  = nstates_up_
       IF ( present( nstates_dw ))       nstates_dw  = nstates_dw_
       !
-      IF ( ltetra_ ) THEN
+      IF ( ltetra_ .and. (tetra_type_ == 0)) THEN
          !
          IF ( present( tetra ) )         tetra(1:4, 1:ntetra_)  = tetra_
          !

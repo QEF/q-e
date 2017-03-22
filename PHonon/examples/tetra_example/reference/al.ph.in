@@ -1,7 +1,7 @@
 Al phonon
 &INPUTPH
    prefix = 'aluminum',
-   outdir = '/home/kawamura/programs/QE/dfpttetra/tempdir/',
+   outdir = '/mnt/c/Users/kawamuura/program/QE/qe_priv/tempdir/',
    fildyn = 'al.dyn'
  fildvscf = 'dv',
   fildrho = 'drho',

@@ -1,0 +1,6 @@
+ &dos
+    outdir='/home/pietro/espresso-svn/tempdir/'
+    prefix='ni'
+    fildos='ni.dos',
+    Emin=5.0, Emax=25.0, DeltaE=0.1
+ /

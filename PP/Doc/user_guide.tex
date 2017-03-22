@@ -239,7 +239,7 @@ and \texttt{plotproj.x} .
 The total electronic DOS can also be calculated by code \texttt{dos.x},
 whose complete input documentation is in \texttt{Doc/INPUT\_DOS.*}
 See Example 02 for total and projected electronic DOS calculations,
-and for projected band structure;
+-and for projected band structure;
 see Example 03 for projected and local DOS calculations.
 
 The DOS projected over {\em molecular} states (e.g. for a molecule on
@@ -247,6 +247,55 @@ a surface system) can be computed using code \texttt{molecularpdos.x}
 (courtesy of Guido Fratesi). See file \texttt{Doc/INPUT\_MOLDOS.*}
 for input documentation and directory \texttt{MolDos\_example/} for
 an example.
+
+\subsection{Color plot of the Fermi velocity and the orbital character
+  on Fermi surfaces}
+
+You can plot any quantity on Fermi surfaces as a color plot 
+by using \verb|fermisurfer| program\footnote{http://osdn.jp/projects/fermisurfer/}.
+\verb|fermi_velocity.x| and \verb|fermi_proj.x| are used 
+to generate an input file for \verb|fermisurfer| from the output
+of \pwx or \verb|projwfc.x|.
+
+\verb|fermi_velocity.x| generates a color-plot of Fermi velocity.
+You use it as follows:
+\begin{enumerate}
+\item Run \pwx with \verb|K_POINT automatic|.
+\item Run 
+\begin{verbatim}
+$ fermi_velocity.x -in {pw.x input file}
+\end{verbatim}  
+\item \verb|vfermi.frmsf| is generated
+\end{enumerate}
+
+\verb|fermi_proj.x| generates a color plot of an orbital character.
+You use it as follows:
+\begin{enumerate}
+\item Run \pwx with \verb|K_POINT automatic|.
+\item Run \verb|projwfc.x| just to generate \verb|{prefix}.save/atomic_proj.*|.
+\item Run 
+\begin{verbatim}
+$ fermi_proj.x -in {input file}
+\end{verbatim}
+Input-file format is as follows:
+\begin{verbatim}
+&PROJWFC
+ {The same as the input of projwfc.x}
+/
+{Number of target wavefunctions}
+{Index of target WFC1} {Index of target WFC2} {Index of target WFC3} ...
+\end{verbatim}
+It generates 
+$\sum_{i=1}^{n_{\rm target}} |\langle \varphi_{{\rm target}(i)}^{\rm atom}|\varphi_{n k} \rangle|^2$, 
+where $n_s$ and ${\rm target}(i)$ are
+the number of the target wavefunctions
+and the indices of target wavefunctions, respectively.
+\item The above quantity is written into \verb|"proj.frmsf"|,
+  which can be read by FermiSurfer program.
+\end{enumerate}
+
+There is an example of \verb|fermi_velocity.x| and \verb|fermi_proj.x|
+in \verb|PP/example/fermisurf_example/|.
 
 \subsection{Wannier functions}
 

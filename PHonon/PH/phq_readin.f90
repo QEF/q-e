@@ -77,7 +77,7 @@ SUBROUTINE phq_readin()
   ! YAMBO >
   USE YAMBO,         ONLY : elph_yambo,dvscf_yambo
   ! YAMBO <
-  USE elph_tetra_mod,ONLY : elph_tetra, lshift_q
+  USE elph_tetra_mod,ONLY : elph_tetra, lshift_q, in_alpha2f
   USE ktetra,        ONLY : tetra_type
   !
   IMPLICIT NONE
@@ -684,15 +684,15 @@ SUBROUTINE phq_readin()
 
   IF (reduce_io) io_level=0
 
-  IF (nproc_image /= nproc_image_file .and. .not. twfcollect)  &
+  IF (nproc_image /= nproc_image_file .and. .not. twfcollect  .AND. .NOT. in_alpha2f)  &
      CALL errore('phq_readin',&
      'pw.x run with a different number of processors. Use wf_collect=.true.',1)
 
-  IF (nproc_pool /= nproc_pool_file .and. .not. twfcollect)  &
+  IF (nproc_pool /= nproc_pool_file .and. .not. twfcollect .AND. .NOT. in_alpha2f)  &
      CALL errore('phq_readin',&
      'pw.x run with a different number of pools. Use wf_collect=.true.',1)
   !
-  IF (nproc_bgrp_file /= nproc_bgrp .AND. .NOT. twfcollect) &
+  IF (nproc_bgrp_file /= nproc_bgrp .AND. .NOT. twfcollect .AND. .NOT. in_alpha2f) &
      CALL errore('phq_readin','pw.x run with different band parallelization',1)
   
   if(elph_mat.and.fildvscf.eq.' ') call errore('phq_readin',&

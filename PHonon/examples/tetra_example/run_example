@@ -78,7 +78,7 @@ $ECHO " done"
 # how to run executables
 PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
 PH_COMMAND="$PARA_PREFIX $BIN_DIR/ph.x $PARA_POSTFIX"
-ALPHA2F_COMMAND="$BIN_DIR/alpha2f.x "
+ALPHA2F_COMMAND="$PARA_PREFIX $BIN_DIR/alpha2f.x"
 $ECHO
 $ECHO "  running pw.x as: $PW_COMMAND"
 $ECHO "  running ph.x as: $PH_COMMAND"
@@ -166,6 +166,9 @@ Al electron-phonon
              nk2 = 16,
              nk3 = 16,
 /
+&INPUTa2F
+ nfreq = 500
+/
 EOF
 $ECHO "  running the el-ph calculation...\c"
 $PH_COMMAND -in al.elph.in > al.elph.out
@@ -174,21 +177,13 @@ $ECHO "  done"
 #
 # Eliashberg function
 #
-cat > lambda.in << EOF
-&input
-      ne = 500, 
-  ltetra = 2, 
-  fildyn = "al.dyn", 
-  mustar = 0.1, 
-  prefix = "${TMP_DIR}/aluminum",
-/
-EOF
-# $ECHO "  running alpha2f.x for lambda and a2F calculation...\c"
-# $ALPHA2F_COMMAND < lambda.in > lambda.out
-# check_failure $?
+$ECHO "  running alpha2f.x for lambda and a2F calculation...\c"
+$ALPHA2F_COMMAND -in al.elph.in > al.a2F.out
+check_failure $?
+$ECHO "  done"
 
 $ECHO "  cleaning $TMP_DIR...\c"
 rm -rf $TMP_DIR/al.* $TMP_DIR/_ph*
-
 $ECHO "  done"
+
 

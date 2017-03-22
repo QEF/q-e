@@ -26,6 +26,7 @@ do_shift_ew.o \
 d_matrix_nc.o \
 d_matrix_so.o \
 elf.o \
+fermisurfer_common.o \
 ggen1d.o \
 local_dos.o \
 local_dos_mag.o \
@@ -58,7 +59,8 @@ all : tldeps average.x bands.x dos.x epsilon.x initial_state.x fs.x \
       plan_avg.x plotband.x plotproj.x plotrho.x pmw.x pp.x projwfc.x \
       pawplot.x sumpdos.x pw2wannier90.x pw_export.x pw2gw.x \
       wannier_ham.x wannier_plot.x molecularpdos.x \
-      pw2bgw.x bgw2pw.x wfck2r.x importexport_binary.x
+      pw2bgw.x bgw2pw.x wfck2r.x importexport_binary.x \
+      fermi_velocity.x fermi_proj.x
 
 
 libpp.a : $(PPOBJS) 
@@ -204,6 +206,16 @@ fs.x : fermisurface.o libpp.a $(MODULES) $(LIBOBJS)
 tldeps :
 	if test -n "$(TLDEPS)" ; then \
 	( cd ../.. ; $(MAKE) $(TLDEPS) || exit 1 ) ; fi
+
+fermi_velocity.x : fermi_velocity.o libpp.a $(MODULES) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o $@ \
+		fermi_velocity.o libpp.a $(MODULES) $(LIBOBJS) $(LIBS)
+	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
+
+fermi_proj.x : fermi_proj.o libpp.a $(MODULES) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o $@ \
+		fermi_proj.o libpp.a $(MODULES) $(LIBOBJS) $(LIBS)
+	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
 clean :
 	- /bin/rm -f *.x *.o *~ *_tmp.f90 *.d *.mod *.i *.L libpp.a
