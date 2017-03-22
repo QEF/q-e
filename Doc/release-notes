@@ -13,6 +13,8 @@ New in 6.1 version:
     by Taylor Barnes et al, http://dx.doi.org/10.1016/j.cpc.2017.01.008
   * Hybrid functionals with PAW now work
   * Optimized tetrahedron method, contributed by Mitsuaki Kawamura, U. Tokyo
+  * PostProcessing: pp.x can now plot many bands in a single run.
+    Contributed by Leopold Talirz, U. York
 
 Incompatible changes in 6.1 version:
 
