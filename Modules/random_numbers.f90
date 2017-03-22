@@ -121,6 +121,41 @@ MODULE random_numbers
       RETURN
       !
     END FUNCTION gauss_dist_scal
+    !
+    !-----------------------------------------------------------------------
+    FUNCTION gauss_dist_cmplx( mu, sigma )
+      !-----------------------------------------------------------------------
+      !
+      ! ... this function generates a number taken from a normal
+      ! ... distribution of mean value \mu and variance \sigma
+      !
+      IMPLICIT NONE
+      !
+      REAL(DP), INTENT(IN) :: mu
+      REAL(DP), INTENT(IN) :: sigma
+      COMPLEX(DP)          :: gauss_dist_cmplx
+      !
+      REAL(DP) :: x1, x2, w
+      !
+      !
+      gaussian_loop: DO
+         !
+         x1 = 2.0_DP * randy() - 1.0_DP
+         x2 = 2.0_DP * randy() - 1.0_DP
+         !
+         w = x1 * x1 + x2 * x2
+         !
+         IF ( w < 1.0_DP ) EXIT gaussian_loop
+         !
+      END DO gaussian_loop
+      !
+      w = SQRT( ( - 2.0_DP * LOG( w ) ) / w )
+      !
+      gauss_dist_cmplx = CMPLX( x1 * w * sigma + mu, x2 * w * sigma + mu, kind=DP)
+      !
+      RETURN
+      !
+    END FUNCTION gauss_dist_cmplx
     !    
     !-----------------------------------------------------------------------
     FUNCTION gauss_dist_vect( mu, sigma, dim )

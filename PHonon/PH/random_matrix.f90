@@ -17,54 +17,7 @@
 ! LP 2017
 !
 !!#define __UNIFORM_DISTRIB
-#if defined (__UNIFORM_DISTRIB)
-#define __RANDOM_DBLE  CMPLX(2.0_DP*randy () - 1.0_DP, 0.d0,kind=DP)
-#define __RANDOM_CMPLX CMPLX(2.0_DP * randy () - 1.0_DP, 2.0_DP * randy () - 1.0_DP,kind=DP)
-#else
-#define __RANDOM_DBLE  random_gaussian_dble()
-#define __RANDOM_CMPLX random_gaussian_cmplx()
-#endif
 !
-MODULE random_gaussian
-  USE kinds, ONLY : DP
-  USE random_numbers, ONLY : randy
-  IMPLICIT NONE
-  CONTAINS
-  REAL(DP) function random_gaussian_dble() result(rand)
-    implicit none
-    !REAL(DP) :: rand
-    REAL(DP) :: x1, x2, v1, v2
-    REAL(DP) :: rsq, fac
-    do
-      x1 = randy()
-      x2 = randy()
-      v1 = 2.0d0 * x1 -1.0d0
-      v2 = 2.0d0 * x2 -1.0d0
-      rsq = v1**2 + v2**2
-      if (rsq .le. 1.0d0 .and. rsq .gt. 0.0d0) exit
-    end do
-    fac = sqrt(-2.0d0 * log(rsq) / rsq)
-    rand = v1 * fac
-  end function random_gaussian_dble
-
-  double complex function random_gaussian_cmplx() result(rand)
-    implicit none
-    !double complex   :: rand
-    REAL(DP) :: x1, x2, v1, v2
-    REAL(DP) :: rsq, fac
-    do
-      x1 = randy()
-      x2 = randy()
-      v1 = 2.0d0 * x1 -1.0d0
-      v2 = 2.0d0 * x2 -1.0d0
-      rsq = v1**2 + v2**2
-      if (rsq .le. 1.0d0 .and. rsq .gt. 0.0d0) exit
-    end do
-    fac = sqrt(-2.0d0 * log(rsq) / rsq)
-    rand = CMPLX(v1, v2) * fac
-  end function random_gaussian_cmplx
-END MODULE
-
 !----------------------------------------------------------------------
 subroutine random_matrix_new (irt, nsymq, minus_q, irotmq, nat, &
      wdyn, lgamma)
@@ -73,6 +26,14 @@ subroutine random_matrix_new (irt, nsymq, minus_q, irotmq, nat, &
   !   Create a random hermitian matrix with non zero elements similar to
   !   the dynamical matrix of the system
   !
+#if defined (__UNIFORM_DISTRIB)
+#define __RANDOM_DBLE  CMPLX(2.0_DP*randy () - 1.0_DP, 0.d0,kind=DP)
+#define __RANDOM_CMPLX CMPLX(2.0_DP * randy () - 1.0_DP, 2.0_DP * randy () - 1.0_DP,kind=DP)
+#else
+#define __RANDOM_DBLE  gauss_dist_scal(0._dp, 1._dp)
+#define __RANDOM_CMPLX gauss_dist_cmplx(0._dp, 1._dp)
+  USE random_numbers, ONLY : gauss_dist_scal, gauss_dist_cmplx
+#endif
   !
   USE kinds, only : DP
   USE random_numbers, ONLY : randy
