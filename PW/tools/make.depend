@@ -1,13 +1,3 @@
-dist.o : ../../Modules/cell_base.o
-dist.o : ../../Modules/command_line_options.o
-dist.o : ../../Modules/constants.o
-dist.o : ../../Modules/environment.o
-dist.o : ../../Modules/io_global.o
-dist.o : ../../Modules/ions_base.o
-dist.o : ../../Modules/kind.o
-dist.o : ../../Modules/mp_global.o
-dist.o : ../../Modules/mp_world.o
-dist.o : ../../Modules/read_input.o
 ev.o : ../../Modules/constants.o
 ev.o : ../../Modules/io_global.o
 ev.o : ../../Modules/kind.o
@@ -19,6 +9,7 @@ ev.o : ev_xml.o
 ev_xml.o : ../../Modules/constants.o
 ev_xml.o : ../../Modules/kind.o
 ev_xml.o : ../../iotk/src/iotk_module.o
+ibrav2cell.o : ../../Modules/kind.o
 kpoints.o : ../../Modules/cell_base.o
 kpoints.o : ../../Modules/kind.o
 kpoints.o : ../../PW/src/symm_base.o

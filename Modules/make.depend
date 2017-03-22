@@ -58,6 +58,11 @@ control_flags.o : parameters.o
 cryst_to_car.o : kind.o
 deviatoric.o : io_global.o
 deviatoric.o : kind.o
+dist.o : cell_base.o
+dist.o : constants.o
+dist.o : io_global.o
+dist.o : ions_base.o
+dist.o : kind.o
 dylmr2.o : kind.o
 electrons_base.o : constants.o
 electrons_base.o : io_global.o

@@ -40,7 +40,6 @@ PROGRAM pwscf
   INTEGER :: exit_status
   !! Status at exit
   !
-  !
   CALL mp_startup ( diag_in_band_group = .true. )
   CALL environment_start ( 'PWSCF' )
   !
@@ -53,7 +52,7 @@ PROGRAM pwscf
   ! ... Perform actual calculation
   !
   IF ( trim(srvaddress) == ' ' ) THEN
-     CALL run_pwscf  ( exit_status )
+     CALL run_pwscf ( exit_status )
   ELSE
      CALL run_driver ( srvaddress, exit_status )
   END IF

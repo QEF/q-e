@@ -13,12 +13,7 @@ TLDEPS= bindir mods libs pw libfft libla
 
 LIBOBJS        = ../../clib/clib.a ../../iotk/src/libiotk.a
 
-all : tldeps dist.x ev.x kpoints.x pwi2xsf.x ibrav2cell.x
-
-dist.x : dist.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
-	$(LD) $(LDFLAGS) -o $@ \
-		dist.o $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
-	- ( cd ../../bin ; ln -fs ../PW/tools/$@ . )
+all : tldeps ev.x kpoints.x pwi2xsf.x ibrav2cell.x
 
 ibrav2cell.x : ibrav2cell.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \

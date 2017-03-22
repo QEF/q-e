@@ -17,6 +17,7 @@ MODULE buiol
   USE kinds, ONLY : DP
   !
   PUBLIC :: init_buiol          ! init the linked chain of i/o units
+  PUBLIC :: is_init_buiol       ! .t. between call to init_buiol and stop_buiol
   PUBLIC :: stop_buiol          ! destroy the linked chain, dealloc everything
   PUBLIC :: report_buiol        ! report on total number of units and memory usage
   PUBLIC :: buiol_open_unit     ! (unit, recl, ext, dir) open a new unit
@@ -486,7 +487,7 @@ Module buffers
   use kinds, only: dp
   use buiol, only: init_buiol, buiol_open_unit, buiol_close_unit, &
                    buiol_check_unit, buiol_get_ext, buiol_get_dir, &
-                   buiol_read_record, buiol_write_record
+                   buiol_read_record, buiol_write_record, is_init_buiol
   implicit none
   !
   ! QE interfaces to BUIOL module
@@ -656,6 +657,7 @@ contains
     INTEGER :: n, ierr, nrec, nword
     LOGICAL :: opnd
     !
+    IF ( .NOT. is_init_buiol ) RETURN
     nword = buiol_check_unit (unit)
     !
     IF( nword > 0 ) THEN

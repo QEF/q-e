@@ -7,8 +7,8 @@ ev.x :
  Contributions by Eyvaz Isaev
 
 dist.x : 
- Same input as pw.x, find distances, nearest neighbors, angles 
- taking into account periodicity
+ Same input as pw.x, find distances, nearest neighbors, angles taking into 
+ account periodicity - now a link to pw.x
 
 ibrav2cell.x :
   read a &system namelist containing only ibrav and celldm(1..6) (same meaning as in pw.x and cp.x)

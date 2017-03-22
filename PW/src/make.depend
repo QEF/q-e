@@ -1723,6 +1723,7 @@ run_driver.o : pwcom.o
 run_driver.o : update_pot.o
 run_pwscf.o : ../../Modules/cell_base.o
 run_pwscf.o : ../../Modules/check_stop.o
+run_pwscf.o : ../../Modules/command_line_options.o
 run_pwscf.o : ../../Modules/control_flags.o
 run_pwscf.o : ../../Modules/fft_base.o
 run_pwscf.o : ../../Modules/io_global.o

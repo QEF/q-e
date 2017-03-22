@@ -260,7 +260,8 @@ all : tldeps pw.x manypw.x generate_vdW_kernel_table.x generate_rVV10_kernel_tab
 pw.x : $(PWOBJS) libpw.a $(LIBOBJS) $(QEMODS)
 	$(LD) $(LDFLAGS) -o $@ \
 	   $(PWOBJS) libpw.a $(QEMODS) $(LIBOBJS) $(LIBS)
-	- ( cd ../../bin; ln -fs ../PW/src/$@ . )
+	- ( cd ../../bin; ln -fs ../PW/src/$@ . ; ln -fs ../PW/src/$@ dist.x )
+
 
 manypw.x : $(MANYPWOBJS) libpw.a $(LIBOBJS) $(QEMODS)
 	$(LD) $(LDFLAGS) -o $@ \

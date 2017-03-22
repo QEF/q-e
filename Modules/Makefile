@@ -24,6 +24,7 @@ constants.o \
 constraints_module.o \
 control_flags.o \
 coulomb_vcut.o \
+dist.o \
 electrons_base.o \
 environment.o \
 error_handler.o \

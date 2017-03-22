@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2013 Quantum ESPRESSO group
+! Copyright (C) 2013-2017 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -24,13 +24,13 @@ SUBROUTINE run_pwscf ( exit_status )
   ! ...     (note: in the future, check_stop_now could also return a value
   ! ...     to specify the reason of exiting, and the value could be used
   ! ..      to return a different value for different reasons)
-  ! ... Will be eventually merged with NEB
   !
   USE io_global,        ONLY : stdout, ionode, ionode_id
   USE parameters,       ONLY : ntypx, npk, lmaxx
   USE cell_base,        ONLY : fix_volume, fix_area
   USE control_flags,    ONLY : conv_elec, gamma_only, ethr, lscf, twfcollect
   USE control_flags,    ONLY : conv_ions, istep, nstep, restart, lmd, lbfgs
+  USE command_line_options, ONLY : command_line
   USE force_mod,        ONLY : lforce, lstres, sigma, force
   USE check_stop,       ONLY : check_stop_init, check_stop_now
   USE mp_images,        ONLY : intra_image_comm
@@ -42,12 +42,13 @@ SUBROUTINE run_pwscf ( exit_status )
                                qmmm_update_positions, qmmm_update_forces
   USE qexsd_module,     ONLY:   qexsd_set_status
   !
-
   IMPLICIT NONE
   INTEGER, INTENT(OUT) :: exit_status
+  !
+  LOGICAL, external :: matches
+  !! checks if first string is contained in the second
   INTEGER :: idone 
   ! counter of electronic + ionic steps done in this run
-  !
   !
   exit_status = 0
   IF ( ionode ) WRITE( unit = stdout, FMT = 9010 ) ntypx, npk, lmaxx
@@ -63,6 +64,14 @@ SUBROUTINE run_pwscf ( exit_status )
   ! ... convert to internal variables
   !
   CALL iosys()
+  !
+  ! ... If executable names is "dist.x", compute atomic distances, angles,
+  ! ... nearest neighbors, write them to file "dist.out", exit
+  !
+  IF ( matches('dist.x',command_line) ) THEN
+     IF (ionode) CALL run_dist ( exit_status )
+     RETURN
+  END IF
   !
   IF ( gamma_only ) WRITE( UNIT = stdout, &
      & FMT = '(/,5X,"gamma-point specific algorithms are used")' )
