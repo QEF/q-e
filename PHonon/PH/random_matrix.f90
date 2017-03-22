@@ -5,7 +5,66 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+! The random matrix (see later) can be populated either with uniformly distributed
+! random numbers or with normal-distributed randm numbers. The former has been the default
+! until QE 6.1, however it sometimes produces accidentally degenerate eigenvalue, especially
+! when dealing with large number of atoms.
+! A matrix of normal-distributed numbers should have (on average) more evenly spaced
+! eigenvalues, reducing the chance of collision.
 !
+! See <http://web.math.princeton.edu/mathlab/projects/ranmatrices/yl/randmtx.PDF>
+! (If I understand it correctly)
+! LP 2017
+!
+!!#define __UNIFORM_DISTRIB
+#if defined (__UNIFORM_DISTRIB)
+#define __RANDOM_DBLE  CMPLX(2.0_DP*randy () - 1.0_DP, 0.d0,kind=DP)
+#define __RANDOM_CMPLX CMPLX(2.0_DP * randy () - 1.0_DP, 2.0_DP * randy () - 1.0_DP,kind=DP)
+#else
+#define __RANDOM_DBLE  random_gaussian_dble()
+#define __RANDOM_CMPLX random_gaussian_cmplx()
+#endif
+!
+MODULE random_gaussian
+  USE kinds, ONLY : DP
+  USE random_numbers, ONLY : randy
+  IMPLICIT NONE
+  CONTAINS
+  REAL(DP) function random_gaussian_dble() result(rand)
+    implicit none
+    !REAL(DP) :: rand
+    REAL(DP) :: x1, x2, v1, v2
+    REAL(DP) :: rsq, fac
+    do
+      x1 = randy()
+      x2 = randy()
+      v1 = 2.0d0 * x1 -1.0d0
+      v2 = 2.0d0 * x2 -1.0d0
+      rsq = v1**2 + v2**2
+      if (rsq .le. 1.0d0 .and. rsq .gt. 0.0d0) exit
+    end do
+    fac = sqrt(-2.0d0 * log(rsq) / rsq)
+    rand = v1 * fac
+  end function random_gaussian_dble
+
+  double complex function random_gaussian_cmplx() result(rand)
+    implicit none
+    !double complex   :: rand
+    REAL(DP) :: x1, x2, v1, v2
+    REAL(DP) :: rsq, fac
+    do
+      x1 = randy()
+      x2 = randy()
+      v1 = 2.0d0 * x1 -1.0d0
+      v2 = 2.0d0 * x2 -1.0d0
+      rsq = v1**2 + v2**2
+      if (rsq .le. 1.0d0 .and. rsq .gt. 0.0d0) exit
+    end do
+    fac = sqrt(-2.0d0 * log(rsq) / rsq)
+    rand = CMPLX(v1, v2) * fac
+  end function random_gaussian_cmplx
+END MODULE
+
 !----------------------------------------------------------------------
 subroutine random_matrix_new (irt, nsymq, minus_q, irotmq, nat, &
      wdyn, lgamma)
@@ -17,6 +76,7 @@ subroutine random_matrix_new (irt, nsymq, minus_q, irotmq, nat, &
   !
   USE kinds, only : DP
   USE random_numbers, ONLY : randy
+  USE random_gaussian, ONLY : random_gaussian_dble, random_gaussian_cmplx
   implicit none
   !
   !    The dummy variables
@@ -46,13 +106,12 @@ subroutine random_matrix_new (irt, nsymq, minus_q, irotmq, nat, &
   wdyn (:, :, :, :) = (0d0, 0d0)
   do na = 1, nat
      do ipol = 1, 3
-        wdyn (ipol, ipol, na, na) = CMPLX(2.0_DP * randy () - 1.0_DP, 0.d0,kind=DP)
+        wdyn (ipol, ipol, na, na) = 2*__RANDOM_DBLE
         do jpol = ipol + 1, 3
            if (lgamma) then
-              wdyn (ipol, jpol, na, na) = CMPLX(2.0_DP * randy () - 1.0_DP, 0.d0,kind=DP)
+              wdyn (ipol, jpol, na, na) = __RANDOM_DBLE
            else
-              wdyn (ipol, jpol, na, na) = &
-                   CMPLX(2.0_DP * randy () - 1.0_DP, 2.0_DP * randy () - 1.0_DP,kind=DP)
+              wdyn (ipol, jpol, na, na) = __RANDOM_CMPLX
            endif
            wdyn (jpol, ipol, na, na) = CONJG(wdyn (ipol, jpol, na, na) )
         enddo
@@ -68,10 +127,9 @@ subroutine random_matrix_new (irt, nsymq, minus_q, irotmq, nat, &
               if ( (nb == ira) .or. (nb == iramq) ) then
                  do jpol = 1, 3
                     if (lgamma) then
-                       wdyn (ipol, jpol, na, nb) = CMPLX(2.0_DP*randy () - 1.0_DP, 0.d0,kind=DP)
+                       wdyn (ipol, jpol, na, nb) = __RANDOM_DBLE
                     else
-                       wdyn (ipol, jpol, na, nb) = &
-                            CMPLX(2.0_DP*randy()-1.0_DP, 2.0_DP*randy()-1.0_DP,kind=DP)
+                       wdyn (ipol, jpol, na, nb) = __RANDOM_CMPLX
                     endif
                     wdyn(jpol, ipol, nb, na) = CONJG(wdyn(ipol, jpol, na, nb))
                  enddo
