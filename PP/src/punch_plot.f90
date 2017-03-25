@@ -213,7 +213,6 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
         rho%of_r (:,1) =  rho%of_r (:,1) +  rho%of_r (:,2)
         nspin = 1
      ENDIF
-     write ( 894, '(10F16.8)' ) rho%of_g(:,1)
      CALL v_h (rho%of_g, ehart, charge, raux)
      IF (tefield.and.dipfield) CALL add_efield(raux,dummy,rho%of_r,.true.)
 
