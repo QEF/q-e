@@ -91,7 +91,8 @@ MODULE io_rho_xml
       END IF
       !
       IF ( dft_is_meta() ) THEN
-          WRITE(stdout,'(5x,"Warning: cannot save meta-gga kinetic terms: not implemented.")')
+         WRITE(stdout,'(5x,"Writing meta-gga kinetic term")')
+          CALL write_rho_only( rho%kin_r, nspin, 'kin' )
       ENDIF
 
       RETURN
@@ -175,7 +176,8 @@ MODULE io_rho_xml
       END IF
       !
       IF ( dft_is_meta() ) THEN
-         WRITE(stdout,'(5x,"Warning: cannot read meta-gga kinetic terms: not implemented.")')
+         WRITE(stdout,'(5x,"Reading meta-gga kinetic term")')
+         CALL read_rho_only( rho%kin_r, nspin, 'kin' )
       END IF
 
       RETURN

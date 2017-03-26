@@ -289,6 +289,25 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
      IF (noncolin) CALL errore('punch_plot','rdg+noncolin not yet implemented',1)
      CALL do_sl2rho (raux)        ! in elf.f90
 
+  ELSEIF (plot_num == 22) THEN
+     !
+     !      plot of the kinetic charge density
+     !
+     IF (noncolin) THEN
+        CALL dcopy (dfftp%nnr, rho%kin_r, 1, raux, 1)
+     ELSE
+        IF (spin_component == 0) THEN
+           CALL dcopy (dfftp%nnr, rho%kin_r (1, 1), 1, raux, 1)
+           DO is = 2, nspin
+              CALL daxpy (dfftp%nnr, 1.d0, rho%kin_r (1, is), 1, raux, 1)
+           ENDDO
+        ELSE
+           IF (nspin == 2) current_spin = spin_component
+           CALL dcopy (dfftp%nnr, rho%kin_r (1, current_spin), 1, raux, 1)
+           CALL dscal (dfftp%nnr, 0.5d0 * nspin, raux, 1)
+        ENDIF
+     ENDIF
+
   ELSE
 
      CALL infomsg ('punch_plot', 'plot_num not implemented')

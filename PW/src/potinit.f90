@@ -215,7 +215,7 @@ SUBROUTINE potinit()
      !
      !!! fact = 0.0_dp
      DO is = 1, nspin
-        rho%kin_r(:,is) = fact * abs(rho%of_r(:,is)*nspin)**(5.0/3.0)/nspin
+        if (starting_pot /= 'file') rho%kin_r(:,is) = fact * abs(rho%of_r(:,is)*nspin)**(5.0/3.0)/nspin
         psic(:) = rho%kin_r(:,is)
         CALL fwfft ('Dense', psic, dfftp)
         rho%kin_g(:,is) = psic(nl(:))
