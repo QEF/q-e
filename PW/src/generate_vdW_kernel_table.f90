@@ -834,7 +834,7 @@ CONTAINS
     ENDDO
 
     ! --------------------------------------------------------------------
-    ! Subtract half of the last value of because of the trapezoid rule.
+    ! Subtract half of the last value off because of the trapezoid rule.
 
     phi_k(0) = phi_k(0) - 0.5D0 * (Nr_points*dr)**2 * phi(Nr_points)
 
@@ -847,7 +847,7 @@ CONTAINS
           r          = r_i * dr
           phi_k(k_i) = phi_k(k_i) + phi(r_i) * r * sin(k*r) / k
        ENDDO
-       phi_k(Nr_points) = phi_k(Nr_points) - 0.5D0 * phi(Nr_points) * r *sin(k*r) / k
+       phi_k(k_i) = phi_k(k_i) - 0.5D0 * phi(Nr_points) * r * sin(k*r) / k
     ENDDO
     ! --------------------------------------------------------------------
     ! Add in the 4*pi and the dr factor for the integration.
