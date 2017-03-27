@@ -1434,6 +1434,7 @@ subroutine tb09cxc(rho, grho, tau, sx, sc, v1x, v2x,v3x,v1c, v2c,v3c)
   v2c = v2c*2.0_dp
   v3c = v3c*0.5_dp
 #else
+  sx=0.0_dp; sc=0.0_dp; v1x=0.0_dp; v2x=0.0_dp; v3x=0.0_dp; v1c=0.0_dp; v2c=0.0_dp; v3c=0.0_dp
   call errore('tb09','need libxc',1)
 #endif
 end subroutine tb09cxc
@@ -1448,8 +1449,8 @@ end subroutine tb09cxc
 !======================================================================
 subroutine SCANcxc(rho, grho, tau, sx, sc, v1x, v2x, v3x, v1c, v2c, v3c)
   USE kinds,            ONLY : DP
-  USE funct,            ONLY : libxc_major, libxc_minor, libxc_micro, get_libxc_version
 #if defined(__LIBXC)
+  USE funct,            ONLY : libxc_major, libxc_minor, libxc_micro, get_libxc_version
   use xc_f90_types_m
   use xc_f90_lib_m
 #endif
@@ -1494,6 +1495,7 @@ subroutine SCANcxc(rho, grho, tau, sx, sc, v1x, v2x, v3x, v1c, v2c, v3c)
   v3c = v3c*0.5_dp
 
 #else
+  sx=0.0_dp; sc=0.0_dp; v1x=0.0_dp; v2x=0.0_dp; v3x=0.0_dp; v1c=0.0_dp; v2c=0.0_dp; v3c=0.0_dp
   call errore('SCAN meta-GGA','please, recompile with LibXC trunk (i.e. >3.0.0))',1)
 #endif
 
