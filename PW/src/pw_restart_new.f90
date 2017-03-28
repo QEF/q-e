@@ -284,12 +284,12 @@ MODULE pw_restart_new
          dft_name = get_dft_name()
          inlc = get_inlc()
          !
-         CALL qexsd_init_dft(output%dft, dft_name, .TRUE., dft_is_hybrid(), nq1, nq2, nq3, ecutfock, &
-              get_exx_fraction(), get_screening_parameter(), exxdiv_treatment, x_gamma_extrapolation,&
-              ecutvcut, lda_plus_u, lda_plus_u_kind, 2*Hubbard_lmax+1, noncolin, nspin, nsp,         &
-              2*Hubbard_lmax+1, nat, atm, ityp, Hubbard_U, Hubbard_J0, Hubbard_alpha, Hubbard_beta,  &
-              Hubbard_J, starting_ns_eigenvalue, rho%ns, rho%ns_nc, U_projection, dft_is_nonlocc(),  &
-              TRIM(vdw_corr), TRIM ( get_nonlocc_name()), scal6, in_c6, lon_rcut, xdm_a1, xdm_a2,   &
+         CALL qexsd_init_dft(output%dft, dft_name, .TRUE., dft_is_hybrid(), nq1, nq2, nq3, ecutfock/e2, &
+              get_exx_fraction(), get_screening_parameter(), exxdiv_treatment, x_gamma_extrapolation,   &
+              ecutvcut/e2, lda_plus_u, lda_plus_u_kind, 2*Hubbard_lmax+1, noncolin, nspin, nsp,         &
+              2*Hubbard_lmax+1, nat, atm, ityp, Hubbard_U, Hubbard_J0, Hubbard_alpha, Hubbard_beta,     &
+              Hubbard_J, starting_ns_eigenvalue, rho%ns, rho%ns_nc, U_projection, dft_is_nonlocc(),     &
+              TRIM(vdw_corr), TRIM ( get_nonlocc_name()), scal6, in_c6, lon_rcut, xdm_a1, xdm_a2,       &
               vdw_econv_thr, vdw_isolated, is_hubbard, upf(1:nsp)%psd)
          !
 !-------------------------------------------------------------------------------
@@ -2173,6 +2173,7 @@ MODULE pw_restart_new
     SUBROUTINE readschema_exx ( hybrid_obj) 
     !------------------------------------------------------------------------
       ! 
+      USE constants,            ONLY : e2
       USE funct,                ONLY : set_exx_fraction, set_screening_parameter, &
                                       set_gau_parameter, enforce_input_dft, start_exx
       USE exx,                  ONLY : x_gamma_extrapolation, nq1, nq2, nq3, &
@@ -2190,8 +2191,8 @@ MODULE pw_restart_new
       CALL set_exx_fraction( hybrid_obj%exx_fraction) 
       CALL set_screening_parameter ( hybrid_obj%screening_parameter)
       exxdiv_treatment = hybrid_obj%exxdiv_treatment 
-      ecutvcut = hybrid_obj%ecutvcut
-      ecutfock = hybrid_obj%ecutfock
+      ecutvcut = hybrid_obj%ecutvcut*e2
+      ecutfock = hybrid_obj%ecutfock*e2
       CALL start_exx() 
     END SUBROUTINE  readschema_exx 
     !-----------------------------------------------------------------------------------  
