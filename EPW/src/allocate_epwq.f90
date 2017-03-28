@@ -20,7 +20,8 @@
   !! Imported the noncolinear case implemented by xlzhang
   !!
   USE ions_base,    ONLY : nat, ntyp => nsp
-  USE pwcom,        ONLY : npwx, nbnd, ngm, nspin, nks
+  USE pwcom,        ONLY : npwx, nbnd, nspin, nks
+  USE gvect,        ONLY : ngm
   USE noncollin_module, ONLY : noncolin, npol
   USE wavefunctions_module,  ONLY: evc
   USE spin_orb,     ONLY : lspinorb

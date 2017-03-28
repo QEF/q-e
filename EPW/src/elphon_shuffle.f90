@@ -25,7 +25,9 @@
   USE mp_global, ONLY : my_pool_id, nproc_pool,npool,kunit,&
                           inter_pool_comm
   USE mp_images, ONLY : nproc_image
-  USE pwcom,     ONLY : nbnd, ngm, doublegrid, nks, nkstot
+  USE pwcom,     ONLY : nbnd, nks, nkstot
+  USE gvect,     ONLY : ngm
+  USE gvecs,     ONLY : doublegrid
   USE kinds,     ONLY : DP
   USE modes,     ONLY : nmodes, nirr, npert, u
   USE elph2,     ONLY : epmatq, el_ph_mat

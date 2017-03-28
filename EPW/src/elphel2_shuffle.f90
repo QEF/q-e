@@ -63,9 +63,10 @@
   USE wavefunctions_module,  ONLY: evc
   USE io_files,      ONLY : diropn, seqopn
   USE wvfct,         ONLY : npwx
-  USE pwcom,         ONLY : current_spin, isk, tpiba, g, &
-                            lsda, nbnd, xk, ngm, &
+  USE pwcom,         ONLY : current_spin, isk, tpiba, &
+                            lsda, nbnd, xk,  &
                             nks
+  USE gvect,         ONLY : ngm, g
   USE uspp,          ONLY : vkb
   USE symm_base,     ONLY : s
   USE modes,         ONLY : u  

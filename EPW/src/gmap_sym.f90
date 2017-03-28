@@ -24,10 +24,9 @@
   !!
   !----------------------------------------------------------------------
   USE kinds,         ONLY : DP
-  USE pwcom,         ONLY : ngm
   USE constants_epw, ONLY : twopi, ci, cone
   USE fft_base,      ONLY : dfftp
-  USE gvect,         ONLY : mill
+  USE gvect,         ONLY : mill, ngm
   ! 
   implicit none
   !

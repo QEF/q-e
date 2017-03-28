@@ -28,9 +28,8 @@
   USE io_files,         ONLY : prefix, tmp_dir
   USE io_global,        ONLY : stdout
   USE io_epw,           ONLY : iurecover
-  USE pwcom,            ONLY : lspinorb, gg, ngm, tpiba2, nl, eigts3, &
-                               eigts2, eigts1, omega, tpiba, g, nspin, mill, & 
-                               domag
+  USE pwcom,            ONLY : lspinorb, tpiba2, omega, tpiba, nspin, domag
+  USE gvect,            ONLY : ngm, gg, nl, g, eigts1, eigts2, eigts3, mill
   USE scf,              ONLY : v, vltot
   USE noncollin_module, ONLY : noncolin
   USE kinds,            ONLY : DP

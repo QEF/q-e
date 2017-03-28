@@ -6,6 +6,7 @@ a2f.o : elph2.o
 a2f.o : epwcom.o
 a2f.o : constants_epw.o
 allocate_epwq.o : elph2.o
+allocate_epwq.o : ../../Modules/recvec.o
 bcast_epw_input.o : epwcom.o
 broyden.o : eliashbergcom.o
 broyden.o : epwcom.o
@@ -31,6 +32,7 @@ dmebloch2wan.o : constants_epw.o
 dmewan2bloch.o : elph2.o
 dmewan2bloch.o : epwcom.o
 dmewan2bloch.o : constants_epw.o
+dvanqq2.o : ../../Modules/recvec.o
 dynbloch2wan.o : elph2.o
 dynbloch2wan.o : constants_epw.o
 dynwan2bloch.o : elph2.o
@@ -61,12 +63,15 @@ eliashberg_setup.o : constants_epw.o
 elphel2_shuffle.o : elph2.o
 elphel2_shuffle.o : epwcom.o
 elphel2_shuffle.o : constants_epw.o
+elphel2_shuffle.o : ../../Modules/recvec.o
 elphon_shuffle.o : elph2.o
 elphon_shuffle.o : epwcom.o
 elphon_shuffle.o : constants_epw.o
+elphon_shuffle.o : ../../Modules/recvec.o
 elphon_shuffle_wrap.o : elph2.o
 elphon_shuffle_wrap.o : epwcom.o
 elphon_shuffle_wrap.o : constants_epw.o
+elphon_shuffle_wrap.o : ../../Modules/recvec.o
 ephbloch2wane.o : epwcom.o
 ephbloch2wane.o : constants_epw.o
 ephbloch2wanp.o : elph2.o
@@ -88,6 +93,7 @@ fermiwindow.o : epwcom.o
 gen_freqgrid.o : eliashbergcom.o
 gen_freqgrid.o : epwcom.o
 gmap_sym.o : constants_epw.o
+gmap_sym.o : ../../Modules/recvec.o
 hambloch2wan.o : constants_epw.o
 hamwan2bloch.o : constants_epw.o
 kernels_aniso_iaxis.o : eliashbergcom.o

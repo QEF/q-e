@@ -27,7 +27,7 @@
   USE mp,            ONLY : mp_barrier, mp_bcast
   USE io_global,     ONLY : meta_ionode, meta_ionode_id
   USE us,            ONLY : nqxq, dq, qrad
-  USE gvect,         ONLY : gcutm
+  USE gvect,         ONLY : gcutm, ngm
   USE cellmd,        ONLY : cell_factor
   USE uspp_param,    ONLY : lmaxq, nbetam
   USE io_files,      ONLY : prefix, tmp_dir
@@ -37,10 +37,11 @@
   USE io_global,     ONLY : stdout
   USE io_epw,        ONLY : iuepb 
   USE kinds,         ONLY : DP
-  USE pwcom,         ONLY : et, xk, nks, nbnd, nkstot, ngm
+  USE pwcom,         ONLY : et, xk, nks, nbnd, nkstot
   USE cell_base,     ONLY : at, bg
   USE symm_base,     ONLY : irt, s, nsym, ftau, sname, invs, s_axis_to_cart,&
-                            sr, nrot, copy_sym, set_sym_bl, find_sym, inverse_s
+                            sr, nrot, copy_sym, set_sym_bl, find_sym, inverse_s,&
+                            remove_sym, allfrac
   USE start_k,       ONLY : nk1, nk2, nk3
   USE phcom,         ONLY : dpsi, dvpsi, evq, nq1, nq3, nq2 
   USE qpoint,        ONLY : igkq
@@ -318,7 +319,9 @@
     WRITE(stdout, '(5x,a,i3)') "Symmetries of bravais lattice: ", nrot
     !
     ! ~~~~~~~~ setup crystal symmetry ~~~~~~~~ 
+    !CALL find_sym ( nat, tau, ityp, dfftp%nr1,dfftp%nr2,dfftp%nr3, .false., m_loc )
     CALL find_sym ( nat, tau, ityp, .false., m_loc )
+    IF ( .NOT. allfrac ) CALL remove_sym ( dfftp%nr1, dfftp%nr2, dfftp%nr3 )
     WRITE(stdout, '(5x,a,i3)') "Symmetries of crystal:         ", nsym
     !   
     ! The following loop is required to propertly set up the symmetry matrix s. 

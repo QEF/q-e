@@ -21,12 +21,12 @@
   USE lrus,                 ONLY : becp1
   USE uspp,                 ONLY : vkb
   USE pwcom,                ONLY : npwx, nbnd, tpi, nks, lsda, current_spin,&
-                                   tpiba2, tpiba, bg, &
-                                   eigts1, eigts2, eigts3, g, g2kin, isk, &
-                                   ngm, xk, strf, omega
+                                   tpiba2, tpiba, bg, g2kin, isk, &
+                                   xk, strf, omega
   USE klist,                ONLY : ngk, igk_k, nkstot
   USE constants_epw,        ONLY : zero
   USE gvecw,                ONLY : ecutwfc
+  USE gvect,                ONLY : eigts1, eigts2, eigts3, g, ngm
   USE atom,                 ONLY : msh, rgrid
   USE wavefunctions_module, ONLY : evc
   USE kinds,                ONLY : DP
