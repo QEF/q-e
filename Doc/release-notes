@@ -1,3 +1,23 @@
+Known bugs in 6.1 version:
+
+  * Hybrid functionals with LSDA, Gamma tricks and 2 pools, fixed in r13158,
+    have meanwhile been broken again by later changes
+
+  * EPW: Wrong results due to a mismatch between symmetry operations in PW 
+    and in EPW. Affects only v6.1 if there are fractional translations
+    that are incommensurate with the FFT grid.
+
+Fixed in svn version
+
+  * FFTXlib: the case in which the smooth and dense grids have the same FFT
+    dimensions along x and y but different along z was incorrectly treated,
+    leading to strange error messages. (r13439)
+
+  * There was a small inconsistency in the vdW-DF kernel generating routine
+    "generate_vdW_kernel_table.f90", not affecting in any significant way 
+    the results. It is anyway recommended to re-generate the kernel file.
+    Thanks to C.Y. Ren for noticing this. (r13438)
+
 Incompatible changes in svn version:
 
   * The new xml format with schema is now the default. Use configure option
