@@ -116,14 +116,17 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 
         var fildrho -type CHARACTER { 
             default { ' ' }
-            info { File where the charge density responses are written. }
+            info { File where the charge density responses are written. Note that the file
+                   will actually be saved as ${outdir}/_ph0/${prefix}.${fildrho}1  
+                   where  ${outdir}, ${prefix} and ${fildrho} are the values of the 
+                   corresponding input variables }
         }
 
         var fildvscf  -type CHARACTER { 
             default { ' ' }
             info {
                 File where the the potential variation is written 
-                (for later use in electron-phonon calculation).
+                (for later use in electron-phonon calculation, see also fildrho).
             }
         }
 
