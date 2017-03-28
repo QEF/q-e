@@ -3,15 +3,15 @@ Known bugs in 6.1 version:
   * Hybrid functionals with LSDA, Gamma tricks and 2 pools, fixed in r13158,
     have meanwhile been broken again by later changes
 
-  * EPW: Wrong results due to a mismatch between symmetry operations in PW 
-    and in EPW. Affects only v6.1 if there are fractional translations
-    that are incommensurate with the FFT grid.
-
 Fixed in svn version
+
+  * EPW: in v.6.1 there was a mismatch between symmetry operations in PW
+    and in EPW. It affected results of v.6.1 only in the presence of
+    fractional translations incommensurate with the FFT grid. (r13443)
 
   * FFTXlib: the case in which the smooth and dense grids have the same FFT
     dimensions along x and y but different along z was incorrectly treated,
-    leading to strange error messages. (r13439)
+    leading to strange error messages. (r13439 and r13445)
 
   * There was a small inconsistency in the vdW-DF kernel generating routine
     "generate_vdW_kernel_table.f90", not affecting in any significant way 
@@ -20,6 +20,7 @@ Fixed in svn version
 
 Incompatible changes in svn version:
 
+  * module pwcom no longer contains modules gvect, gvecs
   * The new xml format with schema is now the default. Use configure option
     "--disable-xml", or add -D__OLDXML to MANUAL_FLAGS in make.inc, to revert
     to the old xml format

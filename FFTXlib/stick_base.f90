@@ -98,7 +98,7 @@
         smap%indmap = 0
         smap%idx = 0
         smap%ist = 0
-     ELSE IF( smap%nstx < nstx .OR. smap%ub(3) /= ub(3) ) THEN
+     ELSE IF( smap%nstx < nstx .OR. smap%ub(3) < ub(3) ) THEN
         !  change the size of the map, but keep the data already there
         IF( smap%lgamma .neqv.  lgamma ) THEN
            CALL fftx_error__(' sticks_map_allocate ',' changing gamma symmetry not allowed ', 1 )
