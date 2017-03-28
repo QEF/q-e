@@ -36,7 +36,7 @@ MODULE dfile_star
     ! output: the max number of irreps
     !
     REAL(DP), ALLOCATABLE :: gi (:,:), gimq (:), eigen(:)
-    ! output: [S(irotq)*q - q]
+    ! output: [S(irotq)*q - q], w2(:)
     ! output: [S(irotmq)*q + q]
     ! output: eigenvalues of the dynmat
     !
@@ -90,8 +90,6 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, &
             sr, invs, irt, ntyp, ityp, dfile_minus_q, iq_ )
   !-----------------------------------------------------------------------
   !
-  ! Electron-phonon calculation from data saved in dfile_rot
-  !
   USE kinds,            ONLY : DP
   USE fft_base,         ONLY : dfftp
   USE cell_base,        ONLY : at, bg
@@ -109,6 +107,7 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, &
   USE mp_images,        ONLY : intra_image_comm
   USE mp,               ONLY : mp_bcast
   USE wrappers,         ONLY : f_mkdir_safe
+  USE control_ph, ONLY : search_sym
 
   USE lr_symm_base, ONLY : rtau
   !
@@ -128,7 +127,7 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, &
   REAL(DP) :: sr(3,3,48)
   ! symmetry matrices in cartesian coordinates
   REAL(DP),INTENT(in) :: xq(3), sxq (3, 48)
-  ! corrent q-point at which drho has been caclulated
+  ! current q-point at which drho has been calculated
   ! list of the q in the star
   COMPLEX(DP),INTENT(in) :: u(3*nat, 3*nat)
   ! the modes of the starting drho
@@ -149,7 +148,7 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, &
   ! counter on the modes
   ! the change of Vscf due to perturbations
   COMPLEX(DP), ALLOCATABLE :: dfile_at(:,:,:), dfile_rot(:,:,:), dfile_rot_scr(:,:,:)
-  LOGICAL :: exst
+  LOGICAL :: exst, search_sym_input
   CHARACTER(LEN=256) :: dfile_rot_name
   COMPLEX(DP) :: phase_xq
   INTEGER     :: ipol,iq,index0,nar
@@ -163,8 +162,8 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, &
   IF ( .not. descr%open ) RETURN
   IF (descr%ext(1:5) /= 'auto:') descr%ext = 'auto:'//descr%ext
   !
-  IF(nsym==1) &
-    CALL errore('write_dfile_star', 'this subroutine produces random garbage without symmetry!', 1)
+!  IF(nsym==1) &
+!    CALL errore('write_dfile_star', 'this subroutine produces random garbage without symmetry!', 1)
   !
   !
   ! create a directory to store the files
@@ -176,13 +175,16 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, &
   CALL mp_bcast( exst, ionode_id, intra_image_comm )
   !if(.not.exst) CALL create_directory(descr%dir)
   if(.not.exst) is = f_mkdir_safe(descr%dir)
+
+  !search_sym_input = search_sym
+  !search_sym = .false.
   !
-  ! ionode does all the work from here on, the other nodes are aly required for
+  ! ionode does all the work from here on, the other nodes are only required for
   ! calling set_irr which includes a mp broadcast
   ONLY_IONODE_1 : IF (ionode) THEN
   !
   !  Between all the possible symmetries I chose the first one
-  !        (all of them lead to the same rotated dwhatever)
+  !        (all of them lead to the same rotated quantity)
   !
   DO iq=1,nq
      nsymrot=0
@@ -277,8 +279,8 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, &
     !
     DO k=1,nat  
       sxq_tau=(sxq(1,iq)*tau(1,k)+ &
-            sxq(2,iq)*tau(2,k)+ &
-            sxq(3,iq)*tau(3,k))*tpi
+               sxq(2,iq)*tau(2,k)+ &
+               sxq(3,iq)*tau(3,k))*tpi
       phase_sxq(k)=1._dp/CMPLX(cos(sxq_tau),sin(sxq_tau))
     ENDDO
     !
@@ -340,15 +342,22 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, &
     ENDIF ONLY_IONODE_2
     !
     ! This part has to be done on all nodes because set_irr calls mp_bcast!
-    ! NOTE: the new set_irr_new subroutine woudl not work here as it uses global variables!!
+    ! NOTE: the new set_irr_new subroutine would not work here as it uses global variables!!
     IF (descr%basis=='modes') THEN
       !
       ! Transform to the basis of the patterns at the new q...
       !
-      CALL set_irr (nat, at, bg, xq, s, sr, tau, ntyp, ityp, ftau, invs, nsym, &
-                    rtau, irt, rpat%irgq, rpat%nsymq, rpat%minus_q, rpat%irotmq, rpat%u, rpat%npert,   &
-                    rpat%nirr, rpat%gi, rpat%gimq, 0, .false., rpat%eigen, search_sym,&
-                    nspin_mag, t_rev, amass, rpat%num_rap_mode, rpat%name_rap_mode)
+!      CALL set_irr (nat, at, bg, sxq(:,iq), s, sr, tau, ntyp, ityp, ftau, invs, nsym, &
+!                    rtau, irt, rpat%irgq, rpat%nsymq, rpat%minus_q, rpat%irotmq, rpat%u, rpat%npert,   &
+!                    rpat%nirr, rpat%gi, rpat%gimq, 0, .false., rpat%eigen, search_sym,&
+!                    nspin_mag, t_rev, amass, rpat%num_rap_mode, rpat%name_rap_mode)
+
+!      CALL set_irr_new (sxq(:,iq), rpat%u, rpat%npert, rpat%nirr, rpat%eigen)
+
+!      rpat%u = u
+      rpat%npert = npert
+      rpat%nirr  = nirr
+      CALL rotate_mod(u,rpat%u,sr,irt,rtau,xq,nat,ichosen_sym(iq))
       !
       ONLY_IONODE_2b : IF (ionode) THEN
       dfile_rot_scr = (0._dp, 0._dp)
@@ -402,7 +411,7 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, &
     !
     ! Also store drho(-q) if necessary
     MINUS_Q : &
-    IF (dfile_minus_q .and. xq(1)**2+xq(2)**2+xq(3)**2 > 1.d-5 )  THEN
+    IF (dfile_minus_q .and. SUM(xq**2) > 1.d-5 )  THEN
       !
       dfile_rot_name = dfile_name(-sxq(:,iq), at, TRIM(descr%ext), &
                         TRIM(descr%dir)//prefix, generate=.true., index_q=iq_)
@@ -436,6 +445,7 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, &
     DEALLOCATE(phase_sxq)
   ENDIF
   CALL deallocate_rotated_pattern_repr(rpat)
+  !search_sym = search_sym_input
   !
   RETURN
   !----------------------------------------------------------------------------
