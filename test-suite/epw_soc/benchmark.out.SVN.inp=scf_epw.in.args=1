@@ -1,5 +1,5 @@
 
-     Program PWSCF v.6.0 starts on  5Feb2017 at 20:47:23 
+     Program PWSCF v.5.4.0 (svn rev. 12493) starts on 21Jun2016 at 16:49:44 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -8,7 +8,19 @@
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
-     Serial multi-threaded version, running on    1 processor cores
+           HOST :    @host@
+           ARCH :    x86_64
+             CC :    cc
+            CPP :    cpp
+            F90 :    mpif90
+            F77 :    gfortran
+         DFLAGS :    -D__GFORTRAN -D__STD_F95 -D__FFTW -D__MPI -D__PARA
+      BLAS LIBS :    /home/sponce/program/espresso/BLAS/blas.a
+    LAPACK LIBS :    /home/sponce/program/espresso/lapack-3.2/lapack.a
+       FFT LIBS :    
+      MASS LIBS :    
+
+     Parallel version (MPI), running on     1 processors
      Waiting for input...
      Reading input from standard input
 
@@ -16,6 +28,10 @@
      Max number of different atomic species (ntypx) = 10
      Max number of k-points (npk) =  40000
      Max angular momentum in pseudopotentials (lmaxx) =  3
+
+     Subspace diagonalization in iterative solution of the eigenvalue problem:
+     a serial algorithm will be used
+
 
      G-vector sticks info
      --------------------
@@ -639,7 +655,7 @@ G_8-   0.00  0.00  0.00  0.00
            90 deg rotation - cart. axis [0,0,-1]                 
      -6C4         -7   -8  -15  -16  -12  -11
            90 deg rotation - cart. axis [0,0,-1] E               
-      6C2'-6C2'    5   -5   -6    6   14  -13  -14   13   10   -9  -10    9
+      6C2'-6C2'    5   -5    6   -6   14  -13  -14   13  -10   -9   10    9
           180 deg rotation - cart. axis [1,1,0]                  
      i            25
           inversion                                              
@@ -655,7 +671,7 @@ G_8-   0.00  0.00  0.00  0.00
           inv.  90 deg rotation - cart. axis [0,0,-1]            
      -6S4        -31  -32  -39  -40  -36  -35
           inv.  90 deg rotation - cart. axis [0,0,-1] E          
-      6s_d-6s_d   29  -29  -30   30   38  -37  -38   37   34  -33  -34   33
+      6s_d-6s_d   29  -29   30  -30   38  -37  -38   37  -34  -33   34   33
           inv. 180 deg rotation - cart. axis [1,1,0]             
 
    Cartesian axes
@@ -683,16 +699,26 @@ G_8-   0.00  0.00  0.00  0.00
 
      Dense  grid:    12387 G-vectors     FFT dimensions: (  36,  36,  36)
 
-     Estimated max dynamical RAM per process >      34.92MB
+     Largest allocated arrays     est. size (Mb)     dimensions
+        Kohn-Sham Wavefunctions         1.06 Mb     (    3160,   22)
+        NL pseudopotentials             0.39 Mb     (    1580,   16)
+        Each V/rho on FFT grid          0.71 Mb     (   46656)
+        Each G-vector array             0.09 Mb     (   12387)
+        G-vector shells                 0.00 Mb     (     175)
+     Largest temporary arrays     est. size (Mb)     dimensions
+        Auxiliary wavefunctions         4.24 Mb     (    3160,   88)
+        Each subspace H/S matrix        0.12 Mb     (      88,   88)
+        Each <psi_i|beta_j> matrix      0.01 Mb     (      16,   2,   22)
+        Arrays for rho mixing           5.70 Mb     (   46656,    8)
 
      Initial potential from superposition of free atoms
 
      starting charge   13.99923, renormalised to   14.00000
      Starting wfc are   18 randomized atomic wfcs +    4 random wfc
 
-     total cpu time spent up to now is        0.8 secs
+     total cpu time spent up to now is        1.1 secs
 
-     per-process dynamical memory:    20.4 Mb
+     per-process dynamical memory:    24.7 Mb
 
      Self-consistent Calculation
 
@@ -706,7 +732,7 @@ G_8-   0.00  0.00  0.00  0.00
      Davidson diagonalization with overlap
      ethr =  4.59E-05,  avg # of iterations =  5.5
 
-     total cpu time spent up to now is        3.0 secs
+     total cpu time spent up to now is        4.9 secs
 
      total energy              =    -119.59560943 Ry
      Harris-Foulkes estimate   =    -119.59933786 Ry
@@ -716,7 +742,7 @@ G_8-   0.00  0.00  0.00  0.00
      Davidson diagonalization with overlap
      ethr =  4.57E-05,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        4.0 secs
+     total cpu time spent up to now is        6.7 secs
 
      total energy              =    -119.59667894 Ry
      Harris-Foulkes estimate   =    -119.59683963 Ry
@@ -726,7 +752,7 @@ G_8-   0.00  0.00  0.00  0.00
      Davidson diagonalization with overlap
      ethr =  2.31E-06,  avg # of iterations =  2.8
 
-     total cpu time spent up to now is        5.1 secs
+     total cpu time spent up to now is        8.6 secs
 
      total energy              =    -119.59672281 Ry
      Harris-Foulkes estimate   =    -119.59672661 Ry
@@ -736,7 +762,7 @@ G_8-   0.00  0.00  0.00  0.00
      Davidson diagonalization with overlap
      ethr =  1.04E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        5.9 secs
+     total cpu time spent up to now is       10.1 secs
 
      total energy              =    -119.59672360 Ry
      Harris-Foulkes estimate   =    -119.59672359 Ry
@@ -746,7 +772,7 @@ G_8-   0.00  0.00  0.00  0.00
      Davidson diagonalization with overlap
      ethr =  4.91E-10,  avg # of iterations =  2.2
 
-     total cpu time spent up to now is        7.0 secs
+     total cpu time spent up to now is       12.0 secs
 
      total energy              =    -119.59672363 Ry
      Harris-Foulkes estimate   =    -119.59672364 Ry
@@ -756,7 +782,7 @@ G_8-   0.00  0.00  0.00  0.00
      Davidson diagonalization with overlap
      ethr =  8.53E-11,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        8.0 secs
+     total cpu time spent up to now is       13.8 secs
 
      End of self-consistent calculation
 
@@ -820,7 +846,7 @@ G_8-   0.00  0.00  0.00  0.00
 
      convergence has been achieved in   6 iterations
 
-     Forces acting on atoms (cartesian axes, Ry/au):
+     Forces acting on atoms (Ry/au):
 
      atom    1 type  1   force =     0.00000000    0.00000000    0.00000000
      The non-local contrib.  to forces
@@ -834,29 +860,29 @@ G_8-   0.00  0.00  0.00  0.00
      The Hubbard contrib.    to forces
      atom    1 type  1   force =     0.00000000    0.00000000    0.00000000
      The SCF correction term to forces
-     atom    1 type  1   force =     0.00000000    0.00000000   -0.00000000
+     atom    1 type  1   force =    -0.00000000    0.00000000   -0.00000000
 
      Total force =     0.000000     Total SCF correction =     0.000000
 
 
-     Computing stress (Cartesian axis) and pressure
+     entering subroutine stress ...
 
           total   stress  (Ry/bohr**3)                   (kbar)     P=   -3.68
-  -0.00002504  -0.00000000  -0.00000000         -3.68     -0.00     -0.00
-  -0.00000000  -0.00002504   0.00000000         -0.00     -3.68      0.00
-  -0.00000000   0.00000000  -0.00002504         -0.00      0.00     -3.68
+  -0.00002504  -0.00000000   0.00000000         -3.68     -0.00      0.00
+  -0.00000000  -0.00002504  -0.00000000         -0.00     -3.68     -0.00
+   0.00000000  -0.00000000  -0.00002504          0.00     -0.00     -3.68
 
-     kinetic stress (kbar)  34590.62      0.00     -0.00
+     kinetic stress (kbar)  34590.62     -0.00      0.00
                                -0.00  34590.62      0.00
-                               -0.00      0.00  34590.62
+                                0.00      0.00  34590.62
 
-     local   stress (kbar)  32802.63      0.00     -0.00
+     local   stress (kbar)  32802.63      0.00      0.00
                                 0.00  32802.63     -0.00
-                               -0.00     -0.00  32802.63
+                                0.00     -0.00  32802.63
 
-     nonloc. stress (kbar) -46356.98     -0.00     -0.00
-                               -0.00 -46356.98      0.00
-                               -0.00      0.00 -46356.98
+     nonloc. stress (kbar) -46356.98      0.00      0.00
+                                0.00 -46356.98     -0.00
+                                0.00     -0.00 -46356.98
 
      hartree stress (kbar)   6162.50     -0.00     -0.00
                                -0.00   6162.50      0.00
@@ -898,55 +924,54 @@ G_8-   0.00  0.00  0.00  0.00
 
      Writing output data file pb.save
 
-     init_run     :      0.67s CPU      0.68s WALL (       1 calls)
-     electrons    :      7.16s CPU      7.21s WALL (       1 calls)
-     forces       :      0.04s CPU      0.05s WALL (       1 calls)
-     stress       :      0.22s CPU      0.22s WALL (       1 calls)
+     init_run     :      1.94s CPU      0.97s WALL (       1 calls)
+     electrons    :     25.56s CPU     12.80s WALL (       1 calls)
+     forces       :      0.09s CPU      0.05s WALL (       1 calls)
+     stress       :      0.47s CPU      0.24s WALL (       1 calls)
 
      Called by init_run:
-     wfcinit      :      0.31s CPU      0.31s WALL (       1 calls)
-     wfcinit:atom :      0.00s CPU      0.00s WALL (       4 calls)
-     wfcinit:wfcr :      0.29s CPU      0.30s WALL (       4 calls)
-     potinit      :      0.02s CPU      0.03s WALL (       1 calls)
+     wfcinit      :      1.12s CPU      0.56s WALL (       1 calls)
+     potinit      :      0.07s CPU      0.03s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :      6.09s CPU      6.11s WALL (       7 calls)
-     sum_band     :      0.97s CPU      0.97s WALL (       7 calls)
-     v_of_rho     :      0.05s CPU      0.05s WALL (       7 calls)
-     v_h          :      0.01s CPU      0.01s WALL (       7 calls)
-     v_xc         :      0.04s CPU      0.04s WALL (       7 calls)
-     mix_rho      :      0.04s CPU      0.06s WALL (       7 calls)
+     c_bands      :     21.21s CPU     10.62s WALL (       7 calls)
+     sum_band     :      4.08s CPU      2.04s WALL (       7 calls)
+     v_of_rho     :      0.10s CPU      0.05s WALL (       7 calls)
+     v_h          :      0.03s CPU      0.02s WALL (       7 calls)
+     v_xc         :      0.07s CPU      0.03s WALL (       7 calls)
+     mix_rho      :      0.15s CPU      0.07s WALL (       7 calls)
 
      Called by c_bands:
-     init_us_2    :      0.05s CPU      0.05s WALL (      68 calls)
-     cegterg      :      5.99s CPU      6.01s WALL (      28 calls)
+     init_us_2    :      0.13s CPU      0.06s WALL (      68 calls)
+     cegterg      :     20.70s CPU     10.36s WALL (      28 calls)
 
      Called by sum_band:
 
      Called by *egterg:
-     h_psi        :      4.79s CPU      4.80s WALL (     111 calls)
-     g_psi        :      0.03s CPU      0.03s WALL (      79 calls)
-     cdiaghg      :      0.13s CPU      0.13s WALL (     103 calls)
-     cegterg:over :      0.50s CPU      0.50s WALL (      79 calls)
-     cegterg:upda :      0.39s CPU      0.39s WALL (      79 calls)
-     cegterg:last :      0.23s CPU      0.23s WALL (      28 calls)
+     h_psi        :     19.60s CPU      9.80s WALL (     111 calls)
+     g_psi        :      0.12s CPU      0.06s WALL (      79 calls)
+     cdiaghg      :      0.20s CPU      0.10s WALL (     103 calls)
+     cegterg:over :      0.76s CPU      0.38s WALL (      79 calls)
+     cegterg:upda :      0.42s CPU      0.21s WALL (      79 calls)
+     cegterg:last :      0.27s CPU      0.13s WALL (      28 calls)
 
      Called by h_psi:
-     h_psi:pot    :      4.77s CPU      4.78s WALL (     111 calls)
-     h_psi:calbec :      0.14s CPU      0.14s WALL (     111 calls)
-     vloc_psi     :      4.45s CPU      4.46s WALL (     111 calls)
-     add_vuspsi   :      0.17s CPU      0.17s WALL (     111 calls)
+     h_psi:vloc   :     19.13s CPU      9.57s WALL (     111 calls)
+     h_psi:vnl    :      0.44s CPU      0.22s WALL (     111 calls)
+     add_vuspsi   :      0.22s CPU      0.11s WALL (     111 calls)
 
      General routines
-     calbec       :      0.18s CPU      0.18s WALL (     131 calls)
-     fft          :      0.08s CPU      0.08s WALL (      79 calls)
-     fftw         :      4.73s CPU      4.73s WALL (    7784 calls)
+     calbec       :      0.28s CPU      0.14s WALL (     131 calls)
+     fft          :      0.33s CPU      0.17s WALL (      79 calls)
+     fftw         :     20.87s CPU     10.44s WALL (    7784 calls)
+
+     Parallel routines
+     fft_scatter  :      0.85s CPU      0.42s WALL (    7863 calls)
+
+     PWSCF        :    28.30s CPU        14.20s WALL
 
 
-     PWSCF        :     8.21s CPU         8.38s WALL
-
-
-   This run was terminated on:  20:47:31   5Feb2017            
+   This run was terminated on:  16:49:59  21Jun2016            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

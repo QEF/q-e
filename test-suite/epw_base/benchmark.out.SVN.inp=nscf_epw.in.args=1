@@ -1,5 +1,5 @@
 
-     Program PWSCF v.6.0 starts on  5Feb2017 at 20:43:29 
+     Program PWSCF v.5.4.0 (svn rev. 12464) starts on  7Jun2016 at 18:47:18 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -8,7 +8,19 @@
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
-     Serial multi-threaded version, running on    1 processor cores
+           HOST :    @host@
+           ARCH :    x86_64
+             CC :    cc
+            CPP :    cpp
+            F90 :    mpif90
+            F77 :    gfortran
+         DFLAGS :    -D__GFORTRAN -D__STD_F95 -D__FFTW -D__MPI -D__PARA
+      BLAS LIBS :    /home/sponce/program/espresso/BLAS/blas.a
+    LAPACK LIBS :    /home/sponce/program/espresso/lapack-3.2/lapack.a
+       FFT LIBS :    
+      MASS LIBS :    
+
+     Parallel version (MPI), running on     1 processors
      Waiting for input...
      Reading input from standard input
 
@@ -21,6 +33,10 @@
      ./diam.save/
 
                file C_3.98148.UPF: wavefunction(s)  3d renormalized
+
+     Subspace diagonalization in iterative solution of the eigenvalue problem:
+     a serial algorithm will be used
+
 
      G-vector sticks info
      --------------------
@@ -711,7 +727,16 @@ T_2u   3.00  0.00 -1.00 -1.00  1.00 -3.00  0.00  1.00  1.00 -1.00
 
      Dense  grid:     4645 G-vectors     FFT dimensions: (  24,  24,  24)
 
-     Estimated max dynamical RAM per process >       1.75MB
+     Largest allocated arrays     est. size (Mb)     dimensions
+        Kohn-Sham Wavefunctions         0.04 Mb     (     589,    4)
+        NL pseudopotentials             0.07 Mb     (     589,    8)
+        Each V/rho on FFT grid          0.21 Mb     (   13824)
+        Each G-vector array             0.04 Mb     (    4645)
+        G-vector shells                 0.00 Mb     (      92)
+     Largest temporary arrays     est. size (Mb)     dimensions
+        Auxiliary wavefunctions         0.14 Mb     (     589,   16)
+        Each subspace H/S matrix        0.00 Mb     (      16,   16)
+        Each <psi_i|beta_j> matrix      0.00 Mb     (       8,    4)
 
      The potential is recalculated from file :
      ./diam.save/charge-density.dat
@@ -722,89 +747,89 @@ T_2u   3.00  0.00 -1.00 -1.00  1.00 -3.00  0.00  1.00  1.00 -1.00
      Davidson diagonalization with overlap
 
      Computing kpt #:     1
-     total cpu time spent up to now is        0.2 secs
+     total cpu time spent up to now is        0.1 secs
 
      Computing kpt #:     2
-     total cpu time spent up to now is        0.2 secs
+     total cpu time spent up to now is        0.1 secs
 
      Computing kpt #:     3
      total cpu time spent up to now is        0.2 secs
 
      Computing kpt #:     4
-     total cpu time spent up to now is        0.3 secs
+     total cpu time spent up to now is        0.2 secs
 
      Computing kpt #:     5
-     total cpu time spent up to now is        0.3 secs
+     total cpu time spent up to now is        0.2 secs
 
      Computing kpt #:     6
      total cpu time spent up to now is        0.3 secs
 
      Computing kpt #:     7
-     total cpu time spent up to now is        0.4 secs
+     total cpu time spent up to now is        0.3 secs
 
      Computing kpt #:     8
-     total cpu time spent up to now is        0.4 secs
+     total cpu time spent up to now is        0.3 secs
 
      Computing kpt #:     9
-     total cpu time spent up to now is        0.4 secs
+     total cpu time spent up to now is        0.3 secs
 
      Computing kpt #:    10
-     total cpu time spent up to now is        0.5 secs
+     total cpu time spent up to now is        0.4 secs
 
      Computing kpt #:    11
-     total cpu time spent up to now is        0.5 secs
+     total cpu time spent up to now is        0.4 secs
 
      Computing kpt #:    12
-     total cpu time spent up to now is        0.5 secs
+     total cpu time spent up to now is        0.4 secs
 
      Computing kpt #:    13
-     total cpu time spent up to now is        0.6 secs
+     total cpu time spent up to now is        0.4 secs
 
      Computing kpt #:    14
-     total cpu time spent up to now is        0.6 secs
+     total cpu time spent up to now is        0.5 secs
 
      Computing kpt #:    15
-     total cpu time spent up to now is        0.6 secs
+     total cpu time spent up to now is        0.5 secs
 
      Computing kpt #:    16
-     total cpu time spent up to now is        0.7 secs
+     total cpu time spent up to now is        0.5 secs
 
      Computing kpt #:    17
-     total cpu time spent up to now is        0.7 secs
+     total cpu time spent up to now is        0.5 secs
 
      Computing kpt #:    18
-     total cpu time spent up to now is        0.7 secs
+     total cpu time spent up to now is        0.6 secs
 
      Computing kpt #:    19
-     total cpu time spent up to now is        0.8 secs
+     total cpu time spent up to now is        0.6 secs
 
      Computing kpt #:    20
-     total cpu time spent up to now is        0.8 secs
+     total cpu time spent up to now is        0.6 secs
 
      Computing kpt #:    21
-     total cpu time spent up to now is        0.8 secs
+     total cpu time spent up to now is        0.6 secs
 
      Computing kpt #:    22
-     total cpu time spent up to now is        0.8 secs
+     total cpu time spent up to now is        0.7 secs
 
      Computing kpt #:    23
-     total cpu time spent up to now is        0.9 secs
+     total cpu time spent up to now is        0.7 secs
 
      Computing kpt #:    24
-     total cpu time spent up to now is        0.9 secs
+     total cpu time spent up to now is        0.7 secs
 
      Computing kpt #:    25
-     total cpu time spent up to now is        0.9 secs
+     total cpu time spent up to now is        0.8 secs
 
      Computing kpt #:    26
-     total cpu time spent up to now is        1.0 secs
+     total cpu time spent up to now is        0.8 secs
 
      Computing kpt #:    27
-     total cpu time spent up to now is        1.0 secs
+     total cpu time spent up to now is        0.8 secs
 
      ethr =  1.26E-12,  avg # of iterations = 10.6
 
-     total cpu time spent up to now is        1.0 secs
+     total cpu time spent up to now is        0.8 secs
 
      End of band structure calculation
 
@@ -1001,52 +1026,51 @@ T_2u   3.00  0.00 -1.00 -1.00  1.00 -3.00  0.00  1.00  1.00 -1.00
 
      Writing output data file diam.save
 
-     init_run     :      0.08s CPU      0.08s WALL (       1 calls)
-     electrons    :      0.84s CPU      0.86s WALL (       1 calls)
+     init_run     :      0.12s CPU      0.06s WALL (       1 calls)
+     electrons    :      1.42s CPU      0.71s WALL (       1 calls)
 
      Called by init_run:
      wfcinit      :      0.00s CPU      0.00s WALL (       1 calls)
-     wfcinit:atom :      0.01s CPU      0.01s WALL (      27 calls)
-     wfcinit:wfcr :      0.22s CPU      0.22s WALL (      27 calls)
-     potinit      :      0.00s CPU      0.00s WALL (       1 calls)
+     potinit      :      0.01s CPU      0.00s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :      0.84s CPU      0.86s WALL (       1 calls)
+     c_bands      :      1.42s CPU      0.71s WALL (       1 calls)
      v_of_rho     :      0.00s CPU      0.00s WALL (       1 calls)
      v_h          :      0.00s CPU      0.00s WALL (       1 calls)
      v_xc         :      0.00s CPU      0.00s WALL (       1 calls)
 
      Called by c_bands:
-     init_us_2    :      0.00s CPU      0.00s WALL (      27 calls)
-     cegterg      :      0.58s CPU      0.58s WALL (      27 calls)
+     init_us_2    :      0.01s CPU      0.00s WALL (      27 calls)
+     cegterg      :      0.97s CPU      0.48s WALL (      27 calls)
 
      Called by sum_band:
 
      Called by *egterg:
-     h_psi        :      0.69s CPU      0.69s WALL (     339 calls)
-     g_psi        :      0.00s CPU      0.01s WALL (     285 calls)
-     cdiaghg      :      0.02s CPU      0.02s WALL (     312 calls)
-     cegterg:over :      0.03s CPU      0.03s WALL (     285 calls)
-     cegterg:upda :      0.02s CPU      0.02s WALL (     285 calls)
-     cegterg:last :      0.01s CPU      0.01s WALL (     108 calls)
+     h_psi        :      1.19s CPU      0.59s WALL (     339 calls)
+     g_psi        :      0.01s CPU      0.00s WALL (     285 calls)
+     cdiaghg      :      0.03s CPU      0.01s WALL (     312 calls)
+     cegterg:over :      0.04s CPU      0.02s WALL (     285 calls)
+     cegterg:upda :      0.02s CPU      0.01s WALL (     285 calls)
+     cegterg:last :      0.02s CPU      0.01s WALL (     108 calls)
 
      Called by h_psi:
-     h_psi:pot    :      0.68s CPU      0.69s WALL (     339 calls)
-     h_psi:calbec :      0.01s CPU      0.01s WALL (     339 calls)
-     vloc_psi     :      0.65s CPU      0.65s WALL (     339 calls)
-     add_vuspsi   :      0.02s CPU      0.02s WALL (     339 calls)
+     h_psi:vloc   :      1.13s CPU      0.57s WALL (     339 calls)
+     h_psi:vnl    :      0.05s CPU      0.02s WALL (     339 calls)
+     add_vuspsi   :      0.02s CPU      0.01s WALL (     339 calls)
 
      General routines
-     calbec       :      0.01s CPU      0.01s WALL (     339 calls)
+     calbec       :      0.03s CPU      0.01s WALL (     339 calls)
      fft          :      0.00s CPU      0.00s WALL (       3 calls)
-     fftw         :      0.62s CPU      0.59s WALL (    3364 calls)
+     fftw         :      1.06s CPU      0.52s WALL (    3364 calls)
      davcio       :      0.00s CPU      0.00s WALL (      54 calls)
 
+     Parallel routines
+     fft_scatter  :      0.03s CPU      0.03s WALL (    3367 calls)
 
-     PWSCF        :     1.01s CPU         1.19s WALL
+     PWSCF        :     1.73s CPU         0.87s WALL
 
 
-   This run was terminated on:  20:43:30   5Feb2017            
+   This run was terminated on:  18:47:19   7Jun2016            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

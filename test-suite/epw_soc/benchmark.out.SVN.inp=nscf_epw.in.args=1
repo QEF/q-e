@@ -1,5 +1,5 @@
 
-     Program PWSCF v.6.0 starts on  5Feb2017 at 20:47:31 
+     Program PWSCF v.5.4.0 (svn rev. 12493) starts on 21Jun2016 at 16:49:59 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -8,7 +8,19 @@
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
-     Serial multi-threaded version, running on    1 processor cores
+           HOST :    @host@
+           ARCH :    x86_64
+             CC :    cc
+            CPP :    cpp
+            F90 :    mpif90
+            F77 :    gfortran
+         DFLAGS :    -D__GFORTRAN -D__STD_F95 -D__FFTW -D__MPI -D__PARA
+      BLAS LIBS :    /home/sponce/program/espresso/BLAS/blas.a
+    LAPACK LIBS :    /home/sponce/program/espresso/lapack-3.2/lapack.a
+       FFT LIBS :    
+      MASS LIBS :    
+
+     Parallel version (MPI), running on     1 processors
      Waiting for input...
      Reading input from standard input
 
@@ -19,6 +31,10 @@
 
      Atomic positions and unit cell read from directory:
      ./pb.save/
+
+
+     Subspace diagonalization in iterative solution of the eigenvalue problem:
+     a serial algorithm will be used
 
 
      G-vector sticks info
@@ -110,7 +126,16 @@
 
      Dense  grid:    12387 G-vectors     FFT dimensions: (  36,  36,  36)
 
-     Estimated max dynamical RAM per process >      16.44MB
+     Largest allocated arrays     est. size (Mb)     dimensions
+        Kohn-Sham Wavefunctions         1.06 Mb     (    3160,   22)
+        NL pseudopotentials             0.39 Mb     (    1580,   16)
+        Each V/rho on FFT grid          0.71 Mb     (   46656)
+        Each G-vector array             0.09 Mb     (   12387)
+        G-vector shells                 0.00 Mb     (     175)
+     Largest temporary arrays     est. size (Mb)     dimensions
+        Auxiliary wavefunctions         4.24 Mb     (    3160,   88)
+        Each subspace H/S matrix        0.12 Mb     (      88,   88)
+        Each <psi_i|beta_j> matrix      0.01 Mb     (      16,   2,   22)
 
      The potential is recalculated from file :
      ./pb.save/charge-density.dat
@@ -122,7 +147,7 @@
 
      ethr =  7.14E-13,  avg # of iterations = 19.0
 
-     total cpu time spent up to now is       31.5 secs
+     total cpu time spent up to now is       49.8 secs
 
      End of band structure calculation
 
@@ -292,45 +317,44 @@
 
      Writing output data file pb.save
 
-     init_run     :      0.35s CPU      0.35s WALL (       1 calls)
-     electrons    :     30.86s CPU     31.03s WALL (       1 calls)
+     init_run     :      0.77s CPU      0.38s WALL (       1 calls)
+     electrons    :     98.55s CPU     49.32s WALL (       1 calls)
 
      Called by init_run:
      wfcinit      :      0.00s CPU      0.00s WALL (       1 calls)
-     potinit      :      0.01s CPU      0.02s WALL (       1 calls)
+     potinit      :      0.04s CPU      0.02s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :     30.86s CPU     31.03s WALL (       1 calls)
-     v_of_rho     :      0.01s CPU      0.01s WALL (       1 calls)
+     c_bands      :     98.55s CPU     49.32s WALL (       1 calls)
+     v_of_rho     :      0.02s CPU      0.01s WALL (       1 calls)
 
      Called by c_bands:
-     init_us_2    :      0.02s CPU      0.02s WALL (      27 calls)
-     cegterg      :     28.74s CPU     28.84s WALL (      33 calls)
+     init_us_2    :      0.04s CPU      0.03s WALL (      27 calls)
+     cegterg      :     90.45s CPU     45.25s WALL (      33 calls)
 
      Called by sum_band:
 
      Called by *egterg:
-     h_psi        :     19.91s CPU     19.96s WALL (     574 calls)
-     g_psi        :      0.15s CPU      0.15s WALL (     514 calls)
-     cdiaghg      :      1.06s CPU      1.06s WALL (     541 calls)
+     h_psi        :     82.60s CPU     41.31s WALL (     574 calls)
+     g_psi        :      0.75s CPU      0.37s WALL (     514 calls)
+     cdiaghg      :      1.65s CPU      0.82s WALL (     541 calls)
 
      Called by h_psi:
-     h_psi:pot    :     19.83s CPU     19.88s WALL (     574 calls)
-     h_psi:calbec :      0.60s CPU      0.60s WALL (     574 calls)
-     vloc_psi     :     18.50s CPU     18.55s WALL (     574 calls)
-     add_vuspsi   :      0.73s CPU      0.73s WALL (     574 calls)
+     add_vuspsi   :      0.95s CPU      0.47s WALL (     574 calls)
 
      General routines
-     calbec       :      0.60s CPU      0.60s WALL (     574 calls)
-     fft          :      0.01s CPU      0.01s WALL (       6 calls)
-     fftw         :     16.64s CPU     16.67s WALL (   27344 calls)
-     davcio       :      0.00s CPU      0.02s WALL (      27 calls)
+     calbec       :      0.94s CPU      0.47s WALL (     574 calls)
+     fft          :      0.03s CPU      0.01s WALL (       6 calls)
+     fftw         :     74.05s CPU     37.04s WALL (   27344 calls)
+     davcio       :      0.01s CPU      0.01s WALL (      27 calls)
+
+     Parallel routines
+     fft_scatter  :      2.73s CPU      1.37s WALL (   27350 calls)
+
+     PWSCF        :  1m39.55s CPU     0m49.83s WALL
 
 
-     PWSCF        :    31.37s CPU        31.65s WALL
-
-
-   This run was terminated on:  20:48: 3   5Feb2017            
+   This run was terminated on:  16:50:49  21Jun2016            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
