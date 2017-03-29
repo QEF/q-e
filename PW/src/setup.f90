@@ -588,11 +588,12 @@ SUBROUTINE setup()
 #endif 
      CALL errore( 'setup ', 'problem reading ef from file ' // &
              & TRIM( tmp_dir ) // TRIM( prefix ) // '.save', ierr )
-
      !
   ELSE IF ( ltetra ) THEN
      !
      ! ... Calculate quantities used in tetrahedra method
+     !
+     IF (nks_start /= 0) CALL errore( 'setup ', 'tetrahedra need automatic k-point grid',1)
      !
      IF (tetra_type == 0) then
         CALL tetra_init( nsym, s, time_reversal, t_rev, at, bg, npk, k1,k2,k3, &
