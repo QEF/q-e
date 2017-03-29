@@ -1,9 +1,8 @@
-Known bugs in 6.1 version:
-
-  * Hybrid functionals with LSDA, Gamma tricks and 2 pools, fixed in r13158,
-    have meanwhile been broken again by later changes
 
 Fixed in svn version
+
+  * Out-of-bounds error in hybrid functionals with LSDA, Gamma tricks and
+    2 pools (r13448)
 
   * EPW: in v.6.1 there was a mismatch between symmetry operations in PW
     and in EPW. It affected results of v.6.1 only in the presence of
