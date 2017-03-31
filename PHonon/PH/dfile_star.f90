@@ -105,7 +105,7 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, &
   USE control_ph,       ONLY : search_sym
   USE noncollin_module, ONLY : nspin_mag
   USE mp_images,        ONLY : intra_image_comm
-  USE mp,               ONLY : mp_bcast
+  USE mp,               ONLY : mp_bcast, mp_barrier
   USE wrappers,         ONLY : f_mkdir_safe
   USE control_ph, ONLY : search_sym
 
@@ -262,15 +262,10 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, &
   !
   ALLOCATE(phase_sxq(nat))
   !
-  ENDIF ONLY_IONODE_1 
-  !
-  ! This part has to be done by all cpus because some parts of rpat% are used by set_irr which 
-  ! calls mp_bcast.
   CALL allocate_rotated_pattern_repr(rpat, nat, npertx)
   ! 
   Q_IN_THE_STAR : &
   DO iq=1,nq
-    ONLY_IONODE_2 : IF (ionode) THEN
     dfile_rot = (0._dp,0._dp)
     !
     ! note that below isym is S and isym_inv refers to S^-1
@@ -339,27 +334,16 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, &
     ENDDO
     !
     !
-    ENDIF ONLY_IONODE_2
-    !
     ! This part has to be done on all nodes because set_irr calls mp_bcast!
     ! NOTE: the new set_irr_new subroutine would not work here as it uses global variables!!
     IF (descr%basis=='modes') THEN
       !
       ! Transform to the basis of the patterns at the new q...
       !
-!      CALL set_irr (nat, at, bg, sxq(:,iq), s, sr, tau, ntyp, ityp, ftau, invs, nsym, &
-!                    rtau, irt, rpat%irgq, rpat%nsymq, rpat%minus_q, rpat%irotmq, rpat%u, rpat%npert,   &
-!                    rpat%nirr, rpat%gi, rpat%gimq, 0, .false., rpat%eigen, search_sym,&
-!                    nspin_mag, t_rev, amass, rpat%num_rap_mode, rpat%name_rap_mode)
-
-!      CALL set_irr_new (sxq(:,iq), rpat%u, rpat%npert, rpat%nirr, rpat%eigen)
-
-!      rpat%u = u
       rpat%npert = npert
       rpat%nirr  = nirr
-      CALL rotate_mod(u,rpat%u,sr,irt,rtau,xq,nat,ichosen_sym(iq))
+      CALL rotate_mod(u,rpat%u,sr(:,:,isym),irt,rtau,xq,nat,isym_inv)
       !
-      ONLY_IONODE_2b : IF (ionode) THEN
       dfile_rot_scr = (0._dp, 0._dp)
       DO i=1,3*nat
         DO j=1,3*nat
@@ -367,7 +351,6 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, &
         ENDDO
       ENDDO
       dfile_rot = dfile_rot_scr
-      ENDIF ONLY_IONODE_2b
     !
     ELSE IF (descr%basis=='cartesian') THEN
       !
@@ -384,10 +367,7 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, &
       CALL errore('dfile_star', 'basis can only be "modes" or "cartesian"', 3)
     ENDIF
     !
-    !
     !  Opening files and writing
-    !
-    ONLY_IONODE_3 : IF (ionode) THEN
     !
     dfile_rot_name = dfile_name(sxq(:,iq), at, TRIM(descr%ext), &
          TRIM(descr%dir)//prefix, generate=.true., index_q=iq_ )
@@ -435,16 +415,17 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, &
     ENDIF &
     MINUS_Q
     !
-    ENDIF ONLY_IONODE_3
     !
   ENDDO &
   Q_IN_THE_STAR
   !
-  IF (ionode) THEN
-    DEALLOCATE(dfile_rot, dfile_rot_scr, dfile_at)
-    DEALLOCATE(phase_sxq)
-  ENDIF
+  DEALLOCATE(dfile_rot, dfile_rot_scr, dfile_at)
+  DEALLOCATE(phase_sxq)
   CALL deallocate_rotated_pattern_repr(rpat)
+  !
+  ENDIF ONLY_IONODE_1
+  !
+  CALL mp_barrier(intra_image_comm)
   !search_sym = search_sym_input
   !
   RETURN
