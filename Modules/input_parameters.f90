@@ -436,6 +436,9 @@ MODULE input_parameters
         REAL(DP) :: conv_thr_init = 0.001_DP
         REAL(DP) :: conv_thr_multi = 0.1_DP
         REAL(DP) :: ecutfock = -1.d0
+          ! variables used in Lin Lin's ACE and SCDM
+        REAL(DP) :: localization_thr = 0.0_dp
+        LOGICAL  :: scdm=.FALSE., ace=.TRUE.
 
           ! parameters for external electric field
         INTEGER  :: edir = 0
@@ -592,7 +595,7 @@ MODULE input_parameters
              Hubbard_J0, Hubbard_beta,                                        &
              edir, emaxpos, eopreg, eamp, smearing, starting_ns_eigenvalue,   &
              U_projection_type, input_dft, la2F, assume_isolated,             &
-             nqx1, nqx2, nqx3, ecutfock,                                      &
+             nqx1, nqx2, nqx3, ecutfock, localization_thr,                    &
              exxdiv_treatment, x_gamma_extrapolation, yukawa, ecutvcut,       &
              exx_fraction, screening_parameter, ref_alat,                     &
              noncolin, lspinorb, starting_spin_angle, lambda, angle1, angle2, &

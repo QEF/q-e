@@ -58,11 +58,17 @@ MODULE exx
   COMPLEX(DP), ALLOCATABLE :: exxbuff(:,:,:)
                                          ! temporary buffer for wfc storage
   !
-  LOGICAL :: use_ace=.true.              !  true: Use Lin Lin's ACE method
-                                         !  set to .false. to disable ACE
+  LOGICAL :: use_ace=.true.  !  true: Use Lin Lin's ACE method
+                             !  false: do not use ACE, use old algorithm instead
   COMPLEX(DP), ALLOCATABLE :: xi(:,:,:)  ! ACE projectors
   INTEGER :: nbndproj
   LOGICAL :: domat
+  !
+  LOGICAL :: use_scdm=.false. ! if .true. enable Lin Lin's SCDM localization
+                              ! currently implemented only within ACE formalism
+  REAL(DP):: local_thr        ! threshold for Lin Lin's SCDM localized orbitals:
+                              ! discard contribution to V_x if overlap between
+                              ! localized orbitals is smaller than "local_thr"
   !
 #if defined(__USE_INTEL_HBM_DIRECTIVES)
 !DIR$ ATTRIBUTES FASTMEM :: exxbuff
@@ -1033,12 +1039,23 @@ MODULE exx
                    ENDDO
 !$omp end parallel do
 #endif
+                   IF (index_sym(ikq) > 0 ) THEN
+                      ! sym. op. without time reversal: normal case
 !$omp parallel do default(shared) private(ir) firstprivate(ibnd,isym,ikq)
-                   DO ir=1,nrxxs
-                      exxbuff(ir,ibnd,ikq)=psic_nc(ir,1)
-                      exxbuff(ir+nrxxs,ibnd,ikq)=psic_nc(ir,2)
-                   ENDDO
+                      DO ir=1,nrxxs
+                         exxbuff(ir,ibnd,ikq)=psic_nc(ir,1)
+                         exxbuff(ir+nrxxs,ibnd,ikq)=psic_nc(ir,2)
+                      ENDDO
 !$omp end parallel do
+                   ELSE
+                      ! sym. op. with time reversal: spin 1->2*, 2->-1*
+!$omp parallel do default(shared) private(ir) firstprivate(ibnd,isym,ikq)
+                      DO ir=1,nrxxs
+                         exxbuff(ir,ibnd,ikq)=CONJG(psic_nc(ir,2))
+                         exxbuff(ir+nrxxs,ibnd,ikq)=-CONJG(psic_nc(ir,1))
+                      ENDDO
+!$omp end parallel do
+                   ENDIF
                 ELSE ! noncolinear
 #if defined(__MPI)
                    CALL gather_grid(exx_fft%dfftt,temppsic,temppsic_all)
