@@ -1,7 +1,7 @@
 New in svn version:
 
   * SCAN functional with libxc v.3; bands with meta-GGA can be computed
-   (Davide ceresoli)
+   (Davide Ceresoli)
 
 Fixed in svn version
 

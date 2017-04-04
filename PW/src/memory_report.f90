@@ -32,10 +32,11 @@ SUBROUTINE memory_report()
   USE fixed_occ, ONLY : one_atom_occupations
   USE wannier_new,ONLY: use_wannier
   USE lsda_mod,  ONLY : nspin
-  USE noncollin_module, ONLY : npol
+  USE uspp_param,ONLY : lmaxkb, upf, nh
+  USE noncollin_module, ONLY : npol, nspin_mag
   USE control_flags, ONLY: isolve, nmix, imix, gamma_only, lscf, io_level, &
        lxdm, smallmem
-  USE ions_base, ONLY : ntyp=>nsp
+  USE ions_base, ONLY : nat, ntyp => nsp, ityp
   USE mp_diag,   ONLY : np_ortho
   USE mp_bands,  ONLY : nproc_bgrp, nbgrp
   USE mp_images, ONLY : nproc_image  
@@ -45,11 +46,12 @@ SUBROUTINE memory_report()
   INTEGER, PARAMETER :: MB=1024*1024
   INTEGER :: g_fact, mix_type_size, scf_type_size
   INTEGER :: nk, nbnd_l, npwx_g, npwx_l, ngxx_g, nexx_l
+  INTEGER :: maxnab, maxnij, nab, na, nij, nt
   !
   ! these quantities are real in order to prevent integer overflow
   !
   REAL(dp), PARAMETER :: complex_size=16_dp, real_size=8_dp, int_size=4_dp
-  REAL(dp) :: ram, ram1, maxram, totram
+  REAL(dp) :: ram, ram_, ram1, maxram, totram
   !
   IF ( gamma_only) THEN
      g_fact = 2  ! use half plane waves or G-vectors
@@ -123,10 +125,11 @@ SUBROUTINE memory_report()
   ! double grid: nls, nlsm
   ram =  ram + int_size * ngms * 2
   !
-  ! now scratch space that raises the "high watermark"
+  ! compute ram_: scratch space that raises the "high watermark"
   !
-  ! hpsi, spsi, matrices allocated in iterative diagonalization 
-  ! nbnd_l : estimated dimension of distributed matrices
+  ! ram1:  scratch space allocated in iterative diagonalization 
+  !        hpsi, spsi, hr and sr matrices, scalar products
+  !        nbnd_l is the estimated dimension of distributed matrices
   !
   nbnd_l = nbndx/np_ortho(1)
   ram1 = complex_size/g_fact * ( 2*nbnd_l**2 + & ! hr, sr
@@ -135,13 +138,45 @@ SUBROUTINE memory_report()
      ram1 = ram1 + complex_size * nbndx * npol * npwx_l              ! hpsi
      IF ( okvan ) ram1 = ram1 + complex_size * nbndx * npol * npwx_l ! spsi
   END IF
+  ram_ = ram1
   !
   ! arrays allocated in approx_screening2 during charge mixing 
   !
   IF ( lscf .AND. imix > 1 ) &
-     ram1 = MAX( ram1, complex_size * ngm * 27 + real_size * dffts%nnr )
-
-  maxram = ram + ram1
+     ram_ = MAX( ram_, complex_size * ngm * 27 + real_size * dffts%nnr )
+  !
+  ! ram1: arrays allocated in addusdens and newq
+  !
+  IF ( okvan ) THEN
+     maxnab = 0
+     maxnij = 0
+     DO nt = 1, ntyp
+        IF ( upf(nt)%tvanp ) THEN
+           !
+           ! nij = max number of (ih,jh) pairs per atom type nt
+           !
+           nij = nh(nt)*(nh(nt)+1)/2
+           IF ( nij > maxnij ) maxnij = nij
+           !
+           ! count max number of atoms of type nt
+           !
+           nab = 0
+           DO na = 1, nat
+              IF ( ityp(na) == nt ) nab = nab + 1
+           ENDDO
+           IF ( nab > maxnab ) maxnab = nab
+        END IF
+     END DO
+     !                                   ylmk0              qmod
+     ram1 = real_size * ngm * ( (2*lmaxkb+1) * (2*lmaxkb+1) + 1 )
+     !                                   aux         skk      aux2   qgm
+     ram1 = ram1 + complex_size * ngm * ( nspin_mag + maxnab + maxnij + 1)
+     !
+     ram_ = MAX ( ram_, ram1 )
+     !
+  END IF
+  !
+  maxram = ram + ram_
   !
   ! arrays used for global sorting in ggen:
   !    mill_g, mill_unsorted, igsrt, g2sort_g, total dimensions:

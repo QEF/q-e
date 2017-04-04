@@ -1,6 +1,6 @@
 
  Hybrid Hartree-Fock+DFT functionals are a still evolving feature in PWscf.
- Only a few functionalities are implemented.
+ Some of the following notes may be obsolete.
 
  WHICH FUNCTIONALS ARE IMPLEMENTED ?
   The following hybrid functionals are implemented: Hartree-Fock, PBE0,
@@ -178,8 +178,5 @@
   Running it will generate directory "results" to be compared with directory 
   "reference"
 
-  Please report problems and suggestions to QE developers, in particular:
-  Stefano de Gironcoli <degironc@sissa.it>,
-  Paolo Giannozzi <paolo.giannozzi@uniud.it>,
-  Layla Martin-Samos <marsamos@gmail.com>), 
-  or in general to <q-e-developers@qe-forge.org>
+  Please report problems and suggestions to the mailing list of QE developers:
+  <q-e-developers@qe-forge.org>
