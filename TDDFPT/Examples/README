@@ -30,6 +30,8 @@ turbo_davidson.x :
 
 CH4-DAV:         Tests NC PP implementation of the Davidson algorithm
 Benzene-DAV:     Tests US PP implementation of the Davidson algorithm
+CH4-DAV-B3LYP:   Tests NC PP implementation of the Davidson algorithm
+                 using B3LYP hybrid functional
 CH4-DAV-ENVIRON: Tests NC PP implementation of the Davidson algorithm
                  and the Environ module (implicit solvent)
 H2O-PLOTRHO:     Tests charge response Davidson algorithm 
