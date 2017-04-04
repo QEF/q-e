@@ -1,5 +1,13 @@
+New in svn version:
+
+  * SCAN functional with libxc v.3; bands with meta-GGA can be computed
+   (Davide ceresoli)
 
 Fixed in svn version
+
+  * EXX in noncolinear/spin-orbit case wasn't correct (r13453)
+
+  * Fixed a small bug in two subroutines only called by Environ (r13451)
 
   * Out-of-bounds error in hybrid functionals with LSDA, Gamma tricks and
     2 pools (r13448)

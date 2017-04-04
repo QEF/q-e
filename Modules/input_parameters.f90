@@ -595,7 +595,7 @@ MODULE input_parameters
              Hubbard_J0, Hubbard_beta,                                        &
              edir, emaxpos, eopreg, eamp, smearing, starting_ns_eigenvalue,   &
              U_projection_type, input_dft, la2F, assume_isolated,             &
-             nqx1, nqx2, nqx3, ecutfock, localization_thr,                    &
+             nqx1, nqx2, nqx3, ecutfock, localization_thr, scdm, ace,         &
              exxdiv_treatment, x_gamma_extrapolation, yukawa, ecutvcut,       &
              exx_fraction, screening_parameter, ref_alat,                     &
              noncolin, lspinorb, starting_spin_angle, lambda, angle1, angle2, &
