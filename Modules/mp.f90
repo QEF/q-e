@@ -348,7 +348,7 @@
 #if defined(__MPI)
         INTEGER :: msglen
         msglen = size(msg)
-        CALL bcast_real( msg, msglen, source, gid )
+        CALL bcast_integer( msg, msglen, source, gid )
 #endif
       END SUBROUTINE mp_bcast_i4d
 !
