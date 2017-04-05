@@ -31,7 +31,7 @@
         MODULE PROCEDURE mp_bcast_i1, mp_bcast_r1, mp_bcast_c1, &
           mp_bcast_z, mp_bcast_zv, &
           mp_bcast_iv, mp_bcast_rv, mp_bcast_cv, mp_bcast_l, mp_bcast_rm, &
-          mp_bcast_cm, mp_bcast_im, mp_bcast_it, mp_bcast_rt, mp_bcast_lv, &
+          mp_bcast_cm, mp_bcast_im, mp_bcast_it, mp_bcast_i4d, mp_bcast_rt, mp_bcast_lv, &
           mp_bcast_lm, mp_bcast_r4d, mp_bcast_r5d, mp_bcast_ct,  mp_bcast_c4d,&
           mp_bcast_c5d
       END INTERFACE
@@ -335,6 +335,22 @@
         CALL bcast_integer( msg, msglen, source, gid )
 #endif
       END SUBROUTINE mp_bcast_it
+!
+!------------------------------------------------------------------------------!
+!
+! Samuel Ponce
+!
+      SUBROUTINE mp_bcast_i4d(msg, source, gid)
+        IMPLICIT NONE
+        INTEGER :: msg(:,:,:,:)
+        INTEGER, INTENT(IN) :: source
+        INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+        msglen = size(msg)
+        CALL bcast_real( msg, msglen, source, gid )
+#endif
+      END SUBROUTINE mp_bcast_i4d
 !
 !------------------------------------------------------------------------------!
 !
