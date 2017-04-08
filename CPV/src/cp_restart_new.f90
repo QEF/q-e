@@ -188,7 +188,6 @@ MODULE cp_restart_new
       TYPE(output_type) :: output_obj
       LOGICAL :: is_hubbard(nsp)
       REAL(dp):: hubbard_dum(3,nsp)
-      COMPLEX(dp), ALLOCATABLE :: ns_dum(:,:,:,:)
       CHARACTER(LEN=6), EXTERNAL :: int_to_char
       !
       k1  = 0
@@ -328,8 +327,6 @@ MODULE cp_restart_new
          dft_name = get_dft_name()
          is_hubbard(:) = (Hubbard_U(:) > 0.0_dp)
          hubbard_dum(:,:)= 0.0_dp
-         ALLOCATE (ns_dum(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat))
-         ns_dum= (0.0_dp, 0.0_dp)
          CALL qexsd_init_dft(output_obj%dft, dft_name, .true., dft_is_hybrid(), &
               0, 0, 0, ecutwfc, get_exx_fraction(), get_screening_parameter(),&
               'none', .false., 0.0_dp, &
@@ -337,10 +334,9 @@ MODULE cp_restart_new
               TRIM ( get_nonlocc_name()), scal6, in_c6, lon_rcut, 0.0_dp, &
               0.0_dp, vdw_econv_thr, vdw_isolated, &
               lda_plus_u, 0, 2*Hubbard_lmax+1, .false.,&
-              nspin, nsp, 2*Hubbard_lmax+1, nat, atm, ityp, Hubbard_U,&
+              nspin, nsp, nat, atm, ityp, Hubbard_U,&
               Hubbard_dum(1,:), Hubbard_dum(2,:), Hubbard_dum(3,:),Hubbard_dum,&
               starting_ns_eigenvalue, 'atomic', is_hubbard, upf(1:nsp)%psd, ns )
-         DEALLOCATE(ns_dum)
 !-------------------------------------------------------------------------------
 ! ... MAGNETIZATION
 !-------------------------------------------------------------------------------

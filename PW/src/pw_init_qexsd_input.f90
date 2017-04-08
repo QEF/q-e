@@ -193,7 +193,7 @@
        dft_is_nonlocc, vdw_corr_, TRIM (get_nonlocc_name()), london_s6, &
        london_c6, london_rcut, xdm_a1,xdm_a2, ts_vdw_econv_thr,ts_vdw_isolated,&
        ip_lda_plus_U, ip_lda_plus_u_kind, 2*hubbard_lmax+1, ip_noncolin, &
-       ip_nspin, ntyp, 0, ip_nat, atm, ip_ityp, ip_hubbard_u, ip_hubbard_j0,&
+       ip_nspin, ntyp, ip_nat, atm, ip_ityp, ip_hubbard_u, ip_hubbard_j0,&
        ip_hubbard_alpha,ip_hubbard_beta,ip_hubbard_j, starting_ns_eigenvalue,&
        u_projection_type, is_hubbard,upf(1:ntyp)%psd )
   !------------------------------------------------------------------------------------------------------------------------

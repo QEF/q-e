@@ -292,7 +292,7 @@ MODULE pw_restart_new
               scal6, in_c6, lon_rcut, xdm_a1, xdm_a2, vdw_econv_thr, &
               vdw_isolated,&
               lda_plus_u, lda_plus_u_kind, 2*Hubbard_lmax+1, noncolin, nspin, &
-              nsp, 2*Hubbard_lmax+1, nat, atm, ityp, Hubbard_U, Hubbard_J0,  &
+              nsp, nat, atm, ityp, Hubbard_U, Hubbard_J0,  &
               Hubbard_alpha, Hubbard_beta, Hubbard_J, starting_ns_eigenvalue, &
               U_projection, is_hubbard, upf(1:nsp)%psd, rho%ns, rho%ns_nc )
          !

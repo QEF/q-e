@@ -619,7 +619,7 @@ CONTAINS
          dft_is_vdW, vdw_corr, nonlocal_term, london_s6, london_c6, &
          london_rcut, xdm_a1, xdm_a2 ,ts_vdw_econv_thr, ts_vdw_isolated, &
          dft_is_lda_plus_U, lda_plus_U_kind, llmax, noncolin, nspin, nsp, &
-         ldim, nat, species, ityp, Hubbard_U, Hubbard_J0, Hubbard_alpha,  &
+         nat, species, ityp, Hubbard_U, Hubbard_J0, Hubbard_alpha,  &
          Hubbard_beta, Hubbard_J, starting_ns, U_projection_type, is_hubbard, &
          psd,  Hubbard_ns, Hubbard_ns_nc )
       !------------------------------------------------------------------------
@@ -641,7 +641,7 @@ CONTAINS
       !
       LOGICAL,          INTENT(IN) :: dft_is_lda_plus_U, noncolin 
       INTEGER,          INTENT(IN) :: lda_plus_U_kind
-      INTEGER,          INTENT(IN) :: llmax, nspin, nsp, ldim, nat
+      INTEGER,          INTENT(IN) :: llmax, nspin, nsp, nat
       CHARACTER(len=*), INTENT(IN) :: species(nsp)
       INTEGER,          INTENT(IN) :: ityp(nat)
       REAL(DP),         INTENT(IN) :: Hubbard_U(nsp)
@@ -650,8 +650,8 @@ CONTAINS
       REAL(DP),         INTENT(IN) :: Hubbard_beta(nsp)
       REAL(DP),         INTENT(IN) :: Hubbard_J(3,nsp)
       REAL(DP),         INTENT(IN) :: starting_ns(lqmax,nspinx,nsp)
-      REAL(DP),   OPTIONAL, INTENT(IN) :: Hubbard_ns(ldim,ldim,nspin,nat)
-      COMPLEX(DP),OPTIONAL, INTENT(IN) :: Hubbard_ns_nc(ldim,ldim,nspin,nat)
+      REAL(DP),   OPTIONAL, INTENT(IN) :: Hubbard_ns(:,:,:,:)
+      COMPLEX(DP),OPTIONAL, INTENT(IN) :: Hubbard_ns_nc(:,:,:,:)
       CHARACTER(len=*), INTENT(IN) :: U_projection_type
       LOGICAL,INTENT(IN)           :: is_hubbard(nsp)
       CHARACTER(LEN=2),INTENT(IN)  :: psd(nsp)
@@ -664,7 +664,7 @@ CONTAINS
       REAL(DP),         INTENT(IN) :: xdm_a2
       REAL(DP),         INTENT(IN) :: london_c6(nsp), ts_vdw_econv_thr
       !
-      INTEGER  :: i, is, isp, ind,hubb_l,hubb_n
+      INTEGER  :: i, is, isp, ind,hubb_l,hubb_n, ldim
       TYPE(hybrid_type) :: hybrid
       TYPE(qpoint_grid_type) :: qpoint_grid
       TYPE(dftU_type) :: dftU
@@ -782,6 +782,7 @@ CONTAINS
           ind = 0
           IF (noncolin .AND. PRESENT(Hubbard_ns_nc) ) THEN
              Hubbard_ns_ispresent = .TRUE.
+             ldim = SIZE(Hubbard_ns_nc,1)
              ALLOCATE (Hubb_occ_aux(2*ldim,2*ldim))
              DO i = 1, nat 
                 Hubb_occ_aux = 0.d0
@@ -799,6 +800,7 @@ CONTAINS
              DEALLOCATE ( Hubb_occ_aux) 
           ELSE IF ( PRESENT(Hubbard_ns) ) THEN
              Hubbard_ns_ispresent = .TRUE.
+             ldim = SIZE(Hubbard_ns,1)
              DO i = 1, nat
                 DO is = 1, nspin
                    ind = ind+1
