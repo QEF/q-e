@@ -299,6 +299,8 @@ MODULE path_base
             tooclose = tooclose .OR. ( image_spacing(i) < 0.01 )
             !
          END DO
+         IF ( tooclose) CALL errore ('initial_guess', &
+            ' something wrong: images are too close',1) 
          !
          path_length = SUM( image_spacing(:) )
          !
@@ -356,9 +358,6 @@ MODULE path_base
          !
       END IF
       !
-      CALL mp_bcast( tooclose,    meta_ionode_id, world_comm )
-      IF ( tooclose) CALL errore ('initial_guess', &
-           ' something wrong: images are too close',1) 
       CALL mp_bcast( pos,         meta_ionode_id, world_comm )
       CALL mp_bcast( path_length, meta_ionode_id, world_comm )
       !

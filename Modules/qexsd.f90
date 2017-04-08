@@ -613,12 +613,15 @@ CONTAINS
     !
     !
     !------------------------------------------------------------------------
-    SUBROUTINE qexsd_init_dft(obj, functional, root_is_output, dft_is_hybrid, nqx1, nqx2, nqx3, ecutfock,       &
-                   exx_fraction, screening_parameter, exxdiv_treatment, x_gamma_extrapolation, ecutvcut,        &
-                   dft_is_lda_plus_U, lda_plus_U_kind, llmax, noncolin, nspin, nsp, ldim, nat, species, ityp,   &
-                   Hubbard_U, Hubbard_J0, Hubbard_alpha, Hubbard_beta, Hubbard_J, starting_ns, Hubbard_ns,      &
-                   Hubbard_ns_nc, U_projection_type, dft_is_vdW, vdw_corr, nonlocal_term, london_s6, london_c6, &
-                   london_rcut, xdm_a1, xdm_a2 ,ts_vdw_econv_thr, ts_vdw_isolated, is_hubbard, psd)
+    SUBROUTINE qexsd_init_dft (obj, functional, root_is_output, dft_is_hybrid,&
+         nqx1, nqx2, nqx3, ecutfock, exx_fraction, screening_parameter, &
+         exxdiv_treatment, x_gamma_extrapolation, ecutvcut,        &
+         dft_is_vdW, vdw_corr, nonlocal_term, london_s6, london_c6, &
+         london_rcut, xdm_a1, xdm_a2 ,ts_vdw_econv_thr, ts_vdw_isolated, &
+         dft_is_lda_plus_U, lda_plus_U_kind, llmax, noncolin, nspin, nsp, &
+         ldim, nat, species, ityp, Hubbard_U, Hubbard_J0, Hubbard_alpha,  &
+         Hubbard_beta, Hubbard_J, starting_ns, U_projection_type, is_hubbard, &
+         psd,  Hubbard_ns, Hubbard_ns_nc )
       !------------------------------------------------------------------------
       USE  parameters,           ONLY:  lqmax
       USE  input_parameters,     ONLY:  nspinx
@@ -647,8 +650,8 @@ CONTAINS
       REAL(DP),         INTENT(IN) :: Hubbard_beta(nsp)
       REAL(DP),         INTENT(IN) :: Hubbard_J(3,nsp)
       REAL(DP),         INTENT(IN) :: starting_ns(lqmax,nspinx,nsp)
-      REAL(DP),         INTENT(IN) :: Hubbard_ns(ldim,ldim,nspin,nat)
-      COMPLEX(DP),      INTENT(IN) :: Hubbard_ns_nc(ldim,ldim,nspin,nat)
+      REAL(DP),   OPTIONAL, INTENT(IN) :: Hubbard_ns(ldim,ldim,nspin,nat)
+      COMPLEX(DP),OPTIONAL, INTENT(IN) :: Hubbard_ns_nc(ldim,ldim,nspin,nat)
       CHARACTER(len=*), INTENT(IN) :: U_projection_type
       LOGICAL,INTENT(IN)           :: is_hubbard(nsp)
       CHARACTER(LEN=2),INTENT(IN)  :: psd(nsp)
@@ -731,7 +734,6 @@ CONTAINS
           Hubbard_alpha_ispresent = (SIZE(Hubbard_alpha)>0)
           Hubbard_beta_ispresent = (SIZE(Hubbard_beta)>0)
           Hubbard_J_ispresent = (SIZE(Hubbard_J)>0)
-          Hubbard_ns_ispresent = (SIZE(Hubbard_ns)>0)
           starting_ns_ispresent = (SIZE(starting_ns)>0)
           !
           ALLOCATE( Hubbard_U_(nsp) )
@@ -778,7 +780,8 @@ CONTAINS
           END IF
           !
           ind = 0
-          IF (noncolin) THEN 
+          IF (noncolin .AND. PRESENT(Hubbard_ns_nc) ) THEN
+             Hubbard_ns_ispresent = .TRUE.
              ALLOCATE (Hubb_occ_aux(2*ldim,2*ldim))
              DO i = 1, nat 
                 Hubb_occ_aux = 0.d0
@@ -794,7 +797,8 @@ CONTAINS
                                          1, i, 2*ldim, 2*ldim, Hubb_occ_aux(:,:))
              END DO 
              DEALLOCATE ( Hubb_occ_aux) 
-          ELSE 
+          ELSE IF ( PRESENT(Hubbard_ns) ) THEN
+             Hubbard_ns_ispresent = .TRUE.
              DO i = 1, nat
                 DO is = 1, nspin
                    ind = ind+1
@@ -802,6 +806,8 @@ CONTAINS
                                        is, i, ldim, ldim, Hubbard_ns(:,:,is,i) )
                 ENDDO
              ENDDO
+          ELSE
+             Hubbard_ns_ispresent = .FALSE.
           END IF
           !
           ! main init

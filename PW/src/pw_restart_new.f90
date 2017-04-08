@@ -284,13 +284,17 @@ MODULE pw_restart_new
          dft_name = get_dft_name()
          inlc = get_inlc()
          !
-         CALL qexsd_init_dft(output%dft, dft_name, .TRUE., dft_is_hybrid(), nq1, nq2, nq3, ecutfock/e2, &
-              get_exx_fraction(), get_screening_parameter(), exxdiv_treatment, x_gamma_extrapolation,   &
-              ecutvcut/e2, lda_plus_u, lda_plus_u_kind, 2*Hubbard_lmax+1, noncolin, nspin, nsp,         &
-              2*Hubbard_lmax+1, nat, atm, ityp, Hubbard_U, Hubbard_J0, Hubbard_alpha, Hubbard_beta,     &
-              Hubbard_J, starting_ns_eigenvalue, rho%ns, rho%ns_nc, U_projection, dft_is_nonlocc(),     &
-              TRIM(vdw_corr), TRIM ( get_nonlocc_name()), scal6, in_c6, lon_rcut, xdm_a1, xdm_a2,       &
-              vdw_econv_thr, vdw_isolated, is_hubbard, upf(1:nsp)%psd)
+         CALL qexsd_init_dft(output%dft, dft_name, .TRUE., dft_is_hybrid(), &
+              nq1, nq2, nq3, ecutfock/e2, get_exx_fraction(), &
+              get_screening_parameter(), exxdiv_treatment, &
+              x_gamma_extrapolation, ecutvcut/e2, &
+              dft_is_nonlocc(), TRIM(vdw_corr), TRIM ( get_nonlocc_name()), &
+              scal6, in_c6, lon_rcut, xdm_a1, xdm_a2, vdw_econv_thr, &
+              vdw_isolated,&
+              lda_plus_u, lda_plus_u_kind, 2*Hubbard_lmax+1, noncolin, nspin, &
+              nsp, 2*Hubbard_lmax+1, nat, atm, ityp, Hubbard_U, Hubbard_J0,  &
+              Hubbard_alpha, Hubbard_beta, Hubbard_J, starting_ns_eigenvalue, &
+              U_projection, is_hubbard, upf(1:nsp)%psd, rho%ns, rho%ns_nc )
          !
 !-------------------------------------------------------------------------------
 ! ... MAGNETIZATION

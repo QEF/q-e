@@ -74,7 +74,7 @@ subroutine latgen(ibrav,celldm,a1,a2,a3,omega)
      a3(:) = 0.d0
   end if
   !
-  if (celldm (1) <= 0.d0) call errore ('latgen', 'wrong celldm(1)', ibrav)
+  if (celldm (1) <= 0.d0) call errore ('latgen', 'wrong celldm(1)', ABS(ibrav) )
   !
   !  index of bravais lattice supplied
   !
