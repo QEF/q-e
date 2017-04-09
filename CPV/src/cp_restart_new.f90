@@ -27,8 +27,8 @@ MODULE cp_restart_new
                           qexsd_init_outputElectricField, input_obj => qexsd_input_obj
   USE io_files,  ONLY : iunpun, xmlpun_schema, prefix, tmp_dir, qexsd_fmt,&
        qexsd_version
-  USE io_base,   ONLY : write_wfc
-  USE xml_io_base,     ONLY  : read_wfc, write_rho_xml,read_print_counter, create_directory
+  USE io_base,   ONLY : write_wfc, read_wfc
+  USE xml_io_base,     ONLY  : write_rho_xml,read_print_counter, create_directory
   !
   USE kinds,     ONLY : DP
   USE io_global, ONLY : ionode, ionode_id, stdout
@@ -281,6 +281,7 @@ MODULE cp_restart_new
          !
          CALL qexsd_openschema(TRIM( dirname ) // TRIM( xmlpun_schema ))
          output_obj%tagname="output"
+         output_obj%lwrite = .TRUE.
 !-------------------------------------------------------------------------------
 ! ... CONVERGENCE_INFO - TO BE VERIFIED
 !-------------------------------------------------------------------------------
@@ -303,6 +304,7 @@ MODULE cp_restart_new
          !
          CALL qexsd_init_atomic_species(output_obj%atomic_species, nsp, atm,&
                  psfile, amass)
+         !
 !-------------------------------------------------------------------------------
 ! ... ATOMIC_STRUCTURE
 !-------------------------------------------------------------------------------
@@ -517,6 +519,7 @@ MODULE cp_restart_new
       USE mp_global,                ONLY : nproc_file, nproc_pool_file, &
                                            nproc_image_file, ntask_groups_file,&
                                            nproc_bgrp_file, nproc_ortho_file
+      USE mp_pools,                 ONLY : root_pool, intra_pool_comm
       USE parameters,               ONLY : ntypx
       USE constants,                ONLY : eps8, angstrom_au, pi
       USE qes_types_module,         ONLY : output_type, parallel_info_type, &
@@ -626,6 +629,7 @@ MODULE cp_restart_new
       REAL(dp):: ecutfock, exx_fraction, screening_parameter, ecutvcut
       LOGICAL :: x_gamma_extrapolation
       REAL(dp):: hubbard_dum(3,nsp)
+      CHARACTER(LEN=6), EXTERNAL :: int_to_char
       !
       ! ... look for an empty unit
       !
@@ -709,9 +713,21 @@ MODULE cp_restart_new
       ALLOCATE( occ_(nbnd_, nspin), et_(nbnd_, nspin) )
       CALL qexsd_copy_band_structure( output_obj%band_structure, lsda_, nk_, &
            isk_, natomwfc, nbnd_, nelec_, wk_, occ_, ef, ef_up, ef_dw, et_ )
+      occ0(1:nupdwn(1)) = occ_(1:nupdwn(1),1)
       DEALLOCATE (occ_, et_)
       !
-      CALL errore('cp_readfile','XSD under development',1)
+      CALL iotk_close_read (iunpun)
+      !
+      DO iss = 1, nspin
+         !
+         ik_eff = iss
+         filename = TRIM(dirname) // 'wfc' // TRIM(int_to_char(ik_eff))
+         CALL read_wfc( iunpun, ik_eff, nk, ik_eff, nspin, &
+              c02, ngw_g, nbnd_tot, ig_l2g, ngw,  &
+              filename, scalef, ionode, root_pool, intra_pool_comm )
+      END DO
+      !
+      CALL infomsg('cp_readfile','XSD under development')
       !
       RETURN
       !
