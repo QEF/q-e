@@ -5,6 +5,9 @@ New in svn version:
 
 Fixed in svn version
 
+  * reset_grid wasn't resetting grid properly if k1,k2,k3=0. Thanks to
+    Giuliana Barbarino (r13462)
+
   * EXX in noncolinear/spin-orbit case wasn't correct (r13453)
 
   * Fixed a small bug in two subroutines only called by Environ (r13451)
