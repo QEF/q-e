@@ -923,9 +923,9 @@ MODULE pw_restart_new
       USE mp,                   ONLY : mp_sum, mp_barrier
       USE qes_types_module,     ONLY : input_type, output_type, &
                                        general_info_type, parallel_info_type    
-!      !
+      !
       IMPLICIT NONE
-!      !
+      !
       CHARACTER(LEN=*), INTENT(IN)           :: what
       TYPE ( output_type), INTENT(IN)        :: output_obj
       TYPE ( parallel_info_type), INTENT(IN) :: par_info
@@ -2156,6 +2156,7 @@ MODULE pw_restart_new
     SUBROUTINE readschema_ef ( band_struct_obj )
     !----------------------------------------------------------------------------------------
        !
+       USE constants, ONLY        : e2
        USE ener,  ONLY            : ef, ef_up, ef_dw
        USE klist, ONLY            : two_fermi_energies, nelec
        USE qes_types_module, ONLY : band_structure_type 
@@ -2167,10 +2168,10 @@ MODULE pw_restart_new
        two_fermi_energies = band_struct_obj%two_fermi_energies_ispresent 
        nelec = band_struct_obj%nelec
        IF ( two_fermi_energies) THEN 
-          ef_up = band_struct_obj%two_fermi_energies(1) 
-          ef_dw = band_struct_obj%two_fermi_energies(2)
+          ef_up = band_struct_obj%two_fermi_energies(1)*e2
+          ef_dw = band_struct_obj%two_fermi_energies(2)*e2
        ELSE IF ( band_struct_obj%fermi_energy_ispresent ) THEN 
-          ef = band_struct_obj%fermi_energy
+          ef = band_struct_obj%fermi_energy*e2
        END IF 
     END SUBROUTINE readschema_ef 
     !------------------------------------------------------------------------
