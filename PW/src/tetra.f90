@@ -1107,6 +1107,7 @@ SUBROUTINE opt_tetra_partialdos(nspin0, kresolveddos,ne,natomwfc,nkseff,&
                  !
                  wgt(1:4) = 0.0_dp
                  G = 0.0_dp
+                 CYCLE
                  !
               END IF
               !
