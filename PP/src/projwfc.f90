@@ -155,11 +155,10 @@ PROGRAM do_projwfc
   !
   !   Tetrahedron method
   !
-  IF ( ltetra .AND. tetra_type == 1 .OR. tetra_type == 2 ) THEN
+  IF ( ltetra ) THEN
      !
      ! info on tetrahedra is no longer saved to file and must be rebuilt
-     !
-     ! workaround for old xml file, to be removed
+     ! workaround for old xml file, to be removed when the old xml file is
      IF(ALLOCATED(tetra)) DEALLOCATE(tetra)
      !
      ! in the lsda case, only the first half of the k points
@@ -170,7 +169,9 @@ PROGRAM do_projwfc
      ELSE
         nks2 = nkstot
      END IF
-     IF(tetra_type == 1) THEN
+     IF(tetra_type < 2) THEN
+        ! use linear tetrahedron for both tetra_type=0 and tetra_type=1
+        IF ( tetra_type == 0 ) tetra_type = 1
         WRITE( stdout,'(/5x,"Linear tetrahedron method (read from file) ")')
      ELSE
         WRITE( stdout,'(/5x,"Optimized tetrahedron method (read from file) ")')

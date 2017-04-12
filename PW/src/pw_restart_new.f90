@@ -1914,14 +1914,16 @@ MODULE pw_restart_new
         nk2 = band_struct_obj%starting_k_points%monkhorst_pack%nk2
         nk3 = band_struct_obj%starting_k_points%monkhorst_pack%nk3
         ntetra = 6* nk1 * nk2 * nk3 
-      ELSE IF (TRIM(input_parameters_occupations) == 'tetrahedra_lin' ) THEN 
+      ELSE IF (TRIM(input_parameters_occupations) == 'tetrahedra_lin' .OR. &
+               TRIM(input_parameters_occupations) == 'tetrahedra-lin' ) THEN
         ltetra = .TRUE. 
         nk1 = band_struct_obj%starting_k_points%monkhorst_pack%nk1
         nk2 = band_struct_obj%starting_k_points%monkhorst_pack%nk2
         nk3 = band_struct_obj%starting_k_points%monkhorst_pack%nk3
         tetra_type = 1
         ntetra = 6* nk1 * nk2 * nk3 
-      ELSE IF (TRIM(input_parameters_occupations) == 'tetrahedra_opt' ) THEN 
+      ELSE IF (TRIM(input_parameters_occupations) == 'tetrahedra_opt' .OR. &
+               TRIM(input_parameters_occupations) == 'tetrahedra-opt' ) THEN 
         ltetra = .TRUE. 
         nk1 = band_struct_obj%starting_k_points%monkhorst_pack%nk1
         nk2 = band_struct_obj%starting_k_points%monkhorst_pack%nk2
