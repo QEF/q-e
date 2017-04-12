@@ -1777,7 +1777,7 @@ SUBROUTINE find_mode_sym (u, w2, at, bg, tau, nat, nsym, sr, irt, xq, &
   ! in case of accidental degeneracy
   COMPLEX(DP), EXTERNAL :: zdotc
   REAL(DP), ALLOCATABLE :: w1(:)
-  COMPLEX(DP), ALLOCATABLE ::  rmode(:), trace(:,:), z(:,:)
+  COMPLEX(DP), ALLOCATABLE ::  rmode(:,:), trace(:,:), z(:,:)
   LOGICAL :: is_linear
   CHARACTER(3) :: cdum
   INTEGER :: counter, counter_s
@@ -1789,7 +1789,7 @@ SUBROUTINE find_mode_sym (u, w2, at, bg, tau, nat, nsym, sr, irt, xq, &
   ALLOCATE(istart(nmodes+1))
   ALLOCATE(z(nmodes,nmodes))
   ALLOCATE(w1(nmodes))
-  ALLOCATE(rmode(nmodes))
+  ALLOCATE(rmode(nmodes,nmodes))
   ALLOCATE(trace(48,nmodes))
 
   IF (flag==1) THEN
@@ -1836,9 +1836,9 @@ SUBROUTINE find_mode_sym (u, w2, at, bg, tau, nat, nsym, sr, irt, xq, &
         trace(iclass,igroup)=(0.d0,0.d0)
         DO i=1,dim_rap
            nu_i=istart(igroup)+i-1
-           CALL rotate_mod(z(1,nu_i),rmode,sr(1,1,irot),irt,rtau,xq,nat,irot)
+           CALL rotate_mod(z,rmode,sr(1,1,irot),irt,rtau,xq,nat,irot)
            trace(iclass,igroup)=trace(iclass,igroup) + &
-                zdotc(3*nat,z(1,nu_i),1,rmode,1)
+                zdotc(3*nat,z(1,nu_i),1,rmode(1,nu_i),1)
         END DO
 !              write(6,*) igroup,iclass, trace(iclass,igroup)
      END DO
