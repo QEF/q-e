@@ -261,6 +261,8 @@
     CALL mp_bcast (ityp, root_pool, intra_pool_comm)  
     CALL mp_bcast (isk, ionode_id, inter_pool_comm)
     CALL mp_bcast (isk, root_pool, intra_pool_comm)    
+    CALL mp_bcast (noncolin, ionode_id, inter_pool_comm)
+    CALL mp_bcast (noncolin, root_pool, intra_pool_comm)    
     IF (mpime.eq.ionode_id) THEN
       CLOSE(crystal)
     ENDIF
