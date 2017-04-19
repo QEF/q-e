@@ -54,7 +54,6 @@ Predefined by specific compilers:
 
 Hardware / Compiler:
       __AIX       Ibm rs/6000 machines (obsolescent)
-      __SX6       Nec sx-6 vector machines (Nec compiler, obsolescent)
       __PGI       Portland Group compiler workarounds for compiler bugs
        _WIN32     Windows 32-bits
 
@@ -80,6 +79,7 @@ Libraries:
       __ELPA_2015   Use ELPA library (version 2015, backward compatibility)
       __ELPA_2016   Use ELPA library (version 2016, supported)
       __MASS        Use mathematical routines from IBM MASS library
+      __SX6         Use MathKeisan libraries for NEC SX machines
       ASL, MICRO    SX-6 specific libraries (obsolescent)
 
 Signals:

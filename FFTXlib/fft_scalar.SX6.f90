@@ -77,7 +77,6 @@
      COMPLEX (DP)    :: DUMMY
      INTEGER, SAVE :: isys = 1
 
-     CALL fftx_error__(" fft_scalar: cft_1z ", " NEC SX6 FFTs disabled ", 1)
      IF( nsl < 0 ) THEN
        CALL fftx_error__(" fft_scalar: cft_1z ", " nsl out of range ", nsl)
      END IF
@@ -355,7 +354,6 @@
      COMMON/NEC_ASL_PARA/nbtasks
 #endif
 
-     CALL fftx_error__(" fft_scalar: cfft3d ", " NEC SX6 FFTs disabled ", 1)
      IF ( nx < 1 ) &
          call fftx_error__('cfft3d',' nx is less than 1 ', 1)
      IF ( ny < 1 ) &
