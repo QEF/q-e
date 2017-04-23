@@ -138,11 +138,10 @@
       USE gvecw,          ONLY : ngw
       USE ions_base,      ONLY : nsp, na, cdmi, taui
 #if defined (__OLDXML)
-      USE cp_restart,       ONLY: cp_readfile
+      USE cp_restart,       ONLY: cp_readfile, cp_read_cell, cp_read_wfc
 #else
-      USE cp_restart_new,   ONLY: cp_readfile
+      USE cp_restart_new,   ONLY: cp_readfile, cp_read_cell, cp_read_wfc
 #endif
-      USE cp_restart,     ONLY : cp_read_cell, cp_read_wfc
       USE ensemble_dft,   ONLY : tens
       USE autopilot,      ONLY : event_step, event_index, max_event_step
       USE cp_autopilot,   ONLY : employ_rules

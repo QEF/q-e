@@ -263,7 +263,7 @@ MODULE cp_restart
       !
 #if !defined (__OLDXML)
       !
-      CALL errore('cp_restart','called in wrong case',1)
+      CALL errore('cp_writefile','called in wrong case',1)
       !
 #else
       !
@@ -1048,7 +1048,6 @@ MODULE cp_restart
                    'no free units to read wavefunctions', ierr )
       !
 #if !defined (__OLDXML)
-      !     
       CALL errore('cp_readfile','called in wrong case',1)
 #else
       kunit = 1
@@ -1822,7 +1821,7 @@ MODULE cp_restart
       REAL(DP)           :: scalef
       !
 #if !defined (__OLDXML)
-      CALL errore('cp_read_wfc','XSD under development',1)
+      CALL errore('cp_read_wfc','called in the wrong case',1)
 #else
       kunit = 1
       !
