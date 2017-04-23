@@ -568,6 +568,20 @@
      WRITE(6, '(/5x,a,f10.6,a)') &
          'Fermi energy is read from the input file: Ef = ', ef * ryd2ev, ' eV'
      WRITE(6,'(/5x,a)') repeat('=',67)
+     ! SP: even when reading from input the number of electron needs to be correct
+     already_skipped = .false.
+     IF ( nbndskip .gt. 0 ) THEN
+        IF ( .not. already_skipped ) THEN
+           IF ( noncolin ) THEN
+              nelec = nelec - one * nbndskip
+           ELSE
+              nelec = nelec - two * nbndskip
+           ENDIF
+           already_skipped = .true.
+           WRITE(6,'(/5x,"Skipping the first ",i4," bands:")') nbndskip
+           WRITE(6,'(/5x,"The Fermi level will be determined with ",f9.5," electrons")') nelec
+        ENDIF
+     ENDIF     
      !
   ELSEIF( band_plot ) THEN 
      !
