@@ -148,7 +148,6 @@ MODULE cp_restart_new
       REAL(DP),              INTENT(IN) :: wfc(:,:)     ! BS 
       REAL(DP),    OPTIONAL, INTENT(IN) :: mat_z(:,:,:) ! 
       !
-      LOGICAL               :: write_charge_density
       CHARACTER(LEN=20)     :: dft_name
       CHARACTER(LEN=256)    :: dirname
       CHARACTER(LEN=320)    :: filename, sourcefile
@@ -181,18 +180,15 @@ MODULE cp_restart_new
       REAL(dp):: hubbard_dum(3,nsp)
       CHARACTER(LEN=6), EXTERNAL :: int_to_char
       !
-      k1  = 0
-      k2  = 0
-      k3  = 0
-      nk1 = 0
-      nk2 = 0
-      nk3 = 0
-      !
       ! ... subroutine body
       !
-      write_charge_density = trhow
+      s0 = cclock() 
       !
-      IF( nspin > 1 .AND. .NOT. force_pairing ) THEN
+      IF( force_pairing ) &
+            CALL errore('cp_writefile',' force pairing not implemented', 1 )
+      !
+      lsda = ( nspin == 2 )
+      IF( lsda ) THEN
          !
          !  check if the array storing wave functions is large enought
          !
@@ -242,22 +238,19 @@ MODULE cp_restart_new
       natomwfc =  n_atom_wfc ( nat, ityp ) 
       !
       CALL s_to_r( stau0, tau, na, nsp, h )
-      !   
-      lsda = ( nspin == 2 )
       !
       ALLOCATE( ftmp( nbnd_tot , nspin ) )
-      !
       ftmp = 0.0d0
-      !
       DO iss = 1, nspin
-         !
          ftmp( 1:nupdwn(iss), iss ) = occ0( iupdwn(iss) : iupdwn(iss) + nupdwn(iss) - 1 )
-         !
       END DO
       !
       ! XML descriptor
       ! 
       WRITE(dirname,'(A,A,"_",I2,".save/")') TRIM(tmp_dir), TRIM(prefix), ndw
+      WRITE( stdout, '(/,3X,"writing restart file (with schema): ",A)' ) &
+             TRIM(dirname)
+      !
       CALL create_directory( TRIM(dirname) )
       !
       CALL qexsd_init_schema( iunpun )
@@ -355,6 +348,12 @@ MODULE cp_restart_new
 ! ... BAND STRUCTURE
 !-------------------------------------------------------------------------------
          ! TEMP
+         k1  = 0
+         k2  = 0
+         k3  = 0
+         nk1 = 0
+         nk2 = 0
+         nk3 = 0
          CALL qexsd_init_k_points_ibz( input_obj%k_points_ibz, 'Gamma', &
               'CP',nk1,nk2,nk3,k1,k2,k3,1,xk,wk,alat,a1,.false.) 
          input_obj%bands%occupations%tagname="occupations"
@@ -436,7 +435,7 @@ MODULE cp_restart_new
 ! ... CHARGE DENSITY
 !-------------------------------------------------------------------------------
       !
-      IF (write_charge_density) then
+      IF (trhow) THEN
          !
          filename = TRIM( dirname ) // 'charge-density'
          !
@@ -468,8 +467,8 @@ MODULE cp_restart_new
             !
          END IF
          !
-      END IF ! write_charge_density
-
+      END IF
+      !
 !-------------------------------------------------------------------------------
 ! ... END RESTART SECTIONS
 !-------------------------------------------------------------------------------
@@ -737,6 +736,15 @@ MODULE cp_restart_new
       DO iss = 1, nspin
          CALL cp_read_wfc( ndr, tmp_dir, 1, 1, iss, nspin, c02, ' ' )
       END DO
+wfcm: DO iss = 1, nspin
+         CALL cp_read_wfc( ndr, tmp_dir, 1, 1, iss, nspin, c02, 'm', ierr )
+         IF ( ierr /= 0) THEN
+            cm2 = c02
+            exit wfcm
+         END IF
+      END DO wfcm
+      lambda0 =0.0_dp
+      lambdam =0.0_dp
       !
       RETURN
       !
@@ -1329,10 +1337,11 @@ MODULE cp_restart_new
   END SUBROUTINE cp_writecp
   !
   !------------------------------------------------------------------------
-  SUBROUTINE cp_read_wfc( ndr, tmp_dir, ik, nk, iss, nspin, c2, tag )
+  SUBROUTINE cp_read_wfc( ndr, tmp_dir, ik, nk, iss, nspin, c2, tag, ierr )
     !------------------------------------------------------------------------
     !
-    ! Wrapper for old cp_read_wfc
+    ! Wrapper, and ugly hack, for old cp_read_wfc called in restart.f90
+    ! If ierr is present, returns ierr=-1 if file not found, 0 otherwise
     !
     USE io_global,          ONLY : ionode
     USE io_files,           ONLY : prefix, iunpun
@@ -1348,12 +1357,12 @@ MODULE cp_restart_new
     INTEGER,               INTENT(IN)  :: ik, iss, nk, nspin
     CHARACTER,             INTENT(IN)  :: tag
     COMPLEX(DP),           INTENT(OUT) :: c2(:,:)
+    INTEGER, OPTIONAL,     INTENT(OUT) :: ierr
     !
     INTEGER            :: ib, nb, nbnd, is_, ns_
     CHARACTER(LEN=320) :: filename
     REAL(DP)           :: scalef
     !
-print *, 'entering cp_read_wfc_new'
     IF ( tag == 'm' ) THEN
        WRITE(filename,'(A,A,"_",I2,".save/wfcm",I1)') &
             TRIM(tmp_dir), TRIM(prefix), ndr, iss
@@ -1366,9 +1375,15 @@ print *, 'entering cp_read_wfc_new'
     ! next two lines workaround for bogus complaint due to intent(in)
     is_= iss
     ns_= nspin
-    CALL read_wfc( iunpun, is_, nk, is_, ns_, &
+    IF ( PRESENT(ierr) ) THEN
+       CALL read_wfc( iunpun, is_, nk, is_, ns_, &
+         c2(:,ib:ib+nb-1), ngw_g, nbnd, ig_l2g, ngw,  &
+         filename, scalef, ionode, root_pool, intra_pool_comm, ierr )
+    ELSE
+       CALL read_wfc( iunpun, is_, nk, is_, ns_, &
          c2(:,ib:ib+nb-1), ngw_g, nbnd, ig_l2g, ngw,  &
          filename, scalef, ionode, root_pool, intra_pool_comm )
+    END IF
     !
   END SUBROUTINE cp_read_wfc
   !
