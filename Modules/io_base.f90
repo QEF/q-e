@@ -159,7 +159,9 @@ MODULE io_base
     !------------------------------------------------------------------------
     SUBROUTINE read_wfc( iuni, ik, nk, ispin, nspin, wfc, ngw, nbnd, &
                          igl, ngwl, filename, scalef, &
-                         ionode_in_group, root_in_group, intra_group_comm)
+                         ionode_in_group, root_in_group, intra_group_comm, &
+                         ierr )
+      ! if ierr is present, return 0 if everything is ok, /= 0 if not
       !------------------------------------------------------------------------
       !
       USE mp_wave,   ONLY : splitwf
@@ -182,10 +184,11 @@ MODULE io_base
       REAL(DP),           INTENT(OUT)   :: scalef
       LOGICAL,            INTENT(IN)    :: ionode_in_group
       INTEGER,            INTENT(IN)    :: root_in_group, intra_group_comm
+      INTEGER, OPTIONAL,  INTENT(OUT)   :: ierr
       !
       INTEGER                           :: j
       COMPLEX(DP), ALLOCATABLE          :: wtmp(:)
-      INTEGER                           :: ierr
+      INTEGER                           :: ierr_
       INTEGER                           :: igwx, igwx_, npwx, npol, ik_, nk_
       INTEGER                           :: me_in_group, nproc_in_group
 #if defined(__HDF5)
@@ -201,20 +204,22 @@ MODULE io_base
       igwx = MAXVAL( igl(1:ngwl) )
       CALL mp_max( igwx, intra_group_comm )
       !
-      ierr = 0
-      !
 #if !defined __HDF5
       IF ( ionode_in_group ) CALL iotk_open_read( iuni, &
-           FILE = TRIM(filename)//'.dat', BINARY = .TRUE., IERR = ierr )
+           FILE = TRIM(filename)//'.dat', BINARY = .TRUE., IERR = ierr_ )
       CALL mp_bcast( ierr, root_in_group, intra_group_comm )
-      CALL errore( 'read_wfc ', &
-                   'cannot open restart file for reading', ierr )
-      !
+      IF ( PRESENT(ierr) ) THEN
+         ierr = ierr_
+         IF ( ierr /= 0 ) RETURN
+      ELSE
+         CALL errore( 'read_wfc ', &
+              'cannot open restart file for reading', ierr_ )
+      END IF
 #endif
       IF ( ionode_in_group ) THEN
           !
 #if defined  __HDF5
-          CALL prepare_for_reading_final(h5_read_desc, 0, &
+         CALL prepare_for_reading_final(h5_read_desc, 0, &
                TRIM(filename)//'.hdf5',ik)
           CALL read_attributes_hdf5(h5_read_desc, ngw,"ngw",ik)
           CALL read_attributes_hdf5(h5_read_desc, nbnd,"nbnd",ik)
@@ -290,7 +295,7 @@ MODULE io_base
       IF ( ionode_in_group ) CALL iotk_close_read( iuni )
 #else
       IF ( ionode_in_group ) THEN 
-         CALL h5fclose_f(h5_read_desc%file_id, ierr)
+         CALL h5fclose_f(h5_read_desc%file_id, ierr_)
          DEALLOCATE (h5_read_desc)
       END IF
 #endif
