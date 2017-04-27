@@ -1383,6 +1383,8 @@ IF ( nks_ispresent) THEN
       IF (.NOT. label_ispresent ) label=" "
       CALL qes_init_k_point (kp_obj(ik),"k_point", wk_, weight_ispresent, TRIM(label), label_ispresent, xk_) 
    END DO
+ELSE 
+   ALLOCATE ( kp_obj(0))
 END IF    
 !  
 CALL iotk_scan_end(iunit, TRIM(tagname_) , IERR = ierr ) 
