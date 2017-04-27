@@ -177,6 +177,9 @@ MODULE qexsd_input
         CALL qes_init_inputOccupations( inpOcc_objs(1),"input_occupations", 1,            &
                                         REAL(spin_degeneracy,KIND=DP) , nbnd-1, input_occupations(2:nbnd) )   
      END IF
+  ELSE 
+     ALLOCATE (inpOcc_objs(0))
+     inpOcc_size = 0
   END IF
   !
   IF (PRESENT ( tot_mag)) tot_mag_ispresent = .TRUE.
