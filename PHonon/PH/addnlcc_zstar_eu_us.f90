@@ -79,10 +79,10 @@ SUBROUTINE addnlcc_zstar_eu_us( drhoscf )
 
            IF ( dft_is_gradient() ) &
                 CALL dgradcorr (rho%of_r, grho, &
-                    dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, xq, drhoscf (1,1,ipert),&
+                    dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, xq, drhoscf (1,1,ipol),&
                     dfftp%nnr, nspin_mag, nspin_gga, nl, ngm, g, alat, dvaux)
            if (dft_is_nonlocc()) &
-                call dnonloccorr(rho%of_r, drhoscf (1, 1, ipert), xq, dvaux)
+                call dnonloccorr(rho%of_r, drhoscf (1, 1, ipol), xq, dvaux)
 
            DO is = 1, nspin_lsda
               rho%of_r(:,is) = rho%of_r(:,is) - fac * rho_core
