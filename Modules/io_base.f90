@@ -219,20 +219,26 @@ MODULE io_base
       IF ( ionode_in_group ) THEN
           !
 #if defined  __HDF5
-         CALL prepare_for_reading_final(h5_read_desc, 0, &
-               TRIM(filename)//'.hdf5',ik)
-          CALL read_attributes_hdf5(h5_read_desc, ngw,"ngw",ik)
-          CALL read_attributes_hdf5(h5_read_desc, nbnd,"nbnd",ik)
-          CALL read_attributes_hdf5(h5_read_desc, ik_,"ik",ik)
-          CALL read_attributes_hdf5(h5_read_desc, nk_,"ik",ik)
-          CALL read_attributes_hdf5(h5_read_desc, ispin,"ispin",ik)
-          CALL read_attributes_hdf5(h5_read_desc, nspin,"nspin",ik)
-          CALL read_attributes_hdf5(h5_read_desc, igwx_,"igwx",ik)
-          CALL read_attributes_hdf5(h5_read_desc, scalef,"scale_factor",ik)
+         IF ( PRESENT (ierr )) THEN 
+            CALL prepare_for_reading_final(h5_read_desc, 0, &
+               TRIM(filename)//'.hdf5',KPOINT = ik, IERR = ierr )
+            IF (ierr /= 0 ) RETURN 
+         ELSE
+           CALL prepare_for_reading_final(h5_read_desc, 0, &
+               TRIM(filename)//'.hdf5',KPOINT = ik)
+         END IF 
+         CALL read_attributes_hdf5(h5_read_desc, ngw,"ngw",ik)
+         CALL read_attributes_hdf5(h5_read_desc, nbnd,"nbnd",ik)
+         CALL read_attributes_hdf5(h5_read_desc, ik_,"ik",ik)
+         CALL read_attributes_hdf5(h5_read_desc, nk_,"ik",ik)
+         CALL read_attributes_hdf5(h5_read_desc, ispin,"ispin",ik)
+         CALL read_attributes_hdf5(h5_read_desc, nspin,"nspin",ik)
+         CALL read_attributes_hdf5(h5_read_desc, igwx_,"igwx",ik)
+         CALL read_attributes_hdf5(h5_read_desc, scalef,"scale_factor",ik)
 #else
-          CALL iotk_scan_empty( iuni, "INFO", attr )
+         CALL iotk_scan_empty( iuni, "INFO", attr )
           !
-          CALL iotk_scan_attr( attr, "ngw",          ngw )
+         CALL iotk_scan_attr( attr, "ngw",          ngw )
           CALL iotk_scan_attr( attr, "nbnd",         nbnd )
           CALL iotk_scan_attr( attr, "ik",           ik_ )
           CALL iotk_scan_attr( attr, "nk",           nk_ )

@@ -82,11 +82,12 @@ module hdf5_qe
    continue 
   end subroutine h5_write_gvecs
  
-  subroutine setup_file_property_hdf5(hdf5desc ,filename, hyperslab, write, kpoint)
+  subroutine setup_file_property_hdf5(hdf5desc ,filename, hyperslab, write, kpoint, ierr )
    use parallel_include
    implicit none
    type(HDF5_type), intent(inout) :: hdf5desc 
    character(len=*), intent(inout) :: filename
+   integer,optional,intent(out)    :: ierr 
    logical,  intent(in) :: hyperslab, write
    integer, intent(in) ::  kpoint
    integer(HID_T) :: plist_id
@@ -121,7 +122,11 @@ module hdf5_qe
       endif
     else
         CALL h5fopen_f(filename, H5F_ACC_RDWR_F, hdf5desc%file_id, error) 
-        IF (error /= 0) CALL errore ('setup_file_property_hdf5','error opening '//filename,error)
+        IF (PRESENT(ierr) ) THEN 
+           ierr = error 
+        ELSE IF (error /= 0) THEN
+          CALL errore ('setup_file_property_hdf5','error opening '//filename,error)
+        END IF
     endif
    endif
    
@@ -279,26 +284,31 @@ module hdf5_qe
 
 
 
-  subroutine prepare_for_reading_final(hdf5desc,comm,filename_input,kpoint)
+  subroutine prepare_for_reading_final(hdf5desc,comm,filename_input,kpoint, ierr)
     USE io_files,             ONLY : wfc_dir, prefix, tmp_dir
     implicit none
     type(HDF5_type), intent(inout) :: hdf5desc
     character(len=*), intent(in):: filename_input
     integer, intent(in) :: comm
     integer, intent(in), optional :: kpoint
+    integer, intent(out), optional :: ierr 
     character(len=256) filename
-    integer :: ik
+    integer :: ik, ierr_
  
     hdf5desc%comm=comm
     hdf5desc%rank =1 
     !filename = trim(filename_input) //".wfchdf5"
     filename=filename_input
-    if(present(kpoint))then
-      CALL setup_file_property_hdf5(hdf5desc,filename ,.false.,.false.,kpoint)
+    if(present(kpoint)) then
+        CALL setup_file_property_hdf5(hdf5desc,filename ,.false.,.false.,KPOINT = kpoint, IERR = ierr_ )
     else
-      CALL setup_file_property_hdf5(hdf5desc,filename ,.false.,.false.,1)
+         CALL setup_file_property_hdf5(hdf5desc,filename ,.false.,.false.,1, IERR = ierr_)
     end if
-
+    IF (PRESENT (ierr)) THEN 
+       ierr = ierr_ 
+    ELSE 
+       IF ( ierr_ /= 0 ) CALL errore ('prepare_for_reading_final', 'error while opening h5 file for reading',ierr_)
+    END IF  
   end subroutine prepare_for_reading_final
 
   subroutine read_rho_hdf5(hdf5desc,dsetname,var)
@@ -955,7 +965,7 @@ module hdf5_qe
         attr_data = .FALSE. 
         CALL infomsg ( 'read_attributes_hdf5' , 'error reading attribute '//TRIM(attr_name)//' value set to .FALSE.')
     END SELECT 
- END SUBROUTINE read_attributes_hdf5_boolean
+  END SUBROUTINE read_attributes_hdf5_boolean
 
 
 
