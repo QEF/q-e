@@ -518,7 +518,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, howmany, isign, &
      END IF
 
 
-     IF ( isign > 0 ) THEN (G -> R)
+     IF ( isign > 0 ) THEN 
 
         !
         !  k-direction ...
