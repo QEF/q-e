@@ -5,6 +5,9 @@ New in svn version:
 
 Fixed in svn version
 
+  * Born effective charges not correctly computed with core corrections
+    + GGA and USPP (r13474) or NCPP (r13481)
+
   * reset_grid wasn't resetting grid properly if k1,k2,k3=0. Thanks to
     Giuliana Barbarino (r13462)
 
