@@ -49,7 +49,7 @@ MODULE cp_restart_new
                              vnhp, xnhp0, xnhpm, nhpcl, nhpdim, occ0, occm,  &
                              lambda0,lambdam, xnhe0, xnhem, vnhe, ekincm,    &
                              et, rho, c02, cm2, ctot, iupdwn, nupdwn,        &
-                             iupdwn_tot, nupdwn_tot, wfc, mat_z ) ! BS added wfc
+                             iupdwn_tot, nupdwn_tot, wfc, mat_z )
       !------------------------------------------------------------------------
       !
       USE control_flags,            ONLY : gamma_only, force_pairing, trhow, &
@@ -90,8 +90,6 @@ MODULE cp_restart_new
       USE fft_base,                 ONLY : dfftp, dffts, dfftb
       USE uspp_param,               ONLY : n_atom_wfc, upf
       USE global_version,           ONLY : version_number
-      USE cp_main_variables,        ONLY : descla
-      USE cp_interfaces,            ONLY : collect_lambda, collect_zmat
       USE kernel_table,             ONLY : vdw_table_name, kernel_file_name
       USE london_module,            ONLY : scal6, lon_rcut, in_c6
       USE tsvdw_module,             ONLY : vdw_isolated, vdw_econv_thr
@@ -186,6 +184,8 @@ MODULE cp_restart_new
       !
       IF( force_pairing ) &
             CALL errore('cp_writefile',' force pairing not implemented', 1 )
+      IF( PRESENT(mat_z) ) &
+            CALL errore('cp_writefile',' case not implemented', 1 )
       !
       lsda = ( nspin == 2 )
       IF( lsda ) THEN
@@ -348,14 +348,8 @@ MODULE cp_restart_new
 ! ... BAND STRUCTURE
 !-------------------------------------------------------------------------------
          ! TEMP
-         k1  = 0
-         k2  = 0
-         k3  = 0
-         nk1 = 0
-         nk2 = 0
-         nk3 = 0
          CALL qexsd_init_k_points_ibz( input_obj%k_points_ibz, 'Gamma', &
-              'CP',nk1,nk2,nk3,k1,k2,k3,1,xk,wk,alat,a1,.false.) 
+              'CP',1,1,1,0,0,0,1,xk,wk,alat,a1,.false.) 
          input_obj%bands%occupations%tagname="occupations"
          input_obj%bands%occupations%lread=.false.
          input_obj%bands%occupations%lwrite=.true.
@@ -368,6 +362,7 @@ MODULE cp_restart_new
               STARTING_KPOINTS = input_obj%k_points_IBZ, &
               OCCUPATION_KIND = input_obj%bands%occupations, &
               WF_COLLECTED = twfcollect)
+         CALL qes_reset_input(input_obj)
 !-------------------------------------------------------------------------------
 ! ... FORCES
 !-------------------------------------------------------------------------------
@@ -398,17 +393,31 @@ MODULE cp_restart_new
       END IF
       !
 !-------------------------------------------------------------------------------
-! ... WRITE WFC
+! ... WRITE WAVEFUNCTIONS AND LAMBDA MATRICES
 !-------------------------------------------------------------------------------
       DO iss = 1, nspin
          !
          ik_eff = iss
-         filename = TRIM(dirname) // 'wfc' // TRIM(int_to_char(ik_eff))
          ib = iupdwn(iss)
          nb = nupdwn(iss)
+         ! wavefunctions at time t
+         filename = TRIM(dirname) // 'wfc' // TRIM(int_to_char(ik_eff))
          CALL write_wfc( iunpun, ik_eff, nk, iss, nspin, &
               c02(:,ib:ib+nb-1), ngw_g, gamma_only, nb, ig_l2g, ngw,  &
               filename, scalef, ionode, root_pool, intra_pool_comm )
+         ! wavefunctions at time t-dt
+         filename = TRIM(dirname) // 'wfcm' // TRIM(int_to_char(ik_eff))
+         CALL write_wfc( iunpun, ik_eff, nk, iss, nspin, &
+              cm2(:,ib:ib+nb-1), ngw_g, gamma_only, nb, ig_l2g, ngw,  &
+              filename, scalef, ionode, root_pool, intra_pool_comm )
+         ! matrix of orthogonality constrains lambda at time t
+         filename = TRIM(dirname) // 'lambda' // TRIM(int_to_char(ik_eff))
+         CALL cp_write_lambda( filename, iunpun, iss, nspin, nudx, &
+              lambda0(:,:,iss), ierr )
+         ! matrix of orthogonality constrains lambda at time t-dt
+         filename = TRIM(dirname) // 'lambdam' // TRIM(int_to_char(ik_eff))
+         CALL cp_write_lambda( filename, iunpun, iss, nspin, nudx, &
+              lambdam(:,:,iss), ierr )
          !
       END DO
 !-------------------------------------------------------------------------------
@@ -496,7 +505,7 @@ MODULE cp_restart_new
                             taui, cdmi, stau0, svel0, staum, svelm, force,    &
                             vnhp, xnhp0, xnhpm, nhpcl,nhpdim,occ0, occm,      &
                             lambda0, lambdam, b1, b2, b3, xnhe0, xnhem, vnhe, &
-                            ekincm, c02, cm2, wfc, mat_z ) ! added wfc
+                            ekincm, c02, cm2, wfc, mat_z )
       !------------------------------------------------------------------------
       !
       USE control_flags,            ONLY : gamma_only, force_pairing, llondon,&
@@ -512,8 +521,7 @@ MODULE cp_restart_new
       USE ions_base,                ONLY : nsp, nat, na, atm, zv, &
                                            sort_tau, ityp, ions_cofmass
       USE gvect,       ONLY : ig_l2g, mill
-      USE cp_main_variables,        ONLY : nprint_nfi, descla
-      USE cp_interfaces,            ONLY : distribute_lambda, distribute_zmat
+      USE cp_main_variables,        ONLY : nprint_nfi
       USE ldaU_cp,                  ONLY : lda_plus_U, ns, Hubbard_l, &
                                            Hubbard_lmax, Hubbard_U
       USE mp,                       ONLY : mp_sum, mp_bcast
@@ -631,6 +639,9 @@ MODULE cp_restart_new
       REAL(dp):: hubbard_dum(3,nsp)
       CHARACTER(LEN=6), EXTERNAL :: int_to_char
       !
+      IF( PRESENT(mat_z) ) &
+            CALL errore('cp_readfile',' case not implemented', 1 )
+      !
       ! ... look for an empty unit
       !
       CALL iotk_free_unit( iunpun, ierr )
@@ -734,17 +745,29 @@ MODULE cp_restart_new
       CALL iotk_close_read (iunpun)
       !
       DO iss = 1, nspin
+         ib = iupdwn(iss)
+         nb = nupdwn(iss)
          CALL cp_read_wfc( ndr, tmp_dir, 1, 1, iss, nspin, c02, ' ' )
-      END DO
-wfcm: DO iss = 1, nspin
-         CALL cp_read_wfc( ndr, tmp_dir, 1, 1, iss, nspin, c02, 'm', ierr )
+         CALL cp_read_wfc( ndr, tmp_dir, 1, 1, iss, nspin, cm2, 'm', ierr )
          IF ( ierr /= 0) THEN
-            cm2 = c02
-            exit wfcm
+            CALL infomsg('cp_readfile','wfc at t-dt not found')
+            cm2(:,ib:ib+nb-1) = c02(:,ib:ib+nb-1)
          END IF
-      END DO wfcm
-      lambda0 =0.0_dp
-      lambdam =0.0_dp
+         ! matrix of orthogonality constrains lambda at time t
+         filename = TRIM(dirname) // 'lambda' // TRIM(int_to_char(ik_eff))
+         CALL cp_read_lambda( filename, iunpun, iss, nspin, nudx, &
+              lambda0(:,:,iss), ierr )
+         IF ( ierr /= 0 ) THEN
+            CALL infomsg('cp_readfile','lambda not found')
+            lambda0 =0.0_dp
+            lambdam =0.0_dp
+         ELSE
+            ! matrix of orthogonality constrains lambda at time t-dt
+            filename = TRIM(dirname) // 'lambdam' // TRIM(int_to_char(ik_eff))
+            CALL cp_read_lambda( filename, iunpun, iss, nspin, nudx, &
+                 lambdam(:,:,iss), ierr )
+         END IF
+      END DO
       !
       RETURN
       !
@@ -1728,6 +1751,83 @@ wfcm: DO iss = 1, nspin
 100 CALL errore( 'cp_read_cell ', attr, ierr )
     !
   END SUBROUTINE cp_read_cell
+
+  SUBROUTINE cp_write_lambda( filename, iunpun, iss, nspin, nudx, &
+       lambda, ierr )
+    !
+    ! ... collect and write matrix lambda to file
+    !
+    USE kinds, ONLY : dp
+    USE mp, ONLY : mp_bcast
+    USE mp_images, ONLY : intra_image_comm
+    USE io_global, ONLY : ionode, ionode_id
+    USE cp_main_variables, ONLY : descla
+    USE cp_interfaces, ONLY : collect_lambda
+    !
+    IMPLICIT NONE
+    CHARACTER(LEN=*), INTENT(in) :: filename
+    INTEGER, INTENT(in) :: iunpun, iss, nspin, nudx
+    REAL(dp), INTENT(in) :: lambda(:,:)
+    INTEGER, INTENT(out) :: ierr
+    !
+    REAL(dp), ALLOCATABLE :: mrepl(:,:)
+    !
+    IF ( ionode ) OPEN( unit=iunpun, file =TRIM(filename), &
+         status='unknown', form='unformatted', iostat=ierr)
+    CALL mp_bcast (ierr, ionode_id, intra_image_comm )
+    IF ( ierr /= 0 ) RETURN
+    !
+    ALLOCATE( mrepl( nudx, nudx ) )
+    CALL collect_lambda( mrepl, lambda, descla(iss) )
+    !
+    IF ( ionode ) THEN
+       WRITE (iunpun, iostat=ierr) mrepl
+       CLOSE( unit=iunpun, status='keep')
+    END IF
+    CALL mp_bcast (ierr, ionode_id, intra_image_comm )
+    !
+  END SUBROUTINE cp_write_lambda
+  !
+  SUBROUTINE cp_read_lambda( filename, iunpun, iss, nspin, nudx, &
+             lambda, ierr )
+    !
+    ! ... read matrix lambda from file, distribute it
+    !
+    USE kinds, ONLY : dp
+    USE mp, ONLY : mp_bcast
+    USE mp_images, ONLY : intra_image_comm
+    USE io_global, ONLY : ionode, ionode_id
+    USE cp_main_variables, ONLY : descla
+    USE cp_interfaces, ONLY : distribute_lambda
+    !
+    IMPLICIT NONE
+    CHARACTER(LEN=*), INTENT(in) :: filename
+    INTEGER, INTENT(in) :: iunpun, iss, nspin, nudx
+    REAL(dp), INTENT(out) :: lambda(:,:)
+    INTEGER, INTENT(out) :: ierr
+    !
+    LOGICAL :: exst
+    REAL(dp), ALLOCATABLE :: mrepl(:,:)
+    !
+    ierr =0
+    IF (ionode) INQUIRE( file =TRIM(filename), exist=exst )
+    CALL mp_bcast (exst, ionode_id, intra_image_comm )
+    IF (.NOT. exst) THEN
+       ierr =-1
+       RETURN
+    END IF
+    !
+    ALLOCATE( mrepl( nudx, nudx ) )
+    IF (ionode) THEN
+       OPEN( unit=iunpun, file =TRIM(filename), status='old', &
+            form='unformatted')
+       READ (iunpun, iostat=ierr) mrepl
+       CLOSE( unit=iunpun, status='keep')
+    END IF
+    CALL distribute_lambda( mrepl, lambda, descla(iss) )
+    CALL mp_bcast (ierr, ionode_id, intra_image_comm )
+    !
+  END SUBROUTINE cp_read_lambda
 #endif
   !
 END MODULE cp_restart_new
