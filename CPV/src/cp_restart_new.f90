@@ -155,24 +155,21 @@ MODULE cp_restart_new
       INTEGER               :: nk1, nk2, nk3
       INTEGER               :: j, i, iss, ig, nspin_wfc, iss_wfc
       INTEGER               :: is, ia, isa, ik, ierr
-      INTEGER,  ALLOCATABLE :: ftmp(:,:)
       INTEGER,  ALLOCATABLE :: ityp(:)
+      REAL(DP), ALLOCATABLE :: ftmp(:,:)
       REAL(DP), ALLOCATABLE :: tau(:,:)
       REAL(DP), ALLOCATABLE :: rhoaux(:)
       REAL(DP)              :: omega, htm1(3,3), h(3,3)
       REAL(DP)              :: a1(3), a2(3), a3(3)
       REAL(DP)              :: b1(3), b2(3), b3(3)
-      REAL(DP)              :: nelec
+      REAL(DP)              :: wk_(2), nelec
       REAL(DP)              :: scalef
       LOGICAL               :: lsda
       REAL(DP)              :: s0, s1, cclock
-      INTEGER               :: nbnd_tot
       INTEGER               :: natomwfc, nbnd_, nb, ib
       REAL(DP), ALLOCATABLE :: mrepl(:,:)
-      CHARACTER(LEN=256)    :: tmp_dir_save
       LOGICAL               :: exst
       INTEGER               :: inlc
-      REAL(DP), ALLOCATABLE :: temp_vec(:), wfc_temp(:,:) ! BS 
       TYPE(output_type) :: output_obj
       LOGICAL :: is_hubbard(nsp)
       REAL(dp):: hubbard_dum(3,nsp)
@@ -184,6 +181,8 @@ MODULE cp_restart_new
       !
       IF( force_pairing ) &
             CALL errore('cp_writefile',' force pairing not implemented', 1 )
+      IF( tksw ) &
+            CALL errore('cp_writefile',' Kohn-Sham states not written', 1 )
       IF( PRESENT(mat_z) ) &
             CALL errore('cp_writefile',' case not implemented', 1 )
       !
@@ -193,15 +192,10 @@ MODULE cp_restart_new
          !  check if the array storing wave functions is large enought
          !
          IF( SIZE( c02, 2 ) < ( iupdwn( 2 ) + nupdwn(1) - 1 ) ) &
-            CALL errore('cp_writefile',' wrong wave functions dimension ', 1 )
+            CALL errore('cp_writefile',' wrong dimensions for wave functions', 1 )
          !
       END IF
       !
-      IF(  nupdwn_tot(1) < nupdwn(1) ) &
-         CALL errore( " writefile ", " wrong number of states ", 1 )
-      !
-      nbnd_    = nupdwn(1) 
-      nbnd_tot = MAX( nupdwn(1), nupdwn_tot(1) )
       nelec = nelt
       !
       ! ... Cell related variables
@@ -239,7 +233,8 @@ MODULE cp_restart_new
       !
       CALL s_to_r( stau0, tau, na, nsp, h )
       !
-      ALLOCATE( ftmp( nbnd_tot , nspin ) )
+      nbnd_    = nupdwn(1) 
+      ALLOCATE( ftmp( nbnd_ , nspin ) )
       ftmp = 0.0d0
       DO iss = 1, nspin
          ftmp( 1:nupdwn(iss), iss ) = occ0( iupdwn(iss) : iupdwn(iss) + nupdwn(iss) - 1 )
@@ -348,17 +343,22 @@ MODULE cp_restart_new
 ! ... BAND STRUCTURE
 !-------------------------------------------------------------------------------
          ! TEMP
+         IF (lsda) THEN
+            wk_ = 1.0_dp
+         ELSE
+            wk_ = 2.0_dp
+         END IF
          CALL qexsd_init_k_points_ibz( input_obj%k_points_ibz, 'Gamma', &
-              'CP',1,1,1,0,0,0,1,xk,wk,alat,a1,.false.) 
+              'CP',1,1,1,0,0,0,1,xk,wk_,alat,a1,.false.) 
          input_obj%bands%occupations%tagname="occupations"
          input_obj%bands%occupations%lread=.false.
          input_obj%bands%occupations%lwrite=.true.
-         input_obj%bands%occupations%spin_ispresent=.false.
+         input_obj%bands%occupations%spin_ispresent=lsda
          input_obj%bands%occupations%occupations="fixed"
          ! TEMP
          CALL  qexsd_init_band_structure(output_obj%band_structure,lsda, .false., &
-              .false., nbnd_, nelec, natomwfc, .true., 0.0_dp , .false., & 
-              [0.0_dp,0.0_dp], et,  DBLE( ftmp ), nspin, xk, [ngw_g], wk,  &
+              .false., nupdwn(1), nupdwn(2), nelec, natomwfc, .true., 0.0_dp, &
+              .false., [0.0_dp,0.0_dp], et, ftmp, nspin, xk, [ngw_g], wk_,&
               STARTING_KPOINTS = input_obj%k_points_IBZ, &
               OCCUPATION_KIND = input_obj%bands%occupations, &
               WF_COLLECTED = twfcollect)
@@ -515,8 +515,7 @@ MODULE cp_restart_new
       USE run_info,                 ONLY : title
       USE gvect,                    ONLY : ngm
       USE gvecw,                    ONLY : ngw, ngw_g
-      USE electrons_base,           ONLY : nspin, nbnd, nelt, nel, &
-                                           nupdwn, iupdwn, nudx
+      USE electrons_base,           ONLY : nspin, nbnd, nupdwn, iupdwn, nudx
       USE cell_base,                ONLY : ibrav, alat, s_to_r, r_to_s
       USE ions_base,                ONLY : nsp, nat, na, atm, zv, &
                                            sort_tau, ityp, ions_cofmass
@@ -607,13 +606,12 @@ MODULE cp_restart_new
       REAL(DP)              :: ecutwfc_, ecutrho_
       INTEGER               :: nr1,nr2,nr3,nr1s,nr2s,nr3s,nr1b,nr2b,nr3b
       INTEGER               :: ngm_g, ngms_g, npw_g 
-      INTEGER               :: iss_, nspin_, ngwt_, nbnd_ , nbnd_tot
-      INTEGER               :: nstates_up_ , nstates_dw_ , ntmp, nel_(2)
+      INTEGER               :: iss_, nspin_, ngwt_, nbnd_
+      INTEGER               :: nbnd_up, nbnd_dw, ntmp
       REAL(DP)              :: nelec_, ef, ef_up, ef_dw
       REAL(DP)              :: scalef_
       REAL(DP)              :: wk_(2)
       INTEGER               :: ib, nb
-      INTEGER               :: ik_eff
       REAL(DP)              :: amass_(ntypx)
       INTEGER,  ALLOCATABLE :: ityp_(:) 
       INTEGER,  ALLOCATABLE :: isrt_(:) 
@@ -625,7 +623,6 @@ MODULE cp_restart_new
       REAL(DP)              :: s1, s0, cclock
       REAL(DP), ALLOCATABLE :: mrepl(:,:) 
       LOGICAL               :: md_found, exist_wfc 
-      CHARACTER(LEN=256)    :: tmp_dir_save
       INTEGER               :: io_bgrp_id
       TYPE ( output_type)   :: output_obj 
       TYPE (parallel_info_type) :: parinfo_obj
@@ -731,8 +728,9 @@ MODULE cp_restart_new
       !
       nbnd_ = nupdwn(1)
       ALLOCATE( occ_(nbnd_, nspin), et_(nbnd_, nspin) )
-      CALL qexsd_copy_band_structure( output_obj%band_structure, lsda_, nk_, &
-           isk_, natomwfc, nbnd_, nelec_, wk_, occ_, ef, ef_up, ef_dw, et_ )
+      CALL qexsd_copy_band_structure( output_obj%band_structure, lsda_, &
+              nk_, isk_, natomwfc, nbnd_up, nbnd_dw, nelec_, wk_, occ_, &
+              ef, ef_up, ef_dw, et_ )
       ! FIXME: in the call, the same array is passed as both occ0 and occm!
       DO iss = 1, nspin
          ib = iupdwn(iss)
@@ -754,7 +752,7 @@ MODULE cp_restart_new
             cm2(:,ib:ib+nb-1) = c02(:,ib:ib+nb-1)
          END IF
          ! matrix of orthogonality constrains lambda at time t
-         filename = TRIM(dirname) // 'lambda' // TRIM(int_to_char(ik_eff))
+         filename = TRIM(dirname) // 'lambda' // TRIM(int_to_char(iss))
          CALL cp_read_lambda( filename, iunpun, iss, nspin, nudx, &
               lambda0(:,:,iss), ierr )
          IF ( ierr /= 0 ) THEN
@@ -763,7 +761,7 @@ MODULE cp_restart_new
             lambdam =0.0_dp
          ELSE
             ! matrix of orthogonality constrains lambda at time t-dt
-            filename = TRIM(dirname) // 'lambdam' // TRIM(int_to_char(ik_eff))
+            filename = TRIM(dirname) // 'lambdam' // TRIM(int_to_char(iss))
             CALL cp_read_lambda( filename, iunpun, iss, nspin, nudx, &
                  lambdam(:,:,iss), ierr )
          END IF
@@ -1129,7 +1127,7 @@ MODULE cp_restart_new
     !
     !------------------------------------------------------------------------
     SUBROUTINE qexsd_copy_band_structure( band_struct_obj, lsda, nkstot, &
-         isk, natomwfc, nbnd, nelec, wk, wg, ef, ef_up, ef_dw, et )
+         isk, natomwfc, nbnd_up, nbnd_dw, nelec, wk, wg, ef, ef_up, ef_dw, et )
       !------------------------------------------------------------------------
       !
       USE qes_types_module, ONLY : band_structure_type
@@ -1137,11 +1135,11 @@ MODULE cp_restart_new
       IMPLICIT NONE
       TYPE ( band_structure_type)         :: band_struct_obj
       LOGICAL, INTENT(out) :: lsda
-      INTEGER, INTENT(out) :: nkstot, natomwfc, nbnd, isk(:)
+      INTEGER, INTENT(out) :: nkstot, natomwfc, nbnd_up, nbnd_dw, isk(:)
       REAL(dp), INTENT(out):: nelec, wk(:), wg(:,:)
       REAL(dp), INTENT(out):: ef, ef_up, ef_dw, et(:,:)
       !
-      INTEGER :: ik, nbnd_, nbnd_up_, nbnd_dw_
+      INTEGER :: ik, nbnd
       ! 
       lsda = band_struct_obj%lsda
       nkstot = band_struct_obj%nks 
@@ -1172,31 +1170,33 @@ MODULE cp_restart_new
       DO ik =1, band_struct_obj%ndim_ks_energies
          IF ( band_struct_obj%lsda) THEN
             IF ( band_struct_obj%nbnd_up_ispresent .AND. band_struct_obj%nbnd_dw_ispresent) THEN
-               nbnd_up_ = band_struct_obj%nbnd_up
-               nbnd_dw_ = band_struct_obj%nbnd_dw 
+               nbnd_up = band_struct_obj%nbnd_up
+               nbnd_dw = band_struct_obj%nbnd_dw 
             ELSE IF ( band_struct_obj%nbnd_up_ispresent ) THEN 
-               nbnd_up_ = band_struct_obj%nbnd_up
-               nbnd_dw_ = band_struct_obj%ks_energies(ik)%ndim_eigenvalues - nbnd_up_
+               nbnd_up = band_struct_obj%nbnd_up
+               nbnd_dw = band_struct_obj%ks_energies(ik)%ndim_eigenvalues - nbnd_up
             ELSE IF ( band_struct_obj%nbnd_dw_ispresent ) THEN 
-               nbnd_dw_ = band_struct_obj%nbnd_dw
-               nbnd_up_ = band_struct_obj%ks_energies(ik)%ndim_eigenvalues - nbnd_dw_ 
+               nbnd_dw = band_struct_obj%nbnd_dw
+               nbnd_up = band_struct_obj%ks_energies(ik)%ndim_eigenvalues - nbnd_dw 
             ELSE 
-               nbnd_up_ = band_struct_obj%ks_energies(ik)%ndim_eigenvalues/2  
-               nbnd_dw_ = band_struct_obj%ks_energies(ik)%ndim_eigenvalues/2
+               nbnd_up = band_struct_obj%ks_energies(ik)%ndim_eigenvalues/2  
+               nbnd_dw = band_struct_obj%ks_energies(ik)%ndim_eigenvalues/2
             END IF
             wk(ik) = band_struct_obj%ks_energies(ik)%k_point%weight
             wk( ik + band_struct_obj%ndim_ks_energies ) = wk(ik) 
-            et(1:nbnd_up_,ik) = band_struct_obj%ks_energies(ik)%eigenvalues(1:nbnd_up_)
-            et(1:nbnd_dw_,ik+band_struct_obj%ndim_ks_energies) =  &
-                 band_struct_obj%ks_energies(ik)%eigenvalues(nbnd_up_+1:nbnd_up_+nbnd_dw_)
-            wg(1:nbnd_up_,ik) = band_struct_obj%ks_energies(ik)%occupations(1:nbnd_up_)*wk(ik)
-            wg(1:nbnd_dw_,ik+band_struct_obj%ndim_ks_energies) =  &
-                 band_struct_obj%ks_energies(ik)%occupations(nbnd_up_+1:nbnd_up_+nbnd_dw_)*wk(ik)
+            et(1:nbnd_up,ik) = band_struct_obj%ks_energies(ik)%eigenvalues(1:nbnd_up)
+            et(1:nbnd_dw,ik+band_struct_obj%ndim_ks_energies) =  &
+                 band_struct_obj%ks_energies(ik)%eigenvalues(nbnd_up+1:nbnd_up+nbnd_dw)
+            wg(1:nbnd_up,ik) = band_struct_obj%ks_energies(ik)%occupations(1:nbnd_up)*wk(ik)
+            wg(1:nbnd_dw,ik+band_struct_obj%ndim_ks_energies) =  &
+                 band_struct_obj%ks_energies(ik)%occupations(nbnd_up+1:nbnd_up+nbnd_dw)*wk(ik)
          ELSE 
             wk(ik) = band_struct_obj%ks_energies(ik)%k_point%weight
-            nbnd_ = band_struct_obj%ks_energies(ik)%ndim_eigenvalues
-            et (1:nbnd_,ik) = band_struct_obj%ks_energies(ik)%eigenvalues(1:nbnd_)
-            wg (1:nbnd_,ik) = band_struct_obj%ks_energies(ik)%occupations(1:nbnd_)*wk(ik)
+            nbnd = band_struct_obj%ks_energies(ik)%ndim_eigenvalues
+            et (1:nbnd,ik) = band_struct_obj%ks_energies(ik)%eigenvalues(1:nbnd)
+            wg (1:nbnd,ik) = band_struct_obj%ks_energies(ik)%occupations(1:nbnd)*wk(ik)
+            nbnd_up = nbnd
+            nbnd_dw = nbnd
          END IF
       END DO
     END SUBROUTINE qexsd_copy_band_structure

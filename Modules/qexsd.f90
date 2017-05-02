@@ -948,7 +948,7 @@ CONTAINS
     !
     ! 
     !---------------------------------------------------------------------------------------
-    SUBROUTINE qexsd_init_band_structure(obj, lsda, noncolin, lspinorb, nbnd, nelec, n_wfc_at, occupations_are_fixed, & 
+    SUBROUTINE qexsd_init_band_structure(obj, lsda, noncolin, lspinorb, nbnd_up, nbnd_dw, nelec, n_wfc_at, occupations_are_fixed, & 
                                          fermi_energy, two_fermi_energies, ef_updw, et, wg, nks, xk, ngk, wk, & 
                                          starting_kpoints, occupation_kind, smearing, wf_collected)
     !----------------------------------------------------------------------------------------
@@ -957,7 +957,7 @@ CONTAINS
     TYPE(band_structure_type)               :: obj
     CHARACTER(LEN=*), PARAMETER             :: TAGNAME="band_structure"
     LOGICAL,INTENT(IN)                      :: lsda, noncolin, lspinorb, occupations_are_fixed
-    INTEGER,INTENT(IN)                      :: nbnd, nks, n_wfc_at
+    INTEGER,INTENT(IN)                      :: nbnd_up, nbnd_dw, nks, n_wfc_at
     REAL(DP),INTENT(IN)                     :: nelec, fermi_energy
     REAL(DP),DIMENSION(:,:),INTENT(IN)      :: et, wg, xk
     REAL(DP),DIMENSION(:),INTENT(IN)        :: wk
@@ -972,8 +972,7 @@ CONTAINS
     LOGICAL                                 :: nbnd_up_ispresent, nbnd_dw_ispresent, &
                                                fermi_energy_ispresent, HOL_ispresent, & 
                                                n_wfc_at_ispresent = .TRUE.  
-    INTEGER                                 :: nbnd_up,nbnd_dw
-    INTEGER                                 :: ndim_ks_energies, nbnd_tot, ik
+    INTEGER                                 :: ndim_ks_energies, nbnd, nbnd_tot, ik
     TYPE(k_point_type)                      :: kp_obj
     TYPE(ks_energies_type),ALLOCATABLE      :: ks_objs(:)
     TYPE (k_points_IBZ_type)                :: starting_k_points_
@@ -983,18 +982,15 @@ CONTAINS
     !
     !
     ndim_ks_energies=nks   
-    nbnd_tot=nbnd
     !
     IF ( lsda ) THEN 
        ndim_ks_energies=ndim_ks_energies/2
-       nbnd_up=nbnd
-       nbnd_dw=nbnd
        nbnd_tot=nbnd_up+nbnd_dw
        nbnd_up_ispresent=.true.
        nbnd_dw_ispresent=.true.
     ELSE 
-       nbnd_up=0
-       nbnd_dw=0
+       nbnd=nbnd_up
+       nbnd_tot=nbnd
        nbnd_up_ispresent=.false.
        nbnd_dw_ispresent=.false. 
     END IF 
