@@ -473,7 +473,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 or = A (in Angstrom), or else it is taken from @ref CELL_PARAMETERS 
  
               ibrav      structure                   celldm(2)-celldm(6)
-                                                   or: b,c,cosab,cosac,cosbc 
+                                                   or: b,c,cosbc,cosac,cosab 
                 0          free 
                     crystal axis provided in input: see card @ref CELL_PARAMETERS
 
@@ -489,14 +489,14 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 4          Hexagonal and Trigonal P        celldm(3)=c/a
                     v1 = a(1,0,0),  v2 = a(-1/2,sqrt(3)/2,0),  v3 = a(0,0,c/a)
 
-                5          Trigonal R, 3fold axis c        celldm(4)=cos(alpha)
+                5          Trigonal R, 3fold axis c        celldm(4)=cos(gamma)
                     The crystallographic vectors form a three-fold star around 
                     the z-axis, the primitive cell is a simple rhombohedron:
                     v1 = a(tx,-ty,tz),   v2 = a(0,2ty,tz),   v3 = a(-tx,-ty,tz)
-                    where c=cos(alpha) is the cosine of the angle alpha between
+                    where c=cos(gamma) is the cosine of the angle gamma between
                     any pair of crystallographic vectors, tx, ty, tz are:
                       tx=sqrt((1-c)/2), ty=sqrt((1-c)/6), tz=sqrt((1+2c)/3)
-               -5          Trigonal R, 3fold axis <111>    celldm(4)=cos(alpha)
+               -5          Trigonal R, 3fold axis <111>    celldm(4)=cos(gamma)
                     The crystallographic vectors form a three-fold star around 
                     <111>. Defining a' = a/sqrt(3) :
                     v1 = a' (u,v,v),   v2 = a' (v,u,v),   v3 = a' (v,v,u)
