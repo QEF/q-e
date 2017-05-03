@@ -64,7 +64,7 @@ SUBROUTINE data_structure( gamma_only )
   ! ... set up fft descriptors, including parallel stuff: sticks, planes, etc.
   !
   CALL fft_type_init( dffts, smap, "wave", gamma_only, lpara, intra_bgrp_comm, at, bg, gkcut, gcutms/gkcut, ntask_groups )
-  CALL fft_type_init( dfftp, smap, "rho", gamma_only, lpara, intra_bgrp_comm, at, bg,  gcutm )
+  CALL fft_type_init( dfftp, smap, "rho", gamma_only, lpara, intra_bgrp_comm, at, bg,  gcutm, ntask_groups=ntask_groups )
   CALL task_groups_init( dffts, dtgs, ntask_groups )
   CALL fft_base_info( ionode, stdout )
   ngs_ = dffts%ngl( dffts%mype + 1 )
