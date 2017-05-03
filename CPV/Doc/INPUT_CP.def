@@ -355,6 +355,8 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
 
                 3          cubic I (bcc)
                     v1 = (a/2)(1,1,1),  v2 = (a/2)(-1,1,1),  v3 = (a/2)(-1,-1,1)
+               -3          cubic I (bcc), more symmetric axis:
+                    v1 = (a/2)(-1,1,1), v2 = (a/2)(1,-1,1),  v3 = (a/2)(1,1,-1)
 
                 4          Hexagonal and Trigonal P        celldm(3)=c/a
                     v1 = a(1,0,0),  v2 = a(-1/2,sqrt(3)/2,0),  v3 = a(0,0,c/a)

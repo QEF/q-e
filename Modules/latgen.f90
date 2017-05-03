@@ -21,6 +21,7 @@ subroutine latgen(ibrav,celldm,a1,a2,a3,omega)
   !       7  tetragonal I (bct)         14  triclinic P
   !     Also accepted:
   !       0  "free" structure          -12  monoclinic P (unique axis: b)
+  !      -3  cubic bcc with a more symmetric choice of axis
   !      -5  trigonal R, threefold axis along (111) 
   !      -9  alternate description for base centered orthorhombic
   !     -13  one face (base) centered monoclinic (unique axis: b)
@@ -98,7 +99,7 @@ subroutine latgen(ibrav,celldm,a1,a2,a3,omega)
      a3(1)=-term
      a3(2)=term
      !
-  else if (ibrav == 3) then
+  else if (ABS(ibrav) == 3) then
      !
      !     bcc lattice
      !
@@ -108,9 +109,15 @@ subroutine latgen(ibrav,celldm,a1,a2,a3,omega)
         a2(ir)=term
         a3(ir)=term
      end do
-     a2(1)=-term
-     a3(1)=-term
-     a3(2)=-term
+     IF ( ibrav < 0 ) THEN
+        a1(1)=-a1(1)
+        a2(2)=-a2(2)
+        a3(3)=-a3(3)
+     ELSE
+        a2(1)=-a2(1)
+        a3(1)=-a3(1)
+        a3(2)=-a3(2)
+     END IF
      !
   else if (ibrav == 4) then
      !
