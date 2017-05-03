@@ -207,7 +207,7 @@ MODULE io_base
 #if !defined __HDF5
       IF ( ionode_in_group ) CALL iotk_open_read( iuni, &
            FILE = TRIM(filename)//'.dat', BINARY = .TRUE., IERR = ierr_ )
-      CALL mp_bcast( ierr, root_in_group, intra_group_comm )
+      CALL mp_bcast( ierr_, root_in_group, intra_group_comm )
       IF ( PRESENT(ierr) ) THEN
          ierr = ierr_
          IF ( ierr /= 0 ) RETURN

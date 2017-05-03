@@ -58,6 +58,7 @@ MODULE cp_restart_new
                                            tfor, tpre
       USE control_flags,            ONLY : lwfpbe0nscf, lwfnscf, lwf ! Lingzhu Kong
       USE constants,                ONLY : e2
+      USE parameters,               ONLY : ntypx
       USE dener,                    ONLY : detot
       USE io_files,                 ONLY : psfile, pseudo_dir, iunwfc, &
                                            nwordwfc, tmp_dir, diropn
@@ -171,8 +172,8 @@ MODULE cp_restart_new
       LOGICAL               :: exst
       INTEGER               :: inlc
       TYPE(output_type) :: output_obj
-      LOGICAL :: is_hubbard(nsp)
-      REAL(dp):: hubbard_dum(3,nsp)
+      LOGICAL :: is_hubbard(ntypx)
+      REAL(dp):: hubbard_dum(3,ntypx)
       CHARACTER(LEN=6), EXTERNAL :: int_to_char
       !
       ! ... subroutine body
@@ -301,10 +302,6 @@ MODULE cp_restart_new
               nat, tau(:,ind_bck(:)), alat, alat*a1(:), alat*a2(:), alat*a3(:), ibrav)
          !
 !-------------------------------------------------------------------------------
-! ... SYMMETRIES
-!-------------------------------------------------------------------------------
-         output_obj%symmetries%lwrite=.false.
-!-------------------------------------------------------------------------------
 ! ... BASIS SET
 !-------------------------------------------------------------------------------
          CALL qexsd_init_basis_set(output_obj%basis_set,gamma_only, ecutwfc/e2, ecutwfc*dual/e2, &
@@ -362,7 +359,8 @@ MODULE cp_restart_new
               STARTING_KPOINTS = input_obj%k_points_IBZ, &
               OCCUPATION_KIND = input_obj%bands%occupations, &
               WF_COLLECTED = twfcollect)
-         CALL qes_reset_input(input_obj)
+         CALL qes_reset_bands(input_obj%bands)
+         CALL qes_reset_k_points_IBZ(input_obj%k_points_IBZ)
 !-------------------------------------------------------------------------------
 ! ... FORCES
 !-------------------------------------------------------------------------------
@@ -374,9 +372,14 @@ MODULE cp_restart_new
 ! ... STRESS - TO BE VERIFIED
 !-------------------------------------------------------------------------------
          output_obj%stress_ispresent=tpre
-         ! may be wrong or incomplete
+         ! FIXME: may be wrong or incomplete
          IF ( tpre) h = -MATMUL( detot, ht ) / omega
          CALL qexsd_init_stress(output_obj%stress, h, tpre ) 
+!-------------------------------------------------------------------------------
+! ... non existent or not implemented fields
+!-------------------------------------------------------------------------------
+         output_obj%symmetries_ispresent=.false.
+         output_obj%electric_field_ispresent=.false.
 !-------------------------------------------------------------------------------
 ! ... ACTUAL WRITING
 !-------------------------------------------------------------------------------
@@ -1747,6 +1750,7 @@ MODULE cp_restart_new
        xnhhm = 0.D0
        !
     END IF
+    CALL iotk_close_read (iunpun)
     !
 100 CALL errore( 'cp_read_cell ', attr, ierr )
     !
