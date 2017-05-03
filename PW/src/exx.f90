@@ -617,8 +617,8 @@ MODULE exx
     END SELECT
     !
     ! Set variables for Coulomb vcut
-    ! NOTE: some memory is allocated inside this routine (in the var vcut)
-    !       and should be deallocated somewehre, at the end of the run
+    ! NOTE: some memory is allocated inside this routine (in variable vcut)
+    !       and should be deallocated at the end of the run
     !
     IF ( use_coulomb_vcut_ws .or. use_coulomb_vcut_spheric ) THEN
         !

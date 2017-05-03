@@ -36,6 +36,7 @@ MODULE io_rho_xml
       USE ldaU,             ONLY : lda_plus_u
       USE funct,            ONLY : dft_is_meta
       USE noncollin_module, ONLY : noncolin
+      USE spin_orb,         ONLY : domag
       USE io_files,         ONLY : seqopn
       USE io_global,        ONLY : ionode, ionode_id, stdout
       USE scf,              ONLY : scf_type
@@ -52,7 +53,13 @@ MODULE io_rho_xml
       INTEGER, EXTERNAL :: find_free_unit
 
       ! Use the equivalent routine to write real space density
-      CALL write_rho_only( rho%of_r, nspin, extension )
+
+      ! in the following case do not read or write polarization
+      IF ( noncolin .AND. .NOT.domag ) THEN
+         CALL write_rho_only( rho%of_r, 1, extension )
+      ELSE
+         CALL write_rho_only( rho%of_r, nspin, extension )
+      END IF
 
       ! Then write the other terms to separate files
 
@@ -102,6 +109,7 @@ MODULE io_rho_xml
       USE paw_variables,    ONLY : okpaw
       USE ldaU,             ONLY : lda_plus_u, starting_ns
       USE noncollin_module, ONLY : noncolin
+      USE spin_orb,         ONLY : domag
       USE funct,            ONLY : dft_is_meta
       USE io_files,         ONLY : seqopn
       USE io_global,        ONLY : ionode, ionode_id, stdout
@@ -118,7 +126,14 @@ MODULE io_rho_xml
       INTEGER, EXTERNAL :: find_free_unit
 
       ! Use the equivalent routine to read real space density
-      CALL read_rho_only( rho%of_r, nspin, extension )
+
+      ! in the following case do not read or write polarization
+      IF ( noncolin .AND. .NOT.domag ) THEN
+         CALL read_rho_only( rho%of_r, 1, extension )
+         rho%of_r(:,2:4) = 0.0_dp
+      ELSE
+         CALL read_rho_only( rho%of_r, nspin, extension )
+      END IF
       !
       IF ( lda_plus_u ) THEN
          !
@@ -193,7 +208,6 @@ MODULE io_rho_xml
       !
       USE io_files, ONLY : tmp_dir, prefix
       USE fft_base, ONLY : dfftp
-      USE spin_orb, ONLY : domag
       USE io_global,ONLY : ionode
       USE mp_bands, ONLY : intra_bgrp_comm, inter_bgrp_comm
       !
@@ -250,25 +264,24 @@ MODULE io_rho_xml
                   dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
                   ionode, intra_bgrp_comm, inter_bgrp_comm )
          !
-         IF (domag) THEN
-            file_base = TRIM( dirname ) // '/magnetization.x' // TRIM( ext )
-            !
-            CALL write_rho_xml( file_base, rho(:,2), dfftp%nr1, dfftp%nr2, &
-                  dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
-                  ionode, intra_bgrp_comm, inter_bgrp_comm )
-            !
-            file_base = TRIM( dirname ) // '/magnetization.y' // TRIM( ext )
-            !
-            CALL write_rho_xml( file_base, rho(:,3), dfftp%nr1, dfftp%nr2, &
-                  dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
-                  ionode, intra_bgrp_comm, inter_bgrp_comm )
-            !
-            file_base = TRIM( dirname ) // '/magnetization.z' // TRIM( ext )
-            !
-            CALL write_rho_xml( file_base, rho(:,4), dfftp%nr1, dfftp%nr2, &
-                  dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
-                  ionode, intra_bgrp_comm, inter_bgrp_comm )
-         END IF
+         file_base = TRIM( dirname ) // '/magnetization.x' // TRIM( ext )
+         !
+         CALL write_rho_xml( file_base, rho(:,2), dfftp%nr1, dfftp%nr2, &
+               dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
+               ionode, intra_bgrp_comm, inter_bgrp_comm )
+         !
+         file_base = TRIM( dirname ) // '/magnetization.y' // TRIM( ext )
+         !
+         CALL write_rho_xml( file_base, rho(:,3), dfftp%nr1, dfftp%nr2, &
+               dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
+               ionode, intra_bgrp_comm, inter_bgrp_comm )
+         !
+         file_base = TRIM( dirname ) // '/magnetization.z' // TRIM( ext )
+         !
+         CALL write_rho_xml( file_base, rho(:,4), dfftp%nr1, dfftp%nr2, &
+               dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
+               ionode, intra_bgrp_comm, inter_bgrp_comm )
+         !
       END IF
       !
       RETURN
@@ -284,7 +297,6 @@ MODULE io_rho_xml
       !
       USE io_files,  ONLY : tmp_dir, prefix
       USE fft_base,  ONLY : dfftp
-      USE spin_orb,  ONLY : domag
       USE io_global, ONLY : ionode
       !
       IMPLICIT NONE
@@ -322,25 +334,18 @@ MODULE io_rho_xml
          !
       ELSE IF ( nspin == 4 ) THEN
          !
-         IF ( domag ) THEN
-            !
-            file_base = TRIM( dirname ) // '/magnetization.x' // TRIM( ext )
-            CALL read_rho_xml ( file_base, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
-                 dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, rho(:,2) ) 
-            !
-            file_base = TRIM( dirname ) // '/magnetization.y' // TRIM( ext )
-            CALL read_rho_xml ( file_base, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
-                 dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, rho(:,3) ) 
-            !
-            file_base = TRIM( dirname ) // '/magnetization.z' // TRIM( ext )
-            CALL read_rho_xml ( file_base, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
-                 dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, rho(:,4) ) 
-            !
-         ELSE
-            !
-            rho(:,2:4) = 0.D0
-            !
-         END IF
+         file_base = TRIM( dirname ) // '/magnetization.x' // TRIM( ext )
+         CALL read_rho_xml ( file_base, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
+              dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, rho(:,2) ) 
+         !
+         file_base = TRIM( dirname ) // '/magnetization.y' // TRIM( ext )
+         CALL read_rho_xml ( file_base, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
+              dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, rho(:,3) ) 
+         !
+         file_base = TRIM( dirname ) // '/magnetization.z' // TRIM( ext )
+         CALL read_rho_xml ( file_base, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
+              dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, rho(:,4) ) 
+         !
       END IF
       !
       RETURN
