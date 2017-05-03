@@ -149,7 +149,7 @@ subroutine dvqpsi_us (ik, uact, addnlcc)
          rho%of_r(:,is) = rho%of_r(:,is) + fac * rho_core
       END DO
 
-      IF ( dft_is_gradient() ) 
+      IF ( dft_is_gradient() ) &
          CALL dgradcorr (rho%of_r, grho, &
                dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, xq, drhoc,&
                dfftp%nnr, 1, nspin_gga, nl, ngm, g, alat, aux)
