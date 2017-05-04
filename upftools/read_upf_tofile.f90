@@ -54,7 +54,7 @@ PROGRAM read_upf_tofile
 
   CALL read_upf(upf, grid, ierr, unit=iunps)
   !
-  IF (ierr /= 0) &
+  IF (ierr /= 0 .AND. ierr /=-1) &
      CALL errore('read_upf_tofile','reading pseudo upf', abs(ierr))
   !
   CLOSE(iunps)
