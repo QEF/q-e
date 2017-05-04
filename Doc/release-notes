@@ -5,6 +5,9 @@ New in svn version:
 
 Fixed in svn version
 
+  * Bug in parallel FFT when task groups are used and the number of XY planes 
+    is not a multiple of the number of MPI tasks and of task groups (r13489)
+
   * Born effective charges with "Zeu" method were not correctly computed 
     when both GGA and core corrections were present (r13474 and r13481).
     Thanks to Vineet Kumar Pandey for reporting the problem.
