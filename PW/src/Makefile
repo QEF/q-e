@@ -246,8 +246,7 @@ wannier_init.o \
 wannier_check.o \
 wannier_clean.o \
 wannier_occ.o \
-wannier_enrg.o \
-wyckoff.o       
+wannier_enrg.o
 
 QEMODS=../../Modules/libqemod.a ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a
 
