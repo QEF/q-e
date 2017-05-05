@@ -87,7 +87,7 @@ Signals:
       __TRAP_SIGUSR1  Enable signal trapping (experimental): code will stop
                       and save data if executable is signaled with USR1
 IO / Reporting:
-      __XSD            Enable XML format
+      __OLDXLM         Enable old XML format (obsolescent)
       __HDF5           Enable I/O using parallel HDF5 (Fortran 2003 
                        features needed to compile)
       __CLOCK_SECONDS  Translate clock from HH:mm:ss to only seconds
