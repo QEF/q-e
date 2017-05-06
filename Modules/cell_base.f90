@@ -5,12 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!------------------------------------------------------------------------
-! TB
-! included monopole potential similar to the saw function of the sawtooth
-! electric field, search 'TB'
-!------------------------------------------------------------------------
-
 !------------------------------------------------------------------------------!
   MODULE cell_base
 !------------------------------------------------------------------------------!
@@ -540,80 +534,6 @@
           rout = rout + matmul(box%hmat(:,:),s)
         END IF
       END FUNCTION pbc
-
-!
-!------------------------------------------------------------------------------!
-!
-      FUNCTION saw(emaxpos,eopreg,x) RESULT (sawout)
-        IMPLICIT NONE
-        REAL(DP) :: emaxpos,eopreg,x
-        REAL(DP) :: y, sawout, z
-        
-        z = x - emaxpos 
-        y = z - floor(z)
-        
-        if (y.le.eopreg) then
-        
-            sawout = (0.5_DP - y/eopreg) * (1._DP-eopreg)
-        
-        else 
-!
-! I would use:   sawout = y - 0.5_DP * ( 1.0_DP + eopreg )
-!
-            sawout = (-0.5_DP + (y-eopreg)/(1._DP-eopreg)) * (1._DP-eopreg)
-        
-        end if
-        
-      END FUNCTION saw
-
-!TB - start
-!------------------------------------------------------------------------------!
-!mopopla - add a potential of a monopole plane (kflag = .true.)
-!          or the compensating background charge (kflag = .false.)
-!          I split those in order to plot both independently
-! cite PRB 89, 245406 (2014)
-!
-      FUNCTION mopopla(zmon,x,kflag) RESULT (mopoplaout)
-        IMPLICIT NONE
-        REAL(DP) :: zmon,x
-        REAL(DP) :: mopoplaout, z
-        LOGICAL  :: kflag
-
-        DO ! is x within the cell?
-          IF (x>1.0) x=x-1.0
-          IF (x<0.0) x=x+1.0
-          IF (x<=1.0.and.x>=0.0) EXIT
-        ENDDO
-
-        z = (x - zmon)
-
-        !Monopole-plane
-        ! if z < 0, we are below the plane
-        !    z > 0, above
-        !    z < -0.5, the potential is again the same as for z > 0
-        !              in order to make it periodic
-        !    z > 0.5, the same as for z < 0
-        !
-        IF (z<=-0.5) z=z+1
-        IF (z>=0.5) z=z-1
-        IF (z.LE.0) THEN
-           IF (kflag) THEN
-              mopoplaout = ( 1.0_DP*z )
-           ELSE
-              mopoplaout = ( z**2 )
-           ENDIF
-        ELSE
-           IF (kflag) THEN
-              mopoplaout = ( -1.0_DP*z )
-           ELSE
-              mopoplaout = ( z**2 )
-           ENDIF
-        ENDIF
-
-      END FUNCTION mopopla
-
-!TB - end
-
 !
 !------------------------------------------------------------------------------!
 !

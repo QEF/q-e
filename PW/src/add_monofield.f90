@@ -24,8 +24,8 @@ SUBROUTINE add_monofield(vpoten,etotmonofield,linear,quadratic)
   USE kinds,         ONLY : DP
   USE constants,     ONLY : fpi, eps8, e2, au_debye, tpi
   USE ions_base,     ONLY : nat, ityp, zv, tau
-  USE cell_base,     ONLY : alat, at, omega, bg, mopopla
-  USE extfield,      ONLY : zmon, monopole, dipfield, forcemono,&
+  USE cell_base,     ONLY : alat, at, omega, bg
+  USE extfield,      ONLY : zmon, monopole, dipfield, forcemono, mopopla, &
                             relaxz, block, block_height, block_1, block_2, eopreg
   USE klist,         ONLY : nelec
   USE force_mod,     ONLY : lforce

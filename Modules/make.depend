@@ -160,6 +160,7 @@ linpack.o : kind.o
 lsda_functionals.o : constants.o
 lsda_functionals.o : kind.o
 metagga.o : constants.o
+metagga.o : funct.o
 metagga.o : kind.o
 metagga.o : libxc.o
 mm_dispersion.o : cell_base.o
@@ -451,6 +452,8 @@ write_upf_v2.o : pseudo_types.o
 write_upf_v2.o : radial_grids.o
 ws_base.o : invmat.o
 ws_base.o : kind.o
+wyckoff.o : kind.o
+wyckoff.o : space_group.o
 wypos.o : kind.o
 xc_rVV10.o : ../FFTXlib/fft_interfaces.o
 xc_rVV10.o : cell_base.o

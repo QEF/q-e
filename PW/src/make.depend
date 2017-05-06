@@ -26,6 +26,7 @@ add_efield.o : ../../Modules/kind.o
 add_efield.o : ../../Modules/mp.o
 add_efield.o : ../../Modules/mp_bands.o
 add_efield.o : ../../Modules/mp_images.o
+add_efield.o : extfield.o
 add_efield.o : pwcom.o
 add_monofield.o : ../../Modules/cell_base.o
 add_monofield.o : ../../Modules/constants.o
@@ -37,6 +38,7 @@ add_monofield.o : ../../Modules/kind.o
 add_monofield.o : ../../Modules/mp.o
 add_monofield.o : ../../Modules/mp_bands.o
 add_monofield.o : ../../Modules/mp_images.o
+add_monofield.o : extfield.o
 add_monofield.o : pwcom.o
 add_paw_to_deeq.o : ../../Modules/ions_base.o
 add_paw_to_deeq.o : ../../Modules/kind.o
@@ -271,6 +273,7 @@ clean_pw.o : ../../Modules/wavefunctions.o
 clean_pw.o : atomic_wfc_mod.o
 clean_pw.o : bp_mod.o
 clean_pw.o : dynamics_module.o
+clean_pw.o : extfield.o
 clean_pw.o : exx.o
 clean_pw.o : ldaU.o
 clean_pw.o : paw_init.o
@@ -318,6 +321,7 @@ compute_dip.o : ../../Modules/ions_base.o
 compute_dip.o : ../../Modules/kind.o
 compute_dip.o : ../../Modules/mp.o
 compute_dip.o : ../../Modules/mp_bands.o
+compute_dip.o : extfield.o
 compute_dip.o : pwcom.o
 compute_qdipol.o : ../../Modules/atom.o
 compute_qdipol.o : ../../Modules/constants.o
@@ -392,6 +396,7 @@ dynamics_module.o : ../../Modules/io_global.o
 dynamics_module.o : ../../Modules/ions_base.o
 dynamics_module.o : ../../Modules/kind.o
 dynamics_module.o : ../../Modules/random_numbers.o
+dynamics_module.o : extfield.o
 dynamics_module.o : pwcom.o
 dynamics_module.o : symm_base.o
 efermig.o : ../../Modules/constants.o
@@ -429,6 +434,7 @@ electrons.o : atomic_wfc_mod.o
 electrons.o : bp_mod.o
 electrons.o : buffers.o
 electrons.o : esm.o
+electrons.o : extfield.o
 electrons.o : exx.o
 electrons.o : io_rho_xml.o
 electrons.o : ldaU.o
@@ -468,6 +474,7 @@ ewald_dipole.o : ../../Modules/mp.o
 ewald_dipole.o : ../../Modules/mp_bands.o
 ewald_dipole.o : ../../Modules/recvec.o
 ewald_dipole.o : pwcom.o
+extfield.o : ../../Modules/kind.o
 exx.o : ../../FFTXlib/fft_interfaces.o
 exx.o : ../../FFTXlib/fft_types.o
 exx.o : ../../FFTXlib/scatter_mod.o
@@ -610,6 +617,7 @@ forces.o : ../../Modules/tsvdw.o
 forces.o : ../../Modules/uspp.o
 forces.o : bp_mod.o
 forces.o : esm.o
+forces.o : extfield.o
 forces.o : ldaU.o
 forces.o : martyna_tuckerman.o
 forces.o : pwcom.o
@@ -932,11 +940,13 @@ input.o : ../../Modules/run_info.o
 input.o : ../../Modules/tsvdw.o
 input.o : ../../Modules/wannier_new.o
 input.o : ../../Modules/wrappers.o
+input.o : ../../Modules/wyckoff.o
 input.o : a2fmod.o
 input.o : atomic_wfc_mod.o
 input.o : bp_mod.o
 input.o : dynamics_module.o
 input.o : esm.o
+input.o : extfield.o
 input.o : exx.o
 input.o : ldaU.o
 input.o : martyna_tuckerman.o
@@ -946,7 +956,6 @@ input.o : start_k.o
 input.o : symm_base.o
 input.o : tetra.o
 input.o : update_pot.o
-input.o : wyckoff.o
 input.o : xdm_dispersion.o
 interpolate.o : ../../FFTXlib/fft_interfaces.o
 interpolate.o : ../../Modules/control_flags.o
@@ -1009,7 +1018,6 @@ manypw.o : ../../Modules/environment.o
 manypw.o : ../../Modules/input_parameters.o
 manypw.o : ../../Modules/io_global.o
 manypw.o : ../../Modules/mp.o
-manypw.o : ../../Modules/mp_global.o
 manypw.o : ../../Modules/mp_images.o
 manypw.o : ../../Modules/mp_world.o
 manypw.o : ../../Modules/read_input.o
@@ -1482,6 +1490,7 @@ pw_restart.o : acfdt_in_pw.o
 pw_restart.o : atomic_wfc_mod.o
 pw_restart.o : buffers.o
 pw_restart.o : esm.o
+pw_restart.o : extfield.o
 pw_restart.o : exx.o
 pw_restart.o : io_rho_xml.o
 pw_restart.o : ldaU.o
@@ -1532,6 +1541,7 @@ pw_restart_new.o : atomic_wfc_mod.o
 pw_restart_new.o : bp_mod.o
 pw_restart_new.o : buffers.o
 pw_restart_new.o : esm.o
+pw_restart_new.o : extfield.o
 pw_restart_new.o : exx.o
 pw_restart_new.o : io_rho_xml.o
 pw_restart_new.o : ldaU.o
@@ -1547,6 +1557,7 @@ pwcom.o : ../../Modules/cell_base.o
 pwcom.o : ../../Modules/constants.o
 pwcom.o : ../../Modules/kind.o
 pwcom.o : ../../Modules/parameters.o
+pwcom.o : extfield.o
 pwscf.o : ../../Modules/command_line_options.o
 pwscf.o : ../../Modules/environment.o
 pwscf.o : ../../Modules/mp_global.o
@@ -1599,6 +1610,7 @@ read_file.o : ../../Modules/uspp.o
 read_file.o : ../../Modules/wavefunctions.o
 read_file.o : buffers.o
 read_file.o : esm.o
+read_file.o : extfield.o
 read_file.o : io_rho_xml.o
 read_file.o : ldaU.o
 read_file.o : newd.o
@@ -1635,6 +1647,7 @@ read_file_new.o : ../../Modules/uspp.o
 read_file_new.o : ../../Modules/wavefunctions.o
 read_file_new.o : buffers.o
 read_file_new.o : esm.o
+read_file_new.o : extfield.o
 read_file_new.o : io_rho_xml.o
 read_file_new.o : ldaU.o
 read_file_new.o : newd.o
@@ -1713,6 +1726,7 @@ rotate_wfc_k.o : ../../Modules/mp_bands.o
 rotate_wfc_k.o : ../../Modules/mp_diag.o
 run_driver.o : ../../Modules/cell_base.o
 run_driver.o : ../../Modules/check_stop.o
+run_driver.o : ../../Modules/command_line_options.o
 run_driver.o : ../../Modules/control_flags.o
 run_driver.o : ../../Modules/fsockets.o
 run_driver.o : ../../Modules/io_global.o
@@ -1788,6 +1802,7 @@ scf_mod.o : ../../Modules/recvec.o
 scf_mod.o : ../../Modules/uspp.o
 scf_mod.o : ../../Modules/wavefunctions.o
 scf_mod.o : buffers.o
+scf_mod.o : extfield.o
 scf_mod.o : ldaU.o
 scf_mod.o : paw_onecenter.o
 scf_mod.o : pwcom.o
@@ -1823,6 +1838,7 @@ setlocal.o : ../../Modules/mp_bands.o
 setlocal.o : ../../Modules/qmmm.o
 setlocal.o : ../../Modules/recvec.o
 setlocal.o : esm.o
+setlocal.o : extfield.o
 setlocal.o : martyna_tuckerman.o
 setlocal.o : pwcom.o
 setlocal.o : scf_mod.o
@@ -1851,6 +1867,7 @@ setup.o : ../../Modules/recvec.o
 setup.o : ../../Modules/uspp.o
 setup.o : atomic_wfc_mod.o
 setup.o : bp_mod.o
+setup.o : extfield.o
 setup.o : exx.o
 setup.o : ldaU.o
 setup.o : pw_restart.o
@@ -2102,6 +2119,7 @@ update_pot.o : ../../Modules/recvec.o
 update_pot.o : ../../Modules/uspp.o
 update_pot.o : ../../Modules/wavefunctions.o
 update_pot.o : buffers.o
+update_pot.o : extfield.o
 update_pot.o : io_rho_xml.o
 update_pot.o : ldaU.o
 update_pot.o : paw_onecenter.o
@@ -2276,8 +2294,6 @@ write_ns.o : ldaU.o
 write_ns.o : pwcom.o
 write_ns.o : scf_mod.o
 wsweight.o : ../../Modules/kind.o
-wyckoff.o : ../../Modules/kind.o
-wyckoff.o : ../../Modules/space_group.o
 xdm_dispersion.o : ../../Modules/atom.o
 xdm_dispersion.o : ../../Modules/cell_base.o
 xdm_dispersion.o : ../../Modules/constants.o

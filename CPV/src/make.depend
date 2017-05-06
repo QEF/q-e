@@ -558,6 +558,7 @@ init.o : ../../Modules/recvec_subs.o
 init.o : ../../Modules/uspp.o
 init.o : cp_interfaces.o
 init.o : cp_restart.o
+init.o : cp_restart_new.o
 init.o : electrons.o
 init.o : exx_module.o
 init.o : ions_positions.o

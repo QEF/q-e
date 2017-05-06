@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003-2004 PWSCF group
+! Copyright (C) 2003-2017 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -28,9 +28,9 @@ SUBROUTINE compute_ion_dip(emaxpos, eopreg, edir, ion_dipole)
   USE ions_base,  ONLY : nat, ityp, tau, zv
   USE constants, ONLY : fpi
   USE kinds,      ONLY : DP
-  USE cell_base,  ONLY : at, bg, omega, alat, saw
+  USE cell_base,  ONLY : at, bg, omega, alat
   USE klist,      ONLY : nelec !TB
-  USE extfield,   ONLY : monopole, dipfield, zmon !TB
+  USE extfield,   ONLY : monopole, dipfield, zmon, saw
   !
   IMPLICIT NONE
   !
@@ -91,11 +91,12 @@ SUBROUTINE compute_el_dip(emaxpos, eopreg, edir, charge, e_dipole)
   !---------------------------------------------------------------------------
   !
   USE io_global,  ONLY : stdout, ionode
-  USE lsda_mod,     ONLY : nspin
-  USE constants, ONLY : fpi
+  USE lsda_mod,   ONLY : nspin
+  USE constants,  ONLY : fpi
   USE kinds,      ONLY : DP
-  USE cell_base,  ONLY : at, bg, omega, alat, saw
+  USE cell_base,  ONLY : at, bg, omega, alat
   USE fft_base,   ONLY : dfftp
+  USE extfield,   ONLY : saw
   USE mp_bands,   ONLY : me_bgrp, intra_bgrp_comm
   USE mp,         ONLY : mp_sum
   !

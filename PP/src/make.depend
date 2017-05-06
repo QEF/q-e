@@ -184,6 +184,7 @@ do_initial_state.o : ../../Modules/kind.o
 do_initial_state.o : ../../Modules/parameters.o
 do_initial_state.o : ../../Modules/recvec.o
 do_initial_state.o : ../../Modules/uspp.o
+do_initial_state.o : ../../PW/src/extfield.o
 do_initial_state.o : ../../PW/src/ldaU.o
 do_initial_state.o : ../../PW/src/newd.o
 do_initial_state.o : ../../PW/src/pwcom.o
@@ -529,7 +530,6 @@ punch_plot.o : ../../FFTXlib/fft_interfaces.o
 punch_plot.o : ../../FFTXlib/scatter_mod.o
 punch_plot.o : ../../Modules/cell_base.o
 punch_plot.o : ../../Modules/constants.o
-punch_plot.o : ../../Modules/control_flags.o
 punch_plot.o : ../../Modules/fft_base.o
 punch_plot.o : ../../Modules/gvecw.o
 punch_plot.o : ../../Modules/io_global.o
@@ -538,7 +538,7 @@ punch_plot.o : ../../Modules/kind.o
 punch_plot.o : ../../Modules/noncol.o
 punch_plot.o : ../../Modules/recvec.o
 punch_plot.o : ../../Modules/run_info.o
-punch_plot.o : ../../Modules/wavefunctions.o
+punch_plot.o : ../../PW/src/extfield.o
 punch_plot.o : ../../PW/src/pwcom.o
 punch_plot.o : ../../PW/src/scf_mod.o
 punch_plot.o : paw_postproc.o
@@ -637,6 +637,7 @@ pw_export.o : ../../Modules/mp_pools.o
 pw_export.o : ../../Modules/mp_wave.o
 pw_export.o : ../../Modules/mp_world.o
 pw_export.o : ../../Modules/parameters.o
+pw_export.o : ../../Modules/recvec.o
 pw_export.o : ../../Modules/uspp.o
 pw_export.o : ../../Modules/version.o
 pw_export.o : ../../Modules/wavefunctions.o

@@ -330,48 +330,6 @@ MODULE us
   !
 END MODULE us
 !
-!
-MODULE extfield
-  !
-  ! ... The quantities needed in calculations with external field
-  !
-  USE kinds, ONLY : DP
-  !
-  SAVE
-  !
-  LOGICAL :: &
-       tefield,      &! if .TRUE. a finite electric field is added to the
-                      ! local potential
-       dipfield,     &! if .TRUE. the dipole field is subtracted
-       ! TB
-       relaxz,       &! relax in z direction
-       block,        &! add potential barrier
-       monopole       ! if .TRUE. and system is charged, charge is represented
-                      ! with monopole plane (gate)
-  INTEGER :: &
-       edir           ! direction of the field
-  REAL(DP) :: &
-      emaxpos,       &! position of the maximum of the field (0<emaxpos<1)
-      eopreg,        &! amplitude of the inverse region (0<eopreg<1)
-      eamp,          &! field amplitude (in a.u.) (1 a.u. = 51.44 10^11 V/m)
-      etotefield,    &! energy correction due to the field
-      el_dipole,     &! electronic_dipole used when dipole correction is on
-      ion_dipole,    &! ionic_dipole      used when dipole correction is on
-      tot_dipole,    &! total dipole      used when dipole correction is on
-      ! TB
-      zmon,          &! position of monopole plane
-      block_1,       &! blocking potential
-      block_2,       &
-      block_height,  &
-      etotmonofield   ! energy correction due to the monopole
-  REAL(DP), ALLOCATABLE :: &
-      forcefield(:,:), &
-      forcemono(:,:) ! TB monopole forces
-  !
-END MODULE extfield
-!
-!
-!
 MODULE fixed_occ
   !
   ! ... The quantities needed in calculations with fixed occupations

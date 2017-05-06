@@ -47,8 +47,8 @@ SUBROUTINE add_efield(vpoten,etotefield,rho,iflag)
   USE kinds,         ONLY : DP
   USE constants,     ONLY : fpi, eps8, e2, au_debye
   USE ions_base,     ONLY : nat, ityp, zv
-  USE cell_base,     ONLY : alat, at, omega, bg, saw
-  USE extfield,      ONLY : tefield, dipfield, edir, eamp, emaxpos, &
+  USE cell_base,     ONLY : alat, at, omega, bg
+  USE extfield,      ONLY : tefield, dipfield, edir, eamp, emaxpos, saw, &
                             eopreg, forcefield, el_dipole, ion_dipole, tot_dipole
   USE force_mod,     ONLY : lforce
   USE io_global,     ONLY : stdout,ionode

@@ -273,6 +273,7 @@ produce_wannier_gamma.o : ../../Modules/mp_world.o
 produce_wannier_gamma.o : ../../Modules/recvec.o
 produce_wannier_gamma.o : ../../Modules/wannier_gw.o
 produce_wannier_gamma.o : ../../Modules/wavefunctions.o
+produce_wannier_gamma.o : ../../PW/src/extfield.o
 produce_wannier_gamma.o : ../../PW/src/exx.o
 produce_wannier_gamma.o : ../../PW/src/ldaU.o
 produce_wannier_gamma.o : ../../PW/src/pwcom.o

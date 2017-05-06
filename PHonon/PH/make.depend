@@ -46,15 +46,6 @@ addcore.o : ../../Modules/kind.o
 addcore.o : ../../Modules/recvec.o
 addcore.o : ../../Modules/uspp.o
 addcore.o : phcom.o
-adddvscf.o : ../../LR_Modules/lrcom.o
-adddvscf.o : ../../Modules/ions_base.o
-adddvscf.o : ../../Modules/kind.o
-adddvscf.o : ../../Modules/noncol.o
-adddvscf.o : ../../Modules/uspp.o
-adddvscf.o : ../../PW/src/pwcom.o
-adddvscf.o : elph.o
-adddvscf.o : elph_tetra_mod.o
-adddvscf.o : phcom.o
 addnlcc.o : ../../LR_Modules/lrcom.o
 addnlcc.o : ../../Modules/cell_base.o
 addnlcc.o : ../../Modules/fft_base.o
@@ -505,6 +496,7 @@ dvqpsi_us.o : ../../FFTXlib/fft_interfaces.o
 dvqpsi_us.o : ../../LR_Modules/lrcom.o
 dvqpsi_us.o : ../../Modules/cell_base.o
 dvqpsi_us.o : ../../Modules/fft_base.o
+dvqpsi_us.o : ../../Modules/funct.o
 dvqpsi_us.o : ../../Modules/ions_base.o
 dvqpsi_us.o : ../../Modules/kind.o
 dvqpsi_us.o : ../../Modules/noncol.o
@@ -512,6 +504,7 @@ dvqpsi_us.o : ../../Modules/recvec.o
 dvqpsi_us.o : ../../Modules/uspp.o
 dvqpsi_us.o : ../../Modules/wavefunctions.o
 dvqpsi_us.o : ../../PW/src/pwcom.o
+dvqpsi_us.o : ../../PW/src/scf_mod.o
 dvqpsi_us.o : phcom.o
 dvqpsi_us_only.o : ../../LR_Modules/lrcom.o
 dvqpsi_us_only.o : ../../Modules/cell_base.o
