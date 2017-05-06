@@ -384,7 +384,6 @@ MODULE pwcom
   USE relax
   USE cellmd
   USE us
-  USE extfield
   USE fixed_occ
   USE spin_orb
   !
