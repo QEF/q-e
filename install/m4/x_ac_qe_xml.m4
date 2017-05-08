@@ -10,7 +10,7 @@ AC_ARG_ENABLE(xml,
    else
       use_xml=0
    fi],
-   [use_xml=0])
+   [use_xml=1])
    
 # preprocessing flag for XML
 if test "$use_xml" -eq 0 ; then try_dflags="$try_dflags -D__OLDXML" ; fi

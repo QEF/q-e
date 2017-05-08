@@ -10162,7 +10162,7 @@ if test "${enable_xml+set}" = set; then :
       use_xml=0
    fi
 else
-  use_xml=0
+  use_xml=1
 fi
 
 
