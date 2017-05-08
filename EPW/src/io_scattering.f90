@@ -311,7 +311,7 @@
       WRITE(name1,'(a16,f6.2)') 'scattering_rate_', temp
     ENDIF
     OPEN(iufilscatt_rate,file=name1, status='old',iostat=ios)
-    WRITE(stdout,'(a16,a22)'),'     Open file: ',name1   
+    WRITE(stdout,'(a16,a22)') '     Open file: ',name1   
     ! There are two comment line at the beginning of the file
     READ(iufilscatt_rate,*) dummy1
     READ(iufilscatt_rate,*) dummy1

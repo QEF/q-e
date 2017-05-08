@@ -18,7 +18,7 @@
   !
   USE kinds,         ONLY : DP
   use elph2,         ONLY : cvmew !, chw
-  use pwcom,         ONLY : at, celldm
+  use cell_base,     ONLY : at, celldm
   USE epwcom,        ONLY : eig_read
   USE constants_epw, ONLY : twopi, ci, czero
   !

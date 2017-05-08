@@ -20,7 +20,8 @@
   !--------------------------------------------------------
   !
   USE kinds,          only : DP
-  use pwcom,          only : nkstot, at
+  use pwcom,          only : nkstot
+  USE cell_base,      ONLY : at
   USE start_k,        ONLY : nk1, nk2, nk3
   use epwcom,         only : xk_cryst
   USE mp_global,      only : nproc_pool, npool

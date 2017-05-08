@@ -194,7 +194,7 @@ SUBROUTINE loadqmesh_serial
   USE epwcom,    ONLY : filqf, nqf1, nqf2, nqf3, &
                         rand_q, rand_nq, mp_mesh_q, system_2d
   USE elph2,     ONLY : xqf, wqf, nqtotf, nqf
-  USE pwcom,     ONLY : at, bg
+  USE cell_base, ONLY : at, bg
   USE symm_base, ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
   USE io_epw,    ONLY : iunqf
   implicit none

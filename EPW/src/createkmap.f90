@@ -417,7 +417,7 @@
   !!
   !-------------------------------------------------------------------------
   USE kinds,         ONLY : DP
-  USE pwcom,         ONLY : at,bg
+  USE cell_base,     ONLY : at,bg
   USE start_k,       ONLY : nk1, nk2, nk3
   USE epwcom,        ONLY : xk_cryst
   USE io_global,     ONLY : stdout, meta_ionode

@@ -24,7 +24,7 @@
   !!
   !
   USE kinds,         ONLY : DP
-  USE pwcom,         ONLY : at, bg, celldm, omega
+  USE cell_base,     ONLY : at, bg, celldm, omega
   USE ions_base,     ONLY : nat, tau
   USE phcom,         ONLY : nq1, nq2, nq3
   USE control_flags, ONLY : iverbosity

@@ -248,7 +248,7 @@ SUBROUTINE loadkmesh_serial
   USE epwcom,    ONLY : filkf, nkf1, nkf2, nkf3, &
                         rand_k, rand_nk, mp_mesh_k, system_2d
   USE elph2,     ONLY : xkf, wkf, nkqtotf, nkf, nkqf
-  USE pwcom,     ONLY : at, bg
+  USE cell_base, ONLY : at, bg
   USE symm_base, ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
   USE io_epw,    ONLY : iunkf
   implicit none

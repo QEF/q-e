@@ -46,7 +46,7 @@
   use phcom,         ONLY : nmodes
   USE constants_epw, ONLY : cone, czero, twopi, rydcm1 
   use control_flags, ONLY : iverbosity
-  use pwcom,         ONLY : at, bg
+  use cell_base,     ONLY : at, bg
   use ions_base,     ONLY : nat, amass, nat, ityp
   implicit none
   !

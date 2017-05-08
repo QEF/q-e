@@ -20,7 +20,7 @@
   !-----------------------------------------------------------------------
   !
   USE kinds,     ONLY : DP
-  USE pwcom,     ONLY : at, bg, celldm
+  USE cell_base, ONLY : at, bg, celldm
   USE constants_epw, ONLY : bohr2ang, twopi, ci, czero, cone
   USE io_epw,    ONLY : iuwane
   USE io_global, ONLY : ionode_id

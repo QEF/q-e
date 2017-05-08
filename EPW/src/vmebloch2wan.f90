@@ -18,7 +18,8 @@
   !--------------------------------------------------------------------------
   !
   USE kinds,     ONLY : DP
-  use pwcom,     ONLY : at, bg, celldm, nkstot
+  use cell_base, ONLY : at, bg, celldm
+  use pwcom,     ONLY : nkstot
   use elph2,     ONLY : cvmew
   USE constants_epw, ONLY : bohr2ang, twopi, zero, ci, czero
   use io_files,  ONLY : prefix

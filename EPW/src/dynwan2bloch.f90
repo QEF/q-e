@@ -25,7 +25,7 @@
   !--------------------------------------------------------------------------
   !
   USE kinds,     ONLY : DP
-  USE pwcom,     ONLY : at, bg
+  USE cell_base, ONLY : at, bg
   USE phcom,     ONLY : nq1, nq2, nq3
   USE ions_base, ONLY : amass, tau, nat, ityp
   USE elph2,     ONLY : rdw, epsi, zstar
@@ -150,7 +150,7 @@
   !--------------------------------------------------------------------------
   !
   USE kinds,     ONLY : DP
-  USE pwcom,     ONLY : at, bg
+  USE cell_base, ONLY : at, bg
   USE phcom,     ONLY : nq1, nq2, nq3
   USE ions_base, ONLY : amass, tau, nat, ityp
   USE elph2,     ONLY : ifc, epsi, zstar
@@ -344,7 +344,7 @@
   !--------------------------------------------------------------------------
   !
   USE kinds,     ONLY : DP
-  USE pwcom,     ONLY : at, bg
+  USE cell_base, ONLY : at, bg
   USE phcom,     ONLY : nq1, nq2, nq3
   USE ions_base, ONLY : amass, tau, nat, ityp
   USE elph2,     ONLY : ifc, epsi, zstar

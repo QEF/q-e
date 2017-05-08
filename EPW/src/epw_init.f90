@@ -20,9 +20,10 @@
   USE phus,                 ONLY : alphap
   USE lrus,                 ONLY : becp1
   USE uspp,                 ONLY : vkb
-  USE pwcom,                ONLY : npwx, nbnd, tpi, nks, lsda, current_spin,&
-                                   tpiba2, tpiba, bg, g2kin, isk, &
-                                   xk, strf, omega
+  USE pwcom,                ONLY : npwx, nbnd, nks, lsda, current_spin,&
+                                   g2kin, isk, xk, strf
+  USE constants,            ONLY : tpi
+  USE cell_base,            ONLY : tpiba2, tpiba, bg, omega
   USE klist,                ONLY : ngk, igk_k, nkstot
   USE constants_epw,        ONLY : zero
   USE gvecw,                ONLY : ecutwfc

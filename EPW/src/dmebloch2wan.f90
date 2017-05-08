@@ -17,7 +17,7 @@
   !!
   !
   USE kinds,         ONLY : DP
-  USE pwcom,         ONLY : at, bg, celldm
+  USE cell_base,     ONLY : at, bg, celldm
   USE elph2,         ONLY : cdmew
   USE constants_epw, ONLY : bohr2ang, twopi, ci, czero
   USE io_global,     ONLY : ionode_id
