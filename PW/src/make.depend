@@ -1553,8 +1553,6 @@ pw_restart_new.o : start_k.o
 pw_restart_new.o : symm_base.o
 pw_restart_new.o : tetra.o
 pw_restart_new.o : xdm_dispersion.o
-pwcom.o : ../../Modules/cell_base.o
-pwcom.o : ../../Modules/constants.o
 pwcom.o : ../../Modules/kind.o
 pwcom.o : ../../Modules/parameters.o
 pwscf.o : ../../Modules/command_line_options.o

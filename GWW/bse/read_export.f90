@@ -6,6 +6,7 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
 
   use kinds,          ONLY : DP 
   use pwcom  
+  use cell_base,      ONLY : tpiba2, bg
   use gvect,          ONLY : ngm, ngm_g, ig_l2g, mill, g 
   use control_flags,  ONLY : gamma_only  
   use becmod,         ONLY : bec_type, becp, calbec, &

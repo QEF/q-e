@@ -125,6 +125,7 @@ direct_w_exc.o : bse_basic_structure.o
 direct_w_exc.o : bse_wannier.o
 direct_w_exc.o : exciton.o
 dvpsi_bse.o : ../../Modules/becmod.o
+dvpsi_bse.o : ../../Modules/cell_base.o
 dvpsi_bse.o : ../../Modules/control_flags.o
 dvpsi_bse.o : ../../Modules/gvecw.o
 dvpsi_bse.o : ../../Modules/io_files.o
@@ -214,6 +215,7 @@ openfil_bse.o : ../../Modules/uspp.o
 openfil_bse.o : ../../PW/src/atomic_wfc_mod.o
 openfil_bse.o : ../../PW/src/pwcom.o
 plot_excwfn.o : ../../GWW/pw4gww/fft_custom.o
+plot_excwfn.o : ../../Modules/cell_base.o
 plot_excwfn.o : ../../Modules/io_files.o
 plot_excwfn.o : ../../Modules/io_global.o
 plot_excwfn.o : ../../Modules/ions_base.o
@@ -244,6 +246,7 @@ qpe_exc.o : ../../Modules/mp_world.o
 qpe_exc.o : ../../PW/src/pwcom.o
 qpe_exc.o : bse_wannier.o
 read_export.o : ../../Modules/becmod.o
+read_export.o : ../../Modules/cell_base.o
 read_export.o : ../../Modules/control_flags.o
 read_export.o : ../../Modules/gvecw.o
 read_export.o : ../../Modules/io_files.o

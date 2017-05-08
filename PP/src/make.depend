@@ -623,6 +623,7 @@ pw2wannier90.o : ../../PW/src/pwcom.o
 pw2wannier90.o : ../../PW/src/scf_mod.o
 pw2wannier90.o : ../../PW/src/symm_base.o
 pw_export.o : ../../Modules/becmod.o
+pw_export.o : ../../Modules/cell_base.o
 pw_export.o : ../../Modules/control_flags.o
 pw_export.o : ../../Modules/environment.o
 pw_export.o : ../../Modules/fft_base.o

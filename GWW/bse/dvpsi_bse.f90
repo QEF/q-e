@@ -16,6 +16,7 @@ SUBROUTINE dvpsi_e(kpoint,ipol,dvpsi2,l_lr)
   USE ions_base, ONLY : ntyp => nsp, nat, ityp
   USE kinds, ONLY: DP
   USE pwcom
+  USE cell_base, ONLY : tpiba, tpiba2
   USE uspp, ONLY: nkb, vkb, dvan
   USE uspp_param, ONLY: nh
   USE wavefunctions_module,  ONLY: evc

@@ -532,6 +532,7 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   use io_files,       ONLY : pseudo_dir, psfile
   use io_global,      ONLY : ionode, stdout
   USE ions_base,      ONLY : atm, nat, ityp, tau, nsp
+  use cell_base,      ONLY : bg
   use mp_pools,       ONLY : nproc_pool, my_pool_id, intra_pool_comm, &
                              inter_pool_comm
   use mp,             ONLY : mp_sum, mp_max

@@ -90,6 +90,7 @@ phq_readin.o : ../../PW/src/start_k.o
 solve_head.o : ../../FFTXlib/fft_interfaces.o
 solve_head.o : ../../LR_Modules/lrcom.o
 solve_head.o : ../../Modules/becmod.o
+solve_head.o : ../../Modules/cell_base.o
 solve_head.o : ../../Modules/check_stop.o
 solve_head.o : ../../Modules/constants.o
 solve_head.o : ../../Modules/fft_base.o

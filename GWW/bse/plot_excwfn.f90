@@ -8,6 +8,7 @@ USE bse_wannier, ONLY:num_nbndv,&
                       r_hole,l_plotaverage
 use bse_basic_structures
 USE pwcom
+USE cell_base, ONLY : alat, at, bg
 USE fft_custom_gwl
 USE io_global, ONLY : stdout,ionode,ionode_id
 USE io_files, ONLY : tmp_dir,prefix

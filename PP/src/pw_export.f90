@@ -373,6 +373,7 @@ SUBROUTINE write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   USE io_base_export, ONLY : write_restart_wfc
   USE io_global,      ONLY : ionode, stdout
   USE ions_base,      ONLY : atm, nat, ityp, tau, nsp
+  USE cell_base,      ONLY : at, bg, alat, omega, tpiba, tpiba2  
   USE mp_pools,       ONLY : my_pool_id, intra_pool_comm, inter_pool_comm, &
                              nproc_pool
   USE mp,             ONLY : mp_sum, mp_max

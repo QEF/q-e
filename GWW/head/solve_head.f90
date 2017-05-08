@@ -17,6 +17,7 @@ subroutine solve_head
   USE io_global,             ONLY : stdout, ionode,ionode_id
   USE io_files,              ONLY : diropn,prefix, tmp_dir
   use pwcom
+  USE cell_base,             ONLY : omega, tpiba2
   USE check_stop,            ONLY : max_seconds
   USE wavefunctions_module,  ONLY : evc
   USE kinds,                 ONLY : DP
@@ -40,7 +41,7 @@ subroutine solve_head
   USE fft_base,             ONLY : dfftp, dffts
   USE fft_interfaces,       ONLY : fwfft, invfft
   USE buffers,              ONLY : get_buffer
-  USE constants,            ONLY : rytoev
+  USE constants,            ONLY : rytoev, fpi
 
   use qpoint,                ONLY : npwq, nksq
   use control_lr,            ONLY : nbnd_occ, lgamma

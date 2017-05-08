@@ -29,7 +29,7 @@
      USE wvfct,    ONLY : et
      USE lsda_mod,             ONLY : nspin
      USE wannier_gw,           ONLY : max_ngm, l_truncated_coulomb,vg_q,truncation_radius
-     USE constants, ONLY : pi, tpi, fpi
+     USE constants, ONLY : e2, pi, tpi, fpi
      USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2
 
 
