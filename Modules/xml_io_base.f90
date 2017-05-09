@@ -32,8 +32,9 @@ MODULE xml_io_base
   PUBLIC :: rho_binary
   PUBLIC :: attr
   !
-  PUBLIC :: read_wfc, write_wfc, read_rho_xml, write_rho_xml, &
-            save_print_counter, read_print_counter
+  PUBLIC :: read_wfc, write_wfc, read_rho, write_rho, &
+       read_rho_xml, write_rho_xml, &
+       save_print_counter, read_print_counter
   PUBLIC :: create_directory, check_file_exst, restart_dir
   !
   CONTAINS
@@ -409,6 +410,160 @@ MODULE xml_io_base
       !
     END SUBROUTINE set_kpoints_vars
     !
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE write_rho( rho, nspin, extension )
+      !------------------------------------------------------------------------
+      !
+      ! ... this routine writes the charge-density in xml format into the
+      ! ... '.save' directory
+      ! ... the '.save' directory is created if not already present
+      !
+      USE io_files, ONLY : tmp_dir, prefix
+      USE fft_base, ONLY : dfftp
+      USE io_global,ONLY : ionode
+      USE mp_bands, ONLY : intra_bgrp_comm, inter_bgrp_comm
+      !
+      IMPLICIT NONE
+      !
+      INTEGER,          INTENT(IN)           :: nspin
+      REAL(DP),         INTENT(IN)           :: rho(dfftp%nnr,nspin)
+      CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: extension
+      !
+      CHARACTER(LEN=256)    :: dirname, file_base
+      CHARACTER(LEN=256)    :: ext
+      REAL(DP), ALLOCATABLE :: rhoaux(:)
+      !
+      !
+      ext = ' '
+      !
+      dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save'
+      !
+      CALL create_directory( dirname )
+      !
+      IF ( PRESENT( extension ) ) ext = '.' // TRIM( extension )
+      !
+      file_base = TRIM( dirname ) // '/charge-density' // TRIM( ext )
+      !
+      IF ( nspin == 1 ) THEN
+         !
+         CALL write_rho_xml( file_base, rho(:,1), dfftp%nr1, dfftp%nr2, &
+                  dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
+                  ionode, intra_bgrp_comm, inter_bgrp_comm )
+         !
+      ELSE IF ( nspin == 2 ) THEN
+         !
+         ALLOCATE( rhoaux( dfftp%nnr ) )
+         !
+         rhoaux(:) = rho(:,1) + rho(:,2)
+         !
+         CALL write_rho_xml( file_base, rhoaux, dfftp%nr1, dfftp%nr2, &
+                  dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
+                  ionode, intra_bgrp_comm, inter_bgrp_comm )
+         !
+         file_base = TRIM( dirname ) // '/spin-polarization' // TRIM( ext )
+         !
+         rhoaux(:) = rho(:,1) - rho(:,2)
+         !
+         CALL write_rho_xml( file_base, rhoaux,  dfftp%nr1, dfftp%nr2, &
+                  dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
+                  ionode, intra_bgrp_comm, inter_bgrp_comm )
+         !
+         DEALLOCATE( rhoaux )
+         !
+      ELSE IF ( nspin == 4 ) THEN
+         !
+         CALL write_rho_xml( file_base, rho(:,1), dfftp%nr1, dfftp%nr2, &
+                  dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
+                  ionode, intra_bgrp_comm, inter_bgrp_comm )
+         !
+         file_base = TRIM( dirname ) // '/magnetization.x' // TRIM( ext )
+         !
+         CALL write_rho_xml( file_base, rho(:,2), dfftp%nr1, dfftp%nr2, &
+               dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
+               ionode, intra_bgrp_comm, inter_bgrp_comm )
+         !
+         file_base = TRIM( dirname ) // '/magnetization.y' // TRIM( ext )
+         !
+         CALL write_rho_xml( file_base, rho(:,3), dfftp%nr1, dfftp%nr2, &
+               dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
+               ionode, intra_bgrp_comm, inter_bgrp_comm )
+         !
+         file_base = TRIM( dirname ) // '/magnetization.z' // TRIM( ext )
+         !
+         CALL write_rho_xml( file_base, rho(:,4), dfftp%nr1, dfftp%nr2, &
+               dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
+               ionode, intra_bgrp_comm, inter_bgrp_comm )
+         !
+      END IF
+      !
+      RETURN
+      !
+    END SUBROUTINE write_rho
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE read_rho( rho, nspin, extension )
+      !------------------------------------------------------------------------
+      !
+      ! ... this routine reads the charge-density in xml format from the
+      ! ... files saved into the '.save' directory
+      !
+      USE io_files,  ONLY : tmp_dir, prefix
+      USE fft_base,  ONLY : dfftp
+      USE io_global, ONLY : ionode
+      !
+      IMPLICIT NONE
+      !
+      INTEGER,          INTENT(IN)           :: nspin
+      REAL(DP),         INTENT(OUT)          :: rho(dfftp%nnr,nspin)
+      CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: extension
+      !
+      CHARACTER(LEN=256)    :: dirname, file_base
+      CHARACTER(LEN=256)    :: ext
+      REAL(DP), ALLOCATABLE :: rhoaux(:)
+      !
+      dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save'
+      ext = ' '
+      IF ( PRESENT( extension ) ) ext = '.' // TRIM( extension )
+      file_base = TRIM( dirname ) // '/charge-density' // TRIM( ext )
+      !
+      CALL read_rho_xml ( file_base, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
+                 dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, rho(:,1) ) 
+      !
+      IF ( nspin == 2 ) THEN
+         !
+         rho(:,2) = rho(:,1)
+         !
+         ALLOCATE( rhoaux( dfftp%nnr ) )
+         !
+         file_base = TRIM( dirname ) // '/spin-polarization' // TRIM( ext )
+         CALL read_rho_xml ( file_base, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
+                    dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, rhoaux ) 
+         !
+         rho(:,1) = 0.5D0*( rho(:,1) + rhoaux(:) )
+         rho(:,2) = 0.5D0*( rho(:,2) - rhoaux(:) )
+         !
+         DEALLOCATE( rhoaux )
+         !
+      ELSE IF ( nspin == 4 ) THEN
+         !
+         file_base = TRIM( dirname ) // '/magnetization.x' // TRIM( ext )
+         CALL read_rho_xml ( file_base, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
+              dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, rho(:,2) ) 
+         !
+         file_base = TRIM( dirname ) // '/magnetization.y' // TRIM( ext )
+         CALL read_rho_xml ( file_base, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
+              dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, rho(:,3) ) 
+         !
+         file_base = TRIM( dirname ) // '/magnetization.z' // TRIM( ext )
+         CALL read_rho_xml ( file_base, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
+              dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, rho(:,4) ) 
+         !
+      END IF
+      !
+      RETURN
+      !
+    END SUBROUTINE read_rho
     !------------------------------------------------------------------------
     SUBROUTINE write_rho_xml( rho_file_base, rho, &
                               nr1, nr2, nr3, nr1x, nr2x, ipp, npp, &

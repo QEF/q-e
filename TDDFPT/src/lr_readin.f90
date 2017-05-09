@@ -53,7 +53,7 @@ SUBROUTINE lr_readin
   USE esm,                 ONLY : do_comp_esm
   USE qpoint,              ONLY : xq
   USE xml_io_base,         ONLY : create_directory
-  USE io_rho_xml,          ONLY : write_rho
+  USE io_rho_xml,          ONLY : write_scf
   USE noncollin_module,    ONLY : noncolin
   USE mp_bands,            ONLY : ntask_groups
   USE constants,           ONLY : eps4
@@ -391,14 +391,14 @@ SUBROUTINE lr_readin
   !
   IF (eels) THEN
      !
-     ! Specify the temporary derictory.
+     ! Specify the temporary directory.
      !
      tmp_dir = tmp_dir_lr
      !
      ! Copy the scf-charge-density to the tmp_dir (PH/check_initial_status.f90).
      ! Needed for the nscf calculation.
      !
-     IF (.NOT.restart) CALL write_rho( rho, nspin )
+     IF (.NOT.restart) CALL write_scf( rho, nspin )
      !
      ! If a band structure calculation needs to be done, do not open a file
      ! for k point (PH/phq_readin.f90)

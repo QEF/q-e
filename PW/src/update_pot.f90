@@ -403,7 +403,7 @@ SUBROUTINE extrapolate_charge( rho_extr )
   USE vlocal,               ONLY : strf
   USE noncollin_module,     ONLY : noncolin
   USE klist,                ONLY : nelec
-  USE io_rho_xml,           ONLY : write_rho, read_rho
+  USE xml_io_base,          ONLY : write_rho, read_rho
   USE paw_variables,        ONLY : okpaw, ddd_paw
   USE paw_onecenter,        ONLY : PAW_potential
   !

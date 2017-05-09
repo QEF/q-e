@@ -88,7 +88,7 @@ SUBROUTINE check_initial_status(auxdyn)
   USE ph_restart,      ONLY : check_directory_phsave, check_available_bands,&
                               allocate_grid_variables, ph_writefile
   USE freq_ph,         ONLY : current_iu
-  USE io_rho_xml,      ONLY : write_rho
+  USE io_rho_xml,      ONLY : write_scf
   USE mp_images,       ONLY : nimage, intra_image_comm
   USE io_global,       ONLY : ionode, ionode_id
   USE io_files,        ONLY : prefix
@@ -254,15 +254,15 @@ SUBROUTINE check_initial_status(auxdyn)
   IF (acfdt_is_active) THEN
      ! ACFDT -test always write rho on file
      IF (acfdt_num_der) THEN
-        CALL write_rho( rho, nspin )
+        CALL write_scf( rho, nspin )
      ELSE 
         IF ((ldisp.OR..NOT.lgamma.OR.modenum/=0).AND.(.NOT.lqdir)) &
-                                           CALL write_rho( rho, nspin )
+                                           CALL write_scf( rho, nspin )
      ENDIF   
   ELSE  
      ! this is the standard treatment
      IF ( ( ( ldisp.OR..NOT.lgamma .OR. modenum/=0 ) .AND. (.NOT.lqdir) ) &
-          .OR. newgrid .OR. always_run ) CALL write_rho( rho, nspin )
+          .OR. newgrid .OR. always_run ) CALL write_scf( rho, nspin )
   ENDIF
 !!!!!!!!!!!!!!!!!!!!!!!! END OF ACFDT TEST !!!!!!!!!!!!!!!!
   !
@@ -315,7 +315,7 @@ SUBROUTINE check_initial_status(auxdyn)
         IF (.NOT. exst) THEN
            CALL create_directory( tmp_dir_phq )
            tmp_dir=tmp_dir_phq
-           CALL write_rho( rho, nspin )
+           CALL write_scf( rho, nspin )
            tmp_dir=tmp_dir_save
         ENDIF
      ENDIF

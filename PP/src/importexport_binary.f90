@@ -77,7 +77,7 @@ SUBROUTINE impexp ()
   USE io_global, ONLY : ionode, ionode_id
   USE mp,        ONLY : mp_bcast
   USE mp_world,  ONLY : world_comm
-  USE io_rho_xml,    ONLY : read_rho, write_rho
+  USE io_rho_xml,    ONLY : write_scf
   USE scf,           ONLY : rho
   USE lsda_mod,      ONLY : nspin
   USE xml_io_base,   ONLY : rho_binary, create_directory
@@ -190,7 +190,7 @@ SUBROUTINE impexp ()
   end if
 
   ! Now I can store the new charge density in the proper binary/non-binary format
-  CALL write_rho(rho, nspin)
+  CALL write_scf(rho, nspin)
   
   ! I need to copy XML file
   filename =  TRIM( xmlpun )

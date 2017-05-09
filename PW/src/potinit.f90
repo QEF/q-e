@@ -48,8 +48,8 @@ SUBROUTINE potinit()
   USE mp,                   ONLY : mp_sum
   USE mp_bands ,            ONLY : intra_bgrp_comm
   USE io_global,            ONLY : ionode, ionode_id
-  USE io_rho_xml,           ONLY : read_rho
-  USE xml_io_base,          ONLY : check_file_exst
+  USE io_rho_xml,           ONLY : read_scf
+  USE xml_io_base,          ONLY : read_rho, check_file_exst
   !
   USE uspp,                 ONLY : becsum
   USE paw_variables,        ONLY : okpaw, ddd_PAW
@@ -91,7 +91,7 @@ SUBROUTINE potinit()
      ! ... this also reads rho%ns if lda+U and rho%bec if PAW
      !
      IF ( .NOT.lforcet ) THEN
-        CALL read_rho ( rho, nspin )
+        CALL read_scf ( rho, nspin )
      ELSE
         !
         ! ... 'force theorem' calculation of MAE: read rho only from previous

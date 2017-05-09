@@ -139,7 +139,7 @@ SUBROUTINE read_xml_file ( )
   USE pw_restart_new,       ONLY :  pw_readschema_file, init_vars_from_schema 
   USE qes_types_module,     ONLY :  output_type, parallel_info_type, general_info_type
   USE qes_libs_module,      ONLY :  qes_reset_output, qes_reset_input, qes_reset_general_info, qes_reset_parallel_info 
-  USE io_rho_xml,           ONLY : read_rho
+  USE io_rho_xml,           ONLY : read_scf
   USE read_pseudo_mod,      ONLY : readpp
   USE uspp,                 ONLY : becsum
   USE uspp_param,           ONLY : upf
@@ -303,7 +303,7 @@ SUBROUTINE read_xml_file ( )
   !
   ! ... read the charge density
   !
-  CALL read_rho( rho, nspin )
+  CALL read_scf( rho, nspin )
   !
   ! ... re-calculate the local part of the pseudopotential vltot
   ! ... and the core correction charge (if any) - This is done here

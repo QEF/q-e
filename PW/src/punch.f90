@@ -20,7 +20,6 @@ SUBROUTINE punch( what )
   USE io_files,             ONLY : xmlpun_schema, psfile, pseudo_dir
   USE wrappers,             ONLY : f_copy
   USE xml_io_base,          ONLY : create_directory
-  USE io_rho_xml,           ONLY : write_rho
   USE spin_orb,             ONLY : lforcet
   USE scf,                  ONLY : rho
   USE lsda_mod,             ONLY : nspin
@@ -32,6 +31,7 @@ SUBROUTINE punch( what )
 #else
   USE pw_restart_new,       ONLY : pw_write_schema, pw_write_binaries
 #endif
+  USE io_rho_xml,           ONLY : write_scf
   USE a2F,                  ONLY : la2F, a2Fsave
   USE wavefunctions_module, ONLY : evc
   !
@@ -77,7 +77,7 @@ SUBROUTINE punch( what )
   ! ... (except in the 'force theorem' calculation of MAE where the
   ! ...  charge density differs from the one read from disk)
   !
-  IF ( lscf .OR. lforcet ) CALL write_rho( rho, nspin )
+  IF ( lscf .OR. lforcet ) CALL write_scf( rho, nspin )
   !
   IF (TRIM(what) == 'all') THEN 
      !

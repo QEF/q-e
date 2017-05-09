@@ -962,13 +962,11 @@ interpolate.o : ../../Modules/control_flags.o
 interpolate.o : ../../Modules/fft_base.o
 interpolate.o : ../../Modules/kind.o
 interpolate.o : ../../Modules/recvec.o
-io_rho_xml.o : ../../Modules/fft_base.o
 io_rho_xml.o : ../../Modules/funct.o
 io_rho_xml.o : ../../Modules/io_files.o
 io_rho_xml.o : ../../Modules/io_global.o
 io_rho_xml.o : ../../Modules/kind.o
 io_rho_xml.o : ../../Modules/mp.o
-io_rho_xml.o : ../../Modules/mp_bands.o
 io_rho_xml.o : ../../Modules/mp_images.o
 io_rho_xml.o : ../../Modules/noncol.o
 io_rho_xml.o : ../../Modules/paw_variables.o
@@ -1689,7 +1687,7 @@ remove_atomic_rho.o : ../../Modules/fft_base.o
 remove_atomic_rho.o : ../../Modules/io_files.o
 remove_atomic_rho.o : ../../Modules/io_global.o
 remove_atomic_rho.o : ../../Modules/kind.o
-remove_atomic_rho.o : io_rho_xml.o
+remove_atomic_rho.o : ../../Modules/xml_io_base.o
 remove_atomic_rho.o : pwcom.o
 remove_atomic_rho.o : scf_mod.o
 report_mag.o : ../../Modules/constants.o
@@ -2115,9 +2113,9 @@ update_pot.o : ../../Modules/paw_variables.o
 update_pot.o : ../../Modules/recvec.o
 update_pot.o : ../../Modules/uspp.o
 update_pot.o : ../../Modules/wavefunctions.o
+update_pot.o : ../../Modules/xml_io_base.o
 update_pot.o : buffers.o
 update_pot.o : extfield.o
-update_pot.o : io_rho_xml.o
 update_pot.o : ldaU.o
 update_pot.o : paw_onecenter.o
 update_pot.o : pwcom.o

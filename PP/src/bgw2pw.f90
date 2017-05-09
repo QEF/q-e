@@ -658,7 +658,7 @@ SUBROUTINE write_cd ( input_file_name, real_or_complex, output_dir_name )
   USE gvect, ONLY : ngm, ngm_g, ig_l2g, nl, mill
   USE io_global, ONLY : ionode, ionode_id
   USE ions_base, ONLY : nat
-  USE io_rho_xml, ONLY : write_rho
+  USE xml_io_base, ONLY : write_rho
   USE iotk_module, ONLY : iotk_attlenx, iotk_free_unit, iotk_open_write, &
     iotk_write_begin, iotk_write_attr, iotk_write_empty, iotk_write_dat, &
     iotk_write_end, iotk_close_write

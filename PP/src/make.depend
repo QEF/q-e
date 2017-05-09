@@ -104,7 +104,6 @@ bgw2pw.o : ../../Modules/qexml.o
 bgw2pw.o : ../../Modules/recvec.o
 bgw2pw.o : ../../Modules/wavefunctions.o
 bgw2pw.o : ../../Modules/xml_io_base.o
-bgw2pw.o : ../../PW/src/io_rho_xml.o
 bgw2pw.o : ../../PW/src/pwcom.o
 bgw2pw.o : ../../PW/src/scf_mod.o
 bgw2pw.o : ../../PW/src/symm_base.o

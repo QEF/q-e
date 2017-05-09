@@ -14,7 +14,7 @@ subroutine remove_atomic_rho
   USE fft_base, ONLY: dfftp
   USE lsda_mod, ONLY: nspin
   USE scf, ONLY: rho
-  USE io_rho_xml, ONLY : write_rho
+  USE xml_io_base, ONLY : write_rho
   implicit none
 
   real(DP), allocatable :: work (:,:)

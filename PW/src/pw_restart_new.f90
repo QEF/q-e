@@ -917,7 +917,7 @@ MODULE pw_restart_new
       !------------------------------------------------------------------------
       !
       USE control_flags,        ONLY : twfcollect
-      USE io_rho_xml,           ONLY : read_rho
+      USE io_rho_xml,           ONLY : read_scf
       USE scf,                  ONLY : rho
       USE lsda_mod,             ONLY : nspin
       USE qes_types_module,     ONLY : input_type, output_type, &
@@ -1115,7 +1115,7 @@ MODULE pw_restart_new
          ! ... to read the charge-density we use the routine from io_rho_xml 
          ! ... it also reads ns for ldaU and becsum for PAW
          !
-         CALL read_rho( rho, nspin )
+         CALL read_scf( rho, nspin )
          !
       END IF
       IF ( lef ) THEN
