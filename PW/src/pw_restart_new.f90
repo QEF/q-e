@@ -1229,8 +1229,11 @@ MODULE pw_restart_new
     noncolin = band_structure%noncolin
     nelec =    band_structure%nelec
     nkstot =   band_structure%nks  
-    IF ( lsda ) nkstot = nkstot * 2 
     nbnd = band_structure%nbnd 
+    IF ( lsda ) THEN
+       nkstot = nkstot * 2 
+       nbnd   = nbnd / 2
+    END IF
     END SUBROUTINE readschema_dim
     !
     !-----------------------------------------------------------------------
@@ -1896,7 +1899,8 @@ MODULE pw_restart_new
       IF ( band_struct_obj%nbnd_up_ispresent ) nupdwn(1) = band_struct_obj%nbnd_up
       IF ( band_struct_obj%nbnd_dw_ispresent ) nupdwn(2) = band_struct_obj%nbnd_dw 
       IF ( lsda )  THEN 
-         nspin = 2  
+         nspin = 2
+         nbnd = nbnd / 2
       ELSE IF ( band_struct_obj%noncolin) THEN 
          nspin = 4 
       ELSE 
@@ -1970,17 +1974,18 @@ MODULE pw_restart_new
       ! 
       lkpoint_dir = .FALSE.
       lsda = band_struct_obj%lsda
+      nbnd  = band_struct_obj%nbnd 
       nkstot = band_struct_obj%nks 
       IF ( lsda) THEN 
-        nkstot = nkstot * 2 
-        isk(1:nkstot/2) = 1
-        isk(nkstot/2+1:nkstot) = 2 
+         nbnd  = nbnd / 2
+         nkstot = nkstot * 2 
+         isk(1:nkstot/2) = 1
+         isk(nkstot/2+1:nkstot) = 2 
       ELSE 
-        isk(1:nkstot)   = 1 
+         isk(1:nkstot)   = 1 
       END IF 
       ! 
       nelec = band_struct_obj%nelec
-      nbnd  = band_struct_obj%nbnd 
       natomwfc = band_struct_obj%num_of_atomic_wfc
       IF ( band_struct_obj%fermi_energy_ispresent) THEN 
          ef = band_struct_obj%fermi_energy*e2 
