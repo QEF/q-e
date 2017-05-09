@@ -12,15 +12,11 @@ MODULE io_base
   ! ... this module contains some common subroutines used to read and write
   ! ... data produced by the Quantum ESPRESSO package
   !
-  USE iotk_module
-  !
   USE kinds,     ONLY : DP
   USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun
   USE io_global, ONLY : stdout
   !
   IMPLICIT NONE
-  !
-  CHARACTER(iotk_attlenx)  :: attr
   !
   PRIVATE
   PUBLIC :: write_wfc, read_wfc
@@ -96,20 +92,13 @@ MODULE io_base
          !
 #else
          !
-         CALL iotk_open_write( iuni, FILE = TRIM(filename)//'.dat', &
-              ROOT="WFC", BINARY = .TRUE. )
+         OPEN ( UNIT = iuni, FILE = TRIM(filename)//'.dat', &
+              FORM='unformatted', STATUS = 'unknown' )
          !
-         CALL iotk_write_attr( attr, "ngw",          ngw, FIRST = .TRUE. )
-         CALL iotk_write_attr( attr, "igwx",         igwx )
-         CALL iotk_write_attr( attr, "gamma_only",   gamma_only )
-         CALL iotk_write_attr( attr, "nbnd",         nbnd )
-         CALL iotk_write_attr( attr, "ik",           ik )
-         CALL iotk_write_attr( attr, "nk",           nk )
-         CALL iotk_write_attr( attr, "ispin",        ispin )
-         CALL iotk_write_attr( attr, "nspin",        nspin )
-         CALL iotk_write_attr( attr, "scale_factor", scalef )
+         WRITE(iuni) ik, nk, ispin, nspin
+         WRITE(iuni) gamma_only, scalef
+         WRITE(iuni) ngw, igwx, nbnd
          !
-         CALL iotk_write_empty( iuni, "INFO", attr )
 #endif
          !
       END IF
@@ -136,8 +125,7 @@ MODULE io_base
 #if defined(__HDF5)
             CALL write_evc(h5_write_desc, j, wtmp(1:npol*igwx), ik) 
 #else
-            CALL iotk_write_dat &
-              ( iuni, "evc" // iotk_index( j ), wtmp(1:npol*igwx))
+            WRITE(iuni) wtmp(1:npol*igwx)
 #endif
          !
       END DO
@@ -146,7 +134,7 @@ MODULE io_base
          CALL h5fclose_f(h5_write_desc%file_id, ierr)
          DEALLOCATE ( h5_write_desc)  
 #else 
-         CALL iotk_close_write( iuni )
+         CLOSE (UNIT = iuni, STATUS = 'keep' )
 #endif
      END IF
       !
@@ -191,6 +179,7 @@ MODULE io_base
       INTEGER                           :: ierr_
       INTEGER                           :: igwx, igwx_, npwx, npol, ik_, nk_
       INTEGER                           :: me_in_group, nproc_in_group
+      LOGICAL                           :: gamma_only_
 #if defined(__HDF5)
       TYPE (hdf5_type),ALLOCATABLE      :: h5_read_desc
       ! 
@@ -205,8 +194,8 @@ MODULE io_base
       CALL mp_max( igwx, intra_group_comm )
       !
 #if !defined __HDF5
-      IF ( ionode_in_group ) CALL iotk_open_read( iuni, &
-           FILE = TRIM(filename)//'.dat', BINARY = .TRUE., IERR = ierr_ )
+      IF ( ionode_in_group ) OPEN ( UNIT = iuni, FILE=TRIM(filename)//'.dat', &
+           FORM='unformatted', STATUS = 'old', IOSTAT = ierr_)
       CALL mp_bcast( ierr_, root_in_group, intra_group_comm )
       IF ( PRESENT(ierr) ) THEN
          ierr = ierr_
@@ -219,7 +208,7 @@ MODULE io_base
       IF ( ionode_in_group ) THEN
           !
 #if defined  __HDF5
-         IF ( PRESENT (ierr )) THEN 
+         IF ( PRESENT (ierr) ) THEN 
             CALL prepare_for_reading_final(h5_read_desc, 0, &
                TRIM(filename)//'.hdf5',KPOINT = ik, IERR = ierr )
             IF (ierr /= 0 ) RETURN 
@@ -236,17 +225,9 @@ MODULE io_base
          CALL read_attributes_hdf5(h5_read_desc, igwx_,"igwx",ik)
          CALL read_attributes_hdf5(h5_read_desc, scalef,"scale_factor",ik)
 #else
-         CALL iotk_scan_empty( iuni, "INFO", attr )
-          !
-         CALL iotk_scan_attr( attr, "ngw",          ngw )
-          CALL iotk_scan_attr( attr, "nbnd",         nbnd )
-          CALL iotk_scan_attr( attr, "ik",           ik_ )
-          CALL iotk_scan_attr( attr, "nk",           nk_ )
-          CALL iotk_scan_attr( attr, "ispin",        ispin )
-          CALL iotk_scan_attr( attr, "nspin",        nspin )
-          CALL iotk_scan_attr( attr, "igwx",         igwx_ )
-          CALL iotk_scan_attr( attr, "scale_factor", scalef )
-          !
+         READ (iuni) ik_, nk_, ispin, nspin
+         READ(iuni) gamma_only_, scalef
+         READ (iuni) ngw, igwx_, nbnd
 #endif
       END IF
       !
@@ -272,11 +253,8 @@ MODULE io_base
 #if defined __HDF5
                CALL read_evc(h5_read_desc, j, wtmp(1:npol*igwx_),ik)
 #else
-               CALL iotk_scan_dat( iuni, &
-                                   "evc" // iotk_index(j), wtmp(1:npol*igwx_) )
- 
+               READ (iuni) wtmp(1:npol*igwx_) 
 #endif
-               !
                IF ( igwx > igwx_ ) wtmp((npol*igwx_+1):npol*igwx) = 0.0_DP
                !
             END IF
@@ -298,7 +276,7 @@ MODULE io_base
       END DO
       !
 #if !defined (__HDF5)
-      IF ( ionode_in_group ) CALL iotk_close_read( iuni )
+      IF ( ionode_in_group ) CLOSE ( UNIT = iuni, STATUS = 'keep' )
 #else
       IF ( ionode_in_group ) THEN 
          CALL h5fclose_f(h5_read_desc%file_id, ierr_)
