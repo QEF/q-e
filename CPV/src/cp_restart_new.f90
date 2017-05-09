@@ -1789,6 +1789,7 @@ MODULE cp_restart_new
        CLOSE( unit=iunpun, status='keep')
     END IF
     CALL mp_bcast (ierr, ionode_id, intra_image_comm )
+    DEALLOCATE( mrepl )
     !
   END SUBROUTINE cp_write_lambda
   !
@@ -1830,6 +1831,7 @@ MODULE cp_restart_new
     END IF
     CALL distribute_lambda( mrepl, lambda, descla(iss) )
     CALL mp_bcast (ierr, ionode_id, intra_image_comm )
+    DEALLOCATE( mrepl )
     !
   END SUBROUTINE cp_read_lambda
 #endif
