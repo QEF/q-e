@@ -157,10 +157,9 @@ MODULE pw_restart_new
       CALL mp_sum( ngm_g, intra_bgrp_comm )
       ! 
       ! 
-      !
       ! XML descriptor
       ! 
-      dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save'
+      dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save/'
       !
       CALL qexsd_init_schema( iunpun )
       !
@@ -173,7 +172,7 @@ MODULE pw_restart_new
 ! ... HEADER
 !-------------------------------------------------------------------------------
          !
-         CALL qexsd_openschema(TRIM( dirname ) // '/' // TRIM( xmlpun_schema ))
+         CALL qexsd_openschema(TRIM( dirname ) // TRIM( xmlpun_schema ))
          output%tagname="output"
          output%lwrite = .TRUE.
          output%lread  = .TRUE.
@@ -471,7 +470,7 @@ MODULE pw_restart_new
 #endif
       !
       !
-      dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save'
+      dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save/'
       !
       ! ... write the G-vectors
       ! ... find out the global number of G vectors: ngm_g
@@ -498,13 +497,13 @@ MODULE pw_restart_new
       !
       IF ( ionode ) THEN  
 #if defined (__HDF5)
-      filename =trim(dirname) //"/gvectors.hdf5"
+      filename =trim(dirname) //"gvectors.hdf5"
       CALL h5_write_gvecs(gvecs_h5desc, filename, dfftp%nr1,dfftp%nr2, dfftp%nr3,&
              ngm_g, gamma_only, mill_g(:,:) )
 #else
 
          !
-         filename = TRIM( dirname ) // '/gvectors.dat'
+         filename = TRIM( dirname ) // 'gvectors.dat'
          CALL write_gvecs( iunpun, filename, dfftp%nr1,dfftp%nr2, dfftp%nr3,&
              ngm_g, gamma_only, mill_g(:,:) )
          !
@@ -578,13 +577,13 @@ MODULE pw_restart_new
             !
             ik_g = MOD ( ik_g-1, nkstot/2 ) + 1 
             ispin = isk(ik)
-            filename = TRIM(dirname) // '/wfc' // updw(ispin) // &
+            filename = TRIM(dirname) // 'wfc' // updw(ispin) // &
                  & TRIM(int_to_char(ik_g))
             !
          ELSE
             !
             ispin = 1
-            filename = TRIM(dirname) // '/wfc' // TRIM(int_to_char(ik_g))
+            filename = TRIM(dirname) // 'wfc' // TRIM(int_to_char(ik_g))
             !
          ENDIF
          !
@@ -709,7 +708,7 @@ MODULE pw_restart_new
           !
           DEALLOCATE( itmp )
           !
-          filename = TRIM(dirname) // '/gkvectors' // TRIM(int_to_char(ik_g))
+          filename = TRIM(dirname) // 'gkvectors' // TRIM(int_to_char(ik_g))
           IF ( ionode_k_ ) THEN
              !
 #if defined(__HDF5)
@@ -943,7 +942,7 @@ MODULE pw_restart_new
       !    
       !
       ierr = 0 
-      dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save'
+      dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save/'
       !
       !
       !
@@ -1390,7 +1389,7 @@ MODULE pw_restart_new
     IF ( atomic_structure%alat_ispresent ) alat = atomic_structure%alat 
     tau(:,1:nat) = tau(:,1:nat)/alat  
     ! 
-    pseudo_dir_cur = TRIM ( dirname)//'/'  
+    pseudo_dir_cur = TRIM (dirname)
     ! 
     END SUBROUTINE readschema_ions
     !  
@@ -2131,12 +2130,12 @@ MODULE pw_restart_new
             !
             ik_g = MOD ( ik_g-1, nkstot/2 ) + 1 
             ispin = isk(ik)
-            filename = TRIM(dirname) // '/wfc' // updw(ispin) // &
+            filename = TRIM(dirname) // 'wfc' // updw(ispin) // &
                  & TRIM(int_to_char(ik_g))
             !
          ELSE
             !
-            filename = TRIM(dirname) // '/wfc' // TRIM(int_to_char(ik_g))
+            filename = TRIM(dirname) // 'wfc' // TRIM(int_to_char(ik_g))
             !
          ENDIF
          !

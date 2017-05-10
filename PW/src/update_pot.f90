@@ -249,6 +249,7 @@ SUBROUTINE update_pot()
   IMPLICIT NONE
   !
   REAL(DP), ALLOCATABLE :: tauold(:,:,:)
+  CHARACTER(LEN=256)    :: dirname
   INTEGER               :: rho_extr, wfc_extr
   LOGICAL               :: exists
   !
@@ -346,25 +347,16 @@ SUBROUTINE update_pot()
      !
      rho_extr = MIN( 1, history, pot_order )
      !
-     INQUIRE( FILE = TRIM( tmp_dir ) // TRIM( prefix ) // &
-            & '.save/charge-density.old.dat', EXIST = exists )
-     !
-     IF ( .NOT. exists ) &
-        !
-        INQUIRE( FILE = TRIM( tmp_dir ) // TRIM( prefix ) // &
-               & '.save/charge-density.old.xml', EXIST = exists )
+     dirname =  TRIM( tmp_dir ) // TRIM( prefix ) // '.save/'
+     INQUIRE( FILE = TRIM( dirname ) // 'charge-density.old.dat', &
+          EXIST = exists )
      !
      IF ( exists ) THEN
         !
         rho_extr = MIN( 2, history, pot_order )
         !
-        INQUIRE( FILE = TRIM( tmp_dir ) // TRIM( prefix ) // &
-               & '.save/charge-density.old2.dat', EXIST = exists )
-        !
-        IF ( .NOT. exists ) &
-           !
-           INQUIRE( FILE = TRIM( tmp_dir ) // TRIM( prefix ) // &
-                  & '.save/charge-density.old2.xml', EXIST = exists )
+        INQUIRE( FILE = TRIM( dirname ) //'charge-density.old2.dat', &
+             EXIST = exists )
         !
         IF ( exists ) rho_extr = MIN( 3, history, pot_order )
         !
@@ -374,7 +366,7 @@ SUBROUTINE update_pot()
   !
   CALL mp_bcast( rho_extr, ionode_id, intra_image_comm )
   !
-  CALL extrapolate_charge( rho_extr )
+  CALL extrapolate_charge( dirname, rho_extr )
   !
   CALL stop_clock( 'update_pot' )
   !
@@ -383,7 +375,7 @@ SUBROUTINE update_pot()
 END SUBROUTINE update_pot
 !
 !----------------------------------------------------------------------------
-SUBROUTINE extrapolate_charge( rho_extr )
+SUBROUTINE extrapolate_charge( dirname, rho_extr )
   !----------------------------------------------------------------------------
   !
   USE constants,            ONLY : eps32
@@ -410,6 +402,7 @@ SUBROUTINE extrapolate_charge( rho_extr )
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: rho_extr
+  CHARACTER(LEN=*), INTENT(IN) :: dirname
   !
   REAL(DP), ALLOCATABLE :: work(:,:), work1(:,:)
     ! work  is the difference between rho and atomic rho at time t
@@ -504,7 +497,7 @@ SUBROUTINE extrapolate_charge( rho_extr )
         !
         ! ...   oldrho  ->  work
         !
-        CALL read_rho( work, 1, 'old' )
+        CALL read_rho( dirname, work, 1, 'old' )
         !
         ! ...   rho%of_r   ->  oldrho
         ! ...   work  ->  oldrho2
@@ -528,8 +521,8 @@ SUBROUTINE extrapolate_charge( rho_extr )
         ! ...   oldrho2  ->  work1
         ! ...   oldrho   ->  work
         !
-        CALL read_rho( work1, 1, 'old2' )
-        CALL read_rho( work,  1, 'old' )
+        CALL read_rho( dirname, work1, 1, 'old2' )
+        CALL read_rho( dirname, work,  1, 'old' )
         !
         ! ...   rho%of_r   ->  oldrho
         ! ...   work  ->  oldrho2

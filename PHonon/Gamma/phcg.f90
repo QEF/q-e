@@ -488,7 +488,7 @@ SUBROUTINE newscf
   USE wvfct, ONLY: nbnd, nbndx
   USE noncollin_module, ONLY: report
   USE symm_base,     ONLY : nsym
-  USE io_files,      ONLY : iunwfc, input_drho, output_drho
+  USE io_files,      ONLY : iunwfc, input_drho, output_drho, prefix, tmp_dir
   USE ldaU,          ONLY : lda_plus_u
   USE control_flags, ONLY : restart, io_level, lscf, iprint, &
                             david, max_cg_iter, &
@@ -496,6 +496,7 @@ SUBROUTINE newscf
   USE extrapolation, ONLY : extrapolate_charge
   !
   IMPLICIT NONE
+  CHARACTER(LEN=256) :: dirname
   INTEGER :: iter
   !
   CALL start_clock('PWSCF')
@@ -537,7 +538,8 @@ SUBROUTINE newscf
   !
   CALL openfil
   !
-  CALL extrapolate_charge( 1 )
+  dirname = TRIM(tmp_dir) //TRIM(prefix) // '.save/'
+  CALL extrapolate_charge( dirname, 1 )
   CALL hinit1
   CALL electrons ( )
   !

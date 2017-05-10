@@ -101,7 +101,7 @@ MODULE io_rho_xml
       USE noncollin_module, ONLY : noncolin
       USE spin_orb,         ONLY : domag
       USE funct,            ONLY : dft_is_meta
-      USE io_files,         ONLY : seqopn
+      USE io_files,         ONLY : seqopn, prefix, tmp_dir
       USE io_global,        ONLY : ionode, ionode_id, stdout
       USE scf,              ONLY : scf_type
       USE mp_images,        ONLY : intra_image_comm
@@ -110,16 +110,18 @@ MODULE io_rho_xml
       IMPLICIT NONE
       TYPE(scf_type),   INTENT(INOUT)        :: rho
       INTEGER,          INTENT(IN)           :: nspin
+      CHARACTER(LEN=256) :: dirname
       LOGICAL :: lexist
       INTEGER :: iunocc, iunpaw, ierr
       INTEGER, EXTERNAL :: find_free_unit
 
+      dirname = TRIM(tmp_dir) // TRIM(prefix) // '.save/'
       ! in the following case do not read or write polarization
       IF ( noncolin .AND. .NOT.domag ) THEN
-         CALL read_rho ( rho%of_r, 1 )
+         CALL read_rho ( dirname, rho%of_r, 1 )
          rho%of_r(:,2:4) = 0.0_dp
       ELSE
-         CALL read_rho ( rho%of_r, nspin )
+         CALL read_rho ( dirname, rho%of_r, nspin )
       END IF
       !
       IF ( lda_plus_u ) THEN
@@ -179,7 +181,7 @@ MODULE io_rho_xml
       !
       IF ( dft_is_meta() ) THEN
          WRITE(stdout,'(5x,"Reading meta-gga kinetic term")')
-         CALL read_rho( rho%kin_r, nspin, 'kin' )
+         CALL read_rho( dirname, rho%kin_r, nspin, 'kin' )
       END IF
 
       RETURN

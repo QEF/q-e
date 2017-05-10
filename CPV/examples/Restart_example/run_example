@@ -111,7 +111,7 @@ cat >  sio2.cp.start.in << EOF
 ATOMIC_SPECIES
    O  16.00 O.pz-rrkjus.UPF
   Si  28.00 Si.pz-vbc.UPF
-ATOMIC_POSITIONS
+ATOMIC_POSITIONS bohr
  O  3.18829368  14.83237039   1.22882961
  O  7.83231469   6.78704039   1.22882961
  O  2.07443467   5.99537992   4.73758250
@@ -186,6 +186,7 @@ $PW_COMMAND -input sio2.pw.restart.in > sio2.pw.restart.out
 $ECHO " done"
 
 
+rm -rf $TMP_DIR/cp_91.save/wfcm1.dat
 # molecular dynamics calculation
 cat > sio2.cp.restart.in << EOF
  &control
@@ -215,7 +216,7 @@ cat > sio2.cp.restart.in << EOF
 ATOMIC_SPECIES
    O  16.00 O.pz-rrkjus.UPF
   Si  28.00 Si.pz-vbc.UPF 
-ATOMIC_POSITIONS
+ATOMIC_POSITIONS bohr
  O  3.18829368  14.83237039   1.22882961
  O  7.83231469   6.78704039   1.22882961
  O  2.07443467   5.99537992   4.73758250

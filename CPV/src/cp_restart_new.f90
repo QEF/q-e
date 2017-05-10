@@ -183,7 +183,7 @@ MODULE cp_restart_new
       IF( force_pairing ) &
             CALL errore('cp_writefile',' force pairing not implemented', 1 )
       IF( tksw ) &
-            CALL errore('cp_writefile',' Kohn-Sham states not written', 1 )
+            CALL infomsg('cp_writefile',' Kohn-Sham states not written' )
       IF( PRESENT(mat_z) ) &
             CALL errore('cp_writefile',' case not implemented', 1 )
       !

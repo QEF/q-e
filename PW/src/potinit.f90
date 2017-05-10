@@ -63,24 +63,25 @@ SUBROUTINE potinit()
   REAL(DP)              :: fact
   INTEGER               :: is
   LOGICAL               :: exst 
-  CHARACTER(LEN=256)    :: filename
+  CHARACTER(LEN=256)    :: dirname, filename
   !
   CALL start_clock('potinit')
   !
+  dirname = TRIM(tmp_dir) // TRIM (prefix) // '.save/'
 #if defined __HDF5
-  filename = TRIM(tmp_dir) // TRIM (prefix) // '.save/charge-density.hdf5'
+  filename = TRIM(dirname) // 'charge-density.hdf5'
   exst = check_file_exst( TRIM(filename))
 #else 
   ! check for both .dat/ and .xml extensions (compatibility reasons) 
   !
-  filename =  TRIM( tmp_dir ) // TRIM( prefix ) // '.save/charge-density.dat'
+  filename = TRIM(dirname) // 'charge-density.dat'
   exst     =  check_file_exst( TRIM(filename) )
   !
   IF ( .NOT. exst ) THEN
-      !
-      filename =  TRIM( tmp_dir ) // TRIM( prefix ) // '.save/charge-density.xml'
-      exst     =  check_file_exst( TRIM(filename) )
-      !
+     !
+     filename = TRIM(dirname) // 'charge-density.xml'
+     exst     =  check_file_exst( TRIM(filename) )
+     !
   ENDIF
 #endif
   !
@@ -97,7 +98,7 @@ SUBROUTINE potinit()
         ! ... 'force theorem' calculation of MAE: read rho only from previous
         ! ... lsda calculation, set noncolinear magnetization from angles
         !
-        CALL read_rho ( rho%of_r, 2 )
+        CALL read_rho ( dirname, rho%of_r, 2 )
         CALL nc_magnetization_from_lsda ( dfftp%nnr, nspin, rho%of_r )
      END IF
      !
@@ -147,7 +148,7 @@ SUBROUTINE potinit()
         IF ( nspin > 1 ) CALL errore &
              ( 'potinit', 'spin polarization not allowed in drho', 1 )
         !
-        CALL read_rho ( v%of_r, 1, input_drho )
+        CALL read_rho ( dirname, v%of_r, 1, input_drho )
         !
         WRITE( UNIT = stdout, &
                FMT = '(/5X,"a scf correction to at. rho is read from",A)' ) &

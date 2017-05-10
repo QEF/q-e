@@ -607,8 +607,7 @@ CONTAINS
       !
       ! ... main restart directory
       !
-      !dirname = trim( prefix ) // '.save'
-      dirname = TRIM( prefix ) // '_' // TRIM( int_to_char( runit ) )// '.save'
+      dirname = TRIM( prefix ) // '_' // TRIM( int_to_char( runit ) )// '.save/'
       !
       IF ( len( outdir ) > 1 ) THEN
          !
