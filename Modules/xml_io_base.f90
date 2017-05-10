@@ -33,7 +33,6 @@ MODULE xml_io_base
   PUBLIC :: attr
   !
   PUBLIC :: read_wfc, write_wfc, read_rho, write_rho, &
-       read_rho_xml, write_rho_xml, &
        save_print_counter, read_print_counter
   PUBLIC :: create_directory, check_file_exst, restart_dir
   !
@@ -405,14 +404,13 @@ MODULE xml_io_base
     !
     !
     !------------------------------------------------------------------------
-    SUBROUTINE write_rho( rho, nspin, extension )
+    SUBROUTINE write_rho( dirname, rho, nspin, extension )
       !------------------------------------------------------------------------
       !
       ! ... this routine writes the charge-density in xml format into the
       ! ... '.save' directory
       ! ... the '.save' directory is created if not already present
       !
-      USE io_files, ONLY : tmp_dir, prefix
       USE fft_base, ONLY : dfftp
       USE io_global,ONLY : ionode
       USE mp_bands, ONLY : intra_bgrp_comm, inter_bgrp_comm
@@ -421,16 +419,15 @@ MODULE xml_io_base
       !
       INTEGER,          INTENT(IN)           :: nspin
       REAL(DP),         INTENT(IN)           :: rho(dfftp%nnr,nspin)
+      CHARACTER(LEN=*), INTENT(IN)           :: dirname
       CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: extension
       !
-      CHARACTER(LEN=256)    :: dirname, file_base
+      CHARACTER(LEN=256)    :: file_base
       CHARACTER(LEN=256)    :: ext
       REAL(DP), ALLOCATABLE :: rhoaux(:)
       !
       !
       ext = ' '
-      !
-      dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save/'
       !
       CALL create_directory( dirname )
       !

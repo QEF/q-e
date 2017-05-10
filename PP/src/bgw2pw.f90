@@ -893,7 +893,7 @@ SUBROUTINE write_cd ( input_file_name, real_or_complex, output_dir_name )
 
   DEALLOCATE ( gvec )
 
-  CALL write_rho ( rho%of_r, nspin )
+  CALL write_rho ( output_dir_name, rho%of_r, nspin )
 
   RETURN
 

@@ -97,7 +97,7 @@ CONTAINS
 
           IF (ionode) THEN
             WRITE( stdout,*) 
-            WRITE( stdout,'( "   Khon Sham state")') 
+            WRITE( stdout,'( "   Kohn Sham state")') 
             WRITE( stdout,'( "   ---------------")') 
           END IF
 
@@ -142,7 +142,7 @@ CONTAINS
         USE gvecw, ONLY: ngw
         USE fft_base, ONLY: dfftp, dffts, dfftp
         USE fft_interfaces, ONLY: invfft
-        USE xml_io_base, ONLY: write_rho_xml
+        USE xml_io_base, ONLY: write_rho
         USE mp_global,       ONLY: intra_bgrp_comm, inter_bgrp_comm
 
         IMPLICIT NONE
@@ -165,9 +165,8 @@ CONTAINS
         END DO
         charge = SUM( rpsi2 )
 
-        CALL write_rho_xml( file_name, rpsi2, &
-                            dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
-                            ionode, intra_bgrp_comm, inter_bgrp_comm )
+        ! FIXME: will append "charge_density" to file_name !
+        CALL write_rho( file_name, rpsi2, 1)
         
         CALL mp_sum( charge, intra_bgrp_comm )
 

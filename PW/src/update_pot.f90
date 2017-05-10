@@ -488,7 +488,7 @@ SUBROUTINE extrapolate_charge( dirname, rho_extr )
         WRITE( UNIT = stdout, FMT = '(5X, &
              & "NEW-OLD atomic charge density approx. for the potential")' )
         !
-        CALL write_rho( rho%of_r, 1, 'old' )
+        CALL write_rho( dirname, rho%of_r, 1, 'old' )
         !
      ELSE IF ( rho_extr == 2 ) THEN
         !
@@ -502,8 +502,8 @@ SUBROUTINE extrapolate_charge( dirname, rho_extr )
         ! ...   rho%of_r   ->  oldrho
         ! ...   work  ->  oldrho2
         !
-        CALL write_rho( rho%of_r,  1, 'old' )
-        CALL write_rho( work, 1, 'old2' )
+        CALL write_rho( dirname, rho%of_r,  1, 'old' )
+        CALL write_rho( dirname, work, 1, 'old2' )
         !
         ! ... extrapolation
         !
@@ -527,8 +527,8 @@ SUBROUTINE extrapolate_charge( dirname, rho_extr )
         ! ...   rho%of_r   ->  oldrho
         ! ...   work  ->  oldrho2
         !
-        CALL write_rho( rho%of_r,  1, 'old' )
-        CALL write_rho( work, 1, 'old2' )
+        CALL write_rho( dirname, rho%of_r,  1, 'old' )
+        CALL write_rho( dirname, work, 1, 'old2' )
         !
         rho%of_r(:,1) = rho%of_r(:,1) + alpha0*( rho%of_r(:,1) - work(:,1) ) + &
                                beta0*( work(:,1) - work1(:,1) )

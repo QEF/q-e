@@ -28,7 +28,7 @@ MODULE io_rho_xml
       USE funct,            ONLY : dft_is_meta
       USE noncollin_module, ONLY : noncolin
       USE spin_orb,         ONLY : domag
-      USE io_files,         ONLY : seqopn
+      USE io_files,         ONLY : seqopn, tmp_dir, prefix
       USE io_global,        ONLY : ionode, ionode_id, stdout
       USE scf,              ONLY : scf_type
       USE mp_images,        ONLY : intra_image_comm
@@ -38,17 +38,19 @@ MODULE io_rho_xml
       IMPLICIT NONE
       TYPE(scf_type),   INTENT(IN)           :: rho
       INTEGER,          INTENT(IN)           :: nspin
+      !
+      CHARACTER (LEN=256) :: dirname
       LOGICAL :: lexist
       INTEGER :: iunocc, iunpaw, ierr
       INTEGER, EXTERNAL :: find_free_unit
 
       ! Use the equivalent routine to write real space density
-
+      dirname = TRIM(tmp_dir) // TRIM(prefix) // '.save/'
       ! in the following case do not read or write polarization
       IF ( noncolin .AND. .NOT.domag ) THEN
-         CALL write_rho ( rho%of_r, 1 )
+         CALL write_rho ( dirname, rho%of_r, 1 )
       ELSE
-         CALL write_rho ( rho%of_r, nspin )
+         CALL write_rho ( dirname, rho%of_r, nspin )
       END IF
 
       ! Then write the other terms to separate files
@@ -89,7 +91,7 @@ MODULE io_rho_xml
       !
       IF ( dft_is_meta() ) THEN
          WRITE(stdout,'(5x,"Writing meta-gga kinetic term")')
-          CALL write_rho ( rho%kin_r, nspin, 'kin' )
+          CALL write_rho ( dirname, rho%kin_r, nspin, 'kin' )
       ENDIF
 
       RETURN

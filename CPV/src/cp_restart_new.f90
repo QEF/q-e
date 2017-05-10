@@ -28,7 +28,7 @@ MODULE cp_restart_new
   USE io_files,  ONLY : iunpun, xmlpun_schema, prefix, tmp_dir, qexsd_fmt,&
        qexsd_version
   USE io_base,   ONLY : write_wfc, read_wfc
-  USE xml_io_base,     ONLY  : write_rho_xml,read_print_counter, create_directory
+  USE xml_io_base,     ONLY  : write_rho,read_print_counter, create_directory
   !
   USE kinds,     ONLY : DP
   USE io_global, ONLY : ionode, ionode_id, stdout
@@ -447,39 +447,7 @@ MODULE cp_restart_new
 ! ... CHARGE DENSITY
 !-------------------------------------------------------------------------------
       !
-      IF (trhow) THEN
-         !
-         filename = TRIM( dirname ) // 'charge-density'
-         !
-         IF ( nspin == 1 ) THEN
-            !
-            CALL write_rho_xml( filename, rho(:,1), &
-                                dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, &
-                                dfftp%ipp, dfftp%npp, ionode, intra_bgrp_comm, inter_bgrp_comm )
-            !
-         ELSE IF ( nspin == 2 ) THEN
-            !
-            ALLOCATE( rhoaux( SIZE( rho, 1 ) ) )
-            !
-            rhoaux = rho(:,1) + rho(:,2) 
-            !
-            CALL write_rho_xml( filename, rhoaux, &
-                                dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, &
-                                dfftp%ipp, dfftp%npp, ionode, intra_bgrp_comm, inter_bgrp_comm )
-            !
-            filename = TRIM( dirname ) // 'spin-polarization'
-            !
-            rhoaux = rho(:,1) - rho(:,2) 
-            !
-            CALL write_rho_xml( filename, rhoaux, &
-                                dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, &
-                                dfftp%ipp, dfftp%npp, ionode, intra_bgrp_comm, inter_bgrp_comm )
-            !
-            DEALLOCATE( rhoaux )
-            !
-         END IF
-         !
-      END IF
+      IF (trhow) CALL write_rho ( dirname, rho, nspin )
       !
 !-------------------------------------------------------------------------------
 ! ... END RESTART SECTIONS

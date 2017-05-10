@@ -9,14 +9,15 @@
 subroutine remove_atomic_rho
   !-----------------------------------------------------------------------
   USE io_global, ONLY: stdout
-  USE io_files, ONLY: output_drho
+  USE io_files, ONLY: output_drho, tmp_dir, prefix
   USE kinds, ONLY: DP
   USE fft_base, ONLY: dfftp
   USE lsda_mod, ONLY: nspin
   USE scf, ONLY: rho
   USE xml_io_base, ONLY : write_rho
-  implicit none
 
+  implicit none
+  CHARACTER(LEN=256) :: dirname 
   real(DP), allocatable :: work (:,:)
   ! workspace, is the difference between the charge density
   ! and the superposition of atomic charges
@@ -35,7 +36,8 @@ subroutine remove_atomic_rho
   !
   work = rho%of_r - work
   !
-  call write_rho ( work, 1, output_drho )
+  dirname = TRIM(tmp_dir) // TRIM(prefix) // '.save/'
+  call write_rho ( dirname, work, 1, output_drho )
   !
   deallocate(work)
   return
