@@ -43,14 +43,14 @@ SUBROUTINE read_file()
   IMPLICIT NONE 
   INTEGER :: ierr
   LOGICAL :: exst
-  CHARACTER( 256 )  :: dirname
+  CHARACTER( LEN=256 )  :: dirname
   !
   !
   ierr = 0 
   !
   ! ... Read the contents of the xml data file
   !
-  dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save'
+  dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save/'
   IF ( ionode ) WRITE( stdout, '(/,5x,A,/,5x,A)') &
      'Reading data from directory:', TRIM( dirname )
   !

@@ -211,7 +211,7 @@ MODULE pw_restart
       CALL errore( 'pw_writefile ', &
                    'no free units to write wavefunctions', ierr )
       !
-      dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save'
+      dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save/'
       !
       ! ... create the main restart directory
       !
@@ -832,7 +832,7 @@ MODULE pw_restart
       !
       ierr = 0
       !
-      dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save'
+      dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save/'
       !
       ! ... look for an empty unit
       !
@@ -2895,8 +2895,8 @@ MODULE pw_restart
       LOGICAL            :: lval, found, back_compat
       !
       !
-      dirname  = TRIM( tmp_dir ) // TRIM( prefix ) // '.save'
-      filename = TRIM( dirname ) // '/' // TRIM( xmlpun )
+      dirname  = TRIM( tmp_dir ) // TRIM( prefix ) // '.save/'
+      filename = TRIM( dirname ) // TRIM( xmlpun )
       !
       IF ( ionode ) &
          CALL iotk_open_read( iunpun, FILE = filename, IERR = ierr )
