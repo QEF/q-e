@@ -839,7 +839,8 @@ MODULE cp_restart
       IF( (.NOT. twfcollect) .AND. (my_bgrp_id == 0) ) THEN
          !
          tmp_dir_save = tmp_dir
-         tmp_dir = TRIM( qexml_kpoint_dirname( tmp_dir, 1 ) )
+         tmp_dir = TRIM( qexml_restart_dirname( tmp_dir, prefix, ndw ) ) // '/'
+         tmp_dir = TRIM( qexml_kpoint_dirname( tmp_dir, 1 ) ) // '/'
          !
          iunwfc = 10
          nwordwfc = SIZE( c02 )
@@ -1699,7 +1700,8 @@ MODULE cp_restart
          IF( my_bgrp_id == 0 ) THEN
             !
             tmp_dir_save = tmp_dir
-            tmp_dir = TRIM( qexml_kpoint_dirname( tmp_dir, 1 ) )
+            tmp_dir = TRIM( qexml_restart_dirname( tmp_dir, prefix, ndr ) ) // '/'
+            tmp_dir = TRIM( qexml_kpoint_dirname( tmp_dir, 1 ) ) // '/'
             !
             iunwfc = 10
             nwordwfc = SIZE( c02 )

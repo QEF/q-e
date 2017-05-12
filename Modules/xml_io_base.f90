@@ -408,8 +408,7 @@ MODULE xml_io_base
       !------------------------------------------------------------------------
       !
       ! ... this routine writes the charge-density in xml format into the
-      ! ... '.save' directory
-      ! ... the '.save' directory is created if not already present
+      ! ... $dirname directory - $dirname must exist and end with '/'
       !
       USE fft_base, ONLY : dfftp
       USE io_global,ONLY : ionode
@@ -428,9 +427,6 @@ MODULE xml_io_base
       !
       !
       ext = ' '
-      !
-      CALL create_directory( dirname )
-      !
       IF ( PRESENT( extension ) ) ext = '.' // TRIM( extension )
       !
       file_base = TRIM( dirname ) // 'charge-density' // TRIM( ext )
