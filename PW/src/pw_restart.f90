@@ -137,7 +137,7 @@ MODULE pw_restart
                                        emaxpos, eopreg, eamp, & !TB
                                        monopole, zmon, block, block_1, &
                                        block_2, block_height, relaxz
-      USE io_rho_xml,           ONLY : write_rho
+      USE io_rho_xml,           ONLY : write_scf
       USE mp_world,             ONLY : nproc
       USE mp_images,            ONLY : nproc_image
       USE mp_pools,             ONLY : kunit, nproc_pool, me_pool, root_pool, &
@@ -559,7 +559,7 @@ MODULE pw_restart
       !
       ! ... also writes rho%ns if lda+U and rho%bec if PAW
       !
-      IF ( lrho ) CALL write_rho( rho, nspin )
+      IF ( lrho ) CALL write_scf( rho, nspin )
 !-------------------------------------------------------------------------------
 ! ... END RESTART SECTIONS
 !-------------------------------------------------------------------------------
@@ -810,7 +810,7 @@ MODULE pw_restart
     SUBROUTINE pw_readfile( what, ierr )
       !------------------------------------------------------------------------
       !
-      USE io_rho_xml,    ONLY : read_rho
+      USE io_rho_xml,    ONLY : read_scf
       USE scf,           ONLY : rho
       USE lsda_mod,      ONLY : nspin
       USE mp_bands,      ONLY : intra_bgrp_comm
@@ -1112,7 +1112,7 @@ MODULE pw_restart
          ! ... to read the charge-density we use the routine from io_rho_xml 
          ! ... it also reads ns for ldaU and becsum for PAW
          !
-         CALL read_rho( rho, nspin )
+         CALL read_scf( rho, nspin )
          !
       END IF
 
