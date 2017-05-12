@@ -46,6 +46,7 @@ MODULE io_rho_xml
 
       ! Use the equivalent routine to write real space density
       dirname = TRIM(tmp_dir) // TRIM(prefix) // '.save/'
+      CALL create_directory( dirname )
       ! in the following case do not read or write polarization
       IF ( noncolin .AND. .NOT.domag ) THEN
          CALL write_rho ( dirname, rho%of_r, 1 )
