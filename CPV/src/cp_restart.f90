@@ -427,7 +427,7 @@ MODULE cp_restart
       IF ( lda_plus_u ) THEN
          !
          IF ( ionode ) THEN
-            filename = dirname // '/occup'
+            filename = dirname // 'occup'
             OPEN (UNIT=iunout,FILE=filename,FORM ='formatted',STATUS='unknown')
             WRITE( iunout, * , iostat = ierr) ns
          END IF
