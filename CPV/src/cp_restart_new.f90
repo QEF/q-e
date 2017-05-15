@@ -12,6 +12,7 @@ MODULE cp_restart_new
   ! ... This module contains subroutines to write and read data required to
   ! ... restart a calculation from the disk
   !
+  USE kinds,     ONLY : DP
 #if !defined(__OLDXML)
   !
   USE iotk_module
@@ -27,10 +28,9 @@ MODULE cp_restart_new
                           qexsd_init_outputElectricField, input_obj => qexsd_input_obj
   USE io_files,  ONLY : iunpun, xmlpun_schema, prefix, tmp_dir, qexsd_fmt,&
        qexsd_version
-  USE io_base,   ONLY : write_wfc, read_wfc
-  USE xml_io_base,     ONLY  : write_rho,read_print_counter, create_directory
+  USE io_base,   ONLY : write_wfc, read_wfc, write_rhog
+  USE xml_io_base,     ONLY  : read_print_counter, create_directory
   !
-  USE kinds,     ONLY : DP
   USE io_global, ONLY : ionode, ionode_id, stdout
   USE mp,        ONLY : mp_bcast
   USE parser,    ONLY : version_compare
@@ -159,7 +159,7 @@ MODULE cp_restart_new
       INTEGER,  ALLOCATABLE :: ityp(:)
       REAL(DP), ALLOCATABLE :: ftmp(:,:)
       REAL(DP), ALLOCATABLE :: tau(:,:)
-      REAL(DP), ALLOCATABLE :: rhoaux(:)
+      COMPLEX(DP), ALLOCATABLE :: rhog(:,:)
       REAL(DP)              :: omega, htm1(3,3), h(3,3)
       REAL(DP)              :: a1(3), a2(3), a3(3)
       REAL(DP)              :: b1(3), b2(3), b3(3)
@@ -447,8 +447,16 @@ MODULE cp_restart_new
 ! ... CHARGE DENSITY
 !-------------------------------------------------------------------------------
       !
-      IF (trhow) CALL write_rho ( dirname, rho, nspin )
-      !
+     IF (trhow) THEN
+        ! Workaround: input rho in real space, bring it to reciprocal space
+        ! To be removed together with old I/O
+        ALLOCATE ( rhog(ngm, nspin) )
+        CALL rho_r2g (rho, rhog)
+        CALL write_rhog ( dirname, alat*b1, alat*b2, alat*b3, gamma_only, mill,&
+             ig_l2g, rhog )
+        DEALLOCATE ( rhog )
+     END IF
+     !
 !-------------------------------------------------------------------------------
 ! ... END RESTART SECTIONS
 !-------------------------------------------------------------------------------
@@ -1804,4 +1812,49 @@ MODULE cp_restart_new
   END SUBROUTINE cp_read_lambda
 #endif
   !
+  SUBROUTINE rho_r2g ( rhor, rhog )
+    !
+    USE fft_base,       ONLY: dfftp
+    USE fft_interfaces, ONLY: fwfft, invfft
+    USE gvect,          ONLY: ngm,  nl, nlm
+    !
+    REAL(dp),    INTENT(in) :: rhor(:,:)
+    COMPLEX(dp), INTENT(OUT):: rhog(:,:)
+    !
+    INTEGER :: ir, ig, iss, isup, isdw
+    INTEGER :: nspin
+    COMPLEX(dp):: fp, fm
+    COMPLEX(dp), ALLOCATABLE :: psi(:)
+
+    nspin= SIZE (rhor, 2)
+
+    ALLOCATE( psi( dfftp%nnr ) )
+    IF( nspin == 1 ) THEN
+       iss=1
+       DO ir=1,dfftp%nnr
+          psi(ir)=CMPLX(rhor(ir,iss),0.0_dp,kind=dp)
+       END DO
+       CALL fwfft('Dense', psi, dfftp )
+       DO ig=1,ngm
+          rhog(ig,iss)=psi(nl(ig))
+       END DO
+    ELSE
+       isup=1
+       isdw=2
+       DO ir=1,dfftp%nnr
+          psi(ir)=CMPLX(rhor(ir,isup),rhor(ir,isdw),kind=dp)
+       END DO
+       CALL fwfft('Dense', psi, dfftp )
+       DO ig=1,ngm
+          fp=psi(nl(ig))+psi(nlm(ig))
+          fm=psi(nl(ig))-psi(nlm(ig))
+          rhog(ig,isup)=0.5_dp*CMPLX( DBLE(fp),AIMAG(fm),kind=DP)
+          rhog(ig,isdw)=0.5_dp*CMPLX(AIMAG(fp),-DBLE(fm),kind=DP)
+       END DO
+    ENDIF
+    
+    DEALLOCATE( psi )
+
+  END SUBROUTINE rho_r2g
+         
 END MODULE cp_restart_new

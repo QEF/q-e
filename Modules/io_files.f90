@@ -12,6 +12,7 @@ MODULE io_files
   USE parameters, ONLY: ntypx
   !
   ! ... I/O related variables: file names, units, utilities
+  ! ... IMPORTANT: when directory names are set, they must always end with "/"
   !
   IMPLICIT NONE
   !
