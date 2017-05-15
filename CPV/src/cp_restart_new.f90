@@ -89,6 +89,7 @@ MODULE cp_restart_new
                                            epseu, enl, exc, vave
       USE mp,                       ONLY : mp_sum, mp_barrier
       USE fft_base,                 ONLY : dfftp, dffts, dfftb
+      USE fft_rho,                  ONLY : rho_r2g
       USE uspp_param,               ONLY : n_atom_wfc, upf
       USE global_version,           ONLY : version_number
       USE kernel_table,             ONLY : vdw_table_name, kernel_file_name
@@ -1811,50 +1812,5 @@ MODULE cp_restart_new
     !
   END SUBROUTINE cp_read_lambda
 #endif
-  !
-  SUBROUTINE rho_r2g ( rhor, rhog )
-    !
-    USE fft_base,       ONLY: dfftp
-    USE fft_interfaces, ONLY: fwfft, invfft
-    USE gvect,          ONLY: ngm,  nl, nlm
-    !
-    REAL(dp),    INTENT(in) :: rhor(:,:)
-    COMPLEX(dp), INTENT(OUT):: rhog(:,:)
-    !
-    INTEGER :: ir, ig, iss, isup, isdw
-    INTEGER :: nspin
-    COMPLEX(dp):: fp, fm
-    COMPLEX(dp), ALLOCATABLE :: psi(:)
 
-    nspin= SIZE (rhor, 2)
-
-    ALLOCATE( psi( dfftp%nnr ) )
-    IF( nspin == 1 ) THEN
-       iss=1
-       DO ir=1,dfftp%nnr
-          psi(ir)=CMPLX(rhor(ir,iss),0.0_dp,kind=dp)
-       END DO
-       CALL fwfft('Dense', psi, dfftp )
-       DO ig=1,ngm
-          rhog(ig,iss)=psi(nl(ig))
-       END DO
-    ELSE
-       isup=1
-       isdw=2
-       DO ir=1,dfftp%nnr
-          psi(ir)=CMPLX(rhor(ir,isup),rhor(ir,isdw),kind=dp)
-       END DO
-       CALL fwfft('Dense', psi, dfftp )
-       DO ig=1,ngm
-          fp=psi(nl(ig))+psi(nlm(ig))
-          fm=psi(nl(ig))-psi(nlm(ig))
-          rhog(ig,isup)=0.5_dp*CMPLX( DBLE(fp),AIMAG(fm),kind=DP)
-          rhog(ig,isdw)=0.5_dp*CMPLX(AIMAG(fp),-DBLE(fm),kind=DP)
-       END DO
-    ENDIF
-    
-    DEALLOCATE( psi )
-
-  END SUBROUTINE rho_r2g
-         
 END MODULE cp_restart_new

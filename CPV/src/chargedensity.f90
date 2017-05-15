@@ -100,11 +100,10 @@
       USE kinds,              ONLY: DP
       USE control_flags,      ONLY: iprint, iverbosity, thdyn, tpre, trhor, ndr
       USE ions_base,          ONLY: nat
-      USE gvect,              ONLY: ngm,  nl, nlm
+      USE gvect,              ONLY: ngm,  nl, nlm, gstart, ig_l2g
       USE gvecs,              ONLY: ngms, nls, nlsm
       USE smallbox_gvec,      ONLY: ngb
       USE gvecw,              ONLY: ngw
-      USE gvect,              ONLY: gstart
       USE uspp,               ONLY: nkb
       USE uspp_param,         ONLY: nh, nhm
       USE cell_base,          ONLY: omega
@@ -123,8 +122,13 @@
       USE wannier_base,       ONLY: iwf
       USE exx_module,         ONLY: rhopr 
       USE input_parameters,   ONLY: tcpbo ! BS
+#if defined (__OLDXML)
       USE xml_io_base,        ONLY: read_rho, restart_dir
-      USE io_files,           ONLY: tmp_dir
+#else
+      USE fft_rho,            ONLY: rho_g2r
+      USE io_base,            ONLY: read_rhog
+#endif      
+      USE io_files,           ONLY: tmp_dir, prefix
       !
       IMPLICIT NONE
       INTEGER nfi
@@ -234,9 +238,20 @@
          !
          ! Lingzhu Kong
          !
+         ! FIXME: in non-scf calculations, the charge density must be read at
+         ! FIXME: the beginning, the potential computed and no longer updated.
+         !
          IF( first ) THEN
+#if defined (__OLDXML)
             dirname = restart_dir( tmp_dir, ndr )
             CALL read_rho( dirname, rhor, nspin )
+#else
+            CALL errore('rhoofr','option trhor unverified, please report',1)
+            WRITE(dirname,'(A,A,"_",I2,".save/")') &
+                 TRIM(tmp_dir), TRIM(prefix), ndr
+            CALL read_rhog ( dirname, ig_l2g, nspin, rhog )
+            CALL rho_g2r ( rhog, rhor )
+#endif
             rhopr = rhor
             first = .FALSE.
          ELSE
