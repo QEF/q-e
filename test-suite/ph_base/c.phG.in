@@ -5,6 +5,5 @@ phonons of C at Gamma
   prefix='carbon',
   fildyn='Cg.dyn',
   amass(1)=12.0107,
-  outdir='/home/sponce/program/espresso/tempdir/'
  /
 0.0 0.0 0.0

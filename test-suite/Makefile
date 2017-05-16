@@ -52,6 +52,12 @@ run-tests-pw-serial : prolog pseudo
 run-tests-pw-parallel : prolog pseudo
 	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=pw_all
 
+run-tests-ph-serial : prolog pseudo
+	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=ph_base
+
+run-tests-ph-parallel : prolog pseudo
+	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=ph_base
+
 run-tests-epw-serial : prolog pseudo
 	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=epw_all
 
@@ -102,17 +108,19 @@ compare-epw : prolog
 
 clean:
 	@for x in `find pw_* -name "test*"`; do rm -rf $$x; done
+	@for x in `find ph_* -name "test*"`; do rm -rf $$x; done
 	@for x in `find cp_* -name "test*"`; do rm -rf $$x; done
 	@for x in `find epw_* -name "test*"`; do rm -rf $$x; done
 	@for x in `find pw_* -name "CRASH"`; do rm -rf $$x; done
+	@for x in `find ph_* -name "CRASH*"`; do rm -rf $$x; done
 	@for x in `find cp_* -name "CRASH"`; do rm -rf $$x; done
 	@for x in `find epw_* -name "CRASH"`; do rm -rf $$x; done
 # Special case for 'pw_vc-relax' test-case
 	@rm -f pw_vc-relax/ave pw_vc-relax/e pw_vc-relax/tv pw_vc-relax/p pw_vc-relax/eal pw_vc-relax/avec
-# Special case for 'pw_langevin' test-case
-	@rm -f pw_langevin/trajectory-pwscf.xyz
-# Special cases for CP	
-	@rm -f cp_si/qe_input.xml cp_sio2/qe_input.xml cp_o2/qe_input.xml cp_h2o/qe_input.xml
+# Special case for 'noexe_langevin' test-case
+	@rm -f noexe_langevin/trajectory-pwscf.xyz
+# Special case for PH
+	@for x in `find ph_* -name "*dyn*"`; do rm -rf $$x; done
 # Cleaning EPW final files
 	@rm -rf epw_*/_ph0 epw_*/*.save epw_*/*.wfc* epw_*/*.dyn* \
 		epw_*/*.qdos_25.00 epw_*/*.P epw_*/*.freq epw_*/*.wout \
