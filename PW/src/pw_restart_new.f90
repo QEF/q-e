@@ -459,7 +459,7 @@ MODULE pw_restart_new
       INTEGER               :: ik, ik_g, ike, iks, npw_g, npwx_g
       INTEGER, EXTERNAL     :: global_kpoint_index
       INTEGER,  ALLOCATABLE :: ngk_g(:)
-      INTEGER,  ALLOCATABLE :: igk_l2g(:), igk_l2g_kdip(:), mill_g(:,:)
+      INTEGER,  ALLOCATABLE :: igk_l2g(:), igk_l2g_kdip(:)
       CHARACTER(LEN=2), DIMENSION(2) :: updw = (/ 'up', 'dw' /)
       CHARACTER(LEN=256)    :: dirname
       CHARACTER(LEN=320)    :: filename
@@ -469,48 +469,9 @@ MODULE pw_restart_new
       TYPE(hdf5_type)       :: gvecs_h5desc
 #endif
       !
-      !
       dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save/'
       !
-      ! ... write the G-vectors
-      ! ... find out the global number of G vectors: ngm_g
-      !
-      ngm_g = ngm
-      !
-      CALL mp_sum( ngm_g, intra_bgrp_comm )
-      !
-      ! ... collect all G-vectors across processors within the pools
-      !
-      ALLOCATE( mill_g( 3, ngm_g ) )
-      !
-      mill_g = 0
-      !
-      DO ig = 1, ngm
-         !
-         mill_g(1,ig_l2g(ig)) = mill(1,ig)
-         mill_g(2,ig_l2g(ig)) = mill(2,ig)
-         mill_g(3,ig_l2g(ig)) = mill(3,ig)
-         !
-      END DO
-      !
-      CALL mp_sum( mill_g, intra_bgrp_comm )
-      !
-      IF ( ionode ) THEN  
-#if defined (__HDF5)
-      filename =trim(dirname) //"gvectors.hdf5"
-      CALL h5_write_gvecs(gvecs_h5desc, filename, dfftp%nr1,dfftp%nr2, dfftp%nr3,&
-             ngm_g, gamma_only, mill_g(:,:) )
-#else
-
-         !
-         filename = TRIM( dirname ) // 'gvectors.dat'
-         CALL write_gvecs( iunpun, filename, dfftp%nr1,dfftp%nr2, dfftp%nr3,&
-             ngm_g, gamma_only, mill_g(:,:) )
-         !
-#endif 
-      END IF
-      !
-      ! ... now write wavefunctions and k+G vectors
+      ! ... write wavefunctions and k+G vectors
       !
       iks = global_kpoint_index (nkstot, 1)
       ike = iks + nks - 1
@@ -596,71 +557,12 @@ MODULE pw_restart_new
       !
       DEALLOCATE ( igk_l2g_kdip )
       DEALLOCATE ( igk_l2g )
-      !
-!-------------------------------------------------------------------------------
-! ... END RESTART SECTIONS
-!-------------------------------------------------------------------------------
-      !
-      DEALLOCATE( mill_g )
       DEALLOCATE( ngk_g )
       !
       RETURN
       !
       CONTAINS
         !
-        !--------------------------------------------------------------------
-        SUBROUTINE write_gvecs( iun, filename, nr1,nr2,nr3,&
-             ngm_g, gamma_only, mill_g )
-          !--------------------------------------------------------------------
-          IMPLICIT NONE
-          !
-          INTEGER,            INTENT(IN) :: iun, nr1,nr2,nr3,ngm_g
-          INTEGER,            INTENT(IN) :: mill_g(:,:)
-          LOGICAL,            INTENT(IN) :: gamma_only
-          CHARACTER(LEN=*),   INTENT(IN) :: filename
-          !
-          CALL iotk_open_write( iun, FILE = TRIM( filename ), &
-               BINARY = .true. )
-          !
-          CALL iotk_write_begin( iun, "G-VECTORS" )
-          CALL iotk_write_attr( attr, "nr1s", nr1, FIRST = .true. )
-          CALL iotk_write_attr( attr, "nr2s", nr2 )
-          CALL iotk_write_attr( attr, "nr3s", nr3 )
-          CALL iotk_write_attr( attr, "gvect_number", ngm_g )
-          CALL iotk_write_attr( attr, "gamma_only", gamma_only )
-          CALL iotk_write_attr( attr, "units", "crystal" )
-          CALL iotk_write_empty( iun, "INFO", ATTR = attr )
-          !
-          CALL iotk_write_dat  ( iun, "g", mill_g(1:3,1:ngm_g), COLUMNS=3)
-          CALL iotk_write_end  ( iun, "G-VECTORS" )
-          !
-          CALL iotk_close_write( iun )
-          !
-        END SUBROUTINE write_gvecs
-        !
-#if defined(__HDF5) 
-        !---------------------------------------------------------------------------------
-        SUBROUTINE h5_write_gvecs(h5_desc, filename, nr1, nr2, nr3, ngm, gamma_only, mill) 
-           !------------------------------------------------------------------------------
-           USE hdf5_qe,             ONLY: write_g, prepare_for_writing_final, add_attributes_hdf5
-           IMPLICIT NONE
-           ! 
-           TYPE (hdf5_type),INTENT(INOUT)         :: h5_desc
-           CHARACTER(LEN=*),INTENT(IN)            :: filename
-           INTEGER,INTENT(IN)                     :: nr1, nr2, nr3, ngm, mill(:,:)
-           LOGICAL,INTENT(IN)                     :: gamma_only
-           !
-           CALL prepare_for_writing_final(h5_desc,0,filename) 
-           CALL add_attributes_hdf5(h5_desc, gamma_only, "gamma_only")
-           CALL add_attributes_hdf5(h5_desc, nr1, "nr1s")
-           CALL add_attributes_hdf5(h5_desc, nr2, "nr2s")
-           CALL add_attributes_hdf5(h5_desc, nr3, "nr3s")
-           CALL add_attributes_hdf5(h5_desc, ngm, "gvect_number")
-           CALL add_attributes_hdf5(h5_desc, "crystal", "units" )
-           ! 
-           CALL write_g(h5_desc, mill)            
-        END SUBROUTINE h5_write_gvecs 
-#endif 
         !--------------------------------------------------------------------
         SUBROUTINE write_gk( iun, ionode_k_, ik, ik_g )
           !--------------------------------------------------------------------
@@ -718,8 +620,8 @@ MODULE pw_restart_new
              CALL add_attributes_hdf5(h5_desc, npwx_g, "max_number_of_gk_vectors") 
              CALL add_attributes_hdf5(h5_desc, gamma_only, "gamma_only")
              CALL add_attributes_hdf5(h5_desc, "2pi/a", "units") 
-             CALL write_gkhdf5(h5_desc,xk(:,ik),igwk(1:ngk_g(ik)), &
-                              mill_g(1:3,igwk(1:ngk_g(ik_g))),ik_g)
+!             CALL write_gkhdf5(h5_desc,xk(:,ik),igwk(1:ngk_g(ik)), &
+!                              mill_g(1:3,igwk(1:ngk_g(ik_g))),ik_g)
              CALL h5fclose_f(h5_desc%file_id, ierr )
              DEALLOCATE (h5_desc) 
 #else
@@ -735,8 +637,8 @@ MODULE pw_restart_new
              CALL iotk_write_dat( iun, "K-POINT_COORDS", xk(:,ik), ATTR = attr )
              !
              CALL iotk_write_dat( iun, "INDEX", igwk(1:ngk_g(ik_g)) )
-             CALL iotk_write_dat( iun, "GRID", mill_g(1:3,igwk(1:ngk_g(ik_g))),&
-                  COLUMNS = 3 )
+!             CALL iotk_write_dat( iun, "GRID", mill_g(1:3,igwk(1:ngk_g(ik_g))),&
+!                  COLUMNS = 3 )
              !
              CALL iotk_close_write( iun )
 #endif

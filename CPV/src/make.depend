@@ -68,9 +68,11 @@ chargedensity.o : ../../Modules/constants.o
 chargedensity.o : ../../Modules/control_flags.o
 chargedensity.o : ../../Modules/electrons_base.o
 chargedensity.o : ../../Modules/fft_base.o
+chargedensity.o : ../../Modules/fft_rho.o
 chargedensity.o : ../../Modules/funct.o
 chargedensity.o : ../../Modules/gvecw.o
 chargedensity.o : ../../Modules/input_parameters.o
+chargedensity.o : ../../Modules/io_base.o
 chargedensity.o : ../../Modules/io_files.o
 chargedensity.o : ../../Modules/io_global.o
 chargedensity.o : ../../Modules/ions_base.o
@@ -151,6 +153,7 @@ cp_restart_new.o : ../../Modules/constants.o
 cp_restart_new.o : ../../Modules/control_flags.o
 cp_restart_new.o : ../../Modules/electrons_base.o
 cp_restart_new.o : ../../Modules/fft_base.o
+cp_restart_new.o : ../../Modules/fft_rho.o
 cp_restart_new.o : ../../Modules/funct.o
 cp_restart_new.o : ../../Modules/gvecw.o
 cp_restart_new.o : ../../Modules/input_parameters.o

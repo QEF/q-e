@@ -15,6 +15,7 @@ MODULE fft_rho
   USE fft_base,       ONLY: dfftp
   USE fft_interfaces, ONLY: fwfft, invfft
   USE gvect,          ONLY: ngm,  nl, nlm
+  USE control_flags,  ONLY: gamma_only
   !
   IMPLICIT NONE
   PRIVATE
@@ -73,42 +74,61 @@ CONTAINS
     COMPLEX(dp), PARAMETER :: ci=(0.0_dp, 1.0_dp)
     COMPLEX(dp), ALLOCATABLE :: psi(:)
 
-    nspin= SIZE (rhor, 2)
+    nspin= SIZE (rhog, 2)
 
     ALLOCATE( psi( dfftp%nnr ) )
-    IF( nspin == 1 ) THEN
-       iss=1
-       psi (:) = (0.0_dp, 0.0_dp)
+    IF ( gamma_only ) THEN
+       IF( nspin == 1 ) THEN
+          iss=1
+          psi (:) = (0.0_dp, 0.0_dp)
 !$omp parallel do
-       DO ig=1,ngm
-          psi(nlm(ig))=CONJG(rhog(ig,iss))
-          psi(nl (ig))=      rhog(ig,iss)
-       END DO
+          DO ig=1,ngm
+             psi(nlm(ig))=CONJG(rhog(ig,iss))
+             psi(nl (ig))=      rhog(ig,iss)
+          END DO
 !$omp end parallel do
-       CALL invfft('Dense',psi, dfftp )
+          CALL invfft('Dense',psi, dfftp )
 !$omp parallel do
-       DO ir=1,dfftp%nnr
-          rhor(ir,iss)=DBLE(psi(ir))
-       END DO
+          DO ir=1,dfftp%nnr
+             rhor(ir,iss)=DBLE(psi(ir))
+          END DO
 !$omp end parallel do
-    ELSE
-       isup=1
-       isdw=2
-       psi (:) = (0.0_dp, 0.0_dp)
+       ELSE
+          isup=1
+          isdw=2
+          psi (:) = (0.0_dp, 0.0_dp)
 !$omp parallel do
-       DO ig=1,ngm
-          psi(nlm(ig))=CONJG(rhog(ig,isup))+ci*CONJG(rhog(ig,isdw))
-          psi(nl(ig))=rhog(ig,isup)+ci*rhog(ig,isdw)
-       END DO
+          DO ig=1,ngm
+             psi(nlm(ig))=CONJG(rhog(ig,isup))+ci*CONJG(rhog(ig,isdw))
+             psi(nl(ig))=rhog(ig,isup)+ci*rhog(ig,isdw)
+          END DO
 !$omp end parallel do
-       CALL invfft('Dense',psi, dfftp )
+          CALL invfft('Dense',psi, dfftp )
 !$omp parallel do
-       DO ir=1,dfftp%nnr
-          rhor(ir,isup)= DBLE(psi(ir))
-          rhor(ir,isdw)=AIMAG(psi(ir))
-       END DO
+          DO ir=1,dfftp%nnr
+             rhor(ir,isup)= DBLE(psi(ir))
+             rhor(ir,isdw)=AIMAG(psi(ir))
+          END DO
        !$omp end parallel do
-    ENDIF
+       ENDIF
+       !
+    ELSE
+       !
+       DO iss=1, nspin
+          psi (:) = (0.0_dp, 0.0_dp)
+!$omp parallel do
+          DO ig=1,ngm
+             psi(nl (ig))=      rhog(ig,iss)
+          END DO
+!$omp end parallel do
+          CALL invfft('Dense',psi, dfftp )
+!$omp parallel do
+          DO ir=1,dfftp%nnr
+             rhor(ir,iss)=DBLE(psi(ir))
+          END DO
+!$omp end parallel do
+       END DO
+    END IF
     
     DEALLOCATE( psi )
 

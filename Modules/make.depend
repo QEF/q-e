@@ -102,6 +102,11 @@ fft_custom.o : io_global.o
 fft_custom.o : kind.o
 fft_custom.o : mp.o
 fft_custom.o : parallel_include.o
+fft_rho.o : ../FFTXlib/fft_interfaces.o
+fft_rho.o : control_flags.o
+fft_rho.o : fft_base.o
+fft_rho.o : kind.o
+fft_rho.o : recvec.o
 funct.o : io_global.o
 funct.o : kind.o
 funct.o : xc_rVV10.o
@@ -135,10 +140,10 @@ input_parameters.o : parameters.o
 input_parameters.o : wannier_new.o
 invmat.o : kind.o
 io_base.o : hdf5_qe.o
-io_base.o : io_files.o
 io_base.o : io_global.o
 io_base.o : kind.o
 io_base.o : mp.o
+io_base.o : mp_bands.o
 io_base.o : mp_wave.o
 io_files.o : io_global.o
 io_files.o : kind.o

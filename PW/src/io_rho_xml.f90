@@ -12,7 +12,9 @@ MODULE io_rho_xml
   !
   USE kinds,       ONLY : DP
   USE xml_io_base, ONLY : create_directory, write_rho, read_rho
-  !
+#if !defined (__OLDXML)
+  USE io_base,     ONLY : write_rhog, read_rhog
+#endif!
   PRIVATE
   !
   PUBLIC :: write_scf, read_scf
@@ -23,14 +25,19 @@ MODULE io_rho_xml
   CONTAINS
 
     SUBROUTINE write_scf ( rho, nspin )
+      !
       USE paw_variables,    ONLY : okpaw
       USE ldaU,             ONLY : lda_plus_u
       USE funct,            ONLY : dft_is_meta
       USE noncollin_module, ONLY : noncolin
       USE spin_orb,         ONLY : domag
+      USE scf,              ONLY : scf_type
+      !
+      USE cell_base,        ONLY : bg, tpiba
+      USE gvect,            ONLY : ig_l2g, mill
+      USE control_flags,    ONLY : gamma_only
       USE io_files,         ONLY : seqopn, tmp_dir, prefix
       USE io_global,        ONLY : ionode, ionode_id, stdout
-      USE scf,              ONLY : scf_type
       USE mp_images,        ONLY : intra_image_comm
       USE mp,               ONLY : mp_bcast
 
@@ -41,7 +48,7 @@ MODULE io_rho_xml
       !
       CHARACTER (LEN=256) :: dirname
       LOGICAL :: lexist
-      INTEGER :: iunocc, iunpaw, ierr
+      INTEGER :: nspin_, iunocc, iunpaw, ierr
       INTEGER, EXTERNAL :: find_free_unit
 
       ! Use the equivalent routine to write real space density
@@ -49,10 +56,16 @@ MODULE io_rho_xml
       CALL create_directory( dirname )
       ! in the following case do not read or write polarization
       IF ( noncolin .AND. .NOT.domag ) THEN
-         CALL write_rho ( dirname, rho%of_r, 1 )
+         nspin_ = 1
       ELSE
-         CALL write_rho ( dirname, rho%of_r, nspin )
-      END IF
+         nspin_ = nspin
+      ENDIF
+#if defined (__OLDXML)
+      CALL write_rho ( dirname, rho%of_r, nspin_ )
+#else
+      CALL write_rhog( dirname, bg(:,1)*tpiba,bg(:,2)*tpiba,bg(:,3)*tpiba, &
+           gamma_only, mill, ig_l2g, rho%of_g(:,1:nspin_) )
+#endif
 
       ! Then write the other terms to separate files
 
@@ -99,14 +112,16 @@ MODULE io_rho_xml
     END SUBROUTINE write_scf
 
     SUBROUTINE read_scf ( rho, nspin )
+      !
+      USE scf,              ONLY : scf_type
       USE paw_variables,    ONLY : okpaw
       USE ldaU,             ONLY : lda_plus_u, starting_ns
       USE noncollin_module, ONLY : noncolin
       USE spin_orb,         ONLY : domag
+      USE gvect,            ONLY : ig_l2g
       USE funct,            ONLY : dft_is_meta
       USE io_files,         ONLY : seqopn, prefix, tmp_dir
       USE io_global,        ONLY : ionode, ionode_id, stdout
-      USE scf,              ONLY : scf_type
       USE mp_images,        ONLY : intra_image_comm
       USE mp,               ONLY : mp_bcast, mp_sum
       !
@@ -115,17 +130,22 @@ MODULE io_rho_xml
       INTEGER,          INTENT(IN)           :: nspin
       CHARACTER(LEN=256) :: dirname
       LOGICAL :: lexist
-      INTEGER :: iunocc, iunpaw, ierr
+      INTEGER :: nspin_, iunocc, iunpaw, ierr
       INTEGER, EXTERNAL :: find_free_unit
 
       dirname = TRIM(tmp_dir) // TRIM(prefix) // '.save/'
       ! in the following case do not read or write polarization
       IF ( noncolin .AND. .NOT.domag ) THEN
-         CALL read_rho ( dirname, rho%of_r, 1 )
-         rho%of_r(:,2:4) = 0.0_dp
+         nspin_=1
       ELSE
-         CALL read_rho ( dirname, rho%of_r, nspin )
-      END IF
+         nspin_=nspin
+      ENDIF
+#if defined (__OLDXML)
+      CALL read_rho ( dirname, rho%of_r, nspin_ )
+#else
+      CALL read_rhog( dirname, ig_l2g, nspin_, rho%of_g )
+#endif
+      IF ( nspin > nspin_) rho%of_r(:,nspin_+1:nspin) = (0.0_dp, 0.0_dp)
       !
       IF ( lda_plus_u ) THEN
          !

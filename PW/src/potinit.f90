@@ -32,7 +32,7 @@ SUBROUTINE potinit()
   USE lsda_mod,             ONLY : lsda, nspin
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft
-  USE gvect,                ONLY : ngm, gstart, nl, g, gg
+  USE gvect,                ONLY : ngm, gstart, nl, g, gg, ig_l2g
   USE gvecs,                ONLY : doublegrid
   USE control_flags,        ONLY : lscf
   USE scf,                  ONLY : rho, rho_core, rhog_core, &
@@ -49,7 +49,13 @@ SUBROUTINE potinit()
   USE mp_bands ,            ONLY : intra_bgrp_comm
   USE io_global,            ONLY : ionode, ionode_id
   USE io_rho_xml,           ONLY : read_scf
-  USE xml_io_base,          ONLY : read_rho, check_file_exst
+  USE xml_io_base,          ONLY : check_file_exst
+#if defined __OLDXML
+  USE xml_io_base,          ONLY : read_rho
+#else
+  USE io_base,              ONLY : read_rhog
+  USE fft_rho,              ONLY : rho_g2r
+#endif
   !
   USE uspp,                 ONLY : becsum
   USE paw_variables,        ONLY : okpaw, ddd_PAW
@@ -70,21 +76,10 @@ SUBROUTINE potinit()
   dirname = TRIM(tmp_dir) // TRIM (prefix) // '.save/'
 #if defined __HDF5
   filename = TRIM(dirname) // 'charge-density.hdf5'
-  exst = check_file_exst( TRIM(filename))
 #else 
-  ! check for both .dat/ and .xml extensions (compatibility reasons) 
-  !
   filename = TRIM(dirname) // 'charge-density.dat'
-  exst     =  check_file_exst( TRIM(filename) )
-  !
-  IF ( .NOT. exst ) THEN
-     !
-     filename = TRIM(dirname) // 'charge-density.xml'
-     exst     =  check_file_exst( TRIM(filename) )
-     !
-  ENDIF
 #endif
-  !
+  exst     =  check_file_exst( TRIM(filename) )
   !
   IF ( starting_pot == 'file' .AND. exst ) THEN
      !
@@ -93,12 +88,20 @@ SUBROUTINE potinit()
      !
      IF ( .NOT.lforcet ) THEN
         CALL read_scf ( rho, nspin )
+#if !defined (__OLDXML)
+        CALL rho_g2r ( rho%of_g, rho%of_r )
+#endif
      ELSE
         !
         ! ... 'force theorem' calculation of MAE: read rho only from previous
         ! ... lsda calculation, set noncolinear magnetization from angles
         !
+#if defined (__OLDXML)
         CALL read_rho ( dirname, rho%of_r, 2 )
+#else
+        CALL read_rhog ( dirname, ig_l2g, nspin, rho%of_g )
+        CALL rho_g2r ( rho%of_g, rho%of_r )
+#endif
         CALL nc_magnetization_from_lsda ( dfftp%nnr, nspin, rho%of_r )
      END IF
      !
@@ -148,7 +151,12 @@ SUBROUTINE potinit()
         IF ( nspin > 1 ) CALL errore &
              ( 'potinit', 'spin polarization not allowed in drho', 1 )
         !
+#if defined (__OLDXML)
         CALL read_rho ( dirname, v%of_r, 1, input_drho )
+#else
+        CALL read_rhog ( dirname, ig_l2g, nspin, v%of_g )
+        CALL rho_g2r ( v%of_g, v%of_r )
+#endif
         !
         WRITE( UNIT = stdout, &
                FMT = '(/5X,"a scf correction to at. rho is read from",A)' ) &
@@ -302,3 +310,4 @@ SUBROUTINE nc_magnetization_from_lsda ( nnr, nspin, rho )
   RETURN
   !
 END SUBROUTINE nc_magnetization_from_lsda
+

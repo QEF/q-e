@@ -422,7 +422,7 @@ MODULE xml_io_base
       CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: extension
       !
       CHARACTER(LEN=256)    :: file_base
-      CHARACTER(LEN=256)    :: ext
+      CHARACTER(LEN=6)      :: ext
       REAL(DP), ALLOCATABLE :: rhoaux(:)
       !
       !
@@ -430,6 +430,7 @@ MODULE xml_io_base
       IF ( PRESENT( extension ) ) ext = '.' // TRIM( extension )
       !
       file_base = TRIM( dirname ) // 'charge-density' // TRIM( ext )
+      print *, 'writing file ', TRIM(dirname)//'charge-density'//TRIM(ext)
       !
       IF ( nspin == 1 ) THEN
          !
@@ -508,11 +509,8 @@ MODULE xml_io_base
       CHARACTER(LEN=6)    :: ext
       REAL(DP), ALLOCATABLE :: rhoaux(:)
       !
-      IF ( PRESENT( extension ) ) THEN
-         ext = TRIM(extension)
-      ELSE
-         ext = ' '
-      END IF
+      ext = ' '
+      IF ( PRESENT( extension ) ) ext = '.' // TRIM( extension )
       !
       file_base = TRIM( dirname ) // 'charge-density' // TRIM( ext )
       CALL read_rho_xml ( file_base, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
@@ -758,13 +756,6 @@ MODULE xml_io_base
       rhounit = find_free_unit ( )
       rho_file = TRIM( rho_file_base ) // ".dat"
       exst = check_file_exst( TRIM(rho_file) ) 
-      !
-      IF ( .NOT. exst ) THEN
-          !
-          rho_file = TRIM( rho_file_base ) // ".xml"
-          exst = check_file_exst( TRIM(rho_file) ) 
-          !
-      ENDIF
       !
       IF ( .NOT. exst ) CALL errore('read_rho_xml', 'searching for '//TRIM(rho_file), 10)
 #endif

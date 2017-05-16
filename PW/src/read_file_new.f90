@@ -140,6 +140,7 @@ SUBROUTINE read_xml_file ( )
   USE qes_types_module,     ONLY :  output_type, parallel_info_type, general_info_type
   USE qes_libs_module,      ONLY :  qes_reset_output, qes_reset_input, qes_reset_general_info, qes_reset_parallel_info 
   USE io_rho_xml,           ONLY : read_scf
+  USE fft_rho,              ONLY : rho_g2r
   USE read_pseudo_mod,      ONLY : readpp
   USE uspp,                 ONLY : becsum
   USE uspp_param,           ONLY : upf
@@ -304,6 +305,11 @@ SUBROUTINE read_xml_file ( )
   ! ... read the charge density
   !
   CALL read_scf( rho, nspin )
+#if ! defined (__OLDXML)
+  ! FIXME: for compatibility. rho was previously read and written in real space
+  ! FIXME: now it is in G space - to be removed together with old format
+  CALL rho_g2r ( rho%of_g, rho%of_r )
+#endif
   !
   ! ... re-calculate the local part of the pseudopotential vltot
   ! ... and the core correction charge (if any) - This is done here

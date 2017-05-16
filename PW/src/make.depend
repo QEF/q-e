@@ -962,7 +962,10 @@ interpolate.o : ../../Modules/control_flags.o
 interpolate.o : ../../Modules/fft_base.o
 interpolate.o : ../../Modules/kind.o
 interpolate.o : ../../Modules/recvec.o
+io_rho_xml.o : ../../Modules/cell_base.o
+io_rho_xml.o : ../../Modules/control_flags.o
 io_rho_xml.o : ../../Modules/funct.o
+io_rho_xml.o : ../../Modules/io_base.o
 io_rho_xml.o : ../../Modules/io_files.o
 io_rho_xml.o : ../../Modules/io_global.o
 io_rho_xml.o : ../../Modules/kind.o
@@ -970,6 +973,7 @@ io_rho_xml.o : ../../Modules/mp.o
 io_rho_xml.o : ../../Modules/mp_images.o
 io_rho_xml.o : ../../Modules/noncol.o
 io_rho_xml.o : ../../Modules/paw_variables.o
+io_rho_xml.o : ../../Modules/recvec.o
 io_rho_xml.o : ../../Modules/xml_io_base.o
 io_rho_xml.o : ldaU.o
 io_rho_xml.o : pwcom.o
@@ -1347,7 +1351,9 @@ potinit.o : ../../Modules/cell_base.o
 potinit.o : ../../Modules/constants.o
 potinit.o : ../../Modules/control_flags.o
 potinit.o : ../../Modules/fft_base.o
+potinit.o : ../../Modules/fft_rho.o
 potinit.o : ../../Modules/funct.o
+potinit.o : ../../Modules/io_base.o
 potinit.o : ../../Modules/io_files.o
 potinit.o : ../../Modules/io_global.o
 potinit.o : ../../Modules/ions_base.o
@@ -1622,6 +1628,7 @@ read_file_new.o : ../../Modules/cell_base.o
 read_file_new.o : ../../Modules/constants.o
 read_file_new.o : ../../Modules/control_flags.o
 read_file_new.o : ../../Modules/fft_base.o
+read_file_new.o : ../../Modules/fft_rho.o
 read_file_new.o : ../../Modules/funct.o
 read_file_new.o : ../../Modules/gvecw.o
 read_file_new.o : ../../Modules/hdf5_qe.o
