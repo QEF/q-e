@@ -11,6 +11,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
         
         @b BEWARE: TABS, DOS <CR><LF> CHARACTERS ARE POTENTIAL SOURCES OF TROUBLE 
 
+        Namelists must appear in the order given below.
         Comment lines in @i namelists can be introduced by a "!", exactly as in 
         fortran code. Comments lines in @i cards can be introduced by 
         either a "!" or a "#" character in the first position of a line.
