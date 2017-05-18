@@ -41,7 +41,9 @@ Incompatible changes in svn version:
     some variables in modules constants, cell_base
   * The new xml format with schema is now the default. Use configure option
     "--disable-xml", or add -D__OLDXML to MANUAL_FLAGS in make.inc, to revert
-    to the old xml format
+    to the old xml format. IMPORTANT NOTICE: the format is incompatibile both
+    with the "old" format and with the previous "new" one: files may be in
+    different locations with different names and contain different data.
   * Hybrid functionals: ACE is now the default for scf calculations (it wasn't
     in 6.1 contrary to what previously stated in this file); it is disabled
     for TD-DFPT. See variable "use_ace".
