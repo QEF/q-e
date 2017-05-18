@@ -430,7 +430,6 @@ MODULE xml_io_base
       IF ( PRESENT( extension ) ) ext = '.' // TRIM( extension )
       !
       file_base = TRIM( dirname ) // 'charge-density' // TRIM( ext )
-      print *, 'writing file ', TRIM(dirname)//'charge-density'//TRIM(ext)
       !
       IF ( nspin == 1 ) THEN
          !
