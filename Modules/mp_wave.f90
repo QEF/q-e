@@ -118,6 +118,111 @@
       END SUBROUTINE mergewf
 
 !=----------------------------------------------------------------------------=!
+      
+      SUBROUTINE mergekg ( mill, millt, ngwl, ig_l2g, mpime, nproc, root, comm )
+
+! ... Same logic as for mergewf, for Miller indices:
+!...  mill = distributed input, millt = collected output
+
+      USE kinds
+      USE parallel_include
+
+      IMPLICIT NONE
+
+      INTEGER, intent(in) :: mill(:,:)
+      INTEGER, intent(out):: millt(:,:)
+      INTEGER, INTENT(IN) :: mpime     ! index of the calling processor ( starting from 0 )
+      INTEGER, INTENT(IN) :: nproc     ! number of processors
+      INTEGER, INTENT(IN) :: root      ! root processor ( the one that should receive the data )
+      INTEGER, INTENT(IN) :: comm    ! communicator
+      INTEGER, INTENT(IN) :: ig_l2g(:)
+      INTEGER, INTENT(IN) :: ngwl
+
+      INTEGER, ALLOCATABLE :: ig_ip(:)
+      INTEGER, ALLOCATABLE :: mill_ip(:,:)
+
+      INTEGER :: ierr, i, ip, ngw_ip, ngw_lmax, itmp, igwx, gid
+
+#if defined __MPI
+      INTEGER :: istatus(MPI_STATUS_SIZE)
+#endif
+
+!
+! ... Subroutine Body
+!
+
+      igwx = MAXVAL( ig_l2g(1:ngwl) )
+
+#if defined __MPI
+
+      gid = comm
+
+! ... Get local and global wavefunction dimensions
+      CALL MPI_ALLREDUCE( ngwl, ngw_lmax, 1, MPI_INTEGER, MPI_MAX, gid, IERR )
+      CALL MPI_ALLREDUCE( igwx, itmp, 1, MPI_INTEGER, MPI_MAX, gid, IERR )
+      igwx = itmp
+
+#endif
+
+      IF( igwx > SIZE( millt, 2 ) ) &
+        CALL errore(' mergekgf',' wrong size for millt ',SIZE(millt,2) )
+
+#if defined __MPI
+
+      DO ip = 1, nproc
+
+        IF( (ip-1) /= root ) THEN
+
+! ...     In turn each processors send to root the wave components and their indexes in the 
+! ...     global array
+          IF ( mpime == (ip-1) ) THEN
+            CALL MPI_SEND( ig_l2g, ngwl, MPI_INTEGER, ROOT, IP, gid, IERR )
+            CALL MPI_SEND( mill,3*ngwl, MPI_INTEGER, ROOT, IP+NPROC, gid, IERR )
+          END IF
+          IF ( mpime == root) THEN
+            ALLOCATE(ig_ip(ngw_lmax))
+            ALLOCATE(mill_ip(3,ngw_lmax))
+            CALL MPI_RECV( ig_ip, ngw_lmax, MPI_INTEGER, (ip-1), IP, gid, istatus, IERR )
+            CALL MPI_GET_COUNT( istatus, MPI_INTEGER, ngw_ip, ierr ) 
+            CALL MPI_RECV( mill_ip,3*ngw_lmax, MPI_INTEGER, (ip-1), IP+NPROC, gid, istatus, IERR )
+            DO I = 1,ngw_ip
+              millt(:,ig_ip(i)) = mill_ip(:,i)
+            END DO
+            DEALLOCATE(ig_ip)
+            DEALLOCATE(mill_ip)
+          END IF
+
+        ELSE
+
+          IF(mpime == root) THEN
+            DO I = 1, ngwl
+              millt(:,ig_l2g(i)) = mill(:,i)
+            END DO
+          END IF
+
+        END IF
+
+        CALL MPI_BARRIER( gid, IERR )
+
+      END DO
+
+#elif ! defined __MPI
+
+      DO I = 1, ngwl
+        ! WRITE( stdout,*) 'MW ', ig_l2g(i), i
+         millt(:,ig_l2g(i) ) = mill(:,i)
+      END DO
+
+#else
+
+      CALL errore(' mergekg ',' no communication protocol ',0)
+
+#endif
+
+      RETURN
+    END SUBROUTINE mergekg
+
+!=----------------------------------------------------------------------------=!
 
       SUBROUTINE splitwf ( pw, pwt, ngwl, ig_l2g, mpime, nproc, root, comm )
 
@@ -212,7 +317,99 @@
       RETURN
       END SUBROUTINE splitwf
 
+      !=----------------------------------------------------------------------------=!
 
+      SUBROUTINE splitkg ( mill, millt, ngwl, ig_l2g, mpime, nproc, root, comm )
+
+! ... Same logic as for splitwf, for Miller indices:
+!...  mill = distributed output, millt = collected input
+
+      USE kinds
+      USE parallel_include
+      IMPLICIT NONE
+
+      INTEGER, INTENT(OUT):: mill(:,:)
+      INTEGER, INTENT(IN) :: millt(:,:)
+      INTEGER, INTENT(IN) :: mpime, nproc, root
+      INTEGER, INTENT(IN) :: comm    ! communicator
+      INTEGER, INTENT(IN) :: ig_l2g(:)
+      INTEGER, INTENT(IN) :: ngwl
+
+      INTEGER, ALLOCATABLE :: ig_ip(:)
+      INTEGER, ALLOCATABLE :: mill_ip(:,:)
+
+      INTEGER ierr, i, ngw_ip, ip, ngw_lmax, gid, igwx, itmp
+
+#if defined __MPI
+      integer istatus(MPI_STATUS_SIZE)
+#endif
+
+!
+! ... Subroutine Body
+!
+
+      igwx = MAXVAL( ig_l2g(1:ngwl) )
+
+#if defined __MPI
+
+      gid = comm
+
+! ... Get local and global wavefunction dimensions
+      CALL MPI_ALLREDUCE(ngwl, ngw_lmax, 1, MPI_INTEGER, MPI_MAX, gid, IERR )
+      CALL MPI_ALLREDUCE(igwx, itmp    , 1, MPI_INTEGER, MPI_MAX, gid, IERR )
+      igwx = itmp
+
+#endif
+
+      IF( igwx > SIZE( millt,2 ) ) &
+        CALL errore(' splitwf ',' wrong size for milltt ',SIZE(millt,2) )
+
+#if defined __MPI
+
+      DO ip = 1, nproc
+! ...   In turn each processor send to root the the indexes of its wavefunction conponents
+! ...   Root receive the indexes and send the componens of the wavefunction read from the disk (pwt)
+        IF ( (ip-1) /= root ) THEN
+          IF ( mpime == (ip-1) ) THEN
+            CALL MPI_SEND( ig_l2g, ngwl, MPI_INTEGER, ROOT, IP, gid,IERR)
+            CALL MPI_RECV( mill(1,1),3*ngwl, MPI_INTEGER, ROOT, IP+NPROC, gid, istatus, IERR )
+          END IF
+          IF ( mpime == root ) THEN
+            ALLOCATE(ig_ip(ngw_lmax))
+            ALLOCATE(mill_ip(3,ngw_lmax))
+            CALL MPI_RECV( ig_ip, ngw_lmax, MPI_INTEGER, (ip-1), IP, gid, istatus, IERR )
+            CALL MPI_GET_COUNT(istatus, MPI_INTEGER, ngw_ip, ierr)
+            DO i = 1, ngw_ip
+              mill_ip(:,i) = millt(:,ig_ip(i))
+            END DO
+            CALL MPI_SEND( mill_ip, 3*ngw_ip, MPI_INTEGER, (ip-1), IP+NPROC, gid, IERR )
+            DEALLOCATE(ig_ip)
+            DEALLOCATE(mill_ip)
+          END IF
+        ELSE
+          IF ( mpime == root ) THEN
+            DO i = 1, ngwl
+              mill(:,i) = millt(:,ig_l2g(i)) 
+            END DO
+          END IF
+        END IF
+        CALL MPI_BARRIER(gid, IERR)
+      END DO
+
+#elif ! defined __MPI
+
+      DO I = 1, ngwl
+         mill(:,i) = millt(:,ig_l2g(i)) 
+      END DO
+
+#else
+
+      CALL errore(' SPLITWF ',' no communication protocol ',0)
+
+#endif
+
+      RETURN
+    END SUBROUTINE splitkg
 
       SUBROUTINE mergeig(igl, igtot, ngl, mpime, nproc, root, comm)
 

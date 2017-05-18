@@ -458,7 +458,7 @@ MODULE pw_restart_new
       INTEGER               :: i, ig, ngg, ipol, ispin
       INTEGER               :: ik, ik_g, ike, iks, npw_g, npwx_g
       INTEGER, EXTERNAL     :: global_kpoint_index
-      INTEGER,  ALLOCATABLE :: ngk_g(:)
+      INTEGER,  ALLOCATABLE :: ngk_g(:), mill_k(:,:)
       INTEGER,  ALLOCATABLE :: igk_l2g(:), igk_l2g_kdip(:)
       CHARACTER(LEN=2), DIMENSION(2) :: updw = (/ 'up', 'dw' /)
       CHARACTER(LEN=256)    :: dirname
@@ -503,6 +503,8 @@ MODULE pw_restart_new
       !
       ALLOCATE ( igk_l2g_kdip( npwx_g ) )
       !
+      ALLOCATE ( mill_k( 3, npwx ) )
+      !
       k_points_loop: DO ik = 1, nks
          !
          ! ik_g is the index of k-point ik in the global list
@@ -526,7 +528,11 @@ MODULE pw_restart_new
          CALL gk_l2gmap_kdip( npw_g, ngk_g(ik_g), ngk(ik), igk_l2g, &
                               igk_l2g_kdip )
          !
-         IF ( .NOT.smallmem ) CALL write_gk( iunpun, ionode_k, ik, ik_g )
+         ! ... mill_k(:,i) contains Miller indices for (k+G)_i
+         !
+         DO ig = 1, ngk (ik)
+            mill_k(:,ig) = mill(:,igk_k(ig,ik))
+         END DO
          !
          ! ... read wavefunctions - do not read if already in memory (nsk==1)
          !
@@ -548,107 +554,19 @@ MODULE pw_restart_new
             !
          ENDIF
          !
-         CALL write_wfc( iunpun, ik_g, nkstot, ispin, nspin, &
-              evc, npw_g, gamma_only, nbnd, igk_l2g_kdip(:),   &
-              ngk(ik), filename, 1.D0, &
-              ionode_k, root_pool, intra_pool_comm )
+         CALL write_wfc( iunpun, filename, ik_g, nkstot, ispin, nspin, &
+              evc, npw_g, gamma_only, nbnd, igk_l2g_kdip(:), ngk(ik),  &
+              mill_k, 1.D0, ionode_k, root_pool, intra_pool_comm )
          !
       END DO k_points_loop
       !
+      DEALLOCATE ( mill_k )
       DEALLOCATE ( igk_l2g_kdip )
       DEALLOCATE ( igk_l2g )
-      DEALLOCATE( ngk_g )
+      DEALLOCATE ( ngk_g )
       !
       RETURN
       !
-      CONTAINS
-        !
-        !--------------------------------------------------------------------
-        SUBROUTINE write_gk( iun, ionode_k_, ik, ik_g )
-          !--------------------------------------------------------------------
-          !
-#if defined(__HDF5)
-          USE hdf5_qe,   ONLY :  prepare_for_writing_final, write_gkhdf5, &
-                                 h5fclose_f, hdf5_type, add_attributes_hdf5
-#endif
-          IMPLICIT NONE
-          !
-          INTEGER, INTENT(IN) :: iun, ik, ik_g
-          LOGICAL, INTENT(IN) :: ionode_k_
-          !
-          INTEGER, ALLOCATABLE :: igwk(:)
-          INTEGER, ALLOCATABLE :: itmp(:)
-          INTEGER              :: ierr  
-#if defined (__HDF5)
-          TYPE (hdf5_type),ALLOCATABLE  :: h5_desc
-          !
-          ALLOCATE (h5_desc)
-#endif
-          !
-          !
-          ALLOCATE( itmp( npw_g ))
-          itmp = 0
-          DO ig = 1, ngk(ik)
-             itmp(igk_l2g(ig)) = igk_l2g(ig)
-          END DO
-          CALL mp_sum( itmp, intra_pool_comm )
-          !
-          ALLOCATE( igwk( npwx_g ) )
-          igwk(:) = 0
-          !
-          ngg = 0
-          DO ig = 1, npw_g
-             !
-             if ( itmp(ig) == ig ) THEN
-                !
-                ngg = ngg + 1
-                igwk(ngg) = ig
-                !
-             END IF
-             !
-          END DO
-          !
-          DEALLOCATE( itmp )
-          !
-          filename = TRIM(dirname) // 'gkvectors' // TRIM(int_to_char(ik_g))
-          IF ( ionode_k_ ) THEN
-             !
-#if defined(__HDF5)
-             CALL prepare_for_writing_final ( h5_desc, 0,&
-                  TRIM(filename)//'.hdf5',ik_g, ADD_GROUP = .false.)
-             CALL add_attributes_hdf5(h5_desc, ngk_g(ik_g), "number_of_gk_vectors")
-             CALL add_attributes_hdf5(h5_desc, npwx_g, "max_number_of_gk_vectors") 
-             CALL add_attributes_hdf5(h5_desc, gamma_only, "gamma_only")
-             CALL add_attributes_hdf5(h5_desc, "2pi/a", "units") 
-!             CALL write_gkhdf5(h5_desc,xk(:,ik),igwk(1:ngk_g(ik)), &
-!                              mill_g(1:3,igwk(1:ngk_g(ik_g))),ik_g)
-             CALL h5fclose_f(h5_desc%file_id, ierr )
-             DEALLOCATE (h5_desc) 
-#else
-             !
-             CALL iotk_open_write( iun, FILE = TRIM(filename)//'.dat', &
-                  BINARY = .TRUE. )
-             !
-             CALL iotk_write_dat( iun, "NUMBER_OF_GK-VECTORS", ngk_g(ik_g) )
-             CALL iotk_write_dat( iun, "MAX_NUMBER_OF_GK-VECTORS", npwx_g )
-             CALL iotk_write_dat( iun, "GAMMA_ONLY", gamma_only )
-             !
-             CALL iotk_write_attr ( attr, "UNITS", "2 pi / a", FIRST = .TRUE. )
-             CALL iotk_write_dat( iun, "K-POINT_COORDS", xk(:,ik), ATTR = attr )
-             !
-             CALL iotk_write_dat( iun, "INDEX", igwk(1:ngk_g(ik_g)) )
-!             CALL iotk_write_dat( iun, "GRID", mill_g(1:3,igwk(1:ngk_g(ik_g))),&
-!                  COLUMNS = 3 )
-             !
-             CALL iotk_close_write( iun )
-#endif
-             !
-          END IF
-          !
-          DEALLOCATE( igwk )
-          !
-        END SUBROUTINE write_gk
-        !
     END SUBROUTINE pw_write_binaries
     !
     !-----------------------------------------------------------------------
@@ -1964,7 +1882,7 @@ MODULE pw_restart_new
       INTEGER              :: nspin_, npwx_g
       INTEGER              :: nupdwn(2), ike, iks, npw_g, ispin
       INTEGER, EXTERNAL    :: global_kpoint_index
-      INTEGER, ALLOCATABLE :: ngk_g(:)
+      INTEGER, ALLOCATABLE :: ngk_g(:), mill_k(:,:)
       INTEGER, ALLOCATABLE :: igk_l2g(:), igk_l2g_kdip(:)
       LOGICAL              :: opnd, ionode_k
       REAL(DP)             :: scalef
@@ -2000,6 +1918,8 @@ MODULE pw_restart_new
       ! ... the igk_l2g_kdip local-to-global map is needed to read wfcs
       !
       ALLOCATE ( igk_l2g_kdip( npwx_g ) )
+      !
+      ALLOCATE( mill_k ( 3,npwx ) )
       !
       k_points_loop: DO ik = 1, nks
          !
@@ -2041,9 +1961,9 @@ MODULE pw_restart_new
             !
          ENDIF
          !
-         CALL read_wfc( iunpun, ik_g, nkstot, ispin, nspin_,      &
+         CALL read_wfc( iunpun, filename, ik_g, nkstot, ispin, nspin_,      &
                         evc, npw_g, nbnd, igk_l2g_kdip(:),   &
-                        ngk(ik), filename, scalef, &
+                        ngk(ik), mill_k, scalef, &
                         ionode_k, root_pool, intra_pool_comm )
          !
          ! ... here one should check for consistency between what is read
@@ -2053,6 +1973,7 @@ MODULE pw_restart_new
          !
       END DO k_points_loop
       !
+      DEALLOCATE ( mill_k )
       DEALLOCATE ( igk_l2g )
       DEALLOCATE ( igk_l2g_kdip )
       !

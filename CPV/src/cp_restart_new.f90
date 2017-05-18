@@ -406,14 +406,14 @@ MODULE cp_restart_new
          nb = nupdwn(iss)
          ! wavefunctions at time t
          filename = TRIM(dirname) // 'wfc' // TRIM(int_to_char(ik_eff))
-         CALL write_wfc( iunpun, ik_eff, nk, iss, nspin, &
+         CALL write_wfc( iunpun, filename, ik_eff, nk, iss, nspin, &
               c02(:,ib:ib+nb-1), ngw_g, gamma_only, nb, ig_l2g, ngw,  &
-              filename, scalef, ionode, root_pool, intra_pool_comm )
+              mill, scalef, ionode, root_pool, intra_pool_comm )
          ! wavefunctions at time t-dt
          filename = TRIM(dirname) // 'wfcm' // TRIM(int_to_char(ik_eff))
-         CALL write_wfc( iunpun, ik_eff, nk, iss, nspin, &
+         CALL write_wfc( iunpun, filename, ik_eff, nk, iss, nspin, &
               cm2(:,ib:ib+nb-1), ngw_g, gamma_only, nb, ig_l2g, ngw,  &
-              filename, scalef, ionode, root_pool, intra_pool_comm )
+              mill, scalef, ionode, root_pool, intra_pool_comm )
          ! matrix of orthogonality constrains lambda at time t
          filename = TRIM(dirname) // 'lambda' // TRIM(int_to_char(ik_eff))
          CALL cp_write_lambda( filename, iunpun, iss, nspin, nudx, &
@@ -1363,6 +1363,7 @@ MODULE cp_restart_new
     INTEGER, OPTIONAL,     INTENT(OUT) :: ierr
     !
     INTEGER            :: ib, nb, nbnd, is_, ns_
+    INTEGER,ALLOCATABLE:: mill_k(:,:)
     CHARACTER(LEN=320) :: filename
     REAL(DP)           :: scalef
     !
@@ -1378,15 +1379,17 @@ MODULE cp_restart_new
     ! next two lines workaround for bogus complaint due to intent(in)
     is_= iss
     ns_= nspin
+    ALLOCATE ( mill_k(3,ngw) )
     IF ( PRESENT(ierr) ) THEN
-       CALL read_wfc( iunpun, is_, nk, is_, ns_, &
+       CALL read_wfc( iunpun, filename, is_, nk, is_, ns_, &
          c2(:,ib:ib+nb-1), ngw_g, nbnd, ig_l2g, ngw,  &
-         filename, scalef, ionode, root_pool, intra_pool_comm, ierr )
+         mill_k, scalef, ionode, root_pool, intra_pool_comm, ierr )
     ELSE
-       CALL read_wfc( iunpun, is_, nk, is_, ns_, &
+       CALL read_wfc( iunpun, filename, is_, nk, is_, ns_, &
          c2(:,ib:ib+nb-1), ngw_g, nbnd, ig_l2g, ngw,  &
-         filename, scalef, ionode, root_pool, intra_pool_comm )
+         mill_k, scalef, ionode, root_pool, intra_pool_comm )
     END IF
+    DEALLOCATE ( mill_k)
     !
   END SUBROUTINE cp_read_wfc
   !

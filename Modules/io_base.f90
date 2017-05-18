@@ -22,12 +22,12 @@ MODULE io_base
   CONTAINS
     !
     !------------------------------------------------------------------------
-    SUBROUTINE write_wfc( iuni, ik, nk, ispin, nspin, wfc, ngw,   &
-                          gamma_only, nbnd, igl, ngwl, filename, scalef, &
+    SUBROUTINE write_wfc( iuni, filename, ik, nk, ispin, nspin, wfc, ngw,   &
+                          gamma_only, nbnd, igl, ngwl, mill_k, scalef, &
                           ionode_in_group, root_in_group, intra_group_comm)
       !------------------------------------------------------------------------
       !
-      USE mp_wave,    ONLY : mergewf
+      USE mp_wave,    ONLY : mergewf, mergekg
       USE mp,         ONLY : mp_size, mp_rank, mp_max
       !
 #if defined(__HDF5)
@@ -39,6 +39,7 @@ MODULE io_base
       IMPLICIT NONE
       !
       INTEGER,            INTENT(IN) :: iuni
+      CHARACTER(LEN=*),   INTENT(IN) :: filename
       INTEGER,            INTENT(IN) :: ik, nk, ispin, nspin
       COMPLEX(DP),        INTENT(IN) :: wfc(:,:)
       INTEGER,            INTENT(IN) :: ngw
@@ -46,7 +47,7 @@ MODULE io_base
       INTEGER,            INTENT(IN) :: nbnd
       INTEGER,            INTENT(IN) :: ngwl
       INTEGER,            INTENT(IN) :: igl(:)
-      CHARACTER(LEN=*),   INTENT(IN) :: filename
+      INTEGER,            INTENT(IN) :: mill_k(:,:)
       REAL(DP),           INTENT(IN) :: scalef    
         ! scale factor, usually 1.0 for pw and 1/SQRT( omega ) for CP
       LOGICAL,            INTENT(IN) :: ionode_in_group
@@ -55,6 +56,7 @@ MODULE io_base
       INTEGER                  :: j, ierr
       INTEGER                  :: igwx, npwx, npol
       INTEGER                  :: me_in_group, nproc_in_group, my_group
+      INTEGER, ALLOCATABLE     :: itmp(:,:)
       COMPLEX(DP), ALLOCATABLE :: wtmp(:)
       !
 #if defined(__HDF5) 
@@ -101,6 +103,13 @@ MODULE io_base
          !
       END IF
       !
+      ALLOCATE( itmp( 3, MAX (igwx,1) ) )
+      itmp (:,:) = 0
+      CALL mergekg( mill_k, itmp, ngwl, igl, me_in_group, &
+           nproc_in_group, root_in_group, intra_group_comm )
+      IF ( ionode_in_group ) WRITE(iuni) itmp(1:3,1:igwx)
+      DEALLOCATE( itmp )
+      !
       DO j = 1, nbnd
          !
          IF ( npol == 2 ) THEN
@@ -143,14 +152,14 @@ MODULE io_base
     END SUBROUTINE write_wfc
     !
     !------------------------------------------------------------------------
-    SUBROUTINE read_wfc( iuni, ik, nk, ispin, nspin, wfc, ngw, nbnd, &
-                         igl, ngwl, filename, scalef, &
+    SUBROUTINE read_wfc( iuni, filename, ik, nk, ispin, nspin, wfc, ngw, nbnd, &
+                         igl, ngwl, mill_k, scalef, &
                          ionode_in_group, root_in_group, intra_group_comm, &
                          ierr )
       ! if ierr is present, return 0 if everything is ok, /= 0 if not
       !------------------------------------------------------------------------
       !
-      USE mp_wave,   ONLY : splitwf
+      USE mp_wave,   ONLY : splitwf, splitkg
       USE mp,        ONLY : mp_bcast, mp_size, mp_rank, mp_max
       !
 #if defined  __HDF5
@@ -161,19 +170,21 @@ MODULE io_base
       IMPLICIT NONE
       !
       INTEGER,            INTENT(IN)    :: iuni
+      CHARACTER(LEN=*),   INTENT(IN)    :: filename
       COMPLEX(DP),        INTENT(OUT)   :: wfc(:,:)
       INTEGER,            INTENT(IN)    :: ik, nk
       INTEGER,            INTENT(INOUT) :: ngw, nbnd, ispin, nspin
       INTEGER,            INTENT(IN)    :: ngwl
       INTEGER,            INTENT(IN)    :: igl(:)
-      CHARACTER(LEN=*),   INTENT(IN)    :: filename
       REAL(DP),           INTENT(OUT)   :: scalef
+      INTEGER,            INTENT(OUT)   :: mill_k(:,:)
       LOGICAL,            INTENT(IN)    :: ionode_in_group
       INTEGER,            INTENT(IN)    :: root_in_group, intra_group_comm
       INTEGER, OPTIONAL,  INTENT(OUT)   :: ierr
       !
       INTEGER                           :: j
       COMPLEX(DP), ALLOCATABLE          :: wtmp(:)
+      INTEGER, ALLOCATABLE              :: itmp(:,:)
       INTEGER                           :: ierr_
       INTEGER                           :: igwx, igwx_, npwx, npol, ik_, nk_
       INTEGER                           :: me_in_group, nproc_in_group
@@ -242,6 +253,17 @@ MODULE io_base
       IF ( nspin == 4 ) npol = 2
       ALLOCATE( wtmp( npol*MAX( igwx_, igwx ) ) )
       npwx = SIZE( wfc, 1 ) / npol
+      !
+      ALLOCATE( itmp( 3,MAX( igwx_, igwx ) ) )
+      IF ( ionode_in_group ) THEN 
+         READ(iuni) itmp(1:3,1:igwx_)
+         IF ( igwx > igwx_ ) itmp(1:3,igwx_+1:igwx) = 0
+      ELSE
+         itmp (:,:) = 0
+      END IF
+      CALL splitkg( mill_k(:,:), itmp, ngwl, igl, me_in_group, &
+           nproc_in_group, root_in_group, intra_group_comm )
+      DEALLOCATE (itmp)
       !
       DO j = 1, nbnd
          !
