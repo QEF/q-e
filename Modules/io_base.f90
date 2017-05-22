@@ -22,7 +22,7 @@ MODULE io_base
   CONTAINS
     !
     !------------------------------------------------------------------------
-    SUBROUTINE write_wfc( iuni, filename, ik, nk, ispin, nspin, wfc, ngw,   &
+    SUBROUTINE write_wfc( iuni, filename, ik, xk, ispin, nspin, wfc, ngw,   &
                           gamma_only, nbnd, igl, ngwl, mill_k, scalef, &
                           ionode_in_group, root_in_group, intra_group_comm)
       !------------------------------------------------------------------------
@@ -40,7 +40,8 @@ MODULE io_base
       !
       INTEGER,            INTENT(IN) :: iuni
       CHARACTER(LEN=*),   INTENT(IN) :: filename
-      INTEGER,            INTENT(IN) :: ik, nk, ispin, nspin
+      INTEGER,            INTENT(IN) :: ik, ispin, nspin
+      REAL(DP),           INTENT(IN) :: xk(:)
       COMPLEX(DP),        INTENT(IN) :: wfc(:,:)
       INTEGER,            INTENT(IN) :: ngw
       LOGICAL,            INTENT(IN) :: gamma_only
@@ -80,25 +81,20 @@ MODULE io_base
 #if defined  __HDF5
          CALL prepare_for_writing_final ( h5_write_desc, 0, &
               TRIM(filename)//'.hdf5',ik, ADD_GROUP = .false.)
-         CALL add_attributes_hdf5(h5_write_desc, ngw,"ngw",ik)
-         CALL add_attributes_hdf5(h5_write_desc, gamma_only,"gamma_only",ik)
-         CALL add_attributes_hdf5(h5_write_desc, igwx,"igwx",ik)
-         CALL add_attributes_hdf5(h5_write_desc, nbnd,"nbnd",ik)
          CALL add_attributes_hdf5(h5_write_desc, ik,"ik",ik)
-         CALL add_attributes_hdf5(h5_write_desc, nk,"nk",ik)
+         CALL add_attributes_hdf5(h5_write_desc, xk,"xk",xk)
          CALL add_attributes_hdf5(h5_write_desc, ispin,"ispin",ik)
-         CALL add_attributes_hdf5(h5_write_desc, nspin,"nspin",ik)
+         CALL add_attributes_hdf5(h5_write_desc, gamma_only,"gamma_only",ik)
          CALL add_attributes_hdf5(h5_write_desc, scalef,"scale_factor",ik)
-         !
+         CALL add_attributes_hdf5(h5_write_desc, ngw,"ngw",ik)
+         CALL add_attributes_hdf5(h5_write_desc, igwx,"igwx",ik)
+         CALL add_attributes_hdf5(h5_write_desc, npol,"npol",ik)
+         CALL add_attributes_hdf5(h5_write_desc, nbnd,"nbnd",ik)
 #else
-         !
          OPEN ( UNIT = iuni, FILE = TRIM(filename)//'.dat', &
               FORM='unformatted', STATUS = 'unknown' )
-         !
-         WRITE(iuni) ik, nk, ispin, nspin
-         WRITE(iuni) gamma_only, scalef
-         WRITE(iuni) ngw, igwx, nbnd
-         !
+         WRITE(iuni) ik, xk, ispin, gamma_only, scalef
+         WRITE(iuni) ngw, igwx, npol, nbnd
 #endif
          !
       END IF
@@ -107,7 +103,13 @@ MODULE io_base
       itmp (:,:) = 0
       CALL mergekg( mill_k, itmp, ngwl, igl, me_in_group, &
            nproc_in_group, root_in_group, intra_group_comm )
-      IF ( ionode_in_group ) WRITE(iuni) itmp(1:3,1:igwx)
+      IF ( ionode_in_group ) THEN
+#if defined(__HDF5)
+         CALL errore('write_wfc', 'hdf5 not yet ready',1)
+#else
+         WRITE(iuni) itmp(1:3,1:igwx)
+#endif
+      END IF
       DEALLOCATE( itmp )
       !
       DO j = 1, nbnd
@@ -152,8 +154,8 @@ MODULE io_base
     END SUBROUTINE write_wfc
     !
     !------------------------------------------------------------------------
-    SUBROUTINE read_wfc( iuni, filename, ik, nk, ispin, nspin, wfc, ngw, nbnd, &
-                         igl, ngwl, mill_k, scalef, &
+    SUBROUTINE read_wfc( iuni, filename, ik, xk, ispin, npol, wfc, ngw, &
+                         gamma_only, nbnd, igl, ngwl, mill_k, scalef,   &
                          ionode_in_group, root_in_group, intra_group_comm, &
                          ierr )
       ! if ierr is present, return 0 if everything is ok, /= 0 if not
@@ -172,12 +174,13 @@ MODULE io_base
       INTEGER,            INTENT(IN)    :: iuni
       CHARACTER(LEN=*),   INTENT(IN)    :: filename
       COMPLEX(DP),        INTENT(OUT)   :: wfc(:,:)
-      INTEGER,            INTENT(IN)    :: ik, nk
-      INTEGER,            INTENT(INOUT) :: ngw, nbnd, ispin, nspin
+      INTEGER,            INTENT(IN)    :: ik
+      INTEGER,            INTENT(INOUT) :: ngw, nbnd, ispin, npol
       INTEGER,            INTENT(IN)    :: ngwl
       INTEGER,            INTENT(IN)    :: igl(:)
-      REAL(DP),           INTENT(OUT)   :: scalef
+      REAL(DP),           INTENT(OUT)   :: scalef, xk(3)
       INTEGER,            INTENT(OUT)   :: mill_k(:,:)
+      LOGICAL,            INTENT(OUT)   :: gamma_only
       LOGICAL,            INTENT(IN)    :: ionode_in_group
       INTEGER,            INTENT(IN)    :: root_in_group, intra_group_comm
       INTEGER, OPTIONAL,  INTENT(OUT)   :: ierr
@@ -186,9 +189,8 @@ MODULE io_base
       COMPLEX(DP), ALLOCATABLE          :: wtmp(:)
       INTEGER, ALLOCATABLE              :: itmp(:,:)
       INTEGER                           :: ierr_
-      INTEGER                           :: igwx, igwx_, npwx, npol, ik_, nk_
+      INTEGER                           :: igwx, igwx_, npwx, ik_
       INTEGER                           :: me_in_group, nproc_in_group
-      LOGICAL                           :: gamma_only_
 #if defined(__HDF5)
       TYPE (hdf5_type),ALLOCATABLE      :: h5_read_desc
       ! 
@@ -225,38 +227,41 @@ MODULE io_base
            CALL prepare_for_reading_final(h5_read_desc, 0, &
                TRIM(filename)//'.hdf5',KPOINT = ik)
          END IF 
+         CALL read_attributes_hdf5(h5_read_desc, ik_,"ik",ik)
+         CALL read_attributes_hdf5(h5_read_desc, xk,"xk",ik)
+         CALL read_attributes_hdf5(h5_read_desc, ispin,"ispin",ik)
+         CALL read_attributes_hdf5(h5_read_desc, gamma_only,"gamma_only",ik)
+         CALL read_attributes_hdf5(h5_read_desc, scalef,"scale_factor",ik)
          CALL read_attributes_hdf5(h5_read_desc, ngw,"ngw",ik)
          CALL read_attributes_hdf5(h5_read_desc, nbnd,"nbnd",ik)
-         CALL read_attributes_hdf5(h5_read_desc, ik_,"ik",ik)
-         CALL read_attributes_hdf5(h5_read_desc, nk_,"ik",ik)
-         CALL read_attributes_hdf5(h5_read_desc, ispin,"ispin",ik)
-         CALL read_attributes_hdf5(h5_read_desc, nspin,"nspin",ik)
+         CALL read_attributes_hdf5(h5_read_desc, npol,"npol",ik)
          CALL read_attributes_hdf5(h5_read_desc, igwx_,"igwx",ik)
-         CALL read_attributes_hdf5(h5_read_desc, scalef,"scale_factor",ik)
 #else
-         READ (iuni) ik_, nk_, ispin, nspin
-         READ(iuni) gamma_only_, scalef
-         READ (iuni) ngw, igwx_, nbnd
+         READ (iuni) ik_, xk, ispin, gamma_only, scalef
+         READ (iuni) ngw, igwx_, npol, nbnd
 #endif
       END IF
       !
-      CALL mp_bcast( ngw,    root_in_group, intra_group_comm )
-      CALL mp_bcast( nbnd,   root_in_group, intra_group_comm )
       CALL mp_bcast( ik_,    root_in_group, intra_group_comm )
-      CALL mp_bcast( nk_,    root_in_group, intra_group_comm )
+      CALL mp_bcast( xk,     root_in_group, intra_group_comm )
       CALL mp_bcast( ispin,  root_in_group, intra_group_comm )
-      CALL mp_bcast( nspin,  root_in_group, intra_group_comm )
-      CALL mp_bcast( igwx_,  root_in_group, intra_group_comm )
+      CALL mp_bcast( gamma_only, root_in_group, intra_group_comm )
       CALL mp_bcast( scalef, root_in_group, intra_group_comm )
+      CALL mp_bcast( ngw,    root_in_group, intra_group_comm )
+      CALL mp_bcast( igwx_,  root_in_group, intra_group_comm )
+      CALL mp_bcast( npol,   root_in_group, intra_group_comm )
+      CALL mp_bcast( nbnd,   root_in_group, intra_group_comm )
       !
-      npol = 1
-      IF ( nspin == 4 ) npol = 2
       ALLOCATE( wtmp( npol*MAX( igwx_, igwx ) ) )
       npwx = SIZE( wfc, 1 ) / npol
       !
       ALLOCATE( itmp( 3,MAX( igwx_, igwx ) ) )
       IF ( ionode_in_group ) THEN 
-         READ(iuni) itmp(1:3,1:igwx_)
+#if defined(__HDF5)
+         CALL errore('read_wfc', 'hdf5 not yet ready',1)
+#else
+         READ (iuni) itmp(1:3,1:igwx_)
+#endif
          IF ( igwx > igwx_ ) itmp(1:3,igwx_+1:igwx) = 0
       ELSE
          itmp (:,:) = 0
@@ -347,6 +352,9 @@ MODULE io_base
       INTEGER                  :: iun, ns, ig, ierr
       CHARACTER(LEN=320)       :: filename
       !
+#if defined __HDF5
+      CALL errore('write_rhog', 'hdf5 not yet ready',1)
+#endif
       ngm  = SIZE (rho, 1)
       IF (ngm /= SIZE (mill, 2) .OR. ngm /= SIZE (ig_l2g, 1) ) &
          CALL errore('write_rhog', 'inconsistent input dimensions', 1)
@@ -449,7 +457,7 @@ MODULE io_base
       !! local-to-global indices, for machine- and mpi-independent ordering
       !! on this processor, G(ig) maps to G(ig_l2g(ig)) in global ordering
       INTEGER,          INTENT(IN) :: nspin
-      !! read up to npsin components
+      !! read up to nspin components
       COMPLEX(dp),  INTENT(INOUT) :: rho(:,:)
       !
       COMPLEX(dp), ALLOCATABLE :: rho_g(:)
@@ -458,7 +466,10 @@ MODULE io_base
       INTEGER                  :: iun, mill_dum, ns, ig, ierr
       LOGICAL                  :: gamma_only
       CHARACTER(LEN=320)       :: filename
-       !
+      !
+#if defined __HDF5
+      CALL errore('read_rhog', 'hdf5 not yet ready',1)
+#endif
       iun  = 4
       !
       ngm  = SIZE (rho, 1)
@@ -482,7 +493,7 @@ MODULE io_base
       CALL mp_bcast( ngm_g, ionode_id, intra_bgrp_comm )
       CALL mp_bcast( nspin_, ionode_id, intra_bgrp_comm )
       IF ( nspin > nspin_ ) &
-         CALL errore('read_rhog', 'not enough spin components found', 1)
+         CALL infomsg('read_rhog', 'some spin components not found')
       !
       IF ( ngm_g < MAXVAL (ig_l2g(:)) ) &
            CALL errore('read_rhog', 'some G-vectors are missing', 1)

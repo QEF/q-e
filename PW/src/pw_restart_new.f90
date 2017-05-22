@@ -48,8 +48,7 @@ MODULE pw_restart_new
       USE paw_variables,        ONLY : okpaw
       USE uspp_param,           ONLY : upf
       USE global_version,       ONLY : version_number
-      USE cell_base,            ONLY : at, bg, alat, tpiba, tpiba2, &
-                                       ibrav, celldm
+      USE cell_base,            ONLY : at, bg, alat, ibrav, celldm
       USE gvect,                ONLY : ig_l2g
       USE ions_base,            ONLY : nsp, ityp, atm, nat, tau, if_pos
       USE noncollin_module,     ONLY : noncolin, npol
@@ -431,6 +430,7 @@ MODULE pw_restart_new
       USE mp,                   ONLY : mp_sum, mp_max
       USE io_base,              ONLY : write_wfc
       USE io_files,             ONLY : iunwfc, nwordwfc
+      USE cell_base,            ONLY : tpiba
       USE control_flags,        ONLY : gamma_only, smallmem
       USE gvect,                ONLY : ig_l2g
       USE noncollin_module,     ONLY : noncolin, npol
@@ -554,7 +554,7 @@ MODULE pw_restart_new
             !
          ENDIF
          !
-         CALL write_wfc( iunpun, filename, ik_g, nkstot, ispin, nspin, &
+         CALL write_wfc( iunpun, filename, ik_g, tpiba*xk(:,ik), ispin, nspin, &
               evc, npw_g, gamma_only, nbnd, igk_l2g_kdip(:), ngk(ik),  &
               mill_k, 1.D0, ionode_k, root_pool, intra_pool_comm )
          !
@@ -1856,7 +1856,7 @@ MODULE pw_restart_new
       ! ... This routines reads wavefunctions from the new file format and
       ! ... writes them into the old format
       !
-      USE control_flags,        ONLY : twfcollect
+      USE control_flags,        ONLY : twfcollect, gamma_only
       USE lsda_mod,             ONLY : nspin, isk
       USE klist,                ONLY : nkstot, wk, nks, xk, ngk, igk_k
       USE wvfct,                ONLY : npw, npwx, g2kin, et, wg, nbnd
@@ -1879,13 +1879,13 @@ MODULE pw_restart_new
       CHARACTER(LEN=2), DIMENSION(2) :: updw = (/ 'up', 'dw' /)
       CHARACTER(LEN=320)   :: filename
       INTEGER              :: i, ik, ik_g, ig, ipol, ik_s
-      INTEGER              :: nspin_, npwx_g
+      INTEGER              :: npol_, npwx_g
       INTEGER              :: nupdwn(2), ike, iks, npw_g, ispin
       INTEGER, EXTERNAL    :: global_kpoint_index
       INTEGER, ALLOCATABLE :: ngk_g(:), mill_k(:,:)
       INTEGER, ALLOCATABLE :: igk_l2g(:), igk_l2g_kdip(:)
       LOGICAL              :: opnd, ionode_k
-      REAL(DP)             :: scalef
+      REAL(DP)             :: scalef, xk_(3)
 
       !
       IF ( .NOT. twfcollect ) RETURN 
@@ -1961,13 +1961,13 @@ MODULE pw_restart_new
             !
          ENDIF
          !
-         CALL read_wfc( iunpun, filename, ik_g, nkstot, ispin, nspin_,      &
-                        evc, npw_g, nbnd, igk_l2g_kdip(:),   &
+         CALL read_wfc( iunpun, filename, ik_g, xk_, ispin, npol_, &
+                        evc, npw_g, gamma_only, nbnd, igk_l2g_kdip(:),&
                         ngk(ik), mill_k, scalef, &
                         ionode_k, root_pool, intra_pool_comm )
          !
          ! ... here one should check for consistency between what is read
-         ! ... and what is expected for ik_g, ispin, nspin         !
+         ! ... and what is expected
          !
          CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
          !
