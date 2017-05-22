@@ -770,7 +770,6 @@ h_psi.o : ../../Modules/mp_bands.o
 h_psi.o : ../../Modules/noncol.o
 h_psi.o : ../../Modules/recvec.o
 h_psi.o : ../../Modules/uspp.o
-h_psi.o : ../../Modules/wavefunctions.o
 h_psi.o : bp_mod.o
 h_psi.o : exx.o
 h_psi.o : ldaU.o

@@ -81,7 +81,6 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   ! ...    hpsi  H*psi
   !
   USE kinds,    ONLY : DP
-  USE wavefunctions_module, ONLY : psic
   USE bp,       ONLY : lelfield,l3dstring,gdir, efield, efield_cry
   USE becmod,   ONLY : bec_type, becp, calbec
   USE lsda_mod, ONLY : current_spin
@@ -116,8 +115,7 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
 
   CALL start_clock( 'h_psi:pot' )
   !
-  ! ... the local potential V_Loc psi
-  !
+  ! ... Here the product with the local potential V_loc psi
   !
   IF ( gamma_only ) THEN
      ! 
@@ -190,7 +188,10 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
      END IF  
      !
   END IF  
-
+  !
+  ! ... Here the product with the non local potential V_NL psi
+  ! ... (not in the real-space case: it is done together with V_loc)
+  !
   IF ( nkb > 0 .AND. .NOT. real_space) THEN
      !
      CALL start_clock( 'h_psi:calbec' )
@@ -225,9 +226,7 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
      !
   ENDIF
   !
-  !
-  ! ... Here the product with the non local potential V_NL psi
-  ! ... (not in the real-space case: it is done together with V_loc)
+  ! ... Here the exact-exchange term Vxx psi
   !
   IF ( exx_is_active() ) THEN
      IF ( use_ace) THEN
@@ -255,7 +254,8 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
      !
   END IF
   !
-  ! ... Gamma-only trick: set to zero the imaginary part of hpsi at G=0
+  ! ... With Gamma-only trick, Im(H*psi)(G=0) = 0 by definition,
+  ! ... but it is convenient to explicitly set it to 0 to prevent trouble
   !
   IF ( gamma_only .AND. gstart == 2 ) &
       hpsi(1,1:m) = CMPLX( DBLE( hpsi(1,1:m) ), 0.D0 ,kind=DP)
