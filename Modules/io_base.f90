@@ -23,8 +23,8 @@ MODULE io_base
     !
     !------------------------------------------------------------------------
     SUBROUTINE write_wfc( iuni, filename, ik, xk, ispin, nspin, wfc, ngw,   &
-                          gamma_only, nbnd, igl, ngwl, mill_k, scalef, &
-                          ionode_in_group, root_in_group, intra_group_comm)
+                          gamma_only, nbnd, igl, ngwl, b1,b2,b3, mill_k,    &
+                          scalef, ionode_in_group, root_in_group, intra_group_comm)
       !------------------------------------------------------------------------
       !
       USE mp_wave,    ONLY : mergewf, mergekg
@@ -49,6 +49,7 @@ MODULE io_base
       INTEGER,            INTENT(IN) :: ngwl
       INTEGER,            INTENT(IN) :: igl(:)
       INTEGER,            INTENT(IN) :: mill_k(:,:)
+      REAL(DP),           INTENT(IN) :: b1(3), b2(3), b3(3)    
       REAL(DP),           INTENT(IN) :: scalef    
         ! scale factor, usually 1.0 for pw and 1/SQRT( omega ) for CP
       LOGICAL,            INTENT(IN) :: ionode_in_group
@@ -73,9 +74,6 @@ MODULE io_base
       npol = 1
       IF ( nspin == 4 ) npol = 2
       npwx = SIZE( wfc, 1 ) / npol
-      ALLOCATE( wtmp( MAX( npol*igwx, 1 ) ) )
-      !
-      wtmp = 0.0_DP
       !
       IF ( ionode_in_group ) THEN
 #if defined  __HDF5
@@ -99,7 +97,12 @@ MODULE io_base
          !
       END IF
       !
-      ALLOCATE( itmp( 3, MAX (igwx,1) ) )
+      IF ( ionode_in_group ) THEN
+         ALLOCATE( itmp( 3, MAX (igwx,1) ) )
+      ELSE
+         ! not used: some compiler do not like passing unallocated arrays
+         ALLOCATE( itmp( 3, 1 ) )
+      ENDIF
       itmp (:,:) = 0
       CALL mergekg( mill_k, itmp, ngwl, igl, me_in_group, &
            nproc_in_group, root_in_group, intra_group_comm )
@@ -107,10 +110,18 @@ MODULE io_base
 #if defined(__HDF5)
          CALL errore('write_wfc', 'hdf5 not yet ready',1)
 #else
+         WRITE(iuni) b1, b2, b3
          WRITE(iuni) itmp(1:3,1:igwx)
 #endif
       END IF
       DEALLOCATE( itmp )
+      !
+      IF ( ionode_in_group ) THEN
+         ALLOCATE( wtmp( MAX( npol*igwx, 1 ) ) )
+      ELSE
+         ALLOCATE( wtmp( 1 ) )
+      ENDIF
+      wtmp = 0.0_DP
       !
       DO j = 1, nbnd
          !
@@ -130,12 +141,13 @@ MODULE io_base
             !
          END IF
          !
-         IF ( ionode_in_group ) &
+         IF ( ionode_in_group ) THEN
 #if defined(__HDF5)
             CALL write_evc(h5_write_desc, j, wtmp(1:npol*igwx), ik) 
 #else
             WRITE(iuni) wtmp(1:npol*igwx)
 #endif
+         END IF
          !
       END DO
       IF ( ionode_in_group ) THEN
@@ -145,7 +157,7 @@ MODULE io_base
 #else 
          CLOSE (UNIT = iuni, STATUS = 'keep' )
 #endif
-     END IF
+      END IF
       !
       DEALLOCATE( wtmp )
       !
@@ -155,9 +167,9 @@ MODULE io_base
     !
     !------------------------------------------------------------------------
     SUBROUTINE read_wfc( iuni, filename, ik, xk, ispin, npol, wfc, ngw, &
-                         gamma_only, nbnd, igl, ngwl, mill_k, scalef,   &
-                         ionode_in_group, root_in_group, intra_group_comm, &
-                         ierr )
+                         gamma_only, nbnd, igl, ngwl, b1, b2, b3, mill_k,&
+                         scalef, ionode_in_group, root_in_group, &
+                         intra_group_comm, ierr )
       ! if ierr is present, return 0 if everything is ok, /= 0 if not
       !------------------------------------------------------------------------
       !
@@ -178,7 +190,9 @@ MODULE io_base
       INTEGER,            INTENT(INOUT) :: ngw, nbnd, ispin, npol
       INTEGER,            INTENT(IN)    :: ngwl
       INTEGER,            INTENT(IN)    :: igl(:)
-      REAL(DP),           INTENT(OUT)   :: scalef, xk(3)
+      REAL(DP),           INTENT(OUT)   :: scalef
+      REAL(DP),           INTENT(OUT)   :: xk(3)
+      REAL(DP),           INTENT(OUT)   :: b1(3), b2(3), b3(3)
       INTEGER,            INTENT(OUT)   :: mill_k(:,:)
       LOGICAL,            INTENT(OUT)   :: gamma_only
       LOGICAL,            INTENT(IN)    :: ionode_in_group
@@ -252,24 +266,29 @@ MODULE io_base
       CALL mp_bcast( npol,   root_in_group, intra_group_comm )
       CALL mp_bcast( nbnd,   root_in_group, intra_group_comm )
       !
-      ALLOCATE( wtmp( npol*MAX( igwx_, igwx ) ) )
       npwx = SIZE( wfc, 1 ) / npol
       !
-      ALLOCATE( itmp( 3,MAX( igwx_, igwx ) ) )
       IF ( ionode_in_group ) THEN 
+         ALLOCATE( itmp( 3,MAX( igwx_, igwx ) ) )
 #if defined(__HDF5)
          CALL errore('read_wfc', 'hdf5 not yet ready',1)
 #else
+         READ (iuni) b1, b2, b3
          READ (iuni) itmp(1:3,1:igwx_)
 #endif
          IF ( igwx > igwx_ ) itmp(1:3,igwx_+1:igwx) = 0
       ELSE
-         itmp (:,:) = 0
+         ALLOCATE( itmp( 3, 1 ) )
       END IF
       CALL splitkg( mill_k(:,:), itmp, ngwl, igl, me_in_group, &
            nproc_in_group, root_in_group, intra_group_comm )
       DEALLOCATE (itmp)
       !
+      IF ( ionode_in_group ) THEN 
+         ALLOCATE( wtmp( npol*MAX( igwx_, igwx ) ) )
+      ELSE
+         ALLOCATE( wtmp(1) )
+      ENDIF
       DO j = 1, nbnd
          !
          IF ( j <= SIZE( wfc, 2 ) ) THEN
@@ -300,12 +319,12 @@ MODULE io_base
          !
       END DO
       !
-#if !defined (__HDF5)
-      IF ( ionode_in_group ) CLOSE ( UNIT = iuni, STATUS = 'keep' )
-#else
-      IF ( ionode_in_group ) THEN 
+      IF ( ionode_in_group ) THEN
+#if defined (__HDF5)
          CALL h5fclose_f(h5_read_desc%file_id, ierr_)
          DEALLOCATE (h5_read_desc)
+#else
+         CLOSE ( UNIT = iuni, STATUS = 'keep' )
       END IF
 #endif
       !
@@ -417,9 +436,23 @@ MODULE io_base
       DO ns = 1, nspin
          !
          rho_g = 0
-         DO ig = 1, ngm
-            rho_g(ig_l2g(ig)) = rho(ig,ns)
-         END DO
+         !
+         ! Workaround for LSDA, while waiting for much-needed harmonization:
+         ! we have rhoup and rhodw, we write rhotot=up+dw and rhodif=up-dw
+         ! 
+         IF ( ns == 1 .AND. nspin == 2 ) THEN
+            DO ig = 1, ngm
+               rho_g(ig_l2g(ig)) = rho(ig,ns) + rho(ig,ns+1)
+            END DO
+         ELSE IF ( ns == 2 .AND. nspin == 2 ) THEN
+            DO ig = 1, ngm
+               rho_g(ig_l2g(ig)) = rho(ig,ns-1) - rho(ig,ns)
+            END DO
+        ELSE
+            DO ig = 1, ngm
+               rho_g(ig_l2g(ig)) = rho(ig,ns)
+            END DO
+         END IF
          !
          CALL mp_sum( rho_g, intra_bgrp_comm )
          !
@@ -461,8 +494,9 @@ MODULE io_base
       COMPLEX(dp),  INTENT(INOUT) :: rho(:,:)
       !
       COMPLEX(dp), ALLOCATABLE :: rho_g(:)
+      COMPLEX(dp)              :: rhoup, rhodw
       REAL(dp)                 :: b1(3), b2(3), b3(3)
-      INTEGER                  :: ngm, nspin_, ngm_g
+      INTEGER                  :: ngm, nspin_, ngm_g, isup, isdw
       INTEGER                  :: iun, mill_dum, ns, ig, ierr
       LOGICAL                  :: gamma_only
       CHARACTER(LEN=320)       :: filename
@@ -523,6 +557,20 @@ MODULE io_base
          END DO
          !
       END DO
+      !
+      ! Workaround for LSDA, while waiting for much-needed harmonization:
+      ! file contains rhotot=up+dw and rhodif=up-dw, we need rhoup and rhodw
+      ! 
+      IF ( nspin_ == 2 .AND. nspin > 1 ) THEN
+         isup = 1
+         isdw = 2
+         DO ig = 1, ngm
+            rhoup = ( rho(ig,isup) + rho(ig,isdw) ) / 2.0_dp
+            rhodw = ( rho(ig,isup) - rho(ig,isdw) ) / 2.0_dp
+            rho(ig,isup) = rhoup
+            rho(ig,isdw) = rhodw
+         END DO
+      END IF
       !
       IF (ionode) CLOSE (UNIT = iun, status ='keep' )
       !

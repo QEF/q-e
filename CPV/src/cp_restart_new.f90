@@ -408,12 +408,14 @@ MODULE cp_restart_new
          filename = TRIM(dirname) // 'wfc' // TRIM(int_to_char(ik_eff))
          CALL write_wfc( iunpun, filename, ik_eff, xk(:,1), iss, nspin, &
               c02(:,ib:ib+nb-1), ngw_g, gamma_only, nb, ig_l2g, ngw,  &
-              mill, scalef, ionode, root_pool, intra_pool_comm )
+              alat*b1, alat*b2, alat*b3, mill, scalef, ionode, root_pool, &
+              intra_pool_comm )
          ! wavefunctions at time t-dt
          filename = TRIM(dirname) // 'wfcm' // TRIM(int_to_char(ik_eff))
          CALL write_wfc( iunpun, filename, ik_eff, xk(:,1), iss, nspin, &
               cm2(:,ib:ib+nb-1), ngw_g, gamma_only, nb, ig_l2g, ngw,  &
-              mill, scalef, ionode, root_pool, intra_pool_comm )
+              alat*b1, alat*b2, alat*b3, mill, scalef, ionode, root_pool, &
+              intra_pool_comm )
          ! matrix of orthogonality constrains lambda at time t
          filename = TRIM(dirname) // 'lambda' // TRIM(int_to_char(ik_eff))
          CALL cp_write_lambda( filename, iunpun, iss, nspin, nudx, &
@@ -1365,7 +1367,7 @@ MODULE cp_restart_new
     INTEGER            :: ib, nb, nbnd, is_, npol
     INTEGER,ALLOCATABLE:: mill_k(:,:)
     CHARACTER(LEN=320) :: filename
-    REAL(DP)           :: scalef, xk(3)
+    REAL(DP)           :: scalef, xk(3), b1(3), b2(3), b3(3)
     LOGICAL            :: gamma_only
     !
     IF ( tag == 'm' ) THEN
@@ -1383,11 +1385,11 @@ MODULE cp_restart_new
     IF ( PRESENT(ierr) ) THEN
        CALL read_wfc( iunpun, filename, is_, xk, is_, npol, &
          c2(:,ib:ib+nb-1), ngw_g, gamma_only, nbnd, ig_l2g, ngw,  &
-         mill_k, scalef, ionode, root_pool, intra_pool_comm, ierr )
+         b1,b2,b3, mill_k, scalef, ionode, root_pool, intra_pool_comm, ierr )
     ELSE
        CALL read_wfc( iunpun, filename, is_, xk, is_, npol, &
          c2(:,ib:ib+nb-1), ngw_g, gamma_only, nbnd, ig_l2g, ngw,  &
-         mill_k, scalef, ionode, root_pool, intra_pool_comm )
+         b1,b2,b3, mill_k, scalef, ionode, root_pool, intra_pool_comm )
     END IF
     DEALLOCATE ( mill_k)
     !

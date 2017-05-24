@@ -430,7 +430,7 @@ MODULE pw_restart_new
       USE mp,                   ONLY : mp_sum, mp_max
       USE io_base,              ONLY : write_wfc
       USE io_files,             ONLY : iunwfc, nwordwfc
-      USE cell_base,            ONLY : tpiba
+      USE cell_base,            ONLY : tpiba, alat, bg
       USE control_flags,        ONLY : gamma_only, smallmem
       USE gvect,                ONLY : ig_l2g
       USE noncollin_module,     ONLY : noncolin, npol
@@ -556,6 +556,7 @@ MODULE pw_restart_new
          !
          CALL write_wfc( iunpun, filename, ik_g, tpiba*xk(:,ik), ispin, nspin, &
               evc, npw_g, gamma_only, nbnd, igk_l2g_kdip(:), ngk(ik),  &
+              alat*bg(:,1), alat*bg(:,2), alat*bg(:,3), &
               mill_k, 1.D0, ionode_k, root_pool, intra_pool_comm )
          !
       END DO k_points_loop
@@ -1885,7 +1886,7 @@ MODULE pw_restart_new
       INTEGER, ALLOCATABLE :: ngk_g(:), mill_k(:,:)
       INTEGER, ALLOCATABLE :: igk_l2g(:), igk_l2g_kdip(:)
       LOGICAL              :: opnd, ionode_k
-      REAL(DP)             :: scalef, xk_(3)
+      REAL(DP)             :: scalef, xk_(3), b1(3), b2(3), b3(3)
 
       !
       IF ( .NOT. twfcollect ) RETURN 
@@ -1963,7 +1964,7 @@ MODULE pw_restart_new
          !
          CALL read_wfc( iunpun, filename, ik_g, xk_, ispin, npol_, &
                         evc, npw_g, gamma_only, nbnd, igk_l2g_kdip(:),&
-                        ngk(ik), mill_k, scalef, &
+                        ngk(ik), b1, b2, b3, mill_k, scalef, &
                         ionode_k, root_pool, intra_pool_comm )
          !
          ! ... here one should check for consistency between what is read

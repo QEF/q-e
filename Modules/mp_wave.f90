@@ -59,7 +59,7 @@
 
 #endif
 
-      IF( igwx > SIZE( pwt ) ) &
+      IF ( mpime == root .AND. igwx > SIZE( pwt ) ) &
         CALL errore(' mergewf ',' wrong size for pwt ',SIZE(pwt) )
 
 #if defined __MPI
@@ -164,8 +164,8 @@
 
 #endif
 
-      IF( igwx > SIZE( millt, 2 ) ) &
-        CALL errore(' mergekgf',' wrong size for millt ',SIZE(millt,2) )
+      IF ( mpime == root .AND. igwx > SIZE( millt, 2 ) ) &
+        CALL errore(' mergekg',' wrong size for millt ',SIZE(millt,2) )
 
 #if defined __MPI
 
@@ -267,7 +267,7 @@
 
 #endif
 
-      IF( igwx > SIZE( pwt ) ) &
+      IF ( mpime == root .AND. igwx > SIZE( pwt ) ) &
         CALL errore(' splitwf ',' wrong size for pwt ',SIZE(pwt) )
 
 #if defined __MPI
@@ -361,8 +361,8 @@
 
 #endif
 
-      IF( igwx > SIZE( millt,2 ) ) &
-        CALL errore(' splitwf ',' wrong size for milltt ',SIZE(millt,2) )
+      IF ( mpime == root .AND. igwx > SIZE( millt, 2 ) ) &
+        CALL errore(' splitkg ',' wrong size for millt ',SIZE(millt,2) )
 
 #if defined __MPI
 
