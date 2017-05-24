@@ -44,6 +44,7 @@ Incompatible changes in svn version:
     to the old xml format. IMPORTANT NOTICE: the format is incompatibile both
     with the "old" format and with the previous "new" one: files may be in
     different locations with different names and contain different data.
+    IMPORTANT NOTICE 2: the "collected" format is now the default
   * Hybrid functionals: ACE is now the default for scf calculations (it wasn't
     in 6.1 contrary to what previously stated in this file); it is disabled
     for TD-DFPT. See variable "use_ace".

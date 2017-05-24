@@ -116,8 +116,7 @@ MODULE read_namelists_module
        lberry   = .FALSE.
        gdir     = 0
        nppstr   = 0
-       wf_collect = .FALSE.
-       IF( prog == 'CP' ) wf_collect = .TRUE.  ! default for CP is true
+       wf_collect = .TRUE.
        lelfield = .FALSE.
        lorbm = .FALSE.
        nberrycyc  = 1

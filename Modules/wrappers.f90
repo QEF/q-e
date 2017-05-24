@@ -25,7 +25,7 @@ MODULE wrappers
   IMPLICIT NONE
   !
   ! C std library functions fortran wrappers:
-  PUBLIC  f_remove, rename, f_chdir, f_mkdir, f_rmdir, f_getcwd
+  PUBLIC  f_remove, f_rename, f_chdir, f_mkdir, f_rmdir, f_getcwd
   ! more stuff:
   PUBLIC  f_copy, feval_infix, md5_from_file, f_mkdir_safe
   !

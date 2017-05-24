@@ -16,6 +16,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
         fortran code. Comments lines in @i cards can be introduced by 
         either a "!" or a "#" character in the first position of a line.
         Do not start any line in @i cards with a "/" character.
+        Leave a space between card names and card options, e.g.
+        ATOMIC_POSITIONS (bohr), not ATOMIC_POSITIONS(bohr)
+        Do not start any line in @i cards with a "/" character.
 
         
         @b {Structure of the input data:}
@@ -152,17 +155,19 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
         }
         
         var wf_collect -type LOGICAL { 
-            default { .FALSE. }
+            default { .TRUE. }
             info {
                 This flag controls the way wavefunctions are stored to disk :
 
                 .TRUE.  collect wavefunctions from all processors, store them
-                        into the output data directory "outdir"/"prefix".save,
-                        ...
+                        into the output data directory "outdir"/"prefix".save
+                        The resulting format is portable to a different number
+                        of processor, or different kind of parallelization
 
-                        .FALSE. do not collect wavefunctions, leave them in temporary
-                                local files (one per processor). The resulting format
-                                ...
+                .FALSE. do not collect wavefunctions, leave them in temporary
+                        local files (one per processor). The resulting format
+                        is readable only on the same number of processors and
+                        with the same knd of paralleliztio used to write it.
 
                 Note that this flag has no effect on reading, only on writing.
             }

@@ -341,6 +341,7 @@ MODULE io_base
       !! Write rho(G) in reciprocal space and related information to file
       !! 'charge-density.*' (* = dat if fortran binary, * = hdf5 if HDF5)
       !! Quick-and-dirty version, allocates a large array on all mpi processes
+      !! Processor "ionode" collects data from band group, writes to file
       !
       USE mp,                   ONLY : mp_sum, mp_bcast
       USE mp_bands,             ONLY : intra_bgrp_comm

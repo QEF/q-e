@@ -10,6 +10,10 @@ MODULE pw_restart_new
 !----------------------------------------------------------------------------
   !
   ! ... New PWscf I/O using xml schema and hdf5 binaries
+  ! ... Parallel execution: the xml file is written by one processor only
+  ! ... ("ionode_id"), read by all processors ;
+  ! ... the wavefunction files are written / read by one processor per pool,
+  ! ... collected on / distributed to all other processors in pool
   !
   USE qes_module
   USE qexsd_module, ONLY: qexsd_init_schema, qexsd_openschema, qexsd_closeschema,      &
@@ -40,7 +44,7 @@ MODULE pw_restart_new
       USE control_flags,        ONLY : istep, twfcollect, conv_ions, &
                                        lscf, gamma_only, &
                                        tqr, tq_smoothing, tbeta_smoothing, &
-                                       noinv, do_makov_payne, smallmem, &
+                                       noinv, smallmem, &
                                        llondon, lxdm, ts_vdw, scf_error, n_scf_steps
       USE constants,            ONLY : e2
       USE realus,               ONLY : real_space
@@ -91,18 +95,12 @@ MODULE pw_restart_new
                                        monopole, zmon, relaxz, block, block_1,&
                                        block_2, block_height ! TB
       USE mp,                   ONLY : mp_sum
-      USE mp_bands,             ONLY : nproc_bgrp, me_bgrp, root_bgrp, &
-                                       intra_bgrp_comm, nbgrp, ntask_groups
-      USE mp_diag,              ONLY : nproc_ortho
+      USE mp_bands,             ONLY : intra_bgrp_comm
       USE funct,                ONLY : get_exx_fraction, dft_is_hybrid, &
                                        get_gau_parameter, &
                                        get_screening_parameter, exx_is_active
       USE exx,                  ONLY : x_gamma_extrapolation, nq1, nq2, nq3, &
                                        exxdiv_treatment, yukawa, ecutvcut, ecutfock
-      USE cellmd,               ONLY : lmovecell, cell_factor 
-      USE martyna_tuckerman,    ONLY : do_comp_mt
-      USE esm,                  ONLY : do_comp_esm, esm_nfit, esm_efield, esm_w, &
-                                       esm_a, esm_bc
       USE london_module,        ONLY : scal6, lon_rcut, in_c6
       USE xdm_module,           ONLY : xdm_a1=>a1i, xdm_a2=>a2i
       USE tsvdw_module,         ONLY : vdw_isolated, vdw_econv_thr
@@ -444,11 +442,9 @@ MODULE pw_restart_new
       USE gvecs,                ONLY : ngms_g, dual
       USE wvfct,                ONLY : npwx, et, wg, nbnd
       USE lsda_mod,             ONLY : nspin, isk, lsda
-      USE mp_pools,             ONLY : nproc_pool, me_pool, root_pool, &
+      USE mp_pools,             ONLY : me_pool, root_pool, &
                                        intra_pool_comm, inter_pool_comm
-      USE mp_bands,             ONLY : nproc_bgrp, me_bgrp, root_bgrp, &
-                                       intra_bgrp_comm, nbgrp, ntask_groups
-      USE mp_diag,              ONLY : nproc_ortho
+      USE mp_bands,             ONLY : nbgrp
 #if defined(__HDF5) 
       USE hdf5_qe,              ONLY : hdf5_type
 #endif
@@ -1061,12 +1057,8 @@ MODULE pw_restart_new
     !-----------------------------------------------------------------------
     !
     USE constants,         ONLY : pi
-    USE run_info,          ONLY : title
     USE cell_base,         ONLY : ibrav, alat, at, bg, celldm
     USE cell_base,         ONLY : tpiba, tpiba2, omega
-    USE cellmd,            ONLY : lmovecell, cell_factor
-    USE control_flags,     ONLY : do_makov_payne
-    USE martyna_tuckerman, ONLY : do_comp_mt
     USE qes_types_module,  ONLY : atomic_structure_type
     !
     IMPLICIT NONE 
@@ -1866,10 +1858,9 @@ MODULE pw_restart_new
       USE buffers,              ONLY : save_buffer
       USE gvect,                ONLY : ig_l2g
       USE noncollin_module,     ONLY : noncolin, npol
-      USE mp_pools,             ONLY : nproc_pool, me_pool, root_pool, &
+      USE mp_bands,             ONLY : nbgrp
+      USE mp_pools,             ONLY : me_pool, root_pool, &
                                        intra_pool_comm, inter_pool_comm
-      USE mp_bands,             ONLY : me_bgrp, nbgrp, root_bgrp, &
-                                       intra_bgrp_comm
       USE mp,                   ONLY : mp_sum, mp_max
       USE io_base,              ONLY : read_wfc
       !
