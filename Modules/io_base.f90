@@ -477,10 +477,12 @@ MODULE io_base
       !! Read rho(G) in reciprocal space from file  'charge-density.*' 
       !! (* = dat if fortran binary, * = hdf5 if HDF5)
       !! Quick-and-dirty version, allocates a large array on all mpi processes
+      !! All pools read the file: 1 proc reads, broadcasts to other procs
+      !! Works only if there is a single band group per pool
       !
       USE mp,                   ONLY : mp_bcast
       USE mp_bands,             ONLY : intra_bgrp_comm
-      USE io_global,            ONLY : ionode, ionode_id
+      USE mp_pools,             ONLY : me_pool, root_pool
       !
       IMPLICIT NONE
       !
@@ -498,44 +500,57 @@ MODULE io_base
       REAL(dp)                 :: b1(3), b2(3), b3(3)
       INTEGER                  :: ngm, nspin_, ngm_g, isup, isdw
       INTEGER                  :: iun, mill_dum, ns, ig, ierr
-      LOGICAL                  :: gamma_only
+      LOGICAL                  :: ionode_k, gamma_only
       CHARACTER(LEN=320)       :: filename
       !
 #if defined __HDF5
       CALL errore('read_rhog', 'hdf5 not yet ready',1)
 #endif
-      iun  = 4
       !
       ngm  = SIZE (rho, 1)
       IF (ngm /= SIZE (ig_l2g, 1) ) &
          CALL errore('read_rhog', 'inconsistent input dimensions', 1)
       !
+      iun  = 4
       filename = TRIM( dirname ) // 'charge-density.dat'
       ierr = 0
-      IF ( ionode ) OPEN ( UNIT = iun, FILE = TRIM( filename ), &
-                FORM = 'unformatted', STATUS = 'old', iostat = ierr )
-      CALL mp_bcast( ierr, ionode_id, intra_bgrp_comm )
-      IF ( ierr > 0 ) CALL errore ( 'read_rhog','error opening file ' & !
-           & // TRIM( filename ), 1 )
-      IF ( ionode ) THEN
+      !
+      ! ... the root processor of each pool reads
+      !
+      ionode_k = (me_pool == root_pool)
+      !
+      IF ( ionode_k ) THEN
+         OPEN ( UNIT = iun, FILE = TRIM( filename ), &
+              FORM = 'unformatted', STATUS = 'old', iostat = ierr )
+         IF ( ierr /= 0 ) THEN
+            ierr = 1
+            GO TO 10
+         END IF
          READ (iun, iostat=ierr) gamma_only, ngm_g, nspin_
+         IF ( ierr /= 0 ) THEN
+            ierr = 2
+            GO TO 10
+         END IF
          READ (iun, iostat=ierr) b1, b2, b3
+         IF ( ierr /= 0 ) ierr = 3
+10       CONTINUE
       END IF
-      CALL mp_bcast( ierr, ionode_id, intra_bgrp_comm )
+      !
+      CALL mp_bcast( ierr, root_pool, intra_bgrp_comm )
       IF ( ierr > 0 ) CALL errore ( 'read_rhog','error reading file ' &
-           & // TRIM( filename ), 1 )
-      CALL mp_bcast( ngm_g, ionode_id, intra_bgrp_comm )
-      CALL mp_bcast( nspin_, ionode_id, intra_bgrp_comm )
+           & // TRIM( filename ), ierr )
+      CALL mp_bcast( ngm_g, root_pool, intra_bgrp_comm )
+      CALL mp_bcast( nspin_, root_pool, intra_bgrp_comm )
+      !
       IF ( nspin > nspin_ ) &
          CALL infomsg('read_rhog', 'some spin components not found')
-      !
       IF ( ngm_g < MAXVAL (ig_l2g(:)) ) &
            CALL errore('read_rhog', 'some G-vectors are missing', 1)
       !
       ! ... skip record containing G-vector indices
       !
-      IF ( ionode ) READ (iun, iostat = ierr) mill_dum
-      CALL mp_bcast( ierr, ionode_id, intra_bgrp_comm )
+      IF ( ionode_k ) READ (iun, iostat = ierr) mill_dum
+      CALL mp_bcast( ierr, root_pool, intra_bgrp_comm )
       IF ( ierr > 0 ) CALL errore ( 'read_rhog','error reading file ' &
            & // TRIM( filename ), 2 )
       !
@@ -546,11 +561,11 @@ MODULE io_base
       !
       DO ns = 1, nspin
          !
-         IF ( ionode ) READ (iun, iostat=ierr) rho_g(1:ngm_g)
-         CALL mp_bcast( ierr, ionode_id, intra_bgrp_comm )
+         IF ( ionode_k ) READ (iun, iostat=ierr) rho_g(1:ngm_g)
+         CALL mp_bcast( ierr, root_pool, intra_bgrp_comm )
          IF ( ierr > 0 ) CALL errore ( 'read_rhog','error reading file ' &
               & // TRIM( filename ), 2+ns )
-         CALL mp_bcast( rho_g, ionode_id, intra_bgrp_comm )
+         CALL mp_bcast( rho_g, root_pool, intra_bgrp_comm )
          !
          DO ig = 1, ngm
             rho(ig,ns) = rho_g(ig_l2g(ig))
@@ -572,7 +587,7 @@ MODULE io_base
          END DO
       END IF
       !
-      IF (ionode) CLOSE (UNIT = iun, status ='keep' )
+      IF ( ionode_k ) CLOSE (UNIT = iun, status ='keep' )
       !
       DEALLOCATE( rho_g )
       !
