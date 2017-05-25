@@ -89,7 +89,7 @@ SUBROUTINE orthoUwfc_k(ik)
   CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)
 
   IF (orthogonalize_wfc) &
-     CALL ortho_swfc ( normalize_only, natomwfc, wfcatom, swfcatom )
+     CALL ortho_swfc ( npw, normalize_only, natomwfc, wfcatom, swfcatom )
   !
   CALL copy_U_wfc (swfcatom)
   !

@@ -92,7 +92,7 @@ SUBROUTINE orthoUwfc
      CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)
 
      IF (orthogonalize_wfc) &
-        CALL ortho_swfc ( normalize_only, natomwfc, wfcatom, swfcatom )
+        CALL ortho_swfc ( npw, normalize_only, natomwfc, wfcatom, swfcatom )
      !
      ! copy atomic wavefunctions with Hubbard U term only in wfcU
      ! save to unit iunhub
@@ -162,7 +162,7 @@ SUBROUTINE orthoatwfc (orthogonalize_wfc)
      CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)
 
      IF (orthogonalize_wfc) &
-        CALL ortho_swfc ( normalize_only, natomwfc, wfcatom, swfcatom )
+        CALL ortho_swfc ( npw, normalize_only, natomwfc, wfcatom, swfcatom )
      !
      ! write S * atomic wfc to unit iunsat
      !
@@ -177,7 +177,7 @@ SUBROUTINE orthoatwfc (orthogonalize_wfc)
 END SUBROUTINE orthoatwfc
 !
 !-----------------------------------------------------------------------
-SUBROUTINE ortho_swfc ( normalize_only, m, wfc, swfc )
+SUBROUTINE ortho_swfc ( npw, normalize_only, m, wfc, swfc )
   !-----------------------------------------------------------------------
   !
   ! On input : wfc (npwx*npol,m) =  \psi = a set of "m" (atomic) wavefcts
@@ -188,13 +188,13 @@ SUBROUTINE ortho_swfc ( normalize_only, m, wfc, swfc )
   !             wfc = currently unchanged
   !
   USE kinds,      ONLY : DP
-  USE wvfct,      ONLY : npwx, npw
+  USE wvfct,      ONLY : npwx
   USE mp_bands,   ONLY : intra_bgrp_comm
   USE mp,         ONLY : mp_sum
   USE noncollin_module, ONLY : noncolin, npol
   IMPLICIT NONE
   !
-  INTEGER, INTENT(in) :: m
+  INTEGER, INTENT(in) :: m, npw
   LOGICAL, INTENT(in) :: normalize_only
   COMPLEX(dp), INTENT(IN   ) :: wfc (npwx*npol,m)
   COMPLEX(dp), INTENT(INOUT) :: swfc(npwx*npol,m)
@@ -267,7 +267,7 @@ SUBROUTINE ortho_swfc ( normalize_only, m, wfc, swfc )
         CALL zcopy (m, work, 1, swfc (i, 1), npwx)
      END IF
   ENDDO
-  
+
   DEALLOCATE (overlap)
   DEALLOCATE (work)
   DEALLOCATE (e)
