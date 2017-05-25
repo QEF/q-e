@@ -19,8 +19,8 @@ SUBROUTINE rhod2vkb(dyn0)
   USE lsda_mod,  ONLY : current_spin
   USE gvect,  ONLY : ngm, g, igtongl, nl
   USE gvecw,  ONLY: gcutw
-  USE wvfct,  ONLY: nbnd, npwx, npw
-  USE klist,  ONLY : wk
+  USE wvfct,  ONLY: nbnd, npwx
+  USE klist,  ONLY : wk, ngk
   USE scf,    ONLY : rho
   USE vlocal, ONLY: vloc
   USE wavefunctions_module,  ONLY: evc, psic
@@ -36,7 +36,7 @@ SUBROUTINE rhod2vkb(dyn0)
   IMPLICIT NONE
   real(DP) :: dyn0(3*nat,3*nat)
   !
-  INTEGER :: i, ih, ibnd, na, nt, nu_i,nu_j,mu_i,mu_j, ir, ng, jkb, ik, &
+  INTEGER :: npw, i, ih, ibnd, na, nt, nu_i,nu_j,mu_i,mu_j, ir, ng, jkb, ik, &
        ipol, jpol, ijpol
   real(DP) :: weight, fac, gtau
   real(DP), ALLOCATABLE :: dynloc(:,:), dynkb(:,:)
@@ -103,6 +103,7 @@ SUBROUTINE rhod2vkb(dyn0)
   ALLOCATE  ( becp2( nkb, nbnd, 6))
   !
   ik = 1
+  npw = ngk(ik)
      ! the sum has four terms which can be reduced to two (note factor 2 in weight):
      !
      ! sum_G sum_G' sum_j sum_l [ psi_j*(G) V_na,l(G)(-iGu_ipol) V^*_na,l(G')( iG'u_jpol) psi_j(G')

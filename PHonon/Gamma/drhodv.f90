@@ -14,21 +14,21 @@ SUBROUTINE drhodv(nu_i)
   !
   USE mp_global, ONLY : intra_pool_comm
   USE mp,        ONLY : mp_sum
-  USE klist,     ONLY : wk !, nks
-  USE wvfct,     ONLY : nbnd, npw, npwx
+  USE klist,     ONLY : wk, ngk
+  USE wvfct,     ONLY : nbnd, npwx
   USE cgcom
 
   IMPLICIT NONE
   INTEGER :: nu_i
   !
-  INTEGER :: nu_j, ibnd, ik
+  INTEGER :: nu_j, ibnd, ik, npw
   real(DP) :: dynel(nmodes), work(nbnd)
   !
   CALL start_clock('drhodv')
   !
   dynel(:) = 0.d0
   ik = 1
-  ! do ik=1,nks
+  npw = ngk(ik)
   !
   !** calculate the dynamical matrix (<DeltaV*psi(ion)|\DeltaPsi(ion)>)
   !

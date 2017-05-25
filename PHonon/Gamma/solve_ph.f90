@@ -18,15 +18,15 @@ SUBROUTINE solve_ph ( )
   USE wavefunctions_module,  ONLY : evc
   USE becmod,                ONLY : bec_type, becp, calbec, &
                                     allocate_bec_type, deallocate_bec_type
-  USE klist,                 ONLY : xk
-  USE wvfct,                 ONLY : nbnd, npwx, npw, g2kin, et
+  USE klist,                 ONLY : xk, ngk
+  USE wvfct,                 ONLY : nbnd, npwx, g2kin, et
   USE gvect,                 ONLY : g
   USE cell_base,             ONLY : tpiba2
   USE cgcom
 
   IMPLICIT NONE
 
-  INTEGER :: nu, i, ibnd, jbnd, info, iter, mode_done, ik
+  INTEGER :: npw, nu, i, ibnd, jbnd, info, iter, mode_done, ik
   REAL(DP), ALLOCATABLE ::  diag(:)
   COMPLEX(DP), ALLOCATABLE :: gr(:,:), h(:,:), work(:,:)
   REAL(DP), ALLOCATABLE :: overlap(:,:)
@@ -43,6 +43,7 @@ SUBROUTINE solve_ph ( )
   ALLOCATE ( h   ( npwx, nbnd) )
   !
   ik = 1
+  npw = ngk(ik)
   DO i = 1,npw
      g2kin(i) = ( g(1,i)**2 + g(2,i)**2 + g(3,i)**2 ) * tpiba2
   ENDDO

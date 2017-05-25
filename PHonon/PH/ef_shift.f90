@@ -29,7 +29,7 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag)
   USE gvect,                ONLY : gg, nl
   USE buffers,              ONLY : get_buffer, save_buffer
   USE lsda_mod,             ONLY : nspin
-  USE wvfct,                ONLY : npw, npwx, et
+  USE wvfct,                ONLY : npwx, et
   USE klist,                ONLY : degauss, ngauss, ngk, ltetra
   USE ener,                 ONLY : ef
   USE noncollin_module,     ONLY : noncolin, npol, nspin_mag, nspin_lsda
@@ -74,7 +74,7 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag)
   real(DP), external :: w0gauss
   ! the smeared delta function
 
-  integer :: ibnd, ik, is, ipert, nrec, ikrec
+  integer :: npw, ibnd, ik, is, ipert, nrec, ikrec
   ! counter on occupied bands
   ! counter on k-point
   ! counter on spin polarizations
@@ -179,7 +179,7 @@ subroutine ef_shift_paw (drhoscf, dbecsum, ldos, ldoss, becsum1, &
   USE gvect,                ONLY : gg, nl
   USE lsda_mod,             ONLY : nspin
   USE uspp_param,           ONLY : nhm
-  USE wvfct,                ONLY : npw, npwx, et
+  USE wvfct,                ONLY : npwx, et
   USE klist,                ONLY : degauss, ngauss, ngk, ltetra
   USE ener,                 ONLY : ef
 ! modules from phcom
@@ -227,7 +227,7 @@ subroutine ef_shift_paw (drhoscf, dbecsum, ldos, ldoss, becsum1, &
   real(DP), external :: w0gauss
   ! the smeared delta function
 
-  integer :: ibnd, ik, is, ipert, nrec, ikrec
+  integer :: npw, ibnd, ik, is, ipert, nrec, ikrec
   ! counter on occupied bands
   ! counter on k-point
   ! counter on spin polarizations

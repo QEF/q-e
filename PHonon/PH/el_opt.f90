@@ -20,7 +20,7 @@ subroutine el_opt
   USE scf,        ONLY : rho, rho_core
   USE symme,      ONLY : symmatrix3
   USE qpoint,     ONLY : nksq
-  USE wvfct,      ONLY : nbnd, npw, npwx
+  USE wvfct,      ONLY : nbnd, npwx
   USE units_ph,   ONLY : iudrho, lrdrho, lrdwf, iudwf
   USE control_lr, ONLY : nbnd_occ
   USE buffers,    ONLY : get_buffer
@@ -35,7 +35,7 @@ subroutine el_opt
   implicit none
 
   logical wr_all
-  integer :: ik, ir, ipa, ipb, ipc, nrec, ibnd, il, ntm, ierr
+  integer :: npw, ik, ir, ipa, ipb, ipc, nrec, ibnd, il, ntm, ierr
   real(DP) :: weight, fac, elop_ (3, 3, 3, 3), ps3 (3, 3, 3)
   real(DP) :: d2mxc, rhotot
   ! external function

@@ -22,7 +22,6 @@ SUBROUTINE dynmatcc(dyncc)
   USE gvect,      ONLY : nl, ngm, igtongl, ngl, g, gg, gl
   USE scf,        ONLY : rho, rho_core, rhog_core
   USE wavefunctions_module,  ONLY: psic
-  USE wvfct,      ONLY: nbnd, npwx, npw
   USE cgcom
   USE mp_global,  ONLY : intra_pool_comm
   USE mp,         ONLY : mp_sum

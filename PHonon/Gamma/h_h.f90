@@ -7,11 +7,11 @@
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE H_h(e,h,Ah)
+SUBROUTINE H_h(npw,e,h,Ah)
   !-----------------------------------------------------------------------
   !
   USE kinds, ONLY: DP
-  USE wvfct, ONLY: nbnd, npwx, npw, g2kin
+  USE wvfct, ONLY: nbnd, npwx, g2kin
   USE gvect, ONLY : gstart
   USE uspp,     ONLY : vkb, nkb
   USE lsda_mod, ONLY : current_spin
@@ -21,6 +21,7 @@ SUBROUTINE H_h(e,h,Ah)
   !
   IMPLICIT NONE
   !
+  INTEGER :: npw
   real(DP):: e(nbnd)
   COMPLEX(DP):: h(npwx,nbnd), Ah(npwx,nbnd)
   !

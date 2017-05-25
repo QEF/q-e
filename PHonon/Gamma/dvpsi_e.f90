@@ -10,7 +10,7 @@
 SUBROUTINE dvpsi_e(ik,ipol)
   !----------------------------------------------------------------------
   !
-  ! Calculates x * psi_k  for each k-points and for the 3 polarizations
+  ! Calculates x * psi_k  for each k-point and for the 3 polarizations
   ! Requires on input: vkb, evc
   !
   USE kinds, ONLY: DP
@@ -22,13 +22,13 @@ SUBROUTINE dvpsi_e(ik,ipol)
       deallocate_bec_type
   USE cell_base, ONLY : tpiba
   USE gvect,     ONLY : g
-  USE klist,     ONLY : xk
-  USE wvfct,     ONLY : nbnd, npwx, npw, g2kin, et
+  USE klist,     ONLY : xk, ngk
+  USE wvfct,     ONLY : nbnd, npwx,g2kin, et
   USE cgcom
   !
   IMPLICIT NONE
   INTEGER :: ik, ipol
-  INTEGER :: i,l, na,nt, ibnd,jbnd, info, ih,jkb, iter
+  INTEGER :: npw, i,l, na,nt, ibnd,jbnd, info, ih,jkb, iter
   real(DP) :: upol(3,3)
   real(DP), ALLOCATABLE :: gk(:,:), q(:), overlap(:,:), &
        becp_(:,:), dbec(:,:), dbec_(:,:)
@@ -50,6 +50,7 @@ SUBROUTINE dvpsi_e(ik,ipol)
   !
   !  g2kin is used in H_h, called by cgsolve below
   !
+  npw = ngk(ik)
   DO i = 1,npw
      gk(1,i) = g(1,i)*tpiba
      gk(2,i) = g(2,i)*tpiba

@@ -27,7 +27,7 @@ SUBROUTINE cg_setup
   USE klist,      ONLY: xk, ngk, igk_k
   USE lsda_mod,   ONLY: nspin, current_spin
   USE vlocal,     ONLY: strf
-  USE wvfct,      ONLY: nbnd, npwx, npw
+  USE wvfct,      ONLY: nbnd, npwx
   USE gvecw,      ONLY: gcutw
   USE cgcom
   !
@@ -118,8 +118,7 @@ SUBROUTINE cg_setup
   !
   !  Kleinman-Bylander PPs
   !
-  npw = ngk(ik)
-  CALL init_us_2 (npw, igk_k(1,ik), xk(1,ik), vkb)
+  CALL init_us_2 (ngk(ik), igk_k(1,ik), xk(1,ik), vkb)
   !
   CALL stop_clock('cg_setup')
   !

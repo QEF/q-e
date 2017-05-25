@@ -7,13 +7,13 @@
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE A_h(e,h,ah)
+SUBROUTINE A_h(npw,e,h,ah)
   !-----------------------------------------------------------------------
   USE kinds, ONLY: DP
   USE cell_base,ONLY : alat, omega, tpiba2
   USE uspp,     ONLY : vkb, nkb
   USE lsda_mod, ONLY : current_spin, nspin
-  USE wvfct, ONLY: nbnd, npwx, npw, g2kin
+  USE wvfct, ONLY: nbnd, npwx, g2kin
   USE wavefunctions_module,  ONLY: evc, psic
   USE scf,      ONLY : vrs, rho
   USE fft_base, ONLY : dffts, dfftp
@@ -25,7 +25,7 @@ SUBROUTINE A_h(e,h,ah)
   USE funct, ONLY: dft_is_gradient
   !
   IMPLICIT NONE
-  INTEGER :: j, jkb, ibnd, na,nt,ih
+  INTEGER :: npw, j, jkb, ibnd, na,nt,ih
   real(DP) :: e(nbnd)
   COMPLEX(DP) :: h(npwx,nbnd), ah(npwx,nbnd)
   !

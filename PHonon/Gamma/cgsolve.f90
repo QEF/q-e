@@ -36,7 +36,7 @@ SUBROUTINE cgsolve (operator,npw,evc,npwx,nbnd,overlap,      &
   ! starting gradient |u> = (A|x>-|b>)-lambda|psi> (lambda=<Ax-b|psi_i>)
   !
   IF (.not.startwith0) THEN
-     CALL operator(e,x,u)
+     CALL operator(npw,e,x,u)
   ELSE
      u (:,:) = (0.d0, 0.d0)
      ! note that we assume x=0 on input
@@ -77,7 +77,7 @@ SUBROUTINE cgsolve (operator,npw,evc,npwx,nbnd,overlap,      &
      !
      ! calculate A|h>
      !
-     CALL operator(e,h,Ah)
+     CALL operator(npw,e,h,Ah)
      !
      ! u_A_h = <u|A|h> (NB: must be equal to <h|A|h>)
      IF (precondition) THEN

@@ -18,14 +18,14 @@ SUBROUTINE dielec(do_zstar)
   USE mp_global, ONLY : intra_pool_comm
   USE mp,        ONLY : mp_sum
   USE io_files,  ONLY : seqopn
-  USE klist,     ONLY : wk !, nks
-  USE wvfct,     ONLY: nbnd, npwx, npw
+  USE klist,     ONLY : wk, ngk
+  USE wvfct,     ONLY: nbnd, npwx
   USE cgcom
 
   IMPLICIT NONE
   LOGICAL :: do_zstar
   !
-  INTEGER :: ibnd,ipol,jpol,na,nu,ik
+  INTEGER :: npw,ibnd,ipol,jpol,na,nu,ik
   CHARACTER(len=7) :: filbar, fildwf
   real(DP) ::  w, weight
   real(DP), ALLOCATABLE ::  work(:,:)
@@ -41,7 +41,8 @@ SUBROUTINE dielec(do_zstar)
   epsilon0(:,:) = 0.d0
   IF (do_zstar) zstar (:,:,:) = 0.d0
   !  do ik=1,nks
-  ik=1
+  ik = 1
+  npw= ngk(ik)
   weight = wk(ik)
   w = fpi/omega * weight
   !

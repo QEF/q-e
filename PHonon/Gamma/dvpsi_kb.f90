@@ -16,6 +16,7 @@ SUBROUTINE dvpsi_kb(ik,nu)
   USE atom,       ONLY: rgrid
   USE becmod,     ONLY: calbec
   USE cell_base,  ONLY: omega, tpiba, tpiba2
+  USE klist,      ONLY: ngk
   USE ions_base,  ONLY: ntyp => nsp, nat, ityp, tau
   USE uspp_param, ONLY: upf, nh, nhm
   USE uspp,       ONLY: dvan, nkb, vkb
@@ -23,13 +24,13 @@ SUBROUTINE dvpsi_kb(ik,nu)
   USE fft_interfaces, ONLY : invfft
   USE gvect,      ONLY : gstart, nl, nlm, ngl, ngm, g, gg, gl, igtongl
   USE vlocal,     ONLY: vloc
-  USE wvfct,      ONLY: nbnd, npwx, npw
+  USE wvfct,      ONLY: nbnd, npwx
   USE wavefunctions_module,  ONLY: evc, psic
   USE cgcom
   !
   IMPLICIT NONE
   INTEGER :: ik, nu
-  INTEGER :: ibnd, ir, ih, jkb, ig, na, ng, mu, nt
+  INTEGER :: npw, ibnd, ir, ih, jkb, ig, na, ng, mu, nt
   COMPLEX(DP), POINTER:: work(:,:), dvloc(:), dvb_cc(:)
   COMPLEX(DP) :: exc
   real(DP), POINTER :: bec1(:,:), bec2(:,:), rhocg(:), dv(:)
@@ -88,6 +89,8 @@ SUBROUTINE dvpsi_kb(ik,nu)
   ENDIF
   !
   !   vloc_psi calculates dVloc/dtau*psi(G)
+  !
+  npw = ngk(ik)
   !
   dvpsi(:,:) = (0.d0, 0.d0)
   CALL vloc_psi_gamma(npwx, npw, nbnd, evc, dv, dvpsi)
