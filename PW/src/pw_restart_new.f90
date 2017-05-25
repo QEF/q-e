@@ -1852,7 +1852,7 @@ MODULE pw_restart_new
       USE control_flags,        ONLY : twfcollect, gamma_only
       USE lsda_mod,             ONLY : nspin, isk
       USE klist,                ONLY : nkstot, wk, nks, xk, ngk, igk_k
-      USE wvfct,                ONLY : npw, npwx, g2kin, et, wg, nbnd
+      USE wvfct,                ONLY : npwx, g2kin, et, wg, nbnd
       USE wavefunctions_module, ONLY : evc
       USE io_files,             ONLY : nwordwfc, iunwfc
       USE buffers,              ONLY : save_buffer

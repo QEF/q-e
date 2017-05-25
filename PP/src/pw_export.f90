@@ -356,7 +356,6 @@ SUBROUTINE write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
 
 
   USE kinds,          ONLY : DP
-  USE pwcom
   USE gvecs,          ONLY : dual
   USE gvect,          ONLY : ngm, ngm_g, mill, ig_l2g
   USE gvecw,          ONLY : ecutwfc, gcutw
@@ -388,7 +387,7 @@ SUBROUTINE write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   CHARACTER(80), INTENT(in) :: pp_file
   LOGICAL, INTENT(in) :: uspp_spsi, ascii, single_file, raw
 
-  INTEGER :: i, j, k, ig, ik, ibnd, na, ngg,ig_, ierr
+  INTEGER :: npw, i, j, k, ig, ik, ibnd, na, ngg,ig_, ierr
   real(DP) :: xyz(3), tmp(3)
   INTEGER :: ike, iks, npw_g, npwx_g, ispin, local_pw
   INTEGER, EXTERNAL :: global_kpoint_index

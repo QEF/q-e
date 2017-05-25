@@ -2998,7 +2998,7 @@ SUBROUTINE compute_amn
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       if(noncolin) then
         sgf_spinor = (0.d0,0.d0)
-        call orient_gf_spinor
+        call orient_gf_spinor(npw)
       endif
 
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -3177,15 +3177,15 @@ SUBROUTINE compute_amn
    RETURN
 END SUBROUTINE compute_amn
 
-subroutine orient_gf_spinor()
+subroutine orient_gf_spinor(npw)
    use constants, only: eps6
    use noncollin_module, only: npol
-   use wvfct,           ONLY : npw, npwx
+   use wvfct,           ONLY : npwx
    use wannier
 
    implicit none
 
-   integer :: iw, ipol, istart, iw_spinor
+   integer :: npw, iw, ipol, istart, iw_spinor
    logical :: spin_z_pos, spin_z_neg
    complex(dp) :: fac(2)
 

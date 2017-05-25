@@ -28,7 +28,7 @@ SUBROUTINE allocate_nlpot
   USE ldaU,             ONLY : Hubbard_lmax
   USE scf,              ONLY : rho
   USE noncollin_module, ONLY : noncolin
-  USE wvfct,            ONLY : npwx, npw, g2kin
+  USE wvfct,            ONLY : npwx, g2kin
   USE gvecw,            ONLY : gcutw, ecutwfc
   USE us,               ONLY : qrad, tab, tab_d2y, tab_at, dq, nqx, &
                                nqxq, spline_ps

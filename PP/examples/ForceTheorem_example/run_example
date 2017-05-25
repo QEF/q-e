@@ -11,7 +11,7 @@ $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
 $ECHO "This example shows how to use pw.x and projwfc.x to calculate"
-$ECHO "the Magnetic Anisotropy Energy n Co using the Force Theorem"
+$ECHO "the Magnetic Anisotropy Energy in Co using the Force Theorem"
 
 # set the needed environment variables
 . ../../../environment_variables

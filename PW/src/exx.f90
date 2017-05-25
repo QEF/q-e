@@ -4721,7 +4721,7 @@ END SUBROUTINE compute_becpsi
     USE cell_base,      ONLY : tpiba2
     USE gvect,          ONLY : ngm, g
     USE gvecw,          ONLY : ecutwfc
-    USE wvfct,          ONLY : npwx, npw, current_k
+    USE wvfct,          ONLY : npwx, current_k
     USE klist,          ONLY : xk, igk_k
     USE mp_exx,         ONLY : negrp
     !
@@ -4731,7 +4731,7 @@ END SUBROUTINE compute_becpsi
     LOGICAL, intent(in) :: is_exx
     COMPLEX(DP), ALLOCATABLE :: work_space(:)
     INTEGER :: comm
-    INTEGER :: ik, i
+    INTEGER :: npw, ik, i
     LOGICAL exst
     !
     IF (negrp.eq.1) RETURN

@@ -5,6 +5,10 @@ New in svn version:
 
 Fixed in svn version
 
+  * Orthogonalization of Hubbard manifold in LDA+U with non-default values
+    of U_projection_type was not properly done in v.6.0 and 6.1 (rev.13529)
+    Thanks to Andrea Ferretti and Mike Atambo for fixing this.
+
   * Bug in parallel FFT when task groups are used and the number of XY planes 
     is not a multiple of the number of MPI tasks and of task groups (r13489)
 

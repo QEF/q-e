@@ -1523,7 +1523,6 @@ pw_restart_new.o : ../../Modules/kernel_table.o
 pw_restart_new.o : ../../Modules/mm_dispersion.o
 pw_restart_new.o : ../../Modules/mp.o
 pw_restart_new.o : ../../Modules/mp_bands.o
-pw_restart_new.o : ../../Modules/mp_diag.o
 pw_restart_new.o : ../../Modules/mp_global.o
 pw_restart_new.o : ../../Modules/mp_pools.o
 pw_restart_new.o : ../../Modules/noncol.o
@@ -1534,7 +1533,6 @@ pw_restart_new.o : ../../Modules/qes_types.o
 pw_restart_new.o : ../../Modules/qexsd.o
 pw_restart_new.o : ../../Modules/qexsd_reader_module.o
 pw_restart_new.o : ../../Modules/recvec.o
-pw_restart_new.o : ../../Modules/run_info.o
 pw_restart_new.o : ../../Modules/tsvdw.o
 pw_restart_new.o : ../../Modules/uspp.o
 pw_restart_new.o : ../../Modules/version.o
@@ -1543,12 +1541,10 @@ pw_restart_new.o : ../../iotk/src/iotk_module.o
 pw_restart_new.o : atomic_wfc_mod.o
 pw_restart_new.o : bp_mod.o
 pw_restart_new.o : buffers.o
-pw_restart_new.o : esm.o
 pw_restart_new.o : extfield.o
 pw_restart_new.o : exx.o
 pw_restart_new.o : io_rho_xml.o
 pw_restart_new.o : ldaU.o
-pw_restart_new.o : martyna_tuckerman.o
 pw_restart_new.o : pwcom.o
 pw_restart_new.o : realus.o
 pw_restart_new.o : scf_mod.o
@@ -2119,6 +2115,7 @@ update_pot.o : ../../Modules/paw_variables.o
 update_pot.o : ../../Modules/recvec.o
 update_pot.o : ../../Modules/uspp.o
 update_pot.o : ../../Modules/wavefunctions.o
+update_pot.o : ../../Modules/wrappers.o
 update_pot.o : ../../Modules/xml_io_base.o
 update_pot.o : buffers.o
 update_pot.o : extfield.o

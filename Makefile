@@ -154,7 +154,7 @@ examples : touch-dummy
 
 pwall : pw neb ph pp pwcond acfdt
 
-all   : pwall cp ld1 upf tddfpt gwl xspectra
+all   : pwall cp ld1 upf tddfpt xspectra gwl 
 
 ###########################################################
 # Auxiliary targets used by main targets:

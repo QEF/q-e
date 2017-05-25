@@ -144,6 +144,7 @@ io_base.o : io_global.o
 io_base.o : kind.o
 io_base.o : mp.o
 io_base.o : mp_bands.o
+io_base.o : mp_pools.o
 io_base.o : mp_wave.o
 io_files.o : io_global.o
 io_files.o : kind.o
