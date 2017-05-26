@@ -194,7 +194,8 @@ SUBROUTINE get_homo_lumo ( ehomo, elumo )
               EXIT band_loop
            END IF
         END DO band_loop
-        ehomo = MAX ( ehomo, et(kbnd,ik) )
+        IF ( kbnd > 0 ) ehomo = MAX ( ehomo, et(kbnd,ik) )
+        !
         IF ( kbnd < nbnd ) THEN
            elumo = MIN ( elumo, et(kbnd+1,ik) )
         END IF
