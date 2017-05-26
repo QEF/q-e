@@ -2982,25 +2982,25 @@ CONTAINS
       CALL iotk_scan_dat( iunit, "FIELD_AMPLITUDE", eamp_, IERR=ierr )
       IF ( ierr /= 0 ) RETURN
       !
-      CALL iotk_scan_dat( iunit, "MONOPOLE_PLANE", monopole_ )
+      CALL iotk_scan_dat( iunit, "MONOPOLE_PLANE", monopole_, IERR=ierr )
       IF ( ierr /= 0 ) RETURN
       !
-      CALL iotk_scan_dat( iunit, "MONOPOLE_POS", zmon_ )
+      CALL iotk_scan_dat( iunit, "MONOPOLE_POS", zmon_, IERR=ierr )
       IF ( ierr /= 0 ) RETURN
       !
-      CALL iotk_scan_dat( iunit, "RELAX_Z", relaxz_ )
+      CALL iotk_scan_dat( iunit, "RELAX_Z", relaxz_, IERR=ierr )
       IF ( ierr /= 0 ) RETURN
       !
-      CALL iotk_scan_dat( iunit, "BLOCK", block_ )
+      CALL iotk_scan_dat( iunit, "BLOCK", block_, IERR=ierr )
       IF ( ierr /= 0 ) RETURN
       !
-      CALL iotk_scan_dat( iunit, "BLOCK_1", block_1_ )
+      CALL iotk_scan_dat( iunit, "BLOCK_1", block_1_, IERR=ierr )
       IF ( ierr /= 0 ) RETURN
       !
-      CALL iotk_scan_dat( iunit, "BLOCK_2", block_2_ )
+      CALL iotk_scan_dat( iunit, "BLOCK_2", block_2_, IERR=ierr )
       IF ( ierr /= 0 ) RETURN
       !
-      CALL iotk_scan_dat( iunit, "BLOCK_HEIGHT", block_height_ )
+      CALL iotk_scan_dat( iunit, "BLOCK_HEIGHT", block_height_, IERR=ierr )
       IF ( ierr /= 0 ) RETURN
       !
       CALL iotk_scan_end( iunit, "ELECTRIC_FIELD", IERR=ierr )
