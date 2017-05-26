@@ -5,8 +5,11 @@ New in svn version:
 
 Fixed in svn version
 
+  * Examples for magnetic anisotropy with force theorem were not properly
+    updated (r13534)
+
   * Orthogonalization of Hubbard manifold in LDA+U with non-default values
-    of U_projection_type was not properly done in v.6.0 and 6.1 (rev.13529)
+    of U_projection_type was not properly done in v.6.0 and 6.1 (r13529)
     Thanks to Andrea Ferretti and Mike Atambo for fixing this.
 
   * Bug in parallel FFT when task groups are used and the number of XY planes 
@@ -75,8 +78,10 @@ Fixed in 6.1 version
   * PW: real instead of complex constants in two ZGEMM calls could lead
         to NaN's in DFT_U forces with some compilers (e.g. PGI) (r13289)
   * pwi2xsf utility, also used in XCrysDen: various fixes (r13197)
-  * PP: incorrect results in "projwfc.x" with PAW projection due to a 
-        missing line (r13121); crash in pw_export.x" due to dumb error (r13189)
+  * PP: incorrect results in "projwfc.x" with PAW projection due to a missing
+        line (r13121); crash in pw_export.x" due to dumb error (r13189);
+        incorrect Fermi energy used in calculation of magnetic anisotropy
+        with force theorem (r13335)
   * PW: final scf step in variable-cell calculation could crash
         due to missing reset of FFT dimensions (r13116)
   * FD: dangerous "q==0" check in matdyn.f90 (r13109)

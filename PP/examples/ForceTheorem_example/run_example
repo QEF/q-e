@@ -124,9 +124,11 @@ mkdir $TMP_DIR/par.save
 mkdir $TMP_DIR/per.save
 cp $TMP_DIR/sr.save/data-file*.xml $TMP_DIR/par.save/
 cp $TMP_DIR/sr.save/charge-density.dat $TMP_DIR/par.save/
+# next line for old format
 cp $TMP_DIR/sr.save/spin-polarization.dat $TMP_DIR/par.save/
 cp $TMP_DIR/sr.save/data-file*.xml $TMP_DIR/per.save/
 cp $TMP_DIR/sr.save/charge-density.dat $TMP_DIR/per.save/
+# next line for old format
 cp $TMP_DIR/sr.save/spin-polarization.dat $TMP_DIR/per.save/
 
 
@@ -246,7 +248,7 @@ cat > proj_par.in << EOF
     ngauss = -1
     lsym = .false.
     filproj = 'eband_par.dat'
-    ef_0 = -0.481064464641450  
+    ef_0 = -0.454721315571854  
     lforcet = .true.
  /
 EOF
@@ -267,7 +269,7 @@ cat > proj_per.in << EOF
     ngauss = -1
     lsym = .false.
     filproj = 'eband_per.dat'
-    ef_0 = -0.481064464641450
+    ef_0 = -0.454721315571854
     lforcet = .true.
  /
 EOF

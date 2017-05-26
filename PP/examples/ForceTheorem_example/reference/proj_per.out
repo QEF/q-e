@@ -1,5 +1,5 @@
 
-     Program PROJWFC v.6.0 (svn rev. 13286) starts on  8Feb2017 at 10: 3:12 
+     Program PROJWFC v.6.1 (svn rev. 13369) starts on 24May2017 at 12:14:58 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -8,11 +8,10 @@
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
-     Parallel version (MPI), running on     2 processors
-     R & G space division:  proc/nbgrp/npool/nimage =       2
+     Parallel version (MPI), running on     1 processors
 
      Reading data from directory:
-     /home/pietro/espresso-svn/tempdir/per.save
+     /home/asmoguno/ESPRESSOs/qe-6.1/tempdir/per.save
 
    Info: using nr1, nr2, nr3 values from input
 
@@ -24,14 +23,12 @@
      Please, verify this is what you really want
 
                file CorelUSPBE.RRKJ3.UPF: wavefunction(s)  4P 4P 3D renormalized
-
-     Parallelization info
+ 
+     G-vector sticks info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
-     Min         156      75     27                21885     7685    1673
-     Max         157      76     28                21888     7724    1700
      Sum         313     151     55                43773    15409    3373
-
+ 
 
      Check: negative/imaginary core charge=   -0.000023    0.000000
 
@@ -41,11 +38,11 @@
 
 
      Calling projwave_nc .... 
+ 
+     PROJWFC      :     6.45s CPU         7.67s WALL
 
-     PROJWFC      :     3.68s CPU         3.73s WALL
-
-
-   This run was terminated on:  10: 3:16   8Feb2017            
+ 
+   This run was terminated on:  12:15: 5  24May2017            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
