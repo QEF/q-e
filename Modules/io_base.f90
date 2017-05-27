@@ -344,7 +344,9 @@ MODULE io_base
       !! Processor "ionode" collects data from band group, writes to file
       !
       USE mp,                   ONLY : mp_sum, mp_bcast
-      USE mp_bands,             ONLY : intra_bgrp_comm
+      USE mp_bands,             ONLY : me_bgrp, root_bgrp, nproc_bgrp, &
+                                       intra_bgrp_comm
+      USE mp_wave,              ONLY : mergewf, mergekg
       USE io_global,            ONLY : ionode, ionode_id
       !
       IMPLICIT NONE
@@ -364,11 +366,13 @@ MODULE io_base
       COMPLEX(dp),      INTENT(IN) :: rho(:,:)
       !! rho(G) on this processor
       !
+      COMPLEX(dp), ALLOCATABLE :: rhoaux(:)
+      !! Local rho(G), with LSDA workaround
       COMPLEX(dp), ALLOCATABLE :: rho_g(:)
-      !! Global rho(G) for all processors
+      !! Global rho(G) collected on root proc
       INTEGER, ALLOCATABLE     :: mill_g(:,:)
-      !! Global Miller indices for all processors
-      INTEGER                  :: ngm, nspin, ngm_g
+      !! Global Miller indices collected on root proc
+      INTEGER                  :: ngm, nspin, ngm_g, igwx
       INTEGER                  :: iun, ns, ig, ierr
       CHARACTER(LEN=320)       :: filename
       !
@@ -401,26 +405,31 @@ MODULE io_base
       IF ( ierr > 0 ) CALL errore ( 'write_rhog','error writing file ' &
            & // TRIM( filename ), 1 )
       !
-      ! ... collect all G-vectors across processors within the pools
+      ! ... collect all G-vectors across processors within the band group
       !
-      ALLOCATE( mill_g( 3, ngm_g ) )
-      mill_g = 0
-      DO ig = 1, ngm
-         !
-         ! ... ig is the local index for local G-vectors
-         ! ... ig_l2g(ig) is the position of G-vector ig in the global list
-         !
-         mill_g(1,ig_l2g(ig)) = mill(1,ig)
-         mill_g(2,ig_l2g(ig)) = mill(2,ig)
-         mill_g(3,ig_l2g(ig)) = mill(3,ig)
-         !
-      END DO
+      IF ( me_bgrp == root_bgrp ) THEN
+         ALLOCATE( mill_g( 3, ngm_g ) )
+      ELSE
+         ! not used: some compiler do not like passing unallocated arrays
+         ALLOCATE( mill_g( 3, 1 ) )
+      END IF
       !
-      CALL mp_sum( mill_g, intra_bgrp_comm )
+      ! ... mergekg collects distributed array mill(1:3,ig) where ig is the
+      ! ... local index, into array mill_g(1:3,ig_g), where ig_g=ig_l2g(ig)
+      ! ... is the global index. mill_g is collected on root_bgrp only
+      !
+      CALL mergekg( mill, mill_g, ngm, ig_l2g, me_bgrp, &
+           nproc_bgrp, root_bgrp, intra_bgrp_comm )
       !
       ! ... write G-vectors
       !
-      IF ( ionode ) WRITE (iun, iostat=ierr) mill_g(1:3,1:ngm_g)
+      IF ( ionode ) THEN
+#if defined(__HDF5)
+         CALL errore('write_rhog', 'hdf5 not yet ready',1)
+#else
+         WRITE (iun, iostat=ierr) mill_g(1:3,1:ngm_g)
+#endif
+      END IF
       CALL mp_bcast( ierr, ionode_id, intra_bgrp_comm )
       IF ( ierr > 0 ) CALL errore ( 'write_rhog','error writing file ' &
            & // TRIM( filename ), 2 )
@@ -432,32 +441,43 @@ MODULE io_base
       ! ... now collect all G-vector components of the charge density
       ! ... (one spin at the time to save memory) using the same logic
       !
-      ALLOCATE( rho_g(ngm_g ) )
+      IF ( me_bgrp == root_bgrp ) THEN
+         ALLOCATE( rho_g( ngm_g ) )
+      ELSE
+         ALLOCATE( rho_g( 1 ) )
+      END IF
+      ALLOCATE (rhoaux(ngm))
       !
       DO ns = 1, nspin
-         !
-         rho_g = 0
          !
          ! Workaround for LSDA, while waiting for much-needed harmonization:
          ! we have rhoup and rhodw, we write rhotot=up+dw and rhodif=up-dw
          ! 
          IF ( ns == 1 .AND. nspin == 2 ) THEN
             DO ig = 1, ngm
-               rho_g(ig_l2g(ig)) = rho(ig,ns) + rho(ig,ns+1)
+               rhoaux(ig) = rho(ig,ns) + rho(ig,ns+1)
             END DO
          ELSE IF ( ns == 2 .AND. nspin == 2 ) THEN
             DO ig = 1, ngm
-               rho_g(ig_l2g(ig)) = rho(ig,ns-1) - rho(ig,ns)
+               rhoaux(ig) = rho(ig,ns-1) - rho(ig,ns)
             END DO
         ELSE
             DO ig = 1, ngm
-               rho_g(ig_l2g(ig)) = rho(ig,ns)
+               rhoaux(ig) = rho(ig,ns)
             END DO
          END IF
          !
-         CALL mp_sum( rho_g, intra_bgrp_comm )
+         rho_g = 0
+         CALL mergewf( rhoaux, rho_g, ngm, ig_l2g, me_bgrp, &
+              nproc_bgrp, root_bgrp, intra_bgrp_comm )
          !
-         IF ( ionode ) WRITE (iun,iostat=ierr) rho_g(1:ngm_g)
+         IF ( ionode ) THEN
+#if defined(__HDF5)
+            CALL errore('write_rhog', 'hdf5 not yet ready',2)
+#else
+            WRITE (iun, iostat=ierr) rho_g(1:ngm_g)
+#endif
+         END IF
          CALL mp_bcast( ierr, ionode_id, intra_bgrp_comm )
          IF ( ierr > 0 ) CALL errore ( 'write_rhog','error writing file ' &
               & // TRIM( filename ), 2+ns )
@@ -466,6 +486,7 @@ MODULE io_base
       !
       IF (ionode) CLOSE (UNIT = iun, status ='keep' )
       !
+      DEALLOCATE( rhoaux )
       DEALLOCATE( rho_g )
       !
       RETURN
@@ -482,8 +503,9 @@ MODULE io_base
       !! Works only if there is a single band group per pool
       !
       USE mp,                   ONLY : mp_bcast
-      USE mp_bands,             ONLY : intra_bgrp_comm
-      USE mp_pools,             ONLY : me_pool, root_pool
+      USE mp_wave,              ONLY : splitwf
+      USE mp_pools,             ONLY : me_pool, root_pool, nproc_pool, &
+                                       intra_pool_comm
       !
       IMPLICIT NONE
       !
@@ -497,6 +519,7 @@ MODULE io_base
       COMPLEX(dp),  INTENT(INOUT) :: rho(:,:)
       !
       COMPLEX(dp), ALLOCATABLE :: rho_g(:)
+      COMPLEX(dp), ALLOCATABLE :: rhoaux(:)
       COMPLEX(dp)              :: rhoup, rhodw
       REAL(dp)                 :: b1(3), b2(3), b3(3)
       INTEGER                  :: ngm, nspin_, ngm_g, isup, isdw
@@ -537,11 +560,11 @@ MODULE io_base
 10       CONTINUE
       END IF
       !
-      CALL mp_bcast( ierr, root_pool, intra_bgrp_comm )
+      CALL mp_bcast( ierr, root_pool, intra_pool_comm )
       IF ( ierr > 0 ) CALL errore ( 'read_rhog','error reading file ' &
            & // TRIM( filename ), ierr )
-      CALL mp_bcast( ngm_g, root_pool, intra_bgrp_comm )
-      CALL mp_bcast( nspin_, root_pool, intra_bgrp_comm )
+      CALL mp_bcast( ngm_g, root_pool, intra_pool_comm )
+      CALL mp_bcast( nspin_, root_pool, intra_pool_comm )
       !
       IF ( nspin > nspin_ ) &
          CALL infomsg('read_rhog', 'some spin components not found')
@@ -550,46 +573,63 @@ MODULE io_base
       !
       ! ... skip record containing G-vector indices
       !
-      IF ( ionode_k ) READ (iun, iostat = ierr) mill_dum
-      CALL mp_bcast( ierr, root_pool, intra_bgrp_comm )
+      IF ( ionode_k ) THEN
+#if defined(__HDF5)
+         CALL errore('write_rhog', 'hdf5 not yet ready',2)
+#else
+         READ (iun, iostat=ierr) mill_dum
+#endif
+      END IF
+      CALL mp_bcast( ierr, root_pool, intra_pool_comm )
       IF ( ierr > 0 ) CALL errore ( 'read_rhog','error reading file ' &
            & // TRIM( filename ), 2 )
       !
       ! ... now read, broadcast and re-order G-vector components
       ! ... of the charge density (one spin at the time to save memory)
       !
-      ALLOCATE( rho_g(ngm_g) )
+      IF ( ionode_k ) THEN
+         ALLOCATE( rho_g( ngm_g ) )
+      ELSE
+         ALLOCATE( rho_g( 1 ) )
+      END IF
+      ALLOCATE (rhoaux(ngm))
       !
       DO ns = 1, nspin
          !
-         IF ( ionode_k ) READ (iun, iostat=ierr) rho_g(1:ngm_g)
-         CALL mp_bcast( ierr, root_pool, intra_bgrp_comm )
-         IF ( ierr > 0 ) CALL errore ( 'read_rhog','error reading file ' &
+         IF ( ionode_k ) THEN
+#if defined(__HDF5)
+            CALL errore('write_rhog', 'hdf5 not yet ready',2)
+#else
+            READ (iun, iostat=ierr) rho_g(1:ngm_g)
+#endif
+         END IF
+         CALL mp_bcast( ierr, root_pool, intra_pool_comm )
+         IF ( ierr > 0 ) CALL errore ( 'write_rhog','error writing file ' &
               & // TRIM( filename ), 2+ns )
-         CALL mp_bcast( rho_g, root_pool, intra_bgrp_comm )
          !
+         CALL splitwf( rhoaux, rho_g, ngm, ig_l2g, me_pool, &
+              nproc_pool, root_pool, intra_pool_comm )
          DO ig = 1, ngm
-            rho(ig,ns) = rho_g(ig_l2g(ig))
+            rho(ig,ns) = rhoaux(ig)
          END DO
          !
+         ! Workaround for LSDA, while waiting for much-needed harmonization:
+         ! if file contains rhotot=up+dw and rhodif=up-dw (nspin_=2), and
+         ! if we want rhoup and rho down (nspin=2), convert 
+         ! 
+         IF ( nspin_ == 2 .AND. nspin == 2 .AND. ns == 2 ) THEN
+            DO ig = 1, ngm
+               rhoup = (rho(ig,ns-1) + rhoaux(ig)) / 2.0_dp
+               rhodw = (rho(ig,ns-1) - rhoaux(ig)) / 2.0_dp
+               rho(ig,ns-1)= rhoup
+               rho(ig,ns  )= rhodw
+            END DO
+         END IF
       END DO
-      !
-      ! Workaround for LSDA, while waiting for much-needed harmonization:
-      ! file contains rhotot=up+dw and rhodif=up-dw, we need rhoup and rhodw
-      ! 
-      IF ( nspin_ == 2 .AND. nspin > 1 ) THEN
-         isup = 1
-         isdw = 2
-         DO ig = 1, ngm
-            rhoup = ( rho(ig,isup) + rho(ig,isdw) ) / 2.0_dp
-            rhodw = ( rho(ig,isup) - rho(ig,isdw) ) / 2.0_dp
-            rho(ig,isup) = rhoup
-            rho(ig,isdw) = rhodw
-         END DO
-      END IF
       !
       IF ( ionode_k ) CLOSE (UNIT = iun, status ='keep' )
       !
+      DEALLOCATE( rhoaux )
       DEALLOCATE( rho_g )
       !
       RETURN
