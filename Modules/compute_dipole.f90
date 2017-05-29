@@ -56,15 +56,18 @@ SUBROUTINE compute_dipole( nnr, nspin, rho, r0, dipole, quadrupole )
   ir_end = nnr
 #endif
   !
-  DO ir = 1, ir_end 
+  DO ir = 1, ir_end
      !
      ! ... three dimensional indexes
      !
      i = index0 + ir - 1
      k = i / (dfftp%nr1x*dfftp%nr2x)
+     IF ( k .GE. dfftp%nr3 ) CYCLE
      i = i - (dfftp%nr1x*dfftp%nr2x)*k
      j = i / dfftp%nr1x
+     IF ( j .GE. dfftp%nr2 ) CYCLE
      i = i - dfftp%nr1x*j
+     IF ( i .GE. dfftp%nr1 ) CYCLE
      !
      DO ip = 1, 3
         r(ip) = DBLE( i )*inv_nr1*at(ip,1) + &
@@ -82,7 +85,7 @@ SUBROUTINE compute_dipole( nnr, nspin, rho, r0, dipole, quadrupole )
      !
      CALL cryst_to_cart( 1, r, at, 1 )
      !
-     rhoir = rho( ir, 1 ) 
+     rhoir = rho( ir, 1 )
      !
      IF ( nspin == 2 ) rhoir = rhoir + rho(ir,2)
      !

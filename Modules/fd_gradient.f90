@@ -19,7 +19,7 @@
       USE kinds, ONLY: DP
 
       IMPLICIT NONE
- 
+
   CONTAINS
 !=----------------------------------------------------------------------=!
 SUBROUTINE calc_fd_gradient( nfdpoint, icfd, ncfd, nnr, f, grad )
@@ -39,7 +39,7 @@ SUBROUTINE calc_fd_gradient( nfdpoint, icfd, ncfd, nnr, f, grad )
   INTEGER, INTENT(IN)  :: nnr
   REAL( DP ), DIMENSION( nnr ), INTENT(IN) :: f
   REAL( DP ), DIMENSION( 3, nnr ), INTENT(OUT) :: grad
-  
+
   INTEGER :: index0, i, ir, ir_end, ipol, in
   INTEGER :: ix(-nfdpoint:nfdpoint),iy(-nfdpoint:nfdpoint),iz(-nfdpoint:nfdpoint)
   INTEGER :: ixc, iyc, izc, ixp, ixm, iyp, iym, izp, izm
@@ -65,41 +65,44 @@ SUBROUTINE calc_fd_gradient( nfdpoint, icfd, ncfd, nnr, f, grad )
 #endif
   !
   DO ir = 1, ir_end
-    !   
+    !
     i = index0 + ir - 1
     iz(0) = i / (dfftp%nr1x*dfftp%nr2x)
+    IF ( iz(0) .GE. dfftp%nr3 ) CYCLE ! if nr3x > nr3 skip unphysical part of the grid
     i     = i - (dfftp%nr1x*dfftp%nr2x)*iz(0)
     iy(0) = i / dfftp%nr1x
+    IF ( iy(0) .GE. dfftp%nr2 ) CYCLE ! if nr2x > nr2 skip unphysical part of the grid
     ix(0) = i - dfftp%nr1x*iy(0)
+    IF ( ix(0) .GE. dfftp%nr1 ) CYCLE ! if nr1x > nr1 skip unphysical part of the grid
     !
-    DO in = 1, nfdpoint 
+    DO in = 1, nfdpoint
       ix(in) = ix(in-1) + 1
-      IF( ix(in) .GT. dfftp%nr1x-1 ) ix(in) = 0     
+      IF( ix(in) .GT. dfftp%nr1-1 ) ix(in) = 0
       ix(-in) = ix(-in+1) - 1
-      IF( ix(-in) .LT. 0 ) ix(-in) = dfftp%nr1x-1
+      IF( ix(-in) .LT. 0 ) ix(-in) = dfftp%nr1-1
       iy(in) = iy(in-1) + 1
-      IF( iy(in) .GT. dfftp%nr2x-1 ) iy(in) = 0
+      IF( iy(in) .GT. dfftp%nr2-1 ) iy(in) = 0
       iy(-in) = iy(-in+1) - 1
-      IF( iy(-in) .LT. 0 ) iy(-in) = dfftp%nr2x-1
+      IF( iy(-in) .LT. 0 ) iy(-in) = dfftp%nr2-1
       iz(in) = iz(in-1) + 1
-      IF( iz(in) .GT. dfftp%nr3x-1 ) iz(in) = 0
+      IF( iz(in) .GT. dfftp%nr3-1 ) iz(in) = 0
       iz(-in) = iz(-in+1) - 1
-      IF( iz(-in) .LT. 0 ) iz(-in) = dfftp%nr3x-1
+      IF( iz(-in) .LT. 0 ) iz(-in) = dfftp%nr3-1
     ENDDO
     !
     DO in = -nfdpoint, nfdpoint
-      i = ix(in) + iy(0) * dfftp%nr1x + iz(0) * dfftp%nr1x * dfftp%nr2x + 1 
-      gradtmp(1,i) = gradtmp(1,i) - icfd(in)*f(ir)*dfftp%nr1x
-      i = ix(0) + iy(in) * dfftp%nr1x + iz(0) * dfftp%nr1x * dfftp%nr2x + 1 
-      gradtmp(2,i) = gradtmp(2,i) - icfd(in)*f(ir)*dfftp%nr2x 
-      i = ix(0) + iy(0) * dfftp%nr1x + iz(in) * dfftp%nr1x * dfftp%nr2x + 1 
-      gradtmp(3,i) = gradtmp(3,i) - icfd(in)*f(ir)*dfftp%nr3x 
+      i = ix(in) + iy(0) * dfftp%nr1x + iz(0) * dfftp%nr1x * dfftp%nr2x + 1
+      gradtmp(1,i) = gradtmp(1,i) - icfd(in)*f(ir)*dfftp%nr1
+      i = ix(0) + iy(in) * dfftp%nr1x + iz(0) * dfftp%nr1x * dfftp%nr2x + 1
+      gradtmp(2,i) = gradtmp(2,i) - icfd(in)*f(ir)*dfftp%nr2
+      i = ix(0) + iy(0) * dfftp%nr1x + iz(in) * dfftp%nr1x * dfftp%nr2x + 1
+      gradtmp(3,i) = gradtmp(3,i) - icfd(in)*f(ir)*dfftp%nr3
     ENDDO
     !
   ENDDO
   !
 #if defined (__MPI)
-  DO ipol = 1, 3 
+  DO ipol = 1, 3
     CALL mp_sum( gradtmp(ipol,:), intra_bgrp_comm )
     CALL scatter_grid ( dfftp, gradtmp(ipol,:), grad(ipol,:) )
   ENDDO
@@ -135,7 +138,7 @@ SUBROUTINE init_fd_gradient( ifdtype, nfdpoint, ncfd, icfd )
   !
   SELECT CASE ( ifdtype )
     !
-  CASE ( 1 ) 
+  CASE ( 1 )
     ! (2N+1)-point Central Differences
     IF ( nfdpoint .EQ. 1 ) THEN
       ncfd = 2
@@ -153,12 +156,12 @@ SUBROUTINE init_fd_gradient( ifdtype, nfdpoint, ncfd, icfd )
       ncfd = 840
       icfd(  4 ) =  -3
       icfd(  3 ) =  32
-      icfd(  2 ) =-168 
+      icfd(  2 ) =-168
       icfd(  1 ) = 672
     ELSE
       WRITE(*,*)'ERROR: wrong number of points',nfdpoint,&
                &' for finite difference type ',ifdtype
-      STOP      
+      STOP
     ENDIF
     !
   CASE ( 2 )
@@ -166,12 +169,12 @@ SUBROUTINE init_fd_gradient( ifdtype, nfdpoint, ncfd, icfd )
     IF ( nfdpoint .GE. 2 ) THEN
       ncfd = (nfdpoint)*(nfdpoint+1)*(2*nfdpoint+1)/3
       DO in = 1,nfdpoint
-        icfd( in ) = in 
+        icfd( in ) = in
       ENDDO
     ELSE
       WRITE(*,*)'ERROR: wrong number of points',nfdpoint,&
                &' for finite difference type ',ifdtype
-      STOP      
+      STOP
     END IF
     !
   CASE ( 3 )
@@ -185,19 +188,19 @@ SUBROUTINE init_fd_gradient( ifdtype, nfdpoint, ncfd, icfd )
       ncfd = 1188
       icfd(  4 ) = -86
       icfd(  3 ) = 142
-      icfd(  2 ) = 193 
+      icfd(  2 ) = 193
       icfd(  1 ) = 126
     ELSE IF ( nfdpoint .EQ. 5 ) THEN
       ncfd = 5148
       icfd(  5 ) =-300
       icfd(  4 ) = 294
       icfd(  3 ) = 532
-      icfd(  2 ) = 503 
+      icfd(  2 ) = 503
       icfd(  1 ) = 296
     ELSE
       WRITE(*,*)'ERROR: wrong number of points',nfdpoint,&
                &' for finite difference type ',ifdtype
-      STOP      
+      STOP
     ENDIF
     !
   CASE ( 4 )
@@ -215,19 +218,19 @@ SUBROUTINE init_fd_gradient( ifdtype, nfdpoint, ncfd, icfd )
       ncfd = 128
       icfd(  4 ) =   1
       icfd(  3 ) =   6
-      icfd(  2 ) =  14 
+      icfd(  2 ) =  14
       icfd(  1 ) =  14
     ELSE IF ( nfdpoint .EQ. 5 ) THEN
       ncfd = 512
       icfd(  5 ) =   1
       icfd(  4 ) =   8
       icfd(  3 ) =  27
-      icfd(  2 ) =  48 
+      icfd(  2 ) =  48
       icfd(  1 ) =  42
     ELSE
       WRITE(*,*)'ERROR: wrong number of points',nfdpoint,&
                &' for finite difference type ',ifdtype
-      STOP      
+      STOP
     ENDIF
     !
   CASE ( 5 )
@@ -241,19 +244,19 @@ SUBROUTINE init_fd_gradient( ifdtype, nfdpoint, ncfd, icfd )
       ncfd = 96
       icfd(  4 ) =  -2
       icfd(  3 ) =  -1
-      icfd(  2 ) =  16 
+      icfd(  2 ) =  16
       icfd(  1 ) =  27
     ELSE IF ( nfdpoint .EQ. 5 ) THEN
       ncfd = 1536
       icfd(  5 ) = -11
       icfd(  4 ) = -32
       icfd(  3 ) =  39
-      icfd(  2 ) = 256 
+      icfd(  2 ) = 256
       icfd(  1 ) = 322
     ELSE
       WRITE(*,*)'ERROR: wrong number of points',nfdpoint,&
                &' for finite difference type ',ifdtype
-      STOP      
+      STOP
     ENDIF
     !
   CASE DEFAULT

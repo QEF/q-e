@@ -487,10 +487,13 @@ END SUBROUTINE qmmm_minimum_image
     DO ir = 1, dfftp%nnr
        index = index0 + ir - 1
        k     = index / (dfftp%nr1x*dfftp%nr2x)
+       IF ( k .GE. dfftp%nr3 ) CYCLE
        index = index - (dfftp%nr1x*dfftp%nr2x)*k
        j     = index / dfftp%nr1x
+       IF ( j .GE. dfftp%nr2 ) CYCLE
        index = index - dfftp%nr1x*j
        i     = index
+       IF ( i .GE. dfftp%nr1 ) CYCLE
        !
        s(1) = DBLE(i)/DBLE(dfftp%nr1)
        s(2) = DBLE(j)/DBLE(dfftp%nr2)
@@ -633,10 +636,13 @@ END SUBROUTINE qmmm_minimum_image
              !
              index = index0 + ir - 1
              k     = index / (dfftp%nr1x*dfftp%nr2x)
+             IF ( k .GE. dfftp%nr3 ) CYCLE
              index = index - (dfftp%nr1x*dfftp%nr2x)*k
              j     = index / dfftp%nr1x
+             IF ( j .GE. dfftp%nr2 ) CYCLE
              index = index - dfftp%nr1x*j
              i     = index
+             IF ( i .GE. dfftp%nr1 ) CYCLE
              !
              s(1) = DBLE(i)/DBLE(dfftp%nr1)
              s(2) = DBLE(j)/DBLE(dfftp%nr2)

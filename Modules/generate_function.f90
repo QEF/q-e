@@ -66,11 +66,16 @@ CONTAINS
          !
          i = idx0 + ir - 1
          idx = i / (dfftp%nr1x*dfftp%nr2x)
+         IF ( idx .GE. dfftp%nr3 ) CYCLE
          IF ( axis .LT. 3 ) THEN
            i = i - (dfftp%nr1x*dfftp%nr2x)*idx
            idx = i / dfftp%nr1x
+           IF ( idx .GE. dfftp%nr2 ) CYCLE
          END IF
-         IF ( axis .EQ. 1 ) idx = i - dfftp%nr1x*idx
+         IF ( axis .EQ. 1 ) THEN
+            idx = i - dfftp%nr1x*idx
+            IF ( idx .GE. dfftp%nr1 ) CYCLE
+         END IF
          !
          idx = idx + 1 + shift
          !
@@ -170,9 +175,12 @@ CONTAINS
          !
          i = idx0 + ir - 1
          k = i / (dfftp%nr1x*dfftp%nr2x)
+         IF ( k .GE. dfftp%nr3 ) CYCLE
          i = i - (dfftp%nr1x*dfftp%nr2x)*k
          j = i / dfftp%nr1x
+         IF ( j .GE. dfftp%nr2 ) CYCLE
          i = i - dfftp%nr1x*j
+         IF ( i .GE. dfftp%nr1 ) CYCLE
          !
          DO ip = 1, 3
             r(ip) = DBLE( i )*inv_nr1*at(ip,1) + &
@@ -283,9 +291,12 @@ CONTAINS
          !
          i = idx0 + ir - 1
          k = i / (dfftp%nr1x*dfftp%nr2x)
+         IF ( k .GE. dfftp%nr3 ) CYCLE
          i = i - (dfftp%nr1x*dfftp%nr2x)*k
          j = i / dfftp%nr1x
+         IF ( j .GE. dfftp%nr2 ) CYCLE
          i = i - dfftp%nr1x*j
+         IF ( i .GE. dfftp%nr1 ) CYCLE
          !
          DO ip = 1, 3
             r(ip) = DBLE( i )*inv_nr1*at(ip,1) + &
@@ -381,10 +392,12 @@ CONTAINS
          !
          i = idx0 + ir - 1
          k = i / (dfftp%nr1x*dfftp%nr2x)
+         IF ( k .GE. dfftp%nr3 ) CYCLE
          i = i - (dfftp%nr1x*dfftp%nr2x)*k
          j = i / dfftp%nr1x
+         IF ( j .GE. dfftp%nr2 ) CYCLE
          i = i - dfftp%nr1x*j
-         r = 0.D0
+         IF ( i .GE. dfftp%nr1 ) CYCLE
          !
          DO ip = 1, 3
             r(ip) = DBLE( i )*inv_nr1*at(ip,1) + &
@@ -475,9 +488,12 @@ CONTAINS
          !
          i = idx0 + ir - 1
          k = i / (dfftp%nr1x*dfftp%nr2x)
+         IF ( k .GE. dfftp%nr3 ) CYCLE
          i = i - (dfftp%nr1x*dfftp%nr2x)*k
          j = i / dfftp%nr1x
+         IF ( j .GE. dfftp%nr2 ) CYCLE
          i = i - dfftp%nr1x*j
+         IF ( i .GE. dfftp%nr1 ) CYCLE
          !
          DO ip = 1, 3
             r(ip) = DBLE( i )*inv_nr1*at(ip,1) + &
@@ -572,9 +588,12 @@ CONTAINS
          !
          i = idx0 + ir - 1
          k = i / (dfftp%nr1x*dfftp%nr2x)
+         IF ( k .GE. dfftp%nr3 ) CYCLE
          i = i - (dfftp%nr1x*dfftp%nr2x)*k
          j = i / dfftp%nr1x
+         IF ( j .GE. dfftp%nr2 ) CYCLE
          i = i - dfftp%nr1x*j
+         IF ( i .GE. dfftp%nr1 ) CYCLE
          !
          DO ip = 1, 3
             r(ip) = DBLE( i )*inv_nr1*at(ip,1) + &
@@ -694,9 +713,12 @@ CONTAINS
          !
          i = idx0 + ir - 1
          k = i / (dfftp%nr1x*dfftp%nr2x)
+         IF ( k .GE. dfftp%nr3 ) CYCLE
          i = i - (dfftp%nr1x*dfftp%nr2x)*k
          j = i / dfftp%nr1x
+         IF ( j .GE. dfftp%nr2 ) CYCLE
          i = i - dfftp%nr1x*j
+         IF ( i .GE. dfftp%nr1 ) CYCLE
          !
          DO ip = 1, 3
             r(ip) = DBLE( i )*inv_nr1*at(ip,1) + &
@@ -789,9 +811,12 @@ CONTAINS
      !
      i = idx0 + ir - 1
      k = i / (dfftp%nr1x*dfftp%nr2x)
+     IF ( k .GE. dfftp%nr3 ) CYCLE
      i = i - (dfftp%nr1x*dfftp%nr2x)*k
      j = i / dfftp%nr1x
+     IF ( j .GE. dfftp%nr2 ) CYCLE
      i = i - dfftp%nr1x*j
+     IF ( i .GE. dfftp%nr1 ) CYCLE
      !
      DO ip = 1, 3
         r(ip) = DBLE( i )*inv_nr1*at(ip,1) + &
@@ -860,9 +885,12 @@ CONTAINS
      !
      i = idx0 + ir - 1
      k = i / (dfftp%nr1x*dfftp%nr2x)
+     IF ( k .GE. dfftp%nr3 ) CYCLE
      i = i - (dfftp%nr1x*dfftp%nr2x)*k
      j = i / dfftp%nr1x
+     IF ( j .GE. dfftp%nr2 ) CYCLE
      i = i - dfftp%nr1x*j
+     IF ( i .GE. dfftp%nr1 ) CYCLE
      !
      DO ip = 1, 3
         r(ip) = DBLE( i )*inv_nr1*at(ip,1) + &
