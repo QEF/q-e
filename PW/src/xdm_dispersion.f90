@@ -270,7 +270,7 @@ CONTAINS
           IF (ialloc /= 0) CALL alloc_failed("gaux, ggaux")
 
           ! valence gradient and laplacian
-          CALL external_ggradient(rho%of_r(:,ispin),gaux,ggaux)
+          CALL external_hessian(rho%of_r(:,ispin),gaux,ggaux)
           lapr = ggaux(1,1,:) + ggaux(2,2,:) + ggaux(3,3,:)
           DEALLOCATE(ggaux)
           gmod = sqrt(gaux(1,:)**2 + gaux(2,:)**2 + gaux(3,:)**2)
