@@ -867,6 +867,10 @@ MODULE realus
             idx = idx - dffts%nr1x*j
             i   = idx
             !
+            ! ... do not include points outside the physical range
+            !
+            IF ( i >= dffts%nr1 .OR. j >= dffts%nr2 .OR. k >= dffts%nr3 ) CYCLE
+            !
             DO ipol = 1, 3
                posi(ipol) = dble( i )*inv_nr1s*at(ipol,1) + &
                             dble( j )*inv_nr2s*at(ipol,2) + &

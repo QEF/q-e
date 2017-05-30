@@ -183,6 +183,10 @@ CONTAINS
      idx = idx - dfftp%nr1x*j
      i   = idx
 
+     ! ... do not include points outside the physical range
+
+     IF ( i >= dfftp%nr1 .OR. j >= dfftp%nr2 .OR. k >= dfftp%nr3 ) CYCLE
+
      r(:) = ( at(:,1)/dfftp%nr1*i + at(:,2)/dfftp%nr2*j + at(:,3)/dfftp%nr3*k )
 
      rws = ws_dist(r,ws)

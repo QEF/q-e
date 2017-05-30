@@ -120,13 +120,13 @@ SUBROUTINE compute_el_dip(emaxpos, eopreg, edir, charge, e_dipole)
   !
   !--------------------------
   !  Calculate ELECTRONIC dipole
-  !--------------------------  
-  
+  !--------------------------
+
   !
   ! Case with edir = 3 (in the formula changes only the argument of saw, i for
   ! edir=1 and j for edir = 2)
   !
-  ! P_{ele} = \sum_{ijk} \rho_{r_{ijk}} Saw\left( \frac{k}{nr3} \right) 
+  ! P_{ele} = \sum_{ijk} \rho_{r_{ijk}} Saw\left( \frac{k}{nr3} \right)
   !                   \frac{alat}{bmod} \frac{\Omega}{nrxx} \frac{4\pi}{\Omega}
   !
   e_dipole  = 0.D0
@@ -146,24 +146,28 @@ SUBROUTINE compute_el_dip(emaxpos, eopreg, edir, charge, e_dipole)
      j   = idx / dfftp%nr1x
      idx = idx - dfftp%nr1x*j
      i   = idx
-     !
-     ! Define the argument for the saw function     
-     !
+
+     ! ... do not include points outside the physical range
+
+!     IF ( i >= dfftp%nr1 .OR. j >= dfftp%nr2 .OR. k >= dfftp%nr3 ) CYCLE
+
+     ! Define the argument for the saw function
+
      if (edir.eq.1) sawarg = DBLE(i)/DBLE(dfftp%nr1)
      if (edir.eq.2) sawarg = DBLE(j)/DBLE(dfftp%nr2)
      if (edir.eq.3) sawarg = DBLE(k)/DBLE(dfftp%nr3)
-     
+
      rhoir = charge(ir,1)
      !
      IF ( nspin == 2 ) rhoir = rhoir + charge(ir,2)
-          
+
      e_dipole = e_dipole + rhoir * saw(emaxpos,eopreg, sawarg) &
                       * (alat/bmod) * (fpi/(dfftp%nr1*dfftp%nr2*dfftp%nr3))
 
   END DO
 
   CALL mp_sum(  e_dipole , intra_bgrp_comm )
-  
+
   RETURN
-  
+
 END SUBROUTINE compute_el_dip

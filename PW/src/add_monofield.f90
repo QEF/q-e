@@ -202,14 +202,19 @@ SUBROUTINE add_monofield(vpoten,etotmonofield,linear,quadratic)
   DO ir = 1, dfftp%nr1x*dfftp%nr2x*dfftp%npl
      !
      ! ... three dimensional indexes
+     !     only need k, but compute j and i to check the physical range
      !
      idx = idx0 + ir - 1
      k   = idx / (dfftp%nr1x*dfftp%nr2x)
+     idx = idx - (dfftp%nr1x*dfftp%nr2x)*k
+     j   = idx / dfftp%nr1x
+     idx = idx - dfftp%nr1x*j
+     i   = idx
 
      ! ... do not include points outside the physical range
 
-     IF ( k >= dfftp%nr3 ) CYCLE
- 
+     IF ( i >= dfftp%nr1 .OR. j >= dfftp%nr2 .OR. k >= dfftp%nr3 ) CYCLE
+
      monoarg = DBLE(k)/DBLE(dfftp%nr3)
 
      ! PRB 89, 245406 (2014)

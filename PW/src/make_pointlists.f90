@@ -120,6 +120,10 @@ SUBROUTINE make_pointlists
      idx = idx - dfftp%nr1x*j0
      i0  = idx
 
+     ! ... do not include points outside the physical range
+
+     IF ( i0 >= dfftp%nr1 .OR. j0 >= dfftp%nr2 .OR. k0 >= dfftp%nr3 ) CYCLE
+
      DO i = i0-dfftp%nr1,i0+dfftp%nr1, dfftp%nr1
         DO j = j0-dfftp%nr2, j0+dfftp%nr2, dfftp%nr2
            DO k = k0-dfftp%nr3, k0+dfftp%nr3, dfftp%nr3
