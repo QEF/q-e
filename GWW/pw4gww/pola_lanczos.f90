@@ -1598,7 +1598,6 @@ end subroutine global_pola_lanczos
 subroutine orthonormalize_two_manifolds_scalapack( state1, n1,state2, n2, threshold, state_out, n_out)
 !this subroutine form am orthormal basis set from 2 manifold (with orthonormal basis sets)
 !ONLY FOR NORM_CONSERVING CASE
-#if defined(__SCALAPACK)
 
    USE io_global,            ONLY : stdout, ionode, ionode_id
    USE kinds,    ONLY : DP
@@ -1630,6 +1629,7 @@ subroutine orthonormalize_two_manifolds_scalapack( state1, n1,state2, n2, thresh
   REAL(kind=DP) :: sca
   INTEGER :: desc_a(9),desc_b(9)
  
+#if defined(__SCALAPACK)
 !buid overlap matrix
   n=n1+n2
   n_r=ceiling(real(n)/real(max(nprow,npcol)))

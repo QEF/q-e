@@ -1181,7 +1181,7 @@ END SUBROUTINE o_1psi_gamma_real
          psi1(ig)=psic(nls(igk_k(ig,1)))
       enddo
 
-      call o_1psi_gamma( numv, v_states, psi1, psi2)
+      call o_1psi_gamma_real( numv, v_states, psi1, psi2)
       sca=0.d0
       do ig=1,npw
          sca=sca+2.d0*dble(conjg(psi2(ig))*psi2(ig))
