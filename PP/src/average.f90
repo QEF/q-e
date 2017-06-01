@@ -1,5 +1,5 @@
 
-! Copyright (C) 2001-2009 Quantum ESPRESSO group
+! Copyright (C) 2001-2017 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -10,32 +10,41 @@
 PROGRAM average
   !-----------------------------------------------------------------------
   !
-  !      This program calculates planar and macroscopic averages
-  !      of a quantity defined on a 3D-FFT mesh.
-  !      The planar average is done on FFT mesh planes.
-  !      It reads the quantity to average, or several quantities, from
-  !      one or several files and adds them with the given weights.
-  !      It computes the planar average of the resulting quantity
-  !      averaging on planes defined by the FFT mesh points and by one
-  !      direction perpendicular to the planes.
-  !      The planar average can be interpolated on a
-  !      1D-mesh with an arbitrary number of points.
-  !      Finally, it computes the macroscopic average. The size
-  !      of the averaging window is given as input.
+  !      Compute planar and macroscopic averages of a quantity (e.g. charge)
+  !      in real space on a 3D FFT mesh. The quantity is read from a file
+  !      produced by "pp.x", or from multiple files as follows:
+  !          Q(i,j,k) = \sum_n w_n q_n(i,j,k)
+  !      where q_n is the quantity for file n, w_n is a user-supplied weight
+  !      The planar average is defined as
+  !         p(k) = \sum_{i=1}^{N_1} \sum_{j=1}^{N_2} Q(i,j,k) / (N_1 N_2)
+  !      along direction 3, and the like for directions 1 and 2;
+  !      N_1, N_2, N_3 are the three dimensions of the 3D FFT.
+  !      Note that if Q is a charge density whose integral is Z_v:
+  !         Z_v = \int p(z) dV = \sum_k p(k) \Omega/N_3
+  !      where \Omega is the size of the unit cell (or supercell)
+  !      The planar average is then interpolated on the specified number
+  !      of points supplied in input and written to file "avg.dat"
+  !      The macroscopic average is defined as
+  !         m(z) = \int_z^{z+a} p(z) dz
+  !      where a is the size of the window (supplied in input)
   !
-  !      It receive as input the following variables:
+  !      Input variables
   !
-  !      nfile        ! the number of 3D-FFT files
+  !      nfile        the number of files contaning the desired quantities
+  !                   All files must refer to the same physical system!
   ! for each file:
-  !      filename     ! the name of the 3D-FFT file
-  !      weight       ! the weight of the quantity in this file
+  !      filename     the name of the n-th file
+  !      weight       the weight w_n of the quantity read from n-th file
   !      .
   !      .
   ! end
-  !      npt          ! the number of points of the thick mesh
-  !      idir         ! 1,2 or 3. It is the fixed index which defines
-  !                   ! the planes of the planar average
-  !      awin         ! the size of the window for macroscopic averages.
+  !      npt          the number of points for the final interpolation of
+  !                   the planar and macroscopic averages, as written to file
+  !                   If npt <= N_idir (see below) no interpolation is done,
+  !                   the N_idir FFT points in direction idir are printed.
+  !      idir         1,2 or 3. Planar average is done in the plane orthogonal
+  !                   to direction "idir", as defined for the crystal cell
+  !      awin         the size of the window for macroscopic average (a.u.)
   !
   USE kinds,                ONLY : DP
   USE klist,                ONLY : nks
@@ -63,12 +72,6 @@ PROGRAM average
   !
   IMPLICIT NONE
   !
-  INTEGER :: npixmax, nfilemax
-  ! maximum number of pixel
-  ! maximum number of files with charge
-  !
-  PARAMETER (npixmax = 5000, nfilemax = 7)
-  !
   INTEGER :: ibravs, nr1sxa, nr2sxa, nr3sxa, nr1sa, nr2sa, nr3sa, &
        ntyps, nats
   INTEGER :: npt, inunit, plot_num, ios, nfile, ifile, nmacro,  &
@@ -84,11 +87,12 @@ PROGRAM average
   ! counter on mesh points
   ! counters on directions
 
-  REAL(DP) :: awin, deltaz, weight (nfilemax), gre(npixmax), &
-       gim(npixmax), macros(npixmax)
+  REAL(DP) :: awin, deltaz
   ! length of the window
   ! the delta on the thick mesh
+  REAL (dp), ALLOCATABLE :: weight (:)
   ! the weight of each file
+  REAL(dp), ALLOCATABLE :: gre(:), gim(:), macros(:)
   ! the function to average in thick mesh (real part)
   ! the function to average in thick mesh (im. part)
   ! the macroscopic average
@@ -104,7 +108,7 @@ PROGRAM average
 
   INTEGER :: nfft, nfftx, idir
 
-  CHARACTER (len=256) :: filename (nfilemax)
+  CHARACTER (len=256), ALLOCATABLE :: filename (:)
   ! names of the files with the charge
   !
   ! initialise environment
@@ -120,15 +124,16 @@ PROGRAM average
      !
      inunit = 5
      READ (inunit, *, err = 1100, iostat = ios) nfile
-     IF (nfile<=0.or.nfile>nfilemax) CALL errore ('average ', &
-          'nfile is wrong ', 1)
+     IF ( nfile <=0 ) CALL errore ('average ', 'nfile is wrong ', 1)
+     ALLOCATE ( filename (nfile) )
+     ALLOCATE ( weight (nfile) )
      DO ifile = 1, nfile
         READ (inunit, '(a)', err = 1100, iostat = ios) filename (ifile)
         READ (inunit, *, err = 1100, iostat = ios) weight (ifile)
      ENDDO
      READ (inunit, *, err = 1100, iostat = ios) npt
 
-     IF (npt<0.or.npt>npixmax) CALL errore ('average', ' wrong npt', 1)
+     IF ( npt < 0 ) CALL errore ('average', ' wrong npt', 1)
      READ (inunit, *, err = 1100, iostat = ios) idir
      READ (inunit, *, err = 1100, iostat = ios) awin
 
@@ -161,8 +166,11 @@ PROGRAM average
      ELSE
         CALL errore('average','idir is wrong',1)
      ENDIF
-     IF (npt<nfft) CALL errore ('average', 'npt smaller than nfft', 1)
-
+     IF ( npt < nfft ) THEN
+        WRITE (stdout, '("Notice: npt was too small and is set to ",i4, &
+             & " (number of points in 1D FFT)")' ) nfft
+        npt = nfft
+     END IF
      ALLOCATE(tau (3, nat))
      ALLOCATE(ityp(nat))
      doublegrid = dual>4.d0
@@ -230,6 +238,8 @@ PROGRAM average
            psic (ir) = psic (ir) + weight(ifile) * cmplx(rho%of_r(ir, 1),0.d0,kind=DP)
         ENDDO
      ENDDO
+     DEALLOCATE ( filename )
+     DEALLOCATE ( weight )
      !
      !   compute the direct and reciprocal lattices
      !
@@ -279,46 +289,56 @@ PROGRAM average
         CALL errore('average','wrong idir',1)
      ENDIF
      !
-     !     add more points to compute the macroscopic average
-     !
-     CALL cft (funcr, funci, nfft, nfft, nfft, - 1)
-     CALL dscal (nfft, 1.d0 / nfft, funcr, 1)
-     CALL dscal (nfft, 1.d0 / nfft, funci, 1)
-     DO k = 1, npt
-        IF (k<=nfft / 2) THEN
-           gre (k) = funcr (k)
-           gim (k) = funci (k)
-        ELSEIF (k>npt - nfft / 2) THEN
-           gre (k) = funcr (k - npt + nfft)
-           gim (k) = funci (k - npt + nfft)
-        ELSE
-           gre (k) = 0.d0
-           gim (k) = 0.d0
-        ENDIF
-     ENDDO
-     IF (mod (nfft, 2) ==0) THEN
-        gre (nfft / 2 + 1) = 0.5d0 * funcr (nfft / 2 + 1)
-        gim (nfft / 2 + 1) = 0.5d0 * funci (nfft / 2 + 1)
-        gre (npt - nfft / 2 + 1) = gre (nfft / 2 + 1)
-        gim (npt - nfft / 2 + 1) = - gim (nfft / 2 + 1)
+     ALLOCATE ( gre(npt) )
+     ALLOCATE ( gim(npt) )
+     IF ( npt == nfft) THEN
+        gre(:) = funcr
+        gim(:) = funci
      ELSE
-        gre (nfft / 2 + 1) = funcr (nfft / 2 + 1)
-        gim (nfft / 2 + 1) = funci (nfft / 2 + 1)
-     ENDIF
-
-
-     CALL cft (gre, gim, npt, npt, npt, 1)
+        !
+        !     add more points to compute the macroscopic average
+        !
+        CALL cft (funcr, funci, nfft, nfft, nfft, - 1)
+        CALL dscal (nfft, 1.d0 / nfft, funcr, 1)
+        CALL dscal (nfft, 1.d0 / nfft, funci, 1)
+        !
+        DO k = 1, npt
+           IF (k<=nfft / 2) THEN
+              gre (k) = funcr (k)
+              gim (k) = funci (k)
+           ELSEIF (k>npt - nfft / 2) THEN
+              gre (k) = funcr (k - npt + nfft)
+              gim (k) = funci (k - npt + nfft)
+           ELSE
+              gre (k) = 0.d0
+              gim (k) = 0.d0
+           ENDIF
+        ENDDO
+        IF (mod (nfft, 2) ==0) THEN
+           gre (nfft / 2 + 1) = 0.5d0 * funcr (nfft / 2 + 1)
+           gim (nfft / 2 + 1) = 0.5d0 * funci (nfft / 2 + 1)
+           gre (npt - nfft / 2 + 1) = gre (nfft / 2 + 1)
+           gim (npt - nfft / 2 + 1) = - gim (nfft / 2 + 1)
+        ELSE
+           gre (nfft / 2 + 1) = funcr (nfft / 2 + 1)
+           gim (nfft / 2 + 1) = funci (nfft / 2 + 1)
+        ENDIF
+        !
+        CALL cft (gre, gim, npt, npt, npt, 1)
+        !
+     END IF
      !
      !     compute the macroscopic average
      !
+     ALLOCATE ( macros(npt) )
      nmacro = npt * (awin / leng )
      IF (nmacro<=0) CALL errore ('average ', 'nmacro is too small ', 1)
      DO i = 1, npt
         macros (i) = 0.d0
         DO j = - nmacro / 2, nmacro / 2
            k = i + j
-           IF (k<=0) k = k + npt
-           IF (k>npt) k = k - npt
+           IF (k <= 0) k = k + npt
+           IF (k >npt) k = k - npt
 
            IF ( (2*j==nmacro) .or. (2*j==-nmacro) ) THEN
               macros (i) = macros (i) + 0.5d0 * gre(k)
@@ -332,10 +352,14 @@ PROGRAM average
      !     print the results on output
      !
      deltaz = leng / dble (npt)
-
-
-     WRITE( stdout, '(3f15.9)') (deltaz * (i - 1) , gre (i) , macros (i) , &
-          i = 1, npt)
+     WRITE( stdout, '(5x,"Output written to file avg.dat")')
+     OPEN (unit=4, file='avg.dat', form='formatted', status='unknown')
+     WRITE(4, '(3f15.9)') (deltaz*(i-1), gre(i), macros(i), i = 1, npt)
+     CLOSE (unit=4, status='keep')
+     !
+     DEALLOCATE(macros)
+     DEALLOCATE(gre)
+     DEALLOCATE(gim)
      DEALLOCATE(funci)
      DEALLOCATE(funcr)
      !

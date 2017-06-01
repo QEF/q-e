@@ -138,7 +138,7 @@ SUBROUTINE poolrecover( vec, length, nkstot, nks )
   ! ... of the current pool
   ! ... On output: vec(length,nkstot) contains data for all "nkstot" k-points
   ! ... on the first processor of the first pool.
-  ! ... vec(1:lenghts,1:nks) is unchanged on output
+  ! ... vec(1:length,1:nks) is unchanged on output
   ! ... Opposite of "poolscatter". Honors "kunit"
   !
   USE kinds,     ONLY : DP

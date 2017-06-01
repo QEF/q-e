@@ -954,7 +954,7 @@ CONTAINS
          ( ( 1.D0 + 1.5D0 * t**2 ) * f1 + ( 1.D0 + t**2 ) * t * f2 )
     CASE ( 1 )
        ! one-dimensional erfc, volume is approx the one of the
-       ! cylinder of radius=width and lenght=alat*at(axis,axis)
+       ! cylinder of radius=width and length=alat*at(axis,axis)
        erfcvolume = pi * width**2 * at(axis,axis) * alat * &
          ( ( 1.D0 + 0.5D0 * t**2 ) * f1  + t * f2 )
     CASE ( 2 )

@@ -766,7 +766,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
         var nosym -type LOGICAL { 
             default { .FALSE. }
             info {
-                if (.TRUE.) symmetry is not used, which means that:
+                if (.TRUE.) symmetry is not used. Consequences:
                 
                 - if a list of k points is provided in input, it is used
                   "as is": symmetry-inequivalent k-points are not generated,
@@ -778,7 +778,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                   Time reversal symmetry is assumed so k and -k are considered
                   as equivalent unless @ref noinv=.true. is specified.
 
-                A careful usage of this option can be advantageous:
+                Do not use this option unless you know exactly what you want
+                and what you get. May be useful in the following cases:
                 - in low-symmetry large cells, if you cannot afford a k-point
                   grid with the correct symmetry
                 - in MD simulations
