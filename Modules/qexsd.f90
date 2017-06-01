@@ -650,8 +650,8 @@ CONTAINS
       REAL(DP),         INTENT(IN) :: Hubbard_beta(nsp)
       REAL(DP),         INTENT(IN) :: Hubbard_J(3,nsp)
       REAL(DP),         INTENT(IN) :: starting_ns(lqmax,nspinx,nsp)
-      REAL(DP),   OPTIONAL, INTENT(IN) :: Hubbard_ns(:,:,:,:)
-      COMPLEX(DP),OPTIONAL, INTENT(IN) :: Hubbard_ns_nc(:,:,:,:)
+      REAL(DP),   OPTIONAL, ALLOCATABLE, INTENT(IN) :: Hubbard_ns(:,:,:,:)
+      COMPLEX(DP),OPTIONAL, ALLOCATABLE, INTENT(IN) :: Hubbard_ns_nc(:,:,:,:)
       CHARACTER(len=*), INTENT(IN) :: U_projection_type
       LOGICAL,INTENT(IN)           :: is_hubbard(nsp)
       CHARACTER(LEN=2),INTENT(IN)  :: psd(nsp)
@@ -781,6 +781,10 @@ CONTAINS
           !
           ind = 0
           IF (noncolin .AND. PRESENT(Hubbard_ns_nc) ) THEN
+             !
+             IF (.NOT. ALLOCATED(Hubbard_ns_nc)) &
+                CALL errore('qexsd_init_dft', 'Hubbard_ns_nc not alloc', 10)
+             !
              Hubbard_ns_ispresent = .TRUE.
              ldim = SIZE(Hubbard_ns_nc,1)
              ALLOCATE (Hubb_occ_aux(2*ldim,2*ldim))
@@ -799,6 +803,10 @@ CONTAINS
              END DO 
              DEALLOCATE ( Hubb_occ_aux) 
           ELSE IF ( PRESENT(Hubbard_ns) ) THEN
+             !
+             IF (.NOT. ALLOCATED(Hubbard_ns)) &
+                CALL errore('qexsd_init_dft', 'Hubbard_ns not alloc', 10)
+             !
              Hubbard_ns_ispresent = .TRUE.
              ldim = SIZE(Hubbard_ns,1)
              DO i = 1, nat
