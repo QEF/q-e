@@ -61,7 +61,7 @@ MODULE cp_restart
                              vnhp, xnhp0, xnhpm, nhpcl, nhpdim, occ0, occm,  &
                              lambda0,lambdam, xnhe0, xnhem, vnhe, ekincm,    &
                              et, rho, c02, cm2, ctot, iupdwn, nupdwn,        &
-                             iupdwn_tot, nupdwn_tot, wfc, mat_z ) ! BS added wfc
+                             iupdwn_tot, nupdwn_tot, wfc ) ! BS added wfc
       !------------------------------------------------------------------------
       !
       USE control_flags,            ONLY : gamma_only, force_pairing, trhow, &
@@ -103,7 +103,7 @@ MODULE cp_restart
       USE uspp_param,               ONLY : n_atom_wfc, upf
       USE global_version,           ONLY : version_number
       USE cp_main_variables,        ONLY : descla
-      USE cp_interfaces,            ONLY : collect_lambda, collect_zmat
+      USE cp_interfaces,            ONLY : collect_lambda
       USE kernel_table,             ONLY : vdw_table_name, kernel_file_name
       USE london_module,            ONLY : scal6, lon_rcut, in_c6
       USE tsvdw_module,             ONLY : vdw_isolated, vdw_econv_thr
@@ -155,7 +155,6 @@ MODULE cp_restart
       INTEGER,               INTENT(IN) :: iupdwn_tot(:)! 
       INTEGER,               INTENT(IN) :: nupdwn_tot(:)! 
       REAL(DP),              INTENT(IN) :: wfc(:,:)     ! BS 
-      REAL(DP),    OPTIONAL, INTENT(IN) :: mat_z(:,:,:) ! 
       !
       LOGICAL               :: write_charge_density
       CHARACTER(LEN=20)     :: dft_name
@@ -753,25 +752,6 @@ MODULE cp_restart
                !
             END IF
             !
-            IF( PRESENT( mat_z ) ) THEN
-               !
-               CALL collect_zmat( mrepl, mat_z(:,:,iss), descla(iss) )
-               !
-               IF ( ionode ) THEN
-                  !
-                  filename = TRIM( qexml_wfc_filename( ".", 'mat_z', ik, iss ) )
-                  !
-                  CALL iotk_link( iunpun, "MAT_Z" // TRIM( cspin ), &
-                                  filename, CREATE = .TRUE., BINARY = .TRUE. )
-                  !
-                  CALL iotk_write_dat( iunpun, "MAT_Z" // TRIM( cspin ), mrepl )
-                  !
-               END IF
-               !
-            END IF
-            !
-            DEALLOCATE( mrepl )
-            !
          END DO
          !
          IF ( ionode ) &
@@ -882,7 +862,7 @@ MODULE cp_restart
                             taui, cdmi, stau0, svel0, staum, svelm, force,    &
                             vnhp, xnhp0, xnhpm, nhpcl,nhpdim,occ0, occm,      &
                             lambda0, lambdam, b1, b2, b3, xnhe0, xnhem, vnhe, &
-                            ekincm, c02, cm2, wfc, mat_z ) ! added wfc
+                            ekincm, c02, cm2, wfc ) ! added wfc
       !------------------------------------------------------------------------
       !
       USE control_flags,            ONLY : gamma_only, force_pairing, iverbosity, twfcollect, lwf ! BS added lwf
@@ -898,7 +878,7 @@ MODULE cp_restart
                                            sort_tau, ityp, ions_cofmass
       USE gvect,       ONLY : ig_l2g, mill
       USE cp_main_variables,        ONLY : nprint_nfi, descla
-      USE cp_interfaces,            ONLY : distribute_lambda, distribute_zmat
+      USE cp_interfaces,            ONLY : distribute_lambda
       USE mp,                       ONLY : mp_sum, mp_bcast
       USE mp_global,                ONLY : intra_image_comm, my_bgrp_id
       USE mp_global,                ONLY : root_bgrp, intra_bgrp_comm, inter_bgrp_comm, intra_pool_comm
@@ -948,7 +928,6 @@ MODULE cp_restart
       COMPLEX(DP),           INTENT(INOUT) :: c02(:,:)     ! 
       COMPLEX(DP),           INTENT(INOUT) :: cm2(:,:)     ! 
       REAL(DP),              INTENT(INOUT) :: wfc(:,:)     ! BS 
-      REAL(DP),    OPTIONAL, INTENT(INOUT) :: mat_z(:,:,:) ! 
       !
       CHARACTER(LEN=256)   :: dirname, kdirname, filename
       CHARACTER(LEN=5)     :: kindex
@@ -1586,22 +1565,6 @@ MODULE cp_restart
             CALL mp_bcast( mrepl, ionode_id, intra_image_comm )
 
             CALL distribute_lambda( mrepl, lambdam(:,:,iss), descla(iss) )
-            !
-            IF ( PRESENT( mat_z ) ) THEN
-               !
-               IF( ionode ) THEN
-                  CALL iotk_scan_dat( iunpun, "MAT_Z" // TRIM( iotk_index( iss ) ), mrepl, FOUND = found )
-                  IF( .NOT. found ) THEN
-                     WRITE( stdout, * ) 'WARNING mat_z not read from restart file'
-                     mrepl = 0.0d0
-                  END IF
-               END IF
-
-               CALL mp_bcast( mrepl, ionode_id, intra_image_comm )
-
-               CALL distribute_zmat( mrepl, mat_z(:,:,iss), descla(iss) )
-               !
-            END IF
             !
             DEALLOCATE( mrepl )
             !

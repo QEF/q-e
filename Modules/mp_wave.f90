@@ -163,7 +163,6 @@
       igwx = itmp
 
 #endif
-
       IF ( mpime == root .AND. igwx > SIZE( millt, 2 ) ) &
         CALL errore(' mergekg',' wrong size for millt ',SIZE(millt,2) )
 

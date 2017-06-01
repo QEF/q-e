@@ -1085,7 +1085,6 @@
       END SUBROUTINE setval_lambda_x
    END INTERFACE
 
-
    PUBLIC :: distribute_zmat
    INTERFACE distribute_zmat
       SUBROUTINE distribute_zmat_x( zmat_repl, zmat_dist, desc )
