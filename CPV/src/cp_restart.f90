@@ -1633,12 +1633,12 @@ MODULE cp_restart
                                                    &wfc(1:3, iupdwn(iss):iupdwn(iss) + nupdwn(iss) -1 ) )
                   !
                ENDDO
+               CALL iotk_scan_end(   iunpun, "WANNIER_CENTERS" )
                !
             ELSE
                WRITE( stdout, * ) 'WARNING wannier centers not read from restart file:'
             ENDIF
             !
-            CALL iotk_scan_end(   iunpun, "WANNIER_CENTERS" )
          END IF
          !
       END IF
