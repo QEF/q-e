@@ -116,6 +116,7 @@ qexsd.o   \
 qexsd_input.o \
 qexsd_reader_module.o \
 hdf5_qe.o\
+qeh5_module.o\
 xsf.o \
 wyckoff.o \
 wypos.o \

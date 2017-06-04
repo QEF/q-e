@@ -102,7 +102,7 @@ module hdf5_qe
 
 
    if(hyperslab .eqv. .true. ) then
-
+#if !defined (__HDF5_SERIAL)
         CALL h5pcreate_f(H5P_FILE_ACCESS_F, hdf5desc%plist_id, error) ! Properties for file creation
         CALL h5pset_fapl_mpio_f(hdf5desc%plist_id, hdf5desc%comm, info, error) ! Stores MPI IO communicator information to the file access property list
         if(kpoint.eq.1)then
@@ -111,6 +111,7 @@ module hdf5_qe
           CALL h5fopen_f(filename, H5F_ACC_RDWR_F, hdf5desc%file_id, error, access_prp = hdf5desc%plist_id) ! create the file collectively
         endif
         CALL h5pclose_f(hdf5desc%plist_id, error)
+#endif
    else
 
     if(write .eqv. .true.)then
@@ -155,7 +156,7 @@ module hdf5_qe
    end subroutine define_dataset_hdf5_hyperslab
 
 
- 
+#if !defined (__HDF5_SERIAL) 
   subroutine  write_data_hdf5(hdf5desc, data,  kpoint)
    USE kinds, ONLY : DP
    USE ISO_C_BINDING
@@ -192,7 +193,7 @@ module hdf5_qe
    CALL h5dclose_f(hdf5desc%dset_id, error)
    CALL h5gclose_f(hdf5desc%group_id, error)
   end subroutine write_data_hdf5
-
+#endif
 
 
 

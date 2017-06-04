@@ -552,7 +552,7 @@ MODULE pw_restart_new
          !
          CALL write_wfc( iunpun, filename, ik_g, tpiba*xk(:,ik), ispin, nspin, &
               evc, npw_g, gamma_only, nbnd, igk_l2g_kdip(:), ngk(ik),  &
-              alat*bg(:,1), alat*bg(:,2), alat*bg(:,3), &
+              tpiba*bg(:,1), tpiba*bg(:,2), tpiba*bg(:,3), &
               mill_k, 1.D0, ionode_k, root_pool, intra_pool_comm )
          !
       END DO k_points_loop

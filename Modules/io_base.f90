@@ -31,9 +31,9 @@ MODULE io_base
       USE mp,         ONLY : mp_size, mp_rank, mp_max
       !
 #if defined(__HDF5)
-      USE hdf5_qe,    ONLY : prepare_for_writing_final, add_attributes_hdf5, &
-           write_evc, h5fclose_f, hdf5_type              
-      USE HDF5
+      USE qeh5_base_module,  ONLY  : qeh5_file, qeh5_dataset, qeh5_openfile, qeh5_open_dataset, &
+                             qeh5_add_attribute, qeh5_write_dataset, qeh5_close, qeh5_set_space, &
+                             qeh5_set_file_hyperslab              
 #endif
 
       IMPLICIT NONE
@@ -62,9 +62,9 @@ MODULE io_base
       COMPLEX(DP), ALLOCATABLE :: wtmp(:)
       !
 #if defined(__HDF5) 
-      TYPE (hdf5_type),ALLOCATABLE    :: h5_write_desc
-      ! 
-      IF ( ionode_in_group ) ALLOCATE (h5_write_desc) 
+      TYPE (qeh5_file)         :: h5file
+      TYPE (qeh5_dataset)      :: evc_dset, igw_dset
+      !  
 #endif 
       me_in_group     = mp_rank( intra_group_comm )
       nproc_in_group  = mp_size( intra_group_comm )
@@ -77,17 +77,20 @@ MODULE io_base
       !
       IF ( ionode_in_group ) THEN
 #if defined  __HDF5
-         CALL prepare_for_writing_final ( h5_write_desc, 0, &
-              TRIM(filename)//'.hdf5',ik, ADD_GROUP = .false.)
-         CALL add_attributes_hdf5(h5_write_desc, ik,"ik",ik)
-         CALL add_attributes_hdf5(h5_write_desc, xk,"xk",xk)
-         CALL add_attributes_hdf5(h5_write_desc, ispin,"ispin",ik)
-         CALL add_attributes_hdf5(h5_write_desc, gamma_only,"gamma_only",ik)
-         CALL add_attributes_hdf5(h5_write_desc, scalef,"scale_factor",ik)
-         CALL add_attributes_hdf5(h5_write_desc, ngw,"ngw",ik)
-         CALL add_attributes_hdf5(h5_write_desc, igwx,"igwx",ik)
-         CALL add_attributes_hdf5(h5_write_desc, npol,"npol",ik)
-         CALL add_attributes_hdf5(h5_write_desc, nbnd,"nbnd",ik)
+         CALL qeh5_openfile(h5file, TRIM(filename)//'.hdf5',action = 'write') 
+         CALL qeh5_add_attribute( h5file%id, "ik", ik, 1, [1])
+         CALL qeh5_add_attribute( h5file%id, "xk", xk, 1, [3]) 
+         CALL qeh5_add_attribute( h5file%id, "ispin", ispin ) 
+         IF (gamma_only) THEN 
+            CALL qeh5_add_attribute(h5file%id, "gamma_only", ".TRUE.") 
+         ELSE 
+            CALL qeh5_add_attribute( h5file%id, "gamma_only", ".FALSE." )
+         END IF 
+         CALL qeh5_add_attribute( h5file%id, "scale_factor", scalef, 1, [1]) 
+         CALL qeh5_add_attribute( h5file%id, "ngw", ngw, 1, [1])
+         CALL qeh5_add_attribute( h5file%id, "igwx", igwx, 1, [1])
+         CALL qeh5_add_attribute( h5file%id, "npol", npol, 1, [1])
+         CALL qeh5_add_attribute( h5file%id, "nbnd", nbnd, 1, [1])
 #else
          OPEN ( UNIT = iuni, FILE = TRIM(filename)//'.dat', &
               FORM='unformatted', STATUS = 'unknown' )
@@ -102,13 +105,23 @@ MODULE io_base
       ELSE
          ! not used: some compiler do not like passing unallocated arrays
          ALLOCATE( itmp( 3, 1 ) )
-      ENDIF
+      END IF
       itmp (:,:) = 0
       CALL mergekg( mill_k, itmp, ngwl, igl, me_in_group, &
            nproc_in_group, root_in_group, intra_group_comm )
       IF ( ionode_in_group ) THEN
 #if defined(__HDF5)
-         CALL errore('write_wfc', 'hdf5 not yet ready',1)
+         igw_dset%name = "MillerIndices"
+         CALL qeh5_set_space( igw_dset, itmp(1,1), RANK = 2, DIMENSIONS = [3,igwx])
+         CALL qeh5_open_dataset (h5file, igw_dset, ACTION = 'write') 
+         CALL qeh5_add_attribute( igw_dset%id, "bg1", b1, RANK =1, DIMS = [3]) 
+         CALL qeh5_add_attribute( igw_dset%id, "bg2", b2, RANK =1, DIMS = [3])
+         CALL qeh5_add_attribute( igw_dset%id, "bg3", b3, RANK =1, DIMS = [3]) 
+         CALL qeh5_add_attribute( igw_dset%id, "doc","Miller Indices of the wave-vectors, &
+                                   same ordering as wave-function components") 
+         CALL qeh5_write_dataset(itmp, igw_dset)
+         CALL qeh5_close(igw_dset)   
+       
 #else
          WRITE(iuni) b1, b2, b3
          WRITE(iuni) itmp(1:3,1:igwx)
@@ -123,6 +136,16 @@ MODULE io_base
       ENDIF
       wtmp = 0.0_DP
       !
+#if defined(__HDF5)
+      IF ( ionode_in_group) THEN 
+         CALL qeh5_set_space ( evc_dset, wtmp(1), 2, [npol*igwx, nbnd], MODE = 'f')
+         CALL qeh5_set_space ( evc_dset, wtmp(1), 1, [npol*igwx], MODE = 'm')
+         CALL qeh5_open_dataset (h5file, evc_dset, ACTION = 'write', NAME = 'evc' )       
+         CALL qeh5_add_attribute( evc_dset%id, "doc:","Wave Functions, (npwx,nbnd), &
+                               each contiguous line represents a wave function,  &
+                               each complex coefficient is given by a couple of contiguous floats") 
+      END IF
+#endif 
       DO j = 1, nbnd
          !
          IF ( npol == 2 ) THEN
@@ -143,7 +166,8 @@ MODULE io_base
          !
          IF ( ionode_in_group ) THEN
 #if defined(__HDF5)
-            CALL write_evc(h5_write_desc, j, wtmp(1:npol*igwx), ik) 
+            CALL qeh5_set_file_hyperslab ( evc_dset,  OFFSET = [0,j-1], COUNT = [2*npol*igwx,1] ) 
+            CALL qeh5_write_dataset ( wtmp, evc_dset)   
 #else
             WRITE(iuni) wtmp(1:npol*igwx)
 #endif
@@ -152,8 +176,8 @@ MODULE io_base
       END DO
       IF ( ionode_in_group ) THEN
 #if defined(__HDF5)
-         CALL h5fclose_f(h5_write_desc%file_id, ierr)
-         DEALLOCATE ( h5_write_desc)  
+         CALL qeh5_close ( evc_dset) 
+         CALL qeh5_close (h5file)   
 #else 
          CLOSE (UNIT = iuni, STATUS = 'keep' )
 #endif
@@ -165,6 +189,9 @@ MODULE io_base
       !
     END SUBROUTINE write_wfc
     !
+
+
+
     !------------------------------------------------------------------------
     SUBROUTINE read_wfc( iuni, filename, ik, xk, ispin, npol, wfc, ngw, &
                          gamma_only, nbnd, igl, ngwl, b1, b2, b3, mill_k,&
@@ -173,12 +200,11 @@ MODULE io_base
       ! if ierr is present, return 0 if everything is ok, /= 0 if not
       !------------------------------------------------------------------------
       !
-      USE mp_wave,   ONLY : splitwf, splitkg
-      USE mp,        ONLY : mp_bcast, mp_size, mp_rank, mp_max
+      USE mp_wave,     ONLY : splitwf, splitkg
+      USE mp,          ONLY : mp_bcast, mp_size, mp_rank, mp_max
       !
-#if defined  __HDF5
-      USE hdf5_qe,  ONLY  : prepare_for_reading_final, read_attributes_hdf5, read_evc, &
-                            h5fclose_f, hdf5_type
+#if defined (__HDF5)
+      USE  qeh5_base_module
 #endif
 
       IMPLICIT NONE
@@ -206,9 +232,10 @@ MODULE io_base
       INTEGER                           :: igwx, igwx_, npwx, ik_
       INTEGER                           :: me_in_group, nproc_in_group
 #if defined(__HDF5)
-      TYPE (hdf5_type),ALLOCATABLE      :: h5_read_desc
-      ! 
-      if (ionode_in_group ) ALLOCATE ( h5_read_desc) 
+      TYPE (qeh5_file)    ::   h5file
+      TYPE (qeh5_dataset) ::   h5dset_wfc, h5dset_mill
+      INTEGER             ::   h5_err
+      CHARACTER(LEN=8)    ::   char_buf 
 #endif  
       !
       !
@@ -233,23 +260,29 @@ MODULE io_base
       IF ( ionode_in_group ) THEN
           !
 #if defined  __HDF5
-         IF ( PRESENT (ierr) ) THEN 
-            CALL prepare_for_reading_final(h5_read_desc, 0, &
-               TRIM(filename)//'.hdf5',KPOINT = ik, IERR = ierr )
-            IF (ierr /= 0 ) RETURN 
+         CALL qeh5_openfile( h5file, TRIM(filename)//'.hdf5', ACTION = 'read', ERROR = h5_err)
+         IF (h5_err /= 0 ) THEN 
+            IF ( PRESENT (ierr) ) THEN 
+               ierr = h5_err 
+               RETURN 
+            END IF
          ELSE
-           CALL prepare_for_reading_final(h5_read_desc, 0, &
-               TRIM(filename)//'.hdf5',KPOINT = ik)
+           CALL errore ( 'read_wfc', 'unable to open '//TRIM(filename)//'.hdf5',h5_err)  
          END IF 
-         CALL read_attributes_hdf5(h5_read_desc, ik_,"ik",ik)
-         CALL read_attributes_hdf5(h5_read_desc, xk,"xk",ik)
-         CALL read_attributes_hdf5(h5_read_desc, ispin,"ispin",ik)
-         CALL read_attributes_hdf5(h5_read_desc, gamma_only,"gamma_only",ik)
-         CALL read_attributes_hdf5(h5_read_desc, scalef,"scale_factor",ik)
-         CALL read_attributes_hdf5(h5_read_desc, ngw,"ngw",ik)
-         CALL read_attributes_hdf5(h5_read_desc, nbnd,"nbnd",ik)
-         CALL read_attributes_hdf5(h5_read_desc, npol,"npol",ik)
-         CALL read_attributes_hdf5(h5_read_desc, igwx_,"igwx",ik)
+         CALL qeh5_read_attribute (h5file%id, "ik", ik_)
+         CALL qeh5_read_attribute (h5file%id, "xk",xk, RANK =1, DIMENSIONS = [3])
+         CALL qeh5_read_attribute (h5file%id, "ispin", ispin)
+         CALL qeh5_read_attribute (h5file%id, "gamma_only", char_buf, MAXLEN = len(char_buf) )
+         IF (TRIM(char_buf) =='.TRUE.' .OR. TRIM(char_buf)=='.true.') THEN 
+            gamma_only = .TRUE. 
+         ELSE 
+            gamma_only = .FALSE.
+         END IF
+         CALL qeh5_read_attribute (h5file%id, "scale_factor",scalef)
+         CALL qeh5_read_attribute (h5file%id, "ngw", ngw)
+         CALL qeh5_read_attribute (h5file%id, "nbnd", nbnd)
+         CALL qeh5_read_attribute (h5file%id, "npol",npol)
+         CALL qeh5_read_attribute (h5file%id, "igwx",igwx_)
 #else
          READ (iuni) ik_, xk, ispin, gamma_only, scalef
          READ (iuni) ngw, igwx_, npol, nbnd
@@ -271,7 +304,12 @@ MODULE io_base
       IF ( ionode_in_group ) THEN 
          ALLOCATE( itmp( 3,MAX( igwx_, igwx ) ) )
 #if defined(__HDF5)
-         CALL errore('read_wfc', 'hdf5 not yet ready',1)
+       CALL qeh5_open_dataset(h5file, h5dset_mill, ACTION = 'read', NAME = 'MillerIndices')
+       IF ( h5dset_mill%filespace%dims(2) .GT. MAX(igwx_, igwx)  ) &
+          CALL errore ( 'read_wfc', 'real dimensions of Miller Indices dataset do not  match with igwx attribute', 8) 
+       ! no reading of b1, b2, and b3 from file. They should be already set. 
+       CALL qeh5_read_dataset ( itmp(:,1), h5dset_mill) 
+       CALL qeh5_close ( h5dset_mill) 
 #else
          READ (iuni) b1, b2, b3
          READ (iuni) itmp(1:3,1:igwx_)
@@ -289,13 +327,18 @@ MODULE io_base
       ELSE
          ALLOCATE( wtmp(1) )
       ENDIF
+#if defined (__HDF5) 
+      CALL qeh5_open_dataset( h5file, h5dset_wfc, ACTION = 'read', NAME = 'evc')
+      CALL qeh5_set_space ( h5dset_wfc, wtmp(1), RANK = 1, DIMENSIONS = [npol*MAX(igwx_, igwx)], MODE = 'm') 
+#endif
       DO j = 1, nbnd
          !
          IF ( j <= SIZE( wfc, 2 ) ) THEN
             !
             IF ( ionode_in_group ) THEN 
 #if defined __HDF5
-               CALL read_evc(h5_read_desc, j, wtmp(1:npol*igwx_),ik)
+               CALL qeh5_set_file_hyperslab (h5dset_wfc, OFFSET = [0,j-1], COUNT = [npol*igwx,1] )
+               CALL qeh5_read_dataset (wtmp, h5dset_wfc )  
 #else
                READ (iuni) wtmp(1:npol*igwx_) 
 #endif
@@ -321,12 +364,12 @@ MODULE io_base
       !
       IF ( ionode_in_group ) THEN
 #if defined (__HDF5)
-         CALL h5fclose_f(h5_read_desc%file_id, ierr_)
-         DEALLOCATE (h5_read_desc)
+         CALL qeh5_close(h5dset_wfc) 
+         CALL qeh5_close(h5file)
 #else
          CLOSE ( UNIT = iuni, STATUS = 'keep' )
-      END IF
 #endif
+      END IF
       !
       DEALLOCATE( wtmp )
       !
@@ -348,6 +391,9 @@ MODULE io_base
                                        intra_bgrp_comm
       USE mp_wave,              ONLY : mergewf, mergekg
       USE io_global,            ONLY : ionode, ionode_id
+#if defined (__HDF5)
+      USE qeh5_base_module
+#endif
       !
       IMPLICIT NONE
       !
@@ -377,7 +423,9 @@ MODULE io_base
       CHARACTER(LEN=320)       :: filename
       !
 #if defined __HDF5
-      CALL errore('write_rhog', 'hdf5 not yet ready',1)
+      TYPE (qeh5_file)          ::  h5file
+      TYPE (qeh5_dataset)       ::  h5dset_mill, h5dset_rho_g
+      CHARACTER(LEN=10)          :: bool_char = ".FALSE.", datasets(2) = ['rhotot_g  ','rhodiff_g ']
 #endif
       ngm  = SIZE (rho, 1)
       IF (ngm /= SIZE (mill, 2) .OR. ngm /= SIZE (ig_l2g, 1) ) &
@@ -392,14 +440,27 @@ MODULE io_base
       !
       filename = TRIM( dirname ) // 'charge-density.dat'
       ierr = 0
+#if defined (__HDF5)
+      IF ( ionode ) CALL qeh5_openfile(h5file, FILE = TRIM(dirname) //'charge-density.hdf5', &
+                                                ACTION = 'write', &
+                                                ERROR = ierr) 
+#else
       IF ( ionode ) OPEN ( UNIT = iun, FILE = TRIM( filename ), &
                 FORM = 'unformatted', STATUS = 'unknown', iostat = ierr )
+#endif
       CALL mp_bcast( ierr, ionode_id, intra_bgrp_comm )
       IF ( ierr > 0 ) CALL errore ( 'write_rhog','error opening file ' &
            & // TRIM( filename ), 1 )
       IF ( ionode ) THEN
+#if defined(__HDF5)
+          IF ( gamma_only) bool_char = '.TRUE.'
+          CALL qeh5_add_attribute (h5file%id, NAME = "gamma_only", TEXT = TRIM(bool_char) )
+          CALL qeh5_add_attribute (h5file%id, "ngm_g",  ngm_g ) 
+          CALL qeh5_add_attribute (h5file%id, "nspin",  nspin )       
+#else
           WRITE (iun, iostat=ierr) gamma_only, ngm_g, nspin
           WRITE (iun, iostat=ierr) b1, b2, b3
+#endif
       END IF
       CALL mp_bcast( ierr, ionode_id, intra_bgrp_comm )
       IF ( ierr > 0 ) CALL errore ( 'write_rhog','error writing file ' &
@@ -425,7 +486,16 @@ MODULE io_base
       !
       IF ( ionode ) THEN
 #if defined(__HDF5)
-         CALL errore('write_rhog', 'hdf5 not yet ready',1)
+         CALL qeh5_set_space ( h5dset_mill, mill_g(1,1), RANK = 2, DIMENSIONS = [3,ngm_g] ) 
+         CALL qeh5_open_dataset ( h5file, h5dset_mill, NAME = "MillerIndices" , ACTION = 'write')
+         !
+         CALL qeh5_add_attribute(h5dset_mill%id, NAME = 'bg1', VALUE = b1(1), RANK = 1, DIMS = [3]) 
+         CALL qeh5_add_attribute(h5dset_mill%id, NAME = 'bg2', VALUE = b2(1), RANK = 1, DIMS = [3])
+         CALL qeh5_add_attribute(h5dset_mill%id, NAME = 'bg3', VALUE = b3(1), RANK = 1, DIMS = [3]) 
+         !
+         CALL qeh5_write_dataset( mill_g, h5dset_mill )
+         ! 
+         CALL qeh5_close( h5dset_mill)    
 #else
          WRITE (iun, iostat=ierr) mill_g(1:3,1:ngm_g)
 #endif
@@ -473,7 +543,10 @@ MODULE io_base
          !
          IF ( ionode ) THEN
 #if defined(__HDF5)
-            CALL errore('write_rhog', 'hdf5 not yet ready',2)
+         CALL qeh5_set_space ( h5dset_rho_g, rho_g(1), RANK = 1 , DIMENSIONS = [ngm_g] ) 
+         CALL qeh5_open_dataset( h5file, h5dset_rho_g, NAME = datasets(ns) , ACTION = 'write', ERROR = ierr )
+         CALL qeh5_write_dataset(rho_g, h5dset_rho_g) 
+         CALL qeh5_close( h5dset_rho_g)     
 #else
             WRITE (iun, iostat=ierr) rho_g(1:ngm_g)
 #endif
@@ -484,7 +557,11 @@ MODULE io_base
          !
       END DO
       !
+#if defined(__HDF5) 
+      IF (ionode) CALL qeh5_close(h5file) 
+#else
       IF (ionode) CLOSE (UNIT = iun, status ='keep' )
+#endif
       !
       DEALLOCATE( rhoaux )
       DEALLOCATE( rho_g )
@@ -507,6 +584,9 @@ MODULE io_base
       USE mp_pools,             ONLY : me_pool, root_pool, nproc_pool, &
                                        intra_pool_comm
       !
+#if defined (__HDF5) 
+      USE qeh5_base_module
+#endif
       IMPLICIT NONE
       !
       CHARACTER(LEN=*), INTENT(IN) :: dirname
@@ -528,15 +608,20 @@ MODULE io_base
       CHARACTER(LEN=320)       :: filename
       !
 #if defined __HDF5
-      CALL errore('read_rhog', 'hdf5 not yet ready',1)
-#endif
+      TYPE ( qeh5_file)       :: h5file
+      TYPE ( qeh5_dataset)    :: h5dset_mill, h5dset_rho_g
+      CHARACTER(LEN=10)       :: tempchar, datasets(2) = ['rhotot_g  ', 'rhodiff_g ']
+      !
+      filename = TRIM( dirname ) // 'charge-density.hdf5'
+#else 
+      filename = TRIM( dirname ) // 'charge-density.dat'
+#endif 
       !
       ngm  = SIZE (rho, 1)
       IF (ngm /= SIZE (ig_l2g, 1) ) &
          CALL errore('read_rhog', 'inconsistent input dimensions', 1)
       !
       iun  = 4
-      filename = TRIM( dirname ) // 'charge-density.dat'
       ierr = 0
       !
       ! ... the root processor of each pool reads
@@ -544,6 +629,18 @@ MODULE io_base
       ionode_k = (me_pool == root_pool)
       !
       IF ( ionode_k ) THEN
+#if defined (__HDF5) 
+         CALL qeh5_openfile(h5file, TRIM(filename), ACTION = 'read', error = ierr)
+         CALL qeh5_read_attribute (h5file%id, "gamma_only", tempchar, MAXLEN = len(tempchar)  )
+         CALL qeh5_read_attribute (h5file%id, "ngm_g", ngm_g ) 
+         CALL qeh5_read_attribute (h5file%id, "nspin", nspin_)  
+         SELECT CASE (TRIM(tempchar) )  
+            CASE ('.true.', '.TRUE.' ) 
+                gamma_only = .TRUE.
+            CASE DEFAULT
+                gamma_only = .FALSE.
+         END SELECT    
+#else
          OPEN ( UNIT = iun, FILE = TRIM( filename ), &
               FORM = 'unformatted', STATUS = 'old', iostat = ierr )
          IF ( ierr /= 0 ) THEN
@@ -557,7 +654,8 @@ MODULE io_base
          END IF
          READ (iun, iostat=ierr) b1, b2, b3
          IF ( ierr /= 0 ) ierr = 3
-10       CONTINUE
+#endif
+10       CONTINUE 
       END IF
       !
       CALL mp_bcast( ierr, root_pool, intra_pool_comm )
@@ -574,9 +672,7 @@ MODULE io_base
       ! ... skip record containing G-vector indices
       !
       IF ( ionode_k ) THEN
-#if defined(__HDF5)
-         CALL errore('write_rhog', 'hdf5 not yet ready',2)
-#else
+#if !defined(__HDF5)
          READ (iun, iostat=ierr) mill_dum
 #endif
       END IF
@@ -598,13 +694,15 @@ MODULE io_base
          !
          IF ( ionode_k ) THEN
 #if defined(__HDF5)
-            CALL errore('write_rhog', 'hdf5 not yet ready',2)
-#else
+            CALL qeh5_open_dataset( h5file, h5dset_rho_g, NAME = datasets(ns), ACTION = 'read', ERROR = ierr) 
+            CALL qeh5_read_dataset ( rho_g , h5dset_rho_g )
+            CALL qeh5_close ( h5dset_rho_g )  
+#else 
             READ (iun, iostat=ierr) rho_g(1:ngm_g)
 #endif
          END IF
          CALL mp_bcast( ierr, root_pool, intra_pool_comm )
-         IF ( ierr > 0 ) CALL errore ( 'write_rhog','error writing file ' &
+         IF ( ierr > 0 ) CALL errore ( 'read_rhog','error reading file ' &
               & // TRIM( filename ), 2+ns )
          !
          CALL splitwf( rhoaux, rho_g, ngm, ig_l2g, me_pool, &
