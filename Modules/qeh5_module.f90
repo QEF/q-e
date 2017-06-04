@@ -9,6 +9,16 @@
 !------------------------------------------------------
 MODULE qeh5_base_module
   !---------------------------------------------------
+  !
+  ! this module contains the basic interface for basic operation for 
+  ! serial I/O in HDF5 format. The parallel interface remains in file
+  ! hdf5_qe.f90 file. 
+  ! 
+  ! author N. Varini, P. Delugas
+  ! last revision June 2017
+  ! 
+  ! 
+#if defined(__HDF5)
   USE KINDS,   ONLY: DP
   USE hdf5 
   USE ISO_C_BINDING
@@ -959,6 +969,6 @@ END SUBROUTINE finalize_hdf5
      INTEGER,DIMENSION(:),OPTIONAL, INTENT(IN)     :: stride, block
      CALL set_hyperslab (dataset%filespace, offset, count, stride, block )
   END SUBROUTINE qeh5_set_file_hyperslab
-
+#endif
 END MODULE qeh5_base_module
  
