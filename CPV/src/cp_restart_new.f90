@@ -78,7 +78,7 @@ MODULE cp_restart_new
       USE gvecw,                    ONLY : ngw, ngw_g, ecutwfc
       USE gvect,                    ONLY : ig_l2g, mill
       USE electrons_base,           ONLY : nspin, nelt, nel, nudx
-      USE cell_base,                ONLY : ibrav, alat, s_to_r, ainv ! BS added ainv
+      USE cell_base,                ONLY : ibrav, alat, s_to_r
       USE ions_base,                ONLY : nsp, nat, na, atm, zv, &
                                            amass, iforce, ind_bck
       USE funct,                    ONLY : get_dft_name, get_inlc, &
@@ -268,6 +268,9 @@ MODULE cp_restart_new
               epseu, enl, exc, vave, enthal, acc, stau0, svel0, taui, cdmi,&
               force, nhpcl, nhpdim, xnhp0, vnhp, ekincm, xnhe0, vnhe, ht,&
               htvel, gvel, xnhh0, vnhh, staum, svelm, xnhpm, xnhem, htm, xnhhm)
+         ! Wannier function centers
+         IF ( lwf ) CALL cp_writecenters &
+              ( iunpun, nspin, iupdwn, nupdwn, h, wfc)
          !
 !-------------------------------------------------------------------------------
 ! ... CONVERGENCE_INFO - TO BE VERIFIED
@@ -632,6 +635,8 @@ MODULE cp_restart_new
            ierr )
       md_found = ( ierr == 0 )
       IF ( ierr > 0 ) CALL errore ('cp_readcp','bad CP section read',ierr)
+      ! Wannier function centers
+      IF ( lwf ) CALL cp_readcenters ( iunpun, nspin, iupdwn, nupdwn, wfc)
       !
       CALL qexsd_get_general_info ( iunpun, geninfo_obj, found)
       IF ( .NOT. found ) THEN
@@ -1326,9 +1331,57 @@ MODULE cp_restart_new
        !
     ENDIF
     !
-    RETURN
-    !
   END SUBROUTINE cp_writecp
+  !
+  !------------------------------------------------------------------------
+  SUBROUTINE cp_writecenters( iunpun, nspin, iupdwn, nupdwn, h, wfc )
+    !------------------------------------------------------------------------
+    !
+    ! ... Write Wannier centers
+    !
+    USE kinds, ONLY : dp
+    USE io_global, ONLY : ionode
+    USE io_files,  ONLY : iunpun
+    USE iotk_module
+    USE cell_base, ONLY : ainv ! what is this? what is the relation with h?
+    !
+    REAL(DP), INTENT(IN) :: h(:,:), wfc(:,:)
+    INTEGER, INTENT(in) :: iunpun, nspin, iupdwn(:), nupdwn(:)
+    !
+    INTEGER :: iss, i, j
+    REAL(DP) :: temp_vec(3)
+    REAL(DP), ALLOCATABLE :: centers(:,:)
+    !
+    IF ( ionode ) THEN
+       !
+       CALL iotk_write_begin( iunpun, "WANNIER_CENTERS" )
+       !
+       DO iss = 1, nspin
+          !
+          temp_vec=0.0_DP
+          ALLOCATE ( centers(3,nupdwn(iss)) )
+          centers =0.0_DP
+          !
+          DO i = 1, nupdwn(iss)
+             !
+             j = i + iupdwn(iss)-1
+             temp_vec(:) = MATMUL( ainv(:,:), wfc(:,j) )
+             temp_vec(:) = temp_vec(:) - floor (temp_vec(:))
+             centers(:,i) = MATMUL( h, temp_vec(:) )
+             !
+          END DO
+          !
+          CALL iotk_write_dat(iunpun, "wanniercentres"//TRIM( iotk_index(iss)),&
+               & centers(1:3,1:nupdwn(iss)),  COLUMNS=3 )
+          DEALLOCATE ( centers )
+          !
+       ENDDO
+       !
+       CALL iotk_write_end(   iunpun, "WANNIER_CENTERS" )
+       !
+    END IF
+    !
+  END SUBROUTINE cp_writecenters
   !
   !------------------------------------------------------------------------
   SUBROUTINE cp_read_wfc( ndr, tmp_dir, ik, nk, iss, nspin, c2, tag, ierr )
@@ -1598,6 +1651,42 @@ MODULE cp_restart_new
     !
   END SUBROUTINE cp_readcp
   !
+  !
+  !------------------------------------------------------------------------
+  SUBROUTINE cp_readcenters( iunpun, nspin, iupdwn, nupdwn, wfc )
+    !------------------------------------------------------------------------
+    !
+    ! ... Read Wannier centers
+    !
+    USE kinds, ONLY : dp
+    USE io_global, ONLY : stdout
+    USE iotk_module
+    !
+    REAL(DP), INTENT(OUT) :: wfc(:,:)
+    INTEGER, INTENT(in) :: iunpun, nspin, iupdwn(:), nupdwn(:)
+    !
+    INTEGER :: iss
+    LOGICAL :: found
+    !
+    CALL iotk_scan_begin( iunpun, "WANNIER_CENTERS", found=found )
+    !
+    IF (found) THEN
+       !
+       DO iss = 1, nspin
+          CALL iotk_scan_dat(iunpun, "wanniercentres"//TRIM(iotk_index(iss)), &
+               wfc(1:3, iupdwn(iss):iupdwn(iss) + nupdwn(iss) -1 ) )
+       ENDDO
+       CALL iotk_scan_end(   iunpun, "WANNIER_CENTERS" )
+       !
+    ELSE
+       !
+       WRITE( stdout, * ) 'WARNING wannier centers not found in restart file'
+       wfc(:,:)= 0.0_dp
+       !
+    END IF
+    !
+  END SUBROUTINE cp_readcenters
+  !
   !------------------------------------------------------------------------
   SUBROUTINE cp_read_cell( ndr, tmp_dir, ascii, ht, &
                            htm, htvel, gvel, xnhh0, xnhhm, vnhh )
@@ -1823,7 +1912,6 @@ MODULE cp_restart_new
   SUBROUTINE cp_write_zmat( ndw, mat_z, ierr )
     !------------------------------------------------------------------------
     !
-    ! ... interface routine, should be moved into module cp_restart_new
     ! ... collect and write matrix z to file
     !
     USE kinds, ONLY : dp
@@ -1877,7 +1965,6 @@ MODULE cp_restart_new
   SUBROUTINE cp_read_zmat( ndr, mat_z, ierr )
     !------------------------------------------------------------------------
     !
-    ! ... interface routine, should be moved into module cp_restart_new
     ! ... read from file and distribute matrix z
     !
     USE kinds, ONLY : dp
@@ -1927,5 +2014,5 @@ MODULE cp_restart_new
     !
   END SUBROUTINE cp_read_zmat
   !------------------------------------------------------------------------
-
+  !
 END MODULE cp_restart_new
