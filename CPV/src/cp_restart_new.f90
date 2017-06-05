@@ -269,8 +269,7 @@ MODULE cp_restart_new
               force, nhpcl, nhpdim, xnhp0, vnhp, ekincm, xnhe0, vnhe, ht,&
               htvel, gvel, xnhh0, vnhh, staum, svelm, xnhpm, xnhem, htm, xnhhm)
          ! Wannier function centers
-         IF ( lwf ) CALL cp_writecenters &
-              ( iunpun, nspin, iupdwn, nupdwn, h, wfc)
+         IF ( lwf ) CALL cp_writecenters ( iunpun, h, wfc)
          !
 !-------------------------------------------------------------------------------
 ! ... CONVERGENCE_INFO - TO BE VERIFIED
@@ -636,7 +635,7 @@ MODULE cp_restart_new
       md_found = ( ierr == 0 )
       IF ( ierr > 0 ) CALL errore ('cp_readcp','bad CP section read',ierr)
       ! Wannier function centers
-      IF ( lwf ) CALL cp_readcenters ( iunpun, nspin, iupdwn, nupdwn, wfc)
+      IF ( lwf ) CALL cp_readcenters ( iunpun, wfc)
       !
       CALL qexsd_get_general_info ( iunpun, geninfo_obj, found)
       IF ( .NOT. found ) THEN
@@ -1334,49 +1333,44 @@ MODULE cp_restart_new
   END SUBROUTINE cp_writecp
   !
   !------------------------------------------------------------------------
-  SUBROUTINE cp_writecenters( iunpun, nspin, iupdwn, nupdwn, h, wfc )
+  SUBROUTINE cp_writecenters( iunpun, h, wfc )
     !------------------------------------------------------------------------
     !
     ! ... Write Wannier centers
     !
     USE kinds, ONLY : dp
     USE io_global, ONLY : ionode
-    USE io_files,  ONLY : iunpun
     USE iotk_module
     USE cell_base, ONLY : ainv ! what is this? what is the relation with h?
     !
     REAL(DP), INTENT(IN) :: h(:,:), wfc(:,:)
-    INTEGER, INTENT(in) :: iunpun, nspin, iupdwn(:), nupdwn(:)
+    INTEGER, INTENT(in) :: iunpun
     !
-    INTEGER :: iss, i, j
+    INTEGER :: iss, i, nbnd
     REAL(DP) :: temp_vec(3)
     REAL(DP), ALLOCATABLE :: centers(:,:)
     !
     IF ( ionode ) THEN
        !
+       nbnd = SIZE (wfc, 2)
+       ALLOCATE ( centers(3,nbnd) )
        CALL iotk_write_begin( iunpun, "WANNIER_CENTERS" )
        !
-       DO iss = 1, nspin
-          !
-          temp_vec=0.0_DP
-          ALLOCATE ( centers(3,nupdwn(iss)) )
-          centers =0.0_DP
-          !
-          DO i = 1, nupdwn(iss)
-             !
-             j = i + iupdwn(iss)-1
-             temp_vec(:) = MATMUL( ainv(:,:), wfc(:,j) )
-             temp_vec(:) = temp_vec(:) - floor (temp_vec(:))
-             centers(:,i) = MATMUL( h, temp_vec(:) )
-             !
-          END DO
-          !
-          CALL iotk_write_dat(iunpun, "wanniercentres"//TRIM( iotk_index(iss)),&
-               & centers(1:3,1:nupdwn(iss)),  COLUMNS=3 )
-          DEALLOCATE ( centers )
-          !
-       ENDDO
+       temp_vec=0.0_DP
+       centers =0.0_DP
        !
+       DO i = 1, nbnd
+          !
+          temp_vec(:) = MATMUL( ainv(:,:), wfc(:,i) )
+          temp_vec(:) = temp_vec(:) - floor (temp_vec(:))
+          centers(:,i) = MATMUL( h, temp_vec(:) )
+          !
+       END DO
+       !
+       CALL iotk_write_dat(iunpun, "wanniercentres",&
+            & centers(1:3,1:nbnd),  COLUMNS=3 )
+       !
+       DEALLOCATE ( centers )
        CALL iotk_write_end(   iunpun, "WANNIER_CENTERS" )
        !
     END IF
@@ -1651,9 +1645,8 @@ MODULE cp_restart_new
     !
   END SUBROUTINE cp_readcp
   !
-  !
   !------------------------------------------------------------------------
-  SUBROUTINE cp_readcenters( iunpun, nspin, iupdwn, nupdwn, wfc )
+  SUBROUTINE cp_readcenters( iunpun, wfc )
     !------------------------------------------------------------------------
     !
     ! ... Read Wannier centers
@@ -1663,19 +1656,18 @@ MODULE cp_restart_new
     USE iotk_module
     !
     REAL(DP), INTENT(OUT) :: wfc(:,:)
-    INTEGER, INTENT(in) :: iunpun, nspin, iupdwn(:), nupdwn(:)
+    INTEGER, INTENT(in) :: iunpun
     !
-    INTEGER :: iss
+    INTEGER :: iss, nbnd
     LOGICAL :: found
     !
+    nbnd = SIZE (wfc, 2)
     CALL iotk_scan_begin( iunpun, "WANNIER_CENTERS", found=found )
     !
     IF (found) THEN
        !
-       DO iss = 1, nspin
-          CALL iotk_scan_dat(iunpun, "wanniercentres"//TRIM(iotk_index(iss)), &
-               wfc(1:3, iupdwn(iss):iupdwn(iss) + nupdwn(iss) -1 ) )
-       ENDDO
+       CALL iotk_scan_dat(iunpun, "wanniercentres", &
+            wfc(1:3, 1:nbnd) )
        CALL iotk_scan_end(   iunpun, "WANNIER_CENTERS" )
        !
     ELSE
