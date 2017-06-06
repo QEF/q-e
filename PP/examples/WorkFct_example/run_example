@@ -174,6 +174,9 @@ $ECHO "  Obtaining 1D macroscopic average of potential ...\c"
 $AVG_COMMAND < Al100.avg.in > Al100.avg.out
 $ECHO " done"
 
+# copy file produced by average.x for later usage
+mv avg.dat Al100.avg.dat
+
 # self-consistent calculation for Al bulk ref
 cat > Al.bulkref.in << EOF
 &CONTROL
@@ -242,14 +245,15 @@ $ECHO "  Obtaining 1D macroscopic average of bulk potential ...\c"
 $AVG_COMMAND < Al.bulkref.avg.in > Al.bulkref.avg.out
 $ECHO " done"
 
+# copy file produced by average.x for later usage
+mv avg.dat Al.bulkref.avg.dat
 # Extract the Fermi energies and V references
 # script written specific to this example
 eFermiSlab=`grep "Fermi" Al100.out | cut -d  \  -f 14`
 eFermiBulk=`grep "Fermi" Al.bulkref.out | cut -d  \  -f 14`
-vVac=`grep "0.000000000" Al100.avg.out | cut -d  \  -f 13`
-vBulk=`grep "0.000000000" Al.bulkref.avg.out | cut -d  \  -f 12`
-vSlab=`grep "17.8087" Al100.avg.out | cut -d \  -f 10`
-
+vVac=`grep "0.000000000" Al100.avg.dat | cut -d  \  -f 13`
+vBulk=`grep "0.000000000" Al.bulkref.avg.dat | cut -d  \  -f 12`
+vSlab=`grep "17.8087" Al100.avg.dat | cut -d \  -f 10`
 vVac=`awk "BEGIN{print $vVac*13.6058}"`
 vBulk=`awk "BEGIN{print $vBulk*13.6058}"`
 vSlab=`awk "BEGIN{print $vSlab*13.6058}"`
@@ -283,8 +287,8 @@ set label 4 "V_{Bulk}" at 18.2, -6.4
 set label 5 "Work function calculated \n with no bulk reference \n {/Symbol F} = $wf1 eV" at 19, -0.7 
 set label 6 "Work function calculated \n with bulk reference \n {/Symbol F} = $wf2 eV" at 19, -4
 
-plot 'Al100.avg.out' using (\$1*0.52918):(\$3*13.6058) with lines linewidth 5 title 'V_{Macroscopic Average, Slab}', \
-     'Al100.avg.out' using (\$1*0.52918):(\$2*13.6058) with lines linewidth 1 title 'V_{Planar Average, Slab}', \
+plot 'Al100.avg.dat' using (\$1*0.52918):(\$3*13.6058) with lines linewidth 5 title 'V_{Macroscopic Average, Slab}', \
+     'Al100.avg.dat' using (\$1*0.52918):(\$2*13.6058) with lines linewidth 1 title 'V_{Planar Average, Slab}', \
      $vSlab with lines linewidth 2 notitle, \
      $eFermiSlab with lines linewidth 2 notitle, \
      $eFermiBulk with lines linewidth 2 notitle 
