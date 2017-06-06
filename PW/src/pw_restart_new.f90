@@ -1091,7 +1091,7 @@ MODULE pw_restart_new
           celldm(5:6) = 0.d0
        CASE (6) 
           celldm(1)= alat 
-          celldm(3)= SQRT( DOT_PRODUCT(at(:,2),at(:,2)))/alat
+          celldm(3)= SQRT( DOT_PRODUCT(at(:,3),at(:,3)))/alat
           celldm(2)= 1.d0
           celldm(4:6) = 0.d0
        CASE (7) 
