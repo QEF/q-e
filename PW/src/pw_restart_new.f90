@@ -1067,6 +1067,8 @@ MODULE pw_restart_new
     !
     alat = atomic_structure%alat 
     IF ( atomic_structure%bravais_index_ispresent ) THEN 
+    !! if ibrav is present then cell parameters have been computed by latgen subrouting using 
+    !! ibrav and celldm parameters, we need to recalculate celldm.  
        ibrav = atomic_structure%bravais_index 
     ELSE 
        ibrav = 0
@@ -1075,8 +1077,8 @@ MODULE pw_restart_new
     at(:,1) = atomic_structure%cell%a1
     at(:,2) = atomic_structure%cell%a2
     at(:,3) = atomic_structure%cell%a3
-    SELECT CASE  (ibrav ) 
-       CASE (1:3) 
+    SELECT CASE  ( ibrav ) 
+       CASE (1:3,-3) 
           celldm(1) = alat
           celldm(2:6) = 0.d0
        CASE (4) 
@@ -1096,8 +1098,8 @@ MODULE pw_restart_new
           celldm(4:6) = 0.d0
        CASE (7) 
           celldm(1) = alat
-          celldm(3) = at(3,3) 
-          celldm(2)=0.d0
+          celldm(3) = ABS(at(3,3)/at(1,3)) 
+          celldm(2)=    0.d0
           celldm(4:6) = 0.d0
        CASE (8)
           celldm(1) = alat
@@ -1139,11 +1141,11 @@ MODULE pw_restart_new
           celldm(2) = SQRT( DOT_PRODUCT(at(:,2),at(:,2))/DOT_PRODUCT(at(:,1),at(:,1)))
           celldm(3) = SQRT( DOT_PRODUCT(at(:,3),at(:,3))/DOT_PRODUCT(at(:,1),at(:,1)))
           celldm(4) = DOT_PRODUCT(at(:,3),at(:,2))/SQRT(DOT_PRODUCT(at(:,2),at(:,2))*&
-                                                   DOT_PRODUCT(at(:,3),at(:,3)))
+                                                        DOT_PRODUCT(at(:,3),at(:,3)))
           celldm(5) = DOT_PRODUCT(at(:,3),at(:,1))/SQRT(DOT_PRODUCT(at(:,1),at(:,1))*&
-                                                   DOT_PRODUCT(at(:,3),at(:,3)))
+                                                        DOT_PRODUCT(at(:,3),at(:,3)))
           celldm(6) = DOT_PRODUCT(at(:,1),at(:,2))/SQRT(DOT_PRODUCT(at(:,2),at(:,2))*&
-                                                   DOT_PRODUCT(at(:,1),at(:,1)))
+                                                        DOT_PRODUCT(at(:,1),at(:,1)))
        CASE  default  
           celldm(1) = 1.d0
           IF (alat .GT. 0.d0 ) celldm(1) = alat
