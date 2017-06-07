@@ -637,6 +637,7 @@ MODULE cp_restart_new
       ! Wannier function centers
       IF ( lwf ) CALL cp_readcenters ( iunpun, wfc)
       !
+      ierr = 0
       CALL qexsd_get_general_info ( iunpun, geninfo_obj, found)
       IF ( .NOT. found ) THEN
          ierr = ierr + 1
@@ -1346,7 +1347,7 @@ MODULE cp_restart_new
     REAL(DP), INTENT(IN) :: h(:,:), wfc(:,:)
     INTEGER, INTENT(in) :: iunpun
     !
-    INTEGER :: iss, i, nbnd
+    INTEGER :: i, nbnd
     REAL(DP) :: temp_vec(3)
     REAL(DP), ALLOCATABLE :: centers(:,:)
     !
@@ -1367,7 +1368,7 @@ MODULE cp_restart_new
           !
        END DO
        !
-       CALL iotk_write_dat(iunpun, "wanniercentres",&
+       CALL iotk_write_dat(iunpun, "wanniercentres", &
             & centers(1:3,1:nbnd),  COLUMNS=3 )
        !
        DEALLOCATE ( centers )
@@ -1655,10 +1656,10 @@ MODULE cp_restart_new
     USE io_global, ONLY : stdout
     USE iotk_module
     !
-    REAL(DP), INTENT(OUT) :: wfc(:,:)
-    INTEGER, INTENT(in) :: iunpun
+    INTEGER, INTENT(IN)  :: iunpun
+    REAL(DP), INTENT(OUT):: wfc(:,:)
     !
-    INTEGER :: iss, nbnd
+    INTEGER :: nbnd, ierr
     LOGICAL :: found
     !
     nbnd = SIZE (wfc, 2)
@@ -1667,12 +1668,15 @@ MODULE cp_restart_new
     IF (found) THEN
        !
        CALL iotk_scan_dat(iunpun, "wanniercentres", &
-            wfc(1:3, 1:nbnd) )
+            wfc(1:3, 1:nbnd), IERR=ierr )
+       IF ( ierr > 0 ) CALL errore ('cp_readcenters', &
+            'error reading Wannier centers',ierr)
        CALL iotk_scan_end(   iunpun, "WANNIER_CENTERS" )
        !
     ELSE
        !
-       WRITE( stdout, * ) 'WARNING wannier centers not found in restart file'
+       CALL infomsg('cp_readcenters', &
+            'Wannier centers not found in restart file')
        wfc(:,:)= 0.0_dp
        !
     END IF
