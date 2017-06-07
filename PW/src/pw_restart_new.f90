@@ -1056,7 +1056,7 @@ MODULE pw_restart_new
     SUBROUTINE readschema_cell(atomic_structure )
     !-----------------------------------------------------------------------
     !
-    USE constants,         ONLY : pi
+    USE constants,         ONLY : pi,tpi
     USE cell_base,         ONLY : ibrav, alat, at, bg, celldm
     USE cell_base,         ONLY : tpiba, tpiba2, omega
     USE qes_types_module,  ONLY : atomic_structure_type
@@ -1084,7 +1084,7 @@ MODULE pw_restart_new
           celldm(2) = 0.d0
           celldm(3) = SQRT( DOT_PRODUCT(at(:,3),at(:,3)))/alat
           celldm(4:6) = 0.d0
-       CASE (5) 
+       CASE (5, -5 ) 
           celldm(1)= alat
           celldm(2:3) = 0.d0
           celldm(4) = DOT_PRODUCT(at(:,1),at(:,2))/(alat**2)
@@ -1104,7 +1104,7 @@ MODULE pw_restart_new
           celldm(2) = SQRT( DOT_PRODUCT (at(:,2),at(:,2)))/alat
           celldm(3) = SQRT( DOT_PRODUCT (at(:,3),at(:,3)))/alat 
           celldm(4:6) = 0.d0
-       CASE (9) 
+       CASE (9, -9 ) 
           celldm(1) = alat
           celldm(2) = ABS ( at(2,1)/at(1,1))
           celldm(3) = ABS ( at(3,3)/2.d0/at(1,1))
@@ -1119,7 +1119,7 @@ MODULE pw_restart_new
           celldm(2) = ABS(at(2,1)/at(1,1))
           celldm(3) = ABS(at(3,1)/at(1,1))
           celldm(4:6) = 0.d0
-       CASE (12) 
+       CASE (12, -12) 
           celldm(1) = alat 
           celldm(2) = SQRT( DOT_PRODUCT(at(:,2),at(:,2))/DOT_PRODUCT(at(:,1),at(:,1)))
           celldm(3) = SQRT( DOT_PRODUCT(at(:,3),at(:,3))/DOT_PRODUCT(at(:,1),at(:,1)))
@@ -1132,7 +1132,7 @@ MODULE pw_restart_new
           celldm(1) = alat
           celldm(2) = SQRT( DOT_PRODUCT(at(:,2),at(:,2)))/(2.d0*at(1,1))
           celldm(3) = ABS (at(3,3)/at(1,3))
-          celldm(4) = ATAN(at(2,2)/at(1,2))
+          celldm(4) = COS( ATAN2( at(2,2), at(1,2) ) )
           celldm(5:6) = 0.d0
        CASE (14) 
           celldm(1) = alat 
@@ -1149,7 +1149,7 @@ MODULE pw_restart_new
           IF (alat .GT. 0.d0 ) celldm(1) = alat
           celldm (2:6) = 0.d0
     END SELECT 
-    tpiba = 2.d0*PI/alat
+    tpiba = tpi/alat
     tpiba2= tpiba**2
     omega = ABS (at(1,1)*at(2,2)*at(3,3)+at(1,2)*at(2,3)*at(3,1)+at(1,3)*at(2,1)*at(3,2)-&
                  at(3,1)*at(2,2)*at(1,3)-at(3,2)*at(2,3)*at(1,1)-at(3,3)*at(2,1)*at(1,2))
