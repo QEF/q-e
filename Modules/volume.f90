@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2017 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -7,56 +7,32 @@
 !
 !
 !---------------------------------------------------------------------
-subroutine volume (alat, a1, a2, a3, omega)
+SUBROUTINE volume (alat, a1, a2, a3, omega)
   !---------------------------------------------------------------------
   !
-  !     Compute the volume of the unit cell
+  !     Compute the volume of the unit cell defined by 3 vectors
+  !     a1, a2, a3, given in units of "alat" (alat may be 1):
+  !        omega = alat^3 * [ a1 . (a2 x a3) ]
+  !     ( . = scalar product, x = vector product )
   !
-  use kinds, ONLY: DP
-  implicit none
+  USE kinds, ONLY: dp
+  IMPLICIT NONE
   !
-  !     First the I/O variables
+  REAL(dp), INTENT(IN) :: alat, a1(3), a2(3), a3(3)
+  REAL(dp), INTENT(OUT) :: omega
   !
-  real(DP) :: alat, a1 (3), a2 (3), a3 (3), omega
-  ! input:  lattice parameter (unit length)
-  ! input: the first lattice vector
-  ! input: the second lattice vector
-  ! input: the third lattice vector
-  ! input: the volume of the unit cell
+  omega = a1(1) * ( a2(2)*a3(3)-a2(3)*a3(2) ) - &
+          a1(2) * ( a2(1)*a3(3)-a2(3)*a3(1) ) + &
+          a1(3) * ( a2(1)*a3(2)-a2(2)*a3(1) )
   !
-  !    Here the local variables required by the routine
+  IF ( omega < 0.0_dp) THEN
+     call infomsg('volume','axis vectors are left-handed')
+     omega = ABS (omega)
+  END IF
   !
-
-  real(DP) :: s
-  ! the sign of a permutation
-  integer :: i, j, k, l, iperm
-  !\
-  ! \
-  ! /   auxiliary indices
-  !/
-  ! counter on permutations
+  IF ( alat < 1.0_dp) call infomsg('volume','strange lattice parameter')
+  omega = omega * alat**3
   !
-  !   Compute the volume
+  RETURN
   !
-  omega = 0.d0
-  s = 1.d0
-  i = 1
-  j = 2
-  k = 3
-101 do iperm = 1, 3
-     omega = omega + s * a1 (i) * a2 (j) * a3 (k)
-     l = i
-     i = j
-     j = k
-     k = l
-  enddo
-  i = 2
-  j = 1
-  k = 3
-  s = - s
-
-  if (s.lt.0.d0) goto 101
-
-  omega = abs (omega) * alat**3
-  return
-end subroutine volume
+END SUBROUTINE volume

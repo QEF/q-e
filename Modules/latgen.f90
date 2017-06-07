@@ -7,7 +7,7 @@
 !
 !
 !-------------------------------------------------------------------------
-subroutine latgen(ibrav,celldm,a1,a2,a3,omega)
+SUBROUTINE latgen(ibrav,celldm,a1,a2,a3,omega)
   !-----------------------------------------------------------------------
   !     sets up the crystallographic vectors a1, a2, and a3.
   !
@@ -369,26 +369,8 @@ subroutine latgen(ibrav,celldm,a1,a2,a3,omega)
   !
   !  calculate unit-cell volume omega
   !
-  omega=0.d0
-  s=1.d0
-  i=1
-  j=2
-  k=3
+  CALL volume (1.0_dp, a1, a2, a3, omega)
   !
-101 do iperm=1,3
-     omega=omega+s*a1(i)*a2(j)*a3(k)
-     l=i
-     i=j
-     j=k
-     k=l
-  end do
-!
-  i=2
-  j=1
-  k=3
-  s=-s
-  if(s < 0.d0) go to 101
-  omega=abs(omega)
-  return
-!
-end subroutine latgen
+  RETURN
+  !
+END SUBROUTINE latgen
