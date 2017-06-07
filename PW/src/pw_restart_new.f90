@@ -52,7 +52,7 @@ MODULE pw_restart_new
       USE paw_variables,        ONLY : okpaw
       USE uspp_param,           ONLY : upf
       USE global_version,       ONLY : version_number
-      USE cell_base,            ONLY : at, bg, alat, ibrav, celldm
+      USE cell_base,            ONLY : at, bg, alat, ibrav
       USE gvect,                ONLY : ig_l2g
       USE ions_base,            ONLY : nsp, ityp, atm, nat, tau, if_pos
       USE noncollin_module,     ONLY : noncolin, npol
@@ -1067,95 +1067,24 @@ MODULE pw_restart_new
     !
     alat = atomic_structure%alat 
     IF ( atomic_structure%bravais_index_ispresent ) THEN 
-    !! if ibrav is present then cell parameters have been computed by latgen subrouting using 
-    !! ibrav and celldm parameters, we need to recalculate celldm.  
        ibrav = atomic_structure%bravais_index 
     ELSE 
        ibrav = 0
     END IF
-    celldm = 0.d0
-    at(:,1) = atomic_structure%cell%a1
-    at(:,2) = atomic_structure%cell%a2
-    at(:,3) = atomic_structure%cell%a3
-    SELECT CASE  ( ibrav ) 
-       CASE (1:3,-3) 
-          celldm(1) = alat
-          celldm(2:6) = 0.d0
-       CASE (4) 
-          celldm(1) = alat
-          celldm(2) = 0.d0
-          celldm(3) = SQRT( DOT_PRODUCT(at(:,3),at(:,3)))/alat
-          celldm(4:6) = 0.d0
-       CASE (5, -5 ) 
-          celldm(1)= alat
-          celldm(2:3) = 0.d0
-          celldm(4) = DOT_PRODUCT(at(:,1),at(:,2))/(alat**2)
-          celldm(5:6) = 0.d0
-       CASE (6) 
-          celldm(1)= alat 
-          celldm(3)= SQRT( DOT_PRODUCT(at(:,3),at(:,3)))/alat
-          celldm(2)= 1.d0
-          celldm(4:6) = 0.d0
-       CASE (7) 
-          celldm(1) = alat
-          celldm(3) = ABS(at(3,3)/at(1,3)) 
-          celldm(2)=    0.d0
-          celldm(4:6) = 0.d0
-       CASE (8)
-          celldm(1) = alat
-          celldm(2) = SQRT( DOT_PRODUCT (at(:,2),at(:,2)))/alat
-          celldm(3) = SQRT( DOT_PRODUCT (at(:,3),at(:,3)))/alat 
-          celldm(4:6) = 0.d0
-       CASE (9, -9 ) 
-          celldm(1) = alat
-          celldm(2) = ABS ( at(2,1)/at(1,1))
-          celldm(3) = ABS ( at(3,3)/2.d0/at(1,1))
-          celldm(4:6) = 0.d0 
-       CASE (10) 
-          celldm(1) = alat
-          celldm(2) = ABS ( at(2,2)/at(2,1))
-          celldm(3) = ABS ( at(3,1)/at(1,1))
-          celldm(4:6) = 0.d0
-       CASE (11) 
-          celldm(1) = alat
-          celldm(2) = ABS(at(2,1)/at(1,1))
-          celldm(3) = ABS(at(3,1)/at(1,1))
-          celldm(4:6) = 0.d0
-       CASE (12, -12) 
-          celldm(1) = alat 
-          celldm(2) = SQRT( DOT_PRODUCT(at(:,2),at(:,2))/DOT_PRODUCT(at(:,1),at(:,1)))
-          celldm(3) = SQRT( DOT_PRODUCT(at(:,3),at(:,3))/DOT_PRODUCT(at(:,1),at(:,1)))
-          celldm(4) = DOT_PRODUCT(at(:,1),at(:,2))/&
-                      SQRT(DOT_PRODUCT(at(:,1),at(:,1))*DOT_PRODUCT(at(:,2),at(:,2)))
-          celldm(5) =  DOT_PRODUCT(at(:,1),at(:,3))/&
-                   SQRT(DOT_PRODUCT(at(:,1),at(:,1))*DOT_PRODUCT(at(:,3),at(:,3)))
-          celldm(6) = 0.d0
-       CASE (13) 
-          celldm(1) = alat
-          celldm(2) = SQRT( DOT_PRODUCT(at(:,2),at(:,2)))/(2.d0*at(1,1))
-          celldm(3) = ABS (at(3,3)/at(1,3))
-          celldm(4) = COS( ATAN2( at(2,2), at(1,2) ) )
-          celldm(5:6) = 0.d0
-       CASE (14) 
-          celldm(1) = alat 
-          celldm(2) = SQRT( DOT_PRODUCT(at(:,2),at(:,2))/DOT_PRODUCT(at(:,1),at(:,1)))
-          celldm(3) = SQRT( DOT_PRODUCT(at(:,3),at(:,3))/DOT_PRODUCT(at(:,1),at(:,1)))
-          celldm(4) = DOT_PRODUCT(at(:,3),at(:,2))/SQRT(DOT_PRODUCT(at(:,2),at(:,2))*&
-                                                        DOT_PRODUCT(at(:,3),at(:,3)))
-          celldm(5) = DOT_PRODUCT(at(:,3),at(:,1))/SQRT(DOT_PRODUCT(at(:,1),at(:,1))*&
-                                                        DOT_PRODUCT(at(:,3),at(:,3)))
-          celldm(6) = DOT_PRODUCT(at(:,1),at(:,2))/SQRT(DOT_PRODUCT(at(:,2),at(:,2))*&
-                                                        DOT_PRODUCT(at(:,1),at(:,1)))
-       CASE  default  
-          celldm(1) = 1.d0
-          IF (alat .GT. 0.d0 ) celldm(1) = alat
-          celldm (2:6) = 0.d0
-    END SELECT 
+    at(:,1) =  atomic_structure%cell%a1
+    at(:,2) =  atomic_structure%cell%a2
+    at(:,3) =  atomic_structure%cell%a3
+    !
+    !! if ibrav is present, cell parameters were computed by subroutine
+    !! "latgen" using ibrav and celldm parameters: recalculate celldm
+    !
+    CALL lat2celldm (ibrav,alat,at(:,1),at(:,2),at(:,3),celldm)
+    !
     tpiba = tpi/alat
     tpiba2= tpiba**2
-    omega = ABS (at(1,1)*at(2,2)*at(3,3)+at(1,2)*at(2,3)*at(3,1)+at(1,3)*at(2,1)*at(3,2)-&
-                 at(3,1)*at(2,2)*at(1,3)-at(3,2)*at(2,3)*at(1,1)-at(3,3)*at(2,1)*at(1,2))
-    at=at / alat
+    !! crystal axis are brought into "alat" units
+    at = at / alat
+    CALL volume (alat,at(:,1),at(:,2),at(:,3),omega)
     CALL recips( at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
 
     END SUBROUTINE readschema_cell

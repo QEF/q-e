@@ -374,3 +374,95 @@ SUBROUTINE latgen(ibrav,celldm,a1,a2,a3,omega)
   RETURN
   !
 END SUBROUTINE latgen
+!
+!-------------------------------------------------------------------------
+SUBROUTINE lat2celldm (ibrav,alat,a1,a2,a3,celldm)
+  !-----------------------------------------------------------------------
+  !
+  !     Returns celldm parameters from lattice vectors
+  !     See latgen for definition of celldm and lattice vectors
+  !
+  use kinds, only: DP
+  implicit none
+  integer, intent(in) :: ibrav
+  real(DP), intent(in) :: alat, a1(3), a2(3), a3(3)
+  real(DP), intent(out) :: celldm(6)
+  !
+  celldm = 0.d0
+  !
+  SELECT CASE  ( ibrav ) 
+  CASE (1:3,-3) 
+     celldm(1) = alat
+     celldm(2:6) = 0.d0
+  CASE (4) 
+     celldm(1) = alat
+     celldm(2) = 0.d0
+     celldm(3) = SQRT( DOT_PRODUCT(a3(:),a3(:)))/alat
+     celldm(4:6) = 0.d0
+  CASE (5, -5 ) 
+     celldm(1)= alat
+     celldm(2:3) = 0.d0
+     celldm(4) = DOT_PRODUCT(a1(:),a2(:))/(alat**2)
+     celldm(5:6) = 0.d0
+  CASE (6) 
+     celldm(1)= alat 
+     celldm(3)= SQRT( DOT_PRODUCT(a3(:),a3(:)))/alat
+     celldm(2)= 1.d0
+     celldm(4:6) = 0.d0
+  CASE (7) 
+     celldm(1) = alat
+     celldm(3) = ABS(a3(3)/a3(1)) 
+     celldm(2)=    0.d0
+     celldm(4:6) = 0.d0
+  CASE (8)
+     celldm(1) = alat
+     celldm(2) = SQRT( DOT_PRODUCT (a2(:),a2(:)))/alat
+     celldm(3) = SQRT( DOT_PRODUCT (a3(:),a3(:)))/alat 
+     celldm(4:6) = 0.d0
+  CASE (9, -9 ) 
+     celldm(1) = alat
+     celldm(2) = ABS ( a1(2)/a1(1))
+     celldm(3) = ABS ( a3(3)/2.d0/a1(1))
+     celldm(4:6) = 0.d0 
+  CASE (10) 
+     celldm(1) = alat
+     celldm(2) = ABS ( a2(2)/a1(2))
+     celldm(3) = ABS ( a1(3)/a1(1))
+     celldm(4:6) = 0.d0
+  CASE (11) 
+     celldm(1) = alat
+     celldm(2) = ABS(a1(2)/a1(1))
+     celldm(3) = ABS(a1(3)/a1(1))
+     celldm(4:6) = 0.d0
+  CASE (12, -12) 
+     celldm(1) = alat 
+     celldm(2) = SQRT( DOT_PRODUCT(a2(:),a2(:))/DOT_PRODUCT(a1(:),a1(:)))
+     celldm(3) = SQRT( DOT_PRODUCT(a3(:),a3(:))/DOT_PRODUCT(a1(:),a1(:)))
+     celldm(4) = DOT_PRODUCT(a1(:),a2(:))/&
+          SQRT(DOT_PRODUCT(a1(:),a1(:))*DOT_PRODUCT(a2(:),a2(:)))
+     celldm(5) =  DOT_PRODUCT(a1(:),a3(:))/&
+          SQRT(DOT_PRODUCT(a1(:),a1(:))*DOT_PRODUCT(a3(:),a3(:)))
+     celldm(6) = 0.d0
+  CASE (13) 
+     celldm(1) = alat
+     celldm(2) = SQRT( DOT_PRODUCT(a2(:),a2(:)))/(2.d0*a1(1))
+     celldm(3) = ABS (a3(3)/a3(1))
+     celldm(4) = COS( ATAN2( a2(2), a2(1) ) )
+     celldm(5:6) = 0.d0
+  CASE (14) 
+     celldm(1) = alat 
+     celldm(2) = SQRT( DOT_PRODUCT(a2(:),a2(:))/DOT_PRODUCT(a1(:),a1(:)))
+     celldm(3) = SQRT( DOT_PRODUCT(a3(:),a3(:))/DOT_PRODUCT(a1(:),a1(:)))
+     celldm(4) = DOT_PRODUCT(a3(:),a2(:))/SQRT(DOT_PRODUCT(a2(:),a2(:))*&
+          DOT_PRODUCT(a3(:),a3(:)))
+     celldm(5) = DOT_PRODUCT(a3(:),a1(:))/SQRT(DOT_PRODUCT(a1(:),a1(:))*&
+          DOT_PRODUCT(a3(:),a3(:)))
+     celldm(6) = DOT_PRODUCT(a1(:),a2(:))/SQRT(DOT_PRODUCT(a2(:),a2(:))*&
+          DOT_PRODUCT(a1(:),a1(:)))
+  CASE  default  
+     celldm(1) = 1.d0
+     IF (alat > 0.d0 ) celldm(1) = alat
+     celldm (2:6) = 0.d0
+  END SELECT
+
+END SUBROUTINE lat2celldm
