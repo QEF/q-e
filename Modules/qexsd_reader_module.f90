@@ -242,7 +242,7 @@ LOGICAL,INTENT(OUT)                       :: atomic_species_ispresent
 ! 
 INTEGER               :: ntyp 
 TYPE (species_type),ALLOCATABLE           :: the_species(:)
-LOGICAL                                   :: pippo, mass_ispresent, spin_theta_ispresent, &
+LOGICAL                                   :: mass_ispresent, spin_theta_ispresent, &
                                              spin_phi_ispresent, start_mag_ispresent
 INTEGER                                   :: ierr, ctyp, t_typ, ntyp_
 REAL(DP)                                  :: mass_, start_mag_, spin_phi_, spin_theta_
@@ -2824,7 +2824,7 @@ INTEGER, INTENT(IN)                          :: iunit
 TYPE ( berryPhaseOutput_type ),INTENT(OUT)    :: obj
 LOGICAL, INTENT(OUT)                         :: ispresent 
 ! 
-INTEGER                                      :: ierr, iobj, ndim_el_pol, ndim_ion_pol, pippo 
+INTEGER                                      :: ierr, iobj, ndim_el_pol, ndim_ion_pol
 LOGICAL                                      :: found
 TYPE ( polarization_type )                   :: polarization_obj
 TYPE ( phase_type )                          :: total_phase_obj

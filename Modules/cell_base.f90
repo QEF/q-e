@@ -200,38 +200,14 @@
      CALL volume( alat, at(1,1), at(1,2), at(1,3), omega )
      !
   ELSE
-  ! ... crystal lattice via celldm or crystallographica parameters
-  !
+     !
+     ! ... crystal lattice vectors via ibrav + celldm parameters
+     !
      IF ( celldm(1) == 0.D0 .and. a /= 0.D0 ) THEN
         !
-        celldm(1) = a / bohr_radius_angs
-        celldm(2) = b / a
-        celldm(3) = c / a
-        IF ( (ABS(cosab) > 1.0_dp) .OR. (ABS(cosac) > 1.0_dp) .OR. &
-             (ABS(cosbc) > 1.0_dp) ) CALL errore ('cell_base_init',&
-                         'incorrect values for cosab, cosac, cosbc',1)
+        ! ... convert crystallographic parameters into celldm parameters
         !
-        IF ( ibrav == 14 ) THEN
-           !
-           ! ... triclinic lattice
-           !
-           celldm(4) = cosbc
-           celldm(5) = cosac
-           celldm(6) = cosab
-           !
-        ELSE IF ( ibrav ==-12 ) THEN
-           !
-           ! ... monoclinic P lattice, unique axis b
-           !
-           celldm(5) = cosac
-           !
-        ELSE
-           !
-           ! ... trigonal and monoclinic lattices, unique axis c
-           !
-           celldm(4) = cosab
-           !
-        ENDIF
+        CALL abc2celldm ( ibrav, a,b,c,cosab,cosac,cosbc, celldm )
         !
      ELSE IF ( celldm(1) /= 0.D0 .and. a /= 0.D0 ) THEN
         !

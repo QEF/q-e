@@ -225,10 +225,6 @@ parser.o : kind.o
 parser.o : mp.o
 parser.o : mp_images.o
 paw_variables.o : kind.o
-pippo.o : ../iotk/src/iotk_module.o
-pippo.o : qes_libs.o
-pippo.o : qes_types.o
-pippo.o : qexsd_reader_module.o
 plot_io.o : io_global.o
 plot_io.o : kind.o
 plugin_arguments.o : io_global.o

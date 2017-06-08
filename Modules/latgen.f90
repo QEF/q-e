@@ -466,3 +466,150 @@ SUBROUTINE lat2celldm (ibrav,alat,a1,a2,a3,celldm)
   END SELECT
 
 END SUBROUTINE lat2celldm
+!
+INTEGER FUNCTION abc2ibrav ( a,b,c,cosab,cosac,cosbc ) RESULT (ibrav)
+  !
+  !  guess of bravais lattice from crystallographic parameters
+  !  returns valid value for ibrav, or else ibrav=-1 if failed
+  !
+  USE kinds, ONLY: dp
+  IMPLICIT NONE
+  !
+  REAL(DP), INTENT (IN) :: a,b,c, cosab, cosac, cosbc 
+  !
+  !
+  IF ( (b == 0.0_dp .AND. c == 0.0_dp) .OR. (b == a .AND. c == a) ) THEN
+     ! Case: a=b=c
+     
+     IF ( cosab == 0.0_dp .AND. cosac == 0.0_dp .AND. cosbc == 0.0_dp ) THEN
+        ! Case: simple cubic
+        ibrav = 1
+     ELSE IF ( cosab/= 0.0_dp .AND. cosac== 0.0_dp .AND. cosbc== 0.0_dp) THEN
+        ! Case: trigonal R with threefold axis along <111>
+        ibrav =-5
+     ELSE IF ( cosab==0.5_dp .AND. cosac == cosab .AND. cosbc == cosab ) THEN
+        ! Case: fcc
+        ibrav = 2
+     ELSE IF ( ABS ( cosab + 1.0_dp/sqrt(3.0_dp) ) < 1.0d-6 .AND. &
+               cosac == cosab .AND. cosbc == cosab ) THEN
+        ! Case: bcc with symmetric basis
+        ibrav =-3
+     ELSE
+        ! Case: unknown (possibly wrong)
+        ibrav =-1
+     END IF
+     
+  ELSE IF ( (b == 0.0_dp .AND. c > 0.0_dp) .OR. (b == a .AND. c /= a) ) THEN
+     ! Case: a=b/=c
+
+     IF ( cosab == 0.0_dp .AND. cosac == 0.0_dp .AND. cosbc == 0.0_dp ) THEN
+        ! Case: simple tetragonal
+        ibrav = 6
+     ELSE IF ( cosab ==-0.5_dp .AND. cosac == 0.0_dp .AND. cosbc == 0.0_dp ) THEN
+        ! Case: simple hexagonal
+        ibrav = 4
+     ELSE
+        ! Case: unknown (body-centered tetragonal or wrong data)
+        ibrav =-1
+     END IF
+     
+  ELSE IF ( b > 0.0_dp .AND. c > 0.0_dp .AND. b /= a .AND. c /= a ) THEN
+     ! Case: a/=b/=c
+     
+     IF ( cosab == 0.0_dp .AND. cosac == 0.0_dp .AND. cosbc == 0.0_dp ) THEN
+        ! Case: simple orthorhombic
+        ibrav = 8
+     ELSE IF ( cosab /= 0.0_dp .AND. cosac == 0.0_dp .AND. cosbc == 0.0_dp ) THEN
+        ! Case: monoclinic P, unique axis c
+        ibrav = 12
+     ELSE IF ( cosab == 0.0_dp .AND. cosac /= 0.0_dp .AND. cosbc == 0.0_dp ) THEN
+        ! Case: monoclinic P, unique axis b
+        ibrav =-12
+     ELSE IF ( cosab /= 0.0_dp .AND. cosac /= 0.0_dp .AND. cosbc /= 0.0_dp ) THEN
+        ! Case: triclinic
+        ibrav = 14
+     ELSE
+        ! Case: unknown (base-, face-, body-centered orthorombic,
+        !               (base-centered monoclinic)
+        ibrav = -1
+     END IF
+  END IF
+  !
+END FUNCTION abc2ibrav
+!
+SUBROUTINE abc2celldm ( ibrav, a,b,c,cosab,cosac,cosbc, celldm )
+  !
+  !  returns internal parameters celldm from crystallographics ones
+  !
+  USE kinds, ONLY: dp
+  USE constants, ONLY: bohr_radius_angs
+  IMPLICIT NONE
+  !
+  INTEGER,  INTENT (IN) :: ibrav 
+  REAL(DP), INTENT (IN) :: a,b,c, cosab, cosac, cosbc 
+  REAL(DP), INTENT (OUT) :: celldm(6)
+  !
+  IF (a <= 0.0_dp) CALL errore('abc2celldm','incorrect lattice parameter (a)',1)
+  IF (b <  0.0_dp) CALL errore('abc2celldm','incorrect lattice parameter (b)',1)
+  IF (c <  0.0_dp) CALL errore('abc2celldm','incorrect lattice parameter (c)',1)
+  IF ( ABS (cosab) > 1.0_dp) CALL errore('abc2celldm', &
+                   'incorrect lattice parameter (cosab)',1)
+  IF ( ABS (cosac) > 1.0_dp) CALL errore('abc2celldm', &
+                   'incorrect lattice parameter (cosac)',1)
+  IF ( ABS (cosbc) > 1.0_dp) CALL errore('abc2celldm', &
+       'incorrect lattice parameter (cosbc)',1)
+  !
+  celldm(1) = a / bohr_radius_angs
+  celldm(2) = b / a
+  celldm(3) = c / a
+  !
+  IF ( ibrav == 14 ) THEN
+     !
+     ! ... triclinic lattice
+     !
+     celldm(4) = cosbc
+     celldm(5) = cosac
+     celldm(6) = cosab
+     !
+  ELSE IF ( ibrav ==-12 ) THEN
+     !
+     ! ... monoclinic P lattice, unique axis b
+     !
+     celldm(5) = cosac
+     !
+  ELSE
+     !
+     ! ... trigonal and monoclinic lattices, unique axis c
+     !
+     celldm(4) = cosab
+     !
+  ENDIF
+  !
+END SUBROUTINE abc2celldm
+!
+SUBROUTINE cell2abc ( alat, at, a,b,c,cosab,cosac,cosbc )
+  !
+  !  returns crystallographic parameters a,b,c from lattice vectors
+  !
+  USE kinds, ONLY: dp
+  USE constants, ONLY: bohr_radius_angs
+  IMPLICIT NONE
+  !
+  REAL(DP), INTENT (IN) :: alat, at(3,3)
+  REAL(DP), INTENT (OUT) :: a,b,c, cosab, cosac, cosbc 
+  REAL(DP) :: norm1, norm2, norm3
+  !
+  !
+  norm1 = SQRT ( at(1,1)**2 + at(2,1)**2 + at(3,1)**2 )
+  norm2 = SQRT ( at(1,2)**2 + at(2,2)**2 + at(3,2)**2 )
+  norm3 = SQRT ( at(1,3)**2 + at(2,3)**2 + at(3,3)**2 )
+  !
+  a = alat * norm1 / bohr_radius_angs
+  b = alat * norm2 / bohr_radius_angs
+  c = alat * norm3 / bohr_radius_angs
+  !
+  cosab = (at(1,1)*at(1,2) + at(2,1)*at(2,2) + at(3,1)*at(3,2))/norm1/norm2
+  cosac = (at(1,1)*at(1,3) + at(2,1)*at(2,3) + at(3,1)*at(3,3))/norm1/norm3
+  cosbc = (at(1,3)*at(1,2) + at(2,3)*at(2,2) + at(3,3)*at(3,2))/norm3/norm2
+  !
+END SUBROUTINE cell2abc
