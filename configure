@@ -14,14 +14,15 @@
 # Dependencies may be also directly generated
 # 
 # Courtesy of A. Ferretti and G. Bussi
-# Modified by F. Spiga
+# Modified by F. Spiga and P. Giannozzi
 #
 #================================================================
 #
 MANUAL=" Usage
-   configure [-h, --help] [<conf_flags>]
+   configure [-h, --help] [--save] [<conf_flags>]
 
  -h, --help           print this manual    
+     --save           do not make clean
  <conf_flags>         these flags will be passed to 
                       the autoconf configure
 
@@ -57,8 +58,11 @@ test -e ./install/configure.msg  && rm ./install/configure.msg
 
 # SAFEGUARD: if you run configure without clean everything first there 
 #            are chances that something goes wrong. Forcing veryclean then.
-if [[ (-e make.inc) && (-e Makefile) && !($@ =~ "--help") ]] ; then
-  make -f Makefile veryclean
+
+if [[  ($1 =~ "--save") ]] ; then
+  shift;
+elif [[ (-e make.inc) && (-e Makefile) ]] ; then
+  echo make -f Makefile veryclean
 fi
 
 ./install/configure "$@"
