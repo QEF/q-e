@@ -78,7 +78,7 @@ MODULE io_base
       IF ( ionode_in_group ) THEN
 #if defined  __HDF5
          CALL qeh5_openfile(h5file, TRIM(filename)//'.hdf5',action = 'write') 
-         CALL qeh5_add_attribute( h5file%id, "ik", ik, 1, [1])
+         CALL qeh5_add_attribute( h5file%id, "ik", ik )
          CALL qeh5_add_attribute( h5file%id, "xk", xk, 1, [3]) 
          CALL qeh5_add_attribute( h5file%id, "ispin", ispin ) 
          IF (gamma_only) THEN 
@@ -86,11 +86,11 @@ MODULE io_base
          ELSE 
             CALL qeh5_add_attribute( h5file%id, "gamma_only", ".FALSE." )
          END IF 
-         CALL qeh5_add_attribute( h5file%id, "scale_factor", scalef, 1, [1]) 
-         CALL qeh5_add_attribute( h5file%id, "ngw", ngw, 1, [1])
-         CALL qeh5_add_attribute( h5file%id, "igwx", igwx, 1, [1])
-         CALL qeh5_add_attribute( h5file%id, "npol", npol, 1, [1])
-         CALL qeh5_add_attribute( h5file%id, "nbnd", nbnd, 1, [1])
+         CALL qeh5_add_attribute( h5file%id, "scale_factor", scalef ) 
+         CALL qeh5_add_attribute( h5file%id, "ngw", ngw )
+         CALL qeh5_add_attribute( h5file%id, "igwx", igwx )
+         CALL qeh5_add_attribute( h5file%id, "npol", npol )
+         CALL qeh5_add_attribute( h5file%id, "nbnd", nbnd )
 #else
          OPEN ( UNIT = iuni, FILE = TRIM(filename)//'.dat', &
               FORM='unformatted', STATUS = 'unknown' )
@@ -324,20 +324,21 @@ MODULE io_base
       !
       IF ( ionode_in_group ) THEN 
          ALLOCATE( wtmp( npol*MAX( igwx_, igwx ) ) )
+#if defined (__HDF5) 
+         CALL qeh5_open_dataset( h5file, h5dset_wfc, ACTION = 'read', NAME = 'evc')
+         CALL qeh5_set_space ( h5dset_wfc, wtmp(1), RANK = 1, DIMENSIONS = [npol*MAX(igwx_, igwx)], MODE = 'm') 
+#endif
       ELSE
          ALLOCATE( wtmp(1) )
       ENDIF
-#if defined (__HDF5) 
-      CALL qeh5_open_dataset( h5file, h5dset_wfc, ACTION = 'read', NAME = 'evc')
-      CALL qeh5_set_space ( h5dset_wfc, wtmp(1), RANK = 1, DIMENSIONS = [npol*MAX(igwx_, igwx)], MODE = 'm') 
-#endif
       DO j = 1, nbnd
          !
          IF ( j <= SIZE( wfc, 2 ) ) THEN
             !
             IF ( ionode_in_group ) THEN 
 #if defined __HDF5
-               CALL qeh5_set_file_hyperslab (h5dset_wfc, OFFSET = [0,j-1], COUNT = [npol*igwx,1] )
+               
+               CALL qeh5_set_file_hyperslab (h5dset_wfc, OFFSET = [0,j-1], COUNT = [2*npol*igwx_,1] )
                CALL qeh5_read_dataset (wtmp, h5dset_wfc )  
 #else
                READ (iuni) wtmp(1:npol*igwx_) 
@@ -379,7 +380,7 @@ MODULE io_base
     !
     !------------------------------------------------------------------------
     SUBROUTINE write_rhog ( dirname, b1, b2, b3, gamma_only, mill, ig_l2g, &
-         rho )
+         rho, ecutrho )
       !------------------------------------------------------------------------
       !! Write rho(G) in reciprocal space and related information to file
       !! 'charge-density.*' (* = dat if fortran binary, * = hdf5 if HDF5)
@@ -411,6 +412,9 @@ MODULE io_base
       !! if true, only the upper half of G-vectors (z >=0) is present
       COMPLEX(dp),      INTENT(IN) :: rho(:,:)
       !! rho(G) on this processor
+      REAL(DP),OPTIONAL,INTENT(IN) :: ecutrho
+      !! cut-off parameter for G-vectors, only the one in root node is
+      !! used, hopefully the same as in the other nodes.  
       !
       COMPLEX(dp), ALLOCATABLE :: rhoaux(:)
       !! Local rho(G), with LSDA workaround
