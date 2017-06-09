@@ -21,7 +21,7 @@ SUBROUTINE local_dos_mag(spin_component, kpoint, kband, raux)
   USE gvect,                ONLY : ngm, g
   USE fft_base,             ONLY : dfftp
   USE gvecs,                ONLY : nls, doublegrid
-  USE klist,                ONLY : nks, xk, ngk, igk_k
+  USE klist,                ONLY : nks, xk, ngk, igk_k, nkstot
   USE scf,                  ONLY : rho
   USE io_files,             ONLY : iunwfc, nwordwfc
   USE uspp,                 ONLY : nkb, vkb, becsum, nhtol, nhtoj, indv, okvan
@@ -31,6 +31,8 @@ SUBROUTINE local_dos_mag(spin_component, kpoint, kband, raux)
   USE spin_orb,             ONLY : lspinorb, fcoef
   USE wvfct,                ONLY : nbnd, npwx
   USE becmod,               ONLY : calbec
+  USE mp_pools,             ONLY : my_pool_id, npool, inter_pool_comm
+  USE mp,                   ONLY : mp_sum
   !
   IMPLICIT NONE
   !
@@ -55,7 +57,8 @@ SUBROUTINE local_dos_mag(spin_component, kpoint, kband, raux)
   !
   COMPLEX(DP), ALLOCATABLE :: be1(:,:), be2(:,:)
   !
-  INTEGER :: ipol, kh, kkb, is1, is2
+  INTEGER :: ipol, kh, kkb, is1, is2, kpoint_pool, which_pool
+  LOGICAL :: i_am_the_pool
 
   becsum(:,:,:) = 0.D0
   rho%of_r(:,:) = 0.D0
@@ -69,7 +72,19 @@ SUBROUTINE local_dos_mag(spin_component, kpoint, kband, raux)
   ! ... Following code is a stripped-down version of "sum_band",
   ! ... without summation over k-points and bands, without symmetrization
   !
-  ik = kpoint
+  IF ( npool > 1 ) THEN
+     CALL xk_pool( kpoint, nkstot, kpoint_pool,  which_pool )
+     IF ( kpoint_pool < 1 .OR. kpoint_pool > nks ) &
+        CALL errore('local_dos_mag','problems with xk_pool',1)
+     i_am_the_pool=(my_pool_id==which_pool)
+  ELSE
+     i_am_the_pool=.true.
+     kpoint_pool=kpoint
+  ENDIF
+
+  ik = kpoint_pool
+  raux=0.0_DP
+  IF (i_am_the_pool) THEN
   !
      npw = ngk(ik)
      CALL davcio (evc, 2*nwordwfc, iunwfc, ik, - 1)
@@ -248,18 +263,23 @@ SUBROUTINE local_dos_mag(spin_component, kpoint, kband, raux)
         !
      !
   !
-  IF ( doublegrid ) THEN
-    is=spin_component+1
-    CALL interpolate( rho%of_r(1,is), rho%of_r(1,is), 1 )
-  ENDIF
+     IF ( doublegrid ) THEN
+       is=spin_component+1
+       CALL interpolate( rho%of_r(1,is), rho%of_r(1,is), 1 )
+     ENDIF
   !
   ! ... Here we add the Ultrasoft contribution to the charge and magnetization
   !
-  IF ( okvan ) CALL addusdens(rho%of_r(:,:))
+     IF ( okvan ) CALL addusdens(rho%of_r(:,:))
 
-  DO ir=1,dfftp%nnr
-     raux(ir)=rho%of_r(ir,spin_component+1)
-  ENDDO
+     DO ir=1,dfftp%nnr
+        raux(ir)=rho%of_r(ir,spin_component+1)
+     ENDDO
+
+  ENDIF
+#if defined(__MPI)
+  CALL mp_sum( raux, inter_pool_comm )
+#endif
   !
   IF (lspinorb) DEALLOCATE(be1, be2)
   DEALLOCATE( becp_nc )
