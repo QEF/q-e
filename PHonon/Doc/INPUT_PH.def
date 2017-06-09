@@ -345,6 +345,14 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 	    }
 	}
 
+	var asr  -type LOGICAL { 
+	    default { .false. }
+	    info {
+		Apply Acoustic Sum Rule to dynamical matrix, effective charges
+                Works only in conjunction with "gamma_gamma" tricks (see above)
+	    }
+	}
+
 	var ldiag  -type LOGICAL { 
 	    default { .false. }
 	    info {
