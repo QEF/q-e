@@ -21,6 +21,9 @@ MODULE environment
   USE mp_pools,  ONLY: npool
   USE mp_bands,  ONLY: ntask_groups, nproc_bgrp, nbgrp
   USE global_version, ONLY: version_number, svn_revision
+#if defined(__HDF5)
+  USE qeh5_base_module,   ONLY: initialize_hdf5, finalize_hdf5
+#endif
 
   IMPLICIT NONE
 
@@ -120,6 +123,9 @@ CONTAINS
 #else
     CALL serial_info()
 #endif
+#if defined(__HDF5) & !defined(__OLDXML)
+  CALL initialize_hdf5()
+#endif
   END SUBROUTINE environment_start
 
   !==-----------------------------------------------------------------------==!
@@ -127,7 +133,9 @@ CONTAINS
   SUBROUTINE environment_end( code )
 
     CHARACTER(LEN=*), INTENT(IN) :: code
-
+#if defined(_HDF5)
+    CALL finalize_hdf5()
+#endif
     IF ( meta_ionode ) WRITE( stdout, * )
 
     CALL stop_clock(  TRIM(code) )
