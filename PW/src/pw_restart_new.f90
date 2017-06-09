@@ -86,7 +86,7 @@ MODULE pw_restart_new
       USE noncollin_module,     ONLY : angle1, angle2, i_cons, mcons, bfield, magtot_nc, &
                                        lambda
       USE ions_base,            ONLY : amass
-      USE funct,                ONLY : get_dft_name, get_inlc, get_nonlocc_name, dft_is_nonlocc
+      USE funct,                ONLY : get_dft_short, get_inlc, get_nonlocc_name, dft_is_nonlocc
       USE kernel_table,         ONLY : vdw_table_name
       USE scf,                  ONLY : rho
       USE force_mod,            ONLY : lforce, sumfor, force, sigma, lstres
@@ -277,7 +277,7 @@ MODULE pw_restart_new
 ! ... DFT
 !-------------------------------------------------------------------------------
          !
-         dft_name = get_dft_name()
+         dft_name = get_dft_short()
          inlc = get_inlc()
          !
          CALL qexsd_init_dft(output%dft, dft_name, .TRUE., dft_is_hybrid(), &
@@ -353,7 +353,9 @@ MODULE pw_restart_new
          IF (lfcpopt .OR. lfcpdyn ) THEN 
             output%total_energy%potentiostat_contr_ispresent = .TRUE.
             output%total_energy%potentiostat_contr = ef * tot_charge/e2
+            output%FCP_tot_charge_ispresent = .TRUE.
             output%FCP_tot_charge = tot_charge
+            output%FCP_force_ispresent = .TRUE.
             output%FCP_force = fcp_mu - ef 
          END IF 
          !

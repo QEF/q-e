@@ -370,11 +370,11 @@ TYPE :: total_energy_type
    REAL(DP) :: etxc
    LOGICAL  :: ewald_ispresent
    REAL(DP) :: ewald
-   LOGICAL  :: demet_ispresent
+   LOGICAL  :: demet_ispresent  = .FALSE.
    REAL(DP) :: demet
-   LOGICAL  :: efieldcorr_ispresent
+   LOGICAL  :: efieldcorr_ispresent  = .FALSE.
    REAL(DP) :: efieldcorr
-   LOGICAL  :: potentiostat_contr_ispresent
+   LOGICAL  :: potentiostat_contr_ispresent  = .FALSE.
    REAL(DP) :: potentiostat_contr
    !
 END TYPE total_energy_type
@@ -1152,9 +1152,9 @@ TYPE :: step_type
    TYPE(matrix_type) :: forces
    LOGICAL  :: stress_ispresent
    TYPE(matrix_type) :: stress
-   LOGICAL  :: FCP_force_ispresent
-   REAL(DP) :: FCP_force
-   LOGICAL  :: FCP_tot_charge_ispresent
+   LOGICAL  :: FCP_force_ispresent = .FALSE.
+   REAL(DP) :: FCP_force  
+   LOGICAL  :: FCP_tot_charge_ispresent =.FALSE.
    REAL(DP) :: FCP_tot_charge
    !
 END TYPE step_type
@@ -1190,15 +1190,15 @@ TYPE :: output_type
    TYPE(magnetization_type) :: magnetization
    TYPE(total_energy_type) :: total_energy
    TYPE(band_structure_type) :: band_structure
-   LOGICAL  :: forces_ispresent
+   LOGICAL  :: forces_ispresent = .FALSE.
    TYPE(matrix_type) :: forces
-   LOGICAL  :: stress_ispresent
+   LOGICAL  :: stress_ispresent = .FALSE.
    TYPE(matrix_type) :: stress
-   LOGICAL  :: electric_field_ispresent
+   LOGICAL  :: electric_field_ispresent = .FALSE.
    TYPE(outputElectricField_type) :: electric_field
-   LOGICAL  :: FCP_force_ispresent
+   LOGICAL  :: FCP_force_ispresent  = .FALSE.
    REAL(DP) :: FCP_force
-   LOGICAL  :: FCP_tot_charge_ispresent
+   LOGICAL  :: FCP_tot_charge_ispresent = .FALSE.
    REAL(DP) :: FCP_tot_charge
    !
 END TYPE output_type
