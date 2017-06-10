@@ -33,6 +33,16 @@ if test "$use_parallel" -ne 0; then
       # Test if it is really installed where it has been specified
       AC_LANG_POP(Fortran 77)
       AC_LANG_PUSH(C)
+      
+      if test -e $with_hdf5_path/bin/h5cc; then 
+          h5cc=$with_hdf5_path/bin/h5cc; 
+       elif test -e $with_hdf5_path/bin/h5pcc ; then 
+           h5cc=$with_hdf5_path/bin/h5pcc; 
+       else 
+          h5cc=$CC; 
+       fi
+       ac_compile='$h5cc -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+       ac_link='$h5cc -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 
       try_libdirs="$with_hdf5_path/lib"
       for dir in $try_libdirs
@@ -66,10 +76,18 @@ if test "$use_parallel" -ne 0; then
               have_hdf5=0])
       fi
       
+
       if test "$have_hdf5" -eq 1 ; then
-          hdf5_libs="-L$with_hdf5_path/lib -lhdf5_fortran -lhdf5"
-          try_iflags="$try_iflags -I$with_hdf5_path/include"
-          try_dflags="$try_dflags -D__HDF5"
+         if test -e $with_hdf5_path/bin/h5fc; then
+         
+             hdf5_libs=`$with_hdf5_path/bin/h5fc -show | gawk '{@S|@1=@S|@2="";print @S|@0}'`
+         elif test -e $with_hdf5_path/bin/h5pfc; then 
+             hdf5_libs=`$with_hdf5_path/bin/h5pfc -show | gawk  '{@S|@1=@S|@2="";print @S|@0}'`
+         else
+          hdf5_libs="-L$with_hdf5_path/lib -lhdf5_fortran -lhdf5 -lrt -lz -ldl -lm -Wl,-rpath -Wl,$with_hdf5_path/lib"
+         fi 
+         try_iflags="$try_iflags -I$with_hdf5_path/include"
+         try_dflags="$try_dflags -D__HDF5"
       fi
 
       hdf5_line="HDF5_LIBS=$hdf5_libs"
