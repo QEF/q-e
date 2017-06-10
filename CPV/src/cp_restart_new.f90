@@ -69,16 +69,15 @@ MODULE cp_restart_new
                                            nwordwfc, tmp_dir, diropn
       USE mp_images,                ONLY : intra_image_comm, me_image, &
                                            nproc_image
-      USE mp_pools,                 ONLY : nproc_pool, intra_pool_comm, root_pool, inter_pool_comm
+      USE mp_bands,                 ONLY : my_bgrp_id, intra_bgrp_comm,root_bgrp
       USE mp_diag,                  ONLY : nproc_ortho
-      USE mp_world,                 ONLY : world_comm, nproc
       USE run_info,                 ONLY : title
-      USE gvect,                    ONLY : ngm, ngm_g
-      USE gvecs,                    ONLY : ngms_g, ecuts, dual
+      USE gvect,                    ONLY : ngm, ngm_g, ecutrho
+      USE gvecs,                    ONLY : ngms_g, ecuts
       USE gvecw,                    ONLY : ngw, ngw_g, ecutwfc
       USE gvect,                    ONLY : ig_l2g, mill
       USE electrons_base,           ONLY : nspin, nelt, nel, nudx
-      USE cell_base,                ONLY : ibrav, alat, s_to_r
+      USE cell_base,                ONLY : ibrav, alat, tpiba, s_to_r
       USE ions_base,                ONLY : nsp, nat, na, atm, zv, &
                                            amass, iforce, ind_bck
       USE funct,                    ONLY : get_dft_name, get_inlc, &
@@ -304,7 +303,7 @@ MODULE cp_restart_new
 !-------------------------------------------------------------------------------
 ! ... BASIS SET
 !-------------------------------------------------------------------------------
-         CALL qexsd_init_basis_set(output_obj%basis_set,gamma_only, ecutwfc/e2, ecutwfc*dual/e2, &
+         CALL qexsd_init_basis_set(output_obj%basis_set,gamma_only, ecutwfc/e2, ecutrho/e2, &
               dfftp%nr1, dfftp%nr2, dfftp%nr3, dffts%nr1, dffts%nr2, dffts%nr3, &
               .FALSE., dfftp%nr1, dfftp%nr2, dfftp%nr3, ngm_g, ngms_g, ngw_g, &
               b1(:), b2(:), b3(:) )
@@ -403,18 +402,25 @@ MODULE cp_restart_new
          ik_eff = iss
          ib = iupdwn(iss)
          nb = nupdwn(iss)
-         ! wavefunctions at time t
-         filename = TRIM(dirname) // 'wfc' // TRIM(int_to_char(ik_eff))
-         CALL write_wfc( iunpun, filename, ik_eff, xk(:,1), iss, nspin, &
-              c02(:,ib:ib+nb-1), ngw_g, gamma_only, nb, ig_l2g, ngw,  &
-              alat*b1, alat*b2, alat*b3, mill, scalef, ionode, root_pool, &
-              intra_pool_comm )
-         ! wavefunctions at time t-dt
-         filename = TRIM(dirname) // 'wfcm' // TRIM(int_to_char(ik_eff))
-         CALL write_wfc( iunpun, filename, ik_eff, xk(:,1), iss, nspin, &
-              cm2(:,ib:ib+nb-1), ngw_g, gamma_only, nb, ig_l2g, ngw,  &
-              alat*b1, alat*b2, alat*b3, mill, scalef, ionode, root_pool, &
-              intra_pool_comm )
+         !
+         IF ( my_bgrp_id == 1 ) THEN
+            !
+            ! wfc collected and written by the root processor of the first
+            ! band group of each pool/image - no warranty it works for nbgrp >1
+            !
+            filename = TRIM(dirname) // 'wfc' // TRIM(int_to_char(ik_eff))
+            CALL write_wfc( iunpun, filename, root_bgrp, intra_bgrp_comm, &
+                 ik_eff, xk(:,1), iss, nspin, c02(:,ib:ib+nb-1), ngw_g, &
+                 gamma_only, nb, ig_l2g, ngw,  &
+                 tpiba*b1, tpiba*b2, tpiba*b3, mill, scalef )
+            ! wavefunctions at time t-dt
+            filename = TRIM(dirname) // 'wfcm' // TRIM(int_to_char(ik_eff))
+            CALL write_wfc( iunpun, filename, root_bgrp, intra_bgrp_comm, &
+                 ik_eff, xk(:,1), iss, nspin, c02(:,ib:ib+nb-1), ngw_g, &
+                 gamma_only, nb, ig_l2g, ngw,  &
+                 tpiba*b1, tpiba*b2, tpiba*b3, mill, scalef )
+         END IF
+         !
          ! matrix of orthogonality constrains lambda at time t
          filename = TRIM(dirname) // 'lambda' // TRIM(int_to_char(ik_eff))
          CALL cp_write_lambda( filename, iunpun, iss, nspin, nudx, &
@@ -451,11 +457,14 @@ MODULE cp_restart_new
       !
      IF (trhow) THEN
         ! Workaround: input rho in real space, bring it to reciprocal space
-        ! To be removed together with old I/O
+        ! To be reconsidered once the old I/O is gone
         ALLOCATE ( rhog(ngm, nspin) )
         CALL rho_r2g (rho, rhog)
-        CALL write_rhog ( dirname, alat*b1, alat*b2, alat*b3, gamma_only, mill,&
-             ig_l2g, rhog )
+        ! Only the first band group collects and writes
+        IF ( my_bgrp_id == 1 ) CALL write_rhog ( dirname, root_bgrp, &
+             intra_bgrp_comm, tpiba*b1, tpiba*b2, tpiba*b3, gamma_only, &
+             mill, ig_l2g, rhog, ecutrho )
+        !
         DEALLOCATE ( rhog )
      END IF
      !

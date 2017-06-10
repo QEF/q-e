@@ -22,11 +22,16 @@ MODULE io_base
   CONTAINS
     !
     !------------------------------------------------------------------------
-    SUBROUTINE write_wfc( iuni, filename, ik, xk, ispin, nspin, wfc, ngw,   &
-                          gamma_only, nbnd, igl, ngwl, b1,b2,b3, mill_k,    &
-                          scalef, ionode_in_group, root_in_group, intra_group_comm)
+    SUBROUTINE write_wfc( iuni, filename, root_in_group, intra_group_comm, &
+         ik, xk, ispin, nspin, wfc, ngw, gamma_only, nbnd, igl, ngwl, &
+         b1,b2,b3, mill_k, scalef )
       !------------------------------------------------------------------------
       !
+      !! Collects wfc, distributed on "intra_group_comm", writes them
+      !! together with related information to file "filename.*"
+      !! (* = dat if fortran binary, * = hdf5 if HDF5)
+      !! Only processor "root_in_group" collects data and writes to file
+      !!
       USE mp_wave,    ONLY : mergewf, mergekg
       USE mp,         ONLY : mp_size, mp_rank, mp_max
       !
@@ -52,11 +57,10 @@ MODULE io_base
       REAL(DP),           INTENT(IN) :: b1(3), b2(3), b3(3)    
       REAL(DP),           INTENT(IN) :: scalef    
         ! scale factor, usually 1.0 for pw and 1/SQRT( omega ) for CP
-      LOGICAL,            INTENT(IN) :: ionode_in_group
       INTEGER,            INTENT(IN) :: root_in_group, intra_group_comm
       !
-      INTEGER                  :: j, ierr
-      INTEGER                  :: igwx, npwx, npol
+      LOGICAL                  :: ionode_in_group
+      INTEGER                  :: igwx, npwx, npol, j
       INTEGER                  :: me_in_group, nproc_in_group, my_group
       INTEGER, ALLOCATABLE     :: itmp(:,:)
       COMPLEX(DP), ALLOCATABLE :: wtmp(:)
@@ -68,6 +72,7 @@ MODULE io_base
 #endif 
       me_in_group     = mp_rank( intra_group_comm )
       nproc_in_group  = mp_size( intra_group_comm )
+      ionode_in_group = ( me_in_group == root_in_group )
       !
       igwx = MAXVAL( igl(1:ngwl) )
       CALL mp_max( igwx, intra_group_comm )
@@ -189,9 +194,6 @@ MODULE io_base
       !
     END SUBROUTINE write_wfc
     !
-
-
-
     !------------------------------------------------------------------------
     SUBROUTINE read_wfc( iuni, filename, ik, xk, ispin, npol, wfc, ngw, &
                          gamma_only, nbnd, igl, ngwl, b1, b2, b3, mill_k,&
@@ -379,19 +381,16 @@ MODULE io_base
     END SUBROUTINE read_wfc
     !
     !------------------------------------------------------------------------
-    SUBROUTINE write_rhog ( dirname, b1, b2, b3, gamma_only, mill, ig_l2g, &
-         rho, ecutrho )
+    SUBROUTINE write_rhog ( dirname, root_in_group, intra_group_comm, &
+         b1, b2, b3, gamma_only, mill, ig_l2g, rho, ecutrho )
       !------------------------------------------------------------------------
-      !! Write rho(G) in reciprocal space and related information to file
-      !! 'charge-density.*' (* = dat if fortran binary, * = hdf5 if HDF5)
-      !! Quick-and-dirty version, allocates a large array on all mpi processes
-      !! Processor "ionode" collects data from band group, writes to file
+      !! Collects rho(G), distributed on "intra_group_comm", writes it
+      !! together with related information to file 'charge-density.*'
+      !! (* = dat if fortran binary, * = hdf5 if HDF5) in directory "dirname"
+      !! Processor "root_in_group" collects data and writes to file
       !
-      USE mp,                   ONLY : mp_sum, mp_bcast
-      USE mp_bands,             ONLY : me_bgrp, root_bgrp, nproc_bgrp, &
-                                       intra_bgrp_comm
+      USE mp,                   ONLY : mp_sum, mp_bcast, mp_size, mp_rank
       USE mp_wave,              ONLY : mergewf, mergekg
-      USE io_global,            ONLY : ionode, ionode_id
 #if defined (__HDF5)
       USE qeh5_base_module
 #endif
@@ -400,6 +399,10 @@ MODULE io_base
       !
       CHARACTER(LEN=*), INTENT(IN) :: dirname
       !! directory name where file is written - must end by '/'
+      INTEGER,            INTENT(IN) :: root_in_group
+      !! root processor that collects and writes
+      INTEGER,            INTENT(IN) :: intra_group_comm
+      !! rho(G) is distributed over this group of processors
       REAL(dp),         INTENT(IN) :: b1(3), b2(3), b3(3)
       !!  b1, b2, b3 are the three primitive vectors in a.u.
       INTEGER,          INTENT(IN) :: mill(:,:)
@@ -422,10 +425,15 @@ MODULE io_base
       !! Global rho(G) collected on root proc
       INTEGER, ALLOCATABLE     :: mill_g(:,:)
       !! Global Miller indices collected on root proc
+      INTEGER                  :: me_in_group, nproc_in_group
+      LOGICAL                  :: ionode_in_group
       INTEGER                  :: ngm, nspin, ngm_g, igwx
       INTEGER                  :: iun, ns, ig, ierr
       CHARACTER(LEN=320)       :: filename
       !
+      me_in_group     = mp_rank( intra_group_comm )
+      nproc_in_group  = mp_size( intra_group_comm )
+      ionode_in_group = ( me_in_group == root_in_group )
 #if defined __HDF5
       TYPE (qeh5_file)          ::  h5file
       TYPE (qeh5_dataset)       ::  h5dset_mill, h5dset_rho_g
@@ -440,22 +448,21 @@ MODULE io_base
       ! ... find out the global number of G vectors: ngm_g
       !
       ngm_g = ngm
-      CALL mp_sum( ngm_g, intra_bgrp_comm )
+      CALL mp_sum( ngm_g, intra_group_comm )
       !
       filename = TRIM( dirname ) // 'charge-density.dat'
       ierr = 0
 #if defined (__HDF5)
-      IF ( ionode ) CALL qeh5_openfile(h5file, FILE = TRIM(dirname) //'charge-density.hdf5', &
-                                                ACTION = 'write', &
-                                                ERROR = ierr) 
+      IF ( ionode_in_group ) CALL qeh5_openfile(h5file, FILE = &
+           TRIM(dirname)//'charge-density.hdf5', ACTION = 'write', ERROR = ierr) 
 #else
-      IF ( ionode ) OPEN ( UNIT = iun, FILE = TRIM( filename ), &
+      IF ( ionode_in_group ) OPEN ( UNIT = iun, FILE = TRIM( filename ), &
                 FORM = 'unformatted', STATUS = 'unknown', iostat = ierr )
 #endif
-      CALL mp_bcast( ierr, ionode_id, intra_bgrp_comm )
+      CALL mp_bcast( ierr, root_in_group, intra_group_comm )
       IF ( ierr > 0 ) CALL errore ( 'write_rhog','error opening file ' &
            & // TRIM( filename ), 1 )
-      IF ( ionode ) THEN
+      IF ( ionode_in_group ) THEN
 #if defined(__HDF5)
           IF ( gamma_only) bool_char = '.TRUE.'
           CALL qeh5_add_attribute (h5file%id, NAME = "gamma_only", TEXT = TRIM(bool_char) )
@@ -466,13 +473,13 @@ MODULE io_base
           WRITE (iun, iostat=ierr) b1, b2, b3
 #endif
       END IF
-      CALL mp_bcast( ierr, ionode_id, intra_bgrp_comm )
+      CALL mp_bcast( ierr, root_in_group, intra_group_comm )
       IF ( ierr > 0 ) CALL errore ( 'write_rhog','error writing file ' &
            & // TRIM( filename ), 1 )
       !
       ! ... collect all G-vectors across processors within the band group
       !
-      IF ( me_bgrp == root_bgrp ) THEN
+      IF ( ionode_in_group ) THEN
          ALLOCATE( mill_g( 3, ngm_g ) )
       ELSE
          ! not used: some compiler do not like passing unallocated arrays
@@ -483,12 +490,12 @@ MODULE io_base
       ! ... local index, into array mill_g(1:3,ig_g), where ig_g=ig_l2g(ig)
       ! ... is the global index. mill_g is collected on root_bgrp only
       !
-      CALL mergekg( mill, mill_g, ngm, ig_l2g, me_bgrp, &
-           nproc_bgrp, root_bgrp, intra_bgrp_comm )
+      CALL mergekg( mill, mill_g, ngm, ig_l2g, me_in_group, &
+           nproc_in_group, root_in_group, intra_group_comm )
       !
       ! ... write G-vectors
       !
-      IF ( ionode ) THEN
+      IF ( ionode_in_group ) THEN
 #if defined(__HDF5)
          CALL qeh5_set_space ( h5dset_mill, mill_g(1,1), RANK = 2, DIMENSIONS = [3,ngm_g] ) 
          CALL qeh5_open_dataset ( h5file, h5dset_mill, NAME = "MillerIndices" , ACTION = 'write')
@@ -504,7 +511,7 @@ MODULE io_base
          WRITE (iun, iostat=ierr) mill_g(1:3,1:ngm_g)
 #endif
       END IF
-      CALL mp_bcast( ierr, ionode_id, intra_bgrp_comm )
+      CALL mp_bcast( ierr, root_in_group, intra_group_comm )
       IF ( ierr > 0 ) CALL errore ( 'write_rhog','error writing file ' &
            & // TRIM( filename ), 2 )
       !
@@ -515,7 +522,7 @@ MODULE io_base
       ! ... now collect all G-vector components of the charge density
       ! ... (one spin at the time to save memory) using the same logic
       !
-      IF ( me_bgrp == root_bgrp ) THEN
+      IF ( ionode_in_group ) THEN
          ALLOCATE( rho_g( ngm_g ) )
       ELSE
          ALLOCATE( rho_g( 1 ) )
@@ -542,10 +549,10 @@ MODULE io_base
          END IF
          !
          rho_g = 0
-         CALL mergewf( rhoaux, rho_g, ngm, ig_l2g, me_bgrp, &
-              nproc_bgrp, root_bgrp, intra_bgrp_comm )
+         CALL mergewf( rhoaux, rho_g, ngm, ig_l2g, me_in_group, &
+              nproc_in_group, root_in_group, intra_group_comm )
          !
-         IF ( ionode ) THEN
+         IF ( ionode_in_group ) THEN
 #if defined(__HDF5)
          CALL qeh5_set_space ( h5dset_rho_g, rho_g(1), RANK = 1 , DIMENSIONS = [ngm_g] ) 
          CALL qeh5_open_dataset( h5file, h5dset_rho_g, NAME = datasets(ns) , ACTION = 'write', ERROR = ierr )
@@ -555,16 +562,16 @@ MODULE io_base
             WRITE (iun, iostat=ierr) rho_g(1:ngm_g)
 #endif
          END IF
-         CALL mp_bcast( ierr, ionode_id, intra_bgrp_comm )
+         CALL mp_bcast( ierr, root_in_group, intra_group_comm )
          IF ( ierr > 0 ) CALL errore ( 'write_rhog','error writing file ' &
               & // TRIM( filename ), 2+ns )
          !
       END DO
       !
 #if defined(__HDF5) 
-      IF (ionode) CALL qeh5_close(h5file) 
+      IF (ionode_in_group) CALL qeh5_close(h5file) 
 #else
-      IF (ionode) CLOSE (UNIT = iun, status ='keep' )
+      IF (ionode_in_group) CLOSE (UNIT = iun, status ='keep' )
 #endif
       !
       DEALLOCATE( rhoaux )

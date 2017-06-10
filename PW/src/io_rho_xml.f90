@@ -38,6 +38,8 @@ MODULE io_rho_xml
       USE control_flags,    ONLY : gamma_only
       USE io_files,         ONLY : seqopn, tmp_dir, prefix
       USE io_global,        ONLY : ionode, ionode_id, stdout
+      USE mp_pools,         ONLY : my_pool_id
+      USE mp_bands,         ONLY : my_bgrp_id, root_bgrp, intra_bgrp_comm
       USE mp_images,        ONLY : intra_image_comm
       USE mp,               ONLY : mp_bcast
 
@@ -63,7 +65,9 @@ MODULE io_rho_xml
 #if defined (__OLDXML)
       CALL write_rho ( dirname, rho%of_r, nspin_ )
 #else
-      CALL write_rhog( dirname, bg(:,1)*tpiba,bg(:,2)*tpiba,bg(:,3)*tpiba, &
+      IF ( my_pool_id == 1 .AND. my_bgrp_id == 1 ) &
+           CALL write_rhog( dirname, root_bgrp, intra_bgrp_comm, &
+           bg(:,1)*tpiba, bg(:,2)*tpiba, bg(:,3)*tpiba, &
            gamma_only, mill, ig_l2g, rho%of_g(:,1:nspin_) )
 #endif
 
