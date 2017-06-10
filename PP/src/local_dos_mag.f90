@@ -57,8 +57,8 @@ SUBROUTINE local_dos_mag(spin_component, kpoint, kband, raux)
   !
   COMPLEX(DP), ALLOCATABLE :: be1(:,:), be2(:,:)
   !
-  INTEGER :: ipol, kh, kkb, is1, is2, kpoint_pool, which_pool
-  LOGICAL :: i_am_the_pool
+  INTEGER :: ipol, kh, kkb, is1, is2
+  INTEGER, EXTERNAL :: local_kpoint_index
 
   becsum(:,:,:) = 0.D0
   rho%of_r(:,:) = 0.D0
@@ -72,19 +72,11 @@ SUBROUTINE local_dos_mag(spin_component, kpoint, kband, raux)
   ! ... Following code is a stripped-down version of "sum_band",
   ! ... without summation over k-points and bands, without symmetrization
   !
-  IF ( npool > 1 ) THEN
-     CALL xk_pool( kpoint, nkstot, kpoint_pool,  which_pool )
-     IF ( kpoint_pool < 1 .OR. kpoint_pool > nks ) &
-        CALL errore('local_dos_mag','problems with xk_pool',1)
-     i_am_the_pool=(my_pool_id==which_pool)
-  ELSE
-     i_am_the_pool=.true.
-     kpoint_pool=kpoint
-  ENDIF
-
-  ik = kpoint_pool
   raux=0.0_DP
-  IF (i_am_the_pool) THEN
+  !
+  ! returns -1 if kpoint is not on this pool
+  ik = local_kpoint_index ( nkstot, kpoint )
+  IF ( ik > 0 ) THEN
   !
      npw = ngk(ik)
      CALL davcio (evc, 2*nwordwfc, iunwfc, ik, - 1)

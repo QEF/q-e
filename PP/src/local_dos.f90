@@ -74,22 +74,23 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
   INTEGER :: who_calculate, iproc
   COMPLEX(DP) :: phase
   REAL(DP), EXTERNAL :: w0gauss, w1gauss
-  LOGICAL :: i_am_the_pool
-  INTEGER :: which_pool, kpoint_pool
+  INTEGER :: kpoint_pool
+  INTEGER, EXTERNAL :: local_kpoint_index
   !
   ! input checks
   !
   IF (noncolin.and. lsign) CALL errore('local_dos','not available',1)
-  IF (noncolin.and. gamma_only) CALL errore('local_dos','not available',1)
+  IF (noncolin.and. gamma_only) CALL errore('local_dos','not available',2)
   !
-  IF ( (iflag == 0) .and. ( kband < 1 .or. kband > nbnd ) ) &
+  IF ( iflag == 0 ) THEN
+     IF ( kband < 1 .or. kband > nbnd )  &
        CALL errore ('local_dos', 'wrong band specified', 1)
-  IF ( (iflag == 0) .and. ( kpoint < 1 .or. kpoint > nkstot ) ) &
+     IF ( kpoint < 1 .or. kpoint > nkstot ) &
        CALL errore ('local_dos', 'wrong kpoint specified', 1)
-  IF (lsign) THEN
+     IF ( (sqrt(xk(1,kpoint)**2+xk(2,kpoint)**2+xk(3,kpoint)**2) > 1d-9 )  &
+          .AND. lsign ) CALL errore ('local_dos', 'k must be zero', 1)
+  ELSE
      IF (iflag /= 0) CALL errore ('local_dos', 'inconsistent flags', 1)
-     IF (sqrt(xk(1,kpoint)**2+xk(2,kpoint)**2+xk(3,kpoint)**2) > 1d-9 )  &
-        CALL errore ('local_dos', 'k must be zero', 1)
   ENDIF
   !
   IF (gamma_only) THEN
@@ -139,23 +140,17 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
   ENDDO
   wg_max = MAXVAL(wg(:,:))
 
-  IF ( iflag == 0 .and. npool > 1 ) THEN
-     CALL xk_pool( kpoint, nkstot, kpoint_pool,  which_pool )
-     IF ( kpoint_pool < 1 .or. kpoint_pool > nks ) &
-        CALL errore('local_dos','problems with xk_pool',1)
-     i_am_the_pool=(my_pool_id==which_pool)
-  ELSE
-     i_am_the_pool=.true.
-     kpoint_pool=kpoint
+  IF ( iflag == 0 ) THEN
+     ! returns -1 if kpoint is not on this pool
+     kpoint_pool = local_kpoint_index ( nkstot, kpoint )
+     IF ( kpoint_pool > 0)  wg (kband, kpoint_pool) = 1.d0
   ENDIF
-
-  IF (iflag == 0.and.i_am_the_pool) wg (kband, kpoint_pool) = 1.d0
   !
   !     here we sum for each k point the contribution
   !     of the wavefunctions to the density of states
   !
   DO ik = 1, nks
-     IF (ik == kpoint_pool .and.i_am_the_pool.or. iflag /= 0) THEN
+     IF ( iflag /= 0 .or. ik == kpoint_pool) THEN
         IF (lsda) current_spin = isk (ik)
         CALL davcio (evc, 2*nwordwfc, iunwfc, ik, - 1)
         npw = ngk(ik)
@@ -435,54 +430,3 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
   RETURN
 
 END SUBROUTINE local_dos
-
-!------------------------------------------------------------------------
-SUBROUTINE xk_pool( ik, nkstot, ik_pool,  which_pool )
-!------------------------------------------------------------------------
-!
-!  This routine is a simplified version of set_kpoint_vars in
-!  xml_io_files. It receives the index ik of a k_point in the complete
-!  k point list and return the index within the pool ik_pool, and
-!  the number of the pool that has that k point.
-!
-!
-USE mp_global,  ONLY : npool, kunit
-!
-IMPLICIT NONE
-
-INTEGER, INTENT(in)  :: ik, nkstot
-INTEGER, INTENT(out) :: ik_pool, which_pool
-!
-INTEGER :: nkl, nkr, nkbl
-!
-!
-IF (npool==1) THEN
-   which_pool=1
-   ik_pool=ik
-   RETURN
-ENDIF
-!
-! ... find out number of k points blocks
-!
-nkbl = nkstot / kunit
-!
-! ... k points per pool
-!
-nkl = kunit * ( nkbl / npool )
-!
-! ... find out the reminder
-!
-nkr = ( nkstot - nkl * npool ) / kunit
-!
-! ... calculate the pool and the index within the pool
-!
-IF (ik<=nkr*(nkl+1)) THEN
-   which_pool=(ik-1)/(nkl+1)
-   ik_pool=ik-which_pool*(nkl+1)
-ELSE
-   which_pool=nkr+(ik-nkr*(nkl+1)-1)/nkl
-   ik_pool=ik-nkr*(nkl+1)-(which_pool-nkr)*nkl
-ENDIF
-
-RETURN
-END SUBROUTINE xk_pool
