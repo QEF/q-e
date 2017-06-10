@@ -90,7 +90,7 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
      IF ( (sqrt(xk(1,kpoint)**2+xk(2,kpoint)**2+xk(3,kpoint)**2) > 1d-9 )  &
           .AND. lsign ) CALL errore ('local_dos', 'k must be zero', 1)
   ELSE
-     IF (iflag /= 0) CALL errore ('local_dos', 'inconsistent flags', 1)
+     IF (lsign) CALL errore ('local_dos', 'inconsistent flags', 1)
   ENDIF
   !
   IF (gamma_only) THEN
