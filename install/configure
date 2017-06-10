@@ -10214,10 +10214,12 @@ ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
+
+if test -e $with_hdf5_path/bin/h5cc; then h5cc=$with_hdf5_path/bin/h5cc; elif test -e $with_hdf5_path/bin/h5pcc ; then h5cc=$with_hdf5_path/bin/h5pcc; else h5cc=$CC; fi
       ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
-ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
-ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compile='$h5cc -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$h5cc -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
@@ -10240,9 +10242,9 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
           { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing H5Fcreate" >&5
 $as_echo_n "checking for library containing H5Fcreate... " >&6; }
-if ${ac_cv_search_H5Fcreate+:} false; then :
+if ${ac_cv_search_H5Fcreate+:} false; then 
   $as_echo_n "(cached) " >&6
-else
+else      
   ac_func_search_save_LIBS=$LIBS
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
@@ -10349,9 +10351,15 @@ fi
       fi
 
       if test "$have_hdf5" -eq 1 ; then
+         if test -e $with_hdf5_path/bin/h5fc; then
+             hdf5_libs=`$with_hdf5_path/bin/h5fc -show | gawk '{$1=$2="";print $0}'`
+         elif test -e $with_hdf5_path/bin/h5pfc; then 
+             hdf5_libs=`$with_hdf5_path/bin/h5pfc -show | gawk '{$1=$2="";print $0}'` 
+         else
           hdf5_libs="-L$with_hdf5_path/lib -lhdf5_fortran -lhdf5"
-          try_iflags="$try_iflags -I$with_hdf5_path/include"
-          try_dflags="$try_dflags -D__HDF5"
+         fi 
+         try_iflags="$try_iflags -I$with_hdf5_path/include"
+         try_dflags="$try_dflags -D__HDF5"
       fi
 
       hdf5_line="HDF5_LIBS=$hdf5_libs"
