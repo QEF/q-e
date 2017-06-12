@@ -1433,15 +1433,9 @@ MODULE cp_restart_new
     !
     ionode_b = ( me_bgrp == root_bgrp )
     !
-    IF ( PRESENT(ierr) ) THEN
-       CALL read_wfc( iunpun, filename, is_, xk, is_, npol, &
-         c2(:,ib:ib+nb-1), ngw_g, gamma_only, nbnd, ig_l2g, ngw,  &
-         b1,b2,b3, mill_k, scalef, ionode_b, root_bgrp, intra_bgrp_comm, ierr )
-    ELSE
-       CALL read_wfc( iunpun, filename, is_, xk, is_, npol, &
-         c2(:,ib:ib+nb-1), ngw_g, gamma_only, nbnd, ig_l2g, ngw,  &
-         b1,b2,b3, mill_k, scalef, ionode_b, root_bgrp, intra_bgrp_comm )
-    END IF
+    CALL read_wfc( iunpun, filename, is_, xk, is_, npol, &
+      c2(:,ib:ib+nb-1), ngw_g, gamma_only, nbnd, ig_l2g, ngw,  &
+      b1,b2,b3, mill_k, scalef, ionode_b, root_bgrp, intra_bgrp_comm, ierr )
     !
     ! Add here checks on consistency of what has been read
     !
