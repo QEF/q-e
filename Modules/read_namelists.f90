@@ -198,11 +198,12 @@ MODULE read_namelists_module
        starting_magnetization = sm_not_set
 
        IF ( prog == 'PW' ) THEN
-          !
           starting_ns_eigenvalue = -1.0_DP
           U_projection_type = 'atomic'
-          !
        END IF
+       !
+       ! .. DFT + U
+       !
        lda_plus_U = .FALSE.
        lda_plus_u_kind = 0
        Hubbard_U = 0.0_DP
@@ -214,6 +215,15 @@ MODULE read_namelists_module
        A_pen=0.0_DP
        sigma_pen=0.01_DP
        alpha_pen=0.0_DP
+       !
+       ! ... EXX
+       !
+       localization_thr = 0.0_dp
+       scdm=.FALSE.
+       ace=.TRUE.
+       !
+       ! ... electric fields
+       !
        edir = 1
        emaxpos = 0.5_DP
        eopreg = 0.1_DP
@@ -225,9 +235,9 @@ MODULE read_namelists_module
        block_1 = 0.45
        block_2 = 0.55
        block_height = 0.0
-
        !
        !  ... postprocessing of DOS & phonons & el-ph
+       !
        la2F = .FALSE.
        !
        ! ... non collinear program variables
@@ -287,6 +297,8 @@ MODULE read_namelists_module
        fcp_tempw       = 0.0_DP
        fcp_relax_step  = 0.5_DP
        fcp_relax_crit  = 0.001_DP
+       !
+       ! ... Wyckoff
        !
        space_group=0
        uniqueb = .FALSE.
@@ -779,19 +791,24 @@ MODULE read_namelists_module
        CALL mp_bcast( qcutz,             ionode_id, intra_image_comm )
        CALL mp_bcast( q2sigma,           ionode_id, intra_image_comm )
        CALL mp_bcast( input_dft,         ionode_id, intra_image_comm )
+
+       ! ... EXX
+
+       CALL mp_bcast( localization_thr,    ionode_id, intra_image_comm )
+       CALL mp_bcast( scdm,                ionode_id, intra_image_comm )
+       CALL mp_bcast( ace,                 ionode_id, intra_image_comm )
        CALL mp_bcast( nqx1,                   ionode_id, intra_image_comm )
        CALL mp_bcast( nqx2,                   ionode_id, intra_image_comm )
        CALL mp_bcast( nqx3,                   ionode_id, intra_image_comm )
        CALL mp_bcast( exx_fraction,           ionode_id, intra_image_comm )
        CALL mp_bcast( screening_parameter,    ionode_id, intra_image_comm ) 
-       !gau-pbe in
        CALL mp_bcast( gau_parameter,          ionode_id, intra_image_comm )
-       !gau-pbe out
        CALL mp_bcast( exxdiv_treatment,       ionode_id, intra_image_comm )
        CALL mp_bcast( x_gamma_extrapolation,  ionode_id, intra_image_comm )
        CALL mp_bcast( yukawa,                 ionode_id, intra_image_comm )
        CALL mp_bcast( ecutvcut,               ionode_id, intra_image_comm )
        CALL mp_bcast( ecutfock,               ionode_id, intra_image_comm )
+       !
        CALL mp_bcast( starting_magnetization, ionode_id, intra_image_comm )
        CALL mp_bcast( starting_ns_eigenvalue, ionode_id, intra_image_comm )
        CALL mp_bcast( U_projection_type,      ionode_id, intra_image_comm )
@@ -811,7 +828,6 @@ MODULE read_namelists_module
        CALL mp_bcast( eopreg,                 ionode_id, intra_image_comm )
        CALL mp_bcast( eamp,                   ionode_id, intra_image_comm )
        CALL mp_bcast( la2F,                   ionode_id, intra_image_comm )
-
        !
        ! ... non collinear broadcast
        !
