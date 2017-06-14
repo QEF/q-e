@@ -54,7 +54,7 @@ MODULE pw_restart_new
       USE global_version,       ONLY : version_number
       USE cell_base,            ONLY : at, bg, alat, ibrav
       USE gvect,                ONLY : ig_l2g
-      USE ions_base,            ONLY : nsp, ityp, atm, nat, tau, if_pos
+      USE ions_base,            ONLY : nsp, ityp, atm, nat, tau
       USE noncollin_module,     ONLY : noncolin, npol
       USE io_files,             ONLY : nwordwfc, iunwfc, psfile
       USE buffers,              ONLY : get_buffer
@@ -1094,7 +1094,7 @@ MODULE pw_restart_new
     SUBROUTINE readschema_ions( atomic_structure, atomic_species, dirname ) 
     !------------------------------------------------------------------------
     ! 
-    USE ions_base, ONLY : nat, nsp, ityp, amass, atm, tau, if_pos
+    USE ions_base, ONLY : nat, nsp, ityp, amass, atm, tau
     USE cell_base, ONLY : alat
     USE io_files,  ONLY : psfile, pseudo_dir, pseudo_dir_cur
     USE qes_types_module, ONLY: atomic_structure_type, atomic_species_type, input_type 

@@ -95,12 +95,15 @@ SUBROUTINE output_tau( print_lattice, print_final  )
   !
   DO na = 1, nat
      !
-     IF ( ANY( if_pos(:,na) == 0 ) ) THEN
-        WRITE( stdout,'(A3,3X,3F14.9,1X,3i4)') &
+     IF ( ALLOCATED( if_pos ) ) THEN
+        IF ( ANY( if_pos(:,na) == 0 ) ) THEN
+           WRITE( stdout,'(A3,3X,3F14.9,1X,3i4)') &
                         atm(ityp(na)), tau_out(:,na), if_pos(:,na)
+        ELSE
+           WRITE( stdout,'(A3,3X,3F14.9)') atm(ityp(na)), tau_out(:,na)
+        END IF
      ELSE
-        WRITE( stdout,'(A3,3X,3F14.9)') &
-                        atm(ityp(na)), tau_out(:,na)
+        WRITE( stdout,'(A3,3X,3F14.9)') atm(ityp(na)), tau_out(:,na)
      END IF
      !
   END DO

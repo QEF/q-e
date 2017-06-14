@@ -113,7 +113,7 @@ SUBROUTINE read_xml_file ( )
   ! ... starting from scratch should be initialized here when restarting
   !
   USE kinds,                ONLY : DP
-  USE ions_base,            ONLY : nat, nsp, ityp, tau, if_pos, extfor
+  USE ions_base,            ONLY : nat, nsp, ityp, tau, extfor
   USE cell_base,            ONLY : tpiba2, alat,omega, at, bg, ibrav
   USE force_mod,            ONLY : force
   USE klist,                ONLY : nkstot, nks, xk, wk
@@ -183,7 +183,6 @@ SUBROUTINE read_xml_file ( )
   !
   ALLOCATE( ityp( nat ) )
   ALLOCATE( tau(    3, nat ) )
-  ALLOCATE( if_pos( 3, nat ) )
   ALLOCATE( force(  3, nat ) )
   ALLOCATE( extfor(  3, nat ) )
   !

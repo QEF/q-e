@@ -604,7 +604,6 @@ MODULE cp_restart_new
       INTEGER,  ALLOCATABLE :: isrt_(:) 
       REAL(DP), ALLOCATABLE :: tau_(:,:) 
       REAL(DP), ALLOCATABLE :: occ_(:,:), et_(:,:)
-      INTEGER,  ALLOCATABLE :: if_pos_(:,:) 
       CHARACTER(LEN=256)    :: psfile_(ntypx)
       CHARACTER(LEN=80)     :: pos_unit
       REAL(DP)              :: s1, s0, cclock
