@@ -417,7 +417,7 @@ MODULE cp_restart_new
             ! wavefunctions at time t-dt
             filename = TRIM(dirname) // 'wfcm' // TRIM(int_to_char(ik_eff))
             CALL write_wfc( iunpun, filename, root_bgrp, intra_bgrp_comm, &
-                 ik_eff, xk(:,1), iss, nspin, c02(:,ib:ib+nb-1), ngw_g, &
+                 ik_eff, xk(:,1), iss, nspin, cm2(:,ib:ib+nb-1), ngw_g, &
                  gamma_only, nb, ig_l2g, ngw,  &
                  tpiba*b1, tpiba*b2, tpiba*b3, mill, scalef )
          END IF
