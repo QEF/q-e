@@ -56,6 +56,7 @@ integer :: fstat,statb(13)
   integer :: unf_recl,ios
   character (len=256) :: tempfile
   character (len=3) :: filelab
+  INTEGER(kind=8) :: mult_unit
   !
   !  the call to set_ndnmbr is just a trick to get quickly
   !  a file label by exploiting an existing subroutine
@@ -71,6 +72,8 @@ integer :: fstat,statb(13)
   !unf_recl = iofactor * lrdrho
   !DBSP
   !print*,'iofactor ',iofactor
+  mult_unit = unf_recl
+  mult_unit = recn * mult_unit
   !
   !
   !  open the dvscf file, read and close
@@ -83,12 +86,13 @@ integer :: fstat,statb(13)
   ! this is tricky to track through error dumps
 #if defined(__NAG)
   CALL fstat( iudvscf, statb, errno=ios)
-  IF (recn * unf_recl .gt. statb%st_size) call errore('readdvscf', &
+  IF (mult_unit .gt. statb%st_size) call errore('readdvscf', &
        trim(tempfile)//' too short, check ecut', iudvscf)
 #endif
 #if ! defined(__NAG)
   ios = fstat ( iudvscf, statb)
-  IF (recn * unf_recl .gt. statb(8)) call errore('readdvscf', &
+  !IF (recn * unf_recl .gt. statb(8)) call errore('readdvscf', &
+  IF (mult_unit .gt. statb(8)) call errore('readdvscf', &
        trim(tempfile)//' too short, check ecut', iudvscf)
 #endif
   !
