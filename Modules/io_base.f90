@@ -195,10 +195,9 @@ MODULE io_base
     END SUBROUTINE write_wfc
     !
     !------------------------------------------------------------------------
-    SUBROUTINE read_wfc( iuni, filename, ik, xk, ispin, npol, wfc, ngw, &
-                         gamma_only, nbnd, igl, ngwl, b1, b2, b3, mill_k,&
-                         scalef, ionode_in_group, root_in_group, &
-                         intra_group_comm, ierr )
+    SUBROUTINE read_wfc( iuni, filename, root_in_group, intra_group_comm,  &
+         ik, xk, ispin, npol, wfc, ngw, gamma_only, nbnd, igl, ngwl, &
+         b1, b2, b3, mill_k, scalef, ierr )
       ! if ierr is present, return 0 if everything is ok, /= 0 if not
       !------------------------------------------------------------------------
       !
@@ -213,18 +212,17 @@ MODULE io_base
       !
       INTEGER,            INTENT(IN)    :: iuni
       CHARACTER(LEN=*),   INTENT(IN)    :: filename
-      COMPLEX(DP),        INTENT(OUT)   :: wfc(:,:)
+      INTEGER,            INTENT(IN)    :: root_in_group, intra_group_comm
       INTEGER,            INTENT(IN)    :: ik
-      INTEGER,            INTENT(INOUT) :: ngw, nbnd, ispin, npol
       INTEGER,            INTENT(IN)    :: ngwl
+      INTEGER,            INTENT(INOUT) :: ngw, nbnd, ispin, npol
+      COMPLEX(DP),        INTENT(OUT)   :: wfc(:,:)
       INTEGER,            INTENT(IN)    :: igl(:)
       REAL(DP),           INTENT(OUT)   :: scalef
       REAL(DP),           INTENT(OUT)   :: xk(3)
       REAL(DP),           INTENT(OUT)   :: b1(3), b2(3), b3(3)
       INTEGER,            INTENT(OUT)   :: mill_k(:,:)
       LOGICAL,            INTENT(OUT)   :: gamma_only
-      LOGICAL,            INTENT(IN)    :: ionode_in_group
-      INTEGER,            INTENT(IN)    :: root_in_group, intra_group_comm
       INTEGER, OPTIONAL,  INTENT(OUT)   :: ierr
       !
       INTEGER                           :: j
@@ -233,6 +231,7 @@ MODULE io_base
       INTEGER                           :: ierr_
       INTEGER                           :: igwx, igwx_, npwx, ik_
       INTEGER                           :: me_in_group, nproc_in_group
+      LOGICAL                           :: ionode_in_group
 #if defined(__HDF5)
       TYPE (qeh5_file)    ::   h5file
       TYPE (qeh5_dataset) ::   h5dset_wfc, h5dset_mill
@@ -240,9 +239,9 @@ MODULE io_base
       CHARACTER(LEN=8)    ::   char_buf 
 #endif  
       !
-      !
       me_in_group     = mp_rank( intra_group_comm )
       nproc_in_group  = mp_size( intra_group_comm )
+      ionode_in_group = ( me_in_group == root_in_group )
       !
       igwx = MAXVAL( igl(1:ngwl) )
       CALL mp_max( igwx, intra_group_comm )
@@ -582,18 +581,16 @@ MODULE io_base
     END SUBROUTINE write_rhog
     !
     !------------------------------------------------------------------------
-    SUBROUTINE read_rhog ( dirname, ig_l2g, nspin, rho )
+    SUBROUTINE read_rhog ( dirname, root_in_group, intra_group_comm, &
+         ig_l2g, nspin, rho )
       !------------------------------------------------------------------------
-      !! Read rho(G) in reciprocal space from file  'charge-density.*' 
+      !! Read and distribute rho(G) from file  'charge-density.*' 
       !! (* = dat if fortran binary, * = hdf5 if HDF5)
-      !! Quick-and-dirty version, allocates a large array on all mpi processes
-      !! All pools read the file: 1 proc reads, broadcasts to other procs
-      !! Works only if there is a single band group per pool
+      !! Processor "root_in_group" reads from file, distributes to
+      !! all processors in the intra_group_comm communicator 
       !
-      USE mp,                   ONLY : mp_bcast
-      USE mp_wave,              ONLY : splitwf
-      USE mp_pools,             ONLY : me_pool, root_pool, nproc_pool, &
-                                       intra_pool_comm
+      USE mp,         ONLY : mp_size, mp_rank, mp_bcast
+      USE mp_wave,    ONLY : splitwf
       !
 #if defined (__HDF5) 
       USE qeh5_base_module
@@ -602,6 +599,10 @@ MODULE io_base
       !
       CHARACTER(LEN=*), INTENT(IN) :: dirname
       !! directory name where file is read - must end by '/'
+      INTEGER,          INTENT(IN) :: root_in_group
+      !! root processor that reads and sirtibutes
+      INTEGER,          INTENT(IN) :: intra_group_comm
+      !! rho(G) is distributed over this group of processors
       INTEGER,          INTENT(IN) :: ig_l2g(:)
       !! local-to-global indices, for machine- and mpi-independent ordering
       !! on this processor, G(ig) maps to G(ig_l2g(ig)) in global ordering
@@ -615,7 +616,8 @@ MODULE io_base
       REAL(dp)                 :: b1(3), b2(3), b3(3)
       INTEGER                  :: ngm, nspin_, ngm_g, isup, isdw
       INTEGER                  :: iun, mill_dum, ns, ig, ierr
-      LOGICAL                  :: ionode_k, gamma_only
+      INTEGER                  :: me_in_group, nproc_in_group
+      LOGICAL                  :: ionode_in_group, gamma_only
       CHARACTER(LEN=320)       :: filename
       !
 #if defined __HDF5
@@ -635,11 +637,11 @@ MODULE io_base
       iun  = 4
       ierr = 0
       !
-      ! ... the root processor of each pool reads
+      me_in_group     = mp_rank( intra_group_comm )
+      nproc_in_group  = mp_size( intra_group_comm )
+      ionode_in_group = ( me_in_group == root_in_group )
       !
-      ionode_k = (me_pool == root_pool)
-      !
-      IF ( ionode_k ) THEN
+      IF ( ionode_in_group ) THEN
 #if defined (__HDF5) 
          CALL qeh5_openfile(h5file, TRIM(filename), ACTION = 'read', error = ierr)
          CALL qeh5_read_attribute (h5file%id, "gamma_only", tempchar, MAXLEN = len(tempchar)  )
@@ -669,11 +671,11 @@ MODULE io_base
 10       CONTINUE 
       END IF
       !
-      CALL mp_bcast( ierr, root_pool, intra_pool_comm )
+      CALL mp_bcast( ierr, root_in_group, intra_group_comm )
       IF ( ierr > 0 ) CALL errore ( 'read_rhog','error reading file ' &
            & // TRIM( filename ), ierr )
-      CALL mp_bcast( ngm_g, root_pool, intra_pool_comm )
-      CALL mp_bcast( nspin_, root_pool, intra_pool_comm )
+      CALL mp_bcast( ngm_g, root_in_group, intra_group_comm )
+      CALL mp_bcast( nspin_, root_in_group, intra_group_comm )
       !
       IF ( nspin > nspin_ ) &
          CALL infomsg('read_rhog', 'some spin components not found')
@@ -682,19 +684,19 @@ MODULE io_base
       !
       ! ... skip record containing G-vector indices
       !
-      IF ( ionode_k ) THEN
+      IF ( ionode_in_group ) THEN
 #if !defined(__HDF5)
          READ (iun, iostat=ierr) mill_dum
 #endif
       END IF
-      CALL mp_bcast( ierr, root_pool, intra_pool_comm )
+      CALL mp_bcast( ierr, root_in_group, intra_group_comm )
       IF ( ierr > 0 ) CALL errore ( 'read_rhog','error reading file ' &
            & // TRIM( filename ), 2 )
       !
       ! ... now read, broadcast and re-order G-vector components
       ! ... of the charge density (one spin at the time to save memory)
       !
-      IF ( ionode_k ) THEN
+      IF ( ionode_in_group ) THEN
          ALLOCATE( rho_g( ngm_g ) )
       ELSE
          ALLOCATE( rho_g( 1 ) )
@@ -703,7 +705,7 @@ MODULE io_base
       !
       DO ns = 1, nspin
          !
-         IF ( ionode_k ) THEN
+         IF ( ionode_in_group ) THEN
 #if defined(__HDF5)
             CALL qeh5_open_dataset( h5file, h5dset_rho_g, NAME = datasets(ns), ACTION = 'read', ERROR = ierr) 
             CALL qeh5_read_dataset ( rho_g , h5dset_rho_g )
@@ -712,12 +714,12 @@ MODULE io_base
             READ (iun, iostat=ierr) rho_g(1:ngm_g)
 #endif
          END IF
-         CALL mp_bcast( ierr, root_pool, intra_pool_comm )
+         CALL mp_bcast( ierr, root_in_group, intra_group_comm )
          IF ( ierr > 0 ) CALL errore ( 'read_rhog','error reading file ' &
               & // TRIM( filename ), 2+ns )
          !
-         CALL splitwf( rhoaux, rho_g, ngm, ig_l2g, me_pool, &
-              nproc_pool, root_pool, intra_pool_comm )
+         CALL splitwf( rhoaux, rho_g, ngm, ig_l2g, me_in_group, &
+              nproc_in_group, root_in_group, intra_group_comm )
          DO ig = 1, ngm
             rho(ig,ns) = rhoaux(ig)
          END DO
@@ -736,7 +738,7 @@ MODULE io_base
          END IF
       END DO
       !
-      IF ( ionode_k ) CLOSE (UNIT = iun, status ='keep' )
+      IF ( ionode_in_group ) CLOSE (UNIT = iun, status ='keep' )
       !
       DEALLOCATE( rhoaux )
       DEALLOCATE( rho_g )

@@ -46,7 +46,7 @@ SUBROUTINE potinit()
   USE io_files,             ONLY : tmp_dir, prefix, input_drho
   USE spin_orb,             ONLY : domag, lforcet
   USE mp,                   ONLY : mp_sum
-  USE mp_bands ,            ONLY : intra_bgrp_comm
+  USE mp_bands ,            ONLY : intra_bgrp_comm, root_bgrp
   USE io_global,            ONLY : ionode, ionode_id
   USE io_rho_xml,           ONLY : read_scf
   USE xml_io_base,          ONLY : check_file_exst
@@ -99,7 +99,8 @@ SUBROUTINE potinit()
 #if defined (__OLDXML)
         CALL read_rho ( dirname, rho%of_r, 2 )
 #else
-        CALL read_rhog ( dirname, ig_l2g, nspin, rho%of_g )
+        CALL read_rhog ( dirname, root_bgrp, intra_bgrp_comm, &
+             ig_l2g, nspin, rho%of_g )
         CALL rho_g2r ( rho%of_g, rho%of_r )
 #endif
         CALL nc_magnetization_from_lsda ( dfftp%nnr, nspin, rho%of_r )
@@ -154,7 +155,8 @@ SUBROUTINE potinit()
 #if defined (__OLDXML)
         CALL read_rho ( dirname, v%of_r, 1, input_drho )
 #else
-        CALL read_rhog ( dirname, ig_l2g, nspin, v%of_g )
+        CALL read_rhog ( dirname, root_bgrp, intra_bgrp_comm, &
+             ig_l2g, nspin, v%of_g )
         CALL rho_g2r ( v%of_g, v%of_r )
 #endif
         !

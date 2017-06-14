@@ -111,7 +111,8 @@
       USE constants,          ONLY: pi, fpi
       USE mp,                 ONLY: mp_sum
       USE io_global,          ONLY: stdout, ionode
-      USE mp_global,          ONLY: intra_bgrp_comm, nbgrp, inter_bgrp_comm, me_bgrp, nproc_bgrp
+      USE mp_global,          ONLY: intra_bgrp_comm, nbgrp, inter_bgrp_comm, &
+           me_bgrp, nproc_bgrp, root_bgrp
       USE funct,              ONLY: dft_is_meta
       USE cg_module,          ONLY: tcg
       USE cp_interfaces,      ONLY: stress_kin, enkin
@@ -249,7 +250,8 @@
             CALL errore('rhoofr','option trhor unverified, please report',1)
             WRITE(dirname,'(A,A,"_",I2,".save/")') &
                  TRIM(tmp_dir), TRIM(prefix), ndr
-            CALL read_rhog ( dirname, ig_l2g, nspin, rhog )
+            CALL read_rhog ( dirname, root_bgrp, intra_bgrp_comm, &
+                 ig_l2g, nspin, rhog )
             CALL rho_g2r ( rhog, rhor )
 #endif
             rhopr = rhor

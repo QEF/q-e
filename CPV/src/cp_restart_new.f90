@@ -69,7 +69,8 @@ MODULE cp_restart_new
                                            nwordwfc, tmp_dir, diropn
       USE mp_images,                ONLY : intra_image_comm, me_image, &
                                            nproc_image
-      USE mp_bands,                 ONLY : my_bgrp_id, intra_bgrp_comm,root_bgrp
+      USE mp_bands,                 ONLY : my_bgrp_id, intra_bgrp_comm, &
+                                           root_bgrp, root_bgrp_id
       USE mp_diag,                  ONLY : nproc_ortho
       USE run_info,                 ONLY : title
       USE gvect,                    ONLY : ngm, ngm_g, ecutrho
@@ -403,7 +404,7 @@ MODULE cp_restart_new
          ib = iupdwn(iss)
          nb = nupdwn(iss)
          !
-         IF ( my_bgrp_id == 1 ) THEN
+         IF ( my_bgrp_id == root_bgrp_id ) THEN
             !
             ! wfc collected and written by the root processor of the first
             ! band group of each pool/image - no warranty it works for nbgrp >1
@@ -461,9 +462,10 @@ MODULE cp_restart_new
         ALLOCATE ( rhog(ngm, nspin) )
         CALL rho_r2g (rho, rhog)
         ! Only the first band group collects and writes
-        IF ( my_bgrp_id == 1 ) CALL write_rhog ( dirname, root_bgrp, &
-             intra_bgrp_comm, tpiba*b1, tpiba*b2, tpiba*b3, gamma_only, &
-             mill, ig_l2g, rhog, ecutrho )
+        IF ( my_bgrp_id == root_bgrp_id ) CALL write_rhog &
+                ( dirname, root_bgrp, intra_bgrp_comm, &
+                tpiba*b1, tpiba*b2, tpiba*b3, gamma_only, &
+                mill, ig_l2g, rhog, ecutrho )
         !
         DEALLOCATE ( rhog )
      END IF
@@ -1413,7 +1415,7 @@ MODULE cp_restart_new
     INTEGER,ALLOCATABLE:: mill_k(:,:)
     CHARACTER(LEN=320) :: filename
     REAL(DP)           :: scalef, xk(3), b1(3), b2(3), b3(3)
-    LOGICAL            :: ionode_b, gamma_only
+    LOGICAL            :: gamma_only
     !
     IF ( tag == 'm' ) THEN
        WRITE(filename,'(A,A,"_",I2,".save/wfcm",I1)') &
@@ -1431,11 +1433,9 @@ MODULE cp_restart_new
     ! the first processor of each "band group" reads the wave function,
     ! distributes it to the other processors in the same band group
     !
-    ionode_b = ( me_bgrp == root_bgrp )
-    !
-    CALL read_wfc( iunpun, filename, is_, xk, is_, npol, &
-      c2(:,ib:ib+nb-1), ngw_g, gamma_only, nbnd, ig_l2g, ngw,  &
-      b1,b2,b3, mill_k, scalef, ionode_b, root_bgrp, intra_bgrp_comm, ierr )
+    CALL read_wfc( iunpun, filename, root_bgrp, intra_bgrp_comm, &
+         is_, xk, is_, npol, c2(:,ib:ib+nb-1), ngw_g, gamma_only,&
+         nbnd, ig_l2g, ngw, b1,b2,b3, mill_k, scalef, ierr )
     !
     ! Add here checks on consistency of what has been read
     !

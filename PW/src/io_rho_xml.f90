@@ -39,7 +39,8 @@ MODULE io_rho_xml
       USE io_files,         ONLY : seqopn, tmp_dir, prefix
       USE io_global,        ONLY : ionode, ionode_id, stdout
       USE mp_pools,         ONLY : my_pool_id
-      USE mp_bands,         ONLY : my_bgrp_id, root_bgrp, intra_bgrp_comm
+      USE mp_bands,         ONLY : my_bgrp_id, root_bgrp_id, &
+                                   root_bgrp, intra_bgrp_comm
       USE mp_images,        ONLY : intra_image_comm
       USE mp,               ONLY : mp_bcast
 
@@ -65,7 +66,7 @@ MODULE io_rho_xml
 #if defined (__OLDXML)
       CALL write_rho ( dirname, rho%of_r, nspin_ )
 #else
-      IF ( my_pool_id == 1 .AND. my_bgrp_id == 1 ) &
+      IF ( my_pool_id == 0 .AND. my_bgrp_id == root_bgrp_id ) &
            CALL write_rhog( dirname, root_bgrp, intra_bgrp_comm, &
            bg(:,1)*tpiba, bg(:,2)*tpiba, bg(:,3)*tpiba, &
            gamma_only, mill, ig_l2g, rho%of_g(:,1:nspin_) )
@@ -126,6 +127,7 @@ MODULE io_rho_xml
       USE funct,            ONLY : dft_is_meta
       USE io_files,         ONLY : seqopn, prefix, tmp_dir
       USE io_global,        ONLY : ionode, ionode_id, stdout
+      USE mp_bands,         ONLY : root_bgrp, intra_bgrp_comm
       USE mp_images,        ONLY : intra_image_comm
       USE mp,               ONLY : mp_bcast, mp_sum
       !
@@ -147,7 +149,8 @@ MODULE io_rho_xml
 #if defined (__OLDXML)
       CALL read_rho ( dirname, rho%of_r, nspin_ )
 #else
-      CALL read_rhog( dirname, ig_l2g, nspin_, rho%of_g )
+      CALL read_rhog( dirname, root_bgrp, intra_bgrp_comm, &
+           ig_l2g, nspin_, rho%of_g )
 #endif
       IF ( nspin > nspin_) rho%of_r(:,nspin_+1:nspin) = (0.0_dp, 0.0_dp)
       !

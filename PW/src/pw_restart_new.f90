@@ -446,7 +446,7 @@ MODULE pw_restart_new
       USE lsda_mod,             ONLY : nspin, isk, lsda
       USE mp_pools,             ONLY : intra_pool_comm, inter_pool_comm
       USE mp_bands,             ONLY : my_bgrp_id, root_bgrp, intra_bgrp_comm,&
-                                       nbgrp
+                                       root_bgrp_id, nbgrp
 #if defined(__HDF5) 
       USE hdf5_qe,              ONLY : hdf5_type
 #endif
@@ -550,8 +550,8 @@ MODULE pw_restart_new
          ! ... Only the first band group of each pool writes
          ! ... No warranty it works for more than one band group
          !
-         IF ( my_bgrp_id == 1 ) CALL write_wfc( iunpun, filename, &
-              root_bgrp, intra_bgrp_comm, ik_g, tpiba*xk(:,ik),   &
+         IF ( my_bgrp_id == root_bgrp_id ) CALL write_wfc( iunpun, &
+              filename, root_bgrp, intra_bgrp_comm, ik_g, tpiba*xk(:,ik), &
               ispin, nspin, evc, npw_g, gamma_only, nbnd, &
               igk_l2g_kdip(:), ngk(ik), tpiba*bg(:,1), tpiba*bg(:,2), &
               tpiba*bg(:,3), mill_k, 1.D0 )
@@ -1790,7 +1790,7 @@ MODULE pw_restart_new
       USE buffers,              ONLY : save_buffer
       USE gvect,                ONLY : ig_l2g
       USE noncollin_module,     ONLY : noncolin, npol
-      USE mp_bands,             ONLY : nbgrp
+      USE mp_bands,             ONLY : nbgrp, root_bgrp, intra_bgrp_comm
       USE mp_pools,             ONLY : me_pool, root_pool, &
                                        intra_pool_comm, inter_pool_comm
       USE mp,                   ONLY : mp_sum, mp_max
@@ -1885,10 +1885,9 @@ MODULE pw_restart_new
             !
          ENDIF
          !
-         CALL read_wfc( iunpun, filename, ik_g, xk_, ispin, npol_, &
-                        evc, npw_g, gamma_only, nbnd, igk_l2g_kdip(:),&
-                        ngk(ik), b1, b2, b3, mill_k, scalef, &
-                        ionode_k, root_pool, intra_pool_comm )
+         CALL read_wfc( iunpun, filename, root_bgrp, intra_bgrp_comm, &
+              ik_g, xk_, ispin, npol_, evc, npw_g, gamma_only, nbnd, &
+              igk_l2g_kdip(:), ngk(ik), b1, b2, b3, mill_k, scalef )
          !
          ! ... here one should check for consistency between what is read
          ! ... and what is expected
