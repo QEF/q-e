@@ -19,7 +19,6 @@ EPWOBJS = \
 transportcom.o \
 io_epw.o\
 elph2.o \
-epw.o \
 a2f.o \
 allocate_epwq.o \
 bcast_epw_input.o \
