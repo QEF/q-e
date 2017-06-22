@@ -23,8 +23,8 @@ program special_points
   character(len=30) :: filout
   character(len=1)  :: answer
   real(dp) ::  celldm(6), xk(3,nptx), xkw(nptx), omega
-  integer  ::  k(3,nptx), kw(nptx), ieq(nptx), i,j,l, n1,n2,n3
-  integer  ::  ibrav, nmax(3), nshift(3), nstart(3),n,n6,nf,nk,nptot
+  integer  ::  k(3,nptx), kw(nptx), ieq(nptx), i,j,l, n1,n2,n3, ibrav
+  integer  ::  ibrav_, nmax(3), nshift(3), nstart(3),n,n6,nf,nk,nptot
   logical  ::  aflag, sflag
   !
   write(*,1)
@@ -57,19 +57,20 @@ program special_points
   open(unit=1,file=filout,status='unknown')
   open(unit=2,file='info',status='unknown')
   !
-  if(ibrav.eq.4 .or. ibrav.gt.5) then
+  ibrav_= abs(ibrav)
+  if(ibrav_ == 4 .or. ibrav_ > 5) then
      write(*,'(5x,a)',advance="no") 'enter celldm(3)  >> '
      read(*,*) celldm(3)
   end if
-  if(ibrav.ge.8) then
+  if(ibrav_ >= 8) then
      write(*,'(5x,a)',advance="no") 'enter celldm(2)  >> '
      read(*,*) celldm(2)
   end if
-  if(ibrav.eq.5 .or. ibrav.ge.12) then
+  if(ibrav_ == 5 .or. (ibrav_ >= 12 .and. ibrav_ <= 14) ) then
      write(*,'(5x,a)',advance="no") 'enter celldm(4)  >> '
      read(*,*) celldm(4)
   end if
-  if(ibrav.eq.14) then
+  if(ibrav_ == 14) then
      write(*,'(5x,a)')   'enter celldm(5)  >> cos(ac)'
      write(*,'(5x,a)',advance="no") 'enter celldm(5)  >> '
      read(*,*) celldm(5)
