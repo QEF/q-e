@@ -655,12 +655,17 @@ CONTAINS
 #else
    CHARACTER(len=len(in)) :: out
 #endif   
-   INTEGER :: i
+   INTEGER :: i,o,disp
+   disp = 0 
    DO i = 1,len(in)
+      o = i + disp
       IF ( in(i:i) == '<' .or. in(i:i) == '>' ) THEN
-         out(i:i) = '/'
-      ELSE
-         out(i:i) = in(i:i)
+         out(o:o) = '/'
+      ELSE IF (in(i:i) == '&') THEN
+         out(o:o+4)='&amp;'
+         disp = disp+4
+      ELSE 
+         out(o:o) = in(i:i)
       ENDIF
    ENDDO
  END FUNCTION CHECK
