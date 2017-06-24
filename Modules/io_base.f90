@@ -327,7 +327,7 @@ MODULE io_base
          ALLOCATE( wtmp( npol*MAX( igwx_, igwx ) ) )
 #if defined (__HDF5) 
          CALL qeh5_open_dataset( h5file, h5dset_wfc, ACTION = 'read', NAME = 'evc')
-         CALL qeh5_set_space ( h5dset_wfc, wtmp(1), RANK = 1, DIMENSIONS = [npol*MAX(igwx_, igwx)], MODE = 'm') 
+         CALL qeh5_set_space ( h5dset_wfc, wtmp(1), RANK = 1, DIMENSIONS = [npol*igwx_], MODE = 'm') 
 #endif
       ELSE
          ALLOCATE( wtmp(1) )
@@ -430,14 +430,15 @@ MODULE io_base
       INTEGER                  :: iun, ns, ig, ierr
       CHARACTER(LEN=320)       :: filename
       !
-      me_in_group     = mp_rank( intra_group_comm )
-      nproc_in_group  = mp_size( intra_group_comm )
-      ionode_in_group = ( me_in_group == root_in_group )
 #if defined __HDF5
       TYPE (qeh5_file)          ::  h5file
       TYPE (qeh5_dataset)       ::  h5dset_mill, h5dset_rho_g
       CHARACTER(LEN=10)          :: bool_char = ".FALSE.", datasets(2) = ['rhotot_g  ','rhodiff_g ']
+      !
 #endif
+      me_in_group     = mp_rank( intra_group_comm )
+      nproc_in_group  = mp_size( intra_group_comm )
+      ionode_in_group = ( me_in_group == root_in_group )
       ngm  = SIZE (rho, 1)
       IF (ngm /= SIZE (mill, 2) .OR. ngm /= SIZE (ig_l2g, 1) ) &
          CALL errore('write_rhog', 'inconsistent input dimensions', 1)
