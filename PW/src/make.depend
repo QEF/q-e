@@ -969,7 +969,9 @@ io_rho_xml.o : ../../Modules/io_files.o
 io_rho_xml.o : ../../Modules/io_global.o
 io_rho_xml.o : ../../Modules/kind.o
 io_rho_xml.o : ../../Modules/mp.o
+io_rho_xml.o : ../../Modules/mp_bands.o
 io_rho_xml.o : ../../Modules/mp_images.o
+io_rho_xml.o : ../../Modules/mp_pools.o
 io_rho_xml.o : ../../Modules/noncol.o
 io_rho_xml.o : ../../Modules/paw_variables.o
 io_rho_xml.o : ../../Modules/recvec.o
@@ -1034,6 +1036,7 @@ martyna_tuckerman.o : ../../Modules/mp.o
 martyna_tuckerman.o : ../../Modules/mp_bands.o
 martyna_tuckerman.o : ../../Modules/recvec.o
 martyna_tuckerman.o : ../../Modules/ws_base.o
+memory_report.o : ../../Modules/atom.o
 memory_report.o : ../../Modules/cell_base.o
 memory_report.o : ../../Modules/constants.o
 memory_report.o : ../../Modules/control_flags.o
@@ -2115,7 +2118,6 @@ update_pot.o : ../../Modules/paw_variables.o
 update_pot.o : ../../Modules/recvec.o
 update_pot.o : ../../Modules/uspp.o
 update_pot.o : ../../Modules/wavefunctions.o
-update_pot.o : ../../Modules/wrappers.o
 update_pot.o : ../../Modules/xml_io_base.o
 update_pot.o : buffers.o
 update_pot.o : extfield.o
