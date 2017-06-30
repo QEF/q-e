@@ -128,6 +128,8 @@
   !! Counter for WS loop
   INTEGER :: nrws
   !! Number of real-space Wigner-Seitz
+  INTEGER :: valueRSS(2)
+  !! Return virtual and resisdent memory from system
   INTEGER, PARAMETER :: nrwsx=200
   !! Maximum number of real-space Wigner-Seitz
   !  
@@ -415,6 +417,16 @@
   IF ( ALLOCATED (cuq) )     DEALLOCATE (cuq)
   IF ( ALLOCATED (lwin) )    DEALLOCATE (lwin)
   IF ( ALLOCATED (lwinq) )   DEALLOCATE (lwinq)
+  ! 
+  ! Check Memory usage
+  CALL system_mem_usage(valueRSS)
+  ! 
+  WRITE(stdout, '(a)' )             '     ==================================================================='
+  WRITE(stdout, '(a,i10,a)' ) '     Memory usage:  VmHWM =',valueRSS(2)/1024,'Mb'
+  WRITE(stdout, '(a,i10,a)' ) '                   VmPeak =',valueRSS(1)/1024,'Mb'
+  WRITE(stdout, '(a)' )             '     ==================================================================='
+  WRITE(stdout, '(a)' )             '     '
+  ! 
   !
   ! at this point, we will interpolate the Wannier rep to the Bloch rep 
   ! for electrons, phonons and the ep-matrix
@@ -1388,7 +1400,6 @@
   CALL mp_bcast (epsi, ionode_id, inter_pool_comm)
   CALL mp_bcast (epsi, root_pool, intra_pool_comm)
   !
-  IF (.not. ALLOCATED(epmatwp)) ALLOCATE ( epmatwp ( nbndsub, nbndsub, nrr_k, nmodes, nrr_q) )
   IF (.not. ALLOCATED(chw)    ) ALLOCATE ( chw ( nbndsub, nbndsub, nrr_k )            )
   IF (.not. ALLOCATED(chw_ks) ) ALLOCATE ( chw_ks ( nbndsub, nbndsub, nrr_k )         )
   IF (.not. ALLOCATED(rdw)    ) ALLOCATE ( rdw ( nmodes,  nmodes,  nrr_q )            )
@@ -1440,6 +1451,7 @@
   IF (lifc) CALL read_ifc
   !
   IF (etf_mem) then
+    IF (.not. ALLOCATED(epmatwp)) ALLOCATE ( epmatwp ( nbndsub, nbndsub, nrr_k, nmodes, nrr_q) )
     epmatwp = czero
     IF (mpime.eq.ionode_id) THEN
       ! SP: The call to aux is now inside the loop

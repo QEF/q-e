@@ -28,7 +28,7 @@
   PUBLIC :: epwdata, iundmedata, iunvmedata, iunksdata, iudyn, iukgmap, iuepb,&
             iurecover, iufilfreq, iufilegnv, iufileph, iufilkqmap, &
             iufilikmap, iueig, iunepmatwp, iunepmatwe, iunkf, iunqf, &
-            iufileig, iukmap, crystal, iunifc
+            iufileig, iukmap, crystal, iunifc, iunimem
   PUBLIC :: iuwinfil, iun_plot, iuukk, iuprojfil !, iummn
   PUBLIC :: iufilsigma, iufilseebeck, iufilkappael, iufilkappa, iufilscatt_rate,&
             iufilFi_all, iufilsigma_all, iufiltau_all
@@ -96,6 +96,7 @@
   INTEGER :: iukmap          = 120  ! Unit for the k-point map generation
   INTEGER :: crystal         = 121  ! Unit for crystal data
   INTEGER :: iunifc          = 122  ! Unit for the IFC produced by q2r.x
+  INTEGER :: iunimem         = 123  ! Unit for reading memory information from the system status file
 
   !
   ! Output quantites related to Wannier (201-250)
