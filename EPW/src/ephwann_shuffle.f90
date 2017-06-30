@@ -1240,10 +1240,10 @@
   USE io_global, ONLY : ionode_id
   !
   implicit none
+  ! 
   LOGICAL             :: exst
   INTEGER             :: ibnd, jbnd, jmode, imode, irk, irq, ipol, i, lrepmatw
-  character (len=256) :: filint
-  complex(kind=DP)    :: aux ( nbndsub*nbndsub*nrr_k*nmodes*nrr_q ) 
+  CHARACTER (len=256) :: filint
   !
   WRITE(6,'(/5x,"Writing Hamiltonian, Dynamical matrix and EP vertex in Wann rep to file"/)')
   !
@@ -1292,7 +1292,7 @@
     ENDDO
     !
     IF (etf_mem) THEN
-      ! SP: The call to aux is now inside the loop
+      ! SP: The call to epmatwp is now inside the loop
       !     This is important as otherwise the lrepmatw integer 
       !     could become too large for integer(kind=4).
       !     Note that in Fortran the record length has to be a integer
@@ -1301,18 +1301,7 @@
       filint    = trim(prefix)//'.epmatwp'
       CALL diropn (iunepmatwp, 'epmatwp', lrepmatw, exst)
       DO irq = 1, nrr_q
-        i = 0      
-        DO imode = 1, nmodes
-          DO irk = 1, nrr_k
-            DO jbnd = 1, nbndsub
-              DO ibnd = 1, nbndsub
-                i = i + 1
-                aux (i) = epmatwp(ibnd,jbnd,irk,imode,irq)
-              ENDDO
-            ENDDO
-          ENDDO
-        ENDDO
-        CALL davcio ( aux, lrepmatw, iunepmatwp, irq, +1 )
+        CALL davcio ( epmatwp(:,:,:,:,irq), lrepmatw, iunepmatwp, irq, +1 )
       ENDDO
       ! 
       CLOSE(iunepmatwp)
@@ -1355,10 +1344,9 @@
   implicit none
   !
   LOGICAL             :: exst
-  character (len=256) :: filint
+  CHARACTER (len=256) :: filint
   INTEGER             :: ibnd, jbnd, jmode, imode, irk, irq, &
                          ipol, ios, i, lrepmatw
-  complex(kind=DP)    :: aux ( nbndsub*nbndsub*nrr_k*nmodes*nrr_q )
   !
   WRITE(stdout,'(/5x,"Reading Hamiltonian, Dynamical matrix and EP vertex in Wann rep from file"/)')
   call flush(6)
@@ -1454,7 +1442,7 @@
     IF (.not. ALLOCATED(epmatwp)) ALLOCATE ( epmatwp ( nbndsub, nbndsub, nrr_k, nmodes, nrr_q) )
     epmatwp = czero
     IF (mpime.eq.ionode_id) THEN
-      ! SP: The call to aux is now inside the loop
+      ! SP: The call to epmatwp is now inside the loop
       !     This is important as otherwise the lrepmatw integer 
       !     could become too large for integer(kind=4).
       !     Note that in Fortran the record length has to be a integer
@@ -1463,18 +1451,7 @@
       filint    = trim(prefix)//'.epmatwp'
       CALL diropn (iunepmatwp, 'epmatwp', lrepmatw, exst)
       DO irq = 1, nrr_q
-        i = 0     
-        CALL davcio ( aux, lrepmatw, iunepmatwp, irq, -1 )
-        DO imode = 1, nmodes
-          DO irk = 1, nrr_k
-            DO jbnd = 1, nbndsub
-              DO ibnd = 1, nbndsub
-                i = i + 1
-                epmatwp(ibnd,jbnd,irk,imode,irq) = aux(i)
-              ENDDO
-            ENDDO
-          ENDDO
-        ENDDO
+        CALL davcio ( epmatwp(:,:,:,:,irq), lrepmatw, iunepmatwp, irq, -1 )
       ENDDO
     ENDIF
     !
