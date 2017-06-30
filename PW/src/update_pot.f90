@@ -343,9 +343,9 @@ SUBROUTINE update_pot()
   ! ... determines the maximum effective order of the extrapolation on the
   ! ... basis of the files that are really available (for the charge density)
   !
-  IF ( ionode ) THEN
-     !
-     rho_extr = MIN( 1, history, pot_order )
+  rho_extr = MIN( 1, history, pot_order )
+  !
+  IF ( pot_order > 1 .AND. ionode ) THEN
      !
      dirname =  TRIM( tmp_dir ) // TRIM( prefix ) // '.save/'
      INQUIRE( FILE = TRIM( dirname ) // 'charge-density.old.dat', &
@@ -488,7 +488,9 @@ SUBROUTINE extrapolate_charge( dirname, rho_extr )
         WRITE( UNIT = stdout, FMT = '(5X, &
              & "NEW-OLD atomic charge density approx. for the potential")' )
         !
-        CALL write_rho( dirname, rho%of_r, 1, 'old' )
+        ! ... no need to save old charge density if no extrapolation is done
+        !
+        IF ( pot_order > 1 ) CALL write_rho( dirname, rho%of_r, 1, 'old' )
         !
      ELSE IF ( rho_extr == 2 ) THEN
         !
