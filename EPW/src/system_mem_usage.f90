@@ -12,7 +12,9 @@
   !! process ( so it will be master only in case of MPI ).
   !! Memory is reported from the /proc/PID_NUMBER/status file
   ! ---------------------------------------------------------------------
-  !USE ifport !if on intel compiler
+#ifdef __INTEL_COMPILER
+  USE ifport !if on intel compiler
+#endif  
   USE io_global,   ONLY : stdout
   USE io_epw,      ONLY : iunimem
   ! 
