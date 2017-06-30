@@ -228,10 +228,11 @@ MODULE realus
       INTEGER,  ALLOCATABLE :: buffpoints(:)
       INTEGER               :: idx0, idx, ir
       INTEGER               :: i, j, k, ipol, ijv
+      INTEGER               :: imin, imax, ii, jmin, jmax, jj, kmin, kmax, kk
       REAL(DP)              :: distsq, posi(3)
       REAL(DP), ALLOCATABLE :: boxdist(:), xyz(:,:)
       REAL(DP)              :: mbr, mbx, mby, mbz, dmbx, dmby, dmbz, aux
-      REAL(DP)              :: inv_nr1, inv_nr2, inv_nr3, boxradsq_ia
+      REAL(DP)              :: inv_nr1, inv_nr2, inv_nr3, boxradsq_ia, boxrad_ia
       !
       initialisation_level = 3
       IF ( .not. okvan ) RETURN
@@ -310,54 +311,46 @@ MODULE realus
          buffpoints(:) = 0
          boxdist(:) = 0.D0
          !
-         boxradsq_ia = boxrad(nt)**2
+         boxrad_ia   = boxrad(nt)
+         boxradsq_ia = boxrad_ia**2
          !
          mbia = 0
          !
-         ! ... The do loop includes only planes that belong to this processor
+         ! ... compute the needed ranges for i,j,k  indices around the atom position in crystal coordinates
          !
-         DO ir = 1, dfft%nr1x*dfft%nr2x * dfft%npl
-            !
-            ! ... three dimensional indices (i,j,k)
-            !
-            idx   = idx0 + ir - 1
-            k     = idx / (dfft%nr1x*dfft%nr2x)
-            idx   = idx - (dfft%nr1x*dfft%nr2x)*k
-            j     = idx / dfft%nr1x
-            idx   = idx - dfft%nr1x*j
-            i     = idx
-            !
-            ! ... do not include points outside the physical range 
-            !
-            IF ( i >= dfft%nr1 .OR. j >= dfft%nr2 .OR. k >= dfft%nr3 ) CYCLE
-            !
-            DO ipol = 1, 3
-               posi(ipol) = dble( i )*inv_nr1*at(ipol,1) + &
-                            dble( j )*inv_nr2*at(ipol,2) + &
-                            dble( k )*inv_nr3*at(ipol,3)
-            ENDDO
-            !
-            posi(:) = posi(:) - tau(:,ia)
-            !
-            ! ... minimum image convention
-            !
-            CALL cryst_to_cart( 1, posi, bg, -1 )
-            posi(:) = posi(:) - anint( posi(:) )
-            CALL cryst_to_cart( 1, posi, at, 1 )
-            distsq = posi(1)**2 + posi(2)**2 + posi(3)**2
-            !
-            IF ( distsq < boxradsq_ia ) THEN
-               !
-               mbia = mbia + 1
-               IF( mbia > roughestimate ) &
-                    CALL errore('qpointlist', 'rough-estimate is too rough', 3)
-               buffpoints(mbia)    = ir
-               boxdist(mbia)       = sqrt( distsq )*alat
-               xyz(:,mbia)         = posi(:)*alat
-               !
-            ENDIF
-            !
-         ENDDO
+         posi(:) = tau(:,ia) ; CALL cryst_to_cart( 1, posi, bg, -1 )
+         imin = NINT((posi(1) - boxrad_ia * sqrt(bg(1,1)*bg(1,1)+bg(2,1)*bg(2,1)+bg(3,1)*bg(3,1)))*dfft%nr1)
+         imax = NINT((posi(1) + boxrad_ia * sqrt(bg(1,1)*bg(1,1)+bg(2,1)*bg(2,1)+bg(3,1)*bg(3,1)))*dfft%nr1)
+         jmin = NINT((posi(2) - boxrad_ia * sqrt(bg(1,2)*bg(1,2)+bg(2,2)*bg(2,2)+bg(3,2)*bg(3,2)))*dfft%nr2)
+         jmax = NINT((posi(2) + boxrad_ia * sqrt(bg(1,2)*bg(1,2)+bg(2,2)*bg(2,2)+bg(3,2)*bg(3,2)))*dfft%nr2)
+         kmin = NINT((posi(3) - boxrad_ia * sqrt(bg(1,3)*bg(1,3)+bg(2,3)*bg(2,3)+bg(3,3)*bg(3,3)))*dfft%nr3)
+         kmax = NINT((posi(3) + boxrad_ia * sqrt(bg(1,3)*bg(1,3)+bg(2,3)*bg(2,3)+bg(3,3)*bg(3,3)))*dfft%nr3)
+         DO k = kmin, kmax
+            kk = modulo(k,dfft%nr3) - dfft%ipp(me_bgrp+1)
+            if (kk .LT. 0 .OR. kk .ge. dfft%npl ) cycle
+            DO j = jmin, jmax
+               jj = modulo(j,dfft%nr2)
+               DO i = imin, imax
+                  ii = modulo(i,dfft%nr1)
+                  !
+                  posi(:) = i * inv_nr1*at(:,1) + j * inv_nr2*at(:,2) + k * inv_nr3*at(:,3) - tau(:,ia)
+                  !
+                  distsq = posi(1)**2 + posi(2)**2 + posi(3)**2
+                  IF ( distsq < boxradsq_ia ) THEN
+                     ! compute fft index ir from ii,jj,kk
+                     ir = 1 + ii + jj * dfft%nr1x + kk * dfft%nr1x * dfft%nr2x
+                     !
+                     mbia = mbia + 1
+                     IF( mbia > roughestimate ) CALL errore('qpointlist', 'rough-estimate is too rough', 3)
+                     !
+                     buffpoints(mbia)    = ir
+                     boxdist(mbia)       = sqrt( distsq )*alat
+                     xyz(:,mbia)         = posi(:)*alat
+                     !
+                  ENDIF
+               END DO
+            END DO
+         END DO
          !
          IF ( mbia == 0 ) CYCLE
          !
@@ -765,12 +758,13 @@ MODULE realus
       REAL(DP)              :: distsq, qtot_int, first, second
       INTEGER               :: idx0, idx, ir
       INTEGER               :: i, j, k, ipol, lm, nb
+      INTEGER               :: imin, imax, ii, jmin, jmax, jj, kmin, kmax, kk
       REAL(DP)              :: posi(3)
       REAL(DP), ALLOCATABLE :: rl(:,:), rl2(:)
       REAL(DP), ALLOCATABLE :: tempspher(:,:), qtot(:,:,:), &
                                xsp(:), ysp(:), wsp(:), d1y(:), d2y(:)
       REAL(DP)              :: mbr, mbx, mby, mbz, dmbx, dmby, dmbz
-      REAL(DP)              :: inv_nr1s, inv_nr2s, inv_nr3s, tau_ia(3), boxradsq_ia
+      REAL(DP)              :: inv_nr1s, inv_nr2s, inv_nr3s, tau_ia(3), boxradsq_ia, boxrad_ia
       !
       initialisation_level = initialisation_level + 5
       IF ( .not. okvan ) CALL errore &
@@ -850,56 +844,50 @@ MODULE realus
          !
          IF ( .not. upf(ityp(ia))%tvanp ) CYCLE
          !
-         boxradsq_ia = boxrad_beta(ityp(ia))**2
+         boxrad_ia   = boxrad_beta(ityp(ia))
+         boxradsq_ia = boxrad_ia**2
          !
          tau_ia(1) = tau(1,ia)
          tau_ia(2) = tau(2,ia)
          tau_ia(3) = tau(3,ia)
          !
-         DO ir = 1, dffts%nr1x*dffts%nr2x * dffts%npl
-            !
-            ! ... three dimensional indexes
-            !
-            idx = idx0 + ir - 1
-            k   = idx / (dffts%nr1x*dffts%nr2x)
-            idx = idx - (dffts%nr1x*dffts%nr2x)*k
-            j   = idx / dffts%nr1x
-            idx = idx - dffts%nr1x*j
-            i   = idx
-            !
-            ! ... do not include points outside the physical range
-            !
-            IF ( i >= dffts%nr1 .OR. j >= dffts%nr2 .OR. k >= dffts%nr3 ) CYCLE
-            !
-            DO ipol = 1, 3
-               posi(ipol) = dble( i )*inv_nr1s*at(ipol,1) + &
-                            dble( j )*inv_nr2s*at(ipol,2) + &
-                            dble( k )*inv_nr3s*at(ipol,3)
-            ENDDO
-            !
-            posi(:) = posi(:) - tau_ia(:)
-            !
-            ! ... minimum image convenction
-            !
-            CALL cryst_to_cart( 1, posi, bg, -1 )
-            !
-            posi(:) = posi(:) - anint( posi(:) )
-            !
-            CALL cryst_to_cart( 1, posi, at, 1 )
-            !
-            distsq = posi(1)**2 + posi(2)**2 + posi(3)**2
-            !
-            IF ( distsq < boxradsq_ia ) THEN
-               !
-               mbia = maxbox_beta(ia) + 1
-               !
-               maxbox_beta(ia)     = mbia
-               buffpoints(mbia,ia) = ir
-               buffdist(mbia,ia)   = sqrt( distsq )*alat
-               buff_xyz_beta(:,mbia,ia) = posi(:)*alat
-               !
-            ENDIF
-         ENDDO
+         !
+         ! ... compute the needed ranges for i,j,k  indices around the atom position in crystal coordinates
+         !
+         posi(:) = tau_ia(:) ; CALL cryst_to_cart( 1, posi, bg, -1 )
+         imin = NINT((posi(1) - boxrad_ia * sqrt(bg(1,1)*bg(1,1)+bg(2,1)*bg(2,1)+bg(3,1)*bg(3,1)))*dffts%nr1)
+         imax = NINT((posi(1) + boxrad_ia * sqrt(bg(1,1)*bg(1,1)+bg(2,1)*bg(2,1)+bg(3,1)*bg(3,1)))*dffts%nr1)
+         jmin = NINT((posi(2) - boxrad_ia * sqrt(bg(1,2)*bg(1,2)+bg(2,2)*bg(2,2)+bg(3,2)*bg(3,2)))*dffts%nr2)
+         jmax = NINT((posi(2) + boxrad_ia * sqrt(bg(1,2)*bg(1,2)+bg(2,2)*bg(2,2)+bg(3,2)*bg(3,2)))*dffts%nr2)
+         kmin = NINT((posi(3) - boxrad_ia * sqrt(bg(1,3)*bg(1,3)+bg(2,3)*bg(2,3)+bg(3,3)*bg(3,3)))*dffts%nr3)
+         kmax = NINT((posi(3) + boxrad_ia * sqrt(bg(1,3)*bg(1,3)+bg(2,3)*bg(2,3)+bg(3,3)*bg(3,3)))*dffts%nr3)
+         DO k = kmin, kmax
+            kk = modulo(k,dffts%nr3) - dffts%ipp(me_bgrp+1)
+            if (kk .LT. 0 .OR. kk .ge. dffts%npl ) cycle
+            DO j = jmin, jmax
+               jj = modulo(j,dffts%nr2)
+               DO i = imin, imax
+                  ii = modulo(i,dffts%nr1)
+                  !
+                  posi(:) = i * inv_nr1s*at(:,1) + j * inv_nr2s*at(:,2) + k * inv_nr3s*at(:,3) - tau_ia(:)
+                  !
+                  distsq = posi(1)**2 + posi(2)**2 + posi(3)**2
+                  IF ( distsq < boxradsq_ia ) THEN
+                     ! compute fft index ir from ii,jj,kk
+                     ir = 1 + ii + jj * dffts%nr1x + kk * dffts%nr1x * dffts%nr2x
+                     !
+                     mbia = maxbox_beta(ia) + 1
+                     !
+                     maxbox_beta(ia)     = mbia
+                     buffpoints(mbia,ia) = ir
+                     buffdist(mbia,ia)   = sqrt( distsq )*alat
+                     buff_xyz_beta(:,mbia,ia) = posi(:)*alat
+                     !
+                  ENDIF
+               END DO
+            END DO
+         END DO
+
       ENDDO
       !
       goodestimate = maxval( maxbox_beta )
