@@ -171,7 +171,6 @@ cp_restart_new.o : ../../Modules/mp_diag.o
 cp_restart_new.o : ../../Modules/mp_global.o
 cp_restart_new.o : ../../Modules/mp_images.o
 cp_restart_new.o : ../../Modules/mp_pools.o
-cp_restart_new.o : ../../Modules/mp_world.o
 cp_restart_new.o : ../../Modules/parameters.o
 cp_restart_new.o : ../../Modules/qes_module.o
 cp_restart_new.o : ../../Modules/qes_types.o

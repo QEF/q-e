@@ -343,6 +343,8 @@ local_dos_mag.o : ../../Modules/fft_base.o
 local_dos_mag.o : ../../Modules/io_files.o
 local_dos_mag.o : ../../Modules/ions_base.o
 local_dos_mag.o : ../../Modules/kind.o
+local_dos_mag.o : ../../Modules/mp.o
+local_dos_mag.o : ../../Modules/mp_pools.o
 local_dos_mag.o : ../../Modules/noncol.o
 local_dos_mag.o : ../../Modules/recvec.o
 local_dos_mag.o : ../../Modules/uspp.o
