@@ -35,7 +35,7 @@ do
 if test "$have_mkl" -eq 1
    then
       unset ac_cv_search_pdgemr2d # clear cached value
-      LIBS="-lmkl_blacs_lp64 $mpi_libs $blas_libs"
+      LIBS="$mpi_libs $blas_libs"
       if test $with_scalapack -eq 1; then
          scalapack_libs=-lmkl_blacs_openmpi_lp64
       else
@@ -43,7 +43,9 @@ if test "$have_mkl" -eq 1
       fi
       AC_SEARCH_LIBS(pdgemr2d, "mkl_scalapack_lp64" , have_scalapack=1
                      try_dflags="$try_dflags -D__SCALAPACK"
-                     scalapack_libs="-lmkl_scalapack_lp64 $scalapack_libs" )
+                     scalapack_libs="-lmkl_scalapack_lp64 $scalapack_libs",
+                     ,
+                     "$scalapack_libs" )
       test "$have_scalapack" -eq 1 && break
 fi 
 #

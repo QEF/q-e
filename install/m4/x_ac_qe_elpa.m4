@@ -25,6 +25,16 @@ AC_ARG_WITH(elpa-lib,
       elpa_libs="$withval"
    fi],
    [with_elpa_libs=0])
+   
+AC_ARG_WITH(elpa-version,
+   [AS_HELP_STRING([--with-elpa-version],
+       [Specify ELPA version, only year (default: 2016)])],
+   [if  test "$withval" = "no" ; then
+      with_elpa_version=0
+   else
+      with_elpa_version="$withval"
+   fi],
+   [with_elpa_version="2016"])
 
 
 elpa_line="@delete@"
@@ -33,9 +43,20 @@ elpa_line="@delete@"
 if test "$with_elpa_libs" -eq 1; then 
   if test "$have_scalapack" -eq 1; then
     if test "$with_elpa_include" -eq 1 && test "$with_elpa_libs" -eq 1; then
-      scalapack_libs="$elpa_libs $scalapack_libs"
+      
+      if test "$with_elpa_version" = "2015"; then
+        try_dflags="$try_dflags -D__ELPA_2015"
+      elif test "$with_elpa_version" = "2016"; then
+        try_dflags="$try_dflags -D__ELPA_2016"
+      elif test "$with_elpa_version" = "2017"; then
+        try_dflags="$try_dflags -D__ELPA_2017"
+      else
+        AC_MSG_WARN([*** Invalid ELPA version, defaulting to 2016])
+        try_dflags="$try_dflags -D__ELPA_2016"
+      fi
+      
       try_iflags="$try_iflags -I$elpa_include"
-      try_dflags="$try_dflags -D__ELPA_2016"
+      scalapack_libs="$elpa_libs $scalapack_libs"
       elpa_line="ELPA_LIBS=$elpa_libs"
     fi
   else

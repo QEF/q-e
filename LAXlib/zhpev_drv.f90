@@ -1474,7 +1474,7 @@ CONTAINS
 
   SUBROUTINE pzheevd_drv( tv, n, nb, h, w, ortho_cntx, ortho_comm )
 
-#if defined(__ELPA) || defined(__ELPA_2016) || defined(__ELPA_2015)
+#if defined(__ELPA) || defined(__ELPA_2017) || defined(__ELPA_2016) || defined(__ELPA_2015)
      USE elpa1
 #endif
      IMPLICIT NONE
@@ -1499,7 +1499,7 @@ CONTAINS
      INTEGER     :: LWORK, LRWORK, LIWORK
      INTEGER     :: desch( 10 ), info, ierr
      CHARACTER   :: jobv
-#if defined(__ELPA) || defined(__ELPA_2016) || defined(__ELPA_2015)
+#if defined(__ELPA) || defined(__ELPA_2017) || defined(__ELPA_2016) || defined(__ELPA_2015)
      INTEGER     :: nprow,npcol,my_prow, my_pcol,mpi_comm_rows, mpi_comm_cols
      LOGICAL     :: success
 #endif 
@@ -1514,10 +1514,14 @@ CONTAINS
 
      call descinit( desch, n, n, nb, nb, 0, 0, ortho_cntx, size(h,1), info )
      
-#if defined(__ELPA) || defined(__ELPA_2016) || defined(__ELPA_2015)
+#if defined(__ELPA) || defined(__ELPA_2017) || defined(__ELPA_2016) || defined(__ELPA_2015)
      CALL BLACS_Gridinfo(ortho_cntx,nprow, npcol, my_prow,my_pcol)
 
-#if defined(__ELPA_2016)
+#if defined(__ELPA_2017)
+     ierr = get_elpa_row_col_comms(ortho_comm, my_prow, my_pcol,mpi_comm_rows, mpi_comm_cols)
+     success = elpa_solve_evp_complex_1stage_double(n, n, h, size(h,1), w,  v, size(h,1), size(h,2), nb, &
+                           mpi_comm_rows, mpi_comm_cols, ortho_comm)
+#elif defined(__ELPA_2016)
      ! -> ELPA 2016.11.001_pre
      ierr = elpa_get_communicators(ortho_comm, my_prow, my_pcol,mpi_comm_rows, mpi_comm_cols)
      success = solve_evp_complex_1stage_double(n, n, h, size(h,1), w,  v, size(h,1), size(h,2), nb, &
