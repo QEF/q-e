@@ -281,14 +281,15 @@
   CALL wigner_seitz2 &
        ( nk1, nk2, nk3, nq1, nq2, nq3, nrr_k, nrr_q, irvec, wslen, ndegen_k, ndegen_q )
   !
+#ifndef __MPI  
+  ! Open like this only in sequential. Otherwize open with MPI-open
   IF ((.NOT. etf_mem) .AND. (ionode)) THEN
     ! open the .epmatwe file with the proper record length
     lrepmatw   = 2 * nbndsub * nbndsub * nrr_k * nmodes
-    filint    = trim(prefix)//'.epmatwe'
-    CALL diropn (iunepmatwe, 'epmatwe', lrepmatw, exst)  
     filint    = trim(prefix)//'.epmatwp'
     CALL diropn (iunepmatwp, 'epmatwp', lrepmatw, exst)
   ENDIF
+#endif
   ! 
   ! At this point, we will interpolate the Wannier rep to the Bloch rep 
   !
@@ -300,6 +301,12 @@
      CALL epw_read
      !
   ELSE !if not epwread (i.e. need to calculate fmt file)
+     ! 
+     IF ((.NOT. etf_mem) .AND. (ionode)) THEN
+       lrepmatw   = 2 * nbndsub * nbndsub * nrr_k * nmodes
+       filint    = trim(prefix)//'.epmatwe'
+       CALL diropn (iunepmatwe, 'epmatwe', lrepmatw, exst)
+     ENDIF          
      !
      !
      xxq = 0.d0 
