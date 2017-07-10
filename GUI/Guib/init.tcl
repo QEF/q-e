@@ -8,7 +8,9 @@
 
 package require Tk       
 #package require Itcl
-package require Itk      
+if { [catch {package require Itk}] } {
+    package require itk
+}
 package require Iwidgets 
 
 # We need to import all of the itcl functions into the global
