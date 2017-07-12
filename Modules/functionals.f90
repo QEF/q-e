@@ -1074,8 +1074,8 @@ subroutine pbex (rho, grho, iflag, sx, v1x, v2x)
   real(DP) :: k (6), mu(6), ev(6)
   !           pbe        rpbe        pbesol   pbeq2d      optB88  optB86b
   data k / 0.804_DP,   1.2450_DP,   0.804_DP , 0.804_DP,  0.0_dp,  0.0_dp/, &
-       mu/ 0.21951_DP, 0.21951_DP, 0.12345679012345679_DP,             &
-                                   0.12345679012345679_DP,  0.22_dp, 0.1234_dp/, &
+       mu/ 0.2195149727645171_DP, 0.2195149727645171_DP, 0.12345679012345679_DP, &
+           0.12345679012345679_DP,  0.22_dp, 0.1234_dp/, &
        ev / 1.647127_DP, 0.980118_DP, 0.017399_DP, 1.523671_DP, 0.367229_DP, &
                                    0.011282_DP /  ! a and b parameters of Engel and Vosko
   agrho = sqrt (grho)
@@ -1188,7 +1188,7 @@ subroutine pbex_vec (rho, grho, iflag, sx, v1x, v2x, length, small)
   ! parameters of the functional
   real(DP) :: k (3), mu(3)
   data k / 0.804_dp, 1.245_dp, 0.804_dp /, &
-       mu/ 0.21951_dp, 0.21951_dp, 0.12345679012345679012_dp  /
+       mu/ 0.2195149727645171_DP, 0.2195149727645171_DP, 0.12345679012345679_DP/
   !
   do i=1,length
      if ((rho(i).gt.small).and.(grho(i).gt.small**2)) then
@@ -1264,10 +1264,10 @@ subroutine pbec (rho, grho, iflag, sc, v1c, v2c)
   v2c = v2c*2.0_dp
 
 #else
-  real(DP), parameter :: ga = 0.031091d0
+  real(DP), parameter :: ga = 0.0310906908696548950_dp
   real(DP) :: be (3)
 !             pbe           pbesol   pbeq2d
-  data be / 0.066725d0, 0.046d0,     0.066725d0/
+  data be / 0.06672455060314922_dp, 0.046_dp, 0.06672455060314922_dp/
   real(DP), parameter :: third = 1.d0 / 3.d0, pi34 = 0.6203504908994d0
   real(DP), parameter :: xkf = 1.919158292677513d0, xks = 1.128379167095513d0
   ! pi34=(3/4pi)^(1/3), xkf=(9 pi/4)^(1/3), xks= sqrt(4/pi)
@@ -1350,7 +1350,7 @@ subroutine cpbe2d(rho,grho,sc,v1c,v2c)
 !
 ! for the LDA correlation
   p=1.d0
-  A=0.031091d0
+  A=0.0310906908696548950_dp
   alpha1=0.21370d0
   beta1=7.5957d0
   beta2=3.5876d0
@@ -1374,8 +1374,8 @@ subroutine cpbe2d(rho,grho,sc,v1c,v2c)
 !
 ! PBE
   c=1.d0
-  gamma1=0.031091d0
-  beta=0.066725d0
+  gamma1=0.0310906908696548950_dp
+  beta=0.06672455060314922_dp
 !
   AA = beta / gamma1 / (exp(-epsc / gamma1 / phi ** 3) - 0.1D1)
   cg = beta / gamma1 ** 2 / (exp(-epsc/ gamma1 / phi ** 3) - 0.1D1) &

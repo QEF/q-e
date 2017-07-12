@@ -670,7 +670,7 @@ subroutine pbec_spin (rho, zeta, grho, iflag, sc, v1cup, v1cdw, v2c)
   real(DP) :: rho, zeta, grho, sc, v1cup, v1cdw, v2c
   real(DP) :: ga, be(2)
   parameter (ga = 0.031091d0)
-  data be / 0.066725d0 ,  0.046d0 /
+  data be / 0.06672455060314922_dp,  0.046_dp /
   real(DP) :: third, pi34, xkf, xks
   parameter (third = 1.d0 / 3.d0, pi34 = 0.6203504908994d0)
   parameter (xkf = 1.919158292677513d0, xks = 1.128379167095513d0)

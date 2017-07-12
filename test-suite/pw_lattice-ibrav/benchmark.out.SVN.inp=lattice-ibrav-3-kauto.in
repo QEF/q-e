@@ -1,5 +1,5 @@
 
-     Program PWSCF v.6.1 (svn rev. 13547M) starts on  7Jun2017 at 11:48:40 
+     Program PWSCF v.6.1 (svn rev. 13591M) starts on 12Jul2017 at 10: 8:15 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -8,7 +8,7 @@
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
-     Parallel version (MPI), running on     1 processors
+     Serial version
      Reading input from lattice-ibrav-3-kauto.in
 
      Current dimensions of program PWSCF are:
@@ -17,15 +17,11 @@
      Max angular momentum in pseudopotentials (lmaxx) =  3
                file H.pz-vbc.UPF: wavefunction(s)  1S renormalized
 
-     Subspace diagonalization in iterative solution of the eigenvalue problem:
-     a serial algorithm will be used
-
- 
      G-vector sticks info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
      Sum         557     557    173                 8391     8391    1433
- 
+
 
 
      bravais-lattice index     =           -3
@@ -84,7 +80,7 @@
 
      Dense  grid:     8391 G-vectors     FFT dimensions: (  27,  27,  27)
 
-     Estimated max dynamical RAM per process >       4.84MB
+     Estimated max dynamical RAM per process >       5.03 MB
 
      Initial potential from superposition of free atoms
 
@@ -93,7 +89,7 @@
 
      total cpu time spent up to now is        0.0 secs
 
-     per-process dynamical memory:     7.1 Mb
+     per-process dynamical memory:     3.7 Mb
 
      Self-consistent Calculation
 
@@ -163,45 +159,43 @@
      convergence has been achieved in   4 iterations
 
      Writing output data file pwscf.save
- 
+
      init_run     :      0.02s CPU      0.02s WALL (       1 calls)
      electrons    :      0.06s CPU      0.06s WALL (       1 calls)
 
      Called by init_run:
-     wfcinit      :      0.00s CPU      0.01s WALL (       1 calls)
-     potinit      :      0.00s CPU      0.00s WALL (       1 calls)
+     wfcinit      :      0.01s CPU      0.01s WALL (       1 calls)
+     potinit      :      0.00s CPU      0.01s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :      0.02s CPU      0.02s WALL (       4 calls)
+     c_bands      :      0.03s CPU      0.03s WALL (       4 calls)
      sum_band     :      0.01s CPU      0.01s WALL (       4 calls)
-     v_of_rho     :      0.02s CPU      0.01s WALL (       5 calls)
-     mix_rho      :      0.01s CPU      0.01s WALL (       4 calls)
+     v_of_rho     :      0.02s CPU      0.02s WALL (       5 calls)
+     mix_rho      :      0.00s CPU      0.01s WALL (       4 calls)
 
      Called by c_bands:
-     cegterg      :      0.02s CPU      0.02s WALL (      12 calls)
+     cegterg      :      0.03s CPU      0.03s WALL (      12 calls)
 
      Called by sum_band:
 
      Called by *egterg:
-     h_psi        :      0.02s CPU      0.02s WALL (      35 calls)
+     h_psi        :      0.04s CPU      0.03s WALL (      35 calls)
      g_psi        :      0.00s CPU      0.00s WALL (      20 calls)
      cdiaghg      :      0.00s CPU      0.00s WALL (      32 calls)
 
      Called by h_psi:
-     h_psi:pot    :      0.02s CPU      0.02s WALL (      35 calls)
-     vloc_psi     :      0.02s CPU      0.02s WALL (      35 calls)
+     h_psi:pot    :      0.04s CPU      0.03s WALL (      35 calls)
+     vloc_psi     :      0.04s CPU      0.03s WALL (      35 calls)
 
      General routines
-     fft          :      0.01s CPU      0.01s WALL (      19 calls)
-     fftw         :      0.02s CPU      0.03s WALL (      88 calls)
- 
-     Parallel routines
-     fft_scatter  :      0.00s CPU      0.00s WALL (     107 calls)
- 
-     PWSCF        :     0.16s CPU         0.16s WALL
+     fft          :      0.02s CPU      0.01s WALL (      19 calls)
+     fftw         :      0.03s CPU      0.03s WALL (      88 calls)
 
- 
-   This run was terminated on:  11:48:41   7Jun2017            
+
+     PWSCF        :     0.16s CPU         0.17s WALL
+
+
+   This run was terminated on:  10: 8:15  12Jul2017            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
