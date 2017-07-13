@@ -278,6 +278,21 @@ uncompress-west: touch-dummy
 	touch uncompress-west
 
 ###########################################################
+# SternheimerGW
+###########################################################
+
+SternheimerGW: extlibs uncompress-SternheimerGW
+	if test -d ../SternheimerGW/src; then \
+	  cd ../SternheimerGW/src ; $(MAKE) ; \
+	fi
+	touch ./make-SternheimerGW
+
+uncompress-SternheimerGW: touch-dummy
+	$(call download_and_unpack,$(SternheimerGW),$(SternheimerGW_URL),SternheimerGW,SternheimerGW)
+	touch uncompress-SternheimerGW
+
+
+###########################################################
 # extlibs
 ###########################################################
 
@@ -399,6 +414,20 @@ west_veryclean: west_clean
 west_distclean: 
 	   rm -f ../archive/$(WEST).tar.gz
 
+SternheimerGW_clean:
+	if test -d ../SternheimerGW/src; then \
+	  cd ../SternheimerGW/src ; $(MAKE) clean ; \
+	fi
+	- rm -rf ./make-SternheimerGW
+
+SternheimerGW_veryclean: SternheimerGW_clean
+	if test -d ../SternheimerGW; then (rm -R -f ../SternheimerGW); fi
+	if test -d ../$(SternheimerGW); then (rm -R -f ../$(SternheimerGW)); fi
+	- rm -rf ./uncompress-SternheimerGW
+
+SternheimerGW_distclean:
+	rm -f ../archive/$(SternheimerGW_archive)
+
 test-suite_clean:
 	if test -d ../test-suite; then (cd ../test-suite; \
 	$(MAKE) clean); fi
@@ -417,15 +446,15 @@ test-suite_distclean:
 ##########################################################
 
 clean: w90_clean want_clean yambo_clean yambo-devel_clean plumed_clean \
-	gipaw_clean west_clean test-suite_clean \
+	gipaw_clean west_clean SternheimerGW_clean test-suite_clean \
 	sax_clean d3q_clean #examples_clean
 
 veryclean: w90_veryclean want_veryclean yambo_veryclean yambo-devel_veryclean \
-	plumed_veryclean gipaw_veryclean west_veryclean \
+	plumed_veryclean gipaw_veryclean west_veryclean SternheimerGW_veryclean \
 	test-suite_veryclean sax_veryclean d3q_veryclean #examples_veryclean
 
 #distclean : veryclean
 distclean: w90_distclean want_distclean yambo_distclean yambo-devel_distclean \
-  test-suite_distclean gipaw_distclean west_distclean \
+  test-suite_distclean gipaw_distclean west_distclean SternheimerGW_distclean \
 	sax_distclean d3q_distclean
 

@@ -41,6 +41,7 @@ default :
 #	@echo '  SaX          Standard GW-BSE with plane waves'
 	@echo '  yambo        electronic excitations with plane waves'
 	@echo '  yambo-devel  yambo devel version'
+	@echo '  SternheimerGW calculate GW using Sternheimer equations'
 	@echo '  plumed       Metadynamics plugin for pw or cp'
 	@echo '  d3q          general third-order code and thermal transport codes'
 	@echo ' '
@@ -219,6 +220,9 @@ plumed: touch-dummy
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
 west: pw touch-dummy
+	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
+
+SternheimerGW: pw lrmods touch-dummy
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
 touch-dummy :

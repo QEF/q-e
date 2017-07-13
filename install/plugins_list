@@ -54,6 +54,12 @@ TESTSUITE_URL=$(URL)$(TESTSUITE).tar.gz
 WEST=West-2.0.1
 WEST_URL=http://www.west-code.org/downloads/$(WEST).tar.gz
 #
+# Package maintainer: Martin Schlipf
+SternheimerGW_version=0.12
+SternheimerGW=SternheimerGW-$(SternheimerGW_version)
+SternheimerGW_archive=v$(SternheimerGW_version).tar.gz
+SternheimerGW_URL=https://github.com/QEF/SternheimerGW/archive/$(SternheimerGW_archive)
+#
 # Package maintainer:
 EXAMPLES=qe-6.1-examples
 EXAMPLES_URL=$(URL)$(EXAMPLES).tar.gz
