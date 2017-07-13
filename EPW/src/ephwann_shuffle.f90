@@ -37,7 +37,7 @@
                             elecselfen, phonselfen, nest_fn, a2f,               &
                             vme, eig_read, ephwrite, nkf1, nkf2, nkf3,          & 
                             efermi_read, fermi_energy, specfun, band_plot,      &
-                            nqf1, nqf2, nqf3, mp_mesh_k, restart
+                            nqf1, nqf2, nqf3, mp_mesh_k, restart, prtgkk
   USE noncollin_module, ONLY : noncolin
   USE constants_epw, ONLY : ryd2ev, ryd2mev, one, two, czero, twopi, ci, zero
   USE io_files,      ONLY : prefix, diropn
@@ -306,6 +306,8 @@
        lrepmatw   = 2 * nbndsub * nbndsub * nrr_k * nmodes
        filint    = trim(prefix)//'.epmatwe'
        CALL diropn (iunepmatwe, 'epmatwe', lrepmatw, exst)
+       filint    = trim(prefix)//'.epmatwp'
+       CALL diropn (iunepmatwp, 'epmatwp', lrepmatw, exst)    
      ENDIF          
      !
      !
@@ -951,11 +953,15 @@
              !    ENDDO
              !  !enddo
              !endif
+             ! 
+             ! Print the vertex |g|. This is slow and produces huge amount of .txt data            
+             ! Do average over degenerate states since g is gauge-dependent.  
              !
           ENDIF
           !
        ENDDO  ! end loop over k points
        !
+       IF (prtgkk)      CALL print_gkk( iq ) 
        IF (phonselfen ) CALL selfen_phon_q( iq )
        IF (elecselfen ) CALL selfen_elec_q( iq )
        IF (nest_fn    ) CALL nesting_fn_q( iq )

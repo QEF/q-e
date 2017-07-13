@@ -45,7 +45,7 @@
                             tempsmin, tempsmax, temps, delta_approx, title, &
                             scattering, scattering_serta, scattering_0rta, &
                             int_mob, scissor, carrier, ncarrier, iterative_bte, &
-                            restart, restart_freq
+                            restart, restart_freq, prtgkk
 !  USE epwcom,        ONLY : fildvscf0, tphases
   USE elph2,         ONLY : elph 
   USE mp,            ONLY : mp_bcast
@@ -126,6 +126,7 @@
   CALL mp_bcast (iterative_bte, meta_ionode_id, world_comm)
   CALL mp_bcast (carrier, meta_ionode_id, world_comm)  
   CALL mp_bcast (restart, meta_ionode_id, world_comm)
+  CALL mp_bcast (prtgkk, meta_ionode_id, world_comm)
   !
   ! integers
   !

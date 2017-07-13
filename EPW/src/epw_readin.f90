@@ -56,7 +56,7 @@
                             title, int_mob, scissor, iterative_bte, scattering, &
                             ncarrier, carrier, scattering_serta, &
                             scattering_0rta, longrange, shortrange,restart, &
-                            restart_freq
+                            restart_freq, prtgkk
   USE elph2,         ONLY : elph
   USE start_k,       ONLY : nk1, nk2, nk3
   USE constants_epw, ONLY : ryd2mev, ryd2ev, ev2cmm1, kelvin2eV
@@ -120,7 +120,7 @@
        specfun, wmin_specfun, wmax_specfun, nw_specfun, system_2d,             & 
        delta_approx, scattering, int_mob, scissor, ncarrier, carrier,          &
        iterative_bte, scattering_serta, scattering_0rta, longrange, shortrange,&
-       restart, restart_freq
+       restart, restart_freq, prtgkk
 
   ! tphases, fildvscf0
   !
@@ -252,11 +252,12 @@
   !                   metals obviously.
   ! carrier         : if .true. computes the doped carrier mobilities. 
   ! ncarrier        : Set the Fermi level so that the carrier concentration is
-  !            "      ncarrier". If ncarrier > 0, electron doping, hole doping otherwise
+  !                   " ncarrier". If ncarrier > 0, electron doping, hole doping otherwise
   ! longrange       : if .true. computes the long-range part of the el-ph (can
   !                   only be used with lpolar = .true. )
   ! shortrange      : if .true. computes the short-range part of the el-ph (can
   !                   only be used with lpolar = .true. )
+  ! prtgkk          : Print the vertex |g| [meV]. This generates huge outputs.   
   !  
   CHARACTER (LEN=80)  :: input_file
   INTEGER             :: nargs, iiarg, ierr
@@ -429,6 +430,7 @@
   ncarrier = 0.d0 ! cm^-3
   longrange = .false.
   shortrange = .false.  
+  prtgkk = .false.
   !
   !     reading the namelist inputepw
   !

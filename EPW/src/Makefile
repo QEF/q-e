@@ -82,6 +82,7 @@ pade.o \
 plot_band.o \
 poolgather.o \
 print_clock_epw.o \
+print_gkk.o \
 readdvscf.o \
 readgmap.o \
 readmat_shuffle2.o \

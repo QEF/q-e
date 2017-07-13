@@ -206,6 +206,8 @@
   !! if .true. fermi energy is read from the input file
   LOGICAL :: system_2d
   !! if .true. the system is 2 dimensional (vaccum is in z-direction)
+  LOGICAL :: prtgkk
+  !! if .true. print the |g| vertex in [meV].
   !
   ! Superconductivity
   LOGICAL :: ephwrite

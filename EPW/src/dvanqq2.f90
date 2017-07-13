@@ -297,6 +297,5 @@
   DEALLOCATE (sk)
 
   CALL stop_clock ('dvanqq2')
-  CALL print_clock('dvanqq2')
   RETURN
 END SUBROUTINE dvanqq2
