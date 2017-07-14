@@ -26,7 +26,7 @@
             iufilgap, iospectral_sup, iua2ftrfil, iufilgapFS, iufillambdaFS, &
             iuwanep, iuwane, iunukk, iudvscf
   PUBLIC :: epwdata, iundmedata, iunvmedata, iunksdata, iudyn, iukgmap, iuepb,&
-            iurecover, iufilfreq, iufilegnv, iufileph, iufilkqmap, &
+            iufilfreq, iufilegnv, iufileph, iufilkqmap, &
             iufilikmap, iueig, iunepmatwp, iunepmatwe, iunkf, iunqf, &
             iufileig, iukmap, crystal, iunifc, iunimem
   PUBLIC :: iuwinfil, iun_plot, iuukk, iuprojfil !, iummn
@@ -76,7 +76,6 @@
   INTEGER :: iunksdata       = 104  ! Hamiltonian in wannier basis
   INTEGER :: iuepb           = 105  ! Electron-phonon matrix in Bloch 
                                     ! representation [.epb]
-  INTEGER :: iurecover       = 107  ! Dvanqq2 recovery file
   INTEGER :: iufilfreq       = 108  ! Phonon frequency from a previous epw run
                                     ! [.freq]
   INTEGER :: iufilegnv       = 109  ! Eigenvalues from a previous epw run [.egnv]

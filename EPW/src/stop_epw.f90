@@ -15,7 +15,7 @@
   !-----------------------------------------------------------------------
   !!
   !! Close all files and synchronize processes before stopping.
-  !! Called at the end of the run (removes 'recover')
+  !! Called at the end of the run
   !!
   use mp,            ONLY : mp_end, mp_barrier
   USE mp_global,     ONLY : inter_pool_comm, mp_global_end

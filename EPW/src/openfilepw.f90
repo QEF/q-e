@@ -20,13 +20,12 @@
   !-----------------------------------------------------------------------
   use mp_global,        ONLY : me_pool
   use io_files,         ONLY : prefix, diropn, seqopn
-  use units_ph,         ONLY : iudrhous, lrdrhous, iudvkb3, iuwfc
-  USE uspp,             ONLY : nkb, okvan
+  use units_ph,         ONLY : iuwfc
   ! nwordwfc is the record length for the direct-access file containing
   ! wavefunctions
   USE wvfct,            ONLY : nbnd, npwx
   USE noncollin_module, ONLY : npol,nspin_mag
-  use phcom,            ONLY : lrwfc, lrdvkb3, lrdrho
+  use phcom,            ONLY : lrwfc, lrdrho
   USE fft_base,         ONLY : dfftp
   !
   implicit none
@@ -64,22 +63,6 @@
   !      tmp_dir=tmp_dir_save
   !   END IF
   !ENDIF
-  !
-  !
-  !    In the USPP case we also need a file in  order to store derivatives 
-  !    of kb projectors
-  !  
-  IF (okvan) THEN
-     iudvkb3 = find_free_unit()
-     lrdvkb3 = 2 * npwx * nkb * 3
-     CALL diropn (iudvkb3, 'dvkb3', lrdvkb3, exst)
-     !
-     iudrhous = find_free_unit()
-     ! RM - nspin corresponds to nspin_mag according to QE5.0.3
-     !    - this will have to change when we move to QE5.0.3 
-     lrdrhous = 2 * dfftp%nnr * nspin_mag
-     CALL diropn (iudrhous, 'prd', lrdrhous, exst)
-  ENDIF
   !
   RETURN
   !

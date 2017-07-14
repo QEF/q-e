@@ -18,7 +18,7 @@
   !!     the other processors
   !!
 #if defined(__MPI)
-  USE phcom,         ONLY : zue, trans, tr2_ph, recover, nmix_ph, niter_ph, &
+  USE phcom,         ONLY : zue, trans, tr2_ph, nmix_ph, niter_ph, &
                             lnscf, ldisp, fildvscf, fildrho, epsil, alpha_mix 
   USE epwcom,        ONLY : epexst, epbwrite, ep_coupling, &
                             eliashberg, elecselfen, eig_read, &
@@ -73,7 +73,6 @@
   CALL mp_bcast (ephwrite, meta_ionode_id, world_comm)! RM
   CALL mp_bcast (band_plot, meta_ionode_id, world_comm)! RM
   CALL mp_bcast (vme, meta_ionode_id, world_comm)!
-  CALL mp_bcast (recover, meta_ionode_id, world_comm)!
   CALL mp_bcast (epbread, meta_ionode_id, world_comm)   !
   CALL mp_bcast (epbwrite, meta_ionode_id, world_comm)  !
 !  CALL mp_bcast (tphases, meta_ionode_id, world_comm)   !
