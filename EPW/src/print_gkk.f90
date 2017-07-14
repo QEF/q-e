@@ -88,6 +88,9 @@
   !
   ! First do the average over bands and modes for each pool
   DO ik = 1, nkf
+    ikk = 2 * ik - 1
+    ikq = ikk + 1
+    ! 
     DO nu = 1, nmodes
       wq = wf (nu, iq)
       !DO ibnd = ibndmin, ibndmax
