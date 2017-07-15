@@ -51,6 +51,17 @@ MODULE mytime
 #if defined (__TRACE)
   INTEGER :: trace_depth = 0
 #endif
+  INTERFACE
+     FUNCTION cclock ( ) BIND(C,name="cclock") RESULT(t)
+       USE ISO_C_BINDING
+       REAL(kind=c_double) :: t
+     END FUNCTION cclock
+     FUNCTION scnds ( ) BIND(C,name="scnds") RESULT(t)
+       USE ISO_C_BINDING
+       REAL(kind=c_double) :: t
+     END FUNCTION scnds
+  END INTERFACE
+  CONTAINS
   !
 END MODULE mytime
 !
@@ -99,7 +110,7 @@ SUBROUTINE start_clock( label )
   USE mytime,    ONLY : trace_depth
 #endif
   USE mytime,    ONLY : nclock, clock_label, notrunning, no, maxclock, &
-                        t0cpu, t0wall
+                        t0cpu, t0wall, cclock, scnds
   !
   IMPLICIT NONE
   !
@@ -107,7 +118,6 @@ SUBROUTINE start_clock( label )
   !
   CHARACTER(len=12) :: label_
   INTEGER          :: n
-  REAL(DP), EXTERNAL :: scnds, cclock
   !
 #if defined (__TRACE)
   WRITE( stdout, '("mpime = ",I2,", TRACE (depth=",I2,") Start: ",A12)') mpime, trace_depth, label
@@ -132,7 +142,7 @@ SUBROUTINE start_clock( label )
 !                           & " already started")' ) n, label_
         ELSE
            t0cpu(n) = scnds()
-                   t0wall(n) = cclock()
+           t0wall(n) = cclock()
         ENDIF
         !
         RETURN
@@ -149,10 +159,10 @@ SUBROUTINE start_clock( label )
      !
   ELSE
      !
-     nclock                                     = nclock + 1
-     clock_label(nclock)        = label_
-     t0cpu(nclock)                      = scnds()
-     t0wall(nclock)                     = cclock()
+     nclock              = nclock + 1
+     clock_label(nclock) = label_
+     t0cpu(nclock)       = scnds()
+     t0wall(nclock)      = cclock()
      !
   ENDIF
   !
@@ -171,7 +181,7 @@ SUBROUTINE stop_clock( label )
   USE mytime,    ONLY : trace_depth
 #endif
   USE mytime,    ONLY : no, nclock, clock_label, cputime, walltime, &
-                        notrunning, called, t0cpu, t0wall
+                        notrunning, called, t0cpu, t0wall, cclock, scnds
   !
   IMPLICIT NONE
   !
@@ -179,7 +189,6 @@ SUBROUTINE stop_clock( label )
   !
   CHARACTER(len=12) :: label_
   INTEGER          :: n
-  REAL(DP), EXTERNAL :: scnds, cclock
   !
 #if defined (__TRACE)
   trace_depth = trace_depth - 1
@@ -208,7 +217,7 @@ SUBROUTINE stop_clock( label )
            !
            cputime(n)   = cputime(n) + scnds() - t0cpu(n)
            walltime(n)  = walltime(n) + cclock() - t0wall(n)
-           t0cpu(n)             = notrunning
+           t0cpu(n)     = notrunning
            t0wall(n)    = notrunning
            called(n)    = called(n) + 1
            !
@@ -283,7 +292,7 @@ SUBROUTINE print_this_clock( n )
   USE kinds,     ONLY : DP
   USE io_global, ONLY : stdout
   USE mytime,    ONLY : clock_label, cputime, walltime, &
-                        notrunning, called, t0cpu, t0wall
+                        notrunning, called, t0cpu, t0wall, cclock, scnds
 !
 ! ... See comments below about parallel case
 !
@@ -295,8 +304,6 @@ SUBROUTINE print_this_clock( n )
   INTEGER  :: n
   REAL(DP) :: elapsed_cpu_time, elapsed_wall_time, nsec, msec
   INTEGER  :: nday, nhour, nmin, nmax, mday, mhour, mmin
-  !
-  REAL(DP), EXTERNAL :: scnds, cclock
   !
   !
   IF ( t0cpu(n) == notrunning ) THEN
@@ -426,7 +433,7 @@ FUNCTION get_clock( label )
   !
   USE kinds,     ONLY : DP
   USE mytime,    ONLY : no, nclock, clock_label, walltime, &
-                        notrunning, t0wall, t0cpu
+                        notrunning, t0wall, t0cpu, cclock
 !
 ! ... See comments in subroutine print_this_clock about parallel case
 !
@@ -438,9 +445,6 @@ FUNCTION get_clock( label )
   REAL(DP)         :: get_clock
   CHARACTER(len=*) :: label
   INTEGER          :: n
-  !
-  REAL(DP), EXTERNAL :: cclock
-  !
   !
   IF ( no ) THEN
      !

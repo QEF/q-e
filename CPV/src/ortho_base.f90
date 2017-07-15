@@ -56,9 +56,13 @@ CONTAINS
       REAL(DP) :: t1, tpar, tser
       INTEGER  :: nr, nc, ir, ic, nx
       TYPE(la_descriptor) :: desc
-      REAL(DP) :: cclock
-      EXTERNAL :: cclock
       INTEGER, PARAMETER :: paradim = 1000
+      INTERFACE
+         FUNCTION cclock ( ) BIND(C,name="cclock") RESULT(t)
+           USE ISO_C_BINDING
+           REAL(kind=c_double) :: t
+         END FUNCTION cclock
+      END INTERFACE
       !
       ! Check if number of PEs for orthogonalization/diagonalization is given from the input
       !
@@ -202,9 +206,12 @@ CONTAINS
       REAL(DP) :: t1, tcan
       INTEGER  :: nr, nc, ir, ic, np, lnode
       TYPE(la_descriptor) :: desc
-      !
-      REAL(DP) :: cclock
-      EXTERNAL :: cclock
+      INTERFACE
+         FUNCTION cclock ( ) BIND(C,name="cclock") RESULT(t)
+           USE ISO_C_BINDING
+           REAL(kind=c_double) :: t
+         END FUNCTION cclock
+      END INTERFACE
       !
       np    = MAX( INT( SQRT( DBLE( nproc_ortho ) + 0.1d0 ) ), 1 ) 
       !

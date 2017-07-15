@@ -30,6 +30,12 @@ MODULE check_stop
   LOGICAL :: stopped_by_user = .FALSE.
   LOGICAL, PRIVATE :: tinit = .FALSE.
   !
+  INTERFACE
+     FUNCTION cclock ( ) BIND(C,name="cclock") RESULT(t)
+       USE ISO_C_BINDING
+       REAL(kind=c_double) :: t
+     END FUNCTION cclock
+  END INTERFACE
   CONTAINS
      !
      ! ... internal procedures
@@ -46,8 +52,6 @@ MODULE check_stop
 #endif
        !
        IMPLICIT NONE
-       !
-       REAL(DP), EXTERNAL :: cclock
        !
        IF ( tinit ) &
           WRITE( UNIT = stdout, &
@@ -90,7 +94,6 @@ MODULE check_stop
        LOGICAL            :: check_stop_now, tex=.false.
        LOGICAL            :: signaled
        REAL(DP)           :: seconds
-       REAL(DP), EXTERNAL :: cclock
        !
        IF ( stopped_by_user ) THEN
           check_stop_now = .TRUE.

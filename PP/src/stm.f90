@@ -58,7 +58,7 @@ SUBROUTINE stm (sample_bias, stmdos, istates)
   ! last  band close enough to the specified energy range [down1:up1]
 
   real(DP) :: emin, emax, x, y, &
-       w1, w2, up, up1, down, down1, t0, scnds
+       w1, w2, up, up1, down, down1
   COMPLEX(DP), PARAMETER :: i= (0.d0, 1.d0)
 
   real(DP), ALLOCATABLE :: gs (:,:)
@@ -67,7 +67,7 @@ SUBROUTINE stm (sample_bias, stmdos, istates)
 
   real(DP), EXTERNAL :: w0gauss
 
-  t0 = scnds ()
+  CALL start_clock('STM')
   ALLOCATE (gs( 2, npwx))
   ALLOCATE (psi(dfftp%nr1x, dfftp%nr2x))
   !
@@ -240,7 +240,8 @@ SUBROUTINE stm (sample_bias, stmdos, istates)
 #endif
   DEALLOCATE(psi)
   DEALLOCATE(gs)
-  WRITE( stdout, '(/5x,"STM:",f10.2,"s cpu time")') scnds ()-t0
+  CALL stop_clock('STM')
+  CALL print_clock('STM')
   !
 #if defined(__MPI)
   CALL mp_sum( istates, inter_pool_comm )

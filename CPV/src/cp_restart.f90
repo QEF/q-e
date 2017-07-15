@@ -176,7 +176,7 @@ MODULE cp_restart
       REAL(DP)              :: nelec
       REAL(DP)              :: scalef
       LOGICAL               :: lsda
-      REAL(DP)              :: s0, s1, cclock
+      REAL(DP)              :: s0, s1
       INTEGER               :: nbnd_tot
       INTEGER               :: natomwfc, nbnd_
       REAL(DP), ALLOCATABLE :: mrepl(:,:)
@@ -185,6 +185,13 @@ MODULE cp_restart
       INTEGER               :: inlc
       CHARACTER(iotk_attlenx)  :: attr
       REAL(DP), ALLOCATABLE :: temp_vec(:), wfc_temp(:,:) ! BS 
+      INTERFACE
+         FUNCTION cclock ( ) BIND(C,name="cclock") RESULT(t)
+           USE ISO_C_BINDING
+           REAL(kind=c_double) :: t
+         END FUNCTION cclock
+      END INTERFACE
+      !
       !
       k1  = 0
       k2  = 0

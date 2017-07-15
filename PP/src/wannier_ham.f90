@@ -92,7 +92,7 @@ SUBROUTINE new_hamiltonian(form, plot_bands)
   USE constants,  ONLY : rytoev , tpi
   USE buffers
   USE symm_base,  ONLY : nsym
-
+  !
   IMPLICIT NONE
   LOGICAL :: plot_bands
   CHARACTER(len=256), INTENT(IN) :: form
@@ -101,8 +101,13 @@ SUBROUTINE new_hamiltonian(form, plot_bands)
   COMPLEX(DP), ALLOCATABLE :: hamk(:,:,:), hamh(:,:,:)
   real(DP), ALLOCATABLE :: ek(:,:)
   real(DP) :: e(nwan), x, hoping(3), nelec
-  REAL(DP), EXTERNAL :: cclock
   CHARACTER(20) :: fmt
+  INTERFACE
+     FUNCTION cclock ( ) BIND(C,name="cclock") RESULT(t)
+       USE ISO_C_BINDING
+       REAL(kind=c_double) :: t
+     END FUNCTION cclock
+  END INTERFACE
 
   ALLOCATE(ek(nwan,nks))
   ALLOCATE(hamk(nwan,nwan,nks))

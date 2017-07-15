@@ -166,7 +166,7 @@ MODULE cp_restart_new
       REAL(DP)              :: wk_(2), nelec
       REAL(DP)              :: scalef
       LOGICAL               :: lsda
-      REAL(DP)              :: s0, s1, cclock
+      REAL(DP)              :: s0, s1
       INTEGER               :: natomwfc, nbnd_, nb, ib
       REAL(DP), ALLOCATABLE :: mrepl(:,:)
       LOGICAL               :: exst
@@ -178,7 +178,7 @@ MODULE cp_restart_new
       !
       ! ... subroutine body
       !
-      s0 = cclock() 
+      CALL start_clock('restart')
       !
       IF( force_pairing ) &
             CALL errore('cp_writefile',' force pairing not implemented', 1 )
@@ -478,9 +478,8 @@ MODULE cp_restart_new
       DEALLOCATE( tau  )
       DEALLOCATE( ityp )
       !
-      s1 = cclock() 
-      !
-      WRITE( stdout, '(3X,"restart file written in ",F8.3," sec.",/)' ) (s1-s0)
+      CALL stop_clock('restart')
+      CALL print_clock('restart')
       !
       RETURN
       !
@@ -606,7 +605,6 @@ MODULE cp_restart_new
       REAL(DP), ALLOCATABLE :: occ_(:,:), et_(:,:)
       CHARACTER(LEN=256)    :: psfile_(ntypx)
       CHARACTER(LEN=80)     :: pos_unit
-      REAL(DP)              :: s1, s0, cclock
       REAL(DP), ALLOCATABLE :: mrepl(:,:) 
       LOGICAL               :: md_found, exist_wfc 
       INTEGER               :: io_bgrp_id
