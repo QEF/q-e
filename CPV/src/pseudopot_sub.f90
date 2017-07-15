@@ -596,7 +596,7 @@
       use uspp_param, only: lmaxkb, ish, nvb
       USE atom,       ONLY: rgrid
       USE uspp,       ONLY: indv
-      use uspp,       only: qq, beta
+      use uspp,       only: qq_nt, beta
       USE betax,      only: refg, qradx, mmx, dqradx
       use smallbox_gvec,      only: ngb
       use control_flags, only: iprint, iverbosity
@@ -772,8 +772,8 @@
                ijv = jv*(jv-1)/2 + iv
                call qvan2b(ngb,iv,jv,is,ylmb,qgb(1,ijv,is),qradb )
 !
-               qq(iv,jv,is)=omegab*DBLE(qgb(1,ijv,is))
-               qq(jv,iv,is)=qq(iv,jv,is)
+               qq_nt(iv,jv,is)=omegab*DBLE(qgb(1,ijv,is))
+               qq_nt(jv,iv,is)=qq_nt(iv,jv,is)
 !
             end do
          end do
@@ -917,7 +917,7 @@
       USE ions_base, only: nsp
       USE gvect, only: gg, g, gstart
       USE uspp_param, only: upf, lmaxq, lmaxkb, nh
-      USE uspp, only: qq, nhtolm, beta, dbeta
+      USE uspp, only: qq_nt, nhtolm, beta, dbeta
       USE cell_base, only: ainv, omega, tpiba2, tpiba
       USE betax, ONLY : refg, betagx, dbetagx
 
@@ -1018,7 +1018,7 @@
       use io_global, only: stdout
       use gvecw, only: ngw
       use cell_base, only: ainv
-      use uspp, only: qq, nhtolm, beta
+      use uspp, only: qq_nt, nhtolm, beta
       use constants, only: pi, fpi
       use ions_base, only: nsp
       use uspp_param, only: upf, lmaxq, lmaxkb, nbetam, nh, nvb
@@ -1098,8 +1098,8 @@
                ijv = jv*(jv-1)/2 + iv
                call qvan2b(ngb,iv,jv,is,ylmb,qgb(1,ijv,is),qradb )
 !
-               qq(iv,jv,is)=omegab*DBLE(qgb(1,ijv,is))
-               qq(jv,iv,is)=qq(iv,jv,is)
+               qq_nt(iv,jv,is)=omegab*DBLE(qgb(1,ijv,is))
+               qq_nt(jv,iv,is)=qq_nt(iv,jv,is)
 !
             end do
          end do
@@ -1198,7 +1198,7 @@
       USE gvecw,         only : ngw
       USE ions_base,     only : nsp
       USE uspp_param,    only : upf, lmaxq, lmaxkb, nh, nhm, oldvan
-      USE uspp,          only : qq, nhtolm, beta, nhtol, indv, dbeta
+      USE uspp,          only : qq_nt, nhtolm, beta, nhtol, indv, dbeta
       USE cell_base,     only : ainv, omega, tpiba2, tpiba
       USE atom,          ONLY : rgrid
       USE gvect, only : gg, g, gstart

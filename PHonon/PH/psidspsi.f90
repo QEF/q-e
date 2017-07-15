@@ -26,7 +26,7 @@ subroutine psidspsi (ik, uact, pdsp)
   USE noncollin_module, ONLY : noncolin, npol
   USE wavefunctions_module,    ONLY : evc
   USE wvfct,     ONLY : nbnd, npwx
-  USE uspp,      ONLY: nkb, vkb, qq, qq_so
+  USE uspp,      ONLY: nkb, vkb, qq_nt, qq_so
   USE uspp_param,ONLY : nh
   USE phus,      ONLY : alphap
 
@@ -151,23 +151,23 @@ subroutine psidspsi (ik, uact, pdsp)
                              else
                                 do is=1,npol
                                    ps1_nc(ikb,is,ibnd)=ps1_nc(ikb,is,ibnd) +   &
-                                     qq(ih,jh,nt)*                          &
+                                     qq_nt(ih,jh,nt)*                          &
                                      alphap(ipol,ik)%nc(jkb,is,ibnd)*        &
                                      uact (mu + ipol)
                                    ps2_nc(ikb,is,ipol,ibnd)=                 &
                                          ps2_nc(ikb,is,ipol,ibnd) +          &
-                                     qq (ih, jh, nt) *(0.d0, -1.d0)*         &
+                                     qq_nt (ih, jh, nt) *(0.d0, -1.d0)*         &
                                      becp1(ik)%nc (jkb,is,ibnd) *            &
                                      uact (mu + ipol) * tpiba
                                 enddo
                              endif
                           else
                              ps1 (ikb, ibnd) = ps1 (ikb, ibnd) +    &
-                               qq (ih, jh, nt) *                 &
+                               qq_nt (ih, jh, nt) *                 &
                                alphap(ipol,ik)%k(jkb,ibnd) *     &
                                uact (mu + ipol)
                              ps2 (ikb, ipol, ibnd) = ps2 (ikb, ipol, ibnd) + &
-                               qq (ih, jh, nt) *                          &
+                               qq_nt (ih, jh, nt) *                          &
                                (0.d0, -1.d0) *                            &
                                becp1(ik)%k (jkb, ibnd) *                  &
                                uact (mu + ipol) * tpiba

@@ -86,7 +86,7 @@ SUBROUTINE s_psi_( lda, n, m, psi, spsi )
   !
   USE kinds,      ONLY : DP
   USE becmod,     ONLY : becp
-  USE uspp,       ONLY : vkb, nkb, okvan, qq, qq_so, indv_ijkb0
+  USE uspp,       ONLY : vkb, nkb, okvan, qq_at, qq_so, indv_ijkb0
   USE spin_orb,   ONLY : lspinorb
   USE uspp_param, ONLY : upf, nh, nhm
   USE ions_base,  ONLY : nat, nsp, ityp
@@ -219,7 +219,7 @@ SUBROUTINE s_psi_( lda, n, m, psi, spsi )
                    !
                    IF ( m_loc > 0 ) THEN
                       CALL DGEMM('N', 'N', nh(nt), m_loc, nh(nt), 1.0_dp, &
-                                  qq(1,1,nt), nhm, becp%r(indv_ijkb0(na)+1,1),&
+                                  qq_at(1,1,na), nhm, becp%r(indv_ijkb0(na)+1,1),&
                                   nkb, 0.0_dp, ps(indv_ijkb0(na)+1,1), nkb )
                    END IF
                 END IF
@@ -296,9 +296,9 @@ SUBROUTINE s_psi_( lda, n, m, psi, spsi )
              ! qq is real:  copy it into a complex variable to perform
              ! a zgemm - simple but sub-optimal solution
              ALLOCATE( qqc(nh(nt),nh(nt)) )
-             qqc(:,:) = CMPLX ( qq(1:nh(nt),1:nh(nt),nt), 0.0_dp, KIND=dp )
              DO na = 1, nat
                 IF ( ityp(na) == nt ) THEN
+                   qqc(:,:) = CMPLX ( qq_at(1:nh(nt),1:nh(nt),na), 0.0_dp, KIND=dp )
                    CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
                         qqc, nh(nt), becp%k(indv_ijkb0(na)+1,1), nkb, &
                         (0.0_dp,0.0_dp), ps(indv_ijkb0(na)+1,1), nkb )
@@ -362,7 +362,7 @@ SUBROUTINE s_psi_( lda, n, m, psi, spsi )
                             DO ipol=1,npol
                                DO ibnd = 1, m
                                   ps(ikb,ipol,ibnd) = ps(ikb,ipol,ibnd) + &
-                                       qq(ih,jh,nt)*becp%nc(jkb,ipol,ibnd)
+                                       qq_at(ih,jh,na)*becp%nc(jkb,ipol,ibnd)
                                END DO
                             END DO
                          ELSE

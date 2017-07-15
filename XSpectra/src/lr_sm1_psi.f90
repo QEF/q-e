@@ -32,7 +32,7 @@ SUBROUTINE sm1_psi( recalc, lda, n, m, psi, spsi)
   !
   USE kinds,      ONLY : DP
   USE control_flags,      ONLY : gamma_only
-  USE uspp,         ONLY : okvan, vkb, nkb, qq
+  USE uspp,         ONLY : okvan, vkb, nkb, qq_nt
   USE uspp_param, ONLY : upf, nh
   USE ldaU,       ONLY : lda_plus_u
   USE ions_base,   ONLY : nat, ntyp => nsp, ityp  
@@ -108,7 +108,7 @@ CONTAINS
                          jkb=ijkb0 + jh
                          do ih=1,nh(nt)
                             ikb = ijkb0 + ih
-                            ps(ikb,ii) = ps(ikb,ii) + qq(ih,jh,nt)*BB_(jkb,ii)
+                            ps(ikb,ii) = ps(ikb,ii) + qq_nt(ih,jh,nt)*BB_(jkb,ii)
                          enddo
                       enddo
                    enddo
@@ -138,7 +138,7 @@ CONTAINS
                          jkb=ijkb0 + jh
                          do ih=1,nh(nt)
                             ikb = ijkb0 + ih
-                            BB_(ii,jkb) = BB_(ii,jkb) - ps(ii,ikb)*qq(ih,jh,nt)
+                            BB_(ii,jkb) = BB_(ii,jkb) - ps(ii,ikb)*qq_nt(ih,jh,nt)
                          enddo
                       enddo
                    enddo
@@ -237,7 +237,7 @@ CONTAINS
                          jkb=ijkb0 + jh
                          do ih=1,nh(nt)
                             ikb = ijkb0 + ih
-                            ps(ikb,ii) = ps(ikb,ii) + BB_(jkb,ii)*qq(ih,jh,nt)
+                            ps(ikb,ii) = ps(ikb,ii) + BB_(jkb,ii)*qq_nt(ih,jh,nt)
                          enddo
                       enddo
                    enddo
@@ -267,8 +267,8 @@ CONTAINS
                          jkb=ijkb0 + jh
                          do ih=1,nh(nt)
                             ikb = ijkb0 + ih
-                            ! BB_(ii,jkb) = BB_(ii,jkb) - ps(ii,jkb)*qq(ih,jh,nt) ! this seems false
-                            BB_(ii,jkb) = BB_(ii,jkb) - ps(ii,ikb)*qq(ih,jh,nt) ! modified by CG
+                            ! BB_(ii,jkb) = BB_(ii,jkb) - ps(ii,jkb)*qq_nt(ih,jh,nt) ! this seems false
+                            BB_(ii,jkb) = BB_(ii,jkb) - ps(ii,ikb)*qq_nt(ih,jh,nt) ! modified by CG
                          enddo
                       enddo
                    enddo

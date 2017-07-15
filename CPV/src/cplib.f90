@@ -891,7 +891,7 @@ subroutine nlfh_x( stress, bec_bgrp, dbec, lambda, descla )
   !     contribution to the internal stress tensor due to the constraints
   !
   USE kinds,             ONLY : DP
-  use uspp,              ONLY : nkb, qq
+  use uspp,              ONLY : nkb, qq_nt
   use uspp_param,        ONLY : nh, nhm, nvb, ish
   use ions_base,         ONLY : na
   use electrons_base,    ONLY : nbspx, nbsp, nudx, nspin, nupdwn, iupdwn, ibgrp_g2l
@@ -980,9 +980,9 @@ subroutine nlfh_x( stress, bec_bgrp, dbec, lambda, descla )
                     do iv=1,nh(is)
                        do jv=1,nh(is)
                           inl=ish(is)+(jv-1)*na(is)+ia
-                          if(abs(qq(iv,jv,is)).gt.1.e-5) then
+                          if(abs(qq_nt(iv,jv,is)).gt.1.e-5) then
                              do i = 1, nc
-                                tmpbec(iv,i) = tmpbec(iv,i) +  qq(iv,jv,is) * bec( inl, i, iss  )
+                                tmpbec(iv,i) = tmpbec(iv,i) +  qq_nt(iv,jv,is) * bec( inl, i, iss  )
                              end do
                           endif
                        end do
@@ -1078,7 +1078,7 @@ subroutine nlinit
       use core,            ONLY : rhocb, allocate_core
       use constants,       ONLY : pi, fpi
       use ions_base,       ONLY : na, nsp
-      use uspp,            ONLY : aainit, beta, qq, dvan, nhtol, nhtolm, indv,&
+      use uspp,            ONLY : aainit, beta, qq_nt, dvan, nhtol, nhtolm, indv,&
                                   dbeta
       use uspp_param,      ONLY : upf, lmaxq, nbetam, lmaxkb, nhm, nh, ish, nvb
       use atom,            ONLY : rgrid
@@ -1125,8 +1125,8 @@ subroutine nlinit
       !
       allocate( beta( ngw, nhm, nsp ) )
       allocate( qgb( ngb, nhm*(nhm+1)/2, nsp ) )
-      allocate( qq( nhm, nhm, nsp ) )
-      qq  (:,:,:) =0.d0
+      allocate( qq_nt( nhm, nhm, nsp ) )
+      qq_nt  (:,:,:) =0.d0
       IF (tpre) THEN
          allocate( dqgb( ngb, nhm*(nhm+1)/2, nsp, 3, 3 ) )
          allocate( dbeta( ngw, nhm, nsp, 3, 3 ) )
@@ -1538,7 +1538,7 @@ END SUBROUTINE print_lambda_x
       USE ions_base,          ONLY: na, nsp, nat
       USE io_global,          ONLY: stdout
       USE gvect, ONLY: gstart
-      USE uspp,               ONLY: nkb, qq
+      USE uspp,               ONLY: nkb, qq_nt
       USE uspp_param,         ONLY: nh, ish, nvb
       USE mp,                 ONLY: mp_sum
       USE mp_global,          ONLY: intra_bgrp_comm, nbgrp, inter_bgrp_comm
@@ -1614,7 +1614,7 @@ END SUBROUTINE print_lambda_x
                         DO ia=1,na(is)
                            inl=ish(is)+(iv-1)*na(is)+ia
                            jnl=ish(is)+(jv-1)*na(is)+ia
-                           rsum = rsum + qq(iv,jv,is)*becp_tmp(inl)*becp(jnl,ibgrp_k)
+                           rsum = rsum + qq_nt(iv,jv,is)*becp_tmp(inl)*becp(jnl,ibgrp_k)
                         END DO
                      END DO
                   END DO
@@ -1699,7 +1699,7 @@ END SUBROUTINE print_lambda_x
       USE kinds,             ONLY: DP
       USE io_global,         ONLY: stdout
       USE ions_base,         ONLY: na, nsp, nat
-      USE uspp,              ONLY: nhsa=>nkb, qq
+      USE uspp,              ONLY: nhsa=>nkb, qq_nt
       USE uspp_param,        ONLY: nhm, nh, ish, nvb
       USE electrons_base,    ONLY: nspin, iupdwn, nupdwn, nbspx_bgrp, ibgrp_g2l, i2gupdwn_bgrp, nbspx, &
                                    iupdwn_bgrp, nupdwn_bgrp
@@ -1798,9 +1798,9 @@ END SUBROUTINE print_lambda_x
                      DO iv=1,nh(is)
                         DO jv=1,nh(is)
                            inl=ish(is)+(jv-1)*na(is)+ia
-                           IF(ABS(qq(iv,jv,is)).GT.1.e-5) THEN
+                           IF(ABS(qq_nt(iv,jv,is)).GT.1.e-5) THEN
                               DO i=1,nc
-                                 tmpbec(iv,i)=tmpbec(iv,i) + qq(iv,jv,is)*bec(inl,i,iss)
+                                 tmpbec(iv,i)=tmpbec(iv,i) + qq_nt(iv,jv,is)*bec(inl,i,iss)
                               END DO
                            ENDIF
                         END DO

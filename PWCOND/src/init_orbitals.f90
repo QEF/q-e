@@ -28,7 +28,7 @@ subroutine init_orbitals (zlen, bd1, bd2, z, nrz, rsph, lsr)
   use spin_orb, only: lspinorb
   use ions_base,  only : atm, nat, ityp, ntyp=>nsp, tau
   use uspp_param, only : upf, nbetam
-  use uspp,       only : deeq, deeq_nc, qq, qq_so
+  use uspp,       only : deeq, deeq_nc, qq_nt, qq_so
   use atom,       only : rgrid
 
   implicit none
@@ -284,12 +284,12 @@ subroutine init_orbitals (zlen, bd1, bd2, z, nrz, rsph, lsr)
                 zpseu_nc(2,iorb,iorb1,is)=qq_so(ih,ih1,is,nt)
                else
                 zpseu_nc(1,iorb,iorb1,is)=deeq_nc(ih,ih1,na,is)
-                zpseu_nc(2,iorb,iorb1,is)=qq(ih,ih1,nt)
+                zpseu_nc(2,iorb,iorb1,is)=qq_nt(ih,ih1,nt)
                endif
              enddo
            else
              zpseu(1,iorb,iorb1)=deeq(ih,ih1,na,iofspin)
-             zpseu(2,iorb,iorb1) = qq(ih,ih1,nt)
+             zpseu(2,iorb,iorb1) = qq_nt(ih,ih1,nt)
            endif
          endif
        enddo

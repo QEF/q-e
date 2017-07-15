@@ -21,7 +21,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
   USE wvfct,                ONLY : npwx, nbnd, wg, et
   USE control_flags,        ONLY : gamma_only
   USE uspp_param,           ONLY : upf, lmaxkb, nh, newpseudo, nhm
-  USE uspp,                 ONLY : nkb, vkb, qq, deeq, deeq_nc, qq_so
+  USE uspp,                 ONLY : nkb, vkb, deeq, deeq_nc
   USE wavefunctions_module, ONLY : evc
   USE spin_orb,             ONLY : lspinorb
   USE lsda_mod,             ONLY : nspin

@@ -63,7 +63,7 @@ SUBROUTINE allocate_fft
   ELSE
      ALLOCATE ( kedtau(1,nspin) )
   ENDIF
-  ALLOCATE( rhog_core( ngm ) )
+  ALLOCATE (rhog_core( ngm ) )
   ALLOCATE (psic( dfftp%nnr))
   ALLOCATE (vrs( dfftp%nnr, nspin))
 

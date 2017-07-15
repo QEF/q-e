@@ -19,7 +19,7 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
   USE lsda_mod,  ONLY : lsda, current_spin, isk, nspin
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   USE noncollin_module, ONLY : noncolin, npol
-  USE uspp,      ONLY : nkb, qq, qq_so
+  USE uspp,      ONLY : nkb, qq_nt, qq_so
   USE uspp_param,ONLY : nh, nhm
   USE spin_orb,  ONLY : lspinorb
   USE wvfct,     ONLY : nbnd, et
@@ -138,7 +138,7 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
                           ELSE
                              DO is=1,npol
                                 ps3_nc(ikb,is,ibnd)=ps3_nc(ikb,is,ibnd) - &
-                                  qq (ih, jh, nt) * becq(ik)%nc (jkb, is, ibnd)
+                                  qq_nt (ih, jh, nt) * becq(ik)%nc (jkb, is, ibnd)
                              ENDDO
                           END IF
                        ELSE
@@ -146,7 +146,7 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
                             deff(ih,jh,na) *                  &
                             becp1(ik)%k (jkb, ibnd)
                           ps3 (ikb, ibnd) = ps3 (ikb, ibnd) - &
-                            qq (ih, jh, nt) * becq(ik)%k (jkb, ibnd)
+                            qq_nt (ih, jh, nt) * becq(ik)%k (jkb, ibnd)
                        END IF
                        do ipol = 1, 3
                           IF (noncolin) THEN
@@ -177,7 +177,7 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
                                 DO is=1,npol
                                    ps4_nc(ikb,is,ibnd,ipol) =                  &
                                      ps4_nc(ikb,is,ibnd,ipol)-              &
-                                     qq(ih,jh,nt)*alpq(ipol,ik)%nc(jkb,is,ibnd)
+                                     qq_nt(ih,jh,nt)*alpq(ipol,ik)%nc(jkb,is,ibnd)
                                 END DO
                              END IF
                           ELSE
@@ -187,7 +187,7 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
                                int1 (ih, jh, ipol, na, current_spin) *       &
                                becp1(ik)%k (jkb, ibnd)
                              ps4 (ikb, ibnd, ipol) = ps4 (ikb, ibnd, ipol) - &
-                               qq (ih, jh, nt) * alpq(ipol,ik)%k (jkb,ibnd)
+                               qq_nt (ih, jh, nt) * alpq(ipol,ik)%k (jkb,ibnd)
                           END IF
                        enddo  ! ipol
                     enddo

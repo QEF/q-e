@@ -107,8 +107,8 @@ MODULE uspp
   PRIVATE
   SAVE
   PUBLIC :: nlx, lpx, lpl, ap, aainit, indv, nhtol, nhtolm, indv_ijkb0, &
-            nkb, nkbus, vkb, dvan, deeq, qq, nhtoj, ijtoh, beta, &
-            becsum, deallocate_uspp
+            nkb, nkbus, vkb, dvan, deeq, qq_at, qq_nt, nhtoj, ijtoh, beta, &
+            becsum, ebecsum, deallocate_uspp
        
   PUBLIC :: okvan, nlcc_any
   PUBLIC :: qq_so, dvan_so, deeq_nc 
@@ -142,9 +142,12 @@ MODULE uspp
   REAL(DP), ALLOCATABLE :: &
        becsum(:,:,:)           ! \sum_i f(i) <psi(i)|beta_l><beta_m|psi(i)>
   REAL(DP), ALLOCATABLE :: &
+       ebecsum(:,:,:)          ! \sum_i f(i) et(i) <psi(i)|beta_l><beta_m|psi(i)>
+  REAL(DP), ALLOCATABLE :: &
        dvan(:,:,:),           &! the D functions of the solid
        deeq(:,:,:,:),         &! the integral of V_eff and Q_{nm} 
-       qq(:,:,:),             &! the q functions in the solid
+       qq_nt(:,:,:),          &! the integral of q functions in the solid (ONE PER NTYP) used to be the qq array
+       qq_at(:,:,:),          &! the integral of q functions in the solid (ONE PER ATOM !!!!) 
        nhtoj(:,:)              ! correspondence n <-> total angular momentum
   !
   COMPLEX(DP), ALLOCATABLE :: & ! variables for spin-orbit/noncolinear case:
@@ -326,7 +329,9 @@ CONTAINS
     IF( ALLOCATED( ijtoh ) )      DEALLOCATE( ijtoh )
     IF( ALLOCATED( vkb ) )        DEALLOCATE( vkb )
     IF( ALLOCATED( becsum ) )     DEALLOCATE( becsum )
-    IF( ALLOCATED( qq ) )         DEALLOCATE( qq )
+    IF( ALLOCATED( ebecsum ) )    DEALLOCATE( ebecsum )
+    IF( ALLOCATED( qq_at ) )      DEALLOCATE( qq_at )
+    IF( ALLOCATED( qq_nt ) )      DEALLOCATE( qq_nt )
     IF( ALLOCATED( dvan ) )       DEALLOCATE( dvan )
     IF( ALLOCATED( deeq ) )       DEALLOCATE( deeq )
     IF( ALLOCATED( qq_so ) )      DEALLOCATE( qq_so )

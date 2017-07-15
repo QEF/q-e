@@ -126,7 +126,7 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi, pdir, e_field)
 
                  else
                     pref0(1) = pref0(1)+becp0%k(jkb1+j,nb) &
-                         *qq(nhjkb,j,np)
+                         *qq_at(nhjkb,j,na)
                  endif
               END DO
               DO mb=1,nbnd
@@ -215,7 +215,7 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi, pdir, e_field)
 
                        else
                           ps (ikb, ibnd) = ps (ikb, ibnd) + &
-                               qq(ih,jh,nt)* bec_evcel%k(jkb,ibnd)
+                               qq_at(ih,jh,na)* bec_evcel%k(jkb,ibnd)
                        endif
                     enddo
                  enddo

@@ -2275,7 +2275,7 @@ SUBROUTINE compute_spin
    USE constants,       ONLY : rytoev
 
    USE uspp_param,           ONLY : upf, nh, nhm
-   USE uspp,                 ONLY: qq, nhtol,nhtoj, indv
+   USE uspp,                 ONLY: qq_nt, nhtol,nhtoj, indv
    USE spin_orb,             ONLY : fcoef
 
    IMPLICIT NONE
@@ -2421,16 +2421,16 @@ SUBROUTINE compute_spin
                                 DO ih = 1, nh(np)
                                    DO jh = 1, nh(np)
                                       sigma_x_aug = sigma_x_aug &
-                                        + qq(ih,jh,np) * ( be_m(jh,2)*conjg(be_n(ih,1))+ be_m(jh,1)*conjg(be_n(ih,2)) )
+                                        + qq_nt(ih,jh,np) * ( be_m(jh,2)*conjg(be_n(ih,1))+ be_m(jh,1)*conjg(be_n(ih,2)) )
 
                                       sigma_y_aug = sigma_y_aug &
-                                      + qq(ih,jh,np) * (  &
+                                      + qq_nt(ih,jh,np) * (  &
                                           be_m(jh,1) * conjg(be_n(ih,2)) &
                                           - be_m(jh,2) * conjg(be_n(ih,1)) &
                                         ) * (0.0d0, 1.0d0)
 
                                       sigma_z_aug = sigma_z_aug &
-                                      + qq(ih,jh,np) * ( be_m(jh,1)*conjg(be_n(ih,1)) - be_m(jh,2)*conjg(be_n(ih,2)) )
+                                      + qq_nt(ih,jh,np) * ( be_m(jh,1)*conjg(be_n(ih,1)) - be_m(jh,2)*conjg(be_n(ih,2)) )
                                    ENDDO
                                 ENDDO                             
                              ijkb0 = ijkb0 + nh(np)

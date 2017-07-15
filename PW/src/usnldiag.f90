@@ -17,7 +17,7 @@ SUBROUTINE usnldiag (npw, h_diag, s_diag)
   USE ions_base,  ONLY : nat, ityp, ntyp => nsp
   USE wvfct, ONLY: npwx
   USE lsda_mod, ONLY: current_spin
-  USE uspp,  ONLY: deeq, vkb, qq, qq_so, deeq_nc, indv_ijkb0
+  USE uspp,  ONLY: deeq, vkb, qq_at, qq_so, deeq_nc, indv_ijkb0
   USE uspp_param, ONLY: upf, nh, newpseudo
   USE spin_orb, ONLY: lspinorb
   USE noncollin_module, ONLY: noncolin, npol
@@ -53,11 +53,11 @@ SUBROUTINE usnldiag (npw, h_diag, s_diag)
               ELSEIF (noncolin) THEN
                  ps1(1) = deeq_nc (ih, ih, na, 1)
                  ps1(2) = deeq_nc (ih, ih, na, 4)
-                 ps2(1) = qq (ih, ih, nt)
-                 ps2(2) = qq (ih, ih, nt)
+                 ps2(1) = qq_at (ih, ih, na)
+                 ps2(2) = qq_at (ih, ih, na)
               ELSE
                  ps1(1) = deeq (ih, ih, na, current_spin)
-                 ps2(1) = qq (ih, ih, nt)
+                 ps2(1) = qq_at (ih, ih, na)
               ENDIF
               DO ipol =1, npol
                  DO ig = 1, npw
@@ -78,11 +78,11 @@ SUBROUTINE usnldiag (npw, h_diag, s_diag)
                        ELSEIF (noncolin) THEN
                           ps1(1) = deeq_nc (ih, jh, na, 1)
                           ps1(2) = deeq_nc (ih, jh, na, 4)
-                          ps2(1) = qq (ih, jh, nt)
-                          ps2(2) = qq (ih, jh, nt)
+                          ps2(1) = qq_at (ih, jh, na)
+                          ps2(2) = qq_at (ih, jh, na)
                        ELSE
                           ps1(1) = deeq (ih, jh, na, current_spin)
-                          ps2(1) = qq (ih, jh, nt)
+                          ps2(1) = qq_at (ih, jh, na)
                        ENDIF
                        DO ipol = 1, npol
                           DO ig = 1, npw

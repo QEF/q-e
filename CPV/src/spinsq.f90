@@ -34,7 +34,7 @@
       USE gvecw, ONLY: ngw
       USE gvect, ONLY: gstart
       USE cell_base, ONLY: omega
-      USE uspp, ONLY: nhsa => nkb, nhsavb=>nkbus, qq
+      USE uspp, ONLY: nhsa => nkb, nhsavb=>nkbus, qq_nt
       USE uspp_param, ONLY: nvb, ish, nh
       USE ions_base, ONLY: na
 !
@@ -117,12 +117,12 @@
             DO is=1,nvb
                DO iv=1,nh(is)
                   DO jv=1,nh(is)
-                     IF(ABS(qq(iv,jv,is)).GT.1.e-5) THEN 
+                     IF(ABS(qq_nt(iv,jv,is)).GT.1.e-5) THEN 
                         DO ia=1,na(is)
                            inl=ish(is)+(iv-1)*na(is)+ia
                            jnl=ish(is)+(jv-1)*na(is)+ia
                            overlap(i,j) = overlap(i,j) +                &
-     &                          qq(iv,jv,is)*bec(inl,i)*bec(jnl,jj)
+     &                          qq_nt(iv,jv,is)*bec(inl,i)*bec(jnl,jj)
                         END DO
                      ENDIF
                   END DO

@@ -15,7 +15,7 @@ SUBROUTINE adddvepsi_us(becp1,becp2,ipol,ik,dvpsi)
   !
   USE kinds,             ONLY : DP
   USE spin_orb,          ONLY : lspinorb
-  USE uspp,              ONLY : nkb, vkb, qq, qq_so
+  USE uspp,              ONLY : nkb, vkb, qq_nt, qq_so
   USE wvfct,             ONLY : npwx, nbnd
   USE ions_base,         ONLY : nat, ityp, ntyp => nsp
   USE noncollin_module,  ONLY : noncolin, npol
@@ -80,17 +80,17 @@ SUBROUTINE adddvepsi_us(becp1,becp2,ipol,ik,dvpsi)
                        ELSE
                           DO is=1,npol
                              ps_nc(ibnd,is)=ps_nc(ibnd,is)+           &
-                                qq(ih,jh,nt)*becp2%nc(jkb,is,ibnd)*(0.d0,1.d0) &
+                                qq_nt(ih,jh,nt)*becp2%nc(jkb,is,ibnd)*(0.d0,1.d0) &
                                + dpqq(ih,jh,ipol,nt)*  &
                                  becp1%nc(jkb,is,ibnd)
                           END DO
                        END IF
                     ELSEIF (gamma_only) THEN
-                       ps_r(ibnd) = ps_r(ibnd)+qq(ih,jh,nt)*becp2&
+                       ps_r(ibnd) = ps_r(ibnd)+qq_nt(ih,jh,nt)*becp2&
                             &%r(jkb,ibnd) + dpqq(ih,jh,ipol,nt)*&
                             & becp1%r(jkb,ibnd) 
                     ELSE
-                       ps(ibnd) = ps(ibnd)+qq(ih,jh,nt)*becp2%k(jkb,ibnd) &
+                       ps(ibnd) = ps(ibnd)+qq_nt(ih,jh,nt)*becp2%k(jkb,ibnd) &
                            *(0.d0,1.d0) +  &
                             dpqq(ih,jh,ipol,nt)* becp1%k(jkb,ibnd)
                     END IF

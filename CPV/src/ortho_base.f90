@@ -1223,7 +1223,7 @@ CONTAINS
       USE io_global,      ONLY: stdout
       USE mp_global,      ONLY: intra_bgrp_comm, inter_bgrp_comm
       USE uspp_param,     ONLY: nh, ish, nvb
-      USE uspp,           ONLY: nkbus, qq
+      USE uspp,           ONLY: nkbus, qq_nt
       USE gvecw,          ONLY: ngw
       USE electrons_base, ONLY: nbsp_bgrp, nbsp
       USE constants,      ONLY: pi, fpi
@@ -1259,8 +1259,8 @@ CONTAINS
                inl = ish(is)+(iv-1)*na(is)
                DO jv=1,nh(is)
                   jnl = ish(is)+(jv-1)*na(is)
-                  IF(ABS(qq(iv,jv,is)) > 1.d-5) THEN
-                     qqf = qq(iv,jv,is)
+                  IF(ABS(qq_nt(iv,jv,is)) > 1.d-5) THEN
+                     qqf = qq_nt(iv,jv,is)
                      DO i=1,nbsp_bgrp
                         CALL daxpy( na(is), qqf, bec_bgrp(jnl+1,i),1,qtemp(inl+1,i), 1 )
                      END DO

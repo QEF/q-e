@@ -15,8 +15,8 @@ subroutine dqvan2 (ngy, ih, jh, np, qmod, dqg, ylmk0, dylmk0, ipol)
   !
   !    The formula implemented here is
   !
-  !     dq(g,l,k) = sum_lm (-i)^l ap(lm,l,k) *
-  !                ( yr_lm(g^) dqrad(g,l,l,k) + dyr_lm(g^) qrad(g,l,l,k))
+  !     dq(g,i,j) = sum_lm (-i)^l ap(lm,i,j) *
+  !                ( yr_lm(g^) dqrad(g,l,i,j) + dyr_lm(g^) qrad(g,l,i,j))
   !
   !     here the dummy variables
   !

@@ -88,6 +88,7 @@ SUBROUTINE hinit0()
   CALL set_rhoc()
   !
   IF ( tqr ) CALL generate_qpointlist()
+  
   IF (real_space ) then
    call betapointlist()
    call init_realspace_vars()

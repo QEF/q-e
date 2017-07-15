@@ -831,6 +831,7 @@ ortho.o : ortho_base.o
 ortho_base.o : ../../LAXlib/dspev_drv.o
 ortho_base.o : ../../LAXlib/la_types.o
 ortho_base.o : ../../LAXlib/ptoolkit.o
+ortho_base.o : ../../Modules/clocks.o
 ortho_base.o : ../../Modules/constants.o
 ortho_base.o : ../../Modules/control_flags.o
 ortho_base.o : ../../Modules/electrons_base.o

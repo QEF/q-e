@@ -19,7 +19,7 @@ SUBROUTINE add_shift_us( shift_nl )
   USE ions_base,            ONLY : nat, ntyp => nsp , ityp
   USE klist,                ONLY : nks, xk, ngk, igk_k
   USE gvect,                ONLY : g, ngm
-  USE uspp,                 ONLY : nkb, vkb, qq, deeq
+  USE uspp,                 ONLY : nkb, vkb, qq_nt, deeq
   USE uspp_param,           ONLY : upf, nh, newpseudo
   USE wvfct,                ONLY : nbnd, wg, et
   USE lsda_mod,             ONLY : lsda, isk
@@ -94,7 +94,7 @@ SUBROUTINE add_shift_us( shift_nl )
                       ikb = ijkb0 + ih
                       DO ibnd = 1, nbnd
                          ps = deeq(ih,ih,na,is) - &
-                              et(ibnd,ik) * qq(ih,ih,nt)
+                              et(ibnd,ik) * qq_nt(ih,ih,nt)
                          shift_(na) = shift_(na) + ps * wg(ibnd,ik) * &
                                       rbecp(ikb,ibnd) * rbecp(ikb,ibnd)
                       ENDDO
@@ -109,7 +109,7 @@ SUBROUTINE add_shift_us( shift_nl )
                             jkb = ijkb0 + jh
                             DO ibnd = 1, nbnd
                                ps = deeq(ih,jh,na,is) - &
-                                    et(ibnd,ik) * qq(ih,jh,nt)
+                                    et(ibnd,ik) * qq_nt(ih,jh,nt)
                                shift_(na) = shift_(na) + ps * wg(ibnd,ik) * &
                                      2.d0 *rbecp(ikb,ibnd) *rbecp(jkb,ibnd)
                             ENDDO
@@ -184,7 +184,7 @@ SUBROUTINE add_shift_us( shift_nl )
                       ikb = ijkb0 + ih
                       DO ibnd = 1, nbnd
                          ps = deeq(ih,ih,na,is) - &
-                              et(ibnd,ik) * qq(ih,ih,nt)
+                              et(ibnd,ik) * qq_nt(ih,ih,nt)
                          shift_(na) = shift_(na) + ps * wg(ibnd,ik) * &
                                       dble( conjg( becp(ikb,ibnd) ) * &
                                                    becp(ikb,ibnd) )
@@ -200,7 +200,7 @@ SUBROUTINE add_shift_us( shift_nl )
                             jkb = ijkb0 + jh
                             DO ibnd = 1, nbnd
                                ps = deeq(ih,jh,na,is) - &
-                                    et(ibnd,ik) * qq (ih,jh,nt)
+                                    et(ibnd,ik) * qq_nt (ih,jh,nt)
                                shift_(na) = shift_ (na) + ps * wg(ibnd,ik) * &
                                       2.d0 * dble( conjg( becp(ikb,ibnd) ) * &
                                                           becp(jkb,ibnd) )

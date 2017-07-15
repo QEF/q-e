@@ -10,7 +10,7 @@
 SUBROUTINE deallocate_modules_var()
   !----------------------------------------------------------------------------
   !
-  USE uspp,       ONLY : beta, dbeta, qq
+  USE uspp,       ONLY : beta, dbeta, qq_nt
   USE core,       ONLY : rhocb
   !
   USE core,                 ONLY : deallocate_core
@@ -49,7 +49,7 @@ SUBROUTINE deallocate_modules_var()
   !
   !
   IF ( ALLOCATED( beta ) )     DEALLOCATE( beta )
-  IF ( ALLOCATED( qq ) )       DEALLOCATE( qq )
+  IF ( ALLOCATED( qq_nt ) )    DEALLOCATE( qq_nt )
   IF ( ALLOCATED( rhocb ) )    DEALLOCATE( rhocb )
   IF ( ALLOCATED( dbeta ) )    DEALLOCATE( dbeta )
   !

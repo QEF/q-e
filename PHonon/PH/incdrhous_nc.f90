@@ -24,7 +24,7 @@ subroutine incdrhous_nc (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
   USE lsda_mod,  ONLY : nspin
   USE spin_orb,  ONLY : lspinorb, domag
   USE noncollin_module, ONLY : npol, nspin_mag
-  USE uspp,      ONLY : nkb, qq, qq_so
+  USE uspp,      ONLY : nkb, qq_nt, qq_so
   USE uspp_param,ONLY : nhm, nh
   USE wvfct,     ONLY : nbnd, npwx
   USE modes,     ONLY : u
@@ -114,7 +114,7 @@ subroutine incdrhous_nc (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
                                    END DO
                                 END DO
                              ELSE
-                                ps1(ibnd,jbnd)=ps1(ibnd,jbnd)-qq(ih,jh,nt)*&
+                                ps1(ibnd,jbnd)=ps1(ibnd,jbnd)-qq_nt(ih,jh,nt)*&
                                 (alphap(ipol,ik)%nc(ikb,1,ibnd) *&
                                       CONJG(becq(ik)%nc(jkb,1,jbnd)) +     &
                                             becp1(ik)%nc(ikb,1,ibnd) *     &

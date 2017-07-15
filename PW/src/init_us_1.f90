@@ -36,7 +36,7 @@ subroutine init_us_1
   USE lsda_mod,     ONLY : nspin
   USE us,           ONLY : nqxq, dq, nqx, tab, tab_d2y, qrad, spline_ps
   USE splinelib
-  USE uspp,         ONLY : nhtol, nhtoj, nhtolm, ijtoh, dvan, qq, indv,&
+  USE uspp,         ONLY : nhtol, nhtoj, nhtolm, ijtoh, dvan, qq_at, qq_nt, indv,&
                            ap, aainit, qq_so, dvan_so, okvan, indv_ijkb0
   USE uspp_param,   ONLY : upf, lmaxq, nbetam, nh, nhm, lmaxkb
   USE spin_orb,     ONLY : lspinorb, rot_ylm, fcoef
@@ -64,7 +64,7 @@ subroutine init_us_1
   ! interpolated value
   ! J=L+S (noninteger!)
   integer :: n1, m0, m1, n, li, mi, vi, vj, ijs, is1, is2, &
-             lk, mk, vk, kh, lh, ijkb0
+             lk, mk, vk, kh, lh, ijkb0, na
   integer, external :: sph_ind
   complex(DP) :: coeff, qgm(1)
   real(DP) :: spinor, ji, jk
@@ -79,9 +79,8 @@ subroutine init_us_1
   ndm = MAXVAL ( upf(:)%kkbeta )
   allocate (aux ( ndm))    
   allocate (aux1( ndm))    
-  allocate (besr( ndm))    
-  allocate (qtot( ndm , nbetam*(nbetam+1)/2 ))    
   allocate (ylmk0( lmaxq * lmaxq))    
+  allocate (qtot( ndm , nbetam*(nbetam+1)/2 ))    
   ap (:,:,:)   = 0.d0
   if (lmaxq > 0) qrad(:,:,:,:)= 0.d0
   !
@@ -115,9 +114,11 @@ subroutine init_us_1
      fcoef=(0.d0,0.d0)
      dvan_so = (0.d0,0.d0)
      qq_so=(0.d0,0.d0)
-     qq  = 0.d0
+     qq_at  = 0.d0
+     qq_nt=0.d0
   else
-     qq  = 0.d0
+     qq_nt=0.d0
+     qq_at  = 0.d0
      dvan = 0.d0
   endif
   !
@@ -307,6 +308,8 @@ subroutine init_us_1
      endif
      ! ntyp
   enddo
+  deallocate (aux1)
+  deallocate (qtot)
   !
   !   and finally we compute the qq coefficients by integrating the Q.
   !   q are the g=0 components of Q.
@@ -321,7 +324,7 @@ subroutine init_us_1
         do ih=1,nh(nt)
           do jh=1,nh(nt)
             call qvan2 (1, ih, jh, nt, gg, qgm, ylmk0)
-            qq (ih, jh, nt) = omega *  DBLE (qgm (1) )
+            qq_nt(ih,jh,nt) = omega * DBLE(qgm (1) )
             do kh=1,nh(nt)
               do lh=1,nh(nt)
                 ijs=0
@@ -349,8 +352,8 @@ subroutine init_us_1
                  qq_so (ih, jh, 4, nt) = qq_so (ih, jh, 1, nt)
                  qq_so (jh, ih, 4, nt) = qq_so (ih, jh, 4, nt)
              endif
-             qq (ih, jh, nt) = omega *  DBLE (qgm (1) )
-             qq (jh, ih, nt) = qq (ih, jh, nt)
+             qq_nt(ih,jh,nt) = omega * DBLE(qgm (1) )
+             qq_nt(jh,ih,nt) = omega * DBLE(qgm (1) )
           enddo
         enddo
       endif
@@ -360,14 +363,23 @@ subroutine init_us_1
 100 continue
   if (lspinorb) then
     call mp_sum(  qq_so , intra_bgrp_comm )
-    call mp_sum(  qq , intra_bgrp_comm )
+    call mp_sum(  qq_nt, intra_bgrp_comm )
   else
-    call mp_sum(  qq , intra_bgrp_comm )
+    call mp_sum(  qq_nt, intra_bgrp_comm )
   endif
 #endif
+  ! finally we set the atomic specific qq_at matrices
+  do na=1, nat
+     qq_at(:,:, na) = qq_nt(:,:,ityp(na))
+  end do
+
+  deallocate (ylmk0)
+  deallocate (aux)
   !
   !     fill the interpolation table tab
   !
+  allocate( aux (ndm) )
+  allocate (besr( ndm))    
   pref = fpi / sqrt (omega)
   call divide (intra_bgrp_comm, nqx, startq, lastq)
   tab (:,:,:) = 0.d0
@@ -404,10 +416,7 @@ subroutine init_us_1
      deallocate(xdata)
   endif
 
-  deallocate (ylmk0)
-  deallocate (qtot)
   deallocate (besr)
-  deallocate (aux1)
   deallocate (aux)
 
   call stop_clock ('init_us_1')

@@ -20,7 +20,7 @@ subroutine add_dkmds(ik, uact, jpol, dvkb)
   USE lsda_mod, ONLY: lsda, current_spin, isk, nspin
   USE klist, ONLY : xk, ngk, igk_k
   USE spin_orb, ONLY : lspinorb
-  USE uspp, ONLY : nkb, qq, qq_so, vkb
+  USE uspp, ONLY : nkb, qq_nt, qq_so, vkb
   USE wvfct, ONLY : npwx, nbnd
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   USE noncollin_module, ONLY : noncolin, npol
@@ -200,12 +200,12 @@ subroutine add_dkmds(ik, uact, jpol, dvkb)
                              else
                                 do is=1,npol
                                    ps1_nc (ikb,is,ibnd)=ps1_nc(ikb,is,ibnd)+  &
-                                     (0.d0,1.d0) * qq (ih, jh, nt) *          &
+                                     (0.d0,1.d0) * qq_nt (ih, jh, nt) *          &
                                      alphadk_nc(jkb, is, ibnd, ipol) *        &
                                       uact (mu + ipol)
                                    ps2_nc(ikb,is,ipol,ibnd)= &
                                           ps2_nc(ikb,is,ipol,ibnd)+ &
-                                     qq(ih,jh,nt)*becp2_nc(jkb, is, ibnd)*   &
+                                     qq_nt(ih,jh,nt)*becp2_nc(jkb, is, ibnd)*   &
                                      uact (mu + ipol) * tpiba
 
                                    ps1_nc(ikb,is,ibnd)=ps1_nc(ikb,is,ibnd) + &
@@ -221,11 +221,11 @@ subroutine add_dkmds(ik, uact, jpol, dvkb)
                              endif
                           else
                              ps1 (ikb, ibnd) = ps1 (ikb, ibnd) +           &
-                                  (0.d0,1.d0) * qq (ih, jh, nt) *          &
+                                  (0.d0,1.d0) * qq_nt (ih, jh, nt) *          &
                                   alphadk(jkb, ibnd, ipol) *               &
                                   uact (mu + ipol)
                              ps2 (ikb, ipol, ibnd) = ps2 (ikb, ipol, ibnd) +  &
-                                  qq (ih, jh, nt) *                           &
+                                  qq_nt (ih, jh, nt) *                           &
                                   becp2(jkb, ibnd) *                          &
                                   uact (mu + ipol) * tpiba
                           !

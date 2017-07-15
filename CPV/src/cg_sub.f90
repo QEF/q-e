@@ -39,7 +39,7 @@
       USE io_files,                 ONLY : tmp_dir, prefix
       use uspp,                     only : nhsa=> nkb, nhsavb=> nkbus, &
                                            betae => vkb, rhovan => becsum, &
-                                           deeq, qq, nlcc_any
+                                           deeq, qq_nt, nlcc_any
       use uspp_param,               only : nh, nvb, ish
       use cg_module,                only : ene_ok,  maxiter,niter_cg_restart, &
                                            conv_thr, passop, enever, itercg,c0old
@@ -388,7 +388,7 @@
                           do ia=1,na(is)
                              inl=ish(is)+(iv-1)*na(is)+ia
                              jnl=ish(is)+(jv-1)*na(is)+ia
-                             gamma=gamma+ qq(iv,jv,is)*becm(inl,i)*bec0(jnl,i)
+                             gamma=gamma+ qq_nt(iv,jv,is)*becm(inl,i)*bec0(jnl,i)
                           end do
                        end do
                     end do
@@ -448,7 +448,7 @@
                                    do ia=1,na(is)
                                       inl=ish(is)+(iv-1)*na(is)+ia
                                       jnl=ish(is)+(jv-1)*na(is)+ia
-                                      gamma=gamma+ qq(iv,jv,is)*becm(inl,i+istart-1)*bec0(jnl,jj+istart-1)*fmat_(j,i)
+                                      gamma=gamma+ qq_nt(iv,jv,is)*becm(inl,i+istart-1)*bec0(jnl,jj+istart-1)*fmat_(j,i)
                                    end do
                                 end do
                              end do

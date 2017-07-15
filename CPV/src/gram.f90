@@ -85,7 +85,7 @@ CONTAINS
       USE gvecw,              ONLY: ngw
       USE gvect,              ONLY: gstart
       USE uspp_param,         ONLY: nh, ish, nvb
-      USE uspp,               ONLY: qq
+      USE uspp,               ONLY: qq_nt
       USE mp,                 ONLY: mp_sum
       USE mp_global,          ONLY: intra_bgrp_comm
       USE kinds,              ONLY: DP
@@ -117,12 +117,12 @@ CONTAINS
       DO is=1,nvb
          DO iv=1,nh(is)
             DO jv=1,nh(is)
-               IF(ABS(qq(iv,jv,is)).GT.1.e-5) THEN 
+               IF(ABS(qq_nt(iv,jv,is)).GT.1.e-5) THEN 
                   DO ia=1,na(is)
                      inl=ish(is)+(iv-1)*na(is)+ia
                      jnl=ish(is)+(jv-1)*na(is)+ia
                      rsum = rsum +                                        &
-     &                    qq(iv,jv,is)*bec(inl,i)*bec(jnl,i)
+     &                    qq_nt(iv,jv,is)*bec(inl,i)*bec(jnl,i)
                   END DO
                ENDIF
             END DO
@@ -142,7 +142,7 @@ CONTAINS
 !     on output: bec(i) is recalculated
 !
       USE ions_base,      ONLY: na
-      USE uspp,           ONLY : nkb, nhsavb=>nkbus, qq
+      USE uspp,           ONLY : nkb, nhsavb=>nkbus, qq_nt
       USE uspp_param,     ONLY:  nh, nvb, ish
       USE electrons_base, ONLY: ispin, ispin_bgrp, nbspx_bgrp, ibgrp_g2l, iupdwn, nupdwn, nbspx
       USE gvecw,          ONLY: ngw
@@ -247,11 +247,11 @@ CONTAINS
             DO is=1,nvb
                DO iv=1,nh(is)
                   DO jv=1,nh(is)
-                     IF(ABS(qq(iv,jv,is)).GT.1.e-5) THEN 
+                     IF(ABS(qq_nt(iv,jv,is)).GT.1.e-5) THEN 
                         DO ia=1,na(is)
                            inl=ish(is)+(iv-1)*na(is)+ia
                            jnl=ish(is)+(jv-1)*na(is)+ia
-                           rsum = rsum + qq(iv,jv,is)*bec_tmp(inl)*bec_bgrp(jnl,ibgrp_k)
+                           rsum = rsum + qq_nt(iv,jv,is)*bec_tmp(inl)*bec_bgrp(jnl,ibgrp_k)
                         END DO
                      ENDIF
                   END DO

@@ -19,7 +19,7 @@ subroutine add_for_charges (ik, uact)
   USE lsda_mod, ONLY: lsda, current_spin, isk
   USE klist, ONLY : xk, ngk, igk_k
   USE spin_orb, ONLY : lspinorb
-  USE uspp, ONLY : nkb, qq, qq_so, vkb
+  USE uspp, ONLY : nkb, qq_nt, qq_so, vkb
   USE wvfct, ONLY : npwx, nbnd
   USE becmod, ONLY: calbec, bec_type, allocate_bec_type, deallocate_bec_type
   USE noncollin_module, ONLY : noncolin, npol
@@ -169,22 +169,22 @@ subroutine add_for_charges (ik, uact)
                              else
                                 do is=1,npol
                                    ps1_nc(ikb,is,ibnd)=ps1_nc(ikb,is,ibnd) + &
-                                       qq (ih, jh, nt) *                     &
+                                       qq_nt (ih, jh, nt) *                     &
                                        alphapp(ipol)%nc(jkb, is, ibnd) *     &
                                        uact (mu + ipol)
                                    ps2_nc(ikb,is,ibnd,ipol)=                 &
                                        ps2_nc(ikb,is, ibnd, ipol) +          &
-                                       qq (ih, jh, nt) * (0.d0, -1.d0) *     &
+                                       qq_nt (ih, jh, nt) * (0.d0, -1.d0) *     &
                                        bedp%nc (jkb, is, ibnd) *             &
                                        uact (mu + ipol) * tpiba
                                 end do
                              endif
                           else
                              ps1 (ikb, ibnd) = ps1 (ikb, ibnd) +     &
-                                  qq (ih, jh, nt)*alphapp(ipol)%k(jkb, ibnd)* &
+                                  qq_nt (ih, jh, nt)*alphapp(ipol)%k(jkb, ibnd)* &
                                   uact (mu + ipol)
                              ps2 (ikb, ibnd, ipol) = ps2 (ikb, ibnd, ipol) + &
-                                  qq (ih, jh, nt) * (0.d0, -1.d0) *          &
+                                  qq_nt (ih, jh, nt) * (0.d0, -1.d0) *          &
                                    bedp%k(jkb, ibnd) *uact (mu + ipol) * tpiba
                           endif
                        enddo

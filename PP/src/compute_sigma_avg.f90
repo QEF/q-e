@@ -14,7 +14,7 @@ SUBROUTINE compute_sigma_avg(sigma_avg,becp_nc,ik,lsigma)
   USE noncollin_module,     ONLY : noncolin, npol
   USE cell_base,            ONLY : alat, at, tpiba, omega
   USE spin_orb,             ONLY : fcoef
-  USE uspp,                 ONLY : nkb,qq,vkb,nhtol,nhtoj,nhtolm,indv
+  USE uspp,                 ONLY : nkb,qq_nt,vkb,nhtol,nhtoj,nhtolm,indv
   USE uspp_param,           ONLY : upf, nh, nhm
   USE wvfct,                ONLY : nbnd, npwx
   USE wavefunctions_module, ONLY : evc, psic_nc
@@ -86,9 +86,9 @@ SUBROUTINE compute_sigma_avg(sigma_avg,becp_nc,ik,lsigma)
            mj = nhtolm(jh,np) - lj**2
            IF (lj==li.and.mj==mi1) THEN
               IF (mj>mi) THEN
-                 r_aux = qq(ih,jh-1,np)
+                 r_aux = qq_nt(ih,jh-1,np)
               ELSE
-                 r_aux = qq(ih,jh+1,np)
+                 r_aux = qq_nt(ih,jh+1,np)
               ENDIF
               qq_lz(ih,jh,np) = c_aux * r_aux
            ENDIF
@@ -232,10 +232,10 @@ SUBROUTINE compute_sigma_avg(sigma_avg,becp_nc,ik,lsigma)
                  ENDDO
                  IF (lsigma(1)) THEN
                     DO ih = 1, nh(np)
-                       magtot2(1)=magtot2(1)+ 2.d0*qq(ih,ih,np)  &
+                       magtot2(1)=magtot2(1)+ 2.d0*qq_nt(ih,ih,np)  &
                             * REAL( be1(ih,2)*conjg(be1(ih,1)) )
                        DO jh = ih + 1, nh(np)
-                          magtot2(1)=magtot2(1)+2.d0*qq(ih,jh,np) &
+                          magtot2(1)=magtot2(1)+2.d0*qq_nt(ih,jh,np) &
                                * REAL( be1(jh,2)*conjg(be1(ih,1))+ &
                                be1(jh,1)*conjg(be1(ih,2)) )
 
@@ -244,10 +244,10 @@ SUBROUTINE compute_sigma_avg(sigma_avg,becp_nc,ik,lsigma)
                  ENDIF
                  IF (lsigma(2)) THEN
                     DO ih = 1, nh(np)
-                       magtot2(2)=magtot2(2)+ 2.d0*qq(ih,ih,np)*aimag   &
+                       magtot2(2)=magtot2(2)+ 2.d0*qq_nt(ih,ih,np)*aimag   &
                             ( be1(ih,2)*conjg(be1(ih,1)) )
                        DO jh = ih + 1, nh(np)
-                          magtot2(2)=magtot2(2) + 2.d0*qq(ih,jh,np)*aimag &
+                          magtot2(2)=magtot2(2) + 2.d0*qq_nt(ih,jh,np)*aimag &
                                (  be1(jh,2) * conjg(be1(ih,1)) &
                                - be1(jh,1) * conjg(be1(ih,2)) )
                        ENDDO
@@ -255,10 +255,10 @@ SUBROUTINE compute_sigma_avg(sigma_avg,becp_nc,ik,lsigma)
                  ENDIF
                  IF (lsigma(3)) THEN
                     DO ih = 1, nh(np)
-                       magtot2(3) = magtot2(3) + qq(ih,ih,np)*              &
+                       magtot2(3) = magtot2(3) + qq_nt(ih,ih,np)*              &
                             ( abs(be1(ih,1))**2 - abs(be1(ih,2))**2 )
                        DO jh = ih + 1, nh(np)
-                          magtot2(3) = magtot2(3) + 2.d0*qq(ih,jh,np) &
+                          magtot2(3) = magtot2(3) + 2.d0*qq_nt(ih,jh,np) &
                                * REAL( be1(jh,1)*conjg(be1(ih,1)) &
                                -be1(jh,2)*conjg(be1(ih,2)) )
                        ENDDO

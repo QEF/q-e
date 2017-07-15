@@ -21,7 +21,7 @@ subroutine incdrhous (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
   USE fft_interfaces, ONLY: invfft
   USE gvecs,   ONLY : nls
   USE noncollin_module, ONLY : npol
-  USE uspp,      ONLY : nkb, qq
+  USE uspp,      ONLY : nkb, qq_nt
   USE uspp_param,ONLY : nhm, nh
   USE wvfct,     ONLY : nbnd, npwx
   USE phus,      ONLY : alphap
@@ -95,7 +95,7 @@ subroutine incdrhous (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
                        do jbnd = startb, lastb
                           do ipol = 1, 3
                              mu = 3 * (na - 1) + ipol
-                             ps1(ibnd,jbnd) = ps1(ibnd,jbnd) - qq(ih,jh,nt) * &
+                             ps1(ibnd,jbnd) = ps1(ibnd,jbnd) - qq_nt(ih,jh,nt) * &
                       ( alphap(ipol,ik)%k(ikb,ibnd) * CONJG(becq(ik)%k(jkb,jbnd)) + &
                         becp1(ik)%k(ikb,ibnd) * CONJG(alpq(ipol,ik)%k(jkb,jbnd)) ) * &
                         wgg (ibnd, jbnd, ik) * u (mu, mode)

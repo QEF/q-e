@@ -179,7 +179,7 @@ SUBROUTINE add_bfield (v,rho)
        ! N.B.: since the magnetization is here computed starting from the mixed
        ! rho (i.e. the input rho for the next scf iteration), as all the other
        ! contributions to the potential for the next iteration, it will differ
-       ! from the magnetization written on the output, since that is calculated
+       ! from the magnetization written on output, since that is calculated
        ! with the output rho of the current iteration. At convergence the two
        ! magnetizations will coincide (and so will do the polar angles).
        write(stdout,'(5x,"theta (target): ",F10.5,"     (",F10.5,")")') &

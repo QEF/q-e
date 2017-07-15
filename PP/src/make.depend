@@ -322,7 +322,6 @@ local_dos.o : ../../Modules/recvec.o
 local_dos.o : ../../Modules/uspp.o
 local_dos.o : ../../Modules/wavefunctions.o
 local_dos.o : ../../PW/src/pwcom.o
-local_dos.o : ../../PW/src/realus.o
 local_dos.o : ../../PW/src/scf_mod.o
 local_dos.o : ../../PW/src/symme.o
 local_dos1d.o : ../../FFTXlib/fft_interfaces.o

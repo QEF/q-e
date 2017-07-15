@@ -33,7 +33,7 @@ SUBROUTINE lr_sm1_psi (recalculate, ik, lda, n, m, psi, spsi)
   !
   USE kinds,            ONLY : DP
   USE control_flags,    ONLY : gamma_only
-  USE uspp,             ONLY : okvan, vkb, nkb, qq
+  USE uspp,             ONLY : okvan, vkb, nkb, qq_nt
   USE uspp_param,       ONLY : nh, upf
   USE ions_base,        ONLY : ityp,nat,ntyp=>nsp
   USE mp,               ONLY : mp_sum
@@ -143,7 +143,7 @@ CONTAINS
                          DO ih=1,nh(nt)
                             ikb = ijkb0 + ih
                             ps(ikb,ii) = ps(ikb,ii) + &
-                               & qq(ih,jh,nt) * bbg(jkb,ii)
+                               & qq_nt(ih,jh,nt) * bbg(jkb,ii)
                          ENDDO
                       ENDDO
                    ENDDO
@@ -185,7 +185,7 @@ CONTAINS
                          DO ih=1,nh(nt)
                             ikb = ijkb0 + ih
                             bbg(ii,jkb) = bbg(ii,jkb) &
-                                    & - ps(ii,ikb) * qq(ih,jh,nt)
+                                    & - ps(ii,ikb) * qq_nt(ih,jh,nt)
                          ENDDO
                       ENDDO
                    ENDDO
@@ -312,7 +312,7 @@ CONTAINS
                             DO ih=1,nh(nt)
                                ikb = ijkb0 + ih
                                ps(ikb,ii) = ps(ikb,ii) + &
-                                & bbk(jkb,ii, ik1) * qq(ih,jh,nt)
+                                & bbk(jkb,ii, ik1) * qq_nt(ih,jh,nt)
                             ENDDO
                          ENDDO
                       ENDDO
@@ -354,7 +354,7 @@ CONTAINS
                             DO ih=1,nh(nt)
                                ikb = ijkb0 + ih
                                bbk(ii,jkb,ik1) = bbk(ii,jkb,ik1) &
-                                           & - ps(ii,ikb) * qq(ih,jh,nt)
+                                           & - ps(ii,ikb) * qq_nt(ih,jh,nt)
                             ENDDO
                          ENDDO
                       ENDDO
@@ -450,7 +450,7 @@ SUBROUTINE lr_sm1_psiq (recalculate, ik, lda, n, m, psi, spsi)
   USE control_flags,    ONLY : gamma_only
   USE klist,            ONLY : xk, igk_k, ngk
   USE qpoint,           ONLY : ikks, ikqs, nksq
-  USE uspp,             ONLY : okvan, vkb, nkb, qq
+  USE uspp,             ONLY : okvan, vkb, nkb, qq_nt
   USE uspp_param,       ONLY : nh, upf
   USE ions_base,        ONLY : ityp,nat,ntyp=>nsp
   USE becmod,           ONLY : bec_type, becp, calbec
@@ -567,7 +567,7 @@ CONTAINS
                                !
                                ikb = ijkb0 + ih
                                !
-                               ps(ikb,ii) = ps(ikb,ii) + bbk(jkb,ii,ik1)*qq(ih,jh,nt)
+                               ps(ikb,ii) = ps(ikb,ii) + bbk(jkb,ii,ik1)*qq_nt(ih,jh,nt)
                                !
                             enddo
                          enddo
@@ -615,7 +615,7 @@ CONTAINS
                                !
                                ikb = ijkb0 + ih
                                !
-                               bbk(ii,jkb,ik1) = bbk(ii,jkb,ik1) - ps(ii,ikb) * qq(ih,jh,nt)
+                               bbk(ii,jkb,ik1) = bbk(ii,jkb,ik1) - ps(ii,ikb) * qq_nt(ih,jh,nt)
                                !
                             enddo
                          enddo
@@ -786,7 +786,7 @@ SUBROUTINE sm1_psiq_nc()
                                   enddo
                                else
                                   ps(ikb,ii,1) = ps(ikb,ii,1) + &
-                                        & bbnc(jkb,ii,1,ik1) * qq(ih,jh,nt) 
+                                        & bbnc(jkb,ii,1,ik1) * qq_nt(ih,jh,nt) 
                                endif
                                !
                             enddo
@@ -862,7 +862,7 @@ SUBROUTINE sm1_psiq_nc()
                                      & - ps(ii,ikb,4) * qq_so(ih,jh,4,nt)
                                 else
                                   bbnc(ii,jkb,1,ik1) = bbnc(ii,jkb,1,ik1) &
-                                            & - ps(ii,ikb,1)*qq(ih,jh,nt)
+                                            & - ps(ii,ikb,1)*qq_nt(ih,jh,nt)
                                 endif
                                 !
                             enddo

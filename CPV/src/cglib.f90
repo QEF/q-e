@@ -89,7 +89,7 @@
       use kinds, only: dp
       use electrons_base, only: nudx, nspin, nupdwn, iupdwn, nx => nbspx, n => nbsp
       use uspp_param, only: nh, ish, nvb
-      use uspp, only :nhsa=>nkb, nhsavb=>nkbus, qq
+      use uspp, only :nhsa=>nkb, nhsavb=>nkbus, qq_nt
       use gvecw, only: ngw
       use ions_base, only: nsp, na
       USE cp_main_variables, ONLY: descla
@@ -205,7 +205,7 @@ subroutine pc2(a,beca,b,becb)
       use electrons_base, only: n => nbsp, ispin,  nupdwn, iupdwn, nspin
       use uspp_param, only: nh, nvb, ish
       use uspp, only :nhsa=>nkb
-      use uspp, only :qq
+      use uspp, only :qq_nt
       use parallel_toolkit, only : rep_matmul_drv
       
                            
@@ -261,7 +261,7 @@ subroutine pc2(a,beca,b,becb)
                      do ia=1,na(is)
                         inl=ish(is)+(iv-1)*na(is)+ia
                         jnl=ish(is)+(jv-1)*na(is)+ia
-                        qq_tmp(inl,jnl)=qq(iv,jv,is)
+                        qq_tmp(inl,jnl)=qq_nt(iv,jv,is)
                      enddo
                   enddo
                enddo
@@ -374,7 +374,7 @@ subroutine pc2(a,beca,b,becb)
       use mp, only: mp_sum, mp_bcast
       use electrons_base, only: n => nbsp, ispin
       use uspp_param, only: nh, ish, nvb
-      use uspp, only :nhsa=>nkb,qq,nhsavb=>nkbus
+      use uspp, only :nhsa=>nkb,qq_nt,nhsavb=>nkbus
       use io_global, ONLY: ionode, ionode_id
 
       implicit none
@@ -409,7 +409,7 @@ subroutine pc2(a,beca,b,becb)
                do ia=1,na(is)
                     inl=ish(is)+(iv-1)*na(is)+ia
                     jnl=ish(is)+(jv-1)*na(is)+ia
-                    q_matrix(inl,jnl)= qq(iv,jv,is)
+                    q_matrix(inl,jnl)= qq_nt(iv,jv,is)
                enddo
             enddo
          enddo
@@ -492,7 +492,7 @@ subroutine pc2(a,beca,b,becb)
       use io_global, only: stdout
       use mp_global, only: intra_bgrp_comm
       use uspp_param, only: nh, nvb, ish
-      use uspp, only :nhsa=>nkb, nhsavb=>nkbus, qq
+      use uspp, only :nhsa=>nkb, nhsavb=>nkbus, qq_nt
       use electrons_base, only: n => nbsp
       use gvecw, only: ngw
       use constants, only: pi, fpi
@@ -666,7 +666,7 @@ subroutine pc2(a,beca,b,becb)
       use io_global, only: stdout
       use mp_global, only: intra_bgrp_comm
       use uspp_param, only: nh, nvb, ish
-      use uspp, only :nhsa=>nkb, nhsavb=>nkbus, qq
+      use uspp, only :nhsa=>nkb, nhsavb=>nkbus, qq_nt
       use electrons_base, only: n => nbsp
       use gvecw, only: ngw
       use constants, only: pi, fpi

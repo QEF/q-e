@@ -279,7 +279,7 @@
       !
       USE kinds,          ONLY: DP
       USE ions_base,      ONLY: na, nat
-      USE uspp,           ONLY: nkb, qq
+      USE uspp,           ONLY: nkb, qq_nt
       USE uspp_param,     ONLY: nh, ish, nvb
       USE electrons_base, ONLY: f, nbsp_bgrp, iupdwn_bgrp, nupdwn_bgrp, i2gupdwn_bgrp, nbsp, nspin, nupdwn, iupdwn
       USE gvecw,          ONLY: ngw
@@ -363,7 +363,7 @@
             inl = ish(is)+(iv-1)*na(is)
             DO jv=1,nh(is)
                jnl = ish(is)+(jv-1)*na(is)
-               qqf = qq(iv,jv,is)
+               qqf = qq_nt(iv,jv,is)
                IF( ABS( qqf ) > 1.D-5 ) THEN
                   DO iss = 1, nspin
                      IF( descla( iss )%active_node > 0 ) THEN
@@ -395,7 +395,7 @@
             inl = ish(is)+(iv-1)*na(is)
             DO jv=1,nh(is)
                jnl = ish(is)+(jv-1)*na(is)
-               qqf = qq(iv,jv,is)
+               qqf = qq_nt(iv,jv,is)
                IF( ABS( qqf ) > 1.D-5 ) THEN
                   DO iss = 1, nspin
                      IF( descla( iss )%active_node > 0 ) THEN

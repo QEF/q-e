@@ -52,3 +52,5 @@ test0.o : fft_support.o
 test0.o : fft_types.o
 fft_stick.o : ../include/c_defs.h
 fft_stick.o : fftw.c
+fftw.o : 
+fftw.o : 

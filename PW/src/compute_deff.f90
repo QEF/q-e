@@ -14,7 +14,7 @@ SUBROUTINE compute_deff(deff, et)
 !
 USE kinds, ONLY : DP
 USE ions_base, ONLY : nsp, nat, ityp
-USE uspp, ONLY : deeq, qq, okvan
+USE uspp, ONLY : deeq, qq_at, okvan
 USE uspp_param, ONLY : nhm
 USE lsda_mod, ONLY : current_spin
 IMPLICIT NONE
@@ -28,7 +28,7 @@ IF (okvan) THEN
    DO nt = 1, nsp
       DO na = 1, nat
          IF ( ityp(na) == nt ) THEN
-            deff(:,:,na) = deff(:,:,na) - et*qq(:,:,nt)
+            deff(:,:,na) = deff(:,:,na) - et*qq_at(:,:,na)
          END IF
       END DO
    END DO
@@ -46,7 +46,7 @@ USE kinds, ONLY : DP
 USE ions_base, ONLY : nsp, nat, ityp
 USE spin_orb,  ONLY : lspinorb
 USE noncollin_module, ONLY : noncolin, npol
-USE uspp, ONLY : deeq_nc, qq, qq_so, okvan
+USE uspp, ONLY : deeq_nc, qq_at, qq_so, okvan
 USE uspp_param, ONLY : nhm
 USE lsda_mod, ONLY : nspin
 IMPLICIT NONE
@@ -67,7 +67,7 @@ IF (okvan) THEN
                DO is=1,npol
                   DO js=1,npol
                      ijs=ijs+1
-                     IF (is==js) deff(:,:,na,ijs)=deff(:,:,na,ijs)-et*qq(:,:,nt)
+                     IF (is==js) deff(:,:,na,ijs)=deff(:,:,na,ijs)-et*qq_at(:,:,na)
                   END DO
                END DO
             END IF

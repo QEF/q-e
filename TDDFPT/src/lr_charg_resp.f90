@@ -634,7 +634,7 @@ CONTAINS
     USE lsda_mod,                 ONLY : nspin
     USE mp,                       ONLY : mp_sum
     USE mp_global,                ONLY : inter_pool_comm, intra_bgrp_comm
-    USE uspp,                     ONLY : okvan,qq,vkb
+    USE uspp,                     ONLY : okvan,qq_nt,vkb
     USE wvfct,                    ONLY : wg,nbnd,npwx
     USE uspp_param,               ONLY : upf, nh
     USE becmod,                   ONLY : becp,calbec
@@ -715,7 +715,7 @@ CONTAINS
                             !
                             !  <beta_i|beta_i> terms
                             !
-                            scal = scal + qq(ih,ih,np) *1.d0 *  becp%r(ikb,ibnd_occ) * becp1_virt(ikb,ibnd_virt)
+                            scal = scal + qq_nt(ih,ih,np) *1.d0 *  becp%r(ikb,ibnd_occ) * becp1_virt(ikb,ibnd_virt)
                             !
                             ijh = ijh + 1
                             !
@@ -725,7 +725,7 @@ CONTAINS
                                !
                                jkb = ijkb0 + jh
                                !
-                               scal = scal + qq(ih,jh,np) *1.d0  * (becp%r(ikb,ibnd_occ) * becp1_virt(jkb,ibnd_virt)+&
+                               scal = scal + qq_nt(ih,jh,np) *1.d0  * (becp%r(ikb,ibnd_occ) * becp1_virt(jkb,ibnd_virt)+&
                                     becp%r(jkb,ibnd_occ) * becp1_virt(ikb,ibnd_virt))
                                !
                                ijh = ijh + 1
@@ -780,7 +780,7 @@ CONTAINS
     USE lsda_mod,                 ONLY : nspin
     USE mp,                       ONLY : mp_sum
     USE mp_global,                ONLY : inter_pool_comm, intra_bgrp_comm
-    USE uspp,                     ONLY : okvan,qq,vkb
+    USE uspp,                     ONLY : okvan,qq_nt,vkb
     USE wvfct,                    ONLY : wg,nbnd,npwx
     USE uspp_param,               ONLY : upf, nh
     USE becmod,                   ONLY : becp,calbec

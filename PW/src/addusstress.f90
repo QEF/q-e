@@ -6,10 +6,44 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------
-SUBROUTINE addusstres (sigmanlc)
+SUBROUTINE addusstress (sigmanlc)
   !----------------------------------------------------------------------
   !
-  !   This routine computes the part of the atomic force which is due
+  USE kinds,        ONLY : dp
+  USE control_flags,ONLY : tqr
+  USE realus,       ONLY : addusstress_r
+  !
+  IMPLICIT NONE
+  REAL(dp), INTENT(INOUT) :: sigmanlc (3, 3)
+  REAL(dp) :: sigma_r(3,3), sigma_g(3,3)
+  INTEGER :: na,ijh, ipol,jpol
+  !
+  IF ( tqr ) THEN
+     sigma_r(:,:) = 0.d0
+     CALL addusstress_r (sigma_r )
+     WRITE (6,'(A)') 'addusstress_r'
+     WRITE (6,'(3f13.8)') sigma_r
+     sigmanlc = sigmanlc + sigma_r
+     sigma_g(:,:) = 0.d0
+     CALL addusstress_g (sigma_g )
+!     sigmanlc = sigmanlc + sigma_g
+     WRITE (6,'(A)') 'addusstress_g'
+     WRITE (6,'(3f13.8)') sigma_g
+  ELSE
+     sigma_g(:,:) = 0.d0
+     CALL addusstress_g (sigma_g )
+     sigmanlc = sigmanlc + sigma_g
+     WRITE (6,'(A)') 'addusstress_g'
+     WRITE (6,'(3f13.8)') sigma_g
+  END IF
+  !
+END SUBROUTINE addusstress
+
+!----------------------------------------------------------------------
+SUBROUTINE addusstress_g (sigmanlc)
+  !----------------------------------------------------------------------
+  !
+  !   This routine computes the part of the crystal stress which is due
   !   to the dependence of the Q function on the atomic position.
   !   Adds contribution to input sigmanlc, does not sum contributions
   !   from various processors (sum is performed by calling routine)
@@ -117,7 +151,7 @@ SUBROUTINE addusstres (sigmanlc)
                 CALL DGEMM('T','N', 3, nspin, 2*ngm, 1.0_dp, aux1, 2*ngm, &
                            aux2, 2*ngm, 0.0_dp, fac, 3 )    
                 DO is = 1, nspin
-                   DO jpol = 1, ipol
+                   DO jpol = 1, 3
                       sus (ipol, jpol) = sus (ipol, jpol) - omega * &
                           fac (jpol, is)
                    ENDDO
@@ -140,5 +174,4 @@ SUBROUTINE addusstres (sigmanlc)
 
   RETURN
 
-END SUBROUTINE addusstres
-
+END SUBROUTINE addusstress_g

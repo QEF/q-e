@@ -14,7 +14,7 @@
 !
       USE kinds, ONLY: DP
       USE ions_base, ONLY: na
-      USE uspp, ONLY: nhsa => nkb, nhsavb=>nkbus, qq
+      USE uspp, ONLY: nhsa => nkb, nhsavb=>nkbus, qq_nt
       USE uspp_param, ONLY: nh, nvb, ish
       USE gvecw, ONLY: ngw
       IMPLICIT NONE
@@ -36,13 +36,13 @@
          DO is=1,nvb
             DO iv=1,nh(is)
                DO jv=1,nh(is)
-                  IF(ABS(qq(iv,jv,is)).GT.1.e-5) THEN
+                  IF(ABS(qq_nt(iv,jv,is)).GT.1.e-5) THEN
                      DO ia=1,na(is)
                         inl=ish(is)+(iv-1)*na(is)+ia
                         jnl=ish(is)+(jv-1)*na(is)+ia
                         DO i=1,nwfc
                            qtemp(inl,i) = qtemp(inl,i) +                &
-     &                                    qq(iv,jv,is)*becwfc(jnl,i)
+     &                                    qq_nt(iv,jv,is)*becwfc(jnl,i)
                         END DO
                      END DO
                   ENDIF
@@ -492,7 +492,7 @@
       use gvecw, only: ngw
       use gvect, only: g, gstart
       use electrons_base, only: n => nbsp, nx => nbspx
-      USE uspp,           ONLY: nhsa=>nkb, qq
+      USE uspp,           ONLY: nhsa=>nkb, qq_nt
       USE ldaU_cp,        ONLY: Hubbard_U, Hubbard_l
       USE ldaU_cp,        ONLY: nwfcU
       use cell_base,      ONLY: tpiba
@@ -572,7 +572,7 @@
       ! following dgemm performs (note that qq is symmetric)
       ! wfcbeta(m,iv) = sum_jv qq(iv,jv,alpha_s)*auxwfc(m,jv)
       CALL dgemm( 'N', 'N', nwfcU, nh(alpha_s), nh(alpha_s), 1.0_DP, &
-                  auxwfc, nwfcU, qq(1,1,alpha_s), nh(alpha_s), &
+                  auxwfc, nwfcU, qq_nt(1,1,alpha_s), nh(alpha_s), &
                   0.0_DP, wfcbeta, nwfcU )
       do iv=1,nh(alpha_s)
          inl=ish(alpha_s)+(iv-1)*na(alpha_s)+alpha_a
@@ -582,7 +582,7 @@
       end do
       ! as above with wfcbeta(m,iv) => wfcdbeta
       CALL dgemm( 'N', 'N', nwfcU, nh(alpha_s), nh(alpha_s), 1.0_DP, &
-                  auxwfc, nwfcU, qq(1,1,alpha_s), nh(alpha_s), &
+                  auxwfc, nwfcU, qq_nt(1,1,alpha_s), nh(alpha_s), &
                   0.0_DP, wfcdbeta, nwfcU )
       deallocate(auxwfc)
       !

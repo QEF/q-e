@@ -179,6 +179,7 @@ SUBROUTINE electrons()
            fock2 = exxenergy2()
         ENDIF
         exxen = 0.50d0*fock2 
+        write (6,*) 'fock energy ',exxen
         etot = etot - etxc 
         !
         ! Recalculate potential because XC functional has changed,

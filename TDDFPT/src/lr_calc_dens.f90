@@ -42,14 +42,13 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
   USE wavefunctions_module,   ONLY : psic
   USE wvfct,                  ONLY : nbnd, et, wg, npwx
   USE control_flags,          ONLY : gamma_only
-  USE uspp,                   ONLY : vkb, nkb, okvan, qq, becsum
+  USE uspp,                   ONLY : vkb, nkb, okvan, qq_nt, becsum
   USE uspp_param,             ONLY : upf, nh
   USE io_global,              ONLY : ionode, stdout
   USE io_files,               ONLY : tmp_dir, prefix
   USE mp,                     ONLY : mp_sum
   USE mp_global,              ONLY : inter_pool_comm, intra_bgrp_comm,&
                                      inter_bgrp_comm 
-  USE realus,                 ONLY : addusdens_r
   USE charg_resp,             ONLY : w_T, lr_dump_rho_tot_cube,&
                                      & lr_dump_rho_tot_xyzd, &
                                      & lr_dump_rho_tot_xcrys,&
@@ -125,13 +124,7 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
   ! Here we add the Ultrasoft contribution to the charge density
   ! response. 
   !
-  IF (okvan) THEN
-     IF (tqr) THEN
-        CALL addusdens_r(rho_1,.FALSE.)
-     ELSE
-        CALL addusdens(rho_1)
-     ENDIF
-  ENDIF
+  IF (okvan) CALL addusdens(rho_1)
   !
   ! The psic workspace can present a memory bottleneck
   !
@@ -513,7 +506,7 @@ CONTAINS
                               2.d0 * w1 * becp%r(ikb,ibnd) *&
                               & becp_1(ikb,ibnd)
                          !
-                         scal = scal + qq(ih,ih,np) *1.d0 *&
+                         scal = scal + qq_nt(ih,ih,np) *1.d0 *&
                               &  becp%r(ikb,ibnd) * becp_1(ikb,ibnd)
                          !
                          ijh = ijh + 1
@@ -528,7 +521,7 @@ CONTAINS
                                  &becp%r(jkb,ibnd) + & 
                                  becp_1(jkb,ibnd) * becp%r(ikb,ibnd))
                             !
-                            scal = scal + qq(ih,jh,np) * 1.d0 *&
+                            scal = scal + qq_nt(ih,jh,np) * 1.d0 *&
                                  & (becp%r(ikb,ibnd) * &
                                  &becp_1(jkb, ibnd) + &
                                  &becp%r(jkb,ibnd) * becp_1(ikb,ibnd))
@@ -658,7 +651,7 @@ CONTAINS
                                  &DBLE(CONJG(becp%k(ikb,ibnd)) *&
                                  & becp1_c(ikb,ibnd,ik)) 
                             !
-                            scal = scal + qq(ih,ih,np) * 1.d0 *&
+                            scal = scal + qq_nt(ih,ih,np) * 1.d0 *&
                                  &  DBLE(CONJG(becp%k(ikb,ibnd)) *&
                                  & becp1_c(ikb,ibnd,ik))
                             !
@@ -676,7 +669,7 @@ CONTAINS
                                     becp1_c(jkb,ibnd,ik) *&
                                     & CONJG(becp%k(ikb,ibnd)))
                                !
-                               scal = scal + qq(ih,jh,np) * 1.d0 * &
+                               scal = scal + qq_nt(ih,jh,np) * 1.d0 * &
                                     & DBLE(CONJG(becp%k(ikb,ibnd)) *&
                                     & becp1_c(jkb,ibnd,ik)+&
                                     & becp%k(jkb,ibnd) * &

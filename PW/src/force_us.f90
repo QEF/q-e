@@ -18,7 +18,7 @@ SUBROUTINE force_us( forcenl )
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE klist,                ONLY : nks, xk, ngk, igk_k
   USE gvect,                ONLY : g
-  USE uspp,                 ONLY : nkb, vkb, qq, deeq, qq_so, deeq_nc, indv_ijkb0
+  USE uspp,                 ONLY : nkb, vkb, qq_at, deeq, qq_so, deeq_nc, indv_ijkb0
   USE uspp_param,           ONLY : upf, nh, newpseudo, nhm
   USE wvfct,                ONLY : nbnd, npwx, wg, et
   USE lsda_mod,             ONLY : lsda, current_spin, isk, nspin
@@ -152,7 +152,7 @@ SUBROUTINE force_us( forcenl )
                 ijkb0 = indv_ijkb0(na)
                 ! this is \sum_j q_{ij} <beta_j|psi>
                 CALL DGEMM ('N','N', nh(nt), becp%nbnd_loc, nh(nt), &
-                     1.0_dp, qq(1,1,nt), nhm, becp%r(ijkb0+1,1),&
+                     1.0_dp, qq_at(1,1,na), nhm, becp%r(ijkb0+1,1),&
                      nkb, 0.0_dp, aux, nh(nt) )
                 ! multiply by -\epsilon_n
 !$omp parallel do default(shared) private(ibnd_loc,ibnd,ih)

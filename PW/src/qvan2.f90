@@ -89,6 +89,7 @@ subroutine qvan2 (ngy, ih, jh, np, qmod, qg, ylmk0)
      if ( lp < 1 .or. lp > 49 ) call errore ('qvan2', ' lp wrong ', max(lp,1))
      !
      !     find angular momentum l corresponding to combined index lp
+     !     (l is actually l+1 because this is the way qrad is stored, check init_us_1)
      !
      if (lp == 1) then
         l = 1
