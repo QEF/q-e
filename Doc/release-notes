@@ -5,6 +5,10 @@ New in svn version:
 
 Fixed in svn version
 
+  * Some constants in the definition of PBE functionals were truncated to 
+    6 significant digits. While not a bug, this could lead to tiny differences
+    with respect to previous results and other XC implementations (r13592)
+
   * Examples for magnetic anisotropy with force theorem were not properly
     updated (r13534)
 
@@ -44,6 +48,8 @@ Fixed in svn version
 
 Incompatible changes in svn version:
 
+  * fft_defs.h and related configure and makedep stuff deleted,
+    replaced by iso_c_binding module
   * module pwcom no longer contains modules gvect, gvecs, references to
     some variables in modules constants, cell_base
   * The new xml format with schema is now the default. Use configure option

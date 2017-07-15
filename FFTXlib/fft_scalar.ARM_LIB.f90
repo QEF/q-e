@@ -6,11 +6,11 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 
-#include "fft_defs.h"
 !=----------------------------------------------------------------------=!
     MODULE fft_scalar_arm
 !=----------------------------------------------------------------------=!
 
+       USE iso_c_binding
        USE fft_param
 
        IMPLICIT NONE
@@ -359,8 +359,8 @@ END IF
      COMPLEX (DP), SAVE :: bw_table(ltabl,ndims)
 #else
      ! FFTW
-     C_POINTER, save :: fw_plan(ndims) = 0
-     C_POINTER, save :: bw_plan(ndims) = 0
+     TYPE(C_PTR), save :: fw_plan(ndims) = C_NULL_PTR
+     TYPE(C_PTR), save :: bw_plan(ndims) = C_NULL_PTR
 #endif
 
 

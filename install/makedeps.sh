@@ -113,7 +113,7 @@ for dir in $dirs; do
         if test "$DIR" = "PW/src" || test "$DIR" = "TDDFPT/src"
         then
             sed '/@environ_/d;/@solvent_tddfpt@/d' make.depend > make.depend.tmp
-            sed '/fft_defs.h@/d' make.depend.tmp > make.depend
+            cp make.depend.tmp make.depend
         fi
 
         if test "$DIR" = "CPV/src"

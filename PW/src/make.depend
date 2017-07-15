@@ -891,7 +891,6 @@ init_us_2.o : ../../Modules/splinelib.o
 init_us_2.o : ../../Modules/uspp.o
 init_us_2.o : pwcom.o
 init_us_b0.o : ../../Modules/atom.o
-init_us_b0.o : ../../Modules/cell_base.o
 init_us_b0.o : ../../Modules/constants.o
 init_us_b0.o : ../../Modules/gvecw.o
 init_us_b0.o : ../../Modules/io_global.o

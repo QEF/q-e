@@ -75,7 +75,7 @@ SUBROUTINE average_pp ( ntyp )
               upf(nt)%dion(nb,nb) = vionl
               !
               nbe = nbe + 1
-                 !
+              !
            ELSE
               !
               upf(nt)%beta(1:rgrid(nt)%mesh,nb) = &

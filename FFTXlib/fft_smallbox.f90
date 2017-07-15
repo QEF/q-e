@@ -6,12 +6,13 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "fft_defs.h"
 
 !=----------------------------------------------------------------------=!
    MODULE fft_smallbox
 !=----------------------------------------------------------------------=!
 
+!! iso_c_binding provides C_PTR, C_NULL_PTR, C_ASSOCIATED
+       USE iso_c_binding
        IMPLICIT NONE
        SAVE
 
@@ -33,11 +34,11 @@
 
         INTEGER   :: cft_b_dims( 4 )
 !$omp threadprivate (cft_b_dims)
-        C_POINTER :: cft_b_bw_planz = 0
+        TYPE(C_PTR) :: cft_b_bw_planz = C_NULL_PTR
 !$omp threadprivate (cft_b_bw_planz)
-        C_POINTER :: cft_b_bw_planx = 0
+        TYPE(C_PTR) :: cft_b_bw_planx = C_NULL_PTR
 !$omp threadprivate (cft_b_bw_planx)
-        C_POINTER :: cft_b_bw_plany = 0
+        TYPE(C_PTR) :: cft_b_bw_plany = C_NULL_PTR
 !$omp threadprivate (cft_b_bw_plany)
 
 !=----------------------------------------------------------------------=!
@@ -75,10 +76,10 @@
       integer, save :: icurrent = 1
       integer, save :: dims( 4, ndims ) = -1
 
-      C_POINTER, save :: bw_planz(  ndims ) = 0
-      C_POINTER, save :: bw_planx(  ndims ) = 0
-      C_POINTER, save :: bw_plany(  ndims ) = 0
-      C_POINTER, save :: bw_planxy( ndims ) = 0
+      TYPE(C_PTR), save :: bw_planz(  ndims ) = C_NULL_PTR
+      TYPE(C_PTR), save :: bw_planx(  ndims ) = C_NULL_PTR
+      TYPE(C_PTR), save :: bw_plany(  ndims ) = C_NULL_PTR
+      TYPE(C_PTR), save :: bw_planxy( ndims ) = C_NULL_PTR
 
       isign = -sgn
       tscale = 1.0_DP
@@ -116,19 +117,19 @@
         !   no table exist for these parameters
         !   initialize a new one
 
-        if ( bw_planz(icurrent) /= 0 ) &
+        if ( C_ASSOCIATED(bw_planz(icurrent)) ) &
              call DESTROY_PLAN_1D( bw_planz(icurrent) )
         call CREATE_PLAN_1D( bw_planz(icurrent), nz, 1 )
 
-        if ( bw_planx(icurrent) /= 0 ) &
+        if ( C_ASSOCIATED(bw_planx(icurrent)) ) &
              call DESTROY_PLAN_1D( bw_planx(icurrent) )
         call CREATE_PLAN_1D( bw_planx(icurrent), nx, 1 )
 
-        if ( bw_plany(icurrent) /= 0 ) &
+        if ( C_ASSOCIATED(bw_plany(icurrent)) ) &
              call DESTROY_PLAN_1D( bw_plany(icurrent) )
         call CREATE_PLAN_1D( bw_plany(icurrent), ny, 1 )
 
-        if ( bw_planxy(icurrent) /= 0 ) &
+        if ( C_ASSOCIATED(bw_planxy(icurrent)) ) &
              call DESTROY_PLAN_2D( bw_planxy(icurrent) )
         call CREATE_PLAN_2D( bw_planxy(icurrent), nx, ny, 1 )
 !
@@ -178,15 +179,15 @@
       !
 !$omp parallel
 
-      IF( cft_b_bw_planz  == 0 ) THEN
+      IF( .NOT. C_ASSOCIATED(cft_b_bw_planz) ) THEN
          CALL CREATE_PLAN_1D( cft_b_bw_planz, nz, 1 )
          cft_b_dims(3) = nz
       END IF
-      IF( cft_b_bw_planx  == 0 ) THEN
+      IF( .NOT. C_ASSOCIATED(cft_b_bw_planx) ) THEN
          CALL CREATE_PLAN_1D( cft_b_bw_planx, nx, 1 )
          cft_b_dims(1) = nx
       END IF
-      IF( cft_b_bw_plany  == 0 ) THEN
+      IF( .NOT. C_ASSOCIATED(cft_b_bw_plany) ) THEN
          CALL CREATE_PLAN_1D( cft_b_bw_plany, ny, 1 )
          cft_b_dims(2) = ny
       END IF
@@ -218,7 +219,9 @@
          CALL fftx_error__('cft_b_omp','forward transform not implemented',1)
       end if
 
-      IF ( ( cft_b_bw_planz == 0 ) .or. ( cft_b_bw_planx == 0 ) .or. ( cft_b_bw_plany == 0 ) ) THEN
+      IF ( .NOT. C_ASSOCIATED(cft_b_bw_planz) .or. &
+           .NOT. C_ASSOCIATED(cft_b_bw_planx) .or. &
+           .NOT. C_ASSOCIATED(cft_b_bw_plany) ) THEN
          CALL fftx_error__('cft_b_omp','plan not initialized',1)
       END IF
 

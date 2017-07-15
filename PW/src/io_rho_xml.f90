@@ -14,9 +14,9 @@ MODULE io_rho_xml
   USE xml_io_base, ONLY : create_directory, write_rho, read_rho
 #if !defined (__OLDXML)
   USE io_base,     ONLY : write_rhog, read_rhog
-#endif!
-  PRIVATE
+#endif
   !
+  PRIVATE
   PUBLIC :: write_scf, read_scf
   !
   ! {read|write}_rho: read or write the charge density

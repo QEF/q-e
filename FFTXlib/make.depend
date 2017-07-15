@@ -50,9 +50,5 @@ test0.o : fft_param.o
 test0.o : fft_scalar.o
 test0.o : fft_support.o
 test0.o : fft_types.o
-fft_scalar.ARM_LIB.o : ../include/fft_defs.h
-fft_scalar.FFTW.o : ../include/fft_defs.h
-fft_scalar.FFTW3.o : ../include/fft_defs.h
-fft_smallbox.o : ../include/fft_defs.h
 fft_stick.o : ../include/c_defs.h
 fft_stick.o : fftw.c

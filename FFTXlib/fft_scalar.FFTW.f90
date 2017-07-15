@@ -6,13 +6,13 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 
-#include "fft_defs.h"
-
 !=----------------------------------------------------------------------=!
    MODULE fft_scalar_FFTW
 !=----------------------------------------------------------------------=!
 
        USE fft_param
+!! iso_c_binding provides C_PTR, C_NULL_PTR, C_ASSOCIATED
+       USE iso_c_binding
        
        IMPLICIT NONE
        SAVE
@@ -67,12 +67,9 @@
 #endif
 
      !   Pointers to the "C" structures containing FFT factors ( PLAN )
-     !   C_POINTER is defined in include/fft_defs.h
-     !   for 32bit executables, C_POINTER is integer(4)
-     !   for 64bit executables, C_POINTER is integer(8)
 
-     C_POINTER, SAVE :: fw_planz( ndims ) = 0
-     C_POINTER, SAVE :: bw_planz( ndims ) = 0
+     TYPE(C_PTR), SAVE :: fw_planz( ndims ) = C_NULL_PTR
+     TYPE(C_PTR), SAVE :: bw_planz( ndims ) = C_NULL_PTR
 
      IF( nsl < 0 ) THEN
        CALL fftx_error__(" fft_scalar: cft_1z ", " nsl out of range ", nsl)
@@ -164,8 +161,8 @@
      END SUBROUTINE lookup
 
      SUBROUTINE init_plan()
-       IF( fw_planz( icurrent) /= 0 ) CALL DESTROY_PLAN_1D( fw_planz( icurrent) )
-       IF( bw_planz( icurrent) /= 0 ) CALL DESTROY_PLAN_1D( bw_planz( icurrent) )
+       IF( C_ASSOCIATED(fw_planz( icurrent)) ) CALL DESTROY_PLAN_1D( fw_planz( icurrent) )
+       IF( C_ASSOCIATED(bw_planz( icurrent)) ) CALL DESTROY_PLAN_1D( bw_planz( icurrent) )
        idir = -1; CALL CREATE_PLAN_1D( fw_planz( icurrent), nz, idir)
        idir =  1; CALL CREATE_PLAN_1D( bw_planz( icurrent), nz, idir)
        zdims(1,icurrent) = nz; zdims(2,icurrent) = nsl; zdims(3,icurrent) = ldz;
@@ -223,11 +220,11 @@
 
 
 #if defined(__FFTW_ALL_XY_PLANES)
-     C_POINTER, SAVE :: fw_plan_2d( ndims ) = 0
-     C_POINTER, SAVE :: bw_plan_2d( ndims ) = 0
+     TYPE(C_PTR), SAVE :: fw_plan_2d( ndims ) = C_NULL_PTR
+     TYPE(C_PTR), SAVE :: bw_plan_2d( ndims ) = C_NULL_PTR
 #else
-     C_POINTER, SAVE :: fw_plan( 2, ndims ) = 0
-     C_POINTER, SAVE :: bw_plan( 2, ndims ) = 0
+     TYPE(C_PTR), SAVE :: fw_plan( 2, ndims ) = C_NULL_PTR
+     TYPE(C_PTR), SAVE :: bw_plan( 2, ndims ) = C_NULL_PTR
 #endif
 
 
@@ -414,18 +411,18 @@
 
      SUBROUTINE init_plan()
 #if defined __FFTW_ALL_XY_PLANES
-       IF( fw_plan_2d( icurrent) /= 0 )  CALL DESTROY_PLAN_2D(fw_plan_2d(icurrent) )
-       IF( bw_plan_2d( icurrent) /= 0 )  CALL DESTROY_PLAN_2D(bw_plan_2d(icurrent) )
+       IF( C_ASSOCIATED(fw_plan_2d( icurrent)) )  CALL DESTROY_PLAN_2D(fw_plan_2d(icurrent) )
+       IF( C_ASSOCIATED(bw_plan_2d( icurrent)) )  CALL DESTROY_PLAN_2D(bw_plan_2d(icurrent) )
        idir = -1; CALL CREATE_PLAN_2D( fw_plan_2d(icurrent), nx, ny, idir)
        idir =  1; CALL CREATE_PLAN_2D( bw_plan_2d(icurrent), nx, ny, idir)
 #else
-       IF( fw_plan( 2,icurrent) /= 0 )   CALL DESTROY_PLAN_1D( fw_plan( 2,icurrent) )
-       IF( bw_plan( 2,icurrent) /= 0 )   CALL DESTROY_PLAN_1D( bw_plan( 2,icurrent) )
+       IF( C_ASSOCIATED(fw_plan( 2,icurrent)) )   CALL DESTROY_PLAN_1D( fw_plan( 2,icurrent) )
+       IF( C_ASSOCIATED(bw_plan( 2,icurrent)) )   CALL DESTROY_PLAN_1D( bw_plan( 2,icurrent) )
        idir = -1; CALL CREATE_PLAN_1D( fw_plan( 2,icurrent), ny, idir)
        idir =  1; CALL CREATE_PLAN_1D( bw_plan( 2,icurrent), ny, idir)
 
-       IF( fw_plan( 1,icurrent) /= 0 ) CALL DESTROY_PLAN_1D( fw_plan( 1,icurrent) )
-       IF( bw_plan( 1,icurrent) /= 0 ) CALL DESTROY_PLAN_1D( bw_plan( 1,icurrent) )
+       IF( C_ASSOCIATED(fw_plan( 1,icurrent)) ) CALL DESTROY_PLAN_1D( fw_plan( 1,icurrent) )
+       IF( C_ASSOCIATED(bw_plan( 1,icurrent)) ) CALL DESTROY_PLAN_1D( bw_plan( 1,icurrent) )
        idir = -1; CALL CREATE_PLAN_1D( fw_plan( 1,icurrent), nx, idir)
        idir =  1; CALL CREATE_PLAN_1D( bw_plan( 1,icurrent), nx, idir)
 #endif
@@ -472,8 +469,8 @@
      INTEGER, SAVE :: icurrent = 1
      INTEGER, SAVE :: dims(3,ndims) = -1
 
-     C_POINTER, save :: fw_plan(ndims) = 0
-     C_POINTER, save :: bw_plan(ndims) = 0
+     TYPE(C_PTR), save :: fw_plan(ndims) = C_NULL_PTR
+     TYPE(C_PTR), save :: bw_plan(ndims) = C_NULL_PTR
 
      IF ( nx < 1 ) &
          call fftx_error__('cfft3d',' nx is less than 1 ', 1)
@@ -534,8 +531,8 @@
      SUBROUTINE init_plan()
        IF ( nx /= ldx .or. ny /= ldy .or. nz /= ldz ) &
          call fftx_error__('cfft3','not implemented',1)
-       IF( fw_plan(icurrent) /= 0 ) CALL DESTROY_PLAN_3D( fw_plan(icurrent) )
-       IF( bw_plan(icurrent) /= 0 ) CALL DESTROY_PLAN_3D( bw_plan(icurrent) )
+       IF( C_ASSOCIATED (fw_plan(icurrent)) ) CALL DESTROY_PLAN_3D( fw_plan(icurrent) )
+       IF( C_ASSOCIATED (bw_plan(icurrent)) ) CALL DESTROY_PLAN_3D( bw_plan(icurrent) )
        idir = -1; CALL CREATE_PLAN_3D( fw_plan(icurrent), nx, ny, nz, idir)
        idir =  1; CALL CREATE_PLAN_3D( bw_plan(icurrent), nx, ny, nz, idir)
        dims(1,icurrent) = nx; dims(2,icurrent) = ny; dims(3,icurrent) = nz
@@ -587,8 +584,8 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, howmany, isign, &
   INTEGER, SAVE :: icurrent = 1
   INTEGER, SAVE :: dims(3,ndims) = -1
 
-  C_POINTER, SAVE :: fw_plan ( 3, ndims ) = 0
-  C_POINTER, SAVE :: bw_plan ( 3, ndims ) = 0
+  TYPE(C_PTR), SAVE :: fw_plan ( 3, ndims ) = C_NULL_PTR
+  TYPE(C_PTR), SAVE :: bw_plan ( 3, ndims ) = C_NULL_PTR
 
   tscale = 1.0_DP
   ldh = ldx * ldy * ldz
@@ -710,12 +707,12 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, howmany, isign, &
      END SUBROUTINE lookup
 
      SUBROUTINE init_plan()
-       IF( fw_plan( 1, icurrent) /= 0 ) CALL DESTROY_PLAN_1D( fw_plan( 1, icurrent) )
-       IF( bw_plan( 1, icurrent) /= 0 ) CALL DESTROY_PLAN_1D( bw_plan( 1, icurrent) )
-       IF( fw_plan( 2, icurrent) /= 0 ) CALL DESTROY_PLAN_1D( fw_plan( 2, icurrent) )
-       IF( bw_plan( 2, icurrent) /= 0 ) CALL DESTROY_PLAN_1D( bw_plan( 2, icurrent) )
-       IF( fw_plan( 3, icurrent) /= 0 ) CALL DESTROY_PLAN_1D( fw_plan( 3, icurrent) )
-       IF( bw_plan( 3, icurrent) /= 0 ) CALL DESTROY_PLAN_1D( bw_plan( 3, icurrent) )
+       IF( C_ASSOCIATED (fw_plan( 1, icurrent)) ) CALL DESTROY_PLAN_1D( fw_plan( 1, icurrent) )
+       IF( C_ASSOCIATED (bw_plan( 1, icurrent)) ) CALL DESTROY_PLAN_1D( bw_plan( 1, icurrent) )
+       IF( C_ASSOCIATED (fw_plan( 2, icurrent)) ) CALL DESTROY_PLAN_1D( fw_plan( 2, icurrent) )
+       IF( C_ASSOCIATED (bw_plan( 2, icurrent)) ) CALL DESTROY_PLAN_1D( bw_plan( 2, icurrent) )
+       IF( C_ASSOCIATED (fw_plan( 3, icurrent)) ) CALL DESTROY_PLAN_1D( fw_plan( 3, icurrent) )
+       IF( C_ASSOCIATED (bw_plan( 3, icurrent)) ) CALL DESTROY_PLAN_1D( bw_plan( 3, icurrent) )
        idir = -1; CALL CREATE_PLAN_1D( fw_plan( 1, icurrent), nx, idir)
        idir =  1; CALL CREATE_PLAN_1D( bw_plan( 1, icurrent), nx, idir)
        idir = -1; CALL CREATE_PLAN_1D( fw_plan( 2, icurrent), ny, idir)

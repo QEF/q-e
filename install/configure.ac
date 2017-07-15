@@ -126,7 +126,6 @@ AC_SUBST(topdir)
 AC_SUBST(extlib_flags)
 
 AC_CONFIG_HEADERS([include/c_defs.h:include/c_defs.h.in])
-AC_CONFIG_FILES([include/fft_defs.h:include/fft_defs.h.in])
 AC_CONFIG_FILES([include/configure.h:include/configure.h.in])
 
 #AC_CONFIG_FILES(Makefile.cpu)

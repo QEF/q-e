@@ -7,14 +7,13 @@
 !
 !----------------------------------------------------------------------------
 
-#include "../../include/fft_defs.h"
-
 MODULE esm_cft
   !--------------------------------------------------------------------------
   !
   ! ... this module contains the variables and SUBROUTINEs needed for the 
   ! ... 1-Dimentinal FFT called from ESM routines
   !
+  USE iso_c_binding
   USE kinds, ONLY : DP
   !
   IMPLICIT NONE
@@ -34,12 +33,9 @@ MODULE esm_cft
 #if defined __FFTW || defined __FFTW3
 
   !   Pointers to the "C" structures containing FFT factors ( PLAN )
-  !   C_POINTER is defined in include/fft_defs.h
-  !   for 32bit executables, C_POINTER is integer(4)
-  !   for 64bit executables, C_POINTER is integer(8)
 
-  C_POINTER :: fw_planz = 0
-  C_POINTER :: bw_planz = 0
+  TYPE(C_PTR) :: fw_planz = C_NULL_PTR
+  TYPE(C_PTR) :: bw_planz = C_NULL_PTR
 
 #elif defined(__LINUX_ESSL)
 
@@ -116,15 +112,15 @@ SUBROUTINE esm_cft_1z_init(nsl, nz, ldz)
 
 #if defined __FFTW
 
-  IF( fw_planz /= 0 ) CALL DESTROY_PLAN_1D( fw_planz )
-  IF( bw_planz /= 0 ) CALL DESTROY_PLAN_1D( bw_planz )
+  IF( C_ASSOCIATED(fw_planz) ) CALL DESTROY_PLAN_1D( fw_planz )
+  IF( C_ASSOCIATED(bw_planz) ) CALL DESTROY_PLAN_1D( bw_planz )
   idir = -1; CALL CREATE_PLAN_1D( fw_planz, nz, idir)
   idir =  1; CALL CREATE_PLAN_1D( bw_planz, nz, idir)
 
 #elif defined(__FFTW3)
 
-  IF( fw_planz /= 0 ) CALL dfftw_destroy_plan( fw_planz )
-  IF( bw_planz /= 0 ) CALL dfftw_destroy_plan( bw_planz )
+  IF( C_ASSOCIATED(fw_planz) ) CALL dfftw_destroy_plan( fw_planz )
+  IF( C_ASSOCIATED(bw_planz) ) CALL dfftw_destroy_plan( bw_planz )
   idir = -1
   CALL dfftw_plan_many_dft( fw_planz, 1, nz, nsl, c, &
     (/ldz*nsl/), 1, ldz, cout, (/ldz*nsl/), 1, ldz, idir, FFTW_ESTIMATE)
