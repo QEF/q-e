@@ -13,7 +13,6 @@
 #include <sys/types.h>
 #include <errno.h>
 #include <time.h>
-#include "c_defs.h"
 #include <unistd.h>
 
 #if defined(_WIN32)

@@ -27,6 +27,7 @@ cell_base.o : control_flags.o
 cell_base.o : invmat.o
 cell_base.o : io_global.o
 cell_base.o : kind.o
+check_stop.o : clocks.o
 check_stop.o : input_parameters.o
 check_stop.o : io_files.o
 check_stop.o : io_global.o

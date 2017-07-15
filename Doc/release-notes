@@ -48,6 +48,8 @@ Fixed in svn version
 
 Incompatible changes in svn version:
 
+  * f_wall and f_tcpu, in module mytime, replace previous fortran wrappers 
+    for cclock and scnds, respectively. The latter remain as C functions
   * fft_defs.h and related configure and makedep stuff deleted,
     replaced by iso_c_binding module
   * module pwcom no longer contains modules gvect, gvecs, references to

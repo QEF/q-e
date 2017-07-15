@@ -9,10 +9,10 @@
 
 MODULE orthogonalize_base
 
-
       USE kinds
       USE dspev_module, ONLY: diagonalize_serial, diagonalize_parallel
-
+      USE mytime, ONLY : f_wall
+      
       IMPLICIT NONE
 
       SAVE
@@ -57,12 +57,6 @@ CONTAINS
       INTEGER  :: nr, nc, ir, ic, nx
       TYPE(la_descriptor) :: desc
       INTEGER, PARAMETER :: paradim = 1000
-      INTERFACE
-         FUNCTION cclock ( ) BIND(C,name="cclock") RESULT(t)
-           USE ISO_C_BINDING
-           REAL(kind=c_double) :: t
-         END FUNCTION cclock
-      END INTERFACE
       !
       ! Check if number of PEs for orthogonalization/diagonalization is given from the input
       !
@@ -96,11 +90,11 @@ CONTAINS
       CALL set_a()
       !
       CALL mp_barrier( intra_bgrp_comm )
-      t1 = cclock()
+      t1 = f_wall()
       !
       CALL diagonalize_parallel( n, a, d, s, desc )
       !
-      tpar = cclock() - t1
+      tpar = f_wall() - t1
       CALL mp_max( tpar, intra_bgrp_comm )
 
       DEALLOCATE( s, a )
@@ -117,11 +111,11 @@ CONTAINS
 
          CALL set_a()
 
-         t1 = cclock()
+         t1 = f_wall()
 
          CALL diagonalize_serial( n, a, d )
 
-         tser = cclock() - t1
+         tser = f_wall() - t1
 
          DEALLOCATE( a )
 
@@ -206,12 +200,6 @@ CONTAINS
       REAL(DP) :: t1, tcan
       INTEGER  :: nr, nc, ir, ic, np, lnode
       TYPE(la_descriptor) :: desc
-      INTERFACE
-         FUNCTION cclock ( ) BIND(C,name="cclock") RESULT(t)
-           USE ISO_C_BINDING
-           REAL(kind=c_double) :: t
-         END FUNCTION cclock
-      END INTERFACE
       !
       np    = MAX( INT( SQRT( DBLE( nproc_ortho ) + 0.1d0 ) ), 1 ) 
       !
@@ -238,11 +226,11 @@ CONTAINS
       CALL sqr_mm_cannon( 'N', 'N', n, 1.0d0, a, nr, b, nr, 0.0d0, c, nr, desc) 
 
       CALL mp_barrier( intra_bgrp_comm )
-      t1 = cclock()
+      t1 = f_wall()
 
       CALL sqr_mm_cannon( 'N', 'N', n, 1.0d0, a, nr, b, nr, 0.0d0, c, nr, desc)
    
-      tcan = cclock() - t1
+      tcan = f_wall() - t1
       CALL mp_max( tcan, intra_bgrp_comm )
 
       DEALLOCATE( a, c, b )
