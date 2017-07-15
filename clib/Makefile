@@ -9,7 +9,6 @@ c_mkdir.o \
 copy.o \
 cptimer.o \
 eval_infix.o \
-indici.o \
 md5.o \
 md5_from_file.o \
 memstat.o \
