@@ -46,7 +46,7 @@ PROGRAM lr_eels_main
   INTEGER             :: ip, na, pol_index, ibnd
   INTEGER             :: iter_restart, iteration
   LOGICAL             :: rflag
-  INTEGER(kind=c_int) :: kilobytes
+  INTEGER             :: kilobytes
   LOGICAL, EXTERNAL   :: test_restart
   !
   pol_index = 1
