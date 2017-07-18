@@ -947,6 +947,7 @@ print_out.o : ../../Modules/io_global.o
 print_out.o : ../../Modules/ions_base.o
 print_out.o : ../../Modules/kind.o
 print_out.o : ../../Modules/tsvdw.o
+print_out.o : ../../Modules/wrappers.o
 print_out.o : ../../Modules/xml_io_base.o
 print_out.o : cg.o
 print_out.o : efield.o

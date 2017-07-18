@@ -48,6 +48,7 @@
       USE funct,             ONLY : dft_is_hybrid, exx_is_active
       USE wannier_module,    ONLY : wfc
       USE electrons_base,    ONLY : nbsp, nspin, nupdwn, iupdwn
+      USE wrappers,          ONLY : memstat
       !
       IMPLICIT NONE
       !
@@ -65,9 +66,8 @@
       REAL(DP), INTENT(IN) :: atot! enthalpy of system for c.g. case
       REAL(DP), INTENT(IN) :: ekin
       REAL(DP), INTENT(IN) :: epot ! ( epseu + eht + exc )
-      LOGICAL, INTENT(IN) :: print_forces, print_stress, tstdout
-   
-   !
+      LOGICAL, INTENT(IN) :: print_forces, print_stress, tstdout   
+      !
       REAL(DP) :: stress_gpa( 3, 3 )
       REAL(DP) :: cdm0( 3 )
       REAL(DP) :: dis( nsp )
@@ -81,8 +81,6 @@
       ! avoid double printing to files by refering to nprint_nfi
       !
       tfile = tfilei .and. ( nfi .gt. nprint_nfi )
-      !
-     
       !
       CALL memstat( kilobytes )
       !

@@ -432,6 +432,7 @@ electrons.o : ../../Modules/recvec.o
 electrons.o : ../../Modules/tsvdw.o
 electrons.o : ../../Modules/uspp.o
 electrons.o : ../../Modules/wavefunctions.o
+electrons.o : ../../Modules/wrappers.o
 electrons.o : atomic_wfc_mod.o
 electrons.o : bp_mod.o
 electrons.o : buffers.o

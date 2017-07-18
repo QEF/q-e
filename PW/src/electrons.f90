@@ -369,7 +369,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
   USE dfunct,               ONLY : newd
   USE esm,                  ONLY : do_comp_esm, esm_printpot, esm_ewald
   USE fcp_variables,        ONLY : lfcpopt, lfcpdyn
-  USE iso_c_binding,        ONLY : c_int
+  USE wrappers,             ONLY : memstat
   !
   USE plugin_variables,     ONLY : plugin_etot
   !
@@ -389,8 +389,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
       i,            &! counter on polarization
       idum,         &! dummy counter on iterations
       iter,         &! counter on iterations
-      ios
-  INTEGER(kind=c_int) :: kilobytes
+      ios, kilobytes
   REAL(DP) :: &
       tr2_min,     &! estimated error on energy coming from diagonalization
       descf,       &! correction for variational energy

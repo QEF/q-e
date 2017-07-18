@@ -36,8 +36,8 @@ PROGRAM lr_eels_main
   USE check_stop,            ONLY : check_stop_now, check_stop_init
   USE fft_base,              ONLY : dffts
   USE uspp,                  ONLY : okvan
-  USE iso_c_binding,         ONLY : c_int
   USE mp_bands,              ONLY : ntask_groups
+  USE wrappers,              ONLY : memstat
   !
   IMPLICIT NONE
   !

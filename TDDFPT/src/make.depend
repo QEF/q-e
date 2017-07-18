@@ -272,6 +272,7 @@ lr_eels_main.o : ../../Modules/mp_global.o
 lr_eels_main.o : ../../Modules/uspp.o
 lr_eels_main.o : ../../Modules/version.o
 lr_eels_main.o : ../../Modules/wavefunctions.o
+lr_eels_main.o : ../../Modules/wrappers.o
 lr_eels_main.o : ../../PW/src/pwcom.o
 lr_eels_main.o : lr_lanczos.o
 lr_eels_main.o : lr_variables.o

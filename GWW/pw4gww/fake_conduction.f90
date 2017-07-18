@@ -14,13 +14,13 @@
 
 MODULE fake_cond_mod
  USE kinds, ONLY : DP
+ USE wrappers, ONLY : memstat
  IMPLICIT NONE
  SAVE
 
  INTEGER :: fcw_number!number of "producs of fake conduction with valence wannier" states for O matrix method
  COMPLEX(kind=DP), ALLOCATABLE, DIMENSION(:,:) :: fcw_state! fcw states for O matrix method
  REAL(kind=DP), ALLOCATABLE, DIMENSION(:,:) :: fcw_mat! "fcw matrix 
-
 
 CONTAINS
   subroutine fake_conduction_wannier( cutoff, s_cutoff,ks_wfcs ,l_frac, ks_wfcs_diag,l_cond)

@@ -27,7 +27,7 @@ MODULE wrappers
   ! C std library functions fortran wrappers:
   PUBLIC  f_remove, f_rename, f_chdir, f_mkdir, f_rmdir, f_getcwd
   ! more stuff:
-  PUBLIC  f_copy, feval_infix, md5_from_file, f_mkdir_safe
+  PUBLIC  f_copy, feval_infix, md5_from_file, f_mkdir_safe, memstat
   !
   ! HELP:
   ! integer f_remove(pathname)
@@ -264,6 +264,24 @@ CONTAINS
        fmd5(i:i) = cmd5(i:i)
     ENDDO
     !
-  END SUBROUTINE 
+  END SUBROUTINE md5_from_file
+  !
+  ! Wrapper for (buggy) C routine "memstat"
+  !
+  SUBROUTINE memstat (kbytes)
+    IMPLICIT NONE
+    INTEGER, INTENT(OUT) :: kbytes
+    !
+    INTERFACE
+       FUNCTION c_memstat( ) BIND(C, name="c_memstat")
+         USE ISO_C_BINDING
+         INTEGER(kind=c_int) :: c_memstat
+       END FUNCTION c_memstat
+    END INTERFACE
+    !
+    kbytes = c_memstat ( )
+    !
+  END SUBROUTINE memstat
+  !
 END MODULE
 ! ==================================================================== 

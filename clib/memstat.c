@@ -6,36 +6,30 @@
   or http://www.gnu.org/copyleft/gpl.txt .
 */
 
-#include "c_defs.h"
-
 /* 
-  This function return the numer of kilobytes allocated
-  by the calling process. 
-  Auhor: Carlo Cavazzoni.
+  This function returns the number of kilobytes
+  allocated by the calling process. 
+  Author: Carlo Cavazzoni.
+  Obsolete AIX case and F77-C binding removed by P. Giannozzi (2017)
 */
+
+#include "c_defs.h"
 
 #if defined (__SVR4) && defined (__sun)
 #define SUN_MALLINFO
 #endif
 
 #if defined(HAVE_MALLINFO) && !defined(__QK_USER__) && !defined(SUN__MALLINFO) 
+
 #include <malloc.h>
-
-void F77_FUNC(memstat,MEMSTAT)(int *kilobytes)
+int c_memstat( )
 {
-
   struct mallinfo info;  
   info = mallinfo();
-
-#if defined(__AIX)
-  *kilobytes = (info.arena) / 1024 ;
+  return (info.arena + info.hblkhd) / 1024 ;
 #else
-  *kilobytes = (info.arena + info.hblkhd) / 1024 ;
-#endif
-
-#else
-void F77_FUNC(memstat,MEMSTAT)(int *kilobytes)
+int c_memstat( )
 {
-  *kilobytes = -1;
+  return -1;
 #endif
 }
