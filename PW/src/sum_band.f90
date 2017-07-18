@@ -54,7 +54,6 @@ SUBROUTINE sum_band()
              ig,   &! counter on g vectors
              ibnd, & ! counter on bands
              ik,   &! counter on k points
-             npol_, &
              ibnd_start, ibnd_end, this_bgrp_nbnd ! first, last and number of band in this bgrp
   REAL (DP), ALLOCATABLE :: kplusg (:)
   !
@@ -247,7 +246,7 @@ SUBROUTINE sum_band()
        !
        REAL(DP) :: w1, w2
          ! weights
-       INTEGER  :: npw, idx, ioff, ioff_tg, nxyp, incr, v_siz, j, ir3
+       INTEGER  :: npw, idx, ioff, incr, v_siz, j
        COMPLEX(DP), ALLOCATABLE :: tg_psi(:)
        REAL(DP),    ALLOCATABLE :: tg_rho(:)
        !
@@ -467,6 +466,7 @@ SUBROUTINE sum_band()
        !
        ! ... with distributed <beta|psi>, sum over bands
        !
+       IF( okvan .AND. becp%comm /= mp_get_comm_null() ) CALL mp_sum( becsum, becp%comm )
        IF( okvan .AND. becp%comm /= mp_get_comm_null() .and. tqr ) CALL mp_sum( ebecsum, becp%comm )
        !
        IF( dtgs%have_task_groups ) THEN
@@ -494,9 +494,9 @@ SUBROUTINE sum_band()
        !
        REAL(DP) :: w1
        ! weights
-       INTEGER :: npw, ipol, npol, na, np, ir3
+       INTEGER :: npw, ipol, na, np
        !
-       INTEGER  :: idx, ioff, ioff_tg, nxyp, incr, v_siz, j
+       INTEGER  :: idx, ioff, incr, v_siz, j
        COMPLEX(DP), ALLOCATABLE :: tg_psi(:), tg_psi_nc(:,:)
        REAL(DP),    ALLOCATABLE :: tg_rho(:), tg_rho_nc(:,:)
        LOGICAL  :: use_tg
@@ -789,7 +789,8 @@ SUBROUTINE sum_band()
        !
        ! ... with distributed <beta|psi>, sum over bands
        !
-       IF( okvan .AND. becp%comm /= mp_get_comm_null() .and. tqr) CALL mp_sum( becsum, becp%comm )
+       IF( okvan .AND. becp%comm /= mp_get_comm_null() ) CALL mp_sum( becsum, becp%comm )
+       IF( okvan .AND. becp%comm /= mp_get_comm_null() .and. tqr ) CALL mp_sum( ebecsum, becp%comm )
        !
        IF( use_tg ) THEN
           IF (noncolin) THEN
