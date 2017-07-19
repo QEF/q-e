@@ -52,7 +52,7 @@ inputs_args = ('scf_epw.in', '1'), ('nscf_epw.in', '1'), ('epw.in', '3')
 
 [epw_super/]
 program = EPW
-inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('scf_epw.in', '1'), ('nscf_epw.in', '1'), ('epw_iso.in', '3'), ('epw_aniso.in', '3'),
+inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('scf_epw.in', '1'), ('nscf_epw.in', '1'), ('epw_iso.in', '3'), ('epw_aniso.in', '3')
 
 [epw_polar/]
 program = EPW
@@ -60,11 +60,11 @@ inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('scf_epw.in', '1'), ('nscf_epw.i
 
 [tddfpt_CH4/]
 program = TDDFPT
-inputs_args = ('CH4.pw-in', '1'), ('CH4.tddfpt-in', '2'), ('CH4.tddfpt_pp-in', '3'),
+inputs_args = ('CH4.pw-in', '1'), ('CH4.tddfpt-in', '2'), ('CH4.tddfpt_pp-in', '3')
 
 [tddfpt_eels-si/]
 program = TDDFPT
-inputs_args = ('Si.pw-in', '1'), ('Si.tddfpt-eels-in', '5'), ('Si.tddfpt_pp_eels-in', '4'),
+inputs_args = ('Si.pw-in', '1'), ('Si.tddfpt-eels-in', '5'), ('Si.tddfpt_pp_eels-in', '4')
 
 [pw_*/]
 program = PW
