@@ -104,13 +104,13 @@
   ENDIF
   !
 #if defined(__MPI)
-  IF (.NOT. etf_mem) then
+  IF (etf_mem == 1) then
     ! Check for directory given by "outdir"
     !      
     filint = trim(tmp_dir)//trim(prefix)//'.epmatwp1'
     CALL MPI_FILE_OPEN(world_comm,filint,MPI_MODE_RDONLY,MPI_INFO_NULL,iunepmatwp2,ierr)
     IF( ierr /= 0 ) CALL errore( 'ephwan2blochp', 'error in MPI_FILE_OPEN',1 )
-    IF( parallel_q ) CALL errore( 'ephwan2blochp', 'q-parallel+etf_mem=.false. is not supported',1 ) 
+    IF( parallel_q ) CALL errore( 'ephwan2blochp', 'q-parallel+etf_mem = 1 is not supported',1 ) 
     !CALL MPI_COMM_RANK(world_comm,my_id,ierr)
   ENDIF
 #endif  
@@ -126,7 +126,7 @@
      cfac(ir) = exp( ci*rdotk ) / dble( ndegen(ir) )
   ENDDO
   ! 
-  IF (etf_mem) then
+  IF (etf_mem == 0) then
     !      
     ! SP: This is faster by 20 % 
     Call zgemv( 'n',  nbnd * nbnd * nrr_k * nmodes, ir_stop - ir_start + 1, ( 1.d0, 0.d0 ),&
@@ -187,7 +187,7 @@
   !
 #if defined(__MPI)
   IF (parallel_k) CALL mp_sum(eptmp, world_comm)
-  IF (.NOT. etf_mem) then
+  IF (etf_mem == 1) then
     CALL MPI_FILE_CLOSE(iunepmatwp2,ierr)
     IF( ierr /= 0 ) CALL errore( 'ephwan2blochp', 'error in MPI_FILE_CLOSE',1 )
   ENDIF  

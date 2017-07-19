@@ -54,6 +54,8 @@
   !! parameter used in writing prefix.win file. 
   INTEGER :: ntempxx = 25
   !! Maximum number of wannier functions
+  INTEGER :: etf_mem
+  !! If 0, all in memory. If 1, less is stored in memory (read files). 
   !
   ! Superconductivity
   INTEGER :: nswfc
@@ -168,8 +170,6 @@
   !! if .TRUE. scatter the phonon q-points on the fine mesh among pools (not k)
   LOGICAL :: a2f
   !! if .TRUE. calculate Eliashberg spectral electron function from selfen_phon
-  LOGICAL :: etf_mem
-  !! If .true., the fine Bloch-space e-ph matrix elements are stored in memory
   LOGICAL :: write_wfn
   !! if .TRUE. write out UNK files in wannier90
   LOGICAL :: kmaps

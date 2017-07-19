@@ -13,7 +13,7 @@
   epwwrite    = .true.
   epwread     = .false.
 
-  etf_mem     = .false.
+  etf_mem     = 1
   lpolar      = .true.
 
   nbndsub     =  4

@@ -13,7 +13,7 @@
   epbwrite    = .false.
   epbread     = .false.
 
-  etf_mem     = .true.
+  etf_mem     = 0
 
   epwwrite    = .false.
   epwread     = .true.

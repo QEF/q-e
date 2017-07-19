@@ -171,7 +171,6 @@
   ! wdata        : Empty array that can be used to pass extra info to prefix.win file, for things not explicitly declared here 
   ! iprint       : verbosity of the wannier90 code
   ! write_wfn    : writes out UNK files from pwscf run for plotting of XSF files
-  ! etf_mem      : if .true., the fine Bloch-space e-ph matrix elements are stored in memory
   ! kmaps        : if true, read kmap and kgmap from disk (prior run)
   ! eig_read     : if .true. then readin a set of electronic eigenvalues in eV to replace the calcualted ones
   ! wepexst      : if .TRUE. prefix.epmatwe files are already on disk. don't recalculate. debugging param
@@ -258,6 +257,7 @@
   ! shortrange      : if .true. computes the short-range part of the el-ph (can
   !                   only be used with lpolar = .true. )
   ! prtgkk          : Print the vertex |g| [meV]. This generates huge outputs.   
+  ! etf_mem         : if 0 no optimization, if 1 less memory is used for the fine grid interpolation
   !  
   CHARACTER (LEN=80)  :: input_file
   INTEGER             :: nargs, iiarg, ierr
@@ -333,7 +333,7 @@
   parallel_k   = .true.
   parallel_q   = .false.
   a2f          = .false.
-  etf_mem      = .true.
+  etf_mem      = 1 
 !  fildvscf0    = ' '
   ngaussw      = 1
   time_max     = 10000000.d0

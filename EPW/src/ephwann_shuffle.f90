@@ -283,7 +283,7 @@
   !
 #ifndef __MPI  
   ! Open like this only in sequential. Otherwize open with MPI-open
-  IF ((.NOT. etf_mem) .AND. (ionode)) THEN
+  IF ((etf_mem == 1) .AND. (ionode)) THEN
     ! open the .epmatwe file with the proper record length
     lrepmatw   = 2 * nbndsub * nbndsub * nrr_k * nmodes
     filint    = trim(prefix)//'.epmatwp'
@@ -302,7 +302,7 @@
      !
   ELSE !if not epwread (i.e. need to calculate fmt file)
      ! 
-     IF ((.NOT. etf_mem) .AND. (ionode)) THEN
+     IF ((etf_mem == 1) .AND. (ionode)) THEN
        lrepmatw   = 2 * nbndsub * nbndsub * nrr_k * nmodes
        filint    = trim(prefix)//'.epmatwe'
        CALL diropn (iunepmatwe, 'epmatwe', lrepmatw, exst)
@@ -326,7 +326,7 @@
      IF (vme) ALLOCATE(cvmew   ( 3, nbndsub, nbndsub, nrr_k ) )
      ! 
      ! SP : Let the user chose. If false use files on disk
-     IF (etf_mem) THEN
+     IF (etf_mem == 0) THEN
        ALLOCATE(epmatwe ( nbndsub, nbndsub, nrr_k, nmodes, nqc))
        ALLOCATE (epmatwp ( nbndsub, nbndsub, nrr_k, nmodes, nrr_q))
      ELSE
@@ -375,7 +375,7 @@
        !
        DO imode = 1, nmodes
          !
-         IF (etf_mem) THEN 
+         IF (etf_mem == 0) THEN 
            CALL ephbloch2wane &
              ( nbnd, nbndsub, nks, nkstot, xk, cu, cuq, &
              epmatq (:,:,:,imode,iq), nrr_k, irvec, wslen, epmatwe(:,:,:,imode,iq) )
@@ -388,7 +388,7 @@
          !
        ENDDO
        ! Only the master node writes 
-       IF ((.NOT. etf_mem) .AND. (ionode)) THEN
+       IF ((etf_mem == 1) .AND. (ionode)) THEN
          ! direct write of epmatwe for this iq 
          CALL rwepmatw ( epmatwe_mem, nbndsub, nrr_k, nmodes, iq, iunepmatwe, +1)       
          !   
@@ -400,7 +400,7 @@
      !
      ! Only master perform this task. Need to be parallelize in the future (SP)
      IF (ionode) THEN
-       IF (etf_mem) THEN
+       IF (etf_mem == 0) THEN
          CALL ephbloch2wanp &
            ( nbndsub, nmodes, xqc, nqc, irvec, nrr_k, nrr_q, epmatwe )
        ELSE
@@ -1304,7 +1304,7 @@
       ENDDO
     ENDDO
     !
-    IF (etf_mem) THEN
+    IF (etf_mem == 0) THEN
       ! SP: The call to epmatwp is now inside the loop
       !     This is important as otherwise the lrepmatw integer 
       !     could become too large for integer(kind=4).
@@ -1451,7 +1451,7 @@
   
   IF (lifc) CALL read_ifc
   !
-  IF (etf_mem) then
+  IF (etf_mem == 0) then
     IF (.not. ALLOCATED(epmatwp)) ALLOCATE ( epmatwp ( nbndsub, nbndsub, nrr_k, nmodes, nrr_q) )
     epmatwp = czero
     IF (mpime.eq.ionode_id) THEN
