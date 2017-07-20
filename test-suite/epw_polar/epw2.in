@@ -1,0 +1,71 @@
+--
+&inputepw
+  prefix      = 'sic'
+  amass(1)    = 28.0855
+  amass(2)    = 12.0107
+  outdir      = './'
+
+  elph        = .true.
+  kmaps       = .false.
+  epbwrite    = .true.
+  epbread     = .false.
+
+  epwwrite    = .true.
+  epwread     = .false.
+
+  etf_mem     = 2
+  lpolar      = .true.
+
+  nbndsub     =  4
+  nbndskip    =  0
+
+  wannierize  = .true.
+  num_iter    = 300
+  iprint      = 2
+  dis_win_max = 12
+  dis_froz_max= 7
+  proj(1)     = 'Si:sp3'   
+  wdata(1) = 'bands_plot = .true.'
+  wdata(2) = 'begin kpoint_path'
+  wdata(3) = 'L 0.50 0.00 0.00 G 0.00 0.00 0.00'
+  wdata(4) = 'G 0.00 0.00 0.00 X 0.50 0.50 0.00'
+  wdata(5) = 'end kpoint_path'
+  wdata(6) = 'bands_plot_format = gnuplot'
+  wdata(7) = 'use_ws_distance = T'
+
+  iverbosity  = 0
+
+  elecselfen  = .true.
+  phonselfen  = .false.
+  a2f         = .false.
+
+  parallel_k  = .true.
+  parallel_q  = .false.
+
+  fsthick     = 2.0 ! eV
+  eptemp      = 300 ! K
+  degaussw    = 0.1 ! eV
+
+  dvscf_dir   = './save'
+
+  nkf1        = 6
+  nkf2        = 6
+  nkf3        = 6
+
+  nqf1        = 6
+  nqf2        = 6
+  nqf3        = 6
+
+  nk1         = 3
+  nk2         = 3
+  nk3         = 3
+
+  nq1         = 3
+  nq2         = 3
+  nq3         = 3
+ /
+      4 cartesian
+  0.000000000000   0.000000000000   0.000000000000   0.0740741
+ -0.333333333333   0.333333333333  -0.333333333333   0.5925926
+  0.000000000000   0.666666666667   0.000000000000   0.4444444
+  0.666666666667   0.000000000000   0.666666666667   0.8888889

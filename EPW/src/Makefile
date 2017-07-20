@@ -54,8 +54,11 @@ elphon_shuffle_wrap.o \
 ephbloch2wane.o \
 ephbloch2wanp.o \
 ephwan2bloch.o \
+ephwan2bloch_mem.o \
 ephwan2blochp.o \
+ephwan2blochp_mem.o \
 ephwann_shuffle.o \
+ephwann_shuffle_mem.o \
 epwcom.o \
 epw_init.o \
 epw_readin.o \
@@ -78,6 +81,7 @@ loadqmesh.o \
 loadumat.o \
 nesting_fn.o \
 openfilepw.o \
+rgd_blk_epw_fine_mem.o \
 pade.o \
 plot_band.o \
 poolgather.o \

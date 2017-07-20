@@ -49,7 +49,7 @@
   USE qpoint,        ONLY : xq
   USE modes,         ONLY : nmodes
   USE lr_symm_base,  ONLY : minus_q, rtau, gi, gimq, irotmq, nsymq, invsymq
-  USE epwcom,        ONLY : epbread, epbwrite, epwread, lifc,  &
+  USE epwcom,        ONLY : epbread, epbwrite, epwread, lifc, etf_mem,  &
                             nbndsub, iswitch, kmaps, eig_read, dvscf_dir, lpolar
   USE elph2,         ONLY : epmatq, dynq, sumr, et_all, xk_all, et_mb, et_ks, &
                             zstar, epsi, cu, cuq, lwin, lwinq, bmat, igk_k_all, &
@@ -766,7 +766,8 @@
   !
   ! the electron-phonon wannier interpolation
   !
-  CALL ephwann_shuffle ( nqc, xqc )
+  IF(etf_mem == 0 .OR. etf_mem == 1 ) CALL ephwann_shuffle ( nqc, xqc )
+  IF(etf_mem == 2 ) CALL ephwann_shuffle_mem ( nqc, xqc )
   !
 5 format (8x,"q(",i5," ) = (",3f12.7," )") 
   !
