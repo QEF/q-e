@@ -243,8 +243,8 @@
     DO nt = 1, ntyp
        read (iudyn, * ) i, atm, amass_
        IF (nt.ne.i.or.abs (amass_ - amass (nt) ) .gt.1.0d-2) then
-       write (6,*) amass_, amass(nt)
-       call errore ('readmat', 'inconsistent data', 0)
+       write (stdout,*) amass_, amass(nt)
+       call errore ('readmat_shuffle2', 'inconsistent data', 1)
     endif
     ENDDO
     DO na = 1, nat
@@ -348,7 +348,7 @@
              read (iudyn,'(a)') line
              read (iudyn,*) ((zstar(i,j,na), j=1,3), i=1,3)
           ENDDO
-          WRITE (6,'(8x,a)') 'Read dielectric tensor and effective charges'
+          WRITE (stdout,'(8x,a)') 'Read dielectric tensor and effective charges'
           !
           !ASR on effective charges
           DO i=1,3
