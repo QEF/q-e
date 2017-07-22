@@ -127,7 +127,7 @@ MODULE pw_restart_new
       INTEGER                  :: iclass, isym, ielem
       CHARACTER(LEN=15)        :: symop_2_class(48)
       LOGICAL                  :: opt_conv_ispresent
-      INTEGER                  :: n_opt_steps, h_band
+      INTEGER                  :: n_opt_steps, n_scf_steps_, h_band
       REAL(DP)                 :: h_energy
       !
       TYPE(output_type) :: output
@@ -185,15 +185,20 @@ MODULE pw_restart_new
                 ELSE 
                     n_opt_steps = istep 
                 END IF 
+            CASE ("nscf", "bands" )
+                opt_conv_ispresent = .FALSE.
+                n_opt_steps = 0
+                n_scf_steps_ = 1
             CASE default
                 opt_conv_ispresent = .FALSE.
                 n_opt_steps        = 0 
+                n_scf_steps_ = n_scf_steps
          END SELECT
          ! 
-         call qexsd_init_convergence_info(output%convergence_info, &
-              n_scf_steps=n_scf_steps, scf_error=scf_error, &
-              opt_conv_ispresent=lforce, &
-              n_opt_steps=n_opt_steps, grad_norm=sumfor )
+            call qexsd_init_convergence_info(output%convergence_info, &
+                        n_scf_steps=n_scf_steps_, scf_error=scf_error,&
+                        opt_conv_ispresent=opt_conv_ispresent,        &
+                        n_opt_steps=n_opt_steps, grad_norm=sumfor )
          !
 !-------------------------------------------------------------------------------
 ! ... ALGORITHMIC_INFO
