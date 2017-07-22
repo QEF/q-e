@@ -109,7 +109,7 @@ data is available for most packages in files \texttt{INPUT\_*.txt} and
 
 The \qe\ codes work on many different types of Unix machines,
 including parallel machines using both OpenMP and MPI
-(Message Passing Interface) and GPU-accelerated machines.
+(Message Passing Interface).
 \qe\ also runs on Mac OS X and MS-Windows machines:
 see section \ref{Sec:Installation}.
 
@@ -223,10 +223,6 @@ automatically deleted with no further processing (sorry, too
 much spam). In case of trouble, carefully check that your return
 e-mail is the correct one (i.e. the one you used to subscribe).
 
-The same \texttt{pw\_forum@pwscf.org} mailing-list is used to address
-specific inquiries related to QE-GPU. In this case please tag your message
-subject with ``[QE-GPU]'' to better identify your email.
-
 If you need to contact the developers for {\em specific} questions
 about coding, proposals, offers of help, etc., please send a message
 to the developers' mailing list: \texttt{q-e-developers@qe-forge.org}.
@@ -302,9 +298,6 @@ and O.pbe-vbc.UPF from\\
 \end{quote}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Installation}
-
-For machines with GPU acceleration, download the QE-GPU-\version.0.tar.gz and read
-the file \texttt{README.GPU} for information how to install the package.
 
 \subsection{Download}
 \label{SubSec:Download}
@@ -442,8 +435,7 @@ will (try to) detect compilers and libraries available on
 your machine, and set up things accordingly. Presently it is expected
 to work on most Linux 32- and 64-bit PCs (all Intel and AMD CPUs) and
 PC clusters, SGI Altix, IBM SP and BlueGene machines, NEC SX, Cray XT
-machines, Mac OS X, MS-Windows PCs, and (for experts!) on several
-GPU-accelerated hardware. Detailed installation instructions for some
+machines, Mac OS X, MS-Windows PCs. Detailed installation instructions for some
 specific HPC machines can be found in files \texttt{install/README.}{\em sys},
 where {\em sys} is the machine name.
 
@@ -964,8 +956,6 @@ for tests [...] I do have to unload some modules to make QE running
 properly. On another CRAY [...] there is also Intel compiler as option
 and the system is slightly different compared to the other.
 So my recipe should work, 99\% of the cases.
-I strongly suggest you to use PGI, also for a performance point of view.''
-(Info by Filippo Spiga, Sept. 2012)
 
 For Cray XT machines, use \texttt{./configure ARCH=crayxt4} or else
 \configure\ will not recognize the Cray-specific software environment.

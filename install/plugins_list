@@ -46,7 +46,7 @@ PLUMED_URL=$(URL)$(PLUMED).tar.gz
 D3Q=d3q-latest
 D3Q_URL="https://d3q.sourceforge.io/d3q-qe6.1-latest.php?outname=d3q-qe6.1-latest.tgz"
 #
-# Package maintainer: Filippo Spiga
+# Package maintainer: 
 TESTSUITE=qe-6.1-test-suite
 TESTSUITE_URL=$(URL)$(TESTSUITE).tar.gz
 #

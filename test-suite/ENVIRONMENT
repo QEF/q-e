@@ -7,7 +7,7 @@
 # of the present distribution.
 
 # Edit this line 
-#export ESPRESSO_ROOT=/home/fspiga/my_q-e
+#export ESPRESSO_ROOT=
 
 # Edit this line every time a new reference is created
 export REFERENCE_VERSION=SVN
