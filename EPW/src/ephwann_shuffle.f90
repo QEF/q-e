@@ -965,7 +965,8 @@
        IF (phonselfen ) CALL selfen_phon_q( iq )
        IF (elecselfen ) CALL selfen_elec_q( iq )
        IF (nest_fn    ) CALL nesting_fn_q( iq )
-       IF (specfun    ) CALL spectral_func_q( iq )
+       IF (specfun .AND. elecselfen ) CALL spectral_func_q( iq )
+       IF (specfun .AND. phonselfen ) CALL spectral_func_ph( iq )
        IF (ephwrite) THEN
           IF ( iq .eq. 1 ) THEN 
              CALL kmesh_fine

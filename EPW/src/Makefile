@@ -102,6 +102,7 @@ setphases_wrap.o \
 sgama2.o \
 sort.o \
 spectral_func.o \
+spectral_func_ph.o \
 star_q2.o \
 stop_epw.o \
 vmebloch2wan.o \

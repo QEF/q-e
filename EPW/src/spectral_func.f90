@@ -110,7 +110,7 @@
   REAL(kind=DP) :: dosef
   !! Density of state N(Ef)
   REAL(kind=DP), PARAMETER :: eps2 = 0.01/ryd2mev
-  !! Tolerenc  
+  !! Tolerence 
   real(kind=DP) :: specfun_sum, esigmar0
   real(kind=DP) :: fermi(nw_specfun)
   real(kind=DP), external :: efermig, dos_ef, wgauss

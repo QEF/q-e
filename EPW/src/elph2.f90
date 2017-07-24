@@ -62,6 +62,8 @@
        zi_all(:,:),            &!
        esigmar_all(:,:,:),     &!
        esigmai_all(:,:,:),     &!   
+       gammar_all(:,:,:),      &!  Real part of the Phonon self-energy (freq. dependent for spectral function) 
+       gammai_all(:,:,:),      &!  Imaginary part of the Phonon self-energy (freq. dependent for spectral function)
        jdos(:),                &!
        spectra(:,:,:,:,:,:),   &!  dipole absorption spectra, polarizations, nomega, nsmear, dme/vme, absorption/emission
        sumr(:,:,:,:),          &!  to apply the ASR correction to every xq
