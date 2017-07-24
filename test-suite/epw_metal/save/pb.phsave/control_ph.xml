@@ -6,7 +6,7 @@
 <Root>
   <HEADER>
     <FORMAT NAME="QEXML" VERSION="1.4.0"/>
-    <CREATOR NAME="PH" VERSION="5.4.0"/>
+    <CREATOR NAME="PH" VERSION="6.1"/>
   </HEADER>
   <CONTROL>
     <DISPERSION_RUN type="logical" size="1">
