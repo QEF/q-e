@@ -31,7 +31,7 @@
   use phcom,      ONLY : nmodes
   use epwcom,     ONLY : nbndsub, lrepmatf, fsthick, &
                          eptemp, ngaussw, degaussw, shortrange, &
-                         nsmear, delta_smear, eps_acustic, &
+                         nsmear, delta_smear, eps_acustic, specfun, &
                          efermi_read, fermi_energy, delta_approx
   use pwcom,      ONLY : nelec, ef, isk
   use elph2,      ONLY : epf17, ibndmax, ibndmin, etf, &
@@ -359,11 +359,12 @@
     !
     WRITE(stdout, 103) lambda_tot
     WRITE(stdout, 105) lambda_tr_tot
-    !WRITE(stdout,'(5x,a/)') repeat('-',67)
     ! 
-    !IF (me_pool == 0) &
-    !  WRITE( stdout, '(/5x,a,i8,a,i8/)' ) &
-    !      'Number of (k,k+q) pairs on the Fermi surface: ',fermicount, ' out of ', nkqtotf/2
+    IF (.NOT. specfun) THEN
+      WRITE(stdout,'(5x,a/)') repeat('-',67)
+      WRITE( stdout, '(/5x,a,i8,a,i8/)' ) &
+          'Number of (k,k+q) pairs on the Fermi surface: ',fermicount, ' out of ', nkqtotf/2
+    ENDIF
     !
   ENDDO !smears
   !
