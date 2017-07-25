@@ -671,7 +671,7 @@
       ! 
     ENDIF
     !      
-    DO iq = 1, nqf
+    DO iq = iq_restart, nqf
        !   
        CALL start_clock ( 'ep-interp' )
        !
@@ -679,7 +679,7 @@
        ! elecselfen = true as nothing happen during the calculation otherwise. 
        !
        IF (.not. phonselfen) THEN 
-         IF (MOD(iq,100) == 0) THEN
+         IF (MOD(iq,50) == 0) THEN
            WRITE(stdout, '(a,i10,a,i10)' ) '     Progression iq (fine) = ',iq,'/',nqf
          ENDIF
        ENDIF
