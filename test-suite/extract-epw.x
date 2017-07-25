@@ -45,7 +45,7 @@ rsig=`grep "Re\[Sigma\]=" $fname | awk '{print $7}'`
 isig=`grep "Im\[Sigma\]=" $fname | awk '{print $10}'` 
 z1=`grep " Z=" $fname | awk '{print $13}'`
 lam=`grep "lam= " $fname | awk '{print $15}'`
-lambda=`grep "  lambda(" $fname | awk '{print $4}'`
+lambda=`grep "     lambda   (" $fname | awk '{print $4}'`
 lambda_tr=`grep "  lambda_tr(" $fname | awk '{print $4}'`
 gamma=`grep " gamma=" $fname | awk '{print $6}'`
 omega=`grep " omega=" $fname | awk '{print $9}'`
@@ -59,6 +59,7 @@ lam_kmax=`grep "lambda_k_max =" $fname | awk '{print $6}'`
 elph=`grep "Electron-phonon coupling strength =" $fname | awk '{print $5}'`
 allDyn=`grep "Estimated Allen-Dynes Tc =" $fname | awk '{print $5}'`
 bcsgap=`grep "Estimated BCS superconducting gap =" $fname | awk '{print $6}'`
+pi=`grep "Re[Pi]=" $fname | awk '{print $4; print $7; print $10}'`
 
 if test "$efm" != ""; then
         echo efm
@@ -222,5 +223,9 @@ if test "$phfreq" != ""; then
         for x in $phfreq; do echo $x; done
 fi
 
+if test "$pi" != ""; then
+        echo pi
+        for x in $pi; do echo $x; done
+fi
 
 

@@ -82,6 +82,7 @@ tolerance = ( (1.0e-6, 5.0e-3, 'e1'),
               (5.0e-4, 5.0e-4, 'lam_kmax'),
               (5.0e-4, 5.0e-4, 'elph'),
               (2.0e-2, 5.0e-4, 'allDyn'),
+              (2.0e-3, 5.0e-4, 'pi'),
               (1.0e-4, 5.0e-4, 'bcsgap'))
 skip_program = grep
 skip_args = 'not present in this version'
