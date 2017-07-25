@@ -45,9 +45,9 @@ rsig=`grep "Re\[Sigma\]=" $fname | awk '{print $7}'`
 isig=`grep "Im\[Sigma\]=" $fname | awk '{print $10}'` 
 z1=`grep " Z=" $fname | awk '{print $13}'`
 lam=`grep "lam= " $fname | awk '{print $15}'`
-lambda=`grep "     lambda   (" $fname | awk '{print $4}'`
+lambda=`grep "     lambda___(" $fname | awk '{print $4}'`
 lambda_tr=`grep "  lambda_tr(" $fname | awk '{print $4}'`
-gamma=`grep " gamma=" $fname | awk '{print $6}'`
+gamma=`grep " gamma___=" $fname | awk '{print $6}'`
 omega=`grep " omega=" $fname | awk '{print $9}'`
 lam_tot=`grep " lambda :" $fname | awk '{print $3}'`
 lam_tr=`grep " lambda_tr :" $fname | awk '{print $3}'`

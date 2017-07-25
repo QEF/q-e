@@ -52,7 +52,7 @@ inputs_args = ('scf_epw.in', '1'), ('nscf_epw.in', '1'), ('epw.in', '3'), ('epw2
 
 [epw_soc/]
 program = EPW
-inputs_args = ('scf_epw.in', '1'), ('nscf_epw.in', '1'), ('epw.in', '3')
+inputs_args = ('scf_epw.in', '1'), ('nscf_epw.in', '1'), ('epw.in', '3'), ('epw2.in', '3')
 
 [epw_super/]
 program = EPW
