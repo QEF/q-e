@@ -38,7 +38,7 @@ MODULE mytime
   !
   SAVE
   !
-  INTEGER,  PARAMETER :: maxclock = 101
+  INTEGER,  PARAMETER :: maxclock = 201
   REAL(DP), PARAMETER :: notrunning = - 1.0_DP
   !
   REAL(DP)          :: cputime(maxclock), t0cpu(maxclock)

@@ -290,7 +290,7 @@ clean :
 	done
 	- @(cd install ; $(MAKE) -f plugins_makefile clean)
 	- @(cd install ; $(MAKE) -f extlibs_makefile clean)
-	- /bin/rm -rf bin/*.x tmp
+	- /bin/rm -rf bin/*.x tempdir
 
 # remove files produced by "configure" as well
 veryclean : clean
