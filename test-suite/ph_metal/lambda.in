@@ -1,0 +1,20 @@
+10  0.12  1    ! emax (something more than highest phonon mode in THz), degauss, smearing method 
+    8          ! Number of q-points for which EPC is calculated, 
+    0.0000000  0.0000000  0.0000000   1.00  ! the first q-point, use kpoints.x program to calculate 
+    -0.2500000 -0.2500000  0.2500000   8.00  ! q-points and their weight
+    -0.5000000 -0.5000000  0.5000000   4.00  !
+     0.0000000  0.0000000  0.5000000   6.00  ! 4th q-point, qx,qy,qz
+    -0.2500000 -0.2500000  0.7500000  24.00  !
+    -0.5000000 -0.5000000  1.0000000  12.00  !
+     0.0000000  0.0000000  1.0000000   3.00  !
+    -0.5000000  0.0000000  1.0000000   6.00  ! the last q-point 
+elph_dir/elph.inp_lambda.1 ! elph output file names,
+elph_dir/elph.inp_lambda.2 ! in the same order as the q-points before
+elph_dir/elph.inp_lambda.3
+elph_dir/elph.inp_lambda.4
+elph_dir/elph.inp_lambda.5
+elph_dir/elph.inp_lambda.6
+elph_dir/elph.inp_lambda.7
+elph_dir/elph.inp_lambda.8
+0.10                     ! \mu the Coloumb coefficient in the modified
+                         ! Allen-Dynes formula for T_c (via \omega_log)

@@ -38,6 +38,10 @@ tolerance = ( (1.0e-6, 5.0e-3, 'e1'),
               (1.0e-1, 1.0e-3, 'p1'),
               (5.0e-2, 5.0e-3, 'diel'),
               (5.0e-2, 5.0e-3, 'born'),
+              (5.0e-4, 5.0e-4, 'dos'),
+              (5.0e-4, 5.0e-4, 'lambda'),
+              (5.0e-4, 5.0e-4, 'lambda2'),
+              (1.0e-6, 1.0e-6, 'qpt'),
               (2.0e+0, 6.0e-2, 'phfreq'))
 skip_program = grep
 skip_args = 'not present in this version'

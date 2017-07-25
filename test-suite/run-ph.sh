@@ -37,5 +37,32 @@ then
   then
     cat $3
   fi
+elif [[ "$1" == "3" ]]
+then
+  echo "Running Q2R ..."
+  echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/q2r.x < $2 > $3 2> $4"  
+  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/q2r.x < $2 > $3 2> $4
+  if [[ -e CRASH ]]
+  then
+    cat $3
+  fi
+elif [[ "$1" == "4" ]]
+then
+  echo "Running MATDYN ..."
+  echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/matdyn.x < $2 > $3 2> $4"  
+  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/matdyn.x < $2 > $3 2> $4
+  if [[ -e CRASH ]]
+  then
+    cat $3
+  fi
+elif [[ "$1" == "5" ]]
+then
+  echo "Running LAMBDA ..."
+  echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/lambda.x < $2 > $3 2> $4"  
+  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/lambda.x < $2 > $3 2> $4
+  if [[ -e CRASH ]]
+  then
+    cat $3
+  fi
 fi
 

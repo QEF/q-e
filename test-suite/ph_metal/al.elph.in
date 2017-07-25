@@ -1,0 +1,15 @@
+Electron-phonon coefficients for Al
+ &inputph
+  tr2_ph=1.0d-10,
+  prefix='aluminum',
+  fildvscf='aldv',
+  amass(1)=26.98,
+  outdir='./',
+  fildyn='al.dyn',
+  electron_phonon='interpolated',
+  el_ph_sigma=0.005, 
+  el_ph_nsigma=10,
+  trans=.true.,
+  ldisp=.true.
+  nq1=4, nq2=4, nq3=4
+ /

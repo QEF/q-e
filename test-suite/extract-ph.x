@@ -18,7 +18,14 @@ p1=`grep "P= " $fname | tail -1 | awk '{print $6}'`
 diel=`grep -A 4 '  Dielectric constant in cartesian' $fname | grep -v '  Dielectric constant' | awk '{print $2; print $3; print $4 }'`
 born=`grep "     E[x-z]  ( " $fname | awk '{print $3; print $4; print $5}'`
 phfreq=`grep "     freq (.*THz" $fname | awk '{print $5; print $8}'`
+dos=`grep "DOS =" $fname | awk '{print $3; print $8}'`
+lambda=`grep "lambda(" $fname | awk '{print $3; print $5}'`
 
+# Q2R
+qpt=`grep "q= " $fname | awk '{print $2; print $3; print $4}'` 
+
+# LAMBDA
+lambda2=`grep "lambda =" $fname | awk '{print $3; print $5; print $9 ;print $12; print $15}'`
 
 
 if test "$e1" != ""; then
@@ -56,4 +63,22 @@ if test "$phfreq" != ""; then
         for x in $phfreq; do echo $x; done
 fi
 
+if test "$dos" != ""; then
+        echo dos
+        for x in $dos; do echo $x; done
+fi
 
+if test "$lambda" != ""; then
+        echo lambda
+        for x in $lambda; do echo $x; done
+fi
+
+if test "$qpt" != ""; then
+        echo qpt
+        for x in $qpt; do echo $x; done
+fi
+
+if test "$lambda2" != ""; then
+        echo lambda2
+        for x in $lambda2; do echo $x; done
+fi
