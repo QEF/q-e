@@ -370,8 +370,8 @@
   !
 100 FORMAT(5x,'Gaussian Broadening: ',f10.6,' eV, ngauss=',i4)
 101 FORMAT(5x,'DOS =',f10.6,' states/spin/eV/Unit Cell at Ef=',f10.6,' eV')
-102 FORMAT(5x,'lambda   ( ',i3,' )=',f15.6,'   gamma   =',f15.6,' meV','   omega=',f12.4,' meV')
-103 FORMAT(5x,'lambda( tot )=',f15.6)
+102 FORMAT(5x,'lambda___( ',i3,' )=',f15.6,'   gamma___=',f15.6,' meV','   omega=',f12.4,' meV')
+103 FORMAT(5x,'lambda___( tot )=',f15.6)
 104 FORMAT(5x,'lambda_tr( ',i3,' )=',f15.6,'   gamma_tr=',f15.6,' meV','   omega=',f12.4,' meV')
 105 FORMAT(5x,'lambda_tr( tot )=',f15.6)
   !
@@ -827,8 +827,8 @@ END SUBROUTINE selfen_phon_q
   ! 
 100 FORMAT(5x,'Gaussian Broadening: ',f10.6,' eV, ngauss=',i4)
 101 FORMAT(5x,'DOS =',f10.6,' states/spin/eV/Unit Cell at Ef=',f10.6,' eV')
-102 FORMAT(5x,'lambda( ',i3,' )=',f15.6,'   gamma=',f15.6,' meV','   omega=',f12.4,' meV')
-103 FORMAT(5x,'lambda( tot )=',f15.6)
+102 FORMAT(5x,'lambda___( ',i3,' )=',f15.6,'   gamma___=',f15.6,' meV','   omega=',f12.4,' meV')
+103 FORMAT(5x,'lambda___( tot )=',f15.6)
 104 FORMAT(5x,'lambda_tr( ',i3,' )=',f15.6,'   gamma_tr=',f15.6,' meV','   omega=',f12.4,' meV')
 105 FORMAT(5x,'lambda_tr( tot )=',f15.6)
   !
