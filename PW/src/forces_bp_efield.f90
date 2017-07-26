@@ -15,7 +15,6 @@ SUBROUTINE forces_ion_efield (forces_bp, pdir, e_field)
   USE cell_base,            ONLY : at
   USE ions_base,            ONLY : nat,zv, ityp
 
-
   implicit none
 
   INTEGER, INTENT(in) :: pdir!direction on which the polarization is calculated
@@ -72,7 +71,7 @@ SUBROUTINE forces_us_efield(forces_bp, pdir, e_field)
    USE becmod,    ONLY : bec_type, becp, calbec,allocate_bec_type, deallocate_bec_type
    USE noncollin_module,     ONLY : noncolin, npol
    USE spin_orb, ONLY: lspinorb
-   USE mytime
+   USE mytime,               ONLY :
    USE parallel_include
 
 !  --- Avoid implicit definitions ---

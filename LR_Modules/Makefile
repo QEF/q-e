@@ -3,7 +3,7 @@
 include ../make.inc
 
 # location of needed modules and included files (if any)
-MODFLAGS=$(MOD_FLAG)../FFTXlib $(MOD_FLAG)../Modules $(MOD_FLAG)../PW/src $(MOD_FLAG).
+MODFLAGS=$(MOD_FLAG)../FFTXlib $(MOD_FLAG)../UtilXlib $(MOD_FLAG)../Modules $(MOD_FLAG)../PW/src $(MOD_FLAG).
 
 IFLAGS=
 

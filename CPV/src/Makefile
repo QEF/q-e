@@ -3,7 +3,7 @@
 include	../../make.inc
 
 # location of needed modules and included files (if any)
-MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../FFTXlib $(MOD_FLAG)../../LAXlib $(MOD_FLAG)../../Modules $(MOD_FLAG).
+MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../FFTXlib $(MOD_FLAG)../../LAXlib $(MOD_FLAG)../../UtilXlib $(MOD_FLAG)../../Modules $(MOD_FLAG).
 IFLAGS=
 
 FOBJS = \
@@ -120,19 +120,20 @@ entropy.o
 QEMODS=../../Modules/libqemod.a
 QEFFT=../../FFTXlib/libqefft.a
 QELA=../../LAXlib/libqela.a
+UTIL=../../UtilXlib/libutil.a
 
 TLDEPS= bindir mods libs libiotk
 
 all : tldeps libcp.a manycp.x cp.x cppp.x wfdd.x
 
-manycp.x : manycp.o libcp.a $(QEMODS) $(QEFFT) $(QELA) $(LIBOBJS)
+manycp.x : manycp.o libcp.a $(QEMODS) $(QEFFT) $(QELA) $(UTIL) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o manycp.x manycp.o \
-		libcp.a $(QEMODS) $(QEFFT) $(QELA) $(LIBOBJS) $(LIBS)
+		libcp.a $(QEMODS) $(QEFFT) $(QELA) $(UTIL) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../CPV/src/manycp.x . )
 
-cp.x : cprstart.o libcp.a $(QEMODS) $(QEFFT) $(QELA) $(LIBOBJS)
+cp.x : cprstart.o libcp.a $(QEMODS) $(QEFFT) $(QELA) $(UTIL) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o cp.x cprstart.o \
-		libcp.a $(QEMODS) $(QEFFT) $(QELA) $(LIBOBJS) $(LIBS)
+		libcp.a $(QEMODS) $(QEFFT) $(QELA) $(UTIL) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../CPV/src/cp.x . )
 
 libcp.a : $(FOBJS) $(LOBJS) 
@@ -145,12 +146,12 @@ cpver.h :
 	echo "CHARACTER(LEN=70), PARAMETER :: version_date = '"`date`"'" \
 		> cpver.h
 
-cppp.x : fpmdpp.o $(QEMODS) $(QEFFT) $(QELA) $(LIBOBJS)
-	$(LD) $(LDFLAGS) -o cppp.x fpmdpp.o $(QEMODS) $(QEFFT) $(QELA) $(LIBOBJS) $(LIBS)
+cppp.x : fpmdpp.o $(QEMODS) $(QEFFT) $(QELA) $(UTIL) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o cppp.x fpmdpp.o $(QEMODS) $(QEFFT) $(QELA) $(UTIL) $(LIBOBJS) $(LIBS)
 	- (cd ../../bin ; ln -fs ../CPV/src/cppp.x . )
 
 wfdd.x : wfdd.o
-	$(LD) $(LDFLAGS) -o $@ wfdd.o $(QEMODS) $(QEFFT) $(QELA) $(LIBOBJS) $(LIBS)
+	$(LD) $(LDFLAGS) -o $@ wfdd.o $(QEMODS) $(QEFFT) $(QELA) $(UTIL) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../CPV/src/$@ . )
 
 tldeps :

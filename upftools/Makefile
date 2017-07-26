@@ -3,10 +3,10 @@
 include ../make.inc
 
 # location of needed modules
-MODFLAGS= $(MOD_FLAG)../iotk/src $(MOD_FLAG)../Modules $(MOD_FLAG)../FFTXlib $(MOD_FLAG)../LAXlib $(MOD_FLAG).
+MODFLAGS= $(MOD_FLAG)../iotk/src $(MOD_FLAG)../Modules $(MOD_FLAG)../FFTXlib $(MOD_FLAG)../LAXlib $(MOD_FLAG)../UtilXlib $(MOD_FLAG).
 
 OBJS = write_upf.o read_upf.o
-QEMODS = ../Modules/libqemod.a ../FFTXlib/libqefft.a
+QEMODS = ../Modules/libqemod.a ../FFTXlib/libqefft.a ../UtilXlib/libutil.a
 
 TLDEPS = mods libs libiotk
 

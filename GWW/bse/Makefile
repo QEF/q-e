@@ -9,7 +9,7 @@ IFLAGS=-I../../include
 MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules \
           $(MOD_FLAG)../../PHonon/Gamma/ $(MOD_FLAG)../../PHonon/PH/ \
           $(MOD_FLAG)../../PW/src $(MOD_FLAG)../../FFTXlib \
-          $(MOD_FLAG)../../LAXlib $(MOD_FLAG)../pw4gww \
+          $(MOD_FLAG)../../LAXlib $(MOD_FLAG)../../UtilXlib $(MOD_FLAG)../pw4gww \
           $(MOD_FLAG)../gww $(MOD_FLAG).
 
 BSEOBJS = \
@@ -49,7 +49,7 @@ qpcorrections.o
 #zvscal_test.o\
 
 
-QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a
+QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a
 PWOBJS = ../../PW/src/libpw.a
 PW4GWWOBJ = ../pw4gww/fft_custom.o ../pw4gww/stop_pp.o ../pw4gww/mp_wave_parallel.o
 GWWOBJ = ../gww/libgww.a ../minpack/minpacklib.a

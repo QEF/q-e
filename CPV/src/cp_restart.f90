@@ -185,12 +185,13 @@ MODULE cp_restart
       INTEGER               :: inlc
       CHARACTER(iotk_attlenx)  :: attr
       REAL(DP), ALLOCATABLE :: temp_vec(:), wfc_temp(:,:) ! BS 
-      INTERFACE
-         FUNCTION cclock ( ) BIND(C,name="cclock") RESULT(t)
-           USE ISO_C_BINDING
-           REAL(kind=c_double) :: t
-         END FUNCTION cclock
-      END INTERFACE
+!      INTERFACE
+!         FUNCTION cclock ( ) BIND(C,name="cclock") RESULT(t)
+!           USE ISO_C_BINDING
+!           REAL(kind=c_double) :: t
+!         END FUNCTION cclock
+!      END INTERFACE
+      REAl(DP), EXTERNAL    :: cclock
       !
       !
       k1  = 0

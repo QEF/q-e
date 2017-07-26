@@ -23,7 +23,7 @@ MODULE check_stop
 !------------------------------------------------------------------------------!
   !
   USE kinds
-  USE mytime, ONLY: f_wall
+  !USE mytime, ONLY: f_wall
   !
   IMPLICIT NONE
   !
@@ -51,6 +51,7 @@ MODULE check_stop
 #endif
        !
        IMPLICIT NONE
+       REAL(DP), EXTERNAL :: cclock
        !!!INTEGER, INTENT(IN), OPTIONAL :: max_seconds_
        !
        IF ( tinit ) &
@@ -64,7 +65,7 @@ MODULE check_stop
        IF ( max_seconds_ > 0.0_DP ) max_seconds = max_seconds_
        !!! IF ( PRESENT(max_seconds_) ) max_seconds = max_seconds_
        !
-       init_second = f_wall()
+       init_second = cclock()
        tinit   = .TRUE.
        !
 #if defined(__TRAP_SIGUSR1) || defined(__TERMINATE_GRACEFULLY)
@@ -95,6 +96,7 @@ MODULE check_stop
        LOGICAL            :: check_stop_now, tex=.false.
        LOGICAL            :: signaled
        REAL(DP)           :: seconds
+       REAL(DP), EXTERNAL :: cclock
        !
        IF ( stopped_by_user ) THEN
           check_stop_now = .TRUE.
@@ -136,7 +138,7 @@ MODULE check_stop
                 CLOSE( UNIT = iunexit, STATUS = 'DELETE' )
                 !
              ELSE
-                seconds = f_wall() - init_second
+                seconds = cclock() - init_second
                 check_stop_now = ( seconds  >  max_seconds )
              END IF
              !

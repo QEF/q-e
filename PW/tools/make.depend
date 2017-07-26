@@ -1,10 +1,10 @@
 ev.o : ../../Modules/constants.o
 ev.o : ../../Modules/io_global.o
 ev.o : ../../Modules/kind.o
-ev.o : ../../Modules/mp.o
 ev.o : ../../Modules/mp_global.o
 ev.o : ../../Modules/mp_world.o
 ev.o : ../../Modules/random_numbers.o
+ev.o : ../../UtilXlib/mp.o
 ev.o : ev_xml.o
 ev_xml.o : ../../Modules/constants.o
 ev_xml.o : ../../Modules/kind.o

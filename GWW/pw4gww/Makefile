@@ -8,7 +8,7 @@ IFLAGS=-I../../include
 
 # location of needed modules
 MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules \
-          $(MOD_FLAG)../../PW/src $(MOD_FLAG)../../FFTXlib $(MOD_FLAG)../../LAXlib $(MOD_FLAG).
+          $(MOD_FLAG)../../PW/src $(MOD_FLAG)../../FFTXlib $(MOD_FLAG)../../LAXlib $(MOD_FLAG)../../UtilXlib $(MOD_FLAG).
 
 PW4GWWOBJS = \
 allocate_wannier.o \
@@ -49,7 +49,7 @@ hpsi_pw4gww.o \
 cgsolve_all_gamma.o \
 realus.o 
 
-QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a
+QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a
 PWOBJS = ../../PW/src/libpw.a
 
 LIBMIN= ../minpack/minpacklib.a
@@ -58,7 +58,7 @@ TLDEPS= bindir libs pw
 
 all : tldeps pw4gww.x
 
-pw4gww.x : pw4gww.o libpw4gww.a  $(PW4GWWOBJS) $(PWOBJS) $(QEMODS)  $(LIBOBJS) $(LIBMIN) 
+pw4gww.x : pw4gww.o libpw4gww.a  $(PW4GWWOBJS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBMIN) 
 	$(LD) $(LDFLAGS) -o $@ \
 	pw4gww.o libpw4gww.a $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBMIN) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../GWW/pw4gww/$@ . )

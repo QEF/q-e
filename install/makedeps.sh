@@ -11,7 +11,8 @@ TOPDIR=`pwd`
 
 if test $# = 0
 then
-    dirs=" LAXlib FFTXlib Modules clib LR_Modules upftools \
+    dirs=" LAXlib FFTXlib UtilXlib Modules clib LR_Modules upftools \
+           KS_Solvers/Davidson KS_Solvers/Davidson_RCI KS_Solvers/CG \
            PW/src CPV/src PW/tools upftools PP/src PWCOND/src \
            PHonon/Gamma PHonon/PH PHonon/FD atomic/src \
            XSpectra/src ACFDT/src NEB/src TDDFPT/src \
@@ -51,9 +52,10 @@ for dir in $dirs; do
     # default
     DEPENDS="$LEVEL1/include" 
     # for convenience, used later
-    DEPEND1="$LEVEL1/include $LEVEL1/iotk/src $LEVEL1/FFTXlib $LEVEL1/LAXlib"
-    DEPEND2="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/FFTXlib $LEVEL2/LAXlib \
+    DEPEND1="$LEVEL1/include $LEVEL1/iotk/src $LEVEL1/FFTXlib $LEVEL1/LAXlib $LEVEL1/UtilXlib"
+    DEPEND2="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/FFTXlib $LEVEL2/LAXlib $LEVEL2/UtilXlib \
              $LEVEL2/Modules"
+    DEPEND3="$LEVEL2/include $LEVEL2/FFTXlib $LEVEL2/LAXlib $LEVEL2/UtilXlib"
     case $DIR in 
         Modules )
              DEPENDS="$DEPEND1" ;;
@@ -65,6 +67,8 @@ for dir in $dirs; do
              DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/PHonon/PH $LEVEL2/LR_Modules" ;;
 	PW/src | CPV/src | atomic/src | GWW/gww )
 	     DEPENDS="$DEPEND2" ;;
+	KS_Solvers/Davidson | KS_Solvers/Davidson_RCI | KS_Solvers/CG )
+	     DEPENDS="$DEPEND3" ;;
 	PW/tools | PP/src | PWCOND/src | GWW/pw4gww | NEB/src )
 	     DEPENDS="$DEPEND2 $LEVEL2/PW/src" ;;
 	PHonon/FD | PHonon/PH | PHonon/Gamma | XSpectra/src  | GIPAW/src )
@@ -101,6 +105,32 @@ for dir in $dirs; do
         then
             sed '/@elpa1@/d' make.depend > make.depend.tmp
             cp make.depend.tmp make.depend
+        fi
+
+        if test "$DIR" = "UtilXlib"
+        then
+            sed '/@elpa1@/d' make.depend > make.depend.tmp
+            sed '/@ifcore@/d' make.depend.tmp > make.depend
+        fi
+
+        if test "$DIR" = "KS_Solvers/Davidson"
+        then
+
+            sed '/@elpa1@/d' make.depend > make.depend.tmp
+            sed '/@ifcore@/d' make.depend.tmp > make.depend
+        fi
+
+        if test "$DIR" = "KS_Solvers/Davidson_RCI"
+        then
+            sed '/@elpa1@/d' make.depend > make.depend.tmp
+            sed '/@ifcore@/d' make.depend.tmp > make.depend
+        fi
+
+        if test "$DIR" = "KS_Solvers/CG"
+        then
+
+            sed '/@elpa1@/d' make.depend > make.depend.tmp
+            sed '/@ifcore@/d' make.depend.tmp > make.depend
         fi
 
         if test "$DIR" = "Modules"

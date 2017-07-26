@@ -2,11 +2,11 @@ bcast_lr_input.o : ../../LR_Modules/lrcom.o
 bcast_lr_input.o : ../../Modules/control_flags.o
 bcast_lr_input.o : ../../Modules/io_files.o
 bcast_lr_input.o : ../../Modules/io_global.o
-bcast_lr_input.o : ../../Modules/mp.o
 bcast_lr_input.o : ../../Modules/mp_global.o
 bcast_lr_input.o : ../../Modules/mp_world.o
 bcast_lr_input.o : ../../PW/src/exx.o
 bcast_lr_input.o : ../../PW/src/realus.o
+bcast_lr_input.o : ../../UtilXlib/mp.o
 bcast_lr_input.o : lr_charg_resp.o
 bcast_lr_input.o : lr_dav_variables.o
 bcast_lr_input.o : lr_variables.o
@@ -51,7 +51,6 @@ lr_apply_liouvillian.o : ../../Modules/fft_base.o
 lr_apply_liouvillian.o : ../../Modules/io_global.o
 lr_apply_liouvillian.o : ../../Modules/ions_base.o
 lr_apply_liouvillian.o : ../../Modules/kind.o
-lr_apply_liouvillian.o : ../../Modules/mp.o
 lr_apply_liouvillian.o : ../../Modules/mp_global.o
 lr_apply_liouvillian.o : ../../Modules/noncol.o
 lr_apply_liouvillian.o : ../../Modules/plugin_flags.o
@@ -62,6 +61,7 @@ lr_apply_liouvillian.o : ../../PW/src/newd.o
 lr_apply_liouvillian.o : ../../PW/src/pwcom.o
 lr_apply_liouvillian.o : ../../PW/src/realus.o
 lr_apply_liouvillian.o : ../../PW/src/scf_mod.o
+lr_apply_liouvillian.o : ../../UtilXlib/mp.o
 lr_apply_liouvillian.o : lr_exx_kernel.o
 lr_apply_liouvillian.o : lr_variables.o
 lr_apply_liouvillian_eels.o : ../../FFTXlib/fft_parallel.o
@@ -87,7 +87,6 @@ lr_calc_dens.o : ../../Modules/io_files.o
 lr_calc_dens.o : ../../Modules/io_global.o
 lr_calc_dens.o : ../../Modules/ions_base.o
 lr_calc_dens.o : ../../Modules/kind.o
-lr_calc_dens.o : ../../Modules/mp.o
 lr_calc_dens.o : ../../Modules/mp_global.o
 lr_calc_dens.o : ../../Modules/noncol.o
 lr_calc_dens.o : ../../Modules/recvec.o
@@ -95,6 +94,7 @@ lr_calc_dens.o : ../../Modules/uspp.o
 lr_calc_dens.o : ../../Modules/wavefunctions.o
 lr_calc_dens.o : ../../PW/src/pwcom.o
 lr_calc_dens.o : ../../PW/src/realus.o
+lr_calc_dens.o : ../../UtilXlib/mp.o
 lr_calc_dens.o : lr_charg_resp.o
 lr_calc_dens.o : lr_exx_kernel.o
 lr_calc_dens.o : lr_variables.o
@@ -104,20 +104,19 @@ lr_calc_dens_eels.o : ../../Modules/gvecw.o
 lr_calc_dens_eels.o : ../../Modules/io_files.o
 lr_calc_dens_eels.o : ../../Modules/ions_base.o
 lr_calc_dens_eels.o : ../../Modules/kind.o
-lr_calc_dens_eels.o : ../../Modules/mp.o
 lr_calc_dens_eels.o : ../../Modules/mp_global.o
 lr_calc_dens_eels.o : ../../Modules/recvec.o
 lr_calc_dens_eels.o : ../../Modules/uspp.o
 lr_calc_dens_eels.o : ../../Modules/wavefunctions.o
 lr_calc_dens_eels.o : ../../PW/src/buffers.o
 lr_calc_dens_eels.o : ../../PW/src/pwcom.o
+lr_calc_dens_eels.o : ../../UtilXlib/mp.o
 lr_calc_dens_eels_nc.o : ../../LR_Modules/lrcom.o
 lr_calc_dens_eels_nc.o : ../../Modules/fft_base.o
 lr_calc_dens_eels_nc.o : ../../Modules/gvecw.o
 lr_calc_dens_eels_nc.o : ../../Modules/io_files.o
 lr_calc_dens_eels_nc.o : ../../Modules/ions_base.o
 lr_calc_dens_eels_nc.o : ../../Modules/kind.o
-lr_calc_dens_eels_nc.o : ../../Modules/mp.o
 lr_calc_dens_eels_nc.o : ../../Modules/mp_global.o
 lr_calc_dens_eels_nc.o : ../../Modules/noncol.o
 lr_calc_dens_eels_nc.o : ../../Modules/recvec.o
@@ -125,6 +124,7 @@ lr_calc_dens_eels_nc.o : ../../Modules/uspp.o
 lr_calc_dens_eels_nc.o : ../../Modules/wavefunctions.o
 lr_calc_dens_eels_nc.o : ../../PW/src/buffers.o
 lr_calc_dens_eels_nc.o : ../../PW/src/pwcom.o
+lr_calc_dens_eels_nc.o : ../../UtilXlib/mp.o
 lr_charg_resp.o : ../../LR_Modules/lrcom.o
 lr_charg_resp.o : ../../Modules/becmod.o
 lr_charg_resp.o : ../../Modules/cell_base.o
@@ -134,7 +134,6 @@ lr_charg_resp.o : ../../Modules/io_files.o
 lr_charg_resp.o : ../../Modules/io_global.o
 lr_charg_resp.o : ../../Modules/ions_base.o
 lr_charg_resp.o : ../../Modules/kind.o
-lr_charg_resp.o : ../../Modules/mp.o
 lr_charg_resp.o : ../../Modules/mp_global.o
 lr_charg_resp.o : ../../Modules/mp_world.o
 lr_charg_resp.o : ../../Modules/noncol.o
@@ -142,12 +141,12 @@ lr_charg_resp.o : ../../Modules/recvec.o
 lr_charg_resp.o : ../../Modules/uspp.o
 lr_charg_resp.o : ../../PW/src/pwcom.o
 lr_charg_resp.o : ../../PW/src/realus.o
+lr_charg_resp.o : ../../UtilXlib/mp.o
 lr_charg_resp.o : lr_variables.o
 lr_dav_debug.o : ../../Modules/cell_base.o
 lr_dav_debug.o : ../../Modules/fft_base.o
 lr_dav_debug.o : ../../Modules/io_global.o
 lr_dav_debug.o : ../../Modules/kind.o
-lr_dav_debug.o : ../../Modules/mp.o
 lr_dav_debug.o : ../../Modules/mp_global.o
 lr_dav_debug.o : ../../Modules/mp_world.o
 lr_dav_debug.o : ../../Modules/recvec.o
@@ -155,6 +154,7 @@ lr_dav_debug.o : ../../Modules/uspp.o
 lr_dav_debug.o : ../../Modules/wavefunctions.o
 lr_dav_debug.o : ../../PW/src/pwcom.o
 lr_dav_debug.o : ../../PW/src/realus.o
+lr_dav_debug.o : ../../UtilXlib/mp.o
 lr_dav_debug.o : lr_dav_variables.o
 lr_dav_debug.o : lr_us.o
 lr_dav_debug.o : lr_variables.o
@@ -187,7 +187,6 @@ lr_dav_routines.o : ../../Modules/io_files.o
 lr_dav_routines.o : ../../Modules/io_global.o
 lr_dav_routines.o : ../../Modules/ions_base.o
 lr_dav_routines.o : ../../Modules/kind.o
-lr_dav_routines.o : ../../Modules/mp.o
 lr_dav_routines.o : ../../Modules/mp_global.o
 lr_dav_routines.o : ../../Modules/mp_world.o
 lr_dav_routines.o : ../../Modules/recvec.o
@@ -196,6 +195,7 @@ lr_dav_routines.o : ../../Modules/wavefunctions.o
 lr_dav_routines.o : ../../PW/src/g_psi_mod.o
 lr_dav_routines.o : ../../PW/src/pwcom.o
 lr_dav_routines.o : ../../PW/src/realus.o
+lr_dav_routines.o : ../../UtilXlib/mp.o
 lr_dav_routines.o : lr_charg_resp.o
 lr_dav_routines.o : lr_dav_debug.o
 lr_dav_routines.o : lr_dav_variables.o
@@ -219,11 +219,11 @@ lr_dot.o : ../../Modules/fft_base.o
 lr_dot.o : ../../Modules/gvecw.o
 lr_dot.o : ../../Modules/io_global.o
 lr_dot.o : ../../Modules/kind.o
-lr_dot.o : ../../Modules/mp.o
 lr_dot.o : ../../Modules/mp_global.o
 lr_dot.o : ../../Modules/noncol.o
 lr_dot.o : ../../Modules/recvec.o
 lr_dot.o : ../../PW/src/pwcom.o
+lr_dot.o : ../../UtilXlib/mp.o
 lr_dot.o : lr_variables.o
 lr_dv_setup.o : ../../LR_Modules/lrcom.o
 lr_dv_setup.o : ../../Modules/fft_base.o
@@ -284,7 +284,6 @@ lr_exx_kernel.o : ../../Modules/fft_custom.o
 lr_exx_kernel.o : ../../Modules/funct.o
 lr_exx_kernel.o : ../../Modules/io_global.o
 lr_exx_kernel.o : ../../Modules/kind.o
-lr_exx_kernel.o : ../../Modules/mp.o
 lr_exx_kernel.o : ../../Modules/mp_global.o
 lr_exx_kernel.o : ../../Modules/recvec.o
 lr_exx_kernel.o : ../../Modules/wavefunctions.o
@@ -292,6 +291,7 @@ lr_exx_kernel.o : ../../PW/src/exx.o
 lr_exx_kernel.o : ../../PW/src/pwcom.o
 lr_exx_kernel.o : ../../PW/src/realus.o
 lr_exx_kernel.o : ../../PW/src/symm_base.o
+lr_exx_kernel.o : ../../UtilXlib/mp.o
 lr_exx_kernel.o : lr_variables.o
 lr_init_nfo.o : ../../LR_Modules/lrcom.o
 lr_init_nfo.o : ../../Modules/becmod.o
@@ -360,12 +360,12 @@ lr_ortho.o : ../../LR_Modules/lrcom.o
 lr_ortho.o : ../../Modules/control_flags.o
 lr_ortho.o : ../../Modules/io_global.o
 lr_ortho.o : ../../Modules/kind.o
-lr_ortho.o : ../../Modules/mp.o
 lr_ortho.o : ../../Modules/mp_global.o
 lr_ortho.o : ../../Modules/noncol.o
 lr_ortho.o : ../../Modules/recvec.o
 lr_ortho.o : ../../Modules/uspp.o
 lr_ortho.o : ../../PW/src/pwcom.o
+lr_ortho.o : ../../UtilXlib/mp.o
 lr_ortho.o : lr_variables.o
 lr_psym_eels.o : ../../FFTXlib/scatter_mod.o
 lr_psym_eels.o : ../../LR_Modules/lrcom.o
@@ -410,7 +410,6 @@ lr_readin.o : ../../Modules/io_files.o
 lr_readin.o : ../../Modules/io_global.o
 lr_readin.o : ../../Modules/ions_base.o
 lr_readin.o : ../../Modules/kind.o
-lr_readin.o : ../../Modules/mp.o
 lr_readin.o : ../../Modules/mp_bands.o
 lr_readin.o : ../../Modules/mp_global.o
 lr_readin.o : ../../Modules/mp_images.o
@@ -430,6 +429,7 @@ lr_readin.o : ../../PW/src/newd.o
 lr_readin.o : ../../PW/src/pwcom.o
 lr_readin.o : ../../PW/src/realus.o
 lr_readin.o : ../../PW/src/scf_mod.o
+lr_readin.o : ../../UtilXlib/mp.o
 lr_readin.o : ../../iotk/src/iotk_module.o
 lr_readin.o : lr_charg_resp.o
 lr_readin.o : lr_dav_variables.o
@@ -441,11 +441,11 @@ lr_restart.o : ../../Modules/fft_base.o
 lr_restart.o : ../../Modules/io_files.o
 lr_restart.o : ../../Modules/io_global.o
 lr_restart.o : ../../Modules/kind.o
-lr_restart.o : ../../Modules/mp.o
 lr_restart.o : ../../Modules/mp_world.o
 lr_restart.o : ../../Modules/noncol.o
 lr_restart.o : ../../Modules/uspp.o
 lr_restart.o : ../../PW/src/pwcom.o
+lr_restart.o : ../../UtilXlib/mp.o
 lr_restart.o : lr_charg_resp.o
 lr_restart.o : lr_variables.o
 lr_run_nscf.o : ../../Modules/control_flags.o
@@ -478,10 +478,10 @@ lr_smallgq.o : ../../Modules/cell_base.o
 lr_smallgq.o : ../../Modules/control_flags.o
 lr_smallgq.o : ../../Modules/io_global.o
 lr_smallgq.o : ../../Modules/kind.o
-lr_smallgq.o : ../../Modules/mp.o
 lr_smallgq.o : ../../Modules/mp_global.o
 lr_smallgq.o : ../../Modules/noncol.o
 lr_smallgq.o : ../../PW/src/symm_base.o
+lr_smallgq.o : ../../UtilXlib/mp.o
 lr_solve_e.o : ../../LR_Modules/lrcom.o
 lr_solve_e.o : ../../Modules/cell_base.o
 lr_solve_e.o : ../../Modules/control_flags.o
@@ -490,7 +490,6 @@ lr_solve_e.o : ../../Modules/io_files.o
 lr_solve_e.o : ../../Modules/io_global.o
 lr_solve_e.o : ../../Modules/ions_base.o
 lr_solve_e.o : ../../Modules/kind.o
-lr_solve_e.o : ../../Modules/mp.o
 lr_solve_e.o : ../../Modules/mp_global.o
 lr_solve_e.o : ../../Modules/noncol.o
 lr_solve_e.o : ../../Modules/recvec.o
@@ -498,6 +497,7 @@ lr_solve_e.o : ../../Modules/uspp.o
 lr_solve_e.o : ../../Modules/wavefunctions.o
 lr_solve_e.o : ../../PW/src/pwcom.o
 lr_solve_e.o : ../../PW/src/realus.o
+lr_solve_e.o : ../../UtilXlib/mp.o
 lr_solve_e.o : lr_variables.o
 lr_summary.o : ../../LR_Modules/lrcom.o
 lr_summary.o : ../../Modules/cell_base.o
@@ -522,8 +522,8 @@ lr_sym_eels.o : ../../Modules/noncol.o
 lr_sym_eels.o : ../../PW/src/symm_base.o
 lr_test_restart.o : ../../Modules/io_files.o
 lr_test_restart.o : ../../Modules/io_global.o
-lr_test_restart.o : ../../Modules/mp.o
 lr_test_restart.o : ../../Modules/mp_world.o
+lr_test_restart.o : ../../UtilXlib/mp.o
 lr_test_restart.o : lr_variables.o
 lr_us.o : ../../LR_Modules/lrcom.o
 lr_us.o : ../../Modules/becmod.o

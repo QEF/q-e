@@ -7,7 +7,6 @@ fd.o : ../../Modules/io_files.o
 fd.o : ../../Modules/io_global.o
 fd.o : ../../Modules/ions_base.o
 fd.o : ../../Modules/kind.o
-fd.o : ../../Modules/mp.o
 fd.o : ../../Modules/mp_global.o
 fd.o : ../../Modules/mp_world.o
 fd.o : ../../Modules/recvec.o
@@ -15,6 +14,7 @@ fd.o : ../../Modules/wrappers.o
 fd.o : ../../PW/src/pwcom.o
 fd.o : ../../PW/src/symm_base.o
 fd.o : ../../PW/src/symme.o
+fd.o : ../../UtilXlib/mp.o
 fd_ef.o : ../../Modules/cell_base.o
 fd_ef.o : ../../Modules/constants.o
 fd_ef.o : ../../Modules/environment.o
@@ -24,12 +24,12 @@ fd_ef.o : ../../Modules/io_files.o
 fd_ef.o : ../../Modules/io_global.o
 fd_ef.o : ../../Modules/ions_base.o
 fd_ef.o : ../../Modules/kind.o
-fd_ef.o : ../../Modules/mp.o
 fd_ef.o : ../../Modules/mp_global.o
 fd_ef.o : ../../Modules/parser.o
 fd_ef.o : ../../PW/src/pwcom.o
 fd_ef.o : ../../PW/src/symm_base.o
 fd_ef.o : ../../PW/src/symme.o
+fd_ef.o : ../../UtilXlib/mp.o
 fd_ifc.o : ../../Modules/cell_base.o
 fd_ifc.o : ../../Modules/constants.o
 fd_ifc.o : ../../Modules/environment.o
@@ -40,12 +40,12 @@ fd_ifc.o : ../../Modules/io_files.o
 fd_ifc.o : ../../Modules/io_global.o
 fd_ifc.o : ../../Modules/ions_base.o
 fd_ifc.o : ../../Modules/kind.o
-fd_ifc.o : ../../Modules/mp.o
 fd_ifc.o : ../../Modules/mp_global.o
 fd_ifc.o : ../../PW/src/pwcom.o
 fd_ifc.o : ../../PW/src/symm_base.o
 fd_ifc.o : ../../PW/src/symme.o
+fd_ifc.o : ../../UtilXlib/mp.o
 stop_pp.o : ../../Modules/control_flags.o
 stop_pp.o : ../../Modules/io_files.o
 stop_pp.o : ../../Modules/mp_global.o
-stop_pp.o : ../../Modules/parallel_include.o
+stop_pp.o : ../../UtilXlib/parallel_include.o

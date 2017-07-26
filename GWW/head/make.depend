@@ -4,13 +4,13 @@ bcast_ph_input.o : ../../Modules/input_parameters.o
 bcast_ph_input.o : ../../Modules/io_files.o
 bcast_ph_input.o : ../../Modules/io_global.o
 bcast_ph_input.o : ../../Modules/ions_base.o
-bcast_ph_input.o : ../../Modules/mp.o
 bcast_ph_input.o : ../../Modules/mp_global.o
 bcast_ph_input.o : ../../Modules/mp_world.o
 bcast_ph_input.o : ../../Modules/run_info.o
 bcast_ph_input.o : ../../Modules/wannier_gw.o
 bcast_ph_input.o : ../../PHonon/PH/phcom.o
 bcast_ph_input.o : ../../PHonon/PH/ramanm.o
+bcast_ph_input.o : ../../UtilXlib/mp.o
 close_phq.o : ../../Modules/control_flags.o
 close_phq.o : ../../Modules/io_global.o
 close_phq.o : ../../Modules/mp_global.o
@@ -34,7 +34,6 @@ lanczos_k.o : ../../Modules/constants.o
 lanczos_k.o : ../../Modules/io_files.o
 lanczos_k.o : ../../Modules/io_global.o
 lanczos_k.o : ../../Modules/kind.o
-lanczos_k.o : ../../Modules/mp.o
 lanczos_k.o : ../../Modules/mp_world.o
 lanczos_k.o : ../../Modules/noncol.o
 lanczos_k.o : ../../Modules/recvec.o
@@ -43,6 +42,7 @@ lanczos_k.o : ../../Modules/wannier_gw.o
 lanczos_k.o : ../../Modules/wavefunctions.o
 lanczos_k.o : ../../PW/src/g_psi_mod.o
 lanczos_k.o : ../../PW/src/pwcom.o
+lanczos_k.o : ../../UtilXlib/mp.o
 openfilq.o : ../../LR_Modules/lrcom.o
 openfilq.o : ../../Modules/control_flags.o
 openfilq.o : ../../Modules/fft_base.o
@@ -65,7 +65,6 @@ phq_readin.o : ../../Modules/io_files.o
 phq_readin.o : ../../Modules/io_global.o
 phq_readin.o : ../../Modules/ions_base.o
 phq_readin.o : ../../Modules/kind.o
-phq_readin.o : ../../Modules/mp.o
 phq_readin.o : ../../Modules/mp_bands.o
 phq_readin.o : ../../Modules/mp_global.o
 phq_readin.o : ../../Modules/mp_images.o
@@ -87,6 +86,7 @@ phq_readin.o : ../../PHonon/PH/save_ph_input.o
 phq_readin.o : ../../PW/src/ldaU.o
 phq_readin.o : ../../PW/src/pwcom.o
 phq_readin.o : ../../PW/src/start_k.o
+phq_readin.o : ../../UtilXlib/mp.o
 solve_head.o : ../../FFTXlib/fft_interfaces.o
 solve_head.o : ../../LR_Modules/lrcom.o
 solve_head.o : ../../Modules/becmod.o
@@ -98,7 +98,6 @@ solve_head.o : ../../Modules/io_files.o
 solve_head.o : ../../Modules/io_global.o
 solve_head.o : ../../Modules/ions_base.o
 solve_head.o : ../../Modules/kind.o
-solve_head.o : ../../Modules/mp.o
 solve_head.o : ../../Modules/mp_pools.o
 solve_head.o : ../../Modules/mp_wave.o
 solve_head.o : ../../Modules/mp_world.o
@@ -110,3 +109,4 @@ solve_head.o : ../../PHonon/PH/phcom.o
 solve_head.o : ../../PW/src/buffers.o
 solve_head.o : ../../PW/src/pwcom.o
 solve_head.o : ../../PW/src/symme.o
+solve_head.o : ../../UtilXlib/mp.o

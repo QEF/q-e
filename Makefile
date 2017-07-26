@@ -65,39 +65,39 @@ default :
 # If "|| exit 1" is not present, the error code from make in subdirectories
 # is not returned and make goes on even if compilation has failed
 
-pw : bindir libfft libla mods liblapack libs libiotk 
+pw : bindir libfft libla libutil mods liblapack libs libiotk 
 	if test -d PW ; then \
 	( cd PW ; $(MAKE) TLDEPS= all || exit 1) ; fi
 
-pw-lib : bindir libfft libla mods liblapack libs libiotk
+pw-lib : bindir libfft libla libutil mods liblapack libs libiotk
 	if test -d PW ; then \
 	( cd PW ; $(MAKE) TLDEPS= pw-lib || exit 1) ; fi
 
-cp : bindir libfft libla mods liblapack libs libiotk
+cp : bindir libfft libla libutil mods liblapack libs libiotk
 	if test -d CPV ; then \
 	( cd CPV ; $(MAKE) TLDEPS= all || exit 1) ; fi
 
-ph : bindir libfft libla mods libs pw lrmods
+ph : bindir libfft libla libutil mods libs pw lrmods
 	if test -d PHonon; then \
 	(cd PHonon; $(MAKE) all || exit 1) ; fi
 
-neb : bindir libfft libla mods libs pw
+neb : bindir libfft libla libutil mods libs pw
 	if test -d NEB; then \
   (cd NEB; $(MAKE) all || exit 1) ; fi
 
-tddfpt : bindir libfft libla mods libs pw
+tddfpt : bindir libfft libla libutil mods libs pw
 	if test -d TDDFPT; then \
 	(cd TDDFPT; $(MAKE) all || exit 1) ; fi
 
-pp : bindir libfft libla mods libs pw
+pp : bindir libfft libla libutil mods libs pw
 	if test -d PP ; then \
 	( cd PP ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
 
-pwcond : bindir libfft libla mods libs pw pp
+pwcond : bindir libfft libla libutil mods libs pw pp
 	if test -d PWCOND ; then \
 	( cd PWCOND ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
 
-acfdt : bindir libfft libla mods libs pw ph
+acfdt : bindir libfft libla libutil mods libs pw ph
 	if test -d ACFDT ; then \
 	( cd ACFDT ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
 
@@ -115,11 +115,11 @@ gipaw : pw
 d3q : pw ph
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-ld1 : bindir liblapack libfft libla mods libs
+ld1 : bindir liblapack libfft libla libutil mods libs
 	if test -d atomic ; then \
 	( cd atomic ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
 
-upf : libfft libla mods libs liblapack
+upf : libfft libla libutil mods libs liblapack
 	if test -d upftools ; then \
 	( cd upftools ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
 
@@ -145,7 +145,6 @@ travis : pwall epw
 	if test -d test-suite ; then \
 	( cd test-suite ; make run-travis || exit 1 ) ; fi
 
-
 gui :
 	@echo 'Check "GUI/README" how to access the Graphical User Interface'
 #@echo 'Check "PWgui-X.Y/README" how to access the Graphical User Interface'
@@ -168,13 +167,16 @@ libla : touch-dummy liblapack
 libfft : touch-dummy
 	( cd FFTXlib ; $(MAKE) TLDEPS= all || exit 1 )
 
-mods : libiotk libla libfft
+libutil : touch-dummy 
+	( cd UtilXlib ; $(MAKE) TLDEPS= all || exit 1 )
+
+mods : libiotk libla libfft libutil
 	( cd Modules ; $(MAKE) TLDEPS= all || exit 1 )
 
 libs : mods
 	( cd clib ; $(MAKE) TLDEPS= all || exit 1 )
 
-lrmods : libs libla libfft 
+lrmods : libs libla libfft  libutil
 	( cd LR_Modules ; $(MAKE) TLDEPS= all || exit 1 )
 
 bindir :
@@ -195,7 +197,6 @@ libiotk: touch-dummy
 
 # In case of trouble with iotk and compilers, add
 # FFLAGS="$(FFLAGS_NOOPT)" after $(MFLAGS)
-
 
 #########################################################
 # plugins
@@ -278,7 +279,8 @@ test-suite: pw cp touch-dummy
 clean : 
 	touch make.inc 
 	for dir in \
-		CPV LAXlib FFTXlib Modules PP PW EPW \
+		CPV LAXlib FFTXlib UtilXlib Modules PP PW EPW \
+                KS_Solvers/CG KS_Solvers/Davidson KS_Solvers/Davidson_RCI \
 		NEB ACFDT COUPLE GWW XSpectra PWCOND \
 		atomic clib LR_Modules pwtools upftools \
 		dev-tools extlibs Environ TDDFPT PHonon GWW \

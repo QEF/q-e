@@ -11,7 +11,6 @@ MODULE orthogonalize_base
 
       USE kinds
       USE dspev_module, ONLY: diagonalize_serial, diagonalize_parallel
-      USE mytime, ONLY : f_wall
       
       IMPLICIT NONE
 
@@ -27,6 +26,7 @@ MODULE orthogonalize_base
       PARAMETER ( mcone = (-1.0d0, 0.0d0) )
       REAL(DP) :: small = 1.0d-14
       LOGICAL :: use_parallel_diag 
+      REAL(DP), EXTERNAL :: cclock
 
       PUBLIC :: sigset
       PUBLIC :: tauset
@@ -90,11 +90,11 @@ CONTAINS
       CALL set_a()
       !
       CALL mp_barrier( intra_bgrp_comm )
-      t1 = f_wall()
+      t1 = cclock()
       !
       CALL diagonalize_parallel( n, a, d, s, desc )
       !
-      tpar = f_wall() - t1
+      tpar = cclock() - t1
       CALL mp_max( tpar, intra_bgrp_comm )
 
       DEALLOCATE( s, a )
@@ -111,11 +111,11 @@ CONTAINS
 
          CALL set_a()
 
-         t1 = f_wall()
+         t1 = cclock()
 
          CALL diagonalize_serial( n, a, d )
 
-         tser = f_wall() - t1
+         tser = cclock() - t1
 
          DEALLOCATE( a )
 
@@ -226,11 +226,11 @@ CONTAINS
       CALL sqr_mm_cannon( 'N', 'N', n, 1.0d0, a, nr, b, nr, 0.0d0, c, nr, desc) 
 
       CALL mp_barrier( intra_bgrp_comm )
-      t1 = f_wall()
+      t1 = cclock()
 
       CALL sqr_mm_cannon( 'N', 'N', n, 1.0d0, a, nr, b, nr, 0.0d0, c, nr, desc)
    
-      tcan = f_wall() - t1
+      tcan = cclock() - t1
       CALL mp_max( tcan, intra_bgrp_comm )
 
       DEALLOCATE( a, c, b )
