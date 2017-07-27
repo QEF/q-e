@@ -16,8 +16,14 @@
   !
   USE phcom,     ONLY : iuwfc, iudwf, fildrho, iudrho
   USE mp_global, ONLY : me_pool,root_pool
+  USE io_epw,    ONLY : iunepmatwe
+  USE epwcom,    ONLY : etf_mem
   !
   implicit none
+  !
+  IF (etf_mem == 1 .OR. etf_mem == 2) THEN
+    CLOSE (unit = iunepmatwe, status = 'delete')
+  ENDIF
   !
   CLOSE (unit = iuwfc, status = 'keep')
   CLOSE (unit = iudwf, status = 'keep')

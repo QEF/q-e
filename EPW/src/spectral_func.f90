@@ -368,7 +368,7 @@
         !
         ww = wmin_specfun + dble (iw-1) * dw
         fermi(iw) = wgauss(-ww/eptemp, -99) 
-        WRITE(stdout,'(2x,i7,2x,f12.4,2x,e12.5)') ik, ryd2ev * ww, a_all(iw,ik) / ryd2mev
+        !WRITE(stdout,'(2x,i7,2x,f12.4,2x,e12.5)') ik, ryd2ev * ww, a_all(iw,ik) / ryd2mev
         !
         specfun_sum = specfun_sum + a_all(iw,ik)* fermi(iw) * dw !/ ryd2mev
         !

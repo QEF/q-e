@@ -21,10 +21,6 @@
   !  the selfenergy for one phonon at a time.  Much smaller footprint on
   !  the disk
   !
-  !  RM 24/02/2014
-  !  redefined the size of coskkq, vkk, vkq within the fermi windwow
-  !  cleaned up the subroutine
-  !
   !-----------------------------------------------------------------------
   USE kinds,     ONLY : DP
   USE io_global, ONLY : stdout
@@ -108,14 +104,6 @@
     !! Electron-phonon matrix elements squared in Ry^2
   REAL(kind=DP) :: g2_tmp
     !! Electron-phonon matrix elements squared in Ry^2
-  REAL(kind=DP) :: coskkq(ibndmax-ibndmin+1, ibndmax-ibndmin+1)
-  !! $$(v_k \cdot v_{k+q}) / |v_k|^2$$
-  REAL(kind=DP) :: DDOT
-  !! Dot product function
-  REAL(kind=DP) :: vkk(3,ibndmax-ibndmin+1)
-  !! Electronic velocity $v_{nk}$
-  REAL(kind=DP) :: vkq(3,ibndmax-ibndmin+1)
-  !! Electronic velocity $v_{nk+q}$
   REAL(kind=DP) :: gamma0(nmodes)
   !! Phonon self-energy
   REAL(kind=DP) :: ww
@@ -217,27 +205,6 @@
        ikk = 2 * ik - 1
        ikq = ikk + 1
        ! 
-       coskkq = 0.d0
-       DO ibnd = 1, ibndmax-ibndmin+1
-         DO jbnd = 1, ibndmax-ibndmin+1
-           ! coskkq = (vk dot vkq) / |vk|^2  appears in Grimvall 8.20
-           ! this is different from :   coskkq = (vk dot vkq) / |vk||vkq|
-           ! In principle the only coskkq contributing to lambda_tr are both near the
-           ! Fermi surface and the magnitudes will not differ greatly between vk and vkq
-           ! we may implement the approximation to the angle between k and k+q vectors also 
-           ! listed in Grimvall
-           !
-           ! v_(k,i) = 1/m <ki|p|ki> = 2 * dmef (:, i,i,k)
-           ! 1/m  = 2 in Rydberg atomic units
-           !
-           vkk(:, ibnd ) = 2.0 * REAL (dmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk ) )
-           vkq(:, jbnd ) = 2.0 * REAL (dmef (:, ibndmin-1+jbnd, ibndmin-1+jbnd, ikq ) )
-           IF ( abs ( vkk(1,ibnd)**2 + vkk(2,ibnd)**2 + vkk(3,ibnd)**2) .gt. 1.d-4) &
-             coskkq(ibnd, jbnd ) = DDOT(3, vkk(:,ibnd ), 1, vkq(:,jbnd),1)  / &
-             DDOT(3, vkk(:,ibnd), 1, vkk(:,ibnd),1)
-         ENDDO
-       ENDDO
-       !
        ! Here we must have ef, not ef0, to be consistent with ephwann_shuffle
        IF ( ( minval ( abs(etf (:, ikk) - ef) ) .lt. fsthick ) .AND. &
            ( minval ( abs(etf (:, ikq) - ef) ) .lt. fsthick ) ) THEN
@@ -312,7 +279,8 @@
                  !weight = wkf (ikk) * (wgkk - wgkq) * &
                  !   aimag ( cone / ( ekq - ekk - ww + ci * degaussw0 ) ) 
                  !  
-                 ! More stable 
+                 ! More stable:
+                 ! Analytical im. part 
                  weight = pi * wkf (ikk) * (wgkk - wgkq) * &
                     w0gauss ( (ekq - ekk - ww) / degaussw0, 0) / degaussw0     
                  !

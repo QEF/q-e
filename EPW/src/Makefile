@@ -7,9 +7,11 @@ include make.libs
 # use recursive definitions in Makefile to modify the PATH for modules
 #
 
-IFLAGS   = -I../../include  
-MODFLAGS = -I../../iotk/src -I../../Modules -I../../LAXlib -I../../iotk/src \
-	   -I../../FFTXlib -I../../PW/src -I../../LR_Modules -I../../PHonon/PH -I../../PP/src/ -I. -I../../wannier90-2.1.0/src/obj/
+IFLAGS   = -I../../include  -I../../UtilXlib/ 
+MODFLAGS = -I../../iotk/src -I../../UtilXlib/ -I../../Modules -I../../LAXlib -I../../iotk/src \
+	   -I../../FFTXlib  -I../../PW/src -I../../LR_Modules -I../../PHonon/PH \
+	   -I../../PP/src/ -I. -I../../wannier90-2.1.0/src/obj/
+
 
 #
 # The above is in alphabetical order except when order matter during compilation
@@ -123,12 +125,11 @@ system_mem_usage.o
 
 PHOBJS = ../../PHonon/PH/libph.a
 PWOBJS = ../../PW/src/libpw.a
-###W90LIB = ../../wannier90-2.0.1/libwannier.a 
 W90LIB = ../../wannier90-2.1.0/libwannier.a 
 LRMODS = ../../LR_Modules/liblrmod.a
 PWOBJS = ../../PW/src/libpw.a
 QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a
-LIBOBJS = ../../clib/clib.a ../../iotk/src/libiotk.a
+LIBOBJS = ../../clib/clib.a ../../iotk/src/libiotk.a ../../UtilXlib/libutil.a
 
 TLDEPS= bindir mods libs pw-lib pw ph
 

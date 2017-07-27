@@ -671,6 +671,15 @@
       ! 
     ENDIF
     !      
+    ! Check Memory usage
+    CALL system_mem_usage(valueRSS)
+    ! 
+    WRITE(stdout, '(a)' )             '     ==================================================================='
+    WRITE(stdout, '(a,i10,a)' ) '     Memory usage:  VmHWM =',valueRSS(2)/1024,'Mb'
+    WRITE(stdout, '(a,i10,a)' ) '                   VmPeak =',valueRSS(1)/1024,'Mb'
+    WRITE(stdout, '(a)' )             '     ==================================================================='
+    WRITE(stdout, '(a)' )             '     '
+    !
     DO iq = iq_restart, nqf
        !   
        CALL start_clock ( 'ep-interp' )
@@ -972,7 +981,8 @@
   IF ( ALLOCATED(gamma_all) )     DEALLOCATE( gamma_all )
   IF ( ALLOCATED(sigmai_all) )    DEALLOCATE( sigmai_all )
   IF ( ALLOCATED(sigmai_mode) )   DEALLOCATE( sigmai_mode )
-  IF ( ALLOCATED(w2) )   DEALLOCATE( w2 )
+  IF ( ALLOCATED(w2) )            DEALLOCATE( w2 )
+  IF ( ALLOCATED(epf17) )            DEALLOCATE( epf17 )
   DEALLOCATE(cfac)
   DEALLOCATE(cfacq)
   DEALLOCATE(rdotk)

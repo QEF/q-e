@@ -258,6 +258,8 @@
   !                   only be used with lpolar = .true. )
   ! prtgkk          : Print the vertex |g| [meV]. This generates huge outputs.   
   ! etf_mem         : if 0 no optimization, if 1 less memory is used for the fine grid interpolation
+  !                   When etf_mem == 2, an additional loop is done on mode for the fine grid interpolation
+  !                   part. This reduces the memory further by a factor "nmodes".    
   !  
   CHARACTER (LEN=80)  :: input_file
   INTEGER             :: nargs, iiarg, ierr
