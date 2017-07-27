@@ -702,6 +702,7 @@ wannier_ham.o : ../../Modules/wannier_new.o
 wannier_ham.o : ../../PW/src/buffers.o
 wannier_ham.o : ../../PW/src/pwcom.o
 wannier_ham.o : ../../PW/src/symm_base.o
+wannier_ham.o : ../../UtilXlib/clocks_handler.o
 wannier_ham.o : ../../UtilXlib/mp.o
 wannier_plot.o : ../../FFTXlib/fft_interfaces.o
 wannier_plot.o : ../../Modules/cell_base.o

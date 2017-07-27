@@ -10,7 +10,8 @@ error_handler.o \
 find_free_unit.o \
 mp.o \
 mp_base.o \
-parallel_include.o
+parallel_include.o \
+util_param.o
 
 all : libutil.a
 

@@ -140,6 +140,7 @@ cp_restart.o : ../../Modules/tsvdw.o
 cp_restart.o : ../../Modules/uspp.o
 cp_restart.o : ../../Modules/version.o
 cp_restart.o : ../../Modules/xml_io_base.o
+cp_restart.o : ../../UtilXlib/clocks_handler.o
 cp_restart.o : ../../UtilXlib/mp.o
 cp_restart.o : ../../iotk/src/iotk_module.o
 cp_restart.o : cp_interfaces.o
@@ -844,6 +845,7 @@ ortho_base.o : ../../Modules/mp_global.o
 ortho_base.o : ../../Modules/mp_images.o
 ortho_base.o : ../../Modules/recvec.o
 ortho_base.o : ../../Modules/uspp.o
+ortho_base.o : ../../UtilXlib/clocks_handler.o
 ortho_base.o : ../../UtilXlib/mp.o
 phasefactor.o : ../../Modules/cell_base.o
 phasefactor.o : ../../Modules/constants.o
