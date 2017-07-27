@@ -44,13 +44,13 @@
                             conv_thr_raxis, tempsmax, tempsmin, temps, broyden_ndim, &
                             wscut, wsfc, nqstep, limag, lreal, muc, gap_edge, &
                             conv_thr_iaxis, nqsmear, iprint, wepexst, epwread, & 
-                            eliashberg, imag_read, kerread, kerwrite, lunif, specfun, &
+                            eliashberg, imag_read, kerread, kerwrite, lunif, &
                             fermi_energy, efermi_read, max_memlt, fila2f, &
                             ep_coupling, nw_specfun, wmax_specfun, &
                             wmin_specfun, laniso, lpolar, lifc, asr_typ, &
                             proj, write_wfn, iswitch, ntempxx, &
                             liso, lacon, lpade, etf_mem, epbwrite, &
-                            nsiter, conv_thr_racon, &
+                            nsiter, conv_thr_racon, specfun_el, specfun_ph, &
                             pwc, nswc, nswfc, nswi, filukq, filukk, &
                             nbndsub, nbndskip, system_2d, delta_approx, &
                             title, int_mob, scissor, iterative_bte, scattering, &
@@ -111,13 +111,13 @@
        nqf1, nqf2, nqf3, nkf1, nkf2, nkf3,                                     &
        mp_mesh_k, mp_mesh_q, filqf, filkf, ephwrite,                           & 
        band_plot, degaussq, delta_qsmear, nqsmear, nqstep,                     &
-       nswfc, nswc, nswi, pwc, wsfc, wscut,                                    &
+       nswfc, nswc, nswi, pwc, wsfc, wscut, system_2d,                         &
        broyden_beta, broyden_ndim, nstemp, tempsmin, tempsmax, temps,          &
        conv_thr_raxis, conv_thr_iaxis, conv_thr_racon,                         &
        gap_edge, nsiter, muc, lreal, limag, lpade, lacon, liso, laniso, lpolar,& 
        lifc, asr_typ, lunif, kerwrite, kerread, imag_read, eliashberg,         & 
        ep_coupling, fila2f, max_memlt, efermi_read, fermi_energy,              &
-       specfun, wmin_specfun, wmax_specfun, nw_specfun, system_2d,             & 
+       specfun_el, specfun_ph, wmin_specfun, wmax_specfun, nw_specfun,         & 
        delta_approx, scattering, int_mob, scissor, ncarrier, carrier,          &
        iterative_bte, scattering_serta, scattering_0rta, longrange, shortrange,&
        restart, restart_freq, prtgkk
@@ -217,19 +217,18 @@
   ! lunif   : if .true. a uniform grid is defined between wsfc and wscut for real-axis calculations
   ! kerwrite: if .true. write Kp and Km to files .ker for real-axis calculations
   ! kerread : if .true. read Kp and Km from files .ker for real-axis calculations
-  ! imag_read : if .true. read from files Delta and Znorm on the imaginary-axis
-  ! eliashberg : if .true. solve the Eliashberg equations
-  ! ep_coupling : if .true. run e-p coupling calculation
-  ! fila2f  : input file with eliashberg spectral function 
-  ! max_memlt : maximum memory that can be allocated per pool 
-  ! efermi_read : if. true. read from input file
+  ! imag_read    : if .true. read from files Delta and Znorm on the imaginary-axis
+  ! eliashberg   : if .true. solve the Eliashberg equations
+  ! ep_coupling  : if .true. run e-p coupling calculation
+  ! fila2f       : input file with eliashberg spectral function 
+  ! max_memlt    : maximum memory that can be allocated per pool 
+  ! efermi_read  : if. true. read from input file
   ! fermi_energy : fermi eneergy read from input file (units of eV)
-  ! specfun  : if .TRUE. calculate electron spectral function due to e-p interaction
   ! wmin_specfun : min frequency in electron spectral function due to e-p interaction (units of eV)
   ! wmax_specfun : max frequency in electron spectral function due to e-p interaction (units of eV)
   ! nw_specfun   : nr. of bins for frequency in electron spectral function due to e-p interaction 
-  ! system_2d : if .true. two-dimensional system (vaccum is in z-direction)  
-  ! delta_approx: if .true. the double delta approximation is used to compute the phonon self-energy 
+  ! system_2d    : if .true. two-dimensional system (vaccum is in z-direction)  
+  ! delta_approx : if .true. the double delta approximation is used to compute the phonon self-energy 
   !
   ! added by CV & SP
   ! lpolar : if .true. enable the correct Wannier interpolation in the case of polar material.  
@@ -238,6 +237,8 @@
   ! 
   ! Added by SP
   !
+  ! specfun_el      : if .TRUE. calculate electron spectral function due to e-p interaction
+  ! specfun_ph      : if .TRUE. calculate phonon spectral function due to e-p interaction
   ! restart         : if .true. a run can be restarted from the interpolation level
   ! restart_freq    : Create a restart point every restart_freq q/k-points
   ! scattering      : if .true. scattering rates are calculated
@@ -302,7 +303,8 @@
   elph         = .false.
   elecselfen   = .false.
   phonselfen   = .false.
-  specfun      = .false.
+  specfun_el   = .false.
+  specfun_ph   = .false.
   epbread      = .false.
   epbwrite     = .false.
   epwread      = .false.
@@ -496,7 +498,7 @@
        &' nqstep must be at least 2', 1)
   IF ((nbndsub.gt.200)) CALL errore ('epw_readin', & 
        ' too many wannier functions increase size of projx', 1)
-  IF (( phonselfen .or. elecselfen .or. specfun ) .and. ( mp_mesh_k .or. mp_mesh_q )) & 
+  IF (( phonselfen .or. elecselfen .or. specfun_el .or. specfun_ph ) .and. ( mp_mesh_k .or. mp_mesh_q )) & 
      CALL errore('epw_readin', 'can only work with full uniform mesh',1)
   IF (ephwrite .and. .not.ep_coupling .and. .not.elph ) CALL errore('epw_readin', &
       &'ephwrite requires ep_coupling=.true., elph=.true.',1)

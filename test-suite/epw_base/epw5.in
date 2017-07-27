@@ -31,7 +31,7 @@
   phonselfen  = .true.
   a2f         = .false.
 
-  specfun      = .true.
+  specfun_ph   = .true.
   wmin_specfun = 0
   wmax_specfun = 20
   nw_specfun   = 20

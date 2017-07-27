@@ -35,7 +35,7 @@
                             ngaussw, nest_fn,  nbndsub, nbndskip, &
                             muc, mp_mesh_q, mp_mesh_k, max_memlt, lunif, &
                             lreal, lpolar, lpade, liso, limag, laniso, &
-                            specfun, lifc, asr_typ, &
+                            specfun_el, specfun_ph, lifc, asr_typ, &
                             rand_q, rand_nq, rand_nk, rand_k, pwc, phonselfen, &
                             parallel_q, parallel_k, &
                             nw_specfun, nw, nswi, nswfc, nswc, nstemp, nsmear, &
@@ -81,7 +81,8 @@
   CALL mp_bcast (wmax, meta_ionode_id, world_comm)      !
   CALL mp_bcast (epwread, meta_ionode_id, world_comm)   !
   CALL mp_bcast (epwwrite, meta_ionode_id, world_comm)  !
-  CALL mp_bcast (specfun, meta_ionode_id, world_comm)   !
+  CALL mp_bcast (specfun_el, meta_ionode_id, world_comm)   !
+  CALL mp_bcast (specfun_ph, meta_ionode_id, world_comm)   !
   CALL mp_bcast (wannierize, meta_ionode_id, world_comm)! JN
   CALL mp_bcast (write_wfn, meta_ionode_id, world_comm) ! 
   CALL mp_bcast (kmaps, meta_ionode_id, world_comm) ! 

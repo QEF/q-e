@@ -160,8 +160,10 @@
   LOGICAL :: restart
   !! if .TRUE. restart a calculation stopped during the interpolation phase from reading 
   !! the XXX.restart file. 
-  LOGICAL :: specfun
+  LOGICAL :: specfun_el
   !! if .TRUE. calculate spectral electron function due to e-p interaction
+  LOGICAL :: specfun_ph
+  !! if .TRUE. calculate spectral phonon function due to e-p interaction
   LOGICAL :: wannierize
   !! if .TRUE. run the wannier90 code
   LOGICAL :: parallel_k

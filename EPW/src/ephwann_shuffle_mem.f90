@@ -30,9 +30,9 @@
   USE epwcom,        ONLY : nbndsub, lrepmatf, fsthick, epwread, longrange,     &
                             epwwrite, ngaussw, degaussw, lpolar, lifc,          &
                             nbndskip, parallel_k, parallel_q, etf_mem,          &
-                            elecselfen, phonselfen, nest_fn, a2f,               &
+                            elecselfen, phonselfen, nest_fn, a2f, specfun_ph,   &
                             vme, eig_read, ephwrite, nkf1, nkf2, nkf3,          & 
-                            efermi_read, fermi_energy, specfun, band_plot,      &
+                            efermi_read, fermi_energy, specfun_el, band_plot,   &
                             nqf1, nqf2, nqf3, mp_mesh_k, restart, prtgkk
   USE noncollin_module, ONLY : noncolin
   USE constants_epw, ONLY : ryd2ev, ryd2mev, one, two, czero, twopi, ci, zero
@@ -913,7 +913,8 @@
        IF (phonselfen ) CALL selfen_phon_q( iq )
        IF (elecselfen ) CALL selfen_elec_q( iq )
        IF (nest_fn    ) CALL nesting_fn_q( iq )
-       IF (specfun    ) CALL spectral_func_q( iq )
+       IF (specfun_el ) CALL spectral_func_q( iq )
+       IF (specfun_ph ) CALL spectral_func_ph( iq )       
        IF (ephwrite) THEN
           IF ( iq .eq. 1 ) THEN 
              CALL kmesh_fine
