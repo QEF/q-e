@@ -12,7 +12,6 @@
 #include <stdio.h>
 #include <stdlib.h> 
 #include <string.h>
-#include "c_defs.h"
 #include "md5.h"
 
 #define MAX_BUF 1024 

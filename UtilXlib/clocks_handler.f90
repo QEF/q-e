@@ -38,7 +38,7 @@ MODULE mytime
   !
   SAVE
   !
-  INTEGER,  PARAMETER :: maxclock = 101
+  INTEGER,  PARAMETER :: maxclock = 128
   REAL(DP), PARAMETER :: notrunning = - 1.0_DP
   !
   REAL(DP)          :: cputime(maxclock), t0cpu(maxclock)
@@ -52,6 +52,16 @@ MODULE mytime
   INTEGER :: trace_depth = 0
   INTEGER :: mpime
 #endif
+  INTERFACE
+     FUNCTION f_wall ( ) BIND(C,name="cclock") RESULT(t)
+       USE ISO_C_BINDING
+       REAL(kind=c_double) :: t
+     END FUNCTION f_wall
+     FUNCTION f_tcpu ( ) BIND(C,name="scnds") RESULT(t)
+       USE ISO_C_BINDING
+       REAL(kind=c_double) :: t
+     END FUNCTION f_tcpu
+  END INTERFACE
   !
 END MODULE mytime
 !
@@ -83,8 +93,8 @@ SUBROUTINE init_clocks( go )
      called(n)      = 0
      cputime(n)     = 0.0_DP
      t0cpu(n)       = notrunning
-     walltime(n)        = 0.0_DP
-     t0wall(n)          = notrunning
+     walltime(n)    = 0.0_DP
+     t0wall(n)      = notrunning
      clock_label(n) = ' '
      !
   ENDDO
@@ -115,15 +125,14 @@ SUBROUTINE start_clock( label )
   USE mytime,    ONLY : trace_depth, mpime
 #endif
   USE mytime,    ONLY : nclock, clock_label, notrunning, no, maxclock, &
-                        t0cpu, t0wall
+                        t0cpu, t0wall, f_wall, f_tcpu
   !
   IMPLICIT NONE
   !
   CHARACTER(len=*) :: label
   !
-  CHARACTER(len=12) :: label_
+  CHARACTER(len=12):: label_
   INTEGER          :: n
-  REAL(DP), EXTERNAL :: scnds, cclock
   !
 #if defined (__TRACE)
   WRITE( stdout, '("mpime = ",I2,", TRACE (depth=",I2,") Start: ",A12)') mpime, trace_depth, label
@@ -147,8 +156,8 @@ SUBROUTINE start_clock( label )
 !            WRITE( stdout, '("start_clock: clock # ",I2," for ",A12, &
 !                           & " already started")' ) n, label_
         ELSE
-           t0cpu(n) = scnds()
-                   t0wall(n) = cclock()
+           t0cpu(n) = f_tcpu()
+           t0wall(n)= f_wall()
         ENDIF
         !
         RETURN
@@ -165,10 +174,10 @@ SUBROUTINE start_clock( label )
      !
   ELSE
      !
-     nclock                                     = nclock + 1
-     clock_label(nclock)        = label_
-     t0cpu(nclock)                      = scnds()
-     t0wall(nclock)                     = cclock()
+     nclock              = nclock + 1
+     clock_label(nclock) = label_
+     t0cpu(nclock)       = f_tcpu()
+     t0wall(nclock)      = f_wall()
      !
   ENDIF
   !
@@ -185,15 +194,14 @@ SUBROUTINE stop_clock( label )
   USE mytime,    ONLY : trace_depth, mpime
 #endif
   USE mytime,    ONLY : no, nclock, clock_label, cputime, walltime, &
-                        notrunning, called, t0cpu, t0wall
+                        notrunning, called, t0cpu, t0wall, f_wall, f_tcpu
   !
   IMPLICIT NONE
   !
   CHARACTER(len=*) :: label
   !
-  CHARACTER(len=12) :: label_
+  CHARACTER(len=12):: label_
   INTEGER          :: n
-  REAL(DP), EXTERNAL :: scnds, cclock
   !
 #if defined (__TRACE)
   trace_depth = trace_depth - 1
@@ -220,9 +228,9 @@ SUBROUTINE stop_clock( label )
            !
         ELSE
            !
-           cputime(n)   = cputime(n) + scnds() - t0cpu(n)
-           walltime(n)  = walltime(n) + cclock() - t0wall(n)
-           t0cpu(n)             = notrunning
+           cputime(n)   = cputime(n) + f_tcpu() - t0cpu(n)
+           walltime(n)  = walltime(n)+ f_wall() - t0wall(n)
+           t0cpu(n)     = notrunning
            t0wall(n)    = notrunning
            called(n)    = called(n) + 1
            !
@@ -247,7 +255,7 @@ SUBROUTINE print_clock( label )
   !----------------------------------------------------------------------------
   !
   USE util_param, ONLY : stdout
-  USE mytime,    ONLY : nclock, clock_label
+  USE mytime,     ONLY : nclock, clock_label
   !
   IMPLICIT NONE
   !
@@ -294,22 +302,15 @@ END SUBROUTINE print_clock
 SUBROUTINE print_this_clock( n )
   !----------------------------------------------------------------------------
   !
-  USE util_param,     ONLY : DP, stdout
-  USE mytime,    ONLY : clock_label, cputime, walltime, &
-                        notrunning, called, t0cpu, t0wall
-!
-! ... See comments below about parallel case
-!
-!  USE mp,        ONLY : mp_max
-!  USE mp_images, ONLY : intra_image_comm, my_image_id
+  USE util_param, ONLY : DP, stdout
+  USE mytime,     ONLY : clock_label, cputime, walltime, &
+                         notrunning, called, t0cpu, t0wall, f_wall, f_tcpu
   !
   IMPLICIT NONE
   !
   INTEGER  :: n
   REAL(DP) :: elapsed_cpu_time, elapsed_wall_time, nsec, msec
   INTEGER  :: nday, nhour, nmin, nmax, mday, mhour, mmin
-  !
-  REAL(DP), EXTERNAL :: scnds, cclock
   !
   !
   IF ( t0cpu(n) == notrunning ) THEN
@@ -323,8 +324,8 @@ SUBROUTINE print_this_clock( n )
      !
      ! ... clock not stopped, print the current value of the cpu time
      !
-     elapsed_cpu_time   = cputime(n) + scnds() - t0cpu(n)
-     elapsed_wall_time  = walltime(n) + cclock() - t0wall(n)
+     elapsed_cpu_time   = cputime(n) + f_tcpu() - t0cpu(n)
+     elapsed_wall_time  = walltime(n)+ f_wall() - t0wall(n)
      called(n)  = called(n) + 1
      !
   ENDIF
@@ -437,14 +438,9 @@ END SUBROUTINE print_this_clock
 FUNCTION get_clock( label )
   !----------------------------------------------------------------------------
   !
-  USE util_param,     ONLY : DP
-  USE mytime,    ONLY : no, nclock, clock_label, walltime, &
-                        notrunning, t0wall, t0cpu
-!
-! ... See comments in subroutine print_this_clock about parallel case
-!
-!  USE mp,        ONLY : mp_max
-!  USE mp_images, ONLY : intra_image_comm
+  USE util_param, ONLY : DP
+  USE mytime,     ONLY : no, nclock, clock_label, walltime, &
+                         notrunning, t0wall, t0cpu, f_wall
   !
   IMPLICIT NONE
   !
@@ -452,14 +448,12 @@ FUNCTION get_clock( label )
   CHARACTER(len=*) :: label
   INTEGER          :: n
   !
-  REAL(DP), EXTERNAL :: cclock
-  !
   !
   IF ( no ) THEN
      !
      IF ( label == clock_label(1) ) THEN
         !
-        get_clock = cclock()
+        get_clock = f_wall()
         !
      ELSE
         !
@@ -481,7 +475,7 @@ FUNCTION get_clock( label )
            !
         ELSE
            !
-           get_clock = walltime(n) + cclock() - t0wall(n)
+           get_clock = walltime(n) + f_wall() - t0wall(n)
            !
         ENDIF
         !

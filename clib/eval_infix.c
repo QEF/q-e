@@ -50,8 +50,6 @@ END PROGRAM
 #include <string.h>
 #include <math.h>
 
-#include "c_defs.h"
-
 /* #pragma warning( disable : 4996 ) */
 
 #define MAXOP        100  /* dimensione massima di un operando o operatore */

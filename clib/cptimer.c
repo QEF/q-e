@@ -16,9 +16,7 @@
 #endif
 #include <unistd.h>
 
-#include "c_defs.h"
-
-double F77_FUNC(cclock,CCLOCK)()
+double cclock()
 
 /* Return the second elapsed since Epoch (00:00:00 UTC, January 1, 1970)
 */
@@ -33,7 +31,7 @@ double F77_FUNC(cclock,CCLOCK)()
 
 }
 
-double F77_FUNC(scnds,SCNDS) ( )
+double scnds ( )
 
 /* Return the cpu time associated to the current process 
 */

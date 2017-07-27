@@ -6,7 +6,6 @@
   or http://www.gnu.org/copyleft/gpl.txt .
 */
 
-#include "c_defs.h"
 #include <stdio.h>
 #include <stdlib.h>
 
