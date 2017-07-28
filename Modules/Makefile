@@ -47,7 +47,6 @@ libxc.o \
 libxc_funcs.o \
 mm_dispersion.o \
 mp_bands.o \
-mp_diag.o \
 mp_exx.o \
 mp_global.o \
 mp_images.o \

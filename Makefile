@@ -161,7 +161,7 @@ all   : pwall cp ld1 upf tddfpt xspectra gwl
 # compile modules, libraries, directory for binaries, etc
 ###########################################################
 
-libla : touch-dummy liblapack
+libla : touch-dummy liblapack libutil
 	( cd LAXlib ; $(MAKE) TLDEPS= all || exit 1 )
 
 libfft : touch-dummy

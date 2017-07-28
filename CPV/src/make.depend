@@ -111,6 +111,7 @@ cp_interfaces.o : ../../Modules/fft_base.o
 cp_interfaces.o : ../../Modules/ions_base.o
 cp_interfaces.o : ../../Modules/kind.o
 cp_interfaces.o : ../../Modules/recvec.o
+cp_restart.o : ../../LAXlib/mp_diag.o
 cp_restart.o : ../../Modules/cell_base.o
 cp_restart.o : ../../Modules/constants.o
 cp_restart.o : ../../Modules/control_flags.o
@@ -126,7 +127,6 @@ cp_restart.o : ../../Modules/kernel_table.o
 cp_restart.o : ../../Modules/kind.o
 cp_restart.o : ../../Modules/mm_dispersion.o
 cp_restart.o : ../../Modules/mp_bands.o
-cp_restart.o : ../../Modules/mp_diag.o
 cp_restart.o : ../../Modules/mp_global.o
 cp_restart.o : ../../Modules/mp_images.o
 cp_restart.o : ../../Modules/mp_pools.o
@@ -149,6 +149,7 @@ cp_restart.o : ldaU_cp.o
 cp_restart.o : mainvar.o
 cp_restart.o : modules.o
 cp_restart.o : wannier_base.o
+cp_restart_new.o : ../../LAXlib/mp_diag.o
 cp_restart_new.o : ../../Modules/cell_base.o
 cp_restart_new.o : ../../Modules/constants.o
 cp_restart_new.o : ../../Modules/control_flags.o
@@ -167,7 +168,6 @@ cp_restart_new.o : ../../Modules/kernel_table.o
 cp_restart_new.o : ../../Modules/kind.o
 cp_restart_new.o : ../../Modules/mm_dispersion.o
 cp_restart_new.o : ../../Modules/mp_bands.o
-cp_restart_new.o : ../../Modules/mp_diag.o
 cp_restart_new.o : ../../Modules/mp_global.o
 cp_restart_new.o : ../../Modules/mp_images.o
 cp_restart_new.o : ../../Modules/mp_pools.o
@@ -831,6 +831,7 @@ ortho.o : cp_interfaces.o
 ortho.o : ortho_base.o
 ortho_base.o : ../../LAXlib/dspev_drv.o
 ortho_base.o : ../../LAXlib/la_types.o
+ortho_base.o : ../../LAXlib/mp_diag.o
 ortho_base.o : ../../LAXlib/ptoolkit.o
 ortho_base.o : ../../Modules/constants.o
 ortho_base.o : ../../Modules/control_flags.o
@@ -840,7 +841,6 @@ ortho_base.o : ../../Modules/io_global.o
 ortho_base.o : ../../Modules/ions_base.o
 ortho_base.o : ../../Modules/kind.o
 ortho_base.o : ../../Modules/mp_bands.o
-ortho_base.o : ../../Modules/mp_diag.o
 ortho_base.o : ../../Modules/mp_global.o
 ortho_base.o : ../../Modules/mp_images.o
 ortho_base.o : ../../Modules/recvec.o
