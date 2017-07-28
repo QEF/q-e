@@ -10,12 +10,6 @@ or http://www.gnu.org/copyleft/gpl.txt .
    Variables that configure defines should be #undef-ined in
    include/c_defs.h.in !!! */
 
-/* fortran-to-C naming convention, for functions with and without
-   underscores in the name (some compilers treat them differently) */ 
-
-#undef F77_FUNC
-#undef F77_FUNC_
-
 /* do we have the mallinfo structure (see clib/memstat.c) ? */
 
 #undef HAVE_MALLINFO

@@ -247,7 +247,17 @@ END SUBROUTINE qmmm_minimum_image
     IMPLICIT NONE
     INTEGER :: ierr,i
     INTEGER :: irecv_buf(8)
-
+    INTERFACE
+       SUBROUTINE ec_fill_radii ( aradii, nat_mm, mass, types, ntypes, flag ) &
+            BIND(C,name="ec_fill_radii")
+         USE ISO_C_BINDING
+         REAL(kind=c_double), INTENT(OUT) :: aradii(*)
+         REAL(kind=c_double), INTENT(IN) :: mass(*)
+         INTEGER(kind=c_int), INTENT(IN) :: types(*)
+         INTEGER(kind=c_int), INTENT(IN) :: nat_mm, ntypes, flag
+       END SUBROUTINE ec_fill_radii
+    END INTERFACE
+    
     IF (qmmm_mode < 0) RETURN
 
 #if defined(__MPI)

@@ -71,7 +71,7 @@ SUBROUTINE errore( calling_routine, message, ierr )
   !
 #if defined(__PTRACE)
 #if defined(__INTEL_COMPILER)
-  call tracebackqq(user_exit_code=-1)
+    call tracebackqq(user_exit_code=-1)
 #elif __GFORTRAN__
 #if (__GNUC__>4) || ((__GNUC__==4) && (__GNUC_MINOR__>=8))
     call backtrace

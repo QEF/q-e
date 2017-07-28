@@ -1,4 +1,3 @@
-#include "c_defs.h"
 /* 
   Print the stack trace
 */
@@ -8,7 +7,7 @@
 #endif
 #include <stdio.h>
 
-void F77_FUNC(ptrace,PTRACE)(int *kilobytes)
+void ptrace_( )
 {
 #ifdef __PTRACE
   void *array[12];

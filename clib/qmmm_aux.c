@@ -15,9 +15,6 @@
 #include<stdio.h>
 #include<stdlib.h>
 
-#include "c_defs.h"
-
-
 /* ---------------------------------------------------------------------- */
 /* Manage the atomic number */
 
@@ -222,7 +219,7 @@ static const double ec_r_covalent[EC_ELEMENTS+1] = {
   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1
 };
 
-int  F77_FUNC(ec_fill_radii,EC_FILL_RADII)
+int ec_fill_radii
 ( double *aradii, int *ndata, double *mass, int *type, int *ntypes, int *screen )
 {
   int i, el;
