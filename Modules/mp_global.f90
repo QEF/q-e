@@ -98,23 +98,26 @@ CONTAINS
     !
     IF( negrp.gt.1 ) THEN
        ! if using exx groups from mp_exx, revert to the old diag method
-       num_groups = npool_*nimage_
-       group_id = my_pool_id + my_image_id * npool_
+!       num_groups = npool_*nimage_
+!       group_id = my_pool_id + my_image_id * npool_
        my_comm = intra_bgrp_comm
     ELSE IF( do_diag_in_band ) THEN
        ! used to be one diag group per bgrp
        ! with strict hierarchy: POOL > BAND > DIAG
-       num_groups = npool_* nimage_ * nband_
-       group_id   = my_bgrp_id + (my_pool_id + my_image_id * npool_ ) * nband_
+!       num_groups = npool_* nimage_ * nband_
+!       group_id   = my_bgrp_id + (my_pool_id + my_image_id * npool_ ) * nband_
        my_comm    = intra_bgrp_comm
     ELSE
        ! one diag group per pool ( individual k-point level )
        ! with band group and diag group both being children of POOL comm
-       num_groups = npool_* nimage_ 
-       group_id   = my_pool_id + my_image_id * npool_ 
+!       num_groups = npool_* nimage_ 
+!       group_id   = my_pool_id + my_image_id * npool_ 
        my_comm    = intra_pool_comm
     END IF
-    CALL mp_start_diag  ( ndiag_, my_comm, num_groups , group_id )
+
+    do_distr_diag_inside_bgrp = (negrp.gt.1) .or. do_diag_in_band
+
+    CALL mp_start_diag  ( ndiag_, my_comm )
     !
     RETURN
     !

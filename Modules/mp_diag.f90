@@ -11,11 +11,6 @@ MODULE mp_diag
   !
   USE mp, ONLY : mp_size, mp_rank, mp_sum, mp_comm_free, mp_comm_split
   !
-  ! The following variables are needed in order to set up the communicator
-  ! for scalapack
-  !
-  USE mp_world, ONLY : world_comm
-  !
   USE parallel_include
   !
   IMPLICIT NONE 
@@ -44,26 +39,39 @@ MODULE mp_diag
   !
   INTEGER :: world_cntx = -1  ! BLACS context of all processor 
   INTEGER :: ortho_cntx = -1  ! BLACS context for ortho_comm
+  INTEGER :: world_comm = -1  ! internal copy of the world_comm  (-1 is unset, should be set to MPI_COMM_WORLD)
+  INTEGER :: mpime      =  0  ! the global MPI task index (used in clocks) can be set with a mp_rank call
   !
+  LOGICAL :: do_distr_diag_inside_bgrp = .true. ! whether the distributed diagoalization should performed
+                                                ! at the band group level (bgrp) or at its parent level
 CONTAINS
   !
   !----------------------------------------------------------------------------
-  SUBROUTINE mp_start_diag( ndiag_, parent_comm, nparent_comm, my_parent_id )
+  SUBROUTINE mp_start_diag( ndiag_, parent_comm )
     !---------------------------------------------------------------------------
     !
     ! ... Ortho/diag/linear algebra group initialization
     !
     IMPLICIT NONE
     !
-    INTEGER, INTENT(IN) :: ndiag_, parent_comm
-    INTEGER, INTENT(IN) :: nparent_comm ! number of parent communicators
-    INTEGER, INTENT(IN) :: my_parent_id ! id of the parent communicator 
+    INTEGER, INTENT(INOUT) :: ndiag_  ! (IN) input number of procs in the diag group, (OUT) actual number
+    INTEGER, INTENT(IN) :: parent_comm ! parallel communicator inside which the distributed linear algebra group
+                                       ! communicators are created
     !
     INTEGER :: nproc_ortho_try
-    INTEGER :: parent_nproc  ! nproc of the parent group
+    INTEGER :: parent_nproc ! nproc of the parent group
+    INTEGER :: world_nproc  ! nproc of the world group
+    INTEGER :: my_parent_id ! id of the parent communicator 
+    INTEGER :: nparent_comm ! mumber of parent communicators
     INTEGER :: ierr = 0
     !
-    parent_nproc = mp_size( parent_comm )
+    world_comm   = MPI_COMM_WORLD        ! set the internal copy of the world_comm to be possibly used in other related routines
+    world_nproc  = mp_size( world_comm ) ! the global number of processors in world_comm
+    mpime        = mp_rank( world_comm ) ! set the global MPI task index  (used in clocks)
+    parent_nproc = mp_size( parent_comm )! the number of processors in the current parent communicator
+    my_parent_id = mpime / parent_nproc  ! set the index of the current parent communicator
+    nparent_comm = world_nproc/parent_nproc ! number of paren communicators
+
     !
 #if defined __SCALAPACK
     np_blacs     = mp_size( world_comm )
@@ -71,7 +79,7 @@ CONTAINS
     !
     ! define a 1D grid containing all MPI tasks of the global communicator
     ! NOTE: world_cntx has the MPI communicator on entry and the BLACS context on exit
-    !       BLACS_GRID_INIT() will create a copy of the communicator, which can be
+    !       BLACS_GRIDINIT() will create a copy of the communicator, which can be
     !       later retrieved using CALL BLACS_GET(world_cntx, 10, comm_copy)
     !
     world_cntx = world_comm
@@ -97,6 +105,10 @@ CONTAINS
     ! then there are as many ortho groups as pools.
     !
     CALL init_ortho_group( nproc_ortho_try, parent_comm, nparent_comm, my_parent_id )
+    !
+    ! set the number of processors in the diag group to the actual number used
+    !
+    ndiag_ = nproc_ortho
     !  
     RETURN
     !
@@ -120,7 +132,6 @@ CONTAINS
     INTEGER :: nprow, npcol, myrow, mycol, i, j, k
     INTEGER, EXTERNAL :: BLACS_PNUM
 #endif
-
 
 #if defined __MPI
 
@@ -211,7 +222,7 @@ CONTAINS
 #if defined __SCALAPACK
     !
     !  This part is used to eliminate the image dependency from ortho groups
-    !  SCALAPACK is now independent of whatever level of parallelization
+    !  SCALAPACK is now independent from whatever level of parallelization
     !  is present on top of pool parallelization
     !
     ALLOCATE( ortho_cntx_pe( nparent_comm ) )
