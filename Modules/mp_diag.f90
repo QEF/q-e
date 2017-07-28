@@ -42,7 +42,7 @@ MODULE mp_diag
   INTEGER :: world_comm = -1  ! internal copy of the world_comm  (-1 is unset, should be set to MPI_COMM_WORLD)
   INTEGER :: mpime      =  0  ! the global MPI task index (used in clocks) can be set with a mp_rank call
   !
-  LOGICAL :: do_distr_diag_inside_bgrp = .true. ! whether the distributed diagoalization should performed
+  LOGICAL :: do_distr_diag_inside_bgrp = .true. ! whether the distributed diagoalization should be performed
                                                 ! at the band group level (bgrp) or at its parent level
 CONTAINS
   !
