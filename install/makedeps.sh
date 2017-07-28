@@ -96,6 +96,8 @@ for dir in $dirs; do
         # handle special cases: modules for C-fortran binding, hdf5, MPI
         sed '/@iso_c_binding@/d' make.depend > make.depend.tmp
         sed '/@hdf5@/d;/@mpi@/d' make.depend.tmp > make.depend
+        sed '/@fox_wxml@/d'      make.depend > make.depend.tmp 
+        sed '/@fox_dom@/d'       make.depend.tmp > make.depend
 
         if test "$DIR" = "FFTXlib"
         then

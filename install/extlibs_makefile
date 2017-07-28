@@ -75,7 +75,12 @@ libiotk:
 	ln -fs ../S3DE/iotk/src/iotk.x .; \
 	ln -fs ../S3DE/iotk/src/iotk_print_kinds.x .; \
 	cd ../; ln -fs S3DE/iotk iotk
-	
+
+libfox:
+	if test ! -d ../FoX; then \
+	(gzip -dc ../archive/fox.tgz | (cd ../; tar -xvf -)); \
+	cd ../fox/; ./configure --prefix=$(TOPDIR)/FoX ;\
+	cd ../fox; $(MAKE) install; rm -fr ../fox;fi
 # ELPA
 libelpa : libelpa_$(ELPA_LIBS_SWITCH)
 

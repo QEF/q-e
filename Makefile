@@ -65,15 +65,15 @@ default :
 # If "|| exit 1" is not present, the error code from make in subdirectories
 # is not returned and make goes on even if compilation has failed
 
-pw : bindir libfft libla libutil mods liblapack libs libiotk 
+pw : bindir libfft libla libutil mods liblapack libs libiotk libfox
 	if test -d PW ; then \
 	( cd PW ; $(MAKE) TLDEPS= all || exit 1) ; fi
 
-pw-lib : bindir libfft libla libutil mods liblapack libs libiotk
+pw-lib : bindir libfft libla libutil mods liblapack libs libiotk libfox
 	if test -d PW ; then \
 	( cd PW ; $(MAKE) TLDEPS= pw-lib || exit 1) ; fi
 
-cp : bindir libfft libla libutil mods liblapack libs libiotk
+cp : bindir libfft libla libutils mods liblapack libs libiotk libfox
 	if test -d CPV ; then \
 	( cd CPV ; $(MAKE) TLDEPS= all || exit 1) ; fi
 
@@ -170,7 +170,7 @@ libfft : touch-dummy
 libutil : touch-dummy 
 	( cd UtilXlib ; $(MAKE) TLDEPS= all || exit 1 )
 
-mods : libiotk libla libfft libutil
+mods : libiotk libfox libla libfft libutil
 	( cd Modules ; $(MAKE) TLDEPS= all || exit 1 )
 
 libs : mods
@@ -193,6 +193,8 @@ liblapack: touch-dummy
 	cd install ; $(MAKE) -f extlibs_makefile $@
 
 libiotk: touch-dummy
+	cd install ; $(MAKE) -f extlibs_makefile $@
+libfox: touch-dummy
 	cd install ; $(MAKE) -f extlibs_makefile $@
 
 # In case of trouble with iotk and compilers, add
