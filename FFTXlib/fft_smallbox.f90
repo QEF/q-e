@@ -65,6 +65,7 @@
 !     implemented for FFTW, only for sgn=1 (f(R) => f(G))
 !     (beware: here the "essl" convention for the sign of the fft is used!)
 !
+      USE fftw_interfaces
       implicit none
       integer nx,ny,nz,ldx,ldy,ldz,imin3,imax3,sgn
       complex(dp) :: f(:)
@@ -172,6 +173,7 @@
 
 !     driver routine for 3d complex fft's on box grid, init subroutine
 !
+      USE fftw_interfaces
       implicit none
       integer, INTENT(IN) :: nx,ny,nz
       !
@@ -208,6 +210,7 @@
 !
 !     This driver is meant for calls inside parallel OpenMP sections
 !
+      USE fftw_interfaces
       implicit none
       integer, INTENT(IN) :: nx,ny,nz,ldx,ldy,ldz,imin3,imax3,sgn
       complex(dp) :: f(:)

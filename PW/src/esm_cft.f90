@@ -14,6 +14,7 @@ MODULE esm_cft
   ! ... 1-Dimentinal FFT called from ESM routines
   !
   USE iso_c_binding
+  USE fftw_interfaces
   USE kinds, ONLY : DP
   !
   IMPLICIT NONE

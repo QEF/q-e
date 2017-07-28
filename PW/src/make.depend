@@ -463,6 +463,7 @@ esm.o : ../../UtilXlib/mp.o
 esm.o : esm_cft.o
 esm.o : pwcom.o
 esm.o : scf_mod.o
+esm_cft.o : ../../FFTXlib/fftw_interfaces.o
 esm_cft.o : ../../Modules/kind.o
 ewald.o : ../../Modules/constants.o
 ewald.o : ../../Modules/kind.o

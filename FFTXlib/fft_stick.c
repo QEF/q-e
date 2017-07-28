@@ -14,13 +14,11 @@
 #define __FFTW
 #endif
 
-#include "c_defs.h"
-
 #if defined(__FFTW)
 
 #include "fftw.c"
 
-int F77_FUNC_ (create_plan_1d, CREATE_PLAN_1D)(fftw_plan *p, int *n, int *idir)
+int create_plan_1d (fftw_plan *p, int *n, int *idir)
 {
    fftw_direction dir = ( (*idir < 0) ? FFTW_FORWARD : FFTW_BACKWARD ); 
    *p = fftw_create_plan(*n, dir, FFTW_ESTIMATE | FFTW_IN_PLACE);
@@ -30,15 +28,14 @@ int F77_FUNC_ (create_plan_1d, CREATE_PLAN_1D)(fftw_plan *p, int *n, int *idir)
 }
 
 
-int F77_FUNC_ (destroy_plan_1d, DESTROY_PLAN_1D)(fftw_plan *p)
+int destroy_plan_1d (fftw_plan *p)
 {
    if ( *p != NULL ) fftw_destroy_plan(*p);
    else fprintf(stderr," *** DESTROY_PLAN: warning empty plan ***\n");
    return 0;
 }
 
-int F77_FUNC_ (create_plan_2d, CREATE_PLAN_2D)
-   (fftwnd_plan *p, int *n, int *m, int *idir)
+int create_plan_2d (fftwnd_plan *p, int *n, int *m, int *idir)
 {
    fftw_direction dir = ( (*idir < 0) ? FFTW_FORWARD : FFTW_BACKWARD );
    *p = fftw2d_create_plan(*m, *n, dir, FFTW_ESTIMATE | FFTW_IN_PLACE);
@@ -47,15 +44,14 @@ int F77_FUNC_ (create_plan_2d, CREATE_PLAN_2D)
    return 0;
 }
 
-int F77_FUNC_ (destroy_plan_2d, DESTROY_PLAN_2D)(fftwnd_plan *p)
+int destroy_plan_2d (fftwnd_plan *p)
 {
    if ( *p != NULL ) fftwnd_destroy_plan(*p);
    else fprintf(stderr," *** DESTROY_PLAN_2D: warning empty plan ***\n");
    return 0;
 }
 
-int F77_FUNC_ (create_plan_3d, CREATE_PLAN_3D)
-   (fftwnd_plan *p, int *n, int *m, int *l, int *idir)
+int create_plan_3d (fftwnd_plan *p, int *n, int *m, int *l, int *idir)
 {
    fftw_direction dir = ( (*idir < 0) ? FFTW_FORWARD : FFTW_BACKWARD );
    *p = fftw3d_create_plan(*l, *m, *n, dir, FFTW_ESTIMATE | FFTW_IN_PLACE);
@@ -67,7 +63,7 @@ int F77_FUNC_ (create_plan_3d, CREATE_PLAN_3D)
    return 0;
 }
 
-int F77_FUNC_ (destroy_plan_3d, DESTROY_PLAN_3D)(fftwnd_plan *p)
+int destroy_plan_3d (fftwnd_plan *p)
 
 {
    if ( *p != NULL ) fftwnd_destroy_plan(*p);
@@ -76,7 +72,7 @@ int F77_FUNC_ (destroy_plan_3d, DESTROY_PLAN_3D)(fftwnd_plan *p)
 }
 
 
-int F77_FUNC_ (fft_x_stick, FFT_X_STICK)
+int fft_x_stick
 (fftw_plan *p, FFTW_COMPLEX *a, int *nx, int *ny, int *nz, int *ldx, int *ldy )
 {
 
@@ -101,7 +97,7 @@ int F77_FUNC_ (fft_x_stick, FFT_X_STICK)
    return 0;
 }
 
-int F77_FUNC_ (fft_y_stick, FFT_Y_STICK)
+int fft_y_stick
    (fftw_plan *p, FFTW_COMPLEX *a, int *ny, int *ldx )
 {
    fftw(*p, 1, a, (*ldx), 1, 0, 0, 0);
@@ -109,7 +105,7 @@ int F77_FUNC_ (fft_y_stick, FFT_Y_STICK)
 }
 
 
-int F77_FUNC_ (fft_z_stick, FFT_Z_STICK)
+int fft_z_stick
    (fftw_plan *p, FFTW_COMPLEX *zstick, int *ldz, int *nstick_l)
 {
    int howmany, idist;
@@ -119,28 +115,28 @@ int F77_FUNC_ (fft_z_stick, FFT_Z_STICK)
    return 0;
 }
 
-int F77_FUNC_ ( fftw_inplace_drv_1d, FFTW_INPLACE_DRV_1D ) 
+int fftw_inplace_drv_1d
    (fftw_plan *p, int *nfft, FFTW_COMPLEX *a, int *inca, int *idist)
 {
    fftw(*p, (*nfft), a, (*inca), (*idist), 0, 0, 0);
    return 0;
 }
 
-int F77_FUNC_ ( fftw_inplace_drv_2d, FFTW_INPLACE_DRV_2D ) 
+int fftw_inplace_drv_2d
   ( fftwnd_plan *p, int *nfft, FFTW_COMPLEX *a, int *inca, int *idist)
 {
    fftwnd( *p, (*nfft), a, (*inca), (*idist), 0, 0, 0 );
    return 0;
 }
 
-int F77_FUNC_ ( fftw_inplace_drv_3d, FFTW_INPLACE_DRV_3D ) 
+int fftw_inplace_drv_3d
    ( fftwnd_plan *p, int *nfft, FFTW_COMPLEX *a, int *inca, int *idist)
 {
    fftwnd( *p, (*nfft), a, (*inca), (*idist), 0, 0, 0 );
    return 0;
 }
 
-int F77_FUNC_ (fft_x_stick_single, FFT_X_STICK_SINGLE)
+int ft_x_stick_single
 (fftw_plan *p, FFTW_COMPLEX *a, int *nx, int *ny, int *nz, int *ldx, int *ldy )
 {
 
@@ -162,8 +158,7 @@ int F77_FUNC_ (fft_x_stick_single, FFT_X_STICK_SINGLE)
 }
 
 
-int F77_FUNC_ (fft_z_stick_single, FFT_Z_STICK_SINGLE)
-  (fftw_plan *p, FFTW_COMPLEX *a, int *ldz)
+int fft_z_stick_single (fftw_plan *p, FFTW_COMPLEX *a, int *ldz)
 {
   fftw(*p, 1,a, 1, 0, 0, 0, 0);
 
