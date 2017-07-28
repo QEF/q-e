@@ -57,7 +57,7 @@ CONTAINS
                                        ! communicators are created
     LOGICAL, INTENT(IN) :: do_distr_diag_inside_bgrp_  ! comme son nom l'indique
     !
-    INTEGER :: world_comm = -1  ! internal copy of the world_comm  (-1 is unset, should be set to MPI_COMM_WORLD)
+    INTEGER :: world_comm_local = -1  ! internal copy of the world_comm  (-1 is unset, should be set to MPI_COMM_WORLD)
     INTEGER :: mpime      =  0  ! the global MPI task index (used in clocks) can be set with a mp_rank call
     !
     INTEGER :: nproc_ortho_try
@@ -67,10 +67,9 @@ CONTAINS
     INTEGER :: nparent_comm ! mumber of parent communicators
     INTEGER :: ierr = 0
     !
-    write (*,*) 'world_comm ', world_comm , MPI_COMM_WORLD
-    world_comm   = MPI_COMM_WORLD        ! set the internal copy of the world_comm to be possibly used in other related routines
-    world_nproc  = mp_size( world_comm ) ! the global number of processors in world_comm
-    mpime        = mp_rank( world_comm ) ! set the global MPI task index  (used in clocks)
+    world_comm_local   = MPI_COMM_WORLD        ! set the internal copy of the world_comm to be possibly used in other related routines
+    world_nproc  = mp_size( world_comm_local ) ! the global number of processors in world_comm
+    mpime        = mp_rank( world_comm_local ) ! set the global MPI task index  (used in clocks)
     parent_nproc = mp_size( parent_comm )! the number of processors in the current parent communicator
     my_parent_id = mpime / parent_nproc  ! set the index of the current parent communicator
     nparent_comm = world_nproc/parent_nproc ! number of paren communicators
@@ -80,15 +79,15 @@ CONTAINS
 
     !
 #if defined __SCALAPACK
-    np_blacs     = mp_size( world_comm )
-    me_blacs     = mp_rank( world_comm )
+    np_blacs     = mp_size( world_comm_local )
+    me_blacs     = mp_rank( world_comm_local )
     !
     ! define a 1D grid containing all MPI tasks of the global communicator
     ! NOTE: world_cntx has the MPI communicator on entry and the BLACS context on exit
     !       BLACS_GRIDINIT() will create a copy of the communicator, which can be
     !       later retrieved using CALL BLACS_GET(world_cntx, 10, comm_copy)
     !
-    world_cntx = world_comm 
+    world_cntx = world_comm_local 
     CALL BLACS_GRIDINIT( world_cntx, 'Row', 1, np_blacs )
     !
 #endif
@@ -140,6 +139,8 @@ CONTAINS
 #endif
 
 #if defined __MPI
+    INTEGER :: world_comm_local = -1  ! internal copy of the world_comm  (-1 is unset, should be set to MPI_COMM_WORLD)
+    world_comm_local   = MPI_COMM_WORLD        ! set the internal copy of the world_comm to be possibly used in other related routines
 
     me_all    = mp_rank( comm_all )
     !
@@ -249,7 +250,7 @@ CONTAINS
 
          ! All MPI tasks defined in the global communicator take part in the definition of the BLACS grid
 
-         CALL mp_sum( blacsmap, world_comm ) 
+         CALL mp_sum( blacsmap, world_comm_local ) 
 
          CALL BLACS_GRIDMAP( ortho_cntx_pe( j ), blacsmap, nprow, nprow, npcol )
 
