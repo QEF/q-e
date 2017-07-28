@@ -39,15 +39,13 @@ MODULE mp_diag
   !
   INTEGER :: world_cntx = -1  ! BLACS context of all processor 
   INTEGER :: ortho_cntx = -1  ! BLACS context for ortho_comm
-  INTEGER :: world_comm = -1  ! internal copy of the world_comm  (-1 is unset, should be set to MPI_COMM_WORLD)
-  INTEGER :: mpime      =  0  ! the global MPI task index (used in clocks) can be set with a mp_rank call
   !
   LOGICAL :: do_distr_diag_inside_bgrp = .true. ! whether the distributed diagoalization should be performed
                                                 ! at the band group level (bgrp) or at its parent level
 CONTAINS
   !
   !----------------------------------------------------------------------------
-  SUBROUTINE mp_start_diag( ndiag_, parent_comm )
+  SUBROUTINE mp_start_diag( ndiag_, parent_comm, do_distr_diag_inside_bgrp_  )
     !---------------------------------------------------------------------------
     !
     ! ... Ortho/diag/linear algebra group initialization
@@ -57,6 +55,10 @@ CONTAINS
     INTEGER, INTENT(INOUT) :: ndiag_  ! (IN) input number of procs in the diag group, (OUT) actual number
     INTEGER, INTENT(IN) :: parent_comm ! parallel communicator inside which the distributed linear algebra group
                                        ! communicators are created
+    LOGICAL, INTENT(IN) :: do_distr_diag_inside_bgrp_  ! comme son nom l'indique
+    !
+    INTEGER :: world_comm = -1  ! internal copy of the world_comm  (-1 is unset, should be set to MPI_COMM_WORLD)
+    INTEGER :: mpime      =  0  ! the global MPI task index (used in clocks) can be set with a mp_rank call
     !
     INTEGER :: nproc_ortho_try
     INTEGER :: parent_nproc ! nproc of the parent group
@@ -65,12 +67,16 @@ CONTAINS
     INTEGER :: nparent_comm ! mumber of parent communicators
     INTEGER :: ierr = 0
     !
+    write (*,*) 'world_comm ', world_comm , MPI_COMM_WORLD
     world_comm   = MPI_COMM_WORLD        ! set the internal copy of the world_comm to be possibly used in other related routines
     world_nproc  = mp_size( world_comm ) ! the global number of processors in world_comm
     mpime        = mp_rank( world_comm ) ! set the global MPI task index  (used in clocks)
     parent_nproc = mp_size( parent_comm )! the number of processors in the current parent communicator
     my_parent_id = mpime / parent_nproc  ! set the index of the current parent communicator
     nparent_comm = world_nproc/parent_nproc ! number of paren communicators
+
+    ! save input value inside the module
+    do_distr_diag_inside_bgrp = do_distr_diag_inside_bgrp_ 
 
     !
 #if defined __SCALAPACK
@@ -82,7 +88,7 @@ CONTAINS
     !       BLACS_GRIDINIT() will create a copy of the communicator, which can be
     !       later retrieved using CALL BLACS_GET(world_cntx, 10, comm_copy)
     !
-    world_cntx = world_comm
+    world_cntx = world_comm 
     CALL BLACS_GRIDINIT( world_cntx, 'Row', 1, np_blacs )
     !
 #endif
