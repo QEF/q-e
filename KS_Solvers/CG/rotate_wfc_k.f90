@@ -133,11 +133,11 @@ SUBROUTINE rotate_wfc_k( h_psi, s_psi, &
   DEALLOCATE( hc )
   DEALLOCATE( aux )
   call stop_clock('rotwfck'); !write(*,*) 'stop rotwfck';FLUSH(6)
-!  call print_clock('rotwfck')
-!  call print_clock('rotwfck:hpsi')
-!  call print_clock('rotwfck:hc')
-!  call print_clock('rotwfck:diag')
-!  call print_clock('rotwfck:evc')
+  !call print_clock('rotwfck')
+  !call print_clock('rotwfck:hpsi')
+  !call print_clock('rotwfck:hc')
+  !call print_clock('rotwfck:diag')
+  !call print_clock('rotwfck:evc')
   !
   RETURN
   !
@@ -285,11 +285,11 @@ SUBROUTINE protate_wfc_k( h_psi, s_psi, &
   DEALLOCATE( desc_ip )
   DEALLOCATE( rank_ip )
   call stop_clock('protwfck')
-  call print_clock('protwfck')
-  call print_clock('protwfck:hpsi')
-  call print_clock('protwfck:hc')
-  call print_clock('protwfck:diag')
-  call print_clock('protwfck:evc')
+  !call print_clock('protwfck')
+  !call print_clock('protwfck:hpsi')
+  !call print_clock('protwfck:hc')
+  !call print_clock('protwfck:diag')
+  !call print_clock('protwfck:evc')
   !
   RETURN
   !
