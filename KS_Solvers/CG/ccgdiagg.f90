@@ -1,75 +1,92 @@
 !
-! Copyright (C) 2002-2006 Quantum ESPRESSO group
+! Copyright (C) 2001-2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+!
+#define ZERO ( 0.D0, 0.D0 )
+#define ONE  ( 1.D0, 0.D0 )
 ! define __VERBOSE to print a message after each eigenvalue is computed
+!
 !----------------------------------------------------------------------------
-SUBROUTINE rcgdiagg( npwx, npw, nbnd, psi, e, btype, precondition, &
+SUBROUTINE ccgdiagg( hs_1psi, s_1psi, &
+                     npwx, npw, nbnd, npol, psi, e, btype, precondition, &
                      ethr, maxter, reorder, notconv, avg_iter )
   !----------------------------------------------------------------------------
   !
   ! ... "poor man" iterative diagonalization of a complex hermitian matrix
   ! ... through preconditioned conjugate gradient algorithm
   ! ... Band-by-band algorithm with minimal use of memory
-  ! ... Calls h_1psi and s_1psi to calculate H|psi> and S|psi>
+  ! ... Calls hs_1psi and s_1psi to calculate H|psi> + S|psi> and S|psi>
   ! ... Works for generalized eigenvalue problem (US pseudopotentials) as well
   !
-  USE constants, ONLY : pi
-  USE kinds,     ONLY : DP
-  USE gvect,     ONLY : gstart
-  USE mp_bands,  ONLY : intra_bgrp_comm
+  USE constants,    ONLY : pi
+  USE cg_param,     ONLY : DP
+  USE mp_bands_cg,  ONLY : intra_bgrp_comm, inter_bgrp_comm, set_bgrp_indices
   USE mp,        ONLY : mp_sum
 #if defined(__VERBOSE)
-  USE io_global, only : stdout
+  USE cg_param,     ONLY : stdout
 #endif
   !
   IMPLICIT NONE
   !
   ! ... I/O variables
   !
-  INTEGER,      INTENT(IN)    :: npwx, npw, nbnd, maxter
-  INTEGER,      INTENT(IN)    :: btype(nbnd)
-  REAL (DP),    INTENT(IN)    :: precondition(npw), ethr
-  COMPLEX (DP), INTENT(INOUT) :: psi(npwx,nbnd)
-  REAL (DP),    INTENT(INOUT) :: e(nbnd)
-  INTEGER,      INTENT(OUT)   :: notconv
-  REAL (DP),    INTENT(OUT)   :: avg_iter
+  INTEGER,     INTENT(IN)    :: npwx, npw, nbnd, npol, maxter
+  INTEGER,     INTENT(IN)    :: btype(nbnd)
+  REAL(DP),    INTENT(IN)    :: precondition(npwx*npol), ethr
+  COMPLEX(DP), INTENT(INOUT) :: psi(npwx*npol,nbnd)
+  REAL(DP),    INTENT(INOUT) :: e(nbnd)
+  INTEGER,     INTENT(OUT)   :: notconv
+  REAL(DP),    INTENT(OUT)   :: avg_iter
   !
   ! ... local variables
   !
-  INTEGER                   :: i, j, m, iter, moved
-  REAL (DP),    ALLOCATABLE :: lagrange(:)
-  COMPLEX (DP), ALLOCATABLE :: hpsi(:), spsi(:), g(:), cg(:), &
-                               scg(:), ppsi(:), g0(:)  
-  REAL (DP)                 :: psi_norm, a0, b0, gg0, gamma, gg, gg1, &
-                               cg0, e0, es(2)
-  REAL (DP)                 :: theta, cost, sint, cos2t, sin2t
-  LOGICAL                   :: reorder
-  INTEGER                   :: npw2, npwx2
-  REAL (DP)                 :: empty_ethr
+  INTEGER                  :: i, j, m, m_start, m_end, iter, moved
+  COMPLEX(DP), ALLOCATABLE :: lagrange(:)
+  COMPLEX(DP), ALLOCATABLE :: hpsi(:), spsi(:), g(:), cg(:), &
+                              scg(:), ppsi(:), g0(:)  
+  REAL(DP)                 :: psi_norm, a0, b0, gg0, gamma, gg, gg1, &
+                              cg0, e0, es(2)
+  REAL(DP)                 :: theta, cost, sint, cos2t, sin2t
+  LOGICAL                  :: reorder
+  INTEGER                  :: kdim, kdmx, kdim2
+  REAL(DP)                 :: empty_ethr, ethr_m
   !
   ! ... external functions
   !
   REAL (DP), EXTERNAL :: ddot
+  EXTERNAL  hs_1psi,    s_1psi 
+  ! hs_1psi( npwx, npw, psi, hpsi, spsi )
+  ! s_1psi( npwx, npw, psi, spsi )
   !
-  !
-  CALL start_clock( 'rcgdiagg' )
+  CALL start_clock( 'ccgdiagg' )
   !
   empty_ethr = MAX( ( ethr * 5.D0 ), 1.D-5 )
   !
-  npw2 = 2 * npw
-  npwx2 = 2 * npwx
+  IF ( npol == 1 ) THEN
+     !
+     kdim = npw
+     kdmx = npwx
+     !
+  ELSE
+     !
+     kdim = npwx * npol
+     kdmx = npwx * npol
+     !
+  END IF
   !
-  ALLOCATE( spsi( npwx ) )
-  ALLOCATE( scg(  npwx ) )
-  ALLOCATE( hpsi( npwx ) )
-  ALLOCATE( g(    npwx ) )
-  ALLOCATE( cg(   npwx ) )
-  ALLOCATE( g0(   npwx ) )
-  ALLOCATE( ppsi( npwx ) )
+  kdim2 = 2 * kdim
+  !
+  ALLOCATE( spsi( kdmx ) )
+  ALLOCATE( scg(  kdmx ) )
+  ALLOCATE( hpsi( kdmx ) )
+  ALLOCATE( g(    kdmx ) )
+  ALLOCATE( cg(   kdmx ) )
+  ALLOCATE( g0(   kdmx ) )
+  ALLOCATE( ppsi( kdmx ) )
   !    
   ALLOCATE( lagrange( nbnd ) )
   !
@@ -81,45 +98,61 @@ SUBROUTINE rcgdiagg( npwx, npw, nbnd, psi, e, btype, precondition, &
   !
   DO m = 1, nbnd
      !
+     IF ( btype(m) == 1 ) THEN
+        !
+        ethr_m = ethr
+        !
+     ELSE
+        !
+        ethr_m = empty_ethr
+        !
+     END IF
+     !
+     spsi     = ZERO
+     scg      = ZERO
+     hpsi     = ZERO
+     g        = ZERO
+     cg       = ZERO
+     g0       = ZERO
+     ppsi     = ZERO
+     !
      ! ... calculate S|psi>
      !
      CALL s_1psi( npwx, npw, psi(1,m), spsi )
      !
      ! ... orthogonalize starting eigenfunction to those already calculated
      !
-     CALL DGEMV( 'T', npw2, m, 2.D0, psi, npwx2, spsi, 1, 0.D0, lagrange, 1 )
-     !
-     IF ( gstart == 2 ) lagrange(1:m) = lagrange(1:m) - psi(1,1:m) * spsi(1)
+     call set_bgrp_indices(m,m_start,m_end); !write(*,*) m,m_start,m_end
+     lagrange = ZERO
+     if(m_start.le.m_end) &
+     CALL ZGEMV( 'C', kdim, m_end-m_start+1, ONE, psi(1,m_start), kdmx, spsi, 1, ZERO, lagrange(m_start), 1 )
+     CALL mp_sum( lagrange( 1:m ), inter_bgrp_comm )
      !
      CALL mp_sum( lagrange( 1:m ), intra_bgrp_comm )
      !
-     psi_norm = lagrange(m)
+     psi_norm = DBLE( lagrange(m) )
      !
      DO j = 1, m - 1
         !
         psi(:,m)  = psi(:,m) - lagrange(j) * psi(:,j)
         !
-        psi_norm = psi_norm - lagrange(j)**2
+        psi_norm = psi_norm - ( DBLE( lagrange(j) )**2 + AIMAG( lagrange(j) )**2 )
         !
      END DO
      !
      psi_norm = SQRT( psi_norm )
      !
      psi(:,m) = psi(:,m) / psi_norm
-     ! ... set Im[ psi(G=0) ] -  needed for numerical stability
-     IF ( gstart == 2 ) psi(1,m) = CMPLX( DBLE(psi(1,m)), 0.D0 ,kind=DP)
      !
      ! ... calculate starting gradient (|hpsi> = H|psi>) ...
      !
-     CALL h_1psi( npwx, npw, psi(1,m), hpsi, spsi )
+     CALL hs_1psi( npwx, npw, psi(1,m), hpsi, spsi )
      !
      ! ... and starting eigenvalue (e = <y|PHP|y> = <psi|H|psi>)
      !
-     ! ... NB:  ddot(2*npw,a,1,b,1) = DBLE( zdotc(npw,a,1,b,1) )
+     ! ... NB:  ddot(2*npw,a,1,b,1) = REAL( zdotc(npw,a,1,b,1) )
      !
-     e(m) = 2.D0 * ddot( npw2, psi(1,m), 1, hpsi, 1 )
-     !
-     IF ( gstart == 2 ) e(m) = e(m) - psi(1,m) * hpsi(1)
+     e(m) = ddot( kdim2, psi(1,m), 1, hpsi, 1 )
      !
      CALL mp_sum( e(m), intra_bgrp_comm )
      !
@@ -130,43 +163,35 @@ SUBROUTINE rcgdiagg( npwx, npw, nbnd, psi, e, btype, precondition, &
         ! ... calculate  P (PHP)|y>
         ! ... ( P = preconditioning matrix, assumed diagonal )
         !
-        g(1:npw)    = hpsi(1:npw) / precondition(:)
-        ppsi(1:npw) = spsi(1:npw) / precondition(:)
+        g(:)    = hpsi(:) / precondition(:)
+        ppsi(:) = spsi(:) / precondition(:)
         !
         ! ... ppsi is now S P(P^2)|y> = S P^2|psi>)
         !
-        es(1) = 2.D0 * ddot( npw2, spsi(1), 1, g(1), 1 )
-        es(2) = 2.D0 * ddot( npw2, spsi(1), 1, ppsi(1), 1 )
+        es(1) = ddot( kdim2, spsi(1), 1, g(1), 1 )
+        es(2) = ddot( kdim2, spsi(1), 1, ppsi(1), 1 )
         !
-        IF ( gstart == 2 ) THEN
-           !
-           es(1) = es(1) - spsi(1) * g(1)
-           es(2) = es(2) - spsi(1) * ppsi(1)
-           !
-        END IF
-        !
-        CALL mp_sum(  es , intra_bgrp_comm )
+        CALL mp_sum( es , intra_bgrp_comm )
         !
         es(1) = es(1) / es(2)
         !
         g(:) = g(:) - es(1) * ppsi(:)
         !
-        ! ... e1 = <y| S P^2 PHP|y> / <y| S S P^2|y>  ensures that  
+        ! ... e1 = <y| S P^2 PHP|y> / <y| S S P^2|y>  ensures that 
         ! ... <g| S P^2|y> = 0
-        !
         ! ... orthogonalize to lowest eigenfunctions (already calculated)
         !
         ! ... scg is used as workspace
         !
         CALL s_1psi( npwx, npw, g(1), scg(1) )
         !
-        CALL DGEMV( 'T', npw2, ( m - 1 ), 2.D0, &
-                    psi, npwx2, scg, 1, 0.D0, lagrange, 1 )
+        lagrange(1:m-1) = ZERO
+        call set_bgrp_indices(m-1,m_start,m_end); !write(*,*) m-1,m_start,m_end
+        if(m_start.le.m_end) &
+        CALL ZGEMV( 'C', kdim, m_end-m_start+1, ONE, psi(1,m_start), kdmx, scg, 1, ZERO, lagrange(m_start), 1 )
+        CALL mp_sum( lagrange( 1:m-1 ), inter_bgrp_comm )
         !
-        IF ( gstart == 2 ) &
-           lagrange(1:m-1) = lagrange(1:m-1) - psi(1,1:m-1) * scg(1)
-        !
-        CALL mp_sum( lagrange( 1 : m-1 ), intra_bgrp_comm )
+        CALL mp_sum( lagrange( 1:m-1 ), intra_bgrp_comm )
         !
         DO j = 1, ( m - 1 )
            !
@@ -179,11 +204,9 @@ SUBROUTINE rcgdiagg( npwx, npw, nbnd, psi, e, btype, precondition, &
            !
            ! ... gg1 is <g(n+1)|S|g(n)> (used in Polak-Ribiere formula)
            !
-           gg1 = 2.D0 * ddot( npw2, g(1), 1, g0(1), 1 )
+           gg1 = ddot( kdim2, g(1), 1, g0(1), 1 )
            !
-           IF ( gstart == 2 ) gg1 = gg1 - g(1) * g0(1)
-           !
-           CALL mp_sum(  gg1 , intra_bgrp_comm )
+           CALL mp_sum( gg1, intra_bgrp_comm )
            !
         END IF
         !
@@ -191,13 +214,11 @@ SUBROUTINE rcgdiagg( npwx, npw, nbnd, psi, e, btype, precondition, &
         !
         g0(:) = scg(:)
         !
-        g0(1:npw) = g0(1:npw) * precondition(:)
+        g0(:) = g0(:) * precondition(:)
         !
-        gg = 2.D0 * ddot( npw2, g(1), 1, g0(1), 1 )
+        gg = ddot( kdim2, g(1), 1, g0(1), 1 )
         !
-        IF ( gstart == 2 ) gg = gg - g(1) * g0(1)
-        !
-        CALL mp_sum(  gg , intra_bgrp_comm )
+        CALL mp_sum( gg, intra_bgrp_comm )
         !
         IF ( iter == 1 ) THEN
            !
@@ -230,16 +251,12 @@ SUBROUTINE rcgdiagg( npwx, npw, nbnd, psi, e, btype, precondition, &
         END IF
         !
         ! ... |cg> contains now the conjugate gradient
-        ! ... set Im[ cg(G=0) ] -  needed for numerical stability
-        IF ( gstart == 2 ) cg(1) = CMPLX( DBLE(cg(1)), 0.D0 ,kind=DP)
         !
         ! ... |scg> is S|cg>
         !
-        CALL h_1psi( npwx, npw, cg(1), ppsi(1), scg(1) )
+        CALL hs_1psi( npwx, npw, cg(1), ppsi(1), scg(1) )
         !
-        cg0 = 2.D0 * ddot( npw2, cg(1), 1, scg(1), 1 )
-        !
-        IF ( gstart == 2 ) cg0 = cg0 - cg(1) * scg(1)
+        cg0 = ddot( kdim2, cg(1), 1, scg(1), 1 )
         !
         CALL mp_sum(  cg0 , intra_bgrp_comm )
         !
@@ -253,19 +270,11 @@ SUBROUTINE rcgdiagg( npwx, npw, nbnd, psi, e, btype, precondition, &
         ! ... so that the result is correctly normalized :
         ! ...                           <y(t)|P^2S|y(t)> = 1
         !
-        a0 = 4.D0 * ddot( npw2, psi(1,m), 1, ppsi(1), 1 )
-        !
-        IF ( gstart == 2 ) a0 = a0 - 2.D0 * psi(1,m) * ppsi(1)
-        !
-        a0 = a0 / cg0
+        a0 = 2.D0 * ddot( kdim2, psi(1,m), 1, ppsi(1), 1 ) / cg0
         !
         CALL mp_sum(  a0 , intra_bgrp_comm )
         !
-        b0 = 2.D0 * ddot( npw2, cg(1), 1, ppsi(1), 1 )
-        !
-        IF ( gstart == 2 ) b0 = b0 - cg(1) * ppsi(1)
-        !
-        b0 = b0 / cg0**2
+        b0 = ddot( kdim2, cg(1), 1, ppsi(1), 1 ) / cg0**2
         !
         CALL mp_sum(  b0 , intra_bgrp_comm )
         !
@@ -296,22 +305,13 @@ SUBROUTINE rcgdiagg( npwx, npw, nbnd, psi, e, btype, precondition, &
         ! ... new estimate of the eigenvalue
         !
         e(m) = MIN( es(1), es(2) )
-        !
         ! ... upgrade |psi>
         !
         psi(:,m) = cost * psi(:,m) + sint / cg0 * cg(:)
         !
         ! ... here one could test convergence on the energy
         !
-        IF ( btype(m) == 1 ) THEN
-           !
-           IF ( ABS( e(m) - e0 ) < ethr ) EXIT iterate
-           !
-        ELSE
-           !
-           IF ( ABS( e(m) - e0 ) < empty_ethr ) EXIT iterate
-           !
-        END IF
+        IF ( ABS( e(m) - e0 ) < ethr_m ) EXIT iterate
         !
         ! ... upgrade H|psi> and S|psi>
         !
@@ -334,19 +334,17 @@ SUBROUTINE rcgdiagg( npwx, npw, nbnd, psi, e, btype, precondition, &
      IF ( iter >= maxter ) notconv = notconv + 1
      !
      avg_iter = avg_iter + iter + 1
-     !
      ! ... reorder eigenvalues if they are not in the right order
      ! ... ( this CAN and WILL happen in not-so-special cases )
      !
      IF ( m > 1 .AND. reorder ) THEN
         !
-        IF ( e(m) - e(m-1) < - 2.D0 * ethr ) THEN
-           !
+        IF ( e(m) - e(m-1) < - 2.D0 * ethr_m ) THEN
            ! ... if the last calculated eigenvalue is not the largest...
            !
            DO i = m - 2, 1, - 1
               !
-              IF ( e(m) - e(i) > 2.D0 * ethr ) EXIT
+              IF ( e(m) - e(i) > 2.D0 * ethr_m ) EXIT
               !
            END DO
            !
@@ -394,8 +392,8 @@ SUBROUTINE rcgdiagg( npwx, npw, nbnd, psi, e, btype, precondition, &
   DEALLOCATE( scg )
   DEALLOCATE( spsi )
   !
-  CALL stop_clock( 'rcgdiagg' )
+  CALL stop_clock( 'ccgdiagg' )
   !
   RETURN
   !
-END SUBROUTINE rcgdiagg
+END SUBROUTINE ccgdiagg

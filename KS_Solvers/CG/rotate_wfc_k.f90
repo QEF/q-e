@@ -7,14 +7,16 @@
 !
 !
 !----------------------------------------------------------------------------
-SUBROUTINE rotate_wfc_k( npwx, npw, nstart, nbnd, npol, psi, overlap, evc, e )
+SUBROUTINE rotate_wfc_k( h_psi, s_psi, &
+                         npwx, npw, nstart, nbnd, npol, psi, overlap, evc, e )
   !----------------------------------------------------------------------------
   !
   ! ... Serial version of rotate_wfc for colinear, k-point calculations
   !
-  USE kinds,         ONLY : DP
-  USE mp_bands,      ONLY : intra_bgrp_comm
-  USE mp,            ONLY : mp_sum
+  USE cg_param,         ONLY : DP
+  USE mp_bands_cg,      ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, nbgrp, my_bgrp_id, &
+                               set_bgrp_indices
+  USE mp,               ONLY : mp_sum
   !
   IMPLICIT NONE
   !
@@ -36,9 +38,18 @@ SUBROUTINE rotate_wfc_k( npwx, npw, nstart, nbnd, npol, psi, overlap, evc, e )
   ! ... local variables
   !
   INTEGER :: kdim, kdmx
-  COMPLEX(DP), ALLOCATABLE :: aux(:,:), hc(:,:), sc(:,:), vc(:,:)
+  COMPLEX(DP), ALLOCATABLE :: aux(:,:)
+  COMPLEX(DP), ALLOCATABLE :: hc(:,:), sc(:,:), vc(:,:)
   REAL(DP),    ALLOCATABLE :: en(:)
+  INTEGER :: n_start, n_end
   !
+  EXTERNAL  h_psi,    s_psi
+    ! h_psi(npwx,npw,nvec,psi,hpsi)
+    !     calculates H|psi>
+    ! s_psi(npwx,npw,nvec,spsi)
+    !     calculates S|psi> (if needed)
+    !     Vectors psi,hpsi,spsi are dimensioned (npwx,npol,nvec)
+
   IF ( npol == 1 ) THEN
      !
      kdim = npw
@@ -51,54 +62,82 @@ SUBROUTINE rotate_wfc_k( npwx, npw, nstart, nbnd, npol, psi, overlap, evc, e )
      !
   END IF
   !
-
   ALLOCATE( aux(kdmx, nstart ) )    
   ALLOCATE( hc( nstart, nstart) )    
   ALLOCATE( sc( nstart, nstart) )    
   ALLOCATE( vc( nstart, nstart) )    
   ALLOCATE( en( nstart ) )
+  call start_clock('rotwfck'); !write(*,*) 'start rotwfck';FLUSH(6)
   !
   ! ... Set up the Hamiltonian and Overlap matrix on the subspace :
   !
   ! ...      H_ij = <psi_i| H |psi_j>     S_ij = <psi_i| S |psi_j>
   !
+  call start_clock('rotwfck:hpsi'); !write(*,*) 'start rotwfck:hpsi';FLUSH(6)
   CALL h_psi( npwx, npw, nstart, psi, aux )
+  call stop_clock('rotwfck:hpsi') ; !write(*,*) 'stop rotwfck:hpsi';FLUSH(6)
   !
-  call ZGEMM( 'C', 'N', nstart, nstart, kdim, ( 1.D0, 0.D0 ), psi, kdmx,  aux, kdmx, ( 0.D0, 0.D0 ), hc, nstart )
+  call start_clock('rotwfck:hc'); !write(*,*) 'start rotwfck:hc';FLUSH(6)
+  hc=(0.D0,0.D0)
+  CALL set_bgrp_indices(nstart,n_start,n_end); !write (*,*) nstart,n_start,n_end
+  if (n_start .le. n_end) &
+  call ZGEMM( 'C', 'N', nstart, n_end-n_start+1, kdim, ( 1.D0, 0.D0 ), psi, &
+              kdmx,  aux(1,n_start), kdmx, ( 0.D0, 0.D0 ), hc(1,n_start), nstart )
+  CALL mp_sum(  hc , inter_bgrp_comm )
   !            
   CALL mp_sum(  hc , intra_bgrp_comm )
   !
+  sc=(0.D0,0.D0)
   IF ( overlap ) THEN
      !
      CALL s_psi( npwx, npw, nstart, psi, aux )
-     !
-     CALL ZGEMM( 'C', 'N', nstart, nstart, kdim, ( 1.D0, 0.D0 ), psi, kdmx,  aux, kdmx, ( 0.D0, 0.D0 ), sc, nstart )
+     if (n_start .le. n_end) &
+     CALL ZGEMM( 'C', 'N', nstart, n_end-n_start+1, kdim, ( 1.D0, 0.D0 ), psi, &
+                 kdmx,  aux(1,n_start), kdmx, ( 0.D0, 0.D0 ), sc(1,n_start), nstart )
      !
   ELSE
      !
-     CALL ZGEMM( 'C', 'N', nstart, nstart, kdim, ( 1.D0, 0.D0 ), psi, kdmx, psi, kdmx, ( 0.D0, 0.D0 ), sc, nstart )
+     if (n_start .le. n_end) &
+     CALL ZGEMM( 'C', 'N', nstart, n_end-n_start+1, kdim, ( 1.D0, 0.D0 ), psi, &
+                 kdmx, psi(1,n_start), kdmx, ( 0.D0, 0.D0 ), sc(1,n_start), nstart )
      !  
   END IF
+  CALL mp_sum(  sc , inter_bgrp_comm )
   !
   CALL mp_sum(  sc , intra_bgrp_comm )
+  call stop_clock('rotwfck:hc'); !write(*,*) 'stop rotwfck:hc';FLUSH(6)
   !
   ! ... Diagonalize
   !
+  call start_clock('rotwfck:diag');  !write(*,*) 'start rotwfck:diag';FLUSH(6)
   CALL cdiaghg( nstart, nbnd, hc, sc, nstart, en, vc )
+  call stop_clock('rotwfck:diag');  !write(*,*) 'stop rotwfck:diag';FLUSH(6)
+  call start_clock('rotwfck:evc'); !write(*,*) 'start rotwfck:evc';FLUSH(6)
   !
   e(:) = en(1:nbnd)
   !
   ! ...  update the basis set
   !  
-  CALL ZGEMM( 'N', 'N', kdim, nbnd, nstart, ( 1.D0, 0.D0 ), psi, kdmx, vc, nstart, ( 0.D0, 0.D0 ), aux, kdmx )
+  aux=(0.D0,0.D0)
+  if (n_start .le. n_end) &
+  CALL ZGEMM( 'N', 'N', kdim, nbnd, n_end-n_start+1, ( 1.D0, 0.D0 ), psi(1,n_start), &
+              kdmx, vc(n_start,1), nstart, ( 0.D0, 0.D0 ), aux, kdmx )
+  CALL mp_sum(  aux , inter_bgrp_comm )
   !     
   evc(:,:) = aux(:,1:nbnd)
+  call stop_clock('rotwfck:evc') ; !write(*,*) 'start rotwfck;evc';FLUSH(6)
   !
   DEALLOCATE( en )
   DEALLOCATE( vc )
   DEALLOCATE( sc )
   DEALLOCATE( hc )
   DEALLOCATE( aux )
+  call stop_clock('rotwfck'); !write(*,*) 'stop rotwfck';FLUSH(6)
+!  call print_clock('rotwfck')
+!  call print_clock('rotwfck:hpsi')
+!  call print_clock('rotwfck:hc')
+!  call print_clock('rotwfck:diag')
+!  call print_clock('rotwfck:evc')
   !
   RETURN
   !
@@ -106,17 +145,19 @@ END SUBROUTINE rotate_wfc_k
 !
 !
 !----------------------------------------------------------------------------
-SUBROUTINE protate_wfc_k( npwx, npw, nstart, nbnd, npol, psi, overlap, evc, e )
+SUBROUTINE protate_wfc_k( h_psi, s_psi, &
+                          npwx, npw, nstart, nbnd, npol, psi, overlap, evc, e )
   !----------------------------------------------------------------------------
   !
   ! ... Parallel version of rotate_wfc for colinear, k-point calculations
   ! ... Subroutine with distributed matrices, written by Carlo Cavazzoni
   !
-  USE kinds,            ONLY : DP
-  USE mp_bands,         ONLY : intra_bgrp_comm, nbgrp
-  USE mp_diag,          ONLY : ortho_comm, np_ortho, me_ortho, ortho_comm_id,&
-                               leg_ortho, ortho_parent_comm, ortho_cntx
-  USE descriptors,      ONLY : descla_init , la_descriptor
+  USE cg_param,         ONLY : DP
+  USE mp_bands_cg,      ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, nbgrp, my_bgrp_id, &
+                               set_bgrp_indices
+  USE mp_diag,          ONLY : ortho_comm, np_ortho, me_ortho, ortho_comm_id, leg_ortho, &
+                               ortho_parent_comm, ortho_cntx, do_distr_diag_inside_bgrp
+  USE descriptors,      ONLY : la_descriptor, descla_init
   USE parallel_toolkit, ONLY : zsqmher
   USE mp,               ONLY : mp_bcast, mp_root_sum, mp_sum, mp_barrier
   !
@@ -140,7 +181,8 @@ SUBROUTINE protate_wfc_k( npwx, npw, nstart, nbnd, npol, psi, overlap, evc, e )
   ! ... local variables
   !
   INTEGER :: kdim, kdmx
-  COMPLEX(DP), ALLOCATABLE :: aux(:,:), hc(:,:), sc(:,:), vc(:,:)
+  COMPLEX(DP), ALLOCATABLE :: aux(:,:)
+  COMPLEX(DP), ALLOCATABLE :: hc(:,:), sc(:,:), vc(:,:)
   REAL(DP),    ALLOCATABLE :: en(:)
   !
   TYPE(la_descriptor) :: desc
@@ -151,6 +193,15 @@ SUBROUTINE protate_wfc_k( npwx, npw, nstart, nbnd, npol, psi, overlap, evc, e )
     ! flag to distinguish procs involved in linear algebra
   TYPE(la_descriptor), ALLOCATABLE :: desc_ip( :, : )
   INTEGER, ALLOCATABLE :: rank_ip( :, : )
+  !
+  EXTERNAL  h_psi,    s_psi
+    ! h_psi(npwx,npw,nvec,psi,hpsi)
+    !     calculates H|psi>
+    ! s_psi(npwx,npw,nvec,spsi)
+    !     calculates S|psi> (if needed)
+    !     Vectors psi,hpsi,spsi are dimensioned (npwx,npol,nvec)
+
+  call start_clock('protwfck')
   !
   ALLOCATE( desc_ip( np_ortho(1), np_ortho(2) ) )
   ALLOCATE( rank_ip( np_ortho(1), np_ortho(2) ) )
@@ -181,14 +232,16 @@ SUBROUTINE protate_wfc_k( npwx, npw, nstart, nbnd, npol, psi, overlap, evc, e )
   !
   ! ...      H_ij = <psi_i| H |psi_j>     S_ij = <psi_i| S |psi_j>
   !
+  call start_clock('protwfck:hpsi')
   CALL h_psi( npwx, npw, nstart, psi, aux )
+  call stop_clock('protwfck:hpsi')
   !
+  call start_clock('protwfck:hc')
   CALL compute_distmat( hc, psi, aux ) 
   !            
   IF ( overlap ) THEN
      !
      CALL s_psi( npwx, npw, nstart, psi, aux )
-     !
      CALL compute_distmat( sc, psi, aux )
      !
   ELSE
@@ -196,18 +249,32 @@ SUBROUTINE protate_wfc_k( npwx, npw, nstart, nbnd, npol, psi, overlap, evc, e )
      CALL compute_distmat( sc, psi, psi )
      !  
   END IF
+  call stop_clock('protwfck:hc')
   !
   ! ... Diagonalize
   !
-  CALL pcdiaghg( nstart, hc, sc, nx, en, vc, desc )
+  call start_clock('protwfck:diag')
+  IF ( do_distr_diag_inside_bgrp ) THEN
+     ! only the first bgrp performs the diagonalization
+     IF( my_bgrp_id == root_bgrp_id ) CALL pcdiaghg( nstart, hc, sc, nx, en, vc, desc )
+     IF( nbgrp > 1 ) THEN ! results are brodcast to the other bnd groups
+       CALL mp_bcast( vc, root_bgrp_id, inter_bgrp_comm )
+       CALL mp_bcast( en, root_bgrp_id, inter_bgrp_comm )
+     ENDIF
+  ELSE
+     CALL pcdiaghg( nstart, hc, sc, nx, en, vc, desc )
+  END IF
+  call stop_clock('protwfck:diag')
   !
   e(:) = en(1:nbnd)
   !
   ! ...  update the basis set
   !  
+  call start_clock('protwfck:evc')
   CALL refresh_evc()
   !     
   evc(:,:) = aux(:,1:nbnd)
+  call stop_clock('protwfck:evc')
   !
   DEALLOCATE( en )
   DEALLOCATE( vc )
@@ -217,6 +284,12 @@ SUBROUTINE protate_wfc_k( npwx, npw, nstart, nbnd, npol, psi, overlap, evc, e )
   !
   DEALLOCATE( desc_ip )
   DEALLOCATE( rank_ip )
+  call stop_clock('protwfck')
+  call print_clock('protwfck')
+  call print_clock('protwfck:hpsi')
+  call print_clock('protwfck:hc')
+  call print_clock('protwfck:diag')
+  call print_clock('protwfck:evc')
   !
   RETURN
   !

@@ -38,7 +38,7 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
   !
   INTEGER     :: m_start, m_end
   !
-  CALL start_clock( 'h_psi_bgrp' )
+  CALL start_clock( 'h_psi_bgrp' ); !write (*,*) 'start h_psi_bgrp'; FLUSH(6)
 
   ! band parallelization with non-distributed bands is performed if
   ! 1. enabled (variable use_bgrp_in_hpsi must be set to .T.)
@@ -109,11 +109,11 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   INTEGER     :: ipol, ibnd, incr
   REAL(dp)    :: ee
   !
-  CALL start_clock( 'h_psi' )
+  CALL start_clock( 'h_psi' ); !write (*,*) 'start h_psi';FLUSH(6)
 
   hpsi (:, 1:m) = (0.0_dp, 0.0_dp)
 
-  CALL start_clock( 'h_psi:pot' )
+  CALL start_clock( 'h_psi:pot' ); !write (*,*) 'start h_pot';FLUSH(6)
   !
   ! ... Here the product with the local potential V_loc psi
   !
@@ -133,7 +133,7 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
            ! ... transform psi to real space -> psic 
            CALL invfft_orbital_gamma(psi,ibnd,m) 
            ! ... compute becp%r = < beta|psi> from psic in real space
-     CALL start_clock( 'h_psi:calbec' )
+     CALL start_clock( 'h_psi:calbec' ) 
            CALL calbec_rs_gamma(ibnd,m,becp%r) 
      CALL stop_clock( 'h_psi:calbec' )
            ! ... psic -> vrs * psic (psic overwritten will become hpsi)

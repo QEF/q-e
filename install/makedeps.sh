@@ -61,14 +61,18 @@ for dir in $dirs; do
              DEPENDS="$DEPEND1 $LEVEL1/UtilXlib" ;;
         Modules )
              DEPENDS="$DEPEND1 $LEVEL1/UtilXlib" ;;
+        LAXlib )
+             DEPENDS="$DEPEND1 ../UtilXlib " ;;
         upftools )
              DEPENDS="$DEPEND1 $LEVEL1/Modules" ;;
         LR_Modules )
              DEPENDS="$DEPEND1 $LEVEL1/Modules $LEVEL1/PW/src" ;;
 	ACFDT/src ) 
              DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/PHonon/PH $LEVEL2/LR_Modules" ;;
-	PW/src | CPV/src | atomic/src | GWW/gww )
+	atomic/src | GWW/gww )
 	     DEPENDS="$DEPEND2" ;;
+	PW/src | CPV/src )
+	     DEPENDS="$DEPEND2 ../../KS_Solvers/Davidson ../../KS_Solvers/CG" ;;
 	KS_Solvers/Davidson | KS_Solvers/Davidson_RCI | KS_Solvers/CG )
 	     DEPENDS="$DEPEND3" ;;
 	PW/tools | PP/src | PWCOND/src | GWW/pw4gww | NEB/src )

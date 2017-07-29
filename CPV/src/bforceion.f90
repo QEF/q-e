@@ -25,7 +25,7 @@ subroutine bforceion(fion,tfor,ipol,qmatinv,bec0,becdr,gqq,evalue)
   use ions_base, only : nax, na, nsp
   use uspp_param, only: nvb, ish
   use kinds, only : dp
-  use constants
+  use constants, only :
   use cell_base, only: at, alat
   use uspp_param, only: nh, nhm
   use uspp, only : nhsa=> nkb

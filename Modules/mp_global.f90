@@ -118,6 +118,9 @@ CONTAINS
     do_distr_diag_inside_bgrp = (negrp.gt.1) .or. do_diag_in_band
     CALL mp_start_diag  ( ndiag_, my_comm, do_distr_diag_inside_bgrp )
     !
+    call set_mpi_comm_4_cg( world_comm, intra_bgrp_comm, inter_bgrp_comm )
+    call set_mpi_comm_4_davidson( world_comm, intra_bgrp_comm, inter_bgrp_comm )
+    !
     RETURN
     !
   END SUBROUTINE mp_startup
@@ -128,7 +131,9 @@ CONTAINS
     !
     USE mp, ONLY : mp_comm_free
     !
-    CALL clean_ortho_group ( )
+!    CALL clean_ortho_group ( )
+    CALL unset_mpi_comm_4_cg()
+    CALL unset_mpi_comm_4_davidson()
     CALL mp_comm_free ( intra_bgrp_comm )
     CALL mp_comm_free ( inter_bgrp_comm )
     CALL mp_comm_free ( intra_pool_comm )

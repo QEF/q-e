@@ -33,7 +33,7 @@ subroutine dforceb(c0, i, betae, ipol, bec0, ctabin, gqq, gqqm, qmat, dq2, df)
   use gvecw, only: ngw
   use  parameters
   use electrons_base, only: nx => nbspx, n => nbsp, nspin, f
-  use  constants
+  use constants, only :
   use ions_base, only : nat, nax, na, nsp
   use cell_base, only: at, alat
   use uspp_param, only: nh, nhm, nvb, ish
@@ -237,7 +237,7 @@ subroutine dforceb(c0, i, betae, ipol, bec0, ctabin, gqq, gqqm, qmat, dq2, df)
 
 function enberry( detq,  ipol )
 
-   use constants
+   use constants, only :
    use kinds, only: dp
    use cell_base, only: alat, at
    USE electrons_base, ONLY : nspin

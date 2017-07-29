@@ -38,22 +38,31 @@ SUBROUTINE rotate_wfc &
     ! input and output eigenvectors (may overlap)
   REAL(DP), INTENT(OUT) :: e(nbnd)
     ! eigenvalues
+  EXTERNAL  h_psi,    s_psi
+    ! h_psi(npwx,npw,nvec,psi,hpsi)
+    !     calculates H|psi>
+    ! s_psi(npwx,npw,nvec,spsi)
+    !     calculates S|psi> (if needed)
+    !     Vectors psi,hpsi,spsi are dimensioned (npwx,npol,nvec)
   !
-  CALL start_clock( 'wfcrot' )
-  !
+  CALL start_clock( 'wfcrot' ); !write (*,*) 'start wfcrot' ; FLUSH(6)
+  !write (*,*) 'gamma_only' , gamma_only; FLUSH(6)
+
   IF( use_para_diag ) THEN
      !
      ! use data distributed subroutine
      !
      IF ( gamma_only ) THEN
+  !write (*,*) 'inside para gamma'; FLUSH(6)
         !
-        CALL protate_wfc_gamma &
-            ( npwx, npw, nstart, gstart, nbnd, psi, overlap, evc, e )
+        CALL protate_wfc_gamma ( h_psi, s_psi, &
+                                 npwx, npw, nstart, nbnd, psi, overlap, evc, e )
         !
      ELSE
+  !write (*,*) 'inside para k'; FLUSH(6)
         !
-        CALL protate_wfc_k &
-            ( npwx, npw, nstart, nbnd, npol, psi, overlap, evc, e )
+        CALL protate_wfc_k ( h_psi, s_psi, &
+                             npwx, npw, nstart, nbnd, npol, psi, overlap, evc, e )
         !
      END IF
      !
@@ -62,19 +71,21 @@ SUBROUTINE rotate_wfc &
      ! use serial subroutines
      !
      IF ( gamma_only ) THEN
+  !write (*,*) 'inside serial gamma'; FLUSH(6)
         !
-        CALL rotate_wfc_gamma &
-            ( npwx, npw, nstart, gstart, nbnd, psi, overlap, evc, e )
+        CALL rotate_wfc_gamma ( h_psi, s_psi, &
+                                npwx, npw, nstart, nbnd, psi, overlap, evc, e )
         !
      ELSE
+  !write (*,*) 'inside serial k'; FLUSH(6)
         !
-        CALL rotate_wfc_k &
-            ( npwx, npw, nstart, nbnd, npol, psi, overlap, evc, e )
+        CALL rotate_wfc_k ( h_psi, s_psi, &
+                            npwx, npw, nstart, nbnd, npol, psi, overlap, evc, e )
         !
      END IF
      !
   END IF
   !
-  CALL stop_clock( 'wfcrot' )
+  CALL stop_clock( 'wfcrot' ); !write (*,*) 'stop wfcrot' ; FLUSH(6)
   !
 END SUBROUTINE rotate_wfc

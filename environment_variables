@@ -56,8 +56,8 @@ fi
 # a small number of processors; do not use tests and examples to benchmark
 # parallelism, do not run on too many processors
 
-PARA_PREFIX="mpirun -np 2"
 PARA_PREFIX=" "
+PARA_PREFIX="mpirun -np 4"
 #
 # available flags: 
 #                  -ni n        number of images        (or -nimage)

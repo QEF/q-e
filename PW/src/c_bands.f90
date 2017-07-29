@@ -44,8 +44,10 @@ SUBROUTINE c_bands( iter )
   ! ik : counter on k points
   ! ik_: k-point already done in a previous run
   LOGICAL :: exst
+!------------------------------------------------------------------------
+
   !
-  CALL start_clock( 'c_bands' )
+  CALL start_clock( 'c_bands' ); !write (*,*) 'start c_bands' ; FLUSH(6)
   !
   ik_ = 0
   avg_iter = 0.D0
@@ -125,7 +127,7 @@ SUBROUTINE c_bands( iter )
        '( 5X,"ethr = ",1PE9.2,",  avg # of iterations =",0PF5.1 )' ) &
        ethr, avg_iter
   !
-  CALL stop_clock( 'c_bands' )
+  CALL stop_clock( 'c_bands' ); !write (*,*) 'stop c_bands' ; FLUSH(6)
   !
   RETURN
   !
@@ -188,6 +190,18 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   LOGICAL :: lrot
   ! .TRUE. if the wfc have already be rotated
   !
+! Davidson diagonalization uses these external routines on groups of nvec bands
+  external h_psi, s_psi, g_psi
+! subroutine h_psi(npwx,npw,nvec,psi,hpsi)  computes H*psi
+! subroutine s_psi(npwx,npw,nvec,psi,spsi)  computes S*psi (if needed)
+! subroutine g_psi(npwx,npw,nvec,psi,eig)   computes G*psi -> psi
+!------------------------------------------------------------------------
+! CG diagonalization uses these external routines on a single band
+   external h_1psi, s_1psi
+!  subroutine h_1psi(npwx,npw,psi,hpsi,spsi)  computes H*psi and S*psi
+!  subroutine s_1psi(npwx,npw,psi,spsi)  computes S*psi (if needed)
+! In addition to the above ithe initial wfc rotation uses h_psi, and s_psi
+
   ALLOCATE( h_diag( npwx, npol ), STAT=ierr )
   IF( ierr /= 0 ) &
      CALL errore( ' diag_bands ', ' cannot allocate h_diag ', ABS(ierr) )
@@ -274,8 +288,9 @@ CONTAINS
              !
           END IF
           !
-          CALL rcgdiagg( npwx, npw, nbnd, evc, et(1,ik), btype(1,ik), &
-               h_diag, ethr, max_cg_iter, .NOT. lscf, notconv, cg_iter )
+          CALL rcgdiagg( h_1psi, s_1psi, &
+                         npwx, npw, nbnd, evc, et(1,ik), btype(1,ik), &
+                         h_diag, ethr, max_cg_iter, .NOT. lscf, notconv, cg_iter )
           !
           avg_iter = avg_iter + cg_iter
           !
@@ -308,14 +323,16 @@ CONTAINS
           IF ( use_para_diag ) then
              !
 !             ! make sure that all processors have the same wfc
-             CALL pregterg( npw, npwx, nbnd, nbndx, evc, ethr, &
-                         okvan, gstart, et(1,ik), btype(1,ik), &
+             CALL pregterg( h_psi, s_psi, g_psi, &
+                         npw, npwx, nbnd, nbndx, evc, ethr, &
+                         okvan, et(1,ik), btype(1,ik), & !    BEWARE gstart has been removed from call 
                          notconv, lrot, dav_iter )
              !
           ELSE
              !
-             CALL regterg ( npw, npwx, nbnd, nbndx, evc, ethr, &
-                         okvan, gstart, et(1,ik), btype(1,ik), &
+             CALL regterg (  h_psi, s_psi, g_psi, &
+                         npw, npwx, nbnd, nbndx, evc, ethr, & !    BEWARE gstart has been removed from call
+                         okvan, et(1,ik), btype(1,ik), &
                          notconv, lrot, dav_iter )
           END IF
           !
@@ -346,10 +363,10 @@ CONTAINS
     ! ... here the local variables
     !
     INTEGER :: ipol
-    REAL(dp) :: eps
+    REAL(dp) :: eps=0.000001d0
     !  --- Define a small number ---
-    eps=0.000001d0
     !
+    !write (*,*) ' enter diag_bands_k'; FLUSH(6)
     IF ( lelfield ) THEN
        !
        ! ... save wave functions from previous iteration for electric field
@@ -381,12 +398,14 @@ CONTAINS
        !
     END IF
     !
+    !write (*,*) ' current isolve value ( 1 CG, 2 Davidson)', isolve; FLUSH(6)
     IF ( isolve == 1 ) THEN
        !
        ! ... Conjugate-Gradient diagonalization
        !
        ! ... h_diag is the precondition matrix
        !
+       !write (*,*) ' inside CG solver branch '
        h_diag = 1.D0
        !
        FORALL( ig = 1 : npwx )
@@ -409,8 +428,9 @@ CONTAINS
              !
           END IF
           !
-          CALL ccgdiagg( npwx, npw, nbnd, npol, evc, et(1,ik), btype(1,ik), &
-               h_diag, ethr, max_cg_iter, .NOT. lscf, notconv, cg_iter )
+          CALL ccgdiagg( h_1psi, s_1psi, &
+                         npwx, npw, nbnd, npol, evc, et(1,ik), btype(1,ik), &
+                         h_diag, ethr, max_cg_iter, .NOT. lscf, notconv, cg_iter )
           !
           avg_iter = avg_iter + cg_iter
           !
@@ -446,13 +466,15 @@ CONTAINS
           !
           IF ( use_para_diag ) then
              !
-             CALL pcegterg( npw, npwx, nbnd, nbndx, npol, evc, ethr, &
+             CALL pcegterg( h_psi, s_psi, g_psi, &
+                         npw, npwx, nbnd, nbndx, npol, evc, ethr, &
                          okvan, et(1,ik), btype(1,ik), &
                          notconv, lrot, dav_iter )
              !
           ELSE
              !
-             CALL cegterg ( npw, npwx, nbnd, nbndx, npol, evc, ethr, &
+             CALL cegterg ( h_psi, s_psi, g_psi, &
+                         npw, npwx, nbnd, nbndx, npol, evc, ethr, &
                          okvan, et(1,ik), btype(1,ik), &
                          notconv, lrot, dav_iter )
           END IF

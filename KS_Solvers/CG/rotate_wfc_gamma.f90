@@ -7,29 +7,29 @@
 !
 !
 !----------------------------------------------------------------------------
-SUBROUTINE rotate_wfc_gamma( npwx, npw, nstart, gstart, nbnd, &
-                             psi, overlap, evc, e )
+SUBROUTINE rotate_wfc_gamma( h_psi, s_psi, &
+                             npwx, npw, nstart, nbnd, psi, overlap, evc, e )
   !----------------------------------------------------------------------------
   !
   ! ... Serial version of rotate_wfc for Gamma-only calculations
   ! ... This version assumes real wavefunctions (k=0) with only
   ! ... half plane waves stored: psi(-G)=psi*(G), except G=0
   !
-  USE kinds,         ONLY : DP
-  USE control_flags, ONLY : gamma_only 
-  USE mp_bands,      ONLY : intra_bgrp_comm
-  USE mp,            ONLY : mp_sum 
+  USE cg_param,         ONLY : DP,  gamma_only
+  USE mp_bands_cg,      ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, nbgrp, my_bgrp_id, &
+                               set_bgrp_indices
+  USE mp_bands_cg,      ONLY : gstart ! index of the first nonzero G 
+  USE mp,               ONLY : mp_sum 
   !
   IMPLICIT NONE
   !
   ! ... I/O variables
   !
-  INTEGER :: npw, npwx, nstart, nbnd, gstart, ibnd
+  INTEGER :: npw, npwx, nstart, nbnd
     ! dimension of the matrix to be diagonalized
     ! leading dimension of matrix psi, as declared in the calling pgm unit
     ! input number of states
     ! output number of states
-    ! first G with nonzero norm
   LOGICAL :: overlap
     ! if .FALSE. : S|psi> not needed
   COMPLEX(DP) :: psi(npwx,nstart), evc(npwx,nbnd)
@@ -37,16 +37,33 @@ SUBROUTINE rotate_wfc_gamma( npwx, npw, nstart, gstart, nbnd, &
   REAL(DP) :: e(nbnd)
     ! eigenvalues
   !
-  ! ... auxiliary variables:
+  ! ... local variables
   !
+  INTEGER                  :: npw2, npwx2
   COMPLEX(DP), ALLOCATABLE :: aux(:,:)
-  REAL(DP),    ALLOCATABLE :: hr(:,:), sr(:,:), vr(:,:), en(:)
+  REAL(DP),    ALLOCATABLE :: hr(:,:), sr(:,:), vr(:,:)
+  REAL(DP),    ALLOCATABLE :: en(:)
+  INTEGER :: n_start, n_end
+  !
+  EXTERNAL  h_psi,    s_psi
+    ! h_psi(npwx,npw,nvec,psi,hpsi)
+    !     calculates H|psi>
+    ! s_psi(npwx,npw,nvec,spsi)
+    !     calculates S|psi> (if needed)
+    !     Vectors psi,hpsi,spsi are dimensioned (npwx,npol,nvec)
+
+  npw2  = 2 * npw
+  npwx2 = 2 * npwx
+
+  IF ( gstart == -1 ) CALL errore( 'regter', 'gstart variable not initialized', 1 )
+
   !
   ALLOCATE( aux(  npwx, nstart ) )    
   ALLOCATE( hr( nstart, nstart ) )    
   ALLOCATE( sr( nstart, nstart ) )    
   ALLOCATE( vr( nstart, nstart ) )    
   ALLOCATE( en( nstart ) )
+  call start_clock('rotwfcg'); !write(*,*) 'start rotwfcg' ; FLUSH(6)
   !
   ! ... Set up the Hamiltonian and Overlap matrix on the subspace :
   !
@@ -57,55 +74,78 @@ SUBROUTINE rotate_wfc_gamma( npwx, npw, nstart, gstart, nbnd, &
   IF ( gstart == 2 ) &
      psi(1,1:nstart) = CMPLX( DBLE( psi(1,1:nstart) ), 0.D0 ,kind=DP)
   !
+  call start_clock('rotwfcg:hpsi'); !write(*,*) 'start rotwfcg:hpsi' ; FLUSH(6)
   CALL h_psi( npwx, npw, nstart, psi, aux )
+  call stop_clock('rotwfcg:hpsi'); !write(*,*) 'stop rotwfcg:hpsi' ; FLUSH(6)
   !
-  CALL DGEMM( 'T', 'N', nstart, nstart, 2 * npw, 2.D0 , psi,  2 * npwx, aux, 2 * npwx, 0.D0, hr, nstart )
-  !  
+  call start_clock('rotwfcg:hc'); !write(*,*) 'start rotwfcg:hc' ; FLUSH(6)
+  hr=0.D0
+  CALL set_bgrp_indices(nstart,n_start,n_end); !write (*,*) nstart,n_start,n_end
+  if (n_start .le. n_end) &
+  CALL DGEMM( 'T', 'N', nstart, n_end-n_start+1, npw2, 2.D0 , psi, &
+              npwx2, aux(1,n_start), npwx2, 0.D0, hr(1,n_start), nstart )
   IF ( gstart == 2 ) &
-     call DGER( nstart, nstart, -1.D0, psi, 2 * npwx, aux, &
-                2 * npwx, hr, nstart )
+     call DGER( nstart, n_end-n_start+1, -1.D0, psi, npwx2, aux(1,n_start),  npwx2, hr(1,n_start), nstart )
+  CALL mp_sum(  hr , inter_bgrp_comm )
   !     
   CALL mp_sum(  hr , intra_bgrp_comm )
   !     
+  sr=0.D0
   IF ( overlap ) THEN 
      ! 
      CALL s_psi( npwx, npw, nstart, psi, aux )
      !
-     CALL DGEMM( 'T', 'N', nstart, nstart, 2 * npw, 2.D0 , psi,  2 * npwx, aux, 2 * npwx, 0.D0, sr, nstart )
-     !            
+     if (n_start .le. n_end) &
+     CALL DGEMM( 'T', 'N', nstart, n_end-n_start+1, npw2, 2.D0 , psi, &
+                 npwx2, aux(1,n_start), npwx2, 0.D0, sr(1,n_start), nstart )
      IF ( gstart == 2 ) &
-        CALL DGER( nstart, nstart, -1.D0, psi, 2 * npwx, &
-                   aux, 2 * npwx, sr, nstart )
+        CALL DGER( nstart, n_end-n_start+1, -1.D0, psi, npwx2, aux(1,n_start), npwx2, sr(1,n_start), nstart )
      !              
   ELSE
      !
-     CALL DGEMM( 'T', 'N', nstart, nstart, 2 * npw, 2.D0, psi,  2 * npwx, psi, 2 * npwx, 0.D0, sr, nstart )
-     !
+     if (n_start .le. n_end) &
+     CALL DGEMM( 'T', 'N', nstart, n_end-n_start+1, npw2, 2.D0 , psi, &
+                 npwx2, psi(1,n_start), npwx2, 0.D0, sr(1,n_start), nstart )
      IF ( gstart == 2 ) &
-        CALL DGER( nstart, nstart, -1.D0, psi, 2 * npwx, &
-                   psi, 2 * npwx, sr, nstart )
+        CALL DGER( nstart, n_end-n_start+1, -1.D0, psi, npwx2, psi(1,n_start), npwx2, sr(1,n_start), nstart )
      !
   END IF
+  CALL mp_sum(  sr , inter_bgrp_comm )
   !
   CALL mp_sum(  sr , intra_bgrp_comm )
+  call stop_clock('rotwfcg:hc'); !write(*,*) 'stop rotwfcg:hc' ; FLUSH(6)
   !
   ! ... Diagonalize
   !
+  call start_clock('rotwfcg:diag'); !write(*,*) 'start rotwfcg:diag' ; FLUSH(6)
   CALL rdiaghg( nstart, nbnd, hr, sr, nstart, en, vr )
+  call stop_clock('rotwfcg:diag'); !write(*,*) 'stop rotwfcg:diag' ; FLUSH(6)
+  call start_clock('rotwfcg:evc'); !write(*,*) 'start rotwfcg:evc' ; FLUSH(6)
   !
   e(:) = en(1:nbnd)
   !
   ! ... update the basis set
   !
-  CALL DGEMM( 'N', 'N', 2 * npw, nbnd, nstart, 1.D0, psi, 2 * npwx,  vr, nstart, 0.D0, aux, 2 * npwx )
+  aux=(0.D0,0.D0)
+  if (n_start .le. n_end) &
+  CALL DGEMM( 'N', 'N', npw2, nbnd, n_end-n_start+1, 1.D0, psi(1,n_start), &
+              npwx2,  vr(n_start,1), nstart, 0.D0, aux, npwx2 )
+  CALL mp_sum(  aux , inter_bgrp_comm )
   !   
   evc(:,:) = aux(:,1:nbnd)
+  call stop_clock('rotwfcg:evc'); !write(*,*) 'stop rotwfcg:evc' ; FLUSH(6)
   !
   DEALLOCATE( en )
   DEALLOCATE( vr )
   DEALLOCATE( sr )
   DEALLOCATE( hr )
   DEALLOCATE( aux )
+  call stop_clock('rotwfcg'); !write(*,*) 'stop rotwfcg' ; FLUSH(6)
+  call print_clock('rotwfcg')
+  call print_clock('rotwfcg:hpsi')
+  call print_clock('rotwfcg:hc')
+  call print_clock('rotwfcg:diag')
+  call print_clock('rotwfcg:evc')
   !
   RETURN
   !
@@ -113,7 +153,8 @@ END SUBROUTINE rotate_wfc_gamma
 !
 !
 !----------------------------------------------------------------------------
-SUBROUTINE protate_wfc_gamma( npwx, npw, nstart, gstart, nbnd, psi, overlap, evc, e )
+SUBROUTINE protate_wfc_gamma( h_psi, s_psi, &
+                              npwx, npw, nstart, nbnd, psi, overlap, evc, e )
   !----------------------------------------------------------------------------
   !
   ! ... Parallel version of rotate_wfc for Gamma-only calculations
@@ -121,11 +162,12 @@ SUBROUTINE protate_wfc_gamma( npwx, npw, nstart, gstart, nbnd, psi, overlap, evc
   ! ... This version assumes real wavefunctions (k=0) with only
   ! ... half plane waves stored: psi(-G)=psi*(G), except G=0
   !
-  USE kinds,            ONLY : DP
-  USE control_flags,    ONLY : gamma_only 
-  USE mp_bands,         ONLY : intra_bgrp_comm, nbgrp
-  USE mp_diag,          ONLY : ortho_comm, np_ortho, me_ortho, ortho_comm_id,&
-                               leg_ortho, ortho_parent_comm, ortho_cntx
+  USE cg_param,         ONLY : DP, gamma_only
+  USE mp_bands_cg,      ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, nbgrp, my_bgrp_id, &
+                               set_bgrp_indices
+  USE mp_bands_cg,      ONLY : gstart ! index of the first nonzero G 
+  USE mp_diag,          ONLY : ortho_comm, np_ortho, me_ortho, ortho_comm_id, leg_ortho, &
+                               ortho_parent_comm, ortho_cntx, do_distr_diag_inside_bgrp
   USE descriptors,      ONLY : la_descriptor, descla_init
   USE parallel_toolkit, ONLY : dsqmsym
   USE mp,               ONLY : mp_bcast, mp_root_sum, mp_sum, mp_barrier
@@ -135,12 +177,11 @@ SUBROUTINE protate_wfc_gamma( npwx, npw, nstart, gstart, nbnd, psi, overlap, evc
   !
   ! ... I/O variables
   !
-  INTEGER :: npw, npwx, nstart, nbnd, gstart
+  INTEGER :: npw, npwx, nstart, nbnd
     ! dimension of the matrix to be diagonalized
     ! leading dimension of matrix psi, as declared in the calling pgm unit
     ! input number of states
     ! output number of states
-    ! first G with nonzero norm
   LOGICAL :: overlap
     ! if .FALSE. : S|psi> not needed
   COMPLEX(DP) :: psi(npwx,nstart), evc(npwx,nbnd)
@@ -148,10 +189,12 @@ SUBROUTINE protate_wfc_gamma( npwx, npw, nstart, gstart, nbnd, psi, overlap, evc
   REAL(DP) :: e(nbnd)
     ! eigenvalues
   !
-  ! ... auxiliary variables:
+  ! ... local variables:
   !
+  INTEGER             :: npw2, npwx2
   COMPLEX(DP), ALLOCATABLE :: aux(:,:)
-  REAL(DP),    ALLOCATABLE :: hr(:,:), sr(:,:), vr(:,:), en(:)
+  REAL(DP),    ALLOCATABLE :: hr(:,:), sr(:,:), vr(:,:)
+  REAL(DP),    ALLOCATABLE :: en(:)
   !
   TYPE(la_descriptor) :: desc
     ! matrix distribution descriptors
@@ -162,31 +205,47 @@ SUBROUTINE protate_wfc_gamma( npwx, npw, nstart, gstart, nbnd, psi, overlap, evc
   TYPE(la_descriptor), ALLOCATABLE :: desc_ip( :, : )
   INTEGER, ALLOCATABLE :: rank_ip( :, : )
   !
-  Integer :: ibnd
-  !
+  EXTERNAL  h_psi,    s_psi
+    ! h_psi(npwx,npw,nvec,psi,hpsi)
+    !     calculates H|psi>
+    ! s_psi(npwx,npw,nvec,spsi)
+    !     calculates S|psi> (if needed)
+    !     Vectors psi,hpsi,spsi are dimensioned (npwx,npol,nvec)
 
+  call start_clock('protwfcg'); !write(*,*) 'start protwfcg' ; FLUSH(6)
+  !
   ALLOCATE( desc_ip( np_ortho(1), np_ortho(2) ) )
   ALLOCATE( rank_ip( np_ortho(1), np_ortho(2) ) )
   !
   CALL desc_init( nstart, desc, desc_ip )
+  !
+
+  npw2  = 2 * npw
+  npwx2 = 2 * npwx
+
+  IF ( gstart == -1 ) CALL errore( 'regter', 'gstart variable not initialized', 1 )
   !
   ALLOCATE( aux(  npwx, nstart ) )    
   ALLOCATE( hr( nx, nx ) )    
   ALLOCATE( sr( nx, nx ) )    
   ALLOCATE( vr( nx, nx ) )    
   ALLOCATE( en( nstart ) )
+
+  aux=(0.0_DP,0.0_DP) 
   !
   ! ... Set up the Hamiltonian and Overlap matrix on the subspace :
   !
   ! ...      H_ij = <psi_i| H |psi_j>     S_ij = <psi_i| S |psi_j>
   !
   ! ... set Im[ psi(G=0) ] -  needed for numerical stability
-  !
   IF ( gstart == 2 ) &
      psi(1,1:nstart) = CMPLX( DBLE( psi(1,1:nstart) ), 0.D0 ,kind=DP)
   !
+  call start_clock('protwfcg:hpsi'); !write(*,*) 'start protwfcg:hpsi' ; FLUSH(6)
   CALL h_psi( npwx, npw, nstart, psi, aux )
+  call stop_clock('protwfcg:hpsi'); !write(*,*) 'stop protwfcg:hpsi' ; FLUSH(6)
   !
+  call start_clock('protwfcg:hc'); !write(*,*) 'start protwfcg:hc' ; FLUSH(6)
   CALL compute_distmat( hr, psi, aux )
   !
   IF ( overlap ) THEN
@@ -199,26 +258,48 @@ SUBROUTINE protate_wfc_gamma( npwx, npw, nstart, gstart, nbnd, psi, overlap, evc
      CALL compute_distmat( sr, psi, psi )
      !
   END IF
+  call stop_clock('protwfcg:hc'); !write(*,*) 'stop protwfcg:hc' ; FLUSH(6)
   !
   ! ... Diagonalize
   !
-  CALL prdiaghg( nstart, hr, sr, nx, en, vr, desc )
+  call start_clock('protwfcg:diag'); !write(*,*) 'start protwfcg:diag' ; FLUSH(6)
+  IF ( do_distr_diag_inside_bgrp ) THEN
+     ! only the first bgrp performs the diagonalization
+     IF( my_bgrp_id == root_bgrp_id ) CALL prdiaghg( nstart, hr, sr, nx, en, vr, desc )
+     IF( nbgrp > 1 ) THEN ! results are brodcast to the other bnd groups
+       CALL mp_bcast( vr, root_bgrp_id, inter_bgrp_comm )
+       CALL mp_bcast( en, root_bgrp_id, inter_bgrp_comm )
+     ENDIF
+  ELSE
+     CALL prdiaghg( nstart, hr, sr, nx, en, vr, desc )
+  END IF
+  call stop_clock('protwfcg:diag'); !write(*,*) 'stop protwfcg:diag' ; FLUSH(6)
   !
   e(:) = en(1:nbnd)
   !
   ! ... update the basis set
   !
+  call start_clock('protwfcg:evc'); !write(*,*) 'start protwfcg:evc' ; FLUSH(6)
   CALL refresh_evc( )
   !   
   evc(:,:) = aux(:,1:nbnd)
+  call stop_clock('protwfcg:evc'); !write(*,*) 'stop protwfcg:evc' ; FLUSH(6)
   !
-  DEALLOCATE( desc_ip )
-  DEALLOCATE( rank_ip )
   DEALLOCATE( en )
   DEALLOCATE( vr )
   DEALLOCATE( sr )
   DEALLOCATE( hr )
   DEALLOCATE( aux )
+  !
+  DEALLOCATE( desc_ip )
+  DEALLOCATE( rank_ip )
+  call stop_clock('protwfcg'); !write(*,*) 'stop protwfcg' ; FLUSH(6)
+  call print_clock('protwfcg')
+  call print_clock('protwfcg:hpsi')
+  call print_clock('protwfcg:hc')
+  call print_clock('protwfcg:diag')
+  call print_clock('protwfcg:evc')
+
   !
   RETURN
   !
@@ -284,10 +365,10 @@ CONTAINS
 
            ! use blas subs. on the matrix block
 
-           CALL DGEMM( 'T', 'N', nr, nc, 2*npw, 2.D0 ,  v(1,ir), 2*npwx, w(1,ic), 2*npwx, 0.D0, work, nx )
+           CALL DGEMM( 'T', 'N', nr, nc, npw2, 2.D0 ,  v(1,ir), npwx2, w(1,ic), npwx2, 0.D0, work, nx )
 
            IF ( gstart == 2 ) &
-              CALL DGER( nr, nc, -1.D0, v(1,ir), 2*npwx, w(1,ic), 2*npwx, work, nx )
+              CALL DGER( nr, nc, -1.D0, v(1,ir), npwx2, w(1,ic), npwx2, work, nx )
 
            ! accumulate result on dm of root proc.
 
@@ -339,13 +420,13 @@ CONTAINS
                  !  this proc sends his block
                  ! 
                  CALL mp_bcast( vr(:,1:nc), root, ortho_parent_comm )
-                 CALL DGEMM( 'N', 'N', 2*npw, nc, nr, 1.D0,  psi(1,ir), 2*npwx, vr, nx, beta, aux(1,ic), 2*npwx )
+                 CALL DGEMM( 'N', 'N', npw2, nc, nr, 1.D0,  psi(1,ir), npwx2, vr, nx, beta, aux(1,ic), npwx2 )
               ELSE
                  !
                  !  all other procs receive
                  ! 
                  CALL mp_bcast( vtmp(:,1:nc), root, ortho_parent_comm )
-                 CALL DGEMM( 'N', 'N', 2*npw, nc, nr, 1.D0,  psi(1,ir), 2*npwx, vtmp, nx, beta, aux(1,ic), 2*npwx )
+                 CALL DGEMM( 'N', 'N', npw2, nc, nr, 1.D0,  psi(1,ir), npwx2, vtmp, nx, beta, aux(1,ic), npwx2 )
               END IF
               ! 
 

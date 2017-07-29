@@ -245,9 +245,9 @@ SUBROUTINE init_wfc ( ik )
   !
   IF ( starting_wfc(1:6) == 'atomic' ) THEN
      !
-     CALL start_clock( 'wfcinit:atomic' )
+     CALL start_clock( 'wfcinit:atomic' ); !write(*,*) 'start wfcinit:atomic' ; FLUSH(6)
      CALL atomic_wfc( ik, wfcatom )
-     CALL stop_clock( 'wfcinit:atomic' )
+     CALL stop_clock( 'wfcinit:atomic' ); !write(*,*) 'stop wfcinit:atomic' ; FLUSH(6)
      !
      IF ( starting_wfc == 'atomic+random' .AND. &
          n_starting_wfc == n_starting_atomic_wfc ) THEN
@@ -326,10 +326,9 @@ SUBROUTINE init_wfc ( ik )
   !
   ! ... subspace diagonalization (calls Hpsi)
   !
-  CALL start_clock( 'wfcinit:wfcrot' )
-  CALL rotate_wfc ( npwx, ngk(ik), n_starting_wfc, gstart, &
-                    nbnd, wfcatom, npol, okvan, evc, etatom )
-  CALL stop_clock( 'wfcinit:wfcrot' )
+  CALL start_clock( 'wfcinit:wfcrot' ); !write(*,*) 'start wfcinit:wfcrot' ; FLUSH(6)
+  CALL rotate_wfc ( npwx, ngk(ik), n_starting_wfc, gstart, nbnd, wfcatom, npol, okvan, evc, etatom )
+  CALL stop_clock( 'wfcinit:wfcrot' ); !write(*,*) 'stop wfcinit:wfcrot' ; FLUSH(6)
   !
   lelfield = lelfield_save
   !

@@ -13,6 +13,7 @@ SUBROUTINE init_run()
   USE symme,              ONLY : sym_rho_init
   USE wvfct,              ONLY : nbnd, et, wg, btype
   USE control_flags,      ONLY : lmd, gamma_only, smallmem, ts_vdw
+  USE gvect,              ONLY : gstart ! to be comunicated to the Solvers if gamma_only
   USE cell_base,          ONLY : at, bg, set_h_ainv
   USE cellmd,             ONLY : lmovecell
   USE dynamics_module,    ONLY : allocate_dyn_vars
@@ -64,6 +65,10 @@ SUBROUTINE init_run()
      CALL ggen( gamma_only, at, bg, intra_bgrp_comm, no_global_sort = .TRUE. )
   ELSE
      CALL ggen( gamma_only, at, bg )
+  END IF
+  if (gamma_only) THEN
+     ! ... Solvers need to know gstart
+     call export_gstart_2_cg(gstart); call export_gstart_2_davidson(gstart)
   END IF
   !
   IF (do_comp_esm) CALL esm_init()

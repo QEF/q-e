@@ -65,15 +65,15 @@ default :
 # If "|| exit 1" is not present, the error code from make in subdirectories
 # is not returned and make goes on even if compilation has failed
 
-pw : bindir libfft libla libutil mods liblapack libs libiotk libfox
+pw : bindir libfft libdavid libcg libla libutil mods liblapack libs libiotk 
 	if test -d PW ; then \
 	( cd PW ; $(MAKE) TLDEPS= all || exit 1) ; fi
 
-pw-lib : bindir libfft libla libutil mods liblapack libs libiotk libfox
+pw-lib : bindir libdavid libcg libfft libla libutil mods liblapack libs libiotk
 	if test -d PW ; then \
 	( cd PW ; $(MAKE) TLDEPS= pw-lib || exit 1) ; fi
 
-cp : bindir libfft libla libutils mods liblapack libs libiotk libfox
+cp : bindir libfft libla libutil mods liblapack libs libiotk libfox
 	if test -d CPV ; then \
 	( cd CPV ; $(MAKE) TLDEPS= all || exit 1) ; fi
 
@@ -160,6 +160,15 @@ all   : pwall cp ld1 upf tddfpt xspectra gwl
 # Auxiliary targets used by main targets:
 # compile modules, libraries, directory for binaries, etc
 ###########################################################
+
+libdavid_rci : touch-dummy libla clib libutil
+	( cd KS_Solvers/Davidson_RCI ; $(MAKE) TLDEPS= all || exit 1 )
+
+libdavid : touch-dummy libla clib libutil
+	( cd KS_Solvers/Davidson ; $(MAKE) TLDEPS= all || exit 1 )
+
+libcg : touch-dummy libla clib libutil
+	( cd KS_Solvers/CG ; $(MAKE) TLDEPS= all || exit 1 )
 
 libla : touch-dummy liblapack libutil
 	( cd LAXlib ; $(MAKE) TLDEPS= all || exit 1 )

@@ -21,7 +21,7 @@ subroutine qqberry2( gqq,gqqm, ipol)
   use core
   use gvecw,              only: ngw
   use gvect,              only: mill
-  use constants
+  use constants,          only: fpi
   use ions_base,          only: nax, na, nsp
   use cell_base,          only: at, alat
   use gvect,              only: g, gg

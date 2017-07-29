@@ -19,9 +19,9 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
   !
   ! ... LAPACK version - uses both ZHEGV and ZHEGVX
   !
-  USE kinds,            ONLY : DP
-  USE mp,               ONLY : mp_bcast, mp_sum, mp_barrier, mp_max
-  USE mp_bands,         ONLY : me_bgrp, root_bgrp, intra_bgrp_comm
+  USE david_param,       ONLY : DP
+  USE mp,                ONLY : mp_bcast, mp_sum, mp_barrier, mp_max
+  USE mp_bands_davidson, ONLY : me_bgrp, root_bgrp, intra_bgrp_comm
   !
   IMPLICIT NONE
   !
@@ -199,9 +199,9 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
   !
   ! ... Parallel version, with full data distribution
   !
-  USE kinds,            ONLY : DP
+  USE david_param,      ONLY : DP
   USE mp,               ONLY : mp_bcast
-  USE mp_bands,         ONLY : root_bgrp, intra_bgrp_comm
+  USE mp_bands_davidson,ONLY : root_bgrp, intra_bgrp_comm
   USE zhpev_module,     ONLY : pzhpev_drv, zhpev_drv
   USE descriptors,      ONLY : la_descriptor
   USE parallel_toolkit, ONLY : zsqmdst, zsqmcll
@@ -389,21 +389,21 @@ CONTAINS
         write( 100, fmt="(A20,2D18.10)" ) ' e code = ', e( 1 ), e( n )
         ALLOCATE( diag( n*(n+1)/2, 1 ) )
         k = 1
-        ! write( 100, fmt="(I5)" ) n
+        !write( 100, fmt="(I5)" ) n
         DO j = 1, n
            DO i = j, n
               diag( k, 1 ) = tt( i, j )
-              ! write( 100, fmt="(2I5,2D18.10)" ) i, j, tt( i, j )
+              !write( 100, fmt="(2I5,2D18.10)" ) i, j, tt( i, j )
               k = k + 1
            END DO
         END DO
         call zhpev_drv( 'V', 'L', N, diag(:,1), e, tt, n )
         write( 100, fmt="(A20,2D18.10)" ) ' e test = ', e( 1 ), e( n )
-        ! write( 100, * ) 'eigenvalues and eigenvectors'
+        !write( 100, * ) 'eigenvalues and eigenvectors'
         DO j = 1, n
-           ! write( 100, fmt="(1I5,1D18.10,A)" ) j, e( j )
+           !write( 100, fmt="(1I5,1D18.10,A)" ) j, e( j )
            DO i = 1, n
-              ! write( 100, fmt="(2I5,2D18.10)" ) i, j, tt( i, j )
+              !write( 100, fmt="(2I5,2D18.10)" ) i, j, tt( i, j )
            END DO
         END DO
         close(100)

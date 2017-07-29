@@ -14,9 +14,9 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
   !
   ! ... LAPACK version - uses both DSYGV and DSYGVX
   !
-  USE kinds,            ONLY : DP
-  USE mp,               ONLY : mp_bcast
-  USE mp_bands,         ONLY : me_bgrp, root_bgrp, intra_bgrp_comm
+  USE cg_param,     ONLY : DP
+  USE mp,           ONLY : mp_bcast
+  USE mp_bands_cg,  ONLY : me_bgrp, root_bgrp, intra_bgrp_comm
   !
   IMPLICIT NONE
   !
@@ -33,7 +33,7 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
   REAL(DP), INTENT(OUT) :: v(ldh,m)
     ! eigenvectors (column-wise)
   !
-  INTEGER               :: i, j, lwork, nb, mm, info
+  INTEGER               :: lwork, nb, mm, info, i, j
     ! mm = number of calculated eigenvectors
   REAL(DP)              :: abstol
   REAL(DP), PARAMETER   :: one = 1_DP
@@ -179,13 +179,13 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
   !
   ! ... Parallel version with full data distribution
   !
-  USE kinds,            ONLY : DP
-  USE mp,               ONLY : mp_bcast
-  USE mp_bands,         ONLY : root_bgrp, intra_bgrp_comm
-  USE descriptors,      ONLY : la_descriptor
+  USE cg_param,    ONLY : DP
+  USE mp,          ONLY : mp_bcast
+  USE mp_bands_cg, ONLY : root_bgrp, intra_bgrp_comm
+  USE descriptors, ONLY : la_descriptor
 #if defined __SCALAPACK
-  USE mp_diag,          ONLY : ortho_cntx, me_blacs, np_ortho, me_ortho, ortho_comm
-  USE dspev_module,     ONLY : pdsyevd_drv
+  USE mp_diag,     ONLY : ortho_cntx, me_blacs, np_ortho, me_ortho, ortho_comm
+  USE dspev_module,ONLY : pdsyevd_drv
 #endif
   !
   !
