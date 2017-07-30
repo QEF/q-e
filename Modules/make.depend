@@ -130,6 +130,11 @@ hdf5_qe.o : ../UtilXlib/parallel_include.o
 hdf5_qe.o : io_files.o
 hdf5_qe.o : kind.o
 hdf5_qe.o : mp_world.o
+hdf5_qe_parallel.o : ../UtilXlib/mp.o
+hdf5_qe_parallel.o : ../UtilXlib/parallel_include.o
+hdf5_qe_parallel.o : io_files.o
+hdf5_qe_parallel.o : kind.o
+hdf5_qe_parallel.o : mp_world.o
 input_parameters.o : kind.o
 input_parameters.o : parameters.o
 input_parameters.o : wannier_new.o
@@ -204,6 +209,10 @@ parser.o : io_global.o
 parser.o : kind.o
 parser.o : mp_images.o
 paw_variables.o : kind.o
+pippo.o : ../iotk/src/iotk_module.o
+pippo.o : @qexsd_reader_module@
+pippo.o : qes_libs.o
+pippo.o : qes_types.o
 plot_io.o : io_global.o
 plot_io.o : kind.o
 plugin_arguments.o : ../UtilXlib/mp.o
@@ -221,11 +230,12 @@ pw_dot.o : kind.o
 pw_dot.o : mp_global.o
 pw_dot.o : recvec.o
 qeh5_module.o : kind.o
-qes_libs.o : ../iotk/src/iotk_module.o
 qes_libs.o : qes_types.o
 qes_module.o : ../iotk/src/iotk_module.o
 qes_module.o : qes_libs.o
 qes_module.o : qes_types.o
+qes_read_module.o : kind.o
+qes_read_module.o : qes_types.o
 qes_types.o : kind.o
 qexml.o : ../iotk/src/iotk_module.o
 qexml.o : hdf5_qe.o
@@ -235,8 +245,6 @@ qexml.o : mp_pools.o
 qexml.o : mp_world.o
 qexml.o : wrappers.o
 qexsd.o : ../UtilXlib/clocks_handler.o
-qexsd.o : ../iotk/src/iotk_base.o
-qexsd.o : ../iotk/src/iotk_module.o
 qexsd.o : cell_base.o
 qexsd.o : constants.o
 qexsd.o : input_parameters.o
@@ -258,11 +266,6 @@ qexsd_input.o : constants.o
 qexsd_input.o : input_parameters.o
 qexsd_input.o : kind.o
 qexsd_input.o : qes_module.o
-qexsd_reader_module.o : ../iotk/src/iotk_module.o
-qexsd_reader_module.o : io_global.o
-qexsd_reader_module.o : kind.o
-qexsd_reader_module.o : parameters.o
-qexsd_reader_module.o : qes_module.o
 qmmm.o : ../FFTXlib/fft_types.o
 qmmm.o : ../UtilXlib/mp.o
 qmmm.o : ../UtilXlib/parallel_include.o

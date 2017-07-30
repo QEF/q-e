@@ -173,10 +173,10 @@ cp_restart_new.o : ../../Modules/mp_images.o
 cp_restart_new.o : ../../Modules/mp_pools.o
 cp_restart_new.o : ../../Modules/parameters.o
 cp_restart_new.o : ../../Modules/qes_module.o
+cp_restart_new.o : ../../Modules/qes_read_module.o
 cp_restart_new.o : ../../Modules/qes_types.o
 cp_restart_new.o : ../../Modules/qexsd.o
 cp_restart_new.o : ../../Modules/qexsd_input.o
-cp_restart_new.o : ../../Modules/qexsd_reader_module.o
 cp_restart_new.o : ../../Modules/recvec.o
 cp_restart_new.o : ../../Modules/run_info.o
 cp_restart_new.o : ../../Modules/tsvdw.o

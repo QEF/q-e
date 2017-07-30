@@ -107,9 +107,9 @@ io_base.o \
 qes_module.o  \
 qes_types.o \
 qes_libs.o  \
+qes_read_module.o \
 qexsd.o   \
 qexsd_input.o \
-qexsd_reader_module.o \
 hdf5_qe.o\
 qeh5_module.o\
 xsf.o \

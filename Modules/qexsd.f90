@@ -26,10 +26,10 @@ MODULE qexsd_module
   USE mp_bands,         ONLY : ntask_groups, nproc_bgrp, nbgrp
   USE global_version,   ONLY:  version_number, svn_revision
   !
-  USE iotk_base,        ONLY : iotk_indent, iotk_maxindent
   USE constants,        ONLY : e2
-  USE iotk_module
   USE qes_module
+  !
+  USE FoX_wxml
   !
   IMPLICIT NONE
   !
@@ -49,6 +49,7 @@ MODULE qexsd_module
   !
   CHARACTER(256)   :: datadir_in, datadir_out
   INTEGER          :: iunit, ounit
+  TYPE(xmlf_t)     :: qexsd_xf
   !
   ! vars to manage back compatibility
   !
@@ -66,7 +67,7 @@ MODULE qexsd_module
   TYPE (berryPhaseOutput_type)     :: qexsd_bp_obj
   TYPE (dipoleOutput_type )        :: qexsd_dipol_obj
   TYPE ( step_type),ALLOCATABLE    :: steps(:)
-  TYPE ( status_type )             :: exit_status
+  INTEGER                          :: exit_status
   TYPE ( closed_type )             :: qexsd_closed_element
   INTEGER                          :: step_counter
   !
@@ -74,6 +75,7 @@ MODULE qexsd_module
   !
   PUBLIC :: qexsd_current_version, qexsd_default_version
   PUBLIC :: qexsd_current_version_init
+  PUBLIC :: qexsd_xf  
   !
   PUBLIC :: qexsd_input_obj
   ! 
@@ -109,11 +111,6 @@ CONTAINS
       ounit       = unit_in
       IF ( present( unit_out ) ) ounit  = unit_out
       !
-      ! increase the xml indentation for better reading
-      IF ( qexsd_use_large_indent ) THEN
-          iotk_indent = 8
-          iotk_maxindent = 64
-      ENDIF
       !
     END SUBROUTINE qexsd_init_schema
     !
@@ -143,49 +140,49 @@ CONTAINS
       !
       IMPLICIT NONE
       !
-      CHARACTER(iotk_attlenx)  :: attr
       CHARACTER(len=*), INTENT(IN) :: filename
       CHARACTER(len=16) :: subname = 'qexsd_openschema'
       INTEGER :: ierr, len_steps, i_step
       !
       ! we need a qes-version number here
-      CALL iotk_write_attr(attr,"xmlns:qes","http://www.quantum-espresso.org/ns/qes/qes-1.0",FIRST=.true.) 
+      CALL xml_OpenFile(FILENAME = TRIM(filename), XF = qexsd_xf, UNIT = ounit, PRETTY_PRINT = .TRUE., &
+                        REPLACE  = .TRUE., NAMESPACE = .TRUE., IOSTAT = ierr ) 
       !
-      ! we need a schema location number (put a string in fortran-input)?
-      CALL iotk_write_attr(attr,"xmlns:xsi","http://www.w3.org/2001/XMLSchema-instance",newline=.true.) 
-      !
-      CALL iotk_write_attr(attr,"xsi:schemaLocation","http://www.quantum-espresso.org/ns/qes/qes-1.0 espresso.xsd",&
-                           newline=.true.)
-      !
-      CALL iotk_open_write(ounit,FILE=filename , root="qes:espresso",attr=attr,binary=.false., &
-                           skip_head=.true.,IERR=ierr)
+      CALL xml_DeclareNamespace (XF=qexsd_xf, PREFIX = "xsi", nsURI ="http://www.w3.org/2001/XMLSchema-instance")
+      CALL xml_DeclareNamespace (XF=qexsd_xf, PREFIX = "qes", nsURI ="http://www.quantum-espresso.org/ns/qes/qes-1.0")
+      CALL xml_NewElement (XF=qexsd_xf, NAME = "qes:espresso")
+      CALL xml_addAttribute(XF=qexsd_xf, NAME = "xsi:schemaLocation", &
+                            VALUE = "http://www.quantum-espresso.org/ns/qes/qes-1.0 "//&
+                                    "http://www.quantum-espresso.org/ns/qes/qes-1.0/qes.xsd" )
+      CALL xml_addAttribute(XF=qexsd_xf, NAME="Units", VALUE="Hartree atomic units")
+      CALL xml_addComment(XF = qexsd_xf, &
+              COMMENT = "If not explicitely indicated, all quantities are expressed in Hartree atomic units" ) 
       !
       IF (ierr /= 0) call errore(subname, 'opening xml output file', ierr)
       ! the input file is mandatory to have a validating schema 
       ! here an error should be issued, instead
       !
       CALL qexsd_init_general_info(general_info)
-      CALL qes_write_general_info(ounit,general_info)
+      CALL qes_write_general_info(qexsd_xf,general_info)
       CALL qes_reset_general_info(general_info)
       !
       CALL qexsd_init_parallel_info(parallel_info)
-      CALL qes_write_parallel_info(ounit,parallel_info)
+      CALL qes_write_parallel_info(qexsd_xf,parallel_info)
       CALL qes_reset_parallel_info(parallel_info) 
       IF ( check_file_exst(input_xml_schema_file) )  THEN
-         CALL qexsd_cp_line_by_line(ounit,input_xml_schema_file, spec_tag="input")
+         CALL qexsd_cp_line_by_line(ounit ,input_xml_schema_file, spec_tag="input")
       ELSE IF ( TRIM(qexsd_input_obj%tagname) == "input") THEN 
-         CALL qes_write_input(ounit,qexsd_input_obj)
+         CALL qes_write_input(qexsd_xf, qexsd_input_obj)
       END IF
       ! 
       !CALL qes_reset_input(qexsd_input_obj)     
       IF (ALLOCATED(steps) ) THEN 
          len_steps= step_counter 
          DO i_step = 1, len_steps
-            CALL qes_write_step(ounit, steps(i_step) )
+            CALL qes_write_step(qexsd_xf, steps(i_step) )
          END DO 
       END IF
-      !
-      
+      ! 
     END SUBROUTINE qexsd_openschema
     !
     !
@@ -251,18 +248,17 @@ CONTAINS
       CHARACTER(len=17) :: subname = 'qexsd_closeschema'
       INTEGER :: ierr
       !
-      IF (TRIM(exit_status%tagname) == "status") THEN 
-         CALL qes_write_status(ounit, exit_status) 
+      IF (exit_status .ge. 0 ) THEN 
+         CALL xml_NewElement(qexsd_xf, "status")
+         CALL xml_AddCharacters(qexsd_xf, exit_status)
+         CALL xml_EndElement(qexsd_xf, "status")          
          CALL qexsd_set_closed()
-         CALL iotk_write_begin(ounit, "cputime", attr="",new_line=.FALSE.)
-      !
-         WRITE(ounit, '(I0)', advance = 'no' )  nint(get_clock('PWSCF'))
-         CALL iotk_write_end(ounit, "cputime",indentation=.FALSE.)
-         CALL qes_write_closed(ounit, qexsd_closed_element)
+         CALL xml_NewElement (qexsd_xf, "cputime")
+         CALL xml_addCharacters(qexsd_xf, nint(get_clock('PWSCF')) )
+         CALL xml_EndElement ( qexsd_xf, "cputime")
+         CALL qes_write_closed(qexsd_xf, qexsd_closed_element)
       END IF
-         CALL iotk_close_write(ounit, IERR=ierr)
-      !
-      CALL errore(subname, 'closing xml input file', ierr)
+         CALL xml_Close(qexsd_xf) 
       !
     END SUBROUTINE qexsd_closeschema
     !
@@ -516,6 +512,7 @@ CONTAINS
       CHARACTER(LEN=256)            :: la_info
       LOGICAL                      :: class_ispresent = .FALSE., time_reversal_ispresent = .FALSE.
       INTEGER                      :: i
+      REAL(DP)                     :: mat_(3,3)
       
       ALLOCATE(symm(nrot))
       !
@@ -534,11 +531,11 @@ CONTAINS
                              time_reversal=(t_rev(i)==1), time_reversal_ispresent = time_reversal_ispresent, &
                              INFO= TRIM(la_info) )
           !
-          CALL qes_init_matrix(matrix, "rotation", ndim1_mat=3, ndim2_mat=3, mat=real(s(:,:,i),DP))
+          mat_ = real(s(:,:,i),DP)
+          CALL qes_init_matrix(matrix, "rotation", DIMS=[3,3], mat=mat_(:,1) )
           !
           IF ( i .LE. nsym ) THEN 
-             CALL qes_init_equivalent_atoms(equiv_atm, "equivalent_atoms", nat=nat, ndim_index_list=nat, &
-                                         index_list=irt(i,1:nat)  )
+             CALL qes_init_equivalent_atoms(equiv_atm, "equivalent_atoms", nat=nat, index_list=irt(i,1:nat)  )
           !
              CALL qes_init_symmetry(symm(i),"symmetry", info=info, rotation=matrix, &
                                  fractional_translation_ispresent=.TRUE., fractional_translation=ft(:,i), &
@@ -689,7 +686,7 @@ CONTAINS
       LOGICAL  :: london_c6_ispresent, london_s6_ispresent, london_rvdw_ispresent, ts_vdw_econv_thr_ispresent, & 
                   london_rcut_ispresent, ts_vdw_isolated_ispresent, xdm_a1_ispresent, xdm_a2_ispresent, &
                   empirical_vdw = .FALSE. 
-      INTEGER  :: ndim_london_c6                   
+      INTEGER  :: ndim_london_c6, ndim_starting_ns                   
       CHARACTER(10), ALLOCATABLE :: label(:)
       CHARACTER                  :: hubbard_shell 
       INTEGER,EXTERNAL           :: set_hubbard_l,set_hubbard_n
@@ -764,20 +761,24 @@ CONTAINS
           IF (starting_ns_ispresent) THEN 
              IF (noncolin) THEN 
                 DO i = 1, nsp 
+                   IF (.NOT. ANY(starting_ns(1:2*llmax,1,i) > 0)) CYCLE
                    ind = ind + 1 
                    CALL qes_init_starting_ns(starting_ns_(ind), "starting_ns", TRIM (species(i)),TRIM (label(i)),&
-                                             1,2*llmax, starting_ns(1:2*llmax, 1, i))
+                                             1, starting_ns(1:2*llmax, 1, i))
                 END DO
              ELSE 
                 DO is = 1, MIN(nspin,nspinx) 
                    DO i  = 1, nsp
-                      ind = ind+1
+                      IF (.NOT. ANY (starting_ns(1:llmax,is,i) > 0)) CYCLE 
+                      ind = ind+1 
                       CALL qes_init_starting_ns(starting_ns_(ind),"starting_ns",TRIM(species(i)),TRIM(label(i)), &
-                                                is, llmax, starting_ns(1:llmax,is,i) )
-                  ENDDO
-                ENDDO
+                                                is, max(starting_ns(1:llmax,is,i),0._DP)  )
+                  ENDDO 
+                ENDDO 
              END IF
+             ndim_starting_ns = ind
           END IF
+          IF ( ndim_starting_ns == 0) starting_ns_ispresent = .FALSE.
           !
           ind = 0
           IF (noncolin .AND. PRESENT(Hubbard_ns_nc) ) THEN
@@ -799,7 +800,7 @@ CONTAINS
                    END DO
                 END DO
                 CALL qes_init_Hubbard_ns(Hubbard_ns_(i),"Hubbard_ns_mod", TRIM(species(ityp(i))),TRIM(label(ityp(i))), &
-                                         1, i, 2*ldim, 2*ldim, Hubb_occ_aux(:,:))
+                                         1, i, Hubb_occ_aux(:,:))
              END DO 
              DEALLOCATE ( Hubb_occ_aux) 
           ELSE IF ( PRESENT(Hubbard_ns) ) THEN
@@ -813,7 +814,7 @@ CONTAINS
                 DO is = 1, nspin
                    ind = ind+1
                    CALL qes_init_Hubbard_ns(Hubbard_ns_(ind),"Hubbard_ns", TRIM(species(ityp(i))),TRIM(label(ityp(i))), &
-                                       is, i, ldim, ldim, Hubbard_ns(:,:,is,i) )
+                                       is, i, Hubbard_ns(:,:,is,i) )
                 ENDDO
              ENDDO
           ELSE
@@ -827,7 +828,7 @@ CONTAINS
                               Hubbard_alpha_ispresent, SIZE(Hubbard_alpha_), Hubbard_alpha_, &
                               Hubbard_beta_ispresent, SIZE(Hubbard_beta_), Hubbard_beta_, &
                               Hubbard_J_ispresent, SIZE(Hubbard_J_), Hubbard_J_, &
-                              starting_ns_ispresent, SIZE(starting_ns_), starting_ns_, &
+                              starting_ns_ispresent, ndim_starting_ns, starting_ns_, &
                               Hubbard_ns_ispresent, SIZE(Hubbard_ns_), Hubbard_ns_, &
                               .TRUE., U_projection_type)
           !
@@ -1018,6 +1019,7 @@ CONTAINS
     ALLOCATE(eigenvalues(nbnd),occupations(nbnd))
     ALLOCATE(ks_objs(ndim_ks_energies))
     !  
+    ks_objs%tagname="ks_energies"
     DO ik=1,ndim_ks_energies
        CALL qes_init_k_point(kp_obj,"k_point",wk(ik),.true.,"",.FALSE., xk(:,ik))
        IF ( lsda ) THEN 
@@ -1045,13 +1047,17 @@ CONTAINS
        END IF
        !
        !
-       CALL  qes_init_ks_energies(ks_objs(ik),"ks_energies",kp_obj,ngk(ik),nbnd,eigenvalues,& 
-                      nbnd,occupations)
+       ks_objs(ik)%k_point = kp_obj
+       ks_objs(ik)%npw = ngk(ik)
+       CALL  qes_init_vector(ks_objs(ik)%eigenvalues, "eigenvalues",eigenvalues)
+       CALL  qes_init_vector(ks_objs(ik)%occupations, "occupations",occupations)
        !
        eigenvalues=0.d0
        occupations=0.d0
        CALL qes_reset_k_point(kp_obj)  
     END DO 
+    ks_objs%lwrite = .TRUE.
+    ks_objs%lread  = .TRUE.
     !
     IF ( PRESENT(smearing) ) smearing_ = smearing
 !
@@ -1064,7 +1070,7 @@ CONTAINS
     CALL qes_init_band_structure( obj,TAGNAME,lsda,noncolin,lspinorb, nbnd, nbnd_up_ispresent,&
                   nbnd_up,nbnd_dw_ispresent,nbnd_dw,nelec, n_wfc_at_ispresent, n_wfc_at, wf_collected, & 
                   fermi_energy_ispresent, fermi_energy/e2, HOL_ispresent, fermi_energy/e2,     &
-                  two_fermi_energies, 2, ef_updw/e2, starting_k_points_, ndim_ks_energies,      &
+                  two_fermi_energies, ef_updw/e2, starting_k_points_, ndim_ks_energies,      &
                   occupations_kind_, PRESENT(smearing), smearing_, ndim_ks_energies, ks_objs )
     DO ik=1,ndim_ks_energies
        CALL qes_reset_ks_energies(ks_objs(ik))
@@ -1147,7 +1153,7 @@ CONTAINS
     ALLOCATE (forces_aux(3,nat))
     forces_aux(1:3,1:nat)=forces(1:3,1:nat)/e2
     !
-    CALL qes_init_matrix(obj,TAGNAME,3,nat,forces_aux)
+    CALL qes_init_matrix(obj,TAGNAME,[3,nat],forces_aux(:,1) )
     !
     DEALLOCATE (forces_aux)
     !
@@ -1174,7 +1180,7 @@ CONTAINS
     END IF
     ! 
     stress_aux=stress/e2
-    CALL qes_init_matrix(obj,TAGNAME,3,3,stress_aux)
+    CALL qes_init_matrix(obj,TAGNAME,[3,3],stress_aux(:,1) )
     ! 
     END SUBROUTINE qexsd_init_stress
     !
@@ -1312,11 +1318,11 @@ CONTAINS
     step_obj%total_energy=tot_en_obj
     CALL qes_reset_total_energy( tot_en_obj )
     ! 
-    CALL  qes_init_matrix( mat_forces, "forces", 3, nat, forces ) 
+    CALL  qes_init_matrix( mat_forces, "forces", [3, nat], forces(:,1) ) 
     step_obj%forces=mat_forces
     CALL qes_reset_matrix ( mat_forces )
     ! 
-    CALL qes_init_matrix( mat_stress, "stress", 3, 3, stress ) 
+    CALL qes_init_matrix( mat_stress, "stress", [3, 3], stress(:,1) ) 
     step_obj%stress = mat_stress
     CALL qes_reset_matrix ( mat_stress ) 
     IF ( PRESENT ( fcp_force ) ) THEN 
@@ -1328,6 +1334,8 @@ CONTAINS
     !  
     ! 
     steps(step_counter) = step_obj
+    steps(step_counter)%lwrite  = .TRUE.
+    steps(step_counter)%lread   = .TRUE. 
     call qes_reset_step(step_obj)
     END SUBROUTINE qexsd_step_addstep 
     !-------------------------------------------------------------------------------------------------
@@ -1430,7 +1438,7 @@ CONTAINS
     !
     INTEGER      :: status_int
 #if !defined(__OLDXML)  
-    CALL qes_init_status( exit_status, "status", status_int)
+    !CALL qes_init_status( exit_status, "status", status_int)
 #endif
     END SUBROUTINE qexsd_set_status 
     !

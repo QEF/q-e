@@ -28,7 +28,7 @@ MODULE cp_restart_new
                           qexsd_init_symmetries, qexsd_init_basis_set, qexsd_init_dft, &
                           qexsd_init_magnetization,qexsd_init_band_structure,          &
                           qexsd_init_dipole_info, qexsd_init_total_energy,             &
-                          qexsd_init_forces,qexsd_init_stress,                         &
+                          qexsd_init_forces,qexsd_init_stress, qexsd_xf,               &
                           qexsd_init_outputElectricField, input_obj => qexsd_input_obj
   USE io_files,  ONLY : iunpun, xmlpun_schema, prefix, tmp_dir, qexsd_fmt,&
        qexsd_version
@@ -264,12 +264,12 @@ MODULE cp_restart_new
 ! ... CP-SPECIFIC CELL variables
 !-------------------------------------------------------------------------------
          !
-         CALL cp_writecp( iunpun, nfi, simtime, ekin, eht, esr, eself, &
+         CALL cp_writecp( qexsd_xf, nfi, simtime, ekin, eht, esr, eself, &
               epseu, enl, exc, vave, enthal, acc, stau0, svel0, taui, cdmi,&
               force, nhpcl, nhpdim, xnhp0, vnhp, ekincm, xnhe0, vnhe, ht,&
               htvel, gvel, xnhh0, vnhh, staum, svelm, xnhpm, xnhem, htm, xnhhm)
          ! Wannier function centers
-         IF ( lwf ) CALL cp_writecenters ( iunpun, h, wfc)
+         IF ( lwf ) CALL cp_writecenters ( qexsd_xf, h, wfc)
          !
 !-------------------------------------------------------------------------------
 ! ... CONVERGENCE_INFO - TO BE VERIFIED
@@ -384,7 +384,7 @@ MODULE cp_restart_new
 ! ... ACTUAL WRITING
 !-------------------------------------------------------------------------------
          !
-         CALL qes_write_output(iunpun,output_obj)
+         CALL qes_write_output(qexsd_xf, output_obj)
          CALL qes_reset_output(output_obj)
          !
 !-------------------------------------------------------------------------------
@@ -495,6 +495,8 @@ MODULE cp_restart_new
       !------------------------------------------------------------------------
       !
       USE iotk_module
+      USE FoX_dom,                  ONLY : parseFile, destroy, item, getElementsByTagname,&
+                                           Node
       USE control_flags,            ONLY : gamma_only, force_pairing, llondon,&
                                            ts_vdw, lxdm, iverbosity, twfcollect, lwf
       USE io_files,                 ONLY : iunpun, xmlpun, iunwfc, nwordwfc, &
@@ -518,9 +520,8 @@ MODULE cp_restart_new
       USE parameters,               ONLY : ntypx
       USE constants,                ONLY : eps8, angstrom_au, pi
       USE qes_types_module,         ONLY : output_type, parallel_info_type, &
-           general_info_type
-      USE qexsd_reader_module,      ONLY : qexsd_get_general_info, &
-           qexsd_get_parallel_info, qexsd_get_output
+                                           general_info_type
+      USE qes_read_module,          ONLY : qes_read
       USE kernel_table,             ONLY : vdw_table_name
       USE london_module,            ONLY : scal6, lon_rcut, in_c6
       USE tsvdw_module,             ONLY : vdw_isolated, vdw_econv_thr
@@ -611,6 +612,7 @@ MODULE cp_restart_new
       TYPE ( output_type)   :: output_obj 
       TYPE (parallel_info_type) :: parinfo_obj
       TYPE (general_info_type ) :: geninfo_obj 
+      TYPE (Node),POINTER       :: root, nodePointer
       CHARACTER(LEN=20) :: dft_name
       CHARACTER(LEN=32) :: exxdiv_treatment, U_projection
       CHARACTER(LEN=256):: vdw_corr
@@ -634,37 +636,51 @@ MODULE cp_restart_new
       IF (.NOT. found ) &
          CALL errore ('cp_readfile', 'xml data file not found', 1)
       !
-      CALL iotk_open_read( iunpun, TRIM(filename) )
+      root => parseFile (TRIM(filename))
       !
-      CALL cp_readcp ( iunpun, nat, nfi, simtime, acc, stau0, svel0, taui,  &
+      nodePointer => item (getElementsByTagname (root, "general_info"),0)
+      IF (ASSOCIATED(nodePointer)) THEN 
+         CALL qes_read(nodePointer, geninfo_obj)
+      ELSE 
+         ierr = ierr + 1 
+      END IF
+      !
+      nodePointer => item (getElementsByTagname (root, "parallel_info"),0) 
+      IF (ASSOCIATED(nodePointer)) THEN 
+         CALL qes_read(nodePointer, parinfo_obj)
+      ELSE 
+         ierr = ierr + 10
+      END IF
+      !
+      nodePointer => item (getElementsByTagname (root, "output"),0)
+      IF (ASSOCIATED(nodePointer)) THEN 
+         CALL qes_read(nodePointer, output_obj)
+      ELSE
+         ierr = ierr + 101
+      END IF
+      IF ( ierr > 100) CALL errore ('cp_readfile', 'missing data in file', ierr)
+      !
+      !
+      CALL cp_readcp ( root, nat, nfi, simtime, acc, stau0, svel0, taui,  &
            cdmi, force, nhpcl, nhpdim, xnhp0, vnhp, ekincm, xnhe0, vnhe, ht,&
            htvel, gvel, xnhh0, vnhh, staum, svelm, xnhpm, xnhem, htm, xnhhm,&
            ierr )
       md_found = ( ierr == 0 )
       IF ( ierr > 0 ) CALL errore ('cp_readcp','bad CP section read',ierr)
-      ! Wannier function centers
-      IF ( lwf ) CALL cp_readcenters ( iunpun, wfc)
       !
       ierr = 0
-      CALL qexsd_get_general_info ( iunpun, geninfo_obj, found)
-      IF ( .NOT. found ) THEN
-         ierr = ierr + 1
-      ELSE
-         CALL qexsd_copy_general_info (geninfo_obj, qexsd_fmt, qexsd_version) 
-      END IF
       !
-      CALL qexsd_get_parallel_info ( iunpun, parinfo_obj, found ) 
-      IF ( .NOT. found ) THEN
-         ierr = ierr + 10
-      ELSE
-         CALL  qexsd_copy_parallel_info (parinfo_obj, nproc_file, &
-              nproc_pool_file, nproc_image_file, ntask_groups_file, &
-              nproc_bgrp_file, nproc_ortho_file)
-      END IF
+      ! Wannier function centers
+      IF ( lwf ) CALL cp_readcenters ( root, wfc)
       !
-      CALL qexsd_get_output ( iunpun, output_obj, found ) 
-      IF ( .NOT. found ) ierr = ierr + 101
-      IF ( ierr > 100) CALL errore ('cp_readfile', 'missing data in file', ierr)
+      ierr = 0
+      !   
+      CALL destroy (root) 
+      CALL qexsd_copy_general_info (geninfo_obj, qexsd_fmt, qexsd_version) 
+      !
+      CALL  qexsd_copy_parallel_info (parinfo_obj, nproc_file, &
+            nproc_pool_file, nproc_image_file, ntask_groups_file, &
+            nproc_bgrp_file, nproc_ortho_file)
       !
       CALL qexsd_copy_atomic_species (output_obj%atomic_species, nsp_, atm, &
            psfile_, amass_)
@@ -723,8 +739,6 @@ MODULE cp_restart_new
       END DO
       occm(:) = occ0(:)
       DEALLOCATE (occ_, et_)
-      !
-      CALL iotk_close_read (iunpun)
       !
       DO iss = 1, nspin
          ib = iupdwn(iss)
@@ -1158,34 +1172,34 @@ MODULE cp_restart_new
                nbnd_dw = band_struct_obj%nbnd_dw 
             ELSE IF ( band_struct_obj%nbnd_up_ispresent ) THEN 
                nbnd_up = band_struct_obj%nbnd_up
-               nbnd_dw = band_struct_obj%ks_energies(ik)%ndim_eigenvalues - nbnd_up
+               nbnd_dw = band_struct_obj%ks_energies(ik)%eigenvalues%size - nbnd_up
             ELSE IF ( band_struct_obj%nbnd_dw_ispresent ) THEN 
                nbnd_dw = band_struct_obj%nbnd_dw
-               nbnd_up = band_struct_obj%ks_energies(ik)%ndim_eigenvalues - nbnd_dw 
+               nbnd_up = band_struct_obj%ks_energies(ik)%eigenvalues%size - nbnd_dw 
             ELSE 
-               nbnd_up = band_struct_obj%ks_energies(ik)%ndim_eigenvalues/2  
-               nbnd_dw = band_struct_obj%ks_energies(ik)%ndim_eigenvalues/2
+               nbnd_up = band_struct_obj%ks_energies(ik)%eigenvalues%size/2  
+               nbnd_dw = band_struct_obj%ks_energies(ik)%eigenvalues%size/2
             END IF
             wk(ik) = band_struct_obj%ks_energies(ik)%k_point%weight
             wk( ik + band_struct_obj%ndim_ks_energies ) = wk(ik) 
-            et(1:nbnd_up,ik) = band_struct_obj%ks_energies(ik)%eigenvalues(1:nbnd_up)
+            et(1:nbnd_up,ik) = band_struct_obj%ks_energies(ik)%eigenvalues%vector(1:nbnd_up)
             et(1:nbnd_dw,ik+band_struct_obj%ndim_ks_energies) =  &
-                 band_struct_obj%ks_energies(ik)%eigenvalues(nbnd_up+1:nbnd_up+nbnd_dw)
-            wg(1:nbnd_up,ik) = band_struct_obj%ks_energies(ik)%occupations(1:nbnd_up)*wk(ik)
+                 band_struct_obj%ks_energies(ik)%eigenvalues%vector(nbnd_up+1:nbnd_up+nbnd_dw)
+            wg(1:nbnd_up,ik) = band_struct_obj%ks_energies(ik)%occupations%vector(1:nbnd_up)*wk(ik)
             wg(1:nbnd_dw,ik+band_struct_obj%ndim_ks_energies) =  &
-                 band_struct_obj%ks_energies(ik)%occupations(nbnd_up+1:nbnd_up+nbnd_dw)*wk(ik)
+                 band_struct_obj%ks_energies(ik)%occupations%vector(nbnd_up+1:nbnd_up+nbnd_dw)*wk(ik)
          ELSE 
             wk(ik) = band_struct_obj%ks_energies(ik)%k_point%weight
-            nbnd = band_struct_obj%ks_energies(ik)%ndim_eigenvalues
-            et (1:nbnd,ik) = band_struct_obj%ks_energies(ik)%eigenvalues(1:nbnd)
-            wg (1:nbnd,ik) = band_struct_obj%ks_energies(ik)%occupations(1:nbnd)*wk(ik)
+            nbnd = band_struct_obj%ks_energies(ik)%eigenvalues%size
+            et (1:nbnd,ik) = band_struct_obj%ks_energies(ik)%eigenvalues%vector(1:nbnd)
+            wg (1:nbnd,ik) = band_struct_obj%ks_energies(ik)%occupations%vector(1:nbnd)*wk(ik)
             nbnd_up = nbnd
             nbnd_dw = nbnd
          END IF
       END DO
     END SUBROUTINE qexsd_copy_band_structure
   !------------------------------------------------------------------------
-  SUBROUTINE cp_writecp( iunpun, nfi, simtime, &
+  SUBROUTINE cp_writecp( xf, nfi, simtime, &
        ekin, eht, esr, eself, epseu, enl, exc, vave, enthal, &
        acc, stau0, svel0, taui, cdmi, force, nhpcl, nhpdim, &
        xnhp0, vnhp, ekincm, xnhe0, vnhe, ht, htvel, gvel, xnhh0, vnhh,      &
@@ -1193,12 +1207,12 @@ MODULE cp_restart_new
     !------------------------------------------------------------------------
     ! ... Cell related variables, CP-specific
     !
-    USE iotk_module
+    USE FoX_wxml
     USE ions_base, ONLY: nat
     !
     IMPLICIT NONE
     !
-    INTEGER,  INTENT(IN) :: iunpun
+    TYPE(xmlf_t),  INTENT(INOUT) :: xf
     INTEGER,  INTENT(IN) :: nfi          ! index of the current step
     REAL(DP), INTENT(IN) :: simtime      ! simulated time
     REAL(DP), INTENT(IN) :: ekin, eht, esr, eself, epseu, enl, exc, vave, &
@@ -1227,133 +1241,207 @@ MODULE cp_restart_new
     REAL(DP), INTENT(IN) :: htm(3,3)
     REAL(DP), INTENT(IN) :: xnhhm(3,3)
     !
-    CHARACTER(iotk_attlenx)  :: attr
     !
     IF ( ionode ) THEN
 !-------------------------------------------------------------------------------
 ! ... STATUS
 !-------------------------------------------------------------------------------
        !
-       CALL iotk_write_begin( iunpun, "STATUS" )
+       CALL xml_NewElement (xf, "STATUS")
        !
-       CALL iotk_write_attr( attr, "ITERATION", nfi, FIRST = .TRUE. )
-       CALL iotk_write_empty( iunpun, "STEP", attr )
+       CALL xml_NewElement ( xf, "STEP")
+       CALL xml_addAttribute (xf, "ITERATION", nfi) 
+       CALL xml_endElement (xf, "STEP") 
        !
-       CALL iotk_write_attr( attr, "UNITS", "pico-seconds", FIRST = .TRUE. )
-       CALL iotk_write_dat( iunpun, "TIME", simtime, ATTR = attr )
+       CALL xml_NewElement ( xf, "TIME")
+       CALL xml_addAttribute( xf, "UNITS", "pico-seconds")
+       CALL xml_addCharacters( xf, simtime )
+       CALL xml_EndElement(xf, "TIME")
        !
-       CALL iotk_write_dat( iunpun, "TITLE", 'temorary title' )
+       CALL xml_NewElement ( xf, "TITLE")
+       CALL xml_addCharacters ( xf, "temporary title")
+       CALL xml_EndElement (xf, "TITLE")
        !
-       CALL iotk_write_attr( attr, "UNITS", 'Hartree', FIRST = .TRUE. )
-       CALL iotk_write_dat( iunpun, "KINETIC_ENERGY", ekin,   ATTR = attr )
-       CALL iotk_write_dat( iunpun, "HARTREE_ENERGY", eht,    ATTR = attr )
-       CALL iotk_write_dat( iunpun, "EWALD_TERM",     esr,    ATTR = attr )
-       CALL iotk_write_dat( iunpun, "GAUSS_SELFINT",  eself,  ATTR = attr )
-       CALL iotk_write_dat( iunpun, "LPSP_ENERGY",    epseu,  ATTR = attr )
-       CALL iotk_write_dat( iunpun, "NLPSP_ENERGY",   enl,    ATTR = attr )
-       CALL iotk_write_dat( iunpun, "EXC_ENERGY",     exc,    ATTR = attr )
-       CALL iotk_write_dat( iunpun, "AVERAGE_POT",    vave,   ATTR = attr )
-       CALL iotk_write_dat( iunpun, "ENTHALPY",       enthal, ATTR = attr )
+       CALL xml_NewElement( xf, "KINETIC_ENERGY")
+       CALL xml_addAttribute( xf, "UNITS", 'Hartree') 
+       CALL xml_addCharacters ( xf, ekin)
+       CALL xml_EndElement(xf, "KINETIC_ENERGY")
+       CALL xml_NewElement( xf, "HARTREE_ENERGY")
+       CALL xml_addCharacters ( xf, eht)
+       CALL xml_EndElement (xf, "HARTREE_ENERGY")
+       CALL xml_NewElement( xf, "EWALD_TERM")
+       CALL xml_addCharacters ( xf, esr)
+       CALL xml_EndElement (xf, "EWALD_TERM")
+       CALL xml_NewElement( xf, "GAUSS_SELFINT")
+       CALL xml_addCharacters ( xf, eself)
+       CALL xml_EndElement (xf, "GAUSS_SELFINT")
+       CALL xml_NewElement( xf, "LPSP_ENERGY")
+       CALL xml_addCharacters ( xf, epseu)
+       CALL xml_EndElement (xf, "LPSP_ENERGY")
+       CALL xml_NewElement( xf, "NLPSP_ENERGY")
+       CALL xml_addCharacters ( xf, enl)
+       CALL xml_EndElement (xf, "NLPSP_ENERGY")
+       CALL xml_NewElement( xf, "EXC_ENERGY")
+       CALL xml_addCharacters ( xf, exc)
+       CALL xml_EndElement (xf, "EXC_ENERGY")
+       CALL xml_NewElement( xf, "AVERAGE_POT")
+       CALL xml_addCharacters ( xf, vave)
+       CALL xml_EndElement (xf, "AVERAGE_POT")
+       CALL xml_NewElement( xf, "ENTHALPY")
+       CALL xml_addCharacters ( xf, enthal)
+       CALL xml_EndElement (xf, "ENTHALPY")
        !
-       CALL iotk_write_end( iunpun, "STATUS" )
+       CALL xml_endElement( xf, "STATUS" )
        !
 !-------------------------------------------------------------------------------
 ! ... TIMESTEPS
 !-------------------------------------------------------------------------------
        !
-       CALL iotk_write_attr( attr, "nt", 2, FIRST = .TRUE. )
-       !
-       CALL iotk_write_begin( iunpun, "TIMESTEPS", attr )
+       CALL xml_NewElement ( xf, "TIMESTEPS")
+       CALL xml_addAttribute ( xf, "nt", 2)
        !
        ! ... STEP0
        !
-       CALL iotk_write_begin( iunpun, "STEP0" )
+       CALL xml_NewElement ( xf, "STEP0")
        !
-       CALL iotk_write_dat( iunpun, "ACCUMULATORS", acc )
+       CALL xml_NewElement( xf, "ACCUMULATORS")
+       CALL xml_addCharacters ( xf, acc)
+       CALL xml_EndElement (xf, "ACCUMULATORS")
        !
-       CALL iotk_write_begin( iunpun, "IONS_POSITIONS" )
-       CALL iotk_write_dat(   iunpun, "stau",  stau0(1:3,1:nat),   COLUMNS=3 )
-       CALL iotk_write_dat(   iunpun, "svel",  svel0(1:3,1:nat),   COLUMNS=3 )
-       CALL iotk_write_dat(   iunpun, "taui",  taui(1:3,1:nat),    COLUMNS=3 )
-       CALL iotk_write_dat(   iunpun, "cdmi",  cdmi(1:3),          COLUMNS=3 )
-       CALL iotk_write_dat(   iunpun, "force", force(1:3,1:nat),   COLUMNS=3 )
-       CALL iotk_write_end(   iunpun, "IONS_POSITIONS" )
+       CALL xml_NewElement ( xf, "IONS_POSITIONS" )
+       CALL xml_NewElement( xf, "stau")
+       CALL xml_addCharacters ( xf, stau0(1:3,1:nat))
+       CALL xml_EndElement (xf, "stau")
+       CALL xml_NewElement( xf, "svel")
+       CALL xml_addCharacters ( xf, svel0(1:3,1:nat) )
+       CALL xml_EndElement (xf, "svel")
+       CALL xml_NewElement( xf, "taui")
+       CALL xml_addCharacters ( xf, taui(1:3,1:nat) )
+       CALL xml_EndElement (xf, "taui")
+       CALL xml_NewElement( xf, "cdmi")
+       CALL xml_addCharacters ( xf, cdmi(1:3) )
+       CALL xml_EndElement (xf, "cdmi")
+       CALL xml_NewElement( xf, "force")
+       CALL xml_addCharacters ( xf, force(1:3, 1:nat) )
+       CALL xml_EndElement (xf, "force")
+       CALL xml_EndElement( xf, "IONS_POSITIONS" )
        !
-       CALL iotk_write_begin( iunpun, "IONS_NOSE" )
-       CALL iotk_write_dat(   iunpun, "nhpcl", nhpcl )
-       CALL iotk_write_dat(   iunpun, "nhpdim", nhpdim )
-       CALL iotk_write_dat(   iunpun, "xnhp",  xnhp0(1:nhpcl*nhpdim) )
-       CALL iotk_write_dat(   iunpun, "vnhp",  vnhp(1:nhpcl*nhpdim) )
-       CALL iotk_write_end(   iunpun, "IONS_NOSE" )
+       CALL xml_newElement( xf, "IONS_NOSE" )
+       CALL xml_NewElement( xf, "nhpcl")
+       CALL xml_addCharacters ( xf, nhpcl)
+       CALL xml_EndElement (xf, "nhpcl")
+       CALL xml_NewElement( xf, "nhpdim")
+       CALL xml_addCharacters ( xf, nhpdim)
+       CALL xml_EndElement (xf, "nhpdim")
+       CALL xml_NewElement( xf, "xnhp")
+       CALL xml_addCharacters ( xf, xnhp0(1:nhpcl*nhpdim))
+       CALL xml_EndElement (xf, "xnhp")
+       CALL xml_NewElement( xf, "vnhp")
+       CALL xml_addCharacters ( xf, vnhp(1:nhpcl*nhpdim) )
+       CALL xml_EndElement (xf, "vnhp")
+       CALL xml_EndElement( xf , "IONS_NOSE" )
        !
-       CALL iotk_write_dat( iunpun, "ekincm", ekincm )
+       CALL xml_NewElement( xf, "ekincm")
+       CALL xml_addCharacters ( xf, ekincm)
+       CALL xml_EndElement (xf, "ekincm")
+
        !
-       CALL iotk_write_begin( iunpun, "ELECTRONS_NOSE" )
-       CALL iotk_write_dat(   iunpun, "xnhe", xnhe0 )
-       CALL iotk_write_dat(   iunpun, "vnhe", vnhe )
-       CALL iotk_write_end(   iunpun, "ELECTRONS_NOSE" )
+       CALL xml_NewElement ( xf, "ELECTRONS_NOSE" )
+       CALL xml_NewElement( xf, "xnhe")
+       CALL xml_addCharacters ( xf, xnhe0)
+       CALL xml_EndElement (xf, "xnhe")
+       CALL xml_NewElement( xf, "vnhe")
+       CALL xml_addCharacters ( xf, vnhe)
+       CALL xml_EndElement (xf, "vnhe")
+       CALL xml_EndElement (  xf, "ELECTRONS_NOSE" )
        !
-       CALL iotk_write_begin( iunpun, "CELL_PARAMETERS" )
-       CALL iotk_write_dat(   iunpun, "ht",    ht )
-       CALL iotk_write_dat(   iunpun, "htvel", htvel )
-       CALL iotk_write_dat(   iunpun, "gvel",  gvel )
-       CALL iotk_write_end(   iunpun, "CELL_PARAMETERS" )
+       CALL xml_NewElement( xf, "CELL_PARAMETERS" )
+       CALL xml_NewElement( xf, "ht")
+       CALL xml_addCharacters ( xf, ht)
+       CALL xml_EndElement (xf, "ht")
+       CALL xml_NewElement( xf, "htvel")
+       CALL xml_addCharacters ( xf, htvel)
+       CALL xml_EndElement (xf, "htvel")
+       CALL xml_NewElement( xf, "gvel")
+       CALL xml_addCharacters ( xf, gvel)
+       CALL xml_EndElement (xf, "gvel")
+       CALL xml_EndElement( xf, "CELL_PARAMETERS" )
        !
-       CALL iotk_write_begin( iunpun, "CELL_NOSE" )
-       CALL iotk_write_dat(   iunpun, "xnhh", xnhh0 )
-       CALL iotk_write_dat(   iunpun, "vnhh", vnhh )
-       CALL iotk_write_end(   iunpun, "CELL_NOSE" )
+       CALL xml_NewElement( xf, "CELL_NOSE" )
+       CALL xml_NewElement( xf, "xnhh")
+       CALL xml_addCharacters ( xf, xnhh0)
+       CALL xml_EndElement (xf, "xnhh")
+       CALL xml_NewElement( xf, "vnhh")
+       CALL xml_addCharacters ( xf, vnhh)
+       CALL xml_EndElement (xf, "vnhh")
+       CALL xml_EndElement(   xf, "CELL_NOSE" )
        !
-       CALL iotk_write_end( iunpun, "STEP0" )
+       CALL xml_EndElement( xf, "STEP0" )
        !
        ! ... STEPM
        !
-       CALL iotk_write_begin( iunpun, "STEPM" )
+       CALL xml_NewElement ( xf, "STEPM" )
        !
-       CALL iotk_write_begin( iunpun, "IONS_POSITIONS" )
-       CALL iotk_write_dat(   iunpun, "stau", staum(1:3,1:nat),  COLUMNS=3 )
-       CALL iotk_write_dat(   iunpun, "svel", svelm(1:3,1:nat),  COLUMNS=3 )
-       CALL iotk_write_end(   iunpun, "IONS_POSITIONS" )
+       CALL xml_NewElement( xf, "IONS_POSITIONS" )
+       CALL xml_NewElement( xf, "stau")
+       CALL xml_addCharacters ( xf, staum(1:3, 1:nat) )
+       CALL xml_EndElement (xf, "stau")
+       CALL xml_NewElement( xf, "svel")
+       CALL xml_addCharacters ( xf, svelm(1:3, 1:nat) )
+       CALL xml_EndElement (xf, "svel")
+       CALL xml_EndElement( xf, "IONS_POSITIONS" )
        !
-       CALL iotk_write_begin( iunpun, "IONS_NOSE" )
-       CALL iotk_write_dat(   iunpun, "nhpcl", nhpcl )
-       CALL iotk_write_dat(   iunpun, "nhpdim", nhpdim )
-       CALL iotk_write_dat(   iunpun, "xnhp",  xnhpm(1:nhpcl*nhpdim) )
-       CALL iotk_write_end(   iunpun, "IONS_NOSE" )
+       CALL xml_NewElement( xf, "IONS_NOSE" )
+       CALL xml_NewElement( xf, "nhpcl")
+       CALL xml_addCharacters ( xf, nhpcl)
+       CALL xml_EndElement (xf, "nhpcl")
+       CALL xml_NewElement( xf, "nhpdim")
+       CALL xml_addCharacters ( xf, nhpdim)
+       CALL xml_EndElement (xf, "nhpdim")
+       CALL xml_NewElement( xf, "xnhp")
+       CALL xml_addCharacters ( xf, xnhpm(1:nhpcl*nhpdim) )
+       CALL xml_EndElement (xf, "xnhp")
+       CALL xml_EndElement( xf, "IONS_NOSE" )
        !
-       CALL iotk_write_begin( iunpun, "ELECTRONS_NOSE" )
-       CALL iotk_write_dat(   iunpun, "xnhe", xnhem )
-       CALL iotk_write_end(   iunpun, "ELECTRONS_NOSE" )
+       CALL xml_NewElement( xf, "ELECTRONS_NOSE" )
+       CALL xml_NewElement( xf, "xnhe")
+       CALL xml_addCharacters ( xf, xnhem)
+       CALL xml_EndElement (xf, "xnhe")
+       CALL xml_EndElement( xf, "ELECTRONS_NOSE" )
        !
-       CALL iotk_write_begin( iunpun, "CELL_PARAMETERS" )
-       CALL iotk_write_dat(   iunpun, "ht",    htm )
-       CALL iotk_write_end(   iunpun, "CELL_PARAMETERS" )
+       CALL xml_NewElement( xf, "CELL_PARAMETERS" )
+       CALL xml_NewElement( xf, "ht")
+       CALL xml_addCharacters ( xf, htm)
+       CALL xml_EndElement (xf, "ht")
+       CALL xml_EndElement( xf, "CELL_PARAMETERS" )
        !
-       CALL iotk_write_begin( iunpun, "CELL_NOSE" )
-       CALL iotk_write_dat(   iunpun, "xnhh", xnhhm )
-       CALL iotk_write_end(   iunpun, "CELL_NOSE" )
+       CALL xml_NewElement( xf, "CELL_NOSE" )
+       CALL xml_NewElement( xf, "xnhh")
+       CALL xml_addCharacters ( xf, xnhhm)
+       CALL xml_EndElement (xf, "xnhh")
+       CALL xml_EndElement( xf, "CELL_NOSE" )
        !
-       CALL iotk_write_end( iunpun, "STEPM" )
+       CALL xml_EndElement( xf, "STEPM" )
        !
-       CALL iotk_write_end( iunpun, "TIMESTEPS" )
+       CALL xml_EndElement( xf, "TIMESTEPS" )
        !
     ENDIF
     !
   END SUBROUTINE cp_writecp
   !
   !------------------------------------------------------------------------
-  SUBROUTINE cp_writecenters( iunpun, h, wfc )
+  SUBROUTINE cp_writecenters( xf, h, wfc )
     !------------------------------------------------------------------------
     !
     ! ... Write Wannier centers
     !
     USE kinds, ONLY : dp
     USE io_global, ONLY : ionode
-    USE iotk_module
+    USE FoX_wxml 
     USE cell_base, ONLY : ainv ! what is this? what is the relation with h?
     !
     REAL(DP), INTENT(IN) :: h(:,:), wfc(:,:)
-    INTEGER, INTENT(in) :: iunpun
+    TYPE(xmlf_t), INTENT(inout) :: xf
     !
     INTEGER :: i, nbnd
     REAL(DP) :: temp_vec(3)
@@ -1363,7 +1451,7 @@ MODULE cp_restart_new
        !
        nbnd = SIZE (wfc, 2)
        ALLOCATE ( centers(3,nbnd) )
-       CALL iotk_write_begin( iunpun, "WANNIER_CENTERS" )
+       CALL xml_NewElement( xf, "WANNIER_CENTERS" )
        !
        temp_vec=0.0_DP
        centers =0.0_DP
@@ -1376,11 +1464,17 @@ MODULE cp_restart_new
           !
        END DO
        !
-       CALL iotk_write_dat(iunpun, "wanniercentres", &
-            & centers(1:3,1:nbnd),  COLUMNS=3 )
+       
+       CALL xml_NewElement( xf, "wanniercentres")
+       CALL xml_addNewLine(xf) 
+       DO i = 1, nbnd
+           CALL xml_addCharacters( xf, centers(1:3,i) )
+           CALL xml_addNewLine(xf)
+       END DO 
+       CALL xml_EndElement (xf, "wanniercentres")
        !
        DEALLOCATE ( centers )
-       CALL iotk_write_end(   iunpun, "WANNIER_CENTERS" )
+       CALL xml_EndElement( xf, "WANNIER_CENTERS" )
        !
     END IF
     !
@@ -1441,7 +1535,7 @@ MODULE cp_restart_new
   END SUBROUTINE cp_read_wfc
   !
   !------------------------------------------------------------------------
-  SUBROUTINE cp_readcp ( iunpun, nat, nfi, simtime, acc, stau0, svel0, taui,&
+  SUBROUTINE cp_readcp ( root, nat, nfi, simtime, acc, stau0, svel0, taui,&
        cdmi, force, nhpcl, nhpdim, xnhp0, vnhp, ekincm, xnhe0, vnhe, ht, &
        htvel, gvel, xnhh0, vnhh, staum, svelm, xnhpm, xnhem, htm, xnhhm, &
        ierr )
@@ -1454,11 +1548,11 @@ MODULE cp_restart_new
     ! ... ierr =  1: error reading MD status
     ! ... ierr =  2: error reading timestep info
     !
-    USE iotk_module
+    USE FoX_dom
     !
     IMPLICIT NONE
     !
-    INTEGER,  INTENT(IN) :: iunpun
+    TYPE(Node),POINTER,INTENT(IN) :: root
     INTEGER,  INTENT(IN) :: nat
     INTEGER,  INTENT(out) :: nfi
     REAL(DP), INTENT(out) :: simtime
@@ -1490,82 +1584,97 @@ MODULE cp_restart_new
     !
     LOGICAL :: found
     INTEGER :: nt_, nhpcl_, nhpdim_
-    CHARACTER(iotk_attlenx)  :: attr
+    TYPE(Node), POINTER      :: n1Pointer, n2Pointer, n3Pointer, n4Pointer
     !
     ! ... read MD status
     !
     ierr = -2
-    CALL iotk_scan_begin( iunpun, "STATUS", attr, FOUND = found )
+    n1Pointer => item( getElementsByTagname( root, "STATUS"), 0)
+    found = ASSOCIATED( n1Pointer)
     IF ( .NOT.found ) RETURN
     !
     ierr = 1
-    CALL iotk_scan_empty( iunpun, "STEP", ATTR = attr, FOUND = found )
+    n2Pointer => item( getElementsByTagname( n1Pointer, "STEP"), 0)
+    found = ASSOCIATED( n2Pointer)
     IF ( .NOT.found ) RETURN
     !
-    CALL iotk_scan_attr( attr, "ITERATION", nfi, FOUND = found )
-    IF ( .NOT.found ) RETURN
+    found = hasAttribute( n2Pointer, "ITERATION") 
+    IF (.NOT. found ) RETURN
+    CALL extractDataAttribute( n2Pointer, "ITERATION", nfi)
     !
-    CALL iotk_scan_dat( iunpun, "TIME", simtime, ATTR = attr, FOUND = found  )
+    n2Pointer => item( getElementsByTagname( n1Pointer, "TIME"), 0)
+    found = ASSOCIATED(n2Pointer)
     IF ( .NOT.found ) RETURN
-    !
-    CALL iotk_scan_end( iunpun, "STATUS", IERR=ierr )
-    IF ( ierr /= 0 ) RETURN
+    CALL extractDataContent( n2Pointer, simtime)
     !
     ! ... read MD timesteps variables
     !
-    CALL iotk_scan_begin( iunpun, "TIMESTEPS", attr, FOUND = found )
+    n1Pointer => item( getElementsByTagname( root, "TIMESTEPS"), 0)
+    found = ASSOCIATED( n1Pointer)
     ! 
     IF ( found ) THEN
        !
        ierr = 0
        !
-       CALL iotk_scan_attr( attr, "nt", nt_ )
+       CALL extractDataAttribute( n1Pointer, "nt", nt_)
        !
        IF ( nt_ > 0 ) THEN
           !
-          CALL iotk_scan_begin( iunpun, "STEP0" )
+          n2Pointer => item( getElementsByTagname( n1Pointer, "STEP0"), 0)
           !
-          CALL iotk_scan_dat ( iunpun, "ACCUMULATORS", acc )
+          n3Pointer => item( getElementsByTagname( n2Pointer, "ACCUMULATORS"), 0)
+          CALL extractDataContent(n3Pointer, acc)
           !
-          CALL iotk_scan_begin( iunpun,"IONS_POSITIONS" )
-          CALL iotk_scan_dat(   iunpun, "stau",  stau0(1:3,1:nat) )
-          CALL iotk_scan_dat(   iunpun, "svel",  svel0(1:3,1:nat) )
-          CALL iotk_scan_dat(   iunpun, "taui",  taui(1:3,1:nat) )
-          CALL iotk_scan_dat(   iunpun, "cdmi",  cdmi(1:3) )
-          CALL iotk_scan_dat(   iunpun, "force", force(1:3,1:nat) )
-          CALL iotk_scan_end(   iunpun, "IONS_POSITIONS" )
+          n3Pointer => item( getElementsByTagname( n2Pointer, "IONS_POSITIONS"), 0)
+          n4Pointer =>item( getElementsByTagname( n3Pointer, "stau"), 0)
+          CALL extractDataContent(n4Pointer, stau0(1:3,1:nat) )
+          n4Pointer =>item( getElementsByTagname( n3Pointer, "svel"), 0)
+          CALL extractDataContent(n4Pointer, svel0(1:3,1:nat) )
+          n4Pointer =>item( getElementsByTagname( n3Pointer, "taui"), 0)
+          CALL extractDataContent(n4Pointer, taui(1:3,1:nat) )
+          n4Pointer =>item( getElementsByTagname( n3Pointer, "cdmi"), 0)
+          CALL extractDataContent(n4Pointer, cdmi(1:3) )
+          n4Pointer =>item( getElementsByTagname( n3Pointer, "force"), 0)
+          CALL extractDataContent(n4Pointer, force(1:3,1:nat) )
           !
-          CALL iotk_scan_begin( iunpun, "IONS_NOSE" )
-          CALL iotk_scan_dat(   iunpun, "nhpcl", nhpcl_ )
-          CALL iotk_scan_dat(   iunpun, "nhpdim", nhpdim_ )
+          n3Pointer => item( getElementsByTagname( n2Pointer, "IONS_NOSE"), 0)
+          n4Pointer =>item( getElementsByTagname( n3Pointer, "nhpcl"), 0)
+          CALL extractDataContent(n4Pointer, nhpcl_ )
+          n4Pointer =>item( getElementsByTagname( n3Pointer, "nhpdim"), 0)
+          CALL extractDataContent(n4Pointer, nhpdim_ )
           IF ( nhpcl_ == nhpcl .AND. nhpdim_ == nhpdim ) THEN
-             CALL iotk_scan_dat( iunpun, "xnhp", xnhp0(1:nhpcl*nhpdim) )
-             CALL iotk_scan_dat( iunpun, "vnhp", vnhp(1:nhpcl*nhpdim) )
+             n4Pointer =>item( getElementsByTagname( n3Pointer, "xnhp"), 0)
+             CALL extractDataContent(n4Pointer, xnhp0(1:nhpcl*nhpdim ) )
+             n4Pointer =>item( getElementsByTagname( n3Pointer, "vnhp"), 0)
+             CALL extractDataContent(n4Pointer, vnhp(1:nhpcl*nhpdim ) )
           ELSE
              xnhp0(1:nhpcl*nhpdim) = 0.D0
              vnhp(1:nhpcl*nhpdim)  = 0.D0
           END IF
-          CALL iotk_scan_end(   iunpun, "IONS_NOSE" )
           !
-          CALL iotk_scan_dat( iunpun, "ekincm", ekincm )
+          n3Pointer => item( getElementsByTagname( n2Pointer, "ekincm"), 0)
+          CALL extractDataContent(n3Pointer, ekincm) 
           !
-          CALL iotk_scan_begin( iunpun, "ELECTRONS_NOSE" )
-          CALL iotk_scan_dat(   iunpun, "xnhe", xnhe0 )
-          CALL iotk_scan_dat(   iunpun, "vnhe", vnhe )
-          CALL iotk_scan_end(   iunpun, "ELECTRONS_NOSE" )
+          n3Pointer => item( getElementsByTagname( n2Pointer, "ELECTRONS_NOSE"), 0) 
+          n4Pointer =>item( getElementsByTagname( n3Pointer, "xnhe"), 0)
+          CALL extractDataContent(n4Pointer, xnhe0 )
+          n4Pointer =>item( getElementsByTagname( n3Pointer, "vnhe"), 0)
+          CALL extractDataContent(n4Pointer, vnhe )
           !
-          CALL iotk_scan_begin( iunpun, "CELL_PARAMETERS" )
-          CALL iotk_scan_dat(   iunpun, "ht",    ht )
-          CALL iotk_scan_dat(   iunpun, "htvel", htvel )
-          CALL iotk_scan_dat(   iunpun, "gvel",  gvel )
-          CALL iotk_scan_end(   iunpun, "CELL_PARAMETERS" )
+          n3Pointer => item( getElementsByTagname( n2Pointer, "CELL_PARAMETERS"), 0)
+          n4Pointer =>item( getElementsByTagname( n3Pointer, "ht"), 0)
+          CALL extractDataContent(n4Pointer, ht )
+          n4Pointer =>item( getElementsByTagname( n3Pointer, "htvel"), 0)
+          CALL extractDataContent(n4Pointer, htvel )
+          n4Pointer =>item( getElementsByTagname( n3Pointer, "gvel"), 0)
+          CALL extractDataContent(n4Pointer, gvel )
           !
-          CALL iotk_scan_begin( iunpun, "CELL_NOSE" )
-          CALL iotk_scan_dat(   iunpun, "xnhh", xnhh0 )
-          CALL iotk_scan_dat(   iunpun, "vnhh", vnhh )
-          CALL iotk_scan_end(   iunpun, "CELL_NOSE" )
+          n3Pointer => item( getElementsByTagname( n2Pointer, "CELL_NOSE"), 0)
+          n4Pointer =>item( getElementsByTagname( n3Pointer, "xnhh"), 0)
+          CALL extractDataContent(n4Pointer, xnhh0 )
+          n4Pointer =>item( getElementsByTagname( n3Pointer, "vnhh"), 0)
+          CALL extractDataContent(n4Pointer, vnhh )
           !
-          CALL iotk_scan_end( iunpun, "STEP0" )
           !
        ELSE
           !
@@ -1576,42 +1685,42 @@ MODULE cp_restart_new
        !
        IF ( nt_ > 1 ) THEN
           !
-          CALL iotk_scan_begin( iunpun, "STEPM" )
+          n2Pointer => item( getElementsByTagname( n1Pointer, "STEPM"), 0)
           !
-          CALL iotk_scan_begin( iunpun, "IONS_POSITIONS" )
-          CALL iotk_scan_dat(   iunpun, "stau", staum(1:3,1:nat) )
-          CALL iotk_scan_dat(   iunpun, "svel", svelm(1:3,1:nat) )
-          CALL iotk_scan_end(   iunpun, "IONS_POSITIONS" )
+          n3Pointer => item( getElementsByTagname( n2Pointer, "IONS_POSITIONS"), 0)
+          n4Pointer =>item( getElementsByTagname( n3Pointer, "stau"), 0)
+          CALL extractDataContent(n4Pointer, staum(1:3,1:nat) )
+          n4Pointer =>item( getElementsByTagname( n3Pointer, "svel"), 0)
+          CALL extractDataContent(n4Pointer, svelm(1:3,1:nat) )
           !
-          CALL iotk_scan_begin( iunpun, "IONS_NOSE" )
-          CALL iotk_scan_dat(   iunpun, "nhpcl", nhpcl_ )
-          CALL iotk_scan_dat(   iunpun, "nhpdim", nhpdim_ )
+          n3Pointer => item( getElementsByTagname( n2Pointer, "IONS_NOSE"), 0)
+          n4Pointer =>item( getElementsByTagname( n3Pointer, "nhpcl"), 0)
+          CALL extractDataContent(n4Pointer, nhpcl_ )
+          n4Pointer =>item( getElementsByTagname( n3Pointer, "nhpdim"), 0)
+          CALL extractDataContent(n4Pointer, nhpdim_ )
           !
           IF ( nhpcl_ == nhpcl .AND. nhpdim_ == nhpdim ) THEN
-             CALL iotk_scan_dat( iunpun, "xnhp",  xnhpm(1:nhpcl*nhpdim) )
+             n4Pointer =>item( getElementsByTagname( n3Pointer, "xnhp"), 0)
+             CALL extractDataContent(n4Pointer, xnhpm(1:nhpcl*nhpdim))
           ELSE
              xnhpm(1:nhpcl*nhpdim) = 0.D0
           END IF
           !
-          CALL iotk_scan_end(   iunpun,"IONS_NOSE" )
+          n3Pointer => item( getElementsByTagname( n2Pointer, "ELECTRONS_NOSE"), 0)
+          n4Pointer =>item( getElementsByTagname( n3Pointer, "xnhe"), 0)
+          CALL extractDataContent(n4Pointer, xnhem )
           !
-          CALL iotk_scan_begin( iunpun, "ELECTRONS_NOSE" )
-          CALL iotk_scan_dat(   iunpun, "xnhe", xnhem )
-          CALL iotk_scan_end(   iunpun, "ELECTRONS_NOSE" )
+          n3Pointer => item( getElementsByTagname( n2Pointer, "CELL_PARAMETERS"), 0)
+          n4Pointer =>item( getElementsByTagname( n3Pointer, "ht"), 0)
+          CALL extractDataContent(n4Pointer, htm )
           !
-          CALL iotk_scan_begin( iunpun, "CELL_PARAMETERS" )
-          CALL iotk_scan_dat(   iunpun, "ht", htm )
-          CALL iotk_scan_end(   iunpun, "CELL_PARAMETERS" )
+          n3Pointer => item( getElementsByTagname( n2Pointer, "CELL_NOSE"), 0)
+          n4Pointer =>item( getElementsByTagname( n3Pointer, "xnhh"), 0)
+          CALL extractDataContent(n4Pointer, xnhhm )
           !
-          CALL iotk_scan_begin( iunpun, "CELL_NOSE" )
-          CALL iotk_scan_dat(   iunpun, "xnhh", xnhhm )
-          CALL iotk_scan_end(   iunpun, "CELL_NOSE" )
-          !
-          CALL iotk_scan_end( iunpun, "STEPM" )
           !
        END IF
        !
-       CALL iotk_scan_end( iunpun, "TIMESTEPS" )
        !
     ELSE
        !
@@ -1647,31 +1756,36 @@ MODULE cp_restart_new
   END SUBROUTINE cp_readcp
   !
   !------------------------------------------------------------------------
-  SUBROUTINE cp_readcenters( iunpun, wfc )
+  SUBROUTINE cp_readcenters( root, wfc )
     !------------------------------------------------------------------------
     !
     ! ... Read Wannier centers
     !
     USE kinds, ONLY : dp
     USE io_global, ONLY : stdout
-    USE iotk_module
+    USE FoX_dom
     !
-    INTEGER, INTENT(IN)  :: iunpun
+    TYPE(Node), POINTER, INTENT(IN)  :: root
     REAL(DP), INTENT(OUT):: wfc(:,:)
     !
     INTEGER :: nbnd, ierr
     LOGICAL :: found
+    TYPE(Node), POINTER      :: n1Pointer, n2Pointer, n3Pointer
     !
     nbnd = SIZE (wfc, 2)
-    CALL iotk_scan_begin( iunpun, "WANNIER_CENTERS", found=found )
+    n1Pointer => item( getElementsByTagname(root, "WANNIER_CENTERS"),0) 
+    found = ASSOCIATED ( n1Pointer ) 
     !
     IF (found) THEN
        !
-       CALL iotk_scan_dat(iunpun, "wanniercentres", &
-            wfc(1:3, 1:nbnd), IERR=ierr )
+       n2Pointer => item( getElementsByTagname ( n1Pointer, "wanniercentres"),0)
+       IF (ASSOCIATED (n2Pointer) ) THEN 
+          CALL extractDataContent ( n2Pointer, wfc(1:3,1:nbnd), IOSTAT = ierr )
+       ELSE
+          ierr = 210
+       END IF 
        IF ( ierr > 0 ) CALL errore ('cp_readcenters', &
             'error reading Wannier centers',ierr)
-       CALL iotk_scan_end(   iunpun, "WANNIER_CENTERS" )
        !
     ELSE
        !
@@ -1690,7 +1804,9 @@ MODULE cp_restart_new
     !
     USE parameters,  ONLY : ntypx
     USE ions_base,   ONLY : nat
-    USE qexsd_reader_module,  ONLY : qexsd_get_output
+    USE FoX_dom,     ONLY : Node, parseFile, item, getElementsByTagname, extractDataAttribute, &
+                            extractDataContent, destroy
+    USE qes_read_module, ONLY : qes_read
     !
     IMPLICIT NONE
     !
@@ -1723,6 +1839,7 @@ MODULE cp_restart_new
     CHARACTER(LEN=3) :: atm_(ntypx)
     CHARACTER(iotk_attlenx)  :: attr
     TYPE(output_type) :: output_obj
+    TYPE(Node),POINTER :: root, simpleNode, timestepsNode, cellNode, stepNode
     !
     ! ... look for an empty unit
     !
@@ -1737,34 +1854,43 @@ MODULE cp_restart_new
     IF (.NOT. found ) &
          CALL errore ('cp_read_cell', 'xml data file not found', 1)
     !
-    CALL iotk_open_read( iunpun, TRIM(filename) )
+   
+    root => parseFile(filename) 
     !
-    CALL iotk_scan_begin( iunpun, "TIMESTEPS", attr, FOUND = found )
+    timestepsNode => item(getElementsByTagname(root, "TIMESTEPS"),0)
+    found = ASSOCIATED(timestepsNode)
     !
     IF ( found ) THEN
        !
-       CALL iotk_scan_attr( attr, "nt", nt_ )
+       CALL extractDataAttribute(timestepsNode, "nt", nt_)
        !
        IF ( nt_ > 0 ) THEN
           !
-          CALL iotk_scan_begin( iunpun, "STEP0" )
+          stepNode => item ( getElementsByTagname(timestepsNode,"STEP0"),0)
           !
-          CALL iotk_scan_begin( iunpun, "CELL_PARAMETERS" )
-          CALL iotk_scan_dat(   iunpun, "ht",    ht )
-          CALL iotk_scan_dat(   iunpun, "htvel", htvel )
-          CALL iotk_scan_dat(   iunpun, "gvel",  gvel, &
-               FOUND = found, IERR = ierr )
+          cellNode => item ( getElementsByTagname(stepNode, "CELL_PARAMETERS"),0)
           !
-          IF ( .NOT. found ) gvel = 0.D0
+          simpleNode => item( getElementsByTagname(cellNode, "ht"),0)
+          CALL extractDataContent(simpleNode,ht)
           !
-          CALL iotk_scan_end( iunpun, "CELL_PARAMETERS" )
+          simpleNode => item( getElementsByTagname(cellNode, "htvel"),0)
+          CALL extractDataContent(simpleNode,htvel)
           !
-          CALL iotk_scan_begin( iunpun, "CELL_NOSE" )
-          CALL iotk_scan_dat(   iunpun, "xnhh", xnhh0 )
-          CALL iotk_scan_dat(   iunpun, "vnhh", vnhh )
-          CALL iotk_scan_end(   iunpun, "CELL_NOSE" )
+          simpleNode => item( getElementsByTagname(cellNode, "gvel"),0)
+          IF (ASSOCIATED(simpleNode)) THEN 
+              CALL extractDataContent(simpleNode,gvel)
+          ELSE 
+              gvel = 0.d0
+          END IF
           !
-          CALL iotk_scan_end( iunpun, "STEP0" )
+          !
+          cellNode => item ( getElementsByTagname(stepNode, "CELL_NOSE"),0)
+          simpleNode => item( getElementsByTagname(cellNode, "xnhh"),0)
+          CALL extractDataContent(simpleNode,xnhh0)
+          !
+          simpleNode => item( getElementsByTagname(cellNode, "vnhh"),0)
+          CALL extractDataContent(simpleNode,vnhh) 
+          !
           !
        ELSE
           !
@@ -1776,27 +1902,28 @@ MODULE cp_restart_new
        !
        IF( nt_ > 1 ) THEN
           !
-          CALL iotk_scan_begin(iunpun,"STEPM")
+          stepNode => item ( getElementsByTagname(timestepsNode, "STEPM"),0)
           !
-          CALL iotk_scan_begin( iunpun, "CELL_PARAMETERS" )
-          CALL iotk_scan_dat(   iunpun, "ht", htm)
-          CALL iotk_scan_end(   iunpun, "CELL_PARAMETERS" )
+          cellNode => item ( getElementsByTagname(stepNode, "CELL_PARAMETERS"),0)
           !
-          CALL iotk_scan_begin( iunpun, "CELL_NOSE" )
-          CALL iotk_scan_dat(   iunpun, "xnhh", xnhhm )
-          CALL iotk_scan_end(   iunpun, "CELL_NOSE" )
+          simpleNode => item( getElementsByTagname(cellNode, "ht"),0)
+          CALL extractDataContent(simpleNode,htm)
           !
-          CALL iotk_scan_end( iunpun, "STEPM" )
+          cellNode => item ( getElementsByTagname(stepNode, "CELL_NOSE"),0)
+          !
+          simpleNode => item( getElementsByTagname(cellNode, "xnhh"),0)
+          CALL extractDataContent(simpleNode,xnhhm)
           !
        END IF
        !
-       CALL iotk_scan_end( iunpun, "TIMESTEPS" )
        !
     ELSE
        !
        ! ... MD steps have not been found, try to restart from cell data
        !
-       CALL qexsd_get_output ( iunpun, output_obj, found ) 
+       simpleNode  => item ( getElementsByTagname(root, "output"),0)
+       CALL qes_read(simpleNode, output_obj) 
+       !
        CALL qexsd_copy_atomic_structure (output_obj%atomic_structure, nsp_, &
             atm_, nat_, tau_, ityp_, alat_, a1_, a2_, a3_, ibrav_ )
        IF ( nat_ /= nat ) CALL errore ('cp_readfile', 'wrong nat read', 1)
@@ -1814,7 +1941,7 @@ MODULE cp_restart_new
        xnhhm = 0.D0
        !
     END IF
-    CALL iotk_close_read (iunpun)
+    CALL destroy (root)
     !
 100 CALL errore( 'cp_read_cell ', attr, ierr )
     !
