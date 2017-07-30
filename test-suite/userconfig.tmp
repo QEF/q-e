@@ -3,13 +3,14 @@ exe = XXXXXX/test-suite/run-pw.sh
 extract_program = XXXXXX/test-suite/extract-pw.x
 inputs_args = ('*.in', '')
 run_cmd_template = tc.program -input tc.input tc.args > tc.output 2> tc.error
-tolerance = ( (5.0e-5, 1.0e-4, 'e1'),
+tolerance = ( (8.0e-4, 1.0e-4, 'e1'),
               (5.0, None, 'n1'),
               (1.0e-3, None, 'f1'),
               (9.0e-1, 5.0e-2, 'p1'),
               (1.0e-2, None, 'ef1'),
               (1.0e-2, None, 'eh1'),
               (1.0e-2, None, 'el1'),
+              (1.0e-3, 1.0e-3, 'band'),
               (1.0e-2, None, 'tf1') )
 skip_program = grep
 skip_args = 'not present in this version'
