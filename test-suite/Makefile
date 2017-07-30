@@ -53,10 +53,10 @@ run-tests-pw-parallel : clean prolog pseudo
 	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=pw_all
 
 run-tests-ph-serial : clean prolog pseudo
-	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=ph_base
+	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=ph_all
 
 run-tests-ph-parallel : clean prolog pseudo
-	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=ph_base
+	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=ph_all
 
 run-tests-epw-serial : clean prolog pseudo
 	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=epw_all

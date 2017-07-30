@@ -59,7 +59,7 @@ elif [[ "$1" == "5" ]]
 then
   echo "Running LAMBDA ..."
   echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/lambda.x < $2 > $3 2> $4"  
-  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/lambda.x < $2 > $3 2> $4
+  ${ESPRESSO_ROOT}/bin/lambda.x < $2 > $3 2> $4
   if [[ -e CRASH ]]
   then
     cat $3
