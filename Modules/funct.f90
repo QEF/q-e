@@ -1027,6 +1027,8 @@ CONTAINS
      shortname = 'SOGGA'
   else if (iexch==1.and.icorr==4.and.igcx==25.and.igcc==0) then
      shortname = 'EV93'
+  else if (iexch==5.and.icorr==0.and.igcx==0.and.igcc==0) then
+     shortname= 'HF'
   end if
 
   if (imeta == 1 ) then
