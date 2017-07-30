@@ -6,13 +6,12 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
   !--------------------------------------------------------------------------
-  FUNCTION find_free_unit(ierr)
+  FUNCTION find_free_unit()
     !--------------------------------------------------------------------------
     !
     IMPLICIT NONE
     !
     INTEGER :: find_free_unit
-    INTEGER,OPTIONAL,INTENT(OUT)  :: ierr
     INTEGER :: iunit
     LOGICAL :: opnd
     !
@@ -32,11 +31,7 @@
        !
     END DO unit_loop
     !
-    IF ( PRESENT( ierr )) THEN 
-       ierr = 1 
-       RETURN
-    END IF 
-    CALL errore( 'find_free_unit()', 'free unit not found ?!?', 1 )
+    CALL infomsg( 'find_free_unit()', 'free unit not found ?!?')
     !
     RETURN
     !
