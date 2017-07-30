@@ -317,9 +317,9 @@ veryclean : clean
 	- cd pseudo; ./clean_ps ; cd -
 	- cd install; ./clean.sh ; cd -
 	- cd include; ./clean.sh ; cd -
-	- rm -f espresso.tar.gz
-	- rm -rf make.inc
-
+	- rm -f espresso.tar.gz -
+	- rm -rf make.inc -
+	- rm -rf FoX
 # remove everything not in the original distribution
 distclean : veryclean
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
