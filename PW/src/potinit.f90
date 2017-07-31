@@ -294,11 +294,13 @@ SUBROUTINE nc_magnetization_from_lsda ( nnr, nspin, rho )
        angle1(1)/PI*180.d0, angle2(1)/PI*180.d0 
   WRITE(stdout,*) '-----------'
   !
+#ifdef __OLDXML
   ! On input, rho(1)=rho_up, rho(2)=rho_down
   ! Set rho(1)=rho_tot, rho(3)=rho_up-rho_down=magnetization
   ! 
   rho(:,3) = rho(:,1)-rho(:,2)
   rho(:,1) = rho(:,1)+rho(:,2)
+#endif
   !
   ! now set rho(2)=magn*sin(theta)*cos(phi)   x
   !         rho(3)=magn*sin(theta)*sin(phi)   y
