@@ -771,8 +771,8 @@
 #if defined(__MPI)         
     CALL ephwann_shuffle_mem ( nqc, xqc )
 #else
-    WRITE(stdout,'(/5x,a') 'WARNING: etf_mem==2 only works with MPI'
-    WRITE(stdout,'(5x,a')  '         Changing to etf_mem ==1 and continue ...'
+    WRITE(stdout,'(/5x,a)') 'WARNING: etf_mem==2 only works with MPI'
+    WRITE(stdout,'(5x,a)')  '         Changing to etf_mem ==1 and continue ...'
     etf_mem = 1
     CALL ephwann_shuffle ( nqc, xqc )
 #endif
