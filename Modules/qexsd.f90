@@ -66,6 +66,7 @@ MODULE qexsd_module
   TYPE (parallel_info_type)        :: parallel_info
   TYPE (berryPhaseOutput_type)     :: qexsd_bp_obj
   TYPE (dipoleOutput_type )        :: qexsd_dipol_obj
+  TYPE (k_points_IBZ_type)         :: qexsd_startk_store_obj 
   TYPE ( step_type),ALLOCATABLE    :: steps(:)
   INTEGER                          :: exit_status
   TYPE ( closed_type )             :: qexsd_closed_element
