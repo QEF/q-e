@@ -33,6 +33,7 @@ MODULE mytime
   !----------------------------------------------------------------------------
   !
   USE util_param, ONLY : DP
+  USE parallel_include
   !
   IMPLICIT NONE
   !
@@ -50,6 +51,7 @@ MODULE mytime
   LOGICAL :: no
 #if defined (__TRACE)
   INTEGER :: trace_depth = 0
+  INTEGER :: max_print_depth = maxclock  ! used to gauge the ammount of output. default: a very deep depth
   INTEGER :: mpime
 #endif
   INTERFACE
@@ -66,23 +68,29 @@ MODULE mytime
 END MODULE mytime
 !
 !----------------------------------------------------------------------------
+#if defined (__TRACE)
+SUBROUTINE init_clocks( go, max_print_depth_ )
+#else
 SUBROUTINE init_clocks( go )
+#endif
   !----------------------------------------------------------------------------
   !
   ! ... go = .TRUE.  : clocks will run
   ! ... go = .FALSE. : only clock #1 will run
   !
-  USE util_param,  ONLY : DP
+  USE util_param,  ONLY : DP, stdout
   USE mytime, ONLY : called, t0cpu, cputime, no, notrunning, maxclock, &
        clock_label, walltime, t0wall, nclock
 #if defined (__TRACE)
-  USE mytime, ONLY : mpime
+  USE mytime, ONLY : mpime, max_print_depth, MPI_COMM_WORLD
 #endif
-
   !
   IMPLICIT NONE
   !
-  LOGICAL :: go
+  LOGICAL, INTENT(IN) :: go
+#if defined (__TRACE)
+  INTEGER, INTENT(IN), OPTIONAL :: max_print_depth_
+#endif
   INTEGER :: n, ierr
   !
   no = .not. go
@@ -99,6 +107,11 @@ SUBROUTINE init_clocks( go )
      !
   ENDDO
 #if defined (__TRACE)
+  write(stdout,*) '*** Code flow traced exploiting clocks calls ***'
+  if (present(max_print_depth_)) then
+     max_print_depth = max_print_depth_
+     write(stdout,*) '--- Code flow traced down to depth ',max_print_depth
+  end if
   mpime = 0
 #if defined(__MPI)
   ierr = 0
@@ -122,7 +135,7 @@ SUBROUTINE start_clock( label )
   !
   USE util_param,     ONLY : DP, stdout
 #if defined (__TRACE)
-  USE mytime,    ONLY : trace_depth, mpime
+  USE mytime,    ONLY : trace_depth, mpime, max_print_depth
 #endif
   USE mytime,    ONLY : nclock, clock_label, notrunning, no, maxclock, &
                         t0cpu, t0wall, f_wall, f_tcpu
@@ -135,7 +148,9 @@ SUBROUTINE start_clock( label )
   INTEGER          :: n
   !
 #if defined (__TRACE)
-  WRITE( stdout, '("mpime = ",I2,", TRACE (depth=",I2,") Start: ",A12)') mpime, trace_depth, label
+  if (trace_depth <= max_print_depth ) &  ! used to gauge the ammount of output
+  WRITE( stdout,'(I3," depth=",I2," start_clock ",A )') mpime,trace_depth, label ; FLUSH(stdout)
+  !WRITE( stdout, '("mpime = ",I2,", TRACE (depth=",I2,") Start: ",A12)') mpime, trace_depth, label
   trace_depth = trace_depth + 1
 #endif
   !
@@ -191,7 +206,7 @@ SUBROUTINE stop_clock( label )
   !
   USE util_param,     ONLY : DP, stdout
 #if defined (__TRACE)
-  USE mytime,    ONLY : trace_depth, mpime
+  USE mytime,    ONLY : trace_depth, mpime, max_print_depth
 #endif
   USE mytime,    ONLY : no, nclock, clock_label, cputime, walltime, &
                         notrunning, called, t0cpu, t0wall, f_wall, f_tcpu
@@ -205,7 +220,9 @@ SUBROUTINE stop_clock( label )
   !
 #if defined (__TRACE)
   trace_depth = trace_depth - 1
-  WRITE( *, '("mpime = ",I2,", TRACE (depth=",I2,") End: ",A12)') mpime, trace_depth, label
+  if (trace_depth <= max_print_depth ) &  ! used to gauge the ammount of output
+  WRITE( stdout,'(I3," depth=",I2," stop_clock ",A )') mpime, trace_depth, label ; FLUSH(stdout)
+  !WRITE( *, '("mpime = ",I2,", TRACE (depth=",I2,") End: ",A12)') mpime, trace_depth, label
 #endif
   !
   IF ( no ) RETURN
@@ -223,8 +240,7 @@ SUBROUTINE stop_clock( label )
         !
         IF ( t0cpu(n) == notrunning ) THEN
            !
-           WRITE( stdout, '("stop_clock: clock # ",I2," for ",A12, &
-                          & " not running")' ) n, label
+           WRITE( stdout, '("stop_clock: clock # ",I2," for ",A12, " not running")' ) n, label
            !
         ELSE
            !
