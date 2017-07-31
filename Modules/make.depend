@@ -130,11 +130,6 @@ hdf5_qe.o : ../UtilXlib/parallel_include.o
 hdf5_qe.o : io_files.o
 hdf5_qe.o : kind.o
 hdf5_qe.o : mp_world.o
-hdf5_qe_parallel.o : ../UtilXlib/mp.o
-hdf5_qe_parallel.o : ../UtilXlib/parallel_include.o
-hdf5_qe_parallel.o : io_files.o
-hdf5_qe_parallel.o : kind.o
-hdf5_qe_parallel.o : mp_world.o
 input_parameters.o : kind.o
 input_parameters.o : parameters.o
 input_parameters.o : wannier_new.o
@@ -209,10 +204,6 @@ parser.o : io_global.o
 parser.o : kind.o
 parser.o : mp_images.o
 paw_variables.o : kind.o
-pippo.o : ../iotk/src/iotk_module.o
-pippo.o : @qexsd_reader_module@
-pippo.o : qes_libs.o
-pippo.o : qes_types.o
 plot_io.o : io_global.o
 plot_io.o : kind.o
 plugin_arguments.o : ../UtilXlib/mp.o
@@ -266,6 +257,11 @@ qexsd_input.o : constants.o
 qexsd_input.o : input_parameters.o
 qexsd_input.o : kind.o
 qexsd_input.o : qes_module.o
+qexsd_reader_module.o : ../iotk/src/iotk_module.o
+qexsd_reader_module.o : io_global.o
+qexsd_reader_module.o : kind.o
+qexsd_reader_module.o : parameters.o
+qexsd_reader_module.o : qes_module.o
 qmmm.o : ../FFTXlib/fft_types.o
 qmmm.o : ../UtilXlib/mp.o
 qmmm.o : ../UtilXlib/parallel_include.o
