@@ -62,7 +62,7 @@ test -e ./install/configure.msg  && rm ./install/configure.msg
 if [[  ($1 =~ "--save") ]] ; then
   shift;
 elif [[ (-e make.inc) && (-e Makefile) ]] ; then
-  echo make -f Makefile veryclean
+  make -f Makefile veryclean
 fi
 
 ./install/configure "$@"
