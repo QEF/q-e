@@ -62,11 +62,13 @@
   INTEGER :: iunepmatwp2
   !! Return the file unit
   INTEGER :: ierr
+#if defined(__MPI)  
   !! Return if there is an error
   INTEGER (kind=MPI_OFFSET_KIND) :: lrepmatw
   !! Offset to tell where to start reading the file
   INTEGER (kind=MPI_OFFSET_KIND) :: lrepmatw2
   !! Offset to tell where to start reading the file
+#endif  
   !
   REAL(kind=DP) :: rdotk
   !! Exponential for the FT
@@ -88,9 +90,11 @@
   !
   CALL para_bounds(ir_start, ir_stop, nrr_q)
   !
+#if defined(__MPI)  
   filint = trim(tmp_dir)//trim(prefix)//'.epmatwp1'
   CALL MPI_FILE_OPEN(world_comm,filint,MPI_MODE_RDONLY,MPI_INFO_NULL,iunepmatwp2,ierr)
   IF( ierr /= 0 ) CALL errore( 'ephwan2blochp_mem', 'error in MPI_FILE_OPEN',1 )
+#endif  
   !
   cfac(:) = czero
   !
@@ -103,15 +107,18 @@
   ! 
   ALLOCATE(epmatw ( nbnd, nbnd, nrr_k))
   !
+#if defined(__MPI)  
   lrepmatw2 = 2_MPI_OFFSET_KIND * INT( nbnd  , kind = MPI_OFFSET_KIND ) * &
                                   INT( nbnd  , kind = MPI_OFFSET_KIND ) * &
                                   INT( nrr_k , kind = MPI_OFFSET_KIND )
+#endif                          
   ! 
   DO ir = ir_start, ir_stop
     !
     ! SP: The following needs a small explaination: although lrepmatw is correctly defined as kind 8 bits or 
     !     kind=MPI_OFFSET_KIND, the number "2" and "8" are default kind 4. The other as well. Therefore
     !     if the product is too large, this will crash. The solution (kind help recieved from Ian Bush) is below:
+#if defined(__MPI)    
     lrepmatw = 2_MPI_OFFSET_KIND * INT( nbnd  , kind = MPI_OFFSET_KIND ) * &
                                    INT( nbnd  , kind = MPI_OFFSET_KIND ) * &
                                    INT( nrr_k , kind = MPI_OFFSET_KIND ) * &
@@ -132,6 +139,7 @@
     IF( ierr /= 0 ) CALL errore( 'ephwan2blochp', 'error in MPI_FILE_SEEK',1 )
     CALL MPI_FILE_READ(iunepmatwp2, epmatw, lrepmatw2, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE,ierr)
     IF( ierr /= 0 ) CALL errore( 'ephwan2blochp', 'error in MPI_FILE_READ_ALL',1 )
+#endif    
     ! 
     !
     CALL ZAXPY(nbnd * nbnd * nrr_k, cfac(ir), epmatw, 1, epmatf, 1)
@@ -141,8 +149,10 @@
   !
   CALL mp_sum(epmatf, world_comm)
   !
+#if defined(__MPI)  
   CALL MPI_FILE_CLOSE(iunepmatwp2,ierr)
   IF( ierr /= 0 ) CALL errore( 'ephwan2blochp_mem', 'error in MPI_FILE_CLOSE',1 )
+#endif  
   !
   CALL stop_clock('ephW2Bp')
   !
