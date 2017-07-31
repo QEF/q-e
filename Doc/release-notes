@@ -48,12 +48,14 @@ Fixed in svn version
 
 Incompatible changes in svn version:
 
-  * some general utility modules moved to UtilsXlib
-  * memstat moved to module wrappers
-  * f_wall and f_tcpu, in module mytime, replace previous fortran wrappers 
-    for cclock and scnds, respectively. The latter remain as C functions.
-  * fft_defs.h and related configure and makedep stuff deleted,
-    replaced by iso_c_binding module
+  * MAJOR restructuring of the distribution:
+    - diagonalizers moved to KS_Solvers/
+    - general utility modules moved to UtilsXlib
+  * Restructuring of C routines, introduction of ISO_C_BINDING:
+    - memstat moved to module wrappers
+    - f_wall and f_tcpu, in module mytime, replace previous fortran wrappers 
+    - for cclock and scnds, respectively. The latter remain as C functions.
+    - fft_defs.h and related configure and makedep stuff deleted
   * module pwcom no longer contains modules gvect, gvecs, references to
     some variables in modules constants, cell_base
   * The new xml format with schema is now the default. Use configure option

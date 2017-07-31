@@ -1,3 +1,4 @@
+clocks_handler.o : parallel_include.o
 clocks_handler.o : util_param.o
 error_handler.o : mp.o
 error_handler.o : util_param.o
