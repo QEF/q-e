@@ -148,9 +148,11 @@
   !
   temp = estemp(itemp) / kelvin2eV
   IF ( temp .lt. 10.d0 ) THEN  
-     WRITE(name2,'(a,a6,f4.2)') TRIM(prefix),'.ker_0', temp
+     WRITE(name2,'(a,a7,f4.2)') TRIM(prefix),'.ker_00', temp
   ELSEIF ( temp .ge. 10.d0 ) THEN 
-     WRITE(name2,'(a,a5,f5.2)') TRIM(prefix),'.ker_', temp
+     WRITE(name2,'(a,a6,f5.2)') TRIM(prefix),'.ker_0', temp
+  ELSEIF ( temp .ge. 100.d0 ) THEN 
+     WRITE(name2,'(a,a5,f6.2)') TRIM(prefix),'.ker_', temp
   ENDIF
   !OPEN(iufilker, file=name2, form='formatted')
   OPEN(iufilker, file=name2, form='unformatted')
@@ -225,9 +227,11 @@
   IF ( errdelta .lt. conv_thr_raxis) conv = .true.
   IF ( errdelta .lt. conv_thr_raxis .OR. iter .eq. nsiter ) THEN
      IF ( temp .lt. 10.d0 ) THEN
-        WRITE(name1,'(a,a7,f4.2)') TRIM(prefix),'.gapr_0', temp
+        WRITE(name1,'(a,a8,f4.2)') TRIM(prefix),'.gapr_00', temp
      ELSEIF ( temp .ge. 10.d0 ) THEN
-        WRITE(name1,'(a,a6,f5.2)') TRIM(prefix),'.gapr_', temp
+        WRITE(name1,'(a,a7,f5.2)') TRIM(prefix),'.gapr_0', temp
+     ELSEIF ( temp .ge. 100.d0 ) THEN
+        WRITE(name1,'(a,a6,f6.2)') TRIM(prefix),'.gapr_', temp
      ENDIF
      OPEN(iufilgap, file=name1, form='formatted')
      !
