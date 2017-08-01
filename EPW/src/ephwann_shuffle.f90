@@ -1476,6 +1476,8 @@
       DO irq = 1, nrr_q
         CALL davcio ( epmatwp(:,:,:,:,irq), lrepmatw, iunepmatwp, irq, -1 )
       ENDDO
+      !  
+      CLOSE(iunepmatwp)
     ENDIF
     !
     CALL mp_bcast (epmatwp, ionode_id, inter_pool_comm)
@@ -1485,7 +1487,6 @@
   !
   CALL mp_barrier(inter_pool_comm)
   IF (mpime.eq.ionode_id) THEN
-    CLOSE(iunepmatwp)
     CLOSE(epwdata)
     CLOSE(iundmedata)
     IF (vme) CLOSE(iunvmedata)

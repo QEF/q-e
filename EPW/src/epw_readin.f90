@@ -538,9 +538,9 @@
        &'Error: kmaps has to be true for a restart run. ',1)
   IF ( etf_mem == 2 .AND. parallel_q) CALL errore('epw_init',&
        &'Error: Memory optimized version and q-parallelization not implemented. ',1)
-#ifndef __MPI
-  IF ( etf_mem == 2 ) CALL errore('epw_init','Error: etf_mem == 2 only works with MPI.',1)
-#endif
+!#ifndef __MPI
+!  IF ( etf_mem == 2 ) CALL errore('epw_init','Error: etf_mem == 2 only works with MPI.',1)
+!#endif
   !
   ! thickness and smearing width of the Fermi surface  
   ! from eV to Ryd
