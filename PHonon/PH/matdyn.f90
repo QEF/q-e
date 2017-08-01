@@ -928,6 +928,8 @@ SUBROUTINE frc_blk(dyn,q,tau,nat,nr1,nr2,nr3,frc,at,bg,rws,nrws,f_of_q,fd)
        DO nb=1, nat
           total_weight=0.0d0
           !
+          ! SUM OVER R VECTORS IN THE SUPERCELL - VERY VERY VERY SAFE RANGE!
+          !
           DO n1=-nr1_,nr1_
              DO n2=-nr2_,nr2_
                 DO n3=-nr3_,nr3_
@@ -937,9 +939,14 @@ SUBROUTINE frc_blk(dyn,q,tau,nat,nr1,nr2,nr3,frc,at,bg,rws,nrws,f_of_q,fd)
                       if (fd) r_ws(i) = r(i) + tau(i,nb)-tau(i,na)
                    END DO
                    wscache(n3,n2,n1,nb,na) = wsweight(r_ws,rws,nrws)
+                   total_weight=total_weight + wscache(n3,n2,n1,nb,na) 
                 ENDDO
              ENDDO
           ENDDO
+          IF (ABS(total_weight-nr1*nr2*nr3).GT.1.0d-8) THEN
+             WRITE(stdout,*) na,nb,total_weight
+             CALL errore ('frc_blk','wrong total_weight',1)
+          END IF
       ENDDO
     ENDDO
   ENDIF FIRST_TIME
@@ -950,7 +957,6 @@ SUBROUTINE frc_blk(dyn,q,tau,nat,nr1,nr2,nr3,frc,at,bg,rws,nrws,f_of_q,fd)
 
   DO na=1, nat
      DO nb=1, nat
-        total_weight=0.0d0
         DO n1=-nr1_,nr1_
            DO n2=-nr2_,nr2_
               DO n3=-nr3_,nr3_
@@ -984,21 +990,16 @@ SUBROUTINE frc_blk(dyn,q,tau,nat,nr1,nr2,nr3,frc,at,bg,rws,nrws,f_of_q,fd)
                     arg = tpi*(q(1)*r(1) + q(2)*r(2) + q(3)*r(3))
                     DO ipol=1, 3
                        DO jpol=1, 3
-                          dyn(ipol,jpol,na,nb) =                 &
-                               dyn(ipol,jpol,na,nb) +            &
-                               (frc(m1,m2,m3,ipol,jpol,na,nb)+f_of_q(ipol,jpol,na,nb))     &
+                          dyn(ipol,jpol,na,nb) = dyn(ipol,jpol,na,nb) +                &
+                               (frc(m1,m2,m3,ipol,jpol,na,nb)+f_of_q(ipol,jpol,na,nb)) &
                                *CMPLX(COS(arg),-SIN(arg),kind=DP)*weight
                        END DO
                     END DO
+
                  END IF
-                 total_weight=total_weight + weight
               END DO
            END DO
         END DO
-        IF (ABS(total_weight-nr1*nr2*nr3).GT.1.0d-8) THEN
-           WRITE(stdout,*) total_weight
-           CALL errore ('frc_blk','wrong total_weight',1)
-        END IF
      END DO
   END DO
   !

@@ -80,7 +80,7 @@ IF (nspin.EQ.2) ALLOCATE(rhodist2(dfftp%nr1x*dfftp%nr2x*dfftp%nr3x))
 ALLOCATE( displs( nproc_bgrp ), recvcount( nproc_bgrp ) )
 !
       do proc=1,nproc_bgrp
-         recvcount(proc) =  dfftp%nnp  * ( dfftp%npp(proc) )
+         recvcount(proc) =  dfftp%nnp  * ( dfftp%nr3p(proc) )
          if (proc.eq.1) then
             displs(proc)=0
          else

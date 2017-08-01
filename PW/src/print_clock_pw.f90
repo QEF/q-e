@@ -160,7 +160,9 @@ SUBROUTINE print_clock_pw()
    WRITE( stdout, '(5X,"Parallel routines")' )
    !
    CALL print_clock( 'reduce' )
-   CALL print_clock( 'fft_scatter' )
+   CALL print_clock( 'fft_scatt_xy' )
+   CALL print_clock( 'fft_scatt_yz' )
+   CALL print_clock( 'fft_scatt_tg' )
    CALL print_clock( 'ALLTOALL' )
 #endif
    !

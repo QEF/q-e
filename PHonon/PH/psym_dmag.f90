@@ -31,7 +31,7 @@ SUBROUTINE psym_dmag (nper, irr, dvtosym)
   !
 #if defined (__MPI)
   !
-  INTEGER :: i, is, iper, npp0
+  INTEGER :: i, is, iper, ir3, ioff, ioff_tg, nxyp
 
   COMPLEX(DP), ALLOCATABLE :: ddvtosym (:,:,:)
   ! the potential to symm
@@ -41,26 +41,26 @@ SUBROUTINE psym_dmag (nper, irr, dvtosym)
   CALL start_clock ('psym_dmag')
 
   ALLOCATE (ddvtosym ( dfftp%nr1x * dfftp%nr2x * dfftp%nr3x, nspin_mag, nper))
-  npp0 = 1
-  DO i = 1, me_bgrp
-     npp0 = npp0 + dfftp%npp (i) * dfftp%nnp
 
-  ENDDO
   DO iper = 1, nper
      DO is = 1, nspin_mag
         CALL cgather_sym (dfftp,dvtosym (:, is, iper), ddvtosym (:, is, iper) )
      ENDDO
-
   ENDDO
 
   CALL sym_dmag (nper, irr, ddvtosym)
+
+  nxyp = dfftp%nr1x * dfftp%my_nr2p
   DO iper = 1, nper
      DO is = 1, nspin_mag
-        CALL zcopy (dfftp%npp (me_bgrp+1) * dfftp%nnp, ddvtosym (npp0, is, iper), &
-             1, dvtosym (1, is, iper), 1)
+        DO ir3 = 1, dfftp%my_nr3p
+           ioff    = dfftp%nr1x * dfftp%my_nr2p * (ir3-1)
+           ioff_tg = dfftp%nr1x * dfftp%nr2x    * (dfftp%my_i0r3p+ir3-1) + dfftp%nr1x * dfftp%my_i0r2p
+           CALL zcopy (nxyp, ddvtosym (ioff_tg+1, is, iper), 1, dvtosym (ioff+1, is, iper), 1)
+        END DO
      ENDDO
-
   ENDDO
+
   DEALLOCATE (ddvtosym)
 
   CALL stop_clock ('psym_dmag')

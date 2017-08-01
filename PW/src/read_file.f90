@@ -145,7 +145,7 @@ SUBROUTINE read_xml_file_internal(withbs)
   USE funct,                ONLY : get_inlc, get_dft_name
   USE kernel_table,         ONLY : initialize_kernel_table
   USE esm,                  ONLY : do_comp_esm, esm_init
-  USE mp_bands,             ONLY : intra_bgrp_comm
+  USE mp_bands,             ONLY : intra_bgrp_comm, nyfft
   !
   IMPLICIT NONE
 
@@ -199,8 +199,8 @@ SUBROUTINE read_xml_file_internal(withbs)
   ALLOCATE( irt( 48, nat ) )
   !
   CALL set_dimensions()
-  CALL fft_type_allocate ( dfftp, at, bg, gcutm, intra_bgrp_comm )
-  CALL fft_type_allocate ( dffts, at, bg, gcutms, intra_bgrp_comm)
+  CALL fft_type_allocate ( dfftp, at, bg, gcutm, intra_bgrp_comm, nyfft=nyfft )
+  CALL fft_type_allocate ( dffts, at, bg, gcutms, intra_bgrp_comm, nyfft=nyfft )
   !
   ! ... check whether LSDA
   !

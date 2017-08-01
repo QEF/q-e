@@ -8,7 +8,7 @@ SUBROUTINE exx_psi(c, psitot2,nnrtot,my_nbsp, my_nxyz, nbsp)
     !
     USE kinds,                   ONLY  : DP
     USE fft_interfaces,          ONLY  : invfft
-    USE fft_base,                ONLY  : dffts, dfftp, dtgs
+    USE fft_base,                ONLY  : dffts, dfftp
     USE gvecw,                   ONLY  : ngw
     USE mp_global,               ONLY  : nproc_image, me_image,intra_image_comm
     USE cell_base,               ONLY  : omega
@@ -47,9 +47,9 @@ SUBROUTINE exx_psi(c, psitot2,nnrtot,my_nbsp, my_nxyz, nbsp)
     nr1s=dfftp%nr1; nr2s=dfftp%nr2; nr3s=dfftp%nr3 
     !
     IF (nproc_image .GE. nr3s) THEN
-      sizefft=MAX(nr1s*nr2s,dffts%npp(me)*nr1s*nr2s)
+      sizefft=MAX(nr1s*nr2s,nr1s*nr2s*dffts%my_nr3p)
     ELSE
-      sizefft=dffts%npp(me)*nr1s*nr2s
+      sizefft=nr1s*nr2s*dffts%my_nr3p
     END IF 
     !
     !write(*,'(10I7)') me, dffts%npp(me), dfftp%npp(me), dffts%tg_npp(me), dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, dffts%nnr, dfftp%nnr, dffts%tg_nnr
@@ -105,7 +105,7 @@ SUBROUTINE exx_psi(c, psitot2,nnrtot,my_nbsp, my_nxyz, nbsp)
       !write(stdout,'("dffts%nnr*nogrp:",I10)'), dffts%nnr*nogrp
       !write(stdout,'("nogrp*nr3 should be smaller or equal to nproc_image:")')
       !
-      nogrp = dtgs%nogrp
+      nogrp = dffts%nproc2
       !
       ALLOCATE( sdispls(nproc_image), sendcount(nproc_image) ); sdispls=0; sendcount=0
       ALLOCATE( rdispls(nproc_image), recvcount(nproc_image) ); rdispls=0; recvcount=0 
@@ -168,14 +168,14 @@ SUBROUTINE exx_psi(c, psitot2,nnrtot,my_nbsp, my_nxyz, nbsp)
           !
         END DO
         !
-        CALL invfft( 'Wave', psis, dffts, dtgs )
+        CALL invfft( 'tgWave', psis, dffts )
         !
 #if defined(__MPI)
         !
-        CALL mp_barrier( dtgs%ogrp_comm )
+        CALL mp_barrier( dffts%comm2 )
         CALL MPI_ALLTOALLV(psis, sendcount1, sdispls1, MPI_DOUBLE_COMPLEX, &
             &         psis1, recvcount1, rdispls1, MPI_DOUBLE_COMPLEX, &
-            &         dtgs%ogrp_comm, ierr)
+            &         dffts%comm2, ierr)
 #endif
         !
         ngpww1 = 0

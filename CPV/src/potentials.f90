@@ -59,9 +59,9 @@
       ir2 = 1
       ir3 = 1
       DO k = 1, me_bgrp
-        ir3 = ir3 + dfftp%npp( k )
+        ir3 = ir3 + dfftp%nr3p( k )
       END DO
-      nr3l = dfftp%npl
+      nr3l = dfftp%my_nr3p
 
       ALLOCATE( grr( dfftp%nnr ) )
       ALLOCATE( grg( SIZE( screen_coul ) ) )

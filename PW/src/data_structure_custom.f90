@@ -18,7 +18,7 @@ SUBROUTINE data_structure_custom(fc, smap_exx, gamma_only)
   USE mp,         ONLY : mp_sum, mp_max,mp_barrier
   USE mp_exx,     ONLY : me_egrp, negrp, nproc_egrp, inter_egrp_comm, &
                          intra_egrp_comm, root_egrp, ntask_groups 
-  USE mp_bands,   ONLY : intra_bgrp_comm
+  USE mp_bands,   ONLY : intra_bgrp_comm, nyfft
   USE fft_types,  ONLY : fft_type_init
   USE stick_base, ONLY : sticks_map
 
@@ -84,10 +84,10 @@ SUBROUTINE data_structure_custom(fc, smap_exx, gamma_only)
   !
   IF( negrp == 1 )THEN
      CALL fft_type_init( fc%dfftt, smap, "rho", gamma_only, lpara, &
-                         intra_bgrp_comm, at, bg, fc%gcutmt, fc%gcutmt/gkcut )
+                         intra_bgrp_comm, at, bg, fc%gcutmt, fc%gcutmt/gkcut, nyfft=nyfft )
   ELSE
      CALL fft_type_init( fc%dfftt, smap_exx, "rho", gamma_only, lpara, &
-                         intra_comm, at, bg, fc%gcutmt, fc%gcutmt/gkcut )
+                         intra_comm, at, bg, fc%gcutmt, fc%gcutmt/gkcut, nyfft=nyfft )
   END IF
   ngs_ = fc%dfftt%ngl( fc%dfftt%mype + 1 )
   IF( gamma_only ) THEN

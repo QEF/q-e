@@ -119,14 +119,14 @@ MODULE exchange_custom
       rz_end =0
       do ii=1,me_pool + 1
          rz_start=rz_end+1
-         rz_end=rz_end+exx_cus%fft_g2r%dfftt%npp(ii)
+         rz_end=rz_end+exx_cus%fft_g2r%dfftt%nr3p(ii)
       end do
 
       rz_start_s=0
       rz_end_s=0
       do ii=1,me_pool + 1
          rz_start_s=rz_end_s+1
-         rz_end_s=rz_end_s+exx_cus%fft_small%dfftt%npp(ii)
+         rz_end_s=rz_end_s+exx_cus%fft_small%dfftt%nr3p(ii)
       end do
       
       nr3small=rz_end_s-rz_start_s+1
@@ -140,7 +140,7 @@ MODULE exchange_custom
       k=0
       do ii=1,nproc
          j=k+1
-         k=k+exx_cus%fft_small%dfftt%npp(ii)
+         k=k+exx_cus%fft_small%dfftt%nr3p(ii)
          z2proc_s(j:k)=ii-1
       end do
 
@@ -148,7 +148,7 @@ MODULE exchange_custom
       k=0
       do ii=1,nproc
          j=k+1
-         k=k+exx_cus%fft_g2r%dfftt%npp(ii)
+         k=k+exx_cus%fft_g2r%dfftt%nr3p(ii)
          z2proc(j:k)=ii-1
       end do
 
@@ -862,14 +862,14 @@ MODULE exchange_custom
       rz_end =0
       do ii=1,me_pool + 1
          rz_start=rz_end+1
-         rz_end=rz_end+exx_cus%fft_g2r%dfftt%npp(ii)
+         rz_end=rz_end+exx_cus%fft_g2r%dfftt%nr3p(ii)
       end do
 
       rz_start_s=0
       rz_end_s=0
       do ii=1,me_pool + 1
          rz_start_s=rz_end_s+1
-         rz_end_s=rz_end_s+fft_small%dfftt%npp(ii)
+         rz_end_s=rz_end_s+fft_small%dfftt%nr3p(ii)
       end do
 
       allocate(z2proc_s(fft_small%nr3t))
@@ -880,7 +880,7 @@ MODULE exchange_custom
       k=0
       do ii=1,nproc
          j=k+1
-         k=k+fft_small%dfftt%npp(ii)
+         k=k+fft_small%dfftt%nr3p(ii)
          z2proc_s(j:k)=ii-1
       end do
 
@@ -888,14 +888,14 @@ MODULE exchange_custom
       k=0
       do ii=1,nproc
          j=k+1
-         k=k+exx_cus%fft_g2r%dfftt%npp(ii)
+         k=k+exx_cus%fft_g2r%dfftt%nr3p(ii)
          z2proc(j:k)=ii-1
       end do
 
 
 
       r2s_xy(:)=0
-      do iz=1,exx_cus%fft_g2r%dfftt%npp(me_pool+1)
+      do iz=1,exx_cus%fft_g2r%dfftt%nr3p(me_pool+1)
          do iy=1,exx_cus%fft_g2r%nr2t
             do ix=1,exx_cus%fft_g2r%nr1t
                iqq=(iz-1)*(exx_cus%fft_g2r%nrx1t*exx_cus%fft_g2r%nrx2t)+(iy-1)*exx_cus%fft_g2r%nrx1t+ix
@@ -1221,13 +1221,13 @@ MODULE exchange_custom
          rz_end =0
          do ii=1,me_pool + 1
             rz_start=rz_end+1
-            rz_end=rz_end+exx_cus%fft_g2r%dfftt%npp(ii)
+            rz_end=rz_end+exx_cus%fft_g2r%dfftt%nr3p(ii)
          end do
 
          exx_cus%r2s_xy(:,:,:)=0
          do i=1,exx_cus%n(1)
             do j=1,exx_cus%n(2)
-               do iz=1,exx_cus%fft_g2r%dfftt%npp(me_pool+1)
+               do iz=1,exx_cus%fft_g2r%dfftt%my_nr3p
                   do iy=1,exx_cus%fft_g2r%nr2t
                      do ix=1,exx_cus%fft_g2r%nr1t
                         iqq=(iz-1)*(exx_cus%fft_g2r%nrx1t*exx_cus%fft_g2r%nrx2t)+(iy-1)*exx_cus%fft_g2r%nrx1t+ix
@@ -1320,14 +1320,14 @@ MODULE exchange_custom
          rz_end =0
          do ii=1,me_pool + 1
             rz_start=rz_end+1
-            rz_end=rz_end+exx_cus%fft_g2r%dfftt%npp(ii)
+            rz_end=rz_end+exx_cus%fft_g2r%dfftt%nr3p(ii)
          end do
          
          rz_start_s=0
          rz_end_s=0
          do ii=1,me_pool + 1
             rz_start_s=rz_end_s+1
-            rz_end_s=rz_end_s+exx_cus%fft_small%dfftt%npp(ii)
+            rz_end_s=rz_end_s+exx_cus%fft_small%dfftt%nr3p(ii)
          end do
          nr3small=rz_end_s-rz_start_s+1
          allocate(exx_cus%wfc_red(exx_cus%fft_g2r%nrx1t*exx_cus%fft_g2r%nrx2t,nr3small,exx_cus%m(3),num_nbndv_max,exx_cus%nspin))
@@ -1339,7 +1339,7 @@ MODULE exchange_custom
          k=0
          do ii=1,nproc
             j=k+1
-            k=k+exx_cus%fft_small%dfftt%npp(ii)
+            k=k+exx_cus%fft_small%dfftt%nr3p(ii)
             z2proc_s(j:k)=ii-1
          end do
          
@@ -1347,7 +1347,7 @@ MODULE exchange_custom
          k=0
          do ii=1,nproc
             j=k+1
-            k=k+exx_cus%fft_g2r%dfftt%npp(ii)
+            k=k+exx_cus%fft_g2r%dfftt%nr3p(ii)
             z2proc(j:k)=ii-1
          end do
 

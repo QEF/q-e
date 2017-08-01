@@ -8,6 +8,7 @@
 ! Uncomment next line to print compilation info. BEWARE: may occasionally
 ! give compilation errors due to lines too long if paths are very long
 !#define __HAVE_CONFIG_INFO
+!
 !==-----------------------------------------------------------------------==!
 MODULE environment
   !==-----------------------------------------------------------------------==!
@@ -19,7 +20,7 @@ MODULE environment
   USE mp_images, ONLY: me_image, my_image_id, root_image, nimage, &
       nproc_image
   USE mp_pools,  ONLY: npool
-  USE mp_bands,  ONLY: ntask_groups, nproc_bgrp, nbgrp
+  USE mp_bands,  ONLY: ntask_groups, nproc_bgrp, nbgrp, nyfft
   USE global_version, ONLY: version_number, svn_revision
 #if defined(__HDF5)
   USE qeh5_base_module,   ONLY: initialize_hdf5, finalize_hdf5
@@ -99,6 +100,7 @@ CONTAINS
        ! ... one processor per image (other than meta_ionode)
        ! ... or, for debugging purposes, all processors,
        ! ... open their own standard output file
+!#define DEBUG
 #if defined(DEBUG)
        debug = .true.
 #endif
@@ -119,7 +121,7 @@ CONTAINS
     CALL opening_message( code_version )
     CALL compilation_info ( )
 #if defined(__MPI)
-    CALL parallel_info ( )
+    CALL parallel_info ( code )
 #else
     CALL serial_info()
 #endif
@@ -201,8 +203,9 @@ CONTAINS
   END SUBROUTINE closing_message
 
   !==-----------------------------------------------------------------------==!
-  SUBROUTINE parallel_info ( )
+  SUBROUTINE parallel_info ( code )
     !
+    CHARACTER(LEN=*), INTENT(IN) :: code
 #if defined(__OPENMP)
     INTEGER, EXTERNAL :: omp_get_max_threads
     !
@@ -226,8 +229,11 @@ CONTAINS
          '(5X,"band groups division:  nbgrp     = ",I7)' ) nbgrp
     IF ( nproc_bgrp > 1 ) WRITE( stdout, &
          '(5X,"R & G space division:  proc/nbgrp/npool/nimage = ",I7)' ) nproc_bgrp
+    IF ( nyfft > 1 ) WRITE( stdout, &
+         '(5X,"wavefunctions fft division:  Y-proc x Z-proc = ",2I7)' ) &
+         nyfft, nproc_bgrp / nyfft
     IF ( ntask_groups > 1 ) WRITE( stdout, &
-         '(5X,"wavefunctions fft division:  fft and procs/group = ",2I7)' ) &
+         '(5X,"wavefunctions fft division:  task group distribution",/,34X,"#TG    x Z-proc = ",2I7)' ) &
          ntask_groups, nproc_bgrp / ntask_groups
     !
   END SUBROUTINE parallel_info

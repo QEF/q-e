@@ -17,7 +17,7 @@
       USE control_flags,            ONLY: iverbosity
       USE io_global,                ONLY: stdout
       USE mp_global,                ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm
-      USE fft_base,                 ONLY: dfftb, dfftp, dfftb, fft_type_descriptor
+      USE fft_base,                 ONLY: dfftb, dfftp, fft_type_descriptor
       USE fft_smallbox_type,        ONLY: fft_box_set
 
       IMPLICIT NONE
@@ -30,12 +30,9 @@
       REAL(DP) :: x(3), xmod
       INTEGER  :: nr(3), nrb(3), xint, is, ia, i, isa
 !
-      IF ( dfftb%nr1 < 1) CALL errore &
-         ('initbox', 'incorrect value for box grid dimensions', 1)
-      IF ( dfftb%nr2 < 1) CALL errore &
-         ('initbox', 'incorrect value for box grid dimensions', 2)
-      IF ( dfftb%nr3 < 1) CALL errore &
-         ('initbox', 'incorrect value for box grid dimensions', 3)
+      IF ( dfftb%nr1 < 1) CALL errore ('initbox', 'incorrect value for box grid dimensions', 1)
+      IF ( dfftb%nr2 < 1) CALL errore ('initbox', 'incorrect value for box grid dimensions', 2)
+      IF ( dfftb%nr3 < 1) CALL errore ('initbox', 'incorrect value for box grid dimensions', 3)
 
       nr (1)=dfftp%nr1
       nr (2)=dfftp%nr2
@@ -101,8 +98,7 @@
 
       ! initialize FFT descriptor
 
-      CALL fft_box_set( dfftb, dfftb%nr1, dfftb%nr2, dfftb%nr3, dfftb%nr1x, dfftb%nr2x, dfftb%nr3x, &
-                        nat, irb, dfftp%npp, dfftp%ipp )
+      CALL fft_box_set( dfftb, nat, irb, dfftp )
 
       IF( iverbosity > 1 ) THEN
            isa = 1

@@ -189,6 +189,7 @@ CONTAINS
   INTEGER :: i
   ! counters on G space
   !
+  INTEGER :: nyfft=1
 
   REAL(DP) :: amod
   ! modulus of G vectors
@@ -216,7 +217,8 @@ CONTAINS
   ! compute gkcut calling an internal procedure
   !
   CALL calculate_gkcut()
-  CALL fft_type_init( fc%dfftt, fc%smapt, "rho", .not. tk, .true., intra_pool_comm, fc%at_t, fc%bg_t, fc%gcutmt,fc%dual_t)
+  CALL fft_type_init( fc%dfftt, fc%smapt, "rho", .not. tk, .true., intra_pool_comm, fc%at_t, fc%bg_t, fc%gcutmt,fc%dual_t, &
+                      nyfft=nyfft)
   !CALL fft_type_init( fc%dfftt, fc%smapt, "rho", .not. tk, .true., intra_pool_comm, fc%at_t, fc%bg_t, fc%gcutmt/gkcut )
   !
   ! set the values of fft arrays
@@ -246,17 +248,17 @@ CONTAINS
      &    CALL errore('data_structure','inconsistent plane dimension on dense grid', abs(fc%dfftt%nnp-ncplane) )
   
   WRITE( stdout, '(/5x,"Planes per process (custom) : nr3t =", &
-       &        i4," npp = ",i4," ncplane =",i6)') fc%nr3t, fc%dfftt%npp (me_pool + 1) , ncplane
+       &        i4," nr3p = ",i4," ncplane =",i6)') fc%nr3t, fc%dfftt%my_nr3p , ncplane
 
   WRITE( stdout,*)
   WRITE( stdout,'(5X,                                                     &
     & "Proc/  planes cols     G    "/5X)')
   DO i=1,nproc_pool
-    WRITE( stdout,'(5x,i4,1x,i5,i7,i9)') i, fc%dfftt%npp(i), fc%dfftt%nsp(i), fc%dfftt%ngl(i)
+    WRITE( stdout,'(5x,i4,1x,i5,i7,i9)') i, fc%dfftt%nr3p(i), fc%dfftt%nsp(i), fc%dfftt%ngl(i)
   ENDDO
   IF ( nproc_pool > 1 ) THEN
       WRITE( stdout,'(5x,"tot",2x,i5,i7,i9)') &
-      sum(fc%dfftt%npp(1:nproc_pool)), sum(fc%dfftt%nsp(1:nproc_pool)), sum(fc%dfftt%ngl(1:nproc_pool))
+      sum(fc%dfftt%nr3p(1:nproc_pool)), sum(fc%dfftt%nsp(1:nproc_pool)), sum(fc%dfftt%ngl(1:nproc_pool))
   ENDIF
   WRITE( stdout,*)
 
@@ -272,7 +274,8 @@ CONTAINS
 
   CALL calculate_gkcut()
 
-  CALL fft_type_init( fc%dfftt, fc%smapt, "rho", .not. tk, .false., intra_pool_comm, fc%at_t, fc%bg_t, fc%gcutmt/gkcut )
+  CALL fft_type_init( fc%dfftt, fc%smapt, "rho", .not. tk, .false., intra_pool_comm, fc%at_t, fc%bg_t, fc%gcutmt/gkcut, &
+                      nyfft=nyfft )
 
   fc%nrx1t  = fc%dfftt%nr1x
   fc%nrx2t  = fc%dfftt%nr2x

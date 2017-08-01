@@ -32,11 +32,11 @@
       USE cell_base,              ONLY: tpiba2
       USE ensemble_dft,           ONLY: tens
       USE funct,                  ONLY: dft_is_meta, dft_is_hybrid, exx_is_active
-      USE fft_base,               ONLY: dffts, dtgs
+      USE fft_base,               ONLY: dffts
       USE fft_interfaces,         ONLY: fwfft, invfft
-      USE fft_parallel,           ONLY: pack_group_sticks, unpack_group_sticks
-      USE fft_parallel,           ONLY: fw_tg_cft3_z, bw_tg_cft3_z, fw_tg_cft3_xy, bw_tg_cft3_xy
-      USE fft_parallel,           ONLY: fw_tg_cft3_scatter, bw_tg_cft3_scatter
+!      USE fft_parallel,           ONLY: pack_group_sticks, unpack_group_sticks
+!      USE fft_parallel,           ONLY: fw_tg_cft3_z, bw_tg_cft3_z, fw_tg_cft3_xy, bw_tg_cft3_xy
+!      USE fft_parallel,           ONLY: fw_tg_cft3_scatter, bw_tg_cft3_scatter
       USE mp_global,              ONLY: me_bgrp
       USE control_flags,          ONLY: lwfpbe0nscf
       USE exx_module,             ONLY: exx_potential
@@ -82,9 +82,9 @@
       END IF
 !=======================================================================
 
-      nogrp_ = dtgs%nogrp
-      ALLOCATE( psi( dtgs%tg_nnr * dtgs%nogrp ) )
-      ALLOCATE( aux( dtgs%tg_nnr * dtgs%nogrp ) )
+      nogrp_ = dffts%nproc2
+      ALLOCATE( psi( dffts%nnr_tg ) )
+      ALLOCATE( aux( dffts%nnr_tg ) )
       !
       ci = ( 0.0d0, 1.0d0 )
       !
@@ -113,30 +113,25 @@
          ! 
          IF ( ( idx + i - 1 ) == n ) c( : , idx + i ) = 0.0d0
 
-         igoff = ( idx - 1 )/2 * dtgs%tg_nnr
+         igoff = ( idx - 1 )/2 * dffts%nnr 
 
-         aux( igoff + 1 : igoff + dtgs%tg_nnr ) = (0.d0, 0.d0)
+         aux( igoff + 1 : igoff + dffts%nnr ) = (0.d0, 0.d0)
 
          IF( idx + i - 1 <= n ) THEN
             DO ig=1,ngw
                aux(nlsm(ig)+igoff) = conjg( c(ig,idx+i-1) - ci * c(ig,idx+i) )
-               aux(nls(ig)+igoff) =        c(ig,idx+i-1) + ci * c(ig,idx+i)
+               aux(nls(ig)+igoff) =         c(ig,idx+i-1) + ci * c(ig,idx+i)
             END DO
          END IF
-
 !$omp end task
-
 
       END DO
 
 !$omp  end single
 !$omp  end parallel
 
-      CALL pack_group_sticks( aux, psi, dtgs )
-
-      CALL fw_tg_cft3_z( psi, dffts, aux, dtgs )
-      CALL fw_tg_cft3_scatter( psi, dffts, aux, dtgs )
-      CALL fw_tg_cft3_xy( psi, dffts, dtgs )
+      psi = aux
+      CALL invfft('tgWave', psi, dffts)
 
 #else
 
@@ -159,13 +154,13 @@
          iss2 = iss1
       END IF
       !
-      IF( dtgs%have_task_groups ) THEN
+      IF( dffts%have_task_groups ) THEN
          !
 !===============================================================================
 !exx_wf related
          IF(dft_is_hybrid().AND.exx_is_active()) THEN
             !$omp parallel do private(tmp1,tmp2) 
-            DO ir = 1, dffts%nr1x*dffts%nr2x*dtgs%tg_npp( me_bgrp + 1 )
+            DO ir = 1, dffts%nr1x*dffts%nr2x*dffts%my_nr3p
                tmp1 = v(ir,iss1) * DBLE( psi(ir) )+exx_potential(ir,i/nogrp_+1)
                tmp2 = v(ir,iss2) * AIMAG(psi(ir) )+exx_potential(ir,i/nogrp_+2)
                psi(ir) = CMPLX( tmp1, tmp2, kind=DP)
@@ -173,7 +168,7 @@
             !$omp end parallel do 
          ELSE
             !$omp parallel do 
-            DO ir = 1, dffts%nr1x*dffts%nr2x*dtgs%tg_npp( me_bgrp + 1 )
+            DO ir = 1, dffts%nr1x*dffts%nr2x*dffts%my_nr3p
                psi(ir) = CMPLX ( v(ir,iss1) * DBLE( psi(ir) ), &
                                  v(ir,iss2) *AIMAG( psi(ir) ) ,kind=DP)
             END DO
@@ -191,7 +186,7 @@
                IF ( (mod(n,2).ne.0 ) .and. (i.eq.n) ) THEN
                  !
                  !$omp parallel do 
-                 DO ir = 1, dffts%nr1x*dffts%nr2x*dffts%npp( me_bgrp + 1 )
+                 DO ir = 1, dffts%nr1x*dffts%nr2x*dffts%my_nr3p
                    exx_a(ir) = exx_potential(ir, i)
                    exx_b(ir) = 0.0_DP
                  END DO
@@ -200,7 +195,7 @@
                ELSE
                  !
                  !$omp parallel do 
-                 DO ir = 1, dffts%nr1x*dffts%nr2x*dffts%npp( me_bgrp + 1 )
+                 DO ir = 1, dffts%nr1x*dffts%nr2x*dffts%my_nr3p
                    exx_a(ir) = exx_potential(ir, i)
                    exx_b(ir) = exx_potential(ir, i+1)
                  END DO
@@ -231,14 +226,14 @@
             IF(dft_is_hybrid().AND.exx_is_active()) THEN
                IF ( (mod(n,2).ne.0 ) .and. (i.eq.n) ) THEN
                  !$omp parallel do 
-                 DO ir = 1, dffts%nr1x*dffts%nr2x*dffts%npp( me_bgrp + 1 )
+                 DO ir = 1, dffts%nr1x*dffts%nr2x*dffts%my_nr3p
                    exx_a(ir) = exx_potential(ir, i)
                    exx_b(ir) = 0.0_DP
                  END DO
                  !$omp end parallel do 
                ELSE
                  !$omp parallel do 
-                 DO ir = 1, dffts%nr1x*dffts%nr2x*dffts%npp( me_bgrp + 1 )
+                 DO ir = 1, dffts%nr1x*dffts%nr2x*dffts%my_nr3p
                    exx_a(ir) = exx_potential(ir, i)
                    exx_b(ir) = exx_potential(ir, i+1)
                  END DO
@@ -265,11 +260,8 @@
       END IF
       !
 #if defined(__MPI)
-      CALL bw_tg_cft3_xy( psi, dffts, dtgs )
-      CALL bw_tg_cft3_scatter( psi, dffts, aux, dtgs )
-      CALL bw_tg_cft3_z( psi, dffts, aux, dtgs )
-
-      CALL unpack_group_sticks( psi, aux, dtgs )
+      CALL fwfft( 'tgWave', psi, dffts )
+      aux = psi
 #else
       CALL fwfft( 'Wave', psi, dffts )
       aux = psi
@@ -303,7 +295,7 @@
                fi = -0.5d0*f(i+idx-1)
                fip = -0.5d0*f(i+idx)
             endif
-            IF( dtgs%have_task_groups ) THEN
+            IF( dffts%have_task_groups ) THEN
                DO ig=1,ngw
                   fp= aux(nls(ig)+eig_offset) +  aux(nlsm(ig)+eig_offset)
                   fm= aux(nls(ig)+eig_offset) -  aux(nlsm(ig)+eig_offset)
@@ -324,7 +316,7 @@
 !$omp end task
 
          igno = igno + ngw
-         eig_offset = eig_offset + dffts%nr3x * dffts%nsw(me_bgrp+1)
+         eig_offset = eig_offset + dffts%nnr
 
          ! We take into account the number of elements received from other members of the orbital group
 

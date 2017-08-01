@@ -466,7 +466,7 @@ END SUBROUTINE qmmm_minimum_image
     !
     ! local variables
     !
-    INTEGER :: index, index0, i, j, k
+    INTEGER :: idx, i, j, k, j0, k0
     INTEGER :: ir
     !
     INTEGER :: i_mm, i_qm, ipol, ii_qm
@@ -484,25 +484,23 @@ END SUBROUTINE qmmm_minimum_image
     ALLOCATE(esfcontrib_all(dfftp%nnr))
     esfcontrib_all(:) = 0.D0
     !
-    index0 = 0
-    !
-    DO i = 1, me_pool
-       index0 = index0 + dfftp%nr1x*dfftp%nr2x*dfftp%npp(i)
-    END DO
+    j0 = dfftp%my_i0r2p ; k0 = dfftp%my_i0r3p
     !
     r_nn = 50000.d0 ! cut-off for the nearest neighbour
     !
     r(:) = 0.d0
     ! 
     DO ir = 1, dfftp%nnr
-       index = index0 + ir - 1
-       k     = index / (dfftp%nr1x*dfftp%nr2x)
+       idx = ir -1
+       k   = idx / (dfftp%nr1x * dfftp%my_nr2p )
+       idx = idx - (dfftp%nr1x * dfftp%my_nr2p ) * k
+       k   = k + k0
        IF ( k .GE. dfftp%nr3 ) CYCLE
-       index = index - (dfftp%nr1x*dfftp%nr2x)*k
-       j     = index / dfftp%nr1x
+       j   = idx / dfftp%nr1x
+       idx = idx - dfftp%nr1x*j
+       j   = j + j0
        IF ( j .GE. dfftp%nr2 ) CYCLE
-       index = index - dfftp%nr1x*j
-       i     = index
+       i   = idx
        IF ( i .GE. dfftp%nr1 ) CYCLE
        !
        s(1) = DBLE(i)/DBLE(dfftp%nr1)
@@ -612,7 +610,7 @@ END SUBROUTINE qmmm_minimum_image
     !
     ! local variables
     !
-    INTEGER :: index, index0, i, j, k
+    INTEGER :: idx, i, j, k, j0, k0
     INTEGER :: ir
     !
     INTEGER :: i_mm, i_qm, ipol,is
@@ -622,11 +620,7 @@ END SUBROUTINE qmmm_minimum_image
     !
     ! Index for parallel summation
     !
-    index0 = 0
-    !
-    DO i = 1, me_pool
-       index0 = index0 + dfftp%nr1x*dfftp%nr2x*dfftp%npp(i)
-    END DO
+    j0 = dfftp%my_i0r2p ; k0 = dfftp%my_i0r3p
     !
     r(:) = 0.d0
     r_nn = 5000000.d0 ! cut-off for nearest neighbor
@@ -644,14 +638,16 @@ END SUBROUTINE qmmm_minimum_image
              !
              ! ... three dimensional indexes
              !
-             index = index0 + ir - 1
-             k     = index / (dfftp%nr1x*dfftp%nr2x)
+             idx = ir - 1
+             k   = idx / (dfftp%nr1x*dfftp%my_nr2p)
+             idx = idx - (dfftp%nr1x*dfftp%my_nr2p)*k
+             k   = k + k0
              IF ( k .GE. dfftp%nr3 ) CYCLE
-             index = index - (dfftp%nr1x*dfftp%nr2x)*k
-             j     = index / dfftp%nr1x
+             j   = idx / dfftp%nr1x
+             idx = idx - dfftp%nr1x*j
+             j   = j + j0
              IF ( j .GE. dfftp%nr2 ) CYCLE
-             index = index - dfftp%nr1x*j
-             i     = index
+             i   = idx
              IF ( i .GE. dfftp%nr1 ) CYCLE
              !
              s(1) = DBLE(i)/DBLE(dfftp%nr1)

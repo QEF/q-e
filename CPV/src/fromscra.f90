@@ -81,6 +81,7 @@ SUBROUTINE from_scratch( )
     !
     ! ... Subroutine body
     !
+
     CALL start_clock( 'from_scratch' )
     !
     nfi = 0

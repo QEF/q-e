@@ -781,7 +781,7 @@ subroutine formf( tfirst, eself )
         rhopsum = SUM( rhops( 1:ngms, is ) )
         call mp_sum( vpsum, intra_bgrp_comm )
         call mp_sum( rhopsum, intra_bgrp_comm )
-        WRITE( stdout,1250) vps(1,is),rhops(1,is)
+        WRITE( stdout,1250) (vps(ig,is),rhops(ig,is),ig=1,5)
         WRITE( stdout,1300) vpsum,rhopsum
      endif
      !

@@ -534,11 +534,7 @@ SUBROUTINE scat_states_comp(nchan, nrzp, norb, nocros, taunew, vec, &
    xdatax(ig) = r_aux2*(ig-1)
   enddo
 
-  if(me_pool.eq.0) then
-   ik = 0
-  else
-   ik = SUM(dffts%npp(1:me_pool))
-  endif
+  ik = dffts%my_i0r3p
 
   do ipol = 1, nspin
    DO ix = 1, dfftp%nr1

@@ -21,14 +21,12 @@ MODULE fft_interfaces
      !! and to the "box-grid" version **invfft_b**, used only in CP 
      !! (the latter has an additional argument)
      
-     SUBROUTINE invfft_x( grid_type, f, dfft, dtgs, howmany )
+     SUBROUTINE invfft_x( grid_type, f, dfft, howmany )
        USE fft_types,  ONLY: fft_type_descriptor
-       USE task_groups,   ONLY: task_groups_descriptor
        USE fft_param,  ONLY :DP
        IMPLICIT NONE
        CHARACTER(LEN=*),  INTENT(IN) :: grid_type
        TYPE(fft_type_descriptor), INTENT(IN) :: dfft
-       TYPE(task_groups_descriptor), OPTIONAL, INTENT(IN) :: dtgs
        INTEGER, OPTIONAL, INTENT(IN) :: howmany
        COMPLEX(DP) :: f(:)
      END SUBROUTINE invfft_x
@@ -44,14 +42,12 @@ MODULE fft_interfaces
   END INTERFACE
 
   INTERFACE fwfft
-     SUBROUTINE fwfft_x( grid_type, f, dfft, dtgs, howmany )
+     SUBROUTINE fwfft_x( grid_type, f, dfft, howmany )
        USE fft_types,  ONLY: fft_type_descriptor
-       USE task_groups,   ONLY: task_groups_descriptor
        USE fft_param,  ONLY :DP
        IMPLICIT NONE
        CHARACTER(LEN=*), INTENT(IN) :: grid_type
        TYPE(fft_type_descriptor), INTENT(IN) :: dfft
-       TYPE(task_groups_descriptor), OPTIONAL, INTENT(IN) :: dtgs
        INTEGER, OPTIONAL, INTENT(IN) :: howmany
        COMPLEX(DP) :: f(:)
      END SUBROUTINE fwfft_x

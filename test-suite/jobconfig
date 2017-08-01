@@ -82,9 +82,6 @@ program = PH
 [epw_*/]
 program = EPW
 
-[tddfpt_*/]
-program = TDDFPT
-
 [categories]
 pw_all = pw_*?? 
 cp_all = cp_*??

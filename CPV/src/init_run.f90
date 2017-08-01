@@ -95,6 +95,7 @@ SUBROUTINE init_run()
   !
   ! ... initialize directories
   !
+
   IF( nbeg < 0 ) THEN
      CALL create_directory( tmp_dir )
   END IF 
@@ -146,7 +147,7 @@ SUBROUTINE init_run()
   !=======================================================================
   !
   CALL allocate_mainvar( ngw, ngw_g, ngb, ngms, ngm, dfftp%nr1,dfftp%nr2,dfftp%nr3, dfftp%nr1x, &
-                         dfftp%nr2x, dfftp%npl, dfftp%nnr, dffts%nnr, nat, nax, nsp,   &
+                         dfftp%nr2x, dfftp%my_nr3p, dfftp%nnr, dffts%nnr, nat, nax, nsp,   &
                          nspin, nbsp, nbspx, nupdwn, nkb, gstart, nudx, &
                          tpre, nbspx_bgrp )
   ! 

@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!
 !----------------------------------------------------------------------------
 SUBROUTINE davcio_drho( drho, lrec, iunit, nrec, isw )
   !----------------------------------------------------------------------------
@@ -43,6 +42,7 @@ SUBROUTINE davcio_drho( drho, lrec, iunit, nrec, isw )
   IF (.NOT.exst) RETURN
 
   ALLOCATE( ddrho( dfftp%nr1x*dfftp%nr2x*dfftp%nr3x , nspin_mag) )
+
   !
   IF ( isw == 1 ) THEN
      !
@@ -56,17 +56,13 @@ SUBROUTINE davcio_drho( drho, lrec, iunit, nrec, isw )
      !
      call mp_barrier(intra_image_comm)
      !
-     IF ( ionode ) THEN
-        CALL davcio( ddrho, lrec, iunit, nrec, + 1 )
-     END IF
+     IF ( ionode ) CALL davcio( ddrho, lrec, iunit, nrec, + 1 )
      !
   ELSE IF ( isw < 0 ) THEN
      !
      ! ... First task reads and broadcasts ddrho to all pools
      !
-     IF ( ionode ) THEN
-        CALL davcio( ddrho, lrec, iunit, nrec, - 1 )
-     ENDIF
+     IF ( ionode ) CALL davcio( ddrho, lrec, iunit, nrec, - 1 )
      !
      CALL mp_bcast( ddrho, ionode_id, inter_pool_comm )
      !

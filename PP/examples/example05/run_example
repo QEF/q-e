@@ -148,7 +148,7 @@ FeO Wustite in LDA
  /
  &system
     ibrav=  0, celldm(1)=8.19, nat=  4, ntyp= 3,
-    ecutwfc = 30.0, ecutrho = 240.0, nbnd=25,
+    ecutwfc = 30.0, ecutrho = 240.0, nbnd=24,
     starting_magnetization(1)= 0.0,
     starting_magnetization(2)= 0.5,
     starting_magnetization(3)=-0.5,

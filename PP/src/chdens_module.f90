@@ -29,7 +29,7 @@ SUBROUTINE chdens (plot_files,plot_num)
   USE io_files,   ONLY : nd_nmbr
   USE mp_pools,   ONLY : nproc_pool
   USE mp_world,   ONLY : world_comm
-  USE mp_bands,   ONLY : intra_bgrp_comm
+  USE mp_bands,   ONLY : intra_bgrp_comm, nyfft
   USE mp,         ONLY : mp_bcast
   USE parameters, ONLY : ntypx
   USE constants,  ONLY : pi, fpi
@@ -326,8 +326,8 @@ SUBROUTINE chdens (plot_files,plot_num)
 
      CALL recips (at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
      CALL volume (alat, at(1,1), at(1,2), at(1,3), omega)
-     CALL fft_type_allocate ( dfftp, at, bg, gcutm, intra_bgrp_comm )
-     CALL fft_type_allocate ( dffts, at, bg, gcutms, intra_bgrp_comm)
+     CALL fft_type_allocate ( dfftp, at, bg, gcutm, intra_bgrp_comm, nyfft=nyfft )
+     CALL fft_type_allocate ( dffts, at, bg, gcutms, intra_bgrp_comm, nyfft=nyfft )
   ENDIF
 
 

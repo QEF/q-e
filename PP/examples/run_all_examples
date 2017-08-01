@@ -7,7 +7,7 @@ echo
 echo "run_all_examples: starting"
 
 # run all examples
-for dir in example* CLS_FS_example CLS_IS_example dipole_example WorkFct_example WannierHam_example MolDos_example ForceTheorem_example  WAN90_example ;
+for dir in example* CLS_FS_example CLS_IS_example dipole_example WorkFct_example WannierHam_example MolDos_example WAN90_example ForceTheorem_example ;
 do
     if test -f $dir/run_example
     then

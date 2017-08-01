@@ -43,6 +43,7 @@
       !
       ! ...   Subroutine body
       !
+
       IF( descla%active_node > 0 ) THEN
          !
          IF( nx0 /= descla%nrcx ) &

@@ -161,17 +161,17 @@ SUBROUTINE compute_sigma_avg(sigma_avg,becp_nc,ik,lsigma)
            CALL invfft ('Wave', dfy, dffts)
            DO i = 1, dffts%nr1
               xx = (i-1)*dx - x0
-              DO j = 1, dffts%nr2
-                 yy = (j-1)*dy - y0
+              DO j = 1, dffts%my_nr2p
+                 yy = (dffts%my_i0r2p+j-1)*dy - y0
                  r_aux = DSQRT (xx**2 + yy**2)
                  IF (r_aux<=r_cut) THEN
-                    DO k = 1, dffts%npp(me_pool+1)
-                       ijk = i + (j-1)*dffts%nr1x + (k-1)*dffts%nr1x*dffts%nr2x
+                    DO k = 1, dffts%my_nr3p
+                       ijk = i + (j-1)*dffts%nr1x + (k-1)*dffts%nr1x*dffts%my_nr2p
                        dfx(ijk) = xx * dfy(ijk) - yy * dfx(ijk)
                     ENDDO
                  ELSE
-                    DO k = 1, dffts%npp(me_pool+1)
-                       ijk = i + (j-1)*dffts%nr1x + (k-1)*dffts%nr1x*dffts%nr2x
+                    DO k = 1, dffts%my_nr3p
+                       ijk = i + (j-1)*dffts%nr1x + (k-1)*dffts%nr1x*dffts%my_nr2p
                        dfx (ijk) = 0.d0
                     ENDDO
                  ENDIF

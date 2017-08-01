@@ -108,17 +108,16 @@ SUBROUTINE PAW_make_ae_charge(rho,withcore)
          ENDDO
          DEALLOCATE(d1y, d2y)
          !
-         ! idx0 = starting index of real-space FFT arrays for this processor
-         idx0 =  dfftp%nr1x* dfftp%nr2x * dfftp%ipp(me_pool+1)
-         !
-         rsp_point : DO ir = 1, dfftp%nr1x*dfftp%nr2x * dfftp%npl
+         rsp_point : DO ir = 1, dfftp%nr1x * dfftp%my_nr2p * dfftp%my_nr3p
             !
             ! three dimensional indices (i,j,k)
-            idx   = idx0 + ir - 1
-            k     = idx / ( dfftp%nr1x* dfftp%nr2x)
-            idx   = idx - ( dfftp%nr1x* dfftp%nr2x)*k
+            idx   = ir - 1
+            k     = idx / (dfftp%nr1x*dfftp%my_nr2p)
+            idx   = idx - (dfftp%nr1x*dfftp%my_nr2p) * k
+            k     = k + dfftp%my_i0r3p
             j     = idx /  dfftp%nr1x
             idx   = idx -  dfftp%nr1x*j
+            j     = j + dfftp%my_i0r2p
             l     = idx
             !
             ! ... do not include points outside the physical range!
@@ -141,8 +140,7 @@ SUBROUTINE PAW_make_ae_charge(rho,withcore)
             posi(:) = posi(:) * alat
             distsq = posi(1)**2 + posi(2)**2 + posi(3)**2
             ! don't consider points too far from the atom:
-            IF ( distsq > g(i%t)%r2(upf(i%t)%kkbeta) ) &
-                 CYCLE rsp_point
+            IF ( distsq > g(i%t)%r2(upf(i%t)%kkbeta) ) CYCLE rsp_point
             !
             ! generate the atomic charge on point posi(:), which means
             ! sum over l and m components rho_lm_ae-rho_lm_ps

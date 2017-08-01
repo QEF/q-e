@@ -16,7 +16,7 @@ SUBROUTINE lr_alloc_init()
   USE ions_base,            ONLY : nat
   USE uspp,                 ONLY : nkb, okvan
   USE uspp_param,           ONLY : nhm
-  USE fft_base,             ONLY : dfftp, dffts, dtgs
+  USE fft_base,             ONLY : dfftp, dffts
   USE klist,                ONLY : nks
   USE lsda_mod,             ONLY : nspin
   USE wvfct,                ONLY : npwx, nbnd
@@ -141,10 +141,10 @@ SUBROUTINE lr_alloc_init()
   !
   ! Allocate the R-space unperturbed orbitals
   !
-  IF (dtgs%have_task_groups) THEN
-     ALLOCATE(tg_revc0(dtgs%tg_nnr * dtgs%nogrp,nbnd,nksq))
+  IF (dffts%have_task_groups) THEN
+     ALLOCATE(tg_revc0(dffts%nnr_tg,nbnd,nksq))
      IF (.NOT. ALLOCATED(tg_psic)) &
-          & ALLOCATE( tg_psic(dtgs%tg_nnr * dtgs%nogrp) )
+          & ALLOCATE( tg_psic(dffts%nnr_tg) )
   ELSE
      IF (.NOT.eels) THEN
         ALLOCATE(revc0(dffts%nnr,nbnd,nksq))

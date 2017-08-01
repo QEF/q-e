@@ -138,7 +138,7 @@ SUBROUTINE cft_wave_tg (ik, evc_g, evc_r, isw, v_size, ibnd, nbnd_occ)
   !
   USE kinds,    ONLY : DP
   USE wvfct,    ONLY : npwx
-  USE fft_base, ONLY : dffts, dtgs
+  USE fft_base, ONLY : dffts
   USE gvecs,    ONLY : nls
   USE qpoint,   ONLY : ikks, ikqs
   USE klist,    ONLY : ngk, igk_k
@@ -159,7 +159,7 @@ SUBROUTINE cft_wave_tg (ik, evc_g, evc_r, isw, v_size, ibnd, nbnd_occ)
      evc_r = (0.0_dp, 0.0_dp)
      !
      ioff   = 0
-     DO idx = 1, dtgs%nogrp
+     DO idx = 1, dffts%nproc2
         !
         IF( idx + ibnd - 1 <= nbnd_occ ) THEN
            DO ig = 1, npw
@@ -172,21 +172,21 @@ SUBROUTINE cft_wave_tg (ik, evc_g, evc_r, isw, v_size, ibnd, nbnd_occ)
            ENDIF
         ENDIF
         !
-        ioff = ioff + dtgs%tg_nnr
+        ioff = ioff + dffts%nnr
         !
      ENDDO
 
-     CALL invfft ('Wave', evc_r(:,1), dffts, dtgs)
-     IF (noncolin) CALL invfft ('Wave', evc_r(:,2), dffts, dtgs)
+     CALL invfft ('tgWave', evc_r(:,1), dffts)
+     IF (noncolin) CALL invfft ('tgWave', evc_r(:,2), dffts)
 
   ELSE IF(isw == -1) THEN
      ikq = ikqs(ik) ! points to k+q+G indices
      npwq= ngk(ikq)
-     CALL fwfft ('Wave', evc_r(:,1), dffts, dtgs)
-     IF (noncolin) CALL fwfft ('Wave', evc_r(:,2), dffts, dtgs)
+     CALL fwfft ('tgWave', evc_r(:,1), dffts)
+     IF (noncolin) CALL fwfft ('tgWave', evc_r(:,2), dffts)
      !
      ioff   = 0
-     DO idx = 1, dtgs%nogrp
+     DO idx = 1, dffts%nproc2
         !
         IF( idx + ibnd - 1 <= nbnd_occ ) THEN
            !
@@ -204,7 +204,7 @@ SUBROUTINE cft_wave_tg (ik, evc_g, evc_r, isw, v_size, ibnd, nbnd_occ)
            !
         ENDIF
         !
-        ioff = ioff + dffts%nr3x * dffts%nsw( me_bgrp + 1 )
+        ioff = ioff + dffts%nnr
         !
      ENDDO
   ELSE

@@ -433,9 +433,7 @@ MODULE xml_io_base
       !
       IF ( nspin == 1 ) THEN
          !
-         CALL write_rho_xml( file_base, rho(:,1), dfftp%nr1, dfftp%nr2, &
-                  dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
-                  ionode, intra_bgrp_comm, inter_bgrp_comm )
+         CALL write_rho_xml( file_base, rho(:,1), dfftp, ionode, inter_bgrp_comm )
          !
       ELSE IF ( nspin == 2 ) THEN
          !
@@ -443,43 +441,31 @@ MODULE xml_io_base
          !
          rhoaux(:) = rho(:,1) + rho(:,2)
          !
-         CALL write_rho_xml( file_base, rhoaux, dfftp%nr1, dfftp%nr2, &
-                  dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
-                  ionode, intra_bgrp_comm, inter_bgrp_comm )
+         CALL write_rho_xml( file_base, rhoaux, dfftp, ionode, inter_bgrp_comm )
          !
          file_base = TRIM( dirname ) // 'spin-polarization' // TRIM( ext )
          !
          rhoaux(:) = rho(:,1) - rho(:,2)
          !
-         CALL write_rho_xml( file_base, rhoaux,  dfftp%nr1, dfftp%nr2, &
-                  dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
-                  ionode, intra_bgrp_comm, inter_bgrp_comm )
+         CALL write_rho_xml( file_base, rhoaux,  dfftp, ionode, inter_bgrp_comm )
          !
          DEALLOCATE( rhoaux )
          !
       ELSE IF ( nspin == 4 ) THEN
          !
-         CALL write_rho_xml( file_base, rho(:,1), dfftp%nr1, dfftp%nr2, &
-                  dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
-                  ionode, intra_bgrp_comm, inter_bgrp_comm )
+         CALL write_rho_xml( file_base, rho(:,1), dfftp, ionode, inter_bgrp_comm )
          !
          file_base = TRIM( dirname ) // 'magnetization.x' // TRIM( ext )
          !
-         CALL write_rho_xml( file_base, rho(:,2), dfftp%nr1, dfftp%nr2, &
-               dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
-               ionode, intra_bgrp_comm, inter_bgrp_comm )
+         CALL write_rho_xml( file_base, rho(:,2), dfftp, ionode, inter_bgrp_comm )
          !
          file_base = TRIM( dirname ) // 'magnetization.y' // TRIM( ext )
          !
-         CALL write_rho_xml( file_base, rho(:,3), dfftp%nr1, dfftp%nr2, &
-               dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
-               ionode, intra_bgrp_comm, inter_bgrp_comm )
+         CALL write_rho_xml( file_base, rho(:,3), dfftp, ionode, inter_bgrp_comm )
          !
          file_base = TRIM( dirname ) // 'magnetization.z' // TRIM( ext )
          !
-         CALL write_rho_xml( file_base, rho(:,4), dfftp%nr1, dfftp%nr2, &
-               dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
-               ionode, intra_bgrp_comm, inter_bgrp_comm )
+         CALL write_rho_xml( file_base, rho(:,4), dfftp, ionode, inter_bgrp_comm )
          !
       END IF
       !
@@ -512,8 +498,7 @@ MODULE xml_io_base
       IF ( PRESENT( extension ) ) ext = '.' // TRIM( extension )
       !
       file_base = TRIM( dirname ) // 'charge-density' // TRIM( ext )
-      CALL read_rho_xml ( file_base, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
-                 dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, rho(:,1) ) 
+      CALL read_rho_xml ( file_base, dfftp, rho(:,1) ) 
       !
       IF ( nspin == 2 ) THEN
          !
@@ -522,8 +507,7 @@ MODULE xml_io_base
          ALLOCATE( rhoaux( dfftp%nnr ) )
          !
          file_base = TRIM( dirname ) // 'spin-polarization' // TRIM( ext )
-         CALL read_rho_xml ( file_base, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
-                    dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, rhoaux ) 
+         CALL read_rho_xml ( file_base, dfftp, rhoaux ) 
          !
          rho(:,1) = 0.5D0*( rho(:,1) + rhoaux(:) )
          rho(:,2) = 0.5D0*( rho(:,2) - rhoaux(:) )
@@ -533,16 +517,13 @@ MODULE xml_io_base
       ELSE IF ( nspin == 4 ) THEN
          !
          file_base = TRIM( dirname ) // 'magnetization.x' // TRIM( ext )
-         CALL read_rho_xml ( file_base, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
-              dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, rho(:,2) ) 
+         CALL read_rho_xml ( file_base, dfftp, rho(:,2) ) 
          !
          file_base = TRIM( dirname ) // 'magnetization.y' // TRIM( ext )
-         CALL read_rho_xml ( file_base, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
-              dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, rho(:,3) ) 
+         CALL read_rho_xml ( file_base, dfftp, rho(:,3) ) 
          !
          file_base = TRIM( dirname ) // 'magnetization.z' // TRIM( ext )
-         CALL read_rho_xml ( file_base, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
-              dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, rho(:,4) ) 
+         CALL read_rho_xml ( file_base, dfftp, rho(:,4) ) 
          !
       END IF
       !
@@ -550,9 +531,7 @@ MODULE xml_io_base
       !
     END SUBROUTINE read_rho
     !------------------------------------------------------------------------
-    SUBROUTINE write_rho_xml( rho_file_base, rho, &
-                              nr1, nr2, nr3, nr1x, nr2x, ipp, npp, &
-                              ionode, intra_group_comm, inter_group_comm )
+    SUBROUTINE write_rho_xml( rho_file_base, rho, fft_desc, ionode, inter_group_comm )
       !------------------------------------------------------------------------
       !
       ! ... Writes charge density rho, one plane at a time.
@@ -565,30 +544,36 @@ MODULE xml_io_base
       USE hdf5_qe,  ONLY  : write_rho_hdf5, h5fclose_f, &
            prepare_for_writing_final, add_attributes_hdf5, rho_hdf5_write  
 #endif
+      USE fft_types
       !
       IMPLICIT NONE
       !
       CHARACTER(LEN=*),  INTENT(IN) :: rho_file_base
       REAL(DP),          INTENT(IN) :: rho(:)
-      INTEGER,           INTENT(IN) :: nr1, nr2, nr3
-      INTEGER,           INTENT(IN) :: nr1x, nr2x
-      INTEGER,           INTENT(IN) :: ipp(:)
-      INTEGER,           INTENT(IN) :: npp(:)
+      TYPE(fft_type_descriptor),INTENT(IN) :: fft_desc
+      INTEGER,           INTENT(IN) :: inter_group_comm
       LOGICAL,           INTENT(IN) :: ionode
-      INTEGER,           INTENT(IN) :: intra_group_comm, inter_group_comm
       !
-      INTEGER               :: rhounit, ierr, i, j, k, kk, ldr, ip
+      INTEGER               :: nr1,nr2,nr3, nr1x, nr2x,nr3x
+      INTEGER               :: rhounit, ierr, i, j, jj, k, kk, ldr, ip
       CHARACTER(LEN=256)    :: rho_file
       CHARACTER(LEN=256)    :: rho_file_hdf5
       CHARACTER(LEN=10)     :: rho_extension
       REAL(DP), ALLOCATABLE :: rho_plane(:)
       INTEGER,  ALLOCATABLE :: kowner(:)
-      INTEGER               :: my_group_id, me_group, nproc_group, io_group_id, io_group
+      INTEGER               :: my_group_id, me_group, me_group2, me_group3, &
+                                            nproc_group, nproc_group2, nproc_group3, &
+                                            io_group_id, io_group2, io_group3
       INTEGER,  EXTERNAL    :: find_free_unit
       !
-      me_group    = mp_rank( intra_group_comm )
-      nproc_group = mp_size( intra_group_comm )
+
       my_group_id = mp_rank( inter_group_comm )
+
+      me_group = fft_desc%mype ; me_group2 = fft_desc%mype2 ; me_group3 = fft_desc%mype3
+      nproc_group = fft_desc%nproc ; nproc_group2 = fft_desc%nproc2 ; nproc_group3 = fft_desc%nproc3
+      !
+      nr1  = fft_desc%nr1  ; nr2  = fft_desc%nr2  ; nr3  = fft_desc%nr3
+      nr1x = fft_desc%nr1x ; nr2x = fft_desc%nr2x ; nr3x = fft_desc%nr3x
       !
       rho_extension = '.dat'
       IF ( .NOT. rho_binary ) rho_extension = '.xml'
@@ -598,11 +583,11 @@ MODULE xml_io_base
       !
       IF ( ionode ) THEN 
 #if defined  __HDF5
-      rho_file_hdf5 = TRIM( rho_file_base ) // '.hdf5'
-      CALL prepare_for_writing_final(rho_hdf5_write, 0 ,rho_file_hdf5)
-      CALL add_attributes_hdf5(rho_hdf5_write,nr1,"nr1")
-      CALL add_attributes_hdf5(rho_hdf5_write,nr2,"nr2")
-      CALL add_attributes_hdf5(rho_hdf5_write,nr3,"nr3")
+         rho_file_hdf5 = TRIM( rho_file_base ) // '.hdf5'
+         CALL prepare_for_writing_final(rho_hdf5_write, 0 ,rho_file_hdf5)
+         CALL add_attributes_hdf5(rho_hdf5_write,nr1,"nr1")
+         CALL add_attributes_hdf5(rho_hdf5_write,nr2,"nr2")
+         CALL add_attributes_hdf5(rho_hdf5_write,nr3,"nr3")
 #else
          CALL iotk_open_write( rhounit, FILE = rho_file,  BINARY = rho_binary, IERR = ierr )
          CALL errore( 'write_rho_xml', 'cannot open ' // TRIM( rho_file ) // ' file for writing', ierr )
@@ -632,59 +617,66 @@ MODULE xml_io_base
       !
       IF ( ionode ) io_group_id = my_group_id
       !
-      CALL mp_sum( io_group_id, intra_group_comm )
-      CALL mp_sum( io_group_id, inter_group_comm )
+      CALL mp_sum( io_group_id, fft_desc%comm )
+      CALL mp_sum( io_group_id, inter_group_comm ) ! io_group_id is the (pool) group that contains the ionode
       !
-      ! ... find the index of the ionode within its own group (pool)
+      ! ... find the index of the ionode within Y and Z  groups
       !
-      io_group = 0
-      !
-      IF ( ionode ) io_group = me_group
-      !
-      CALL mp_sum( io_group, intra_group_comm )
+      io_group2 = 0 ; IF ( ionode ) io_group2 = me_group2
+      CALL mp_sum( io_group2, fft_desc%comm )  ! io_group2 is the group index of the ionode in the Y group (nproc2)
+      io_group3 = 0 ; IF ( ionode ) io_group3 = me_group3
+      CALL mp_sum( io_group3, fft_desc%comm )  ! io_group3 is the group index of the ionode in the Z group (nproc3)
       !
       ! ... find out the owner of each "z" plane
       !
-      DO ip = 1, nproc_group
+      DO ip = 1, nproc_group3
          !
-         kowner( (ipp(ip)+1):(ipp(ip)+npp(ip)) ) = ip - 1
+         kowner( (fft_desc%i0r3p(ip)+1):(fft_desc%i0r3p(ip)+fft_desc%nr3p(ip)) ) = ip - 1
          !
       END DO
       !
-      ldr = nr1x*nr2x
+      ldr = nr1x*fft_desc%my_nr2p
       !
-      DO k = 1, nr3
+      IF ( ( my_group_id == io_group_id ) ) THEN ! only the group of ionode collects and writes the data
          !
-         !  Only one subgroup write the charge density
-         !
-         IF( ( kowner(k) == me_group ) .AND. ( my_group_id == io_group_id ) ) THEN
+         DO k = 1, nr3
             !
-            kk = k - ipp( me_group + 1 )
+            !  Only one subgroup write the charge density
             ! 
-            DO j = 1, nr2
+            rho_plane = 0.d0
+            IF( ( kowner(k) == me_group3 ) ) THEN
                !
-               DO i = 1, nr1
+               kk = k - fft_desc%my_i0r3p
+               ! 
+               DO jj = 1, fft_desc%my_nr2p
                   !
-                  rho_plane(i+(j-1)*nr1) = rho(i+(j-1)*nr1x+(kk-1)*ldr)
+                  j = jj + fft_desc%my_i0r2p
+                  DO i = 1, nr1
+                     !
+                     rho_plane(i+(j-1)*nr1) = rho(i+(jj-1)*nr1x+(kk-1)*ldr)
+                     !
+                  END DO
                   !
                END DO
+               call mp_sum(rho_plane, fft_desc%comm2 ) ! collect the data over the Y group (nproc2)
                !
-            END DO
+            END IF
             !
-         END IF
-         !
-         IF ( kowner(k) /= io_group .AND. my_group_id == io_group_id ) &
-            CALL mp_get( rho_plane, rho_plane, me_group, io_group, kowner(k), k, intra_group_comm )
-         !
-         IF ( ionode ) THEN
+            ! if this processor is in the same comm3 group as ionode (me_group2==io_group2) 
+            IF ( kowner(k) /= io_group3 .and. me_group2==io_group2) & 
+               CALL mp_get( rho_plane, rho_plane, me_group3, io_group3, kowner(k), k, fft_desc%comm3 )
+            !
+            IF ( ionode ) THEN
 #if defined __HDF5
             CALL write_rho_hdf5(rho_hdf5_write,k,rho_plane)
 #else
-            CALL iotk_write_dat( rhounit, "z" // iotk_index( k ), rho_plane )
+               CALL iotk_write_dat( rhounit, "z" // iotk_index( k ), rho_plane )
 #endif
-         ENDIF
+            ENDIF
+            !
+         END DO
          !
-      END DO
+      END IF
       !
       DEALLOCATE( rho_plane )
       DEALLOCATE( kowner )
@@ -706,8 +698,7 @@ MODULE xml_io_base
     END SUBROUTINE write_rho_xml
     !
     !------------------------------------------------------------------------
-    SUBROUTINE read_rho_xml( rho_file_base, nr1, nr2, nr3, nr1x, nr2x, &
-                             ipp, npp, rho )
+    SUBROUTINE read_rho_xml( rho_file_base, fft_desc, rho )
       !------------------------------------------------------------------------
       !
       ! ... Reads charge density rho, one plane at a time, to avoid 
@@ -721,19 +712,18 @@ MODULE xml_io_base
       USE hdf5_qe,   ONLY : read_rho_hdf5, read_attributes_hdf5, &
            prepare_for_reading_final, h5fclose_f, rho_hdf5_write, hdf5_type
 #endif
+      USE fft_types
       !
       IMPLICIT NONE
       !
       CHARACTER(LEN=*),  INTENT(IN)  :: rho_file_base
-      INTEGER,           INTENT(IN)  :: nr1, nr2, nr3
-      INTEGER,           INTENT(IN)  :: nr1x, nr2x
+      TYPE(fft_type_descriptor),INTENT(IN) :: fft_desc
       REAL(DP),          INTENT(OUT) :: rho(:)
-      INTEGER,           INTENT(IN)  :: ipp(:)
-      INTEGER,           INTENT(IN)  :: npp(:)
       !
-      INTEGER               :: rhounit, ierr, i, j, k, kk, ldr, ip
-      INTEGER               :: nr( 3 ), nr1_, nr2_, nr3_
-      INTEGER               :: me_group, nproc_group
+      INTEGER               :: rhounit, ierr, i, j, jj, k, kk, ldr, ip
+      INTEGER               :: nr( 3 ), nr1_, nr2_, nr3_, nr1, nr2, nr3, nr1x, nr2x, nr3x
+      INTEGER               :: me_group, me_group2, me_group3, &
+                               nproc_group, nproc_group2, nproc_group3
       CHARACTER(LEN=256)    :: rho_file
       CHARACTER(LEN=256)    :: rho_file_hdf5
       REAL(DP), ALLOCATABLE :: rho_plane(:)
@@ -744,8 +734,11 @@ MODULE xml_io_base
       TYPE(hdf5_type),ALLOCATABLE   :: h5desc
 #endif
       !
-      me_group     = mp_rank ( intra_bgrp_comm )
-      nproc_group  = mp_size ( intra_bgrp_comm )
+      me_group = fft_desc%mype ; me_group2 = fft_desc%mype2 ; me_group3 = fft_desc%mype3
+      nproc_group = fft_desc%nproc ; nproc_group2 = fft_desc%nproc2 ; nproc_group3 = fft_desc%nproc3
+      !
+      nr1  = fft_desc%nr1  ; nr2  = fft_desc%nr2  ; nr3  = fft_desc%nr3
+      nr1x = fft_desc%nr1x ; nr2x = fft_desc%nr2x ; nr3x = fft_desc%nr3x
       !
 #if defined(__HDF5)
       rho_file_hdf5 = TRIM( rho_file_base ) // '.hdf5'
@@ -787,16 +780,16 @@ MODULE xml_io_base
       ALLOCATE( rho_plane( nr1*nr2 ) )
       ALLOCATE( kowner( nr3 ) )
       !
-      DO ip = 1, nproc_group
+      DO ip = 1, nproc_group3
          !
-         kowner((ipp(ip)+1):(ipp(ip)+npp(ip))) = ip - 1
+         kowner( (fft_desc%i0r3p(ip)+1):(fft_desc%i0r3p(ip)+fft_desc%nr3p(ip)) ) = ip - 1
          !
       END DO
       !
-      ldr = nr1x*nr2x
+      ldr = nr1x*fft_desc%my_nr2p
       !
       ! ... explicit initialization to zero is needed because the physical
-      ! ... dimensions rho may exceed the true size of the FFT grid 
+      ! ... dimensions of rho may exceed the true size of the FFT grid 
       !
       rho(:) = 0.0_DP
       !
@@ -814,14 +807,15 @@ MODULE xml_io_base
          !
          ! ... planes are sent to the destination processor
          !
-         CALL mp_bcast( rho_plane, ionode_id, intra_image_comm )
+         CALL mp_bcast( rho_plane, ionode_id, fft_desc%comm )
          !
-         IF( kowner(k) == me_group ) THEN
+         IF( kowner(k) == me_group3 ) THEN
             !
-            kk = k - ipp( me_group + 1 )
-            DO j = 1, nr2
+            kk = k - fft_desc%my_i0r3p
+            DO jj = 1, fft_desc%my_nr2p
+               j = jj + fft_desc%my_i0r2p
                DO i = 1, nr1
-                  rho(i+(j-1)*nr1x+(kk-1)*ldr) = rho_plane(i+(j-1)*nr1)
+                  rho(i+(jj-1)*nr1x+(kk-1)*ldr) = rho_plane(i+(j-1)*nr1)
                END DO
             END DO
             !

@@ -271,8 +271,7 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   !      Original routine written by Francesco Mauri
   !
   USE kinds, ONLY : DP
-  USE fft_base, ONLY : dffts, dtgs
-  USE fft_parallel, ONLY : tg_cgather
+  USE fft_base, ONLY : dffts
   USE wavefunctions_module,  ONLY: evc
   USE buffers,  ONLY : get_buffer
   USE klist, ONLY: xk, ngk, igk_k
@@ -327,12 +326,12 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   el_ph_mat_rec=(0.0_DP,0.0_DP)
   ALLOCATE (aux2(npwx*npol, nbnd))
   incr=1
-  IF ( dtgs%have_task_groups ) THEN
+  IF ( dffts%have_task_groups ) THEN
      !
-     v_siz =  dtgs%tg_nnr * dtgs%nogrp
+     v_siz =  dffts%nnr_tg
      ALLOCATE( tg_dv   ( v_siz, nspin_mag ) )
      ALLOCATE( tg_psic( v_siz, npol ) )
-     incr = dtgs%nogrp
+     incr = dffts%nproc2
      !
   ENDIF
   !
@@ -379,23 +378,21 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
         !
         ! calculate dvscf_q*psi_k
         !
-        IF ( dtgs%have_task_groups ) THEN
+        IF ( dffts%have_task_groups ) THEN
            IF (noncolin) THEN
-              CALL tg_cgather( dffts, dtgs, dvscfins(:,1,ipert), tg_dv(:,1))
+              CALL tg_cgather( dffts, dvscfins(:,1,ipert), tg_dv(:,1))
               IF (domag) THEN
                  DO ipol=2,4
-                    CALL tg_cgather( dffts, dtgs, dvscfins(:,ipol,ipert), &
-                                                          tg_dv(:,ipol))
+                    CALL tg_cgather( dffts,  dvscfins(:,ipol,ipert), tg_dv(:,ipol))
                  ENDDO
               ENDIF
            ELSE
-              CALL tg_cgather( dffts, dtgs, dvscfins(:,current_spin,ipert), &
-                                                            tg_dv(:,1))
+              CALL tg_cgather( dffts, dvscfins(:,current_spin,ipert), tg_dv(:,1))
            ENDIF
         ENDIF
         aux2=(0.0_DP,0.0_DP)
         DO ibnd = ibnd_fst, ibnd_lst, incr
-           IF ( dtgs%have_task_groups ) THEN
+           IF ( dffts%have_task_groups ) THEN
               CALL cft_wave_tg (ik, evc, tg_psic, 1, v_siz, ibnd, nbnd )
               CALL apply_dpot(v_siz, tg_psic, tg_dv, 1)
               CALL cft_wave_tg (ik, aux2, tg_psic, -1, v_siz, ibnd, nbnd)
@@ -452,7 +449,7 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   DEALLOCATE (elphmat)
   DEALLOCATE (aux1)
   DEALLOCATE (aux2)
-  IF ( dtgs%have_task_groups ) THEN
+  IF ( dffts%have_task_groups ) THEN
      DEALLOCATE( tg_dv )
      DEALLOCATE( tg_psic )
   ENDIF

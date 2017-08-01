@@ -49,7 +49,7 @@ SUBROUTINE add_monofield(vpoten,etotmonofield,linear,quadratic)
   !
   ! local variables
   !
-  INTEGER :: idx0, idx,  i, j, k
+  INTEGER :: idx,  i, j, k, j0, k0
   INTEGER :: ir, na, ipol
   REAL(DP) :: value, monoarg, ion_dipole, monoamp, block_size
   REAL(DP) :: bmod, ionic_charge, area, sgn1, zvia, tvectb
@@ -64,6 +64,7 @@ SUBROUTINE add_monofield(vpoten,etotmonofield,linear,quadratic)
   !---------------------
 
   IF (.NOT.monopole) RETURN
+  !write (*,*) ' enter monopole '; FLUSH(6)
 
   ! if we are not in the first step, and we do not want to calculate the linear or quadratic part
   IF ( (.NOT.first) .AND. (.NOT.linear) .AND. (.NOT.quadratic) ) RETURN ! why are we here?
@@ -195,17 +196,16 @@ SUBROUTINE add_monofield(vpoten,etotmonofield,linear,quadratic)
 
   !
   ! Loop in the charge array
-  ! idx0 = starting index of real-space FFT arrays for this processor
-  !
-  idx0 = dfftp%nr1x*dfftp%nr2x*dfftp%ipp(me_bgrp+1)
-  !
-  DO ir = 1, dfftp%nr1x*dfftp%nr2x*dfftp%npl
+  j0 = dfftp%my_i0r2p ; k0 = dfftp%my_i0r3p
+  DO ir = 1, dfftp%nr1x*dfftp%my_nr2p*dfftp%my_nr3p
      !
      ! ... three dimensional indexes
      !     only need k, but compute j and i to check the physical range
      !
-     idx = idx0 + ir - 1
-     k   = idx / (dfftp%nr1x*dfftp%nr2x)
+     idx = ir -1
+     k   = idx / (dfftp%nr1x*dfftp%my_nr2p)
+     idx = idx - (dfftp%nr1x*dfftp%my_nr2p)*k
+     k   = k + k0
      idx = idx - (dfftp%nr1x*dfftp%nr2x)*k
      j   = idx / dfftp%nr1x
      idx = idx - dfftp%nr1x*j

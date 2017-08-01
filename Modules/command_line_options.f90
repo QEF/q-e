@@ -14,7 +14,7 @@ MODULE command_line_options
   ! ...                      reads the command line,
   ! ...                      interprets QE-specific variables,
   ! ...                      stores the corresponding values
-  ! ...                      (nimage, npool, ntg, nband, ndiag),
+  ! ...                      (nimage, npool, ntg, nyfft, nband, ndiag),
   ! ...                      broadcasts them to all processors,
   ! ...                      leaves the rest of the command line 
   ! ...                      (including the code name) in "command_line"
@@ -23,7 +23,7 @@ MODULE command_line_options
   ! ... Variables are read on one processor and broadcast to all others
   ! ... because there is no guarantee that all processors have access to
   ! ... command-line options in parallel execution.
-  ! ... "set_command_line" directly sets nimage, npool, ntg, nband, ndiag.
+  ! ... "set_command_line" directly sets nimage, npool, ntg, nyfft, nband, ndiag.
   ! ... Useful to initialize parallelism when QE is used as a library
   !
   USE mp,        ONLY : mp_bcast
@@ -37,7 +37,7 @@ MODULE command_line_options
   ! ... Number of arguments in command line
   INTEGER :: nargs = 0
   ! ... QE arguments read from command line
-  INTEGER :: nimage_= 1, npool_= 1, ndiag_ = 0, nband_= 1, ntg_= 1
+  INTEGER :: nimage_= 1, npool_= 1, ndiag_ = 0, nband_= 1, ntg_= 1, nyfft_ = 1
   ! ... Indicate if using library init
   LOGICAL :: library_init = .FALSE.
   ! ... input file name read from command line
@@ -106,14 +106,33 @@ CONTAINS
               ENDIF
               READ ( arg, *, ERR = 15, END = 15) npool_
               narg = narg + 1
-           CASE ( '-nt', '-ntg', '-ntask_groups') 
+!
+! special case : task group paralleization and nyfft parallelization, both 
+!                introduced to improve scaling coexist and are in part interchangeable
+!                if TG is available it's faster that NYFFT becouse it communicates larger
+!                data chuncks less times. But sometimes it is not available as for instance
+!                when metagga is used or realus or for conjugate gradient. nyfft can be used.
+!-ntg and -nyfft are both alloved flags set the same value for both ntg and nyfft. 
+!                These variables are kept separated to help understanding which operation belong
+!                to TG or to NYFFT. This can enable to make them different if the need arises.
+!
+           CASE ( '-nt', '-ntg', '-ntask_groups', '-nyfft')   
               IF (read_string) THEN
                  CALL my_getarg ( input_command_line, narg, arg )
               ELSE
                  CALL get_command_argument ( narg, arg )
               ENDIF
-              READ ( arg, *, ERR = 15, END = 15) ntg_
+              READ ( arg, *, ERR = 15, END = 15) ntg_         ! read the argument as ntg_
+                                               nyfft_ = ntg_  ! set nyfft_ equal to ntg_
               narg = narg + 1
+!           CASE ( '-nyfft' ) 
+!              IF (read_string) THEN
+!                 CALL my_getarg ( input_command_line, narg, arg )
+!              ELSE
+!                 CALL get_command_argument ( narg, arg )
+!              ENDIF
+!              READ ( arg, *, ERR = 15, END = 15) nyfft_
+!              narg = narg + 1
            CASE ( '-nb', '-nband', '-nbgrp', '-nband_group') 
               IF (read_string) THEN
                  CALL my_getarg ( input_command_line, narg, arg )
@@ -147,6 +166,7 @@ CONTAINS
      CALL mp_bcast( nimage_, root, world_comm ) 
      CALL mp_bcast( npool_ , root, world_comm ) 
      CALL mp_bcast( ntg_   , root, world_comm ) 
+     CALL mp_bcast( nyfft_ , root, world_comm ) 
      CALL mp_bcast( nband_ , root, world_comm ) 
      CALL mp_bcast( ndiag_ , root, world_comm ) 
      
@@ -195,15 +215,16 @@ CONTAINS
 
   END SUBROUTINE my_getarg 
 
-  SUBROUTINE set_command_line ( nimage, npool, ntg, nband, ndiag)
+  SUBROUTINE set_command_line ( nimage, npool, ntg, nyfft, nband, ndiag)
      ! directly set command line options without going through the command line
      IMPLICIT NONE
 
-     INTEGER, INTENT(IN), OPTIONAL :: nimage, npool, ntg, nband, ndiag
+     INTEGER, INTENT(IN), OPTIONAL :: nimage, npool, ntg, nyfft, nband, ndiag
      !
      IF ( PRESENT(nimage) ) nimage_ = nimage
      IF ( PRESENT(npool)  ) npool_  = npool
      IF ( PRESENT(ntg)    ) ntg_    = ntg
+     IF ( PRESENT(nyfft)  ) nyfft_  = nyfft
      IF ( PRESENT(nband)  ) nband_  = nband
      IF ( PRESENT(ndiag)  ) ndiag_  = ndiag
      !

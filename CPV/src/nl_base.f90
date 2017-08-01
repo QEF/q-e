@@ -97,6 +97,7 @@
                end do
                !
             end do
+
 !$omp end do
             
 !$omp end parallel

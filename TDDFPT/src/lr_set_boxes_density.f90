@@ -38,8 +38,8 @@ SUBROUTINE lr_set_boxes_density()
   nnr = dfftp%nnr
   !
 #if defined (__MPI)
-  index0 = dfftp%nr1x*dfftp%nr2x*SUM(dfftp%npp(1:me_bgrp))
-  ir_end = MIN(nnr,dfftp%nr1x*dfftp%nr2x*dfftp%npp(me_bgrp+1))
+  index0 = dfftp%nr1x*dfftp%nr2x*SUM(dfftp%nr3p(1:me_bgrp))
+  ir_end = MIN(nnr,dfftp%nr1x*dfftp%nr2x*dfftp%my_nr3p)
 #else
   index0 = 0
   ir_end = nnr

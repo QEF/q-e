@@ -408,7 +408,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
         IF (nspin.EQ.1) THEN
            !
 !$omp parallel do
-           DO ir=1,dfftp%npp(me_image+1)*dfftp%nr1*dfftp%nr2
+           DO ir=1,dfftp%nr1*dfftp%nr2*dfftp%my_nr3p
               !
               rhor(ir,1)=rhor(ir,1)+UtsvdW(ir)
               !
@@ -418,7 +418,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
         ELSE IF (nspin.EQ.2) THEN
            !
 !$omp parallel do
-           DO ir=1,dfftp%npp(me_image+1)*dfftp%nr1*dfftp%nr2
+           DO ir=1,dfftp%nr1*dfftp%nr2*dfftp%my_nr3p
               !
               rhor(ir,1)=rhor(ir,1)+UtsvdW(ir)
               rhor(ir,2)=rhor(ir,2)+UtsvdW(ir)

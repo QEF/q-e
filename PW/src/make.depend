@@ -327,7 +327,6 @@ d_matrix.o : ../../Modules/kind.o
 d_matrix.o : ../../Modules/random_numbers.o
 d_matrix.o : symm_base.o
 data_structure.o : ../../FFTXlib/fft_types.o
-data_structure.o : ../../FFTXlib/task_groups.o
 data_structure.o : ../../Modules/cell_base.o
 data_structure.o : ../../Modules/fft_base.o
 data_structure.o : ../../Modules/gvecw.o
@@ -464,7 +463,6 @@ exx.o : ../../FFTXlib/fft_interfaces.o
 exx.o : ../../FFTXlib/fft_types.o
 exx.o : ../../FFTXlib/scatter_mod.o
 exx.o : ../../FFTXlib/stick_base.o
-exx.o : ../../FFTXlib/task_groups.o
 exx.o : ../../KS_Solvers/CG/constants.o
 exx.o : ../../Modules/becmod.o
 exx.o : ../../Modules/cell_base.o
@@ -1632,7 +1630,6 @@ read_file_new.o : realus.o
 read_file_new.o : scf_mod.o
 read_file_new.o : symm_base.o
 realus.o : ../../FFTXlib/fft_interfaces.o
-realus.o : ../../FFTXlib/fft_parallel.o
 realus.o : ../../FFTXlib/fft_types.o
 realus.o : ../../KS_Solvers/CG/constants.o
 realus.o : ../../Modules/atom.o
@@ -2149,7 +2146,6 @@ vloc_of_g.o : ../../KS_Solvers/CG/constants.o
 vloc_of_g.o : ../../Modules/kind.o
 vloc_of_g.o : esm.o
 vloc_psi.o : ../../FFTXlib/fft_interfaces.o
-vloc_psi.o : ../../FFTXlib/fft_parallel.o
 vloc_psi.o : ../../Modules/fft_base.o
 vloc_psi.o : ../../Modules/kind.o
 vloc_psi.o : ../../Modules/mp_bands.o

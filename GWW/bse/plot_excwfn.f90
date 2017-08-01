@@ -74,11 +74,11 @@ nr3s_start=0
 nr3s_end =0
 do ii=1,mpime+1
    nr3s_start=nr3s_end+1
-   nr3s_end=nr3s_end+fc%dfftt%npp(ii)
+   nr3s_end=nr3s_end+fc%dfftt%nr3p(ii)
 enddo
 
 
-do iplane=1,fc%dfftt%npp(mpime+1)
+do iplane=1,fc%dfftt%my_nr3p
    iz=nr3s_start+iplane-1
    if (iz==nzh) then
       nh=(iplane-1)*fc%nrx1t*fc%nrx2t+(nyh-1)*fc%nrx1t+nxh
@@ -133,7 +133,7 @@ endif
    allocate(psi_excio(fc%nrx1t*fc%nrx2t*fc%nrx3t))
 
    psi_excio(1:fc%nrx1t*fc%nrx3t*fc%nrx3t)=0.d0
-   do iplane=1,fc%dfftt%npp(mpime+1)
+   do iplane=1,fc%dfftt%my_nr3p
      iz=nr3s_start+iplane-1
      do iy=1,fc%nr2t
         do ix=1,fc%nr1t

@@ -14,6 +14,8 @@ MODULE fft_param
 #else
   INCLUDE 'mpif.h'
 #endif
+#else
+  INTEGER, PARAMETER :: MPI_COMM_NULL=0
 #endif
   
   INTEGER, PARAMETER :: ndims = 10

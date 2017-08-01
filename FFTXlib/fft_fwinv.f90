@@ -7,7 +7,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !=---------------------------------------------------------------------------=!
-SUBROUTINE invfft_x( grid_type, f, dfft, dtgs, howmany )
+SUBROUTINE invfft_x( grid_type, f, dfft, howmany )
   !! Compute G-space to R-space for a specific grid type
   !! 
   !! **grid_type = 'Dense'** : 
@@ -21,7 +21,11 @@ SUBROUTINE invfft_x( grid_type, f, dfft, dtgs, howmany )
   !! **grid_type = 'Wave'** :
   !!   inverse fourier transform of  wave functions f
   !!   on the smooth grid . On output, f is overwritten
-  !! 
+  !!
+  !! **grid_type = 'tgWave'** :
+  !!   inverse fourier transform of  wave functions f with task group
+  !!   on the smooth grid . On output, f is overwritten
+  !!
   !! **grid_type = 'Custom'** : 
   !!   inverse fourier transform of potentials and charge density f
   !!   on a custom grid. On output, f is overwritten
@@ -39,7 +43,6 @@ SUBROUTINE invfft_x( grid_type, f, dfft, dtgs, howmany )
   USE fft_smallbox,  ONLY: cft_b, cft_b_omp
   USE fft_parallel,  ONLY: tg_cft3s
   USE fft_types,     ONLY: fft_type_descriptor
-  USE task_groups,   ONLY: task_groups_descriptor
   USE fft_param,     ONLY: DP
 
   IMPLICIT NONE
@@ -47,7 +50,6 @@ SUBROUTINE invfft_x( grid_type, f, dfft, dtgs, howmany )
   TYPE(fft_type_descriptor), INTENT(IN) :: dfft
   CHARACTER(LEN=*), INTENT(IN) :: grid_type
   COMPLEX(DP) :: f(:)
-  TYPE(task_groups_descriptor), OPTIONAL, INTENT(IN) :: dtgs
   INTEGER, OPTIONAL, INTENT(IN) :: howmany
   INTEGER :: howmany_ = 1
 
@@ -59,7 +61,7 @@ SUBROUTINE invfft_x( grid_type, f, dfft, dtgs, howmany )
      CALL start_clock( 'fft' )
   ELSE IF( grid_type == 'Smooth' ) THEN
      CALL start_clock( 'ffts' )
-  ELSE IF( grid_type == 'Wave' ) THEN
+  ELSE IF( grid_type == 'Wave' .OR. grid_type == 'tgWave' ) THEN
      CALL start_clock('fftw')
   ELSE IF( grid_type == 'Custom' ) THEN
      CALL start_clock('fftc')
@@ -79,7 +81,9 @@ SUBROUTINE invfft_x( grid_type, f, dfft, dtgs, howmany )
           grid_type == 'Custom' ) THEN
         CALL tg_cft3s( f, dfft, 1 )
      ELSE IF( grid_type == 'Wave' .OR. grid_type == 'CustomWave' ) THEN
-        CALL tg_cft3s( f, dfft, 2, dtgs )
+        CALL tg_cft3s( f, dfft, 2 )
+     ELSE IF( grid_type == 'tgWave' ) THEN
+        CALL tg_cft3s( f, dfft, 3 )
      END IF
 
   ELSE
@@ -88,7 +92,7 @@ SUBROUTINE invfft_x( grid_type, f, dfft, dtgs, howmany )
          grid_type == 'Custom' ) THEN
         CALL cfft3d( f, dfft%nr1, dfft%nr2, dfft%nr3, &
                         dfft%nr1x,dfft%nr2x,dfft%nr3x, howmany_ , 1)
-     ELSE IF( grid_type == 'Wave' .OR. grid_type == 'CustomWave' ) THEN
+     ELSE IF( grid_type == 'Wave' .OR. grid_type == 'CustomWave' .OR. grid_type == 'tgWave' ) THEN
         CALL cfft3ds( f, dfft%nr1, dfft%nr2, dfft%nr3, &
                          dfft%nr1x,dfft%nr2x,dfft%nr3x, howmany_ , 1, &
                          dfft%isind, dfft%iplw )
@@ -100,7 +104,7 @@ SUBROUTINE invfft_x( grid_type, f, dfft, dtgs, howmany )
      CALL stop_clock( 'fft' )
   ELSE IF( grid_type == 'Smooth' ) THEN
      CALL stop_clock( 'ffts' )
-  ELSE IF( grid_type == 'Wave' ) THEN
+  ELSE IF( grid_type == 'Wave' .OR. grid_type == 'tgWave' ) THEN
      CALL stop_clock('fftw')
   ELSE IF( grid_type == 'Custom' ) THEN
      CALL stop_clock('fftc')
@@ -114,7 +118,7 @@ END SUBROUTINE invfft_x
 !=---------------------------------------------------------------------------=!
 !
 !=---------------------------------------------------------------------------=!
-SUBROUTINE fwfft_x( grid_type, f, dfft, dtgs, howmany )
+SUBROUTINE fwfft_x( grid_type, f, dfft, howmany )
   !! Compute R-space to G-space for a specific grid type
   !! 
   !! **grid_type = 'Dense'**
@@ -127,6 +131,10 @@ SUBROUTINE fwfft_x( grid_type, f, dfft, dtgs, howmany )
   !! 
   !! **grid_type = 'Wave'**
   !!   forward fourier transform of  wave functions f
+  !!   on the smooth grid . On output, f is overwritten
+  !!
+  !! **grid_type = 'tgWave'**
+  !!   forward fourier transform of wave functions f with task group
   !!   on the smooth grid . On output, f is overwritten
   !! 
   !! **grid_type = 'Custom'**
@@ -145,7 +153,6 @@ SUBROUTINE fwfft_x( grid_type, f, dfft, dtgs, howmany )
   USE fft_scalar,    ONLY: cfft3d, cfft3ds
   USE fft_parallel,  ONLY: tg_cft3s
   USE fft_types,     ONLY: fft_type_descriptor
-  USE task_groups,   ONLY: task_groups_descriptor
   USE fft_param,     ONLY: DP
 
   IMPLICIT NONE
@@ -153,7 +160,6 @@ SUBROUTINE fwfft_x( grid_type, f, dfft, dtgs, howmany )
   TYPE(fft_type_descriptor), INTENT(IN) :: dfft
   CHARACTER(LEN=*), INTENT(IN) :: grid_type
   COMPLEX(DP) :: f(:)
-  TYPE(task_groups_descriptor), OPTIONAL, INTENT(IN) :: dtgs
   INTEGER, OPTIONAL, INTENT(IN) :: howmany
   INTEGER :: howmany_ = 1
 
@@ -165,7 +171,7 @@ SUBROUTINE fwfft_x( grid_type, f, dfft, dtgs, howmany )
      CALL start_clock( 'fft' )
   ELSE IF( grid_type == 'Smooth' ) THEN
      CALL start_clock( 'ffts' )
-  ELSE IF( grid_type == 'Wave' ) THEN
+  ELSE IF( grid_type == 'Wave' .OR. grid_type == 'tgWave' ) THEN
      CALL start_clock( 'fftw' )
   ELSE IF( grid_type == 'Custom' ) THEN
      CALL start_clock('fftc')
@@ -185,7 +191,9 @@ SUBROUTINE fwfft_x( grid_type, f, dfft, dtgs, howmany )
          grid_type == 'Custom' ) THEN
         CALL tg_cft3s(f,dfft,-1)
      ELSE IF( grid_type == 'Wave' .OR. grid_type == 'CustomWave' ) THEN
-        CALL tg_cft3s(f,dfft,-2, dtgs )
+        CALL tg_cft3s(f,dfft,-2 )
+     ELSE IF( grid_type == 'tgWave' ) THEN
+        CALL tg_cft3s(f,dfft,-3 )
      END IF
 
   ELSE
@@ -194,7 +202,7 @@ SUBROUTINE fwfft_x( grid_type, f, dfft, dtgs, howmany )
          grid_type == 'Custom' ) THEN
         CALL cfft3d( f, dfft%nr1, dfft%nr2, dfft%nr3, &
                         dfft%nr1x,dfft%nr2x,dfft%nr3x, howmany_ , -1)
-     ELSE IF( grid_type == 'Wave' .OR. grid_type == 'CustomWave' ) THEN
+     ELSE IF( grid_type == 'Wave' .OR. grid_type == 'CustomWave' .OR. grid_type == 'tgWave' ) THEN
         CALL cfft3ds( f, dfft%nr1, dfft%nr2, dfft%nr3, &
                          dfft%nr1x,dfft%nr2x,dfft%nr3x, howmany_ , -1, &
                          dfft%isind, dfft%iplw )
@@ -206,7 +214,7 @@ SUBROUTINE fwfft_x( grid_type, f, dfft, dtgs, howmany )
      CALL stop_clock( 'fft' )
   ELSE IF( grid_type == 'Smooth' ) THEN
      CALL stop_clock( 'ffts' )
-  ELSE IF( grid_type == 'Wave' ) THEN
+  ELSE IF( grid_type == 'Wave' .OR. grid_type == 'tgWave' ) THEN
      CALL stop_clock( 'fftw' )
   ELSE IF( grid_type == 'Custom' ) THEN
      CALL stop_clock('fftc')
@@ -227,9 +235,10 @@ SUBROUTINE invfft_b( f, dfft, ia )
   !! The array f (overwritten on output) is NOT distributed:
   !! a copy is present on each processor.
   !! The fft along z  is done on the entire grid.
-  !! The fft along xy is done ONLY on planes that have components on the
-  !! dense grid for each processor. Note that the final array will no
-  !! longer be the same on all processors.
+  !! The fft along y  is done ONLY on planes that have components on the dense 
+  !! dense grid for each processor. In addition the fft along x is done ONLY on
+  !! the y-sections that have components on the dense grid for each processor. 
+  !! Note that the final array will no longer be the same on all processors.
   !! 
   !! **grid_type** = 'Box' (only allowed value!)
   !! 
@@ -255,7 +264,7 @@ SUBROUTINE invfft_b( f, dfft, ia )
   INTEGER, INTENT(IN) :: ia
   COMPLEX(DP) :: f(:)
   !
-  INTEGER :: imin3, imax3, np3
+!  INTEGER :: imin2, imax2, np2, imin3, imax2, np2, imax3, np3
 
   ! clocks called inside a parallel region do not work properly!
   ! in the future we probably need a thread safe version of the clock
@@ -266,17 +275,19 @@ SUBROUTINE invfft_b( f, dfft, ia )
 
 #if defined(__MPI) && !defined(__USE_3D_FFT)
      
-  IF( dfft%np3( ia ) > 0 ) THEN
+  IF( (dfft%np3( ia ) > 0) .AND. (dfft%np2( ia ) > 0) ) THEN
 
 #if defined(__OPENMP)
 
      CALL cft_b_omp( f, dfft%nr1, dfft%nr2, dfft%nr3, &
                         dfft%nr1x,dfft%nr2x,dfft%nr3x, &
+                        dfft%imin2( ia ), dfft%imax2( ia ), &
                         dfft%imin3( ia ), dfft%imax3( ia ), 1 )
 
 #else
      CALL cft_b( f, dfft%nr1, dfft%nr2, dfft%nr3, &
                     dfft%nr1x,dfft%nr2x,dfft%nr3x, &
+                    dfft%imin2( ia ), dfft%imax2( ia ), &
                     dfft%imin3( ia ), dfft%imax3( ia ), 1 )
 #endif
 
@@ -287,6 +298,7 @@ SUBROUTINE invfft_b( f, dfft, ia )
 #if defined(__OPENMP)
   CALL cft_b_omp( f, dfft%nr1, dfft%nr2, dfft%nr3, &
                      dfft%nr1x,dfft%nr2x,dfft%nr3x, &
+                     dfft%imin2( ia ), dfft%imax2( ia ), &
                      dfft%imin3( ia ), dfft%imax3( ia ), 1 )
 #else
   CALL cfft3d( f, dfft%nr1, dfft%nr2, dfft%nr3, &

@@ -16,7 +16,7 @@ subroutine incdrhoscf (drhoscf, weight, ik, dbecsum, dpsi)
   USE kinds,                ONLY : DP
   USE cell_base,            ONLY : omega
   USE ions_base,            ONLY : nat
-  USE fft_base,             ONLY : dffts, dtgs
+  USE fft_base,             ONLY : dffts
   USE fft_interfaces,       ONLY : invfft
   USE gvecs,                ONLY : nls
   USE wvfct,                ONLY : npwx, nbnd
@@ -51,7 +51,7 @@ subroutine incdrhoscf (drhoscf, weight, ik, dbecsum, dpsi)
   COMPLEX(DP), ALLOCATABLE :: tg_psi(:), tg_dpsi(:), tg_drho(:)
 
   INTEGER :: npw, npwq, ikk, ikq
-  INTEGER :: ibnd, ir, ig, incr, v_siz, idx, ioff
+  INTEGER :: ibnd, ir, ir3, ig, incr, v_siz, idx, ioff, ioff_tg, nxyp
   ! counters
 
   CALL start_clock ('incdrhoscf')
@@ -66,15 +66,15 @@ subroutine incdrhoscf (drhoscf, weight, ik, dbecsum, dpsi)
   npwq= ngk(ikq)
   incr = 1
   !
-  IF ( dtgs%have_task_groups ) THEN
+  IF ( dffts%have_task_groups ) THEN
      !
-     v_siz = dtgs%tg_nnr * dtgs%nogrp
+     v_siz = dffts%nnr_tg
      !
      ALLOCATE( tg_psi( v_siz ) )
      ALLOCATE( tg_dpsi( v_siz ) )
      ALLOCATE( tg_drho( v_siz ) )
      !
-     incr = dtgs%nogrp
+     incr = dffts%nproc2
      !
   ENDIF
   !
@@ -83,7 +83,7 @@ subroutine incdrhoscf (drhoscf, weight, ik, dbecsum, dpsi)
   !
   do ibnd = 1, nbnd_occ(ikk), incr
      !
-     IF ( dtgs%have_task_groups ) THEN
+     IF ( dffts%have_task_groups ) THEN
         !
         tg_drho=(0.0_DP, 0.0_DP)
         tg_psi=(0.0_DP, 0.0_DP)
@@ -91,7 +91,7 @@ subroutine incdrhoscf (drhoscf, weight, ik, dbecsum, dpsi)
         !
         ioff   = 0
         !
-        DO idx = 1, dtgs%nogrp
+        DO idx = 1, dffts%nproc2
            !
            ! ... dtgs%nogrp ffts at the same time. We prepare both
            ! evc (at k) and dpsi (at k+q)
@@ -107,33 +107,28 @@ subroutine incdrhoscf (drhoscf, weight, ik, dbecsum, dpsi)
               !
            END IF
            !
-           ioff = ioff + dtgs%tg_nnr
+           ioff = ioff + dffts%nnr
            !
         END DO
-        CALL invfft ('Wave', tg_psi, dffts, dtgs)
-        CALL invfft ('Wave', tg_dpsi, dffts, dtgs)
+        CALL invfft ('tgWave', tg_psi, dffts)
+        CALL invfft ('tgWave', tg_dpsi, dffts)
 
-        do ir = 1, dtgs%tg_npp( me_bgrp + 1 ) * dffts%nr1x * dffts%nr2x
-           tg_drho (ir) = tg_drho (ir) + wgt * CONJG(tg_psi (ir) ) *  &
-                                                     tg_dpsi (ir)
+        do ir = 1, dffts%nr1x * dffts%nr2x * dffts%my_nr3p
+           tg_drho (ir) = tg_drho (ir) + wgt * CONJG(tg_psi (ir) ) *  tg_dpsi (ir)
         enddo
         !
         ! reduce the group charge (equivalent to sum over bands of 
         ! orbital group)
         !
-        CALL mp_sum( tg_drho, gid = dtgs%ogrp_comm )
-        !
-        ioff = 0
-        DO idx = 1, dtgs%nogrp
-           IF( me_bgrp == dtgs%nolist( idx ) ) EXIT
-           ioff = ioff + dffts%nr1x * dffts%nr2x * &
-                                      dffts%npp( dtgs%nolist( idx ) + 1 )
-        END DO
+        CALL mp_sum( tg_drho, gid = dffts%comm2 )
         !
         ! copy the charge back to the proper processor location
         !
-        DO ir = 1, dffts%nnr
-           drhoscf(ir) = drhoscf(ir) + tg_drho(ir+ioff)
+        nxyp = dffts%nr1x * dffts%my_nr2p
+        DO ir3 = 1, dffts%my_nr3p
+           ioff    = dffts%nr1x * dffts%my_nr2p * (ir3-1)
+           ioff_tg = dffts%nr1x * dffts%nr2x    * (ir3-1) + dffts%nr1x * dffts%my_i0r2p
+           drhoscf(ioff+1:ioff+nxyp) = drhoscf(ioff+1:ioff+nxyp) + tg_drho(ioff_tg+1:ioff_tg+nxyp)
         END DO
         !
      ELSE
@@ -174,7 +169,7 @@ subroutine incdrhoscf (drhoscf, weight, ik, dbecsum, dpsi)
   DEALLOCATE(psi)
   DEALLOCATE(dpsic)
   !
-  IF ( dtgs%have_task_groups ) THEN
+  IF ( dffts%have_task_groups ) THEN
      DEALLOCATE(tg_psi)
      DEALLOCATE(tg_dpsi)
      DEALLOCATE(tg_drho)

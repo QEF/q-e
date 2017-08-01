@@ -337,6 +337,7 @@ SUBROUTINE ccgdiagg( hs_1psi, s_1psi, &
      ! ... reorder eigenvalues if they are not in the right order
      ! ... ( this CAN and WILL happen in not-so-special cases )
      !
+     !
      IF ( m > 1 .AND. reorder ) THEN
         !
         IF ( e(m) - e(m-1) < - 2.D0 * ethr_m ) THEN

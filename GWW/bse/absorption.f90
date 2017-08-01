@@ -73,12 +73,12 @@ debug=.true.
 ! each processor finds the starting index of its collection of FFT planes  
 ikstart=1
 do ii=1,mpime
-   ikstart=ikstart+fc%dfftt%npp(ii)
+   ikstart=ikstart+fc%dfftt%nr3p(ii)
 enddo
 
 iktotal=0
 do ii=1,nproc_pool
-   iktotal=iktotal+fc%dfftt%npp(ii)
+   iktotal=iktotal+fc%dfftt%nr3p(ii)
 enddo
 
 !if(debug) then
@@ -101,7 +101,7 @@ allocate(rpsiv_r%ar(rpsiv_r%nrxxt,rpsiv_r%numb_v))
 
 rpsiv_r%ar(1:rpsiv_r%nrxxt,1:rpsiv_r%numb_v)=0.d0
 
-do iz=1,fc%dfftt%npp(mpime+1) 
+do iz=1,fc%dfftt%my_nr3p 
    do iy=1,fc%nr2t
       do ix=1,fc%nr1t
           iqq=(iz-1)*(fc%nrx1t*fc%nrx2t)+(iy-1)*fc%nrx1t+ix 
@@ -130,7 +130,7 @@ do iz=1,fc%dfftt%npp(mpime+1)
    enddo
 enddo
 
-!do ifft=0,fc%nrx1t*fc%nrx2t*fc%dfftt%npp(mpime+1)-1
+!do ifft=0,fc%nrx1t*fc%nrx2t*fc%dfftt%my_nr3p-1
 !
 !   iklocal=ifft/(fc%nrx1t*fc%nrx2t)+1
 !   ik=ikstart+iklocal-1

@@ -31,7 +31,7 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : ityp, nat, ntyp=>nsp
   USE cell_base,            ONLY : tpiba2
-  USE fft_base,             ONLY : dffts, dfftp, dtgs
+  USE fft_base,             ONLY : dffts, dfftp
   USE fft_interfaces,       ONLY : fwfft
   USE gvecs,                ONLY : nls, nlsm
   USE gvect,                ONLY : nl, ngm, gstart, g, gg
@@ -350,7 +350,6 @@ CONTAINS
     USE lr_variables,             ONLY : becp_1, tg_revc0
     USE realus,                   ONLY : tg_psic
     USE mp_global,                ONLY : me_bgrp
-    USE fft_parallel,             ONLY : tg_gather
     USE mp_global,                ONLY : ibnd_start, ibnd_end, inter_bgrp_comm
     USE mp,                       ONLY : mp_sum
     USE lr_exx_kernel,            ONLY : lr_exx_sum_int
@@ -418,16 +417,16 @@ CONTAINS
           !end: calculation of becp2
        ENDIF
 
-      IF ( dtgs%have_task_groups ) THEN
+      IF ( dffts%have_task_groups ) THEN
          !
-         v_siz =  dtgs%tg_nnr * dtgs%nogrp
+         v_siz =  dffts%nnr_tg
          !
-         incr = 2 * dtgs%nogrp
+         incr = 2 * dffts%nproc2
          !
          ALLOCATE( tg_dvrss(1:v_siz) )
          tg_dvrss=0.0d0
          !
-         CALL tg_gather(dffts, dtgs, dvrss, tg_dvrss)
+         CALL tg_gather(dffts, dvrss, tg_dvrss)
          !
       ENDIF
        !
@@ -447,9 +446,9 @@ CONTAINS
           ! Product with the potential vrs = (vltot+vr)
           ! revc0 is on smooth grid. psic is used up to smooth grid
           !
-          IF (dtgs%have_task_groups) THEN
+          IF (dffts%have_task_groups) THEN
              !
-             DO ir=1, dffts%nr1x*dffts%nr2x*dtgs%tg_npp( me_bgrp + 1 )
+             DO ir=1, dffts%nr1x*dffts%nr2x*dffts%my_nr3p
                 !
                 tg_psic(ir) = tg_revc0(ir,ibnd,1)*CMPLX(tg_dvrss(ir),0.0d0,DP)
                 !
@@ -540,7 +539,7 @@ CONTAINS
 #if defined(__MPI)
        CALL mp_sum( evc1_new(:,:,1), inter_bgrp_comm )
 #endif
-       IF (dtgs%have_task_groups) DEALLOCATE (tg_dvrss)
+       IF (dffts%have_task_groups) DEALLOCATE (tg_dvrss)
        !
        IF( nkb > 0 .and. okvan .and. real_space_debug <= 7) THEN
           !The non real_space part

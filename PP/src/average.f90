@@ -66,7 +66,7 @@ PROGRAM average
   USE io_files,             ONLY : iunpun
   USE scf,                  ONLY : rho
   USE mp_global,            ONLY : mp_startup
-  USE mp_bands,             ONLY : intra_bgrp_comm
+  USE mp_bands,             ONLY : intra_bgrp_comm, nyfft
   USE environment,          ONLY : environment_start, environment_end
   USE control_flags,        ONLY : gamma_only
   !
@@ -187,8 +187,8 @@ PROGRAM average
 
      CALL volume (alat, at (1, 1), at (1, 2), at (1, 3), omega)
 
-     CALL fft_type_allocate ( dfftp, at, bg, gcutm, intra_bgrp_comm )
-     CALL fft_type_allocate ( dffts, at, bg, gcutms, intra_bgrp_comm)
+     CALL fft_type_allocate ( dfftp, at, bg, gcutm, intra_bgrp_comm, nyfft=nyfft )
+     CALL fft_type_allocate ( dffts, at, bg, gcutms, intra_bgrp_comm, nyfft=nyfft )
      CALL data_structure ( gamma_only )
      CALL allocate_fft ( )
      !

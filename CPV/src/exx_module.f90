@@ -36,7 +36,6 @@ MODULE exx_module
   USE electrons_base,     ONLY: nupdwn             !number of states with up and down spin 
   USE fft_base,           ONLY: dffts              !FFT derived data type
   USE fft_base,           ONLY: dfftp              !FFT derived data type 
-  USE fft_base,           ONLY: dtgs               !FFT task groups
   USE funct,              ONLY: get_exx_fraction   ! function to get exx_fraction value
   USE funct,              ONLY: stop_exx, start_exx
   USE input_parameters,   ONLY: ref_alat           !alat of reference cell ..
@@ -167,7 +166,7 @@ CONTAINS
 #if defined(__OPENMP)
       WRITE(stdout,'(5X,"OpenMP threads/MPI task",3X,I4)') omp_get_max_threads() 
 #endif
-      WRITE(stdout,'(5X,"Taskgroups          ",3X,I7)') dtgs%nogrp 
+      WRITE(stdout,'(5X,"Taskgroups          ",3X,I7)') dffts%nproc2
       !
       ! the fraction of exact exchange is stored here
       !
@@ -269,11 +268,11 @@ CONTAINS
         !
       END IF      
       !
-      IF((nproc_image.LE.nbsp).AND.(dtgs%nogrp.GT.1)) CALL errore('exx_module','EXX calculation error :  &
+      IF((nproc_image.LE.nbsp).AND.(dffts%nproc2.GT.1)) CALL errore('exx_module','EXX calculation error :  &
           & use taskgroup (-ntg) = 1 when number of MPI tasks is less or equal to the number of electronic states',1)
       !
       ! to fix this issue. see file exx_psi.f90, exx_gs.f90
-      IF(nproc_image.GT.nbsp.AND.MOD(dffts%nnr,dtgs%nogrp).NE.0) CALL errore('exx_module','EXX calculation error : &
+      IF(nproc_image.GT.nbsp.AND.MOD(dffts%nnr,dffts%nproc2).NE.0) CALL errore('exx_module','EXX calculation error : &
           & (nr1x * nr2x) is not integer multiple of the number of task groups. Change task groups such that &
           & (nr1x * nr2x) becomes integer multiple of the number of task groups. Otherwise restrict number of MPI tasks &
           & up to the number of electronic states.',1)
@@ -284,7 +283,7 @@ CONTAINS
           & or equal to the electronic bands. Otherwise, change ecutwfc to make (nr1x * nr2x) an even number.',1)
       !
       ! to fix this issue. see file exx_psi.f90, exx_gs.f90
-      IF((nproc_image.GT.nbsp).AND.MOD(nbsp,2*dtgs%nogrp).NE.0) CALL errore('exx_module','EXX calculation error : &
+      IF((nproc_image.GT.nbsp).AND.MOD(nbsp,2*dffts%nproc2).NE.0) CALL errore('exx_module','EXX calculation error : &
           & number of electronic states is not integer multiple of two times the number of task groups. &
           & Either change the number of taskgroups or restrict number of MPI tasks up to the number of electronic states.',1)
       !
@@ -302,7 +301,7 @@ CONTAINS
           write(stdout,*) "You may want to use number of MPI tasks = ", CEILING(DBLE(2.0*dfftp%nr3)/DBLE(nbsp))*nbsp,& 
             & "(combined with -ntg 2)"
           !
-        ELSE IF (NINT(2**(LOG(DBLE(INT(nproc_image / dfftp%nr3))) / LOG(2.0))).GT.dtgs%nogrp) THEN
+        ELSE IF (NINT(2**(LOG(DBLE(INT(nproc_image / dfftp%nr3))) / LOG(2.0))).GT.dffts%nproc2) THEN
           !
           write(stdout,*) 
           write(stdout,*) "**********************************************************************************************"
@@ -312,7 +311,7 @@ CONTAINS
             NINT(2**(LOG(DBLE(INT(nproc_image / dfftp%nr3))) / LOG(2.0)))
         END IF
         !
-        IF(dtgs%nogrp.EQ.1) THEN
+        IF(dffts%nproc2.EQ.1) THEN
           !
           write(stdout,*) 
           write(stdout,*) "**********************************************************************************************"
@@ -329,9 +328,9 @@ CONTAINS
             & One needs number of task groups =  2^n where n is a positive integer when number of MPI tasks is greater than &
             & the number of electronic states. See above for Possible Solutions',1)
           !
-        ELSE IF (NINT(2**(LOG(DBLE(dtgs%nogrp)) / LOG(2.0))).NE.dtgs%nogrp) THEN
+        ELSE IF (NINT(2**(LOG(DBLE(dffts%nproc2)) / LOG(2.0))).NE.dffts%nproc2) THEN
           !
-          ! NINT(2**(LOG(DBLE(dtgs%nogrp)) / LOG(2.0))) is the largest power of 2 that is smaller or equal to dffts%nogrp
+          ! NINT(2**(LOG(DBLE(dffts%nproc2)) / LOG(2.0))) is the largest power of 2 that is smaller or equal to dffts%nogrp
           !
           CALL errore('exx_module','EXX calculation error : &
             & One needs number of task groups =  2^n where n is a positive integer when number of MPI tasks is greater than &
@@ -340,7 +339,7 @@ CONTAINS
         !
       END IF
       !
-      IF((dtgs%nogrp.GT.1).AND.(dfftp%nr3*dtgs%nogrp.GT.nproc_image)) CALL errore('exx_module','EXX calculation error : &
+      IF((dffts%nproc2.GT.1).AND.(dfftp%nr3*dffts%nproc2.GT.nproc_image)) CALL errore('exx_module','EXX calculation error : &
           & (nr3x * number of taskgroups) is greater than the number of MPI tasks. Change the number of MPI tasks or the number &
           & of taskgroups or both. To estimate ntg, find the value of nr3x in the output and compute (MPI task/nr3x) and take &
           & the integer value.',1)
@@ -377,21 +376,21 @@ CONTAINS
       !
       IF (nproc_image .LT. nbsp) THEN
         !
-        ALLOCATE( exx_potential(dffts%nr1*dffts%nr2*dffts%npp(me_bgrp+1),nbsp) )
+        ALLOCATE( exx_potential(dffts%nr1*dffts%nr2*dffts%my_nr3p,nbsp) )
         !
       ELSE
         !
-        IF ( dtgs%have_task_groups ) THEN
+        IF ( dffts%have_task_groups ) THEN
           !
-          ALLOCATE( exx_potential(dffts%nnr,nproc_image/dtgs%nogrp) )
+          ALLOCATE( exx_potential(dffts%nnr,nproc_image/dffts%nproc2) )
           !
-          IF(MOD(nproc_image,dtgs%nogrp).NE.0) CALL errore &
+          IF(MOD(nproc_image,dffts%nproc2).NE.0) CALL errore &
               & ('exx_module','EXX calculation is not working when &
               & number of MPI tasks (nproc_image) is not integer multiple of number of taskgroups',1)
           !
         ELSE
           !
-          ALLOCATE( exx_potential(dffts%nr1x*dffts%nr2x*dffts%npp(me_bgrp+1),nproc_image) ) !
+          ALLOCATE( exx_potential(dffts%nr1x*dffts%nr2x*dffts%my_nr3p,nproc_image) ) !
           !
         END IF
         !
@@ -491,7 +490,7 @@ CONTAINS
       !
       ! ** Note that in this case .. 
       ! this is incorrect:   my_nxyz(:) = nr1*nr2*dffts%npp(me_image+1)
-      my_nxyz(:) = nr1*nr2*dffts%npp
+      my_nxyz(:) = nr1*nr2*dffts%nr3p
       !
       !DEBUG
       !WRITE(stdout,'("my_nbsp")')

@@ -37,6 +37,7 @@ MODULE mp_global
   INTEGER :: nproc_ortho_file = 1
   INTEGER :: nproc_bgrp_file  = 1
   INTEGER :: ntask_groups_file= 1
+  INTEGER :: nyfft_file= 1
   !
 CONTAINS
   !
@@ -51,7 +52,7 @@ CONTAINS
     ! ... groups and parallelization levels
     !
     USE command_line_options, ONLY : get_command_line, &
-        nimage_, npool_, ndiag_, nband_, ntg_
+        nimage_, npool_, ndiag_, nband_, ntg_, nyfft_
     USE parallel_include
     !
     IMPLICIT NONE
@@ -87,12 +88,8 @@ CONTAINS
     CALL mp_start_pools ( npool_, intra_image_comm )
     ! Init orthopools is done during EXX bootstrap but, if they become more used, do it here:
     ! CALL mp_start_orthopools ( intra_image_comm )
-    IF( what_band_group_ == 0 ) THEN
-       CALL mp_start_bands ( nband_, ntg_, intra_pool_comm )
-    ELSE
-       CALL mp_start_bands ( 1, ntg_, intra_pool_comm )
-       CALL mp_start_exx ( nband_, ntg_, intra_pool_comm )
-    END IF
+    CALL mp_start_bands ( nband_, ntg_, nyfft_, intra_pool_comm )
+    CALL mp_start_exx ( nband_, ntg_, intra_pool_comm )
     !
     do_diag_in_band = .FALSE.
     IF ( PRESENT(diag_in_band_group) ) do_diag_in_band = diag_in_band_group

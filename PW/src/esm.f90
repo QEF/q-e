@@ -4723,14 +4723,14 @@ SUBROUTINE esm_printpot ()
 ! v_local = planar-averaged local potential term (eV)
 
 !$omp parallel do private( iz, izz, k3, z1, z2, z3, z4, iy, ix, i )
-  do iz = 1, dfftp%npp(dfftp%mype+1)
-     izz = iz + dfftp%ipp(dfftp%mype+1)
+  do iz = 1, dfftp%my_nr3p
+     izz = iz + dfftp%my_i0r3p
      k3 = izz - 1
      if( k3 > dfftp%nr3/2 ) k3 = k3 - dfftp%nr3
      z1=0.d0;z2=0.d0;z3=0.d0;z4=0.d0
-     do iy=1,dfftp%nr2
+     do iy=1,dfftp%my_nr2p
         do ix=1,dfftp%nr1
-           i=ix+(iy-1)*dfftp%nr1+(iz-1)*dfftp%nr1*dfftp%nr2
+           i=ix+(iy-1)*dfftp%nr1+(iz-1)*dfftp%nr1*dfftp%my_nr2p
            z1=z1+work1(i)*area/dble(dfftp%nr1*dfftp%nr2)
            z2=z2+(work2(i,1)+work3(i))/dble(dfftp%nr1*dfftp%nr2)
            z3=z3+work2(i,1)/dble(dfftp%nr1*dfftp%nr2)

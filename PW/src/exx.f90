@@ -4532,14 +4532,14 @@ END SUBROUTINE compute_becpsi
                                deallocate_gvecs
     USE gvecw,          ONLY : gkcut, ecutwfc, gcutw
     USE klist,          ONLY : xk, nks, ngk
-    USE mp_bands,       ONLY : intra_bgrp_comm, ntask_groups
+    USE mp_bands,       ONLY : intra_bgrp_comm, ntask_groups, nyfft
     USE mp_exx,         ONLY : intra_egrp_comm, me_egrp, exx_mode, nproc_egrp, &
                                negrp, root_egrp
     USE io_global,      ONLY : stdout
     USE fft_base,       ONLY : dfftp, dffts, dtgs, smap, fft_base_info
     USE fft_types,      ONLY : fft_type_init
     USE recvec_subs,    ONLY : ggen
-    USE task_groups,    ONLY : task_groups_init
+!    USE task_groups,    ONLY : task_groups_init
     !
     !
     IMPLICIT NONE
@@ -4589,9 +4589,9 @@ END SUBROUTINE compute_becpsi
 
           CALL fft_type_init( dffts_exx, smap_exx, "wave", gamma_only, &
                lpara, intra_egrp_comm, at, bg, gkcut, gcutms/gkcut, &
-               ntask_groups )
+               nyfft=ntask_groups )
           CALL fft_type_init( dfftp_exx, smap_exx, "rho", gamma_only, &
-               lpara, intra_egrp_comm, at, bg,  gcutm )
+               lpara, intra_egrp_comm, at, bg,  gcutm, nyfft=nyfft )
           CALL fft_base_info( ionode, stdout )
           ngs_ = dffts_exx%ngl( dffts_exx%mype + 1 )
           ngm_ = dfftp_exx%ngl( dfftp_exx%mype + 1 )

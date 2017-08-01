@@ -29,8 +29,7 @@
       USE mp_global,           ONLY : me_bgrp, &
                                       my_bgrp_id, nbgrp, inter_bgrp_comm
       USE mp,                  ONLY : mp_sum
-      USE fft_base,            ONLY : dffts, dtgs
-      USE fft_parallel,        ONLY : tg_gather
+      USE fft_base,            ONLY : dffts
       use wave_base,           only : wave_steepest, wave_verlet
       use control_flags,       only : lwf, tsde
       use uspp,                only : deeq, vkb
@@ -70,8 +69,6 @@
      integer :: iflag
      logical :: ttsde
 
-
-
      iflag = 0
      !
      IF( PRESENT( fromscra ) ) THEN
@@ -81,9 +78,9 @@
        IF( restart ) iflag = 2
      END IF
 
-     IF( dtgs%have_task_groups ) THEN
-        tg_rhos_siz = dtgs%nogrp * dtgs%tg_nnr
-        c2_siz      = dtgs%nogrp * ngwx
+     IF( dffts%have_task_groups ) THEN
+        tg_rhos_siz = dffts%nnr_tg
+        c2_siz      = dffts%nnr_tg
      ELSE
         tg_rhos_siz = 1
         c2_siz      = ngw 
@@ -118,24 +115,23 @@
          call ef_potential( nfi, rhos, bec_bgrp, deeq, vkb, c0_bgrp, cm_bgrp,&
                              emadt2, emaver, verl1, verl2 )
      ELSE
-
         allocate( c2( c2_siz ), c3( c2_siz ) )
         allocate( tg_rhos( tg_rhos_siz, nspin ) )
 
         c2      = 0D0
         c3      = 0D0
 
-        IF( dtgs%have_task_groups ) THEN
+        IF( dffts%have_task_groups ) THEN
            !
            !  The potential in rhos is distributed across all processors
            !  We need to redistribute it so that it is completely contained in the
            !  processors of an orbital TASK-GROUP
            !
            DO i = 1, nspin
-              CALL tg_gather( dffts, dtgs, rhos(:,i), tg_rhos(:,i) )
+              CALL tg_gather( dffts, rhos(:,i), tg_rhos(:,i) )
            END DO
 
-           incr = 2 * dtgs%nogrp
+           incr = 2 * dffts%nproc2
 
         ELSE
 
@@ -143,10 +139,9 @@
 
         END IF
 
-
         DO i = 1, nbsp_bgrp, incr
 
-           IF( dtgs%have_task_groups ) THEN
+           IF( dffts%have_task_groups ) THEN
               !
               !The input coefficients to dforce cover eigenstates i:i+2*NOGRP-1
               !Thus, in dforce the dummy arguments for c0_bgrp(1,i) and
@@ -316,7 +311,7 @@
       USE electrons_base,      ONLY : ispin, nspin, f, n=>nbsp
       USE cp_interfaces,       ONLY : dforce
       USE gvecw, ONLY: ngw
-      USE fft_base, ONLY: dffts, dtgs
+      USE fft_base, ONLY: dffts
       USE electrons_base,   ONLY: nx=>nbnd, nupdwn, iupdwn, nbspx, nbsp
       USE mp, ONLY: mp_sum 
       USE mp_global, ONLY: intra_bgrp_comm 
@@ -357,7 +352,7 @@
                            'Electric field and sic are not implemented',2)
        IF( nspin == 1 ) CALL errore(' runcp_force_pairing ',' inconsistent nspin ', 1)
 
-       IF( dtgs%have_task_groups ) CALL errore(' runcp_force_pairing ',' task_groups not implemented ', 1)
+       IF( dffts%have_task_groups ) CALL errore(' runcp_force_pairing ',' task_groups not implemented ', 1)
 !       
        ALLOCATE( emadt2( ngw ) )
        ALLOCATE( emaver( ngw ) )      

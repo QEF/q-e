@@ -187,7 +187,7 @@ CONTAINS
     REAL(DP), PARAMETER :: ecut = 1e-11_DP
 
     INTEGER :: ialloc
-    INTEGER :: i, iat, n, ix, iy, iz, j, jj
+    INTEGER :: i, iat, n, ix, iy, iz, j, jj, iy0, iz0
     REAL(DP), ALLOCATABLE :: gaux(:,:), ggaux(:,:,:), rhoat(:), rhocor(:), rhoae(:)
     REAL(DP), ALLOCATABLE :: lapr(:), gmod(:), avol(:), b(:)
     REAL(DP) :: taus, rhos, ds, qs, rhs, xroot, xshift, xold, expx, gx, fx, ffx
@@ -202,7 +202,7 @@ CONTAINS
     INTEGER :: i3, nn
     REAL(DP) :: for(3,nat), sigma(3,3), sat(3,3)
     INTEGER :: resto, divid, first, last, it
-    INTEGER :: idx0, idx, ispin
+    INTEGER :: idx, ispin
     INTEGER, EXTERNAL :: atomic_number
 
     real*8 :: iix, iiy, iiz
@@ -247,9 +247,6 @@ CONTAINS
 
        ! don't need the core anymore
        DEALLOCATE(rhocor)
-
-       ! define the starting index for each processor
-       idx0 = dfftp%nr1x * dfftp%nr2x * dfftp%ipp(me_pool+1)
 
        ! allocate arrays and initialize
        ALLOCATE(b(dfftp%nnr),STAT=ialloc)
@@ -332,14 +329,21 @@ CONTAINS
              it = ityp(iat)
              nn = msh(it)
              taub = tau(:,iat) * alat
-             DO n = 1, dfftp%nr1x*dfftp%nr2x * dfftp%npl
-                idx = idx0 + n - 1
 
-                iz = idx / (dfftp%nr1x*dfftp%nr2x)
-                idx = idx - (dfftp%nr1x*dfftp%nr2x)*iz
-                iy = idx / dfftp%nr1x
-                idx = idx - dfftp%nr1x*iy
-                ix = idx
+             iy0 = dfftp%my_i0r2p ; iz0 = dfftp%my_i0r3p
+             DO n = 1, dfftp%nr1x*dfftp%my_nr2p*dfftp%my_nr3p
+                !
+                ! ... three dimensional indexes
+                !
+                idx = n -1
+                iz  = idx / (dfftp%nr1x*dfftp%my_nr2p)
+                idx = idx - (dfftp%nr1x*dfftp%my_nr2p)*iz
+                iz  = iz + iz0
+                iy  = idx / dfftp%nr1x
+                idx = idx - dfftp%nr1x * iy
+                iy  = iy + iy0
+                ix  = idx
+
                 iix = ix / REAL(dfftp%nr1,DP)
                 iiy = iy / REAL(dfftp%nr2,DP)
                 iiz = iz / REAL(dfftp%nr3,DP)
@@ -712,7 +716,7 @@ CONTAINS
 
     TYPE(paw_info)          :: i
     INTEGER                 :: ipol, ir, is, it, lm
-    INTEGER                 :: j, k, l, idx, idx0
+    INTEGER                 :: j, k, l, j0, k0, idx
     INTEGER                 :: ia, il, im, ml, mm
     REAL(DP),ALLOCATABLE    :: wsp_lm(:,:), ylm_posi(:,:), d1y(:,:), d2y(:,:)
     REAL(DP),ALLOCATABLE    :: rho_lm(:,:,:), rho_lm_ae(:,:,:), rho_lm_ps(:,:,:)
@@ -802,18 +806,18 @@ CONTAINS
        ENDDO
        DEALLOCATE(d1y,d2y)
 
-       ! define the starting index for each processor
-       idx0 = dfftp%nr1x * dfftp%nr2x * dfftp%ipp(me_pool+1)
-
        ALLOCATE(ylm_posi(1,i%l**2))
-       rsp_point : DO ir = 1, dfftp%nr1x*dfftp%nr2x * dfftp%npl
+       j0 = dfftp%my_i0r2p ; k0 = dfftp%my_i0r3p
+       rsp_point : DO ir = 1, dfftp%nr1x*dfftp%my_nr2p*dfftp%my_nr3p
           ! three dimensional indices (i,j,k)
-          idx   = idx0 + ir - 1
-          k     = idx / ( dfftp%nr1x* dfftp%nr2x)
-          idx   = idx - ( dfftp%nr1x* dfftp%nr2x)*k
-          j     = idx /  dfftp%nr1x
-          idx   = idx -  dfftp%nr1x*j
-          l     = idx
+          idx = ir -1
+          k   = idx / (dfftp%nr1x*dfftp%my_nr2p)
+          idx = idx - (dfftp%nr1x*dfftp%my_nr2p)*k
+          k   = k + k0
+          j   = idx / dfftp%nr1x
+          idx = idx - dfftp%nr1x * j
+          j   = j + j0
+          l   = idx
 
           ! ... do not include points outside the physical range!
           IF ( l >=  dfftp%nr1 .OR. j >=  dfftp%nr2 .OR. k >=  dfftp%nr3 ) CYCLE rsp_point
@@ -877,24 +881,24 @@ CONTAINS
     real(DP), intent(out) :: rhot(dfftp%nnr) ! core density in the real-space grid
 
     integer :: i, it, nn
-    integer :: n, idx0, idx, ix, iy, iz
+    integer :: n, idx, ix, iy, iz, iy0, iz0
     real(DP) :: x(3), xx(3), r, r2, rrho
-
-    ! define the starting index for each processor
-    idx0 = dfftp%nr1x * dfftp%nr2x * dfftp%ipp(me_pool+1)
 
     rhot = 0._DP
     rhoc = 0._DP
 
+    iy0 = dfftp%my_i0r2p ; iz0 = dfftp%my_i0r3p
     ! run over the real-space density grid
     DO n = 1, dfftp%nnr
-       idx = idx0 + n - 1
-
-       iz = idx / (dfftp%nr1x*dfftp%nr2x)
-       idx = idx - (dfftp%nr1x*dfftp%nr2x)*iz
-       iy = idx / dfftp%nr1x
-       idx = idx - dfftp%nr1x*iy
-       ix = idx
+       ! three dimensional indices (i,j,k)
+       idx  = n -1
+       iz   = idx / (dfftp%nr1x*dfftp%my_nr2p)
+       idx  = idx - (dfftp%nr1x*dfftp%my_nr2p)*iz
+       iz   = iz + iz0
+       iy   = idx / dfftp%nr1x
+       idx  = idx - dfftp%nr1x * iy
+       iy   = iy + iy0
+       ix   = idx
 
        x = ix / REAL(dfftp%nr1,DP) * at(:,1) + iy / REAL(dfftp%nr2,DP) * at(:,2) + &
           iz / REAL(dfftp%nr3,DP) * at(:,3)

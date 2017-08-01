@@ -225,8 +225,8 @@ SUBROUTINE compute_d0psi_rs( n_ipol )
   inv_nr3 = 1.D0 / DBLE( dfftp%nr3 )
   !
 #if defined (__MPI)
-  index0 = dfftp%nr1x*dfftp%nr2x*SUM(dfftp%npp(1:me_bgrp))
-  ir_end = MIN(dfftp%nnr,dfftp%nr1x*dfftp%nr2x*dfftp%npp(me_bgrp+1))
+  index0 = dfftp%nr1x*dfftp%nr2x*SUM(dfftp%nr3p(1:me_bgrp))
+  ir_end = MIN(dfftp%nnr,dfftp%nr1x*dfftp%nr2x*dfftp%my_nr3p)
 #else
   index0 = 0
   ir_end = dfftp%nnr

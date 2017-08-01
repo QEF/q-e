@@ -40,7 +40,7 @@ SUBROUTINE calc_fd_gradient( nfdpoint, icfd, ncfd, nnr, f, grad )
   REAL( DP ), DIMENSION( nnr ), INTENT(IN) :: f
   REAL( DP ), DIMENSION( 3, nnr ), INTENT(OUT) :: grad
 
-  INTEGER :: index0, i, ir, ir_end, ipol, in
+  INTEGER :: idx, j0, k0, i, ir, ir_end, ipol, in
   INTEGER :: ix(-nfdpoint:nfdpoint),iy(-nfdpoint:nfdpoint),iz(-nfdpoint:nfdpoint)
   INTEGER :: ixc, iyc, izc, ixp, ixm, iyp, iym, izp, izm
   REAL( DP ), DIMENSION( :, : ), ALLOCATABLE :: gradtmp
@@ -50,29 +50,26 @@ SUBROUTINE calc_fd_gradient( nfdpoint, icfd, ncfd, nnr, f, grad )
   ALLOCATE( gradtmp( 3, dfftp%nr1x*dfftp%nr2x*dfftp%nr3x ) )
   gradtmp = 0.D0
   !
-  index0 = 0
-  !
 #if defined (__MPI)
-  DO i = 1, me_bgrp
-    index0 = index0 + dfftp%nr1x*dfftp%nr2x*dfftp%npp(i)
-  END DO
-#endif
-  !
-#if defined (__MPI)
-  ir_end = MIN(nnr,dfftp%nr1x*dfftp%nr2x*dfftp%npp(me_bgrp+1))
+  j0 = dfftp%my_i0r2p ; k0 = dfftp%my_i0r3p
+  ir_end = MIN(nnr,dfftp%nr1x*dfftp%my_nr2p*dfftp%my_nr3p)
 #else
+  j0 = 0 ; k0 = 0
   ir_end = nnr
 #endif
   !
   DO ir = 1, ir_end
     !
-    i = index0 + ir - 1
-    iz(0) = i / (dfftp%nr1x*dfftp%nr2x)
+    idx   = ir - 1
+    iz(0) = idx / (dfftp%nr1x*dfftp%my_nr2p)
+    idx   = idx - (dfftp%nr1x*dfftp%my_nr2p)*iz(0)
+    iz(0) = iz(0) + k0
     IF ( iz(0) .GE. dfftp%nr3 ) CYCLE ! if nr3x > nr3 skip unphysical part of the grid
-    i     = i - (dfftp%nr1x*dfftp%nr2x)*iz(0)
-    iy(0) = i / dfftp%nr1x
+    iy(0) = idx / dfftp%nr1x
+    idx   = idx - dfftp%nr1x*iy(0)
+    iy(0) = iy(0) + j0
     IF ( iy(0) .GE. dfftp%nr2 ) CYCLE ! if nr2x > nr2 skip unphysical part of the grid
-    ix(0) = i - dfftp%nr1x*iy(0)
+    ix(0) = idx 
     IF ( ix(0) .GE. dfftp%nr1 ) CYCLE ! if nr1x > nr1 skip unphysical part of the grid
     !
     DO in = 1, nfdpoint

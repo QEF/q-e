@@ -47,14 +47,14 @@
       USE input_parameters,     ONLY: ref_cell, ref_alat
       use cell_base,            ONLY: ref_at, ref_bg
       USE exx_module,           ONLY: h_init
-      USE task_groups,          ONLY: task_groups_init
+!      USE task_groups,          ONLY: task_groups_init
 
       implicit none
 ! 
       integer  :: i
       real(dp) :: rat1, rat2, rat3
       real(dp) :: bg(3,3), tpiba2 
-      integer :: ng_, ngs_, ngm_ , ngw_ 
+      integer :: ng_, ngs_, ngm_ , ngw_, nyfft_
 #if defined(__MPI)
       LOGICAL :: lpara = .true.
 #else
@@ -89,6 +89,7 @@
       h_init=at*alat
 
       ! ... Initialize FFT real-space grids and small box grid
+      nyfft_ = ntask_groups
       !
       IF ( ref_cell ) THEN
         !
@@ -100,16 +101,17 @@
         WRITE( stdout,'(3X,"ref_cell_a2 =",1X,3f14.8,3x,"ref_cell_b2 =",3f14.8)') ref_at(:,2)*ref_alat,ref_bg(:,2)/ref_alat
         WRITE( stdout,'(3X,"ref_cell_a3 =",1X,3f14.8,3x,"ref_cell_b3 =",3f14.8)') ref_at(:,3)*ref_alat,ref_bg(:,3)/ref_alat
         !
-        !
-        CALL fft_type_init( dffts, smap, "wave", gamma_only, lpara, intra_bgrp_comm, ref_at, ref_bg, gkcut )
-        CALL fft_type_init( dfftp, smap, "rho", gamma_only, lpara, intra_bgrp_comm, ref_at, ref_bg,  gcutm )
-        CALL fft_type_init( dfft3d, smap, "wave", gamma_only, .false., intra_bgrp_comm, ref_at, ref_bg, gkcut)
+        dffts%have_task_groups = (ntask_groups >1)
+        CALL fft_type_init( dffts, smap, "wave", gamma_only, lpara, intra_bgrp_comm, ref_at, ref_bg, gkcut, nyfft=nyfft_ )
+        CALL fft_type_init( dfftp, smap, "rho", gamma_only, lpara, intra_bgrp_comm, ref_at, ref_bg,  gcutm, nyfft=nyfft_ )
+        CALL fft_type_init( dfft3d, smap, "wave", gamma_only, .false., intra_bgrp_comm, ref_at, ref_bg, gkcut, nyfft=nyfft_)
         !
       ELSE
         !
-        CALL fft_type_init( dffts, smap, "wave", gamma_only, lpara, intra_bgrp_comm, at, bg, gkcut )
-        CALL fft_type_init( dfftp, smap, "rho", gamma_only, lpara, intra_bgrp_comm, at, bg,  gcutm )
-        CALL fft_type_init( dfft3d, smap, "wave", gamma_only, .false., intra_bgrp_comm, at, bg, gkcut)
+        dffts%have_task_groups = (ntask_groups >1)
+        CALL fft_type_init( dffts, smap, "wave", gamma_only, lpara, intra_bgrp_comm, at, bg, gkcut, nyfft=nyfft_ )
+        CALL fft_type_init( dfftp, smap, "rho", gamma_only, lpara, intra_bgrp_comm, at, bg,  gcutm, nyfft=nyfft_ )
+        CALL fft_type_init( dfft3d, smap, "wave", gamma_only, .false., intra_bgrp_comm, at, bg, gkcut, nyfft=nyfft_)
         !
       END IF
       !
@@ -140,7 +142,7 @@
       !       (but only if the axis triplet is right-handed, otherwise
       !        for a left-handed triplet, ainv is minus the inverse of a)
       !
-      CALL task_groups_init( dffts, dtgs, ntask_groups )
+!      CALL task_groups_init( dffts, dtgs, ntask_groups )
       CALL fft_base_info( ionode, stdout )
       ngw_ = dffts%nwl( dffts%mype + 1 )
       ngs_ = dffts%ngl( dffts%mype + 1 )
@@ -463,22 +465,22 @@
         WRITE( stdout,*)
         WRITE( stdout,*) '  Real Mesh'
         WRITE( stdout,*) '  ---------'
-        WRITE( stdout,1000) dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1, dfftp%nr2, dfftp%npl, 1, 1, dfftp%nproc
+        WRITE( stdout,1000) dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1, dfftp%nr2, dfftp%my_nr3p, 1, 1, dfftp%nproc
         WRITE( stdout,1010) dfftp%nr1x, dfftp%nr2x, dfftp%nr3x
         WRITE( stdout,1020) dfftp%nnr
         WRITE( stdout,*) '  Number of x-y planes for each processors: '
         WRITE( stdout, fmt = '( 3X, "nr3l = ", 10I5 )' ) &
-           ( dfftp%npp( i ), i = 1, dfftp%nproc )
+           ( dfftp%nr3p( i ), i = 1, dfftp%nproc3 )
 
         WRITE( stdout,*)
         WRITE( stdout,*) '  Smooth Real Mesh'
         WRITE( stdout,*) '  ----------------'
-        WRITE( stdout,1000) dffts%nr1, dffts%nr2, dffts%nr3, dffts%nr1, dffts%nr2, dffts%npl,1,1, dfftp%nproc
+        WRITE( stdout,1000) dffts%nr1, dffts%nr2, dffts%nr3, dffts%nr1, dffts%nr2, dffts%my_nr3p,1,1, dfftp%nproc
         WRITE( stdout,1010) dffts%nr1x, dffts%nr2x, dffts%nr3x
         WRITE( stdout,1020) dffts%nnr
         WRITE( stdout,*) '  Number of x-y planes for each processors: '
         WRITE( stdout, fmt = '( 3X, "nr3sl = ", 10I5 )' ) &
-           ( dffts%npp( i ), i = 1, dfftp%nproc )
+           ( dffts%nr3p( i ), i = 1, dfftp%nproc3 )
 
       END IF
 

@@ -31,7 +31,7 @@ MODULE realus_scatt
 
    IMPLICIT NONE
 
-   INTEGER  :: ia, ir, mbia, roughestimate, idx0, idx, i, j, k, i_lr, ipol
+   INTEGER  :: ia, ir, mbia, roughestimate, j0, k0, idx, i, j, k, i_lr, ipol
    REAL(DP) :: mbr, mbx, mby, mbz, dmbx, dmby, dmbz, distsq
    REAL(DP) :: inv_nr1, inv_nr2, inv_nr3, boxradsq_ia, posi(3)
 
@@ -53,9 +53,6 @@ MODULE realus_scatt
    IF (ALLOCATED(orig_or_copy)) DEALLOCATE( orig_or_copy )
    ALLOCATE( orig_or_copy( roughestimate, nat ) )
 
-   ! idx0 = starting index of real-space FFT arrays for this processor
-   idx0 = dfftp%nr1x*dfftp%nr2x * dfftp%ipp(me_pool+1)
-
    inv_nr1 = 1.D0 / DBLE( dfftp%nr1 )
    inv_nr2 = 1.D0 / DBLE( dfftp%nr2 )
    inv_nr3 = 1.D0 / DBLE( dfftp%nr3 )
@@ -64,13 +61,24 @@ MODULE realus_scatt
        IF ( .NOT. upf(ityp(ia))%tvanp ) CYCLE
        mbia = 0
        boxradsq_ia = boxrad(ityp(ia))**2
-       DO ir = 1, dfftp%nr1x*dfftp%nr2x * dfftp%npl
-         idx   = idx0 + ir - 1
-         k     = idx / (dfftp%nr1x*dfftp%nr2x)
-         idx   = idx - (dfftp%nr1x*dfftp%nr2x)*k
-         j     = idx / dfftp%nr1x
-         idx   = idx - dfftp%nr1x*j
-         i     = idx
+       j0 = dfftp%my_i0r2p ; k0 = dfftp%my_i0r3p
+       DO ir = 1, dfftp%nr1x*dfftp%my_nr2p*dfftp%my_nr3p
+         !
+         ! ... three dimensional indices (i,j,k)
+         !
+         idx = ir -1
+         k   = idx / (dfftp%nr1x*dfftp%my_nr2p)
+         idx = idx - (dfftp%nr1x*dfftp%my_nr2p)*k
+         k   = k + k0
+         j   = idx / dfftp%nr1x
+         idx = idx - dfftp%nr1x * j
+         j   = j + j0
+         i   = idx
+         !
+         ! ... do not include points outside the physical range 
+         !
+         IF ( i >= dfftp%nr1 .OR. j >= dfftp%nr2 .OR. k >= dfftp%nr3 ) CYCLE
+
          DO ipol = 1, 3
            posi(ipol) = DBLE( i )*inv_nr1*at(ipol,1) + &
                         DBLE( j )*inv_nr2*at(ipol,2) + &

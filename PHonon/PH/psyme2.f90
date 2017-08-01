@@ -23,28 +23,28 @@ subroutine psyme2 (dvtosym)
   !-local variable
 
 #if defined(__MPI)
-  integer :: i, iper, npp0
+  integer :: i, iper, ir3, ioff, ioff_tg, nxyp
 
   complex(DP), allocatable :: ddvtosym (:,:)
   ! the potential to symmetrize
 
   allocate (ddvtosym (dfftp%nr1x*dfftp%nr2x*dfftp%nr3x, 6))
 
-  npp0 = 0
-  do i = 1, me_bgrp
-     npp0 = npp0 + dfftp%npp (i)
-  enddo
-  npp0 = npp0 * dfftp%nnp + 1
   do iper = 1, 6
      call cgather_sym (dfftp, dvtosym (:, iper), ddvtosym (:, iper) )
   enddo
 
   call syme2 (ddvtosym)
 
-  do iper = 1, 6
-     call zcopy (dfftp%npp (me_bgrp+1) * dfftp%nnp, ddvtosym (npp0, iper), 1, &
-                 dvtosym (1, iper), 1)
-  enddo
+  nxyp = dfftp%nr1x * dfftp%my_nr2p
+  DO iper = 1, 6
+     DO ir3 = 1, dfftp%my_nr3p
+        ioff    = dfftp%nr1x * dfftp%my_nr2p * (ir3-1)
+        ioff_tg = dfftp%nr1x * dfftp%nr2x    * (dfftp%my_i0r3p+ir3-1) + dfftp%nr1x * dfftp%my_i0r2p
+        CALL zcopy (nxyp, ddvtosym (ioff_tg+1, iper), 1, dvtosym (ioff+1, iper), 1)
+     END DO
+  ENDDO
+
 
   deallocate (ddvtosym)
 #else

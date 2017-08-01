@@ -242,7 +242,7 @@
 
          do ia = 1, na(is)
             nfft = 1
-            if ( dfftb%np3( ia + isa ) <= 0 ) cycle
+            if ( ( dfftb%np3( ia + isa ) <= 0 ) .OR. ( dfftb%np2( ia + isa) <= 0 ) ) cycle
 #else
          !
          ! two fft's on two atoms at the same time (when possible)
@@ -381,7 +381,7 @@
 #if defined(__MPI)
          do ia=1,na(is)
             nfft=1
-            if ( dfftb%np3( ia + isa ) <= 0 ) cycle
+            if ( ( dfftb%np3( ia + isa ) <= 0 ) .OR. ( dfftb%np2 ( ia + isa ) <= 0 ) ) cycle
 #else
          !
          ! two ffts at the same time, on two atoms (if possible: nfft=2)

@@ -162,6 +162,7 @@ cat > Fe.band_pbe.in << EOF
  /
  &electrons
     conv_thr =  1.0d-10
+    diagonalization = 'cg'
  /
 ATOMIC_SPECIES
 Fe  0.0    Fe.rel-pbe-kjpaw.UPF

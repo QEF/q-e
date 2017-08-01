@@ -46,7 +46,7 @@ SUBROUTINE lr_psym_eels (dvtosym)
   !
   DO i = 1, me_bgrp
        !
-       npp0 = npp0 + dfftp%npp(i) * dfftp%nnp
+       npp0 = npp0 + dfftp%nr3p(i) * dfftp%nnp
        !
   ENDDO
   !
@@ -64,7 +64,7 @@ SUBROUTINE lr_psym_eels (dvtosym)
   !
   DO is = 1, nspin_mag
        !
-       CALL zcopy (dfftp%npp(me_bgrp+1) * dfftp%nnp, ddvtosym(npp0, is), 1, dvtosym(1, is), 1)
+       CALL zcopy (dfftp%my_nr3p * dfftp%nnp, ddvtosym(npp0, is), 1, dvtosym(1, is), 1)
        !
   ENDDO
   !

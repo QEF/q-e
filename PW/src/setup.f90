@@ -77,7 +77,7 @@ SUBROUTINE setup()
   USE fixed_occ,          ONLY : f_inp, tfixed_occ, one_atom_occupations
   USE funct,              ONLY : set_dft_from_name
   USE mp_pools,           ONLY : kunit
-  USE mp_bands,           ONLY : intra_bgrp_comm
+  USE mp_bands,           ONLY : intra_bgrp_comm, nyfft
   USE spin_orb,           ONLY : lspinorb, domag
   USE noncollin_module,   ONLY : noncolin, npol, m_loc, i_cons, &
                                  angle1, angle2, bfield, ux, nspin_lsda, &
@@ -459,8 +459,8 @@ SUBROUTINE setup()
      dffts%nr2 = dfftp%nr2
      dffts%nr3 = dfftp%nr3
   END IF
-  CALL fft_type_allocate ( dfftp, at, bg, gcutm, intra_bgrp_comm )
-  CALL fft_type_allocate ( dffts, at, bg, gcutms, intra_bgrp_comm)
+  CALL fft_type_allocate ( dfftp, at, bg, gcutm, intra_bgrp_comm, nyfft=nyfft )
+  CALL fft_type_allocate ( dffts, at, bg, gcutms, intra_bgrp_comm, nyfft=nyfft)
   !
   !  ... generate transformation matrices for the crystal point group
   !  ... First we generate all the symmetry matrices of the Bravais lattice

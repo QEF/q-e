@@ -21,20 +21,20 @@ SUBROUTINE addusstress (sigmanlc)
   IF ( tqr ) THEN
      sigma_r(:,:) = 0.d0
      CALL addusstress_r (sigma_r )
-     WRITE (6,'(A)') 'addusstress_r'
-     WRITE (6,'(3f13.8)') sigma_r
+     !WRITE (6,'(A)') 'addusstress_r'
+     !WRITE (6,'(3f13.8)') sigma_r
      sigmanlc = sigmanlc + sigma_r
      sigma_g(:,:) = 0.d0
      CALL addusstress_g (sigma_g )
 !     sigmanlc = sigmanlc + sigma_g
-     WRITE (6,'(A)') 'addusstress_g'
-     WRITE (6,'(3f13.8)') sigma_g
+     !WRITE (6,'(A)') 'addusstress_g'
+     !WRITE (6,'(3f13.8)') sigma_g
   ELSE
      sigma_g(:,:) = 0.d0
      CALL addusstress_g (sigma_g )
      sigmanlc = sigmanlc + sigma_g
-     WRITE (6,'(A)') 'addusstress_g'
-     WRITE (6,'(3f13.8)') sigma_g
+     !WRITE (6,'(A)') 'addusstress_g'
+     !WRITE (6,'(3f13.8)') sigma_g
   END IF
   !
 END SUBROUTINE addusstress

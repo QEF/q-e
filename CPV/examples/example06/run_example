@@ -97,6 +97,7 @@ cat > h2o.scf.in << EOF
     ekin_conv_thr = 1.0d-8
     etot_conv_thr = 1.0d-6
     forc_conv_thr = 1.0d-2
+    verbosity="debug"
  /
 &system
     ibrav=  1, celldm(1)=16.0, nat=  3, ntyp= 2,

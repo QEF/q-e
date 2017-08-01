@@ -25,6 +25,7 @@ SUBROUTINE cpr_loop( nloop )
   REAL(DP)              :: etot
   !
   !
+
   IF ( nat > 0 ) THEN
      !
      ALLOCATE( tau(  3, nat ) )

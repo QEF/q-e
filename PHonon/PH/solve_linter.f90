@@ -33,8 +33,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
                                    xk, wk, ngk, igk_k
   USE gvect,                ONLY : g
   USE gvecs,                ONLY : doublegrid
-  USE fft_base,             ONLY : dfftp, dffts, dtgs
-  USE fft_parallel,         ONLY : tg_cgather
+  USE fft_base,             ONLY : dfftp, dffts
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE spin_orb,             ONLY : domag
   USE wvfct,                ONLY : nbnd, npwx, g2kin,  et
@@ -170,12 +169,12 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   allocate (aux2(npwx*npol, nbnd))
   allocate (drhoc(dfftp%nnr))
   incr=1
-  IF ( dtgs%have_task_groups ) THEN
+  IF ( dffts%have_task_groups ) THEN
      !
-     v_siz =  dtgs%tg_nnr * dtgs%nogrp
-     ALLOCATE( tg_dv   ( v_siz, nspin_mag ) )
+     v_siz =  dffts%nnr_tg
+     ALLOCATE( tg_dv  ( v_siz, nspin_mag ) )
      ALLOCATE( tg_psic( v_siz, npol ) )
-     incr = dtgs%nogrp
+     incr = dffts%nproc2
      !
   ENDIF
   !
@@ -286,29 +285,24 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
               ! dvscf_q from previous iteration (mix_potential)
               !
               call start_clock ('vpsifft')
-              IF( dtgs%have_task_groups ) THEN
+              IF( dffts%have_task_groups ) THEN
                  IF (noncolin) THEN
-                    CALL tg_cgather( dffts, dtgs, dvscfins(:,1,ipert), &
-                                                                tg_dv(:,1))
+                    CALL tg_cgather( dffts, dvscfins(:,1,ipert), tg_dv(:,1))
                     IF (domag) THEN
                        DO ipol=2,4
-                          CALL tg_cgather( dffts, dtgs, dvscfins(:,ipol,ipert), &
-                                                             tg_dv(:,ipol))
+                          CALL tg_cgather( dffts, dvscfins(:,ipol,ipert), tg_dv(:,ipol))
                        ENDDO
                     ENDIF
                  ELSE
-                    CALL tg_cgather( dffts, dtgs, dvscfins(:,current_spin,ipert), &
-                                                             tg_dv(:,1))
+                    CALL tg_cgather( dffts, dvscfins(:,current_spin,ipert), tg_dv(:,1))
                  ENDIF
               ENDIF
               aux2=(0.0_DP,0.0_DP)
               do ibnd = 1, nbnd_occ (ikk), incr
-                 IF( dtgs%have_task_groups ) THEN
-                    call cft_wave_tg (ik, evc, tg_psic, 1, v_siz, ibnd, &
-                                      nbnd_occ (ikk) )
+                 IF( dffts%have_task_groups ) THEN
+                    call cft_wave_tg (ik, evc, tg_psic, 1, v_siz, ibnd, nbnd_occ (ikk) )
                     call apply_dpot(v_siz, tg_psic, tg_dv, 1)
-                    call cft_wave_tg (ik, aux2, tg_psic, -1, v_siz, ibnd, &
-                                      nbnd_occ (ikk))
+                    call cft_wave_tg (ik, aux2, tg_psic, -1, v_siz, ibnd, nbnd_occ (ikk))
                  ELSE
                     call cft_wave (ik, evc (1, ibnd), aux1, +1)
                     call apply_dpot(dffts%nnr,aux1, dvscfins(1,1,ipert), current_spin)
@@ -449,13 +443,10 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
      !
      IF (.not.lgamma_gamma) THEN
         call psymdvscf (npe, irr, drhoscfh)
-        IF ( noncolin.and.domag ) &
-           CALL psym_dmag( npe, irr, drhoscfh)
+        IF ( noncolin.and.domag ) CALL psym_dmag( npe, irr, drhoscfh)
         IF (okpaw) THEN
-           IF (minus_q) CALL PAW_dumqsymmetrize(dbecsum,npe,irr, &
-                             npertx,irotmq,rtau,xq,tmq)
-           CALL  &
-              PAW_dusymmetrize(dbecsum,npe,irr,npertx,nsymq,rtau,xq,t)
+           IF (minus_q) CALL PAW_dumqsymmetrize(dbecsum,npe,irr, npertx,irotmq,rtau,xq,tmq)
+           CALL PAW_dusymmetrize(dbecsum,npe,irr,npertx,nsymq,rtau,xq,t)
         END IF
      ENDIF
      !
@@ -575,8 +566,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
                 dvscfin(:,:,ipert) = dvscfin(:,:,ipert)-def(ipert)
                 if (doublegrid) dvscfins(:,:,ipert) = dvscfins(:,:,ipert)-def(ipert)
            endif
-           call davcio_drho ( dvscfin(1,1,ipert),  lrdrho, iudvscf, &
-                         imode0 + ipert, +1 )
+           call davcio_drho ( dvscfin(1,1,ipert),  lrdrho, iudvscf, imode0 + ipert, +1 )
            IF (okpaw.AND.me_bgrp==0) CALL davcio( int3_paw(:,:,:,:,ipert), lint3paw, &
                                                   iuint3paw, imode0+ipert, + 1 )
         end do
@@ -601,7 +591,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   deallocate (dvscfin)
   deallocate(aux2)
   deallocate(drhoc)
-  IF ( dtgs%have_task_groups ) THEN
+  IF ( dffts%have_task_groups ) THEN
      DEALLOCATE( tg_dv )
      DEALLOCATE( tg_psic )
   ENDIF

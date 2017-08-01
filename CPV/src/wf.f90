@@ -1296,7 +1296,8 @@ SUBROUTINE grid_map()
   !
   IMPLICIT NONE
   !
-  INTEGER :: ir1, ir2, ir3, ibig3, me, nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx
+  INTEGER :: ir1, ir2, ir3, ibig2, ibig3, me, nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx, nx, nxy
+  REAL(DP) :: obnr1sx, obnr2sx, obnr3sx
   !
   me = me_bgrp + 1
   !
@@ -1304,29 +1305,37 @@ SUBROUTINE grid_map()
   ALLOCATE(ydist(dffts%nnr))
   ALLOCATE(zdist(dffts%nnr))
   !
-  nr1s = dffts%nr1
-  nr2s = dffts%nr2
-  nr1sx = dffts%nr1x
-  nr2sx = dffts%nr2x
-  nr3sx = dffts%nr3x
-  nr3s = dffts%nr3
+  nr1s = dffts%nr1 ;  nr1sx = dffts%nr1x ; obnr1sx = 1.D0/DBLE(nr1sx)
+  nr2s = dffts%nr2 ;  nr2sx = dffts%nr2x ; obnr2sx = 1.D0/DBLE(nr2sx)
+  nr3s = dffts%nr3 ;  nr3sx = dffts%nr3x ; obnr3sx = 1.D0/DBLE(nr3sx)
+  nx  = nr1sx
+#if defined(__MPI)
+  nxy = nr1sx* dffts%my_nr2p
+#else
+  nxy = nr1sx* nr2sx
+#endif
   DO ir3=1,nr3s
 #if defined(__MPI)
-     ibig3 = ir3 - dffts%ipp( me )
-     IF(ibig3.GT.0.AND.ibig3.LE.dffts%npp(me)) THEN
+     ibig3 = ir3 - dffts%my_i0r3p
+     IF(ibig3.GT.0.AND.ibig3.LE.dffts%my_nr3p) THEN
 #else
         ibig3=ir3
 #endif
         DO ir2=1,nr2s
-           DO ir1=1,nr1s
-              xdist(ir1+(ir2-1)*nr1sx+(ibig3-1)*nr1sx*nr2sx) =                     &
-                   &                  ((ir1-1)/DBLE(nr1sx))
-              ydist(ir1+(ir2-1)*nr1sx+(ibig3-1)*nr1sx*nr2sx) =                   &
-                   &                  ((ir2-1)/DBLE(nr2sx))
-              zdist(ir1+(ir2-1)*nr1sx+(ibig3-1)*nr1sx*nr2sx) =                     &
-                   &                  ((ir3-1)/DBLE(nr3sx))
-              !         
-           END DO
+#if defined(__MPI)
+           ibig2 = ir2 - dffts%my_i0r2p
+           IF(ibig2.GT.0.AND.ibig2.LE.dffts%my_nr2p) THEN
+#else
+              ibig2=ir2
+#endif
+              DO ir1=1,nr1s
+                 xdist(ir1+(ibig2-1)*nx+(ibig3-1)*nxy) = (ir1-1)*obnr1sx
+                 ydist(ir1+(ibig2-1)*nx+(ibig3-1)*nxy) = (ir2-1)*obnr2sx
+                 zdist(ir1+(ibig2-1)*nx+(ibig3-1)*nxy) = (ir3-1)*obnr3sx
+              END DO
+#if defined(__MPI)
+           END IF
+#endif
         END DO
 #if defined(__MPI)
      END IF
@@ -1899,12 +1908,19 @@ SUBROUTINE small_box_wf( i_1, j_1, k_1, nw1 )
   !
   IMPLICIT NONE
 
-  INTEGER ir1, ir2, ir3, ibig3 , inw
-  REAL(DP) x
   INTEGER , INTENT(in) :: nw1, i_1(nw1), j_1(nw1), k_1(nw1)
-  INTEGER :: me
+  INTEGER ir1, ir2, ir3, ibig2, ibig3 , inw
+  REAL(DP) x, obnr1x, obnr2x, obnr3x
+  INTEGER :: me, nx, nxy
 
   me = me_bgrp + 1
+  obnr1x = 1.D0/dfftp%nr1x ; obnr2x = 1.D0/dfftp%nr2x ; obnr3x = 1.D0/dfftp%nr3x 
+  nx = dfftp%nr1x 
+#if defined(__MPI)
+  nxy = dfftp%nr1x * dfftp%my_nr2p
+#else
+  nxy = dfftp%nr1x * dfftp%nr2x
+#endif
 
   ALLOCATE(expo(dfftp%nnr,nw1))
 
@@ -1914,18 +1930,27 @@ SUBROUTINE small_box_wf( i_1, j_1, k_1, nw1 )
 
      DO ir3=1,dfftp%nr3
 #if defined(__MPI)
-        ibig3 = ir3 - dfftp%ipp( me )
-        IF(ibig3.GT.0.AND.ibig3.LE.dfftp%npp(me)) THEN
+        ibig3 = ir3 - dfftp%my_i0r3p
+        IF(ibig3.GT.0.AND.ibig3.LE.dfftp%my_nr3p) THEN
 #else
            ibig3=ir3
 #endif
            DO ir2=1,dfftp%nr2
-              DO ir1=1,dfftp%nr1
-                 x =  (((ir1-1)/DBLE(dfftp%nr1x))*i_1(inw) +                          &
-                      &                  ((ir2-1)/DBLE(dfftp%nr2x))*j_1(inw) +             &
-                      &                  ((ir3-1)/DBLE(dfftp%nr3x))*k_1(inw))*0.5d0*fpi
-                 expo(ir1+(ir2-1)*dfftp%nr1x+(ibig3-1)*dfftp%nr1x*dfftp%nr2x,inw) = CMPLX(COS(x), -SIN(x),kind=DP)
-              END DO
+#if defined(__MPI)
+              ibig2 = ir2 - dfftp%my_i0r2p
+              IF(ibig2.GT.0.AND.ibig2.LE.dfftp%my_nr2p) THEN
+#else
+                 ibig2=ir2
+#endif
+                 DO ir1=1,dfftp%nr1
+                    x =  (((ir1-1)*obnr1x)*i_1(inw) + &
+                      &   ((ir2-1)*obnr2x)*j_1(inw) + &
+                      &   ((ir3-1)*obnr3x)*k_1(inw))*0.5d0*fpi
+                    expo(ir1+(ibig2-1)*nx+(ibig3-1)*nxy,inw) = CMPLX(COS(x), -SIN(x),kind=DP)
+                 END DO
+#if defined(__MPI)
+              END IF
+#endif
            END DO
 #if defined(__MPI)
         END IF
@@ -1966,19 +1991,26 @@ FUNCTION boxdotgridcplx(irb,qv,vr)
      ibig3=irb(3)+ir3-1
      ibig3=1+MOD(ibig3-1,dfftp%nr3)
 #if defined(__MPI)
-     ibig3 = ibig3 - dfftp%ipp( me )
-     IF (ibig3.GT.0.AND.ibig3.LE.dfftp%npp(me)) THEN
+     ibig3 = ibig3 - dfftp%my_i0r3p
+     IF (ibig3.GT.0.AND.ibig3.LE.dfftp%my_nr3p) THEN
 #endif
         DO ir2=1,dfftb%nr2
            ibig2=irb(2)+ir2-1
            ibig2=1+MOD(ibig2-1,dfftp%nr2)
-           DO ir1=1,dfftb%nr1
-              ibig1=irb(1)+ir1-1
-              ibig1=1+MOD(ibig1-1,dfftp%nr1)
-              ibig=ibig1 + (ibig2-1)*dfftp%nr1x + (ibig3-1)*dfftp%nr1x*dfftp%nr2x
-              ir  =ir1 + (ir2-1)*dfftb%nr1x + (ir3-1)*dfftb%nr1x*dfftb%nr2x
-              boxdotgridcplx = boxdotgridcplx + qv(ir)*vr(ibig)
-           END DO
+#if defined(__MPI)
+           ibig2 = ibig2 - dfftp%my_i0r2p
+           IF (ibig2.GT.0.AND.ibig2.LE.dfftp%my_nr2p) THEN
+#endif
+              DO ir1=1,dfftb%nr1
+                 ibig1=irb(1)+ir1-1
+                 ibig1=1+MOD(ibig1-1,dfftp%nr1)
+                 ibig=ibig1 + (ibig2-1)*dfftp%nr1x + (ibig3-1)*dfftp%nr1x*dfftp%my_nr2p
+                 ir  =ir1 + (ir2-1)*dfftb%nr1x + (ir3-1)*dfftb%nr1x*dfftb%nr2x
+                 boxdotgridcplx = boxdotgridcplx + qv(ir)*vr(ibig)
+              END DO
+#if defined(__MPI)
+           ENDIF
+#endif
         END DO
 #if defined(__MPI)
      ENDIF
@@ -2740,7 +2772,7 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
      END IF
      !
      IF( sp < 0.D0 ) &
-        CALL errore( 'cp-wf', 'Something wrong WF Spread negative', 1 )
+        CALL errore( 'cp-wf', 'Something wrong WF Spread negative', 2 )
      !
      spread=spread+sp
      !
@@ -3241,7 +3273,7 @@ END SUBROUTINE jacobi_rotation
         END IF
         !
         IF ( sp < 0.D0 ) &
-           CALL errore( 'cp-wf', 'Something wrong WF Spread negative', 1 )  
+           CALL errore( 'cp-wf', 'Something wrong WF Spread negative', 3 )  
         spread=spread+sp
      END DO
 

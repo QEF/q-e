@@ -42,7 +42,6 @@ lr_alloc_init.o : ../../PW/src/realus.o
 lr_alloc_init.o : lr_charg_resp.o
 lr_alloc_init.o : lr_variables.o
 lr_apply_liouvillian.o : ../../FFTXlib/fft_interfaces.o
-lr_apply_liouvillian.o : ../../FFTXlib/fft_parallel.o
 lr_apply_liouvillian.o : ../../LR_Modules/dv_of_drho.o
 lr_apply_liouvillian.o : ../../Modules/becmod.o
 lr_apply_liouvillian.o : ../../Modules/cell_base.o
@@ -64,7 +63,6 @@ lr_apply_liouvillian.o : ../../PW/src/scf_mod.o
 lr_apply_liouvillian.o : ../../UtilXlib/mp.o
 lr_apply_liouvillian.o : lr_exx_kernel.o
 lr_apply_liouvillian.o : lr_variables.o
-lr_apply_liouvillian_eels.o : ../../FFTXlib/fft_parallel.o
 lr_apply_liouvillian_eels.o : ../../LR_Modules/dv_of_drho.o
 lr_apply_liouvillian_eels.o : ../../LR_Modules/lrcom.o
 lr_apply_liouvillian_eels.o : ../../Modules/fft_base.o

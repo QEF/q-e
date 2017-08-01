@@ -71,7 +71,7 @@ SUBROUTINE add_efield(vpoten,etotefield,rho,iflag)
   !
   ! local variables
   !
-  INTEGER :: idx0, idx,  i, j, k
+  INTEGER :: idx,  i, j, k, j0, k0
   INTEGER :: ir, na, ipol
   REAL(DP) :: length, vamp, value, sawarg, bmod
 
@@ -223,19 +223,18 @@ SUBROUTINE add_efield(vpoten,etotefield,rho,iflag)
 
   !
   ! Loop in the charge array
-  ! idx0 = starting index of real-space FFT arrays for this processor
-  !
-  idx0 = dfftp%nr1x*dfftp%nr2x*dfftp%ipp(me_bgrp+1)
-  !
-  DO ir = 1, dfftp%nr1x*dfftp%nr2x*dfftp%npl
+  j0 = dfftp%my_i0r2p ; k0 = dfftp%my_i0r3p
+  DO ir = 1, dfftp%nr1x*dfftp%my_nr2p*dfftp%my_nr3p
      !
      ! ... three dimensional indexes
      !
-     idx = idx0 + ir - 1
-     k   = idx / (dfftp%nr1x*dfftp%nr2x)
-     idx = idx - (dfftp%nr1x*dfftp%nr2x)*k
+     idx = ir -1
+     k   = idx / (dfftp%nr1x*dfftp%my_nr2p)
+     idx = idx - (dfftp%nr1x*dfftp%my_nr2p)*k
+     k   = k + k0
      j   = idx / dfftp%nr1x
-     idx = idx - dfftp%nr1x*j
+     idx = idx - dfftp%nr1x * j
+     j   = j + j0
      i   = idx
 
      ! ... do not include points outside the physical range

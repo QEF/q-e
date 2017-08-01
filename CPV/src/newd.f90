@@ -87,7 +87,7 @@
 
          DO ia=1,na(is)
              nfft = 1
-             IF ( ( dfftb%np3( isa ) <= 0 ) .OR. ( my_bgrp_id /= MOD( ia, nbgrp ) ) ) THEN
+             IF ( ( dfftb%np3( isa ) <= 0 ) .OR. ( dfftb%np2( isa ) <= 0 ).OR. ( my_bgrp_id /= MOD( ia, nbgrp ) ) ) THEN
                 isa = isa + nfft
                 CYCLE
              END IF
@@ -192,7 +192,7 @@
 #if defined(__MPI)
             DO ia=1,na(is)
                nfft=1
-               IF ( ( dfftb%np3( isa ) <= 0 ) .OR. ( my_bgrp_id /= MOD( ia, nbgrp ) ) ) THEN
+               IF ( ( dfftb%np3( isa ) <= 0 ) .OR. ( dfftb%np2( isa ) <= 0 ) .OR. ( my_bgrp_id /= MOD( ia, nbgrp ) ) ) THEN
                   isa = isa + nfft
                   CYCLE
                END IF
@@ -282,7 +282,7 @@
          DO is=1,nvb
             DO ia=1,na(is)
 #if defined(__MPI)
-               IF ( dfftb%np3( isa ) <= 0 ) go to 25
+               IF ( dfftb%np3( isa ) <= 0 .OR. dfftb%np2( isa ) <= 0 ) go to 25
 #endif
                DO ik=1,3
                   qv(:) = (0.d0, 0.d0)

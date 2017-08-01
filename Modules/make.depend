@@ -475,6 +475,7 @@ xml_input.o : kind.o
 xml_input.o : qexml.o
 xml_input.o : version.o
 xml_input.o : xml_io_base.o
+xml_io_base.o : ../FFTXlib/fft_types.o
 xml_io_base.o : ../UtilXlib/mp.o
 xml_io_base.o : ../iotk/src/iotk_module.o
 xml_io_base.o : control_flags.o

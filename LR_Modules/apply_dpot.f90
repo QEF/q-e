@@ -14,7 +14,7 @@ SUBROUTINE apply_dpot(nrxxs, aux1, dv, current_spin)
   USE noncollin_module, ONLY : noncolin, npol, nspin_mag
   USE spin_orb, ONLY : domag
   USE mp_bands, ONLY : me_bgrp
-  USE fft_base,  ONLY : dffts, dtgs
+  USE fft_base,  ONLY : dffts
 
   IMPLICIT NONE
   INTEGER, INTENT(IN) :: current_spin, nrxxs
@@ -28,9 +28,9 @@ SUBROUTINE apply_dpot(nrxxs, aux1, dv, current_spin)
 !
 !    Noncollinear part with task groups
 !
-     IF( dtgs%have_task_groups ) THEN
+     IF( dffts%have_task_groups ) THEN
         IF (domag) THEN
-           DO ir=1, dffts%nr1x*dffts%nr2x*dtgs%tg_npp( me_bgrp + 1 )
+           DO ir=1, dffts%nr1x*dffts%nr2x*dffts%my_nr3p
               sup = aux1(ir,1) * (dv(ir,1)+dv(ir,4)) + &
                     aux1(ir,2) * (dv(ir,2)-(0.d0,1.d0)*dv(ir,3))
               sdwn = aux1(ir,2) * (dv(ir,1)-dv(ir,4)) + &
@@ -39,7 +39,7 @@ SUBROUTINE apply_dpot(nrxxs, aux1, dv, current_spin)
               aux1(ir,2)=sdwn
            ENDDO
         ELSE
-           DO ir=1, dffts%nr1x*dffts%nr2x*dtgs%tg_npp( me_bgrp + 1 )
+           DO ir=1, dffts%nr1x*dffts%nr2x*dffts%my_nr3p
               aux1(ir,:) = aux1(ir,:) * dv(ir,1)
            ENDDO
         ENDIF
@@ -66,9 +66,9 @@ SUBROUTINE apply_dpot(nrxxs, aux1, dv, current_spin)
 !
 !  collinear part with Task Groups
 !
-     IF( dtgs%have_task_groups ) THEN
+     IF( dffts%have_task_groups ) THEN
         !
-        DO ir = 1, dffts%nr1x*dffts%nr2x*dtgs%tg_npp( me_bgrp + 1 )
+        DO ir = 1, dffts%nr1x*dffts%nr2x*dffts%my_nr3p
            aux1 (ir,1) = aux1 (ir,1) * dv(ir,1)
         ENDDO
      ELSE

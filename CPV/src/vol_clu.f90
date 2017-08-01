@@ -84,7 +84,7 @@ SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
 #if defined(__MPI)
       me = mpime + 1
       do ip=1,nproc
-         ppp(ip) =  dfftp%nnp  * ( dfftp%npp(ip) )
+         ppp(ip) =  dfftp%nnp  * ( dfftp%nr3p(ip) )
          if (ip.eq.1) then
             shift(ip)=0
          else

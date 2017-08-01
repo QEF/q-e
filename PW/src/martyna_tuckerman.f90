@@ -134,7 +134,7 @@ CONTAINS
   USE gvect,         ONLY : ngm, gg, gstart_ => gstart, nl, nlm, ecutrho
   USE cell_base,     ONLY : at, alat, tpiba2, omega
 
-  INTEGER :: idx0, idx, ir, i,j,k, ig, nt
+  INTEGER :: idx, ir, i,j,k, j0, k0, ig, nt
   REAL(DP) :: r(3), rws, upperbound, rws2
   COMPLEX (DP), ALLOCATABLE :: aux(:)
   REAL(DP), EXTERNAL :: qe_erfc
@@ -166,21 +166,20 @@ CONTAINS
   gstart = gstart_
   gamma_only = gamma_only_
   !
-  ! idx0 = starting index of real-space FFT arrays for this processor
-  !
-  idx0 = dfftp%nr1x*dfftp%nr2x * dfftp%ipp(me_bgrp+1)
-  !
   ALLOCATE (aux(dfftp%nnr))
   aux = (0._dp,0._dp)
-  DO ir = 1, dfftp%nr1x*dfftp%nr2x * dfftp%npl
+  j0 = dfftp%my_i0r2p ; k0 = dfftp%my_i0r3p
+  DO ir = 1, dfftp%nr1x*dfftp%my_nr2p*dfftp%my_nr3p
      !
-     ! ... three dimensional indices
+     ! ... three dimensional indexes
      !
-     idx = idx0 + ir - 1
-     k   = idx / (dfftp%nr1x*dfftp%nr2x)
-     idx = idx - (dfftp%nr1x*dfftp%nr2x)*k
+     idx = ir -1
+     k   = idx / (dfftp%nr1x*dfftp%my_nr2p)
+     idx = idx - (dfftp%nr1x*dfftp%my_nr2p)*k
+     k   = k + k0
      j   = idx / dfftp%nr1x
-     idx = idx - dfftp%nr1x*j
+     idx = idx - dfftp%nr1x * j
+     j   = j + j0
      i   = idx
 
      ! ... do not include points outside the physical range

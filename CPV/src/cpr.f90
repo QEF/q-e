@@ -210,6 +210,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      tfile   = ( MOD( nfi, iprint ) == 0 )
      tstdout = ( MOD( nfi, iprint_stdout ) == 0 ) .OR. tlast
      !
+
      IF ( abivol ) THEN
         IF ( pvar ) THEN
            IF ( nfi .EQ. 1 ) THEN
@@ -368,6 +369,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         END IF
         !
      END IF
+     !
      !
      !=======================================================================
      !

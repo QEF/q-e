@@ -233,8 +233,8 @@ SUBROUTINE memory_report()
     mbz = mbr*sqrt( bg(3,1)**2 + bg(3,2)**2 + bg(3,3)**2 )
     !
     dmbx = 2*anint( mbx*dfftp%nr1x ) + 2
-    dmby = 2*anint( mby*dfftp%nr2x ) + 2
-    dmbz = 2*anint( mbz*dfftp%npl ) + 2  ! approximation!
+    dmby = 2*anint( mby*dfftp%my_nr2p ) + 2  ! approximation!
+    dmbz = 2*anint( mbz*dfftp%my_nr3p ) + 2  ! approximation!
     !
     roughestimate = anint( dble( dmbx*dmby*dmbz ) * pi / 6.D0 )
     add  = 0.d0

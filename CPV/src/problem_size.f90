@@ -37,7 +37,7 @@
 
       nr1_l = dfftp%nr1x
       nr2_l = dfftp%nr2x
-      nr3_l = dfftp%npl
+      nr3_l = dfftp%my_nr3p
 
       nr1x  = dfftp%nr1x
       nr2x  = dfftp%nr2x

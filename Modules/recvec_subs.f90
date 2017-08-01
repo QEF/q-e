@@ -126,6 +126,7 @@ CONTAINS
    nj = (dfftp%nr2-1)/2
    nk = (dfftp%nr3-1)/2
    !
+   !write (6,*) ' ni,nj,nk ', ni, nj, nk
    iloop: DO i = -ni, ni
       !
       ! gamma-only: exclude space with x < 0
@@ -173,6 +174,7 @@ CONTAINS
       ngmpe( mype + 1 ) = ngm
       CALL mp_sum( ngmpe, comm )
    END IF
+   !write (6,*) ' ngm, ngms', ngm,ngm_max, ngms, ngms_max
    IF (ngm  /= ngm_max) &
          CALL errore ('ggen', 'g-vectors missing !', abs(ngm - ngm_max))
    IF (ngms /= ngms_max) &
