@@ -349,8 +349,12 @@
        DO imode = 1, nmodes
          ! 
          wq = wf (imode, iq)
-         a_all(iw,iq) = a_all(iw,iq) + abs( gammai_all(imode,iq,iw) ) / pi / &
-               ( ( ww - wq - gammar_all (imode,iq,iw) + gamma0 (imode))**two + (gammai_all(imode,iq,iw) )**two )
+         !a_all(iw,iq) = a_all(iw,iq) + abs( gammai_all(imode,iq,iw) ) / pi / &
+         !      ( ( ww - wq - gammar_all (imode,iq,iw) + gamma0 (imode))**two + (gammai_all(imode,iq,iw) )**two )
+         ! SP: From Eq. 16 of PRB 9, 4733 (1974)
+         !    Also in Eq.2 of PRL 119, 017001 (2017). 
+         a_all(iw,iq) = a_all(iw,iq) + ((2*wq)**2) * abs( gammai_all(imode,iq,iw) ) / pi / &
+               ( ( ww**2 - wq**2 - 2 * wq * ( gammar_all (imode,iq,iw) + gamma0 (imode) ) )**two + (2 * wq * gammai_all(imode,iq,iw) )**two )
          !
          IF (mpime.eq.ionode_id) THEN
            WRITE(iospectral_sup,'(2i9,2x,f12.5,2x,f12.5,2x,E22.14,2x,E22.14,2x,E22.14)') iq,&
