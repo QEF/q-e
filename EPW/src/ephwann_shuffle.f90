@@ -306,8 +306,10 @@
        lrepmatw   = 2 * nbndsub * nbndsub * nrr_k * nmodes
        filint    = trim(prefix)//'.epmatwe'
        CALL diropn (iunepmatwe, 'epmatwe', lrepmatw, exst)
+#ifdef __MPI       
        filint    = trim(prefix)//'.epmatwp'
        CALL diropn (iunepmatwp, 'epmatwp', lrepmatw, exst)    
+#endif
      ENDIF          
      !
      !

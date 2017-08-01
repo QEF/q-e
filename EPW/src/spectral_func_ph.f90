@@ -354,7 +354,7 @@
          ! SP: From Eq. 16 of PRB 9, 4733 (1974)
          !    Also in Eq.2 of PRL 119, 017001 (2017). 
          a_all(iw,iq) = a_all(iw,iq) + ((2*wq)**2) * abs( gammai_all(imode,iq,iw) ) / pi / &
-               ( ( ww**2 - wq**2 - 2 * wq * ( gammar_all (imode,iq,iw) + gamma0 (imode) ) )**two +&
+               ( ( ww**2 - wq**2 - 2 * wq * ( gammar_all (imode,iq,iw) - gamma0 (imode) ) )**two +&
                  (2 * wq * gammai_all(imode,iq,iw) )**two )
          !
          IF (mpime.eq.ionode_id) THEN
