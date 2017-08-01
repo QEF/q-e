@@ -111,6 +111,7 @@ cat > al.scf.in << EOF
    prefix='aluminum',
    pseudo_dir = '$PSEUDO_DIR/',
    outdir='$TMP_DIR/'
+   wf_collect = .false.
  /
  &system
     ibrav=  2, celldm(1) =7.5, nat= 1, ntyp= 1,
