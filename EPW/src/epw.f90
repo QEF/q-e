@@ -83,9 +83,6 @@ write(stdout,'(a)') "                                                           
   !
   CALL environment_start ( code )
   !
-  IF ( ep_coupling ) & 
-  WRITE( stdout, '(/5x,"Ultrasoft (Vanderbilt) Pseudopotentials")' )
-  !
   ! Read in the input file
   !
   CALL epw_readin

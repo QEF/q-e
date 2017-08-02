@@ -107,8 +107,6 @@
   !! Current frequency
   REAL(kind=DP) :: dw 
   !! Frequency intervals
-  REAL(kind=DP) :: dosef
-  !! Density of state N(Ef)
   REAL(kind=DP), PARAMETER :: eps2 = 0.01/ryd2mev
   !! Tolerence 
   real(kind=DP) :: specfun_sum, esigmar0
@@ -156,13 +154,8 @@
      !
   ENDIF
   !
-  dosef = dos_ef (ngaussw, degaussw, ef0, etf, wkf, nkqf, nbndsub)
-  !   N(Ef) in the equation for lambda is the DOS per spin
-  dosef = dosef / two
-  !
   IF ( iq .eq. 1 ) THEN 
      WRITE (stdout, 100) degaussw * ryd2ev, ngaussw
-     WRITE (stdout, 101) dosef / ryd2ev, ef0 * ryd2ev
      WRITE (stdout,'(a)') ' '
   ENDIF
   !
@@ -513,7 +506,7 @@
   !! Tolerenc  
   real(kind=DP), external :: efermig, dos_ef, wgauss
   real(kind=DP) :: g2, ekk, ekq, wq, ef0, wgq, wgkq, ww, dw, weight
-  real(kind=DP) :: dosef, specfun_sum, esigmar0
+  real(kind=DP) :: specfun_sum, esigmar0
   real(kind=DP) :: fermi(nw_specfun)
   REAL(kind=DP), external ::  dos_ef_seq
   !
@@ -556,15 +549,8 @@
      !
   ENDIF
   !
-  IF (mpime .eq. ionode_id) THEN
-    !
-    dosef = dos_ef_seq (ngaussw, degaussw, ef0, etf_k, wkf, nkqf, nbndsub)/2
-  ENDIF
-  CALL mp_bcast (dosef, ionode_id, inter_pool_comm)
-  !
   IF ( ik .eq. 1 ) THEN 
     WRITE (stdout, 100) degaussw * ryd2ev, ngaussw
-    WRITE (stdout, 101) dosef / ryd2ev, ef0 * ryd2ev
     WRITE (stdout,'(a)') ' '
   ENDIF
   !

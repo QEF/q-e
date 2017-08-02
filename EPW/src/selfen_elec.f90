@@ -121,8 +121,6 @@
   !! Self-energy factor 
   !!$$ N_q \Re( \frac{f_{mk+q}(T) + n_{q\nu}(T)}{ \varepsilon_{nk} - \varepsilon_{mk+q} + \omega_{q\nu} - i\delta }) $$ 
   !!$$ + N_q \Re( \frac{1- f_{mk+q}(T) + n_{q\nu}(T)}{ \varepsilon_{nk} - \varepsilon_{mk+q} - \omega_{q\nu} - i\delta }) $$ 
-  REAL(kind=DP) :: dosef
-  !! Density of state N(Ef)
   REAL(kind=DP) :: w0g1
   !! Dirac delta for the imaginary part of $\Sigma$
   REAL(kind=DP) :: w0g2
@@ -185,14 +183,8 @@
     !
   ENDIF
   !
-  dosef = dos_ef (ngaussw, degaussw, ef0, etf, wkf, nkqf, nbndsub)
-  !   N(Ef) in the equation for lambda is the DOS per spin
-  dosef = dosef / two
-  !
   IF ( iq .eq. 1 ) THEN 
      WRITE (stdout, 100) degaussw * ryd2ev, ngaussw
-     WRITE (stdout, 101) dosef / ryd2ev, ef0 * ryd2ev
-     !WRITE (stdout, 101) dosef / ryd2ev, ef  * ryd2ev
      WRITE (stdout,'(a)') ' '
   ENDIF
   !
@@ -588,7 +580,7 @@
   !! Temporary array to store the imag-part of Sigma 
   REAL(kind=DP) :: zi_tmp(ibndmax-ibndmin+1)
   !! Temporary array to store the Z
-  REAL(kind=DP) :: g2, ekk, ekq, wq, ef0, wgq, wgkq, weight, dosef, &
+  REAL(kind=DP) :: g2, ekk, ekq, wq, ef0, wgq, wgkq, weight, &
                    w0g1, w0g2, inv_wq, inv_eptemp0, g2_tmp,&
                    inv_degaussw
   REAL(kind=DP), external :: efermig, dos_ef, wgauss, w0gauss, dos_ef_seq
@@ -639,23 +631,9 @@
      ! in ephwann_shuffle
      !
   ENDIF
-  !  
-  IF (mpime .eq. ionode_id) THEN
-    !   N(Ef) in the equation for lambda is the DOS per spin
-    !dosef = dosef / two
-    dosef = dos_ef_seq (ngaussw, degaussw, ef0, etf_k, wkf, nkqf, nbndsub)/2
-    !
-  ENDIF
-  CALL mp_bcast (dosef, ionode_id, inter_pool_comm)
-  !
-  !dosef = dos_ef (ngaussw, degaussw, ef0, etf, wkf, nkqf, nbndsub)
-  !   N(Ef) in the equation for lambda is the DOS per spin
-  !dosef = dosef / two
   !
   IF ( ik .eq. 1 ) THEN 
      WRITE (stdout, 100) degaussw * ryd2ev, ngaussw
-     WRITE (stdout, 101) dosef / ryd2ev, ef0 * ryd2ev
-     !WRITE (stdout, 101) dosef / ryd2ev, ef  * ryd2ev
      WRITE (stdout,'(a)') ' '
   ENDIF
   !

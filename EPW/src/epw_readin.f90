@@ -608,7 +608,7 @@
   dvscf_dir = trim(dvscf_dir)//'/'
   !
 400 continue
-  CALL bcast_ph_input
+  CALL bcast_epw_input
   xqq(:) = xq(:) 
   !
   !   Here we finished the reading of the input file.
@@ -672,7 +672,7 @@
      CALL mp_bcast(atomo, meta_ionode_id, world_comm )
   ENDIF
 800 continue
-  CALL bcast_ph_input1
+  CALL bcast_epw_input1
   !
   DO it = 1, ntyp
      IF (amass (it) <= 0.d0) CALL errore ('epw_readin', 'Wrong masses', it)

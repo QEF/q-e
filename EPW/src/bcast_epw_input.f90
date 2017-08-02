@@ -11,7 +11,7 @@
   ! excess variables
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE bcast_ph_input
+  SUBROUTINE bcast_epw_input
   !-----------------------------------------------------------------------
   !!
   !!     In this routine the first processor sends the input to all
@@ -205,10 +205,10 @@
   CALL mp_bcast (asr_typ, meta_ionode_id, world_comm)
 #endif
   !
-END SUBROUTINE bcast_ph_input
+END SUBROUTINE bcast_epw_input
 !
 !-----------------------------------------------------------------------
-SUBROUTINE bcast_ph_input1
+SUBROUTINE bcast_epw_input1
 !-----------------------------------------------------------------------
 !
 #if defined(__MPI)
@@ -227,4 +227,4 @@ SUBROUTINE bcast_ph_input1
   ENDIF
 #endif
   !  
-END SUBROUTINE bcast_ph_input1
+END SUBROUTINE bcast_epw_input1
