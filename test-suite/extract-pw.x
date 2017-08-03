@@ -13,7 +13,7 @@ e1=`grep ! $fname | tail -1 | awk '{printf "%12.6f\n", $5}'`
 n1=`grep 'convergence has' $fname | tail -1 | awk '{print $6}'`
 f1=`grep "Total force" $fname | head -1 | awk '{printf "%8.4f\n", $4}'`
 p1=`grep "P= " $fname | tail -1 | awk '{print $6}'`
-band=`sed -n "/bands (ev)/{n;n;p}" $fname | awk '{print $1; print $2; print $3; print $4; print $5; print $6; print $7; print $8 }'`
+band=`sed -n "/bands (ev)/{n;n;p}" $fname | awk '{print $1; print $2; print $3; print $4; print $5 }'`
 
 # NSCF
 ef1=`grep Fermi $fname | awk '{print $5}'`

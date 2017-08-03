@@ -1,3 +1,7 @@
+[pw_atom/]
+program = PW
+inputs_args = ('atom.in', ''), ('atom-lsda.in',''), ('atom-occ1.in',''), ('atom-occ2.in',''), ('atom-pbe.in',''), ('atom-sigmapbe.in', '')
+
 [pw_b3lyp/]
 program = PW
 inputs_args = ('b3lyp-O.in', ''), ('b3lyp-h2o.in','')
@@ -6,13 +10,25 @@ inputs_args = ('b3lyp-O.in', ''), ('b3lyp-h2o.in','')
 program = PW
 inputs_args = ('berry.in', ''), ('berry-1.in', ''), ('berry-2.in','')
 
-[pw_noncolin/]
+[pw_cluster/]
 program = PW
-inputs_args = ('noncolin.in' ,''), ('noncolin-1.in' ,''), ('noncolin-2.in' ,''), ('noncolin-cg.in' ,''), ('noncolin-constrain_angle.in' ,''), ('noncolin-constrain_atomic.in' ,''), ('noncolin-constrain_total.in' ,''), ('noncolin-hyb.in' ,'')
+inputs_args = ('cluster1.in', ''), ('cluster2.in', ''), ('cluster3.in',''), ('cluster4.in','')
+
+[pw_lsda/]
+program = PW
+inputs_args = ('lsda.in', ''), ('lsda-2.in', ''), ('lsda-cg.in', ''), ('lsda-mixing_localTF.in', ''), ('lsda-mixing_ndim.in', ''), ('lsda-mixing_TF.in', ''), ('lsda-nelup+neldw.in', ''), ('lsda-tot_magnetization.in', '')
 
 [pw_metal/]
 program = PW
 inputs_args = ('metal.in' ,''), ('metal-2.in' ,''), ('metal-fermi_dirac.in' ,''), ('metal-gaussian.in' ,''), ('metal-tetrahedra-2.in' ,''), ('metal-tetrahedra.in' ,'')
+
+[pw_noncolin/]
+program = PW
+inputs_args = ('noncolin.in' ,''), ('noncolin-1.in' ,''), ('noncolin-2.in' ,''), ('noncolin-cg.in' ,''), ('noncolin-constrain_angle.in' ,''), ('noncolin-constrain_atomic.in' ,''), ('noncolin-constrain_total.in' ,''), ('noncolin-hyb.in' ,'')
+
+[pw_pawatom/]
+program = PW
+inputs_args = ('paw-atom.in', ''), ('paw-atom_l=2.in', ''), ('paw-atom_lda.in',''), ('paw-atom_spin.in',''), ('paw-atom_spin_lda.in',''), ('paw-atom_tqr.in',''), ('paw-bfgs.in',''), ('paw-vcbfgs.in','')
 
 [pw_scf/]
 program = PW
@@ -26,9 +42,9 @@ inputs_args = ('spinorbit.in' ,''), ('spinorbit-1.in' ,''), ('spinorbit-3.in' ,'
 program = PW
 inputs_args = ('uspp.in' ,''), ('uspp-2.in' ,''), ('uspp-cg.in' ,''), ('uspp-hyb-g.in' ,''), ('uspp-hyb-k.in' ,''), ('uspp-mixing_TF.in' ,''), ('uspp-mixing_localTF.in' ,''), ('uspp-mixing_ndim.in' ,''), ('uspp-singlegrid.in' ,''), ('uspp1-coulomb.in' ,''), ('uspp1.in' ,''), ('uspp2.in' ,'')
 
-[pw_lsda/]
+[pw_vdw/]
 program = PW
-inputs_args = ('lsda.in', ''), ('lsda-2.in', ''), ('lsda-cg.in', ''), ('lsda-mixing_localTF.in', ''), ('lsda-mixing_ndim.in', ''), ('lsda-mixing_TF.in', ''), ('lsda-nelup+neldw.in', ''), ('lsda-tot_magnetization.in', '')
+inputs_args = ('vdw1.in' ,''), ('vdw2.in' ,''), ('vdw3.in' ,''), ('vdw4.in' ,''), ('vdw5.in' ,''), ('vdw6.in' ,''), ('vdw-d.in',''),('vdw-ts.in','')
 
 [ph_base/]
 program = PH

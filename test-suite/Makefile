@@ -40,22 +40,22 @@ run-tests-serial : run-tests-cp-serial run-tests-pw-serial
 run-tests-parallel : run-tests-cp-parallel run-tests-pw-parallel
 
 
-run-tests-cp-serial : clean prolog pseudo 
+run-tests-cp-serial : prolog pseudo 
 	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=cp_all
 
-run-tests-cp-parallel : clean prolog pseudo
+run-tests-cp-parallel : prolog pseudo
 	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=cp_all
 
-run-tests-pw-serial : clean prolog pseudo
+run-tests-pw-serial : prolog pseudo
 	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=pw_all
 
-run-tests-pw-parallel : clean prolog pseudo
+run-tests-pw-parallel : prolog pseudo
 	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=pw_all
 
-run-tests-ph-serial : clean prolog pseudo
+run-tests-ph-serial : prolog pseudo
 	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=ph_all
 
-run-tests-ph-parallel : clean prolog pseudo
+run-tests-ph-parallel : prolog pseudo
 	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=ph_all
 
 run-tests-epw-serial : clean prolog pseudo
@@ -69,16 +69,16 @@ run-travis : clean prolog pseudo
 
 run-custom-test : run-custom-test-serial
 
-run-custom-test-serial : clean prolog pseudo
+run-custom-test-serial : prolog pseudo
 	@if test -d $(testdir); then \
 	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=$(testdir) ; fi
 
-run-custom-test-parallel : clean prolog pseudo
+run-custom-test-parallel : prolog pseudo
 	@if test -d $(testdir); then \
 	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=$(testdir) ; fi
 
 
-run-tests-xsd-pw-serial : clean prolog pseudo
+run-tests-xsd-pw-serial : prolog pseudo
 	cd xsd_pw ; for file in ./*.in ; do \
   	echo "Running using $$file" ; \
 		env QE_USE_MPI=0 ../run-pw.sh -in $$file &> $$file.out ; \

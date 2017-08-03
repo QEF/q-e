@@ -78,7 +78,7 @@
 !     nnr_tg = local number of grid elements for task group FFT ( ~nr1*nr2*nr3/proc3 )  
 !           --> tg = task group    
 !  ALLOCATE (dmuxc ( dtgs%tg_nnr, nspin, nspin))    
-  ALLOCATE (dmuxc ( dffts%nnr_tg, nspin, nspin))    
+  ALLOCATE (dmuxc ( dffts%nnr, nspin, nspin))    
 
   !
   ALLOCATE (eigqts ( nat))    
