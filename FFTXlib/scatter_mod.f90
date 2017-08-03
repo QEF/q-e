@@ -144,7 +144,7 @@ SUBROUTINE fft_scatter_xy ( desc, f_in, f_aux, nxx_, isgn )
      !
      ! step one: store contiguously the slices
      !
-     f_aux = (0.0_DP, 0.0_DP) !
+     !f_aux = (1110.0_DP, 11110.0_DP) !
      offset = 0
      DO iproc2 = 1, nproc2
         kdest = ( iproc2 - 1 ) * sendsize
@@ -164,7 +164,7 @@ SUBROUTINE fft_scatter_xy ( desc, f_in, f_aux, nxx_, isgn )
      !
      ! ensures that no garbage is present in the output 
      ! useless; the later accessed elements are overwritten by the A2A step
-     f_in = (0.0_DP, 0.0_DP) !
+     !f_in = (0.0_DP, 0.0_DP) !
      !
      ! step two: communication  across the    nproc3    group
      !
@@ -200,7 +200,7 @@ SUBROUTINE fft_scatter_xy ( desc, f_in, f_aux, nxx_, isgn )
      !write (6,*) 'f_aux on input '
      !write(6,99) f_aux(1:60), f_aux(60*59+1:60*60) ; write(6,*); FLUSH (6) ! not needed, just printed outside
 
-     f_in = (0.0_DP, 0.0_DP) !
+     !f_in = (11110.0_DP, 11110.0_DP) !
      DO iproc2 = 1, nproc2
         it = ( iproc2 - 1 ) * sendsize
         DO i = 1, ncp_( iproc2 )
@@ -217,7 +217,7 @@ SUBROUTINE fft_scatter_xy ( desc, f_in, f_aux, nxx_, isgn )
      !write(6,99) f_in(1:120) ; write(6,*); FLUSH (6)
 
      !write (6,*) '--- A2A '
-     f_aux = (0.0_DP, 0.0_DP) !
+     !f_aux = (11110.0_DP, 11110.0_DP) !
      !
      !  step two: communication
      !
@@ -382,7 +382,7 @@ SUBROUTINE fft_scatter_yz ( desc, f_in, f_aux, nxx_, isgn )
      !
      ! ensures that no garbage is present in the output 
      ! useless; the later accessed elements are overwritten by the A2A step
-     f_in = (0.0_DP, 0.0_DP) !
+     !f_in = (0.0_DP, 0.0_DP) !
      !
      ! step two: communication  across the    nproc3    group
      !
@@ -425,7 +425,7 @@ SUBROUTINE fft_scatter_yz ( desc, f_in, f_aux, nxx_, isgn )
      !
      !  "backward" scatter from planes to columns
      !
-     f_in = (0.0_DP, 0.0_DP) !
+     !f_in = (1110.0_DP, 1110.0_DP) !
      DO iproc3 = 1, desc%nproc3
         it = ( iproc3 - 1 ) * sendsize
         DO me2 = me2_start, me2_end
@@ -447,7 +447,7 @@ SUBROUTINE fft_scatter_yz ( desc, f_in, f_aux, nxx_, isgn )
      !
      !  step two: communication
      !
-     f_aux = (0.0_DP, 0.0_DP) !
+     !f_aux = (11110.0_DP, 11110.0_DP) !
      !write(6,*) ' f_in just before A2A'
      !write(6,99) f_in ; write(6,*); FLUSH (6) ! not needed, will be printed outside
      CALL mpi_alltoall (f_in(1), sendsize, MPI_DOUBLE_COMPLEX, f_aux(1), sendsize, MPI_DOUBLE_COMPLEX, desc%comm3, ierr)
@@ -525,20 +525,19 @@ SUBROUTINE fft_scatter_tg ( desc, f_in, f_aux, nxx_, isgn )
 
 #if defined(__MPI)
   !
-  f_aux = (0.d0,0.d0)
+  f_aux = f_in
   if ( isgn > 0 ) then
 
-     CALL MPI_ALLTOALLV( f_in,  desc%tg_snd, desc%tg_sdsp, MPI_DOUBLE_COMPLEX, &
-                         f_aux, desc%tg_rcv, desc%tg_rdsp, MPI_DOUBLE_COMPLEX, desc%comm2, ierr)
+     CALL MPI_ALLTOALLV( f_aux,  desc%tg_snd, desc%tg_sdsp, MPI_DOUBLE_COMPLEX, &
+                         f_in, desc%tg_rcv, desc%tg_rdsp, MPI_DOUBLE_COMPLEX, desc%comm2, ierr)
      IF( ierr /= 0 ) CALL fftx_error__( 'fft_scatter_tg', ' alltoall error 1 ', abs(ierr) )
 
   else
 
-     CALL MPI_ALLTOALLV( f_in,  desc%tg_rcv, desc%tg_rdsp, MPI_DOUBLE_COMPLEX, &
-                         f_aux, desc%tg_snd, desc%tg_sdsp, MPI_DOUBLE_COMPLEX, desc%comm2, ierr)
+     CALL MPI_ALLTOALLV( f_aux,  desc%tg_rcv, desc%tg_rdsp, MPI_DOUBLE_COMPLEX, &
+                         f_in, desc%tg_snd, desc%tg_sdsp, MPI_DOUBLE_COMPLEX, desc%comm2, ierr)
      IF( ierr /= 0 ) CALL fftx_error__( 'fft_scatter_tg', ' alltoall error 2 ', abs(ierr) )
    end if
-   f_in = f_aux
 
 #endif
   CALL stop_clock ('fft_scatt_tg')

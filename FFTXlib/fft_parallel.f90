@@ -96,7 +96,7 @@ SUBROUTINE tg_cft3s( f, dfft, isgn )
   else
      CALL fftx_error__( ' tg_cft3s', ' wrong value of isgn ', 10+abs(isgn) )
   end if
-  ALLOCATE( aux( nnr_ ) ) ;  aux = (0.d0,0.d0)
+  ALLOCATE( aux( nnr_ ) ) !;  aux = (0.d0,0.d0)
   !
 
   !write (6,99) f(1:400); write(6,*); FLUSH(6)
