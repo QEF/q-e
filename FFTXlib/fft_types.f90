@@ -645,6 +645,7 @@ CONTAINS
 
     IF ( desc%nproc == 1 ) THEN
       desc%nnr  = nr1x * nr2x * nr3x
+      desc%nnr_tg = desc%nnr * desc%nproc2 
     ELSE
       desc%nnr  = max( ncpx * nr3x, nr1x * nr2px * nr3px )  ! this is required to contain the local data in R and G space
       desc%nnr  = max( desc%nnr, ncpx*nr3px*desc%nproc3, nr1px*nr2px*nr3px*desc%nproc2)  ! this is required to use ALLTOALL instead of ALLTOALLV
