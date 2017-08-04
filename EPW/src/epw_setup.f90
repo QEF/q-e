@@ -37,12 +37,12 @@
   USE nlcc_ph,       ONLY : drc
   USE uspp,          ONLY : nlcc_any
   USE control_ph,    ONLY : lgamma_gamma, search_sym, start_irr, &
-                            last_irr, niter_ph, alpha_mix, all_done,  &
+                            last_irr, niter_ph, alpha_mix,  &
                             flmixdpot, reduce_io, u_from_file
   USE control_lr,    ONLY : lgamma, alpha_pv, nbnd_occ
   USE gamma_gamma,   ONLY : has_equivalent, asr, nasr, n_diff_sites, &
                             equiv_atoms, n_equiv_atoms, with_symmetry
-  USE partial,       ONLY : comp_irr, atomo, nat_todo, all_comp, &
+  USE partial,       ONLY :  &
                             done_irr
   USE modes,         ONLY : u, npertx, npert, nirr, nmodes, num_rap_mode
   USE lr_symm_base,  ONLY : gi, gimq, irotmq, minus_q, nsymq, invsymq, rtau
@@ -78,8 +78,6 @@
   !! counter on bands
   INTEGER :: mu
   !! counter on polarizations
-  INTEGER :: imode0
-  !! counter on modes
   INTEGER :: irr
   !! the starting mode
   INTEGER :: ipert
@@ -93,8 +91,6 @@
   INTEGER :: js
   !! counter on atomic type
   INTEGER :: last_irr_eff
-  !! Last effective irr
-  INTEGER, ALLOCATABLE :: ifat(:)
   !!  
   REAL(kind=DP) :: rhotot
   !! total charge
@@ -398,75 +394,10 @@
      flmixdpot = 'mixd'
   endif
   !
-  !  8) set the variables needed for the partial computation: nat_todo, 
-  !     atomo, comp_irr
+  !  8) set max perturbation
+  !     
   !
-  if (lgamma_gamma) then
-     with_symmetry=1
-     comp_irr = .FALSE.
-     comp_irr(0)=.TRUE.
-     do na=1,nat
-        if (has_equivalent(na)==0) then
-            do ipol=1,3
-               comp_irr(3*(na-1)+ipol)=.TRUE.
-               with_symmetry(3*(na-1)+ipol)=0
-            enddo
-        endif
-     enddo
-     if (nasr>0) then
-        do ipol=1,3
-           comp_irr(3*(nasr-1)+ipol)=.FALSE.
-           with_symmetry(3*(nasr-1)+ipol)=0
-        enddo
-     endif
-     IF (start_irr <= last_irr_eff) THEN
-        DO irr=1,start_irr-1
-           comp_irr(irr) = .FALSE.
-        ENDDO
-        DO irr=last_irr_eff+1,3*nat
-           comp_irr(irr) = .FALSE.
-        ENDDO
-     ENDIF
-  endif
-  !
-  !  Compute how many atoms moves and set the list atomo
-  !
-  ALLOCATE(ifat(nat))
-  ifat = 0
-  imode0 = 0
-  DO irr = 1, nirr
-     if (comp_irr (irr)) then
-        do ipert = 1, npert (irr)
-           do na = 1, nat
-              do ipol = 1, 3
-                 mu = 3 * (na - 1) + ipol
-                 if (abs (u (mu, imode0+ipert) ) > 1.d-12) ifat (na) = 1
-              enddo
-           enddo
-        enddo
-     endif
-     imode0 = imode0 + npert (irr)
-  ENDDO
-  nat_todo = 0
-  DO na = 1, nat
-     IF (ifat (na) == 1) THEN
-        nat_todo = nat_todo + 1
-        atomo (nat_todo) = na
-     ENDIF
-  ENDDO
-
-  DEALLOCATE(ifat)
-  !
-  !   Initialize done_irr, find max dimension of the irreps
-  !
-  all_comp=.true.
-  DO irr=1,nirr
-     IF (.NOT.comp_irr(irr)) all_comp=.false.
-  ENDDO
-  all_comp = all_comp.OR.lgamma_gamma
-  all_done = .FALSE.
   npertx = 0
-  done_irr = .FALSE.
   DO irr = 1, nirr
      npertx = max (npertx, npert (irr) )
   ENDDO
