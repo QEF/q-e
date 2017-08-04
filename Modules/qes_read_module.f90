@@ -6898,20 +6898,20 @@ MODULE qes_read_module
     !
     !
     !
-    tmp_node_list => getElementsByTagname(xml_node, "polarization")
+    tmp_node_list => getElementsByTagname(xml_node, "totalPolarization")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size /= 1) THEN
         IF (PRESENT(ierr) ) THEN 
-           CALL infomsg("qes_read:BerryPhaseOutputType","polarization: wrong number of occurrences")
+           CALL infomsg("qes_read:BerryPhaseOutputType","totalPolarization: wrong number of occurrences")
            ierr = ierr + 1 
         ELSE 
-           CALL errore("qes_read:BerryPhaseOutputType","polarization: wrong number of occurrences",10)
+           CALL errore("qes_read:BerryPhaseOutputType","totalPolarization: wrong number of occurrences",10)
         END IF
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL qes_read_polarization(tmp_node, obj%polarization, ierr )
+    CALL qes_read_polarization(tmp_node, obj%totalPolarization, ierr )
     !
     tmp_node_list => getElementsByTagname(xml_node, "totalPhase")
     tmp_node_list_size = getLength(tmp_node_list)

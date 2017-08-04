@@ -1085,7 +1085,7 @@ MODULE qes_types_module
     LOGICAL  :: lwrite = .FALSE.
     LOGICAL  :: lread  = .FALSE.
     !
-    TYPE(polarization_type) :: polarization
+    TYPE(polarization_type) :: totalPolarization
     TYPE(phase_type) :: totalPhase
     TYPE(ionicPolarization_type), DIMENSION(:), ALLOCATABLE :: ionicPolarization
     INTEGER   :: ndim_ionicPolarization

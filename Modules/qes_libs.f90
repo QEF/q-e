@@ -5507,7 +5507,7 @@ SUBROUTINE qes_write_BerryPhaseOutput(xp, obj)
 
    CALL xml_NewElement(xp, TRIM(obj%tagname))
       !
-      CALL qes_write_polarization(xp, obj%polarization)
+      CALL qes_write_polarization(xp, obj%totalPolarization)
       !
       CALL qes_write_phase(xp, obj%totalPhase)
       !
@@ -5523,7 +5523,7 @@ SUBROUTINE qes_write_BerryPhaseOutput(xp, obj)
    !
 END SUBROUTINE qes_write_BerryPhaseOutput
 
-SUBROUTINE qes_init_BerryPhaseOutput(obj, tagname, polarization, totalPhase, &
+SUBROUTINE qes_init_BerryPhaseOutput(obj, tagname, totalPolarization, totalPhase, &
                               ndim_ionicPolarization, ionicPolarization, &
                               ndim_electronicPolarization, electronicPolarization)
    IMPLICIT NONE
@@ -5531,7 +5531,7 @@ SUBROUTINE qes_init_BerryPhaseOutput(obj, tagname, polarization, totalPhase, &
    TYPE(BerryPhaseOutput_type) :: obj
    CHARACTER(len=*) :: tagname
    INTEGER  :: i
-   TYPE(polarization_type) :: polarization
+   TYPE(polarization_type) :: totalPolarization
    TYPE(phase_type) :: totalPhase
    INTEGER  :: ndim_ionicPolarization
    TYPE(ionicPolarization_type ), DIMENSION( ndim_ionicPolarization )  :: ionicPolarization
@@ -5541,7 +5541,7 @@ SUBROUTINE qes_init_BerryPhaseOutput(obj, tagname, polarization, totalPhase, &
    obj%tagname = TRIM(tagname)
    obj%lwrite   = .TRUE.
    obj%lread    = .TRUE.
-   obj%polarization = polarization
+   obj%totalPolarization = totalPolarization
    obj%totalPhase = totalPhase
    ALLOCATE(obj%ionicPolarization(SIZE(ionicPolarization)))
    DO i = 1, SIZE(ionicPolarization)
@@ -5564,7 +5564,7 @@ SUBROUTINE qes_reset_BerryPhaseOutput(obj)
    obj%tagname = ""
    obj%lwrite  = .FALSE.
 
-   CALL qes_reset_polarization(obj%polarization)
+   CALL qes_reset_polarization(obj%totalPolarization)
    CALL qes_reset_phase(obj%totalPhase)
    DO i = 1, SIZE(obj%ionicPolarization)
       CALL qes_reset_ionicPolarization(obj%ionicPolarization(i))

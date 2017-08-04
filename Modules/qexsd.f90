@@ -1412,7 +1412,7 @@ CONTAINS
     ! 
     CALL qes_init_scalarQuantity ( pol_val, "polarization", Units="e/bohr^2", scalarQuantity=(rmod/omega)*pdl_tot )
     !
-    CALL qes_init_polarization(tot_pol_obj, "polarization", pol_val, modulus = (rmod/omega)*dble(mod_tot), &
+    CALL qes_init_polarization(tot_pol_obj, "totalPolarization", pol_val, modulus = (rmod/omega)*dble(mod_tot), &
                                direction = upol )  
     ! 
     CALL qes_init_berryPhaseOutput( obj, TAGNAME, tot_pol_obj, tot_phase, nat, ion_pol_obj, nstring, str_pol_obj )
