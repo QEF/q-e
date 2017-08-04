@@ -35,7 +35,7 @@
 
         PUBLIC :: fft_type_descriptor
         PUBLIC :: gather_grid, scatter_grid
-        PUBLIC :: fft_scatter_xy, fft_scatter_yz, fft_scatter_tg
+        PUBLIC :: fft_scatter_xy, fft_scatter_yz, fft_scatter_tg, fft_scatter_tg_opt
         PUBLIC :: cgather_sym, cgather_sym_many, cscatter_sym_many
 
 !=----------------------------------------------------------------------=!
@@ -408,9 +408,10 @@ SUBROUTINE fft_scatter_yz ( desc, f_in, f_aux, nxx_, isgn )
            DO i = 1, ncp_( ip ) ! was ncp_(iproc3)
               mc = desc%ismap( i + ioff ) ! this is  m1+(m2-1)*nr1x  of the  current pencil
               m1 = mod (mc-1,desc%nr1x) + 1 ; m2 = (mc-1)/desc%nr1x + 1 
-              i1 = ir1p_(m1) ; if (i1==0) call fftx_error__ ('fft_scatter', 'ir1p error !', 1 )
+              i1 = m2 + ( ir1p_(m1) - 1 ) * desc%nr2x 
               DO k = 1, desc%my_nr3p
-                 f_aux( m2 + ( i1 - 1 ) * desc%nr2x + ( k - 1 ) * desc%nr2x*my_nr1p_ ) = f_in( k + it )
+                 f_aux( i1 ) = f_in( k + it )
+                 i1 = i1 + desc%nr2x*my_nr1p_
               ENDDO
               it = it + nr3px
            ENDDO
@@ -434,9 +435,10 @@ SUBROUTINE fft_scatter_yz ( desc, f_in, f_aux, nxx_, isgn )
            DO i = 1, ncp_( ip )
               mc = desc%ismap( i + ioff ) ! this is  m1+(m2-1)*nr1x  of the  current pencil
               m1 = mod (mc-1,desc%nr1x) + 1 ; m2 = (mc-1)/desc%nr1x + 1 
-              i1 = ir1p_(m1) ; if (i1==0) call fftx_error__ ('fft_scatter', 'ir1p error !', 1 )
+              i1 = m2 + ( ir1p_(m1) - 1 ) * desc%nr2x 
               DO k = 1, desc%my_nr3p
-                 f_in( k + it ) = f_aux( m2 + ( i1 - 1 ) * desc%nr2x + ( k - 1 ) * desc%nr2x*my_nr1p_)
+                 f_in( k + it ) = f_aux( i1 )
+                 i1 = i1 + desc%nr2x * my_nr1p_
               ENDDO
               it = it + nr3px
            ENDDO
@@ -450,7 +452,9 @@ SUBROUTINE fft_scatter_yz ( desc, f_in, f_aux, nxx_, isgn )
      !f_aux = (11110.0_DP, 11110.0_DP) !
      !write(6,*) ' f_in just before A2A'
      !write(6,99) f_in ; write(6,*); FLUSH (6) ! not needed, will be printed outside
+
      CALL mpi_alltoall (f_in(1), sendsize, MPI_DOUBLE_COMPLEX, f_aux(1), sendsize, MPI_DOUBLE_COMPLEX, desc%comm3, ierr)
+
      !write (6,*) '--- A2A '
      !write(6,*) ' f_aux just before A2A'
      !write(6,99) f_aux ; write(6,*); FLUSH (6) ! not needed, will be printed outside
@@ -546,6 +550,55 @@ SUBROUTINE fft_scatter_tg ( desc, f_in, f_aux, nxx_, isgn )
 99 format ( 20 ('(',2f12.9,')') )
 
 END SUBROUTINE fft_scatter_tg
+!
+!-----------------------------------------------------------------------
+SUBROUTINE fft_scatter_tg_opt ( desc, f_in, f_out, nxx_, isgn )
+  !-----------------------------------------------------------------------
+  !
+  ! task group wavefunction redistribution
+  !
+  ! a) (isgn >0 ) From many-wfc partial-plane arrangement to single-wfc whole-plane one
+  !
+  ! b) (isgn <0 ) From single-wfc whole-plane arrangement to many-wfc partial-plane one
+  !
+  ! in both cases:
+  !    f_in  contains the input data
+  !    f_out contains the output data
+  !
+  IMPLICIT NONE
+
+  TYPE (fft_type_descriptor), INTENT(in) :: desc
+  INTEGER, INTENT(in)           :: nxx_, isgn
+  COMPLEX (DP), INTENT(inout)   :: f_in (nxx_), f_out (nxx_)
+
+  INTEGER :: ierr
+
+  CALL start_clock ('fft_scatt_tg')
+
+  if ( abs (isgn) /= 3 ) call fftx_error__ ('fft_scatter_tg', 'wrong call', 1 )
+
+#if defined(__MPI)
+  !
+  if ( isgn > 0 ) then
+
+     CALL MPI_ALLTOALLV( f_in,  desc%tg_snd, desc%tg_sdsp, MPI_DOUBLE_COMPLEX, &
+                         f_out, desc%tg_rcv, desc%tg_rdsp, MPI_DOUBLE_COMPLEX, desc%comm2, ierr)
+     IF( ierr /= 0 ) CALL fftx_error__( 'fft_scatter_tg', ' alltoall error 1 ', abs(ierr) )
+
+  else
+
+     CALL MPI_ALLTOALLV( f_in,  desc%tg_rcv, desc%tg_rdsp, MPI_DOUBLE_COMPLEX, &
+                         f_out, desc%tg_snd, desc%tg_sdsp, MPI_DOUBLE_COMPLEX, desc%comm2, ierr)
+     IF( ierr /= 0 ) CALL fftx_error__( 'fft_scatter_tg', ' alltoall error 2 ', abs(ierr) )
+   end if
+
+#endif
+  CALL stop_clock ('fft_scatt_tg')
+
+  RETURN
+99 format ( 20 ('(',2f12.9,')') )
+
+END SUBROUTINE fft_scatter_tg_opt
 
 #else
 !

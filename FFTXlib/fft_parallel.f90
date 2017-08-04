@@ -60,6 +60,7 @@ SUBROUTINE tg_cft3s( f, dfft, isgn )
   !
   USE fft_scalar, ONLY : cft_1z
   USE scatter_mod,ONLY : fft_scatter_xy, fft_scatter_yz, fft_scatter_tg
+  USE scatter_mod,ONLY : fft_scatter_tg_opt
   USE fft_types,  ONLY : fft_type_descriptor
   !
   IMPLICIT NONE
@@ -96,68 +97,36 @@ SUBROUTINE tg_cft3s( f, dfft, isgn )
   else
      CALL fftx_error__( ' tg_cft3s', ' wrong value of isgn ', 10+abs(isgn) )
   end if
-  ALLOCATE( aux( nnr_ ) ) !;  aux = (0.d0,0.d0)
+  ALLOCATE( aux( nnr_ ) ) 
   !
-
-  !write (6,99) f(1:400); write(6,*); FLUSH(6)
   IF ( isgn > 0 ) THEN  ! G -> R
-  !write (6,*) 'enter scatter_tg' ; write(6,*); FLUSH(6)
-     if (isgn==+3) call fft_scatter_tg ( dfft, f, aux, nnr_, isgn)
-  !write (6,99) f(1:860); write(6,*); FLUSH(6)
-     !
-  !write (6,*) 'enter cft_1z' ; write(6,*); FLUSH(6)
-     CALL cft_1z( f, nsticks_z, n3, nx3, isgn, aux )
-  !write (6,99) aux(1:860); write(6,*); FLUSH(6)
-     !
-  !write (6,*) 'enter scatter_yz' ; write(6,*); FLUSH(6)
-     CALL fft_scatter_yz ( dfft, aux, f, nnr_, isgn )
-  !write (6,99) f(1:400); write(6,*); FLUSH(6)
-     !
-  !write (6,*) 'enter cft_1y' ; write(6,*); FLUSH(6)
-     CALL cft_1z( f, nsticks_y, n2, nx2, isgn, aux )
-  !write (6,99) aux(1:400); write(6,*); FLUSH(6)
-     !
-  !write (6,*) 'enter scatter_xy' ; write(6,*); FLUSH(6)
-     CALL fft_scatter_xy ( dfft, aux, f, nnr_, isgn )
-  !write (6,*) 'f after  scatter_xy' ; write(6,*); FLUSH(6)
-  !write (6,99) f(1:400); write(6,*); FLUSH(6)
-     !
-  !write (6,*) 'enter cft_1x' ; write(6,*); FLUSH(6)
-     CALL cft_1z( f, nsticks_x, n1, nx1, isgn, aux )
-  !write (6,*) 'aux after  cft_1x' ; write(6,*); FLUSH(6)
-  !write (6,99) aux(1:400); write(6,*); FLUSH(6)
+     if (isgn==+3) then 
+        call fft_scatter_tg_opt ( dfft, f, aux, nnr_, isgn)
+     else
+        aux(1:nnr_)=f(1:nnr_) ! not limiting the range to dfft%nnr may crash when size(f)>size(aux)
+     endif
+     CALL cft_1z( aux, nsticks_z, n3, nx3, isgn, f )
+     CALL fft_scatter_yz ( dfft, f, aux, nnr_, isgn )
+     CALL cft_1z( aux, nsticks_y, n2, nx2, isgn, f )
+     CALL fft_scatter_xy ( dfft, f, aux, nnr_, isgn )
+     CALL cft_1z( aux, nsticks_x, n1, nx1, isgn, f )
      ! clean garbage beyond the intended dimension. should not be needed but apparently it is !
-     if (nsticks_x*nx1 < nnr_) aux(nsticks_x*nx1+1:nnr_) = (0.0_DP,0.0_DP)
-     !write (6,*) size(f), size(aux),nsticks_x*nx1,dfft%nnr ; FLUSH(6)
-     f(1:nnr_)=aux(1:nnr_) ! not limiting the range to dfft%nnr may crash when size(f)>size(aux)
+     if (nsticks_x*nx1 < nnr_) f(nsticks_x*nx1+1:nnr_) = (0.0_DP,0.0_DP)
      !
   ELSE                  ! R -> G
      !
-  !write (6,*) 'enter cft_1x' ; write(6,*); FLUSH(6)
      CALL cft_1z( f, nsticks_x, n1, nx1, isgn, aux )
-  !write (6,99) aux(1:400); write(6,*); FLUSH(6)
-     !
-  !write (6,*) 'enter scatter_xy' ; write(6,*); FLUSH(6)
      CALL fft_scatter_xy ( dfft, f, aux, nnr_, isgn )
-  !write (6,99) f(1:400); write(6,*); FLUSH(6)
-     !
-  !write (6,*) 'enter cft_1y' ; write(6,*); FLUSH(6)
      CALL cft_1z( f, nsticks_y, n2, nx2, isgn, aux )
-  !write (6,99) aux(1:400); write(6,*); FLUSH(6)
-     !
-  !write (6,*) 'enter scatter_yz' ; write(6,*); FLUSH(6)
      CALL fft_scatter_yz ( dfft, f, aux, nnr_, isgn )
-  !write (6,*) 'f after  scatter_yz' ; write(6,*); FLUSH(6)
-  !write (6,99) f(1:400); write(6,*); FLUSH(6)
-     !
-  !write (6,*) 'enter cft_1z' ; write(6,*); FLUSH(6)
      CALL cft_1z( f, nsticks_z, n3, nx3, isgn, aux )
      ! clean garbage beyond the intended dimension. should not be needed but apparently it is !
      if (nsticks_z*nx3 < nnr_) aux(nsticks_z*nx3+1:nnr_) = (0.0_DP,0.0_DP)
-     f(1:nnr_)=aux(1:nnr_) ! not limiting the range to dfft%nnr may crash when size(f)>size(aux)
-     !
-  !write (6,*) 'enter scatter_tg' ; write(6,*); FLUSH(6)
-     if (isgn==-3) call fft_scatter_tg ( dfft, f, aux, nnr_, isgn)
+     if (isgn==-3) then 
+        call fft_scatter_tg_opt ( dfft, aux, f, nnr_, isgn)
+     else
+        f(1:nnr_)=aux(1:nnr_) ! not limiting the range to dfft%nnr may crash when size(f)>size(aux)
+     endif
   ENDIF
   !write (6,99) f(1:400); write(6,*); FLUSH(6)
   !
