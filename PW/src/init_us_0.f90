@@ -322,7 +322,7 @@ subroutine init_us_0
               ijv = mb * (mb-1) / 2 + nb;  lnb = upf(nt)%lll(nb) ; lmb = upf(nt)%lll(mb)
               do l = 0, upf(nt)%nqlc -1
                   if ( (l>=abs(lnb-lmb)) .and. (l<=lnb+lmb) .and. (mod(l+lnb+lmb,2)==0) ) then
-                     upf(nt)%qfuncl(1:upf(nt)%kkbeta,ijv,l) = qrad_r(1:upf(nt)%kkbeta,ijv,l+1) 
+                     upf(nt)%qfuncl(1:upf(nt)%kkbeta,ijv,l) = qrad_rs(1:upf(nt)%kkbeta,ijv,l+1) 
                   end if
               enddo
            enddo ! mb
