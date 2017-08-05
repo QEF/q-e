@@ -58,7 +58,7 @@ MODULE fft_types
     !
     ! FFT distributed data dimensions and indices
     !
-    INTEGER :: my_nr3p = 0 ! size of the "Z" section for this processor = np3p( mype3 + 1 )    ~ nr3/nproc3
+    INTEGER :: my_nr3p = 0 ! size of the "Z" section for this processor = nr3p( mype3 + 1 )    ~ nr3/nproc3
     INTEGER :: my_nr2p = 0 ! size of the "Y" section for this processor = nr2p( mype2 + 1 )    ~ nr2/nproc2
 
     INTEGER :: my_i0r3p = 0 ! offset of the first "Z" element of this proc in the nproc3 group = i0r3p( mype3 + 1 )
