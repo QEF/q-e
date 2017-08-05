@@ -20,6 +20,14 @@ MODULE qes_libs_module
    !
    PRIVATE :: attr, fmtstr
 !
+INTERFACE qes_init_matrix
+   MODULE PROCEDURE  qes_init_matrix_1, qes_init_matrix_2, qes_init_matrix_3
+END INTERFACE
+
+INTERFACE qes_init_integerMatrix
+  MODULE PROCEDURE  qes_init_integerMatrix_1, qes_init_integerMatrix_2, qes_init_integerMatrix_3
+END INTERFACE
+ 
 CONTAINS
 !
 
@@ -1322,7 +1330,7 @@ SUBROUTINE qes_write_matrix(xp, obj)
    !
 END SUBROUTINE qes_write_matrix
 
-SUBROUTINE qes_init_matrix(obj, tagname, dims, mat, order)
+SUBROUTINE qes_init_matrix_1(obj, tagname, dims, mat, order)
    IMPLICIT NONE
 
    TYPE(matrix_type),        INTENT(OUT)   :: obj
@@ -1349,7 +1357,59 @@ SUBROUTINE qes_init_matrix(obj, tagname, dims, mat, order)
    ELSE 
       obj%order = 'F'
    END IF
-END SUBROUTINE qes_init_matrix
+END SUBROUTINE qes_init_matrix_1
+
+SUBROUTINE qes_init_matrix_2(obj, tagname, dims, mat)
+   IMPLICIT NONE
+
+   TYPE(matrix_type),        INTENT(OUT)   :: obj
+   CHARACTER(len=*),         INTENT(IN)    :: tagname
+   INTEGER,DIMENSION(:),     INTENT(IN)    :: dims
+   REAL(DP), DIMENSION(:,:),   INTENT(IN)    :: mat
+   INTEGER  :: i, rank, length
+
+   obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
+   rank = size(dims) 
+   length = 1
+   DO i =1, rank
+      length=length*dims(i)
+   END DO
+   ALLOCATE(obj%matrix(length), obj%dims(rank) )
+   obj%matrix(1:length) = reshape(mat,[length]) 
+   obj%dims = dims
+   obj%rank = rank
+   !
+   obj%order = 'F'
+END SUBROUTINE qes_init_matrix_2
+
+SUBROUTINE qes_init_matrix_3(obj, tagname, dims, mat )
+   IMPLICIT NONE
+
+   TYPE(matrix_type),        INTENT(OUT)   :: obj
+   CHARACTER(len=*),         INTENT(IN)    :: tagname
+   INTEGER,DIMENSION(:),     INTENT(IN)    :: dims
+   REAL(DP), DIMENSION(:,:,:),   INTENT(IN)    :: mat
+   INTEGER  :: i, rank, length
+
+   obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
+   rank = size(dims) 
+   length = 1
+   DO i =1, rank
+      length=length*dims(i)
+   END DO
+   ALLOCATE(obj%matrix(length), obj%dims(rank) )
+   obj%matrix(1:length) = reshape(mat,[length]) 
+   obj%dims = dims
+   obj%rank = rank
+   !
+   obj%order = 'F'
+END SUBROUTINE qes_init_matrix_3
+
+
 
 SUBROUTINE qes_reset_matrix(obj)
    IMPLICIT NONE
@@ -1393,7 +1453,7 @@ SUBROUTINE qes_write_integerMatrix(xp, obj)
    !
 END SUBROUTINE qes_write_integerMatrix
 
-SUBROUTINE qes_init_integerMatrix(obj, tagname, dims, int_mat, order )
+SUBROUTINE qes_init_integerMatrix_1(obj, tagname, dims, int_mat, order )
    IMPLICIT NONE
 
    TYPE(integerMatrix_type),INTENT(OUT):: obj
@@ -1422,7 +1482,63 @@ SUBROUTINE qes_init_integerMatrix(obj, tagname, dims, int_mat, order )
       obj%order = 'F'
    END IF
 
-END SUBROUTINE qes_init_integerMatrix
+END SUBROUTINE qes_init_integerMatrix_1
+
+SUBROUTINE qes_init_integerMatrix_2(obj, tagname, dims, int_mat)
+   IMPLICIT NONE
+
+   TYPE(integerMatrix_type),INTENT(OUT):: obj
+   CHARACTER(len=*),        INTENT(IN) :: tagname
+   INTEGER,DIMENSION(:),    INTENT(IN) :: dims
+   INTEGER,DIMENSION(:,:),    INTENT(IN) :: int_mat
+   INTEGER  :: i,rank, length
+  
+
+   obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
+   rank = size(dims)
+   length =1 
+   DO i =1, rank
+      length = length*dims(i)
+   END DO
+   ALLOCATE(obj%integerMatrix(length), obj%dims(rank) )
+   obj%integerMatrix(1:length) = reshape(int_mat, [length])
+   obj%rank           = rank
+   obj%dims           = dims
+   !
+   obj%order = 'F'
+   !
+END SUBROUTINE qes_init_integerMatrix_2
+
+SUBROUTINE qes_init_integerMatrix_3(obj, tagname, dims, int_mat )
+   IMPLICIT NONE
+
+   TYPE(integerMatrix_type),INTENT(OUT):: obj
+   CHARACTER(len=*),        INTENT(IN) :: tagname
+   INTEGER,DIMENSION(:),    INTENT(IN) :: dims
+   INTEGER,DIMENSION(:,:,:),    INTENT(IN) :: int_mat
+   INTEGER  :: i,rank, length
+  
+
+   obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
+   rank = size(dims)
+   length =1 
+   DO i =1, rank
+      length = length*dims(i)
+   END DO
+   ALLOCATE(obj%integerMatrix(length), obj%dims(rank) )
+   obj%integerMatrix(1:length) = reshape(int_mat, [length])
+   obj%rank           = rank
+   obj%dims           = dims
+   !
+   obj%order = 'F'
+   !
+END SUBROUTINE qes_init_integerMatrix_3
+
+
 
 SUBROUTINE qes_reset_integerMatrix(obj)
    IMPLICIT NONE

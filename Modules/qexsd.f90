@@ -533,7 +533,7 @@ CONTAINS
                              INFO= TRIM(la_info) )
           !
           mat_ = real(s(:,:,i),DP)
-          CALL qes_init_matrix(matrix, "rotation", DIMS=[3,3], mat=mat_(:,1) )
+          CALL qes_init_matrix(matrix, "rotation", DIMS=[3,3], mat=mat_ )
           !
           IF ( i .LE. nsym ) THEN 
              CALL qes_init_equivalent_atoms(equiv_atm, "equivalent_atoms", nat=nat, index_list=irt(i,1:nat)  )
@@ -1154,7 +1154,7 @@ CONTAINS
     ALLOCATE (forces_aux(3,nat))
     forces_aux(1:3,1:nat)=forces(1:3,1:nat)/e2
     !
-    CALL qes_init_matrix(obj,TAGNAME,[3,nat],forces_aux(:,1) )
+    CALL qes_init_matrix(obj,TAGNAME,[3,nat],forces_aux )
     !
     DEALLOCATE (forces_aux)
     !
@@ -1181,7 +1181,7 @@ CONTAINS
     END IF
     ! 
     stress_aux=stress/e2
-    CALL qes_init_matrix(obj,TAGNAME,[3,3],stress_aux(:,1) )
+    CALL qes_init_matrix(obj,TAGNAME,[3,3],stress_aux )
     ! 
     END SUBROUTINE qexsd_init_stress
     !
@@ -1319,11 +1319,11 @@ CONTAINS
     step_obj%total_energy=tot_en_obj
     CALL qes_reset_total_energy( tot_en_obj )
     ! 
-    CALL  qes_init_matrix( mat_forces, "forces", [3, nat], forces(:,1) ) 
+    CALL  qes_init_matrix( mat_forces, "forces", [3, nat], forces ) 
     step_obj%forces=mat_forces
     CALL qes_reset_matrix ( mat_forces )
     ! 
-    CALL qes_init_matrix( mat_stress, "stress", [3, 3], stress(:,1) ) 
+    CALL qes_init_matrix( mat_stress, "stress", [3, 3], stress ) 
     step_obj%stress = mat_stress
     CALL qes_reset_matrix ( mat_stress ) 
     IF ( PRESENT ( fcp_force ) ) THEN 

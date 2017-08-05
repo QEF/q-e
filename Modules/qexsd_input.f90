@@ -450,7 +450,7 @@ MODULE qexsd_input
       isotropic=.TRUE.
       isotropic_ispresent=.TRUE.  
    END IF
-   IF (free_cell_ispresent) CALL  qes_init_integerMatrix(free_cell_obj,"free_cell",[3,3],my_forceh (:,1) )
+   IF (free_cell_ispresent) CALL  qes_init_integerMatrix(free_cell_obj,"free_cell",[3,3],my_forceh )
    !
    CALL qes_init_cell_control(obj,TAGNAME, PRESSURE = pressure, CELL_DYNAMICS=cell_dynamics, WMASS_ISPRESENT=.TRUE.,&
                               WMASS=wmass, CELL_FACTOR_ISPRESENT=.TRUE., CELL_FACTOR=cell_factor,&
@@ -541,7 +541,7 @@ MODULE qexsd_input
    ! 
    CHARACTER(LEN=*),PARAMETER                  :: TAGNAME="external_atomic_forces"
    !
-   CALL qes_init_matrix(obj,TAGNAME,[3,nat],mat=extfor(:,1) )
+   CALL qes_init_matrix(obj,TAGNAME,[3,nat],mat=extfor )
    END SUBROUTINE qexsd_init_external_atomic_forces
    !
    !     
@@ -557,7 +557,7 @@ MODULE qexsd_input
    CHARACTER(LEN=*),PARAMETER           :: TAGNAME = "free_positions" 
    REAL(DP),DIMENSION(:,:),ALLOCATABLE  :: free_positions
    ! 
-   CALL qes_init_integerMatrix(obj,TAGNAME,[3,nat], int_mat=if_pos(:,1))
+   CALL qes_init_integerMatrix(obj,TAGNAME,[3,nat], int_mat=if_pos )
    END SUBROUTINE qexsd_init_free_positions
    ! 
    !----------------------------------------------------------------------------------
@@ -577,7 +577,7 @@ MODULE qexsd_input
       xdim=3
       ydim=nat
    END IF
-   CALL qes_init_matrix(obj,TAGNAME,[xdim,ydim],rd_vel(:,1) )
+   CALL qes_init_matrix(obj,TAGNAME,[xdim,ydim],rd_vel )
    END SUBROUTINE qexsd_init_starting_atomic_velocities
    ! 
    !-------------------------------------------------------------------------------------
