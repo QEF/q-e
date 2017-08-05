@@ -488,8 +488,10 @@ SUBROUTINE check_initial_status(auxdyn)
    USE io_files,  ONLY : tmp_dir, prefix
    USE control_ph, ONLY : tmp_dir_ph
    USE save_ph,   ONLY : tmp_dir_save
-   USE disp,      ONLY : nqs
+   USE disp,      ONLY : nqs, lgamma_iq
    USE grid_irr_iq,  ONLY : comp_irr_iq, irr_iq
+   USE control_ph,  ONLY : ldisp, epsil, zue, zeu
+   USE klist,       ONLY : lgauss, ltetra
    USE el_phon,     ONLY : elph
    USE wrappers,  ONLY : f_copy
    USE mp,        ONLY : mp_barrier
@@ -539,6 +541,18 @@ SUBROUTINE check_initial_status(auxdyn)
             ENDIF
          ENDIF
       ENDDO
+      IF ((ldisp.AND..NOT. (lgauss .OR. ltetra)).OR.(epsil.OR.zeu.OR.zue)) THEN
+         IF (lgamma_iq(iq).AND.comp_irr_iq(0,iq).AND.ionode) THEN
+            file_input=TRIM( tmp_dir_ph ) // &
+                      TRIM( prefix ) // '.phsave/tensors.xml'
+
+            file_output=TRIM( tmp_dir_save ) // '/_ph0/' &
+                    // TRIM( prefix ) // '.phsave/tensors.xml'
+
+            INQUIRE (FILE = TRIM(file_input), EXIST = exst)
+            IF (exst) ios = f_copy(file_input, file_output)
+         ENDIF
+      ENDIF
    ENDDO
    RETURN
    END SUBROUTINE collect_grid_files
