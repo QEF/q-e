@@ -92,7 +92,7 @@ SUBROUTINE fft_scatter_xy ( desc, f_in, f_aux, nxx_, isgn )
 #if defined(__MPI)
   !
   INTEGER :: ierr, me2, nproc2, iproc2, ncpx, my_nr2p, nr2px, ip, ip0
-  INTEGER :: i, it, j, k, kfrom, kdest, offset, ioff, mc, m1, m3, i1,  sendsize
+  INTEGER :: i, it, j, k, kfrom, kdest, offset, ioff, mc, m1, m3, i1, icompact, sendsize
   INTEGER, ALLOCATABLE :: ncp_(:), nr1p_(:), indx(:,:)
   !
   
@@ -122,8 +122,12 @@ SUBROUTINE fft_scatter_xy ( desc, f_in, f_aux, nxx_, isgn )
   !
   ! calculate the message size
   !
-  nr2px = MAXVAL ( desc%nr2p )  ! maximum number of Y values to be disributed
-  if ( abs (isgn) == 3 ) nr2px = desc%nr2x ! if it's a task group FFT whole planes are distributed
+  if ( abs (isgn) == 3 ) then
+     nr2px = desc%nr2x ! if it's a task group FFT whole planes are distributed
+  else
+     nr2px = MAXVAL ( desc%nr2p )  ! maximum number of Y values to be disributed
+  end if
+
   ncpx  = MAXVAL ( ncp_ )       ! maximum number of Y columns to be disributed
   
   sendsize = ncpx * nr2px       ! dimension of the scattered chunks (safe value)
@@ -183,8 +187,11 @@ SUBROUTINE fft_scatter_xy ( desc, f_in, f_aux, nxx_, isgn )
         it = ( iproc2 - 1 ) * sendsize
         DO i = 1, ncp_( iproc2 )
            m3 = (i-1)/nr1p_(iproc2)+1 ; i1  = mod(i-1,nr1p_(iproc2))+1 ;  m1 = indx(i1,iproc2)
+           icompact = m1 + (m3-1)*desc%nr1x*my_nr2p
            DO j = 1, my_nr2p
-              f_aux( m1 + (j-1)*desc%nr1x + (m3-1)*desc%nr1x*my_nr2p ) = f_in( j + it )
+              !f_aux( m1 + (j-1)*desc%nr1x + (m3-1)*desc%nr1x*my_nr2p ) = f_in( j + it )
+              f_aux( icompact ) = f_in( j + it )
+              icompact = icompact + desc%nr1x
            ENDDO
            it = it + nr2px
         ENDDO
@@ -205,8 +212,11 @@ SUBROUTINE fft_scatter_xy ( desc, f_in, f_aux, nxx_, isgn )
         it = ( iproc2 - 1 ) * sendsize
         DO i = 1, ncp_( iproc2 )
            m3 = (i-1)/nr1p_(iproc2)+1 ; i1  = mod(i-1,nr1p_(iproc2))+1 ;  m1 = indx(i1,iproc2)
+           icompact = m1 + (m3-1)*desc%nr1x*my_nr2p
            DO j = 1, my_nr2p
-              f_in( j + it ) = f_aux( m1 + (j-1)*desc%nr1x + (m3-1)*desc%nr1x*my_nr2p )
+              !f_in( j + it ) = f_aux( m1 + (j-1)*desc%nr1x + (m3-1)*desc%nr1x*my_nr2p )
+              f_in( j + it ) = f_aux( icompact )
+              icompact = icompact + desc%nr1x
            ENDDO
            it = it + nr2px
         ENDDO
@@ -346,7 +356,9 @@ SUBROUTINE fft_scatter_yz ( desc, f_in, f_aux, nxx_, isgn )
   !
   nr3px = MAXVAL ( desc%nr3p )  ! maximum number of Z values to be exchanged
   ncpx  = MAXVAL ( ncp_ )       ! maximum number of Z columns to be exchanged
-  if (abs(isgn)==3) ncpx = ncpx * desc%nproc2 ! if it's a task group FFT groups of columns are exchanged
+  if (abs(isgn)==3) then
+     ncpx = ncpx * desc%nproc2  ! if it's a task group FFT groups of columns are exchanged
+  end if
   
   sendsize = ncpx * nr3px       ! dimension of the scattered chunks
   !write (6,*) 'nr3px,ncpx,sendsize', nr3px, ncpx, sendsize
