@@ -62,7 +62,7 @@ CONTAINS
     INTEGER, INTENT(IN), OPTIONAL :: what_band_group
     LOGICAL :: do_images
     LOGICAL :: do_diag_in_band
-    INTEGER :: my_comm, num_groups, group_id
+    INTEGER :: my_comm
     INTEGER :: what_band_group_
     LOGICAL :: do_distr_diag_inside_bgrp
     !
@@ -94,26 +94,17 @@ CONTAINS
     do_diag_in_band = .FALSE.
     IF ( PRESENT(diag_in_band_group) ) do_diag_in_band = diag_in_band_group
     !
-    IF( negrp.gt.1 ) THEN
-       ! if using exx groups from mp_exx, revert to the old diag method
-       num_groups = npool_*nimage_
-       group_id = my_pool_id + my_image_id * npool_
+    IF( negrp.gt.1 .or. do_diag_in_band ) THEN
+       ! used to be the default : one diag group per bgrp ! with strict hierarchy: POOL > BAND > DIAG
+       ! if using exx groups from mp_exx still use this diag method
        my_comm = intra_bgrp_comm
-    ELSE IF( do_diag_in_band ) THEN
-       ! used to be one diag group per bgrp
-       ! with strict hierarchy: POOL > BAND > DIAG
-       num_groups = npool_* nimage_ * nband_
-       group_id   = my_bgrp_id + (my_pool_id + my_image_id * npool_ ) * nband_
-       my_comm    = intra_bgrp_comm
     ELSE
-       ! one diag group per pool ( individual k-point level )
+       ! new default: one diag group per pool ( individual k-point level )
        ! with band group and diag group both being children of POOL comm
-       num_groups = npool_* nimage_ 
-       group_id   = my_pool_id + my_image_id * npool_ 
-       my_comm    = intra_pool_comm
+       my_comm = intra_pool_comm
     END IF
     do_distr_diag_inside_bgrp = (negrp.gt.1) .or. do_diag_in_band
-    CALL mp_start_diag  ( ndiag_, my_comm, do_distr_diag_inside_bgrp )
+    CALL mp_start_diag ( ndiag_, my_comm, do_distr_diag_inside_bgrp )
     !
     call set_mpi_comm_4_cg( intra_pool_comm, intra_bgrp_comm, inter_bgrp_comm )
     call set_mpi_comm_4_davidson( intra_pool_comm, intra_bgrp_comm, inter_bgrp_comm )
