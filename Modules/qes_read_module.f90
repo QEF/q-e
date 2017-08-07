@@ -136,7 +136,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL qes_read_xml_format(tmp_node, obj%xml_format, ierr )
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_xml_format(tmp_node, obj%xml_format, ierr )
     !
     tmp_node_list => getElementsByTagname(xml_node, "creator")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -151,7 +152,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL qes_read_creator(tmp_node, obj%creator, ierr )
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_creator(tmp_node, obj%creator, ierr )
     !
     tmp_node_list => getElementsByTagname(xml_node, "created")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -166,7 +168,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL qes_read_created(tmp_node, obj%created, ierr )
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_created(tmp_node, obj%created, ierr )
     !
     tmp_node_list => getElementsByTagname(xml_node, "job")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -181,7 +184,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%job, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%job, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:general_infoType","error reading job")
@@ -228,7 +232,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%nprocs, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%nprocs, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:parallel_infoType","error reading nprocs")
@@ -251,7 +256,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%nthreads, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%nthreads, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:parallel_infoType","error reading nthreads")
@@ -274,7 +280,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%ntasks, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%ntasks, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:parallel_infoType","error reading ntasks")
@@ -297,7 +304,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%nbgrp, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%nbgrp, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:parallel_infoType","error reading nbgrp")
@@ -320,7 +328,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%npool, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%npool, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:parallel_infoType","error reading npool")
@@ -343,7 +352,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%ndiag, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%ndiag, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:parallel_infoType","error reading ndiag")
@@ -390,7 +400,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL qes_read_control_variables(tmp_node, obj%control_variables, ierr )
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_control_variables(tmp_node, obj%control_variables, ierr )
     !
     tmp_node_list => getElementsByTagname(xml_node, "atomic_species")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -405,7 +416,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL qes_read_atomic_species(tmp_node, obj%atomic_species, ierr )
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_atomic_species(tmp_node, obj%atomic_species, ierr )
     !
     tmp_node_list => getElementsByTagname(xml_node, "atomic_structure")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -420,7 +432,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL qes_read_atomic_structure(tmp_node, obj%atomic_structure, ierr )
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_atomic_structure(tmp_node, obj%atomic_structure, ierr )
     !
     tmp_node_list => getElementsByTagname(xml_node, "dft")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -435,7 +448,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL qes_read_dft(tmp_node, obj%dft, ierr )
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_dft(tmp_node, obj%dft, ierr )
     !
     tmp_node_list => getElementsByTagname(xml_node, "spin")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -450,7 +464,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL qes_read_spin(tmp_node, obj%spin, ierr )
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_spin(tmp_node, obj%spin, ierr )
     !
     tmp_node_list => getElementsByTagname(xml_node, "bands")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -465,7 +480,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL qes_read_bands(tmp_node, obj%bands, ierr )
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_bands(tmp_node, obj%bands, ierr )
     !
     tmp_node_list => getElementsByTagname(xml_node, "basis")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -480,7 +496,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL qes_read_basis(tmp_node, obj%basis, ierr )
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_basis(tmp_node, obj%basis, ierr )
     !
     tmp_node_list => getElementsByTagname(xml_node, "electron_control")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -495,7 +512,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL qes_read_electron_control(tmp_node, obj%electron_control, ierr )
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_electron_control(tmp_node, obj%electron_control, ierr )
     !
     tmp_node_list => getElementsByTagname(xml_node, "k_points_IBZ")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -510,7 +528,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL qes_read_k_points_IBZ(tmp_node, obj%k_points_IBZ, ierr )
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_k_points_IBZ(tmp_node, obj%k_points_IBZ, ierr )
     !
     tmp_node_list => getElementsByTagname(xml_node, "ion_control")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -525,7 +544,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL qes_read_ion_control(tmp_node, obj%ion_control, ierr )
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_ion_control(tmp_node, obj%ion_control, ierr )
     !
     tmp_node_list => getElementsByTagname(xml_node, "cell_control")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -540,7 +560,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL qes_read_cell_control(tmp_node, obj%cell_control, ierr )
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_cell_control(tmp_node, obj%cell_control, ierr )
     !
     tmp_node_list => getElementsByTagname(xml_node, "symmetry_flags")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -773,7 +794,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL qes_read_scf_conv(tmp_node, obj%scf_conv, ierr )
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_scf_conv(tmp_node, obj%scf_conv, ierr )
     !
     tmp_node_list => getElementsByTagname(xml_node, "atomic_structure")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -788,7 +810,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL qes_read_atomic_structure(tmp_node, obj%atomic_structure, ierr )
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_atomic_structure(tmp_node, obj%atomic_structure, ierr )
     !
     tmp_node_list => getElementsByTagname(xml_node, "total_energy")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -803,7 +826,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL qes_read_total_energy(tmp_node, obj%total_energy, ierr )
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_total_energy(tmp_node, obj%total_energy, ierr )
     !
     tmp_node_list => getElementsByTagname(xml_node, "forces")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -818,7 +842,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL qes_read_matrix(tmp_node, obj%forces, ierr )
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_matrix(tmp_node, obj%forces, ierr )
     !
     tmp_node_list => getElementsByTagname(xml_node, "stress")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -933,7 +958,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL qes_read_convergence_info(tmp_node, obj%convergence_info, ierr )
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_convergence_info(tmp_node, obj%convergence_info, ierr )
     !
     tmp_node_list => getElementsByTagname(xml_node, "algorithmic_info")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -948,7 +974,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL qes_read_algorithmic_info(tmp_node, obj%algorithmic_info, ierr )
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_algorithmic_info(tmp_node, obj%algorithmic_info, ierr )
     !
     tmp_node_list => getElementsByTagname(xml_node, "atomic_species")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -963,7 +990,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL qes_read_atomic_species(tmp_node, obj%atomic_species, ierr )
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_atomic_species(tmp_node, obj%atomic_species, ierr )
     !
     tmp_node_list => getElementsByTagname(xml_node, "atomic_structure")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -978,7 +1006,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL qes_read_atomic_structure(tmp_node, obj%atomic_structure, ierr )
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_atomic_structure(tmp_node, obj%atomic_structure, ierr )
     !
     tmp_node_list => getElementsByTagname(xml_node, "symmetries")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -1013,7 +1042,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL qes_read_basis_set(tmp_node, obj%basis_set, ierr )
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_basis_set(tmp_node, obj%basis_set, ierr )
     !
     tmp_node_list => getElementsByTagname(xml_node, "dft")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -1028,7 +1058,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL qes_read_dft(tmp_node, obj%dft, ierr )
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_dft(tmp_node, obj%dft, ierr )
     !
     tmp_node_list => getElementsByTagname(xml_node, "magnetization")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -1043,7 +1074,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL qes_read_magnetization(tmp_node, obj%magnetization, ierr )
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_magnetization(tmp_node, obj%magnetization, ierr )
     !
     tmp_node_list => getElementsByTagname(xml_node, "total_energy")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -1058,7 +1090,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL qes_read_total_energy(tmp_node, obj%total_energy, ierr )
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_total_energy(tmp_node, obj%total_energy, ierr )
     !
     tmp_node_list => getElementsByTagname(xml_node, "band_structure")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -1073,7 +1106,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL qes_read_band_structure(tmp_node, obj%band_structure, ierr )
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_band_structure(tmp_node, obj%band_structure, ierr )
     !
     tmp_node_list => getElementsByTagname(xml_node, "forces")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -1228,7 +1262,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%title, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%title, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:control_variablesType","error reading title")
@@ -1251,7 +1286,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%calculation, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%calculation, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:control_variablesType","error reading calculation")
@@ -1274,7 +1310,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%restart_mode, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%restart_mode, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:control_variablesType","error reading restart_mode")
@@ -1297,7 +1334,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%prefix, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%prefix, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:control_variablesType","error reading prefix")
@@ -1320,7 +1358,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%pseudo_dir, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%pseudo_dir, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:control_variablesType","error reading pseudo_dir")
@@ -1343,7 +1382,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%outdir, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%outdir, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:control_variablesType","error reading outdir")
@@ -1366,7 +1406,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%stress, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%stress, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:control_variablesType","error reading stress")
@@ -1389,7 +1430,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%forces, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%forces, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:control_variablesType","error reading forces")
@@ -1412,7 +1454,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%wf_collect, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%wf_collect, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:control_variablesType","error reading wf_collect")
@@ -1435,7 +1478,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%disk_io, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%disk_io, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:control_variablesType","error reading disk_io")
@@ -1458,7 +1502,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%max_seconds, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%max_seconds, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:control_variablesType","error reading max_seconds")
@@ -1509,7 +1554,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%etot_conv_thr, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%etot_conv_thr, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:control_variablesType","error reading etot_conv_thr")
@@ -1532,7 +1578,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%forc_conv_thr, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%forc_conv_thr, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:control_variablesType","error reading forc_conv_thr")
@@ -1555,7 +1602,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%press_conv_thr, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%press_conv_thr, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:control_variablesType","error reading press_conv_thr")
@@ -1578,7 +1626,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%verbosity, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%verbosity, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:control_variablesType","error reading verbosity")
@@ -1601,7 +1650,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%print_every, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%print_every, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:control_variablesType","error reading print_every")
@@ -1913,7 +1963,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%pseudo_file, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%pseudo_file, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:speciesType","error reading pseudo_file")
@@ -2112,7 +2163,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL qes_read_cell(tmp_node, obj%cell, ierr )
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_cell(tmp_node, obj%cell, ierr )
     !
     !
     obj%lwrite = .TRUE.
@@ -2312,7 +2364,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%a1, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%a1, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:cellType","error reading a1")
@@ -2335,7 +2388,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%a2, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%a2, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:cellType","error reading a2")
@@ -2358,7 +2412,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%a3, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%a3, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:cellType","error reading a3")
@@ -2405,7 +2460,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%functional, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%functional, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:dftType","error reading functional")
@@ -2512,7 +2568,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL qes_read_qpoint_grid(tmp_node, obj%qpoint_grid, ierr )
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_qpoint_grid(tmp_node, obj%qpoint_grid, ierr )
     !
     tmp_node_list => getElementsByTagname(xml_node, "ecutfock")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -2527,7 +2584,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%ecutfock, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%ecutfock, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:hybridType","error reading ecutfock")
@@ -2550,7 +2608,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%exx_fraction, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%exx_fraction, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:hybridType","error reading exx_fraction")
@@ -2573,7 +2632,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%screening_parameter, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%screening_parameter, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:hybridType","error reading screening_parameter")
@@ -2596,7 +2656,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%exxdiv_treatment, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%exxdiv_treatment, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:hybridType","error reading exxdiv_treatment")
@@ -2619,7 +2680,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%x_gamma_extrapolation, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%x_gamma_extrapolation, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:hybridType","error reading x_gamma_extrapolation")
@@ -2642,7 +2704,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%ecutvcut, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%ecutvcut, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:hybridType","error reading ecutvcut")
@@ -3229,7 +3292,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%vdw_corr, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%vdw_corr, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:vdWType","error reading vdw_corr")
@@ -3488,7 +3552,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%lsda, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%lsda, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:spinType","error reading lsda")
@@ -3511,7 +3576,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%noncolin, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%noncolin, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:spinType","error reading noncolin")
@@ -3534,7 +3600,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%spinorbit, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%spinorbit, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:spinType","error reading spinorbit")
@@ -3685,7 +3752,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL qes_read_occupations(tmp_node, obj%occupations, ierr )
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_occupations(tmp_node, obj%occupations, ierr )
     !
     tmp_node_list => getElementsByTagname(xml_node, "inputOccupations")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -3850,7 +3918,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%ecutwfc, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%ecutwfc, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:basisType","error reading ecutwfc")
@@ -4013,7 +4082,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%ecutwfc, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%ecutwfc, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:basis_setType","error reading ecutwfc")
@@ -4064,7 +4134,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL qes_read_basisSetItem(tmp_node, obj%fft_grid, ierr )
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_basisSetItem(tmp_node, obj%fft_grid, ierr )
     !
     tmp_node_list => getElementsByTagname(xml_node, "fft_smooth")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -4119,7 +4190,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%ngm, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%ngm, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:basis_setType","error reading ngm")
@@ -4170,7 +4242,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%npwx, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%npwx, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:basis_setType","error reading npwx")
@@ -4193,7 +4266,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL qes_read_reciprocal_lattice(tmp_node, obj%reciprocal_lattice, ierr )
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_reciprocal_lattice(tmp_node, obj%reciprocal_lattice, ierr )
     !
     !
     obj%lwrite = .TRUE.
@@ -4298,7 +4372,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%b1, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%b1, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:reciprocal_latticeType","error reading b1")
@@ -4321,7 +4396,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%b2, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%b2, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:reciprocal_latticeType","error reading b2")
@@ -4344,7 +4420,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%b3, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%b3, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:reciprocal_latticeType","error reading b3")
@@ -4391,7 +4468,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%diagonalization, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%diagonalization, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:electron_controlType","error reading diagonalization")
@@ -4414,7 +4492,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%mixing_mode, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%mixing_mode, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:electron_controlType","error reading mixing_mode")
@@ -4437,7 +4516,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%mixing_beta, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%mixing_beta, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:electron_controlType","error reading mixing_beta")
@@ -4460,7 +4540,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%conv_thr, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%conv_thr, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:electron_controlType","error reading conv_thr")
@@ -4483,7 +4564,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%mixing_ndim, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%mixing_ndim, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:electron_controlType","error reading mixing_ndim")
@@ -4506,7 +4588,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%max_nstep, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%max_nstep, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:electron_controlType","error reading max_nstep")
@@ -4529,7 +4612,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%real_space_q, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%real_space_q, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:electron_controlType","error reading real_space_q")
@@ -4552,7 +4636,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%tq_smoothing, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%tq_smoothing, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:electron_controlType","error reading tq_smoothing")
@@ -4575,7 +4660,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%tbeta_smoothing, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%tbeta_smoothing, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:electron_controlType","error reading tbeta_smoothing")
@@ -4598,7 +4684,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%diago_thr_init, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%diago_thr_init, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:electron_controlType","error reading diago_thr_init")
@@ -4621,7 +4708,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%diago_full_acc, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%diago_full_acc, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:electron_controlType","error reading diago_full_acc")
@@ -4958,7 +5046,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%ion_dynamics, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%ion_dynamics, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:ion_controlType","error reading ion_dynamics")
@@ -5129,7 +5218,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%ndim, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%ndim, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:bfgsType","error reading ndim")
@@ -5152,7 +5242,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%trust_radius_min, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%trust_radius_min, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:bfgsType","error reading trust_radius_min")
@@ -5175,7 +5266,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%trust_radius_max, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%trust_radius_max, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:bfgsType","error reading trust_radius_max")
@@ -5198,7 +5290,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%trust_radius_init, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%trust_radius_init, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:bfgsType","error reading trust_radius_init")
@@ -5221,7 +5314,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%w1, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%w1, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:bfgsType","error reading w1")
@@ -5244,7 +5338,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%w2, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%w2, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:bfgsType","error reading w2")
@@ -5291,7 +5386,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%pot_extrapolation, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%pot_extrapolation, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:mdType","error reading pot_extrapolation")
@@ -5314,7 +5410,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%wfc_extrapolation, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%wfc_extrapolation, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:mdType","error reading wfc_extrapolation")
@@ -5337,7 +5434,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%ion_temperature, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%ion_temperature, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:mdType","error reading ion_temperature")
@@ -5360,7 +5458,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%timestep, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%timestep, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:mdType","error reading timestep")
@@ -5383,7 +5482,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%tempw, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%tempw, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:mdType","error reading tempw")
@@ -5406,7 +5506,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%tolp, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%tolp, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:mdType","error reading tolp")
@@ -5429,7 +5530,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%deltaT, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%deltaT, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:mdType","error reading deltaT")
@@ -5452,7 +5554,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%nraise, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%nraise, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:mdType","error reading nraise")
@@ -5499,7 +5602,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%cell_dynamics, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%cell_dynamics, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:cell_controlType","error reading cell_dynamics")
@@ -5522,7 +5626,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%pressure, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%pressure, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:cell_controlType","error reading pressure")
@@ -5729,7 +5834,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%nosym, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%nosym, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:symmetry_flagsType","error reading nosym")
@@ -5752,7 +5858,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%nosym_evc, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%nosym_evc, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:symmetry_flagsType","error reading nosym_evc")
@@ -5775,7 +5882,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%noinv, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%noinv, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:symmetry_flagsType","error reading noinv")
@@ -5798,7 +5906,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%no_t_rev, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%no_t_rev, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:symmetry_flagsType","error reading no_t_rev")
@@ -5821,7 +5930,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%force_symmorphic, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%force_symmorphic, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:symmetry_flagsType","error reading force_symmorphic")
@@ -5844,7 +5954,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%use_all_frac, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%use_all_frac, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:symmetry_flagsType","error reading use_all_frac")
@@ -5891,7 +6002,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%assume_isolated, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%assume_isolated, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:boundary_conditionsType","error reading assume_isolated")
@@ -6014,7 +6126,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%bc, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%bc, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:esmType","error reading bc")
@@ -6037,7 +6150,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%nfit, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%nfit, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:esmType","error reading nfit")
@@ -6060,7 +6174,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%w, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%w, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:esmType","error reading w")
@@ -6083,7 +6198,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%efield, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%efield, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:esmType","error reading efield")
@@ -6130,7 +6246,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%ecfixed, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%ecfixed, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:ekin_functionalType","error reading ecfixed")
@@ -6153,7 +6270,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%qcutz, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%qcutz, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:ekin_functionalType","error reading qcutz")
@@ -6176,7 +6294,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%q2sigma, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%q2sigma, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:ekin_functionalType","error reading q2sigma")
@@ -6223,7 +6342,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%spin_constraints, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%spin_constraints, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:spin_constraintsType","error reading spin_constraints")
@@ -6246,7 +6366,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%lagrange_multiplier, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%lagrange_multiplier, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:spin_constraintsType","error reading lagrange_multiplier")
@@ -6321,7 +6442,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%electric_potential, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%electric_potential, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:electric_fieldType","error reading electric_potential")
@@ -6592,7 +6714,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%num_of_constraints, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%num_of_constraints, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:atomic_constraintsType","error reading num_of_constraints")
@@ -6615,7 +6738,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%tolerance, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%tolerance, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:atomic_constraintsType","error reading tolerance")
@@ -6681,7 +6805,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%constr_parms, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%constr_parms, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:atomic_constraintType","error reading constr_parms")
@@ -6704,7 +6829,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%constr_type, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%constr_type, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:atomic_constraintType","error reading constr_type")
@@ -6727,7 +6853,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%constr_target, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%constr_target, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:atomic_constraintType","error reading constr_target")
@@ -6918,7 +7045,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL qes_read_polarization(tmp_node, obj%totalPolarization, ierr )
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_polarization(tmp_node, obj%totalPolarization, ierr )
     !
     tmp_node_list => getElementsByTagname(xml_node, "totalPhase")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -6933,7 +7061,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL qes_read_phase(tmp_node, obj%totalPhase, ierr )
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_phase(tmp_node, obj%totalPhase, ierr )
     !
     tmp_node_list => getElementsByTagname(xml_node, "ionicPolarization")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -7010,7 +7139,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%idir, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%idir, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:dipoleOutputType","error reading idir")
@@ -7033,7 +7163,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL qes_read_scalarQuantity(tmp_node, obj%dipole, ierr )
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_scalarQuantity(tmp_node, obj%dipole, ierr )
     !
     tmp_node_list => getElementsByTagname(xml_node, "ion_dipole")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -7048,7 +7179,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL qes_read_scalarQuantity(tmp_node, obj%ion_dipole, ierr )
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_scalarQuantity(tmp_node, obj%ion_dipole, ierr )
     !
     tmp_node_list => getElementsByTagname(xml_node, "elec_dipole")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -7063,7 +7195,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL qes_read_scalarQuantity(tmp_node, obj%elec_dipole, ierr )
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_scalarQuantity(tmp_node, obj%elec_dipole, ierr )
     !
     tmp_node_list => getElementsByTagname(xml_node, "dipoleField")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -7078,7 +7211,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL qes_read_scalarQuantity(tmp_node, obj%dipoleField, ierr )
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_scalarQuantity(tmp_node, obj%dipoleField, ierr )
     !
     tmp_node_list => getElementsByTagname(xml_node, "potentialAmp")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -7093,7 +7227,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL qes_read_scalarQuantity(tmp_node, obj%potentialAmp, ierr )
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_scalarQuantity(tmp_node, obj%potentialAmp, ierr )
     !
     tmp_node_list => getElementsByTagname(xml_node, "totalLength")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -7108,7 +7243,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL qes_read_scalarQuantity(tmp_node, obj%totalLength, ierr )
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_scalarQuantity(tmp_node, obj%totalLength, ierr )
     !
     !
     obj%lwrite = .TRUE.
@@ -7147,7 +7283,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%electronicDipole, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%electronicDipole, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:finiteFieldOutType","error reading electronicDipole")
@@ -7170,7 +7307,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%ionicDipole, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%ionicDipole, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:finiteFieldOutType","error reading ionicDipole")
@@ -7217,7 +7355,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL qes_read_scalarQuantity(tmp_node, obj%polarization, ierr )
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_scalarQuantity(tmp_node, obj%polarization, ierr )
     !
     tmp_node_list => getElementsByTagname(xml_node, "modulus")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -7232,7 +7371,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%modulus, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%modulus, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:polarizationType","error reading modulus")
@@ -7255,7 +7395,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%direction, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%direction, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:polarizationType","error reading direction")
@@ -7302,7 +7443,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL qes_read_atom(tmp_node, obj%ion, ierr )
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_atom(tmp_node, obj%ion, ierr )
     !
     tmp_node_list => getElementsByTagname(xml_node, "charge")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -7317,7 +7459,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%charge, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%charge, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:ionicPolarizationType","error reading charge")
@@ -7340,7 +7483,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL qes_read_phase(tmp_node, obj%phase, ierr )
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_phase(tmp_node, obj%phase, ierr )
     !
     !
     obj%lwrite = .TRUE.
@@ -7379,7 +7523,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL qes_read_k_point(tmp_node, obj%firstKeyPoint, ierr )
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_k_point(tmp_node, obj%firstKeyPoint, ierr )
     !
     tmp_node_list => getElementsByTagname(xml_node, "spin")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -7422,7 +7567,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL qes_read_phase(tmp_node, obj%phase, ierr )
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_phase(tmp_node, obj%phase, ierr )
     !
     !
     obj%lwrite = .TRUE.
@@ -7509,7 +7655,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL qes_read_scf_conv(tmp_node, obj%scf_conv, ierr )
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_scf_conv(tmp_node, obj%scf_conv, ierr )
     !
     tmp_node_list => getElementsByTagname(xml_node, "opt_conv")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -7568,7 +7715,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%n_scf_steps, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%n_scf_steps, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:scf_convType","error reading n_scf_steps")
@@ -7591,7 +7739,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%scf_error, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%scf_error, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:scf_convType","error reading scf_error")
@@ -7638,7 +7787,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%n_opt_steps, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%n_opt_steps, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:opt_convType","error reading n_opt_steps")
@@ -7661,7 +7811,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%grad_norm, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%grad_norm, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:opt_convType","error reading grad_norm")
@@ -7708,7 +7859,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%real_space_q, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%real_space_q, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:algorithmic_infoType","error reading real_space_q")
@@ -7731,7 +7883,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%uspp, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%uspp, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:algorithmic_infoType","error reading uspp")
@@ -7754,7 +7907,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%paw, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%paw, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:algorithmic_infoType","error reading paw")
@@ -7801,7 +7955,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%nsym, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%nsym, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:symmetriesType","error reading nsym")
@@ -7824,7 +7979,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%nrot, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%nrot, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:symmetriesType","error reading nrot")
@@ -7847,7 +8003,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%space_group, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%space_group, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:symmetriesType","error reading space_group")
@@ -7921,7 +8078,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL qes_read_info(tmp_node, obj%info, ierr )
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_info(tmp_node, obj%info, ierr )
     !
     tmp_node_list => getElementsByTagname(xml_node, "rotation")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -7936,7 +8094,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL qes_read_matrix(tmp_node, obj%rotation, ierr )
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_matrix(tmp_node, obj%rotation, ierr )
     !
     tmp_node_list => getElementsByTagname(xml_node, "fractional_translation")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -8118,7 +8277,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%lsda, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%lsda, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:magnetizationType","error reading lsda")
@@ -8141,7 +8301,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%noncolin, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%noncolin, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:magnetizationType","error reading noncolin")
@@ -8164,7 +8325,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%spinorbit, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%spinorbit, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:magnetizationType","error reading spinorbit")
@@ -8187,7 +8349,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%total, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%total, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:magnetizationType","error reading total")
@@ -8210,7 +8373,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%absolute, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%absolute, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:magnetizationType","error reading absolute")
@@ -8233,7 +8397,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%do_magnetization, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%do_magnetization, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:magnetizationType","error reading do_magnetization")
@@ -8280,7 +8445,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%etot, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%etot, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:total_energyType","error reading etot")
@@ -8551,7 +8717,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%lsda, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%lsda, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:band_structureType","error reading lsda")
@@ -8574,7 +8741,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%noncolin, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%noncolin, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:band_structureType","error reading noncolin")
@@ -8597,7 +8765,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%spinorbit, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%spinorbit, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:band_structureType","error reading spinorbit")
@@ -8620,7 +8789,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%nbnd, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%nbnd, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:band_structureType","error reading nbnd")
@@ -8699,7 +8869,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%nelec, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%nelec, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:band_structureType","error reading nelec")
@@ -8750,7 +8921,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%wf_collected, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%wf_collected, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:band_structureType","error reading wf_collected")
@@ -8857,7 +9029,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL qes_read_k_points_IBZ(tmp_node, obj%starting_k_points, ierr )
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_k_points_IBZ(tmp_node, obj%starting_k_points, ierr )
     !
     tmp_node_list => getElementsByTagname(xml_node, "nks")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -8872,7 +9045,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%nks, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%nks, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:band_structureType","error reading nks")
@@ -8895,7 +9069,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL qes_read_occupations(tmp_node, obj%occupations_kind, ierr )
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_occupations(tmp_node, obj%occupations_kind, ierr )
     !
     tmp_node_list => getElementsByTagname(xml_node, "smearing")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -8973,7 +9148,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL qes_read_k_point(tmp_node, obj%k_point, ierr )
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_k_point(tmp_node, obj%k_point, ierr )
     !
     tmp_node_list => getElementsByTagname(xml_node, "npw")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -8988,7 +9164,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL extractDataContent(tmp_node, obj%npw, IOSTAT = iostat_ )
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%npw, IOSTAT = iostat_ )
     IF ( iostat_ /= 0 ) THEN
        IF ( PRESENT (ierr ) ) THEN 
           CALL infomsg("qes_read:ks_energiesType","error reading npw")
@@ -9011,7 +9188,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL qes_read_vector(tmp_node, obj%eigenvalues, ierr )
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_vector(tmp_node, obj%eigenvalues, ierr )
     !
     tmp_node_list => getElementsByTagname(xml_node, "occupations")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -9026,7 +9204,8 @@ MODULE qes_read_module
     END IF
     !
     tmp_node => item(tmp_node_list, 0)
-    CALL qes_read_vector(tmp_node, obj%occupations, ierr )
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_vector(tmp_node, obj%occupations, ierr )
     !
     !
     obj%lwrite = .TRUE.
