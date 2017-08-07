@@ -30,8 +30,9 @@ SUBROUTINE loadkmesh_para
   !
   implicit none
   !
-  real(kind=DP), ALLOCATABLE :: xkf_(:,:), wkf_(:), xkf_tmp(:,:), &
-       wkf_tmp(:)
+  real(kind=DP), ALLOCATABLE :: xkf_(:,:), wkf_(:), xkf_tmp(:,:)
+  REAL(kind=DP), ALLOCATABLE :: wkf_tmp(:)
+  REAL(kind=DP), ALLOCATABLE :: xkfval(:,:)
   integer :: ik, ikk, ikq, lower_bnd, upper_bnd, i, j, k, ios
   !
   !
@@ -84,27 +85,38 @@ SUBROUTINE loadkmesh_para
           DEALLOCATE (xkf_, wkf_)
           ALLOCATE ( xkf_ (3, 2*nkqtotf), wkf_(2*nkqtotf)) 
           ALLOCATE (xkf_tmp (3,nkqtotf), wkf_tmp(nkqtotf))
+          ALLOCATE ( xkfval (3, 2*nkqtotf))   
+          xkf_(:,:) = 0.0d0
+          xkfval(:,:) = 0.0d0
           CALL kpoint_grid ( nrot, time_reversal, .false., s, t_rev, bg, nkf1*nkf2*nkf3, &
                0,0,0, nkf1,nkf2,nkf3, nkqtotf, xkf_tmp, wkf_tmp)
           !  
           ! assign to k and k+q for xkf and wkf 
           ! 
+          ! SP: The variable xkfval is a duplication. However, it allows to avoid some strange 
+          !     memory allocation issue. FIXME
           DO ik = 1, nkqtotf
              ikk = 2 * ik - 1
              ikq = ikk + 1
-             xkf_(:,ikk) = xkf_tmp(:,ik)
-             xkf_(:,ikq) = xkf_tmp(:,ik)
+             xkf_(:,ikk)   = xkf_tmp(:,ik)
+             xkf_(:,ikq)   = xkf_tmp(:,ik)
+             xkfval(:,ikk) = xkf_tmp(:,ik)
+             xkfval(:,ikq) = xkf_tmp(:,ik)
              wkf_(ikk)   = 2.d0 * wkf_tmp(ik)
              wkf_(ikq)   = 0.d0
           ENDDO
           DEALLOCATE (xkf_tmp, wkf_tmp)
           !       
           ! bring the k point to crystal coordinates       
-          CALL cryst_to_cart (2*nkqtotf, xkf_, at, -1)
+          !CALL cryst_to_cart (2*nkqtotf, xkf_, at, -1)
+          CALL cryst_to_cart (2*nkqtotf, xkfval, at, -1)
+          xkf_(:,:) = xkfval(:,:)
           !
           ! redefine nkqtotf to include the k+q points
           !
-          nkqtotf = 2 * nkqtotf
+          nkqtotf = 2 * nkqtotf 
+          ! 
+          DEALLOCATE(xkfval)
           !
        ELSE
           !
