@@ -1,0 +1,79 @@
+--
+&inputepw
+  prefix      = 'si'
+  amass(1)    = 28.0855
+  outdir      = './'
+
+  iverbosity  = 0
+
+  elph        = .true.
+  epbwrite    = .true.
+  epbread     = .false.
+
+  etf_mem     = 1
+
+  prtgkk      = .true.
+
+  epwwrite    = .true.
+  epwread     = .false.
+
+  nbndsub     =  8
+  nbndskip    =  0
+
+  wannierize  = .true.
+  num_iter    = 800
+  iprint      = 2
+  dis_win_max = 8
+  dis_froz_max= 5.5
+  !proj(1)     = 'Si : sp3'
+  proj(1)     = 'random'
+  wdata(1) = 'bands_plot = .true.'
+  wdata(2) = 'begin kpoint_path'
+  wdata(3) = 'L 0.50 0.00 0.00 G 0.00 0.00 0.00'
+  wdata(4) = 'G 0.00 0.00 0.00 X 0.50 0.50 0.00'
+  wdata(5) = 'end kpoint_path'
+  wdata(6) = 'bands_plot_format = gnuplot'
+  wdata(7) = 'guiding_centres = .true.'
+  wdata(8) = 'dis_num_iter      = 300'
+  wdata(9) = 'num_print_cycles  = 10'
+  wdata(10) = 'dis_mix_ratio     = 1.0'
+  wdata(11) = 'use_ws_distance = T'
+
+  elecselfen  = .false.
+  phonselfen  = .false.
+  a2f         = .false.
+
+  parallel_k  = .true.
+  parallel_q  = .false.
+
+  fsthick     = 20 ! eV 
+  eptemp      = 1 ! K 
+  degaussw    = 0.01 ! eV
+
+  dvscf_dir   = './save/'
+
+  nkf1         = 4
+  nkf2         = 4
+  nkf3         = 4
+
+  nqf1         = 4
+  nqf2         = 4
+  nqf3         = 4
+ 
+  nk1         = 4
+  nk2         = 4
+  nk3         = 4
+
+  nq1         = 4
+  nq2         = 4
+  nq3         = 4
+ /
+      8 cartesian
+  0.000000000   0.000000000   0.000000000  1.0
+ -0.250000000   0.250000000  -0.250000000  1.0
+  0.500000000  -0.500000000   0.500000000  1.0
+  0.000000000   0.500000000   0.000000000  1.0
+  0.750000000  -0.250000000   0.750000000  1.0
+  0.500000000   0.000000000   0.500000000  1.0
+  0.000000000  -1.000000000   0.000000000  1.0
+ -0.500000000  -1.000000000   0.000000000  1.0

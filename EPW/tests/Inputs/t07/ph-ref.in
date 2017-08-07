@@ -1,0 +1,10 @@
+---
+ &inputph
+  tr2_ph=1.0d-14,
+  prefix='si',
+  outdir='./',
+  fildyn='si.dyn',
+  fildvscf='dvscf'
+  electron_phonon='simple',
+ /
+0.5 0.5 0.5

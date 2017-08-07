@@ -1,0 +1,12 @@
+--
+&inputph
+  prefix   = 'si',
+  epsil    = .false.,
+  fildyn   = 'si.dyn',
+  ldisp    = .true.
+  fildvscf = 'dvscf'
+  nq1=4,
+  nq2=4,
+  nq3=4,
+  tr2_ph   =  1.0d-14,
+ /

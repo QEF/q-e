@@ -1,0 +1,13 @@
+# This is a test to compare matrix elements produced directly by DFPT inside the PH code
+# and matrix elements interpolated by EPW (S. Ponce and C. Verdi)
+
+1) You need to copy the 3 src file onto PH to print the matrix elements
+cp elphon.f90 phq_readin.f90 do_phonon.f90 symdyn_munu.f90 ../../../../PHonon/PH/
+
+2) When you run ph-ref.in it will produce the data for the second k-points (k=2). 
+You need to run the test in sequential.
+
+3) Run EPW with prtgkk (run in seq. for safety)
+
+You can compare the results.
+
