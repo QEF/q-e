@@ -51,7 +51,7 @@ SUBROUTINE gram_bgrp( betae, bec_bgrp, nkbx, cp_bgrp, ngwx )
             ctmp = 0.0d0
          END IF
          !
-         IF( nbgrp_im1 > 0 ) &
+         IF( nbgrp_im1 > 0 .AND. ngw > 0 ) &
             CALL dgemv( 'N', 2*ngw, nbgrp_im1, mone, cp_bgrp(1,iupdwn_bgrp(iss)), 2*ngwx, csc, 1, one, ctmp, 1 )
 
          CALL mp_sum( ctmp, inter_bgrp_comm )

@@ -56,7 +56,7 @@ SUBROUTINE from_scratch( )
                                      sfac, eigr, taub, irb, eigrb, bec_bgrp, &
                                      lambda, lambdam, lambdap, ema0bg, rhog, rhor, rhos, &
                                      vpot, ht0, edft, becdr_bgrp, dbec, drhor, drhog
-    USE mp_global,            ONLY : np_ortho, me_ortho, ortho_comm, inter_bgrp_comm, nbgrp
+    USE mp_global,            ONLY : np_ortho, me_ortho, ortho_comm, inter_bgrp_comm, nbgrp, me_bgrp
     USE mp,                   ONLY : mp_sum
     USE matrix_inversion
     !

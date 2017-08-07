@@ -99,7 +99,7 @@
 !$omp task default(none) &
 !$omp          firstprivate( idx, i, n, ngw, ci, nogrp_ ) &
 !$omp          private( igoff, ig ) &
-!$omp          shared( c, dffts, dtgs, aux, nlsm, nls )
+!$omp          shared( c, dffts, aux, nlsm, nls )
          !
          !  This loop is executed only ONCE when NOGRP=1.
          !  Equivalent to the case with no task-groups
@@ -285,7 +285,7 @@
 !$omp task default(none)  &
 !$omp          private( fi, fip, fp, fm, ig ) &
 !$omp          firstprivate( eig_offset, igno, idx, nogrp_, ngw, tpiba2, me_bgrp, i, n, tens ) &
-!$omp          shared( f, aux, df, da, c, dffts, dtgs, g2kin, nls, nlsm )
+!$omp          shared( f, aux, df, da, c, dffts, g2kin, nls, nlsm )
 
          IF( idx + i - 1 <= n ) THEN
             if (tens) then
@@ -403,9 +403,10 @@
 !$omp end single
 !$omp end parallel
 
-         CALL dgemm ( 'N', 'N', 2*ngw, nogrp_ , nhsa, 1.0d0, vkb, 2*ngw, af, nhsa, 1.0d0, df, 2*ngw)
-
-         CALL dgemm ( 'N', 'N', 2*ngw, nogrp_ , nhsa, 1.0d0, vkb, 2*ngw, aa, nhsa, 1.0d0, da, 2*ngw)
+         IF( ngw > 0 ) THEN
+           CALL dgemm ( 'N', 'N', 2*ngw, nogrp_ , nhsa, 1.0d0, vkb, 2*ngw, af, nhsa, 1.0d0, df, 2*ngw)
+           CALL dgemm ( 'N', 'N', 2*ngw, nogrp_ , nhsa, 1.0d0, vkb, 2*ngw, aa, nhsa, 1.0d0, da, 2*ngw)
+         END IF
          !
          DEALLOCATE( aa, af )
          !

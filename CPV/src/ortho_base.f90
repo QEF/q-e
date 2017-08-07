@@ -661,8 +661,12 @@ CONTAINS
 
                root = root * leg_ortho
 
-               CALL dgemm( 'T', 'N',  nr, nc, 2*ngw, -2.0d0, cp( 1, ist + ir - 1), 2*ngwx, &
+               IF( ngw > 0 ) THEN 
+                  CALL dgemm( 'T', 'N',  nr, nc, 2*ngw, -2.0d0, cp( 1, ist + ir - 1), 2*ngwx, &
                            cp( 1, ist + ic - 1 ), 2*ngwx, 0.0d0, sigp, nx )
+               ELSE
+                  sigp = 0.0d0
+               END IF
                !
                !     q = 0  components has weight 1.0
                !
@@ -801,8 +805,12 @@ CONTAINS
 
             root = root * leg_ortho
 
-            CALL dgemm( 'T', 'N', nr, nc, 2*ngw, 2.0d0, phi( 1, ist + ir - 1 ), 2*ngwx, &
+            IF( ngw > 0 ) THEN
+              CALL dgemm( 'T', 'N', nr, nc, 2*ngw, 2.0d0, phi( 1, ist + ir - 1 ), 2*ngwx, &
                   cp( 1, ist + ic - 1 ), 2*ngwx, 0.0d0, rhop, nx )
+            ELSE
+              rhop = 0.0d0
+            END IF
             !
             !     q = 0  components has weight 1.0
             !
@@ -942,8 +950,12 @@ CONTAINS
             !  All processors contribute to the tau block of processor (ipr,ipc)
             !  with their own part of wavefunctions
             !
-            CALL dgemm( 'T', 'N', nr, nc, 2*ngw, 2.0d0, phi( 1, ist + ir - 1 ), 2*ngwx, &
+            IF( ngw > 0 ) THEN
+               CALL dgemm( 'T', 'N', nr, nc, 2*ngw, 2.0d0, phi( 1, ist + ir - 1 ), 2*ngwx, &
                         phi( 1, ist + ic - 1 ), 2*ngwx, 0.0d0, taup, nx )
+            ELSE
+               taup = 0.0d0
+            END IF
             !
             !           q = 0  components has weight 1.0
             !
@@ -1146,8 +1158,10 @@ CONTAINS
    
                CALL mp_bcast( xd, root, intra_bgrp_comm )
    
-               CALL dgemm( 'N', 'N', 2*ngw, nbgrp_i, nr, 1.0d0, phi(1,istart+ir-1), 2*ngwx, &
+               IF( ngw > 0 ) THEN
+                  CALL dgemm( 'N', 'N', 2*ngw, nbgrp_i, nr, 1.0d0, phi(1,istart+ir-1), 2*ngwx, &
                            xd(1,i_first), nrcx, 1.0d0, cp_bgrp(1,ibgrp_i_first), 2*ngwx )
+               END IF
    
                IF( nvb > 0 )THEN
    
@@ -1269,8 +1283,12 @@ CONTAINS
             END DO
          END DO
 !
-         CALL dgemm ( 'N', 'N', 2*ngw, nbsp_bgrp, nkbus, 1.0d0, betae, &
+         IF( ngw > 0 ) THEN
+            CALL dgemm ( 'N', 'N', 2*ngw, nbsp_bgrp, nkbus, 1.0d0, betae, &
                        2*ngwx, qtemp, nkbus, 0.0d0, phi_bgrp, 2*ngwx )
+         ELSE
+            phi_bgrp = 0.0d0
+         END IF
 
          DEALLOCATE( qtemp )
 

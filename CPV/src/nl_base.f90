@@ -104,10 +104,14 @@
             !
             IF( nproc_bgrp > 1 ) THEN
                inl=(iv-1)*na(is)+1
-               CALL dgemm( 'T', 'N', na(is), n, 2*ngw, 1.0d0, wrk2, 2*ngw, c, 2*ngw, 0.0d0, becps( inl, 1 ), nhx )
+               IF( ngw > 0 ) THEN
+                  CALL dgemm( 'T', 'N', na(is), n, 2*ngw, 1.0d0, wrk2, 2*ngw, c, 2*ngw, 0.0d0, becps( inl, 1 ), nhx )
+               END IF
             ELSE
                inl=ish(is)+(iv-1)*na(is)+1
-               CALL dgemm( 'T', 'N', na(is), n, 2*ngw, 1.0d0, wrk2, 2*ngw, c, 2*ngw, 0.0d0, becp( inl, 1 ), nkb )
+               IF( ngw > 0 ) THEN
+                  CALL dgemm( 'T', 'N', na(is), n, 2*ngw, 1.0d0, wrk2, 2*ngw, c, 2*ngw, 0.0d0, becp( inl, 1 ), nkb )
+               END IF
             END IF
 
          end do
@@ -231,8 +235,10 @@
 !$omp end do
 !$omp end parallel 
                inl=ish(is)+(iv-1)*na(is)+1
-               CALL dgemm( 'T', 'N', na(is), nbsp_bgrp, 2*ngw, 1.0d0, wrk2, 2*ngw, &
+               IF( ngw > 0 ) THEN
+                  CALL dgemm( 'T', 'N', na(is), nbsp_bgrp, 2*ngw, 1.0d0, wrk2, 2*ngw, &
                            c_bgrp, 2*ngw, 0.0d0, becdr_bgrp( inl, 1, k ), nkb )
+               END IF
             end do
 
             deallocate( wrk2 )
@@ -542,7 +548,10 @@ SUBROUTINE caldbec_bgrp_x( eigr, c_bgrp, dbec, descla )
                  end do
               end do
               inl=(iv-1)*na(is)+1
-              CALL dgemm( 'T', 'N', na(is), nbsp_bgrp, 2*ngw, 1.0d0, wrk2, 2*ngw, c_bgrp, 2*ngw, 0.0d0, dwrk_bgrp(inl,1), nanh )
+              IF( ngw > 0 ) THEN
+                 CALL dgemm( 'T', 'N', na(is), nbsp_bgrp, 2*ngw, 1.0d0, wrk2, 2*ngw, &
+                             c_bgrp, 2*ngw, 0.0d0, dwrk_bgrp(inl,1), nanh )
+              END IF
            end do
            deallocate( wrk2 )
 

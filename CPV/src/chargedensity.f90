@@ -123,6 +123,7 @@
       USE wannier_base,       ONLY: iwf
       USE exx_module,         ONLY: rhopr 
       USE input_parameters,   ONLY: tcpbo ! BS
+      USE scatter_mod,        ONLY: fft_scatter_tg_opt, maps_sticks_to_3d
 #if defined (__OLDXML)
       USE xml_io_base,        ONLY: read_rho, restart_dir
 #else
@@ -514,7 +515,7 @@
       SUBROUTINE loop_over_states
          !
          USE parallel_include
-!         USE fft_scalar, ONLY: cfft3ds
+         USE fft_scalar, ONLY: cfft3ds
 !         USE scatter_mod, ONLY: maps_sticks_to_3d
          !
          !        MAIN LOOP OVER THE EIGENSTATES
@@ -601,8 +602,8 @@
             !  now redistribute data
             !
 !            IF( dffts%nproc2 == dffts%nproc ) THEN
-!               CALL pack_group_sticks( aux, psis )
-!               CALL maps_sticks_to_3d( dffts, psis, SIZE(psis), aux, 2 )
+!               CALL fft_scatter_tg_opt(dffts, aux, psis, SIZE(psis), 3 )
+!               CALL maps_sticks_to_3d( dffts, psis, SIZE(psis), aux, 3 )
 !               CALL cfft3ds( aux, dfft3d%nr1, dfft3d%nr2, dfft3d%nr3, &
 !                             dfft3d%nr1x,dfft3d%nr2x,dfft3d%nr3x, 1, 1, dfft3d%isind, dfft3d%iplw )
 !               psis = aux

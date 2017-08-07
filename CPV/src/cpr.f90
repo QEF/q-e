@@ -1098,7 +1098,9 @@ SUBROUTINE terminate_run()
   CALL print_clock( 'fft' )
   CALL print_clock( 'ffts' )
   CALL print_clock( 'fftw' )
-  CALL print_clock( 'fft_scatter' )
+  CALL print_clock( 'fft_scatt_xy' )
+  CALL print_clock( 'fft_scatt_yz' )
+  CALL print_clock( 'fft_scatt_tg' )
   CALL print_clock( 'betagx' )
   CALL print_clock( 'qradx' )
   CALL print_clock( 'tmp_clk1' )
@@ -1129,8 +1131,6 @@ SUBROUTINE terminate_run()
   END IF
   !
   IF (tcg) call print_clock_tcg()
-  !
-  CALL print_clock( 'ALLTOALL' )
   !
   CALL plugin_clock()
   !
