@@ -123,7 +123,7 @@
       USE wannier_base,       ONLY: iwf
       USE exx_module,         ONLY: rhopr 
       USE input_parameters,   ONLY: tcpbo ! BS
-      USE scatter_mod,        ONLY: fft_scatter_tg_opt, maps_sticks_to_3d
+      ! USE scatter_mod,        ONLY: fft_scatter_tg_opt, maps_sticks_to_3d
 #if defined (__OLDXML)
       USE xml_io_base,        ONLY: read_rho, restart_dir
 #else
