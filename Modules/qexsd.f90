@@ -66,7 +66,9 @@ MODULE qexsd_module
   TYPE (parallel_info_type)        :: parallel_info
   TYPE (berryPhaseOutput_type)     :: qexsd_bp_obj
   TYPE (dipoleOutput_type )        :: qexsd_dipol_obj
-  TYPE (k_points_IBZ_type)         :: qexsd_startk_store_obj 
+  TYPE (k_points_IBZ_type)         :: qexsd_start_k_obj 
+  TYPE (occupations_type)          :: qexsd_occ_obj
+  TYPE (smearing_type)             :: qexsd_smear_obj
   TYPE ( step_type),ALLOCATABLE    :: steps(:)
   INTEGER                          :: exit_status
   TYPE ( closed_type )             :: qexsd_closed_element
@@ -78,7 +80,7 @@ MODULE qexsd_module
   PUBLIC :: qexsd_current_version_init
   PUBLIC :: qexsd_xf  
   !
-  PUBLIC :: qexsd_input_obj
+  PUBLIC :: qexsd_input_obj, qexsd_start_k_obj, qexsd_occ_obj, qexsd_smear_obj
   ! 
   PUBLIC :: qexsd_init_schema,  qexsd_openschema, qexsd_closeschema
   !

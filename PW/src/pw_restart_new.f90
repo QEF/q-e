@@ -1152,7 +1152,14 @@ MODULE pw_restart_new
     IF ( atomic_structure%alat_ispresent ) alat = atomic_structure%alat 
     tau(:,1:nat) = tau(:,1:nat)/alat  
     ! 
-    pseudo_dir_cur = TRIM (dirname)
+    IF ( atomic_species%pseudo_dir_ispresent) THEN 
+       pseudo_dir = TRIM(atomic_species%pseudo_dir)
+       print *, "I have found pseudo dir:"// TRIM(pseudo_dir)
+    ELSE 
+       pseudo_dir = TRIM (dirname)
+       print *, " I havent found pseudo dir:" // trim(pseudo_dir)
+    END IF
+      pseudo_dir_cur = pseudo_dir
     ! 
     END SUBROUTINE readschema_ions
     !  

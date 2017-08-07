@@ -713,6 +713,53 @@ MODULE qexsd_input
    END SUBROUTINE qexsd_init_atomic_constraints
    !
    !------------------------------------------------------------------------------------------------------------ 
+   SUBROUTINE qexsd_init_occupations(obj, occupations, nspin) 
+   !------------------------------------------------------------------------------------------------------------
+     !
+     IMPLICIT NONE
+     TYPE(occupations_type),INTENT(OUT)        :: obj
+     CHARACTER(LEN=*),INTENT(IN)               :: occupations
+     INTEGER,INTENT(IN)                        :: nspin
+     ! 
+     INTEGER                                   :: spin_degeneracy
+     !   
+     IF (nspin .GT. 1) THEN 
+        spin_degeneracy = 1
+     ELSE 
+        spin_degeneracy = 2
+     END IF
+     CALL  qes_init_occupations(obj, "occupations", spin= spin_degeneracy, & 
+                              spin_ispresent =.FALSE., occupations = TRIM(occupations))
+   END SUBROUTINE qexsd_init_occupations
+   !
+   !---------------------------------------------------------
+   SUBROUTINE qexsd_init_smearing(obj, smearing, degauss)
+   !---------------------------------------------------------
+      !
+      IMPLICIT NONE
+      TYPE(smearing_type),INTENT(OUT)      :: obj
+      CHARACTER(LEN = * ), INTENT(IN)      :: smearing
+      REAL(DP),INTENT(IN)                  :: degauss 
+      ! 
+      CHARACTER(LEN=256)                   :: smearing_local 
+
+      SELECT CASE (TRIM  (smearing))
+        CASE ("gaussian", "gauss")
+            smearing_local="gaussian"
+        CASE ('methfessel-paxton', 'm-p', 'mp')
+            smearing_local="mp"
+        CASE ( 'marzari-vanderbilt', 'cold', 'm-v', 'mv') 
+            smearing_local="mv"
+        CASE ('fermi-dirac', 'f-d', 'fd') 
+            smearing_local="fd"
+        CASE default
+            smearing_local='not set'
+      END SELECT 
+      CALL qes_init_smearing(obj,"smearing",degauss=degauss,smearing=smearing_local)
+      !
+      END SUBROUTINE qexsd_init_smearing
+      !--------------------------------------------------------------------------------------------
+      !
 END MODULE qexsd_input          
 ! 
 #endif

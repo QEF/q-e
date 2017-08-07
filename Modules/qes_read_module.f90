@@ -1805,6 +1805,13 @@ MODULE qes_read_module
       END IF
     END IF
     !
+    IF (hasAttribute(xml_node, "pseudo_dir")) THEN
+      CALL extractDataAttribute(xml_node, "pseudo_dir", obj%pseudo_dir)
+      obj%pseudo_dir_ispresent = .TRUE.
+    ELSE
+      obj%pseudo_dir_ispresent = .FALSE.
+    END IF
+    !
     !
     !
     !
@@ -3161,15 +3168,15 @@ MODULE qes_read_module
     IF (hasAttribute(xml_node, "rank"))  THEN
         CALL extractDataAttribute(xml_node, "rank", obj%rank)
     ELSE
-        CALL errore ("qes_read: Hubbard_nsType", &
-                     "mandatory rank attribute not found in "//TRIM(obj%tagname), 12)
+        CALL errore ("qes_read: Hubbard_nsType",&
+                      "required attribute rank not found, can't read further, stopping", 10 ) 
     END IF
     ALLOCATE (obj%dims(obj%rank))
     IF (hasAttribute(xml_node, "dims")) THEN
         CALL extractDataAttribute(xml_node, "dims", obj%dims)
     ELSE
-        CALL errore ("qes_read: Hubbard_nsType", &
-                     "mandatory dims attribute not found in "//TRIM(obj%tagname), 13)
+        CALL errore ("qes_read: Hubbard_nsType",&
+                      "required attribute dims not found, can't read further, stopping", 10 ) 
     END IF
     IF (hasAttribute(xml_node,"order")) THEN
         CALL extractDataAttribute(xml_node, "order", obj%order)
@@ -9105,6 +9112,7 @@ MODULE qes_read_module
     !
     !
     !
+    !
     ALLOCATE (obj%vector(obj%size))
     CALL extractDataContent(xml_node, obj%vector )
     !
@@ -9138,6 +9146,7 @@ MODULE qes_read_module
     !
     !
     !
+    !
     ALLOCATE (obj%integerVector(obj%size))
     CALL extractDataContent(xml_node, obj%integerVector)
     !
@@ -9166,15 +9175,15 @@ MODULE qes_read_module
     IF (hasAttribute(xml_node, "rank"))  THEN
         CALL extractDataAttribute(xml_node, "rank", obj%rank)
     ELSE
-        CALL errore ("qes_read: matrixType", &
-                     "mandatory rank attribute not found in "//TRIM(obj%tagname), 12)
+        CALL errore ("qes_read: matrixType",&
+                      "required attribute rank not found, can't read further, stopping", 10 ) 
     END IF
     ALLOCATE (obj%dims(obj%rank))
     IF (hasAttribute(xml_node, "dims")) THEN
         CALL extractDataAttribute(xml_node, "dims", obj%dims)
     ELSE
-        CALL errore ("qes_read: matrixType", &
-                     "mandatory dims attribute not found in "//TRIM(obj%tagname), 13)
+        CALL errore ("qes_read: matrixType",&
+                      "required attribute dims not found, can't read further, stopping", 10 ) 
     END IF
     IF (hasAttribute(xml_node,"order")) THEN
         CALL extractDataAttribute(xml_node, "order", obj%order)
@@ -9216,15 +9225,15 @@ MODULE qes_read_module
     IF (hasAttribute(xml_node, "rank"))  THEN
         CALL extractDataAttribute(xml_node, "rank", obj%rank)
     ELSE
-        CALL errore ("qes_read: integerMatrixType", &
-                     "mandatory rank attribute not found in "//TRIM(obj%tagname), 12)
+        CALL errore ("qes_read: integerMatrixType",&
+                      "required attribute rank not found, can't read further, stopping", 10 ) 
     END IF
     ALLOCATE (obj%dims(obj%rank))
     IF (hasAttribute(xml_node, "dims")) THEN
         CALL extractDataAttribute(xml_node, "dims", obj%dims)
     ELSE
-        CALL errore ("qes_read: integerMatrixType", &
-                     "mandatory dims attribute not found in "//TRIM(obj%tagname), 13)
+        CALL errore ("qes_read: integerMatrixType",&
+                      "required attribute dims not found, can't read further, stopping", 10 ) 
     END IF
     IF (hasAttribute(xml_node,"order")) THEN
         CALL extractDataAttribute(xml_node, "order", obj%order)
