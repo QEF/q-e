@@ -210,7 +210,7 @@ CONTAINS
       j = mill_g(2, ng)
       k = mill_g(3, ng)
 
-#if defined(__MPI)
+#if defined(__MPI) && ! defined(__USE_3D_FFT)
       IF( global_sort ) THEN
          m1 = mod (i, dfftp%nr1) + 1
          IF (m1 < 1) m1 = m1 + dfftp%nr1
@@ -239,6 +239,7 @@ CONTAINS
       IF (ngm > ngm_save) CALL errore ('ggen 2', 'too many g-vectors', ngm)
    ENDDO ngloop
 
+   write (6,*) ' ngm, ngms', ngm,ngm_save, ngms, ngms_save
    IF (ngm /= ngm_save) &
       CALL errore ('ggen', 'g-vectors (ngm) missing !', abs(ngm - ngm_save))
    IF (ngms /= ngms_save) &

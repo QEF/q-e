@@ -5,6 +5,8 @@ New in svn version:
 
 Fixed in svn version
 
+  * __USE_3D_FFT was broken in v.6.1 (r13698)
+
   * Some constants in the definition of PBE functionals were truncated to 
     6 significant digits. While not a bug, this could lead to tiny differences
     with respect to previous results and other XC implementations (r13592)
