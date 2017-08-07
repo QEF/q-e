@@ -198,7 +198,11 @@ MODULE io_base
     SUBROUTINE read_wfc( iuni, filename, root_in_group, intra_group_comm,  &
          ik, xk, ispin, npol, wfc, ngw, gamma_only, nbnd, igl, ngwl, &
          b1, b2, b3, mill_k, scalef, ierr )
-      ! if ierr is present, return 0 if everything is ok, /= 0 if not
+      !
+      !! Processor "root_in_group" reads wfc and related information from file 
+      !! "filename.*" (* = dat if fortran binary, * = hdf5 if HDF5),
+      !! distributes wfc on "intra_group_comm"
+      !! if ierr is present, return 0 if everything is ok, /= 0 if not
       !------------------------------------------------------------------------
       !
       USE mp_wave,     ONLY : splitwf, splitkg
@@ -235,7 +239,6 @@ MODULE io_base
 #if defined(__HDF5)
       TYPE (qeh5_file)    ::   h5file
       TYPE (qeh5_dataset) ::   h5dset_wfc, h5dset_mill
-      INTEGER             ::   h5_err
       CHARACTER(LEN=8)    ::   char_buf 
 #endif  
       !
@@ -246,9 +249,14 @@ MODULE io_base
       igwx = MAXVAL( igl(1:ngwl) )
       CALL mp_max( igwx, intra_group_comm )
       !
+      IF ( ionode_in_group ) THEN
 #if !defined __HDF5
-      IF ( ionode_in_group ) OPEN ( UNIT = iuni, FILE=TRIM(filename)//'.dat', &
-           FORM='unformatted', STATUS = 'old', IOSTAT = ierr_)
+         OPEN ( UNIT = iuni, FILE=TRIM(filename)//'.dat', &
+                FORM='unformatted', STATUS = 'old', IOSTAT = ierr_)
+#else
+         CALL qeh5_openfile( h5file, TRIM(filename)//'.hdf5', ACTION = 'read', ERROR = ierr_)
+#endif
+      END IF
       CALL mp_bcast( ierr_, root_in_group, intra_group_comm )
       IF ( PRESENT(ierr) ) THEN
          ierr = ierr_
@@ -257,19 +265,9 @@ MODULE io_base
          CALL errore( 'read_wfc ', &
               'cannot open restart file for reading', ierr_ )
       END IF
-#endif
+      !
       IF ( ionode_in_group ) THEN
-          !
 #if defined  __HDF5
-         CALL qeh5_openfile( h5file, TRIM(filename)//'.hdf5', ACTION = 'read', ERROR = h5_err)
-         IF (h5_err /= 0 ) THEN 
-            IF ( PRESENT (ierr) ) THEN 
-               ierr = h5_err 
-               RETURN 
-            END IF
-         ELSE
-           CALL errore ( 'read_wfc', 'unable to open '//TRIM(filename)//'.hdf5',h5_err)  
-         END IF 
          CALL qeh5_read_attribute (h5file%id, "ik", ik_)
          CALL qeh5_read_attribute (h5file%id, "xk",xk, RANK =1, DIMENSIONS = [3])
          CALL qeh5_read_attribute (h5file%id, "ispin", ispin)

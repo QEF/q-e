@@ -29,7 +29,7 @@ SUBROUTINE errore( calling_routine, message, ierr )
 #if defined(__PTRACE) && defined(__INTEL_COMPILER)
   USE ifcore,    ONLY : tracebackqq
 #endif
-  USE mp,        ONLY : mp_abort
+  USE mp,        ONLY : mp_abort, mp_rank
   IMPLICIT NONE
   !
   CHARACTER(LEN=*), INTENT(IN) :: calling_routine, message
@@ -83,7 +83,8 @@ SUBROUTINE errore( calling_routine, message, ierr )
 #endif
 !
 #if defined(__MPI)
-  CALL mpi_comm_rank(MPI_COMM_WORLD,mpime,ierr)
+  !
+  mpime = mp_rank(MPI_COMM_WORLD)
   !
   !  .. write the message to a file and close it before exiting
   !  .. this will prevent loss of information on systems that
@@ -104,7 +105,6 @@ SUBROUTINE errore( calling_routine, message, ierr )
   CLOSE( UNIT = crashunit )
   !
   ! ... try to exit in a smooth way
-  !
   !
   CALL mp_abort(1,MPI_COMM_WORLD)
   !
