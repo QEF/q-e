@@ -1154,12 +1154,10 @@ MODULE pw_restart_new
     ! 
     IF ( atomic_species%pseudo_dir_ispresent) THEN 
        pseudo_dir = TRIM(atomic_species%pseudo_dir)
-       print *, "I have found pseudo dir:"// TRIM(pseudo_dir)
     ELSE 
        pseudo_dir = TRIM (dirname)
-       print *, " I havent found pseudo dir:" // trim(pseudo_dir)
     END IF
-      pseudo_dir_cur = pseudo_dir
+      pseudo_dir_cur = TRIM(pseudo_dir)
     ! 
     END SUBROUTINE readschema_ions
     !  
