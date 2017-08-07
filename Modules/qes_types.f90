@@ -966,6 +966,8 @@ MODULE qes_types_module
     LOGICAL  :: lread  = .FALSE.
     !
     INTEGER :: ntyp
+    CHARACTER(len=256) :: pseudo_dir
+    LOGICAL :: pseudo_dir_ispresent = .FALSE.
     TYPE(species_type), DIMENSION(:), ALLOCATABLE :: species
     INTEGER   :: ndim_species
     !

@@ -4928,6 +4928,7 @@ SUBROUTINE qes_write_atomic_species(xp, obj)
 
    CALL xml_NewElement(xp, TRIM(obj%tagname))
    CALL xml_addAttribute( xp, 'ntyp', obj%ntyp)
+   IF (obj%pseudo_dir_ispresent) CALL xml_addAttribute( xp, 'pseudo_dir', TRIM ( obj%pseudo_dir) )
 
       !
       DO i = 1, obj%ndim_species
