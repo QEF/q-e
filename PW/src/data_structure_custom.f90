@@ -23,7 +23,7 @@ SUBROUTINE data_structure_custom(fc, smap_exx, gamma_only)
   USE stick_base, ONLY : sticks_map
 
   USE fft_custom, ONLY : fft_cus, gvec_init
-  USE fft_base,   ONLY : dfftp, smap
+  USE fft_base,   ONLY : smap
   USE gvect,      ONLY : gcutm
   !
   !
@@ -37,7 +37,7 @@ SUBROUTINE data_structure_custom(fc, smap_exx, gamma_only)
   TYPE (sticks_map) :: smap_exx ! Stick map descriptor
 
   INTEGER :: kpoint
-#if defined (__MPI)
+#if defined (__MPI) && ! defined (__USE_3D_FFT)
   LOGICAL :: lpara = .true.
 #else
   LOGICAL :: lpara = .false.

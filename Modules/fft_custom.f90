@@ -203,11 +203,7 @@ CONTAINS
     !     replicated data
     INTEGER, ALLOCATABLE :: igsrt(:)
     !
-
-#if defined(__MPI)
     INTEGER :: m1, m2, mc
-    !
-#endif
     INTEGER :: i, j, k, ipol, ng, igl, iswap, indsw, ni, nj, nk
     
     
@@ -280,14 +276,14 @@ CONTAINS
        j = mill_g(2, ng)
        k = mill_g(3, ng)
        
-#if defined(__MPI)
-       m1 = MOD (i, fc%dfftt%nr1) + 1
-       IF (m1 < 1) m1 = m1 + fc%dfftt%nr1
-       m2 = MOD (j, fc%dfftt%nr2) + 1
-       IF (m2 < 1) m2 = m2 + fc%dfftt%nr2
-       mc = m1 + (m2 - 1) * fc%dfftt%nr1x
-       IF ( fc%dfftt%isind ( mc ) == 0) CYCLE ngloop
-#endif
+       IF ( fc%dfftt%lpara ) THEN
+          m1 = MOD (i, fc%dfftt%nr1) + 1
+          IF (m1 < 1) m1 = m1 + fc%dfftt%nr1
+          m2 = MOD (j, fc%dfftt%nr2) + 1
+          IF (m2 < 1) m2 = m2 + fc%dfftt%nr2
+          mc = m1 + (m2 - 1) * fc%dfftt%nr1x
+          IF ( fc%dfftt%isind ( mc ) == 0) CYCLE ngloop
+       END IF
        
        fc%ngmt = fc%ngmt + 1
        
@@ -334,14 +330,13 @@ CONTAINS
        IF (n1>fc%dfftt%nr1 .OR. n2>fc%dfftt%nr2 .OR. n3>fc%dfftt%nr3) &
             CALL errore('ggent','Mesh too small?',ng)
        
-#if defined (__MPI) && !defined (__USE_3D_FFT)
-       fc%nlt (ng) = n3 + ( fc%dfftt%isind (n1 + (n2 - 1) * fc%dfftt%nr1x)&
+       IF ( fc%dfftt%lpara ) THEN
+          fc%nlt (ng) = n3 + ( fc%dfftt%isind (n1 + (n2 - 1) * fc%dfftt%nr1x)&
             & - 1) * fc%dfftt%nr3x
-#else
-       fc%nlt (ng) = n1 + (n2 - 1) * fc%dfftt%nr1x + (n3 - 1) * &
+       ELSE
+          fc%nlt (ng) = n1 + (n2 - 1) * fc%dfftt%nr1x + (n3 - 1) * &
             & fc%dfftt%nr1x * fc%dfftt%nr2x 
-       
-#endif
+       END IF
     ENDDO
     !
     DEALLOCATE( mill_g )
@@ -405,15 +400,14 @@ CONTAINS
           CALL errore('index_minusg_custom','Mesh too small?',ng)
        ENDIF
        
-#if defined (__MPI) && !defined (__USE_3D_FFT)
-       fc%nltm(ng) = n3 + (fc%dfftt%isind (n1 + (n2 - 1) * fc&
+       IF ( fc%dfftt%lpara ) THEN
+          fc%nltm(ng) = n3 + (fc%dfftt%isind (n1 + (n2 - 1) * fc&
             &%dfftt%nr1x) - 1) * fc%dfftt%nr3x
-       
-#else
-       fc%nltm(ng) = n1 + (n2 - 1) * fc%dfftt%nr1x + (n3 - 1) * fc&
+       ELSE
+          fc%nltm(ng) = n1 + (n2 - 1) * fc%dfftt%nr1x + (n3 - 1) * fc&
             &%dfftt%nr1x * fc%dfftt%nr1x
-       
-#endif
+       ENDIF
+
     ENDDO
     
   END SUBROUTINE index_minusg_custom

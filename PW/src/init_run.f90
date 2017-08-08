@@ -126,8 +126,8 @@ SUBROUTINE init_run()
 #endif
   !
   IF ( lmd ) CALL allocate_dyn_vars()
-  !
   IF( nbgrp > 1 ) THEN
+     ! FIXME: this should be in wfcinit, not here
      CALL mp_bcast( evc, root_bgrp_id, inter_bgrp_comm )
   ENDIF
   !

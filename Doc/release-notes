@@ -5,7 +5,7 @@ New in svn version:
 
 Fixed in svn version
 
-  * __USE_3D_FFT was broken in v.6.1 (r13698)
+  * __USE_3D_FFT was broken since v.6.0 (r13700)
 
   * Some constants in the definition of PBE functionals were truncated to 
     6 significant digits. While not a bug, this could lead to tiny differences
