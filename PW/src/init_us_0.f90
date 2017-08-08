@@ -214,16 +214,15 @@ subroutine init_us_0
                  power_q (ijv,0) = power_q (ijv,0) + power_q (ijv,l+1)
                  power_r (ijv,0) = power_r (ijv,0) + power_r (ijv,l+1)
               end do
-              write (*, *) ' nb :', nb,lnb,' mb :',mb,lmb,' lmax :',lnb+lmb
-              write (*,'(a,12f16.10)') 'power_0 ',(power_0 (ijv,l+1), l=0,lnb+lmb)
-              write (*,'(a,12f16.10)') 'power_r ',(power_r (ijv,l+1), l=0,lnb+lmb)
-              write (*,'(a,12f16.10)') 'power_q ',(power_q (ijv,l+1), l=0,lnb+lmb)
-              write (*,*) 'ratio   ',1.d0-(power_r (ijv,0)/power_q (ijv,0)), 1.d0-(power_r (ijv,0)/power_0 (ijv,0))
+              !write (*, *) ' nb :', nb,lnb,' mb :',mb,lmb,' lmax :',lnb+lmb
+              !write (*,'(a,12f16.10)') 'power_0 ',(power_0 (ijv,l+1), l=0,lnb+lmb)
+              !write (*,'(a,12f16.10)') 'power_r ',(power_r (ijv,l+1), l=0,lnb+lmb)
+              !write (*,'(a,12f16.10)') 'power_q ',(power_q (ijv,l+1), l=0,lnb+lmb)
+              !write (*,*) 'ratio   ',1.d0-(power_r (ijv,0)/power_q (ijv,0)), 1.d0-(power_r (ijv,0)/power_0 (ijv,0))
               if (power_0(ijv,0).gt.eps8) target_ratio = min(target_ratio,power_r(ijv,0)/power_0(ijv,0))
            enddo ! mb
         enddo ! nb
-        write (*,*) ' TARGET Qs SPILLOVER :',1.d0-target_ratio, target_ratio
-
+        write (*,*) ' TARGET Qs SPILLOVER : 1.d0-target_ratio, target_ratio ',1.d0-target_ratio, target_ratio
 !
         fac = 1.2d0
  99     continue
@@ -253,9 +252,9 @@ subroutine init_us_0
               if (power_q(ijv,0).gt.eps8) ratio = min (ratio, power_qs(ijv,0)/power_q(ijv,0))
            end do
         end do
-        WRITE (*,*) ' filter factor and ratio :', fac, ratio
+        !WRITE (*,*) ' filter factor and power_qs/power_q ratio:', fac, ratio
 ! 
-! once fac is chosen the smoothed Qs qre built
+! with a given fac the smoothed Qs qre built
 !        
         qrad_rs(:,:,:) = 0.d0; ffrr(:) = 0.d0
         do l = 0, upf(nt)%nqlc -1
@@ -271,7 +270,6 @@ subroutine init_us_0
                  ! q_nb_mb_l(r) from the back fourier transform up to qmax of q_nb_mb_l(q)
                  qrad_rs(ir,1:nbetam*(nbetam+1)/2,l+1) = qrad_rs(ir,1:nbetam*(nbetam+1)/2,l+1) + aux(ir) *&
                    q*q * dq*tpiba * rgrid(nt)%r(ir)**2 * qrad_q( iq, 1:nbetam*(nbetam+1)/2,l+1) * filter(fac*q/qmax,a,nn)
-                 
                  ! build the filter function in real space from the back fourier transform up to qmax 
                  if (l==0) ffrr(ir) = ffrr(ir) + q*q * dq*tpiba * aux(ir) * rgrid(nt)%r(ir)**2 * filter(fac*q/qmax,a,nn)
               enddo
@@ -303,18 +301,18 @@ subroutine init_us_0
               do l=0,lnb+lmb
                  power_rs (ijv,0) = power_rs (ijv,0) + power_rs (ijv,l+1)
               end do
-              write (*, *) ' nb :', nb,lnb,' mb :',mb,lmb,' lmax :',lnb+lmb
-              write (*,'(a,12f16.10)') 'power_rs',(power_rs(ijv,l+1), l=0,lnb+lmb)
-              write (*,'(a,12f16.10)') 'power_qs',(power_qs(ijv,l+1), l=0,lnb+lmb)
-              write (*,*) 'ratio   ',1.d0-(power_rs(ijv,0)/power_qs(ijv,0)), 1.d0-(power_qs(ijv,0)/power_q (ijv,0))
+              !write (*, *) ' nb :', nb,lnb,' mb :',mb,lmb,' lmax :',lnb+lmb
+              !write (*,'(a,12f16.10)') 'power_rs',(power_rs(ijv,l+1), l=0,lnb+lmb)
+              !write (*,'(a,12f16.10)') 'power_qs',(power_qs(ijv,l+1), l=0,lnb+lmb)
+              !write (*,*) 'ratio   ',1.d0-(power_rs(ijv,0)/power_qs(ijv,0)), 1.d0-(power_qs(ijv,0)/power_q (ijv,0))
               if (power_qs(ijv,0).gt.eps8) ratio_s = min (ratio_s, power_rs(ijv,0)/power_qs(ijv,0))
            enddo ! mb
         enddo ! nb
 
-        WRITE (*,*) ' filter factor and ratio :', fac, ratio_s, ratio
+        WRITE (*,*) ' filter factor, 1.d0-power_rs/power_qs and power_qs/power_q ratio :', fac, 1.d0-ratio_s, ratio
         fac = fac -0.05d0
         if (ratio .lt. target_ratio .and. (1.d0-ratio_s).lt. eps8) go to 99
-        fac = fac + 0.05d0
+        fac = fac + 0.05d0 ! reset the last successful  value of fac 
 
 !- save the smoothed real space qs in qfuncl
         do nb = 1, upf(nt)%nbeta
