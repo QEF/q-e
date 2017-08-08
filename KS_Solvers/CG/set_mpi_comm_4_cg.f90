@@ -10,7 +10,7 @@ SUBROUTINE set_mpi_comm_4_cg(parent_comm, intra_bgrp_comm_, inter_bgrp_comm_ )
   !----------------------------------------------------------------------------
   !
   USE cg_param,    ONLY : DP
-  USE mp_bands_cg
+  USE mp_bands_util
   USE mp,          ONLY : mp_size, mp_rank
   !
   IMPLICIT NONE

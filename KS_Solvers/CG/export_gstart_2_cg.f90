@@ -9,7 +9,7 @@
 SUBROUTINE export_gstart_2_cg(gstart_)
   !----------------------------------------------------------------------------
   !
-  USE mp_bands_cg, ONLY : gstart
+  USE mp_bands_util, ONLY : gstart
   !
   IMPLICIT NONE
   !

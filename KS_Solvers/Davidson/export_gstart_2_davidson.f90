@@ -9,7 +9,7 @@
 SUBROUTINE export_gstart_2_davidson(gstart_)
   !----------------------------------------------------------------------------
   !
-  USE mp_bands_davidson, ONLY : gstart
+  USE mp_bands_util, ONLY : gstart
   !
   IMPLICIT NONE
   !

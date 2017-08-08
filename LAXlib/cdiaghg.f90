@@ -19,9 +19,9 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
   !
   ! ... LAPACK version - uses both ZHEGV and ZHEGVX
   !
-  USE david_param,       ONLY : DP
+  USE la_param,          ONLY : DP
   USE mp,                ONLY : mp_bcast, mp_sum, mp_barrier, mp_max
-  USE mp_bands_davidson, ONLY : me_bgrp, root_bgrp, intra_bgrp_comm
+  USE mp_bands_util,     ONLY : me_bgrp, root_bgrp, intra_bgrp_comm
   !
   IMPLICIT NONE
   !
@@ -199,9 +199,9 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
   !
   ! ... Parallel version, with full data distribution
   !
-  USE david_param,      ONLY : DP
+  USE la_param,         ONLY : DP
   USE mp,               ONLY : mp_bcast
-  USE mp_bands_davidson,ONLY : root_bgrp, intra_bgrp_comm
+  USE mp_bands_util,    ONLY : root_bgrp, intra_bgrp_comm
   USE zhpev_module,     ONLY : pzhpev_drv, zhpev_drv
   USE descriptors,      ONLY : la_descriptor
   USE parallel_toolkit, ONLY : zsqmdst, zsqmcll

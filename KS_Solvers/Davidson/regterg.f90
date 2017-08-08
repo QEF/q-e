@@ -23,11 +23,11 @@ SUBROUTINE regterg(  h_psi, s_psi, g_psi, &
   ! ... S is an uspp matrix, evc is a complex vector
   ! ... (real wavefunctions with only half plane waves stored)
   
-  USE david_param,       ONLY : DP, stdout
-  USE mp_bands_davidson, ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, nbgrp, my_bgrp_id, &
-                                  set_bgrp_indices    
-  USE mp_bands_davidson, ONLY : gstart
-  USE mp,                ONLY : mp_sum, mp_bcast
+  USE david_param,   ONLY : DP, stdout
+  USE mp_bands_util, ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, nbgrp, my_bgrp_id, &
+                            set_bgrp_indices    
+  USE mp_bands_util, ONLY : gstart
+  USE mp,            ONLY : mp_sum, mp_bcast
   !
   IMPLICIT NONE
   !
@@ -527,10 +527,10 @@ SUBROUTINE pregterg(h_psi, s_psi, g_psi, &
   ! ... (real wavefunctions with only half plane waves stored)
   !
   USE david_param,       ONLY : DP, stdout
-  USE mp_bands_davidson, ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, nbgrp, my_bgrp_id
-  USE mp_bands_davidson, ONLY : gstart
+  USE mp_bands_util,     ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, nbgrp, my_bgrp_id
+  USE mp_bands_util,     ONLY : gstart
   USE mp_diag,           ONLY : ortho_comm, np_ortho, me_ortho, ortho_comm_id, leg_ortho, &
-                                 ortho_parent_comm, ortho_cntx, do_distr_diag_inside_bgrp
+                                ortho_parent_comm, ortho_cntx, do_distr_diag_inside_bgrp
   USE descriptors,       ONLY : la_descriptor, descla_init, descla_local_dims
   USE parallel_toolkit,  ONLY : dsqmdst, dsqmcll, dsqmred, dsqmsym
   USE mp,                ONLY : mp_bcast, mp_root_sum, mp_sum

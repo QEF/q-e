@@ -57,12 +57,10 @@ for dir in $dirs; do
              $LEVEL2/Modules"
     DEPEND3="$LEVEL2/include $LEVEL2/FFTXlib $LEVEL2/LAXlib $LEVEL2/UtilXlib"
     case $DIR in 
-        LAXlib )
-             DEPENDS="$DEPEND1 $LEVEL1/UtilXlib" ;;
         Modules )
              DEPENDS="$DEPEND1 $LEVEL1/UtilXlib" ;;
         LAXlib )
-             DEPENDS="$DEPEND1 ../UtilXlib " ;;
+             DEPENDS="$LEVEL1/UtilXlib " ;;
         upftools )
              DEPENDS="$DEPEND1 $LEVEL1/Modules" ;;
         LR_Modules )

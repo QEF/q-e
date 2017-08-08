@@ -5,11 +5,9 @@ include ../../make.inc
 # location of needed modules and included files (if any)
 MODFLAGS= $(MOD_FLAG) ../../ELPA/src $(MOD_FLAG) ../../LAXlib $(MOD_FLAG) ../../UtilXlib $(MOD_FLAG).
 
-CG = cdiaghg.o \
+CG = \
 ccgdiagg.o \
-rdiaghg.o \
 rcgdiagg.o \
-mp_bands.o \
 export_gstart_2_cg.o \
 set_mpi_comm_4_cg.o \
 cg_param.o \

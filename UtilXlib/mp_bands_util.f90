@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-MODULE mp_bands_cg
+MODULE mp_bands_util
   !----------------------------------------------------------------------------
   !
   USE mp, ONLY : mp_barrier, mp_bcast, mp_size, mp_rank, mp_comm_split
@@ -171,4 +171,4 @@ CONTAINS
 
   END FUNCTION bgrp_end
 
-END MODULE mp_bands_cg
+END MODULE mp_bands_util

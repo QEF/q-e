@@ -21,10 +21,10 @@ SUBROUTINE cegterg( h_psi, s_psi, g_psi, &
   ! ... where H is an hermitean operator, e is a real scalar,
   ! ... S is an overlap matrix, evc is a complex vector
   !
-  USE david_param,       ONLY : DP
-  USE mp_bands_davidson, ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, nbgrp, my_bgrp_id, &
-                                set_bgrp_indices
-  USE mp,                ONLY : mp_sum, mp_bcast
+  USE david_param,   ONLY : DP
+  USE mp_bands_util, ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, nbgrp, my_bgrp_id, &
+                            set_bgrp_indices
+  USE mp,            ONLY : mp_sum, mp_bcast
   !
   IMPLICIT NONE
   !
@@ -533,7 +533,7 @@ SUBROUTINE pcegterg(h_psi, s_psi, g_psi, &
   ! ... S is an uspp matrix, evc is a complex vector
   !
   USE david_param,      ONLY : DP, stdout
-  USE mp_bands_davidson,ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, nbgrp, my_bgrp_id
+  USE mp_bands_util,    ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, nbgrp, my_bgrp_id
   USE mp_diag,          ONLY : ortho_comm, np_ortho, me_ortho, ortho_comm_id, leg_ortho, &
                                  ortho_parent_comm, ortho_cntx, do_distr_diag_inside_bgrp
   USE descriptors,      ONLY : la_descriptor, descla_init , descla_local_dims

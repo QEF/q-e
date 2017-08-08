@@ -10,7 +10,7 @@ SUBROUTINE set_mpi_comm_4_davidson_rci(parent_comm, intra_bgrp_comm_, inter_bgrp
   !----------------------------------------------------------------------------
   !
   USE david_param,      ONLY : DP
-  USE mp_bands_davidson
+  USE mp_bands_util
   USE mp,               ONLY : mp_size, mp_rank
   !
   IMPLICIT NONE

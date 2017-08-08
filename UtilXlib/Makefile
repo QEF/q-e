@@ -10,6 +10,7 @@ error_handler.o \
 find_free_unit.o \
 mp.o \
 mp_base.o \
+mp_bands_util.o \
 parallel_include.o \
 util_param.o
 

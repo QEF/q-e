@@ -15,11 +15,11 @@ SUBROUTINE rotate_wfc_gamma( h_psi, s_psi, &
   ! ... This version assumes real wavefunctions (k=0) with only
   ! ... half plane waves stored: psi(-G)=psi*(G), except G=0
   !
-  USE cg_param,         ONLY : DP,  gamma_only
-  USE mp_bands_cg,      ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, nbgrp, my_bgrp_id, &
-                               set_bgrp_indices
-  USE mp_bands_cg,      ONLY : gstart ! index of the first nonzero G 
-  USE mp,               ONLY : mp_sum 
+  USE cg_param,      ONLY : DP
+  USE mp_bands_util, ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, nbgrp, my_bgrp_id, &
+                            set_bgrp_indices
+  USE mp_bands_util, ONLY : gstart ! index of the first nonzero G 
+  USE mp,            ONLY : mp_sum 
   !
   IMPLICIT NONE
   !
@@ -163,9 +163,9 @@ SUBROUTINE protate_wfc_gamma( h_psi, s_psi, &
   ! ... half plane waves stored: psi(-G)=psi*(G), except G=0
   !
   USE cg_param,         ONLY : DP, gamma_only
-  USE mp_bands_cg,      ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, nbgrp, my_bgrp_id, &
+  USE mp_bands_util,    ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, nbgrp, my_bgrp_id, &
                                set_bgrp_indices
-  USE mp_bands_cg,      ONLY : gstart ! index of the first nonzero G 
+  USE mp_bands_util,    ONLY : gstart ! index of the first nonzero G 
   USE mp_diag,          ONLY : ortho_comm, np_ortho, me_ortho, ortho_comm_id, leg_ortho, &
                                ortho_parent_comm, ortho_cntx, do_distr_diag_inside_bgrp
   USE descriptors,      ONLY : la_descriptor, descla_init

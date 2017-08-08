@@ -13,8 +13,8 @@
 
 module david_rci_m
   use david_param
-  USE mp_bands_davidson, ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, nbgrp, my_bgrp_id
-  USE mp,                ONLY : mp_sum, mp_bcast
+  USE mp_bands_util, ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, nbgrp, my_bgrp_id
+  USE mp,            ONLY : mp_sum, mp_bcast
   implicit none
   private
 

@@ -60,6 +60,7 @@ cglib.o : ../../UtilXlib/mp.o
 cglib.o : cp_interfaces.o
 cglib.o : mainvar.o
 chargedensity.o : ../../FFTXlib/fft_interfaces.o
+chargedensity.o : ../../FFTXlib/fft_scalar.o
 chargedensity.o : ../../KS_Solvers/CG/constants.o
 chargedensity.o : ../../Modules/cell_base.o
 chargedensity.o : ../../Modules/control_flags.o

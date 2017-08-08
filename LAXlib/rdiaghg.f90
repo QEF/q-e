@@ -14,9 +14,9 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
   !
   ! ... LAPACK version - uses both DSYGV and DSYGVX
   !
-  USE cg_param,     ONLY : DP
-  USE mp,           ONLY : mp_bcast
-  USE mp_bands_cg,  ONLY : me_bgrp, root_bgrp, intra_bgrp_comm
+  USE la_param,          ONLY : DP
+  USE mp,                ONLY : mp_bcast
+  USE mp_bands_util,     ONLY : me_bgrp, root_bgrp, intra_bgrp_comm
   !
   IMPLICIT NONE
   !
@@ -179,13 +179,13 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
   !
   ! ... Parallel version with full data distribution
   !
-  USE cg_param,    ONLY : DP
-  USE mp,          ONLY : mp_bcast
-  USE mp_bands_cg, ONLY : root_bgrp, intra_bgrp_comm
-  USE descriptors, ONLY : la_descriptor
+  USE la_param,          ONLY : DP
+  USE mp,                ONLY : mp_bcast
+  USE mp_bands_util,     ONLY : root_bgrp, intra_bgrp_comm
+  USE descriptors,       ONLY : la_descriptor
 #if defined __SCALAPACK
-  USE mp_diag,     ONLY : ortho_cntx, me_blacs, np_ortho, me_ortho, ortho_comm
-  USE dspev_module,ONLY : pdsyevd_drv
+  USE mp_diag,           ONLY : ortho_cntx, me_blacs, np_ortho, me_ortho, ortho_comm
+  USE dspev_module,      ONLY : pdsyevd_drv
 #endif
   !
   !

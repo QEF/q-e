@@ -1517,6 +1517,7 @@ pw_restart_new.o : ../../Modules/qes_module.o
 pw_restart_new.o : ../../Modules/qes_read_module.o
 pw_restart_new.o : ../../Modules/qes_types.o
 pw_restart_new.o : ../../Modules/qexsd.o
+pw_restart_new.o : ../../Modules/qexsd_input.o
 pw_restart_new.o : ../../Modules/recvec.o
 pw_restart_new.o : ../../Modules/tsvdw.o
 pw_restart_new.o : ../../Modules/uspp.o

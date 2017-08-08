@@ -5,11 +5,9 @@ include ../../make.inc
 # location of needed modules and included files (if any)
 MODFLAGS= $(MOD_FLAG) ../../ELPA/src $(MOD_FLAG) ../../LAXlib $(MOD_FLAG) ../../UtilXlib $(MOD_FLAG).
 
-DAVID = cdiaghg.o \
+DAVID = \
 cegterg.o \
-rdiaghg.o \
 regterg.o \
-mp_bands.o \
 export_gstart_2_davidson.o \
 set_mpi_comm_4_davidson.o \
 david_param.o

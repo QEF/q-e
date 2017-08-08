@@ -18,10 +18,10 @@ SUBROUTINE rcgdiagg( hs_1psi, s_1psi, &
   ! ... Calls hs_1psi and s_1psi to calculate H|psi> + S|psi> and S|psi>
   ! ... Works for generalized eigenvalue problem (US pseudopotentials) as well
   !
-  USE constants,    ONLY : pi
-  USE cg_param,     ONLY : DP
-  USE mp_bands_cg,  ONLY : intra_bgrp_comm, inter_bgrp_comm, set_bgrp_indices, gstart
-  USE mp,           ONLY : mp_sum
+  USE constants,      ONLY : pi
+  USE cg_param,       ONLY : DP
+  USE mp_bands_util,  ONLY : intra_bgrp_comm, inter_bgrp_comm, set_bgrp_indices, gstart
+  USE mp,             ONLY : mp_sum
 #if defined(__VERBOSE)
   USE cg_param,     ONLY : stdout
 #endif
@@ -106,8 +106,8 @@ SUBROUTINE rcgdiagg( hs_1psi, s_1psi, &
      lagrange = 0.d0
      if(m_start.le.m_end) &
      CALL DGEMV( 'T', npw2, m_end-m_start+1, 2.D0, psi(1,m_start), npwx2, spsi, 1, 0.D0, lagrange(m_start), 1 )
-     IF ( gstart == 2 ) lagrange(1:m) = lagrange(1:m) - psi(1,1:m) * spsi(1)
      CALL mp_sum( lagrange( 1:m ), inter_bgrp_comm )
+     IF ( gstart == 2 ) lagrange(1:m) = lagrange(1:m) - psi(1,1:m) * spsi(1)
      !
      CALL mp_sum( lagrange( 1:m ), intra_bgrp_comm )
      !
@@ -181,8 +181,8 @@ SUBROUTINE rcgdiagg( hs_1psi, s_1psi, &
         call set_bgrp_indices(m-1,m_start,m_end); !write(*,*) m-1,m_start,m_end
         if(m_start.le.m_end) &
         CALL DGEMV( 'T', npw2, m_end-m_start+1, 2.D0, psi(1,m_start), npw2, scg, 1, 0.D0, lagrange(m_start), 1 )
-        IF ( gstart == 2 ) lagrange(1:m-1) = lagrange(1:m-1) - psi(1,1:m-1) * scg(1)
         CALL mp_sum( lagrange( 1:m-1 ), inter_bgrp_comm )
+        IF ( gstart == 2 ) lagrange(1:m-1) = lagrange(1:m-1) - psi(1,1:m-1) * scg(1)
         !
         CALL mp_sum( lagrange( 1:m-1 ), intra_bgrp_comm )
         !

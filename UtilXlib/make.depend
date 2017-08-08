@@ -4,5 +4,7 @@ error_handler.o : mp.o
 error_handler.o : util_param.o
 mp.o : parallel_include.o
 mp.o : util_param.o
+mp_bands_util.o : mp.o
+mp_bands_util.o : parallel_include.o
 mp_base.o : parallel_include.o
 mp_base.o : util_param.o
