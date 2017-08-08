@@ -136,7 +136,7 @@ int fftw_inplace_drv_3d
    return 0;
 }
 
-int ft_x_stick_single
+int fft_x_stick_single
 (fftw_plan *p, FFTW_COMPLEX *a, int *nx, int *ny, int *nz, int *ldx, int *ldy )
 {
 
