@@ -18,7 +18,7 @@ fi
 
 #echo $0" "$@
 # Additional stuff before run special test-cases
-if test "$2" = "vdw1.in" || test "$1" = "vdw2.in" ; then
+if test "$1" = "vdw1.in" || test "$1" = "vdw2.in" ; then
    if ! test -f ${ESPRESSO_PSEUDO}/vdW_kernel_table ; then
       echo -n "Generating kernel table - May take several minutes..."
       ${PARA_PREFIX} ${ESPRESSO_ROOT}/PW/src/generate_vdW_kernel_table.x 
@@ -27,7 +27,7 @@ if test "$2" = "vdw1.in" || test "$1" = "vdw2.in" ; then
    fi
 fi
 
-if test "$2" = "vdw6.in" ; then
+if test "$1" = "vdw6.in" ; then
    if ! test -f ${ESPRESSO_PSEUDO}/rVV10_kernel_table ; then
       echo -n "Generating kernel table - May take several minutes..."
       ${PARA_PREFIX} ${ESPRESSO_ROOT}/PW/src/generate_rVV10_kernel_table.x
