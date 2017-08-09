@@ -39,11 +39,10 @@
                             sigmar_all, sigmai_all, sigmai_mode, zi_all, efnew, nqf, & 
                             xqf, dmef  
   USE constants_epw, ONLY : ryd2mev, one, ryd2ev, two, zero, pi, ci, eps6
-#ifdef __MPI
   USE mp,            ONLY : mp_barrier, mp_sum
   USE mp_global,     ONLY : me_pool, inter_pool_comm, my_pool_id
   use cell_base,     ONLY : omega, alat
-#endif
+  !USE mp_world,      ONLY : mpime
   implicit none
   !
   INTEGER :: ik, ikk, ikq, ibnd, jbnd, imode, nrec, iq, fermicount
@@ -340,7 +339,7 @@
      xkf_all(:,:) = zero
      etf_all(:,:) = zero
      !
-#ifdef __PARA
+#if defined(__MPI)
      !
      ! note that poolgather2 works with the doubled grid (k and k+q)
      !
@@ -445,12 +444,12 @@
            ! calculate Z = 1 / ( 1 -\frac{\partial\Sigma}{\partial\omega} )
            !zi_all (ibnd,ik) = one / ( one + zi_all (ibnd,ik) )
            !
-           WRITE(stdout,'(2i9,5f12.4)') ik, ibndmin-1+ibnd, ryd2ev * ekk, ryd2mev * sigmar_all(ibnd,ik), &
-                                        ryd2mev * sigmai_all (ibnd,ik), zi_all (ibnd,ik),  one/zi_all(ibnd,ik)-one
+           !WRITE(stdout,'(2i9,5f12.4)') ik, ibndmin-1+ibnd, ryd2ev * ekk, ryd2mev * sigmar_all(ibnd,ik), &
+           !                             ryd2mev * sigmai_all (ibnd,ik), zi_all (ibnd,ik),  one/zi_all(ibnd,ik)-one
            ! 
         ENDDO
         !
-        WRITE(stdout,'(a)') '  '
+        !WRITE(stdout,'(a)') '  '
         !
      ENDDO
      !

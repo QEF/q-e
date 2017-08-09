@@ -51,9 +51,9 @@
   degaussw    = 0.01
  
   specfun_pl  = .true.
-  wmax_specfun = 10.0
-  wmin_specfun = 3.0
-  nw_specfun   = 200
+  wmax_specfun = 8.0
+  wmin_specfun = 6.0
+  nw_specfun   = 20
 
   efermi_read = .true.
   fermi_energy= 6.65
