@@ -99,12 +99,14 @@ rotate_eigenm.o \
 rotate_epmat.o \
 selfen_elec.o \
 selfen_phon.o \
+selfen_pl.o \
 set_ndnmbr.o \
 setphases_wrap.o \
 sgama2.o \
 sort.o \
 spectral_func.o \
 spectral_func_ph.o \
+spectral_func_pl.o \
 star_q2.o \
 stop_epw.o \
 vmebloch2wan.o \

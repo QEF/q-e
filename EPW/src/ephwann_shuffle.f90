@@ -37,7 +37,8 @@
                             elecselfen, phonselfen, nest_fn, a2f, specfun_ph,   &
                             vme, eig_read, ephwrite, nkf1, nkf2, nkf3,          & 
                             efermi_read, fermi_energy, specfun_el, band_plot,   &
-                            nqf1, nqf2, nqf3, mp_mesh_k, restart, prtgkk
+                            nqf1, nqf2, nqf3, mp_mesh_k, restart, prtgkk,       &
+                            plselfen, specfun_pl
   USE noncollin_module, ONLY : noncolin
   USE constants_epw, ONLY : ryd2ev, ryd2mev, one, two, czero, twopi, ci, zero
   USE io_files,      ONLY : prefix, diropn
@@ -873,7 +874,7 @@
           ! within a Fermi shell of size fsthick 
           !
           IF ( (( minval ( abs(etf (:, ikk) - ef) ) < fsthick ) .and. &
-                  ( minval ( abs(etf (:, ikq) - ef) ) < fsthick )) ) THEN
+                  ( minval ( abs(etf (:, ikq) - ef) ) < fsthick )) .and. .NOT. plselfen) THEN
              !
              !  fermicount = fermicount + 1
              !
@@ -963,12 +964,14 @@
           !
        ENDDO  ! end loop over k points
        !
-       IF (prtgkk)      CALL print_gkk( iq ) 
+       IF (prtgkk     ) CALL print_gkk( iq ) 
        IF (phonselfen ) CALL selfen_phon_q( iq )
        IF (elecselfen ) CALL selfen_elec_q( iq )
+       IF (plselfen   ) CALL selfen_pl_q( iq ) 
        IF (nest_fn    ) CALL nesting_fn_q( iq )
        IF (specfun_el ) CALL spectral_func_q( iq )
        IF (specfun_ph ) CALL spectral_func_ph( iq )
+       IF (specfun_pl ) CALL spectral_func_pl_q( iq )
        IF (ephwrite) THEN
           IF ( iq .eq. 1 ) THEN 
              CALL kmesh_fine

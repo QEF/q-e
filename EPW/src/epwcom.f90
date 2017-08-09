@@ -142,6 +142,14 @@
   !! Value of the scissor shift in eV.
   REAL (KIND=DP) :: ncarrier
   !! Amount of carrier concentration in cm^-3 when doping a semiconductors
+  ! 
+  ! Plasmon
+  REAL (KIND=DP) :: nel
+  !! Carrier concentration
+  REAL (KIND=DP) :: meff
+  !! Density-of-state effective mass
+  REAL (KIND=DP) :: epsiHEG
+  !! Dielectric constant at zero doping. 
   !
   !LOGICAL :: tphases
   !! tphases:  if .TRUE. set absolute reference for unitary gauge of the eigenvectors
@@ -149,6 +157,8 @@
   !! if .TRUE. calculate electron selfenergy due to e-p interaction
   LOGICAL :: phonselfen
   !! if .TRUE. calculate phonon selfenergy due to e-p interaction
+  LOGICAL :: plselfen
+  !! if .TRUE. calculate the electron-plason self-energy 
   LOGICAL :: epbread
   !! if .TRUE. read epmatq from files .epb
   LOGICAL :: epbwrite
@@ -164,6 +174,8 @@
   !! if .TRUE. calculate spectral electron function due to e-p interaction
   LOGICAL :: specfun_ph
   !! if .TRUE. calculate spectral phonon function due to e-p interaction
+  LOGICAL :: specfun_pl
+  !! if .TRUE. calculate plasmon spectral function
   LOGICAL :: wannierize
   !! if .TRUE. run the wannier90 code
   LOGICAL :: parallel_k

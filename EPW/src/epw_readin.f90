@@ -35,8 +35,8 @@
                             num_iter, dis_froz_max, fsthick, dis_froz_min, &
                             vme, degaussw, epexst, eig_read, kmaps, &
                             epwwrite, epbread, phonselfen, elecselfen, &
-                            a2f, rand_k, rand_nq, rand_q, &
-                            parallel_q, parallel_k, nkf1, &
+                            a2f, rand_k, rand_nq, rand_q, plselfen, &
+                            parallel_q, parallel_k, nkf1, specfun_pl, &
                             nkf2, nkf3, nqf1, nqf2, nqf3, rand_nk, &
                             nest_fn, eps_acustic, nw, wmax, wmin, &
                             mp_mesh_q, filqf, filkf, delta_qsmear, degaussq, &
@@ -56,7 +56,7 @@
                             title, int_mob, scissor, iterative_bte, scattering, &
                             ncarrier, carrier, scattering_serta, &
                             scattering_0rta, longrange, shortrange,restart, &
-                            restart_freq, prtgkk
+                            restart_freq, prtgkk, nel, meff, epsiHEG
   USE elph2,         ONLY : elph
   USE start_k,       ONLY : nk1, nk2, nk3
   USE constants_epw, ONLY : ryd2mev, ryd2ev, ev2cmm1, kelvin2eV
@@ -105,9 +105,9 @@
        dvscf_dir, ngaussw,                                                     &
        wannierize, dis_win_max, dis_win_min, dis_froz_min, dis_froz_max,       &
        num_iter, proj,  wdata, iprint, write_wfn, wmin, wmax, nw,              &
-       eps_acustic, a2f, nest_fn,                                              & 
+       eps_acustic, a2f, nest_fn, plselfen,                                    & 
        elecselfen, phonselfen, parallel_k, parallel_q,                         &
-       rand_q, rand_nq, rand_k, rand_nk,                                       &
+       rand_q, rand_nq, rand_k, rand_nk, specfun_pl,                           &
        nqf1, nqf2, nqf3, nkf1, nkf2, nkf3,                                     &
        mp_mesh_k, mp_mesh_q, filqf, filkf, ephwrite,                           & 
        band_plot, degaussq, delta_qsmear, nqsmear, nqstep,                     &
@@ -120,7 +120,7 @@
        specfun_el, specfun_ph, wmin_specfun, wmax_specfun, nw_specfun,         & 
        delta_approx, scattering, int_mob, scissor, ncarrier, carrier,          &
        iterative_bte, scattering_serta, scattering_0rta, longrange, shortrange,&
-       restart, restart_freq, prtgkk
+       restart, restart_freq, prtgkk, nel, meff, epsiHEG
 
   ! tphases, fildvscf0
   !
@@ -239,6 +239,7 @@
   !
   ! specfun_el      : if .TRUE. calculate electron spectral function due to e-p interaction
   ! specfun_ph      : if .TRUE. calculate phonon spectral function due to e-p interaction
+  ! specfun_pl      : if .TRUE. calculate plason spectral function 
   ! restart         : if .true. a run can be restarted from the interpolation level
   ! restart_freq    : Create a restart point every restart_freq q/k-points
   ! scattering      : if .true. scattering rates are calculated
@@ -261,6 +262,10 @@
   ! etf_mem         : if 0 no optimization, if 1 less memory is used for the fine grid interpolation
   !                   When etf_mem == 2, an additional loop is done on mode for the fine grid interpolation
   !                   part. This reduces the memory further by a factor "nmodes".    
+  ! plselfen        : Calculate the electron-plasmon self-energy.
+  ! nel             : Carrier concentration
+  ! meff            : Density of state effective mass
+  ! epsiHEG         : Dielectric constant at zero doping
   !  
   CHARACTER (LEN=80)  :: input_file
   INTEGER             :: nargs, iiarg, ierr
@@ -303,8 +308,10 @@
   elph         = .false.
   elecselfen   = .false.
   phonselfen   = .false.
+  plselfen     = .false.
   specfun_el   = .false.
   specfun_ph   = .false.
+  specfun_pl   = .false.
   epbread      = .false.
   epbwrite     = .false.
   epwread      = .false.
@@ -427,14 +434,17 @@
   scattering = .false.
   scattering_serta = .false.
   scattering_0rta = .false.
-  int_mob = .false.
+  int_mob    = .false.
   iterative_bte = .false.
-  scissor = 0.d0 ! eV
-  carrier = .false.
-  ncarrier = 0.d0 ! cm^-3
-  longrange = .false.
+  scissor    = 0.d0 ! eV
+  carrier    = .false.
+  ncarrier   = 0.d0 ! cm^-3
+  longrange  = .false.
   shortrange = .false.  
-  prtgkk = .false.
+  prtgkk     = .false.
+  nel        = 0.01d0
+  meff       = 12.d0
+  epsiHEG    = 0.25d0
   !
   !     reading the namelist inputepw
   !
@@ -476,6 +486,26 @@
        &'must parallelize over k OR q',1)
   IF (parallel_k .and. elecselfen) CALL errore('epw_readin', &
        &'Electron selfenergy is more efficient with k_para',-1)
+  IF (elecselfen .and. plselfen) CALL errore('epw_readin', &
+       &'Electron-plasmon self-energy cannot be computed with electron-phonon',1)
+  IF (phonselfen .and. plselfen) CALL errore('epw_readin', &
+       &'Electron-plasmon self-energy cannot be computed with electron-phonon',1)
+  IF (specfun_el .and. plselfen) CALL errore('epw_readin', &
+       &'Electron-plasmon self-energy cannot be computed with el-ph spectral function',1)
+  IF (specfun_ph .and. plselfen) CALL errore('epw_readin', &
+       &'Electron-plasmon self-energy cannot be computed with el-ph spectral function',1)
+  IF (parallel_q .and. plselfen) CALL errore('epw_readin', &
+       &'Electron-plasmon self-energy cannot be computed with q-parallelization',1)
+  IF (elecselfen .and. specfun_pl ) CALL errore('epw_readin', &
+       &'Electron-plasmon spectral function cannot be computed with electron-phonon',1)
+  IF (phonselfen .and. specfun_pl) CALL errore('epw_readin', &
+       &'Electron-plasmon spectral function cannot be computed with electron-phonon',1)
+  IF (specfun_el .and. specfun_pl) CALL errore('epw_readin', &
+       &'Electron-plasmon spectral function cannot be computed with el-ph spectral function',1)
+  IF (specfun_ph .and. specfun_pl) CALL errore('epw_readin', &
+       &'Electron-plasmon spectral function cannot be computed with el-ph spectral function',1)
+  IF (parallel_q .and. specfun_pl) CALL errore('epw_readin', &
+       &'Electron-plasmon spectral function cannot be computed with q-parallelization',1)
   IF (a2f .and. .not.phonselfen) CALL errore('epw_readin', &
        &'a2f requires phonoselfen',1)
   IF (parallel_q .and. phonselfen) CALL errore('epw_readin', &

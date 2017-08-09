@@ -21,7 +21,7 @@
   USE phcom,         ONLY : zue, trans, tr2_ph, nmix_ph, niter_ph, &
                             lnscf, ldisp, fildvscf, fildrho, epsil, alpha_mix 
   USE epwcom,        ONLY : epexst, epbwrite, ep_coupling, &
-                            eliashberg, elecselfen, eig_read, &
+                            eliashberg, elecselfen, eig_read, plselfen, &
                             efermi_read, dvscf_dir, delta_smear, &
                             delta_qsmear, degaussw, degaussq, conv_thr_raxis, &
                             conv_thr_racon, conv_thr_iaxis, broyden_ndim, &
@@ -37,7 +37,7 @@
                             lreal, lpolar, lpade, liso, limag, laniso, &
                             specfun_el, specfun_ph, lifc, asr_typ, &
                             rand_q, rand_nq, rand_nk, rand_k, pwc, phonselfen, &
-                            parallel_q, parallel_k, &
+                            parallel_q, parallel_k, specfun_pl, &
                             nw_specfun, nw, nswi, nswfc, nswc, nstemp, nsmear, &
                             wsfc, wscut, write_wfn, wmin_specfun, wmin, &
                             wmax_specfun, wmax, wepexst, wannierize, &
@@ -45,7 +45,7 @@
                             tempsmin, tempsmax, temps, delta_approx, title, &
                             scattering, scattering_serta, scattering_0rta, &
                             int_mob, scissor, carrier, ncarrier, iterative_bte, &
-                            restart, restart_freq, prtgkk
+                            restart, restart_freq, prtgkk, nel, meff, epsiHEG
 !  USE epwcom,        ONLY : fildvscf0, tphases
   USE elph2,         ONLY : elph 
   USE mp,            ONLY : mp_bcast
@@ -70,6 +70,7 @@
   CALL mp_bcast (ldisp, meta_ionode_id, world_comm)
   CALL mp_bcast (elecselfen, meta_ionode_id, world_comm)!
   CALL mp_bcast (phonselfen, meta_ionode_id, world_comm)!
+  CALL mp_bcast (plselfen, meta_ionode_id, world_comm)!
   CALL mp_bcast (ephwrite, meta_ionode_id, world_comm)! RM
   CALL mp_bcast (band_plot, meta_ionode_id, world_comm)! RM
   CALL mp_bcast (vme, meta_ionode_id, world_comm)!
@@ -83,6 +84,7 @@
   CALL mp_bcast (epwwrite, meta_ionode_id, world_comm)  !
   CALL mp_bcast (specfun_el, meta_ionode_id, world_comm)   !
   CALL mp_bcast (specfun_ph, meta_ionode_id, world_comm)   !
+  CALL mp_bcast (specfun_pl, meta_ionode_id, world_comm)   !
   CALL mp_bcast (wannierize, meta_ionode_id, world_comm)! JN
   CALL mp_bcast (write_wfn, meta_ionode_id, world_comm) ! 
   CALL mp_bcast (kmaps, meta_ionode_id, world_comm) ! 
@@ -185,6 +187,9 @@
   CALL mp_bcast (eptemp, meta_ionode_id, world_comm)    !
   CALL mp_bcast (scissor, meta_ionode_id, world_comm)    !
   CALL mp_bcast (ncarrier, meta_ionode_id, world_comm)      
+  CALL mp_bcast (nel, meta_ionode_id, world_comm)      
+  CALL mp_bcast (meff, meta_ionode_id, world_comm)      
+  CALL mp_bcast (epsiHEG, meta_ionode_id, world_comm)      
   !
   ! characters
   !
