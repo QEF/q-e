@@ -45,75 +45,6 @@ MODULE mp_bands_util
 
 CONTAINS
   !
-  !----------------------------------------------------------------------------
-  SUBROUTINE mp_start_bands( nband_, ntg_, parent_comm )
-    !---------------------------------------------------------------------------
-    !
-    ! ... Divide processors (of the "parent_comm" group) into nband_ pools
-    ! ... Requires: nband_, read from command line
-    ! ...           parent_comm, typically processors of a k-point pool
-    ! ...           (intra_pool_comm)
-    !
-    IMPLICIT NONE
-    !
-    INTEGER, INTENT(IN) :: nband_, parent_comm
-    INTEGER, INTENT(IN), OPTIONAL :: ntg_
-    !
-    INTEGER :: parent_nproc = 1, parent_mype = 0
-    !
-#if defined (__MPI)
-    !
-    parent_nproc = mp_size( parent_comm )
-    parent_mype  = mp_rank( parent_comm )
-    !
-    ! ... nband_ must have been previously read from command line argument
-    ! ... by a call to routine get_command_line
-    !
-    nbgrp = nband_
-    !
-    IF ( nbgrp < 1 .OR. nbgrp > parent_nproc ) CALL errore( 'mp_start_bands',&
-                          'invalid number of band groups, out of range', 1 )
-    IF ( MOD( parent_nproc, nbgrp ) /= 0 ) CALL errore( 'mp_start_bands', &
-        'n. of band groups  must be divisor of parent_nproc', 1 )
-    !
-    ! set logical flag so that band parallelization in H\psi is allowed
-    ! (can be disabled before calling H\psi if not desired)
-    !
-    use_bgrp_in_hpsi = ( nbgrp > 1 )
-    ! 
-    ! ... Set number of processors per band group
-    !
-    nproc_bgrp = parent_nproc / nbgrp
-    !
-    ! ... set index of band group for this processor   ( 0 : nbgrp - 1 )
-    !
-    my_bgrp_id = parent_mype / nproc_bgrp
-    !
-    ! ... set index of processor within the image ( 0 : nproc_image - 1 )
-    !
-    me_bgrp    = MOD( parent_mype, nproc_bgrp )
-    !
-    CALL mp_barrier( parent_comm )
-    !
-    ! ... the intra_bgrp_comm communicator is created
-    !
-    CALL mp_comm_split( parent_comm, my_bgrp_id, parent_mype, intra_bgrp_comm )
-    !
-    CALL mp_barrier( parent_comm )
-    !
-    ! ... the inter_bgrp_comm communicator is created                     
-    !     
-    CALL mp_comm_split( parent_comm, me_bgrp, parent_mype, inter_bgrp_comm )  
-    !
-    IF ( PRESENT(ntg_) ) THEN
-       ntask_groups = ntg_
-    END IF
-    !
-#endif
-    RETURN
-    !
-  END SUBROUTINE mp_start_bands
-  !
   SUBROUTINE set_bgrp_indices(nbnd, ib_start, ib_end)
     !
     IMPLICIT NONE
@@ -135,40 +66,5 @@ CONTAINS
 
   END SUBROUTINE set_bgrp_indices
 
-  INTEGER FUNCTION bgrp_start(nbnd)
-    !
-    IMPLICIT NONE
-    INTEGER, INTENT(IN) :: nbnd
-
-    INTEGER :: rest, nbnd_per_bgrp
-
-    rest = mod ( nbnd, nbgrp )
-    nbnd_per_bgrp = int( nbnd / nbgrp ) 
-
-    IF (rest > my_bgrp_id) THEN 
-       bgrp_start =  my_bgrp_id    * (nbnd_per_bgrp+1) + 1
-    ELSE
-       bgrp_start =  my_bgrp_id    * nbnd_per_bgrp + rest + 1
-    ENDIF
-
-  END FUNCTION bgrp_start
-
-  INTEGER FUNCTION bgrp_end(nbnd)
-    !
-    IMPLICIT NONE
-    INTEGER, INTENT(IN) :: nbnd
-
-    INTEGER :: rest, nbnd_per_bgrp
-
-    rest = mod ( nbnd, nbgrp )
-    nbnd_per_bgrp = int( nbnd / nbgrp ) 
-
-    IF (rest > my_bgrp_id) THEN 
-       bgrp_end   = (my_bgrp_id+1) * (nbnd_per_bgrp+1) 
-    ELSE
-       bgrp_end   = (my_bgrp_id+1) * nbnd_per_bgrp + rest 
-    ENDIF
-
-  END FUNCTION bgrp_end
 
 END MODULE mp_bands_util
