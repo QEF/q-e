@@ -78,9 +78,10 @@ libiotk:
 
 libfox:
 	if test ! -d ../FoX; then \
-	(gzip -dc ../archive/fox.tgz | (cd ../; tar -xvf -)); \
-	cd ../fox/; export FC=$(F90); ./configure --prefix=$(TOPDIR)/FoX ;\
-	cd ../fox; $(MAKE) install; rm -fr ../fox;fi
+        mkdir ../FoX; \
+	(gzip -dc ../archive/fox.tgz | (cd ../FoX; tar -xvf -)); \
+	cd ../FoX/fox/; export FC=$(F90); ./configure --prefix=$(TOPDIR)/FoX ;\
+	cd ../fox; $(MAKE) install; cd ../ rm -fr fox;fi
 # ELPA
 libelpa : libelpa_$(ELPA_LIBS_SWITCH)
 
