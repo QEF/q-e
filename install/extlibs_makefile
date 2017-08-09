@@ -81,7 +81,7 @@ libfox:
         mkdir ../FoX; \
 	(gzip -dc ../archive/fox.tgz | (cd ../FoX; tar -xvf -)); \
 	cd ../FoX/fox/; export FC=$(F90); ./configure --prefix=$(TOPDIR)/FoX ;\
-	cd ../fox; $(MAKE) install; cd ../ rm -fr fox;fi
+	$(MAKE) install; cd ../; rm -fr fox;fi
 # ELPA
 libelpa : libelpa_$(ELPA_LIBS_SWITCH)
 
