@@ -1386,10 +1386,13 @@
   IF (mpime.eq.ionode_id) THEN
     !
     OPEN(unit=epwdata,file='epwdata.fmt',status='old',iostat=ios)
-    OPEN(unit=iundmedata,file='dmedata.fmt',status='old',iostat=ios)
-    IF (eig_read) OPEN(unit=iunksdata,file='ksdata.fmt',status='old',iostat=ios)
-    IF (vme) OPEN(unit=iunvmedata,file='vmedata.fmt',status='old',iostat=ios)
     IF (ios /= 0) call errore ('ephwann_shuffle', 'error opening epwdata.fmt',epwdata)
+    OPEN(unit=iundmedata,file='dmedata.fmt',status='old',iostat=ios)
+    IF (ios /= 0) call errore ('ephwann_shuffle', 'error opening dmedata.fmt',iundmedata)
+    IF (eig_read) OPEN(unit=iunksdata,file='ksdata.fmt',status='old',iostat=ios)
+    IF (eig_read .AND. ios /= 0) call errore ('ephwann_shuffle', 'error opening ksdata.fmt',iunksdata)
+    IF (vme) OPEN(unit=iunvmedata,file='vmedata.fmt',status='old',iostat=ios)
+    IF (vme .AND. ios /= 0) call errore ('ephwann_shuffle', 'error opening vmedata.fmt',iunvmedata)
     READ (epwdata,*) ef
     READ (epwdata,*) nbndsub, nrr_k, nmodes, nrr_q
     READ (epwdata,*) zstar, epsi

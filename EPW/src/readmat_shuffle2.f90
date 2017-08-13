@@ -97,10 +97,18 @@
   INTEGER             :: nrws
   REAL(kind=DP)       :: eps, celldm_ (6), amass_, tau_ (3), q(3,nq1*nq2*nq3), &
                          dynr (2, 3, nat, 3, nat), sumz
-  REAL(DP), allocatable :: m_loc(:,:), dchi_dtau(:,:,:,:)
-  REAL(DP)              :: qout(3), amass2(ntypx)
-  REAL(kind=DP)         :: rws(0:3,nrwsx), atws(3,3)
-  COMPLEX(KIND=DP),allocatable   :: dyn(:,:,:,:) ! 3,3,nat,nat
+  REAL(kind=DP), allocatable :: m_loc(:,:), dchi_dtau(:,:,:,:)
+  REAL(kind=DP)              :: qout(3) 
+  REAL(kind=DP)              :: amass2(ntypx)
+  REAL(kind=DP)              :: rws(0:3,nrwsx)
+  REAL(kind=DP)              :: atws(3,3)
+  !! WS cell dist.  
+  REAL(kind=DP)              :: zstar_(3,3,nat)
+  !! Temporary array to store Z*
+  REAL(kind=DP)              :: epsi_(3,3)
+  !! Temporary array to store Z*
+  COMPLEX(KIND=DP),allocatable :: dyn(:,:,:,:) ! 3,3,nat,nat
+  !! Dynamical matrix
   !
   axis = 3 
   !
@@ -116,7 +124,7 @@
     ALLOCATE (dchi_dtau(3,3,3,nat) )
     CALL read_dyn_mat_header(ntyp, nat, ibrav, nspin_mag, &
             celldm, at, bg, omega, atm, amass2, tau, ityp, &
-            m_loc, nqs, lrigid, epsi, zstar, lraman, dchi_dtau)
+            m_loc, nqs, lrigid, epsi_, zstar_, lraman, dchi_dtau)
     ALLOCATE (dyn(3,3,nat,nat) )
     IF (ionode) THEN
        DO nt=1, ntyp
@@ -125,19 +133,21 @@
     END IF
     !
     IF (lrigid) THEN
-       WRITE (6,'(8x,a)') 'Read dielectric tensor and effective charges'
-       !ASR on effective charges
-        DO i=1,3
-           DO j=1,3
-              sumz=0.0d0
-              DO na=1,nat
-                 sumz = sumz + zstar(i,j,na)
-              ENDDO
-              DO na=1,nat
-                 zstar(i,j,na) = zstar(i,j,na) - sumz/nat
-              ENDDO
-           ENDDO
+      WRITE (6,'(8x,a)') 'Read dielectric tensor and effective charges'
+      zstar = zstar_
+      epsi = epsi_
+      !ASR on effective charges
+      DO i=1,3
+        DO j=1,3
+          sumz=0.0d0
+          DO na=1,nat
+            sumz = sumz + zstar(i,j,na)
+          ENDDO
+          DO na=1,nat
+            zstar(i,j,na) = zstar(i,j,na) - sumz/nat
+          ENDDO
         ENDDO
+      ENDDO
     ENDIF
     !
     ! If time-reversal is not included in the star of q, then double the nq to
