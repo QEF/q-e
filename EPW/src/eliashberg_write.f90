@@ -291,27 +291,50 @@
   ! SP & RM: .cube file for VESTA plotting (only if iverbosity = 2)
   !
   IF ( iverbosity .eq. 2 ) THEN
-     !
-     DO ibnd = 1, nbndfs
-        IF ( temp .lt. 10.d0 ) THEN
+    !
+    DO ibnd = 1, nbndfs
+      !
+      IF ( ibnd < 10 ) THEN
+        ! We make the assumption that there are no superconductor with Tc higher than 999 K.  
+        IF ( temp < 10.d0 ) THEN
            WRITE(name1,'(a,a1,a4,a14,f4.2,a1,i1,a5)')TRIM(prefix), '.', cname, '_aniso_gap0_00', temp, '_', ibnd, '.cube'
-        ELSEIF ( temp .ge. 10.d0 ) THEN
+        ELSEIF ( temp < 100.d0 ) THEN
            WRITE(name1,'(a,a1,a4,a13,f5.2,a1,i1,a5)')TRIM(prefix), '.', cname, '_aniso_gap0_0', temp, '_', ibnd, '.cube'
-        ELSEIF ( temp .ge. 100.d0 ) THEN
+        ELSEIF ( temp < 1000.d0 ) THEN
            WRITE(name1,'(a,a1,a4,a12,f6.2,a1,i1,a5)')TRIM(prefix), '.', cname, '_aniso_gap0_', temp, '_', ibnd, '.cube'
         ENDIF
-        OPEN(iufilgapFS, file=name1, form='formatted')
-        WRITE(iufilgapFS,*) 'Cubfile created from EPW calculation'
-        WRITE(iufilgapFS,*) 'gap'
-        WRITE(iufilgapFS,'(i5,3f12.6)') 1, 0.0d0, 0.0d0, 0.0d0
-        WRITE(iufilgapFS,'(i5,3f12.6)') nkf1, (bg(i,1)/dble(nkf1),i=1,3)
-        WRITE(iufilgapFS,'(i5,3f12.6)') nkf2, (bg(i,2)/dble(nkf2),i=1,3)
-        WRITE(iufilgapFS,'(i5,3f12.6)') nkf3, (bg(i,3)/dble(nkf3),i=1,3)
-        WRITE(iufilgapFS,'(i5,4f12.6)') 1, 1.0d0, 0.0d0, 0.0d0, 0.0d0
-        WRITE(iufilgapFS,'(6f12.6)') ( Agap_tmp(ibnd,ixkff(ik)),ik=1,nkf1*nkf2*nkf3 )
-        CLOSE(iufilgapFS)
-     ENDDO
-     !
+      ELSEIF ( ibnd < 100 ) THEN
+        IF ( temp < 10.d0 ) THEN
+           WRITE(name1,'(a,a1,a4,a14,f4.2,a1,i2,a5)')TRIM(prefix), '.', cname, '_aniso_gap0_00', temp, '_', ibnd, '.cube'
+        ELSEIF ( temp < 100.d0 ) THEN
+           WRITE(name1,'(a,a1,a4,a13,f5.2,a1,i2,a5)')TRIM(prefix), '.', cname, '_aniso_gap0_0', temp, '_', ibnd, '.cube'
+        ELSEIF ( temp < 1000.d0 ) THEN
+           WRITE(name1,'(a,a1,a4,a12,f6.2,a1,i2,a5)')TRIM(prefix), '.', cname, '_aniso_gap0_', temp, '_', ibnd, '.cube'
+        ENDIF
+      ELSEIF ( ibnd < 1000 ) THEN
+        IF ( temp < 10.d0 ) THEN
+           WRITE(name1,'(a,a1,a4,a14,f4.2,a1,i3,a5)')TRIM(prefix), '.', cname, '_aniso_gap0_00', temp, '_', ibnd, '.cube'
+        ELSEIF ( temp < 100.d0 ) THEN
+           WRITE(name1,'(a,a1,a4,a13,f5.2,a1,i3,a5)')TRIM(prefix), '.', cname, '_aniso_gap0_0', temp, '_', ibnd, '.cube'
+        ELSEIF ( temp < 1000.d0 ) THEN
+           WRITE(name1,'(a,a1,a4,a12,f6.2,a1,i3,a5)')TRIM(prefix), '.', cname, '_aniso_gap0_', temp, '_', ibnd, '.cube'
+        ENDIF
+      ELSE
+        CALL errore( 'eliashberg_write', ' Too many bands ',1)
+      ENDIF
+      !
+      OPEN(iufilgapFS, file=name1, form='formatted')
+      WRITE(iufilgapFS,*) 'Cubfile created from EPW calculation'
+      WRITE(iufilgapFS,*) 'gap'
+      WRITE(iufilgapFS,'(i5,3f12.6)') 1, 0.0d0, 0.0d0, 0.0d0
+      WRITE(iufilgapFS,'(i5,3f12.6)') nkf1, (bg(i,1)/dble(nkf1),i=1,3)
+      WRITE(iufilgapFS,'(i5,3f12.6)') nkf2, (bg(i,2)/dble(nkf2),i=1,3)
+      WRITE(iufilgapFS,'(i5,3f12.6)') nkf3, (bg(i,3)/dble(nkf3),i=1,3)
+      WRITE(iufilgapFS,'(i5,4f12.6)') 1, 1.0d0, 0.0d0, 0.0d0, 0.0d0
+      WRITE(iufilgapFS,'(6f12.6)') ( Agap_tmp(ibnd,ixkff(ik)),ik=1,nkf1*nkf2*nkf3 )
+      CLOSE(iufilgapFS)
+    ENDDO
+    !
   ENDIF
   !
   ! SP & RM : Write on file the superconducting gap close to the Fermi surface along with

@@ -462,21 +462,31 @@
     ! ixkff(ik)=0 and lambda_k(0,ibnd) = 0.0
     !
     IF ( iverbosity .eq. 2 ) THEN
-       !
-       DO ibnd = 1, nbndfs
+      !
+      DO ibnd = 1, nbndfs
+        !
+        IF ( ibnd < 10 ) THEN
           WRITE(name1,'(a,a8,i1,a5)') TRIM(prefix),'.lambda_', ibnd, '.cube'
-          OPEN(iufillambdaFS, file=name1, form='formatted')
-          WRITE(iufillambdaFS,*) 'Cubfile created from EPW calculation'
-          WRITE(iufillambdaFS,*) 'lambda'
-          WRITE(iufillambdaFS,'(i5,3f12.6)') 1, 0.0d0, 0.0d0, 0.0d0
-          WRITE(iufillambdaFS,'(i5,3f12.6)') nkf1, (bg(i,1)/DBLE(nkf1),i=1,3)
-          WRITE(iufillambdaFS,'(i5,3f12.6)') nkf2, (bg(i,2)/DBLE(nkf2),i=1,3)
-          WRITE(iufillambdaFS,'(i5,3f12.6)') nkf3, (bg(i,3)/DBLE(nkf3),i=1,3)
-          WRITE(iufillambdaFS,'(i5,4f12.6)') 1, 1.0d0, 0.0d0, 0.0d0, 0.0d0
-          WRITE(iufillambdaFS,'(6f12.6)') ( lambda_k(ixkff(ik),ibnd), ik=1,nkf1*nkf2*nkf3 )
-          CLOSE(iufillambdaFS)
-       ENDDO
-       !
+        ELSEIF ( ibnd < 100 ) THEN
+          WRITE(name1,'(a,a8,i2,a5)') TRIM(prefix),'.lambda_', ibnd, '.cube'
+        ELSEIF( ibnd < 1000 ) THEN
+          WRITE(name1,'(a,a8,i3,a5)') TRIM(prefix),'.lambda_', ibnd, '.cube'
+        ELSE 
+          CALL errore( 'eliashberg_setup', 'Too many bands ',1)  
+        ENDIF  
+        !  
+        OPEN(iufillambdaFS, file=name1, form='formatted')
+        WRITE(iufillambdaFS,*) 'Cubfile created from EPW calculation'
+        WRITE(iufillambdaFS,*) 'lambda'
+        WRITE(iufillambdaFS,'(i5,3f12.6)') 1, 0.0d0, 0.0d0, 0.0d0
+        WRITE(iufillambdaFS,'(i5,3f12.6)') nkf1, (bg(i,1)/DBLE(nkf1),i=1,3)
+        WRITE(iufillambdaFS,'(i5,3f12.6)') nkf2, (bg(i,2)/DBLE(nkf2),i=1,3)
+        WRITE(iufillambdaFS,'(i5,3f12.6)') nkf3, (bg(i,3)/DBLE(nkf3),i=1,3)
+        WRITE(iufillambdaFS,'(i5,4f12.6)') 1, 1.0d0, 0.0d0, 0.0d0, 0.0d0
+        WRITE(iufillambdaFS,'(6f12.6)') ( lambda_k(ixkff(ik),ibnd), ik=1,nkf1*nkf2*nkf3 )
+        CLOSE(iufillambdaFS)
+      ENDDO
+      !
     ENDIF
     !
     ! SP & RM : Write on file the lambda close to the Fermi surface along with 

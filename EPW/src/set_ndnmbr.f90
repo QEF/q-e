@@ -27,29 +27,40 @@
   !
   node = (pool-1)*procp + proc + 1
   !
-  ndlab = '   '
-  IF ( nprocs < 10 ) then
+  ndlab = '    '
+  IF ( nprocs < 10 ) THEN
     WRITE (ndlab(1:1),'(i1)') node
-  ELSEif ( nprocs < 100 ) then
+  ELSEIF ( nprocs < 100 ) then
 ! SP: Seems like QE change its convention to
-    IF ( node < 10 ) then
+    IF ( node < 10 ) THEN
 !       ndlab = '0'
 !       WRITE (ndlab(2:2),'(i1)') node
        WRITE (ndlab(1:1),'(i1)') node
     ELSE
        WRITE (ndlab(1:2),'(i2)') node
     ENDIF
-  ELSE
-    IF ( node < 10 ) then
- !      ndlab = '00'
-!       WRITE (ndlab(3:3),'(i1)') node
+  ELSEIF ( nprocs < 100 ) THEN
+    IF ( node < 10 ) THEN
+!       ndlab = '00'
        WRITE (ndlab(1:1),'(i1)') node
-    ELSEif ( node < 100 ) then
- !      ndlab = '0'
-!       WRITE (ndlab(2:3),'(i2)') node
+    ELSEIF ( node < 100 ) THEN
+!       ndlab = '0'
        WRITE (ndlab(1:2),'(i2)') node
     ELSE
-       WRITE (ndlab,'(i3)') node
+       WRITE (ndlab(1:3),'(i3)') node
+    ENDIF
+  ELSE
+    IF ( node < 10 ) THEN
+!       ndlab = '000'
+       WRITE (ndlab(1:1),'(i1)') node
+    ELSEIF ( node < 100 ) THEN
+!       ndlab = '00'
+       WRITE (ndlab(1:2),'(i2)') node
+    ELSEIF ( node < 1000 ) THEN
+!       ndlab = '0'
+       WRITE (ndlab(1:3),'(i3)') node
+    ELSE
+       WRITE (ndlab,'(i4)') node
     ENDIF
   ENDIF
   !
