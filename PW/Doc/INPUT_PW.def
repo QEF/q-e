@@ -454,6 +454,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 that no symmetry is included which maps @i z to -@i z even if in principle one
                 could still use them for symmetric systems (i.e. no dipole correction).
                 For @ref nosym=.false. verbosity is set to 'high'.
+                Note: this option was called "monopole" in v6.0 and 6.1 of pw.x
             }
         }
 
