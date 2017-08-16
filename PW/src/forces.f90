@@ -7,7 +7,7 @@
 !
 !----------------------------------------------------------------------------
 ! TB
-! included monopole related forces
+! included gate related forces
 !----------------------------------------------------------------------------
 !
 !----------------------------------------------------------------------------
@@ -40,7 +40,7 @@ SUBROUTINE forces()
   USE scf,           ONLY : rho
   USE ions_base,     ONLY : if_pos
   USE ldaU,          ONLY : lda_plus_u, U_projection
-  USE extfield,      ONLY : tefield, forcefield, monopole, forcemono, relaxz
+  USE extfield,      ONLY : tefield, forcefield, gate, forcegate, relaxz
   USE control_flags, ONLY : gamma_only, remove_rigid_rot, textfor, &
                             iverbosity, llondon, lxdm, ts_vdw
   USE plugin_flags
@@ -190,7 +190,7 @@ SUBROUTINE forces()
         ! factor 2 converts from Ha to Ry a.u.
         IF ( ts_vdw )  force(ipol,na) = force(ipol,na) + 2.0_dp*FtsvdW(ipol,na)
         IF ( tefield ) force(ipol,na) = force(ipol,na) + forcefield(ipol,na)
-        IF ( monopole ) force(ipol,na) = force(ipol,na) + forcemono(ipol,na) ! TB
+        IF ( gate ) force(ipol,na) = force(ipol,na) + forcegate(ipol,na) ! TB
         IF (lelfield)  force(ipol,na) = force(ipol,na) + forces_bp_efield(ipol,na)
         IF (do_comp_mt)force(ipol,na) = force(ipol,na) + force_mt(ipol,na) 
 
@@ -199,9 +199,9 @@ SUBROUTINE forces()
      END DO
      !
      !TB
-     IF ((monopole.and.relaxz).AND.(ipol==3)) WRITE( stdout, '("Total force in z direction = 0 disabled")')
+     IF ((gate.and.relaxz).AND.(ipol==3)) WRITE( stdout, '("Total force in z direction = 0 disabled")')
      !
-     IF ( (do_comp_esm .and. ( esm_bc .ne. 'pbc' )).or.(monopole.and.relaxz) ) THEN
+     IF ( (do_comp_esm .and. ( esm_bc .ne. 'pbc' )).or.(gate.and.relaxz) ) THEN
         !
         ! ... impose total force along xy = 0
         !
@@ -301,11 +301,11 @@ SUBROUTINE forces()
         END DO
      END IF
      !
-     ! TB monopole forces
-     IF ( monopole) THEN
-        WRITE( stdout, '(/,5x,"Monopole contribution to forces:")')
+     ! TB gate forces
+     IF ( gate ) THEN
+        WRITE( stdout, '(/,5x,"Gate contribution to forces:")')
         DO na = 1, nat
-           WRITE( stdout, 9035) na, ityp(na), (forcemono(ipol,na), ipol = 1, 3)
+           WRITE( stdout, 9035) na, ityp(na), (forcegate(ipol,na), ipol = 1, 3)
         END DO
      END IF
      !

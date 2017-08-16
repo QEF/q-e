@@ -439,18 +439,18 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             }
         }
 
-        var monopole -type LOGICAL {
+        var gate -type LOGICAL {
             default { .FALSE. }
-            see { zmon, realxz, block, block_1, block_2, block_height }
+            see { zgate, realxz, block, block_1, block_2, block_height }
             info {
-                In the case of charged cells (@ref tot_charge .ne. 0) setting monopole = .TRUE.
+                In the case of charged cells (@ref tot_charge .ne. 0) setting gate = .TRUE.
                 represents the counter charge (i.e. -tot_charge) not by a homogenous
-                background charge but with a charged plate, which is placed at @ref zmon
-                (see below). Details of the monopole potential can be found in
+                background charge but with a charged plate, which is placed at @ref zgate
+                (see below). Details of the gate potential can be found in
                 T. Brumme, M. Calandra, F. Mauri; PRB 89, 245406 (2014).
                 Note, that in systems which are not symmetric with respect to the plate,
                 one needs to enable the dipole correction! (@ref dipfield=.true.).
-                Currently, symmetry can be used with monopole=.true. but carefully check
+                Currently, symmetry can be used with gate=.true. but carefully check
                 that no symmetry is included which maps @i z to -@i z even if in principle one
                 could still use them for symmetric systems (i.e. no dipole correction).
                 For @ref nosym=.false. verbosity is set to 'high'.
@@ -1664,16 +1664,16 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
          }
     
         group {
-	    label { below variables are used only if @ref monopole = .TRUE. }
+	    label { below variables are used only if @ref gate = .TRUE. }
 
-	    var zmon -type REAL {
+	    var zgate -type REAL {
 		default { 0.5 }
 		info {
-		    used only if @ref monopole = .TRUE.
+		    used only if @ref gate = .TRUE.
 		    Specifies the position of the charged plate which represents
 		    the counter charge in doped systems (@ref tot_charge .ne. 0).
-		    In units of the unit cell length in @i z direction, @ref zmon in ]0,1[
-                    Details of the monopole potential can be found in
+		    In units of the unit cell length in @i z direction, @ref zgate in ]0,1[
+                    Details of the gate potential can be found in
                     T. Brumme, M. Calandra, F. Mauri; PRB 89, 245406 (2014).
 		}
 	    }
@@ -1681,7 +1681,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	    var realxz -type LOGICAL {
 		default { .FALSE. }
 		info {
-		    used only if @ref monopole = .TRUE.
+		    used only if @ref gate = .TRUE.
 		    Allows the relaxation of the system towards the charged plate.
 		    Use carefully and utilize either a layer of fixed atoms or a
 		    potential barrier (@ref block=.TRUE.) to avoid the atoms moving to
@@ -1693,7 +1693,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	    var block -type LOGICAL {
 		default { .FALSE. }
 		info {
-		    used only if @ref monopole = .TRUE.
+		    used only if @ref gate = .TRUE.
 		    Adds a potential barrier to the total potential seen by the
 		    electrons to mimic a dielectric in field effect configuration
 		    and/or to avoid electrons spilling into the vacuum region for
@@ -1707,7 +1707,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	    var block_1 -type REAL {
 		default { 0.45 }
 		info {
-		    used only if @ref monopole = .TRUE. and @ref block = .TRUE.
+		    used only if @ref gate = .TRUE. and @ref block = .TRUE.
 		    lower beginning of the potential barrier, in units of the
 		    unit cell size along @i z, @ref block_1 in ]0,1[
 		}
@@ -1716,7 +1716,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	    var block_2 -type REAL {
 		default { 0.55 }
 		info {
-		    used only if @ref monopole = .TRUE. and @ref block = .TRUE.
+		    used only if @ref gate = .TRUE. and @ref block = .TRUE.
 		    upper beginning of the potential barrier, in units of the
 		    unit cell size along @i z, @ref block_2 in ]0,1[
                 }
@@ -1725,7 +1725,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	    var block_height -type REAL {
 		default { 0.1 }
 		info {
-		    used only if @ref monopole = .TRUE. and @ref block = .TRUE.
+		    used only if @ref gate = .TRUE. and @ref block = .TRUE.
 		    Height of the potential barrier in Rydberg.
 		}
 	    }

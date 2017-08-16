@@ -22,8 +22,8 @@ MODULE extfield
       ! TB
        relaxz,       &! relax in z direction
        block,        &! add potential barrier
-       monopole       ! if .TRUE. and system is charged, charge is represented
-                      ! with monopole plane (gate)
+       gate           ! if .TRUE. and system is charged, charge is represented
+                      ! with charged plate (gate)
   INTEGER :: &
        edir           ! direction of the field
   REAL(DP) :: &
@@ -35,14 +35,14 @@ MODULE extfield
       ion_dipole,    &! ionic_dipole      used when dipole correction is on
       tot_dipole,    &! total dipole      used when dipole correction is on
       ! TB
-      zmon,          &! position of monopole plane
+      zgate,         &! position of charged plate
       block_1,       &! blocking potential
       block_2,       &
       block_height,  &
-      etotmonofield   ! energy correction due to the monopole
+      etotgatefield   ! energy correction due to the gate
   REAL(DP), ALLOCATABLE :: &
       forcefield(:,:), &
-      forcemono(:,:) ! TB monopole forces
+      forcegate(:,:) ! TB gate forces
   !
 CONTAINS
 !
@@ -72,14 +72,14 @@ CONTAINS
 
 !TB - start
 !------------------------------------------------------------------------------!
-!mopopla - add a potential of a monopole plane (kflag = .true.)
+!mopopla - add a potential of a charged plate (kflag = .true.)
 !          or the compensating background charge (kflag = .false.)
 !          I split those in order to plot both independently
 ! cite PRB 89, 245406 (2014)
 !
-      FUNCTION mopopla(zmon,x,kflag) RESULT (mopoplaout)
+      FUNCTION mopopla(zgate,x,kflag) RESULT (mopoplaout)
         IMPLICIT NONE
-        REAL(DP) :: zmon,x
+        REAL(DP) :: zgate,x
         REAL(DP) :: mopoplaout, z
         LOGICAL  :: kflag
 
@@ -89,9 +89,9 @@ CONTAINS
           IF (x<=1.0.and.x>=0.0) EXIT
         ENDDO
 
-        z = (x - zmon)
+        z = (x - zgate)
 
-        !Monopole-plane
+        !Charged-plate
         ! if z < 0, we are below the plane
         !    z > 0, above
         !    z < -0.5, the potential is again the same as for z > 0

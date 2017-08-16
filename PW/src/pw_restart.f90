@@ -7,7 +7,7 @@
 !
 !----------------------------------------------------------------------------
 ! TB
-! included monopole related variables, search for 'TB'
+! included gate related variables, search for 'TB'
 !----------------------------------------------------------------------------
 !
 !----------------------------------------------------------------------------
@@ -135,7 +135,7 @@ MODULE pw_restart
       USE scf,                  ONLY : rho
       USE extfield,             ONLY : tefield, dipfield, edir, &
                                        emaxpos, eopreg, eamp, & !TB
-                                       monopole, zmon, block, block_1, &
+                                       gate, zgate, block, block_1, &
                                        block_2, block_height, relaxz
       USE io_rho_xml,           ONLY : write_scf
       USE mp_world,             ONLY : nproc
@@ -378,7 +378,7 @@ MODULE pw_restart
 !-------------------------------------------------------------------------------
          !
          CALL qexml_write_efield( tefield, dipfield, edir, emaxpos, eopreg, eamp, &
-                                  monopole, zmon, relaxz, block, block_1, block_2,&
+                                  gate, zgate, relaxz, block, block_1, block_2,&
                                   block_height ) 
          !
 !
@@ -1651,7 +1651,7 @@ MODULE pw_restart
       !----------------------------------------------------------------------
       !
       USE extfield, ONLY : tefield, dipfield, edir, emaxpos, eopreg, eamp, & !TB
-                           monopole, zmon, relaxz, block, block_1, block_2, block_height
+                           gate, zgate, relaxz, block, block_1, block_2, block_height
       !
       IMPLICIT NONE
       !
@@ -1666,7 +1666,7 @@ MODULE pw_restart
          !
          CALL qexml_read_efield( TEFIELD=tefield, DIPFIELD=dipfield, EDIR=edir, &
                                  EMAXPOS=emaxpos, EOPREG=eopreg, EAMP=eamp, &
-                                 MONOPOLE=monopole, ZMON=zmon, RELAXZ=relaxz, & !TB
+                                 GATE=gate, ZGATE=zgate, RELAXZ=relaxz, & !TB
                                  BLOCK=block, BLOCK_1=block_1, BLOCK_2=block_2, &
                                  BLOCK_HEIGHT=block_height, FOUND=found, IERR=ierr )
       ENDIF
@@ -1679,7 +1679,7 @@ MODULE pw_restart
          !
          tefield  = .FALSE.
          dipfield = .FALSE.
-         monopole = .FALSE.
+         gate     = .FALSE.
          !
       END IF
       !
@@ -1689,8 +1689,8 @@ MODULE pw_restart
       CALL mp_bcast( emaxpos,  ionode_id, intra_image_comm )
       CALL mp_bcast( eopreg,   ionode_id, intra_image_comm )
       CALL mp_bcast( eamp,     ionode_id, intra_image_comm )
-      CALL mp_bcast( monopole, ionode_id, intra_image_comm )
-      CALL mp_bcast( zmon,     ionode_id, intra_image_comm )
+      CALL mp_bcast( gate,     ionode_id, intra_image_comm )
+      CALL mp_bcast( zgate,    ionode_id, intra_image_comm )
       CALL mp_bcast( relaxz,   ionode_id, intra_image_comm )
       CALL mp_bcast( block,    ionode_id, intra_image_comm )
       CALL mp_bcast( block_1,  ionode_id, intra_image_comm )

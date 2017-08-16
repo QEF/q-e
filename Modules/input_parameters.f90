@@ -7,7 +7,7 @@
 !
 !---------------------------------------------
 ! TB
-! included monopole related stuff, search 'TB'
+! included gate related stuff, search 'TB'
 !---------------------------------------------
 !
 !=----------------------------------------------------------------------------=!
@@ -197,9 +197,9 @@ MODULE input_parameters
           ! if .TRUE. a sawtooth potential simulating a finite electric field
           ! is added to the local potential = only used in PW
 
-          ! TB - added monopole also below to the namelist
-        LOGICAL :: monopole = .FALSE.
-          ! if .TRUE. a monopole plane in charged systems is added with a
+          ! TB - added gate also below to the namelist
+        LOGICAL :: gate = .FALSE.
+          ! if .TRUE. a charged plate in charged systems is added with a
           ! total charge which is opposite to the charge of the system
 
           LOGICAL :: tefield2  = .false.
@@ -285,7 +285,7 @@ MODULE input_parameters
           gdir, nppstr, wf_collect, lelfield, nberrycyc, refg,            &
           tefield2, saverho, tabps, lkpoint_dir, use_wannier, lecrpa,     &
           tqmmm, vdw_table_name, lorbm, memory, point_label_type,         &
-          lfcpopt, lfcpdyn, input_xml_schema_file, monopole                                        
+          lfcpopt, lfcpdyn, input_xml_schema_file, gate                                        
 !
 !=----------------------------------------------------------------------------=!
 !  SYSTEM Namelist Input Parameters
@@ -446,10 +446,10 @@ MODULE input_parameters
         REAL(DP) :: eopreg = 0.0_DP
         REAL(DP) :: eamp = 0.0_DP
 
-          ! TB parameters for monopole representing the gate
+          ! TB parameters for charged plate representing the gate
           ! and a possible potential barrier
           ! added also below to the namelist
-        REAL(DP) :: zmon  = 0.5
+        REAL(DP) :: zgate = 0.5
         LOGICAL  :: relaxz = .false.
         LOGICAL  :: block = .false.
         REAL(DP) :: block_1 = 0.45
@@ -611,7 +611,7 @@ MODULE input_parameters
              esm_a, esm_zb, fcp_mu, fcp_mass, fcp_tempw, fcp_relax_step,      &
              fcp_relax_crit,                                                  &
              space_group, uniqueb, origin_choice, rhombohedral,               &
-             zmon, relaxz, block, block_1, block_2, block_height
+             zgate, relaxz, block, block_1, block_2, block_height
 
 !=----------------------------------------------------------------------------=!
 !  ELECTRONS Namelist Input Parameters

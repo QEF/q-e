@@ -7,7 +7,7 @@
 !
 !---------------------------------------------
 ! TB
-! included monopole related stuff, search 'TB'
+! included gate related stuff, search 'TB'
 !---------------------------------------------
 !
 MODULE read_xml_fields_module
@@ -493,11 +493,11 @@ CONTAINS
        CALL iotk_scan_dat_inside( xmlinputunit, mixing_ndim, ierr = ierr )
        !
        ! TB - start
-    CASE ( 'monopole' )
-       CALL iotk_scan_dat_inside( xmlinputunit, monopole, ierr = ierr )
+    CASE ( 'gate' )
+       CALL iotk_scan_dat_inside( xmlinputunit, gate, ierr = ierr )
        !
-    CASE ( 'zmon' )
-       CALL iotk_scan_dat_inside( xmlinputunit, zmon, ierr = ierr )
+    CASE ( 'zgate' )
+       CALL iotk_scan_dat_inside( xmlinputunit, zgate, ierr = ierr )
        !
     CASE ( 'relaxz' )
        CALL iotk_scan_dat_inside( xmlinputunit, relaxz, ierr = ierr )

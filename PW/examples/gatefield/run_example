@@ -2,7 +2,7 @@
 
 ###############################################################################
 ##
-##  monopole EXAMPLE
+##  gate EXAMPLE
 ##
 ###############################################################################
 
@@ -16,7 +16,7 @@ if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
-$ECHO "This example shows how to use a monopole field to simulate"
+$ECHO "This example shows how to use a gate field to simulate"
 $ECHO "a charged surface slab"
 $ECHO
 
@@ -90,7 +90,7 @@ cat > single_-0.10.in  << EOF
  prefix        = 'single_-0.10',
  outdir        = '$TMP_DIR/',
  nstep         = 300,
- monopole      = .true.,
+ gate          = .true.,
  tefield       = .true.,
  dipfield      = .true.,
 /
@@ -104,13 +104,14 @@ cat > single_-0.10.in  << EOF
  ecutrho     = 410,
  occupations = 'smearing',
  degauss     = 0.002,
- smearing    = 'mv',
+ smearing    = 'gauss',
  tot_charge  = -0.10,
  relaxz      = .true.,
  edir        = 3,
- zmon        = 0.011,
+ zgate       = 0.011,
  emaxpos     = 0.000001,
  eopreg      = 0.01,
+ eamp        = 0.0,
  block       = .true.,
  block_1     = 0.000001,
  block_2     = 0.1,
@@ -146,7 +147,7 @@ cat > single_+0.10.in  << EOF
  prefix        = 'single_+0.10',
  outdir        = '$TMP_DIR/',
  nstep         = 300,
- monopole      = .true.,
+ gate          = .true.,
  tefield       = .true.,
  dipfield      = .true.,
 /
@@ -160,13 +161,14 @@ cat > single_+0.10.in  << EOF
  ecutrho     = 410,
  occupations = 'smearing',
  degauss     = 0.002,
- smearing    = 'mv',
+ smearing    = 'gauss',
  tot_charge  = +0.10,
  relaxz      = .true.,
  edir        = 3,
- zmon        = 0.011,
+ zgate       = 0.011,
  emaxpos     = 0.000001,
  eopreg      = 0.01,
+ eamp        = 0.0,
  block       = .true.,
  block_1     = 0.000001,
  block_2     = 0.1,
@@ -202,7 +204,7 @@ cat > single_+0.10.bands.in  << EOF
  prefix        = 'single_+0.10',
  outdir        = '$TMP_DIR/',
  nstep         = 300,
- monopole      = .true.,
+ gate          = .true.,
  tefield       = .true.,
  dipfield      = .true.,
 /
@@ -216,13 +218,14 @@ cat > single_+0.10.bands.in  << EOF
  ecutrho     = 410,
  occupations = 'smearing',
  degauss     = 0.002,
- smearing    = 'mv',
+ smearing    = 'gauss',
  tot_charge  = +0.10,
  relaxz      = .true.,
  edir        = 3,
- zmon        = 0.011,
+ zgate       = 0.011,
  emaxpos     = 0.000001,
  eopreg      = 0.01,
+ eamp        = 0.0,
  block       = .true.,
  block_1     = 0.000001,
  block_2     = 0.1,
@@ -259,7 +262,7 @@ cat > single_+0.10_nobarrier.in  << EOF
  prefix        = 'single_+0.10_nob',
  outdir        = '$TMP_DIR/',
  nstep         = 300,
- monopole      = .true.,
+ gate          = .true.,
  tefield       = .true.,
  dipfield      = .true.,
 /
@@ -273,13 +276,14 @@ cat > single_+0.10_nobarrier.in  << EOF
  ecutrho     = 410,
  occupations = 'smearing',
  degauss     = 0.002,
- smearing    = 'mv',
+ smearing    = 'gauss',
  tot_charge  = +0.10,
  relaxz      = .true.,
  edir        = 3,
- zmon        = 0.011,
+ zgate       = 0.011,
  emaxpos     = 0.000001,
  eopreg      = 0.01,
+ eamp        = 0.0,
 /
 &electrons
  conv_thr = 1.0d-9,
@@ -311,7 +315,7 @@ cat > single_+0.10_nobarrier.bands.in  << EOF
  prefix        = 'single_+0.10_nob',
  outdir        = '$TMP_DIR/',
  nstep         = 300,
- monopole      = .true.,
+ gate          = .true.,
  tefield       = .true.,
  dipfield      = .true.,
 /
@@ -325,13 +329,14 @@ cat > single_+0.10_nobarrier.bands.in  << EOF
  ecutrho     = 410,
  occupations = 'smearing',
  degauss     = 0.002,
- smearing    = 'mv',
+ smearing    = 'gauss',
  tot_charge  = +0.10,
  relaxz      = .true.,
  edir        = 3,
- zmon        = 0.011,
+ zgate       = 0.011,
  emaxpos     = 0.000001,
  eopreg      = 0.01,
+ eamp        = 0.0,
 /
 &electrons
  conv_thr = 1.0d-9,

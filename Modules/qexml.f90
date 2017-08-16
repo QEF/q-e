@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 ! TB
-! included monopole related variables in qexml_write_efield and qexml_read_efield
+! included gate related variables in qexml_write_efield and qexml_read_efield
 !
 !----------------------------------------------------------------------------
 MODULE qexml_module
@@ -1003,21 +1003,21 @@ CONTAINS
     !
     !------------------------------------------------------------------------
     SUBROUTINE qexml_write_efield( tefield, dipfield, edir, emaxpos, eopreg, eamp, &
-                                   monopole, zmon, relaxz, block, block_1, block_2,&
+                                   gate, zgate, relaxz, block, block_1, block_2,&
                                    block_height)
      !------------------------------------------------------------------------
      !
       LOGICAL, INTENT(in)   :: tefield        ! if .TRUE. a finite electric field
                                               ! is added to the local potential
       LOGICAL, INTENT(in)   :: dipfield       ! if .TRUE. the dipole field is subtracted
-      LOGICAL, INTENT(in)   :: monopole       ! if .TRUE. counter charge is represented by monopole (gate)
+      LOGICAL, INTENT(in)   :: gate           ! if .TRUE. counter charge is represented by charged plate
       LOGICAL, INTENT(in)   :: block          ! add potential barrier
       LOGICAL, INTENT(in)   :: relaxz         ! relax in z direction  
       INTEGER, INTENT(in)   :: edir           ! direction of the field
       REAL(DP), INTENT(in) :: emaxpos        ! position of the maximum of the field (0<emaxpos<1)
       REAL(DP), INTENT(in) :: eopreg         ! amplitude of the inverse region (0<eopreg<1)
       REAL(DP), INTENT(in) :: eamp           ! field amplitude (in a.u.) (1 a.u. = 51.44 10^11 V/m)
-      REAL(DP), INTENT(in) :: zmon           ! position of monopole plane in units of cell vector in z direction
+      REAL(DP), INTENT(in) :: zgate          ! position of charged plate in units of cell vector in z direction
       REAL(DP), INTENT(in) :: block_1        ! potential barrier
       REAL(DP), INTENT(in) :: block_2
       REAL(DP), INTENT(in) :: block_height
@@ -1037,9 +1037,9 @@ CONTAINS
       !
       CALL iotk_write_dat( ounit, "FIELD_AMPLITUDE", eamp )
       !
-      CALL iotk_write_dat( ounit, "MONOPOLE_PLANE", monopole )
+      CALL iotk_write_dat( ounit, "CHARGED_PLATE", gate )
       !
-      CALL iotk_write_dat( ounit, "MONOPOLE_POS", zmon )
+      CALL iotk_write_dat( ounit, "GATE_POS", zgate )
       !
       CALL iotk_write_dat( ounit, "RELAX_Z", relaxz )
       !
@@ -2942,21 +2942,21 @@ CONTAINS
     !
     !------------------------------------------------------------------------
     SUBROUTINE qexml_read_efield( tefield, dipfield, edir, emaxpos, eopreg, eamp, &
-                                  monopole, zmon, relaxz, block, block_1, block_2,&
+                                  gate, zgate, relaxz, block, block_1, block_2,&
                                   block_height, found, ierr )
       !----------------------------------------------------------------------
       !
       IMPLICIT NONE
       !
-      LOGICAL,   OPTIONAL, INTENT(out) :: tefield, dipfield, monopole, relaxz, block
+      LOGICAL,   OPTIONAL, INTENT(out) :: tefield, dipfield, gate, relaxz, block
       INTEGER,   OPTIONAL, INTENT(out) :: edir
-      REAL(DP),  OPTIONAL, INTENT(out) :: emaxpos, eopreg, eamp, zmon, block_1, block_2, block_height
+      REAL(DP),  OPTIONAL, INTENT(out) :: emaxpos, eopreg, eamp, zgate, block_1, block_2, block_height
       LOGICAL,             INTENT(out) :: found
       INTEGER,             INTENT(out) :: ierr
       !
-      LOGICAL   :: tefield_, dipfield_, monopole_, block_, relaxz_
+      LOGICAL   :: tefield_, dipfield_, gate_, block_, relaxz_
       INTEGER   :: edir_
-      REAL(DP)  :: emaxpos_, eopreg_, eamp_, zmon_, block_1_, block_2_, block_height_
+      REAL(DP)  :: emaxpos_, eopreg_, eamp_, zgate_, block_1_, block_2_, block_height_
       !
       ierr = 0
       !
@@ -2982,10 +2982,10 @@ CONTAINS
       CALL iotk_scan_dat( iunit, "FIELD_AMPLITUDE", eamp_, IERR=ierr )
       IF ( ierr /= 0 ) RETURN
       !
-      CALL iotk_scan_dat( iunit, "MONOPOLE_PLANE", monopole_, IERR=ierr )
+      CALL iotk_scan_dat( iunit, "CHARGED_PLATE", gate_, IERR=ierr )
       IF ( ierr /= 0 ) RETURN
       !
-      CALL iotk_scan_dat( iunit, "MONOPOLE_POS", zmon_, IERR=ierr )
+      CALL iotk_scan_dat( iunit, "GATE_POS", zgate_, IERR=ierr )
       IF ( ierr /= 0 ) RETURN
       !
       CALL iotk_scan_dat( iunit, "RELAX_Z", relaxz_, IERR=ierr )
@@ -3013,8 +3013,8 @@ CONTAINS
       IF ( present(emaxpos) )        emaxpos      = emaxpos_
       IF ( present(eopreg) )         eopreg       = eopreg_
       IF ( present(eamp) )           eamp         = eamp_
-      IF ( present(monopole) )       monopole     = monopole_
-      IF ( present(zmon) )           zmon         = zmon_
+      IF ( present(gate) )           gate         = gate_
+      IF ( present(zgate) )          zgate        = zgate_
       IF ( present(relaxz) )         relaxz       = relaxz_
       IF ( present(block) )          block        = block_
       IF ( present(block_1) )        block_1      = block_1_

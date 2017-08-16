@@ -93,7 +93,7 @@ MODULE pw_restart_new
       USE force_mod,            ONLY : lforce, sumfor, force, sigma, lstres
       USE extfield,             ONLY : tefield, dipfield, edir, etotefield, &
                                        emaxpos, eopreg, eamp, el_dipole, ion_dipole,&
-                                       monopole, zmon, relaxz, block, block_1,&
+                                       gate, zgate, relaxz, block, block_1,&
                                        block_2, block_height ! TB
       USE mp,                   ONLY : mp_sum
       USE mp_bands,             ONLY : intra_bgrp_comm

@@ -16,7 +16,7 @@
 !   and electronic (compute_el_dip) contributions.
 !
 ! TB
-! included monopole in the calculation of the dipole
+! included gate in the calculation of the dipole
 ! search for 'TB'
 !
 SUBROUTINE compute_ion_dip(emaxpos, eopreg, edir, ion_dipole)
@@ -30,7 +30,7 @@ SUBROUTINE compute_ion_dip(emaxpos, eopreg, edir, ion_dipole)
   USE kinds,      ONLY : DP
   USE cell_base,  ONLY : at, bg, omega, alat
   USE klist,      ONLY : nelec !TB
-  USE extfield,   ONLY : monopole, dipfield, zmon, saw
+  USE extfield,   ONLY : gate, dipfield, zgate, saw
   !
   IMPLICIT NONE
   !
@@ -72,12 +72,12 @@ SUBROUTINE compute_ion_dip(emaxpos, eopreg, edir, ion_dipole)
   END DO
 
   !
-  ! if the monopole is used to represent the background charge we need to include
-  ! the charged plane in the calculation of the dipole
+  ! if the gate is used to represent the background charge we need to include
+  ! the charged plate in the calculation of the dipole
   !
-  IF (monopole.AND.dipfield) THEN
+  IF (gate.AND.dipfield) THEN
      ionic_charge = SUM( zv(ityp(1:nat)) )
-     ion_dipole = ion_dipole + (nelec-ionic_charge) * saw(emaxpos,eopreg, zmon ) &
+     ion_dipole = ion_dipole + (nelec-ionic_charge) * saw(emaxpos,eopreg, zgate ) &
                                                 * (alat/bmod) * (fpi/omega)
   ENDIF
   

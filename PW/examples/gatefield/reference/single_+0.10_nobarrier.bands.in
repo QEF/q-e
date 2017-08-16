@@ -1,11 +1,11 @@
 &control
- calculation   = 'relax',
+ calculation   = 'bands',
  restart_mode  = 'from_scratch',
- pseudo_dir    = '/scratch/scitas/nvarini/espresso_trunk_svn/pseudo',
+ pseudo_dir    = '/home/paulatto/ESPRESSO/espresso/pseudo',
  prefix        = 'single_+0.10_nob',
- outdir        = '/scratch/scitas/nvarini/espresso_trunk_svn/tempdir/',
+ outdir        = '/home/paulatto/ESPRESSO/espresso/tempdir/',
  nstep         = 300,
- monopole      = .true.,
+ gate          = .true.,
  tefield       = .true.,
  dipfield      = .true.,
 /
@@ -19,19 +19,17 @@
  ecutrho     = 410,
  occupations = 'smearing',
  degauss     = 0.002,
- smearing    = 'mv',
+ smearing    = 'gauss',
  tot_charge  = +0.10,
  relaxz      = .true.,
  edir        = 3,
- zmon        = 0.011,
+ zgate       = 0.011,
  emaxpos     = 0.000001,
  eopreg      = 0.01,
+ eamp        = 0.0,
 /
 &electrons
  conv_thr = 1.0d-9,
-/
-&IONS
- ion_dynamics='bfgs',
 /
 ATOMIC_SPECIES
  Mo  95.94    Mo.pz-spn-rrkjus_psl.0.2.UPF
@@ -40,5 +38,9 @@ ATOMIC_POSITIONS (alat)
 S        0.500000000   0.288675130   2.500000000    0   0   0
 Mo       0.000000000   0.577350270   2.987083433
 S        0.000000000  -0.577350270   3.474835516
-K_POINTS automatic
-16 16 1 0 0 0
+K_POINTS crystal_b
+4
+ 0.000000  0.000000  0.000000  33
+ 0.500000  0.000000  0.000000  25
+ 0.666666 -0.333333  0.000000  50
+ 0.000000  0.000000  0.000000  1

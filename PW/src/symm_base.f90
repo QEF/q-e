@@ -341,7 +341,7 @@ SUBROUTINE find_sym ( nat, tau, ityp, magnetic_sym, m_loc, no_z_inv )
   LOGICAL, INTENT(in) :: magnetic_sym
   LOGICAL, INTENT(IN), OPTIONAL :: no_z_inv
   ! no_z_inv: if .true., disable symmetries sending z into -z.
-  !           Some calculations (e.g. monopole fields) require this
+  !           Some calculations (e.g. gate fields) require this
   !
   INTEGER :: i
   LOGICAL :: sym (48)
@@ -428,7 +428,7 @@ SUBROUTINE sgam_at ( nat, tau, ityp, sym, no_z_inv)
   !
   LOGICAL, INTENT(in), OPTIONAL :: no_z_inv
   ! no_z_inv: if .true., disable symmetry operations sending z into -z.
-  !           Some calculations (e.g. monopole fields) require this
+  !           Some calculations (e.g. gate fields) require this
   !
   LOGICAL, INTENT(out) :: sym (48)
   ! sym(isym)    : flag indicating if sym.op. isym in the parent group

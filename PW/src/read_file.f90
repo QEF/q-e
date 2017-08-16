@@ -8,7 +8,7 @@
 #if defined(__OLDXML)
 !----------------------------------------------------------------------------
 ! TB
-! included allocation of the force field of the monopole, search for 'TB'
+! included allocation of the force field of the gate, search for 'TB'
 !----------------------------------------------------------------------------
 !
 !----------------------------------------------------------------------------
@@ -117,7 +117,7 @@ SUBROUTINE read_xml_file_internal(withbs)
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE wvfct,                ONLY : nbnd, nbndx, et, wg
   USE symm_base,            ONLY : irt, d1, d2, d3, checkallsym, nsym
-  USE extfield,             ONLY : forcefield, tefield, monopole, forcemono
+  USE extfield,             ONLY : forcefield, tefield, gate, forcegate
   USE cellmd,               ONLY : cell_factor, lmovecell
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft
@@ -194,7 +194,7 @@ SUBROUTINE read_xml_file_internal(withbs)
   ALLOCATE( extfor(  3, nat ) )
   !
   IF ( tefield ) ALLOCATE( forcefield( 3, nat ) )
-  IF ( monopole ) ALLOCATE( forcemono( 3, nat ) ) ! TB
+  IF ( gate ) ALLOCATE( forcegate( 3, nat ) ) ! TB
   !
   ALLOCATE( irt( 48, nat ) )
   !

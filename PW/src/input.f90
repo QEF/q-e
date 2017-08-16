@@ -7,7 +7,7 @@
 !
 !----------------------------------------------------------------------------
 ! TB
-! included monopole related stuff, search for 'TB'
+! included gate related stuff, search for 'TB'
 !----------------------------------------------------------------------------
 !
 !----------------------------------------------------------------------------
@@ -79,16 +79,16 @@ SUBROUTINE iosys()
                             emaxpos_  => emaxpos, &
                             eopreg_   => eopreg, &
                             eamp_     => eamp, &
-  ! TB added monopole related variables
-                            zmon_     => zmon, &
-                            monopole_ => monopole, &
+  ! TB added gate related variables
+                            zgate_    => zgate, &
+                            gate_     => gate, &
                             relaxz_   => relaxz, &
-                            block_   => block, &
+                            block_    => block, &
                             block_1_   => block_1, &
                             block_2_   => block_2, &
                             block_height_   => block_height, &
                             forcefield, &
-                            forcemono
+                            forcegate
   !
   USE io_files,      ONLY : input_drho, output_drho, &
                             psfile, tmp_dir, wfc_dir, &
@@ -219,7 +219,7 @@ SUBROUTINE iosys()
                                gdir, nppstr, wf_collect,lelfield,lorbm,efield, &
                                nberrycyc, lkpoint_dir, efield_cart, lecrpa,    &
                                vdw_table_name, memory, tqmmm,                  &
-                               efield_phase, monopole
+                               efield_phase, gate
 
   !
   ! ... SYSTEM namelist
@@ -253,7 +253,7 @@ SUBROUTINE iosys()
                                lfcpopt, lfcpdyn, fcp_mu, fcp_mass, fcp_tempw, & 
                                fcp_relax_step, fcp_relax_crit,                &
                                space_group, uniqueb, origin_choice,           &
-                               rhombohedral, zmon, relaxz, block, block_1,    &
+                               rhombohedral, zgate, relaxz, block, block_1,   &
                                block_2, block_height
   !
   ! ... ELECTRONS namelist
@@ -493,30 +493,30 @@ SUBROUTINE iosys()
   !
   ! TB
   ! IF ( tefield .and. ( .not. nosym ) ) THEN
-  IF ( tefield .and. ( .not. nosym ) .and. ( .not. monopole)) THEN
+  IF ( tefield .and. ( .not. nosym ) .and. ( .not. gate )) THEN
      nosym = .true.
      WRITE( stdout, &
             '(5x,"Presently no symmetry can be used with electric field",/)' )
   ENDIF
   !TB begin some checks on input
-  IF ( (monopole) .AND. ( .NOT. nosym )) THEN
-     WRITE( stdout,'(/,5x,"Presently symmetry can be used with monopole field",/)' )
+  IF ( (gate) .AND. ( .NOT. nosym )) THEN
+     WRITE( stdout,'(/,5x,"Presently symmetry can be used with gate field",/)' )
      WRITE( stdout,'(5x,"setting verbosity to high",/)' )
      WRITE( stdout,'(5x,"CAREFULLY CHECK ALL SYMMETRIES",/)' )
      verbosity='high'
   ENDIF
-  IF ((zmon>1.0).OR.(zmon<0.0)) &
-     CALL errore( 'iosys', 'Position of the monopole has to be between within ]0,1[' , 1 )
-  IF ( (monopole) .AND. ((tefield).OR.(dipfield)) ) THEN
+  IF ((zgate>1.0).OR.(zgate<0.0)) &
+     CALL errore( 'iosys', 'Position of the charged plate representing the gate has to be between within ]0,1[' , 1 )
+  IF ( (gate) .AND. ((tefield).OR.(dipfield)) ) THEN
      IF (edir .ne. 3) &
-        CALL errore( 'iosys','Using monopole and tefield/dipfield, edir must be 3', 1)
-     IF ((zmon>=emaxpos).AND.(zmon<=(emaxpos+eopreg))) &
-        CALL errore( 'iosys', 'Monopole between the 2 dipole planes not allowed' , 1 )
+        CALL errore( 'iosys','Using gate and tefield/dipfield, edir must be 3', 1)
+     IF ((zgate>=emaxpos).AND.(zgate<=(emaxpos+eopreg))) &
+        CALL errore( 'iosys', 'Charged plate between the 2 dipole planes not allowed' , 1 )
      IF ((block).AND.(block_1.NE.emaxpos).AND.(block_2.NE.(emaxpos+eopreg))) THEN
         WRITE( stdout,'(/,5x,"Neither block_1=emaxpos, nor block_2=emaxpos+eopreg, CHECK IF THIS IS WHAT YOU WANT",/)' )
         WRITE( stdout,'(/,5x,"eopreg is nevertheless used for the smooth increase of the barrier",/)' )
   ENDIF
-  IF ( (monopole) .AND. (block) ) THEN
+  IF ( (gate) .AND. (block) ) THEN
      IF ((block_1<0.0) .OR. (block_1>1.0) .OR. (block_2<0.0) .OR. (block_2>1.0)) &
         CALL errore( 'iosys', 'Both block_1, block_2 have to be between wihtin ]0,1[' , 1 )
      IF (block_1>=block_2) &
@@ -524,14 +524,14 @@ SUBROUTINE iosys()
      ENDIF
   ENDIF
   !TB end
-  IF ( (tefield.or.monopole) .and. tstress ) THEN !TB no stress with monopole
+  IF ( (tefield.or.gate) .and. tstress ) THEN !TB no stress with gate
      lstres = .false.
      WRITE( stdout, &
-            '(5x,"Presently stress not available with electric field and monopole",/)' )
+            '(5x,"Presently stress not available with electric field and gates",/)' )
   ENDIF
   !TB Why no E-field with SOC?
   !IF ( tefield .and. ( nspin > 2 ) ) THEN
-  IF ( (tefield .and. ( nspin > 2 )) .and. (.not.monopole) ) THEN
+  IF ( (tefield .and. ( nspin > 2 )) .and. (.not.gate) ) THEN
      CALL errore( 'iosys', 'LSDA not available with electric field' , 1 )
   ENDIF
   !
@@ -1139,8 +1139,8 @@ SUBROUTINE iosys()
   tefield_    = tefield
   dipfield_   = dipfield
   !TB start
-  monopole_   = monopole
-  zmon_    = zmon
+  gate_   = gate
+  zgate_    = zgate
   relaxz_  = relaxz
   block_   = block
   block_1_ = block_1
@@ -1422,7 +1422,7 @@ SUBROUTINE iosys()
   ENDIF
   !
   IF ( tefield ) ALLOCATE( forcefield( 3, nat_ ) )
-  IF ( monopole ) ALLOCATE( forcemono( 3, nat_ ) ) !TB monopole forces
+  IF ( gate ) ALLOCATE( forcegate( 3, nat_ ) ) !TB gate forces
   !
   ! ... note that read_cards_pw no longer reads cards!
   !
