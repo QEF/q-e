@@ -328,7 +328,6 @@ SUBROUTINE fft_scatter_yz ( desc, f_in, f_aux, nxx_, isgn )
   me2    = desc%mype2 + 1
   me3    = desc%mype3 + 1
   nproc3 = desc%nproc3
-  !write (6,*) 'inside scatter_yz', isgn, nproc3
 
   ! allocate auxiliary array for columns distribution
   ALLOCATE ( ncp_( desc%nproc), ir1p_(desc%nr1x) )
@@ -346,9 +345,6 @@ SUBROUTINE fft_scatter_yz ( desc, f_in, f_aux, nxx_, isgn )
      me2_start = 1 ; me2_end = desc%nproc2
   end if
   my_nr1p_ = count (ir1p_ > 0)
-  !write (6,*) 'my_nr1p_', my_nr1p_
-  !write (6,*) 'ir1p_'
-  !write (6,*) ir1p_ ;FLUSH(6)
   !
   CALL start_clock ('fft_scatt_yz')
   !
@@ -361,20 +357,16 @@ SUBROUTINE fft_scatter_yz ( desc, f_in, f_aux, nxx_, isgn )
   end if
   
   sendsize = ncpx * nr3px       ! dimension of the scattered chunks
-  !write (6,*) 'nr3px,ncpx,sendsize', nr3px, ncpx, sendsize
 
   ierr = 0
   IF (isgn.gt.0) THEN
 
-     !write(6,*) ' f_in on input'
-     !write(6,99) f_in ; write(6,*); FLUSH (6) ! not needed, will be printed outside
      IF (nproc3==1) GO TO 10
      !
      ! "forward" scatter from columns to planes
      !
      ! step one: store contiguously the slices
      !
-     f_aux = (0.0_DP, 0.0_DP) !
      offset = 0
      DO iproc3 = 1, nproc3
         kdest = ( iproc3 - 1 ) * sendsize
@@ -394,16 +386,10 @@ SUBROUTINE fft_scatter_yz ( desc, f_in, f_aux, nxx_, isgn )
      !
      ! ensures that no garbage is present in the output 
      ! useless; the later accessed elements are overwritten by the A2A step
-     !f_in = (0.0_DP, 0.0_DP) !
      !
      ! step two: communication  across the    nproc3    group
      !
-     !write(6,*) ' f_aux just before A2A'
-     !write(6,98) f_aux(1:2*sendsize) ; write(6,*); FLUSH (6) 
-     !write (6,*) '--- A2A '
      CALL mpi_alltoall (f_aux(1), sendsize, MPI_DOUBLE_COMPLEX, f_in(1), sendsize, MPI_DOUBLE_COMPLEX, desc%comm3, ierr)
-     !write(6,*) ' f_in just after A2A'
-     !write(6,99) f_in ; write(6,*); FLUSH (6) 
 
      IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', 'info<>0', abs(ierr) )
      !
@@ -416,7 +402,6 @@ SUBROUTINE fft_scatter_yz ( desc, f_in, f_aux, nxx_, isgn )
         DO me2 = me2_start, me2_end
            ip = desc%iproc( me2, iproc3)
            ioff = desc%iss(ip)
-           !write(6,*) ip, it, ioff
            DO i = 1, ncp_( ip ) ! was ncp_(iproc3)
               mc = desc%ismap( i + ioff ) ! this is  m1+(m2-1)*nr1x  of the  current pencil
               m1 = mod (mc-1,desc%nr1x) + 1 ; m2 = (mc-1)/desc%nr1x + 1 
@@ -429,16 +414,11 @@ SUBROUTINE fft_scatter_yz ( desc, f_in, f_aux, nxx_, isgn )
            ENDDO
         ENDDO
      ENDDO
-     !write(6,*) ' f_aux on output'
-     !write(6,99) f_aux ; write(6,*); FLUSH (6) ! not needed, will be printed outside
 
   ELSE
-     !write(6,*) ' f_aux on input'
-     !write(6,99) f_aux ; write(6,*); FLUSH (6) ! not needed, will be printed outside
      !
      !  "backward" scatter from planes to columns
      !
-     !f_in = (1110.0_DP, 1110.0_DP) !
      DO iproc3 = 1, desc%nproc3
         it = ( iproc3 - 1 ) * sendsize
         DO me2 = me2_start, me2_end
@@ -461,23 +441,12 @@ SUBROUTINE fft_scatter_yz ( desc, f_in, f_aux, nxx_, isgn )
      !
      !  step two: communication
      !
-     !f_aux = (11110.0_DP, 11110.0_DP) !
-     !write(6,*) ' f_in just before A2A'
-     !write(6,99) f_in ; write(6,*); FLUSH (6) ! not needed, will be printed outside
 
      CALL mpi_alltoall (f_in(1), sendsize, MPI_DOUBLE_COMPLEX, f_aux(1), sendsize, MPI_DOUBLE_COMPLEX, desc%comm3, ierr)
-
-     !write (6,*) '--- A2A '
-     !write(6,*) ' f_aux just before A2A'
-     !write(6,99) f_aux ; write(6,*); FLUSH (6) ! not needed, will be printed outside
 
      IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', 'info<>0', abs(ierr) )
      !
      !  step one: store contiguously the columns
-     !
-     ! ensures that no garbage is present in the output 
-     ! not useless ... clean the array to be returned from the garbage of previous A2A step
-     f_in = (0.0_DP, 0.0_DP) !
      !
      offset = 0
      DO iproc3 = 1, nproc3
@@ -495,8 +464,17 @@ SUBROUTINE fft_scatter_yz ( desc, f_in, f_aux, nxx_, isgn )
         ENDDO
         offset = offset + desc%nr3p( iproc3 )
      ENDDO
-     !write(6,*) ' f_in on output'
-     !write(6,99) f_in ; write(6,*); FLUSH (6) ! not needed, will be printed outside
+
+     ! clean extra array elements in each stick
+
+     IF( desc%nr3x /= desc%nr3 ) THEN
+       DO k = 1, ncp_ ( desc%mype+1 ) 
+          DO i = desc%nr3, desc%nr3x
+             f_in( (k-1)*desc%nr3x + i ) = 0.0d0 
+          END DO
+       END DO
+     END IF
+
 
 20   CONTINUE
 
