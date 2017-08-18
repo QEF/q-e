@@ -36,8 +36,8 @@
   wmax_specfun = 1
   nw_specfun   = 20
 
-  parallel_k  = .false.
-  parallel_q  = .true.
+  parallel_k  = .true.
+  parallel_q  = .false.
 
   fsthick     = 15 ! eV 
   eptemp      = 300 ! K (same as PRB 76, 165108)

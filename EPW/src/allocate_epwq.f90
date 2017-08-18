@@ -25,7 +25,7 @@
   USE noncollin_module, ONLY : noncolin, npol
   USE wavefunctions_module,  ONLY: evc
   USE spin_orb,     ONLY : lspinorb
-  USE control_lr,   ONLY : lgamma, nbnd_occ
+  USE control_lr,   ONLY : nbnd_occ
   USE phcom,        ONLY : evq, dpsi, vlocq,&
                            dmuxc, npertx 
   USE phus,         ONLY : int1, int1_nc, int2, int2_so, &
@@ -54,19 +54,8 @@
   !
   !  allocate space for the quantities needed in EPW
   !
-  IF (lgamma) THEN
-     !
-     !  q=0  : evq is a pointers to evc
-     !
-     evq  => evc
-  ELSE
-     !
-     !  q!=0 : evq is ALLOCATEd and calculated at point k+q
-     !
-     ALLOCATE (evq ( npwx*npol, nbnd))    
-  ENDIF
-  !
-  ALLOCATE ( dpsi ( npwx*npol, nbnd))    
+  ALLOCATE (evq ( npwx*npol, nbnd))    
+  ALLOCATE (dpsi ( npwx*npol, nbnd))    
   ALLOCATE (vlocq ( ngm, ntyp))    
 ! SP: nrxx is not used in QE 5 ==> tg_nnr is the maximum among nnr
 !     This SHOULD have the same dim as nrxx had.

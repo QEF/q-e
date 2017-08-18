@@ -29,11 +29,12 @@
        umatq_all(:,:,:),       &!  the rotation matrix for the unique setting of the wfs gauge -- for all k+q points
        dynq  (:,:,:),          &!  dynamical matrix for every q (nmode, nmodes, nqtot)
        epmatq (:,:,:,:,:),     &!  e-p matrix for every q (nbnd, nbnd, nks, nmodes, nqtot)
-       epf17 (:, :, :, :),  &!  full ep matrix in bloch rep stored in mem (nkqtotf, nbnd, nbnd, nmodes)-nbnd inside wndw 
+       epf17 (:, :, :, :),     &!  full ep matrix in bloch rep stored in mem (nkqtotf, nbnd, nbnd, nmodes)-nbnd inside wndw 
        dmec(:,:,:,:),          &!  dipole matrix elements on the coarse mesh (ipol, nbnd, nbnd, nks)
        dmef(:,:,:,:),          &!  dipole matrix elements on the fine   mesh (ipol, nbnd, nbnd, nks)
        vmef(:,:,:,:),          &!  velocity matrix elements on the fine mesh (ipol, nbnd, nbnd, nks)
-       bmat(:,:,:,:)            !   overlap U_k+q U_k^\dagger on the coarse mesh (nbnd, nbnd, nks, nqtot)
+       bmat(:,:,:,:),          &!  overlap U_k+q U_k^\dagger on the coarse mesh (nbnd, nbnd, nks, nqtot)
+       eps_rpa(:)               !  screening
   REAL(KIND=DP), ALLOCATABLE ::&
        a_all(:,:),             &!  electronic spectral function du to electron-phonon interaction
        xk_all(:,:),            &!  full k point grid, coarse (3, nkstot)

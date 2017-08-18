@@ -127,10 +127,13 @@
             m_loc, nqs, lrigid, epsi_, zstar_, lraman, dchi_dtau)
     ALLOCATE (dyn(3,3,nat,nat) )
     IF (ionode) THEN
-       DO nt=1, ntyp
-          IF (amass(nt) <= 0.0d0) amass(nt)=amass2(nt)
-       END DO
+      DO nt=1, ntyp
+        IF (amass(nt) <= 0.0d0) amass(nt)=amass2(nt)
+      END DO
     END IF
+    !
+    IF (lpolar .and. .not. lrigid) CALL errore('readmat_shuffle2', &
+       &'You set lpolar = .true. but did not put epsil = true in the PH calculation at Gamma. ',1)
     !
     IF (lrigid) THEN
       WRITE (6,'(8x,a)') 'Read dielectric tensor and effective charges'
@@ -347,7 +350,7 @@
       read (iudyn,'(a)') line
       read (iudyn,'(a)') line
       !
-      IF (lpolar) THEN
+      !IF (lpolar) THEN
         IF (line(6:15).EQ.'Dielectric') THEN
           read (iudyn,'(a)') line
           read (iudyn,*) ((epsi(i,j), j=1,3), i=1,3)
@@ -374,10 +377,11 @@
           ENDDO
           !
         ELSE 
-          call errore('readmat_shuffle2','You set lpolar = .true. but did not put epsil = true in the PH calculation at Gamma. ',1)
+          IF (lpolar) CALL errore('readmat_shuffle2',&
+             'You set lpolar = .true. but did not put epsil = true in the PH calculation at Gamma. ',1)
         ENDIF
         !
-      ENDIF
+      !ENDIF
       !   
     ENDIF
     !

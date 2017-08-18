@@ -1,0 +1,546 @@
+                                                                                      
+                                       ``:oss/                                        
+                           `.+s+.     .+ys--yh+     `./ss+.                           
+                          -sh//yy+`   +yy   +yy    -+h+-oyy                           
+                          -yh- .oyy/.-sh.   .syo-.:sy-  /yh                           
+                 `.-.`    `yh+   -oyyyo.     `/syys:    oys      `.`                  
+               `/+ssys+-` `sh+      `                   oys`   .:osyo`                
+               -yh- ./syyooyo`                          .sys+/oyo--yh/                
+               `yy+    .-:-.                             `-/+/:`  -sh-                
+                /yh.                                              oys                 
+          ``..---hho---------`   .---------..`      `.-----.`    -hd+---.             
+       `./osmNMMMMMMMMMMMMMMMs. +NNMMMMMMMMNNmh+.   yNMMMMMNm-  oNMMMMMNmo++:`        
+       +sy--/sdMMMhyyyyyyyNMMh- .oyNMMmyyyyyhNMMm+` -yMMMdyyo:` .oyyNMMNhs+syy`       
+       -yy/   /MMM+.`-+/``mMMy-   `mMMh:`````.dMMN:` `MMMy-`-dhhy```mMMy:``+hs        
+        -yy+` /MMMo:-mMM+`-oo/.    mMMh:     `dMMN/`  dMMm:`dMMMMy..MMMo-.+yo`        
+         .sys`/MMMMNNMMMs-         mMMmyooooymMMNo:   oMMM/sMMMMMM++MMN//oh:          
+          `sh+/MMMhyyMMMs- `-`     mMMMMMMMMMNmy+-`   -MMMhMMMsmMMmdMMd/yy+           
+    `-/+++oyy-/MMM+.`/hh/.`mNm:`   mMMd+/////:-.`      NMMMMMd/:NMMMMMy:/yyo/:.`      
+   +os+//:-..-oMMMo:--:::-/MMMo. .-mMMd+---`           hMMMMN+. oMMMMMo. `-+osyso:`   
+   syo     `mNMMMMMNNNNNNNNMMMo.oNNMMMMMNNNN:`         +MMMMs:`  dMMMN/`     ``:syo   
+   /yh`     :syyyyyyyyyyyyyyyy+.`+syyyyyyyyo:`         .oyys:`   .oyys:`        +yh   
+   -yh-        ````````````````    `````````              ``        ``          oys   
+   -+h/------------------------::::::::://////++++++++++++++++++++++///////::::/yd:   
+   shdddddddddddddddddddddddddddddhhhhhhhhyyyyyssssssssssssssssyyyyyyyhhhhhhhddddh`   
+                                                                                      
+  S. Ponce, E. R. Margine, C. Verdi, and F. Giustino,                                 
+                                                Comput. Phys. Commun. 209, 116 (2016) 
+                                                                                      
+
+     Program EPW v.4.2.0 (svn rev. 13721) starts on 18Aug2017 at 10:11:15 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     1 processors
+                      
+     ------------------------------------------------------------------------ 
+                   RESTART - RESTART - RESTART - RESTART                         
+     Restart is done without reading PWSCF save file.                  
+     Be aware that some consistency checks are therefore not done.                  
+     ------------------------------------------------------------------------ 
+                      
+
+     --                                                                         
+
+     bravais-lattice index     =            0
+     lattice parameter (a_0)   =       0.0000  a.u.
+     unit-cell volume          =       0.0000 (a.u.)^3
+     number of atoms/cell      =            0
+     number of atomic types    =            0
+     kinetic-energy cut-off    =       0.0000  Ry
+     charge density cut-off    =       0.0000  Ry
+     convergence threshold     =      0.0E+00
+     beta                      =       0.0000
+     number of iterations used =            0
+     Exchange-correlation      = not set (-1 -1 -1 -1-1-1)
+
+
+     celldm(1)=    0.00000  celldm(2)=    0.00000  celldm(3)=    0.00000
+     celldm(4)=    0.00000  celldm(5)=    0.00000  celldm(6)=    0.00000
+
+     crystal axes: (cart. coord. in units of a_0)
+               a(1) = (  0.0000  0.0000  0.0000 )  
+               a(2) = (  0.0000  0.0000  0.0000 )  
+               a(3) = (  0.0000  0.0000  0.0000 )  
+
+     reciprocal axes: (cart. coord. in units 2 pi/a_0)
+               b(1) = (  0.0000  0.0000  0.0000 )  
+               b(2) = (  0.0000  0.0000  0.0000 )  
+               b(3) = (  0.0000  0.0000  0.0000 )  
+
+
+     Atoms inside the unit cell: 
+
+   Cartesian axes
+
+     site n.  atom      mass           positions (a_0 units)
+
+
+     No symmetry!
+
+     G cutoff =    0.0000  (      0 G-vectors)     FFT grid: (  0,  0,  0)
+     number of k points=    0
+                       cart. coord. in units 2pi/a_0
+
+     ====================================================================================================
+     Performing the CUMULANT EXPANSION to obtain the electron spectral function
+     There is no spin degeneracy factor, as in spectral_func.f90
+     Warning: the time-ordered cumulant expansion is well-defined only for states below the Fermi energy
+     Warning: the routine is sequential but very fast.
+     ====================================================================================================
+
+     Check: nk =  216, ibndmin =    1, ibndmax =    4 kbT (eV) =     0.025852
+
+ Done ik    2 sat    1
+ Done ik    2 sat    2
+ Done ik    3 sat    1
+ Done ik    3 sat    2
+ Done ik    4 sat    1
+ Done ik    4 sat    2
+ Done ik    5 sat    1
+ Done ik    5 sat    2
+ Done ik    6 sat    1
+ Done ik    6 sat    2
+ Done ik    7 sat    1
+ Done ik    7 sat    2
+ Done ik    8 sat    1
+ Done ik    8 sat    2
+ Done ik    9 sat    1
+ Done ik    9 sat    2
+ Done ik   10 sat    1
+ Done ik   10 sat    2
+ Done ik   11 sat    1
+ Done ik   11 sat    2
+ Done ik   12 sat    1
+ Done ik   12 sat    2
+ Done ik   13 sat    1
+ Done ik   13 sat    2
+ Done ik   14 sat    1
+ Done ik   14 sat    2
+ Done ik   15 sat    1
+ Done ik   15 sat    2
+ Done ik   16 sat    1
+ Done ik   16 sat    2
+ Done ik   17 sat    1
+ Done ik   17 sat    2
+ Done ik   18 sat    1
+ Done ik   18 sat    2
+ Done ik   19 sat    1
+ Done ik   19 sat    2
+ Done ik   20 sat    1
+ Done ik   20 sat    2
+ Done ik   21 sat    1
+ Done ik   21 sat    2
+ Done ik   22 sat    1
+ Done ik   22 sat    2
+ Done ik   23 sat    1
+ Done ik   23 sat    2
+ Done ik   24 sat    1
+ Done ik   24 sat    2
+ Done ik   25 sat    1
+ Done ik   25 sat    2
+ Done ik   26 sat    1
+ Done ik   26 sat    2
+ Done ik   27 sat    1
+ Done ik   27 sat    2
+ Done ik   28 sat    1
+ Done ik   28 sat    2
+ Done ik   29 sat    1
+ Done ik   29 sat    2
+ Done ik   30 sat    1
+ Done ik   30 sat    2
+ Done ik   31 sat    1
+ Done ik   31 sat    2
+ Done ik   32 sat    1
+ Done ik   32 sat    2
+ Done ik   33 sat    1
+ Done ik   33 sat    2
+ Done ik   34 sat    1
+ Done ik   34 sat    2
+ Done ik   35 sat    1
+ Done ik   35 sat    2
+ Done ik   36 sat    1
+ Done ik   36 sat    2
+ Done ik   37 sat    1
+ Done ik   37 sat    2
+ Done ik   38 sat    1
+ Done ik   38 sat    2
+ Done ik   39 sat    1
+ Done ik   39 sat    2
+ Done ik   40 sat    1
+ Done ik   40 sat    2
+ Done ik   41 sat    1
+ Done ik   41 sat    2
+ Done ik   42 sat    1
+ Done ik   42 sat    2
+ Done ik   43 sat    1
+ Done ik   43 sat    2
+ Done ik   44 sat    1
+ Done ik   44 sat    2
+ Done ik   45 sat    1
+ Done ik   45 sat    2
+ Done ik   46 sat    1
+ Done ik   46 sat    2
+ Done ik   47 sat    1
+ Done ik   47 sat    2
+ Done ik   48 sat    1
+ Done ik   48 sat    2
+ Done ik   49 sat    1
+ Done ik   49 sat    2
+ Done ik   50 sat    1
+ Done ik   50 sat    2
+ Done ik   51 sat    1
+ Done ik   51 sat    2
+ Done ik   52 sat    1
+ Done ik   52 sat    2
+ Done ik   53 sat    1
+ Done ik   53 sat    2
+ Done ik   54 sat    1
+ Done ik   54 sat    2
+ Done ik   55 sat    1
+ Done ik   55 sat    2
+ Done ik   56 sat    1
+ Done ik   56 sat    2
+ Done ik   57 sat    1
+ Done ik   57 sat    2
+ Done ik   58 sat    1
+ Done ik   58 sat    2
+ Done ik   59 sat    1
+ Done ik   59 sat    2
+ Done ik   60 sat    1
+ Done ik   60 sat    2
+ Done ik   61 sat    1
+ Done ik   61 sat    2
+ Done ik   62 sat    1
+ Done ik   62 sat    2
+ Done ik   63 sat    1
+ Done ik   63 sat    2
+ Done ik   64 sat    1
+ Done ik   64 sat    2
+ Done ik   65 sat    1
+ Done ik   65 sat    2
+ Done ik   66 sat    1
+ Done ik   66 sat    2
+ Done ik   67 sat    1
+ Done ik   67 sat    2
+ Done ik   68 sat    1
+ Done ik   68 sat    2
+ Done ik   69 sat    1
+ Done ik   69 sat    2
+ Done ik   70 sat    1
+ Done ik   70 sat    2
+ Done ik   71 sat    1
+ Done ik   71 sat    2
+ Done ik   72 sat    1
+ Done ik   72 sat    2
+ Done ik   73 sat    1
+ Done ik   73 sat    2
+ Done ik   74 sat    1
+ Done ik   74 sat    2
+ Done ik   75 sat    1
+ Done ik   75 sat    2
+ Done ik   76 sat    1
+ Done ik   76 sat    2
+ Done ik   77 sat    1
+ Done ik   77 sat    2
+ Done ik   78 sat    1
+ Done ik   78 sat    2
+ Done ik   79 sat    1
+ Done ik   79 sat    2
+ Done ik   80 sat    1
+ Done ik   80 sat    2
+ Done ik   81 sat    1
+ Done ik   81 sat    2
+ Done ik   82 sat    1
+ Done ik   82 sat    2
+ Done ik   83 sat    1
+ Done ik   83 sat    2
+ Done ik   84 sat    1
+ Done ik   84 sat    2
+ Done ik   85 sat    1
+ Done ik   85 sat    2
+ Done ik   86 sat    1
+ Done ik   86 sat    2
+ Done ik   87 sat    1
+ Done ik   87 sat    2
+ Done ik   88 sat    1
+ Done ik   88 sat    2
+ Done ik   89 sat    1
+ Done ik   89 sat    2
+ Done ik   90 sat    1
+ Done ik   90 sat    2
+ Done ik   91 sat    1
+ Done ik   91 sat    2
+ Done ik   92 sat    1
+ Done ik   92 sat    2
+ Done ik   93 sat    1
+ Done ik   93 sat    2
+ Done ik   94 sat    1
+ Done ik   94 sat    2
+ Done ik   95 sat    1
+ Done ik   95 sat    2
+ Done ik   96 sat    1
+ Done ik   96 sat    2
+ Done ik   97 sat    1
+ Done ik   97 sat    2
+ Done ik   98 sat    1
+ Done ik   98 sat    2
+ Done ik   99 sat    1
+ Done ik   99 sat    2
+ Done ik  100 sat    1
+ Done ik  100 sat    2
+ Done ik  101 sat    1
+ Done ik  101 sat    2
+ Done ik  102 sat    1
+ Done ik  102 sat    2
+ Done ik  103 sat    1
+ Done ik  103 sat    2
+ Done ik  104 sat    1
+ Done ik  104 sat    2
+ Done ik  105 sat    1
+ Done ik  105 sat    2
+ Done ik  106 sat    1
+ Done ik  106 sat    2
+ Done ik  107 sat    1
+ Done ik  107 sat    2
+ Done ik  108 sat    1
+ Done ik  108 sat    2
+ Done ik  109 sat    1
+ Done ik  109 sat    2
+ Done ik  110 sat    1
+ Done ik  110 sat    2
+ Done ik  111 sat    1
+ Done ik  111 sat    2
+ Done ik  112 sat    1
+ Done ik  112 sat    2
+ Done ik  113 sat    1
+ Done ik  113 sat    2
+ Done ik  114 sat    1
+ Done ik  114 sat    2
+ Done ik  115 sat    1
+ Done ik  115 sat    2
+ Done ik  116 sat    1
+ Done ik  116 sat    2
+ Done ik  117 sat    1
+ Done ik  117 sat    2
+ Done ik  118 sat    1
+ Done ik  118 sat    2
+ Done ik  119 sat    1
+ Done ik  119 sat    2
+ Done ik  120 sat    1
+ Done ik  120 sat    2
+ Done ik  121 sat    1
+ Done ik  121 sat    2
+ Done ik  122 sat    1
+ Done ik  122 sat    2
+ Done ik  123 sat    1
+ Done ik  123 sat    2
+ Done ik  124 sat    1
+ Done ik  124 sat    2
+ Done ik  125 sat    1
+ Done ik  125 sat    2
+ Done ik  126 sat    1
+ Done ik  126 sat    2
+ Done ik  127 sat    1
+ Done ik  127 sat    2
+ Done ik  128 sat    1
+ Done ik  128 sat    2
+ Done ik  129 sat    1
+ Done ik  129 sat    2
+ Done ik  130 sat    1
+ Done ik  130 sat    2
+ Done ik  131 sat    1
+ Done ik  131 sat    2
+ Done ik  132 sat    1
+ Done ik  132 sat    2
+ Done ik  133 sat    1
+ Done ik  133 sat    2
+ Done ik  134 sat    1
+ Done ik  134 sat    2
+ Done ik  135 sat    1
+ Done ik  135 sat    2
+ Done ik  136 sat    1
+ Done ik  136 sat    2
+ Done ik  137 sat    1
+ Done ik  137 sat    2
+ Done ik  138 sat    1
+ Done ik  138 sat    2
+ Done ik  139 sat    1
+ Done ik  139 sat    2
+ Done ik  140 sat    1
+ Done ik  140 sat    2
+ Done ik  141 sat    1
+ Done ik  141 sat    2
+ Done ik  142 sat    1
+ Done ik  142 sat    2
+ Done ik  143 sat    1
+ Done ik  143 sat    2
+ Done ik  144 sat    1
+ Done ik  144 sat    2
+ Done ik  145 sat    1
+ Done ik  145 sat    2
+ Done ik  146 sat    1
+ Done ik  146 sat    2
+ Done ik  147 sat    1
+ Done ik  147 sat    2
+ Done ik  148 sat    1
+ Done ik  148 sat    2
+ Done ik  149 sat    1
+ Done ik  149 sat    2
+ Done ik  150 sat    1
+ Done ik  150 sat    2
+ Done ik  151 sat    1
+ Done ik  151 sat    2
+ Done ik  152 sat    1
+ Done ik  152 sat    2
+ Done ik  153 sat    1
+ Done ik  153 sat    2
+ Done ik  154 sat    1
+ Done ik  154 sat    2
+ Done ik  155 sat    1
+ Done ik  155 sat    2
+ Done ik  156 sat    1
+ Done ik  156 sat    2
+ Done ik  157 sat    1
+ Done ik  157 sat    2
+ Done ik  158 sat    1
+ Done ik  158 sat    2
+ Done ik  159 sat    1
+ Done ik  159 sat    2
+ Done ik  160 sat    1
+ Done ik  160 sat    2
+ Done ik  161 sat    1
+ Done ik  161 sat    2
+ Done ik  162 sat    1
+ Done ik  162 sat    2
+ Done ik  163 sat    1
+ Done ik  163 sat    2
+ Done ik  164 sat    1
+ Done ik  164 sat    2
+ Done ik  165 sat    1
+ Done ik  165 sat    2
+ Done ik  166 sat    1
+ Done ik  166 sat    2
+ Done ik  167 sat    1
+ Done ik  167 sat    2
+ Done ik  168 sat    1
+ Done ik  168 sat    2
+ Done ik  169 sat    1
+ Done ik  169 sat    2
+ Done ik  170 sat    1
+ Done ik  170 sat    2
+ Done ik  171 sat    1
+ Done ik  171 sat    2
+ Done ik  172 sat    1
+ Done ik  172 sat    2
+ Done ik  173 sat    1
+ Done ik  173 sat    2
+ Done ik  174 sat    1
+ Done ik  174 sat    2
+ Done ik  175 sat    1
+ Done ik  175 sat    2
+ Done ik  176 sat    1
+ Done ik  176 sat    2
+ Done ik  177 sat    1
+ Done ik  177 sat    2
+ Done ik  178 sat    1
+ Done ik  178 sat    2
+ Done ik  179 sat    1
+ Done ik  179 sat    2
+ Done ik  180 sat    1
+ Done ik  180 sat    2
+ Done ik  181 sat    1
+ Done ik  181 sat    2
+ Done ik  182 sat    1
+ Done ik  182 sat    2
+ Done ik  183 sat    1
+ Done ik  183 sat    2
+ Done ik  184 sat    1
+ Done ik  184 sat    2
+ Done ik  185 sat    1
+ Done ik  185 sat    2
+ Done ik  186 sat    1
+ Done ik  186 sat    2
+ Done ik  187 sat    1
+ Done ik  187 sat    2
+ Done ik  188 sat    1
+ Done ik  188 sat    2
+ Done ik  189 sat    1
+ Done ik  189 sat    2
+ Done ik  190 sat    1
+ Done ik  190 sat    2
+ Done ik  191 sat    1
+ Done ik  191 sat    2
+ Done ik  192 sat    1
+ Done ik  192 sat    2
+ Done ik  193 sat    1
+ Done ik  193 sat    2
+ Done ik  194 sat    1
+ Done ik  194 sat    2
+ Done ik  195 sat    1
+ Done ik  195 sat    2
+ Done ik  196 sat    1
+ Done ik  196 sat    2
+ Done ik  197 sat    1
+ Done ik  197 sat    2
+ Done ik  198 sat    1
+ Done ik  198 sat    2
+ Done ik  199 sat    1
+ Done ik  199 sat    2
+ Done ik  200 sat    1
+ Done ik  200 sat    2
+ Done ik  201 sat    1
+ Done ik  201 sat    2
+ Done ik  202 sat    1
+ Done ik  202 sat    2
+ Done ik  203 sat    1
+ Done ik  203 sat    2
+ Done ik  204 sat    1
+ Done ik  204 sat    2
+ Done ik  205 sat    1
+ Done ik  205 sat    2
+ Done ik  206 sat    1
+ Done ik  206 sat    2
+ Done ik  207 sat    1
+ Done ik  207 sat    2
+ Done ik  208 sat    1
+ Done ik  208 sat    2
+ Done ik  209 sat    1
+ Done ik  209 sat    2
+ Done ik  210 sat    1
+ Done ik  210 sat    2
+ Done ik  211 sat    1
+ Done ik  211 sat    2
+ Done ik  212 sat    1
+ Done ik  212 sat    2
+ Done ik  213 sat    1
+ Done ik  213 sat    2
+ Done ik  214 sat    1
+ Done ik  214 sat    2
+ Done ik  215 sat    1
+ Done ik  215 sat    2
+ Done ik  216 sat    1
+ Done ik  216 sat    2
+
+     Unfolding on the coarse grid
+
+     INITIALIZATION: 
+
+
+
+     Electron-Phonon interpolation
+
+
+
+     Total program execution
+     EPW          :     0.04s CPU         0.05s WALL
+
+                                                                                          
+ Please consider citing:                                                                  
+ S. Ponce, E. R. Margine, C. Verdi and F. Giustino, Comput. Phys. Commun. 209, 116 (2016) 
+                                                                                          

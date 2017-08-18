@@ -104,6 +104,7 @@ set_ndnmbr.o \
 setphases_wrap.o \
 sgama2.o \
 sort.o \
+spec_cumulant.o \
 spectral_func.o \
 spectral_func_ph.o \
 spectral_func_pl.o \

@@ -56,6 +56,10 @@
   !! Maximum number of wannier functions
   INTEGER :: etf_mem
   !! If 0, all in memory. If 1, less is stored in memory (read files). 
+  INTEGER :: scr_typ
+  !! If 0 calculates the Lindhard screening, if 1 the Thomas-Fermi screening
+  INTEGER :: bnd_cum
+  !! band index for which the cumulant calculation is done
   !
   ! Superconductivity
   INTEGER :: nswfc
@@ -145,11 +149,15 @@
   ! 
   ! Plasmon
   REAL (KIND=DP) :: nel
-  !! Carrier concentration
+  !! fractional number of electrons in the unit cell
   REAL (KIND=DP) :: meff
-  !! Density-of-state effective mass
+  !! Density-of-state effective mass (in unit of the electron mass)
   REAL (KIND=DP) :: epsiHEG
   !! Dielectric constant at zero doping. 
+  REAL (KIND=DP) :: fermi_diff
+  !! difference between Fermi energy and band edge (in eV)
+  REAL (KIND=DP) :: smear_rpa
+  !! smearing for the calculation of the Lindhard function (in eV)
   !
   !LOGICAL :: tphases
   !! tphases:  if .TRUE. set absolute reference for unitary gauge of the eigenvectors
@@ -210,8 +218,12 @@
   ! band_plot : if .true. write filrs to plot band structure and phonon dispersion
   LOGICAL :: lpolar 
   !! if .true. enable the correct Wannier interpolation in the case of polar material.  
+  LOGICAL :: lscreen
+  !! if .true. the e-ph matrix elements are screened by the RPA or TF dielectric function
   LOGICAL :: lifc
   !! if .true. reads interatomic force constants produced by q2r.x for phonon interpolation
+  LOGICAL :: cumulant
+  !! if .true. calculates the electron spectral function using the cumulant expansion method
   LOGICAL :: delta_approx
   !! if .true. the double delta approximation is used for the phonon self energy
   LOGICAL :: ep_coupling

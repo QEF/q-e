@@ -45,7 +45,6 @@
   USE start_k,       ONLY : nk1, nk2, nk3
   USE phcom,         ONLY : dpsi, dvpsi, evq, nq1, nq3, nq2 
   USE qpoint,        ONLY : igkq
-  USE control_lr,    ONLY : lgamma 
   USE qpoint,        ONLY : xq
   USE modes,         ONLY : nmodes
   USE lr_symm_base,  ONLY : minus_q, rtau, gi, gimq, irotmq, nsymq, invsymq
@@ -187,8 +186,6 @@
   ! ---------------------------------------------------------------------
   !
   CALL start_clock ( 'elphon_wrap' )
-  !
-  IF (lgamma) CALL errore('elphon_shuffle_wrap','EPW does not support Gamma only calculation ',1)
   !
   ! READ qpoint list from stdin
   !

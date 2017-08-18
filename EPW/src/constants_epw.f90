@@ -26,8 +26,8 @@
   REAL(DP), PARAMETER :: two    = 2.d0
   REAL(DP), PARAMETER :: zero   = 0.d0
   REAL(DP), PARAMETER :: e2     = 2.0_DP      ! the square of the electron charge
-  COMPLEX(DP), PARAMETER :: ci   = (0.d0, 1.d0)
-  COMPLEX(DP), PARAMETER :: cone = (1.d0, 0.d0)
+  COMPLEX(DP), PARAMETER :: ci    = (0.d0, 1.d0)
+  COMPLEX(DP), PARAMETER :: cone  = (1.d0, 0.d0)
   COMPLEX(DP), PARAMETER :: czero = (0.d0, 0.d0)
   !
   ! Unit conversion factors
@@ -37,7 +37,8 @@
   REAL(DP), PARAMETER :: bohr     = 0.52917721092d0
   REAL(DP), PARAMETER :: ryd2mev  = 13605.6981d0
   REAL(DP), PARAMETER :: ryd2ev   = 13.6056981d0
-  REAL(DP), PARAMETER :: rydcm1   = 13.6056981d0 * 8065.541d0
+  REAL(DP), PARAMETER :: ha2ev    = 2.d0*ryd2ev
+  REAL(DP), PARAMETER :: rydcm1   = ryd2ev * 8065.541d0
   REAL(DP), PARAMETER :: bohr2ang = 0.52917721092d0
   REAL(DP), PARAMETER :: ev2cmm1  = 8065.541d0
   REAL(DP), PARAMETER :: kelvin2eV= 8.6173427909d-05

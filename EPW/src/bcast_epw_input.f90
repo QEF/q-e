@@ -36,8 +36,9 @@
                             muc, mp_mesh_q, mp_mesh_k, max_memlt, lunif, &
                             lreal, lpolar, lpade, liso, limag, laniso, &
                             specfun_el, specfun_ph, lifc, asr_typ, &
+                            lscreen, scr_typ, fermi_diff, smear_rpa, &
                             rand_q, rand_nq, rand_nk, rand_k, pwc, phonselfen, &
-                            parallel_q, parallel_k, specfun_pl, &
+                            parallel_q, parallel_k, specfun_pl, cumulant, bnd_cum, &
                             nw_specfun, nw, nswi, nswfc, nswc, nstemp, nsmear, &
                             wsfc, wscut, write_wfn, wmin_specfun, wmin, &
                             wmax_specfun, wmax, wepexst, wannierize, &
@@ -52,7 +53,6 @@
   USE mp_world,      ONLY : world_comm
   USE io_files,      ONLY : prefix, tmp_dir
   USE qpoint,        ONLY : xq
-  USE control_lr,    ONLY : lgamma
   USE io_global,     ONLY : meta_ionode_id
   USE control_flags, ONLY : iverbosity
   USE ions_base,     ONLY : amass
@@ -61,7 +61,6 @@
   !
   ! logicals
   !
-  CALL mp_bcast (lgamma, meta_ionode_id, world_comm)
   CALL mp_bcast (epsil, meta_ionode_id, world_comm)
   CALL mp_bcast (trans, meta_ionode_id, world_comm)
   CALL mp_bcast (zue, meta_ionode_id, world_comm)
@@ -108,6 +107,8 @@
   CALL mp_bcast (laniso, meta_ionode_id, world_comm)     !
   CALL mp_bcast (lpolar, meta_ionode_id, world_comm)     !
   CALL mp_bcast (lifc, meta_ionode_id, world_comm) 
+  CALL mp_bcast (lscreen, meta_ionode_id, world_comm)
+  CALL mp_bcast (cumulant, meta_ionode_id, world_comm)
   CALL mp_bcast (lunif, meta_ionode_id, world_comm)     !
   CALL mp_bcast (kerwrite, meta_ionode_id, world_comm)     !
   CALL mp_bcast (kerread, meta_ionode_id, world_comm)     !
@@ -158,6 +159,8 @@
   CALL mp_bcast (nsiter, meta_ionode_id, world_comm )     !
   CALL mp_bcast (nw_specfun, meta_ionode_id, world_comm)  !
   CALL mp_bcast (restart_freq, meta_ionode_id, world_comm)
+  CALL mp_bcast (scr_typ, meta_ionode_id, world_comm)
+  CALL mp_bcast (bnd_cum, meta_ionode_id, world_comm)
   !
   ! real*8
   !
@@ -190,6 +193,8 @@
   CALL mp_bcast (nel, meta_ionode_id, world_comm)      
   CALL mp_bcast (meff, meta_ionode_id, world_comm)      
   CALL mp_bcast (epsiHEG, meta_ionode_id, world_comm)      
+  CALL mp_bcast (fermi_diff, meta_ionode_id, world_comm)
+  CALL mp_bcast (smear_rpa, meta_ionode_id, world_comm)
   !
   ! characters
   !

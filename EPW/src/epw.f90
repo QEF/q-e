@@ -20,14 +20,14 @@
   !! @Note
   !! 8/14/08 lnscf is unnecessary, as is nqs,iq_start
   !!
-  USE io_global,       ONLY : stdout
+  USE io_global,       ONLY : stdout, ionode
   USE mp,              ONLY : mp_bcast, mp_barrier
   USE mp_world,        ONLY : mpime  
   USE mp_global,       ONLY : mp_startup, ionode_id, mp_global_end
   USE control_flags,   ONLY : gamma_only
   USE control_epw,     ONLY : wannierize
   USE global_version,  ONLY : version_number
-  USE epwcom,          ONLY : filukk, eliashberg, ep_coupling, epwread, epbread
+  USE epwcom,          ONLY : filukk, eliashberg, ep_coupling, epwread, epbread, cumulant
   USE environment,     ONLY : environment_start
   USE elph2,           ONLY : elph 
   ! Flag to perform an electron-phonon calculation. If .true. 
@@ -160,6 +160,10 @@ write(stdout,'(a)') "                                                           
     !
     CALL close_epw()
     !
+  ENDIF
+  ! 
+  IF ( cumulant .and. ionode ) THEN
+     CALL spec_cumulant()
   ENDIF
   !
   IF ( eliashberg ) THEN

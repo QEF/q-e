@@ -48,7 +48,8 @@
                             fermi_energy, efermi_read, max_memlt, fila2f, &
                             ep_coupling, nw_specfun, wmax_specfun, &
                             wmin_specfun, laniso, lpolar, lifc, asr_typ, &
-                            proj, write_wfn, iswitch, ntempxx, &
+                            lscreen, scr_typ, fermi_diff, smear_rpa, & 
+                            cumulant, bnd_cum, proj, write_wfn, iswitch, ntempxx, &
                             liso, lacon, lpade, etf_mem, epbwrite, &
                             nsiter, conv_thr_racon, specfun_el, specfun_ph, &
                             pwc, nswc, nswfc, nswi, filukq, filukk, &
@@ -66,7 +67,6 @@
   USE mp_world,      ONLY : world_comm
   USE partial,       ONLY : atomo, nat_todo
   USE constants,     ONLY : AMU_RY
-  USE control_lr,    ONLY : lgamma
   USE mp_global,     ONLY : my_pool_id, me_pool
   USE io_global,     ONLY : meta_ionode, meta_ionode_id, ionode, ionode_id, stdout
 #if defined(__NAG)
@@ -115,6 +115,7 @@
        broyden_beta, broyden_ndim, nstemp, tempsmin, tempsmax, temps,          &
        conv_thr_raxis, conv_thr_iaxis, conv_thr_racon,                         &
        gap_edge, nsiter, muc, lreal, limag, lpade, lacon, liso, laniso, lpolar,& 
+       lscreen, scr_typ, fermi_diff, smear_rpa, cumulant, bnd_cum,             &
        lifc, asr_typ, lunif, kerwrite, kerread, imag_read, eliashberg,         & 
        ep_coupling, fila2f, max_memlt, efermi_read, fermi_energy,              &
        specfun_el, specfun_ph, wmin_specfun, wmax_specfun, nw_specfun,         & 
@@ -231,9 +232,18 @@
   ! delta_approx : if .true. the double delta approximation is used to compute the phonon self-energy 
   !
   ! added by CV & SP
-  ! lpolar : if .true. enable the correct Wannier interpolation in the case of polar material.  
-  ! lifc : if .true. reads interatomic force constants produced by q2r.x for phonon interpolation
+  ! lpolar  : if .true. enable the correct Wannier interpolation in the case of polar material.  
+  ! lifc    : if .true. reads interatomic force constants produced by q2r.x for phonon interpolation
   ! asr_typ : select type of ASR if lifc=.true. (as in matdyn); otherwise it is the usual simple sum rule
+  ! lscreen : if .true. the e-ph matrix elements are screened by the RPA or TF dielectric function
+  ! scr_typ : if 0 calculates the Lindhard screening, if 1 the Thomas-Fermi screening
+  ! fermi_diff : difference between Fermi energy and band edge (in eV)
+  ! smear_rpa  : smearing for the calculation of the Lindhard function (in eV)
+  ! cumulant   : if .true. calculates the electron spectral function using the cumulant expansion method
+  !              (can be used as independent postprocessing by setting ep_coupling=.false.)
+  ! bnd_cum    : band index for which the cumulant calculation is done 
+  !              (for more than one band, perform multiple calculations and add the results together)
+  !
   ! 
   ! Added by SP
   !
@@ -263,8 +273,8 @@
   !                   When etf_mem == 2, an additional loop is done on mode for the fine grid interpolation
   !                   part. This reduces the memory further by a factor "nmodes".    
   ! plselfen        : Calculate the electron-plasmon self-energy.
-  ! nel             : Carrier concentration
-  ! meff            : Density of state effective mass
+  ! nel             : Fractional number of electrons in the unit cell
+  ! meff            : Density of state effective mass (in unit of the electron mass)
   ! epsiHEG         : Dielectric constant at zero doping
   !  
   CHARACTER (LEN=80)  :: input_file
@@ -400,10 +410,16 @@
   lpolar  = .false.
   lifc    = .false.
   asr_typ = 'simple'
-  kerwrite= .false.
-  kerread = .false.
-  imag_read = .false.
-  eliashberg = .false.
+  lscreen = .false. 
+  scr_typ = 0
+  fermi_diff  = 1.d0
+  smear_rpa   = 0.05d0
+  cumulant    = .false.
+  bnd_cum     = 1
+  kerwrite    = .false.
+  kerread     = .false.
+  imag_read   = .false.
+  eliashberg  = .false.
   ep_coupling = .true.
   nswfc    = 0
   nswc     = 0
@@ -442,9 +458,9 @@
   longrange  = .false.
   shortrange = .false.  
   prtgkk     = .false.
-  nel        = 0.01d0
-  meff       = 12.d0
-  epsiHEG    = 0.25d0
+  nel        = 0.0d0
+  meff       = 1.d0
+  epsiHEG    = 1.d0
   !
   !     reading the namelist inputepw
   !
@@ -568,6 +584,12 @@
        &'Error: kmaps has to be true for a restart run. ',1)
   IF ( etf_mem == 2 .AND. parallel_q) CALL errore('epw_init',&
        &'Error: Memory optimized version and q-parallelization not implemented. ',1)
+  IF ( lscreen .AND. parallel_q) CALL errore('epw_init',&
+       &'Error: lscreen can only be used with parallel_k ',1)
+  IF ( lscreen .AND. etf_mem == 2) CALL errore('epw_init',&
+       &'Error: lscreen not implemented with etf_mem=2 ',1)
+  IF ( cumulant .AND. parallel_q ) CALL errore('epw_init',&
+       &'Error: Cumulant and parallel_q is not implemented ',1)
 !#ifndef __MPI
 !  IF ( etf_mem == 2 ) CALL errore('epw_init','Error: etf_mem == 2 only works with MPI.',1)
 !#endif
@@ -586,7 +608,7 @@
   ! fermi_energy read from the input file
   ! from eV to Ryd
   IF ( efermi_read ) THEN
-     fermi_energy = fermi_energy / ryd2ev
+    fermi_energy = fermi_energy / ryd2ev
   ENDIF
   ! eptemp : temperature for the electronic Fermi occupations in the e-p calculation (units of Kelvin)
   ! 1 K in eV = 8.6173423e-5
@@ -633,7 +655,6 @@
   ! 
   xq(:) = 0.d0
   !
-  lgamma = .false.
   tmp_dir = trim(outdir)
   dvscf_dir = trim(dvscf_dir)//'/'
   !

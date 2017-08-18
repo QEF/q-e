@@ -39,7 +39,7 @@
   USE control_ph,    ONLY : lgamma_gamma, search_sym, start_irr, &
                             last_irr, niter_ph, alpha_mix,  &
                             flmixdpot, reduce_io, u_from_file
-  USE control_lr,    ONLY : lgamma, alpha_pv, nbnd_occ
+  USE control_lr,    ONLY : alpha_pv, nbnd_occ
   USE gamma_gamma,   ONLY : has_equivalent, asr, nasr, n_diff_sites, &
                             equiv_atoms, n_equiv_atoms, with_symmetry
   USE partial,       ONLY :  &
@@ -304,15 +304,6 @@
 !     xk_col(:,1:nks) = xk(:,1:nks)
 !  ENDIF
   !
-  !   The small group of q may be known. At a given q it is calculated
-  !   by set_nscf, at gamma it coincides with the point group and we
-  !   take nsymq=nsym
-  !
-  IF (lgamma.AND.modenum==0) THEN
-     nsymq=nsym
-     minus_q=.TRUE.
-  ENDIF
-  !
   !   If the code arrives here and nsymq is still 0 the small group of q has 
   !   not been calculated by set_nscf because this is a recover run. 
   !   We recalculate here the small group of q.
@@ -322,8 +313,8 @@
   !
   !
   IF (modenum > 0) THEN
-     search_sym=.FALSE.
-     minus_q = .FALSE.
+    search_sym=.FALSE.
+    minus_q = .FALSE.
   ENDIF
   !
   ! allocate and calculate rtau, the bravais lattice vector associated

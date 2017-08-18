@@ -1,19 +1,26 @@
 --
 &inputepw
-  prefix      = 'diam'
-  amass(1)    = 12.01078
+  prefix      = 'sic'
+  amass(1)    = 28.0855
+  amass(2)    = 12.0107
   outdir      = './'
 
-  iverbosity  = 3
-
   elph        = .true.
+  kmaps       = .false.
   epbwrite    = .true.
   epbread     = .false.
 
-  etf_mem     = 0
-
   epwwrite    = .true.
   epwread     = .false.
+
+  etf_mem     = 1
+  lpolar      = .true.
+  lscreen     = .true.
+  scr_typ     = 0
+  meff        = 1.0
+  fermi_diff  = 0.1
+  nel         = 0.001
+  smear_rpa   = 0.025
 
   nbndsub     =  4
   nbndskip    =  0
@@ -23,36 +30,38 @@
   iprint      = 2
   dis_win_max = 12
   dis_froz_max= 7
-  proj(1)     = 'f=0,0,0:l=-3'   
+  proj(1)     = 'Si:sp3'   
+  wdata(1) = 'bands_plot = .true.'
+  wdata(2) = 'begin kpoint_path'
+  wdata(3) = 'L 0.50 0.00 0.00 G 0.00 0.00 0.00'
+  wdata(4) = 'G 0.00 0.00 0.00 X 0.50 0.50 0.00'
+  wdata(5) = 'end kpoint_path'
+  wdata(6) = 'bands_plot_format = gnuplot'
+  wdata(7) = 'use_ws_distance = T'
+
+  iverbosity  = 0
 
   elecselfen  = .true.
-  nest_fn     = .true.  
   phonselfen  = .false.
   a2f         = .false.
 
-  specfun_el   = .true.
-  wmin_specfun = -4
-  wmax_specfun = 1
-  nw_specfun   = 20
+  parallel_k  = .true.
+  parallel_q  = .false.
 
-  parallel_k  = .false.
-  parallel_q  = .true.
+  fsthick     = 2.0 ! eV
+  eptemp      = 300 ! K
+  degaussw    = 0.1 ! eV
 
-  fsthick     = 15 ! eV 
-  eptemp      = 300 ! K (same as PRB 76, 165108)
-  degaussw    = 1.0 ! eV
-
-  dvscf_dir   = './save/'
-  filukk      = './diam.ukk'
+  dvscf_dir   = './save'
 
   nkf1        = 6
   nkf2        = 6
-  nkf3        = 6 
+  nkf3        = 6
 
   nqf1        = 6
   nqf2        = 6
   nqf3        = 6
-  
+
   nk1         = 3
   nk2         = 3
   nk3         = 3
@@ -66,4 +75,3 @@
  -0.333333333333   0.333333333333  -0.333333333333   0.5925926
   0.000000000000   0.666666666667   0.000000000000   0.4444444
   0.666666666667   0.000000000000   0.666666666667   0.8888889
-

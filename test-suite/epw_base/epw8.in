@@ -4,39 +4,42 @@
   amass(1)    = 12.01078
   outdir      = './'
 
-  iverbosity  = 3
+  iverbosity  = 0
 
-  elph        = .true.
-  epbwrite    = .true.
+  ep_coupling = .false.
+  elph        = .false.
+  kmaps       = .true.
+  epbwrite    = .false.
   epbread     = .false.
 
-  etf_mem     = 0
+  etf_mem     = 1
 
-  epwwrite    = .true.
-  epwread     = .false.
+  epwwrite    = .false.
+  epwread     = .true.
 
   nbndsub     =  4
   nbndskip    =  0
 
-  wannierize  = .true.
+  wannierize  = .false.
   num_iter    = 300
   iprint      = 2
   dis_win_max = 12
   dis_froz_max= 7
   proj(1)     = 'f=0,0,0:l=-3'   
 
-  elecselfen  = .true.
-  nest_fn     = .true.  
+  elecselfen  = .false.
   phonselfen  = .false.
   a2f         = .false.
 
-  specfun_el   = .true.
+  specfun_el   = .false.
   wmin_specfun = -4
   wmax_specfun = 1
   nw_specfun   = 20
+  cumulant     = .true.
+  bnd_cum      = 4
 
-  parallel_k  = .false.
-  parallel_q  = .true.
+  parallel_k  = .true.
+  parallel_q  = .false.
 
   fsthick     = 15 ! eV 
   eptemp      = 300 ! K (same as PRB 76, 165108)

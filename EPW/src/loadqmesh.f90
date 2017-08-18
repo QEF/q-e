@@ -20,7 +20,7 @@ SUBROUTINE loadqmesh_para
   USE kinds,     ONLY : DP
   USE io_global, ONLY : stdout
   USE epwcom,    ONLY : filqf, nqf1, nqf2, nqf3, &
-                        rand_q, rand_nq, mp_mesh_q, system_2d
+                        rand_q, rand_nq, mp_mesh_q, system_2d, lscreen
   USE elph2,     ONLY : xqf, wqf, nqf, nqtotf
   USE cell_base, ONLY : at, bg
   USE symm_base, ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
@@ -40,6 +40,7 @@ SUBROUTINE loadqmesh_para
     IF (filqf .ne. '') THEN ! load from file (crystal coordinates)
        !
        WRITE(stdout, *) '     Using q-mesh file: ', trim(filqf)
+       IF (lscreen) WRITE(stdout, *) '     WARNING: if lscreen=.true., q-mesh needs to be [-0.5:0.5] (crystal)' 
        OPEN( unit = iunqf, file = filqf, status = 'old', form = 'formatted',err=100, iostat=ios)
 100    CALL errore('loadkmesh_para','opening file '//filqf,abs(ios))
        READ(iunqf, *) nqtotf
@@ -55,7 +56,8 @@ SUBROUTINE loadqmesh_para
        !
     ELSEIF ( (nqf1.ne.0) .and. (nqf2.ne.0) .and. (nqf3.ne.0) ) THEN ! generate grid
        IF (mp_mesh_q) THEN
-           ! get size of the mp_mesh in the irr wedge 
+          IF (lscreen) CALL errore ('If lscreen=.true. do not use mp_mesh_q',1)
+          ! get size of the mp_mesh in the irr wedge 
           WRITE (stdout, '(a,3i4)') '     Using uniform MP q-mesh: ', nqf1, nqf2, nqf3
           call set_sym_bl ( )
           !
@@ -91,6 +93,7 @@ SUBROUTINE loadqmesh_para
                 ENDDO
              ENDDO
           ENDDO
+          IF (lscreen) xqf_(:,:) = xqf_(:,:) - 0.5d0
           !
        ENDIF
        !
@@ -110,9 +113,11 @@ SUBROUTINE loadqmesh_para
           !
           IF ( system_2d ) THEN
              CALL random_number(xqf_(1:2,iq))
+             IF (lscreen) xqf_(1:2,iq) = xqf_(1:2,iq) - 0.5d0
              xqf_(3,iq) = 0.d0
           ELSE
              CALL random_number(xqf_(:,iq))
+             IF (lscreen) xqf_(:,iq) = xqf_(:,iq) - 0.5d0
           ENDIF
           !
        ENDDO
@@ -192,7 +197,7 @@ SUBROUTINE loadqmesh_serial
   USE mp_world,  ONLY : mpime
   USE io_global, ONLY : stdout
   USE epwcom,    ONLY : filqf, nqf1, nqf2, nqf3, &
-                        rand_q, rand_nq, mp_mesh_q, system_2d
+                        rand_q, rand_nq, mp_mesh_q, system_2d, lscreen
   USE elph2,     ONLY : xqf, wqf, nqtotf, nqf
   USE cell_base, ONLY : at, bg
   USE symm_base, ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
@@ -207,6 +212,7 @@ SUBROUTINE loadqmesh_serial
        ! Each pool gets its own copy from the action=read statement
        !
        WRITE (stdout, *) '     Using q-mesh file: ', trim(filqf)
+       IF (lscreen) WRITE(stdout, *) '     WARNING: if lscreen=.true., q-mesh needs to be [-0.5:0.5] (crystal)'
        OPEN ( unit = iunqf, file = filqf, status = 'old', form = 'formatted', err=100, iostat=ios)
 100    CALL errore('loadqmesh_serial','opening file '//filqf,abs(ios))
        READ(iunqf, *) nqtotf
@@ -221,6 +227,7 @@ SUBROUTINE loadqmesh_serial
        !
     ELSEIF ( (nqf1.ne.0) .and. (nqf2.ne.0) .and. (nqf3.ne.0) ) THEN ! generate grid
        IF (mp_mesh_q) THEN
+          IF (lscreen) CALL errore ('If lscreen=.true. do not use mp_mesh_q',1)
           ! get size of the mp_mesh in the irr wedge 
           WRITE (stdout, '(a,3i4)') '     Using uniform q-mesh: ', nqf1, nqf2, nqf3
           call set_sym_bl ( )
@@ -255,6 +262,7 @@ SUBROUTINE loadqmesh_serial
                 ENDDO
              ENDDO
           ENDDO
+          IF (lscreen) xqf(:,:) = xqf(:,:) - 0.5d0
           !
           !WRITE(stdout,'(a)') '  '
           !DO iq = 1, nqtotf
@@ -278,9 +286,11 @@ SUBROUTINE loadqmesh_serial
           !
           IF ( system_2d ) THEN
              CALL random_number(xqf(1:2,iq))
+             IF (lscreen) xqf(1:2,iq) = xqf(1:2,iq) - 0.5d0
              xqf(3,iq) = 0.d0
           ELSE
              CALL random_number(xqf(:,iq))
+             IF (lscreen) xqf(:,iq) = xqf(:,iq) - 0.5d0
           ENDIF
           !
           !WRITE(stdout,'(4f12.7)') xqf(:,iq), wqf(iq)

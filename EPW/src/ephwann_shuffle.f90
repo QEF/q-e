@@ -32,8 +32,8 @@
   USE ions_base,     ONLY : nat, amass, ityp, tau
   USE phcom,         ONLY : nq1, nq2, nq3, nmodes
   USE epwcom,        ONLY : nbndsub, lrepmatf, fsthick, epwread, longrange,     &
-                            epwwrite, ngaussw, degaussw, lpolar, lifc,          &
-                            nbndskip, parallel_k, parallel_q, etf_mem,          &
+                            epwwrite, ngaussw, degaussw, lpolar, lifc, lscreen, &
+                            nbndskip, parallel_k, parallel_q, etf_mem, scr_typ, &
                             elecselfen, phonselfen, nest_fn, a2f, specfun_ph,   &
                             vme, eig_read, ephwrite, nkf1, nkf2, nkf3,          & 
                             efermi_read, fermi_energy, specfun_el, band_plot,   &
@@ -51,7 +51,7 @@
                             wkf, dynq, nqtotf, nkqf, epf17, nkf, nqf, et_ks,    &
                             ibndmin, ibndmax, lambda_all, dmec, dmef, vmef,     &
                             sigmai_all, sigmai_mode, gamma_all, epsi, zstar,    &
-                            efnew, ifc, sigmar_all, zi_all, nkqtotf
+                            efnew, ifc, sigmar_all, zi_all, nkqtotf, eps_rpa
 #if defined(__NAG)
   USE f90_unix_io,   ONLY : flush
 #endif
@@ -463,7 +463,7 @@
        etf_ks ( nbndsub, nkqf),                   &
        epmatf( nbndsub, nbndsub, nmodes), cufkk ( nbndsub, nbndsub), &
        cufkq ( nbndsub, nbndsub), uf ( nmodes, nmodes),              &
-       bmatf( nbndsub, nbndsub) )
+       bmatf( nbndsub, nbndsub), eps_rpa( nmodes) )
   !
   ! Need to be initialized
   epmatf(:,:,:) = czero
@@ -485,7 +485,7 @@
   ! SP: Create a look-up table for the exponential of the factor. 
   !     This can only work with homogeneous fine grids.
   IF ( (nkf1 >0) .AND. (nkf2 > 0) .AND. (nkf3 > 0) .AND. &
-       (nqf1 >0) .AND. (nqf2 > 0) .AND. (nqf3 > 0) .AND. .NOT. mp_mesh_k ) THEN
+       (nqf1 >0) .AND. (nqf2 > 0) .AND. (nqf3 > 0) .AND. .NOT. mp_mesh_k .AND. .NOT. lscreen ) THEN
     ! Make a check   
     IF ((nqf1>nkf1) .or. (nqf2>nkf2) .or. (nqf3>nkf3)) &
             CALL errore('The fine q-grid cannot be larger than the fine k-grid',1)   
@@ -770,6 +770,11 @@
        !  number of k points with a band on the Fermi surface
        fermicount = 0
        !
+       IF (lscreen) THEN
+          IF (scr_typ == 0) CALL rpa_epsilon (xxq, wf(:,iq), nmodes, epsi, eps_rpa)
+          IF (scr_typ == 1) CALL tf_epsilon (xxq, nmodes, epsi, eps_rpa)
+       ENDIF
+       !
        ! this is a loop over k blocks in the pool
        ! (size of the local k-set)
        DO ik = 1, nkf
@@ -919,7 +924,11 @@
              DO jbnd = ibndmin, ibndmax
                DO ibnd = ibndmin, ibndmax
                  ! 
-                 epf17(ibnd-ibndmin+1,jbnd-ibndmin+1,:,ik) = epmatf(ibnd,jbnd,:)        
+                 IF (lscreen) THEN
+                    epf17(ibnd-ibndmin+1,jbnd-ibndmin+1,:,ik) = epmatf(ibnd,jbnd,:) / eps_rpa(:)
+                 ELSE
+                    epf17(ibnd-ibndmin+1,jbnd-ibndmin+1,:,ik) = epmatf(ibnd,jbnd,:)
+                 ENDIF
                  !
                ENDDO
              ENDDO
