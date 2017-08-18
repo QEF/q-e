@@ -794,7 +794,7 @@
           ! SP: Compute the cfac only once here since the same are use in both hamwan2bloch and dmewan2bloch
           ! + optimize the 2\pi r\cdot k with Blas
           IF ( (nkf1 >0) .AND. (nkf2 > 0) .AND. (nkf3 > 0) .AND. &
-             (nqf1 > 0) .AND. (nqf2 > 0) .AND. (nqf3 > 0) .AND. .NOT. mp_mesh_k) THEN          
+             (nqf1 > 0) .AND. (nqf2 > 0) .AND. (nqf3 > 0) .AND. .NOT. mp_mesh_k .AND. .NOT. lscreen) THEN          
             ! We need to use NINT (nearest integer to x) rather than INT
             xkk1 = NINT(xkk(1)*(nkf1)) + 1
             xkk2 = NINT(xkk(2)*(nkf2)) + 1
