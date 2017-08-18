@@ -7,7 +7,7 @@
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
   !                                                                            
   !-----------------------------------------------------------------------
-  SUBROUTINE spec_cumulant 
+  SUBROUTINE spectral_cumulant 
   !-----------------------------------------------------------------------
   !!
   !!  Compute the electron spectral function including the electron-
@@ -186,6 +186,8 @@
   ! uncomment if needed
   !OPEN (unit=76,file='specfun_k0.dat')
   !
+  WRITE(iospectral_cum,'(a)') '#       k  Energy [eV]  A(k,w)[eV^-1]'
+  WRITE(stdout,'(2x,a)') '      k  Energy [eV]  A(k,w)[eV^-1]'
   ! define index corresponding to omega=0
   DO iw = 1, nw_specfun
     IF ( abs(ww(iw)-0.d0).le.(dw/1.8d0) ) THEN
@@ -256,7 +258,7 @@
         IF (isat.eq.1) a_s1 = a_tmp
         IF (isat.eq.2) a_s2 = a_tmp / 2.d0
         conv = a_tmp
-        WRITE(stdout,'(a,i4,a,i4)') ' Done ik ', ik, ' sat ', isat
+        !WRITE(stdout,'(a,i4,a,i4)') ' Done ik ', ik, ' sat ', isat
         !
       ENDDO ! isat
       !
@@ -265,6 +267,7 @@
         a_tmp(iw) = a_qp(iw) + a_s1(iw) + a_s2(iw)
         !
         WRITE(iospectral_cum,'(2x,i7,2x,f10.5,2x,e12.5)') ik, ww(iw), a_tmp(iw) / ( exp( ww(iw)/eptempc )+1.d0 )
+        WRITE(stdout,'(2x,i7,2x,f10.5,2x,e12.5)') ik, ww(iw), a_tmp(iw) / ( exp( ww(iw)/eptempc )+1.d0 )
         !
         ! uncomment and change if needed
         !IF (ik==114 .or. ik==185) WRITE(76,'(2x,f10.5,2x,f10.5)') ww(iw), a_tmp(iw) ! / ( exp( ww(iw)/eptempc )+1.d0 )
@@ -272,6 +275,7 @@
       ENDDO
       !
       WRITE(iospectral_cum,'(a)') ' '
+      WRITE(stdout,'(a)') ' '
       ! uncomment and change if needed
       !IF (ik==114 .or. ik==185) WRITE (76,'(a)') ' '
       !IF (ik==114 .or. ik==185) WRITE (76,'(a)') ' '
@@ -286,5 +290,5 @@
   DEALLOCATE ( ww, ek, sigmar, sigmai )
   DEALLOCATE ( a_mig, a_qp, a_s, a_tmp, conv, a_s1, a_s2 )
   !
-  END SUBROUTINE spec_cumulant
+  END SUBROUTINE spectral_cumulant
   !

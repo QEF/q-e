@@ -323,7 +323,7 @@
          OPEN(unit=iospectral_sup,file='specfun_sup.phon')
          WRITE(iospectral, '(/2x,a)') '#Phonon spectral function (meV)'
          WRITE(iospectral_sup, '(2x,a)') '#Phonon eigenenergies + real and im part of phonon self-energy (meV)'
-         WRITE(iospectral, '(/2x,a)') '#K-point    Energy[meV]     A(q,w)[meV^-1]'
+         WRITE(iospectral, '(/2x,a)') '#K-point    Energy[eV]     A(q,w)[meV^-1]'
          WRITE(iospectral_sup, '(2x,a)') '#Q-point    Mode       w_q[eV]        w[eV]   &
 &    Real Sigma(w)[meV]    Im Sigma(w=0)[meV]     Im Sigma(w)[meV]'
          WRITE(stdout,'(/5x,a)') 'Real and Imaginary part of the phonon self-energy (omega=0).'  

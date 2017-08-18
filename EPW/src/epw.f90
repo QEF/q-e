@@ -163,7 +163,7 @@ write(stdout,'(a)') "                                                           
   ENDIF
   ! 
   IF ( cumulant .and. ionode ) THEN
-     CALL spec_cumulant()
+     CALL spectral_cumulant()
   ENDIF
   !
   IF ( eliashberg ) THEN

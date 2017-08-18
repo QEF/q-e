@@ -6,12 +6,12 @@
   outdir      = './'
 
   elph        = .true.
-  kmaps       = .false.
-  epbwrite    = .true.
+  kmaps       = .true.
+  epbwrite    = .false.
   epbread     = .false.
 
-  epwwrite    = .true.
-  epwread     = .false.
+  epwwrite    = .false.
+  epwread     = .true.
 
   etf_mem     = 1
   lpolar      = .true.
@@ -25,7 +25,7 @@
   nbndsub     =  4
   nbndskip    =  0
 
-  wannierize  = .true.
+  wannierize  = .false.
   num_iter    = 300
   iprint      = 2
   dis_win_max = 12

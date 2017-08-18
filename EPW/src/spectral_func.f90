@@ -681,7 +681,7 @@
       OPEN(unit=iospectral_sup,file='specfun_sup.elself')
       WRITE(iospectral, '(/2x,a/)') '#Electronic spectral function (meV)'
       WRITE(iospectral_sup, '(/2x,a/)') '#KS eigenenergies + real and im part of electronic self-energy (meV)'
-      WRITE(iospectral, '(/2x,a/)') '#K-point    Energy[meV]     A(k,w)[meV^-1]'
+      WRITE(iospectral, '(/2x,a/)') '#K-point    Energy[eV]     A(k,w)[meV^-1]'
       WRITE(iospectral_sup, '(/2x,a/)') '#K-point    Band   e_nk[eV]   w[eV]   &
 &         Real Sigma[meV]  Im Sigma[meV]'
       !
