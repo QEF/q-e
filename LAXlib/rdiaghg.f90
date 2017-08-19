@@ -181,8 +181,8 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
   !
   USE la_param,          ONLY : DP
   USE mp,                ONLY : mp_bcast
-  USE mp_bands_util,     ONLY : root_bgrp, intra_bgrp_comm
   USE descriptors,       ONLY : la_descriptor
+  USE mp_diag,           ONLY : ortho_parent_comm
 #if defined __SCALAPACK
   USE mp_diag,           ONLY : ortho_cntx, me_blacs, np_ortho, me_ortho, ortho_comm
   USE dspev_module,      ONLY : pdsyevd_drv
@@ -204,6 +204,7 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
     ! eigenvectors (column-wise)
   TYPE(la_descriptor), INTENT(IN) :: desc
   !
+  INTEGER, PARAMETER    :: root = 0
   INTEGER               :: nx
     ! local block size
   REAL(DP), PARAMETER   :: one = 1_DP
@@ -320,7 +321,7 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
      !
   END IF
   !
-  CALL mp_bcast( e, root_bgrp, intra_bgrp_comm )
+  CALL mp_bcast( e, root, ortho_parent_comm )
   !
   CALL stop_clock( 'rdiaghg:paragemm' )
   !

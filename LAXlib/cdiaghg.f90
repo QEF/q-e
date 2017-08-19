@@ -201,10 +201,10 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
   !
   USE la_param,         ONLY : DP
   USE mp,               ONLY : mp_bcast
-  USE mp_bands_util,    ONLY : root_bgrp, intra_bgrp_comm
   USE zhpev_module,     ONLY : pzhpev_drv, zhpev_drv
   USE descriptors,      ONLY : la_descriptor
   USE parallel_toolkit, ONLY : zsqmdst, zsqmcll
+  USE mp_diag,          ONLY : ortho_parent_comm
 #if defined __SCALAPACK
   USE mp_diag,          ONLY : ortho_cntx, me_blacs, np_ortho, me_ortho, ortho_comm
   USE zhpev_module,     ONLY : pzheevd_drv
@@ -226,6 +226,7 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
     ! eigenvectors (column-wise)
   TYPE(la_descriptor), INTENT(IN) :: desc
   !
+  INTEGER, PARAMETER  :: root = 0
   INTEGER             :: nx
 #if defined __SCALAPACK
   INTEGER             :: descsca( 16 ), info
@@ -359,7 +360,7 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
      !
   END IF
   !
-  CALL mp_bcast( e, root_bgrp, intra_bgrp_comm )
+  CALL mp_bcast( e, root, ortho_parent_comm )
   !
   CALL stop_clock( 'cdiaghg:paragemm' )
   !
