@@ -338,17 +338,6 @@ data_structure.o : ../../Modules/mp_pools.o
 data_structure.o : ../../Modules/recvec.o
 data_structure.o : ../../UtilXlib/mp.o
 data_structure.o : pwcom.o
-data_structure_custom.o : ../../FFTXlib/fft_types.o
-data_structure_custom.o : ../../FFTXlib/stick_base.o
-data_structure_custom.o : ../../Modules/cell_base.o
-data_structure_custom.o : ../../Modules/fft_base.o
-data_structure_custom.o : ../../Modules/fft_custom.o
-data_structure_custom.o : ../../Modules/kind.o
-data_structure_custom.o : ../../Modules/mp_bands.o
-data_structure_custom.o : ../../Modules/mp_exx.o
-data_structure_custom.o : ../../Modules/recvec.o
-data_structure_custom.o : ../../UtilXlib/mp.o
-data_structure_custom.o : pwcom.o
 deriv_drhoc.o : ../../KS_Solvers/CG/constants.o
 deriv_drhoc.o : ../../Modules/kind.o
 divide.o : ../../UtilXlib/mp.o

@@ -5,7 +5,10 @@ New in svn version:
 
 Fixed in svn version
 
-  * __USE_3D_FFT was broken since v.6.0 (r13700)
+  * EXX with k-points and pool parallelization was occasionally crashing
+    due to questionable custom FFT grid initialization (r137XX)
+
+  * __USE_3D_FFT was broken since v.6.0 (r13700, r13706)
 
   * Some constants in the definition of PBE functionals were truncated to 
     6 significant digits. While not a bug, this could lead to tiny differences
@@ -56,7 +59,7 @@ Incompatible changes in svn version:
   * Restructuring of C routines, introduction of ISO_C_BINDING:
     - memstat moved to module wrappers
     - f_wall and f_tcpu, in module mytime, replace previous fortran wrappers 
-    - for cclock and scnds, respectively. The latter remain as C functions.
+      for cclock and scnds, respectively. The latter remain as C functions.
     - fft_defs.h and related configure and makedep stuff deleted
   * module pwcom no longer contains modules gvect, gvecs, references to
     some variables in modules constants, cell_base

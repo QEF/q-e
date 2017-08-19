@@ -199,15 +199,26 @@ MODULE exx
   !
   !------------------------------------------------------------------------
   SUBROUTINE exx_fft_create ()
+
     USE gvecw,        ONLY : ecutwfc
     USE gvect,        ONLY : ecutrho, ig_l2g
     USE klist,        ONLY : qnorm
     USE cell_base,    ONLY : at, bg, tpiba2
-    USE fft_custom,   ONLY : set_custom_grid, ggent
+    USE fft_custom,   ONLY : ggent, gvec_init
+    USE fft_base,     ONLY : smap
+    USE fft_types,    ONLY : fft_type_init
+    USE mp_exx,       ONLY : negrp, intra_egrp_comm
+    USE mp_bands,     ONLY : intra_bgrp_comm, nyfft
     USE control_flags,ONLY : tqr
     USE realus,       ONLY : qpointlist, tabxx, tabp!, tabs
 
     IMPLICIT NONE
+    INTEGER :: intra_comm, ngs_
+#if defined (__MPI) && ! defined (__USE_3D_FFT)
+    LOGICAL :: lpara = .true.
+#else
+    LOGICAL :: lpara = .false.
+#endif
 
     IF( exx_fft%initialized) RETURN
 
@@ -224,21 +235,40 @@ MODULE exx
     ENDIF
     !
     exx_fft%gcutmt = exx_fft%dual_t*exx_fft%ecutt / tpiba2
-    CALL data_structure_custom(exx_fft, smap_exx, gamma_only)
+    !
+    ! ... set up fft descriptors, including parallel stuff: sticks, planes, etc.
+    !
+    IF( negrp == 1 ) THEN
+       intra_comm = intra_bgrp_comm
+       CALL fft_type_init( exx_fft%dfftt, smap, "rho", gamma_only, lpara, &
+            intra_comm, at, bg, exx_fft%gcutmt, exx_fft%dual_t, nyfft=nyfft )
+    ELSE
+       intra_comm = intra_egrp_comm
+       CALL fft_type_init( exx_fft%dfftt, smap_exx, "rho", gamma_only, lpara, &
+            intra_comm, at, bg, exx_fft%gcutmt, exx_fft%dual_t, nyfft=nyfft )
+    END IF
+    !
+    ngs_ = exx_fft%dfftt%ngl( exx_fft%dfftt%mype + 1 )
+    IF( gamma_only ) THEN
+       ngs_ = (ngs_ + 1)/2
+    END IF
+    !
+    !     on output, ngm_ and ngs_ contain the local number of G-vectors
+    !     for the two grids. Initialize local and global number of G-vectors
+    !
+    CALL gvec_init (exx_fft, ngs_ , intra_comm )
+    !
     CALL ggent(exx_fft)
     exx_fft%initialized = .true.
     !
     IF(tqr)THEN
-      WRITE(stdout, '(5x,a)') "Initializing real-space augmentation for EXX grid"
-      IF(ecutfock==ecutrho)THEN
-        WRITE(stdout, '(7x,a)') " EXX grid -> DENSE grid"
-        tabxx => tabp
-!       ELSEIF(ecutfock==ecutwfc)THEN
-!         WRITE(stdout, '(7x,a)') " EXX grid -> SMOOTH grid"
-!         tabxx => tabs
-      ELSE
-        CALL qpointlist(exx_fft%dfftt, tabxx)
-      ENDIF
+       WRITE(stdout, '(5x,a)') "Initializing real-space augmentation for EXX grid"
+       IF(ecutfock==ecutrho)THEN
+          WRITE(stdout, '(7x,a)') " EXX grid -> DENSE grid"
+          tabxx => tabp
+       ELSE
+          CALL qpointlist(exx_fft%dfftt, tabxx)
+       ENDIF
     ENDIF
 
     RETURN
@@ -354,6 +384,8 @@ MODULE exx
     USE wvfct,      ONLY : nbnd
     USE start_k,    ONLY : nk1,nk2,nk3
     USE control_flags, ONLY : iverbosity
+    USE mp_pools,   ONLY : inter_pool_comm
+    USE mp,         ONLY : mp_max
     !
     IMPLICIT NONE
     !
@@ -567,6 +599,7 @@ MODULE exx
           qnorm = max(qnorm, sqrt( sum((xk(:,ik)-xkq_collect(:,iq))**2) ))
        ENDDO
     ENDDO
+    CALL mp_max( qnorm, inter_pool_comm )
     !
     CALL stop_clock ('exx_grid')
     !
@@ -796,7 +829,6 @@ MODULE exx
     ! Note that nxxs is not the same as nrxxs in parallel case
     nxxs = exx_fft%dfftt%nr1x *exx_fft%dfftt%nr2x *exx_fft%dfftt%nr3x
     nrxxs= exx_fft%dfftt%nnr
-
     !allocate psic_exx
     IF(.not.allocated(psic_exx))THEN
        ALLOCATE(psic_exx(nrxxs))
@@ -4226,7 +4258,6 @@ END SUBROUTINE compute_becpsi
          nproc_egrp, me_egrp, negrp, my_egrp_id, nibands, ibands, &
          max_ibands, all_start, all_end
     USE parallel_include
-    USE klist,        ONLY : xk, wk, nkstot, nks, qnorm
     !
     !
     IMPLICIT NONE
@@ -4917,7 +4948,6 @@ END SUBROUTINE compute_becpsi
     USE mp_exx,       ONLY : intra_egrp_comm, inter_egrp_comm, &
          nproc_egrp, me_egrp, negrp, my_egrp_id, iexx_istart, iexx_iend
     USE parallel_include
-    USE klist,        ONLY : xk, wk, nkstot, nks, qnorm
     USE wvfct,        ONLY : current_k
     !
     !
