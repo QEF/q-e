@@ -12,8 +12,10 @@
 
 if [ $QE_USE_MPI == 1 ]; then
   export PARA_PREFIX="mpirun -np ${TESTCODE_NPROCS}"
+  export PARA_POSTFIX=" "
 else
   unset PARA_PREFIX
+  unset PARA_POSTFIX
 fi
 
 #echo $0" "$@
@@ -36,7 +38,7 @@ if test "$1" = "vdw6.in" ; then
    fi
 fi
 
-echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/pw.x -input $1 > $2 2> $3"
-${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/pw.x -input $1 > $2 2> $3
+# echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/pw.x ${PARA_POSTFIX} -input $1 > $2 2> $3"
+${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/pw.x ${PARA_POSTFIX}-input $1 > $2 2> $3
 
 rm -f input_tmp.in

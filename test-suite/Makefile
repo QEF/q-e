@@ -95,13 +95,16 @@ create-reference-epw : pseudo prolog
 	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --category=epw_all make-benchmarks
 
 
-compare : compare-cp compare-pw compare-epw
+compare : compare-cp compare-pw compare-ph compare-epw
 
 compare-cp : prolog
 	${TESTCODE_DIR}/bin/testcode.py --category=cp_all  --verbose compare 2>&1 | tee out.CP.`date +%Y%m%d_%H%M%S`
 
 compare-pw : prolog
 	${TESTCODE_DIR}/bin/testcode.py --category=pw_all  --verbose compare 2>&1 | tee out.PW.`date +%Y%m%d_%H%M%S`
+
+compare-ph : prolog
+	${TESTCODE_DIR}/bin/testcode.py --category=ph_all  --verbose compare 2>&1 | tee out.PH.`date +%Y%m%d_%H%M%S`
 
 compare-epw : prolog
 	${TESTCODE_DIR}/bin/testcode.py --category=epw_all  --verbose compare 2>&1 | tee out.EPW.`date +%Y%m%d_%H%M%S`
