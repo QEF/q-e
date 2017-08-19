@@ -43,7 +43,7 @@ SUBROUTINE rotate_wfc_gamma( h_psi, s_psi, &
   COMPLEX(DP), ALLOCATABLE :: aux(:,:)
   REAL(DP),    ALLOCATABLE :: hr(:,:), sr(:,:), vr(:,:)
   REAL(DP),    ALLOCATABLE :: en(:)
-  INTEGER :: n_start, n_end
+  INTEGER :: n_start, n_end, my_n
   !
   EXTERNAL  h_psi,    s_psi
     ! h_psi(npwx,npw,nvec,psi,hpsi)
@@ -72,7 +72,7 @@ SUBROUTINE rotate_wfc_gamma( h_psi, s_psi, &
   ! ... set Im[ psi(G=0) ] -  needed for numerical stability
   !
   IF ( gstart == 2 ) &
-     psi(1,1:nstart) = CMPLX( DBLE( psi(1,1:nstart) ), 0.D0 ,kind=DP)
+     psi(1,1:nstart) = CMPLX( DBLE( psi(1,1:nstart) ), 0.D0,kind=DP)
   !
   call start_clock('rotwfcg:hpsi'); !write(*,*) 'start rotwfcg:hpsi' ; FLUSH(6)
   CALL h_psi( npwx, npw, nstart, psi, aux )
@@ -80,15 +80,13 @@ SUBROUTINE rotate_wfc_gamma( h_psi, s_psi, &
   !
   call start_clock('rotwfcg:hc'); !write(*,*) 'start rotwfcg:hc' ; FLUSH(6)
   hr=0.D0
-  CALL set_bgrp_indices(nstart,n_start,n_end); !write (*,*) nstart,n_start,n_end
+  CALL set_bgrp_indices(nstart,n_start,n_end); my_n = n_end - n_start + 1; !write (*,*) nstart,n_start,n_end
   if (n_start .le. n_end) &
-  CALL DGEMM( 'T', 'N', nstart, n_end-n_start+1, npw2, 2.D0 , psi, &
-              npwx2, aux(1,n_start), npwx2, 0.D0, hr(1,n_start), nstart )
-  IF ( gstart == 2 ) &
-     call DGER( nstart, n_end-n_start+1, -1.D0, psi, npwx2, aux(1,n_start),  npwx2, hr(1,n_start), nstart )
-  CALL mp_sum(  hr , inter_bgrp_comm )
+  CALL DGEMM( 'T','N', nstart, my_n, npw2, 2.D0, psi, npwx2, aux(1,n_start), npwx2, 0.D0, hr(1,n_start), nstart )
+  IF ( gstart == 2 ) call DGER( nstart, my_n, -1.D0, psi, npwx2, aux(1,n_start), npwx2, hr(1,n_start), nstart )
+  CALL mp_sum( hr, inter_bgrp_comm )
   !     
-  CALL mp_sum(  hr , intra_bgrp_comm )
+  CALL mp_sum( hr, intra_bgrp_comm )
   !     
   sr=0.D0
   IF ( overlap ) THEN 
@@ -96,23 +94,19 @@ SUBROUTINE rotate_wfc_gamma( h_psi, s_psi, &
      CALL s_psi( npwx, npw, nstart, psi, aux )
      !
      if (n_start .le. n_end) &
-     CALL DGEMM( 'T', 'N', nstart, n_end-n_start+1, npw2, 2.D0 , psi, &
-                 npwx2, aux(1,n_start), npwx2, 0.D0, sr(1,n_start), nstart )
-     IF ( gstart == 2 ) &
-        CALL DGER( nstart, n_end-n_start+1, -1.D0, psi, npwx2, aux(1,n_start), npwx2, sr(1,n_start), nstart )
+     CALL DGEMM( 'T','N', nstart, my_n, npw2, 2.D0, psi, npwx2, aux(1,n_start), npwx2, 0.D0, sr(1,n_start), nstart )
+     IF ( gstart == 2 ) CALL DGER( nstart, my_n, -1.D0, psi, npwx2, aux(1,n_start), npwx2, sr(1,n_start), nstart )
      !              
   ELSE
      !
      if (n_start .le. n_end) &
-     CALL DGEMM( 'T', 'N', nstart, n_end-n_start+1, npw2, 2.D0 , psi, &
-                 npwx2, psi(1,n_start), npwx2, 0.D0, sr(1,n_start), nstart )
-     IF ( gstart == 2 ) &
-        CALL DGER( nstart, n_end-n_start+1, -1.D0, psi, npwx2, psi(1,n_start), npwx2, sr(1,n_start), nstart )
+     CALL DGEMM( 'T','N', nstart, my_n, npw2, 2.D0, psi, npwx2, psi(1,n_start), npwx2, 0.D0, sr(1,n_start), nstart )
+     IF ( gstart == 2 ) CALL DGER( nstart, my_n, -1.D0, psi, npwx2, psi(1,n_start), npwx2, sr(1,n_start), nstart )
      !
   END IF
-  CALL mp_sum(  sr , inter_bgrp_comm )
+  CALL mp_sum( sr, inter_bgrp_comm )
   !
-  CALL mp_sum(  sr , intra_bgrp_comm )
+  CALL mp_sum( sr, intra_bgrp_comm )
   call stop_clock('rotwfcg:hc'); !write(*,*) 'stop rotwfcg:hc' ; FLUSH(6)
   !
   ! ... Diagonalize
@@ -128,9 +122,8 @@ SUBROUTINE rotate_wfc_gamma( h_psi, s_psi, &
   !
   aux=(0.D0,0.D0)
   if (n_start .le. n_end) &
-  CALL DGEMM( 'N', 'N', npw2, nbnd, n_end-n_start+1, 1.D0, psi(1,n_start), &
-              npwx2,  vr(n_start,1), nstart, 0.D0, aux, npwx2 )
-  CALL mp_sum(  aux , inter_bgrp_comm )
+  CALL DGEMM( 'N','N', npw2, nbnd, my_n, 1.D0, psi(1,n_start), npwx2, vr(n_start,1), nstart, 0.D0, aux, npwx2 )
+  CALL mp_sum( aux, inter_bgrp_comm )
   !   
   evc(:,:) = aux(:,1:nbnd)
   call stop_clock('rotwfcg:evc'); !write(*,*) 'stop rotwfcg:evc' ; FLUSH(6)
@@ -239,7 +232,7 @@ SUBROUTINE protate_wfc_gamma( h_psi, s_psi, &
   !
   ! ... set Im[ psi(G=0) ] -  needed for numerical stability
   IF ( gstart == 2 ) &
-     psi(1,1:nstart) = CMPLX( DBLE( psi(1,1:nstart) ), 0.D0 ,kind=DP)
+     psi(1,1:nstart) = CMPLX( DBLE( psi(1,1:nstart) ), 0.D0, kind=DP)
   !
   call start_clock('protwfcg:hpsi'); !write(*,*) 'start protwfcg:hpsi' ; FLUSH(6)
   CALL h_psi( npwx, npw, nstart, psi, aux )
@@ -263,10 +256,10 @@ SUBROUTINE protate_wfc_gamma( h_psi, s_psi, &
   ! ... Diagonalize
   !
   call start_clock('protwfcg:diag'); !write(*,*) 'start protwfcg:diag' ; FLUSH(6)
-  IF ( do_distr_diag_inside_bgrp ) THEN
+  IF ( do_distr_diag_inside_bgrp ) THEN ! NB on output of prdiaghg en and vr are the same across ortho_parent_comm
      ! only the first bgrp performs the diagonalization
      IF( my_bgrp_id == root_bgrp_id ) CALL prdiaghg( nstart, hr, sr, nx, en, vr, desc )
-     IF( nbgrp > 1 ) THEN ! results are brodcast to the other bnd groups
+     IF( nbgrp > 1 ) THEN ! results must be brodcast to the other band groups
        CALL mp_bcast( vr, root_bgrp_id, inter_bgrp_comm )
        CALL mp_bcast( en, root_bgrp_id, inter_bgrp_comm )
      ENDIF
@@ -365,7 +358,7 @@ CONTAINS
 
            ! use blas subs. on the matrix block
 
-           CALL DGEMM( 'T', 'N', nr, nc, npw2, 2.D0 ,  v(1,ir), npwx2, w(1,ic), npwx2, 0.D0, work, nx )
+           CALL DGEMM( 'T', 'N', nr, nc, npw2, 2.D0, v(1,ir), npwx2, w(1,ic), npwx2, 0.D0, work, nx )
 
            IF ( gstart == 2 ) &
               CALL DGER( nr, nc, -1.D0, v(1,ir), npwx2, w(1,ic), npwx2, work, nx )
@@ -420,13 +413,13 @@ CONTAINS
                  !  this proc sends his block
                  ! 
                  CALL mp_bcast( vr(:,1:nc), root, ortho_parent_comm )
-                 CALL DGEMM( 'N', 'N', npw2, nc, nr, 1.D0,  psi(1,ir), npwx2, vr, nx, beta, aux(1,ic), npwx2 )
+                 CALL DGEMM( 'N', 'N', npw2, nc, nr, 1.D0, psi(1,ir), npwx2, vr, nx, beta, aux(1,ic), npwx2 )
               ELSE
                  !
                  !  all other procs receive
                  ! 
                  CALL mp_bcast( vtmp(:,1:nc), root, ortho_parent_comm )
-                 CALL DGEMM( 'N', 'N', npw2, nc, nr, 1.D0,  psi(1,ir), npwx2, vtmp, nx, beta, aux(1,ic), npwx2 )
+                 CALL DGEMM( 'N', 'N', npw2, nc, nr, 1.D0, psi(1,ir), npwx2, vtmp, nx, beta, aux(1,ic), npwx2 )
               END IF
               ! 
 

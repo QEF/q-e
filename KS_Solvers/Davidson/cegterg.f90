@@ -64,7 +64,7 @@ SUBROUTINE cegterg( h_psi, s_psi, g_psi, &
     ! counter on the reduced basis vectors
     ! adapted npw and npwx
     ! do-loop counters
-  INTEGER :: n_start, n_end
+  INTEGER :: n_start, n_end, my_n
   INTEGER :: ierr
   COMPLEX(DP), ALLOCATABLE :: hc(:,:), sc(:,:), vc(:,:)
     ! Hamiltonian on the reduced basis
@@ -168,10 +168,9 @@ SUBROUTINE cegterg( h_psi, s_psi, g_psi, &
   sc(:,:) = ZERO
   vc(:,:) = ZERO
   !
-  CALL set_bgrp_indices(nbase,n_start,n_end); !write (*,*) nbase,n_start,n_end
+  CALL set_bgrp_indices(nbase,n_start,n_end); my_n = n_end - n_start + 1; !write (*,*) nbase,n_start,n_end
   if (n_start .le. n_end) &
-  CALL ZGEMM( 'C', 'N', nbase, n_end-n_start+1, kdim, ONE, &
-              psi, kdmx, hpsi(1,1,n_start), kdmx, ZERO, hc(1,n_start), nvecx )
+  CALL ZGEMM( 'C','N', nbase, my_n, kdim, ONE, psi, kdmx, hpsi(1,1,n_start), kdmx, ZERO, hc(1,n_start), nvecx )
   CALL mp_sum( hc( :, 1:nbase ), inter_bgrp_comm )
   !
   CALL mp_sum( hc( :, 1:nbase ), intra_bgrp_comm )
@@ -179,14 +178,14 @@ SUBROUTINE cegterg( h_psi, s_psi, g_psi, &
   IF ( uspp ) THEN
      !
      if (n_start .le. n_end) &
-     CALL ZGEMM( 'C', 'N', nbase, n_end-n_start+1, kdim, ONE, &
-                 psi, kdmx, spsi(1,1,n_start), kdmx, ZERO, sc(1,n_start), nvecx )
+     CALL ZGEMM( 'C','N', nbase, my_n, kdim, ONE, psi, kdmx, spsi(1,1,n_start), kdmx, &
+                 ZERO, sc(1,n_start), nvecx )
      !     
   ELSE
      !
      if (n_start .le. n_end) &
-     CALL ZGEMM( 'C', 'N', nbase, n_end-n_start+1, kdim, ONE, &
-                 psi, kdmx, psi(1,1,n_start), kdmx, ZERO, sc(1,n_start), nvecx )
+     CALL ZGEMM( 'C','N', nbase, my_n, kdim, ONE, psi, kdmx, psi(1,1,n_start), kdmx, &
+                 ZERO, sc(1,n_start), nvecx )
      !
   END IF
   CALL mp_sum( sc( :, 1:nbase ), inter_bgrp_comm )
@@ -258,19 +257,19 @@ SUBROUTINE cegterg( h_psi, s_psi, g_psi, &
      !
      ! ... expand the basis set with new basis vectors ( H - e*S )|psi> ...
      !
-     CALL set_bgrp_indices(nbase,n_start,n_end); !write (*,*) nbase,n_start,n_end
+     CALL set_bgrp_indices(nbase,n_start,n_end); my_n = n_end - n_start + 1; !write (*,*) nbase,n_start,n_end
      psi(:,:,nb1:nbase+notcnv)=ZERO
      IF ( uspp ) THEN
         !
         if (n_start .le. n_end) &
-        CALL ZGEMM( 'N', 'N', kdim, notcnv, n_end-n_start+1, ONE, spsi(1,1,n_start), &
-                    kdmx, vc(n_start,1), nvecx, ZERO, psi(1,1,nb1), kdmx )
+        CALL ZGEMM( 'N','N', kdim, notcnv, my_n, ONE, spsi(1,1,n_start), kdmx, vc(n_start,1), nvecx, &
+                    ZERO, psi(1,1,nb1), kdmx )
         !     
      ELSE
         !
         if (n_start .le. n_end) &
-        CALL ZGEMM( 'N', 'N', kdim, notcnv, n_end-n_start+1, ONE, psi(1,1,n_start), &
-                    kdmx, vc(n_start,1), nvecx, ZERO, psi(1,1,nb1), kdmx )
+        CALL ZGEMM( 'N','N', kdim, notcnv, my_n, ONE, psi(1,1,n_start), kdmx, vc(n_start,1), nvecx, &
+                    ZERO, psi(1,1,nb1), kdmx )
         !
      END IF
 ! NB: must not call mp_sum over inter_bgrp_comm here because it is done later to the full correction
@@ -282,8 +281,8 @@ SUBROUTINE cegterg( h_psi, s_psi, g_psi, &
      END DO
      !
      if (n_start .le. n_end) &
-     CALL ZGEMM( 'N', 'N', kdim, notcnv, n_end-n_start+1, ONE, hpsi(1,1,n_start), &
-                 kdmx, vc(n_start,1), nvecx, ONE, psi(1,1,nb1), kdmx )
+     CALL ZGEMM( 'N','N', kdim, notcnv, my_n, ONE, hpsi(1,1,n_start), kdmx, vc(n_start,1), nvecx, &
+                 ONE, psi(1,1,nb1), kdmx )
      CALL mp_sum( psi(:,:,nb1:nbase+notcnv), inter_bgrp_comm )
      !
      CALL stop_clock( 'cegterg:update' )
@@ -334,24 +333,24 @@ SUBROUTINE cegterg( h_psi, s_psi, g_psi, &
      CALL start_clock( 'cegterg:overlap' )
      !
      hc( :, nb1:nb1+notcnv-1 )=ZERO
-     CALL set_bgrp_indices(nbase+notcnv,n_start,n_end); !write (*,*) nbase+notcnv,n_start,n_end
-     CALL ZGEMM( 'C', 'N', n_end-n_start+1, notcnv, kdim, ONE, psi(1,1,n_start), &
-                 kdmx, hpsi(1,1,nb1), kdmx, ZERO, hc(n_start,nb1), nvecx )
+     CALL set_bgrp_indices(nbase+notcnv,n_start,n_end); my_n = n_end - n_start + 1; !write (*,*) nbase+notcnv,n_start,n_end
+     CALL ZGEMM( 'C','N', my_n, notcnv, kdim, ONE, psi(1,1,n_start), kdmx, hpsi(1,1,nb1), kdmx, &
+                 ZERO, hc(n_start,nb1), nvecx )
      CALL mp_sum( hc( :, nb1:nb1+notcnv-1 ), inter_bgrp_comm )
      !
      CALL mp_sum( hc( :, nb1:nb1+notcnv-1 ), intra_bgrp_comm )
      !
      sc( :, nb1:nb1+notcnv-1 )=ZERO
-     CALL set_bgrp_indices(nbase+notcnv,n_start,n_end); !write (*,*) nbase+notcnv,n_start,n_end
+     CALL set_bgrp_indices(nbase+notcnv,n_start,n_end); my_n = n_end - n_start + 1; !write (*,*) nbase+notcnv,n_start,n_end
      IF ( uspp ) THEN
         !
-        CALL ZGEMM( 'C', 'N', n_end-n_start+1, notcnv, kdim, ONE, psi(1,1,n_start), &
-                    kdmx, spsi(1,1,nb1), kdmx, ZERO, sc(n_start,nb1), nvecx )
+        CALL ZGEMM( 'C','N', my_n, notcnv, kdim, ONE, psi(1,1,n_start), kdmx, spsi(1,1,nb1), kdmx, &
+                    ZERO, sc(n_start,nb1), nvecx )
         !     
      ELSE
         !
-        CALL ZGEMM( 'C', 'N', n_end-n_start+1, notcnv, kdim, ONE, psi(1,1,n_start), &
-                   kdmx, psi(1,1,nb1), kdmx, ZERO, sc(n_start,nb1), nvecx )
+        CALL ZGEMM( 'C','N', my_n, notcnv, kdim, ONE, psi(1,1,n_start), kdmx, psi(1,1,nb1), kdmx, &
+                     ZERO, sc(n_start,nb1), nvecx )
         !
      END IF
      CALL mp_sum( sc( :, nb1:nb1+notcnv-1 ), inter_bgrp_comm )
@@ -420,9 +419,9 @@ SUBROUTINE cegterg( h_psi, s_psi, g_psi, &
         CALL start_clock( 'cegterg:last' )
         !
         evc = ZERO
-        CALL set_bgrp_indices(nbase,n_start,n_end); !write (*,*) nbase,n_start,n_end
-        CALL ZGEMM( 'N', 'N', kdim, nvec, n_end-n_start+1, ONE, &
-                    psi(1,1,n_start), kdmx, vc(n_start,1), nvecx, ZERO, evc, kdmx )
+        CALL set_bgrp_indices(nbase,n_start,n_end); my_n = n_end - n_start + 1; !write (*,*) nbase,n_start,n_end
+        CALL ZGEMM( 'N','N', kdim, nvec, my_n, ONE, psi(1,1,n_start), kdmx, vc(n_start,1), nvecx, &
+                    ZERO, evc, kdmx )
         CALL mp_sum( evc, inter_bgrp_comm )
         !
         IF ( notcnv == 0 ) THEN
@@ -453,8 +452,8 @@ SUBROUTINE cegterg( h_psi, s_psi, g_psi, &
         IF ( uspp ) THEN
            !
            psi(:,:,nvec+1:nvec+nvec) = ZERO
-           CALL ZGEMM( 'N', 'N', kdim, nvec, n_end-n_start+1, ONE, spsi(1,1,n_start), &
-                       kdmx, vc(n_start,1), nvecx, ZERO, psi(1,1,nvec+1), kdmx )
+           CALL ZGEMM( 'N','N', kdim, nvec, my_n, ONE, spsi(1,1,n_start), kdmx, vc(n_start,1), nvecx, &
+                       ZERO, psi(1,1,nvec+1), kdmx)
            CALL mp_sum( psi(:,:,nvec+1:nvec+nvec), inter_bgrp_comm )
            !
            spsi(:,:,1:nvec) = psi(:,:,nvec+1:nvec+nvec)
@@ -462,8 +461,8 @@ SUBROUTINE cegterg( h_psi, s_psi, g_psi, &
         END IF
         !
         psi(:,:,nvec+1:nvec+nvec) = ZERO
-        CALL ZGEMM( 'N', 'N', kdim, nvec,n_end-n_start+1, ONE, hpsi(1,1,n_start), &
-                    kdmx, vc(n_start,1), nvecx, ZERO, psi(1,1,nvec+1), kdmx )
+        CALL ZGEMM( 'N','N', kdim, nvec, my_n, ONE, hpsi(1,1,n_start), kdmx, vc(n_start,1), nvecx, &
+                    ZERO, psi(1,1,nvec+1), kdmx )
         CALL mp_sum( psi(:,:,nvec+1:nvec+nvec), inter_bgrp_comm )
         !
         hpsi(:,:,1:nvec) = psi(:,:,nvec+1:nvec+nvec)
@@ -763,10 +762,10 @@ SUBROUTINE pcegterg(h_psi, s_psi, g_psi, &
      !     Calling block parallel algorithm
      !
      CALL start_clock( 'cegterg:diag' )
-     IF ( do_distr_diag_inside_bgrp ) THEN
+     IF ( do_distr_diag_inside_bgrp ) THEN ! NB on output of pcdiaghg ew and vl are the same across ortho_parent_comm
         ! only the first bgrp performs the diagonalization
         IF( my_bgrp_id == root_bgrp_id ) CALL pcdiaghg( nbase, hl, sl, nx, ew, vl, desc )
-        IF( nbgrp > 1 ) THEN ! results are brodcast to the other bnd groups
+        IF( nbgrp > 1 ) THEN ! results must be brodcast to the other band groups
            CALL mp_bcast( vl, root_bgrp_id, inter_bgrp_comm )
            CALL mp_bcast( ew, root_bgrp_id, inter_bgrp_comm )
         ENDIF
@@ -898,10 +897,10 @@ SUBROUTINE pcegterg(h_psi, s_psi, g_psi, &
      !     Call block parallel algorithm
      !
      CALL start_clock( 'cegterg:diag' )
-     IF ( do_distr_diag_inside_bgrp ) THEN
+     IF ( do_distr_diag_inside_bgrp ) THEN ! NB on output of pcdiaghg ew and vl are the same across ortho_parent_comm
         ! only the first bgrp performs the diagonalization
         IF( my_bgrp_id == root_bgrp_id ) CALL pcdiaghg( nbase, hl, sl, nx, ew, vl, desc )
-        IF( nbgrp > 1 ) THEN ! results are brodcast to the other bnd groups
+        IF( nbgrp > 1 ) THEN ! results must be brodcast to the other band groups
            CALL mp_bcast( vl, root_bgrp_id, inter_bgrp_comm )
            CALL mp_bcast( ew, root_bgrp_id, inter_bgrp_comm )
         ENDIF

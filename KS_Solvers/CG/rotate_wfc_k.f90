@@ -41,7 +41,7 @@ SUBROUTINE rotate_wfc_k( h_psi, s_psi, &
   COMPLEX(DP), ALLOCATABLE :: aux(:,:)
   COMPLEX(DP), ALLOCATABLE :: hc(:,:), sc(:,:), vc(:,:)
   REAL(DP),    ALLOCATABLE :: en(:)
-  INTEGER :: n_start, n_end
+  INTEGER :: n_start, n_end, my_n
   !
   EXTERNAL  h_psi,    s_psi
     ! h_psi(npwx,npw,nvec,psi,hpsi)
@@ -79,32 +79,29 @@ SUBROUTINE rotate_wfc_k( h_psi, s_psi, &
   !
   call start_clock('rotwfck:hc'); !write(*,*) 'start rotwfck:hc';FLUSH(6)
   hc=(0.D0,0.D0)
-  CALL set_bgrp_indices(nstart,n_start,n_end); !write (*,*) nstart,n_start,n_end
+  CALL set_bgrp_indices(nstart,n_start,n_end); my_n = n_end - n_start + 1; !write (*,*) nstart,n_start,n_end
   if (n_start .le. n_end) &
-  call ZGEMM( 'C', 'N', nstart, n_end-n_start+1, kdim, ( 1.D0, 0.D0 ), psi, &
-              kdmx,  aux(1,n_start), kdmx, ( 0.D0, 0.D0 ), hc(1,n_start), nstart )
-  CALL mp_sum(  hc , inter_bgrp_comm )
+  call ZGEMM( 'C','N', nstart, my_n, kdim, (1.D0,0.D0), psi, kdmx, aux(1,n_start), kdmx, (0.D0,0.D0), hc(1,n_start), nstart )
+  CALL mp_sum( hc, inter_bgrp_comm )
   !            
-  CALL mp_sum(  hc , intra_bgrp_comm )
+  CALL mp_sum( hc, intra_bgrp_comm )
   !
   sc=(0.D0,0.D0)
   IF ( overlap ) THEN
      !
      CALL s_psi( npwx, npw, nstart, psi, aux )
      if (n_start .le. n_end) &
-     CALL ZGEMM( 'C', 'N', nstart, n_end-n_start+1, kdim, ( 1.D0, 0.D0 ), psi, &
-                 kdmx,  aux(1,n_start), kdmx, ( 0.D0, 0.D0 ), sc(1,n_start), nstart )
+     CALL ZGEMM( 'C','N', nstart, my_n, kdim, (1.D0,0.D0), psi, kdmx, aux(1,n_start), kdmx, (0.D0,0.D0), sc(1,n_start), nstart )
      !
   ELSE
      !
      if (n_start .le. n_end) &
-     CALL ZGEMM( 'C', 'N', nstart, n_end-n_start+1, kdim, ( 1.D0, 0.D0 ), psi, &
-                 kdmx, psi(1,n_start), kdmx, ( 0.D0, 0.D0 ), sc(1,n_start), nstart )
+     CALL ZGEMM( 'C','N', nstart, my_n, kdim, (1.D0,0.D0), psi, kdmx, psi(1,n_start), kdmx, (0.D0,0.D0), sc(1,n_start), nstart )
      !  
   END IF
-  CALL mp_sum(  sc , inter_bgrp_comm )
+  CALL mp_sum( sc, inter_bgrp_comm )
   !
-  CALL mp_sum(  sc , intra_bgrp_comm )
+  CALL mp_sum( sc, intra_bgrp_comm )
   call stop_clock('rotwfck:hc'); !write(*,*) 'stop rotwfck:hc';FLUSH(6)
   !
   ! ... Diagonalize
@@ -120,9 +117,8 @@ SUBROUTINE rotate_wfc_k( h_psi, s_psi, &
   !  
   aux=(0.D0,0.D0)
   if (n_start .le. n_end) &
-  CALL ZGEMM( 'N', 'N', kdim, nbnd, n_end-n_start+1, ( 1.D0, 0.D0 ), psi(1,n_start), &
-              kdmx, vc(n_start,1), nstart, ( 0.D0, 0.D0 ), aux, kdmx )
-  CALL mp_sum(  aux , inter_bgrp_comm )
+  CALL ZGEMM( 'N','N', kdim, nbnd, my_n, (1.D0,0.D0), psi(1,n_start), kdmx, vc(n_start,1), nstart, (0.D0,0.D0), aux, kdmx )
+  CALL mp_sum( aux, inter_bgrp_comm )
   !     
   evc(:,:) = aux(:,1:nbnd)
   call stop_clock('rotwfck:evc') ; !write(*,*) 'start rotwfck;evc';FLUSH(6)
@@ -254,10 +250,10 @@ SUBROUTINE protate_wfc_k( h_psi, s_psi, &
   ! ... Diagonalize
   !
   call start_clock('protwfck:diag')
-  IF ( do_distr_diag_inside_bgrp ) THEN
+  IF ( do_distr_diag_inside_bgrp ) THEN ! NB on output of pcdiaghg en and vc are the same across ortho_parent_comm
      ! only the first bgrp performs the diagonalization
      IF( my_bgrp_id == root_bgrp_id ) CALL pcdiaghg( nstart, hc, sc, nx, en, vc, desc )
-     IF( nbgrp > 1 ) THEN ! results are brodcast to the other bnd groups
+     IF( nbgrp > 1 ) THEN ! results must be brodcast to the other band groups
        CALL mp_bcast( vc, root_bgrp_id, inter_bgrp_comm )
        CALL mp_bcast( en, root_bgrp_id, inter_bgrp_comm )
      ENDIF
@@ -357,7 +353,7 @@ CONTAINS
 
            ! use blas subs. on the matrix block
 
-           CALL ZGEMM( 'C', 'N', nr, nc, kdim, ( 1.D0, 0.D0 ) ,  v(1,ir), kdmx, w(1,ic), kdmx, ( 0.D0, 0.D0 ), work, nx )
+           CALL ZGEMM( 'C', 'N', nr, nc, kdim, ( 1.D0, 0.D0 ),  v(1,ir), kdmx, w(1,ic), kdmx, ( 0.D0, 0.D0 ), work, nx )
 
            ! accumulate result on dm of root proc.
            CALL mp_root_sum( work, dm, root, ortho_parent_comm )
@@ -407,13 +403,13 @@ CONTAINS
                  !  this proc sends his block
                  ! 
                  CALL mp_bcast( vc(:,1:nc), root, ortho_parent_comm )
-                 CALL ZGEMM( 'N', 'N', kdim, nc, nr, ( 1.D0, 0.D0 ),  psi(1,ir), kdmx, vc, nx, beta, aux(1,ic), kdmx )
+                 CALL ZGEMM( 'N', 'N', kdim, nc, nr, ( 1.D0, 0.D0 ), psi(1,ir), kdmx, vc, nx, beta, aux(1,ic), kdmx )
               ELSE
                  !
                  !  all other procs receive
                  ! 
                  CALL mp_bcast( vtmp(:,1:nc), root, ortho_parent_comm )
-                 CALL ZGEMM( 'N', 'N', kdim, nc, nr, ( 1.D0, 0.D0 ),  psi(1,ir), kdmx, vtmp, nx, beta, aux(1,ic), kdmx )
+                 CALL ZGEMM( 'N', 'N', kdim, nc, nr, ( 1.D0, 0.D0 ), psi(1,ir), kdmx, vtmp, nx, beta, aux(1,ic), kdmx )
               END IF
               ! 
 
