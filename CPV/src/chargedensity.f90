@@ -487,6 +487,7 @@
       !
       !
       SUBROUTINE sum_charge( rsumg, rsumr )
+
          !
          REAL(DP), INTENT(OUT) :: rsumg( : )
          REAL(DP), INTENT(OUT) :: rsumr( : )
@@ -516,6 +517,7 @@
          !
          USE parallel_include
          USE fft_scalar, ONLY: cfft3ds
+         USE fft_helper_subroutines
 !         USE scatter_mod, ONLY: maps_sticks_to_3d
          !
          !        MAIN LOOP OVER THE EIGENSTATES
@@ -524,7 +526,7 @@
          !
          IMPLICIT NONE
          !
-         INTEGER :: from, i, eig_index, eig_offset, ii
+         INTEGER :: from, i, eig_index, eig_offset, ii, right_nnr
          !
 #if defined(__INTEL_COMPILER)
 #if __INTEL_COMPILER  >= 1300
@@ -541,6 +543,8 @@
          !
          tmp_rhos = 0_DP
 
+         CALL tg_get_nnr( dffts, right_nnr )
+
          do i = 1, nbsp_bgrp, 2*dffts%nproc2
 
             !
@@ -552,6 +556,7 @@
 #if defined(__MPI)
 
             aux = (0.d0, 0.d0)
+
             !
             !  Loop for all local g-vectors (ngw)
             !  ci_bgrp: stores the Fourier expansion coefficients
@@ -565,14 +570,7 @@
             !
             eig_offset = 0
 
-!!$omp  parallel
-!!$omp  single
-
             do eig_index = 1, 2*dffts%nproc2, 2   
-               !
-!!$omp task default(none) &
-!!$omp          firstprivate( i, eig_offset, nbsp_bgrp, ngw, eig_index  ) &
-!!$omp          shared(  aux, c_bgrp, dffts )
                !
                !  here we pack 2*nogrp electronic states in the psis array
                !  note that if nogrp == nproc_bgrp each proc perform a full 3D
@@ -582,18 +580,15 @@
                   !
                   !  The  eig_index loop is executed only ONCE when NOGRP=1.
                   !
-                  CALL c2psi( psis(eig_offset*dffts%nnr+1), dffts%nnr, &
+                  CALL c2psi( psis( eig_offset * right_nnr + 1 ), right_nnr, &
                        c_bgrp( 1, i+eig_index-1 ), c_bgrp( 1, i+eig_index ), ngw, 2 )
                   !
                ENDIF
-!!$omp end task
                !
                eig_offset = eig_offset + 1
                !
             end do
 
-!!$omp  end single
-!!$omp  end parallel
             !
             !  2*NOGRP are trasformed at the same time
             !  psis: holds the fourier coefficients of the current proccesor
@@ -679,29 +674,12 @@
             !
          END DO
 
+
          IF( nbgrp > 1 ) THEN
             CALL mp_sum( tmp_rhos, inter_bgrp_comm )
          END IF
 
-         !ioff = 0
-         !DO ip = 1, nproc_bgrp
-         !   CALL MPI_REDUCE( rho(1+ioff*nr1*nr2,1), rhos(1,1), dffts%nnr, MPI_DOUBLE_PRECISION, MPI_SUM, ip-1, intra_bgrp_comm, ierr)
-         !   ioff = ioff + dffts%npp( ip )
-         !END DO
-         IF ( dffts%nproc2 > 1 ) CALL mp_sum( tmp_rhos, gid = dffts%comm2 )
-
-         !
-         !BRING CHARGE DENSITY BACK TO ITS ORIGINAL POSITION
-         !
-         !If the current processor is not the "first" processor in its
-         !orbital group then does a local copy (reshuffling) of its data
-         !
-         nxyp = dffts%nr1x * dffts%my_nr2p
-         DO ir3 = 1, dffts%my_nr3p
-            ioff    = dffts%nr1x * dffts%my_nr2p * (ir3-1)
-            ioff_tg = dffts%nr1x * dffts%nr2x    * (ir3-1) + dffts%nr1x * dffts%my_i0r2p
-            rhos(ioff+1:ioff+nxyp,1:nspin) = rhos(ioff+1:ioff+nxyp,1:nspin) + tmp_rhos(ioff_tg+1:ioff_tg+nxyp,1:nspin)
-         END DO
+         CALL tg_reduce_rho( rhos, tmp_rhos, dffts )
 
          DEALLOCATE( tmp_rhos )
          DEALLOCATE( aux ) 

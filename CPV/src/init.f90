@@ -26,7 +26,7 @@
       use cell_base,            only: ainv, at, omega, alat
       use small_box,            only: small_box_set
       use smallbox_grid_dim,    only: smallbox_grid_init,smallbox_grid_info
-      USE fft_types,            ONLY: fft_type_allocate, fft_type_init
+      USE fft_types,            ONLY: fft_type_init
       use ions_base,            only: nat
       USE recvec_subs,          ONLY: ggen
       USE gvect,                ONLY: mill_g, eigts1,eigts2,eigts3, gg, &
@@ -34,7 +34,7 @@
       use gvecs,                only: gcutms, gvecs_init
       use gvecw,                only: gkcut, gvecw_init, g2kin_init
       USE smallbox_subs,        ONLY: ggenb
-      USE fft_base,             ONLY: dfftp, dffts, dfftb, dfft3d, dtgs, fft_base_info
+      USE fft_base,             ONLY: dfftp, dffts, dfftb, dfft3d, fft_base_info
       USE fft_smallbox,         ONLY: cft_b_omp_init
       USE fft_base,             ONLY: smap
       USE control_flags,        ONLY: gamma_only, smallmem
@@ -47,7 +47,6 @@
       USE input_parameters,     ONLY: ref_cell, ref_alat
       use cell_base,            ONLY: ref_at, ref_bg
       USE exx_module,           ONLY: h_init
-!      USE task_groups,          ONLY: task_groups_init
 
       implicit none
 ! 
@@ -142,7 +141,6 @@
       !       (but only if the axis triplet is right-handed, otherwise
       !        for a left-handed triplet, ainv is minus the inverse of a)
       !
-!      CALL task_groups_init( dffts, dtgs, ntask_groups )
       CALL fft_base_info( ionode, stdout )
       ngw_ = dffts%nwl( dffts%mype + 1 )
       ngs_ = dffts%ngl( dffts%mype + 1 )
@@ -452,30 +450,36 @@
 
       USE fft_types, ONLY: fft_type_descriptor
       use io_global, only: stdout, ionode
+      USE fft_helper_subroutines
 
       IMPLICIT NONE
 
 
       TYPE(fft_type_descriptor), INTENT(IN) :: dfftp, dffts
 
-      INTEGER :: i
+      INTEGER :: i, nr3l
+
 
       IF(ionode) THEN
+
+        CALL tg_get_local_nr3( dfftp, nr3l )
 
         WRITE( stdout,*)
         WRITE( stdout,*) '  Real Mesh'
         WRITE( stdout,*) '  ---------'
-        WRITE( stdout,1000) dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1, dfftp%nr2, dfftp%my_nr3p, 1, 1, dfftp%nproc
+        WRITE( stdout,1000) dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1, dfftp%nr2, nr3l, 1, 1, dfftp%nproc
         WRITE( stdout,1010) dfftp%nr1x, dfftp%nr2x, dfftp%nr3x
         WRITE( stdout,1020) dfftp%nnr
         WRITE( stdout,*) '  Number of x-y planes for each processors: '
         WRITE( stdout, fmt = '( 3X, "nr3l = ", 10I5 )' ) &
            ( dfftp%nr3p( i ), i = 1, dfftp%nproc3 )
 
+        CALL tg_get_local_nr3( dffts, nr3l )
+
         WRITE( stdout,*)
         WRITE( stdout,*) '  Smooth Real Mesh'
         WRITE( stdout,*) '  ----------------'
-        WRITE( stdout,1000) dffts%nr1, dffts%nr2, dffts%nr3, dffts%nr1, dffts%nr2, dffts%my_nr3p,1,1, dfftp%nproc
+        WRITE( stdout,1000) dffts%nr1, dffts%nr2, dffts%nr3, dffts%nr1, dffts%nr2, nr3l,1,1, dfftp%nproc
         WRITE( stdout,1010) dffts%nr1x, dffts%nr2x, dffts%nr3x
         WRITE( stdout,1020) dffts%nnr
         WRITE( stdout,*) '  Number of x-y planes for each processors: '

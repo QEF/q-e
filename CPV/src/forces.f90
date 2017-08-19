@@ -34,12 +34,10 @@
       USE funct,                  ONLY: dft_is_meta, dft_is_hybrid, exx_is_active
       USE fft_base,               ONLY: dffts
       USE fft_interfaces,         ONLY: fwfft, invfft
-!      USE fft_parallel,           ONLY: pack_group_sticks, unpack_group_sticks
-!      USE fft_parallel,           ONLY: fw_tg_cft3_z, bw_tg_cft3_z, fw_tg_cft3_xy, bw_tg_cft3_xy
-!      USE fft_parallel,           ONLY: fw_tg_cft3_scatter, bw_tg_cft3_scatter
       USE mp_global,              ONLY: me_bgrp
       USE control_flags,          ONLY: lwfpbe0nscf
       USE exx_module,             ONLY: exx_potential
+      USE fft_helper_subroutines
 !
       IMPLICIT NONE
 !
@@ -59,7 +57,7 @@
       !
       INTEGER     :: iv, jv, ia, is, isa, ism, ios, iss1, iss2, ir, ig, inl, jnl
       INTEGER     :: ivoff, jvoff, igoff, igno, igrp, ierr
-      INTEGER     :: idx, eig_offset, nogrp_
+      INTEGER     :: idx, eig_offset, nogrp_ , inc
       REAL(DP)    :: fi, fip, dd, dv
       COMPLEX(DP) :: fp, fm, ci
 #if defined(__INTEL_COMPILER)
@@ -278,6 +276,7 @@
 !$omp  single
 
       eig_offset = 0
+      CALL tg_get_recip_inc( dffts, inc )
       igno = 1
 
       DO idx = 1, 2*nogrp_ , 2
@@ -316,7 +315,7 @@
 !$omp end task
 
          igno = igno + ngw
-         eig_offset = eig_offset + dffts%nnr
+         eig_offset = eig_offset + inc
 
          ! We take into account the number of elements received from other members of the orbital group
 
