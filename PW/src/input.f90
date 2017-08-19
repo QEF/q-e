@@ -70,8 +70,11 @@ SUBROUTINE iosys()
                             fcp_mu_ => fcp_mu, &
                             fcp_mass_ => fcp_mass, &
                             fcp_temperature, &
+                            fcp_relax_ => fcp_relax, &
                             fcp_relax_step_ => fcp_relax_step, &
-                            fcp_relax_crit_ => fcp_relax_crit
+                            fcp_relax_crit_ => fcp_relax_crit, &
+                            fcp_mdiis_size_ => fcp_mdiis_size, &
+                            fcp_mdiis_step_ => fcp_mdiis_step
   !
   USE extfield,      ONLY : tefield_  => tefield, &
                             dipfield_ => dipfield, &
@@ -229,7 +232,7 @@ SUBROUTINE iosys()
                                ecutwfc, ecutrho, nr1, nr2, nr3, nr1s, nr2s, &
                                nr3s, noinv, nosym, nosym_evc, no_t_rev,     &
                                use_all_frac, force_symmorphic,              &
-                               starting_magnetization,                      &
+                               starting_charge, starting_magnetization,     &
                                occupations, degauss, smearing, nspin,       &
                                ecfixed, qcutz, q2sigma, lda_plus_U,         &
                                lda_plus_U_kind, Hubbard_U, Hubbard_J,       &
@@ -251,7 +254,8 @@ SUBROUTINE iosys()
                                one_atom_occupations,                          &
                                esm_bc, esm_efield, esm_w, esm_nfit, esm_a,    &
                                lfcpopt, lfcpdyn, fcp_mu, fcp_mass, fcp_tempw, & 
-                               fcp_relax_step, fcp_relax_crit,                &
+                               fcp_relax, fcp_relax_step, fcp_relax_crit,     &
+                               fcp_mdiis_size, fcp_mdiis_step,                &
                                space_group, uniqueb, origin_choice,           &
                                rhombohedral, zgate, relaxz, block, block_1,   &
                                block_2, block_height
@@ -305,6 +309,8 @@ SUBROUTINE iosys()
   USE wyckoff,               ONLY : nattot, sup_spacegroup
   USE qexsd_module,          ONLY : qexsd_input_obj
   USE qes_types_module,      ONLY: input_type
+  !
+  USE vlocal,        ONLY : starting_charge_ => starting_charge
   ! 
   IMPLICIT NONE
   !
@@ -322,7 +328,6 @@ SUBROUTINE iosys()
   INTEGER  :: ia, nt, inlc, ibrav_sg, ierr
   LOGICAL  :: exst, parallelfs
   REAL(DP) :: theta, phi, ecutwfc_pp, ecutrho_pp
-  !
   !
   ! ... various initializations of control variables
   !
@@ -1198,6 +1203,7 @@ SUBROUTINE iosys()
   lda_plus_u_kind_        = lda_plus_u_kind
   la2F_                   = la2F
   nspin_                  = nspin
+  starting_charge_        = starting_charge
   starting_magnetization_ = starting_magnetization
   starting_ns             = starting_ns_eigenvalue
   U_projection            = U_projection_type
@@ -1399,8 +1405,11 @@ SUBROUTINE iosys()
   !
   IF ( fcp_temperature == 0.0_DP ) &
      fcp_temperature = temperature
+  fcp_relax_      = fcp_relax
   fcp_relax_step_ = fcp_relax_step
   fcp_relax_crit_ = fcp_relax_crit
+  fcp_mdiis_size_ = fcp_mdiis_size
+  fcp_mdiis_step_ = fcp_mdiis_step
   !
   CALL plugin_read_input()
   !

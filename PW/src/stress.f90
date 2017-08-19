@@ -31,7 +31,10 @@ subroutine stress ( sigma )
   USE xdm_module,    ONLY : stress_xdm
   USE exx,           ONLY : exx_stress
   USE funct,         ONLY : dft_is_hybrid
-  use tsvdw_module,  only : HtsvdW
+  USE tsvdw_module,  ONLY : HtsvdW
+  USE ener,          ONLY : etot ! for ESM stress
+  USE esm,           ONLY : do_comp_esm, esm_bc ! for ESM stress
+  USE esm,           ONLY : esm_stres_har, esm_stres_ewa, esm_stres_loclong ! for ESM stress
   !
   IMPLICIT NONE
   !
@@ -41,6 +44,7 @@ subroutine stress ( sigma )
        sigmaxc (3, 3), sigmaxcc (3, 3), sigmaewa (3, 3), sigmanlc (3, 3), &
        sigmabare (3, 3), sigmah (3, 3), sigmael( 3, 3), sigmaion(3, 3), &
        sigmalon ( 3 , 3 ), sigmaxdm(3, 3), sigma_nonloc_dft (3 ,3), sigmaexx(3,3), sigma_ts(3,3)
+  real(DP) :: sigmaloclong(3,3)  ! for ESM stress
   integer :: l, m
   !
   WRITE( stdout, '(//5x,"Computing stress (Cartesian axis) and pressure"/)')
@@ -60,11 +64,19 @@ subroutine stress ( sigma )
   !
   !   contribution from local  potential
   !
-  call stres_loc (sigmaloc)
+  call stres_loc(sigmaloc) ! In ESM, sigmaloc has only short term.
+  IF ( do_comp_esm .and. ( esm_bc .ne. 'pbc' ) ) THEN ! for ESM stress
+     call esm_stres_loclong( sigmaloclong, rho%of_g ) ! long range part
+     sigmaloc(:,:) = sigmaloc(:,:) + sigmaloclong(:,:)
+  END IF
   !
   !  hartree contribution
   !
-  call stres_har (sigmahar)
+  IF ( do_comp_esm .and. ( esm_bc .ne. 'pbc' ) ) THEN ! for ESM stress
+     call esm_stres_har( sigmahar, rho%of_g )
+  ELSE
+     call stres_har (sigmahar)
+  END IF
   !
   !  xc contribution (diagonal)
   !
@@ -85,8 +97,12 @@ subroutine stress ( sigma )
   !
   !  ewald contribution
   !
-  call stres_ewa (alat, nat, ntyp, ityp, zv, at, bg, tau, omega, g, &
-       gg, ngm, gstart, gamma_only, gcutm, sigmaewa)
+  IF ( do_comp_esm .and. ( esm_bc .ne. 'pbc' ) ) THEN ! for ESM stress
+     call esm_stres_ewa( sigmaewa )
+  ELSE
+     call stres_ewa (alat, nat, ntyp, ityp, zv, at, bg, tau, omega, g, &
+          gg, ngm, gstart, gamma_only, gcutm, sigmaewa)
+  END IF
   !
   !  semi-empirical dispersion contribution
   !
@@ -153,9 +169,17 @@ subroutine stress ( sigma )
   !
   ! write results in Ryd/(a.u.)^3 and in kbar
   !
-  WRITE( stdout, 9000) (sigma(1,1) + sigma(2,2) + sigma(3,3)) * ry_kbar/3d0, &
-                  (sigma(l,1), sigma(l,2), sigma(l,3),                    &
-            sigma(l,1)*ry_kbar, sigma(l,2)*ry_kbar, sigma(l,3)*ry_kbar, l=1,3)
+  IF ( do_comp_esm .and. ( esm_bc .ne. 'pbc' ) ) THEN ! for ESM stress
+     write( stdout, 9000) (sigma(1,1) + sigma(2,2)) * ry_kbar/3d0, &
+     sigma(1,1), sigma(1,2), 0.d0, sigma(1,1)*ry_kbar, sigma(1,2)*ry_kbar, 0.d0,&
+     sigma(2,1), sigma(2,2), 0.d0, sigma(2,1)*ry_kbar, sigma(2,2)*ry_kbar, 0.d0,&
+     0.d0      , 0.d0      , 0.d0, 0.d0              , 0.d0              , 0.d0
+  ELSE
+     write( stdout, 9000) (sigma(1,1) + sigma(2,2) + sigma(3,3)) * ry_kbar/3d0, &
+                          (sigma(l,1), sigma(l,2), sigma(l,3),                  &
+                           sigma(l,1)*ry_kbar, sigma(l,2)*ry_kbar,              &
+                           sigma(l,3)*ry_kbar, l=1,3)
+  END IF
 
   if ( iverbosity > 0 ) WRITE( stdout, 9005) &
      (sigmakin(l,1)*ry_kbar,sigmakin(l,2)*ry_kbar,sigmakin(l,3)*ry_kbar, l=1,3),&

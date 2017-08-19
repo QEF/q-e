@@ -84,6 +84,7 @@ CONTAINS
        hubbard_j0 = 0.0_DP
        hubbard_alpha = 0.0_DP
        hubbard_beta = 0.0_DP
+       starting_charge = 0.0_DP
        starting_magnetization = sm_not_set
        starting_ns_eigenvalue = -1.0_DP
        angle1 = 0.0_DP
@@ -181,6 +182,7 @@ CONTAINS
        CALL mp_bcast( hubbard_j0, ionode_id, intra_image_comm )
        CALL mp_bcast( hubbard_alpha, ionode_id, intra_image_comm )
        CALL mp_bcast( hubbard_beta, ionode_id, intra_image_comm )
+       CALL mp_bcast( starting_charge, ionode_id, intra_image_comm )
        CALL mp_bcast( starting_magnetization, ionode_id, intra_image_comm )
        CALL mp_bcast( starting_ns_eigenvalue, ionode_id, intra_image_comm )
        CALL mp_bcast( angle1, ionode_id, intra_image_comm )
@@ -469,6 +471,12 @@ CONTAINS
   !              </string>                                                  !
   !           </property>                                                   !
   ![ optional                                                               !
+  !           <property name="starting_charge">                             !
+  !              <real>                                                     !
+  !                 starting_charge(i)                                      !
+  !              </real>                                                    !
+  !           </property>                                                   !
+  !                                                                         !
   !           <property name="starting_magnetization">                      !
   !              <real>                                                     !
   !                 starting_magnetization(i)                               !
@@ -674,6 +682,10 @@ CONTAINS
          CALL iotk_scan_dat_inside( xmlinputunit, psfile, ierr = ierr)
          psfile = clean_str( psfile )
          psfile_found = .true.
+         !
+      CASE ( 'starting_charge' )
+         CALL iotk_scan_dat_inside( xmlinputunit, starting_charge( is ),&
+              ierr = ierr)
          !
       CASE ( 'starting_magnetization' )
          CALL iotk_scan_dat_inside( xmlinputunit, starting_magnetization( is ),&

@@ -33,53 +33,85 @@ are printed out into 'esm1' file.
 
 The example calculation proceeds as follows:
 
-esm_bc = 'bc1':
+esm_bc = 'pbc':
 
 1) make a self-consistent calculation for H2O with esm_bc = 'pbc' (ESM off)
    (input=H2O_pbc.in, output=H2O_pbc.out). Using 'pbc' causes the
    code to print out the density and potential (hartree + local) along z, even
    though ESM is disabled. Note that the molecule has a z-oriented dipole.
 
-2) make a self-consistent calculation for H2O with esm_bc = 'bc1'
+2) make a self-consistent calculation for Al(001) with esm_bc = 'pbc'
+   (input=Al001_pbc.in, output=Al001_pbc.out). 
+
+3) make a self-consistent calculation for graphene with esm_bc = 'pbc'
+   Stress calculation is enabled.
+
+esm_bc = 'bc1':
+
+4) make a self-consistent calculation for H2O with esm_bc = 'bc1'
    (input=H2O_bc1.in, output=H2O_bc1.out). This simulates the water molecule 
    in an infinite vacuum along the z-direction, preventing dipole-dipole 
    interaction between periodic images. 
 
+5) make a self-consistent calculation for Al(001) with esm_bc = 'bc1' 
+   (input=Al001_bc1.in, output=Al001_bc1.out). 
+
+6) make a self-consistent calculation for graphene with esm_bc = 'bc1'
+   (input=graphene_bc1.in, output=graphene_bc1.out).
+   Stress calculation is enabled.
+
+7) make a variable cell (vc-relax) calculation for graphene with esm_bc = 'bc1'
+   (input=graphene_bc1_vc-relax.in, output=graphene_bc1_vc-relax.out). 
+   This simulation starts from slightly distorted cell (angle of lattice vector 
+   is 117 degree) and ends with hexagonal cell (angle of lattice vector is 120 
+   degree).
+
 esm_bc = 'bc2':
 
-3) make a self-consistent calculation for Al(001) with esm_bc = 'bc2',
+8) make a self-consistent calculation for Al(001) with esm_bc = 'bc2',
    without an applied field (input=Al001_bc2.in, output=Al001_bc2.out). 
    This simulates the slab sandwiched between two uncharged semi-infinite 
    metal electrodes. 
 
-4) make a self-consistent calculation for Al(001) with esm_bc = 'bc2',
+9) make a self-consistent calculation for Al(001) with esm_bc = 'bc2',
    this time with an applied field (input=Al001_bc2_efield.in, 
    output=Al001_bc2_efield.out). The slab polarizes in response.
 
+10) make a self-consistent calculation for graphene with esm_bc = 'bc2',
+   input=graphene_bc2.in, output=graphene_bc2.out).
+   Stress calculation is enabled.
+
 esm_bc = 'bc3':
 
-5) make a self-consistent calculation for Al(001) with esm_bc = 'bc3' to 
+11) make a self-consistent calculation for Al(001) with esm_bc = 'bc3' to 
    simulate a slab in contact with semi-infinite  metal electrode (right-
    hand side).
    (input=Al001_bc3.in, output=Al001_bc3.out).
 
-6) make a self-consistent calculation for Al(001) with esm_bc = 'bc3' to 
+12) make a self-consistent calculation for Al(001) with esm_bc = 'bc3' to 
    simulate a slab in contact with semi-infinite metal electrode with 
-   a weakly negative (-0.005e) overall charge (input=Al001_bc3_m005.in, 
-   output=Al001_bc3_m005.out). Note that the charge migrates to the right
+   a weakly negative (-0.02e) overall charge (input=Al001_bc3_m002.in, 
+   output=Al001_bc3_m002.out). Note that the charge migrates to the right
    surface of the slab.
 
-7) Repeat #6 but with a weakly positive (+0.005e) overall charge 
-   (input=Al001_bc3_p005.in, output=Al001_bc3_p005.out).
+13) Repeat #6 but with a weakly positive (+0.02e) overall charge 
+   (input=Al001_bc3_p002.in, output=Al001_bc3_p002.out).
 
-8) make a 'relax' calculation on both geometory and Fermi energy for Al(001)
+14) make a 'relax' calculation on both geometory and Fermi energy for Al(001)
    with esm_bc = 'bc3' (input=Al001_bc3_v00.in, output=Al001_bc3_v00.out).
-   The target Fermi energy is set to that of the neutral surface (#5, Vpzc).
-   (input=Al001_bc3_v00.in, output=Al001_bc3_v00.out)
+   The target Fermi energy is set to that of the neutral surface (#11, Vpzc).
+   (input=Al001_bc3_v00.in, output=Al001_bc3_v00.out).
    
-9) Repeat #8 but with a higher target Fermi energy (+0.5V vs Vpzc).
-   (input=Al001_bc3_vp05.in, output=Al001_bc3_vp05.out)
+15) Repeat #8 but with a higher target Fermi energy (+0.5V vs Vpzc).
+   (input=Al001_bc3_vp05.in, output=Al001_bc3_vp05.out).
 
-10) Repeat #8 but with a lower target Fermi energy (-0.5V vs Vpzc).
-    (input=Al001_bc3_vm05.in, output=Al001_bc3_vm05.out)
+16) Repeat #8 but with a lower target Fermi energy (-0.5V vs Vpzc).
+    (input=Al001_bc3_vm05.in, output=Al001_bc3_vm05.out).
 
+17) make a self-consistent calculation for graphene with esm_bc = 'bc3'
+    (input=graphene_bc3.in, output=graphene_bc3.out).
+
+18) make a variable cell (vc-relax) calculation for graphene with esm_bc = 'bc3'
+    (input=graphene_bc3_vc-relax.in, output=graphene_bc3_vc-relax.out).
+    The graphene is weakly positive (+0.02e) overall charge. The angle of the
+    unit cell is converged to 120 degree.

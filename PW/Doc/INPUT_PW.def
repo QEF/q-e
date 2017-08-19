@@ -661,6 +661,14 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             }
         }
         
+        dimension starting_charge -start 1 -end ntyp -type REAL {
+            default { 0.0 }
+            info {
+                starting charge on atomic type 'i',
+                to create starting potential with @ref startingpot = 'atomic'.
+            }
+        }
+
         var tot_magnetization -type REAL { 
             default { -1 [unspecified] }
             info {
@@ -1432,6 +1440,16 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                          disabled along z, either by setting @ref nosym = .TRUE.
                          or by very slight displacement (i.e., 5e-4 a.u.)
                          of the slab along z.
+
+                       - Components of the total stress; sigma_xy, sigma_yz,
+                         sigma_zz, sigma_zy, and sigma_zx are meaningless 
+                         bacause ESM stress routines calculate only
+                         components of stress; sigma_xx, sigma_xy, sigma_yx,
+                         and sigma_yy.
+
+                       - In case of calculation='vc-relax', use
+                         cell_dofree='2Dxy' or other parameters so that
+                         c-vector along z-axis should not be moved.
                        
                     See @ref esm_bc, @ref esm_efield, @ref esm_w, @ref esm_nfit.
                 }

@@ -28,6 +28,7 @@ SUBROUTINE summary()
   USE gvecs,           ONLY : doublegrid, ngms, ngms_g, gcutms
   USE fft_base,        ONLY : dfftp
   USE fft_base,        ONLY : dffts
+  USE vlocal,          ONLY : starting_charge
   USE lsda_mod,        ONLY : lsda, starting_magnetization
   USE ldaU,            ONLY : lda_plus_U, Hubbard_u, Hubbard_j, Hubbard_alpha, &
                               Hubbard_l, lda_plus_u_kind, Hubbard_lmax,&
@@ -212,6 +213,14 @@ SUBROUTINE summary()
      WRITE( stdout, '(/5x," cell mass =", f10.5, " AMU ")') cmass/amu_ry
   IF (calc.EQ.'nd' .OR. calc.EQ.'nm' ) &
      WRITE( stdout, '(/5x," cell mass =", f10.5, " AMU/(a.u.)^2 ")') cmass/amu_ry
+
+  IF (ANY(starting_charge(:) /= 0.D0)) THEN
+     WRITE( stdout, '(/5x,"Starting charge structure ", &
+          &      /5x,"atomic species   charge")')
+     DO nt = 1, ntyp
+        WRITE( stdout, '(5x,a6,9x,f6.3)') atm(nt), starting_charge(nt)
+     ENDDO
+  ENDIF
 
   IF (lsda) THEN
      WRITE( stdout, '(/5x,"Starting magnetic structure ", &

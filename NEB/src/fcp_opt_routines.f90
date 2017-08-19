@@ -14,14 +14,18 @@ MODULE fcp_opt_routines
    !
    ! ... Written by Carlo Sbraccia ( 2003-2006 )
    !
+   ! ... MDIIS algorithm is implemented by Satomichi Nishihara ( 2016 )
+   !
    USE kinds,          ONLY : DP
    USE constants,      ONLY : eps8, eps16, e2, rytoev, fpi
    USE path_variables, ONLY : ds, pos, grad
    USE io_global,      ONLY : meta_ionode, meta_ionode_id
    USE mp,             ONLY : mp_bcast
    USE mp_world,       ONLY : world_comm
-   USE fcp_variables,  ONLY : fcp_mu, fcp_relax_step, fcp_tot_charge_first, &
-                              fcp_tot_charge_last
+   USE fcp_variables,  ONLY : fcp_mu, fcp_relax, fcp_relax_step, &
+                              fcp_mdiis_size, fcp_mdiis_step, &
+                              fcp_tot_charge_first, fcp_tot_charge_last
+   USE mdiis,          ONLY : mdiis_type, allocate_mdiis, deallocate_mdiis, update_by_mdiis
    USE path_variables, ONLY : num_of_images
    !
    IMPLICIT NONE
@@ -31,12 +35,17 @@ MODULE fcp_opt_routines
    REAL(DP), ALLOCATABLE :: fcp_neb_nelec(:)
    REAL(DP), ALLOCATABLE :: fcp_neb_ef(:)
    !
+   ! ... variables for line-minimisation
    REAL(DP), ALLOCATABLE :: force0(:)
    REAL(DP), ALLOCATABLE :: nelec0(:)
    LOGICAL,  ALLOCATABLE :: firstcall(:)
    !
-   PUBLIC :: fcp_neb_nelec, fcp_neb_ef, fcp_line_minimisation, &
-      fcp_opt_allocation, fcp_opt_deallocation
+   ! ... variables for MDIIS
+   LOGICAL          :: init_mdiis
+   TYPE(mdiis_type) :: mdiist
+   !
+   PUBLIC :: fcp_neb_nelec, fcp_neb_ef, &
+      fcp_opt_allocation, fcp_opt_deallocation, fcp_opt_perform
    !
 CONTAINS
    !
@@ -63,11 +72,24 @@ CONTAINS
       !
       ALLOCATE( fcp_neb_nelec( num_of_images ) )
       ALLOCATE( fcp_neb_ef   ( num_of_images ) )
-      ALLOCATE( force0       ( num_of_images ) )
-      ALLOCATE( nelec0       ( num_of_images ) )
-      ALLOCATE( firstcall    ( num_of_images ) )
       !
-
+      IF ( TRIM(fcp_relax) == 'lm' ) THEN
+         !
+         ALLOCATE( force0    ( num_of_images ) )
+         ALLOCATE( nelec0    ( num_of_images ) )
+         ALLOCATE( firstcall ( num_of_images ) )
+         !
+         force0    (:) = 0.0_DP
+         nelec0    (:) = 0.0_DP
+         firstcall (:) = .TRUE.
+         !
+      ELSE IF ( TRIM(fcp_relax) == 'mdiis' ) THEN
+         !
+         init_mdiis = .TRUE.
+         CALL allocate_mdiis(mdiist, fcp_mdiis_size, num_of_images, fcp_mdiis_step, 1)
+         !
+      END IF
+      !
       IF ( restart ) THEN
          !
          tmp_dir_saved = tmp_dir
@@ -106,10 +128,6 @@ CONTAINS
          !
       END IF
       !
-      force0    (:) = 0.0_DP
-      nelec0    (:) = 0.0_DP
-      firstcall (:) = .TRUE.
-      !
    END SUBROUTINE fcp_opt_allocation
    !
    !----------------------------------------------------------------------
@@ -124,7 +142,31 @@ CONTAINS
       IF ( ALLOCATED( nelec0        ) ) DEALLOCATE( nelec0        )
       IF ( ALLOCATED( firstcall     ) ) DEALLOCATE( firstcall     )
       !
+      IF ( init_mdiis ) THEN
+         !
+         CALL deallocate_mdiis(mdiist)
+         !
+      END IF
+      !
    END SUBROUTINE fcp_opt_deallocation
+   !
+   !----------------------------------------------------------------------
+   SUBROUTINE fcp_opt_perform()
+      !----------------------------------------------------------------------
+      !
+      IMPLICIT NONE
+      !
+      IF ( TRIM(fcp_relax) == 'lm' ) THEN
+         !
+         CALL fcp_line_minimisation()
+         !
+      ELSE IF ( TRIM(fcp_relax) == 'mdiis' ) THEN
+         !
+         CALL fcp_mdiis()
+         !
+      END IF
+      !
+   END SUBROUTINE fcp_opt_perform
    !
    !----------------------------------------------------------------------
    SUBROUTINE fcp_line_minimisation()
@@ -191,5 +233,52 @@ CONTAINS
       RETURN
       !
    END SUBROUTINE fcp_line_minimisation
+   !
+   !----------------------------------------------------------------------
+   SUBROUTINE fcp_mdiis()
+      !----------------------------------------------------------------------
+      !
+      USE path_variables, ONLY : frozen
+      !
+      IMPLICIT NONE
+      !
+      INTEGER               :: image
+      REAL(DP)              :: ef
+      REAL(DP), ALLOCATABLE :: force1(:)
+      REAL(DP), ALLOCATABLE :: nelec1(:)
+      !
+      ALLOCATE(force1(num_of_images))
+      ALLOCATE(nelec1(num_of_images))
+      !
+      IF ( meta_ionode ) THEN
+         !
+         DO image = 1, num_of_images
+            !
+            ef            = fcp_neb_ef(image)
+            nelec1(image) = fcp_neb_nelec(image)
+            force1(image) = fcp_mu - ef
+            !
+         END DO
+         !
+         CALL update_by_mdiis(mdiist, nelec1, force1)
+         !
+         DO image = 1, num_of_images
+            !
+            IF ( frozen(image) ) CYCLE
+            !
+            fcp_neb_nelec(image) = nelec1(image)
+            !
+         END DO
+         !
+      END IF
+      !
+      CALL mp_bcast( fcp_neb_nelec, meta_ionode_id, world_comm )
+      !
+      DEALLOCATE(force1)
+      DEALLOCATE(nelec1)
+      !
+      RETURN
+      !
+   END SUBROUTINE fcp_mdiis
    !
 END MODULE fcp_opt_routines

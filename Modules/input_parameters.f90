@@ -388,6 +388,9 @@ MODULE input_parameters
           ! pseudopotential files; 'none' means DFT is read from pseudos.
           ! Only used in PW - allowed values: any legal DFT value
 
+        REAL(DP) :: starting_charge( nsx ) = 0.0_DP
+          ! ONLY PW
+
         REAL(DP) :: starting_magnetization( nsx ) = 0.0_DP
           ! ONLY PW
 
@@ -557,14 +560,31 @@ MODULE input_parameters
 
         REAL(DP) :: fcp_mu         = 0.0_DP
           ! target Fermi energy
+
         REAL(DP) :: fcp_mass       = 10000.0_DP
           ! mass for the FCP
+
         REAL(DP) :: fcp_tempw      = 300.0_DP
           ! target temperature for the FCP dynamics
+
+        CHARACTER(LEN=8) :: fcp_relax = 'mdiis'
+          ! 'lm':    Line-Minimisation
+          ! 'mdiis': MDIIS algorism
+
+        CHARACTER(len=8) :: fcp_relax_allowed(2)
+        DATA fcp_relax_allowed / 'lm', 'mdiis' /
+
         REAL(DP) :: fcp_relax_step = 0.5_DP
           ! step size for steepest descent
+
         REAL(DP) :: fcp_relax_crit = 0.001_DP
           ! threshold for force acting on FCP
+
+        INTEGER :: fcp_mdiis_size = 4
+          ! size of MDIIS algorism
+
+        REAL(DP) :: fcp_mdiis_step = 0.2_DP
+          ! step width of MDIIS algorism
 
         INTEGER :: space_group = 0
           ! space group number for coordinates given in crystallographic form
@@ -588,7 +608,7 @@ MODULE input_parameters
         NAMELIST / system / ibrav, celldm, a, b, c, cosab, cosac, cosbc, nat, &
              ntyp, nbnd, ecutwfc, ecutrho, nr1, nr2, nr3, nr1s, nr2s,         &
              nr3s, nr1b, nr2b, nr3b, nosym, nosym_evc, noinv, use_all_frac,   &
-             force_symmorphic, starting_magnetization,                        &
+             force_symmorphic, starting_charge, starting_magnetization,       &
              occupations, degauss, nspin, ecfixed,                            &
              qcutz, q2sigma, lda_plus_U, lda_plus_u_kind,                     &
              Hubbard_U, Hubbard_J, Hubbard_alpha,                             &
@@ -608,8 +628,8 @@ MODULE input_parameters
              xdm, xdm_a1, xdm_a2,                                             &
              step_pen, A_pen, sigma_pen, alpha_pen, no_t_rev,                 &
              esm_bc, esm_efield, esm_w, esm_nfit, esm_debug, esm_debug_gpmax, &
-             esm_a, esm_zb, fcp_mu, fcp_mass, fcp_tempw, fcp_relax_step,      &
-             fcp_relax_crit,                                                  &
+             esm_a, esm_zb, fcp_mu, fcp_mass, fcp_tempw, fcp_relax,           &
+             fcp_relax_step, fcp_relax_crit, fcp_mdiis_size, fcp_mdiis_step,  &
              space_group, uniqueb, origin_choice, rhombohedral,               &
              zgate, relaxz, block, block_1, block_2, block_height
 

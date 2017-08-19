@@ -41,6 +41,7 @@ fcp_opt_routines.o : ../../Modules/io_files.o
 fcp_opt_routines.o : ../../Modules/io_global.o
 fcp_opt_routines.o : ../../Modules/ions_base.o
 fcp_opt_routines.o : ../../Modules/kind.o
+fcp_opt_routines.o : ../../Modules/mdiis.o
 fcp_opt_routines.o : ../../Modules/mp_world.o
 fcp_opt_routines.o : ../../PW/src/pw_restart.o
 fcp_opt_routines.o : ../../PW/src/pwcom.o

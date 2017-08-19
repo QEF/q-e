@@ -67,8 +67,11 @@ MODULE path_read_namelists_module
          !
          lfcpopt              = .FALSE.
          fcp_mu               = 0.0_DP
+         fcp_relax            = 'mdiis'
          fcp_relax_step       = 0.1_DP
          fcp_relax_crit       = 0.001_DP
+         fcp_mdiis_size       = 4
+         fcp_mdiis_step       = 0.2_DP
          fcp_tot_charge_first = 0.0_DP
          fcp_tot_charge_last  = 0.0_DP
        !
@@ -114,8 +117,11 @@ MODULE path_read_namelists_module
        CALL mp_bcast( nstep_path,           ionode_id, world_comm )
        CALL mp_bcast( lfcpopt,              ionode_id, world_comm )
        CALL mp_bcast( fcp_mu,               ionode_id, world_comm )
+       CALL mp_bcast( fcp_relax,            ionode_id, world_comm )
        CALL mp_bcast( fcp_relax_step,       ionode_id, world_comm )
        CALL mp_bcast( fcp_relax_crit,       ionode_id, world_comm )
+       CALL mp_bcast( fcp_mdiis_size,       ionode_id, world_comm )
+       CALL mp_bcast( fcp_mdiis_step,       ionode_id, world_comm )
        CALL mp_bcast( fcp_tot_charge_first, ionode_id, world_comm )
        CALL mp_bcast( fcp_tot_charge_last,  ionode_id, world_comm )
        !
@@ -169,6 +175,18 @@ MODULE path_read_namelists_module
        IF ( .NOT. allowed ) &
           CALL errore( sub_name, ' CI_scheme ''' // &
                       & TRIM( CI_scheme ) //''' not allowed ', 1 )
+       !
+       !
+       ! ... FCP algorithm
+       !
+       allowed = .FALSE.
+       DO i = 1, SIZE( fcp_relax_allowed )
+          IF ( TRIM( fcp_relax ) == fcp_relax_allowed(i) ) allowed = .TRUE.
+       END DO
+       !
+       IF ( .NOT. allowed ) &
+          CALL errore( sub_name, ' fcp_relax ''' // &
+                      & TRIM( fcp_relax ) //''' not allowed ', 1 )
        !
        RETURN
        !

@@ -14,14 +14,17 @@ MODULE fcp_variables
    IMPLICIT NONE
    SAVE
    !
-   LOGICAL  :: lfcpopt              = .FALSE.
-   LOGICAL  :: lfcpdyn              = .FALSE.
-   REAL(DP) :: fcp_mu               = 0.0_DP
-   REAL(DP) :: fcp_mass             = 10000.0_DP
-   REAL(DP) :: fcp_temperature      = 0.0_DP
-   REAL(DP) :: fcp_relax_step       = 0.5_DP
-   REAL(DP) :: fcp_relax_crit       = 0.001_DP
-   REAL(DP) :: fcp_tot_charge_first = 0.0_DP
-   REAL(DP) :: fcp_tot_charge_last  = 0.0_DP
+   LOGICAL          :: lfcpopt              = .FALSE.
+   LOGICAL          :: lfcpdyn              = .FALSE.
+   REAL(DP)         :: fcp_mu               = 0.0_DP
+   REAL(DP)         :: fcp_mass             = 10000.0_DP
+   REAL(DP)         :: fcp_temperature      = 0.0_DP
+   CHARACTER(LEN=8) :: fcp_relax            = 'mdiis'
+   REAL(DP)         :: fcp_relax_step       = 0.5_DP
+   REAL(DP)         :: fcp_relax_crit       = 0.001_DP
+   INTEGER          :: fcp_mdiis_size       = 4
+   REAL(DP)         :: fcp_mdiis_step       = 0.2_DP
+   REAL(DP)         :: fcp_tot_charge_first = 0.0_DP
+   REAL(DP)         :: fcp_tot_charge_last  = 0.0_DP
 
 END MODULE fcp_variables

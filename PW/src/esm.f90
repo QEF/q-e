@@ -50,7 +50,7 @@ MODULE esm
             mill_2d, imill_2d, ngm_2d, &
             esm_init, esm_hartree, esm_local, esm_ewald, esm_force_lc, &
             esm_force_ew, esm_printpot, esm_summary
-
+  PUBLIC :: esm_stres_har, esm_stres_ewa, esm_stres_loclong
   !
   LOGICAL              :: do_comp_esm=.FALSE.
   INTEGER              :: esm_nfit
@@ -62,6 +62,9 @@ MODULE esm
   real(DP), external   :: qe_erf, qe_erfc
   !
   CONTAINS
+  !-----------------------------------------------------------------------
+  !--------------ESM ENERGY AND POTENTIAL SUBROUTINE----------------------
+  !-----------------------------------------------------------------------
      subroutine esm_hartree( rhog, ehart, aux )
         USE kinds,    ONLY : DP
         USE gvect,    ONLY : ngm
@@ -147,6 +150,9 @@ MODULE esm
 
      END SUBROUTINE esm_local
      
+  !-----------------------------------------------------------------------
+  !--------------ESM FORCE SUBROUTINE-------------------------------------
+  !-----------------------------------------------------------------------
      SUBROUTINE esm_force_ewr( alpha_g, forceion ) 
         USE kinds,     ONLY : DP
         USE ions_base, ONLY : nat
@@ -210,6 +216,111 @@ MODULE esm
         end if
 
      END SUBROUTINE esm_force_lc
+
+  !-----------------------------------------------------------------------
+  !--------------ESM STRESS SUBROUTINE------------------------------------
+  !-----------------------------------------------------------------------
+  subroutine esm_stres_har( sigmahar, rhog )
+    USE kinds,    ONLY : DP
+    USE gvect,    ONLY : ngm
+    USE lsda_mod, ONLY : nspin
+    IMPLICIT NONE
+    real(DP), intent(out)   :: sigmahar(3,3)
+    complex(DP), intent(in) :: rhog(ngm,nspin)   !  n(G)
+
+    select case( esm_bc )
+    case( 'pbc' )
+       stop 'esm_stres_har must not be called for esm_bc = pbc'
+    case( 'bc1' )
+       call esm_stres_har_bc1( sigmahar, rhog )
+    case( 'bc2' )
+       call esm_stres_har_bc2( sigmahar, rhog )
+    case( 'bc3' )
+       call esm_stres_har_bc3( sigmahar, rhog )
+    case( 'bc4' )
+       stop 'esm_stres_har has not yet implemented for esm_bc = bc4'
+    end select
+
+    return
+  end subroutine esm_stres_har
+
+  subroutine esm_stres_ewa( sigmaewa )
+    !-----------------------------------------------------------------------
+    !
+    ! Calculates Ewald stresswith both G- and R-space terms.
+    ! Determines optimal alpha. Should hopefully work for any structure.
+    !
+    USE kinds,     ONLY : DP
+    USE constants, ONLY : tpi
+    USE cell_base, ONLY : tpiba2
+    USE ions_base, ONLY : zv, nat, ityp
+    USE gvect,     ONLY : gcutm
+    implicit none
+    real(DP), intent(out) :: sigmaewa(3,3)
+
+    ! output: the ewald stress
+    !
+    !    here the local variables
+    !
+    integer :: ia
+    ! counter on atoms
+
+    real(DP) :: charge, alpha, upperbound
+    ! total ionic charge in the cell
+    ! alpha term in ewald sum
+    ! the maximum radius to consider real space sum
+    real(DP) :: sigmaewg(3,3), sigmaewr(3,3)
+    ! ewald stress computed in reciprocal space
+    ! ewald stress computed in real space
+
+    charge = sum(zv(ityp(:)))
+
+    ! choose alpha in order to have convergence in the sum over G
+    ! upperbound is a safe upper bound for the error in the sum over G
+    alpha = 2.9d0
+    do
+       alpha = alpha - 0.1d0
+       if (alpha.le.0.d0) call errore ('esm_stres_ewa', 'optimal alpha not found', 1)
+       upperbound = 2.d0 * charge**2 * sqrt (2.d0 * alpha / tpi) * &
+            qe_erfc ( sqrt (tpiba2 * gcutm / 4.d0 / alpha) )
+       if ( upperbound < 1.0d-7 ) exit
+    end do
+
+    ! G-space sum here.
+    ! Determine if this processor contains G=0 and set the constant term
+    CALL esm_stres_ewg( alpha, sigmaewg )
+
+    ! R-space sum here (only for the processor that contains G=0)
+    CALL esm_stres_ewr( alpha, sigmaewr )
+
+    sigmaewa(:,:) = sigmaewg(:,:) + sigmaewr(:,:)
+
+    return
+  end subroutine esm_stres_ewa
+
+  subroutine esm_stres_loclong( sigmaloclong, rhog )
+    USE kinds,    ONLY : DP
+    USE gvect,    ONLY : ngm
+    USE lsda_mod, ONLY : nspin
+    IMPLICIT NONE
+    real(DP), intent(out)   :: sigmaloclong(3,3)
+    complex(DP), intent(in) :: rhog(ngm,nspin)   !  n(G)
+
+    select case( esm_bc )
+    case( 'pbc' )
+       stop 'esm_stres_loclong must not be called for esm_bc = pbc'
+    case( 'bc1' )
+       call esm_stres_loclong_bc1( sigmaloclong, rhog )
+    case( 'bc2' )
+       call esm_stres_loclong_bc2( sigmaloclong, rhog )
+    case( 'bc3' )
+       call esm_stres_loclong_bc3( sigmaloclong, rhog )
+    case( 'bc4' )
+       stop 'esm_stres_loclong has not yet implemented for esm_bc = bc4'
+    end select
+
+    return
+  end subroutine esm_stres_loclong
 
 SUBROUTINE esm_rgen_2d ( dtau, rmax, mxr, at, bg, r, r2, nrm)
   !-----------------------------------------------------------------------
@@ -304,11 +415,9 @@ END SUBROUTINE esm_rgen_2d
 
 SUBROUTINE esm_init()
    USE fft_base, ONLY : dfftp
-   USE esm_cft,  ONLY : esm_cft_1z_init
    IMPLICIT NONE
    
    call esm_ggen_2d()
-   call esm_cft_1z_init(1,dfftp%nr3,dfftp%nr3)
 
 END SUBROUTINE esm_init
 
@@ -388,7 +497,8 @@ SUBROUTINE esm_hartree_bc1(rhog, ehart, aux)
   USE mp_global,        ONLY : intra_bgrp_comm
   USE mp,               ONLY : mp_sum
   USE fft_base,         ONLY : dfftp
-  USE esm_cft,          ONLY : esm_cft_1z
+  USE fft_scalar,       ONLY : cft_1z
+
   !
   IMPLICIT NONE
   !
@@ -410,7 +520,6 @@ SUBROUTINE esm_hartree_bc1(rhog, ehart, aux)
 !
 ! Map to FFT mesh (dfftp%nr3,ngm_2d)
   rhog3(:,:)=(0.d0,0.d0)
-!$omp parallel do private( ng, n1, n2, ng_2d, n3, rg3 )
   do ng=1,ngm
      n1 = mill(1,ng)
      n2 = mill(2,ng)
@@ -429,7 +538,6 @@ SUBROUTINE esm_hartree_bc1(rhog, ehart, aux)
         rhog3(n3,ng_2d)=CONJG(rg3)
      endif
   enddo
-!$omp end parallel do
 ! End mapping
 !
   vg3(:,:)=(0.d0,0.d0)
@@ -438,10 +546,7 @@ SUBROUTINE esm_hartree_bc1(rhog, ehart, aux)
   ci=(0.d0,1.d0)
 
 !****For gp!=0 case ********************
-!$omp parallel private( k1, k2, t, gp2, gp, tmp1, tmp2, vg, iz, kn, cc0, ss0, &
-!$omp                   rg3, vg_r, k3, z, arg1, arg2, ng_2d )
   allocate(vg(dfftp%nr3),vg_r(dfftp%nr3))
-!$omp do
   do ng_2d = 1, ngm_2d
      k1 = mill_2d(1,ng_2d)
      k2 = mill_2d(2,ng_2d)
@@ -476,11 +581,10 @@ SUBROUTINE esm_hartree_bc1(rhog, ehart, aux)
         vg_r(iz)=-tpi/gp*(exp(arg1)*tmp1+exp(arg2)*tmp2)
      enddo
      
-     call esm_cft_1z(vg_r,1,dfftp%nr3,dfftp%nr3,-1,vg)
+     call cft_1z(vg_r,1,dfftp%nr3,dfftp%nr3,-1,vg)
      vg3(:,ng_2d)=(vg3(:,ng_2d)+vg(:))*e2 ! factor e2: hartree -> Ry.
   enddo
   deallocate(vg,vg_r)
-!$omp end parallel
 
 !****For gp=0 case ********************
   ng_2d = imill_2d(0,0)
@@ -551,7 +655,7 @@ SUBROUTINE esm_hartree_bc1(rhog, ehart, aux)
      enddo
      ! end smoothing
 
-     call esm_cft_1z(vg_r,1,dfftp%nr3,dfftp%nr3,-1,vg)
+     call cft_1z(vg_r,1,dfftp%nr3,dfftp%nr3,-1,vg)
      vg3(:,ng_2d)=(vg3(:,ng_2d)+vg(:))*e2 ! factor e2: hartree -> Ry.
 
      deallocate (vg,vg_r)
@@ -559,17 +663,13 @@ SUBROUTINE esm_hartree_bc1(rhog, ehart, aux)
 
 ! Hartree Energy
   ehart=0.d0
-!$omp parallel private( ng_2d, k1, k2, eh )
   eh = 0d0
-!$omp do
   do ng_2d = 1, ngm_2d
      k1 = mill_2d(1,ng_2d)
      k2 = mill_2d(2,ng_2d)
      eh = eh + sum( vg3(:,ng_2d)*conjg(rhog3(:,ng_2d)) )
   enddo
-!$omp atomic
   ehart=ehart+eh
-!$omp end parallel
   if( gamma_only ) then
      ehart = ehart * 2d0
      ng_2d = imill_2d(0,0)
@@ -583,7 +683,6 @@ SUBROUTINE esm_hartree_bc1(rhog, ehart, aux)
   !
 ! Map to FFT mesh (dfftp%nrx)
   aux=0.0d0
-!$omp parallel do private( ng, n1, n2, ng_2d, n3 )
   do ng=1,ngm
      n1 = mill(1,ng)
      n2 = mill(2,ng)
@@ -595,7 +694,6 @@ SUBROUTINE esm_hartree_bc1(rhog, ehart, aux)
         aux(nlm(ng))=CONJG(aux(nl(ng)))
      endif
   enddo
-!$omp end parallel do
 
   deallocate (rhog3,vg3)
 
@@ -612,7 +710,7 @@ SUBROUTINE esm_hartree_bc2 (rhog, ehart, aux)
   USE mp_global,        ONLY : intra_bgrp_comm
   USE mp,               ONLY : mp_sum
   USE fft_base,         ONLY : dfftp
-  USE esm_cft,          ONLY : esm_cft_1z
+  USE fft_scalar,       ONLY : cft_1z
   !
   IMPLICIT NONE
   !
@@ -634,7 +732,6 @@ SUBROUTINE esm_hartree_bc2 (rhog, ehart, aux)
 !
 ! Map to FFT mesh (dfftp%nr3,ngm_2d)
   rhog3(:,:)=(0.d0,0.d0)
-!$omp parallel do private( ng, n1, n2, ng_2d, n3, rg3 )
   do ng=1,ngm
      n1 = mill(1,ng)
      n2 = mill(2,ng)
@@ -653,7 +750,6 @@ SUBROUTINE esm_hartree_bc2 (rhog, ehart, aux)
         rhog3(n3,ng_2d)=CONJG(rg3)
      endif
   enddo
-!$omp end parallel do
 ! End mapping
 !
   vg3(:,:)=(0.d0,0.d0)
@@ -663,11 +759,7 @@ SUBROUTINE esm_hartree_bc2 (rhog, ehart, aux)
   ci=(0.d0,1.d0)
 
 !****For gp!=0 case ********************
-!$omp parallel private( k1, k2, t, gp2, gp, tmp1, tmp2, vg, iz, kn, cc0, ss0, &
-!$omp                   rg3, tmp, vg_r, k3, z, arg1, arg2, arg3, arg4, arg5, &
-!$omp                   ng_2d )
   allocate(vg(dfftp%nr3),vg_r(dfftp%nr3))
-!$omp do
   do ng_2d = 1, ngm_2d
      k1 = mill_2d(1,ng_2d)
      k2 = mill_2d(2,ng_2d)
@@ -709,11 +801,10 @@ SUBROUTINE esm_hartree_bc2 (rhog, ehart, aux)
         vg_r(iz)=-fpi*(exp(arg1)-exp(arg4))*tmp1/(1.d0-exp(arg5)) &
            +fpi*(exp(arg3)-exp(arg2))*tmp2/(1.d0-exp(arg5))
      enddo
-     call esm_cft_1z(vg_r,1,dfftp%nr3,dfftp%nr3,-1,vg)
+     call cft_1z(vg_r,1,dfftp%nr3,dfftp%nr3,-1,vg)
      vg3(:,ng_2d)=(vg3(:,ng_2d)+vg(:))*e2 ! factor e2: hartree -> Ry.
   enddo
   deallocate(vg,vg_r)
-!$omp end parallel
 
 !****For gp=0 case ********************
   ng_2d = imill_2d(0,0)
@@ -789,7 +880,7 @@ SUBROUTINE esm_hartree_bc2 (rhog, ehart, aux)
      enddo
      ! end smoothing
      
-     call esm_cft_1z(vg_r,1,dfftp%nr3,dfftp%nr3,-1,vg)
+     call cft_1z(vg_r,1,dfftp%nr3,dfftp%nr3,-1,vg)
      vg3(:,ng_2d)=(vg3(:,ng_2d)+vg(:))*e2 ! factor e2: hartree -> Ry.
 
      deallocate (vg,vg_r)
@@ -797,17 +888,13 @@ SUBROUTINE esm_hartree_bc2 (rhog, ehart, aux)
 
 ! Hartree Energy
   ehart=0.d0
-!$omp parallel private( ng_2d, k1, k2, eh )
   eh = 0d0
-!$omp do
   do ng_2d = 1, ngm_2d
      k1 = mill_2d(1,ng_2d)
      k2 = mill_2d(2,ng_2d)
      eh = eh + sum( vg3(:,ng_2d)*conjg(rhog3(:,ng_2d)) )
   enddo
-!$omp atomic
   ehart=ehart+eh
-!$omp end parallel
   if( gamma_only ) then
      ehart = ehart * 2d0
      ng_2d = imill_2d(0,0)
@@ -821,7 +908,6 @@ SUBROUTINE esm_hartree_bc2 (rhog, ehart, aux)
   !
 ! Map to FFT mesh (dfftp%nrx)
   aux=0.0d0
-!$omp parallel do private( ng, n1, n2, ng_2d, n3 )
   do ng=1,ngm
      n1 = mill(1,ng)
      n2 = mill(2,ng)
@@ -833,7 +919,6 @@ SUBROUTINE esm_hartree_bc2 (rhog, ehart, aux)
         aux(nlm(ng))=CONJG(aux(nl(ng)))
      endif
   enddo
-!$omp end parallel do
 
   deallocate (rhog3,vg3)
 
@@ -850,7 +935,7 @@ SUBROUTINE esm_hartree_bc3 (rhog, ehart, aux)
   USE mp_global,        ONLY : intra_bgrp_comm
   USE mp,               ONLY : mp_sum
   USE fft_base,         ONLY : dfftp
-  USE esm_cft,          ONLY : esm_cft_1z
+  USE fft_scalar,       ONLY : cft_1z
   !
   IMPLICIT NONE
   !
@@ -872,7 +957,6 @@ SUBROUTINE esm_hartree_bc3 (rhog, ehart, aux)
 !
 ! Map to FFT mesh (dfftp%nr3,ngm_2d)
   rhog3(:,:)=(0.d0,0.d0)
-!$omp parallel do private( ng, n1, n2, ng_2d, n3, rg3 )
   do ng=1,ngm
      n1 = mill(1,ng)
      n2 = mill(2,ng)
@@ -891,7 +975,6 @@ SUBROUTINE esm_hartree_bc3 (rhog, ehart, aux)
         rhog3(n3,ng_2d)=CONJG(rg3)
      endif
   enddo
-!$omp end parallel do
 ! End mapping
 !
   vg3(:,:)=(0.d0,0.d0)
@@ -901,10 +984,7 @@ SUBROUTINE esm_hartree_bc3 (rhog, ehart, aux)
   ci=(0.d0,1.d0)
 
 !****For gp!=0 case ********************
-!$omp parallel private( k1, k2, t, gp2, gp, tmp1, tmp2, vg, iz, kn, cc0, ss0, &
-!$omp                   rg3, tmp, vg_r, k3, z, arg1, arg2, arg3, ng_2d )
   allocate(vg(dfftp%nr3),vg_r(dfftp%nr3))
-!$omp do
   do ng_2d = 1, ngm_2d
      k1 = mill_2d(1,ng_2d)
      k2 = mill_2d(2,ng_2d)
@@ -944,11 +1024,10 @@ SUBROUTINE esm_hartree_bc3 (rhog, ehart, aux)
         vg_r(iz)=-fpi*exp(arg1)*tmp1+tpi*(exp(arg3)-exp(arg2))*tmp2
      enddo
      
-     call esm_cft_1z(vg_r,1,dfftp%nr3,dfftp%nr3,-1,vg)
+     call cft_1z(vg_r,1,dfftp%nr3,dfftp%nr3,-1,vg)
      vg3(:,ng_2d)=(vg3(:,ng_2d)+vg(:))*e2 ! factor e2: hartree -> Ry.
   enddo
   deallocate(vg,vg_r)
-!$omp end parallel
 
 !****For gp=0 case ********************
   ng_2d = imill_2d(0,0)
@@ -1016,7 +1095,7 @@ SUBROUTINE esm_hartree_bc3 (rhog, ehart, aux)
      enddo
      ! end smoothing
 
-     call esm_cft_1z(vg_r,1,dfftp%nr3,dfftp%nr3,-1,vg)
+     call cft_1z(vg_r,1,dfftp%nr3,dfftp%nr3,-1,vg)
      vg3(:,ng_2d)=(vg3(:,ng_2d)+vg(:))*e2 ! factor e2: hartree -> Ry.
 
      deallocate (vg,vg_r)
@@ -1024,17 +1103,13 @@ SUBROUTINE esm_hartree_bc3 (rhog, ehart, aux)
 
 ! Hartree Energy
   ehart=0.d0
-!$omp parallel private( ng_2d, k1, k2, eh )
   eh = 0d0
-!$omp do
   do ng_2d = 1, ngm_2d
      k1 = mill_2d(1,ng_2d)
      k2 = mill_2d(2,ng_2d)
      eh = eh + sum( vg3(:,ng_2d)*conjg(rhog3(:,ng_2d)) )
   enddo
-!$omp atomic
   ehart=ehart+eh
-!$omp end parallel
   if( gamma_only ) then
      ehart = ehart * 2d0
      ng_2d = imill_2d(0,0)
@@ -1048,7 +1123,6 @@ SUBROUTINE esm_hartree_bc3 (rhog, ehart, aux)
   !
 ! Map to FFT mesh (dfftp%nrx)
   aux=0.0d0
-!$omp parallel do private( ng, n1, n2, ng_2d, n3 )
   do ng=1,ngm
      n1 = mill(1,ng)
      n2 = mill(2,ng)
@@ -1060,7 +1134,6 @@ SUBROUTINE esm_hartree_bc3 (rhog, ehart, aux)
         aux(nlm(ng))=CONJG(aux(nl(ng)))
      endif
   enddo
-!$omp end parallel do
 
   deallocate (rhog3,vg3)
 
@@ -1077,7 +1150,7 @@ SUBROUTINE esm_hartree_bc4 (rhog, ehart, aux)
   USE mp_global,        ONLY : intra_bgrp_comm
   USE mp,               ONLY : mp_sum
   USE fft_base,         ONLY : dfftp
-  USE esm_cft,          ONLY : esm_cft_1z
+  USE fft_scalar,       ONLY : cft_1z
   !
   IMPLICIT NONE
   !
@@ -1103,7 +1176,6 @@ SUBROUTINE esm_hartree_bc4 (rhog, ehart, aux)
 !
 ! Map to FFT mesh (dfftp%nr3,ngm_2d)
   rhog3(:,:)=(0.d0,0.d0)
-!$omp parallel do private( ng, n1, n2, ng_2d, n3, rg3 )
   do ng=1,ngm
      n1 = mill(1,ng)
      n2 = mill(2,ng)
@@ -1122,7 +1194,6 @@ SUBROUTINE esm_hartree_bc4 (rhog, ehart, aux)
         rhog3(n3,ng_2d)=CONJG(rg3)
      endif
   enddo
-!$omp end parallel do
 ! End mapping
 !
   vg3(:,:)=(0.d0,0.d0)
@@ -1133,13 +1204,7 @@ SUBROUTINE esm_hartree_bc4 (rhog, ehart, aux)
   ci=(0.d0,1.d0)
 
 !****For gp!=0 case ********************
-!$omp parallel private( k1, k2, t, gp2, gp, tmp1, tmp2, tmp3, tmp4, tmpr1, &
-!$omp                   tmpr2, tmpr3, tmpr4, vg, vr, iz, kn, cc0, ss0, rg3, &
-!$omp                   tmp, cc1, ss1, alpha, beta, kappa, xi, chi, lambda, &
-!$omp                   vg_r, vr_r, k3, z, arg1, arg2, arg3, arg4, argr1, &
-!$omp                   argr2, argr3, argr4, argr5, ng_2d )
   allocate(vg(dfftp%nr3),vg_r(dfftp%nr3),vr(dfftp%nr3),vr_r(dfftp%nr3))
-!$omp do
   do ng_2d = 1, ngm_2d
      k1 = mill_2d(1,ng_2d)
      k2 = mill_2d(2,ng_2d)
@@ -1179,9 +1244,9 @@ SUBROUTINE esm_hartree_bc4 (rhog, ehart, aux)
            /(gp**2+kn**2+ci*2.d0*aaa*kn)
      enddo
      
-     call esm_cft_1z(vg,1,dfftp%nr3,dfftp%nr3,1,vg_r)
+     call cft_1z(vg,1,dfftp%nr3,dfftp%nr3,1,vg_r)
      ! bc4
-     CALL esm_cft_1z(vr,1,dfftp%nr3,dfftp%nr3,1,vr_r)
+     CALL cft_1z(vr,1,dfftp%nr3,dfftp%nr3,1,vr_r)
      
      do iz=1,dfftp%nr3
         k3=iz-1
@@ -1207,11 +1272,10 @@ SUBROUTINE esm_hartree_bc4 (rhog, ehart, aux)
         endif
      enddo
      
-     call esm_cft_1z(vg_r,1,dfftp%nr3,dfftp%nr3,-1,vg)
+     call cft_1z(vg_r,1,dfftp%nr3,dfftp%nr3,-1,vg)
      vg3(:,ng_2d)=vg(:)*e2 ! factor e2: hartree -> Ry.
   enddo
   deallocate(vg,vg_r,vr,vr_r)
-!$omp end parallel
 
 !****For gp=0 case ********************
   ng_2d = imill_2d(0,0)
@@ -1264,9 +1328,9 @@ SUBROUTINE esm_hartree_bc4 (rhog, ehart, aux)
         !
      enddo
      
-     call esm_cft_1z(vg,1,dfftp%nr3,dfftp%nr3,1,vg_r)
+     call cft_1z(vg,1,dfftp%nr3,dfftp%nr3,1,vg_r)
      ! bc4
-     call esm_cft_1z(vr,1,dfftp%nr3,dfftp%nr3,1,vr_r)
+     call cft_1z(vr,1,dfftp%nr3,dfftp%nr3,1,vr_r)
      
      rg3=rhog3(1,ng_2d)
      do iz=1,dfftp%nr3
@@ -1329,7 +1393,7 @@ SUBROUTINE esm_hartree_bc4 (rhog, ehart, aux)
         vg_r(iz)=(a0+a1*z+a2*z**2+a3*z**3)
      enddo
      
-     call esm_cft_1z(vg_r,1,dfftp%nr3,dfftp%nr3,-1,vg)
+     call cft_1z(vg_r,1,dfftp%nr3,dfftp%nr3,-1,vg)
      
      vg3(:,ng_2d)=vg(:)*e2 ! factor e2: hartree -> Ry.
 
@@ -1338,17 +1402,13 @@ SUBROUTINE esm_hartree_bc4 (rhog, ehart, aux)
 
 ! Hartree Energy
   ehart=0.d0
-!$omp parallel private( ng_2d, k1, k2, eh )
   eh = 0d0
-!$omp do
   do ng_2d = 1, ngm_2d
      k1 = mill_2d(1,ng_2d)
      k2 = mill_2d(2,ng_2d)
      eh = eh + sum( vg3(:,ng_2d)*conjg(rhog3(:,ng_2d)) )
   enddo
-!$omp atomic
   ehart=ehart+eh
-!$omp end parallel
   if( gamma_only ) then
      ehart = ehart * 2d0
      ng_2d = imill_2d(0,0)
@@ -1362,7 +1422,6 @@ SUBROUTINE esm_hartree_bc4 (rhog, ehart, aux)
   !
 ! Map to FFT mesh (dfftp%nrx)
   aux=0.0d0
-!$omp parallel do private( ng, n1, n2, ng_2d, n3 )
   do ng=1,ngm
      n1 = mill(1,ng)
      n2 = mill(2,ng)
@@ -1374,13 +1433,1033 @@ SUBROUTINE esm_hartree_bc4 (rhog, ehart, aux)
         aux(nlm(ng))=CONJG(aux(nl(ng)))
      endif
   enddo
-!$omp end parallel do
 
   deallocate (rhog3,vg3)
 
   RETURN
 END SUBROUTINE esm_hartree_bc4
 
+  complex(DP) function qe_exp( x )
+    complex(DP), intent(in) :: x
+    real(DP) :: r, i, c, s
+
+    r = dreal(x)
+    i = dimag(x)
+    c = cos(i)
+    s = sin(i)
+
+    qe_exp = exp(r)*cmplx(c,s,kind=DP)
+
+  end function qe_exp
+
+
+  complex(DP) function qe_sinh( x )
+    complex(DP), intent(in) :: x
+    real(DP) :: r, i, c, s
+
+    r = dreal(x)
+    i = dimag(x)
+    c = cos(i)
+    s = sin(i)
+
+    qe_sinh = 0.5d0*(exp(r)*cmplx(c,s,kind=DP) - exp(-r)*cmplx(c,-s,kind=DP) )
+
+  end function qe_sinh
+
+  complex(DP) function qe_cosh( x )
+    complex(DP), intent(in) :: x
+    real(DP) :: r, i, c, s
+
+    r = dreal(x)
+    i = dimag(x)
+    c = cos(i)
+    s = sin(i)
+
+    qe_cosh = 0.5d0*(exp(r)*cmplx(c,s,kind=DP) + exp(-r)*cmplx(c,-s,kind=DP) )
+
+  end function qe_cosh
+
+  subroutine esm_stres_har_bc1( sigmahar, rhog )
+    use kinds,         only : DP
+    use gvect,         only : ngm, mill
+    use lsda_mod,      only : nspin
+    use constants,     only : tpi, fpi, e2
+    use cell_base,     only : omega, alat, at, tpiba, bg
+    use control_flags, only : gamma_only
+    use fft_base,      only : dfftp
+    use fft_scalar,    only : cft_1z
+    use mp_global,     only : intra_bgrp_comm
+    use mp,            only : mp_sum
+    implicit none
+
+    real(DP), intent(out)   :: sigmahar(3,3)
+    complex(DP), intent(in) :: rhog(ngm,nspin)   !  n(G)
+
+    integer :: ig, iga, igb, igz, igp, la, mu, iz
+    real(DP) :: L, S, z0, z
+    real(DP) :: g(2), gp, gz
+    complex(DP), parameter :: ci = dcmplx(0.0d0, 1.0d0)
+    complex(DP) :: rg3
+    complex(DP) :: sum1p, sum1m, sum1c, sum2c, sum2p, sum2m
+    real(DP)    :: z_l, z_r
+    complex(DP) :: f1, f2, f3, f4, a0, a1, a2, a3
+    complex(DP) :: poly_fr, poly_fl, poly_dfr, poly_dfl
+    complex(DP) :: poly_a, poly_b, poly_c, poly_d
+    real(DP), parameter :: delta(2,2) = reshape( (/ 1.0d0, 0.0d0, 0.0d0, 1.0d0 /), (/2,2/) )
+    real(DP) :: dgp_deps(2,2)  !! dgp/deps
+    real(DP) :: dgp2_deps(2,2)  !! dgp^2/deps
+    real(DP) :: dinvgp_deps(2,2)  !! dgp^-1/deps
+
+    complex(DP), allocatable :: rhog3(:,:)
+    complex(DP), allocatable :: dVr_deps(:,:,:)
+    complex(DP), allocatable :: dVg_deps(:,:,:)
+    complex(DP), allocatable :: Vr(:)
+    complex(DP), allocatable :: Vg(:)
+
+    ! cell settings
+    L  = at(3,3)*alat
+    S  = omega/L
+    z0 = L/2.d0
+
+    ! initialize
+    sigmahar(:,:) = 0.0d0
+
+    allocate( rhog3(dfftp%nr3,ngm_2d) )
+    allocate( dVr_deps(dfftp%nr3,2,2) )
+    allocate( dVg_deps(dfftp%nr3,2,2) )
+    allocate( Vr(dfftp%nr3) )
+    allocate( Vg(dfftp%nr3) )
+
+    ! reconstruct rho(gz,gp)
+    rhog3(:,:)=(0.d0,0.d0)
+
+    do ig=1, ngm
+       iga = mill(1,ig)
+       igb = mill(2,ig)
+       igz = mill(3,ig)+1
+       igp = imill_2d(iga,igb)
+       if( igz<1 ) then
+          igz = igz + dfftp%nr3
+       end if
+
+       if( nspin == 2 ) then
+          rg3 = rhog(ig,1) + rhog(ig,2)
+       else
+          rg3 = rhog(ig,1)
+       endif
+       rhog3(igz,igp) = rg3
+
+       ! expand function symmetrically to gz<0
+       if( gamma_only .and. iga==0 .and. igb==0 ) then
+          igz = 1-mill(3,ig)
+          if( igz<1 ) then
+             igz = igz + dfftp%nr3
+          end if
+          rhog3(igz,igp) = CONJG(rg3)
+       end if
+    end do ! ig
+
+
+    !****For gp!=0 case ********************
+    do igp=1, ngm_2d
+       iga = mill_2d(1,igp)
+       igb = mill_2d(2,igp)
+       g(1:2) = (iga*bg(1:2,1) + igb*bg(1:2,2))*tpiba
+       gp = sqrt(g(1)*g(1) + g(2)*g(2))
+
+       if( gp==0.0d0 ) cycle ! skip gp=0
+
+       ! derivatives by strain tensor
+       do la=1, 2
+          do mu=1, 2
+             dgp_deps(la,mu)    = -g(la)*g(mu)/gp
+             dgp2_deps(la,mu)   = -g(la)*g(mu)*2.0d0
+             dinvgp_deps(la,mu) = +g(la)*g(mu)/gp**3
+          end do
+       end do
+
+       ! summations over gz
+       sum1p=(0.d0,0.d0)
+       sum1m=(0.d0,0.d0)
+       sum2p=(0.d0,0.d0)
+       sum2m=(0.d0,0.d0)
+       do igz=1, dfftp%nr3
+          if( igz<=dfftp%nr3/2 )then
+             gz = dble(igz-1)*tpi/L
+          else
+             gz = dble(igz-1-dfftp%nr3)*tpi/L
+          end if
+
+          rg3 = rhog3(igz,igp)
+          sum1p = sum1p + rg3*qe_exp(+ci*gz*z0)/(gp-ci*gz)
+          sum1m = sum1m + rg3*qe_exp(-ci*gz*z0)/(gp+ci*gz)
+          sum2p = sum2p + rg3*qe_exp(+ci*gz*z0)/(gp-ci*gz)**2
+          sum2m = sum2m + rg3*qe_exp(-ci*gz*z0)/(gp+ci*gz)**2
+       end do ! igz
+
+       ! calculate dV(z)/deps
+       do iz=1, dfftp%nr3
+          if( iz-1 .gt. dfftp%nr3/2 ) then
+             z = dble(iz-1-dfftp%nr3)/dble(dfftp%nr3)*L
+          else
+             z = dble(iz-1)/dble(dfftp%nr3)*L
+          end if
+
+          dVr_deps(iz,:,:) = &
+               -( dgp_deps(:,:)*tpi/gp**2*(gp*(z-z0)-1.0d0) &
+               -  delta(:,:)*tpi/gp ) &
+               * exp(+gp*(z-z0)) * sum1p &
+               + dgp_deps(:,:)*tpi/gp * exp(+gp*(z-z0)) * sum2p &
+               +( dgp_deps(:,:)*tpi/gp**2*(gp*(z+z0)+1.0d0) &
+               +  delta(:,:)*tpi/gp ) &
+               * exp(-gp*(z+z0)) * sum1m &
+               + dgp_deps(:,:)*tpi/gp * exp(-gp*(z+z0)) * sum2m
+       end do ! iz
+
+       ! convert dV(z)/deps to dV(gz)/deps
+       do la=1, 2
+          do mu=1, 2
+             call cft_1z( dVr_deps(:,la,mu), 1, dfftp%nr3, dfftp%nr3, -1, dVg_deps(:,la,mu) )
+          end do
+       end do
+
+       ! add bare coulomn terms to dV(gz)/deps
+       do igz=1, dfftp%nr3
+          if( igz<=dfftp%nr3/2 )then
+             gz = dble(igz-1)*tpi/L
+          else
+             gz = dble(igz-1-dfftp%nr3)*tpi/L
+          end if
+          rg3 = rhog3(igz,igp)
+
+          dVg_deps(igz,:,:) = dVg_deps(igz,:,:) &
+               - delta(:,:)* fpi*rg3/(gp**2+gz**2) &
+               - dgp2_deps(:,:)* fpi*rg3/(gp**2+gz**2)**2
+       end do ! igz
+
+       ! modifications
+       if( gamma_only ) then
+          dVg_deps(:,:,:) = dVg_deps(:,:,:)*2.0d0
+       end if
+
+       ! calculate stress tensor
+       do igz=1, dfftp%nr3
+          rg3 = rhog3(igz,igp)
+          sigmahar(1:2,1:2) = sigmahar(1:2,1:2) &
+               + real( CONJG(rg3) * dVg_deps(igz,:,:) )
+       end do ! igz
+    end do ! igp
+
+    !****For gp=0 case ********************
+    if( imill_2d(0,0) > 0 ) then
+       ! summations over gz
+       sum1c = (0.d0,0.d0)
+       sum2c = (0.d0,0.d0)
+       do igz=2, dfftp%nr3
+          if( igz<=dfftp%nr3/2 ) then
+             gz = dble(igz-1)*tpi/L
+          else
+             gz = dble(igz-1-dfftp%nr3)*tpi/L
+          end if
+
+          rg3 = rhog3(igz,imill_2d(0,0))
+          sum1c = sum1c + rg3*ci*cos(gz*z0)/gz
+          sum2c = sum2c + rg3*cos(gz*z0)/gz**2
+       end do ! igz
+
+       ! calculate V(z)
+       do iz=1, dfftp%nr3
+          if( iz-1 > dfftp%nr3/2 ) then
+             z = dble(iz-1-dfftp%nr3)/dble(dfftp%nr3)*L
+          else
+             z = dble(iz-1)/dble(dfftp%nr3)*L
+          end if
+
+          rg3 = rhog3(1,imill_2d(0,0))
+          Vr(iz) = &
+               - tpi*z**2*rg3 &
+               - tpi*z0**2*rg3 &
+               - fpi*z*sum1c &
+               - fpi*sum2c
+       end do ! iz
+
+       ! separation by polynomial
+       z_l=-z0
+       z_r=+z0
+       f1 = -tpi*z_r**2*rg3 &
+            -tpi*z0**2*rg3 &
+            -fpi*z_r*sum1c &
+            -fpi*sum2c
+       f2 = -tpi*z_l**2*rg3 &
+            -tpi*z0**2*rg3 &
+            -fpi*z_l*sum1c &
+            -fpi*sum2c
+       f3 = -fpi*z_r*rg3 &
+            -fpi*sum1c
+       f4 = -fpi*z_l*rg3 &
+            -fpi*sum1c
+       a0=(f1*z_l**2*(z_l-3.d0*z_r)+z_r*(f3*z_l**2*(-z_l+z_r) &
+            +z_r*(f2*(3.d0*z_l-z_r)+f4*z_l*(-z_l+z_r))))/(z_l-z_r)**3
+       a1=(f3*z_l**3+z_l*(6.d0*f1-6.d0*f2+(f3+2.d0*f4)*z_l)*z_r &
+            -(2*f3+f4)*z_l*z_r**2-f4*z_r**3)/(z_l-z_r)**3
+       a2=(-3*f1*(z_l+z_r)+3.d0*f2*(z_l+z_r)-(z_l-z_r)*(2*f3*z_l &
+            +f4*z_l+f3*z_r+2*f4*z_r))/(z_l-z_r)**3
+       a3=(2.d0*f1-2.d0*f2+(f3+f4)*(z_l-z_r))/(z_l-z_r)**3
+
+       ! remove polynomial from V(z)
+       do iz=1, dfftp%nr3
+          if( iz-1 .gt. dfftp%nr3/2 ) then
+             z = dble(iz-1-dfftp%nr3)/dble(dfftp%nr3)*L
+          else
+             z = dble(iz-1)/dble(dfftp%nr3)*L
+          end if
+          Vr(iz) = Vr(iz) - (a0+a1*z+a2*z**2+a3*z**3)
+       enddo
+
+       ! convert V(z) to V(gz) without polynomial
+       call cft_1z(Vr,1,dfftp%nr3,dfftp%nr3,-1,Vg)
+
+       ! add polynomial to V(gz)
+       do igz=2, dfftp%nr3
+          if( igz<=dfftp%nr3/2 )then
+             gz = dble(igz-1)*tpi/L
+          else
+             gz = dble(igz-1-dfftp%nr3)*tpi/L
+          end if
+
+          Vg(igz) = Vg(igz) &
+               + a1 * ci * cos(gz*z0)/gz &
+               + a2 * 2.0d0 * cos(gz*z0)/gz**2 &
+               + a3 * ci * z0**2 * cos(gz*z0)/gz &
+               - a3 * ci * 6.0d0 * cos(gz*z0)/gz**3
+       end do
+       Vg(1) = Vg(1) + a0*1.0d0 + a2*z0**2/3.0d0
+
+       ! add bare coulomn terms to V(gz)
+       do igz=2, dfftp%nr3
+          if( igz<=dfftp%nr3/2 ) then
+             gz = dble(igz-1)*tpi/L
+          else
+             gz = dble(igz-1-dfftp%nr3)*tpi/L
+          end if
+
+          rg3 = rhog3(igz,imill_2d(0,0))
+          Vg(igz) = Vg(igz) + fpi*rg3/gz**2
+       end do ! igz
+
+       ! calculate dV/deps(gz)
+       do igz=1, dfftp%nr3
+          dVg_deps(igz,:,:) = -delta(:,:) * Vg(igz)
+       end do ! igz
+
+       ! calculate stress tensor
+       do igz=1, dfftp%nr3
+          rg3 = rhog3(igz,imill_2d(0,0))
+          sigmahar(1:2,1:2) = sigmahar(1:2,1:2) &
+               + real( CONJG(rg3) * dVg_deps(igz,1:2,1:2) )
+       end do ! igz
+
+    end if ! imill_2d(0,0) > 0
+
+    ! half means removing duplications.
+    ! e2 means hartree -> Ry.
+    sigmahar(:,:) = sigmahar(:,:) * (-0.5d0*e2)
+
+    call mp_sum(  sigmahar, intra_bgrp_comm )
+
+    deallocate( rhog3 )
+    deallocate( dVr_deps )
+    deallocate( dVg_deps )
+    deallocate( Vr )
+    deallocate( Vg )
+
+    return
+  end subroutine esm_stres_har_bc1
+
+
+
+
+  subroutine esm_stres_har_bc2( sigmahar, rhog )
+    use kinds,         only : DP
+    use gvect,         only : ngm, mill
+    use lsda_mod,      only : nspin
+    use constants,     only : tpi, fpi, e2
+    use cell_base,     only : omega, alat, at, tpiba, bg
+    use control_flags, only : gamma_only
+    use fft_base,      only : dfftp
+    use fft_scalar,    only : cft_1z
+    use mp_global,     only : intra_bgrp_comm
+    use mp,            only : mp_sum
+    implicit none
+
+    real(DP), intent(out)   :: sigmahar(3,3)
+    complex(DP), intent(in) :: rhog(ngm,nspin)   !  n(G)
+
+    integer :: ig, iga, igb, igz, igp, la, mu, iz
+    real(DP) :: L, S, z0, z1, z
+    real(DP) :: g(2), gp, gz
+    complex(DP), parameter :: ci = dcmplx(0.0d0, 1.0d0)
+    complex(DP) :: rg3
+    complex(DP) :: sum1p, sum1m, sum1c, sum2c, sum2p, sum2m
+    complex(DP) :: sum1sp, sum1sm, sum1cp, sum1cm, sum2sp, sum2sm
+    real(DP)    :: z_l, z_r
+    complex(DP) :: f1, f2, f3, f4, a0, a1, a2, a3
+    real(DP), parameter :: delta(2,2) = reshape( (/ 1.0d0, 0.0d0, 0.0d0, 1.0d0 /), (/2,2/) )
+    real(DP) :: dgp_deps(2,2)  !! dgp/deps
+    real(DP) :: dgp2_deps(2,2)  !! dgp^2/deps
+    real(DP) :: dinvgp_deps(2,2)  !! dgp^-1/deps
+
+    complex(DP), allocatable :: rhog3(:,:)
+    complex(DP), allocatable :: dVr_deps(:,:,:)
+    complex(DP), allocatable :: dVg_deps(:,:,:)
+    complex(DP), allocatable :: Vr(:)
+    complex(DP), allocatable :: Vg(:)
+
+    ! cell settings
+    L  = at(3,3)*alat
+    S  = omega/L
+    z0 = L/2.d0
+    z1 = z0+esm_w
+
+    ! initialize
+    sigmahar(:,:) = 0.0d0
+
+    allocate( rhog3(dfftp%nr3,ngm_2d) )
+    allocate( dVr_deps(dfftp%nr3,2,2) )
+    allocate( dVg_deps(dfftp%nr3,2,2) )
+    allocate( Vr(dfftp%nr3) )
+    allocate( Vg(dfftp%nr3) )
+
+    ! reconstruct rho(gz,gp)
+    rhog3(:,:)=(0.d0,0.d0)
+
+    do ig=1, ngm
+       iga = mill(1,ig)
+       igb = mill(2,ig)
+       igz = mill(3,ig)+1
+       igp = imill_2d(iga,igb)
+       if( igz<1 ) then
+          igz = igz + dfftp%nr3
+       end if
+
+       if( nspin == 2 ) then
+          rg3 = rhog(ig,1) + rhog(ig,2)
+       else
+          rg3 = rhog(ig,1)
+       endif
+       rhog3(igz,igp) = rg3
+
+       ! expand function symmetrically to gz<0
+       if( gamma_only .and. iga==0 .and. igb==0 ) then
+          igz = 1-mill(3,ig)
+          if( igz<1 ) then
+             igz = igz + dfftp%nr3
+          end if
+          rhog3(igz,igp) = CONJG(rg3)
+       end if
+    end do ! ig
+
+    !****For gp!=0 case ********************
+    do igp=1, ngm_2d
+       iga = mill_2d(1,igp)
+       igb = mill_2d(2,igp)
+       g(1:2) = (iga*bg(1:2,1) + igb*bg(1:2,2))*tpiba
+       gp = sqrt(g(1)*g(1) + g(2)*g(2))
+
+       if( gp==0.0d0 ) cycle ! skip gp=0
+
+       ! derivatives by strain tensor
+       do la=1, 2
+          do mu=1, 2
+             dgp_deps(la,mu)    = -g(la)*g(mu)/gp
+             dgp2_deps(la,mu)   = -g(la)*g(mu)*2.0d0
+             dinvgp_deps(la,mu) = +g(la)*g(mu)/gp**3
+          end do
+       end do
+
+       ! summations over gz
+       sum1p=(0.d0,0.d0)
+       sum1m=(0.d0,0.d0)
+       sum2p=(0.d0,0.d0)
+       sum2m=(0.d0,0.d0)
+       sum1sp=(0.d0,0.d0)
+       sum1sm=(0.d0,0.d0)
+       sum1cp=(0.d0,0.d0)
+       sum1cm=(0.d0,0.d0)
+       sum2sp=(0.d0,0.d0)
+       sum2sm=(0.d0,0.d0)
+       do igz=1, dfftp%nr3
+          if( igz<=dfftp%nr3/2 )then
+             gz = dble(igz-1)*tpi/L
+          else
+             gz = dble(igz-1-dfftp%nr3)*tpi/L
+          end if
+
+          rg3 = rhog3(igz,igp)
+
+          sum1p = sum1p + rg3*qe_exp(+ci*gz*z0)/(gp-ci*gz)
+          sum1m = sum1m + rg3*qe_exp(-ci*gz*z0)/(gp+ci*gz)
+          sum2p = sum2p + rg3*qe_exp(+ci*gz*z0)/(gp-ci*gz)**2
+          sum2m = sum2m + rg3*qe_exp(-ci*gz*z0)/(gp+ci*gz)**2
+
+          sum1sp = sum1sp + rg3*qe_sinh(gp*z0+ci*gz*z0)/(gp+ci*gz)
+          sum1sm = sum1sm + rg3*qe_sinh(gp*z0-ci*gz*z0)/(gp-ci*gz)
+
+          sum1cp = sum1cp + rg3*qe_cosh(gp*z0+ci*gz*z0)/(gp+ci*gz)*z0
+          sum1cm = sum1cm + rg3*qe_cosh(gp*z0-ci*gz*z0)/(gp-ci*gz)*z0
+
+          sum2sp = sum2sp + rg3*qe_sinh(gp*z0+ci*gz*z0)/(gp+ci*gz)**2
+          sum2sm = sum2sm + rg3*qe_sinh(gp*z0-ci*gz*z0)/(gp-ci*gz)**2
+       end do ! igz
+
+       ! calculate dV(z)/deps
+       do iz=1, dfftp%nr3
+          if( iz-1 .gt. dfftp%nr3/2 ) then
+             z = dble(iz-1-dfftp%nr3)/dble(dfftp%nr3)*L
+          else
+             z = dble(iz-1)/dble(dfftp%nr3)*L
+          end if
+
+          !! BC1 terms
+          dVr_deps(iz,:,:) = &
+               -( dgp_deps(:,:)*tpi/gp**2*(gp*(z-z0)-1.0d0) &
+               -  delta(:,:)*tpi/gp ) &
+               * exp(+gp*(z-z0)) * sum1p &
+               + dgp_deps(:,:)*tpi/gp * exp(+gp*(z-z0)) * sum2p &
+               +( dgp_deps(:,:)*tpi/gp**2*(gp*(z+z0)+1.0d0) &
+               +  delta(:,:)*tpi/gp ) &
+               * exp(-gp*(z+z0)) * sum1m &
+               + dgp_deps(:,:)*tpi/gp * exp(-gp*(z+z0)) * sum2m
+
+          !! BC2 terms
+          dVr_deps(iz,:,:) = dVr_deps(iz,:,:) &
+               + dgp_deps(:,:) * ( &
+               -   tpi/gp**2 * ( exp(-gp*(z+2*z1))-exp(+gp*z) )/sinh(2*gp*z1) &
+               +   tpi/gp * ( (-z-2*z1)*exp(-gp*(z+2*z1)) - z*exp(+gp*z) )/sinh(2*gp*z1) &
+               -   tpi/gp * ( exp(-gp*(z+2*z1))-exp(+gp*z) )/sinh(2*gp*z1)**2 * 2*z1 * cosh(2*gp*z1) ) &
+               * sum1sp &
+               + tpi/gp * ( exp(-gp*(z+2*z1))-exp(+gp*z) )/sinh(2*gp*z1) &
+               * ( -delta(:,:)*sum1sp + dgp_deps(:,:)*( sum1cp - sum2sp ) ) &
+               + dgp_deps(:,:) * ( &
+               -   tpi/gp**2 * (exp(+gp*(z-2*z1))-exp(-gp*z) )/sinh(2*gp*z1) &
+               +   tpi/gp * ( (+z-2*z1)*exp(+gp*(z-2*z1)) + z*exp(-gp*z) )/sinh(2*gp*z1) &
+               -   tpi/gp * ( exp(+gp*(z-2*z1))-exp(-gp*z) )/sinh(2*gp*z1)**2 * 2*z1 * cosh(2*gp*z1) ) &
+               * sum1sm &
+               + tpi/gp * ( exp(+gp*(z-2*z1))-exp(-gp*z) )/sinh(2*gp*z1) &
+               * ( -delta(:,:)*sum1sm + dgp_deps(:,:)*( sum1cm - sum2sm ) )
+
+       end do ! iz
+
+       ! convert dV(z)/deps to dV(gz)/deps
+       do la=1, 2
+          do mu=1, 2
+             call cft_1z( dVr_deps(:,la,mu), 1, dfftp%nr3, dfftp%nr3, -1, dVg_deps(:,la,mu) )
+          end do
+       end do
+
+       ! add bare couloum terms to dV(gz)/deps
+       do igz=1, dfftp%nr3
+          if( igz<=dfftp%nr3/2 )then
+             gz = dble(igz-1)*tpi/L
+          else
+             gz = dble(igz-1-dfftp%nr3)*tpi/L
+          end if
+          rg3 = rhog3(igz,igp)
+
+          dVg_deps(igz,:,:) = dVg_deps(igz,:,:) &
+               - delta(:,:)* fpi*rg3/(gp**2+gz**2) &
+               - dgp2_deps(:,:)* fpi*rg3/(gp**2+gz**2)**2
+       end do ! igz
+
+       ! modifications
+       if( gamma_only ) then
+          dVg_deps(:,:,:) = dVg_deps(:,:,:)*2.0d0
+       end if
+
+       ! calculate stress tensor
+       do igz=1, dfftp%nr3
+          rg3 = rhog3(igz,igp)
+          sigmahar(1:2,1:2) = sigmahar(1:2,1:2) &
+               + real( CONJG(rg3) * dVg_deps(igz,:,:) )
+       end do ! igz
+    end do ! igp
+
+    !****For gp=0 case ********************
+    if( imill_2d(0,0) > 0 ) then
+       ! summations over gz
+       sum1c = (0.d0,0.d0)
+       sum2c = (0.d0,0.d0)
+       do igz=2, dfftp%nr3
+          if( igz<=dfftp%nr3/2 ) then
+             gz = dble(igz-1)*tpi/L
+          else
+             gz = dble(igz-1-dfftp%nr3)*tpi/L
+          end if
+
+          rg3 = rhog3(igz,imill_2d(0,0))
+          sum1c = sum1c + rg3*ci*cos(gz*z0)/gz
+          sum2c = sum2c + rg3*cos(gz*z0)/gz**2
+       end do ! igz
+
+       ! calculate V(z)
+       do iz=1, dfftp%nr3
+          if( iz-1 > dfftp%nr3/2 ) then
+             z = dble(iz-1-dfftp%nr3)/dble(dfftp%nr3)*L
+          else
+             z = dble(iz-1)/dble(dfftp%nr3)*L
+          end if
+
+          rg3 = rhog3(1,imill_2d(0,0))
+
+          !! BC1 terms
+          Vr(iz) = &
+               - tpi*z**2*rg3 &
+               - tpi*z0**2*rg3 &
+               - fpi*z*sum1c &
+               - fpi*sum2c
+
+          !! BC2 terms
+          Vr(iz) = Vr(iz) &
+               + tpi*z1*2*z0 * rg3 - tpi*(-z/z1)*2*z0*sum1c
+       end do ! iz
+
+       ! separation by polynomial
+       z_l=-z0
+       z_r=+z0
+       f1 = -tpi*z_r**2*rg3 &
+            -tpi*z0**2*rg3 &
+            -fpi*z_r*sum1c &
+            -fpi*sum2c
+       f1 = f1 &
+            + tpi*z1*2*z0 * rg3 - tpi*(-z_r/z1)*2*z0*sum1c
+
+       f2 = -tpi*z_l**2*rg3 &
+            -tpi*z0**2*rg3 &
+            -fpi*z_l*sum1c &
+            -fpi*sum2c
+       f2 = f2 &
+            + tpi*z1*2*z0 * rg3 - tpi*(-z_l/z1)*2*z0*sum1c
+
+       f3 = -fpi*z_r*rg3 &
+            -fpi*sum1c
+       f3 = f3 &
+            - tpi*(-1.0d0/z1)*2*z0*sum1c
+
+       f4 = -fpi*z_l*rg3 &
+            -fpi*sum1c
+       f4 = f4 &
+            - tpi*(-1.0d0/z1)*2*z0*sum1c
+
+       a0=(f1*z_l**2*(z_l-3.d0*z_r)+z_r*(f3*z_l**2*(-z_l+z_r) &
+            +z_r*(f2*(3.d0*z_l-z_r)+f4*z_l*(-z_l+z_r))))/(z_l-z_r)**3
+       a1=(f3*z_l**3+z_l*(6.d0*f1-6.d0*f2+(f3+2.d0*f4)*z_l)*z_r &
+            -(2*f3+f4)*z_l*z_r**2-f4*z_r**3)/(z_l-z_r)**3
+       a2=(-3*f1*(z_l+z_r)+3.d0*f2*(z_l+z_r)-(z_l-z_r)*(2*f3*z_l &
+            +f4*z_l+f3*z_r+2*f4*z_r))/(z_l-z_r)**3
+       a3=(2.d0*f1-2.d0*f2+(f3+f4)*(z_l-z_r))/(z_l-z_r)**3
+
+       ! remove polynomial from V(z)
+       do iz=1, dfftp%nr3
+          if( iz-1 .gt. dfftp%nr3/2 ) then
+             z = dble(iz-1-dfftp%nr3)/dble(dfftp%nr3)*L
+          else
+             z = dble(iz-1)/dble(dfftp%nr3)*L
+          end if
+          Vr(iz) = Vr(iz) - (a0+a1*z+a2*z**2+a3*z**3)
+       enddo
+
+       ! convert V(z) to V(gz) without polynomial
+       call cft_1z(Vr,1,dfftp%nr3,dfftp%nr3,-1,Vg)
+
+       ! add polynomial to V(gz)
+       do igz=2, dfftp%nr3
+          if( igz<=dfftp%nr3/2 )then
+             gz = dble(igz-1)*tpi/L
+          else
+             gz = dble(igz-1-dfftp%nr3)*tpi/L
+          end if
+
+          Vg(igz) = Vg(igz) &
+               + a1 * ci * cos(gz*z0)/gz &
+               + a2 * 2.0d0 * cos(gz*z0)/gz**2 &
+               + a3 * ci * z0**2 * cos(gz*z0)/gz &
+               - a3 * ci * 6.0d0 * cos(gz*z0)/gz**3
+       end do
+       Vg(1) = Vg(1) + a0*1.0d0 + a2*z0**2/3.0d0
+
+       ! add bare coulomn terms to V(gz)
+       do igz=2, dfftp%nr3
+          if( igz<=dfftp%nr3/2 ) then
+             gz = dble(igz-1)*tpi/L
+          else
+             gz = dble(igz-1-dfftp%nr3)*tpi/L
+          end if
+
+          rg3 = rhog3(igz,imill_2d(0,0))
+          Vg(igz) = Vg(igz) + fpi*rg3/gz**2
+       end do ! igz
+
+       ! calculate dV/deps(gz)
+       do igz=1, dfftp%nr3
+          dVg_deps(igz,:,:) = -delta(:,:) * Vg(igz)
+       end do ! igz
+
+       ! calculate stress tensor
+       do igz=1, dfftp%nr3
+          rg3 = rhog3(igz,imill_2d(0,0))
+          sigmahar(1:2,1:2) = sigmahar(1:2,1:2) &
+               + real( CONJG(rg3) * dVg_deps(igz,1:2,1:2) )
+       end do ! igz
+    end if ! imill_2d(0,0) > 0
+
+    ! half means removing duplications.
+    ! e2 means hartree -> Ry.
+    sigmahar(:,:) = sigmahar(:,:) * (-0.5d0*e2)
+
+    call mp_sum(  sigmahar, intra_bgrp_comm )
+
+    deallocate( rhog3 )
+    deallocate( dVr_deps )
+    deallocate( dVg_deps )
+    deallocate( Vr )
+    deallocate( Vg )
+
+    return
+  end subroutine esm_stres_har_bc2
+
+
+  subroutine esm_stres_har_bc3( sigmahar, rhog )
+    use kinds,         only : DP
+    use gvect,         only : ngm, mill
+    use lsda_mod,      only : nspin
+    use constants,     only : tpi, fpi, e2
+    use cell_base,     only : omega, alat, at, tpiba, bg
+    use control_flags, only : gamma_only
+    use fft_base,      only : dfftp
+    use fft_scalar,    only : cft_1z
+    use mp_global,     only : intra_bgrp_comm
+    use mp,            only : mp_sum
+    implicit none
+
+    real(DP), intent(out)   :: sigmahar(3,3)
+    complex(DP), intent(in) :: rhog(ngm,nspin)   !  n(G)
+
+    integer :: ig, iga, igb, igz, igp, la, mu, iz
+    real(DP) :: L, S, z0, z1, z
+    real(DP) :: g(2), gp, gz
+    complex(DP), parameter :: ci = dcmplx(0.0d0, 1.0d0)
+    complex(DP) :: rg3
+    complex(DP) :: sum1p, sum1m, sum2p, sum2m, sum1c, sum2c
+    complex(DP) :: sum1sh, sum1ch, sum2sh
+    real(DP)    :: z_l, z_r
+    complex(DP) :: f1, f2, f3, f4, a0, a1, a2, a3
+    complex(DP) :: poly_fr, poly_fl, poly_dfr, poly_dfl
+    complex(DP) :: poly_a, poly_b, poly_c, poly_d
+    real(DP), parameter :: delta(2,2) = reshape( (/ 1.0d0, 0.0d0, 0.0d0, 1.0d0 /), (/2,2/) )
+    real(DP) :: dgp_deps(2,2)  !! dgp/deps
+    real(DP) :: dgp2_deps(2,2)  !! dgp^2/deps
+    real(DP) :: dinvgp_deps(2,2)  !! dgp^-1/deps
+
+    complex(DP), allocatable :: rhog3(:,:)
+    complex(DP), allocatable :: dVr_deps(:,:,:)
+    complex(DP), allocatable :: dVg_deps(:,:,:)
+    complex(DP), allocatable :: Vr(:)
+    complex(DP), allocatable :: Vg(:)
+
+    real(DP) :: sigmahar_bc1(3,3)
+
+    ! cell settings
+    L  = at(3,3)*alat
+    S  = omega/L
+    z0 = L/2.d0
+    z1 = z0+esm_w
+
+    ! initialize
+    sigmahar(:,:) = 0.0d0
+
+    allocate( rhog3(dfftp%nr3,ngm_2d) )
+    allocate( dVr_deps(dfftp%nr3,2,2) )
+    allocate( dVg_deps(dfftp%nr3,2,2) )
+    allocate( Vr(dfftp%nr3) )
+    allocate( Vg(dfftp%nr3) )
+
+    ! reconstruct rho(gz,gp)
+    rhog3(:,:)=(0.d0,0.d0)
+
+    do ig=1, ngm
+       iga = mill(1,ig)
+       igb = mill(2,ig)
+       igz = mill(3,ig)+1
+       igp = imill_2d(iga,igb)
+       if( igz<1 ) then
+          igz = igz + dfftp%nr3
+       end if
+
+       if( nspin == 2 ) then
+          rg3 = rhog(ig,1) + rhog(ig,2)
+       else
+          rg3 = rhog(ig,1)
+       endif
+       rhog3(igz,igp) = rg3
+
+       ! expand function symmetrically to gz<0
+       if( gamma_only .and. iga==0 .and. igb==0 ) then
+          igz = 1-mill(3,ig)
+          if( igz<1 ) then
+             igz = igz + dfftp%nr3
+          end if
+          rhog3(igz,igp) = CONJG(rg3)
+       end if
+    end do ! ig
+
+    !****For gp!=0 case ********************
+    do igp=1, ngm_2d
+       iga = mill_2d(1,igp)
+       igb = mill_2d(2,igp)
+       g(1:2) = (iga*bg(1:2,1) + igb*bg(1:2,2))*tpiba
+       gp = sqrt(g(1)*g(1) + g(2)*g(2))
+
+       if( gp==0.0d0 ) cycle ! skip gp=0
+
+       ! derivatives by strain tensor
+       do la=1, 2
+          do mu=1, 2
+             dgp_deps(la,mu)    = -g(la)*g(mu)/gp
+             dgp2_deps(la,mu)   = -g(la)*g(mu)*2.0d0
+             dinvgp_deps(la,mu) = +g(la)*g(mu)/gp**3
+          end do
+       end do
+
+       ! summations over gz
+       sum1p=(0.d0,0.d0)
+       sum1m=(0.d0,0.d0)
+       sum2p=(0.d0,0.d0)
+       sum2m=(0.d0,0.d0)
+       sum1sh=(0.d0,0.d0)
+       sum1ch=(0.d0,0.d0)
+       sum2sh=(0.d0,0.d0)
+       do igz=1, dfftp%nr3
+          if( igz<=dfftp%nr3/2 )then
+             gz = dble(igz-1)*tpi/L
+          else
+             gz = dble(igz-1-dfftp%nr3)*tpi/L
+          end if
+
+          rg3 = rhog3(igz,igp)
+          sum1p = sum1p + rg3*qe_exp(+ci*gz*z0)/(gp-ci*gz)
+          sum1m = sum1m + rg3*qe_exp(-ci*gz*z0)/(gp+ci*gz)
+          sum2p = sum2p + rg3*qe_exp(+ci*gz*z0)/(gp-ci*gz)**2
+          sum2m = sum2m + rg3*qe_exp(-ci*gz*z0)/(gp+ci*gz)**2
+          sum1sh = sum1sh + rg3*qe_sinh(gp*z0+ci*gz*z0)/(gp+ci*gz)
+          sum1ch = sum1ch + rg3*qe_cosh(gp*z0+ci*gz*z0)/(gp+ci*gz)*z0
+          sum2sh = sum2sh + rg3*qe_sinh(gp*z0+ci*gz*z0)/(gp+ci*gz)**2
+       end do ! igz
+
+       ! calculate dV(z)/deps
+       do iz=1, dfftp%nr3
+          if( iz-1 .gt. dfftp%nr3/2 ) then
+             z = dble(iz-1-dfftp%nr3)/dble(dfftp%nr3)*L
+          else
+             z = dble(iz-1)/dble(dfftp%nr3)*L
+          end if
+
+          !! BC1 terms
+          dVr_deps(iz,:,:) = &
+               -( dgp_deps(:,:)*tpi/gp**2*(gp*(z-z0)-1.0d0) &
+               -  delta(:,:)*tpi/gp ) &
+               * exp(+gp*(z-z0)) * sum1p &
+               + dgp_deps(:,:)*tpi/gp * exp(+gp*(z-z0)) * sum2p &
+               +( dgp_deps(:,:)*tpi/gp**2*(gp*(z+z0)+1.0d0) &
+               +  delta(:,:)*tpi/gp ) &
+               * exp(-gp*(z+z0)) * sum1m &
+               + dgp_deps(:,:)*tpi/gp * exp(-gp*(z+z0)) * sum2m
+
+          !! BC3 termn
+          dVr_deps(iz,:,:) = dVr_deps(iz,:,:) &
+               - dgp_deps(:,:) * ( &
+               -   fpi/gp**2 *exp(-gp*(-z+2*z1)) &
+               -   fpi/gp*(-z+2*z1)*exp(-gp*(-z+2*z1)) &
+               ) * sum1sh &
+               - fpi/gp*exp(-gp*(-z+2*z1))* ( &
+               -   delta(:,:)* sum1sh &
+               +   dgp_deps(:,:) * (sum1ch - sum2sh) )
+       end do ! iz
+
+       ! convert dV(z)/deps to dV(gz)/deps
+       do la=1, 2
+          do mu=1, 2
+             call cft_1z( dVr_deps(:,la,mu), 1, dfftp%nr3, dfftp%nr3, -1, dVg_deps(:,la,mu) )
+          end do
+       end do
+
+       ! add bare coulomn terms to dV(gz)/deps
+       do igz=1, dfftp%nr3
+          if( igz<=dfftp%nr3/2 )then
+             gz = dble(igz-1)*tpi/L
+          else
+             gz = dble(igz-1-dfftp%nr3)*tpi/L
+          end if
+          rg3 = rhog3(igz,igp)
+
+          dVg_deps(igz,:,:) = dVg_deps(igz,:,:) &
+               - delta(:,:)* fpi*rg3/(gp**2+gz**2) &
+               - dgp2_deps(:,:)* fpi*rg3/(gp**2+gz**2)**2
+       end do ! igz
+
+       ! modifications
+       if( gamma_only ) then
+          dVg_deps(:,:,:) = dVg_deps(:,:,:)*2.0d0
+       end if
+
+       ! calculate stress tensor
+       do igz=1, dfftp%nr3
+          rg3 = rhog3(igz,igp)
+          sigmahar(1:2,1:2) = sigmahar(1:2,1:2) &
+               + real( CONJG(rg3) * dVg_deps(igz,:,:) )
+       end do ! igz
+    end do ! igp
+
+    !****For gp=0 case ********************
+    if( imill_2d(0,0) > 0 ) then
+       ! summations over gz
+       sum1c = (0.d0,0.d0)
+       sum2c = (0.d0,0.d0)
+       do igz=2, dfftp%nr3
+          if( igz<=dfftp%nr3/2 ) then
+             gz = dble(igz-1)*tpi/L
+          else
+             gz = dble(igz-1-dfftp%nr3)*tpi/L
+          end if
+
+          rg3 = rhog3(igz,imill_2d(0,0))
+          sum1c = sum1c + rg3*ci*cos(gz*z0)/gz
+          sum2c = sum2c + rg3*cos(gz*z0)/gz**2
+       end do ! igz
+
+       ! calculate V(z)
+       do iz=1, dfftp%nr3
+          if( iz-1 > dfftp%nr3/2 ) then
+             z = dble(iz-1-dfftp%nr3)/dble(dfftp%nr3)*L
+          else
+             z = dble(iz-1)/dble(dfftp%nr3)*L
+          end if
+
+          rg3 = rhog3(1,imill_2d(0,0))
+          !! BC1 terms
+          Vr(iz) = &
+               - tpi*z**2*rg3 &
+               - tpi*z0**2*rg3 &
+               - fpi*z*sum1c &
+               - fpi*sum2c
+
+          !! BC3 terms
+          Vr(iz) = Vr(iz) - tpi*(z-2*z1)*2*z0 * rg3 + fpi*z0*sum1c
+       end do ! iz
+
+       ! separation by polynomial
+       z_l=-z0
+       z_r=+z0
+       f1 = -tpi*z_r**2*rg3 &
+            -tpi*z0**2*rg3 &
+            -fpi*z_r*sum1c &
+            -fpi*sum2c
+       f1 = f1 &
+            - tpi*(z_r-2*z1)*2*z0 * rg3 + fpi*z0*sum1c
+
+       f2 = -tpi*z_l**2*rg3 &
+            -tpi*z0**2*rg3 &
+            -fpi*z_l*sum1c &
+            -fpi*sum2c
+       f2 = f2 &
+            - tpi*(z_l-2*z1)*2*z0 * rg3 + fpi*z0*sum1c
+
+       f3 = -fpi*z_r*rg3 &
+            -fpi*sum1c
+       f3 = f3 &
+            - tpi*(1.0d0)*2*z0 * rg3
+
+       f4 = -fpi*z_l*rg3 &
+            -fpi*sum1c
+       f4 = f4 &
+            - tpi*(1.0d0)*2*z0 * rg3
+
+       a0=(f1*z_l**2*(z_l-3.d0*z_r)+z_r*(f3*z_l**2*(-z_l+z_r) &
+            +z_r*(f2*(3.d0*z_l-z_r)+f4*z_l*(-z_l+z_r))))/(z_l-z_r)**3
+       a1=(f3*z_l**3+z_l*(6.d0*f1-6.d0*f2+(f3+2.d0*f4)*z_l)*z_r &
+            -(2*f3+f4)*z_l*z_r**2-f4*z_r**3)/(z_l-z_r)**3
+       a2=(-3*f1*(z_l+z_r)+3.d0*f2*(z_l+z_r)-(z_l-z_r)*(2*f3*z_l &
+            +f4*z_l+f3*z_r+2*f4*z_r))/(z_l-z_r)**3
+       a3=(2.d0*f1-2.d0*f2+(f3+f4)*(z_l-z_r))/(z_l-z_r)**3
+
+       ! remove polynomial from V(z)
+       do iz=1, dfftp%nr3
+          if( iz-1 .gt. dfftp%nr3/2 ) then
+             z = dble(iz-1-dfftp%nr3)/dble(dfftp%nr3)*L
+          else
+             z = dble(iz-1)/dble(dfftp%nr3)*L
+          end if
+          Vr(iz) = Vr(iz) - (a0+a1*z+a2*z**2+a3*z**3)
+       enddo
+
+       ! convert V(z) to V(gz) without polynomial
+       call cft_1z(Vr,1,dfftp%nr3,dfftp%nr3,-1,Vg)
+
+       ! add polynomial to V(gz)
+       do igz=2, dfftp%nr3
+          if( igz<=dfftp%nr3/2 )then
+             gz = dble(igz-1)*tpi/L
+          else
+             gz = dble(igz-1-dfftp%nr3)*tpi/L
+          end if
+
+          Vg(igz) = Vg(igz) &
+               + a1 * ci * cos(gz*z0)/gz &
+               + a2 * 2.0d0 * cos(gz*z0)/gz**2 &
+               + a3 * ci * z0**2 * cos(gz*z0)/gz &
+               - a3 * ci * 6.0d0 * cos(gz*z0)/gz**3
+       end do
+       Vg(1) = Vg(1) + a0*1.0d0 + a2*z0**2/3.0d0
+
+       ! add bare coulomn terms to V(gz)
+       do igz=2, dfftp%nr3
+          if( igz<=dfftp%nr3/2 ) then
+             gz = dble(igz-1)*tpi/L
+          else
+             gz = dble(igz-1-dfftp%nr3)*tpi/L
+          end if
+
+          rg3 = rhog3(igz,imill_2d(0,0))
+          Vg(igz) = Vg(igz) + fpi*rg3/gz**2
+       end do ! igz
+
+       ! calculate dV/deps(gz)
+       do igz=1, dfftp%nr3
+          dVg_deps(igz,:,:) = -delta(:,:) * Vg(igz)
+       end do ! igz
+
+       ! calculate stress tensor
+       do igz=1, dfftp%nr3
+          rg3 = rhog3(igz,imill_2d(0,0))
+
+          sigmahar(1:2,1:2) = sigmahar(1:2,1:2) &
+               + real( CONJG(rg3) * dVg_deps(igz,1:2,1:2) )
+       end do ! igz
+    end if ! imill_2d(0,0) > 0
+
+    ! half means removing duplications.
+    ! e2 means hartree -> Ry.
+    sigmahar(:,:) = sigmahar(:,:) * (-0.5d0*e2)
+
+    call mp_sum(  sigmahar, intra_bgrp_comm )
+
+    deallocate( rhog3 )
+    deallocate( dVr_deps )
+    deallocate( dVg_deps )
+    deallocate( Vr )
+    deallocate( Vg )
+
+    return
+  end subroutine esm_stres_har_bc3
 
 FUNCTION esm_ewald()
   !-----------------------------------------------------------------------
@@ -1464,7 +2543,7 @@ SUBROUTINE esm_ewaldr_pbc ( alpha_g, ewr )
   !
   !    here the local variables
   !
-  integer            :: na, nb, nr, nrm, np, ip, ith
+  integer            :: na, nb, nr, nrm, np, ip
   ! counter on atoms
   ! counter on atoms
   ! counter over direct vectors
@@ -1482,10 +2561,6 @@ SUBROUTINE esm_ewaldr_pbc ( alpha_g, ewr )
   !
   real(DP)            :: tmp, fac, ss, ew, rmax0, rr
   !
-#if defined __OPENMP
-  integer, external   :: OMP_GET_THREAD_NUM
-#endif
-  !
   ewr = 0.d0
 
   tmp=sqrt(alpha_g)
@@ -1494,16 +2569,8 @@ SUBROUTINE esm_ewaldr_pbc ( alpha_g, ewr )
   ip = mp_rank( intra_bgrp_comm )
   np = mp_size( intra_bgrp_comm )
 
-!$omp parallel private( na, nb, dtau, fac, r, r2, nrm, nr, &
-!$omp                   ss, ew, ith )
-  ith = 0
-#if defined __OPENMP
-  ith = OMP_GET_THREAD_NUM()
-#endif
-
   ew = 0.d0
   do na = ip+1, nat, np
-!$omp do
      do nb = 1, nat
         dtau(:)=tau(:,na)-tau(:,nb)
         fac=zv(ityp(nb))*zv(ityp(na))
@@ -1519,14 +2586,10 @@ SUBROUTINE esm_ewaldr_pbc ( alpha_g, ewr )
            ew=ew+fac*qe_erfc(tmp*rr)/rr
         enddo
      enddo
-!$omp end do
-     if( ith /= 0 ) cycle
      ! Here add the other constant term
      ew=ew-zv(ityp(na))**2*tmp/sqrt(pi)*2.d0 ! 2.d0: fit to original code
   enddo
-!$omp atomic
   ewr = ewr + ew
-!$omp end parallel
 
 END SUBROUTINE esm_ewaldr_pbc
 
@@ -1547,7 +2610,7 @@ SUBROUTINE esm_ewaldr_bc4 ( alpha_g, ewr )
   !
   !    here the local variables
   !
-  integer            :: na, nb, nr, nrm, np, ip, ith
+  integer            :: na, nb, nr, nrm, np, ip
   ! counter on atoms
   ! counter on atoms
   ! counter over direct vectors
@@ -1570,10 +2633,6 @@ SUBROUTINE esm_ewaldr_bc4 ( alpha_g, ewr )
   ! zbuff: smearing width to avoid the singularity of the Force
   ! znrm: threashold value for normal RSUM and Smooth-ESM's RSUM
   real(DP), parameter :: eps=1.d-11, epsneib=1.d-6
-  !
-#if defined __OPENMP
-  integer, external   :: OMP_GET_THREAD_NUM
-#endif
   !
   ewr = 0.d0
   L=at(3,3)*alat
@@ -1628,19 +2687,11 @@ SUBROUTINE esm_ewaldr_bc4 ( alpha_g, ewr )
   ip = mp_rank( intra_bgrp_comm )
   np = mp_size( intra_bgrp_comm )
 
-!$omp parallel private( na, z, nb, zp, dtau, fac, r, r2, nrm, nr, rxy, &
-!$omp                   rxyz, ss, ew, ith )
-  ith = 0
-#if defined __OPENMP
-  ith = OMP_GET_THREAD_NUM()
-#endif
-
   ew = 0.d0
   do na = ip+1, nat, np
      z=tau(3,na)
      if (z.gt.at(3,3)*0.5) z=z-at(3,3)
      z=z*alat
-!$omp do
      do nb = 1, nat
         zp=tau(3,nb)
         if (zp.gt.at(3,3)*0.5) zp=zp-at(3,3)
@@ -1712,8 +2763,6 @@ SUBROUTINE esm_ewaldr_bc4 ( alpha_g, ewr )
            endif
         endif ! if for z
      enddo
-!$omp end do
-     if( ith /= 0 ) cycle
      if (z < znrm ) then
         ss=-tmp/sqrt(pi)
      elseif (z < z1) then
@@ -1723,11 +2772,98 @@ SUBROUTINE esm_ewaldr_bc4 ( alpha_g, ewr )
      endif
      ew=ew+zv(ityp(na))**2*ss*2.d0 ! 2.0: fit to original code
   enddo
-!$omp atomic
   ewr = ewr + ew
-!$omp end parallel
 
 END SUBROUTINE esm_ewaldr_bc4
+
+  subroutine esm_stres_ewr( alpha, sigmaewa )
+    use kinds,     only : DP
+    implicit none
+
+    real(DP), intent(in)  :: alpha
+    real(DP), intent(out) :: sigmaewa(3,3)
+
+    select case( esm_bc )
+    case( 'pbc')
+       stop 'esm_stres_ewa must not be called for esm_bc = pbc'
+    case( 'bc1' )
+       call esm_stres_ewr_pbc( alpha, sigmaewa )
+    case( 'bc2' )
+       call esm_stres_ewr_pbc( alpha, sigmaewa )
+    case( 'bc3' )
+       call esm_stres_ewr_pbc( alpha, sigmaewa )
+    case( 'bc4' )
+       stop 'esm_stres_ewa has not yet implemented for esm_bc = bc4'
+    end select
+
+    return
+  end subroutine esm_stres_ewr
+
+  subroutine esm_stres_ewr_pbc( alpha, sigmaewa )
+    use kinds,     only : DP
+    use constants, only : pi, sqrtpm1, tpi, fpi, e2
+    use cell_base, only : omega, alat, at, tpiba, bg
+    use ions_base, only : zv, nat, tau, ityp
+    use gvect,     only : gstart
+    USE mp_bands,  ONLY : intra_bgrp_comm
+    USE mp,        ONLY : mp_sum
+    implicit none
+
+    real(DP), intent(in)  :: alpha
+    real(DP), intent(out) :: sigmaewa(3,3)
+
+    integer, parameter :: mxr = 50
+    ! the maximum number of R vectors included in r sum
+    integer  :: ia, ib, nr, nrm, la, mu
+    real(DP) :: Qa, Qb, dtau(3), rmax
+    real(DP) :: salp, r(3,mxr), r2(mxr), rr, fac
+
+    salp = sqrt(alpha)
+
+    ! initialize
+    sigmaewa(:,:) = 0.d0
+
+    !
+    ! R-space sum here (only for the processor that contains G=0)
+    !
+    if( gstart == 2 ) then
+       rmax = 4.0d0/salp/alat
+       !
+       ! with this choice terms up to ZiZj*erfc(5) are counted (erfc(5)=2x10^-1
+       !
+       do ib=1, nat
+          Qb = (-1.0d0)*zv(ityp(ib))
+          do ia=1, nat
+             Qa = (-1.0d0)*zv(ityp(ia))
+             !
+             !     generates nearest-neighbors shells r(i)=R(i)-dtau(i)
+             !
+             dtau(:) = tau(:,ib) - tau(:,ia)
+             call rgen(dtau, rmax, mxr, at, bg, r, r2, nrm)
+
+             do nr = 1, nrm
+                rr = sqrt(r2(nr))*alat
+                r(:,nr) = r(:,nr)*alat
+
+                fac = Qb*Qa/rr**3 &
+                     * ( qe_erfc(salp*rr) &
+                     + rr*2.0d0*salp*sqrtpm1 * exp(-alpha*rr**2) )
+                do la=1, 3
+                   do mu=1, 3
+                      sigmaewa(la,mu) = sigmaewa(la,mu) + fac*r(la,nr)*r(mu,nr)
+                   end do ! mu
+                end do ! la
+             end do ! nr
+          end do ! ia
+       end do ! ib
+    end if
+
+    sigmaewa(:,:) = sigmaewa(:,:)*(e2/2.0d0/omega)
+
+    call mp_sum( sigmaewa, intra_bgrp_comm )
+
+    return
+  end subroutine esm_stres_ewr_pbc
 
 !-----------------------------------------------------------------------
 !--------------ESM EWALD GSUM SUBROUTINE--------------------------------
@@ -1796,12 +2932,7 @@ SUBROUTINE esm_ewaldg_bc1 ( alpha_g, ewg )
   z0=L/2.d0
   tmp=sqrt(alpha_g)
   sa=omega/L
-!$omp parallel private( ew, it1, it2, z, zp, tt, arg001, arg002, &
-!$omp                   arg101, arg102, &
-!$omp                   kk1, kk2, t1, t2, cc1, cc2, ng_2d, &
-!$omp                   k1, k2, t, gp2, gp, ff )
   ew=0d0
-!$omp do
   do it1=1,nat
   do it2=1,nat
      z=tau(3,it1)
@@ -1847,17 +2978,14 @@ SUBROUTINE esm_ewaldg_bc1 ( alpha_g, ewg )
      if(gstart==2) ew=ew+tt*(kk1+kk2)
   enddo
   enddo
-!$omp end do
-!$omp atomic
   ewg=ewg+ew
-!$omp end parallel
 
   return
 END SUBROUTINE esm_ewaldg_bc1
 
 SUBROUTINE esm_ewaldg_bc2 ( alpha_g, ewg )
 
-  USE constants,        ONLY : pi, tpi, fpi
+  USE constants,        ONLY : pi, tpi, fpi, e2
   USE gvect,            ONLY : gstart
   USE cell_base,        ONLY : omega, alat, tpiba2, at, bg
   USE ions_base,        ONLY : zv, nat, nsp, ityp, tau
@@ -1881,12 +3009,7 @@ SUBROUTINE esm_ewaldg_bc2 ( alpha_g, ewg )
   z1=z0+esm_w
   tmp=sqrt(alpha_g)
   sa=omega/L
-!$omp parallel private( ew, it1, it2, z, zp, tt, arg001, arg002, &
-!$omp                   arg003, arg005, arg006, arg007, arg101, &
-!$omp                   arg102, kk1, kk2, t1, t2, cc1, cc2, ng_2d, &
-!$omp                   k1, k2, t, gp2, gp, ff )
   ew=0d0
-!$omp do
   do it1=1,nat
   do it2=1,nat
      z=tau(3,it1)
@@ -1896,6 +3019,14 @@ SUBROUTINE esm_ewaldg_bc2 ( alpha_g, ewg )
      if (zp.gt.at(3,3)*0.5) zp=zp-at(3,3)
      zp=zp*alat
      tt=zv(ityp(it1))*zv(ityp(it2))*fpi/sa
+
+     if(gstart==2) then
+        if(it1==it2) then
+           !! add coulomb energy of ions under efield
+           ew=ew - zv(ityp(it1))*(z1-z)*esm_efield/e2*2.0
+        end if
+     end if
+
      ! bc2
      arg001=-tmp**2*(z-zp)**2
      arg101= tmp*(z-zp)
@@ -1939,10 +3070,7 @@ SUBROUTINE esm_ewaldg_bc2 ( alpha_g, ewg )
      if(gstart==2) ew=ew+tt*(kk1+kk2)
   enddo
   enddo
-!$omp end do
-!$omp atomic
   ewg=ewg+ew
-!$omp end parallel
 
   return
 END SUBROUTINE esm_ewaldg_bc2
@@ -1972,11 +3100,7 @@ SUBROUTINE esm_ewaldg_bc3 ( alpha_g, ewg )
   z1=z0+esm_w
   tmp=sqrt(alpha_g)
   sa=omega/L
-!$omp parallel private( ew, it1, it2, z, zp, tt, arg001, arg002, &
-!$omp                   arg003, arg101, arg102, kk1, kk2, t1, t2, &
-!$omp                   cc1, cc2, ng_2d, k1, k2, t, gp2, gp, ff )
   ew=0d0
-!$omp do
   do it1=1,nat
   do it2=1,nat
      z=tau(3,it1)
@@ -2023,10 +3147,7 @@ SUBROUTINE esm_ewaldg_bc3 ( alpha_g, ewg )
      if(gstart==2) ew=ew+tt*(kk1+kk2)
   enddo
   enddo
-!$omp end do
-!$omp atomic
   ewg=ewg+ew
-!$omp end parallel
 
   return
 END SUBROUTINE esm_ewaldg_bc3
@@ -2060,14 +3181,7 @@ SUBROUTINE esm_ewaldg_bc4 ( alpha_g, ewg )
   aaa=esm_a
   tmp=sqrt(alpha_g)
   sa=omega/L
-!$omp parallel private( ew, it1, it2, z, zp, tt, arg001, arg002, &
-!$omp                   arg003, arg005, arg006, arg007, arg008, arg009, &
-!$omp                   arg011, arg101, arg102, arg103, arg104, arg107, &
-!$omp                   arg109, arg111, arg113, alpha, beta, kappa, xi, &
-!$omp                   chi, lambda, kk1, kk2, t1, t2, t3, cc1, cc2, ng_2d, &
-!$omp                   k1, k2, t, gp2, gp, ff )
   ew=0d0
-!$omp do
   do it1=1,nat
   do it2=1,nat
      z=tau(3,it1)
@@ -2160,14 +3274,498 @@ SUBROUTINE esm_ewaldg_bc4 ( alpha_g, ewg )
      if(gstart==2) ew=ew+tt*(kk1+kk2)
   enddo
   enddo
-!$omp end do
-!$omp atomic
   ewg=ewg+ew
-!$omp end parallel
 
   return
 END SUBROUTINE esm_ewaldg_bc4
 
+
+  subroutine esm_stres_ewg( alpha, sigmaewa )
+    USE kinds,     ONLY : DP
+    implicit none
+
+    real(DP), intent(in)  :: alpha
+    real(DP), intent(out) :: sigmaewa(3,3)
+
+    select case( esm_bc )
+    case( 'pbc' )
+       stop 'esm_stres_ewa must not be called for esm_bc = pbc'
+    case( 'bc1' )
+       call esm_stres_ewg_bc1( alpha, sigmaewa )
+    case( 'bc2' )
+       call esm_stres_ewg_bc2( alpha, sigmaewa )
+    case( 'bc3' )
+       call esm_stres_ewg_bc3( alpha, sigmaewa )
+    case( 'bc4' )
+       stop 'esm_stres_ewa must not be called for esm_bc = bc4'
+    end select
+
+    return
+  end subroutine esm_stres_ewg
+
+  function qe_gauss(x) result(gauss)
+    use kinds,     only : DP
+    use constants, only : sqrtpm1  ! 1/sqrt(pi)
+    implicit none
+
+    real(DP), intent(in) :: x
+    real(DP) :: gauss
+
+    gauss = 2.0d0*sqrtpm1*exp(-x*x)
+
+  end function qe_gauss
+
+  subroutine esm_stres_ewg_bc1( alpha, sigmaewa )
+    use kinds,         only : DP
+    use constants,     only : pi, sqrtpm1, tpi, fpi, e2
+    use cell_base,     only : omega, alat, at, tpiba, bg
+    use ions_base,     only : zv, nat, tau, ityp
+    use control_flags, only : gamma_only
+    use gvect,         only : gstart
+    use mp_global,     only : intra_bgrp_comm
+    use mp,            only : mp_sum
+    implicit none
+
+    real(DP), intent(in)  :: alpha
+    real(DP), intent(out) :: sigmaewa(3,3)
+
+    integer  :: ia, ib, igp, iga, igb, la, mu, iz
+    real(DP) :: L, S, salp
+    real(DP) :: Qa, Qb, ra(2), rb(2), za, zb
+    real(DP) :: g(2), gp, Vr
+    real(DP) :: cosgpr, experfcm, experfcp, dexperfcm_dgp, dexperfcp_dgp
+
+    real(DP) :: dE_deps(2,2)
+    real(DP), parameter :: delta(2,2) = reshape( (/ 1.0d0, 0.0d0, 0.0d0, 1.0d0 /), (/2,2/) )
+    real(DP) :: dgp_deps(2,2)  !! dgp/deps
+    real(DP) :: dinvgp_deps(2,2)  !! dgp^-1/deps
+
+    ! cell settings
+    L  = at(3,3)*alat
+    S  = omega/L
+    salp = sqrt(alpha)
+
+    ! initialize
+    sigmaewa(:,:) = 0.0d0
+
+    !****For gp!=0 case ********************
+    do ib=1, nat
+       Qb = (-1.0d0)*zv(ityp(ib))
+       rb(1:2) = tau(1:2,ib)*alat
+       zb = tau(3,ib)*alat
+       if( zb > L*0.5d0 ) then
+          zb = zb - L
+       end if
+
+       do ia=1, nat
+          Qa = (-1.0d0)*zv(ityp(ia))
+          ra(1:2) = tau(1:2,ia)*alat
+          za = tau(3,ia)*alat
+          if( za > L*0.5d0 ) then
+             za = za - L
+          end if
+
+          ! summations over gp
+          dE_deps(:,:) = 0.0d0
+          do igp=1, ngm_2d
+             iga = mill_2d(1,igp)
+             igb = mill_2d(2,igp)
+             g(1:2) = (iga*bg(1:2,1) + igb*bg(1:2,2))*tpiba
+             gp = sqrt(g(1)*g(1) + g(2)*g(2))
+
+             if( gp==0.0d0 ) cycle ! skip gp=0
+
+             ! derivatives by strain tensor
+             do la=1, 2
+                do mu=1, 2
+                   dgp_deps(la,mu)    = -g(la)*g(mu)/gp
+                   dinvgp_deps(la,mu) = +g(la)*g(mu)/gp**3
+                end do
+             end do
+
+             ! coefficients
+             cosgpr   = cos(g(1)*(rb(1)-ra(1)) + g(2)*(rb(2)-ra(2)))
+             experfcm = exp_erfc( -gp*(zb-za), gp/2.d0/salp-salp*(zb-za) )
+             experfcp = exp_erfc( +gp*(zb-za), gp/2.d0/salp+salp*(zb-za) )
+             dexperfcm_dgp = -(zb-za)*exp_erfc( -gp*(zb-za), gp/2.d0/salp-salp*(zb-za) ) &
+                  - exp( -gp*(zb-za) ) * qe_gauss( gp/2.d0/salp-salp*(zb-za) )/2.d0/salp
+             dexperfcp_dgp = +(zb-za)*exp_erfc( +gp*(zb-za), gp/2.d0/salp+salp*(zb-za) ) &
+                  - exp( +gp*(zb-za) ) * qe_gauss( gp/2.d0/salp+salp*(zb-za) )/2.d0/salp
+
+             dE_deps(:,:) = dE_deps(:,:) &
+                  + gp*dinvgp_deps(:,:) * pi/gp * Qb*Qa/S * cosgpr * experfcm &
+                  - pi/gp * delta(:,:) * Qb*Qa/S * cosgpr * experfcm &
+                  + pi/gp * Qb*Qa/S * cosgpr * dgp_deps(:,:) * dexperfcm_dgp &
+                  + gp*dinvgp_deps(:,:) * pi/gp * Qb*Qa/S * cosgpr * experfcp &
+                  - pi/gp * delta(:,:) * Qb*Qa/S * cosgpr * experfcp &
+                  + pi/gp * Qb*Qa/S * cosgpr * dgp_deps(:,:) * dexperfcp_dgp
+          end do ! igp
+
+          ! modifications
+          if( gamma_only ) then
+             dE_deps(:,:) = dE_deps(:,:)*2.0d0
+          end if
+
+          ! calculate stress tensor
+          sigmaewa(1:2,1:2) = sigmaewa(1:2,1:2) - dE_deps(1:2,1:2)/omega
+
+       end do ! ia
+    end do ! ib
+
+    !****For gp=0 case ********************
+    if( gstart==2 ) then
+       do ib=1, nat
+          Qb = (-1.0d0)*zv(ityp(ib))
+          rb(1:2) = tau(1:2,ib)*alat
+          zb = tau(3,ib)*alat
+          if( zb > L*0.5d0 ) then
+             zb = zb - L
+          end if
+
+          Vr = 0.0d0
+          do ia=1, nat
+             Qa = (-1.0d0)*zv(ityp(ia))
+             ra(1:2) = tau(1:2,ia)*alat
+             za = tau(3,ia)*alat
+             if( za > L*0.5d0 ) then
+                za = za - L
+             end if
+
+             Vr = Vr - tpi * Qa/S &
+                  * ( (zb-za)*qe_erf(salp*(zb-za)) &
+                  + exp(-alpha*(zb-za)**2)*sqrtpm1/salp )
+          end do ! ia
+
+          dE_deps(1:2,1:2) = - delta(1:2,1:2) * Vr*Qb
+
+          ! calculate stress tensor
+          sigmaewa(1:2,1:2) = sigmaewa(1:2,1:2) - dE_deps(1:2,1:2)/omega
+       end do ! ib
+    end if
+
+    ! half means removing duplications.
+    ! e2 means hartree -> Ry.
+    sigmaewa(:,:) = sigmaewa(:,:) * (0.5d0*e2)
+
+    call mp_sum( sigmaewa, intra_bgrp_comm )
+
+    return
+  end subroutine esm_stres_ewg_bc1
+
+
+
+  subroutine esm_stres_ewg_bc2( alpha, sigmaewa )
+    use kinds,         only : DP
+    use constants,     only : pi, sqrtpm1, tpi, fpi, e2
+    use cell_base,     only : omega, alat, at, tpiba, bg
+    use ions_base,     only : zv, nat, tau, ityp
+    use control_flags, only : gamma_only
+    use gvect,         only : gstart
+    use mp_global,     only : intra_bgrp_comm
+    use mp,            only : mp_sum
+    implicit none
+
+    real(DP), intent(in)  :: alpha
+    real(DP), intent(out) :: sigmaewa(3,3)
+
+    integer  :: ia, ib, igp, iga, igb, la, mu
+    real(DP) :: L, S, salp, z0, z1
+    real(DP) :: Qa, Qb, ra(2), rb(2), za, zb
+    real(DP) :: g(2), gp, Vr
+    real(DP) :: cosgpr, experfcm, experfcp, dexperfcm_dgp, dexperfcp_dgp
+    real(DP) :: exph1, exph2, exph3
+
+    real(DP) :: dE_deps(2,2)
+    real(DP), parameter :: delta(2,2) = reshape( (/ 1.0d0, 0.0d0, 0.0d0, 1.0d0 /), (/2,2/) )
+    real(DP) :: dgp_deps(2,2)  !! dgp/deps
+    real(DP) :: dinvgp_deps(2,2)  !! dgp^-1/deps
+
+    ! cell settings
+    L  = at(3,3)*alat
+    S  = omega/L
+    z0 = L/2.d0
+    z1 = z0+esm_w
+    salp = sqrt(alpha)
+
+    ! initialize
+    sigmaewa(:,:) = 0.0d0
+
+    !****For gp!=0 case ********************
+    do ib=1, nat
+       Qb = (-1.0d0)*zv(ityp(ib))
+       rb(1:2) = tau(1:2,ib)*alat
+       zb = tau(3,ib)*alat
+       if( zb > L*0.5d0 ) then
+          zb = zb - L
+       end if
+
+       do ia=1, nat
+          Qa = (-1.0d0)*zv(ityp(ia))
+          ra(1:2) = tau(1:2,ia)*alat
+          za = tau(3,ia)*alat
+          if( za > L*0.5d0 ) then
+             za = za - L
+          end if
+
+          ! summations over gp
+          dE_deps(:,:) = 0.0d0
+          do igp=1, ngm_2d
+             iga = mill_2d(1,igp)
+             igb = mill_2d(2,igp)
+             g(1:2) = (iga*bg(1:2,1) + igb*bg(1:2,2))*tpiba
+             gp = sqrt(g(1)*g(1) + g(2)*g(2))
+
+             if( gp==0.0d0 ) cycle ! skip gp=0
+
+             ! derivatives by strain tensor
+             do la=1, 2
+                do mu=1, 2
+                   dgp_deps(la,mu)    = -g(la)*g(mu)/gp
+                   dinvgp_deps(la,mu) = +g(la)*g(mu)/gp**3
+                end do
+             end do
+
+             ! coefficients
+             cosgpr = cos(g(1)*(rb(1)-ra(1)) + g(2)*(rb(2)-ra(2)))
+
+             experfcm = exp_erfc( -gp*(zb-za), gp/2.d0/salp-salp*(zb-za) )
+             experfcp = exp_erfc( +gp*(zb-za), gp/2.d0/salp+salp*(zb-za) )
+             dexperfcm_dgp = -(zb-za)*exp_erfc( -gp*(zb-za), gp/2.d0/salp-salp*(zb-za) ) &
+                  - exp( -gp*(zb-za) ) * qe_gauss( gp/2.d0/salp-salp*(zb-za) )/2.d0/salp
+             dexperfcp_dgp = +(zb-za)*exp_erfc( +gp*(zb-za), gp/2.d0/salp+salp*(zb-za) ) &
+                  - exp( +gp*(zb-za) ) * qe_gauss( gp/2.d0/salp+salp*(zb-za) )/2.d0/salp
+
+             exph1  = (cosh(gp*(zb-za))*exp(-2*gp*z1) - cosh(gp*(zb+za)) )/sinh(2*gp*z1)
+             exph2  = ( (zb-za)*sinh(gp*(zb-za))*exp(-2*gp*z1) &
+                  - 2*z1*cosh(gp*(zb-za))*exp(-2*gp*z1) &
+                  - (zb+za)*sinh(gp*(zb+za)) )/sinh(2*gp*z1)
+             exph3  = - (cosh(gp*(zb-za))*exp(-2*gp*z1) - cosh(gp*(zb+za)) )/sinh(2*gp*z1)**2 * 2*z1*cosh(2*gp*z1)
+
+             !! BC1 terms
+             dE_deps(:,:) = dE_deps(:,:) &
+                  + gp*dinvgp_deps(:,:) * pi/gp * Qb*Qa/S * cosgpr * experfcm &
+                  - pi/gp * delta(:,:) * Qb*Qa/S * cosgpr * experfcm &
+                  + pi/gp * Qb*Qa/S * cosgpr * dgp_deps(:,:) * dexperfcm_dgp &
+                  + gp*dinvgp_deps(:,:) * pi/gp * Qb*Qa/S * cosgpr * experfcp &
+                  - pi/gp * delta(:,:) * Qb*Qa/S * cosgpr * experfcp &
+                  + pi/gp * Qb*Qa/S * cosgpr * dgp_deps(:,:) * dexperfcp_dgp
+
+
+             !! BC2 terms
+             dE_deps(:,:) = dE_deps(:,:) &
+                  + gp*dinvgp_deps(:,:) * tpi/gp * Qb*Qa/S * cosgpr * exph1 &
+                  - tpi/gp * delta(:,:) * Qb*Qa/S * cosgpr * exph1 &
+                  + tpi/gp * Qb*Qa/S * cosgpr * dgp_deps(:,:) * (exph2+exph3)
+          end do ! igp
+
+          ! modifications
+          if( gamma_only ) then
+             dE_deps(:,:) = dE_deps(:,:)*2.0d0
+          end if
+
+          ! calculate stress tensor
+          sigmaewa(1:2,1:2) = sigmaewa(1:2,1:2) - dE_deps(1:2,1:2)/omega
+
+       end do ! ia
+    end do ! ib
+
+    !****For gp=0 case ********************
+    if( gstart==2 ) then
+       do ib=1, nat
+          Qb = (-1.0d0)*zv(ityp(ib))
+          rb(1:2) = tau(1:2,ib)*alat
+          zb = tau(3,ib)*alat
+          if( zb > L*0.5d0 ) then
+             zb = zb - L
+          end if
+
+          ! [note] this Vr does not contain a term due to efield z*efield
+          ! because it vanishes in the differentiation with respect to strain.
+          Vr = 0.0d0
+          do ia=1, nat
+             Qa = (-1.0d0)*zv(ityp(ia))
+             ra(1:2) = tau(1:2,ia)*alat
+             za = tau(3,ia)*alat
+             if( za > L*0.5d0 ) then
+                za = za - L
+             end if
+
+             !! BC1 terms
+             Vr = Vr - tpi * Qa/S &
+                  * ( (zb-za)*qe_erf(salp*(zb-za)) &
+                  + exp(-alpha*(zb-za)**2)*sqrtpm1/salp )
+
+             !! BC2 terms
+             Vr = Vr + tpi * Qa/S * ( -zb*za + z1*z1 )/z1
+          end do ! ia
+
+          dE_deps(1:2,1:2) = - delta(1:2,1:2) * Vr*Qb
+
+          ! calculate stress tensor
+          sigmaewa(1:2,1:2) = sigmaewa(1:2,1:2) - dE_deps(1:2,1:2)/omega
+       end do ! ib
+    end if
+
+    ! half means removing duplications.
+    ! e2 means hartree -> Ry.
+    sigmaewa(:,:) = sigmaewa(:,:) * (0.5d0*e2)
+
+    call mp_sum( sigmaewa, intra_bgrp_comm )
+
+    return
+  end subroutine esm_stres_ewg_bc2
+
+
+  subroutine esm_stres_ewg_bc3( alpha, sigmaewa )
+    use kinds,         only : DP
+    use constants,     only : pi, sqrtpm1, tpi, fpi, e2
+    use cell_base,     only : omega, alat, at, tpiba, bg
+    use ions_base,     only : zv, nat, tau, ityp
+    use control_flags, only : gamma_only
+    use gvect,         only : gstart
+    use mp_global,     only : intra_bgrp_comm
+    use mp,            only : mp_sum
+    implicit none
+
+    real(DP), intent(in)  :: alpha
+    real(DP), intent(out) :: sigmaewa(3,3)
+
+    integer  :: ia, ib, igp, iga, igb, la, mu
+    real(DP) :: L, S, salp, z0, z1
+    real(DP) :: Qa, Qb, ra(2), rb(2), za, zb
+    real(DP) :: g(2), gp, Vr
+    real(DP) :: cosgpr, experfcm, experfcp, dexperfcm_dgp, dexperfcp_dgp, expm
+
+    real(DP) :: dE_deps(2,2)
+    real(DP), parameter :: delta(2,2) = reshape( (/ 1.0d0, 0.0d0, 0.0d0, 1.0d0 /), (/2,2/) )
+    real(DP) :: dgp_deps(2,2)  !! dgp/deps
+    real(DP) :: dinvgp_deps(2,2)  !! dgp^-1/deps
+
+    ! cell settings
+    L  = at(3,3)*alat
+    S  = omega/L
+    z0 = L/2.d0
+    z1 = z0+esm_w
+    salp = sqrt(alpha)
+
+    ! initialize
+    sigmaewa(:,:) = 0.0d0
+
+    !****For gp!=0 case ********************
+    do ib=1, nat
+       Qb = (-1.0d0)*zv(ityp(ib))
+       rb(1:2) = tau(1:2,ib)*alat
+       zb = tau(3,ib)*alat
+       if( zb > L*0.5d0 ) then
+          zb = zb - L
+       end if
+
+       do ia=1, nat
+          Qa = (-1.0d0)*zv(ityp(ia))
+          ra(1:2) = tau(1:2,ia)*alat
+          za = tau(3,ia)*alat
+          if( za > L*0.5d0 ) then
+             za = za - L
+          end if
+
+          ! summations over gp
+          dE_deps(:,:) = 0.0d0
+          do igp=1, ngm_2d
+             iga = mill_2d(1,igp)
+             igb = mill_2d(2,igp)
+             g(1:2) = (iga*bg(1:2,1) + igb*bg(1:2,2))*tpiba
+             gp = sqrt(g(1)*g(1) + g(2)*g(2))
+
+             if( gp==0.0d0 ) cycle ! skip gp=0
+
+             ! derivatives by strain tensor
+             do la=1, 2
+                do mu=1, 2
+                   dgp_deps(la,mu)    = -g(la)*g(mu)/gp
+                   dinvgp_deps(la,mu) = +g(la)*g(mu)/gp**3
+                end do
+             end do
+
+             ! coefficients
+             cosgpr   = cos(g(1)*(rb(1)-ra(1)) + g(2)*(rb(2)-ra(2)))
+             experfcm = exp_erfc( -gp*(zb-za), gp/2.d0/salp-salp*(zb-za) )
+             experfcp = exp_erfc( +gp*(zb-za), gp/2.d0/salp+salp*(zb-za) )
+             dexperfcm_dgp = -(zb-za)*exp_erfc( -gp*(zb-za), gp/2.d0/salp-salp*(zb-za) ) &
+                  - exp( -gp*(zb-za) ) * qe_gauss( gp/2.d0/salp-salp*(zb-za) )/2.d0/salp
+             dexperfcp_dgp = +(zb-za)*exp_erfc( +gp*(zb-za), gp/2.d0/salp+salp*(zb-za) ) &
+                  - exp( +gp*(zb-za) ) * qe_gauss( gp/2.d0/salp+salp*(zb-za) )/2.d0/salp
+             expm = exp( -gp*(-zb+2*z1-za) )
+
+             !! BC1 terms
+             dE_deps(:,:) = dE_deps(:,:) &
+                  + gp*dinvgp_deps(:,:) * pi/gp * Qb*Qa/S * cosgpr * experfcm &
+                  - pi/gp * delta(:,:) * Qb*Qa/S * cosgpr * experfcm &
+                  + pi/gp * Qb*Qa/S * cosgpr * dgp_deps(:,:) * dexperfcm_dgp &
+                  + gp*dinvgp_deps(:,:) * pi/gp * Qb*Qa/S * cosgpr * experfcp &
+                  - pi/gp * delta(:,:) * Qb*Qa/S * cosgpr * experfcp &
+                  + pi/gp * Qb*Qa/S * cosgpr * dgp_deps(:,:) * dexperfcp_dgp
+
+             !! BC3 terms
+             dE_deps(:,:) = dE_deps(:,:) &
+                  - gp*dinvgp_deps(:,:) * tpi/gp * Qb*Qa/S * cosgpr * expm &
+                  + tpi/gp * delta(:,:) * Qb*Qa/S * cosgpr * expm &
+                  + tpi/gp * Qb*Qa/S * cosgpr * dgp_deps(:,:) * (-zb+2*z1-za) * expm
+          end do ! igp
+
+          ! modifications
+          if( gamma_only ) then
+             dE_deps(:,:) = dE_deps(:,:)*2.0d0
+          end if
+
+          ! calculate stress tensor
+          sigmaewa(1:2,1:2) = sigmaewa(1:2,1:2) - dE_deps(1:2,1:2)/omega
+
+       end do ! ia
+    end do ! ib
+
+    !****For gp=0 case ********************
+    if( gstart==2 ) then
+       do ib=1, nat
+          Qb = (-1.0d0)*zv(ityp(ib))
+          rb(1:2) = tau(1:2,ib)*alat
+          zb = tau(3,ib)*alat
+          if( zb > L*0.5d0 ) then
+             zb = zb - L
+          end if
+
+          Vr = 0.0d0
+          do ia=1, nat
+             Qa = (-1.0d0)*zv(ityp(ia))
+             ra(1:2) = tau(1:2,ia)*alat
+             za = tau(3,ia)*alat
+             if( za > L*0.5d0 ) then
+                za = za - L
+             end if
+
+             !! BC1 terms
+             Vr = Vr - tpi * Qa/S &
+                  * ( (zb-za)*qe_erf(salp*(zb-za)) &
+                  + exp(-alpha*(zb-za)**2)*sqrtpm1/salp )
+
+             !! BC3 terms
+             Vr = Vr + tpi * Qa/S * ( -zb+2*z1-za )
+          end do ! ia
+
+          dE_deps(1:2,1:2) = - delta(1:2,1:2) * Vr*Qb
+
+          ! calculate stress tensor
+          sigmaewa(1:2,1:2) = sigmaewa(1:2,1:2) - dE_deps(1:2,1:2)/omega
+       end do ! ib
+    end if
+
+    ! half means removing duplications.
+    ! e2 means hartree -> Ry.
+    sigmaewa(:,:) = sigmaewa(:,:) * (0.5d0*e2)
+
+    call mp_sum( sigmaewa, intra_bgrp_comm )
+
+    return
+  end subroutine esm_stres_ewg_bc3
 
 
 !-----------------------------------------------------------------------
@@ -2190,7 +3788,7 @@ SUBROUTINE esm_local_bc1 (aux)
   USE cell_base,        ONLY : at, bg, alat, tpiba2, omega
   USE ions_base,        ONLY : zv, nat, tau, ityp
   USE fft_base,         ONLY : dfftp
-  USE esm_cft,          ONLY : esm_cft_1z
+  USE fft_scalar,       ONLY : cft_1z
   !
   implicit none
   ! aux contains v_loc_short(G) (input) and v_loc(G) (output)
@@ -2213,11 +3811,7 @@ SUBROUTINE esm_local_bc1 (aux)
   allocate(vloc3(dfftp%nr3,ngm_2d))
 
 ! for gp!=0
-!$omp parallel private( ng_2d, k1, k2, t, gp2, gp, vg, vg_r, it, tt, pp, &
-!$omp                   cc, ss, cs, zp, iz, k3, z, cc1, cc2, t1, t2, &
-!$omp                   arg001, arg002, arg101, arg102 )
   allocate(vg(dfftp%nr3),vg_r(dfftp%nr3))
-!$omp do
   do ng_2d = 1, ngm_2d
      k1 = mill_2d(1,ng_2d)
      k2 = mill_2d(2,ng_2d)
@@ -2252,13 +3846,12 @@ SUBROUTINE esm_local_bc1 (aux)
            vg_r(iz) = vg_r(iz)+tt*(cc1+cc2)*e2 ! factor e2: hartree -> Ry.
         enddo
      enddo
-     call esm_cft_1z(vg_r,1,dfftp%nr3,dfftp%nr3,-1,vg)
+     call cft_1z(vg_r,1,dfftp%nr3,dfftp%nr3,-1,vg)
      do iz=1,dfftp%nr3
         vloc3(iz,ng_2d)=vg(iz)
      enddo
   enddo
   deallocate(vg,vg_r)
-!$omp end parallel
   
   ng_2d=imill_2d(0,0)
   if( ng_2d > 0 ) then
@@ -2313,7 +3906,7 @@ SUBROUTINE esm_local_bc1 (aux)
         z=dble(iz-1)/dble(dfftp%nr3)*L
         vg_r(iz)=(a0+a1*z+a2*z**2+a3*z**3)
      enddo
-     call esm_cft_1z(vg_r,1,dfftp%nr3,dfftp%nr3,-1,vg)
+     call cft_1z(vg_r,1,dfftp%nr3,dfftp%nr3,-1,vg)
      do iz=1,dfftp%nr3
         vloc3(iz,ng_2d)=vg(iz)
      enddo
@@ -2322,7 +3915,6 @@ SUBROUTINE esm_local_bc1 (aux)
   endif ! if( ng_2d > 0 )
   
 ! Map to FFT mesh (dfftp%nrx)
-!$omp parallel do private( ng, n1, n2, ng_2d, n3 )
   do ng=1,ngm
      n1 = mill(1,ng)
      n2 = mill(2,ng)
@@ -2334,7 +3926,6 @@ SUBROUTINE esm_local_bc1 (aux)
         aux (nlm(ng))=CONJG(aux(nl(ng)))
      endif
   enddo
-!$omp end parallel do
 
   deallocate(vloc3)
 
@@ -2349,7 +3940,7 @@ SUBROUTINE esm_local_bc2 (aux)
   USE cell_base,        ONLY : at, bg, alat, tpiba2, omega
   USE ions_base,        ONLY : zv, nat, tau, ityp
   USE fft_base,         ONLY : dfftp
-  USE esm_cft,          ONLY : esm_cft_1z
+  USE fft_scalar,       ONLY : cft_1z
   !
   implicit none
   ! aux contains v_loc_short(G) (input) and v_loc(G) (output)
@@ -2375,12 +3966,7 @@ SUBROUTINE esm_local_bc2 (aux)
   allocate(vloc3(dfftp%nr3,ngm_2d))
 
 ! for gp!=0
-!$omp parallel private( ng_2d, k1, k2, t, gp2, gp, vg, vg_r, it, tt, pp, &
-!$omp                   cc, ss, cs, zp, iz, k3, z, cc1, cc2, t1, t2, &
-!$omp                   arg001, arg002, arg003, arg005, arg006, arg007, &
-!$omp                   arg101, arg102 )
   allocate(vg(dfftp%nr3),vg_r(dfftp%nr3))
-!$omp do
   do ng_2d = 1, ngm_2d
      k1 = mill_2d(1,ng_2d)
      k2 = mill_2d(2,ng_2d)
@@ -2422,13 +4008,12 @@ SUBROUTINE esm_local_bc2 (aux)
            vg_r(iz) = vg_r(iz)+tt*(cc1+cc2)*e2 ! factor e2: hartree -> Ry.
         enddo
      enddo
-     call esm_cft_1z(vg_r,1,dfftp%nr3,dfftp%nr3,-1,vg)
+     call cft_1z(vg_r,1,dfftp%nr3,dfftp%nr3,-1,vg)
      do iz=1,dfftp%nr3
         vloc3(iz,ng_2d)=vg(iz)
      enddo
   enddo
   deallocate(vg,vg_r)
-!$omp end parallel
   
   ng_2d=imill_2d(0,0)
   if( ng_2d > 0 ) then
@@ -2500,7 +4085,7 @@ SUBROUTINE esm_local_bc2 (aux)
         z=dble(iz-1)/dble(dfftp%nr3)*L
         vg_r(iz)=(a0+a1*z+a2*z**2+a3*z**3)
      enddo
-     call esm_cft_1z(vg_r,1,dfftp%nr3,dfftp%nr3,-1,vg)
+     call cft_1z(vg_r,1,dfftp%nr3,dfftp%nr3,-1,vg)
      do iz=1,dfftp%nr3
         vloc3(iz,ng_2d)=vg(iz)
      enddo
@@ -2509,7 +4094,6 @@ SUBROUTINE esm_local_bc2 (aux)
   endif ! if( ng_2d > 0 )
   
 ! Map to FFT mesh (dfftp%nrx)
-!$omp parallel do private( ng, n1, n2, ng_2d, n3 )
   do ng=1,ngm
      n1 = mill(1,ng)
      n2 = mill(2,ng)
@@ -2521,7 +4105,6 @@ SUBROUTINE esm_local_bc2 (aux)
         aux (nlm(ng))=CONJG(aux(nl(ng)))
      endif
   enddo
-!$omp end parallel do
 
   deallocate(vloc3)
 
@@ -2536,7 +4119,7 @@ SUBROUTINE esm_local_bc3 (aux)
   USE cell_base,        ONLY : at, bg, alat, tpiba2, omega
   USE ions_base,        ONLY : zv, nat, tau, ityp
   USE fft_base,         ONLY : dfftp
-  USE esm_cft,          ONLY : esm_cft_1z
+  USE fft_scalar,       ONLY : cft_1z
   !
   implicit none
   ! aux contains v_loc_short(G) (input) and v_loc(G) (output)
@@ -2560,11 +4143,7 @@ SUBROUTINE esm_local_bc3 (aux)
   allocate(vloc3(dfftp%nr3,ngm_2d))
 
 ! for gp!=0
-!$omp parallel private( ng_2d, k1, k2, t, gp2, gp, vg, vg_r, it, tt, pp, &
-!$omp                   cc, ss, cs, zp, iz, k3, z, cc1, cc2, t1, t2, &
-!$omp                   arg001, arg002, arg003, arg101, arg102 )
   allocate(vg(dfftp%nr3),vg_r(dfftp%nr3))
-!$omp do
   do ng_2d = 1, ngm_2d
      k1 = mill_2d(1,ng_2d)
      k2 = mill_2d(2,ng_2d)
@@ -2601,13 +4180,12 @@ SUBROUTINE esm_local_bc3 (aux)
            vg_r(iz) = vg_r(iz)+tt*(cc1+cc2)*e2 ! factor e2: hartree -> Ry.
         enddo
      enddo
-     call esm_cft_1z(vg_r,1,dfftp%nr3,dfftp%nr3,-1,vg)
+     call cft_1z(vg_r,1,dfftp%nr3,dfftp%nr3,-1,vg)
      do iz=1,dfftp%nr3
         vloc3(iz,ng_2d)=vg(iz)
      enddo
   enddo
   deallocate(vg,vg_r)
-!$omp end parallel
   
   ng_2d=imill_2d(0,0)
   if( ng_2d > 0 ) then
@@ -2668,7 +4246,7 @@ SUBROUTINE esm_local_bc3 (aux)
         vg_r(iz)=(a0+a1*z+a2*z**2+a3*z**3)
      enddo
 
-     call esm_cft_1z(vg_r,1,dfftp%nr3,dfftp%nr3,-1,vg)
+     call cft_1z(vg_r,1,dfftp%nr3,dfftp%nr3,-1,vg)
      do iz=1,dfftp%nr3
         vloc3(iz,ng_2d)=vg(iz)
      enddo
@@ -2677,7 +4255,6 @@ SUBROUTINE esm_local_bc3 (aux)
   endif ! if( ng_2d > 0 )
   
 ! Map to FFT mesh (dfftp%nrx)
-!$omp parallel do private( ng, n1, n2, ng_2d, n3 )
   do ng=1,ngm
      n1 = mill(1,ng)
      n2 = mill(2,ng)
@@ -2689,7 +4266,6 @@ SUBROUTINE esm_local_bc3 (aux)
         aux (nlm(ng))=CONJG(aux(nl(ng)))
      endif
   enddo
-!$omp end parallel do
 
   deallocate(vloc3)
 
@@ -2704,7 +4280,7 @@ SUBROUTINE esm_local_bc4 (aux)
   USE cell_base,        ONLY : at, bg, alat, tpiba2, omega
   USE ions_base,        ONLY : zv, nat, tau, ityp
   USE fft_base,         ONLY : dfftp
-  USE esm_cft,          ONLY : esm_cft_1z
+  USE fft_scalar,       ONLY : cft_1z
   !
   implicit none
   ! aux contains v_loc_short(G) (input) and v_loc(G) (output)
@@ -2733,14 +4309,7 @@ SUBROUTINE esm_local_bc4 (aux)
   allocate(vloc3(dfftp%nr3,ngm_2d))
 
 ! for gp!=0
-!$omp parallel private( ng_2d, k1, k2, t, gp2, gp, vg, vg_r, it, tt, pp, &
-!$omp                   cc, ss, cs, zp, iz, k3, z, cc1, cc2, t1, t2, t3, &
-!$omp                   arg001, arg002, arg003, arg005, arg006, arg008, &
-!$omp                   arg009, arg011, arg101, arg102, arg103, arg104, &
-!$omp                   arg107, arg109, arg111, arg113, alpha, beta, kappa, &
-!$omp                   xi, chi, lambda )
   allocate(vg(dfftp%nr3),vg_r(dfftp%nr3))
-!$omp do
   do ng_2d = 1, ngm_2d
      k1 = mill_2d(1,ng_2d)
      k2 = mill_2d(2,ng_2d)
@@ -2805,13 +4374,12 @@ SUBROUTINE esm_local_bc4 (aux)
            vg_r(iz) = vg_r(iz)+tt*(cc1+cc2)*e2 ! factor e2: hartree -> Ry.
         enddo
      enddo
-     call esm_cft_1z(vg_r,1,dfftp%nr3,dfftp%nr3,-1,vg)
+     call cft_1z(vg_r,1,dfftp%nr3,dfftp%nr3,-1,vg)
      do iz=1,dfftp%nr3
         vloc3(iz,ng_2d)=vg(iz)
      enddo
   enddo
   deallocate(vg,vg_r)
-!$omp end parallel
   
   ng_2d=imill_2d(0,0)
   if( ng_2d > 0 ) then
@@ -2903,7 +4471,7 @@ SUBROUTINE esm_local_bc4 (aux)
         vg_r(iz)=(a0+a1*z+a2*z**2+a3*z**3)
      enddo
 
-     call esm_cft_1z(vg_r,1,dfftp%nr3,dfftp%nr3,-1,vg)
+     call cft_1z(vg_r,1,dfftp%nr3,dfftp%nr3,-1,vg)
      do iz=1,dfftp%nr3
         vloc3(iz,ng_2d)=vg(iz)
      enddo
@@ -2912,7 +4480,6 @@ SUBROUTINE esm_local_bc4 (aux)
   endif ! if( ng_2d > 0 )
   
 ! Map to FFT mesh (dfftp%nrx)
-!$omp parallel do private( ng, n1, n2, ng_2d, n3 )
   do ng=1,ngm
      n1 = mill(1,ng)
      n2 = mill(2,ng)
@@ -2924,13 +4491,850 @@ SUBROUTINE esm_local_bc4 (aux)
         aux (nlm(ng))=CONJG(aux(nl(ng)))
      endif
   enddo
-!$omp end parallel do
 
   deallocate(vloc3)
 
   return
 END SUBROUTINE esm_local_bc4
 
+
+  subroutine esm_stres_loclong_bc1( sigmaloclong, rhog )
+    use kinds,         only : DP
+    use gvect,         only : ngm, mill
+    use lsda_mod,      only : nspin
+    use constants,     only : pi, sqrtpm1, tpi, fpi, e2
+    use cell_base,     only : omega, alat, at, tpiba, bg
+    use ions_base,     only : zv, nat, tau, ityp
+    use control_flags, only : gamma_only
+    use fft_base,      only : dfftp
+    use fft_scalar,    only : cft_1z
+    use mp_global,     only : intra_bgrp_comm
+    use mp,            only : mp_sum
+    implicit none
+
+    real(DP), intent(out) :: sigmaloclong(3,3)
+    complex(DP) :: rhog(ngm,nspin)   !  n(G)
+
+    integer  :: ig, iga, igb, igz, igp, la, mu, iz, ia
+    real(DP) :: L, S, z0, alpha, salp, z
+    real(DP) :: Qa, ra(2), za
+    real(DP) :: g(2), gp, gz
+    complex(DP), parameter :: ci = dcmplx(0.0d0, 1.0d0)
+    complex(DP) :: rg3
+    complex(DP) :: expimgpr, experfcm, experfcp, dexperfcm_dgp, dexperfcp_dgp
+    real(DP)    :: z_r, z_l
+    complex(DP) :: a0, a1, a2, a3, f1, f2, f3, f4
+    complex(DP) :: poly_fr, poly_fl, poly_dfr, poly_dfl
+    complex(DP) :: poly_a, poly_b, poly_c, poly_d
+    real(DP), parameter :: delta(2,2) = reshape( (/ 1.0d0, 0.0d0, 0.0d0, 1.0d0 /), (/2,2/) )
+    real(DP) :: dgp_deps(2,2)  !! dgp/deps
+    real(DP) :: dinvgp_deps(2,2)  !! dgp^-1/deps
+
+    complex(DP), allocatable :: rhog3(:,:)
+    complex(DP), allocatable :: dVr_deps(:,:,:)
+    complex(DP), allocatable :: dVg_deps(:,:,:)
+    complex(DP), allocatable :: Vr(:)
+    complex(DP), allocatable :: Vg(:)
+
+    allocate( rhog3(dfftp%nr3,ngm_2d) )
+    allocate( dVr_deps(dfftp%nr3,2,2) )
+    allocate( dVg_deps(dfftp%nr3,2,2) )
+    allocate( Vr(dfftp%nr3) )
+    allocate( Vg(dfftp%nr3) )
+
+    ! reconstruct rho(gz,gp)
+    rhog3(:,:)=(0.d0,0.d0)
+
+    do ig=1, ngm
+       iga = mill(1,ig)
+       igb = mill(2,ig)
+       igz = mill(3,ig)+1
+       igp = imill_2d(iga,igb)
+       if( igz<1 ) then
+          igz = igz + dfftp%nr3
+       end if
+
+       if( nspin == 2 ) then
+          rg3 = rhog(ig,1) + rhog(ig,2)
+       else
+          rg3 = rhog(ig,1)
+       endif
+       rhog3(igz,igp) = rg3
+
+       if( gamma_only .and. iga==0 .and. igb==0 ) then
+          igz = 1-mill(3,ig)
+          if( igz<1 ) then
+             igz = igz + dfftp%nr3
+          end if
+          rhog3(igz,igp) = CONJG(rg3)
+       endif
+    end do ! ig
+
+    ! cell settings
+    L  = at(3,3)*alat
+    S  = omega/L
+    z0 = L/2.d0
+    alpha = 1.0d0
+    salp = sqrt(alpha)
+
+    ! initialize
+    sigmaloclong(:,:) = 0.0d0
+
+    !****For gp!=0 case ********************
+    do igp=1, ngm_2d
+       iga = mill_2d(1,igp)
+       igb = mill_2d(2,igp)
+       g(1:2) = (iga*bg(1:2,1) + igb*bg(1:2,2))*tpiba
+       gp = sqrt(g(1)*g(1) + g(2)*g(2))
+
+       if( gp==0.0d0 ) cycle ! skip gp=0
+
+       ! derivatives by strain tensor
+       do la=1, 2
+          do mu=1, 2
+             dgp_deps(la,mu)    = -g(la)*g(mu)/gp
+             dinvgp_deps(la,mu) = +g(la)*g(mu)/gp**3
+          end do
+       end do
+
+       ! calculate dV(z)/deps
+       do iz=1, dfftp%nr3
+          if( iz-1 .gt. dfftp%nr3/2 ) then
+             z = dble(iz-1-dfftp%nr3)/dble(dfftp%nr3)*L
+          else
+             z = dble(iz-1)/dble(dfftp%nr3)*L
+          end if
+
+          ! summations over all atoms
+          dVr_deps(iz,:,:) = ( 0.0d0, 0.0d0 )
+          do ia=1, nat
+             Qa = (-1.0d0)*zv(ityp(ia))
+             ra(1:2) = tau(1:2,ia)*alat
+             za = tau(3,ia)*alat
+             if( za > L*0.5d0 ) then
+                za = za - L
+             end if
+
+             expimgpr = qe_exp( - ci*(g(1)*ra(1) + g(2)*ra(2)) )
+             experfcm = exp_erfc( -gp*(z-za), gp/2.d0/salp-salp*(z-za) )
+             experfcp = exp_erfc( +gp*(z-za), gp/2.d0/salp+salp*(z-za) )
+             dexperfcm_dgp = -(z-za)*exp_erfc( -gp*(z-za), gp/2.d0/salp-salp*(z-za) ) &
+                  - exp( -gp*(z-za) ) * qe_gauss( gp/2.d0/salp-salp*(z-za) )/2.d0/salp
+             dexperfcp_dgp = +(z-za)*exp_erfc( +gp*(z-za), gp/2.d0/salp+salp*(z-za) ) &
+                  - exp( +gp*(z-za) ) * qe_gauss( gp/2.d0/salp+salp*(z-za) )/2.d0/salp
+
+             dVr_deps(iz,:,:) = dVr_deps(iz,:,:) &
+                  + gp*dinvgp_deps(:,:) * pi/gp * Qa/S * expimgpr * experfcm &
+                  - pi/gp * delta(:,:) * Qa/S * expimgpr * experfcm &
+                  + pi/gp * Qa/S * expimgpr * dgp_deps(:,:) * dexperfcm_dgp
+
+             dVr_deps(iz,:,:) = dVr_deps(iz,:,:) &
+                  + gp*dinvgp_deps(:,:) * pi/gp * Qa/S * expimgpr * experfcp &
+                  - pi/gp * delta(:,:) * Qa/S * expimgpr * experfcp &
+                  + pi/gp * Qa/S * expimgpr * dgp_deps(:,:) * dexperfcp_dgp
+          end do ! ia
+       end do ! iz
+
+       ! convert dV(z)/deps to dV(gz)/deps
+       do la=1, 2
+          do mu=1, 2
+             call cft_1z( dVr_deps(:,la,mu), 1, dfftp%nr3, dfftp%nr3, -1, dVg_deps(:,la,mu) )
+          end do
+       end do
+
+       ! modifications
+       if( gamma_only ) then
+          dVg_deps(:,:,:) = dVg_deps(:,:,:)*2.0d0
+       end if
+
+       ! calculate stress tensor
+       do igz=1, dfftp%nr3
+          rg3 = rhog3(igz,igp)
+          sigmaloclong(1:2,1:2) = sigmaloclong(1:2,1:2) &
+               - real( CONJG(rg3) * dVg_deps(igz,1:2,1:2) )
+       end do ! igz
+    end do ! igp
+
+    !****For gp=0 case ********************
+    if( imill_2d(0,0) > 0 ) then
+       ! calculate V(z)
+       Vr(:) = 0.0d0
+       ! separation by polynomial
+       f1=(0.d0,0.d0); f2=(0.d0,0.d0); f3=(0.d0,0.d0); f4=(0.d0,0.d0)
+       z_l=-z0
+       z_r=+z0
+       do ia=1, nat
+          Qa = (-1.0d0)*zv(ityp(ia))
+          ra(1:2) = tau(1:2,ia)*alat
+          za = tau(3,ia)*alat
+          if( za > L*0.5d0 ) then
+             za = za - L
+          end if
+
+          do iz=1, dfftp%nr3
+             if( iz-1 > dfftp%nr3/2 ) then
+                z = dble(iz-1-dfftp%nr3)/dble(dfftp%nr3)*L
+             else
+                z = dble(iz-1)/dble(dfftp%nr3)*L
+             end if
+
+             Vr(iz) = Vr(iz) - tpi * Qa/S &
+                  * ( (z-za)*qe_erf(salp*(z-za)) &
+                  + exp(-alpha*(z-za)**2)*sqrtpm1/salp )
+          end do ! iz
+
+          f1 = f1 - tpi * Qa/S &
+               * ( (z_r-za)*qe_erf(salp*(z_r-za)) &
+               + exp(-alpha*(z_r-za)**2)*sqrtpm1/salp )
+          f2 = f2 - tpi * Qa/S &
+               * ( (z_l-za)*qe_erf(salp*(z_l-za)) &
+               + exp(-alpha*(z_l-za)**2)*sqrtpm1/salp )
+          f3 = f3 - tpi * Qa/S &
+               * qe_erf(salp*(z_r-za))
+          f4 = f4 - tpi * Qa/S &
+               * qe_erf(salp*(z_l-za))
+       end do ! ia
+
+       a0=(f1*z_l**2*(z_l-3.d0*z_r)+z_r*(f3*z_l**2*(-z_l+z_r) &
+            +z_r*(f2*(3.d0*z_l-z_r)+f4*z_l*(-z_l+z_r))))/(z_l-z_r)**3
+       a1=(f3*z_l**3+z_l*(6.d0*f1-6.d0*f2+(f3+2.d0*f4)*z_l)*z_r &
+            -(2*f3+f4)*z_l*z_r**2-f4*z_r**3)/(z_l-z_r)**3
+       a2=(-3*f1*(z_l+z_r)+3.d0*f2*(z_l+z_r)-(z_l-z_r)*(2*f3*z_l &
+            +f4*z_l+f3*z_r+2*f4*z_r))/(z_l-z_r)**3
+       a3=(2.d0*f1-2.d0*f2+(f3+f4)*(z_l-z_r))/(z_l-z_r)**3
+
+       ! remove polynomial from V(z)
+       do iz=1, dfftp%nr3
+          if( iz-1 .gt. dfftp%nr3/2 ) then
+             z = dble(iz-1-dfftp%nr3)/dble(dfftp%nr3)*L
+          else
+             z = dble(iz-1)/dble(dfftp%nr3)*L
+          end if
+          Vr(iz) = Vr(iz) - (a0+a1*z+a2*z**2+a3*z**3)
+       enddo
+
+       ! convert V(z) to V(gz) without polynomial
+       call cft_1z(Vr,1,dfftp%nr3,dfftp%nr3,-1,Vg)
+
+       ! add polynomial to V(gz)
+       do igz=2, dfftp%nr3
+          if( igz<=dfftp%nr3/2 )then
+             gz = dble(igz-1)*tpi/L
+          else
+             gz = dble(igz-1-dfftp%nr3)*tpi/L
+          end if
+
+          Vg(igz) = Vg(igz) &
+               + a1 * ci * cos(gz*z0)/gz &
+               + a2 * 2.0d0 * cos(gz*z0)/gz**2 &
+               + a3 * ci * z0**2 * cos(gz*z0)/gz &
+               - a3 * ci * 6.0d0 * cos(gz*z0)/gz**3
+       end do
+       Vg(1) = Vg(1) + a0*1.0d0 + a2*z0**2/3.0d0
+
+       ! calculate dV/deps(gz)
+       do igz=1, dfftp%nr3
+          dVg_deps(igz,:,:) = -delta(:,:) * Vg(igz)
+       end do ! igz
+
+       ! calculate stress tensor
+       do igz=1, dfftp%nr3
+          rg3 = rhog3(igz,imill_2d(0,0))
+          sigmaloclong(1:2,1:2) = sigmaloclong(1:2,1:2) &
+               - real( CONJG(rg3) * dVg_deps(igz,1:2,1:2) )
+       end do ! igz
+    endif ! imill_2d(0,0) > 0
+
+    ! e2 means hartree -> Ry.
+    sigmaloclong(:,:) = sigmaloclong(:,:)*(e2)
+
+    call mp_sum( sigmaloclong, intra_bgrp_comm )
+
+    deallocate( rhog3 )
+    deallocate( dVr_deps )
+    deallocate( dVg_deps )
+    deallocate( Vr )
+    deallocate( Vg )
+
+    return
+  end subroutine esm_stres_loclong_bc1
+
+
+
+  subroutine esm_stres_loclong_bc2( sigmaloclong, rhog )
+    use kinds,         only : DP
+    use gvect,         only : ngm, mill
+    use lsda_mod,      only : nspin
+    use constants,     only : pi, sqrtpm1, tpi, fpi, e2
+    use cell_base,     only : omega, alat, at, tpiba, bg
+    use ions_base,     only : zv, nat, tau, ityp
+    use control_flags, only : gamma_only
+    use fft_base,      only : dfftp
+    use fft_scalar,    only : cft_1z
+    use mp_global,     only : intra_bgrp_comm
+    use mp,            only : mp_sum
+    implicit none
+
+    real(DP), intent(out) :: sigmaloclong(3,3)
+    complex(DP) :: rhog(ngm,nspin)   !  n(G)
+
+    integer  :: ig, iga, igb, igz, igp, la, mu, iz, ia
+    real(DP) :: L, S, z0, z1, alpha, salp, z
+    real(DP) :: Qa, ra(2), za
+    real(DP) :: g(2), gp, gz
+    complex(DP), parameter :: ci = dcmplx(0.0d0, 1.0d0)
+    complex(DP) :: rg3
+    complex(DP) :: expimgpr, experfcm, experfcp, dexperfcm_dgp, dexperfcp_dgp
+    complex(DP) :: exph1, exph2, exph3
+    real(DP)    :: z_r, z_l
+    complex(DP) :: a0, a1, a2, a3, f1, f2, f3, f4
+    real(DP), parameter :: delta(2,2) = reshape( (/ 1.0d0, 0.0d0, 0.0d0, 1.0d0 /), (/2,2/) )
+    real(DP) :: dgp_deps(2,2)  !! dgp/deps
+    real(DP) :: dinvgp_deps(2,2)  !! dgp^-1/deps
+
+    complex(DP), allocatable :: rhog3(:,:)
+    complex(DP), allocatable :: dVr_deps(:,:,:)
+    complex(DP), allocatable :: dVg_deps(:,:,:)
+    complex(DP), allocatable :: Vr(:)
+    complex(DP), allocatable :: Vg(:)
+
+    allocate( rhog3(dfftp%nr3,ngm_2d) )
+    allocate( dVr_deps(dfftp%nr3,2,2) )
+    allocate( dVg_deps(dfftp%nr3,2,2) )
+    allocate( Vr(dfftp%nr3) )
+    allocate( Vg(dfftp%nr3) )
+
+    ! reconstruct rho(gz,gp)
+    rhog3(:,:)=(0.d0,0.d0)
+
+    do ig=1, ngm
+       iga = mill(1,ig)
+       igb = mill(2,ig)
+       igz = mill(3,ig)+1
+       igp = imill_2d(iga,igb)
+       if( igz<1 ) then
+          igz = igz + dfftp%nr3
+       end if
+
+       if( nspin == 2 ) then
+          rg3 = rhog(ig,1) + rhog(ig,2)
+       else
+          rg3 = rhog(ig,1)
+       endif
+       rhog3(igz,igp) = rg3
+
+       if( gamma_only .and. iga==0 .and. igb==0 ) then
+          igz = 1-mill(3,ig)
+          if( igz<1 ) then
+             igz = igz + dfftp%nr3
+          end if
+          rhog3(igz,igp) = CONJG(rg3)
+       endif
+    end do ! ig
+
+    ! cell settings
+    L  = at(3,3)*alat
+    S  = omega/L
+    z0 = L/2.d0
+    z1 = z0+esm_w
+    alpha = 1.0d0
+    salp = sqrt(alpha)
+
+    ! initialize
+    sigmaloclong(:,:) = 0.0d0
+
+    !****For gp!=0 case ********************
+    do igp=1, ngm_2d
+       iga = mill_2d(1,igp)
+       igb = mill_2d(2,igp)
+       g(1:2) = (iga*bg(1:2,1) + igb*bg(1:2,2))*tpiba
+       gp = sqrt(g(1)*g(1) + g(2)*g(2))
+
+       if( gp==0.0d0 ) cycle ! skip gp=0
+
+       ! derivatives by strain tensor
+       do la=1, 2
+          do mu=1, 2
+             dgp_deps(la,mu)    = -g(la)*g(mu)/gp
+             dinvgp_deps(la,mu) = +g(la)*g(mu)/gp**3
+          end do
+       end do
+
+       ! calculate dV(z)/deps
+       do iz=1, dfftp%nr3
+          if( iz-1 .gt. dfftp%nr3/2 ) then
+             z = dble(iz-1-dfftp%nr3)/dble(dfftp%nr3)*L
+          else
+             z = dble(iz-1)/dble(dfftp%nr3)*L
+          end if
+
+          ! summations over all atoms
+          dVr_deps(iz,:,:) = ( 0.0d0, 0.0d0 )
+          do ia=1, nat
+             Qa = (-1.0d0)*zv(ityp(ia))
+             ra(1:2) = tau(1:2,ia)*alat
+             za = tau(3,ia)*alat
+             if( za > L*0.5d0 ) then
+                za = za - L
+             end if
+
+             expimgpr = qe_exp( - ci*(g(1)*ra(1)+g(2)*ra(2)) )
+             experfcm = exp_erfc( -gp*(z-za), gp/2.d0/salp-salp*(z-za) )
+             experfcp = exp_erfc( +gp*(z-za), gp/2.d0/salp+salp*(z-za) )
+             dexperfcm_dgp = -(z-za)*exp_erfc( -gp*(z-za), gp/2.d0/salp-salp*(z-za) ) &
+                  - exp( -gp*(z-za) ) * qe_gauss( gp/2.d0/salp-salp*(z-za) )/2.d0/salp
+             dexperfcp_dgp = +(z-za)*exp_erfc( +gp*(z-za), gp/2.d0/salp+salp*(z-za) ) &
+                  - exp( +gp*(z-za) ) * qe_gauss( gp/2.d0/salp+salp*(z-za) )/2.d0/salp
+
+             exph1  = (cosh(gp*(z-za))*exp(-2*gp*z1) - cosh(gp*(z+za)) )/sinh(2*gp*z1)
+             exph2  = ( (z-za)*sinh(gp*(z-za))*exp(-2*gp*z1) &
+                  - 2*z1*cosh(gp*(z-za))*exp(-2*gp*z1) &
+                  - (z+za)*sinh(gp*(z+za)) )/sinh(2*gp*z1)
+             exph3  = - (cosh(gp*(z-za))*exp(-2*gp*z1) - cosh(gp*(z+za)) )/sinh(2*gp*z1)**2 * 2*z1*cosh(2*gp*z1)
+
+             !! BC1 terms
+             dVr_deps(iz,:,:) = dVr_deps(iz,:,:) &
+                  + gp*dinvgp_deps(:,:) * pi/gp * Qa/S * expimgpr * experfcm &
+                  - pi/gp * delta(:,:) * Qa/S * expimgpr * experfcm &
+                  + pi/gp * Qa/S * expimgpr * dgp_deps(:,:) * dexperfcm_dgp
+
+             !! BC1 terms
+             dVr_deps(iz,:,:) = dVr_deps(iz,:,:) &
+                  + gp*dinvgp_deps(:,:) * pi/gp * Qa/S * expimgpr * experfcp &
+                  - pi/gp * delta(:,:) * Qa/S * expimgpr * experfcp &
+                  + pi/gp * Qa/S * expimgpr * dgp_deps(:,:) * dexperfcp_dgp
+
+             !! BC2 terms
+             dVr_deps(iz,:,:) = dVr_deps(iz,:,:) &
+                  + gp*dinvgp_deps(:,:) * tpi/gp * Qa/S * expimgpr * exph1 &
+                  - tpi/gp * delta(:,:) * Qa/S * expimgpr * exph1 &
+                  + tpi/gp * Qa/S * expimgpr * dgp_deps(:,:) * (exph2+exph3)
+          end do ! ia
+       end do ! iz
+
+       ! convert dV(z)/deps to dV(gz)/deps
+       do la=1, 2
+          do mu=1, 2
+             call cft_1z( dVr_deps(:,la,mu), 1, dfftp%nr3, dfftp%nr3, -1, dVg_deps(:,la,mu) )
+          end do
+       end do
+
+       ! modifications
+       if( gamma_only ) then
+          dVg_deps(:,:,:) = dVg_deps(:,:,:)*2.0d0
+       end if
+
+       ! calculate stress tensor
+       do igz=1, dfftp%nr3
+          rg3 = rhog3(igz,igp)
+          sigmaloclong(1:2,1:2) = sigmaloclong(1:2,1:2) &
+               - real( CONJG(rg3) * dVg_deps(igz,1:2,1:2) )
+       end do ! igz
+    end do ! igp
+
+    !****For gp=0 case ********************
+    if( imill_2d(0,0) > 0 ) then
+       ! calculate V(z)
+       ! [note] this Vr does not contain a term due to efield z*efield
+       ! because it vanishes in the differentiation with respect to strain.
+       Vr(:) = 0.0d0
+       ! separation by polynomial
+       f1=(0.d0,0.d0); f2=(0.d0,0.d0); f3=(0.d0,0.d0); f4=(0.d0,0.d0)
+       z_l=-z0
+       z_r=+z0
+       do ia=1, nat
+          Qa = (-1.0d0)*zv(ityp(ia))
+          ra(1:2) = tau(1:2,ia)*alat
+          za = tau(3,ia)*alat
+          if( za > L*0.5d0 ) then
+             za = za - L
+          end if
+
+          do iz=1, dfftp%nr3
+             if( iz-1 > dfftp%nr3/2 ) then
+                z = dble(iz-1-dfftp%nr3)/dble(dfftp%nr3)*L
+             else
+                z = dble(iz-1)/dble(dfftp%nr3)*L
+             end if
+
+             !! BC1 terms
+             Vr(iz) = Vr(iz) - tpi * Qa/S &
+                  * ( (z-za)*qe_erf(salp*(z-za)) &
+                  + exp(-alpha*(z-za)**2)*sqrtpm1/salp )
+
+             !! BC2 terms
+             Vr(iz) = Vr(iz) + tpi * Qa/S * ( -z*za + z1*z1 )/z1
+          end do ! iz
+
+          f1 = f1 - tpi * Qa/S &
+               * ( (z_r-za)*qe_erf(salp*(z_r-za)) &
+               + exp(-alpha*(z_r-za)**2)*sqrtpm1/salp )
+          f1 = f1 + tpi * Qa/S * ( -z_r*za + z1*z1 )/z1
+
+          f2 = f2 - tpi * Qa/S &
+               * ( (z_l-za)*qe_erf(salp*(z_l-za)) &
+               + exp(-alpha*(z_l-za)**2)*sqrtpm1/salp )
+          f2 = f2 + tpi * Qa/S * ( -z_l*za + z1*z1 )/z1
+
+          f3 = f3 - tpi * Qa/S &
+               * qe_erf(salp*(z_r-za))
+          f3 = f3 + tpi * Qa/S * ( -za )/z1
+
+          f4 = f4 - tpi * Qa/S &
+               * qe_erf(salp*(z_l-za))
+          f4 = f4 + tpi * Qa/S * ( -za )/z1
+
+       end do ! ia
+
+       a0=(f1*z_l**2*(z_l-3.d0*z_r)+z_r*(f3*z_l**2*(-z_l+z_r) &
+            +z_r*(f2*(3.d0*z_l-z_r)+f4*z_l*(-z_l+z_r))))/(z_l-z_r)**3
+       a1=(f3*z_l**3+z_l*(6.d0*f1-6.d0*f2+(f3+2.d0*f4)*z_l)*z_r &
+            -(2*f3+f4)*z_l*z_r**2-f4*z_r**3)/(z_l-z_r)**3
+       a2=(-3*f1*(z_l+z_r)+3.d0*f2*(z_l+z_r)-(z_l-z_r)*(2*f3*z_l &
+            +f4*z_l+f3*z_r+2*f4*z_r))/(z_l-z_r)**3
+       a3=(2.d0*f1-2.d0*f2+(f3+f4)*(z_l-z_r))/(z_l-z_r)**3
+
+       ! remove polynomial from V(z)
+       do iz=1, dfftp%nr3
+          if( iz-1 .gt. dfftp%nr3/2 ) then
+             z = dble(iz-1-dfftp%nr3)/dble(dfftp%nr3)*L
+          else
+             z = dble(iz-1)/dble(dfftp%nr3)*L
+          end if
+          Vr(iz) = Vr(iz) - (a0+a1*z+a2*z**2+a3*z**3)
+       enddo
+
+       ! convert V(z) to V(gz) without polynomial
+       call cft_1z(Vr,1,dfftp%nr3,dfftp%nr3,-1,Vg)
+
+       ! add polynomial to V(gz)
+       do igz=2, dfftp%nr3
+          if( igz<=dfftp%nr3/2 )then
+             gz = dble(igz-1)*tpi/L
+          else
+             gz = dble(igz-1-dfftp%nr3)*tpi/L
+          end if
+
+          Vg(igz) = Vg(igz) &
+               + a1 * ci * cos(gz*z0)/gz &
+               + a2 * 2.0d0 * cos(gz*z0)/gz**2 &
+               + a3 * ci * z0**2 * cos(gz*z0)/gz &
+               - a3 * ci * 6.0d0 * cos(gz*z0)/gz**3
+       end do
+       Vg(1) = Vg(1) + a0*1.0d0 + a2*z0**2/3.0d0
+
+       ! calculate dV/deps(gz)
+       do igz=1, dfftp%nr3
+          dVg_deps(igz,:,:) = -delta(:,:) * Vg(igz)
+       end do ! igz
+
+       ! calculate stress tensor
+       do igz=1, dfftp%nr3
+          rg3 = rhog3(igz,imill_2d(0,0))
+          sigmaloclong(1:2,1:2) = sigmaloclong(1:2,1:2) &
+               - real( CONJG(rg3) * dVg_deps(igz,1:2,1:2) )
+       end do ! igz
+    endif ! imill_2d(0,0) > 0
+
+    ! e2 means hartree -> Ry.
+    sigmaloclong(:,:) = sigmaloclong(:,:)*(e2)
+
+    call mp_sum( sigmaloclong, intra_bgrp_comm )
+
+    deallocate( rhog3 )
+    deallocate( dVr_deps )
+    deallocate( dVg_deps )
+    deallocate( Vr )
+    deallocate( Vg )
+
+    return
+  end subroutine esm_stres_loclong_bc2
+
+
+
+  subroutine esm_stres_loclong_bc3( sigmaloclong, rhog )
+    use kinds,         only : DP
+    use gvect,         only : ngm, mill
+    use lsda_mod,      only : nspin
+    use constants,     only : pi, sqrtpm1, tpi, fpi, e2
+    use cell_base,     only : omega, alat, at, tpiba, bg
+    use ions_base,     only : zv, nat, tau, ityp
+    use control_flags, only : gamma_only
+    use fft_base,      only : dfftp
+    use fft_scalar,    only : cft_1z
+    use mp_global,     only : intra_bgrp_comm
+    use mp,            only : mp_sum
+    implicit none
+
+    real(DP), intent(out) :: sigmaloclong(3,3)
+    complex(DP) :: rhog(ngm,nspin)   !  n(G)
+
+    integer  :: ig, iga, igb, igz, igp, la, mu, iz, ia
+    real(DP) :: L, S, z0, z1, alpha, salp, z
+    real(DP) :: Qa, ra(2), za
+    real(DP) :: g(2), gp, gz
+    complex(DP), parameter :: ci = dcmplx(0.0d0, 1.0d0)
+    complex(DP) :: rg3
+    complex(DP) :: expimgpr, experfcm, experfcp, dexperfcm_dgp, dexperfcp_dgp
+    complex(DP) :: expm
+    real(DP)    :: z_r, z_l
+    complex(DP) :: a0, a1, a2, a3, f1, f2, f3, f4
+    real(DP), parameter :: delta(2,2) = reshape( (/ 1.0d0, 0.0d0, 0.0d0, 1.0d0 /), (/2,2/) )
+    real(DP) :: dgp_deps(2,2)  !! dgp/deps
+    real(DP) :: dinvgp_deps(2,2)  !! dgp^-1/deps
+
+    complex(DP), allocatable :: rhog3(:,:)
+    complex(DP), allocatable :: dVr_deps(:,:,:)
+    complex(DP), allocatable :: dVg_deps(:,:,:)
+    complex(DP), allocatable :: Vr(:)
+    complex(DP), allocatable :: Vg(:)
+
+    real(DP) :: sigmaloclong_bc1(3,3)
+
+    allocate( rhog3(dfftp%nr3,ngm_2d) )
+    allocate( dVr_deps(dfftp%nr3,2,2) )
+    allocate( dVg_deps(dfftp%nr3,2,2) )
+    allocate( Vr(dfftp%nr3) )
+    allocate( Vg(dfftp%nr3) )
+
+    ! reconstruct rho(gz,gp)
+    rhog3(:,:)=(0.d0,0.d0)
+
+    do ig=1, ngm
+       iga = mill(1,ig)
+       igb = mill(2,ig)
+       igz = mill(3,ig)+1
+       igp = imill_2d(iga,igb)
+       if( igz<1 ) then
+          igz = igz + dfftp%nr3
+       end if
+
+       if( nspin == 2 ) then
+          rg3 = rhog(ig,1) + rhog(ig,2)
+       else
+          rg3 = rhog(ig,1)
+       endif
+       rhog3(igz,igp) = rg3
+          
+       if( gamma_only .and. iga==0 .and. igb==0 ) then
+          igz = 1-mill(3,ig)
+          if( igz<1 ) then
+             igz = igz + dfftp%nr3
+          end if
+          rhog3(igz,igp) = CONJG(rg3)
+       endif
+    end do ! ig
+
+    ! cell settings
+    L  = at(3,3)*alat
+    S  = omega/L
+    z0 = L/2.d0
+    z1 = z0+esm_w
+    alpha = 1.0d0
+    salp = sqrt(alpha)
+
+    ! initialize
+    sigmaloclong(:,:) = 0.0d0
+
+    !****For gp!=0 case ********************
+    do igp=1, ngm_2d
+       iga = mill_2d(1,igp)
+       igb = mill_2d(2,igp)
+       g(1:2) = (iga*bg(1:2,1) + igb*bg(1:2,2))*tpiba
+       gp = sqrt(g(1)*g(1) + g(2)*g(2))
+
+       if( gp==0.0d0 ) cycle ! skip gp=0
+
+       ! derivatives by strain tensor
+       do la=1, 2
+          do mu=1, 2
+             dgp_deps(la,mu)    = -g(la)*g(mu)/gp
+             dinvgp_deps(la,mu) = +g(la)*g(mu)/gp**3
+          end do
+       end do
+
+       ! calculate dV(z)/deps
+       do iz=1, dfftp%nr3
+          if( iz-1 .gt. dfftp%nr3/2 ) then
+             z = dble(iz-1-dfftp%nr3)/dble(dfftp%nr3)*L
+          else
+             z = dble(iz-1)/dble(dfftp%nr3)*L
+          end if
+
+          ! summations over all atoms
+          dVr_deps(iz,:,:) = ( 0.0d0, 0.0d0 )
+          do ia=1, nat
+             Qa = (-1.0d0)*zv(ityp(ia))
+             ra(1:2) = tau(1:2,ia)*alat
+             za = tau(3,ia)*alat
+             if( za > L*0.5d0 ) then
+                za = za - L
+             end if
+
+             expimgpr = qe_exp( - ci*(g(1)*ra(1)+g(2)*ra(2)) )
+             experfcm = exp_erfc( -gp*(z-za), gp/2.d0/salp-salp*(z-za) )
+             experfcp = exp_erfc( +gp*(z-za), gp/2.d0/salp+salp*(z-za) )
+             dexperfcm_dgp = -(z-za)*exp_erfc( -gp*(z-za), gp/2.d0/salp-salp*(z-za) ) &
+                  - exp( -gp*(z-za) ) * qe_gauss( gp/2.d0/salp-salp*(z-za) )/2.d0/salp
+             dexperfcp_dgp = +(z-za)*exp_erfc( +gp*(z-za), gp/2.d0/salp+salp*(z-za) ) &
+                  - exp( +gp*(z-za) ) * qe_gauss( gp/2.d0/salp+salp*(z-za) )/2.d0/salp
+
+             expm = exp( -gp*(-z+2*z1-za) )
+
+             !! BC1 terms
+             dVr_deps(iz,:,:) = dVr_deps(iz,:,:) &
+                  + gp*dinvgp_deps(:,:) * pi/gp * Qa/S * expimgpr * experfcm &
+                  - pi/gp * delta(:,:) * Qa/S * expimgpr * experfcm &
+                  + pi/gp * Qa/S * expimgpr * dgp_deps(:,:) * dexperfcm_dgp
+
+             !! BC1 terms
+             dVr_deps(iz,:,:) = dVr_deps(iz,:,:) &
+                  + gp*dinvgp_deps(:,:) * pi/gp * Qa/S * expimgpr * experfcp &
+                  - pi/gp * delta(:,:) * Qa/S * expimgpr * experfcp &
+                  + pi/gp * Qa/S * expimgpr * dgp_deps(:,:) * dexperfcp_dgp
+
+             !! BC3 terms
+             dVr_deps(iz,:,:) = dVr_deps(iz,:,:) &
+                  - gp*dinvgp_deps(:,:) * tpi/gp * Qa/S * expimgpr * expm &
+                  + tpi/gp * delta(:,:) * Qa/S * expimgpr * expm &
+                  + tpi/gp * Qa/S * expimgpr * dgp_deps(:,:) * (-z+2*z1-za) * expm
+          end do ! ia
+       end do ! iz
+
+       ! convert dV(z)/deps to dV(gz)/deps
+       do la=1, 2
+          do mu=1, 2
+             call cft_1z( dVr_deps(:,la,mu), 1, dfftp%nr3, dfftp%nr3, -1, dVg_deps(:,la,mu) )
+          end do
+       end do
+
+       ! modifications
+       if( gamma_only ) then
+          dVg_deps(:,:,:) = dVg_deps(:,:,:)*2.0d0
+       end if
+
+       ! calculate stress tensor
+       do igz=1, dfftp%nr3
+          rg3 = rhog3(igz,igp)
+          sigmaloclong(1:2,1:2) = sigmaloclong(1:2,1:2) &
+               - real( CONJG(rg3) * dVg_deps(igz,1:2,1:2) )
+       end do ! igz
+    end do ! igp
+
+    !****For gp=0 case ********************
+    if( imill_2d(0,0) > 0 ) then
+       ! calculate V(z)
+       Vr(:) = 0.0d0
+       ! separation by polynomial
+       f1=(0.d0,0.d0); f2=(0.d0,0.d0); f3=(0.d0,0.d0); f4=(0.d0,0.d0)
+       z_l=-z0
+       z_r=+z0
+       do ia=1, nat
+          Qa = (-1.0d0)*zv(ityp(ia))
+          ra(1:2) = tau(1:2,ia)*alat
+          za = tau(3,ia)*alat
+          if( za > L*0.5d0 ) then
+             za = za - L
+          end if
+
+          do iz=1, dfftp%nr3
+             if( iz-1 > dfftp%nr3/2 ) then
+                z = dble(iz-1-dfftp%nr3)/dble(dfftp%nr3)*L
+             else
+                z = dble(iz-1)/dble(dfftp%nr3)*L
+             end if
+
+             !! BC1 terms
+             Vr(iz) = Vr(iz) - tpi * Qa/S &
+                  * ( (z-za)*qe_erf(salp*(z-za)) &
+                  + exp(-alpha*(z-za)**2)*sqrtpm1/salp )
+
+             !! BC3 terms
+             Vr(iz) = Vr(iz) + tpi * Qa/S * (-z+2*z1-za)
+          end do ! iz
+
+          f1 = f1 - tpi * Qa/S &
+               * ( (z_r-za)*qe_erf(salp*(z_r-za)) &
+               + exp(-alpha*(z_r-za)**2)*sqrtpm1/salp )
+          f1 = f1 + tpi * Qa/S * (-z_r+2*z1-za)
+
+          f2 = f2 - tpi * Qa/S &
+               * ( (z_l-za)*qe_erf(salp*(z_l-za)) &
+               + exp(-alpha*(z_l-za)**2)*sqrtpm1/salp )
+          f2 = f2 + tpi * Qa/S * (-z_l+2*z1-za)
+
+          f3 = f3 - tpi * Qa/S &
+               * qe_erf(salp*(z_r-za))
+          f3 = f3 + tpi * Qa/S * (-1.0d0)
+
+          f4 = f4 - tpi * Qa/S &
+               * qe_erf(salp*(z_l-za))
+          f4 = f4 + tpi * Qa/S * (-1.0d0)
+       end do ! ia
+
+       a0=(f1*z_l**2*(z_l-3.d0*z_r)+z_r*(f3*z_l**2*(-z_l+z_r) &
+            +z_r*(f2*(3.d0*z_l-z_r)+f4*z_l*(-z_l+z_r))))/(z_l-z_r)**3
+       a1=(f3*z_l**3+z_l*(6.d0*f1-6.d0*f2+(f3+2.d0*f4)*z_l)*z_r &
+            -(2*f3+f4)*z_l*z_r**2-f4*z_r**3)/(z_l-z_r)**3
+       a2=(-3*f1*(z_l+z_r)+3.d0*f2*(z_l+z_r)-(z_l-z_r)*(2*f3*z_l &
+            +f4*z_l+f3*z_r+2*f4*z_r))/(z_l-z_r)**3
+       a3=(2.d0*f1-2.d0*f2+(f3+f4)*(z_l-z_r))/(z_l-z_r)**3
+
+       ! remove polynomial from V(z)
+       do iz=1, dfftp%nr3
+          if( iz-1 .gt. dfftp%nr3/2 ) then
+             z = dble(iz-1-dfftp%nr3)/dble(dfftp%nr3)*L
+          else
+             z = dble(iz-1)/dble(dfftp%nr3)*L
+          end if
+          Vr(iz) = Vr(iz) - (a0+a1*z+a2*z**2+a3*z**3)
+       enddo
+
+       ! convert V(z) to V(gz) without polynomial
+       call cft_1z(Vr,1,dfftp%nr3,dfftp%nr3,-1,Vg)
+
+       ! add polynomial to V(gz)
+       do igz=2, dfftp%nr3
+          if( igz<=dfftp%nr3/2 )then
+             gz = dble(igz-1)*tpi/L
+          else
+             gz = dble(igz-1-dfftp%nr3)*tpi/L
+          end if
+
+          Vg(igz) = Vg(igz) &
+               + a1 * ci * cos(gz*z0)/gz &
+               + a2 * 2.0d0 * cos(gz*z0)/gz**2 &
+               + a3 * ci * z0**2 * cos(gz*z0)/gz &
+               - a3 * ci * 6.0d0 * cos(gz*z0)/gz**3
+       end do
+       Vg(1) = Vg(1) + a0*1.0d0 + a2*z0**2/3.0d0
+
+       ! calculate dV/deps(gz)
+       do igz=1, dfftp%nr3
+          dVg_deps(igz,:,:) = -delta(:,:) * Vg(igz)
+       end do ! igz
+
+       ! calculate stress tensor
+       do igz=1, dfftp%nr3
+          rg3 = rhog3(igz,imill_2d(0,0))
+          sigmaloclong(1:2,1:2) = sigmaloclong(1:2,1:2) &
+               - real( CONJG(rg3) * dVg_deps(igz,1:2,1:2) )
+       end do ! igz
+    endif ! imill_2d(0,0) > 0
+
+    ! e2 means hartree -> Ry.
+    sigmaloclong(:,:) = sigmaloclong(:,:)*(e2)
+
+    call mp_sum( sigmaloclong, intra_bgrp_comm )
+
+    deallocate( rhog3 )
+    deallocate( dVr_deps )
+    deallocate( dVg_deps )
+    deallocate( Vr )
+    deallocate( Vg )
+
+    return
+  end subroutine esm_stres_loclong_bc3
 
 SUBROUTINE esm_force_ew( forceion )
   !-----------------------------------------------------------------------
@@ -2994,7 +5398,7 @@ SUBROUTINE esm_force_ewr_pbc ( alpha_g, forceion )
   USE mp_global,        ONLY : intra_bgrp_comm
 
   implicit none
-  integer               :: na, nb, nr, nrm, ip, np, ith
+  integer               :: na, nb, nr, nrm, ip, np
   ! counter on atoms
   ! counter on atoms
   ! counter over direct vectors
@@ -3013,9 +5417,6 @@ SUBROUTINE esm_force_ewr_pbc ( alpha_g, forceion )
   real(DP)              :: tmp, fac, rmax0, rr
   ! rmax0: the maximum radius to consider real space sum
   real(DP), allocatable :: force(:,:)
-#if defined __OPENMP
-  integer, external   :: OMP_GET_THREAD_NUM
-#endif
 
   tmp=sqrt(alpha_g)
   rmax0 = 5.d0 / tmp / alat
@@ -3023,16 +5424,9 @@ SUBROUTINE esm_force_ewr_pbc ( alpha_g, forceion )
   ip = mp_rank( intra_bgrp_comm )
   np = mp_size( intra_bgrp_comm )
 
-!$omp parallel private( force, na, nb, dtau, fac, r, r2, nrm, ith )
-  ith = 0
-#if defined __OPENMP
-  ith = OMP_GET_THREAD_NUM()
-#endif
-
   allocate( force(3,nat) )
   force(:,:)=0.d0
   do na = ip+1, nat, np
-!$omp do
      do nb = 1, nat
         if (nb.eq.na)cycle
         dtau(:)=tau(:,na)-tau(:,nb)
@@ -3051,13 +5445,9 @@ SUBROUTINE esm_force_ewr_pbc ( alpha_g, forceion )
               *exp(-tmp**2*rr**2))*r(:,nr)*alat
         enddo
      enddo
-!$omp end do
   enddo
-!$omp critical
   forceion(:,:)=forceion(:,:)+force(:,:)
-!$omp end critical
   deallocate( force )
-!$omp end parallel
 
 END SUBROUTINE esm_force_ewr_pbc
 
@@ -3072,7 +5462,7 @@ SUBROUTINE esm_force_ewr_bc4 ( alpha_g, forceion )
   USE mp_global,        ONLY : intra_bgrp_comm
 
   implicit none
-  integer               :: na, nb, nr, nrm, ipol, ip, np, ith
+  integer               :: na, nb, nr, nrm, ipol, ip, np
   ! counter on atoms
   ! counter on atoms
   ! counter over direct vectors
@@ -3098,9 +5488,6 @@ SUBROUTINE esm_force_ewr_bc4 ( alpha_g, forceion )
   ! znrm: threashold value for normal RSUM and Smooth-ESM's RSUM
   real(DP), parameter :: eps=1.d-11, epsneib=1.d-6
   real(DP), allocatable :: force(:,:)
-#if defined __OPENMP
-  integer, external   :: OMP_GET_THREAD_NUM
-#endif
 
   L=at(3,3)*alat
   z0=L/2.d0
@@ -3154,20 +5541,12 @@ SUBROUTINE esm_force_ewr_bc4 ( alpha_g, forceion )
   ip = mp_rank( intra_bgrp_comm )
   np = mp_size( intra_bgrp_comm )
 
-!$omp parallel private( force, na, z, nb, zp, dtau, fac, r, r2, nrm, rxy, &
-!$omp                   rxyz, ss, ith )
-  ith = 0
-#if defined __OPENMP
-  ith = OMP_GET_THREAD_NUM()
-#endif
-
   allocate( force(3,nat) )
   force(:,:)=0.d0
   do na = ip+1, nat, np
      z=tau(3,na)
      if (z.gt.at(3,3)*0.5) z=z-at(3,3)
      z=z*alat
-!$omp do
      do nb = 1, nat
         if (nb.eq.na)cycle
         zp=tau(3,nb)
@@ -3265,8 +5644,6 @@ SUBROUTINE esm_force_ewr_bc4 ( alpha_g, forceion )
            endif ! if for zp
         endif
      enddo
-!$omp end do
-     if( ith /= 0 ) cycle
      if (z < znrm) then
         ss=0.d0
      elseif (z < z1) then
@@ -3277,11 +5654,8 @@ SUBROUTINE esm_force_ewr_bc4 ( alpha_g, forceion )
      ! factor e2: hartree -> Ry.
      force(3,na)=force(3,na)-zv(ityp(na))**2*e2*ss
   enddo
-!$omp critical
   forceion(:,:)=forceion(:,:)+force(:,:)
-!$omp end critical
   deallocate( force )
-!$omp end parallel
 
 END SUBROUTINE esm_force_ewr_bc4
 
@@ -3372,12 +5746,7 @@ SUBROUTINE esm_force_ewg_bc1 ( alpha_g, forceion )
   z1=z0+esm_w
   tmp=sqrt(alpha_g)
 
-!$omp parallel private( for, it1, it2, z, zp, t1_for, t2_for, &
-!$omp                   kk1_for, kk2_for, c1_for, c2_for, &
-!$omp                   ng_2d, k1, k2, t, gp2, gp, ff, t1, t2, &
-!$omp                   arg001, arg002, arg101, arg102 )
   for=0.d0
-!$omp do
   do it1=1,nat
   do it2=1,nat
      z=tau(3,it1)
@@ -3424,11 +5793,7 @@ SUBROUTINE esm_force_ewg_bc1 ( alpha_g, forceion )
      
   enddo
   enddo
-!$omp end do
-!$omp critical
   for_g(:,:) = for_g(:,:) + for(:,:)
-!$omp end critical
-!$omp end parallel
 
   for_g(:,:)=for_g(:,:)*e2 ! factor e2: hartree -> Ry.
 
@@ -3470,12 +5835,7 @@ SUBROUTINE esm_force_ewg_bc2 ( alpha_g, forceion )
   z1=z0+esm_w
   tmp=sqrt(alpha_g)
 
-!$omp parallel private( for, it1, it2, z, zp, t1_for, t2_for, &
-!$omp                   kk1_for, kk2_for, c1_for, c2_for, ng_2d, k1, k2, t, &
-!$omp                   gp2, gp, ff, t1, t2, arg001, arg002, arg003, arg004, &
-!$omp                   arg005, arg006, arg007, arg101, arg102 )
   for=0.d0
-!$omp do
   do it1=1,nat
   do it2=1,nat
      z=tau(3,it1)
@@ -3533,11 +5893,7 @@ SUBROUTINE esm_force_ewg_bc2 ( alpha_g, forceion )
      
   enddo
   enddo
-!$omp end do
-!$omp critical
   for_g(:,:) = for_g(:,:) + for(:,:)
-!$omp end critical
-!$omp end parallel
 
   for_g(:,:)=for_g(:,:)*e2 ! factor e2: hartree -> Ry.
 
@@ -3545,6 +5901,10 @@ SUBROUTINE esm_force_ewg_bc2 ( alpha_g, forceion )
      forceion(1,it1)=-sum( for_g(1:2,it1)*bg(1,1:2) )*sqrt(tpiba2)
      forceion(2,it1)=-sum( for_g(1:2,it1)*bg(2,1:2) )*sqrt(tpiba2)
      forceion(3,it1)=-for_g(3,it1)
+     if(gstart==2)then
+        !! add coulomb fource of ions under efield
+        forceion(3,it1)=forceion(3,it1) - zv(ityp(it1))*esm_efield
+     endif
   enddo
   
   return
@@ -3578,11 +5938,7 @@ SUBROUTINE esm_force_ewg_bc3 ( alpha_g, forceion )
   z1=z0+esm_w
   tmp=sqrt(alpha_g)
 
-!$omp parallel private( for, it1, it2, z, zp, t1_for, t2_for, kk1_for, &
-!$omp                   kk2_for, c1_for, c2_for, ng_2d, k1, k2, t, gp2, &
-!$omp                   gp, ff, t1, t2, arg001, arg002, arg003, arg101, arg102 )
   for=0.d0
-!$omp do
   do it1=1,nat
   do it2=1,nat
      z=tau(3,it1)
@@ -3633,11 +5989,7 @@ SUBROUTINE esm_force_ewg_bc3 ( alpha_g, forceion )
      
   enddo
   enddo
-!$omp end do
-!$omp critical
   for_g(:,:) = for_g(:,:) + for(:,:)
-!$omp end critical
-!$omp end parallel
 
   for_g(:,:)=for_g(:,:)*e2 ! factor e2: hartree -> Ry.
 
@@ -3686,17 +6038,7 @@ SUBROUTINE esm_force_ewg_bc4 ( alpha_g, forceion )
   z1=z0+esm_w
   tmp=sqrt(alpha_g)
 
-!$omp parallel private( for, it1, it2, z, zp, t1_for, t2_for, &
-!$omp                   kk1_for, kk2_for, c1_for, c2_for, &
-!$omp                   ng_2d, k1, k2, t, gp2, &
-!$omp                   gp, ff, t1, t2, t3, arg001, arg002, arg003, arg004, &
-!$omp                   arg005, arg006, arg007, arg008, arg009, arg010, &
-!$omp                   arg011, arg012, arg101, arg102, arg103, arg104, &
-!$omp                   arg105, arg106, arg107, arg108, arg109, arg110, &
-!$omp                   arg111, arg112, arg113, arg114, alpha, beta, kappa, &
-!$omp                   xi, chi, lambda )
   for=0.d0
-!$omp do
   do it1=1,nat
   do it2=1,nat
      z=tau(3,it1)
@@ -3885,11 +6227,7 @@ SUBROUTINE esm_force_ewg_bc4 ( alpha_g, forceion )
      
   enddo
   enddo
-!$omp end do
-!$omp critical
   for_g(:,:) = for_g(:,:) + for(:,:)
-!$omp end critical
-!$omp end parallel
 
   for_g(:,:)=for_g(:,:)*e2 ! factor e2: hartree -> Ry.
 
@@ -3925,7 +6263,7 @@ SUBROUTINE esm_force_lc_bc1 ( aux, forcelc )
   USE control_flags,    ONLY : gamma_only
   USE ions_base,        ONLY : zv, nat, tau, ityp
   USE fft_base,         ONLY : dfftp
-  USE esm_cft,          ONLY : esm_cft_1z
+  USE fft_scalar,       ONLY : cft_1z
 
   implicit none
   complex(DP), intent(in)    :: aux(dfftp%nnr) ! aux contains n(G) (input)   
@@ -3944,7 +6282,6 @@ SUBROUTINE esm_force_lc_bc1 ( aux, forcelc )
 ! Map to FFT mesh
   allocate(rhog3(dfftp%nr3,ngm_2d))
   rhog3(:,:)=(0.d0,0.d0)
-!$omp parallel do private( n1, n2, ng_2d, n3 )
   do ng=1,ngm
       n1 = mill(1,ng)
       n2 = mill(2,ng)
@@ -3958,7 +6295,6 @@ SUBROUTINE esm_force_lc_bc1 ( aux, forcelc )
          rhog3(n3,ng_2d)=aux(nlm(ng))
       endif  
   enddo
-!$omp end parallel do
 
   L=at(3,3)*alat
   sa=omega/L
@@ -3970,14 +6306,9 @@ SUBROUTINE esm_force_lc_bc1 ( aux, forcelc )
   for_g(:,:)=0.d0
 
 !**** for gp!=0 *********
-!$omp parallel private( for, vg_f, vg_f_r, ng_2d, k1, k2, k3, &
-!$omp                   gp2, gp, it, tt, pp, cc, ss, zp, iz, z, t1, t2, &
-!$omp                   c1, c2, r1, r2, f1, &
-!$omp                   f2, arg001, arg002, arg101, arg102 )
   allocate(for(3,nat),vg_f(dfftp%nr3x,3), vg_f_r(dfftp%nr3x,3))
   for(:,:)=0.d0
   vg_f_r(:,:)=(0.d0,0.d0)
-!$omp do
   do ng_2d = 1, ngm_2d
      k1 = mill_2d(1,ng_2d)
      k2 = mill_2d(2,ng_2d)
@@ -4017,9 +6348,9 @@ SUBROUTINE esm_force_lc_bc1 ( aux, forcelc )
            c2(:)=(0.d0,0.d0)
            vg_f_r(iz,:) = tt*(c1(:)+c2(:))
         enddo
-        call esm_cft_1z(vg_f_r(:,1),1,dfftp%nr3,dfftp%nr3,-1,vg_f(:,1))
-        call esm_cft_1z(vg_f_r(:,2),1,dfftp%nr3,dfftp%nr3,-1,vg_f(:,2))
-        call esm_cft_1z(vg_f_r(:,3),1,dfftp%nr3,dfftp%nr3,-1,vg_f(:,3))
+        call cft_1z(vg_f_r(:,1),1,dfftp%nr3,dfftp%nr3,-1,vg_f(:,1))
+        call cft_1z(vg_f_r(:,2),1,dfftp%nr3,dfftp%nr3,-1,vg_f(:,2))
+        call cft_1z(vg_f_r(:,3),1,dfftp%nr3,dfftp%nr3,-1,vg_f(:,3))
         do iz=1,dfftp%nr3
            r1= dble(rhog3(iz,ng_2d))
            r2=aimag(rhog3(iz,ng_2d))
@@ -4029,11 +6360,8 @@ SUBROUTINE esm_force_lc_bc1 ( aux, forcelc )
         enddo
      enddo
   enddo
-!$omp critical
   for_g(:,:)=for_g(:,:)+for(:,:)
-!$omp end critical
   deallocate(for,vg_f,vg_f_r)
-!$omp end parallel
 
 !***** for gp==0********
   ng_2d = imill_2d(0,0)
@@ -4055,7 +6383,7 @@ SUBROUTINE esm_force_lc_bc1 ( aux, forcelc )
 
            vg_f_r(iz,1) = tt*(cc1+cc2)
         enddo
-        call esm_cft_1z(vg_f_r(:,1),1,dfftp%nr3,dfftp%nr3,-1,vg_f(:,1))
+        call cft_1z(vg_f_r(:,1),1,dfftp%nr3,dfftp%nr3,-1,vg_f(:,1))
         do iz=1,dfftp%nr3
            r1= dble(rhog3(iz,ng_2d))
            r2=aimag(rhog3(iz,ng_2d))
@@ -4097,7 +6425,7 @@ SUBROUTINE esm_force_lc_bc2 ( aux, forcelc )
   USE control_flags,    ONLY : gamma_only
   USE ions_base,        ONLY : zv, nat, tau, ityp
   USE fft_base,         ONLY : dfftp
-  USE esm_cft,          ONLY : esm_cft_1z
+  USE fft_scalar,       ONLY : cft_1z
 
   implicit none
   complex(DP), intent(in)    :: aux(dfftp%nnr) ! aux contains n(G) (input)   
@@ -4117,7 +6445,6 @@ SUBROUTINE esm_force_lc_bc2 ( aux, forcelc )
 ! Map to FFT mesh
   allocate(rhog3(dfftp%nr3,ngm_2d))
   rhog3(:,:)=(0.d0,0.d0)
-!$omp parallel do private( n1, n2, ng_2d, n3 )
   do ng=1,ngm
       n1 = mill(1,ng)
       n2 = mill(2,ng)
@@ -4131,7 +6458,6 @@ SUBROUTINE esm_force_lc_bc2 ( aux, forcelc )
          rhog3(n3,ng_2d)=aux(nlm(ng))
       endif  
   enddo
-!$omp end parallel do
 
   L=at(3,3)*alat
   sa=omega/L
@@ -4143,14 +6469,9 @@ SUBROUTINE esm_force_lc_bc2 ( aux, forcelc )
   for_g(:,:)=0.d0
 
 !**** for gp!=0 *********
-!$omp parallel private( for, vg_f, vg_f_r, ng_2d, k1, k2, k3, &
-!$omp                   gp2, gp, it, tt, pp, cc, ss, zp, iz, z, t1, t2, &
-!$omp                   c1, c2, r1, r2, f1, f2, arg001, arg002, arg003, &
-!$omp                   arg005, arg006, arg008, arg009, arg101, arg102 )
   allocate(for(3,nat),vg_f(dfftp%nr3x,3),vg_f_r(dfftp%nr3x,3))
   for(:,:)=0.d0
   vg_f_r(:,:)=(0.d0,0.d0)
-!$omp do
   do ng_2d = 1, ngm_2d
      k1 = mill_2d(1,ng_2d)
      k2 = mill_2d(2,ng_2d)
@@ -4200,9 +6521,9 @@ SUBROUTINE esm_force_lc_bc2 ( aux, forcelc )
               -exp(arg005)+exp(arg003))/(1.d0-exp(arg009))/2.d0
            vg_f_r(iz,:) = tt*(c1(:)+c2(:))
         enddo
-        call esm_cft_1z(vg_f_r(:,1),1,dfftp%nr3,dfftp%nr3,-1,vg_f(:,1))
-        call esm_cft_1z(vg_f_r(:,2),1,dfftp%nr3,dfftp%nr3,-1,vg_f(:,2))
-        call esm_cft_1z(vg_f_r(:,3),1,dfftp%nr3,dfftp%nr3,-1,vg_f(:,3))
+        call cft_1z(vg_f_r(:,1),1,dfftp%nr3,dfftp%nr3,-1,vg_f(:,1))
+        call cft_1z(vg_f_r(:,2),1,dfftp%nr3,dfftp%nr3,-1,vg_f(:,2))
+        call cft_1z(vg_f_r(:,3),1,dfftp%nr3,dfftp%nr3,-1,vg_f(:,3))
         do iz=1,dfftp%nr3
            r1= dble(rhog3(iz,ng_2d))
            r2=aimag(rhog3(iz,ng_2d))
@@ -4212,11 +6533,8 @@ SUBROUTINE esm_force_lc_bc2 ( aux, forcelc )
         enddo
      enddo
   enddo
-!$omp critical
   for_g(:,:)=for_g(:,:)+for(:,:)
-!$omp end critical
   deallocate(for,vg_f,vg_f_r)
-!$omp end parallel
 
 !***** for gp==0********
   ng_2d = imill_2d(0,0)
@@ -4237,7 +6555,7 @@ SUBROUTINE esm_force_lc_bc2 ( aux, forcelc )
            cc2=-0.5d0*(z/z1)
            vg_f_r(iz,1) = tt*(cc1+cc2)
         enddo
-        call esm_cft_1z(vg_f_r(:,1),1,dfftp%nr3,dfftp%nr3,-1,vg_f(:,1))
+        call cft_1z(vg_f_r(:,1),1,dfftp%nr3,dfftp%nr3,-1,vg_f(:,1))
         do iz=1,dfftp%nr3
            r1= dble(rhog3(iz,ng_2d))
            r2=aimag(rhog3(iz,ng_2d))
@@ -4278,7 +6596,7 @@ SUBROUTINE esm_force_lc_bc3 ( aux, forcelc )
   USE control_flags,    ONLY : gamma_only
   USE ions_base,        ONLY : zv, nat, tau, ityp
   USE fft_base,         ONLY : dfftp
-  USE esm_cft,          ONLY : esm_cft_1z
+  USE fft_scalar,       ONLY : cft_1z
 
   implicit none
   complex(DP), intent(in)    :: aux(dfftp%nnr) ! aux contains n(G) (input)   
@@ -4297,7 +6615,6 @@ SUBROUTINE esm_force_lc_bc3 ( aux, forcelc )
 ! Map to FFT mesh
   allocate(rhog3(dfftp%nr3,ngm_2d))
   rhog3(:,:)=(0.d0,0.d0)
-!$omp parallel do private( n1, n2, ng_2d, n3 )
   do ng=1,ngm
       n1 = mill(1,ng)
       n2 = mill(2,ng)
@@ -4311,7 +6628,6 @@ SUBROUTINE esm_force_lc_bc3 ( aux, forcelc )
          rhog3(n3,ng_2d)=aux(nlm(ng))
       endif  
   enddo
-!$omp end parallel do
 
   L=at(3,3)*alat
   sa=omega/L
@@ -4323,14 +6639,9 @@ SUBROUTINE esm_force_lc_bc3 ( aux, forcelc )
   for_g(:,:)=0.d0
 
 !**** for gp!=0 *********
-!$omp parallel private( for, vg_f, vg_f_r,  ng_2d, k1, k2, k3, &
-!$omp                   gp2, gp, it, tt, pp, cc, ss, zp, iz, z, t1, t2, &
-!$omp                   c1, c2, r1, r2, f1, f2, &
-!$omp                   arg001, arg002, arg003, arg101, arg102 )
   allocate(for(3,nat),vg_f(dfftp%nr3x,3),vg_f_r(dfftp%nr3x,3))
   for(:,:)=0.d0
   vg_f_r(:,:)=(0.d0,0.d0)
-!$omp do
   do ng_2d = 1, ngm_2d
      k1 = mill_2d(1,ng_2d)
      k2 = mill_2d(2,ng_2d)
@@ -4374,9 +6685,9 @@ SUBROUTINE esm_force_lc_bc3 ( aux, forcelc )
 
            vg_f_r(iz,:) = tt*(c1(:)+c2(:))
         enddo
-        call esm_cft_1z(vg_f_r(:,1),1,dfftp%nr3,dfftp%nr3,-1,vg_f(:,1))
-        call esm_cft_1z(vg_f_r(:,2),1,dfftp%nr3,dfftp%nr3,-1,vg_f(:,2))
-        call esm_cft_1z(vg_f_r(:,3),1,dfftp%nr3,dfftp%nr3,-1,vg_f(:,3))
+        call cft_1z(vg_f_r(:,1),1,dfftp%nr3,dfftp%nr3,-1,vg_f(:,1))
+        call cft_1z(vg_f_r(:,2),1,dfftp%nr3,dfftp%nr3,-1,vg_f(:,2))
+        call cft_1z(vg_f_r(:,3),1,dfftp%nr3,dfftp%nr3,-1,vg_f(:,3))
         do iz=1,dfftp%nr3
            r1= dble(rhog3(iz,ng_2d))
            r2=aimag(rhog3(iz,ng_2d))
@@ -4386,11 +6697,8 @@ SUBROUTINE esm_force_lc_bc3 ( aux, forcelc )
         enddo
      enddo
   enddo
-!$omp critical
   for_g(:,:)=for_g(:,:)+for(:,:)
-!$omp end critical
   deallocate(for,vg_f,vg_f_r)
-!$omp end parallel
 
 !***** for gp==0********
   ng_2d = imill_2d(0,0)
@@ -4411,7 +6719,7 @@ SUBROUTINE esm_force_lc_bc3 ( aux, forcelc )
            cc2=-0.5d0
            vg_f_r(iz,1) = tt*(cc1+cc2)
         enddo
-        call esm_cft_1z(vg_f_r(:,1),1,dfftp%nr3,dfftp%nr3,-1,vg_f(:,1))
+        call cft_1z(vg_f_r(:,1),1,dfftp%nr3,dfftp%nr3,-1,vg_f(:,1))
         do iz=1,dfftp%nr3
            r1= dble(rhog3(iz,ng_2d))
            r2=aimag(rhog3(iz,ng_2d))
@@ -4453,7 +6761,7 @@ SUBROUTINE esm_force_lc_bc4 ( aux, forcelc )
   USE control_flags,    ONLY : gamma_only
   USE ions_base,        ONLY : zv, nat, tau, ityp
   USE fft_base,         ONLY : dfftp
-  USE esm_cft,          ONLY : esm_cft_1z
+  USE fft_scalar,       ONLY : cft_1z
 
   implicit none
   complex(DP), intent(in)    :: aux(dfftp%nnr) ! aux contains n(G) (input)   
@@ -4476,7 +6784,6 @@ SUBROUTINE esm_force_lc_bc4 ( aux, forcelc )
 ! Map to FFT mesh
   allocate(rhog3(dfftp%nr3,ngm_2d))
   rhog3(:,:)=(0.d0,0.d0)
-!$omp parallel do private( n1, n2, ng_2d, n3 )
   do ng=1,ngm
       n1 = mill(1,ng)
       n2 = mill(2,ng)
@@ -4490,7 +6797,6 @@ SUBROUTINE esm_force_lc_bc4 ( aux, forcelc )
          rhog3(n3,ng_2d)=aux(nlm(ng))
       endif  
   enddo
-!$omp end parallel do
 
   L=at(3,3)*alat
   sa=omega/L
@@ -4503,17 +6809,9 @@ SUBROUTINE esm_force_lc_bc4 ( aux, forcelc )
   for_g(:,:)=0.d0
 
 !**** for gp!=0 *********
-!$omp parallel private( for, vg_f, vg_f_r, ng_2d, k1, k2, k3, &
-!$omp                   gp2, gp, it, tt, pp, cc, ss, zp, iz, z, t1, t2, t3, &
-!$omp                   c1, c2, r1, r2, f1, f2, &
-!$omp                   arg001, arg002, arg003, arg005, &
-!$omp                   arg006, arg008, arg009, arg011, arg101, arg102, &
-!$omp                   arg103, arg104, arg107, arg109, arg111, arg113, &
-!$omp                   alpha, beta, kappa, xi, chi, lambda )
   allocate(for(3,nat),vg_f(dfftp%nr3x,3),vg_f_r(dfftp%nr3x,3))
   for(:,:)=0.d0
   vg_f_r(:,:)=(0.d0,0.d0)
-!$omp do
   do ng_2d = 1, ngm_2d
      k1 = mill_2d(1,ng_2d)
      k2 = mill_2d(2,ng_2d)
@@ -4596,9 +6894,9 @@ SUBROUTINE esm_force_lc_bc4 ( aux, forcelc )
            endif
            vg_f_r(iz,:) = tt*(c1(:)+c2(:))
         enddo
-        call esm_cft_1z(vg_f_r(:,1),1,dfftp%nr3,dfftp%nr3,-1,vg_f(:,1))
-        call esm_cft_1z(vg_f_r(:,2),1,dfftp%nr3,dfftp%nr3,-1,vg_f(:,2))
-        call esm_cft_1z(vg_f_r(:,3),1,dfftp%nr3,dfftp%nr3,-1,vg_f(:,3))
+        call cft_1z(vg_f_r(:,1),1,dfftp%nr3,dfftp%nr3,-1,vg_f(:,1))
+        call cft_1z(vg_f_r(:,2),1,dfftp%nr3,dfftp%nr3,-1,vg_f(:,2))
+        call cft_1z(vg_f_r(:,3),1,dfftp%nr3,dfftp%nr3,-1,vg_f(:,3))
         do iz=1,dfftp%nr3
            r1= dble(rhog3(iz,ng_2d))
            r2=aimag(rhog3(iz,ng_2d))
@@ -4608,11 +6906,8 @@ SUBROUTINE esm_force_lc_bc4 ( aux, forcelc )
         enddo
      enddo
   enddo
-!$omp critical
   for_g(:,:)=for_g(:,:)+for(:,:)
-!$omp end critical
   deallocate(for,vg_f,vg_f_r)
-!$omp end parallel
 
 !***** for gp==0********
   ng_2d = imill_2d(0,0)
@@ -4643,7 +6938,7 @@ SUBROUTINE esm_force_lc_bc4 ( aux, forcelc )
            endif
            vg_f_r(iz,1) = tt*(cc1+cc2)
         enddo
-        call esm_cft_1z(vg_f_r(:,1),1,dfftp%nr3,dfftp%nr3,-1,vg_f(:,1))
+        call cft_1z(vg_f_r(:,1),1,dfftp%nr3,dfftp%nr3,-1,vg_f(:,1))
         do iz=1,dfftp%nr3
            r1= dble(rhog3(iz,ng_2d))
            r2=aimag(rhog3(iz,ng_2d))

@@ -38,8 +38,11 @@ SUBROUTINE ioneb()
   !
   USE fcp_variables, ONLY : lfcpopt_ => lfcpopt, &
                             fcp_mu_ => fcp_mu, &
+                            fcp_relax_ => fcp_relax, &
                             fcp_relax_step_ => fcp_relax_step, &
                             fcp_relax_crit_ => fcp_relax_crit, &
+                            fcp_mdiis_size_ => fcp_mdiis_size, &
+                            fcp_mdiis_step_ => fcp_mdiis_step, &
                             fcp_tot_charge_first_ => fcp_tot_charge_first, &
                             fcp_tot_charge_last_ => fcp_tot_charge_last
   !
@@ -48,9 +51,10 @@ SUBROUTINE ioneb()
                                CI_scheme, opt_scheme, use_masses,      &
                                first_last_opt, temp_req, k_max, k_min, &
                                ds, use_freezing, fixed_tan,            &
-                               lfcpopt, fcp_mu, fcp_relax_step,        &
-                               fcp_relax_crit, fcp_tot_charge_first,   &
-                               fcp_tot_charge_last
+                               lfcpopt, fcp_mu, fcp_relax,             &
+                               fcp_relax_step, fcp_relax_crit,         &
+                               fcp_mdiis_size, fcp_mdiis_step,         &
+                               fcp_tot_charge_first, fcp_tot_charge_last
   !
   IMPLICIT NONE
   !
@@ -186,8 +190,11 @@ SUBROUTINE ioneb()
   !
   lfcpopt_              = lfcpopt
   fcp_mu_               = fcp_mu
+  fcp_relax_            = fcp_relax
   fcp_relax_step_       = fcp_relax_step
   fcp_relax_crit_       = fcp_relax_crit
+  fcp_mdiis_size_       = fcp_mdiis_size
+  fcp_mdiis_step_       = fcp_mdiis_step
   fcp_tot_charge_first_ = fcp_tot_charge_first
   fcp_tot_charge_last_  = fcp_tot_charge_last
   !

@@ -189,6 +189,7 @@ MODULE read_namelists_module
        q2sigma = 0.01_DP
        input_dft = 'none'
        ecutfock  = -1.0_DP
+       starting_charge = 0.0_DP
 !
 ! ... set starting_magnetization to an invalid value:
 ! ... in PW starting_magnetization MUST be set for at least one atomic type
@@ -295,8 +296,11 @@ MODULE read_namelists_module
        fcp_mu          = 0.0_DP
        fcp_mass        = 10000.0_DP
        fcp_tempw       = 0.0_DP
+       fcp_relax       = 'mdiis'
        fcp_relax_step  = 0.5_DP
        fcp_relax_crit  = 0.001_DP
+       fcp_mdiis_size  = 4
+       fcp_mdiis_step  = 0.2_DP
        !
        ! ... Wyckoff
        !
@@ -809,6 +813,7 @@ MODULE read_namelists_module
        CALL mp_bcast( ecutvcut,               ionode_id, intra_image_comm )
        CALL mp_bcast( ecutfock,               ionode_id, intra_image_comm )
        !
+       CALL mp_bcast( starting_charge,        ionode_id, intra_image_comm )
        CALL mp_bcast( starting_magnetization, ionode_id, intra_image_comm )
        CALL mp_bcast( starting_ns_eigenvalue, ionode_id, intra_image_comm )
        CALL mp_bcast( U_projection_type,      ionode_id, intra_image_comm )
@@ -878,8 +883,11 @@ MODULE read_namelists_module
        CALL mp_bcast( fcp_mu,          ionode_id, intra_image_comm )
        CALL mp_bcast( fcp_mass,        ionode_id, intra_image_comm )
        CALL mp_bcast( fcp_tempw,       ionode_id, intra_image_comm )
+       CALL mp_bcast( fcp_relax,       ionode_id, intra_image_comm )
        CALL mp_bcast( fcp_relax_step,  ionode_id, intra_image_comm )
        CALL mp_bcast( fcp_relax_crit,  ionode_id, intra_image_comm )
+       CALL mp_bcast( fcp_mdiis_size,  ionode_id, intra_image_comm )
+       CALL mp_bcast( fcp_mdiis_step,  ionode_id, intra_image_comm )
        !
        !
        ! ... space group information
@@ -1461,6 +1469,15 @@ MODULE read_namelists_module
        IF ( gate .and. tot_charge == 0 ) &
           CALL errore(sub_name, ' charged plane (gate) to compensate tot_charge of 0', 1)
        RETURN
+       !
+       ! ... control on FCP variables
+       !
+       allowed = .FALSE.
+       DO i = 1, SIZE(fcp_relax_allowed)
+          IF( TRIM(fcp_relax) == fcp_relax_allowed(i) ) allowed = .TRUE.
+       END DO
+       IF( .NOT. allowed ) &
+          CALL errore(sub_name, ' fcp_relax '''//TRIM(fcp_relax)//''' not allowed ', 1)
        !
      END SUBROUTINE
      !

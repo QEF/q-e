@@ -130,6 +130,7 @@ allocate_wfc.o : atomic_wfc_mod.o
 allocate_wfc.o : ldaU.o
 allocate_wfc.o : pwcom.o
 atomic_rho.o : ../../FFTXlib/fft_interfaces.o
+atomic_rho.o : ../../KS_Solvers/CG/constants.o
 atomic_rho.o : ../../Modules/atom.o
 atomic_rho.o : ../../Modules/cell_base.o
 atomic_rho.o : ../../Modules/control_flags.o
@@ -368,6 +369,7 @@ drhoc.o : ../../KS_Solvers/CG/constants.o
 drhoc.o : ../../Modules/kind.o
 dvloc_of_g.o : ../../KS_Solvers/CG/constants.o
 dvloc_of_g.o : ../../Modules/kind.o
+dvloc_of_g.o : esm.o
 dynamics_module.o : ../../KS_Solvers/CG/constants.o
 dynamics_module.o : ../../Modules/basic_algebra_routines.o
 dynamics_module.o : ../../Modules/cell_base.o
@@ -428,6 +430,7 @@ electrons.o : pwcom.o
 electrons.o : scf_mod.o
 electrons.o : xdm_dispersion.o
 eqvect.o : ../../Modules/kind.o
+esm.o : ../../FFTXlib/fft_scalar.o
 esm.o : ../../KS_Solvers/CG/constants.o
 esm.o : ../../Modules/cell_base.o
 esm.o : ../../Modules/control_flags.o
@@ -440,11 +443,8 @@ esm.o : ../../Modules/mp_bands.o
 esm.o : ../../Modules/mp_global.o
 esm.o : ../../Modules/recvec.o
 esm.o : ../../UtilXlib/mp.o
-esm.o : esm_cft.o
 esm.o : pwcom.o
 esm.o : scf_mod.o
-esm_cft.o : ../../FFTXlib/fftw_interfaces.o
-esm_cft.o : ../../Modules/kind.o
 ewald.o : ../../KS_Solvers/CG/constants.o
 ewald.o : ../../Modules/kind.o
 ewald.o : ../../Modules/mp_bands.o
@@ -505,6 +505,7 @@ fcp.o : ../../Modules/io_files.o
 fcp.o : ../../Modules/io_global.o
 fcp.o : ../../Modules/ions_base.o
 fcp.o : ../../Modules/kind.o
+fcp.o : ../../Modules/mdiis.o
 fcp.o : ../../Modules/random_numbers.o
 fcp.o : dynamics_module.o
 fcp.o : pwcom.o
@@ -1952,6 +1953,7 @@ stress.o : ../../Modules/recvec.o
 stress.o : ../../Modules/tsvdw.o
 stress.o : ../../Modules/uspp.o
 stress.o : bp_mod.o
+stress.o : esm.o
 stress.o : exx.o
 stress.o : ldaU.o
 stress.o : pwcom.o

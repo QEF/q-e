@@ -15,6 +15,9 @@
 ! description of the system connected to a potentiostat which preserves
 ! the Fermi energy of the system as the target Fermi energy (mu).
 !
+! MDIIS algorithm is implemented for relax-calculation
+! by Satomichi Nishihara (2016)
+!
 !----------------------------------------------------------------------------
 MODULE fcp
    !----------------------------------------------------------------------------
@@ -27,7 +30,8 @@ MODULE fcp
    USE dynamics_module, ONLY : dt, delta_t, nraise, &
       control_temp, thermostat
    USE fcp_variables, ONLY : fcp_mu, fcp_mass, fcp_temperature, &
-      fcp_relax_step, fcp_relax_crit
+      fcp_relax, fcp_relax_step, fcp_relax_crit, fcp_mdiis_size, fcp_mdiis_step
+   USE mdiis,     ONLY : mdiis_type, allocate_mdiis, deallocate_mdiis, update_by_mdiis
    !
    IMPLICIT NONE
    !
@@ -40,7 +44,12 @@ MODULE fcp
    REAL(DP) :: tau, tau_old, tau_new
    REAL(DP) :: vel, acc
    !
+   ! ... data of MDIIS
+   LOGICAL          :: init_mdiis = .FALSE.
+   TYPE(mdiis_type) :: mdiist
+   !
    PUBLIC :: fcp_line_minimisation, fcp_verlet, fcp_summary
+   PUBLIC :: fcp_mdiis_update, fcp_mdiis_end
    !
 CONTAINS
    !
@@ -521,14 +530,83 @@ CONTAINS
       !
    END SUBROUTINE fcp_line_minimisation
    !
+   !------------------------------------------------------------------------
+   SUBROUTINE fcp_mdiis_update( conv_fcp )
+      !------------------------------------------------------------------------
+      !
+      ! ... This routine performs one step of relaxation
+      ! ... using the MDIIS algorithm.
+      !
+      USE control_flags,  ONLY : iverbosity
+      USE ener,           ONLY : ef
+      USE klist,          ONLY : nelec, tot_charge
+      USE ions_base,      ONLY : nat, ityp, zv
+      !
+      IMPLICIT NONE
+      LOGICAL, INTENT(OUT) :: conv_fcp
+      REAL(DP)             :: ionic_charge
+      REAL(DP)             :: nelec0
+      REAL(DP)             :: nelec1(1)
+      REAL(DP)             :: force
+      REAL(DP)             :: force1(1)
+      !
+      IF ( .NOT. init_mdiis ) THEN
+         init_mdiis = .TRUE.
+         CALL allocate_mdiis(mdiist, fcp_mdiis_size, 1, fcp_mdiis_step, 1)
+      END IF
+      !
+      nelec0    = nelec
+      nelec1(1) = nelec
+      force     = fcp_mu - ef
+      force1(1) = force
+      CALL update_by_mdiis(mdiist, nelec1, force1)
+      nelec = nelec1(1)
+      !
+      ionic_charge = SUM( zv(ityp(1:nat)) )
+      IF ( iverbosity > 1 ) THEN
+         write( stdout,'(5X,"Original:",F12.6," Expected:",F12.6)') &
+                 ionic_charge - nelec0, ionic_charge - nelec
+      END IF
+      !
+      tot_charge = ionic_charge - nelec
+      IF ( iverbosity > 1 ) THEN
+         write( stdout,'(5X,"Next tot_charge:",F12.6)') tot_charge
+      END IF
+      !
+      conv_fcp = .FALSE.
+      !
+      IF( ABS( force ) < fcp_relax_crit ) THEN
+         !
+         conv_fcp = .TRUE.
+         nelec = nelec0
+         tot_charge = ionic_charge - nelec
+         !
+      END IF
+      !
+      WRITE( stdout, FMT = 9002 ) force
+      !
+9002  FORMAT(/,5X,'FCP Optimisation: Force acting on FCP =',F12.6,' Ry',/)
+      !
+   END SUBROUTINE fcp_mdiis_update
+   !
+   !------------------------------------------------------------------------
+   SUBROUTINE fcp_mdiis_end()
+      !------------------------------------------------------------------------
+      !
+      IMPLICIT NONE
+      !
+      IF ( init_mdiis ) THEN
+         CALL deallocate_mdiis(mdiist)
+      END IF
+      !
+   END SUBROUTINE fcp_mdiis_end
+   !
    SUBROUTINE fcp_summary ()
       !
       USE io_global,        ONLY : stdout, ionode
       USE constants,        ONLY : rytoev, BOHR_RADIUS_ANGS
       USE klist,            ONLY : tot_charge
-      USE fcp_variables,    ONLY : lfcpopt, lfcpdyn, fcp_mu, &
-                                   fcp_relax_step, fcp_relax_crit, &
-                                   fcp_temperature, fcp_mass
+      USE fcp_variables,    ONLY : lfcpopt, lfcpdyn
       !
       IMPLICIT NONE
       !
@@ -538,22 +616,33 @@ CONTAINS
          WRITE( UNIT = stdout, FMT  = '(5x,"-->FCP optimiser activated<--")' )
          WRITE( UNIT = stdout, FMT = 9056 ) fcp_mu*rytoev, fcp_mu
          WRITE( UNIT = stdout, FMT = 9057 ) tot_charge
-         WRITE( UNIT = stdout, FMT = 9058 ) fcp_relax_step
-         WRITE( UNIT = stdout, FMT = 9059 ) fcp_relax_crit*rytoev, &
+         IF ( TRIM(fcp_relax) == 'lm' ) THEN
+            WRITE( UNIT = stdout, FMT = 9058 )
+            WRITE( UNIT = stdout, FMT = 9059 ) fcp_relax_step
+         ELSE IF ( TRIM(fcp_relax) == 'mdiis' ) THEN
+            WRITE( UNIT = stdout, FMT = 9060 )
+            WRITE( UNIT = stdout, FMT = 9061 ) fcp_mdiis_size
+            WRITE( UNIT = stdout, FMT = 9062 ) fcp_mdiis_step
+         END IF
+         WRITE( UNIT = stdout, FMT = 9063 ) fcp_relax_crit*rytoev, &
                                          fcp_relax_crit
       ELSE IF ( lfcpdyn ) THEN
          WRITE( UNIT = stdout, FMT  = '(5x,"-->FCP optimiser activated<--")' )
-         WRITE( UNIT = stdout, FMT = 9056 ) fcp_mu*rytoev, fcp_mu
-         WRITE( UNIT = stdout, FMT = 9057 ) tot_charge
+         WRITE( UNIT = stdout, FMT = 9064 ) fcp_mu*rytoev, fcp_mu
+         WRITE( UNIT = stdout, FMT = 9065 ) tot_charge
       END IF
 9056  FORMAT( '     Target Fermi energy              = ', F9.4,' eV' &
              /'                                      = ', F9.4,' Ry')
 9057  FORMAT( '     Initial tot_charge               = ', F9.6)
-9058  FORMAT( '     FCP relax step                   = ', F9.2)
-9059  FORMAT( '     FCP force convergence threshold  = ', 1PE9.1,' V' &
+9058  FORMAT( '     FCP relax algorism               =  Line-Minimisation')
+9059  FORMAT( '     FCP relax step                   = ', F9.2)
+9060  FORMAT( '     FCP relax algorism               =  MDIIS')
+9061  FORMAT( '     FCP MDIIS-size                   = ', I6)
+9062  FORMAT( '     FCP MDIIS-step                   = ', F9.2)
+9063  FORMAT( '     FCP force convergence threshold  = ', 1PE9.1,' V' &
              /'                                      = ', 1PE9.1,' Ry')
-9060  FORMAT( '     FCP temperature                  = ', F9.6)
-9061  FORMAT( '     FCP mass                         = ', F9.6)
+9064  FORMAT( '     FCP temperature                  = ', F9.6)
+9065  FORMAT( '     FCP mass                         = ', F9.6)
       !
    END SUBROUTINE fcp_summary
    !

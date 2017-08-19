@@ -157,6 +157,8 @@ libxc.o : libxc_funcs.o
 linpack.o : kind.o
 lsda_functionals.o : constants.o
 lsda_functionals.o : kind.o
+mdiis.o : ../UtilXlib/mp.o
+mdiis.o : kind.o
 metagga.o : constants.o
 metagga.o : funct.o
 metagga.o : kind.o

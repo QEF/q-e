@@ -15,6 +15,7 @@ subroutine dvloc_of_g (mesh, msh, rab, r, vloc_at, zp, tpiba2, ngl, gl, &
   !
   USE kinds
   USE constants , ONLY : pi, fpi, e2, eps8
+  USE esm, ONLY : do_comp_esm, esm_bc
   implicit none
   !
   !    first the dummy variables
@@ -81,10 +82,16 @@ subroutine dvloc_of_g (mesh, msh, rab, r, vloc_at, zp, tpiba2, ngl, gl, &
      call simpson (msh, aux, rab, vlcp)
      ! DV(g^2)/Dg^2 = (DV(g)/Dg)/2g
      vlcp = fpi / omega / 2.0d0 / gx * vlcp
-     ! subtract the long-range term
-     g2a = gl (igl) * tpiba2 / 4.d0
-     vlcp = vlcp + fpi / omega * zp * e2 * exp ( - g2a) * (g2a + &
-          1.d0) / (gl (igl) * tpiba2) **2
+
+     ! for ESM stress
+     ! In ESM, vloc and dvloc have only short term.
+     IF ( ( .not. do_comp_esm ) .or. ( esm_bc .eq. 'pbc' ) ) THEN
+        ! subtract the long-range term
+        g2a = gl (igl) * tpiba2 / 4.d0
+        vlcp = vlcp + fpi / omega * zp * e2 * exp ( - g2a) * (g2a + &
+             1.d0) / (gl (igl) * tpiba2) **2
+     END IF
+
      dvloc (igl) = vlcp
   enddo
   deallocate (aux1)

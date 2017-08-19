@@ -50,9 +50,10 @@ SUBROUTINE move_ions ( idone )
   USE basic_algebra_routines, ONLY : norm
   USE dynamics_module,        ONLY : verlet, terminate_verlet, proj_verlet
   USE dynamics_module,        ONLY : smart_MC, langevin_md
-  USE fcp                ,    ONLY : fcp_verlet, fcp_line_minimisation
+  USE fcp                ,    ONLY : fcp_verlet, fcp_line_minimisation, &
+                                     fcp_mdiis_update, fcp_mdiis_end
   USE fcp_variables,          ONLY : lfcpopt, lfcpdyn, fcp_mu, &
-                                     fcp_relax_crit
+                                     fcp_relax, fcp_relax_crit
   USE klist,                  ONLY : nelec
   USE dfunct,                 only : newd
   !
@@ -121,7 +122,11 @@ SUBROUTINE move_ions ( idone )
         ! ... relax for FCP
         !
         IF ( lfcpopt ) THEN
-           CALL fcp_line_minimisation( conv_fcp )
+           IF ( TRIM(fcp_relax) == 'lm' ) THEN
+              CALL fcp_line_minimisation( conv_fcp )
+           ELSE IF ( TRIM(fcp_relax) == 'mdiis' ) THEN
+              CALL fcp_mdiis_update( conv_fcp )
+           END IF
            IF ( .not. conv_fcp .and. idone < nstep ) THEN
              conv_ions = .FALSE.
            END IF
@@ -174,6 +179,9 @@ SUBROUTINE move_ions ( idone )
                & "( criteria force < ",ES8.1," )")') fcp_relax_crit
              WRITE( stdout, '(5X,"FCP Optimisation : tot_charge =",F12.6,/)') &
                SUM( zv(ityp(1:nat)) ) - nelec
+             IF ( TRIM(fcp_relax) == 'mdiis' ) THEN
+                CALL fcp_mdiis_end()
+             END IF
            END IF
            !
         ELSE
@@ -226,7 +234,11 @@ SUBROUTINE move_ions ( idone )
            ! ... relax for FCP
            !
            IF ( lfcpopt ) THEN
-              CALL fcp_line_minimisation( conv_fcp )
+              IF ( TRIM(fcp_relax) == 'lm' ) THEN
+                 CALL fcp_line_minimisation( conv_fcp )
+              ELSE IF ( TRIM(fcp_relax) == 'mdiis' ) THEN
+                 CALL fcp_mdiis_update( conv_fcp )
+              END IF
               IF ( .not. conv_fcp .and. idone < nstep ) conv_ions = .FALSE.
               !
               ! ... FCP output
@@ -236,6 +248,9 @@ SUBROUTINE move_ions ( idone )
                       & "( criteria force < ", ES8.1," )")') fcp_relax_crit
                  WRITE( stdout, '(5X,"FCP : final tot_charge =",F12.6,/)') &
                       SUM( zv(ityp(1:nat)) ) - nelec
+                 IF ( TRIM(fcp_relax) == 'mdiis' ) THEN
+                    CALL fcp_mdiis_end()
+                 END IF
               END IF
            END IF
            IF ( .NOT. conv_ions .AND. idone >= nstep ) THEN
