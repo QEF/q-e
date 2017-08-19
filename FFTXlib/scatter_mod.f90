@@ -131,16 +131,9 @@ SUBROUTINE fft_scatter_xy ( desc, f_in, f_aux, nxx_, isgn )
   ncpx  = MAXVAL ( ncp_ )       ! maximum number of Y columns to be disributed
   
   sendsize = ncpx * nr2px       ! dimension of the scattered chunks (safe value)
-  !write (6,*) ' ncpx, nr2px, sendsize', ncpx, nr2px, sendsize
-  !write(6,*) desc%nr1p(1:nproc2), desc%nr1x
-  !write(6,*) desc%nr2p(1:nproc2), desc%nr2x
-  !write (6,*) nr1p_, nproc2
-  !write (6,*) indx(1:desc%nr1x,nproc2)
 
   ierr = 0
   IF (isgn.gt.0) THEN
-     !write (6,*) 'f_in on input '
-     !write(6,99) f_in(1:60), f_in(60*59+1:60*60) ; write(6,*); FLUSH (6) ! not needed, just printed outside
 
      IF (nproc2==1) GO TO 10
      !
@@ -148,7 +141,6 @@ SUBROUTINE fft_scatter_xy ( desc, f_in, f_aux, nxx_, isgn )
      !
      ! step one: store contiguously the slices
      !
-     !f_aux = (1110.0_DP, 11110.0_DP) !
      offset = 0
      DO iproc2 = 1, nproc2
         kdest = ( iproc2 - 1 ) * sendsize
@@ -162,26 +154,16 @@ SUBROUTINE fft_scatter_xy ( desc, f_in, f_aux, nxx_, isgn )
         ENDDO
         offset = offset + desc%nr2p( iproc2 )
      ENDDO
-     !write (6,*) 'f_aux just before A2A '
-     !write(6,99) f_aux(1:120) ; write(6,*); FLUSH (6)
-
-     !
-     ! ensures that no garbage is present in the output 
-     ! useless; the later accessed elements are overwritten by the A2A step
-     !f_in = (0.0_DP, 0.0_DP) !
      !
      ! step two: communication  across the    nproc3    group
      !
-     !write (6,*) '--- A2A '
      CALL mpi_alltoall (f_aux(1), sendsize, MPI_DOUBLE_COMPLEX, f_in(1), sendsize, MPI_DOUBLE_COMPLEX, desc%comm2, ierr)
 
      IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', 'info<>0', abs(ierr) )
-     !write (6,*) 'f_in just after A2A '
-     !write(6,99) f_in(1:120) ; write(6,*); FLUSH (6)
      !
 10   CONTINUE
      !
-     f_aux = (0.0_DP, 0.0_DP) !
+     f_aux = (0.0_DP, 0.0_DP)
      !
      DO iproc2 = 1, nproc2
         it = ( iproc2 - 1 ) * sendsize
@@ -197,17 +179,10 @@ SUBROUTINE fft_scatter_xy ( desc, f_in, f_aux, nxx_, isgn )
         ENDDO
      ENDDO
 
-     !write (6,*) 'f_aux on output '
-     !write(6,99) f_aux(1:60), f_aux(60*59+1:60*60) ; write(6,*); FLUSH (6) ! not needed, will  be printed outside
-
   ELSE
      !
      !  "backward" scatter from planes to columns
      !
-     !write (6,*) 'f_aux on input '
-     !write(6,99) f_aux(1:60), f_aux(60*59+1:60*60) ; write(6,*); FLUSH (6) ! not needed, just printed outside
-
-     !f_in = (11110.0_DP, 11110.0_DP) !
      DO iproc2 = 1, nproc2
         it = ( iproc2 - 1 ) * sendsize
         DO i = 1, ncp_( iproc2 )
@@ -223,17 +198,10 @@ SUBROUTINE fft_scatter_xy ( desc, f_in, f_aux, nxx_, isgn )
      ENDDO
      IF (nproc2==1) GO TO 20
 
-     !write (6,*) 'f_in just before A2A '
-     !write(6,99) f_in(1:120) ; write(6,*); FLUSH (6)
-
-     !write (6,*) '--- A2A '
-     !f_aux = (11110.0_DP, 11110.0_DP) !
      !
      !  step two: communication
      !
      CALL mpi_alltoall (f_in(1), sendsize, MPI_DOUBLE_COMPLEX, f_aux(1), sendsize, MPI_DOUBLE_COMPLEX, desc%comm2, ierr)
-     !write (6,*) 'f_aux just after A2A '
-     !write(6,99) f_aux(1:120) ; write(6,*); FLUSH (6)
 
      IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', 'info<>0', abs(ierr) )
      !
@@ -259,8 +227,6 @@ SUBROUTINE fft_scatter_xy ( desc, f_in, f_aux, nxx_, isgn )
 
 20   CONTINUE
 
-     !write(6,*) ' f_in on exit'
-     !write(6,99) f_in(1:60),f_in(59*60+1:60*60) ; write(6,*); FLUSH (6) ! not needed, will be printed outside
 
   ENDIF
 

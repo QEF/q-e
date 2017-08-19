@@ -27,6 +27,7 @@ fft_error.o  \
 fft_stick.o  \
 fft_types.o \
 tg_gather.o \
+fft_helper_subroutines.o \
 fft_param.o
 
 
