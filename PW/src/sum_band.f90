@@ -240,6 +240,7 @@ SUBROUTINE sum_band()
        USE becmod,        ONLY : becp
        USE mp_bands,      ONLY : me_bgrp
        USE mp,            ONLY : mp_sum, mp_get_comm_null
+       USE fft_helper_subroutines
        !
        IMPLICIT NONE
        !
@@ -251,6 +252,7 @@ SUBROUTINE sum_band()
        COMPLEX(DP), ALLOCATABLE :: tg_psi(:)
        REAL(DP),    ALLOCATABLE :: tg_rho(:)
        LOGICAL :: use_tg
+       INTEGER :: right_nnr, right_nr3, right_inc
        !
        !
        ! ... here we sum for each k point the contribution
@@ -303,6 +305,8 @@ SUBROUTINE sum_band()
                 tg_psi(:) = ( 0.D0, 0.D0 )
                 ioff   = 0
                 !
+                CALL tg_get_nnr( dffts, right_nnr )
+                !
                 DO idx = 1, 2*dffts%nproc2, 2
                    !
                    ! ... 2*dffts%nproc2 ffts at the same time
@@ -321,7 +325,7 @@ SUBROUTINE sum_band()
                       END DO
                    END IF
 
-                   ioff = ioff + dffts%nnr
+                   ioff = ioff + right_nnr
 
                 END DO
                 !
@@ -354,7 +358,9 @@ SUBROUTINE sum_band()
                    w2 = w1
                 END IF
                 !
-                CALL get_rho_gamma(tg_rho, dffts%nr1x*dffts%nr2x*dffts%my_nr3p, w1, w2, tg_psi)
+                CALL tg_get_group_nr3( dffts, right_nr3 )
+                !
+                CALL get_rho_gamma(tg_rho, dffts%nr1x*dffts%nr2x*right_nr3, w1, w2, tg_psi)
                 !
              ELSE
                 !
@@ -437,22 +443,9 @@ SUBROUTINE sum_band()
           END DO
           !
           IF( use_tg ) THEN
-             !
-             ! reduce the charge across task group
-             !
-             CALL mp_sum( tg_rho, gid = dffts%comm2 )
-             !
-             ! copy the charge back to processor location
-             !
-             nxyp = dffts%nr1x * dffts%my_nr2p
-             DO ir3 = 1, dffts%my_nr3p
-                ioff    = dffts%nr1x * dffts%my_nr2p * (ir3-1)
-                ioff_tg = dffts%nr1x * dffts%nr2x    * (ir3-1) + dffts%nr1x * dffts%my_i0r2p
-                rho%of_r(ioff+1:ioff+nxyp,current_spin) = rho%of_r(ioff+1:ioff+nxyp,current_spin) + &
-                                                          tg_rho(ioff_tg+1:ioff_tg+nxyp)
-             END DO
-             !
 
+             CALL tg_reduce_rho( rho%of_r, tg_rho, current_spin, dffts )
+             !
           END IF
           !
           ! ... If we have a US pseudopotential we compute here the becsum term
@@ -484,6 +477,7 @@ SUBROUTINE sum_band()
        !
        USE mp_bands,     ONLY : me_bgrp
        USE mp,           ONLY : mp_sum, mp_get_comm_null
+       USE fft_helper_subroutines
        !
        IMPLICIT NONE
        !
@@ -497,6 +491,7 @@ SUBROUTINE sum_band()
        COMPLEX(DP), ALLOCATABLE :: tg_psi(:), tg_psi_nc(:,:)
        REAL(DP),    ALLOCATABLE :: tg_rho(:), tg_rho_nc(:,:)
        LOGICAL  :: use_tg
+       INTEGER :: right_nnr, right_nr3, right_inc
        !
        ! ... here we sum for each k point the contribution
        ! ... of the wavefunctions to the charge
@@ -562,6 +557,8 @@ SUBROUTINE sum_band()
                    !
                    tg_psi_nc = ( 0.D0, 0.D0 )
                    !
+                   CALL tg_get_nnr( dffts, right_nnr )
+                   !
                    ioff   = 0
                    !
                    DO idx = 1, dffts%nproc2
@@ -577,7 +574,7 @@ SUBROUTINE sum_band()
                          END DO
                       END IF
 
-                      ioff = ioff + dffts%nnr
+                      ioff = ioff + right_nnr
 
                    END DO
                    !
@@ -603,8 +600,10 @@ SUBROUTINE sum_band()
                       w1 = 0.0d0
                    END IF
                    !
+                   CALL tg_get_group_nr3( dffts, right_nr3 )
+                   !
                    DO ipol=1,npol
-                      CALL get_rho(tg_rho_nc(:,1), dffts%nr1x * dffts%nr2x* dffts%my_nr3p, w1, tg_psi_nc(:,ipol))
+                      CALL get_rho(tg_rho_nc(:,1), dffts%nr1x * dffts%nr2x* right_nr3, w1, tg_psi_nc(:,ipol))
                    ENDDO
                    !
                    IF (domag) CALL get_rho_domag(tg_rho_nc(:,:), dffts%nr1x*dffts%nr2x*dffts%my_nr3p, w1, tg_psi_nc(:,:))
@@ -651,6 +650,8 @@ SUBROUTINE sum_band()
                    !
                    ioff   = 0
                    !
+                   CALL tg_get_nnr( dffts, right_nnr )
+                   !
                    DO idx = 1, dffts%nproc2
                       !
                       ! ... dffts%nproc2 ffts at the same time
@@ -663,7 +664,7 @@ SUBROUTINE sum_band()
 !$omp end do
                       END IF
 
-                      ioff = ioff + dffts%nnr
+                      ioff = ioff + right_nnr
 
                    END DO
 !$omp end parallel
@@ -689,7 +690,9 @@ SUBROUTINE sum_band()
                       w1 = 0.0d0
                    END IF
                    !
-                   CALL get_rho(tg_rho, dffts%nr1x * dffts%nr2x *dffts%my_nr3p, w1, tg_psi)
+                   CALL tg_get_group_nr3( dffts, right_nr3 )
+                   !
+                   CALL get_rho(tg_rho, dffts%nr1x * dffts%nr2x * right_nr3, w1, tg_psi)
                    !
                 ELSE
                    !
@@ -729,37 +732,7 @@ SUBROUTINE sum_band()
              !
              ! reduce the charge across task group
              !
-             IF (noncolin) THEN
-                CALL mp_sum( tg_rho_nc, gid = dffts%comm2 )
-             ELSE
-                CALL mp_sum( tg_rho, gid = dffts%comm2 )
-             ENDIF
-             !
-             ! copy the charge back to the proper processor location
-             !
-             nxyp = dffts%nr1x * dffts%my_nr2p
-             IF (noncolin) THEN
-                 npol_ = 1 ; if (domag) npol_ = 4
-             endif
-             DO ir3=1,dffts%my_nr3p
-                ioff    = dffts%nr1x * dffts%my_nr2p * (ir3-1)
-                ioff_tg = dffts%nr1x * dffts%nr2x    * (ir3-1) + dffts%nr1x * dffts%my_i0r2p
-                IF (noncolin) THEN
-!$omp parallel do
-                   DO ipol=1, npol_
-                      DO ir = 1, nxyp
-                         rho%of_r(ir+ioff,ipol) = rho%of_r(ir+ioff,ipol) + tg_rho_nc(ir+ioff_tg,ipol)
-                      END DO
-                   END DO
-!$omp end parallel do
-                ELSE
-!$omp parallel do
-                   DO ir = 1, nxyp
-                      rho%of_r(ir+ioff,current_spin) = rho%of_r(ir+ioff,current_spin) + tg_rho(ir+ioff_tg)
-                   END DO
-!$omp end parallel do
-                END IF
-             END DO
+             CALL tg_reduce_rho( rho%of_r, tg_rho_nc, tg_rho, current_spin, noncolin, domag, dffts )
              !
           END IF
           !

@@ -143,10 +143,14 @@ SUBROUTINE make_pointlists
                                   (posi(3)-tau0(3,iat))**2)
 
                  IF (distance.LE.r_m(nt)) THEN
+                    IF( ir .GT. SIZE( factlist ) .OR. ir .GT. SIZE( pointlist ))  &
+                      CALL errore( ' make_pointlists ', ' inconsistent sizes ', 1 )
                     factlist(ir) = 1.d0
                     pointlist(ir) = iat
                     GO TO 10
                  ELSE IF (distance.LE.1.2*r_m(nt)) THEN
+                    IF( ir .GT. SIZE( factlist ) .OR. ir .GT. SIZE( pointlist ))  &
+                      CALL errore( ' make_pointlists ', ' inconsistent sizes ', 1 )
                     factlist(ir) = 1.d0 - (distance -r_m(nt))/(0.2d0*r_m(nt))
                     pointlist(ir) = iat
                     GO TO 10

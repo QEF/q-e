@@ -19,6 +19,7 @@ SUBROUTINE vloc_psi_gamma(lda, n, m, psi, v, hpsi)
   USE fft_base,      ONLY : dffts
   USE fft_interfaces,ONLY : fwfft, invfft
   USE wavefunctions_module,  ONLY: psic
+  USE fft_helper_subroutines
   !
   IMPLICIT NONE
   !
@@ -27,7 +28,7 @@ SUBROUTINE vloc_psi_gamma(lda, n, m, psi, v, hpsi)
   COMPLEX(DP), INTENT(inout):: hpsi (lda, m)
   REAL(DP), INTENT(in) :: v(dffts%nnr)
   !
-  INTEGER :: ibnd, j, incr
+  INTEGER :: ibnd, j, incr, right_nnr, right_nr3, right_inc
   COMPLEX(DP) :: fp, fm
   !
   LOGICAL :: use_tg
@@ -62,6 +63,8 @@ SUBROUTINE vloc_psi_gamma(lda, n, m, psi, v, hpsi)
      !
      IF( use_tg ) THEN
         !
+        CALL tg_get_nnr( dffts, right_nnr )
+        !
         tg_psic = (0.d0, 0.d0)
         ioff   = 0
         !
@@ -80,7 +83,7 @@ SUBROUTINE vloc_psi_gamma(lda, n, m, psi, v, hpsi)
               ENDDO
            ENDIF
 
-           ioff = ioff + dffts%nnr
+           ioff = ioff + right_nnr
 
         ENDDO
         !
@@ -110,7 +113,9 @@ SUBROUTINE vloc_psi_gamma(lda, n, m, psi, v, hpsi)
         !
         CALL invfft ('tgWave', tg_psic, dffts )
         !
-        DO j = 1, dffts%nr1x*dffts%nr2x*dffts%my_nr3p
+        CALL tg_get_group_nr3( dffts, right_nr3 )
+        !
+        DO j = 1, dffts%nr1x * dffts%nr2x * right_nr3
            tg_psic (j) = tg_psic (j) * tg_v(j)
         ENDDO
         !
@@ -134,6 +139,8 @@ SUBROUTINE vloc_psi_gamma(lda, n, m, psi, v, hpsi)
         !
         ioff   = 0
         !
+        CALL tg_get_recip_inc( dffts, right_inc )
+        !
         DO idx = 1, 2*dffts%nproc2, 2
            !
            IF( idx + ibnd - 1 < m ) THEN
@@ -154,7 +161,7 @@ SUBROUTINE vloc_psi_gamma(lda, n, m, psi, v, hpsi)
               ENDDO
            ENDIF
            !
-           ioff = ioff + dffts%nnr
+           ioff = ioff + right_inc
            !
         ENDDO
         !
@@ -208,6 +215,7 @@ SUBROUTINE vloc_psi_k(lda, n, m, psi, v, hpsi)
   USE mp_bands,      ONLY : me_bgrp
   USE fft_base,      ONLY : dffts
   USE fft_interfaces,ONLY : fwfft, invfft
+  USE fft_helper_subroutines
   USE wavefunctions_module,  ONLY: psic
   !
   IMPLICIT NONE
@@ -218,7 +226,7 @@ SUBROUTINE vloc_psi_k(lda, n, m, psi, v, hpsi)
   REAL(DP), INTENT(in) :: v(dffts%nnr)
   !
   INTEGER :: ibnd, j, incr
-  INTEGER :: i
+  INTEGER :: i, right_nnr, right_nr3, right_inc
   !
   LOGICAL :: use_tg
   ! Task Groups
@@ -244,6 +252,8 @@ SUBROUTINE vloc_psi_k(lda, n, m, psi, v, hpsi)
   !
   IF( use_tg ) THEN
 
+     CALL tg_get_nnr( dffts, right_nnr )
+
      DO ibnd = 1, m, dffts%nproc2
         !
         tg_psic = (0.d0, 0.d0)
@@ -262,15 +272,17 @@ SUBROUTINE vloc_psi_k(lda, n, m, psi, v, hpsi)
         !write (6,*) 'wfc G ', idx+ibnd-1
         !write (6,99) (tg_psic(i+ioff), i=1,400)
 
-           ioff = ioff + dffts%nnr
+           ioff = ioff + right_nnr
         ENDDO
         !
         CALL  invfft ('tgWave', tg_psic, dffts )
         !write (6,*) 'wfc R ' 
         !write (6,99) (tg_psic(i), i=1,400)
         !
+        CALL tg_get_group_nr3( dffts, right_nr3 )
+        !
 !$omp parallel do
-        DO j = 1, dffts%nr1x*dffts%nr2x*dffts%my_nr3p
+        DO j = 1, dffts%nr1x*dffts%nr2x* right_nr3
            tg_psic (j) = tg_psic (j) * tg_v(j)
         ENDDO
 !$omp end parallel do
@@ -282,6 +294,8 @@ SUBROUTINE vloc_psi_k(lda, n, m, psi, v, hpsi)
         !   addition to the total product
         !
         ioff   = 0
+        !
+        CALL tg_get_recip_inc( dffts, right_inc )
         !
         DO idx = 1, dffts%nproc2
            !
@@ -297,7 +311,7 @@ SUBROUTINE vloc_psi_k(lda, n, m, psi, v, hpsi)
         !write (6,*) 'v psi G ', idx+ibnd-1
         !write (6,99) (tg_psic(i+ioff), i=1,400)
 
-           ioff = ioff + dffts%nnr
+           ioff = ioff + right_inc
            !
         ENDDO
         !
@@ -368,6 +382,7 @@ SUBROUTINE vloc_psi_nc (lda, n, m, psi, v, hpsi)
   USE spin_orb,      ONLY : domag
   USE noncollin_module,     ONLY: npol
   USE wavefunctions_module, ONLY: psic_nc
+  USE fft_helper_subroutines
   !
   IMPLICIT NONE
   !
@@ -384,6 +399,7 @@ SUBROUTINE vloc_psi_nc (lda, n, m, psi, v, hpsi)
   REAL(DP),    ALLOCATABLE :: tg_v(:,:)
   COMPLEX(DP), ALLOCATABLE :: tg_psic(:,:)
   INTEGER :: v_siz, idx, ioff
+  INTEGER :: right_nnr, right_nr3, right_inc
   !
   CALL start_clock ('vloc_psi')
   !
@@ -415,6 +431,8 @@ SUBROUTINE vloc_psi_nc (lda, n, m, psi, v, hpsi)
 
      IF( use_tg ) THEN
         !
+        CALL tg_get_nnr( dffts, right_nnr )
+        !
         DO ipol = 1, npol
            !
            tg_psic(:,ipol) = ( 0.D0, 0.D0 )
@@ -429,7 +447,7 @@ SUBROUTINE vloc_psi_nc (lda, n, m, psi, v, hpsi)
                  ENDDO
               ENDIF
 
-              ioff = ioff + dffts%nnr
+              ioff = ioff + right_nnr
 
            ENDDO
            !
@@ -451,8 +469,9 @@ SUBROUTINE vloc_psi_nc (lda, n, m, psi, v, hpsi)
      !   product with the potential v = (vltot+vr) on the smooth grid
      !
      IF( use_tg ) THEN
+        CALL tg_get_group_nr3( dffts, right_nr3 )
         IF (domag) THEN
-           DO j=1, dffts%nr1x*dffts%nr2x*dffts%my_nr3p
+           DO j=1, dffts%nr1x*dffts%nr2x*right_nr3
               sup = tg_psic(j,1) * (tg_v(j,1)+tg_v(j,4)) + &
                     tg_psic(j,2) * (tg_v(j,2)-(0.d0,1.d0)*tg_v(j,3))
               sdwn = tg_psic(j,2) * (tg_v(j,1)-tg_v(j,4)) + &
@@ -461,7 +480,7 @@ SUBROUTINE vloc_psi_nc (lda, n, m, psi, v, hpsi)
               tg_psic(j,2)=sdwn
            ENDDO
         ELSE
-           DO j=1, dffts%nr1x*dffts%nr2x*dffts%my_nr3p
+           DO j=1, dffts%nr1x*dffts%nr2x*right_nr3
               tg_psic(j,:) = tg_psic(j,:) * tg_v(j,1)
            ENDDO
         ENDIF
@@ -492,6 +511,8 @@ SUBROUTINE vloc_psi_nc (lda, n, m, psi, v, hpsi)
            !
            ioff   = 0
            !
+           CALL tg_get_recip_inc( dffts, right_inc )
+           !
            DO idx = 1, dffts%nproc2
               !
               IF( idx + ibnd - 1 <= m ) THEN
@@ -501,7 +522,7 @@ SUBROUTINE vloc_psi_nc (lda, n, m, psi, v, hpsi)
                  ENDDO
               ENDIF
               !
-              ioff = ioff + dffts%nnr
+              ioff = ioff + right_inc
               !
            ENDDO
 

@@ -4567,7 +4567,7 @@ END SUBROUTINE compute_becpsi
     USE mp_exx,         ONLY : intra_egrp_comm, me_egrp, exx_mode, nproc_egrp, &
                                negrp, root_egrp
     USE io_global,      ONLY : stdout
-    USE fft_base,       ONLY : dfftp, dffts, dtgs, smap, fft_base_info
+    USE fft_base,       ONLY : dfftp, dffts, smap, fft_base_info
     USE fft_types,      ONLY : fft_type_init
     USE recvec_subs,    ONLY : ggen
 !    USE task_groups,    ONLY : task_groups_init
