@@ -17,7 +17,7 @@ MODULE fft_rho
   !
   IMPLICIT NONE
   PRIVATE
-  PUBLIC :: rho_r2g, rho_g2r, smooth_rho_g2r
+  PUBLIC :: rho_r2g, rho_g2r, smooth_rho_g2r, smooth_rho_r2g
   !
 CONTAINS
   !
@@ -76,6 +76,62 @@ CONTAINS
     DEALLOCATE( psi )
 
   END SUBROUTINE rho_r2g
+  !
+  SUBROUTINE smooth_rho_r2g ( rhor, rhog, v )
+    USE gvecs,          ONLY: ngms,  nls, nlsm
+    USE fft_base,       ONLY: dffts
+    !
+    REAL(dp),    INTENT(in) :: rhor(:,:)
+    COMPLEX(dp), INTENT(OUT):: rhog(:,:)
+    REAL(dp),    OPTIONAL, INTENT(in) :: v(:)
+    !
+    INTEGER :: ir, ig, iss, isup, isdw
+    INTEGER :: nspin
+    COMPLEX(dp):: fp, fm
+    COMPLEX(dp), ALLOCATABLE :: psi(:)
+
+    nspin= SIZE (rhor, 2)
+
+    ALLOCATE( psi( dffts%nnr ) )
+    IF( nspin == 1 ) THEN
+       iss=1
+       IF( PRESENT( v ) ) THEN
+          DO ir=1,dffts%nnr
+             psi(ir)=CMPLX(rhor(ir,iss)+v(ir),0.0_dp,kind=dp)
+          END DO
+       ELSE
+          DO ir=1,dffts%nnr
+             psi(ir)=CMPLX(rhor(ir,iss),0.0_dp,kind=dp)
+          END DO
+       END IF
+       CALL fwfft('Smooth', psi, dffts )
+       DO ig=1,ngms
+          rhog(ig,iss)=psi(nls(ig))
+       END DO
+    ELSE
+       isup=1
+       isdw=2
+       IF( PRESENT( v ) ) THEN
+          DO ir=1,dffts%nnr
+             psi(ir)=CMPLX(rhor(ir,isup)+v(ir),rhor(ir,isdw)+v(ir),kind=dp)
+          END DO
+       ELSE
+          DO ir=1,dffts%nnr
+             psi(ir)=CMPLX(rhor(ir,isup),rhor(ir,isdw),kind=dp)
+          END DO
+       END IF
+       CALL fwfft('Smooth', psi, dffts )
+       DO ig=1,ngms
+          fp=psi(nls(ig))+psi(nlsm(ig))
+          fm=psi(nls(ig))-psi(nlsm(ig))
+          rhog(ig,isup)=0.5_dp*CMPLX( DBLE(fp),AIMAG(fm),kind=DP)
+          rhog(ig,isdw)=0.5_dp*CMPLX(AIMAG(fp),-DBLE(fm),kind=DP)
+       END DO
+    ENDIF
+    
+    DEALLOCATE( psi )
+
+  END SUBROUTINE smooth_rho_r2g
   !
   SUBROUTINE rho_g2r ( rhog, rhor )
     USE gvect,          ONLY: ngm,  nl, nlm
