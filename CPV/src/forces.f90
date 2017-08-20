@@ -57,7 +57,7 @@
       !
       INTEGER     :: iv, jv, ia, is, isa, ism, ios, iss1, iss2, ir, ig, inl, jnl
       INTEGER     :: ivoff, jvoff, igoff, igno, igrp, ierr
-      INTEGER     :: idx, eig_offset, nogrp_ , inc
+      INTEGER     :: idx, eig_offset, nogrp_ , inc, tg_nr3
       REAL(DP)    :: fi, fip, dd, dv
       COMPLEX(DP) :: fp, fm, ci
 #if defined(__INTEL_COMPILER)
@@ -154,11 +154,13 @@
       !
       IF( dffts%have_task_groups ) THEN
          !
+         CALL tg_get_group_nr3( dffts, tg_nr3 )
+         !
 !===============================================================================
 !exx_wf related
          IF(dft_is_hybrid().AND.exx_is_active()) THEN
             !$omp parallel do private(tmp1,tmp2) 
-            DO ir = 1, dffts%nr1x*dffts%nr2x*dffts%my_nr3p
+            DO ir = 1, dffts%nr1x*dffts%nr2x*tg_nr3
                tmp1 = v(ir,iss1) * DBLE( psi(ir) )+exx_potential(ir,i/nogrp_+1)
                tmp2 = v(ir,iss2) * AIMAG(psi(ir) )+exx_potential(ir,i/nogrp_+2)
                psi(ir) = CMPLX( tmp1, tmp2, kind=DP)
@@ -166,7 +168,7 @@
             !$omp end parallel do 
          ELSE
             !$omp parallel do 
-            DO ir = 1, dffts%nr1x*dffts%nr2x*dffts%my_nr3p
+            DO ir = 1, dffts%nr1x*dffts%nr2x*tg_nr3
                psi(ir) = CMPLX ( v(ir,iss1) * DBLE( psi(ir) ), &
                                  v(ir,iss2) *AIMAG( psi(ir) ) ,kind=DP)
             END DO

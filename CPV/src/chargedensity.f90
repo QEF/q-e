@@ -526,7 +526,7 @@
          !
          IMPLICIT NONE
          !
-         INTEGER :: from, i, eig_index, eig_offset, ii, right_nnr
+         INTEGER :: from, i, eig_index, eig_offset, ii, right_nnr, tg_nr3
          !
 #if defined(__INTEL_COMPILER)
 #if __INTEL_COMPILER  >= 1300
@@ -539,7 +539,9 @@
          ALLOCATE( psis( dffts%nnr_tg ) ) 
          ALLOCATE( aux( dffts%nnr_tg ) ) 
          !
-         ALLOCATE( tmp_rhos ( dffts%nr1x * dffts%nr2x * dffts%my_nr3p, nspin ) )
+         CALL tg_get_group_nr3( dffts, tg_nr3 )
+         !
+         ALLOCATE( tmp_rhos ( dffts%nr1x * dffts%nr2x * tg_nr3, nspin ) )
          !
          tmp_rhos = 0_DP
 
@@ -663,11 +665,11 @@
             !code this should be equal to the total number of planes
             !
 
-            ir =  dffts%nr1x*dffts%nr2x*dffts%my_nr3p 
+            ir =  dffts%nr1x*dffts%nr2x*tg_nr3
             IF( ir > SIZE( psis ) ) &
                CALL errore( ' rhoofr ', ' psis size too small ', ir )
 
-            do ir = 1, dffts%nr1x*dffts%nr2x*dffts%my_nr3p
+            do ir = 1, dffts%nr1x*dffts%nr2x*tg_nr3
                tmp_rhos(ir,iss1) = tmp_rhos(ir,iss1) + sa1*( real(psis(ir)))**2
                tmp_rhos(ir,iss2) = tmp_rhos(ir,iss2) + sa2*(aimag(psis(ir)))**2
             end do
