@@ -12,18 +12,18 @@ MODULE fft_rho
   ! ... FFT and inverse FFT of rho on the dense grid
   !
   USE kinds,     ONLY : DP
-  USE fft_base,       ONLY: dfftp
   USE fft_interfaces, ONLY: fwfft, invfft
-  USE gvect,          ONLY: ngm,  nl, nlm
   USE control_flags,  ONLY: gamma_only
   !
   IMPLICIT NONE
   PRIVATE
-  PUBLIC :: rho_r2g, rho_g2r
+  PUBLIC :: rho_r2g, rho_g2r, smooth_rho_g2r
   !
 CONTAINS
   !
   SUBROUTINE rho_r2g ( rhor, rhog, v )
+    USE gvect,          ONLY: ngm,  nl, nlm
+    USE fft_base,       ONLY: dfftp
     !
     REAL(dp),    INTENT(in) :: rhor(:,:)
     COMPLEX(dp), INTENT(OUT):: rhog(:,:)
@@ -78,6 +78,8 @@ CONTAINS
   END SUBROUTINE rho_r2g
   !
   SUBROUTINE rho_g2r ( rhog, rhor )
+    USE gvect,          ONLY: ngm,  nl, nlm
+    USE fft_base,       ONLY: dfftp
     !
     COMPLEX(dp), INTENT(in ):: rhog(:,:)
     REAL(dp),    INTENT(out):: rhor(:,:)
@@ -146,5 +148,78 @@ CONTAINS
     DEALLOCATE( psi )
 
   END SUBROUTINE rho_g2r
+
+  SUBROUTINE smooth_rho_g2r ( rhog, rhor )
+    USE gvecs,          ONLY: ngms,  nls, nlsm
+    USE fft_base,       ONLY: dffts
+    !
+    COMPLEX(dp), INTENT(in ):: rhog(:,:)
+    REAL(dp),    INTENT(out):: rhor(:,:)
+    !
+    INTEGER :: ir, ig, iss, isup, isdw
+    INTEGER :: nspin
+    COMPLEX(dp), PARAMETER :: ci=(0.0_dp, 1.0_dp)
+    COMPLEX(dp), ALLOCATABLE :: psi(:)
+
+    nspin= SIZE (rhog, 2)
+
+    ALLOCATE( psi( dffts%nnr ) )
+    IF ( gamma_only ) THEN
+       IF( nspin == 1 ) THEN
+          iss=1
+          psi (:) = (0.0_dp, 0.0_dp)
+!$omp parallel do
+          DO ig=1,ngms
+             psi(nlsm(ig))=CONJG(rhog(ig,iss))
+             psi(nls (ig))=      rhog(ig,iss)
+          END DO
+!$omp end parallel do
+          CALL invfft('Smooth',psi, dffts )
+!$omp parallel do
+          DO ir=1,dffts%nnr
+             rhor(ir,iss)=DBLE(psi(ir))
+          END DO
+!$omp end parallel do
+       ELSE
+          isup=1
+          isdw=2
+          psi (:) = (0.0_dp, 0.0_dp)
+!$omp parallel do
+          DO ig=1,ngms
+             psi(nlsm(ig))=CONJG(rhog(ig,isup))+ci*CONJG(rhog(ig,isdw))
+             psi(nls(ig))=rhog(ig,isup)+ci*rhog(ig,isdw)
+          END DO
+!$omp end parallel do
+          CALL invfft('Smooth',psi, dffts )
+!$omp parallel do
+          DO ir=1,dffts%nnr
+             rhor(ir,isup)= DBLE(psi(ir))
+             rhor(ir,isdw)=AIMAG(psi(ir))
+          END DO
+       !$omp end parallel do
+       ENDIF
+       !
+    ELSE
+       !
+       DO iss=1, nspin
+          psi (:) = (0.0_dp, 0.0_dp)
+!$omp parallel do
+          DO ig=1,ngms
+             psi(nls (ig))=      rhog(ig,iss)
+          END DO
+!$omp end parallel do
+          CALL invfft('Smooth',psi, dffts )
+!$omp parallel do
+          DO ir=1,dffts%nnr
+             rhor(ir,iss)=DBLE(psi(ir))
+          END DO
+!$omp end parallel do
+       END DO
+    END IF
+    
+    DEALLOCATE( psi )
+
+  END SUBROUTINE smooth_rho_g2r
+
 
 END MODULE fft_rho
