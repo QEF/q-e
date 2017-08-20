@@ -63,6 +63,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       USE mp_global,        ONLY: me_image
       USE exx_module,       ONLY: dexx_dh, exxalfa  ! exx_wf related
       USE fft_rho
+      USE fft_helper_subroutines
       
       USE plugin_variables, ONLY: plugin_etot
 
@@ -405,28 +406,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       !
       IF (ts_vdw) THEN
         !
-        IF (nspin.EQ.1) THEN
-           !
-!$omp parallel do
-           DO ir=1,dfftp%nr1*dfftp%nr2*dfftp%my_nr3p
-              !
-              rhor(ir,1)=rhor(ir,1)+UtsvdW(ir)
-              !
-           END DO
-!$omp end parallel do
-           !
-        ELSE IF (nspin.EQ.2) THEN
-           !
-!$omp parallel do
-           DO ir=1,dfftp%nr1*dfftp%nr2*dfftp%my_nr3p
-              !
-              rhor(ir,1)=rhor(ir,1)+UtsvdW(ir)
-              rhor(ir,2)=rhor(ir,2)+UtsvdW(ir)
-              !
-           END DO
-!$omp end parallel do
-          !
-        END IF
+        CALL fftx_add_field( rhor, UtsvdW, dfftp )
         !
       END IF
       !
