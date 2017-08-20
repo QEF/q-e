@@ -70,7 +70,6 @@
       use gvecs
       use gvecw, only: ngw
       use gvect, only: g
-      use gvect, only: nl, nlm
       use cell_base, only : omega, tpiba, ainv
       use electrons_base, only: nx => nbspx, n => nbsp, f, ispin, nspin
       use constants, only: pi, fpi
@@ -80,6 +79,7 @@
                           dkedtaus
       USE fft_interfaces, ONLY: fwfft, invfft
       USE fft_base,       ONLY: dffts, dfftp
+      USE fft_rho
       
       implicit none
 
@@ -175,60 +175,14 @@
          end if  !end metagga
          !
       end do
+
 !     kinetic energy density (kedtau) in g-space (kedtaug)
-      if(nspin.eq.1)then
-         iss=1
 
-         psis(1:dffts%nnr)=CMPLX(kedtaus(1:dffts%nnr,iss),0.d0,kind=DP)
-         call fwfft('Smooth',psis, dffts )
-         kedtaug(1:ngms,iss)=psis(nls(1:ngms))
-
-      else
-         isup=1
-         isdw=2
-
-         psis(1:dffts%nnr)=CMPLX(kedtaus(1:dffts%nnr,isup),kedtaus(1:dffts%nnr,isdw),kind=DP)
-         call fwfft('Smooth',psis, dffts )
-         do ig=1,ngms
-            fp= psis(nls(ig)) + psis(nlsm(ig))
-            fm= psis(nls(ig)) - psis(nlsm(ig))
-            kedtaug(ig,isup)=0.5d0*CMPLX( DBLE(fp),AIMAG(fm),kind=DP)
-            kedtaug(ig,isdw)=0.5d0*CMPLX(AIMAG(fp),-DBLE(fm),kind=DP)
-         end do
-
-      endif
+      CALL smooth_rho_r2g( kedtaus, kedtaug )
 !
-      if(nspin.eq.1) then
-!     ==================================================================
-!     case nspin=1
-!     ------------------------------------------------------------------
-         iss=1
+      kedtaug(ngms+1:,:) = 0.0d0
 
-         psi( : ) = (0.d0,0.d0)
-         psi(nlm(1:ngms))=CONJG(kedtaug(1:ngms,iss))
-         psi(nl(1:ngms)) =      kedtaug(1:ngms,iss)
-         call invfft('Dense',psi, dfftp )
-         kedtaur(1:dfftp%nnr,iss)=DBLE(psi(1:dfftp%nnr))
-
-      else 
-!     ==================================================================
-!     case nspin=2
-!     ------------------------------------------------------------------
-         isup=1
-         isdw=2
-
-         psi( : ) = (0.d0,0.d0)
-
-         do ig=1,ngms
-            psi(nlm(ig))=CONJG(kedtaug(ig,isup))+ci*conjg(kedtaug(ig,isdw))
-            psi(nl(ig)) =kedtaug(ig,isup)+ci*kedtaug(ig,isdw)
-         end do
-         call invfft('Dense',psi, dfftp )
-         kedtaur(1:dfftp%nnr,isup)= DBLE(psi(1:dfftp%nnr))
-         kedtaur(1:dfftp%nnr,isdw)=AIMAG(psi(1:dfftp%nnr))
-
-      endif
-
+      CALL rho_g2r( kedtaug, kedtaur )
 !
       return
     end subroutine kedtauofr_meta
@@ -252,8 +206,6 @@
       use control_flags, only: thdyn, tpre, tfor, tprnfor
       use io_global, only: stdout
       use ions_base, only: nsp, na, nat
-      use gvecs
-      use gvect, only: ngm, nl, nlm
       use cell_base, only: omega
       use electrons_base, only: nspin
       use constants, only: pi, fpi
@@ -262,7 +214,6 @@
       use core
       use smallbox_gvec
       use dener
-!      use derho
       use mp,      ONLY : mp_sum
       use mp_global, ONLY : intra_bgrp_comm
       use metagga, ONLY : kedtaur, kedtaug, kedtaus, dkedtaus
