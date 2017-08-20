@@ -19,6 +19,10 @@ MODULE fft_rho
   PRIVATE
   PUBLIC :: rho_r2g, rho_g2r, smooth_rho_g2r, smooth_rho_r2g
   !
+  INTERFACE rho_g2r
+    MODULE PROCEDURE rho_g2r_x, rho_g2r_sum_components
+  END INTERFACE
+  !
 CONTAINS
   !
   SUBROUTINE rho_r2g ( rhor, rhog, v )
@@ -133,7 +137,7 @@ CONTAINS
 
   END SUBROUTINE smooth_rho_r2g
   !
-  SUBROUTINE rho_g2r ( rhog, rhor )
+  SUBROUTINE rho_g2r_x ( rhog, rhor )
     USE gvect,          ONLY: ngm,  nl, nlm
     USE fft_base,       ONLY: dfftp
     !
@@ -180,7 +184,7 @@ CONTAINS
              rhor(ir,isup)= DBLE(psi(ir))
              rhor(ir,isdw)=AIMAG(psi(ir))
           END DO
-       !$omp end parallel do
+!$omp end parallel do
        ENDIF
        !
     ELSE
@@ -203,7 +207,86 @@ CONTAINS
     
     DEALLOCATE( psi )
 
-  END SUBROUTINE rho_g2r
+  END SUBROUTINE rho_g2r_x
+  !
+  SUBROUTINE rho_g2r_sum_components ( rhog, rhor )
+    USE gvect,          ONLY: ngm,  nl, nlm
+    USE fft_base,       ONLY: dfftp
+    !
+    COMPLEX(dp), INTENT(in ):: rhog(:,:)
+    REAL(dp),    INTENT(out):: rhor(:)
+    !
+    INTEGER :: ir, ig, iss, isup, isdw
+    INTEGER :: nspin
+    COMPLEX(dp), PARAMETER :: ci=(0.0_dp, 1.0_dp)
+    COMPLEX(dp), ALLOCATABLE :: psi(:)
+
+    nspin= SIZE (rhog, 2)
+
+    ALLOCATE( psi( dfftp%nnr ) )
+    IF ( gamma_only ) THEN
+       IF( nspin == 1 ) THEN
+          iss=1
+          psi (:) = (0.0_dp, 0.0_dp)
+!$omp parallel do
+          DO ig=1,ngm
+             psi(nlm(ig))=CONJG(rhog(ig,iss))
+             psi(nl (ig))=      rhog(ig,iss)
+          END DO
+!$omp end parallel do
+          CALL invfft('Dense',psi, dfftp )
+!$omp parallel do
+          DO ir=1,dfftp%nnr
+             rhor(ir)=DBLE(psi(ir))
+          END DO
+!$omp end parallel do
+       ELSE
+          isup=1
+          isdw=2
+          psi (:) = (0.0_dp, 0.0_dp)
+!$omp parallel do
+          DO ig=1,ngm
+             psi(nlm(ig))=CONJG(rhog(ig,isup))+ci*CONJG(rhog(ig,isdw))
+             psi(nl(ig))=rhog(ig,isup)+ci*rhog(ig,isdw)
+          END DO
+!$omp end parallel do
+          CALL invfft('Dense',psi, dfftp )
+!$omp parallel do
+          DO ir=1,dfftp%nnr
+             rhor(ir)= DBLE(psi(ir))+AIMAG(psi(ir))
+          END DO
+!$omp end parallel do
+       ENDIF
+       !
+    ELSE
+       !
+       DO iss=1, nspin
+          psi (:) = (0.0_dp, 0.0_dp)
+!$omp parallel do
+          DO ig=1,ngm
+             psi(nl (ig))=      rhog(ig,iss)
+          END DO
+!$omp end parallel do
+          CALL invfft('Dense',psi, dfftp )
+          IF( iss == 1 ) THEN
+!$omp parallel do
+             DO ir=1,dfftp%nnr
+                rhor(ir)=DBLE(psi(ir))
+             END DO
+!$omp end parallel do
+          ELSE
+!$omp parallel do
+             DO ir=1,dfftp%nnr
+                rhor(ir)=rhor(ir) + DBLE(psi(ir))
+             END DO
+!$omp end parallel do
+          END IF
+       END DO
+    END IF
+    
+    DEALLOCATE( psi )
+
+  END SUBROUTINE rho_g2r_sum_components
 
   SUBROUTINE smooth_rho_g2r ( rhog, rhor )
     USE gvecs,          ONLY: ngms,  nls, nlsm
