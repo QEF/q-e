@@ -84,7 +84,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       COMPLEX(DP)  fp, fm, ci, drhop, zpseu, zh
       COMPLEX(DP), ALLOCATABLE :: rhotmp(:), vtemp(:)
       COMPLEX(DP), ALLOCATABLE :: drhot(:,:)
-      COMPLEX(DP), ALLOCATABLE :: v(:), vs(:)
+      COMPLEX(DP), ALLOCATABLE :: vs(:)
       REAL(DP), ALLOCATABLE    :: gagb(:,:), rhosave(:,:), rhocsave(:)
       !
       REAL(DP), ALLOCATABLE :: fion1( :, : )
@@ -442,64 +442,25 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
 !     fourier transform of xc potential to g-space (dense grid)
 !     -------------------------------------------------------------------
 !
-      ALLOCATE( v(  dfftp%nnr ) )
+      IF( abivol .or. abisur ) THEN
+         CALL rho_r2g ( rhor, rhog, v_vol )
+      ELSE
+         CALL rho_r2g ( rhor, rhog )
+      END IF
+       
       IF( nspin == 1 ) THEN
-         iss = 1
-         if (abivol.or.abisur) then
-!$omp parallel do
-            do ir=1, dfftp%nnr
-               v(ir)=CMPLX( rhor( ir, iss ) + v_vol( ir ), 0.d0 ,kind=DP)
-            end do           
-         else
-!$omp parallel do
-            do ir=1, dfftp%nnr
-               v(ir)=CMPLX( rhor( ir, iss ), 0.d0 ,kind=DP)
-            end do
-         end if
-         !
-         !     v_xc(r) --> v_xc(g)
-         !
-         CALL fwfft( 'Dense', v, dfftp )
-!
-!$omp parallel do
-         DO ig = 1, ngm
-            rhog( ig, iss ) = vtemp(ig) + v( nl( ig ) )
-         END DO
-         !
-         !     v_tot(g) = (v_tot(g) - v_xc(g)) +v_xc(g)
-         !     rhog contains the total potential in g-space
-         !
+         rhog( 1:ngm, 1 ) = rhog( 1:ngm, 1 ) + vtemp(1:ngm) 
       ELSE
          isup=1
          isdw=2
-         if (abivol.or.abisur) then
-!$omp parallel do
-            do ir=1, dfftp%nnr
-               v(ir)=CMPLX ( rhor(ir,isup)+v_vol(ir), &
-                             rhor(ir,isdw)+v_vol(ir),kind=DP)
-            end do
-         else
-!$omp parallel do
-            do ir=1, dfftp%nnr
-               v(ir)=CMPLX (rhor(ir,isup),rhor(ir,isdw),kind=DP)
-            end do
-         end if
-         CALL fwfft('Dense',v, dfftp )
-!$omp parallel do private(fp,fm)
-         DO ig=1,ngm
-            fp=v(nl(ig))+v(nlm(ig))
-            fm=v(nl(ig))-v(nlm(ig))
-            IF( ttsic ) THEN
-             rhog(ig,isup)=vtemp(ig)-self_vloc(ig) + &
-                           0.5d0*CMPLX( DBLE(fp),AIMAG(fm),kind=DP)
-             rhog(ig,isdw)=vtemp(ig)+self_vloc(ig) + &
-                           0.5d0*CMPLX(AIMAG(fp),-DBLE(fm),kind=DP)
-            ELSE
-             rhog(ig,isup)=vtemp(ig)+0.5d0*CMPLX( DBLE(fp),AIMAG(fm),kind=DP)
-             rhog(ig,isdw)=vtemp(ig)+0.5d0*CMPLX(AIMAG(fp),-DBLE(fm),kind=DP)
-            ENDIF
-         END DO
-      ENDIF
+         rhog( 1:ngm, isup ) = rhog( 1:ngm, isup ) + vtemp(1:ngm) 
+         rhog( 1:ngm, isdw ) = rhog( 1:ngm, isdw ) + vtemp(1:ngm) 
+         IF( ttsic ) THEN
+            rhog( 1:ngm, isup ) = rhog( 1:ngm, isup ) - self_vloc(1:ngm) 
+            rhog( 1:ngm, isdw ) = rhog( 1:ngm, isdw ) - self_vloc(1:ngm) 
+         END IF
+      END IF
+
       DEALLOCATE (vtemp)
 !
 !     rhog contains now the total (local+Hartree+xc) potential in g-space
@@ -535,13 +496,14 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
 !     ===================================================================
 !     fourier transform of total potential to r-space (dense grid)
 !     -------------------------------------------------------------------
-      v(:) = (0.d0, 0.d0)
       
       CALL rho_g2r( rhog, rhor )
 
       IF(nspin.EQ.1) THEN
-         vave=SUM(rhor(:,iss))/DBLE( dfftp%nr1* dfftp%nr2* dfftp%nr3)
+         vave=SUM(rhor(:,1))/DBLE( dfftp%nr1* dfftp%nr2* dfftp%nr3)
       ELSE
+         isup=1
+         isdw=2
          vave=(SUM(rhor(:,isup))+SUM(rhor(:,isdw))) / 2.0d0 / DBLE(  dfftp%nr1 *  dfftp%nr2 *  dfftp%nr3 )
       END IF
 
@@ -589,10 +551,9 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
          !
       ENDIF
 
-      IF( dft_is_meta() ) CALL vofrho_meta( v, vs )
+      IF( dft_is_meta() ) CALL vofrho_meta( vs )
 
       DEALLOCATE( vs )
-      DEALLOCATE( v )
 
       ebac = 0.0d0
       !
