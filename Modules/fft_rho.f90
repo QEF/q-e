@@ -196,7 +196,7 @@ CONTAINS
              rhor(ir,isup)= DBLE(psi(ir))
              rhor(ir,isdw)=AIMAG(psi(ir))
           END DO
-       !$omp end parallel do
+!$omp end parallel do
        ENDIF
        !
     ELSE
