@@ -62,6 +62,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       USE tsvdw_module,     ONLY: EtsvdW,UtsvdW,FtsvdW,HtsvdW
       USE mp_global,        ONLY: me_image
       USE exx_module,       ONLY: dexx_dh, exxalfa  ! exx_wf related
+      USE fft_rho
       
       USE plugin_variables, ONLY: plugin_etot
 
@@ -535,46 +536,14 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
 !     fourier transform of total potential to r-space (dense grid)
 !     -------------------------------------------------------------------
       v(:) = (0.d0, 0.d0)
+      
+      CALL rho_g2r( rhog, rhor )
+
       IF(nspin.EQ.1) THEN
-         iss=1
-!$omp parallel do
-         DO ig=1,ngm
-            v(nl (ig))=rhog(ig,iss)
-            v(nlm(ig))=CONJG(rhog(ig,iss))
-         END DO
-!
-!     v(g) --> v(r)
-!
-         CALL invfft('Dense',v, dfftp )
-!
-!$omp parallel do
-         DO ir=1, dfftp%nnr
-            rhor(ir,iss)=DBLE(v(ir))
-         END DO
-!
-!     calculation of average potential
-!
          vave=SUM(rhor(:,iss))/DBLE( dfftp%nr1* dfftp%nr2* dfftp%nr3)
       ELSE
-         isup=1
-         isdw=2
-!$omp parallel do
-         DO ig=1,ngm
-            v(nl (ig))=rhog(ig,isup)+ci*rhog(ig,isdw)
-            v(nlm(ig))=CONJG(rhog(ig,isup)) +ci*CONJG(rhog(ig,isdw))
-         END DO
-!
-         CALL invfft('Dense',v, dfftp )
-!$omp parallel do
-         DO ir=1, dfftp%nnr
-            rhor(ir,isup)= DBLE(v(ir))
-            rhor(ir,isdw)=AIMAG(v(ir))
-         END DO
-         !
-         !     calculation of average potential
-         !
          vave=(SUM(rhor(:,isup))+SUM(rhor(:,isdw))) / 2.0d0 / DBLE(  dfftp%nr1 *  dfftp%nr2 *  dfftp%nr3 )
-      ENDIF
+      END IF
 
       CALL mp_sum( vave, intra_bgrp_comm )
 
