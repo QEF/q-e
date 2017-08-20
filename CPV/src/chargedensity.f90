@@ -127,10 +127,10 @@
 #if defined (__OLDXML)
       USE xml_io_base,        ONLY: read_rho, restart_dir
 #else
-      USE fft_rho,            ONLY: rho_g2r
       USE io_base,            ONLY: read_rhog
 #endif      
       USE io_files,           ONLY: tmp_dir, prefix
+      USE fft_rho
       !
       IMPLICIT NONE
       INTEGER nfi
@@ -262,33 +262,7 @@
             rhor = rhopr
          END IF
 
-         ALLOCATE( psi( dfftp%nnr ) )
-
-         IF(nspin.EQ.1)THEN
-            iss=1
-            DO ir=1,dfftp%nnr
-               psi(ir)=CMPLX(rhor(ir,iss),0.d0,kind=DP)
-            END DO
-            CALL fwfft('Dense', psi, dfftp )
-            DO ig=1,ngm
-               rhog(ig,iss)=psi(nl(ig))
-            END DO
-         ELSE
-            isup=1
-            isdw=2
-            DO ir=1,dfftp%nnr
-               psi(ir)=CMPLX(rhor(ir,isup),rhor(ir,isdw),kind=DP)
-            END DO
-            CALL fwfft('Dense', psi, dfftp )
-            DO ig=1,ngm
-               fp=psi(nl(ig))+psi(nlm(ig))
-               fm=psi(nl(ig))-psi(nlm(ig))
-               rhog(ig,isup)=0.5d0*CMPLX( DBLE(fp),AIMAG(fm),kind=DP)
-               rhog(ig,isdw)=0.5d0*CMPLX(AIMAG(fp),-DBLE(fm),kind=DP)
-            END DO
-         ENDIF
-
-         DEALLOCATE( psi )
+         CALL rho_r2g( rhor, rhog )
 
       ELSE
          !
@@ -340,88 +314,19 @@
          !
          !     smooth charge in g-space is put into rhog(ig)
          !
-         ALLOCATE( psis( dffts%nnr ) ) 
+         CALL smooth_rho_r2g( rhos, rhog )
          !
-         IF(nspin.EQ.1)THEN
-            iss=1
-!$omp parallel do
-            DO ir=1,dffts%nnr
-               psis(ir)=CMPLX(rhos(ir,iss),0.d0,kind=DP)
-            END DO
-!$omp end parallel do
-            CALL fwfft('Smooth', psis, dffts )
-
-!$omp parallel do
-            DO ig=1,ngms
-               rhog(ig,iss)=psis(nls(ig))
-            END DO
-!$omp end parallel do
-         ELSE
-            isup=1
-            isdw=2
-!$omp parallel do
-             DO ir=1,dffts%nnr
-               psis(ir)=CMPLX(rhos(ir,isup),rhos(ir,isdw),kind=DP)
-            END DO
-!$omp end parallel do
-            CALL fwfft('Smooth',psis, dffts )
-!$omp parallel do private(fp,fm)
-            DO ig=1,ngms
-               fp= psis(nls(ig)) + psis(nlsm(ig))
-               fm= psis(nls(ig)) - psis(nlsm(ig))
-               rhog(ig,isup)=0.5d0*CMPLX( DBLE(fp),AIMAG(fm),kind=DP)
-               rhog(ig,isdw)=0.5d0*CMPLX(AIMAG(fp),-DBLE(fm),kind=DP)
-            END DO
-!$omp end parallel do
-         ENDIF
+         rhog(ngms+1:,:) = 0.0d0
          !
-         ALLOCATE( psi( dfftp%nnr ) )
+         CALL rho_g2r( rhog, rhor )
          !
-         IF( nspin .EQ. 1 ) THEN
-            ! 
-            !     case nspin=1
-            ! 
-            iss=1
-            psi (:) = (0.d0, 0.d0)
-!$omp parallel do
-            DO ig=1,ngms
-               psi(nlm(ig))=CONJG(rhog(ig,iss))
-               psi(nl (ig))=      rhog(ig,iss)
-            END DO
-!$omp end parallel do
-            CALL invfft('Dense',psi, dfftp )
-!$omp parallel do
-            DO ir=1,dfftp%nnr
-               rhor(ir,iss)=DBLE(psi(ir))
-            END DO
-!$omp end parallel do
-            !
-         ELSE 
-            !
-            !     case nspin=2
-            !
-            isup=1
-            isdw=2
-            psi (:) = (0.d0, 0.d0)
-!$omp parallel do
-            DO ig=1,ngms
-               psi(nlm(ig))=CONJG(rhog(ig,isup))+ci*CONJG(rhog(ig,isdw))
-               psi(nl(ig))=rhog(ig,isup)+ci*rhog(ig,isdw)
-            END DO
-!$omp end parallel do
-            CALL invfft('Dense',psi, dfftp )
-!$omp parallel do
-            DO ir=1,dfftp%nnr
-               rhor(ir,isup)= DBLE(psi(ir))
-               rhor(ir,isdw)=AIMAG(psi(ir))
-            END DO
-!$omp end parallel do
-         ENDIF
-         !
-         IF ( dft_is_meta() ) CALL kedtauofr_meta( c_bgrp, psi, SIZE( psi ), psis, SIZE( psis ) ) ! METAGGA
-         !
-         DEALLOCATE( psi ) 
-         DEALLOCATE( psis ) 
+         IF ( dft_is_meta() ) THEN
+            ALLOCATE( psis( dffts%nnr ) ) 
+            ALLOCATE( psi( dfftp%nnr ) )
+            CALL kedtauofr_meta( c_bgrp, psi, SIZE( psi ), psis, SIZE( psis ) ) ! METAGGA
+            DEALLOCATE( psi ) 
+            DEALLOCATE( psis ) 
+         END IF
          !
          !     add vanderbilt contribution to the charge density
          !     drhov called before rhov because input rho must be the smooth part
