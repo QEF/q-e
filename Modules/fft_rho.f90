@@ -23,10 +23,11 @@ MODULE fft_rho
   !
 CONTAINS
   !
-  SUBROUTINE rho_r2g ( rhor, rhog )
+  SUBROUTINE rho_r2g ( rhor, rhog, v )
     !
     REAL(dp),    INTENT(in) :: rhor(:,:)
     COMPLEX(dp), INTENT(OUT):: rhog(:,:)
+    REAL(dp),    OPTIONAL, INTENT(in) :: v(:)
     !
     INTEGER :: ir, ig, iss, isup, isdw
     INTEGER :: nspin
@@ -38,9 +39,15 @@ CONTAINS
     ALLOCATE( psi( dfftp%nnr ) )
     IF( nspin == 1 ) THEN
        iss=1
-       DO ir=1,dfftp%nnr
-          psi(ir)=CMPLX(rhor(ir,iss),0.0_dp,kind=dp)
-       END DO
+       IF( PRESENT( v ) ) THEN
+          DO ir=1,dfftp%nnr
+             psi(ir)=CMPLX(rhor(ir,iss)+v(ir),0.0_dp,kind=dp)
+          END DO
+       ELSE
+          DO ir=1,dfftp%nnr
+             psi(ir)=CMPLX(rhor(ir,iss),0.0_dp,kind=dp)
+          END DO
+       END IF
        CALL fwfft('Dense', psi, dfftp )
        DO ig=1,ngm
           rhog(ig,iss)=psi(nl(ig))
@@ -48,9 +55,15 @@ CONTAINS
     ELSE
        isup=1
        isdw=2
-       DO ir=1,dfftp%nnr
-          psi(ir)=CMPLX(rhor(ir,isup),rhor(ir,isdw),kind=dp)
-       END DO
+       IF( PRESENT( v ) ) THEN
+          DO ir=1,dfftp%nnr
+             psi(ir)=CMPLX(rhor(ir,isup)+v(ir),rhor(ir,isdw)+v(ir),kind=dp)
+          END DO
+       ELSE
+          DO ir=1,dfftp%nnr
+             psi(ir)=CMPLX(rhor(ir,isup),rhor(ir,isdw),kind=dp)
+          END DO
+       END IF
        CALL fwfft('Dense', psi, dfftp )
        DO ig=1,ngm
           fp=psi(nl(ig))+psi(nlm(ig))
