@@ -542,7 +542,7 @@ MODULE xml_io_base
       USE mp,        ONLY : mp_get, mp_sum, mp_rank, mp_size
 #if defined __HDF5
       USE hdf5_qe,  ONLY  : write_rho_hdf5, h5fclose_f, &
-           prepare_for_writing_final, add_attributes_hdf5, rho_hdf5_write  
+                            prepare_for_writing_final, add_attributes_hdf5, rho_hdf5_write  
 #endif
       USE fft_types
       !
@@ -705,7 +705,6 @@ MODULE xml_io_base
       ! ... collecting the entire charge density on a single processor
       !
       USE io_global, ONLY : ionode, ionode_id
-      USE mp_bands,  ONLY : intra_bgrp_comm
       USE mp_images, ONLY : intra_image_comm
       USE mp,        ONLY : mp_put, mp_sum, mp_rank, mp_size
 #if defined __HDF5
@@ -805,9 +804,9 @@ MODULE xml_io_base
 #endif
          ENDIF
          !
-         ! ... planes are sent to the destination processor
+         ! ... planes are sent to the destination processor (all processors in this image)
          !
-         CALL mp_bcast( rho_plane, ionode_id, fft_desc%comm )
+         CALL mp_bcast( rho_plane, ionode_id, intra_image_comm )
          !
          IF( kowner(k) == me_group3 ) THEN
             !
