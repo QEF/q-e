@@ -150,5 +150,33 @@ CONTAINS
      val = desc%nnr
   END SUBROUTINE
 
+  SUBROUTINE fftx_add_field( r, f, desc )
+     USE fft_param
+     USE fft_types,      ONLY : fft_type_descriptor
+     TYPE(fft_type_descriptor), INTENT(in) :: desc
+     REAL(DP), INTENT(INOUT)  :: r(:,:)
+     REAL(DP), INTENT(IN) :: f(:)
+     INTEGER :: nspin, ir
+     nspin = SIZE( r, 2 )
+     IF (nspin.EQ.1) THEN
+!$omp parallel do
+        DO ir=1,desc%nr1*desc%nr2*desc%my_nr3p
+           r(ir,1)=r(ir,1)+f(ir)
+        END DO
+!$omp end parallel do
+     ELSE IF (nspin.EQ.2) THEN
+!$omp parallel do
+        DO ir=1,desc%nr1*desc%nr2*desc%my_nr3p
+           r(ir,1)=r(ir,1)+f(ir)
+        END DO
+!$omp end parallel do
+!$omp parallel do
+        DO ir=1,desc%nr1*desc%nr2*desc%my_nr3p
+           r(ir,2)=r(ir,2)+f(ir)
+        END DO
+!$omp end parallel do
+     END IF
+  END SUBROUTINE
+
 
 END MODULE fft_helper_subroutines
