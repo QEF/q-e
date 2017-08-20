@@ -84,7 +84,6 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       COMPLEX(DP)  fp, fm, ci, drhop, zpseu, zh
       COMPLEX(DP), ALLOCATABLE :: rhotmp(:), vtemp(:)
       COMPLEX(DP), ALLOCATABLE :: drhot(:,:)
-      COMPLEX(DP), ALLOCATABLE :: vs(:)
       REAL(DP), ALLOCATABLE    :: gagb(:,:), rhosave(:,:), rhocsave(:)
       !
       REAL(DP), ALLOCATABLE :: fion1( :, : )
@@ -462,6 +461,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       END IF
 
       DEALLOCATE (vtemp)
+      IF( ttsic ) DEALLOCATE( self_vloc )
 !
 !     rhog contains now the total (local+Hartree+xc) potential in g-space
 !
@@ -491,7 +491,6 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
 
       DEALLOCATE( fion1 )
 !
-      IF( ttsic ) DEALLOCATE( self_vloc )
 !
 !     ===================================================================
 !     fourier transform of total potential to r-space (dense grid)
@@ -512,48 +511,9 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       !
       !     fourier transform of total potential to r-space (smooth grid)
       !
-      ALLOCATE( vs( dffts%nnr ) )
-      vs (:) = (0.d0, 0.d0)
-      !
-      IF(nspin.EQ.1)THEN
-         !
-         iss=1
-!$omp parallel do
-         DO ig=1,ngms
-            vs(nlsm(ig))=CONJG(rhog(ig,iss))
-            vs(nls(ig))=rhog(ig,iss)
-         END DO
-         !
-         CALL invfft('Smooth',vs, dffts )
-         !
-!$omp parallel do
-         DO ir=1,dffts%nnr
-            rhos(ir,iss)=DBLE(vs(ir))
-         END DO
-         !
-      ELSE
-         !
-         isup=1
-         isdw=2
-!$omp parallel do
-         DO ig=1,ngms
-            vs(nls(ig))=rhog(ig,isup)+ci*rhog(ig,isdw)
-            vs(nlsm(ig))=CONJG(rhog(ig,isup)) +ci*CONJG(rhog(ig,isdw))
-         END DO 
-         !
-         CALL invfft('Smooth',vs, dffts )
-         !
-!$omp parallel do
-         DO ir=1,dffts%nnr
-            rhos(ir,isup)= DBLE(vs(ir))
-            rhos(ir,isdw)=AIMAG(vs(ir))
-         END DO
-         !
-      ENDIF
+      CALL smooth_rho_g2r ( rhog, rhos )
 
-      IF( dft_is_meta() ) CALL vofrho_meta( vs )
-
-      DEALLOCATE( vs )
+      IF( dft_is_meta() ) CALL vofrho_meta( )
 
       ebac = 0.0d0
       !

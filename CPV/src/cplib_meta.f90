@@ -235,7 +235,7 @@
 !
 !
 !-----------------------------------------------------------------------
-      subroutine vofrho_meta ( vs)
+      subroutine vofrho_meta ( )
 !-----------------------------------------------------------------------
 !     computes: the one-particle potential v in real space,
 !               the total energy etot,
@@ -271,16 +271,16 @@
 !
       implicit none
 !
-      complex(dp)  vs(dffts%nnr)
-!
       integer iss, isup, isdw, ig, ir,i,j,k,is, ia
       real(dp) dkedxc(3,3) !metagga
       complex(dp)  fp, fm, ci
       COMPLEX(DP), ALLOCATABLE :: v(:)
+      COMPLEX(DP), ALLOCATABLE :: vs(:)
 !
       ci=(0.d0,1.d0)
 
       ALLOCATE( v(dfftp%nnr) )
+      ALLOCATE( vs(dffts%nnr) )
       v(:)=(0.d0,0.d0)
 !
 !     ===================================================================
@@ -371,6 +371,7 @@
           end do
        end if        
        DEALLOCATE( v )
+       DEALLOCATE( vs )
        return
      end subroutine vofrho_meta
 !-----------------------------------------------------------------------
