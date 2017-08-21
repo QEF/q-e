@@ -59,6 +59,7 @@ cglib.o : ../../Modules/uspp.o
 cglib.o : ../../UtilXlib/mp.o
 cglib.o : cp_interfaces.o
 cglib.o : mainvar.o
+chargedensity.o : ../../FFTXlib/fft_helper_subroutines.o
 chargedensity.o : ../../FFTXlib/fft_interfaces.o
 chargedensity.o : ../../FFTXlib/fft_scalar.o
 chargedensity.o : ../../KS_Solvers/CG/constants.o
@@ -221,6 +222,7 @@ cplib_meta.o : ../../Modules/cell_base.o
 cplib_meta.o : ../../Modules/control_flags.o
 cplib_meta.o : ../../Modules/electrons_base.o
 cplib_meta.o : ../../Modules/fft_base.o
+cplib_meta.o : ../../Modules/fft_rho.o
 cplib_meta.o : ../../Modules/gvecw.o
 cplib_meta.o : ../../Modules/io_global.o
 cplib_meta.o : ../../Modules/ions_base.o
@@ -461,6 +463,7 @@ fft.o : ../../Modules/fft_base.o
 fft.o : ../../Modules/kind.o
 fft.o : ../../Modules/mp_global.o
 fft.o : ../../Modules/recvec.o
+forces.o : ../../FFTXlib/fft_helper_subroutines.o
 forces.o : ../../FFTXlib/fft_interfaces.o
 forces.o : ../../KS_Solvers/CG/constants.o
 forces.o : ../../Modules/cell_base.o
@@ -533,6 +536,7 @@ gtable.o : ../../Modules/recvec.o
 gtable.o : ../../UtilXlib/mp.o
 gtable.o : ../../UtilXlib/parallel_include.o
 gtable.o : efield.o
+init.o : ../../FFTXlib/fft_helper_subroutines.o
 init.o : ../../FFTXlib/fft_smallbox.o
 init.o : ../../FFTXlib/fft_smallbox_type.o
 init.o : ../../FFTXlib/fft_types.o
@@ -1129,12 +1133,14 @@ stress.o : ../../Modules/recvec.o
 stress.o : ../../UtilXlib/mp.o
 stress.o : cp_interfaces.o
 stress.o : modules.o
+vofrho.o : ../../FFTXlib/fft_helper_subroutines.o
 vofrho.o : ../../FFTXlib/fft_interfaces.o
 vofrho.o : ../../KS_Solvers/CG/constants.o
 vofrho.o : ../../Modules/cell_base.o
 vofrho.o : ../../Modules/control_flags.o
 vofrho.o : ../../Modules/electrons_base.o
 vofrho.o : ../../Modules/fft_base.o
+vofrho.o : ../../Modules/fft_rho.o
 vofrho.o : ../../Modules/funct.o
 vofrho.o : ../../Modules/io_global.o
 vofrho.o : ../../Modules/ions_base.o
@@ -1162,6 +1168,7 @@ vol_clu.o : ../../Modules/cell_base.o
 vol_clu.o : ../../Modules/control_flags.o
 vol_clu.o : ../../Modules/electrons_base.o
 vol_clu.o : ../../Modules/fft_base.o
+vol_clu.o : ../../Modules/fft_rho.o
 vol_clu.o : ../../Modules/io_global.o
 vol_clu.o : ../../Modules/ions_base.o
 vol_clu.o : ../../Modules/kind.o

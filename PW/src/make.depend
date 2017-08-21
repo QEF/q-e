@@ -1951,6 +1951,7 @@ stress.o : symme.o
 stress.o : xdm_dispersion.o
 struct_fact.o : ../../KS_Solvers/CG/constants.o
 struct_fact.o : ../../Modules/kind.o
+sum_band.o : ../../FFTXlib/fft_helper_subroutines.o
 sum_band.o : ../../FFTXlib/fft_interfaces.o
 sum_band.o : ../../Modules/becmod.o
 sum_band.o : ../../Modules/cell_base.o
@@ -2137,6 +2138,7 @@ vhpsi.o : scf_mod.o
 vloc_of_g.o : ../../KS_Solvers/CG/constants.o
 vloc_of_g.o : ../../Modules/kind.o
 vloc_of_g.o : esm.o
+vloc_psi.o : ../../FFTXlib/fft_helper_subroutines.o
 vloc_psi.o : ../../FFTXlib/fft_interfaces.o
 vloc_psi.o : ../../Modules/fft_base.o
 vloc_psi.o : ../../Modules/kind.o

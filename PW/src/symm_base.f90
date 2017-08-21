@@ -439,6 +439,7 @@ SUBROUTINE sgam_at ( nat, tau, ityp, sym, no_z_inv)
   REAL(DP) , ALLOCATABLE :: xau (:,:), rau (:,:)
   ! atomic coordinates in crystal axis
   LOGICAL :: fractional_translations, no_z
+  INTEGER :: nfrac
   REAL(DP) :: ft_(3), ftaux(3)
   !
   ALLOCATE(xau(3,nat))
@@ -531,7 +532,12 @@ SUBROUTINE sgam_at ( nat, tau, ityp, sym, no_z_inv)
                  ! in order to ensure that fractional translations are
                  ! commensurate with FFT grids 
                  DO i = 1, 3
-                    fft_fact(i) = mcm ( fft_fact(i), NINT(1.0_dp/ft_(i)) )
+                    IF ( ABS (ft_(i)) > eps2 ) THEN
+                       nfrac = NINT(1.0_dp/ft_(i)) 
+                    ELSE
+                       nfrac = 0
+                    END IF
+                    fft_fact(i) = mcm ( fft_fact(i), nfrac )
                  END DO
                  !
                  GOTO 20
