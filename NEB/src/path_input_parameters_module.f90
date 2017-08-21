@@ -117,9 +117,9 @@ MODULE path_input_parameters_module
   !
   LOGICAL      :: lfcpopt              = .FALSE.
   REAL(DP)     :: fcp_mu               = 0.0_DP
-  CHARACTER(8) :: fcp_relax            = 'mdiis'
-  ! 'lm':    Line-Minimisation
-  ! 'mdiis': MDIIS algorism
+  CHARACTER(8) :: fcp_relax            = 'lm'
+  ! 'lm':    line minimisation
+  ! 'mdiis': MDIIS algorithm
   CHARACTER(len=8) :: fcp_relax_allowed(2)
   DATA fcp_relax_allowed / 'lm', 'mdiis' /
   REAL(DP)     :: fcp_relax_step       = 0.1_DP

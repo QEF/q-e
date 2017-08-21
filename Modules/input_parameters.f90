@@ -567,9 +567,9 @@ MODULE input_parameters
         REAL(DP) :: fcp_tempw      = 300.0_DP
           ! target temperature for the FCP dynamics
 
-        CHARACTER(LEN=8) :: fcp_relax = 'mdiis'
-          ! 'lm':    Line-Minimisation
-          ! 'mdiis': MDIIS algorism
+        CHARACTER(LEN=8) :: fcp_relax = 'lm'
+          ! 'lm':    line minimisation
+          ! 'mdiis': MDIIS algorithm
 
         CHARACTER(len=8) :: fcp_relax_allowed(2)
         DATA fcp_relax_allowed / 'lm', 'mdiis' /

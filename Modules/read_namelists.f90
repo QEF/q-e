@@ -296,7 +296,7 @@ MODULE read_namelists_module
        fcp_mu          = 0.0_DP
        fcp_mass        = 10000.0_DP
        fcp_tempw       = 0.0_DP
-       fcp_relax       = 'mdiis'
+       fcp_relax       = 'lm'
        fcp_relax_step  = 0.5_DP
        fcp_relax_crit  = 0.001_DP
        fcp_mdiis_size  = 4

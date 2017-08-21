@@ -19,7 +19,7 @@ MODULE fcp_variables
    REAL(DP)         :: fcp_mu               = 0.0_DP
    REAL(DP)         :: fcp_mass             = 10000.0_DP
    REAL(DP)         :: fcp_temperature      = 0.0_DP
-   CHARACTER(LEN=8) :: fcp_relax            = 'mdiis'
+   CHARACTER(LEN=8) :: fcp_relax            = 'lm'
    REAL(DP)         :: fcp_relax_step       = 0.5_DP
    REAL(DP)         :: fcp_relax_crit       = 0.001_DP
    INTEGER          :: fcp_mdiis_size       = 4

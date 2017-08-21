@@ -819,7 +819,7 @@ cat > graphene_bc3_vc-relax_p002.in << EOF
  &control
     calculation = 'vc-relax',
     restart_mode='from_scratch',
-    prefix='graphene_bc1_vc-relax_p002',
+    prefix='graphene_bc3_vc-relax_p002',
     pseudo_dir = '$PSEUDO_DIR/',
     outdir='$TMP_DIR/',
     tprnfor = .true.,
