@@ -694,6 +694,7 @@
     ! Fine mesh set of g-matrices.  It is large for memory storage
     ! SP: Should not be a memory problem. If so, can always the number of cores to reduce nkf. 
     ALLOCATE ( epf17 (ibndmax-ibndmin+1, ibndmax-ibndmin+1, nmodes, nkf) )
+    epf17(:,:,:,:) = zero
     ! 
     ! Restart calculation
     iq_restart = 1
@@ -778,199 +779,199 @@
        ! this is a loop over k blocks in the pool
        ! (size of the local k-set)
        DO ik = 1, nkf
-          !
-          ! DBSP
-          !write(900,*),'iq ik ',iq, ' ',ik
-          !write(901,*),'iq ik ',iq, ' ',ik
-          !
-          ! xkf is assumed to be in crys coord
-          !
-          ikk = 2 * ik - 1
-          ikq = ikk + 1
-          !
-          xkk = xkf(:, ikk)
-          xkq = xkk + xxq
-          !
-          ! SP: Compute the cfac only once here since the same are use in both hamwan2bloch and dmewan2bloch
-          ! + optimize the 2\pi r\cdot k with Blas
-          IF ( (nkf1 >0) .AND. (nkf2 > 0) .AND. (nkf3 > 0) .AND. &
-             (nqf1 > 0) .AND. (nqf2 > 0) .AND. (nqf3 > 0) .AND. .NOT. mp_mesh_k .AND. .NOT. lscreen) THEN          
-            ! We need to use NINT (nearest integer to x) rather than INT
-            xkk1 = NINT(xkk(1)*(nkf1)) + 1
-            xkk2 = NINT(xkk(2)*(nkf2)) + 1
-            xkk3 = NINT(xkk(3)*(nkf3)) + 1 
-            xkq1 = NINT(xkq(1)*(nkf1)) + 1
-            xkq2 = NINT(xkq(2)*(nkf2)) + 1
-            xkq3 = NINT(xkq(3)*(nkf3)) + 1 
-            ! 
-            ! SP: Look-up table is more effecient than calling the exp function.
-            DO ir = 1, nrr_k
-              cfac(ir) = ( tablex(irvec(1,ir)+2*nk1+1,xkk1) *&
-                      tabley(irvec(2,ir)+2*nk2+1,xkk2) * tablez(irvec(3,ir)+2*nk3+1,xkk3) ) / ndegen_k(ir)
-              cfacq(ir) = ( tableqx(irvec(1,ir)+2*nk1+1,xkq1) *&
-                      tableqy(irvec(2,ir)+2*nk2+1,xkq2) * tableqz(irvec(3,ir)+2*nk3+1,xkq3) ) /  ndegen_k(ir)
-            ENDDO
-            !DBSP
-            !IF ( (iq == 1) .and. (ik ==4)) THEN
-            !  CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkk, 1, 0.0_DP, rdotk, 1 )
-            !  cfac1(:) = exp( ci*rdotk(:) ) / ndegen_k(:)
-            !  CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkq, 1, 0.0_DP, rdotk, 1 )
-            !  cfacq1(:) = exp( ci*rdotk(:) ) / ndegen_k(:)
-            !ENDIF
-          ELSE
-            CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkk, 1, 0.0_DP, rdotk, 1 )
-            cfac(:) = exp( ci*rdotk(:) ) / ndegen_k(:)
-            CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkq, 1, 0.0_DP, rdotk, 1 )
-            cfacq(:) = exp( ci*rdotk(:) ) / ndegen_k(:)
-          ENDIF
-          !DO ir = 1, nrr_k
-          !  write(900,*)ir, ' ', cfacq(ir)
-          !  write(901,*)ir, ' ', cfacq1(ir)
-          !ENDDO
-          !
-          ! ------------------------------------------------------        
-          ! hamiltonian : Wannier -> Bloch 
-          ! ------------------------------------------------------
-          !
-          ! Kohn-Sham first, then get the rotation matricies for following interp.
-          IF (eig_read) THEN
-             CALL hamwan2bloch &
-               ( nbndsub, nrr_k, cufkk, etf_ks (:, ikk), chw_ks, cfac)
-             CALL hamwan2bloch &
-               ( nbndsub, nrr_k, cufkq, etf_ks (:, ikq), chw_ks, cfacq)
-          ENDIF
-          !
-          CALL hamwan2bloch &
-               ( nbndsub, nrr_k, cufkk, etf (:, ikk), chw, cfac)
-          CALL hamwan2bloch &
-               ( nbndsub, nrr_k, cufkq, etf (:, ikq), chw, cfacq)
-          !DBSP
-          !write(900,*)'ikk ',etf(:,ikk)
-          !write(900,*)'ikq ',etf(:,ikq)
-          !
-          ! ------------------------------------------------------        
-          !  dipole: Wannier -> Bloch
-          ! ------------------------------------------------------        
-          !
-          CALL dmewan2bloch &
-               ( nbndsub, nrr_k, irvec, ndegen_k, xkk, cufkk, dmef (:,:,:, ikk), etf(:,ikk), etf_ks(:,ikk), cfac)
-          CALL dmewan2bloch &
-               ( nbndsub, nrr_k, irvec, ndegen_k, xkq, cufkq, dmef (:,:,:, ikq), etf(:,ikq), etf_ks(:,ikq), cfacq)
-          !
-          ! ------------------------------------------------------        
-          !  velocity: Wannier -> Bloch
-          ! ------------------------------------------------------        
-          !
-          IF (vme) THEN
-             IF (eig_read) THEN
-                CALL vmewan2bloch &
-                     ( nbndsub, nrr_k, irvec, ndegen_k, xkk, cufkk, vmef (:,:,:, ikk), etf(:,ikk), etf_ks(:,ikk), chw_ks)
-                CALL vmewan2bloch &
-                     ( nbndsub, nrr_k, irvec, ndegen_k, xkq, cufkq, vmef (:,:,:, ikq), etf(:,ikq), etf_ks(:,ikq), chw_ks)
-             ELSE
-                CALL vmewan2bloch &
-                     ( nbndsub, nrr_k, irvec, ndegen_k, xkk, cufkk, vmef (:,:,:, ikk), etf(:,ikk), etf_ks(:,ikk), chw)
-                CALL vmewan2bloch &
-                     ( nbndsub, nrr_k, irvec, ndegen_k, xkq, cufkq, vmef (:,:,:, ikq), etf(:,ikq), etf_ks(:,ikq), chw)
-             ENDIF
-          ENDIF
-          !
-          ! interpolate ONLY when (k,k+q) both have at least one band 
-          ! within a Fermi shell of size fsthick 
-          !
-          IF ( (( minval ( abs(etf (:, ikk) - ef) ) < fsthick ) .and. &
-                  ( minval ( abs(etf (:, ikq) - ef) ) < fsthick )) .and. .NOT. plselfen) THEN
+         !
+         ! DBSP
+         !write(900,*),'iq ik ',iq, ' ',ik
+         !write(901,*),'iq ik ',iq, ' ',ik
+         !
+         ! xkf is assumed to be in crys coord
+         !
+         ikk = 2 * ik - 1
+         ikq = ikk + 1
+         !
+         xkk = xkf(:, ikk)
+         xkq = xkk + xxq
+         !
+         ! SP: Compute the cfac only once here since the same are use in both hamwan2bloch and dmewan2bloch
+         ! + optimize the 2\pi r\cdot k with Blas
+         IF ( (nkf1 >0) .AND. (nkf2 > 0) .AND. (nkf3 > 0) .AND. &
+            (nqf1 > 0) .AND. (nqf2 > 0) .AND. (nqf3 > 0) .AND. .NOT. mp_mesh_k .AND. .NOT. lscreen) THEN          
+           ! We need to use NINT (nearest integer to x) rather than INT
+           xkk1 = NINT(xkk(1)*(nkf1)) + 1
+           xkk2 = NINT(xkk(2)*(nkf2)) + 1
+           xkk3 = NINT(xkk(3)*(nkf3)) + 1 
+           xkq1 = NINT(xkq(1)*(nkf1)) + 1
+           xkq2 = NINT(xkq(2)*(nkf2)) + 1
+           xkq3 = NINT(xkq(3)*(nkf3)) + 1 
+           ! 
+           ! SP: Look-up table is more effecient than calling the exp function.
+           DO ir = 1, nrr_k
+             cfac(ir) = ( tablex(irvec(1,ir)+2*nk1+1,xkk1) *&
+                     tabley(irvec(2,ir)+2*nk2+1,xkk2) * tablez(irvec(3,ir)+2*nk3+1,xkk3) ) / ndegen_k(ir)
+             cfacq(ir) = ( tableqx(irvec(1,ir)+2*nk1+1,xkq1) *&
+                     tableqy(irvec(2,ir)+2*nk2+1,xkq2) * tableqz(irvec(3,ir)+2*nk3+1,xkq3) ) /  ndegen_k(ir)
+           ENDDO
+           !DBSP
+           !IF ( (iq == 1) .and. (ik ==4)) THEN
+           !  CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkk, 1, 0.0_DP, rdotk, 1 )
+           !  cfac1(:) = exp( ci*rdotk(:) ) / ndegen_k(:)
+           !  CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkq, 1, 0.0_DP, rdotk, 1 )
+           !  cfacq1(:) = exp( ci*rdotk(:) ) / ndegen_k(:)
+           !ENDIF
+         ELSE
+           CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkk, 1, 0.0_DP, rdotk, 1 )
+           cfac(:) = exp( ci*rdotk(:) ) / ndegen_k(:)
+           CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkq, 1, 0.0_DP, rdotk, 1 )
+           cfacq(:) = exp( ci*rdotk(:) ) / ndegen_k(:)
+         ENDIF
+         !DO ir = 1, nrr_k
+         !  write(900,*)ir, ' ', cfacq(ir)
+         !  write(901,*)ir, ' ', cfacq1(ir)
+         !ENDDO
+         !
+         ! ------------------------------------------------------        
+         ! hamiltonian : Wannier -> Bloch 
+         ! ------------------------------------------------------
+         !
+         ! Kohn-Sham first, then get the rotation matricies for following interp.
+         IF (eig_read) THEN
+            CALL hamwan2bloch &
+              ( nbndsub, nrr_k, cufkk, etf_ks (:, ikk), chw_ks, cfac)
+            CALL hamwan2bloch &
+              ( nbndsub, nrr_k, cufkq, etf_ks (:, ikq), chw_ks, cfacq)
+         ENDIF
+         !
+         CALL hamwan2bloch &
+              ( nbndsub, nrr_k, cufkk, etf (:, ikk), chw, cfac)
+         CALL hamwan2bloch &
+              ( nbndsub, nrr_k, cufkq, etf (:, ikq), chw, cfacq)
+         !DBSP
+         !write(900,*)'ikk ',etf(:,ikk)
+         !write(900,*)'ikq ',etf(:,ikq)
+         !
+         ! ------------------------------------------------------        
+         !  dipole: Wannier -> Bloch
+         ! ------------------------------------------------------        
+         !
+         CALL dmewan2bloch &
+              ( nbndsub, nrr_k, irvec, ndegen_k, xkk, cufkk, dmef (:,:,:, ikk), etf(:,ikk), etf_ks(:,ikk), cfac)
+         CALL dmewan2bloch &
+              ( nbndsub, nrr_k, irvec, ndegen_k, xkq, cufkq, dmef (:,:,:, ikq), etf(:,ikq), etf_ks(:,ikq), cfacq)
+         !
+         ! ------------------------------------------------------        
+         !  velocity: Wannier -> Bloch
+         ! ------------------------------------------------------        
+         !
+         IF (vme) THEN
+            IF (eig_read) THEN
+               CALL vmewan2bloch &
+                    ( nbndsub, nrr_k, irvec, ndegen_k, xkk, cufkk, vmef (:,:,:, ikk), etf(:,ikk), etf_ks(:,ikk), chw_ks)
+               CALL vmewan2bloch &
+                    ( nbndsub, nrr_k, irvec, ndegen_k, xkq, cufkq, vmef (:,:,:, ikq), etf(:,ikq), etf_ks(:,ikq), chw_ks)
+            ELSE
+               CALL vmewan2bloch &
+                    ( nbndsub, nrr_k, irvec, ndegen_k, xkk, cufkk, vmef (:,:,:, ikk), etf(:,ikk), etf_ks(:,ikk), chw)
+               CALL vmewan2bloch &
+                    ( nbndsub, nrr_k, irvec, ndegen_k, xkq, cufkq, vmef (:,:,:, ikq), etf(:,ikq), etf_ks(:,ikq), chw)
+            ENDIF
+         ENDIF
+         !
+         ! interpolate ONLY when (k,k+q) both have at least one band 
+         ! within a Fermi shell of size fsthick 
+         !
+         IF ( (( minval ( abs(etf (:, ikk) - ef) ) < fsthick ) .and. &
+                ( minval ( abs(etf (:, ikq) - ef) ) < fsthick )) .and. .NOT. plselfen) THEN
+           !
+           !  fermicount = fermicount + 1
+           !
+           ! --------------------------------------------------------------
+           ! epmat : Wannier el and Bloch ph -> Bloch el and Bloch ph
+           ! --------------------------------------------------------------
+           !
+           ! SP: Note: In case of polar materials, computing the long-range and short-range term 
+           !     separately might help speed up the convergence. Indeed the long-range term should be 
+           !     much faster to compute. Note however that the short-range term still contains a linear
+           !     long-range part and therefore could still be a bit more difficult to converge than 
+           !     non-polar materials. 
+           ! 
+           IF (longrange) THEN
+             !      
+             epmatf = czero
              !
-             !  fermicount = fermicount + 1
+           ELSE        
              !
-             ! --------------------------------------------------------------
-             ! epmat : Wannier el and Bloch ph -> Bloch el and Bloch ph
-             ! --------------------------------------------------------------
+             CALL ephwan2bloch &
+               ( nbndsub, nrr_k, irvec, ndegen_k, epmatwef, xkk, cufkk, cufkq, epmatf, nmodes )
              !
-             ! SP: Note: In case of polar materials, computing the long-range and short-range term 
-             !     separately might help speed up the convergence. Indeed the long-range term should be 
-             !     much faster to compute. Note however that the short-range term still contains a linear
-             !     long-range part and therefore could still be a bit more difficult to converge than 
-             !     non-polar materials. 
-             ! 
-             IF (longrange) THEN
+           ENDIF
+           !
+           IF (lpolar) THEN
+             !
+             CALL compute_umn_f( nbndsub, cufkk, cufkq, bmatf )
+             !
+             IF ( (abs(xxq(1)) > eps) .or. (abs(xxq(2)) > eps) .or. (abs(xxq(3)) > eps) ) THEN
                !      
-               epmatf = czero
-               !
-             ELSE        
-               !
-               CALL ephwan2bloch &
-                 ( nbndsub, nrr_k, irvec, ndegen_k, epmatwef, xkk, cufkk, cufkq, epmatf, nmodes )
+               CALL cryst_to_cart (1, xxq, bg, 1)
+               CALL rgd_blk_epw_fine(nq1, nq2, nq3, xxq, uf, epmatf, &
+                                     nmodes, epsi, zstar, bmatf, +1.d0)
+               CALL cryst_to_cart (1, xxq, at, -1)
                !
              ENDIF
              !
-             IF (lpolar) THEN
-               !
-               CALL compute_umn_f( nbndsub, cufkk, cufkq, bmatf )
-               !
-               IF ( (abs(xxq(1)) > eps) .or. (abs(xxq(2)) > eps) .or. (abs(xxq(3)) > eps) ) THEN
-                 !      
-                 CALL cryst_to_cart (1, xxq, bg, 1)
-                 CALL rgd_blk_epw_fine(nq1, nq2, nq3, xxq, uf, epmatf, &
-                                       nmodes, epsi, zstar, bmatf, +1.d0)
-                 CALL cryst_to_cart (1, xxq, at, -1)
-                 !
+           ENDIF
+           ! 
+           ! Store epmatf in memory
+           !
+           DO jbnd = ibndmin, ibndmax
+             DO ibnd = ibndmin, ibndmax
+               ! 
+               IF (lscreen) THEN
+                  epf17(ibnd-ibndmin+1,jbnd-ibndmin+1,:,ik) = epmatf(ibnd,jbnd,:) / eps_rpa(:)
+               ELSE
+                  epf17(ibnd-ibndmin+1,jbnd-ibndmin+1,:,ik) = epmatf(ibnd,jbnd,:)
                ENDIF
                !
-             ENDIF
-             ! 
-             ! Store epmatf in memory
-             !
-             DO jbnd = ibndmin, ibndmax
-               DO ibnd = ibndmin, ibndmax
-                 ! 
-                 IF (lscreen) THEN
-                    epf17(ibnd-ibndmin+1,jbnd-ibndmin+1,:,ik) = epmatf(ibnd,jbnd,:) / eps_rpa(:)
-                 ELSE
-                    epf17(ibnd-ibndmin+1,jbnd-ibndmin+1,:,ik) = epmatf(ibnd,jbnd,:)
-                 ENDIF
-                 !
-               ENDDO
              ENDDO
-             ! 
-             !DBSP
-             ! Debug on the long/short range. Usefull to keep commented for now.  
-             !if (ik==2) then
-             !  !print*,'iq ',iq
-             !  !do imode = 1, nmodes
-             !    !write(*,*) 'epmatf ',SUM((REAL(REAL(epmatf(:,:,imode))))**2)+SUM((REAL(AIMAG(epmatf(:,:,imode))))**2)
-             !    F = SUM((REAL(REAL(epmatf(:,:,:))))**2)+SUM((REAL(AIMAG(epmatf(:,:,:))))**2)
-             !    !S = SUM((REAL(REAL(epmatfs(:,:,:))))**2)+SUM((REAL(AIMAG(epmatfs(:,:,:))))**2)
-             !    S = SUM((epmatfs(:,:,:))**2)
-             !    L = SUM((REAL(REAL(epmatfl(:,:,:))))**2)+SUM((REAL(AIMAG(epmatfl(:,:,:))))**2)
-             !    write(*,*) 'F, S+L', F, S+L
-             !    DO ibnd = 1, nbndsub
-             !      print*,'ibnd ',ibnd
-             !      DO jbnd = 1, nbndsub
-             !        print*,'jbnd ',jbnd
-             !        F = SUM((REAL(REAL(epmatf(ibnd,jbnd,:))))**2)+SUM((REAL(AIMAG(epmatf(ibnd,jbnd,:))))**2)
-             !        !S = SUM((REAL(REAL(epmatfs(ibnd,jbnd,:))))**2)+SUM((REAL(AIMAG(epmatfs(ibnd,jbnd,:))))**2)
-             !        S = SUM(epmatfs(ibnd,jbnd,:)**2)
-             !        L = SUM((REAL(REAL(epmatfl(ibnd,jbnd,:))))**2)+SUM((REAL(AIMAG(epmatfl(ibnd,jbnd,:))))**2)
-             !        write(*,*) 'F, S+L', F, S+L
-             !        DO imode = 1, nmodes
-             !          print*,'imode ',imode
-             !          F = (REAL(REAL(epmatf(ibnd,jbnd,imode))))**2+(REAL(AIMAG(epmatf(ibnd,jbnd,imode))))**2
-             !          !S = (REAL(REAL(epmatfs(ibnd,jbnd,imode))))**2+(REAL(AIMAG(epmatfs(ibnd,jbnd,imode))))**2
-             !          S = (epmatfs(ibnd,jbnd,imode))**2
-             !          L = (REAL(REAL(epmatfl(ibnd,jbnd,imode))))**2+(REAL(AIMAG(epmatfl(ibnd,jbnd,imode))))**2
-             !          write(*,*) 'F, S+L', F, S+L
-             !        ENDDO
-             !      ENDDO
-             !    ENDDO
-             !  !enddo
-             !endif
-             ! 
-             ! Print the vertex |g|. This is slow and produces huge amount of .txt data            
-             ! Do average over degenerate states since g is gauge-dependent.  
-             !
-          ENDIF
-          !
+           ENDDO
+           ! 
+           !DBSP
+           ! Debug on the long/short range. Usefull to keep commented for now.  
+           !if (ik==2) then
+           !  !print*,'iq ',iq
+           !  !do imode = 1, nmodes
+           !    !write(*,*) 'epmatf ',SUM((REAL(REAL(epmatf(:,:,imode))))**2)+SUM((REAL(AIMAG(epmatf(:,:,imode))))**2)
+           !    F = SUM((REAL(REAL(epmatf(:,:,:))))**2)+SUM((REAL(AIMAG(epmatf(:,:,:))))**2)
+           !    !S = SUM((REAL(REAL(epmatfs(:,:,:))))**2)+SUM((REAL(AIMAG(epmatfs(:,:,:))))**2)
+           !    S = SUM((epmatfs(:,:,:))**2)
+           !    L = SUM((REAL(REAL(epmatfl(:,:,:))))**2)+SUM((REAL(AIMAG(epmatfl(:,:,:))))**2)
+           !    write(*,*) 'F, S+L', F, S+L
+           !    DO ibnd = 1, nbndsub
+           !      print*,'ibnd ',ibnd
+           !      DO jbnd = 1, nbndsub
+           !        print*,'jbnd ',jbnd
+           !        F = SUM((REAL(REAL(epmatf(ibnd,jbnd,:))))**2)+SUM((REAL(AIMAG(epmatf(ibnd,jbnd,:))))**2)
+           !        !S = SUM((REAL(REAL(epmatfs(ibnd,jbnd,:))))**2)+SUM((REAL(AIMAG(epmatfs(ibnd,jbnd,:))))**2)
+           !        S = SUM(epmatfs(ibnd,jbnd,:)**2)
+           !        L = SUM((REAL(REAL(epmatfl(ibnd,jbnd,:))))**2)+SUM((REAL(AIMAG(epmatfl(ibnd,jbnd,:))))**2)
+           !        write(*,*) 'F, S+L', F, S+L
+           !        DO imode = 1, nmodes
+           !          print*,'imode ',imode
+           !          F = (REAL(REAL(epmatf(ibnd,jbnd,imode))))**2+(REAL(AIMAG(epmatf(ibnd,jbnd,imode))))**2
+           !          !S = (REAL(REAL(epmatfs(ibnd,jbnd,imode))))**2+(REAL(AIMAG(epmatfs(ibnd,jbnd,imode))))**2
+           !          S = (epmatfs(ibnd,jbnd,imode))**2
+           !          L = (REAL(REAL(epmatfl(ibnd,jbnd,imode))))**2+(REAL(AIMAG(epmatfl(ibnd,jbnd,imode))))**2
+           !          write(*,*) 'F, S+L', F, S+L
+           !        ENDDO
+           !      ENDDO
+           !    ENDDO
+           !  !enddo
+           !endif
+           ! 
+           ! Print the vertex |g|. This is slow and produces huge amount of .txt data            
+           ! Do average over degenerate states since g is gauge-dependent.  
+           !
+         ENDIF
+         !
        ENDDO  ! end loop over k points
        !
        IF (prtgkk     ) CALL print_gkk( iq ) 
@@ -982,12 +983,12 @@
        IF (specfun_ph ) CALL spectral_func_ph( iq )
        IF (specfun_pl ) CALL spectral_func_pl_q( iq )
        IF (ephwrite) THEN
-          IF ( iq .eq. 1 ) THEN 
-             CALL kmesh_fine
-             CALL kqmap_fine
-          ENDIF
-          CALL write_ephmat( iq ) 
-          CALL count_kpoints(iq)
+         IF ( iq .eq. 1 ) THEN 
+           CALL kmesh_fine
+           CALL kqmap_fine
+         ENDIF
+         CALL write_ephmat( iq ) 
+         CALL count_kpoints(iq)
        ENDIF
        !
        CALL stop_clock ( 'ep-interp' )
@@ -1244,7 +1245,8 @@
   IF ( ALLOCATED(gamma_all) )     DEALLOCATE( gamma_all )
   IF ( ALLOCATED(sigmai_all) )    DEALLOCATE( sigmai_all )
   IF ( ALLOCATED(sigmai_mode) )   DEALLOCATE( sigmai_mode )
-  IF ( ALLOCATED(w2) )   DEALLOCATE( w2 )
+  IF ( ALLOCATED(w2) )            DEALLOCATE( w2 )
+  IF ( ALLOCATED(epf17) )        DEALLOCATE( epf17 )
   DEALLOCATE(cfac)
   DEALLOCATE(cfacq)
   DEALLOCATE(rdotk)

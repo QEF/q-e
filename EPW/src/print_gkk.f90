@@ -74,9 +74,9 @@
   !! Eigenenergies at k+q
   REAL(kind=DP) :: g2
   !! Temporary electron-phonon matrix element square
-  REAL(kind=DP) :: epc(nbndsub, nbndsub, nmodes, nkqtotf/2)
+  REAL(kind=DP), ALLOCATABLE :: epc(:,:,:,:)
   !! g vectex accross all pools 
-  REAL(kind=DP) :: epc_sym(nbndsub,nbndsub, nmodes)
+  REAL(kind=DP), ALLOCATABLE :: epc_sym(:,:,:)
   !! Temporary g-vertex for each pool 
   REAL(kind=DP), PARAMETER :: eps = 0.01/ryd2mev
   !! Tolerence to be degenerate
@@ -84,7 +84,11 @@
   ! find the bounds of k-dependent arrays in the parallel case in each pool
   CALL fkbounds( nkqtotf/2, lower_bnd, upper_bnd )
   ! 
-  epc(:,:,:,:) = zero
+  ALLOCATE ( epc (ibndmax-ibndmin+1, ibndmax-ibndmin+1, nmodes, nkqtotf/2) )
+  ALLOCATE ( epc_sym (ibndmax-ibndmin+1, ibndmax-ibndmin+1, nmodes) )
+  ! 
+  epc(:,:,:,:)   = zero
+  epc_sym(:,:,:) = zero
   !
   ! First do the average over bands and modes for each pool
   DO ik = 1, nkf
@@ -95,17 +99,17 @@
       wq = wf (nu, iq)
       !DO ibnd = ibndmin, ibndmax
       DO ibnd = 1, ibndmax-ibndmin+1
-         DO jbnd = 1, ibndmax-ibndmin+1
-            gamma = ( ABS(epf17 (jbnd, ibnd, nu, ik)) )**two
-            IF (wq > 0.d0) then
-                gamma = gamma / (two * wq)
-            ELSE
-                gamma = 0.d0
-            ENDIF
-            gamma = sqrt(gamma)
-            ! gamma = |g| [Ry]
-            epc(ibnd,jbnd,nu,ik+lower_bnd-1) = gamma
-         ENDDO ! jbnd
+        DO jbnd = 1, ibndmax-ibndmin+1
+          gamma = ( ABS(epf17 (jbnd, ibnd, nu, ik)) )**two
+          IF (wq > 0.d0) then
+              gamma = gamma / (two * wq)
+          ELSE
+              gamma = 0.d0
+          ENDIF
+          gamma = sqrt(gamma)
+          ! gamma = |g| [Ry]
+          epc(ibnd,jbnd,nu,ik+lower_bnd-1) = gamma
+        ENDDO ! jbnd
       ENDDO   ! ibnd        
     ENDDO ! loop on modes
     !
@@ -227,5 +231,8 @@
       !
     ENDDO
   ENDIF ! master node
+  ! 
+  DEALLOCATE ( epc )
+  DEALLOCATE ( epc_sym )
   !
   END SUBROUTINE print_gkk
