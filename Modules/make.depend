@@ -86,7 +86,6 @@ fd_gradient.o : mp_bands.o
 fft_base.o : ../FFTXlib/fft_smallbox_type.o
 fft_base.o : ../FFTXlib/fft_types.o
 fft_base.o : ../FFTXlib/stick_base.o
-fft_base.o : ../FFTXlib/task_groups.o
 fft_base.o : ../UtilXlib/parallel_include.o
 fft_custom.o : ../FFTXlib/fft_support.o
 fft_custom.o : ../FFTXlib/fft_types.o
