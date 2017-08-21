@@ -23,7 +23,7 @@ SUBROUTINE lr_readin
                                   & do_makov_payne
   USE scf,                 ONLY : vltot, v, vrs, vnew, &
                                   & destroy_scf_type, rho
-  USE fft_base,            ONLY : dfftp, dffts, dtgs
+  USE fft_base,            ONLY : dfftp, dffts
   USE gvecs,               ONLY : doublegrid
   USE wvfct,               ONLY : nbnd, et, wg, current_k
   USE lsda_mod,            ONLY : isk
@@ -610,13 +610,13 @@ CONTAINS
     !
     ! No taskgroups and EXX.
     !
-    IF (dtgs%have_task_groups .AND. dft_is_hybrid()) &
+    IF (dffts%have_task_groups .AND. dft_is_hybrid()) &
          & CALL errore( 'lr_readin', ' Linear response calculation ' // &
          & 'not implemented for EXX+Task groups', 1 )
     !
     ! Experimental task groups warning.
     !
-    IF (dtgs%have_task_groups) &
+    IF (dffts%have_task_groups) &
          & CALL infomsg( 'lr_readin','Usage of task &
          &groups with TDDFPT is still experimental. Use at your own risk.' )
     !

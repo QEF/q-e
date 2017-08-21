@@ -18,7 +18,7 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   USE wvfct,                ONLY : npwx, nbnd, current_k
   USE becmod,               ONLY : bec_type, becp, calbec
   USE uspp,                 ONLY : nkb, vkb
-  USE fft_base,             ONLY : dffts, dtgs
+  USE fft_base,             ONLY : dffts
   USE gvect,                ONLY : g
   USE klist,                ONLY : xk, igk_k
   USE noncollin_module,     ONLY : noncolin, npol
