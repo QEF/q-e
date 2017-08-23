@@ -123,7 +123,11 @@ clean:
 # Special case for 'noexe_langevin' test-case
 	@rm -f noexe_langevin/trajectory-pwscf.xyz
 # Special case for PH
-	@for x in `find ph_* -name "*dyn*"`; do rm -rf $$x; done
+	@for x in `find ph_* -name "*dyn"`; do rm -rf $$x; done
+# Cleaning PH final files
+	@rm -rf ph_*/_ph0 ph_*/*.save ph_*/*.xml ph_*/a2F.* ph_*/*.dyn? ph_*/alpha2F.dat \
+		ph_*/dyna2F ph_*/elph.gamma* ph_*/gam.lines ph_*/lambda ph_*/lambda.dat \
+		ph_*/elph_dir ph_*/Al444.* ph_*/matdyn.modes ph_*/phonon.dos
 # Cleaning EPW final files
 	@rm -rf epw_*/_ph0 epw_*/*.save epw_*/*.wfc* epw_*/*.dyn* \
 		epw_*/*.qdos_25.00 epw_*/*.P epw_*/*.freq epw_*/*.wout \
