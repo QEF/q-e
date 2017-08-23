@@ -441,7 +441,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 
         var gate -type LOGICAL {
             default { .FALSE. }
-            see { zgate, realxz, block, block_1, block_2, block_height }
+            see { zgate, relaxz, block, block_1, block_2, block_height }
             info {
                 In the case of charged cells (@ref tot_charge .ne. 0) setting gate = .TRUE.
                 represents the counter charge (i.e. -tot_charge) not by a homogenous
@@ -1697,7 +1697,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 		}
 	    }
 
-	    var realxz -type LOGICAL {
+	    var relaxz -type LOGICAL {
 		default { .FALSE. }
 		info {
 		    used only if @ref gate = .TRUE.
