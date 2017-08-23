@@ -39,11 +39,11 @@ MODULE check_stop
      ! ... internal procedures
      !
      !-----------------------------------------------------------------------
-     !!!SUBROUTINE check_stop_init( max_seconds_ )
-     SUBROUTINE check_stop_init( )
+     SUBROUTINE check_stop_init( max_seconds_ )
        !-----------------------------------------------------------------------
        !
-       USE input_parameters, ONLY : max_seconds_ => max_seconds       
+       ! FIXME: following line to be removed
+       USE input_parameters, ONLY : max_second__ => max_seconds       
        USE io_global,        ONLY : stdout
        USE io_files,         ONLY : prefix, exit_file
 #if defined(__TRAP_SIGUSR1) || defined(__TERMINATE_GRACEFULLY)
@@ -51,7 +51,7 @@ MODULE check_stop
 #endif
        !
        IMPLICIT NONE
-       !!!INTEGER, INTENT(IN), OPTIONAL :: max_seconds_
+       REAL(dp), INTENT(IN), OPTIONAL :: max_seconds_
        !
        IF ( tinit ) &
           WRITE( UNIT = stdout, &
@@ -61,8 +61,11 @@ MODULE check_stop
        !
        exit_file = TRIM( prefix ) // '.EXIT'
        !
-       IF ( max_seconds_ > 0.0_DP ) max_seconds = max_seconds_
-       !!! IF ( PRESENT(max_seconds_) ) max_seconds = max_seconds_
+       IF ( PRESENT(max_seconds_) ) THEN
+          max_seconds = max_seconds_
+       ELSE IF ( max_second__ > 0.0_dp ) THEN
+          max_seconds = max_second__
+       END IF
        !
        init_second = f_wall()
        tinit   = .TRUE.

@@ -210,8 +210,9 @@ SUBROUTINE iosys()
 
   USE read_pseudo_mod,       ONLY : readpp
 
-  USE qmmm, ONLY : qmmm_config
+  USE qmmm,                  ONLY : qmmm_config
 
+  USE check_stop,            ONLY : check_stop_init 
   !
   ! ... CONTROL namelist
   !
@@ -221,7 +222,7 @@ SUBROUTINE iosys()
                                pseudo_dir, disk_io, tefield, dipfield, lberry, &
                                gdir, nppstr, wf_collect,lelfield,lorbm,efield, &
                                nberrycyc, lkpoint_dir, efield_cart, lecrpa,    &
-                               vdw_table_name, memory, tqmmm,                  &
+                               vdw_table_name, memory, tqmmm, max_seconds,     &
                                efield_phase, gate
 
   !
@@ -294,9 +295,10 @@ SUBROUTINE iosys()
   !
   ! ... CARDS
   !
-  USE input_parameters,   ONLY : k_points, xk, wk, nk1, nk2, nk3,  &
-                                 k1, k2, k3, nkstot
-  USE input_parameters, ONLY : nconstr_inp, trd_ht, rd_ht, cell_units
+  USE input_parameters,      ONLY : k_points, xk, wk, nk1, nk2, nk3,  &
+                                    k1, k2, k3, nkstot
+  USE input_parameters,      ONLY : nconstr_inp, trd_ht, rd_ht, cell_units
+  USE input_parameters,      ONLY : deallocate_input_parameters
   !
   USE constraints_module,    ONLY : init_constraint
   USE read_namelists_module, ONLY : read_namelists, sm_not_set
@@ -305,7 +307,6 @@ SUBROUTINE iosys()
   USE tsvdw_module,          ONLY : vdw_isolated, vdw_econv_thr
   USE us,                    ONLY : spline_ps_ => spline_ps
   !
-  USE input_parameters,      ONLY : deallocate_input_parameters
   USE wyckoff,               ONLY : nattot, sup_spacegroup
   USE qexsd_module,          ONLY : qexsd_input_obj
   USE qes_types_module,      ONLY: input_type
@@ -1613,6 +1614,8 @@ SUBROUTINE iosys()
   !
   CALL pw_init_qexsd_input(qexsd_input_obj, obj_tagname="input")
   CALL deallocate_input_parameters ()  
+  !
+  CALL check_stop_init ( max_seconds ) 
   !
   ! ... Initialize temporary directory(-ies)
   !
