@@ -38,6 +38,7 @@
       USE gvect,           ONLY: ngm
       USE constants,       ONLY: gsmall, pi
       USE cell_base,       ONLY: tpiba2, s_to_r, alat
+      USE fft_rho
 
       IMPLICIT NONE
       
@@ -49,8 +50,8 @@
 
       ! ... Locals
       !
-      COMPLEX(DP), ALLOCATABLE :: grr(:)
-      COMPLEX(DP), ALLOCATABLE :: grg(:)
+      REAL(DP), ALLOCATABLE :: grr(:,:)
+      COMPLEX(DP), ALLOCATABLE :: grg(:,:)
       REAL(DP) :: rc, r(3), s(3), rmod, g2, rc2, arg, fact
       INTEGER   :: ig, i, j, k, ir
       INTEGER   :: ir1, ir2, ir3, nr3l
@@ -63,8 +64,8 @@
       END DO
       nr3l = dfftp%my_nr3p
 
-      ALLOCATE( grr( dfftp%nnr ) )
-      ALLOCATE( grg( SIZE( screen_coul ) ) )
+      ALLOCATE( grr( dfftp%nnr, 1 ) )
+      ALLOCATE( grg( dfftp%nnr, 1 ) )
 
       grr = 0.0d0
 
@@ -85,9 +86,9 @@
             rmod = SQRT( r(1)**2 + r(2)**2 + r(3)**2 )
             ir =  i + (j-1)*dfftp%nr1x + (k-1)*dfftp%nr1x*dfftp%nr2x
             IF( rmod < gsmall ) THEN
-              grr( ir ) = fact * 2.0d0 * rc / SQRT( pi )
+              grr( ir, 1 ) = fact * 2.0d0 * rc / SQRT( pi )
             ELSE
-              grr( ir ) = fact * qe_erf( rc * rmod ) / rmod
+              grr( ir, 1 ) = fact * qe_erf( rc * rmod ) / rmod
             END IF
           END DO
         END DO
@@ -95,16 +96,15 @@
 
       ! grg = FFT( grr )
 
-      CALL fwfft(   'Dense', grr, dfftp )
-      CALL psi2rho( 'Dense', grr, dfftp%nnr, grg, ngm )
+      CALL rho_r2g( grr, grg )
 
       DO ig = 1, SIZE( screen_coul )
         IF( hg(ig) < gsmall ) THEN
-          screen_coul(ig) = grg(1) - ( - pi / rc2 )
+          screen_coul(ig) = grg(1,1) - ( - pi / rc2 )
         ELSE
           g2  = tpiba2 * hg(ig)
           arg = - g2 / ( 4.0d0 * rc2 )
-          screen_coul(ig) = grg(ig) - ( 4.0d0 * pi * EXP( arg ) / g2 ) 
+          screen_coul(ig) = grg(ig,1) - ( 4.0d0 * pi * EXP( arg ) / g2 ) 
         END IF
       END DO
 

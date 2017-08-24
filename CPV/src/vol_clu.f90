@@ -21,7 +21,7 @@ SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
       USE electrons_base, ONLY: nspin
       USE ions_base,      ONLY: na, nsp, amass
       USE ions_positions, ONLY: tau0
-      USE gvect,          ONLY: g, gg, ngm, nl, nlm
+      USE gvect,          ONLY: g, gg, ngm
       USE gvecs,          ONLY: ngms
       USE cp_main_variables, only: drhor
       USE control_flags,  ONLY: tpre

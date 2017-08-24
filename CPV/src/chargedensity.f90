@@ -100,7 +100,7 @@
       USE kinds,              ONLY: DP
       USE control_flags,      ONLY: iprint, iverbosity, thdyn, tpre, trhor, ndr
       USE ions_base,          ONLY: nat
-      USE gvect,              ONLY: ngm,  nl, nlm, gstart, ig_l2g
+      USE gvect,              ONLY: ngm,  gstart, ig_l2g
       USE gvecs,              ONLY: ngms, nls, nlsm
       USE smallbox_gvec,      ONLY: ngb
       USE gvecw,              ONLY: ngw

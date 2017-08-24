@@ -27,7 +27,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       USE ions_base,        ONLY: nsp, na, nat, rcmax, compute_eextfor
       USE ions_base,        ONLY: ind_srt, ind_bck
       USE gvecs
-      USE gvect,            ONLY: ngm, nl, nlm
+      USE gvect,            ONLY: ngm
       USE cell_base,        ONLY: omega, r_to_s
       USE cell_base,        ONLY: alat, at, tpiba2, h, ainv
       USE cell_base,        ONLY: ibrav, isotropic  !True if volume option is chosen for cell_dofree
