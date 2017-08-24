@@ -951,6 +951,7 @@ phq_init.o : acfdtest.o
 phq_init.o : elph.o
 phq_init.o : phcom.o
 phq_readin.o : ../../LR_Modules/lrcom.o
+phq_readin.o : ../../Modules/check_stop.o
 phq_readin.o : ../../Modules/control_flags.o
 phq_readin.o : ../../Modules/fft_base.o
 phq_readin.o : ../../Modules/funct.o

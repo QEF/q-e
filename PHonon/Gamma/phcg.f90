@@ -13,7 +13,6 @@ PROGRAM phcg
   USE ions_base,     ONLY: nat, tau
   USE io_global,     ONLY: ionode
   USE io_files,      ONLY: seqopn
-  USE check_stop,    ONLY: check_stop_init
   USE mp_global,     ONLY: mp_startup, mp_global_end
   USE environment,   ONLY: environment_start
   USE cgcom
@@ -25,8 +24,6 @@ PROGRAM phcg
   CHARACTER(len=9) :: cdate, ctime, code = 'PHCG'
   LOGICAL :: exst
   INTEGER :: i
-  !
-  CALL check_stop_init ()
   !
   ! Initialize MPI, clocks, print initial messages
   !

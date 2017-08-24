@@ -137,7 +137,6 @@ macro.o : ../../Modules/io_files.o
 macro.o : ../../PW/src/pwcom.o
 macro.o : cgcom.o
 phcg.o : ../../Modules/cell_base.o
-phcg.o : ../../Modules/check_stop.o
 phcg.o : ../../Modules/constants.o
 phcg.o : ../../Modules/control_flags.o
 phcg.o : ../../Modules/environment.o
