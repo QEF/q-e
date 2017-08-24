@@ -30,7 +30,6 @@ PROGRAM manycp
   USE mp_global,         ONLY : mp_startup
   USE mp_images,         ONLY : my_image_id
   USE read_input,        ONLY : read_input_file
-  USE check_stop,        ONLY : check_stop_init
   USE command_line_options, ONLY: input_file_
   !
   IMPLICIT NONE
@@ -95,8 +94,6 @@ PROGRAM manycp
   ! ... copy input parameters from input_parameter module
   !
   CALL iosys()
-  !
-  CALL check_stop_init()
   !
   CALL cpr_loop( 1 )
   !

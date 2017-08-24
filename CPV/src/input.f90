@@ -198,6 +198,8 @@ MODULE input
                                     efield2_     => efield2
      !
      USE uspp_param,         ONLY : nvb
+     USE check_stop,         ONLY : check_stop_init
+     USE funct,              ONLY : dft_is_hybrid
      !
      USE input_parameters,   ONLY: &
         electron_dynamics, electron_damping, electron_temperature,   &
@@ -212,8 +214,7 @@ MODULE input
         orthogonalization, electron_velocities, nat, if_pos,                   &
         tefield, epol, efield, tefield2, epol2, efield2, remove_rigid_rot,     &
         iesr, saverho, rd_for, assume_isolated, wf_collect,                    &
-        memory, ref_cell, tcpbo
-     USE funct,              ONLY : dft_is_hybrid
+        memory, ref_cell, tcpbo, max_seconds
      !
      IMPLICIT NONE
      !
@@ -706,6 +707,8 @@ MODULE input
 
       IF( .NOT. trd_ht .AND. ibrav == 0 ) &
         CALL errore(' iosys ',' ibrav = 0 but CELL_PARAMETERS not present in stdin ', 1 )
+
+      CALL check_stop_init ( max_seconds )
 
       RETURN
    END SUBROUTINE set_control_flags

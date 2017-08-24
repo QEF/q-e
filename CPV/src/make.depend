@@ -280,7 +280,6 @@ cpr.o : wannier.o
 cpr_loop.o : ../../Modules/ions_base.o
 cpr_loop.o : ../../Modules/kind.o
 cpr_mod.o : ../../Modules/kind.o
-cprstart.o : ../../Modules/check_stop.o
 cprstart.o : ../../Modules/command_line_options.o
 cprstart.o : ../../Modules/environment.o
 cprstart.o : ../../Modules/io_global.o
@@ -633,6 +632,7 @@ inner_loop_cold.o : smallbox_gvec.o
 input.o : ../../KS_Solvers/CG/constants.o
 input.o : ../../Modules/autopilot.o
 input.o : ../../Modules/cell_base.o
+input.o : ../../Modules/check_stop.o
 input.o : ../../Modules/constraints_module.o
 input.o : ../../Modules/control_flags.o
 input.o : ../../Modules/electrons_base.o
@@ -736,7 +736,6 @@ makov_payne.o : ../../UtilXlib/mp.o
 makov_payne.o : ../../UtilXlib/parallel_include.o
 makov_payne.o : ions_positions.o
 makov_payne.o : mainvar.o
-manycp.o : ../../Modules/check_stop.o
 manycp.o : ../../Modules/command_line_options.o
 manycp.o : ../../Modules/environment.o
 manycp.o : ../../Modules/input_parameters.o
@@ -927,6 +926,7 @@ potentials.o : ../../KS_Solvers/CG/constants.o
 potentials.o : ../../Modules/cell_base.o
 potentials.o : ../../Modules/control_flags.o
 potentials.o : ../../Modules/fft_base.o
+potentials.o : ../../Modules/fft_rho.o
 potentials.o : ../../Modules/io_global.o
 potentials.o : ../../Modules/ions_base.o
 potentials.o : ../../Modules/kind.o

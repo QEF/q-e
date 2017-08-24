@@ -52,7 +52,6 @@ SUBROUTINE f2libcpv(lib_comm,nim,npt,npl,nta,nbn,ndg,retval,infile)
   USE mp_global,     ONLY : mp_startup
   USE io_global,     ONLY : ionode, ionode_id
   USE environment,   ONLY : environment_start
-  USE check_stop,    ONLY : check_stop_init
   USE mp_images,     ONLY : intra_image_comm
   USE command_line_options, ONLY : set_command_line
   USE parallel_include
@@ -109,9 +108,6 @@ SUBROUTINE f2libcpv(lib_comm,nim,npt,npl,nta,nbn,ndg,retval,infile)
   ! call to void routine for user define / plugin patches initializations
   ! temporary moved to init_run
 !  CALL plugin_initialization()
-  !
-  !
-  CALL check_stop_init()
   !
   CALL cpr_loop( 1 )
   !
