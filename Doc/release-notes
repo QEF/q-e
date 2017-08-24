@@ -5,8 +5,10 @@ New in svn version:
 
 Fixed in svn version
 
+  * ESM stress and forces in ESM for 'bc2' case were not correct (r13727)
+
   * EXX with k-points and pool parallelization was occasionally crashing
-    due to questionable custom FFT grid initialization (r137XX)
+    due to questionable custom FFT grid initialization (r13728)
 
   * __USE_3D_FFT was broken since v.6.0 (r13700, r13706)
 
