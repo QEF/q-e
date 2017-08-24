@@ -66,7 +66,7 @@
 #endif
 #endif
       REAL(DP),    ALLOCATABLE :: af( :, : ), aa( :, : )
-      COMPLEX(DP), ALLOCATABLE :: psi(:), aux(:)
+      COMPLEX(DP), ALLOCATABLE :: psi(:)
       REAL(DP)    :: tmp1, tmp2                      ! Lingzhu Kong
       REAL(DP),    ALLOCATABLE :: exx_a(:), exx_b(:) ! Lingzhu Kong      
       !
@@ -82,7 +82,6 @@
 
       nogrp_ = dffts%nproc2
       ALLOCATE( psi( dffts%nnr_tg ) )
-      ALLOCATE( aux( dffts%nnr_tg ) )
       !
       ci = ( 0.0d0, 1.0d0 )
       !
@@ -97,7 +96,7 @@
 !$omp task default(none) &
 !$omp          firstprivate( idx, i, n, ngw, ci, nogrp_ ) &
 !$omp          private( igoff, ig ) &
-!$omp          shared( c, dffts, aux, nlsm, nls )
+!$omp          shared( c, dffts, psi, nlsm, nls )
          !
          !  This loop is executed only ONCE when NOGRP=1.
          !  Equivalent to the case with no task-groups
@@ -113,12 +112,12 @@
 
          igoff = ( idx - 1 )/2 * dffts%nnr 
 
-         aux( igoff + 1 : igoff + dffts%nnr ) = (0.d0, 0.d0)
+         psi( igoff + 1 : igoff + dffts%nnr ) = (0.d0, 0.d0)
 
          IF( idx + i - 1 <= n ) THEN
             DO ig=1,ngw
-               aux(nlsm(ig)+igoff) = conjg( c(ig,idx+i-1) - ci * c(ig,idx+i) )
-               aux(nls(ig)+igoff) =         c(ig,idx+i-1) + ci * c(ig,idx+i)
+               psi(nlsm(ig)+igoff) = conjg( c(ig,idx+i-1) - ci * c(ig,idx+i) )
+               psi(nls(ig)+igoff) =         c(ig,idx+i-1) + ci * c(ig,idx+i)
             END DO
          END IF
 !$omp end task
@@ -128,7 +127,6 @@
 !$omp  end single
 !$omp  end parallel
 
-      psi = aux
       CALL invfft('tgWave', psi, dffts)
 
 #else
@@ -261,10 +259,8 @@
       !
 #if defined(__MPI)
       CALL fwfft( 'tgWave', psi, dffts )
-      aux = psi
 #else
       CALL fwfft( 'Wave', psi, dffts )
-      aux = psi
 #endif
       !
       !   note : the factor 0.5 appears 
@@ -286,7 +282,7 @@
 !$omp task default(none)  &
 !$omp          private( fi, fip, fp, fm, ig ) &
 !$omp          firstprivate( eig_offset, igno, idx, nogrp_, ngw, tpiba2, me_bgrp, i, n, tens ) &
-!$omp          shared( f, aux, df, da, c, dffts, g2kin, nls, nlsm )
+!$omp          shared( f, psi, df, da, c, dffts, g2kin, nls, nlsm )
 
          IF( idx + i - 1 <= n ) THEN
             if (tens) then
@@ -298,8 +294,8 @@
             endif
             IF( dffts%have_task_groups ) THEN
                DO ig=1,ngw
-                  fp= aux(nls(ig)+eig_offset) +  aux(nlsm(ig)+eig_offset)
-                  fm= aux(nls(ig)+eig_offset) -  aux(nlsm(ig)+eig_offset)
+                  fp= psi(nls(ig)+eig_offset) +  psi(nlsm(ig)+eig_offset)
+                  fm= psi(nls(ig)+eig_offset) -  psi(nlsm(ig)+eig_offset)
                   df(ig+igno-1)= fi *(tpiba2 * g2kin(ig) * c(ig,idx+i-1) + &
                                  CMPLX(real (fp), aimag(fm), kind=dp ))
                   da(ig+igno-1)= fip*(tpiba2 * g2kin(ig) * c(ig,idx+i  ) + &
@@ -307,8 +303,8 @@
                END DO
             ELSE
                DO ig=1,ngw
-                  fp= aux(nls(ig)) + aux(nlsm(ig))
-                  fm= aux(nls(ig)) - aux(nlsm(ig))
+                  fp= psi(nls(ig)) + psi(nlsm(ig))
+                  fm= psi(nls(ig)) - psi(nlsm(ig))
                   df(ig)= fi*(tpiba2*g2kin(ig)* c(ig,idx+i-1)+CMPLX(DBLE(fp), AIMAG(fm),kind=DP))
                   da(ig)=fip*(tpiba2*g2kin(ig)* c(ig,idx+i  )+CMPLX(AIMAG(fp),-DBLE(fm),kind=DP))
                END DO
@@ -327,7 +323,7 @@
 !$omp end parallel 
       !
       IF(dft_is_meta()) THEN
-         CALL dforce_meta(c(1,i),c(1,i+1),df,da,aux,iss1,iss2,fi,fip) !METAGGA
+         CALL dforce_meta(c(1,i),c(1,i+1),df,da,psi,iss1,iss2,fi,fip) !METAGGA
       END IF
 
 
@@ -414,7 +410,6 @@
       ENDIF
 !
       IF(dft_is_hybrid().AND.exx_is_active()) DEALLOCATE(exx_a, exx_b)
-      DEALLOCATE( aux )
       DEALLOCATE( psi )
 !
       CALL stop_clock( 'dforce' ) 
