@@ -659,6 +659,7 @@ CONTAINS
    disp = 0 
    DO i = 1,len(in)
       o = i + disp
+      IF(o>len(in)) EXIT
       IF ( in(i:i) == '<' .or. in(i:i) == '>' ) THEN
          out(o:o) = '/'
       ELSE IF (in(i:i) == '&') THEN
