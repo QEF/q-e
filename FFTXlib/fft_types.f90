@@ -255,6 +255,7 @@ CONTAINS
 
   SUBROUTINE fft_type_deallocate( desc )
     TYPE (fft_type_descriptor) :: desc
+    INTEGER :: ierr
      !write (6,*) ' inside fft_type_deallocate' ; FLUSH(6)
     IF ( ALLOCATED( desc%nr2p ) )   DEALLOCATE( desc%nr2p )
     IF ( ALLOCATED( desc%i0r2p ) )  DEALLOCATE( desc%i0r2p )
@@ -287,7 +288,14 @@ CONTAINS
     IF ( ALLOCATED( desc%tg_sdsp ) )DEALLOCATE( desc%tg_sdsp )
     IF ( ALLOCATED( desc%tg_rdsp ) )DEALLOCATE( desc%tg_rdsp )
 
-    desc%comm = MPI_COMM_NULL 
+    desc%comm  = MPI_COMM_NULL 
+#if defined(__MPI)
+    CALL MPI_COMM_FREE( desc%comm2, ierr )
+    CALL MPI_COMM_FREE( desc%comm3, ierr )
+#else
+    desc%comm2 = MPI_COMM_NULL 
+    desc%comm3 = MPI_COMM_NULL 
+#endif
 
     desc%nr1    = 0 ; desc%nr2    = 0 ; desc%nr3    = 0  
     desc%nr1x   = 0 ; desc%nr2x   = 0 ; desc%nr3x   = 0  
