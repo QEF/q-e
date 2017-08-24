@@ -127,6 +127,7 @@ CONTAINS
     CALL mp_comm_free ( intra_pool_comm )
     CALL mp_comm_free ( inter_pool_comm )
     CALL mp_world_end( )
+    CALL mp_stop_orthopools( ) ! cleans orthopools if used in exx
     !
     RETURN
     !

@@ -117,9 +117,23 @@ MODULE mp_orthopools
   INTEGER :: inter_orthopool_comm  = 0  ! inter orthopool communicator
   INTEGER :: intra_orthopool_comm  = 0  ! intra orthopool communicator
   !
-  LOGICAL :: init_orthopools = .false.
+  LOGICAL,PRIVATE :: init_orthopools = .false.
   ! 
 CONTAINS
+  !
+  !----------------------------------------------------------------------------
+  SUBROUTINE mp_stop_orthopools( )
+    USE mp, ONLY : mp_comm_free
+    IMPLICIT NONE
+    ! Free the orthopools communicators (if they had been set up)
+    IF(init_orthopools) THEN
+      CALL mp_comm_free ( inter_orthopool_comm )
+      CALL mp_comm_free ( intra_orthopool_comm )
+      init_orthopools = .false.
+    ENDIF
+    !
+    RETURN
+  END SUBROUTINE
   !
   !----------------------------------------------------------------------------
   SUBROUTINE mp_start_orthopools( parent_comm )
