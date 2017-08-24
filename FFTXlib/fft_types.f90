@@ -290,8 +290,8 @@ CONTAINS
 
     desc%comm  = MPI_COMM_NULL 
 #if defined(__MPI)
-    CALL MPI_COMM_FREE( desc%comm2, ierr )
-    CALL MPI_COMM_FREE( desc%comm3, ierr )
+    IF (desc%comm2 /= MPI_COMM_NULL) CALL MPI_COMM_FREE( desc%comm2, ierr )
+    IF (desc%comm3 /= MPI_COMM_NULL) CALL MPI_COMM_FREE( desc%comm3, ierr )
 #else
     desc%comm2 = MPI_COMM_NULL 
     desc%comm3 = MPI_COMM_NULL 
