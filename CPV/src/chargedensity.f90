@@ -159,10 +159,10 @@
       COMPLEX(DP) :: ci,fp,fm
 #if defined(__INTEL_COMPILER)
 #if __INTEL_COMPILER  >= 1300
-!dir$ attributes align: 4096 :: psi, psis, drhovan
+!dir$ attributes align: 4096 :: psis, drhovan
 #endif
 #endif
-      COMPLEX(DP), ALLOCATABLE :: psi(:), psis(:)
+      COMPLEX(DP), ALLOCATABLE :: psis(:)
       REAL(DP), ALLOCATABLE :: drhovan(:,:,:,:,:)
       CHARACTER(LEN=256) :: dirname
 
@@ -321,11 +321,7 @@
          CALL rho_g2r( rhog, rhor )
          !
          IF ( dft_is_meta() ) THEN
-            ALLOCATE( psis( dffts%nnr ) ) 
-            ALLOCATE( psi( dfftp%nnr ) )
-            CALL kedtauofr_meta( c_bgrp, psi, SIZE( psi ), psis, SIZE( psis ) ) ! METAGGA
-            DEALLOCATE( psi ) 
-            DEALLOCATE( psis ) 
+            CALL kedtauofr_meta( c_bgrp ) ! METAGGA
          END IF
          !
          !     add vanderbilt contribution to the charge density
@@ -342,7 +338,6 @@
 !
       IF( PRESENT( ndwwf ) ) THEN
          !
-         !CALL old_write_rho( ndwwf, nspin, rhor )
          CALL errore('cp_rhoofr','old_write_rho no longer implemented',1)
          !
       END IF
@@ -403,11 +398,9 @@
             rsumr(iss)=SUM(rhor(:,iss),1)*omega/DBLE(dfftp%nr1*dfftp%nr2*dfftp%nr3)
          END DO
 
-         IF (gstart.NE.2) THEN
+         IF ( gstart .NE. 2 ) THEN
             ! in the parallel case, only one processor has G=0 !
-            DO iss=1,nspin
-               rsumg(iss)=0.0d0
-            END DO
+            rsumg( 1:nspin ) = 0.0d0
          END IF
 
          CALL mp_sum( rsumg( 1:nspin ), intra_bgrp_comm )
@@ -421,9 +414,7 @@
       SUBROUTINE loop_over_states
          !
          USE parallel_include
-         USE fft_scalar, ONLY: cfft3ds
          USE fft_helper_subroutines
-!         USE scatter_mod, ONLY: maps_sticks_to_3d
          !
          !        MAIN LOOP OVER THE EIGENSTATES
          !           - This loop is also parallelized within the task-groups framework
@@ -435,14 +426,12 @@
          !
 #if defined(__INTEL_COMPILER)
 #if __INTEL_COMPILER  >= 1300
-!dir$ attributes align: 4096 :: tmp_rhos, aux
+!dir$ attributes align: 4096 :: tmp_rhos
 #endif
 #endif
          REAL(DP), ALLOCATABLE :: tmp_rhos(:,:)
-         COMPLEX(DP), ALLOCATABLE :: aux(:)
 
          ALLOCATE( psis( dffts%nnr_tg ) ) 
-         ALLOCATE( aux( dffts%nnr_tg ) ) 
          !
          CALL tg_get_group_nr3( dffts, tg_nr3 )
          !
@@ -461,9 +450,6 @@
             !
 
 #if defined(__MPI)
-
-            aux = (0.d0, 0.d0)
-
             !
             !  Loop for all local g-vectors (ngw)
             !  ci_bgrp: stores the Fourier expansion coefficients
@@ -497,25 +483,11 @@
             end do
 
             !
-            !  2*NOGRP are trasformed at the same time
-            !  psis: holds the fourier coefficients of the current proccesor
-            !        for eigenstates i and i+2*NOGRP-1
+            !  2*NOGRP bands are trasformed at the same time
             !
-            !  now redistribute data
-            !
-!            IF( dffts%nproc2 == dffts%nproc ) THEN
-!               CALL fft_scatter_tg_opt(dffts, aux, psis, SIZE(psis), 3 )
-!               CALL maps_sticks_to_3d( dffts, psis, SIZE(psis), aux, 3 )
-!               CALL cfft3ds( aux, dfft3d%nr1, dfft3d%nr2, dfft3d%nr3, &
-!                             dfft3d%nr1x,dfft3d%nr2x,dfft3d%nr3x, 1, 1, dfft3d%isind, dfft3d%iplw )
-!               psis = aux
-!            ELSE
-               !
 
-               CALL invfft ('tgWave', psis, dffts )
-!            END IF
+            CALL invfft ('tgWave', psis, dffts )
 #else
-            psis = (0.d0, 0.d0)
 
             CALL c2psi( psis, dffts%nnr, c_bgrp( 1, i ), c_bgrp( 1, i+1 ), ngw, 2 )
 
@@ -569,18 +541,12 @@
             !to each processor. In the original code this is nnr. In the task-groups
             !code this should be equal to the total number of planes
             !
-
-            ir =  dffts%nr1x*dffts%nr2x*tg_nr3
-            IF( ir > SIZE( psis ) ) &
-               CALL errore( ' rhoofr ', ' psis size too small ', ir )
-
             do ir = 1, dffts%nr1x*dffts%nr2x*tg_nr3
                tmp_rhos(ir,iss1) = tmp_rhos(ir,iss1) + sa1*( real(psis(ir)))**2
                tmp_rhos(ir,iss2) = tmp_rhos(ir,iss2) + sa2*(aimag(psis(ir)))**2
             end do
             !
          END DO
-
 
          IF( nbgrp > 1 ) THEN
             CALL mp_sum( tmp_rhos, inter_bgrp_comm )
@@ -589,7 +555,6 @@
          CALL tg_reduce_rho( rhos, tmp_rhos, dffts )
 
          DEALLOCATE( tmp_rhos )
-         DEALLOCATE( aux ) 
          DEALLOCATE( psis ) 
 
          RETURN

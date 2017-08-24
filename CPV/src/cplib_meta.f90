@@ -62,7 +62,7 @@
 !-----------------------------------------------------------------------
 !
 !-----------------------------------------------------------------------
-      subroutine kedtauofr_meta (c, psi, nlsi, psis, nlsis )
+      subroutine kedtauofr_meta (c)
 !-----------------------------------------------------------------------
 !
       use kinds, only: dp
@@ -83,9 +83,8 @@
       
       implicit none
 
-      integer, intent(in) :: nlsi, nlsis
       complex(dp) :: c(ngw,nx)
-      complex(dp) :: psi( nlsi ), psis( nlsis )
+      complex(dp), allocatable :: psis( : )
 
 ! local variables
       integer iss, isup, isdw, iss1, iss2, ios, i, ir, ig
@@ -93,7 +92,7 @@
       real(dp) sa1, sa2
       complex(dp) ci,fp,fm
 !
-      psi( : ) = (0.d0,0.d0)
+      ALLOCATE( psis( dffts%nnr ) )
 !
       ci=(0.0d0,1.0d0)
       kedtaur(:,:)=0.d0
@@ -175,6 +174,8 @@
          end if  !end metagga
          !
       end do
+
+      DEALLOCATE( psis )
 
 !     kinetic energy density (kedtau) in g-space (kedtaug)
 
