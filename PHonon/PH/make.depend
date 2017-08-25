@@ -138,6 +138,7 @@ alpha2f.o : elph_tetra_mod.o
 alpha2f.o : io_dyn_mat.o
 alpha2f.o : phcom.o
 bcast_ph_input.o : ../../LR_Modules/lrcom.o
+bcast_ph_input.o : ../../Modules/check_stop.o
 bcast_ph_input.o : ../../Modules/control_flags.o
 bcast_ph_input.o : ../../Modules/input_parameters.o
 bcast_ph_input.o : ../../Modules/io_files.o

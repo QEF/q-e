@@ -40,7 +40,7 @@ SUBROUTINE run_pwscf ( exit_status )
   USE control_flags,    ONLY : conv_ions, istep, nstep, restart, lmd, lbfgs
   USE command_line_options, ONLY : command_line
   USE force_mod,        ONLY : lforce, lstres, sigma, force
-  USE check_stop,       ONLY : check_stop_now
+  USE check_stop,       ONLY : check_stop_init, check_stop_now
   USE mp_images,        ONLY : intra_image_comm
   USE extrapolation,    ONLY : update_file, update_pot
   USE scf,              ONLY : rho
@@ -87,6 +87,8 @@ SUBROUTINE run_pwscf ( exit_status )
   ! call to void routine for user defined / plugin patches initializations
   !
   CALL plugin_initialization()
+  !
+  CALL check_stop_init()
   !
   CALL setup ()
   !

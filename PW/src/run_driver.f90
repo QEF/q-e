@@ -12,6 +12,7 @@ SUBROUTINE run_driver ( srvaddress, exit_status )
   !!
   USE io_global,        ONLY : stdout, ionode, ionode_id
   USE parameters,       ONLY : ntypx, npk, lmaxx
+  USE check_stop,       ONLY : check_stop_init
   USE mp_global,        ONLY : mp_bcast, mp_global_end, intra_image_comm
   USE control_flags,    ONLY : gamma_only, conv_elec, istep, ethr, lscf, lmd
   USE cellmd,           ONLY : lmovecell
@@ -68,6 +69,8 @@ SUBROUTINE run_driver ( srvaddress, exit_status )
   ! call to void routine for user defined / plugin patches initializations
   !
   CALL plugin_initialization()
+  !
+  CALL check_stop_init()
   !
   ! ... We do a fake run so that the G vectors are initialized
   ! ... based on the pw input. This is needed to guarantee smooth energy

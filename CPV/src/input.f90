@@ -182,7 +182,8 @@ MODULE input
      !
      ! ...  Other modules
      !
-     USE cp_main_variables,        ONLY : nprint_nfi
+     USE check_stop,         ONLY : max_seconds_ => max_seconds
+     USE cp_main_variables,  ONLY : nprint_nfi
      USE wave_base,          ONLY : frice_ => frice
      USE ions_base,          ONLY : fricp_ => fricp
      USE cell_base,          ONLY : frich_ => frich
@@ -198,8 +199,6 @@ MODULE input
                                     efield2_     => efield2
      !
      USE uspp_param,         ONLY : nvb
-     USE check_stop,         ONLY : check_stop_init
-     USE funct,              ONLY : dft_is_hybrid
      !
      USE input_parameters,   ONLY: &
         electron_dynamics, electron_damping, electron_temperature,   &
@@ -215,6 +214,7 @@ MODULE input
         tefield, epol, efield, tefield2, epol2, efield2, remove_rigid_rot,     &
         iesr, saverho, rd_for, assume_isolated, wf_collect,                    &
         memory, ref_cell, tcpbo, max_seconds
+     USE funct,              ONLY : dft_is_hybrid
      !
      IMPLICIT NONE
      !
@@ -340,6 +340,8 @@ MODULE input
      trane_  = .FALSE.
      ampre_  = ampre
      taurdr_ = .FALSE.
+     !
+     max_seconds_ = max_seconds
      !
      SELECT CASE ( TRIM( restart_mode ) )
        !
@@ -707,8 +709,6 @@ MODULE input
 
       IF( .NOT. trd_ht .AND. ibrav == 0 ) &
         CALL errore(' iosys ',' ibrav = 0 but CELL_PARAMETERS not present in stdin ', 1 )
-
-      CALL check_stop_init ( max_seconds )
 
       RETURN
    END SUBROUTINE set_control_flags

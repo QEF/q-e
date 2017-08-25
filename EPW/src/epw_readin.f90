@@ -26,7 +26,7 @@
   USE klist,         ONLY : nks 
   USE lsda_mod,      ONLY : lsda
   USE fixed_occ,     ONLY : tfixed_occ
-  USE phcom,         ONLY : time_max => max_seconds
+  USE check_stop,    ONLY : time_max => max_seconds
   USE qpoint,        ONLY : xq
   USE disp,          ONLY : nq1, nq2, nq3
   USE output,        ONLY : fildvscf, fildrho

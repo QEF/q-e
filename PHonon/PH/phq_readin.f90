@@ -22,6 +22,7 @@ SUBROUTINE phq_readin()
   USE mp,            ONLY : mp_bcast
   USE mp_world,      ONLY : world_comm
   USE ions_base,     ONLY : amass, atm
+  USE check_stop,    ONLY : max_seconds
   USE input_parameters, ONLY : nk1, nk2, nk3, k1, k2, k3
   USE start_k,       ONLY : reset_grid
   USE klist,         ONLY : xk, nks, nkstot, lgauss, two_fermi_energies, ltetra
@@ -43,7 +44,7 @@ SUBROUTINE phq_readin()
                             ext_recover, ext_restart, u_from_file, ldiag, &
                             search_sym, lqdir, electron_phonon, tmp_dir_phq, &
                             rec_code_read, qplot, only_init, only_wfc, &
-                            low_directory_check, max_seconds
+                            low_directory_check
 
   USE save_ph,       ONLY : tmp_dir_save, save_ph_input_variables
   USE gamma_gamma,   ONLY : asr
@@ -79,7 +80,6 @@ SUBROUTINE phq_readin()
   ! YAMBO <
   USE elph_tetra_mod,ONLY : elph_tetra, lshift_q, in_alpha2f
   USE ktetra,        ONLY : tetra_type
-  USE check_stop,    ONLY : check_stop_init
   !
   IMPLICIT NONE
   !
@@ -824,8 +824,6 @@ SUBROUTINE phq_readin()
        CALL errore('phq_readin','nq1, nq2, and nq3 must be greater than 0',1)
 
   CALL save_ph_input_variables()
-  !
-  CALL check_stop_init( max_seconds)
   !
   RETURN
   !

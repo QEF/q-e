@@ -399,6 +399,7 @@ lr_read_wf.o : lr_exx_kernel.o
 lr_read_wf.o : lr_variables.o
 lr_readin.o : ../../LR_Modules/lrcom.o
 lr_readin.o : ../../Modules/cell_base.o
+lr_readin.o : ../../Modules/check_stop.o
 lr_readin.o : ../../Modules/constants.o
 lr_readin.o : ../../Modules/control_flags.o
 lr_readin.o : ../../Modules/fft_base.o

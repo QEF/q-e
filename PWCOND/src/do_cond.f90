@@ -28,8 +28,7 @@ SUBROUTINE do_cond(done)
   USE io_files,   ONLY: tmp_dir, prefix
   !!! RECOVER
   USE cond_restart
-  USE input_parameters, ONLY: max_seconds
-  USE check_stop, ONLY: check_stop_init, check_stop_now
+  USE check_stop, ONLY: max_seconds, check_stop_init, check_stop_now
   !!!
   USE noncollin_module, ONLY : noncolin, i_cons
   USE io_global, ONLY : stdout, ionode, ionode_id

@@ -36,7 +36,7 @@ MODULE check_stop
   LOGICAL :: tinit = .FALSE.
   !
   PRIVATE
-  PUBLIC :: check_stop_init, check_stop_now, stopped_by_user
+  PUBLIC :: check_stop_init, check_stop_now, max_seconds, stopped_by_user
   !
   CONTAINS
      !
@@ -46,8 +46,6 @@ MODULE check_stop
      SUBROUTINE check_stop_init( max_seconds_ )
        !-----------------------------------------------------------------------
        !
-       ! FIXME: following line to be removed
-       USE input_parameters, ONLY : max_second__ => max_seconds       
        USE io_global,        ONLY : stdout
        USE io_files,         ONLY : prefix, exit_file
 #if defined(__TRAP_SIGUSR1) || defined(__TERMINATE_GRACEFULLY)
@@ -57,8 +55,7 @@ MODULE check_stop
        IMPLICIT NONE
        REAL(dp), INTENT(IN), OPTIONAL :: max_seconds_
        !
-       IF ( tinit ) &
-          WRITE( UNIT = stdout, &
+       IF ( tinit )  WRITE( UNIT = stdout, &
                  FMT = '(/,5X,"WARNING: check_stop already initialized")' )
        !
        ! ... the exit_file name is set here
@@ -71,11 +68,10 @@ MODULE check_stop
        !
        IF ( PRESENT(max_seconds_) ) THEN
           max_seconds = max_seconds_
-       ELSE IF ( max_second__ > 0.0_dp ) THEN
-          max_seconds = max_second__
        END IF
        !
        init_second = f_wall()
+       !
        tinit   = .TRUE.
        !
 #if defined(__TRAP_SIGUSR1) || defined(__TERMINATE_GRACEFULLY)

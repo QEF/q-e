@@ -31,8 +31,8 @@ SUBROUTINE lr_readin
   USE io_global,           ONLY : ionode, ionode_id, stdout
   USE klist,               ONLY : nks, wk, nelec, lgauss, ltetra
   USE fixed_occ,           ONLY : tfixed_occ
-  USE input_parameters,    ONLY : degauss, nosym, wfcdir, outdir,&
-                                  & max_seconds
+  USE input_parameters,    ONLY : degauss, nosym, wfcdir, outdir
+  USE check_stop,          ONLY : max_seconds
   USE realus,              ONLY : real_space, real_space_debug,&
                                   & init_realspace_vars, qpointlist,&
                                   & betapointlist

@@ -34,7 +34,6 @@ do_cond.o : ../../Modules/check_stop.o
 do_cond.o : ../../Modules/constants.o
 do_cond.o : ../../Modules/environment.o
 do_cond.o : ../../Modules/gvecw.o
-do_cond.o : ../../Modules/input_parameters.o
 do_cond.o : ../../Modules/io_files.o
 do_cond.o : ../../Modules/io_global.o
 do_cond.o : ../../Modules/ions_base.o

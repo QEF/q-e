@@ -204,8 +204,7 @@ MODULE control_ph
              current_iq,    & ! current q point
              start_q, last_q  ! initial q in the list, last_q in the list
   REAL(DP) :: tr2_ph  ! threshold for phonon calculation
-  REAL(DP) :: alpha_mix(maxter), & ! the mixing parameter
-              max_seconds = 1.0D+7 ! max CPU time
+  REAL(DP) :: alpha_mix(maxter)  ! the mixing parameter
   CHARACTER(LEN=10)  :: where_rec='no_recover'! where the ph run recovered
   CHARACTER(LEN=12) :: electron_phonon
   CHARACTER(LEN=256) :: flmixdpot, tmp_dir_ph, tmp_dir_phq

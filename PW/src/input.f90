@@ -151,7 +151,10 @@ SUBROUTINE iosys()
   !
   USE extrapolation, ONLY : pot_order, wfc_order
   USE control_flags, ONLY : isolve, max_cg_iter, david, tr2, imix, gamma_only,&
-                            nmix, iverbosity, niter, &
+                            nmix, iverbosity, smallmem, niter, &
+                            io_level, ethr, lscf, lbfgs, lmd, &
+                            lbands, lconstrain, restart, twfcollect, &
+                            llondon, do_makov_payne, lxdm, &
                             remove_rigid_rot_ => remove_rigid_rot, &
                             diago_full_acc_   => diago_full_acc, &
                             tolp_             => tolp, &
@@ -164,13 +167,10 @@ SUBROUTINE iosys()
                             tqr_              => tqr, &
                             tq_smoothing_     => tq_smoothing, &
                             tbeta_smoothing_  => tbeta_smoothing, &
-                            io_level, ethr, lscf, lbfgs, lmd, &
-                            lbands, lconstrain, restart, twfcollect, &
-                            llondon, do_makov_payne, lxdm, &
                             ts_vdw_           => ts_vdw, &
                             lecrpa_           => lecrpa, &
-                            smallmem
-  USE control_flags, ONLY: scf_must_converge_ => scf_must_converge
+                            scf_must_converge_=> scf_must_converge
+  USE check_stop,    ONLY : max_seconds_ => max_seconds
   !
   USE wvfct,         ONLY : nbnd_ => nbnd
   USE gvecw,         ONLY : ecfixed_ => ecfixed, &
@@ -212,7 +212,6 @@ SUBROUTINE iosys()
 
   USE qmmm,                  ONLY : qmmm_config
 
-  USE check_stop,            ONLY : check_stop_init 
   !
   ! ... CONTROL namelist
   !
@@ -222,7 +221,7 @@ SUBROUTINE iosys()
                                pseudo_dir, disk_io, tefield, dipfield, lberry, &
                                gdir, nppstr, wf_collect,lelfield,lorbm,efield, &
                                nberrycyc, lkpoint_dir, efield_cart, lecrpa,    &
-                               vdw_table_name, memory, tqmmm, max_seconds,     &
+                               vdw_table_name, memory, max_seconds, tqmmm,     &
                                efield_phase, gate
 
   !
@@ -1615,8 +1614,6 @@ SUBROUTINE iosys()
   CALL pw_init_qexsd_input(qexsd_input_obj, obj_tagname="input")
   CALL deallocate_input_parameters ()  
   !
-  CALL check_stop_init ( max_seconds ) 
-  !
   ! ... Initialize temporary directory(-ies)
   !
   CALL check_tempdir ( tmp_dir, exst, parallelfs )
@@ -1631,7 +1628,9 @@ SUBROUTINE iosys()
   END IF
   IF ( TRIM(wfc_dir) /= TRIM(tmp_dir) ) &
      CALL check_tempdir( wfc_dir, exst, parallelfs )
-
+  !
+  max_seconds_ = max_seconds
+  !
   RETURN
   !
 END SUBROUTINE iosys
