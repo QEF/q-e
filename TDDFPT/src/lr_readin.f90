@@ -443,7 +443,7 @@ SUBROUTINE lr_readin
      !
      ! Taken from PW/src/init_run.f90
      !
-     ir_end = MIN(dfftp%nnr,dfftp%nr1x*dfftp%nr2x*dfftp%npp(me_bgrp+1))
+     ir_end = MIN(dfftp%nnr,dfftp%nr1x*dfftp%my_nr2p*dfftp%my_nr3)
      CALL environ_initbase( dfftp%nnr )
      !
      ! Taken from PW/src/electrons.f90

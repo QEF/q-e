@@ -178,7 +178,7 @@ SUBROUTINE compute_d0psi_rs( n_ipol )
   USE kinds,                ONLY : DP
   USE cell_base,            ONLY : at, bg, alat, omega
   USE fft_base,             ONLY : dfftp,dffts
-  USE mp_global,            ONLY : me_bgrp, intra_bgrp_comm
+  USE mp_global,            ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_barrier
   USE io_global,            ONLY : stdout
   USE wvfct,                ONLY : nbnd,npwx
@@ -195,7 +195,7 @@ SUBROUTINE compute_d0psi_rs( n_ipol )
   !
   REAL(DP),    ALLOCATABLE :: r(:,:)
   COMPLEX(DP), ALLOCATABLE :: psic_temp(:), evc_temp(:,:)
-  INTEGER  :: i, j, k, ip, ir, ir_end, index0, ibnb, n_ipol
+  INTEGER  :: i, j, k, ip, ir, ir_end, ibnb, n_ipol, idx, j0, k0
   REAL(DP) :: inv_nr1, inv_nr2, inv_nr3
   !
   WRITE(stdout,'(/,5X,"Calculation of the dipole in real space")')
@@ -225,10 +225,10 @@ SUBROUTINE compute_d0psi_rs( n_ipol )
   inv_nr3 = 1.D0 / DBLE( dfftp%nr3 )
   !
 #if defined (__MPI)
-  index0 = dfftp%nr1x*dfftp%nr2x*SUM(dfftp%nr3p(1:me_bgrp))
-  ir_end = MIN(dfftp%nnr,dfftp%nr1x*dfftp%nr2x*dfftp%my_nr3p)
+  j0 = dfftp%my_i0r2p ; k0 = dfftp%my_i0r3p
+  ir_end = MIN(dfftp%nnr,dfftp%nr1x*dfftp%my_nr2p*dfftp%my_nr3p)
 #else
-  index0 = 0
+  j0 = 0 ; k0 = 0
   ir_end = dfftp%nnr
 #endif
   !
@@ -236,11 +236,17 @@ SUBROUTINE compute_d0psi_rs( n_ipol )
      !
      ! ... three dimensional indexes
      !
-     i = index0 + ir - 1
-     k = i / (dfftp%nr1x*dfftp%nr2x)
-     i = i - (dfftp%nr1x*dfftp%nr2x)*k
-     j = i / dfftp%nr1x
-     i = i - dfftp%nr1x*j
+     idx = ir -1
+     k   = idx / (dfftp%nr1x*dfftp%my_nr2p)
+     idx = idx - (dfftp%nr1x*dfftp%my_nr2p)*k
+     k   = k + k0
+     IF ( k .GE. dfftp%nr3 ) CYCLE
+     j   = idx / dfftp%nr1x
+     idx = idx - dfftp%nr1x * j
+     j   = j + j0
+     IF ( j .GE. dfftp%nr2 ) CYCLE
+     i   = idx
+     IF ( i .GE. dfftp%nr1 ) CYCLE
      !
      DO ip = 1, n_ipol
         r(ir,ip) = DBLE( i )*inv_nr1*at(ip,1) + &
