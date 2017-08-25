@@ -1,6 +1,6 @@
  Warning: Only a single CPU will be used!
 
-     Program TDDFPT_PP v.5.4.0 (svn rev. 12487) starts on 13Jun2016 at 11:40:52 
+     Program TDDFPT_PP v.6.1 (svn rev. 13774) starts on 25Aug2017 at 12:56:25 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -8,18 +8,6 @@
           URL http://www.quantum-espresso.org", 
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
- 
-           HOST :    @host@
-           ARCH :    x86_64
-             CC :    icc
-            CPP :    cpp
-            F90 :    mpiifort
-            F77 :    ifort
-         DFLAGS :    -D__INTEL -D__FFTW3 -D__MPI -D__PARA -D__SCALAPACK
-      BLAS LIBS :    -lmkl_intel_lp64  -lmkl_sequential -lmkl_core
-    LAPACK LIBS :    
-       FFT LIBS :    -lfftw3
-      MASS LIBS :    
 
      Parallel version (MPI), running on     8 processors
      R & G space division:  proc/nbgrp/npool/nimage =       8
@@ -38,18 +26,18 @@
 
      Polarization direction:1
      Lanczos coefficients:
-     Average =    13.04033852
-     Average oscillation amplitude =     0.40156083
+     Average =    13.04033838
+     Average oscillation amplitude =     0.40156120
 
      Polarization direction:2
      Lanczos coefficients:
-     Average =    13.04033852
-     Average oscillation amplitude =     0.40156083
+     Average =    13.04033838
+     Average oscillation amplitude =     0.40156120
 
      Polarization direction:3
      Lanczos coefficients:
-     Average =    13.04033852
-     Average oscillation amplitude =     0.40156083
+     Average =    13.04033838
+     Average oscillation amplitude =     0.40156120
 
      Data ready, starting to calculate observables...
 
@@ -67,10 +55,10 @@
 
      Functions are reported in \hbar.\omega  Energy unit is (Ry)
  
-     TDDFPT_PP    :    10.58s CPU        10.65s WALL
+     TDDFPT_PP    :    10.60s CPU        10.63s WALL
 
  
-   This run was terminated on:  11:41: 3  13Jun2016            
+   This run was terminated on:  12:56:35  25Aug2017            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
